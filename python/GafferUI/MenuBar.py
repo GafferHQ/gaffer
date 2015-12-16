@@ -42,6 +42,7 @@ import IECore
 import Gaffer
 import GafferUI
 
+QtCore = GafferUI._qtImport( "QtCore" )
 QtGui = GafferUI._qtImport( "QtGui" )
 
 class MenuBar( GafferUI.Widget ) :
@@ -54,9 +55,12 @@ class MenuBar( GafferUI.Widget ) :
 
 		GafferUI.Widget.__init__( self, menuBar, **kw )
 
+		self.__shortcutEventFilter = None
 		self.definition = definition
 
 		self.__visibilityChangedConnection = self.visibilityChangedSignal().connect( Gaffer.WeakMethod( self.__visibilityChanged ) )
+		self.__parentChangedConnection = self.parentChangedSignal().connect( Gaffer.WeakMethod( self.__parentChanged ) )
+		self.__setupShortcutEventFilter()
 
 	def __setattr__( self, key, value ) :
 
@@ -85,25 +89,81 @@ class MenuBar( GafferUI.Widget ) :
 
 				done.add( name )
 
-			if self.visible() :
-				self.__buildSubMenusFully()
+	def __setupShortcutEventFilter( self ) :
+
+		if self.__shortcutEventFilter is not None :
+			return
+
+		shortcutTarget = self.parent()
+		if shortcutTarget is None :
+			return
+
+		if isinstance( shortcutTarget.parent(), GafferUI.Window ) :
+			shortcutTarget = shortcutTarget.parent()
+
+		self.__shortcutEventFilter = _ShortcutEventFilter( self._qtWidget() )
+		shortcutTarget._qtWidget().installEventFilter( self.__shortcutEventFilter )
 
 	def __visibilityChanged( self, widget ) :
 
 		if self.visible() :
-			# normally, Menus aren't populated with items until they're shown,
-			# but we need them populated before so that the keyboard shortcuts
-			# become available. we wait until a menu bar show event because we
-			# know then that we're parented below a Window, and many of our menu
-			# commands and status items we use need to find their parent ScriptWindow
-			# before they work properly.
-			self.__buildSubMenusFully()
+			self.__setupShortcutEventFilter()
 
-	def __buildSubMenusFully( self ) :
+	def __parentChanged( self, widget ) :
 
-		for subMenu in self.__subMenus :
+		if self.__shortcutEventFilter is not None :
+			self.__shortcutEventFilter.setParent( None )
+			self.__shortcutEventFilter = None
+			self.__setupShortcutEventFilter()
 
-			# in order to avoid the potential overhead caused by building the submenus
-			# fully every time the showEvent is triggered we just do it once
-			if subMenu._qtWidget().isEmpty() :
-				subMenu._buildFully()
+# We use this event filter to detect keyboard shortcuts and
+# trigger our menu items using them if necessary. We can't just let
+# Qt handle the shortcuts because it would scope all the shortcuts to the
+# toplevel window. This would not only prevent the effective use of
+# multiple menubars within a layout, it also conflicts badly with
+# native shortcuts when we're hosted inside an application like Maya.
+# See Menu.__buildAction() where we limit the default scope for the
+# shortcuts in order to defer to our own code here.
+class _ShortcutEventFilter( QtCore.QObject ) :
+
+	def __init__( self, parent ) :
+
+		QtCore.QObject.__init__( self, parent )
+
+	def eventFilter( self, qObject, qEvent ) :
+
+		# Qt bubbles up these shortcut override events from
+		# the focussed widget to the top of the hierarchy,
+		# at each level asking "Do you want to process this
+		# keypress yourself before I use it as a shortcut at
+		# some other scope?". This gives us the opportunity
+		# to do sane scoped handling of shortcuts, rather than
+		# the everything-fighting-at-the-window-level carnage
+		# that Qt has gone out of its way to create. We're
+		# striving to do all event handling in GafferUI with this
+		# bubble-up-until-handled methodology anyway, so doing
+		# shortcuts this way seems to make sense.
+		if qEvent.type() == qEvent.Type.ShortcutOverride :
+
+			menuBar = GafferUI.Widget._owner( self.parent() )
+			keySequence = QtGui.QKeySequence( qEvent.key() | qEvent.modifiers() )
+			for menu in menuBar._MenuBar__subMenus :
+				if menu._qtWidget().isEmpty() :
+					menu._buildFully()
+				if self.__handleShortcut( keySequence, menu._qtWidget() ) :
+					qEvent.accept()
+					return True
+
+		return QtCore.QObject.eventFilter( self, qObject, qEvent )
+
+	def __handleShortcut( self, keySequence, menu ) :
+
+		for action in menu.actions() :
+			if keySequence in action.shortcuts() :
+				action.trigger()
+				return True
+			if action.menu() is not None :
+				if self.__handleShortcut( keySequence, action.menu() ) :
+					return True
+
+		return False

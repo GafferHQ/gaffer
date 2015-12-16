@@ -108,26 +108,14 @@ class MenuBarTest( GafferUITest.TestCase ) :
 		window.setVisible( True )
 		self.waitForIdle( 1000 )
 
-		def simulateShortcut( widget ) :
-
-			QtGui.QApplication.instance().notify(
-				widget._qtWidget(),
-				QtGui.QKeyEvent( QtCore.QEvent.KeyPress, QtCore.Qt.Key_A, QtCore.Qt.ControlModifier )
-			)
-
-			QtGui.QApplication.instance().notify(
-				widget._qtWidget(),
-				QtGui.QKeyEvent( QtCore.QEvent.KeyRelease, QtCore.Qt.Key_A, QtCore.Qt.ControlModifier )
-			)
-
-		simulateShortcut( label )
+		self.__simulateShortcut( label )
 		self.waitForIdle( 1000 )
 		self.assertEqual( len( commandInvocations ), 1 )
 		self.assertEqual( commandInvocations[0], "arg1" )
 
 		menuBar.definition = IECore.MenuDefinition()
 
-		simulateShortcut( label )
+		self.__simulateShortcut( label )
 		self.waitForIdle( 1000 )
 		self.assertEqual( len( commandInvocations ), 1 )
 
@@ -135,10 +123,98 @@ class MenuBarTest( GafferUITest.TestCase ) :
 			( "/test/command", { "command" : functools.partial( command, "arg2" ), "shortCut" : "Ctrl+A" } ),
 		] )
 
-		simulateShortcut( label )
+		self.__simulateShortcut( label )
 		self.waitForIdle( 1000 )
 		self.assertEqual( len( commandInvocations ), 2 )
 		self.assertEqual( commandInvocations[1], "arg2" )
+
+	def testNesting( self ) :
+
+		commandInvocations = []
+		def command( arg ) :
+
+			commandInvocations.append( arg )
+
+		outerDefinition = IECore.MenuDefinition( [
+			( "/test/command", { "command" : functools.partial( command, "outer" ), "shortCut" : "Ctrl+A" } ),
+		] )
+
+		innerDefinition = IECore.MenuDefinition( [
+			( "/test/command", { "command" : functools.partial( command, "inner" ), "shortCut" : "Ctrl+A" } ),
+		] )
+
+		with GafferUI.Window() as window :
+			with GafferUI.ListContainer() :
+				GafferUI.MenuBar( outerDefinition )
+				outerLabel = GafferUI.Label( "test" )
+				with GafferUI.ListContainer() :
+					GafferUI.MenuBar( innerDefinition )
+					innerLabel = GafferUI.Label( "test" )
+
+		window.setVisible( True )
+		self.waitForIdle( 1000 )
+
+		self.__simulateShortcut( innerLabel )
+		self.waitForIdle( 1000 )
+		self.assertEqual( len( commandInvocations ), 1 )
+		self.assertEqual( commandInvocations[0], "inner" )
+
+		self.__simulateShortcut( outerLabel )
+		self.waitForIdle( 1000 )
+		self.assertEqual( len( commandInvocations ), 2 )
+		self.assertEqual( commandInvocations[1], "outer" )
+
+	def testParentChange( self ) :
+
+		commandInvocations = []
+		def command( arg ) :
+
+			commandInvocations.append( arg )
+
+		definition = IECore.MenuDefinition( [
+			( "/test/command", { "command" : functools.partial( command, "test" ), "shortCut" : "Ctrl+A" } ),
+		] )
+
+		with GafferUI.Window() as window :
+			with GafferUI.ListContainer() :
+				with GafferUI.ListContainer() as container1 :
+					menuBar = GafferUI.MenuBar( definition )
+					label1 = GafferUI.Label( "test" )
+				with GafferUI.ListContainer() as container2 :
+					label2 = GafferUI.Label( "test" )
+
+		window.setVisible( True )
+		self.waitForIdle( 1000 )
+
+		self.__simulateShortcut( label1 )
+		self.waitForIdle( 1000 )
+		self.assertEqual( len( commandInvocations ), 1 )
+
+		self.__simulateShortcut( label2 )
+		self.waitForIdle( 1000 )
+		self.assertEqual( len( commandInvocations ), 1 )
+
+		container2.insert( 0, menuBar )
+
+		self.__simulateShortcut( label1 )
+		self.waitForIdle( 1000 )
+		self.assertEqual( len( commandInvocations ), 1 )
+
+		self.__simulateShortcut( label2 )
+		self.waitForIdle( 1000 )
+		self.assertEqual( len( commandInvocations ), 2 )
+
+	def __simulateShortcut( self, widget ) :
+
+		QtGui.QApplication.instance().notify(
+			widget._qtWidget(),
+			QtGui.QKeyEvent( QtCore.QEvent.KeyPress, QtCore.Qt.Key_A, QtCore.Qt.ControlModifier )
+		)
+
+		QtGui.QApplication.instance().notify(
+			widget._qtWidget(),
+			QtGui.QKeyEvent( QtCore.QEvent.KeyRelease, QtCore.Qt.Key_A, QtCore.Qt.ControlModifier )
+		)
 
 if __name__ == "__main__":
 	unittest.main()
