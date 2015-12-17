@@ -48,6 +48,12 @@ Sampler::Sampler( const GafferImage::ImagePlug *plug, const std::string &channel
 {
 	{
 		ImagePlug::GlobalScope c( Context::current() );
+
+		if( m_plug->deepPlug()->getValue() )
+		{
+			throw IECore::Exception( "Sampler does not support deep image data" );
+		}
+
 		m_dataWindow = m_plug->dataWindowPlug()->getValue();
 	}
 

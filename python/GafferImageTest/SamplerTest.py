@@ -203,5 +203,22 @@ class SamplerTest( GafferImageTest.ImageTestCase ) :
 		sampler = GafferImage.Sampler( empty["out"], "R", empty["out"]["format"].getValue().getDisplayWindow(), boundingMode = GafferImage.Sampler.BoundingMode.Clamp )
 		self.assertEqual( sampler.sample( 0, 0 ), 0.0 )
 
+	def testExceptionOnDeepData( self ) :
+
+		constant1 = GafferImage.Constant()
+		constant1["format"].setValue( GafferImage.Format( 1000, 1000 ) )
+		constant1["color"].setValue( imath.Color4f( 1 ) )
+
+		constant2 = GafferImage.Constant()
+		constant2["format"].setValue( GafferImage.Format( 1000, 1000 ) )
+		constant2["color"].setValue( imath.Color4f( 1 ) )
+
+		merge = GafferImage.DeepMerge()
+		merge["in"][0].setInput( constant1["out"] )
+		merge["in"][1].setInput( constant2["out"] )
+
+		with self.assertRaises( RuntimeError ) :
+			sampler = GafferImage.Sampler( merge["out"], "R", imath.Box2i( imath.V2i( 0 ), imath.V2i( 200 ) ), boundingMode = GafferImage.Sampler.BoundingMode.Black )
+
 if __name__ == "__main__":
 	unittest.main()
