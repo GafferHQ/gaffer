@@ -100,6 +100,15 @@ ImageStats::ImageStats( const std::string &name )
 	addChild( new Color4fPlug( "average", Gaffer::Plug::Out, Imath::Color4f( 0, 0, 0, 1 ) ) );
 	addChild( new Color4fPlug( "min", Gaffer::Plug::Out, Imath::Color4f( 0, 0, 0, 1 ) ) );
 	addChild( new Color4fPlug( "max", Gaffer::Plug::Out, Imath::Color4f( 0, 0, 0, 1 ) ) );
+
+	addChild( new ImagePlug( "__flattenedIn", Plug::In, Plug::Default & ~Plug::Serialisable ) );
+
+	DeepStatePtr deepStateNode = new DeepState( "__deepState" );
+	addChild( deepStateNode );
+
+	deepStateNode->inPlug()->setInput( inPlug() );
+	deepStateNode->deepStatePlug()->setValue( int( DeepState::TargetState::Flat ) );
+	flattenedInPlug()->setInput( deepStateNode->outPlug() );
 }
 
 ImageStats::~ImageStats()
@@ -166,13 +175,33 @@ const Color4fPlug *ImageStats::maxPlug() const
 	return getChild<Color4fPlug>( g_firstPlugIndex + 5 );
 }
 
+ImagePlug *ImageStats::flattenedInPlug()
+{
+	return getChild<ImagePlug>( g_firstPlugIndex + 6 );
+}
+
+const ImagePlug *ImageStats::flattenedInPlug() const
+{
+	return getChild<ImagePlug>( g_firstPlugIndex + 6 );
+}
+
+DeepState *ImageStats::deepState()
+{
+	return getChild<DeepState>( g_firstPlugIndex + 4 );
+}
+
+const DeepState *ImageStats::deepState() const
+{
+	return getChild<DeepState>( g_firstPlugIndex + 4 );
+}
+
 void ImageStats::affects( const Gaffer::Plug *input, AffectedPlugsContainer &outputs ) const
 {
 	ComputeNode::affects( input, outputs );
 	if(
-		input == inPlug()->dataWindowPlug() ||
-		input == inPlug()->channelNamesPlug() ||
-		input == inPlug()->channelDataPlug() ||
+		input == flattenedInPlug()->dataWindowPlug() ||
+		input == flattenedInPlug()->channelNamesPlug() ||
+		input == flattenedInPlug()->channelDataPlug() ||
 		input == channelsPlug() ||
 		areaPlug()->isAncestorOf( input )
 	)
