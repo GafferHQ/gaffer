@@ -37,6 +37,7 @@
 #ifndef GAFFERIMAGE_IMAGESAMPLER_H
 #define GAFFERIMAGE_IMAGESAMPLER_H
 
+#include "GafferImage/DeepState.h"
 #include "GafferImage/Export.h"
 #include "GafferImage/TypeIds.h"
 
@@ -84,6 +85,15 @@ class GAFFERIMAGE_API ImageSampler : public Gaffer::ComputeNode
 		// Returns the channel to be read for the specified child of colorPlug(),
 		// returning the empty string if the channel doesn't exist.
 		std::string channelName( const Gaffer::ValuePlug *output ) const;
+
+		// Input plug to receive the flattened image from the internal
+		// deepState plug.
+		ImagePlug *flattenedInPlug();
+		const ImagePlug *flattenedInPlug() const;
+
+		// The internal DeepState node.
+		GafferImage::DeepState *deepState();
+		const GafferImage::DeepState *deepState() const;
 
 		static size_t g_firstPlugIndex;
 
