@@ -421,6 +421,69 @@ class MergeTest( GafferImageTest.ImageTestCase ) :
 		self.assertAlmostEqual( sampler["color"]["b"].getValue(), 0.3 + 0.1 )
 		self.assertAlmostEqual( sampler["color"]["a"].getValue(), 0.4 + 0.2 )
 
+	def testNonFlatHashPassThrough( self ) :
+
+		constant1 = GafferImage.Constant()
+		constant1["color"].setValue( IECore.Color4f( 1 ) )
+
+		crop1 = GafferImage.Crop()
+		crop1["in"].setInput( constant1["out"] )
+		crop1["area"].setValue( IECore.Box2i( IECore.V2i( 10 ), IECore.V2i( 20 ) ) )
+		crop1["affectDisplayWindow"].setValue( False )
+
+		constant2 = GafferImage.Constant()
+		constant2["color"].setValue( IECore.Color4f( 1 ) )
+
+		crop2 = GafferImage.Crop()
+		crop2["in"].setInput( constant2["out"] )
+		crop2["area"].setValue( IECore.Box2i( IECore.V2i( 10 ), IECore.V2i( 20 ) ) )
+		crop2["affectDisplayWindow"].setValue( False )
+
+		deepMerge = GafferImage.DeepMerge()
+		deepMerge["in"][0].setInput( crop1["out"] )
+		deepMerge["in"][1].setInput( crop2["out"] )
+
+		merge = GafferImage.Merge()
+		merge["in"][0].setInput( deepMerge["out"] )
+		merge["in"][1].setInput( crop2["out"] )
+
+		self.assertEqual( deepMerge["out"].imageHash(), merge["out"].imageHash() )
+
+		deepMerge["enabled"].setValue( False )
+
+		self.assertNotEqual( deepMerge["out"].imageHash(), merge["out"].imageHash() )
+
+	def testSecondaryNonFlatIgnored( self ) :
+
+		img = GafferImage.ImageReader()
+		img["fileName"].setValue( self.rgbPath )
+
+		constant1 = GafferImage.Constant()
+		constant1["color"].setValue( IECore.Color4f( 0.1, 0.2, 0.3, 0.4 ) )
+		constant1["z"].setValue( 1.0 )
+		constant1["zBack"].setValue( 1.0 )
+
+		constant2 = GafferImage.Constant()
+		constant2["color"].setValue( IECore.Color4f( 0.9, 0.8, 0.7, 0.6 ) )
+		constant2["z"].setValue( 3.0 )
+		constant2["zBack"].setValue( 4.0 )
+
+		deepMerge = GafferImage.DeepMerge()
+		deepMerge["in"][0].setInput( constant1["out"] )
+		deepMerge["in"][1].setInput( constant2["out"] )
+
+		mergeFlat = GafferImage.Merge()
+		mergeFlat["in"][0].setInput( img["out"] )
+		mergeFlat["in"][1].setInput( constant1["out"] )
+
+		mergeMixed = GafferImage.Merge()
+		mergeMixed["in"][0].setInput( img["out"] )
+		mergeMixed["in"][1].setInput( deepMerge["out"] )
+		mergeMixed["in"][2].setInput( constant1["out"] )
+
+		self.assertEqual( mergeFlat["out"].imageHash(), mergeMixed["out"].imageHash() )
+		self.assertEqual( mergeFlat["out"].image(), mergeMixed["out"].image() )
+
 	def testDefaultFormat( self ) :
 
 		a = GafferImage.Constant()
