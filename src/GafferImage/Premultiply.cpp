@@ -118,7 +118,8 @@ void Premultiply::processChannelData( const Gaffer::Context *context, const Imag
 	tmpContext->set( ImagePlug::channelNameContextName, alphaChannel );
 	Context::Scope scopedContext( tmpContext.get() );
 
-	const std::vector<float> &a = inPlug()->channelDataPlug()->getValue()->readable();
+	ConstFloatVectorDataPtr aData = inPlug()->channelDataPlug()->getValue();
+	const std::vector<float> &a = aData->readable();
 	std::vector<float> &out = outData->writable();
 
 	std::vector<float>::const_iterator aIt = a.begin();
