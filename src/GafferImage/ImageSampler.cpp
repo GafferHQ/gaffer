@@ -58,6 +58,14 @@ ImageSampler::ImageSampler( const std::string &name )
 	addChild( new V2fPlug( "pixel" ) );
 	addChild( new Color4fPlug( "color", Plug::Out ) );
 
+	addChild( new ImagePlug( "__flattenedIn", Plug::In, Plug::Default & ~Plug::Serialisable ) );
+
+	ImageStatePtr imageStateNode = new ImageState( "__imageState" );
+	addChild( imageStateNode );
+
+	imageStateNode->inPlug()->setInput( imagePlug() );
+	imageStateNode->deepStatePlug()->setValue( ImagePlug::Flat );
+	flattenedInPlug()->setInput( imageStateNode->outPlug() );
 }
 
 ImageSampler::~ImageSampler()
@@ -94,13 +102,33 @@ const Gaffer::Color4fPlug *ImageSampler::colorPlug() const
 	return getChild<Color4fPlug>( g_firstPlugIndex + 2 );
 }
 
+ImagePlug *ImageSampler::flattenedInPlug()
+{
+	return getChild<ImagePlug>( g_firstPlugIndex + 3 );
+}
+
+const ImagePlug *ImageSampler::flattenedInPlug() const
+{
+	return getChild<ImagePlug>( g_firstPlugIndex + 3 );
+}
+
+ImageState *ImageSampler::imageState()
+{
+	return getChild<ImageState>( g_firstPlugIndex + 4 );
+}
+
+const ImageState *ImageSampler::imageState() const
+{
+	return getChild<ImageState>( g_firstPlugIndex + 4 );
+}
+
 void ImageSampler::affects( const Gaffer::Plug *input, AffectedPlugsContainer &outputs ) const
 {
 	ComputeNode::affects( input, outputs );
 
 	if(
-		input == imagePlug()->dataWindowPlug() ||
-		input == imagePlug()->channelDataPlug() ||
+		input == flattenedInPlug()->dataWindowPlug() ||
+		input == flattenedInPlug()->channelDataPlug() ||
 		input->parent<Plug>() == pixelPlug()
 	)
 	{
@@ -124,7 +152,7 @@ void ImageSampler::hash( const Gaffer::ValuePlug *output, const Gaffer::Context 
 			Box2i sampleWindow;
 			sampleWindow.extendBy( V2i( pixel ) - V2i( 1 ) );
 			sampleWindow.extendBy( V2i( pixel ) + V2i( 1 ) );
-			Sampler sampler( imagePlug(), channel, sampleWindow );
+			Sampler sampler( flattenedInPlug(), channel, sampleWindow );
 
 			sampler.hash( h );
 			h.append( pixel );
@@ -145,7 +173,7 @@ void ImageSampler::compute( Gaffer::ValuePlug *output, const Gaffer::Context *co
 			Box2i sampleWindow;
 			sampleWindow.extendBy( V2i( pixel ) - V2i( 1 ) );
 			sampleWindow.extendBy( V2i( pixel ) + V2i( 1 ) );
-			Sampler sampler( imagePlug(), channel, sampleWindow );
+			Sampler sampler( flattenedInPlug(), channel, sampleWindow );
 			sample = sampler.sample( pixel.x, pixel.y );
 		}
 
@@ -178,7 +206,7 @@ std::string ImageSampler::channelName( const Gaffer::ValuePlug *output ) const
 		name = "A";
 	}
 
-	ConstStringVectorDataPtr channelNames = imagePlug()->channelNamesPlug()->getValue();
+	ConstStringVectorDataPtr channelNames = flattenedInPlug()->channelNamesPlug()->getValue();
 	if( find( channelNames->readable().begin(), channelNames->readable().end(), name ) != channelNames->readable().end() )
 	{
 		return name;
