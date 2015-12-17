@@ -51,7 +51,7 @@ QtGui = GafferUI._qtImport( "QtGui" )
 #
 #	- "layout:index" controls ordering of plugs within the layout
 #	- "layout:section" places the plug in a named section of the layout
-#	- "divider" specifies whether or not a plug should be followed by a divider
+#	- "layout:divider" specifies whether or not a plug should be followed by a divider
 #	- "layout:activator" the name of an activator to control editability
 #	- "layout:visibilityActivator" the name of an activator to control visibility
 #
@@ -398,10 +398,11 @@ class PlugLayout( GafferUI.Widget ) :
 	def __staticItemMetadataValue( cls, item, name, parent ) :
 
 		if isinstance( item, Gaffer.Plug ) :
-			##\todo Update "divider" and "label" items to use prefix too
-			if name not in ( "divider", "label" ) :
-				name = "layout:" + name
-			return Gaffer.Metadata.plugValue( item, name )
+			v = Gaffer.Metadata.plugValue( item, "layout:" + name )
+			if v is None and name in ( "divider", "label" ) :
+				# Backwards compatibility with old unprefixed metadata names.
+				v = Gaffer.Metadata.plugValue( item, name )
+			return v
 		else :
 			return cls.__metadataValue( parent, "layout:customWidget:" + item + ":" + name )
 
