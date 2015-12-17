@@ -143,10 +143,10 @@ class _ShortcutEventFilter( QtCore.QObject ) :
 		# striving to do all event handling in GafferUI with this
 		# bubble-up-until-handled methodology anyway, so doing
 		# shortcuts this way seems to make sense.
-		if qEvent.type() == qEvent.Type.ShortcutOverride :
+		if qEvent.type() == qEvent.ShortcutOverride :
 
 			menuBar = GafferUI.Widget._owner( self.parent() )
-			keySequence = QtGui.QKeySequence( qEvent.key() | qEvent.modifiers() )
+			keySequence = QtGui.QKeySequence( qEvent.key() | int( qEvent.modifiers() ) )
 			for menu in menuBar._MenuBar__subMenus :
 				if menu._qtWidget().isEmpty() :
 					menu._buildFully()
