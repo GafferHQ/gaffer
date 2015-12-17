@@ -78,6 +78,9 @@ inline std::string baseName( const std::string &channelName );
 /// and "A" respectively. Returns -1 for all other base names.
 inline int colorIndex( const std::string &channelName );
 
+/// Returns true if the specified channel exists in image
+inline bool channelExists( const ImagePlug *image, const std::string &channelName );
+
 enum TileOrder
 {
 	Unordered,

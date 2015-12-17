@@ -479,6 +479,14 @@ inline int colorIndex( const std::string &channelName )
 	}
 }
 
+inline bool channelExists( const ImagePlug *image, const std::string &channelName )
+{
+	IECore::ConstStringVectorDataPtr channelNamesData = image->channelNamesPlug()->getValue();
+	const std::vector<std::string> &channelNames = channelNamesData->readable();
+
+	return std::find( channelNames.begin(), channelNames.end(), channelName ) != channelNames.end();
+}
+
 template <class ThreadableFunctor>
 void parallelProcessTiles( const ImagePlug *imagePlug, ThreadableFunctor &functor, const Imath::Box2i &window )
 {
