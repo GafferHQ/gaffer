@@ -185,7 +185,7 @@ Gaffer.Metadata.registerNode(
 			"plugValueWidget:type", "GafferImageUI.ImageViewToolbar._TogglePlugValueWidget",
 			"togglePlugValueWidget:imagePrefix", "clipping",
 			"togglePlugValueWidget:defaultToggleValue", True,
-			"divider", True,
+			"layout:divider", True,
 
 		],
 
@@ -236,7 +236,7 @@ Gaffer.Metadata.registerNode(
 			"plugValueWidget:type", "GafferImageUI.ImageViewToolbar._ColorInspectorPlugValueWidget",
 			"label", "",
 			"layout:index", 0,
-			"divider", True,
+			"layout:divider", True,
 
 		],
 
