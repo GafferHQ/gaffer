@@ -344,7 +344,7 @@ class Menu( GafferUI.Widget ) :
 			# Here we're limiting the scope so that conflicts don't occur, deferring
 			# to the code in MenuBar to manage triggering of the action with manual
 			# shortcut processing.
-			qtAction.setShortcutContext( QtCore.Qt.WidgetWithChildrenShortcut )
+			qtAction.setShortcutContext( QtCore.Qt.WidgetShortcut )
 
 		# when an icon file path is defined in the menu definition
 		icon = getattr( item, "icon", None )
