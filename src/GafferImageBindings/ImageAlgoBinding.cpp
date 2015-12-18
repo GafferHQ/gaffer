@@ -48,6 +48,7 @@ void bindImageAlgo()
 	def( "layerName", &GafferImage::layerName );
 	def( "baseName", &GafferImage::baseName );
 	def( "colorIndex", &GafferImage::colorIndex );
+	def( "channelExists", &GafferImage::channelExists );
 
 }
 

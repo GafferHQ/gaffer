@@ -40,6 +40,7 @@
 #include "Gaffer/Context.h"
 
 #include "GafferImage/Merge.h"
+#include "GafferImage/ImageAlgo.h"
 
 using namespace std;
 using namespace Imath;
@@ -187,6 +188,7 @@ void Merge::hashChannelData( const GafferImage::ImagePlug *output, const Gaffer:
 {
 	ImageProcessor::hashChannelData( output, context, h );
 
+	const std::string channelName = context->get<std::string>( ImagePlug::channelNameContextName );
 	const V2i tileOrigin = context->get<V2i>( ImagePlug::tileOriginContextName );
 	const Box2i tileBound( tileOrigin, tileOrigin + V2i( ImagePlug::tileSize() ) );
 
@@ -197,8 +199,15 @@ void Merge::hashChannelData( const GafferImage::ImagePlug *output, const Gaffer:
 			continue;
 		}
 
-		(*it)->channelDataPlug()->hash( h );
-		h.append( (*it)->channelDataHash( "A", tileOrigin ) );
+		if( channelExists( it->get(), channelName ) )
+		{
+			(*it)->channelDataPlug()->hash( h );
+		}
+
+		if( channelExists( it->get(), "A" ) )
+		{
+			h.append( (*it)->channelDataHash( "A", tileOrigin ) );
+		}
 
 		// The hash of the channel data we include above represents just the data in
 		// the tile itself, and takes no account of the possibility that parts of the
@@ -222,47 +231,69 @@ IECore::ConstFloatVectorDataPtr Merge::computeChannelData( const std::string &ch
 	switch( operationPlug()->getValue() )
 	{
 		case Add :
-			return merge( opAdd, tileOrigin );
+			return merge( opAdd, channelName, tileOrigin);
 		case Atop :
-			return merge( opAtop, tileOrigin );
+			return merge( opAtop, channelName, tileOrigin);
 		case Divide :
-			return merge( opDivide, tileOrigin );
+			return merge( opDivide, channelName, tileOrigin);
 		case In :
-			return merge( opIn, tileOrigin );
+			return merge( opIn, channelName, tileOrigin);
 		case Out :
-			return merge( opOut, tileOrigin );
+			return merge( opOut, channelName, tileOrigin);
 		case Mask :
-			return merge( opMask, tileOrigin );
+			return merge( opMask, channelName, tileOrigin);
 		case Matte :
-			return merge( opMatte, tileOrigin );
+			return merge( opMatte, channelName, tileOrigin);
 		case Multiply :
-			return merge( opMultiply, tileOrigin );
+			return merge( opMultiply, channelName, tileOrigin);
 		case Over :
-			return merge( opOver, tileOrigin );
+			return merge( opOver, channelName, tileOrigin);
 		case Subtract :
-			return merge( opSubtract, tileOrigin );
+			return merge( opSubtract, channelName, tileOrigin);
 		case Difference :
-			return merge( opDifference, tileOrigin );
+			return merge( opDifference, channelName, tileOrigin);
 		case Under :
-			return merge( opUnder, tileOrigin );
+			return merge( opUnder, channelName, tileOrigin);
 	}
 
 	throw Exception( "Merge::computeChannelData : Invalid operation mode." );
 }
 
 template<typename F>
-IECore::ConstFloatVectorDataPtr Merge::merge( F f, const Imath::V2i &tileOrigin ) const
+IECore::ConstFloatVectorDataPtr Merge::merge( F f, const std::string &channelName, const Imath::V2i &tileOrigin ) const
 {
 	FloatVectorDataPtr resultData = NULL;
 	// Temporary buffer for computing the alpha of intermediate composited layers.
 	FloatVectorDataPtr resultAlphaData = NULL;
 
 	const Box2i tileBound( tileOrigin, tileOrigin + V2i( ImagePlug::tileSize() ) );
+
 	for( ImagePlugIterator it( inPlugs() ); it != it.end(); ++it )
 	{
 		if( !(*it)->getInput<ValuePlug>() )
 		{
 			continue;
+		}
+
+		ConstFloatVectorDataPtr channelData;
+		ConstFloatVectorDataPtr alphaData;
+
+		if( channelExists( it->get(), channelName ) )
+		{
+			channelData = (*it)->channelDataPlug()->getValue();
+		}
+		else
+		{
+			channelData = ImagePlug::blackTile();
+		}
+
+		if( channelExists( it->get(), "A" ) )
+		{
+			alphaData = (*it)->channelData( "A", tileOrigin );
+		}
+		else
+		{
+			alphaData = ImagePlug::blackTile();
 		}
 
 		const Box2i validBound = boxIntersection( tileBound, (*it)->dataWindowPlug()->getValue() );
@@ -279,8 +310,8 @@ IECore::ConstFloatVectorDataPtr Merge::merge( F f, const Imath::V2i &tileOrigin 
 			/// the operation for in[1:], even if in[0] is disconnected. In other
 			/// words, shouldn't multiplying a white constant over an unconnected
 			/// in[0] produce black?
-			resultData = (*it)->channelDataPlug()->getValue()->copy();
-			resultAlphaData = (*it)->channelData( "A", tileOrigin )->copy();
+			resultData = channelData->copy();
+			resultAlphaData = alphaData->copy();
 			float *B = &resultData->writable().front();
 			float *b = &resultAlphaData->writable().front();
 			for( int y = tileBound.min.y; y < tileBound.max.y; ++y )
@@ -299,9 +330,6 @@ IECore::ConstFloatVectorDataPtr Merge::merge( F f, const Imath::V2i &tileOrigin 
 		else
 		{
 			// A higher layer (A) which must be composited over the result (B).
-			ConstFloatVectorDataPtr channelData = (*it)->channelDataPlug()->getValue();
-			ConstFloatVectorDataPtr alphaData = (*it)->channelData( "A", tileOrigin );
-
 			const float *A = &channelData->readable().front();
 			float *B = &resultData->writable().front();
 			const float *a = &alphaData->readable().front();

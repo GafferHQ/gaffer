@@ -93,6 +93,24 @@ class ImageAlgoTest( GafferImageTest.ImageTestCase ) :
 		] :
 			self.assertEqual( GafferImage.colorIndex( channelName ), index )
 
+	def testChannelExists( self ) :
+
+		c = GafferImage.Constant()
+
+		d = GafferImage.DeleteChannels()
+		d["in"].setInput( c["out"] )
+		d["mode"].setValue( GafferImage.DeleteChannels.Mode.Delete )
+		d["channels"].setValue( IECore.StringVectorData( [] ) )
+
+		self.assertTrue( GafferImage.channelExists( d["out"], "R" ) )
+		self.assertTrue( GafferImage.channelExists( d["out"], "G" ) )
+		self.assertTrue( GafferImage.channelExists( d["out"], "B" ) )
+		self.assertTrue( GafferImage.channelExists( d["out"], "A" ) )
+
+		for chan in [ "R", "G", "B", "A" ] :
+			d["channels"].setValue( IECore.StringVectorData( [ chan ] ) )
+			self.assertFalse( GafferImage.channelExists( d["out"], chan ) )
+
 	def testParallelProcessEmptyDataWindow( self ) :
 
 		d = GafferImage.Display()
@@ -101,6 +119,7 @@ class ImageAlgoTest( GafferImageTest.ImageTestCase ) :
 		GafferImageTest.processTiles( d["out"] )
 		d["out"].image()
 		d["out"].imageHash()
+
 
 if __name__ == "__main__":
 	unittest.main()
