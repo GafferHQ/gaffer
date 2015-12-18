@@ -130,6 +130,8 @@ class _ShortcutEventFilter( QtCore.QObject ) :
 
 		QtCore.QObject.__init__( self, parent )
 
+		self.__shortcutAction = None
+
 	def eventFilter( self, qObject, qEvent ) :
 
 		# Qt bubbles up these shortcut override events from
@@ -145,25 +147,44 @@ class _ShortcutEventFilter( QtCore.QObject ) :
 		# shortcuts this way seems to make sense.
 		if qEvent.type() == qEvent.ShortcutOverride :
 
+			self.__shortcutAction = None
+			keySequence = self.__keySequence( qEvent )
 			menuBar = GafferUI.Widget._owner( self.parent() )
-			keySequence = QtGui.QKeySequence( qEvent.key() | int( qEvent.modifiers() ) )
 			for menu in menuBar._MenuBar__subMenus :
 				if menu._qtWidget().isEmpty() :
 					menu._buildFully()
-				if self.__handleShortcut( keySequence, menu._qtWidget() ) :
+				action = self.__matchingAction( keySequence, menu._qtWidget() )
+				if action is not None :
+					# Store for use in KeyPress
+					self.__shortcutAction = action
 					qEvent.accept()
 					return True
 
+		# We handle the shortcut override event, but that just
+		# means that we then have the option of handling the
+		# associated keypress, which is what we do here.
+		elif qEvent.type() == qEvent.KeyPress :
+
+			if self.__shortcutAction is not None and self.__keySequence( qEvent ) in self.__shortcutAction.shortcuts() :
+				self.__shortcutAction.trigger()
+				self.__shortcutAction = None
+				qEvent.accept()
+				return True
+
 		return QtCore.QObject.eventFilter( self, qObject, qEvent )
 
-	def __handleShortcut( self, keySequence, menu ) :
+	def __keySequence( self, keyEvent ) :
+
+		return QtGui.QKeySequence( keyEvent.key() | int( keyEvent.modifiers() ) )
+
+	def __matchingAction( self, keySequence, menu ) :
 
 		for action in menu.actions() :
 			if keySequence in action.shortcuts() :
-				action.trigger()
-				return True
+				return action
 			if action.menu() is not None :
-				if self.__handleShortcut( keySequence, action.menu() ) :
-					return True
+				a = self.__matchingAction( keySequence, action.menu() )
+				if a is not None :
+					return a
 
-		return False
+		return None
