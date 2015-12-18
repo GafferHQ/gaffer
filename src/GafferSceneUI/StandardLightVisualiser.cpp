@@ -522,7 +522,7 @@ const char *StandardLightVisualiser::areaLightDrawFragSource()
 		""
 		"void main()"
 		"{"
-			"vec2 texCoords = fragmentst;"
+			"vec2 texCoords = vec2( fragmentst.x, 1 - fragmentst.y );"
 			"if( sphericalProjection )"
 			"{"
 			"	const float toUnit = 0.5 / 3.1415926535897932384626433832795;"
