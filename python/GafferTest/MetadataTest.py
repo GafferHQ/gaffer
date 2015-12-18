@@ -962,6 +962,41 @@ class MetadataTest( GafferTest.TestCase ) :
 		self.assertEqual( Gaffer.Metadata.plugValue( s2["n"]["p"], "test" ), needsQuoting )
 		self.assertEqual( Gaffer.Metadata.plugValue( s2["n"]["p"], needsQuoting ), "test" )
 
+	def testSerialisationOnlyUsesDataWhenNecessary( self ) :
+
+		s = Gaffer.ScriptNode()
+		s["n"] = Gaffer.Node()
+		s["n"]["p"] = Gaffer.Plug( flags = Gaffer.Plug.Flags.Default | Gaffer.Plug.Flags.Dynamic )
+
+		for value in [
+			"s",
+			1,
+			2.0,
+			True,
+			IECore.Color3f( 0 ),
+			IECore.V2f( 0 ),
+			IECore.V2i( 0 ),
+			IECore.V3i( 0 ),
+			IECore.StringVectorData( [ "one", "two" ] ),
+			IECore.IntVectorData( [ 1, 2, 3 ] ),
+		] :
+
+			Gaffer.Metadata.registerNodeValue( s["n"], "test", value )
+			Gaffer.Metadata.registerPlugValue( s["n"]["p"], "test", value )
+
+			self.assertEqual( Gaffer.Metadata.nodeValue( s["n"], "test" ), value )
+			self.assertEqual( Gaffer.Metadata.plugValue( s["n"]["p"], "test" ), value )
+
+			ss = s.serialise()
+			if not isinstance( value, IECore.Data ) :
+				self.assertTrue( "Data" not in ss )
+
+			s2 = Gaffer.ScriptNode()
+			s2.execute( ss )
+
+			self.assertEqual( Gaffer.Metadata.nodeValue( s2["n"], "test" ), value )
+			self.assertEqual( Gaffer.Metadata.plugValue( s2["n"]["p"], "test" ), value )
+
 if __name__ == "__main__":
 	unittest.main()
 
