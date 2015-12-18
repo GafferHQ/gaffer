@@ -41,6 +41,7 @@ import weakref
 import gc
 import os
 import shutil
+import inspect
 
 import IECore
 
@@ -1254,6 +1255,22 @@ a = A()"""
 		s2.execute( s.serialise() )
 		self.assertEqual( s2["framesPerSecond"].getValue(), 48.0 )
 		self.assertEqual( s2.context().getFramesPerSecond(), 48.0 )
+
+	def testLineNumberForExecutionSyntaxError( self ) :
+
+		s = Gaffer.ScriptNode()
+		self.assertRaisesRegexp(
+			Exception,
+			"^Exception : Line 2",
+			s.execute,
+			inspect.cleandoc(
+				"""
+				a = 10
+				i am a syntax error
+				b = 20
+				"""
+			)
+		)
 
 if __name__ == "__main__":
 	unittest.main()
