@@ -541,14 +541,17 @@ std::string metadataSerialisation( const Gaffer::Node *node, const std::string &
 	std::string result;
 	for( std::vector<InternedString>::const_iterator it = keys.begin(), eIt = keys.end(); it != eIt; ++it )
 	{
+		object pythonKey( it->c_str() );
+		std::string key = extract<std::string>( pythonKey.attr( "__repr__" )() );
+
 		ConstDataPtr value = Metadata::nodeValue<Data>( node, *it );
 		object pythonValue( boost::const_pointer_cast<Data>( value ) );
 		std::string stringValue = extract<std::string>( pythonValue.attr( "__repr__" )() );
 
 		result += boost::str(
-			boost::format( "Gaffer.Metadata.registerNodeValue( %s, \"%s\", %s )\n" ) %
+			boost::format( "Gaffer.Metadata.registerNodeValue( %s, %s, %s )\n" ) %
 				identifier %
-				*it %
+				key %
 				stringValue
 		);
 	}
@@ -564,14 +567,17 @@ std::string metadataSerialisation( const Plug *plug, const std::string &identifi
 	std::string result;
 	for( std::vector<InternedString>::const_iterator it = keys.begin(), eIt = keys.end(); it != eIt; ++it )
 	{
+		object pythonKey( it->c_str() );
+		std::string key = extract<std::string>( pythonKey.attr( "__repr__" )() );
+
 		ConstDataPtr value = Metadata::plugValue<Data>( plug, *it );
 		object pythonValue( boost::const_pointer_cast<Data>( value ) );
 		std::string stringValue = extract<std::string>( pythonValue.attr( "__repr__" )() );
 
 		result += boost::str(
-			boost::format( "Gaffer.Metadata.registerPlugValue( %s, \"%s\", %s )\n" ) %
+			boost::format( "Gaffer.Metadata.registerPlugValue( %s, %s, %s )\n" ) %
 				identifier %
-				*it %
+				key %
 				stringValue
 		);
 	}

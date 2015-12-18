@@ -936,6 +936,32 @@ class MetadataTest( GafferTest.TestCase ) :
 		self.assertTrue( names.index( "testInt" ) < names.index( "testIntVectorData" ) )
 		self.assertTrue( names.index( "testIntVectorData" ) < names.index( "testDynamicValue" ) )
 
+	def testSerialisationQuoting( self ) :
+
+		s = Gaffer.ScriptNode()
+		s["n"] = Gaffer.Node()
+		s["n"]["p"] = Gaffer.Plug( flags = Gaffer.Plug.Flags.Default | Gaffer.Plug.Flags.Dynamic )
+
+		needsQuoting = """'"\n\\'!"""
+
+		Gaffer.Metadata.registerNodeValue( s["n"], "test", needsQuoting )
+		Gaffer.Metadata.registerNodeValue( s["n"], needsQuoting, "test" )
+		Gaffer.Metadata.registerPlugValue( s["n"]["p"], "test", needsQuoting )
+		Gaffer.Metadata.registerPlugValue( s["n"]["p"], needsQuoting, "test" )
+
+		self.assertEqual( Gaffer.Metadata.nodeValue( s["n"], "test" ), needsQuoting )
+		self.assertEqual( Gaffer.Metadata.nodeValue( s["n"], needsQuoting ), "test" )
+		self.assertEqual( Gaffer.Metadata.plugValue( s["n"]["p"], "test" ), needsQuoting )
+		self.assertEqual( Gaffer.Metadata.plugValue( s["n"]["p"], needsQuoting ), "test" )
+
+		s2 = Gaffer.ScriptNode()
+		s2.execute( s.serialise() )
+
+		self.assertEqual( Gaffer.Metadata.nodeValue( s2["n"], "test" ), needsQuoting )
+		self.assertEqual( Gaffer.Metadata.nodeValue( s2["n"], needsQuoting ), "test" )
+		self.assertEqual( Gaffer.Metadata.plugValue( s2["n"]["p"], "test" ), needsQuoting )
+		self.assertEqual( Gaffer.Metadata.plugValue( s2["n"]["p"], needsQuoting ), "test" )
+
 if __name__ == "__main__":
 	unittest.main()
 
