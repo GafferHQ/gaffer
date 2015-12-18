@@ -41,11 +41,33 @@ import GafferUI
 
 class StandardNodeToolbar( GafferUI.NodeToolbar ) :
 
-	def __init__( self, node, **kw ) :
+	def __init__( self, node, edge = GafferUI.Edge.Top, **kw ) :
 
-		self.__row = GafferUI.ListContainer( GafferUI.ListContainer.Orientation.Horizontal, spacing = 4 )
+		layout = GafferUI.PlugLayout(
+			node,
+			orientation = GafferUI.ListContainer.Orientation.Horizontal if edge in ( GafferUI.Edge.Top, GafferUI.Edge.Bottom ) else GafferUI.ListContainer.Orientation.Vertical,
+			layoutName = "toolbarLayout",
+			rootSection = str( edge )
+		)
 
-		GafferUI.NodeToolbar.__init__( self, node, self.__row, **kw )
+		GafferUI.NodeToolbar.__init__( self, node, layout, **kw )
 
-		self.__row.append( GafferUI.Spacer( IECore.V2i( 1, 1 ) ), expand = True )
-		self.__row.append( GafferUI.PlugLayout( node, orientation = GafferUI.ListContainer.Orientation.Horizontal ) )
+	@staticmethod
+	def top( node ) :
+
+		return StandardNodeToolbar( node, edge = GafferUI.Edge.Top )
+
+	@staticmethod
+	def bottom( node ) :
+
+		return StandardNodeToolbar( node, edge = GafferUI.Edge.Bottom )
+
+	@staticmethod
+	def left( node ) :
+
+		return StandardNodeToolbar( node, edge = GafferUI.Edge.Left )
+
+	@staticmethod
+	def right( node ) :
+
+		return StandardNodeToolbar( node, edge = GafferUI.Edge.Right )
