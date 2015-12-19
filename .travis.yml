@@ -14,6 +14,8 @@ addons:
         - doxygen
         - gcc-4.8
         - g++-4.8
+        - gcc-5
+        - g++-5
 
 before_install:
     - export DISPLAY=:99.0
@@ -62,6 +64,7 @@ env:
     - COMPILER_VERSION= CXXSTD=c++98
     - COMPILER_VERSION=4.8 CXXSTD=c++98
     - COMPILER_VERSION=4.8 CXXSTD=c++11
+    - COMPILER_VERSION=5 CXXSTD=c++11
 
 matrix:
     exclude:
@@ -69,3 +72,5 @@ matrix:
           env: COMPILER_VERSION=4.8 CXXSTD=c++98
         - compiler: clang
           env: COMPILER_VERSION=4.8 CXXSTD=c++11
+        - compiler: clang
+          env: COMPILER_VERSION=5 CXXSTD=c++11
