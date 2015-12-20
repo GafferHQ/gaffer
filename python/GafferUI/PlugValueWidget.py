@@ -635,4 +635,3 @@ class PlugValueWidget( GafferUI.Widget ) :
 				self.getPlug().setValue( self._convertValue( event.data ) )
 
 		return True
-

@@ -51,14 +51,14 @@ class SubGraph : public DependencyNode
 		virtual ~SubGraph();
 
 		IE_CORE_DECLARERUNTIMETYPEDEXTENSION( Gaffer::SubGraph, SubGraphTypeId, DependencyNode );
-		
+
 		/// Does nothing
 		void affects( const Plug *input, AffectedPlugsContainer &outputs ) const;
-		
+
 		/// Returns getChild<BoolPlug>( "enabled" ).
 		virtual BoolPlug *enabledPlug();
 		virtual const BoolPlug *enabledPlug() const;
-		
+
 		/// Implemented to allow a user to define a pass-through behaviour
 		/// by wiring the nodes inside this sub graph up appropriately. The
 		/// input to the output plug must be connected from a node inside

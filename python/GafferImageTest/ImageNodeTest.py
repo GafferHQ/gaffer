@@ -119,4 +119,3 @@ class ImageNodeTest( GafferImageTest.ImageTestCase ) :
 
 if __name__ == "__main__":
 	unittest.main()
-

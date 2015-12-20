@@ -66,23 +66,23 @@ class FileSequencePathFilter : public PathFilter
 			Verbose = Files | SequentialFiles,
 			All = Files | SequentialFiles | Sequences,
 		};
-		
+
 		FileSequencePathFilter( Keep mode = Concise, IECore::CompoundDataPtr userData = NULL );
 		virtual ~FileSequencePathFilter();
 
 		IE_CORE_DECLARERUNTIMETYPEDEXTENSION( Gaffer::FileSequencePathFilter, FileSequencePathFilterTypeId, Gaffer::PathFilter );
-		
+
 		Keep getMode() const;
 		void setMode( Keep mode );
 
 	protected :
 
 		virtual void doFilter( std::vector<PathPtr> &paths ) const;
-	
+
 	private :
-		
+
 		bool remove( PathPtr path ) const;
-		
+
 		Keep m_mode;
 
 };

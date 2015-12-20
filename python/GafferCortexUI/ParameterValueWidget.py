@@ -183,4 +183,3 @@ def __setValue( parameterHandler, value ) :
 	parameterHandler.parameter().setValue( value )
 	with Gaffer.UndoContext( parameterHandler.plug().ancestor( Gaffer.ScriptNode.staticTypeId() ) ) :
 		parameterHandler.setPlugValue()
-

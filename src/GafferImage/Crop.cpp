@@ -396,4 +396,3 @@ void Crop::compute( Gaffer::ValuePlug *output, const Gaffer::Context *context ) 
 		ImageProcessor::compute( output, context );
 	}
 }
-

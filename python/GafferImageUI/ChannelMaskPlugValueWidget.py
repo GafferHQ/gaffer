@@ -124,4 +124,3 @@ class ChannelMaskPlugValueWidget( GafferUI.PlugValueWidget ) :
 			self.getPlug().setValue( value )
 
 GafferUI.PlugValueWidget.registerType( GafferImage.ChannelMaskPlug, ChannelMaskPlugValueWidget )
-

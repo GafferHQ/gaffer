@@ -136,4 +136,3 @@ class SelectionMenu( GafferUI.Widget ) :
 
 	def insertSeparator( self, index ):
 		self._qtWidget().insertSeparator( index )
-

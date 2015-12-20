@@ -115,4 +115,3 @@ class UnpremultiplyTest( GafferImageTest.ImageTestCase ) :
 						self.assertEqual( result, color[channelName] )
 					else:
 						self.assertEqual( result, color[channelName] / color[alphaChannelName] )
-

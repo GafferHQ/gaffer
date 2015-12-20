@@ -105,10 +105,10 @@ def __scheduleUpdate( plug, force = False ) :
 	GafferUI.EventLoop.executeOnUIThread( lambda : __update( plug ) )
 
 def __update( plug ) :
-	
+
 	# it's possible that this function can get called on a plug whose node has
 	# been deleted, so we always check if the node exists:
-	
+
 	node = plug.node()
 	if node:
 		updateCountPlug = node["__updateCount"]

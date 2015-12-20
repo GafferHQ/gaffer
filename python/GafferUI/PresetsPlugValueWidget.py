@@ -47,7 +47,7 @@ class PresetsPlugValueWidget( GafferUI.PlugValueWidget ) :
 
 		self.__menuButton = GafferUI.MenuButton( "", menu = GafferUI.Menu( Gaffer.WeakMethod( self.__menuDefinition ) ) )
 		GafferUI.PlugValueWidget.__init__( self, self.__menuButton, plug, **kw )
-		
+
 		self.__plugMetadataChangedConnection = Gaffer.Metadata.plugValueChangedSignal().connect( Gaffer.WeakMethod( self.__plugMetadataChanged ) )
 
 		self._addPopupMenu( self.__menuButton )

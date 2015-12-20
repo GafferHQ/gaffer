@@ -84,7 +84,7 @@ class LazyMethod( object ) :
 				return
 
 			elif self.__deferUntilVisible and not widget.visible() :
-				
+
 				setattr(
 					widget,
 					method.__name__ + "__VisibilityChangedConnection",
@@ -92,7 +92,7 @@ class LazyMethod( object ) :
 						functools.partial( self.__visibilityChanged, method = method )
 					)
 				)
-			
+
 			elif self.__deferUntilPlaybackStops and self.__playback( widget ).getState() != GafferUI.Playback.State.Stopped :
 
 				setattr(
@@ -118,7 +118,7 @@ class LazyMethod( object ) :
 		wrapper.flush = flush
 
 		return wrapper
-	
+
 	@classmethod
 	def __playback( cls, widget ) :
 
@@ -149,7 +149,7 @@ class LazyMethod( object ) :
 		if widget is None :
 			return
 
-		cls.__doPendingCalls( widget, method )	
+		cls.__doPendingCalls( widget, method )
 
 	@classmethod
 	def __idle( cls, widgetWeakref, method ) :

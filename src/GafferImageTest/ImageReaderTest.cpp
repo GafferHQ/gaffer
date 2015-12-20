@@ -154,4 +154,3 @@ void GafferImageTest::testOIIOExrRead()
 		throw IECore::Exception( "Failed to find $GAFFER_ROOT env. Has it been set?" );
 	}
 }
-

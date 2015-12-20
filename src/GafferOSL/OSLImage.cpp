@@ -72,7 +72,7 @@ OSLImage::OSLImage( const std::string &name )
 	// simply references data direct from the shading plug, which will itself
 	// be cached. we don't want to count the memory usage for that twice.
 	outPlug()->channelDataPlug()->setFlags( Plug::Cacheable, false );
-	
+
 	// We don't ever want to change these, so we make pass-through connections.
 	outPlug()->formatPlug()->setInput( inPlug()->formatPlug() );
 	outPlug()->dataWindowPlug()->setInput( inPlug()->dataWindowPlug() );

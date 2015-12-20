@@ -2,9 +2,9 @@ import IECore
 
 import GafferScene
 
-GafferScene.Displays.registerDisplay( 
+GafferScene.Displays.registerDisplay(
 	"AOVs/beauty",
-	IECore.Display( 
+	IECore.Display(
 		"/tmp/beauty.####.exr",
 		"exr",
 		"rgba",
@@ -14,9 +14,9 @@ GafferScene.Displays.registerDisplay(
 	)
 )
 
-GafferScene.Displays.registerDisplay( 
+GafferScene.Displays.registerDisplay(
 	"AOVs/diffuse",
-	IECore.Display( 
+	IECore.Display(
 		"/tmp/diffuse.####.exr",
 		"exr",
 		"aov_diffuse",
@@ -26,9 +26,9 @@ GafferScene.Displays.registerDisplay(
 	)
 )
 
-GafferScene.Displays.registerDisplay( 
+GafferScene.Displays.registerDisplay(
 	"AOVs/specular",
-	IECore.Display( 
+	IECore.Display(
 		"/tmp/specular.####.exr",
 		"exr",
 		"aov_specular",
@@ -38,9 +38,9 @@ GafferScene.Displays.registerDisplay(
 	)
 )
 
-GafferScene.Displays.registerDisplay( 
+GafferScene.Displays.registerDisplay(
 	"AOVs/indirectDiffuse",
-	IECore.Display( 
+	IECore.Display(
 		"/tmp/indirectDiffuse.####.exr",
 		"exr",
 		"aov_indirectDiffuse",
@@ -50,9 +50,9 @@ GafferScene.Displays.registerDisplay(
 	)
 )
 
-GafferScene.Displays.registerDisplay( 
+GafferScene.Displays.registerDisplay(
 	"AOVs/indirectSpecular",
-	IECore.Display( 
+	IECore.Display(
 		"/tmp/indirectSpecular.####.exr",
 		"exr",
 		"aov_indirectSpecular",

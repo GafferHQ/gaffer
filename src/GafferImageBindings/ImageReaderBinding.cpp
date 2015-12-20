@@ -71,7 +71,7 @@ void GafferImageBindings::bindImageReader()
 		.value( "Black", ImageReader::Black )
 		.value( "Hold", ImageReader::Hold )
 	;
-	
+
 	boost::python::enum_<ImageReader::FrameMaskMode>( "FrameMaskMode" )
 		.value( "None", ImageReader::None )
 		.value( "BlackOutside", ImageReader::BlackOutside )

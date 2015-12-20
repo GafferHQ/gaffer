@@ -163,4 +163,3 @@ class Playback :
 			frame = self.__frameRange[1] + ( frame - math.floor( frame ) )
 
 		self.context().setFrame( frame )
-

@@ -113,10 +113,10 @@ class InteractiveRender : public Gaffer::Node
 		void parentChanged( Gaffer::GraphComponent *child, Gaffer::GraphComponent *oldParent );
 
 		void update();
-		
+
 		static void runPipeline(tbb::pipeline *p);
 		void outputScene( bool update );
-		
+
 		void updateLights();
 		void updateAttributes();
 		void updateCameras();
@@ -139,7 +139,7 @@ class InteractiveRender : public Gaffer::Node
 		class SceneGraphIteratorFilter;
 		class SceneGraphEvaluatorFilter;
 		class SceneGraphOutputFilter;
-		
+
 		IECore::RendererPtr m_renderer;
 		ConstScenePlugPtr m_scene;
 		State m_state;

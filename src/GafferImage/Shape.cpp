@@ -65,10 +65,10 @@ Shape::Shape( const std::string &name )
 	addChild( new Color4fPlug( "shadowColor", Gaffer::Plug::In, Color4f( 0, 0, 0, 1 ) ) );
 	addChild( new V2fPlug( "shadowOffset", Gaffer::Plug::In, V2f( 5, -5 ) ) );
 	addChild( new FloatPlug( "shadowBlur", Gaffer::Plug::In, 0.0f, 0.0f ) );
-	
+
 	// We generate our shape and shadow on the __shape and __shadowShape output plugs
 	// and then use an internal node network to merge them over the input.
-	
+
 	addChild( new ImagePlug( "__shape", Gaffer::Plug::Out, Plug::Default & ~Plug::Serialisable ) );
 	addChild( new ImagePlug( "__shadowShape", Gaffer::Plug::Out, Plug::Default & ~Plug::Serialisable ) );
 
@@ -78,12 +78,12 @@ Shape::Shape( const std::string &name )
 	shadowBlur->radiusPlug()->getChild( 0 )->setInput( shadowBlurPlug() );
 	shadowBlur->radiusPlug()->getChild( 1 )->setInput( shadowBlurPlug() );
 	shadowBlur->expandDataWindowPlug()->setValue( true );
-	
+
 	ImageTransformPtr shadowTransform = new ImageTransform( "__shadowTransform" );
 	addChild( shadowTransform );
 	shadowTransform->inPlug()->setInput( shadowBlur->outPlug() );
 	shadowTransform->transformPlug()->translatePlug()->setInput( shadowOffsetPlug() );
-	
+
 	MergePtr shadowMerge = new Merge( "__shadowMerge" );
 	addChild( shadowMerge );
 	shadowMerge->inPlugs()->getChild<ImagePlug>( 0 )->setInput( inPlug() );
@@ -159,7 +159,7 @@ const Gaffer::FloatPlug *Shape::shadowBlurPlug() const
 {
 	return getChild<FloatPlug>( g_firstPlugIndex + 4 );
 }
-		
+
 ImagePlug *Shape::shapePlug()
 {
 	return getChild<ImagePlug>( g_firstPlugIndex + 5 );
@@ -202,7 +202,7 @@ void Shape::affects( const Gaffer::Plug *input, AffectedPlugsContainer &outputs 
 		outputs.push_back( shapePlug()->channelDataPlug() );
 		outputs.push_back( shadowShapePlug()->channelDataPlug() );
 	}
-	
+
 	if( input->parent<Plug>() == colorPlug() )
 	{
 		outputs.push_back( shapePlug()->channelDataPlug() );
@@ -211,7 +211,7 @@ void Shape::affects( const Gaffer::Plug *input, AffectedPlugsContainer &outputs 
 	{
 		outputs.push_back( shadowShapePlug()->channelDataPlug() );
 	}
-	
+
 }
 
 void Shape::hashDataWindow( const GafferImage::ImagePlug *parent, const Gaffer::Context *context, IECore::MurmurHash &h ) const

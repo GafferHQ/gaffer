@@ -982,7 +982,7 @@ class InteractiveRenderManRenderTest( GafferRenderManTest.RenderManTestCase ) :
 		s["r"]["state"].setValue( s["r"].State.Running )
 
 	def testChildNamesUpdateCrash( self ) :
-		
+
 		# build a scene with a reasonably large hierarchy:
 		plane = GafferScene.Plane()
 		plane["dimensions"].setValue( IECore.V2f( 1000,1000 ) )
@@ -991,24 +991,24 @@ class InteractiveRenderManRenderTest( GafferRenderManTest.RenderManTestCase ) :
 		seeds["parent"].setValue("/plane")
 		seeds["density"].setValue(0.01)
 		sphere = GafferScene.Sphere()
-		
+
 		instancer = GafferScene.Instancer()
 		instancer["parent"].setValue("/plane/seeds")
 		instancer["in"].setInput( seeds["out"] )
 		instancer["instance"].setInput( sphere["out"] )
-		
+
 		r = GafferRenderMan.InteractiveRenderManRender()
 		r["in"].setInput( instancer["out"] )
 		r["state"].setValue( r.State.Running )
-		
+
 		# change the child names a couple of times. There was a problem
 		# where a childnames check was happening asynchronously, leading
 		# to a crash, so we're gonna check this has been fixed:
-		
+
 		seeds["density"].setValue(0)
 		seeds["density"].setValue(0.01)
-		
+
 		r["state"].setValue( r.State.Stopped )
-		
+
 if __name__ == "__main__":
 	unittest.main()

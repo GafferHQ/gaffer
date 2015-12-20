@@ -63,4 +63,3 @@ def __nodeCreator( nodeName, shaderName ) :
 	node.loadShader( shaderName )
 
 	return node
-

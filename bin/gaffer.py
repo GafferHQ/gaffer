@@ -1,27 +1,27 @@
 #!/usr/bin/env python2.6
 ##########################################################################
-#  
+#
 #  Copyright (c) 2011, John Haddon. All rights reserved.
 #  Copyright (c) 2011-2012, Image Engine Design Inc. All rights reserved.
-#  
+#
 #  Redistribution and use in source and binary forms, with or without
 #  modification, are permitted provided that the following conditions are
 #  met:
-#  
+#
 #      * Redistributions of source code must retain the above
 #        copyright notice, this list of conditions and the following
 #        disclaimer.
-#  
+#
 #      * Redistributions in binary form must reproduce the above
 #        copyright notice, this list of conditions and the following
 #        disclaimer in the documentation and/or other materials provided with
 #        the distribution.
-#  
+#
 #      * Neither the name of John Haddon nor the names of
 #        any other contributors to this software may be used to endorse or
 #        promote products derived from this software without specific prior
 #        written permission.
-#  
+#
 #  THIS SOFTWARE IS PROVIDED BY THE COPYRIGHT HOLDERS AND CONTRIBUTORS "AS
 #  IS" AND ANY EXPRESS OR IMPLIED WARRANTIES, INCLUDING, BUT NOT LIMITED TO,
 #  THE IMPLIED WARRANTIES OF MERCHANTABILITY AND FITNESS FOR A PARTICULAR
@@ -33,7 +33,7 @@
 #  LIABILITY, WHETHER IN CONTRACT, STRICT LIABILITY, OR TORT (INCLUDING
 #  NEGLIGENCE OR OTHERWISE) ARISING IN ANY WAY OUT OF THE USE OF THIS
 #  SOFTWARE, EVEN IF ADVISED OF THE POSSIBILITY OF SUCH DAMAGE.
-#  
+#
 ##########################################################################
 
 import os
@@ -67,7 +67,7 @@ appLoader = IECore.ClassLoader.defaultLoader( "GAFFER_APP_PATHS" )
 applicationText = "Installed applications :\n\n" + "\n".join( "    " + x for x in appLoader.classNames() ) + "\n"
 
 def loadApp( appName ) :
-	
+
 	if appName in appLoader.classNames() :
 		return appLoader.load( appName )()
 	else :
@@ -85,7 +85,7 @@ def checkCleanExit() :
 
 	if Gaffer is None and GafferUI is None :
 		return
-	
+
 	# Clean up any garbage left behind by Cortex's wrapper mechanism - because
 	# the Gaffer.Application itself is derived from IECore.Parameterised, which
 	# as far as I can tell is wrapped unnecessarily, we must call this to allow
@@ -103,7 +103,7 @@ def checkCleanExit() :
 	# nothing referring to them and which should be dead, even with an
 	# explicit call to gc.collect() beforehand.
 	import gc
-	
+
 	# Check for things that shouldn't exist at shutdown, and
 	# warn of anything we find.
 	scriptNodes = []
@@ -113,7 +113,7 @@ def checkCleanExit() :
 			scriptNodes.append( o )
 		elif GafferUI is not None and isinstance( o, GafferUI.Widget ) :
 			widgets.append( o )
-	
+
 	if scriptNodes :
 		IECore.msg(
 			IECore.Msg.Level.Debug,
@@ -122,16 +122,16 @@ def checkCleanExit() :
 				"s" if len( scriptNodes ) > 1 else "",
 			)
 		)
-	
+
 	if widgets :
-		
+
 		count = {}
 		for widget in widgets :
 			widgetType = widget.__class__.__name__
 			count[widgetType] = count.get( widgetType, 0 ) + 1
-		
+
 		summaries = [ "%s (%d)" % ( k, count[k] ) for k in sorted( count.keys() ) ]
-		
+
 		IECore.msg(
 			IECore.Msg.Level.Debug,
 			"Gaffer shutdown", "%d remaining Widget%s detected : \n\n%s\n\nDebugging with objgraph is recommended." % (
@@ -165,16 +165,15 @@ else :
 	appArgs = args
 	if len( args ) :
 		if not args[0].startswith( "-" ) and not args[0].endswith( ".gfr" ) :
-			appName = args[0]	
+			appName = args[0]
 			appArgs = args[1:]
-		
+
 	app = loadApp( appName )
 	IECore.ParameterParser().parse( appArgs, app.parameters() )
-	
+
 	result = app.run()
-	
+
 	del app
 	checkCleanExit()
-	
-	sys.exit( result )
 
+	sys.exit( result )

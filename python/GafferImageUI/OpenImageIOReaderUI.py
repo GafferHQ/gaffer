@@ -102,7 +102,7 @@ Gaffer.Metadata.registerNode(
 			"plugValueWidget:type", "GafferUI.PresetsPlugValueWidget",
 
 		],
-		
+
 		"availableFrames" : [
 
 			"description",

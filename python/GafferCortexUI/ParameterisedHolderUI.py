@@ -70,15 +70,15 @@ class _ParameterisedHolderNodeUI( GafferUI.NodeUI ) :
 		column = GafferUI.ListContainer( GafferUI.ListContainer.Orientation.Vertical, spacing = 4 )
 
 		GafferUI.NodeUI.__init__( self, node, column, **kw )
-		
+
 		headerVisible = True
 		parameterised = self.node().getParameterised()[0]
-		with IECore.IgnoredExceptions( KeyError ) :		
+		with IECore.IgnoredExceptions( KeyError ) :
 			headerVisible = parameterised.userData()["UI"]["headerVisible"].value
 
 		with column :
-			
-			if headerVisible :	
+
+			if headerVisible :
 				with GafferUI.ListContainer( orientation = GafferUI.ListContainer.Orientation.Horizontal ) :
 					GafferUI.Spacer( IECore.V2i( 10 ), parenting = { "expand"  : True } )
 					toolButton = GafferCortexUI.ToolParameterValueWidget( self.node().parameterHandler() )
@@ -135,7 +135,7 @@ class _InfoButton( GafferUI.Button ) :
 		with context :
 			result = Gaffer.Metadata.nodeDescription( self.__node )
 			summary = Gaffer.Metadata.nodeValue( self.__node, "summary" )
-		
+
 		if summary :
 			if result :
 				result += "\n\n"

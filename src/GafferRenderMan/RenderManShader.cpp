@@ -916,5 +916,3 @@ void RenderManShader::loadShaderParameters( const IECore::Shader *shader, Gaffer
 	}
 
 }
-
-

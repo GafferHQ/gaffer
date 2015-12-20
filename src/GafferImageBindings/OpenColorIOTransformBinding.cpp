@@ -69,7 +69,7 @@ void GafferImageBindings::bindOpenColorIOTransform()
 	GafferBindings::DependencyNodeClass<OpenColorIOTransform>()
 		.def( "availableColorSpaces", &availableColorSpaces ).staticmethod( "availableColorSpaces" )
 	;
-	
+
 	GafferBindings::DependencyNodeClass<ColorSpace>();
 	GafferBindings::DependencyNodeClass<CDL>();
 	GafferBindings::DependencyNodeClass<DisplayTransform>();

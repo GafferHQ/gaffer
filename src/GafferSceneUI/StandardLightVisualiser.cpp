@@ -209,7 +209,7 @@ void StandardLightVisualiser::addEnvLightVisualiser( GroupPtr &output, Color3f m
 	sphereGroup->getState()->add(
 		new IECoreGL::DoubleSidedStateComponent( false )
 	);
-	
+
 	output->addChild( sphereGroup );
 }
 
@@ -266,7 +266,7 @@ void StandardLightVisualiser::addBasicLightVisualiser( ConstStringDataPtr type, 
 	else if( type->readable() == "distant" )
 	{
 		for ( int i = 0; i < 3; i++ )
-		{	
+		{
 			IECoreGL::GroupPtr rayGroup = new IECoreGL::Group();
 
 			Imath::M44f trans;
@@ -274,7 +274,7 @@ void StandardLightVisualiser::addBasicLightVisualiser( ConstStringDataPtr type, 
 			trans.translate( V3f( 0, 0.4, 0.5 ) );
 			rayGroup->addChild( const_pointer_cast<IECoreGL::Renderable>( ray() ) );
 			rayGroup->setTransform( trans );
-			
+
 			output->addChild( rayGroup );
 		}
 	}

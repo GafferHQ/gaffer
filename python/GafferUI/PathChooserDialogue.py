@@ -161,4 +161,3 @@ class PathChooserDialogue( GafferUI.Dialogue ) :
 					break
 
 		self.__confirmButton.setEnabled( confirmEnabled )
-

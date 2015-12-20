@@ -327,4 +327,3 @@ class _UIThreadExecutor( QtCore.QObject ) :
 			return True
 
 		return False
-

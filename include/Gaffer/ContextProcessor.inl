@@ -237,15 +237,15 @@ const ValuePlug *ContextProcessor<BaseType>::oppositePlug( const ValuePlug *plug
 {
 	const static IECore::InternedString inName( "in" );
 	const static IECore::InternedString outName( "out" );
-	
+
 	const ValuePlug *inPlug = BaseType::template getChild<ValuePlug>( inName );
 	const ValuePlug *outPlug = BaseType::template getChild<ValuePlug>( outName );
-	
+
 	if( !( outPlug && inPlug ) )
 	{
 		return 0;
 	}
-	
+
 	if( plug->direction() == Plug::Out )
 	{
 		return correspondingDescendant( plug, outPlug, inPlug );

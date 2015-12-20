@@ -53,7 +53,7 @@ SceneElementProcessor::SceneElementProcessor( const std::string &name, Filter::R
 	:	FilteredSceneProcessor( name, filterDefault )
 {
 	storeIndexOfNextChild( g_firstPlugIndex );
-	
+
 	// We don't ever want to change the scene hierarchy, globals, or sets,
 	// so we make pass-through connections for them. This is quicker than
 	// implementing a pass through of the input in the hash and compute

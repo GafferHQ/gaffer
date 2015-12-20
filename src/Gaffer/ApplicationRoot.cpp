@@ -140,4 +140,3 @@ std::string ApplicationRoot::defaultPreferencesFileName() const
 {
 	return preferencesLocation() + "/preferences.py";
 }
-

@@ -109,4 +109,3 @@ IECore::MurmurHash Sampler::hash() const
 	hash( h );
 	return h;
 }
-

@@ -51,7 +51,7 @@ namespace
 
 struct Edit : public tbb::task
 {
-	
+
 	Edit( const bool &stop )
 		:	m_stop( stop )
 	{
@@ -91,7 +91,7 @@ struct Compute
 	void operator()( const blocked_range<size_t> &r ) const
 	{
 		for( size_t i=r.begin(); i!=r.end(); ++i )
-		{			
+		{
 			GAFFERTEST_ASSERT( m_node2->productPlug()->getValue() == 9 );
 		}
 	}

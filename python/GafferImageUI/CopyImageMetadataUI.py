@@ -59,7 +59,7 @@ Gaffer.Metadata.registerNode(
 			""",
 
 		],
-		
+
 		"names" : [
 
 			"description",
@@ -69,7 +69,7 @@ Gaffer.Metadata.registerNode(
 			""",
 
 		],
-		
+
 		"invertNames" : [
 
 			"description",

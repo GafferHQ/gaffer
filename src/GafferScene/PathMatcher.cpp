@@ -502,4 +502,3 @@ bool PathMatcher::removePathsWalk( Node *node, const Node *srcNode )
 
 	return result;
 }
-

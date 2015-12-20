@@ -51,7 +51,7 @@ class PathParameterValueWidget( GafferCortexUI.ParameterValueWidget ) :
 			self._path(),
 			pathChooserDialogueKeywords = Gaffer.WeakMethod( self._pathChooserDialogueKeywords ),
 		)
-		
+
 		GafferCortexUI.ParameterValueWidget.__init__(
 
 			self,

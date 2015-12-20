@@ -75,13 +75,13 @@ class PathFilter : public Filter
 		// if pathsPlug() is receiving data from an output plug, we compute the PathMatcher
 		// using an intermediate plug called __pathMatcher, as it's possible the paths we're
 		// testing against could vary depending on the context:
-		
+
 		PathMatcherDataPlug *pathMatcherPlug();
 		const PathMatcherDataPlug *pathMatcherPlug() const;
 
 		// If that's not the case, we can improve performance by precomputing the PathMatcher
 		// whenever the plug is dirtied, which saves on graph evaluations:
-		
+
 		void plugDirtied( const Gaffer::Plug *plug );
 
 		PathMatcherDataPtr m_pathMatcher;

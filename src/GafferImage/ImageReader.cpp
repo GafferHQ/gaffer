@@ -72,21 +72,21 @@ ImageReader::ImageReader( const std::string &name )
 	);
 	addChild( new IntPlug( "refreshCount" ) );
 	addChild( new IntPlug( "missingFrameMode", Plug::In, Error, /* min */ Error, /* max */ Hold ) );
-	
+
 	ValuePlugPtr startPlug = new ValuePlug( "start", Plug::In );
 	startPlug->addChild( new IntPlug( "mode", Plug::In, None, /* min */ None, /* max */ ClampToFrame ) );
 	startPlug->addChild( new IntPlug( "frame", Plug::In, 0 ) );
 	addChild( startPlug );
-	
+
 	ValuePlugPtr endPlug = new ValuePlug( "end", Plug::In );
 	endPlug->addChild( new IntPlug( "mode", Plug::In, None, /* min */ None, /* max */ ClampToFrame ) );
 	endPlug->addChild( new IntPlug( "frame", Plug::In, 0 ) );
 	addChild( endPlug );
-	
+
 	addChild( new CompoundObjectPlug( "__intermediateMetadata", Plug::In, new CompoundObject, Plug::Default & ~Plug::Serialisable ) );
 	addChild( new StringPlug( "__intermediateColorSpace", Plug::Out, "", Plug::Default & ~Plug::Serialisable ) );
 	addChild( new ImagePlug( "__intermediateImage", Plug::In, Plug::Default & ~Plug::Serialisable ) );
-	
+
 	// We don't really do much work ourselves - we just
 	// defer to internal nodes to do the hard work.
 
@@ -238,7 +238,7 @@ size_t ImageReader::supportedExtensions( std::vector<std::string> &extensions )
 void ImageReader::affects( const Plug *input, AffectedPlugsContainer &outputs ) const
 {
 	ImageNode::affects( input, outputs );
-	
+
 	if( input == intermediateMetadataPlug() )
 	{
 		outputs.push_back( intermediateColorSpacePlug() );

@@ -83,4 +83,3 @@ def __displayName( model ) :
 	displayName = displayName.replace(" Light", "" )
 	displayName = displayName.replace(" Environment Edf", "" )
 	return displayName
-

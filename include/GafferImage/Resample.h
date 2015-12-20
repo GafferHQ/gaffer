@@ -95,7 +95,7 @@ class Resample : public ImageProcessor
 		const Gaffer::IntPlug *debugPlug() const;
 
 		virtual void affects( const Gaffer::Plug *input, AffectedPlugsContainer &outputs ) const;
-		
+
 		static const std::vector<std::string> &filters();
 
 	protected :

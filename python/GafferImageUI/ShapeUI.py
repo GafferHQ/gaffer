@@ -55,7 +55,7 @@ Gaffer.Metadata.registerNode(
 			Enables the rendering of a drop shadow which can be coloured, offset and
 			blurred.
 			""",
-			
+
 			"layout:section", "Shadow",
 
 		],
@@ -70,7 +70,7 @@ Gaffer.Metadata.registerNode(
 			"layout:section", "Shadow",
 
 		],
-		
+
 		"shadowOffset" : [
 
 			"description",
@@ -81,7 +81,7 @@ Gaffer.Metadata.registerNode(
 			"layout:section", "Shadow",
 
 		],
-		
+
 		"shadowBlur" : [
 
 			"description",

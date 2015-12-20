@@ -111,7 +111,7 @@ bool FileSequencePathFilter::remove( PathPtr path ) const
 	std::vector<FileSequencePtr> sequences;
 	IECore::findSequences( names, sequences, /* minSequenceSize = */ 1 );
 	bool isSequentialFile = !sequences.empty();
-	
+
 	if( ( m_mode & SequentialFiles ) && isSequentialFile )
 	{
 		// its a file that could be part of a sequence, so keep it

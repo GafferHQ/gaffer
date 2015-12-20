@@ -140,4 +140,3 @@ def __savePreferences( button ) :
 	application = scriptWindow.scriptNode().ancestor( Gaffer.ApplicationRoot )
 	application.savePreferences()
 	button.ancestor( type=GafferUI.Window ).setVisible( False )
-

@@ -50,7 +50,7 @@ class OpenColorIOTransformTest( GafferTest.TestCase ) :
 	def testAvailableColorSpaces( self ) :
 
 		config = PyOpenColorIO.GetCurrentConfig()
-		
+
 		self.assertEqual(
 			GafferImage.OpenColorIOTransform.availableColorSpaces(),
 			[ cs.getName() for cs in config.getColorSpaces() ]

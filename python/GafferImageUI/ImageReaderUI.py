@@ -113,11 +113,11 @@ Gaffer.Metadata.registerNode(
 			return a black image which matches the data window
 			and display window of the start frame.
 			""",
-			
+
 			"plugValueWidget:type", "GafferImageUI.ImageReaderUI._FrameMaskPlugValueWidget",
 
 		],
-		
+
 		"start.mode" : [
 
 			"description",
@@ -132,7 +132,7 @@ Gaffer.Metadata.registerNode(
 			"plugValueWidget:type", "GafferUI.PresetsPlugValueWidget",
 
 		],
-		
+
 		"start.frame" : [
 
 			"description",
@@ -155,11 +155,11 @@ Gaffer.Metadata.registerNode(
 			return a black image which matches the data window
 			and display window of the end frame.
 			""",
-			
+
 			"plugValueWidget:type", "GafferImageUI.ImageReaderUI._FrameMaskPlugValueWidget",
 
 		],
-		
+
 		"end.mode" : [
 
 			"description",
@@ -174,7 +174,7 @@ Gaffer.Metadata.registerNode(
 			"plugValueWidget:type", "GafferUI.PresetsPlugValueWidget",
 
 		],
-		
+
 		"end.frame" : [
 
 			"description",
@@ -243,5 +243,5 @@ class _FrameMaskPlugValueWidget( GafferUI.PlugValueWidget ) :
 
 		with self.getContext() :
 			mode = self.getPlug()["mode"].getValue()
-		
+
 		self.childPlugValueWidget( self.getPlug()["frame"] ).setEnabled( mode != GafferImage.ImageReader.FrameMaskMode.None )

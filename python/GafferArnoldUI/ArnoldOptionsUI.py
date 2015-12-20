@@ -227,7 +227,7 @@ Gaffer.Metadata.registerNode(
 			"description",
 			"""
 			Controls the number of ray bounces when
-			computing reflections. 
+			computing reflections.
 			""",
 
 			"layout:section", "Ray Depth",
@@ -241,7 +241,7 @@ Gaffer.Metadata.registerNode(
 			"description",
 			"""
 			Controls the number of ray bounces when
-			computing refractions. 
+			computing refractions.
 			""",
 
 			"layout:section", "Ray Depth",

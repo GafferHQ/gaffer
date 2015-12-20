@@ -57,7 +57,7 @@ class SceneHierarchyTest( GafferUITest.TestCase ) :
 		# Make a small scene, and view it with a SceneHierarchy editor.
 
 		script = Gaffer.ScriptNode()
-		
+
 		script["plane"] = GafferScene.Plane()
 		script["group"] = GafferScene.Group()
 		script["group"]["in"][0].setInput( script["plane"]["out"] )
@@ -90,4 +90,3 @@ class SceneHierarchyTest( GafferUITest.TestCase ) :
 
 if __name__ == "__main__":
 	unittest.main()
-

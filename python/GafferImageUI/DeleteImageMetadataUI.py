@@ -58,7 +58,7 @@ Gaffer.Metadata.registerNode(
 			""",
 
 		],
-		
+
 		"invertNames" : [
 
 			"description",

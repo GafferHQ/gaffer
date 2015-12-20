@@ -68,7 +68,7 @@ class Text : public Shape
 			Right,
 			HorizontalCenter
 		};
-		
+
 		enum VerticalAlignment
 		{
 			Bottom,
@@ -90,7 +90,7 @@ class Text : public Shape
 
 		Gaffer::IntPlug *horizontalAlignmentPlug();
 		const Gaffer::IntPlug *horizontalAlignmentPlug() const;
-		
+
 		Gaffer::IntPlug *verticalAlignmentPlug();
 		const Gaffer::IntPlug *verticalAlignmentPlug() const;
 

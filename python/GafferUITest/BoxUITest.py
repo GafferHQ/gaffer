@@ -89,15 +89,15 @@ class BoxUITest( GafferUITest.TestCase ) :
 		self.assertEqual( boxGadget2.noduleTangent( boxGadget2.nodule( box2["sum"] ) ), IECore.V3f( 1, 0, 0 ) )
 
 	def testNodulePositionsForPromotedPlugs( self ) :
-	
+
 		s = Gaffer.ScriptNode()
 		g = GafferUI.GraphGadget( s )
-		
+
 		s["b"] = Gaffer.Box()
 		s["b"]["n"] = self.NodulePositionNode()
-		
+
 		boxGadget = g.nodeGadget( s["b"] )
-		
+
 		p1 = s["b"].promotePlug( s["b"]["n"]["op1"] )
 		p2 = s["b"].promotePlug( s["b"]["n"]["sum"] )
 
@@ -134,16 +134,16 @@ class BoxUITest( GafferUITest.TestCase ) :
 		self.assertTrue( w2 is w )
 
 	def testUIForNonMatchingPromotedPlugTypes( self ) :
-	
+
 		box = Gaffer.Box()
 		box["user"]["b"] = Gaffer.BoolPlug()
 		box["node"] = Gaffer.Node()
 		box["node"]["i"] = Gaffer.IntPlug()
 		box["node"]["i"].setInput( box["user"]["b"] )
-		
+
 		ui = GafferUI.NodeUI.create( box )
 		w = ui.plugValueWidget( box["user"]["b"], lazy=False )
-		
+
 		self.assertTrue( isinstance( w, GafferUI.BoolPlugValueWidget ) )
 
 	def testUIForOutputPlugTypes( self ) :

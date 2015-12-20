@@ -208,10 +208,10 @@ Gaffer.Metadata.registerNode(
 		"options.renderPasses" : [
 
 			"description",
-			__getDescriptionString( 
+			__getDescriptionString(
 				"generic_frame_renderer:passes",
 				"""
-				When using photon mapping this is the number of 
+				When using photon mapping this is the number of
 				progressive refinement passes used.
 				"""
 			),
@@ -361,7 +361,7 @@ Gaffer.Metadata.registerNode(
 
 			"description",
 			__getDescriptionString(
-				"drt:max_path_length", 
+				"drt:max_path_length",
 				"If set to zero, use an unlimited number of bounces"
 			),
 
@@ -425,7 +425,7 @@ Gaffer.Metadata.registerNode(
 		"options.ptMaxBounces" : [
 
 			"description",
-			__getDescriptionString( 
+			__getDescriptionString(
 				"pt:max_path_length",
 				"If set to zero, use an unlimited number of bounces"
 			),
@@ -458,7 +458,7 @@ Gaffer.Metadata.registerNode(
 		"options.ptMaxRayIntensity" : [
 
 			"description",
-			__getDescriptionString( 
+			__getDescriptionString(
 				"pt:max_ray_intensity",
 				"Set to zero to disable"
 			),
@@ -532,7 +532,7 @@ Gaffer.Metadata.registerNode(
 		"options.sppmPhotonMaxBounces" : [
 
 			"description",
-			__getDescriptionString( 
+			__getDescriptionString(
 				"sppm:photon_tracing_max_path_length",
 				"If set to zero, use an unlimited number of bounces"
 			),
@@ -545,7 +545,7 @@ Gaffer.Metadata.registerNode(
 		"options.sppmPathMaxBounces" : [
 
 			"description",
-			__getDescriptionString( 
+			__getDescriptionString(
 				"sppm:path_tracing_max_path_length",
 				"If set to zero, use an unlimited number of bounces"
 			),

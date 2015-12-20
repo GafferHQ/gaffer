@@ -97,7 +97,7 @@ bool OpenColorIOTransform::affectsColorData( const Gaffer::Plug *input ) const
 	{
 		return true;
 	}
-	
+
 	return affectsTransform( input );
 }
 
@@ -115,7 +115,7 @@ void OpenColorIOTransform::processColorData( const Gaffer::Context *context, IEC
 	{
 		return;
 	}
-	
+
 	OpenColorIO::ConstProcessorRcPtr processor;
 	{
 		Detail::OCIOMutex::scoped_lock lock( Detail::g_ocioMutex );

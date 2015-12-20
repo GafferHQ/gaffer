@@ -199,7 +199,7 @@ Gaffer.Metadata.registerNode(
 
 			"description",
 			"""
-			Specifies a grayscale texture than can be used to efficiently discard 
+			Specifies a grayscale texture than can be used to efficiently discard
 			unwanted parts of the surface of the object while computing ray intersections.
 			""",
 

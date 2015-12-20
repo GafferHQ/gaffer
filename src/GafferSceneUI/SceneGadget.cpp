@@ -419,11 +419,11 @@ class SceneGadget::UpdateTask : public tbb::task
 
 					IECore::ConstRunTimeTypedPtr glStateCachedTyped = IECoreGL::CachedConverter::defaultCachedConverter()->convert( attributes.get() );
 					IECoreGL::ConstStatePtr glStateCached = IECore::runTimeCast<const IECoreGL::State>( glStateCachedTyped );
-					
+
 
 
 					IECoreGL::ConstStatePtr visState = NULL;
-					
+
 					deferReferenceRemoval( m_sceneGraph->m_attributesRenderable );
 					m_sceneGraph->m_attributesRenderable = AttributeVisualiser::allVisualisations( attributes.get(), visState );
 

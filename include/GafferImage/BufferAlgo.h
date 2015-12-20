@@ -72,4 +72,3 @@ inline Imath::V2i clamp( const Imath::V2i &point, const Imath::Box2i &window );
 #include "GafferImage/BufferAlgo.inl"
 
 #endif // GAFFERIMAGE_BUFFERALGO_H
-

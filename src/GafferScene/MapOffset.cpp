@@ -58,7 +58,7 @@ MapOffset::MapOffset( const std::string &name )
 	addChild( new IntPlug( "udim", Plug::In, 1001, 1001 ) );
 	addChild( new StringPlug( "sName", Plug::In, "s" ) );
 	addChild( new StringPlug( "tName", Plug::In, "t" ) );
-	
+
 	// Fast pass-throughs for things we don't modify
 	outPlug()->attributesPlug()->setInput( inPlug()->attributesPlug() );
 	outPlug()->transformPlug()->setInput( inPlug()->transformPlug() );

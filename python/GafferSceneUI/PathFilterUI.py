@@ -194,9 +194,9 @@ def __drop( nodeGadget, event ) :
 		paths = sorted( paths )
 
 	with Gaffer.UndoContext( nodeGadget.node().ancestor( Gaffer.ScriptNode ) ) :
-		
+
 		if pathsPlug is None :
-		
+
 			pathFilter = GafferScene.PathFilter()
 			nodeGadget.node().parent().addChild( pathFilter )
 			nodeGadget.node()["filter"].setInput( pathFilter["out"] )

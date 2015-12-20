@@ -51,7 +51,7 @@ class ClippingPlane : public ObjectSource
 
 		ClippingPlane( const std::string &name=defaultName<ClippingPlane>() );
 		virtual ~ClippingPlane();
-		
+
 	protected :
 
 		virtual void hashSource( const Gaffer::Context *context, IECore::MurmurHash &h ) const;

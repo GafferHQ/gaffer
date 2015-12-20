@@ -72,4 +72,3 @@ class SubGraphTest( GafferTest.TestCase ) :
 
 if __name__ == "__main__":
 	unittest.main()
-

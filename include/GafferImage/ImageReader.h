@@ -74,7 +74,7 @@ class ImageReader : public ImageNode
 			Black,
 			Hold,
 		};
-		
+
 		/// The FrameMaskMode controls how to handle images
 		/// outside of the values provided by the start
 		/// and end frame masks.

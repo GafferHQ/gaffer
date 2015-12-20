@@ -77,4 +77,3 @@ bool SpacerGadget::acceptsChild( const GraphComponent *potentialChild ) const
 {
 	return false;
 }
-

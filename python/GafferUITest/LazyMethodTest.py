@@ -69,13 +69,13 @@ class LazyMethodTest( GafferUITest.TestCase ) :
 		@GafferUI.LazyMethod( deferUntilPlaybackStops = True )
 		def setTextLazilyDeferredUntilStop( self, text ) :
 
-			self.setText( text )	
+			self.setText( text )
 
 	def test( self ) :
 
 		with GafferUI.Window() as window :
 			w = self.LazyWidget()
-		
+
 		cs = GafferTest.CapturingSlot( w.textChangedSignal() )
 
 		w.setTextLazily( "t" )
@@ -83,7 +83,7 @@ class LazyMethodTest( GafferUITest.TestCase ) :
 		self.assertEqual( w.getText(), "" )
 
 		window.setVisible( True )
-		
+
 		self.assertEqual( len( cs ), 1 )
 		self.assertEqual( w.getText(), "t" )
 
@@ -112,7 +112,7 @@ class LazyMethodTest( GafferUITest.TestCase ) :
 
 		with GafferUI.Window() as window :
 			w = self.LazyWidget()
-		
+
 		cs = GafferTest.CapturingSlot( w.textChangedSignal() )
 
 		w.setTextLazilyNoReplace( "s" )
@@ -121,7 +121,7 @@ class LazyMethodTest( GafferUITest.TestCase ) :
 		self.assertEqual( w.getText(), "" )
 
 		window.setVisible( True )
-		
+
 		self.assertEqual( len( cs ), 2 )
 		self.assertEqual( w.getText(), "t" )
 
@@ -129,7 +129,7 @@ class LazyMethodTest( GafferUITest.TestCase ) :
 
 		with GafferUI.Window() as window :
 			w = self.LazyWidget()
-		
+
 		cs = GafferTest.CapturingSlot( w.textChangedSignal() )
 
 		w.setTextLazilyDeferredUntilStop( "t" )
@@ -137,7 +137,7 @@ class LazyMethodTest( GafferUITest.TestCase ) :
 		self.assertEqual( w.getText(), "" )
 
 		window.setVisible( True )
-		
+
 		self.assertEqual( len( cs ), 1 )
 		self.assertEqual( w.getText(), "t" )
 
@@ -183,4 +183,3 @@ class LazyMethodTest( GafferUITest.TestCase ) :
 
 if __name__ == "__main__":
 	unittest.main()
-

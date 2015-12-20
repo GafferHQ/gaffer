@@ -60,7 +60,7 @@ StandardOptions::StandardOptions( const std::string &name )
 	options->addOptionalMember( "render:overscanBottom", new FloatPlug( "value", Plug::In, 0.1f, 0.0f, 1.0f ), "overscanBottom", false );
 	options->addOptionalMember( "render:overscanLeft", new FloatPlug( "value", Plug::In, 0.1f, 0.0f, 1.0f ), "overscanLeft", false );
 	options->addOptionalMember( "render:overscanRight", new FloatPlug( "value", Plug::In, 0.1f, 0.0f, 1.0f ), "overscanRight", false );
-	
+
 	// motion blur
 
 	options->addOptionalMember( "render:cameraBlur", new IECore::BoolData( false ), "cameraBlur", Gaffer::Plug::Default, false );

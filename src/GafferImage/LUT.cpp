@@ -159,7 +159,7 @@ OpenColorIO::ConstTransformRcPtr LUT::transform() const
 			break;
 		}
 	}
-	
+
 	switch( (Interpolation)interpolationPlug()->getValue() )
 	{
 		case Best :

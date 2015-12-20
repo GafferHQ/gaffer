@@ -454,7 +454,7 @@ void OpenImageIOReader::affects( const Gaffer::Plug *input, AffectedPlugsContain
 	{
 		outputs.push_back( availableFramesPlug() );
 	}
-	
+
 	if( input == fileNamePlug() || input == refreshCountPlug() || input == missingFrameModePlug() )
 	{
 		for( ValuePlugIterator it( outPlug() ); it != it.end(); it++ )

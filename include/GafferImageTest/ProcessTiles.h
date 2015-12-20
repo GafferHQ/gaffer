@@ -39,7 +39,7 @@
 
 namespace GafferImage
 {
-	
+
 	IE_CORE_FORWARDDECLARE( ImagePlug )
 
 } // namespace GafferImage

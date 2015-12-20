@@ -80,7 +80,7 @@ class StandardLightVisualiser : public LightVisualiser
 		static void addAreaLightVisualiser( IECoreGL::ConstStatePtr &state, Imath::Color3f multiplier, const std::string &textureName, bool flipNormal, bool doubleSided, bool sphericalProjection, const Imath::M44f &projectionTransform );
 		static void addBasicLightVisualiser( IECore::ConstStringDataPtr type, IECoreGL::GroupPtr &output, Imath::Color3f multiplier, float coneAngle, float penumbraAngle, const std::string *penumbraType );
 
-		
+
 };
 
 IE_CORE_DECLAREPTR( StandardLightVisualiser )

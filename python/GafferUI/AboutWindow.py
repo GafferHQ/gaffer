@@ -167,4 +167,3 @@ class AboutWindow( GafferUI.Window ) :
 	def __linkActivated( self, label, url ) :
 
 		GafferUI.showURL( url )
-

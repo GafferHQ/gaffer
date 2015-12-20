@@ -124,7 +124,7 @@ class AtomicFormatPlugTest( GafferImageTest.ImageTestCase ) :
 		self.assertEqual( s["n2"]["user"]["f"].getValue(), GafferImage.Format( IECore.Box2i( IECore.V2i( 10, 20 ), IECore.V2i( 120, 130 ) ), 0.5 ) )
 
 	def testGetAndSetEmptyFormat( self ) :
-	
+
 		p = GafferImage.AtomicFormatPlug()
 		p.setValue( GafferImage.Format() )
 		self.assertEqual( p.getValue(), GafferImage.Format() )

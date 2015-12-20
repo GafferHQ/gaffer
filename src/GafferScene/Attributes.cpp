@@ -51,7 +51,7 @@ Attributes::Attributes( const std::string &name )
 	storeIndexOfNextChild( g_firstPlugIndex );
 	addChild( new CompoundDataPlug( "attributes" ) );
 	addChild( new BoolPlug( "global", Plug::In, false ) );
-	
+
 	// Fast pass-throughs for the things we don't alter.
 	outPlug()->objectPlug()->setInput( inPlug()->objectPlug() );
 	outPlug()->transformPlug()->setInput( inPlug()->transformPlug() );

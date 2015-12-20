@@ -126,7 +126,7 @@ class LightTest( GafferSceneTest.SceneTestCase ) :
 
 		l["enabled"].setValue( False )
 		self.assertEqual( l["out"]["setNames"].getValue(), IECore.InternedStringVectorData() )
-		
+
 	def testNonExistentSets( self ) :
 
 		l = GafferSceneTest.TestLight()

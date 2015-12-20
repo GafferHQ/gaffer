@@ -56,4 +56,3 @@ Set::MemberSignal &Set::memberRemovedSignal()
 {
 	return m_memberRemovedSignal;
 }
-

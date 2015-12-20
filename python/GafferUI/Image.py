@@ -151,7 +151,7 @@ class Image( GafferUI.Widget ) :
 		# used. Since we don't want to do that, we make a deep copy of
 		# the image so we can dispose of s.
 		image = image.copy()
-		
+
 		pixmap = QtGui.QPixmap( image )
 
 		return pixmap

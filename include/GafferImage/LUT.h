@@ -83,7 +83,7 @@ class LUT : public OpenColorIOTransform
 
 		Gaffer::IntPlug *directionPlug();
 		const Gaffer::IntPlug *directionPlug() const;
-		
+
 		/// Fills the supplied vector with the supported
 		/// file extensions for the LUT node.
 		static size_t supportedExtensions( std::vector<std::string> &extensions );
