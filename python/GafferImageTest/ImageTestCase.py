@@ -46,7 +46,6 @@ import GafferImageTest
 
 class ImageTestCase( GafferTest.TestCase ) :
 
-
 	def setUp( self ) :
 
 		GafferTest.TestCase.setUp( self )
@@ -119,3 +118,19 @@ class ImageTestCase( GafferTest.TestCase ) :
 		self.assertEqual( result["out"]["dataWindow"].getValue(), imath.Box2i() )
 
 		return result
+
+	def deepImage( self ):
+		return self.DeepImage()
+
+	def assertRaisesDeepNotSupported( self, node ) :
+
+		flat = GafferImage.Constant()
+		node["in"].setInput( flat["out"] )
+
+		self.assertNotEqual( GafferImage.ImageAlgo.imageHash( flat["out"] ), GafferImage.ImageAlgo.imageHash( node["out"] ) )
+
+		deep = GafferImage.Empty()
+		node["in"].setInput( deep["out"] )
+
+		self.assertRaisesRegexp( RuntimeError, 'Deep data not supported in input "in*', GafferImage.ImageAlgo.image, node["out"] )
+
