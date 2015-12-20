@@ -156,8 +156,14 @@ void AppleseedLight::setupPlugs( const std::string &shaderName, const asf::Dicti
 			}
 			else if( inputType == "colormap" )
 			{
+				// for some light models, the exposure input accepts a texture in appleseed,
+				// but we want to represent them in Gaffer as float plugs instead of color plugs.
+				if ( inputName == "exposure" )
+				{
+					plug = new Gaffer::FloatPlug( inputName, Gaffer::Plug::In, 0.0f );
+				}
 				// multiplier inputs make more sense in Gaffer as float plugs.
-				if( inputName.find( "multiplier" ) != std::string::npos )
+				else if( inputName.find( "multiplier" ) != std::string::npos )
 				{
 					plug = new Gaffer::FloatPlug( inputName, Gaffer::Plug::In, 1.0f, 0.0f );
 				}
