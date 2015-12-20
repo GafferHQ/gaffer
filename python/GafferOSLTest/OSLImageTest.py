@@ -239,5 +239,36 @@ class OSLImageTest( GafferOSLTest.OSLTestCase ) :
 
 		s["r"]["p"].setInput( s["s"]["out"] )
 
+	def testNonFlatHashPassThrough( self ) :
+
+		constant1 = GafferImage.Constant()
+		constant1["color"].setValue( IECore.Color4f( 1 ) )
+
+		constant2 = GafferImage.Constant()
+		constant2["color"].setValue( IECore.Color4f( 1 ) )
+
+		merge = GafferImage.DeepMerge()
+		merge["in"][0].setInput( constant1["out"] )
+		merge["in"][1].setInput( constant2["out"] )
+
+		outR = GafferOSL.OSLShader()
+		outR.loadShader( "ImageProcessing/OutChannel" )
+		outR["parameters"]["channelName"].setValue( "R" )
+		outR["parameters"]["channelValue"].setValue( 0 )
+
+		imageShader = GafferOSL.OSLShader()
+		imageShader.loadShader( "ImageProcessing/OutImage" )
+		imageShader["parameters"]["in0"].setInput( outR["out"]["channel"] )
+
+		image = GafferOSL.OSLImage()
+		image["in"].setInput( merge["out"] )
+		image["shader"].setInput( imageShader["out"] )
+
+		self.assertEqual( merge["out"].imageHash(), image["out"].imageHash() )
+
+		merge["enabled"].setValue( False )
+
+		self.assertNotEqual( merge["out"].imageHash(), image["out"].imageHash() )
+
 if __name__ == "__main__":
 	unittest.main()
