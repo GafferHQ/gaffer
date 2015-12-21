@@ -87,7 +87,7 @@ class PlugLayout( GafferUI.Widget ) :
 	# We use this when we can't find a ScriptNode to provide the context.
 	__fallbackContext = Gaffer.Context()
 
-	def __init__( self, parent, orientation = GafferUI.ListContainer.Orientation.Vertical, layoutName = "layout", **kw ) :
+	def __init__( self, parent, orientation = GafferUI.ListContainer.Orientation.Vertical, layoutName = "layout", rootSection = "", **kw ) :
 
 		assert( isinstance( parent, ( Gaffer.Node, Gaffer.Plug ) ) )
 
@@ -98,6 +98,8 @@ class PlugLayout( GafferUI.Widget ) :
 		self.__parent = parent
 		self.__readOnly = False
 		self.__layoutName = layoutName
+		# not to be confused with __rootSection, which holds an actual _Section object
+		self.__rootSectionName = rootSection
 
 		# we need to connect to the childAdded/childRemoved signals on
 		# the parent so we can update the ui when plugs are added and removed.
@@ -206,7 +208,7 @@ class PlugLayout( GafferUI.Widget ) :
 	# strings within the list. If a section name is specified, then the
 	# result will be filtered to include only items in that section.
 	@classmethod
-	def layoutOrder( cls, parent, includeCustomWidgets = False, section = None, layoutName = "layout" ) :
+	def layoutOrder( cls, parent, includeCustomWidgets = False, section = None, layoutName = "layout", rootSection = "" ) :
 
 		items = parent.children( Gaffer.Plug )
 		items = [ plug for plug in items if not plug.getName().startswith( "__" ) ]
@@ -233,6 +235,10 @@ class PlugLayout( GafferUI.Widget ) :
 		if section is not None :
 			sectionPath = section.split( "." ) if section else []
 			itemsAndIndices = [ x for x in itemsAndIndices if cls.__staticSectionPath( x[1], parent, layoutName ) == sectionPath ]
+
+		if rootSection :
+			rootSectionPath = rootSection.split( "." if rootSection else [] )
+			itemsAndIndices = [ x for x in itemsAndIndices if cls.__staticSectionPath( x[1], parent, layoutName )[:len(rootSectionPath)] == rootSectionPath ]
 
 		return [ x[1] for x in itemsAndIndices ]
 
@@ -264,7 +270,7 @@ class PlugLayout( GafferUI.Widget ) :
 
 		# get the items to lay out - these are a combination
 		# of plugs and strings representing custom widgets.
-		items = self.layoutOrder( self.__parent, includeCustomWidgets = True, layoutName = self.__layoutName )
+		items = self.layoutOrder( self.__parent, includeCustomWidgets = True, layoutName = self.__layoutName, rootSection = self.__rootSectionName )
 
 		# ditch widgets we don't need any more
 
@@ -277,8 +283,10 @@ class PlugLayout( GafferUI.Widget ) :
 			if isinstance( k, str ) or v is not None and Gaffer.Metadata.plugValue( k, "plugValueWidget:type" ) == v.__plugValueWidgetType
 		}
 
+
 		# make (or reuse existing) widgets for each item, and sort them into
 		# sections.
+		rootSectionDepth = self.__rootSectionName.count( "." ) + 1 if self.__rootSectionName else 0
 		self.__rootSection.clear()
 		for item in items :
 
@@ -295,7 +303,7 @@ class PlugLayout( GafferUI.Widget ) :
 				continue
 
 			section = self.__rootSection
-			for sectionName in self.__sectionPath( item ) :
+			for sectionName in self.__sectionPath( item )[rootSectionDepth:] :
 				section = section.subsection( sectionName )
 
 			section.widgets.append( widget )

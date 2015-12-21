@@ -293,5 +293,18 @@ class PlugLayoutTest( GafferUITest.TestCase ) :
 		self.assertFalse( l2.plugValueWidget( n["p1"], lazy = False ).enabled() )
 		self.assertTrue( l2.plugValueWidget( n["p2"], lazy = False ).enabled() )
 
+	def testRootSection( self ) :
+
+		n = Gaffer.Node()
+		n["p1"] = Gaffer.Plug( flags = Gaffer.Plug.Flags.Default | Gaffer.Plug.Flags.Dynamic )
+		n["p2"] = Gaffer.Plug( flags = Gaffer.Plug.Flags.Default | Gaffer.Plug.Flags.Dynamic )
+
+		Gaffer.Metadata.registerPlugValue( n["p2"], "layout:section", "sectionA" )
+
+		l = GafferUI.PlugLayout( n, rootSection = "sectionA" )
+
+		self.assertTrue( l.plugValueWidget( n["p1"], lazy = False ) is None )
+		self.assertTrue( l.plugValueWidget( n["p2"], lazy = False ) is not None )
+
 if __name__ == "__main__":
 	unittest.main()
