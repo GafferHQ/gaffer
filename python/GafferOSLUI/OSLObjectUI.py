@@ -57,21 +57,20 @@ Gaffer.Metadata.registerNode(
 	plugs = {
 
 		"shader" : [
-		
+
 			"description",
 			"""
 			The shader to be executed - connect the output from an OSL network here.
 			A minimal shader network to process P would look like this :
-			
+
 				InPoint->ProcessingNodes->OutPoint->OutObject
 			""",
-			
+
 			"nodeGadget:nodulePosition", "left",
 			"nodule:type", "GafferUI::StandardNodule",
 
 		],
 
 	}
-	
-)
 
+)

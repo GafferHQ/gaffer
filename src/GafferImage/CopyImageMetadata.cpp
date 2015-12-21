@@ -71,7 +71,7 @@ const ImagePlug *CopyImageMetadata::copyFromPlug() const
 {
 	return getChild<ImagePlug>( g_firstPlugIndex );
 }
-		
+
 Gaffer::StringPlug *CopyImageMetadata::namesPlug()
 {
 	return getChild<StringPlug>( g_firstPlugIndex + 1 );
@@ -132,13 +132,13 @@ IECore::ConstCompoundObjectPtr CopyImageMetadata::computeProcessedMetadata( cons
 		{
 			copy = true;
 		}
-		
+
 		if ( copy )
 		{
 			result->members()[it->first] = it->second;
 		}
 	}
-	
+
 	return result;
 }
 

@@ -533,7 +533,7 @@ void parallelGatherTiles( const ImagePlug *imagePlug, TileFunctor &tileFunctor, 
 
 	GafferImage::Detail::TileInputIterator inputIterator( numTiles, tileOrder );
 
-	parallel_pipeline( tbb::task_scheduler_init::default_num_threads(),       
+	parallel_pipeline( tbb::task_scheduler_init::default_num_threads(),
 		tbb::make_filter<void, boost::tuple<Imath::V2i> >(
 			tbb::filter::serial,
 			GafferImage::Detail::TileInputFilter<GafferImage::Detail::TileInputIterator>( inputIterator )

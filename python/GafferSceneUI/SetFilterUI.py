@@ -52,7 +52,7 @@ Gaffer.Metadata.registerNode(
 	""",
 
 	plugs = {
-	
+
 		"set" : [
 
 			"description",
@@ -60,12 +60,12 @@ Gaffer.Metadata.registerNode(
 			The name of a set that defines the locations to
 			be matched.
 			""",
-			
+
 			"ui:scene:acceptsSetName", True,
 			"nodule:type", "",
-			
+
 		],
-		
+
 	}
-	
+
 )

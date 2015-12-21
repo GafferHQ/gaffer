@@ -53,4 +53,3 @@ GafferScene.Prune,
 """Computes new tightened bounding boxes taking into account the removed locations. This can be an expensive operation - turn on with care.""",
 
 )
-

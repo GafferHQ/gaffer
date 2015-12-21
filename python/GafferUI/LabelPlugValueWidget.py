@@ -201,4 +201,3 @@ class LabelPlugValueWidget( GafferUI.PlugValueWidget ) :
 
 		self.__label.setVisible( True )
 		self.__editableLabel.setVisible( False )
-

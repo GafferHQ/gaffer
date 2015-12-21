@@ -61,7 +61,7 @@ MapProjection::MapProjection( const std::string &name )
 	addChild( new StringPlug( "camera" ) );
 	addChild( new StringPlug( "sName", Plug::In, "s" ) );
 	addChild( new StringPlug( "tName", Plug::In, "t" ) );
-	
+
 	// Fast pass-throughs for things we don't modify
 	outPlug()->attributesPlug()->setInput( inPlug()->attributesPlug() );
 	outPlug()->transformPlug()->setInput( inPlug()->transformPlug() );

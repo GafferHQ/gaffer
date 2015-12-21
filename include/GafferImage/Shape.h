@@ -64,16 +64,16 @@ class Shape : public ImageProcessor
 
 		Gaffer::Color4fPlug *colorPlug();
 		const Gaffer::Color4fPlug *colorPlug() const;
-		
+
 		Gaffer::BoolPlug *shadowPlug();
 		const Gaffer::BoolPlug *shadowPlug() const;
-		
+
 		Gaffer::Color4fPlug *shadowColorPlug();
 		const Gaffer::Color4fPlug *shadowColorPlug() const;
-		
+
 		Gaffer::V2fPlug *shadowOffsetPlug();
 		const Gaffer::V2fPlug *shadowOffsetPlug() const;
-		
+
 		Gaffer::FloatPlug *shadowBlurPlug();
 		const Gaffer::FloatPlug *shadowBlurPlug() const;
 
@@ -111,7 +111,7 @@ class Shape : public ImageProcessor
 
 		ImagePlug *shapePlug();
 		const ImagePlug *shapePlug() const;
-		
+
 		ImagePlug *shadowShapePlug();
 		const ImagePlug *shadowShapePlug() const;
 

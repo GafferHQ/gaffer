@@ -64,7 +64,7 @@ class MetadataProcessor : public ImageProcessor
 		virtual void hashMetadata( const GafferImage::ImagePlug *parent, const Gaffer::Context *context, IECore::MurmurHash &h ) const;
 		// Reimplemented to call computeProcessedMetadata()
 		virtual IECore::ConstCompoundObjectPtr computeMetadata( const Gaffer::Context *context, const ImagePlug *parent ) const;
-		
+
 		/// Must be implemented by derived classes to compute the hash for the work done in computeProcessedMetadata().
 		virtual void hashProcessedMetadata( const Gaffer::Context *context, IECore::MurmurHash &h ) const = 0;
 		/// Must be implemented by derived classes to process the incoming metadata.

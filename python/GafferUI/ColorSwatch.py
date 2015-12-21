@@ -157,4 +157,3 @@ class _Checker( QtGui.QWidget ) :
 			pen.setWidth( 4 )
 			painter.setPen( pen )
 			painter.drawRect( 0, 0, self.width(), self.height() )
-

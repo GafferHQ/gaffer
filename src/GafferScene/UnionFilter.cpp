@@ -80,4 +80,3 @@ unsigned UnionFilter::computeMatch( const ScenePlug *scene, const Gaffer::Contex
 	}
 	return result;
 }
-

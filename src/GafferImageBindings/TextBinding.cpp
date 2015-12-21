@@ -53,14 +53,14 @@ void bindText()
 		.value( "Left", Text::Left )
 		.value( "Right", Text::Right )
 		.value( "HorizontalCenter", Text::HorizontalCenter )
-		// Also bind a nice sensible value without the prefix - 
+		// Also bind a nice sensible value without the prefix -
 		// the prefix is only needed because of C++'s weird
 		// enum value scoping causing clashes with VerticalAlignment.
 		// In C++11 we should be able to use `enum class` to avoid
 		// this problem.
 		.value( "Center", Text::HorizontalCenter )
 	;
-	
+
 	enum_<Text::VerticalAlignment>( "VerticalAlignment" )
 		.value( "Bottom", Text::Bottom )
 		.value( "Top", Text::Top )

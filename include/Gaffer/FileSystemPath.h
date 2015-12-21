@@ -87,9 +87,9 @@ class FileSystemPath : public Path
 	protected :
 
 		virtual void doChildren( std::vector<PathPtr> &children ) const;
-	
+
 	private :
-		
+
 		bool m_includeSequences;
 
 };

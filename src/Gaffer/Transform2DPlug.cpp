@@ -171,4 +171,3 @@ Imath::M33f Transform2DPlug::matrix() const
 
 	return result;
 }
-

@@ -126,5 +126,3 @@ IECore::ConstCompoundObjectPtr Light::computeAttributes( const SceneNode::SceneP
 
 	return result;
 }
-
-

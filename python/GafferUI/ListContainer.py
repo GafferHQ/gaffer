@@ -213,4 +213,3 @@ class ListContainer( GafferUI.ContainerWidget ) :
 
 		stretch = self.__qtLayout.stretch( self.index( child ) )
 		return stretch > 0
-

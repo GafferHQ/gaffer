@@ -47,4 +47,3 @@ class FilteredRecursiveChildIteratorTest( GafferTest.TestCase ) :
 
 if __name__ == "__main__":
 	unittest.main()
-

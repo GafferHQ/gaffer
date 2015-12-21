@@ -62,5 +62,5 @@ Gaffer.Metadata.registerNode(
 		]
 
 	}
-		
+
 )

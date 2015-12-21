@@ -66,7 +66,7 @@ ColorProcessor::ColorProcessor( const std::string &name )
 	// just copying data out of our intermediate colorDataPlug(), it is
 	// actually quicker not to cache the result.
 	outPlug()->channelDataPlug()->setFlags( Plug::Cacheable, false );
-	
+
 	// We don't ever want to change the these, so we make pass-through connections.
 	outPlug()->formatPlug()->setInput( inPlug()->formatPlug() );
 	outPlug()->dataWindowPlug()->setInput( inPlug()->dataWindowPlug() );
@@ -179,7 +179,7 @@ IECore::ConstFloatVectorDataPtr ColorProcessor::computeChannelData( const std::s
 	{
 		return boost::static_pointer_cast<const FloatVectorData>( colorData->members()[2] );
 	}
-	
+
 	// ColorProcessor only handles RGB values at present
 	// so we just return the input value otherwise.
 	return inPlug()->channelDataPlug()->getValue();

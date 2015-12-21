@@ -66,7 +66,7 @@ class StringParameterValueWidget( GafferCortexUI.ParameterValueWidget ) :
 
 		if multiLine :
 			plugValueWidget = GafferUI.MultiLineStringPlugValueWidget( parameterHandler.plug() )
-		
+
 		else :
 			plugValueWidget = GafferUI.StringPlugValueWidget( parameterHandler.plug() )
 			with IECore.IgnoredExceptions( KeyError ) :
@@ -91,16 +91,16 @@ def __fixedLineHeight( plug ) :
 			return None
 		else :
 			parameter = parameter[name]
-	
+
 	# by default the multi-line widget gets auto-expanded in the op interface which works nicely when
 	# the user has to insert a lot of text, but very often we just want to provide a multi-line text field
-	# for a brief description, for this reason we check by the user data "multiLineFixedLineHeight" which when set 
+	# for a brief description, for this reason we check by the user data "multiLineFixedLineHeight" which when set
 	# forces the parameter to show an arbitrary number of lines
 	fixedLineHeight = None
 	with IECore.IgnoredExceptions( KeyError ) :
 		fixedLineHeight = parameter.userData()["UI"]["multiLineFixedLineHeight"].value
-	
+
 	return fixedLineHeight
-	
+
 for nodeType in __nodeTypes:
 	Gaffer.Metadata.registerPlugValue( nodeType, "*", "fixedLineHeight", __fixedLineHeight )

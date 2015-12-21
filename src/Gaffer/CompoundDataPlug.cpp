@@ -499,4 +499,3 @@ IECore::DataPtr CompoundDataPlug::extractDataFromPlug( const ValuePlug *plug )
 	}
 
 }
-

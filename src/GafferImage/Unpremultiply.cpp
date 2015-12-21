@@ -133,4 +133,3 @@ void Unpremultiply::processChannelData( const Gaffer::Context *context, const Im
 }
 
 } // namespace GafferImage
-

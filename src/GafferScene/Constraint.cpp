@@ -54,7 +54,7 @@ Constraint::Constraint( const std::string &name )
 	addChild( new StringPlug( "target" ) );
 	addChild( new IntPlug( "targetMode", Plug::In, Origin, Origin, BoundCenter ) );
 	addChild( new V3fPlug( "targetOffset" ) );
-	
+
 	// Pass through things we don't want to modify
 	outPlug()->attributesPlug()->setInput( inPlug()->attributesPlug() );
 	outPlug()->objectPlug()->setInput( inPlug()->objectPlug() );

@@ -59,7 +59,7 @@ struct TilesEvaluateFunctor
 
 namespace GafferImageTest
 {
-	
+
 void processTiles( const GafferImage::ImagePlug *imagePlug )
 {
 	TilesEvaluateFunctor f;

@@ -136,4 +136,3 @@ IECore::ConstCompoundObjectPtr DeleteGlobals::computeProcessedGlobals( const Gaf
 
 	return result;
 }
-

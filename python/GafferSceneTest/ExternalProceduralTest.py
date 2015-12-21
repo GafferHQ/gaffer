@@ -47,20 +47,20 @@ class ExternalProceduralTest( GafferSceneTest.SceneTestCase ) :
 
 		n = GafferScene.ExternalProcedural()
 		self.assertTrue( n["name"].getValue(), "procedural" )
-		
+
 		self.assertSceneValid( n["out"] )
-		
+
 		n["bound"].setValue( IECore.Box3f( IECore.V3f( 1, 2, 3 ), IECore.V3f( 4, 5, 6 ) ) )
 		n["fileName"].setValue( "test.so" )
 		n["parameters"].addMember( "testFloat", 1.0 )
-		
+
 		p = n["out"].object( "/procedural" )
-		
+
 		self.assertTrue( isinstance( p, IECore.ExternalProcedural ) )
 		self.assertEqual( p.getFileName(), "test.so" )
 		self.assertEqual( p.getBound(), IECore.Box3f( IECore.V3f( 1, 2, 3 ), IECore.V3f( 4, 5, 6 ) ) )
 		self.assertEqual( p.parameters().keys(), [ "testFloat" ] )
 		self.assertEqual( p.parameters()["testFloat"], IECore.FloatData( 1.0 ) )
-		
+
 if __name__ == "__main__":
 	unittest.main()

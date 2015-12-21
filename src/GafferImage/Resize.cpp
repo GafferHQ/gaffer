@@ -293,4 +293,3 @@ const ImagePlug *Resize::source() const
 		return resampledInPlug();
 	}
 }
-

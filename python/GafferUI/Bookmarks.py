@@ -318,4 +318,3 @@ class Bookmarks :
 					f.write( "bookmarks.addRecent( %s )\n" % repr( b.path ) )
 				else :
 					f.write( "bookmarks.add( %s, %s, persistent=True )\n" % ( repr( b.name ), repr( b.path ) ) )
-

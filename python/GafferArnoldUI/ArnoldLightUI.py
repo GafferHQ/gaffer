@@ -53,4 +53,3 @@ Gaffer.Metadata.registerValue( "light:ai:distant_light", "type", "distant" )
 Gaffer.Metadata.registerValue( "light:ai:distant_light", "intensityParameter", "intensity" )
 Gaffer.Metadata.registerValue( "light:ai:distant_light", "exposureParameter", "exposure" )
 Gaffer.Metadata.registerValue( "light:ai:distant_light", "colorParameter", "color" )
-

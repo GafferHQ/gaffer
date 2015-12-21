@@ -66,7 +66,7 @@ def __viewPresetNames( plug ) :
 
 	config = PyOpenColorIO.GetCurrentConfig()
 	display = plug.parent()["display"].getValue()
-	
+
 	return IECore.StringVectorData( [ "None" ] + config.getViews( display ) )
 
 def __viewPresetValues( plug ) :

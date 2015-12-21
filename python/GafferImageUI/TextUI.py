@@ -140,7 +140,7 @@ Gaffer.Metadata.registerNode(
 			"preset:Center", GafferImage.Text.HorizontalAlignment.Center,
 
 		],
-		
+
 		"verticalAlignment" : [
 
 			"description",

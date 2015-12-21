@@ -105,5 +105,3 @@ void Sampler::cachedData( Imath::V2i p, const float *& tileData, Imath::V2i &til
 }
 
 }; // namespace GafferImage
-
-

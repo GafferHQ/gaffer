@@ -58,7 +58,7 @@ PathFilter::PathFilter( const std::string &name )
 	storeIndexOfNextChild( g_firstPlugIndex );
 	addChild( new StringVectorDataPlug( "paths", Plug::In, new StringVectorData ) );
 	addChild( new PathMatcherDataPlug( "__pathMatcher", Plug::Out, new PathMatcherData ) );
-	
+
 	plugDirtiedSignal().connect( boost::bind( &PathFilter::plugDirtied, this, ::_1 ) );
 }
 
@@ -94,16 +94,16 @@ void PathFilter::plugDirtied( const Gaffer::Plug *plug )
 		Plug* sourcePlug = pathsPlug()->source<Plug>();
 		if( sourcePlug->direction() == Plug::Out && IECore::runTimeCast<const ComputeNode>( sourcePlug->node() ) )
 		{
-			// pathsPlug() is receiving data from a plug whose value is context varying, meaning 
+			// pathsPlug() is receiving data from a plug whose value is context varying, meaning
 			// we need to use the intermediate pathMatcherPlug() in computeMatch() instead:
-			
+
 			m_pathMatcher = NULL;
 		}
 		else
 		{
 			// pathsPlug() value is not context varying, meaning we can save on graph evaluations
 			// by just precomputing it here and directly using it in computeMatch():
-			
+
 			ConstStringVectorDataPtr paths = pathsPlug()->getValue();
 			m_pathMatcher = new PathMatcherData;
 			m_pathMatcher->writable().init( paths->readable().begin(), paths->readable().end() );
@@ -170,7 +170,7 @@ unsigned PathFilter::computeMatch( const ScenePlug *scene, const Gaffer::Context
 		// If we have a precomputed PathMatcher, we use that to compute matches, otherwise
 		// we grab the PathMatcher from the intermediate plug (which is a bit more expensive
 		// as it involves graph evaluations):
-		
+
 		ConstPathMatcherDataPtr pathMatcher = m_pathMatcher ? m_pathMatcher : pathMatcherPlug()->getValue();
 		return pathMatcher->readable().match( pathData->readable() );
 	}

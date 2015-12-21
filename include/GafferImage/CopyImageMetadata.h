@@ -56,7 +56,7 @@ class CopyImageMetadata : public MetadataProcessor
 		/// we can remove this secondary image plug.
 		ImagePlug *copyFromPlug();
 		const ImagePlug *copyFromPlug() const;
-		
+
 		Gaffer::StringPlug *namesPlug();
 		const Gaffer::StringPlug *namesPlug() const;
 

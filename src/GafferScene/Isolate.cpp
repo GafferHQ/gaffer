@@ -57,7 +57,7 @@ Isolate::Isolate( const std::string &name )
 	storeIndexOfNextChild( g_firstPlugIndex );
 	addChild( new StringPlug( "from", Plug::In, "/" ) );
 	addChild( new BoolPlug( "adjustBounds", Plug::In, false ) );
-	
+
 	// Direct pass-throughs
 	outPlug()->transformPlug()->setInput( inPlug()->transformPlug() );
 	outPlug()->attributesPlug()->setInput( inPlug()->attributesPlug() );

@@ -129,4 +129,3 @@ class Sampler
 #include "GafferImage/Sampler.inl"
 
 #endif
-

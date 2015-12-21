@@ -65,5 +65,5 @@ def __getItem( self, name ) :
 		self["expression"] = __ExpressionPlug()
 
 	return Gaffer.Node.__getitem__( self, name )
-	
+
 Gaffer.Expression.__getitem__ = __getItem

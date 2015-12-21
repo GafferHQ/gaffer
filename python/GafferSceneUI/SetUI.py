@@ -67,7 +67,7 @@ Gaffer.Metadata.registerNode(
 			Add mode adds the specified paths to an existing set,
 			keeping the paths already in the set. If the set does
 			not exist yet, this is the same as create mode.
-			
+
 			Remove mode removes the specified paths from an
 			existing set. If the set does not exist yet, nothing
 			is done.
@@ -87,9 +87,9 @@ Gaffer.Metadata.registerNode(
 			"""
 			The name of the set that will be created or edited.
 			""",
-			
+
 			"ui:scene:acceptsSetName", True,
-			
+
 		],
 
 		"paths" : [
@@ -121,7 +121,7 @@ def __setValue( plug, value, *unused ) :
 
 def __setsPopupMenu( menuDefinition, plugValueWidget ) :
 
-	plug = plugValueWidget.getPlug() 
+	plug = plugValueWidget.getPlug()
 	if plug is None :
 		return
 
@@ -129,21 +129,21 @@ def __setsPopupMenu( menuDefinition, plugValueWidget ) :
 	acceptsSetNames = Gaffer.Metadata.plugValue( plug, "ui:scene:acceptsSetNames" )
 	if not acceptsSetName and not acceptsSetNames :
 		return
-	
+
 	node = plug.node()
 	if isinstance( node, GafferScene.Filter ) :
 		nodes = [ o.node() for o in node["out"].outputs() ]
 	else :
 		nodes = [ node ]
-	
+
 	setNames = set()
 	with plugValueWidget.getContext() :
 		for node in nodes :
 			for scenePlug in node.children( GafferScene.ScenePlug ) :
-				
+
 				if scenePlug.direction() != scenePlug.Direction.In :
 					continue
-				
+
 				setNames.update( [ str( n ) for n in scenePlug["setNames"].getValue() ] )
 
 	if not setNames :

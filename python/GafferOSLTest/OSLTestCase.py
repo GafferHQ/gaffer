@@ -46,4 +46,3 @@ class OSLTestCase( GafferSceneTest.SceneTestCase ) :
 		os.system( "oslc -q -o %s %s" % ( outputFileName, sourceFileName ) )
 
 		return os.path.splitext( outputFileName )[0]
-

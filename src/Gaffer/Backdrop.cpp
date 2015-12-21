@@ -85,5 +85,3 @@ const Gaffer::StringPlug *Backdrop::descriptionPlug() const
 {
 	return getChild<StringPlug>( g_firstPlugIndex + 2 );
 }
-
-

@@ -229,4 +229,3 @@ IECore::ConstFloatVectorDataPtr Offset::computeChannelData( const std::string &c
 		return outData;
 	}
 }
-

@@ -57,7 +57,7 @@ ChannelDataProcessor::ChannelDataProcessor( const std::string &name )
 			~(Gaffer::Plug::Dynamic | Gaffer::Plug::ReadOnly)
 		)
 	);
-	
+
 	// We don't ever want to change these, so we make pass-through connections.
 	outPlug()->formatPlug()->setInput( inPlug()->formatPlug() );
 	outPlug()->dataWindowPlug()->setInput( inPlug()->dataWindowPlug() );

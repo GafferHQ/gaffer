@@ -182,7 +182,7 @@ std::string ValuePlugSerialiser::postConstructor( const Gaffer::GraphComponent *
 
 	object pythonPlug( ValuePlugPtr( const_cast<ValuePlug *>( plug ) ) );
 	object pythonValue = pythonPlug.attr( "getValue" )();
-			
+
 	bool omitDefaultValue = true;
 	if( const Reference *reference = IECore::runTimeCast<const Reference>( plug->node() ) )
 	{

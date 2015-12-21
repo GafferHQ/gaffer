@@ -51,16 +51,16 @@ class Application( IECore.Parameterised ) :
 		self.parameters().addParameters(
 
 			[
-				
+
 				IECore.IntParameter(
 					name = "threads",
 					description = "The maximum number of threads used for computation. "
 						"The default value of zero causes the number of threads to "
-						" be chosen automatically based on the available hardware.",		
+						" be chosen automatically based on the available hardware.",
 					defaultValue = 0,
 					minValue = 0,
 				),
-				
+
 				IECore.FileNameParameter(
 					name = "profileFileName",
 					description = "If this is specified, then the application "

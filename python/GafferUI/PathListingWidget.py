@@ -727,4 +727,3 @@ class _TreeView( QtGui.QTreeView ) :
 
 			self.collapsed.connect( self.__collapsed )
 			self.expanded.connect( self.__expanded )
-

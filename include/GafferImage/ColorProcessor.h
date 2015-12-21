@@ -63,7 +63,7 @@ class ColorProcessor : public ImageProcessor
 
 		virtual void hash( const Gaffer::ValuePlug *output, const Gaffer::Context *context, IECore::MurmurHash &h ) const;
 		virtual void hashChannelData( const GafferImage::ImagePlug *output, const Gaffer::Context *context, IECore::MurmurHash &h ) const;
-		
+
 		/// Implemented to process the color data and stash the results on colorDataPlug()
 		/// format, dataWindow, metadata, and channelNames are passed through via direct connection to the input values.
 		virtual void compute( Gaffer::ValuePlug *output, const Gaffer::Context *context ) const;

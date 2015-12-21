@@ -119,7 +119,7 @@ IECore::ConstCompoundObjectPtr DeleteImageMetadata::computeProcessedMetadata( co
 		{
 			keep = false;
 		}
-		
+
 		if ( keep )
 		{
 			result->members()[it->first] = it->second;

@@ -99,10 +99,10 @@ class _MenuBar( QtGui.QMenuBar ) :
 		# before they work properly.
 
 		for subMenu in GafferUI.Widget._owner( self )._subMenus :
-			
+
 			# in order to avoid the potential overhead caused by building the submenus
 			# fully every time the showEvent is triggered we just do it once
 			if subMenu._qtWidget().isEmpty() :
 				subMenu._buildFully()
-			
+
 		return QtGui.QMenuBar.showEvent( self, event )

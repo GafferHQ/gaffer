@@ -123,8 +123,8 @@ class Widget( object ) :
 		if isinstance( topLevelWidget, QtGui.QWidget ) :
 			assert( Widget.__qtWidgetOwners.get( topLevelWidget ) is None )
 			self.__qtWidget = topLevelWidget
-			
-			## Qt treats subclasses of QWidget differently from direct instances of QWidget itself 
+
+			## Qt treats subclasses of QWidget differently from direct instances of QWidget itself
 			# where in direct instances of QWidget the behavior of the attribute "WA_StyledBackground"
 			# is set in place, however there is a bug in PySide that treats direct instances of QWidget
 			# in the same way as their subclassed ones, because of that we need to set the

@@ -53,4 +53,3 @@ GafferImage.Format.registerFormat( GafferImage.Format( 1920, 1080 ), "HD 1080" )
 GafferImage.Format.registerFormat( GafferImage.Format( 3840, 2160 ), "UHD" )
 
 GafferImage.Format.registerFormat( GafferImage.Format( 2880, 1620 ), "Alexa 2.8k" )
-

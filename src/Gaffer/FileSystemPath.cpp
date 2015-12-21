@@ -99,7 +99,7 @@ bool FileSystemPath::isValid() const
 	{
 		return true;
 	}
-	
+
 	const file_type t = symlink_status( path( this->string() ) ).type();
 	return t != status_error && t != file_not_found;
 }
@@ -133,7 +133,7 @@ bool FileSystemPath::isFileSequence() const
 	catch( ... )
 	{
 	}
-	
+
 	return false;
 }
 
@@ -143,7 +143,7 @@ FileSequencePtr FileSystemPath::fileSequence() const
 	{
 		return NULL;
 	}
-	
+
 	FileSequencePtr sequence = NULL;
 	IECore::ls( this->string(), sequence, /* minSequenceSize = */ 1 );
 	return sequence;
@@ -157,7 +157,7 @@ void FileSystemPath::propertyNames( std::vector<IECore::InternedString> &names )
 	names.push_back( g_groupPropertyName );
 	names.push_back( g_modificationTimePropertyName );
 	names.push_back( g_sizePropertyName );
-	
+
 	if( m_includeSequences )
 	{
 		names.push_back( g_frameRangePropertyName );
@@ -196,7 +196,7 @@ IECore::ConstRunTimeTypedPtr FileSystemPath::property( const IECore::InternedStr
 				return new StringData( mostCommon );
 			}
 		}
-		
+
 		std::string n = this->string();
 		struct stat s;
 		stat( n.c_str(), &s );
@@ -243,7 +243,7 @@ IECore::ConstRunTimeTypedPtr FileSystemPath::property( const IECore::InternedStr
 	else if( name == g_modificationTimePropertyName )
 	{
 		boost::system::error_code e;
-		
+
 		if( m_includeSequences )
 		{
 			FileSequencePtr sequence = fileSequence();
@@ -272,7 +272,7 @@ IECore::ConstRunTimeTypedPtr FileSystemPath::property( const IECore::InternedStr
 	else if( name == g_sizePropertyName )
 	{
 		boost::system::error_code e;
-		
+
 		if( m_includeSequences )
 		{
 			FileSequencePtr sequence = fileSequence();
@@ -305,10 +305,10 @@ IECore::ConstRunTimeTypedPtr FileSystemPath::property( const IECore::InternedStr
 		{
 			return new StringData( sequence->getFrameList()->asString() );
 		}
-		
+
 		return new StringData;
 	}
-	
+
 	return Path::property( name );
 }
 
@@ -330,7 +330,7 @@ void FileSystemPath::doChildren( std::vector<PathPtr> &children ) const
 	{
 		children.push_back( new FileSystemPath( it->path().string(), const_cast<PathFilter *>( getFilter() ), m_includeSequences ) );
 	}
-	
+
 	if( m_includeSequences )
 	{
 		std::vector<FileSequencePtr> sequences;

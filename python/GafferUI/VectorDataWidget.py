@@ -183,11 +183,11 @@ class VectorDataWidget( GafferUI.Widget ) :
 		GafferUI.Widget.setHighlighted( self, highlighted )
 
 	def addButton( self ) :
-	
+
 		return self.__buttonRow[0]
-		
+
 	def removeButton( self ) :
-	
+
 		return self.__buttonRow[1]
 
 	def setData( self, data ) :

@@ -171,4 +171,3 @@ void Node::parentChanging( Gaffer::GraphComponent *newParent )
 		}
 	}
 }
-

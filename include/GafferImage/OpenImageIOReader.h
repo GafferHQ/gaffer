@@ -68,7 +68,7 @@ class OpenImageIOReader : public ImageNode
 			Black,
 			Hold,
 		};
-		
+
 		Gaffer::StringPlug *fileNamePlug();
 		const Gaffer::StringPlug *fileNamePlug() const;
 
@@ -113,7 +113,7 @@ class OpenImageIOReader : public ImageNode
 		void hashFileName( const Gaffer::Context *context, IECore::MurmurHash &h ) const;
 
 		void plugSet( Gaffer::Plug *plug );
-		
+
 		static size_t g_firstPlugIndex;
 
 };

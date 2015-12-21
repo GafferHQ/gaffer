@@ -67,7 +67,7 @@ class OpenColorIOTransform : public ColorProcessor
 		/// node should be in a disabled state.
 		/// \todo: rework ColorProcessor so we can remove this.
 		virtual bool enabled() const;
-		
+
 		/// Implemented to call affectsTransform() if the base class
 		/// does not affect the color data for this input. Derived
 		/// classes should implement affectsTransform() instead.
@@ -80,7 +80,7 @@ class OpenColorIOTransform : public ColorProcessor
 		/// OpenColorIO Config and apply it to the output channels.
 		/// Derived classes should implement transform() instead.
 		virtual void processColorData( const Gaffer::Context *context, IECore::FloatVectorData *r, IECore::FloatVectorData *g, IECore::FloatVectorData *b ) const;
-		
+
 		/// Derived classes must implement this to return true if the specified input
 		/// is used in transform().
 		virtual bool affectsTransform( const Gaffer::Plug *input ) const = 0;

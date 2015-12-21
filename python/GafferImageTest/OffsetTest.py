@@ -149,28 +149,28 @@ class OffsetTest( GafferTest.TestCase ) :
 		self.assertEqual( c["out"].image(), o2["out"].image() )
 
 	def testChannelDataDirtyPropagation( self ) :
-	
+
 		c = GafferImage.Constant()
-		
+
 		o = GafferImage.Offset()
 		o["in"].setInput( c["out"] )
-		
+
 		cs = GafferTest.CapturingSlot( o.plugDirtiedSignal() )
 		c["color"]["r"].setValue( 0.5 )
-		
+
 		self.assertTrue( o["out"]["channelData"] in { x[0] for x in cs } )
-		
+
 	def testDataWindowDirtyPropagation( self ) :
-	
+
 		c = GafferImage.Constant()
-		
+
 		o = GafferImage.Offset()
 		o["in"].setInput( c["out"] )
-		
+
 		cs = GafferTest.CapturingSlot( o.plugDirtiedSignal() )
 		c["format"].setValue( GafferImage.Format( 100, 100 ) )
-		
-		self.assertTrue( o["out"]["dataWindow"] in { x[0] for x in cs } )	
-		
+
+		self.assertTrue( o["out"]["dataWindow"] in { x[0] for x in cs } )
+
 if __name__ == "__main__":
 	unittest.main()

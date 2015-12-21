@@ -71,4 +71,3 @@ class GraphComponentPathTest( GafferTest.TestCase ) :
 
 if __name__ == "__main__":
 	unittest.main()
-

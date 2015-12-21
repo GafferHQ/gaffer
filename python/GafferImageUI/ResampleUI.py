@@ -73,13 +73,13 @@ Gaffer.Metadata.registerNode(
 			""",
 
 			"plugValueWidget:type", "GafferUI.PresetsPlugValueWidget",
-			
+
 			"preset:Default", "",
 
 		] + list( itertools.chain(
-		
+
 			*[ ( "preset:" + x.title(), x ) for x in GafferImage.Resample.filters() ]
-		
+
 		) ),
 
 		"filterWidth" : [

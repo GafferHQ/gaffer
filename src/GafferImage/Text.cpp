@@ -105,7 +105,7 @@ FacePtr faceLoader( const std::string &font, size_t &cost )
 	{
 		throw Exception( boost::str( boost::format( "Error loading font \"%s\"." ) % font ) );
 	}
-		
+
 	cost = 1;
 	return result;
 }
@@ -116,12 +116,12 @@ FaceCachePtr createFaceCache()
 {
 	return boost::make_shared<FaceCache>( faceLoader );
 }
-	
+
 FacePtr face( const string &font, const V2i &size )
 {
 	typedef tbb::enumerable_thread_specific<FaceCachePtr> ThreadSpecificFaceCache;
 	static ThreadSpecificFaceCache g_faceCaches( createFaceCache );
-	
+
 	FacePtr face = g_faceCaches.local()->get( font );
 
 	FT_Set_Transform( face.get(), NULL, NULL );
@@ -376,7 +376,7 @@ IECore::ConstCompoundObjectPtr Text::computeLayout( const Gaffer::Context *conte
 	{
 		area = inPlug()->formatPlug()->getValue().getDisplayWindow();
 	}
-	
+
 	area.min *= 64; area.max *= 64;
 	V2i pen = V2i( area.min.x, area.max.y - face->size->metrics.ascender );
 
@@ -463,7 +463,7 @@ IECore::ConstCompoundObjectPtr Text::computeLayout( const Gaffer::Context *conte
 	{
 		yOffset = (float)(area.min.y - (pen.y + face->size->metrics.descender) ) / (64.0f * 2.0f);
 	}
-	
+
 	FT_GlyphSlot slot = face->glyph;
 
 	for( vector<Line>::const_iterator lIt = lines.begin(), leIt = lines.end(); lIt != leIt; ++lIt )
@@ -624,4 +624,3 @@ IECore::ConstFloatVectorDataPtr Text::computeShapeChannelData(  const Imath::V2i
 
 	return resultData;
 }
-

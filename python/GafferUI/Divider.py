@@ -65,4 +65,3 @@ class Divider( GafferUI.Widget ) :
 			return self.Orientation.Horizontal
 		else :
 			return self.Orientation.Vertical
-

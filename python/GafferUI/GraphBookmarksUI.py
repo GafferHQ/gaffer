@@ -61,7 +61,7 @@ def appendPlugContextMenuDefinitions( nodeGraph, plug, menuDefinition ) :
 	parent = nodeGraph.graphGadget().getRoot()
 	dividerAdded = False
 	for bookmark in __bookmarks( parent ) :
-		
+
 		nodeGadget = nodeGraph.graphGadget().nodeGadget( bookmark )
 		if nodeGadget is None :
 			continue

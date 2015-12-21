@@ -107,7 +107,7 @@ struct NodeMetadata
 			multi_index::sequenced<>
 		>
 	> PlugValues;
-	
+
 	typedef map<MatchPattern, PlugValues> PlugPathsToValues;
 
 	NodeValues nodeValues;
@@ -144,7 +144,7 @@ typedef multi_index::multi_index_container<
 		multi_index::sequenced<>
 	>
 > InstanceValues;
-	
+
 typedef concurrent_hash_map<const GraphComponent *, InstanceValues *> InstanceMetadataMap;
 
 InstanceMetadataMap &instanceMetadataMap()
@@ -187,7 +187,7 @@ OptionalData instanceValue( const GraphComponent *instance, InternedString key, 
 	{
 		return OptionalData();
 	}
-	
+
 	InstanceValues::const_iterator vIt = m->find( key );
 	if( vIt != m->end() )
 	{
@@ -197,7 +197,7 @@ OptionalData instanceValue( const GraphComponent *instance, InternedString key, 
 		}
 		return vIt->value;
 	}
-	
+
 	return OptionalData();
 }
 
@@ -229,7 +229,7 @@ void registerInstanceValueAction( GraphComponent *instance, InternedString key, 
 			m->erase( it );
 		}
 	}
-	
+
 	if( Node *node = runTimeCast<Node>( instance ) )
 	{
 		Metadata::nodeValueChangedSignal()( node->typeId(), key, node );
@@ -503,7 +503,7 @@ void Metadata::registerPlugValue( IECore::TypeId nodeTypeId, const MatchPattern 
 {
 	NodeMetadata &nodeMetadata = nodeMetadataMap()[nodeTypeId];
 	NodeMetadata::PlugValues &plugValues = nodeMetadata.plugPathsToValues[plugPath];
-	
+
 	NodeMetadata::NamedPlugValue namedValue( key, value );
 
 	NodeMetadata::PlugValues::const_iterator it = plugValues.find( key );
@@ -515,7 +515,7 @@ void Metadata::registerPlugValue( IECore::TypeId nodeTypeId, const MatchPattern 
 	{
 		plugValues.replace( it, namedValue );
 	}
-	
+
 	plugValueChangedSignal()( nodeTypeId, plugPath, key, NULL );
 }
 

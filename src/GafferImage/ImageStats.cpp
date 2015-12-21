@@ -339,4 +339,3 @@ void ImageStats::compute( ValuePlug *output, const Context *context ) const
 		static_cast<FloatPlug *>( output )->setValue( 0 );
 	}
 }
-

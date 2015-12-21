@@ -143,4 +143,3 @@ BOOST_PYTHON_MODULE( _GafferImage )
 	GafferImageBindings::bindOpenColorIOTransform();
 
 }
-

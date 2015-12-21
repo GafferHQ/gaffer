@@ -133,7 +133,7 @@ class CompoundEditor( GafferUI.EditorWidget ) :
 					tabDict["pinned"].append( None )
 
 			return repr( tabDict )
-	
+
 	def __repr__( self ) :
 
 		return "GafferUI.CompoundEditor( scriptNode, children = %s )" % self.__serialise( self.__splitContainer )
@@ -553,4 +553,3 @@ class _TabbedContainer( GafferUI.TabbedContainer ) :
 		self.__pinningButton.setHighlighted( False )
 
 		return True
-

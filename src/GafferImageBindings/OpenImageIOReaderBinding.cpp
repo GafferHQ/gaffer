@@ -66,7 +66,7 @@ void GafferImageBindings::bindOpenImageIOReader()
 		.def( "getCacheMemoryLimit", &OpenImageIOReader::getCacheMemoryLimit ).staticmethod( "getCacheMemoryLimit" )
 		.def( "setCacheMemoryLimit", &OpenImageIOReader::setCacheMemoryLimit ).staticmethod( "setCacheMemoryLimit" )
 	;
-	
+
 	boost::python::enum_<OpenImageIOReader::MissingFrameMode>( "MissingFrameMode" )
 		.value( "Error", OpenImageIOReader::Error )
 		.value( "Black", OpenImageIOReader::Black )

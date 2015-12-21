@@ -41,7 +41,7 @@ import GafferUI
 # plugs of the main plug.
 ## \todo If required, add support for a surrounding collapsible layout,
 # the presence of which should be specified via a metadata item. All
-# additional features should be driven by metadata only as far as is 
+# additional features should be driven by metadata only as far as is
 # feasible.
 class LayoutPlugValueWidget( GafferUI.PlugValueWidget ) :
 

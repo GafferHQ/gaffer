@@ -3,10 +3,10 @@ import GafferScene
 import GafferUI
 
 def __exportRibs( menu ):
-	
+
 	scriptWindow = menu.ancestor( GafferUI.ScriptWindow )
 	script = scriptWindow.scriptNode()
-	
+
 	start = script['frameRange']['start'].getValue()
 	end = script['frameRange']['end'].getValue()
 	if len(script.selection()):
@@ -22,5 +22,5 @@ def __exportRibs( menu ):
 			print 'needs to be a renderman render node!'
 	else:
 		print 'select a node!'
-	
+
 GafferUI.ScriptWindow.menuDefinition(application).append( "/ben/Export Ribs", { "command" : __exportRibs } )

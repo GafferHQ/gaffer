@@ -61,7 +61,7 @@ class RenderManRender( GafferScene.ExecutableRender ) :
 				"ribFileName",
 			)
 		)
-		
+
 		self.addChild(
 			Gaffer.StringPlug(
 				"command",
@@ -133,17 +133,17 @@ class RenderManRender( GafferScene.ExecutableRender ) :
 
 		if self["mode"].getValue() != "render" :
 			return ""
-		
+
 		result = self["command"].getValue()
 		result = Gaffer.Context.current().substitute( result ) ## \todo See __fileName()
 		result = result.strip()
 		if result == "" :
 			return
-		
+
 		result += " '" + self.__fileName() + "'"
-		
+
 		return result
-		
+
 	def __fileName( self ) :
 
 		result = self["ribFileName"].getValue()

@@ -209,4 +209,3 @@ class FormatPlugValueWidget( GafferUI.PlugValueWidget ) :
 			self._updateFromPlug()
 
 GafferUI.PlugValueWidget.registerType( GafferImage.FormatPlug, FormatPlugValueWidget )
-

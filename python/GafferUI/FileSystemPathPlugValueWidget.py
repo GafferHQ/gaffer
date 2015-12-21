@@ -47,7 +47,7 @@ import GafferUI
 # - "fileSystemPathPlugValueWidget:includeSequenceFrameRange"
 #	Note that includeSequenceFrameRange is primarily used
 #	by GafferCortex. Think twice before using it elsewhere
-#	as it may not exist in the future. 
+#	as it may not exist in the future.
 class FileSystemPathPlugValueWidget( GafferUI.PathPlugValueWidget ) :
 
 	def __init__( self, plug, path=None, **kw ) :

@@ -273,4 +273,3 @@ def __shaderSubMenu( searchPaths, extensions, nodeCreator, matchExpression ) :
 	result.append( "/Load...", { "command" : GafferUI.NodeMenu.nodeCreatorWrapper( lambda menu : __loadFromFile( menu, extensions, nodeCreator ) ) } )
 
 	return result
-

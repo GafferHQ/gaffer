@@ -380,7 +380,7 @@ class CompoundDataPlugTest( GafferTest.TestCase ) :
 
 		# but changing the name and value for the disabled
 		# member should have no effect at all.
-		
+
 		m2["value"].setValue( 40 )
 		self.assertEqual( h5, p.hash() )
 
@@ -389,4 +389,3 @@ class CompoundDataPlugTest( GafferTest.TestCase ) :
 
 if __name__ == "__main__":
 	unittest.main()
-

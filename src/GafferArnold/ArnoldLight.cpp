@@ -96,7 +96,7 @@ IECore::ObjectVectorPtr ArnoldLight::computeLight( const Gaffer::Context *contex
 	{
 		result->parameters()[(*it)->getName()] = CompoundDataPlug::extractDataFromPlug( it->get() );
 	}
-	
+
 	IECore::ObjectVectorPtr resultVector = new IECore::ObjectVector();
 	resultVector->members().push_back( result );
 	return resultVector;

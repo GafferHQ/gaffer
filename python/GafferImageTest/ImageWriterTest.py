@@ -715,11 +715,11 @@ class ImageWriterTest( GafferImageTest.ImageTestCase ) :
 				expectedMetadata["IPTC:OriginatingProgram"] = expectedMetadata["Software"]
 				expectedMetadata["IPTC:Creator"] = expectedMetadata["Artist"]
 				break
-		
+
 		for key in overrideMetadata :
 			expectedMetadata[key] = overrideMetadata[key]
 			beforeMetadata[key] = overrideMetadata[key]
-		
+
 		for key in metadataToIgnore :
 			if key in expectedMetadata :
 				del expectedMetadata[key]
@@ -727,7 +727,7 @@ class ImageWriterTest( GafferImageTest.ImageTestCase ) :
 				del beforeMetadata[key]
 			if key in afterMetadata :
 				del afterMetadata[key]
-		
+
 		for metaName in expectedMetadata.keys() :
 			self.assertTrue( metaName in afterMetadata.keys(), "Writer Metadata missing expected key \"{}\" set to \"{}\" : {}".format(metaName, str(expectedMetadata[metaName]), ext) )
 			self.assertEqual( expectedMetadata[metaName], afterMetadata[metaName], "Metadata does not match for key \"{}\" : {}".format(metaName, ext) )
@@ -956,4 +956,3 @@ class ImageWriterTest( GafferImageTest.ImageTestCase ) :
 
 if __name__ == "__main__":
 	unittest.main()
-

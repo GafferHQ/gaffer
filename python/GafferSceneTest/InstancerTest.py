@@ -267,31 +267,31 @@ class InstancerTest( GafferSceneTest.SceneTestCase ) :
 		self.assertTrue( instancer["out"]["transform"] in dirtiedPlugs )
 
 	def testPythonExpressionAndGIL( self ) :
-	
+
 		script = Gaffer.ScriptNode()
-		
+
 		script["plane"] = GafferScene.Plane()
 		script["plane"]["divisions"].setValue( IECore.V2i( 20 ) )
-		
+
 		script["sphere"] = GafferScene.Sphere()
-		
+
 		script["expression"] = Gaffer.Expression()
 		script["expression"].setExpression( "parent['sphere']['radius'] = context.getFrame() + float( context['instancer:id'] )" )
-		
+
 		script["instancer"] = GafferScene.Instancer()
 		script["instancer"]["in"].setInput( script["plane"]["out"] )
 		script["instancer"]["instance"].setInput( script["sphere"]["out"] )
 		script["instancer"]["parent"].setValue( "/plane" )
-		
+
 		# The Instancer spawns its own threads, so if we don't release the GIL
 		# when invoking it, and an upstream node enters Python, we'll end up
 		# with a deadlock. Test that isn't the case. We increment the frame
 		# between each test to ensure the expression result is not cached and
 		# we do truly enter python.
 		with Gaffer.Context() as c :
-		
+
 			c["scene:path"] = IECore.InternedStringVectorData( [ "plane" ] )
-			
+
 			c.setFrame( 1 )
 			script["instancer"]["out"]["globals"].getValue()
 			c.setFrame( 2 )
@@ -305,7 +305,7 @@ class InstancerTest( GafferSceneTest.SceneTestCase ) :
 			c.setFrame( 6 )
 			script["instancer"]["out"]["childNames"].getValue()
 			c.setFrame( 7 )
-			
+
 			c.setFrame( 101 )
 			script["instancer"]["out"]["globals"].hash()
 			c.setFrame( 102 )
@@ -319,9 +319,9 @@ class InstancerTest( GafferSceneTest.SceneTestCase ) :
 			c.setFrame( 106 )
 			script["instancer"]["out"]["childNames"].hash()
 			c.setFrame( 107 )
-			
-			# The same applies for the higher level helper functions on ScenePlug	
-			
+
+			# The same applies for the higher level helper functions on ScenePlug
+
 			c.setFrame( 200 )
 			script["instancer"]["out"].bound( "/plane" )
 			c.setFrame( 201 )

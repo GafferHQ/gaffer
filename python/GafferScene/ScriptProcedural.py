@@ -105,12 +105,12 @@ class ScriptProcedural( IECore.ParameterisedProcedural ) :
 			return
 
 		self.__postExpansionCacheClearConnection = GafferScene.SceneProcedural.allRenderedSignal().connect( Gaffer.WeakMethod( self.__allRendered ) )
-		
+
 		sceneProcedural = GafferScene.SceneProcedural( plug, context, "/" )
 		renderer.procedural( sceneProcedural )
 
 	def __allRendered( self ):
-		
+
 		# all the procedural expansion's done, so lets clear the value plug cache/object pool to free up a bit of memory:
 		self.__postExpansionCacheClearConnection = None
 

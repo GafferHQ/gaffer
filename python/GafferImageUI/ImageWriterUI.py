@@ -165,7 +165,7 @@ Gaffer.Metadata.registerNode(
 			"preset:Half", "half",
 			"preset:Float", "float",
 			"preset:Double", "double",
-			
+
 		],
 
 		"fits" : [
@@ -346,7 +346,7 @@ Gaffer.Metadata.registerNode(
 			0 (no compression) and 9 (most compression).
 			""",
 		],
-		
+
 		"rla" : [
 			"description",
 			"""
@@ -484,7 +484,7 @@ Gaffer.Metadata.registerNode(
 			100 (high quality, low compression).
 			""",
 		],
-		
+
 
 	}
 

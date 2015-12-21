@@ -185,4 +185,3 @@ void FormatPlug::plugDirtied( Gaffer::Plug *plug )
 		setDefaultFormat( parent<ScriptNode>()->context(), getValue() );
 	}
 }
-

@@ -150,18 +150,18 @@ class FilterPlugValueWidget( GafferUI.PlugValueWidget ) :
 
 	@staticmethod
 	def __filterTypes() :
-	
+
 		def walk( f ) :
-		
+
 			result = []
-			
+
 			subClasses = f.__subclasses__()
 			if not len( subClasses ) :
 				result.append( f )
 			else :
 				for s in subClasses :
 					result += walk( s )
-					
+
 			return result
-		
+
 		return walk( GafferScene.Filter )

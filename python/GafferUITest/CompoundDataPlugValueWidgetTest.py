@@ -47,7 +47,7 @@ class CompoundDataPlugValueWidgetTest( GafferUITest.TestCase ) :
 		n = Gaffer.Node()
 		n["user"]["p1"] = Gaffer.CompoundDataPlug()
 		n["user"]["p2"] = Gaffer.CompoundDataPlug()
-		
+
 		m1 = n["user"]["p1"].addMember( "test", 10 )
 		m2 = n["user"]["p2"].addMember( "test", 10 )
 
@@ -61,4 +61,3 @@ class CompoundDataPlugValueWidgetTest( GafferUITest.TestCase ) :
 
 if __name__ == "__main__":
 	unittest.main()
-

@@ -241,4 +241,3 @@ def __nodeTypeExtractor( node ) :
 
 NodeFinderDialogue.registerMode( "Node Names", __nodeNameExtractor )
 NodeFinderDialogue.registerMode( "Node Types", __nodeTypeExtractor )
-

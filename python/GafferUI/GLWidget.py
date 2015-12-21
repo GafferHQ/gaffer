@@ -355,16 +355,16 @@ class _GLGraphicsView( QtGui.QGraphicsView ) :
 			return None
 
 		import IECoreHoudini
-		
+
 		# Prior to Houdini 14 we are running embedded on the hou.ui idle loop,
 		# so we needed to force the Houdini GL context to be current, and share
 		# it, similar to how we do this in Maya.
 		if hou.applicationVersion()[0] < 14 :
 			return cls.__createHostedQGLWidget( format, IECoreHoudini.makeMainGLContextCurrent )
-		
+
 		# In Houdini 14 and beyond, Qt is the native UI, and we can access
 		# Houdini's shared QGLWidget directly, provided we are using a recent
-		# Cortex version.		
+		# Cortex version.
 		return QtOpenGL.QGLWidget( format, shareWidget = GafferUI._qtObject( IECoreHoudini.sharedGLWidget(), QtOpenGL.QGLWidget ) )
 
 class _GLGraphicsScene( QtGui.QGraphicsScene ) :

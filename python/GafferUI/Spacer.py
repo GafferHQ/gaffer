@@ -54,4 +54,3 @@ class Spacer( GafferUI.Widget ) :
 		if maximumSize is not None :
 			self._qtWidget().setMaximumWidth( maximumSize.x )
 			self._qtWidget().setMaximumHeight( maximumSize.y )
-
