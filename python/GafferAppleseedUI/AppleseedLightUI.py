@@ -117,6 +117,8 @@ Gaffer.Metadata.registerValue( "light:as:latlong_map_environment_edf", "textureN
 Gaffer.Metadata.registerValue( "light:as:latlong_map_environment_edf", "intensityParameter", "radiance_multiplier" )
 Gaffer.Metadata.registerValue( "light:as:latlong_map_environment_edf", "exposureParameter", "exposure" )
 
+Gaffer.Metadata.registerValue( "light:as:hosek_environment_edf", "type", "environment" )
+
 Gaffer.Metadata.registerValue( "light:as:spot_light", "type", "spot" )
 Gaffer.Metadata.registerValue( "light:as:spot_light", "coneAngleParameter", "outer_angle" )
 Gaffer.Metadata.registerValue( "light:as:spot_light", "penumbraAngleParameter", "inner_angle" )

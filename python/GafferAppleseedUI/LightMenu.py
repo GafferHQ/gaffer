@@ -43,7 +43,8 @@ import GafferAppleseed
 
 def appendLights( menuDefinition, prefix="/Appleseed" ) :
 
-	__addToMenu( menuDefinition, prefix + "/Environment/", "latlong_map_environment_edf" )
+	__addToMenu( menuDefinition, prefix + "/Environment/", "latlong_map_environment_edf", "Skydome" )
+	__addToMenu( menuDefinition, prefix + "/Environment/", "hosek_environment_edf", "Physical Sky" )
 
 	lightModelsToExpose = [ "point_light", "directional_light", "spot_light" ]
 
@@ -57,9 +58,11 @@ def __lightCreator( name ) :
 	light.loadShader( name )
 	return light
 
-def __addToMenu( menuDefinition, prefix, model ) :
+def __addToMenu( menuDefinition, prefix, model, displayName = None ) :
 
-	displayName = __displayName( model )
+	if displayName == None :
+		displayName = __displayName( model )
+
 	menuPath = prefix + displayName
 	menuDefinition.append(
 		menuPath,
