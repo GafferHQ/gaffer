@@ -347,7 +347,7 @@ class ExecutableNodeTest( GafferTest.TestCase ) :
 
 		s["r"]["p"].setInput( s["e"]["task"] )
 
-	def testReferencePromotedPreTasksPlug( self ) :
+	def testReferencePromotedPreTasksArrayPlug( self ) :
 
 		s = Gaffer.ScriptNode()
 
