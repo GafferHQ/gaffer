@@ -40,9 +40,12 @@ from __future__ import with_statement
 import Gaffer
 import GafferUI
 
+## Supported metadata :
+#
+#  "numericPlugValueWidget:fixedCharacterWidth"
+##
 ## \todo Maths expressions to modify the existing value
 ## \todo Enter names of other plugs to create a connection
-## \todo Color change for connected plugs and output plugs
 ## \todo Reject drag and drop of anything that's not a number
 class NumericPlugValueWidget( GafferUI.PlugValueWidget ) :
 
@@ -179,8 +182,12 @@ class NumericPlugValueWidget( GafferUI.PlugValueWidget ) :
 	def __updateWidth( self ) :
 
 		charWidth = None
-		if isinstance( self.getPlug(), Gaffer.IntPlug ) and self.getPlug().hasMaxValue() :
+		if self.getPlug() is not None :
+			charWidth = Gaffer.Metadata.plugValue( self.getPlug(), "numericPlugValueWidget:fixedCharacterWidth" )
+
+		if charWidth is None and isinstance( self.getPlug(), Gaffer.IntPlug ) and self.getPlug().hasMaxValue() :
 			charWidth = len( str( self.getPlug().maxValue() ) )
+
 		self.__numericWidget.setFixedCharacterWidth( charWidth )
 
 GafferUI.PlugValueWidget.registerType( Gaffer.FloatPlug, NumericPlugValueWidget )
