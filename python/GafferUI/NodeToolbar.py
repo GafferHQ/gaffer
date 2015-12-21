@@ -39,9 +39,10 @@ import IECore
 import Gaffer
 import GafferUI
 
-## Abstract base class for toolbars representing nodes -
-# see StandardNodeToolbar for a concrete implementation
-# suitable for most purposes.
+## Abstract base class for toolbars representing nodes, typically
+# used in the Viewer. Nodes may have up to four toolbars - one for
+# each edge of the frame. See StandardNodeToolbar for a concrete
+# implementation suitable for most purposes.
 class NodeToolbar( GafferUI.Widget ) :
 
 	def __init__( self, node, topLevelWidget, **kw ) :
@@ -55,21 +56,35 @@ class NodeToolbar( GafferUI.Widget ) :
 
 		return self.__node
 
-	## Creates a NodeToolbar instance for the specified node.
+	## Creates a NodeToolbar instance for the specified node and edge.
 	# Note that not all nodes have toolbars, so None may be returned.
 	@classmethod
-	def create( cls, node ) :
+	def create( cls, node, edge = GafferUI.Edge.Top ) :
 
-		nodeHierarchy = IECore.RunTimeTyped.baseTypeIds( node.typeId() )
-		for typeId in [ node.typeId() ] + nodeHierarchy :
-			creator = cls.__creators.get( typeId, None )
-			if creator is not None :
-				return creator( node )
+		# Try to create a toolbar using metadata.
+		toolbarType = Gaffer.Metadata.nodeValue( node, "nodeToolbar:%s:type" % str( edge ).lower() )
+		if toolbarType is not None :
+			if toolbarType == "" :
+				return None
+			path = toolbarType.split( "." )
+			toolbarClass = __import__( path[0] )
+			for n in path[1:] :
+				toolbarClass = getattr( toolbarClass, n )
+			return toolbarClass( node )
+
+		# Fall back to deprecated registry.
+		if edge == GafferUI.Edge.Top :
+			nodeHierarchy = IECore.RunTimeTyped.baseTypeIds( node.typeId() )
+			for typeId in [ node.typeId() ] + nodeHierarchy :
+				creator = cls.__creators.get( typeId, None )
+				if creator is not None :
+					return creator( node )
 
 		return None
 
 	__creators = {}
 	## Registers a subclass of NodeToolbar to be used with a specific node type.
+	## \deprecated. Use "nodeToolbar:top|bottom|left|right:type" metadata instead.
 	@classmethod
 	def registerCreator( cls, nodeClassOrTypeId, toolbarCreator ) :
 
