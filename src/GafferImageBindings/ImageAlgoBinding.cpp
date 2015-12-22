@@ -45,10 +45,10 @@ namespace GafferImageBindings
 // Register a conversion from StringVectorData.
 /// \todo We could instead do this in the Cortex bindings for all
 /// VectorTypedData types.
-struct StringListFromStringVectorData
+struct StringVectorFromStringVectorData
 {
 
-	StringListFromStringVectorData()
+	StringVectorFromStringVectorData()
 	{
 		boost::python::converter::registry::push_back(
 			&convertible,
@@ -82,7 +82,7 @@ void bindImageAlgo()
 	def( "channelExists", ( bool (*)( const GafferImage::ImagePlug *image, const std::string &channelName ) )&GafferImage::channelExists );
 	def( "channelExists", ( bool (*)( const std::vector<std::string> &channelNames, const std::string &channelName ) )&GafferImage::channelExists );
 
-	StringListFromStringVectorData();
+	StringVectorFromStringVectorData();
 
 }
 
