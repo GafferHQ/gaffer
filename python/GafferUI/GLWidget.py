@@ -418,13 +418,26 @@ class _GLGraphicsScene( QtGui.QGraphicsScene ) :
 			widget._qtWidget().layout().setSizeConstraint( QtGui.QLayout.SetNoConstraint )
 
 		self.__overlayProxy = _OverlayProxyWidget()
+
 		self.__overlayProxy.setWidget( self.__overlay._qtWidget() )
+
+		shadow = QtGui.QGraphicsDropShadowEffect( self )
+		shadow.setColor( QtGui.QColor( 0, 0, 0, 70 ) )
+		shadow.setBlurRadius( 6 )
+		shadow.setOffset( 2.0, 2.0 )
+		self.__overlayProxy.setGraphicsEffect( shadow )
+
 		self.addItem( self.__overlayProxy )
 		self.__updateItemGeometry( self.__overlayProxy, self.sceneRect() )
 
 	def drawBackground( self, painter, rect ) :
 
 		self.__backgroundDrawFunction()
+
+		# Reset pixel store setting back to the default. IECoreGL
+		# (and the ImageGadget) meddle with this, and it throws off
+		# the QGraphicsEffects.
+		GL.glPixelStorei( GL.GL_UNPACK_ALIGNMENT, 4 );
 
 	def __sceneRectChanged( self, sceneRect ) :
 
