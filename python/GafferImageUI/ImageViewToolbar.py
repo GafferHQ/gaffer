@@ -125,18 +125,27 @@ class _ColorInspectorPlugValueWidget( GafferUI.PlugValueWidget ) :
 
 	def __init__( self, plug, **kw ) :
 
-		self.__row = GafferUI.ListContainer( GafferUI.ListContainer.Orientation.Horizontal, spacing = 4 )
-		GafferUI.PlugValueWidget.__init__( self, self.__row, plug, **kw )
+		frame = GafferUI.Frame( borderWidth = 4 )
+		frame._qtWidget().setObjectName( "gafferDarker" )
 
-		with self.__row :
+		GafferUI.PlugValueWidget.__init__( self, frame, plug, **kw )
 
-			self.__positionLabel = GafferUI.Label()
-			self.__positionLabel._qtWidget().setFixedWidth( 100 )
-			self.__swatch = GafferUI.ColorSwatch()
-			self.__rgbLabel = GafferUI.Label()
-			self.__rgbLabel._qtWidget().setFixedWidth( 200 )
-			self.__hsvLabel = GafferUI.Label()
-			self.__hsvLabel._qtWidget().setFixedWidth( 150 )
+		with frame :
+
+			with GafferUI.ListContainer( GafferUI.ListContainer.Orientation.Horizontal, spacing = 4 ) :
+
+				self.__positionLabel = GafferUI.Label()
+				self.__positionLabel._qtWidget().setFixedWidth( 90 )
+
+				self.__swatch = GafferUI.ColorSwatch()
+				self.__swatch._qtWidget().setFixedWidth( 12 )
+				self.__swatch._qtWidget().setFixedHeight( 12 )
+
+				self.__rgbLabel = GafferUI.Label()
+
+				GafferUI.Spacer( IECore.V2i( 20, 10 ), IECore.V2i( 20, 10 ) )
+
+				self.__hsvLabel = GafferUI.Label()
 
 	def _updateFromPlug( self ) :
 
@@ -154,16 +163,16 @@ class _ColorInspectorPlugValueWidget( GafferUI.PlugValueWidget ) :
 		if "A" not in channelNames :
 			color = IECore.Color3f( color[0], color[1], color[2] )
 
-		hsv = color.rgbToHSV()
-
+		self.__positionLabel.setText( "<b>XY : %d %d</b>" % ( pixel.x, pixel.y ) )
 		self.__swatch.setColor( color )
-		self.__positionLabel.setText( "XY : %d, %d" % ( pixel.x, pixel.y ) )
-		self.__hsvLabel.setText( "HSV : %s %s %s" % tuple( GafferUI.NumericWidget.valueToString( x ) for x in ( hsv.r, hsv.g, hsv.b ) ) )
 
 		if isinstance( color, IECore.Color4f ) :
-			self.__rgbLabel.setText( "RGBA : %s %s %s %s" % tuple( GafferUI.NumericWidget.valueToString( x ) for x in ( color.r, color.g, color.b, color.a ) ) )
+			self.__rgbLabel.setText( "<b>RGBA : %.3f %.3f %.3f %.3f</b>" % ( color.r, color.g, color.b, color.a ) )
 		else :
-			self.__rgbLabel.setText( "RGB : %s %s %s" % tuple( GafferUI.NumericWidget.valueToString( x ) for x in ( color.r, color.g, color.b ) ) )
+			self.__rgbLabel.setText( "<b>RGB : %.3f %.3f %.3f</b>" % ( color.r, color.g, color.b ) )
+
+		hsv = color.rgbToHSV()
+		self.__hsvLabel.setText( "<b>HSV : %.3f %.3f %.3f</b>" % ( hsv.r, hsv.g, hsv.b ) )
 
 ##########################################################################
 # Metadata registration.
@@ -172,6 +181,8 @@ class _ColorInspectorPlugValueWidget( GafferUI.PlugValueWidget ) :
 Gaffer.Metadata.registerNode(
 
 	GafferImageUI.ImageView,
+
+	"nodeToolbar:bottom:type", "GafferUI.StandardNodeToolbar.bottom",
 
 	plugs = {
 
@@ -185,7 +196,7 @@ Gaffer.Metadata.registerNode(
 			"plugValueWidget:type", "GafferImageUI.ImageViewToolbar._TogglePlugValueWidget",
 			"togglePlugValueWidget:imagePrefix", "clipping",
 			"togglePlugValueWidget:defaultToggleValue", True,
-			"layout:divider", True,
+			"toolbarLayout:divider", True,
 
 		],
 
@@ -235,8 +246,7 @@ Gaffer.Metadata.registerNode(
 
 			"plugValueWidget:type", "GafferImageUI.ImageViewToolbar._ColorInspectorPlugValueWidget",
 			"label", "",
-			"layout:index", 0,
-			"layout:divider", True,
+			"toolbarLayout:section", "Bottom",
 
 		],
 

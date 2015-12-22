@@ -964,6 +964,14 @@ _styleSheet = string.Template(
 
 	}
 
+	QFrame#gafferDarker {
+
+		background: solid rgba( 0, 0, 0, 80 );
+		border-radius: 2px;
+		padding: 2px;
+
+	}
+
 	QFrame[gafferHighlighted=\"true\"]#gafferDiffA, QFrame[gafferHighlighted=\"true\"]#gafferDiffB, QFrame[gafferHighlighted=\"true\"]#gafferDiffCommon {
 		background-color: $brightColor;
 	}
