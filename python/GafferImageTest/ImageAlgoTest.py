@@ -111,6 +111,21 @@ class ImageAlgoTest( GafferImageTest.ImageTestCase ) :
 			d["channels"].setValue( IECore.StringVectorData( [ chan ] ) )
 			self.assertFalse( GafferImage.channelExists( d["out"], chan ) )
 
+	def testChannelExistsBindings( self ) :
+
+		# Test that both forms of binding to channelExists return the same
+		# value
+
+		c = GafferImage.Constant()
+
+		d = GafferImage.DeleteChannels()
+		d["in"].setInput( c["out"] )
+		d["mode"].setValue( GafferImage.DeleteChannels.Mode.Delete )
+		d["channels"].setValue( IECore.StringVectorData( [ "R", "A" ] ) )
+
+		for chan in [ "R", "G", "B", "A" ] :
+			self.assertEqual( GafferImage.channelExists( d["out"], chan ), GafferImage.channelExists( d["out"]["channelNames"].getValue(), chan ) )
+
 	def testParallelProcessEmptyDataWindow( self ) :
 
 		d = GafferImage.Display()
@@ -119,7 +134,6 @@ class ImageAlgoTest( GafferImageTest.ImageTestCase ) :
 		GafferImageTest.processTiles( d["out"] )
 		d["out"].image()
 		d["out"].imageHash()
-
 
 if __name__ == "__main__":
 	unittest.main()

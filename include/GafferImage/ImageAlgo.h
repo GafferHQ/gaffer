@@ -81,6 +81,9 @@ inline int colorIndex( const std::string &channelName );
 /// Returns true if the specified channel exists in image
 inline bool channelExists( const ImagePlug *image, const std::string &channelName );
 
+/// Returns true if the specified channel exists in channelNames
+inline bool channelExists( const std::vector<std::string> &channelNames, const std::string &channelName );
+
 enum TileOrder
 {
 	Unordered,

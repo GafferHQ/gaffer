@@ -484,6 +484,11 @@ inline bool channelExists( const ImagePlug *image, const std::string &channelNam
 	IECore::ConstStringVectorDataPtr channelNamesData = image->channelNamesPlug()->getValue();
 	const std::vector<std::string> &channelNames = channelNamesData->readable();
 
+	return channelExists( channelNames, channelName );
+}
+
+inline bool channelExists( const std::vector<std::string> &channelNames, const std::string &channelName )
+{
 	return std::find( channelNames.begin(), channelNames.end(), channelName ) != channelNames.end();
 }
 

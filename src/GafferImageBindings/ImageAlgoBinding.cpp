@@ -42,13 +42,47 @@ using namespace boost::python;
 namespace GafferImageBindings
 {
 
+// Register a conversion from StringVectorData.
+/// \todo We could instead do this in the Cortex bindings for all
+/// VectorTypedData types.
+struct StringVectorFromStringVectorData
+{
+
+	StringVectorFromStringVectorData()
+	{
+		boost::python::converter::registry::push_back(
+			&convertible,
+			NULL,
+			boost::python::type_id<std::vector<std::string> >()
+		);
+	}
+
+	static void *convertible( PyObject *obj )
+	{
+		extract<IECore::StringVectorData *> dataExtractor( obj );
+		if( dataExtractor.check() )
+		{
+			if( IECore::StringVectorData *data = dataExtractor() )
+			{
+				return &(data->writable());
+			}
+		}
+
+		return NULL;
+	}
+
+};
+
 void bindImageAlgo()
 {
 
 	def( "layerName", &GafferImage::layerName );
 	def( "baseName", &GafferImage::baseName );
 	def( "colorIndex", &GafferImage::colorIndex );
-	def( "channelExists", &GafferImage::channelExists );
+	def( "channelExists", ( bool (*)( const GafferImage::ImagePlug *image, const std::string &channelName ) )&GafferImage::channelExists );
+	def( "channelExists", ( bool (*)( const std::vector<std::string> &channelNames, const std::string &channelName ) )&GafferImage::channelExists );
+
+	StringVectorFromStringVectorData();
 
 }
 
