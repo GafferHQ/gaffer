@@ -199,12 +199,15 @@ void Merge::hashChannelData( const GafferImage::ImagePlug *output, const Gaffer:
 			continue;
 		}
 
-		if( channelExists( it->get(), channelName ) )
+		IECore::ConstStringVectorDataPtr channelNamesData = (*it)->channelNamesPlug()->getValue();
+		const std::vector<std::string> &channelNames = channelNamesData->readable();
+
+		if( channelExists( channelNames, channelName ) )
 		{
 			(*it)->channelDataPlug()->hash( h );
 		}
 
-		if( channelExists( it->get(), "A" ) )
+		if( channelExists( channelNames, "A" ) )
 		{
 			h.append( (*it)->channelDataHash( "A", tileOrigin ) );
 		}
@@ -275,10 +278,13 @@ IECore::ConstFloatVectorDataPtr Merge::merge( F f, const std::string &channelNam
 			continue;
 		}
 
+		IECore::ConstStringVectorDataPtr channelNamesData = (*it)->channelNamesPlug()->getValue();
+		const std::vector<std::string> &channelNames = channelNamesData->readable();
+
 		ConstFloatVectorDataPtr channelData;
 		ConstFloatVectorDataPtr alphaData;
 
-		if( channelExists( it->get(), channelName ) )
+		if( channelExists( channelNames, channelName ) )
 		{
 			channelData = (*it)->channelDataPlug()->getValue();
 		}
@@ -287,7 +293,7 @@ IECore::ConstFloatVectorDataPtr Merge::merge( F f, const std::string &channelNam
 			channelData = ImagePlug::blackTile();
 		}
 
-		if( channelExists( it->get(), "A" ) )
+		if( channelExists( channelNames, "A" ) )
 		{
 			alphaData = (*it)->channelData( "A", tileOrigin );
 		}
