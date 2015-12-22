@@ -44,8 +44,73 @@ import GafferUI
 import GafferScene
 import GafferSceneUI
 
+Gaffer.Metadata.registerNode(
+
+	GafferSceneUI.SceneView,
+
+	plugs = {
+
+		"shadingMode" : [
+
+			"toolbarLayout:index", 2,
+			"toolbarLayout:divider", True,
+			"plugValueWidget:type", "GafferSceneUI.SceneViewToolbar._ShadingModePlugValueWidget",
+
+		],
+
+		"minimumExpansionDepth" : [
+
+			"plugValueWidget:type", "GafferSceneUI.SceneViewToolbar._ExpansionPlugValueWidget",
+			"toolbarLayout:divider", True,
+
+		],
+
+		"lookThrough" : [
+
+			"plugValueWidget:type", "GafferSceneUI.SceneViewToolbar._LookThroughPlugValueWidget",
+			"toolbarLayout:divider", True,
+			"toolbarLayout:label", "",
+
+		],
+
+		"lookThrough.enabled" : [
+
+			"description",
+			"""
+			When enabled, locks the view to look through a specific camera in the scene.
+			By default, the current render camera is used, but this can be changed using the lookThrough.camera
+			setting.
+			""",
+		],
+
+		"lookThrough.camera" : [
+
+			"description",
+			"""
+			Specifies the camera to look through when lookThrough.enabled is on. The default value
+			means that the current render camera will be used - the paths to other cameras may be specified
+			to choose another camera."
+			""",
+		],
+
+		"grid" : [
+
+			"plugValueWidget:type", "GafferSceneUI.SceneViewToolbar._GridPlugValueWidget",
+
+		],
+
+		"gnomon" : [
+
+			"plugValueWidget:type", "",
+
+		],
+
+	}
+
+)
+
 ##########################################################################
-# Shading Mode
+# _ShadingModePlugValueWidget
 ##########################################################################
 
 class _ShadingModePlugValueWidget( GafferUI.PlugValueWidget ) :
@@ -91,12 +156,8 @@ class _ShadingModePlugValueWidget( GafferUI.PlugValueWidget ) :
 
 			self.getPlug().setValue( value )
 
-Gaffer.Metadata.registerPlugValue( GafferSceneUI.SceneView, "shadingMode", "layout:index", 2 )
-Gaffer.Metadata.registerPlugValue( GafferSceneUI.SceneView, "shadingMode", "divider", True )
-GafferUI.PlugValueWidget.registerCreator( GafferSceneUI.SceneView, "shadingMode", _ShadingModePlugValueWidget )
-
 ##########################################################################
-# Expansion
+# _ExpansionPlugValueWidget
 ##########################################################################
 
 class _ExpansionPlugValueWidget( GafferUI.PlugValueWidget ) :
@@ -133,12 +194,8 @@ class _ExpansionPlugValueWidget( GafferUI.PlugValueWidget ) :
 
 		self.getPlug().setValue( 0 if self.getPlug().getValue() else 999 )
 
-GafferUI.PlugValueWidget.registerCreator( GafferSceneUI.SceneView, "minimumExpansionDepth", _ExpansionPlugValueWidget )
-
-Gaffer.Metadata.registerPlugValue( GafferSceneUI.SceneView, "minimumExpansionDepth", "divider", True )
-
 ##########################################################################
-# Lookthrough
+# _LookThroughPlugValueWidget
 ##########################################################################
 
 class _LookThroughPlugValueWidget( GafferUI.PlugValueWidget ) :
@@ -171,28 +228,8 @@ class _LookThroughPlugValueWidget( GafferUI.PlugValueWidget ) :
 		with self.getContext() :
 			self.__cameraWidget.setEnabled( self.getPlug()["enabled"].getValue() )
 
-GafferUI.PlugValueWidget.registerCreator(
-	GafferSceneUI.SceneView,
-	"lookThrough",
-	_LookThroughPlugValueWidget,
-)
-
-Gaffer.Metadata.registerPlugValue( GafferSceneUI.SceneView, "lookThrough", "label", "" )
-
-Gaffer.Metadata.registerPlugDescription( GafferSceneUI.SceneView, "lookThrough.enabled",
-	"When enabled, locks the view to look through a specific camera in the scene. "
-	"By default, the current render camera is used, but this can be changed using the lookThrough.camera "
-	"setting."
-)
-
-Gaffer.Metadata.registerPlugDescription( GafferSceneUI.SceneView, "lookThrough.camera",
-	"Specifies the camera to look through when lookThrough.enabled is on. The default value "
-	"means that the current render camera will be used - the paths to other cameras may be specified "
-	"to choose another camera."
-)
-
 ##########################################################################
-# Grid
+# _GridPlugValueWidget
 ##########################################################################
 
 class _GridPlugValueWidget( GafferUI.PlugValueWidget ) :
@@ -232,6 +269,3 @@ class _GridPlugValueWidget( GafferUI.PlugValueWidget ) :
 		)
 
 		return m
-
-GafferUI.PlugValueWidget.registerCreator( GafferSceneUI.SceneView.staticTypeId(), "grid", _GridPlugValueWidget )
-GafferUI.PlugValueWidget.registerCreator( GafferSceneUI.SceneView.staticTypeId(), "gnomon", None )
