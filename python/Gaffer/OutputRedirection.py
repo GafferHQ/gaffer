@@ -39,7 +39,7 @@ import threading
 
 ## A threadsafe means of temporarily diverting sys.stdout and/or sys.stderr
 # to alternative functions.
-class OutputRedirection :
+class OutputRedirection( object ) :
 
 	def __init__( self, stdOut = None, stdErr = None ) :
 
@@ -73,7 +73,7 @@ class OutputRedirection :
 	__sysLock = threading.RLock()
 	_streams = threading.local()
 
-class _StdOut() :
+class _StdOut( object ) :
 
 	def write( self, text ) :
 
@@ -83,7 +83,7 @@ class _StdOut() :
 		else :
 			OutputRedirection._originalStdOut.write( text )
 
-class _StdErr() :
+class _StdErr( object ) :
 
 	def write( self, text ) :
 

@@ -36,11 +36,11 @@
 
 # This script is used by PythonApplicationTest.py
 
-class A() :
+class A( object ) :
 
 	pass
 
-class B() :
+class B( object ) :
 
 	def __init__( self ) :
 

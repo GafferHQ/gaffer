@@ -59,7 +59,7 @@ class LocalDispatcher( GafferDispatch.Dispatcher ) :
 
 		self.__jobPool = jobPool if jobPool else LocalDispatcher.defaultJobPool()
 
-	class Job :
+	class Job( object ) :
 
 		Status = IECore.Enum.create( "Waiting", "Running", "Complete", "Failed", "Killed" )
 

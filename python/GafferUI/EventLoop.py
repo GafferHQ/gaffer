@@ -48,7 +48,7 @@ QtCore = GafferUI._qtImport( "QtCore" )
 QtGui = GafferUI._qtImport( "QtGui" )
 
 ## This class provides the event loops used to run GafferUI based applications.
-class EventLoop() :
+class EventLoop( object ) :
 
 	__RunStyle = IECore.Enum.create( "Normal", "PumpThread", "AlreadyRunning", "Houdini" )
 

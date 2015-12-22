@@ -44,7 +44,7 @@ import Gaffer
 # class allows the registration of a function to perform linear->display
 # transforms, and to signal when this is changed. It is expected that
 # specific application configurations will set this appropriately.
-class DisplayTransform() :
+class DisplayTransform( object ) :
 
 	# have to store it inside a list so python doesn't
 	# keep trying to turn it into a method.

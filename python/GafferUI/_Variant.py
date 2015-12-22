@@ -44,7 +44,7 @@ QtCore = GafferUI._qtImport( "QtCore" )
 # the standard python types, whereas PyQt binds and uses the QVariant type.
 # This class provides functions to help with writing code which works
 # with either set of bindings.
-class _Variant() :
+class _Variant( object ) :
 
 	## Returns value converted to a form which can be passed to a function
 	# expecting a QVariant.

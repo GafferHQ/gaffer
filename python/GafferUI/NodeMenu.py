@@ -50,7 +50,7 @@ import GafferUI
 # different applications to coexist happily in the same process, separate node
 # menus are maintained per application, and NodeMenu.acquire() is used to
 # obtain the appropriate menu.
-class NodeMenu :
+class NodeMenu( object ) :
 
 	## Chances are you want to use acquire() to get the NodeMenu for a
 	# specific application, rather than construct one directly.

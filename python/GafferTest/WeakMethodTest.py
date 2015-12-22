@@ -44,7 +44,7 @@ class WeakMethodTest( GafferTest.TestCase ) :
 
 	def test( self ) :
 
-		class A() :
+		class A( object ) :
 
 			def f( self ) :
 

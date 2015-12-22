@@ -47,7 +47,7 @@ import GafferUI
 # sets of layouts are maintained on a per-application basis. Access
 # to the layouts for a specific application is provided by the
 # Layouts.acquire() method.
-class Layouts :
+class Layouts( object ) :
 
 	## Typically acquire() should be used in preference
 	# to this constructor.

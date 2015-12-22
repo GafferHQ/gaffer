@@ -37,7 +37,7 @@
 
 import Gaffer
 
-class BlockedConnection() :
+class BlockedConnection( object ) :
 
 	def __init__( self, connectionOrConnections ) :
 

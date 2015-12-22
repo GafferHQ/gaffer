@@ -203,7 +203,7 @@ class SignalsTest( GafferTest.TestCase ) :
 	# references to the T instance below were kept until another exception was thrown.
 	def testExceptionRefCounting( self ) :
 
-		class T :
+		class T( object ) :
 
 			def __init__( self, s ) :
 
