@@ -37,7 +37,7 @@
 
 from _Gaffer import _UndoContext
 
-class UndoContext() :
+class UndoContext( object ) :
 
 	State = _UndoContext.State
 

@@ -37,7 +37,7 @@
 
 import GafferImage
 
-class __MultiSetPlug :
+class __MultiSetPlug( object ) :
 	def __init__( self, plugs ) :
 		self._plugs = plugs
 

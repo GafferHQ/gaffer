@@ -178,7 +178,7 @@ class SceneProceduralTest( unittest.TestCase ) :
 
 	def testAllRenderedSignal( self ) :
 
-		class AllRenderedTest :
+		class AllRenderedTest( object ) :
 			allRenderedSignalCalled = False
 			def allRendered( self ):
 				self.allRenderedSignalCalled = True
@@ -239,9 +239,6 @@ class SceneProceduralTest( unittest.TestCase ) :
 			renderer.procedural( procedural2 )
 
 		self.assertEqual( t.allRenderedSignalCalled, True )
-
-
-
 
 if __name__ == "__main__":
 	unittest.main()

@@ -45,7 +45,7 @@ import GafferUI
 ## The Bookmarks class provides a registry of named locations for use
 # in Path UIs. To allow different gaffer applications to coexist in the
 # same process, separate bookmarks are maintained per application.
-class Bookmarks :
+class Bookmarks( object ) :
 
 	## Use acquire() in preference to this constructor.
 	def __init__( self, applicationRoot, pathType, category ) :

@@ -54,7 +54,7 @@ import Gaffer
 #
 # ["OpMatcher"]["ignore"] - when this BoolData is True, the Parameter is not
 # considered by the matcher.
-class OpMatcher() :
+class OpMatcher( object ) :
 
 	def __init__( self, classLoader, classNamesMatchString = "*", reportErrors=True ) :
 

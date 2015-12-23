@@ -337,7 +337,7 @@ def __parameterActivators( parent ) :
 
 	node = parent.node()
 
-	class ExpressionVariables :
+	class ExpressionVariables( object ) :
 
 		def connected( self, key ) :
 
