@@ -156,8 +156,13 @@ void AppleseedLight::setupPlugs( const std::string &shaderName, const asf::Dicti
 			}
 			else if( inputType == "colormap" )
 			{
+				// override the plug type for the exposure param (usually it's a color in appleseed).
+				if ( inputName == "exposure" )
+				{
+					plug = new Gaffer::FloatPlug( inputName, Gaffer::Plug::In, 0.0f );
+				}
 				// multiplier inputs make more sense in Gaffer as float plugs.
-				if( inputName.find( "multiplier" ) != std::string::npos )
+				else if( inputName.find( "multiplier" ) != std::string::npos )
 				{
 					plug = new Gaffer::FloatPlug( inputName, Gaffer::Plug::In, 1.0f, 0.0f );
 				}

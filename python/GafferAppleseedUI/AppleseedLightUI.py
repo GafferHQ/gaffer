@@ -112,17 +112,27 @@ Gaffer.Metadata.registerNode(
 
 )
 
+Gaffer.Metadata.registerValue( "light:as:latlong_map_environment_edf", "type", "environment" )
+Gaffer.Metadata.registerValue( "light:as:latlong_map_environment_edf", "textureNameParameter", "radiance_map" )
+Gaffer.Metadata.registerValue( "light:as:latlong_map_environment_edf", "intensityParameter", "radiance_multiplier" )
+Gaffer.Metadata.registerValue( "light:as:latlong_map_environment_edf", "exposureParameter", "exposure" )
+
+Gaffer.Metadata.registerValue( "light:as:hosek_environment_edf", "type", "environment" )
+
 Gaffer.Metadata.registerValue( "light:as:spot_light", "type", "spot" )
 Gaffer.Metadata.registerValue( "light:as:spot_light", "coneAngleParameter", "outer_angle" )
 Gaffer.Metadata.registerValue( "light:as:spot_light", "penumbraAngleParameter", "inner_angle" )
 Gaffer.Metadata.registerValue( "light:as:spot_light", "penumbraType", "absolute" )
 Gaffer.Metadata.registerValue( "light:as:spot_light", "intensityParameter", "intensity_multiplier" )
+Gaffer.Metadata.registerValue( "light:as:spot_light", "exposureParameter", "exposure" )
 Gaffer.Metadata.registerValue( "light:as:spot_light", "colorParameter", "intensity" )
 
 Gaffer.Metadata.registerValue( "light:as:point_light", "type", "point" )
 Gaffer.Metadata.registerValue( "light:as:point_light", "intensityParameter", "intensity_multiplier" )
+Gaffer.Metadata.registerValue( "light:as:point_light", "exposureParameter", "exposure" )
 Gaffer.Metadata.registerValue( "light:as:point_light", "colorParameter", "intensity" )
 
 Gaffer.Metadata.registerValue( "light:as:directional_light", "type", "distant" )
 Gaffer.Metadata.registerValue( "light:as:directional_light", "intensityParameter", "irradiance_multiplier" )
+Gaffer.Metadata.registerValue( "light:as:directional_light", "exposureParameter", "exposure" )
 Gaffer.Metadata.registerValue( "light:as:directional_light", "colorParameter", "irradiance" )
