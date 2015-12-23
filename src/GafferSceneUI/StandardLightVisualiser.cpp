@@ -444,7 +444,11 @@ const char *StandardLightVisualiser::faceCameraVertexSource()
 const char *StandardLightVisualiser::environmentLightDrawFragSource()
 {
 	return
-		"#version 150 compatibility\n"
+		"#version 120\n"
+		""
+		"#if __VERSION__ <= 120\n"
+		"#define in varying\n"
+		"#endif\n"
 		""
 		"#include \"IECoreGL/ColorAlgo.h\"\n"
 		""
