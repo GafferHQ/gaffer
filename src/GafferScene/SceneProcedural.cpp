@@ -154,7 +154,7 @@ tbb::mutex SceneProcedural::g_allRenderedMutex;
 
 SceneProcedural::AllRenderedSignal SceneProcedural::g_allRenderedSignal;
 
-SceneProcedural::SceneProcedural( ConstScenePlugPtr scenePlug, const Gaffer::Context *context, const ScenePlug::ScenePath &scenePath )
+SceneProcedural::SceneProcedural( ConstScenePlugPtr scenePlug, const Gaffer::Context *context, const ScenePlug::ScenePath &scenePath, bool computeBound )
 	:	m_scenePlug( scenePlug ), m_context( new Context( *context ) ), m_scenePath( scenePath ), m_rendered( false )
 {
 	tbb::task_scheduler_init tsi( tbb::task_scheduler_init::deferred );
@@ -195,9 +195,9 @@ SceneProcedural::SceneProcedural( ConstScenePlugPtr scenePlug, const Gaffer::Con
 	m_attributes.deformationBlurSegments = deformationBlurSegmentsData ? deformationBlurSegmentsData->readable() : 1;
 
 	updateAttributes();
-	computeBound();
-	++g_pendingSceneProcedurals;
+	initBound( computeBound );
 
+	++g_pendingSceneProcedurals;
 }
 
 SceneProcedural::SceneProcedural( const SceneProcedural &other, const ScenePlug::ScenePath &scenePath )
@@ -213,7 +213,8 @@ SceneProcedural::SceneProcedural( const SceneProcedural &other, const ScenePlug:
 	m_context->set( ScenePlug::scenePathContextName, m_scenePath );
 
 	updateAttributes();
-	computeBound();
+	initBound( other.m_bound != Procedural::noBound );
+
 	++g_pendingSceneProcedurals;
 }
 
@@ -225,8 +226,14 @@ SceneProcedural::~SceneProcedural()
 	}
 }
 
-void SceneProcedural::computeBound()
+void SceneProcedural::initBound( bool compute )
 {
+	if( !compute )
+	{
+		m_bound = Procedural::noBound;
+		return;
+	}
+
 	/// \todo I think we should be able to remove this exception handling in the future.
 	/// Either when we do better error handling in ValuePlug computations, or when
 	/// the bug in IECoreGL that caused the crashes in SceneProceduralTest.testComputationErrors

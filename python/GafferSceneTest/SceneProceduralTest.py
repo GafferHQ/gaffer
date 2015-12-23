@@ -282,5 +282,16 @@ class SceneProceduralTest( unittest.TestCase ) :
 				else :
 					self.assertEqual( bound, IECore.Box3f( sphereBound.min + velocity * frame, sphereBound.max + velocity * frame ) )
 
+	def testComputeBound( self ) :
+
+		script = Gaffer.ScriptNode()
+		script["p"] = GafferScene.Plane()
+
+		proc1 = GafferScene.SceneProcedural( script["p"]["out"], script.context(), "/" )
+		proc2 = GafferScene.SceneProcedural( script["p"]["out"], script.context(), "/", computeBound = False )
+
+		self.assertEqual( proc1.bound(), script["p"]["out"].bound( "/" ) )
+		self.assertEqual( proc2.bound(), IECore.Renderer.Procedural.noBound )
+
 if __name__ == "__main__":
 	unittest.main()

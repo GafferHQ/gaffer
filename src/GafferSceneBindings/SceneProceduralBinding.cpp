@@ -60,12 +60,14 @@ void GafferSceneBindings::bindSceneProcedural()
 			init<
 				ConstScenePlugPtr,
 				const Gaffer::Context *,
-				const ScenePlug::ScenePath &
+				const ScenePlug::ScenePath &,
+				bool
 			>(
 				(
 					boost::python::arg( "scenePlug" ),
 					boost::python::arg( "context" ),
-					boost::python::arg( "scenePath" )
+					boost::python::arg( "scenePath" ),
+					boost::python::arg( "computeBound" ) = true
 				)
 			)
 		)

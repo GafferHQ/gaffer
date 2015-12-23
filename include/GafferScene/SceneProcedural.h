@@ -70,10 +70,13 @@ class SceneProcedural : public IECore::Renderer::Procedural
 		IE_CORE_DECLAREMEMBERPTR( SceneProcedural );
 
 		/// A copy of context is taken.
-		SceneProcedural( ConstScenePlugPtr scenePlug, const Gaffer::Context *context, const ScenePlug::ScenePath &scenePath=ScenePlug::ScenePath() );
+		SceneProcedural( ConstScenePlugPtr scenePlug, const Gaffer::Context *context, const ScenePlug::ScenePath &scenePath=ScenePlug::ScenePath(), bool computeBound = true );
 		virtual ~SceneProcedural();
 
 		virtual IECore::MurmurHash hash() const;
+		/// Returns an accurate computed bound if `computeBound=true`
+		/// was passed to the constructor, otherwise returns
+		/// Procedural::noBound.
 		virtual Imath::Box3f bound() const;
 		virtual void render( IECore::Renderer *renderer ) const;
 
@@ -116,7 +119,7 @@ class SceneProcedural : public IECore::Renderer::Procedural
 	private :
 
 		void updateAttributes();
-		void computeBound();
+		void initBound( bool compute );
 		void motionTimes( unsigned segments, std::set<float> &times ) const;
 
 		// A global counter of all the scene procedurals that are hanging around but haven't been rendered yet, which
