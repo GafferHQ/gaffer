@@ -298,5 +298,50 @@ class ArnoldRenderTest( GafferTest.TestCase ) :
 		self.assertTrue( hiddenStats["average"].getValue()[0] < 0.05 )
 		self.assertTrue( visibleStats["average"].getValue()[0] > .35 )
 
+	def testBounds( self ) :
+
+		s = Gaffer.ScriptNode()
+
+		s["plane"] = GafferScene.Plane()
+		s["plane"]["transform"]["translate"].setValue( IECore.V3f( 0, 0, -5 ) )
+
+		s["outputs"] = GafferScene.Outputs()
+		s["outputs"].addOutput(
+			"beauty",
+			IECore.Display(
+				self.temporaryDirectory() + "/test.tif",
+				"tiff",
+				"rgba",
+				{}
+			)
+		)
+		s["outputs"]["in"].setInput( s["plane"]["out"] )
+
+		s["render"] = GafferArnold.ArnoldRender()
+		s["render"]["in"].setInput( s["outputs"]["out"] )
+		s["render"]["mode"].setValue( "generate" )
+		s["render"]["fileName"].setValue( self.temporaryDirectory() + "/test.ass" )
+
+		s["fileName"].setValue( self.temporaryDirectory() + "/test.gfr" )
+		s.save()
+
+		s["render"].execute()
+
+		self.assertTrue( os.path.exists( self.temporaryDirectory() + "/test.ass" ) )
+
+		p = subprocess.Popen(
+			"kick -dp -dw " + self.temporaryDirectory() + "/test.ass",
+			shell = True,
+			stdout = subprocess.PIPE,
+			stderr = subprocess.PIPE
+		)
+		p.wait()
+
+		output = "".join( p.stderr.readlines() + p.stdout.readlines() )
+		self.failIf( "incorrect bounds" in output )
+		self.failIf( "user bounds could be" in output )
+		self.failIf( "ignoring parameter min" in output )
+		self.failIf( "ignoring parameter max" in output )
+
 if __name__ == "__main__":
 	unittest.main()

@@ -101,6 +101,16 @@ class ArnoldRender( GafferScene.ExecutableRender ) :
 		procedural["fileName"].setTypedValue( scriptNode["fileName"].getValue() )
 		procedural["node"].setTypedValue( scenePlug.node().relativeName( scriptNode ) )
 		procedural["frame"].setNumericValue( currentContext.getFrame() )
+		## \todo Determine an appropriate value for the "computeBounds" parameter.
+		# In theory we might see startup time improvements if we turned it off as
+		# we do for 3delight. But on the other hand turning off bounds computation
+		# makes IECoreArnold use load_at_init which by default serialises procedural
+		# expansion (in theory the parallel_node_init option could paralellise that
+		# again). But since Arnold properly expands procedurals only when they are
+		# hit by a ray, perhaps we're actually better off computing accurate bounds
+		# in the hope that not everything will be expanded. The only reason it's a
+		# definite win to turn it off in 3delight is because everything is going to
+		# be expanded anyway.
 
 		contextArgs = IECore.StringVectorData()
 		for entry in [ k for k in currentContext.keys() if k != "frame" and not k.startswith( "ui:" ) ] :
@@ -116,7 +126,7 @@ class ArnoldRender( GafferScene.ExecutableRender ) :
 
 		externalProcedural = IECore.Renderer.ExternalProcedural(
 			"ieProcedural.so",
-			IECore.Box3f( IECore.V3f( -1e30 ), IECore.V3f( 1e30 ) ),
+			IECore.Renderer.Procedural.noBound,
 			{
 				"className" : "gaffer/script",
 				"classVersion" : 1,
