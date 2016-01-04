@@ -128,7 +128,10 @@ class ImageGadget : public GafferUI::Gadget
 		// We only pull on the m_image plug lazily when
 		// we need something, and store the result for later
 		// use. These flags and the member variables below
-		// are used to implement this caching.
+		// are used to implement this caching. Note that the
+		// access functions do nothing to handle errors during
+		// computation, so exceptions must be handled by the
+		// caller.
 		enum DirtyFlags
 		{
 			NothingDirty = 0,

@@ -165,7 +165,16 @@ int ImageGadget::getSoloChannel() const
 
 Imath::Box3f ImageGadget::bound() const
 {
-	const Format f = format();
+	Format f;
+	try
+	{
+		f = format();
+	}
+	catch( ... )
+	{
+		return Box3f();
+	}
+
 	const Box2i &w = f.getDisplayWindow();
 	if( empty( w ) )
 	{
@@ -492,8 +501,6 @@ IECoreGL::Texture *blackTexture()
 
 void ImageGadget::renderTiles() const
 {
-	updateTiles();
-
 	GLint previousProgram;
 	glGetIntegerv( GL_CURRENT_PROGRAM, &previousProgram );
 
@@ -599,18 +606,32 @@ void ImageGadget::doRender( const GafferUI::Style *style ) const
 		return;
 	}
 
-	const Format &format = this->format();
-	const Box2i &displayWindow = format.getDisplayWindow();
-	if( empty( displayWindow ) )
+	// Compute what we need, and abort rendering if
+	// there are any computation errors.
+
+	Format format;
+	Box2i dataWindow;
+	try
+	{
+		format = this->format();
+		dataWindow = this->dataWindow();
+		updateTiles();
+	}
+	catch( ... )
 	{
 		return;
 	}
 
 	// Render a black background the size of the image.
 
+	const Box2i &displayWindow = format.getDisplayWindow();
+	if( empty( displayWindow ) )
+	{
+		return;
+	}
+
 	glColor3f( 0.0f, 0.0f, 0.0f );
 	style->renderSolidRectangle( Box2f( V2f( displayWindow.min ), V2f( displayWindow.max ) ) );
-	const Box2i &dataWindow = this->dataWindow();
 	if( !empty( dataWindow ) )
 	{
 		style->renderSolidRectangle( Box2f( V2f( dataWindow.min ), V2f( dataWindow.max ) ) );
