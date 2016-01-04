@@ -122,7 +122,7 @@ Gaffer.Metadata.registerNodeDescription( GafferOSL.OSLShader, __nodeDescription 
 
 Gaffer.Metadata.registerPlugDescription( GafferOSL.OSLShader, "parameters.*", __plugDescription )
 Gaffer.Metadata.registerPlugValue( GafferOSL.OSLShader, "parameters.*", "label", __plugLabel )
-Gaffer.Metadata.registerPlugValue( GafferOSL.OSLShader, "parameters.*", "divider", __plugDivider )
+Gaffer.Metadata.registerPlugValue( GafferOSL.OSLShader, "parameters.*", "layout:divider", __plugDivider )
 Gaffer.Metadata.registerPlugValue( GafferOSL.OSLShader, "parameters.*", "presetNames", __plugPresetNames )
 Gaffer.Metadata.registerPlugValue( GafferOSL.OSLShader, "parameters.*", "presetValues", __plugPresetValues )
 Gaffer.Metadata.registerPlugValue( GafferOSL.OSLShader, "parameters.*", "plugValueWidget:type", __plugWidgetType )

@@ -37,6 +37,7 @@
 
 import copy
 import functools
+import collections
 
 import IECore
 
@@ -70,21 +71,106 @@ class Viewer( GafferUI.NodeSetEditor ) :
 
 		GafferUI.NodeSetEditor.__init__( self, self.__gadgetWidget, scriptNode, **kw )
 
-		with GafferUI.ListContainer( borderWidth = 2, spacing = 2 ) as toolbarColumn :
-			self.__nodeToolbarFrame = GafferUI.Frame( borderWidth = 0, borderStyle=GafferUI.Frame.BorderStyle.None )
-			with GafferUI.ListContainer( borderWidth = 0, spacing = 2, orientation = GafferUI.ListContainer.Orientation.Horizontal ) :
-				with GafferUI.Frame( borderWidth = 1, borderStyle=GafferUI.Frame.BorderStyle.None ) :
-					self.__toolMenuButton = GafferUI.MenuButton( menu = GafferUI.Menu( Gaffer.WeakMethod( self.__toolMenuDefinition ) ), hasFrame=False )
-				self.__toolbarFrame = GafferUI.Frame( borderWidth = 0, borderStyle=GafferUI.Frame.BorderStyle.None )
-		self.__gadgetWidget.addOverlay( toolbarColumn )
+		self.__nodeToolbars = []
+		self.__viewToolbars = []
+
+		with GafferUI.GridContainer( borderWidth = 2, spacing = 0 ) as overlay :
+
+			with GafferUI.ListContainer(
+				orientation = GafferUI.ListContainer.Orientation.Horizontal,
+				parenting = {
+					"index" : ( slice( 0, 5 ), 0 ),
+					"alignment" : ( GafferUI.HorizontalAlignment.None, GafferUI.VerticalAlignment.Top )
+				}
+			) :
+
+				self.__toolMenuButton = GafferUI.MenuButton(
+					menu = GafferUI.Menu( Gaffer.WeakMethod( self.__toolMenuDefinition ) ),
+					hasFrame = False,
+				)
+
+				GafferUI.Spacer( IECore.V2i( 0 ), parenting = { "expand" : True } )
+
+				self.__viewToolbars.append(
+					_Toolbar( GafferUI.Edge.Top, parenting = { "verticalAlignment" : GafferUI.VerticalAlignment.Top } )
+				)
+
+			self.__nodeToolbars.append(
+				_Toolbar(
+					GafferUI.Edge.Top,
+					parenting = {
+						"index" : ( slice( 0, 5 ), 1 ),
+						"alignment" : ( GafferUI.HorizontalAlignment.Center, GafferUI.VerticalAlignment.Top ),
+					}
+				)
+			)
+
+			self.__viewToolbars.append(
+				_Toolbar( GafferUI.Edge.Left,
+					parenting = {
+						"index" : ( 0, 2 ),
+						"alignment" : ( GafferUI.HorizontalAlignment.Left, GafferUI.VerticalAlignment.Center ),
+					}
+				)
+			)
+
+			self.__nodeToolbars.append(
+				_Toolbar( GafferUI.Edge.Left,
+					parenting = {
+						"index" : ( 1, 2 ),
+						"alignment" : ( GafferUI.HorizontalAlignment.Left, GafferUI.VerticalAlignment.Center ),
+					}
+				)
+			)
+
+			self.__nodeToolbars.append(
+				_Toolbar( GafferUI.Edge.Right,
+					parenting = {
+						"index" : ( 3, 2 ),
+						"alignment" : ( GafferUI.HorizontalAlignment.Right, GafferUI.VerticalAlignment.Center ),
+					}
+				)
+			)
+
+			self.__viewToolbars.append(
+				_Toolbar( GafferUI.Edge.Right,
+					parenting = {
+						"index" : ( 4, 2 ),
+						"alignment" : ( GafferUI.HorizontalAlignment.Right, GafferUI.VerticalAlignment.Center ),
+					}
+				)
+			)
+
+			self.__nodeToolbars.append(
+				_Toolbar( GafferUI.Edge.Bottom,
+					parenting = {
+						"index" : ( slice( 0, 5 ), 3 ),
+						"alignment" : ( GafferUI.HorizontalAlignment.Center, GafferUI.VerticalAlignment.Bottom ),
+					}
+				)
+			)
+
+			self.__viewToolbars.append(
+				_Toolbar( GafferUI.Edge.Bottom,
+					parenting = {
+						"index" : ( slice( 0, 5 ), 4 ),
+						"alignment" : ( GafferUI.HorizontalAlignment.Center, GafferUI.VerticalAlignment.Bottom ),
+					}
+				)
+			)
+
+		## \todo Consider public API for this in the GridContainer class.
+		overlay._qtWidget().layout().setRowStretch( 2, 1 )
+		overlay._qtWidget().layout().setColumnStretch( 2, 1 )
+
+		self.__gadgetWidget.setOverlay( overlay )
 
 		self.__views = []
-		# The following two variables are indexed by view
-		# instance. We would prefer to simply store toolbars
-		# and tools as python attributes on the view instances
+		# Indexed by view instance. We would prefer to simply
+		# store tools as python attributes on the view instances
 		# themselves, but we can't because that would create
-		# circular references.
-		self.__viewToolbars = {}
+		# circular references. Maybe it makes sense to be able to
+		# query tools from a view anyway?
 		self.__viewTools = {}
 		self.__currentView = None
 
@@ -128,7 +214,6 @@ class Viewer( GafferUI.NodeSetEditor ) :
 							self.__currentView.__updateRequestConnection = self.__currentView.updateRequestSignal().connect( Gaffer.WeakMethod( self.__updateRequest, fallbackResult=None ) )
 							self.__currentView.__pendingUpdate = True
 							self.__currentView.setContext( self.getContext() )
-							self.__viewToolbars[self.__currentView] = GafferUI.NodeToolbar.create( self.__currentView )
 							self.__viewTools[self.__currentView] = [ GafferUI.Tool.create( n, self.__currentView ) for n in GafferUI.Tool.registeredTools( self.__currentView.typeId() ) ]
 							self.__viewTools[self.__currentView].sort( key = lambda v : Gaffer.Metadata.nodeValue( v, "order" ) if Gaffer.Metadata.nodeValue( v, "order" ) is not None else 999 )
 							if len( self.__viewTools[self.__currentView] ) :
@@ -139,20 +224,20 @@ class Viewer( GafferUI.NodeSetEditor ) :
 					if self.__currentView is not None :
 						break
 
+		for toolbar in self.__nodeToolbars :
+			toolbar.setNode( node )
+
+		for toolbar in self.__viewToolbars :
+			toolbar.setNode( self.__currentView )
+
 		if self.__currentView is not None :
 			self.__gadgetWidget.setViewportGadget( self.__currentView.viewportGadget() )
-			self.__nodeToolbarFrame.setChild( GafferUI.NodeToolbar.create( node ) )
-			self.__toolbarFrame.setChild( self.__viewToolbars[self.__currentView] )
 			self.__toolMenuButton.setVisible( len( self.__viewTools[self.__currentView] ) != 0 )
 			if self.__currentView.__pendingUpdate :
 				self.__update()
 		else :
 			self.__gadgetWidget.setViewportGadget( GafferUI.ViewportGadget() )
-			self.__nodeToolbarFrame.setChild( None )
-			self.__toolbarFrame.setChild( None )
 			self.__toolMenuButton.setVisible( False )
-
-		self.__nodeToolbarFrame.setVisible( self.__nodeToolbarFrame.getChild() is not None )
 
 	def _titleFormat( self ) :
 
@@ -230,3 +315,38 @@ class Viewer( GafferUI.NodeSetEditor ) :
 		return result
 
 GafferUI.EditorWidget.registerType( "Viewer", Viewer )
+
+# Internal widget to simplify the management of node toolbars.
+class _Toolbar( GafferUI.Frame ) :
+
+	def __init__( self, edge, **kw ) :
+
+		GafferUI.Frame.__init__( self, borderWidth = 0, borderStyle = GafferUI.Frame.BorderStyle.None, **kw )
+
+		# We store the 5 most recently used toolbars in a cache,
+		# to avoid unnecessary reconstruction when switching back and
+		# forth between the same set of nodes.
+		self.__nodeToolbarCache = IECore.LRUCache( self.__cacheGetter, 5 )
+
+		self.__edge = edge
+		self.__node = []
+
+	def setNode( self, node ) :
+
+		if node == self.__node :
+			return
+
+		self.__node = node
+		if self.__node is not None :
+			self.setChild( self.__nodeToolbarCache.get( ( self.__node, self.__edge ) ) )
+		else :
+			self.setChild( None )
+
+	def getNode( self ) :
+
+		return self.__node
+
+	@staticmethod
+	def __cacheGetter( nodeAndEdge ) :
+
+		return ( GafferUI.NodeToolbar.create( nodeAndEdge[0], nodeAndEdge[1] ), 1 )

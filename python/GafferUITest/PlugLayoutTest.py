@@ -266,5 +266,45 @@ class PlugLayoutTest( GafferUITest.TestCase ) :
 		p["value"].setValue( True )
 		self.assertEqual( l.plugValueWidget( s["n"]["s"], lazy = False ).enabled(), True )
 
+	def testMultipleLayouts( self ) :
+
+		n = Gaffer.Node()
+		n["p1"] = Gaffer.Plug( flags = Gaffer.Plug.Flags.Default | Gaffer.Plug.Flags.Dynamic )
+		n["p2"] = Gaffer.Plug( flags = Gaffer.Plug.Flags.Default | Gaffer.Plug.Flags.Dynamic )
+
+		Gaffer.Metadata.registerNodeValue( n, "layout1:activator:true", True )
+		Gaffer.Metadata.registerNodeValue( n, "layout1:activator:false", False )
+
+		Gaffer.Metadata.registerNodeValue( n, "layout2:activator:true", True )
+		Gaffer.Metadata.registerNodeValue( n, "layout2:activator:false", False )
+
+		Gaffer.Metadata.registerPlugValue( n["p1"], "layout1:activator", "true" )
+		Gaffer.Metadata.registerPlugValue( n["p1"], "layout2:activator", "false" )
+
+		Gaffer.Metadata.registerPlugValue( n["p2"], "layout1:activator", "false" )
+		Gaffer.Metadata.registerPlugValue( n["p2"], "layout2:activator", "true" )
+
+		l1 = GafferUI.PlugLayout( n, layoutName = "layout1" )
+		l2 = GafferUI.PlugLayout( n, layoutName = "layout2" )
+
+		self.assertTrue( l1.plugValueWidget( n["p1"], lazy = False ).enabled() )
+		self.assertFalse( l1.plugValueWidget( n["p2"], lazy = False ).enabled() )
+
+		self.assertFalse( l2.plugValueWidget( n["p1"], lazy = False ).enabled() )
+		self.assertTrue( l2.plugValueWidget( n["p2"], lazy = False ).enabled() )
+
+	def testRootSection( self ) :
+
+		n = Gaffer.Node()
+		n["p1"] = Gaffer.Plug( flags = Gaffer.Plug.Flags.Default | Gaffer.Plug.Flags.Dynamic )
+		n["p2"] = Gaffer.Plug( flags = Gaffer.Plug.Flags.Default | Gaffer.Plug.Flags.Dynamic )
+
+		Gaffer.Metadata.registerPlugValue( n["p2"], "layout:section", "sectionA" )
+
+		l = GafferUI.PlugLayout( n, rootSection = "sectionA" )
+
+		self.assertTrue( l.plugValueWidget( n["p1"], lazy = False ) is None )
+		self.assertTrue( l.plugValueWidget( n["p2"], lazy = False ) is not None )
+
 if __name__ == "__main__":
 	unittest.main()

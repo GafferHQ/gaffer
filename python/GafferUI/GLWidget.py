@@ -90,18 +90,39 @@ class GLWidget( GafferUI.Widget ) :
 
 		GafferUI.Widget.__init__( self, graphicsView, **kw )
 
-	## Adds a Widget as an overlay.
-	## \todo Support more than one overlay, and provide grid-based
-	# placement options. Perhaps GLWidget should also derive from Container
-	# to support auto-parenting and appropriate removeChild() behaviour.
-	def addOverlay( self, overlay ) :
+		self.__overlay = None
 
-		assert( overlay.parent() is None )
+	## Specifies a widget to be overlaid on top of the GL rendering,
+	# stretched to fill the frame. To add multiple widgets and/or gain
+	# more control over the layout, use a Container as the overlay and
+	# use it to layout multiple child widgets.
+	def setOverlay( self, overlay ) :
+
+		if overlay is self.__overlay :
+			return
+
+		if self.__overlay is not None :
+			self.removeChild( self.__overlay )
+
+		if overlay is not None :
+			oldParent = overlay.parent()
+			if oldParent is not None :
+				oldParent.removeChild( child )
 
 		self.__overlay = overlay
 		self.__overlay._setStyleSheet()
 
-		item = self.__graphicsScene.addOverlay( self.__overlay )
+		self.__graphicsScene.setOverlay( self.__overlay )
+
+	def getOverlay( self ) :
+
+		return self.__overlay
+
+	def removeChild( self, child ) :
+
+		assert( child is self.__overlay )
+		self.__overlay = None
+		self.__graphicsScene.setOverlay( None )
 
 	## Called whenever the widget is resized. May be reimplemented by derived
 	# classes if necessary. The appropriate OpenGL context will already be current
@@ -376,29 +397,63 @@ class _GLGraphicsScene( QtGui.QGraphicsScene ) :
 		self.__backgroundDrawFunction = backgroundDrawFunction
 		self.sceneRectChanged.connect( self.__sceneRectChanged )
 
-	def addOverlay( self, widget ) :
+		self.__overlay = None # Stores the GafferUI.Widget
+		self.__overlayProxy = None # Stores the _OverlayProxyWidget
 
-		self.__widget = widget
+	def setOverlay( self, widget ) :
+
+		if self.__overlay is not None :
+			self.__overlayProxy.setWidget( None )
+			self.removeItem( self.__overlayProxy )
+			self.__overlay = None
+			self.__overlayProxy = None
+
+		if widget is None :
+			return
+
+		self.__overlay = widget
 		if widget._qtWidget().layout() is not None :
 			# removing the size constraint is necessary to keep the widget the
 			# size we tell it to be in __updateItemGeometry.
 			widget._qtWidget().layout().setSizeConstraint( QtGui.QLayout.SetNoConstraint )
 
-		item = QtGui.QGraphicsScene.addWidget( self, widget._qtWidget() )
-		self.__updateItemGeometry( item, self.sceneRect() )
+		self.__overlayProxy = _OverlayProxyWidget()
+		self.__overlayProxy.setWidget( self.__overlay._qtWidget() )
 
-		return item
+		self.addItem( self.__overlayProxy )
+		self.__updateItemGeometry( self.__overlayProxy, self.sceneRect() )
 
 	def drawBackground( self, painter, rect ) :
 
 		self.__backgroundDrawFunction()
 
+		# Reset pixel store setting back to the default. IECoreGL
+		# (and the ImageGadget) meddle with this, and it throws off
+		# the QGraphicsEffects.
+		GL.glPixelStorei( GL.GL_UNPACK_ALIGNMENT, 4 );
+
 	def __sceneRectChanged( self, sceneRect ) :
 
-		for item in self.items() :
-			self.__updateItemGeometry( item, sceneRect )
+		if self.__overlayProxy is not None :
+			self.__updateItemGeometry( self.__overlayProxy, sceneRect )
 
 	def __updateItemGeometry( self, item, sceneRect ) :
 
 		geometry = item.widget().geometry()
-		item.widget().setGeometry( QtCore.QRect( 0, 0, sceneRect.width(), item.widget().sizeHint().height() ) )
+		item.widget().setGeometry( QtCore.QRect( 0, 0, sceneRect.width(), sceneRect.height() ) )
+
+## A QGraphicsProxyWidget whose shape is composed from the
+# bounds of its child widgets. This allows our overlays to
+# pass through events in the regions where there isn't a
+# child widget.
+class _OverlayProxyWidget( QtGui.QGraphicsProxyWidget ) :
+
+	def __init__( self ) :
+
+		QtGui.QGraphicsProxyWidget.__init__( self )
+
+	def shape( self ) :
+
+		path = QtGui.QPainterPath()
+		path.addRegion( self.widget().childrenRegion() )
+		return path

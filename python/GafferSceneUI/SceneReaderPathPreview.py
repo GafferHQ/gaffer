@@ -34,8 +34,6 @@
 #
 ##########################################################################
 
-import fnmatch
-
 import IECore
 
 import Gaffer
@@ -238,30 +236,65 @@ class _Camera( Gaffer.Node ) :
 
 IECore.registerRunTimeTyped( _Camera )
 
-GafferUI.NodeToolbar.registerCreator( _Camera, GafferUI.StandardNodeToolbar )
-GafferUI.PlugValueWidget.registerCreator( _Camera, "in", None )
-GafferUI.PlugValueWidget.registerCreator( _Camera, "out", None )
-GafferUI.PlugValueWidget.registerCreator( _Camera, "user", None )
+Gaffer.Metadata.registerNode(
 
-GafferUI.PlugValueWidget.registerCreator(
 	_Camera,
-	"lookAt",
-	lambda plug : GafferUI.PathPlugValueWidget(
-		plug,
-		path = GafferScene.ScenePath( plug.node()["in"], plug.node().scriptNode().context(), "/" ),
-	),
+
+	"nodeToolbar:top:type", "GafferUI.StandardNodeToolbar.top",
+
+	plugs = {
+
+		"*" : [
+
+			"toolbarLayout:section", "Top",
+
+		],
+
+		"in" : [
+
+			"plugValueWidget:type", "",
+
+		],
+
+		"out" : [
+
+			"plugValueWidget:type", "",
+
+		],
+
+		"user" : [
+
+			"plugValueWidget:type", "",
+
+		],
+
+		"lookAt" : [
+
+			"plugValueWidget:type", "GafferSceneUI.ScenePathPlugValueWidget",
+
+		],
+
+		"depth" : [
+
+			"numericPlugValueWidget:fixedCharacterWidth", 5,
+
+		],
+
+		"angle" : [
+
+			"numericPlugValueWidget:fixedCharacterWidth", 5,
+
+		],
+
+		"elevation" : [
+
+			"numericPlugValueWidget:fixedCharacterWidth", 5,
+
+		],
+
+	}
+
 )
-
-def __fixedWidthNumericPlugValueWidget( plug ) :
-
-	result = GafferUI.NumericPlugValueWidget( plug )
-	result.numericWidget().setFixedCharacterWidth( 5 )
-
-	return result
-
-GafferUI.PlugValueWidget.registerCreator( _Camera, "depth", __fixedWidthNumericPlugValueWidget )
-GafferUI.PlugValueWidget.registerCreator( _Camera, "angle", __fixedWidthNumericPlugValueWidget )
-GafferUI.PlugValueWidget.registerCreator( _Camera, "elevation", __fixedWidthNumericPlugValueWidget )
 
 # Utility node for previewing single objects from a file or
 # sequence (cob, ptc, pdc, etc), as though they were a scene

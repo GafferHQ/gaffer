@@ -129,7 +129,7 @@ Gaffer.Metadata.registerNode(
 			""",
 
 			"layout:activator", "areaSourceIsFormatAndAffectDisplayWindowIsOn",
-			"divider", True
+			"layout:divider", True
 
 		],
 

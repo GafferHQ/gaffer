@@ -49,21 +49,21 @@ QtGui = GafferUI._qtImport( "QtGui" )
 #
 # Per-plug metadata support :
 #
-#	- "layout:index" controls ordering of plugs within the layout
-#	- "layout:section" places the plug in a named section of the layout
-#	- "divider" specifies whether or not a plug should be followed by a divider
-#	- "layout:activator" the name of an activator to control editability
-#	- "layout:visibilityActivator" the name of an activator to control visibility
+#	- "<layoutName>:index" controls ordering of plugs within the layout
+#	- "<layoutName>:section" places the plug in a named section of the layout
+#	- "<layoutName>:divider" specifies whether or not a plug should be followed by a divider
+#	- "<layoutName>:activator" the name of an activator to control editability
+#	- "<layoutName>:visibilityActivator" the name of an activator to control visibility
 #
 # Per-parent metadata support :
 #
-#   - layout:section:sectionName:summary" dynamic metadata entry returning a
+#   - <layoutName>:section:sectionName:summary" dynamic metadata entry returning a
 #     string to be used as a summary for the section.
-#   - layout:section:sectionName:collapsed" boolean indicating whether or
+#   - <layoutName>:section:sectionName:collapsed" boolean indicating whether or
 #     not a section should be collapsed initially.
-#   - "layout:activator:activatorName" a dynamic boolean metadata entry to control
+#   - "<layoutName>:activator:activatorName" a dynamic boolean metadata entry to control
 #     the activation of plugs within the layout
-#   - "layout:activators" a dynamic metadata entry returning a CompoundData of booleans
+#   - "<layoutName>:activators" a dynamic metadata entry returning a CompoundData of booleans
 #     for several named activators.
 #
 # ## Custom widgets
@@ -73,13 +73,13 @@ QtGui = GafferUI._qtImport( "QtGui" )
 # to display asset management information for each node.
 #
 # A custom widget is specified using parent metadata entries starting with
-# "layout:customWidget:Name:" prefixes, where "Name" is a unique identifier for the
+# "<layoutName>:customWidget:Name:" prefixes, where "Name" is a unique identifier for the
 # custom widget :
 #
-#   - "layout:customWidget:Name:widgetType" specifies a string containing the fully qualified
+#   - "<layoutName>:customWidget:Name:widgetType" specifies a string containing the fully qualified
 #     name of a python callable which will be used to create the widget. This callable will be passed
 #     the same parent GraphComponent (node or plug) that the PlugLayout is being created for.
-#   - "layout:customWidget:Name:*" as for the standard per-plug "layout:*" metadata, so custom
+#   - "<layoutName>:customWidget:Name:*" as for the standard per-plug "<layoutName>:*" metadata, so custom
 #     widgets may be assigned to a section, reordered, given activators etc.
 #
 class PlugLayout( GafferUI.Widget ) :
@@ -87,7 +87,7 @@ class PlugLayout( GafferUI.Widget ) :
 	# We use this when we can't find a ScriptNode to provide the context.
 	__fallbackContext = Gaffer.Context()
 
-	def __init__( self, parent, orientation = GafferUI.ListContainer.Orientation.Vertical, **kw ) :
+	def __init__( self, parent, orientation = GafferUI.ListContainer.Orientation.Vertical, layoutName = "layout", rootSection = "", **kw ) :
 
 		assert( isinstance( parent, ( Gaffer.Node, Gaffer.Plug ) ) )
 
@@ -97,6 +97,9 @@ class PlugLayout( GafferUI.Widget ) :
 
 		self.__parent = parent
 		self.__readOnly = False
+		self.__layoutName = layoutName
+		# not to be confused with __rootSection, which holds an actual _Section object
+		self.__rootSectionName = rootSection
 
 		# we need to connect to the childAdded/childRemoved signals on
 		# the parent so we can update the ui when plugs are added and removed.
@@ -188,24 +191,24 @@ class PlugLayout( GafferUI.Widget ) :
 	# out the plugs of the specified parent. The sections are returned
 	# in the order in which they will be created.
 	@classmethod
-	def layoutSections( cls, parent, includeCustomWidgets = False ) :
+	def layoutSections( cls, parent, includeCustomWidgets = False, layoutName = "layout" ) :
 
 		d = collections.OrderedDict()
-		for item in cls.layoutOrder( parent, includeCustomWidgets ) :
-			sectionPath = cls.__staticSectionPath(item, parent)
+		for item in cls.layoutOrder( parent, includeCustomWidgets, layoutName = layoutName ) :
+			sectionPath = cls.__staticSectionPath( item, parent, layoutName )
 			sectionName = ".".join( sectionPath )
 			d[sectionName] = 1
 
 		return d.keys()
 
 	## Returns the child plugs of the parent in the order in which they
-	# will be laid out, based on "layout:index" Metadata entries. If
+	# will be laid out, based on "<layoutName>:index" Metadata entries. If
 	# includeCustomWidgets is True, then the positions of custom widgets
 	# are represented by the appearance of the names of the widgets as
 	# strings within the list. If a section name is specified, then the
 	# result will be filtered to include only items in that section.
 	@classmethod
-	def layoutOrder( cls, parent, includeCustomWidgets = False, section = None ) :
+	def layoutOrder( cls, parent, includeCustomWidgets = False, section = None, layoutName = "layout", rootSection = "" ) :
 
 		items = parent.children( Gaffer.Plug )
 		items = [ plug for plug in items if not plug.getName().startswith( "__" ) ]
@@ -216,13 +219,13 @@ class PlugLayout( GafferUI.Widget ) :
 			else :
 				metadataNames = Gaffer.Metadata.registeredPlugValues( parent )
 			for name in metadataNames :
-				m = re.match( "layout:customWidget:(.+):widgetType", name )
+				m = re.match( layoutName + ":customWidget:(.+):widgetType", name )
 				if m and cls.__metadataValue( parent, name ) :
 					items.append( m.group( 1 ) )
 
 		itemsAndIndices = [ list( x ) for x in enumerate( items ) ]
 		for itemAndIndex in itemsAndIndices :
-			index = cls.__staticItemMetadataValue( itemAndIndex[1], "index", parent )
+			index = cls.__staticItemMetadataValue( itemAndIndex[1], "index", parent, layoutName )
 			if index is not None :
 				index = index if index >= 0 else sys.maxint + index
 				itemAndIndex[0] = index
@@ -231,7 +234,11 @@ class PlugLayout( GafferUI.Widget ) :
 
 		if section is not None :
 			sectionPath = section.split( "." ) if section else []
-			itemsAndIndices = [ x for x in itemsAndIndices if cls.__staticSectionPath( x[1], parent ) == sectionPath ]
+			itemsAndIndices = [ x for x in itemsAndIndices if cls.__staticSectionPath( x[1], parent, layoutName ) == sectionPath ]
+
+		if rootSection :
+			rootSectionPath = rootSection.split( "." if rootSection else [] )
+			itemsAndIndices = [ x for x in itemsAndIndices if cls.__staticSectionPath( x[1], parent, layoutName )[:len(rootSectionPath)] == rootSectionPath ]
 
 		return [ x[1] for x in itemsAndIndices ]
 
@@ -263,7 +270,7 @@ class PlugLayout( GafferUI.Widget ) :
 
 		# get the items to lay out - these are a combination
 		# of plugs and strings representing custom widgets.
-		items = self.layoutOrder( self.__parent, includeCustomWidgets = True )
+		items = self.layoutOrder( self.__parent, includeCustomWidgets = True, layoutName = self.__layoutName, rootSection = self.__rootSectionName )
 
 		# ditch widgets we don't need any more
 
@@ -276,8 +283,10 @@ class PlugLayout( GafferUI.Widget ) :
 			if isinstance( k, str ) or v is not None and Gaffer.Metadata.plugValue( k, "plugValueWidget:type" ) == v.__plugValueWidgetType
 		}
 
+
 		# make (or reuse existing) widgets for each item, and sort them into
 		# sections.
+		rootSectionDepth = self.__rootSectionName.count( "." ) + 1 if self.__rootSectionName else 0
 		self.__rootSection.clear()
 		for item in items :
 
@@ -294,7 +303,7 @@ class PlugLayout( GafferUI.Widget ) :
 				continue
 
 			section = self.__rootSection
-			for sectionName in self.__sectionPath( item ) :
+			for sectionName in self.__sectionPath( item )[rootSectionDepth:] :
 				section = section.subsection( sectionName )
 
 			section.widgets.append( widget )
@@ -308,7 +317,7 @@ class PlugLayout( GafferUI.Widget ) :
 		with self.getContext() :
 			# Must scope the context when getting activators, because they are typically
 			# computed from the plug values, and may therefore trigger a compute.
-			activators = self.__metadataValue( self.__parent, "layout:activators" ) or {}
+			activators = self.__metadataValue( self.__parent, self.__layoutName + ":activators" ) or {}
 
 		activators = { k : v.value for k, v in activators.items() } # convert CompoundData of BoolData to dict of booleans
 
@@ -319,7 +328,7 @@ class PlugLayout( GafferUI.Widget ) :
 				result = activators.get( activatorName )
 				if result is None :
 					with self.getContext() :
-						result = self.__metadataValue( self.__parent, "layout:activator:" + activatorName )
+						result = self.__metadataValue( self.__parent, self.__layoutName + ":activator:" + activatorName )
 					result = result if result is not None else False
 					activators[activatorName] = result
 
@@ -336,7 +345,7 @@ class PlugLayout( GafferUI.Widget ) :
 			# Must scope the context because summaries are typically
 			# generated from plug values, and may therefore trigger
 			# a compute.
-			section.summary = self.__metadataValue( self.__parent, "layout:section:" + section.fullName + ":summary" ) or ""
+			section.summary = self.__metadataValue( self.__parent, self.__layoutName + ":section:" + section.fullName + ":summary" ) or ""
 
 		for subsection in section.subsections.values() :
 			self.__updateSummariesWalk( subsection )
@@ -356,7 +365,7 @@ class PlugLayout( GafferUI.Widget ) :
 		if result is None :
 			return result
 
-		if isinstance( result, GafferUI.PlugValueWidget ) and not result.hasLabel() and Gaffer.Metadata.plugValue( plug, "label" ) != "" :
+		if isinstance( result, GafferUI.PlugValueWidget ) and not result.hasLabel() and self.__itemMetadataValue( plug, "label" ) != "" :
  			result = GafferUI.PlugWidget( result )
 			if self.__layout.orientation() == GafferUI.ListContainer.Orientation.Horizontal :
 				# undo the annoying fixed size the PlugWidget has applied
@@ -395,39 +404,40 @@ class PlugLayout( GafferUI.Widget ) :
 			return Gaffer.Metadata.plugValue( plugOrNode, name )
 
 	@classmethod
-	def __staticItemMetadataValue( cls, item, name, parent ) :
+	def __staticItemMetadataValue( cls, item, name, parent, layoutName ) :
 
 		if isinstance( item, Gaffer.Plug ) :
-			##\todo Update "divider" and "label" items to use prefix too
-			if name not in ( "divider", "label" ) :
-				name = "layout:" + name
-			return Gaffer.Metadata.plugValue( item, name )
+			v = Gaffer.Metadata.plugValue( item, layoutName + ":" + name )
+			if v is None and name in ( "divider", "label" ) :
+				# Backwards compatibility with old unprefixed metadata names.
+				v = Gaffer.Metadata.plugValue( item, name )
+			return v
 		else :
-			return cls.__metadataValue( parent, "layout:customWidget:" + item + ":" + name )
+			return cls.__metadataValue( parent, layoutName + ":customWidget:" + item + ":" + name )
 
 	def __itemMetadataValue( self, item, name ) :
 
-		return self.__staticItemMetadataValue( item, name, parent = self.__parent )
+		return self.__staticItemMetadataValue( item, name, parent = self.__parent, layoutName = self.__layoutName )
 
 	@classmethod
-	def __staticSectionPath( cls, item, parent ) :
+	def __staticSectionPath( cls, item, parent, layoutName ) :
 
 		m = None
 		if isinstance( parent, Gaffer.Node ) :
 			# Backwards compatibility with old metadata entry
 			## \todo Remove
-			m = cls.__staticItemMetadataValue( item, "nodeUI:section", parent )
+			m = cls.__staticItemMetadataValue( item, "nodeUI:section", parent, layoutName )
 			if m == "header" :
 				m = ""
 
 		if m is None :
-			m = cls.__staticItemMetadataValue( item, "section", parent )
+			m = cls.__staticItemMetadataValue( item, "section", parent, layoutName )
 
 		return m.split( "." ) if m else []
 
 	def __sectionPath( self, item ) :
 
-		return self.__staticSectionPath( item, parent = self.__parent )
+		return self.__staticSectionPath( item, parent = self.__parent, layoutName = self.__layoutName )
 
 	def __childAddedOrRemoved( self, *unusedArgs ) :
 
@@ -468,12 +478,18 @@ class PlugLayout( GafferUI.Widget ) :
 		if not self.__node().isInstanceOf( nodeTypeId ) :
 			return
 
-		if key in ( "divider", "layout:index", "layout:section", "plugValueWidget:type" ) :
+		if key in (
+			"divider",
+			self.__layoutName + ":divider",
+			self.__layoutName + ":index",
+			self.__layoutName + ":section",
+			"plugValueWidget:type"
+		) :
 			# we often see sequences of several metadata changes - so
 			# we schedule a lazy update to batch them into one ui update.
 			self.__layoutDirty = True
 			self.__updateLazily()
-		elif re.match( "layout:section:.*:summary", key ) :
+		elif re.match( self.__layoutName + ":section:.*:summary", key ) :
 			self.__summariesDirty = True
 			self.__updateLazily()
 

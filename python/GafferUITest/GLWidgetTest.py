@@ -50,7 +50,7 @@ class GLWidgetTest( GafferUITest.TestCase ) :
 		b = GafferUI.Button()
 
 		w.setChild( g )
-		g.addOverlay( f )
+		g.setOverlay( f )
 		f.setChild( b )
 
 		self.assertTrue( b.parent() is f )
@@ -64,12 +64,12 @@ class GLWidgetTest( GafferUITest.TestCase ) :
 
 		w = GafferUI.Window()
 		g = GafferUI.GLWidget()
-		f = GafferUI.Frame( borderWidth = 0, borderStyle=GafferUI.Frame.BorderStyle.None )
+		c = GafferUI.GridContainer()
 		b = GafferUI.Button()
 
 		w.setChild( g )
-		g.addOverlay( f )
-		f.setChild( b )
+		g.setOverlay( c )
+		c.addChild( b, alignment = ( GafferUI.HorizontalAlignment.None, GafferUI.VerticalAlignment.Top ) )
 
 		w.setVisible( True )
 
@@ -85,7 +85,7 @@ class GLWidgetTest( GafferUITest.TestCase ) :
 		b = GafferUI.Button()
 
 		w.setChild( g )
-		g.addOverlay( f )
+		g.setOverlay( f )
 		f.setChild( b )
 
 		w.setVisible( True )
@@ -109,7 +109,7 @@ class GLWidgetTest( GafferUITest.TestCase ) :
 		b = GafferUI.Button()
 
 		w.setChild( g )
-		g.addOverlay( f )
+		g.setOverlay( f )
 		f.setChild( b )
 
 		w.setVisible( True )
@@ -124,6 +124,24 @@ class GLWidgetTest( GafferUITest.TestCase ) :
 		bP = GafferUI.Widget.mousePosition( relativeTo = b )
 
 		self.assertEqual( bBound.min - wBound.min, wP - bP )
+
+	def testOverlayAccessors( self ) :
+
+		g = GafferUI.GLWidget()
+		self.assertEqual( g.getOverlay(), None )
+
+		b1 = GafferUI.Button()
+		b2 = GafferUI.Button()
+		self.assertEqual( b1.parent(), None )
+		self.assertEqual( b2.parent(), None )
+
+		g.setOverlay( b1 )
+		self.assertEqual( b1.parent(), g )
+		self.assertEqual( b2.parent(), None )
+
+		g.setOverlay( b2 )
+		self.assertEqual( b1.parent(), None )
+		self.assertEqual( b2.parent(), g )
 
 if __name__ == "__main__":
 	unittest.main()

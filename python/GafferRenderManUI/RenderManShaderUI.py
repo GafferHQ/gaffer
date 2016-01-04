@@ -418,7 +418,7 @@ for nodeType in( GafferRenderMan.RenderManShader, GafferRenderMan.RenderManLight
 	Gaffer.Metadata.registerPlugValue( nodeType, "parameters", "layout:activators", __parameterActivators )
 	Gaffer.Metadata.registerPlugDescription( nodeType, "parameters.*", __plugDescription )
 	Gaffer.Metadata.registerPlugValue( nodeType, "parameters.*", "label", __plugLabel )
-	Gaffer.Metadata.registerPlugValue( nodeType, "parameters.*", "divider", __plugDivider )
+	Gaffer.Metadata.registerPlugValue( nodeType, "parameters.*", "layout:divider", __plugDivider )
 	Gaffer.Metadata.registerPlugValue( nodeType, "parameters.*", "ui:visibleDimensions", __plugVisibleDimensions )
 	Gaffer.Metadata.registerPlugValue( nodeType, "parameters.*", "layout:section", __plugSection )
 	Gaffer.Metadata.registerPlugValue( nodeType, "parameters.*", "layout:activator", __plugActivator )

@@ -1,7 +1,6 @@
 //////////////////////////////////////////////////////////////////////////
 //
-//  Copyright (c) 2012, John Haddon. All rights reserved.
-//  Copyright (c) 2013, Image Engine Design Inc. All rights reserved.
+//  Copyright (c) 2015, Image Engine Design Inc. All rights reserved.
 //
 //  Redistribution and use in source and binary forms, with or without
 //  modification, are permitted provided that the following conditions are
@@ -37,17 +36,39 @@
 
 #include "boost/python.hpp"
 
-#include "GafferImageUIBindings/ImageViewBinding.h"
+#include "Gaffer/Context.h"
+
+#include "GafferUIBindings/GadgetBinding.h"
+
+#include "GafferImage/ImagePlug.h"
+
+#include "GafferImageUI/ImageGadget.h"
 #include "GafferImageUIBindings/ImageGadgetBinding.h"
 
 using namespace boost::python;
+using namespace IECorePython;
+using namespace Gaffer;
+using namespace GafferUIBindings;
+using namespace GafferImage;
+using namespace GafferImageUI;
 
-using namespace GafferImageUIBindings;
-
-BOOST_PYTHON_MODULE( _GafferImageUI )
+namespace
 {
 
-	bindImageView();
-	bindImageGadget();
+ImagePlugPtr getImage( const ImageGadget &v )
+{
+	return ImagePlugPtr( const_cast<ImagePlug *>( v.getImage() ) );
+}
 
+} // namespace
+
+void GafferImageUIBindings::bindImageGadget()
+{
+	GadgetClass<ImageGadget>()
+		.def( init<>() )
+		.def( "setImage", &ImageGadget::setImage )
+		.def( "getImage", &getImage )
+		.def( "setContext", &ImageGadget::setContext )
+		.def( "getContext", (Context *(ImageGadget::*)())&ImageGadget::getContext, return_value_policy<CastToIntrusivePtr>() )
+	;
 }

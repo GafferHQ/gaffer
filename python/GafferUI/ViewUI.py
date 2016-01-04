@@ -41,11 +41,13 @@ Gaffer.Metadata.registerNode(
 
 	GafferUI.View,
 
+	"nodeToolbar:top:type", "GafferUI.StandardNodeToolbar.top",
+
 	plugs = {
 
 		"*" : [
 
-			"layout:section", "",
+			"toolbarLayout:section", "Top",
 
 		],
 
@@ -64,5 +66,3 @@ Gaffer.Metadata.registerNode(
 	}
 
 )
-
-GafferUI.NodeToolbar.registerCreator( GafferUI.View, GafferUI.StandardNodeToolbar )
