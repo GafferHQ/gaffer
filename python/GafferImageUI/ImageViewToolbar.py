@@ -156,9 +156,13 @@ class _ColorInspectorPlugValueWidget( GafferUI.PlugValueWidget ) :
 		# properly, I think by having some sort of ContextSensitiveWidget
 		# base class which inherits contexts from parents.
 		with view.getContext() :
-			channelNames = view.viewportGadget().getPrimaryChild().getImage()["channelNames"].getValue()
 			pixel = self.getPlug()["pixel"].getValue()
-			color = self.getPlug()["color"].getValue()
+			try :
+				channelNames = view.viewportGadget().getPrimaryChild().getImage()["channelNames"].getValue()
+				color = self.getPlug()["color"].getValue()
+			except :
+				channelNames = view.viewportGadget().getPrimaryChild().getImage()["channelNames"].defaultValue()
+				color = self.getPlug()["color"].defaultValue()
 
 		if "A" not in channelNames :
 			color = IECore.Color3f( color[0], color[1], color[2] )
