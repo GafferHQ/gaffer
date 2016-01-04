@@ -150,10 +150,22 @@ class ImageView::ColorInspector : public boost::signals::trackable
 				return NULL;
 			}
 
+			Color4f color;
+			try
+			{
+				Context::Scope scopedContext( m_view->getContext() );
+				color = plug()->getChild<Color4fPlug>( "color" )->getValue();
+			}
+			catch( ... )
+			{
+				// If there's an error computing the image, we can't
+				// start a drag.
+				return NULL;
+			}
+
 			Pointer::setCurrent( "rgba" );
 
-			Context::Scope scopedContext( m_view->getContext() );
-			return new Color4fData( plug()->getChild<Color4fPlug>( "color" )->getValue() );
+			return new Color4fData( color );
 		}
 
 		bool dragEnd( const ButtonEvent &event )
