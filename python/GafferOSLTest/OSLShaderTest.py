@@ -93,7 +93,7 @@ class OSLShaderTest( GafferOSLTest.OSLTestCase ) :
 		self.assertEqual( len( n["parameters"] ), 1 )
 		self.assertEqual( n["parameters"].keys(), [ "input" ] )
 
-		self.assertEqual( n["out"].typeId(), Gaffer.CompoundPlug.staticTypeId() )
+		self.assertEqual( n["out"].typeId(), Gaffer.Plug.staticTypeId() )
 		self.assertEqual( n["out"].keys(), [ "i", "f", "c", "s" ] )
 
 	def testNetwork( self ) :
@@ -457,6 +457,35 @@ class OSLShaderTest( GafferOSLTest.OSLTestCase ) :
 		# Should not throw - there are no cycles above.
 		color.stateHash()
 		color.state()
+
+	def testLoadNetworkFromVersion0_23( self ) :
+
+		s = Gaffer.ScriptNode()
+		s["fileName"].setValue( os.path.dirname( __file__ ) + "/scripts/networkVersion-0.23.2.1.gfr" )
+		s.load()
+
+		for plug, expectedValue, expectedInput in [
+			( "InFloat.parameters.name", "s", None ),
+			( "InFloat.parameters.defaultValue", 1, None ),
+			( "InFloat1.parameters.name", "t", None ),
+			( "InFloat1.parameters.defaultValue", 0.5, None ),
+			( "InFloat2.parameters.name", "u", None ),
+			( "InFloat2.parameters.defaultValue", 0.25, None ),
+			( "OutPoint.parameters.name", "stu", None ),
+			( "BuildPoint.parameters.x", None, "InFloat.out.value" ),
+			( "BuildPoint.parameters.y", None, "InFloat1.out.value" ),
+			( "BuildPoint.parameters.z", None, "InFloat2.out.value" ),
+			( "OutPoint.parameters.value", None, "BuildPoint.out.p" ),
+			( "OutObject.parameters.in0", None, "OutPoint.out.primitiveVariable" ),
+		] :
+
+			if expectedInput is not None :
+				self.assertTrue( s.descendant( plug ).getInput().isSame( s.descendant( expectedInput ) ) )
+			else :
+				self.assertTrue( s.descendant( plug ).getInput() is None )
+
+			if expectedValue is not None :
+				self.assertEqual( s.descendant( plug ).getValue(), expectedValue )
 
 if __name__ == "__main__":
 	unittest.main()

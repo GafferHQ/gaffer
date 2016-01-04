@@ -136,6 +136,7 @@ class Shader : public Gaffer::DependencyNode
 
 				void parameterHashWalk( const Shader *shaderNode, const Gaffer::Plug *parameterPlug, IECore::MurmurHash &h );
 				void parameterValueWalk( const Shader *shaderNode, const Gaffer::Plug *parameterPlug, const IECore::InternedString &parameterName, IECore::CompoundDataMap &values );
+				bool isLeafParameter( const Gaffer::Plug *parameterPlug ) const;
 
 				const Shader *m_rootNode;
 				IECore::ObjectVectorPtr m_state;

@@ -376,7 +376,7 @@ void Shader::NetworkBuilder::parameterHashWalk( const Shader *shaderNode, const 
 {
 	for( InputPlugIterator it( parameterPlug ); !it.done(); ++it )
 	{
-		if( (*it)->typeId() == CompoundPlug::staticTypeId() )
+		if( !isLeafParameter( it->get() ) )
 		{
 			parameterHashWalk( shaderNode, it->get(), h );
 		}
@@ -446,7 +446,7 @@ void Shader::NetworkBuilder::parameterValueWalk( const Shader *shaderNode, const
 			childParameterName = (*it)->getName();
 		}
 
-		if( (*it)->typeId() == CompoundPlug::staticTypeId() )
+		if( !isLeafParameter( it->get() ) )
 		{
 			parameterValueWalk( shaderNode, it->get(), childParameterName, values );
 		}
@@ -458,6 +458,24 @@ void Shader::NetworkBuilder::parameterValueWalk( const Shader *shaderNode, const
 			}
 		}
 	}
+}
+
+bool Shader::NetworkBuilder::isLeafParameter( const Gaffer::Plug *parameterPlug ) const
+{
+	const IECore::TypeId typeId = parameterPlug->typeId();
+	if( typeId == CompoundPlug::staticTypeId() )
+	{
+		return false;
+	}
+
+	if( typeId == Plug::staticTypeId() || typeId == ValuePlug::staticTypeId() )
+	{
+		if( !parameterPlug->children().empty() )
+		{
+			return false;
+		}
+	}
+	return true;
 }
 
 const std::string &Shader::NetworkBuilder::shaderHandle( const Shader *shaderNode )

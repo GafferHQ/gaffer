@@ -45,7 +45,6 @@
 #include "Gaffer/NumericPlug.h"
 #include "Gaffer/CompoundNumericPlug.h"
 #include "Gaffer/StringPlug.h"
-#include "Gaffer/CompoundPlug.h"
 
 #include "GafferOSL/OSLShader.h"
 #include "GafferOSL/OSLRenderer.h"
@@ -393,21 +392,30 @@ static Plug *loadShaderParameter( const OSLQuery &query, const OSLQuery::Paramet
 
 static Plug *loadStructParameter( const OSLQuery &query, const OSLQuery::Parameter *parameter, Gaffer::Plug *parent, bool keepExistingValues )
 {
-	CompoundPlug *result = NULL;
+	Plug *result = NULL;
 
 	const string name = plugName( parameter );
-	CompoundPlug *existingPlug = parent->getChild<CompoundPlug>( name );
-	if( existingPlug )
+	Plug *existingPlug = parent->getChild<Plug>( name );
+	if( !existingPlug || existingPlug->typeId() != Plug::staticTypeId() )
 	{
+		// No existing plug, or it was the wrong type (we used to use a CompoundPlug).
+		result = new Plug( name, parent->direction(), Plug::Default | Plug::Dynamic );
+		if( existingPlug )
+		{
+			// Transfer old plugs onto the replacement.
+			for( PlugIterator it( existingPlug ); !it.done(); ++it )
+			{
+				result->addChild( *it );
+			}
+		}
+	}
+	else
+	{
+		result = existingPlug;
 		if( !keepExistingValues )
 		{
 			existingPlug->clearChildren();
 		}
-		result = existingPlug;
-	}
-	else
-	{
-		result = new CompoundPlug( name, parent->direction(), Plug::Default | Plug::Dynamic );
 	}
 
 #if OSL_LIBRARY_VERSION_CODE > 10500
@@ -571,24 +579,26 @@ void OSLShader::loadShader( const std::string &shaderName, bool keepExistingValu
 
 	loadShaderParameters( query, parametersPlug(), keepExistingValues );
 
+	Plug *existingOut = getChild<Plug>( "out" );
+	if( !existingOut || existingOut->typeId() != Plug::staticTypeId() )
+	{
+		PlugPtr outPlug = new Plug( "out", Plug::Out, Plug::Default | Plug::Dynamic );
+		if( existingOut )
+		{
+			// We had an out plug but it was the wrong type (we used
+			// to use a CompoundPlug before that was deprecated). Move
+			// over any existing child plugs onto our replacement.
+			for( PlugIterator it( existingOut ); !it.done(); ++it )
+			{
+				outPlug->addChild( *it );
+			}
+		}
+		setChild( "out", outPlug );
+	}
+
 	if( query.shadertype() == "shader" )
 	{
-		CompoundPlug *existingOut = getChild<CompoundPlug>( "out" );
-		if( !existingOut || existingOut->typeId() != CompoundPlug::staticTypeId() )
-		{
-			CompoundPlugPtr outPlug = new CompoundPlug( "out", Plug::Out, Plug::Default | Plug::Dynamic );
-			setChild( "out", outPlug );
-		}
-		loadShaderParameters( query, getChild<CompoundPlug>( "out" ), keepExistingValues );
-	}
-	else
-	{
-		Plug *existingOut = getChild<Plug>( "out" );
-		if( !existingOut || existingOut->typeId() != Plug::staticTypeId() )
-		{
-			PlugPtr outPlug = new Plug( "out", Plug::Out, Plug::Default | Plug::Dynamic );
-			setChild( "out", outPlug );
-		}
+		loadShaderParameters( query, outPlug(), keepExistingValues );
 	}
 
 	namePlug()->setValue( shaderName );
