@@ -73,7 +73,7 @@ class WeakMethodTest( GafferTest.TestCase ) :
 
 	def testFallbackResult( self ) :
 
-		class A() :
+		class A( object ) :
 
 			def f( self ) :
 
