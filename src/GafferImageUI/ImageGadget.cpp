@@ -155,6 +155,14 @@ void ImageGadget::setSoloChannel( int index )
 	}
 
 	m_soloChannel = index;
+	if( m_soloChannel == -1 )
+	{
+		// Last time we called updateTiles(), we
+		// only updated the solo channel, so now
+		// we need to trigger a pass over all the
+		// channels.
+		m_dirtyFlags |= TilesDirty;
+	}
 	requestRender();
 }
 

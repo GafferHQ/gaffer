@@ -380,15 +380,18 @@ void ImageView::plugSet( Gaffer::Plug *plug )
 
 bool ImageView::keyPress( const GafferUI::KeyEvent &event )
 {
-	const char *rgba[4] = { "R", "G", "B", "A" };
-	for( int i = 0; i < 4; ++i )
+	if( !event.modifiers )
 	{
-		if( event.key == rgba[i] )
+		const char *rgba[4] = { "R", "G", "B", "A" };
+		for( int i = 0; i < 4; ++i )
 		{
-			m_imageGadget->setSoloChannel(
-				m_imageGadget->getSoloChannel() == i ? -1 : i
-			);
-			return true;
+			if( event.key == rgba[i] )
+			{
+				m_imageGadget->setSoloChannel(
+					m_imageGadget->getSoloChannel() == i ? -1 : i
+				);
+				return true;
+			}
 		}
 	}
 
