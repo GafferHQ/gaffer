@@ -194,7 +194,7 @@ SceneProcedural::SceneProcedural( ConstScenePlugPtr scenePlug, const Gaffer::Con
 	const IntData *deformationBlurSegmentsData = globals->member<IntData>( g_deformationBlurSegmentsGlobalAttributeName );
 	m_attributes.deformationBlurSegments = deformationBlurSegmentsData ? deformationBlurSegmentsData->readable() : 1;
 
-	updateAttributes( /* full = */ true );
+	updateAttributes();
 	computeBound();
 	++g_pendingSceneProcedurals;
 
@@ -212,7 +212,7 @@ SceneProcedural::SceneProcedural( const SceneProcedural &other, const ScenePlug:
 
 	m_context->set( ScenePlug::scenePathContextName, m_scenePath );
 
-	updateAttributes( /* full = */ false );
+	updateAttributes();
 	computeBound();
 	++g_pendingSceneProcedurals;
 }
@@ -353,8 +353,7 @@ void SceneProcedural::render( Renderer *renderer ) const
 
 		// get all the attributes, and early out if we're not visibile
 
-		ConstCompoundObjectPtr attributes = m_scenePlug->attributesPlug()->getValue();
-		const BoolData *visibilityData = attributes->member<BoolData>( g_visibleAttributeName );
+		const BoolData *visibilityData = m_attributesObject->member<BoolData>( g_visibleAttributeName );
 		if( visibilityData && !visibilityData->readable() )
 		{
 
@@ -392,7 +391,7 @@ void SceneProcedural::render( Renderer *renderer ) const
 
 		// attributes
 
-		outputAttributes( attributes.get(), renderer );
+		outputAttributes( m_attributesObject.get(), renderer );
 
 		// object
 
@@ -491,38 +490,35 @@ IECore::MurmurHash SceneProcedural::hash() const
 	return IECore::MurmurHash();
 }
 
-void SceneProcedural::updateAttributes( bool full )
+void SceneProcedural::updateAttributes()
 {
 	Context::Scope scopedContext( m_context.get() );
 
-	// \todo: Investigate if it's worth keeping these around and reusing them in SceneProcedural::render().
+	// We need to compute the attributes during construction so
+	// that we have the right motion blur settings in bound(), and
+	// we don't want to have to compute them again in render(), so
+	// we store them. We only output attributes which are local to
+	// the location we represent.
+	m_attributesObject = m_scenePlug->attributesPlug()->getValue();
 
-	ConstCompoundObjectPtr attributes;
-	if( full )
-	{
-		attributes = m_scenePlug->fullAttributes( m_scenePath );
-	}
-	else
-	{
-		attributes = m_scenePlug->attributesPlug()->getValue();
-	}
-
-	if( const BoolData *transformBlurData = attributes->member<BoolData>( g_transformBlurAttributeName ) )
+	// Some attributes have special meaning to us - we must track
+	// the inherited values of these.
+	if( const BoolData *transformBlurData = m_attributesObject->member<BoolData>( g_transformBlurAttributeName ) )
 	{
 		m_attributes.transformBlur = transformBlurData->readable();
 	}
 
-	if( const IntData *transformBlurSegmentsData = attributes->member<IntData>( g_transformBlurSegmentsAttributeName ) )
+	if( const IntData *transformBlurSegmentsData = m_attributesObject->member<IntData>( g_transformBlurSegmentsAttributeName ) )
 	{
 		m_attributes.transformBlurSegments = transformBlurSegmentsData->readable();
 	}
 
-	if( const BoolData *deformationBlurData = attributes->member<BoolData>( g_deformationBlurAttributeName ) )
+	if( const BoolData *deformationBlurData = m_attributesObject->member<BoolData>( g_deformationBlurAttributeName ) )
 	{
 		m_attributes.deformationBlur = deformationBlurData->readable();
 	}
 
-	if( const IntData *deformationBlurSegmentsData = attributes->member<IntData>( g_deformationBlurSegmentsAttributeName ) )
+	if( const IntData *deformationBlurSegmentsData = m_attributesObject->member<IntData>( g_deformationBlurSegmentsAttributeName ) )
 	{
 		m_attributes.deformationBlurSegments = deformationBlurSegmentsData->readable();
 	}
