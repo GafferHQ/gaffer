@@ -364,3 +364,7 @@ if "APPLESEED" in os.environ :
 ###########################################################################
 
 GafferUI.DotUI.connect( application.root() )
+
+with IECore.IgnoredExceptions( ImportError ) :
+
+	import GafferTractorUI
