@@ -52,7 +52,6 @@
 #include "GafferScene/InteractiveRender.h"
 #include "GafferScene/RendererAlgo.h"
 #include "GafferScene/PathMatcherData.h"
-#include "GafferScene/SceneProcedural.h"
 
 using namespace std;
 using namespace Imath;

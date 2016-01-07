@@ -54,7 +54,6 @@
 #include "GafferUI/Style.h"
 #include "GafferUI/Pointer.h"
 
-#include "GafferScene/SceneProcedural.h"
 #include "GafferScene/PathMatcherData.h"
 #include "GafferScene/StandardAttributes.h"
 #include "GafferScene/PathFilter.h"
