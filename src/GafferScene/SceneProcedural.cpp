@@ -62,6 +62,24 @@ using namespace IECore;
 using namespace Gaffer;
 using namespace GafferScene;
 
+// Static InternedStrings for attribute and option names. We don't want the overhead of
+// constructing these each time.
+
+static InternedString g_transformBlurOptionName( "option:render:transformBlur" );
+static InternedString g_deformationBlurOptionName( "option:render:deformationBlur" );
+static InternedString g_shutterOptionName( "option:render:shutter" );
+
+static InternedString g_transformBlurGlobalAttributeName( "attribute:gaffer:transformBlur" );
+static InternedString g_transformBlurSegmentsGlobalAttributeName( "attribute:gaffer:transformBlurSegments" );
+static InternedString g_deformationBlurGlobalAttributeName( "attribute:gaffer:deformationBlur" );
+static InternedString g_deformationBlurSegmentsGlobalAttributeName( "attribute:gaffer:deformationBlurSegments" );
+
+static InternedString g_visibleAttributeName( "scene:visible" );
+static InternedString g_transformBlurAttributeName( "gaffer:transformBlur" );
+static InternedString g_transformBlurSegmentsAttributeName( "gaffer:transformBlurSegments" );
+static InternedString g_deformationBlurAttributeName( "gaffer:deformationBlur" );
+static InternedString g_deformationBlurSegmentsAttributeName( "gaffer:deformationBlurSegments" );
+
 // TBB recommends that you defer decisions about how many threads to create
 // to it, so you can write nice high level code and it can decide how best
 // to schedule the work. Generally if left to do this, it schedules it by
@@ -152,28 +170,28 @@ SceneProcedural::SceneProcedural( ConstScenePlugPtr scenePlug, const Gaffer::Con
 	Context::Scope scopedContext( m_context.get() );
 	ConstCompoundObjectPtr globals = m_scenePlug->globalsPlug()->getValue();
 
-	const BoolData *transformBlurData = globals->member<BoolData>( "option:render:transformBlur" );
+	const BoolData *transformBlurData = globals->member<BoolData>( g_transformBlurOptionName );
 	m_options.transformBlur = transformBlurData ? transformBlurData->readable() : false;
 
-	const BoolData *deformationBlurData = globals->member<BoolData>( "option:render:deformationBlur" );
+	const BoolData *deformationBlurData = globals->member<BoolData>( g_deformationBlurOptionName );
 	m_options.deformationBlur = deformationBlurData ? deformationBlurData->readable() : false;
 
-	const V2fData *shutterData = globals->member<V2fData>( "option:render:shutter" );
+	const V2fData *shutterData = globals->member<V2fData>( g_shutterOptionName );
 	m_options.shutter = shutterData ? shutterData->readable() : V2f( -0.25, 0.25 );
 	m_options.shutter += V2f( m_context->getFrame() );
 
 	// attributes
 
-	transformBlurData = globals->member<BoolData>( "attribute:gaffer:transformBlur" );
+	transformBlurData = globals->member<BoolData>( g_transformBlurGlobalAttributeName );
 	m_attributes.transformBlur = transformBlurData ? transformBlurData->readable() : true;
 
-	const IntData *transformBlurSegmentsData = globals->member<IntData>( "attribute:gaffer:transformBlurSegments" );
+	const IntData *transformBlurSegmentsData = globals->member<IntData>( g_transformBlurSegmentsGlobalAttributeName );
 	m_attributes.transformBlurSegments = transformBlurSegmentsData ? transformBlurSegmentsData->readable() : 1;
 
-	deformationBlurData = globals->member<BoolData>( "attribute:gaffer:deformationBlur" );
+	deformationBlurData = globals->member<BoolData>( g_deformationBlurGlobalAttributeName );
 	m_attributes.deformationBlur = deformationBlurData ? deformationBlurData->readable() : true;
 
-	const IntData *deformationBlurSegmentsData = globals->member<IntData>( "attribute:gaffer:deformationBlurSegments" );
+	const IntData *deformationBlurSegmentsData = globals->member<IntData>( g_deformationBlurSegmentsGlobalAttributeName );
 	m_attributes.deformationBlurSegments = deformationBlurSegmentsData ? deformationBlurSegmentsData->readable() : 1;
 
 	updateAttributes( /* full = */ true );
@@ -336,7 +354,7 @@ void SceneProcedural::render( Renderer *renderer ) const
 		// get all the attributes, and early out if we're not visibile
 
 		ConstCompoundObjectPtr attributes = m_scenePlug->attributesPlug()->getValue();
-		const BoolData *visibilityData = attributes->member<BoolData>( "scene:visible" );
+		const BoolData *visibilityData = attributes->member<BoolData>( g_visibleAttributeName );
 		if( visibilityData && !visibilityData->readable() )
 		{
 
@@ -489,22 +507,22 @@ void SceneProcedural::updateAttributes( bool full )
 		attributes = m_scenePlug->attributesPlug()->getValue();
 	}
 
-	if( const BoolData *transformBlurData = attributes->member<BoolData>( "gaffer:transformBlur" ) )
+	if( const BoolData *transformBlurData = attributes->member<BoolData>( g_transformBlurAttributeName ) )
 	{
 		m_attributes.transformBlur = transformBlurData->readable();
 	}
 
-	if( const IntData *transformBlurSegmentsData = attributes->member<IntData>( "gaffer:transformBlurSegments" ) )
+	if( const IntData *transformBlurSegmentsData = attributes->member<IntData>( g_transformBlurSegmentsAttributeName ) )
 	{
 		m_attributes.transformBlurSegments = transformBlurSegmentsData->readable();
 	}
 
-	if( const BoolData *deformationBlurData = attributes->member<BoolData>( "gaffer:deformationBlur" ) )
+	if( const BoolData *deformationBlurData = attributes->member<BoolData>( g_deformationBlurAttributeName ) )
 	{
 		m_attributes.deformationBlur = deformationBlurData->readable();
 	}
 
-	if( const IntData *deformationBlurSegmentsData = attributes->member<IntData>( "gaffer:deformationBlurSegments" ) )
+	if( const IntData *deformationBlurSegmentsData = attributes->member<IntData>( g_deformationBlurSegmentsAttributeName ) )
 	{
 		m_attributes.deformationBlurSegments = deformationBlurSegmentsData->readable();
 	}
