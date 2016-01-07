@@ -176,8 +176,8 @@ SceneProcedural::SceneProcedural( ConstScenePlugPtr scenePlug, const Gaffer::Con
 	const IntData *deformationBlurSegmentsData = globals->member<IntData>( "attribute:gaffer:deformationBlurSegments" );
 	m_attributes.deformationBlurSegments = deformationBlurSegmentsData ? deformationBlurSegmentsData->readable() : 1;
 
+	updateAttributes( /* full = */ true );
 	computeBound();
-	updateAttributes( true );
 	++g_pendingSceneProcedurals;
 
 }
@@ -194,8 +194,8 @@ SceneProcedural::SceneProcedural( const SceneProcedural &other, const ScenePlug:
 
 	m_context->set( ScenePlug::scenePathContextName, m_scenePath );
 
+	updateAttributes( /* full = */ false );
 	computeBound();
-	updateAttributes( false );
 	++g_pendingSceneProcedurals;
 }
 
