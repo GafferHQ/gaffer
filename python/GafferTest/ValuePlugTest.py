@@ -564,6 +564,14 @@ class ValuePlugTest( GafferTest.TestCase ) :
 		self.assertEqual( cs[0][0], n["c"]["d"] )
 		self.assertEqual( cs[1][0], n["c"] )
 
+	def testNoNonValuePlugChildren( self ) :
+
+		v = Gaffer.ValuePlug()
+		p = Gaffer.Plug()
+
+		self.assertFalse( v.acceptsChild( p ) )
+		self.assertRaises( RuntimeError, v.addChild, p )
+
 	def setUp( self ) :
 
 		GafferTest.TestCase.setUp( self )

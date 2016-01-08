@@ -120,5 +120,14 @@ class CompoundPlugTest( GafferTest.TestCase ) :
 		self.assertEqual( c2["b"].direction(), Gaffer.Plug.Direction.In )
 		self.assertEqual( c2["c"].direction(), Gaffer.Plug.Direction.In )
 
+	def testNonValuePlugChildren( self ) :
+
+		c = Gaffer.CompoundPlug()
+		p = Gaffer.Plug()
+
+		self.assertTrue( c.acceptsChild( p ) )
+		c["p"] = p
+		self.assertTrue( p.parent().isSame( c ) )
+
 if __name__ == "__main__":
 	unittest.main()
