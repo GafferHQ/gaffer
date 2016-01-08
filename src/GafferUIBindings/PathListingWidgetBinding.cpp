@@ -55,6 +55,7 @@
 
 #include "IECorePython/RefCountedBinding.h"
 #include "IECorePython/ScopedGILLock.h"
+#include "IECorePython/ScopedGILRelease.h"
 
 #include "Gaffer/Path.h"
 #include "Gaffer/FileSystemPath.h"
@@ -881,6 +882,9 @@ void propagateExpanded( uint64_t treeViewAddress, uint64_t modelIndexAddress, bo
 
 PathPtr pathForIndex( uint64_t treeViewAddress, uint64_t modelIndexAddress )
 {
+	// put a GIL release here in case scene child name computations etc triggered by
+	// this function end up calling into python:
+	IECorePython::ScopedGILRelease r;
 	QTreeView *treeView = reinterpret_cast<QTreeView *>( treeViewAddress );
 	PathModel *model = dynamic_cast<PathModel *>( treeView->model() );
 	if( !model )
@@ -894,6 +898,9 @@ PathPtr pathForIndex( uint64_t treeViewAddress, uint64_t modelIndexAddress )
 
 void indexForPath( uint64_t treeViewAddress, const Path *path, uint64_t modelIndexAddress )
 {
+	// put a GIL release here in case scene child name computations etc triggered by
+	// this function end up calling into python:
+	IECorePython::ScopedGILRelease r;
 	QTreeView *treeView = reinterpret_cast<QTreeView *>( treeViewAddress );
 	PathModel *model = dynamic_cast<PathModel *>( treeView->model() );
 	QModelIndex *modelIndex = reinterpret_cast<QModelIndex *>( modelIndexAddress );
