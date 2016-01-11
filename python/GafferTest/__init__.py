@@ -126,6 +126,7 @@ from LoopTest import LoopTest
 from SubGraphTest import SubGraphTest
 from FileSequencePathFilterTest import FileSequencePathFilterTest
 from AnimationTest import AnimationTest
+from StatsApplicationTest import StatsApplicationTest
 
 if __name__ == "__main__":
 	import unittest
