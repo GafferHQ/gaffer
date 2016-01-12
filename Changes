@@ -1,3 +1,94 @@
+# 0.21.0.0
+==========
+
+Apps
+-----------------------------------------------------------------------
+
+- Added `gaffer stats` application. This takes a script and prints out
+  information about version, settings, variables and nodes (#1437).
+
+Core
+-----------------------------------------------------------------------
+
+- Fixed serialisation of quotes and other special characters in metadata
+  keys. This was most visible when using special characters in custom
+  preset names (#1599).
+- Simplified metadata serialisations (#1599).
+
+UI
+-----------------------------------------------------------------------
+
+- Fixed UV orientation for area light visualisations (#1600).
+- Fixed environment light visualisations on OSX (#1609).
+- Viewer (#1592)
+  - Improved image viewer performance.
+  - Fixed several image viewer bugs (#1427, #1426, #1356, #773).
+  - Added support for custom toolbars on all edges of the viewer,
+    for both views and nodes.
+- Fixed hang when browsing scene locations (#1618).
+
+Image
+-----------------------------------------------------------------------
+
+- Fixed reference counting bugs in Premultiply and Unpremultiply nodes
+  (#1598).
+- Fixed crashes caused by Merge requesting nonexistent upstream
+  channels (#1596).
+
+Appleseed
+-----------------------------------------------------------------------
+
+- Added support for exposure parameters on Appleseed lights (#1608).
+- Simplified light menus (#1608).
+- Improved environment light visualisations (#1608).
+
+API
+-----------------------------------------------------------------------
+
+- ImageAlgo
+  - Added channelExists() function (#1596).
+- ExceptionAlgo
+  - Fixed line number extraction for syntax errors (#1599).
+- Menu
+  - Fixed broken shortcuts after assigning new menu definition (#1597).
+  - Fixed scoping of MenuBar shortcuts. In particular this fixes
+    a bug whereby an embedded Gaffer panel could prevent Maya's
+    main window shortcuts from working (#1597).
+- Replaced all old-style python classes with new style ones #1607.
+- GafferImageUI
+  - Added ImageGadget class.
+- PlugLayout improvements
+  - Added support for "layout:divider" metadata - this replaces
+    the old "divider" metadata.
+  - Added support for multiple layouts, using a different metadata
+    prefix for each layout.
+  - Added support for creating partial layouts, using a new rootSection
+    constructor argument.
+- Toolbar improvements
+  - Toolbars can now be defined for all edges, not just the top of
+    frame (#1592).
+  - StandardNodeToolbar has a new constructor argument to choose which
+    edge to create the toolbar for. A new "toolbarLayout:section" metadata
+    value chooses which toolbar plugs belong in, with values of
+    "Top", "Bottom", "Left" and "Right" (#1592).
+- GLWidget
+  - Improved overlay mechanism. Overlays may be queried and removed as
+    well as set. Container overlays are transparent to mouse events in
+    areas where no child widget exists (#1592).
+- NumericPlugValueWidget
+  - Added support for "fixedCharacterWidth" metadata.
+
+Build
+-----------------------------------------------------------------------
+
+- Added GCC 5 build to Travis test setup.
+
+Incompatibilities
+-----------------------------------------------------------------------
+
+- Removed ImageView::update() virtual override.
+- Replaced GLWidget.addOverlay() method with setOverlay()/getOverlay() methods.
+
 # 0.20.0.0
 ==========
 
