@@ -1,3 +1,11 @@
+# 0.20.0.1
+==========
+
+UI
+-----------------------------------------------------------------------
+
+- Added GIL release to some PathListingWidget methods to fix a hang
+
 # 0.20.0.0
 ==========
 
