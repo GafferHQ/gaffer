@@ -677,6 +677,14 @@ libraries = {
 
 	"GafferAppleseedUITest" : {},
 
+	"GafferTractor" : {},
+
+	"GafferTractorTest" : {},
+
+	"GafferTractorUI" : {},
+
+	"GafferTractorUITest" : {},
+
 	"apps" : {
 		"additionalFiles" : glob.glob( "apps/*/*-1.py" ),
 	},
