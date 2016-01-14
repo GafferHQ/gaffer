@@ -572,6 +572,51 @@ class ValuePlugTest( GafferTest.TestCase ) :
 		self.assertFalse( v.acceptsChild( p ) )
 		self.assertRaises( RuntimeError, v.addChild, p )
 
+	def testDerivingInPython( self ) :
+
+		class TestValuePlug( Gaffer.ValuePlug ) :
+
+			def __init__( self, name = "TestValuePlug", direction = Gaffer.Plug.Direction.In, flags = Gaffer.Plug.Flags.None ) :
+
+				Gaffer.ValuePlug.__init__( self, name, direction, flags )
+
+			def acceptsChild( self, child ) :
+
+				if not Gaffer.ValuePlug.acceptsChild( self, child ) :
+					return False
+
+				return isinstance( child, Gaffer.IntPlug )
+
+		IECore.registerRunTimeTyped( TestValuePlug )
+
+		# check the constructor
+
+		p = TestValuePlug()
+		self.assertEqual( p.getName(), "TestValuePlug" )
+		self.assertEqual( p.direction(), Gaffer.Plug.Direction.In )
+		self.assertEqual( p.getFlags(), Gaffer.Plug.Flags.None )
+
+		p = TestValuePlug( name = "p", direction = Gaffer.Plug.Direction.Out, flags = Gaffer.Plug.Flags.Default | Gaffer.Plug.Flags.Dynamic )
+		self.assertEqual( p.getName(), "p" )
+		self.assertEqual( p.direction(), Gaffer.Plug.Direction.Out )
+		self.assertEqual( p.getFlags(), Gaffer.Plug.Flags.Default | Gaffer.Plug.Flags.Dynamic )
+
+		# check that acceptsChild can be overridden
+
+		p = TestValuePlug()
+
+		self.assertRaises( RuntimeError, p.addChild, Gaffer.FloatPlug() )
+
+		p.addChild( Gaffer.IntPlug() )
+
+		# check that the fact the plug has been wrapped solves the object identity problem
+
+		p = TestValuePlug()
+		n = Gaffer.Node()
+		n["p"] = p
+
+		self.failUnless( n["p"] is p )
+
 	def setUp( self ) :
 
 		GafferTest.TestCase.setUp( self )

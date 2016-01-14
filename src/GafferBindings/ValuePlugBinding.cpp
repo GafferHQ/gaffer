@@ -269,7 +269,7 @@ bool ValuePlugSerialiser::valueNeedsSerialisation( const Gaffer::ValuePlug *plug
 
 void GafferBindings::bindValuePlug()
 {
-	PlugClass<ValuePlug>()
+	PlugClass<ValuePlug, PlugWrapper<ValuePlug> >()
 		.def( boost::python::init<const std::string &, Plug::Direction, unsigned>(
 				(
 					boost::python::arg_( "name" ) = GraphComponent::defaultName<ValuePlug>(),
