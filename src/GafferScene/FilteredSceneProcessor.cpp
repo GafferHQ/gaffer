@@ -81,28 +81,6 @@ void FilteredSceneProcessor::affects( const Gaffer::Plug *input, AffectedPlugsCo
 		const Filter *filter = runTimeCast<const Filter>( filterPlug()->source<Plug>()->node() );
 		if( filter && filter->sceneAffectsMatch( scenePlug, static_cast<const ValuePlug *>( input ) ) )
 		{
-			if(
-				input != scenePlug->globalsPlug() &&
-				input != scenePlug->setNamesPlug() &&
-				input != scenePlug->setPlug()
-			)
-			{
-				/// \todo Obviously it would be great to remove this restriction and implement AttributeFilters and
-				/// BoundFilters and suchlike. There are currently two issues :
-				///
-				/// - Implementing DescendantMatch and AncestorMatch would be very expensive for an AttributeFilter,
-				///   and filters currently compute all results at once. At the very least we need a way
-				///   of only computing ExactMatch when that is all that is needed, and only paying the extra
-				///   when descendant and ancestor matches are relevant. If we had a hierarchy hash we might be able
-				///   to do even better.
-				///
-				/// - The Isolate and Prune nodes make a single call to filterHash() in hashSet(), to account for
-				///   the fact that the filter is used in remapping sets. This wouldn't work for filter types which
-				///   actually vary based on data within the scene hierarchy, because then multiple calls would be
-				///   necessary. We could make more calls here, but that would be expensive. In an ideal world we'd
-				///   be able to compute a hash for the filter across a whole hierarchy.
-				throw Exception( "Filters may not currently depend on parts of the scene other than the globals and sets." );
-			}
 			outputs.push_back( filterPlug() );
 		}
 	}

@@ -96,6 +96,40 @@ void Prune::affects( const Gaffer::Plug *input, AffectedPlugsContainer &outputs 
 	}
 }
 
+bool Prune::acceptsInput( const Gaffer::Plug *plug, const Gaffer::Plug *inputPlug ) const
+{
+	if( !FilteredSceneProcessor::acceptsInput( plug, inputPlug ) )
+	{
+		return false;
+	}
+
+	if( plug == filterPlug() )
+	{
+		if( const Filter *filter = runTimeCast<const Filter>( inputPlug->source<Plug>()->node() ) )
+		{
+			if(
+				filter->sceneAffectsMatch( inPlug(), inPlug()->boundPlug() ) ||
+				filter->sceneAffectsMatch( inPlug(), inPlug()->transformPlug() ) ||
+				filter->sceneAffectsMatch( inPlug(), inPlug()->attributesPlug() ) ||
+				filter->sceneAffectsMatch( inPlug(), inPlug()->objectPlug() ) ||
+				filter->sceneAffectsMatch( inPlug(), inPlug()->childNamesPlug() )
+			)
+			{
+				// We make a single call to filterHash() in hashSet(), to account for
+				// the fact that the filter is used in remapping sets. This wouldn't
+				// work for filter types which actually vary based on data within the
+				// scene hierarchy, because then multiple calls would be necessary.
+				// We could make more calls here, but that would be expensive.
+				/// \todo In an ideal world we'd be able to compute a hash for the
+				/// filter across a whole hierarchy.
+				return false;
+			}
+		}
+	}
+
+	return true;
+}
+
 void Prune::hashBound( const ScenePath &path, const Gaffer::Context *context, const ScenePlug *parent, IECore::MurmurHash &h ) const
 {
 	if( adjustBoundsPlug()->getValue() )
