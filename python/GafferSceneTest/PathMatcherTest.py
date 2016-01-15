@@ -287,7 +287,7 @@ class PathMatcherTest( unittest.TestCase ) :
 			with c :
 				self.assertEqual( f["out"].getValue(), int( result ) )
 
-	def testCopyConstructorIsDeep( self ) :
+	def testCopyConstructorAppearsDeep( self ) :
 
 		m = GafferScene.PathMatcher( [ "/a" ] )
 		self.assertEqual( m.match( "/a" ), GafferScene.Filter.Result.ExactMatch )
@@ -738,6 +738,46 @@ class PathMatcherTest( unittest.TestCase ) :
 	def testIteratorPrune( self ) :
 
 		GafferSceneTest.testPathMatcherIteratorPrune()
+
+	def testCopyAndAddPaths( self ) :
+
+		initialPaths = [
+			"/a/b/c/d",
+			"/a/b",
+			"/e/f",
+		]
+
+		additionalPaths = [
+			"/a/b/c/d/e",
+			"/a/b/c/e",
+			"/a/b/e",
+			"/e",
+			"/g"
+		]
+
+		m1 = GafferScene.PathMatcher( initialPaths )
+		m2 = GafferScene.PathMatcher( m1 )
+
+		self.assertEqual( set( m1.paths() ), set( initialPaths ) )
+		self.assertEqual( set( m2.paths() ), set( initialPaths ) )
+
+		for path in additionalPaths :
+			m1.addPath( path )
+
+		self.assertEqual( set( m1.paths() ), set( initialPaths + additionalPaths ) )
+		self.assertEqual( set( m2.paths() ), set( initialPaths ) )
+
+	def testCopyAndAddRoot( self ) :
+
+		p1 = GafferScene.PathMatcher()
+		p2 = GafferScene.PathMatcher( p1 )
+
+		self.assertEqual( p1.paths(), [] )
+		self.assertEqual( p2.paths(), [] )
+
+		p2.addPath( "/" )
+		self.assertEqual( p1.paths(), [] )
+		self.assertEqual( p2.paths(), [ "/" ] )
 
 if __name__ == "__main__":
 	unittest.main()

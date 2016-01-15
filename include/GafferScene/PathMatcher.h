@@ -54,18 +54,13 @@ class PathMatcher
 	public :
 
 		PathMatcher();
-		/// Constructs a deep copy of other.
+		/// Copy constructor. Uses lazy-copy-on-write so
+		/// that copies are cheap until edited.
 		PathMatcher( const PathMatcher &other );
 
 		template<typename PathIterator>
 		PathMatcher( PathIterator pathsBegin, PathIterator pathsEnd );
 
-		/// \todo Should this keep the existing tree in place,
-		/// but just remove the terminator flags on any items
-		/// not present in the new paths? This might give
-		/// better performance for selections and expansions
-		/// which will tend to be adding and removing the same
-		/// paths repeatedly.
 		template<typename PathIterator>
 		void init( PathIterator pathsBegin, PathIterator pathsEnd );
 
@@ -170,6 +165,7 @@ class PathMatcher
 			typedef ChildMap::const_iterator ConstChildMapIterator;
 
 			Node();
+			// Shallow copy.
 			Node( const Node &other );
 			~Node();
 
@@ -194,7 +190,10 @@ class PathMatcher
 
 		typedef std::vector<IECore::InternedString>::const_iterator NameIterator;
 
-		bool addPath( const NameIterator &start, const NameIterator &end );
+		// Recursive method used to add a path to a Node tree. Since nodes may be shared among multiple
+		// trees, we perform lazy-copy-on-write when needing to edit a shared node. When we do this,
+		// the copy is returned so that it can be used to replace the old child.
+		NodePtr addWalk( Node *node, const NameIterator &start, const NameIterator &end, bool shared, bool &added );
 		void removeWalk( Node *node, const NameIterator &start, const NameIterator &end, const bool prune, bool &removed );
 		bool addPathsWalk( Node *node, const Node *srcNode );
 		bool removePathsWalk( Node *node, const Node *srcNode );

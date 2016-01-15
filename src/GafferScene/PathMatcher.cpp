@@ -74,13 +74,8 @@ PathMatcher::Node::Node()
 }
 
 PathMatcher::Node::Node( const Node &other )
-	:	terminator( other.terminator )
+	:	children( other.children ), terminator( other.terminator )
 {
-	ChildMapIterator hint = children.begin();
-	for( ConstChildMapIterator it = other.children.begin(), eIt = other.children.end(); it != eIt; it++ )
-	{
-		hint = children.insert( hint, ChildMapValue( it->first, new Node( *(it->second) ) ) );
-	}
 }
 
 PathMatcher::Node::~Node()
@@ -169,7 +164,7 @@ PathMatcher::PathMatcher()
 }
 
 PathMatcher::PathMatcher( const PathMatcher &other )
-	:	m_root( new Node( *(other.m_root ) ) )
+	:	m_root( other.m_root )
 {
 }
 
@@ -335,26 +330,12 @@ bool PathMatcher::addPath( const std::string &path )
 
 bool PathMatcher::addPath( const std::vector<IECore::InternedString> &path )
 {
-	return addPath( path.begin(), path.end() );
-}
-
-bool PathMatcher::addPath( const NameIterator &start, const NameIterator &end )
-{
-	Node *node = m_root.get();
-	for( NameIterator it = start; it != end; ++it )
+	bool result = false;
+	NodePtr newRoot = addWalk( m_root.get(), path.begin(), path.end(), /* shared = */ false, result );
+	if( newRoot )
 	{
-		const Name name( *it );
-		Node *nextNode = node->child( name );
-		if( !nextNode )
-		{
-			nextNode = new Node;
-			node->children.insert( Node::ChildMapValue( name, nextNode ) );
-		}
-		node = nextNode;
+		m_root = newRoot;
 	}
-
-	bool result = !node->terminator;
-	node->terminator = true;
 	return result;
 }
 
@@ -404,6 +385,72 @@ PathMatcher::RawIterator PathMatcher::begin() const
 PathMatcher::RawIterator PathMatcher::end() const
 {
 	return RawIterator( *this, true );
+}
+
+PathMatcher::NodePtr PathMatcher::addWalk( Node *node, const NameIterator &start, const NameIterator &end, bool shared, bool &added )
+{
+	shared = shared || node->refCount() > 1;
+	if( start == end )
+	{
+		// We're at the end of the path we wish to add.
+		if( node->terminator )
+		{
+			// Nothing to do.
+			return NULL;
+		}
+
+		added = true;
+		if( shared )
+		{
+			NodePtr result = new Node( *node );
+			result->terminator = true;
+			return result;
+		}
+		else
+		{
+			node->terminator = true;
+			return NULL;
+		}
+	}
+
+	// Not at the end of the path yet. Need to make sure we
+	// have an appropriate child and recurse.
+
+	NodePtr newChild;
+	NameIterator childStart = start; childStart++;
+
+	if( Node *child = node->child( *start ) )
+	{
+		// Recurse using the child we've found. We may still need to replace this
+		// child with a new one in the event that it is duplicated in order to be
+		// written to.
+		newChild = addWalk( child, childStart, end, shared, added );
+	}
+	else
+	{
+		// No matching child, so make a new one.
+		newChild = new Node();
+		addWalk( newChild.get(), childStart, end, /* shared = */ false, added );
+	}
+
+	// If there's a new child then add it. If we ourselves are shared
+	// then we'll need to create a new node to do this in, and then
+	// return that to our caller to be replaced in its node and so on.
+	if( newChild )
+	{
+		if( shared )
+		{
+			NodePtr result = new Node( *node );
+			result->children[*start] = newChild;
+			return result;
+		}
+		else
+		{
+			node->children[*start] = newChild;
+		}
+	}
+
+	return NULL;
 }
 
 void PathMatcher::removeWalk( Node *node, const NameIterator &start, const NameIterator &end, const bool prune, bool &removed )
