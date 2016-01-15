@@ -104,7 +104,7 @@ inline void PathMatcher::RawIterator::increment()
 		return;
 	}
 
-	const Node *node = m_stack.back().it->second;
+	const Node *node = m_stack.back().it->second.get();
 	if( !m_pruned && !node->children.empty() )
 	{
 		m_stack.push_back(
@@ -153,7 +153,7 @@ inline const PathMatcher::Node *PathMatcher::RawIterator::node() const
 	{
 		if( m_stack.back().it != m_stack.back().end )
 		{
-			return m_stack.back().it->second;
+			return m_stack.back().it->second.get();
 		}
 	}
 	return NULL;

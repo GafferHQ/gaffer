@@ -85,7 +85,6 @@ PathMatcher::Node::Node( const Node &other )
 
 PathMatcher::Node::~Node()
 {
-	clearChildren();
 }
 
 inline PathMatcher::Node::ConstChildMapIterator PathMatcher::Node::wildcardsBegin() const
@@ -100,7 +99,7 @@ inline PathMatcher::Node *PathMatcher::Node::child( const Name &name )
 	ChildMapIterator it = children.find( name );
 	if( it != children.end() )
 	{
-		return it->second;
+		return it->second.get();
 	}
 	return NULL;
 }
@@ -110,7 +109,7 @@ inline const PathMatcher::Node *PathMatcher::Node::child( const Name &name ) con
 	ConstChildMapIterator it = children.find( name );
 	if( it != children.end() )
 	{
-		return it->second;
+		return it->second.get();
 	}
 	return NULL;
 }
@@ -151,11 +150,6 @@ bool PathMatcher::Node::operator != ( const Node &other )
 bool PathMatcher::Node::clearChildren()
 {
 	const bool result = !children.empty();
-	ChildMap::iterator it, eIt;
-	for( it = children.begin(), eIt = children.end(); it != eIt; it++ )
-	{
-		delete it->second;
-	}
 	children.clear();
 	return result;
 }
@@ -170,18 +164,18 @@ bool PathMatcher::Node::isEmpty()
 //////////////////////////////////////////////////////////////////////////
 
 PathMatcher::PathMatcher()
+	:	m_root( new Node )
 {
-	m_root = boost::shared_ptr<Node>( new Node );
 }
 
 PathMatcher::PathMatcher( const PathMatcher &other )
+	:	m_root( new Node( *(other.m_root ) ) )
 {
-	m_root = boost::shared_ptr<Node>( new Node( *(other.m_root) ) );
 }
 
 void PathMatcher::clear()
 {
-	m_root = boost::shared_ptr<Node>( new Node );
+	m_root = new Node;
 }
 
 bool PathMatcher::isEmpty() const
@@ -275,7 +269,7 @@ void PathMatcher::matchWalk( const Node *node, const NameIterator &start, const 
 	if( childIt != childItEnd )
 	{
 		NameIterator newStart = start + 1;
-		matchWalk( childIt->second, newStart, end, result );
+		matchWalk( childIt->second.get(), newStart, end, result );
 		// if we've found every kind of match then we can terminate early,
 		// but otherwise we need to keep going even though we may
 		// have found some of the match types already.
@@ -294,14 +288,14 @@ void PathMatcher::matchWalk( const Node *node, const NameIterator &start, const 
 		if( childIt->first.name == g_ellipsis )
 		{
 			// store for use in next block.
-			ellipsis = childIt->second;
+			ellipsis = childIt->second.get();
 			continue;
 		}
 
 		NameIterator newStart = start + 1;
 		if( Gaffer::match( start->c_str(), childIt->first.name.c_str() ) )
 		{
-			matchWalk( childIt->second, newStart, end, result );
+			matchWalk( childIt->second.get(), newStart, end, result );
 			if( result == Filter::EveryMatch )
 			{
 				return;
@@ -436,13 +430,12 @@ void PathMatcher::removeWalk( Node *node, const NameIterator &start, const NameI
 		return;
 	}
 
-	Node *childNode = childIt->second;
+	Node *childNode = childIt->second.get();
 
 	NameIterator childStart = start; childStart++;
 	removeWalk( childNode, childStart, end, prune, removed );
 	if( childNode->isEmpty() )
 	{
-		delete childNode;
 		node->children.erase( childIt );
 	}
 }
@@ -457,7 +450,7 @@ bool PathMatcher::addPathsWalk( Node *node, const Node *srcNode )
 
 	for( Node::ChildMap::const_iterator it = srcNode->children.begin(), eIt = srcNode->children.end(); it != eIt; ++it )
 	{
-		const Node *srcChild = it->second;
+		const Node *srcChild = it->second.get();
 		if( Node *child = node->child( it->first ) )
 		{
 			// result must be on right of ||, to avoid short-circuiting addPathsWalk().
@@ -487,14 +480,13 @@ bool PathMatcher::removePathsWalk( Node *node, const Node *srcNode )
 		const Node::ChildMapIterator childIt = node->children.find( it->first );
 		if( childIt != node->children.end() )
 		{
-			Node *child = childIt->second;
-			if( removePathsWalk( child, it->second ) )
+			Node *child = childIt->second.get();
+			if( removePathsWalk( child, it->second.get() ) )
 			{
 				result = true;
 				if( child->isEmpty() )
 				{
 					node->children.erase( childIt );
-					delete child;
 				}
 			}
 		}

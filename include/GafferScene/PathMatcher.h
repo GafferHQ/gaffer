@@ -38,8 +38,6 @@
 #ifndef GAFFER_PATHMATCHER_H
 #define GAFFER_PATHMATCHER_H
 
-#include "boost/shared_ptr.hpp"
-
 #include "IECore/TypedData.h"
 
 #include "GafferScene/Filter.h"
@@ -154,7 +152,9 @@ class PathMatcher
 
 		};
 
-		struct Node
+		IE_CORE_FORWARDDECLARE( Node )
+
+		struct Node : public IECore::RefCounted
 		{
 
 			// Container used to store all the children of the node.
@@ -164,7 +164,7 @@ class PathMatcher
 			// achieved by using an ordered container, and having the
 			// less than operation for Names sort first on hasWildcards
 			// and second on the name.
-			typedef std::map<Name, Node *> ChildMap;
+			typedef std::map<Name, NodePtr> ChildMap;
 			typedef ChildMap::iterator ChildMapIterator;
 			typedef ChildMap::value_type ChildMapValue;
 			typedef ChildMap::const_iterator ConstChildMapIterator;
@@ -187,8 +187,8 @@ class PathMatcher
 			bool clearChildren();
 			bool isEmpty();
 
-			bool terminator;
 			ChildMap children;
+			bool terminator;
 
 		};
 
@@ -202,7 +202,7 @@ class PathMatcher
 		template<typename NameIterator>
 		void matchWalk( const Node *node, const NameIterator &start, const NameIterator &end, unsigned &result ) const;
 
-		boost::shared_ptr<Node> m_root;
+		NodePtr m_root;
 
 };
 
