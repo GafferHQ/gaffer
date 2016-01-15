@@ -767,6 +767,19 @@ class PathMatcherTest( unittest.TestCase ) :
 		self.assertEqual( set( m1.paths() ), set( initialPaths + additionalPaths ) )
 		self.assertEqual( set( m2.paths() ), set( initialPaths ) )
 
+		# repeat, but add as PathMatcher rather than individual paths
+
+		m1 = GafferScene.PathMatcher( initialPaths )
+		m2 = GafferScene.PathMatcher( m1 )
+
+		self.assertEqual( set( m1.paths() ), set( initialPaths ) )
+		self.assertEqual( set( m2.paths() ), set( initialPaths ) )
+
+		m1.addPaths( GafferScene.PathMatcher( additionalPaths ) )
+
+		self.assertEqual( set( m1.paths() ), set( initialPaths + additionalPaths ) )
+		self.assertEqual( set( m2.paths() ), set( initialPaths ) )
+
 	def testCopyAndAddRoot( self ) :
 
 		p1 = GafferScene.PathMatcher()

@@ -355,7 +355,13 @@ bool PathMatcher::removePath( const std::vector<IECore::InternedString> &path )
 
 bool PathMatcher::addPaths( const PathMatcher &paths )
 {
-	return addPathsWalk( m_root.get(), paths.m_root.get() );
+	bool result = false;
+	NodePtr newRoot = addPathsWalk( m_root.get(), paths.m_root.get(), /* shared = */ false, result );
+	if( newRoot )
+	{
+		m_root = newRoot;
+	}
+	return result;
 }
 
 bool PathMatcher::removePaths( const PathMatcher &paths )
@@ -385,6 +391,20 @@ PathMatcher::RawIterator PathMatcher::begin() const
 PathMatcher::RawIterator PathMatcher::end() const
 {
 	return RawIterator( *this, true );
+}
+
+PathMatcher::Node *PathMatcher::writable( Node *node, NodePtr &writableCopy, bool shared )
+{
+	if( !shared )
+	{
+		return node;
+	}
+
+	if( !writableCopy )
+	{
+		writableCopy = new Node( *node );
+	}
+	return writableCopy.get();
 }
 
 PathMatcher::NodePtr PathMatcher::addWalk( Node *node, const NameIterator &start, const NameIterator &end, bool shared, bool &added )
@@ -484,26 +504,36 @@ void PathMatcher::removeWalk( Node *node, const NameIterator &start, const NameI
 	}
 }
 
-bool PathMatcher::addPathsWalk( Node *node, const Node *srcNode )
+PathMatcher::NodePtr PathMatcher::addPathsWalk( Node *node, const Node *srcNode, bool shared, bool &added )
 {
-	bool result = false;
+	shared = shared || node->refCount() > 1;
+
+	NodePtr result;
 	if( !node->terminator && srcNode->terminator )
 	{
-		node->terminator = result = true;
+		added = true;
+		writable( node, result, shared )->terminator = true;
 	}
 
 	for( Node::ChildMap::const_iterator it = srcNode->children.begin(), eIt = srcNode->children.end(); it != eIt; ++it )
 	{
-		const Node *srcChild = it->second.get();
+		Node *srcChild = it->second.get();
+		NodePtr newChild;
 		if( Node *child = node->child( it->first ) )
 		{
-			// result must be on right of ||, to avoid short-circuiting addPathsWalk().
-			result = addPathsWalk( child, srcChild ) || result;
+			if( child != srcChild )
+			{
+				newChild = addPathsWalk( child, srcChild, shared, added );
+			}
 		}
 		else
 		{
-			node->children.insert( Node::ChildMapValue( it->first, new Node( *srcChild ) ) );
-			result = true; // source node can only exist if it or a descendant is a terminator
+			newChild = srcChild;
+			added = true; // source node can only exist if it or a descendant is a terminator
+		}
+		if( newChild )
+		{
+			writable( node, result, shared )->children[it->first] = newChild;
 		}
 	}
 

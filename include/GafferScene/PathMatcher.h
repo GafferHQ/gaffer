@@ -190,12 +190,15 @@ class PathMatcher
 
 		typedef std::vector<IECore::InternedString>::const_iterator NameIterator;
 
+		// Utility used in lazy-copy-on-write.
+		PathMatcher::Node *writable( Node *node, NodePtr &writableCopy, bool shared );
+
 		// Recursive method used to add a path to a Node tree. Since nodes may be shared among multiple
 		// trees, we perform lazy-copy-on-write when needing to edit a shared node. When we do this,
 		// the copy is returned so that it can be used to replace the old child.
 		NodePtr addWalk( Node *node, const NameIterator &start, const NameIterator &end, bool shared, bool &added );
 		void removeWalk( Node *node, const NameIterator &start, const NameIterator &end, const bool prune, bool &removed );
-		bool addPathsWalk( Node *node, const Node *srcNode );
+		NodePtr addPathsWalk( Node *node, const Node *srcNode, bool shared, bool &added );
 		bool removePathsWalk( Node *node, const Node *srcNode );
 
 		void matchWalk( const Node *node, const NameIterator &start, const NameIterator &end, unsigned &result ) const;
