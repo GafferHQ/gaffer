@@ -192,14 +192,13 @@ class PathMatcher
 
 		};
 
-		template<typename NameIterator>
+		typedef std::vector<IECore::InternedString>::const_iterator NameIterator;
+
 		bool addPath( const NameIterator &start, const NameIterator &end );
-		template<typename NameIterator>
 		void removeWalk( Node *node, const NameIterator &start, const NameIterator &end, const bool prune, bool &removed );
 		bool addPathsWalk( Node *node, const Node *srcNode );
 		bool removePathsWalk( Node *node, const Node *srcNode );
 
-		template<typename NameIterator>
 		void matchWalk( const Node *node, const NameIterator &start, const NameIterator &end, unsigned &result ) const;
 
 		NodePtr m_root;

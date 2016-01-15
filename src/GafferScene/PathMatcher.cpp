@@ -222,7 +222,6 @@ unsigned PathMatcher::match( const std::vector<IECore::InternedString> &path ) c
 	return result;
 }
 
-template<typename NameIterator>
 void PathMatcher::matchWalk( const Node *node, const NameIterator &start, const NameIterator &end, unsigned &result ) const
 {
 	// see if we've matched to the end of the path, and terminate the recursion if we have.
@@ -339,7 +338,6 @@ bool PathMatcher::addPath( const std::vector<IECore::InternedString> &path )
 	return addPath( path.begin(), path.end() );
 }
 
-template<typename NameIterator>
 bool PathMatcher::addPath( const NameIterator &start, const NameIterator &end )
 {
 	Node *node = m_root.get();
@@ -408,7 +406,6 @@ PathMatcher::RawIterator PathMatcher::end() const
 	return RawIterator( *this, true );
 }
 
-template<typename NameIterator>
 void PathMatcher::removeWalk( Node *node, const NameIterator &start, const NameIterator &end, const bool prune, bool &removed )
 {
 	if( start == end )
