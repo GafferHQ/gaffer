@@ -168,6 +168,11 @@ PathMatcher::PathMatcher( const PathMatcher &other )
 {
 }
 
+PathMatcher::PathMatcher( const NodePtr &root )
+	:	m_root( root )
+{
+}
+
 void PathMatcher::clear()
 {
 	m_root = new Node;
@@ -395,6 +400,26 @@ bool PathMatcher::prune( const std::vector<IECore::InternedString> &path )
 		m_root = newRoot;
 	}
 	return result;
+}
+
+PathMatcher PathMatcher::subTree( const std::string &root ) const
+{
+	std::vector<IECore::InternedString> tokenizedRoot;
+	Gaffer::tokenize( root, '/', tokenizedRoot );
+	return subTree( tokenizedRoot );
+}
+
+PathMatcher PathMatcher::subTree( const std::vector<IECore::InternedString> &root ) const
+{
+	RawIterator it = find( root );
+	if( it == end() )
+	{
+		return PathMatcher();
+	}
+	else
+	{
+		return PathMatcher( it.node() );
+	}
 }
 
 PathMatcher::RawIterator PathMatcher::begin() const

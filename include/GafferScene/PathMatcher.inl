@@ -173,7 +173,7 @@ inline const std::vector<IECore::InternedString> &PathMatcher::RawIterator::dere
 	return m_path;
 }
 
-inline const PathMatcher::Node *PathMatcher::RawIterator::node() const
+inline PathMatcher::Node *PathMatcher::RawIterator::node() const
 {
 	if( m_nodeIfRoot )
 	{

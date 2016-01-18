@@ -85,6 +85,11 @@ class PathMatcher
 		bool prune( const std::string &path );
 		bool prune( const std::vector<IECore::InternedString> &path );
 
+		/// Constructs a new PathMatcher by rerooting all the paths
+		/// below prefix to /.
+		PathMatcher subTree( const std::string &root ) const;
+		PathMatcher subTree( const std::vector<IECore::InternedString> &root ) const;
+
 		void clear();
 
 		bool isEmpty() const;
@@ -116,6 +121,10 @@ class PathMatcher
 		RawIterator find( const std::vector<IECore::InternedString> &path ) const;
 
 	private :
+
+		IE_CORE_FORWARDDECLARE( Node )
+
+		PathMatcher( const NodePtr &root );
 
 		// Struct used to store the name for each node in the tree of paths.
 		// This is just an InternedString with an extra field used to separate
@@ -149,8 +158,6 @@ class PathMatcher
 			const unsigned char type;
 
 		};
-
-		IE_CORE_FORWARDDECLARE( Node )
 
 		struct Node : public IECore::RefCounted
 		{
@@ -254,7 +261,7 @@ class PathMatcher::RawIterator : public boost::iterator_facade<RawIterator, cons
 		// Our own internal methods.
 		//////////////////////////////////////////////////
 
-		const Node *node() const;
+		Node *node() const;
 
 		// Keeps track of our iteration at a given depth in
 		// the hierarchy. We keep a stack of these to allow

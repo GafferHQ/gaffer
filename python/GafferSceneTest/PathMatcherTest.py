@@ -869,5 +869,47 @@ class PathMatcherTest( unittest.TestCase ) :
 
 		GafferSceneTest.testPathMatcherFind()
 
+	def testSubTree( self ) :
+
+		paths = [
+			"/a/b/c/d/e",
+			"/d/b/c/d",
+			"/a",
+			"/a/b/c",
+		]
+
+		m1 = GafferScene.PathMatcher( paths )
+		self.assertEqual( set( m1.paths() ), set( paths ) )
+
+		expectedPaths = [
+			"/d/e",
+			"/"
+		]
+
+		m2 = m1.subTree( "/a/b/c" )
+		self.assertEqual( set( m1.paths() ), set( paths ) )
+		self.assertEqual( set( m2.paths() ), set( expectedPaths ) )
+
+		m1.addPath( "/a/b/c/d/f" )
+		self.assertEqual( set( m1.paths() ), set( paths + [ "/a/b/c/d/f" ] ) )
+		self.assertEqual( set( m2.paths() ), set( expectedPaths ) )
+
+		m2.addPath( "/d/e/g" )
+		self.assertEqual( set( m1.paths() ), set( paths + [ "/a/b/c/d/f" ] ) )
+		self.assertEqual( set( m2.paths() ), set( expectedPaths + [ "/d/e/g" ] ) )
+
+	def testNonExistentSubtree( self ) :
+
+		m1 = GafferScene.PathMatcher( "/a/b" )
+		m2 = m1.subTree( "/wot?" )
+
+		self.assertEqual( m2.paths(), [] )
+
+	def testSubTreeWithNonTerminatingRoot( self ) :
+
+		m1 = GafferScene.PathMatcher( [ "/a/b/c/d" ] )
+		m2 = m1.subTree( "/a" )
+		self.assertEqual( m2.paths(), [ "/b/c/d" ] )
+
 if __name__ == "__main__":
 	unittest.main()
