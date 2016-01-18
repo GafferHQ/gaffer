@@ -373,6 +373,22 @@ bool PathMatcher::addPaths( const PathMatcher &paths )
 	return result;
 }
 
+bool PathMatcher::addPaths( const PathMatcher &paths, const std::vector<IECore::InternedString> &prefix )
+{
+	if( paths.isEmpty() )
+	{
+		return false;
+	}
+
+	bool result = false;
+	NodePtr newRoot = addPrefixedPathsWalk( m_root.get(), paths.m_root.get(), prefix.begin(), prefix.end(), /* shared = */ false, result );
+	if( newRoot )
+	{
+		m_root = newRoot;
+	}
+	return result;
+}
+
 bool PathMatcher::removePaths( const PathMatcher &paths )
 {
 	bool result = false;
@@ -577,6 +593,49 @@ PathMatcher::NodePtr PathMatcher::addPathsWalk( Node *node, const Node *srcNode,
 		{
 			writable( node, result, shared )->children[it->first] = newChild;
 		}
+	}
+
+	return result;
+}
+
+PathMatcher::NodePtr PathMatcher::addPrefixedPathsWalk( Node *node, const Node *srcNode, const NameIterator &start, const NameIterator &end, bool shared, bool &added  )
+{
+	shared = shared || node->refCount() > 1;
+
+	if( start == end )
+	{
+		// At the end of the prefix path. Defer to addPathsWalk()
+		// to actually add the paths.
+		return addPathsWalk( node, srcNode, shared, added );
+	}
+
+	// Not at the end of the prefix path yet. Need to make sure we
+	// have an appropriate child and recurse.
+
+	NodePtr newChild;
+	NameIterator childStart = start; childStart++;
+
+	if( Node *child = node->child( *start ) )
+	{
+		// Recurse using the child we've found. We may still need to replace this
+		// child with a new one in the event that it is duplicated in order to be
+		// written to.
+		newChild = addPrefixedPathsWalk( child, srcNode, childStart, end, shared, added );
+	}
+	else
+	{
+		// No matching child, so make a new one.
+		newChild = new Node();
+		addPrefixedPathsWalk( newChild.get(), srcNode, childStart, end, /* shared = */ false, added );
+	}
+
+	// If there's a new child then add it. If we ourselves are shared
+	// then we'll need to create a new node to do this in, and then
+	// return that to our caller to be replaced in its node and so on.
+	NodePtr result;
+	if( newChild )
+	{
+		writable( node, result, shared )->children[*start] = newChild;
 	}
 
 	return result;

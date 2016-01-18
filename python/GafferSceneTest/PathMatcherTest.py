@@ -911,5 +911,46 @@ class PathMatcherTest( unittest.TestCase ) :
 		m2 = m1.subTree( "/a" )
 		self.assertEqual( m2.paths(), [ "/b/c/d" ] )
 
+	def testAddPathsWithPrefix( self ) :
+
+		paths = [
+			"/a/b",
+			"/e/d",
+			"/",
+		]
+
+		prefixedPaths = [
+			"/x/y/z/a/b",
+			"/x/y/z/e/d",
+			"/x/y/z",
+		]
+
+		m1 = GafferScene.PathMatcher( paths )
+		self.assertEqual( set( m1.paths() ), set( paths ) )
+
+		m2 = GafferScene.PathMatcher()
+		self.assertTrue( m2.addPaths( m1, "/x/y/z" ) )
+		self.assertFalse( m2.addPaths( m1, "/x/y/z" ) )
+
+		self.assertEqual( set( m1.paths() ), set( paths ) )
+		self.assertEqual( set( m2.paths() ), set( prefixedPaths ) )
+
+		self.assertTrue( m1.addPath( "/b/c" ) )
+		self.assertEqual( set( m1.paths() ), set( paths + [ "/b/c" ] ) )
+		self.assertEqual( set( m2.paths() ), set( prefixedPaths ) )
+
+	def testAddEmptyPathsWithPrefix( self ) :
+
+		m = GafferScene.PathMatcher()
+		m.addPaths( GafferScene.PathMatcher(), "/x/y/z" )
+		self.assertEqual( m.paths(), [] )
+		self.assertTrue( m.isEmpty() )
+
+	def testPrefixNotAdded( self ) :
+
+		m = GafferScene.PathMatcher()
+		m.addPaths( GafferScene.PathMatcher( [ "/a" ] ), "/prefix" )
+		self.assertEqual( m.paths(), [ "/prefix/a" ] )
+
 if __name__ == "__main__":
 	unittest.main()

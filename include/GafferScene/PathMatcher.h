@@ -76,6 +76,8 @@ class PathMatcher
 		/// Adds all paths from the other PathMatcher, returning true if
 		/// any were added, and false if they were all already present.
 		bool addPaths( const PathMatcher &paths );
+		/// As above, but prefixing the paths that are added.
+		bool addPaths( const PathMatcher &paths, const std::vector<IECore::InternedString> &prefix );
 		/// Removes all specified paths, returning true if any paths
 		/// were removed, and false if none existed anyway.
 		bool removePaths( const PathMatcher &paths );
@@ -209,6 +211,7 @@ class PathMatcher
 		NodePtr addWalk( Node *node, const NameIterator &start, const NameIterator &end, bool shared, bool &added );
 		NodePtr removeWalk( Node *node, const NameIterator &start, const NameIterator &end, bool shared, const bool prune, bool &removed );
 		NodePtr addPathsWalk( Node *node, const Node *srcNode, bool shared, bool &added );
+		NodePtr addPrefixedPathsWalk( Node *node, const Node *srcNode, const NameIterator &start, const NameIterator &end, bool shared, bool &added  );
 		NodePtr removePathsWalk( Node *node, const Node *srcNode, bool shared, bool &removed );
 
 		void matchWalk( const Node *node, const NameIterator &start, const NameIterator &end, unsigned &result ) const;
