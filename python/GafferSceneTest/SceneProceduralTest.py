@@ -240,5 +240,47 @@ class SceneProceduralTest( unittest.TestCase ) :
 
 		self.assertEqual( t.allRenderedSignalCalled, True )
 
+	def testTransformBlurAttributeScope( self ) :
+
+		script = Gaffer.ScriptNode()
+
+		script["sphere"] = GafferScene.Sphere()
+		script["sphere"]["type"].setValue( GafferScene.Sphere.Type.Primitive )
+
+		script["expression1"] = Gaffer.Expression()
+		script["expression1"].setExpression( 'parent["sphere"]["transform"]["translate"]["x"] = context.getFrame()' )
+
+		script["filter"] = GafferScene.PathFilter()
+		script["filter"]["paths"].setValue( IECore.StringVectorData( [ "/sphere" ] ) )
+
+		script["attributes"] = GafferScene.StandardAttributes()
+		script["attributes"]["in"].setInput( script["sphere"]["out"] )
+		script["attributes"]["filter"].setInput( script["filter"]["out"] )
+		script["attributes"]["attributes"]["transformBlur"]["enabled"].setValue( True )
+
+		script["options"] = GafferScene.StandardOptions()
+		script["options"]["in"].setInput( script["attributes"]["out"] )
+		script["options"]["options"]["transformBlur"]["enabled"].setValue( True )
+		script["options"]["options"]["transformBlur"]["value"].setValue( True )
+		script["options"]["options"]["shutter"]["enabled"].setValue( True )
+		script["options"]["options"]["shutter"]["value"].setValue( IECore.V2f( -0.5, 0.5 ) )
+
+		sphereBound = IECore.Box3f( IECore.V3f( -1 ), IECore.V3f( 1 ) )
+		velocity = IECore.V3f( 1, 0, 0 )
+
+		context = Gaffer.Context()
+		for frame in range( 0, 10 ) :
+			for transformBlur in ( False, True ) :
+
+				context.setFrame( frame )
+				script["attributes"]["attributes"]["transformBlur"]["value"].setValue( transformBlur )
+
+				procedural = GafferScene.SceneProcedural( script["options"]["out"], context, "/sphere" )
+				bound = procedural.bound()
+				if transformBlur :
+					self.assertEqual( bound, IECore.Box3f( sphereBound.min + velocity * ( frame - 0.5 ), sphereBound.max + velocity * ( frame + 0.5 ) ) )
+				else :
+					self.assertEqual( bound, IECore.Box3f( sphereBound.min + velocity * frame, sphereBound.max + velocity * frame ) )
+
 if __name__ == "__main__":
 	unittest.main()

@@ -111,10 +111,11 @@ class SceneProcedural : public IECore::Renderer::Procedural
 		};
 
 		Attributes m_attributes;
+		IECore::ConstCompoundObjectPtr m_attributesObject;
 
 	private :
 
-		void updateAttributes( bool full );
+		void updateAttributes();
 		void computeBound();
 		void motionTimes( unsigned segments, std::set<float> &times ) const;
 
