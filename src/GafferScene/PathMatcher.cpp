@@ -407,6 +407,11 @@ PathMatcher::RawIterator PathMatcher::end() const
 	return RawIterator( *this, true );
 }
 
+PathMatcher::RawIterator PathMatcher::find( const std::vector<IECore::InternedString> &path ) const
+{
+	return RawIterator( *this, path );
+}
+
 PathMatcher::Node *PathMatcher::writable( Node *node, NodePtr &writableCopy, bool shared )
 {
 	if( !shared )

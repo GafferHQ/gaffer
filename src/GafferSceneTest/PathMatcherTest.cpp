@@ -116,3 +116,46 @@ void GafferSceneTest::testPathMatcherIteratorPrune()
 	GAFFERTEST_ASSERT( it == m.end() );
 
 }
+
+void GafferSceneTest::testPathMatcherFind()
+{
+	vector<InternedString> root;
+	vector<InternedString> a = assign::list_of( "a" );
+	vector<InternedString> ab = assign::list_of( "a" )( "b" );
+	vector<InternedString> abc = assign::list_of( "a" )( "b" )( "c" );
+	vector<InternedString> abcd = assign::list_of( "a" )( "b" )( "c" )( "d" );
+
+	PathMatcher m;
+	PathMatcher::RawIterator it = m.find( root );
+	GAFFERTEST_ASSERT( it == m.end() );
+
+	it = m.find( ab );
+	GAFFERTEST_ASSERT( it == m.end() );
+
+	m.addPath( abc );
+
+	it = m.find( root );
+	GAFFERTEST_ASSERT( it == m.begin() );
+	GAFFERTEST_ASSERT( it != m.end() );
+	GAFFERTEST_ASSERT( *it == root );
+	++it;
+	GAFFERTEST_ASSERT( *it == a );
+	++it;
+	GAFFERTEST_ASSERT( *it == ab );
+	++it;
+	GAFFERTEST_ASSERT( *it == abc );
+	++it;
+	GAFFERTEST_ASSERT( it == m.end() );
+
+	it = m.find( ab );
+	GAFFERTEST_ASSERT( it != m.end() );
+	GAFFERTEST_ASSERT( *it == ab );
+	++it;
+	GAFFERTEST_ASSERT( *it == abc );
+	++it;
+	GAFFERTEST_ASSERT( it == m.end() );
+
+	it = m.find( abcd );
+	GAFFERTEST_ASSERT( it == m.end() );
+
+}

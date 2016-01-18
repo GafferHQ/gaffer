@@ -865,5 +865,9 @@ class PathMatcherTest( unittest.TestCase ) :
 		self.assertEqual( set( m1.paths() ), set( expectedPaths ) )
 		self.assertEqual( set( m2.paths() ), set( initialPaths ) )
 
+	def testFind( self ) :
+
+		GafferSceneTest.testPathMatcherFind()
+
 if __name__ == "__main__":
 	unittest.main()

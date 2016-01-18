@@ -111,6 +111,9 @@ class PathMatcher
 		/// Returns an iterator to the end of the
 		/// tree of paths.
 		RawIterator end() const;
+		/// Returns an iterator to the specified path,
+		/// or end() if it does not exist.
+		RawIterator find( const std::vector<IECore::InternedString> &path ) const;
 
 	private :
 
@@ -236,6 +239,8 @@ class PathMatcher::RawIterator : public boost::iterator_facade<RawIterator, cons
 
 		// Private constructor, called by PathMatcher::begin() and PathMatcher::end().
 		RawIterator( const PathMatcher &matcher, bool atEnd );
+		// Private constructor, called by PathPatcher::find().
+		RawIterator( const PathMatcher &matcher, const std::vector<IECore::InternedString> &path );
 
 		//////////////////////////////////////////////////
 		// Methods required by boost::iterator_facade
