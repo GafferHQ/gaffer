@@ -72,11 +72,14 @@ GafferUI.NodeGadget.registerNodeGadget( Gaffer.Animation, lambda node : None )
 # PlugValueWidget popup menu for setting keys
 ##########################################################################
 
-def __setKey( plug, time, value ) :
+def __setKey( plug, context ) :
+
+	with context :
+		value = plug.getValue()
 
 	with Gaffer.UndoContext( plug.ancestor( Gaffer.ScriptNode ) ) :
 		curve = Gaffer.Animation.acquire( plug )
-		curve.addKey( Gaffer.Animation.Key( time, value ) )
+		curve.addKey( Gaffer.Animation.Key( context.getTime(), value ) )
 
 def __removeKey( plug, time ) :
 
@@ -136,8 +139,7 @@ def __popupMenu( menuDefinition, plugValueWidget ) :
 			"command" : functools.partial(
 				__setKey,
 				plug,
-				context.getTime(),
-				plug.getValue()
+				context
 			),
 			"active" : plugValueWidget._editable( canEditAnimation = True ),
 		}
