@@ -197,7 +197,7 @@ class PathMatcher
 		// trees, we perform lazy-copy-on-write when needing to edit a shared node. When we do this,
 		// the copy is returned so that it can be used to replace the old child.
 		NodePtr addWalk( Node *node, const NameIterator &start, const NameIterator &end, bool shared, bool &added );
-		void removeWalk( Node *node, const NameIterator &start, const NameIterator &end, const bool prune, bool &removed );
+		NodePtr removeWalk( Node *node, const NameIterator &start, const NameIterator &end, bool shared, const bool prune, bool &removed );
 		NodePtr addPathsWalk( Node *node, const Node *srcNode, bool shared, bool &added );
 		bool removePathsWalk( Node *node, const Node *srcNode );
 

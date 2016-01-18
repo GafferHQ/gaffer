@@ -349,7 +349,11 @@ bool PathMatcher::removePath( const std::string &path )
 bool PathMatcher::removePath( const std::vector<IECore::InternedString> &path )
 {
 	bool result = false;
-	removeWalk( m_root.get(), path.begin(), path.end(), /* prune = */ false, result );
+	NodePtr newRoot = removeWalk( m_root.get(), path.begin(), path.end(), /* shared = */ false, /* prune = */ false, result );
+	if( newRoot )
+	{
+		m_root = newRoot;
+	}
 	return result;
 }
 
@@ -379,7 +383,11 @@ bool PathMatcher::prune( const std::string &path )
 bool PathMatcher::prune( const std::vector<IECore::InternedString> &path )
 {
 	bool result = false;
-	removeWalk( m_root.get(), path.begin(), path.end(), /* prune = */ true, result );
+	NodePtr newRoot = removeWalk( m_root.get(), path.begin(), path.end(), /* shared = */ false, /* prune = */ true, result );
+	if( newRoot )
+	{
+		m_root = newRoot;
+	}
 	return result;
 }
 
@@ -473,35 +481,49 @@ PathMatcher::NodePtr PathMatcher::addWalk( Node *node, const NameIterator &start
 	return NULL;
 }
 
-void PathMatcher::removeWalk( Node *node, const NameIterator &start, const NameIterator &end, const bool prune, bool &removed )
+PathMatcher::NodePtr PathMatcher::removeWalk( Node *node, const NameIterator &start, const NameIterator &end, bool shared, const bool prune, bool &removed )
 {
+	shared = shared || node->refCount() > 1;
+	NodePtr result;
+
 	if( start == end )
 	{
 		// we've found the end of the path we wish to remove.
 		if( prune )
 		{
-			removed = node->clearChildren();
+			removed = writable( node, result, shared )->clearChildren();
 		}
 		removed = removed || node->terminator;
-		node->terminator = false;
-		return;
+		writable( node, result, shared )->terminator = false;
+		/// \todo When we're pruning, we end up creating a new empty
+		/// node to return, just to signal to the caller that they
+		/// should erase the original child. We could use a single
+		/// shared instance for this return value instead of allocating
+		/// a new one with writable() all the time.
+		return result;
 	}
 
-	const IECore::InternedString name( *start );
-	Node::ChildMapIterator childIt = node->children.find( name );
+	Node::ChildMapIterator childIt = node->children.find( *start );
 	if( childIt == node->children.end() )
 	{
-		return;
+		return result;
 	}
 
 	Node *childNode = childIt->second.get();
 
 	NameIterator childStart = start; childStart++;
-	removeWalk( childNode, childStart, end, prune, removed );
-	if( childNode->isEmpty() )
+	NodePtr newChild = removeWalk( childIt->second.get(), childStart, end, shared, prune, removed );
+
+	if( newChild && !newChild->isEmpty() )
 	{
-		node->children.erase( childIt );
+		writable( node, result, shared )->children[childIt->first] = newChild;
 	}
+	else if( childNode->isEmpty() || ( newChild && newChild->isEmpty() ) )
+	{
+		writable( node, result, shared )->children.erase( childIt->first );
+	}
+
+	return result;
 }
 
 PathMatcher::NodePtr PathMatcher::addPathsWalk( Node *node, const Node *srcNode, bool shared, bool &added )

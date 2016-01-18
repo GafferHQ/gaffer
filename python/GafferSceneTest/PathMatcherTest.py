@@ -792,5 +792,65 @@ class PathMatcherTest( unittest.TestCase ) :
 		self.assertEqual( p1.paths(), [] )
 		self.assertEqual( p2.paths(), [ "/" ] )
 
+	def testCopyAndRemovePath( self ) :
+
+		initialPaths = [
+			"/a/b/c/d/e",
+			"/a/b",
+			"/e/f",
+			"/e/f/g",
+			"/g"
+		]
+
+		pathsToRemove = [
+			"/a/b",
+			"/e/f/g",
+			"/g",
+		]
+
+		m1 = GafferScene.PathMatcher( initialPaths )
+		m2 = GafferScene.PathMatcher( m1 )
+
+		self.assertEqual( set( m1.paths() ), set( initialPaths ) )
+		self.assertEqual( set( m2.paths() ), set( initialPaths ) )
+
+		for path in pathsToRemove :
+			m1.removePath( path )
+
+		self.assertEqual( set( m1.paths() ), set( initialPaths ) - set( pathsToRemove ) )
+		self.assertEqual( set( m2.paths() ), set( initialPaths ) )
+
+	def testCopyAndPrunePath( self ) :
+
+		initialPaths = [
+			"/a/b/c/d/e",
+			"/a/b",
+			"/e/f",
+			"/e/f/g",
+			"/g"
+		]
+
+		pathsToPrune = [
+			"/a/b",
+			"/e/f/g",
+			"/g",
+		]
+
+		expectedPaths = [
+			"/e/f",
+		]
+
+		m1 = GafferScene.PathMatcher( initialPaths )
+		m2 = GafferScene.PathMatcher( m1 )
+
+		self.assertEqual( set( m1.paths() ), set( initialPaths ) )
+		self.assertEqual( set( m2.paths() ), set( initialPaths ) )
+
+		for path in pathsToPrune :
+			m1.prune( path )
+
+		self.assertEqual( set( m1.paths() ), set( expectedPaths ) )
+		self.assertEqual( set( m2.paths() ), set( initialPaths ) )
+
 if __name__ == "__main__":
 	unittest.main()
