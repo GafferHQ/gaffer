@@ -231,34 +231,17 @@ GafferScene::ConstPathMatcherDataPtr SubTree::computeSet( const IECore::Interned
 		return inputSetData;
 	}
 
-	const std::string rootString = rootPlug()->getValue();
 	ScenePlug::ScenePath root;
-	ScenePlug::stringToPath( rootString, root );
+	ScenePlug::stringToPath( rootPlug()->getValue(), root );
 
-	size_t prefixSize = root.size(); // number of names to remove from front of each path
-	if( includeRootPlug()->getValue() && prefixSize )
+	ScenePlug::ScenePath prefix;
+	if( includeRootPlug()->getValue() && root.size() )
 	{
-		prefixSize--;
+		prefix.push_back( root.back() );
 	}
-
-	/// \todo This could be more efficient if PathMatcher exposed the internal nodes,
-	/// and allowed sharing between matchers. Then we could just pick the subtree within
-	/// the matcher that we wanted.
 
 	PathMatcherDataPtr outputSetData = new PathMatcherData;
-	PathMatcher &outputSet = outputSetData->writable();
-
-	ScenePlug::ScenePath outputPath;
-	for( PathMatcher::Iterator pIt = inputSet.begin(), peIt = inputSet.end(); pIt != peIt; ++pIt )
-	{
-		const ScenePlug::ScenePath &inputPath = *pIt;
-		if( boost::starts_with( inputPath, root ) )
-		{
-			outputPath.assign( inputPath.begin() + prefixSize, inputPath.end() );
-			outputSet.addPath( outputPath );
-		}
-	}
-
+	outputSetData->writable().addPaths( inputSet.subTree( root ), prefix );
 	return outputSetData;
 }
 
