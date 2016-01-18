@@ -370,7 +370,13 @@ bool PathMatcher::addPaths( const PathMatcher &paths )
 
 bool PathMatcher::removePaths( const PathMatcher &paths )
 {
-	return removePathsWalk( m_root.get(), paths.m_root.get() );
+	bool result = false;
+	NodePtr newRoot = removePathsWalk( m_root.get(), paths.m_root.get(), /* shared = */ false, result );
+	if( newRoot )
+	{
+		m_root = newRoot;
+	}
+	return result;
 }
 
 bool PathMatcher::prune( const std::string &path )
@@ -562,13 +568,15 @@ PathMatcher::NodePtr PathMatcher::addPathsWalk( Node *node, const Node *srcNode,
 	return result;
 }
 
-bool PathMatcher::removePathsWalk( Node *node, const Node *srcNode )
+PathMatcher::NodePtr PathMatcher::removePathsWalk( Node *node, const Node *srcNode, bool shared, bool &removed )
 {
-	bool result = false;
+	shared = shared || node->refCount() > 1;
+	NodePtr result;
+
 	if( node->terminator && srcNode->terminator )
 	{
-		node->terminator = false;
-		result = true;
+		writable( node, result, shared )->terminator = false;
+		removed = true;
 	}
 
 	for( Node::ChildMap::const_iterator it = srcNode->children.begin(), eIt = srcNode->children.end(); it != eIt; ++it )
@@ -577,13 +585,15 @@ bool PathMatcher::removePathsWalk( Node *node, const Node *srcNode )
 		if( childIt != node->children.end() )
 		{
 			Node *child = childIt->second.get();
-			if( removePathsWalk( child, it->second.get() ) )
+			NodePtr newChild = removePathsWalk( child, it->second.get(), shared, removed );
+
+			if( newChild && !newChild->isEmpty() )
 			{
-				result = true;
-				if( child->isEmpty() )
-				{
-					node->children.erase( childIt );
-				}
+				writable( node, result, shared )->children[childIt->first] = newChild;
+			}
+			else if( child->isEmpty() || ( newChild && newChild->isEmpty() ) )
+			{
+				writable( node, result, shared )->children.erase( childIt->first );
 			}
 		}
 	}

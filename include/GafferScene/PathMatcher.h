@@ -199,7 +199,7 @@ class PathMatcher
 		NodePtr addWalk( Node *node, const NameIterator &start, const NameIterator &end, bool shared, bool &added );
 		NodePtr removeWalk( Node *node, const NameIterator &start, const NameIterator &end, bool shared, const bool prune, bool &removed );
 		NodePtr addPathsWalk( Node *node, const Node *srcNode, bool shared, bool &added );
-		bool removePathsWalk( Node *node, const Node *srcNode );
+		NodePtr removePathsWalk( Node *node, const Node *srcNode, bool shared, bool &removed );
 
 		void matchWalk( const Node *node, const NameIterator &start, const NameIterator &end, unsigned &result ) const;
 
