@@ -87,7 +87,7 @@ def __removeKey( plug, time ) :
 def __popupMenu( menuDefinition, plugValueWidget ) :
 
 	plug = plugValueWidget.getPlug()
-	if not Gaffer.Animation.canAnimate( plug ) :
+	if not isinstance( plug, Gaffer.ValuePlug ) or not Gaffer.Animation.canAnimate( plug ) :
 		return
 
 	context = plugValueWidget.getContext()
