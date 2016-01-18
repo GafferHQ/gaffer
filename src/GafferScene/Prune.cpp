@@ -254,7 +254,7 @@ GafferScene::ConstPathMatcherDataPtr Prune::computeSet( const IECore::InternedSt
 		return inputSetData;
 	}
 
-	PathMatcherDataPtr outputSetData = new PathMatcherData;
+	PathMatcherDataPtr outputSetData = inputSetData->copy();
 	PathMatcher &outputSet = outputSetData->writable();
 
 	ContextPtr tmpContext = filterContext( context );
@@ -269,18 +269,14 @@ GafferScene::ConstPathMatcherDataPtr Prune::computeSet( const IECore::InternedSt
 			// This path and all below it are pruned, so we can
 			// ignore it and prune the traversal to the descendant
 			// paths.
+			outputSet.prune( *pIt );
 			pIt.prune();
 			++pIt;
 		}
 		else if( m & Filter::DescendantMatch )
 		{
-			// This path isn't pruned, so we add it, and then
-			// continue our traversal as normal to find out
-			// which descendants _are_ pruned.
-			if( pIt.exactMatch() )
-			{
-				outputSet.addPath( *pIt );
-			}
+			// This path isn't pruned, so we continue our traversal
+			// as normal to find out which descendants _are_ pruned.
 			++pIt;
 		}
 		else
@@ -289,19 +285,9 @@ GafferScene::ConstPathMatcherDataPtr Prune::computeSet( const IECore::InternedSt
 			// below it. We can avoid retesting the filter for
 			// all descendant paths, since we know they're not
 			// pruned.
-			/// \todo If PathMatcher could share nodes internally,
-			/// it could provide us with a method to just reference
-			/// the whole subtree here.
 			assert( m == Filter::NoMatch );
-			PathMatcher::RawIterator next = pIt; next.prune(); ++next;
-			while( pIt != next )
-			{
-				if( pIt.exactMatch() )
-				{
-					outputSet.addPath( *pIt );
-				}
-				++pIt;
-			}
+			pIt.prune();
+			++pIt;
 		}
 	}
 
