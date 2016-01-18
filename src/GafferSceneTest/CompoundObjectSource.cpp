@@ -177,11 +177,7 @@ void CompoundObjectSource::hashGlobals( const Gaffer::Context *context, const Ga
 
 IECore::ConstCompoundObjectPtr CompoundObjectSource::computeGlobals( const Gaffer::Context *context, const GafferScene::ScenePlug *parent ) const
 {
-	ConstCompoundObjectPtr compoundObject = runTimeCast<const CompoundObject>( inPlug()->getValue() );
-	if( !compoundObject )
-	{
-		throw Exception( "Input value is not a CompoundObject" );
-	}
+	ConstCompoundObjectPtr compoundObject = inObject();
 
 	if( ConstCompoundObjectPtr globals = compoundObject->member<CompoundObject>( "globals" ) )
 	{
@@ -192,31 +188,67 @@ IECore::ConstCompoundObjectPtr CompoundObjectSource::computeGlobals( const Gaffe
 
 void CompoundObjectSource::hashSetNames( const Gaffer::Context *context, const GafferScene::ScenePlug *parent, IECore::MurmurHash &h ) const
 {
-	h = outPlug()->setNamesPlug()->defaultValue()->Object::hash();
+	SceneNode::hashSetNames( context, parent, h );
+	inPlug()->hash( h );
 }
 
 IECore::ConstInternedStringVectorDataPtr CompoundObjectSource::computeSetNames( const Gaffer::Context *context, const GafferScene::ScenePlug *parent ) const
 {
+	ConstCompoundObjectPtr compoundObject = inObject();
+
+	if( ConstCompoundObjectPtr sets = compoundObject->member<CompoundObject>( "sets" ) )
+	{
+		InternedStringVectorDataPtr resultData = new InternedStringVectorData;
+		std::vector<InternedString> &result = resultData->writable();
+		for( CompoundObject::ObjectMap::const_iterator it = sets->members().begin(), eIt = sets->members().end(); it != eIt; ++it )
+		{
+			result.push_back( it->first );
+		}
+		return resultData;
+	}
+
 	return outPlug()->setNamesPlug()->defaultValue();
 }
 
 void CompoundObjectSource::hashSet( const IECore::InternedString &setName, const Gaffer::Context *context, const GafferScene::ScenePlug *parent, IECore::MurmurHash &h ) const
 {
-	h = outPlug()->setPlug()->defaultValue()->Object::hash();
+	SceneNode::hashSet( setName, context, parent, h );
+	inPlug()->hash( h );
+	h.append( setName );
 }
 
 GafferScene::ConstPathMatcherDataPtr CompoundObjectSource::computeSet( const IECore::InternedString &setName, const Gaffer::Context *context, const GafferScene::ScenePlug *parent ) const
 {
+	ConstCompoundObjectPtr compoundObject = inObject();
+
+	if( ConstCompoundObjectPtr sets = compoundObject->member<CompoundObject>( "sets" ) )
+	{
+		CompoundObject::ObjectMap::const_iterator it = sets->members().find( setName );
+		if( it != sets->members().end() )
+		{
+			if( ConstPathMatcherDataPtr result = runTimeCast<const PathMatcherData>( it->second ) )
+			{
+				return result;
+			}
+		}
+	}
+
 	return outPlug()->setPlug()->defaultValue();
 }
 
-IECore::ConstCompoundObjectPtr CompoundObjectSource::entryForPath( const ScenePath &path ) const
+IECore::ConstCompoundObjectPtr CompoundObjectSource::inObject() const
 {
 	ConstCompoundObjectPtr result = runTimeCast<const CompoundObject>( inPlug()->getValue() );
 	if( !result )
 	{
 		throw Exception( "Input value is not a CompoundObject" );
 	}
+	return result;
+}
+
+IECore::ConstCompoundObjectPtr CompoundObjectSource::entryForPath( const ScenePath &path ) const
+{
+	ConstCompoundObjectPtr result = inObject();
 
 	for( ScenePath::const_iterator it=path.begin(); it!=path.end(); it++ )
 	{
