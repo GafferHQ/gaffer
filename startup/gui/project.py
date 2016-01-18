@@ -40,6 +40,11 @@ import IECore
 
 import Gaffer
 import GafferUI
+import GafferDispatch
+
+##########################################################################
+# Project variables
+##########################################################################
 
 def __scriptAdded( container, script ) :
 
@@ -52,6 +57,10 @@ def __scriptAdded( container, script ) :
 		projectRoot["name"].setFlags( Gaffer.Plug.Flags.ReadOnly, True )
 
 __scriptAddedConnection = application.root()["scripts"].childAddedSignal().connect( __scriptAdded )
+
+##########################################################################
+# Bookmarks
+##########################################################################
 
 def __projectBookmark( forWidget, location ) :
 
@@ -75,11 +84,24 @@ def __projectBookmark( forWidget, location ) :
 	else :
 		return os.getcwd()
 
-Gaffer.Metadata.registerPlugValue( Gaffer.LocalDispatcher.staticTypeId(), "jobName", "userDefault", "${script:name}" )
-Gaffer.Metadata.registerPlugValue( Gaffer.LocalDispatcher.staticTypeId(), "jobsDirectory", "userDefault", "${project:rootDirectory}/dispatcher/local" )
-Gaffer.Metadata.registerPlugValue( Gaffer.LocalDispatcher.staticTypeId(), "executeInBackground", "userDefault", True )
-Gaffer.Dispatcher.setDefaultDispatcherType( "Local" )
-
 GafferUI.Bookmarks.acquire( application ).add( "Project", IECore.curry( __projectBookmark, location="${project:rootDirectory}" ) )
 GafferUI.Bookmarks.acquire( application, category="script" ).setDefault( IECore.curry( __projectBookmark, location="${project:rootDirectory}/scripts" ) )
 GafferUI.Bookmarks.acquire( application, category="reference" ).setDefault( IECore.curry( __projectBookmark, location="${project:rootDirectory}/references" ) )
+
+##########################################################################
+# Dispatchers
+##########################################################################
+
+dispatchers = [ GafferDispatch.LocalDispatcher ]
+with IECore.IgnoredExceptions( ImportError ) :
+	import GafferTractor
+	dispatchers.append( GafferTractor.TractorDispatcher )
+
+for dispatcher in dispatchers :
+
+	Gaffer.Metadata.registerPlugValue( dispatcher, "jobName", "userDefault", "${script:name}" )
+	directoryName = dispatcher.staticTypeName().rpartition( ":" )[2].replace( "Dispatcher", "" ).lower()
+	Gaffer.Metadata.registerPlugValue( dispatcher, "jobsDirectory", "userDefault", "${project:rootDirectory}/dispatcher/" + directoryName )
+
+Gaffer.Metadata.registerPlugValue( GafferDispatch.LocalDispatcher, "executeInBackground", "userDefault", True )
+Gaffer.Dispatcher.setDefaultDispatcherType( "Local" )
