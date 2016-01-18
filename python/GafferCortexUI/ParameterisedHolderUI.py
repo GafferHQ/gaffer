@@ -1,6 +1,6 @@
 ##########################################################################
 #
-#  Copyright (c) 2011-2012, Image Engine Design Inc. All rights reserved.
+#  Copyright (c) 2011-2015, Image Engine Design Inc. All rights reserved.
 #  Copyright (c) 2011-2012, John Haddon. All rights reserved.
 #
 #  Redistribution and use in source and binary forms, with or without
@@ -194,10 +194,10 @@ def __nodeSummary( node ) :
 		parameterValues,
 	)
 
-def __plugDescription( plug ) :
+## \todo There should really be a method to map from plug to parameter.
+# The logic exists in ParameterisedHolder.plugSet() but isn't public.
+def __parameter( plug ) :
 
-	## \todo There should really be a method to map from plug to parameter.
-	# The logic exists in ParameterisedHolder.plugSet() but isn't public.
 	parameter = plug.node().parameterHandler().parameter()
 	for name in plug.relativeName( plug.node() ).split( "." )[1:] :
 		if not isinstance( parameter, IECore.CompoundParameter ) :
@@ -205,13 +205,73 @@ def __plugDescription( plug ) :
 		else :
 			parameter = parameter[name]
 
-	return parameter.description
+	return parameter
+
+def __plugDescription( plug ) :
+
+	parameter = __parameter( plug )
+	return parameter.description if parameter else None
+
+def __plugPresetNames( plug ) :
+
+	parameter = __parameter( plug )
+	if not parameter :
+		return None
+
+	presetNames = parameter.presetNames()
+	if presetNames and isinstance( plug, (
+		Gaffer.StringPlug,
+		Gaffer.BoolPlug,
+		Gaffer.IntPlug,
+		Gaffer.FloatPlug,
+		Gaffer.Color3fPlug,
+		Gaffer.V3fPlug,
+	) ) :
+		return IECore.StringVectorData( presetNames )
+
+	return None
+
+def __plugPresetValues( plug ) :
+
+	parameter = __parameter( plug )
+	if not parameter :
+		return None
+
+	# make sure to get the values in the same
+	# order that the names were given.
+	values = [ parameter.presets()[x] for x in parameter.presetNames() ]
+	if isinstance( plug, Gaffer.StringPlug ) :
+		return IECore.StringVectorData( [ v.value for v in values ] )
+	elif isinstance( plug, Gaffer.BoolPlug ) :
+		return IECore.BoolVectorData( [ v.value for v in values ] )
+	elif isinstance( plug, Gaffer.IntPlug ) :
+		return IECore.IntVectorData( [ v.value for v in values ] )
+	elif isinstance( plug, Gaffer.FloatPlug ) :
+		return IECore.FloatVectorData( [ v.value for v in values ] )
+	elif isinstance( plug, Gaffer.Color3fPlug ) :
+		return IECore.Color3fVectorData( [ v.value for v in values ] )
+	elif isinstance( plug, Gaffer.V3fPlug ) :
+		return IECore.V3fVectorData( [ v.value for v in values ] )
+
+	return None
+
+def __plugWidgetType( plug ) :
+
+	parameter = __parameter( plug )
+
+	if parameter and parameter.presetsOnly and __plugPresetNames( plug ) :
+		return "GafferUI.PresetsPlugValueWidget"
+
+	return None
 
 for nodeType in __nodeTypes :
 
 	Gaffer.Metadata.registerNodeDescription( nodeType, __nodeDescription )
 	Gaffer.Metadata.registerNodeValue( nodeType, "summary", __nodeSummary )
 	Gaffer.Metadata.registerPlugDescription( nodeType, "parameters.*", __plugDescription )
+	Gaffer.Metadata.registerPlugValue( nodeType, "parameters.*", "presetNames", __plugPresetNames )
+	Gaffer.Metadata.registerPlugValue( nodeType, "parameters.*", "presetValues", __plugPresetValues )
+	Gaffer.Metadata.registerPlugValue( nodeType, "parameters.*", "plugValueWidget:type", __plugWidgetType )
 
 ##########################################################################
 # Node menu
