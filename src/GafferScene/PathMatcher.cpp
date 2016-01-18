@@ -424,6 +424,8 @@ PathMatcher::Node *PathMatcher::writable( Node *node, NodePtr &writableCopy, boo
 PathMatcher::NodePtr PathMatcher::addWalk( Node *node, const NameIterator &start, const NameIterator &end, bool shared, bool &added )
 {
 	shared = shared || node->refCount() > 1;
+	NodePtr result;
+
 	if( start == end )
 	{
 		// We're at the end of the path we wish to add.
@@ -433,18 +435,9 @@ PathMatcher::NodePtr PathMatcher::addWalk( Node *node, const NameIterator &start
 			return NULL;
 		}
 
+		writable( node, result, shared )->terminator = true;
 		added = true;
-		if( shared )
-		{
-			NodePtr result = new Node( *node );
-			result->terminator = true;
-			return result;
-		}
-		else
-		{
-			node->terminator = true;
-			return NULL;
-		}
+		return result;
 	}
 
 	// Not at the end of the path yet. Need to make sure we
@@ -472,19 +465,10 @@ PathMatcher::NodePtr PathMatcher::addWalk( Node *node, const NameIterator &start
 	// return that to our caller to be replaced in its node and so on.
 	if( newChild )
 	{
-		if( shared )
-		{
-			NodePtr result = new Node( *node );
-			result->children[*start] = newChild;
-			return result;
-		}
-		else
-		{
-			node->children[*start] = newChild;
-		}
+		writable( node, result, shared )->children[*start] = newChild;
 	}
 
-	return NULL;
+	return result;
 }
 
 PathMatcher::NodePtr PathMatcher::removeWalk( Node *node, const NameIterator &start, const NameIterator &end, bool shared, const bool prune, bool &removed )
