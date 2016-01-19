@@ -365,6 +365,43 @@ IECore::ConstInternedStringVectorDataPtr Duplicate::computeBranchChildNames( con
 	}
 }
 
+void Duplicate::hashBranchSet( const ScenePath &parentPath, const IECore::InternedString &setName, const Gaffer::Context *context, IECore::MurmurHash &h ) const
+{
+	h.append( inPlug()->setHash( setName ) );
+	targetPlug()->hash( h );
+	childNamesPlug()->hash( h );
+}
+
+GafferScene::ConstPathMatcherDataPtr Duplicate::computeBranchSet( const ScenePath &parentPath, const IECore::InternedString &setName, const Gaffer::Context *context ) const
+{
+	ConstPathMatcherDataPtr inputSetData = inPlug()->set( setName );
+	const PathMatcher &inputSet = inputSetData->readable();
+	if( inputSet.isEmpty() )
+	{
+		return outPlug()->setPlug()->defaultValue();
+	}
+
+	PathMatcher subTree = inputSet.subTree( targetPlug()->getValue() );
+	if( subTree.isEmpty() )
+	{
+		return outPlug()->setPlug()->defaultValue();
+	}
+
+	ConstInternedStringVectorDataPtr childNamesData = childNamesPlug()->getValue();
+	const vector<InternedString> &childNames = childNamesData->readable();
+
+	PathMatcherDataPtr resultData = new PathMatcherData;
+	PathMatcher &result = resultData->writable();
+	ScenePath prefix( 1 );
+	for( vector<InternedString>::const_iterator it = childNames.begin(), eIt = childNames.end(); it != eIt; ++it )
+	{
+		prefix.back() = *it;
+		result.addPaths( subTree, prefix );
+	}
+
+	return resultData;
+}
+
 void Duplicate::sourcePath( const ScenePath &branchPath, ScenePath &source ) const
 {
 	assert( branchPath.size() );

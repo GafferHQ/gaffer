@@ -154,5 +154,37 @@ class DuplicateTest( GafferSceneTest.SceneTestCase ) :
 		d["name"].setValue( "test" )
 		self.assertTrue( d["out"]["childNames"] in [ c[0] for c in cs ] )
 
+	def testSets( self ) :
+
+		s = GafferScene.Sphere()
+		s["sets"].setValue( "set" )
+
+		g = GafferScene.Group()
+		g["in"].setInput( s["out"] )
+
+		d = GafferScene.Duplicate()
+		d["in"].setInput( g["out"] )
+		d["target"].setValue( "/group" )
+		d["copies"].setValue( 5 )
+
+		self.assertEqual(
+			set( d["out"].set( "set" ).value.paths() ),
+			set(
+				[ "/group/sphere" ] +
+				[ "/group%d/sphere" % n for n in range( 1, 6 ) ]
+			)
+		)
+
+		d["target"].setValue( "/group/sphere" )
+		d["copies"].setValue( 1500 )
+
+		self.assertEqual(
+			set( d["out"].set( "set" ).value.paths() ),
+			set(
+				[ "/group/sphere" ] +
+				[ "/group/sphere%d" % n for n in range( 1, 1501 ) ]
+			)
+		)
+
 if __name__ == "__main__":
 	unittest.main()
