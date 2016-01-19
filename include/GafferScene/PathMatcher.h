@@ -161,50 +161,52 @@ class PathMatcher
 
 		};
 
-		struct Node : public IECore::RefCounted
+		class Node : public IECore::RefCounted
 		{
 
-			// Container used to store all the children of the node.
-			// We need two things out of this structure - quick access
-			// to the child with a specific name, and also partitioning
-			// between names with wildcards and those without. This is
-			// achieved by using an ordered container, and having the
-			// less than operation for Names sort first on hasWildcards
-			// and second on the name.
-			typedef std::map<Name, NodePtr> ChildMap;
-			typedef ChildMap::iterator ChildMapIterator;
-			typedef ChildMap::value_type ChildMapValue;
-			typedef ChildMap::const_iterator ConstChildMapIterator;
+			public :
 
-			Node( bool terminator = false );
-			// Shallow copy.
-			Node( const Node &other );
-			~Node();
+				// Container used to store all the children of the node.
+				// We need two things out of this structure - quick access
+				// to the child with a specific name, and also partitioning
+				// between names with wildcards and those without. This is
+				// achieved by using an ordered container, and having the
+				// less than operation for Names sort first on hasWildcards
+				// and second on the name.
+				typedef std::map<Name, NodePtr> ChildMap;
+				typedef ChildMap::iterator ChildMapIterator;
+				typedef ChildMap::value_type ChildMapValue;
+				typedef ChildMap::const_iterator ConstChildMapIterator;
 
-			// Returns an iterator to the first child whose name contains wildcards.
-			// All children between here and children.end() will also contain wildcards.
-			ConstChildMapIterator wildcardsBegin() const;
+				Node( bool terminator = false );
+				// Shallow copy.
+				Node( const Node &other );
+				~Node();
 
-			Node *child( const Name &name );
-			const Node *child( const Name &name ) const;
+				// Returns an iterator to the first child whose name contains wildcards.
+				// All children between here and children.end() will also contain wildcards.
+				ConstChildMapIterator wildcardsBegin() const;
 
-			bool operator == ( const Node &other ) const;
+				Node *child( const Name &name );
+				const Node *child( const Name &name ) const;
 
-			bool operator != ( const Node &other );
+				bool operator == ( const Node &other ) const;
 
-			bool clearChildren();
-			bool isEmpty();
+				bool operator != ( const Node &other );
 
-			ChildMap children;
-			bool terminator;
+				bool clearChildren();
+				bool isEmpty();
 
-			// For most Node trees, the number of leaf nodes
-			// exceeds the number of branch nodes. Since by
-			// definition all leaf nodes are terminators with
-			// no children, we can save memory by always using
-			// this single shared node instance when adding a
-			// leaf node.
-			static Node *leaf();
+				ChildMap children;
+				bool terminator;
+
+				// For most Node trees, the number of leaf nodes
+				// exceeds the number of branch nodes. Since by
+				// definition all leaf nodes are terminators with
+				// no children, we can save memory by always using
+				// this single shared node instance when adding a
+				// leaf node.
+				static Node *leaf();
 
 		};
 
