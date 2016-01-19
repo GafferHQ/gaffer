@@ -450,43 +450,29 @@ GafferScene::ConstPathMatcherDataPtr Group::computeSet( const IECore::InternedSt
 
 		const CompoundData *forwardMapping = static_cast<const IECore::CompoundData *>( forwardMappings->members()[i].get() );
 
-		/// \todo If PathMatcher allowed access to the internal nodes, and allowed them to be shared between
-		/// matchers, we could be much more efficient here by making a new matcher which referenced the contents
-		/// of the input matchers.
-		vector<InternedString> outputPath; outputPath.push_back( groupName );
-		for( PathMatcher::Iterator pIt = inputSet.begin(), peIt = inputSet.end(); pIt != peIt; ++pIt )
+		// We want our outputSet to reference the data within inputSet rather
+		// than do an expensive copy. This is complicated slightly by the fact
+		// that we may need to rename the children of the root according to the
+		// forwardMapping object. Here we do that by taking subtrees of the input
+		// and adding them to our output under a renamed prefix.
+		for( PathMatcher::RawIterator pIt = inputSet.begin(), peIt = inputSet.end(); pIt != peIt; ++pIt )
 		{
 			const vector<InternedString> &inputPath = *pIt;
 			if( !inputPath.size() )
 			{
+				// Skip root.
 				continue;
 			}
+			assert( inputPath.size() == 1 );
 
-			const InternedStringData *outputName = forwardMapping->member<InternedStringData>( inputPath[0] );
-			if( !outputName )
-			{
-				// Getting here indicates either a bug in computeMapping() or an inconsistency in one
-				// of our inputs whereby a forward declaration has been made with a name which isn't
-				// in childNames( "/" ). The second case can occur in practice when an input is being
-				// connected or disconnected - because our inputs are CompoundPlugs, part way through
-				// the setInput() process the child connections for globalsPlug() and childNamesPlug()
-				// will not correspond, leading us here. This problem occurs in InteractiveRenderManRenderTest
-				// when the scene is being updated from a plugDirtiedSignal() which is emitted when one
-				// child plug has been disconnected, but before the other one has. The real solution to
-				// this would be to properly batch up dirty signals so that only a single signal is
-				// emitted for the parent after all signals for the children have been emitted. Then we
-				// would only ever be called in a consistent connection state.
-				/// \todo Now we have proper batching of dirty propagation we should remove this workaround,
-				/// reverting to a call to forwardMapping->member<InternedStringData>( inputName, true ),
-				/// which will throw when an error is detected.
-				continue;
-			}
+			const InternedStringData *outputName = forwardMapping->member<InternedStringData>( inputPath[0], /* throwExceptions = */ true );
 
-			outputPath.resize( 2 );
-			outputPath[1] = outputName->readable();
-			outputPath.insert( outputPath.end(), inputPath.begin() + 1, inputPath.end() );
+			vector<InternedString> prefix;
+			prefix.push_back( groupName );
+			prefix.push_back( outputName->readable() );
+			result.addPaths( inputSet.subTree( inputPath ), prefix );
 
-			result.addPath( outputPath );
+			pIt.prune(); // We only want to visit the first level
 		}
 	}
 
