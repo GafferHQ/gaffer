@@ -68,8 +68,8 @@ inline bool PathMatcher::Name::operator < ( const Name &other ) const
 // Node implementation
 //////////////////////////////////////////////////////////////////////////
 
-PathMatcher::Node::Node()
-	:	terminator( false )
+PathMatcher::Node::Node( bool terminator )
+	:	terminator( terminator )
 {
 }
 
@@ -152,6 +152,14 @@ bool PathMatcher::Node::clearChildren()
 bool PathMatcher::Node::isEmpty()
 {
 	return !terminator && children.empty();
+}
+
+PathMatcher::Node *PathMatcher::Node::leaf()
+{
+	static NodePtr g_leaf = new Node( true );
+	assert( g_leaf->terminator );
+	assert( g_leaf->children().empty() );
+	return g_leaf.get();
 }
 
 //////////////////////////////////////////////////////////////////////////
@@ -503,7 +511,23 @@ PathMatcher::NodePtr PathMatcher::addWalk( Node *node, const NameIterator &start
 	{
 		// No matching child, so make a new one.
 		newChild = new Node();
-		addWalk( newChild.get(), childStart, end, /* shared = */ false, added );
+		if( childStart == end )
+		{
+			// We're adding a leaf node. Rather than allocate a brand
+			// new node for this, we can just reuse a single shared
+			// instance. If later on the node needs to be edited, our
+			// lazy-copy-on-write behaviour will avoid editing the
+			// shared node anyway. Since leaf nodes often dominate within
+			// our trees, this optimisation saves significant amounts of
+			// memory.
+			newChild = Node::leaf();
+			added = true;
+		}
+		else
+		{
+			newChild = new Node();
+			addWalk( newChild.get(), childStart, end, /* shared = */ false, added );
+		}
 	}
 
 	// If there's a new child then add it. If we ourselves are shared

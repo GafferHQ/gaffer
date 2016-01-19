@@ -176,7 +176,7 @@ class PathMatcher
 			typedef ChildMap::value_type ChildMapValue;
 			typedef ChildMap::const_iterator ConstChildMapIterator;
 
-			Node();
+			Node( bool terminator = false );
 			// Shallow copy.
 			Node( const Node &other );
 			~Node();
@@ -197,6 +197,14 @@ class PathMatcher
 
 			ChildMap children;
 			bool terminator;
+
+			// For most Node trees, the number of leaf nodes
+			// exceeds the number of branch nodes. Since by
+			// definition all leaf nodes are terminators with
+			// no children, we can save memory by always using
+			// this single shared node instance when adding a
+			// leaf node.
+			static Node *leaf();
 
 		};
 
