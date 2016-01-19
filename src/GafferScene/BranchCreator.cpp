@@ -432,29 +432,23 @@ GafferScene::ConstPathMatcherDataPtr BranchCreator::computeSet( const IECore::In
 	PathMatcherDataPtr outputSetData = inputSetData->copy();
 	PathMatcher &outputSet = outputSetData->writable();
 
-	/// \todo If PathMatcher allowed us to rename nodes and merge in other PathMatchers, this could
-	/// be much more efficient.
-	vector<InternedString> outputPath( parentPath );
-	for( PathMatcher::Iterator pIt = branchSet.begin(), peIt = branchSet.end(); pIt != peIt; ++pIt )
+	vector<InternedString> outputPrefix( parentPath );
+	for( PathMatcher::RawIterator pIt = branchSet.begin(), peIt = branchSet.end(); pIt != peIt; ++pIt )
 	{
 		const ScenePlug::ScenePath &branchPath = *pIt;
 		if( !branchPath.size() )
 		{
-			continue;
+			continue; // Skip root
 		}
+		assert( inputPath.size() == 1 );
 
-		const InternedStringData *outputName = forwardMapping->member<InternedStringData>( branchPath[0] );
-		if( !outputName )
-		{
-			// See comments in Group::computeSet().
-			continue;
-		}
+		const InternedStringData *outputName = forwardMapping->member<InternedStringData>( branchPath[0], /* throwExceptions = */ true );
 
-		outputPath.resize( parentPath.size() + 1 );
-		outputPath.back() = outputName->readable();
-		outputPath.insert( outputPath.end(), branchPath.begin() + 1, branchPath.end() );
+		outputPrefix.resize( parentPath.size() + 1 );
+		outputPrefix.back() = outputName->readable();
+		outputSet.addPaths( branchSet.subTree( *pIt ), outputPrefix );
 
-		outputSet.addPath( outputPath );
+		pIt.prune(); // We only want to visit the first level
 	}
 
 	return outputSetData;
