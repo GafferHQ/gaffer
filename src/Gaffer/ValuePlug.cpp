@@ -567,10 +567,26 @@ bool ValuePlug::acceptsChild( const GraphComponent *potentialChild ) const
 	{
 		return false;
 	}
-	/// \todo Check that child is a ValuePlug - the
-	/// only reason we're not doing that is for backwards
-	/// compatibility with CompoundPlug.
-	return m_staticValue == NULL;
+
+	if( m_staticValue != NULL )
+	{
+		return false;
+	}
+
+	if( this->isInstanceOf( (IECore::TypeId)CompoundPlugTypeId ) )
+	{
+		/// \todo Remove this special case when we remove
+		/// CompoundPlug - it exists only for backwards
+		/// compatibility for that class. When we do this,
+		/// we'll be able to remove a lot of runTimeCasts in
+		/// our other methods, because we'll know our children
+		/// are all ValuePlugs.
+		return true;
+	}
+	else
+	{
+		return IECore::runTimeCast<const ValuePlug>( potentialChild );
+	}
 }
 
 bool ValuePlug::acceptsInput( const Plug *input ) const
