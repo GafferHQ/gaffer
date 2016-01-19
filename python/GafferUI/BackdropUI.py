@@ -47,17 +47,28 @@ def nodeMenuCreateCommand( menu ) :
 
 	nodeGraph = menu.ancestor( GafferUI.NodeGraph )
 	assert( nodeGraph is not None )
+	gadgetWidget = nodeGraph.graphGadgetWidget()
+	graphGadget = nodeGraph.graphGadget()
 
 	script = nodeGraph.scriptNode()
 
 	with Gaffer.UndoContext( script ) :
 
 		backdrop = Gaffer.Backdrop()
-		nodeGraph.graphGadget().getRoot().addChild( backdrop )
+		Gaffer.NodeAlgo.applyUserDefaults( backdrop )
+
+		graphGadget.getRoot().addChild( backdrop )
 
 		if script.selection() :
-			nodeGadget = nodeGraph.graphGadget().nodeGadget( backdrop )
+			nodeGadget = graphGadget.nodeGadget( backdrop )
 			nodeGadget.frame( [ x for x in script.selection() ] )
+		else :
+			menuPosition = menu.popupPosition( relativeTo = gadgetWidget )
+			nodePosition = gadgetWidget.getViewportGadget().rasterToGadgetSpace(
+				IECore.V2f( menuPosition.x, menuPosition.y ),
+				gadget = graphGadget
+			).p0
+			graphGadget.setNodePosition( backdrop, IECore.V2f( nodePosition.x, nodePosition.y ) )
 
 	return backdrop
 
