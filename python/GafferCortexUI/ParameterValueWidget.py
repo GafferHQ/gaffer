@@ -170,6 +170,7 @@ def __parameterPopupMenu( menuDefinition, parameterValueWidget ) :
 	)
 
 	# add menu items for presets
+	menuDefinition.remove( "/Preset", raiseIfMissing=False )
 	if len( parameterHandler.parameter().presetNames() ) :
 		menuDefinition.append( "/PresetDivider", { "divider" : True } )
 
