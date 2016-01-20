@@ -103,6 +103,7 @@ Gaffer.Metadata.registerNode(
 			```
 			""",
 
+			"nodule:type", "",
 			"layout:section", "Advanced",
 
 		),
