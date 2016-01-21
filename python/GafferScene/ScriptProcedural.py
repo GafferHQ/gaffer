@@ -72,6 +72,16 @@ class ScriptProcedural( IECore.ParameterisedProcedural ) :
 					defaultValue = 1,
 				),
 
+				IECore.BoolParameter(
+					name = "computeBound",
+					description =
+						"Determines if the procedural will compute an accurate bound "
+						"or just not specify a bound. Not specifying a bound can give "
+						"improved performance in cases where the procedurals will all "
+						"be expanded immediately anyway.",
+					defaultValue = True,
+				),
+
 				IECore.StringVectorParameter(
 					name = "context",
 					description = "Additional context entries to be used during rendering.",
@@ -95,7 +105,7 @@ class ScriptProcedural( IECore.ParameterisedProcedural ) :
 		if plug is  None :
 			return IECore.Box3f()
 
-		sceneProcedural = GafferScene.SceneProcedural( plug, context, "/" )
+		sceneProcedural = GafferScene.SceneProcedural( plug, context, "/", args["computeBound"].value )
 		return sceneProcedural.bound()
 
 	def doRender( self, renderer, args ) :
@@ -106,7 +116,7 @@ class ScriptProcedural( IECore.ParameterisedProcedural ) :
 
 		self.__postExpansionCacheClearConnection = GafferScene.SceneProcedural.allRenderedSignal().connect( Gaffer.WeakMethod( self.__allRendered ) )
 
-		sceneProcedural = GafferScene.SceneProcedural( plug, context, "/" )
+		sceneProcedural = GafferScene.SceneProcedural( plug, context, "/", args["computeBound"].value )
 		renderer.procedural( sceneProcedural )
 
 	def __allRendered( self ):

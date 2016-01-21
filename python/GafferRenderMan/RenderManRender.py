@@ -108,6 +108,16 @@ class RenderManRender( GafferScene.ExecutableRender ) :
 		procedural["node"].setTypedValue( scenePlug.node().relativeName( scriptNode ) )
 		procedural["frame"].setNumericValue( currentContext.getFrame() )
 
+		# In practice when using the raytrace hider, 3delight always expands
+		# all procedurals before rendering begins, so computing bounds is
+		# a waste of time.
+		globals = scenePlug["globals"].getValue()
+		computeBound = True
+		with IECore.IgnoredExceptions( KeyError ) :
+			if globals["option:ri:hider"].value == "raytrace" :
+				computeBound = False
+		procedural["computeBound"].setTypedValue( computeBound )
+
 		contextArgs = IECore.StringVectorData()
 		for entry in [ k for k in currentContext.keys() if k != "frame" and not k.startswith( "ui:" ) ] :
 			if entry not in scriptContext.keys() or currentContext[entry] != scriptContext[entry] :
@@ -122,7 +132,7 @@ class RenderManRender( GafferScene.ExecutableRender ) :
 		pythonString = "IECoreRI.executeProcedural( \"gaffer/script\", 1, %s )" % str( IECore.ParameterParser().serialise( procedural.parameters(), procedural.parameters().getValue() ) )
 		externalProcedural = IECore.Renderer.ExternalProcedural(
 			"iePython",
-			IECore.Box3f( IECore.V3f( -1e30 ), IECore.V3f( 1e30 ) ),
+			IECore.Box3f( IECore.V3f( -1e30 ), IECore.V3f( 1e30 ) ) if computeBound else IECore.Renderer.Procedural.noBound,
 			{
 				"ri:data" : pythonString,
 			}
