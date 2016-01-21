@@ -88,6 +88,16 @@ class _PlugValueWidget( GafferUI.CompoundPlugValueWidget ) :
 
 		self.__parameterHandler = parameterHandler
 
+	def _childPlugs( self ) :
+
+		plug = self.getPlug()
+		orderedChildren = []
+		for childName in self.__parameterHandler.parameter().keys() :
+			if childName in plug :
+				orderedChildren.append( plug[childName] )
+
+		return orderedChildren
+
 	def _childPlugWidget( self, childPlug ) :
 
 		childParameter = self.__parameterHandler.parameter()[childPlug.getName()]
