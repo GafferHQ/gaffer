@@ -229,6 +229,7 @@ class Plug : public GraphComponent
 
 		void setFlagsInternal( unsigned flags );
 
+		bool acceptsInputInternal( const Plug *input, bool detectDependencyCycles ) const;
 		void setInput( PlugPtr input, bool setChildInputs, bool updateParentInput );
 		void setInputInternal( PlugPtr input, bool emit );
 		void emitInputChanged();

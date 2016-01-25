@@ -1,7 +1,6 @@
 //////////////////////////////////////////////////////////////////////////
 //
-//  Copyright (c) 2012, John Haddon. All rights reserved.
-//  Copyright (c) 2013, Image Engine Design Inc. All rights reserved.
+//  Copyright (c) 2016, Image Engine Design Inc. All rights reserved.
 //
 //  Redistribution and use in source and binary forms, with or without
 //  modification, are permitted provided that the following conditions are
@@ -35,46 +34,14 @@
 //
 //////////////////////////////////////////////////////////////////////////
 
-#include "Gaffer/DependencyNode.h"
+#ifndef GAFFERTEST_DOWNSTREAMITERATORTEST_H
+#define GAFFERTEST_DOWNSTREAMITERATORTEST_H
 
-using namespace Gaffer;
-
-IE_CORE_DEFINERUNTIMETYPED( DependencyNode );
-
-DependencyNode::DependencyNode( const std::string &name )
-	:	Node( name )
+namespace GafferTest
 {
-}
 
-DependencyNode::~DependencyNode()
-{
-}
+void testDownstreamIterator();
 
-void DependencyNode::affects( const Plug *input, AffectedPlugsContainer &outputs ) const
-{
-	if( !input->children().empty() )
-	{
-		throw IECore::Exception( "DependencyNode::affects() called with non-leaf plug " + input->fullName() );
-	}
-}
+} // namespace GafferTest
 
-
-BoolPlug *DependencyNode::enabledPlug()
-{
-	return 0;
-}
-
-const BoolPlug *DependencyNode::enabledPlug() const
-{
-	return 0;
-}
-
-Plug *DependencyNode::correspondingInput( const Plug *output )
-{
-	return 0;
-}
-
-const Plug *DependencyNode::correspondingInput( const Plug *output ) const
-{
-	return 0;
-}
+#endif // GAFFERTEST_DOWNSTREAMITERATORTEST_H

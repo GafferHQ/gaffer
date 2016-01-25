@@ -134,5 +134,39 @@ class ShaderTest( unittest.TestCase ) :
 		self.assertEqual( state[0].type, "test:shader" )
 		self.assertEqual( state[1].type, "test:surface" )
 
+	def testDirtyPropagationThroughShaderAssignment( self ) :
+
+		n = GafferSceneTest.TestShader()
+
+		p = GafferScene.Plane()
+		a = GafferScene.ShaderAssignment()
+		a["in"].setInput( p["out"] )
+		a["shader"].setInput( n["out"] )
+
+		cs = GafferTest.CapturingSlot( a.plugDirtiedSignal() )
+
+		n["parameters"]["i"].setValue( 1 )
+
+		self.assertEqual(
+			[ c[0] for c in cs ],
+			[
+				a["shader"],
+				a["out"]["attributes"],
+				a["out"],
+			],
+		)
+
+	def testDisallowCyclicConnections( self ) :
+
+		n1 = GafferSceneTest.TestShader()
+		n2 = GafferSceneTest.TestShader()
+		n3 = GafferSceneTest.TestShader()
+
+		n2["parameters"]["i"].setInput( n1["out"]["r"] )
+		n3["parameters"]["i"].setInput( n2["out"]["g"] )
+
+		self.assertFalse( n1["parameters"]["i"].acceptsInput( n3["out"]["b"] ) )
+		self.assertRaisesRegexp( RuntimeError, "rejects input", n1["parameters"]["i"].setInput, n3["out"]["b"] )
+
 if __name__ == "__main__":
 	unittest.main()

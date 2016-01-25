@@ -49,6 +49,7 @@
 #include "Gaffer/Action.h"
 #include "Gaffer/ScriptNode.h"
 #include "Gaffer/Metadata.h"
+#include "Gaffer/DownstreamIterator.h"
 
 using namespace boost;
 using namespace Gaffer;
@@ -220,48 +221,7 @@ void Plug::setFlagsInternal( unsigned flags )
 
 bool Plug::acceptsInput( const Plug *input ) const
 {
-	if( !getFlags( AcceptsInputs ) || getFlags( ReadOnly ) )
-	{
-		return false;
-	}
-
-	if( input == this )
-	{
-		return false;
-	}
-
-	if( const Node *n = node() )
-	{
-		if( !n->acceptsInput( this, input ) )
-		{
-			return false;
-		}
-	}
-
-	for( OutputContainer::const_iterator it=m_outputs.begin(), eIt=m_outputs.end(); it!=eIt; ++it )
-	{
-		if( !(*it)->acceptsInput( input ) )
-		{
-			return false;
-		}
-	}
-
-	if( input )
-	{
-		if( children().size() > input->children().size() )
-		{
-			return false;
-		}
-		for( PlugIterator it1( this ), it2( input ); it1!=it1.end(); ++it1, ++it2 )
-		{
-			if( !( *it1 )->acceptsInput( it2->get() ) )
-			{
-				return false;
-			}
-		}
-	}
-
-	return true;
+	return acceptsInputInternal( input, /* detectDependencyCycles = */ true );
 }
 
 void Plug::setInput( PlugPtr input )
@@ -341,6 +301,76 @@ void Plug::setInput( PlugPtr input, bool setChildInputs, bool updateParentInput 
 		}
 	}
 
+}
+
+bool Plug::acceptsInputInternal( const Plug *input, bool detectDependencyCycles ) const
+{
+	if( !getFlags( AcceptsInputs ) || getFlags( ReadOnly ) )
+	{
+		return false;
+	}
+
+	if( input == this )
+	{
+		return false;
+	}
+
+	if( const Node *n = node() )
+	{
+		if( !n->acceptsInput( this, input ) )
+		{
+			return false;
+		}
+	}
+
+	// Give our outputs a chance to deny inputs they wouldn't accept themselves,
+	// because an input to us is indirectly an input to them.
+	for( OutputContainer::const_iterator it=m_outputs.begin(), eIt=m_outputs.end(); it!=eIt; ++it )
+	{
+		// No need to look for dependency cycles here, because we'll traverse through
+		// the outputs when we perform our own test anyway.
+		if( !(*it)->acceptsInputInternal( input, /* detectDependencyCycles = */ false ) )
+		{
+			return false;
+		}
+	}
+
+	// We should always accept a disconnection - how else could undo work?
+	if( !input )
+	{
+		return true;
+	}
+
+	// Make sure our children are happy to accept the equivalent child inputs.
+	if( children().size() > input->children().size() )
+	{
+		return false;
+	}
+	for( PlugIterator it1( this ), it2( input ); it1!=it1.end(); ++it1, ++it2 )
+	{
+		if( !( *it1 )->acceptsInputInternal( it2->get(), detectDependencyCycles ) )
+		{
+			return false;
+		}
+	}
+
+	// Check that the connection won't create a cyclic dependency.
+	if( detectDependencyCycles )
+	{
+		for( DownstreamIterator it( this ); it != it.end(); ++it )
+		{
+			if( it->getFlags( AcceptsDependencyCycles ) )
+			{
+				it.prune();
+			}
+			else if( &*it == input )
+			{
+				return false;
+			}
+		}
+	}
+
+	return true;
 }
 
 void Plug::setInputInternal( PlugPtr input, bool emit )
@@ -623,9 +653,36 @@ class Plug::DirtyPlugs
 
 		void insert( Plug *plugToDirty )
 		{
-			if( !m_emitting ) // see comment in emit()
+			if( m_emitting ) // see comment in emit()
 			{
-				insertInternal( plugToDirty );
+				return;
+			}
+
+			if( !insertVertex( plugToDirty ).second )
+			{
+				// Previously inserted, so we'll already
+				// have visited the dependents.
+				return;
+			}
+
+			for( DownstreamIterator it( plugToDirty ); it != it.end(); ++it )
+			{
+				InsertedVertex v = insertVertex( &*it );
+				if( !it->getFlags( Plug::AcceptsDependencyCycles ) )
+				{
+					add_edge(
+						v.first,
+						insertVertex( it.upstream() ).first,
+						m_graph
+					);
+				}
+
+				if( !v.second )
+				{
+					// Already visited this plug by another path,
+					// so we can prune the iteration.
+					it.prune();
+				}
 			}
 		}
 
@@ -666,9 +723,13 @@ class Plug::DirtyPlugs
 
 		typedef std::map<const Plug *, VertexDescriptor> PlugMap;
 
-		// Inserts a vertex representing plugToDirty into the graph, and
-		// then inserts all affected plugs.
-		VertexDescriptor insertInternal( Plug *plugToDirty )
+		// Equivalent to the return type for map::insert - the first
+		// field is the vertex descriptor, and the second field is
+		// false if the vertex was already there, true if it was
+		// inserted.
+		typedef std::pair<VertexDescriptor, bool> InsertedVertex;
+
+		InsertedVertex insertVertex( const Plug *plug )
 		{
 			// We need to hold a reference to the plug, because otherwise
 			// it might be deleted between now and emit(). But if there is
@@ -676,28 +737,27 @@ class Plug::DirtyPlugs
 			// we'd end up deleting it in emit() since we'd have sole
 			// ownership. Nobody wants that. If we had weak pointers, this
 			// would make for an ideal use.
-			assert( plugToDirty->refCount() );
+			assert( plug->refCount() );
 
-			// If we've inserted this one before, then early out. There's
-			// no point repeating the propagation all over again, and our
-			// Graph isn't designed to have duplicate edges anyway.
-			PlugMap::const_iterator it = m_plugs.find( plugToDirty );
+			PlugMap::const_iterator it = m_plugs.find( plug );
 			if( it != m_plugs.end() )
 			{
-				return it->second;
+				return InsertedVertex( it->second, false );
 			}
 
-			// Insert a vertex for this plug.
 			VertexDescriptor result = add_vertex( m_graph );
-			m_graph[result] = plugToDirty;
-			m_plugs[plugToDirty] = result;
+			m_graph[result] = const_cast<Plug *>( plug );
+			m_plugs[plug] = result;
 
-			// Insert all ancestor plugs.
-			Plug *child = plugToDirty;
-			VertexDescriptor childVertex = result;
-			while( Plug *parent = child->parent<Plug>() )
+			// Insert parent plug.
+			if( const Plug *parent = plug->parent<Plug>() )
 			{
-				if( !parent->refCount() )
+				if( parent->refCount() )
+				{
+					VertexDescriptor parentVertex = insertVertex( parent ).first;
+					add_edge( parentVertex, result, m_graph );
+				}
+				else
 				{
 					// We can end up here when constructing a SplinePlug,
 					// because it calls setValue() in its constructor.
@@ -706,91 +766,10 @@ class Plug::DirtyPlugs
 					// it in emit(). And there's no point signalling dirtiness
 					// because the plug has no parent and therefore can have
 					// no observers.
-					break;
-				}
-
-				VertexDescriptor parentVertex = insertInternal( parent );
-				add_edge( parentVertex, childVertex, m_graph );
-
-				child = parent;
-				childVertex = parentVertex;
-			}
-
-			// Propagate dirtiness to output plugs and affected plugs.
-			// We only propagate dirtiness along leaf level plugs, because
-			// they are the only plugs which can be the target of the affects(),
-			// and compute() methods. We must handle any exceptions thrown by
-			// DependencyNode::affects() so that we don't leave the graph in
-			// an unexpected state - propagateDirtiness() is called in the middle
-			// of addChild(), setInput() and setValue() methods, and we want those
-			// to succeed at all costs.
-			if( !plugToDirty->isInstanceOf( (IECore::TypeId)CompoundPlugTypeId ) )
-			{
-				for( Plug::OutputContainer::const_iterator it=plugToDirty->outputs().begin(), eIt=plugToDirty->outputs().end(); it!=eIt; ++it )
-				{
-					VertexDescriptor outputVertex = insertInternal( const_cast<Plug *>( *it ) );
-					add_edge( outputVertex, result, m_graph );
-				}
-
-				const DependencyNode *dependencyNode = plugToDirty->ancestor<DependencyNode>();
-				if( dependencyNode )
-				{
-					DependencyNode::AffectedPlugsContainer affected;
-					try
-					{
-						dependencyNode->affects( plugToDirty, affected );
-					}
-					catch( const std::exception &e )
-					{
-						IECore::msg(
-							IECore::Msg::Error,
-							dependencyNode->relativeName( dependencyNode->scriptNode() ) + "::affects()",
-							e.what()
-						);
-					}
-					catch( ... )
-					{
-						IECore::msg(
-							IECore::Msg::Error,
-							dependencyNode->relativeName( dependencyNode->scriptNode() ) + "::affects()",
-							"Unknown exception"
-						);
-					}
-
-					for( DependencyNode::AffectedPlugsContainer::const_iterator it=affected.begin(); it!=affected.end(); it++ )
-					{
-						if( ( *it )->isInstanceOf( (IECore::TypeId)Gaffer::CompoundPlugTypeId ) )
-						{
-							// DependencyNode::affects() implementations are only allowed to place leaf plugs in the outputs,
-							// so we helpfully report any mistakes.
-							IECore::msg(
-								IECore::Msg::Error,
-								dependencyNode->relativeName( dependencyNode->scriptNode() ) + "::affects()",
-								"Non-leaf plug " + (*it)->relativeName( dependencyNode ) + " returned by affects()"
-							);
-							continue;
-						}
-						// cast is ok - AffectedPlugsContainer only holds const pointers so that
-						// affects() can be const to discourage implementations from having side effects.
-						VertexDescriptor affectedVertex = insertInternal( const_cast<Plug *>( *it ) );
-
-						if( (*it)->getFlags( Plug::AcceptsDependencyCycles ) )
-						{
-							// Skip making an edge to avoid a cycle in emit() - we still propagated
-							// dirtiness onwards with the call to insertInternal() above though, so the
-							// only thing lost is a guarantee of emission ordering. It might be more
-							// accurate to make the edge and then wait until emit() to see if a cycle
-							// has actually been created in practice, and then remove it. But this is
-							// simpler, and it seems reasonable to assume that the existence of the
-							// flag indicates a definite intention to create a cycle.
-							continue;
-						}
-						add_edge( affectedVertex, result, m_graph );
-					}
 				}
 			}
 
-			return result;
+			return InsertedVertex( result, true );
 		}
 
 		void emit()
@@ -818,7 +797,15 @@ class Plug::DirtyPlugs
 			ScopedAssignment<bool> scopedAssignment( m_emitting, true );
 
 			std::vector<VertexDescriptor> sorted;
-			topological_sort( m_graph, std::back_inserter( sorted ) );
+			try
+			{
+				topological_sort( m_graph, std::back_inserter( sorted ) );
+			}
+			catch( const std::exception &e )
+			{
+				IECore::msg( IECore::Msg::Error, "Plug dirty propagation", e.what() );
+			}
+
 			for( std::vector<VertexDescriptor>::const_iterator it = sorted.begin(), eIt = sorted.end(); it != eIt; ++it )
 			{
 				Plug *plug = m_graph[*it].get();

@@ -339,7 +339,12 @@ class ExpressionTest( GafferTest.TestCase ) :
 
 		s = Gaffer.ScriptNode()
 		s["fileName"].setValue( os.path.dirname( __file__ ) + "/scripts/legacyExpression.gfr" )
-		s.load( continueOnError = True )
+
+		with IECore.CapturingMessageHandler() as mh :
+			s.load( continueOnError = True )
+
+		self.assertEqual( len( mh.messages ), 1 )
+		self.assertTrue( "rejects input " in mh.messages[0].message )
 
 		s.context().setFrame( 3 )
 		with s.context() :
@@ -816,7 +821,12 @@ class ExpressionTest( GafferTest.TestCase ) :
 
 		s = Gaffer.ScriptNode()
 		s["fileName"].setValue( os.path.dirname( __file__ ) + "/scripts/expressionVersion-0.15.0.0.gfr" )
-		s.load( continueOnError = True )
+
+		with IECore.CapturingMessageHandler() as mh :
+			s.load( continueOnError = True )
+
+		self.assertEqual( len( mh.messages ), 1 )
+		self.assertTrue( "rejects input " in mh.messages[0].message )
 
 		self.assertEqual( s["n"]["user"]["b"].getValue(), 2 )
 		self.assertTrue( s["n"]["user"]["b"].getInput().node().isSame( s["e"] ) )

@@ -47,7 +47,7 @@ import GafferTest
 import GafferScene
 import GafferSceneTest
 
-class SceneProceduralTest( unittest.TestCase ) :
+class SceneProceduralTest( GafferSceneTest.SceneTestCase ) :
 
 	class __WrappingProcedural( IECore.ParameterisedProcedural ) :
 
@@ -76,10 +76,15 @@ class SceneProceduralTest( unittest.TestCase ) :
 		renderer = IECoreGL.Renderer()
 		renderer.setOption( "gl:mode", IECore.StringData( "deferred" ) )
 
-		with IECore.WorldBlock( renderer ) :
+		with IECore.CapturingMessageHandler() as mh :
 
-			procedural = GafferScene.SceneProcedural( badNode["out"], Gaffer.Context(), "/" )
-			self.__WrappingProcedural( procedural ).render( renderer )
+			with IECore.WorldBlock( renderer ) :
+
+				procedural = GafferScene.SceneProcedural( badNode["out"], Gaffer.Context(), "/" )
+				self.__WrappingProcedural( procedural ).render( renderer )
+
+		self.assertTrue( len( mh.messages ) )
+		self.assertTrue( "Unable to find font" in mh.messages[0].message )
 
 	def testPythonComputationErrors( self ) :
 
@@ -95,10 +100,15 @@ class SceneProceduralTest( unittest.TestCase ) :
 		renderer = IECoreGL.Renderer()
 		renderer.setOption( "gl:mode", IECore.StringData( "deferred" ) )
 
-		with IECore.WorldBlock( renderer ) :
+		with IECore.CapturingMessageHandler() as mh :
 
-			procedural = GafferScene.SceneProcedural( script["plane"]["out"], Gaffer.Context(), "/" )
-			self.__WrappingProcedural( procedural ).render( renderer )
+			with IECore.WorldBlock( renderer ) :
+
+				procedural = GafferScene.SceneProcedural( script["plane"]["out"], Gaffer.Context(), "/" )
+				self.__WrappingProcedural( procedural ).render( renderer )
+
+		self.assertTrue( len( mh.messages ) )
+		self.assertTrue( "iDontExist" in mh.messages[0].message )
 
 	def testMotionBlurredBounds( self ) :
 

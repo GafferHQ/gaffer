@@ -45,6 +45,7 @@
 #include "GafferTest/MetadataTest.h"
 #include "GafferTest/ContextTest.h"
 #include "GafferTest/ComputeNodeTest.h"
+#include "GafferTest/DownstreamIteratorTest.h"
 
 using namespace boost::python;
 using namespace GafferTest;
@@ -68,5 +69,6 @@ BOOST_PYTHON_MODULE( _GafferTest )
 	def( "testManyEnvironmentSubstitutions", &testManyEnvironmentSubstitutions );
 	def( "testScopingNullContext", &testScopingNullContext );
 	def( "testComputeNodeThreading", &testComputeNodeThreading );
+	def( "testDownstreamIterator", &testDownstreamIterator );
 
 }

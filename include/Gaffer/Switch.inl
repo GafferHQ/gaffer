@@ -135,20 +135,22 @@ void Switch<BaseType>::affects( const Plug *input, DependencyNode::AffectedPlugs
 		input == indexPlug()
 	)
 	{
-		const Plug *out = BaseType::template getChild<Plug>( "out" );
-		if( out->children().size() )
+		if( const Plug *out = BaseType::template getChild<Plug>( "out" ) )
 		{
-			for( RecursiveOutputPlugIterator it( out ); it != it.end(); ++it )
+			if( out->children().size() )
 			{
-				if( !(*it)->children().size() )
+				for( RecursiveOutputPlugIterator it( out ); it != it.end(); ++it )
 				{
-					outputs.push_back( it->get() );
+					if( !(*it)->children().size() )
+					{
+						outputs.push_back( it->get() );
+					}
 				}
 			}
-		}
-		else
-		{
-			outputs.push_back( out );
+			else
+			{
+				outputs.push_back( out );
+			}
 		}
 	}
 	else if( input->direction() == Plug::In )

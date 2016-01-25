@@ -456,7 +456,12 @@ class ReferenceTest( GafferTest.TestCase ) :
 		s2 = Gaffer.ScriptNode()
 		s2["r"] = Gaffer.Reference()
 
-		self.assertRaises( Exception, s2["r"].load, "/tmp/test.grf" )
+		with IECore.CapturingMessageHandler() as mh :
+			self.assertRaises( Exception, s2["r"].load, "/tmp/test.grf" )
+
+		self.assertEqual( len( mh.messages ), 2 )
+		self.assertTrue( "has no attribute 'SphereNode'" in mh.messages[0].message )
+		self.assertTrue( "KeyError: 'n'" in mh.messages[1].message )
 
 	def testErrorTolerantLoading( self ) :
 
