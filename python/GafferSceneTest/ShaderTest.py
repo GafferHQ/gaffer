@@ -156,5 +156,17 @@ class ShaderTest( unittest.TestCase ) :
 			],
 		)
 
+	def testDisallowCyclicConnections( self ) :
+
+		n1 = GafferSceneTest.TestShader()
+		n2 = GafferSceneTest.TestShader()
+		n3 = GafferSceneTest.TestShader()
+
+		n2["parameters"]["i"].setInput( n1["out"]["r"] )
+		n3["parameters"]["i"].setInput( n2["out"]["g"] )
+
+		self.assertFalse( n1["parameters"]["i"].acceptsInput( n3["out"]["b"] ) )
+		self.assertRaisesRegexp( RuntimeError, "rejects input", n1["parameters"]["i"].setInput, n3["out"]["b"] )
+
 if __name__ == "__main__":
 	unittest.main()
