@@ -40,6 +40,7 @@ import inspect
 import types
 import shutil
 import tempfile
+import functools
 
 import IECore
 
@@ -51,6 +52,14 @@ class TestCase( unittest.TestCase ) :
 	def setUp( self ) :
 
 		self.__temporaryDirectory = None
+
+		# Set up a capturing message handler and a cleanup function so
+		# we can assert that no warning or error messages are triggered by
+		# the tests. If any such messages are actually expected during testing,
+		# the relevant tests should use their own CapturingMessageHandler
+		# to grab them and then assert that they are as expected.
+		self.addCleanup( functools.partial( self.__messageHandlerCleanup, IECore.MessageHandler.getDefaultHandler() ) )
+		IECore.MessageHandler.setDefaultHandler( IECore.CapturingMessageHandler() )
 
 	def tearDown( self ) :
 
@@ -71,6 +80,16 @@ class TestCase( unittest.TestCase ) :
 
 		if self.__temporaryDirectory is not None :
 			shutil.rmtree( self.__temporaryDirectory )
+
+	@staticmethod
+	def __messageHandlerCleanup( originalHandler ) :
+
+		mh = IECore.MessageHandler.getDefaultHandler()
+		IECore.MessageHandler.setDefaultHandler( originalHandler )
+
+		for message in mh.messages :
+			if message.level in  ( mh.Level.Warning, mh.Level.Error ) :
+				raise RuntimeError( "Unexpected message : " + mh.levelAsString( message.level ) + " : " + message.context + " : " + message.message )
 
 	## Returns a path to a directory the test may use for temporary
 	# storage. This will be cleaned up automatically after the test
