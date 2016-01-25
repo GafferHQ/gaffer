@@ -36,7 +36,6 @@
 //////////////////////////////////////////////////////////////////////////
 
 #include "Gaffer/DependencyNode.h"
-#include "Gaffer/CompoundPlug.h"
 
 using namespace Gaffer;
 
@@ -53,7 +52,7 @@ DependencyNode::~DependencyNode()
 
 void DependencyNode::affects( const Plug *input, AffectedPlugsContainer &outputs ) const
 {
-	if( input->isInstanceOf( CompoundPlug::staticTypeId() ) )
+	if( !input->children().empty() )
 	{
 		throw IECore::Exception( "DependencyNode::affects() called with non-leaf plug " + input->fullName() );
 	}
