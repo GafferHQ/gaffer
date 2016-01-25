@@ -343,5 +343,28 @@ class ArnoldShaderTest( unittest.TestCase ) :
 
 		self.assertEqual( a["out"].attributes( "/plane" ).keys(), [ "ai:surface"] )
 
+	def testDirtyPropagationThroughShaderAssignment( self ) :
+
+		n = GafferArnold.ArnoldShader()
+		n.loadShader( "flat" )
+
+		p = GafferScene.Plane()
+		a = GafferScene.ShaderAssignment()
+		a["in"].setInput( p["out"] )
+		a["shader"].setInput( n["out"] )
+
+		cs = GafferTest.CapturingSlot( a.plugDirtiedSignal() )
+
+		n["parameters"]["color"]["r"].setValue( 0.25 )
+
+		self.assertEqual(
+			[ c[0] for c in cs ],
+			[
+				a["shader"],
+				a["out"]["attributes"],
+				a["out"],
+			],
+		)
+
 if __name__ == "__main__":
 	unittest.main()
