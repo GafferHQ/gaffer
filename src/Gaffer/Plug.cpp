@@ -818,7 +818,15 @@ class Plug::DirtyPlugs
 			ScopedAssignment<bool> scopedAssignment( m_emitting, true );
 
 			std::vector<VertexDescriptor> sorted;
-			topological_sort( m_graph, std::back_inserter( sorted ) );
+			try
+			{
+				topological_sort( m_graph, std::back_inserter( sorted ) );
+			}
+			catch( const std::exception &e )
+			{
+				IECore::msg( IECore::Msg::Error, "Plug dirty propagation", e.what() );
+			}
+
 			for( std::vector<VertexDescriptor>::const_iterator it = sorted.begin(), eIt = sorted.end(); it != eIt; ++it )
 			{
 				Plug *plug = m_graph[*it].get();
