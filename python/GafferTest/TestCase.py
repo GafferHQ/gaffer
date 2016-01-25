@@ -110,7 +110,7 @@ class TestCase( unittest.TestCase ) :
 		inputPlugs = []
 		def __walkInputs( parent ) :
 			for child in parent.children() :
-				if isinstance( child, Gaffer.CompoundPlug ) :
+				if len( child ) :
 					__walkInputs( child )
 				elif isinstance( child, Gaffer.ValuePlug ) :
 					if child not in inputsToIgnore :
