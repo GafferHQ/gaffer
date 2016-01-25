@@ -221,48 +221,7 @@ void Plug::setFlagsInternal( unsigned flags )
 
 bool Plug::acceptsInput( const Plug *input ) const
 {
-	if( !getFlags( AcceptsInputs ) || getFlags( ReadOnly ) )
-	{
-		return false;
-	}
-
-	if( input == this )
-	{
-		return false;
-	}
-
-	if( const Node *n = node() )
-	{
-		if( !n->acceptsInput( this, input ) )
-		{
-			return false;
-		}
-	}
-
-	for( OutputContainer::const_iterator it=m_outputs.begin(), eIt=m_outputs.end(); it!=eIt; ++it )
-	{
-		if( !(*it)->acceptsInput( input ) )
-		{
-			return false;
-		}
-	}
-
-	if( input )
-	{
-		if( children().size() > input->children().size() )
-		{
-			return false;
-		}
-		for( PlugIterator it1( this ), it2( input ); it1!=it1.end(); ++it1, ++it2 )
-		{
-			if( !( *it1 )->acceptsInput( it2->get() ) )
-			{
-				return false;
-			}
-		}
-	}
-
-	return true;
+	return acceptsInputInternal( input, /* detectDependencyCycles = */ true );
 }
 
 void Plug::setInput( PlugPtr input )
@@ -342,6 +301,76 @@ void Plug::setInput( PlugPtr input, bool setChildInputs, bool updateParentInput 
 		}
 	}
 
+}
+
+bool Plug::acceptsInputInternal( const Plug *input, bool detectDependencyCycles ) const
+{
+	if( !getFlags( AcceptsInputs ) || getFlags( ReadOnly ) )
+	{
+		return false;
+	}
+
+	if( input == this )
+	{
+		return false;
+	}
+
+	if( const Node *n = node() )
+	{
+		if( !n->acceptsInput( this, input ) )
+		{
+			return false;
+		}
+	}
+
+	// Give our outputs a chance to deny inputs they wouldn't accept themselves,
+	// because an input to us is indirectly an input to them.
+	for( OutputContainer::const_iterator it=m_outputs.begin(), eIt=m_outputs.end(); it!=eIt; ++it )
+	{
+		// No need to look for dependency cycles here, because we'll traverse through
+		// the outputs when we perform our own test anyway.
+		if( !(*it)->acceptsInputInternal( input, /* detectDependencyCycles = */ false ) )
+		{
+			return false;
+		}
+	}
+
+	// We should always accept a disconnection - how else could undo work?
+	if( !input )
+	{
+		return true;
+	}
+
+	// Make sure our children are happy to accept the equivalent child inputs.
+	if( children().size() > input->children().size() )
+	{
+		return false;
+	}
+	for( PlugIterator it1( this ), it2( input ); it1!=it1.end(); ++it1, ++it2 )
+	{
+		if( !( *it1 )->acceptsInputInternal( it2->get(), detectDependencyCycles ) )
+		{
+			return false;
+		}
+	}
+
+	// Check that the connection won't create a cyclic dependency.
+	if( detectDependencyCycles )
+	{
+		for( DownstreamIterator it( this ); it != it.end(); ++it )
+		{
+			if( it->getFlags( AcceptsDependencyCycles ) )
+			{
+				it.prune();
+			}
+			else if( &*it == input )
+			{
+				return false;
+			}
+		}
+	}
+
+	return true;
 }
 
 void Plug::setInputInternal( PlugPtr input, bool emit )
