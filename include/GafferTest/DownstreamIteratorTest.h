@@ -1,7 +1,6 @@
 //////////////////////////////////////////////////////////////////////////
 //
-//  Copyright (c) 2012, John Haddon. All rights reserved.
-//  Copyright (c) 2013-2015, Image Engine Design Inc. All rights reserved.
+//  Copyright (c) 2016, Image Engine Design Inc. All rights reserved.
 //
 //  Redistribution and use in source and binary forms, with or without
 //  modification, are permitted provided that the following conditions are
@@ -35,40 +34,14 @@
 //
 //////////////////////////////////////////////////////////////////////////
 
-#include "IECorePython/ScopedGILRelease.h"
+#ifndef GAFFERTEST_DOWNSTREAMITERATORTEST_H
+#define GAFFERTEST_DOWNSTREAMITERATORTEST_H
 
-#include "GafferBindings/DependencyNodeBinding.h"
-
-#include "GafferTest/MultiplyNode.h"
-#include "GafferTest/RecursiveChildIteratorTest.h"
-#include "GafferTest/FilteredRecursiveChildIteratorTest.h"
-#include "GafferTest/MetadataTest.h"
-#include "GafferTest/ContextTest.h"
-#include "GafferTest/ComputeNodeTest.h"
-#include "GafferTest/DownstreamIteratorTest.h"
-
-using namespace boost::python;
-using namespace GafferTest;
-
-static void testMetadataThreadingWrapper()
-{
-	IECorePython::ScopedGILRelease gilRelease;
-	testMetadataThreading();
-}
-
-BOOST_PYTHON_MODULE( _GafferTest )
+namespace GafferTest
 {
 
-	GafferBindings::DependencyNodeClass<MultiplyNode>();
+void testDownstreamIterator();
 
-	def( "testRecursiveChildIterator", &testRecursiveChildIterator );
-	def( "testFilteredRecursiveChildIterator", &testFilteredRecursiveChildIterator );
-	def( "testMetadataThreading", &testMetadataThreadingWrapper );
-	def( "testManyContexts", &testManyContexts );
-	def( "testManySubstitutions", &testManySubstitutions );
-	def( "testManyEnvironmentSubstitutions", &testManyEnvironmentSubstitutions );
-	def( "testScopingNullContext", &testScopingNullContext );
-	def( "testComputeNodeThreading", &testComputeNodeThreading );
-	def( "testDownstreamIterator", &testDownstreamIterator );
+} // namespace GafferTest
 
-}
+#endif // GAFFERTEST_DOWNSTREAMITERATORTEST_H
