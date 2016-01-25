@@ -90,9 +90,9 @@ class DependencyNodeWrapper : public NodeWrapper<WrappedType>
 		{
 			if( this->isSubclassed() )
 			{
+				IECorePython::ScopedGILLock gilLock;
 				try
 				{
-					IECorePython::ScopedGILLock gilLock;
 					boost::python::object f = this->methodOverride( "affects" );
 					if( f )
 					{
@@ -114,9 +114,9 @@ class DependencyNodeWrapper : public NodeWrapper<WrappedType>
 		{
 			if( this->isSubclassed() )
 			{
+				IECorePython::ScopedGILLock gilLock;
 				try
 				{
-					IECorePython::ScopedGILLock gilLock;
 					boost::python::object f = this->methodOverride( "enabledPlug" );
 					if( f )
 					{
@@ -141,9 +141,9 @@ class DependencyNodeWrapper : public NodeWrapper<WrappedType>
 		{
 			if( this->isSubclassed() )
 			{
+				IECorePython::ScopedGILLock gilLock;
 				try
 				{
-					IECorePython::ScopedGILLock gilLock;
 					boost::python::object f = this->methodOverride( "correspondingInput" );
 					if( f )
 					{
