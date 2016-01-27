@@ -97,12 +97,14 @@ class NodeWrapper : public GraphComponentWrapper<T>
 			// so this optimisation is well worth it.
 			//
 			// Note that we can't actually guarantee that we're not a
-			// ScriptNode, but ScriptNode queries are so common that we
-			// must accelerate them. We adjust for this slightly overzealous
-			// optimisation in ScriptNodeWrapper where we also override
+			// ScriptNode or DependencyNode, but those queries are so
+			// common that we simply must accelerate them. We adjust for
+			// this slightly overzealous optimisation in ScriptNodeWrapper
+			// and DependencyNodeWrapper where we also override
 			// isInstanceOf() and make the necessary correction.
 			if(
 				typeId == (IECore::TypeId)Gaffer::ScriptNodeTypeId ||
+				typeId == (IECore::TypeId)Gaffer::DependencyNodeTypeId ||
 				typeId == (IECore::TypeId)Gaffer::PlugTypeId ||
 				typeId == (IECore::TypeId)Gaffer::ValuePlugTypeId ||
 				typeId == (IECore::TypeId)Gaffer::CompoundPlugTypeId

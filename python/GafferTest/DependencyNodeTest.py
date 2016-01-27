@@ -332,6 +332,11 @@ class DependencyNodeTest( GafferTest.TestCase ) :
 
 	def testEfficiency( self ) :
 
+		# Node with compound plugs where every child
+		# of the input compound affects every child
+		# of the output compound. When a bunch of these
+		# nodes are connected in series, an explosion
+		# of plug interdependencies results.
 		class FanTest( Gaffer.DependencyNode ) :
 
 			def __init__( self, name = "FanTest" ) :
@@ -355,18 +360,49 @@ class DependencyNodeTest( GafferTest.TestCase ) :
 
 				return result
 
+		# Connect nodes from top to bottom.
+		# This is a simpler case, because when
+		# the connection is made, no downstream
+		# connections exist which must be checked
+		# for cycles and flagged for dirtiness
+		# etc.
+
 		f1 = FanTest( "f1" )
 		f2 = FanTest( "f2" )
 		f3 = FanTest( "f3" )
 		f4 = FanTest( "f4" )
 		f5 = FanTest( "f5" )
 		f6 = FanTest( "f6" )
+		f7 = FanTest( "f7" )
 
 		f2["in"].setInput( f1["out"] )
 		f3["in"].setInput( f2["out"] )
 		f4["in"].setInput( f3["out"] )
 		f5["in"].setInput( f4["out"] )
 		f6["in"].setInput( f5["out"] )
+		f7["in"].setInput( f6["out"] )
+
+		f1["in"][0].setValue( 10 )
+
+		# Connect nodes from bottom to top.
+		# This case potentially has even worse
+		# performance because when each connection
+		# is made, a downstream network exists.
+
+		f1 = FanTest( "f1" )
+		f2 = FanTest( "f2" )
+		f3 = FanTest( "f3" )
+		f4 = FanTest( "f4" )
+		f5 = FanTest( "f5" )
+		f6 = FanTest( "f6" )
+		f7 = FanTest( "f7" )
+
+		f7["in"].setInput( f6["out"] )
+		f6["in"].setInput( f5["out"] )
+		f5["in"].setInput( f4["out"] )
+		f4["in"].setInput( f3["out"] )
+		f3["in"].setInput( f2["out"] )
+		f2["in"].setInput( f1["out"] )
 
 		f1["in"][0].setValue( 10 )
 

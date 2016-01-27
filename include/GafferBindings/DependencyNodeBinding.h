@@ -86,6 +86,17 @@ class DependencyNodeWrapper : public NodeWrapper<WrappedType>
 		{
 		}
 
+		virtual bool isInstanceOf( IECore::TypeId typeId ) const
+		{
+			if( typeId == (IECore::TypeId)Gaffer::DependencyNodeTypeId )
+			{
+				// Correct for the slightly overzealous (but hugely beneficial)
+				// optimisation in NodeWrapper::isInstanceOf().
+				return true;
+			}
+			return NodeWrapper<WrappedType>::isInstanceOf( typeId );
+		}
+
 		virtual void affects( const Gaffer::Plug *input, Gaffer::DependencyNode::AffectedPlugsContainer &outputs ) const
 		{
 			if( this->isSubclassed() )

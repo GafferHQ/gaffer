@@ -695,7 +695,7 @@ class InteractiveRenderManRenderTest( GafferRenderManTest.RenderManTestCase ) :
 		s["o"] = GafferScene.StandardOptions()
 		s["o"]["in"].setInput( s["d"]["out"] )
 		s["o"]["options"]["renderCamera"]["enabled"].setValue( True )
-		s["o"]["options"]["renderCamera"]["value"].setValue( "/group/plane" )
+		s["o"]["options"]["renderCamera"]["value"].setValue( "/group/camera" )
 
 		s["r"] = GafferRenderMan.InteractiveRenderManRender()
 		s["r"]["in"].setInput( s["o"]["out"] )
