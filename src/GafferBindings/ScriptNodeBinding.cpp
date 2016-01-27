@@ -113,6 +113,7 @@ class ScriptNodeWrapper : public NodeWrapper<ScriptNode>
 
 		virtual bool execute( const std::string &pythonScript, Node *parent = 0, bool continueOnError = false )
 		{
+			DirtyPropagationScope dirtyScope;
 			IECorePython::ScopedGILLock gilLock;
 			boost::python::object e = executionDict( parent );
 
@@ -188,6 +189,8 @@ class ScriptNodeWrapper : public NodeWrapper<ScriptNode>
 
 		virtual bool load( bool continueOnError = false )
 		{
+			DirtyPropagationScope dirtyScope;
+
 			const std::string s = readFile( fileNamePlug()->getValue() );
 
 			deleteNodes();
