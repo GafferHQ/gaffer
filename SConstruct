@@ -49,7 +49,7 @@ import subprocess
 ###############################################################################################
 
 gafferMilestoneVersion = 0 # for announcing major milestones - may contain all of the below
-gafferMajorVersion = 21 # backwards-incompatible changes
+gafferMajorVersion = 22 # backwards-incompatible changes
 gafferMinorVersion = 0 # new backwards-compatible features
 gafferPatchVersion = 0 # bug fixes
 

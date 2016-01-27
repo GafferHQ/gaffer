@@ -1,3 +1,85 @@
+# 0.22.0.0
+==========
+
+This release brings support for dispatching via Pixar's Tractor, in
+additional to the usual medley of bug fixes and optimisations.
+
+Core
+-----------------------------------------------------------------------
+
+- Prevented the creation of cyclic connections (#1630).
+
+UI
+-----------------------------------------------------------------------
+
+- Fixed bugs in "Set Key" plug menu item.
+- Fixed Backdrop node positioning when creating a backdrop with no
+  nodes selected (#1625).
+- Fixed NodeEditor layout problems caused by long summaries (#1629).
+
+Scene
+-----------------------------------------------------------------------
+
+- SceneProcedural (#1615)
+  - Fixed bug which could cause motion blurred bounding
+    boxes to be computed incorrectly.
+  - Removed duplicate attribute computations. This shaves
+    9% off the time to first pixel for a complex benchmark scene.
+
+RenderMan
+-----------------------------------------------------------------------
+
+- Improved time to first pixel for raytraced 3delight renders (#1614).
+
+Arnold
+-----------------------------------------------------------------------
+
+- Fixed warnings about inaccurate bounds (#1614).
+
+Appleseed
+-----------------------------------------------------------------------
+
+- Added support for volume priority attribute (#1631).
+
+Tractor
+-----------------------------------------------------------------------
+
+- Added a new GafferTractor module, which enables dispatching of
+  Gaffer's task graphs to renderfarms running Pixar's Tractor (#1619).
+
+Cortex
+-----------------------------------------------------------------------
+
+- Fixed UI for promoted presets parameters (#1624).
+- Fixed parameter ordering in UI (#1627).
+
+API
+-----------------------------------------------------------------------
+
+- ValuePlug
+  - Prevented the addition of children which are not themselves
+    ValuePlugs.
+  - Allowed subclassing in Python.
+- FilteredSceneProcessor
+  - Removed restrictions on `Filter::sceneAffectsMatch()` (#1620).
+- SceneProcedural/ScriptProcedural
+  - Added support for using Renderer::Procedural::noBound (#1614).
+- Fixed GIL management in DependencyNodeWrapper.
+- Added DownstreamIterator.
+- Improved error handling during dirty propagation.
+- Batched dirty propagation during script loading, execution and
+  destruction (#1632).
+
+Tests
+-----------------------------------------------------------------------
+
+- Unexpected messages are now treated as errors.
+
+Build
+-----------------------------------------------------------------------
+
+- Requires Cortex 9.6.0.
+
 # 0.21.0.0
 ==========
 
