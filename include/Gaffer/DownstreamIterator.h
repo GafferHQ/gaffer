@@ -47,6 +47,11 @@ namespace Gaffer
 {
 
 /// Performs a depth-first iteration of a plug's outputs and affected plugs.
+/// Note that this performs a totally naive traversal, and may visit the same
+/// plug multiple times in the event that multiple upstream plugs affect it -
+/// a diamond graph being the simplest example. Typically you will want to
+/// track visited plugs and prune traversal when revisiting.
+/// See DependencyNodeTest.testEfficiency and Plug.cpp.
 class DownstreamIterator : public boost::iterator_facade<DownstreamIterator, const Plug, boost::forward_traversal_tag>
 {
 
