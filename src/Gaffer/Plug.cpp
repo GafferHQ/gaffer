@@ -316,6 +316,19 @@ bool Plug::acceptsInputInternal( const Plug *input, boost::unordered_set<const P
 		return false;
 	}
 
+	// We should always accept a disconnection - how else could undo work?
+	if( !input )
+	{
+		return true;
+	}
+
+	// If we accepted it previously, we can't change our minds now.
+	if( input == getInput<Plug>() )
+	{
+		return true;
+	}
+
+	// Give the node a say.
 	if( const Node *n = node() )
 	{
 		if( !n->acceptsInput( this, input ) )
@@ -334,12 +347,6 @@ bool Plug::acceptsInputInternal( const Plug *input, boost::unordered_set<const P
 		{
 			return false;
 		}
-	}
-
-	// We should always accept a disconnection - how else could undo work?
-	if( !input )
-	{
-		return true;
 	}
 
 	// Make sure our children are happy to accept the equivalent child inputs.
