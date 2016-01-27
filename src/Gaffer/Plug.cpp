@@ -221,7 +221,8 @@ void Plug::setFlagsInternal( unsigned flags )
 
 bool Plug::acceptsInput( const Plug *input ) const
 {
-	return acceptsInputInternal( input, /* detectDependencyCycles = */ true );
+	boost::unordered_set<const Plug *> dependencyCycleVisits;
+	return acceptsInputInternal( input, &dependencyCycleVisits );
 }
 
 void Plug::setInput( PlugPtr input )
@@ -303,7 +304,7 @@ void Plug::setInput( PlugPtr input, bool setChildInputs, bool updateParentInput 
 
 }
 
-bool Plug::acceptsInputInternal( const Plug *input, bool detectDependencyCycles ) const
+bool Plug::acceptsInputInternal( const Plug *input, boost::unordered_set<const Plug *> *dependencyCycleVisits ) const
 {
 	if( !getFlags( AcceptsInputs ) || getFlags( ReadOnly ) )
 	{
@@ -329,7 +330,7 @@ bool Plug::acceptsInputInternal( const Plug *input, bool detectDependencyCycles 
 	{
 		// No need to look for dependency cycles here, because we'll traverse through
 		// the outputs when we perform our own test anyway.
-		if( !(*it)->acceptsInputInternal( input, /* detectDependencyCycles = */ false ) )
+		if( !(*it)->acceptsInputInternal( input, /* dependencyCycleVisits = */ NULL ) )
 		{
 			return false;
 		}
@@ -348,18 +349,21 @@ bool Plug::acceptsInputInternal( const Plug *input, bool detectDependencyCycles 
 	}
 	for( PlugIterator it1( this ), it2( input ); it1!=it1.end(); ++it1, ++it2 )
 	{
-		if( !( *it1 )->acceptsInputInternal( it2->get(), detectDependencyCycles ) )
+		if( !( *it1 )->acceptsInputInternal( it2->get(), dependencyCycleVisits ) )
 		{
 			return false;
 		}
 	}
 
 	// Check that the connection won't create a cyclic dependency.
-	if( detectDependencyCycles )
+	if( dependencyCycleVisits )
 	{
 		for( DownstreamIterator it( this ); it != it.end(); ++it )
 		{
-			if( it->getFlags( AcceptsDependencyCycles ) )
+			if(
+				it->getFlags( AcceptsDependencyCycles ) ||
+				!dependencyCycleVisits->insert( &*it ).second
+			)
 			{
 				it.prune();
 			}

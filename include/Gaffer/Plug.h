@@ -38,6 +38,8 @@
 #ifndef GAFFER_PLUG_H
 #define GAFFER_PLUG_H
 
+#include "boost/unordered_set.hpp"
+
 #include "IECore/Object.h"
 
 #include "Gaffer/GraphComponent.h"
@@ -229,7 +231,7 @@ class Plug : public GraphComponent
 
 		void setFlagsInternal( unsigned flags );
 
-		bool acceptsInputInternal( const Plug *input, bool detectDependencyCycles ) const;
+		bool acceptsInputInternal( const Plug *input, boost::unordered_set<const Plug *> *dependencyCycleVisits ) const;
 		void setInput( PlugPtr input, bool setChildInputs, bool updateParentInput );
 		void setInputInternal( PlugPtr input, bool emit );
 		void emitInputChanged();
