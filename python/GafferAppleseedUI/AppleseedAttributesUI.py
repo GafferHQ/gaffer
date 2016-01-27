@@ -199,7 +199,7 @@ Gaffer.Metadata.registerNode(
 			"description",
 			"""
 			For objects with refractive materials, specify the volume priority.
-			When multiple objects share the same volume, appleseed will consider 
+			When multiple objects share the same volume, appleseed will consider
 			only the higher priority one for intersections and shading.
 			Sometimes called nested dielectrics in other renderers.
 			""",
