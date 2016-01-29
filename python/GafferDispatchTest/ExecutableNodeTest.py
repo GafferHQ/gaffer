@@ -36,6 +36,7 @@
 
 import os
 import unittest
+import itertools
 
 import IECore
 
@@ -406,6 +407,16 @@ class ExecutableNodeTest( GafferTest.TestCase ) :
 
 		self.assertTrue( s["TaskList"]["preTasks"][0].getInput().isSame( s["SystemCommand"]["task"] ) )
 		self.assertTrue( s["TaskList"]["preTasks"][1].getInput() is None )
+
+	def testExecuteSequenceWithIterable( self ) :
+
+		n = GafferDispatchTest.LoggingExecutableNode()
+
+		n.executeSequence( tuple( [ 1, 2, 3 ] ) )
+		self.assertEqual( len( n.log ), 3 )
+
+		n.executeSequence( itertools.chain( [ 1, 2, 3 ], [ 4, 5, 6 ] ) )
+		self.assertEqual( len( n.log ), 9 )
 
 if __name__ == "__main__":
 	unittest.main()

@@ -50,14 +50,14 @@ using namespace GafferBindings;
 namespace
 {
 
-MatchPatternPathFilterPtr construct( list pythonPatterns, const char *propertyName, bool leafOnly )
+MatchPatternPathFilterPtr construct( object pythonPatterns, const char *propertyName, bool leafOnly )
 {
 	std::vector<MatchPattern> patterns;
 	boost::python::container_utils::extend_container( patterns, pythonPatterns );
 	return new MatchPatternPathFilter( patterns, propertyName, leafOnly );
 }
 
-void setMatchPatterns( MatchPatternPathFilter &f, list pythonPatterns )
+void setMatchPatterns( MatchPatternPathFilter &f, object pythonPatterns )
 {
 	std::vector<MatchPattern> patterns;
 	boost::python::container_utils::extend_container( patterns, pythonPatterns );

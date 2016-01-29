@@ -35,6 +35,7 @@
 ##########################################################################
 
 import unittest
+import itertools
 
 import Gaffer
 import GafferTest
@@ -103,6 +104,14 @@ class MatchPatternPathFilterTest( GafferTest.TestCase ) :
 
 		f.setInverted( True )
 		self.assertEqual( set( [ str( c ) for c in p.children() ] ), set( [ "/b" ] ) )
+
+	def testPatternsAsIterables( self ) :
+
+		f = Gaffer.MatchPatternPathFilter( itertools.chain( [ "a*" ], [ "b*"] ) )
+		self.assertEqual( f.getMatchPatterns(), [ "a*", "b*" ] )
+
+		f.setMatchPatterns( [ "c*", "d*" ] )
+		self.assertEqual( f.getMatchPatterns(), [ "c*", "d*" ] )
 
 if __name__ == "__main__":
 	unittest.main()

@@ -35,6 +35,7 @@
 //////////////////////////////////////////////////////////////////////////
 
 #include "boost/python.hpp"
+#include "boost/python/suite/indexing/container_utils.hpp"
 
 #include "IECorePython/ScopedGILRelease.h"
 
@@ -71,20 +72,7 @@ class DispatcherWrapper : public NodeWrapper<Dispatcher>
 		{
 		}
 
-		void dispatch( list nodeList ) const
-		{
-			ScopedGILLock gilLock;
-			size_t len = boost::python::len( nodeList );
-			std::vector<NodePtr> nodes;
-			nodes.reserve( len );
-			for ( size_t i = 0; i < len; i++ )
-			{
-				nodes.push_back( extract<NodePtr>( nodeList[i] ) );
-			}
-			Dispatcher::dispatch( nodes );
-		}
-
-		void doDispatch( const TaskBatch *batch ) const
+		virtual void doDispatch( const TaskBatch *batch ) const
 		{
 			ScopedGILLock gilLock;
 
@@ -106,7 +94,7 @@ class DispatcherWrapper : public NodeWrapper<Dispatcher>
 			}
 		}
 
-		FrameListPtr frameRange( const ScriptNode *script, const Context *context ) const
+		virtual FrameListPtr frameRange( const ScriptNode *script, const Context *context ) const
 		{
 			ScopedGILLock gilLock;
 
@@ -130,6 +118,11 @@ class DispatcherWrapper : public NodeWrapper<Dispatcher>
 
 			return Dispatcher::frameRange( script, context );
 		}
+
+		//////////////////////////////////////////////////////////////////////////
+		// TashBatch method wrappers. These are defined here rather than as free
+		// functions because TaskBatch is a protected member of Dispatcher.
+		//////////////////////////////////////////////////////////////////////////
 
 		static void taskBatchExecute( const Dispatcher::TaskBatch &batch )
 		{
@@ -236,6 +229,13 @@ struct DispatcherHelper
 
 };
 
+void dispatch( Dispatcher &dispatcher, object pythonNodes )
+{
+	std::vector<NodePtr> nodes;
+	boost::python::container_utils::extend_container( nodes, pythonNodes );
+	dispatcher.dispatch( nodes );
+}
+
 IECore::FrameListPtr frameRange( Dispatcher &n, const ScriptNode *script, const Context *context )
 {
 	return n.Dispatcher::frameRange( script, context );
@@ -308,7 +308,7 @@ struct PostDispatchSlotCaller
 void GafferDispatchBindings::bindDispatcher()
 {
 	scope s = NodeClass<Dispatcher, DispatcherWrapper>()
-		.def( "dispatch", &DispatcherWrapper::dispatch )
+		.def( "dispatch", &dispatch )
 		.def( "jobDirectory", &Dispatcher::jobDirectory )
 		.def( "frameRange", &frameRange )
 		.def( "create", &Dispatcher::create ).staticmethod( "create" )
