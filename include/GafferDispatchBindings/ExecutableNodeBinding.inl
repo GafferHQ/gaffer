@@ -87,7 +87,7 @@ void execute( T &n )
 }
 
 template<typename T>
-void executeSequence( T &n, const boost::python::list &frameList )
+void executeSequence( T &n, const boost::python::object &frameList )
 {
 	std::vector<float> frames;
 	boost::python::container_utils::extend_container( frames, frameList );
