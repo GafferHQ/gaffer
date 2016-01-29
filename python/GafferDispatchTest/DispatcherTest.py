@@ -38,6 +38,7 @@ import os
 import stat
 import unittest
 import functools
+import itertools
 
 import IECore
 
@@ -1225,6 +1226,18 @@ class DispatcherTest( GafferTest.TestCase ) :
 		dispatcher = GafferDispatch.Dispatcher.create( "testDispatcher" )
 		dispatcher.dispatch( [ s["n3"] ] )
 		self.assertEqual( [ l.node for l in log ], [ s["n1"], s["i1"], s["n2"], s["n3"] ] )
+
+	def testDispatchIterable( self ) :
+
+		s = Gaffer.ScriptNode()
+
+		log = []
+		s["n1"] = GafferDispatchTest.LoggingExecutableNode( log = log )
+		s["n2"] = GafferDispatchTest.LoggingExecutableNode( log = log )
+
+		dispatcher = GafferDispatch.Dispatcher.create( "testDispatcher" )
+		dispatcher.dispatch( itertools.chain( [ s["n1"], s["n2"] ] ) )
+		self.assertEqual( [ l.node for l in log ], [ s["n1"], s["n2"] ] )
 
 if __name__ == "__main__":
 	unittest.main()
