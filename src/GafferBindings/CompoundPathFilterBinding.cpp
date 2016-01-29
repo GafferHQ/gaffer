@@ -51,7 +51,7 @@ using namespace GafferBindings;
 namespace
 {
 
-void setFilters( CompoundPathFilter &f, list pythonFilters )
+void setFilters( CompoundPathFilter &f, object pythonFilters )
 {
 	CompoundPathFilter::Filters filters;
 	boost::python::container_utils::extend_container( filters, pythonFilters );
@@ -71,7 +71,7 @@ list getFilters( const CompoundPathFilter &f )
 	return result;
 }
 
-CompoundPathFilterPtr construct( list filters, CompoundDataPtr userData )
+CompoundPathFilterPtr construct( object filters, CompoundDataPtr userData )
 {
 	CompoundPathFilterPtr result = new CompoundPathFilter( userData );
 	setFilters( *result, filters );
