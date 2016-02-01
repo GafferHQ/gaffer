@@ -133,20 +133,18 @@ class CompoundDataPlugValueWidget( GafferUI.PlugValueWidget ) :
 
 class _MemberPlugValueWidget( GafferUI.PlugValueWidget ) :
 
-	def __init__( self, childPlug, label=None ) :
+	def __init__( self, childPlug ) :
 
 		self.__row = GafferUI.ListContainer( GafferUI.ListContainer.Orientation.Horizontal, spacing = 4 )
 
 		GafferUI.PlugValueWidget.__init__( self, self.__row, childPlug )
 
-		if label is not None or not childPlug.getFlags( Gaffer.Plug.Flags.Dynamic ) :
+		if not childPlug.getFlags( Gaffer.Plug.Flags.Dynamic ) :
 			nameWidget = GafferUI.LabelPlugValueWidget(
 				childPlug,
 				horizontalAlignment = GafferUI.Label.HorizontalAlignment.Right,
 				verticalAlignment = GafferUI.Label.VerticalAlignment.Center,
 			)
-			if label is not None :
-				nameWidget.label().setText( label )
 			nameWidget.label()._qtWidget().setFixedWidth( GafferUI.PlugWidget.labelWidth() )
 			# cheat to get the height of the label to match the height of a line edit
 			# so the label and plug widgets align nicely. ideally we'd get the stylesheet
