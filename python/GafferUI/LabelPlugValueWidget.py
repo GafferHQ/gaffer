@@ -67,6 +67,8 @@ class LabelPlugValueWidget( GafferUI.PlugValueWidget ) :
 		self.__dragBeginConnection = self.__label.dragBeginSignal().connect( 0, Gaffer.WeakMethod( self.__dragBegin ) )
 		self.__dragEndConnection = self.__label.dragEndSignal().connect( 0, Gaffer.WeakMethod( self.__dragEnd ) )
 
+		self.__plugMetadataChangedConnection = Gaffer.Metadata.plugValueChangedSignal().connect( Gaffer.WeakMethod( self.__plugMetadataChanged ) )
+
 		self._addPopupMenu( self.__label )
 
 		self.setPlug( plug )
@@ -83,10 +85,7 @@ class LabelPlugValueWidget( GafferUI.PlugValueWidget ) :
 		if self.__editableLabel is not None :
 			self.__editableLabel.setGraphComponent( plug )
 
-		label = Gaffer.Metadata.plugValue( plug, "label" ) if plug is not None else None
-		if label is not None :
-			self.__label.setText( label )
-
+		self.__updateFormatter()
 		self.__updateDoubleClickConnection()
 
 	def setHighlighted( self, highlighted ) :
@@ -160,6 +159,15 @@ class LabelPlugValueWidget( GafferUI.PlugValueWidget ) :
 
 		GafferUI.Pointer.setCurrent( None )
 
+	def __updateFormatter( self ) :
+
+		plug = self.getPlug()
+		label = Gaffer.Metadata.plugValue( plug, "label" ) if plug is not None else None
+		if label is not None :
+			self.__label.setFormatter( lambda graphComponents : label )
+		else :
+			self.__label.setFormatter( self.__label.defaultFormatter )
+
 	def __updateDoubleClickConnection( self ) :
 
 		# If the plug is a user plug or the child of a box, then set things up so it can be
@@ -201,3 +209,17 @@ class LabelPlugValueWidget( GafferUI.PlugValueWidget ) :
 
 		self.__label.setVisible( True )
 		self.__editableLabel.setVisible( False )
+
+	def __plugMetadataChanged( self, nodeTypeId, plugPath, key, plug ) :
+
+		if self.getPlug() is None :
+			return
+
+		if plug is not None and not plug.isSame( self.getPlug() ) :
+			return
+
+		if not self.getPlug().node().isInstanceOf( nodeTypeId ) :
+			return
+
+		if key=="label" :
+			self.__updateFormatter()
