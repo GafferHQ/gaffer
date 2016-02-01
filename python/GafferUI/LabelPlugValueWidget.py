@@ -197,7 +197,8 @@ class LabelPlugValueWidget( GafferUI.PlugValueWidget ) :
 			self.__editableLabel = GafferUI.NameWidget( self.getPlug() )
 			self.__editableLabel._qtWidget().setMinimumSize( self.label()._qtWidget().minimumSize() )
 			self.__editableLabel._qtWidget().setMaximumSize( self.label()._qtWidget().maximumSize() )
-			self.__labelEditingFinishedConnection = self.__editableLabel.editingFinishedSignal().connect( Gaffer.WeakMethod( self.__labelEditingFinished ) )
+			# Connect at group 0 so we're called before the NameWidget's own slots.
+			self.__labelEditingFinishedConnection = self.__editableLabel.editingFinishedSignal().connect( 0, Gaffer.WeakMethod( self.__labelEditingFinished ) )
 			self._qtWidget().layout().insertWidget( 0, self.__editableLabel._qtWidget() )
 
 		self.__label.setVisible( False )
@@ -205,10 +206,23 @@ class LabelPlugValueWidget( GafferUI.PlugValueWidget ) :
 		self.__editableLabel.setSelection( 0, len( self.__editableLabel.getText() ) )
 		self.__editableLabel.grabFocus()
 
-	def __labelEditingFinished( self, label ) :
+	def __labelEditingFinished( self, nameWidget ) :
+
+		with Gaffer.UndoContext( self.getPlug().ancestor( Gaffer.ScriptNode ) ) :
+			# Do what the NameWidget would have done for us anyway, so we
+			# can group it with the metadata deregistration in the undo queue.
+			self.getPlug().setName( nameWidget.getText() )
+			# Remove any metadata label which would mask the name - if a user
+			# has gone to the trouble of setting a sensible name, then it should
+			# take precedence.
+			Gaffer.Metadata.deregisterPlugValue( self.getPlug(), "label" )
 
 		self.__label.setVisible( True )
 		self.__editableLabel.setVisible( False )
+
+		# Return True so that the NameWidget's handler isn't run, since we
+		# did all the work ourselves.
+		return True
 
 	def __plugMetadataChanged( self, nodeTypeId, plugPath, key, plug ) :
 
