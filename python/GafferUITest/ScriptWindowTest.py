@@ -67,6 +67,7 @@ class ScriptWindowTest( GafferUITest.TestCase ) :
 
 		s1 = Gaffer.ScriptNode()
 		s2 = Gaffer.ScriptNode()
+		s3 = Gaffer.ScriptNode()
 
 		w1 = GafferUI.ScriptWindow.acquire( s1 )
 		self.failUnless( w1.scriptNode().isSame( s1 ) )
@@ -76,6 +77,15 @@ class ScriptWindowTest( GafferUITest.TestCase ) :
 
 		w3 = GafferUI.ScriptWindow.acquire( s1 )
 		self.failUnless( w3 is w1 )
+
+		w4 = GafferUI.ScriptWindow.acquire( s1, createIfNecessary = False )
+		self.assertTrue( w4 is w1 )
+
+		w5 = GafferUI.ScriptWindow.acquire( s3, createIfNecessary = False )
+		self.assertTrue( w5 is None )
+
+		w6 = GafferUI.ScriptWindow.acquire( s3, createIfNecessary = True )
+		self.assertTrue( w6.scriptNode().isSame( s3 ) )
 
 if __name__ == "__main__":
 	unittest.main()
