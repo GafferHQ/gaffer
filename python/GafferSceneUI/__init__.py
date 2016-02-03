@@ -118,6 +118,7 @@ import CubeUI
 import AttributeVisualiserUI
 import SceneLoopUI
 import FilterProcessorUI
+import MeshToPointsUI
 
 # then all the PathPreviewWidgets. note that the order
 # of import controls the order of display.
