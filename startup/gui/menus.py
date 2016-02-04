@@ -227,6 +227,7 @@ nodeMenu.append( "/Scene/Object/Primitive Variables", GafferScene.PrimitiveVaria
 nodeMenu.append( "/Scene/Object/Delete Primitive Variables", GafferScene.DeletePrimitiveVariables, searchText = "DeletePrimitiveVariables" )
 nodeMenu.append( "/Scene/Object/Mesh Type", GafferScene.MeshType, searchText = "MeshType" )
 nodeMenu.append( "/Scene/Object/Points Type", GafferScene.PointsType, searchText = "PointsType" )
+nodeMenu.append( "/Scene/Object/Mesh To Points", GafferScene.MeshToPoints, searchText = "MeshToPoints" )
 nodeMenu.append( "/Scene/Object/Map Projection", GafferScene.MapProjection, searchText = "MapProjection" )
 nodeMenu.append( "/Scene/Object/Map Offset", GafferScene.MapOffset, searchText = "MapOffset"  )
 nodeMenu.append( "/Scene/Object/Parameters", GafferScene.Parameters )
