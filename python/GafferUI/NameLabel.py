@@ -48,7 +48,7 @@ class NameLabel( GafferUI.Label ) :
 
 		GafferUI.Label.__init__( self, "", horizontalAlignment, verticalAlignment, **kw )
 
-		self.__formatter = formatter if formatter is not None else self.__defaultFormatter
+		self.__formatter = formatter if formatter is not None else self.defaultFormatter
 		self.__numComponents = numComponents
 
 		self.__connections = []
@@ -60,6 +60,7 @@ class NameLabel( GafferUI.Label ) :
 		self.__dragEndConnection = self.dragEndSignal().connect( Gaffer.WeakMethod( self.__dragEnd ) )
 
 	## Calling setText() disables the name tracking behaviour.
+	## \deprecated. Use a custom formatter to override the text.
 	def setText( self, text ) :
 
 		GafferUI.Label.setText( self, text )
@@ -112,6 +113,11 @@ class NameLabel( GafferUI.Label ) :
 	def getFormatter( self ) :
 
 		return self.__formatter
+
+	@staticmethod
+	def defaultFormatter( graphComponents ) :
+
+		return ".".join( IECore.CamelCase.toSpaced( g.getName() ) for g in graphComponents )
 
 	def __setupConnections( self, reuseUntil=None ) :
 
@@ -185,8 +191,3 @@ class NameLabel( GafferUI.Label ) :
 	def __dragEnd( self, widget, event ) :
 
 		GafferUI.Pointer.setCurrent( None )
-
-	@staticmethod
-	def __defaultFormatter( graphComponents ) :
-
-		return ".".join( IECore.CamelCase.toSpaced( g.getName() ) for g in graphComponents )

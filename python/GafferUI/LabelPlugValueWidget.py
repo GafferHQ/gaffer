@@ -67,6 +67,8 @@ class LabelPlugValueWidget( GafferUI.PlugValueWidget ) :
 		self.__dragBeginConnection = self.__label.dragBeginSignal().connect( 0, Gaffer.WeakMethod( self.__dragBegin ) )
 		self.__dragEndConnection = self.__label.dragEndSignal().connect( 0, Gaffer.WeakMethod( self.__dragEnd ) )
 
+		self.__plugMetadataChangedConnection = Gaffer.Metadata.plugValueChangedSignal().connect( Gaffer.WeakMethod( self.__plugMetadataChanged ) )
+
 		self._addPopupMenu( self.__label )
 
 		self.setPlug( plug )
@@ -83,10 +85,7 @@ class LabelPlugValueWidget( GafferUI.PlugValueWidget ) :
 		if self.__editableLabel is not None :
 			self.__editableLabel.setGraphComponent( plug )
 
-		label = Gaffer.Metadata.plugValue( plug, "label" ) if plug is not None else None
-		if label is not None :
-			self.__label.setText( label )
-
+		self.__updateFormatter()
 		self.__updateDoubleClickConnection()
 
 	def setHighlighted( self, highlighted ) :
@@ -160,6 +159,15 @@ class LabelPlugValueWidget( GafferUI.PlugValueWidget ) :
 
 		GafferUI.Pointer.setCurrent( None )
 
+	def __updateFormatter( self ) :
+
+		plug = self.getPlug()
+		label = Gaffer.Metadata.plugValue( plug, "label" ) if plug is not None else None
+		if label is not None :
+			self.__label.setFormatter( lambda graphComponents : label )
+		else :
+			self.__label.setFormatter( self.__label.defaultFormatter )
+
 	def __updateDoubleClickConnection( self ) :
 
 		# If the plug is a user plug or the child of a box, then set things up so it can be
@@ -189,7 +197,8 @@ class LabelPlugValueWidget( GafferUI.PlugValueWidget ) :
 			self.__editableLabel = GafferUI.NameWidget( self.getPlug() )
 			self.__editableLabel._qtWidget().setMinimumSize( self.label()._qtWidget().minimumSize() )
 			self.__editableLabel._qtWidget().setMaximumSize( self.label()._qtWidget().maximumSize() )
-			self.__labelEditingFinishedConnection = self.__editableLabel.editingFinishedSignal().connect( Gaffer.WeakMethod( self.__labelEditingFinished ) )
+			# Connect at group 0 so we're called before the NameWidget's own slots.
+			self.__labelEditingFinishedConnection = self.__editableLabel.editingFinishedSignal().connect( 0, Gaffer.WeakMethod( self.__labelEditingFinished ) )
 			self._qtWidget().layout().insertWidget( 0, self.__editableLabel._qtWidget() )
 
 		self.__label.setVisible( False )
@@ -197,7 +206,34 @@ class LabelPlugValueWidget( GafferUI.PlugValueWidget ) :
 		self.__editableLabel.setSelection( 0, len( self.__editableLabel.getText() ) )
 		self.__editableLabel.grabFocus()
 
-	def __labelEditingFinished( self, label ) :
+	def __labelEditingFinished( self, nameWidget ) :
+
+		with Gaffer.UndoContext( self.getPlug().ancestor( Gaffer.ScriptNode ) ) :
+			# Do what the NameWidget would have done for us anyway, so we
+			# can group it with the metadata deregistration in the undo queue.
+			self.getPlug().setName( nameWidget.getText() )
+			# Remove any metadata label which would mask the name - if a user
+			# has gone to the trouble of setting a sensible name, then it should
+			# take precedence.
+			Gaffer.Metadata.deregisterPlugValue( self.getPlug(), "label" )
 
 		self.__label.setVisible( True )
 		self.__editableLabel.setVisible( False )
+
+		# Return True so that the NameWidget's handler isn't run, since we
+		# did all the work ourselves.
+		return True
+
+	def __plugMetadataChanged( self, nodeTypeId, plugPath, key, plug ) :
+
+		if self.getPlug() is None :
+			return
+
+		if plug is not None and not plug.isSame( self.getPlug() ) :
+			return
+
+		if not self.getPlug().node().isInstanceOf( nodeTypeId ) :
+			return
+
+		if key=="label" :
+			self.__updateFormatter()
