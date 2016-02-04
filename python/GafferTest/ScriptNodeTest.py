@@ -42,6 +42,7 @@ import gc
 import os
 import shutil
 import inspect
+import functools
 
 import IECore
 
@@ -1271,6 +1272,31 @@ a = A()"""
 				"""
 			)
 		)
+
+	def testFileNameInExecutionError( self ) :
+
+		fileName = self.temporaryDirectory() + "/test.gfr"
+		with open( fileName, "w" ) as f :
+			f.write( "a = 10\n" )
+			f.write( "a = iDontExist\n" )
+
+		s = Gaffer.ScriptNode()
+		s["fileName"].setValue( fileName )
+
+		for method in ( s.load, functools.partial( s.executeFile, fileName ) ) :
+
+			self.assertRaisesRegexp(
+				RuntimeError,
+				"Line 2 of " + fileName + " : NameError: name 'iDontExist' is not defined",
+				method
+			)
+
+			with IECore.CapturingMessageHandler() as mh :
+				method( continueOnError = True )
+
+			self.assertEqual( len( mh.messages ), 1 )
+			self.assertEqual( mh.messages[0].context, "Line 2 of " + fileName )
+			self.assertTrue( "NameError: name 'iDontExist' is not defined" in mh.messages[0].message )
 
 if __name__ == "__main__":
 	unittest.main()
