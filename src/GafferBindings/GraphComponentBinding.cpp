@@ -36,6 +36,7 @@
 //////////////////////////////////////////////////////////////////////////
 
 #include "boost/python.hpp"
+#include "boost/format.hpp"
 
 #include "Gaffer/GraphComponent.h"
 
@@ -117,6 +118,15 @@ GraphComponentPtr descendant( GraphComponent &g, const char *n )
 	return g.descendant<GraphComponent>( n );
 }
 
+void throwKeyError( const GraphComponent &g, const char *n )
+{
+	const std::string error = boost::str(
+		boost::format( "'%s' is not a child of '%s'" ) % n % g.getName()
+	);
+	PyErr_SetString( PyExc_KeyError, error.c_str() );
+	throw_error_already_set();
+}
+
 GraphComponentPtr getItem( GraphComponent &g, const char *n )
 {
 	GraphComponentPtr c = g.getChild<GraphComponent>( n );
@@ -125,8 +135,7 @@ GraphComponentPtr getItem( GraphComponent &g, const char *n )
 		return c;
 	}
 
-	PyErr_SetString( PyExc_KeyError, n );
-	throw_error_already_set();
+	throwKeyError( g, n );
 	return 0; // shouldn't get here
 }
 
@@ -157,8 +166,7 @@ void delItem( GraphComponent &g, const char *n )
 		return;
 	}
 
-	PyErr_SetString( PyExc_KeyError, n );
-	throw_error_already_set();
+	throwKeyError( g, n );
 }
 
 int length( GraphComponent &g )

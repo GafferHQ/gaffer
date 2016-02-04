@@ -754,5 +754,11 @@ class GraphComponentTest( GafferTest.TestCase ) :
 		self.assertEqual( len( c.parentChanges ), 1 )
 		self.assertEqual( c.parentChanges[-1], ( None, None ) )
 
+	def testDescriptiveKeyErrors( self ) :
+
+		g = Gaffer.GraphComponent()
+		self.assertRaisesRegexp( KeyError, "'a' is not a child of 'GraphComponent'", g.__getitem__, "a" )
+		self.assertRaisesRegexp( KeyError, "'a' is not a child of 'GraphComponent'", g.__delitem__, "a" )
+
 if __name__ == "__main__":
 	unittest.main()
