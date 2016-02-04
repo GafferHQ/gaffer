@@ -38,8 +38,6 @@
 #ifndef GAFFER_PATHMATCHER_H
 #define GAFFER_PATHMATCHER_H
 
-#include "boost/shared_ptr.hpp"
-
 #include "IECore/TypedData.h"
 
 #include "GafferScene/Filter.h"
@@ -56,18 +54,13 @@ class PathMatcher
 	public :
 
 		PathMatcher();
-		/// Constructs a deep copy of other.
+		/// Copy constructor. Uses lazy-copy-on-write so
+		/// that copies are cheap until edited.
 		PathMatcher( const PathMatcher &other );
 
 		template<typename PathIterator>
 		PathMatcher( PathIterator pathsBegin, PathIterator pathsEnd );
 
-		/// \todo Should this keep the existing tree in place,
-		/// but just remove the terminator flags on any items
-		/// not present in the new paths? This might give
-		/// better performance for selections and expansions
-		/// which will tend to be adding and removing the same
-		/// paths repeatedly.
 		template<typename PathIterator>
 		void init( PathIterator pathsBegin, PathIterator pathsEnd );
 
@@ -83,6 +76,8 @@ class PathMatcher
 		/// Adds all paths from the other PathMatcher, returning true if
 		/// any were added, and false if they were all already present.
 		bool addPaths( const PathMatcher &paths );
+		/// As above, but prefixing the paths that are added.
+		bool addPaths( const PathMatcher &paths, const std::vector<IECore::InternedString> &prefix );
 		/// Removes all specified paths, returning true if any paths
 		/// were removed, and false if none existed anyway.
 		bool removePaths( const PathMatcher &paths );
@@ -91,6 +86,11 @@ class PathMatcher
 		/// Returns true if something was removed, false otherwise.
 		bool prune( const std::string &path );
 		bool prune( const std::vector<IECore::InternedString> &path );
+
+		/// Constructs a new PathMatcher by rerooting all the paths
+		/// below prefix to /.
+		PathMatcher subTree( const std::string &root ) const;
+		PathMatcher subTree( const std::vector<IECore::InternedString> &root ) const;
 
 		void clear();
 
@@ -118,8 +118,15 @@ class PathMatcher
 		/// Returns an iterator to the end of the
 		/// tree of paths.
 		RawIterator end() const;
+		/// Returns an iterator to the specified path,
+		/// or end() if it does not exist.
+		RawIterator find( const std::vector<IECore::InternedString> &path ) const;
 
 	private :
+
+		IE_CORE_FORWARDDECLARE( Node )
+
+		PathMatcher( const NodePtr &root );
 
 		// Struct used to store the name for each node in the tree of paths.
 		// This is just an InternedString with an extra field used to separate
@@ -154,55 +161,72 @@ class PathMatcher
 
 		};
 
-		struct Node
+		class Node : public IECore::RefCounted
 		{
 
-			// Container used to store all the children of the node.
-			// We need two things out of this structure - quick access
-			// to the child with a specific name, and also partitioning
-			// between names with wildcards and those without. This is
-			// achieved by using an ordered container, and having the
-			// less than operation for Names sort first on hasWildcards
-			// and second on the name.
-			typedef std::map<Name, Node *> ChildMap;
-			typedef ChildMap::iterator ChildMapIterator;
-			typedef ChildMap::value_type ChildMapValue;
-			typedef ChildMap::const_iterator ConstChildMapIterator;
+			public :
 
-			Node();
-			Node( const Node &other );
-			~Node();
+				// Container used to store all the children of the node.
+				// We need two things out of this structure - quick access
+				// to the child with a specific name, and also partitioning
+				// between names with wildcards and those without. This is
+				// achieved by using an ordered container, and having the
+				// less than operation for Names sort first on hasWildcards
+				// and second on the name.
+				typedef std::map<Name, NodePtr> ChildMap;
+				typedef ChildMap::iterator ChildMapIterator;
+				typedef ChildMap::value_type ChildMapValue;
+				typedef ChildMap::const_iterator ConstChildMapIterator;
 
-			// Returns an iterator to the first child whose name contains wildcards.
-			// All children between here and children.end() will also contain wildcards.
-			ConstChildMapIterator wildcardsBegin() const;
+				Node( bool terminator = false );
+				// Shallow copy.
+				Node( const Node &other );
+				~Node();
 
-			Node *child( const Name &name );
-			const Node *child( const Name &name ) const;
+				// Returns an iterator to the first child whose name contains wildcards.
+				// All children between here and children.end() will also contain wildcards.
+				ConstChildMapIterator wildcardsBegin() const;
 
-			bool operator == ( const Node &other ) const;
+				Node *child( const Name &name );
+				const Node *child( const Name &name ) const;
 
-			bool operator != ( const Node &other );
+				bool operator == ( const Node &other ) const;
 
-			bool clearChildren();
-			bool isEmpty();
+				bool operator != ( const Node &other );
 
-			bool terminator;
-			ChildMap children;
+				bool clearChildren();
+				bool isEmpty();
+
+				ChildMap children;
+				bool terminator;
+
+				// For most Node trees, the number of leaf nodes
+				// exceeds the number of branch nodes. Since by
+				// definition all leaf nodes are terminators with
+				// no children, we can save memory by always using
+				// this single shared node instance when adding a
+				// leaf node.
+				static Node *leaf();
 
 		};
 
-		template<typename NameIterator>
-		bool addPath( const NameIterator &start, const NameIterator &end );
-		template<typename NameIterator>
-		void removeWalk( Node *node, const NameIterator &start, const NameIterator &end, const bool prune, bool &removed );
-		bool addPathsWalk( Node *node, const Node *srcNode );
-		bool removePathsWalk( Node *node, const Node *srcNode );
+		typedef std::vector<IECore::InternedString>::const_iterator NameIterator;
 
-		template<typename NameIterator>
+		// Utility used in lazy-copy-on-write.
+		PathMatcher::Node *writable( Node *node, NodePtr &writableCopy, bool shared );
+
+		// Recursive method used to add a path to a Node tree. Since nodes may be shared among multiple
+		// trees, we perform lazy-copy-on-write when needing to edit a shared node. When we do this,
+		// the copy is returned so that it can be used to replace the old child.
+		NodePtr addWalk( Node *node, const NameIterator &start, const NameIterator &end, bool shared, bool &added );
+		NodePtr removeWalk( Node *node, const NameIterator &start, const NameIterator &end, bool shared, const bool prune, bool &removed );
+		NodePtr addPathsWalk( Node *node, const Node *srcNode, bool shared, bool &added );
+		NodePtr addPrefixedPathsWalk( Node *node, const Node *srcNode, const NameIterator &start, const NameIterator &end, bool shared, bool &added  );
+		NodePtr removePathsWalk( Node *node, const Node *srcNode, bool shared, bool &removed );
+
 		void matchWalk( const Node *node, const NameIterator &start, const NameIterator &end, unsigned &result ) const;
 
-		boost::shared_ptr<Node> m_root;
+		NodePtr m_root;
 
 };
 
@@ -235,6 +259,8 @@ class PathMatcher::RawIterator : public boost::iterator_facade<RawIterator, cons
 
 		// Private constructor, called by PathMatcher::begin() and PathMatcher::end().
 		RawIterator( const PathMatcher &matcher, bool atEnd );
+		// Private constructor, called by PathPatcher::find().
+		RawIterator( const PathMatcher &matcher, const std::vector<IECore::InternedString> &path );
 
 		//////////////////////////////////////////////////
 		// Methods required by boost::iterator_facade
@@ -248,7 +274,7 @@ class PathMatcher::RawIterator : public boost::iterator_facade<RawIterator, cons
 		// Our own internal methods.
 		//////////////////////////////////////////////////
 
-		const Node *node() const;
+		Node *node() const;
 
 		// Keeps track of our iteration at a given depth in
 		// the hierarchy. We keep a stack of these to allow

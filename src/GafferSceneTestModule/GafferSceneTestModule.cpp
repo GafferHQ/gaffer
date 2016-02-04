@@ -69,5 +69,6 @@ BOOST_PYTHON_MODULE( _GafferSceneTest )
 
 	def( "testPathMatcherRawIterator", &testPathMatcherRawIterator );
 	def( "testPathMatcherIteratorPrune", &testPathMatcherIteratorPrune );
+	def( "testPathMatcherFind", &testPathMatcherFind );
 
 }

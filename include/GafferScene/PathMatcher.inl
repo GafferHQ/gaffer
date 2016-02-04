@@ -95,6 +95,36 @@ inline PathMatcher::RawIterator::RawIterator( const PathMatcher &matcher, bool a
 	}
 }
 
+inline PathMatcher::RawIterator::RawIterator( const PathMatcher &matcher, const std::vector<IECore::InternedString> &path )
+	:	m_nodeIfRoot( NULL ), m_pruned( false )
+{
+	if( !path.size() )
+	{
+		m_stack.push_back( Level( matcher.m_root->children, matcher.m_root->children.begin() ) );
+		if( !matcher.isEmpty() )
+		{
+			m_nodeIfRoot = matcher.m_root.get();
+		}
+		return;
+	}
+
+	Node *node = matcher.m_root.get();
+	for( std::vector<IECore::InternedString>::const_iterator it = path.begin(), eIt = path.end(); it != eIt; ++it )
+	{
+		Node::ConstChildMapIterator cIt = node->children.find( *it );
+		if( cIt == node->children.end() )
+		{
+			// path doesn't exist
+			m_stack.clear();
+			m_stack.push_back( Level( matcher.m_root->children, matcher.m_root->children.end() ) );
+			return;
+		}
+		m_stack.push_back( Level( node->children, cIt ) );
+		node = cIt->second.get();
+	}
+	m_path = path;
+}
+
 inline void PathMatcher::RawIterator::increment()
 {
 	if( m_nodeIfRoot )
@@ -104,7 +134,7 @@ inline void PathMatcher::RawIterator::increment()
 		return;
 	}
 
-	const Node *node = m_stack.back().it->second;
+	const Node *node = m_stack.back().it->second.get();
 	if( !m_pruned && !node->children.empty() )
 	{
 		m_stack.push_back(
@@ -143,7 +173,7 @@ inline const std::vector<IECore::InternedString> &PathMatcher::RawIterator::dere
 	return m_path;
 }
 
-inline const PathMatcher::Node *PathMatcher::RawIterator::node() const
+inline PathMatcher::Node *PathMatcher::RawIterator::node() const
 {
 	if( m_nodeIfRoot )
 	{
@@ -153,7 +183,7 @@ inline const PathMatcher::Node *PathMatcher::RawIterator::node() const
 	{
 		if( m_stack.back().it != m_stack.back().end )
 		{
-			return m_stack.back().it->second;
+			return m_stack.back().it->second.get();
 		}
 	}
 	return NULL;

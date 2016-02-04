@@ -287,7 +287,7 @@ class PathMatcherTest( unittest.TestCase ) :
 			with c :
 				self.assertEqual( f["out"].getValue(), int( result ) )
 
-	def testCopyConstructorIsDeep( self ) :
+	def testCopyConstructorAppearsDeep( self ) :
 
 		m = GafferScene.PathMatcher( [ "/a" ] )
 		self.assertEqual( m.match( "/a" ), GafferScene.Filter.Result.ExactMatch )
@@ -738,6 +738,219 @@ class PathMatcherTest( unittest.TestCase ) :
 	def testIteratorPrune( self ) :
 
 		GafferSceneTest.testPathMatcherIteratorPrune()
+
+	def testCopyAndAddPaths( self ) :
+
+		initialPaths = [
+			"/a/b/c/d",
+			"/a/b",
+			"/e/f",
+		]
+
+		additionalPaths = [
+			"/a/b/c/d/e",
+			"/a/b/c/e",
+			"/a/b/e",
+			"/e",
+			"/g"
+		]
+
+		m1 = GafferScene.PathMatcher( initialPaths )
+		m2 = GafferScene.PathMatcher( m1 )
+
+		self.assertEqual( set( m1.paths() ), set( initialPaths ) )
+		self.assertEqual( set( m2.paths() ), set( initialPaths ) )
+
+		for path in additionalPaths :
+			m1.addPath( path )
+
+		self.assertEqual( set( m1.paths() ), set( initialPaths + additionalPaths ) )
+		self.assertEqual( set( m2.paths() ), set( initialPaths ) )
+
+		# repeat, but add as PathMatcher rather than individual paths
+
+		m1 = GafferScene.PathMatcher( initialPaths )
+		m2 = GafferScene.PathMatcher( m1 )
+
+		self.assertEqual( set( m1.paths() ), set( initialPaths ) )
+		self.assertEqual( set( m2.paths() ), set( initialPaths ) )
+
+		m1.addPaths( GafferScene.PathMatcher( additionalPaths ) )
+
+		self.assertEqual( set( m1.paths() ), set( initialPaths + additionalPaths ) )
+		self.assertEqual( set( m2.paths() ), set( initialPaths ) )
+
+	def testCopyAndAddRoot( self ) :
+
+		p1 = GafferScene.PathMatcher()
+		p2 = GafferScene.PathMatcher( p1 )
+
+		self.assertEqual( p1.paths(), [] )
+		self.assertEqual( p2.paths(), [] )
+
+		p2.addPath( "/" )
+		self.assertEqual( p1.paths(), [] )
+		self.assertEqual( p2.paths(), [ "/" ] )
+
+	def testCopyAndRemovePath( self ) :
+
+		initialPaths = [
+			"/a/b/c/d/e",
+			"/a/b",
+			"/e/f",
+			"/e/f/g",
+			"/g"
+		]
+
+		pathsToRemove = [
+			"/a/b",
+			"/e/f/g",
+			"/g",
+		]
+
+		m1 = GafferScene.PathMatcher( initialPaths )
+		m2 = GafferScene.PathMatcher( m1 )
+
+		self.assertEqual( set( m1.paths() ), set( initialPaths ) )
+		self.assertEqual( set( m2.paths() ), set( initialPaths ) )
+
+		for path in pathsToRemove :
+			m1.removePath( path )
+
+		self.assertEqual( set( m1.paths() ), set( initialPaths ) - set( pathsToRemove ) )
+		self.assertEqual( set( m2.paths() ), set( initialPaths ) )
+
+		# repeat, but add as PathMatcher rather than individual paths
+
+		m1 = GafferScene.PathMatcher( initialPaths )
+		m2 = GafferScene.PathMatcher( m1 )
+
+		self.assertEqual( set( m1.paths() ), set( initialPaths ) )
+		self.assertEqual( set( m2.paths() ), set( initialPaths ) )
+
+		m1.removePaths( GafferScene.PathMatcher( pathsToRemove ) )
+
+		self.assertEqual( set( m1.paths() ), set( initialPaths ) - set( pathsToRemove ) )
+		self.assertEqual( set( m2.paths() ), set( initialPaths ) )
+
+	def testCopyAndPrunePath( self ) :
+
+		initialPaths = [
+			"/a/b/c/d/e",
+			"/a/b",
+			"/e/f",
+			"/e/f/g",
+			"/g"
+		]
+
+		pathsToPrune = [
+			"/a/b",
+			"/e/f/g",
+			"/g",
+		]
+
+		expectedPaths = [
+			"/e/f",
+		]
+
+		m1 = GafferScene.PathMatcher( initialPaths )
+		m2 = GafferScene.PathMatcher( m1 )
+
+		self.assertEqual( set( m1.paths() ), set( initialPaths ) )
+		self.assertEqual( set( m2.paths() ), set( initialPaths ) )
+
+		for path in pathsToPrune :
+			m1.prune( path )
+
+		self.assertEqual( set( m1.paths() ), set( expectedPaths ) )
+		self.assertEqual( set( m2.paths() ), set( initialPaths ) )
+
+	def testFind( self ) :
+
+		GafferSceneTest.testPathMatcherFind()
+
+	def testSubTree( self ) :
+
+		paths = [
+			"/a/b/c/d/e",
+			"/d/b/c/d",
+			"/a",
+			"/a/b/c",
+		]
+
+		m1 = GafferScene.PathMatcher( paths )
+		self.assertEqual( set( m1.paths() ), set( paths ) )
+
+		expectedPaths = [
+			"/d/e",
+			"/"
+		]
+
+		m2 = m1.subTree( "/a/b/c" )
+		self.assertEqual( set( m1.paths() ), set( paths ) )
+		self.assertEqual( set( m2.paths() ), set( expectedPaths ) )
+
+		m1.addPath( "/a/b/c/d/f" )
+		self.assertEqual( set( m1.paths() ), set( paths + [ "/a/b/c/d/f" ] ) )
+		self.assertEqual( set( m2.paths() ), set( expectedPaths ) )
+
+		m2.addPath( "/d/e/g" )
+		self.assertEqual( set( m1.paths() ), set( paths + [ "/a/b/c/d/f" ] ) )
+		self.assertEqual( set( m2.paths() ), set( expectedPaths + [ "/d/e/g" ] ) )
+
+	def testNonExistentSubtree( self ) :
+
+		m1 = GafferScene.PathMatcher( "/a/b" )
+		m2 = m1.subTree( "/wot?" )
+
+		self.assertEqual( m2.paths(), [] )
+
+	def testSubTreeWithNonTerminatingRoot( self ) :
+
+		m1 = GafferScene.PathMatcher( [ "/a/b/c/d" ] )
+		m2 = m1.subTree( "/a" )
+		self.assertEqual( m2.paths(), [ "/b/c/d" ] )
+
+	def testAddPathsWithPrefix( self ) :
+
+		paths = [
+			"/a/b",
+			"/e/d",
+			"/",
+		]
+
+		prefixedPaths = [
+			"/x/y/z/a/b",
+			"/x/y/z/e/d",
+			"/x/y/z",
+		]
+
+		m1 = GafferScene.PathMatcher( paths )
+		self.assertEqual( set( m1.paths() ), set( paths ) )
+
+		m2 = GafferScene.PathMatcher()
+		self.assertTrue( m2.addPaths( m1, "/x/y/z" ) )
+		self.assertFalse( m2.addPaths( m1, "/x/y/z" ) )
+
+		self.assertEqual( set( m1.paths() ), set( paths ) )
+		self.assertEqual( set( m2.paths() ), set( prefixedPaths ) )
+
+		self.assertTrue( m1.addPath( "/b/c" ) )
+		self.assertEqual( set( m1.paths() ), set( paths + [ "/b/c" ] ) )
+		self.assertEqual( set( m2.paths() ), set( prefixedPaths ) )
+
+	def testAddEmptyPathsWithPrefix( self ) :
+
+		m = GafferScene.PathMatcher()
+		m.addPaths( GafferScene.PathMatcher(), "/x/y/z" )
+		self.assertEqual( m.paths(), [] )
+		self.assertTrue( m.isEmpty() )
+
+	def testPrefixNotAdded( self ) :
+
+		m = GafferScene.PathMatcher()
+		m.addPaths( GafferScene.PathMatcher( [ "/a" ] ), "/prefix" )
+		self.assertEqual( m.paths(), [ "/prefix/a" ] )
 
 if __name__ == "__main__":
 	unittest.main()

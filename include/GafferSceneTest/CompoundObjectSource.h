@@ -84,6 +84,7 @@ class CompoundObjectSource : public GafferScene::SceneNode
 		virtual IECore::ConstInternedStringVectorDataPtr computeSetNames( const Gaffer::Context *context, const GafferScene::ScenePlug *parent ) const;
 		virtual GafferScene::ConstPathMatcherDataPtr computeSet( const IECore::InternedString &setName, const Gaffer::Context *context, const GafferScene::ScenePlug *parent ) const;
 
+		IECore::ConstCompoundObjectPtr inObject() const;
 		IECore::ConstCompoundObjectPtr entryForPath( const ScenePath &path ) const;
 
 };

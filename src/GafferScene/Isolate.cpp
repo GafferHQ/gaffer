@@ -252,7 +252,7 @@ GafferScene::ConstPathMatcherDataPtr Isolate::computeSet( const IECore::Interned
 		return inputSetData;
 	}
 
-	PathMatcherDataPtr outputSetData = new PathMatcherData;
+	PathMatcherDataPtr outputSetData = inputSetData->copy();
 	PathMatcher &outputSet = outputSetData->writable();
 
 	ContextPtr tmpContext = filterContext( context );
@@ -267,28 +267,16 @@ GafferScene::ConstPathMatcherDataPtr Isolate::computeSet( const IECore::Interned
 		const int m = filterPlug()->getValue();
 		if( m & ( Filter::ExactMatch | Filter::AncestorMatch ) )
 		{
-			// We want to keep everything below this point, and
-			// we can speed things up by not checking the filter
-			// for our descendants.
-			PathMatcher::RawIterator next = pIt; next.prune(); ++next;
-			while( pIt != next )
-			{
-				if( pIt.exactMatch() )
-				{
-					outputSet.addPath( *pIt );
-				}
-				++pIt;
-			}
+			// We want to keep everything below this point, so
+			// can just prune our iteration.
+			pIt.prune();
+			++pIt;
 		}
 		else if( m & Filter::DescendantMatch )
 		{
 			// We might be removing things below here,
 			// so just continue our iteration normally
 			// so we can find out.
-			if( pIt.exactMatch() )
-			{
-				outputSet.addPath( *pIt );
-			}
 			++pIt;
 		}
 		else
@@ -299,11 +287,8 @@ GafferScene::ConstPathMatcherDataPtr Isolate::computeSet( const IECore::Interned
 				// Not going to keep anything below
 				// here, so we can prune traversal
 				// entirely.
+				outputSet.prune( *pIt );
 				pIt.prune();
-			}
-			else if( pIt.exactMatch() )
-			{
-				outputSet.addPath( *pIt );
 			}
 			++pIt;
 		}
