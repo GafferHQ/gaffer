@@ -196,7 +196,7 @@ class ExecuteApplicationTest( GafferTest.TestCase ) :
 
 		error = "".join( p.stderr.readlines() )
 		self.assertTrue( self.__scriptFileName in error )
-		self.assertTrue( "KeyError: 'badPlug'" in error )
+		self.assertTrue( "KeyError: \"'badPlug'" in error )
 		self.assertFalse( "Traceback" in error )
 		self.assertNotEqual( p.returncode, 0 )
 
@@ -208,7 +208,7 @@ class ExecuteApplicationTest( GafferTest.TestCase ) :
 		p.wait()
 
 		error = "".join( p.stderr.readlines() )
-		self.assertTrue( "KeyError: 'badPlug'" in error )
+		self.assertTrue( "KeyError: \"'badPlug'" in error )
 		self.assertFalse( "Traceback" in error )
 		self.assertEqual( p.returncode, 0 )
 
