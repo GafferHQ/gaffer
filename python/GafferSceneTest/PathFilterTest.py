@@ -207,5 +207,15 @@ class PathFilterTest( unittest.TestCase ) :
 		a = f.affects( f["enabled"] )
 		self.assertTrue( f["out"] in a )
 
+	def testEmptyStringMatchesNothing( self ) :
+
+		f = GafferScene.PathFilter()
+		f["paths"].setValue( IECore.StringVectorData( [ "" ] ) )
+
+		with Gaffer.Context() as c :
+
+			c["scene:path"] = IECore.InternedStringVectorData( [ "a" ] )
+			self.assertEqual( f["out"].getValue(), GafferScene.Filter.Result.NoMatch )
+
 if __name__ == "__main__":
 	unittest.main()
