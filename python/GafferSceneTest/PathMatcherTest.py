@@ -952,5 +952,38 @@ class PathMatcherTest( unittest.TestCase ) :
 		m.addPaths( GafferScene.PathMatcher( [ "/a" ] ), "/prefix" )
 		self.assertEqual( m.paths(), [ "/prefix/a" ] )
 
+	def testEmptyStringIsNotAPath( self ) :
+
+		m = GafferScene.PathMatcher()
+		self.assertFalse( m.addPath( "" ) )
+		self.assertTrue( m.isEmpty() )
+		self.assertEqual( m.paths(), [] )
+
+		m.addPath( "/" )
+		self.assertEqual( m.paths(), [ "/" ] )
+		self.assertFalse( m.removePath( "" ) )
+		self.assertFalse( m.isEmpty() )
+		self.assertEqual( m.paths(), [ "/" ] )
+
+		m.addPath( "/a" )
+		self.assertEqual( m.paths(), [ "/", "/a" ] )
+		self.assertFalse( m.prune( "" ) )
+		self.assertEqual( m.paths(), [ "/", "/a" ] )
+
+		self.assertEqual( m.match( "" ), GafferScene.Filter.Result.NoMatch )
+
+		s = m.subTree( "" )
+		self.assertTrue( s.isEmpty() )
+
+	def testPruneRoot( self ) :
+
+		m = GafferScene.PathMatcher()
+		m.addPath( "/" )
+		self.assertEqual( m.paths(), [ "/" ] )
+
+		self.assertTrue( m.prune( "/" ) )
+		self.assertEqual( m.paths(), [] )
+		self.assertTrue( m.isEmpty() )
+
 if __name__ == "__main__":
 	unittest.main()
