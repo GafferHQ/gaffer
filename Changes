@@ -1,3 +1,41 @@
+0.23.0.0
+========
+
+UI
+-----------------------------------------------------------------------
+
+- Fixed labelling of renamed plugs which had a custom label. The label
+  is now removed by the rename operation (#1635).
+
+Scene
+-----------------------------------------------------------------------
+
+- Improved set performance and memory usage significantly for all node
+  types (#1623).
+- Added a MeshToPoints node (#1640).
+- Added sets support in the Duplicate node (#1623).
+
+API
+-----------------------------------------------------------------------
+
+- Fixed python bindings to accept any iterable where previously only
+  lists were accepted (#1634).
+- ScriptWindow
+  - Added createIfNecessary argument to ScriptWindow.acquire() (#1639).
+- NameLabel (#1635)
+  - Exposed default formatter.
+  - Deprecated setText().
+- PathMatcher (#1623)
+  - Reimplemented using lazy-copy-on-write sharing.
+  - Added addPaths() overload with prefix path.
+  - Added subTree() method.
+  - Added `RawIterator find( path )` method.
+
+Incompatibilities
+-----------------------------------------------------------------------
+
+- PathMatcher binary compatibility changes.
+
 # 0.22.0.0
 ==========
 
