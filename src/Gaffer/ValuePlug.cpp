@@ -219,14 +219,15 @@ class ValuePlug::Computation
 		{
 			if( m_threadData->computationStack.empty() )
 			{
-				if( ++(m_threadData->hashCacheClearCount) == 100 || m_threadData->clearHashCache )
+				if( ++(m_threadData->hashCacheClearCount) == 3200 || m_threadData->clearHashCache )
 				{
 					// Prevent unbounded growth in the hash cache
 					// if many computations are being performed
 					// without any plugs being dirtied in between,
 					// by clearing it after every Nth computation.
-					// N == 100 was chosen based on memory/performance
-					// analysis of a particularly heavy render process.
+					// N == 3200 was observed to be 6x faster than
+					// N == 100 for a procedural instancing scene at
+					// a memory cost of about 100 mb.
 					m_threadData->hashCache.clear();
 					m_threadData->hashCacheClearCount = 0;
 					m_threadData->clearHashCache = 0;
