@@ -113,37 +113,14 @@ class ScriptNodeWrapper : public NodeWrapper<ScriptNode>
 
 		virtual bool execute( const std::string &pythonScript, Node *parent = 0, bool continueOnError = false )
 		{
-			DirtyPropagationScope dirtyScope;
-			IECorePython::ScopedGILLock gilLock;
-			boost::python::object e = executionDict( parent );
-
-			bool result = false;
-			if( !continueOnError )
-			{
-				try
-				{
-					exec( pythonScript.c_str(), e, e );
-				}
-				catch( boost::python::error_already_set &e )
-				{
-					int lineNumber = 0;
-					std::string message = formatPythonException( /* withTraceback = */ false, &lineNumber );
-					throw IECore::Exception( boost::str( boost::format( "Line %d : %s" ) % lineNumber % message ) );
-				}
-			}
-			else
-			{
-				result = tolerantExec( pythonScript.c_str(), e, e );
-			}
-
-			scriptExecutedSignal()( this, pythonScript );
+			const bool result = executeInternal( pythonScript, parent, continueOnError );
 			return result;
 		}
 
-		bool executeFile( const std::string &pythonFile, Node *parent = 0, bool continueOnError = false )
+		virtual bool executeFile( const std::string &pythonFile, Node *parent = 0, bool continueOnError = false )
 		{
 			const std::string pythonScript = readFile( pythonFile );
-			return execute( pythonScript, parent, continueOnError );
+			return executeInternal( pythonScript, parent, continueOnError, pythonFile );
 		}
 
 		virtual PyObject *evaluate( const std::string &pythonExpression, Node *parent = 0 )
@@ -191,12 +168,13 @@ class ScriptNodeWrapper : public NodeWrapper<ScriptNode>
 		{
 			DirtyPropagationScope dirtyScope;
 
-			const std::string s = readFile( fileNamePlug()->getValue() );
+			const std::string fileName = fileNamePlug()->getValue();
+			const std::string s = readFile( fileName );
 
 			deleteNodes();
 			variablesPlug()->clearChildren();
 
-			const bool result = execute( s, NULL, continueOnError );
+			const bool result = executeInternal( s, NULL, continueOnError, fileName );
 
 			UndoContext undoDisabled( this, UndoContext::Disabled );
 			unsavedChangesPlug()->setValue( false );
@@ -237,6 +215,35 @@ class ScriptNodeWrapper : public NodeWrapper<ScriptNode>
 			return s;
 		}
 
+		bool executeInternal( const std::string &pythonScript, Node *parent, bool continueOnError, const std::string &context = "" )
+		{
+			DirtyPropagationScope dirtyScope;
+			IECorePython::ScopedGILLock gilLock;
+			boost::python::object e = executionDict( parent );
+
+			bool result = false;
+			if( !continueOnError )
+			{
+				try
+				{
+					exec( pythonScript.c_str(), e, e );
+				}
+				catch( boost::python::error_already_set &e )
+				{
+					int lineNumber = 0;
+					std::string message = formatPythonException( /* withTraceback = */ false, &lineNumber );
+					throw IECore::Exception( formattedErrorContext( lineNumber, context ) + " : " + message );
+				}
+			}
+			else
+			{
+				result = tolerantExec( pythonScript.c_str(), e, e, context );
+			}
+
+			scriptExecutedSignal()( this, pythonScript );
+			return result;
+		}
+
 		// the dict returned will form both the locals and the globals for the execute()
 		// and evaluate() methods. it's not possible to have a separate locals
 		// and globals dictionary and have things work as intended. see
@@ -262,7 +269,7 @@ class ScriptNodeWrapper : public NodeWrapper<ScriptNode>
 		// reporting errors that occur, but otherwise continuing
 		// with execution.
 		/////////////////////////////////////////////////////////
-		bool tolerantExec( const char *pythonScript, boost::python::object globals, boost::python::object locals )
+		bool tolerantExec( const char *pythonScript, boost::python::object globals, boost::python::object locals, const std::string &context )
 		{
 			// The python parsing framework uses an arena to simplify memory allocation,
 			// which is handy for us, since we're going to manipulate the AST a little.
@@ -311,12 +318,22 @@ class ScriptNodeWrapper : public NodeWrapper<ScriptNode>
 				{
 					int lineNumber = 0;
 					std::string message = formatPythonException( /* withTraceback = */ false, &lineNumber );
-					IECore::msg( IECore::Msg::Error, boost::str( boost::format( "Line %d" ) % lineNumber ), message );
+					IECore::msg( IECore::Msg::Error, formattedErrorContext( lineNumber, context ), message );
 					result = true;
 				}
 			}
 
 			return result;
+		}
+
+		const std::string formattedErrorContext( int lineNumber, const std::string &context )
+		{
+			return boost::str(
+				boost::format( "Line %d%s%s" ) %
+					lineNumber %
+					(!context.empty() ? " of " : "") %
+					context
+			);
 		}
 
 };

@@ -906,7 +906,7 @@ class ReferenceTest( GafferTest.TestCase ) :
 		# Although we expect it to load OK, we do also expect to receive a
 		# warning message because we removed the fileName plug after version 0.14.
 		self.assertEqual( len( mh.messages ), 1 )
-		self.assertTrue( "KeyError: 'fileName'" in mh.messages[0].message )
+		self.assertTrue( "KeyError: \"'fileName'" in mh.messages[0].message )
 
 		self.assertEqual( s["Reference"]["testPlug"].getValue(), 2 )
 

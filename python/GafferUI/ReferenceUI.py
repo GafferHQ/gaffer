@@ -79,7 +79,7 @@ def nodeMenuCreateCommand( menu ) :
 	nodeGraph.graphGadget().getRoot().addChild( node )
 
 	if fileName :
-		node.load( fileName )
+		_load( node, fileName, parentWindow = nodeGraph.ancestor( GafferUI.Window ) )
 
 	return node
 
@@ -121,12 +121,12 @@ class _FileNameWidget( GafferUI.Widget ) :
 			return
 
 		with Gaffer.UndoContext( self.__node.scriptNode() ) :
-			self.__node.load( fileName )
+			_load( self.__node, fileName, self.ancestor( GafferUI.Window ) )
 
 	def __reloadClicked( self, button ) :
 
 		with Gaffer.UndoContext( self.__node.scriptNode() ) :
-			self.__node.load( self.__node.fileName() )
+			_load( self.__node, self.__node.fileName(), self.ancestor( GafferUI.Window ) )
 
 	def __referenceLoaded( self, node ) :
 
@@ -156,3 +156,23 @@ def _waitForFileName( initialFileName="", parentWindow=None ) :
 		return ""
 
 	return str( path )
+
+def _load( node, fileName, parentWindow ) :
+
+	messageWidget = GafferUI.MessageWidget()
+	with messageWidget.messageHandler() as mh :
+		try :
+			node.load( fileName )
+		except Exception as e :
+			mh.handle( mh.Level.Error, "Loading Reference", str( e ) )
+
+	if sum( [ messageWidget.messageCount( level ) for level in ( IECore.Msg.Level.Error, IECore.Msg.Level.Warning ) ] ) :
+		dialogue = GafferUI.Dialogue( "Errors Occurred During Loading" )
+		## \todo These dialogue methods should be available publicly.
+		# Alternatively, we could make the ErrorDialogue class handle
+		# messages as well as exceptions and use that here. Bear in mind
+		# that we're doing the same thing in FileMenu.__open(), so we
+		# definitely have a need for something like this.
+		dialogue._setWidget( messageWidget )
+		dialogue._addButton( "Oy vey" )
+		dialogue.waitForButton( parentWindow=parentWindow )
