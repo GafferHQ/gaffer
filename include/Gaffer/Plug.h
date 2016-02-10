@@ -231,7 +231,6 @@ class Plug : public GraphComponent
 
 		void setFlagsInternal( unsigned flags );
 
-		bool acceptsInputInternal( const Plug *input, boost::unordered_set<const Plug *> *dependencyCycleVisits ) const;
 		void setInput( PlugPtr input, bool setChildInputs, bool updateParentInput );
 		void setInputInternal( PlugPtr input, bool emit );
 		void emitInputChanged();

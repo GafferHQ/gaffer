@@ -612,17 +612,5 @@ class DependencyNodeTest( GafferTest.TestCase ) :
 
 		s["n2"]["op1"].setInput( s["n1"]["product"] )
 
-	def testDisallowCyclicConnections( self ) :
-
-		a1 = GafferTest.AddNode()
-		a2 = GafferTest.AddNode()
-		a3 = GafferTest.AddNode()
-
-		a2["op1"].setInput( a1["sum"] )
-		a3["op1"].setInput( a2["sum"] )
-
-		self.assertFalse( a1["op1"].acceptsInput( a3["sum"] ) )
-		self.assertRaisesRegexp( RuntimeError, "rejects input", a1["op1"].setInput, a3["sum"] )
-
 if __name__ == "__main__":
 	unittest.main()
