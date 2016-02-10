@@ -200,4 +200,4 @@ class TractorDispatcher( GafferDispatch.Dispatcher ) :
 
 IECore.registerRunTimeTyped( TractorDispatcher, typeName = "GafferTractor::TractorDispatcher" )
 
-Gaffer.Dispatcher.registerDispatcher( "Tractor", TractorDispatcher, TractorDispatcher._setupPlugs )
+GafferDispatch.Dispatcher.registerDispatcher( "Tractor", TractorDispatcher, TractorDispatcher._setupPlugs )
