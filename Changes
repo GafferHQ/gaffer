@@ -1,6 +1,12 @@
 0.23.0.0
 ========
 
+Core
+-----------------------------------------------------------------------
+
+- Reverted cyclic connection check on plug connection
+- Reduced hash cache clearing frequency to speed up instancing.
+
 UI
 -----------------------------------------------------------------------
 
