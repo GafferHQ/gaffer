@@ -38,6 +38,8 @@
 #ifndef GAFFERSCENE_SHADER_H
 #define GAFFERSCENE_SHADER_H
 
+#include "boost/unordered_set.hpp"
+
 #include "IECore/ObjectVector.h"
 #include "IECore/Shader.h"
 
