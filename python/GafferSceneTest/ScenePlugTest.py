@@ -43,7 +43,7 @@ import Gaffer
 import GafferScene
 import GafferSceneTest
 
-class ScenePlugTest( unittest.TestCase ) :
+class ScenePlugTest( GafferSceneTest.SceneTestCase ) :
 
 	def testRunTimeTyped( self ) :
 

@@ -44,7 +44,7 @@ import GafferTest
 import GafferScene
 import GafferSceneTest
 
-class PathFilterTest( unittest.TestCase ) :
+class PathFilterTest( GafferSceneTest.SceneTestCase ) :
 
 	def testConstruct( self ) :
 

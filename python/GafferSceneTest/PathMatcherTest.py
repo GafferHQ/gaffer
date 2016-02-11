@@ -44,7 +44,7 @@ import Gaffer
 import GafferScene
 import GafferSceneTest
 
-class PathMatcherTest( unittest.TestCase ) :
+class PathMatcherTest( GafferSceneTest.SceneTestCase ) :
 
 	@staticmethod
 	def generatePaths( seed, depthRange, numChildrenRange ) :

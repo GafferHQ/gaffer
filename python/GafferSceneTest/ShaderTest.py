@@ -43,7 +43,7 @@ import GafferTest
 import GafferScene
 import GafferSceneTest
 
-class ShaderTest( unittest.TestCase ) :
+class ShaderTest( GafferSceneTest.SceneTestCase ) :
 
 	def testDirtyPropagation( self ) :
 
