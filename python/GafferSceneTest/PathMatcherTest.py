@@ -604,6 +604,18 @@ class PathMatcherTest( unittest.TestCase ) :
 		self.assertEqual( m.paths(), [] )
 		self.assertTrue( m.isEmpty() )
 
+		# And again, this time with only
+		# a single path, which also happens
+		# to be the root.
+
+		m = GafferScene.PathMatcher()
+		m.addPath( "/" )
+		self.assertEqual( m.paths(), [ "/" ] )
+
+		self.assertTrue( m.prune( "/" ) )
+		self.assertEqual( m.paths(), [] )
+		self.assertTrue( m.isEmpty() )
+
 	def testIsEmpty( self ) :
 
 		m = GafferScene.PathMatcher( [] )
@@ -974,16 +986,6 @@ class PathMatcherTest( unittest.TestCase ) :
 
 		s = m.subTree( "" )
 		self.assertTrue( s.isEmpty() )
-
-	def testPruneRoot( self ) :
-
-		m = GafferScene.PathMatcher()
-		m.addPath( "/" )
-		self.assertEqual( m.paths(), [ "/" ] )
-
-		self.assertTrue( m.prune( "/" ) )
-		self.assertEqual( m.paths(), [] )
-		self.assertTrue( m.isEmpty() )
 
 if __name__ == "__main__":
 	unittest.main()
