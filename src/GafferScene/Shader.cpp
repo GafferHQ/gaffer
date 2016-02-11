@@ -356,7 +356,7 @@ IECore::StateRenderable *Shader::NetworkBuilder::shader( const Shader *shaderNod
 	shaderNode = effectiveNode( shaderNode );
 	if( !shaderNode )
 	{
-		return 0;
+		return NULL;
 	}
 
 	ShaderAndHash &shaderAndHash = m_shaders[shaderNode];
@@ -375,7 +375,7 @@ IECore::StateRenderable *Shader::NetworkBuilder::shader( const Shader *shaderNod
 			prefix = shaderType.substr( 0, colon + 1 );
 		}
 
-		IECore::Light *lightShader =  new IECore::Light( prefix + shaderNode->namePlug()->getValue(), "LIGHT_HANDLE_UNUSED" );
+		IECore::LightPtr lightShader = new IECore::Light( prefix + shaderNode->namePlug()->getValue(), "LIGHT_HANDLE_UNUSED" );
 		parameterValueWalk( shaderNode, shaderNode->parametersPlug(), IECore::InternedString(), lightShader->parameters() );
 		shaderAndHash.shader = lightShader;
 	}
