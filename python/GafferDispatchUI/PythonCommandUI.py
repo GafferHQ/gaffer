@@ -36,10 +36,11 @@
 
 import Gaffer
 import GafferUI
+import GafferDispatch
 
 Gaffer.Metadata.registerNode(
 
-	Gaffer.PythonCommand,
+	GafferDispatch.PythonCommand,
 
 	"description",
 	"""

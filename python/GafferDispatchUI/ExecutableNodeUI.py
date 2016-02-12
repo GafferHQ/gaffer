@@ -35,11 +35,11 @@
 ##########################################################################
 
 import Gaffer
-import GafferUI
+import GafferDispatch
 
 Gaffer.Metadata.registerNode(
 
-	Gaffer.ExecutableNode,
+	GafferDispatch.ExecutableNode,
 
 	"description",
 	"""

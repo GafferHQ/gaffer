@@ -34,14 +34,12 @@
 #
 ##########################################################################
 
-import IECore
-
 import Gaffer
-import GafferUI
+import GafferDispatch
 
 Gaffer.Metadata.registerNode(
 
-	Gaffer.TaskContextVariables,
+	GafferDispatch.TaskContextVariables,
 
 	"description",
 	"""

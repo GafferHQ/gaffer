@@ -38,10 +38,11 @@ import IECore
 
 import Gaffer
 import GafferUI
+import GafferDispatch
 
 Gaffer.Metadata.registerNode(
 
-	Gaffer.Wedge,
+	GafferDispatch.Wedge,
 
 	"description",
 	"""
@@ -117,12 +118,12 @@ Gaffer.Metadata.registerNode(
 			"nodule:type", "",
 			"plugValueWidget:type", "GafferUI.PresetsPlugValueWidget",
 
-			"preset:Float Range", int( Gaffer.Wedge.Mode.FloatRange ),
-			"preset:Int Range", int( Gaffer.Wedge.Mode.IntRange ),
-			"preset:Color Range", int( Gaffer.Wedge.Mode.ColorRange ),
-			"preset:Float List", int( Gaffer.Wedge.Mode.FloatList ),
-			"preset:Int List", int( Gaffer.Wedge.Mode.IntList ),
-			"preset:String List", int( Gaffer.Wedge.Mode.StringList ),
+			"preset:Float Range", int( GafferDispatch.Wedge.Mode.FloatRange ),
+			"preset:Int Range", int( GafferDispatch.Wedge.Mode.IntRange ),
+			"preset:Color Range", int( GafferDispatch.Wedge.Mode.ColorRange ),
+			"preset:Float List", int( GafferDispatch.Wedge.Mode.FloatList ),
+			"preset:Int List", int( GafferDispatch.Wedge.Mode.IntList ),
+			"preset:String List", int( GafferDispatch.Wedge.Mode.StringList ),
 
 		],
 

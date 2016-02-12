@@ -40,13 +40,14 @@ import IECore
 
 import Gaffer
 import GafferUI
+import GafferDispatch
 
 QtCore = GafferUI._qtImport( "QtCore" )
 QtGui = GafferUI._qtImport( "QtGui" )
 
 Gaffer.Metadata.registerNode(
 
-	Gaffer.LocalDispatcher,
+	GafferDispatch.LocalDispatcher,
 
 	"description",
 	"""
@@ -244,7 +245,7 @@ class _LocalJobsWindow( GafferUI.Window ) :
 	@staticmethod
 	def acquire( jobPool ) :
 
-		assert( isinstance( jobPool, Gaffer.LocalDispatcher.JobPool ) )
+		assert( isinstance( jobPool, GafferDispatch.LocalDispatcher.JobPool ) )
 
 		window = getattr( jobPool, "_window", None )
 		if window is not None and window() :
@@ -338,7 +339,7 @@ class _LocalJobsWindow( GafferUI.Window ) :
 
 def __showLocalDispatcherWindow( menu ) :
 
-	window = _LocalJobsWindow.acquire( Gaffer.LocalDispatcher.defaultJobPool() )
+	window = _LocalJobsWindow.acquire( GafferDispatch.LocalDispatcher.defaultJobPool() )
 	scriptWindow = menu.ancestor( GafferUI.ScriptWindow )
 	scriptWindow.addChildWindow( window )
 	window.setVisible( True )

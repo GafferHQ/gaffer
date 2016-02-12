@@ -35,10 +35,11 @@
 ##########################################################################
 
 import Gaffer
+import GafferDispatch
 
 Gaffer.Metadata.registerNode(
 
-	Gaffer.TaskList,
+	GafferDispatch.TaskList,
 
 	"description",
 	"""
