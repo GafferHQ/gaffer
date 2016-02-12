@@ -73,6 +73,12 @@ Gaffer.Metadata.registerNode(
 
 		),
 
+		"preTasks.*" : (
+
+			"plugValueWidget:type", "",
+
+		),
+
 		"postTasks" : (
 
 			"description",
@@ -88,6 +94,13 @@ Gaffer.Metadata.registerNode(
 			"compoundNodule:orientation", "y",
 
 			"plugValueWidget:type", "",
+
+		),
+
+		"postTasks.*" : (
+
+			"plugValueWidget:type", "",
+			"nodeGadget:nodulePosition", "right",
 
 		),
 
