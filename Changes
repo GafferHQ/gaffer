@@ -21,6 +21,11 @@ Scene
 - Added a MeshToPoints node (#1640).
 - Added sets support in the Duplicate node (#1623).
 
+Arnold
+-----------------------------------------------------------------------
+
+- Added support for motion blur, courtesy of Cortex 9.7.0.
+
 API
 -----------------------------------------------------------------------
 
@@ -36,6 +41,13 @@ API
   - Added addPaths() overload with prefix path.
   - Added subTree() method.
   - Added `RawIterator find( path )` method.
+
+Build
+-----------------------------------------------------------------------
+
+- Updated release builds to Cortex 9.7.0.
+- Updated OCIO build to be compatible with Maya. It should now be
+  possible to run a standard Gaffer build from within Maya.
 
 Incompatibilities
 -----------------------------------------------------------------------
