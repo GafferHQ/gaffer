@@ -1123,7 +1123,12 @@ class ParameterisedHolderTest( GafferTest.TestCase ) :
 		ph = GafferCortex.ParameterisedHolderNode()
 		ph.setParameterised( c )
 
-		self.assertRaises( RuntimeError, ph["parameters"]["driver"].setValue, 1 )
+		with IECore.CapturingMessageHandler() as mh :
+			# We want the original exception to be the visible one.
+			self.assertRaisesRegexp( RuntimeError, "Ooops!", ph["parameters"]["driver"].setValue, 1 )
+		# And we want the secondary exception to be reported as a message.
+		self.assertEqual( len( mh.messages ), 1 )
+		self.assertTrue( "Value is not an instance of \"IntData\"" in mh.messages[0].message )
 
 	def testTypeNamePrefixes( self ) :
 
