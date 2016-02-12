@@ -104,4 +104,4 @@ for dispatcher in dispatchers :
 	Gaffer.Metadata.registerPlugValue( dispatcher, "jobsDirectory", "userDefault", "${project:rootDirectory}/dispatcher/" + directoryName )
 
 Gaffer.Metadata.registerPlugValue( GafferDispatch.LocalDispatcher, "executeInBackground", "userDefault", True )
-Gaffer.Dispatcher.setDefaultDispatcherType( "Local" )
+GafferDispatch.Dispatcher.setDefaultDispatcherType( "Local" )
