@@ -58,7 +58,6 @@ Gaffer.Metadata.registerNode(
 			and the current context as `context`.
 			""",
 
-			"nodule:type", "",
 			"plugValueWidget:type", "GafferUI.PythonCommandUI._CommandPlugValueWidget",
 
 		),
@@ -71,7 +70,6 @@ Gaffer.Metadata.registerNode(
 			the `variables` dictionary within the python command.
 			""",
 
-			"nodule:type", "",
 			"layout:section", "Variables",
 
 		),
@@ -104,7 +102,6 @@ Gaffer.Metadata.registerNode(
 			```
 			""",
 
-			"nodule:type", "",
 			"layout:section", "Advanced",
 
 		),

@@ -56,8 +56,6 @@ Gaffer.Metadata.registerNode(
 			from substitutions with '{substitutionName}' syntax.
 			""",
 
-			"nodule:type", "",
-
 		),
 
 		"substitutions" : (
@@ -68,7 +66,6 @@ Gaffer.Metadata.registerNode(
 			referenced in command with '{substitutionsName}' syntax.
 			""",
 
-			"nodule:type", "",
 			"layout:section", "Settings.Substitutions",
 
 		),
@@ -81,7 +78,6 @@ Gaffer.Metadata.registerNode(
 			environment variables when running the command.
 			""",
 
-			"nodule:type", "",
 			"layout:section", "Settings.Environment Variables",
 
 		)
