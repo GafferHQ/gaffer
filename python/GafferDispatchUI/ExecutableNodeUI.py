@@ -52,6 +52,12 @@ Gaffer.Metadata.registerNode(
 
 	plugs = {
 
+		"*" : [
+
+			"nodule:type", lambda plug : "GafferUI::StandardNodule" if isinstance( plug, GafferDispatch.ExecutableNode.TaskPlug ) else "",
+
+		],
+
 		"preTasks" : (
 
 			"description",
@@ -108,7 +114,6 @@ Gaffer.Metadata.registerNode(
 			"plugValueWidget:type", "GafferUI.LayoutPlugValueWidget",
 			"layout:section", "Dispatcher",
 			"layout:index", -3, # Just before the node section,
-			"nodule:type", "",
 
 		),
 
