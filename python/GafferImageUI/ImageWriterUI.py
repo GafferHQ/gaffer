@@ -62,6 +62,8 @@ Gaffer.Metadata.registerNode(
 			The image to be written to disk.
 			""",
 
+			"nodule:type", "GafferUI::StandardNodule",
+
 		],
 
 		"fileName" : [
@@ -73,7 +75,6 @@ Gaffer.Metadata.registerNode(
 			as a placeholder for the frame numbers.
 			""",
 
-			"nodule:type", "",
 			"plugValueWidget:type", "GafferUI.FileSystemPathPlugValueWidget",
 			"pathPlugValueWidget:leaf", True,
 			"pathPlugValueWidget:bookmarks", "image",
@@ -90,8 +91,6 @@ Gaffer.Metadata.registerNode(
 			The channels to be written to the file.
 			""",
 
-			"nodule:type", "",
-
 		],
 
 		"out" : [
@@ -101,23 +100,22 @@ Gaffer.Metadata.registerNode(
 			A pass-through of the input image.
 			""",
 
-			"nodule:type", "",
-
 		],
 
 		"dpx" : [
+
 			"description",
 			"""
 			Format options specific to DPX files.
 			""",
 
-			"nodule:type", "",
 			"plugValueWidget:type", "GafferUI.LayoutPlugValueWidget",
 			"layout:section", "Settings.DPX",
 
 		],
 
 		"dpx.dataType" : [
+
 			"description",
 			"""
 			The data type to be written to the DPX file.
@@ -132,6 +130,7 @@ Gaffer.Metadata.registerNode(
 		],
 
 		"field3d" : [
+
 			"description",
 			"""
 			Format options specific to Field3D files.
@@ -144,6 +143,7 @@ Gaffer.Metadata.registerNode(
 		],
 
 		"field3d.mode" : [
+
 			"description",
 			"""
 			The write mode for the Field3D file - scanline or tiled data.
@@ -156,6 +156,7 @@ Gaffer.Metadata.registerNode(
 		],
 
 		"field3d.dataType" : [
+
 			"description",
 			"""
 			The data type to be written to the Field3D file.
@@ -169,17 +170,19 @@ Gaffer.Metadata.registerNode(
 		],
 
 		"fits" : [
+
 			"description",
 			"""
 			Format options specific to FITS files.
 			""",
 
-			"nodule:type", "",
 			"plugValueWidget:type", "GafferUI.LayoutPlugValueWidget",
 			"layout:section", "Settings.FITS",
+
 		],
 
 		"fits.dataType" : [
+
 			"description",
 			"""
 			The data type to be written to the FITS file.
@@ -191,20 +194,23 @@ Gaffer.Metadata.registerNode(
 			"preset:32-bit", "uint32",
 			"preset:Float", "float",
 			"preset:Double", "double",
+
 		],
 
 		"iff" : [
+
 			"description",
 			"""
 			Format options specific to IFF files.
 			""",
 
-			"nodule:type", "",
 			"plugValueWidget:type", "GafferUI.LayoutPlugValueWidget",
 			"layout:section", "Settings.IFF",
+
 		],
 
 		"iff.mode" : [
+
 			"description",
 			"""
 			The write mode for the IFF file - scanline or tiled data.
@@ -217,18 +223,19 @@ Gaffer.Metadata.registerNode(
 		],
 
 		"jpeg" : [
+
 			"description",
 			"""
 			Format options specific to Jpeg files.
 			""",
 
-			"nodule:type", "",
 			"plugValueWidget:type", "GafferUI.LayoutPlugValueWidget",
 			"layout:section", "Settings.Jpeg",
 
 		],
 
 		"jpeg.compressionQuality" : [
+
 			"description",
 			"""
 			The compression quality for the Jpeg file to be written.
@@ -239,17 +246,19 @@ Gaffer.Metadata.registerNode(
 		],
 
 		"jpeg2000" : [
+
 			"description",
 			"""
 			Format options specific to Jpeg2000 files.
 			""",
 
-			"nodule:type", "",
 			"plugValueWidget:type", "GafferUI.LayoutPlugValueWidget",
 			"layout:section", "Settings.Jpeg2000",
+
 		],
 
 		"jpeg2000.dataType" : [
+
 			"description",
 			"""
 			The data type to be written to the Jpeg2000 file.
@@ -258,21 +267,23 @@ Gaffer.Metadata.registerNode(
 			"plugValueWidget:type", "GafferUI.PresetsPlugValueWidget",
 			"preset:8-bit", "uint8",
 			"preset:16-bit", "uint16",
+
 		],
 
 		"openexr" : [
+
 			"description",
 			"""
 			Format options specific to OpenEXR files.
 			""",
 
-			"nodule:type", "",
 			"plugValueWidget:type", "GafferUI.LayoutPlugValueWidget",
 			"layout:section", "Settings.OpenEXR",
 
 		],
 
 		"openexr.mode" : [
+
 			"description",
 			"""
 			The write mode for the OpenEXR file - scanline or tiled data.
@@ -285,6 +296,7 @@ Gaffer.Metadata.registerNode(
 		],
 
 		"openexr.compression" : [
+
 			"description",
 			"""
 			The compression method to use when writing the OpenEXR file.
@@ -303,6 +315,7 @@ Gaffer.Metadata.registerNode(
 		],
 
 		"openexr.dataType" : [
+
 			"description",
 			"""
 			The data type to be written to the OpenEXR file.
@@ -315,17 +328,19 @@ Gaffer.Metadata.registerNode(
 		],
 
 		"png" : [
+
 			"description",
 			"""
 			Format options specific to PNG files.
 			""",
 
-			"nodule:type", "",
 			"plugValueWidget:type", "GafferUI.LayoutPlugValueWidget",
 			"layout:section", "Settings.PNG",
+
 		],
 
 		"png.compression" : [
+
 			"description",
 			"""
 			The compression method to use when writing the PNG file.
@@ -337,28 +352,33 @@ Gaffer.Metadata.registerNode(
 			"preset:Huffman", "huffman",
 			"preset:RLE", "rle",
 			"preset:Fixed", "fixed",
+
 		],
 
 		"png.compressionLevel" : [
+
 			"description",
 			"""
 			The compression level of the PNG file. This is a value between
 			0 (no compression) and 9 (most compression).
 			""",
+
 		],
 
 		"rla" : [
+
 			"description",
 			"""
 			Format options specific to RLA files.
 			""",
 
-			"nodule:type", "",
 			"plugValueWidget:type", "GafferUI.LayoutPlugValueWidget",
 			"layout:section", "Settings.RLA",
+
 		],
 
 		"rla.dataType" : [
+
 			"description",
 			"""
 			The data type to be written to the RLA file.
@@ -368,20 +388,23 @@ Gaffer.Metadata.registerNode(
 			"preset:8-bit", "uint8",
 			"preset:16-bit", "uint16",
 			"preset:Float", "float",
+
 		],
 
 		"sgi" : [
+
 			"description",
 			"""
 			Format options specific to SGI files.
 			""",
 
-			"nodule:type", "",
 			"plugValueWidget:type", "GafferUI.LayoutPlugValueWidget",
 			"layout:section", "Settings.SGI",
+
 		],
 
 		"sgi.dataType" : [
+
 			"description",
 			"""
 			The data type to be written to the SGI file.
@@ -390,20 +413,23 @@ Gaffer.Metadata.registerNode(
 			"plugValueWidget:type", "GafferUI.PresetsPlugValueWidget",
 			"preset:8-bit", "uint8",
 			"preset:16-bit", "uint16",
+
 		],
 
 		"targa" : [
+
 			"description",
 			"""
 			Format options specific to Targa files.
 			""",
 
-			"nodule:type", "",
 			"plugValueWidget:type", "GafferUI.LayoutPlugValueWidget",
 			"layout:section", "Settings.Targa",
+
 		],
 
 		"targa.compression" : [
+
 			"description",
 			"""
 			The compression method to use when writing the Targa file.
@@ -412,21 +438,23 @@ Gaffer.Metadata.registerNode(
 			"plugValueWidget:type", "GafferUI.PresetsPlugValueWidget",
 			"preset:None", "none",
 			"preset:RLE", "rle",
+
 		],
 
 		"tiff" : [
+
 			"description",
 			"""
 			Format options specific to TIFF files.
 			""",
 
-			"nodule:type", "",
 			"plugValueWidget:type", "GafferUI.LayoutPlugValueWidget",
 			"layout:section", "Settings.TIFF",
 
 		],
 
 		"tiff.mode" : [
+
 			"description",
 			"""
 			The write mode for the TIFF file - scanline or tiled data.
@@ -439,6 +467,7 @@ Gaffer.Metadata.registerNode(
 		],
 
 		"tiff.compression" : [
+
 			"description",
 			"""
 			The compression method to use when writing the TIFF file.
@@ -453,6 +482,7 @@ Gaffer.Metadata.registerNode(
 		],
 
 		"tiff.dataType" : [
+
 			"description",
 			"""
 			The data type to be written to the TIFF file.
@@ -466,23 +496,26 @@ Gaffer.Metadata.registerNode(
 		],
 
 		"webp" : [
+
 			"description",
 			"""
 			Format options specific to WebP files.
 			""",
 
-			"nodule:type", "",
 			"plugValueWidget:type", "GafferUI.LayoutPlugValueWidget",
 			"layout:section", "Settings.WebP",
+
 		],
 
 		"webp.compressionQuality" : [
+
 			"description",
 			"""
 			The compression quality for the WebP file to be written.
 			A value between 0 (low quality, high compression) and
 			100 (high quality, low compression).
 			""",
+
 		],
 
 
