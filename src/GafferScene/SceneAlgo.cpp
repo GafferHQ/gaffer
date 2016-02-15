@@ -133,6 +133,12 @@ void GafferScene::matchingPaths( const Gaffer::IntPlug *filterPlug, const SceneP
 	GafferScene::filteredParallelTraverse( scene, filterPlug, f );
 }
 
+void GafferScene::matchingPaths( const PathMatcher &filter, const ScenePlug *scene, PathMatcher &paths )
+{
+	ThreadablePathAccumulator f( paths );
+	GafferScene::filteredParallelTraverse( scene, filter, f );
+}
+
 Imath::V2f GafferScene::shutter( const IECore::CompoundObject *globals )
 {
 	const BoolData *cameraBlurData = globals->member<BoolData>( "option:render:cameraBlur" );

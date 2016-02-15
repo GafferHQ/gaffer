@@ -67,6 +67,13 @@ void matchingPathsHelper2( const Gaffer::IntPlug *filterPlug, const ScenePlug *s
 	matchingPaths( filterPlug, scene, paths );
 }
 
+void matchingPathsHelper3( const PathMatcher &filter, const ScenePlug *scene, PathMatcher &paths )
+{
+	// gil release in case the scene traversal dips back into python:
+	IECorePython::ScopedGILRelease r;
+	matchingPaths( filter, scene, paths );
+}
+
 IECore::CompoundDataPtr setsHelper( const ScenePlug *scene, bool copy )
 {
 	IECore::ConstCompoundDataPtr result = sets( scene );
@@ -84,6 +91,7 @@ void bindSceneAlgo()
 	def( "visible", visible );
 	def( "matchingPaths", &matchingPathsHelper1 );
 	def( "matchingPaths", &matchingPathsHelper2 );
+	def( "matchingPaths", &matchingPathsHelper3 );
 	def( "shutter", &shutter );
 	def(
 		"camera",
