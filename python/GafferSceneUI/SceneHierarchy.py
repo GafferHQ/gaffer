@@ -35,21 +35,39 @@
 #
 ##########################################################################
 
+import functools
+
 import IECore
 
 import Gaffer
-import GafferScene
 import GafferUI
+import GafferScene
+import _GafferSceneUI
+
+##########################################################################
+# SceneHierarchy
+##########################################################################
 
 class SceneHierarchy( GafferUI.NodeSetEditor ) :
 
 	def __init__( self, scriptNode, **kw ) :
 
-		column = GafferUI.ListContainer( GafferUI.ListContainer.Orientation.Vertical, borderWidth = 8 )
+		column = GafferUI.ListContainer( GafferUI.ListContainer.Orientation.Vertical, borderWidth = 8, spacing = 4 )
 
 		GafferUI.NodeSetEditor.__init__( self, column, scriptNode, **kw )
 
+		searchFilter = _GafferSceneUI._SceneHierarchySearchFilter()
+		setFilter = _GafferSceneUI._SceneHierarchySetFilter()
+		setFilter.setEnabled( False )
+
+		self.__filter = Gaffer.CompoundPathFilter( [ searchFilter, setFilter ] )
+
 		with column :
+
+			with GafferUI.ListContainer( GafferUI.ListContainer.Orientation.Horizontal, spacing = 4 ) :
+
+				_SearchFilterWidget( searchFilter )
+				_SetFilterWidget( setFilter )
 
 			self.__pathListing = GafferUI.PathListingWidget(
 				Gaffer.DictPath( {}, "/" ), # temp till we make a ScenePath
@@ -121,12 +139,18 @@ class SceneHierarchy( GafferUI.NodeSetEditor ) :
 	@GafferUI.LazyMethod( deferUntilPlaybackStops = True )
 	def __setPathListingPath( self ) :
 
+		for f in self.__filter.getFilters() :
+			f.setScene( self.__plug )
+
 		if self.__plug is not None :
-			# Note that we take a static copy of our current context for use in the ScenePath - this prevents the
+			# We take a static copy of our current context for use in the ScenePath - this prevents the
 			# PathListing from updating automatically when the original context changes, and allows us to take
 			# control of updates ourselves in _updateFromContext(), using LazyMethod to defer the calls to this
 			# function until we are visible and playback has stopped.
-			self.__pathListing.setPath( GafferScene.ScenePath( self.__plug, Gaffer.Context( self.getContext() ), "/" ) )
+			contextCopy = Gaffer.Context( self.getContext() )
+			for f in self.__filter.getFilters() :
+				f.setContext( contextCopy )
+			self.__pathListing.setPath( GafferScene.ScenePath( self.__plug, contextCopy, "/", filter = self.__filter ) )
 			self.__transferExpansionFromContext()
 			self.__transferSelectionFromContext()
 		else :
@@ -182,3 +206,118 @@ class SceneHierarchy( GafferUI.NodeSetEditor ) :
 				self.__pathListing.setSelectedPaths( [] )
 
 GafferUI.EditorWidget.registerType( "SceneHierarchy", SceneHierarchy )
+
+##########################################################################
+# _SetFilterWidget
+##########################################################################
+
+class _SetFilterWidget( GafferUI.PathFilterWidget ) :
+
+	def __init__( self, pathFilter ) :
+
+		button = GafferUI.MenuButton(
+			"Sets",
+			menu = GafferUI.Menu(
+				Gaffer.WeakMethod( self.__setsMenuDefinition ),
+				title = "Set Filter"
+			)
+		)
+
+		GafferUI.PathFilterWidget.__init__( self, button, pathFilter )
+
+	def _updateFromPathFilter( self ) :
+
+		pass
+
+	def __setsMenuDefinition( self ) :
+
+		m = IECore.MenuDefinition()
+
+		availableSets = set()
+		if self.pathFilter().getScene() is not None :
+			with self.pathFilter().getContext() :
+				availableSets.update( str( s ) for s in self.pathFilter().getScene()["setNames"].getValue() )
+
+		builtInSets = { "__lights", "__cameras", "__coordinateSystems" }
+		selectedSets = set( self.pathFilter().getSetNames() )
+
+		m.append( "/Enabled", { "checkBox" : self.pathFilter().getEnabled(), "command" : Gaffer.WeakMethod( self.__toggleEnabled ) } )
+		m.append( "/EnabledDivider", { "divider" : True } )
+
+		m.append(
+			"/All", {
+				"active" : self.pathFilter().getEnabled() and selectedSets.issuperset( availableSets ),
+				"checkBox" : selectedSets.issuperset( availableSets ),
+				"command" : functools.partial( Gaffer.WeakMethod( self.__setSets ), builtInSets | availableSets | selectedSets )
+			}
+		)
+		m.append(
+			"/None", {
+				"active" : self.pathFilter().getEnabled() and len( selectedSets ),
+				"checkBox" : not len( selectedSets ),
+				"command" : functools.partial( Gaffer.WeakMethod( self.__setSets ), set() )
+			}
+		)
+		m.append( "/AllDivider", { "divider" : True } )
+
+		def item( setName ) :
+
+			updatedSets = set( selectedSets )
+			if setName in updatedSets :
+				updatedSets.remove( setName )
+			else :
+				updatedSets.add( setName )
+
+			return {
+				"active" : self.pathFilter().getEnabled() and s in availableSets,
+				"checkBox" : s in selectedSets,
+				"command" : functools.partial( Gaffer.WeakMethod( self.__setSets ), updatedSets )
+			}
+
+		for s in sorted( builtInSets ) :
+			m.append(
+				"/%s" % IECore.CamelCase.toSpaced( s[2:] ),
+				item( s )
+			)
+
+		if len( availableSets - builtInSets ) :
+			m.append( "/BuiltInDivider", { "divider" : True } )
+
+		for s in sorted( availableSets | selectedSets ) :
+			if s in builtInSets :
+				continue
+			m.append( "/" + str( s ), item( s ) )
+
+		return m
+
+	def __toggleEnabled( self, *unused ) :
+
+		self.pathFilter().setEnabled( not self.pathFilter().getEnabled() )
+
+	def __setSets( self, sets, *unused ) :
+
+		self.pathFilter().setSetNames( sets )
+
+##########################################################################
+# _SearchFilterWidget
+##########################################################################
+
+class _SearchFilterWidget( GafferUI.PathFilterWidget ) :
+
+	def __init__( self, pathFilter ) :
+
+		self.__patternWidget = GafferUI.TextWidget()
+		GafferUI.PathFilterWidget.__init__( self, self.__patternWidget, pathFilter )
+
+		self.__patternWidget._qtWidget().setPlaceholderText( "Filter..." )
+		self.__patternWidgetEditingFinishedConnection = self.__patternWidget.editingFinishedSignal().connect( Gaffer.WeakMethod( self.__patternEditingFinished ) )
+
+		self._updateFromPathFilter()
+
+	def _updateFromPathFilter( self ) :
+
+		self.__patternWidget.setText( self.pathFilter().getMatchPattern() )
+
+	def __patternEditingFinished( self, widget ) :
+
+		self.pathFilter().setMatchPattern( self.__patternWidget.getText() )
