@@ -62,8 +62,9 @@ void GafferTest::testManyContexts()
 	{
 		InternedString key = string( "testKey" ) + lexical_cast<string>( i );
 		keys.push_back( key );
-		base->set( key, i );
+		base->set( key, -1 - i );
 	}
+	const MurmurHash baseHash = base->hash();
 
 	// then typically we create new temporary contexts based on that one,
 	// change a value or two, and then continue.
@@ -74,6 +75,7 @@ void GafferTest::testManyContexts()
 		ContextPtr tmp = new Context( *base, Context::Borrowed );
 		tmp->set( keys[i%numKeys], i );
 		GAFFERTEST_ASSERT( tmp->get<int>( keys[i%numKeys] ) == i );
+		GAFFERTEST_ASSERT( tmp->hash() != baseHash );
 	}
 
 	// uncomment to get timing information
