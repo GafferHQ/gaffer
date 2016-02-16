@@ -336,12 +336,15 @@ if moduleSearchPath.find( "GafferOSL" ) :
 
 # Dispatch nodes
 
-nodeMenu.append( "/Dispatch/System Command", Gaffer.SystemCommand, searchText = "SystemCommand" )
-nodeMenu.append( "/Dispatch/Python Command", Gaffer.PythonCommand, searchText = "PythonCommand" )
-nodeMenu.append( "/Dispatch/Task List", Gaffer.TaskList, searchText = "TaskList" )
-nodeMenu.append( "/Dispatch/Task Switch", Gaffer.TaskSwitch, searchText = "TaskSwitch" )
-nodeMenu.append( "/Dispatch/Wedge", Gaffer.Wedge )
-nodeMenu.append( "/Dispatch/Variables", Gaffer.TaskContextVariables, searchText = "TaskContextVariables" )
+import GafferDispatch
+import GafferDispatchUI
+
+nodeMenu.append( "/Dispatch/System Command", GafferDispatch.SystemCommand, searchText = "SystemCommand" )
+nodeMenu.append( "/Dispatch/Python Command", GafferDispatch.PythonCommand, searchText = "PythonCommand" )
+nodeMenu.append( "/Dispatch/Task List", GafferDispatch.TaskList, searchText = "TaskList" )
+nodeMenu.append( "/Dispatch/Task Switch", GafferDispatch.TaskSwitch, searchText = "TaskSwitch" )
+nodeMenu.append( "/Dispatch/Wedge", GafferDispatch.Wedge )
+nodeMenu.append( "/Dispatch/Variables", GafferDispatch.TaskContextVariables, searchText = "TaskContextVariables" )
 
 # Utility nodes
 

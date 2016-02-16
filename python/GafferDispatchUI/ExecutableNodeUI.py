@@ -35,11 +35,11 @@
 ##########################################################################
 
 import Gaffer
-import GafferUI
+import GafferDispatch
 
 Gaffer.Metadata.registerNode(
 
-	Gaffer.ExecutableNode,
+	GafferDispatch.ExecutableNode,
 
 	"description",
 	"""
@@ -52,6 +52,12 @@ Gaffer.Metadata.registerNode(
 
 	plugs = {
 
+		"*" : [
+
+			"nodule:type", lambda plug : "GafferUI::StandardNodule" if isinstance( plug, GafferDispatch.ExecutableNode.TaskPlug ) else "",
+
+		],
+
 		"preTasks" : (
 
 			"description",
@@ -62,6 +68,12 @@ Gaffer.Metadata.registerNode(
 
 			"nodule:type", "GafferUI::CompoundNodule",
 			"compoundNodule:spacing", 0.4,
+
+			"plugValueWidget:type", "",
+
+		),
+
+		"preTasks.*" : (
 
 			"plugValueWidget:type", "",
 
@@ -82,6 +94,13 @@ Gaffer.Metadata.registerNode(
 			"compoundNodule:orientation", "y",
 
 			"plugValueWidget:type", "",
+
+		),
+
+		"postTasks.*" : (
+
+			"plugValueWidget:type", "",
+			"nodeGadget:nodulePosition", "right",
 
 		),
 
@@ -108,7 +127,6 @@ Gaffer.Metadata.registerNode(
 			"plugValueWidget:type", "GafferUI.LayoutPlugValueWidget",
 			"layout:section", "Dispatcher",
 			"layout:index", -3, # Just before the node section,
-			"nodule:type", "",
 
 		),
 

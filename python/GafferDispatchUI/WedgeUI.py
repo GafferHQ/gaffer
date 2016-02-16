@@ -38,10 +38,11 @@ import IECore
 
 import Gaffer
 import GafferUI
+import GafferDispatch
 
 Gaffer.Metadata.registerNode(
 
-	Gaffer.Wedge,
+	GafferDispatch.Wedge,
 
 	"description",
 	"""
@@ -80,8 +81,6 @@ Gaffer.Metadata.registerNode(
 			wedged value to specific nodes.
 			""",
 
-			"nodule:type", "",
-
 		],
 
 		"indexVariable" : [
@@ -100,8 +99,6 @@ Gaffer.Metadata.registerNode(
 			wedged renders.
 			""",
 
-			"nodule:type", "",
-
 		],
 
 		"mode" : [
@@ -114,15 +111,14 @@ Gaffer.Metadata.registerNode(
 			strings.
 			""",
 
-			"nodule:type", "",
 			"plugValueWidget:type", "GafferUI.PresetsPlugValueWidget",
 
-			"preset:Float Range", int( Gaffer.Wedge.Mode.FloatRange ),
-			"preset:Int Range", int( Gaffer.Wedge.Mode.IntRange ),
-			"preset:Color Range", int( Gaffer.Wedge.Mode.ColorRange ),
-			"preset:Float List", int( Gaffer.Wedge.Mode.FloatList ),
-			"preset:Int List", int( Gaffer.Wedge.Mode.IntList ),
-			"preset:String List", int( Gaffer.Wedge.Mode.StringList ),
+			"preset:Float Range", int( GafferDispatch.Wedge.Mode.FloatRange ),
+			"preset:Int Range", int( GafferDispatch.Wedge.Mode.IntRange ),
+			"preset:Color Range", int( GafferDispatch.Wedge.Mode.ColorRange ),
+			"preset:Float List", int( GafferDispatch.Wedge.Mode.FloatList ),
+			"preset:Int List", int( GafferDispatch.Wedge.Mode.IntList ),
+			"preset:String List", int( GafferDispatch.Wedge.Mode.StringList ),
 
 		],
 
@@ -137,7 +133,6 @@ Gaffer.Metadata.registerNode(
 			other modes.
 			""",
 
-			"nodule:type", "",
 			"layout:visibilityActivator", "modeIsFloatRange",
 
 		],
@@ -151,7 +146,6 @@ Gaffer.Metadata.registerNode(
 			effect in other modes.
 			""",
 
-			"nodule:type", "",
 			"layout:visibilityActivator", "modeIsFloatRange",
 
 		],
@@ -167,7 +161,6 @@ Gaffer.Metadata.registerNode(
 			other modes.
 			""",
 
-			"nodule:type", "",
 			"layout:visibilityActivator", "modeIsFloatRange",
 
 		],
@@ -183,7 +176,6 @@ Gaffer.Metadata.registerNode(
 			other modes.
 			""",
 
-			"nodule:type", "",
 			"layout:visibilityActivator", "modeIsIntRange",
 
 		],
@@ -197,7 +189,6 @@ Gaffer.Metadata.registerNode(
 			effect in other modes.
 			""",
 
-			"nodule:type", "",
 			"layout:visibilityActivator", "modeIsIntRange",
 
 		],
@@ -215,7 +206,6 @@ Gaffer.Metadata.registerNode(
 			be used at all. Has no effect in other modes.
 			""",
 
-			"nodule:type", "",
 			"layout:visibilityActivator", "modeIsIntRange",
 
 		],
@@ -231,7 +221,6 @@ Gaffer.Metadata.registerNode(
 			other modes.
 			""",
 
-			"nodule:type", "",
 			"layout:visibilityActivator", "modeIsColorRange",
 
 		],
@@ -248,7 +237,6 @@ Gaffer.Metadata.registerNode(
 			""",
 
 			"label", "Steps",
-			"nodule:type", "",
 			"layout:visibilityActivator", "modeIsColorRange",
 
 		],
@@ -263,7 +251,6 @@ Gaffer.Metadata.registerNode(
 			mode. Has no effect in other modes.
 			""",
 
-			"nodule:type", "",
 			"layout:visibilityActivator", "modeIsFloatList",
 
 		],
@@ -276,7 +263,6 @@ Gaffer.Metadata.registerNode(
 			mode. Has no effect in other modes.
 			""",
 
-			"nodule:type", "",
 			"layout:visibilityActivator", "modeIsIntList",
 
 		],
@@ -289,7 +275,6 @@ Gaffer.Metadata.registerNode(
 			mode. Has no effect in other modes.
 			""",
 
-			"nodule:type", "",
 			"layout:visibilityActivator", "modeIsStringList",
 
 		],

@@ -62,7 +62,6 @@ Gaffer.Metadata.registerNode(
 			number is generally not necessary.
 			""",
 
-			"nodule:type", "",
 			"plugValueWidget:type", "GafferUI.FileSystemPathPlugValueWidget",
 			"pathPlugValueWidget:leaf", True,
 			"pathPlugValueWidget:bookmarks", "sceneCache",
@@ -76,7 +75,9 @@ Gaffer.Metadata.registerNode(
 			"description",
 			"""
 			The scene to be written.
-			"""
+			""",
+
+			"nodule:type", "GafferUI::StandardNodule",
 
 		],
 
@@ -86,8 +87,6 @@ Gaffer.Metadata.registerNode(
 			"""
 			A direct pass-through of the input scene.
 			""",
-
-			"nodule:type", "",
 
 		],
 

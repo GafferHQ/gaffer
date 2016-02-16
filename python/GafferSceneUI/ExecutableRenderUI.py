@@ -62,6 +62,8 @@ Gaffer.Metadata.registerNode(
 			The scene to be rendered.
 			""",
 
+			"nodule:type", "GafferUI::StandardNodule"
+
 		],
 
 		"out" : [
@@ -70,8 +72,6 @@ Gaffer.Metadata.registerNode(
 			"""
 			A pass-through of the input scene.
 			""",
-
-			"nodule:type", ""
 
 		],
 

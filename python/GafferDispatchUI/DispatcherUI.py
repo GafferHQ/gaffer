@@ -42,12 +42,13 @@ import IECore
 
 import Gaffer
 import GafferUI
+import GafferDispatch
 
 QtCore = GafferUI._qtImport( "QtCore" )
 
 Gaffer.Metadata.registerNode(
 
-	Gaffer.Dispatcher,
+	GafferDispatch.Dispatcher,
 
 	"description",
 	"""
@@ -124,7 +125,7 @@ Gaffer.Metadata.registerNode(
 
 Gaffer.Metadata.registerNode(
 
-	Gaffer.ExecutableNode,
+	GafferDispatch.ExecutableNode,
 
 	"layout:customWidget:dispatchButton:widgetType", "GafferUI.DispatcherUI._DispatchButton",
 
@@ -198,12 +199,12 @@ class DispatcherWindow( GafferUI.Window ) :
 		GafferUI.Window.__init__( self, **kw )
 
 		self.__dispatchers = {}
-		for dispatcherType in Gaffer.Dispatcher.registeredDispatchers() :
-			dispatcher = Gaffer.Dispatcher.create( dispatcherType )
+		for dispatcherType in GafferDispatch.Dispatcher.registeredDispatchers() :
+			dispatcher = GafferDispatch.Dispatcher.create( dispatcherType )
 			Gaffer.NodeAlgo.applyUserDefaults( dispatcher )
 			self.__dispatchers[dispatcherType] = dispatcher
 
-		defaultType = Gaffer.Dispatcher.getDefaultDispatcherType()
+		defaultType = GafferDispatch.Dispatcher.getDefaultDispatcherType()
 		self.__currentDispatcher = self.__dispatchers[ defaultType ]
 		self.__nodes = []
 
@@ -358,10 +359,10 @@ class _FramesModePlugValueWidget( GafferUI.PlugValueWidget ) :
 		GafferUI.PlugValueWidget.__init__( self, self.__selectionMenu, plug, **kw )
 
 		self.__labelsAndValues = (
-			( "CurrentFrame", Gaffer.Dispatcher.FramesMode.CurrentFrame ),
-			( "FullRange", Gaffer.Dispatcher.FramesMode.FullRange ),
-			( "PlaybackRange", Gaffer.Dispatcher.FramesMode.CustomRange ),
-			( "CustomRange", Gaffer.Dispatcher.FramesMode.CustomRange ),
+			( "CurrentFrame", GafferDispatch.Dispatcher.FramesMode.CurrentFrame ),
+			( "FullRange", GafferDispatch.Dispatcher.FramesMode.FullRange ),
+			( "PlaybackRange", GafferDispatch.Dispatcher.FramesMode.CustomRange ),
+			( "CustomRange", GafferDispatch.Dispatcher.FramesMode.CustomRange ),
 		)
 
 		for label, value in self.__labelsAndValues :
@@ -490,7 +491,7 @@ class _FrameRangePlugValueWidget( GafferUI.StringPlugValueWidget ) :
 			framesMode = self.getPlug().node()["framesMode"].getValue()
 
 		# we need to disable the normal update in CurrentFrame and FullRange modes
-		if framesMode == Gaffer.Dispatcher.FramesMode.CustomRange :
+		if framesMode == GafferDispatch.Dispatcher.FramesMode.CustomRange :
 			GafferUI.StringPlugValueWidget._updateFromPlug( self )
 
 		self.textWidget().setEditable( self._editable() )
@@ -531,10 +532,10 @@ def _showDispatcherWindow( nodes ) :
 def selectedNodes( script ) :
 	result = []
 	for n in script.selection() :
-		if isinstance( n, Gaffer.ExecutableNode):
+		if isinstance( n, GafferDispatch.ExecutableNode ) :
 			result.append( n )
 		elif isinstance( n, Gaffer.SubGraph ) :
-			for p in n.children( Gaffer.ExecutableNode.TaskPlug ) :
+			for p in n.children( GafferDispatch.ExecutableNode.TaskPlug ) :
 				if p.direction() == Gaffer.Plug.Direction.Out and p.source() :
 					result.append( n )
 

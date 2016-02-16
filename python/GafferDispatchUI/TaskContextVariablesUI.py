@@ -34,14 +34,12 @@
 #
 ##########################################################################
 
-import IECore
-
 import Gaffer
-import GafferUI
+import GafferDispatch
 
 Gaffer.Metadata.registerNode(
 
-	Gaffer.TaskContextVariables,
+	GafferDispatch.TaskContextVariables,
 
 	"description",
 	"""
@@ -57,8 +55,6 @@ Gaffer.Metadata.registerNode(
 			The variables to be added - arbitrary numbers of variables
 			can be added here.
 			""",
-
-			"nodule:type", "",
 
 		]
 

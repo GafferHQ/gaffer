@@ -41,18 +41,19 @@ import Gaffer
 import GafferUI
 import GafferScene
 import GafferSceneUI
+import GafferDispatch
 
 ##########################################################################
 # Colour
 ##########################################################################
 
-Gaffer.Metadata.registerNodeValue( Gaffer.ExecutableNode, "nodeGadget:color", IECore.Color3f( 0.61, 0.1525, 0.1525 ) )
-Gaffer.Metadata.registerPlugValue( Gaffer.ExecutableNode, "task", "nodule:color", IECore.Color3f( 0.645, 0.2483, 0.2483 ) )
-Gaffer.Metadata.registerPlugValue( Gaffer.ExecutableNode, "preTasks.*", "nodule:color", IECore.Color3f( 0.645, 0.2483, 0.2483 ) )
-Gaffer.Metadata.registerPlugValue( Gaffer.ExecutableNode, "postTasks.*", "nodule:color", IECore.Color3f( 0.645, 0.2483, 0.2483 ) )
-Gaffer.Metadata.registerPlugValue( Gaffer.ExecutableNode, "task", "connectionGadget:color", IECore.Color3f( 0.315, 0.0787, 0.0787 ) )
-Gaffer.Metadata.registerPlugValue( Gaffer.ExecutableNode, "preTasks.*", "connectionGadget:color", IECore.Color3f( 0.315, 0.0787, 0.0787 ) )
-Gaffer.Metadata.registerPlugValue( Gaffer.ExecutableNode, "postTasks.*", "connectionGadget:color", IECore.Color3f( 0.315, 0.0787, 0.0787 ) )
+Gaffer.Metadata.registerNodeValue( GafferDispatch.ExecutableNode, "nodeGadget:color", IECore.Color3f( 0.61, 0.1525, 0.1525 ) )
+Gaffer.Metadata.registerPlugValue( GafferDispatch.ExecutableNode, "task", "nodule:color", IECore.Color3f( 0.645, 0.2483, 0.2483 ) )
+Gaffer.Metadata.registerPlugValue( GafferDispatch.ExecutableNode, "preTasks.*", "nodule:color", IECore.Color3f( 0.645, 0.2483, 0.2483 ) )
+Gaffer.Metadata.registerPlugValue( GafferDispatch.ExecutableNode, "postTasks.*", "nodule:color", IECore.Color3f( 0.645, 0.2483, 0.2483 ) )
+Gaffer.Metadata.registerPlugValue( GafferDispatch.ExecutableNode, "task", "connectionGadget:color", IECore.Color3f( 0.315, 0.0787, 0.0787 ) )
+Gaffer.Metadata.registerPlugValue( GafferDispatch.ExecutableNode, "preTasks.*", "connectionGadget:color", IECore.Color3f( 0.315, 0.0787, 0.0787 ) )
+Gaffer.Metadata.registerPlugValue( GafferDispatch.ExecutableNode, "postTasks.*", "connectionGadget:color", IECore.Color3f( 0.315, 0.0787, 0.0787 ) )
 
 Gaffer.Metadata.registerNodeValue( Gaffer.SubGraph, "nodeGadget:color", IECore.Color3f( 0.225 ) )
 

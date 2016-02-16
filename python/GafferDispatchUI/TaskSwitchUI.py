@@ -35,10 +35,11 @@
 ##########################################################################
 
 import Gaffer
+import GafferDispatch
 
 Gaffer.Metadata.registerNode(
 
-	Gaffer.TaskSwitch,
+	GafferDispatch.TaskSwitch,
 
 	"description",
 	"""
@@ -57,8 +58,6 @@ Gaffer.Metadata.registerNode(
 			larger than the number of available inputs wrap back around to
 			the beginning.
 			""",
-
-			"nodule:type", "",
 
 		],
 
