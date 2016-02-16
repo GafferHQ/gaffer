@@ -165,5 +165,19 @@ class SceneAlgoTest( GafferSceneTest.SceneTestCase ) :
 		for n in sets.keys() :
 			self.assertTrue( sets[n].isSame( light["out"].set( n, _copy = False ) ) )
 
+	def testMatchingPathsWithPathMatcher( self ) :
+
+		s = GafferScene.Sphere()
+		g = GafferScene.Group()
+		g["in"][0].setInput( s["out"] )
+		g["in"][1].setInput( s["out"] )
+		g["in"][2].setInput( s["out"] )
+
+		f = GafferScene.PathMatcher( [ "/group/s*" ] )
+		m = GafferScene.PathMatcher()
+		GafferScene.matchingPaths( f, g["out"], m )
+
+		self.assertEqual( set( m.paths() ), { "/group/sphere", "/group/sphere1", "/group/sphere2" } )
+
 if __name__ == "__main__":
 	unittest.main()
