@@ -68,7 +68,15 @@ class MultiLineStringPlugValueWidget( GafferUI.PlugValueWidget ) :
 
 		if self.getPlug() is not None :
 			with self.getContext() :
-				self.__textWidget.setText( self.getPlug().getValue() )
+				try :
+					value = self.getPlug().getValue()
+				except :
+					value = None
+
+			if value is not None :
+				self.__textWidget.setText( value )
+
+			self.__textWidget.setErrored( value is None )
 
 			fixedLineHeight = Gaffer.Metadata.plugValue( self.getPlug(), "fixedLineHeight" )
 			self.__textWidget.setFixedLineHeight( fixedLineHeight )
