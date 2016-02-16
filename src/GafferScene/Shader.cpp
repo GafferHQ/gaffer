@@ -45,6 +45,7 @@
 #include "Gaffer/StringPlug.h"
 #include "Gaffer/Metadata.h"
 #include "Gaffer/CompoundPlug.h"
+#include "Gaffer/ScriptNode.h"
 
 #include "IECore/Light.h"
 
@@ -318,6 +319,11 @@ IECore::MurmurHash Shader::NetworkBuilder::shaderHash( const Shader *shaderNode 
 		return h;
 	}
 
+	if( !m_downstreamShaders.insert( shaderNode ).second )
+	{
+		throwCycleError( shaderNode );
+	}
+
 	ShaderAndHash &shaderAndHash = m_shaders[shaderNode];
 	if( shaderAndHash.hash != IECore::MurmurHash() )
 	{
@@ -332,6 +338,8 @@ IECore::MurmurHash Shader::NetworkBuilder::shaderHash( const Shader *shaderNode 
 
 	shaderNode->nodeNamePlug()->hash( shaderAndHash.hash );
 	shaderNode->nodeColorPlug()->hash( shaderAndHash.hash );
+
+	m_downstreamShaders.erase( shaderNode );
 
 	return shaderAndHash.hash;
 }
@@ -356,7 +364,12 @@ IECore::StateRenderable *Shader::NetworkBuilder::shader( const Shader *shaderNod
 	shaderNode = effectiveNode( shaderNode );
 	if( !shaderNode )
 	{
-		return 0;
+		return NULL;
+	}
+
+	if( !m_downstreamShaders.insert( shaderNode ).second )
+	{
+		throwCycleError( shaderNode );
 	}
 
 	ShaderAndHash &shaderAndHash = m_shaders[shaderNode];
@@ -375,7 +388,7 @@ IECore::StateRenderable *Shader::NetworkBuilder::shader( const Shader *shaderNod
 			prefix = shaderType.substr( 0, colon + 1 );
 		}
 
-		IECore::Light *lightShader =  new IECore::Light( prefix + shaderNode->namePlug()->getValue(), "LIGHT_HANDLE_UNUSED" );
+		IECore::LightPtr lightShader = new IECore::Light( prefix + shaderNode->namePlug()->getValue(), "LIGHT_HANDLE_UNUSED" );
 		parameterValueWalk( shaderNode, shaderNode->parametersPlug(), IECore::InternedString(), lightShader->parameters() );
 		shaderAndHash.shader = lightShader;
 	}
@@ -390,6 +403,9 @@ IECore::StateRenderable *Shader::NetworkBuilder::shader( const Shader *shaderNod
 	shaderAndHash.shader->blindData()->writable()["gaffer:nodeColor"] = new IECore::Color3fData( shaderNode->nodeColorPlug()->getValue() );
 
 	m_state->members().push_back( shaderAndHash.shader );
+
+	m_downstreamShaders.erase( shaderNode );
+
 	return shaderAndHash.shader.get();
 }
 
@@ -487,4 +503,14 @@ const Shader *Shader::NetworkBuilder::effectiveNode( const Shader *shaderNode ) 
 		shaderNode = source->ancestor<Shader>();
 	}
 	return NULL;
+}
+
+void Shader::NetworkBuilder::throwCycleError( const Shader *shaderNode )
+{
+	throw IECore::Exception(
+		boost::str(
+			boost::format( "Shader \"%s\" is involved in a dependency cycle." ) %
+				shaderNode->relativeName( shaderNode->ancestor<ScriptNode>() )
+		)
+	);
 }

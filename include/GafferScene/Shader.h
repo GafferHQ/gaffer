@@ -38,6 +38,8 @@
 #ifndef GAFFERSCENE_SHADER_H
 #define GAFFERSCENE_SHADER_H
 
+#include "boost/unordered_set.hpp"
+
 #include "IECore/ObjectVector.h"
 #include "IECore/Shader.h"
 
@@ -135,6 +137,8 @@ class Shader : public Gaffer::DependencyNode
 				void parameterHashWalk( const Shader *shaderNode, const Gaffer::Plug *parameterPlug, IECore::MurmurHash &h );
 				void parameterValueWalk( const Shader *shaderNode, const Gaffer::Plug *parameterPlug, const IECore::InternedString &parameterName, IECore::CompoundDataMap &values );
 
+				void throwCycleError( const Shader *shaderNode );
+
 				const Shader *m_rootNode;
 				IECore::ObjectVectorPtr m_state;
 
@@ -146,6 +150,9 @@ class Shader : public Gaffer::DependencyNode
 
 				typedef std::map<const Shader *, ShaderAndHash> ShaderMap;
 				ShaderMap m_shaders;
+
+				typedef boost::unordered_set<const Shader *> ShaderSet;
+				ShaderSet m_downstreamShaders; // Used for detecting cycles
 
 				unsigned int m_handleCount;
 

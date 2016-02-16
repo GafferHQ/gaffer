@@ -43,7 +43,7 @@ import GafferTest
 import GafferScene
 import GafferSceneTest
 
-class ShaderTest( unittest.TestCase ) :
+class ShaderTest( GafferSceneTest.SceneTestCase ) :
 
 	def testDirtyPropagation( self ) :
 
@@ -155,6 +155,29 @@ class ShaderTest( unittest.TestCase ) :
 				a["out"],
 			],
 		)
+
+	def testDetectCyclicConnections( self ) :
+
+		n1 = GafferSceneTest.TestShader()
+		n2 = GafferSceneTest.TestShader()
+		n3 = GafferSceneTest.TestShader()
+
+		n2["parameters"]["i"].setInput( n1["out"]["r"] )
+		n3["parameters"]["i"].setInput( n2["out"]["g"] )
+
+		with IECore.CapturingMessageHandler() as mh :
+			n1["parameters"]["i"].setInput( n3["out"]["b"] )
+
+		# We expect a message warning of the cycle when the
+		# connection is made.
+		self.assertEqual( len( mh.messages ), 1 )
+		self.assertTrue( "Plug dirty propagation" in mh.messages[0].context )
+
+		# And a hard error when we attempt to actually generate
+		# the shader network.
+		for node in ( n1, n2, n3 ) :
+			self.assertRaisesRegexp( RuntimeError, "cycle", node.stateHash )
+			self.assertRaisesRegexp( RuntimeError, "cycle", node.state )
 
 if __name__ == "__main__":
 	unittest.main()

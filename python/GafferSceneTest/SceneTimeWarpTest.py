@@ -44,7 +44,7 @@ import GafferTest
 import GafferScene
 import GafferSceneTest
 
-class SceneTimeWarpTest( unittest.TestCase ) :
+class SceneTimeWarpTest( GafferSceneTest.SceneTestCase ) :
 
 	def testConstruct( self ) :
 

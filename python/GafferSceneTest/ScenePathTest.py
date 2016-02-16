@@ -40,8 +40,9 @@ import unittest
 import Gaffer
 import GafferTest
 import GafferScene
+import GafferSceneTest
 
-class ScenePathTest( unittest.TestCase ) :
+class ScenePathTest( GafferSceneTest.SceneTestCase ) :
 
 	def test( self ) :
 

@@ -40,8 +40,9 @@ import IECore
 
 import Gaffer
 import GafferScene
+import GafferSceneTest
 
-class PathMatcherDataTest( unittest.TestCase ) :
+class PathMatcherDataTest( GafferSceneTest.SceneTestCase ) :
 
 	def test( self ) :
 
