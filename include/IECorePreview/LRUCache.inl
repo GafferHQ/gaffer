@@ -33,11 +33,10 @@
 //
 //////////////////////////////////////////////////////////////////////////
 
-#ifndef IECORE_LRUCACHE_INL
-#define IECORE_LRUCACHE_INL
+#ifndef IECOREPREVIEW_LRUCACHE_INL
+#define IECOREPREVIEW_LRUCACHE_INL
 
 #include <cassert>
-#include <iostream>
 
 #include "tbb/tbb_thread.h"
 
@@ -88,7 +87,8 @@ LRUCache<Key, Value>::~LRUCache()
 template<typename Key, typename Value>
 void LRUCache<Key, Value>::clear()
 {
-	Handle handle( this );
+	Handle handle;
+	handle.begin( this );
 	while( handle.valid() )
 	{
 		eraseInternal( *handle );
@@ -118,7 +118,30 @@ typename LRUCache<Key, Value>::Cost LRUCache<Key, Value>::currentCost() const
 template<typename Key, typename Value>
 Value LRUCache<Key, Value>::get( const Key& key )
 {
-	Handle handle( this, key, /* createIfMissing = */ true );
+	Handle handle;
+	if( !handle.acquire( this, key, /* write = */ false, /* createIfMissing = */ true ) )
+	{
+		// We found an existing entry, and have a read lock for it.
+		// If the value is cached already and the recentlyUsed flag
+		// is already set, we have no need of a write lock at all.
+		// This gives us a significant performance boost when the
+		// cache is heavily contended on the same already-cached
+		// items.
+		const CacheEntry &cacheEntry = handle->second;
+		if( cacheEntry.status == Cached && cacheEntry.recentlyUsed )
+		{
+			return cacheEntry.value;
+		}
+		else
+		{
+			// Upgrade to writer and fall through to general case below.
+			handle.upgradeToWriter();
+		}
+	}
+
+	// We have a write lock, and the item may or may not be
+	// cached already.
+
 	CacheEntry &cacheEntry = handle->second;
 
 	if( cacheEntry.status==New || cacheEntry.status==TooCostly )
@@ -165,7 +188,8 @@ Value LRUCache<Key, Value>::get( const Key& key )
 template<typename Key, typename Value>
 bool LRUCache<Key, Value>::set( const Key &key, const Value &value, Cost cost )
 {
-	Handle handle( this, key, /* createIfMissing = */ true );
+	Handle handle;
+	handle.acquire( this, key, /* write = */ true, /* createIfMissing = */ true );
 
 	const bool result = setInternal( *handle, value, cost );
 
@@ -178,14 +202,16 @@ bool LRUCache<Key, Value>::set( const Key &key, const Value &value, Cost cost )
 template<typename Key, typename Value>
 bool LRUCache<Key, Value>::cached( const Key &key ) const
 {
-	Handle handle( const_cast<LRUCache *>( this ), key, /* createIfMissing = */ false );
+	Handle handle;
+	handle.acquire( const_cast<LRUCache *>( this ), key, /* write = */ false, /* createIfMissing = */ false );
 	return handle.valid() && handle->second.status == Cached;
 }
 
 template<typename Key, typename Value>
 bool LRUCache<Key, Value>::erase( const Key &key )
 {
-	Handle handle( this, key, /* createIfMissing = */ false );
+	Handle handle;
+	handle.acquire( this, key, /* write = */ true, /* createIfMissing = */ false );
 	if( handle.valid() )
 	{
 		eraseInternal( *handle );
@@ -250,7 +276,8 @@ void LRUCache<Key, Value>::limitCost()
 		return;
 	}
 
-	Handle handle( this, m_limitCostSweepPosition, /* createIfMissing = */ false );
+	Handle handle;
+	handle.acquire( this, m_limitCostSweepPosition, /* write = */ true, /* createIfMissing = */ false );
 	if( !handle.valid() )
 	{
 		// This is our first sweep, or the entry
@@ -307,6 +334,6 @@ void LRUCache<Key, Value>::nullRemovalCallback( const Key &key, const Value &val
 {
 }
 
-} // namespace IECore
+} // namespace IECorePreview
 
-#endif // IECORE_LRUCACHE_INL
+#endif // IECOREPREVIEW_LRUCACHE_INL
