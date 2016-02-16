@@ -1697,10 +1697,8 @@ class __SetMembershipSection( Section ) :
 
 		def name( self ) :
 
-			if self.__setName == "__lights" :
-				return "Lights"
-			elif self.__setName == "__cameras" :
-				return "Cameras"
+			if self.__setName.startswith( "__" ) :
+				return IECore.CamelCase.toSpaced( self.__setName[2:] )
 			else :
 				return self.__setName or ""
 
@@ -2014,10 +2012,8 @@ class _SetsSection( Section ) :
 
 		def name( self ) :
 
-			if self.__setName == "__lights" :
-				return "Lights"
-			elif self.__setName == "__cameras" :
-				return "Cameras"
+			if self.__setName.startswith( "__" ) :
+				return IECore.CamelCase.toSpaced( self.__setName[2:] )
 			else :
 				return self.__setName or ""
 
