@@ -129,5 +129,16 @@ class MultiLineTextWidgetTest( GafferUITest.TestCase ) :
 		# checking if the geometry has been updated for the new line height
 		self.assertEqual( newHeight == oldHeight, False )
 
+	def testErrored( self ) :
+
+		w = GafferUI.TextWidget()
+		self.assertEqual( w.getErrored(), False )
+
+		w.setErrored( True )
+		self.assertEqual( w.getErrored(), True )
+
+		w.setErrored( False )
+		self.assertEqual( w.getErrored(), False )
+
 if __name__ == "__main__":
 	unittest.main()
