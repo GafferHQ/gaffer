@@ -203,7 +203,7 @@ _styleSheet = string.Template(
 
 	}
 
-	QLineEdit[gafferError="true"] {
+	QLineEdit[gafferError="true"], QPlainTextEdit[gafferError="true"] {
 
 		background-color: $errorColor;
 

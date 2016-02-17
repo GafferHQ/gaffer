@@ -70,10 +70,10 @@ class MultiLineTextWidget( GafferUI.Widget ) :
 		self.setWrapMode( wrapMode )
 		self.setFixedLineHeight( fixedLineHeight )
 
- 		self.__dragEnterConnection = self.dragEnterSignal().connect( Gaffer.WeakMethod( self.__dragEnter ) )
- 		self.__dragMoveConnection = self.dragMoveSignal().connect( Gaffer.WeakMethod( self.__dragMove ) )
- 		self.__dragLeaveConnection = self.dragLeaveSignal().connect( Gaffer.WeakMethod( self.__dragLeave ) )
- 		self.__dropConnection = self.dropSignal().connect( Gaffer.WeakMethod( self.__drop ) )
+		self.__dragEnterConnection = self.dragEnterSignal().connect( Gaffer.WeakMethod( self.__dragEnter ) )
+		self.__dragMoveConnection = self.dragMoveSignal().connect( Gaffer.WeakMethod( self.__dragMove ) )
+		self.__dragLeaveConnection = self.dragLeaveSignal().connect( Gaffer.WeakMethod( self.__dragLeave ) )
+		self.__dropConnection = self.dropSignal().connect( Gaffer.WeakMethod( self.__drop ) )
 
 		self._qtWidget().setTabStopWidth( 20 ) # pixels
 
@@ -140,6 +140,18 @@ class MultiLineTextWidget( GafferUI.Widget ) :
 	def getFixedLineHeight( self ) :
 
 		return self._qtWidget().getFixedLineHeight()
+
+	def setErrored( self, errored ) :
+
+		if errored == self.getErrored() :
+			return
+
+		self._qtWidget().setProperty( "gafferError", GafferUI._Variant.toVariant( bool( errored ) ) )
+		self._repolish()
+
+	def getErrored( self ) :
+
+		return GafferUI._Variant.fromVariant( self._qtWidget().property( "gafferError" ) ) or False
 
 	def setCursorPosition( self, position ) :
 
