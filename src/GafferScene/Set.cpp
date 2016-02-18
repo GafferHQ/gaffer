@@ -157,6 +157,10 @@ void Set::compute( Gaffer::ValuePlug *output, const Gaffer::Context *context ) c
 		vector<InternedString> tokenizedPath;
 		for( vector<string>::const_iterator it = paths.begin(), eIt = paths.end(); it != eIt; ++it )
 		{
+			if( it->empty() )
+			{
+				continue;
+			}
 			tokenizedPath.clear();
 			Gaffer::tokenize( *it, '/', tokenizedPath );
 			for( vector<InternedString>::const_iterator nIt = tokenizedPath.begin(), neIt = tokenizedPath.end(); nIt != neIt; ++nIt )

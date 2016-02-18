@@ -199,5 +199,23 @@ class SetTest( GafferSceneTest.SceneTestCase ) :
 		s["paths"].setValue( IECore.StringVectorData( [ "/a/b*" ] ) )
 		self.assertRaises( RuntimeError, s["out"].set, "set" )
 
+	def testEmptyStringIsIgnored( self ) :
+
+		s1 = GafferScene.Set()
+		s1["paths"].setValue( IECore.StringVectorData( [ "/a" ] ) )
+
+		s2 = GafferScene.Set()
+		s2["paths"].setValue( IECore.StringVectorData( [ "" ] ) )
+		s2["in"].setInput( s1["out"] )
+
+		s2["mode"].setValue( s2.Mode.Create )
+		self.assertEqual( s2["out"].set( "set" ).value.paths(), [] )
+
+		s2["mode"].setValue( s2.Mode.Add )
+		self.assertEqual( s2["out"].set( "set" ).value.paths(), [ "/a" ] )
+
+		s2["mode"].setValue( s2.Mode.Remove )
+		self.assertEqual( s2["out"].set( "set" ).value.paths(), [ "/a" ] )
+
 if __name__ == "__main__":
 	unittest.main()

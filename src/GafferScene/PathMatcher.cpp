@@ -212,6 +212,10 @@ bool PathMatcher::operator != ( const PathMatcher &other ) const
 
 unsigned PathMatcher::match( const std::string &path ) const
 {
+	if( path.empty() )
+	{
+		return Filter::NoMatch;
+	}
 	std::vector<IECore::InternedString> tokenizedPath;
 	Gaffer::tokenize( path, '/', tokenizedPath );
 	return match( tokenizedPath );
@@ -336,6 +340,10 @@ void PathMatcher::matchWalk( const Node *node, const NameIterator &start, const 
 
 bool PathMatcher::addPath( const std::string &path )
 {
+	if( path.empty() )
+	{
+		return false;
+	}
 	std::vector<IECore::InternedString> tokenizedPath;
 	Gaffer::tokenize( path, '/', tokenizedPath );
 	return addPath( tokenizedPath );
@@ -354,6 +362,10 @@ bool PathMatcher::addPath( const std::vector<IECore::InternedString> &path )
 
 bool PathMatcher::removePath( const std::string &path )
 {
+	if( path.empty() )
+	{
+		return false;
+	}
 	std::vector<IECore::InternedString> tokenizedPath;
 	Gaffer::tokenize( path, '/', tokenizedPath );
 	return removePath( tokenizedPath );
@@ -410,6 +422,10 @@ bool PathMatcher::removePaths( const PathMatcher &paths )
 
 bool PathMatcher::prune( const std::string &path )
 {
+	if( path.empty() )
+	{
+		return false;
+	}
 	std::vector<IECore::InternedString> tokenizedPath;
 	Gaffer::tokenize( path, '/', tokenizedPath );
 	return prune( tokenizedPath );;
@@ -428,6 +444,10 @@ bool PathMatcher::prune( const std::vector<IECore::InternedString> &path )
 
 PathMatcher PathMatcher::subTree( const std::string &root ) const
 {
+	if( root.empty() )
+	{
+		return PathMatcher();
+	}
 	std::vector<IECore::InternedString> tokenizedRoot;
 	Gaffer::tokenize( root, '/', tokenizedRoot );
 	return subTree( tokenizedRoot );

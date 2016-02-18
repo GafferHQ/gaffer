@@ -604,6 +604,18 @@ class PathMatcherTest( GafferSceneTest.SceneTestCase ) :
 		self.assertEqual( m.paths(), [] )
 		self.assertTrue( m.isEmpty() )
 
+		# And again, this time with only
+		# a single path, which also happens
+		# to be the root.
+
+		m = GafferScene.PathMatcher()
+		m.addPath( "/" )
+		self.assertEqual( m.paths(), [ "/" ] )
+
+		self.assertTrue( m.prune( "/" ) )
+		self.assertEqual( m.paths(), [] )
+		self.assertTrue( m.isEmpty() )
+
 	def testIsEmpty( self ) :
 
 		m = GafferScene.PathMatcher( [] )
@@ -951,6 +963,29 @@ class PathMatcherTest( GafferSceneTest.SceneTestCase ) :
 		m = GafferScene.PathMatcher()
 		m.addPaths( GafferScene.PathMatcher( [ "/a" ] ), "/prefix" )
 		self.assertEqual( m.paths(), [ "/prefix/a" ] )
+
+	def testEmptyStringIsNotAPath( self ) :
+
+		m = GafferScene.PathMatcher()
+		self.assertFalse( m.addPath( "" ) )
+		self.assertTrue( m.isEmpty() )
+		self.assertEqual( m.paths(), [] )
+
+		m.addPath( "/" )
+		self.assertEqual( m.paths(), [ "/" ] )
+		self.assertFalse( m.removePath( "" ) )
+		self.assertFalse( m.isEmpty() )
+		self.assertEqual( m.paths(), [ "/" ] )
+
+		m.addPath( "/a" )
+		self.assertEqual( m.paths(), [ "/", "/a" ] )
+		self.assertFalse( m.prune( "" ) )
+		self.assertEqual( m.paths(), [ "/", "/a" ] )
+
+		self.assertEqual( m.match( "" ), GafferScene.Filter.Result.NoMatch )
+
+		s = m.subTree( "" )
+		self.assertTrue( s.isEmpty() )
 
 if __name__ == "__main__":
 	unittest.main()
