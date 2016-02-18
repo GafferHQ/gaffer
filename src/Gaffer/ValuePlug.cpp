@@ -43,7 +43,7 @@
 #include "boost/format.hpp"
 #include "boost/unordered_map.hpp"
 
-#include "IECore/LRUCache.h"
+#include "IECorePreview/LRUCache.h"
 
 #include "Gaffer/ValuePlug.h"
 #include "Gaffer/ComputeNode.h"
@@ -459,7 +459,7 @@ class ValuePlug::Computation
 		// A cache mapping from ValuePlug::hash() to the result of the previous computation
 		// for that hash. This allows us to cache results for faster repeat evaluation. Unlike
 		// the HashCache, the ValueCache persists from one graph evaluation to the next.
-		typedef IECore::LRUCache<IECore::MurmurHash, IECore::ConstObjectPtr> ValueCache;
+		typedef IECorePreview::LRUCache<IECore::MurmurHash, IECore::ConstObjectPtr> ValueCache;
 		static ValueCache g_valueCache;
 
 };

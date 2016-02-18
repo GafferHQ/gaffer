@@ -247,7 +247,7 @@ IECore::MurmurHash Context::hash() const
 	}
 
 	m_hash = IECore::MurmurHash();
-	for( Map::const_iterator it = m_map.begin(), eIt = m_map.end(); it != eIt; it++ )
+	for( Map::const_iterator it = m_map.begin(), eIt = m_map.end(); it != eIt; ++it )
 	{
 		/// \todo Perhaps at some point the UI should use a different container for
 		/// these "not computationally important" values, so we wouldn't have to skip
@@ -259,7 +259,7 @@ IECore::MurmurHash Context::hash() const
 		{
 			continue;
 		}
-		m_hash.append( it->first );
+		m_hash.append( (uint64_t)&name );
 		it->second.data->hash( m_hash );
 	}
 	m_hashValid = true;
