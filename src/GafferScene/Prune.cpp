@@ -166,15 +166,24 @@ void Prune::hashChildNames( const ScenePath &path, const Gaffer::Context *contex
 
 	if( m & Filter::ExactMatch )
 	{
-		h = IECore::MurmurHash();
-		inPlug()->childNamesPlug()->defaultValue()->hash( h );
+		h = inPlug()->childNamesPlug()->defaultValue()->Object::hash();
 	}
 	else if( m & Filter::DescendantMatch )
 	{
 		// we might be computing new childnames for this level.
 		FilteredSceneProcessor::hashChildNames( path, context, parent, h );
-		inPlug()->childNamesPlug()->hash( h );
-		filterPlug()->hash( h );
+
+		ConstInternedStringVectorDataPtr inputChildNamesData = inPlug()->childNamesPlug()->getValue();
+		const vector<InternedString> &inputChildNames = inputChildNamesData->readable();
+
+		ScenePath childPath = path;
+		childPath.push_back( InternedString() ); // for the child name
+		for( vector<InternedString>::const_iterator it = inputChildNames.begin(), eIt = inputChildNames.end(); it != eIt; ++it )
+		{
+			childPath[path.size()] = *it;
+			tmpContext->set( ScenePlug::scenePathContextName, childPath );
+			filterPlug()->hash( h );
+		}
 	}
 	else
 	{
@@ -204,7 +213,7 @@ IECore::ConstInternedStringVectorDataPtr Prune::computeChildNames( const ScenePa
 
 		ScenePath childPath = path;
 		childPath.push_back( InternedString() ); // for the child name
-		for( vector<InternedString>::const_iterator it = inputChildNames.begin(), eIt = inputChildNames.end(); it != eIt; it++ )
+		for( vector<InternedString>::const_iterator it = inputChildNames.begin(), eIt = inputChildNames.end(); it != eIt; ++it )
 		{
 			childPath[path.size()] = *it;
 			tmpContext->set( ScenePlug::scenePathContextName, childPath );
