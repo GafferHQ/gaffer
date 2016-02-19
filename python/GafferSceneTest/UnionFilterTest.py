@@ -221,5 +221,33 @@ class UnionFilterTest( GafferSceneTest.SceneTestCase ) :
 		self.assertTrue( s["UnionFilter"]["in"][1].getInput().isSame( s["PathFilter1"]["out"] ) )
 		self.assertTrue( s["UnionFilter"]["in"][2].getInput().isSame( s["PathFilter2"]["out"] ) )
 
+	def testDisabling( self ) :
+
+		pathFilterA = GafferScene.PathFilter()
+		pathFilterB = GafferScene.PathFilter()
+
+		pathFilterA["paths"].setValue( IECore.StringVectorData( [ "/a" ] ) )
+		pathFilterB["paths"].setValue( IECore.StringVectorData( [ "/b" ] ) )
+
+		unionFilter = GafferScene.UnionFilter()
+		unionFilter["in"][0].setInput( pathFilterA["out"] )
+		unionFilter["in"][1].setInput( pathFilterB["out"] )
+
+		self.assertTrue( unionFilter.correspondingInput( unionFilter["out"] ).isSame( unionFilter["in"][0] ) )
+
+		with Gaffer.Context() as c :
+			c["scene:path"] = IECore.InternedStringVectorData( [ "a" ] )
+			self.assertEqual( unionFilter["out"].getValue(), unionFilter.Result.ExactMatch )
+			c["scene:path"] = IECore.InternedStringVectorData( [ "b" ] )
+			self.assertEqual( unionFilter["out"].getValue(), unionFilter.Result.ExactMatch )
+
+		unionFilter["enabled"].setValue( False )
+
+		with Gaffer.Context() as c :
+			c["scene:path"] = IECore.InternedStringVectorData( [ "a" ] )
+			self.assertEqual( unionFilter["out"].getValue(), unionFilter.Result.ExactMatch )
+			c["scene:path"] = IECore.InternedStringVectorData( [ "b" ] )
+			self.assertEqual( unionFilter["out"].getValue(), unionFilter.Result.NoMatch )
+
 if __name__ == "__main__":
 	unittest.main()
