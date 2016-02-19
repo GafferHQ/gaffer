@@ -51,6 +51,17 @@ Gaffer.Metadata.registerNode(
 
 	plugs = {
 
+
+		"enabled" : [
+
+			"description",
+			"""
+			The on/off state of the filter. When it is off, the
+			result of the first input is passed through unchanged.
+			""",
+
+		],
+
 		"in" : [
 
 			"description", lambda plug : "The input filter" + ( "s" if isinstance( plug, Gaffer.ArrayPlug ) else "" ),
