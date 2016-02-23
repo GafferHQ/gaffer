@@ -1,3 +1,54 @@
+0.23.1.0
+========
+
+Core
+-----------------------------------------------------------------------
+
+- Improved performance of the computation cache, particularly when under
+  heavy multithreaded load (#1638).
+
+UI
+-----------------------------------------------------------------------
+
+- SceneHierarchy
+  - Added search field (#1572, #1649).
+  - Added set filter (#48, #1649).
+- NodeEditor
+  - Improved error handling for labels and multiline text fields (#1650).
+- SceneInspector
+  - Fixed labelling of CoordinateSystem sets (#1648).
+- ExecutableNode
+  - Fixed UI for individually promoted pre/post tasks (#1647).
+
+Scene
+-----------------------------------------------------------------------
+
+- PathFilter/Set
+  - Fixed bugs which treated empty paths as "/" rather than ignoring
+    them (#1642).
+- Isolate/Prune
+  - Fixed bugs which caused incorrect results when used with a
+    particular custom filter outside of Gaffer (#1652).
+- Shader
+  - Fixed crashes caused by cyclic connections in shader networks (#1646).
+
+API
+-----------------------------------------------------------------------
+
+- PathMatcher
+  - Fixed bugs which treated empty paths as "/" rather than as empty (#1642).
+- SceneAlgo
+  - Added PathMatcher overloads for `filteredParallelTraverse()` and
+    `matchingPaths()` (#1649).
+- MultiLineTextWidget
+  - Added `setErrored()/getErrored()` methods to (#1650).
+- MultiLineStringPlugValueWidget/LabelPlugValueWidget
+  - Added error handling (#1650).
+- ExecutableNode
+  - Disabled nodule creation by default for all but TaskPlugs. Nodules
+    can be explicitly reenabled using a ( "nodule:type", "GafferUI.StandardNodule" )
+    metadata registration for a particular plug.
+
 0.23.0.1
 ========
 
