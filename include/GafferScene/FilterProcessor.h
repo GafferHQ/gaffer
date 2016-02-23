@@ -83,9 +83,18 @@ class FilterProcessor : public Filter
 
 		virtual bool sceneAffectsMatch( const ScenePlug *scene, const Gaffer::ValuePlug *child ) const;
 
+		/// Returns inPlug() as the correspondingInput of outPlug();
+		virtual Gaffer::Plug *correspondingInput( const Gaffer::Plug *output );
+		virtual const Gaffer::Plug *correspondingInput( const Gaffer::Plug *output ) const;
+
 	protected :
 
 		virtual bool acceptsInput( const Gaffer::Plug *plug, const Gaffer::Plug *inputPlug ) const;
+
+		/// Reimplemented to pass through the inPlug() hash when the node is disabled.
+		virtual void hash( const Gaffer::ValuePlug *output, const Gaffer::Context *context, IECore::MurmurHash &h ) const;
+		/// Reimplemented to pass through the inPlug() result when the node is disabled.
+		virtual void compute( Gaffer::ValuePlug *output, const Gaffer::Context *context ) const;
 
 	private :
 

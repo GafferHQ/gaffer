@@ -117,6 +117,24 @@ bool FilterProcessor::sceneAffectsMatch( const ScenePlug *scene, const Gaffer::V
 	return false;
 }
 
+Gaffer::Plug *FilterProcessor::correspondingInput( const Gaffer::Plug *output )
+{
+	if( output == outPlug() )
+	{
+		return inPlug();
+	}
+	return Filter::correspondingInput( output );
+}
+
+const Gaffer::Plug *FilterProcessor::correspondingInput( const Gaffer::Plug *output ) const
+{
+	if( output == outPlug() )
+	{
+		return inPlug();
+	}
+	return Filter::correspondingInput( output );
+}
+
 bool FilterProcessor::acceptsInput( const Gaffer::Plug *plug, const Gaffer::Plug *inputPlug ) const
 {
 	if( !Filter::acceptsInput( plug, inputPlug ) )
@@ -136,4 +154,28 @@ bool FilterProcessor::acceptsInput( const Gaffer::Plug *plug, const Gaffer::Plug
 	}
 
 	return true;
+}
+
+void FilterProcessor::hash( const Gaffer::ValuePlug *output, const Gaffer::Context *context, IECore::MurmurHash &h ) const
+{
+	if( output == outPlug() && !enabledPlug()->getValue() )
+	{
+		h = inPlug()->hash();
+	}
+	else
+	{
+		Filter::hash( output, context, h );
+	}
+}
+
+void FilterProcessor::compute( Gaffer::ValuePlug *output, const Gaffer::Context *context ) const
+{
+	if( output == outPlug() && !enabledPlug()->getValue() )
+	{
+		output->setFrom( inPlug() );
+	}
+	else
+	{
+		Filter::compute( output, context );
+	}
 }
