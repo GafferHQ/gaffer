@@ -75,6 +75,7 @@
 #include "GafferUIBindings/ToolBinding.h"
 #include "GafferUIBindings/DotNodeGadgetBinding.h"
 #include "GafferUIBindings/PathListingWidgetBinding.h"
+#include "GafferUIBindings/GLWidgetBinding.h"
 
 using namespace GafferUIBindings;
 
@@ -119,5 +120,6 @@ BOOST_PYTHON_MODULE( _GafferUI )
 	bindTool();
 	bindDotNodeGadget();
 	bindPathListingWidget();
+	bindGLWidget();
 
 }
