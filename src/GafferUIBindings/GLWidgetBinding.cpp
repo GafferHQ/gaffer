@@ -38,9 +38,11 @@
 
 #include "QtOpenGL/QGLWidget"
 
+#if defined( __linux__ )
 #include "GL/glx.h" // Must come after Qt!
+#endif
 
-#include "IECorePython/ScopedGILLock.h"
+#include "IECore/MessageHandler.h"
 
 #include "GafferUIBindings/GLWidgetBinding.h"
 
@@ -48,6 +50,8 @@ using namespace boost::python;
 
 namespace
 {
+
+#if defined( __linux__ )
 
 class HostedGLContext : public QGLContext
 {
@@ -57,6 +61,7 @@ class HostedGLContext : public QGLContext
 		HostedGLContext( const QGLFormat &format, QPaintDevice *device )
 			:	QGLContext( format, device )
 		{
+
 			GLXContext hostContext = glXGetCurrentContext();
 			m_display = glXGetCurrentDisplay();
 
@@ -88,6 +93,23 @@ class HostedGLContext : public QGLContext
 		GLXContext m_context;
 
 };
+
+#else
+
+class HostedGLContext : public QGLContext
+{
+
+	public :
+
+		HostedGLContext( const QGLFormat &format, QPaintDevice *device )
+			:	QGLContext( format, device )
+		{
+			IECore::msg( IECore::Msg::Warning, "HostedGLContext", "Not implemented on this platform." );
+		}
+
+};
+
+#endif
 
 void setHostedContext( uint64_t glWidgetAddress, uint64_t glFormatAddress )
 {
