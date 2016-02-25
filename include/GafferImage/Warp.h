@@ -81,6 +81,8 @@ class Warp : public ImageProcessor
 		struct Engine
 		{
 
+			virtual ~Engine();
+
 			/// Must be implemented to return a window bounding all input pixels
 			/// for the specified tile.
 			virtual Imath::Box2i inputWindow( const Imath::V2i &tileOrigin ) const = 0;
