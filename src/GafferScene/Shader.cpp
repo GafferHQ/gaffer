@@ -55,6 +55,10 @@ using namespace Imath;
 using namespace GafferScene;
 using namespace Gaffer;
 
+//////////////////////////////////////////////////////////////////////////
+// Shader implementation
+//////////////////////////////////////////////////////////////////////////
+
 static IECore::InternedString g_nodeColorMetadataName( "nodeGadget:color" );
 
 IE_CORE_DEFINERUNTIMETYPED( Shader );
@@ -289,6 +293,35 @@ void Shader::nodeMetadataChanged( IECore::TypeId nodeTypeId, IECore::InternedStr
 // NetworkBuilder implementation
 //////////////////////////////////////////////////////////////////////////
 
+struct Shader::NetworkBuilder::CycleDetector
+{
+
+	CycleDetector( ShaderSet &downstreamShaders, const Shader *shader )
+		:	m_downstreamShaders( downstreamShaders ), m_shader( shader )
+	{
+		if( !m_downstreamShaders.insert( m_shader ).second )
+		{
+			throw IECore::Exception(
+				boost::str(
+					boost::format( "Shader \"%s\" is involved in a dependency cycle." ) %
+						m_shader->relativeName( m_shader->ancestor<ScriptNode>() )
+				)
+			);
+		}
+	}
+
+	~CycleDetector()
+	{
+		m_downstreamShaders.erase( m_shader );
+	}
+
+	private :
+
+		ShaderSet &m_downstreamShaders;
+		const Shader *m_shader;
+
+};
+
 Shader::NetworkBuilder::NetworkBuilder( const Shader *rootNode )
 	:	m_rootNode( rootNode ), m_handleCount( 0 )
 {
@@ -319,10 +352,7 @@ IECore::MurmurHash Shader::NetworkBuilder::shaderHash( const Shader *shaderNode 
 		return h;
 	}
 
-	if( !m_downstreamShaders.insert( shaderNode ).second )
-	{
-		throwCycleError( shaderNode );
-	}
+	CycleDetector cycleDetector( m_downstreamShaders, shaderNode );
 
 	ShaderAndHash &shaderAndHash = m_shaders[shaderNode];
 	if( shaderAndHash.hash != IECore::MurmurHash() )
@@ -338,8 +368,6 @@ IECore::MurmurHash Shader::NetworkBuilder::shaderHash( const Shader *shaderNode 
 
 	shaderNode->nodeNamePlug()->hash( shaderAndHash.hash );
 	shaderNode->nodeColorPlug()->hash( shaderAndHash.hash );
-
-	m_downstreamShaders.erase( shaderNode );
 
 	return shaderAndHash.hash;
 }
@@ -367,10 +395,7 @@ IECore::StateRenderable *Shader::NetworkBuilder::shader( const Shader *shaderNod
 		return NULL;
 	}
 
-	if( !m_downstreamShaders.insert( shaderNode ).second )
-	{
-		throwCycleError( shaderNode );
-	}
+	CycleDetector cycleDetector( m_downstreamShaders, shaderNode );
 
 	ShaderAndHash &shaderAndHash = m_shaders[shaderNode];
 	if( shaderAndHash.shader )
@@ -403,8 +428,6 @@ IECore::StateRenderable *Shader::NetworkBuilder::shader( const Shader *shaderNod
 	shaderAndHash.shader->blindData()->writable()["gaffer:nodeColor"] = new IECore::Color3fData( shaderNode->nodeColorPlug()->getValue() );
 
 	m_state->members().push_back( shaderAndHash.shader );
-
-	m_downstreamShaders.erase( shaderNode );
 
 	return shaderAndHash.shader.get();
 }
@@ -503,14 +526,4 @@ const Shader *Shader::NetworkBuilder::effectiveNode( const Shader *shaderNode ) 
 		shaderNode = source->ancestor<Shader>();
 	}
 	return NULL;
-}
-
-void Shader::NetworkBuilder::throwCycleError( const Shader *shaderNode )
-{
-	throw IECore::Exception(
-		boost::str(
-			boost::format( "Shader \"%s\" is involved in a dependency cycle." ) %
-				shaderNode->relativeName( shaderNode->ancestor<ScriptNode>() )
-		)
-	);
 }
