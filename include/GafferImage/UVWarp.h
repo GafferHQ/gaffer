@@ -62,7 +62,7 @@ class UVWarp : public Warp
 
 	private :
 
-		class Engine;
+		struct Engine;
 
 		static size_t g_firstPlugIndex;
 

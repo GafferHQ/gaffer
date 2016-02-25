@@ -41,7 +41,6 @@
 #include "GafferImage/ImageAlgo.h"
 #include "GafferImage/UVWarp.h"
 
-using namespace std;
 using namespace Imath;
 using namespace IECore;
 using namespace Gaffer;
@@ -127,9 +126,9 @@ struct UVWarp::Engine : public Warp::Engine
 		ConstFloatVectorDataPtr m_vData;
 		ConstFloatVectorDataPtr m_aData;
 
-		const vector<float> &m_u;
-		const vector<float> &m_v;
-		const vector<float> &m_a;
+		const std::vector<float> &m_u;
+		const std::vector<float> &m_v;
+		const std::vector<float> &m_a;
 
 };
 
@@ -188,19 +187,19 @@ void UVWarp::hashEngine( const std::string &channelName, const Imath::V2i &tileO
 
 	if( channelExists( channelNames->readable(), "R" ) )
 	{
-		tmpContext->set<string>( ImagePlug::channelNameContextName, "R" );
+		tmpContext->set<std::string>( ImagePlug::channelNameContextName, "R" );
 		uvPlug()->channelDataPlug()->hash( h );
 	}
 
 	if( channelExists( channelNames->readable(), "G" ) )
 	{
-		tmpContext->set<string>( ImagePlug::channelNameContextName, "G" );
+		tmpContext->set<std::string>( ImagePlug::channelNameContextName, "G" );
 		uvPlug()->channelDataPlug()->hash( h );
 	}
 
 	if( channelExists( channelNames->readable(), "A" ) )
 	{
-		tmpContext->set<string>( ImagePlug::channelNameContextName, "A" );
+		tmpContext->set<std::string>( ImagePlug::channelNameContextName, "A" );
 		uvPlug()->channelDataPlug()->hash( h );
 	}
 
@@ -220,21 +219,21 @@ const Warp::Engine *UVWarp::computeEngine( const std::string &channelName, const
 	ConstFloatVectorDataPtr uData = ImagePlug::blackTile();
 	if( channelExists( channelNames->readable(), "R" ) )
 	{
-		tmpContext->set<string>( ImagePlug::channelNameContextName, "R" );
+		tmpContext->set<std::string>( ImagePlug::channelNameContextName, "R" );
 		uData = uvPlug()->channelDataPlug()->getValue();
 	}
 
 	ConstFloatVectorDataPtr vData = ImagePlug::blackTile();
 	if( channelExists( channelNames->readable(), "G" ) )
 	{
-		tmpContext->set<string>( ImagePlug::channelNameContextName, "G" );
+		tmpContext->set<std::string>( ImagePlug::channelNameContextName, "G" );
 		vData = uvPlug()->channelDataPlug()->getValue();
 	}
 
 	ConstFloatVectorDataPtr aData = ImagePlug::whiteTile();
 	if( channelExists( channelNames->readable(), "A" ) )
 	{
-		tmpContext->set<string>( ImagePlug::channelNameContextName, "A" );
+		tmpContext->set<std::string>( ImagePlug::channelNameContextName, "A" );
 		aData = uvPlug()->channelDataPlug()->getValue();
 	}
 
