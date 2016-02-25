@@ -54,7 +54,7 @@ class ObjectReader( Gaffer.ComputeNode ) :
 
 	def affects( self, input ) :
 
-		outputs = []
+		outputs = Gaffer.ComputeNode.affects( self, input )
 		if input.isSame( self["fileName"] ) :
 			outputs.append( self["out"] )
 

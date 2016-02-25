@@ -72,7 +72,7 @@ class AddNode( Gaffer.ComputeNode ) :
 
 	def affects( self, input ) :
 
-		outputs = []
+		outputs = Gaffer.ComputeNode.affects( self, input )
 		if input.getName() in ( "enabled", "op1", "op2" ) :
 			outputs.append( self.getChild( "sum" ) )
 
