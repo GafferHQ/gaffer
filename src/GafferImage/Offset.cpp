@@ -46,25 +46,6 @@ using namespace Gaffer;
 using namespace GafferImage;
 
 //////////////////////////////////////////////////////////////////////////
-// Utilities
-//////////////////////////////////////////////////////////////////////////
-
-namespace
-{
-
-// Index of pixel within a buffer.
-/// \todo Move to ImageAlgo?
-size_t bufferIndex( const V2i &p, const Box2i &b )
-{
-	assert( contains( b, p ) );
-	return
-		( p.y - b.min.y ) * b.size().x +
-		( p.x - b.min.x );
-}
-
-} // namespace
-
-//////////////////////////////////////////////////////////////////////////
 // Offset node
 //////////////////////////////////////////////////////////////////////////
 
@@ -216,9 +197,9 @@ IECore::ConstFloatVectorDataPtr Offset::computeChannelData( const std::string &c
 				{
 					memcpy(
 						// to
-						out + bufferIndex( inScanlineOrigin + offset, outTileBound ),
+						out + index( inScanlineOrigin + offset, outTileBound ),
 						// from
-						in + bufferIndex( inScanlineOrigin, inTileBound ),
+						in + index( inScanlineOrigin, inTileBound ),
 						sizeof( float ) * scanlineLength
 					);
 					++inScanlineOrigin.y;

@@ -37,7 +37,6 @@
 #ifndef GAFFERIMAGE_BUFFERALGO_H
 #define GAFFERIMAGE_BUFFERALGO_H
 
-#include <vector>
 #include "OpenEXR/ImathBox.h"
 
 namespace GafferImage
@@ -66,6 +65,9 @@ inline bool contains( const Imath::Box2i &window, const Imath::Box2i &area );
 
 /// Clamps the point so that it is contained inside the window.
 inline Imath::V2i clamp( const Imath::V2i &point, const Imath::Box2i &window );
+
+/// Returns the index of point p within a buffer with bounds b.
+inline size_t index( const Imath::V2i &p, const Imath::Box2i &b );
 
 } // namespace GafferImage
 

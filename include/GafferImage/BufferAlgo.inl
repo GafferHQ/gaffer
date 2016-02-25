@@ -37,6 +37,8 @@
 #ifndef GAFFERIMAGE_BUFFERALGO_INL
 #define GAFFERIMAGE_BUFFERALGO_INL
 
+#include <cassert>
+
 namespace GafferImage
 {
 
@@ -114,6 +116,14 @@ inline Imath::V2i clamp( const Imath::V2i &point, const Imath::Box2i &window )
 		std::max( std::min( point.x, window.max.x - 1 ), window.min.x ),
 		std::max( std::min( point.y, window.max.y - 1 ), window.min.y )
 	);
+}
+
+inline size_t index( const Imath::V2i &p, const Imath::Box2i &b )
+{
+	assert( contains( b, p ) );
+	return
+		( p.y - b.min.y ) * b.size().x +
+		( p.x - b.min.x );
 }
 
 } // namespace GafferImage
