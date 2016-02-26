@@ -1,6 +1,6 @@
 //////////////////////////////////////////////////////////////////////////
 //
-//  Copyright (c) 2015, Image Engine Design Inc. All rights reserved.
+//  Copyright (c) 2016, Image Engine Design Inc. All rights reserved.
 //
 //  Redistribution and use in source and binary forms, with or without
 //  modification, are permitted provided that the following conditions are
@@ -15,7 +15,7 @@
 //        disclaimer in the documentation and/or other materials provided with
 //        the distribution.
 //
-//      * Neither the name of John Haddon nor the names of
+//      * Neither the name of Image Engine Design nor the names of
 //        any other contributors to this software may be used to endorse or
 //        promote products derived from this software without specific prior
 //        written permission.
@@ -34,43 +34,42 @@
 //
 //////////////////////////////////////////////////////////////////////////
 
-#ifndef GAFFERIMAGE_BUFFERALGO_H
-#define GAFFERIMAGE_BUFFERALGO_H
+#ifndef GAFFERIMAGE_UVWARP_H
+#define GAFFERIMAGE_UVWARP_H
 
-#include "OpenEXR/ImathBox.h"
+#include "GafferImage/Warp.h"
 
 namespace GafferImage
 {
 
-/// Image window utility functions. The GafferImage convention is that
-/// the minimum coordinate is included within the window and the
-/// maximum coordinate is outside it - these functions take that into
-/// account and should therefore be used in favour of the Imath equivalents.
-////////////////////////////////////////////////////////////////////////////
+class UVWarp : public Warp
+{
+	public :
 
-/// Returns true if the window contains no pixels, and false otherwise.
-inline bool empty( const Imath::Box2i &window );
+		UVWarp( const std::string &name=defaultName<Warp>() );
+		virtual ~UVWarp();
 
-/// Returns true if the image windows intersect.
-inline bool intersects( const Imath::Box2i &window1, const Imath::Box2i &window2 );
+		IE_CORE_DECLARERUNTIMETYPEDEXTENSION( GafferImage::UVWarp, UVWarpTypeId, Warp );
 
-/// Return the intersection of the two image windows.
-inline Imath::Box2i intersection( const Imath::Box2i &window1, const Imath::Box2i &window2 );
+		ImagePlug *uvPlug();
+		const ImagePlug *uvPlug() const;
 
-/// Returns true if the given point is inside the window.
-inline bool contains( const Imath::Box2i &window, const Imath::V2i &point );
+	protected :
 
-/// Returns true if the given area is inside the window.
-inline bool contains( const Imath::Box2i &window, const Imath::Box2i &area );
+		virtual bool affectsEngine( const Gaffer::Plug *input ) const;
+		virtual void hashEngine( const std::string &channelName, const Imath::V2i &tileOrigin, const Gaffer::Context *context, IECore::MurmurHash &h ) const;
+		virtual const Engine *computeEngine( const std::string &channelName, const Imath::V2i &tileOrigin, const Gaffer::Context *context ) const;
 
-/// Clamps the point so that it is contained inside the window.
-inline Imath::V2i clamp( const Imath::V2i &point, const Imath::Box2i &window );
+	private :
 
-/// Returns the index of point p within a buffer with bounds b.
-inline size_t index( const Imath::V2i &p, const Imath::Box2i &b );
+		struct Engine;
+
+		static size_t g_firstPlugIndex;
+
+};
+
+IE_CORE_DECLAREPTR( UVWarp )
 
 } // namespace GafferImage
 
-#include "GafferImage/BufferAlgo.inl"
-
-#endif // GAFFERIMAGE_BUFFERALGO_H
+#endif // GAFFERIMAGE_UVWARP_H

@@ -1,6 +1,6 @@
 //////////////////////////////////////////////////////////////////////////
 //
-//  Copyright (c) 2015, Image Engine Design Inc. All rights reserved.
+//  Copyright (c) 2016, Image Engine Design Inc. All rights reserved.
 //
 //  Redistribution and use in source and binary forms, with or without
 //  modification, are permitted provided that the following conditions are
@@ -34,43 +34,14 @@
 //
 //////////////////////////////////////////////////////////////////////////
 
-#ifndef GAFFERIMAGE_BUFFERALGO_H
-#define GAFFERIMAGE_BUFFERALGO_H
+#ifndef GAFFERIMAGEBINDINGS_UVWARPBINDING_H
+#define GAFFERIMAGEBINDINGS_UVWARPBINDING_H
 
-#include "OpenEXR/ImathBox.h"
-
-namespace GafferImage
+namespace GafferImageBindings
 {
 
-/// Image window utility functions. The GafferImage convention is that
-/// the minimum coordinate is included within the window and the
-/// maximum coordinate is outside it - these functions take that into
-/// account and should therefore be used in favour of the Imath equivalents.
-////////////////////////////////////////////////////////////////////////////
+void bindUVWarp();
 
-/// Returns true if the window contains no pixels, and false otherwise.
-inline bool empty( const Imath::Box2i &window );
+}; // namespace GafferImageBindings
 
-/// Returns true if the image windows intersect.
-inline bool intersects( const Imath::Box2i &window1, const Imath::Box2i &window2 );
-
-/// Return the intersection of the two image windows.
-inline Imath::Box2i intersection( const Imath::Box2i &window1, const Imath::Box2i &window2 );
-
-/// Returns true if the given point is inside the window.
-inline bool contains( const Imath::Box2i &window, const Imath::V2i &point );
-
-/// Returns true if the given area is inside the window.
-inline bool contains( const Imath::Box2i &window, const Imath::Box2i &area );
-
-/// Clamps the point so that it is contained inside the window.
-inline Imath::V2i clamp( const Imath::V2i &point, const Imath::Box2i &window );
-
-/// Returns the index of point p within a buffer with bounds b.
-inline size_t index( const Imath::V2i &p, const Imath::Box2i &b );
-
-} // namespace GafferImage
-
-#include "GafferImage/BufferAlgo.inl"
-
-#endif // GAFFERIMAGE_BUFFERALGO_H
+#endif // GAFFERIMAGEBINDINGS_UVWARPBINDING_H

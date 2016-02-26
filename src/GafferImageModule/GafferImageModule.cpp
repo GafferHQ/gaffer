@@ -85,6 +85,8 @@
 #include "GafferImageBindings/ShapeBinding.h"
 #include "GafferImageBindings/TextBinding.h"
 #include "GafferImageBindings/OpenColorIOTransformBinding.h"
+#include "GafferImageBindings/WarpBinding.h"
+#include "GafferImageBindings/UVWarpBinding.h"
 
 using namespace boost::python;
 using namespace GafferImage;
@@ -141,5 +143,7 @@ BOOST_PYTHON_MODULE( _GafferImage )
 	GafferImageBindings::bindShape();
 	GafferImageBindings::bindText();
 	GafferImageBindings::bindOpenColorIOTransform();
+	GafferImageBindings::bindWarp();
+	GafferImageBindings::bindUVWarp();
 
 }

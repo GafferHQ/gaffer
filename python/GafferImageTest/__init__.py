@@ -82,6 +82,7 @@ from OffsetTest import OffsetTest
 from BlurTest import BlurTest
 from TextTest import TextTest
 from OpenColorIOTransformTest import OpenColorIOTransformTest
+from UVWarpTest import UVWarpTest
 
 if __name__ == "__main__":
 	import unittest
