@@ -119,7 +119,7 @@ bool CompoundDataPlug::MemberPlug::acceptsChild( const Gaffer::GraphComponent *p
 PlugPtr CompoundDataPlug::MemberPlug::createCounterpart( const std::string &name, Direction direction ) const
 {
 	PlugPtr result = new MemberPlug( name, direction, getFlags() );
-	for( PlugIterator it( this ); it != it.end(); it++ )
+	for( PlugIterator it( this ); !it.done(); ++it )
 	{
 		result->addChild( (*it)->createCounterpart( (*it)->getName(), direction ) );
 	}
@@ -154,7 +154,7 @@ bool CompoundDataPlug::acceptsChild( const GraphComponent *potentialChild ) cons
 PlugPtr CompoundDataPlug::createCounterpart( const std::string &name, Direction direction ) const
 {
 	CompoundDataPlugPtr result = new CompoundDataPlug( name, direction, getFlags() );
-	for( PlugIterator it( this ); it != it.end(); it++ )
+	for( PlugIterator it( this ); !it.done(); ++it )
 	{
 		result->addChild( (*it)->createCounterpart( (*it)->getName(), direction ) );
 	}
@@ -212,7 +212,7 @@ void CompoundDataPlug::addMembers( const IECore::CompoundData *parameters, bool 
 void CompoundDataPlug::fillCompoundData( IECore::CompoundDataMap &compoundDataMap ) const
 {
 	std::string name;
-	for( MemberPlugIterator it( this ); it != it.end(); it++ )
+	for( MemberPlugIterator it( this ); !it.done(); ++it )
 	{
 		IECore::DataPtr data = memberDataAndName( it->get(), name );
 		if( data )
@@ -225,7 +225,7 @@ void CompoundDataPlug::fillCompoundData( IECore::CompoundDataMap &compoundDataMa
 IECore::MurmurHash CompoundDataPlug::hash() const
 {
 	IECore::MurmurHash h;
-	for( MemberPlugIterator it( this ); it != it.end(); ++it )
+	for( MemberPlugIterator it( this ); !it.done(); ++it )
 	{
 		const MemberPlug *plug = it->get();
 		bool active = true;
@@ -250,7 +250,7 @@ void CompoundDataPlug::hash( IECore::MurmurHash &h ) const
 void CompoundDataPlug::fillCompoundObject( IECore::CompoundObject::ObjectMap &compoundObjectMap ) const
 {
 	std::string name;
-	for( MemberPlugIterator it( this ); it != it.end(); it++ )
+	for( MemberPlugIterator it( this ); !it.done(); ++it )
 	{
 		IECore::DataPtr data = memberDataAndName( it->get(), name );
 		if( data )

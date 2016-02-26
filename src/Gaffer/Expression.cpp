@@ -278,7 +278,7 @@ void Expression::hash( const ValuePlug *output, const Context *context, IECore::
 	{
 		enginePlug()->hash( h );
 		expressionPlug()->hash( h );
-		for( ValuePlugIterator it( inPlug() ); it!=it.end(); it++ )
+		for( ValuePlugIterator it( inPlug() ); !it.done(); ++it )
 		{
 			(*it)->hash( h );
 			// We must hash the types of the input plugs, because
@@ -286,7 +286,7 @@ void Expression::hash( const ValuePlug *output, const Context *context, IECore::
 			// types may yield a different result from Engine::execute().
 			h.append( (*it)->typeId() );
 		}
-		for( ValuePlugIterator it( outPlug() ); it!=it.end(); it++ )
+		for( ValuePlugIterator it( outPlug() ); !it.done(); ++it )
 		{
 			// We also need to hash the types of the output plugs,
 			// because an identical expression with different output
@@ -323,7 +323,7 @@ void Expression::compute( ValuePlug *output, const Context *context ) const
 		if( m_engine )
 		{
 			std::vector<const ValuePlug *> inputs;
-			for( ValuePlugIterator it( inPlug() ); it != it.end(); ++it )
+			for( ValuePlugIterator it( inPlug() ); !it.done(); ++it )
 			{
 				inputs.push_back( it->get() );
 			}
@@ -356,7 +356,7 @@ void Expression::compute( ValuePlug *output, const Context *context ) const
 	{
 		ConstObjectVectorPtr values = executePlug()->getValue();
 		size_t index = 0;
-		for( ValuePlugIterator it( outPlug() ); it != it.end() && *it != outPlugChild; ++it )
+		for( ValuePlugIterator it( outPlug() ); !it.done() && *it != outPlugChild; ++it )
 		{
 			index++;
 		}
@@ -445,13 +445,13 @@ std::string Expression::transcribe( const std::string &expression, bool toIntern
 	}
 
 	std::vector<const ValuePlug *> internalPlugs, externalPlugs;
-	for( ValuePlugIterator it( inPlug() ); it != it.end(); ++it )
+	for( ValuePlugIterator it( inPlug() ); !it.done(); ++it )
 	{
 		internalPlugs.push_back( it->get() );
 		externalPlugs.push_back( (*it)->getInput<ValuePlug>() );
 	}
 
-	for( ValuePlugIterator it( outPlug() ); it != it.end(); ++it )
+	for( ValuePlugIterator it( outPlug() ); !it.done(); ++it )
 	{
 		internalPlugs.push_back( it->get() );
 		if( !(*it)->outputs().empty() )

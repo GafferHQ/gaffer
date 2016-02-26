@@ -629,7 +629,7 @@ void ValuePlug::setInput( PlugPtr input )
 PlugPtr ValuePlug::createCounterpart( const std::string &name, Direction direction ) const
 {
 	PlugPtr result = new ValuePlug( name, direction, getFlags() );
-	for( PlugIterator it( this ); it != it.end(); ++it )
+	for( PlugIterator it( this ); !it.done(); ++it )
 	{
 		result->addChild( (*it)->createCounterpart( (*it)->getName(), direction ) );
 	}
@@ -658,7 +658,7 @@ bool ValuePlug::settable() const
 		{
 			return false;
 		}
-		for( PlugIterator it( this ); it!=it.end(); ++it )
+		for( PlugIterator it( this ); !it.done(); ++it )
 		{
 			ValuePlug *valuePlug = IECore::runTimeCast<ValuePlug>( it->get() );
 			if( !valuePlug || !valuePlug->settable() )
@@ -699,7 +699,7 @@ void ValuePlug::setToDefault()
 	}
 	else
 	{
-		for( ValuePlugIterator it( this ); it != it.end(); ++it )
+		for( ValuePlugIterator it( this ); !it.done(); ++it )
 		{
 			(*it)->setToDefault();
 		}
@@ -714,7 +714,7 @@ bool ValuePlug::isSetToDefault() const
 	}
 	else
 	{
-		for( ValuePlugIterator it( this ); it != it.end(); ++it )
+		for( ValuePlugIterator it( this ); !it.done(); ++it )
 		{
 			if( !(*it)->isSetToDefault() )
 			{
@@ -733,7 +733,7 @@ IECore::MurmurHash ValuePlug::hash() const
 		// being used as a parent for other ValuePlugs. So
 		// return the combined hashes of our children.
 		IECore::MurmurHash result;
-		for( ValuePlugIterator it( this ); it!=it.end(); it++ )
+		for( ValuePlugIterator it( this ); !it.done(); ++it )
 		{
 			(*it)->hash( result );
 		}

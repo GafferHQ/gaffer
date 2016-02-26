@@ -108,7 +108,7 @@ Gaffer::Plug *CompoundParameterHandler::setupPlug( Gaffer::GraphComponent *plugP
 	// remove any child plugs we don't need
 
 	std::vector<Gaffer::PlugPtr> toRemove;
-	for( Gaffer::PlugIterator pIt( m_plug->children().begin(), m_plug->children().end() ); pIt!=pIt.end(); pIt++ )
+	for( Gaffer::PlugIterator pIt( m_plug.get() ); !pIt.done(); ++pIt )
 	{
 		if( (*pIt)->getName().string().compare( 0, 2, "__" ) == 0 )
 		{

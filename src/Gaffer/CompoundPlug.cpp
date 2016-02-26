@@ -62,7 +62,7 @@ CompoundPlug::~CompoundPlug()
 PlugPtr CompoundPlug::createCounterpart( const std::string &name, Direction direction ) const
 {
 	CompoundPlugPtr result = new CompoundPlug( name, direction, getFlags() );
-	for( PlugIterator it( this ); it != it.end(); it++ )
+	for( PlugIterator it( this ); !it.done(); ++it )
 	{
 		result->addChild( (*it)->createCounterpart( (*it)->getName(), direction ) );
 	}

@@ -254,7 +254,7 @@ void ImageReader::affects( const Plug *input, AffectedPlugsContainer &outputs ) 
 		input == endModePlug()
 	)
 	{
-		for( ValuePlugIterator it( outPlug() ); it != it.end(); ++it )
+		for( ValuePlugIterator it( outPlug() ); !it.done(); ++it )
 		{
 			outputs.push_back( it->get() );
 		}

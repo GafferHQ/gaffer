@@ -190,7 +190,7 @@ void Box::unpromotePlug( Plug *promotedDescendantPlug )
 	while( plugToRemove->parent<Plug>() && plugToRemove->parent<Plug>() != userPlug() )
 	{
 		plugToRemove = plugToRemove->parent<Plug>();
-		for( PlugIterator it( plugToRemove ); it != it.end(); ++it )
+		for( PlugIterator it( plugToRemove ); !it.done(); ++it )
 		{
 			if(
 				( (*it)->direction() == Plug::In && (*it)->outputs().size() ) ||
@@ -394,7 +394,7 @@ BoxPtr Box::create( Node *parent, const Set *childNodes )
 	// the changing contents. we can use this opportunity to weed out anything in childNodes
 	// which isn't a direct child of parent though.
 	StandardSetPtr verifiedChildNodes = new StandardSet();
-	for( NodeIterator nodeIt( parent ); nodeIt != nodeIt.end(); nodeIt++ )
+	for( NodeIterator nodeIt( parent ); !nodeIt.done(); ++nodeIt )
 	{
 		if( childNodes->contains( nodeIt->get() ) )
 		{
@@ -506,7 +506,7 @@ void Box::copyMetadata( const Plug *from, Plug *to )
 		Metadata::registerPlugValue( to, *it, Metadata::plugValue<IECore::Data>( from, *it ) );
 	}
 
-	for( PlugIterator it( from ); it != it.end(); ++it )
+	for( PlugIterator it( from ); !it.done(); ++it )
 	{
 		if( Plug *childTo = to->getChild<Plug>( (*it)->getName() ) )
 		{

@@ -211,7 +211,7 @@ const Plug *ExecutableNode::dispatcherPlug() const
 
 void ExecutableNode::preTasks( const Context *context, Tasks &tasks ) const
 {
-	for( PlugIterator cIt( preTasksPlug() ); cIt != cIt.end(); ++cIt )
+	for( PlugIterator cIt( preTasksPlug() ); !cIt.done(); ++cIt )
 	{
 		Plug *source = (*cIt)->source<Plug>();
 		if( source != *cIt )
@@ -226,7 +226,7 @@ void ExecutableNode::preTasks( const Context *context, Tasks &tasks ) const
 
 void ExecutableNode::postTasks( const Context *context, Tasks &tasks ) const
 {
-	for( PlugIterator cIt( postTasksPlug() ); cIt != cIt.end(); ++cIt )
+	for( PlugIterator cIt( postTasksPlug() ); !cIt.done(); ++cIt )
 	{
 		Plug *source = (*cIt)->source<Plug>();
 		if( source != *cIt )

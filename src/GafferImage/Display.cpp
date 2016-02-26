@@ -362,7 +362,7 @@ void Display::affects( const Gaffer::Plug *input, AffectedPlugsContainer &output
 
 	if( input == portPlug() || input == updateCountPlug() )
 	{
-		for( ValuePlugIterator it( outPlug() ); it != it.end(); it++ )
+		for( ValuePlugIterator it( outPlug() ); !it.done(); ++it )
 		{
 			outputs.push_back( it->get() );
 		}

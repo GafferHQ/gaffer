@@ -543,7 +543,7 @@ void ScriptNode::deleteNodes( Node *parent, const Set *filter, bool reconnect )
 			DependencyNode *dependencyNode = IECore::runTimeCast<DependencyNode>( node );
 			if( reconnect && dependencyNode )
 			{
-				for( OutputPlugIterator it( node ); it != it.end(); ++it )
+				for( OutputPlugIterator it( node ); !it.done(); ++it )
 				{
 					Plug *inPlug = dependencyNode->correspondingInput( it->get() );
 					if ( !inPlug )

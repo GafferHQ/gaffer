@@ -370,7 +370,7 @@ OpenImageIOReader::OpenImageIOReader( const std::string &name )
 	addChild( new IntVectorDataPlug( "availableFrames", Plug::Out, new IntVectorData ) );
 
 	// disable caching on our outputs, as OIIO is already doing caching for us.
-	for( OutputPlugIterator it( outPlug() ); it!=it.end(); it++ )
+	for( OutputPlugIterator it( outPlug() ); !it.done(); ++it )
 	{
 		(*it)->setFlags( Plug::Cacheable, false );
 	}
@@ -457,7 +457,7 @@ void OpenImageIOReader::affects( const Gaffer::Plug *input, AffectedPlugsContain
 
 	if( input == fileNamePlug() || input == refreshCountPlug() || input == missingFrameModePlug() )
 	{
-		for( ValuePlugIterator it( outPlug() ); it != it.end(); it++ )
+		for( ValuePlugIterator it( outPlug() ); !it.done(); ++it )
 		{
 			outputs.push_back( it->get() );
 		}

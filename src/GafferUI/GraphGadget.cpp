@@ -1366,7 +1366,7 @@ void GraphGadget::updateGraph()
 	}
 
 	// now make sure we have gadgets for all the nodes we're meant to display
-	for( Gaffer::NodeIterator it( m_root.get() ); it != it.end(); it++ )
+	for( Gaffer::NodeIterator it( m_root.get() ); !it.done(); ++it )
 	{
 		if( !m_filter || m_filter->contains( it->get() ) )
 		{
@@ -1379,7 +1379,7 @@ void GraphGadget::updateGraph()
 
 	// and that we have gadgets for each connection
 
-	for( Gaffer::NodeIterator it( m_root.get() ); it != it.end(); it++ )
+	for( Gaffer::NodeIterator it( m_root.get() ); !it.done(); ++it )
 	{
 		if( !m_filter || m_filter->contains( it->get() ) )
 		{
@@ -1494,7 +1494,7 @@ void GraphGadget::addConnectionGadgets( Gaffer::GraphComponent *nodeOrPlug )
 		}
 	}
 
-	for( Gaffer::PlugIterator pIt( nodeOrPlug ); pIt != pIt.end(); ++pIt )
+	for( Gaffer::PlugIterator pIt( nodeOrPlug ); !pIt.done(); ++pIt )
 	{
 		addConnectionGadgets( pIt->get() );
 	}
@@ -1567,7 +1567,7 @@ void GraphGadget::removeConnectionGadgets( const Gaffer::GraphComponent *nodeOrP
 		}
 	}
 
-	for( Gaffer::PlugIterator pIt( nodeOrPlug ); pIt != pIt.end(); ++pIt )
+	for( Gaffer::PlugIterator pIt( nodeOrPlug ); !pIt.done(); ++pIt )
 	{
 		removeConnectionGadgets( pIt->get() );
 	}

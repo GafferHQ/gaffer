@@ -59,7 +59,7 @@ ImagePrimitiveSource<BaseType>::ImagePrimitiveSource( const std::string &name )
 
 	// disable caching on our outputs, as we're basically caching the entire
 	// image ourselves in __inputImagePrimitive.
-	for( Gaffer::OutputPlugIterator it( BaseType::outPlug() ); it!=it.end(); it++ )
+	for( Gaffer::OutputPlugIterator it( BaseType::outPlug() ); !it.done(); ++it )
 	{
 		(*it)->setFlags( Gaffer::Plug::Cacheable, false );
 	}
@@ -77,7 +77,7 @@ void ImagePrimitiveSource<BaseType>::affects( const Gaffer::Plug *input, Gaffer:
 
 	if( input == inputImagePrimitivePlug() )
 	{
-		for( Gaffer::ValuePlugIterator it( BaseType::outPlug() ); it != it.end(); it++ )
+		for( Gaffer::ValuePlugIterator it( BaseType::outPlug() ); !it.done(); ++it )
 		{
 			outputs.push_back( it->get() );
 		}

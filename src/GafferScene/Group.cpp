@@ -124,7 +124,7 @@ void Group::affects( const Plug *input, AffectedPlugsContainer &outputs ) const
 
 	if( input == namePlug() )
 	{
-		for( ValuePlugIterator it( outPlug() ); it != it.end(); it++ )
+		for( ValuePlugIterator it( outPlug() ); !it.done(); ++it )
 		{
 			outputs.push_back( it->get() );
 		}
@@ -150,7 +150,7 @@ void Group::affects( const Plug *input, AffectedPlugsContainer &outputs ) const
 	else if( input == mappingPlug() )
 	{
 		// the mapping affects everything about the output
-		for( ValuePlugIterator it( outPlug() ); it != it.end(); it++ )
+		for( ValuePlugIterator it( outPlug() ); !it.done(); ++it )
 		{
 			outputs.push_back( it->get() );
 		}
@@ -167,7 +167,7 @@ void Group::hash( const Gaffer::ValuePlug *output, const Gaffer::Context *contex
 		ContextPtr tmpContext = new Context( *context, Context::Borrowed );
 		tmpContext->set( ScenePlug::scenePathContextName, ScenePath() );
 		Context::Scope scopedContext( tmpContext.get() );
-		for( ScenePlugIterator it( inPlugs() ); it != it.end(); ++it )
+		for( ScenePlugIterator it( inPlugs() ); !it.done(); ++it )
 		{
 			(*it)->childNamesPlug()->hash( h );
 		}
@@ -190,7 +190,7 @@ void Group::hashBound( const ScenePath &path, const Gaffer::Context *context, co
 	if( path.size() == 0 ) // "/"
 	{
 		SceneProcessor::hashBound( path, context, parent, h );
-		for( ScenePlugIterator it( inPlugs() ); it != it.end(); ++it )
+		for( ScenePlugIterator it( inPlugs() ); !it.done(); ++it )
 		{
 			(*it)->boundPlug()->hash( h );
 		}
@@ -202,7 +202,7 @@ void Group::hashBound( const ScenePath &path, const Gaffer::Context *context, co
 		ContextPtr tmpContext = new Context( *context, Context::Borrowed );
 		tmpContext->set( ScenePlug::scenePathContextName, ScenePath() );
 		Context::Scope scopedContext( tmpContext.get() );
-		for( ScenePlugIterator it( inPlugs() ); it != it.end(); ++it )
+		for( ScenePlugIterator it( inPlugs() ); !it.done(); ++it )
 		{
 			(*it)->boundPlug()->hash( h );
 		}
@@ -224,7 +224,7 @@ Imath::Box3f Group::computeBound( const ScenePath &path, const Gaffer::Context *
 	{
 		// either / or /groupName
 		Box3f combinedBound;
-		for( ScenePlugIterator it( inPlugs() ); it != it.end(); ++it )
+		for( ScenePlugIterator it( inPlugs() ); !it.done(); ++it )
 		{
 			// we don't need to transform these bounds, because the SceneNode
 			// guarantees that the transform for root nodes is always identity.
@@ -394,7 +394,7 @@ IECore::ConstInternedStringVectorDataPtr Group::computeChildNames( const ScenePa
 void Group::hashSetNames( const Gaffer::Context *context, const ScenePlug *parent, IECore::MurmurHash &h ) const
 {
 	SceneProcessor::hashSetNames( context, parent, h );
-	for( ScenePlugIterator it( inPlugs() ); it != it.end(); ++it )
+	for( ScenePlugIterator it( inPlugs() ); !it.done(); ++it )
 	{
 		(*it)->setNamesPlug()->hash( h );
 	}
@@ -404,7 +404,7 @@ IECore::ConstInternedStringVectorDataPtr Group::computeSetNames( const Gaffer::C
 {
 	InternedStringVectorDataPtr resultData = new InternedStringVectorData;
 	vector<InternedString> &result = resultData->writable();
-	for( ScenePlugIterator it( inPlugs() ); it != it.end(); ++it )
+	for( ScenePlugIterator it( inPlugs() ); !it.done(); ++it )
 	{
 		// This naive approach to merging set names preserves the order of the incoming names,
 		// but at the expense of using linear search. We assume that the number of sets is small
@@ -426,7 +426,7 @@ IECore::ConstInternedStringVectorDataPtr Group::computeSetNames( const Gaffer::C
 void Group::hashSet( const IECore::InternedString &setName, const Gaffer::Context *context, const ScenePlug *parent, IECore::MurmurHash &h ) const
 {
 	SceneProcessor::hashSet( setName, context, parent, h );
-	for( ScenePlugIterator it( inPlugs() ); it != it.end(); ++it )
+	for( ScenePlugIterator it( inPlugs() ); !it.done(); ++it )
 	{
 		(*it)->setPlug()->hash( h );
 	}
@@ -496,7 +496,7 @@ IECore::ObjectPtr Group::computeMapping( const Gaffer::Context *context ) const
 	boost::format namePrefixSuffixFormatter( "%s%d" );
 
 	set<InternedString> allNames;
-	for( ScenePlugIterator it( inPlugs() ); it != it.end(); ++it )
+	for( ScenePlugIterator it( inPlugs() ); !it.done(); ++it )
 	{
 		ConstInternedStringVectorDataPtr inChildNamesData = (*it)->childNames( ScenePath() );
 		CompoundDataPtr forwardMapping = new CompoundData;

@@ -190,7 +190,7 @@ class LayoutEngine
 			// Build a map from node to vertex so we can use it to lookup nodes
 			// when inserting edges.
 
-			for( NodeIterator it( graphGadget->getRoot() ); it != it.end(); ++it )
+			for( NodeIterator it( graphGadget->getRoot() ); !it.done(); ++it )
 			{
 				Node *node = it->get();
 				const NodeGadget *nodeGadget = graphGadget->nodeGadget( node );

@@ -272,7 +272,7 @@ void ImageNode::affects( const Gaffer::Plug *input, AffectedPlugsContainer &outp
 
 	if( input == enabledPlug() )
 	{
-		for( ValuePlugIterator it( outPlug() ); it != it.end(); it++ )
+		for( ValuePlugIterator it( outPlug() ); !it.done(); ++it )
 		{
 			outputs.push_back( it->get() );
 		}

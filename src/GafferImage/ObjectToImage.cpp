@@ -73,7 +73,7 @@ void ObjectToImage::affects( const Gaffer::Plug *input, AffectedPlugsContainer &
 
 	if( input == objectPlug() )
 	{
-		for( ValuePlugIterator it( outPlug() ); it != it.end(); it++ )
+		for( ValuePlugIterator it( outPlug() ); !it.done(); ++it )
 		{
 			outputs.push_back( it->get() );
 		}

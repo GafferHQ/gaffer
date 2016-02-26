@@ -124,7 +124,7 @@ void Merge::hashDataWindow( const GafferImage::ImagePlug *output, const Gaffer::
 {
 	ImageProcessor::hashDataWindow( output, context, h );
 
-	for( ImagePlugIterator it( inPlugs() ); it != it.end(); ++it )
+	for( ImagePlugIterator it( inPlugs() ); !it.done(); ++it )
 	{
 		(*it)->dataWindowPlug()->hash( h );
 	}
@@ -133,7 +133,7 @@ void Merge::hashDataWindow( const GafferImage::ImagePlug *output, const Gaffer::
 Imath::Box2i Merge::computeDataWindow( const Gaffer::Context *context, const ImagePlug *parent ) const
 {
 	Imath::Box2i dataWindow;
-	for( ImagePlugIterator it( inPlugs() ); it != it.end(); ++it )
+	for( ImagePlugIterator it( inPlugs() ); !it.done(); ++it )
 	{
 		// We don't need to check that the plug is connected here as unconnected plugs don't have data windows.
 		dataWindow.extendBy( (*it)->dataWindowPlug()->getValue() );
@@ -146,7 +146,7 @@ void Merge::hashChannelNames( const GafferImage::ImagePlug *output, const Gaffer
 {
 	ImageProcessor::hashChannelNames( output, context, h );
 
-	for( ImagePlugIterator it( inPlugs() ); it != it.end(); ++it )
+	for( ImagePlugIterator it( inPlugs() ); !it.done(); ++it )
 	{
 		if( (*it)->getInput<ValuePlug>() )
 		{
@@ -160,7 +160,7 @@ IECore::ConstStringVectorDataPtr Merge::computeChannelNames( const Gaffer::Conte
 	IECore::StringVectorDataPtr outChannelStrVectorData( new IECore::StringVectorData() );
 	std::vector<std::string> &outChannels( outChannelStrVectorData->writable() );
 
-	for( ImagePlugIterator it( inPlugs() ); it != it.end(); ++it )
+	for( ImagePlugIterator it( inPlugs() ); !it.done(); ++it )
 	{
 		if( (*it)->getInput<ValuePlug>() )
 		{
@@ -192,7 +192,7 @@ void Merge::hashChannelData( const GafferImage::ImagePlug *output, const Gaffer:
 	const V2i tileOrigin = context->get<V2i>( ImagePlug::tileOriginContextName );
 	const Box2i tileBound( tileOrigin, tileOrigin + V2i( ImagePlug::tileSize() ) );
 
-	for( ImagePlugIterator it( inPlugs() ); it != it.end(); ++it )
+	for( ImagePlugIterator it( inPlugs() ); !it.done(); ++it )
 	{
 		if( !(*it)->getInput<ValuePlug>() )
 		{
@@ -271,7 +271,7 @@ IECore::ConstFloatVectorDataPtr Merge::merge( F f, const std::string &channelNam
 
 	const Box2i tileBound( tileOrigin, tileOrigin + V2i( ImagePlug::tileSize() ) );
 
-	for( ImagePlugIterator it( inPlugs() ); it != it.end(); ++it )
+	for( ImagePlugIterator it( inPlugs() ); !it.done(); ++it )
 	{
 		if( !(*it)->getInput<ValuePlug>() )
 		{
