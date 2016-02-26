@@ -651,7 +651,7 @@ class Plug::DirtyPlugs
 				return;
 			}
 
-			for( DownstreamIterator it( plugToDirty ); it != it.end(); ++it )
+			for( DownstreamIterator it( plugToDirty ); !it.done(); ++it )
 			{
 				InsertedVertex v = insertVertex( &*it );
 				if( !it->getFlags( Plug::AcceptsDependencyCycles ) )

@@ -72,8 +72,8 @@ void GafferTest::testDownstreamIterator()
 	GAFFERTEST_ASSERT( it1.upstream() == a->floatRangePlug()->getChild( 0 ) );
 	GAFFERTEST_ASSERT( it2.upstream() == a->floatRangePlug()->getChild( 0 ) );
 	GAFFERTEST_ASSERT( it1 == it2 );
-	GAFFERTEST_ASSERT( it1 != it1.end() );
-	GAFFERTEST_ASSERT( it2 != it2.end() );
+	GAFFERTEST_ASSERT( !it1.done() );
+	GAFFERTEST_ASSERT( !it2.done() );
 
 	it1++;
 
@@ -82,8 +82,8 @@ void GafferTest::testDownstreamIterator()
 	GAFFERTEST_ASSERT( it1.upstream() == a->outFloatPlug() );
 	GAFFERTEST_ASSERT( it2.upstream() == a->floatRangePlug()->getChild( 0 ) );
 	GAFFERTEST_ASSERT( it1 != it2 );
-	GAFFERTEST_ASSERT( it1 != it1.end() );
-	GAFFERTEST_ASSERT( it2 != it2.end() );
+	GAFFERTEST_ASSERT( !it1.done() );
+	GAFFERTEST_ASSERT( !it2.done() );
 
 	it2 = it1;
 
@@ -92,11 +92,11 @@ void GafferTest::testDownstreamIterator()
 	GAFFERTEST_ASSERT( it1.upstream() == a->outFloatPlug() );
 	GAFFERTEST_ASSERT( it2.upstream() == a->outFloatPlug() );
 	GAFFERTEST_ASSERT( it1 == it2 );
-	GAFFERTEST_ASSERT( it1 != it1.end() );
-	GAFFERTEST_ASSERT( it2 != it2.end() );
+	GAFFERTEST_ASSERT( !it1.done() );
+	GAFFERTEST_ASSERT( !it2.done() );
 
 	std::vector<const Plug *> visited;
-	for( DownstreamIterator it( a->floatRangePlug()->getChild( 0 ) ); it != it.end(); ++it )
+	for( DownstreamIterator it( a->floatRangePlug()->getChild( 0 ) ); !it.done(); ++it )
 	{
 		visited.push_back( &*it );
 	}
@@ -115,7 +115,7 @@ void GafferTest::testDownstreamIterator()
 	// test pruning
 
 	visited.clear();
-	for( DownstreamIterator it( a->floatRangePlug()->getChild( 0 ) ); it != it.end(); ++it )
+	for( DownstreamIterator it( a->floatRangePlug()->getChild( 0 ) ); !it.done(); ++it )
 	{
 		visited.push_back( &*it );
 		if( &*it == d->floatRangePlug()->getChild( 0 ) || &*it == c->outFloatPlug() )
