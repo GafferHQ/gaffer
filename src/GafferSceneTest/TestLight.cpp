@@ -56,7 +56,7 @@ TestLight::~TestLight()
 
 void TestLight::hashLight( const Gaffer::Context *context, IECore::MurmurHash &h ) const
 {
-	for( ValuePlugIterator it( parametersPlug() ); it != it.end(); ++it )
+	for( ValuePlugIterator it( parametersPlug() ); !it.done(); ++it )
 	{
 		(*it)->hash( h );
 	}

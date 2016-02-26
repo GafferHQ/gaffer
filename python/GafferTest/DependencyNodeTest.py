@@ -119,10 +119,12 @@ class DependencyNodeTest( GafferTest.TestCase ) :
 				# leaf level plugs.
 				assert( not input.isSame( self["in"] ) )
 
-				if self["in"].isAncestorOf( input ) :
-					return [ self["out"] ]
+				outputs = Gaffer.DependencyNode.affects( self, input )
 
-				return []
+				if self["in"].isAncestorOf( input ) :
+					outputs.append( self["out"] )
+
+				return outputs
 
 		src = CompoundOut()
 		dst = CompoundIn()

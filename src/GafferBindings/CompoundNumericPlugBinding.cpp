@@ -74,7 +74,7 @@ class CompoundNumericPlugSerialiser : public ValuePlugSerialiser
 				return false;
 			}
 
-			for( PlugIterator it( plug ); it != it.end(); ++it )
+			for( PlugIterator it( plug ); !it.done(); ++it )
 			{
 				if( (*it)->getInput<Plug>() )
 				{

@@ -572,7 +572,7 @@ void StandardNodeGadget::enter( Gadget *gadget )
 {
 	if( m_labelsVisibleOnHover )
 	{
-		for( RecursiveStandardNoduleIterator it( gadget  ); it != it.end(); ++it )
+		for( RecursiveStandardNoduleIterator it( gadget  ); !it.done(); ++it )
 		{
 			(*it)->setLabelVisible( true );
 		}
@@ -583,7 +583,7 @@ void StandardNodeGadget::leave( Gadget *gadget )
 {
 	if( m_labelsVisibleOnHover )
 	{
-		for( RecursiveStandardNoduleIterator it( gadget  ); it != it.end(); ++it )
+		for( RecursiveStandardNoduleIterator it( gadget  ); !it.done(); ++it )
 		{
 			(*it)->setLabelVisible( false );
 		}
@@ -670,7 +670,7 @@ Nodule *StandardNodeGadget::closestCompatibleNodule( const DragDropEvent &event 
 {
 	Nodule *result = 0;
 	float maxDist = Imath::limits<float>::max();
-	for( RecursiveNoduleIterator it( this ); it != it.end(); it++ )
+	for( RecursiveNoduleIterator it( this ); !it.done(); it++ )
 	{
 		if( noduleIsCompatible( it->get(), event ) )
 		{
@@ -737,7 +737,7 @@ void StandardNodeGadget::updateNodules( std::vector<Nodule *> &nodules, std::vec
 	// Update the nodules for all our plugs, and build a vector
 	// of IndexAndNodule to sort ready for layout.
 	vector<IndexAndNodule> sortedNodules;
-	for( PlugIterator plugIt( node() ); plugIt != plugIt.end(); ++plugIt )
+	for( PlugIterator plugIt( node() ); !plugIt.done(); ++plugIt )
 	{
 		Plug *plug = plugIt->get();
 		if( plug->getName().string().compare( 0, 2, "__" )==0 )

@@ -266,7 +266,7 @@ size_t GraphGadget::connectionGadgets( const Gaffer::Plug *plug, std::vector<con
 
 size_t GraphGadget::connectionGadgets( const Gaffer::Node *node, std::vector<ConnectionGadget *> &connections, const Gaffer::Set *excludedNodes )
 {
-	for( Gaffer::RecursivePlugIterator it( node ); it != it.end(); ++it )
+	for( Gaffer::RecursivePlugIterator it( node ); !it.done(); ++it )
 	{
 		this->connectionGadgets( it->get(), connections, excludedNodes );
 	}
@@ -276,7 +276,7 @@ size_t GraphGadget::connectionGadgets( const Gaffer::Node *node, std::vector<Con
 
 size_t GraphGadget::connectionGadgets( const Gaffer::Node *node, std::vector<const ConnectionGadget *> &connections, const Gaffer::Set *excludedNodes ) const
 {
-	for( Gaffer::RecursivePlugIterator it( node ); it != it.end(); ++it )
+	for( Gaffer::RecursivePlugIterator it( node ); !it.done(); ++it )
 	{
 		this->connectionGadgets( it->get(), connections, excludedNodes );
 	}
@@ -357,7 +357,7 @@ void GraphGadget::connectedNodeGadgetsWalk( NodeGadget *gadget, std::set<NodeGad
 		return;
 	}
 
-	for( Gaffer::RecursivePlugIterator it( gadget->node() ); it != it.end(); ++it )
+	for( Gaffer::RecursivePlugIterator it( gadget->node() ); !it.done(); ++it )
 	{
 		Gaffer::Plug *plug = it->get();
 		if( ( direction != Gaffer::Plug::Invalid ) && ( plug->direction() != direction ) )
@@ -1069,7 +1069,7 @@ void GraphGadget::updateDragReconnectCandidate( const DragDropEvent &event )
 	}
 
 	Gaffer::DependencyNode *depNode = IECore::runTimeCast<Gaffer::DependencyNode>( node );
-	for ( Gaffer::RecursiveOutputPlugIterator cIt( node ); cIt != cIt.end(); ++cIt )
+	for ( Gaffer::RecursiveOutputPlugIterator cIt( node ); !cIt.done(); ++cIt )
 	{
 		// must be compatible
 		Gaffer::Plug *p = cIt->get();
@@ -1127,7 +1127,7 @@ void GraphGadget::updateDragReconnectCandidate( const DragDropEvent &event )
 	// check input plugs on non-dependencyNodes
 	if ( !depNode && !m_dragReconnectDstNodule )
 	{
-		for ( Gaffer::RecursiveInputPlugIterator cIt( node ); cIt != cIt.end(); ++cIt )
+		for ( Gaffer::RecursiveInputPlugIterator cIt( node ); !cIt.done(); ++cIt )
 		{
 			Gaffer::Plug *p = cIt->get();
 			if ( !p->getInput<Gaffer::Plug>() && p->acceptsInput( srcPlug ) )
@@ -1366,7 +1366,7 @@ void GraphGadget::updateGraph()
 	}
 
 	// now make sure we have gadgets for all the nodes we're meant to display
-	for( Gaffer::NodeIterator it( m_root.get() ); it != it.end(); it++ )
+	for( Gaffer::NodeIterator it( m_root.get() ); !it.done(); ++it )
 	{
 		if( !m_filter || m_filter->contains( it->get() ) )
 		{
@@ -1379,7 +1379,7 @@ void GraphGadget::updateGraph()
 
 	// and that we have gadgets for each connection
 
-	for( Gaffer::NodeIterator it( m_root.get() ); it != it.end(); it++ )
+	for( Gaffer::NodeIterator it( m_root.get() ); !it.done(); ++it )
 	{
 		if( !m_filter || m_filter->contains( it->get() ) )
 		{
@@ -1494,7 +1494,7 @@ void GraphGadget::addConnectionGadgets( Gaffer::GraphComponent *nodeOrPlug )
 		}
 	}
 
-	for( Gaffer::PlugIterator pIt( nodeOrPlug ); pIt != pIt.end(); ++pIt )
+	for( Gaffer::PlugIterator pIt( nodeOrPlug ); !pIt.done(); ++pIt )
 	{
 		addConnectionGadgets( pIt->get() );
 	}
@@ -1567,7 +1567,7 @@ void GraphGadget::removeConnectionGadgets( const Gaffer::GraphComponent *nodeOrP
 		}
 	}
 
-	for( Gaffer::PlugIterator pIt( nodeOrPlug ); pIt != pIt.end(); ++pIt )
+	for( Gaffer::PlugIterator pIt( nodeOrPlug ); !pIt.done(); ++pIt )
 	{
 		removeConnectionGadgets( pIt->get() );
 	}

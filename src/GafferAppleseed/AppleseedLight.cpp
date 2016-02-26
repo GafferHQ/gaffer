@@ -97,7 +97,7 @@ void AppleseedLight::loadShader( const std::string &shaderName )
 
 void AppleseedLight::hashLight( const Gaffer::Context *context, IECore::MurmurHash &h ) const
 {
-	for( ValuePlugIterator it( parametersPlug() ); it != it.end(); ++it )
+	for( ValuePlugIterator it( parametersPlug() ); !it.done(); ++it )
 	{
 		(*it)->hash( h );
 	}
@@ -107,7 +107,7 @@ void AppleseedLight::hashLight( const Gaffer::Context *context, IECore::MurmurHa
 IECore::ObjectVectorPtr AppleseedLight::computeLight( const Gaffer::Context *context ) const
 {
 	IECore::LightPtr result = new IECore::Light( "as:" + modelPlug()->getValue() );
-	for( InputValuePlugIterator it( parametersPlug() ); it!=it.end(); it++ )
+	for( InputValuePlugIterator it( parametersPlug() ); !it.done(); ++it )
 	{
 		result->parameters()[(*it)->getName()] = CompoundDataPlug::extractDataFromPlug( it->get() );
 	}

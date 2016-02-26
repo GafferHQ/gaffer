@@ -192,7 +192,7 @@ void Shader::affects( const Gaffer::Plug *input, AffectedPlugsContainer &outputs
 		{
 			if( !out->children().empty() )
 			{
-				for( RecursivePlugIterator it( out ); it != it.end(); it++ )
+				for( RecursivePlugIterator it( out ); !it.done(); it++ )
 				{
 					if( (*it)->children().empty() )
 					{
@@ -374,7 +374,7 @@ IECore::MurmurHash Shader::NetworkBuilder::shaderHash( const Shader *shaderNode 
 
 void Shader::NetworkBuilder::parameterHashWalk( const Shader *shaderNode, const Gaffer::Plug *parameterPlug, IECore::MurmurHash &h )
 {
-	for( InputPlugIterator it( parameterPlug ); it != it.end(); ++it )
+	for( InputPlugIterator it( parameterPlug ); !it.done(); ++it )
 	{
 		if( (*it)->typeId() == CompoundPlug::staticTypeId() )
 		{
@@ -434,7 +434,7 @@ IECore::StateRenderable *Shader::NetworkBuilder::shader( const Shader *shaderNod
 
 void Shader::NetworkBuilder::parameterValueWalk( const Shader *shaderNode, const Gaffer::Plug *parameterPlug, const IECore::InternedString &parameterName, IECore::CompoundDataMap &values )
 {
-	for( InputPlugIterator it( parameterPlug ); it != it.end(); ++it )
+	for( InputPlugIterator it( parameterPlug ); !it.done(); ++it )
 	{
 		IECore::InternedString childParameterName;
 		if( parameterName.string().size() )

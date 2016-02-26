@@ -84,16 +84,6 @@ class FilteredRecursiveChildIterator : public boost::iterator_adaptor<FilteredRe
 			satisfyPredicate();
 		}
 
-		bool operator==( const RecursiveChildIterator &rhs ) const
-		{
-			return BaseIterator::base()==( rhs );
-		}
-
-		bool operator!=( const RecursiveChildIterator &rhs ) const
-		{
-			return BaseIterator::base()!=( rhs );
-		}
-
 		/// Calling prune() causes the next increment to skip any recursion
 		/// that it would normally perform.
 		void prune()
@@ -101,6 +91,24 @@ class FilteredRecursiveChildIterator : public boost::iterator_adaptor<FilteredRe
 			const_cast<RecursiveChildIterator &>( BaseIterator::base() ).prune();
 		}
 
+		bool done() const
+		{
+			return BaseIterator::base().done();
+		}
+
+		/// \deprecated Comparison to end() is unreliable. Use done() instead.
+		bool operator==( const RecursiveChildIterator &rhs ) const
+		{
+			return BaseIterator::base()==( rhs );
+		}
+
+		/// \deprecated Comparison to end() is unreliable. Use done() instead.
+		bool operator!=( const RecursiveChildIterator &rhs ) const
+		{
+			return BaseIterator::base()!=( rhs );
+		}
+
+		/// \deprecated Comparison to end() is unreliable. Use done() instead.
 		RecursiveChildIterator end()
 		{
 			return m_end;

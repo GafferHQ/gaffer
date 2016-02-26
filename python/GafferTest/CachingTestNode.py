@@ -51,10 +51,12 @@ class CachingTestNode( Gaffer.ComputeNode ) :
 
 	def affects( self, input ) :
 
-		if input.isSame( self["in"] ) :
-			return [ self["out"] ]
+		outputs = Gaffer.ComputeNode.affects( self, input )
 
-		return []
+		if input.isSame( self["in"] ) :
+			outputs.append( self["out"] )
+
+		return outputs
 
 	def hash( self, output, context, h ) :
 

@@ -54,7 +54,7 @@ class BadNode( Gaffer.ComputeNode ) :
 
 	def affects( self, input ) :
 
-		outputs = []
+		outputs = Gaffer.ComputeNode.affects( self, input )
 		if input.isSame( self["in1"] ) :
 			outputs.append( self["out1"] )
 		elif input.isSame( self["in2"] ) :

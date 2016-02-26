@@ -129,14 +129,14 @@ template<typename BaseType>
 void ContextProcessor<BaseType>::appendAffectedPlugs( DependencyNode::AffectedPlugsContainer &outputs ) const
 {
 	Node *n = const_cast<Node *>( static_cast<const Node *>( this ) );
-	for( OutputPlugIterator it( n ); it != it.end(); it++ )
+	for( OutputPlugIterator it( n ); !it.done(); ++it )
 	{
 		const ValuePlug *valuePlug = IECore::runTimeCast<const ValuePlug>( it->get() );
 		if( 0 == valuePlug->getName().string().compare( 0, 3, "out" ) && oppositePlug( valuePlug ) )
 		{
 			if( valuePlug->children().size() )
 			{
-				for( ValuePlugIterator cIt( valuePlug ); cIt != cIt.end(); cIt++ )
+				for( ValuePlugIterator cIt( valuePlug ); !cIt.done(); ++cIt )
 				{
 					outputs.push_back( cIt->get() );
 				}

@@ -62,7 +62,8 @@ class SphereNode( Gaffer.ComputeNode ) :
 
 	def affects( self, input ) :
 
-		outputs = []
+		outputs = Gaffer.ComputeNode.affects( self, input )
+
 		if input.getName() in ( "radius", "zMin", "zMax", "theta" ) :
 			outputs.append( self["out"] )
 

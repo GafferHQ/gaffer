@@ -84,7 +84,7 @@ Plug *Box::promotePlug( Plug *descendantPlug )
 	const Gaffer::TypeId *compoundTypesEnd = compoundTypes + 4;
 	if( find( compoundTypes, compoundTypesEnd, (Gaffer::TypeId)externalPlug->typeId() ) != compoundTypesEnd )
 	{
-		for( RecursivePlugIterator it( externalPlug.get() ); it != it.end(); ++it )
+		for( RecursivePlugIterator it( externalPlug.get() ); !it.done(); ++it )
 		{
 			(*it)->setFlags( Plug::Dynamic, true );
 			if( find( compoundTypes, compoundTypesEnd, (Gaffer::TypeId)(*it)->typeId() ) != compoundTypesEnd )
@@ -190,7 +190,7 @@ void Box::unpromotePlug( Plug *promotedDescendantPlug )
 	while( plugToRemove->parent<Plug>() && plugToRemove->parent<Plug>() != userPlug() )
 	{
 		plugToRemove = plugToRemove->parent<Plug>();
-		for( PlugIterator it( plugToRemove ); it != it.end(); ++it )
+		for( PlugIterator it( plugToRemove ); !it.done(); ++it )
 		{
 			if(
 				( (*it)->direction() == Plug::In && (*it)->outputs().size() ) ||
@@ -333,7 +333,7 @@ bool Box::validatePromotability( const Plug *descendantPlug, bool throwException
 	}
 
 	// check all the children of this plug too
-	for( RecursivePlugIterator it( descendantPlug ); it != it.end(); ++it )
+	for( RecursivePlugIterator it( descendantPlug ); !it.done(); ++it )
 	{
 		if( !validatePromotability( it->get(), throwExceptions, /* childPlug = */ true ) )
 		{
@@ -394,7 +394,7 @@ BoxPtr Box::create( Node *parent, const Set *childNodes )
 	// the changing contents. we can use this opportunity to weed out anything in childNodes
 	// which isn't a direct child of parent though.
 	StandardSetPtr verifiedChildNodes = new StandardSet();
-	for( NodeIterator nodeIt( parent ); nodeIt != nodeIt.end(); nodeIt++ )
+	for( NodeIterator nodeIt( parent ); !nodeIt.done(); ++nodeIt )
 	{
 		if( childNodes->contains( nodeIt->get() ) )
 		{
@@ -414,7 +414,7 @@ BoxPtr Box::create( Node *parent, const Set *childNodes )
 	{
 		Node *childNode = static_cast<Node *>( verifiedChildNodes->member( i ) );
 		// reroute any connections to external nodes
-		for( RecursivePlugIterator plugIt( childNode ); plugIt != plugIt.end(); plugIt++ )
+		for( RecursivePlugIterator plugIt( childNode ); !plugIt.done(); ++plugIt )
 		{
 			Plug *plug = plugIt->get();
 			if( plug->direction() == Plug::In )
@@ -506,7 +506,7 @@ void Box::copyMetadata( const Plug *from, Plug *to )
 		Metadata::registerPlugValue( to, *it, Metadata::plugValue<IECore::Data>( from, *it ) );
 	}
 
-	for( PlugIterator it( from ); it != it.end(); ++it )
+	for( PlugIterator it( from ); !it.done(); ++it )
 	{
 		if( Plug *childTo = to->getChild<Plug>( (*it)->getName() ) )
 		{

@@ -102,7 +102,7 @@ void Reference::loadInternal( const std::string &fileName )
 	// incoming plugs don't get renamed.
 
 	std::map<std::string, Plug *> previousPlugs;
-	for( PlugIterator it( this ); it != it.end(); ++it )
+	for( PlugIterator it( this ); !it.done(); ++it )
 	{
 		Plug *plug = it->get();
 		if( isReferencePlug( plug ) )
@@ -115,7 +115,7 @@ void Reference::loadInternal( const std::string &fileName )
 	// We don't export user plugs to references, but old versions of
 	// Gaffer did, so as above, we must get them out of the way during
 	// the load.
-	for( PlugIterator it( userPlug() ); it != it.end(); ++it )
+	for( PlugIterator it( userPlug() ); !it.done(); ++it )
 	{
 		Plug *plug = it->get();
 		if( isReferencePlug( plug ) )
@@ -167,7 +167,7 @@ void Reference::loadInternal( const std::string &fileName )
 		{
 			plug->setFlags( Plug::Dynamic, false );
 			convertPersistentMetadata( plug );
-			for( RecursivePlugIterator it( plug ); it != it.end(); ++it )
+			for( RecursivePlugIterator it( plug ); !it.done(); ++it )
 			{
 				(*it)->setFlags( Plug::Dynamic, false );
 				convertPersistentMetadata( it->get() );
@@ -327,7 +327,7 @@ void Reference::transferPersistentMetadata( const Plug *srcPlug, Plug *dstPlug )
 		Metadata::registerPlugValue( dstPlug, *it, value );
 	}
 
-	for( PlugIterator it( srcPlug ); it != it.end(); ++it )
+	for( PlugIterator it( srcPlug ); !it.done(); ++it )
 	{
 		if( Plug *dstChildPlug = dstPlug->getChild<Plug>( (*it)->getName() ) )
 		{

@@ -324,7 +324,7 @@ Animation::CurvePlug *Animation::acquire( ValuePlug *plug )
 		throw IECore::Exception( "Plug does not belong to a node" );
 	}
 
-	for( RecursivePlugIterator it( plug->node() ); it != it.end(); ++it )
+	for( RecursivePlugIterator it( plug->node() ); !it.done(); ++it )
 	{
 		ValuePlug *valuePlug = runTimeCast<ValuePlug>( it->get() );
 		if( !valuePlug )

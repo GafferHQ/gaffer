@@ -114,7 +114,7 @@ void ArrayPlug::setInput( PlugPtr input )
 PlugPtr ArrayPlug::createCounterpart( const std::string &name, Direction direction ) const
 {
 	ArrayPlugPtr result = new ArrayPlug( name, direction, NULL, m_minSize, m_maxSize, getFlags() );
-	for( PlugIterator it( this ); it != it.end(); it++ )
+	for( PlugIterator it( this ); !it.done(); ++it )
 	{
 		result->addChild( (*it)->createCounterpart( (*it)->getName(), direction ) );
 	}

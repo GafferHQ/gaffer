@@ -64,6 +64,11 @@ class FilteredChildIterator : public boost::filter_iterator<Predicate, GraphComp
 		typedef typename Predicate::ChildType ChildType;
 		typedef boost::filter_iterator<Predicate, GraphComponent::ChildIterator> BaseIterator;
 
+		/// \todo It's inconvenient that our reference type
+		/// is ChildType::Ptr rather than just ChildType. It
+		/// leads to lots of ugly `it->get()` and `(*it)->`
+		/// calls. Change this for this class and also for
+		/// the RecursiveIterator classes.
 		typedef const typename ChildType::Ptr &reference;
 		typedef const typename ChildType::Ptr *pointer;
 
@@ -86,16 +91,6 @@ class FilteredChildIterator : public boost::filter_iterator<Predicate, GraphComp
 		FilteredChildIterator( const GraphComponent *parent )
 			:	BaseIterator( parent->children().begin(), parent->children().end() )
 		{
-		}
-
-		bool operator==( const GraphComponent::ChildIterator &rhs ) const
-		{
-			return BaseIterator::base()==( rhs );
-		}
-
-		bool operator!=( const GraphComponent::ChildIterator &rhs ) const
-		{
-			return BaseIterator::base()!=( rhs );
 		}
 
 		reference operator*() const
@@ -121,6 +116,23 @@ class FilteredChildIterator : public boost::filter_iterator<Predicate, GraphComp
 			FilteredChildIterator r( *this );
 			BaseIterator::operator++();
 			return r;
+		}
+
+		bool done() const
+		{
+			return BaseIterator::base() == this->end();
+		}
+
+		/// \deprecated Prefer done() over comparison against end().
+		bool operator==( const GraphComponent::ChildIterator &rhs ) const
+		{
+			return BaseIterator::base()==( rhs );
+		}
+
+		/// \deprecated Prefer done() over comparison against end().
+		bool operator!=( const GraphComponent::ChildIterator &rhs ) const
+		{
+			return BaseIterator::base()!=( rhs );
 		}
 
 };

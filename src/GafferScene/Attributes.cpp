@@ -131,7 +131,7 @@ IECore::ConstCompoundObjectPtr Attributes::computeGlobals( const Gaffer::Context
 	result->members() = inputGlobals->members();
 
 	std::string name;
-	for( CompoundDataPlug::MemberPlugIterator it( p ); it != it.end(); ++it )
+	for( CompoundDataPlug::MemberPlugIterator it( p ); !it.done(); ++it )
 	{
 		IECore::DataPtr d = p->memberDataAndName( it->get(), name );
 		if( d )

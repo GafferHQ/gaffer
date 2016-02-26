@@ -47,7 +47,7 @@ namespace Gaffer
 /// RecursiveChildIterator provides a depth-first traversal over all the children of
 /// a GraphComponent. Use as follows :
 ///
-/// for( RecursiveChildIterator it( parent ); it != it.end(); ++it )
+/// for( RecursiveChildIterator it( parent ); !it.done(); ++it )
 /// ...
 class RecursiveChildIterator : public boost::iterator_facade<RecursiveChildIterator, const GraphComponentPtr, boost::forward_traversal_tag>
 {
@@ -93,16 +93,24 @@ class RecursiveChildIterator : public boost::iterator_facade<RecursiveChildItera
 			m_pruned = true;
 		}
 
+		bool done() const
+		{
+			return m_stack.size() == 1 && m_stack[0].it == m_stack[0].end;
+		}
+
+		/// \deprecated Comparison to end() is unreliable. Use done() instead.
 		bool operator==( const GraphComponent::ChildIterator &rhs ) const
 		{
 			return stackTop().it == rhs ;
 		}
 
+		/// \deprecated Comparison to end() is unreliable. Use done() instead.
 		bool operator!=( const GraphComponent::ChildIterator &rhs ) const
 		{
 			return stackTop().it != rhs;
 		}
 
+		/// \deprecated Comparison to end() is unreliable. Use done() instead.
 		const GraphComponent::ChildIterator &end() const
 		{
 			return m_stack[0].end;

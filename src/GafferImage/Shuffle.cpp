@@ -151,7 +151,7 @@ void Shuffle::hashChannelNames( const GafferImage::ImagePlug *parent, const Gaff
 {
 	ImageProcessor::hashChannelNames( parent, context, h );
 	inPlug()->channelNamesPlug()->hash( h );
-	for( ChannelPlugIterator it( channelsPlug() ); it != it.end(); ++it )
+	for( ChannelPlugIterator it( channelsPlug() ); !it.done(); ++it )
 	{
 		(*it)->outPlug()->hash( h );
 	}
@@ -161,7 +161,7 @@ IECore::ConstStringVectorDataPtr Shuffle::computeChannelNames( const Gaffer::Con
 {
 	StringVectorDataPtr resultData = inPlug()->channelNamesPlug()->getValue()->copy();
 	vector<string> &result = resultData->writable();
-	for( ChannelPlugIterator it( channelsPlug() ); it != it.end(); ++it )
+	for( ChannelPlugIterator it( channelsPlug() ); !it.done(); ++it )
 	{
 		string channelName = (*it)->outPlug()->getValue();
 		if( channelName != "" && find( result.begin(), result.end(), channelName ) == result.end() )
@@ -218,7 +218,7 @@ IECore::ConstFloatVectorDataPtr Shuffle::computeChannelData( const std::string &
 
 std::string Shuffle::inChannelName( const std::string &outChannelName ) const
 {
-	for( ChannelPlugIterator it( channelsPlug() ); it != it.end(); ++it )
+	for( ChannelPlugIterator it( channelsPlug() ); !it.done(); ++it )
 	{
 		if( (*it)->outPlug()->getValue() == outChannelName )
 		{

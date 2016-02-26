@@ -257,7 +257,7 @@ void RenderManShader::parameterHash( const Gaffer::Plug *parameterPlug, NetworkB
 	if( parameterPlug->isInstanceOf( ArrayPlug::staticTypeId() ) )
 	{
 		// coshader array parameter
-		for( InputPlugIterator cIt( parameterPlug ); cIt != cIt.end(); ++cIt )
+		for( InputPlugIterator cIt( parameterPlug ); !cIt.done(); ++cIt )
 		{
 			Shader::parameterHash( cIt->get(), network, h );
 		}
@@ -291,7 +291,7 @@ IECore::DataPtr RenderManShader::parameterValue( const Gaffer::Plug *parameterPl
 	{
 		// coshader array parameter
 		StringVectorDataPtr value = new StringVectorData();
-		for( InputPlugIterator cIt( parameterPlug ); cIt != cIt.end(); ++cIt )
+		for( InputPlugIterator cIt( parameterPlug ); !cIt.done(); ++cIt )
 		{
 			const Plug *inputPlug = (*cIt)->source<Plug>();
 			const RenderManShader *inputShader = inputPlug && inputPlug != *cIt ? inputPlug->parent<RenderManShader>() : 0;
