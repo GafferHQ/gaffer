@@ -767,9 +767,11 @@ for library in ( "GafferUI", ) :
 		libraries[library]["pythonEnvAppends"].setdefault( "FRAMEWORKPATH", [] ).append( "$BUILD_DIR/lib" )
 		libraries[library]["pythonEnvAppends"].setdefault( "FRAMEWORKS", [] ).append( "QtCore" )
 		libraries[library]["pythonEnvAppends"].setdefault( "FRAMEWORKS", [] ).append( "QtGui" )
+		libraries[library]["pythonEnvAppends"].setdefault( "FRAMEWORKS", [] ).append( "QtOpenGL" )
 	else :
 		libraries[library]["pythonEnvAppends"]["LIBS"].append( "QtCore" )
 		libraries[library]["pythonEnvAppends"]["LIBS"].append( "QtGui" )
+		libraries[library]["pythonEnvAppends"]["LIBS"].append( "QtOpenGL" )
 
 
 ###############################################################################################

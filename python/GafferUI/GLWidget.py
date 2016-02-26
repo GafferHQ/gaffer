@@ -48,6 +48,7 @@ import IECore
 
 import Gaffer
 import GafferUI
+import _GafferUI
 
 # import lazily to improve startup of apps which don't use GL functionality
 GL = Gaffer.lazyImport( "OpenGL.GL" )
@@ -283,73 +284,20 @@ class _GLGraphicsView( QtGui.QGraphicsView ) :
 		return QtOpenGL.QGLWidget( format, shareWidget = cls.__shareWidget )
 
 	@classmethod
-	def __createHostedQGLWidget( cls, format, hostContextActivator ) :
+	def __createHostedQGLWidget( cls, format ) :
 
 		# When running Gaffer embedded in a host application such as Maya
 		# or Houdini, we want to be able to share OpenGL resources between
 		# gaffer uis and host viewport uis, because IECoreGL will be used
 		# in both. So we implement our own QGLContext class which creates a
-		# context which shares with the host.
-
-		import OpenGL.GLX
-
-		# This is our custom context class which allows us to share gl
-		# resources with the hosts's contexts. We define it in here rather than
-		# at the top level because we want to import QtOpenGL lazily and
-		# don't want to trigger a full import until the last minute.
-		## \todo Call glXDestroyContext appropriately, although as far as I
-		# can tell this is impossible. The base class implementation calls it
-		# in reset(), but that's not virtual, and we can't store it in d->cx
-		# (which is what the base class destroys) because that's entirely
-		# on the C++ side of things.
-		class HostedGLContext( QtOpenGL.QGLContext ) :
-
-			def __init__( self, format, paintDevice, hostContextActivator ) :
-
-				QtOpenGL.QGLContext.__init__( self, format, paintDevice )
-
-				self.__paintDevice = paintDevice
-				self.__context = None
-				self.__hostContextActivator = hostContextActivator
-
-			def chooseContext( self, shareContext ) :
-
-				assert( self.__context is None )
-
-				# We have to call this to get d->vi set in the base class, because
-				# QGLWidget::setContext() accesses it directly, and will crash if we don't.
-				QtOpenGL.QGLContext.chooseContext( self, shareContext )
-
-				# Get the host's main OpenGL context. It is the responsibility
-				# of the hostContextActivator passed to __init__ to make the host
-				# context current so we can access it.
-				self.__hostContextActivator()
-				hostContext = OpenGL.GLX.glXGetCurrentContext()
-				self.__display = OpenGL.GLX.glXGetCurrentDisplay()
-
-				# Get a visual - we let the base class figure this out, but then we need
-				# to convert it from the form given by the qt bindings into the ctypes form
-				# needed by PyOpenGL.
-				visual = self.chooseVisual()
-				visual = ctypes.cast( int( visual ), ctypes.POINTER( OpenGL.raw._GLX.XVisualInfo ) )
-
-				# Make our context.
-				self.__context = OpenGL.GLX.glXCreateContext(
-					self.__display[0],
-					visual,
-					hostContext,
-					True
-				)
-
-				return True
-
-			def makeCurrent( self ) :
-
-				success = OpenGL.GLX.glXMakeCurrent( self.__display, self.__paintDevice.effectiveWinId(), self.__context )
-				assert( success )
+		# context which shares with the host. The custom QGLContext is
+		# implemented in GLWidgetBinding.cpp, and automatically shares with
+		# the context which is current at the time of its creation. The host
+		# context should therefore be made current before calling this
+		# method.
 
 		result = QtOpenGL.QGLWidget()
-		result.setContext( HostedGLContext( format, result, hostContextActivator ) )
+		_GafferUI._glWidgetSetHostedContext( GafferUI._qtAddress( result ), GafferUI._qtAddress( format ) )
 		return result
 
 	@classmethod
@@ -363,7 +311,8 @@ class _GLGraphicsView( QtGui.QGraphicsView ) :
 			return None
 
 		mayaRenderer = maya.OpenMayaRender.MHardwareRenderer.theRenderer()
-		return cls.__createHostedQGLWidget( format, IECore.curry( mayaRenderer.makeResourceContextCurrent, mayaRenderer.backEndString() ) )
+		mayaRenderer.makeResourceContextCurrent( mayaRenderer.backEndString() )
+		return cls.__createHostedQGLWidget( format )
 
 	@classmethod
 	def __createHoudiniQGLWidget( cls, format ) :
@@ -381,7 +330,8 @@ class _GLGraphicsView( QtGui.QGraphicsView ) :
 		# so we needed to force the Houdini GL context to be current, and share
 		# it, similar to how we do this in Maya.
 		if hou.applicationVersion()[0] < 14 :
-			return cls.__createHostedQGLWidget( format, IECoreHoudini.makeMainGLContextCurrent )
+			IECoreHoudini.makeMainGLContextCurrent()
+			return cls.__createHostedQGLWidget( format )
 
 		# In Houdini 14 and beyond, Qt is the native UI, and we can access
 		# Houdini's shared QGLWidget directly, provided we are using a recent
