@@ -432,5 +432,31 @@ class OSLShaderTest( GafferOSLTest.OSLTestCase ) :
 
 		self.assertTrue( n["parameters"]["i"].acceptsInput( None ) )
 
+	def testOverzealousCycleDetection( self ) :
+
+		globals = GafferOSL.OSLShader( "Globals" )
+		globals.loadShader( "Utility/Globals" )
+
+		point = GafferOSL.OSLShader( "Point" )
+		point.loadShader( "Utility/BuildPoint" )
+
+		noise = GafferOSL.OSLShader( "Noise" )
+		noise.loadShader( "Pattern/Noise" )
+
+		color = GafferOSL.OSLShader( "Color" )
+		color.loadShader( "Utility/BuildColor" )
+
+		point["parameters"]["x"].setInput( globals["out"]["globalU"] )
+		point["parameters"]["y"].setInput( globals["out"]["globalV"] )
+
+		noise["parameters"]["p"].setInput( point["out"]["p"] )
+
+		color["parameters"]["r"].setInput( globals["out"]["globalU"] )
+		color["parameters"]["g"].setInput( noise["out"]["n"] )
+
+		# Should not throw - there are no cycles above.
+		color.stateHash()
+		color.state()
+
 if __name__ == "__main__":
 	unittest.main()
