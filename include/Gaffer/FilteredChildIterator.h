@@ -64,6 +64,11 @@ class FilteredChildIterator : public boost::filter_iterator<Predicate, GraphComp
 		typedef typename Predicate::ChildType ChildType;
 		typedef boost::filter_iterator<Predicate, GraphComponent::ChildIterator> BaseIterator;
 
+		/// \todo It's inconvenient that our reference type
+		/// is ChildType::Ptr rather than just ChildType. It
+		/// leads to lots of ugly `it->get()` and `(*it)->`
+		/// calls. Change this for this class and also for
+		/// the RecursiveIterator classes.
 		typedef const typename ChildType::Ptr &reference;
 		typedef const typename ChildType::Ptr *pointer;
 
