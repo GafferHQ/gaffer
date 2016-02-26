@@ -88,16 +88,6 @@ class FilteredChildIterator : public boost::filter_iterator<Predicate, GraphComp
 		{
 		}
 
-		bool operator==( const GraphComponent::ChildIterator &rhs ) const
-		{
-			return BaseIterator::base()==( rhs );
-		}
-
-		bool operator!=( const GraphComponent::ChildIterator &rhs ) const
-		{
-			return BaseIterator::base()!=( rhs );
-		}
-
 		reference operator*() const
 		{
 			// cast should be safe as predicate has checked type, and the layout of
@@ -121,6 +111,23 @@ class FilteredChildIterator : public boost::filter_iterator<Predicate, GraphComp
 			FilteredChildIterator r( *this );
 			BaseIterator::operator++();
 			return r;
+		}
+
+		bool done() const
+		{
+			return BaseIterator::base() == this->end();
+		}
+
+		/// \deprecated Prefer done() over comparison against end().
+		bool operator==( const GraphComponent::ChildIterator &rhs ) const
+		{
+			return BaseIterator::base()==( rhs );
+		}
+
+		/// \deprecated Prefer done() over comparison against end().
+		bool operator!=( const GraphComponent::ChildIterator &rhs ) const
+		{
+			return BaseIterator::base()!=( rhs );
 		}
 
 };
