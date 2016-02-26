@@ -276,7 +276,7 @@ bool Loop<BaseType>::setupPlugs()
 	// hash()/compute() because each iteration changes the context and we bottom
 	// out after the specified number of iterations.
 	previousPlug()->setFlags( Plug::AcceptsDependencyCycles, true );
-	for( Gaffer::RecursivePlugIterator it( previousPlug() ); it != it.end(); ++it )
+	for( Gaffer::RecursivePlugIterator it( previousPlug() ); !it.done(); ++it )
 	{
 		(*it)->setFlags( Plug::AcceptsDependencyCycles, true );
 	}
@@ -313,7 +313,7 @@ void Loop<BaseType>::addAffectedPlug( const ValuePlug *output, DependencyNode::A
 {
 	if( output->children().size() )
 	{
-		for( RecursiveOutputPlugIterator it( output ); it != it.end(); ++it )
+		for( RecursiveOutputPlugIterator it( output ); !it.done(); ++it )
 		{
 			if( !(*it)->children().size() )
 			{

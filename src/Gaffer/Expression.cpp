@@ -260,7 +260,7 @@ void Expression::affects( const Plug *input, AffectedPlugsContainer &outputs ) c
 	}
 	else if( input == executePlug() )
 	{
-		for( RecursiveValuePlugIterator it( outPlug() ); it != it.end(); ++it )
+		for( RecursiveValuePlugIterator it( outPlug() ); !it.done(); ++it )
 		{
 			if( !(*it)->children().size() )
 			{

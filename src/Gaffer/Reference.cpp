@@ -167,7 +167,7 @@ void Reference::loadInternal( const std::string &fileName )
 		{
 			plug->setFlags( Plug::Dynamic, false );
 			convertPersistentMetadata( plug );
-			for( RecursivePlugIterator it( plug ); it != it.end(); ++it )
+			for( RecursivePlugIterator it( plug ); !it.done(); ++it )
 			{
 				(*it)->setFlags( Plug::Dynamic, false );
 				convertPersistentMetadata( it->get() );

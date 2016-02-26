@@ -214,7 +214,7 @@ class LayoutEngine
 
 			for( NodesToVertices::const_iterator it = m_nodesToVertices.begin(), eIt = m_nodesToVertices.end(); it != eIt; ++it )
 			{
-				for( RecursiveInputPlugIterator pIt( it->first ); pIt != pIt.end(); ++pIt )
+				for( RecursiveInputPlugIterator pIt( it->first ); !pIt.done(); ++pIt )
 				{
 					ConnectionGadget *connection = graphGadget->connectionGadget( pIt->get() );
 					if( !connection || connection->getMinimised() )
@@ -936,7 +936,7 @@ bool StandardGraphLayout::connectNodes( GraphGadget *graph, Gaffer::Set *nodes, 
 		}
 
 		bool hasInputs = false;
-		for( RecursiveInputPlugIterator it( node ); it != it.end(); ++it )
+		for( RecursiveInputPlugIterator it( node ); !it.done(); ++it )
 		{
 			if( (*it)->getInput<Plug>() && nodeGadget->nodule( it->get() ) )
 			{
@@ -1124,7 +1124,7 @@ bool StandardGraphLayout::connectNodeInternal( GraphGadget *graph, Gaffer::Node 
 
 size_t StandardGraphLayout::outputPlugs( NodeGadget *nodeGadget, std::vector<Gaffer::Plug *> &plugs ) const
 {
-	for( RecursiveOutputPlugIterator it( nodeGadget->node() ); it != it.end(); it++ )
+	for( RecursiveOutputPlugIterator it( nodeGadget->node() ); !it.done(); it++ )
 	{
 		if( nodeGadget->nodule( it->get() ) )
 		{
@@ -1155,7 +1155,7 @@ size_t StandardGraphLayout::outputPlugs( GraphGadget *graph, Gaffer::Set *nodes,
 size_t StandardGraphLayout::unconnectedInputPlugs( NodeGadget *nodeGadget, std::vector<Plug *> &plugs ) const
 {
 	plugs.clear();
-	for( RecursiveInputPlugIterator it( nodeGadget->node() ); it != it.end(); it++ )
+	for( RecursiveInputPlugIterator it( nodeGadget->node() ); !it.done(); it++ )
 	{
 		if( (*it)->getInput<Plug>() == 0 and nodeGadget->nodule( it->get() ) )
 		{
@@ -1176,7 +1176,7 @@ Gaffer::Plug *StandardGraphLayout::correspondingOutput( const Gaffer::Plug *inpu
 		return 0;
 	}
 
-	for( RecursiveOutputPlugIterator it( dependencyNode ); it != it.end(); ++it )
+	for( RecursiveOutputPlugIterator it( dependencyNode ); !it.done(); ++it )
 	{
 		if( dependencyNode->correspondingInput( it->get() ) == input )
 		{

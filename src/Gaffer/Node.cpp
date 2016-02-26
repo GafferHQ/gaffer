@@ -147,7 +147,7 @@ void Node::parentChanging( Gaffer::GraphComponent *newParent )
 		// process to avoid such changes invalidating our
 		// iterators.
 		vector<PlugPtr> toDisconnect;
-		for( RecursivePlugIterator it( this ); it!=it.end(); ++it )
+		for( RecursivePlugIterator it( this ); !it.done(); ++it )
 		{
 			if( Plug *input = (*it)->getInput<Plug>() )
 			{

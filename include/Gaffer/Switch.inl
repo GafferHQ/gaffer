@@ -139,7 +139,7 @@ void Switch<BaseType>::affects( const Plug *input, DependencyNode::AffectedPlugs
 		{
 			if( out->children().size() )
 			{
-				for( RecursiveOutputPlugIterator it( out ); it != it.end(); ++it )
+				for( RecursiveOutputPlugIterator it( out ); !it.done(); ++it )
 				{
 					if( !(*it)->children().size() )
 					{

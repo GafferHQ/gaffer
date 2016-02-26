@@ -572,7 +572,7 @@ void StandardNodeGadget::enter( Gadget *gadget )
 {
 	if( m_labelsVisibleOnHover )
 	{
-		for( RecursiveStandardNoduleIterator it( gadget  ); it != it.end(); ++it )
+		for( RecursiveStandardNoduleIterator it( gadget  ); !it.done(); ++it )
 		{
 			(*it)->setLabelVisible( true );
 		}
@@ -583,7 +583,7 @@ void StandardNodeGadget::leave( Gadget *gadget )
 {
 	if( m_labelsVisibleOnHover )
 	{
-		for( RecursiveStandardNoduleIterator it( gadget  ); it != it.end(); ++it )
+		for( RecursiveStandardNoduleIterator it( gadget  ); !it.done(); ++it )
 		{
 			(*it)->setLabelVisible( false );
 		}
@@ -670,7 +670,7 @@ Nodule *StandardNodeGadget::closestCompatibleNodule( const DragDropEvent &event 
 {
 	Nodule *result = 0;
 	float maxDist = Imath::limits<float>::max();
-	for( RecursiveNoduleIterator it( this ); it != it.end(); it++ )
+	for( RecursiveNoduleIterator it( this ); !it.done(); it++ )
 	{
 		if( noduleIsCompatible( it->get(), event ) )
 		{

@@ -481,8 +481,7 @@ std::vector<Node*> Metadata::nodesWithMetadata( GraphComponent *root, IECore::In
 	}
 	else
 	{
-		RecursiveNodeIterator it( root );
-		for( ; it != it.end(); ++it )
+		for( RecursiveNodeIterator it( root ); !it.done(); ++it )
 		{
 			if( nodeValueInternal( it->get(), key, inherit, instanceOnly ) )
 			{
@@ -681,8 +680,7 @@ std::vector<Plug*> Metadata::plugsWithMetadata( GraphComponent *root, IECore::In
 	}
 	else
 	{
-		FilteredRecursiveChildIterator<TypePredicate<Plug> > it( root );
-		for( ; it != it.end(); ++it )
+		for( FilteredRecursiveChildIterator<TypePredicate<Plug> > it( root ); !it.done(); ++it )
 		{
 			if( plugValueInternal( it->get(), key, inherit, false ) )
 			{

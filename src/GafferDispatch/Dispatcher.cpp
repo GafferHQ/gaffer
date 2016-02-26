@@ -588,7 +588,7 @@ void Dispatcher::dispatch( const std::vector<NodePtr> &nodes ) const
 		}
 		else if ( const SubGraph *subGraph = runTimeCast<const SubGraph>( nIt->get() ) )
 		{
-			for ( RecursiveOutputPlugIterator plugIt( subGraph ); plugIt != plugIt.end(); ++plugIt )
+			for ( RecursiveOutputPlugIterator plugIt( subGraph ); !plugIt.done(); ++plugIt )
 			{
 				Node *sourceNode = plugIt->get()->source<Plug>()->node();
 				if ( ExecutableNode *executable = runTimeCast<ExecutableNode>( sourceNode ) )

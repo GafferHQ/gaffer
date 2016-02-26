@@ -409,7 +409,7 @@ void StandardNodule::setCompatibleLabelsVisible( const DragDropEvent &event, boo
 		return;
 	}
 
-	for( RecursiveStandardNoduleIterator it( nodeGadget ); it != it.end(); ++it )
+	for( RecursiveStandardNoduleIterator it( nodeGadget ); !it.done(); ++it )
 	{
 		Gaffer::PlugPtr input, output;
 		(*it)->connection( event, input, output );
