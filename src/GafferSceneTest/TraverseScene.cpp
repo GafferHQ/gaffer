@@ -34,17 +34,15 @@
 //
 //////////////////////////////////////////////////////////////////////////
 
-#include "GafferSceneTest/TraverseScene.h"
 #include "GafferScene/SceneAlgo.h"
+#include "GafferSceneTest/TraverseScene.h"
 
 using namespace std;
 using namespace IECore;
 using namespace Gaffer;
 using namespace GafferScene;
 
-namespace GafferSceneTest
-{
-namespace Detail
+namespace
 {
 
 struct SceneEvaluateFunctor
@@ -59,12 +57,15 @@ struct SceneEvaluateFunctor
 	}
 };
 
-} // namespace Detail
+} // namespace
 
-void traverseScene( GafferScene::ScenePlug *scenePlug )
+void GafferSceneTest::traverseScene( const GafferScene::ScenePlug *scenePlug )
 {
-	Detail::SceneEvaluateFunctor f;
+	SceneEvaluateFunctor f;
 	parallelTraverse( scenePlug, f );
 }
 
-} // namespace GafferSceneTest
+void GafferSceneTest::traverseScene( GafferScene::ScenePlug *scenePlug )
+{
+	traverseScene( const_cast<const ScenePlug *>( scenePlug ) );
+}

@@ -51,7 +51,7 @@
 using namespace boost::python;
 using namespace GafferSceneTest;
 
-static void traverseSceneWrapper( GafferScene::ScenePlug *scenePlug )
+static void traverseSceneWrapper( const GafferScene::ScenePlug *scenePlug )
 {
 	IECorePython::ScopedGILRelease gilRelease;
 	traverseScene( scenePlug );
