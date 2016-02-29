@@ -38,6 +38,7 @@
 #include "boost/python.hpp"
 
 #include "IECorePython/RunTimeTypedBinding.h"
+#include "IECorePython/ScopedGILRelease.h"
 
 #include "Gaffer/CompoundDataPlug.h"
 
@@ -92,22 +93,32 @@ CompoundDataPlugPtr compoundDataPlugConstructor( const char *name, Plug::Directi
 
 Gaffer::CompoundDataPlug::MemberPlugPtr addMemberWrapper( CompoundDataPlug &p, const std::string &name, IECore::DataPtr value, const std::string &plugName, unsigned plugFlags )
 {
+	IECorePython::ScopedGILRelease gilRelease;
 	return p.addMember( name, value.get(), plugName, plugFlags );
 }
 
 Gaffer::CompoundDataPlug::MemberPlugPtr addMemberWrapper2( CompoundDataPlug &p, const std::string &name, ValuePlug *valuePlug, const std::string &plugName )
 {
+	IECorePython::ScopedGILRelease gilRelease;
 	return p.addMember( name, valuePlug, plugName );
 }
 
 Gaffer::CompoundDataPlug::MemberPlugPtr addOptionalMemberWrapper( CompoundDataPlug &p, const std::string &name, IECore::DataPtr value, const std::string plugName, unsigned plugFlags, bool enabled )
 {
+	IECorePython::ScopedGILRelease gilRelease;
 	return p.addOptionalMember( name, value.get(), plugName, plugFlags, enabled );
 }
 
 Gaffer::CompoundDataPlug::MemberPlugPtr addOptionalMemberWrapper2( CompoundDataPlug &p, const std::string &name, ValuePlug *valuePlug, const std::string &plugName, bool enabled )
 {
+	IECorePython::ScopedGILRelease gilRelease;
 	return p.addOptionalMember( name, valuePlug, plugName, enabled );
+}
+
+void addMembersWrapper( CompoundDataPlug &p, const IECore::CompoundData *members, bool useNameAsPlugName )
+{
+	IECorePython::ScopedGILRelease gilRelease;
+	p.addMembers( members, useNameAsPlugName );
 }
 
 tuple memberDataAndNameWrapper( CompoundDataPlug &p, const CompoundDataPlug::MemberPlug *member )
@@ -165,7 +176,7 @@ void GafferBindings::bindCompoundDataPlug()
 		.def( "addMember", &addMemberWrapper2, ( arg_( "name" ), arg_( "valuePlug" ), arg_( "plugName" ) = "member1" ) )
 		.def( "addOptionalMember", &addOptionalMemberWrapper, ( arg_( "name" ), arg_( "defaultValue" ), arg_( "plugName" ) = "member1", arg_( "plugFlags" ) = Plug::Default | Plug::Dynamic, arg_( "enabled" ) = false ) )
 		.def( "addOptionalMember", &addOptionalMemberWrapper2, ( arg_( "name" ), arg_( "valuePlug" ), arg_( "plugName" ) = "member1", arg_( "enabled" ) = false ) )
-		.def( "addMembers", &CompoundDataPlug::addMembers, ( arg_( "members" ), arg_( "useNameAsPlugName" ) = false ) )
+		.def( "addMembers", &addMembersWrapper, ( arg_( "members" ), arg_( "useNameAsPlugName" ) = false ) )
 		.def( "memberDataAndName", &memberDataAndNameWrapper )
 		.def( "fillCompoundData", &fillCompoundData )
 		.def( "fillCompoundObject", &fillCompoundObject )
