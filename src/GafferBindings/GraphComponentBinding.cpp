@@ -38,6 +38,8 @@
 #include "boost/python.hpp"
 #include "boost/format.hpp"
 
+#include "IECorePython/ScopedGILRelease.h"
+
 #include "Gaffer/GraphComponent.h"
 
 #include "GafferBindings/GraphComponentBinding.h"
@@ -108,6 +110,24 @@ boost::python::tuple children( GraphComponent &c, IECore::TypeId typeId )
 	return boost::python::tuple( l );
 }
 
+void addChild( GraphComponent &g, GraphComponentPtr c )
+{
+	IECorePython::ScopedGILRelease gilRelease;
+	g.addChild( c );
+}
+
+void setChild( GraphComponent &g, const IECore::InternedString &n, GraphComponentPtr c )
+{
+	IECorePython::ScopedGILRelease gilRelease;
+	g.setChild( n, c );
+}
+
+void removeChild( GraphComponent &g, GraphComponentPtr c )
+{
+	IECorePython::ScopedGILRelease gilRelease;
+	g.removeChild( c );
+}
+
 GraphComponentPtr getChild( GraphComponent &g, const char *n )
 {
 	return g.getChild<GraphComponent>( n );
@@ -159,11 +179,13 @@ GraphComponentPtr getItem( GraphComponent &g, long index )
 
 void delItem( GraphComponent &g, const char *n )
 {
-	GraphComponentPtr c = g.getChild<GraphComponent>( n );
-	if( c )
 	{
-		g.removeChild( c );
-		return;
+		IECorePython::ScopedGILRelease gilRelease;
+		if( GraphComponentPtr c = g.getChild<GraphComponent>( n ) )
+		{
+			g.removeChild( c );
+			return;
+		}
 	}
 
 	throwKeyError( g, n );
@@ -251,15 +273,15 @@ void GafferBindings::bindGraphComponent()
 		.def( "fullName", &GraphComponent::fullName )
 		.def( "relativeName", &GraphComponent::relativeName )
 		.def( "nameChangedSignal", &GraphComponent::nameChangedSignal, return_internal_reference<1>() )
-		.def( "addChild", &GraphComponent::addChild )
-		.def( "removeChild", &GraphComponent::removeChild )
+		.def( "addChild", &addChild )
+		.def( "removeChild", &removeChild )
 		.def( "clearChildren", &GraphComponent::clearChildren )
-		.def( "setChild", &GraphComponent::setChild )
+		.def( "setChild", &setChild )
 		.def( "getChild", &getChild )
 		.def( "descendant", &descendant )
 		.def( "__getitem__", (GraphComponentPtr (*)( GraphComponent &, const char * ))&getItem )
 		.def( "__getitem__", (GraphComponentPtr (*)( GraphComponent &, long ))&getItem )
-		.def( "__setitem__", &GraphComponent::setChild )
+		.def( "__setitem__", &setChild )
 		.def( "__delitem__", delItem )
 		.def( "__contains__", contains )
 		.def( "__len__", &length )

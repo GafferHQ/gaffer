@@ -401,6 +401,25 @@ class InstancerTest( GafferSceneTest.SceneTestCase ) :
 			)
 
 			c.setFrame( 4 )
+			p = script["attributes"]["attributes"][0]
+			del script["attributes"]["attributes"][p.getName()]
+
+			c.setFrame( 5 )
+			script["attributes"]["attributes"].addChild( p )
+
+			c.setFrame( 6 )
+			script["attributes"]["attributes"].removeChild( p )
+
+			c.setFrame( 7 )
+			script["attributes"]["attributes"].setChild( p.getName(), p )
+
+			c.setFrame( 8 )
+			script["attributes"]["attributes"].removeChild( p )
+
+			c.setFrame( 9 )
+			script["attributes"]["attributes"][p.getName()] = p
+
+			c.setFrame( 10 )
 			script["outputs"].addOutput( "test", IECore.Display( "beauty.exr", "exr", "rgba" ) )
 
 if __name__ == "__main__":
