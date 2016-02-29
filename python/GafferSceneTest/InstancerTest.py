@@ -374,13 +374,16 @@ class InstancerTest( GafferSceneTest.SceneTestCase ) :
 		script["attributes"] = GafferScene.CustomAttributes()
 		script["attributes"]["in"].setInput( script["instancer"]["out"] )
 
+		script["outputs"] = GafferScene.Outputs()
+		script["outputs"]["in"].setInput( script["attributes"]["out"] )
+
 		# Simulate an InteractiveRender or Viewer traversal of the scene
 		# every time it is dirtied. If the GIL isn't released when dirtiness
 		# is signalled, we'll end up with a deadlock as the traversal enters
 		# python on another thread to evaluate the expression. We increment the frame
 		# between each test to ensure the expression result is not cached and
 		# we do truly enter python.
-		traverseConnection = Gaffer.ScopedConnection( GafferSceneTest.connectTraverseSceneToPlugDirtiedSignal( script["attributes"]["out"] ) )
+		traverseConnection = Gaffer.ScopedConnection( GafferSceneTest.connectTraverseSceneToPlugDirtiedSignal( script["outputs"]["out"] ) )
 		with Gaffer.Context() as c :
 
 			c.setFrame( 1 )
@@ -396,6 +399,9 @@ class InstancerTest( GafferSceneTest.SceneTestCase ) :
 					"test4" : 40,
 				} )
 			)
+
+			c.setFrame( 4 )
+			script["outputs"].addOutput( "test", IECore.Display( "beauty.exr", "exr", "rgba" ) )
 
 if __name__ == "__main__":
 	unittest.main()

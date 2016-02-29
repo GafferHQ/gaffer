@@ -35,7 +35,8 @@
 //////////////////////////////////////////////////////////////////////////
 
 #include "boost/python.hpp"
-#include "boost/python/suite/indexing/container_utils.hpp"
+
+#include "IECorePython/ScopedGILRelease.h"
 
 #include "GafferBindings/DependencyNodeBinding.h"
 
@@ -51,7 +52,22 @@ using namespace Gaffer;
 using namespace GafferBindings;
 using namespace GafferScene;
 
-static boost::python::tuple registeredOutputsWrapper()
+namespace
+{
+
+ValuePlugPtr addOutputWrapper( Outputs &o, const std::string &name )
+{
+	ScopedGILRelease gilRelease;
+	return o.addOutput( name );
+}
+
+ValuePlugPtr addOutputWrapper2( Outputs &o, const std::string &name, const IECore::Display *output )
+{
+	ScopedGILRelease gilRelease;
+	return o.addOutput( name, output );
+}
+
+boost::python::tuple registeredOutputsWrapper()
 {
 	vector<string> names;
 	Outputs::registeredOutputs( names );
@@ -63,11 +79,13 @@ static boost::python::tuple registeredOutputsWrapper()
 	return boost::python::tuple( l );
 }
 
+} // namespace
+
 void GafferSceneBindings::bindOutputs()
 {
 	DependencyNodeClass<Outputs>()
-		.def( "addOutput", (ValuePlug *(Outputs::*)( const std::string & ))&Outputs::addOutput, return_value_policy<CastToIntrusivePtr>() )
-		.def( "addOutput", (ValuePlug *(Outputs::*)( const std::string &, const IECore::Display * ))&Outputs::addOutput, return_value_policy<CastToIntrusivePtr>() )
+		.def( "addOutput", &addOutputWrapper )
+		.def( "addOutput", &addOutputWrapper2 )
 		.def( "registerOutput", &Outputs::registerOutput ).staticmethod( "registerOutput" )
 		.def( "registeredOutputs", &registeredOutputsWrapper ).staticmethod( "registeredOutputs" )
 	;
