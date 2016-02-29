@@ -422,5 +422,40 @@ class InstancerTest( GafferSceneTest.SceneTestCase ) :
 			c.setFrame( 10 )
 			script["outputs"].addOutput( "test", IECore.Display( "beauty.exr", "exr", "rgba" ) )
 
+	def testLoadReferenceAndGIL( self ) :
+
+		script = Gaffer.ScriptNode()
+
+		script["plane"] = GafferScene.Plane()
+		script["plane"]["divisions"].setValue( IECore.V2i( 20 ) )
+
+		script["sphere"] = GafferScene.Sphere()
+
+		script["expression"] = Gaffer.Expression()
+		script["expression"].setExpression( "parent['sphere']['radius'] = 0.1 + context.getFrame() + float( context['instancer:id'] )" )
+
+		script["instancer"] = GafferScene.Instancer()
+		script["instancer"]["in"].setInput( script["plane"]["out"] )
+		script["instancer"]["instance"].setInput( script["sphere"]["out"] )
+		script["instancer"]["parent"].setValue( "/plane" )
+
+		script["box"] = Gaffer.Box()
+		script["box"]["in"] = GafferScene.ScenePlug( flags = Gaffer.Plug.Flags.Default | Gaffer.Plug.Flags.Dynamic )
+		script["box"]["out"] = GafferScene.ScenePlug( direction = Gaffer.Plug.Direction.Out, flags = Gaffer.Plug.Flags.Default | Gaffer.Plug.Flags.Dynamic )
+		script["box"]["out"].setInput( script["box"]["in"] )
+		script["box"].exportForReference( self.temporaryDirectory() + "/test.grf" )
+
+		script["reference"] = Gaffer.Reference()
+		script["reference"].load( self.temporaryDirectory() + "/test.grf" )
+		script["reference"]["in"].setInput( script["instancer"]["out"] )
+
+		script["attributes"] = GafferScene.CustomAttributes()
+		script["attributes"]["in"].setInput( script["reference"]["out"] )
+
+		traverseConnection = Gaffer.ScopedConnection( GafferSceneTest.connectTraverseSceneToPlugDirtiedSignal( script["attributes"]["out"] ) )
+		with Gaffer.Context() as c :
+
+			script["reference"].load( self.temporaryDirectory() + "/test.grf" )
+
 if __name__ == "__main__":
 	unittest.main()
