@@ -48,7 +48,10 @@ using namespace boost::python;
 using namespace GafferBindings;
 using namespace Gaffer;
 
-static std::string maskedMemberPlugRepr( const CompoundDataPlug::MemberPlug *plug, unsigned flagsMask )
+namespace
+{
+
+std::string maskedMemberPlugRepr( const CompoundDataPlug::MemberPlug *plug, unsigned flagsMask )
 {
 	// the only reason we have a different __repr__ implementation than Gaffer::Plug is
 	// because we can't determine the nested class name from a PyObject.
@@ -70,12 +73,12 @@ static std::string maskedMemberPlugRepr( const CompoundDataPlug::MemberPlug *plu
 	return result;
 }
 
-static std::string memberPlugRepr( const CompoundDataPlug::MemberPlug *plug )
+std::string memberPlugRepr( const CompoundDataPlug::MemberPlug *plug )
 {
 	return maskedMemberPlugRepr( plug, Plug::All );
 }
 
-static CompoundDataPlugPtr compoundDataPlugConstructor( const char *name, Plug::Direction direction, unsigned flags, tuple children )
+CompoundDataPlugPtr compoundDataPlugConstructor( const char *name, Plug::Direction direction, unsigned flags, tuple children )
 {
 	CompoundDataPlugPtr result = new CompoundDataPlug( name, direction, flags );
 	size_t s = extract<size_t>( children.attr( "__len__" )() );
@@ -87,39 +90,39 @@ static CompoundDataPlugPtr compoundDataPlugConstructor( const char *name, Plug::
 	return result;
 }
 
-static Gaffer::CompoundDataPlug::MemberPlugPtr addMemberWrapper( CompoundDataPlug &p, const std::string &name, IECore::DataPtr value, const std::string &plugName, unsigned plugFlags )
+Gaffer::CompoundDataPlug::MemberPlugPtr addMemberWrapper( CompoundDataPlug &p, const std::string &name, IECore::DataPtr value, const std::string &plugName, unsigned plugFlags )
 {
 	return p.addMember( name, value.get(), plugName, plugFlags );
 }
 
-static Gaffer::CompoundDataPlug::MemberPlugPtr addMemberWrapper2( CompoundDataPlug &p, const std::string &name, ValuePlug *valuePlug, const std::string &plugName )
+Gaffer::CompoundDataPlug::MemberPlugPtr addMemberWrapper2( CompoundDataPlug &p, const std::string &name, ValuePlug *valuePlug, const std::string &plugName )
 {
 	return p.addMember( name, valuePlug, plugName );
 }
 
-static Gaffer::CompoundDataPlug::MemberPlugPtr addOptionalMemberWrapper( CompoundDataPlug &p, const std::string &name, IECore::DataPtr value, const std::string plugName, unsigned plugFlags, bool enabled )
+Gaffer::CompoundDataPlug::MemberPlugPtr addOptionalMemberWrapper( CompoundDataPlug &p, const std::string &name, IECore::DataPtr value, const std::string plugName, unsigned plugFlags, bool enabled )
 {
 	return p.addOptionalMember( name, value.get(), plugName, plugFlags, enabled );
 }
 
-static Gaffer::CompoundDataPlug::MemberPlugPtr addOptionalMemberWrapper2( CompoundDataPlug &p, const std::string &name, ValuePlug *valuePlug, const std::string &plugName, bool enabled )
+Gaffer::CompoundDataPlug::MemberPlugPtr addOptionalMemberWrapper2( CompoundDataPlug &p, const std::string &name, ValuePlug *valuePlug, const std::string &plugName, bool enabled )
 {
 	return p.addOptionalMember( name, valuePlug, plugName, enabled );
 }
 
-static tuple memberDataAndNameWrapper( CompoundDataPlug &p, const CompoundDataPlug::MemberPlug *member )
+tuple memberDataAndNameWrapper( CompoundDataPlug &p, const CompoundDataPlug::MemberPlug *member )
 {
 	std::string name;
 	IECore::DataPtr d = p.memberDataAndName( member, name );
 	return boost::python::make_tuple( d, name );
 }
 
-static void fillCompoundData( const CompoundDataPlug &p, IECore::CompoundData *d )
+void fillCompoundData( const CompoundDataPlug &p, IECore::CompoundData *d )
 {
 	p.fillCompoundData( d->writable() );
 }
 
-static void fillCompoundObject( const CompoundDataPlug &p, IECore::CompoundObject *o )
+void fillCompoundObject( const CompoundDataPlug &p, IECore::CompoundObject *o )
 {
 	p.fillCompoundObject( o->members() );
 }
@@ -142,6 +145,8 @@ class MemberPlugSerialiser : public ValuePlugSerialiser
 		}
 
 };
+
+} // namespace
 
 void GafferBindings::bindCompoundDataPlug()
 {
