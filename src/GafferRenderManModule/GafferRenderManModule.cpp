@@ -36,6 +36,8 @@
 
 #include "boost/python.hpp"
 
+#include "IECorePython/ScopedGILRelease.h"
+
 #include "Gaffer/StringPlug.h"
 
 #include "GafferBindings/DependencyNodeBinding.h"
@@ -51,8 +53,12 @@ using namespace boost::python;
 using namespace GafferBindings;
 using namespace GafferRenderMan;
 
+namespace
+{
+
 /// \todo Move this serialisation to the bindings for GafferScene::Shader, once we've made Shader::loadShader() virtual
-/// and implemented it so reloading works in ArnoldShader and OpenGLShader.
+/// and implemented it so reloading works in ArnoldShader and OpenGLShader. Also consider how we might share loading code
+/// between shaders and lights.
 class RenderManShaderSerialiser : public GafferBindings::NodeSerialiser
 {
 
@@ -70,11 +76,25 @@ class RenderManShaderSerialiser : public GafferBindings::NodeSerialiser
 
 };
 
+void loadShader( RenderManShader &shader, const std::string &shaderName, bool keepExistingValues )
+{
+	IECorePython::ScopedGILRelease gilRelease;
+	shader.loadShader( shaderName, keepExistingValues );
+}
+
+void loadLightShader( RenderManLight &light, const std::string &shaderName )
+{
+	IECorePython::ScopedGILRelease gilRelease;
+	light.loadShader( shaderName );
+}
+
+} // namespace
+
 BOOST_PYTHON_MODULE( _GafferRenderMan )
 {
 
 	GafferBindings::DependencyNodeClass<RenderManShader>()
-		.def( "loadShader", &RenderManShader::loadShader, ( arg_( "shaderName" ), arg_( "keepExistingValues" ) = false ) )
+		.def( "loadShader", &loadShader, ( arg_( "shaderName" ), arg_( "keepExistingValues" ) = false ) )
 		.def( "shaderLoader", &RenderManShader::shaderLoader, return_value_policy<reference_existing_object>() )
 		.staticmethod( "shaderLoader" )
 	;
@@ -82,7 +102,7 @@ BOOST_PYTHON_MODULE( _GafferRenderMan )
 	Serialisation::registerSerialiser( RenderManShader::staticTypeId(), new RenderManShaderSerialiser() );
 
 	GafferBindings::NodeClass<RenderManLight>()
-		.def( "loadShader", &RenderManLight::loadShader )
+		.def( "loadShader", &loadLightShader )
 	;
 
 	GafferBindings::NodeClass<RenderManAttributes>();

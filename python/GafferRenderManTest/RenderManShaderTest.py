@@ -42,6 +42,7 @@ import IECore
 import Gaffer
 import GafferTest
 import GafferScene
+import GafferSceneTest
 import GafferRenderMan
 import GafferRenderManTest
 
@@ -1616,6 +1617,31 @@ class RenderManShaderTest( GafferRenderManTest.RenderManTestCase ) :
 		s["r"].load( self.temporaryDirectory() + "/test.grf" )
 
 		self.assertTrue( s["r"]["p"].acceptsInput( s["c"]["out"] ) )
+
+	def testLoadAndGIL( self ) :
+
+		script = Gaffer.ScriptNode()
+
+		script["plane"] = GafferScene.Plane()
+		script["plane"]["divisions"].setValue( IECore.V2i( 20 ) )
+
+		script["sphere"] = GafferScene.Sphere()
+
+		script["expression"] = Gaffer.Expression()
+		script["expression"].setExpression( "parent['sphere']['radius'] = 0.2 + context.getFrame() + float( context['instancer:id'] )" )
+
+		script["instancer"] = GafferScene.Instancer()
+		script["instancer"]["in"].setInput( script["plane"]["out"] )
+		script["instancer"]["instance"].setInput( script["sphere"]["out"] )
+		script["instancer"]["parent"].setValue( "/plane" )
+
+		script["shader"] = GafferRenderMan.RenderManShader()
+		script["assignment"] = GafferScene.ShaderAssignment()
+		script["assignment"]["in"].setInput( script["instancer"]["out"] )
+		script["assignment"]["shader"].setInput( script["shader"]["out"] )
+
+		traverseConnection = Gaffer.ScopedConnection( GafferSceneTest.connectTraverseSceneToPlugDirtiedSignal( script["assignment"]["out"] ) )
+		script["shader"].loadShader( "matte" )
 
 if __name__ == "__main__":
 	unittest.main()
