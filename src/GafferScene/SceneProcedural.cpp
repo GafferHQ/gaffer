@@ -381,20 +381,7 @@ void SceneProcedural::render( Renderer *renderer ) const
 
 		// transform
 
-		std::set<float> transformTimes;
-		motionTimes( ( m_options.transformBlur && m_attributes.transformBlur ) ? m_attributes.transformBlurSegments : 0, transformTimes );
-		{
-			ContextPtr timeContext = new Context( *m_context, Context::Borrowed );
-			Context::Scope scopedTimeContext( timeContext.get() );
-
-			MotionBlock motionBlock( renderer, transformTimes, transformTimes.size() > 1 );
-
-			for( std::set<float>::const_iterator it = transformTimes.begin(), eIt = transformTimes.end(); it != eIt; it++ )
-			{
-				timeContext->setFrame( *it );
-				renderer->concatTransform( m_scenePlug->transformPlug()->getValue() );
-			}
-		}
+		outputTransform( m_scenePlug.get(), renderer, ( m_options.transformBlur && m_attributes.transformBlur ) ? m_attributes.transformBlurSegments : 0, m_options.shutter );
 
 		// attributes
 

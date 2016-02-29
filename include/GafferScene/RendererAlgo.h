@@ -96,6 +96,16 @@ void createDisplayDirectories( const IECore::CompoundObject *globals );
 /// retrieved from ScenePlug:attributesPlug().
 void outputAttributes( const IECore::CompoundObject *attributes, IECore::Renderer *renderer );
 
+/// Samples the local transform from the current location in preparation for output to the renderer.
+/// If segments is 0, the transform is sampled at the time from the current context. If it is non-zero then
+/// the sampling is performed evenly across the shutter interval, which should have been obtained via
+/// SceneAlgo::shutter(). If all samples turn out to be identical, they will be collapsed automatically
+/// into a single sample. The sampleTimes container is only filled if there is more than one sample.
+void transformSamples( const ScenePlug *scene, size_t segments, const Imath::V2f &shutter, std::vector<Imath::M44f> &samples, std::set<float> &sampleTimes );
+
+/// Outputs the local transform for the current location, using transformSamples() to generate the samples.
+void outputTransform( const ScenePlug *scene, IECore::Renderer *renderer, size_t segments = 0, const Imath::V2f &shutter = Imath::V2i( 0 ) );
+
 } // namespace GafferScene
 
 #endif // GAFFERSCENE_RENDERERALGO_H

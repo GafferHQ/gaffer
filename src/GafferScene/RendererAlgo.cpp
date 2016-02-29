@@ -48,6 +48,7 @@
 #include "IECore/CoordinateSystem.h"
 #include "IECore/ClippingPlane.h"
 #include "IECore/VisibleRenderable.h"
+#include "IECore/MotionBlock.h"
 
 #include "Gaffer/Context.h"
 #include "Gaffer/Metadata.h"
@@ -61,6 +62,27 @@ using namespace std;
 using namespace Imath;
 using namespace IECore;
 using namespace Gaffer;
+
+//////////////////////////////////////////////////////////////////////////
+// Internal utilities
+//////////////////////////////////////////////////////////////////////////
+
+namespace
+{
+
+void motionTimes( size_t segments, const V2f &shutter, std::set<float> &times )
+{
+	for( size_t i = 0; i<segments + 1; ++i )
+	{
+		times.insert( lerp( shutter[0], shutter[1], (float)i / (float)segments ) );
+	}
+}
+
+} // namespace
+
+//////////////////////////////////////////////////////////////////////////
+// RendererAlgo implementation
+//////////////////////////////////////////////////////////////////////////
 
 namespace GafferScene
 {
@@ -431,6 +453,56 @@ void outputAttributes( const IECore::CompoundObject *attributes, IECore::Rendere
 				}
 			}
 		}
+	}
+}
+
+void transformSamples( const ScenePlug *scene, size_t segments, const Imath::V2f &shutter, std::vector<Imath::M44f> &samples, std::set<float> &sampleTimes )
+{
+	// Static case
+
+	if( !segments )
+	{
+		samples.push_back( scene->transformPlug()->getValue() );
+		return;
+	}
+
+	// Motion case
+
+	motionTimes( segments, shutter, sampleTimes );
+
+	ContextPtr timeContext = new Context( *Context::current(), Context::Borrowed );
+	Context::Scope scopedTimeContext( timeContext.get() );
+
+	bool moving = false;
+	samples.reserve( sampleTimes.size() );
+	for( std::set<float>::const_iterator it = sampleTimes.begin(), eIt = sampleTimes.end(); it != eIt; ++it )
+	{
+		timeContext->setFrame( *it );
+		const M44f m = scene->transformPlug()->getValue();
+		if( !moving && !samples.empty() && m != samples.front() )
+		{
+			moving = true;
+		}
+		samples.push_back( m );
+	}
+
+	if( !moving )
+	{
+		samples.resize( 1 );
+		sampleTimes.clear();
+	}
+}
+
+void outputTransform( const ScenePlug *scene, IECore::Renderer *renderer, size_t segments, const Imath::V2f &shutter )
+{
+	vector<M44f> samples;
+	set<float> sampleTimes;
+	transformSamples( scene, segments, shutter, samples, sampleTimes );
+
+	MotionBlock motionBlock( renderer, sampleTimes );
+	for( vector<M44f>::const_iterator it = samples.begin(), eIt = samples.end(); it != eIt; ++it )
+	{
+		renderer->concatTransform( *it );
 	}
 }
 

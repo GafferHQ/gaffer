@@ -744,5 +744,61 @@ class RenderManRenderTest( GafferRenderManTest.RenderManTestCase ) :
 		rib = "\n".join( file( self.temporaryDirectory() + "/test.rib" ).readlines() )
 		self.assertTrue( "ClippingPlane" in rib )
 
+	def __expandedRIB( self, scene ) :
+
+		script = scene.ancestor( Gaffer.ScriptNode )
+		script["fileName"].setValue( self.temporaryDirectory() + "/test.gfr" )
+		script.save()
+
+		script["__render"] = GafferRenderMan.RenderManRender()
+		script["__render"]["in"].setInput( scene )
+		script["__render"]["ribFileName"].setValue( self.temporaryDirectory() + "/test.rib" )
+		script["__render"]["mode"].setValue( "generate" )
+
+		script["__render"].execute()
+
+		self.assertTrue( os.path.exists( self.temporaryDirectory() + "/test.rib" ) )
+
+		expandedRIB = self.temporaryDirectory() + "/expanded.rib"
+		subprocess.check_call(
+			[ "renderdl", "-catrib", "-callprocedurals", "-o", expandedRIB, self.temporaryDirectory() + "/test.rib"  ]
+		)
+
+		return "".join( file( expandedRIB ).readlines() )
+
+	def testTransformMotionBlur( self ) :
+
+		s = Gaffer.ScriptNode()
+
+		s["sphere"] = GafferScene.Sphere()
+		s["sphere"]["type"].setValue( s["sphere"].Type.Primitive )
+
+		s["attributes"] = GafferScene.StandardAttributes()
+		s["attributes"]["in"].setInput( s["sphere"]["out"] )
+
+		s["options"] = GafferScene.StandardOptions()
+		s["options"]["in"].setInput( s["attributes"]["out"] )
+
+		# Transform motion off, we should have no motion statements
+
+		r = self.__expandedRIB( s["options"]["out"] )
+		self.assertEqual( r.count( "MotionBegin" ), 0 )
+
+		# Transform motion on, but no motion, so we should still have no motion statements
+
+		s["options"]["options"]["transformBlur"]["enabled"].setValue( True )
+		s["options"]["options"]["transformBlur"]["value"].setValue( True )
+
+		r = self.__expandedRIB( s["options"]["out"] )
+		self.assertEqual( r.count( "MotionBegin" ), 0 )
+
+		# With some motion - we should have a motion block.
+
+		s["expression"] = Gaffer.Expression()
+		s["expression"].setExpression( 'parent["sphere"]["transform"]["translate"]["x"] = context.getFrame()' )
+
+		r = self.__expandedRIB( s["options"]["out"] )
+		self.assertEqual( r.count( "MotionBegin" ), 1 )
+
 if __name__ == "__main__":
 	unittest.main()
