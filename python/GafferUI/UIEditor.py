@@ -343,6 +343,16 @@ class _MetadataWidget( GafferUI.Widget ) :
 		with Gaffer.UndoContext( self.__target.ancestor( Gaffer.ScriptNode ) ) :
 			_registerMetadata( self.__target, self.__key, value )
 
+	## May be called by derived classes to deregister the
+	# metadata value.
+	def _deregisterValue( self ) :
+
+		if self.__target is None :
+			return
+
+		with Gaffer.UndoContext( self.__target.ancestor( Gaffer.ScriptNode ) ) :
+			_deregisterMetadata( self.__target, self.__key )
+
 	def __update( self ) :
 
 		if isinstance( self.__target, Gaffer.Node ) :
@@ -397,10 +407,12 @@ class _BoolMetadataWidget( _MetadataWidget ) :
 
 class _StringMetadataWidget( _MetadataWidget ) :
 
-	def __init__( self, key, target = None, **kw ) :
+	def __init__( self, key, target = None, acceptEmptyString = True, **kw ) :
 
 		self.__textWidget = GafferUI.TextWidget()
 		_MetadataWidget.__init__( self, self.__textWidget, key, target, **kw )
+
+		self.__acceptEmptyString = acceptEmptyString
 
 		self.__editingFinishedConnection = self.__textWidget.editingFinishedSignal().connect(
 			Gaffer.WeakMethod( self.__editingFinished )
@@ -416,7 +428,11 @@ class _StringMetadataWidget( _MetadataWidget ) :
 
 	def __editingFinished( self, *unused ) :
 
-		self._updateFromWidget( self.__textWidget.getText() )
+		text = self.__textWidget.getText()
+		if text or self.__acceptEmptyString :
+			self._updateFromWidget( text )
+		else :
+			self._deregisterValue()
 
 class _MultiLineStringMetadataWidget( _MetadataWidget ) :
 
@@ -1417,6 +1433,11 @@ class _PlugEditor( GafferUI.Widget ) :
 				_Label( "Name" )
 
 				self.__nameWidget = GafferUI.NameWidget( None )
+
+			with _Row() :
+
+				_Label( "Label" )
+				self.__metadataWidgets["label"] = _StringMetadataWidget( key = "label", acceptEmptyString = False )
 
 			with _Row() :
 
