@@ -34,6 +34,8 @@
 //
 //////////////////////////////////////////////////////////////////////////
 
+#include "boost/bind.hpp"
+
 #include "GafferScene/SceneAlgo.h"
 #include "GafferSceneTest/TraverseScene.h"
 
@@ -41,6 +43,7 @@ using namespace std;
 using namespace IECore;
 using namespace Gaffer;
 using namespace GafferScene;
+using namespace GafferSceneTest;
 
 namespace
 {
@@ -57,6 +60,14 @@ struct SceneEvaluateFunctor
 	}
 };
 
+void traverseOnDirty( const Gaffer::Plug *dirtiedPlug, ConstScenePlugPtr scene )
+{
+	if( dirtiedPlug == scene.get() )
+	{
+		traverseScene( scene.get() );
+	}
+}
+
 } // namespace
 
 void GafferSceneTest::traverseScene( const GafferScene::ScenePlug *scenePlug )
@@ -68,4 +79,15 @@ void GafferSceneTest::traverseScene( const GafferScene::ScenePlug *scenePlug )
 void GafferSceneTest::traverseScene( GafferScene::ScenePlug *scenePlug )
 {
 	traverseScene( const_cast<const ScenePlug *>( scenePlug ) );
+}
+
+boost::signals::connection GafferSceneTest::connectTraverseSceneToPlugDirtiedSignal( const GafferScene::ConstScenePlugPtr &scene )
+{
+	const Node *node = scene->node();
+	if( !node )
+	{
+		throw IECore::Exception( "Plug does not belong to a node." );
+	}
+
+	return const_cast<Node *>( node )->plugDirtiedSignal().connect( boost::bind( &traverseOnDirty, ::_1, scene ) );
 }

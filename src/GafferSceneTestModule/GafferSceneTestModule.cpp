@@ -65,6 +65,8 @@ BOOST_PYTHON_MODULE( _GafferSceneTest )
 	GafferBindings::NodeClass<TestLight>();
 
 	def( "traverseScene", &traverseSceneWrapper );
+	def( "connectTraverseSceneToPlugDirtiedSignal", &connectTraverseSceneToPlugDirtiedSignal );
+
 	def( "testManyStringToPathCalls", &testManyStringToPathCalls );
 
 	def( "testPathMatcherRawIterator", &testPathMatcherRawIterator );
