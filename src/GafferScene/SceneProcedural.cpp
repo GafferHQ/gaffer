@@ -389,39 +389,7 @@ void SceneProcedural::render( Renderer *renderer ) const
 
 		// object
 
-		std::set<float> deformationTimes;
-		motionTimes( ( m_options.deformationBlur && m_attributes.deformationBlur ) ? m_attributes.deformationBlurSegments : 0, deformationTimes );
-		{
-			ContextPtr timeContext = new Context( *m_context, Context::Borrowed );
-			Context::Scope scopedTimeContext( timeContext.get() );
-
-			unsigned timeIndex = 0;
-			for( std::set<float>::const_iterator it = deformationTimes.begin(), eIt = deformationTimes.end(); it != eIt; it++, timeIndex++ )
-			{
-				timeContext->setFrame( *it );
-				ConstObjectPtr object = m_scenePlug->objectPlug()->getValue();
-				if( const Primitive *primitive = runTimeCast<const Primitive>( object.get() ) )
-				{
-					if( deformationTimes.size() > 1 && timeIndex == 0 )
-					{
-						renderer->motionBegin( deformationTimes );
-					}
-
-						primitive->render( renderer );
-
-					if( deformationTimes.size() > 1 && timeIndex == deformationTimes.size() - 1 )
-					{
-						renderer->motionEnd();
-					}
-				}
-				else if( const VisibleRenderable* renderable = runTimeCast< const VisibleRenderable >( object.get() ) )
-				{
-					renderable->render( renderer );
-					break; // no motion blur for these chappies.
-				}
-
-			}
-		}
+		outputObject( m_scenePlug.get(), renderer, ( m_options.deformationBlur && m_attributes.deformationBlur ) ? m_attributes.deformationBlurSegments : 0, m_options.shutter );
 
 		// children
 

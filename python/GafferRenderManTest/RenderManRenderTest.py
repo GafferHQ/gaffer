@@ -800,5 +800,39 @@ class RenderManRenderTest( GafferRenderManTest.RenderManTestCase ) :
 		r = self.__expandedRIB( s["options"]["out"] )
 		self.assertEqual( r.count( "MotionBegin" ), 1 )
 
+	def testDeformationMotionBlur( self ) :
+
+		s = Gaffer.ScriptNode()
+
+		s["sphere"] = GafferScene.Sphere()
+		s["sphere"]["type"].setValue( s["sphere"].Type.Primitive )
+
+		s["attributes"] = GafferScene.StandardAttributes()
+		s["attributes"]["in"].setInput( s["sphere"]["out"] )
+
+		s["options"] = GafferScene.StandardOptions()
+		s["options"]["in"].setInput( s["attributes"]["out"] )
+
+		# Deformation motion off, we should have no motion statements
+
+		r = self.__expandedRIB( s["options"]["out"] )
+		self.assertEqual( r.count( "MotionBegin" ), 0 )
+
+		# Deformation motion on, but no motion, so we should still have no motion statements
+
+		s["options"]["options"]["deformationBlur"]["enabled"].setValue( True )
+		s["options"]["options"]["deformationBlur"]["value"].setValue( True )
+
+		r = self.__expandedRIB( s["options"]["out"] )
+		self.assertEqual( r.count( "MotionBegin" ), 0 )
+
+		# With some motion - we should have a motion block.
+
+		s["expression"] = Gaffer.Expression()
+		s["expression"].setExpression( 'parent["sphere"]["radius"] = context.getFrame()' )
+
+		r = self.__expandedRIB( s["options"]["out"] )
+		self.assertEqual( r.count( "MotionBegin" ), 1 )
+
 if __name__ == "__main__":
 	unittest.main()

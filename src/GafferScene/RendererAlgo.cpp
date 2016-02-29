@@ -48,6 +48,7 @@
 #include "IECore/CoordinateSystem.h"
 #include "IECore/ClippingPlane.h"
 #include "IECore/VisibleRenderable.h"
+#include "IECore/Primitive.h"
 #include "IECore/MotionBlock.h"
 
 #include "Gaffer/Context.h"
@@ -503,6 +504,84 @@ void outputTransform( const ScenePlug *scene, IECore::Renderer *renderer, size_t
 	for( vector<M44f>::const_iterator it = samples.begin(), eIt = samples.end(); it != eIt; ++it )
 	{
 		renderer->concatTransform( *it );
+	}
+}
+
+void objectSamples( const ScenePlug *scene, size_t segments, const Imath::V2f &shutter, std::vector<IECore::ConstVisibleRenderablePtr> &samples, std::set<float> &sampleTimes )
+{
+
+	// Static case
+
+	if( !segments )
+	{
+		ConstObjectPtr object = scene->objectPlug()->getValue();
+		if( const VisibleRenderable *renderable = runTimeCast<const VisibleRenderable>( object.get() ) )
+		{
+			samples.push_back( renderable );
+		}
+		return;
+	}
+
+	// Motion case
+
+	motionTimes( segments, shutter, sampleTimes );
+
+	ContextPtr timeContext = new Context( *Context::current(), Context::Borrowed );
+	Context::Scope scopedTimeContext( timeContext.get() );
+
+	bool moving = false;
+	MurmurHash lastHash;
+	samples.reserve( sampleTimes.size() );
+	for( std::set<float>::const_iterator it = sampleTimes.begin(), eIt = sampleTimes.end(); it != eIt; ++it )
+	{
+		timeContext->setFrame( *it );
+
+		const MurmurHash objectHash = scene->objectPlug()->hash();
+		ConstObjectPtr object = scene->objectPlug()->getValue( &objectHash );
+
+		if( const Primitive *primitive = runTimeCast<const Primitive>( object.get() ) )
+		{
+			// We can support multiple samples for these, so check to see
+			// if we actually have something moving.
+			if( !moving && !samples.empty() && objectHash != lastHash )
+			{
+				moving = true;
+			}
+			samples.push_back( primitive );
+			lastHash = objectHash;
+		}
+		else if( const VisibleRenderable *renderable = runTimeCast< const VisibleRenderable >( object.get() ) )
+		{
+			// We can't motion blur these chappies, so just take the one
+			// sample.
+			samples.push_back( renderable );
+			break;
+		}
+		else
+		{
+			// We don't even know what these chappies are, so
+			// don't take any samples at all.
+			break;
+		}
+	}
+
+	if( !moving )
+	{
+		samples.resize( std::min<size_t>( samples.size(), 1 ) );
+		sampleTimes.clear();
+	}
+}
+
+void outputObject( const ScenePlug *scene, IECore::Renderer *renderer, size_t segments, const Imath::V2f &shutter )
+{
+	vector<ConstVisibleRenderablePtr> samples;
+	set<float> sampleTimes;
+	objectSamples( scene, segments, shutter, samples, sampleTimes );
+
+	MotionBlock motionBlock( renderer, sampleTimes );
+	for( vector<ConstVisibleRenderablePtr>::const_iterator it = samples.begin(), eIt = samples.end(); it != eIt; ++it )
+	{
+		(*it)->render( renderer );
 	}
 }
 
