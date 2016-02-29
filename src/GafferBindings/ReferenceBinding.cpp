@@ -36,6 +36,8 @@
 
 #include "boost/python.hpp" // must be the first include
 
+#include "IECorePython/ScopedGILRelease.h"
+
 #include "Gaffer/Reference.h"
 #include "Gaffer/StringPlug.h"
 
@@ -85,12 +87,18 @@ class ReferenceSerialiser : public NodeSerialiser
 
 };
 
+void load( Reference &r, const std::string &f )
+{
+	IECorePython::ScopedGILRelease gilRelease;
+	r.load( f );
+}
+
 } // namespace
 
 void GafferBindings::bindReference()
 {
 	NodeClass<Reference>()
-		.def( "load", &Reference::load )
+		.def( "load", &load )
 		.def( "fileName", &Reference::fileName, return_value_policy<copy_const_reference>() )
 		.def( "referenceLoadedSignal", &Reference::referenceLoadedSignal, return_internal_reference<1>() )
 	;

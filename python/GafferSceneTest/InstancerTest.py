@@ -354,5 +354,108 @@ class InstancerTest( GafferSceneTest.SceneTestCase ) :
 			script["instancer"]["out"].childNamesHash( "/plane" )
 			c.setFrame( 307 )
 
+	def testDynamicPlugsAndGIL( self ) :
+
+		script = Gaffer.ScriptNode()
+
+		script["plane"] = GafferScene.Plane()
+		script["plane"]["divisions"].setValue( IECore.V2i( 20 ) )
+
+		script["sphere"] = GafferScene.Sphere()
+
+		script["expression"] = Gaffer.Expression()
+		script["expression"].setExpression( "parent['sphere']['radius'] = context.getFrame() + float( context['instancer:id'] )" )
+
+		script["instancer"] = GafferScene.Instancer()
+		script["instancer"]["in"].setInput( script["plane"]["out"] )
+		script["instancer"]["instance"].setInput( script["sphere"]["out"] )
+		script["instancer"]["parent"].setValue( "/plane" )
+
+		script["attributes"] = GafferScene.CustomAttributes()
+		script["attributes"]["in"].setInput( script["instancer"]["out"] )
+
+		script["outputs"] = GafferScene.Outputs()
+		script["outputs"]["in"].setInput( script["attributes"]["out"] )
+
+		# Simulate an InteractiveRender or Viewer traversal of the scene
+		# every time it is dirtied. If the GIL isn't released when dirtiness
+		# is signalled, we'll end up with a deadlock as the traversal enters
+		# python on another thread to evaluate the expression. We increment the frame
+		# between each test to ensure the expression result is not cached and
+		# we do truly enter python.
+		traverseConnection = Gaffer.ScopedConnection( GafferSceneTest.connectTraverseSceneToPlugDirtiedSignal( script["outputs"]["out"] ) )
+		with Gaffer.Context() as c :
+
+			c.setFrame( 1 )
+			script["attributes"]["attributes"].addMember( "test1", IECore.IntData( 10 ) )
+
+			c.setFrame( 2 )
+			script["attributes"]["attributes"].addOptionalMember( "test2", IECore.IntData( 20 ) )
+
+			c.setFrame( 3 )
+			script["attributes"]["attributes"].addMembers(
+				IECore.CompoundData( {
+					"test3" : 30,
+					"test4" : 40,
+				} )
+			)
+
+			c.setFrame( 4 )
+			p = script["attributes"]["attributes"][0]
+			del script["attributes"]["attributes"][p.getName()]
+
+			c.setFrame( 5 )
+			script["attributes"]["attributes"].addChild( p )
+
+			c.setFrame( 6 )
+			script["attributes"]["attributes"].removeChild( p )
+
+			c.setFrame( 7 )
+			script["attributes"]["attributes"].setChild( p.getName(), p )
+
+			c.setFrame( 8 )
+			script["attributes"]["attributes"].removeChild( p )
+
+			c.setFrame( 9 )
+			script["attributes"]["attributes"][p.getName()] = p
+
+			c.setFrame( 10 )
+			script["outputs"].addOutput( "test", IECore.Display( "beauty.exr", "exr", "rgba" ) )
+
+	def testLoadReferenceAndGIL( self ) :
+
+		script = Gaffer.ScriptNode()
+
+		script["plane"] = GafferScene.Plane()
+		script["plane"]["divisions"].setValue( IECore.V2i( 20 ) )
+
+		script["sphere"] = GafferScene.Sphere()
+
+		script["expression"] = Gaffer.Expression()
+		script["expression"].setExpression( "parent['sphere']['radius'] = 0.1 + context.getFrame() + float( context['instancer:id'] )" )
+
+		script["instancer"] = GafferScene.Instancer()
+		script["instancer"]["in"].setInput( script["plane"]["out"] )
+		script["instancer"]["instance"].setInput( script["sphere"]["out"] )
+		script["instancer"]["parent"].setValue( "/plane" )
+
+		script["box"] = Gaffer.Box()
+		script["box"]["in"] = GafferScene.ScenePlug( flags = Gaffer.Plug.Flags.Default | Gaffer.Plug.Flags.Dynamic )
+		script["box"]["out"] = GafferScene.ScenePlug( direction = Gaffer.Plug.Direction.Out, flags = Gaffer.Plug.Flags.Default | Gaffer.Plug.Flags.Dynamic )
+		script["box"]["out"].setInput( script["box"]["in"] )
+		script["box"].exportForReference( self.temporaryDirectory() + "/test.grf" )
+
+		script["reference"] = Gaffer.Reference()
+		script["reference"].load( self.temporaryDirectory() + "/test.grf" )
+		script["reference"]["in"].setInput( script["instancer"]["out"] )
+
+		script["attributes"] = GafferScene.CustomAttributes()
+		script["attributes"]["in"].setInput( script["reference"]["out"] )
+
+		traverseConnection = Gaffer.ScopedConnection( GafferSceneTest.connectTraverseSceneToPlugDirtiedSignal( script["attributes"]["out"] ) )
+		with Gaffer.Context() as c :
+
+			script["reference"].load( self.temporaryDirectory() + "/test.grf" )
+
 if __name__ == "__main__":
 	unittest.main()

@@ -51,7 +51,7 @@
 using namespace boost::python;
 using namespace GafferSceneTest;
 
-static void traverseSceneWrapper( GafferScene::ScenePlug *scenePlug )
+static void traverseSceneWrapper( const GafferScene::ScenePlug *scenePlug )
 {
 	IECorePython::ScopedGILRelease gilRelease;
 	traverseScene( scenePlug );
@@ -65,6 +65,8 @@ BOOST_PYTHON_MODULE( _GafferSceneTest )
 	GafferBindings::NodeClass<TestLight>();
 
 	def( "traverseScene", &traverseSceneWrapper );
+	def( "connectTraverseSceneToPlugDirtiedSignal", &connectTraverseSceneToPlugDirtiedSignal );
+
 	def( "testManyStringToPathCalls", &testManyStringToPathCalls );
 
 	def( "testPathMatcherRawIterator", &testPathMatcherRawIterator );

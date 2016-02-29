@@ -37,7 +37,6 @@
 #ifndef GAFFERSCENETEST_TRAVERSESCENE_H
 #define GAFFERSCENETEST_TRAVERSESCENE_H
 
-#include "Gaffer/Context.h"
 #include "GafferScene/ScenePlug.h"
 
 namespace GafferSceneTest
@@ -46,7 +45,14 @@ namespace GafferSceneTest
 /// Traverses the entire scene once, evaluating every aspect of the scene, using parallel
 /// threads to process different children. It's useful to use this in test cases to exercise
 /// any thread related crashes, and also in profiling for performance improvement.
+void traverseScene( const GafferScene::ScenePlug *scenePlug );
+/// \todo Remove.
 void traverseScene( GafferScene::ScenePlug *scenePlug );
+
+/// Arranges for traverseScene() to be called every time the scene is dirtied. This is useful
+/// for exposing bugs caused by things like InteractiveRender and SceneView, where threaded
+/// traversals will be triggered automatically by plugDirtiedSignal().
+boost::signals::connection connectTraverseSceneToPlugDirtiedSignal( const GafferScene::ConstScenePlugPtr &scene );
 
 } // namespace GafferSceneTest
 
