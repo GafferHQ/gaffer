@@ -35,6 +35,10 @@
 ##########################################################################
 
 import os
+import gc
+import sys
+import time
+import resource
 import collections
 
 import IECore
@@ -59,6 +63,18 @@ class stats( Gaffer.Application ) :
 					check = IECore.FileNameParameter.CheckType.MustExist,
 				),
 
+				IECore.FloatParameter(
+					name = "frame",
+					description = "The frame to evaluate statistics at.",
+					defaultValue = 1,
+				),
+
+				IECore.StringParameter(
+					name = "scene",
+					description = "The name of a SceneNode or ScenePlug to examine.",
+					defaultValue = "",
+				),
+
 			]
 
 		)
@@ -71,23 +87,55 @@ class stats( Gaffer.Application ) :
 
 	def _run( self, args ) :
 
+		self.__timers = collections.OrderedDict()
+		self.__memory = collections.OrderedDict()
+
+		self.__memory["Application"] = _Memory.maxRSS()
+
 		script = Gaffer.ScriptNode()
 		script["fileName"].setValue( os.path.abspath( args["script"].value ) )
-		script.load( continueOnError = True )
 
-		self.__printVersion( script )
+		with _Timer() as loadingTimer :
+			script.load( continueOnError = True )
+		self.__timers["Loading"] = loadingTimer
+
+		self.__memory["Script"] = _Memory.maxRSS() - self.__memory["Application"]
+
+		with Gaffer.Context( script.context() ) as context :
+
+			context.setFrame( args["frame"].value )
+
+			self.__printVersion( script )
+
+			print ""
+
+			self.__printSettings( script )
+
+			print ""
+
+			self.__printVariables( script )
+
+			print ""
+
+			self.__printNodes( script )
+
+			if args["scene"].value :
+
+				self.__printScene( script, args )
+
+		with _Timer() as shutdownTimer :
+			del script
+			while gc.collect() :
+				IECore.RefCounted.collectGarbage()
+		self.__timers["Shutdown"] = shutdownTimer
 
 		print ""
 
-		self.__printSettings( script )
+		self.__printMemory()
 
 		print ""
 
-		self.__printVariables( script )
-
-		print ""
-
-		self.__printNodes( script )
+		self.__printPerformance()
 
 	def __printVersion( self, script ) :
 
@@ -162,5 +210,93 @@ class stats( Gaffer.Application ) :
 
 		print "Nodes :\n"
 		self.__printItems( items )
+
+	def __printScene( self, script, args ) :
+
+		import GafferScene
+		import GafferSceneTest
+
+		scene = script.descendant( args["scene"].value )
+		if isinstance( scene, Gaffer.Node ) :
+			scene = next( ( x for x in scene.children( GafferScene.ScenePlug ) ), None )
+
+		if scene is None :
+			IECore.msg( IECore.Msg.Level.Error, "stats", "Scene \"%s\" does not exist" % args["scene"].value )
+			return
+
+		memory = _Memory.maxRSS()
+		with _Timer() as sceneTimer :
+			GafferSceneTest.traverseScene( scene )
+		self.__timers["Scene generation"] = sceneTimer
+		self.__memory["Scene generation"] = _Memory.maxRSS() - memory
+
+		## \todo Calculate and print scene stats
+		#  - Locations
+		#  - Unique objects, attributes etc
+
+	def __printMemory( self ) :
+
+		objectPool = IECore.ObjectPool.defaultObjectPool()
+
+		items = self.__memory.items()
+
+		items.extend( [
+			( "", "" ),
+			( "Cache limit", _Memory( Gaffer.ValuePlug.getCacheMemoryLimit() ) ),
+			( "Cache usage", _Memory( Gaffer.ValuePlug.cacheMemoryUsage() ) ),
+			( "", "" ),
+			( "Object pool limit", _Memory( objectPool.getMaxMemoryUsage() ) ),
+			( "Object pool usage", _Memory( objectPool.memoryUsage() ) ),
+			( "", "" ),
+			( "Max resident size", _Memory.maxRSS() ),
+		] )
+
+		print "Memory :\n"
+		self.__printItems( items )
+
+	def __printPerformance( self ) :
+
+			print "Performance :\n"
+			self.__printItems( self.__timers.items() )
+
+class _Timer( object ) :
+
+	def __enter__( self ) :
+
+		self.__time = time.time()
+		self.__clock = time.clock()
+
+		return self
+
+	def __exit__( self, type, value, traceBack ) :
+
+		self.__time = time.time() - self.__time
+		self.__clock = time.clock() - self.__clock
+
+	def __str__( self ) :
+
+		return "%.3fs (wall), %.3fs (CPU)" % ( self.__time, self.__clock )
+
+class _Memory( object ) :
+
+	def __init__( self, bytes ) :
+
+		self.__bytes = bytes
+
+	@classmethod
+	def maxRSS( cls ) :
+
+		if sys.platform == "darwin" :
+			return cls( resource.getrusage( resource.RUSAGE_SELF ).ru_maxrss )
+		else :
+			return cls( resource.getrusage( resource.RUSAGE_SELF ).ru_maxrss * 1024 )
+
+	def __str__( self ) :
+
+		return "%.3fM" % ( self.__bytes / ( 1024 * 1024. ) )
+
+	def __sub__( self, other ) :
+
+		return _Memory( self.__bytes - other.__bytes )
 
 IECore.registerRunTimeTyped( stats )
