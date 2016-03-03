@@ -38,6 +38,7 @@
 #define GAFFER_SCENESWITCH_H
 
 #include "Gaffer/Switch.h"
+#include "Gaffer/Context.h"
 
 #include "GafferScene/SceneProcessor.h"
 

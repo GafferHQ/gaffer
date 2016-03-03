@@ -34,6 +34,7 @@
 #
 ##########################################################################
 
+import inspect
 import unittest
 
 import IECore
@@ -117,6 +118,32 @@ class SceneSwitchTest( GafferSceneTest.SceneTestCase ) :
 		self.assertTrue( script2["switch"]["in"][0].getInput().isSame( script2["plane"]["out"] ) )
 		self.assertTrue( script2["switch"]["in"][1].getInput().isSame( script2["sphere"]["out"] ) )
 		self.assertTrue( script2["switch"]["in"][2].getInput() is None )
+
+	def testScenePathNotAvailableInContextExpressions( self ) :
+
+		# We don't want expressions on the index to be sensitive
+		# to the scene:path context entry, because then the scene
+		# can be made invalid by splicing together different input
+		# scenes without taking care of bounding box propagation etc.
+
+		script = Gaffer.ScriptNode()
+
+		script["plane"] = GafferScene.Plane()
+		script["sphere"] = GafferScene.Sphere()
+
+		script["switch"] = GafferScene.SceneSwitch()
+		script["switch"]["in"][0].setInput( script["plane"]["out"] )
+		script["switch"]["in"][1].setInput( script["sphere"]["out"] )
+
+		script["expression"] = Gaffer.Expression()
+		script["expression"].setExpression( inspect.cleandoc(
+			"""
+			assert( context.get( "scene:path", None ) is None )
+			parent["switch"]["index"] = 1
+			"""
+		) )
+
+		self.assertEqual( script["switch"]["out"].childNames( "/" ), IECore.InternedStringVectorData( [ "sphere" ] ) )
 
 if __name__ == "__main__":
 	unittest.main()
