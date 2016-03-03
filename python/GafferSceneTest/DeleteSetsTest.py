@@ -63,22 +63,31 @@ class DeleteSetsTest( GafferSceneTest.SceneTestCase ) :
 		d = GafferScene.DeleteSets()
 		d["in"].setInput(s3["out"])
 
-		# no sets to delete, so everything should be intact:
+		# No sets to delete, so everything should be intact
 		self.assertEqual( d["out"]["setNames"].getValue(), IECore.InternedStringVectorData( ['s1','s2','s3'] ) )
 		self.assertEqual( d["out"].set( "s1" ).value.paths(), ['/blah1'] )
 		self.assertEqual( d["out"].set( "s2" ).value.paths(), ['/blah2'] )
 		self.assertEqual( d["out"].set( "s3" ).value.paths(), ['/blah3'] )
+		self.assertTrue( d["out"].set( "s1", _copy = False ).isSame( s3["out"].set( "s1", _copy = False ) ) )
+		self.assertTrue( d["out"].set( "s2", _copy = False ).isSame( s3["out"].set( "s2", _copy = False ) ) )
+		self.assertTrue( d["out"].set( "s3", _copy = False ).isSame( s3["out"].set( "s3", _copy = False ) ) )
 
-		# delete s1 and s2:
+		# Delete s1 and s2
 		d["names"].setValue( "s1 s2" )
 		self.assertEqual( d["out"]["setNames"].getValue(), IECore.InternedStringVectorData( ['s3'] ) )
 		self.assertEqual( d["out"].set( "s3" ).value.paths(), ['/blah3'] )
+		self.assertTrue( d["out"].set( "s1", _copy = False ).isSame( d["in"]["set"].defaultValue( _copy = False ) ) )
+		self.assertTrue( d["out"].set( "s2", _copy = False ).isSame( d["in"]["set"].defaultValue( _copy = False ) ) )
+		self.assertTrue( d["out"].set( "s3", _copy = False ).isSame( s3["out"].set( "s3", _copy = False ) ) )
 
-		# invert:
+		# Invert
 		d["invertNames"].setValue( True )
 		self.assertEqual( d["out"]["setNames"].getValue(), IECore.InternedStringVectorData( ['s1','s2' ] ) )
 		self.assertEqual( d["out"].set( "s1" ).value.paths(), ['/blah1'] )
 		self.assertEqual( d["out"].set( "s2" ).value.paths(), ['/blah2'] )
+		self.assertTrue( d["out"].set( "s1", _copy = False ).isSame( d["in"].set( "s1", _copy = False ) ) )
+		self.assertTrue( d["out"].set( "s2", _copy = False ).isSame( d["in"].set( "s2", _copy = False ) ) )
+		self.assertTrue( d["out"].set( "s3", _copy = False ).isSame( d["in"]["set"].defaultValue( _copy = False ) ) )
 
 	def testWildcards( self ) :
 
@@ -121,6 +130,30 @@ class DeleteSetsTest( GafferSceneTest.SceneTestCase ) :
 		self.failUnless( d["out"]["setNames"] in d.affects( d["in"]["setNames"] ) )
 		self.failUnless( d["out"]["setNames"] in d.affects( d["names"] ) )
 		self.failUnless( d["out"]["setNames"] in d.affects( d["invertNames"] ) )
+
+	def testWithSetFilter( self ) :
+
+		p = GafferScene.Plane()
+		p["sets"].setValue( "test" )
+
+		d = GafferScene.DeleteSets()
+		d["in"].setInput( p["out"] )
+
+		f = GafferScene.SetFilter()
+		f["set"].setValue( "test" )
+
+		a = GafferScene.CustomAttributes()
+		a["in"].setInput( d["out"] )
+		a["attributes"].addMember( "user:a", 10 )
+		a["filter"].setInput( f["out"] )
+
+		# We haven't deleted the set yet, so we should get
+		# the attribute.
+		self.assertTrue( "user:a" in a["out"].attributes( "/plane" ) )
+
+		# Delete the set, and the attribute should go away.
+		d["names"].setValue( "test" )
+		self.assertFalse( "user:a" in a["out"].attributes( "/plane" ) )
 
 if __name__ == "__main__":
 	unittest.main()
