@@ -158,7 +158,14 @@ void PathFilter::hashMatch( const ScenePlug *scene, const Gaffer::Context *conte
 		const ScenePlug::ScenePath &path = pathData->readable();
 		h.append( &(path[0]), path.size() );
 	}
-	pathMatcherPlug()->hash( h );
+	if( m_pathMatcher )
+	{
+		m_pathMatcher->hash( h );
+	}
+	else
+	{
+		pathMatcherPlug()->hash( h );
+	}
 }
 
 unsigned PathFilter::computeMatch( const ScenePlug *scene, const Gaffer::Context *context ) const
