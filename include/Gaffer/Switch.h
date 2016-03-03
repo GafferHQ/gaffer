@@ -116,7 +116,7 @@ class Switch : public BaseType
 		void childAdded( GraphComponent *child );
 		void plugSet( Plug *plug );
 		void plugInputChanged( Plug *plug );
-		size_t inputIndex() const;
+		size_t inputIndex( const Context *context = NULL ) const;
 
 		// Returns the input corresponding to the output and vice versa. Returns NULL
 		// if plug is not meaningful to the switching process.
@@ -128,6 +128,26 @@ class Switch : public BaseType
 
 		IE_CORE_DECLARERUNTIMETYPEDDESCRIPTION( Switch<BaseType> );
 		static size_t g_firstPlugIndex;
+
+};
+
+namespace Detail
+{
+
+struct IdentityContext;
+
+} // namespace Detail
+
+/// May be specialised to control the behaviour of
+/// Switch<BaseType>.
+template<typename BaseType>
+struct SwitchTraits
+{
+
+	/// A class which will be instantiated as
+	/// `IndexContext indexContext( Context::current() )`
+	/// to modify the context when evaluating the switch index.
+	typedef Detail::IdentityContext IndexContext;
 
 };
 

@@ -44,6 +44,18 @@
 namespace Gaffer
 {
 
+namespace Detail
+{
+
+struct IdentityContext
+{
+	IdentityContext( const Context *context )
+	{
+	}
+};
+
+};
+
 template<typename BaseType>
 const IECore::RunTimeTyped::TypeDescription<Switch<BaseType> > Switch<BaseType>::g_typeDescription;
 
@@ -247,7 +259,7 @@ template<typename BaseType>
 template<typename T>
 void Switch<BaseType>::hashInternal( const ValuePlug *output, const Context *context, IECore::MurmurHash &h, typename boost::enable_if<boost::is_base_of<ComputeNode, T> >::type *enabler ) const
 {
-	if( const ValuePlug *input = IECore::runTimeCast<const ValuePlug>( oppositePlug( output, inputIndex() ) ) )
+	if( const ValuePlug *input = IECore::runTimeCast<const ValuePlug>( oppositePlug( output, inputIndex( context ) ) ) )
 	{
 		h = input->hash();
 		return;
@@ -275,7 +287,7 @@ template<typename BaseType>
 template<typename T>
 void Switch<BaseType>::computeInternal( ValuePlug *output, const Context *context, typename boost::enable_if<boost::is_base_of<ComputeNode, T> >::type *enabler ) const
 {
-	if( const ValuePlug *input = IECore::runTimeCast<const ValuePlug>( oppositePlug( output, inputIndex() ) ) )
+	if( const ValuePlug *input = IECore::runTimeCast<const ValuePlug>( oppositePlug( output, inputIndex( context ) ) ) )
 	{
 		output->setFrom( input );
 		return;
@@ -310,12 +322,23 @@ void Switch<BaseType>::plugInputChanged( Plug *plug )
 }
 
 template<typename BaseType>
-size_t Switch<BaseType>::inputIndex() const
+size_t Switch<BaseType>::inputIndex( const Context *context ) const
 {
 	const ArrayPlug *inPlugs = BaseType::template getChild<ArrayPlug>( "in" );
 	if( enabledPlug()->getValue() && inPlugs && inPlugs->children().size() > 1 )
 	{
-		return indexPlug()->getValue() % (inPlugs->children().size() - 1);
+		size_t index = 0;
+		const IntPlug *indexPlug = this->indexPlug();
+		if( variesWithContext( indexPlug ) )
+		{
+			typename SwitchTraits<BaseType>::IndexContext indexContext( context );
+			index = indexPlug->getValue();
+		}
+		else
+		{
+			index = indexPlug->getValue();
+		}
+		return index % (inPlugs->children().size() - 1);
 	}
 	else
 	{
