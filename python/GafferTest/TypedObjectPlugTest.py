@@ -80,6 +80,9 @@ class TypedObjectPlugTest( GafferTest.TestCase ) :
 		p = Gaffer.ObjectPlug( "p", defaultValue = IECore.IntVectorData( [ 1, 2, 3 ] ) )
 		self.assertEqual( p.defaultValue(), IECore.IntVectorData( [ 1, 2, 3 ] ) )
 
+		self.assertFalse( p.defaultValue().isSame( p.defaultValue() ) )
+		self.assertTrue( p.defaultValue( _copy = False ).isSame( p.defaultValue( _copy = False ) ) )
+
 	def testRunTimeTyped( self ) :
 
 		self.assertEqual( IECore.RunTimeTyped.baseTypeId( Gaffer.ObjectPlug.staticTypeId() ), Gaffer.ValuePlug.staticTypeId() )
