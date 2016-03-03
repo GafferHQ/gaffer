@@ -35,13 +35,49 @@
 //////////////////////////////////////////////////////////////////////////
 
 #include "Gaffer/Switch.inl"
+#include "Gaffer/Context.h"
 
 #include "GafferImage/ImageSwitch.h"
+
+using namespace GafferImage;
+
+namespace
+{
+
+/// \todo If we introduce a TemporaryContext base class in Context.h
+/// then this should derive from that.
+struct ImageSwitchIndexContext
+{
+
+	ImageSwitchIndexContext( const Gaffer::Context *context )
+		:	m_context( new Gaffer::Context( *context, Gaffer::Context::Borrowed ) ),
+			m_scopedContext( m_context.get() )
+	{
+		m_context->remove( ImagePlug::channelNameContextName );
+		m_context->remove( ImagePlug::tileOriginContextName );
+	}
+
+	private :
+
+		Gaffer::ContextPtr m_context;
+		Gaffer::Context::Scope m_scopedContext;
+
+};
+
+} // namespace
 
 namespace Gaffer
 {
 
 IECORE_RUNTIMETYPED_DEFINETEMPLATESPECIALISATION( GafferImage::ImageSwitch, GafferImage::ImageSwitchTypeId )
+
+template<>
+struct SwitchTraits<GafferImage::ImageProcessor>
+{
+
+	typedef ImageSwitchIndexContext IndexContext;
+
+};
 
 }
 
