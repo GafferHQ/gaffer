@@ -94,7 +94,7 @@ IECore::ObjectPtr getValue( typename T::Ptr p, const IECore::MurmurHash *precomp
 			return boost::const_pointer_cast<IECore::Object>( v );
 		}
 	}
-	return 0;
+	return NULL;
 }
 
 template<typename T>
@@ -105,7 +105,7 @@ typename T::ValuePtr defaultValue( typename T::Ptr p )
 	{
 		return v->copy();
 	}
-	return 0;
+	return NULL;
 }
 
 template<typename T>
