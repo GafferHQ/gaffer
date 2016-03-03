@@ -175,6 +175,20 @@ IECore::CompoundObjectPtr fullAttributesWrapper( const ScenePlug &plug, const Sc
 	return plug.fullAttributes( scenePath );
 }
 
+IECore::CompoundObjectPtr globalsWrapper( const ScenePlug &plug, bool copy )
+{
+	IECorePython::ScopedGILRelease gilRelease;
+	IECore::ConstCompoundObjectPtr g = plug.globals();
+	return copy ? g->copy() : boost::const_pointer_cast<IECore::CompoundObject>( g );
+}
+
+IECore::InternedStringVectorDataPtr setNamesWrapper( const ScenePlug &plug, bool copy )
+{
+	IECorePython::ScopedGILRelease gilRelease;
+	IECore::ConstInternedStringVectorDataPtr s = plug.setNames();
+	return copy ? s->copy() : boost::const_pointer_cast<IECore::InternedStringVectorData>( s );
+}
+
 PathMatcherDataPtr setWrapper( const ScenePlug &plug, const IECore::InternedString &setName, bool copy=true )
 {
 	IECorePython::ScopedGILRelease gilRelease;
@@ -224,6 +238,18 @@ IECore::MurmurHash fullAttributesHashWrapper( const ScenePlug &plug, const Scene
 	return plug.fullAttributesHash( scenePath );
 }
 
+IECore::MurmurHash globalsHashWrapper( const ScenePlug &plug )
+{
+	IECorePython::ScopedGILRelease gilRelease;
+	return plug.globalsHash();
+}
+
+IECore::MurmurHash setNamesHashWrapper( const ScenePlug &plug )
+{
+	IECorePython::ScopedGILRelease gilRelease;
+	return plug.setNamesHash();
+}
+
 IECore::MurmurHash setHashWrapper( const ScenePlug &plug, const IECore::InternedString &setName )
 {
 	IECorePython::ScopedGILRelease gilRelease;
@@ -266,6 +292,8 @@ void GafferSceneBindings::bindScenePlug()
 		.def( "childNames", &childNamesWrapper, ( boost::python::arg_( "_copy" ) = true ) )
 		.def( "attributes", &attributesWrapper, ( boost::python::arg_( "_copy" ) = true ) )
 		.def( "fullAttributes", &fullAttributesWrapper )
+		.def( "globals", &globalsWrapper, ( boost::python::arg_( "_copy" ) = true ) )
+		.def( "setNames", &setNamesWrapper, ( boost::python::arg_( "_copy" ) = true ) )
 		.def( "set", &setWrapper, ( boost::python::arg_( "_copy" ) = true ) )
 		// hash accessors
 		.def( "boundHash", &boundHashWrapper )
@@ -275,6 +303,8 @@ void GafferSceneBindings::bindScenePlug()
 		.def( "childNamesHash", &childNamesHashWrapper )
 		.def( "attributesHash", &attributesHashWrapper )
 		.def( "fullAttributesHash", &fullAttributesHashWrapper )
+		.def( "globalsHash", &globalsHashWrapper )
+		.def( "setNamesHash", &setNamesHashWrapper )
 		.def( "setHash", &setHashWrapper )
 		// string utilities
 		.def( "stringToPath", &stringToPathWrapper )
