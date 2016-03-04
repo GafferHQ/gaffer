@@ -1,11 +1,23 @@
 0.23.1.0
 ========
 
+Apps
+-----------------------------------------------------------------------
+
+- Stats App
+  - Added outputs for scene traversal time and memory usage.
+
 Core
 -----------------------------------------------------------------------
 
 - Improved performance of the computation cache, particularly when under
   heavy multithreaded load (#1638).
+- Fixed GIL lock issues.
+  - CompoundDataPlug releases when adding child plugs.
+  - GraphComponent releases when adding/removing children.
+  - Reference releases in load().
+- Switch
+  - Add SwitchTraits<BaseType> to control context for index evaluation.
 
 UI
 -----------------------------------------------------------------------
@@ -15,22 +27,59 @@ UI
   - Added set filter (#48, #1649).
 - NodeEditor
   - Improved error handling for labels and multiline text fields (#1650).
+- NodeGraph
+  - Fix "Find..." shortcut.
 - SceneInspector
   - Fixed labelling of CoordinateSystem sets (#1648).
 - ExecutableNode
   - Fixed UI for individually promoted pre/post tasks (#1647).
+- UIEditor
+  - Add label field to plug section.
+- GLWidget
+  - Supports use in Maya when using PySide.
 
 Scene
 -----------------------------------------------------------------------
 
-- PathFilter/Set
-  - Fixed bugs which treated empty paths as "/" rather than ignoring
-    them (#1642).
+- ScenePlug
+  - set() and setHash() are friendlier to the hash cache.
+- SceneSwitch
+  - Removed scene:path from context for index.
+- FilterProcessor
+  - Implement pass-through when disabled.
+- PathFilter
+  - Fixed bugs which treated empty paths as "/" rather than ignoring them (#1642)
+   - Avoid unnecessary hashing of __pathMatcher plug.
+- Set
+  - Fixed bugs which treated empty paths as "/" rather than ignoring them (#1642)
+- SetFilter
+  - Remove unnecessary context manipulation..
+- DeleteSets
+  - Fixed bug which could pass-through a deleted set.
 - Isolate/Prune
   - Fixed bugs which caused incorrect results when used with a
     particular custom filter outside of Gaffer (#1652).
 - Shader
   - Fixed crashes caused by cyclic connections in shader networks (#1646).
+- Fixed GIL lock issues.
+  - Outputs releases in addOutput().
+
+Image
+-----------------------------------------------------------------------
+
+- Warp
+  - Added Warp base class.
+  - Added UVWarp node.
+- BufferAlgo
+  - Added index() function.
+- ImageSwitch
+  - Removed tile variables from context for index.
+
+RenderMan
+-----------------------------------------------------------------------
+
+- Fixed GIL lock issues.
+  - RenderManShader releases in loadShader().
 
 API
 -----------------------------------------------------------------------
@@ -48,6 +97,16 @@ API
   - Disabled nodule creation by default for all but TaskPlugs. Nodules
     can be explicitly reenabled using a ( "nodule:type", "GafferUI.StandardNodule" )
     metadata registration for a particular plug.
+- DownstreamIterator/RecursiveChildIterators
+  - Fixed API for completion of iteration.
+- FilteredChildIterator
+  - Added done() method.
+- TypedObjectPlug bindings : Add _copy argument to defaultValue() method.
+
+Build
+-----------------------------------------------------------------------
+
+- GafferUI now links to QtOpenGL
 
 0.23.0.1
 ========
