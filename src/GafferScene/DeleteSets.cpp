@@ -61,7 +61,6 @@ DeleteSets::DeleteSets( const std::string &name )
 	outPlug()->objectPlug()->setInput( inPlug()->objectPlug() );
 	outPlug()->childNamesPlug()->setInput( inPlug()->childNamesPlug() );
 	outPlug()->globalsPlug()->setInput( inPlug()->globalsPlug() );
-	outPlug()->setPlug()->setInput( inPlug()->setPlug() );
 }
 
 DeleteSets::~DeleteSets()
@@ -131,4 +130,32 @@ IECore::ConstInternedStringVectorDataPtr DeleteSets::computeSetNames( const Gaff
 	}
 
 	return outputSetNamesData;
+}
+
+void DeleteSets::hashSet( const IECore::InternedString &setName, const Gaffer::Context *context, const ScenePlug *parent, IECore::MurmurHash &h ) const
+{
+	const std::string names = namesPlug()->getValue();
+	const bool invert = invertNamesPlug()->getValue();
+	if( matchMultiple( setName, names ) != (!invert) )
+	{
+		h = inPlug()->setPlug()->getValue()->Object::hash();
+	}
+	else
+	{
+		h = inPlug()->setPlug()->defaultValue()->Object::hash();
+	}
+}
+
+GafferScene::ConstPathMatcherDataPtr DeleteSets::computeSet( const IECore::InternedString &setName, const Gaffer::Context *context, const ScenePlug *parent ) const
+{
+	const std::string names = namesPlug()->getValue();
+	const bool invert = invertNamesPlug()->getValue();
+	if( matchMultiple( setName, names ) != (!invert) )
+	{
+		return inPlug()->setPlug()->getValue();
+	}
+	else
+	{
+		return inPlug()->setPlug()->defaultValue();
+	}
 }

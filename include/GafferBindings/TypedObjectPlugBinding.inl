@@ -94,18 +94,18 @@ IECore::ObjectPtr getValue( typename T::Ptr p, const IECore::MurmurHash *precomp
 			return boost::const_pointer_cast<IECore::Object>( v );
 		}
 	}
-	return 0;
+	return NULL;
 }
 
 template<typename T>
-typename T::ValuePtr defaultValue( typename T::Ptr p )
+typename T::ValuePtr defaultValue( typename T::Ptr p, bool copy )
 {
 	typename T::ConstValuePtr v = p->defaultValue();
 	if( v )
 	{
-		return v->copy();
+		return copy ? v->copy() : boost::const_pointer_cast<typename T::ValueType>( v );
 	}
-	return 0;
+	return NULL;
 }
 
 template<typename T>
@@ -140,7 +140,7 @@ TypedObjectPlugClass<T, TWrapper>::TypedObjectPlugClass( const char *docString )
 			)
 		)
 	);
-	this->def( "defaultValue", &Detail::defaultValue<T> );
+	this->def( "defaultValue", &Detail::defaultValue<T>, ( boost::python::arg_( "_copy" ) = true ) );
 	this->def( "setValue", Detail::setValue<T>, ( boost::python::arg_( "value" ), boost::python::arg_( "_copy" ) = true ) );
 	this->def( "getValue", Detail::getValue<T>, ( boost::python::arg_( "_precomputedHash" ) = boost::python::object(), boost::python::arg_( "_copy" ) = true ) );
 

@@ -332,6 +332,14 @@ ConstPathMatcherDataPtr ScenePlug::set( const IECore::InternedString &setName ) 
 {
 	ContextPtr tmpContext = new Context( *Context::current(), Context::Borrowed );
 	tmpContext->set( setNameContextName, setName );
+
+	// Remove unnecessary but frequently changed context entries. This
+	// makes us friendlier to the hash caching mechanism in ValuePlug,
+	// since it'll see fewer unnecessarily different contexts, and will
+	// therefore get more cache hits. We do the same in setHash().
+	tmpContext->remove( Filter::inputSceneContextName );
+	tmpContext->remove( ScenePlug::scenePathContextName );
+
 	Context::Scope scopedContext( tmpContext.get() );
 	return setPlug()->getValue();
 }
@@ -415,6 +423,11 @@ IECore::MurmurHash ScenePlug::setHash( const IECore::InternedString &setName ) c
 {
 	ContextPtr tmpContext = new Context( *Context::current(), Context::Borrowed );
 	tmpContext->set( setNameContextName, setName );
+
+	// See explanatory comments in set().
+	tmpContext->remove( Filter::inputSceneContextName );
+	tmpContext->remove( ScenePlug::scenePathContextName );
+
 	Context::Scope scopedContext( tmpContext.get() );
 	return setPlug()->hash();
 }
