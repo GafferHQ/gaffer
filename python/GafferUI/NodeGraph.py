@@ -278,7 +278,7 @@ class NodeGraph( GafferUI.EditorWidget ) :
 
 	def __keyPress( self, widget, event ) :
 
-		if event.key == "F" :
+		if event.key == "F" and not event.modifiers :
 			self.__frame( self.scriptNode().selection() )
 			return True
 		## \todo This cursor key navigation might not make sense for all applications,
