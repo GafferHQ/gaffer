@@ -149,6 +149,9 @@ class stats( Gaffer.Application ) :
 
 	def __printItems( self, items ) :
 
+		if not len( items ) :
+			return
+
 		width = max( [ len( x[0] ) for x in items ] ) + 4
 		for name, value in items :
 			print "  {name:<{width}}{value}".format( name = name, width = width, value = value )
