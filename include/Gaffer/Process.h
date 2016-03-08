@@ -47,6 +47,7 @@ namespace Gaffer
 {
 
 class Plug;
+class Monitor;
 
 /// Base class representing a node graph process being
 /// performed on behalf of a plug. Processes are never
@@ -94,6 +95,13 @@ class Process : public boost::noncopyable
 		void handleException();
 
 	private :
+
+		// Friendship allows monitors to register and deregister
+		// themselves.
+		friend class Monitor;
+		static void registerMonitor( Monitor *monitor );
+		static void deregisterMonitor( Monitor *monitor );
+		static bool monitorRegistered( const Monitor *monitor );
 
 		void emitError( const std::string &error ) const;
 

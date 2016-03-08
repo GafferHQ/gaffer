@@ -36,11 +36,22 @@
 
 #include <stack>
 
+#include "boost/container/flat_set.hpp"
+
 #include "Gaffer/Process.h"
 #include "Gaffer/Plug.h"
 #include "Gaffer/Node.h"
+#include "Gaffer/Monitor.h"
 
 using namespace Gaffer;
+
+namespace
+{
+
+typedef boost::container::flat_set<Monitor *> Monitors;
+Monitors g_activeMonitors;
+
+} // namespace
 
 struct Process::ThreadData
 {
@@ -60,10 +71,20 @@ Process::Process( const IECore::InternedString &type, const Plug *plug, const Pl
 	ThreadData::Stack &stack = m_threadData->stack;
 	m_parent = stack.size() ? stack.top() : NULL;
 	m_threadData->stack.push( this );
+
+	for( Monitors::const_iterator it = g_activeMonitors.begin(), eIt = g_activeMonitors.end(); it != eIt; ++it )
+	{
+		(*it)->processStarted( this );
+	}
 }
 
 Process::~Process()
 {
+	for( Monitors::const_iterator it = g_activeMonitors.begin(), eIt = g_activeMonitors.end(); it != eIt; ++it )
+	{
+		(*it)->processFinished( this );
+	}
+
 	m_threadData->stack.pop();
 	if( m_threadData->stack.empty() )
 	{
@@ -120,3 +141,19 @@ void Process::emitError( const std::string &error ) const
 		plug = plug != m_plug ? plug->getInput<Plug>() : NULL;
 	}
 }
+
+void Process::registerMonitor( Monitor *monitor )
+{
+	g_activeMonitors.insert( monitor );
+}
+
+void Process::deregisterMonitor( Monitor *monitor )
+{
+	g_activeMonitors.erase( monitor );
+}
+
+bool Process::monitorRegistered( const Monitor *monitor )
+{
+	return g_activeMonitors.find( const_cast<Monitor *>( monitor ) ) != g_activeMonitors.end();
+}
+
