@@ -37,6 +37,7 @@
 
 #include "Gaffer/Context.h"
 #include "Gaffer/StringPlug.h"
+#include "Gaffer/Process.h"
 
 using namespace IECore;
 using namespace Gaffer;
@@ -103,7 +104,7 @@ std::string StringPlug::getValue( const IECore::MurmurHash *precomputedHash ) co
 	bool performSubstitution =
 		m_substitutions &&
 		direction()==Plug::In &&
-		inCompute() &&
+		Process::current() &&
 		Plug::getFlags( Plug::PerformsSubstitutions ) &&
 		Context::hasSubstitutions( s->readable() );
 
