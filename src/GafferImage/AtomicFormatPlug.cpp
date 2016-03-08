@@ -37,6 +37,7 @@
 #include "Gaffer/Context.h"
 #include "Gaffer/TypedPlug.h"
 #include "Gaffer/TypedPlug.inl"
+#include "Gaffer/Process.h"
 
 #include "GafferImage/FormatData.h"
 #include "GafferImage/AtomicFormatPlug.h"
@@ -61,7 +62,7 @@ Format AtomicFormatPlug::getValue( const IECore::MurmurHash *precomputedHash ) c
 	}
 
 	Format result = d->readable();
-	if( result.getDisplayWindow().isEmpty() && ( ( direction() == Plug::In && inCompute() ) || direction() == Plug::Out ) )
+	if( result.getDisplayWindow().isEmpty() && ( ( direction() == Plug::In && Process::current() ) || direction() == Plug::Out ) )
 	{
 		return FormatPlug::getDefaultFormat( Context::current() );
 	}
@@ -71,18 +72,19 @@ Format AtomicFormatPlug::getValue( const IECore::MurmurHash *precomputedHash ) c
 template<>
 IECore::MurmurHash AtomicFormatPlug::hash() const
 {
-	Format v = getValue();
-	if( v.getDisplayWindow().isEmpty() )
+	const AtomicFormatPlug *p = source<AtomicFormatPlug>();
+
+	if( p->direction() == Plug::In )
 	{
-		v = FormatPlug::getDefaultFormat( Context::current() );
+		const Format v = p->getValue();
+
+		IECore::MurmurHash result;
+		result.append( v.getDisplayWindow() );
+		result.append( v.getPixelAspect() );
+		return result;
 	}
 
-	IECore::MurmurHash result;
-	result.append( v.getDisplayWindow() );
-	result.append( v.getPixelAspect() );
-	return result;
-
-	return ValuePlug::hash();
+	return p->ValuePlug::hash();
 }
 
 template class TypedPlug<GafferImage::Format>;
