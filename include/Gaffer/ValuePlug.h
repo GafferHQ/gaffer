@@ -154,8 +154,7 @@ class ValuePlug : public Plug
 		/// not be changed following the call.
 		void setObjectValue( IECore::ConstObjectPtr value );
 
-		/// Returns true if a computation is currently being performed on this thread -
-		/// if we are inside Node::compute().
+		/// \deprecated. Use Process::current() instead.
 		bool inCompute() const;
 
 		/// Reimplemented for cache management.
@@ -163,7 +162,8 @@ class ValuePlug : public Plug
 
 	private :
 
-		class Computation;
+		class HashProcess;
+		class ComputeProcess;
 		class SetValueAction;
 
 		void setValueInternal( IECore::ConstObjectPtr value, bool propagateDirtiness );
