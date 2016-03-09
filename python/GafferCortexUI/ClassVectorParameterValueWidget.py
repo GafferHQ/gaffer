@@ -265,7 +265,8 @@ class _ChildParameterUI( GafferUI.CompoundPlugValueWidget ) :
 
 			layerButton = GafferUI.MenuButton( image="classVectorParameterHandle.png", hasFrame=False )
 
-			parentParameter = self.ancestor( ClassVectorParameterValueWidget ).parameter()
+			compoundPlugValueWidget = self.ancestor( _PlugValueWidget )
+			parentParameter = compoundPlugValueWidget._parameter()
 			cls = parentParameter.getClass( self.__parameterHandler.parameter().name, True )
 
 			layerButtonToolTip = "<h3>%s v%d</h3>" % ( cls[1], cls[2] )
@@ -274,7 +275,6 @@ class _ChildParameterUI( GafferUI.CompoundPlugValueWidget ) :
 			layerButtonToolTip += "<p>Click to reorder or remove.</p>"
 			layerButton.setToolTip( layerButtonToolTip )
 
-			compoundPlugValueWidget = self.ancestor( _PlugValueWidget )
 			layerButton.setMenu( GafferUI.Menu( IECore.curry( Gaffer.WeakMethod( compoundPlugValueWidget._layerMenuDefinition ), self.__parameterHandler.parameter().name ) ) )
 
 			GafferUI.Spacer( IECore.V2i( 2 ) )
