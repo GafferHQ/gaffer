@@ -38,6 +38,7 @@
 
 #include "Gaffer/ScriptNode.h"
 #include "Gaffer/Context.h"
+#include "Gaffer/Process.h"
 
 #include "GafferImage/FormatPlug.h"
 #include "GafferImage/FormatData.h"
@@ -107,7 +108,7 @@ void FormatPlug::setValue( const Format &value )
 Format FormatPlug::getValue() const
 {
 	Format result( displayWindowPlug()->getValue(), pixelAspectPlug()->getValue() );
-	if( direction() == Plug::In && result.getDisplayWindow().isEmpty() && inCompute() )
+	if( direction() == Plug::In && result.getDisplayWindow().isEmpty() && Process::current() )
 	{
 		return getDefaultFormat( Context::current() );
 	}

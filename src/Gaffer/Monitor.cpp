@@ -1,6 +1,6 @@
 //////////////////////////////////////////////////////////////////////////
 //
-//  Copyright (c) 2012-2015, Image Engine Design Inc. All rights reserved.
+//  Copyright (c) 2016, Image Engine Design Inc. All rights reserved.
 //
 //  Redistribution and use in source and binary forms, with or without
 //  modification, are permitted provided that the following conditions are
@@ -34,59 +34,45 @@
 //
 //////////////////////////////////////////////////////////////////////////
 
-#include "Gaffer/Context.h"
-#include "Gaffer/TypedPlug.h"
-#include "Gaffer/TypedPlug.inl"
+#include "Gaffer/Monitor.h"
 #include "Gaffer/Process.h"
 
-#include "GafferImage/FormatData.h"
-#include "GafferImage/AtomicFormatPlug.h"
-#include "GafferImage/FormatPlug.h"
-
 using namespace Gaffer;
-using namespace GafferImage;
 
-namespace Gaffer
+Monitor::Monitor()
 {
-
-IECORE_RUNTIMETYPED_DEFINETEMPLATESPECIALISATION( GafferImage::AtomicFormatPlug, AtomicFormatPlugTypeId )
-
-template<>
-Format AtomicFormatPlug::getValue( const IECore::MurmurHash *precomputedHash ) const
-{
-	IECore::ConstObjectPtr o = getObjectValue( precomputedHash );
-	const GafferImage::FormatData *d = IECore::runTimeCast<const GafferImage::FormatData>( o.get() );
-	if( !d )
-	{
-		throw IECore::Exception( "AtomicFormatPlug::getObjectValue() didn't return FormatData - is the hash being computed correctly?" );
-	}
-
-	Format result = d->readable();
-	if( result.getDisplayWindow().isEmpty() && ( ( direction() == Plug::In && Process::current() ) || direction() == Plug::Out ) )
-	{
-		return FormatPlug::getDefaultFormat( Context::current() );
-	}
-	return result;
 }
 
-template<>
-IECore::MurmurHash AtomicFormatPlug::hash() const
+Monitor::~Monitor()
 {
-	const AtomicFormatPlug *p = source<AtomicFormatPlug>();
-
-	if( p->direction() == Plug::In )
-	{
-		const Format v = p->getValue();
-
-		IECore::MurmurHash result;
-		result.append( v.getDisplayWindow() );
-		result.append( v.getPixelAspect() );
-		return result;
-	}
-
-	return p->ValuePlug::hash();
+	Process::deregisterMonitor( this );
 }
 
-template class TypedPlug<GafferImage::Format>;
+void Monitor::setActive( bool active )
+{
+	if( active )
+	{
+		Process::registerMonitor( this );
+	}
+	else
+	{
+		Process::deregisterMonitor( this );
+	}
+}
 
-} // namespace Gaffer
+bool Monitor::getActive() const
+{
+	return Process::monitorRegistered( this );
+}
+
+Monitor::Scope::Scope( Monitor *monitor )
+	:	m_monitor( monitor )
+{
+	m_monitor->setActive( true );
+}
+
+Monitor::Scope::~Scope()
+{
+	m_monitor->setActive( false );
+}
+

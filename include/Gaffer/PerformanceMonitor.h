@@ -1,6 +1,6 @@
 //////////////////////////////////////////////////////////////////////////
 //
-//  Copyright (c) 2012-2015, Image Engine Design Inc. All rights reserved.
+//  Copyright (c) 2016, Image Engine Design Inc. All rights reserved.
 //
 //  Redistribution and use in source and binary forms, with or without
 //  modification, are permitted provided that the following conditions are
@@ -34,59 +34,69 @@
 //
 //////////////////////////////////////////////////////////////////////////
 
-#include "Gaffer/Context.h"
-#include "Gaffer/TypedPlug.h"
-#include "Gaffer/TypedPlug.inl"
-#include "Gaffer/Process.h"
+#ifndef GAFFER_PERFORMANCEMONITOR_H
+#define GAFFER_PERFORMANCEMONITOR_H
 
-#include "GafferImage/FormatData.h"
-#include "GafferImage/AtomicFormatPlug.h"
-#include "GafferImage/FormatPlug.h"
+#include "tbb/enumerable_thread_specific.h"
 
-using namespace Gaffer;
-using namespace GafferImage;
+#include "boost/unordered_map.hpp"
+
+#include "IECore/RefCounted.h"
+
+#include "Gaffer/Monitor.h"
 
 namespace Gaffer
 {
 
-IECORE_RUNTIMETYPED_DEFINETEMPLATESPECIALISATION( GafferImage::AtomicFormatPlug, AtomicFormatPlugTypeId )
+IE_CORE_FORWARDDECLARE( Plug )
 
-template<>
-Format AtomicFormatPlug::getValue( const IECore::MurmurHash *precomputedHash ) const
+/// A monitor which collects statistics about the frequency
+/// of hash and compute processes per plug.
+class PerformanceMonitor : public Monitor
 {
-	IECore::ConstObjectPtr o = getObjectValue( precomputedHash );
-	const GafferImage::FormatData *d = IECore::runTimeCast<const GafferImage::FormatData>( o.get() );
-	if( !d )
-	{
-		throw IECore::Exception( "AtomicFormatPlug::getObjectValue() didn't return FormatData - is the hash being computed correctly?" );
-	}
 
-	Format result = d->readable();
-	if( result.getDisplayWindow().isEmpty() && ( ( direction() == Plug::In && Process::current() ) || direction() == Plug::Out ) )
-	{
-		return FormatPlug::getDefaultFormat( Context::current() );
-	}
-	return result;
-}
+	public :
 
-template<>
-IECore::MurmurHash AtomicFormatPlug::hash() const
-{
-	const AtomicFormatPlug *p = source<AtomicFormatPlug>();
+		PerformanceMonitor();
+		virtual ~PerformanceMonitor();
 
-	if( p->direction() == Plug::In )
-	{
-		const Format v = p->getValue();
+		struct Statistics
+		{
 
-		IECore::MurmurHash result;
-		result.append( v.getDisplayWindow() );
-		result.append( v.getPixelAspect() );
-		return result;
-	}
+			Statistics( size_t hashCount = 0, size_t computeCount = 0 );
 
-	return p->ValuePlug::hash();
-}
+			size_t hashCount;
+			size_t computeCount;
 
-template class TypedPlug<GafferImage::Format>;
+			Statistics & operator += ( const Statistics &rhs );
+
+			bool operator == ( const Statistics &rhs );
+			bool operator != ( const Statistics &rhs );
+
+		};
+
+		typedef boost::unordered_map<ConstPlugPtr, Statistics> StatisticsMap;
+
+		const StatisticsMap &allStatistics() const;
+		const Statistics &plugStatistics( const Plug *plug ) const;
+
+	protected :
+
+		virtual void processStarted( const Process *process );
+		virtual void processFinished( const Process *process );
+
+	private :
+
+		// For performance reasons we accumulate our statistics into
+		// thread local storage while computations are running.
+		tbb::enumerable_thread_specific<StatisticsMap> m_threadStatistics;
+
+		// Then when we want to query it, we collate it into m_statistics.
+		void collate() const;
+		mutable StatisticsMap m_statistics;
+
+};
 
 } // namespace Gaffer
+
+#endif // GAFFER_PERFORMANCEMONITOR_H

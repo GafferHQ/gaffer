@@ -1,6 +1,6 @@
 //////////////////////////////////////////////////////////////////////////
 //
-//  Copyright (c) 2012-2015, Image Engine Design Inc. All rights reserved.
+//  Copyright (c) 2016, Image Engine Design Inc. All rights reserved.
 //
 //  Redistribution and use in source and binary forms, with or without
 //  modification, are permitted provided that the following conditions are
@@ -34,59 +34,55 @@
 //
 //////////////////////////////////////////////////////////////////////////
 
-#include "Gaffer/Context.h"
-#include "Gaffer/TypedPlug.h"
-#include "Gaffer/TypedPlug.inl"
-#include "Gaffer/Process.h"
+#ifndef GAFFER_MONITOR_H
+#define GAFFER_MONITOR_H
 
-#include "GafferImage/FormatData.h"
-#include "GafferImage/AtomicFormatPlug.h"
-#include "GafferImage/FormatPlug.h"
-
-using namespace Gaffer;
-using namespace GafferImage;
+#include "boost/noncopyable.hpp"
 
 namespace Gaffer
 {
 
-IECORE_RUNTIMETYPED_DEFINETEMPLATESPECIALISATION( GafferImage::AtomicFormatPlug, AtomicFormatPlugTypeId )
+class Process;
 
-template<>
-Format AtomicFormatPlug::getValue( const IECore::MurmurHash *precomputedHash ) const
+/// Base class for monitoring node graph processes.
+class Monitor : boost::noncopyable
 {
-	IECore::ConstObjectPtr o = getObjectValue( precomputedHash );
-	const GafferImage::FormatData *d = IECore::runTimeCast<const GafferImage::FormatData>( o.get() );
-	if( !d )
-	{
-		throw IECore::Exception( "AtomicFormatPlug::getObjectValue() didn't return FormatData - is the hash being computed correctly?" );
-	}
 
-	Format result = d->readable();
-	if( result.getDisplayWindow().isEmpty() && ( ( direction() == Plug::In && Process::current() ) || direction() == Plug::Out ) )
-	{
-		return FormatPlug::getDefaultFormat( Context::current() );
-	}
-	return result;
-}
+	public :
 
-template<>
-IECore::MurmurHash AtomicFormatPlug::hash() const
-{
-	const AtomicFormatPlug *p = source<AtomicFormatPlug>();
+		Monitor();
+		virtual ~Monitor();
 
-	if( p->direction() == Plug::In )
-	{
-		const Format v = p->getValue();
+		void setActive( bool active );
+		bool getActive() const;
 
-		IECore::MurmurHash result;
-		result.append( v.getDisplayWindow() );
-		result.append( v.getPixelAspect() );
-		return result;
-	}
+		class Scope : boost::noncopyable
+		{
 
-	return p->ValuePlug::hash();
-}
+			public :
 
-template class TypedPlug<GafferImage::Format>;
+				/// Constructing the Scope makes the monitor active.
+				Scope( Monitor *monitor );
+				/// Destruction of the Scope makes the monitor inactive.
+				~Scope();
+
+			private :
+
+				Monitor *m_monitor;
+
+		};
+
+	protected :
+
+		friend class Process;
+
+		/// Implementations must be safe to call concurrently.
+		virtual void processStarted( const Process *process ) = 0;
+		/// Implementations must be safe to call concurrently.
+		virtual void processFinished( const Process *process ) = 0;
+
+};
 
 } // namespace Gaffer
+
+#endif // GAFFER_MONITOR_H

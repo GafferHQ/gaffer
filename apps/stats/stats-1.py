@@ -75,6 +75,27 @@ class stats( Gaffer.Application ) :
 					defaultValue = "",
 				),
 
+				IECore.BoolParameter(
+					name = "performanceMonitor",
+					description = "Turns on a performance monitor to provide additional"
+						"statistics about the operation of the node graph.",
+					defaultValue = False,
+				),
+
+				IECore.IntParameter(
+					name = "mostFrequentlyHashed",
+					description = "The number of most-frequently hashed plugs to print. "
+						"Only used when the performance monitor is on.",
+					defaultValue = 50,
+				),
+
+				IECore.IntParameter(
+					name = "mostFrequentlyComputed",
+					description = "The number of most-frequently hashed plugs to print. "
+						"Only used when the performance monitor is on.",
+					defaultValue = 50,
+				)
+
 			]
 
 		)
@@ -86,6 +107,11 @@ class stats( Gaffer.Application ) :
 		)
 
 	def _run( self, args ) :
+
+		if args["performanceMonitor"].value :
+			self.__performanceMonitor = Gaffer.PerformanceMonitor()
+		else :
+			self.__performanceMonitor = None
 
 		self.__timers = collections.OrderedDict()
 		self.__memory = collections.OrderedDict()
@@ -123,19 +149,15 @@ class stats( Gaffer.Application ) :
 
 				self.__printScene( script, args )
 
-		with _Timer() as shutdownTimer :
-			del script
-			while gc.collect() :
-				IECore.RefCounted.collectGarbage()
-		self.__timers["Shutdown"] = shutdownTimer
-
 		print ""
 
 		self.__printMemory()
 
 		print ""
 
-		self.__printPerformance()
+		self.__printPerformance( script, args )
+
+		print
 
 	def __printVersion( self, script ) :
 
@@ -229,7 +251,8 @@ class stats( Gaffer.Application ) :
 
 		memory = _Memory.maxRSS()
 		with _Timer() as sceneTimer :
-			GafferSceneTest.traverseScene( scene )
+			with self.__performanceMonitor or _NullContextManager() :
+				GafferSceneTest.traverseScene( scene )
 		self.__timers["Scene generation"] = sceneTimer
 		self.__memory["Scene generation"] = _Memory.maxRSS() - memory
 
@@ -257,10 +280,27 @@ class stats( Gaffer.Application ) :
 		print "Memory :\n"
 		self.__printItems( items )
 
-	def __printPerformance( self ) :
+	def __printStatisticsItems( self, script, stats, key, n ) :
+
+		stats.sort( key = key, reverse = True )
+		items = [ ( x[0].relativeName( script ), key( x ) ) for x in stats[:n] ]
+		self.__printItems( items )
+
+	def __printPerformance( self, script, args ) :
 
 			print "Performance :\n"
 			self.__printItems( self.__timers.items() )
+
+			if self.__performanceMonitor is None :
+				return
+
+			stats = self.__performanceMonitor.allStatistics().items()
+
+			print "\nMost frequently hashed :\n"
+			self.__printStatisticsItems( script, stats, lambda x : x[1].hashCount, args["mostFrequentlyHashed"].value )
+
+			print "\nMost frequently computed :\n"
+			self.__printStatisticsItems( script, stats, lambda x : x[1].computeCount, args["mostFrequentlyComputed"].value )
 
 class _Timer( object ) :
 
@@ -301,5 +341,15 @@ class _Memory( object ) :
 	def __sub__( self, other ) :
 
 		return _Memory( self.__bytes - other.__bytes )
+
+class _NullContextManager( object ) :
+
+	def __enter__( self ) :
+
+		pass
+
+	def __exit__( self, type, value, traceBack ) :
+
+		pass
 
 IECore.registerRunTimeTyped( stats )
