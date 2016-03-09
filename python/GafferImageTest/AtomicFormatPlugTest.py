@@ -129,5 +129,16 @@ class AtomicFormatPlugTest( GafferImageTest.ImageTestCase ) :
 		p.setValue( GafferImage.Format() )
 		self.assertEqual( p.getValue(), GafferImage.Format() )
 
+	def testHashRepeatability( self ) :
+
+		p = GafferImage.AtomicFormatPlug()
+		p.setValue( GafferImage.Format( 1920, 1080 ) )
+
+		allHashes = set()
+		for i in range( 0, 1000 ) :
+			allHashes.add( p.hash().toString() )
+
+		self.assertEqual( len( allHashes ), 1 )
+
 if __name__ == "__main__":
 	unittest.main()
