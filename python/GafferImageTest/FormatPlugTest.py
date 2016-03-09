@@ -216,5 +216,15 @@ class FormatPlugTest( GafferImageTest.ImageTestCase ) :
 		self.assertTrue( s["n"]["f"].getInput().node().isSame( s["e"] ) )
 		self.assertEqual( s["n"]["f"].getValue(), f )
 
+	def testDefaultFormatHashRepeatability( self ) :
+
+		allHashes = set()
+		for i in range( 0, 1000 ) :
+			c = Gaffer.Context()
+			GafferImage.FormatPlug.setDefaultFormat( c, GafferImage.Format( 1920, 1080 ) )
+			allHashes.add( str( c.hash() ) )
+
+		self.assertEqual( len( allHashes ), 1 )
+
 if __name__ == "__main__":
 	unittest.main()
