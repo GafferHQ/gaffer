@@ -151,9 +151,6 @@ class _VariablesDict( dict ) :
 				continue
 			with IECore.IgnoredExceptions( Exception ) :
 				value = value.value
-			if isinstance( value, str ) :
-				## \todo Remove when #887 is fixed.
-				value = self.__context.substitute( value )
 
 			self[name] = value
 

@@ -56,7 +56,7 @@ class TextWriter( GafferDispatch.ExecutableNode ) :
 	def execute( self ) :
 
 		context = Gaffer.Context.current()
-		fileName = context.substitute( self["fileName"].getValue() )
+		fileName = self["fileName"].getValue()
 
 		directory = os.path.dirname( fileName )
 		if directory :
@@ -80,7 +80,7 @@ class TextWriter( GafferDispatch.ExecutableNode ) :
 			return
 
 		context = Gaffer.Context( Gaffer.Context.current() )
-		fileName = context.substitute( self["fileName"].getValue() )
+		fileName = self["fileName"].getValue()
 
 		with file( fileName, self["mode"].getValue() ) as f :
 			with context :
@@ -94,9 +94,9 @@ class TextWriter( GafferDispatch.ExecutableNode ) :
 		h = GafferDispatch.ExecutableNode.hash( self, context )
 		h.append( context.getFrame() )
 		h.append( context.get( "textWriter:replace", IECore.StringVectorData() ) )
-		h.append( context.substitute( self["fileName"].getValue() ) )
-		h.append( self["mode"].getValue() )
-		h.append( context.substitute( self["text"].getValue() ) )
+		self["fileName"].hash( h )
+		self["mode"].hash( h )
+		self["text"].hash( h )
 
 		return h
 
@@ -106,8 +106,7 @@ class TextWriter( GafferDispatch.ExecutableNode ) :
 
 	def __processText( self, context ) :
 
-		text = context.substitute( self["text"].getValue() )
-
+		text = self["text"].getValue()
 		replace = context.get( "textWriter:replace", IECore.StringVectorData() )
 		if replace and len(replace) == 2 :
 			text = text.replace( replace[0], replace[1] )
