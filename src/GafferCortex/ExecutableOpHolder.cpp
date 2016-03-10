@@ -108,24 +108,5 @@ void ExecutableOpHolder::execute() const
 	// and passing it explicitly in the operate call, so clients can safely call execute() from multiple threads.
 	const_cast<CompoundParameterHandler *>( parameterHandler() )->setParameterValue();
 	Op *op = const_cast<Op *>( getOp() );
-	/// \todo: Remove this once scoping the context takes care of it for us
-	substitute( op->parameters(), Gaffer::Context::current() );
 	op->operate();
-}
-
-void ExecutableOpHolder::substitute( Parameter *parameter, const Gaffer::Context *context ) const
-{
-	if ( const CompoundParameter *compound = runTimeCast<const CompoundParameter>( parameter ) )
-	{
-		const CompoundParameter::ParameterVector &children = compound->orderedParameters();
-		for ( CompoundParameter::ParameterVector::const_iterator it = children.begin(); it != children.end(); ++it )
-		{
-			substitute( const_cast<Parameter*>( it->get() ), context );
-		}
-	}
-
-	if ( StringParameter *stringParm = runTimeCast<StringParameter>( parameter ) )
-	{
-		stringParm->setTypedValue( context->substitute( stringParm->getTypedValue() ) );
-	}
 }
