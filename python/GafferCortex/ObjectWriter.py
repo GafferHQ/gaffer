@@ -103,8 +103,6 @@ class ObjectWriter( GafferDispatch.ExecutableNode ) :
 	def __ensureWriter( self ) :
 
 		fileName = self["fileName"].getValue()
-		## \todo See equivalent todo in ArnoldRender.__fileName()
-		fileName = Gaffer.Context.current().substitute( fileName )
 		if fileName :
 
 			extension = os.path.splitext( fileName )[-1]
