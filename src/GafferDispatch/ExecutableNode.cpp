@@ -38,6 +38,7 @@
 #include "Gaffer/Dot.h"
 #include "Gaffer/Context.h"
 #include "Gaffer/ArrayPlug.h"
+#include "Gaffer/Process.h"
 
 #include "GafferDispatch/Dispatcher.h"
 #include "GafferDispatch/ExecutableNode.h"
@@ -101,6 +102,47 @@ bool ExecutableNode::Task::operator < ( const Task &rhs ) const
 // TaskPlug implementation.
 //////////////////////////////////////////////////////////////////////////
 
+namespace
+{
+
+class ExecutableNodeProcess : public Gaffer::Process
+{
+
+	public :
+
+		ExecutableNodeProcess( const IECore::InternedString &type, const ExecutableNode::TaskPlug *plug )
+			:	Process( type, plug->source<Plug>(), plug )
+		{
+		}
+
+		const ExecutableNode *executableNode() const
+		{
+			const ExecutableNode *n = runTimeCast<const ExecutableNode>( plug()->node() );
+			if( !n )
+			{
+				throw IECore::Exception( boost::str( boost::format( "TaskPlug \"%s\" has no ExecutableNode." ) % plug()->fullName() ) );
+			}
+			return n;
+		}
+
+		static InternedString hashProcessType;
+		static InternedString executeProcessType;
+		static InternedString executeSequenceProcessType;
+		static InternedString requiresSequenceExecutionProcessType;
+		static InternedString preTasksProcessType;
+		static InternedString postTasksProcessType;
+
+};
+
+InternedString ExecutableNodeProcess::hashProcessType( "executableNode:hash" );
+InternedString ExecutableNodeProcess::executeProcessType( "executableNode:execute" );
+InternedString ExecutableNodeProcess::executeSequenceProcessType( "executableNode:executeSequence" );
+InternedString ExecutableNodeProcess::requiresSequenceExecutionProcessType( "executableNode:requiresSequenceExecution" );
+InternedString ExecutableNodeProcess::preTasksProcessType( "executableNode:preTasks" );
+InternedString ExecutableNodeProcess::postTasksProcessType( "executableNode:postTasks" );
+
+} // namespace
+
 IE_CORE_DEFINERUNTIMETYPED( ExecutableNode::TaskPlug );
 
 ExecutableNode::TaskPlug::TaskPlug( const std::string &name, Direction direction, unsigned flags )
@@ -157,43 +199,38 @@ PlugPtr ExecutableNode::TaskPlug::createCounterpart( const std::string &name, Di
 
 IECore::MurmurHash ExecutableNode::TaskPlug::hash() const
 {
-	return executableNode()->hash( Context::current() );
+	ExecutableNodeProcess p( ExecutableNodeProcess::hashProcessType, this );
+	return p.executableNode()->hash( Context::current() );
 }
 
 void ExecutableNode::TaskPlug::execute() const
 {
-	return executableNode()->execute();
+	ExecutableNodeProcess p( ExecutableNodeProcess::executeProcessType, this );
+	return p.executableNode()->execute();
 }
 
 void ExecutableNode::TaskPlug::executeSequence( const std::vector<float> &frames ) const
 {
-	return executableNode()->executeSequence( frames );
+	ExecutableNodeProcess p( ExecutableNodeProcess::executeSequenceProcessType, this );
+	return p.executableNode()->executeSequence( frames );
 }
 
 bool ExecutableNode::TaskPlug::requiresSequenceExecution() const
 {
-	return executableNode()->requiresSequenceExecution();
+	ExecutableNodeProcess p( ExecutableNodeProcess::requiresSequenceExecutionProcessType, this );
+	return p.executableNode()->requiresSequenceExecution();
 }
 
 void ExecutableNode::TaskPlug::preTasks( Tasks &tasks ) const
 {
-	return executableNode()->preTasks( Context::current(), tasks );
+	ExecutableNodeProcess p( ExecutableNodeProcess::preTasksProcessType, this );
+	return p.executableNode()->preTasks( Context::current(), tasks );
 }
 
 void ExecutableNode::TaskPlug::postTasks( Tasks &tasks ) const
 {
-	return executableNode()->postTasks( Context::current(), tasks );
-}
-
-const ExecutableNode *ExecutableNode::TaskPlug::executableNode() const
-{
-	const Plug *s = source<Plug>();
-	const ExecutableNode *n = runTimeCast<const ExecutableNode>( s->node() );
-	if( !n )
-	{
-		throw IECore::Exception( boost::str( boost::format( "TaskPlug \"%s\" has no ExecutableNode." ) % s->fullName() ) );
-	}
-	return n;
+	ExecutableNodeProcess p( ExecutableNodeProcess::postTasksProcessType, this );
+	return p.executableNode()->postTasks( Context::current(), tasks );
 }
 
 //////////////////////////////////////////////////////////////////////////

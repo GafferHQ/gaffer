@@ -158,10 +158,6 @@ class ExecutableNode : public Gaffer::Node
 				/// class.
 				void postTasks( Tasks &tasks ) const;
 
-			private :
-
-				const ExecutableNode *executableNode() const;
-
 		};
 
 		typedef Gaffer::FilteredChildIterator<Gaffer::PlugPredicate<Gaffer::Plug::Invalid, TaskPlug> > TaskPlugIterator;
