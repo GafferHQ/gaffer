@@ -124,6 +124,11 @@ class Dispatcher : public Gaffer::Node
 		/// Calls doDispatch, taking care to trigger the dispatch signals at the appropriate times.
 		/// Note that this will throw unless all of the nodes are either ExecutableNodes or Boxes,
 		/// and it will also throw if cycles are detected in the resulting TaskBatch graph.
+		/// \todo Replace this with a version taking vector<TaskPlugPtr>. This will plug the
+		/// type safety issue whereby currently any old node can be passed to dispatch.
+		/// Alternatively, perhaps the tasks to dispatch should be specified via connections
+		/// into a "tasks" ArrayPlug, so dispatchers can optionally live directly in the node
+		/// graph.
 		void dispatch( const std::vector<Gaffer::NodePtr> &nodes ) const;
 
 		enum FramesMode
