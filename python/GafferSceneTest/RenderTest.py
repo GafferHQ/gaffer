@@ -73,7 +73,7 @@ class RenderTest( GafferSceneTest.SceneTestCase ) :
 		# CapturingRenderer outputs some spurious errors which
 		# we suppress by capturing them.
 		with IECore.CapturingMessageHandler() :
-			s["r"].execute()
+			s["r"]["task"].execute()
 
 		w = s["r"].world()
 		lights = self.__allState( s["r"].world(), IECore.Light )
@@ -103,7 +103,7 @@ class RenderTest( GafferSceneTest.SceneTestCase ) :
 		# CapturingRenderer outputs some spurious errors which
 		# we suppress by capturing them.
 		with IECore.CapturingMessageHandler() :
-			s["r"].execute()
+			s["r"]["task"].execute()
 
 		w = s["r"].world()
 		lights = self.__allState( s["r"].world(), IECore.Light )
@@ -113,7 +113,7 @@ class RenderTest( GafferSceneTest.SceneTestCase ) :
 
 		s["v"]["attributes"]["visibility"]["value"].setValue( False )
 		with IECore.CapturingMessageHandler() :
-			s["r"].execute()
+			s["r"]["task"].execute()
 
 		w = s["r"].world()
 		lights = self.__allState( s["r"].world(), IECore.Light )
@@ -136,7 +136,7 @@ class RenderTest( GafferSceneTest.SceneTestCase ) :
 		# CapturingRenderer outputs some spurious errors which
 		# we suppress by capturing them.
 		with IECore.CapturingMessageHandler() :
-			s["r"].execute()
+			s["r"]["task"].execute()
 
 		w = s["r"].world()
 		l = w.children()[0].state()
@@ -162,7 +162,7 @@ class RenderTest( GafferSceneTest.SceneTestCase ) :
 		# CapturingRenderer outputs some spurious errors which
 		# we suppress by capturing them.
 		with IECore.CapturingMessageHandler() :
-			s["r"].execute()
+			s["r"]["task"].execute()
 
 		w = s["r"].world()
 		self.assertEqual( w.children()[0].state()[0].attributes["name"].value, "/group/light" )
@@ -187,7 +187,7 @@ class RenderTest( GafferSceneTest.SceneTestCase ) :
 		# CapturingRenderer outputs some spurious errors which
 		# we suppress by capturing them.
 		with IECore.CapturingMessageHandler() :
-			s["r"].execute()
+			s["r"]["task"].execute()
 
 		w = s["r"].world()
 
@@ -218,7 +218,7 @@ class RenderTest( GafferSceneTest.SceneTestCase ) :
 			# we suppress by capturing them.
 			with IECore.CapturingMessageHandler() :
 				with s.context() :
-					s["r"].execute()
+					s["r"]["task"].execute()
 
 		self.assertTrue( "/group/invalid" in str( a.exception ) )
 
@@ -228,7 +228,7 @@ class RenderTest( GafferSceneTest.SceneTestCase ) :
 			# we suppress by capturing them.
 			with IECore.CapturingMessageHandler() :
 				with s.context() :
-					s["r"].execute()
+					s["r"]["task"].execute()
 
 		self.assertTrue( "/group/invalid" in str( a.exception ) )
 		self.assertTrue( "does not exist" in str( a.exception ) )
@@ -237,7 +237,7 @@ class RenderTest( GafferSceneTest.SceneTestCase ) :
 		with self.assertRaises( RuntimeError ) as a :
 			with IECore.CapturingMessageHandler() :
 				with s.context() :
-					s["r"].execute()
+					s["r"]["task"].execute()
 
 		self.assertTrue( "/group/sphere" in str( a.exception ) )
 		self.assertTrue( "is not a camera" in str( a.exception ) )
@@ -257,7 +257,7 @@ class RenderTest( GafferSceneTest.SceneTestCase ) :
 		# CapturingRenderer outputs some spurious errors which
 		# we suppress by capturing them.
 		with IECore.CapturingMessageHandler() :
-			s["r"].execute()
+			s["r"]["task"].execute()
 
 		self.assertEqual( s["r"].renderer().getOption( "user:test" ), IECore.IntData( 10 ) )
 
@@ -278,7 +278,7 @@ class RenderTest( GafferSceneTest.SceneTestCase ) :
 		# CapturingRenderer outputs some spurious errors which
 		# we suppress by capturing them.
 		with IECore.CapturingMessageHandler() :
-			s["r"].execute()
+			s["r"]["task"].execute()
 
 		self.assertEqual( s["r"].world().state()[0].attributes["doubleSided"], IECore.BoolData( False ) )
 
