@@ -107,7 +107,7 @@ class AppleseedRenderTest( GafferTest.TestCase ) :
 		s["fileName"].setValue( self.__scriptFileName )
 		s.save()
 
-		s["render"].execute()
+		s["render"]["task"].execute()
 
 		self.failUnless( os.path.exists( self.temporaryDirectory() + "/test.exr" ) )
 
@@ -166,7 +166,7 @@ class AppleseedRenderTest( GafferTest.TestCase ) :
 		for i in range( 1, 4 ) :
 			c.setFrame( i )
 			with c :
-				s["render"].execute()
+				s["render"]["task"].execute()
 
 		for i in range( 1, 4 ) :
 			self.failUnless( os.path.exists( self.temporaryDirectory() + "/test.%04d.exr" % i ) )
@@ -220,7 +220,7 @@ class AppleseedRenderTest( GafferTest.TestCase ) :
 		s.save()
 
 		with s.context() :
-			s["render"].execute()
+			s["render"]["task"].execute()
 
 		self.assertTrue( os.path.exists( self.temporaryDirectory() + "/renderTests" ) )
 		self.assertTrue( os.path.exists( self.temporaryDirectory() + "/appleseedTests" ) )
@@ -230,7 +230,7 @@ class AppleseedRenderTest( GafferTest.TestCase ) :
 		# check it can cope with everything already existing
 
 		with s.context() :
-			s["render"].execute()
+			s["render"]["task"].execute()
 
 		self.assertTrue( os.path.exists( self.temporaryDirectory() + "/renderTests" ) )
 		self.assertTrue( os.path.exists( self.temporaryDirectory() + "/appleseedTests" ) )
