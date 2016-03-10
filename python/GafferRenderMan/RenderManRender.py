@@ -71,7 +71,7 @@ class RenderManRender( GafferScene.ExecutableRender ) :
 
 	def _createRenderer( self ) :
 
-		fileName = self.__fileName()
+		fileName = self["ribFileName"].getValue()
 		directory = os.path.dirname( fileName )
 		if directory :
 			try :
@@ -145,23 +145,12 @@ class RenderManRender( GafferScene.ExecutableRender ) :
 			return ""
 
 		result = self["command"].getValue()
-		result = Gaffer.Context.current().substitute( result ) ## \todo See __fileName()
 		result = result.strip()
 		if result == "" :
 			return
 
-		result += " '" + self.__fileName() + "'"
+		result += " '" + self["ribFileName"].getValue() + "'"
 
-		return result
-
-	def __fileName( self ) :
-
-		result = self["ribFileName"].getValue()
-		# because execute() isn't called inside a compute(), we
-		# don't get string expansions automatically, and have to
-		# do them ourselves.
-		## \todo Can we improve this situation?
-		result = Gaffer.Context.current().substitute( result )
 		return result
 
 IECore.registerRunTimeTyped( RenderManRender, typeName = "GafferRenderMan::RenderManRender" )
