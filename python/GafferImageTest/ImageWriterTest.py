@@ -69,7 +69,7 @@ class ImageWriterTest( GafferImageTest.ImageTestCase ) :
 		w["fileName"].setValue( testFile )
 		w["channels"].setValue( IECore.StringVectorData( ["R","B"] ) )
 		with Gaffer.Context() :
-			w.execute()
+			w["task"].execute()
 
 		writerOutput = GafferImage.ImageReader()
 		writerOutput["fileName"].setValue( testFile )
@@ -264,8 +264,8 @@ class ImageWriterTest( GafferImageTest.ImageTestCase ) :
 
 		# Try to execute. In older versions of the ImageWriter this would throw an exception.
 		with s.context() :
-			w1.execute()
-			w2.execute()
+			w1["task"].execute()
+			w2["task"].execute()
 		self.failUnless( os.path.exists( testScanlineFile ) )
 		self.failUnless( os.path.exists( testTileFile ) )
 
@@ -333,7 +333,7 @@ class ImageWriterTest( GafferImageTest.ImageTestCase ) :
 			w["fileName"].setValue( testFile )
 
 			with Gaffer.Context() :
-				w.execute()
+				w["task"].execute()
 
 	# Write an RGBA image that has a data window to various supported formats and in both scanline and tile modes.
 	def __testExtension( self, ext, formatName, options = {}, metadataToIgnore = [] ) :
@@ -379,7 +379,7 @@ class ImageWriterTest( GafferImageTest.ImageTestCase ) :
 
 			# Execute
 			with Gaffer.Context() :
-				w.execute()
+				w["task"].execute()
 			self.failUnless( os.path.exists( testFile ), "Failed to create file : {} ({}) : {}".format( ext, name, testFile ) )
 
 			# Check the output.
@@ -483,7 +483,7 @@ class ImageWriterTest( GafferImageTest.ImageTestCase ) :
 
 		# Execute
 		with Gaffer.Context() :
-			w.execute()
+			w["task"].execute()
 		self.failUnless( os.path.exists( testFile ), "Failed to create file : {} : {}".format( ext, testFile ) )
 
 		# Check the output.
@@ -512,7 +512,7 @@ class ImageWriterTest( GafferImageTest.ImageTestCase ) :
 		w["in"].setInput( c["out"] )
 		w["fileName"].setValue( testFile )
 
-		w.execute()
+		w["task"].execute()
 
 		self.failUnless( os.path.exists( testFile ) )
 		i = IECore.Reader.create( testFile ).read()
@@ -598,7 +598,7 @@ class ImageWriterTest( GafferImageTest.ImageTestCase ) :
 		w["fileName"].setValue( testFile )
 
 		with Gaffer.Context() :
-			w.execute()
+			w["task"].execute()
 		self.failUnless( os.path.exists( testFile ) )
 
 		result = GafferImage.ImageReader()
@@ -612,7 +612,7 @@ class ImageWriterTest( GafferImageTest.ImageTestCase ) :
 		s.addChild( w )
 
 		with Gaffer.Context() :
-			w.execute()
+			w["task"].execute()
 
 		result["refreshCount"].setValue( result["refreshCount"].getValue() + 1 )
 		self.assertEqual( result["out"]["metadata"].getValue()["DocumentName"].value, "untitled" )
@@ -621,7 +621,7 @@ class ImageWriterTest( GafferImageTest.ImageTestCase ) :
 		s["fileName"].setValue( "/my/gaffer/script.gfr" )
 
 		with Gaffer.Context() :
-			w.execute()
+			w["task"].execute()
 
 		result["refreshCount"].setValue( result["refreshCount"].getValue() + 1 )
 		self.assertEqual( result["out"]["metadata"].getValue()["DocumentName"].value, "/my/gaffer/script.gfr" )
@@ -669,8 +669,8 @@ class ImageWriterTest( GafferImageTest.ImageTestCase ) :
 		self.assertEqual( inMetadata["oiio:Gamma"], IECore.FloatData( 0.25 ) )
 
 		with Gaffer.Context() :
-			w.execute()
-			w2.execute()
+			w["task"].execute()
+			w2["task"].execute()
 		self.failUnless( os.path.exists( testFile ) )
 		self.failUnless( os.path.exists( testFile2 ) )
 
@@ -775,7 +775,7 @@ class ImageWriterTest( GafferImageTest.ImageTestCase ) :
 		w["fileName"].setValue( testFile )
 
 		with Gaffer.Context():
-			w.execute()
+			w["task"].execute()
 		self.failUnless( os.path.exists( testFile ) )
 
 		after = GafferImage.ImageReader()
@@ -808,7 +808,7 @@ class ImageWriterTest( GafferImageTest.ImageTestCase ) :
 		w["channels"].setValue( IECore.StringVectorData( f["out"]["channelNames"].getValue() ) )
 
 		with Gaffer.Context() :
-			w.execute()
+			w["task"].execute()
 		self.failUnless( os.path.exists( testFile ) )
 
 		after = GafferImage.ImageReader()
@@ -869,7 +869,7 @@ class ImageWriterTest( GafferImageTest.ImageTestCase ) :
 		context = Gaffer.Context( s.context() )
 		context["ext"] = "tif"
 		with context :
-			s["w"].execute()
+			s["w"]["task"].execute()
 
 		self.assertTrue( os.path.isfile( self.temporaryDirectory() + "/test.tif" ) )
 
@@ -887,10 +887,10 @@ class ImageWriterTest( GafferImageTest.ImageTestCase ) :
 			self.assertRaisesRegexp( RuntimeError, "could not find a format writer for", s["w"].execute )
 
 			s["w"]["fileName"].setValue( self.temporaryDirectory() + "/test.tif" )
-			s["w"].execute()
+			s["w"]["task"].execute()
 
 			os.chmod( self.temporaryDirectory() + "/test.tif", 0o444 )
-			self.assertRaisesRegexp( RuntimeError, "Could not open", s["w"].execute )
+			self.assertRaisesRegexp( RuntimeError, "Could not open", s["w"]["task"].execute )
 
 	def testWriteIntermediateFile( self ) :
 

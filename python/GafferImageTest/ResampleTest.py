@@ -93,7 +93,7 @@ class ResampleTest( GafferImageTest.ImageTestCase ) :
 			writer = GafferImage.ImageWriter()
 			writer["in"].setInput( crop["out"] )
 			writer["fileName"].setValue( outputFileName )
-			writer.execute()
+			writer["task"].execute()
 
 			result = GafferImage.ImageReader()
 			result["fileName"].setValue( writer["fileName"].getValue() )
