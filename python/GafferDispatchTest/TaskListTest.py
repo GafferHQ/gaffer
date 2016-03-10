@@ -47,14 +47,20 @@ class TaskListTest( GafferTest.TestCase ) :
 	def test( self ) :
 
 		n = GafferDispatch.TaskList()
-		c = Gaffer.Context()
-		c2 = Gaffer.Context()
-		c2["frame"] = 10.0
-		self.assertEqual( n.hash( c ), n.hash( c2 ) )
+		with Gaffer.Context() as c :
+
+			h1 = n["task"].hash()
+			c["frame"] = 10.0
+			h2 = n["task"].hash()
+
+			self.assertEqual( h1, h2 )
 
 		n2 = GafferDispatch.TaskList( "TaskList2" )
-		self.assertEqual( n.hash( c ), n2.hash( c ) )
-		self.assertEqual( n.hash( c2 ), n2.hash( c2 ) )
+		with Gaffer.Context() as c :
+
+			self.assertEqual( n2["task"].hash(), h1 )
+			c["frame"] = 10.0
+			self.assertEqual( n2["task"].hash(), h2 )
 
 if __name__ == "__main__":
 	unittest.main()

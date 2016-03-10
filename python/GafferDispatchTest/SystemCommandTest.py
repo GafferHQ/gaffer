@@ -50,7 +50,7 @@ class SystemCommandTest( GafferTest.TestCase ) :
 		n = GafferDispatch.SystemCommand()
 		n["command"].setValue( "touch " + self.temporaryDirectory() + "/systemCommandTest.txt" )
 
-		n.execute()
+		n["task"].execute()
 
 		self.assertTrue( os.path.exists( self.temporaryDirectory() + "/systemCommandTest.txt" ) )
 
@@ -60,7 +60,7 @@ class SystemCommandTest( GafferTest.TestCase ) :
 		n["command"].setValue( "env > " + self.temporaryDirectory() + "/systemCommandTest.txt" )
 		n["environmentVariables"].addMember( "GAFFER_SYSTEMCOMMAND_TEST", IECore.StringData( "test" ) )
 
-		n.execute()
+		n["task"].execute()
 
 		env = "".join( open( self.temporaryDirectory() + "/systemCommandTest.txt" ).readlines() )
 		self.assertTrue( "GAFFER_SYSTEMCOMMAND_TEST=test" in env )
@@ -72,7 +72,7 @@ class SystemCommandTest( GafferTest.TestCase ) :
 		n["substitutions"].addMember( "adjective", IECore.StringData( "red" ) )
 		n["substitutions"].addMember( "noun", IECore.StringData( "truck" ) )
 
-		n.execute()
+		n["task"].execute()
 		self.assertEqual( "red truck\n", open( self.temporaryDirectory() + "/systemCommandTest.txt" ).readlines()[0] )
 
 	def testHash( self ) :
@@ -80,19 +80,19 @@ class SystemCommandTest( GafferTest.TestCase ) :
 		hashes = []
 
 		n = GafferDispatch.SystemCommand()
-		hashes.append( n.hash( Gaffer.Context.current() ) )
+		hashes.append( n["task"].hash() )
 
 		n["command"].setValue( "env" )
-		hashes.append( n.hash( Gaffer.Context.current() ) )
+		hashes.append( n["task"].hash() )
 
 		n["command"].setValue( "echo abc" )
-		hashes.append( n.hash( Gaffer.Context.current() ) )
+		hashes.append( n["task"].hash() )
 
 		n["substitutions"].addMember( "test", IECore.StringData( "value" ) )
-		hashes.append( n.hash( Gaffer.Context.current() ) )
+		hashes.append( n["task"].hash() )
 
 		n["environmentVariables"].addMember( "test", IECore.StringData( "value" ) )
-		hashes.append( n.hash( Gaffer.Context.current() ) )
+		hashes.append( n["task"].hash() )
 
 		# check that all hashes are unique
 		self.assertEqual( len( hashes ), len( set( hashes ) ) )
