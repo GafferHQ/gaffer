@@ -50,19 +50,31 @@ using namespace GafferDispatch;
 // Task implementation
 //////////////////////////////////////////////////////////////////////////
 
-ExecutableNode::Task::Task( const Task &t ) : m_node( t.m_node ), m_context( t.m_context ), m_hash( t.m_hash )
+ExecutableNode::Task::Task( ConstTaskPlugPtr plug, const Gaffer::Context *context )
+	:	m_plug( plug ), m_context( new Context( *context ) )
+{
+	Context::Scope scopedContext( m_context.get() );
+	m_hash = m_plug->hash();
+}
+
+ExecutableNode::Task::Task( const Task &t ) : m_plug( t.m_plug ), m_context( t.m_context ), m_hash( t.m_hash )
 {
 }
 
-ExecutableNode::Task::Task( ExecutableNodePtr n, const Context *c ) : m_node( n ), m_context( new Context( *c ) )
+ExecutableNode::Task::Task( ExecutableNodePtr n, const Context *c ) : m_plug( n->taskPlug() ), m_context( new Context( *c ) )
 {
 	Context::Scope scopedContext( m_context.get() );
-	m_hash = m_node->hash( m_context.get() );
+	m_hash = m_plug->hash();
+}
+
+const ExecutableNode::TaskPlug *ExecutableNode::Task::plug() const
+{
+	return m_plug.get();
 }
 
 const ExecutableNode *ExecutableNode::Task::node() const
 {
-	return m_node.get();
+	return runTimeCast<const ExecutableNode>( m_plug->node() );
 }
 
 const Context *ExecutableNode::Task::context() const
@@ -141,6 +153,47 @@ bool ExecutableNode::TaskPlug::acceptsInput( const Plug *input ) const
 PlugPtr ExecutableNode::TaskPlug::createCounterpart( const std::string &name, Direction direction ) const
 {
 	return new TaskPlug( name, direction, getFlags() );
+}
+
+IECore::MurmurHash ExecutableNode::TaskPlug::hash() const
+{
+	return executableNode()->hash( Context::current() );
+}
+
+void ExecutableNode::TaskPlug::execute() const
+{
+	return executableNode()->execute();
+}
+
+void ExecutableNode::TaskPlug::executeSequence( const std::vector<float> &frames ) const
+{
+	return executableNode()->executeSequence( frames );
+}
+
+bool ExecutableNode::TaskPlug::requiresSequenceExecution() const
+{
+	return executableNode()->requiresSequenceExecution();
+}
+
+void ExecutableNode::TaskPlug::preTasks( Tasks &tasks ) const
+{
+	return executableNode()->preTasks( Context::current(), tasks );
+}
+
+void ExecutableNode::TaskPlug::postTasks( Tasks &tasks ) const
+{
+	return executableNode()->postTasks( Context::current(), tasks );
+}
+
+const ExecutableNode *ExecutableNode::TaskPlug::executableNode() const
+{
+	const Plug *s = source<Plug>();
+	const ExecutableNode *n = runTimeCast<const ExecutableNode>( s->node() );
+	if( !n )
+	{
+		throw IECore::Exception( boost::str( boost::format( "TaskPlug \"%s\" has no ExecutableNode." ) % s->fullName() ) );
+	}
+	return n;
 }
 
 //////////////////////////////////////////////////////////////////////////
