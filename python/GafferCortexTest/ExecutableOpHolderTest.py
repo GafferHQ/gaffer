@@ -108,7 +108,7 @@ class ExecutableOpHolderTest( GafferTest.TestCase ) :
 		script = n.scriptNode()
 		self.assertEqual( op.counter, 0 )
 		with Gaffer.Context() :
-			n.execute()
+			n["task"].execute()
 		self.assertEqual( op.counter, 1 )
 
 	def testContextSubstitutions( self ) :
@@ -122,26 +122,26 @@ class ExecutableOpHolderTest( GafferTest.TestCase ) :
 		c = Gaffer.Context()
 		c.setFrame( 1 )
 		with c :
-			n.execute()
+			n["task"].execute()
 		self.assertEqual( op.counter, 1 )
 		self.assertEqual( op.stringValue, "" )
 
 		n["parameters"]["stringParm"].setValue( "${frame}" )
 		with c :
-			n.execute()
+			n["task"].execute()
 		self.assertEqual( op.counter, 2 )
 		self.assertEqual( op.stringValue, "1" )
 
 		# variable outside the context (and environment) get removed
 		n["parameters"]["stringParm"].setValue( "${test}" )
 		with c :
-			n.execute()
+			n["task"].execute()
 		self.assertEqual( op.counter, 3 )
 		self.assertEqual( op.stringValue, "" )
 
 		c["test"] = "passed"
 		with c :
-			n.execute()
+			n["task"].execute()
 		self.assertEqual( op.counter, 4 )
 		self.assertEqual( op.stringValue, "passed" )
 
@@ -158,20 +158,21 @@ class ExecutableOpHolderTest( GafferTest.TestCase ) :
 		r2 = Gaffer.Plug( name = "r2" )
 		n2["preTasks"][1].setInput( n2b["task"] )
 
-		c = Gaffer.Context()
-		self.assertEqual( n2a.preTasks(c), [] )
-		self.assertEqual( n2b.preTasks(c), [] )
-		n2PreTasks = n2.preTasks(c)
-		self.assertEqual( n2PreTasks[0].node(), n2a )
-		self.assertEqual( n2PreTasks[0].context(), c )
-		self.assertEqual( n2PreTasks[1].node(), n2b )
-		self.assertEqual( n2PreTasks[1].context(), c )
-		t1 = GafferDispatch.ExecutableNode.Task(n2a,c)
-		t2 = GafferDispatch.ExecutableNode.Task(n2b,c)
-		self.assertEqual( n2PreTasks[0], t1 )
-		self.assertEqual( n2PreTasks[1], t2 )
-		self.assertEqual( len(set(n2.preTasks(c)).difference([ t1, t2])), 0 )
-		self.assertEqual( n1.preTasks(c), [ GafferDispatch.ExecutableNode.Task(n2,c) ] )
+		with Gaffer.Context() as c :
+
+			self.assertEqual( n2a["task"].preTasks(), [] )
+			self.assertEqual( n2b["task"].preTasks(), [] )
+			n2PreTasks = n2["task"].preTasks()
+			self.assertEqual( n2PreTasks[0].node(), n2a )
+			self.assertEqual( n2PreTasks[0].context(), c )
+			self.assertEqual( n2PreTasks[1].node(), n2b )
+			self.assertEqual( n2PreTasks[1].context(), c )
+			t1 = GafferDispatch.ExecutableNode.Task(n2a,c)
+			t2 = GafferDispatch.ExecutableNode.Task(n2b,c)
+			self.assertEqual( n2PreTasks[0], t1 )
+			self.assertEqual( n2PreTasks[1], t2 )
+			self.assertEqual( len( set( n2["task"].preTasks() ).difference( [ t1, t2] ) ), 0 )
+			self.assertEqual( n1["task"].preTasks(), [ GafferDispatch.ExecutableNode.Task( n2, c ) ] )
 
 	def testSerialise( self ) :
 
@@ -197,28 +198,46 @@ class ExecutableOpHolderTest( GafferTest.TestCase ) :
 		op = TestOp()
 
 		# output doesn't vary until we set an op
-		self.assertEqual( n.hash( c ), IECore.MurmurHash() )
+		self.assertEqual( n["task"].hash(), IECore.MurmurHash() )
 
 		# output varies if any op is set
 		n.setParameterised( op )
-		self.assertNotEqual( n.hash( c ), IECore.MurmurHash() )
+		self.assertNotEqual( n["task"].hash(), IECore.MurmurHash() )
 
 		# output doesn't vary by time unless ${frame} is used by the parameters
-		self.assertEqual( n.hash( c ), n.hash( c2 ) )
+		with c :
+			h1 = n["task"].hash()
+		with c2 :
+			h2 = n["task"].hash()
+		self.assertEqual( h1, h2 )
 
 		# output varies by time because ${frame} is used by the parameters
 		n["parameters"]["stringParm"].setValue( "${frame}" )
-		self.assertNotEqual( n.hash( c ), n.hash( c2 ) )
+		with c :
+			h1 = n["task"].hash()
+		with c2 :
+			h2 = n["task"].hash()
+		self.assertNotEqual( h1, h2 )
 
 		# output varies any context entry used by the parameters
 		n["parameters"]["stringParm"].setValue( "${test}" )
-		self.assertEqual( n.hash( c ), n.hash( c2 ) )
-		c["test"] = "a"
-		self.assertNotEqual( n.hash( c ), n.hash( c2 ) )
-		c2["test"] = "b"
-		self.assertNotEqual( n.hash( c ), n.hash( c2 ) )
-		c2["test"] = "a"
-		self.assertEqual( n.hash( c ), n.hash( c2 ) )
+		with c :
+			h1 = n["task"].hash()
+		with c2 :
+			h2 = n["task"].hash()
+		self.assertEqual( h1, h2 )
+
+		with c :
+			c["test"] = "a"
+			h1 = n["task"].hash()
+			self.assertNotEqual( h1, h2 )
+		with c2 :
+			c2["test"] = "b"
+			h2 = n["task"].hash()
+			self.assertNotEqual( h1, h2 )
+			c2["test"] = "a"
+			h2 = n["task"].hash()
+			self.assertEqual( h1, h2 )
 
 if __name__ == "__main__":
 	unittest.main()
