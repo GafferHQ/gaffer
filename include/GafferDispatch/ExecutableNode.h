@@ -110,6 +110,7 @@ class ExecutableNode : public Gaffer::Node
 		};
 
 		typedef std::vector<Task> Tasks;
+		/// \todo This is unused - remove it.
 		typedef std::vector<Gaffer::ConstContextPtr> Contexts;
 
 		IE_CORE_DECLARERUNTIMETYPEDEXTENSION( GafferDispatch::ExecutableNode, ExecutableNodeTypeId, Gaffer::Node );
