@@ -36,9 +36,12 @@
 ##########################################################################
 
 import ctypes
+import functools
+import collections
 
 import arnold
 
+import IECore
 import IECoreArnold
 
 import Gaffer
@@ -64,8 +67,7 @@ def __aiMetadataGetStr( nodeEntry, paramName, name ) :
 # and we don't want to have to keep making those temporarily later.
 ##########################################################################
 
-__descriptions = {}
-__plugValueWidgetCreators = {}
+__metadata = collections.defaultdict( dict )
 
 with IECoreArnold.UniverseBlock() :
 
@@ -77,7 +79,7 @@ with IECoreArnold.UniverseBlock() :
 
 		description = __aiMetadataGetStr( nodeEntry, None, "desc" )
 		if description is not None :
-			__descriptions[nodeName] = description
+			__metadata[nodeName]["description"] = description
 
 		paramIt = arnold.AiNodeEntryGetParamIterator( nodeEntry )
 		while not arnold.AiParamIteratorFinished( paramIt ) :
@@ -90,20 +92,22 @@ with IECoreArnold.UniverseBlock() :
 
 			description = __aiMetadataGetStr( nodeEntry, paramName, "desc" )
 			if description is not None :
-				__descriptions[paramPath] = description
+				__metadata[paramPath]["description"] = description
 
 			paramType = arnold.AiParamGetType( param )
 			if paramType == arnold.AI_TYPE_ENUM :
 
 				enum = arnold.AiParamGetEnum( param )
-				namesAndValues = []
+				presets = IECore.StringVectorData()
 				while True :
-					enumLabel = arnold.AiEnumGetString( enum, len( namesAndValues ) )
-					if not enumLabel :
+					preset = arnold.AiEnumGetString( enum, len( presets ) )
+					if not preset :
 						break
-					namesAndValues.append( ( enumLabel, enumLabel ) )
+					presets.append( preset )
 
-				__plugValueWidgetCreators[paramPath] = ( GafferUI.EnumPlugValueWidget, namesAndValues )
+				__metadata[paramPath]["plugValueWidget:type"] = "GafferUI.PresetsPlugValueWidget"
+				__metadata[paramPath]["presetNames"] = presets
+				__metadata[paramPath]["presetValues"] = presets
 
 ##########################################################################
 # Gaffer Metadata queries. These are implemented using the preconstructed
@@ -115,41 +119,37 @@ def __nodeDescription( node ) :
 	shaderDefault = """Loads shaders for use in Arnold renderers. Use the ShaderAssignment node to assign shaders to objects in the scene."""
 	lightDefault = """Loads an Arnold light shader and uses it to output a scene with a single light."""
 
-	return __descriptions.get(
-		node["name"].getValue(),
+	return __metadata[node["name"].getValue()].get(
+		"description",
 		shaderDefault if isinstance( node, GafferArnold.ArnoldShader ) else lightDefault
 	)
 
-def __plugDescription( plug ) :
+def __plugMetadata( plug, name ) :
 
-	return __descriptions.get( plug.node()["name"].getValue() + "." + plug.getName() )
+	return __metadata[plug.node()["name"].getValue() + "." + plug.getName()].get( name )
 
-for nodeType in ( GafferArnold.ArnoldShader, GafferArnold.ArnoldLight ) :
-
-	Gaffer.Metadata.registerNodeValue( nodeType, "description", __nodeDescription )
-	Gaffer.Metadata.registerPlugValue( nodeType, "parameters.*", "description", __plugDescription )
-
-##########################################################################
-# Nodule and widget creators
-##########################################################################
-
-def __parameterNoduleType( plug ) :
+def __noduleType( plug ) :
 
 	if isinstance( plug, ( Gaffer.BoolPlug, Gaffer.IntPlug, Gaffer.StringPlug ) ) :
 		return ""
 
 	return "GafferUI::StandardNodule"
 
-GafferUI.Metadata.registerPlugValue( GafferArnold.ArnoldShader, "parameters.*", "nodule:type", __parameterNoduleType )
+for nodeType in ( GafferArnold.ArnoldShader, GafferArnold.ArnoldLight ) :
 
-def __plugValueWidgetCreator( plug ) :
+	Gaffer.Metadata.registerNodeValue( nodeType, "description", __nodeDescription )
+	GafferUI.Metadata.registerPlugValue( nodeType, "parameters.*", "nodule:type", __noduleType )
 
-	paramPath = plug.node()["name"].getValue() + "." + plug.getName()
-	customCreator = __plugValueWidgetCreators.get( paramPath, None )
-	if customCreator is not None :
-		return customCreator[0]( plug, *customCreator[1:] )
+	for name in [
+		"description",
+		"presetNames",
+		"presetValues",
+		"plugValueWidget:type"
+	] :
 
-	return GafferUI.PlugValueWidget.create( plug, useTypeOnly=True )
-
-GafferUI.PlugValueWidget.registerCreator( GafferArnold.ArnoldShader, "parameters.*", __plugValueWidgetCreator )
-GafferUI.PlugValueWidget.registerCreator( GafferArnold.ArnoldLight, "parameters.*", __plugValueWidgetCreator )
+		Gaffer.Metadata.registerPlugValue(
+			nodeType,
+			"parameters.*",
+			name,
+			functools.partial( __plugMetadata, name = name )
+		)
