@@ -1239,5 +1239,75 @@ class DispatcherTest( GafferTest.TestCase ) :
 		dispatcher.dispatch( itertools.chain( [ s["n1"], s["n2"] ] ) )
 		self.assertEqual( [ l.node for l in log ], [ s["n1"], s["n2"] ] )
 
+	def testFrameOrderWithPostTask( self ) :
+
+		# t - p
+
+		s = Gaffer.ScriptNode()
+
+		log = []
+		s["p"] = GafferDispatchTest.LoggingExecutableNode( log = log )
+		s["p"]["f"] = Gaffer.StringPlug( defaultValue = "####" )
+
+		s["t"] = GafferDispatchTest.LoggingExecutableNode( log = log )
+		s["t"]["postTasks"][0].setInput( s["p"]["task"] )
+		s["t"]["f"] = Gaffer.StringPlug( defaultValue = "####" )
+
+		dispatcher = GafferDispatch.Dispatcher.create( "testDispatcher" )
+		dispatcher["framesMode"].setValue( GafferDispatch.Dispatcher.FramesMode.CustomRange )
+		dispatcher["frameRange"].setValue( "1-4" )
+
+		dispatcher.dispatch( [ s["t"] ] )
+
+		self.assertEqual( [ l.node for l in log ], [ s["t"], s["p"], ] * 4 )
+		self.assertEqual( [ l.context.getFrame() for l in log ], [ 1, 1, 2, 2, 3, 3, 4, 4 ] )
+
+	def testFrameOrderWithStaticPostTask( self ) :
+
+		# t - p
+
+		s = Gaffer.ScriptNode()
+
+		log = []
+		s["p"] = GafferDispatchTest.LoggingExecutableNode( log = log )
+
+		s["t"] = GafferDispatchTest.LoggingExecutableNode( log = log )
+		s["t"]["postTasks"][0].setInput( s["p"]["task"] )
+		s["t"]["f"] = Gaffer.StringPlug( defaultValue = "####" )
+
+		dispatcher = GafferDispatch.Dispatcher.create( "testDispatcher" )
+		dispatcher["framesMode"].setValue( GafferDispatch.Dispatcher.FramesMode.CustomRange )
+		dispatcher["frameRange"].setValue( "1-4" )
+
+		dispatcher.dispatch( [ s["t"] ] )
+
+		self.assertEqual( [ l.node for l in log ], [ s["t"], s["t"], s["t"], s["t"], s["p"] ] )
+		self.assertEqual( [ l.context.getFrame() for l in log ], [ 1, 2, 3, 4, 1 ] )
+
+	def testFrameOrderWithSequencePostTask( self ) :
+
+		# t - p
+
+		s = Gaffer.ScriptNode()
+
+		log = []
+		s["p"] = GafferDispatchTest.LoggingExecutableNode( log = log )
+		s["p"]["f"] = Gaffer.StringPlug( defaultValue = "####" )
+		s["p"]["requiresSequenceExecution"].setValue( True )
+
+		s["t"] = GafferDispatchTest.LoggingExecutableNode( log = log )
+		s["t"]["postTasks"][0].setInput( s["p"]["task"] )
+		s["t"]["f"] = Gaffer.StringPlug( defaultValue = "####" )
+
+		dispatcher = GafferDispatch.Dispatcher.create( "testDispatcher" )
+		dispatcher["framesMode"].setValue( GafferDispatch.Dispatcher.FramesMode.CustomRange )
+		dispatcher["frameRange"].setValue( "1-4" )
+
+		dispatcher.dispatch( [ s["t"] ] )
+
+		self.assertEqual( [ l.node for l in log ], [ s["t"], s["t"], s["t"], s["t"], s["p"], ] )
+		self.assertEqual( [ l.context.getFrame() for l in log ], [ 1, 2, 3, 4, 1 ] )
+		self.assertEqual( [ l.frames for l in log ], [ None, None, None, None, [ 1, 2, 3, 4 ] ] )
+
 if __name__ == "__main__":
 	unittest.main()
