@@ -1,6 +1,6 @@
 ##########################################################################
 #
-#  Copyright (c) 2015, Image Engine Design Inc. All rights reserved.
+#  Copyright (c) 2016, Image Engine Design Inc. All rights reserved.
 #
 #  Redistribution and use in source and binary forms, with or without
 #  modification, are permitted provided that the following conditions are
@@ -34,8 +34,49 @@
 #
 ##########################################################################
 
-from DocumentationTest import DocumentationTest
-from ArnoldShaderUITest import ArnoldShaderUITest
+import IECore
+
+import Gaffer
+import GafferUITest
+import GafferArnold
+import GafferArnoldUI
+
+class ArnoldShaderUITest( GafferUITest.TestCase ) :
+
+	def testMetadata( self ) :
+
+		shader = GafferArnold.ArnoldShader()
+		shader.loadShader( "noise" )
+
+		self.assertEqual(
+			Gaffer.Metadata.plugValue( shader["parameters"]["octaves"], "nodule:type" ),
+			""
+		)
+
+		self.assertEqual(
+			Gaffer.Metadata.plugValue( shader["parameters"]["amplitude"], "nodule:type" ),
+			"GafferUI::StandardNodule"
+		)
+
+		self.assertEqual(
+			Gaffer.Metadata.plugValue( shader["parameters"]["octaves"], "plugValueWidget:type" ),
+			None
+		)
+
+		self.assertEqual(
+			Gaffer.Metadata.plugValue( shader["parameters"]["coord_space"], "plugValueWidget:type" ),
+			"GafferUI.PresetsPlugValueWidget"
+		)
+
+		self.assertEqual(
+			Gaffer.Metadata.plugValue( shader["parameters"]["coord_space"], "presetNames" ),
+			IECore.StringVectorData( [ "world", "object", "Pref" ] ),
+		)
+
+		self.assertEqual(
+			Gaffer.Metadata.plugValue( shader["parameters"]["coord_space"], "presetValues" ),
+			Gaffer.Metadata.plugValue( shader["parameters"]["coord_space"], "presetNames" ),
+		)
 
 if __name__ == "__main__":
 	unittest.main()
