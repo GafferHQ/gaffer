@@ -1,6 +1,6 @@
 ##########################################################################
 #
-#  Copyright (c) 2011-2012, John Haddon. All rights reserved.
+#  Copyright (c) 2011-2016, John Haddon. All rights reserved.
 #  Copyright (c) 2011-2013, Image Engine Design Inc. All rights reserved.
 #
 #  Redistribution and use in source and binary forms, with or without
@@ -69,95 +69,79 @@ class Viewer( GafferUI.NodeSetEditor ) :
 
 		self.__nodeToolbars = []
 		self.__viewToolbars = []
+		self.__toolToolbars = []
 
 		with GafferUI.GridContainer( borderWidth = 2, spacing = 0 ) as overlay :
 
+			# Top toolbars
+
 			with GafferUI.ListContainer(
-				orientation = GafferUI.ListContainer.Orientation.Horizontal,
+				orientation = GafferUI.ListContainer.Orientation.Vertical,
 				parenting = {
-					"index" : ( slice( 0, 5 ), 0 ),
+					"index" : ( slice( 0, 3 ), 0 ),
 					"alignment" : ( GafferUI.HorizontalAlignment.None, GafferUI.VerticalAlignment.Top )
 				}
 			) :
 
-				self.__toolMenuButton = GafferUI.MenuButton(
-					menu = GafferUI.Menu( Gaffer.WeakMethod( self.__toolMenuDefinition ) ),
-					hasFrame = False,
-				)
+				with GafferUI.ListContainer(
+					orientation = GafferUI.ListContainer.Orientation.Horizontal,
+				) :
 
-				GafferUI.Spacer( IECore.V2i( 0 ), parenting = { "expand" : True } )
+					self.__toolMenuButton = GafferUI.MenuButton(
+						menu = GafferUI.Menu( Gaffer.WeakMethod( self.__toolMenuDefinition ) ),
+						hasFrame = False,
+					)
 
-				self.__viewToolbars.append(
-					_Toolbar( GafferUI.Edge.Top, parenting = { "verticalAlignment" : GafferUI.VerticalAlignment.Top } )
-				)
+					GafferUI.Spacer( IECore.V2i( 0 ), parenting = { "expand" : True } )
 
-			self.__nodeToolbars.append(
-				_Toolbar(
-					GafferUI.Edge.Top,
-					parenting = {
-						"index" : ( slice( 0, 5 ), 1 ),
-						"alignment" : ( GafferUI.HorizontalAlignment.Center, GafferUI.VerticalAlignment.Top ),
-					}
-				)
-			)
+					self.__viewToolbars.append( _Toolbar( GafferUI.Edge.Top ) )
 
-			self.__viewToolbars.append(
-				_Toolbar( GafferUI.Edge.Left,
-					parenting = {
-						"index" : ( 0, 2 ),
-						"alignment" : ( GafferUI.HorizontalAlignment.Left, GafferUI.VerticalAlignment.Center ),
-					}
-				)
-			)
+				for toolbarContainer in [ self.__nodeToolbars, self.__toolToolbars ] :
+					toolbarContainer.append( _Toolbar( GafferUI.Edge.Top ) )
 
-			self.__nodeToolbars.append(
-				_Toolbar( GafferUI.Edge.Left,
-					parenting = {
-						"index" : ( 1, 2 ),
-						"alignment" : ( GafferUI.HorizontalAlignment.Left, GafferUI.VerticalAlignment.Center ),
-					}
-				)
-			)
+			# Left toolbars
 
-			self.__nodeToolbars.append(
-				_Toolbar( GafferUI.Edge.Right,
-					parenting = {
-						"index" : ( 3, 2 ),
-						"alignment" : ( GafferUI.HorizontalAlignment.Right, GafferUI.VerticalAlignment.Center ),
-					}
-				)
-			)
+			with GafferUI.ListContainer(
+				orientation = GafferUI.ListContainer.Orientation.Horizontal,
+				parenting = {
+					"index" : ( 0, 1 ),
+					"alignment" : ( GafferUI.HorizontalAlignment.Left, GafferUI.VerticalAlignment.Center )
+				}
+			) :
 
-			self.__viewToolbars.append(
-				_Toolbar( GafferUI.Edge.Right,
-					parenting = {
-						"index" : ( 4, 2 ),
-						"alignment" : ( GafferUI.HorizontalAlignment.Right, GafferUI.VerticalAlignment.Center ),
-					}
-				)
-			)
+				for toolbarContainer in [ self.__viewToolbars, self.__nodeToolbars, self.__toolToolbars ] :
+					toolbarContainer.append( _Toolbar( GafferUI.Edge.Left ) )
 
-			self.__nodeToolbars.append(
-				_Toolbar( GafferUI.Edge.Bottom,
-					parenting = {
-						"index" : ( slice( 0, 5 ), 3 ),
-						"alignment" : ( GafferUI.HorizontalAlignment.Center, GafferUI.VerticalAlignment.Bottom ),
-					}
-				)
-			)
+			# Right toolbars
 
-			self.__viewToolbars.append(
-				_Toolbar( GafferUI.Edge.Bottom,
-					parenting = {
-						"index" : ( slice( 0, 5 ), 4 ),
-						"alignment" : ( GafferUI.HorizontalAlignment.Center, GafferUI.VerticalAlignment.Bottom ),
-					}
-				)
-			)
+			with GafferUI.ListContainer(
+				orientation = GafferUI.ListContainer.Orientation.Horizontal,
+				parenting = {
+					"index" : ( 3, 1 ),
+					"alignment" : ( GafferUI.HorizontalAlignment.Right, GafferUI.VerticalAlignment.Center )
+				}
+			) :
+
+				for toolbarContainer in [ self.__toolToolbars, self.__nodeToolbars, self.__viewToolbars ] :
+					toolbarContainer.append( _Toolbar( GafferUI.Edge.Right ) )
+
+			# Bottom toolbars
+
+			with GafferUI.ListContainer(
+				spacing = 0,
+				orientation = GafferUI.ListContainer.Orientation.Vertical,
+				parenting = {
+					"index" : ( slice( 0, 3 ), 2 ),
+					"alignment" : ( GafferUI.HorizontalAlignment.Right, GafferUI.VerticalAlignment.Center )
+				}
+			) :
+
+				for toolbarContainer in [ self.__toolToolbars, self.__nodeToolbars, self.__viewToolbars ] :
+					toolbarContainer.append( _Toolbar( GafferUI.Edge.Bottom ) )
 
 		## \todo Consider public API for this in the GridContainer class.
-		overlay._qtWidget().layout().setRowStretch( 2, 1 )
-		overlay._qtWidget().layout().setColumnStretch( 2, 1 )
+		overlay._qtWidget().layout().setRowStretch( 1, 1 )
+		overlay._qtWidget().layout().setColumnStretch( 1, 1 )
 
 		self.__gadgetWidget.setOverlay( overlay )
 
@@ -226,9 +210,14 @@ class Viewer( GafferUI.NodeSetEditor ) :
 		if self.__currentView is not None :
 			self.__gadgetWidget.setViewportGadget( self.__currentView.viewportGadget() )
 			self.__toolMenuButton.setVisible( len( self.__viewTools[self.__currentView] ) != 0 )
+			activeTool = next( ( t for t in self.__viewTools[self.__currentView] if t["active"].getValue() ), None )
+			for toolbar in self.__toolToolbars :
+				toolbar.setNode( activeTool )
 		else :
 			self.__gadgetWidget.setViewportGadget( GafferUI.ViewportGadget() )
 			self.__toolMenuButton.setVisible( False )
+			for toolbar in self.__toolToolbars :
+				toolbar.setNode( None )
 
 	def _titleFormat( self ) :
 
@@ -263,6 +252,9 @@ class Viewer( GafferUI.NodeSetEditor ) :
 		self.__toolMenuButton.setImage( iconName )
 
 		self.__toolMenuButton.setToolTip( self.__toolDescription( tool ) )
+
+		for toolbar in self.__toolToolbars :
+			toolbar.setNode( tool )
 
 	def __toolDescription( self, tool ) :
 
@@ -300,6 +292,8 @@ class _Toolbar( GafferUI.Frame ) :
 			self.setChild( self.__nodeToolbarCache.get( ( self.__node, self.__edge ) ) )
 		else :
 			self.setChild( None )
+
+		self.setVisible( self.getChild() is not None )
 
 	def getNode( self ) :
 
