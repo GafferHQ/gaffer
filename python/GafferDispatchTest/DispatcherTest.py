@@ -348,10 +348,10 @@ class DispatcherTest( GafferTest.TestCase ) :
 		s["n2"]["preTasks"][0].setInput( s["n1"]["task"] )
 		s["n1"]["preTasks"][0].setInput( s["n4"]["task"] )
 
-		self.assertNotEqual( s["n1"].hash( s.context() ), s["n2"].hash( s.context() ) )
-		self.assertNotEqual( s["n2"].hash( s.context() ), s["n3"].hash( s.context() ) )
-		self.assertNotEqual( s["n3"].hash( s.context() ), s["n4"].hash( s.context() ) )
-		self.assertNotEqual( s["n1"].hash( s.context() ), s["n4"].hash( s.context() ) )
+		self.assertNotEqual( s["n1"]["task"].hash(), s["n2"]["task"].hash() )
+		self.assertNotEqual( s["n2"]["task"].hash(), s["n3"]["task"].hash() )
+		self.assertNotEqual( s["n3"]["task"].hash(), s["n4"]["task"].hash() )
+		self.assertNotEqual( s["n1"]["task"].hash(), s["n4"]["task"].hash() )
 
 		self.assertEqual( os.path.isfile( fileName ), False )
 		self.assertRaises( RuntimeError, dispatcher.dispatch, [ s["n4"] ] )
@@ -380,8 +380,8 @@ class DispatcherTest( GafferTest.TestCase ) :
 		s["n3"]["preTasks"][1].setInput( s["n1"]["task"] )
 		s["n2"]["preTasks"][0].setInput( s["n1"]["task"] )
 
-		self.assertNotEqual( s["n1"].hash( s.context() ), s["n2"].hash( s.context() ) )
-		self.assertNotEqual( s["n2"].hash( s.context() ), s["n3"].hash( s.context() ) )
+		self.assertNotEqual( s["n1"]["task"].hash(), s["n2"]["task"].hash() )
+		self.assertNotEqual( s["n2"]["task"].hash(), s["n3"]["task"].hash() )
 
 		self.assertEqual( os.path.isfile( fileName ), False )
 		dispatcher.dispatch( [ s["n3"] ] )
@@ -397,7 +397,7 @@ class DispatcherTest( GafferTest.TestCase ) :
 		s = Gaffer.ScriptNode()
 		s["n1"] = GafferDispatchTest.LoggingExecutableNode()
 		s["n1"]["noOp"].setValue( True )
-		self.assertEqual( s["n1"].hash( s.context() ), IECore.MurmurHash() )
+		self.assertEqual( s["n1"]["task"].hash(), IECore.MurmurHash() )
 
 		# It doesn't execute, because the executionHash is null
 		dispatcher = GafferDispatch.Dispatcher.create( "testDispatcher" )
@@ -855,13 +855,17 @@ class DispatcherTest( GafferTest.TestCase ) :
 		c2["selfExecutingNode:preExecute"] = True
 
 		# e2 requires itself with a different context
-		self.assertEqual( s["e2"].preTasks( c1 ), [ GafferDispatch.ExecutableNode.Task( s["e2"], c2 ) ] )
+		with c1 :
+			self.assertEqual( s["e2"]["task"].preTasks(), [ GafferDispatch.ExecutableNode.Task( s["e2"], c2 ) ] )
 		# e2 in the other context requires e1 with the original context
-		self.assertEqual( s["e2"].preTasks( c2 ), [ GafferDispatch.ExecutableNode.Task( s["e1"], c1 ) ] )
+		with c2 :
+			self.assertEqual( s["e2"]["task"].preTasks(), [ GafferDispatch.ExecutableNode.Task( s["e1"], c1 ) ] )
 		# e1 requires itself with a different context
-		self.assertEqual( s["e1"].preTasks( c1 ), [ GafferDispatch.ExecutableNode.Task( s["e1"], c2 ) ] )
+		with c1 :
+			self.assertEqual( s["e1"]["task"].preTasks(), [ GafferDispatch.ExecutableNode.Task( s["e1"], c2 ) ] )
 		# e1 in the other context has no requirements
-		self.assertEqual( s["e1"].preTasks( c2 ), [] )
+		with c2 :
+			self.assertEqual( s["e1"]["task"].preTasks(), [] )
 
 		self.assertEqual( s["e1"].preExecutionCount, 0 )
 		self.assertEqual( s["e1"].mainExecutionCount, 0 )

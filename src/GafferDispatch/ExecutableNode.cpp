@@ -38,6 +38,7 @@
 #include "Gaffer/Dot.h"
 #include "Gaffer/Context.h"
 #include "Gaffer/ArrayPlug.h"
+#include "Gaffer/Process.h"
 
 #include "GafferDispatch/Dispatcher.h"
 #include "GafferDispatch/ExecutableNode.h"
@@ -50,19 +51,31 @@ using namespace GafferDispatch;
 // Task implementation
 //////////////////////////////////////////////////////////////////////////
 
-ExecutableNode::Task::Task( const Task &t ) : m_node( t.m_node ), m_context( t.m_context ), m_hash( t.m_hash )
+ExecutableNode::Task::Task( ConstTaskPlugPtr plug, const Gaffer::Context *context )
+	:	m_plug( plug ), m_context( new Context( *context ) )
+{
+	Context::Scope scopedContext( m_context.get() );
+	m_hash = m_plug->hash();
+}
+
+ExecutableNode::Task::Task( const Task &t ) : m_plug( t.m_plug ), m_context( t.m_context ), m_hash( t.m_hash )
 {
 }
 
-ExecutableNode::Task::Task( ExecutableNodePtr n, const Context *c ) : m_node( n ), m_context( new Context( *c ) )
+ExecutableNode::Task::Task( ExecutableNodePtr n, const Context *c ) : m_plug( n->taskPlug() ), m_context( new Context( *c ) )
 {
 	Context::Scope scopedContext( m_context.get() );
-	m_hash = m_node->hash( m_context.get() );
+	m_hash = m_plug->hash();
+}
+
+const ExecutableNode::TaskPlug *ExecutableNode::Task::plug() const
+{
+	return m_plug.get();
 }
 
 const ExecutableNode *ExecutableNode::Task::node() const
 {
-	return m_node.get();
+	return runTimeCast<const ExecutableNode>( m_plug->node() );
 }
 
 const Context *ExecutableNode::Task::context() const
@@ -88,6 +101,47 @@ bool ExecutableNode::Task::operator < ( const Task &rhs ) const
 //////////////////////////////////////////////////////////////////////////
 // TaskPlug implementation.
 //////////////////////////////////////////////////////////////////////////
+
+namespace
+{
+
+class ExecutableNodeProcess : public Gaffer::Process
+{
+
+	public :
+
+		ExecutableNodeProcess( const IECore::InternedString &type, const ExecutableNode::TaskPlug *plug )
+			:	Process( type, plug->source<Plug>(), plug )
+		{
+		}
+
+		const ExecutableNode *executableNode() const
+		{
+			const ExecutableNode *n = runTimeCast<const ExecutableNode>( plug()->node() );
+			if( !n )
+			{
+				throw IECore::Exception( boost::str( boost::format( "TaskPlug \"%s\" has no ExecutableNode." ) % plug()->fullName() ) );
+			}
+			return n;
+		}
+
+		static InternedString hashProcessType;
+		static InternedString executeProcessType;
+		static InternedString executeSequenceProcessType;
+		static InternedString requiresSequenceExecutionProcessType;
+		static InternedString preTasksProcessType;
+		static InternedString postTasksProcessType;
+
+};
+
+InternedString ExecutableNodeProcess::hashProcessType( "executableNode:hash" );
+InternedString ExecutableNodeProcess::executeProcessType( "executableNode:execute" );
+InternedString ExecutableNodeProcess::executeSequenceProcessType( "executableNode:executeSequence" );
+InternedString ExecutableNodeProcess::requiresSequenceExecutionProcessType( "executableNode:requiresSequenceExecution" );
+InternedString ExecutableNodeProcess::preTasksProcessType( "executableNode:preTasks" );
+InternedString ExecutableNodeProcess::postTasksProcessType( "executableNode:postTasks" );
+
+} // namespace
 
 IE_CORE_DEFINERUNTIMETYPED( ExecutableNode::TaskPlug );
 
@@ -141,6 +195,42 @@ bool ExecutableNode::TaskPlug::acceptsInput( const Plug *input ) const
 PlugPtr ExecutableNode::TaskPlug::createCounterpart( const std::string &name, Direction direction ) const
 {
 	return new TaskPlug( name, direction, getFlags() );
+}
+
+IECore::MurmurHash ExecutableNode::TaskPlug::hash() const
+{
+	ExecutableNodeProcess p( ExecutableNodeProcess::hashProcessType, this );
+	return p.executableNode()->hash( Context::current() );
+}
+
+void ExecutableNode::TaskPlug::execute() const
+{
+	ExecutableNodeProcess p( ExecutableNodeProcess::executeProcessType, this );
+	return p.executableNode()->execute();
+}
+
+void ExecutableNode::TaskPlug::executeSequence( const std::vector<float> &frames ) const
+{
+	ExecutableNodeProcess p( ExecutableNodeProcess::executeSequenceProcessType, this );
+	return p.executableNode()->executeSequence( frames );
+}
+
+bool ExecutableNode::TaskPlug::requiresSequenceExecution() const
+{
+	ExecutableNodeProcess p( ExecutableNodeProcess::requiresSequenceExecutionProcessType, this );
+	return p.executableNode()->requiresSequenceExecution();
+}
+
+void ExecutableNode::TaskPlug::preTasks( Tasks &tasks ) const
+{
+	ExecutableNodeProcess p( ExecutableNodeProcess::preTasksProcessType, this );
+	return p.executableNode()->preTasks( Context::current(), tasks );
+}
+
+void ExecutableNode::TaskPlug::postTasks( Tasks &tasks ) const
+{
+	ExecutableNodeProcess p( ExecutableNodeProcess::postTasksProcessType, this );
+	return p.executableNode()->postTasks( Context::current(), tasks );
 }
 
 //////////////////////////////////////////////////////////////////////////

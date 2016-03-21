@@ -87,7 +87,7 @@ class OpenGLRenderTest( GafferSceneTest.SceneTestCase ) :
 		s["fileName"].setValue( self.temporaryDirectory() + "/test.gfr" )
 		s.save()
 
-		s["render"].execute()
+		s["render"]["task"].execute()
 
 		self.assertTrue( os.path.exists( self.temporaryDirectory() + "/test.exr" ) )
 
@@ -127,7 +127,7 @@ class OpenGLRenderTest( GafferSceneTest.SceneTestCase ) :
 		s["fileName"].setValue( "/tmp/test.gfr" )
 
 		with s.context() :
-			s["render"].execute()
+			s["render"]["task"].execute()
 
 		self.assertTrue( os.path.exists( self.temporaryDirectory() + "/openGLRenderTest" ) )
 		self.assertTrue( os.path.exists( self.temporaryDirectory() + "/openGLRenderTest/test.0001.exr" ) )

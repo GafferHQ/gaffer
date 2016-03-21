@@ -77,7 +77,7 @@ class LocalDispatcher( GafferDispatch.Dispatcher ) :
 			# use signals to report changes in status, and the JobPool should connect to those
 			# signals. Jobs should be blissfully ignorant of JobPools.
 			self.__dispatcher = dispatcher
-			script = batch.preTasks()[0].node().scriptNode()
+			script = batch.preTasks()[0].plug().ancestor( Gaffer.ScriptNode )
 			self.__context = Gaffer.Context( script.context() )
 
 			self.__name = name
@@ -111,7 +111,7 @@ class LocalDispatcher( GafferDispatch.Dispatcher ) :
 		def description( self ) :
 
 			batch = self.__currentBatch( self.__batch )
-			if batch is None or batch.node() is None :
+			if batch is None or batch.plug() is None :
 				return "N/A"
 
 			frames = str( IECore.frameListFromList( [ int(x) for x in batch.frames() ] ) )
@@ -191,7 +191,7 @@ class LocalDispatcher( GafferDispatch.Dispatcher ) :
 				self.__reportKilled( batch )
 				return False
 
-			if not batch.node() or self.__getStatus( batch ) == LocalDispatcher.Job.Status.Complete :
+			if not batch.plug() or self.__getStatus( batch ) == LocalDispatcher.Job.Status.Complete :
 				self.__setStatus( batch, LocalDispatcher.Job.Status.Complete )
 				return True
 
@@ -228,7 +228,7 @@ class LocalDispatcher( GafferDispatch.Dispatcher ) :
 				self.__reportKilled( batch )
 				return False
 
-			if not batch.node() :
+			if not batch.plug() :
 				self.__reportCompleted( batch )
 				return True
 
@@ -331,8 +331,8 @@ class LocalDispatcher( GafferDispatch.Dispatcher ) :
 
 		def __storeNodeNames( self, script, batch ) :
 
-			if batch.node() :
-				batch.blindData()["nodeName"] = batch.node().relativeName( script )
+			if batch.plug() :
+				batch.blindData()["nodeName"] = batch.plug().node().relativeName( script )
 
 			for upstreamBatch in batch.preTasks() :
 				self.__storeNodeNames( script, upstreamBatch )

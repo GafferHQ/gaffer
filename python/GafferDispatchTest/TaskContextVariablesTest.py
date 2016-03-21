@@ -128,5 +128,19 @@ class TaskContextVariablesTest( GafferTest.TestCase ) :
 		d = self.__dispatcher()
 		self.assertRaisesRegexp( RuntimeError, "cannot have cyclic dependencies", d.dispatch, [ s["variables"] ] )
 
+	def testStringSubstitutions( self ) :
+
+		s = Gaffer.ScriptNode()
+		s["l"] = GafferDispatchTest.LoggingExecutableNode()
+		s["v"] = GafferDispatch.TaskContextVariables()
+		s["v"]["preTasks"][0].setInput( s["l"]["task"] )
+		s["v"]["variables"].addMember( "test", "test.####.cob" )
+
+		with Gaffer.Context() as c :
+			c.setFrame( 100 )
+			self.__dispatcher().dispatch( [ s["v"] ] )
+
+		self.assertEqual( s["l"].log[0].context["test"], "test.0100.cob" )
+
 if __name__ == "__main__":
 	unittest.main()

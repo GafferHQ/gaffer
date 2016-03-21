@@ -165,8 +165,11 @@ void Dispatcher::setupPlugs( Plug *parentPlug )
 {
 	if ( const ExecutableNode *node = parentPlug->ancestor<const ExecutableNode>() )
 	{
-		/// \todo: this will always return true until we sort out issue #915
-		if ( !node->requiresSequenceExecution() )
+		/// \todo: this will always return true until we sort out issue #915.
+		/// But since requiresSequenceExecution() could feasibly return different
+		/// values in different contexts, perhaps the conditional is bogus
+		/// anyway, and if anything we should just grey out the plug in the UI?
+		if( !node->taskPlug()->requiresSequenceExecution() )
 		{
 			parentPlug->addChild( new IntPlug( g_batchSize, Plug::In, 1 ) );
 		}
@@ -218,8 +221,13 @@ Dispatcher::TaskBatch::TaskBatch()
 {
 }
 
+Dispatcher::TaskBatch::TaskBatch( ExecutableNode::ConstTaskPlugPtr plug, Gaffer::ConstContextPtr context )
+	:	m_plug( plug ), m_context( context ), m_blindData( new CompoundData )
+{
+}
+
 Dispatcher::TaskBatch::TaskBatch( ConstExecutableNodePtr node, Gaffer::ConstContextPtr context )
-	:	m_node( node ), m_context( context ), m_blindData( new CompoundData )
+	:	m_plug( node->taskPlug() ), m_context( context ), m_blindData( new CompoundData )
 {
 }
 
@@ -231,12 +239,17 @@ void Dispatcher::TaskBatch::execute() const
 	}
 
 	Context::Scope scopedContext( m_context.get() );
-	m_node->executeSequence( m_frames );
+	m_plug->executeSequence( m_frames );
+}
+
+const ExecutableNode::TaskPlug *Dispatcher::TaskBatch::plug() const
+{
+	return m_plug.get();
 }
 
 const ExecutableNode *Dispatcher::TaskBatch::node() const
 {
-	return m_node.get();
+	return m_plug ? runTimeCast<const ExecutableNode>( m_plug->node() ) : NULL;
 }
 
 const Context *Dispatcher::TaskBatch::context() const
@@ -310,16 +323,16 @@ class Dispatcher::Batcher
 			TaskBatchPtr batch = acquireBatch( task );
 			if( ancestors.find( batch.get() ) != ancestors.end() )
 			{
-				throw IECore::Exception( ( boost::format( "Dispatched nodes cannot have cyclic dependencies but %s is involved in a cycle." ) % batch->node()->relativeName( batch->node()->scriptNode() ) ).str() );
+				throw IECore::Exception( ( boost::format( "Dispatched tasks cannot have cyclic dependencies but %s is involved in a cycle." ) % batch->plug()->relativeName( batch->plug()->ancestor<ScriptNode>() ) ).str() );
 			}
 
-			// Ask the node what preTasks and postTasks it would like.
+			// Ask the task what preTasks and postTasks it would like.
 			ExecutableNode::Tasks preTasks;
 			ExecutableNode::Tasks postTasks;
 			{
 				Context::Scope scopedTaskContext( task.context() );
-				task.node()->preTasks( task.context(), preTasks );
-				task.node()->postTasks( task.context(), postTasks );
+				task.plug()->preTasks( preTasks );
+				task.plug()->postTasks( postTasks );
 			}
 
 			// Collect all the batches the postTasks belong in.
@@ -393,7 +406,7 @@ class Dispatcher::Batcher
 				TaskBatchPtr candidateBatch = bIt->second;
 				const IntPlug *batchSizePlug = task.node()->dispatcherPlug()->getChild<const IntPlug>( g_batchSize );
 				const size_t batchSize = ( batchSizePlug ) ? batchSizePlug->getValue() : 1;
-				if( task.node()->requiresSequenceExecution() || ( candidateBatch->frames().size() < batchSize ) )
+				if( task.plug()->requiresSequenceExecution() || ( candidateBatch->frames().size() < batchSize ) )
 				{
 					batch = candidateBatch;
 				}
@@ -401,7 +414,7 @@ class Dispatcher::Batcher
 
 			if( !batch )
 			{
-				batch = new TaskBatch( task.node(), task.context() );
+				batch = new TaskBatch( task.plug(), task.context() );
 				m_currentBatches[batchMapHash] = batch;
 			}
 
@@ -414,7 +427,7 @@ class Dispatcher::Batcher
 				std::vector<float> &frames = batch->frames();
 				if( std::find( frames.begin(), frames.end(), frame ) == frames.end() )
 				{
-					if( task.node()->requiresSequenceExecution() )
+					if( task.plug()->requiresSequenceExecution() )
 					{
 						frames.insert( std::lower_bound( frames.begin(), frames.end(), frame ), frame );
 					}

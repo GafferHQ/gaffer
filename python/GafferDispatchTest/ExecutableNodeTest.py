@@ -75,21 +75,40 @@ class ExecutableNodeTest( GafferTest.TestCase ) :
 
 		# hashes that don't use the context are equivalent
 		n = GafferDispatchTest.CountingExecutableNode( withHash = False )
-		self.assertEqual( n.hash( c1 ), n.hash( c1 ) )
-		self.assertEqual( n.hash( c1 ), n.hash( c2 ) )
-		self.assertEqual( n.hash( c1 ), n.hash( c3 ) )
+		with c1 :
+			c1h = n["task"].hash()
+		with c2 :
+			c2h = n["task"].hash()
+		with c3 :
+			c3h = n["task"].hash()
+
+		self.assertEqual( c1h, c2h )
+		self.assertEqual( c1h, c3h )
 
 		# hashes that do use the context differ
 		n2 = GafferDispatchTest.CountingExecutableNode( withHash = True )
-		self.assertEqual( n2.hash( c1 ), n2.hash( c1 ) )
-		self.assertNotEqual( n2.hash( c1 ), n2.hash( c2 ) )
-		self.assertNotEqual( n2.hash( c1 ), n2.hash( c3 ) )
+		with c1 :
+			c1h = n2["task"].hash()
+		with c2 :
+			c2h = n2["task"].hash()
+		with c3 :
+			c3h = n2["task"].hash()
+
+		self.assertNotEqual( c1h, c2h )
+		self.assertNotEqual( c1h, c3h )
 
 		# hashes match across the same node type
 		n3 = GafferDispatchTest.CountingExecutableNode( withHash = True )
-		self.assertEqual( n2.hash( c1 ), n3.hash( c1 ) )
-		self.assertEqual( n2.hash( c2 ), n3.hash( c2 ) )
-		self.assertEqual( n2.hash( c3 ), n3.hash( c3 ) )
+		with c1 :
+			c1h2 = n3["task"].hash()
+		with c2 :
+			c2h2 = n3["task"].hash()
+		with c3 :
+			c3h2 = n3["task"].hash()
+
+		self.assertEqual( c1h, c1h2 )
+		self.assertEqual( c2h, c2h2 )
+		self.assertEqual( c3h, c3h2 )
 
 		# hashes differ across different node types
 		class MyNode( GafferDispatchTest.CountingExecutableNode ) :
@@ -99,26 +118,32 @@ class ExecutableNodeTest( GafferTest.TestCase ) :
 		IECore.registerRunTimeTyped( MyNode )
 
 		n4 = MyNode()
+		with c1 :
+			c1h3 = n4["task"].hash()
+		with c2 :
+			c2h3 = n4["task"].hash()
+		with c3 :
+			c3h3 = n4["task"].hash()
 
-		self.assertNotEqual( n4.hash( c1 ), n3.hash( c1 ) )
-		self.assertNotEqual( n4.hash( c2 ), n3.hash( c2 ) )
-		self.assertNotEqual( n4.hash( c3 ), n3.hash( c3 ) )
+		self.assertNotEqual( c1h3, c1h2 )
+		self.assertNotEqual( c2h3, c2h2 )
+		self.assertNotEqual( c3h3, c3h2 )
 
 	def testExecute( self ) :
 
 		n = GafferDispatchTest.CountingExecutableNode()
 		self.assertEqual( n.executionCount, 0 )
 
-		n.execute()
+		n["task"].execute()
 		self.assertEqual( n.executionCount, 1 )
 
-		n.execute()
+		n["task"].execute()
 		self.assertEqual( n.executionCount, 2 )
 
 		c = Gaffer.Context()
 		c.setFrame( Gaffer.Context.current().getFrame() + 1 )
 		with c :
-			n.execute()
+			n["task"].execute()
 		self.assertEqual( n.executionCount, 3 )
 
 	def testExecuteSequence( self ) :
@@ -126,20 +151,20 @@ class ExecutableNodeTest( GafferTest.TestCase ) :
 		n = GafferDispatchTest.CountingExecutableNode()
 		self.assertEqual( n.executionCount, 0 )
 
-		n.executeSequence( [ 1, 2, 3 ] )
+		n["task"].executeSequence( [ 1, 2, 3 ] )
 		self.assertEqual( n.executionCount, 3 )
 
-		n.executeSequence( [ 1, 5, 10 ] )
+		n["task"].executeSequence( [ 1, 5, 10 ] )
 		self.assertEqual( n.executionCount, 6 )
 
 		# requiring execution doesn't tally the count per frame
 		n2 = GafferDispatchTest.CountingExecutableNode( requiresSequenceExecution = True )
 		self.assertEqual( n2.executionCount, 0 )
 
-		n2.executeSequence( [ 1, 2, 3 ] )
+		n2["task"].executeSequence( [ 1, 2, 3 ] )
 		self.assertEqual( n2.executionCount, 1 )
 
-		n2.executeSequence( [ 1, 5, 10 ] )
+		n2["task"].executeSequence( [ 1, 5, 10 ] )
 		self.assertEqual( n2.executionCount, 2 )
 
 	def testRequiresSequenceExecution( self ) :
@@ -160,9 +185,11 @@ class ExecutableNodeTest( GafferTest.TestCase ) :
 		# make n2 require n
 		n2["preTasks"][0].setInput( n["task"] )
 
-		self.assertEqual( n.preTasks(c1), [] )
-		self.assertEqual( n2.preTasks(c1), [ GafferDispatch.ExecutableNode.Task( n, c1 ) ] )
-		self.assertEqual( n2.preTasks(c2), [ GafferDispatch.ExecutableNode.Task( n, c2 ) ] )
+		with c1 :
+			self.assertEqual( n["task"].preTasks(), [] )
+			self.assertEqual( n2["task"].preTasks(), [ GafferDispatch.ExecutableNode.Task( n, c1 ) ] )
+		with c2 :
+			self.assertEqual( n2["task"].preTasks(), [ GafferDispatch.ExecutableNode.Task( n, c2 ) ] )
 
 	def testTaskConstructors( self ) :
 
@@ -392,8 +419,8 @@ class ExecutableNodeTest( GafferTest.TestCase ) :
 		c = Gaffer.Context()
 		c["test"] = "test"
 		with c :
-			self.assertEqual( writer.preTasks( c ), [ GafferDispatch.ExecutableNode.Task( preWriter, c ) ] )
-			self.assertEqual( writer.postTasks( c ), [ GafferDispatch.ExecutableNode.Task( postWriter, c ) ] )
+			self.assertEqual( writer["task"].preTasks(), [ GafferDispatch.ExecutableNode.Task( preWriter, c ) ] )
+			self.assertEqual( writer["task"].postTasks(), [ GafferDispatch.ExecutableNode.Task( postWriter, c ) ] )
 
 	def testLoadNetworkFromVersion0_19( self ) :
 
@@ -412,10 +439,10 @@ class ExecutableNodeTest( GafferTest.TestCase ) :
 
 		n = GafferDispatchTest.LoggingExecutableNode()
 
-		n.executeSequence( tuple( [ 1, 2, 3 ] ) )
+		n["task"].executeSequence( tuple( [ 1, 2, 3 ] ) )
 		self.assertEqual( len( n.log ), 3 )
 
-		n.executeSequence( itertools.chain( [ 1, 2, 3 ], [ 4, 5, 6 ] ) )
+		n["task"].executeSequence( itertools.chain( [ 1, 2, 3 ], [ 4, 5, 6 ] ) )
 		self.assertEqual( len( n.log ), 9 )
 
 if __name__ == "__main__":

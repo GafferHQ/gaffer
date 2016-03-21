@@ -136,8 +136,16 @@ class DispatcherWrapper : public NodeWrapper<Dispatcher>
 			{
 				return boost::const_pointer_cast<ExecutableNode>( node );
 			}
-
 			return 0;
+		}
+
+		static ExecutableNode::TaskPlugPtr taskBatchPlug( const Dispatcher::TaskBatchPtr &batch )
+		{
+			if( const ExecutableNode::TaskPlug *p = batch->plug() )
+			{
+				return const_cast<ExecutableNode::TaskPlug *>( p );
+			}
+			return NULL;
 		}
 
 		static ContextPtr taskBatchGetContext( const Dispatcher::TaskBatchPtr &batch, bool copy = true )
@@ -329,6 +337,7 @@ void GafferDispatchBindings::bindDispatcher()
 	RefCountedClass<Dispatcher::TaskBatch, RefCounted>( "_TaskBatch" )
 		.def( "execute", &DispatcherWrapper::taskBatchExecute )
 		.def( "node", &DispatcherWrapper::taskBatchGetNode )
+		.def( "plug", &DispatcherWrapper::taskBatchPlug )
 		.def( "context", &DispatcherWrapper::taskBatchGetContext, ( boost::python::arg_( "_copy" ) = true ) )
 		.def( "frames", &DispatcherWrapper::taskBatchGetFrames )
 		.def( "preTasks", &DispatcherWrapper::taskBatchGetPreTasks )

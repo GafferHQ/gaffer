@@ -68,10 +68,10 @@ class PythonCommandTest( GafferTest.TestCase ) :
 
 		n.executionCount = 0
 
-		n.execute()
+		n["task"].execute()
 		self.assertEqual( n.executionCount, 1 )
 
-		n.execute()
+		n["task"].execute()
 		self.assertEqual( n.executionCount, 2 )
 
 	def testVariables( self ) :
@@ -88,7 +88,7 @@ class PythonCommandTest( GafferTest.TestCase ) :
 			"""
 		) )
 
-		n.execute()
+		n["task"].execute()
 
 		self.assertEqual( n.testInt, 1 )
 		self.assertEqual( n.testFloat, 2.5 )
@@ -107,7 +107,7 @@ class PythonCommandTest( GafferTest.TestCase ) :
 		with Gaffer.Context() as c :
 			c.setFrame( 10 )
 			c["testInt"] = 2
-			n.execute()
+			n["task"].execute()
 
 		self.assertEqual( n.frame, 10 )
 		self.assertEqual( n.testInt, 2 )
@@ -121,17 +121,17 @@ class PythonCommandTest( GafferTest.TestCase ) :
 
 		with Gaffer.Context() as c :
 
-			h = n.hash( c )
+			h = n["task"].hash()
 
 			c.setTime( 2 )
-			self.assertEqual( n.hash( c ), h )
+			self.assertEqual( n["task"].hash(), h )
 			c.setTime( 3 )
-			self.assertEqual( n.hash( c ), h )
+			self.assertEqual( n["task"].hash(), h )
 
 			c["testInt"] = 10
-			self.assertEqual( n.hash( c ), h )
+			self.assertEqual( n["task"].hash(), h )
 			c["testInt"] = 20
-			self.assertEqual( n.hash( c ), h )
+			self.assertEqual( n["task"].hash(), h )
 
 		# If we access the frame, then we should
 		# be sensitive to the time, but not anything else
@@ -141,13 +141,13 @@ class PythonCommandTest( GafferTest.TestCase ) :
 		with Gaffer.Context() as c :
 
 			c.setTime( 1 )
-			h1 = n.hash( c )
+			h1 = n["task"].hash()
 
 			c.setTime( 2 )
-			h2 = n.hash( c )
+			h2 = n["task"].hash()
 
 			c.setTime( 3 )
-			h3 = n.hash( c )
+			h3 = n["task"].hash()
 
 			self.assertNotEqual( h1, h )
 			self.assertNotEqual( h2, h1 )
@@ -155,9 +155,9 @@ class PythonCommandTest( GafferTest.TestCase ) :
 			self.assertNotEqual( h3, h1 )
 
 			c["testInt"] = 10
-			self.assertEqual( n.hash( c ), h3 )
+			self.assertEqual( n["task"].hash(), h3 )
 			c["testInt"] = 20
-			self.assertEqual( n.hash( c ), h3 )
+			self.assertEqual( n["task"].hash(), h3 )
 
 		# The same should apply if we access the frame
 		# via subscripting rather than the method.
@@ -167,13 +167,13 @@ class PythonCommandTest( GafferTest.TestCase ) :
 		with Gaffer.Context() as c :
 
 			c.setTime( 1 )
-			h1 = n.hash( c )
+			h1 = n["task"].hash()
 
 			c.setTime( 2 )
-			h2 = n.hash( c )
+			h2 = n["task"].hash()
 
 			c.setTime( 3 )
-			h3 = n.hash( c )
+			h3 = n["task"].hash()
 
 			self.assertNotEqual( h1, h )
 			self.assertNotEqual( h2, h1 )
@@ -181,9 +181,9 @@ class PythonCommandTest( GafferTest.TestCase ) :
 			self.assertNotEqual( h3, h1 )
 
 			c["testInt"] = 10
-			self.assertEqual( n.hash( c ), h3 )
+			self.assertEqual( n["task"].hash(), h3 )
 			c["testInt"] = 20
-			self.assertEqual( n.hash( c ), h3 )
+			self.assertEqual( n["task"].hash(), h3 )
 
 		# Likewise, accessing other variables should
 		# affect the hash.
@@ -193,22 +193,22 @@ class PythonCommandTest( GafferTest.TestCase ) :
 		with Gaffer.Context() as c :
 
 			c["testInt"] = 1
-			h1 = n.hash( c )
+			h1 = n["task"].hash()
 
 			c["testInt"] = 2
-			h2 = n.hash( c )
+			h2 = n["task"].hash()
 
 			c["testInt"] = 3
-			h3 = n.hash( c )
+			h3 = n["task"].hash()
 
 			self.assertNotEqual( h2, h1 )
 			self.assertNotEqual( h3, h2 )
 			self.assertNotEqual( h3, h1 )
 
 			c.setFrame( 2 )
-			self.assertEqual( n.hash( c ), h3 )
+			self.assertEqual( n["task"].hash(), h3 )
 			c.setFrame( 3 )
-			self.assertEqual( n.hash( c ), h3 )
+			self.assertEqual( n["task"].hash(), h3 )
 
 	def testRequiresSequenceExecution( self ) :
 
@@ -295,7 +295,7 @@ class PythonCommandTest( GafferTest.TestCase ) :
 
 		with Gaffer.Context() as c :
 			c.setFrame( 10 )
-			s["n"].execute()
+			s["n"]["task"].execute()
 
 		self.assertEqual( s["n"].frameString, "010" )
 

@@ -124,6 +124,11 @@ class Dispatcher : public Gaffer::Node
 		/// Calls doDispatch, taking care to trigger the dispatch signals at the appropriate times.
 		/// Note that this will throw unless all of the nodes are either ExecutableNodes or Boxes,
 		/// and it will also throw if cycles are detected in the resulting TaskBatch graph.
+		/// \todo Replace this with a version taking vector<TaskPlugPtr>. This will plug the
+		/// type safety issue whereby currently any old node can be passed to dispatch.
+		/// Alternatively, perhaps the tasks to dispatch should be specified via connections
+		/// into a "tasks" ArrayPlug, so dispatchers can optionally live directly in the node
+		/// graph.
 		void dispatch( const std::vector<Gaffer::NodePtr> &nodes ) const;
 
 		enum FramesMode
@@ -204,7 +209,7 @@ class Dispatcher : public Gaffer::Node
 		/// be executed first. This DAG is the primary
 		/// data structure used in the dispatch process.
 		///
-		/// All tasks within a batch are from the same node
+		/// All tasks within a batch are from the same plug
 		/// and have identical contexts except for the frame
 		/// number.
 		class TaskBatch : public IECore::RefCounted
@@ -212,12 +217,16 @@ class Dispatcher : public Gaffer::Node
 			public :
 
 				TaskBatch();
+				TaskBatch( ExecutableNode::ConstTaskPlugPtr plug, Gaffer::ConstContextPtr context );
+				/// \deprecated
 				TaskBatch( ConstExecutableNodePtr node, Gaffer::ConstContextPtr context );
 
 				IE_CORE_DECLAREMEMBERPTR( TaskBatch );
 
 				void execute() const;
 
+				const ExecutableNode::TaskPlug *plug() const;
+				/// \deprecated.
 				const ExecutableNode *node() const;
 				const Gaffer::Context *context() const;
 
@@ -232,7 +241,7 @@ class Dispatcher : public Gaffer::Node
 
 			private :
 
-				ConstExecutableNodePtr m_node;
+				ExecutableNode::ConstTaskPlugPtr m_plug;
 				Gaffer::ConstContextPtr m_context;
 				IECore::CompoundDataPtr m_blindData;
 				std::vector<float> m_frames;

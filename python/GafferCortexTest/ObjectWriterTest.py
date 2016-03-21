@@ -81,7 +81,7 @@ class ObjectWriterTest( GafferTest.TestCase ) :
 
 		self.failIf( os.path.exists( self.__exrFileName ) )
 		with Gaffer.Context() :
-			node.execute()
+			node["task"].execute()
 		self.failUnless( os.path.exists( self.__exrFileName ) )
 
 		checker2 = IECore.Reader.create( self.__exrFileName ).read()
@@ -99,7 +99,7 @@ class ObjectWriterTest( GafferTest.TestCase ) :
 		node["fileName"].setValue( self.__tifFileName )
 
 		with Gaffer.Context() :
-			node.execute()
+			node["task"].execute()
 		self.failUnless( os.path.exists( self.__tifFileName ) )
 
 		self.failUnless( IECore.TIFFImageReader.canRead( self.__tifFileName ) )
@@ -135,7 +135,7 @@ class ObjectWriterTest( GafferTest.TestCase ) :
 			context = Gaffer.Context()
 			context.setFrame( i )
 			with context :
-				node.execute()
+				node["task"].execute()
 
 		for f in self.__exrSequence.fileNames() :
 			self.failUnless( os.path.exists( f ) )
@@ -151,23 +151,36 @@ class ObjectWriterTest( GafferTest.TestCase ) :
 		s["n"] = GafferCortex.ObjectWriter()
 
 		# no file produces no effect
-		self.assertEqual( s["n"].hash( c ), IECore.MurmurHash() )
+		with c :
+			self.assertEqual( s["n"]["task"].hash(), IECore.MurmurHash() )
 
 		# no input object produces no effect
-		s["n"]["fileName"].setValue( self.__exrFileName )
-		self.assertEqual( s["n"].hash( c ), IECore.MurmurHash() )
+		with c :
+			s["n"]["fileName"].setValue( self.__exrFileName )
+			self.assertEqual( s["n"]["task"].hash(), IECore.MurmurHash() )
 
 		# now theres a file and object, we get some output
-		s["sphere"] = GafferTest.SphereNode()
-		s["n"]["in"].setInput( s["sphere"]["out"] )
-		self.assertNotEqual( s["n"].hash( c ), IECore.MurmurHash() )
+		with c :
+			s["sphere"] = GafferTest.SphereNode()
+			s["n"]["in"].setInput( s["sphere"]["out"] )
+			self.assertNotEqual( s["n"]["task"].hash(), IECore.MurmurHash() )
 
 		# output doesn't vary by time
-		self.assertEqual( s["n"].hash( c ), s["n"].hash( c2 ) )
+		with c :
+			h1 = s["n"]["task"].hash()
+		with c2 :
+			h2 = s["n"]["task"].hash()
+
+		self.assertEqual( h1, h2 )
 
 		# output varies by time since the file name does
 		s["n"]["fileName"].setValue( self.__exrSequence.fileName )
-		self.assertNotEqual( s["n"].hash( c ), s["n"].hash( c2 ) )
+		with c :
+			h1 = s["n"]["task"].hash()
+		with c2 :
+			h2 = s["n"]["task"].hash()
+
+		self.assertNotEqual( h1, h2 )
 
 if __name__ == "__main__":
 	unittest.main()

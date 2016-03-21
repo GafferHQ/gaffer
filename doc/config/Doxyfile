@@ -760,6 +760,7 @@ WARN_LOGFILE           =
 
 INPUT                  = include/Gaffer \
                          include/GafferUI \
+                         include/GafferDispatch \
                          include/GafferScene \
                          include/GafferImage \
                          include/GafferRenderMan \
@@ -769,6 +770,7 @@ INPUT                  = include/Gaffer \
                          include/GafferAppleseed \
                          src/Gaffer \
                          src/GafferUI \
+                         src/GafferDispatch \
                          src/GafferScene \
                          src/GafferImage \
                          src/GafferRenderMan \

@@ -147,7 +147,7 @@ class execute( Gaffer.Application ) :
 		with context :
 			for node in nodes :
 				try :
-					node.executeSequence( frames )
+					node["task"].executeSequence( frames )
 				except Exception as exception :
 					IECore.msg(
 						IECore.Msg.Level.Debug,
