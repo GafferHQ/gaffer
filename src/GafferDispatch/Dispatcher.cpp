@@ -53,6 +53,7 @@ using namespace GafferDispatch;
 static InternedString g_frame( "frame" );
 static InternedString g_batchSize( "batchSize" );
 static InternedString g_immediatePlugName( "immediate" );
+static InternedString g_postTaskIndexBlindDataName( "dispatcher:postTaskIndex" );
 static InternedString g_immediateBlindDataName( "dispatcher:immediate" );
 static InternedString g_executedBlindDataName( "dispatcher:executed" );
 static InternedString g_jobDirectoryContextEntry( "dispatcher:jobDirectory" );
@@ -367,7 +368,7 @@ class Dispatcher::Batcher
 			// are reachable from doDispatch().
 			for( TaskBatches::const_iterator it = postBatches.begin(), eIt = postBatches.end(); it != eIt; ++it )
 			{
-				addPreTask( it->get(), batch, /* front = */ true );
+				addPreTask( it->get(), batch, /* forPostTask =  */ true );
 				addPreTask( m_rootBatch.get(), *it );
 			}
 
@@ -495,14 +496,28 @@ class Dispatcher::Batcher
 			return result;
 		}
 
-		void addPreTask( TaskBatch *batch, TaskBatchPtr preTask, bool front = false )
+		void addPreTask( TaskBatch *batch, TaskBatchPtr preTask, bool forPostTask = false )
 		{
 			TaskBatches &preTasks = batch->preTasks();
 			if( std::find( preTasks.begin(), preTasks.end(), preTask ) == preTasks.end() )
 			{
-				if( front )
+				if( forPostTask )
 				{
-					preTasks.insert( preTasks.begin(), preTask );
+					// We're adding the preTask because the batch is a postTask
+					// of it, but the batch may already have it's own standard
+					// preTasks. There's no strict requirement that we separate
+					// out these two types of preTasks (indeed a good dispatcher might
+					// execute them in parallel), but for simple dispatchers
+					// it's more intuitive to users if we separate them so the
+					// standard preTasks come second.
+					//
+					// See `DispatcherTest.testPostTaskWithPreTasks()` for an
+					// example.
+					IntDataPtr postTaskIndex = batch->blindData()->member<IntData>(
+						g_postTaskIndexBlindDataName, /* throwExceptions = */ false, /* createIfMissing = */ true
+					);
+					preTasks.insert( preTasks.begin() + postTaskIndex->readable(), preTask );
+					postTaskIndex->writable()++;
 				}
 				else
 				{
