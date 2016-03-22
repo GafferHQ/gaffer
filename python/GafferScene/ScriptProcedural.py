@@ -98,6 +98,7 @@ class ScriptProcedural( IECore.ParameterisedProcedural ) :
 		)
 
 		self.__currentFileName = None
+		self.__ensureAllRenderedConnection()
 
 	def doBound( self, args ) :
 
@@ -114,20 +115,8 @@ class ScriptProcedural( IECore.ParameterisedProcedural ) :
 		if plug is None :
 			return
 
-		self.__postExpansionCacheClearConnection = GafferScene.SceneProcedural.allRenderedSignal().connect( Gaffer.WeakMethod( self.__allRendered ) )
-
 		sceneProcedural = GafferScene.SceneProcedural( plug, context, "/", args["computeBound"].value )
 		renderer.procedural( sceneProcedural )
-
-	def __allRendered( self ):
-
-		# all the procedural expansion's done, so lets clear the value plug cache/object pool to free up a bit of memory:
-		self.__postExpansionCacheClearConnection = None
-
-		IECore.ObjectPool.defaultObjectPool().clear()
-		memoryLimit = Gaffer.ValuePlug.getCacheMemoryLimit()
-		Gaffer.ValuePlug.setCacheMemoryLimit( 0 )
-		Gaffer.ValuePlug.setCacheMemoryLimit( memoryLimit )
 
 	def __plugAndContext( self, args ) :
 
@@ -157,5 +146,25 @@ class ScriptProcedural( IECore.ParameterisedProcedural ) :
 			context[entry] = eval( args["context"][i+1] )
 
 		return node["out"], context
+
+	__allRenderedConnection = None
+	@classmethod
+	def __ensureAllRenderedConnection( cls ) :
+
+		if cls.__allRenderedConnection is not None :
+			return
+
+		cls.__allRenderedConnection = GafferScene.SceneProcedural.allRenderedSignal().connect( cls.__allRendered )
+
+	@staticmethod
+	def __allRendered():
+
+		# All the procedural expansion's done, so let's clear various Cortex/Gaffer
+		# caches to free up some memory.
+
+		IECore.ObjectPool.defaultObjectPool().clear()
+		memoryLimit = Gaffer.ValuePlug.getCacheMemoryLimit()
+		Gaffer.ValuePlug.setCacheMemoryLimit( 0 )
+		Gaffer.ValuePlug.setCacheMemoryLimit( memoryLimit )
 
 IECore.registerRunTimeTyped( ScriptProcedural, typeName = "GafferScene::ScriptProcedural" )
