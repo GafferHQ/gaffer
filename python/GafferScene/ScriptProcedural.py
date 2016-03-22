@@ -37,6 +37,8 @@
 
 from __future__ import with_statement
 
+import sys
+
 import IECore
 
 import Gaffer
@@ -147,6 +149,11 @@ class ScriptProcedural( IECore.ParameterisedProcedural ) :
 
 		self.__ensureErrorConnection( node )
 
+		with context :
+			globals = node["out"]["globals"].getValue()
+		if "option:render:performanceMonitor" in globals and globals["option:render:performanceMonitor"].value :
+			self.__ensurePerformanceMonitor()
+
 		return node["out"], context
 
 	__allRenderedConnection = None
@@ -158,8 +165,11 @@ class ScriptProcedural( IECore.ParameterisedProcedural ) :
 
 		cls.__allRenderedConnection = GafferScene.SceneProcedural.allRenderedSignal().connect( cls.__allRendered )
 
-	@staticmethod
-	def __allRendered():
+	@classmethod
+	def __allRendered( cls ):
+
+		if cls.__performanceMonitor is not None :
+			cls.__printPerformance()
 
 		# All the procedural expansion's done, so let's clear various Cortex/Gaffer
 		# caches to free up some memory.
@@ -191,5 +201,49 @@ class ScriptProcedural( IECore.ParameterisedProcedural ) :
 			errorContext,
 			error
 		)
+
+	__performanceMonitor = None
+	@classmethod
+	def __ensurePerformanceMonitor( cls ) :
+
+		if cls.__performanceMonitor is not None :
+			return
+
+		cls.__performanceMonitor = Gaffer.PerformanceMonitor()
+		cls.__performanceMonitor.setActive( True )
+
+	@staticmethod
+	def __printItems( items ) :
+
+		if not len( items ) :
+			return
+
+		width = max( [ len( x[0] ) for x in items ] ) + 4
+		for name, value in items :
+			sys.stderr.write( "  {name:<{width}}{value}\n".format( name = name, width = width, value = value ) )
+
+	@classmethod
+	def __printStatisticsItems( cls, stats, key, n ) :
+
+		stats.sort( key = key, reverse = True )
+		items = [ ( x[0].relativeName( x[0].ancestor( Gaffer.ScriptNode ) ), key( x ) ) for x in stats[:n] ]
+		cls.__printItems( items )
+
+	@classmethod
+	def __printPerformance( cls ) :
+
+		## \todo This code is essentially just cribbed from the
+		# stats app. Perhaps we should share it via something
+		# like a MonitorAlgo file.
+
+		stats = cls.__performanceMonitor.allStatistics().items()
+
+		sys.stderr.write( "\nPerformance Monitor\n===================\n\n" )
+
+		sys.stderr.write( "Most frequently hashed :\n\n" )
+		cls.__printStatisticsItems( stats, lambda x : x[1].hashCount, 50 )
+
+		sys.stderr.write( "\nMost frequently computed :\n\n" )
+		cls.__printStatisticsItems(stats, lambda x : x[1].computeCount, 50 )
 
 IECore.registerRunTimeTyped( ScriptProcedural, typeName = "GafferScene::ScriptProcedural" )
