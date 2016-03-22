@@ -145,6 +145,8 @@ class ScriptProcedural( IECore.ParameterisedProcedural ) :
 			entry = args["context"][i].lstrip( "-" )
 			context[entry] = eval( args["context"][i+1] )
 
+		self.__ensureErrorConnection( node )
+
 		return node["out"], context
 
 	__allRenderedConnection = None
@@ -166,5 +168,28 @@ class ScriptProcedural( IECore.ParameterisedProcedural ) :
 		memoryLimit = Gaffer.ValuePlug.getCacheMemoryLimit()
 		Gaffer.ValuePlug.setCacheMemoryLimit( 0 )
 		Gaffer.ValuePlug.setCacheMemoryLimit( memoryLimit )
+
+	__errorConnections = {}
+	@classmethod
+	def __ensureErrorConnection( cls, node ) :
+
+		if node in cls.__errorConnections :
+			return
+
+		cls.__errorConnections[node] = node.errorSignal().connect( cls.__error )
+
+	@staticmethod
+	def __error( plug, source, error ) :
+
+		errorContext = "Plug \"%s\"" % source.relativeName( source.ancestor( Gaffer.ScriptNode ) )
+		if "scene:path" in Gaffer.Context.current() :
+			path = "/" + "/".join( [ str( x ) for x in Gaffer.Context.current()["scene:path"] ] )
+			errorContext += ", Location \"%s\"" % path
+
+		IECore.msg(
+			IECore.Msg.Level.Error,
+			errorContext,
+			error
+		)
 
 IECore.registerRunTimeTyped( ScriptProcedural, typeName = "GafferScene::ScriptProcedural" )
