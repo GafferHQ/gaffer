@@ -129,6 +129,7 @@ import ShaderBallUI
 import LightTweaksUI
 import LightToCameraUI
 import FilterResultsUI
+import TranslateToolUI
 
 # then all the PathPreviewWidgets. note that the order
 # of import controls the order of display.
