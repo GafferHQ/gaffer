@@ -273,10 +273,7 @@ def __appendPlugPromotionMenuItems( menuDefinition, plug, readOnly = False ) :
 
 	elif box.plugIsPromoted( plug ) :
 
-		# Add a menu item to unpromote the plug, replacing the "Remove input" menu item if it exists
-
-		with IECore.IgnoredExceptions( Exception ) :
-			menuDefinition.remove( "/Remove input" )
+		# Add a menu item to unpromote the plug
 
 		if len( menuDefinition.items() ) :
 			menuDefinition.append( "/BoxDivider", { "divider" : True } )
