@@ -237,6 +237,13 @@ IECore::InternedStringVectorDataPtr stringToPathWrapper( const char *s )
 	return p;
 }
 
+std::string pathToStringWrapper( const ScenePlug::ScenePath &scenePath )
+{
+	std::string result;
+	ScenePlug::pathToString( scenePath, result );
+	return result;
+}
+
 } // namespace
 
 void GafferSceneBindings::bindScenePlug()
@@ -272,7 +279,7 @@ void GafferSceneBindings::bindScenePlug()
 		// string utilities
 		.def( "stringToPath", &stringToPathWrapper )
 		.staticmethod( "stringToPath" )
-		.def( "pathToString", &ScenePlug::pathToString )
+		.def( "pathToString", &pathToStringWrapper )
 		.staticmethod( "pathToString" )
 ;
 
