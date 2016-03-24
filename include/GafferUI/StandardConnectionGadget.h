@@ -74,14 +74,16 @@ class StandardConnectionGadget : public ConnectionGadget
 		static ConnectionGadgetTypeDescription<StandardConnectionGadget> g_connectionGadgetTypeDescription;
 
 		void setPositionsFromNodules();
+		Gaffer::Plug::Direction endAt( const IECore::LineSegment3f &line );
 
-		void enter( GadgetPtr gadget, const ButtonEvent &event );
-		void leave( GadgetPtr gadget, const ButtonEvent &event );
-		bool buttonPress( GadgetPtr gadget, const ButtonEvent &event );
-		IECore::RunTimeTypedPtr dragBegin( GadgetPtr gadget, const DragDropEvent &event );
-		bool dragEnter( GadgetPtr gadget, const DragDropEvent &event );
-		bool dragMove( GadgetPtr gadget, const DragDropEvent &event );
-		bool dragEnd( GadgetPtr gadget, const DragDropEvent &event );
+		void enter( const ButtonEvent &event );
+		bool mouseMove( const ButtonEvent &event );
+		void leave( const ButtonEvent &event );
+		bool buttonPress( const ButtonEvent &event );
+		IECore::RunTimeTypedPtr dragBegin( const DragDropEvent &event );
+		bool dragEnter( const DragDropEvent &event );
+		bool dragMove( const DragDropEvent &event );
+		bool dragEnd(  const DragDropEvent &event );
 
 		bool nodeSelected( const Nodule *nodule ) const;
 
@@ -96,6 +98,10 @@ class StandardConnectionGadget : public ConnectionGadget
 
 		Gaffer::Plug::Direction m_dragEnd;
 
+		/// \todo Store the end we are hovering over as
+		/// type Plug::Direction, and update the Style
+		/// classes so we can show which end is being
+		/// hovered.
 		bool m_hovering;
 		boost::optional<Imath::Color3f> m_userColor;
 
