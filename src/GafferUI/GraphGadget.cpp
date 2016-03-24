@@ -1086,7 +1086,33 @@ void GraphGadget::updateDragReconnectCandidate( const DragDropEvent &event )
 			continue;
 		}
 
-		// Check that those plugs are represented in the graph.
+		// Check that this pair of plugs doesn't have existing
+		// connections. We do however allow output connections
+		// provided they are not to plugs in this graph - this
+		// allows us to ignore connections the UI components
+		// make, for instance connecting an output plug into
+		// a View outside the script.
+		if( inPlug->getInput<Gaffer::Plug>() )
+		{
+			continue;
+		}
+
+		bool haveOutputs = false;
+		for( Gaffer::Plug::OutputContainer::const_iterator oIt = outPlug->outputs().begin(), oeIt = outPlug->outputs().end(); oIt != oeIt; ++oIt )
+		{
+			if( m_root->isAncestorOf( *oIt ) )
+			{
+				haveOutputs = true;
+				break;
+			}
+		}
+
+		if( haveOutputs )
+		{
+			continue;
+		}
+
+		// Check that our plugs are represented in the graph.
 		// If they are, we've found a valid place to insert the
 		// dragged node.
 
