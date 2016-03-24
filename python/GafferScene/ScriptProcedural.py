@@ -193,7 +193,7 @@ class ScriptProcedural( IECore.ParameterisedProcedural ) :
 
 		errorContext = "Plug \"%s\"" % source.relativeName( source.ancestor( Gaffer.ScriptNode ) )
 		if "scene:path" in Gaffer.Context.current() :
-			path = "/" + "/".join( [ str( x ) for x in Gaffer.Context.current()["scene:path"] ] )
+			path = GafferScene.ScenePlug.pathToString( Gaffer.Context.current()["scene:path"] )
 			errorContext += ", Location \"%s\"" % path
 
 		IECore.msg(
