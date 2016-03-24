@@ -47,7 +47,7 @@ StandardOptions::StandardOptions( const std::string &name )
 {
 	CompoundDataPlug *options = optionsPlug();
 
-	// camera
+	// Camera
 
 	options->addOptionalMember( "render:camera", new IECore::StringData(), "renderCamera", Plug::Default, false );
 	options->addOptionalMember( "render:resolution", new IECore::V2iData( Imath::V2i( 1024, 778 ) ), "renderResolution", Plug::Default, false );
@@ -61,12 +61,16 @@ StandardOptions::StandardOptions( const std::string &name )
 	options->addOptionalMember( "render:overscanLeft", new FloatPlug( "value", Plug::In, 0.1f, 0.0f, 1.0f ), "overscanLeft", false );
 	options->addOptionalMember( "render:overscanRight", new FloatPlug( "value", Plug::In, 0.1f, 0.0f, 1.0f ), "overscanRight", false );
 
-	// motion blur
+	// Motion blur
 
 	options->addOptionalMember( "render:cameraBlur", new IECore::BoolData( false ), "cameraBlur", Gaffer::Plug::Default, false );
 	options->addOptionalMember( "render:transformBlur", new IECore::BoolData( false ), "transformBlur", Gaffer::Plug::Default, false );
 	options->addOptionalMember( "render:deformationBlur", new IECore::BoolData( false ), "deformationBlur", Gaffer::Plug::Default, false );
 	options->addOptionalMember( "render:shutter", new IECore::V2fData( Imath::V2f( -0.25, 0.25 ) ), "shutter", Gaffer::Plug::Default, false );
+
+	// Statistics
+
+	options->addOptionalMember( "render:performanceMonitor", new IECore::BoolData( false ), "performanceMonitor", Gaffer::Plug::Default, false );
 
 }
 

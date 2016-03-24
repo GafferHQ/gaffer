@@ -37,6 +37,8 @@
 
 from __future__ import with_statement
 
+import sys
+
 import IECore
 
 import Gaffer
@@ -98,6 +100,7 @@ class ScriptProcedural( IECore.ParameterisedProcedural ) :
 		)
 
 		self.__currentFileName = None
+		self.__ensureAllRenderedConnection()
 
 	def doBound( self, args ) :
 
@@ -114,20 +117,8 @@ class ScriptProcedural( IECore.ParameterisedProcedural ) :
 		if plug is None :
 			return
 
-		self.__postExpansionCacheClearConnection = GafferScene.SceneProcedural.allRenderedSignal().connect( Gaffer.WeakMethod( self.__allRendered ) )
-
 		sceneProcedural = GafferScene.SceneProcedural( plug, context, "/", args["computeBound"].value )
 		renderer.procedural( sceneProcedural )
-
-	def __allRendered( self ):
-
-		# all the procedural expansion's done, so lets clear the value plug cache/object pool to free up a bit of memory:
-		self.__postExpansionCacheClearConnection = None
-
-		IECore.ObjectPool.defaultObjectPool().clear()
-		memoryLimit = Gaffer.ValuePlug.getCacheMemoryLimit()
-		Gaffer.ValuePlug.setCacheMemoryLimit( 0 )
-		Gaffer.ValuePlug.setCacheMemoryLimit( memoryLimit )
 
 	def __plugAndContext( self, args ) :
 
@@ -156,6 +147,103 @@ class ScriptProcedural( IECore.ParameterisedProcedural ) :
 			entry = args["context"][i].lstrip( "-" )
 			context[entry] = eval( args["context"][i+1] )
 
+		self.__ensureErrorConnection( node )
+
+		with context :
+			globals = node["out"]["globals"].getValue()
+		if "option:render:performanceMonitor" in globals and globals["option:render:performanceMonitor"].value :
+			self.__ensurePerformanceMonitor()
+
 		return node["out"], context
+
+	__allRenderedConnection = None
+	@classmethod
+	def __ensureAllRenderedConnection( cls ) :
+
+		if cls.__allRenderedConnection is not None :
+			return
+
+		cls.__allRenderedConnection = GafferScene.SceneProcedural.allRenderedSignal().connect( cls.__allRendered )
+
+	@classmethod
+	def __allRendered( cls ):
+
+		if cls.__performanceMonitor is not None :
+			cls.__printPerformance()
+
+		# All the procedural expansion's done, so let's clear various Cortex/Gaffer
+		# caches to free up some memory.
+
+		IECore.ObjectPool.defaultObjectPool().clear()
+		memoryLimit = Gaffer.ValuePlug.getCacheMemoryLimit()
+		Gaffer.ValuePlug.setCacheMemoryLimit( 0 )
+		Gaffer.ValuePlug.setCacheMemoryLimit( memoryLimit )
+
+	__errorConnections = {}
+	@classmethod
+	def __ensureErrorConnection( cls, node ) :
+
+		if node in cls.__errorConnections :
+			return
+
+		cls.__errorConnections[node] = node.errorSignal().connect( cls.__error )
+
+	@staticmethod
+	def __error( plug, source, error ) :
+
+		errorContext = "Plug \"%s\"" % source.relativeName( source.ancestor( Gaffer.ScriptNode ) )
+		if "scene:path" in Gaffer.Context.current() :
+			path = GafferScene.ScenePlug.pathToString( Gaffer.Context.current()["scene:path"] )
+			errorContext += ", Location \"%s\"" % path
+
+		IECore.msg(
+			IECore.Msg.Level.Error,
+			errorContext,
+			error
+		)
+
+	__performanceMonitor = None
+	@classmethod
+	def __ensurePerformanceMonitor( cls ) :
+
+		if cls.__performanceMonitor is not None :
+			return
+
+		cls.__performanceMonitor = Gaffer.PerformanceMonitor()
+		cls.__performanceMonitor.setActive( True )
+
+	@staticmethod
+	def __printItems( items ) :
+
+		if not len( items ) :
+			return
+
+		width = max( [ len( x[0] ) for x in items ] ) + 4
+		for name, value in items :
+			sys.stderr.write( "  {name:<{width}}{value}\n".format( name = name, width = width, value = value ) )
+
+	@classmethod
+	def __printStatisticsItems( cls, stats, key, n ) :
+
+		stats.sort( key = key, reverse = True )
+		items = [ ( x[0].relativeName( x[0].ancestor( Gaffer.ScriptNode ) ), key( x ) ) for x in stats[:n] ]
+		cls.__printItems( items )
+
+	@classmethod
+	def __printPerformance( cls ) :
+
+		## \todo This code is essentially just cribbed from the
+		# stats app. Perhaps we should share it via something
+		# like a MonitorAlgo file.
+
+		stats = cls.__performanceMonitor.allStatistics().items()
+
+		sys.stderr.write( "\nPerformance Monitor\n===================\n\n" )
+
+		sys.stderr.write( "Most frequently hashed :\n\n" )
+		cls.__printStatisticsItems( stats, lambda x : x[1].hashCount, 50 )
+
+		sys.stderr.write( "\nMost frequently computed :\n\n" )
+		cls.__printStatisticsItems(stats, lambda x : x[1].computeCount, 50 )
 
 IECore.registerRunTimeTyped( ScriptProcedural, typeName = "GafferScene::ScriptProcedural" )

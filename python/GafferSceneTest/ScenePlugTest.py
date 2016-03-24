@@ -198,6 +198,12 @@ class ScenePlugTest( GafferSceneTest.SceneTestCase ) :
 		self.assertEqual( GafferScene.ScenePlug.stringToPath( "/foo/bar/" ), IECore.InternedStringVectorData( [ "foo", "bar" ] ) )
 		self.assertEqual( GafferScene.ScenePlug.stringToPath( "foo/bar/" ), IECore.InternedStringVectorData( [ "foo", "bar" ] ) )
 
+	def testPathToString( self ) :
+
+		self.assertEqual( GafferScene.ScenePlug.pathToString( IECore.InternedStringVectorData() ), "/" )
+		self.assertEqual( GafferScene.ScenePlug.pathToString( IECore.InternedStringVectorData( [ "a" ] ) ), "/a" )
+		self.assertEqual( GafferScene.ScenePlug.pathToString( IECore.InternedStringVectorData( [ "a", "b" ] ) ), "/a/b" )
+
 	def testManyStringToPathCalls( self ) :
 
 		GafferSceneTest.testManyStringToPathCalls()

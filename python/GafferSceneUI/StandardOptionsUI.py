@@ -81,6 +81,14 @@ def __motionBlurSummary( plug ) :
 
 	return ", ".join( info )
 
+def __statisticsSummary( plug ) :
+
+	info = []
+	if plug["performanceMonitor"]["enabled"].getValue() :
+		info.append( "Performance Monitor " + ( "On" if plug["performanceMonitor"]["value"].getValue() else "Off" ) )
+
+	return ", ".join( info )
+
 Gaffer.Metadata.registerNode(
 
 	GafferScene.StandardOptions,
@@ -93,16 +101,17 @@ Gaffer.Metadata.registerNode(
 
 	plugs = {
 
-		# section summaries
+		# Section summaries
 
 		"options" : [
 
 			"layout:section:Camera:summary", __cameraSummary,
 			"layout:section:Motion Blur:summary", __motionBlurSummary,
+			"layout:section:Statistics:summary", __statisticsSummary,
 
 		],
 
-		# camera plugs
+		# Camera plugs
 
 		"options.renderCamera" : [
 
@@ -244,7 +253,7 @@ Gaffer.Metadata.registerNode(
 
 		],
 
-		# motion blur plugs
+		# Motion blur plugs
 
 		"options.cameraBlur" : [
 
@@ -303,6 +312,20 @@ Gaffer.Metadata.registerNode(
 			""",
 
 			"layout:section", "Motion Blur",
+
+		],
+
+		# Statistics plugs
+
+		"options.performanceMonitor" : [
+
+			"description",
+			"""
+			Enables a performance monitor and uses it to output
+			statistics about scene generation performance.
+			""",
+
+			"layout:section", "Statistics",
 
 		],
 
