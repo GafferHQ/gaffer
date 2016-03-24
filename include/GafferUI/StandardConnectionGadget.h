@@ -75,13 +75,13 @@ class StandardConnectionGadget : public ConnectionGadget
 
 		void setPositionsFromNodules();
 
-		void enter( GadgetPtr gadget, const ButtonEvent &event );
-		void leave( GadgetPtr gadget, const ButtonEvent &event );
-		bool buttonPress( GadgetPtr gadget, const ButtonEvent &event );
-		IECore::RunTimeTypedPtr dragBegin( GadgetPtr gadget, const DragDropEvent &event );
-		bool dragEnter( GadgetPtr gadget, const DragDropEvent &event );
-		bool dragMove( GadgetPtr gadget, const DragDropEvent &event );
-		bool dragEnd( GadgetPtr gadget, const DragDropEvent &event );
+		void enter( const ButtonEvent &event );
+		void leave( const ButtonEvent &event );
+		bool buttonPress( const ButtonEvent &event );
+		IECore::RunTimeTypedPtr dragBegin( const DragDropEvent &event );
+		bool dragEnter( const DragDropEvent &event );
+		bool dragMove( const DragDropEvent &event );
+		bool dragEnd(  const DragDropEvent &event );
 
 		bool nodeSelected( const Nodule *nodule ) const;
 

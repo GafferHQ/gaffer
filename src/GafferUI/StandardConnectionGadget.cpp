@@ -63,13 +63,13 @@ static IECore::InternedString g_colorKey( "connectionGadget:color" );
 StandardConnectionGadget::StandardConnectionGadget( GafferUI::NodulePtr srcNodule, GafferUI::NodulePtr dstNodule )
 	:	ConnectionGadget( srcNodule, dstNodule ), m_dragEnd( Gaffer::Plug::Invalid ), m_hovering( false )
 {
-	enterSignal().connect( boost::bind( &StandardConnectionGadget::enter, this, ::_1, ::_2 ) );
-	leaveSignal().connect( boost::bind( &StandardConnectionGadget::leave, this, ::_1, ::_2 ) );
-	buttonPressSignal().connect( boost::bind( &StandardConnectionGadget::buttonPress, this, ::_1,  ::_2 ) );
-	dragBeginSignal().connect( boost::bind( &StandardConnectionGadget::dragBegin, this, ::_1, ::_2 ) );
-	dragEnterSignal().connect( boost::bind( &StandardConnectionGadget::dragEnter, this, ::_1, ::_2 ) );
-	dragMoveSignal().connect( boost::bind( &StandardConnectionGadget::dragMove, this, ::_1, ::_2 ) );
-	dragEndSignal().connect( boost::bind( &StandardConnectionGadget::dragEnd, this, ::_1, ::_2 ) );
+	enterSignal().connect( boost::bind( &StandardConnectionGadget::enter, this, ::_2 ) );
+	leaveSignal().connect( boost::bind( &StandardConnectionGadget::leave, this, ::_2 ) );
+	buttonPressSignal().connect( boost::bind( &StandardConnectionGadget::buttonPress, this,  ::_2 ) );
+	dragBeginSignal().connect( boost::bind( &StandardConnectionGadget::dragBegin, this, ::_2 ) );
+	dragEnterSignal().connect( boost::bind( &StandardConnectionGadget::dragEnter, this, ::_2 ) );
+	dragMoveSignal().connect( boost::bind( &StandardConnectionGadget::dragMove, this, ::_2 ) );
+	dragEndSignal().connect( boost::bind( &StandardConnectionGadget::dragEnd, this, ::_2 ) );
 
 	Metadata::plugValueChangedSignal().connect( boost::bind( &StandardConnectionGadget::plugMetadataChanged, this, ::_1, ::_2, ::_3, ::_4 ) );
 
@@ -196,7 +196,7 @@ void StandardConnectionGadget::doRender( const Style *style ) const
 }
 
 
-bool StandardConnectionGadget::buttonPress( GadgetPtr gadget, const ButtonEvent &event )
+bool StandardConnectionGadget::buttonPress( const ButtonEvent &event )
 {
 	if( event.buttons==ButtonEvent::Left )
 	{
@@ -206,7 +206,7 @@ bool StandardConnectionGadget::buttonPress( GadgetPtr gadget, const ButtonEvent 
 	return false;
 }
 
-IECore::RunTimeTypedPtr StandardConnectionGadget::dragBegin( GadgetPtr gadget, const DragDropEvent &event )
+IECore::RunTimeTypedPtr StandardConnectionGadget::dragBegin( const DragDropEvent &event )
 {
 	setPositionsFromNodules();
 	float length = ( m_srcPos - m_dstPos ).length();
@@ -230,10 +230,10 @@ IECore::RunTimeTypedPtr StandardConnectionGadget::dragBegin( GadgetPtr gadget, c
 		}
 	}
 
-	return 0;
+	return NULL;
 }
 
-bool StandardConnectionGadget::dragEnter( GadgetPtr gadget, const DragDropEvent &event )
+bool StandardConnectionGadget::dragEnter( const DragDropEvent &event )
 {
 	if( event.sourceGadget == this )
 	{
@@ -242,13 +242,13 @@ bool StandardConnectionGadget::dragEnter( GadgetPtr gadget, const DragDropEvent 
 	return false;
 }
 
-bool StandardConnectionGadget::dragMove( GadgetPtr gadget, const DragDropEvent &event )
+bool StandardConnectionGadget::dragMove( const DragDropEvent &event )
 {
 	updateDragEndPoint( event.line.p0, V3f( 0 ) );
 	return true;
 }
 
-bool StandardConnectionGadget::dragEnd( GadgetPtr gadget, const DragDropEvent &event )
+bool StandardConnectionGadget::dragEnd( const DragDropEvent &event )
 {
 	if( !event.destinationGadget || event.destinationGadget == this )
 	{
@@ -326,13 +326,13 @@ std::string StandardConnectionGadget::getToolTip( const IECore::LineSegment3f &l
 	return result;
 }
 
-void StandardConnectionGadget::enter( GadgetPtr gadget, const ButtonEvent &event )
+void StandardConnectionGadget::enter( const ButtonEvent &event )
 {
 	m_hovering = true;
  	requestRender();
 }
 
-void StandardConnectionGadget::leave( GadgetPtr gadget, const ButtonEvent &event )
+void StandardConnectionGadget::leave( const ButtonEvent &event )
 {
 	m_hovering = false;
  	requestRender();
