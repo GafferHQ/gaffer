@@ -209,7 +209,7 @@ class GraphGadget : public ContainerGadget
 		void removeConnectionGadget( const Gaffer::Plug *dstPlug );
 		ConnectionGadget *findConnectionGadget( const Gaffer::Plug *dstPlug ) const;
 		void updateConnectionGadgetMinimisation( ConnectionGadget *gadget );
-		ConnectionGadget *reconnectionGadgetAt( NodeGadget *gadget, const IECore::LineSegment3f &lineInGadgetSpace ) const;
+		ConnectionGadget *reconnectionGadgetAt( const NodeGadget *gadget, const IECore::LineSegment3f &lineInGadgetSpace ) const;
 		void updateDragReconnectCandidate( const DragDropEvent &event );
 
 		void connectedNodeGadgetsWalk( NodeGadget *gadget, std::set<NodeGadget *> &connectedGadgets, Gaffer::Plug::Direction direction, size_t degreesOfSeparation );
