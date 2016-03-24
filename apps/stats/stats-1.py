@@ -75,6 +75,12 @@ class stats( Gaffer.Application ) :
 					defaultValue = "",
 				),
 
+				IECore.StringParameter(
+					name = "image",
+					description = "The name of an ImageNode or ImagePlug to examine.",
+					defaultValue = "",
+				),
+
 				IECore.BoolParameter(
 					name = "performanceMonitor",
 					description = "Turns on a performance monitor to provide additional"
@@ -148,6 +154,10 @@ class stats( Gaffer.Application ) :
 			if args["scene"].value :
 
 				self.__printScene( script, args )
+
+			if args["image"].value :
+
+				self.__printImage( script, args )
 
 		print ""
 
@@ -259,6 +269,35 @@ class stats( Gaffer.Application ) :
 		## \todo Calculate and print scene stats
 		#  - Locations
 		#  - Unique objects, attributes etc
+
+	def __printImage( self, script, args ) :
+
+		import GafferImage
+		import GafferImageTest
+
+		image = script.descendant( args["image"].value )
+		if isinstance( image, Gaffer.Node ) :
+			image = next( ( x for x in image.children( GafferImage.ImagePlug ) ), None )
+
+		if image is None :
+			IECore.msg( IECore.Msg.Level.Error, "stats", "Image \"%s\" does not exist" % args["image"].value )
+			return
+
+		memory = _Memory.maxRSS()
+		with _Timer() as sceneTimer :
+			with self.__performanceMonitor or _NullContextManager() :
+				GafferImageTest.processTiles( image )
+		self.__timers["Image generation"] = sceneTimer
+		self.__memory["Image generation"] = _Memory.maxRSS() - memory
+
+		items = [
+			( "Format", image["format"].getValue() ),
+			( "Data window", image["dataWindow"].getValue() ),
+			( "Channel names", image["channelNames"].getValue() ),
+		]
+
+		print "\nImage :\n"
+		self.__printItems( items )
 
 	def __printMemory( self ) :
 
