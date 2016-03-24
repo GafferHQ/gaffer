@@ -38,6 +38,8 @@
 #include "boost/bind.hpp"
 #include "boost/bind/placeholders.hpp"
 
+#include "OpenEXR/ImathFun.h"
+
 #include "Gaffer/UndoContext.h"
 #include "Gaffer/ScriptNode.h"
 #include "Gaffer/StandardSet.h"
@@ -176,7 +178,7 @@ void StandardConnectionGadget::doRender( const Style *style ) const
 {
 	const_cast<StandardConnectionGadget *>( this )->setPositionsFromNodules();
 
-	Style::State state = m_hovering ? Style::HighlightedState : Style::NormalState;
+	Style::State state = ( m_hovering || m_dragEnd ) ? Style::HighlightedState : Style::NormalState;
 	if( state != Style::HighlightedState )
 	{
 		if( nodeSelected( srcNodule() ) || nodeSelected( dstNodule() ) )
@@ -199,11 +201,12 @@ void StandardConnectionGadget::doRender( const Style *style ) const
 Gaffer::Plug::Direction StandardConnectionGadget::endAt( const IECore::LineSegment3f &line )
 {
 	const float length = ( m_srcPos - m_dstPos ).length();
+	const float threshold = clamp( length / 4.0f, 2.5f, 25.0f );
 
 	const float dSrc = line.distanceTo( m_srcPos );
 	const float dDst = line.distanceTo( m_dstPos );
 
-	if( min( dSrc, dDst ) < length / 3.0f )
+	if( min( dSrc, dDst ) < threshold )
 	{
 		// close enough to the ends to consider
 		if( dSrc < dDst )
