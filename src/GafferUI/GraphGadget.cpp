@@ -1119,29 +1119,12 @@ bool GraphGadget::dragEnd( GadgetPtr gadget, const DragDropEvent &event )
 		return false;
 	}
 
-	if( dragMode == Moving )
+	if( dragMode == Moving && m_dragReconnectCandidate )
 	{
-		if ( m_dragReconnectCandidate )
-		{
-			if ( m_dragReconnectDstNodule || m_dragReconnectSrcNodule )
-			{
-				Gaffer::Plug *srcPlug = m_dragReconnectCandidate->srcNodule()->plug();
-				Gaffer::Plug *dstPlug = m_dragReconnectCandidate->dstNodule()->plug();
+		Gaffer::UndoContext undoContext( m_scriptNode );
 
-				Gaffer::UndoContext undoContext( m_scriptNode );
-
-				if ( m_dragReconnectDstNodule )
-				{
-					m_dragReconnectDstNodule->plug()->setInput( srcPlug );
-					dstPlug->setInput( NULL );
-				}
-
-				if ( m_dragReconnectSrcNodule )
-				{
-					dstPlug->setInput( m_dragReconnectSrcNodule->plug() );
-				}
-			}
-		}
+		m_dragReconnectDstNodule->plug()->setInput( m_dragReconnectCandidate->srcNodule()->plug() );
+		m_dragReconnectCandidate->dstNodule()->plug()->setInput( m_dragReconnectSrcNodule->plug() );
 
 		m_dragReconnectCandidate = NULL;
  		requestRender();
