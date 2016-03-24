@@ -64,6 +64,7 @@ StandardConnectionGadget::StandardConnectionGadget( GafferUI::NodulePtr srcNodul
 	:	ConnectionGadget( srcNodule, dstNodule ), m_dragEnd( Gaffer::Plug::Invalid ), m_hovering( false )
 {
 	enterSignal().connect( boost::bind( &StandardConnectionGadget::enter, this, ::_2 ) );
+	mouseMoveSignal().connect( boost::bind( &StandardConnectionGadget::mouseMove, this, ::_2 ) );
 	leaveSignal().connect( boost::bind( &StandardConnectionGadget::leave, this, ::_2 ) );
 	buttonPressSignal().connect( boost::bind( &StandardConnectionGadget::buttonPress, this,  ::_2 ) );
 	dragBeginSignal().connect( boost::bind( &StandardConnectionGadget::dragBegin, this, ::_2 ) );
@@ -195,42 +196,49 @@ void StandardConnectionGadget::doRender( const Style *style ) const
 	style->renderConnection( adjustedSrcPos, adjustedSrcTangent, m_dstPos, m_dstTangent, state, m_userColor.get_ptr() );
 }
 
+Gaffer::Plug::Direction StandardConnectionGadget::endAt( const IECore::LineSegment3f &line )
+{
+	const float length = ( m_srcPos - m_dstPos ).length();
+
+	const float dSrc = line.distanceTo( m_srcPos );
+	const float dDst = line.distanceTo( m_dstPos );
+
+	if( min( dSrc, dDst ) < length / 3.0f )
+	{
+		// close enough to the ends to consider
+		if( dSrc < dDst )
+		{
+			return Gaffer::Plug::Out;
+		}
+		else
+		{
+			return Gaffer::Plug::In;
+		}
+	}
+
+	return Gaffer::Plug::Invalid;
+
+}
 
 bool StandardConnectionGadget::buttonPress( const ButtonEvent &event )
 {
-	if( event.buttons==ButtonEvent::Left )
-	{
-		// we have to accept button presses so we can initiate dragging
-		return true;
-	}
-	return false;
+	// We have to accept button presses so we can initiate dragging.
+	return event.buttons==ButtonEvent::Left && m_hovering;
 }
 
 IECore::RunTimeTypedPtr StandardConnectionGadget::dragBegin( const DragDropEvent &event )
 {
 	setPositionsFromNodules();
-	float length = ( m_srcPos - m_dstPos ).length();
-
-	float dSrc = event.line.distanceTo( m_srcPos );
-	float dDst = event.line.distanceTo( m_dstPos );
-
-	float dMin = min( dSrc, dDst );
-	if( dMin < length / 3.0f )
+	m_dragEnd = endAt( event.line );
+	switch( m_dragEnd )
 	{
-		// close enough to the ends to consider
-		if( dSrc < dDst )
-		{
-			m_dragEnd = Gaffer::Plug::Out;
+		case Gaffer::Plug::Out :
 			return dstNodule()->plug();
-		}
-		else
-		{
-			m_dragEnd = Gaffer::Plug::In;
+		case Gaffer::Plug::In :
 			return dstNodule()->plug()->getInput<Gaffer::Plug>();
-		}
+		default :
+			return NULL;
 	}
-
-	return NULL;
 }
 
 bool StandardConnectionGadget::dragEnter( const DragDropEvent &event )
@@ -328,14 +336,21 @@ std::string StandardConnectionGadget::getToolTip( const IECore::LineSegment3f &l
 
 void StandardConnectionGadget::enter( const ButtonEvent &event )
 {
-	m_hovering = true;
+	m_hovering = endAt( event.line ) != Plug::Invalid;
+	requestRender();
+}
+
+bool StandardConnectionGadget::mouseMove( const ButtonEvent &event )
+{
+	m_hovering = endAt( event.line ) != Plug::Invalid;
  	requestRender();
+	return false;
 }
 
 void StandardConnectionGadget::leave( const ButtonEvent &event )
 {
 	m_hovering = false;
- 	requestRender();
+	requestRender();
 }
 
 bool StandardConnectionGadget::nodeSelected( const Nodule *nodule ) const
