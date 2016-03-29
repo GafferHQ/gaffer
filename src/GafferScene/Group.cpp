@@ -551,7 +551,9 @@ SceneNode::ScenePath Group::sourcePath( const ScenePath &outputPath, const std::
 	const CompoundObject *entry = mapping->member<CompoundObject>( mappedChildName );
 	if( !entry )
 	{
-		throw Exception( boost::str( boost::format( "Unable to find mapping for output path" ) ) );
+		string outputPathString;
+		ScenePlug::pathToString( outputPath, outputPathString );
+		throw Exception( boost::str( boost::format( "Unable to find mapping for output path \"%s\"" ) % outputPathString ) );
 	}
 
 	*source = inPlugs()->getChild<ScenePlug>( entry->member<IntData>( "i" )->readable() );
