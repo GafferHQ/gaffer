@@ -88,7 +88,7 @@ void GafferBindings::bindMonitor()
 	class_<Monitor, boost::noncopyable>( "Monitor", no_init )
 		.def( "setActive", &Monitor::setActive )
 		.def( "getActive", &Monitor::getActive )
-		.def( "__enter__", &enterScope )
+		.def( "__enter__", &enterScope, return_self<>() )
 		.def( "__exit__", &exitScope )
 	;
 
