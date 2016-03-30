@@ -148,21 +148,21 @@ Imath::M44f fullTransformWrapper( const ScenePlug &plug, const ScenePlug::SceneP
 	return plug.fullTransform( scenePath );
 }
 
-IECore::ObjectPtr objectWrapper( const ScenePlug &plug, const ScenePlug::ScenePath &scenePath, bool copy=true )
+IECore::ObjectPtr objectWrapper( const ScenePlug &plug, const ScenePlug::ScenePath &scenePath, bool copy )
 {
 	IECorePython::ScopedGILRelease gilRelease;
 	IECore::ConstObjectPtr o = plug.object( scenePath );
 	return copy ? o->copy() : boost::const_pointer_cast<IECore::Object>( o );
 }
 
-IECore::InternedStringVectorDataPtr childNamesWrapper( const ScenePlug &plug, const ScenePlug::ScenePath &scenePath, bool copy=true )
+IECore::InternedStringVectorDataPtr childNamesWrapper( const ScenePlug &plug, const ScenePlug::ScenePath &scenePath, bool copy )
 {
 	IECorePython::ScopedGILRelease gilRelease;
 	IECore::ConstInternedStringVectorDataPtr n = plug.childNames( scenePath );
 	return copy ? n->copy() : boost::const_pointer_cast<IECore::InternedStringVectorData>( n );
 }
 
-IECore::CompoundObjectPtr attributesWrapper( const ScenePlug &plug, const ScenePlug::ScenePath &scenePath, bool copy=true )
+IECore::CompoundObjectPtr attributesWrapper( const ScenePlug &plug, const ScenePlug::ScenePath &scenePath, bool copy )
 {
 	IECorePython::ScopedGILRelease gilRelease;
 	IECore::ConstCompoundObjectPtr a = plug.attributes( scenePath );
@@ -189,7 +189,7 @@ IECore::InternedStringVectorDataPtr setNamesWrapper( const ScenePlug &plug, bool
 	return copy ? s->copy() : boost::const_pointer_cast<IECore::InternedStringVectorData>( s );
 }
 
-PathMatcherDataPtr setWrapper( const ScenePlug &plug, const IECore::InternedString &setName, bool copy=true )
+PathMatcherDataPtr setWrapper( const ScenePlug &plug, const IECore::InternedString &setName, bool copy )
 {
 	IECorePython::ScopedGILRelease gilRelease;
 	ConstPathMatcherDataPtr s = plug.set( setName );
