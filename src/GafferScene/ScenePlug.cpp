@@ -46,6 +46,32 @@
 using namespace Gaffer;
 using namespace GafferScene;
 
+//////////////////////////////////////////////////////////////////////////
+// Utilities
+//////////////////////////////////////////////////////////////////////////
+
+namespace
+{
+
+// Removes context variables which are unnecessary when computing
+// global aspects of the scene, but which are frequently changed
+// to compute per-location aspects of the scene. This makes us
+// friendlier to the hash caching mechanism in ValuePlug,
+// since it'll see fewer unnecessarily different contexts, and will
+// therefore get more cache hits. We use this in our utility
+// methods for computing set names, sets and globals.
+void removeNonGlobalContextVariables( Context *context )
+{
+	context->remove( Filter::inputSceneContextName );
+	context->remove( ScenePlug::scenePathContextName );
+}
+
+} // namespace
+
+//////////////////////////////////////////////////////////////////////////
+// ScenePlug
+//////////////////////////////////////////////////////////////////////////
+
 IE_CORE_DEFINERUNTIMETYPED( ScenePlug );
 
 const IECore::InternedString ScenePlug::scenePathContextName( "scene:path" );
@@ -328,18 +354,27 @@ IECore::ConstInternedStringVectorDataPtr ScenePlug::childNames( const ScenePath 
 	return childNamesPlug()->getValue();
 }
 
+IECore::ConstCompoundObjectPtr ScenePlug::globals() const
+{
+	ContextPtr tmpContext = new Context( *Context::current(), Context::Borrowed );
+	removeNonGlobalContextVariables( tmpContext.get() );
+	Context::Scope scopedContext( tmpContext.get() );
+	return globalsPlug()->getValue();
+}
+
+IECore::ConstInternedStringVectorDataPtr ScenePlug::setNames() const
+{
+	ContextPtr tmpContext = new Context( *Context::current(), Context::Borrowed );
+	removeNonGlobalContextVariables( tmpContext.get() );
+	Context::Scope scopedContext( tmpContext.get() );
+	return setNamesPlug()->getValue();
+}
+
 ConstPathMatcherDataPtr ScenePlug::set( const IECore::InternedString &setName ) const
 {
 	ContextPtr tmpContext = new Context( *Context::current(), Context::Borrowed );
 	tmpContext->set( setNameContextName, setName );
-
-	// Remove unnecessary but frequently changed context entries. This
-	// makes us friendlier to the hash caching mechanism in ValuePlug,
-	// since it'll see fewer unnecessarily different contexts, and will
-	// therefore get more cache hits. We do the same in setHash().
-	tmpContext->remove( Filter::inputSceneContextName );
-	tmpContext->remove( ScenePlug::scenePathContextName );
-
+	removeNonGlobalContextVariables( tmpContext.get() );
 	Context::Scope scopedContext( tmpContext.get() );
 	return setPlug()->getValue();
 }
@@ -419,15 +454,27 @@ IECore::MurmurHash ScenePlug::childNamesHash( const ScenePath &scenePath ) const
 	return childNamesPlug()->hash();
 }
 
+IECore::MurmurHash ScenePlug::globalsHash() const
+{
+	ContextPtr tmpContext = new Context( *Context::current(), Context::Borrowed );
+	removeNonGlobalContextVariables( tmpContext.get() );
+	Context::Scope scopedContext( tmpContext.get() );
+	return globalsPlug()->hash();
+}
+
+IECore::MurmurHash ScenePlug::setNamesHash() const
+{
+	ContextPtr tmpContext = new Context( *Context::current(), Context::Borrowed );
+	removeNonGlobalContextVariables( tmpContext.get() );
+	Context::Scope scopedContext( tmpContext.get() );
+	return setNamesPlug()->hash();
+}
+
 IECore::MurmurHash ScenePlug::setHash( const IECore::InternedString &setName ) const
 {
 	ContextPtr tmpContext = new Context( *Context::current(), Context::Borrowed );
 	tmpContext->set( setNameContextName, setName );
-
-	// See explanatory comments in set().
-	tmpContext->remove( Filter::inputSceneContextName );
-	tmpContext->remove( ScenePlug::scenePathContextName );
-
+	removeNonGlobalContextVariables( tmpContext.get() );
 	Context::Scope scopedContext( tmpContext.get() );
 	return setPlug()->hash();
 }

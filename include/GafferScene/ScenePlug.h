@@ -144,6 +144,16 @@ class ScenePlug : public Gaffer::ValuePlug
 		IECore::CompoundObjectPtr fullAttributes( const ScenePath &scenePath ) const;
 		IECore::ConstObjectPtr object( const ScenePath &scenePath ) const;
 		IECore::ConstInternedStringVectorDataPtr childNames( const ScenePath &scenePath ) const;
+		/// Prefer this to bare `globalsPlug()->getValue()` calls when
+		/// accessing globals from within a per-location computation. It
+		/// removes unnecessary context variables which could otherwise
+		/// lead to poor cache performance.
+		IECore::ConstCompoundObjectPtr globals() const;
+		/// Prefer this to bare `setNamesPlug()->getValue()` calls when
+		/// accessing set names from within a per-location computation. It
+		/// removes unnecessary context variables which could otherwise
+		/// lead to poor cache performance.
+		IECore::ConstInternedStringVectorDataPtr setNames() const;
 		ConstPathMatcherDataPtr set( const IECore::InternedString &setName ) const;
 
 		IECore::MurmurHash boundHash( const ScenePath &scenePath ) const;
@@ -153,6 +163,10 @@ class ScenePlug : public Gaffer::ValuePlug
 		IECore::MurmurHash fullAttributesHash( const ScenePath &scenePath ) const;
 		IECore::MurmurHash objectHash( const ScenePath &scenePath ) const;
 		IECore::MurmurHash childNamesHash( const ScenePath &scenePath ) const;
+		/// See comments for `globals()` method.
+		IECore::MurmurHash globalsHash() const;
+		/// See comments for `setNames()` method.
+		IECore::MurmurHash setNamesHash() const;
 		IECore::MurmurHash setHash( const IECore::InternedString &setName ) const;
 		//@}
 

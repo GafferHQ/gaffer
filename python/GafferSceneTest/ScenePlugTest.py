@@ -218,5 +218,20 @@ class ScenePlugTest( GafferSceneTest.SceneTestCase ) :
 		self.assertTrue( isinstance( p["set"], GafferScene.PathMatcherDataPlug ) )
 		self.assertEqual( p["set"].defaultValue(), GafferScene.PathMatcherData() )
 
+	def testGlobalsAccessors( self ) :
+
+		p = GafferScene.ScenePlug()
+
+		self.assertEqual( p.globals(), p["globals"].getValue() )
+		self.assertFalse( p.globals().isSame( p["globals"].getValue() ) )
+		self.assertTrue( p.globals( _copy = False ).isSame( p["globals"].getValue( _copy = False ) ) )
+
+		self.assertEqual( p.setNames(), p["setNames"].getValue() )
+		self.assertFalse( p.setNames().isSame( p["setNames"].getValue() ) )
+		self.assertTrue( p.setNames( _copy = False ).isSame( p["setNames"].getValue( _copy = False ) ) )
+
+		self.assertEqual( p.globalsHash(), p["globals"].hash() )
+		self.assertEqual( p.setNamesHash(), p["setNames"].hash() )
+
 if __name__ == "__main__":
 	unittest.main()
