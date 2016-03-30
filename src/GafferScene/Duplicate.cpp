@@ -65,6 +65,10 @@ Duplicate::Duplicate( const std::string &name )
 	parentPlug()->setFlags( Plug::ReadOnly, true );
 	parentPlug()->setFlags( Plug::Serialisable, false );
 
+	// Since we don't introduce any new sets, but just duplicate parts
+	// of existing ones, we can save the BranchCreator base class some
+	// trouble by making the setNamesPlug into a pass-through.
+	outPlug()->setNamesPlug()->setInput( inPlug()->setNamesPlug() );
 }
 
 Duplicate::~Duplicate()

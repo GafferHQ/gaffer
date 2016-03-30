@@ -36,6 +36,7 @@
 
 import IECore
 
+import Gaffer
 import GafferTest
 import GafferScene
 import GafferSceneTest
@@ -185,6 +186,23 @@ class DuplicateTest( GafferSceneTest.SceneTestCase ) :
 				[ "/group/sphere%d" % n for n in range( 1, 1501 ) ]
 			)
 		)
+
+	def testSetNames( self ) :
+
+		s = GafferScene.Sphere()
+		s["sets"].setValue( "testSet" )
+		d = GafferScene.Duplicate()
+		d["in"].setInput( s["out"] )
+		d["target"].setValue( "/sphere" )
+		d["transform"]["translate"].setValue( IECore.V3f( 1, 0, 0 ) )
+
+		with Gaffer.PerformanceMonitor() as m :
+			self.assertEqual( s["out"]["setNames"].hash(), d["out"]["setNames"].hash() )
+			self.assertTrue( s["out"]["setNames"].getValue( _copy = False ).isSame( d["out"]["setNames"].getValue( _copy = False ) ) )
+			self.assertEqual( s["out"]["setNames"].getValue(), IECore.InternedStringVectorData( [ "testSet" ] ) )
+
+		self.assertEqual( m.plugStatistics( d["out"]["setNames"] ).hashCount, 0 )
+		self.assertEqual( m.plugStatistics( d["out"]["setNames"] ).computeCount, 0 )
 
 if __name__ == "__main__":
 	unittest.main()
