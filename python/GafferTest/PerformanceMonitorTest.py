@@ -105,5 +105,13 @@ class PerformanceMonitorTest( GafferTest.TestCase ) :
 			}
 		)
 
+	def testEnterReturnValue( self ) :
+
+		m = Gaffer.PerformanceMonitor()
+		with m as n :
+			pass
+
+		self.assertTrue( m is n )
+
 if __name__ == "__main__":
 	unittest.main()
