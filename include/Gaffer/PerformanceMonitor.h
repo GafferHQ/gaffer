@@ -40,6 +40,7 @@
 #include "tbb/enumerable_thread_specific.h"
 
 #include "boost/unordered_map.hpp"
+#include "boost/chrono.hpp"
 
 #include "IECore/RefCounted.h"
 
@@ -63,10 +64,17 @@ class PerformanceMonitor : public Monitor
 		struct Statistics
 		{
 
-			Statistics( size_t hashCount = 0, size_t computeCount = 0 );
+			Statistics(
+				size_t hashCount = 0,
+				size_t computeCount = 0,
+				boost::chrono::nanoseconds hashDuration = boost::chrono::nanoseconds( 0 ),
+				boost::chrono::nanoseconds computeDuration = boost::chrono::nanoseconds( 0 )
+			);
 
 			size_t hashCount;
 			size_t computeCount;
+			boost::chrono::nanoseconds hashDuration;
+			boost::chrono::nanoseconds computeDuration;
 
 			Statistics & operator += ( const Statistics &rhs );
 
@@ -89,7 +97,8 @@ class PerformanceMonitor : public Monitor
 
 		// For performance reasons we accumulate our statistics into
 		// thread local storage while computations are running.
-		tbb::enumerable_thread_specific<StatisticsMap> m_threadStatistics;
+		struct ThreadData;
+		tbb::enumerable_thread_specific<ThreadData, tbb::cache_aligned_allocator<ThreadData>, tbb::ets_key_per_instance> m_threadData;
 
 		// Then when we want to query it, we collate it into m_statistics.
 		void collate() const;

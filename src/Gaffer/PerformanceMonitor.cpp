@@ -34,6 +34,8 @@
 //
 //////////////////////////////////////////////////////////////////////////
 
+#include <stack>
+
 #include "Gaffer/PerformanceMonitor.h"
 #include "Gaffer/Process.h"
 #include "Gaffer/Plug.h"
@@ -50,8 +52,8 @@ static PerformanceMonitor::Statistics g_emptyStatistics;
 // PerformanceMonitor::Statistics
 //////////////////////////////////////////////////////////////////////////
 
-PerformanceMonitor::Statistics::Statistics( size_t hashCount, size_t computeCount )
-	:	hashCount( hashCount ), computeCount( computeCount )
+PerformanceMonitor::Statistics::Statistics( size_t hashCount, size_t computeCount, boost::chrono::nanoseconds hashDuration, boost::chrono::nanoseconds computeDuration )
+	:	hashCount( hashCount ), computeCount( computeCount ), hashDuration( hashDuration ), computeDuration( computeDuration )
 {
 }
 
@@ -59,18 +61,42 @@ PerformanceMonitor::Statistics & PerformanceMonitor::Statistics::operator += ( c
 {
 	hashCount += rhs.hashCount;
 	computeCount += rhs.computeCount;
+	hashDuration += rhs.hashDuration;
+	computeDuration += rhs.computeDuration;
 	return *this;
 }
 
 bool PerformanceMonitor::Statistics::operator == ( const Statistics &rhs )
 {
-	return hashCount == rhs.hashCount && computeCount == rhs.computeCount;
+	return
+		hashCount == rhs.hashCount &&
+		computeCount == rhs.computeCount &&
+		hashDuration == rhs.hashDuration &&
+		computeDuration == rhs.computeDuration
+	;
 }
 
 bool PerformanceMonitor::Statistics::operator != ( const Statistics &rhs )
 {
 	return !( *this == rhs );
 }
+
+//////////////////////////////////////////////////////////////////////////
+// PerformanceMonitor::ThreadData
+//////////////////////////////////////////////////////////////////////////
+
+struct PerformanceMonitor::ThreadData
+{
+	// Stores the per-plug statistics captured by this thread.
+	StatisticsMap statistics;
+	// Stack of durations pointing into the statistics map.
+	// The top of the stack is the duration we're billing the
+	// current chunk of time to.
+	typedef std::stack<boost::chrono::nanoseconds *> DurationStack;
+	DurationStack durationStack;
+	// The last time measurement we made.
+	boost::chrono::high_resolution_clock::time_point then;
+};
 
 //////////////////////////////////////////////////////////////////////////
 // PerformanceMonitor
@@ -109,27 +135,49 @@ void PerformanceMonitor::processStarted( const Process *process )
 		return;
 	}
 
-	Statistics &s = m_threadStatistics.local()[process->plug()];
+	ThreadData &threadData = m_threadData.local();
+
+	boost::chrono::high_resolution_clock::time_point now = boost::chrono::high_resolution_clock::now();
+	if( !threadData.durationStack.empty() )
+	{
+		*(threadData.durationStack.top()) += now - threadData.then;
+	}
+	threadData.then = now;
+
+	Statistics &s = threadData.statistics[process->plug()];
 	if( type == g_hashType )
 	{
 		s.hashCount++;
+		threadData.durationStack.push( &s.hashDuration );
 	}
 	else
 	{
 		s.computeCount++;
+		threadData.durationStack.push( &s.computeDuration );
 	}
 }
 
 void PerformanceMonitor::processFinished( const Process *process )
 {
+	const IECore::InternedString type = process->type();
+	if( type != g_hashType && type != g_computeType )
+	{
+		return;
+	}
+
+	ThreadData &threadData = m_threadData.local();
+	boost::chrono::high_resolution_clock::time_point now = boost::chrono::high_resolution_clock::now();
+	*(threadData.durationStack.top()) += now - threadData.then;
+	threadData.durationStack.pop();
+	threadData.then = now;
 }
 
 void PerformanceMonitor::collate() const
 {
-	tbb::enumerable_thread_specific<StatisticsMap>::iterator it, eIt;
-	for( it = m_threadStatistics.begin(), eIt = m_threadStatistics.end(); it != eIt; ++it )
+	tbb::enumerable_thread_specific<ThreadData, tbb::cache_aligned_allocator<ThreadData>, tbb::ets_key_per_instance>::iterator it, eIt;
+	for( it = m_threadData.begin(), eIt = m_threadData.end(); it != eIt; ++it )
 	{
-		StatisticsMap &m = *it;
+		StatisticsMap &m = it->statistics;
 		for( StatisticsMap::const_iterator mIt = m.begin(), meIt = m.end(); mIt != meIt; ++mIt )
 		{
 			m_statistics[mIt->first] += mIt->second;
