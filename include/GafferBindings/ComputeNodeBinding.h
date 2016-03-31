@@ -78,6 +78,10 @@ class ComputeNodeWrapper : public DependencyNodeWrapper<WrappedType>
 
 		virtual void hash( const Gaffer::ValuePlug *output, const Gaffer::Context *context, IECore::MurmurHash &h ) const
 		{
+			/// \todo Stop calling the base class unconditionally - if an override
+			/// exists then the override should call the base class explicitly itself
+			/// if required. Having a disparity between the python bindings and the
+			/// C++ form here does us no favours.
 			WrappedType::hash( output, context, h );
 			if( this->isSubclassed() )
 			{
