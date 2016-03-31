@@ -63,10 +63,42 @@ void exitScope( Monitor &m, object type, object value, object traceBack )
 std::string repr( PerformanceMonitor::Statistics &s )
 {
 	return boost::str(
-		boost::format( "Gaffer.PerformanceMonitor.Statistics( hashCount = %d, computeCount = %d )" )
+		boost::format( "Gaffer.PerformanceMonitor.Statistics( hashCount = %d, computeCount = %d, hashDuration = %d, computeDuration = %d )" )
 			% s.hashCount
 			% s.computeCount
+			% s.hashDuration.count()
+			% s.computeDuration.count()
 	);
+}
+
+PerformanceMonitor::Statistics *statisticsConstructor(
+	size_t hashCount,
+	size_t computeCount,
+	boost::chrono::nanoseconds::rep hashDuration,
+	boost::chrono::nanoseconds::rep computeDuration
+)
+{
+	return new PerformanceMonitor::Statistics( hashCount, computeCount, boost::chrono::nanoseconds( hashDuration ), boost::chrono::nanoseconds( computeDuration ) );
+}
+
+boost::chrono::nanoseconds::rep getHashDuration( PerformanceMonitor::Statistics &s )
+{
+	return s.hashDuration.count();
+}
+
+void setHashDuration( PerformanceMonitor::Statistics &s, boost::chrono::nanoseconds::rep v )
+{
+	s.hashDuration = boost::chrono::nanoseconds( v );
+}
+
+boost::chrono::nanoseconds::rep getComputeDuration( PerformanceMonitor::Statistics &s )
+{
+	return s.computeDuration.count();
+}
+
+void setComputeDuration( PerformanceMonitor::Statistics &s, boost::chrono::nanoseconds::rep v )
+{
+	s.computeDuration = boost::chrono::nanoseconds( v );
 }
 
 dict allStatistics( PerformanceMonitor &m )
@@ -98,9 +130,19 @@ void GafferBindings::bindMonitor()
 	;
 
 	class_<PerformanceMonitor::Statistics>( "Statistics" )
-		.def( init<size_t, size_t>( ( arg( "hashCount" ) = 0, arg( "computeCount" ) = 0 ) ) )
+		.def( "__init__", make_constructor( statisticsConstructor, default_call_policies(),
+				(
+					arg( "hashCount" ) = 0,
+					arg( "computeCount" ) = 0,
+					arg( "hashDuration" ) = 0,
+					arg( "computeDuration" ) = 0
+				)
+			)
+		)
 		.def_readwrite( "hashCount", &PerformanceMonitor::Statistics::hashCount )
 		.def_readwrite( "computeCount", &PerformanceMonitor::Statistics::computeCount )
+		.add_property( "hashDuration", &getHashDuration, &setHashDuration )
+		.add_property( "computeDuration", &getComputeDuration, &setComputeDuration )
 		.def( self == self )
 		.def( self != self )
 		.def( "__repr__", &repr )
