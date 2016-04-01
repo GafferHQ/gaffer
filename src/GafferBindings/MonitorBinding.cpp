@@ -39,6 +39,7 @@
 
 #include "Gaffer/Monitor.h"
 #include "Gaffer/PerformanceMonitor.h"
+#include "Gaffer/MonitorAlgo.h"
 #include "Gaffer/Plug.h"
 
 #include "GafferBindings/MonitorBinding.h"
@@ -116,6 +117,37 @@ dict allStatistics( PerformanceMonitor &m )
 
 void GafferBindings::bindMonitor()
 {
+
+	enum_<PerformanceMetric>( "PerformanceMetric" )
+		.value( "Invalid", Invalid )
+		.value( "HashCount", HashCount )
+		.value( "ComputeCount", ComputeCount )
+		.value( "HashDuration", HashDuration )
+		.value( "ComputeDuration", ComputeDuration )
+		.value( "TotalDuration", TotalDuration )
+		.value( "PerHashDuration", PerHashDuration )
+		.value( "PerComputeDuration", PerComputeDuration )
+		.value( "HashesPerCompute", HashesPerCompute )
+	;
+
+	def(
+		"formatStatistics",
+		( std::string (*)( const PerformanceMonitor &, size_t ) )&formatStatistics,
+		(
+			arg( "monitor" ),
+			arg( "maxLinesPerMetric" ) = 50
+		)
+	);
+
+	def(
+		"formatStatistics",
+		( std::string (*)( const PerformanceMonitor &, PerformanceMetric, size_t ) )&formatStatistics,
+		(
+			arg( "monitor" ),
+			arg( "metric" ),
+			arg( "maxLines" ) = 50
+		)
+	);
 
 	class_<Monitor, boost::noncopyable>( "Monitor", no_init )
 		.def( "setActive", &Monitor::setActive )
