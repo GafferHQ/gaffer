@@ -89,18 +89,11 @@ class stats( Gaffer.Application ) :
 				),
 
 				IECore.IntParameter(
-					name = "mostFrequentlyHashed",
-					description = "The number of most-frequently hashed plugs to print. "
-						"Only used when the performance monitor is on.",
+					name = "maxLinesPerMetric",
+					description = "The maximum number of plugs to list for each metric "
+						"captured by the performance monitor.",
 					defaultValue = 50,
 				),
-
-				IECore.IntParameter(
-					name = "mostFrequentlyComputed",
-					description = "The number of most-frequently hashed plugs to print. "
-						"Only used when the performance monitor is on.",
-					defaultValue = 50,
-				)
 
 			]
 
@@ -330,16 +323,11 @@ class stats( Gaffer.Application ) :
 			print "Performance :\n"
 			self.__printItems( self.__timers.items() )
 
-			if self.__performanceMonitor is None :
-				return
-
-			stats = self.__performanceMonitor.allStatistics().items()
-
-			print "\nMost frequently hashed :\n"
-			self.__printStatisticsItems( script, stats, lambda x : x[1].hashCount, args["mostFrequentlyHashed"].value )
-
-			print "\nMost frequently computed :\n"
-			self.__printStatisticsItems( script, stats, lambda x : x[1].computeCount, args["mostFrequentlyComputed"].value )
+			if self.__performanceMonitor is not None :
+				print "\n" + Gaffer.formatStatistics(
+					self.__performanceMonitor,
+					maxLinesPerMetric = args["maxLinesPerMetric"].value
+				)
 
 class _Timer( object ) :
 
