@@ -1,3 +1,113 @@
+0.23.2.0
+========
+
+Apps
+-----------------------------------------------------------------------
+
+- Stats
+  - Fixed bug which caused errors when there were no items to print
+    in a particular category (#1667).
+  - Added -performanceMonitor flag, which outputs in depth statistics
+    for use in analysing and optimising performance (#1668).
+  - Added -image flag for outputting image statistics (#1680).
+
+UI
+-----------------------------------------------------------------------
+
+- Added back "Remove Input" menu option for promoted plugs. This differs
+  from the "Unpromote" option in that it breaks the connection but keeps
+  the promoted plug on the outside of the box (#1678).
+- NodeGraph (#1679)
+  - Tightened rules for inserting nodes into noodles. Nodes are now only
+    inserted when disabling the inserted node would create a pass-through
+    equivalent to the original connection, and deleting the node will
+    restore the original connection. Previously nodes could be inserted
+    in such a way that one end of the connection was broken, or two new
+    connections were made which had no logical in->out connection through
+    the inserted node.
+  - Stopped highlighting connections when hovering in their middle, where
+    they cannot be dragged anyway.
+  - Made it harder to accidentally drag a long connection by grabbing it
+    in the middle - the sensitive section is now limited to a shorter
+    segment near the end.
+
+Scene
+-----------------------------------------------------------------------
+
+- Improved output of objects and transforms which are static, but for
+  which motion blur has been requested via StandardAttributes. Motion
+  blocks are now omitted when no motion is detected (#1662).
+- ScriptProcedural (#1676)
+  - Fixed clearing of caches after procedural expansion in Arnold.
+  - Improved error reporting to include the node which caused the
+    error.
+  - Added support for performance monitoring.
+- StandardOptions
+  - Added new performanceMonitor option, which enables/disables the
+    performance monitoring now supported by the ScriptProcedural
+    (#1676).
+- Duplicate
+  - Optimised set name computation. This knocks 35% off the time
+    to compute a set in a custom downstream node with certain
+    suboptimal qualities (#1682).
+
+Dispatch
+-----------------------------------------------------------------------
+
+- ExecutableNodes now support automatic substitution of variables in
+  StringPlug values, in the same way as has always been supported
+  by other node types (#887, #1671).
+- Fixed order of dispatch when postTasks exist (#1675).
+
+Arnold
+-----------------------------------------------------------------------
+
+- Removed use of deprecated UI APIs. Specifically,
+  `PlugValueWidget.registerCreator()` has been deprecated, and all code
+  should use the equivalent "plugValueWidget:type" metadata instead
+  (#1673).
+
+Cortex
+-----------------------------------------------------------------------
+
+- Fixed UI error when launching a ClassVectorParameter UI with
+  preexisting child parameters (#665, #1670).
+
+Documentation
+-----------------------------------------------------------------------
+
+- Added GafferDispatch to the API docs.
+
+API
+-----------------------------------------------------------------------
+
+- Added Process and Monitor classes. Processes expose internal
+  processes such as ComputeNode::compute() and ComputeNode::hash()
+  to Monitors - classes which can observe the internal workings of
+  Gaffer via the exposed Processes (#1668).
+- Added PerformanceMonitor class. This uses the Monitor/Process
+  API to collect statistics useful in analysing and optimising
+  performance (#1668).
+- RendererAlgo
+  - Added outputObject() method (#1662).
+  - Added outputTransform() method (#1662).
+- ValuePlug
+  - Deprecated inCompute() method - use Process::current() instead
+    (#1668).
+- FormatData
+  - Added workaround for unstable hash() method when compiling with
+    GCC 4.4.7 (#1669).
+- ExecutableNode
+  - Moved public interface to TaskPlug. The ExecutableNode virtual
+    interface is now considered to be protected, and will be made
+    so in a future release.
+- ScenePlug
+  - Fixed python binding for pathToString().
+  - Added helpers for accessing globals and set names. These manage
+    the context such that it is friendlier to the hash cache, by
+    removing variables we know to change frequently but which cannot
+    affect the result #(1683).
+
 0.23.1.0
 ========
 
