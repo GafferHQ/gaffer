@@ -53,6 +53,14 @@ using namespace GafferScene;
 namespace
 {
 
+bool existsHelper( const ScenePlug *scene, const ScenePlug::ScenePath &path )
+{
+	// gil release in case the scene traversal dips back into python:
+	IECorePython::ScopedGILRelease r;
+	return exists( scene, path );
+}
+
+
 void matchingPathsHelper1( const Filter *filter, const ScenePlug *scene, PathMatcher &paths )
 {
 	// gil release in case the scene traversal dips back into python:
@@ -87,7 +95,7 @@ namespace GafferSceneBindings
 
 void bindSceneAlgo()
 {
-	def( "exists", exists );
+	def( "exists", &existsHelper );
 	def( "visible", visible );
 	def( "matchingPaths", &matchingPathsHelper1 );
 	def( "matchingPaths", &matchingPathsHelper2 );
