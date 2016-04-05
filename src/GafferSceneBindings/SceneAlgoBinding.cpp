@@ -53,7 +53,7 @@ using namespace GafferScene;
 namespace
 {
 
-bool existsHelper( const ScenePlug *scene, const ScenePlug::ScenePath &path )
+bool existsWrapper( const ScenePlug *scene, const ScenePlug::ScenePath &path )
 {
 	// gil release in case the scene traversal dips back into python:
 	IECorePython::ScopedGILRelease r;
@@ -61,28 +61,28 @@ bool existsHelper( const ScenePlug *scene, const ScenePlug::ScenePath &path )
 }
 
 
-void matchingPathsHelper1( const Filter *filter, const ScenePlug *scene, PathMatcher &paths )
+void matchingPathsWrapper1( const Filter *filter, const ScenePlug *scene, PathMatcher &paths )
 {
 	// gil release in case the scene traversal dips back into python:
 	IECorePython::ScopedGILRelease r;
 	matchingPaths( filter, scene, paths );
 }
 
-void matchingPathsHelper2( const Gaffer::IntPlug *filterPlug, const ScenePlug *scene, PathMatcher &paths )
+void matchingPathsWrapper2( const Gaffer::IntPlug *filterPlug, const ScenePlug *scene, PathMatcher &paths )
 {
 	// gil release in case the scene traversal dips back into python:
 	IECorePython::ScopedGILRelease r;
 	matchingPaths( filterPlug, scene, paths );
 }
 
-void matchingPathsHelper3( const PathMatcher &filter, const ScenePlug *scene, PathMatcher &paths )
+void matchingPathsWrapper3( const PathMatcher &filter, const ScenePlug *scene, PathMatcher &paths )
 {
 	// gil release in case the scene traversal dips back into python:
 	IECorePython::ScopedGILRelease r;
 	matchingPaths( filter, scene, paths );
 }
 
-IECore::CompoundDataPtr setsHelper( const ScenePlug *scene, bool copy )
+IECore::CompoundDataPtr setsWrapper( const ScenePlug *scene, bool copy )
 {
 	IECore::ConstCompoundDataPtr result = sets( scene );
 	return copy ? result->copy() : boost::const_pointer_cast<IECore::CompoundData>( result );
@@ -95,11 +95,11 @@ namespace GafferSceneBindings
 
 void bindSceneAlgo()
 {
-	def( "exists", &existsHelper );
+	def( "exists", &existsWrapper );
 	def( "visible", visible );
-	def( "matchingPaths", &matchingPathsHelper1 );
-	def( "matchingPaths", &matchingPathsHelper2 );
-	def( "matchingPaths", &matchingPathsHelper3 );
+	def( "matchingPaths", &matchingPathsWrapper1 );
+	def( "matchingPaths", &matchingPathsWrapper2 );
+	def( "matchingPaths", &matchingPathsWrapper3 );
 	def( "shutter", &shutter );
 	def(
 		"camera",
@@ -114,7 +114,7 @@ void bindSceneAlgo()
 	def( "setExists", &setExists );
 	def(
 		"sets",
-		&setsHelper,
+		&setsWrapper,
 		( arg( "scene" ), arg( "_copy" ) = true )
 	);
 }
