@@ -81,7 +81,7 @@ class SceneWriter : public GafferDispatch::ExecutableNode
 
 	private :
 
-		void createDirectories( std::string &fileName ) const;
+		void createDirectories( const std::string &fileName ) const;
 		void writeLocation( const GafferScene::ScenePlug *scene, const ScenePlug::ScenePath &scenePath, Gaffer::Context *context, IECore::SceneInterface *output, double time ) const;
 
 		static size_t g_firstPlugIndex;

@@ -82,7 +82,7 @@ class AppleseedRender( GafferScene.ExecutableRender ) :
 
 	def _createRenderer( self ) :
 
-		fileName = self.__fileName()
+		fileName = self["fileName"].getValue()
 		directory = os.path.dirname( fileName )
 		if directory :
 			self._makeDir( directory )
@@ -98,18 +98,8 @@ class AppleseedRender( GafferScene.ExecutableRender ) :
 
 	def _command( self ) :
 		if self["mode"].getValue() == "render" :
-			return "appleseed.cli --message-verbosity %s -c final '%s'" % ( self["verbosity"].getValue(), self.__fileName() )
+			return "appleseed.cli --message-verbosity %s -c final '%s'" % ( self["verbosity"].getValue(), self["fileName"].getValue() )
 
 		return ""
-
-	def __fileName( self ) :
-
-		result = self["fileName"].getValue()
-		# because execute() isn't called inside a compute(), we
-		# don't get string expansions automatically, and have to
-		# do them ourselves.
-		## \todo Can we improve this situation?
-		result = Gaffer.Context.current().substitute( result )
-		return result
 
 IECore.registerRunTimeTyped( AppleseedRender, typeName = "GafferAppleseed::AppleseedRender" )

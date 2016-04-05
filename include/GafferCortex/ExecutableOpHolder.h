@@ -72,10 +72,6 @@ class ExecutableOpHolder : public ParameterisedHolderExecutableNode
 		virtual IECore::MurmurHash hash( const Gaffer::Context *context ) const;
 		virtual void execute() const;
 
-	private :
-
-		void substitute( IECore::Parameter *parameter, const Gaffer::Context *context ) const;
-
 };
 
 IE_CORE_DECLAREPTR( ExecutableOpHolder )

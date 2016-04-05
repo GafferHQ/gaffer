@@ -133,7 +133,7 @@ void SceneWriter::executeSequence( const std::vector<float> &frames ) const
 	ContextPtr context = new Context( *Context::current(), Context::Borrowed );
 	Context::Scope scopedContext( context.get() );
 
-	std::string fileName = context->substitute( fileNamePlug()->getValue() );
+	const std::string fileName = fileNamePlug()->getValue();
 	createDirectories( fileName );
 	SceneInterfacePtr output = SceneInterface::create( fileName, IndexedIO::Write );
 
@@ -203,7 +203,7 @@ void SceneWriter::writeLocation( const GafferScene::ScenePlug *scene, const Scen
 	}
 }
 
-void SceneWriter::createDirectories( std::string &fileName ) const
+void SceneWriter::createDirectories( const std::string &fileName ) const
 {
 	boost::filesystem::path filePath( fileName );
 	boost::filesystem::path directory = filePath.parent_path();

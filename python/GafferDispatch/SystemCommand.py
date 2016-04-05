@@ -59,8 +59,6 @@ class SystemCommand( GafferDispatch.ExecutableNode ) :
 		substitutions = { key : str( value ) for ( key, value ) in substitutions.items() }
 
 		command = self["command"].getValue()
-		## \todo We can remove this manual subsitution when we finally sort out #887.
-		command = Gaffer.Context.current().substitute( command )
 		command = command.format( **substitutions )
 
 		env = os.environ.copy()

@@ -973,7 +973,7 @@ const Gaffer::ValuePlug *ImageWriter::fileFormatSettingsPlug( const std::string 
 
 const std::string ImageWriter::currentFileFormat() const
 {
-	const std::string fileName = Context::current()->substitute( fileNamePlug()->getValue() );
+	const std::string fileName = fileNamePlug()->getValue();
 	ImageOutputPtr out( ImageOutput::create( fileName.c_str() ) );
 	if( out != NULL )
 	{
@@ -1019,7 +1019,7 @@ void ImageWriter::execute() const
 		throw IECore::Exception( "No input image." );
 	}
 
-	std::string fileName = Context::current()->substitute( fileNamePlug()->getValue() );
+	const std::string fileName = fileNamePlug()->getValue();
 
 	ImageOutputPtr out( ImageOutput::create( fileName.c_str() ) );
 	if( !out )

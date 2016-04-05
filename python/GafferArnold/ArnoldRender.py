@@ -73,7 +73,7 @@ class ArnoldRender( GafferScene.ExecutableRender ) :
 
 	def _createRenderer( self ) :
 
-		fileName = self.__fileName()
+		fileName = self["fileName"].getValue()
 		directory = os.path.dirname( fileName )
 		if directory :
 			try :
@@ -140,22 +140,14 @@ class ArnoldRender( GafferScene.ExecutableRender ) :
 
 	def _command( self ) :
 
+		fileName = self["fileName"].getValue()
+
 		mode = self["mode"].getValue()
 		if mode == "render" :
-			return "kick -dp -dw -v %d '%s'" % ( self["verbosity"].getValue(), self.__fileName() )
+			return "kick -dp -dw -v %d '%s'" % ( self["verbosity"].getValue(), fileName )
 		elif mode == "expand" :
-			return "kick -v %d -forceexpand -resave '%s' '%s'" % ( self["verbosity"].getValue(), self.__fileName(), self.__fileName() )
+			return "kick -v %d -forceexpand -resave '%s' '%s'" % ( self["verbosity"].getValue(), fileName, fileName )
 
 		return ""
-
-	def __fileName( self ) :
-
-		result = self["fileName"].getValue()
-		# because execute() isn't called inside a compute(), we
-		# don't get string expansions automatically, and have to
-		# do them ourselves.
-		## \todo Can we improve this situation?
-		result = Gaffer.Context.current().substitute( result )
-		return result
 
 IECore.registerRunTimeTyped( ArnoldRender, typeName = "GafferArnold::ArnoldRender" )
