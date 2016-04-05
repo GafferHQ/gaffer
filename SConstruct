@@ -405,6 +405,7 @@ baseLibEnv.Append(
 		"boost_wave$BOOST_LIB_SUFFIX",
 		"boost_regex$BOOST_LIB_SUFFIX",
 		"boost_system$BOOST_LIB_SUFFIX",
+		"boost_chrono$BOOST_LIB_SUFFIX",
 		"tbb",
 		"Imath$OPENEXR_LIB_SUFFIX",
 		"IlmImf$OPENEXR_LIB_SUFFIX",
