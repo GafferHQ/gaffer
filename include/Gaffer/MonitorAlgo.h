@@ -34,78 +34,35 @@
 //
 //////////////////////////////////////////////////////////////////////////
 
-#ifndef GAFFER_PERFORMANCEMONITOR_H
-#define GAFFER_PERFORMANCEMONITOR_H
+#ifndef GAFFER_MONITORALGO_H
+#define GAFFER_MONITORALGO_H
 
-#include "tbb/enumerable_thread_specific.h"
-
-#include "boost/unordered_map.hpp"
-#include "boost/chrono.hpp"
-
-#include "IECore/RefCounted.h"
-
-#include "Gaffer/Monitor.h"
+#include <string>
 
 namespace Gaffer
 {
 
-IE_CORE_FORWARDDECLARE( Plug )
+class PerformanceMonitor;
 
-/// A monitor which collects statistics about the frequency
-/// of hash and compute processes per plug.
-class PerformanceMonitor : public Monitor
+enum PerformanceMetric
 {
+	Invalid,
+	HashCount,
+	ComputeCount,
+	HashDuration,
+	ComputeDuration,
+	TotalDuration,
+	PerHashDuration,
+	PerComputeDuration,
+	HashesPerCompute,
 
-	public :
-
-		PerformanceMonitor();
-		virtual ~PerformanceMonitor();
-
-		struct Statistics
-		{
-
-			Statistics(
-				size_t hashCount = 0,
-				size_t computeCount = 0,
-				boost::chrono::nanoseconds hashDuration = boost::chrono::nanoseconds( 0 ),
-				boost::chrono::nanoseconds computeDuration = boost::chrono::nanoseconds( 0 )
-			);
-
-			size_t hashCount;
-			size_t computeCount;
-			boost::chrono::nanoseconds hashDuration;
-			boost::chrono::nanoseconds computeDuration;
-
-			Statistics & operator += ( const Statistics &rhs );
-
-			bool operator == ( const Statistics &rhs );
-			bool operator != ( const Statistics &rhs );
-
-		};
-
-		typedef boost::unordered_map<ConstPlugPtr, Statistics> StatisticsMap;
-
-		const StatisticsMap &allStatistics() const;
-		const Statistics &plugStatistics( const Plug *plug ) const;
-
-	protected :
-
-		virtual void processStarted( const Process *process );
-		virtual void processFinished( const Process *process );
-
-	private :
-
-		// For performance reasons we accumulate our statistics into
-		// thread local storage while computations are running.
-		struct ThreadData;
-		tbb::enumerable_thread_specific<ThreadData, tbb::cache_aligned_allocator<ThreadData>, tbb::ets_key_per_instance> m_threadData;
-
-		// Then when we want to query it, we collate it into m_statistics.
-		void collate() const;
-		mutable StatisticsMap m_statistics;
-
+	First = HashCount,
+	Last = HashesPerCompute
 };
+
+std::string formatStatistics( const PerformanceMonitor &monitor, size_t maxLinesPerMetric = 50 );
+std::string formatStatistics( const PerformanceMonitor &monitor, PerformanceMetric metric, size_t maxLines = 50 );
 
 } // namespace Gaffer
 
-#endif // GAFFER_PERFORMANCEMONITOR_H
+#endif // GAFFER_MONITORALGO_H
