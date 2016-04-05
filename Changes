@@ -50,6 +50,8 @@ Scene
   - Optimised set name computation. This knocks 35% off the time
     to compute a set in a custom downstream node with certain
     suboptimal qualities (#1682).
+- Fixed hangs caused by missing GIL management in SceneAlgo
+  bindings (#1686, #1687).
 
 Dispatch
 -----------------------------------------------------------------------
@@ -76,6 +78,7 @@ Appleseed
 -----------------------------------------------------------------------
 
 - Updated to [Appleseed 1.4.0-beta](https://github.com/appleseedhq/appleseed/releases/tag/1.4.0-beta).
+- Renamed volume priority attribute to medium priority.
 
 Cortex
 -----------------------------------------------------------------------
