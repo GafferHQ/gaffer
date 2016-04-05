@@ -65,7 +65,7 @@ def __shadingSummary( plug ) :
 	info = []
 	if plug["shadingSamples"]["enabled"].getValue() :
 		info.append( "Shading Samples %d" % plug["shadingSamples"]["value"].getValue() )
-		info.append( "Volume Priority %d" % plug["volumePriority"]["value"].getValue() )
+		info.append( "Medium Priority %d" % plug["mediumPriority"]["value"].getValue() )
 
 	return ", ".join( info )
 
@@ -194,13 +194,13 @@ Gaffer.Metadata.registerNode(
 
 		],
 
-		"attributes.volumePriority" : [
+		"attributes.mediumPriority" : [
 
 			"description",
 			"""
-			For objects with refractive materials, specify the volume priority.
+			Specify the object medium priority.
 			When multiple objects share the same volume, appleseed will consider
-			only the higher priority one for intersections and shading.
+			only the highest priority one for intersections and shading.
 			Sometimes called nested dielectrics in other renderers.
 			""",
 

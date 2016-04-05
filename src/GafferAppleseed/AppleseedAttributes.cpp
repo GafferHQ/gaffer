@@ -57,7 +57,7 @@ AppleseedAttributes::AppleseedAttributes( const std::string &name )
 
 	// shading parameters
 	attributes->addOptionalMember( "as:shading_samples", new IECore::IntData( 1 ), "shadingSamples", Gaffer::Plug::Default, false );
-	attributes->addOptionalMember( "as:volume_priority", new IECore::IntData( 0 ), "volumePriority", Gaffer::Plug::Default, false );
+	attributes->addOptionalMember( "as:medium_priority", new IECore::IntData( 0 ), "mediumPriority", Gaffer::Plug::Default, false );
 
 	// alpha map parameters
 	attributes->addOptionalMember( "as:alpha_map", new IECore::StringData(), "alphaMap", Gaffer::Plug::Default, false );
