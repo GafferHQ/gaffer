@@ -67,6 +67,16 @@ Arnold
   should use the equivalent "plugValueWidget:type" metadata instead
   (#1673).
 
+RenderMan
+-----------------------------------------------------------------------
+
+- Added initial support for using OSL shaders in 3delight.
+
+Appleseed
+-----------------------------------------------------------------------
+
+- Updated to [Appleseed 1.4.0-beta](https://github.com/appleseedhq/appleseed/releases/tag/1.4.0-beta).
+
 Cortex
 -----------------------------------------------------------------------
 
@@ -107,6 +117,12 @@ API
     the context such that it is friendlier to the hash cache, by
     removing variables we know to change frequently but which cannot
     affect the result #(1683).
+
+Build
+-----------------------------------------------------------------------
+
+- Updated Cortex to version 9.8.0.
+- Updated Appleseed version to 1.4.0-beta.
 
 0.23.1.0
 ========
