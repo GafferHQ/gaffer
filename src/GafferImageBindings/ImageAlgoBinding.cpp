@@ -39,7 +39,7 @@
 
 using namespace boost::python;
 
-namespace GafferImageBindings
+namespace
 {
 
 // Register a conversion from StringVectorData.
@@ -72,6 +72,11 @@ struct StringVectorFromStringVectorData
 	}
 
 };
+
+} // namespace
+
+namespace GafferImageBindings
+{
 
 void bindImageAlgo()
 {
