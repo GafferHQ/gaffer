@@ -211,15 +211,13 @@ void Group::hashBound( const ScenePath &path, const Gaffer::Context *context, co
 	{
 		// pass through
 		const ScenePlug *sourcePlug = 0;
-		ScenePath source = sourcePath( path, namePlug()->getValue(), &sourcePlug );
+		ScenePath source = sourcePath( path, &sourcePlug );
 		h = sourcePlug->boundHash( source );
 	}
 }
 
 Imath::Box3f Group::computeBound( const ScenePath &path, const Gaffer::Context *context, const ScenePlug *parent ) const
 {
-	std::string groupName = namePlug()->getValue();
-
 	if( path.size() <= 1 )
 	{
 		// either / or /groupName
@@ -240,7 +238,7 @@ Imath::Box3f Group::computeBound( const ScenePath &path, const Gaffer::Context *
 	else
 	{
 		const ScenePlug *sourcePlug = 0;
-		ScenePath source = sourcePath( path, groupName, &sourcePlug );
+		ScenePath source = sourcePath( path, &sourcePlug );
 		return sourcePlug->bound( source );
 	}
 }
@@ -260,15 +258,13 @@ void Group::hashTransform( const ScenePath &path, const Gaffer::Context *context
 	{
 		// pass through
 		const ScenePlug *sourcePlug = 0;
-		ScenePath source = sourcePath( path, namePlug()->getValue(), &sourcePlug );
+		ScenePath source = sourcePath( path, &sourcePlug );
 		h = sourcePlug->transformHash( source );
 	}
 }
 
 Imath::M44f Group::computeTransform( const ScenePath &path, const Gaffer::Context *context, const ScenePlug *parent ) const
 {
-	std::string groupName = namePlug()->getValue();
-
 	if( path.size() == 0 )
 	{
 		return Imath::M44f();
@@ -280,7 +276,7 @@ Imath::M44f Group::computeTransform( const ScenePath &path, const Gaffer::Contex
 	else
 	{
 		const ScenePlug *sourcePlug = 0;
-		ScenePath source = sourcePath( path, groupName, &sourcePlug );
+		ScenePath source = sourcePath( path, &sourcePlug );
 		return sourcePlug->transform( source );
 	}
 }
@@ -295,15 +291,13 @@ void Group::hashAttributes( const ScenePath &path, const Gaffer::Context *contex
 	{
 		// pass through
 		const ScenePlug *sourcePlug = 0;
-		ScenePath source = sourcePath( path, namePlug()->getValue(), &sourcePlug );
+		ScenePath source = sourcePath( path, &sourcePlug );
 		h = sourcePlug->attributesHash( source );
 	}
 }
 
 IECore::ConstCompoundObjectPtr Group::computeAttributes( const ScenePath &path, const Gaffer::Context *context, const ScenePlug *parent ) const
 {
-	std::string groupName = namePlug()->getValue();
-
 	if( path.size() <= 1 )
 	{
 		return parent->attributesPlug()->defaultValue();
@@ -311,7 +305,7 @@ IECore::ConstCompoundObjectPtr Group::computeAttributes( const ScenePath &path, 
 	else
 	{
 		const ScenePlug *sourcePlug = 0;
-		ScenePath source = sourcePath( path, groupName, &sourcePlug );
+		ScenePath source = sourcePath( path, &sourcePlug );
 		return sourcePlug->attributes( source );
 	}
 }
@@ -326,15 +320,13 @@ void Group::hashObject( const ScenePath &path, const Gaffer::Context *context, c
 	{
 		// pass through
 		const ScenePlug *sourcePlug = 0;
-		ScenePath source = sourcePath( path, namePlug()->getValue(), &sourcePlug );
+		ScenePath source = sourcePath( path, &sourcePlug );
 		h = sourcePlug->objectHash( source );
 	}
 }
 
 IECore::ConstObjectPtr Group::computeObject( const ScenePath &path, const Gaffer::Context *context, const ScenePlug *parent ) const
 {
-	std::string groupName = namePlug()->getValue();
-
 	if( path.size() <= 1 )
 	{
 		return parent->objectPlug()->defaultValue();
@@ -342,7 +334,7 @@ IECore::ConstObjectPtr Group::computeObject( const ScenePath &path, const Gaffer
 	else
 	{
 		const ScenePlug *sourcePlug = 0;
-		ScenePath source = sourcePath( path, groupName, &sourcePlug );
+		ScenePath source = sourcePath( path, &sourcePlug );
 		return sourcePlug->object( source );
 	}
 }
@@ -363,19 +355,17 @@ void Group::hashChildNames( const ScenePath &path, const Gaffer::Context *contex
 	{
 		// pass through
 		const ScenePlug *sourcePlug = 0;
-		ScenePath source = sourcePath( path, namePlug()->getValue(), &sourcePlug );
+		ScenePath source = sourcePath( path, &sourcePlug );
 		h = sourcePlug->childNamesHash( source );
 	}
 }
 
 IECore::ConstInternedStringVectorDataPtr Group::computeChildNames( const ScenePath &path, const Gaffer::Context *context, const ScenePlug *parent ) const
 {
-	std::string groupName = namePlug()->getValue();
-
 	if( path.size() == 0 )
 	{
 		InternedStringVectorDataPtr result = new InternedStringVectorData();
-		result->writable().push_back( groupName );
+		result->writable().push_back( namePlug()->getValue() );
 		return result;
 	}
 	else if( path.size() == 1 )
@@ -386,7 +376,7 @@ IECore::ConstInternedStringVectorDataPtr Group::computeChildNames( const ScenePa
 	else
 	{
 		const ScenePlug *sourcePlug = 0;
-		ScenePath source = sourcePath( path, groupName, &sourcePlug );
+		ScenePath source = sourcePath( path, &sourcePlug );
 		return sourcePlug->childNames( source );
 	}
 }
@@ -543,7 +533,7 @@ IECore::ObjectPtr Group::computeMapping( const Gaffer::Context *context ) const
 	return result;
 }
 
-SceneNode::ScenePath Group::sourcePath( const ScenePath &outputPath, const std::string &groupName, const ScenePlug **source ) const
+SceneNode::ScenePath Group::sourcePath( const ScenePath &outputPath, const ScenePlug **source ) const
 {
 	const InternedString mappedChildName = outputPath[1];
 
@@ -551,7 +541,9 @@ SceneNode::ScenePath Group::sourcePath( const ScenePath &outputPath, const std::
 	const CompoundObject *entry = mapping->member<CompoundObject>( mappedChildName );
 	if( !entry )
 	{
-		throw Exception( boost::str( boost::format( "Unable to find mapping for output path" ) ) );
+		string outputPathString;
+		ScenePlug::pathToString( outputPath, outputPathString );
+		throw Exception( boost::str( boost::format( "Unable to find mapping for output path \"%s\"" ) % outputPathString ) );
 	}
 
 	*source = inPlugs()->getChild<ScenePlug>( entry->member<IntData>( "i" )->readable() );

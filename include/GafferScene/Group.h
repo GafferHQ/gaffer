@@ -94,12 +94,12 @@ class Group : public SceneProcessor
 		virtual IECore::ConstInternedStringVectorDataPtr computeSetNames( const Gaffer::Context *context, const ScenePlug *parent ) const;
 		virtual GafferScene::ConstPathMatcherDataPtr computeSet( const IECore::InternedString &setName, const Gaffer::Context *context, const ScenePlug *parent ) const;
 
-		ScenePath sourcePath( const ScenePath &outputPath, const std::string &groupName, const ScenePlug **source ) const;
-
 	private :
 
 		Gaffer::ObjectPlug *mappingPlug();
 		const Gaffer::ObjectPlug *mappingPlug() const;
+
+		ScenePath sourcePath( const ScenePath &outputPath, const ScenePlug **source ) const;
 
 		static size_t g_firstPlugIndex;
 
