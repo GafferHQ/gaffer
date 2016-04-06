@@ -67,13 +67,6 @@ class SignalClass : public boost::python::class_<Signal, boost::noncopyable>
 
 };
 
-/// \deprecated Use SignalClass instead.
-template<typename Signal, typename SignalCaller=DefaultSignalCaller<Signal>, typename SlotCaller=DefaultSlotCaller<Signal> >
-struct SignalBinder
-{
-	static boost::python::class_<Signal, boost::noncopyable> bind( const char *className );
-};
-
 /// This function binds a series of generic signals taking and returning python objects, with
 /// combiners being provided as python callables.
 void bindSignal();

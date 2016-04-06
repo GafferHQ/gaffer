@@ -98,24 +98,6 @@ class RecursiveChildIterator : public boost::iterator_facade<RecursiveChildItera
 			return m_stack.size() == 1 && m_stack[0].it == m_stack[0].end;
 		}
 
-		/// \deprecated Comparison to end() is unreliable. Use done() instead.
-		bool operator==( const GraphComponent::ChildIterator &rhs ) const
-		{
-			return stackTop().it == rhs ;
-		}
-
-		/// \deprecated Comparison to end() is unreliable. Use done() instead.
-		bool operator!=( const GraphComponent::ChildIterator &rhs ) const
-		{
-			return stackTop().it != rhs;
-		}
-
-		/// \deprecated Comparison to end() is unreliable. Use done() instead.
-		const GraphComponent::ChildIterator &end() const
-		{
-			return m_stack[0].end;
-		}
-
 	private :
 
 		friend class boost::iterator_core_access;

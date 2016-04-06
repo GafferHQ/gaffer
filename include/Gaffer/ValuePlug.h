@@ -154,9 +154,6 @@ class ValuePlug : public Plug
 		/// not be changed following the call.
 		void setObjectValue( IECore::ConstObjectPtr value );
 
-		/// \deprecated. Use Process::current() instead.
-		bool inCompute() const;
-
 		/// Reimplemented for cache management.
 		virtual void dirty();
 

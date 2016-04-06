@@ -94,24 +94,6 @@ class DownstreamIterator : public boost::iterator_facade<DownstreamIterator, con
 			return m_stack.size() == 1 && m_stack[0].it == m_stack[0].end;
 		}
 
-		/// \deprecated Comparison to end() is unreliable. Use done() instead.
-		bool operator==( const DependencyNode::AffectedPlugsContainer::const_iterator &rhs ) const
-		{
-			return stackTop().it == rhs ;
-		}
-
-		/// \deprecated Comparison to end() is unreliable. Use done() instead.
-		bool operator!=( const DependencyNode::AffectedPlugsContainer::const_iterator &rhs ) const
-		{
-			return stackTop().it != rhs;
-		}
-
-		/// \deprecated Comparison to end() is unreliable. Use done() instead.
-		const DependencyNode::AffectedPlugsContainer::const_iterator &end() const
-		{
-			return m_stack[0].end;
-		}
-
 	private :
 
 		friend class boost::iterator_core_access;

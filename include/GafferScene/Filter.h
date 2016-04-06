@@ -75,11 +75,6 @@ class Filter : public Gaffer::ComputeNode
 		Gaffer::IntPlug *outPlug();
 		const Gaffer::IntPlug *outPlug() const;
 
-		/// \deprecated Use outPlug() instead - it returns the
-		/// same thing.
-		Gaffer::IntPlug *matchPlug();
-		const Gaffer::IntPlug *matchPlug() const;
-
 		virtual void affects( const Gaffer::Plug *input, AffectedPlugsContainer &outputs ) const;
 		virtual bool sceneAffectsMatch( const ScenePlug *scene, const Gaffer::ValuePlug *child ) const;
 

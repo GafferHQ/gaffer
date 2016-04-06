@@ -392,12 +392,6 @@ SignalClass<Signal, SignalCaller, SlotCaller>::SignalClass( const char *classNam
 	this->def( "__call__", &SignalCaller::call );
 }
 
-template<typename Signal, typename SignalCaller, typename SlotCaller>
-boost::python::class_<Signal, boost::noncopyable> SignalBinder<Signal, SignalCaller, SlotCaller>::bind( const char *className )
-{
-	return SignalClass<Signal, SignalCaller, SlotCaller>( className );
-}
-
 } // namespace GafferBindings
 
 #endif // GAFFERBINDINGS_SIGNALBINDING_INL
