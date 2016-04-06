@@ -123,18 +123,6 @@ class FilteredChildIterator : public boost::filter_iterator<Predicate, GraphComp
 			return BaseIterator::base() == this->end();
 		}
 
-		/// \deprecated Prefer done() over comparison against end().
-		bool operator==( const GraphComponent::ChildIterator &rhs ) const
-		{
-			return BaseIterator::base()==( rhs );
-		}
-
-		/// \deprecated Prefer done() over comparison against end().
-		bool operator!=( const GraphComponent::ChildIterator &rhs ) const
-		{
-			return BaseIterator::base()!=( rhs );
-		}
-
 };
 
 } // namespace Gaffer
