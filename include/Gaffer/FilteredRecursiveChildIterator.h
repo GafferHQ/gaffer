@@ -96,24 +96,6 @@ class FilteredRecursiveChildIterator : public boost::iterator_adaptor<FilteredRe
 			return BaseIterator::base().done();
 		}
 
-		/// \deprecated Comparison to end() is unreliable. Use done() instead.
-		bool operator==( const RecursiveChildIterator &rhs ) const
-		{
-			return BaseIterator::base()==( rhs );
-		}
-
-		/// \deprecated Comparison to end() is unreliable. Use done() instead.
-		bool operator!=( const RecursiveChildIterator &rhs ) const
-		{
-			return BaseIterator::base()!=( rhs );
-		}
-
-		/// \deprecated Comparison to end() is unreliable. Use done() instead.
-		RecursiveChildIterator end()
-		{
-			return m_end;
-		}
-
 	private :
 
 		friend class boost::iterator_core_access;
