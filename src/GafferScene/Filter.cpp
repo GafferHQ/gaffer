@@ -78,16 +78,6 @@ const Gaffer::IntPlug *Filter::outPlug() const
 	return getChild<Gaffer::IntPlug>( g_firstPlugIndex + 1 );
 }
 
-Gaffer::IntPlug *Filter::matchPlug()
-{
-	return outPlug();
-}
-
-const Gaffer::IntPlug *Filter::matchPlug() const
-{
-	return outPlug();
-}
-
 void Filter::affects( const Gaffer::Plug *input, AffectedPlugsContainer &outputs ) const
 {
 	ComputeNode::affects( input, outputs );
