@@ -722,11 +722,6 @@ void ValuePlug::setObjectValue( IECore::ConstObjectPtr value )
 	ComputeProcess::receiveResult( this, value );
 }
 
-bool ValuePlug::inCompute() const
-{
-	return Process::current();
-}
-
 void ValuePlug::setValueInternal( IECore::ConstObjectPtr value, bool propagateDirtiness )
 {
 	m_staticValue = value;
