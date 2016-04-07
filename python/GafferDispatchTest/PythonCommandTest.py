@@ -299,5 +299,13 @@ class PythonCommandTest( GafferTest.TestCase ) :
 
 		self.assertEqual( s["n"].frameString, "010" )
 
+	def testComments( self ) :
+
+		c = Gaffer.PythonCommand()
+		c["command"].setValue( "self.test = 10 # this is a comment" )
+
+		c["task"].execute()
+		self.assertEqual( c.test, 10 )
+
 if __name__ == "__main__":
 	unittest.main()
