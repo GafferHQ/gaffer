@@ -71,6 +71,14 @@ def __subdivisionSummary( plug ) :
 
 	return ", ".join( info )
 
+def __volumeSummary( plug ) :
+
+	info = []
+	if plug["volumeStepSize"]["enabled"].getValue() :
+		info.append( "Step %s" % GafferUI.NumericWidget.valueToString( plug["volumeStepSize"]["value"].getValue() ) )
+
+	return ", ".join( info )
+
 Gaffer.Metadata.registerNode(
 
 	GafferArnold.ArnoldAttributes,
@@ -89,6 +97,7 @@ Gaffer.Metadata.registerNode(
 
 			"layout:section:Visibility:summary", __visibilitySummary,
 			"layout:section:Subdivision:summary", __subdivisionSummary,
+			"layout:section:Volume:summary", __volumeSummary,
 
 		],
 
@@ -249,6 +258,23 @@ Gaffer.Metadata.registerNode(
 			"preset:Flatness", "flatness",
 
 			"plugValueWidget:type", "GafferUI.PresetsPlugValueWidget",
+
+		],
+
+		# Volume
+
+		"attributes.volumeStepSize" : [
+
+			"description",
+			"""
+			The step size to take when raymarching volumes.
+			A non-zero value causes an object to be treated
+			as a volume container, and a value of 0 causes
+			an object to be treated as regular geometry.
+			""",
+
+			"layout:section", "Volume",
+			"label", "Step Size",
 
 		],
 

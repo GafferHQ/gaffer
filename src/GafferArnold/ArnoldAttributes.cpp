@@ -65,6 +65,10 @@ ArnoldAttributes::ArnoldAttributes( const std::string &name )
 	attributes->addOptionalMember( "ai:polymesh:subdiv_pixel_error", new FloatPlug( "value", Plug::In, 0.0f, 0.0f ), "subdivPixelError", false );
 	attributes->addOptionalMember( "ai:polymesh:subdiv_adaptive_metric", new StringPlug( "value", Plug::In, "auto" ), "subdivAdaptiveMetric", false );
 
+	// volume parameters
+
+	attributes->addOptionalMember( "ai:shape:step_size", new FloatPlug( "value", Plug::In, 0.0f, 0.0f ), "volumeStepSize", false );
+
 }
 
 ArnoldAttributes::~ArnoldAttributes()
