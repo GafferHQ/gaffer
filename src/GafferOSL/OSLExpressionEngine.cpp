@@ -543,7 +543,26 @@ class OSLExpressionEngine : public Gaffer::Expression::Engine
 			vector<const ValuePlug *>::const_iterator newIt = newPlugs.begin();
 			for( vector<const ValuePlug *>::const_iterator oldIt = oldPlugs.begin(), oldEIt = oldPlugs.end(); oldIt != oldEIt; ++oldIt, ++newIt )
 			{
-				replace_all( result, identifier( node, *oldIt ), identifier( node, *newIt ) );
+				std::string replacement;
+				if( *newIt )
+				{
+					replacement = identifier( node, *newIt );
+				}
+				else
+				{
+					string defaultValue;
+					string type = parameterType( *oldIt, defaultValue );
+					if( (*oldIt)->direction() == Plug::In )
+					{
+						replacement = defaultValue;
+					}
+					else
+					{
+						type[0] = toupper( type[0] );
+						replacement = "_disconnected" + type;
+					}
+				}
+				replace_all( result, identifier( node, *oldIt ), replacement );
 			}
 
 			return result;
@@ -702,6 +721,14 @@ class OSLExpressionEngine : public Gaffer::Expression::Engine
 				string type = parameterType( outPlugs[i], defaultValue );
 				result += "\toutput " + type + " parent." + outPlugPaths[i] + " = " + defaultValue + ",\n";
 			}
+
+			result += "\n\t// Dummy parameters we can use as outputs when connections\n";
+			result += "\t// are broken and we must keep the expression valid.\n";
+			result += "\toutput float _disconnectedFloat = 0.0,\n";
+			result += "\toutput int _disconnectedInt = 0,\n";
+			result += "\toutput color _disconnectedColor = color( 0.0 ),\n";
+			result += "\toutput color _disconnectedVector = vector( 0.0 ),\n";
+			result += "\toutput string _disconnectedString = \"\",\n";
 
 			result += "\n)\n";
 
