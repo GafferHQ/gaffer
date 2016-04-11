@@ -114,6 +114,20 @@ class OSLExpressionEngineTest( GafferOSLTest.OSLTestCase ) :
 		s["n"]["user"]["i"].setValue( "string" )
 		self.assertEqual( s["n"]["user"]["o"].getValue(), "string" )
 
+	def testUnsupportedPlugs( self ) :
+
+		s = Gaffer.ScriptNode()
+		s["n"] = Gaffer.Node()
+		s["n"]["user"]["o"] = Gaffer.ObjectPlug( flags = Gaffer.Plug.Flags.Default | Gaffer.Plug.Flags.Dynamic, defaultValue = IECore.NullObject.defaultNullObject() )
+
+		s["e"] = Gaffer.Expression()
+		self.assertRaisesRegexp(
+			RuntimeError, "Unsupported plug type \"Gaffer::ObjectPlug\"",
+			s["e"].setExpression,
+			"parent.n.user.o = 1",
+			"OSL"
+		)
+
 	def testContextFrame( self ) :
 
 		s = Gaffer.ScriptNode()
@@ -365,6 +379,76 @@ class OSLExpressionEngineTest( GafferOSLTest.OSLTestCase ) :
 			h2 = s["n"]["user"]["f"].hash()
 
 		self.assertEqual( h1, h2 )
+
+	def testDeleteOutputPlug( self ) :
+
+		s = Gaffer.ScriptNode()
+
+		s["n1"] = Gaffer.Node()
+		s["n1"]["user"]["f"] = Gaffer.FloatPlug( flags = Gaffer.Plug.Flags.Default | Gaffer.Plug.Flags.Dynamic )
+
+		s["n2"] = Gaffer.Node()
+		s["n2"]["user"]["f"] = Gaffer.FloatPlug( flags = Gaffer.Plug.Flags.Default | Gaffer.Plug.Flags.Dynamic )
+
+		s["e"] = Gaffer.Expression()
+		s["e"].setExpression(
+			inspect.cleandoc(
+				"""
+				parent.n1.user.f = 1;
+				parent.n2.user.f = 2;
+				"""
+			),
+			"OSL"
+		)
+
+		self.assertEqual( s["n2"]["user"]["f"].getValue(), 2 )
+		del s["n1"]
+		self.assertEqual( s["n2"]["user"]["f"].getValue(), 2 )
+
+		s["e"].setExpression(
+			"// I should be able to edit a broken expression\n" +
+			s["e"].getExpression()[0],
+			"OSL"
+		)
+		self.assertTrue( "_disconnectedFloat = 1" in s["e"].getExpression()[0] )
+
+		self.assertEqual( s["n2"]["user"]["f"].getValue(), 2 )
+
+	def testDeleteInputPlug( self ) :
+
+		s = Gaffer.ScriptNode()
+
+		s["n1"] = Gaffer.Node()
+		s["n1"]["user"]["f1"] = Gaffer.FloatPlug( flags = Gaffer.Plug.Flags.Default | Gaffer.Plug.Flags.Dynamic )
+		s["n1"]["user"]["f2"] = Gaffer.FloatPlug( flags = Gaffer.Plug.Flags.Default | Gaffer.Plug.Flags.Dynamic )
+
+		s["n2"] = Gaffer.Node()
+		s["n2"]["user"]["f"] = Gaffer.FloatPlug( flags = Gaffer.Plug.Flags.Default | Gaffer.Plug.Flags.Dynamic )
+
+		s["e"] = Gaffer.Expression()
+		s["e"].setExpression(
+			inspect.cleandoc(
+				"""
+				parent.n2.user.f = parent.n1.user.f1 + parent.n1.user.f2;
+				"""
+			),
+			"OSL"
+		)
+
+		s["n1"]["user"]["f1"].setValue( 2 )
+		s["n1"]["user"]["f2"].setValue( 4 )
+		self.assertEqual( s["n2"]["user"]["f"].getValue(), 6 )
+
+		del s["n1"]["user"]["f1"]
+		self.assertEqual( s["n2"]["user"]["f"].getValue(), 4 )
+
+		s["e"].setExpression(
+			"// I should be able to edit a broken expression\n" +
+			s["e"].getExpression()[0],
+			"OSL"
+		)
+
+		self.assertEqual( s["n2"]["user"]["f"].getValue(), 4 )
 
 if __name__ == "__main__":
 	unittest.main()
