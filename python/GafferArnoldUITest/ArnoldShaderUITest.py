@@ -78,5 +78,47 @@ class ArnoldShaderUITest( GafferUITest.TestCase ) :
 			Gaffer.Metadata.plugValue( shader["parameters"]["coord_space"], "presetNames" ),
 		)
 
+	def testLightMetadata( self ) :
+
+		light = GafferArnold.ArnoldLight()
+		with IECore.CapturingMessageHandler() as mh :
+			light.loadShader( "skydome_light" )
+
+		## \todo Here we're suppressing warnings about not being
+		# able to create plugs for some parameters. In many cases
+		# these are parameters like "matrix" and "time_samples"
+		# that we don't actually want to represent anyway. We should
+		# add a mechanism for ignoring irrelevant parameters (perhaps
+		# using custom gaffer.something metadata in additional Arnold
+		# .mtd files), and then remove this suppression.
+		for message in mh.messages :
+			self.assertEqual( message.level, mh.Level.Warning )
+			self.assertTrue( "Unsupported parameter" in message.message )
+
+		self.assertEqual(
+			Gaffer.Metadata.plugValue( light["parameters"]["cast_shadows"], "nodule:type" ),
+			""
+		)
+
+		self.assertEqual(
+			Gaffer.Metadata.plugValue( light["parameters"]["color"], "nodule:type" ),
+			"GafferUI::StandardNodule"
+		)
+
+		self.assertEqual(
+			Gaffer.Metadata.plugValue( light["parameters"]["format"], "plugValueWidget:type" ),
+			"GafferUI.PresetsPlugValueWidget"
+		)
+
+		self.assertEqual(
+			Gaffer.Metadata.plugValue( light["parameters"]["format"], "presetNames" ),
+			IECore.StringVectorData( [ "mirrored_ball", "angular", "latlong" ] ),
+		)
+
+		self.assertEqual(
+			Gaffer.Metadata.plugValue( light["parameters"]["format"], "presetValues" ),
+			Gaffer.Metadata.plugValue( light["parameters"]["format"], "presetNames" ),
+		)
+
 if __name__ == "__main__":
 	unittest.main()

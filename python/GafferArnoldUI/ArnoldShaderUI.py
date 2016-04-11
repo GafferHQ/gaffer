@@ -116,17 +116,26 @@ with IECoreArnold.UniverseBlock() :
 
 def __nodeDescription( node ) :
 
-	shaderDefault = """Loads shaders for use in Arnold renderers. Use the ShaderAssignment node to assign shaders to objects in the scene."""
-	lightDefault = """Loads an Arnold light shader and uses it to output a scene with a single light."""
-
-	return __metadata[node["name"].getValue()].get(
-		"description",
-		shaderDefault if isinstance( node, GafferArnold.ArnoldShader ) else lightDefault
-	)
+	if isinstance( node, GafferArnold.ArnoldShader ) :
+		return __metadata[node["name"].getValue()].get(
+			"description",
+			"""Loads shaders for use in Arnold renders. Use the ShaderAssignment node to assign shaders to objects in the scene.""",
+		)
+	else :
+		return __metadata[node["__shaderName"].getValue()].get(
+			"description",
+			"""Loads an Arnold light shader and uses it to output a scene with a single light."""
+		)
 
 def __plugMetadata( plug, name ) :
 
-	return __metadata[plug.node()["name"].getValue() + "." + plug.getName()].get( name )
+	if isinstance( plug.node(), GafferArnold.ArnoldShader ) :
+		key = plug.node()["name"].getValue() + "." + plug.getName()
+	else :
+		# Node type is ArnoldLight.
+		key = plug.node()["__shaderName"].getValue() + "." + plug.getName()
+
+	return __metadata[key].get( name )
 
 def __noduleType( plug ) :
 
