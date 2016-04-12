@@ -234,12 +234,6 @@ options.Add(
 )
 
 options.Add(
-	"DOXYGEN",
-	"Where to find the doxygen binary",
-	"doxygen",
-)
-
-options.Add(
 	"INKSCAPE",
 	"Where to find the inkscape binary",
 	"inkscape",
@@ -304,7 +298,7 @@ if env["BUILD_CACHEDIR"] != "" :
 	CacheDir( env["BUILD_CACHEDIR"] )
 
 ###############################################################################################
-# Checks for doxygen and inkscape requirements
+# Check for inkscape
 ###############################################################################################
 
 def checkExecutable(executable):
@@ -324,23 +318,13 @@ def checkExecutable(executable):
 
     return False
 
-def checkDoxygen(context):
-	context.Message('Checking for Doxygen... ')
-	result = checkExecutable(context.sconf.env['DOXYGEN'])
-	context.Result(result)
-	return result
-
 def checkInkscape(context):
 	context.Message('Checking for Inkscape... ')
 	result = checkExecutable(context.sconf.env['INKSCAPE'])
 	context.Result(result)
 	return result
 
-conf = Configure(env, custom_tests = {'checkDoxygen' : checkDoxygen, 'checkInkscape' : checkInkscape})
-
-if not conf.checkDoxygen():
-	print 'Doxygen is not installed!'
-	Exit(1)
+conf = Configure(env, custom_tests = { 'checkInkscape' : checkInkscape})
 
 if not conf.checkInkscape():
 	print 'Inkscape is not installed!'
@@ -953,88 +937,6 @@ for source, target in (
 	graphicsBuild = env.Command( os.path.join( "$BUILD_DIR/graphics/", target ), source, buildGraphics )
 	env.NoCache( graphicsBuild )
 	env.Alias( "build", graphicsBuild )
-
-#########################################################################################################
-# Documentation
-#########################################################################################################
-
-def readLinesMinusLicense( f ) :
-
-	if isinstance( f, basestring ) :
-		f = open( f, "r" )
-
-	result = []
-	skippedLicense = False
-	for line in f.readlines() :
-
-		if not line.startswith( "#" ) :
-			skippedLicense = True
-		if skippedLicense :
-			result.append( line )
-
-	return result
-
-# Builder action that munges a nicely organised python module into a much less nicely organised one
-# that doxygen will understand. Otherwise it puts every class implemented in its own file
-# into its own namespace and the docs get mighty confusing.
-def createDoxygenPython( target, source, env ) :
-
-	target = str( target[0] )
-	source = str( source[0] )
-
-	if not os.path.isdir( target ) :
-		os.makedirs( target )
-
-	outFile = open( target + "/__init__.py", "w" )
-
-	for line in readLinesMinusLicense( source ) :
-
-		outFile.write( line )
-
-		if line.startswith( "import" ) :
-
-			# copy source file over to target directory
-			words = line.split()
-			fileName = os.path.dirname( source ) + "/" + words[1] + ".py"
-			if os.path.isfile( fileName ) :
-				destFile = open( target + "/" + words[1] + ".py", "w" )
-				for l in readLinesMinusLicense( fileName ) :
-					destFile.write( l )
-
-		elif line.startswith( "from" ) :
-
-			# cat source file directly into init file
-			words = line.split()
-			fileName = os.path.dirname( source ) + "/" + words[1] + ".py"
-			if os.path.isfile( fileName ) :
-
-				outFile.write( "\n" )
-
-				for line in readLinesMinusLicense( fileName ) :
-					outFile.write( line )
-
-				outFile.write( "\n" )
-
-docEnv = env.Clone()
-docEnv["ENV"]["PATH"] = os.environ["PATH"]
-for v in ( "BUILD_DIR", "GAFFER_MILESTONE_VERSION", "GAFFER_MAJOR_VERSION", "GAFFER_MINOR_VERSION", "GAFFER_PATCH_VERSION" ) :
-	docEnv["ENV"][v] = docEnv[v]
-
-docs = docEnv.Command( "doc/html/index.html", "doc/config/Doxyfile", "$DOXYGEN doc/config/Doxyfile" )
-env.NoCache( docs )
-
-for modulePath in ( "python/Gaffer", "python/GafferUI", "python/GafferScene", "python/GafferSceneUI" ) :
-
-	module = os.path.basename( modulePath )
-	mungedModule = docEnv.Command( "doc/python/" + module, modulePath + "/__init__.py", createDoxygenPython )
-	docEnv.Depends( mungedModule, glob.glob( modulePath + "/*.py" ) )
-	docEnv.Depends( docs, mungedModule )
-	docEnv.NoCache( mungedModule )
-
-docEnv.Depends( docs, glob.glob( "include/*/*.h" ) + glob.glob( "doc/doxygenPages/*.md" ) )
-
-docInstall = docEnv.Install( "$BUILD_DIR/doc/gaffer", "doc/html" )
-docEnv.Alias( "build", docInstall )
 
 #########################################################################################################
 # Installation
