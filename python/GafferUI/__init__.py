@@ -262,6 +262,7 @@ import ViewUI
 from Playback import Playback
 from UIEditor import UIEditor
 import GraphBookmarksUI
+import DocumentationAlgo
 
 # and then specific node uis
 
