@@ -291,12 +291,14 @@ class ArnoldRenderTest( GafferTest.TestCase ) :
 
 		hiddenStats = GafferImage.ImageStats()
 		hiddenStats["in"].setInput( hidden["out"] )
+		hiddenStats["regionOfInterest"].setValue( hiddenStats["in"]["dataWindow"].getValue() )
 
 		visibleStats = GafferImage.ImageStats()
 		visibleStats["in"].setInput( visible["out"] )
+		visibleStats["regionOfInterest"].setValue( visibleStats["in"]["dataWindow"].getValue() )
 
-		self.assertTrue( hiddenStats["average"].getValue()[0] < 0.05 )
-		self.assertTrue( visibleStats["average"].getValue()[0] > .35 )
+		self.assertLess( hiddenStats["average"].getValue()[0], 0.05 )
+		self.assertGreater( visibleStats["average"].getValue()[0], .35 )
 
 	def testBounds( self ) :
 
