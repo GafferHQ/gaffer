@@ -49,6 +49,22 @@ import GafferOSLTest
 
 class OSLExpressionEngineTest( GafferOSLTest.OSLTestCase ) :
 
+	def testBoolPlugs( self ) :
+
+		s = Gaffer.ScriptNode()
+		s["n"] = Gaffer.Node()
+		s["n"]["user"]["i"] = Gaffer.BoolPlug( flags = Gaffer.Plug.Flags.Default | Gaffer.Plug.Flags.Dynamic )
+		s["n"]["user"]["o"] = Gaffer.BoolPlug( flags = Gaffer.Plug.Flags.Default | Gaffer.Plug.Flags.Dynamic )
+
+		s["e"] = Gaffer.Expression()
+		s["e"].setExpression( "parent.n.user.o = !parent.n.user.i;", "OSL" )
+
+		s["n"]["user"]["i"].setValue( True )
+		self.assertEqual( s["n"]["user"]["o"].getValue(), False )
+
+		s["n"]["user"]["i"].setValue( False )
+		self.assertEqual( s["n"]["user"]["o"].getValue(), True )
+
 	def testFloatPlugs( self ) :
 
 		s = Gaffer.ScriptNode()

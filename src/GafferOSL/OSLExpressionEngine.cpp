@@ -274,6 +274,9 @@ class RendererServices : public OSL::RendererServices
 				const ValuePlug *plug = (*renderState->inPlugs)[index];
 				switch( (Gaffer::TypeId)plug->typeId() )
 				{
+					case BoolPlugTypeId :
+						*(int *)value = static_cast<const BoolPlug *>( plug )->getValue();
+						return true;
 					case FloatPlugTypeId :
 						*(float *)value = static_cast<const FloatPlug *>( plug )->getValue();
 						return true;
@@ -472,7 +475,14 @@ class OSLExpressionEngine : public Gaffer::Expression::Engine
 					static_cast<FloatPlug *>( proxyOutput )->setValue( static_cast<const FloatData *>( value )->readable() );
 					break;
 				case IntDataTypeId :
-					static_cast<IntPlug *>( proxyOutput )->setValue( static_cast<const IntData *>( value )->readable() );
+					if( IntPlug *intPlug = runTimeCast<IntPlug>( proxyOutput ) )
+					{
+						intPlug->setValue( static_cast<const IntData *>( value )->readable() );
+					}
+					else
+					{
+						static_cast<BoolPlug *>( proxyOutput )->setValue( static_cast<const IntData *>( value )->readable() );
+					}
 					break;
 				case Color3fDataTypeId :
 				{
@@ -514,6 +524,7 @@ class OSLExpressionEngine : public Gaffer::Expression::Engine
 		{
 			switch( (Gaffer::TypeId)plug->typeId() )
 			{
+				case BoolPlugTypeId :
 				case FloatPlugTypeId :
 				case IntPlugTypeId :
 				case Color3fPlugTypeId :
@@ -579,6 +590,9 @@ class OSLExpressionEngine : public Gaffer::Expression::Engine
 			string value;
 			switch( (Gaffer::TypeId)output->typeId() )
 			{
+				case BoolPlugTypeId :
+					value = lexical_cast<string>( static_cast<int>( static_cast<const BoolPlug *>( output )->getValue() ) );
+					break;
 				case FloatPlugTypeId :
 					value = lexical_cast<string>( static_cast<const FloatPlug *>( output )->getValue() );
 					break;
@@ -671,6 +685,9 @@ class OSLExpressionEngine : public Gaffer::Expression::Engine
 		{
 			switch( (Gaffer::TypeId)plug->typeId() )
 			{
+				case BoolPlugTypeId :
+					defaultValue = "0";
+					return "int";
 				case FloatPlugTypeId :
 					defaultValue = "0.0";
 					return "float";
