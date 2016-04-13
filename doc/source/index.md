@@ -8,3 +8,4 @@ Gaffer also provides basic 2D compositing functionality, suitable for use in lig
 In addition to itself being highly extensible, Gaffer's underlying frameworks are designed to enable the rapid development of standalone custom tools, both command line and GUI.
 
 - [UI Reference](UIReference/index.md)
+- [Node Reference](NodeReference/index.md)
