@@ -36,7 +36,6 @@
 
 #include "Gaffer/Node.h"
 #include "Gaffer/NumericPlug.h"
-#include "Gaffer/CompoundPlug.h"
 
 #include "GafferTest/Assert.h"
 #include "GafferTest/FilteredRecursiveChildIteratorTest.h"
@@ -50,7 +49,7 @@ void GafferTest::testFilteredRecursiveChildIterator()
 	FloatPlugPtr c = new FloatPlug( "c" );
 	NodePtr d = new Node( "d" );
 	NodePtr e = new Node( "e" );
-	CompoundPlugPtr f = new CompoundPlug( "f" );
+	ValuePlugPtr f = new ValuePlug( "f" );
 	FloatPlugPtr g = new FloatPlug( "g" );
 	FloatPlugPtr h = new FloatPlug( "h", Plug::Out );
 
