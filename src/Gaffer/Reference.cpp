@@ -42,7 +42,6 @@
 
 #include "Gaffer/Reference.h"
 #include "Gaffer/ScriptNode.h"
-#include "Gaffer/CompoundPlug.h"
 #include "Gaffer/Metadata.h"
 #include "Gaffer/StringPlug.h"
 #include "Gaffer/StandardSet.h"

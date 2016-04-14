@@ -42,7 +42,6 @@
 #include "Gaffer/Box.h"
 #include "Gaffer/StandardSet.h"
 #include "Gaffer/NumericPlug.h"
-#include "Gaffer/CompoundPlug.h"
 #include "Gaffer/ScriptNode.h"
 #include "Gaffer/Metadata.h"
 #include "Gaffer/Context.h"
@@ -256,10 +255,10 @@ bool Box::validatePromotability( const Plug *descendantPlug, bool throwException
 			}
 		}
 
-		// the plug must be serialisable, as we need its input to be saved,
+		// The plug must be serialisable, as we need its input to be saved,
 		// but we only need to check this for the topmost plug and not for
-		// children, because a CompoundPlug::setInput() call will also restore
-		// child inputs.
+		// children, because a setInput() call for a parent plug will also
+		// restore child inputs.
 		if( !childPlug && !descendantPlug->getFlags( Plug::Serialisable ) )
 		{
 			if( !throwExceptions )
