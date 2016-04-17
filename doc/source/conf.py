@@ -14,6 +14,8 @@
 
 import sys
 import os
+import inspect
+import docutils
 
 import sphinx_rtd_theme
 import recommonmark.parser
@@ -299,12 +301,51 @@ source_parsers = {
 
 source_suffix = ['.rst', '.md']
 
+## \Todo See if the recommonmark folks would accept a patch with this
+#  functionality.
+class GafferTransform( recommonmark.transform.AutoStructify ) :
+
+    def auto_admonition( self, node ) :
+
+        """
+        Replace blockquotes beginning with "admonitionType :"
+        with the equivalent admonition.
+        """
+
+        if not len( node ) :
+            return None
+
+        if not isinstance( node[0], docutils.nodes.paragraph ) :
+            return None
+
+        if not isinstance( node[0][0], docutils.nodes.Text ) :
+           return None
+
+        partition = node[0][0].partition( ":" )
+        if not partition[1] :
+            return None
+
+        admonitions = dict( inspect.getmembers( docutils.nodes, lambda x : inspect.isclass( x ) and issubclass( x, docutils.nodes.Admonition ) ) )
+
+        admonition = partition[0].strip().lower()
+        if admonition not in admonitions :
+            return None
+
+        node[0][0] = docutils.nodes.Text( partition[2] ) # Remove "admonition : " prefix
+        return admonitions[admonition]( "", *node.children )
+
+    def find_replace( self, node ) :
+
+        if isinstance( node, docutils.nodes.block_quote ) :
+            return self.auto_admonition( node )
+        else :
+            return recommonmark.transform.AutoStructify.find_replace( self, node )
+
 def setup( app ) :
     app.add_config_value(
     	'recommonmark_config',
     	{
-           # 'url_resolver': lambda url: github_doc_root + url,
         },
         True
     )
-    app.add_transform( recommonmark.transform.AutoStructify )
+    app.add_transform( GafferTransform )
