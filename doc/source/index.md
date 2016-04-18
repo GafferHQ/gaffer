@@ -9,3 +9,4 @@ In addition to itself being highly extensible, Gaffer's underlying frameworks ar
 
 - [UI Reference](UIReference/index.md)
 - [Node Reference](NodeReference/index.md)
+- [Command Line Reference](CommandLineReference/index.md)
