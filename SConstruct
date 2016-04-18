@@ -301,26 +301,26 @@ if env["BUILD_CACHEDIR"] != "" :
 # Check for inkscape
 ###############################################################################################
 
-def checkExecutable(executable):
+def findExecutable(executable):
     def is_exe(fpath):
         return os.path.isfile(fpath) and os.access(fpath, os.X_OK)
 
     fpath, fname = os.path.split(executable)
     if fpath:
         if is_exe(executable):
-            return True
+            return executable
     else:
         for path in os.environ["PATH"].split(os.pathsep):
             path = path.strip('"')
             exe_file = os.path.join(path, executable)
             if is_exe(exe_file):
-                return True
+                return exe_file
 
-    return False
+    return None
 
 def checkInkscape(context):
 	context.Message('Checking for Inkscape... ')
-	result = checkExecutable(context.sconf.env['INKSCAPE'])
+	result = bool( findExecutable(context.sconf.env['INKSCAPE']) )
 	context.Result(result)
 	return result
 
@@ -939,6 +939,59 @@ for source, target in (
 	env.Alias( "build", graphicsBuild )
 
 #########################################################################################################
+# Documentation
+#########################################################################################################
+
+def buildDocs( target, source, env ) :
+
+	# This is a little bit tricky. We need Gaffer itself to build the
+	# docs, because we autogenerate the node reference from the node metadata.
+	# And we also need sphinx, but `sphinx_build` starts with `#!/usr/bin/python`,
+	# which may not be compatible with Gaffer's built-in python. So, we locate
+	# the modules sphinx needs upfront, and make sure they're on the PYTHONPATH,
+	# then we use `gaffer env python` to launch Gaffer's python, and generate
+	# all the docs in that environment.
+
+	import sphinx
+	import markupsafe
+
+	commandEnv = os.environ.copy()
+	commandEnv["PATH"] = env.subst( "$BUILD_DIR/bin:" ) + commandEnv["PATH"]
+	commandEnv["PYTHONPATH"] = os.path.dirname( sphinx.__path__[0] ) + ":" + os.path.dirname( markupsafe.__path__[0] )
+
+	# Run any python scripts we find in the document source tree. These are
+	# used to autogenerate source files for processing by sphinx.
+
+	for root, dirs, files in os.walk( str( source[0] ) ) :
+		for f in files :
+			ext = os.path.splitext( f )[1]
+			command = []
+			if ext == ".py" :
+				command = [ "gaffer", "env", "python", f ]
+			elif ext == ".sh" :
+				command = [ "gaffer", "env", "./" + f ]
+			if command :
+				print "Running", os.path.join( root, f )
+				subprocess.check_call( command, cwd = root, env = commandEnv )
+
+	# Run sphinx to generate the final documentation.
+
+	subprocess.check_call(
+		[
+			"gaffer", "env", "python", findExecutable( "sphinx-build" ),
+			"-b", "html",
+			str( source[0] ), os.path.dirname( str( target[0] ) )
+		],
+		env = commandEnv
+	)
+
+docs = env.Command( "$BUILD_DIR/doc/gaffer/html/index.html", "doc/source", buildDocs )
+env.Depends( docs, "build" )
+env.AlwaysBuild( docs )
+env.NoCache( docs )
+env.Alias( "docs", docs )
+
+#########################################################################################################
 # Installation
 #########################################################################################################
 
@@ -1020,6 +1073,7 @@ dependenciesManifest = [
 
 	"doc/licenses",
 	"doc/cortex/html",
+	"doc/gaffer"
 	"doc/osl*",
 
 	"python/IECore*",
