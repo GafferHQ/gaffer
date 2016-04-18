@@ -6,3 +6,5 @@ Gaffer is a node based application for use in CG and VFX production, with a part
 Gaffer also provides basic 2D compositing functionality, suitable for use in lighting slapcomps and automated pipeline processes. Processing on a renderfarm is defined using graphs of tasks within Gaffer's node editor, with dispatch currently supported via [Tractor](https://renderman.pixar.com/view/pixars-tractor) or a built in local dispatcher.
 
 In addition to itself being highly extensible, Gaffer's underlying frameworks are designed to enable the rapid development of standalone custom tools, both command line and GUI.
+
+- [UI Reference](UIReference/index.md)
