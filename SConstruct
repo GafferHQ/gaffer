@@ -985,11 +985,13 @@ def buildDocs( target, source, env ) :
 		env = commandEnv
 	)
 
-docs = env.Command( "$BUILD_DIR/doc/gaffer/html/index.html", "doc/source", buildDocs )
-env.Depends( docs, "build" )
-env.AlwaysBuild( docs )
-env.NoCache( docs )
-env.Alias( "docs", docs )
+if "TRAVIS" not in os.environ :
+
+	docs = env.Command( "$BUILD_DIR/doc/gaffer/html/index.html", "doc/source", buildDocs )
+	env.Depends( docs, "build" )
+	env.AlwaysBuild( docs )
+	env.NoCache( docs )
+	env.Alias( "docs", docs )
 
 #########################################################################################################
 # Installation
