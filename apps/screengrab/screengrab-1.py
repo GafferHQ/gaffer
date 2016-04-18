@@ -34,16 +34,17 @@
 #
 ##########################################################################
 
+import os
+
 import IECore
+
 import Gaffer
 import GafferUI
 
 QtGui = GafferUI._qtImport( "QtGui" )
 
-import os
-
-
 class screengrab( Gaffer.Application ) :
+
 	def __init__( self ) :
 
 		Gaffer.Application.__init__( self, "A tool to generate documentation screengrabs." )
@@ -69,6 +70,12 @@ class screengrab( Gaffer.Application ) :
 				),
 
 				IECore.StringParameter(
+					name = "editor",
+					description = "The name of an editor to screengrab. If not specified, the whole window will be grabbed.",
+					defaultValue = "",
+				),
+
+				IECore.StringParameter(
 					name = "cmd",
 					description = "Command(s) to execute after session is launched. 'script' node is available to interact with script contents",
 					defaultValue = "",
@@ -83,6 +90,10 @@ class screengrab( Gaffer.Application ) :
 
 		)
 
+		self.parameters().userData()["parser"] = IECore.CompoundObject( {
+			"flagless" : IECore.StringVectorData( [ "script" ] )
+		} )
+
 	def setGrabWidget( self, widget ) :
 
 		self.__grabWidget = widget
@@ -93,71 +104,90 @@ class screengrab( Gaffer.Application ) :
 
 	def _run( self, args ) :
 
-		# run the gui startup files so the images we grab are representative
+		# Run the gui startup files so the images we grab are representative
 		# of the layouts and configuration of the gui app.
 		self._executeStartupFiles( "gui" )
 
 		GafferUI.ScriptWindow.connect( self.root() )
 
-		#load the specified gfr file
-		fileName = str(args["script"])
+		# Load the specified gfr file.
 		script = Gaffer.ScriptNode()
-		script["fileName"].setValue( os.path.abspath( fileName ) )
+		script["fileName"].setValue( os.path.abspath( args["script"].value ) )
 		script.load()
 		self.root()["scripts"].addChild( script )
 
-		#set the grab window to be the primary window by default
-		self.setGrabWidget( GafferUI.ScriptWindow.acquire( script ) )
+		# Choose the widget we'll grab by default. This can be overridden
+		# by the command files below by calling `application.setGrabWidget()`.
 
-		#set up target to write to
-		self.__image = str(args["image"])
-		#create path if missing
-		targetdir = os.path.dirname(self.__image)
-		if not os.path.exists(targetdir):
-			IECore.msg( IECore.Msg.Level.Info, "screengrab", "Creating target directory [ %s ]" % (targetdir) )
-			os.makedirs(targetdir)
+		scriptWindow = GafferUI.ScriptWindow.acquire( script )
+		self.setGrabWidget( scriptWindow )
 
-		#expose some variables when running the cmd(s)
+		if args["editor"].value :
+
+			editor = args["editor"].value
+			if "." not in editor :
+				editor = "GafferUI." + editor
+			editorPartition = editor.rpartition( "." )
+			editor = getattr( __import__( editorPartition[0] ), editorPartition[2] )
+
+			editors = scriptWindow.getLayout().editors( editor )
+			if not editors :
+				IECore.msg( IECore.Msg.Level.Error, "screengrab", "Unable to find an editor of type \"%s\"" % editor )
+				return 1
+
+			self.setGrabWidget( editors[0] )
+
+		# Set up some default framing for the node graphs.
+
+		self.__waitForIdle()
+
+		for nodeGraph in scriptWindow.getLayout().editors( GafferUI.NodeGraph ) :
+			nodeGraph.frame( script.children( Gaffer.Node ) )
+
+		# Execute any commands we've been asked to, exposing the application
+		# and script as variables.
+
+		self.__waitForIdle()
+
 		d = {
-				"application" 	: self,
-				"script"		: script,
-			}
+			"application" 	: self,
+			"script"		: script,
+		}
 
-		if str(args["cmd"]) != "":
-			#execute any commands passed as arguments prior to doing the screengrab
-			exec(str(args["cmd"]), d, d)
-		if str(args["cmdfile"]) != "":
-			#execute any commands passed as arguments prior to doing the screengrab
-			execfile(str(args["cmdfile"]), d, d)
+		if args["cmd"].value :
+			exec( args["cmd"].value, d, d )
+		if args["cmdfile"].value :
+			execfile( args["cmdfile"].value, d, d )
 
-		#register the function to run when the app is idle.
-		self.__idleCount = 0
-		GafferUI.EventLoop.addIdleCallback( self.__grabAndQuit )
-		GafferUI.EventLoop.mainEventLoop().start()
+		# Write the image, creating a directory for it if necessary.
+
+		self.__waitForIdle()
+
+		imageDir = os.path.dirname( args["image"].value )
+		if imageDir and not os.path.isdir( imageDir ) :
+			IECore.msg( IECore.Msg.Level.Info, "screengrab", "Creating target directory [ %s ]" % imageDir )
+			os.makedirs( imageDir )
+
+		pixmap = QtGui.QPixmap.grabWindow( self.getGrabWidget()._qtWidget().winId() )
+		IECore.msg( IECore.Msg.Level.Info, "screengrab", "Writing image [ %s ]" % args["image"].value )
+		pixmap.save( args["image"].value )
 
 		return 0
 
-	def __grabAndQuit( self ) :
+	def __waitForIdle( self, count = 1000 ) :
 
+		self.__idleCount = 0
+		def f() :
 
-		self.__idleCount += 1
-		if self.__idleCount == 100 : #put a little wait in to give gaffer a chance to draw the ui
+			self.__idleCount += 1
 
-			#do some dirty rummaging to get the id of the resulting window
-			## this should replaced by gaffer api methods in future
-			grabWidget = self.getGrabWidget()
-			winhandle = grabWidget._qtWidget().winId()
+			if self.__idleCount >= count :
+				GafferUI.EventLoop.mainEventLoop().stop()
+				return False
 
-			#use QPixmap to snapshot the window
-			pm = QtGui.QPixmap.grabWindow( winhandle )
+			return True
 
-			#save that file out
-			IECore.msg( IECore.Msg.Level.Info, "screengrab", "Writing image [ %s ]" % (self.__image) )
-			pm.save( self.__image )
-
-			#exit the application once we've done the screen grab
-			GafferUI.EventLoop.mainEventLoop().stop()
-
-		return True
+		GafferUI.EventLoop.addIdleCallback( f )
+		GafferUI.EventLoop.mainEventLoop().start()
 
 IECore.registerRunTimeTyped( screengrab )
