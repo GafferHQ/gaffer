@@ -175,6 +175,12 @@ options.Add(
 )
 
 options.Add(
+	"LOCATE_DEPENDENCY_PYTHONPATH",
+	"The locations on which to search for python modules for "
+	"the dependencies.",
+	"",
+)
+options.Add(
 	"OPENEXR_LIB_SUFFIX",
 	"The suffix used when locating the OpenEXR libraries.",
 	"",
@@ -239,6 +245,12 @@ options.Add(
 	"inkscape",
 )
 
+options.Add(
+	"SPHINX",
+	"Where to find the sphinx-build program",
+	"sphinx-build",
+)
+
 ###############################################################################################
 # Basic environment object. All the other environments will be based on this.
 ###############################################################################################
@@ -261,7 +273,9 @@ env = Environment(
 
 )
 
-for e in env["ENV_VARS_TO_IMPORT"].split() :
+# DISPLAY and HOME are essential for running gaffer when generating
+# the documentation.
+for e in env["ENV_VARS_TO_IMPORT"].split() + [ "DISPLAY", "HOME" ] :
 	if e in os.environ :
 		env["ENV"][e] = os.environ[e]
 
@@ -298,33 +312,37 @@ if env["BUILD_CACHEDIR"] != "" :
 	CacheDir( env["BUILD_CACHEDIR"] )
 
 ###############################################################################################
-# Check for inkscape
+# Check for inkscape and sphinx
 ###############################################################################################
 
-def findExecutable(executable):
-    def is_exe(fpath):
-        return os.path.isfile(fpath) and os.access(fpath, os.X_OK)
+def findOnPath( file, path ) :
 
-    fpath, fname = os.path.split(executable)
-    if fpath:
-        if is_exe(executable):
-            return executable
-    else:
-        for path in os.environ["PATH"].split(os.pathsep):
-            path = path.strip('"')
-            exe_file = os.path.join(path, executable)
-            if is_exe(exe_file):
-                return exe_file
+	if os.path.isabs( file ) :
+		return file if os.path.exists( file ) else None
+	else :
+		if isinstance( path, basestring ) :
+			path = path.split( os.pathsep )
+		for p in path :
+			f = os.path.join( p, file )
+			if os.path.exists( f ) :
+				return f
 
-    return None
+	return None
 
 def checkInkscape(context):
 	context.Message('Checking for Inkscape... ')
-	result = bool( findExecutable(context.sconf.env['INKSCAPE']) )
+	result = bool( findOnPath( context.sconf.env['INKSCAPE'], os.environ["PATH"] ) )
 	context.Result(result)
 	return result
 
-conf = Configure(env, custom_tests = { 'checkInkscape' : checkInkscape})
+def checkSphinx( context ) :
+
+	context.Message( "Checking for Sphinx..." )
+	result = bool( findOnPath( context.sconf.env["SPHINX"], context.sconf.env["ENV"]["PATH"] ) )
+	context.Result( result )
+	return result
+
+conf = Configure( env, custom_tests = { "checkInkscape" : checkInkscape, "checkSphinx" : checkSphinx } )
 
 if not conf.checkInkscape():
 	print 'Inkscape is not installed!'
@@ -334,13 +352,22 @@ if not conf.checkInkscape():
 # An environment for running commands with access to the applications we've built
 ###############################################################################################
 
+def split( stringOrList, separator = ":" ) :
+
+	if isinstance( stringOrList, list ) :
+		return stringOrList
+	else :
+		return stringOrList.split( separator )
+
 commandEnv = env.Clone()
 commandEnv["ENV"]["PATH"] = commandEnv.subst( "$BUILD_DIR/bin:" ) + commandEnv["ENV"]["PATH"]
 
 if commandEnv["PLATFORM"]=="darwin" :
-	commandEnv["ENV"]["DYLD_LIBRARY_PATH"] = commandEnv.subst( "$BUILD_DIR/lib" )
+	commandEnv["ENV"]["DYLD_LIBRARY_PATH"] = commandEnv.subst( ":".join( [ "$BUILD_DIR/lib" ] + split( commandEnv["LOCATE_DEPENDENCY_LIBPATH"] ) ) )
 else :
-	commandEnv["ENV"]["LD_LIBRARY_PATH"] = commandEnv.subst( "$BUILD_DIR/lib" )
+	commandEnv["ENV"]["LD_LIBRARY_PATH"] = commandEnv.subst( ":".join( [ "$BUILD_DIR/lib" ] + split( commandEnv["LOCATE_DEPENDENCY_LIBPATH"] ) ) )
+
+commandEnv["ENV"]["PYTHONPATH"] = commandEnv.subst( ":".join( split( commandEnv["LOCATE_DEPENDENCY_PYTHONPATH"] ) ) )
 
 def runCommand( command ) :
 
@@ -952,12 +979,29 @@ def buildDocs( target, source, env ) :
 	# then we use `gaffer env python` to launch Gaffer's python, and generate
 	# all the docs in that environment.
 
-	import sphinx
-	import markupsafe
+	for module in ( "sphinx", "markupsafe", "CommonMark" ) :
+		if not findOnPath( module, env["ENV"]["PYTHONPATH"] ) :
+			try :
+				m = __import__( module )
+				env["ENV"]["PYTHONPATH"] = env["ENV"]["PYTHONPATH"] + ":" + os.path.dirname( m.__path__[0] )
+			except ImportError :
+				pass
 
-	commandEnv = os.environ.copy()
-	commandEnv["PATH"] = env.subst( "$BUILD_DIR/bin:" ) + commandEnv["PATH"]
-	commandEnv["PYTHONPATH"] = os.path.dirname( sphinx.__path__[0] ) + ":" + os.path.dirname( markupsafe.__path__[0] )
+	# Ensure that Arnold and 3delight are available in the documentation
+	# environment.
+	## \todo Should we try to generate this automatically from the
+	# `libraries` dictionary above?
+
+	libraryPathEnvVar = "DYLD_LIBRARY_PATH" if commandEnv["PLATFORM"]=="darwin" else "LD_LIBRARY_PATH"
+
+	if env.subst( "$ARNOLD_ROOT" ) :
+		env["ENV"]["PATH"] += ":" + env.subst( "$ARNOLD_ROOT/bin" )
+		env["ENV"]["PYTHONPATH"] += ":" + env.subst( "$ARNOLD_ROOT/python" )
+		env["ENV"][libraryPathEnvVar] += ":" + env.subst( "$ARNOLD_ROOT/bin" )
+
+	if env.subst( "$RMAN_ROOT" ) :
+		env["ENV"]["PATH"] += ":" + env.subst( "$RMAN_ROOT/bin" )
+		env["ENV"][libraryPathEnvVar] += ":" + env.subst( "$RMAN_ROOT/lib" )
 
 	# Run any python scripts we find in the document source tree. These are
 	# used to autogenerate source files for processing by sphinx.
@@ -972,26 +1016,31 @@ def buildDocs( target, source, env ) :
 				command = [ "gaffer", "env", "./" + f ]
 			if command :
 				print "Running", os.path.join( root, f )
-				subprocess.check_call( command, cwd = root, env = commandEnv )
+				subprocess.check_call( command, cwd = root, env = env["ENV"] )
 
 	# Run sphinx to generate the final documentation.
 
 	subprocess.check_call(
 		[
-			"gaffer", "env", "python", findExecutable( "sphinx-build" ),
+			"gaffer", "env", "python",
+			findOnPath( env.subst( "$SPHINX" ), env["ENV"]["PATH"] ),
 			"-b", "html",
 			str( source[0] ), os.path.dirname( str( target[0] ) )
 		],
-		env = commandEnv
+		env = env["ENV"]
 	)
 
-if "TRAVIS" not in os.environ :
+if conf.checkSphinx() :
 
-	docs = env.Command( "$BUILD_DIR/doc/gaffer/html/index.html", "doc/source", buildDocs )
-	env.Depends( docs, "build" )
-	env.AlwaysBuild( docs )
-	env.NoCache( docs )
-	env.Alias( "docs", docs )
+	docs = commandEnv.Command( "$BUILD_DIR/doc/gaffer/html/index.html", "doc/source", buildDocs )
+	commandEnv.Depends( docs, "build" )
+	commandEnv.AlwaysBuild( docs )
+	commandEnv.NoCache( docs )
+	commandEnv.Alias( "docs", docs )
+
+else :
+
+	sys.stderr.write( "WARNING : Sphinx not found - not building docs. Check SPHINX build variable.\n" )
 
 #########################################################################################################
 # Installation
