@@ -69,10 +69,28 @@ class screengrab( Gaffer.Application ) :
 					allowEmptyString = False,
 				),
 
+				IECore.StringVectorParameter(
+					name = "selection",
+					description = "A list of nodes to select.",
+					defaultValue = IECore.StringVectorData(),
+				),
+
 				IECore.StringParameter(
 					name = "editor",
 					description = "The name of an editor to screengrab. If not specified, the whole window will be grabbed.",
 					defaultValue = "",
+				),
+
+				IECore.CompoundParameter(
+					name = "nodeEditor",
+					description = "Parameters that configure NodeEditors.",
+					members = [
+						IECore.StringVectorParameter(
+							name = "reveal",
+							description = "The names of plugs to reveal in the NodeEditor.",
+							defaultValue = IECore.StringVectorData(),
+						),
+					],
 				),
 
 				IECore.StringParameter(
@@ -116,6 +134,10 @@ class screengrab( Gaffer.Application ) :
 		script.load()
 		self.root()["scripts"].addChild( script )
 
+		# Select any nodes we've been asked to.
+		for name in args["selection"] :
+			script.selection().add( script.descendant( name ) )
+
 		# Choose the widget we'll grab by default. This can be overridden
 		# by the command files below by calling `application.setGrabWidget()`.
 
@@ -143,6 +165,14 @@ class screengrab( Gaffer.Application ) :
 
 		for nodeGraph in scriptWindow.getLayout().editors( GafferUI.NodeGraph ) :
 			nodeGraph.frame( script.children( Gaffer.Node ) )
+
+		# Set up the NodeEditors as requested.
+
+		for nodeEditor in scriptWindow.getLayout().editors( GafferUI.NodeEditor ) :
+
+			for name in args["nodeEditor"]["reveal"] :
+				plugValueWidget = nodeEditor.nodeUI().plugValueWidget( script.descendant( name ) )
+				plugValueWidget.reveal()
 
 		# Execute any commands we've been asked to, exposing the application
 		# and script as variables.
