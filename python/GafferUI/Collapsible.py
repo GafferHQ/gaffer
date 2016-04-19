@@ -161,6 +161,10 @@ class Collapsible( GafferUI.ContainerWidget ) :
 
 		return self.__stateChangedSignal
 
+	def _revealDescendant( self, descendant ) :
+
+		self.setCollapsed( False )
+
 	def __toggled( self, value ) :
 
 		if self.__child is not None :
