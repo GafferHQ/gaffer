@@ -115,7 +115,14 @@ def exportLicenseReference( directory, about ) :
 				index.write( "[%s](%s)\n\n" % ( dependency["url"], dependency["url"] ) )
 
 			if "license" in dependency :
-				index.write( "```\n" + __fileContents( dependency["license"] ) + "\n```\n\n" )
+				if os.path.isfile( os.path.expandvars( dependency["license"] ) ) :
+					index.write( "```\n" + __fileContents( dependency["license"] ) + "\n```\n\n" )
+				else :
+					# Looks like Gaffer has been built with external dependencies rather
+					# than using the package provided by the gafferDependencies project.
+					# Documentation without the licenses isn't suitable for publication,
+					# but is OK for internal use at facilities which build their own.
+					pass
 
 def exportCommandLineReference( directory, appPath = "$GAFFER_ROOT/apps" ) :
 
