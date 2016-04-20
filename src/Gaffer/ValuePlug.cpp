@@ -41,7 +41,7 @@
 #include "boost/format.hpp"
 #include "boost/unordered_map.hpp"
 
-#include "IECorePreview/LRUCache.h"
+#include "Gaffer/Private/IECorePreview/LRUCache.h"
 
 #include "Gaffer/ValuePlug.h"
 #include "Gaffer/ComputeNode.h"
