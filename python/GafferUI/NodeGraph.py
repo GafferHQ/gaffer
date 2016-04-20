@@ -44,7 +44,7 @@ import GafferUI
 
 class NodeGraph( GafferUI.EditorWidget ) :
 
-	def __init__( self, scriptNode, **kw ) :
+	def __init__( self, scriptNode, parenting = None ) :
 
 		self.__gadgetWidget = GafferUI.GadgetWidget(
 			bufferOptions = set( [
@@ -52,7 +52,7 @@ class NodeGraph( GafferUI.EditorWidget ) :
 			] ),
 		)
 
-		GafferUI.EditorWidget.__init__( self, self.__gadgetWidget, scriptNode, **kw )
+		GafferUI.EditorWidget.__init__( self, self.__gadgetWidget, scriptNode, parenting = parenting )
 
 		graphGadget = GafferUI.GraphGadget( self.scriptNode() )
 		self.__rootChangedConnection = graphGadget.rootChangedSignal().connect( Gaffer.WeakMethod( self.__rootChanged ) )

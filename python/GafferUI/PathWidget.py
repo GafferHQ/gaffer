@@ -49,9 +49,9 @@ QtCore = GafferUI._qtImport( "QtCore" )
 
 class PathWidget( GafferUI.TextWidget ) :
 
-	def __init__( self, path, **kw ) :
+	def __init__( self, path, parenting = None ) :
 
-		GafferUI.TextWidget.__init__( self, str( path ), **kw )
+		GafferUI.TextWidget.__init__( self, str( path ), parenting = parenting )
 
 		# we can be fairly sure that the average path requires a bit more space
 		# than the other things that go in TextWidgets.

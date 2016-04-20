@@ -49,7 +49,7 @@ class PathChooserDialogue( GafferUI.Dialogue ) :
 	#    None : Accept both leaf and non-leaf paths
 	#    True : Accept only leaf paths
 	#    False : Accept only non-leaf paths
-	def __init__( self, path, title=None, cancelLabel="Cancel", confirmLabel="OK", allowMultipleSelection=False, valid=None, leaf=None, bookmarks=None, **kw ) :
+	def __init__( self, path, title=None, cancelLabel="Cancel", confirmLabel="OK", allowMultipleSelection=False, valid=None, leaf=None, bookmarks=None, parenting=None ) :
 
 		if allowMultipleSelection :
 			assert( valid != False )
@@ -57,7 +57,7 @@ class PathChooserDialogue( GafferUI.Dialogue ) :
 		if title is None :
 			title = "Select paths" if allowMultipleSelection else "Select path"
 
-		GafferUI.Dialogue.__init__( self, title, **kw )
+		GafferUI.Dialogue.__init__( self, title, parenting = parenting )
 
 		self.__path = path
 		self.__allowMultipleSelection = allowMultipleSelection

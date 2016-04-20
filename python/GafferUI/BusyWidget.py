@@ -44,9 +44,9 @@ QtGui = GafferUI._qtImport( "QtGui" )
 
 class BusyWidget( GafferUI.Widget ) :
 
-	def __init__( self, size = 50, **kw ) :
+	def __init__( self, size = 50, parenting = None ) :
 
-		GafferUI.Widget.__init__( self, _BusyWidget( None, size ), **kw )
+		GafferUI.Widget.__init__( self, _BusyWidget( None, size ), parenting = parenting )
 
 # qt implementation class
 class _BusyWidget( QtGui.QWidget ) :

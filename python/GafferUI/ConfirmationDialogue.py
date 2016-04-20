@@ -38,9 +38,9 @@ import GafferUI
 
 class ConfirmationDialogue( GafferUI.Dialogue ) :
 
-	def __init__( self, title, message, cancelLabel="Cancel", confirmLabel="OK", sizeMode=GafferUI.Window.SizeMode.Automatic, **kw ) :
+	def __init__( self, title, message, cancelLabel="Cancel", confirmLabel="OK", sizeMode=GafferUI.Window.SizeMode.Automatic, parenting=None ) :
 
-		GafferUI.Dialogue.__init__( self, title, sizeMode=sizeMode, **kw )
+		GafferUI.Dialogue.__init__( self, title, sizeMode=sizeMode, parenting=parenting )
 
 		self._setWidget( GafferUI.Label( message ) )
 

@@ -44,9 +44,9 @@ import GafferUI
 
 class ScriptWindow( GafferUI.Window ) :
 
-	def __init__( self, script, **kw ) :
+	def __init__( self, script, parenting = None ) :
 
-		GafferUI.Window.__init__( self, **kw )
+		GafferUI.Window.__init__( self, parenting = parenting )
 
 		self.__script = script
 

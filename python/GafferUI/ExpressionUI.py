@@ -142,10 +142,10 @@ __popupMenuConnection = GafferUI.PlugValueWidget.popupMenuSignal().connect( __po
 
 class _ExpressionWidget( GafferUI.Widget ) :
 
-	def __init__( self, node, **kw ) :
+	def __init__( self, node, parenting = None ) :
 
 		column = GafferUI.ListContainer( spacing = 4 )
-		GafferUI.Widget.__init__( self, column )
+		GafferUI.Widget.__init__( self, column, parenting = parenting )
 
 		self.__node = node
 

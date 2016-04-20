@@ -44,9 +44,9 @@ import GafferUI
 
 class AboutWindow( GafferUI.Window ) :
 
-	def __init__( self, about, **kw ) :
+	def __init__( self, about, parenting = None ) :
 
-		GafferUI.Window.__init__( self, title = "About " + about.name(), sizeMode=GafferUI.Window.SizeMode.Manual, borderWidth = 6, **kw )
+		GafferUI.Window.__init__( self, title = "About " + about.name(), sizeMode=GafferUI.Window.SizeMode.Manual, borderWidth = 6, parenting = parenting )
 
 		self.__linkActivatedConnections = []
 

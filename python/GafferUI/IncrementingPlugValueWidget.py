@@ -41,11 +41,11 @@ import GafferUI
 
 class IncrementingPlugValueWidget( GafferUI.PlugValueWidget ) :
 
-	def __init__( self, plug, label, increment = 1, undoable = True, **kw ) :
+	def __init__( self, plug, label, increment = 1, undoable = True, parenting = None ) :
 
 		self.__button = GafferUI.Button( label )
 
-		GafferUI.PlugValueWidget.__init__( self, self.__button, plug, **kw )
+		GafferUI.PlugValueWidget.__init__( self, self.__button, plug, parenting = parenting )
 
 		self.__increment = increment
 		self.__undoable = undoable

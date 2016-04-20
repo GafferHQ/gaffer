@@ -53,11 +53,11 @@ QtCore = GafferUI._qtImport( "QtCore" )
 # that works in a specific namespace.
 class ScriptEditor( GafferUI.EditorWidget ) :
 
-	def __init__( self, scriptNode, **kw ) :
+	def __init__( self, scriptNode, parenting = None ) :
 
 		self.__splittable = GafferUI.SplitContainer()
 
-		GafferUI.EditorWidget.__init__( self, self.__splittable, scriptNode, **kw )
+		GafferUI.EditorWidget.__init__( self, self.__splittable, scriptNode, parenting = parenting )
 
 		self.__outputWidget = GafferUI.MultiLineTextWidget( editable = False, wrapMode = GafferUI.MultiLineTextWidget.WrapMode.None )
 		self.__inputWidget = GafferUI.MultiLineTextWidget( wrapMode = GafferUI.MultiLineTextWidget.WrapMode.None )

@@ -51,9 +51,9 @@ QtGui = GafferUI._qtImport( "QtGui" )
 
 class Menu( GafferUI.Widget ) :
 
-	def __init__( self, definition, _qtParent=None, searchable=False, title=None, **kw ) :
+	def __init__( self, definition, _qtParent=None, searchable=False, title=None, parenting=None ) :
 
-		GafferUI.Widget.__init__( self, _Menu( _qtParent ), **kw )
+		GafferUI.Widget.__init__( self, _Menu( _qtParent ), parenting = parenting )
 
 		self.__searchable = searchable
 

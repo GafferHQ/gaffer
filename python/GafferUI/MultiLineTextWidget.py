@@ -47,9 +47,9 @@ class MultiLineTextWidget( GafferUI.Widget ) :
 
 	WrapMode = IECore.Enum.create( "None", "Word", "Character", "WordOrCharacter" )
 
-	def __init__( self, text="", editable=True, wrapMode=WrapMode.WordOrCharacter, fixedLineHeight=None, **kw ) :
+	def __init__( self, text="", editable=True, wrapMode=WrapMode.WordOrCharacter, fixedLineHeight=None, parenting=None ) :
 
-		GafferUI.Widget.__init__( self, _PlainTextEdit(), **kw )
+		GafferUI.Widget.__init__( self, _PlainTextEdit(), parenting = parenting )
 
 		## \todo This should come from the Style when we get Styles applied to Widgets
 		# (and not just Gadgets as we have currently).

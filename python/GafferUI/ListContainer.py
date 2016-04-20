@@ -49,9 +49,9 @@ class ListContainer( GafferUI.ContainerWidget ) :
 	HorizontalAlignment = GafferUI.Enums.HorizontalAlignment
 	VerticalAlignment = GafferUI.Enums.VerticalAlignment
 
-	def __init__( self, orientation=Orientation.Vertical, spacing=0, borderWidth=0, **kw ) :
+	def __init__( self, orientation=Orientation.Vertical, spacing=0, borderWidth=0, parenting = None ) :
 
-		GafferUI.ContainerWidget.__init__( self, QtGui.QWidget(), **kw )
+		GafferUI.ContainerWidget.__init__( self, QtGui.QWidget(), parenting = parenting )
 
 		if orientation==self.Orientation.Vertical :
 			self.__qtLayout = QtGui.QVBoxLayout()

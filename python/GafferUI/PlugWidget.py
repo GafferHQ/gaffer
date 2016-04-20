@@ -50,9 +50,9 @@ QtGui = GafferUI._qtImport( "QtGui" )
 ## \todo Remove deprecated label and description capabilities.
 class PlugWidget( GafferUI.Widget ) :
 
-	def __init__( self, plugOrWidget, label=None, description=None, **kw ) :
+	def __init__( self, plugOrWidget, label=None, description=None, parenting = None ) :
 
-		GafferUI.Widget.__init__( self, QtGui.QWidget(), **kw )
+		GafferUI.Widget.__init__( self, QtGui.QWidget(), parenting = parenting )
 
 		layout = QtGui.QHBoxLayout()
 		layout.setContentsMargins( 0, 0, 0, 0 )

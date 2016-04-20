@@ -57,9 +57,9 @@ QtGui = GafferUI._qtImport( "QtGui" )
 # del[2,0:2] # delete all children intersecting the specified area (both the remaining buttons in this case).
 class GridContainer( GafferUI.ContainerWidget ) :
 
-	def __init__( self, spacing=0, borderWidth=0, **kw ) :
+	def __init__( self, spacing=0, borderWidth=0, parenting=None ) :
 
-		GafferUI.ContainerWidget.__init__( self, QtGui.QWidget(), **kw )
+		GafferUI.ContainerWidget.__init__( self, QtGui.QWidget(), parenting = parenting )
 
 		self.__qtLayout = _GridLayout( self._qtWidget() )
 		self.__qtLayout.setSpacing( spacing )

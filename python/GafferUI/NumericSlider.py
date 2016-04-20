@@ -53,9 +53,9 @@ class NumericSlider( GafferUI.Slider ) :
 	# By default, values outside this range will be clamped, but hardMin and hardMax
 	# may be specified to move the point at which the clamping happens outside of the
 	# slider itself.
-	def __init__( self, value=None, min=0, max=1, hardMin=None, hardMax=None, values=None, **kw ) :
+	def __init__( self, value=None, min=0, max=1, hardMin=None, hardMax=None, values=None, parenting=None ) :
 
-		GafferUI.Slider.__init__( self, **kw )
+		GafferUI.Slider.__init__( self, parenting = parenting )
 
 		assert( ( value is None ) or ( values is None) )
 

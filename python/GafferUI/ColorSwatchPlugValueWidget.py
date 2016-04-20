@@ -42,11 +42,11 @@ import GafferUI
 
 class ColorSwatchPlugValueWidget( GafferUI.PlugValueWidget ) :
 
-	def __init__( self, plug, **kw ) :
+	def __init__( self, plug, parenting = None ) :
 
 		self.__swatch = GafferUI.ColorSwatch()
 
-		GafferUI.PlugValueWidget.__init__( self, self.__swatch, plug, **kw )
+		GafferUI.PlugValueWidget.__init__( self, self.__swatch, plug, parenting = parenting )
 
 		## \todo How do set maximum height with a public API?
 		self.__swatch._qtWidget().setMaximumHeight( 20 )

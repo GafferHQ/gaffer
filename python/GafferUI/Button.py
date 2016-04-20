@@ -45,9 +45,9 @@ class Button( GafferUI.Widget ) :
 
 	__palette = None
 
-	def __init__( self, text="", image=None, hasFrame=True, highlightOnOver=True, **kw ) :
+	def __init__( self, text="", image=None, hasFrame=True, highlightOnOver=True, parenting=None ) :
 
-		GafferUI.Widget.__init__( self, QtGui.QPushButton(), **kw )
+		GafferUI.Widget.__init__( self, QtGui.QPushButton(), parenting = parenting )
 
 		self._qtWidget().setAttribute( QtCore.Qt.WA_LayoutUsesWidgetRect )
 		# allow return and enter keys to click button

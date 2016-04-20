@@ -42,9 +42,9 @@ import GafferUI
 
 class NodeFinderDialogue( GafferUI.Dialogue ) :
 
-	def __init__( self, scope, **kw ) :
+	def __init__( self, scope, parenting = None ) :
 
-		GafferUI.Dialogue.__init__( self, "", sizeMode = self.SizeMode.Automatic, **kw )
+		GafferUI.Dialogue.__init__( self, "", sizeMode = self.SizeMode.Automatic, parenting = parenting )
 
 		with GafferUI.GridContainer( spacing = 4 ) as grid :
 

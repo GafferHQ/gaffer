@@ -42,11 +42,11 @@ import GafferUI
 
 class SplineEditor( GafferUI.EditorWidget ) :
 
-	def __init__( self, scriptNode, **kw ) :
+	def __init__( self, scriptNode, parenting = None ) :
 
 		self.__column = GafferUI.ListContainer( GafferUI.ListContainer.Orientation.Vertical )
 
-		GafferUI.EditorWidget.__init__( self, self.__column, scriptNode, **kw )
+		GafferUI.EditorWidget.__init__( self, self.__column, scriptNode, parenting = parenting )
 
 		self.__splineGadget = GafferUI.SplinePlugGadget()
 		self.__selectionAddedConnection = self.__splineGadget.selection().memberAddedSignal().connect( Gaffer.WeakMethod( self.__selectionChanged ) )

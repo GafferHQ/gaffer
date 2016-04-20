@@ -44,11 +44,11 @@ class CompoundPathPreview( GafferUI.PathPreviewWidget ) :
 	# registered with PathPreviewWidget - each type will be
 	# instantiated to become a tab in the CompoundPathPreview.
 	# If not specified, then all registered types are used.
-	def __init__( self, path, childTypes=None, **kw ) :
+	def __init__( self, path, childTypes=None, parenting=None ) :
 
 		self.__tabbedContainer = GafferUI.TabbedContainer()
 
-		GafferUI.PathPreviewWidget.__init__( self, self.__tabbedContainer, path, **kw )
+		GafferUI.PathPreviewWidget.__init__( self, self.__tabbedContainer, path, parenting = parenting )
 
 		if childTypes is None :
 			childTypes = GafferUI.PathPreviewWidget.types()

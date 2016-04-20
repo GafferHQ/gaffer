@@ -71,7 +71,7 @@ class GLWidget( GafferUI.Widget ) :
 	## Note that you won't always get the buffer options you ask for - a best fit is found
 	# among the available formats. In particular it appears that a depth buffer is often present
 	# even when not requested.
-	def __init__( self, bufferOptions = set(), **kw ) :
+	def __init__( self, bufferOptions = set(), parenting = None ) :
 
 		format = QtOpenGL.QGLFormat()
 		format.setRgba( True )
@@ -87,7 +87,7 @@ class GLWidget( GafferUI.Widget ) :
 		self.__graphicsScene = _GLGraphicsScene( graphicsView, Gaffer.WeakMethod( self.__draw ) )
 		graphicsView.setScene( self.__graphicsScene )
 
-		GafferUI.Widget.__init__( self, graphicsView, **kw )
+		GafferUI.Widget.__init__( self, graphicsView, parenting = parenting )
 
 		self.__overlay = None
 

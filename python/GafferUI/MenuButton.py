@@ -41,9 +41,9 @@ import GafferUI
 
 class MenuButton( GafferUI.Button ) :
 
-	def __init__( self, text="", image=None, hasFrame=True, menu=None, **kw ) :
+	def __init__( self, text="", image=None, hasFrame=True, menu=None, parenting=None ) :
 
-		GafferUI.Button.__init__( self, text, image, hasFrame, **kw )
+		GafferUI.Button.__init__( self, text, image, hasFrame, parenting = parenting )
 
 		self.__menu = None
 		self.setMenu( menu )

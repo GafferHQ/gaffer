@@ -60,7 +60,7 @@ class CompoundPlugValueWidget( GafferUI.PlugValueWidget ) :
 	#
 	# If summary is specified it will be called each time a child plug changes value,
 	# and the result used to provide a summary in the collapsible header.
-	def __init__( self, plug, collapsed=True, label=None, summary=None, **kw ) :
+	def __init__( self, plug, collapsed=True, label=None, summary=None, parenting=None ) :
 
 		self.__column = GafferUI.ListContainer( GafferUI.ListContainer.Orientation.Vertical, spacing = 4 )
 		self.__label = label if label else IECore.CamelCase.toSpaced( plug.getName() )
@@ -82,7 +82,7 @@ class CompoundPlugValueWidget( GafferUI.PlugValueWidget ) :
 			self,
 			self.__collapsible if self.__collapsible is not None else self.__column,
 			plug,
-			**kw
+			parenting = parenting
 		)
 
 		self.__plugAddedConnection = plug.childAddedSignal().connect( Gaffer.WeakMethod( self.__childAddedOrRemoved ) )

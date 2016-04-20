@@ -44,9 +44,9 @@ import GafferUI
 # GraphComponent to another widget.
 class NameLabel( GafferUI.Label ) :
 
-	def __init__( self, graphComponent, horizontalAlignment=GafferUI.Label.HorizontalAlignment.Left, verticalAlignment=GafferUI.Label.VerticalAlignment.Center, numComponents=1, formatter=None, **kw ) :
+	def __init__( self, graphComponent, horizontalAlignment=GafferUI.Label.HorizontalAlignment.Left, verticalAlignment=GafferUI.Label.VerticalAlignment.Center, numComponents=1, formatter=None, parenting = None ) :
 
-		GafferUI.Label.__init__( self, "", horizontalAlignment, verticalAlignment, **kw )
+		GafferUI.Label.__init__( self, "", horizontalAlignment, verticalAlignment, parenting = parenting )
 
 		self.__formatter = formatter if formatter is not None else self.defaultFormatter
 		self.__numComponents = numComponents

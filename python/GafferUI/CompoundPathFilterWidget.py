@@ -41,11 +41,11 @@ import GafferUI
 
 class CompoundPathFilterWidget( GafferUI.PathFilterWidget ) :
 
-	def __init__( self, pathFilter, **kw ) :
+	def __init__( self, pathFilter, parenting = None ) :
 
 		self.__grid = GafferUI.GridContainer( spacing=4 )
 
-		GafferUI.PathFilterWidget.__init__( self, self.__grid, pathFilter, **kw )
+		GafferUI.PathFilterWidget.__init__( self, self.__grid, pathFilter, parenting = parenting )
 
 		self.__filters = []
 		self._updateFromPathFilter()

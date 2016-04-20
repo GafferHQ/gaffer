@@ -40,9 +40,9 @@ import GafferUI
 
 class TextInputDialogue( GafferUI.Dialogue ) :
 
-	def __init__( self, initialText="", title="Enter text", cancelLabel="Cancel", confirmLabel="OK", **kw ) :
+	def __init__( self, initialText="", title="Enter text", cancelLabel="Cancel", confirmLabel="OK", parenting=None ) :
 
-		GafferUI.Dialogue.__init__( self, title, sizeMode=GafferUI.Window.SizeMode.Fixed, **kw )
+		GafferUI.Dialogue.__init__( self, title, sizeMode=GafferUI.Window.SizeMode.Fixed, parenting=parenting )
 
 		self.__textWidget = GafferUI.TextWidget( initialText )
 		self.__textWidget.setSelection( None, None ) # all text

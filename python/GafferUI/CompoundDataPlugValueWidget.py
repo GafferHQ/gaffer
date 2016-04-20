@@ -47,11 +47,11 @@ import GafferUI
 # "compoundDataPlugValueWidget:editable"
 class CompoundDataPlugValueWidget( GafferUI.PlugValueWidget ) :
 
-	def __init__( self, plug, **kw ) :
+	def __init__( self, plug, parenting = None ) :
 
 		self.__column = GafferUI.ListContainer( spacing = 6 )
 
-		GafferUI.PlugValueWidget.__init__( self, self.__column, plug, **kw )
+		GafferUI.PlugValueWidget.__init__( self, self.__column, plug, parenting = parenting )
 
 		with self.__column :
 
