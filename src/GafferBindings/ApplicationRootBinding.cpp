@@ -43,7 +43,6 @@
 
 #include "IECorePython/ScopedGILLock.h"
 #include "IECorePython/RunTimeTypedBinding.h"
-#include "IECorePython/Wrapper.h"
 
 #include "Gaffer/ApplicationRoot.h"
 #include "Gaffer/Preferences.h"
@@ -56,13 +55,13 @@ using namespace boost::python;
 using namespace GafferBindings;
 using namespace Gaffer;
 
-class ApplicationRootWrapper : public ApplicationRoot, public IECorePython::Wrapper<ApplicationRoot>
+class ApplicationRootWrapper : public IECorePython::RunTimeTypedWrapper<ApplicationRoot>
 {
 
 	public :
 
 		ApplicationRootWrapper( PyObject *self, const std::string &name = defaultName<ApplicationRoot>() )
-			:	ApplicationRoot( name ), IECorePython::Wrapper<ApplicationRoot>( self, this )
+			:	IECorePython::RunTimeTypedWrapper<ApplicationRoot>( self, name )
 		{
 		}
 
