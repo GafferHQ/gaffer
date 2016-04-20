@@ -141,11 +141,11 @@ Gaffer.Metadata.registerNode(
 
 class _ShaderNamePlugValueWidget( GafferUI.PlugValueWidget ) :
 
-	def __init__( self, plug, **kw ) :
+	def __init__( self, plug, parenting = None ) :
 
 		row = GafferUI.ListContainer( GafferUI.ListContainer.Orientation.Horizontal, spacing = 4 )
 
-		GafferUI.PlugValueWidget.__init__( self, row, plug, **kw )
+		GafferUI.PlugValueWidget.__init__( self, row, plug, parenting = parenting )
 
 		with row :
 
