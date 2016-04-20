@@ -39,7 +39,6 @@
 
 #include "IECorePython/RefCountedBinding.h"
 #include "IECorePython/ScopedGILLock.h"
-#include "IECorePython/Wrapper.h"
 
 #include "Gaffer/Plug.h"
 
@@ -51,28 +50,28 @@ using namespace boost::python;
 using namespace GafferCortex;
 using namespace GafferCortexBindings;
 
-class ParameterHandlerWrapper : public ParameterHandler, public IECorePython::Wrapper<ParameterHandler>
+class ParameterHandlerWrapper : public IECorePython::RefCountedWrapper<ParameterHandler>
 {
 
 	public :
 
 		ParameterHandlerWrapper( PyObject *self )
-			:	ParameterHandler(), IECorePython::Wrapper<ParameterHandler>( self, this )
+			:	IECorePython::RefCountedWrapper<ParameterHandler>( self )
 		{
 		}
 
 		virtual IECore::Parameter *parameter()
 		{
 			IECorePython::ScopedGILLock gilLock;
-			override o = this->get_override( "parameter" );
-			return o();
+			object o = methodOverride( "parameter" );
+			return extract<IECore::Parameter *>( o() );
 		}
 
 		virtual const IECore::Parameter *parameter() const
 		{
 			IECorePython::ScopedGILLock gilLock;
-			override o = this->get_override( "parameter" );
-			return o();
+			object o = methodOverride( "parameter" );
+			return extract<IECore::Parameter *>( o() );
 		}
 
 		virtual void restore( Gaffer::GraphComponent *plugParent )
@@ -85,35 +84,35 @@ class ParameterHandlerWrapper : public ParameterHandler, public IECorePython::Wr
 		virtual Gaffer::Plug *setupPlug( Gaffer::GraphComponent *plugParent, Gaffer::Plug::Direction direction, unsigned flags )
 		{
 			IECorePython::ScopedGILLock gilLock;
-			override o = this->get_override( "setupPlug" );
-			return o( Gaffer::GraphComponentPtr( plugParent ), direction, flags );
+			object o = methodOverride( "setupPlug" );
+			return extract<Gaffer::Plug *>( o( Gaffer::GraphComponentPtr( plugParent ), direction, flags ) );
 		}
 
 		virtual Gaffer::Plug *plug()
 		{
 			IECorePython::ScopedGILLock gilLock;
-			override o = this->get_override( "plug" );
-			return o();
+			object o = methodOverride( "plug" );
+			return extract<Gaffer::Plug *>( o() );
 		}
 
 		virtual const Gaffer::Plug *plug() const
 		{
 			IECorePython::ScopedGILLock gilLock;
-			override o = this->get_override( "plug" );
-			return o();
+			object o = methodOverride( "plug" );
+			return extract<Gaffer::Plug *>( o() );
 		}
 
 		virtual void setParameterValue()
 		{
 			IECorePython::ScopedGILLock gilLock;
-			override o = this->get_override( "setParameterValue" );
+			object o = methodOverride( "setParameterValue" );
 			o();
 		}
 
 		virtual void setPlugValue()
 		{
 			IECorePython::ScopedGILLock gilLock;
-			override o = this->get_override( "setPlugValue" );
+			object o = methodOverride( "setPlugValue" );
 			o();
 		}
 

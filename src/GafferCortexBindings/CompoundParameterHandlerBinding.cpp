@@ -37,7 +37,6 @@
 #include "boost/python.hpp"
 
 #include "IECorePython/RefCountedBinding.h"
-#include "IECorePython/Wrapper.h"
 #include "IECorePython/ScopedGILLock.h"
 
 #include "Gaffer/GraphComponent.h"
@@ -50,25 +49,25 @@ using namespace boost::python;
 using namespace GafferCortex;
 using namespace GafferCortexBindings;
 
-/// Note that we've copied parts of the ParameterHandlerWrapper here. Typically we'd macroise
-/// the repeated parts and make it possible to wrap any of the ParameterHandler classes
+/// Note that we've copied parts of the ParameterHandlerWrapper here. Typically we'd template
+/// the ParameterHandlerWrapper class and make it possible to wrap any of the ParameterHandler classes
 /// easily (see GraphComponentBinding.h for an example). However, doing that would necessitate
 /// binding every single one of the ParameterHandlers, which isn't something we want to do
 /// right now.
-class CompoundParameterHandlerWrapper : public CompoundParameterHandler, public IECorePython::Wrapper<ParameterHandler>
+class CompoundParameterHandlerWrapper : public IECorePython::RefCountedWrapper<CompoundParameterHandler>
 {
 
 	public :
 
 		CompoundParameterHandlerWrapper( PyObject *self, IECore::CompoundParameterPtr parameter )
-			:	CompoundParameterHandler( parameter ), IECorePython::Wrapper<ParameterHandler>( self, this )
+			:	 IECorePython::RefCountedWrapper<CompoundParameterHandler>( self, parameter )
 		{
 		}
 
 		virtual void restore( Gaffer::GraphComponent *plugParent )
 		{
 			IECorePython::ScopedGILLock gilLock;
-			override o = this->get_override( "restore" );
+			object o = methodOverride( "restore" );
 			if( o )
 			{
 				o( Gaffer::GraphComponentPtr( plugParent ) );
@@ -82,10 +81,10 @@ class CompoundParameterHandlerWrapper : public CompoundParameterHandler, public 
 		virtual Gaffer::Plug *setupPlug( Gaffer::GraphComponent *plugParent, Gaffer::Plug::Direction direction, unsigned flags )
 		{
 			IECorePython::ScopedGILLock gilLock;
-			override o = this->get_override( "setupPlug" );
+			object o = methodOverride( "setupPlug" );
 			if( o )
 			{
-				return o( Gaffer::GraphComponentPtr( plugParent ), direction, flags );
+				return extract<Gaffer::Plug *>( o( Gaffer::GraphComponentPtr( plugParent ), direction, flags ) );
 			}
 			else
 			{
@@ -96,7 +95,7 @@ class CompoundParameterHandlerWrapper : public CompoundParameterHandler, public 
 		virtual void setParameterValue()
 		{
 			IECorePython::ScopedGILLock gilLock;
-			override o = this->get_override( "setParameterValue" );
+			object o = methodOverride( "setParameterValue" );
 			if( o )
 			{
 				o();
@@ -110,7 +109,7 @@ class CompoundParameterHandlerWrapper : public CompoundParameterHandler, public 
 		virtual void setPlugValue()
 		{
 			IECorePython::ScopedGILLock gilLock;
-			override o = this->get_override( "setPlugValue" );
+			object o = methodOverride( "setPlugValue" );
 			if( o )
 			{
 				o();
@@ -124,10 +123,10 @@ class CompoundParameterHandlerWrapper : public CompoundParameterHandler, public 
 		virtual IECore::RunTimeTyped *childParameterProvider( IECore::Parameter *childParameter )
 		{
 			IECorePython::ScopedGILLock gilLock;
-			override o = this->get_override( "childParameterProvider" );
+			object o = methodOverride( "childParameterProvider" );
 			if( o )
 			{
-				return o( IECore::ParameterPtr( childParameter ) );
+				return extract<IECore::RunTimeTyped *>( o( IECore::ParameterPtr( childParameter ) ) );
 			}
 			else
 			{
