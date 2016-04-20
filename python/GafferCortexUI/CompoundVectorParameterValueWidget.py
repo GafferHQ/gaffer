@@ -60,9 +60,9 @@ import GafferCortexUI
 # ["UI"]["elementPresetsOnly"] BoolData.
 class CompoundVectorParameterValueWidget( GafferCortexUI.CompoundParameterValueWidget ) :
 
-	def __init__( self, parameterHandler, collapsible=None, **kw ) :
+	def __init__( self, parameterHandler, collapsible=None, parenting = None ) :
 
-		GafferCortexUI.CompoundParameterValueWidget.__init__( self, parameterHandler, collapsible, _plugValueWidgetClass=_PlugValueWidget, **kw )
+		GafferCortexUI.CompoundParameterValueWidget.__init__( self, parameterHandler, collapsible, _plugValueWidgetClass=_PlugValueWidget, parenting = parenting )
 
 class _PlugValueWidget( GafferCortexUI.CompoundParameterValueWidget._PlugValueWidget ) :
 

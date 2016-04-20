@@ -41,12 +41,12 @@ import GafferCortexUI
 
 class DirNameParameterValueWidget( GafferCortexUI.PathParameterValueWidget ) :
 
-	def __init__( self, parameterHandler, **kw ) :
+	def __init__( self, parameterHandler, parenting = None ) :
 
 		GafferCortexUI.PathParameterValueWidget.__init__(
 			self,
 			parameterHandler,
-			**kw
+			parenting = parenting
 		)
 
 	def _filter( self ) :
