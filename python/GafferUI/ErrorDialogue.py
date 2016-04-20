@@ -39,7 +39,6 @@ import traceback
 
 import IECore
 
-import Gaffer
 import GafferUI
 
 class ErrorDialogue( GafferUI.Dialogue ) :

@@ -35,8 +35,6 @@
 #
 ##########################################################################
 
-import os
-import ctypes
 import logging
 
 # the OpenGL module loves spewing things into logs, and for some reason

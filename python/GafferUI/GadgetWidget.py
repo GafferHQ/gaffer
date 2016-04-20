@@ -41,8 +41,6 @@ import IECore
 
 import Gaffer
 import GafferUI
-from GLWidget import GLWidget
-from _GafferUI import ButtonEvent, ModifiableEvent, ContainerGadget, DragDropEvent, KeyEvent
 
 # import lazily to improve startup of apps which don't use GL functionality
 GL = Gaffer.lazyImport( "OpenGL.GL" )
@@ -60,7 +58,7 @@ class GadgetWidget( GafferUI.GLWidget ) :
 	# be placed within it.
 	def __init__( self, gadget=None, bufferOptions=set(), **kw ) :
 
-		GLWidget.__init__( self, bufferOptions, **kw )
+		GafferUI.GLWidget.__init__( self, bufferOptions, **kw )
 
 		self._qtWidget().setFocusPolicy( QtCore.Qt.ClickFocus )
 

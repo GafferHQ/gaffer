@@ -37,8 +37,6 @@
 
 import warnings
 
-import IECore
-
 import Gaffer
 import GafferUI
 

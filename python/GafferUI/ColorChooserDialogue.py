@@ -37,7 +37,6 @@
 
 import IECore
 
-import Gaffer
 import GafferUI
 
 class ColorChooserDialogue( GafferUI.Dialogue ) :

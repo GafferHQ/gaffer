@@ -35,10 +35,6 @@
 #
 ##########################################################################
 
-import copy
-import functools
-import collections
-
 import IECore
 
 import Gaffer

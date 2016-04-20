@@ -42,11 +42,7 @@ import traceback
 import IECore
 
 import Gaffer
-from Gaffer import ScriptNode
 import GafferUI
-from Menu import Menu
-from Widget import Widget
-from EditorWidget import EditorWidget
 
 QtGui = GafferUI._qtImport( "QtGui" )
 QtCore = GafferUI._qtImport( "QtCore" )

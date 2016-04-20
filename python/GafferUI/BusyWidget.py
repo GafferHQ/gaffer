@@ -37,7 +37,6 @@
 import math
 import time
 
-import Gaffer
 import GafferUI
 
 QtCore = GafferUI._qtImport( "QtCore" )

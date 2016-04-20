@@ -36,8 +36,6 @@
 ##########################################################################
 
 import weakref
-import os
-import math
 import inspect
 import warnings
 

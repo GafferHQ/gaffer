@@ -34,9 +34,6 @@
 #
 ##########################################################################
 
-import re
-import sys
-import traceback
 import weakref
 
 import IECore

@@ -35,7 +35,6 @@
 ##########################################################################
 
 import os
-import re
 import weakref
 import threading
 
