@@ -41,7 +41,6 @@
 #include "boost/format.hpp"
 
 #include "IECore/Parameter.h"
-#include "IECorePython/Wrapper.h"
 
 #include "GafferBindings/NodeBinding.h"
 #include "GafferBindings/ExceptionAlgo.h"

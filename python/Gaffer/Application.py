@@ -74,7 +74,7 @@ class Application( IECore.Parameterised ) :
 
 		)
 
-		self.__root = Gaffer.ApplicationRoot( self.__class__.__name__ )
+		self.__root = _NonSlicingApplicationRoot( self.__class__.__name__ )
 
 	## All Applications have an ApplicationRoot which forms the root of the
 	# hierarchy for all scripts, preferences, nodes etc.
@@ -129,3 +129,22 @@ class Application( IECore.Parameterised ) :
 			return self._run( args )
 
 IECore.registerRunTimeTyped( Application, typeName = "Gaffer::Application" )
+
+# Various parts of the UI try to store their state as attributes on
+# the root object, and therefore require it's identity in python to
+# be stable, even when acquiring it from separate calls to C++ methods
+# like `ancestor( ApplicationRoot )`. The IECorePython::RunTimeTypedWrapper
+# only guarantees this stability if we've derived from it in Python,
+# which is what we do here.
+## \todo Either :
+#
+# - Fix the object identity problem in Cortex
+# - Or at least add a way of requesting that identity be
+#   preserved without needing to derive.
+# - Or stop the UI relying on storing it's own members on
+#   the root.
+class _NonSlicingApplicationRoot( Gaffer.ApplicationRoot ) :
+
+	def __init__( self, name ) :
+
+		Gaffer.ApplicationRoot.__init__( self, name )
