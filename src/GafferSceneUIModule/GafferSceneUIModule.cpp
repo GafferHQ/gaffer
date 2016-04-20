@@ -52,6 +52,7 @@
 #include "GafferSceneUIBindings/ShaderViewBinding.h"
 #include "GafferSceneUIBindings/ShaderNodeGadgetBinding.h"
 #include "GafferSceneUIBindings/TransformToolBinding.h"
+#include "GafferSceneUIBindings/TranslateToolBinding.h"
 
 using namespace boost::python;
 using namespace IECorePython;
@@ -101,6 +102,7 @@ BOOST_PYTHON_MODULE( _GafferSceneUI )
 	GafferBindings::NodeClass<CropWindowTool>( NULL, no_init );
 
 	bindTransformTool();
+	bindTranslateTool();
 	bindObjectVisualiser();
 	bindLightVisualiser();
 	bindStandardLightVisualiser();
