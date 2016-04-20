@@ -49,6 +49,7 @@ enum TypeId
 	ShaderViewTypeId = 110655,
 	ShaderNodeGadgetTypeId = 110656,
 	TransformToolTypeId = 110657,
+	TranslateToolTypeId = 110658,
 	LastTypeId = 110700
 };
 
