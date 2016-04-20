@@ -154,6 +154,8 @@ class Viewer( GafferUI.NodeSetEditor ) :
 		self.__viewTools = {}
 		self.__currentView = None
 
+		self.__keyPressConnection = self.keyPressSignal().connect( Gaffer.WeakMethod( self.__keyPress ) )
+
 		self._updateFromSet()
 
 	def view( self ) :
@@ -264,6 +266,18 @@ class Viewer( GafferUI.NodeSetEditor ) :
 			result += "\n\n" + IECore.StringUtil.wrap( description, 80 )
 
 		return result
+
+	def __keyPress( self, widget, event ) :
+
+		if self.__currentView is None :
+			return False
+
+		for t in self.__viewTools[self.__currentView] :
+			if Gaffer.Metadata.nodeValue( t, "viewer:shortCut" ) == event.key :
+				self.__activateTool( t )
+				return True
+
+		return False
 
 GafferUI.EditorWidget.registerType( "Viewer", Viewer )
 
