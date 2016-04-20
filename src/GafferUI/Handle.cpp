@@ -243,5 +243,5 @@ float Handle::absoluteDragOffset( const DragDropEvent &event ) const
 			Line3f( worldClosestLine.p0, worldClosestLine.p1 )
 		);
 
-	return worldClosestPoint[m_type];
+	return m_dragHandleWorld.normalizedDirection().dot( worldClosestPoint - m_dragHandleWorld.p0 );
 }
