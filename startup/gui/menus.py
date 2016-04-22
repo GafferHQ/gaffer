@@ -101,6 +101,7 @@ if moduleSearchPath.find( "arnold" ) :
 
 		GafferArnoldUI.ShaderMenu.appendShaders( nodeMenu.definition() )
 
+		nodeMenu.append( "/Arnold/VDB Volume", GafferArnold.VDBVolume, searchText = "VDBVolume"  )
 		nodeMenu.append( "/Arnold/Options", GafferArnold.ArnoldOptions, searchText = "ArnoldOptions" )
 		nodeMenu.append( "/Arnold/Attributes", GafferArnold.ArnoldAttributes, searchText = "ArnoldAttributes" )
 		nodeMenu.append(
