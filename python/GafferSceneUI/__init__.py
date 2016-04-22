@@ -130,6 +130,7 @@ import LightTweaksUI
 import LightToCameraUI
 import FilterResultsUI
 import TranslateToolUI
+import ScaleToolUI
 
 # then all the PathPreviewWidgets. note that the order
 # of import controls the order of display.
