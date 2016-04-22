@@ -34,8 +34,6 @@
 #
 ##########################################################################
 
-import IECore
-
 import GafferUI
 
 QtGui = GafferUI._qtImport( "QtGui" )

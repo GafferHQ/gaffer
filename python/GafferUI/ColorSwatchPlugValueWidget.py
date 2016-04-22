@@ -37,8 +37,6 @@
 
 import weakref
 
-import IECore
-
 import Gaffer
 import GafferUI
 

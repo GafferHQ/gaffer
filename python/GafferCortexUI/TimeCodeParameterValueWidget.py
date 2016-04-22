@@ -36,7 +36,6 @@
 
 import IECore
 
-import Gaffer
 import GafferUI
 import GafferCortexUI
 

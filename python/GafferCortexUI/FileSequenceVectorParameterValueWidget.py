@@ -39,7 +39,6 @@ import os
 import IECore
 
 import Gaffer
-import GafferUI
 import GafferCortexUI
 
 class FileSequenceVectorParameterValueWidget( GafferCortexUI.PathVectorParameterValueWidget ) :

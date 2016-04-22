@@ -36,7 +36,6 @@
 
 import re
 import traceback
-import functools
 import warnings
 
 import IECore

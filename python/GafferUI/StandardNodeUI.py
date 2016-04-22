@@ -37,11 +37,6 @@
 
 from __future__ import with_statement
 
-import re
-import fnmatch
-
-import IECore
-
 import Gaffer
 import GafferUI
 

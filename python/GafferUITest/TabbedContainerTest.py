@@ -37,9 +37,6 @@
 
 import unittest
 
-import IECore
-
-import Gaffer
 import GafferUI
 import GafferUITest
 

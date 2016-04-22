@@ -34,9 +34,6 @@
 #
 ##########################################################################
 
-import IECore
-
-import Gaffer
 import GafferUI
 
 class ConfirmationDialogue( GafferUI.Dialogue ) :

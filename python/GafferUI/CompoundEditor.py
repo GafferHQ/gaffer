@@ -36,8 +36,6 @@
 ##########################################################################
 
 import gc
-import types
-import traceback
 
 import IECore
 

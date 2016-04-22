@@ -41,7 +41,6 @@ import IECore
 import Gaffer
 import GafferImage
 import GafferUI
-import GafferImageUI
 
 class ChannelMaskPlugValueWidget( GafferUI.PlugValueWidget ) :
 

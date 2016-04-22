@@ -37,7 +37,6 @@
 import IECore
 
 import Gaffer
-import GafferUI
 import GafferCortexUI
 
 class DirNameParameterValueWidget( GafferCortexUI.PathParameterValueWidget ) :
