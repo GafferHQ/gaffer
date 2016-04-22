@@ -622,7 +622,9 @@ libraries = {
 		"requiredOptions" : [ "ARNOLD_ROOT" ],
 	},
 
-	"GafferArnoldTest" : {},
+	"GafferArnoldTest" : {
+		"additionalFiles" : glob.glob( "python/GafferArnoldTest/volumes/*" ),
+	},
 
 	"GafferArnoldUI" : {},
 
