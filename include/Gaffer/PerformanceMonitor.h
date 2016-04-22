@@ -37,6 +37,8 @@
 #ifndef GAFFER_PERFORMANCEMONITOR_H
 #define GAFFER_PERFORMANCEMONITOR_H
 
+#include <stack>
+
 #include "tbb/enumerable_thread_specific.h"
 
 #include "boost/unordered_map.hpp"
@@ -96,8 +98,20 @@ class PerformanceMonitor : public Monitor
 	private :
 
 		// For performance reasons we accumulate our statistics into
-		// thread local storage while computations are running.
-		struct ThreadData;
+		// thread local storage while computations are running.		
+		struct ThreadData
+		{
+			// Stores the per-plug statistics captured by this thread.
+			StatisticsMap statistics;
+			// Stack of durations pointing into the statistics map.
+			// The top of the stack is the duration we're billing the
+			// current chunk of time to.
+			typedef std::stack<boost::chrono::nanoseconds *> DurationStack;
+			DurationStack durationStack;
+			// The last time measurement we made.
+			boost::chrono::high_resolution_clock::time_point then;
+		};
+		
 		tbb::enumerable_thread_specific<ThreadData, tbb::cache_aligned_allocator<ThreadData>, tbb::ets_key_per_instance> m_threadData;
 
 		// Then when we want to query it, we collate it into m_statistics.

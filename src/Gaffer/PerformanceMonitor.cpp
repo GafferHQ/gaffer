@@ -34,8 +34,6 @@
 //
 //////////////////////////////////////////////////////////////////////////
 
-#include <stack>
-
 #include "Gaffer/PerformanceMonitor.h"
 #include "Gaffer/Process.h"
 #include "Gaffer/Plug.h"
@@ -80,23 +78,6 @@ bool PerformanceMonitor::Statistics::operator != ( const Statistics &rhs )
 {
 	return !( *this == rhs );
 }
-
-//////////////////////////////////////////////////////////////////////////
-// PerformanceMonitor::ThreadData
-//////////////////////////////////////////////////////////////////////////
-
-struct PerformanceMonitor::ThreadData
-{
-	// Stores the per-plug statistics captured by this thread.
-	StatisticsMap statistics;
-	// Stack of durations pointing into the statistics map.
-	// The top of the stack is the duration we're billing the
-	// current chunk of time to.
-	typedef std::stack<boost::chrono::nanoseconds *> DurationStack;
-	DurationStack durationStack;
-	// The last time measurement we made.
-	boost::chrono::high_resolution_clock::time_point then;
-};
 
 //////////////////////////////////////////////////////////////////////////
 // PerformanceMonitor
