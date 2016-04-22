@@ -1,7 +1,6 @@
 //////////////////////////////////////////////////////////////////////////
 //
-//  Copyright (c) 2012, John Haddon. All rights reserved.
-//  Copyright (c) 2013, Image Engine Design Inc. All rights reserved.
+//  Copyright (c) 2016, Image Engine Design Inc. All rights reserved.
 //
 //  Redistribution and use in source and binary forms, with or without
 //  modification, are permitted provided that the following conditions are
@@ -35,23 +34,59 @@
 //
 //////////////////////////////////////////////////////////////////////////
 
-#ifndef GAFFERARNOLD_TYPEIDS_H
-#define GAFFERARNOLD_TYPEIDS_H
+#ifndef GAFFERARNOLD_VDBVOLUME_H
+#define GAFFERARNOLD_VDBVOLUME_H
+
+#include "GafferScene/ObjectSource.h"
+
+#include "GafferArnold/TypeIds.h"
 
 namespace GafferArnold
 {
 
-enum TypeId
+class VDBVolume : public GafferScene::ObjectSource
 {
-	ArnoldShaderTypeId = 110900,
-	ArnoldOptionsTypeId = 110901,
-	ArnoldAttributesTypeId = 110902,
-	ArnoldLightTypeId = 110903,
-	VDBVolumeTypeId = 110904,
 
-	LastTypeId = 110949
+	public :
+
+		IE_CORE_DECLARERUNTIMETYPEDEXTENSION( GafferArnold::VDBVolume, VDBVolumeTypeId, GafferScene::ObjectSource );
+
+		VDBVolume( const std::string &name=defaultName<VDBVolume>() );
+		virtual ~VDBVolume();
+
+		Gaffer::StringPlug *fileNamePlug();
+		const Gaffer::StringPlug *fileNamePlug() const;
+
+		Gaffer::StringPlug *gridsPlug();
+		const Gaffer::StringPlug *gridsPlug() const;
+
+		Gaffer::StringPlug *velocityGridsPlug();
+		const Gaffer::StringPlug *velocityGridsPlug() const;
+
+		Gaffer::FloatPlug *velocityScalePlug();
+		const Gaffer::FloatPlug *velocityScalePlug() const;
+
+		Gaffer::FloatPlug *stepSizePlug();
+		const Gaffer::FloatPlug *stepSizePlug() const;
+
+		Gaffer::StringPlug *dsoPlug();
+		const Gaffer::StringPlug *dsoPlug() const;
+
+		virtual void affects( const Gaffer::Plug *input, AffectedPlugsContainer &outputs ) const;
+
+	protected :
+
+		virtual void hashSource( const Gaffer::Context *context, IECore::MurmurHash &h ) const;
+		virtual IECore::ConstObjectPtr computeSource( const Gaffer::Context *context ) const;
+
+	private :
+
+		static size_t g_firstPlugIndex;
+
 };
+
+IE_CORE_DECLAREPTR( VDBVolume )
 
 } // namespace GafferArnold
 
-#endif // GAFFERARNOLD_TYPEIDS_H
+#endif // GAFFERARNOLD_VDBVOLUME_H
