@@ -175,6 +175,12 @@ options.Add(
 )
 
 options.Add(
+	"LOCATE_DEPENDENCY_PYTHONPATH",
+	"The locations on which to search for python modules for "
+	"the dependencies.",
+	"",
+)
+options.Add(
 	"OPENEXR_LIB_SUFFIX",
 	"The suffix used when locating the OpenEXR libraries.",
 	"",
@@ -234,15 +240,15 @@ options.Add(
 )
 
 options.Add(
-	"DOXYGEN",
-	"Where to find the doxygen binary",
-	"doxygen",
-)
-
-options.Add(
 	"INKSCAPE",
 	"Where to find the inkscape binary",
 	"inkscape",
+)
+
+options.Add(
+	"SPHINX",
+	"Where to find the sphinx-build program",
+	"sphinx-build",
 )
 
 ###############################################################################################
@@ -267,7 +273,9 @@ env = Environment(
 
 )
 
-for e in env["ENV_VARS_TO_IMPORT"].split() :
+# DISPLAY and HOME are essential for running gaffer when generating
+# the documentation.
+for e in env["ENV_VARS_TO_IMPORT"].split() + [ "DISPLAY", "HOME" ] :
 	if e in os.environ :
 		env["ENV"][e] = os.environ[e]
 
@@ -304,43 +312,37 @@ if env["BUILD_CACHEDIR"] != "" :
 	CacheDir( env["BUILD_CACHEDIR"] )
 
 ###############################################################################################
-# Checks for doxygen and inkscape requirements
+# Check for inkscape and sphinx
 ###############################################################################################
 
-def checkExecutable(executable):
-    def is_exe(fpath):
-        return os.path.isfile(fpath) and os.access(fpath, os.X_OK)
+def findOnPath( file, path ) :
 
-    fpath, fname = os.path.split(executable)
-    if fpath:
-        if is_exe(executable):
-            return True
-    else:
-        for path in os.environ["PATH"].split(os.pathsep):
-            path = path.strip('"')
-            exe_file = os.path.join(path, executable)
-            if is_exe(exe_file):
-                return True
+	if os.path.isabs( file ) :
+		return file if os.path.exists( file ) else None
+	else :
+		if isinstance( path, basestring ) :
+			path = path.split( os.pathsep )
+		for p in path :
+			f = os.path.join( p, file )
+			if os.path.exists( f ) :
+				return f
 
-    return False
-
-def checkDoxygen(context):
-	context.Message('Checking for Doxygen... ')
-	result = checkExecutable(context.sconf.env['DOXYGEN'])
-	context.Result(result)
-	return result
+	return None
 
 def checkInkscape(context):
 	context.Message('Checking for Inkscape... ')
-	result = checkExecutable(context.sconf.env['INKSCAPE'])
+	result = bool( findOnPath( context.sconf.env['INKSCAPE'], os.environ["PATH"] ) )
 	context.Result(result)
 	return result
 
-conf = Configure(env, custom_tests = {'checkDoxygen' : checkDoxygen, 'checkInkscape' : checkInkscape})
+def checkSphinx( context ) :
 
-if not conf.checkDoxygen():
-	print 'Doxygen is not installed!'
-	Exit(1)
+	context.Message( "Checking for Sphinx..." )
+	result = bool( findOnPath( context.sconf.env["SPHINX"], context.sconf.env["ENV"]["PATH"] ) )
+	context.Result( result )
+	return result
+
+conf = Configure( env, custom_tests = { "checkInkscape" : checkInkscape, "checkSphinx" : checkSphinx } )
 
 if not conf.checkInkscape():
 	print 'Inkscape is not installed!'
@@ -350,13 +352,22 @@ if not conf.checkInkscape():
 # An environment for running commands with access to the applications we've built
 ###############################################################################################
 
+def split( stringOrList, separator = ":" ) :
+
+	if isinstance( stringOrList, list ) :
+		return stringOrList
+	else :
+		return stringOrList.split( separator )
+
 commandEnv = env.Clone()
 commandEnv["ENV"]["PATH"] = commandEnv.subst( "$BUILD_DIR/bin:" ) + commandEnv["ENV"]["PATH"]
 
 if commandEnv["PLATFORM"]=="darwin" :
-	commandEnv["ENV"]["DYLD_LIBRARY_PATH"] = commandEnv.subst( "$BUILD_DIR/lib" )
+	commandEnv["ENV"]["DYLD_LIBRARY_PATH"] = commandEnv.subst( ":".join( [ "$BUILD_DIR/lib" ] + split( commandEnv["LOCATE_DEPENDENCY_LIBPATH"] ) ) )
 else :
-	commandEnv["ENV"]["LD_LIBRARY_PATH"] = commandEnv.subst( "$BUILD_DIR/lib" )
+	commandEnv["ENV"]["LD_LIBRARY_PATH"] = commandEnv.subst( ":".join( [ "$BUILD_DIR/lib" ] + split( commandEnv["LOCATE_DEPENDENCY_LIBPATH"] ) ) )
+
+commandEnv["ENV"]["PYTHONPATH"] = commandEnv.subst( ":".join( split( commandEnv["LOCATE_DEPENDENCY_PYTHONPATH"] ) ) )
 
 def runCommand( command ) :
 
@@ -958,83 +969,78 @@ for source, target in (
 # Documentation
 #########################################################################################################
 
-def readLinesMinusLicense( f ) :
+def buildDocs( target, source, env ) :
 
-	if isinstance( f, basestring ) :
-		f = open( f, "r" )
+	# This is a little bit tricky. We need Gaffer itself to build the
+	# docs, because we autogenerate the node reference from the node metadata.
+	# And we also need sphinx, but `sphinx_build` starts with `#!/usr/bin/python`,
+	# which may not be compatible with Gaffer's built-in python. So, we locate
+	# the modules sphinx needs upfront, and make sure they're on the PYTHONPATH,
+	# then we use `gaffer env python` to launch Gaffer's python, and generate
+	# all the docs in that environment.
 
-	result = []
-	skippedLicense = False
-	for line in f.readlines() :
+	for module in ( "sphinx", "markupsafe", "CommonMark" ) :
+		if not findOnPath( module, env["ENV"]["PYTHONPATH"] ) :
+			try :
+				m = __import__( module )
+				env["ENV"]["PYTHONPATH"] = env["ENV"]["PYTHONPATH"] + ":" + os.path.dirname( m.__path__[0] )
+			except ImportError :
+				pass
 
-		if not line.startswith( "#" ) :
-			skippedLicense = True
-		if skippedLicense :
-			result.append( line )
+	# Ensure that Arnold and 3delight are available in the documentation
+	# environment.
+	## \todo Should we try to generate this automatically from the
+	# `libraries` dictionary above?
 
-	return result
+	libraryPathEnvVar = "DYLD_LIBRARY_PATH" if commandEnv["PLATFORM"]=="darwin" else "LD_LIBRARY_PATH"
 
-# Builder action that munges a nicely organised python module into a much less nicely organised one
-# that doxygen will understand. Otherwise it puts every class implemented in its own file
-# into its own namespace and the docs get mighty confusing.
-def createDoxygenPython( target, source, env ) :
+	if env.subst( "$ARNOLD_ROOT" ) :
+		env["ENV"]["PATH"] += ":" + env.subst( "$ARNOLD_ROOT/bin" )
+		env["ENV"]["PYTHONPATH"] += ":" + env.subst( "$ARNOLD_ROOT/python" )
+		env["ENV"][libraryPathEnvVar] += ":" + env.subst( "$ARNOLD_ROOT/bin" )
 
-	target = str( target[0] )
-	source = str( source[0] )
+	if env.subst( "$RMAN_ROOT" ) :
+		env["ENV"]["PATH"] += ":" + env.subst( "$RMAN_ROOT/bin" )
+		env["ENV"][libraryPathEnvVar] += ":" + env.subst( "$RMAN_ROOT/lib" )
 
-	if not os.path.isdir( target ) :
-		os.makedirs( target )
+	# Run any python scripts we find in the document source tree. These are
+	# used to autogenerate source files for processing by sphinx.
 
-	outFile = open( target + "/__init__.py", "w" )
+	for root, dirs, files in os.walk( str( source[0] ) ) :
+		for f in files :
+			ext = os.path.splitext( f )[1]
+			command = []
+			if ext == ".py" :
+				command = [ "gaffer", "env", "python", f ]
+			elif ext == ".sh" :
+				command = [ "gaffer", "env", "./" + f ]
+			if command :
+				print "Running", os.path.join( root, f )
+				subprocess.check_call( command, cwd = root, env = env["ENV"] )
 
-	for line in readLinesMinusLicense( source ) :
+	# Run sphinx to generate the final documentation.
 
-		outFile.write( line )
+	subprocess.check_call(
+		[
+			"gaffer", "env", "python",
+			findOnPath( env.subst( "$SPHINX" ), env["ENV"]["PATH"] ),
+			"-b", "html",
+			str( source[0] ), os.path.dirname( str( target[0] ) )
+		],
+		env = env["ENV"]
+	)
 
-		if line.startswith( "import" ) :
+if conf.checkSphinx() :
 
-			# copy source file over to target directory
-			words = line.split()
-			fileName = os.path.dirname( source ) + "/" + words[1] + ".py"
-			if os.path.isfile( fileName ) :
-				destFile = open( target + "/" + words[1] + ".py", "w" )
-				for l in readLinesMinusLicense( fileName ) :
-					destFile.write( l )
+	docs = commandEnv.Command( "$BUILD_DIR/doc/gaffer/html/index.html", "doc/source", buildDocs )
+	commandEnv.Depends( docs, "build" )
+	commandEnv.AlwaysBuild( docs )
+	commandEnv.NoCache( docs )
+	commandEnv.Alias( "docs", docs )
 
-		elif line.startswith( "from" ) :
+else :
 
-			# cat source file directly into init file
-			words = line.split()
-			fileName = os.path.dirname( source ) + "/" + words[1] + ".py"
-			if os.path.isfile( fileName ) :
-
-				outFile.write( "\n" )
-
-				for line in readLinesMinusLicense( fileName ) :
-					outFile.write( line )
-
-				outFile.write( "\n" )
-
-docEnv = env.Clone()
-docEnv["ENV"]["PATH"] = os.environ["PATH"]
-for v in ( "BUILD_DIR", "GAFFER_MILESTONE_VERSION", "GAFFER_MAJOR_VERSION", "GAFFER_MINOR_VERSION", "GAFFER_PATCH_VERSION" ) :
-	docEnv["ENV"][v] = docEnv[v]
-
-docs = docEnv.Command( "doc/html/index.html", "doc/config/Doxyfile", "$DOXYGEN doc/config/Doxyfile" )
-env.NoCache( docs )
-
-for modulePath in ( "python/Gaffer", "python/GafferUI", "python/GafferScene", "python/GafferSceneUI" ) :
-
-	module = os.path.basename( modulePath )
-	mungedModule = docEnv.Command( "doc/python/" + module, modulePath + "/__init__.py", createDoxygenPython )
-	docEnv.Depends( mungedModule, glob.glob( modulePath + "/*.py" ) )
-	docEnv.Depends( docs, mungedModule )
-	docEnv.NoCache( mungedModule )
-
-docEnv.Depends( docs, glob.glob( "include/*/*.h" ) + glob.glob( "doc/doxygenPages/*.md" ) )
-
-docInstall = docEnv.Install( "$BUILD_DIR/doc/gaffer", "doc/html" )
-docEnv.Alias( "build", docInstall )
+	sys.stderr.write( "WARNING : Sphinx not found - not building docs. Check SPHINX build variable.\n" )
 
 #########################################################################################################
 # Installation
@@ -1118,6 +1124,7 @@ dependenciesManifest = [
 
 	"doc/licenses",
 	"doc/cortex/html",
+	"doc/gaffer"
 	"doc/osl*",
 
 	"python/IECore*",

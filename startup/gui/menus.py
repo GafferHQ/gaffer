@@ -37,6 +37,7 @@
 
 import os
 import traceback
+import functools
 
 import IECore
 
@@ -57,37 +58,30 @@ GafferUI.LayoutMenu.appendDefinitions( scriptWindowMenu, name="/Layout" )
 GafferUI.DispatcherUI.appendMenuDefinitions( scriptWindowMenu, prefix="/Execute" )
 GafferUI.LocalDispatcherUI.appendMenuDefinitions( scriptWindowMenu, prefix="/Execute" )
 
-# Add help menu
-def launchGoogleGroup( menu ):
-		url = r'https://groups.google.com/forum/#!forum/gaffer-dev'
-		GafferUI.ShowURL.showURL( url )
+## Help menu
+###########################################################################
 
-#TODO - scour an examples directory for .gfr files
-#TODO - ..then build a menu with items to launch each example
-def helpExamples( menu ):
-	result = IECore.MenuDefinition()
-	return result
-
-for menuItem, fileName in [
-		( "/Help/User Guide", "$GAFFER_ROOT/doc/GafferUserGuide.pdf" ),
-		( "/Help/Node Reference", "$GAFFER_ROOT/doc/GafferNodeReference.pdf" ),
-		( "/Help/Licenses", "$GAFFER_ROOT/doc/GafferLicenses.pdf" ),
+for menuItem, url in [
+		( "User Guide", "$GAFFER_ROOT/doc/gaffer/html/index.html" ),
+		( "Node Reference", "$GAFFER_ROOT/doc/gaffer/html/NodeReference/index.html" ),
+		( "License", "$GAFFER_ROOT/doc/gaffer/html/Appendices/License/index.html" ),
+		( "LocalDocsDivider", None ),
+		( "Mailing List", "https://groups.google.com/forum/#!forum/gaffer-dev" ),
+		( "CoreDocsDivider", None ),
 	] :
 
-	fileName = os.path.expandvars( fileName )
+	if url and "://" not in url :
+		url = os.path.expandvars( url )
+		url = "file://" + url if os.path.isfile( url ) else ""
+
 	scriptWindowMenu.append(
-		menuItem,
+		"/Help/" + menuItem,
 		{
-			"command" : IECore.curry( GafferUI.showURL, fileName ),
-			"active" : os.path.exists( fileName ),
+			"divider" : url is None,
+			"command" : functools.partial( GafferUI.showURL, url ),
+			"active" : bool( url )
 		}
 	)
-
-scriptWindowMenu.append( "/Help/DocsDivider", 		{ "divider" : True } )
-scriptWindowMenu.append( "/Help/Developer Discussion", { "command" : launchGoogleGroup } )
-scriptWindowMenu.append( "/Help/DevDivider", 		{ "divider" : True } )
-scriptWindowMenu.append( "/Help/Examples",			{ "subMenu" : helpExamples } )
-
 
 ## Node creation menu
 ###########################################################################
@@ -147,7 +141,7 @@ if "DELIGHT" in os.environ :
 		scriptWindowMenu.append(
 			"/Help/3Delight/User Guide",
 			{
-				"command" : IECore.curry( GafferUI.showURL, os.path.expandvars( "$DELIGHT/doc/3Delight-UserManual.pdf" ) ),
+				"command" : functools.partial( GafferUI.showURL, os.path.expandvars( "$DELIGHT/doc/3Delight-UserManual.pdf" ) ),
 			}
 		)
 
@@ -197,7 +191,7 @@ if "APPLESEED" in os.environ :
 		scriptWindowMenu.append(
 			"/Help/Appleseed/User Docs",
 			{
-				"command" : IECore.curry( GafferUI.showURL, "https://github.com/appleseedhq/appleseed/wiki" ),
+				"command" : functools.partial( GafferUI.showURL, "https://github.com/appleseedhq/appleseed/wiki" ),
 			}
 		)
 
@@ -328,10 +322,12 @@ if moduleSearchPath.find( "GafferOSL" ) :
 	nodeMenu.append( "/OSL/Image", GafferOSL.OSLImage, searchText = "OSLImage" )
 	nodeMenu.append( "/OSL/Object", GafferOSL.OSLObject, searchText = "OSLObject" )
 
+	oslDocs = os.path.expandvars( "$GAFFER_ROOT/doc/osl-languagespec.pdf" )
 	scriptWindowMenu.append(
 		"/Help/Open Shading Language/Language Reference",
 		{
-			"command" : IECore.curry( GafferUI.showURL, os.path.expandvars( "$GAFFER_ROOT/doc/osl/osl-languagespec.pdf" ) ),
+			"active" : os.path.exists( oslDocs ),
+			"command" : functools.partial( GafferUI.showURL, oslDocs ),
 		}
 	)
 

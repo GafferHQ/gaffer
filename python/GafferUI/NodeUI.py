@@ -35,10 +35,18 @@
 #
 ##########################################################################
 
+import os.path
+
 import IECore
 
 import Gaffer
 import GafferUI
+
+def __documentationURL( node ) :
+
+	fileName = "$GAFFER_ROOT/doc/gaffer/html/NodeReference/" + node.typeName().replace( "::", "/" ) + ".html"
+	fileName = os.path.expandvars( fileName )
+	return "file://" + fileName if os.path.isfile( fileName ) else ""
 
 Gaffer.Metadata.registerNode(
 
@@ -48,6 +56,8 @@ Gaffer.Metadata.registerNode(
 	"""
 	A container for plugs.
 	""",
+
+	"documentation:url", __documentationURL,
 
 	plugs = {
 

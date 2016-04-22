@@ -117,6 +117,8 @@ try :
 except :
 	pass
 
+sphinxRoot = os.path.join( IEEnv.Environment.rootPath(), "apps", "sphinx", "1.4.1" )
+
 ##########################################################################
 # set where we'll put things
 ##########################################################################
@@ -187,9 +189,22 @@ LOCATE_DEPENDENCY_LIBPATH = [
 
 	os.path.join( IEEnv.Environment.rootPath(), "tools", "lib", IEEnv.platform(), compiler, compilerVersion ),
 	os.path.join( IEEnv.Environment.rootPath(), "apps", "cortex", cortexVersion, IEEnv.platform(), "base", "lib", compiler, compilerVersion ),
-	os.path.join( IEEnv.Environment.rootPath(), "apps", "qt", qtVersion, IEEnv.platform(), compiler, compilerVersion, "lib" )
+	os.path.join( IEEnv.Environment.rootPath(), "apps", "qt", qtVersion, IEEnv.platform(), compiler, compilerVersion, "lib" ),
+	os.path.join( IEEnv.Environment.rootPath(), "apps", "OpenShadingLanguage", oslVersion, IEEnv.platform(), compiler, compilerVersion, "lib" ),	
 
 ]
+
+LOCATE_DEPENDENCY_PYTHONPATH = [
+
+	os.path.join( IEEnv.Environment.rootPath(), "apps", "cortex", cortexVersion, IEEnv.platform(), "base", "python", pythonVersion, compiler, compilerVersion ),	
+	os.path.join( IEEnv.Environment.rootPath(), "tools", "python", pythonVersion, IEEnv.platform(), compiler, compilerVersion, "subprocess32", "3" ),
+	os.path.join( IEEnv.Environment.rootPath(), "tools", "python", pythonVersion, IEEnv.platform(), compiler, compilerVersion, "PyOpenGL", "3" ),
+	os.path.join( sphinxRoot, "lib", "python" + pythonVersion, "site-packages" ),
+	os.path.join( sphinxRoot, "lib64", "python" + pythonVersion, "site-packages" ),
+
+]
+
+os.environ["IECOREGL_SHADER_INCLUDE_PATHS"] = os.path.join( IEEnv.Environment.rootPath(), "apps", "cortex", cortexVersion, IEEnv.platform(), "base", "glsl" )
 
 if targetAppVersion :
 	
@@ -226,11 +241,13 @@ if getOption( "RELEASE", "0" )=="0" :
 APPLESEED_LIB_PATH = ""
 
 ##########################################################################
-# get compiler set up
+# get compiler and other build tools set up
 ##########################################################################
 
 compilerReg = IEEnv.registry["compilers"][compiler][compilerVersion][IEEnv.platform()]
 CXX = os.path.join( compilerReg["location"], compilerReg["bin"] )
+
+SPHINX = os.path.join( sphinxRoot, "bin", "sphinx-build" )
 
 ##########################################################################
 # figure out the lib suffixes
@@ -258,8 +275,8 @@ CORTEX_PYTHON_LIB_SUFFIX = "-" + cortexMajorVersion + "-python" + pythonVersion
 # when the gaffer sconstruct invokes the cortex sconstruct
 #os.environ["IEENV_LIBRARY_PREFIX_PATH"] = BUILD_DIR + "/lib"
 
-# we need these imported so scons runs ok when we invoke the cortex build
-ENV_VARS_TO_IMPORT="PATH PYTHONPATH IEENV_ROOT IEENV_DISABLE_WRAPPER_ENV_CHECK IEENV_WORKING_PATH  DOXYGEN_VERSION OSL_VERSION"
+# we need these imported so we can run the commands to generate the documentation
+ENV_VARS_TO_IMPORT="PATH PYTHONPATH IEENV_ROOT IEENV_DISABLE_WRAPPER_ENV_CHECK IECORE_FONT_PATHS IECOREGL_SHADER_INCLUDE_PATHS OCIO IEENV_WORKING_PATH DOXYGEN_VERSION OSL_VERSION"
 # the output is pretty tedious without this disabled
 os.environ["IEENV_DISABLE_WRAPPER_ENV_CHECK"] = "1"
 

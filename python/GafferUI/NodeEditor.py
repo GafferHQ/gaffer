@@ -35,6 +35,8 @@
 #
 ##########################################################################
 
+import functools
+
 import IECore
 
 import Gaffer
@@ -110,8 +112,17 @@ class NodeEditor( GafferUI.NodeSetEditor ) :
 				self.__nameWidget.setEditable( not self.getReadOnly() )
 
 				with GafferUI.ListContainer( GafferUI.ListContainer.Orientation.Horizontal, spacing=4 ) as infoSection :
+
 					GafferUI.Label( "<h4>" + node.typeName().rpartition( ":" )[-1] + "</h4>" )
-					GafferUI.Image( "info.png" )
+
+					button = GafferUI.Button( image = "info.png", hasFrame = False )
+					url = Gaffer.Metadata.nodeValue( node, "documentation:url" )
+					if url :
+						button.clickedSignal().connect(
+							lambda button : GafferUI.showURL( url ),
+							scoped = False
+						)
+
 				toolTip = "<h3>" + node.typeName().rpartition( ":" )[2] + "</h3>"
 				description = Gaffer.Metadata.nodeDescription( node )
 				if description :
@@ -137,6 +148,17 @@ class NodeEditor( GafferUI.NodeSetEditor ) :
 	def __menuDefinition( self ) :
 
 		result = IECore.MenuDefinition()
+
+		url = Gaffer.Metadata.nodeValue( self.nodeUI().node(), "documentation:url" )
+		result.append(
+			"/Documentation...",
+			{
+				"active" : bool( url ),
+				"command" : functools.partial( GafferUI.showURL, url ),
+			}
+		)
+
+		result.append( "/DocumentationDivider", { "divider" : True } )
 
 		result.append(
 			"/Revert to Defaults",
