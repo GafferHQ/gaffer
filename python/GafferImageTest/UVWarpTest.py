@@ -96,5 +96,23 @@ class UVWarpTest( GafferImageTest.ImageTestCase ) :
 				sampler1["pixel"].setValue( IECore.V2f( u * 2, v * 2 ) )
 				self.assertEqual( sampler1["color"].getValue(), sampler2["color"].getValue() )
 
+	def testNegativeDataWindowOrigin( self ) :
+
+		reader = GafferImage.ImageReader()
+		reader["fileName"].setValue( os.path.dirname( __file__ ) + "/images/checker.exr" )
+
+		constant = GafferImage.Constant()
+		constant["color"].setValue( IECore.Color4f( 0.5, 0, 0, 1 ) )
+
+		offset = GafferImage.Offset()
+		offset["in"].setInput( constant["out"] )
+		offset["offset"].setValue( IECore.V2i( -200, -250 ) )
+
+		uvWarp = GafferImage.UVWarp()
+		uvWarp["in"].setInput( reader["out"] )
+		uvWarp["uv"].setInput( offset["out"] )
+
+		GafferImageTest.processTiles( uvWarp["out"] )
+
 if __name__ == "__main__":
 	unittest.main()
