@@ -42,9 +42,9 @@ QtGui = GafferUI._qtImport( "QtGui" )
 
 class PopupWindow( GafferUI.Window ) :
 
-	def __init__( self, title="GafferUI.Window", borderWidth=8, child=None, sizeMode=GafferUI.Window.SizeMode.Automatic, closeOnLeave=False, **kw ) :
+	def __init__( self, title="GafferUI.Window", borderWidth=8, child=None, sizeMode=GafferUI.Window.SizeMode.Automatic, closeOnLeave=False, parenting = None ) :
 
-		GafferUI.Window.__init__( self, title, borderWidth, child=child, sizeMode=sizeMode, **kw )
+		GafferUI.Window.__init__( self, title, borderWidth, child=child, sizeMode=sizeMode, parenting=parenting )
 
 		self._qtWidget().setWindowFlags( self._qtWidget().windowFlags() | QtCore.Qt.FramelessWindowHint | QtCore.Qt.Tool )
 

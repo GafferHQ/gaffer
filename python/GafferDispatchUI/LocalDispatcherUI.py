@@ -180,9 +180,9 @@ class _LocalJobsPath( Gaffer.Path ) :
 
 class _LocalJobsWindow( GafferUI.Window ) :
 
-	def __init__( self, jobPool, **kw ) :
+	def __init__( self, jobPool, parenting = None ) :
 
-		GafferUI.Window.__init__( self, **kw )
+		GafferUI.Window.__init__( self, parenting = parenting )
 
 		with self :
 			with GafferUI.SplitContainer() :

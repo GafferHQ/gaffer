@@ -115,7 +115,7 @@ Gaffer.Metadata.registerNode(
 
 class _ShadingModePlugValueWidget( GafferUI.PlugValueWidget ) :
 
-		def __init__( self, plug, **kw ) :
+		def __init__( self, plug, parenting = None ) :
 
 			menuButton = GafferUI.MenuButton(
 				image = "shading.png",
@@ -123,7 +123,7 @@ class _ShadingModePlugValueWidget( GafferUI.PlugValueWidget ) :
 				hasFrame = False,
 			)
 
-			GafferUI.PlugValueWidget.__init__( self, menuButton, plug, **kw )
+			GafferUI.PlugValueWidget.__init__( self, menuButton, plug, parenting = parenting )
 
 		def hasLabel( self ) :
 
@@ -162,12 +162,12 @@ class _ShadingModePlugValueWidget( GafferUI.PlugValueWidget ) :
 
 class _ExpansionPlugValueWidget( GafferUI.PlugValueWidget ) :
 
-	def __init__( self, plug, **kw ) :
+	def __init__( self, plug, parenting = None ) :
 
 		menu = GafferUI.Menu( Gaffer.WeakMethod( self.__menuDefinition ) )
 		menuButton = GafferUI.MenuButton( menu=menu, image = "expansion.png", hasFrame=False )
 
-		GafferUI.PlugValueWidget.__init__( self, menuButton, plug, **kw )
+		GafferUI.PlugValueWidget.__init__( self, menuButton, plug, parenting = parenting )
 
 	def hasLabel( self ) :
 
@@ -200,11 +200,11 @@ class _ExpansionPlugValueWidget( GafferUI.PlugValueWidget ) :
 
 class _LookThroughPlugValueWidget( GafferUI.PlugValueWidget ) :
 
-	def __init__( self, plug, **kw ) :
+	def __init__( self, plug, parenting = None ) :
 
 		row = GafferUI.ListContainer( GafferUI.ListContainer.Orientation.Horizontal )
 
-		GafferUI.PlugValueWidget.__init__( self, row, plug, **kw )
+		GafferUI.PlugValueWidget.__init__( self, row, plug, parenting = parenting )
 
 		with row :
 			self.__enabledWidget = GafferUI.BoolPlugValueWidget( plug["enabled"], displayMode=GafferUI.BoolWidget.DisplayMode.Switch )
@@ -234,12 +234,12 @@ class _LookThroughPlugValueWidget( GafferUI.PlugValueWidget ) :
 
 class _GridPlugValueWidget( GafferUI.PlugValueWidget ) :
 
-	def __init__( self, plug, **kw ) :
+	def __init__( self, plug, parenting = None ) :
 
 		menu = GafferUI.Menu( Gaffer.WeakMethod( self.__menuDefinition ) )
 		menuButton = GafferUI.MenuButton( menu=menu, image = "grid.png", hasFrame=False )
 
-		GafferUI.PlugValueWidget.__init__( self, menuButton, plug, **kw )
+		GafferUI.PlugValueWidget.__init__( self, menuButton, plug, parenting = parenting )
 
 	def hasLabel( self ) :
 

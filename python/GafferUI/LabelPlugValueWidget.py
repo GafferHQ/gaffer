@@ -43,9 +43,9 @@ QtGui = GafferUI._qtImport( "QtGui" )
 # with the popup action menu for the plug.
 class LabelPlugValueWidget( GafferUI.PlugValueWidget ) :
 
-	def __init__( self, plug, horizontalAlignment=GafferUI.Label.HorizontalAlignment.Left, verticalAlignment=GafferUI.Label.VerticalAlignment.Center, **kw ) :
+	def __init__( self, plug, horizontalAlignment=GafferUI.Label.HorizontalAlignment.Left, verticalAlignment=GafferUI.Label.VerticalAlignment.Center, parenting = None ) :
 
-		GafferUI.PlugValueWidget.__init__( self, QtGui.QWidget(), plug, **kw )
+		GafferUI.PlugValueWidget.__init__( self, QtGui.QWidget(), plug, parenting = parenting )
 
 		layout = QtGui.QHBoxLayout()
 		layout.setContentsMargins( 0, 0, 0, 0 )

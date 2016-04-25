@@ -45,11 +45,11 @@ import GafferUI
 # - "multiLineStringPlugValueWidget:continuousUpdate"
 class MultiLineStringPlugValueWidget( GafferUI.PlugValueWidget ) :
 
-	def __init__( self, plug, **kw ) :
+	def __init__( self, plug, parenting = None ) :
 
 		self.__textWidget = GafferUI.MultiLineTextWidget()
 
-		GafferUI.PlugValueWidget.__init__( self, self.__textWidget, plug, **kw )
+		GafferUI.PlugValueWidget.__init__( self, self.__textWidget, plug, parenting = parenting )
 
 		self._addPopupMenu( self.__textWidget )
 

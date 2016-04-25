@@ -42,12 +42,12 @@ import GafferUI
 
 class _BaseStatePlugValueWidget( GafferUI.PlugValueWidget ) :
 
-	def __init__( self, plug, **kw ) :
+	def __init__( self, plug, parenting = None ) :
 
 		menu = GafferUI.Menu( Gaffer.WeakMethod( self.__menuDefinition ) )
 		menuButton = GafferUI.MenuButton( menu=menu, image = "drawingStyles.png", hasFrame=False )
 
-		GafferUI.PlugValueWidget.__init__( self, menuButton, plug, **kw )
+		GafferUI.PlugValueWidget.__init__( self, menuButton, plug, parenting = parenting )
 
 	def hasLabel( self ) :
 

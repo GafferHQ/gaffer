@@ -45,9 +45,9 @@ import GafferUI
 # implementation suitable for most purposes.
 class NodeToolbar( GafferUI.Widget ) :
 
-	def __init__( self, node, topLevelWidget, **kw ) :
+	def __init__( self, node, topLevelWidget, parenting = None ) :
 
-		GafferUI.Widget.__init__( self, topLevelWidget, **kw )
+		GafferUI.Widget.__init__( self, topLevelWidget, parenting = parenting )
 
 		self.__node = node
 

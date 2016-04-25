@@ -46,9 +46,9 @@ QtGui = GafferUI._qtImport( "QtGui" )
 # may be provided to add additional functionality to the header.
 class Collapsible( GafferUI.ContainerWidget ) :
 
-	def __init__( self, label="", child=None, collapsed=False, borderWidth=0, cornerWidget=None, cornerWidgetExpanded=False, **kw ) :
+	def __init__( self, label="", child=None, collapsed=False, borderWidth=0, cornerWidget=None, cornerWidgetExpanded=False, parenting=None ) :
 
-		GafferUI.ContainerWidget.__init__( self, QtGui.QWidget(), **kw )
+		GafferUI.ContainerWidget.__init__( self, QtGui.QWidget(), parenting = parenting )
 
 		layout = _VBoxLayout()
 		self._qtWidget().setLayout( layout )

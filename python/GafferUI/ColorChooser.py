@@ -47,7 +47,7 @@ QtGui = GafferUI._qtImport( "QtGui" )
 # A custom slider for drawing the backgrounds.
 class _ComponentSlider( GafferUI.NumericSlider ) :
 
-	def __init__( self, color, component, useDisplayTransform = True, **kw ) :
+	def __init__( self, color, component, useDisplayTransform = True, parenting = None ) :
 
 		min = hardMin = 0
 		max = hardMax = 1
@@ -55,7 +55,7 @@ class _ComponentSlider( GafferUI.NumericSlider ) :
 		if component in ( "r", "g", "b", "v" ) :
 			hardMax = sys.float_info.max
 
-		GafferUI.NumericSlider.__init__( self, 0.0, min, max, hardMin, hardMax, **kw )
+		GafferUI.NumericSlider.__init__( self, 0.0, min, max, hardMin, hardMax, parenting = parenting )
 
 		self.color = color
 		self.component = component
@@ -114,11 +114,11 @@ class ColorChooser( GafferUI.Widget ) :
 
 	ColorChangedReason = IECore.Enum.create( "Invalid", "SetColor", "Reset" )
 
-	def __init__( self, color=IECore.Color3f( 1 ), useDisplayTransform = True ) :
+	def __init__( self, color=IECore.Color3f( 1 ), useDisplayTransform = True, parenting = None ) :
 
 		self.__column = GafferUI.ListContainer( GafferUI.ListContainer.Orientation.Vertical, spacing = 4 )
 
-		GafferUI.Widget.__init__( self, self.__column )
+		GafferUI.Widget.__init__( self, self.__column, parenting = parenting )
 
 		self.__color = color
 		self.__defaultColor = color

@@ -109,12 +109,9 @@ class Widget( object ) :
 	# protected to encourage non-reliance on knowledge of the Qt backend.
 	#
 	# If a current parent has been defined using the `with` syntax described above,
-	# the parenting argument provides optional keywords for the automatic
-	# `parent.addChild()` call.
-	#
-	# \deprecated The arbitrary keyword arguments (**kw) will be removed in
-	# a future version.
-	def __init__( self, topLevelWidget, toolTip="", parenting = {}, **kw ) :
+	# the parenting argument may be passed as a dictionay of optional keywords for the
+	# automatic `parent.addChild()` call.
+	def __init__( self, topLevelWidget, toolTip="", parenting = None ) :
 
 		assert( isinstance( topLevelWidget, ( QtGui.QWidget, Widget ) ) )
 
@@ -181,16 +178,8 @@ class Widget( object ) :
 		# hardcoding stuff here.
 		if len( self.__parentStack ) and not isinstance( self, GafferUI.Menu ) :
 			if self.__initNesting() == self.__parentStack[-1][1] + 1 :
-				addChildKW = parenting
-				if len( kw ) :
-					addChildKW = addChildKW.copy()
-					addChildKW.update( kw )
-					warnings.warn(
-						"Arbitrary keyword arguments are deprecated - use the `parenting` argument instead.",
-						DeprecationWarning,
-						self.__keywordArgumentDeprecationNesting()
-					)
-				self.__parentStack[-1][0].addChild( self, **addChildKW )
+				parenting = parenting or {}
+				self.__parentStack[-1][0].addChild( self, **parenting )
 
 		self.__eventFilterInstalled = False
 		# if a class has overridden getToolTip, then the tooltips

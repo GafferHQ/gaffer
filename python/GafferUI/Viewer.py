@@ -56,7 +56,7 @@ IECoreGL = Gaffer.lazyImport( "IECoreGL" )
 # without modifying the Views themselves.
 class Viewer( GafferUI.NodeSetEditor ) :
 
-	def __init__( self, scriptNode, **kw ) :
+	def __init__( self, scriptNode, parenting = None ) :
 
 		self.__gadgetWidget = GafferUI.GadgetWidget(
 			bufferOptions = set( (
@@ -65,7 +65,7 @@ class Viewer( GafferUI.NodeSetEditor ) :
 			),
 		)
 
-		GafferUI.NodeSetEditor.__init__( self, self.__gadgetWidget, scriptNode, **kw )
+		GafferUI.NodeSetEditor.__init__( self, self.__gadgetWidget, scriptNode, parenting = parenting )
 
 		self.__nodeToolbars = []
 		self.__viewToolbars = []
@@ -315,9 +315,9 @@ GafferUI.EditorWidget.registerType( "Viewer", Viewer )
 # Internal widget to simplify the management of node toolbars.
 class _Toolbar( GafferUI.Frame ) :
 
-	def __init__( self, edge, **kw ) :
+	def __init__( self, edge, parenting = None ) :
 
-		GafferUI.Frame.__init__( self, borderWidth = 0, borderStyle = GafferUI.Frame.BorderStyle.None, **kw )
+		GafferUI.Frame.__init__( self, borderWidth = 0, borderStyle = GafferUI.Frame.BorderStyle.None, parenting = parenting )
 
 		# We store the 5 most recently used toolbars in a cache,
 		# to avoid unnecessary reconstruction when switching back and

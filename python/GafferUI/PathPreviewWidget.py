@@ -41,9 +41,9 @@ import GafferUI
 # preview the contents of a path in some way.
 class PathPreviewWidget( GafferUI.Widget ) :
 
-	def __init__( self, topLevelWidget, path ) :
+	def __init__( self, topLevelWidget, path, parenting = None ) :
 
-		GafferUI.Widget.__init__( self, topLevelWidget )
+		GafferUI.Widget.__init__( self, topLevelWidget, parenting = parenting )
 
 		self.__path = None
 		self.setPath( path )

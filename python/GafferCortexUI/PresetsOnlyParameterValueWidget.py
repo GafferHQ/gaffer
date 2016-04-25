@@ -46,13 +46,13 @@ import GafferCortexUI
 
 class PresetsOnlyParameterValueWidget( GafferCortexUI.ParameterValueWidget ) :
 
-	def __init__( self, parameterHandler, **kw ) :
+	def __init__( self, parameterHandler, parenting = None ) :
 
 		GafferCortexUI.ParameterValueWidget.__init__(
 			self,
 			_PlugValueWidget( parameterHandler ),
 			parameterHandler,
-			**kw
+			parenting = parenting
 		)
 
 GafferCortexUI.ParameterValueWidget.registerType( IECore.Parameter, PresetsOnlyParameterValueWidget, "presets" )
@@ -61,12 +61,12 @@ GafferCortexUI.ParameterValueWidget.registerType( IECore.Parameter, PresetsOnlyP
 # but is overridden here to allow for dynamic changes Parameter presets.
 class _PlugValueWidget( GafferUI.PlugValueWidget ) :
 
-	def __init__( self, parameterHandler, **kw ) :
+	def __init__( self, parameterHandler, parenting = None ) :
 
 		self.__parameterHandler = parameterHandler
 
 		self.__menuButton = GafferUI.MenuButton( "", menu = GafferUI.Menu( Gaffer.WeakMethod( self.__menuDefinition ) ) )
-		GafferUI.PlugValueWidget.__init__( self, self.__menuButton, self.__parameterHandler.plug(), **kw )
+		GafferUI.PlugValueWidget.__init__( self, self.__menuButton, self.__parameterHandler.plug(), parenting = parenting )
 
 		self._addPopupMenu( self.__menuButton )
 		self._updateFromPlug()

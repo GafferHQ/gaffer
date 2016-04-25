@@ -43,14 +43,14 @@ import GafferCortexUI
 
 class ClassParameterValueWidget( GafferCortexUI.CompoundParameterValueWidget ) :
 
-	def __init__( self, parameterHandler, collapsible=None, **kw ) :
+	def __init__( self, parameterHandler, collapsible=None, parenting=None ) :
 
 		GafferCortexUI.CompoundParameterValueWidget.__init__(
 			self,
 			parameterHandler,
 			collapsible,
 			_PlugValueWidget,
-			**kw
+			parenting = parenting
 		)
 
 class _PlugValueWidget( GafferCortexUI.CompoundParameterValueWidget._PlugValueWidget ) :

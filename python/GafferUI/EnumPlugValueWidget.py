@@ -39,10 +39,10 @@ import GafferUI
 
 class EnumPlugValueWidget( GafferUI.PlugValueWidget ) :
 
-	def __init__( self, plug, labelsAndValues, **kw ) :
+	def __init__( self, plug, labelsAndValues, parenting = None ) :
 
 		self.__selectionMenu = GafferUI.MultiSelectionMenu( allowMultipleSelection = False, allowEmptySelection = False )
-		GafferUI.PlugValueWidget.__init__( self, self.__selectionMenu, plug, **kw )
+		GafferUI.PlugValueWidget.__init__( self, self.__selectionMenu, plug, parenting = parenting )
 
 		self.__labelsAndValues = labelsAndValues
 		for label, value in self.__labelsAndValues :

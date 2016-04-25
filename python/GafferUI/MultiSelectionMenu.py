@@ -45,13 +45,13 @@ class MultiSelectionMenu( GafferUI.MenuButton ) :
 		self,
 		allowMultipleSelection = False,
 		allowEmptySelection = True,
-		**kw
+		parenting = None
 	) :
 
 		GafferUI.MenuButton.__init__(
 			self,
 			menu = GafferUI.Menu( Gaffer.WeakMethod( self.__menuDefinition ) ),
-			**kw
+			parenting = parenting
 		)
 
 		self.__allowMultipleSelection = allowMultipleSelection

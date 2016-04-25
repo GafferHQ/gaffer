@@ -47,11 +47,11 @@ import GafferUI
 # - "boolPlugValueWidget:displayMode", with a value of "checkBox" or "switch"
 class BoolPlugValueWidget( GafferUI.PlugValueWidget ) :
 
-	def __init__( self, plug, displayMode=GafferUI.BoolWidget.DisplayMode.CheckBox, **kw ) :
+	def __init__( self, plug, displayMode=GafferUI.BoolWidget.DisplayMode.CheckBox, parenting=None ) :
 
 		self.__boolWidget = GafferUI.BoolWidget( displayMode=displayMode )
 
-		GafferUI.PlugValueWidget.__init__( self, self.__boolWidget, plug, **kw )
+		GafferUI.PlugValueWidget.__init__( self, self.__boolWidget, plug, parenting = parenting )
 
 		self._addPopupMenu( self.__boolWidget )
 

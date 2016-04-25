@@ -44,9 +44,9 @@ class Spacer( GafferUI.Widget ) :
 
 	## \todo Rename size to minimumSize. We're just keeping the name
 	# for backwards compatibility for now.
-	def __init__( self, size, maximumSize=None, **kw ) :
+	def __init__( self, size, maximumSize=None, parenting=None ) :
 
-		GafferUI.Widget.__init__( self, QtGui.QWidget(), **kw )
+		GafferUI.Widget.__init__( self, QtGui.QWidget(), parenting = parenting )
 
 		self._qtWidget().setMinimumWidth( size.x )
 		self._qtWidget().setMinimumHeight( size.y )

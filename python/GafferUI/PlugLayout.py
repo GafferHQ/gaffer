@@ -87,13 +87,13 @@ class PlugLayout( GafferUI.Widget ) :
 	# We use this when we can't find a ScriptNode to provide the context.
 	__fallbackContext = Gaffer.Context()
 
-	def __init__( self, parent, orientation = GafferUI.ListContainer.Orientation.Vertical, layoutName = "layout", rootSection = "", **kw ) :
+	def __init__( self, parent, orientation = GafferUI.ListContainer.Orientation.Vertical, layoutName = "layout", rootSection = "", parenting = None ) :
 
 		assert( isinstance( parent, ( Gaffer.Node, Gaffer.Plug ) ) )
 
 		self.__layout = _TabLayout( orientation ) if isinstance( parent, Gaffer.Node ) else _CollapsibleLayout( orientation )
 
-		GafferUI.Widget.__init__( self, self.__layout, **kw )
+		GafferUI.Widget.__init__( self, self.__layout, parenting = parenting )
 
 		self.__parent = parent
 		self.__readOnly = False
@@ -565,9 +565,9 @@ class _Section( object ) :
 # or the parent is a node (tabbed layout) or a plug (collapsible layout).
 class _Layout( GafferUI.Widget ) :
 
-	def __init__( self, topLevelWidget, orientation, **kw ) :
+	def __init__( self, topLevelWidget, orientation, parenting = None ) :
 
-		GafferUI.Widget.__init__( self, topLevelWidget, **kw )
+		GafferUI.Widget.__init__( self, topLevelWidget, parenting = parenting )
 
 		self.__orientation = orientation
 
@@ -581,11 +581,11 @@ class _Layout( GafferUI.Widget ) :
 
 class _TabLayout( _Layout ) :
 
-	def __init__( self, orientation, **kw ) :
+	def __init__( self, orientation, parenting = None ) :
 
 		self.__mainColumn = GafferUI.ListContainer( GafferUI.ListContainer.Orientation.Vertical )
 
-		_Layout.__init__( self, self.__mainColumn, orientation, **kw )
+		_Layout.__init__( self, self.__mainColumn, orientation, parenting = parenting )
 
 		with self.__mainColumn :
 			self.__widgetsColumn = GafferUI.ListContainer( self.orientation(), spacing = 4, borderWidth = 4 )
@@ -641,11 +641,11 @@ class _TabLayout( _Layout ) :
 
 class _CollapsibleLayout( _Layout ) :
 
-	def __init__( self, orientation, **kw ) :
+	def __init__( self, orientation, parenting = None ) :
 
 		self.__column = GafferUI.ListContainer( orientation, spacing = 4 )
 
-		_Layout.__init__( self, self.__column, orientation, **kw )
+		_Layout.__init__( self, self.__column, orientation, parenting = parenting )
 
 		self.__collapsibles = {} # Indexed by section name
 

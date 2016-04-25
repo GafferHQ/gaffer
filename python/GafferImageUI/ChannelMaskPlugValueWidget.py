@@ -47,11 +47,11 @@ class ChannelMaskPlugValueWidget( GafferUI.PlugValueWidget ) :
 	# The imagePlug provides the available channel names which are
 	# presented in the UI. The default value causes the "in" plug
 	# from the same node as the main plug to be used.
-	def __init__( self, plug, imagePlug = None, **kw ) :
+	def __init__( self, plug, imagePlug = None, parenting = None ) :
 
 		self.__menuButton = GafferUI.MenuButton( menu = GafferUI.Menu( Gaffer.WeakMethod( self.__menuDefinition ) ) )
 
-		GafferUI.PlugValueWidget.__init__( self, self.__menuButton, plug, **kw )
+		GafferUI.PlugValueWidget.__init__( self, self.__menuButton, plug, parenting = parenting )
 
 		if imagePlug is not None :
 			self.__imagePlug = imagePlug
