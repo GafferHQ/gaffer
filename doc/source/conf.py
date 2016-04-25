@@ -341,11 +341,23 @@ class GafferTransform( recommonmark.transform.AutoStructify ) :
         else :
             return recommonmark.transform.AutoStructify.find_replace( self, node )
 
+def gafferSourceSubstitutions( app, docName, source ) :
+
+    source[0] = source[0].replace( "!GAFFER_VERSION!", Gaffer.About.versionString() )
+    source[0] = source[0].replace( "!GAFFER_MILESTONE_VERSION!", str( Gaffer.About.milestoneVersion() ) )
+    source[0] = source[0].replace( "!GAFFER_MAJOR_VERSION!", str( Gaffer.About.majorVersion() ) )
+    source[0] = source[0].replace( "!GAFFER_MINOR_VERSION!", str( Gaffer.About.minorVersion() ) )
+    source[0] = source[0].replace( "!GAFFER_PATCH_VERSION!", str( Gaffer.About.patchVersion() ) )
+
 def setup( app ) :
+
     app.add_config_value(
     	'recommonmark_config',
     	{
         },
         True
     )
+
     app.add_transform( GafferTransform )
+
+    app.connect( "source-read", gafferSourceSubstitutions )
