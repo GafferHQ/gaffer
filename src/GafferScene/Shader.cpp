@@ -44,7 +44,6 @@
 #include "Gaffer/CompoundDataPlug.h"
 #include "Gaffer/StringPlug.h"
 #include "Gaffer/Metadata.h"
-#include "Gaffer/CompoundPlug.h"
 #include "Gaffer/ScriptNode.h"
 
 #include "IECore/Light.h"
@@ -71,7 +70,7 @@ Shader::Shader( const std::string &name )
 	storeIndexOfNextChild( g_firstPlugIndex );
 	addChild( new StringPlug( "name" ) );
 	addChild( new StringPlug( "type" ) );
-	addChild( new CompoundPlug( "parameters", Plug::In, Plug::Default & ~Plug::AcceptsInputs ) );
+	addChild( new Plug( "parameters", Plug::In, Plug::Default & ~Plug::AcceptsInputs ) );
 	addChild( new BoolPlug( "enabled", Gaffer::Plug::In, true ) );
 	addChild( new StringPlug( "__nodeName", Gaffer::Plug::In, name, Plug::Default & ~(Plug::Serialisable | Plug::AcceptsInputs), Context::NoSubstitutions ) );
 	addChild( new Color3fPlug( "__nodeColor", Gaffer::Plug::In, Color3f( 0.0f ) ) );
@@ -376,7 +375,7 @@ void Shader::NetworkBuilder::parameterHashWalk( const Shader *shaderNode, const 
 {
 	for( InputPlugIterator it( parameterPlug ); !it.done(); ++it )
 	{
-		if( (*it)->typeId() == CompoundPlug::staticTypeId() )
+		if( !isLeafParameter( it->get() ) )
 		{
 			parameterHashWalk( shaderNode, it->get(), h );
 		}
@@ -446,7 +445,7 @@ void Shader::NetworkBuilder::parameterValueWalk( const Shader *shaderNode, const
 			childParameterName = (*it)->getName();
 		}
 
-		if( (*it)->typeId() == CompoundPlug::staticTypeId() )
+		if( !isLeafParameter( it->get() ) )
 		{
 			parameterValueWalk( shaderNode, it->get(), childParameterName, values );
 		}
@@ -458,6 +457,19 @@ void Shader::NetworkBuilder::parameterValueWalk( const Shader *shaderNode, const
 			}
 		}
 	}
+}
+
+bool Shader::NetworkBuilder::isLeafParameter( const Gaffer::Plug *parameterPlug ) const
+{
+	const IECore::TypeId typeId = parameterPlug->typeId();
+	if( typeId == Plug::staticTypeId() || typeId == ValuePlug::staticTypeId() )
+	{
+		if( !parameterPlug->children().empty() )
+		{
+			return false;
+		}
+	}
+	return true;
 }
 
 const std::string &Shader::NetworkBuilder::shaderHandle( const Shader *shaderNode )
