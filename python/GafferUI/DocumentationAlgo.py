@@ -150,8 +150,22 @@ def exportCommandLineReference( directory, appPath = "$GAFFER_ROOT/apps" ) :
 		```
 
 		If the `appName` is not specified it defaults to `"gui"`, and
-		the familiar main interface is loaded. Details on the
-		specific arguments for each app are provided below.
+		the familiar main interface is loaded. This shortcut also allows
+		a file to load to be specified :
+
+		```
+		gaffer file.gfr
+		```
+
+		Help for any application can be printed with the following
+		command :
+
+		```
+		gaffer -help appName
+		```
+
+		Further information on the specific command line arguments for each
+		application is provided below.
 		"""
 
 	) )
