@@ -199,6 +199,10 @@ def __nodeDocumentation( node ) :
 			result += "\n\n" + __heading( plug.relativeName( node ), 1 )
 			result += description
 
+			extensions = Gaffer.Metadata.plugValue( plug, "fileSystemPathPlugValueWidget:extensions" ) or []
+			if extensions :
+				result += "\n\n**Supported file extensions** : "+ ", ".join( extensions )
+
 			if type( plug ) in ( Gaffer.Plug, Gaffer.ValuePlug, Gaffer.CompoundDataPlug ) :
 				result += walkPlugs( plug )
 

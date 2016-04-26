@@ -61,6 +61,16 @@ class FileSystemPathPlugValueWidget( GafferUI.PathPlugValueWidget ) :
 
 		self.__plugMetadataChangedConnection = Gaffer.Metadata.plugValueChangedSignal().connect( Gaffer.WeakMethod( self.__plugMetadataChanged ) )
 
+	def getToolTip( self ) :
+
+		result = GafferUI.PathPlugValueWidget.getToolTip( self )
+
+		extensions = self.__extensions()
+		if extensions :
+			result += "\n\nSupported file extensions : " + ", ".join( extensions )
+
+		return result
+
 	def _pathChooserDialogue( self ) :
 
 		dialogue = GafferUI.PathPlugValueWidget._pathChooserDialogue( self )
@@ -77,15 +87,11 @@ class FileSystemPathPlugValueWidget( GafferUI.PathPlugValueWidget ) :
 
 		GafferUI.PathPlugValueWidget._updateFromPlug( self )
 
-		extensions = Gaffer.Metadata.plugValue( self.getPlug(), "fileSystemPathPlugValueWidget:extensions" ) or []
-		if isinstance( extensions, str ) :
-			extensions = extensions.split()
-
 		includeSequences = Gaffer.Metadata.plugValue( self.getPlug(), "fileSystemPathPlugValueWidget:includeSequences" ) or False
 
 		self.path().setFilter(
 			Gaffer.FileSystemPath.createStandardFilter(
-				list( extensions ),
+				self.__extensions(),
 				Gaffer.Metadata.plugValue( self.getPlug(), "fileSystemPathPlugValueWidget:extensionsLabel" ) or "",
 				includeSequenceFilter = includeSequences,
 			)
@@ -116,3 +122,16 @@ class FileSystemPathPlugValueWidget( GafferUI.PathPlugValueWidget ) :
 
 		if key.startswith( "fileSystemPathPlugValueWidget:" ) :
 			self._updateFromPlug()
+
+	def __extensions( self ) :
+
+		if self.getPlug() is None :
+			return []
+
+		extensions = Gaffer.Metadata.plugValue( self.getPlug(), "fileSystemPathPlugValueWidget:extensions" ) or []
+		if isinstance( extensions, str ) :
+			extensions = extensions.split()
+		else :
+			extensions = list( extensions )
+
+		return extensions

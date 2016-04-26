@@ -95,10 +95,10 @@ class PathPlugValueWidget( GafferUI.PlugValueWidget ) :
 
 		result = GafferUI.PlugValueWidget.getToolTip( self )
 
-		result += "<ul>"
+		result += "\n\n<ul>"
 		result += "<li>Tab to auto-complete</li>"
 		result += "<li>Cursor down to list</li>"
-		result += "<ul>"
+		result += "</ul>"
 
 		return result
 
