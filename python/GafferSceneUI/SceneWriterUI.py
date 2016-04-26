@@ -46,8 +46,9 @@ Gaffer.Metadata.registerNode(
 
 	"description",
 	"""
-	Writes scenes to disk. Supports all formats for which a
-	writeable Cortex SceneInterface exists.
+	Writes scenes to cache files on disk. Gaffer's native file format is the .scc
+	(SceneCache) format provided by Cortex, but other formats may be supported by
+	registering a new implementation of Cortex's abstract SceneInterface.
 	""",
 
 	plugs = {
