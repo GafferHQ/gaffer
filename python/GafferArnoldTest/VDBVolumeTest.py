@@ -75,5 +75,22 @@ class VDBVolumeTest( GafferSceneTest.SceneTestCase ) :
 		v["fileName"].setValue( "notAFile.vdb" )
 		self.assertRaisesRegexp( RuntimeError, "No such file or directory", v["out"].bound, "/volume" )
 
+	def testStepSize( self ) :
+
+		v = GafferArnold.VDBVolume()
+		v["fileName"].setValue( os.path.join( os.path.dirname( __file__ ), "volumes", "sphere.vdb" ) )
+
+		self.assertEqual( v["stepSize"].getValue(), 0 )
+		self.assertEqual( v["stepScale"].getValue(), 1 )
+
+		# Step size should be calculated for us.
+		self.assertAlmostEqual( v["out"].object( "/volume" ).parameters()["step_size"].value, 0.2 )
+		# But we can scale it if we want.
+		v["stepScale"].setValue( 4 )
+		self.assertAlmostEqual( v["out"].object( "/volume" ).parameters()["step_size"].value, 0.8 )
+		# Or override it entirely.
+		v["stepSize"].setValue( 0.01 )
+		self.assertAlmostEqual( v["out"].object( "/volume" ).parameters()["step_size"].value, 0.04 )
+
 if __name__ == "__main__":
 	unittest.main()

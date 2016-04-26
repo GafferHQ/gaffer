@@ -69,6 +69,9 @@ class VDBVolume : public GafferScene::ObjectSource
 		Gaffer::FloatPlug *stepSizePlug();
 		const Gaffer::FloatPlug *stepSizePlug() const;
 
+		Gaffer::FloatPlug *stepScalePlug();
+		const Gaffer::FloatPlug *stepScalePlug() const;
+
 		Gaffer::StringPlug *dsoPlug();
 		const Gaffer::StringPlug *dsoPlug() const;
 

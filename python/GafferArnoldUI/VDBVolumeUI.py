@@ -104,7 +104,23 @@ Gaffer.Metadata.registerNode(
 			The ray marching step size. This should be small enough to capture
 			the smallest details in the volume. Values which are too large will
 			cause aliasing artifacts, and values which are too small will cause
-			rendering to be excessively slow.
+			rendering to be excessively slow. The default value of 0 causes the
+			size to be calculated automatically based on the resolution of the
+			VDB file. The step scale can then be used to make relative adjustments
+			on top of this automatic size.
+			""",
+
+		],
+
+		"stepScale" : [
+
+			"description",
+			"""
+			A multiplier applied to the step size. This is most useful when the
+			step size is computed automatically. Typically stepScale would be
+			increased above 1 to give improved render times when it is known that
+			the VDB file doesn't have a lot of fine detail at the voxel level -
+			a value of 4 might be a good starting point for such a file.
 			""",
 
 		],

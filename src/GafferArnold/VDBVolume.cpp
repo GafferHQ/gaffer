@@ -59,11 +59,13 @@ using namespace GafferArnold;
 namespace
 {
 
-Box3f bound( const std::string &fileName, const std::set<std::string> &sets )
+Box3f boundAndAutoStepSize( const std::string &fileName, const std::set<std::string> &sets, float &autoStepSize )
 {
 	openvdb::initialize();
 	openvdb::io::File file( fileName );
 	file.open();
+
+	autoStepSize = Imath::limits<float>::max();
 
 	openvdb::BBoxd result;
 	for( std::set<std::string>::const_iterator it = sets.begin(), eIt = sets.end(); it != eIt; ++it )
@@ -72,6 +74,9 @@ Box3f bound( const std::string &fileName, const std::set<std::string> &sets )
 		const openvdb::Vec3i &min = grid->metaValue<openvdb::Vec3i>( openvdb::GridBase::META_FILE_BBOX_MIN );
 		const openvdb::Vec3i &max = grid->metaValue<openvdb::Vec3i>( openvdb::GridBase::META_FILE_BBOX_MAX );
 		result.expand( grid->transform().indexToWorld( openvdb::BBoxd( min - 0.5, max + 0.5 ) ) );
+
+		const openvdb::Vec3d voxelSize = grid->voxelSize();
+		autoStepSize = std::min( std::min( (double)autoStepSize, voxelSize.x() ), std::min( voxelSize.y(), voxelSize.z() ) );
 	}
 
 	return Box3f(
@@ -98,7 +103,8 @@ VDBVolume::VDBVolume( const std::string &name )
 	addChild( new StringPlug( "grids", Plug::In, "density" ) );
 	addChild( new StringPlug( "velocityGrids" ) );
 	addChild( new FloatPlug( "velocityScale", Plug::In, 1.0f ) );
-	addChild( new FloatPlug( "stepSize", Plug::In, 1.0f, 0.0f ) );
+	addChild( new FloatPlug( "stepSize", Plug::In, 0.0f, 0.0f ) );
+	addChild( new FloatPlug( "stepScale", Plug::In, 1.0f, 0.0f ) );
 	addChild( new StringPlug( "dso", Plug::In, "volume_vdb.so" ) );
 }
 
@@ -156,14 +162,24 @@ const Gaffer::FloatPlug *VDBVolume::stepSizePlug() const
 	return getChild<FloatPlug>( g_firstPlugIndex + 4 );
 }
 
+Gaffer::FloatPlug *VDBVolume::stepScalePlug()
+{
+	return getChild<FloatPlug>( g_firstPlugIndex + 5 );
+}
+
+const Gaffer::FloatPlug *VDBVolume::stepScalePlug() const
+{
+	return getChild<FloatPlug>( g_firstPlugIndex + 5 );
+}
+
 Gaffer::StringPlug *VDBVolume::dsoPlug()
 {
-	return getChild<StringPlug>( g_firstPlugIndex + 5 );
+	return getChild<StringPlug>( g_firstPlugIndex + 6 );
 }
 
 const Gaffer::StringPlug *VDBVolume::dsoPlug() const
 {
-	return getChild<StringPlug>( g_firstPlugIndex + 5 );
+	return getChild<StringPlug>( g_firstPlugIndex + 6 );
 }
 
 void VDBVolume::affects( const Gaffer::Plug *input, AffectedPlugsContainer &outputs ) const
@@ -173,9 +189,10 @@ void VDBVolume::affects( const Gaffer::Plug *input, AffectedPlugsContainer &outp
 	if(
 		input == fileNamePlug() ||
 		input == gridsPlug() ||
-		input == stepSizePlug() ||
 		input == velocityGridsPlug() ||
 		input == velocityScalePlug() ||
+		input == stepSizePlug() ||
+		input == stepScalePlug() ||
 		input == dsoPlug()
 	)
 	{
@@ -187,9 +204,10 @@ void VDBVolume::hashSource( const Gaffer::Context *context, IECore::MurmurHash &
 {
 	fileNamePlug()->hash( h );
 	gridsPlug()->hash( h );
-	stepSizePlug()->hash( h );
 	velocityGridsPlug()->hash( h );
 	velocityScalePlug()->hash( h );
+	stepSizePlug()->hash( h );
+	stepScalePlug()->hash( h );
 	dsoPlug()->hash( h );
 	h.append( context->getFramesPerSecond() );
 }
@@ -197,16 +215,21 @@ void VDBVolume::hashSource( const Gaffer::Context *context, IECore::MurmurHash &
 IECore::ConstObjectPtr VDBVolume::computeSource( const Context *context ) const
 {
 	IECore::ExternalProceduralPtr result = new ExternalProcedural( dsoPlug()->getValue() );
+	const std::string fileName = fileNamePlug()->getValue();
+	const std::string gridsString = gridsPlug()->getValue();
+	if( fileName.empty() || gridsString.empty() )
+	{
+		result->setBound( Box3f( V3f( -0.5 ), V3f( 0.5 ) ) );
+		return result;
+	}
 
 	CompoundDataMap &parameters = result->parameters()->writable();
 
 	parameters["ai:nodeType"] = new StringData( "volume" );
-	const std::string fileName = fileNamePlug()->getValue();
 	parameters["filename"] = new StringData( fileNamePlug()->getValue() );
-	parameters["step_size"] = new FloatData( stepSizePlug()->getValue() );
 
 	StringVectorDataPtr grids = new StringVectorData();
-	tokenize( gridsPlug()->getValue(), ' ', grids->writable() );
+	tokenize( gridsString, ' ', grids->writable() );
 	parameters["grids"] = grids;
 
 	StringVectorDataPtr velocityGrids = new StringVectorData();
@@ -216,17 +239,20 @@ IECore::ConstObjectPtr VDBVolume::computeSource( const Context *context ) const
 	parameters["velocity_scale"] = new FloatData( velocityScalePlug()->getValue() );
 	parameters["velocity_fps"] = new FloatData( context->getFramesPerSecond() );
 
-	if( !fileName.empty() )
-	{
-		std::set<std::string> allGrids;
-		allGrids.insert( grids->readable().begin(), grids->readable().end() );
-		allGrids.insert( velocityGrids->readable().begin(), velocityGrids->readable().end() );
-		result->setBound( bound( fileName, allGrids ) );
-	}
-	else
-	{
-		result->setBound( Box3f( V3f( -0.5 ), V3f( 0.5 ) ) );
-	}
+	std::set<std::string> allGrids;
+	allGrids.insert( grids->readable().begin(), grids->readable().end() );
+	allGrids.insert( velocityGrids->readable().begin(), velocityGrids->readable().end() );
+
+	float autoStepSize = 0;
+	const Box3f bound = boundAndAutoStepSize( fileName, allGrids, autoStepSize );
+
+	result->setBound( bound );
+
+	const float stepSize = stepSizePlug()->getValue();
+	const float stepScale = stepScalePlug()->getValue();
+	parameters["step_size"] = new FloatData(
+		( stepSize <= 0.0f ? autoStepSize : stepSize ) * stepScale
+	);
 
 	return result;
 }
