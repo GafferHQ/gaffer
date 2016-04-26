@@ -96,7 +96,7 @@ struct UVWarp::Engine : public Warp::Engine
 
 	virtual Imath::V2f inputPixel( const Imath::V2f &outputPixel ) const
 	{
-		const V2i outputPixelI( floorf( outputPixel.x ), floorf( outputPixel.y ) );
+		const V2i outputPixelI( (int)floorf( outputPixel.x ), (int)floorf( outputPixel.y ) );
 		const size_t i = index( outputPixelI, m_tileBound );
 		if( m_a[i] == 0.0f )
 		{
