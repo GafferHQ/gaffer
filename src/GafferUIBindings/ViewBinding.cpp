@@ -55,6 +55,18 @@ using namespace GafferUIBindings;
 namespace
 {
 
+class ViewWrapper : public GafferBindings::NodeWrapper<View>
+{
+
+	public :
+
+		ViewWrapper( PyObject *self, const std::string &name, PlugPtr input )
+			:	GafferBindings::NodeWrapper<View>( self, name, input )
+		{
+		}
+
+};
+
 struct ViewCreator
 {
 	ViewCreator( object fn )
@@ -94,7 +106,8 @@ Gaffer::NodePtr GafferUIBindings::getPreprocessor( View &v )
 
 void GafferUIBindings::bindView()
 {
-	GafferBindings::NodeClass<View>( NULL, no_init )
+	GafferBindings::NodeClass<View, ViewWrapper>( NULL, no_init )
+		.def( init<const std::string &, PlugPtr>() )
 		.def( "getContext", (Context *(View::*)())&View::getContext, return_value_policy<IECorePython::CastToIntrusivePtr>() )
 		.def( "setContext", &View::setContext )
 		.def( "contextChangedSignal", &View::contextChangedSignal, return_internal_reference<1>() )
