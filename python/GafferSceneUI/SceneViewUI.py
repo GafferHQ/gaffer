@@ -54,20 +54,20 @@ Gaffer.Metadata.registerNode(
 
 			"toolbarLayout:index", 2,
 			"toolbarLayout:divider", True,
-			"plugValueWidget:type", "GafferSceneUI.SceneViewToolbar._ShadingModePlugValueWidget",
+			"plugValueWidget:type", "GafferSceneUI.SceneViewUI._ShadingModePlugValueWidget",
 
 		],
 
 		"minimumExpansionDepth" : [
 
-			"plugValueWidget:type", "GafferSceneUI.SceneViewToolbar._ExpansionPlugValueWidget",
+			"plugValueWidget:type", "GafferSceneUI.SceneViewUI._ExpansionPlugValueWidget",
 			"toolbarLayout:divider", True,
 
 		],
 
 		"lookThrough" : [
 
-			"plugValueWidget:type", "GafferSceneUI.SceneViewToolbar._LookThroughPlugValueWidget",
+			"plugValueWidget:type", "GafferSceneUI.SceneViewUI._LookThroughPlugValueWidget",
 			"toolbarLayout:divider", True,
 			"toolbarLayout:label", "",
 
@@ -95,7 +95,7 @@ Gaffer.Metadata.registerNode(
 
 		"grid" : [
 
-			"plugValueWidget:type", "GafferSceneUI.SceneViewToolbar._GridPlugValueWidget",
+			"plugValueWidget:type", "GafferSceneUI.SceneViewUI._GridPlugValueWidget",
 
 		],
 
