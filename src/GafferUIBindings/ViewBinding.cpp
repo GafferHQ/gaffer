@@ -45,8 +45,6 @@
 #include "GafferBindings/NodeBinding.h"
 
 #include "GafferUI/View.h"
-#include "GafferUI/View3D.h"
-#include "GafferUI/ObjectView.h"
 #include "GafferUIBindings/ViewBinding.h"
 
 using namespace boost::python;
@@ -115,11 +113,4 @@ void GafferUIBindings::bindView()
 		.def( "registerView", &registerView2 )
 		.staticmethod( "registerView" )
 	;
-
-	GafferBindings::NodeClass<View3D>( NULL, no_init );
-
-	typedef GafferBindings::NodeWrapper<ObjectView> ObjectViewWrapper;
-
-	GafferBindings::NodeClass<ObjectView, ObjectViewWrapper>();
-
 }
