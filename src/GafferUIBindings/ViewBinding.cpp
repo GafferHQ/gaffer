@@ -52,6 +52,9 @@ using namespace Gaffer;
 using namespace GafferUI;
 using namespace GafferUIBindings;
 
+namespace
+{
+
 struct ViewCreator
 {
 	ViewCreator( object fn )
@@ -72,15 +75,17 @@ struct ViewCreator
 
 };
 
-static void registerView1( IECore::TypeId plugType, object creator )
+void registerView1( IECore::TypeId plugType, object creator )
 {
 	View::registerView( plugType, ViewCreator( creator ) );
 }
 
-static void registerView2( IECore::TypeId nodeType, const std::string &plugPath, object creator )
+void registerView2( IECore::TypeId nodeType, const std::string &plugPath, object creator )
 {
 	View::registerView( nodeType, plugPath, ViewCreator( creator ) );
 }
+
+} // namespace
 
 Gaffer::NodePtr GafferUIBindings::getPreprocessor( View &v )
 {
