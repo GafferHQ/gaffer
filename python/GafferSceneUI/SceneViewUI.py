@@ -50,9 +50,14 @@ Gaffer.Metadata.registerNode(
 
 	plugs = {
 
+		"drawingMode" : [
+
+			"plugValueWidget:type", "GafferSceneUI.SceneViewUI._DrawingModePlugValueWidget",
+
+		],
+
 		"shadingMode" : [
 
-			"toolbarLayout:index", 2,
 			"toolbarLayout:divider", True,
 			"plugValueWidget:type", "GafferSceneUI.SceneViewUI._ShadingModePlugValueWidget",
 
@@ -108,6 +113,43 @@ Gaffer.Metadata.registerNode(
 	}
 
 )
+
+##########################################################################
+# _DrawingModePlugValueWidget
+##########################################################################
+
+class _DrawingModePlugValueWidget( GafferUI.PlugValueWidget ) :
+
+	def __init__( self, plug, parenting = None ) :
+
+		menu = GafferUI.Menu( Gaffer.WeakMethod( self.__menuDefinition ) )
+		menuButton = GafferUI.MenuButton( menu=menu, image = "drawingStyles.png", hasFrame=False )
+
+		GafferUI.PlugValueWidget.__init__( self, menuButton, plug, parenting = parenting )
+
+	def hasLabel( self ) :
+
+		return True
+
+	def _updateFromPlug( self ) :
+
+		pass
+
+	def __menuDefinition( self ) :
+
+		m = IECore.MenuDefinition()
+
+		for n in [ "solid", "wireframe", "points" ] :
+			plug = self.getPlug()[n]["enabled"]
+			m.append(
+				"/" + n.capitalize(),
+				{
+					"command" : functools.partial( plug.setValue, not plug.getValue() ),
+					"checkBox" : plug.getValue(),
+				}
+			)
+
+		return m
 
 ##########################################################################
 # _ShadingModePlugValueWidget

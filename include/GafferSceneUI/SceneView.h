@@ -38,7 +38,7 @@
 #ifndef GAFFERSCENEUI_SCENEVIEW_H
 #define GAFFERSCENEUI_SCENEVIEW_H
 
-#include "GafferUI/View3D.h"
+#include "GafferUI/View.h"
 
 #include "GafferScene/ScenePlug.h"
 #include "GafferScene/PathMatcherData.h"
@@ -64,7 +64,7 @@ namespace GafferSceneUI
 /// these in the public API as optional "bolt on" components that applications can
 /// use as they see fit. If we do this, we need to consider how these relate to
 /// Tools, which could also be seen as viewer components.
-class SceneView : public GafferUI::View3D
+class SceneView : public GafferUI::View
 {
 
 	public :
@@ -72,7 +72,7 @@ class SceneView : public GafferUI::View3D
 		SceneView( const std::string &name = defaultName<SceneView>() );
 		virtual ~SceneView();
 
-		IE_CORE_DECLARERUNTIMETYPEDEXTENSION( GafferSceneUI::SceneView, SceneViewTypeId, GafferUI::View3D );
+		IE_CORE_DECLARERUNTIMETYPEDEXTENSION( GafferSceneUI::SceneView, SceneViewTypeId, GafferUI::View );
 
 		Gaffer::IntPlug *minimumExpansionDepthPlug();
 		const Gaffer::IntPlug *minimumExpansionDepthPlug() const;
@@ -125,18 +125,18 @@ class SceneView : public GafferUI::View3D
 
 		boost::signals::scoped_connection m_selectionChangedConnection;
 
-		void baseStateChanged();
-
 		SceneGadgetPtr m_sceneGadget;
 
+		class DrawingMode;
+		boost::shared_ptr<DrawingMode> m_drawingMode;
+		class ShadingMode;
+		boost::shared_ptr<ShadingMode> m_shadingMode;
 		class LookThrough;
 		boost::shared_ptr<LookThrough> m_lookThrough;
 		class Grid;
 		boost::shared_ptr<Grid> m_grid;
 		class Gnomon;
 		boost::shared_ptr<Gnomon> m_gnomon;
-		class ShadingMode;
-		boost::shared_ptr<ShadingMode> m_shadingMode;
 
 		static size_t g_firstPlugIndex;
 		static ViewDescription<SceneView> g_viewDescription;
