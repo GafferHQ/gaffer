@@ -52,15 +52,6 @@ using namespace Gaffer;
 using namespace GafferUI;
 using namespace GafferUIBindings;
 
-void GafferUIBindings::updateView( View &v )
-{
-	// the release is essential, as the update will most
-	// likely involve evaluation of the graph from multiple
-	// threads, and those threads might need access to python.
-	IECorePython::ScopedGILRelease gilRelease;
-	v.update();
-}
-
 struct ViewCreator
 {
 	ViewCreator( object fn )
@@ -103,10 +94,8 @@ void GafferUIBindings::bindView()
 		.def( "setContext", &View::setContext )
 		.def( "contextChangedSignal", &View::contextChangedSignal, return_internal_reference<1>() )
 		.def( "viewportGadget", (ViewportGadget *(View::*)())&View::viewportGadget, return_value_policy<IECorePython::CastToIntrusivePtr>() )
-		.def( "updateRequestSignal", &View::updateRequestSignal, return_internal_reference<1>() )
 		.def( "_setPreprocessor", &View::setPreprocessor )
 		.def( "_getPreprocessor", &getPreprocessor )
-		.def( "_update", &updateView )
 		.def( "create", &View::create )
 		.staticmethod( "create" )
 		.def( "registerView", &registerView1 )

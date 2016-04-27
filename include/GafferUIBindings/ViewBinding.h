@@ -37,13 +37,6 @@
 #ifndef GAFFERUIBINDINGS_VIEWBINDING_H
 #define GAFFERUIBINDINGS_VIEWBINDING_H
 
-namespace Gaffer
-{
-
-IE_CORE_FORWARDDECLARE( Node );
-
-} // namespace Gaffer
-
 namespace GafferUI
 {
 class View;
@@ -53,7 +46,6 @@ namespace GafferUIBindings
 {
 
 void bindView();
-void updateView( GafferUI::View &v );
 Gaffer::NodePtr getPreprocessor( GafferUI::View &v );
 
 } // namespace GafferUIBindings
