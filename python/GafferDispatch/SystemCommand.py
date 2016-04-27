@@ -67,7 +67,7 @@ class SystemCommand( GafferDispatch.ExecutableNode ) :
 		for name, value in environmentVariables.items() :
 			env[name] = str( value )
 
-		subprocess.check_output( command, shell = True, env = env )
+		subprocess.check_call( command, shell = True, env = env )
 
 	def hash( self, context ) :
 
