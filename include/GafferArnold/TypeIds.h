@@ -47,7 +47,7 @@ enum TypeId
 	ArnoldOptionsTypeId = 110901,
 	ArnoldAttributesTypeId = 110902,
 	ArnoldLightTypeId = 110903,
-	VDBVolumeTypeId = 110904,
+	ArnoldVDBTypeId = 110904,
 
 	LastTypeId = 110949
 };

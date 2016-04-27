@@ -44,7 +44,7 @@
 #include "Gaffer/StringPlug.h"
 #include "Gaffer/StringAlgo.h"
 
-#include "GafferArnold/VDBVolume.h"
+#include "GafferArnold/ArnoldVDB.h"
 
 using namespace Imath;
 using namespace IECore;
@@ -88,14 +88,14 @@ Box3f boundAndAutoStepSize( const std::string &fileName, const std::set<std::str
 } // namespace
 
 //////////////////////////////////////////////////////////////////////////
-// VDBVolume
+// ArnoldVDB
 //////////////////////////////////////////////////////////////////////////
 
-IE_CORE_DEFINERUNTIMETYPED( VDBVolume );
+IE_CORE_DEFINERUNTIMETYPED( ArnoldVDB );
 
-size_t VDBVolume::g_firstPlugIndex = 0;
+size_t ArnoldVDB::g_firstPlugIndex = 0;
 
-VDBVolume::VDBVolume( const std::string &name )
+ArnoldVDB::ArnoldVDB( const std::string &name )
 	:	ObjectSource( name, "volume" )
 {
 	storeIndexOfNextChild( g_firstPlugIndex );
@@ -108,81 +108,81 @@ VDBVolume::VDBVolume( const std::string &name )
 	addChild( new StringPlug( "dso", Plug::In, "volume_vdb.so" ) );
 }
 
-VDBVolume::~VDBVolume()
+ArnoldVDB::~ArnoldVDB()
 {
 }
 
-Gaffer::StringPlug *VDBVolume::fileNamePlug()
-{
-	return getChild<StringPlug>( g_firstPlugIndex );
-}
-
-const Gaffer::StringPlug *VDBVolume::fileNamePlug() const
+Gaffer::StringPlug *ArnoldVDB::fileNamePlug()
 {
 	return getChild<StringPlug>( g_firstPlugIndex );
 }
 
-Gaffer::StringPlug *VDBVolume::gridsPlug()
+const Gaffer::StringPlug *ArnoldVDB::fileNamePlug() const
+{
+	return getChild<StringPlug>( g_firstPlugIndex );
+}
+
+Gaffer::StringPlug *ArnoldVDB::gridsPlug()
 {
 	return getChild<StringPlug>( g_firstPlugIndex + 1 );
 }
 
-const Gaffer::StringPlug *VDBVolume::gridsPlug() const
+const Gaffer::StringPlug *ArnoldVDB::gridsPlug() const
 {
 	return getChild<StringPlug>( g_firstPlugIndex + 1 );
 }
 
-Gaffer::StringPlug *VDBVolume::velocityGridsPlug()
+Gaffer::StringPlug *ArnoldVDB::velocityGridsPlug()
 {
 	return getChild<StringPlug>( g_firstPlugIndex + 2 );
 }
 
-const Gaffer::StringPlug *VDBVolume::velocityGridsPlug() const
+const Gaffer::StringPlug *ArnoldVDB::velocityGridsPlug() const
 {
 	return getChild<StringPlug>( g_firstPlugIndex + 2 );
 }
 
-Gaffer::FloatPlug *VDBVolume::velocityScalePlug()
+Gaffer::FloatPlug *ArnoldVDB::velocityScalePlug()
 {
 	return getChild<FloatPlug>( g_firstPlugIndex + 3 );
 }
 
-const Gaffer::FloatPlug *VDBVolume::velocityScalePlug() const
+const Gaffer::FloatPlug *ArnoldVDB::velocityScalePlug() const
 {
 	return getChild<FloatPlug>( g_firstPlugIndex + 3 );
 }
 
-Gaffer::FloatPlug *VDBVolume::stepSizePlug()
+Gaffer::FloatPlug *ArnoldVDB::stepSizePlug()
 {
 	return getChild<FloatPlug>( g_firstPlugIndex + 4 );
 }
 
-const Gaffer::FloatPlug *VDBVolume::stepSizePlug() const
+const Gaffer::FloatPlug *ArnoldVDB::stepSizePlug() const
 {
 	return getChild<FloatPlug>( g_firstPlugIndex + 4 );
 }
 
-Gaffer::FloatPlug *VDBVolume::stepScalePlug()
+Gaffer::FloatPlug *ArnoldVDB::stepScalePlug()
 {
 	return getChild<FloatPlug>( g_firstPlugIndex + 5 );
 }
 
-const Gaffer::FloatPlug *VDBVolume::stepScalePlug() const
+const Gaffer::FloatPlug *ArnoldVDB::stepScalePlug() const
 {
 	return getChild<FloatPlug>( g_firstPlugIndex + 5 );
 }
 
-Gaffer::StringPlug *VDBVolume::dsoPlug()
+Gaffer::StringPlug *ArnoldVDB::dsoPlug()
 {
 	return getChild<StringPlug>( g_firstPlugIndex + 6 );
 }
 
-const Gaffer::StringPlug *VDBVolume::dsoPlug() const
+const Gaffer::StringPlug *ArnoldVDB::dsoPlug() const
 {
 	return getChild<StringPlug>( g_firstPlugIndex + 6 );
 }
 
-void VDBVolume::affects( const Gaffer::Plug *input, AffectedPlugsContainer &outputs ) const
+void ArnoldVDB::affects( const Gaffer::Plug *input, AffectedPlugsContainer &outputs ) const
 {
 	ObjectSource::affects( input, outputs );
 
@@ -200,7 +200,7 @@ void VDBVolume::affects( const Gaffer::Plug *input, AffectedPlugsContainer &outp
 	}
 }
 
-void VDBVolume::hashSource( const Gaffer::Context *context, IECore::MurmurHash &h ) const
+void ArnoldVDB::hashSource( const Gaffer::Context *context, IECore::MurmurHash &h ) const
 {
 	fileNamePlug()->hash( h );
 	gridsPlug()->hash( h );
@@ -212,7 +212,7 @@ void VDBVolume::hashSource( const Gaffer::Context *context, IECore::MurmurHash &
 	h.append( context->getFramesPerSecond() );
 }
 
-IECore::ConstObjectPtr VDBVolume::computeSource( const Context *context ) const
+IECore::ConstObjectPtr ArnoldVDB::computeSource( const Context *context ) const
 {
 	IECore::ExternalProceduralPtr result = new ExternalProcedural( dsoPlug()->getValue() );
 	const std::string fileName = fileNamePlug()->getValue();

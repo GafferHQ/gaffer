@@ -41,7 +41,7 @@ import GafferArnold
 
 Gaffer.Metadata.registerNode(
 
-	GafferArnold.VDBVolume,
+	GafferArnold.ArnoldVDB,
 
 	"description",
 	"""

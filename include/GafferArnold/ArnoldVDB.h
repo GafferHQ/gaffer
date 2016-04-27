@@ -34,8 +34,8 @@
 //
 //////////////////////////////////////////////////////////////////////////
 
-#ifndef GAFFERARNOLD_VDBVOLUME_H
-#define GAFFERARNOLD_VDBVOLUME_H
+#ifndef GAFFERARNOLD_ARNOLDVDB_H
+#define GAFFERARNOLD_ARNOLDVDB_H
 
 #include "GafferScene/ObjectSource.h"
 
@@ -44,15 +44,15 @@
 namespace GafferArnold
 {
 
-class VDBVolume : public GafferScene::ObjectSource
+class ArnoldVDB : public GafferScene::ObjectSource
 {
 
 	public :
 
-		IE_CORE_DECLARERUNTIMETYPEDEXTENSION( GafferArnold::VDBVolume, VDBVolumeTypeId, GafferScene::ObjectSource );
+		IE_CORE_DECLARERUNTIMETYPEDEXTENSION( GafferArnold::ArnoldVDB, ArnoldVDBTypeId, GafferScene::ObjectSource );
 
-		VDBVolume( const std::string &name=defaultName<VDBVolume>() );
-		virtual ~VDBVolume();
+		ArnoldVDB( const std::string &name=defaultName<ArnoldVDB>() );
+		virtual ~ArnoldVDB();
 
 		Gaffer::StringPlug *fileNamePlug();
 		const Gaffer::StringPlug *fileNamePlug() const;
@@ -88,8 +88,8 @@ class VDBVolume : public GafferScene::ObjectSource
 
 };
 
-IE_CORE_DECLAREPTR( VDBVolume )
+IE_CORE_DECLAREPTR( ArnoldVDB )
 
 } // namespace GafferArnold
 
-#endif // GAFFERARNOLD_VDBVOLUME_H
+#endif // GAFFERARNOLD_ARNOLDVDB_H

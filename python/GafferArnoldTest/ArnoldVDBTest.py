@@ -41,11 +41,11 @@ import IECore
 import GafferSceneTest
 import GafferArnold
 
-class VDBVolumeTest( GafferSceneTest.SceneTestCase ) :
+class ArnoldVDBTest( GafferSceneTest.SceneTestCase ) :
 
 	def test( self ) :
 
-		v = GafferArnold.VDBVolume()
+		v = GafferArnold.ArnoldVDB()
 
 		# Just an empty procedural at this point.
 		self.assertEqual( v["out"].childNames( "/" ), IECore.InternedStringVectorData( [ "volume" ] ) )
@@ -77,7 +77,7 @@ class VDBVolumeTest( GafferSceneTest.SceneTestCase ) :
 
 	def testStepSize( self ) :
 
-		v = GafferArnold.VDBVolume()
+		v = GafferArnold.ArnoldVDB()
 		v["fileName"].setValue( os.path.join( os.path.dirname( __file__ ), "volumes", "sphere.vdb" ) )
 
 		self.assertEqual( v["stepSize"].getValue(), 0 )

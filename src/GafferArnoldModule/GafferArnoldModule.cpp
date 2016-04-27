@@ -42,7 +42,7 @@
 #include "GafferArnold/ArnoldOptions.h"
 #include "GafferArnold/ArnoldAttributes.h"
 #include "GafferArnold/ArnoldLight.h"
-#include "GafferArnold/VDBVolume.h"
+#include "GafferArnold/ArnoldVDB.h"
 
 using namespace boost::python;
 using namespace GafferArnold;
@@ -60,6 +60,6 @@ BOOST_PYTHON_MODULE( _GafferArnold )
 
 	GafferBindings::DependencyNodeClass<ArnoldOptions>();
 	GafferBindings::DependencyNodeClass<ArnoldAttributes>();
-	GafferBindings::DependencyNodeClass<VDBVolume>();
+	GafferBindings::DependencyNodeClass<ArnoldVDB>();
 
 }
