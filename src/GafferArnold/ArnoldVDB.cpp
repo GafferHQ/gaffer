@@ -63,6 +63,11 @@ Box3f boundAndAutoStepSize( const std::string &fileName, const std::set<std::str
 {
 	openvdb::initialize();
 	openvdb::io::File file( fileName );
+	// VDB has the crazy default behaviour of making a local
+	// copy of the file and then opening that instead. Even if
+	// the file is local already. Even if all you do is query
+	// metadata. Restore sanity!
+	file.setCopyMaxBytes( 0 );
 	file.open();
 
 	autoStepSize = Imath::limits<float>::max();
