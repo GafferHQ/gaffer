@@ -85,7 +85,5 @@ class ImageViewTest( GafferUITest.TestCase ) :
 		view["exposure"].setValue( 1 )
 		view["gamma"].setValue( 0.5 )
 
-		view._update()
-
 if __name__ == "__main__":
 	unittest.main()

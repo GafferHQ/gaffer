@@ -48,18 +48,15 @@ class ViewTest( GafferUITest.TestCase ) :
 	def testFactory( self ) :
 
 		sphere = GafferTest.SphereNode()
-		view = GafferUI.View.create( sphere["out"] )
-
-		self.assertTrue( isinstance( view, GafferUI.ObjectView ) )
-		self.assertTrue( view["in"].getInput().isSame( sphere["out"] ) )
+		self.assertTrue( GafferUI.View.create( sphere["out"] ) is None )
 
 		# check that we can make our own view and register it for the node
 
-		class MyView( GafferUI.ObjectView ) :
+		class MyView( GafferUI.View ) :
 
 			def __init__( self, viewedPlug = None ) :
 
-				GafferUI.ObjectView.__init__( self )
+				GafferUI.View.__init__( self, "MyView", Gaffer.ObjectPlug( "in", defaultValue = IECore.NullObject.defaultNullObject() ) )
 
 				self["in"].setInput( viewedPlug )
 
@@ -74,10 +71,7 @@ class ViewTest( GafferUITest.TestCase ) :
 		n = Gaffer.Node()
 		n["out"] = Gaffer.ObjectPlug( direction = Gaffer.Plug.Direction.Out, defaultValue = IECore.NullObject.defaultNullObject() )
 
-		view = GafferUI.View.create( n["out"] )
-
-		self.assertTrue( isinstance( view, GafferUI.ObjectView ) )
-		self.assertTrue( view["in"].getInput().isSame( n["out"] ) )
+		self.assertTrue( GafferUI.View.create( n["out"] ) is None )
 
 if __name__ == "__main__":
 	unittest.main()

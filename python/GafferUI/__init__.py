@@ -257,7 +257,6 @@ from SplinePlugValueWidget import SplinePlugValueWidget
 from RampPlugValueWidget import RampPlugValueWidget
 from NodeFinderDialogue import NodeFinderDialogue
 from ConnectionPlugValueWidget import ConnectionPlugValueWidget
-import View3DToolbar
 import ViewUI
 from Playback import Playback
 from UIEditor import UIEditor

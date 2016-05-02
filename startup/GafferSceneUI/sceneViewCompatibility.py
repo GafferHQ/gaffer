@@ -1,6 +1,6 @@
 ##########################################################################
 #
-#  Copyright (c) 2013, Image Engine Design Inc. All rights reserved.
+#  Copyright (c) 2016, Image Engine Design Inc. All rights reserved.
 #
 #  Redistribution and use in source and binary forms, with or without
 #  modification, are permitted provided that the following conditions are
@@ -34,48 +34,18 @@
 #
 ##########################################################################
 
-import IECore
+import GafferSceneUI
 
-import Gaffer
+def __sceneViewGetItemWrapper( originalGetItem ) :
 
-import GafferUI
+	def getItem( self, key ) :
 
-class _BaseStatePlugValueWidget( GafferUI.PlugValueWidget ) :
+		key = {
+			"baseState" : "drawingMode",
+		}.get( key, key )
 
-	def __init__( self, plug, parenting = None ) :
+		return originalGetItem( self, key )
 
-		menu = GafferUI.Menu( Gaffer.WeakMethod( self.__menuDefinition ) )
-		menuButton = GafferUI.MenuButton( menu=menu, image = "drawingStyles.png", hasFrame=False )
+	return getItem
 
-		GafferUI.PlugValueWidget.__init__( self, menuButton, plug, parenting = parenting )
-
-	def hasLabel( self ) :
-
-		return True
-
-	def _updateFromPlug( self ) :
-
-		pass
-
-	def __menuDefinition( self ) :
-
-		m = IECore.MenuDefinition()
-
-		for n in [ "solid", "wireframe", "points" ] :
-			plug = self.getPlug()[n]["enabled"]
-			m.append(
-				"/" + n.capitalize(),
-				{
-					"command" : IECore.curry( _BaseStatePlugValueWidget.__togglePlug, plug=plug ),
-					"checkBox" : plug.getValue(),
-				}
-			)
-
-		return m
-
-	@staticmethod
-	def __togglePlug( menu, plug ) :
-
-		plug.setValue( not plug.getValue() )
-
-GafferUI.PlugValueWidget.registerCreator( GafferUI.View3D, "baseState", _BaseStatePlugValueWidget )
+GafferSceneUI.SceneView.__getitem__ = __sceneViewGetItemWrapper( GafferSceneUI.SceneView.__getitem__ )

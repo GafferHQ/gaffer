@@ -200,15 +200,12 @@ class Viewer( GafferUI.NodeSetEditor ) :
 							self.__currentView = view
 							viewInput = self.__currentView["in"].getInput()
 							if not viewInput or not viewInput.isSame( plug ) :
-								self.__currentView.__pendingUpdate = True
 								self.__currentView["in"].setInput( plug )
 							break # break out of view loop
 					# if that failed then try to make a new one
 					if self.__currentView is None :
 						self.__currentView = GafferUI.View.create( plug )
 						if self.__currentView is not None:
-							self.__currentView.__updateRequestConnection = self.__currentView.updateRequestSignal().connect( Gaffer.WeakMethod( self.__updateRequest, fallbackResult=None ) )
-							self.__currentView.__pendingUpdate = True
 							self.__currentView.setContext( self.getContext() )
 							self.__viewTools[self.__currentView] = [ GafferUI.Tool.create( n, self.__currentView ) for n in GafferUI.Tool.registeredTools( self.__currentView.typeId() ) ]
 							self.__viewTools[self.__currentView].sort( key = lambda v : Gaffer.Metadata.nodeValue( v, "order" ) if Gaffer.Metadata.nodeValue( v, "order" ) is not None else 999 )
@@ -229,8 +226,6 @@ class Viewer( GafferUI.NodeSetEditor ) :
 		if self.__currentView is not None :
 			self.__gadgetWidget.setViewportGadget( self.__currentView.viewportGadget() )
 			self.__toolMenuButton.setVisible( len( self.__viewTools[self.__currentView] ) != 0 )
-			if self.__currentView.__pendingUpdate :
-				self.__update()
 		else :
 			self.__gadgetWidget.setViewportGadget( GafferUI.ViewportGadget() )
 			self.__toolMenuButton.setVisible( False )
@@ -238,38 +233,6 @@ class Viewer( GafferUI.NodeSetEditor ) :
 	def _titleFormat( self ) :
 
 		return GafferUI.NodeSetEditor._titleFormat( self, _maxNodes = 1, _reverseNodes = True, _ellipsis = False )
-
-	def __update( self ) :
-
-		if self.__currentView is None :
-			return
-
-		self.__currentView.__pendingUpdate = False
-
-		if not self.__currentView.getContext().isSame( self.getContext() ) :
-			self.__currentView.setContext( self.getContext() )
-
-		self.__currentView._update()
-
-	def __updateRequest( self, view ) :
-
-		# due to problems with object identity in boost::python, the view we are passed might
-		# be a different python instance than the ones we stored in self.__views. find the original
-		# python instance so we can access view.__pendingUpdate on it.
-		view, = [ v for v in self.__views if v.isSame( view ) ]
-
-		# Ideally we might want the view to be doing the update automatically whenever it
-		# wants, rather than using updateRequestSignal() to request a call back in to update().
-		# Currently we can't do that because the Views are implemented in C++ and might spawn
-		# threads which need to call back into Python - leading to deadlock if the GIL hasn't
-		# been released previously. The binding for View._update() releases the GIL for
-		# us to work around that problem - another solution might be to release the GIL in all
-		# bindings which might eventually trigger a viewer update, but that could
-		# be nearly anything.
-		if not view.__pendingUpdate :
-			view.__pendingUpdate = True
-			if view.isSame( self.__currentView ) :
-				GafferUI.EventLoop.executeOnUIThread( self.__update )
 
 	def __toolMenuDefinition( self ) :
 

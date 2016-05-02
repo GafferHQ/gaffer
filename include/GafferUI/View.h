@@ -43,7 +43,7 @@
 #include "Gaffer/Node.h"
 
 #include "GafferUI/ViewportGadget.h"
-#include "GafferUIBindings/ViewBinding.h" // to enable friend declaration for updateViewFromPlug().
+#include "GafferUIBindings/ViewBinding.h" // to enable friend declaration for bindView().
 
 namespace Gaffer
 {
@@ -91,10 +91,6 @@ class View : public Gaffer::Node
 		ViewportGadget *viewportGadget();
 		const ViewportGadget *viewportGadget() const;
 
-		/// A signal the view may use when it needs to be updated due
-		/// to user action.
-		UnarySignal &updateRequestSignal();
-
 		/// @name Factory
 		///////////////////////////////////////////////////////////////////
 		//@{
@@ -141,31 +137,17 @@ class View : public Gaffer::Node
 		template<typename T>
 		T *preprocessedInPlug();
 
-		/// Called when the context changes. The default implementation triggers
-		/// updateRequestSignal(), but derived classes may reimplement the method
-		/// to perform more specific actions.
+		/// Called when the context changes. Derived classes should call the
+		/// base class implementation if they override this method.
 		virtual void contextChanged( const IECore::InternedString &name );
 		/// Returns the connection used to trigger the call to contextChanged(). Derived
 		/// classes may block this temporarily if they want to prevent the triggering -
 		/// this can be useful when modifying the context.
 		boost::signals::connection &contextChangedConnection();
-		/// Called when a plug on this node or on the preprocessor is dirtied. The
-		/// default implementation triggers updateRequestSignal() when the plug is
-		/// preprocessedInPlug() but derived classes may reimplement the method to
-		/// perform more specific actions.
+		/// Called when a plug on this node or on the preprocessor is dirtied.
+		/// Derived classes should call the base class implementation if they
+		/// override this method.
 		virtual void plugDirtied( const Gaffer::Plug *plug );
-		/// Must be implemented by derived classes to update the view from preprocessedInPlug()
-		/// using the context provided by getContext(). This method will be called
-		/// by the Viewer following a triggering of the updateRequestSignal().
-		/// See notes in Viewer.__updateRequest explaining why it's necessary for the
-		/// Viewer to be responsible for calling this rather than have the View
-		/// do it itself.
-		/// \todo Phase out this mechanism - it is just a nasty workaround for GIL
-		/// problems which we should now have addressed. Refactor the View classes
-		/// to manage their own updates. SceneView/SceneGadget provide a reasonable
-		/// model for how to do this.
-		/// \see View::updateRequestSignal().
-		virtual void update();
 
 		/// May be overridden by derived classes to control the region that is framed
 		/// when "F" is pressed.
@@ -184,7 +166,6 @@ class View : public Gaffer::Node
 		ViewportGadgetPtr m_viewportGadget;
 		Gaffer::ContextPtr m_context;
 		UnarySignal m_contextChangedSignal;
-		UnarySignal m_updateRequestSignal;
 		boost::signals::scoped_connection m_contextChangedConnection;
 		boost::signals::scoped_connection m_preprocessorPlugDirtiedConnection;
 
@@ -201,7 +182,6 @@ class View : public Gaffer::Node
 		static size_t g_firstPlugIndex;
 
 		friend void GafferUIBindings::bindView();
-		friend void GafferUIBindings::updateView( View & );
 		friend Gaffer::NodePtr GafferUIBindings::getPreprocessor( View & );
 
 };

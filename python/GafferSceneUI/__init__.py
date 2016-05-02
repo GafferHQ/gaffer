@@ -67,7 +67,7 @@ import MapProjectionUI
 import MapOffsetUI
 import CustomAttributesUI
 import CustomOptionsUI
-import SceneViewToolbar
+import SceneViewUI
 import SceneSwitchUI
 import ShaderSwitchUI
 import ShaderAssignmentUI

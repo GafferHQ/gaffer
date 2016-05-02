@@ -103,11 +103,6 @@ const ViewportGadget *View::viewportGadget() const
 	return m_viewportGadget.get();
 }
 
-View::UnarySignal &View::updateRequestSignal()
-{
-	return m_updateRequestSignal;
-}
-
 void View::setPreprocessor( Gaffer::NodePtr preprocessor )
 {
 	setChild( "__preprocessor", preprocessor );
@@ -117,7 +112,6 @@ void View::setPreprocessor( Gaffer::NodePtr preprocessor )
 
 void View::contextChanged( const IECore::InternedString &name )
 {
-	updateRequestSignal()( this );
 }
 
 boost::signals::connection &View::contextChangedConnection()
@@ -126,14 +120,6 @@ boost::signals::connection &View::contextChangedConnection()
 }
 
 void View::plugDirtied( const Gaffer::Plug *plug )
-{
-	if( plug == preprocessedInPlug<Gaffer::Plug>() )
-	{
-		updateRequestSignal()( this );
-	}
-}
-
-void View::update()
 {
 }
 

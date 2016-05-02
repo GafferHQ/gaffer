@@ -42,10 +42,12 @@
 #include "IECore/ParameterisedProcedural.h"
 #include "IECore/VectorTypedData.h"
 #include "IECore/MatrixTransform.h"
+#include "IECore/AngleConversion.h"
 
 #include "IECoreGL/GL.h"
 #include "IECoreGL/State.h"
 #include "IECoreGL/Camera.h"
+#include "IECoreGL/Primitive.h"
 
 #include "Gaffer/Context.h"
 #include "Gaffer/BlockedConnection.h"
@@ -70,6 +72,99 @@ using namespace Gaffer;
 using namespace GafferUI;
 using namespace GafferScene;
 using namespace GafferSceneUI;
+
+//////////////////////////////////////////////////////////////////////////
+// SceneView::DrawingMode implementation
+//////////////////////////////////////////////////////////////////////////
+
+class SceneView::DrawingMode : public boost::signals::trackable
+{
+
+	public :
+
+		DrawingMode( SceneView *view )
+			:	m_view( view )
+		{
+			ValuePlugPtr drawingMode = new ValuePlug( "drawingMode" );
+			m_view->addChild( drawingMode );
+
+			ValuePlugPtr solid = new ValuePlug( "solid" );
+			drawingMode->addChild( solid );
+			solid->addChild( new BoolPlug( "enabled", Plug::In, true ) );
+			solid->addChild( new BoolPlug( "override" ) );
+
+			ValuePlugPtr wireframe = new ValuePlug( "wireframe" );
+			drawingMode->addChild( wireframe );
+			wireframe->addChild( new BoolPlug( "enabled" ) );
+			wireframe->addChild( new BoolPlug( "override" ) );
+
+			ValuePlugPtr points = new ValuePlug( "points" );
+			drawingMode->addChild( points );
+			points->addChild( new BoolPlug( "enabled" ) );
+			points->addChild( new BoolPlug( "override" ) );
+
+			ValuePlugPtr bound = new ValuePlug( "bound" );
+			drawingMode->addChild( bound );
+			bound->addChild( new BoolPlug( "enabled" ) );
+			bound->addChild( new BoolPlug( "override" ) );
+
+			view->plugSetSignal().connect( boost::bind( &DrawingMode::plugSet, this, ::_1 ) );
+		}
+
+	private :
+
+		Gaffer::StringPlug *drawingModePlug()
+		{
+			return m_view->getChild<StringPlug>( "drawingMode" );
+		}
+
+		SceneGadget *sceneGadget()
+		{
+			return static_cast<SceneGadget *>( m_view->viewportGadget()->getPrimaryChild() );
+		}
+
+		void plugSet( const Plug *plug )
+		{
+			if( plug == drawingModePlug() )
+			{
+				updateBaseState();
+			}
+		}
+
+		void updateBaseState()
+		{
+			IECoreGL::State *baseState = sceneGadget()->baseState();
+
+			const ValuePlug *solid = drawingModePlug()->getChild<ValuePlug>( "solid" );
+			baseState->add(
+				new IECoreGL::Primitive::DrawSolid( solid->getChild<BoolPlug>( "enabled" )->getValue() ),
+				solid->getChild<BoolPlug>( "override" )->getValue()
+			);
+
+			const ValuePlug *wireframe = drawingModePlug()->getChild<ValuePlug>( "wireframe" );
+			baseState->add(
+				new IECoreGL::Primitive::DrawWireframe( wireframe->getChild<BoolPlug>( "enabled" )->getValue() ),
+				wireframe->getChild<BoolPlug>( "override" )->getValue()
+			);
+
+			const ValuePlug *points = drawingModePlug()->getChild<ValuePlug>( "points" );
+			baseState->add(
+				new IECoreGL::Primitive::DrawPoints( points->getChild<BoolPlug>( "enabled" )->getValue() ),
+				points->getChild<BoolPlug>( "override" )->getValue()
+			);
+
+			const ValuePlug *bound = drawingModePlug()->getChild<ValuePlug>( "bound" );
+			baseState->add(
+				new IECoreGL::Primitive::DrawBound( bound->getChild<BoolPlug>( "enabled" )->getValue() ),
+				bound->getChild<BoolPlug>( "override" )->getValue()
+			);
+
+			sceneGadget()->renderRequestSignal()( sceneGadget() );
+		}
+
+		SceneView *m_view;
+
+};
 
 //////////////////////////////////////////////////////////////////////////
 // SceneView::ShadingMode implementation
@@ -943,9 +1038,23 @@ size_t SceneView::g_firstPlugIndex = 0;
 SceneView::ViewDescription<SceneView> SceneView::g_viewDescription( GafferScene::ScenePlug::staticTypeId() );
 
 SceneView::SceneView( const std::string &name )
-	:	View3D( name, new GafferScene::ScenePlug() ),
+	:	View( name, new GafferScene::ScenePlug() ),
 		m_sceneGadget( new SceneGadget )
 {
+
+	// set up a sensible default camera
+
+	IECore::CameraPtr camera = new IECore::Camera();
+
+	camera->parameters()["projection"] = new IECore::StringData( "perspective" );
+	camera->parameters()["projection:fov"] = new IECore::FloatData( 54.43 ); // 35 mm focal length
+
+	M44f matrix;
+	matrix.translate( V3f( 0, 0, 1 ) );
+	matrix.rotate( IECore::degreesToRadians( V3f( -25, 45, 0 ) ) );
+	camera->setTransform( new IECore::MatrixTransform( matrix ) );
+
+	viewportGadget()->setCamera( camera.get() );
 
 	// add plugs and signal handling for them
 
@@ -958,17 +1067,15 @@ SceneView::SceneView( const std::string &name )
 	// set up our gadgets
 
 	viewportGadget()->setPrimaryChild( m_sceneGadget );
-
 	viewportGadget()->keyPressSignal().connect( boost::bind( &SceneView::keyPress, this, ::_1, ::_2 ) );
 
-	m_sceneGadget->baseState()->add( const_cast<IECoreGL::State *>( baseState() ) );
 	m_sceneGadget->setContext( getContext() );
-	baseStateChangedSignal().connect( boost::bind( &SceneView::baseStateChanged, this ) );
 
-	m_lookThrough = boost::shared_ptr<LookThrough>( new LookThrough( this ) );
-	m_grid = boost::shared_ptr<Grid>( new Grid( this ) );
-	m_gnomon = boost::shared_ptr<Gnomon>( new Gnomon( this ) );
-	m_shadingMode = boost::shared_ptr<ShadingMode>( new ShadingMode( this ) );
+	m_drawingMode = boost::make_shared<DrawingMode>( this );
+	m_shadingMode = boost::make_shared<ShadingMode>( this );
+	m_lookThrough = boost::make_shared<LookThrough>( this );
+	m_grid = boost::make_shared<Grid>( this );
+	m_gnomon = boost::make_shared<Gnomon>( this );
 
 	//////////////////////////////////////////////////////////////////////////
 	// add a preprocessor which monkeys with the scene before it is displayed.
@@ -1066,7 +1173,7 @@ const GafferScene::PathFilter *SceneView::hideFilter() const
 
 void SceneView::setContext( Gaffer::ContextPtr context )
 {
-	View3D::setContext( context );
+	View::setContext( context );
 	m_sceneGadget->setContext( context );
 }
 
@@ -1120,7 +1227,7 @@ Imath::Box3f SceneView::framingBound() const
 		return b;
 	}
 
-	b = View3D::framingBound();
+	b = View::framingBound();
 	if( m_grid->gadget()->getVisible() )
 	{
 		b.extendBy( m_grid->gadget()->bound() );
@@ -1283,13 +1390,6 @@ GafferScene::PathMatcherData *SceneView::expandedPaths()
 		m = getContext()->get<GafferScene::PathMatcherData>( "ui:scene:expandedPaths", 0 );
 	}
 	return const_cast<GafferScene::PathMatcherData *>( m );
-}
-
-void SceneView::baseStateChanged()
-{
-	/// \todo This isn't transferring the override state properly. Probably an IECoreGL problem.
-	m_sceneGadget->baseState()->add( const_cast<IECoreGL::State *>( baseState() ) );
-	viewportGadget()->renderRequestSignal()( viewportGadget() );
 }
 
 void SceneView::plugSet( Gaffer::Plug *plug )

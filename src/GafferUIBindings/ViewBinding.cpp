@@ -45,8 +45,6 @@
 #include "GafferBindings/NodeBinding.h"
 
 #include "GafferUI/View.h"
-#include "GafferUI/View3D.h"
-#include "GafferUI/ObjectView.h"
 #include "GafferUIBindings/ViewBinding.h"
 
 using namespace boost::python;
@@ -54,14 +52,20 @@ using namespace Gaffer;
 using namespace GafferUI;
 using namespace GafferUIBindings;
 
-void GafferUIBindings::updateView( View &v )
+namespace
 {
-	// the release is essential, as the update will most
-	// likely involve evaluation of the graph from multiple
-	// threads, and those threads might need access to python.
-	IECorePython::ScopedGILRelease gilRelease;
-	v.update();
-}
+
+class ViewWrapper : public GafferBindings::NodeWrapper<View>
+{
+
+	public :
+
+		ViewWrapper( PyObject *self, const std::string &name, PlugPtr input )
+			:	GafferBindings::NodeWrapper<View>( self, name, input )
+		{
+		}
+
+};
 
 struct ViewCreator
 {
@@ -83,15 +87,17 @@ struct ViewCreator
 
 };
 
-static void registerView1( IECore::TypeId plugType, object creator )
+void registerView1( IECore::TypeId plugType, object creator )
 {
 	View::registerView( plugType, ViewCreator( creator ) );
 }
 
-static void registerView2( IECore::TypeId nodeType, const std::string &plugPath, object creator )
+void registerView2( IECore::TypeId nodeType, const std::string &plugPath, object creator )
 {
 	View::registerView( nodeType, plugPath, ViewCreator( creator ) );
 }
+
+} // namespace
 
 Gaffer::NodePtr GafferUIBindings::getPreprocessor( View &v )
 {
@@ -100,26 +106,18 @@ Gaffer::NodePtr GafferUIBindings::getPreprocessor( View &v )
 
 void GafferUIBindings::bindView()
 {
-	GafferBindings::NodeClass<View>( NULL, no_init )
+	GafferBindings::NodeClass<View, ViewWrapper>( NULL, no_init )
+		.def( init<const std::string &, PlugPtr>() )
 		.def( "getContext", (Context *(View::*)())&View::getContext, return_value_policy<IECorePython::CastToIntrusivePtr>() )
 		.def( "setContext", &View::setContext )
 		.def( "contextChangedSignal", &View::contextChangedSignal, return_internal_reference<1>() )
 		.def( "viewportGadget", (ViewportGadget *(View::*)())&View::viewportGadget, return_value_policy<IECorePython::CastToIntrusivePtr>() )
-		.def( "updateRequestSignal", &View::updateRequestSignal, return_internal_reference<1>() )
 		.def( "_setPreprocessor", &View::setPreprocessor )
 		.def( "_getPreprocessor", &getPreprocessor )
-		.def( "_update", &updateView )
 		.def( "create", &View::create )
 		.staticmethod( "create" )
 		.def( "registerView", &registerView1 )
 		.def( "registerView", &registerView2 )
 		.staticmethod( "registerView" )
 	;
-
-	GafferBindings::NodeClass<View3D>( NULL, no_init );
-
-	typedef GafferBindings::NodeWrapper<ObjectView> ObjectViewWrapper;
-
-	GafferBindings::NodeClass<ObjectView, ObjectViewWrapper>();
-
 }
