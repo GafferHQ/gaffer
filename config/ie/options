@@ -67,6 +67,7 @@ qtVersion = gafferReg["qtVersion"]
 oiioVersion = gafferReg["OpenImageIO"]
 ocioVersion = gafferReg["OpenColorIO"]
 oslVersion = gafferReg["OpenShadingLanguage"]
+vdbVersion = gafferReg.get( "OpenVDB", "3.0.0" )
 
 if targetApp :
 	
@@ -146,6 +147,7 @@ if targetAppVersion :
 
 LOCATE_DEPENDENCY_SYSTEMPATH = [
 
+	os.path.join( IEEnv.Environment.rootPath(), "apps", "OpenVDB", vdbVersion, IEEnv.platform(), compiler, compilerVersion, "include" ),
 	os.path.join( IEEnv.Environment.rootPath(), "apps", "OpenColorIO", ocioVersion, IEEnv.platform(), compiler, compilerVersion, "include" ),
 	os.path.join( IEEnv.Environment.rootPath(), "apps", "OpenImageIO", oiioVersion, IEEnv.platform(), compiler, compilerVersion, "include" ),
 	os.path.join( IEEnv.Environment.rootPath(), "apps", "OpenShadingLanguage", oslVersion, IEEnv.platform(), compiler, compilerVersion, "include" ),
@@ -191,6 +193,7 @@ LOCATE_DEPENDENCY_LIBPATH = [
 	os.path.join( IEEnv.Environment.rootPath(), "apps", "cortex", cortexVersion, IEEnv.platform(), "base", "lib", compiler, compilerVersion ),
 	os.path.join( IEEnv.Environment.rootPath(), "apps", "qt", qtVersion, IEEnv.platform(), compiler, compilerVersion, "lib" ),
 	os.path.join( IEEnv.Environment.rootPath(), "apps", "OpenShadingLanguage", oslVersion, IEEnv.platform(), compiler, compilerVersion, "lib" ),	
+	os.path.join( IEEnv.Environment.rootPath(), "apps", "OpenVDB", vdbVersion, IEEnv.platform(), compiler, compilerVersion, "lib" ),
 
 ]
 

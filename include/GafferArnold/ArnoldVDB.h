@@ -1,6 +1,6 @@
 //////////////////////////////////////////////////////////////////////////
 //
-//  Copyright (c) 2012, John Haddon. All rights reserved.
+//  Copyright (c) 2016, Image Engine Design Inc. All rights reserved.
 //
 //  Redistribution and use in source and binary forms, with or without
 //  modification, are permitted provided that the following conditions are
@@ -34,32 +34,62 @@
 //
 //////////////////////////////////////////////////////////////////////////
 
-#include "boost/python.hpp"
+#ifndef GAFFERARNOLD_ARNOLDVDB_H
+#define GAFFERARNOLD_ARNOLDVDB_H
 
-#include "GafferBindings/DependencyNodeBinding.h"
+#include "GafferScene/ObjectSource.h"
 
-#include "GafferArnold/ArnoldShader.h"
-#include "GafferArnold/ArnoldOptions.h"
-#include "GafferArnold/ArnoldAttributes.h"
-#include "GafferArnold/ArnoldLight.h"
-#include "GafferArnold/ArnoldVDB.h"
+#include "GafferArnold/TypeIds.h"
 
-using namespace boost::python;
-using namespace GafferArnold;
-
-BOOST_PYTHON_MODULE( _GafferArnold )
+namespace GafferArnold
 {
 
-	GafferBindings::DependencyNodeClass<ArnoldShader>()
-		.def( "loadShader", (void (ArnoldShader::*)( const std::string & ) )&ArnoldShader::loadShader )
-	;
+class ArnoldVDB : public GafferScene::ObjectSource
+{
 
-	GafferBindings::NodeClass<ArnoldLight>()
-		.def( "loadShader", (void (ArnoldLight::*)( const std::string & ) )&ArnoldLight::loadShader )
-	;
+	public :
 
-	GafferBindings::DependencyNodeClass<ArnoldOptions>();
-	GafferBindings::DependencyNodeClass<ArnoldAttributes>();
-	GafferBindings::DependencyNodeClass<ArnoldVDB>();
+		IE_CORE_DECLARERUNTIMETYPEDEXTENSION( GafferArnold::ArnoldVDB, ArnoldVDBTypeId, GafferScene::ObjectSource );
 
-}
+		ArnoldVDB( const std::string &name=defaultName<ArnoldVDB>() );
+		virtual ~ArnoldVDB();
+
+		Gaffer::StringPlug *fileNamePlug();
+		const Gaffer::StringPlug *fileNamePlug() const;
+
+		Gaffer::StringPlug *gridsPlug();
+		const Gaffer::StringPlug *gridsPlug() const;
+
+		Gaffer::StringPlug *velocityGridsPlug();
+		const Gaffer::StringPlug *velocityGridsPlug() const;
+
+		Gaffer::FloatPlug *velocityScalePlug();
+		const Gaffer::FloatPlug *velocityScalePlug() const;
+
+		Gaffer::FloatPlug *stepSizePlug();
+		const Gaffer::FloatPlug *stepSizePlug() const;
+
+		Gaffer::FloatPlug *stepScalePlug();
+		const Gaffer::FloatPlug *stepScalePlug() const;
+
+		Gaffer::StringPlug *dsoPlug();
+		const Gaffer::StringPlug *dsoPlug() const;
+
+		virtual void affects( const Gaffer::Plug *input, AffectedPlugsContainer &outputs ) const;
+
+	protected :
+
+		virtual void hashSource( const Gaffer::Context *context, IECore::MurmurHash &h ) const;
+		virtual IECore::ConstObjectPtr computeSource( const Gaffer::Context *context ) const;
+
+	private :
+
+		static size_t g_firstPlugIndex;
+
+};
+
+IE_CORE_DECLAREPTR( ArnoldVDB )
+
+} // namespace GafferArnold
+
+#endif // GAFFERARNOLD_ARNOLDVDB_H

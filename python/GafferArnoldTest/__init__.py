@@ -38,6 +38,7 @@ from ArnoldShaderTest import ArnoldShaderTest
 from ArnoldRenderTest import ArnoldRenderTest
 from ArnoldOptionsTest import ArnoldOptionsTest
 from ArnoldAttributesTest import ArnoldAttributesTest
+from ArnoldVDBTest import ArnoldVDBTest
 
 if __name__ == "__main__":
 	import unittest
