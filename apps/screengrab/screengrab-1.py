@@ -202,6 +202,11 @@ class screengrab( Gaffer.Application ) :
 		IECore.msg( IECore.Msg.Level.Info, "screengrab", "Writing image [ %s ]" % args["image"].value )
 		pixmap.save( args["image"].value )
 
+		# Remove the script and any reference to the grab widget up so
+		# we can shut down cleanly.
+		self.root()["scripts"].clearChildren()
+		self.setGrabWidget( None )
+
 		return 0
 
 	def __waitForIdle( self, count = 1000 ) :
