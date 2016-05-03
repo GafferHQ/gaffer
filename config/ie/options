@@ -103,10 +103,11 @@ pythonReg = IEEnv.registry['apps']['python'][pythonVersion][IEEnv.platform()]
 
 arnoldVersion = getOption( "ARNOLD_VERSION", os.environ["ARNOLD_VERSION"] )
 
+# find arnold. we only build the arnold stuff if the compiler we're building with is suitable.
+arnoldVersion = getOption( "ARNOLD_VERSION", os.environ["ARNOLD_VERSION"] )
 try :
 	arnoldReg = IEEnv.registry["apps"]["arnold"][arnoldVersion][IEEnv.platform()]
-	if arnoldReg["compiler"]==compiler and arnoldReg["compilerVersion"]==compilerVersion :
-		ARNOLD_ROOT = arnoldReg["location"]
+	ARNOLD_ROOT = arnoldReg["location"]
 except :
 	pass
 
@@ -191,6 +192,7 @@ LOCATE_DEPENDENCY_LIBPATH = [
 
 	os.path.join( IEEnv.Environment.rootPath(), "tools", "lib", IEEnv.platform(), compiler, compilerVersion ),
 	os.path.join( IEEnv.Environment.rootPath(), "apps", "cortex", cortexVersion, IEEnv.platform(), "base", "lib", compiler, compilerVersion ),
+	os.path.join( IEEnv.Environment.rootPath(), "apps", "cortex", cortexVersion, IEEnv.platform(), "base", "arnold", arnoldVersion, "lib", compiler, compilerVersion ),
 	os.path.join( IEEnv.Environment.rootPath(), "apps", "qt", qtVersion, IEEnv.platform(), compiler, compilerVersion, "lib" ),
 	os.path.join( IEEnv.Environment.rootPath(), "apps", "OpenShadingLanguage", oslVersion, IEEnv.platform(), compiler, compilerVersion, "lib" ),	
 	os.path.join( IEEnv.Environment.rootPath(), "apps", "OpenVDB", vdbVersion, IEEnv.platform(), compiler, compilerVersion, "lib" ),
