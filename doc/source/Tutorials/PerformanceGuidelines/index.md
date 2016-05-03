@@ -78,3 +78,14 @@ Bearing in mind the rough complexity metric of `numberOfLocations * numberOfNode
 - Use a minimum of nodes below the instancer to modify the scene containing all the instances.
 - Group or Parent the instances into the main scene as late in the node graph as possible.
 - Prefer to assign shaders and set attributes on a location above all the instances, rather than on a per-instance basis.
+
+Performance Monitor
+-------------------
+
+> Tip : Use the Performance Monitor.
+
+Gaffer includes a built in performance monitor which can be useful when optimising node graphs for performance or tracking down a bug. It can be turned on for batch rendering from within the statistics section of a StandardOptions node.
+
+![Turning on the performance monitor](images/performanceMonitor.png)
+
+This will cause performance statistics to be output into the render logs for later analysis.
