@@ -1048,175 +1048,15 @@ else :
 # Installation
 #########################################################################################################
 
-## \todo I'm not convinced we need this manifest anymore. If everyone will be using
-# the gafferDependencies project to seed their builds, then BUILD_DIR will only contain
-# files from gafferDependencies (which has its own manifest) and files we explicitly
-# built and definitely want packaged.
-dependenciesManifest = [
-
-	"bin/python",
-	"bin/python*[0-9]", # get the versioned python binaries, but not python-config etc
-
-	"bin/maketx",
-	"bin/oslc",
-	"bin/oslinfo",
-
-	"lib/libboost_signals$BOOST_LIB_SUFFIX$SHLIBSUFFIX*",
-	"lib/libboost_thread$BOOST_LIB_SUFFIX$SHLIBSUFFIX*",
-	"lib/libboost_wave$BOOST_LIB_SUFFIX$SHLIBSUFFIX*",
-	"lib/libboost_regex$BOOST_LIB_SUFFIX$SHLIBSUFFIX*",
-	"lib/libboost_python$BOOST_LIB_SUFFIX$SHLIBSUFFIX*",
-	"lib/libboost_date_time$BOOST_LIB_SUFFIX$SHLIBSUFFIX*",
-	"lib/libboost_filesystem$BOOST_LIB_SUFFIX$SHLIBSUFFIX*",
-	"lib/libboost_iostreams$BOOST_LIB_SUFFIX$SHLIBSUFFIX*",
-	"lib/libboost_system$BOOST_LIB_SUFFIX$SHLIBSUFFIX*",
-	"lib/libboost_chrono$BOOST_LIB_SUFFIX$SHLIBSUFFIX*",
-
-	"lib/libIECore*$SHLIBSUFFIX",
-
-	"lib/libIex*$SHLIBSUFFIX*",
-	"lib/libHalf*$SHLIBSUFFIX*",
-	"lib/libImath*$SHLIBSUFFIX*",
-	"lib/libIlmImf*$SHLIBSUFFIX*",
-	"lib/libIlmThread*$SHLIBSUFFIX*",
-
-	"lib/libtiff*$SHLIBSUFFIX*",
-	"lib/libfreetype*$SHLIBSUFFIX*",
-	"lib/libjpeg*$SHLIBSUFFIX*",
-	"lib/libpng*$SHLIBSUFFIX*",
-
-	"lib/libOpenImageIO*$SHLIBSUFFIX*",
-	"lib/libOpenColorIO*$SHLIBSUFFIX*",
-
-	"lib/libLLVM*$SHLIBSUFFIX*",
-	"lib/libosl*",
-
-	"lib/libpython*$SHLIBSUFFIX*",
-	"lib/Python.framework",
-	"lib/python$PYTHON_VERSION",
-
-	"lib/libGLEW*$SHLIBSUFFIX*",
-	"lib/libtbb*$SHLIBSUFFIX*",
-
-	"lib/libhdf5*$SHLIBSUFFIX*",
-
-	"lib/libpyside*$SHLIBSUFFIX*",
-	"lib/libshiboken*$SHLIBSUFFIX*",
-
-	"lib/libQtCore*",
-	"lib/libQtGui*",
-	"lib/libQtOpenGL*",
-	"lib/QtCore.framework",
-	"lib/QtGui.framework",
-	"lib/QtOpenGL.framework",
-
-	"lib/libxerces-c*$SHLIBSUFFIX",
-
-	"fonts",
-	"ops",
-	"procedurals",
-	"resources",
-	"shaders",
-
-	"openColorIO",
-
-	"glsl/IECoreGL",
-	"glsl/*.frag",
-	"glsl/*.vert",
-
-	"doc/licenses",
-	"doc/cortex/html",
-	"doc/gaffer"
-	"doc/osl*",
-
-	"python/IECore*",
-	"python/shiboken.so",
-	"python/PySide/*.py",
-	"python/PySide/QtCore.so",
-	"python/PySide/QtGui.so",
-	"python/PySide/QtOpenGL.so",
-	"python/sip.so",
-	"python/PyQt*",
-	"python/OpenGL",
-	"python/PyOpenColorIO*",
-
-	"include/IECore*",
-	"include/boost",
-	"include/GL",
-	"include/OpenEXR",
-	"include/python*",
-	"include/tbb",
-	"include/OSL",
-	"include/OpenImageIO",
-	"include/OpenColorIO",
-	"include/QtCore",
-	"include/QtGui",
-	"include/QtOpenGL",
-
-	"renderMan",
-	"arnold",
-	"appleseed",
-	"appleseedDisplays",
-
-]
-
-gafferManifest = dependenciesManifest + [
-
-	"bin/gaffer",
-	"bin/gaffer.py",
-
-	"LICENSE",
-
-	"apps/*/*-1.py",
-
-	"lib/libGaffer*$SHLIBSUFFIX",
-
-	"startup/*/*.py",
-
-	"graphics/*.png",
-
-	"doc/gaffer/html",
-
-	"python/Gaffer*",
-
-	"include/Gaffer*",
-
-]
-
 def installer( target, source, env ) :
 
-	def copyTree( src, dst, regex ) :
-
-		names = os.listdir( src )
-
-		for name in names:
-
-			srcName = os.path.join( src, name )
-			dstName = os.path.join( dst, name )
-
-			if os.path.isdir( srcName ) :
-				if regex.match( srcName ) :
-					copyTree( srcName, dstName, re.compile( ".*" ) )
-				else :
-					copyTree( srcName, dstName, regex )
-			else :
-				if regex.match( srcName ) :
-					dstDir = os.path.dirname( dstName )
-					if not os.path.isdir( dstDir ) :
-						os.makedirs( dstDir )
-					if os.path.islink( srcName ) :
-						os.symlink( os.readlink( srcName ), dstName )
-					else:
-						shutil.copy2( srcName, dstName )
-
-	regex = re.compile( "|".join( [ fnmatch.translate( os.path.normpath( env.subst( "$BUILD_DIR/" + m ) ) ) for m in env["MANIFEST"] ] ) )
-	copyTree( str( source[0] ), str( target[0] ), regex )
+	shutil.copytree( str( source[0] ), str( target[0] ), symlinks=True )
 
 if env.subst( "$PACKAGE_FILE" ).endswith( ".dmg" ) :
 
 	# if the packaging will make a disk image, then build an os x app bundle
 
-	install = env.Command( "$INSTALL_DIR/Gaffer.app/Contents/Resources", "$BUILD_DIR", installer, MANIFEST=gafferManifest )
+	install = env.Command( "$INSTALL_DIR/Gaffer.app/Contents/Resources", "$BUILD_DIR", installer )
 	env.AlwaysBuild( install )
 	env.NoCache( install )
 	env.Alias( "install", install )
@@ -1229,7 +1069,7 @@ if env.subst( "$PACKAGE_FILE" ).endswith( ".dmg" ) :
 
 else :
 
-	install = env.Command( "$INSTALL_DIR", "$BUILD_DIR", installer, MANIFEST=gafferManifest )
+	install = env.Command( "$INSTALL_DIR", "$BUILD_DIR", installer )
 	env.AlwaysBuild( install )
 	env.NoCache( install )
 
