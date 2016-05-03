@@ -118,6 +118,8 @@ try :
 except :
 	pass
 
+OSL_ROOT = os.path.join( IEEnv.Environment.rootPath(), "apps", "OpenShadingLanguage", oslVersion, IEEnv.platform(), compiler, compilerVersion )
+
 sphinxRoot = os.path.join( IEEnv.Environment.rootPath(), "apps", "sphinx", "1.4.1" )
 
 ##########################################################################

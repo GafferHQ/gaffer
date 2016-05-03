@@ -138,6 +138,12 @@ options.Add(
 )
 
 options.Add(
+	"OSL_ROOT",
+	"The directory in which OpenShadingLanguage is installed. Used to build GafferOSL",
+	"",
+)
+
+options.Add(
 	"APPLESEED_INCLUDE_PATH",
 	"The path to the appleseed include directory. Used to build Gafferseed",
 	"$BUILD_DIR/appleseed/include",
@@ -900,7 +906,7 @@ for libraryName, libraryDef in libraries.items() :
 	for oslShader in libraryDef.get( "oslShaders", [] ) :
 		oslShaderInstall = env.InstallAs( "$BUILD_DIR/" + oslShader, oslShader )
 		env.Alias( "build", oslShader )
-		compiledFile = commandEnv.Command( os.path.splitext( str( oslShaderInstall[0] ) )[0] + ".oso", oslShader, "oslc -I./shaders -o $TARGET $SOURCE" )
+		compiledFile = commandEnv.Command( os.path.splitext( str( oslShaderInstall[0] ) )[0] + ".oso", oslShader, "$OSL_ROOT/bin/oslc -I./shaders -o $TARGET $SOURCE" )
 		env.Depends( compiledFile, "oslHeaders" )
 		env.Alias( "build", compiledFile )
 
