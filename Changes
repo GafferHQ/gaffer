@@ -1,3 +1,73 @@
+0.24.0.0
+========
+
+UI
+-----------------------------------------------------------------------
+
+- Added node reference documentation menu item to NodeEditor tool menus.
+
+Scene
+-----------------------------------------------------------------------
+
+- Improved error messages emitted by Group node.
+
+Image
+-----------------------------------------------------------------------
+
+- Fixed UVWarp crash triggered by negative data window origins (#1707).
+
+OSL
+-----------------------------------------------------------------------
+
+- Fixed crash when deleting connections to an OSL expression (#1695).
+- Added support for BoolPlugs in OSL expressions (#1697).
+
+Dispatch
+-----------------------------------------------------------------------
+
+- Stopped SystemCommand swallowing the stdout of launched processes
+  (#1712).
+- Disabled automatic substitutions for command (#1692). This was broken
+  by #1671.
+
+Arnold
+-----------------------------------------------------------------------
+
+- Added VDBVolume node (#1711).
+- Added volume step size to ArnoldAttributes node (#1694).
+- Fixed metadata for ArnoldLight UIs (#1696).
+
+Apps
+-----------------------------------------------------------------------
+
+- Removed procedural app
+- Added `-editor` argument to screengrab app.
+
+Documentation
+-----------------------------------------------------------------------
+
+- Introduced HTML documentation which is shipped with every Gaffer
+  release (#1702, #1708, #1710).
+
+API
+-----------------------------------------------------------------------
+
+- View (#1713)
+  - Removed View3D and ObjectView derived classes.
+  - Removed update() and updateRequestSignal() methods.
+- Added DocumentationAlgo namespace with functions to assist in
+  auto-generating documentation.
+- Removed CompoundPlug usage from Shader nodes (#1701).
+- Removed deprecated Widget keyword arguments. Use the
+  `parenting = {}` dictionary instead (#655, #1704).
+- Removed all use of deprecated IECorePython::Wrapper (#1116, #1703).
+- Removed deprecated `ValuePlg::inCompute()` method. Use `Process::current()`
+  instead.
+- Removed deprecated `Filter::matchPlug()` method. Use `Filter::outPlug()`
+  instead.
+- Removed deprecated SignalBinder class. Use SignalClass instead.
+- Removed deprecated iterator methods. Use `Iterator::done()` instead.
+
 0.23.2.0
 ========
 
