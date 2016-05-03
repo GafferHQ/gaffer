@@ -13,7 +13,7 @@ The gaffer distribution can be moved to any suitable location on the filesystem.
 > and enter these commands :
 >
 > ```shell
-> cd ~Downloads
+> cd ~/Downloads
 > tar -xzf gaffer-!GAFFER_VERSION!-linux.tar.gz
 > cd gaffer-!GAFFER_VERSION!-linux
 > ./bin/gaffer
