@@ -189,5 +189,5 @@ class ScriptWindow( GafferUI.Window ) :
 			if w.scriptNode().isSame( script ) :
 				ScriptWindow.__automaticallyCreatedInstances.remove( w )
 
-		if not len( scriptContainer.children() ) :
+		if not len( scriptContainer.children() ) and GafferUI.EventLoop.mainEventLoop().running() :
 			GafferUI.EventLoop.mainEventLoop().stop()
