@@ -5,6 +5,8 @@ UI
 -----------------------------------------------------------------------
 
 - Added node reference documentation menu item to NodeEditor tool menus.
+- GafferUI.Collapsible supports Widget.reveal().
+- ScriptWindow no longer stops the EventLoop if it's already stopped.
 
 Scene
 -----------------------------------------------------------------------
@@ -33,7 +35,7 @@ Dispatch
 Arnold
 -----------------------------------------------------------------------
 
-- Added VDBVolume node (#1711).
+- Added ArnoldVDB node (#1711).
 - Added volume step size to ArnoldAttributes node (#1694).
 - Fixed metadata for ArnoldLight UIs (#1696).
 
@@ -41,13 +43,25 @@ Apps
 -----------------------------------------------------------------------
 
 - Removed procedural app
-- Added `-editor` argument to screengrab app.
+- Screengrab app
+  - Added `-editor` argument
+  - Added `-selection` argument
+  - Added `-nodeEditor.reveal` argument
+  - Fix crashes at shutdown
 
 Documentation
 -----------------------------------------------------------------------
 
 - Introduced HTML documentation which is shipped with every Gaffer
   release (#1702, #1708, #1710).
+- Mentioned PerformanceMonitor.
+
+Build
+-----------------------------------------------------------------------
+
+- Simplified packaging. Use the gafferDependencies project if the
+  dependencies are needed for your build.
+
 
 API
 -----------------------------------------------------------------------
@@ -61,7 +75,7 @@ API
 - Removed deprecated Widget keyword arguments. Use the
   `parenting = {}` dictionary instead (#655, #1704).
 - Removed all use of deprecated IECorePython::Wrapper (#1116, #1703).
-- Removed deprecated `ValuePlg::inCompute()` method. Use `Process::current()`
+- Removed deprecated `ValuePlug::inCompute()` method. Use `Process::current()`
   instead.
 - Removed deprecated `Filter::matchPlug()` method. Use `Filter::outPlug()`
   instead.
