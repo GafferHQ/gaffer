@@ -273,6 +273,8 @@ env = Environment(
 
 )
 
+env["BUILD_DIR"] = os.path.abspath( env["BUILD_DIR"] )
+
 # DISPLAY and HOME are essential for running gaffer when generating
 # the documentation.
 for e in env["ENV_VARS_TO_IMPORT"].split() + [ "DISPLAY", "HOME" ] :
