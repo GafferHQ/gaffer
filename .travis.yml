@@ -34,7 +34,7 @@ install:
     - if [ -n "$COMPILER_VERSION" ]; then export CXX="${CXX}-${COMPILER_VERSION}"; fi
 
 script:
-    - scons -j 2 install CXX=$CXX CXXSTD=$CXXSTD ENV_VARS_TO_IMPORT=PATH RMAN_ROOT=$DELIGHT
+    - scons -j 2 install CXX=$CXX CXXSTD=$CXXSTD ENV_VARS_TO_IMPORT=PATH RMAN_ROOT=$DELIGHT OSL_ROOT=.
     # Preload libSegFault when running tests, so we get stack
     # traces from any crashes.
     - export LD_PRELOAD=/lib/x86_64-linux-gnu/libSegFault.so
