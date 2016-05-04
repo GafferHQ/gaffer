@@ -232,10 +232,17 @@ if targetAppVersion :
 
 if getOption( "RELEASE", "0" )=="0" :
 
-	LOCATE_DEPENDENCY_LIBPATH.insert(
-		0,
+	LOCATE_DEPENDENCY_LIBPATH[:0] = [
 		os.path.join( os.path.expanduser( "~" ), "apps", "cortex", cortexVersion, IEEnv.platform(), "base", "lib", compiler, compilerVersion ),
-	)
+		os.path.join( os.path.expanduser( "~" ), "apps", "cortex", cortexVersion, IEEnv.platform(), "base", "arnold", arnoldVersion, "lib", compiler, compilerVersion ),
+	]
+
+	LOCATE_DEPENDENCY_PYTHONPATH[:0] = [
+		os.path.join( os.path.expanduser( "~" ), "apps", "cortex", cortexVersion, IEEnv.platform(), "base", "python", pythonVersion, compiler, compilerVersion ),
+		os.path.join( os.path.expanduser( "~" ), "apps", "cortex", cortexVersion, IEEnv.platform(), "base", "arnold", arnoldVersion, "python", pythonVersion, compiler, compilerVersion ),
+	]
+
+	os.environ["IECOREGL_SHADER_INCLUDE_PATHS"] = os.path.join( os.path.expanduser( "~" ), "apps", "cortex", cortexVersion, IEEnv.platform(), "base", "glsl" ) + ":" + os.environ["IECOREGL_SHADER_INCLUDE_PATHS"]
 	
 	if targetAppVersion :
 		LOCATE_DEPENDENCY_LIBPATH.insert(
