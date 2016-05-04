@@ -345,5 +345,59 @@ class ArnoldRenderTest( GafferTest.TestCase ) :
 		self.failIf( "ignoring parameter min" in output )
 		self.failIf( "ignoring parameter max" in output )
 
+	def testCommand( self ) :
+
+		s = Gaffer.ScriptNode()
+
+		s["sphere"] = GafferScene.Sphere()
+
+		s["outputs"] = GafferScene.Outputs()
+		s["outputs"].addOutput(
+			"beauty",
+			IECore.Display(
+				"test",
+				"ieDisplay",
+				"rgba",
+				{
+					"quantize" : IECore.FloatVectorData( [ 0, 0, 0, 0 ] ),
+					"driverType" : "ClientDisplayDriver",
+					"displayHost" : "localhost",
+					"displayPort" : "1559",
+					"remoteDisplayType" : "GafferImage::GafferDisplayDriver",
+					"handle" : "myLovelyPlane",
+				}
+			)
+		)
+		s["outputs"]["in"].setInput( s["sphere"]["out"] )
+
+		s["display"] = GafferImage.Display()
+
+		s["render"] = GafferArnold.ArnoldRender()
+		s["render"]["fileName"].setValue( self.temporaryDirectory() + "/test.ass" )
+		s["render"]["in"].setInput( s["outputs"]["out"] )
+
+		s["fileName"].setValue( self.temporaryDirectory() + "/test.gfr" )
+		s.save()
+
+		# render a full frame and get the data window
+		s["render"]["task"].execute()
+		self.assertEqual( s["display"]["out"].image().dataWindow.size() + IECore.V2i( 1 ), IECore.V2i( 640, 480 ) )
+
+		# specify a crop on the command line and get the new data window
+		s["render"]["command"].setValue( "kick -dp -dw -r 1920 1080" )
+		s["render"]["task"].execute()
+
+		# check that the crop worked
+		self.assertEqual( s["display"]["out"].image().dataWindow.size() + IECore.V2i( 1 ), IECore.V2i( 1920, 1080 ) )
+
+		# now check that we can specify values via the context too
+		s["render"]["command"].setValue( "kick -dp -dw -r ${xres} ${yres}" )
+		s.context()["xres"] = 1024
+		s.context()["yres"] = 576
+		with s.context() :
+			s["render"]["task"].execute()
+
+		self.assertEqual( s["display"]["out"].image().dataWindow.size() + IECore.V2i( 1 ), IECore.V2i( 1024, 576 ) )
+
 if __name__ == "__main__":
 	unittest.main()

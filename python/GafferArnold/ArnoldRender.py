@@ -1,7 +1,7 @@
 ##########################################################################
 #
 #  Copyright (c) 2012, John Haddon. All rights reserved.
-#  Copyright (c) 2013, Image Engine Design Inc. All rights reserved.
+#  Copyright (c) 2013-2015, Image Engine Design Inc. All rights reserved.
 #
 #  Redistribution and use in source and binary forms, with or without
 #  modification, are permitted provided that the following conditions are
@@ -60,6 +60,13 @@ class ArnoldRender( GafferScene.ExecutableRender ) :
 		self.addChild(
 			Gaffer.StringPlug(
 				"fileName",
+			)
+		)
+
+		self.addChild(
+			Gaffer.StringPlug(
+				"command",
+				defaultValue = "kick -dp -dw",
 			)
 		)
 
@@ -142,11 +149,15 @@ class ArnoldRender( GafferScene.ExecutableRender ) :
 
 		fileName = self["fileName"].getValue()
 
+		command = self["command"].getValue().strip()
+		if command == "" :
+			return
+
 		mode = self["mode"].getValue()
 		if mode == "render" :
-			return "kick -dp -dw -v %d '%s'" % ( self["verbosity"].getValue(), fileName )
+			return command + " -v %d '%s'" % ( self["verbosity"].getValue(), fileName )
 		elif mode == "expand" :
-			return "kick -v %d -forceexpand -resave '%s' '%s'" % ( self["verbosity"].getValue(), fileName, fileName )
+			return command + " -v %d -forceexpand -resave '%s' '%s'" % ( self["verbosity"].getValue(), fileName, fileName )
 
 		return ""
 

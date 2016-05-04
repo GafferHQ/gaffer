@@ -1,6 +1,7 @@
 ##########################################################################
 #
 #  Copyright (c) 2012-2014, John Haddon. All rights reserved.
+#  Copyright (c) 2015, Image Engine Design Inc. All rights reserved.
 #
 #  Redistribution and use in source and binary forms, with or without
 #  modification, are permitted provided that the following conditions are
@@ -93,6 +94,19 @@ Gaffer.Metadata.registerNode(
 			"pathPlugValueWidget:bookmarks", "ass",
 			"pathPlugValueWidget:leaf", True,
 			"fileSystemPathPlugValueWidget:extensions", IECore.StringVectorData( [ "ass" ] ),
+
+		],
+
+		"command" : [
+
+			"description",
+			"""
+			The system command used to invoke the renderer - this
+			can be edited to add any custom flags that are necessary,
+			or to use a different renderer. The ass filename is
+			automatically appended to the command before it is invoked,
+			as is the verbosity and options relevant to each "mode".
+			""",
 
 		],
 
