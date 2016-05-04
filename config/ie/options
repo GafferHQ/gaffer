@@ -105,8 +105,7 @@ arnoldVersion = getOption( "ARNOLD_VERSION", os.environ["ARNOLD_VERSION"] )
 
 try :
 	arnoldReg = IEEnv.registry["apps"]["arnold"][arnoldVersion][IEEnv.platform()]
-	if arnoldReg["compiler"]==compiler and arnoldReg["compilerVersion"]==compilerVersion :
-		ARNOLD_ROOT = arnoldReg["location"]
+	ARNOLD_ROOT = arnoldReg["location"]
 except :
 	pass
 
@@ -191,6 +190,7 @@ LOCATE_DEPENDENCY_LIBPATH = [
 
 	os.path.join( IEEnv.Environment.rootPath(), "tools", "lib", IEEnv.platform(), compiler, compilerVersion ),
 	os.path.join( IEEnv.Environment.rootPath(), "apps", "cortex", cortexVersion, IEEnv.platform(), "base", "lib", compiler, compilerVersion ),
+	os.path.join( IEEnv.Environment.rootPath(), "apps", "cortex", cortexVersion, IEEnv.platform(), "base", "arnold", arnoldVersion, "lib", compiler, compilerVersion ),
 	os.path.join( IEEnv.Environment.rootPath(), "apps", "qt", qtVersion, IEEnv.platform(), compiler, compilerVersion, "lib" ),
 	os.path.join( IEEnv.Environment.rootPath(), "apps", "OpenShadingLanguage", oslVersion, IEEnv.platform(), compiler, compilerVersion, "lib" ),	
 	os.path.join( IEEnv.Environment.rootPath(), "apps", "OpenVDB", vdbVersion, IEEnv.platform(), compiler, compilerVersion, "lib" ),
@@ -200,8 +200,10 @@ LOCATE_DEPENDENCY_LIBPATH = [
 LOCATE_DEPENDENCY_PYTHONPATH = [
 
 	os.path.join( IEEnv.Environment.rootPath(), "apps", "cortex", cortexVersion, IEEnv.platform(), "base", "python", pythonVersion, compiler, compilerVersion ),	
+	os.path.join( IEEnv.Environment.rootPath(), "apps", "cortex", cortexVersion, IEEnv.platform(), "base", "arnold", arnoldVersion, "python", pythonVersion, compiler, compilerVersion ),
 	os.path.join( IEEnv.Environment.rootPath(), "tools", "python", pythonVersion, IEEnv.platform(), compiler, compilerVersion, "subprocess32", "3" ),
 	os.path.join( IEEnv.Environment.rootPath(), "tools", "python", pythonVersion, IEEnv.platform(), compiler, compilerVersion, "PyOpenGL", "3" ),
+	os.path.join( IEEnv.Environment.rootPath(), "tools", "python", pythonVersion, "noarch" ),
 	os.path.join( sphinxRoot, "lib", "python" + pythonVersion, "site-packages" ),
 	os.path.join( sphinxRoot, "lib64", "python" + pythonVersion, "site-packages" ),
 
@@ -230,10 +232,17 @@ if targetAppVersion :
 
 if getOption( "RELEASE", "0" )=="0" :
 
-	LOCATE_DEPENDENCY_LIBPATH.insert(
-		0,
+	LOCATE_DEPENDENCY_LIBPATH[:0] = [
 		os.path.join( os.path.expanduser( "~" ), "apps", "cortex", cortexVersion, IEEnv.platform(), "base", "lib", compiler, compilerVersion ),
-	)
+		os.path.join( os.path.expanduser( "~" ), "apps", "cortex", cortexVersion, IEEnv.platform(), "base", "arnold", arnoldVersion, "lib", compiler, compilerVersion ),
+	]
+
+	LOCATE_DEPENDENCY_PYTHONPATH[:0] = [
+		os.path.join( os.path.expanduser( "~" ), "apps", "cortex", cortexVersion, IEEnv.platform(), "base", "python", pythonVersion, compiler, compilerVersion ),
+		os.path.join( os.path.expanduser( "~" ), "apps", "cortex", cortexVersion, IEEnv.platform(), "base", "arnold", arnoldVersion, "python", pythonVersion, compiler, compilerVersion ),
+	]
+
+	os.environ["IECOREGL_SHADER_INCLUDE_PATHS"] = os.path.join( os.path.expanduser( "~" ), "apps", "cortex", cortexVersion, IEEnv.platform(), "base", "glsl" ) + ":" + os.environ["IECOREGL_SHADER_INCLUDE_PATHS"]
 	
 	if targetAppVersion :
 		LOCATE_DEPENDENCY_LIBPATH.insert(
