@@ -120,12 +120,12 @@ Gaffer.Metadata.registerNode(
 
 class _DrawingModePlugValueWidget( GafferUI.PlugValueWidget ) :
 
-	def __init__( self, plug, parenting = None ) :
+	def __init__( self, plug, **kw ) :
 
 		menu = GafferUI.Menu( Gaffer.WeakMethod( self.__menuDefinition ) )
 		menuButton = GafferUI.MenuButton( menu=menu, image = "drawingStyles.png", hasFrame=False )
 
-		GafferUI.PlugValueWidget.__init__( self, menuButton, plug, parenting = parenting )
+		GafferUI.PlugValueWidget.__init__( self, menuButton, plug, **kw )
 
 	def hasLabel( self ) :
 
