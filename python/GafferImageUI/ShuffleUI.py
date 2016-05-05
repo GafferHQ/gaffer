@@ -100,10 +100,10 @@ def nodeMenuCreateCommand() :
 
 class _ShuffleChannelPlugValueWidget( GafferUI.PlugValueWidget ) :
 
-	def __init__( self, plug, parenting = None ) :
+	def __init__( self, plug, **kw ) :
 
 		self.__row = GafferUI.ListContainer( GafferUI.ListContainer.Orientation.Horizontal, spacing = 4 )
-		GafferUI.PlugValueWidget.__init__( self, self.__row, plug, parenting = parenting )
+		GafferUI.PlugValueWidget.__init__( self, self.__row, plug, **kw )
 
 		with self.__row :
 
@@ -144,11 +144,11 @@ GafferUI.PlugValueWidget.registerType( GafferImage.Shuffle.ChannelPlug, _Shuffle
 # whether or not new channels can be created using metadata.
 class _ChannelPlugValueWidget( GafferUI.PlugValueWidget ) :
 
-	def __init__( self, plug, imagePlug = None, parenting = None ) :
+	def __init__( self, plug, imagePlug = None, **kw ) :
 
 		self.__menuButton = GafferUI.MenuButton( menu = GafferUI.Menu( Gaffer.WeakMethod( self.__menuDefinition ) ) )
 
-		GafferUI.PlugValueWidget.__init__( self, self.__menuButton, plug, parenting = parenting )
+		GafferUI.PlugValueWidget.__init__( self, self.__menuButton, plug, **kw )
 
 		if imagePlug is not None :
 			self.__imagePlug = imagePlug

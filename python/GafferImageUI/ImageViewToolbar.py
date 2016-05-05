@@ -47,11 +47,11 @@ import GafferImageUI
 # Toggles between default value and the last non-default value
 class _TogglePlugValueWidget( GafferUI.PlugValueWidget ) :
 
-	def __init__( self, plug, parenting = None ) :
+	def __init__( self, plug, **kw ) :
 
 		row = GafferUI.ListContainer( GafferUI.ListContainer.Orientation.Horizontal, spacing = 2 )
 
-		GafferUI.PlugValueWidget.__init__( self, row, plug, parenting = parenting )
+		GafferUI.PlugValueWidget.__init__( self, row, plug, **kw )
 
 		self.__imagePrefix = Gaffer.Metadata.plugValue( plug, "togglePlugValueWidget:imagePrefix" )
 		with row :
@@ -109,9 +109,9 @@ class _TogglePlugValueWidget( GafferUI.PlugValueWidget ) :
 
 class _DisplayTransformPlugValueWidget( GafferUI.PresetsPlugValueWidget ) :
 
-	def __init__( self, plug, parenting = None ) :
+	def __init__( self, plug, **kw ) :
 
-		GafferUI.PresetsPlugValueWidget.__init__( self, plug, parenting = parenting )
+		GafferUI.PresetsPlugValueWidget.__init__( self, plug, **kw )
 
 		## \todo Perhaps the layout could do this sort of thing for us
 		# based on a metadata value?
@@ -123,12 +123,12 @@ class _DisplayTransformPlugValueWidget( GafferUI.PresetsPlugValueWidget ) :
 
 class _ColorInspectorPlugValueWidget( GafferUI.PlugValueWidget ) :
 
-	def __init__( self, plug, parenting = None ) :
+	def __init__( self, plug, **kw ) :
 
 		frame = GafferUI.Frame( borderWidth = 4 )
 		frame._qtWidget().setObjectName( "gafferDarker" )
 
-		GafferUI.PlugValueWidget.__init__( self, frame, plug, parenting = parenting )
+		GafferUI.PlugValueWidget.__init__( self, frame, plug, **kw )
 
 		with frame :
 
