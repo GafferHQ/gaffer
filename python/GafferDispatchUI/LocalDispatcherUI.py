@@ -73,7 +73,29 @@ Gaffer.Metadata.registerNode(
 			This is not recommended - fix the problem instead.
 			""",
 
-		)
+		),
+
+		"environmentCommand" : (
+
+			"description",
+			"""
+			Optional system command to modify the environment when launching
+			tasks in the background. Background tasks are launched in a separate
+			process using a `gaffer execute ...` command, and they inherit the
+			environment from the launching process. When an environment
+			command is specified, tasks are instead launched using `environmentCommand
+			gaffer execute ...`, and the environment command is responsible for
+			modifying the inherited environment and then launching `gaffer execute ...`.
+
+			For example, the following environment command will use the standard `/usr/bin/env`
+			program to set some custom variables :
+
+			```
+			/usr/bin/env FOO=BAR TOTO=TATA
+			```
+			"""
+
+		),
 
 	}
 
