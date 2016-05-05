@@ -289,11 +289,11 @@ Gaffer.Metadata.registerNode(
 
 class _ValuesPreview( GafferUI.Widget ) :
 
-	def __init__( self, previewWidget, node, parenting = None ) :
+	def __init__( self, previewWidget, node, **kw ) :
 
 		self.__grid = GafferUI.GridContainer( spacing = 4 )
 
-		GafferUI.Widget.__init__( self, self.__grid, parenting = parenting )
+		GafferUI.Widget.__init__( self, self.__grid, **kw )
 
 		self.__grid[0,0] =  GafferUI.Spacer(
 			IECore.V2i( GafferUI.PlugWidget.labelWidth(), 1 ),
@@ -325,10 +325,10 @@ class _ValuesPreview( GafferUI.Widget ) :
 
 class _NumericValuesPreview( _ValuesPreview ) :
 
-	def __init__( self, node, parenting = None ) :
+	def __init__( self, node, **kw ) :
 
 		self.__textWidget = GafferUI.MultiLineTextWidget( editable = False )
-		_ValuesPreview.__init__( self, self.__textWidget, node, parenting = parenting )
+		_ValuesPreview.__init__( self, self.__textWidget, node, **kw )
 
 		self._update()
 
@@ -351,12 +351,12 @@ class _NumericValuesPreview( _ValuesPreview ) :
 
 class _ColorValuesPreview( _ValuesPreview ) :
 
-	def __init__( self, node, parenting = None ) :
+	def __init__( self, node, **kw ) :
 
 		self.__row = GafferUI.ListContainer( GafferUI.ListContainer.Orientation.Horizontal )
 		self.__row._qtWidget().setFixedHeight( 100 )
 
-		_ValuesPreview.__init__( self, self.__row, node, parenting = parenting )
+		_ValuesPreview.__init__( self, self.__row, node, **kw )
 
 		self._update()
 
