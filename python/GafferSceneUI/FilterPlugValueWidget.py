@@ -44,10 +44,10 @@ import GafferScene
 
 class FilterPlugValueWidget( GafferUI.PlugValueWidget ) :
 
-	def __init__( self, plug, parenting = None ) :
+	def __init__( self, plug, **kw ) :
 
 		self.__column = GafferUI.ListContainer( spacing = 8 )
-		GafferUI.PlugValueWidget.__init__( self, self.__column, plug, parenting = parenting )
+		GafferUI.PlugValueWidget.__init__( self, self.__column, plug, **kw )
 
 		row = GafferUI.ListContainer( GafferUI.ListContainer.Orientation.Horizontal, spacing = 4 )
 
