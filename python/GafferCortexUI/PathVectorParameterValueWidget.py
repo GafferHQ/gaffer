@@ -45,7 +45,7 @@ import GafferCortexUI
 
 class PathVectorParameterValueWidget( GafferCortexUI.ParameterValueWidget ) :
 
-	def __init__( self, parameterHandler, parenting = None ) :
+	def __init__( self, parameterHandler, **kw ) :
 
 		self.__pathVectorWidget = GafferUI.PathVectorDataPlugValueWidget(
 			parameterHandler.plug(),
@@ -58,7 +58,7 @@ class PathVectorParameterValueWidget( GafferCortexUI.ParameterValueWidget ) :
 			self,
 			self.__pathVectorWidget,
 			parameterHandler,
-			parenting = parenting
+			**kw
 		)
 
 	def _path( self ) :

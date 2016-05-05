@@ -41,10 +41,10 @@ import GafferCortexUI
 
 class TimeCodeParameterValueWidget( GafferCortexUI.ParameterValueWidget ) :
 
-	def __init__( self, parameterHandler, parenting = None ) :
+	def __init__( self, parameterHandler, **kw ) :
 
 		plugValueWidget = GafferUI.CompoundNumericPlugValueWidget( parameterHandler.plug() )
 
-		GafferCortexUI.ParameterValueWidget.__init__( self, plugValueWidget, parameterHandler, parenting = parenting )
+		GafferCortexUI.ParameterValueWidget.__init__( self, plugValueWidget, parameterHandler, **kw )
 
 GafferCortexUI.ParameterValueWidget.registerType( IECore.TimeCodeParameter, TimeCodeParameterValueWidget )

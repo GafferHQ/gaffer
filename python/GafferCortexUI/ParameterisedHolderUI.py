@@ -65,11 +65,11 @@ __nodeTypes = (
 
 class _ParameterisedHolderNodeUI( GafferUI.NodeUI ) :
 
-	def __init__( self, node, readOnly=False, parenting = None ) :
+	def __init__( self, node, readOnly=False, **kw ) :
 
 		column = GafferUI.ListContainer( GafferUI.ListContainer.Orientation.Vertical, spacing = 4 )
 
-		GafferUI.NodeUI.__init__( self, node, column, parenting = parenting )
+		GafferUI.NodeUI.__init__( self, node, column, **kw )
 
 		headerVisible = True
 		parameterised = self.node().getParameterised()[0]

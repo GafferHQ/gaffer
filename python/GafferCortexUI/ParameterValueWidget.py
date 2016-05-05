@@ -45,11 +45,11 @@ import GafferCortexUI
 
 class ParameterValueWidget( GafferUI.Widget ) :
 
-	def __init__( self, plugValueWidget, parameterHandler, parenting = None ) :
+	def __init__( self, plugValueWidget, parameterHandler, **kw ) :
 
 		assert( isinstance( plugValueWidget, GafferUI.PlugValueWidget ) )
 
-		GafferUI.Widget.__init__( self, plugValueWidget, parenting = parenting )
+		GafferUI.Widget.__init__( self, plugValueWidget, **kw )
 
 		self.__plugValueWidget = plugValueWidget
 		self.__parameterHandler = parameterHandler

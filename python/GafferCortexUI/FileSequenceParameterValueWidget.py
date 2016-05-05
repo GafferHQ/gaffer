@@ -43,9 +43,9 @@ import GafferCortexUI
 
 class FileSequenceParameterValueWidget( GafferCortexUI.PathParameterValueWidget ) :
 
-	def __init__( self, parameterHandler, parenting = None ) :
+	def __init__( self, parameterHandler, **kw ) :
 
-		GafferCortexUI.PathParameterValueWidget.__init__( self, parameterHandler, parenting = parenting )
+		GafferCortexUI.PathParameterValueWidget.__init__( self, parameterHandler, **kw )
 
 	def _path( self ) :
 

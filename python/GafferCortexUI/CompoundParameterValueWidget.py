@@ -53,7 +53,7 @@ import GafferCortexUI
 class CompoundParameterValueWidget( GafferCortexUI.ParameterValueWidget ) :
 
 	## If collapsible is not None then it overrides any ["UI]["collapsible"] userData the parameter might have.
-	def __init__( self, parameterHandler, collapsible=None, _plugValueWidgetClass=None, parenting=None ) :
+	def __init__( self, parameterHandler, collapsible=None, _plugValueWidgetClass=None, **kw ) :
 
 		if collapsible is None :
 			collapsible = True
@@ -73,7 +73,7 @@ class CompoundParameterValueWidget( GafferCortexUI.ParameterValueWidget ) :
 			self,
 			_plugValueWidgetClass( parameterHandler, collapsed ),
 			parameterHandler,
-			parenting = parenting
+			**kw
 		)
 
 # CompoundParameterValueWidget is simply a lightweight wrapper around this CompoundPlugValueWidget

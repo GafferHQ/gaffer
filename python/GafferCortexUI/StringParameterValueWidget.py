@@ -58,7 +58,7 @@ __nodeTypes = (
 
 class StringParameterValueWidget( GafferCortexUI.ParameterValueWidget ) :
 
-	def __init__( self, parameterHandler, parenting = None ) :
+	def __init__( self, parameterHandler, **kw ) :
 
 		multiLine = False
 		with IECore.IgnoredExceptions( KeyError ) :
@@ -73,7 +73,7 @@ class StringParameterValueWidget( GafferCortexUI.ParameterValueWidget ) :
 				if parameterHandler.parameter().userData()["UI"]["password"].value :
 					plugValueWidget.textWidget().setDisplayMode( GafferUI.TextWidget.DisplayMode.Password )
 
-		GafferCortexUI.ParameterValueWidget.__init__( self, plugValueWidget, parameterHandler, parenting = parenting )
+		GafferCortexUI.ParameterValueWidget.__init__( self, plugValueWidget, parameterHandler, **kw )
 
 GafferCortexUI.ParameterValueWidget.registerType( IECore.StringParameter, StringParameterValueWidget )
 
