@@ -52,9 +52,9 @@ class ColorSwatch( GafferUI.Widget ) :
 	__linearBackgroundColor0 = IECore.Color3f( 0.1 )
 	__linearBackgroundColor1 = IECore.Color3f( 0.2 )
 
-	def __init__( self, color=IECore.Color4f( 1 ), useDisplayTransform = True, parenting = None ) :
+	def __init__( self, color=IECore.Color4f( 1 ), useDisplayTransform = True, **kw ) :
 
-		GafferUI.Widget.__init__( self, _Checker(), parenting = parenting )
+		GafferUI.Widget.__init__( self, _Checker(), **kw )
 
 		## \todo Should this be an option? Should it be an option for all Widgets?
 		self._qtWidget().setMinimumSize( 12, 12 )

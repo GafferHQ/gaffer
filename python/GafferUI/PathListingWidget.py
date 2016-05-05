@@ -91,10 +91,10 @@ class PathListingWidget( GafferUI.Widget ) :
 		columns = defaultFileSystemColumns,
 		allowMultipleSelection = False,
 		displayMode = DisplayMode.List,
-		parenting = None
+		**kw
 	) :
 
-		GafferUI.Widget.__init__( self, _TreeView(), parenting = parenting )
+		GafferUI.Widget.__init__( self, _TreeView(), **kw )
 
 		self._qtWidget().setAlternatingRowColors( True )
 		self._qtWidget().setUniformRowHeights( True )

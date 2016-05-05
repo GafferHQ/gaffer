@@ -50,11 +50,11 @@ import _GafferSceneUI
 
 class SceneHierarchy( GafferUI.NodeSetEditor ) :
 
-	def __init__( self, scriptNode, parenting = None ) :
+	def __init__( self, scriptNode, **kw ) :
 
 		column = GafferUI.ListContainer( GafferUI.ListContainer.Orientation.Vertical, borderWidth = 8, spacing = 4 )
 
-		GafferUI.NodeSetEditor.__init__( self, column, scriptNode, parenting = parenting )
+		GafferUI.NodeSetEditor.__init__( self, column, scriptNode, **kw )
 
 		searchFilter = _GafferSceneUI._SceneHierarchySearchFilter()
 		setFilter = _GafferSceneUI._SceneHierarchySetFilter()

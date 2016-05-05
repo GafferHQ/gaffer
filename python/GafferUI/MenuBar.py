@@ -45,13 +45,13 @@ QtGui = GafferUI._qtImport( "QtGui" )
 
 class MenuBar( GafferUI.Widget ) :
 
-	def __init__( self, definition, parenting = None ) :
+	def __init__( self, definition, **kw ) :
 
 		menuBar = QtGui.QMenuBar()
 		menuBar.setSizePolicy( QtGui.QSizePolicy( QtGui.QSizePolicy.Expanding, QtGui.QSizePolicy.Fixed ) )
 		menuBar.setNativeMenuBar( False )
 
-		GafferUI.Widget.__init__( self, menuBar, parenting = parenting )
+		GafferUI.Widget.__init__( self, menuBar, **kw )
 
 		self.__shortcutEventFilter = None
 		self.definition = definition

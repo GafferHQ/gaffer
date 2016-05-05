@@ -193,9 +193,9 @@ def repeatPrevious( menu ) :
 
 class DispatcherWindow( GafferUI.Window ) :
 
-	def __init__( self, parenting = None ) :
+	def __init__( self, **kw ) :
 
-		GafferUI.Window.__init__( self, parenting = parenting )
+		GafferUI.Window.__init__( self, **kw )
 
 		self.__dispatchers = {}
 		for dispatcherType in GafferDispatch.Dispatcher.registeredDispatchers() :
@@ -333,9 +333,9 @@ class DispatcherWindow( GafferUI.Window ) :
 
 class _DispatchButton( GafferUI.Button ) :
 
-	def __init__( self, node, parenting = None ) :
+	def __init__( self, node, **kw ) :
 
-		GafferUI.Button.__init__( self, "Execute", parenting = parenting )
+		GafferUI.Button.__init__( self, "Execute", **kw )
 
 		self.__node = node
 		self.__clickedConnection = self.clickedSignal().connect( Gaffer.WeakMethod( self.__clicked ) )
@@ -352,10 +352,10 @@ class _DispatchButton( GafferUI.Button ) :
 # want the ability to add in menu items that don't correspond to plug values directly.
 class _FramesModePlugValueWidget( GafferUI.PlugValueWidget ) :
 
-	def __init__( self, plug, parenting = None ) :
+	def __init__( self, plug, **kw ) :
 
 		self.__selectionMenu = GafferUI.MultiSelectionMenu( allowMultipleSelection = False, allowEmptySelection = False )
-		GafferUI.PlugValueWidget.__init__( self, self.__selectionMenu, plug, parenting = parenting )
+		GafferUI.PlugValueWidget.__init__( self, self.__selectionMenu, plug, **kw )
 
 		self.__labelsAndValues = (
 			( "CurrentFrame", GafferDispatch.Dispatcher.FramesMode.CurrentFrame ),

@@ -103,5 +103,14 @@ class ButtonTest( GafferUITest.TestCase ) :
 		self.assertGreater( b.bound().size().x, 10 )
 		self.assertGreater( b.bound().size().y, 10 )
 
+	def testToolTip( self ) :
+
+		b = GafferUI.Button( image = "arrowRight10.png", toolTip = "Test" )
+		self.assertEqual( b.getToolTip(), "Test" )
+
+	def testUnknownConstructorArguments( self ) :
+
+		self.assertRaises( TypeError, GafferUI.Button, notAnArgument = 1 )
+
 if __name__ == "__main__":
 	unittest.main()

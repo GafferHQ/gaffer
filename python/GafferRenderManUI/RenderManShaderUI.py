@@ -94,9 +94,9 @@ GafferUI.Metadata.registerPlugValue( GafferRenderMan.RenderManShader, "parameter
 
 class RenderManShaderUI( GafferUI.StandardNodeUI ) :
 
-	def __init__( self, node, displayMode = None, parenting = None ) :
+	def __init__( self, node, displayMode = None, **kw ) :
 
-		GafferUI.StandardNodeUI.__init__( self, node, displayMode, parenting = parenting )
+		GafferUI.StandardNodeUI.__init__( self, node, displayMode, **kw )
 
 		warnings.warn( "RenderManShaderUI is deprecated, use either StandardNodeUI or LayoutPlugValueWidget.", DeprecationWarning, 2 )
 

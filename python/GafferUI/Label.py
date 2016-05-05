@@ -47,9 +47,9 @@ class Label( GafferUI.Widget ) :
 	HorizontalAlignment = GafferUI.HorizontalAlignment
 	VerticalAlignment = GafferUI.VerticalAlignment
 
-	def __init__( self, text="", horizontalAlignment=HorizontalAlignment.Left, verticalAlignment=VerticalAlignment.Center, parenting=None ) :
+	def __init__( self, text="", horizontalAlignment=HorizontalAlignment.Left, verticalAlignment=VerticalAlignment.Center, **kw ) :
 
-		GafferUI.Widget.__init__( self, QtGui.QLabel( text ), parenting = parenting )
+		GafferUI.Widget.__init__( self, QtGui.QLabel( text ), **kw )
 
 		# by default the widget would accept both shrinking and growing, but we'd rather it just stubbornly stayed
 		# the same size. it's particularly important that it doesn't accept growth vertically as then vertical ListContainers

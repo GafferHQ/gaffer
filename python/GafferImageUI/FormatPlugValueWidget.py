@@ -43,10 +43,10 @@ import GafferImage
 
 class FormatPlugValueWidget( GafferUI.PlugValueWidget ) :
 
-	def __init__( self, plug, parenting = None ) :
+	def __init__( self, plug, **kw ) :
 
 		grid = GafferUI.GridContainer( spacing = 4 )
-		GafferUI.PlugValueWidget.__init__( self, grid, plug, parenting = parenting )
+		GafferUI.PlugValueWidget.__init__( self, grid, plug, **kw )
 
 		self.__menuButton = GafferUI.MenuButton( menu = GafferUI.Menu( Gaffer.WeakMethod( self.__menuDefinition ) ) )
 		grid[0:2,0] = self.__menuButton

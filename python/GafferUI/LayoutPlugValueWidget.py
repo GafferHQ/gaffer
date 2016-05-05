@@ -45,10 +45,10 @@ import GafferUI
 # feasible.
 class LayoutPlugValueWidget( GafferUI.PlugValueWidget ) :
 
-	def __init__( self, plug, parenting = None ) :
+	def __init__( self, plug, **kw ) :
 
 		self.__layout = GafferUI.PlugLayout( plug )
-		GafferUI.PlugValueWidget.__init__( self, self.__layout, plug, parenting = parenting )
+		GafferUI.PlugValueWidget.__init__( self, self.__layout, plug, **kw )
 
 	def hasLabel( self ) :
 

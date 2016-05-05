@@ -40,7 +40,7 @@ import GafferScene
 
 class ScenePathPlugValueWidget( GafferUI.PathPlugValueWidget ) :
 
-	def __init__( self, plug, path = None, parenting = None ) :
+	def __init__( self, plug, path = None, **kw ) :
 
 		if path is None :
 
@@ -59,7 +59,7 @@ class ScenePathPlugValueWidget( GafferUI.PathPlugValueWidget ) :
 				filter = filter
 			)
 
-		GafferUI.PathPlugValueWidget.__init__( self, plug, path, parenting = parenting )
+		GafferUI.PathPlugValueWidget.__init__( self, plug, path, **kw )
 
 	def _pathChooserDialogue( self ) :
 

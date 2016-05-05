@@ -42,11 +42,11 @@ QtGui = GafferUI._qtImport( "QtGui" )
 
 class RampPlugValueWidget( GafferUI.PlugValueWidget ) :
 
-	def __init__( self, plug, parenting = None ) :
+	def __init__( self, plug, **kw ) :
 
 		column = GafferUI.ListContainer( GafferUI.ListContainer.Orientation.Vertical, spacing = 4 )
 
-		GafferUI.PlugValueWidget.__init__( self, column, plug, parenting = parenting )
+		GafferUI.PlugValueWidget.__init__( self, column, plug, **kw )
 
 		with column :
 

@@ -39,11 +39,11 @@ import GafferCortexUI
 
 class ToolParameterValueWidget( GafferCortexUI.ParameterValueWidget ) :
 
-	def __init__( self, parameterHandler, parenting = None ) :
+	def __init__( self, parameterHandler, **kw ) :
 
 		GafferCortexUI.ParameterValueWidget.__init__(
 			self,
 			GafferUI.ToolPlugValueWidget( parameterHandler.plug() ),
 			parameterHandler,
-			parenting = parenting
+			**kw
 		)

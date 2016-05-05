@@ -44,11 +44,11 @@ import GafferUI
 
 class NodeEditor( GafferUI.NodeSetEditor ) :
 
-	def __init__( self, scriptNode, parenting = None ) :
+	def __init__( self, scriptNode, **kw ) :
 
 		self.__column = GafferUI.ListContainer( GafferUI.ListContainer.Orientation.Vertical )
 
-		GafferUI.NodeSetEditor.__init__( self, self.__column, scriptNode, parenting = parenting )
+		GafferUI.NodeSetEditor.__init__( self, self.__column, scriptNode, **kw )
 
 		self.__nodeUI = None
 		self.__nameWidget = None

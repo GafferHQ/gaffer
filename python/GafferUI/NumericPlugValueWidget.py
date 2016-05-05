@@ -49,11 +49,11 @@ import GafferUI
 ## \todo Reject drag and drop of anything that's not a number
 class NumericPlugValueWidget( GafferUI.PlugValueWidget ) :
 
-	def __init__( self, plug, parenting = None ) :
+	def __init__( self, plug, **kw ) :
 
 		self.__numericWidget = GafferUI.NumericWidget( 0 )
 
-		GafferUI.PlugValueWidget.__init__( self, self.__numericWidget, plug, parenting = parenting )
+		GafferUI.PlugValueWidget.__init__( self, self.__numericWidget, plug, **kw )
 
 		self._addPopupMenu( self.__numericWidget )
 

@@ -45,11 +45,11 @@ import GafferUI
 # to see how the layout can be controlled using Metadata entries.
 class StandardNodeUI( GafferUI.NodeUI ) :
 
-	def __init__( self, node, parenting = None ) :
+	def __init__( self, node, **kw ) :
 
 		self.__mainColumn = GafferUI.ListContainer( GafferUI.ListContainer.Orientation.Vertical )
 
-		GafferUI.NodeUI.__init__( self, node, self.__mainColumn, parenting = parenting )
+		GafferUI.NodeUI.__init__( self, node, self.__mainColumn, **kw )
 
 		with self.__mainColumn :
 			self.__plugLayout = GafferUI.PlugLayout( node )

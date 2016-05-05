@@ -44,9 +44,9 @@ QtCore = GafferUI._qtImport( "QtCore" )
 
 class ColorPlugValueWidget( GafferUI.CompoundNumericPlugValueWidget ) :
 
-	def __init__( self, plug, parenting = None ) :
+	def __init__( self, plug, **kw ) :
 
-		GafferUI.CompoundNumericPlugValueWidget.__init__( self, plug, parenting = parenting )
+		GafferUI.CompoundNumericPlugValueWidget.__init__( self, plug, **kw )
 
 		self.__swatch = GafferUI.ColorSwatchPlugValueWidget( plug )
 

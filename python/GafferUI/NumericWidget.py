@@ -49,9 +49,9 @@ class NumericWidget( GafferUI.TextWidget ) :
 
 	ValueChangedReason = IECore.Enum.create( "Invalid", "SetValue", "DragBegin", "DragMove", "DragEnd", "Increment", "Edit" )
 
-	def __init__( self, value, parenting = None ) :
+	def __init__( self, value, **kw ) :
 
-		GafferUI.TextWidget.__init__( self, "", parenting = parenting )
+		GafferUI.TextWidget.__init__( self, "", **kw )
 
 		self.__dragValue = None
 		self.__dragStart = None

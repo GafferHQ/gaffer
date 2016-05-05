@@ -42,7 +42,7 @@ import GafferCortexUI
 
 class PathParameterValueWidget( GafferCortexUI.ParameterValueWidget ) :
 
-	def __init__( self, parameterHandler, parenting = None ) :
+	def __init__( self, parameterHandler, **kw ) :
 
 		self.__pathWidget = GafferUI.FileSystemPathPlugValueWidget(
 			parameterHandler.plug(),
@@ -55,7 +55,7 @@ class PathParameterValueWidget( GafferCortexUI.ParameterValueWidget ) :
 			self,
 			self.__pathWidget,
 			parameterHandler,
-			parenting = parenting
+			**kw
 
 		)
 

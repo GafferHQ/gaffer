@@ -42,11 +42,11 @@ import GafferUI
 
 class SplinePlugValueWidget( GafferUI.PlugValueWidget ) :
 
-	def __init__( self, plug, parenting = None ) :
+	def __init__( self, plug, **kw ) :
 
 		self.__splineWidget = GafferUI.SplineWidget()
 
-		GafferUI.PlugValueWidget.__init__( self, self.__splineWidget, plug, parenting = parenting )
+		GafferUI.PlugValueWidget.__init__( self, self.__splineWidget, plug, **kw )
 
 		self.__splineWidget._qtWidget().setFixedHeight( 20 )
 

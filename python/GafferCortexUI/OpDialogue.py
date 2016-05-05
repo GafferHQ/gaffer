@@ -94,7 +94,7 @@ class OpDialogue( GafferUI.Dialogue ) :
 		executeInBackground = False,
 		defaultButton = DefaultButton.FromUserData,
 		executeImmediately = False,
-		parenting = None
+		**kw
 	) :
 
 		# sort out our op and op holder
@@ -117,7 +117,7 @@ class OpDialogue( GafferUI.Dialogue ) :
 		if title is None :
 			title = IECore.CamelCase.toSpaced( opInstance.typeName() )
 
-		GafferUI.Dialogue.__init__( self, title, sizeMode=sizeMode, parenting = parenting )
+		GafferUI.Dialogue.__init__( self, title, sizeMode=sizeMode, **kw )
 
 		# decide what we'll do after execution.
 

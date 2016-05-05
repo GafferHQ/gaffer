@@ -39,11 +39,11 @@ import GafferUI
 
 class BoxPlugValueWidget( GafferUI.PlugValueWidget ) :
 
-	def __init__( self, plug, parenting = None ) :
+	def __init__( self, plug, **kw ) :
 
 		self.__column = GafferUI.ListContainer( GafferUI.ListContainer.Orientation.Vertical, spacing=4 )
 
-		GafferUI.PlugValueWidget.__init__( self, self.__column, plug, parenting = parenting )
+		GafferUI.PlugValueWidget.__init__( self, self.__column, plug, **kw )
 
 		with self.__column :
 			GafferUI.PlugValueWidget.create( plug["min"] )

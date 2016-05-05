@@ -46,9 +46,9 @@ import GafferUI
 # manipulate a ScriptNode or its children.
 class EditorWidget( GafferUI.Widget ) :
 
-	def __init__( self, topLevelWidget, scriptNode, parenting = None ) :
+	def __init__( self, topLevelWidget, scriptNode, **kw ) :
 
-		GafferUI.Widget.__init__( self, topLevelWidget, parenting = parenting )
+		GafferUI.Widget.__init__( self, topLevelWidget, **kw )
 
 		assert( isinstance( scriptNode, Gaffer.ScriptNode ) )
 

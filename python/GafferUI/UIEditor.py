@@ -48,11 +48,11 @@ import GafferUI
 ## The UIEditor class allows the user to edit the interfaces for nodes.
 class UIEditor( GafferUI.NodeSetEditor ) :
 
-	def __init__( self, scriptNode, parenting = None ) :
+	def __init__( self, scriptNode, **kw ) :
 
 		self.__frame = GafferUI.Frame( borderWidth = 4, borderStyle = GafferUI.Frame.BorderStyle.None )
 
-		GafferUI.NodeSetEditor.__init__( self, self.__frame, scriptNode, parenting = parenting )
+		GafferUI.NodeSetEditor.__init__( self, self.__frame, scriptNode, **kw )
 
 		# Build the UI. Initially this isn't connected up to any node - we'll
 		# perform the connections in _updateFromSet().
@@ -282,9 +282,9 @@ class _Row( GafferUI.ListContainer ) :
 
 class _MetadataWidget( GafferUI.Widget ) :
 
-	def __init__( self, topLevelWidget, key, target = None, parenting = None ) :
+	def __init__( self, topLevelWidget, key, target = None, **kw ) :
 
-		GafferUI.Widget.__init__( self, topLevelWidget, parenting = parenting )
+		GafferUI.Widget.__init__( self, topLevelWidget, **kw )
 
 		self.__key = key
 		self.__target = None
@@ -388,10 +388,10 @@ class _MetadataWidget( GafferUI.Widget ) :
 
 class _BoolMetadataWidget( _MetadataWidget ) :
 
-	def __init__( self, key, target = None, parenting = None ) :
+	def __init__( self, key, target = None, **kw ) :
 
 		self.__boolWidget = GafferUI.BoolWidget()
-		_MetadataWidget.__init__( self, self.__boolWidget, key, target, parenting = parenting )
+		_MetadataWidget.__init__( self, self.__boolWidget, key, target, **kw )
 
 		self.__stateChangedConnection = self.__boolWidget.stateChangedSignal().connect(
 			Gaffer.WeakMethod( self.__stateChanged )
@@ -407,10 +407,10 @@ class _BoolMetadataWidget( _MetadataWidget ) :
 
 class _StringMetadataWidget( _MetadataWidget ) :
 
-	def __init__( self, key, target = None, acceptEmptyString = True, parenting = None ) :
+	def __init__( self, key, target = None, acceptEmptyString = True, **kw ) :
 
 		self.__textWidget = GafferUI.TextWidget()
-		_MetadataWidget.__init__( self, self.__textWidget, key, target, parenting = None )
+		_MetadataWidget.__init__( self, self.__textWidget, key, target, **kw )
 
 		self.__acceptEmptyString = acceptEmptyString
 
@@ -436,10 +436,10 @@ class _StringMetadataWidget( _MetadataWidget ) :
 
 class _MultiLineStringMetadataWidget( _MetadataWidget ) :
 
-	def __init__( self, key, target = None, parenting = None ) :
+	def __init__( self, key, target = None, **kw ) :
 
 		self.__textWidget = GafferUI.MultiLineTextWidget()
-		_MetadataWidget.__init__( self, self.__textWidget, key, target, parenting = None )
+		_MetadataWidget.__init__( self, self.__textWidget, key, target, **kw )
 
 		self.__editingFinishedConnection = self.__textWidget.editingFinishedSignal().connect(
 			Gaffer.WeakMethod( self.__editingFinished )
@@ -459,11 +459,11 @@ class _MultiLineStringMetadataWidget( _MetadataWidget ) :
 
 class _ColorSwatchMetadataWidget( _MetadataWidget ) :
 
-	def __init__( self, key, target = None, parenting = None ) :
+	def __init__( self, key, target = None, **kw ) :
 
 		self.__swatch = GafferUI.ColorSwatch( useDisplayTransform = False )
 
-		_MetadataWidget.__init__( self, self.__swatch, key, target, parenting = parenting )
+		_MetadataWidget.__init__( self, self.__swatch, key, target, **kw )
 
 		self.__swatch._qtWidget().setFixedHeight( 18 )
 		self.__swatch._qtWidget().setMaximumWidth( 40 )
@@ -494,7 +494,7 @@ class _ColorSwatchMetadataWidget( _MetadataWidget ) :
 
 class _MenuMetadataWidget( _MetadataWidget ) :
 
-	def __init__( self, key, labelsAndValues, target = None, parenting = None ) :
+	def __init__( self, key, labelsAndValues, target = None, **kw ) :
 
 		self.__menuButton = GafferUI.MenuButton(
 			menu = GafferUI.Menu( Gaffer.WeakMethod( self.__menuDefinition ) )
@@ -503,7 +503,7 @@ class _MenuMetadataWidget( _MetadataWidget ) :
 		self.__labelsAndValues = labelsAndValues
 		self.__currentValue = None
 
-		_MetadataWidget.__init__( self, self.__menuButton, key, target, parenting = parenting )
+		_MetadataWidget.__init__( self, self.__menuButton, key, target, **kw )
 
 	def _updateFromValue( self, value ) :
 
@@ -706,10 +706,10 @@ class _PlugListing( GafferUI.Widget ) :
 
 			return result
 
-	def __init__( self, parenting = None ) :
+	def __init__( self, **kw ) :
 
 		column = GafferUI.ListContainer( spacing = 4 )
-		GafferUI.Widget.__init__( self, column, parenting = parenting )
+		GafferUI.Widget.__init__( self, column, **kw )
 
 		with column :
 
@@ -1181,10 +1181,10 @@ class _PlugListing( GafferUI.Widget ) :
 
 class _PresetsEditor( GafferUI.Widget ) :
 
-	def __init__( self, parenting = None ) :
+	def __init__( self, **kw ) :
 
 		row = GafferUI.ListContainer( GafferUI.ListContainer.Orientation.Horizontal, spacing = 8 )
-		GafferUI.Widget.__init__( self, row, parenting = parenting )
+		GafferUI.Widget.__init__( self, row, **kw )
 
 		with row :
 
@@ -1418,10 +1418,10 @@ class _PresetsEditor( GafferUI.Widget ) :
 
 class _PlugEditor( GafferUI.Widget ) :
 
-	def __init__( self, parenting = None ) :
+	def __init__( self, **kw ) :
 
 		scrolledContainer = GafferUI.ScrolledContainer( horizontalMode = GafferUI.ScrolledContainer.ScrollMode.Never, borderWidth = 8 )
-		GafferUI.Widget.__init__( self, scrolledContainer, parenting = parenting )
+		GafferUI.Widget.__init__( self, scrolledContainer, **kw )
 
 		self.__metadataWidgets = {}
 
@@ -1683,10 +1683,10 @@ class _PlugEditor( GafferUI.Widget ) :
 
 class _SectionEditor( GafferUI.Widget ) :
 
-	def __init__( self, parenting = None ) :
+	def __init__( self, **kw ) :
 
 		column = GafferUI.ListContainer( spacing = 4, borderWidth = 8 )
-		GafferUI.Widget.__init__( self, column, parenting = parenting )
+		GafferUI.Widget.__init__( self, column, **kw )
 
 		with column :
 

@@ -195,14 +195,14 @@ GafferUI.PlugValueWidget.registerCreator( GafferImage.ImageReader, "refreshCount
 
 class _FrameMaskPlugValueWidget( GafferUI.PlugValueWidget ) :
 
-	def __init__( self, plug, parenting = None ) :
+	def __init__( self, plug, **kw ) :
 
 		with GafferUI.ListContainer( GafferUI.ListContainer.Orientation.Horizontal, spacing=4 ) as self.__row :
 
 			GafferUI.PlugValueWidget.create( plug["mode"] )
 			GafferUI.PlugValueWidget.create( plug["frame"] )
 
-		GafferUI.PlugValueWidget.__init__( self, self.__row, plug, parenting = parenting )
+		GafferUI.PlugValueWidget.__init__( self, self.__row, plug, **kw )
 
 	def setPlug( self, plug ) :
 

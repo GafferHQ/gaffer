@@ -45,11 +45,11 @@ import GafferUI
 # "vectorDataPlugValueWidget:dragPointer"
 class VectorDataPlugValueWidget( GafferUI.PlugValueWidget ) :
 
-	def __init__( self, plug, parenting = None ) :
+	def __init__( self, plug, **kw ) :
 
 		self.__dataWidget = GafferUI.VectorDataWidget()
 
-		GafferUI.PlugValueWidget.__init__( self, self.__dataWidget, plug, parenting = parenting )
+		GafferUI.PlugValueWidget.__init__( self, self.__dataWidget, plug, **kw )
 
 		self.__dataChangedConnection = self.__dataWidget.dataChangedSignal().connect( Gaffer.WeakMethod( self.__dataChanged ) )
 

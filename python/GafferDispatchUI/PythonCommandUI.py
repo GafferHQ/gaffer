@@ -112,9 +112,9 @@ Gaffer.Metadata.registerNode(
 
 class _CommandPlugValueWidget( GafferUI.MultiLineStringPlugValueWidget ) :
 
-	def __init__( self, plug, parenting = None ) :
+	def __init__( self, plug, **kw ) :
 
-		GafferUI.MultiLineStringPlugValueWidget.__init__( self, plug, parenting = parenting )
+		GafferUI.MultiLineStringPlugValueWidget.__init__( self, plug, **kw )
 
 	def hasLabel( self ) :
 

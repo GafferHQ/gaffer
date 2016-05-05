@@ -47,11 +47,11 @@ import GafferUI
 #     V2fPlug.
 class CompoundNumericPlugValueWidget( GafferUI.PlugValueWidget ) :
 
-	def __init__( self, plug, parenting = None ) :
+	def __init__( self, plug, **kw ) :
 
 		self.__row = GafferUI.ListContainer( GafferUI.ListContainer.Orientation.Horizontal, spacing=4 )
 
-		GafferUI.PlugValueWidget.__init__( self, self.__row, plug, parenting = parenting )
+		GafferUI.PlugValueWidget.__init__( self, self.__row, plug, **kw )
 
 		componentPlugs = plug.children()
 		for p in componentPlugs :

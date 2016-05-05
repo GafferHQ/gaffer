@@ -42,11 +42,11 @@ import GafferUI
 
 class PathChooserWidget( GafferUI.Widget ) :
 
-	def __init__( self, path, previewTypes=[], allowMultipleSelection=False, bookmarks=None, parenting=None ) :
+	def __init__( self, path, previewTypes=[], allowMultipleSelection=False, bookmarks=None, **kw ) :
 
 		self.__column = GafferUI.ListContainer( GafferUI.ListContainer.Orientation.Vertical, spacing=8 )
 
-		GafferUI.Widget.__init__( self, self.__column, parenting = parenting )
+		GafferUI.Widget.__init__( self, self.__column, **kw )
 
 		# we use this temporary path for our child widgets while constructing, and then call
 		# self.setPath() to replace it with the real thing. this lets us avoid duplicating the
