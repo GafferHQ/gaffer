@@ -86,6 +86,13 @@ def __featuresSummary( plug ) :
 
 	return ", ".join( info )
 
+def __performanceSummary( plug ) :
+
+	info = []
+	if plug["threads"]["enabled"].getValue() :
+		info.append( "Threads %d" % plug["threads"]["value"].getValue() )
+	return ", ".join( info )
+
 def __searchPathsSummary( plug ) :
 
 	info = []
@@ -124,6 +131,7 @@ Gaffer.Metadata.registerNode(
 			"layout:section:Sampling:summary", __samplingSummary,
 			"layout:section:Ray Depth:summary", __rayDepthSummary,
 			"layout:section:Features:summary", __featuresSummary,
+			"layout:section:Performance:summary", __performanceSummary,
 			"layout:section:Search Paths:summary", __searchPathsSummary,
 			"layout:section:Error Colors:summary", __errorColorsSummary,
 
@@ -364,6 +372,21 @@ Gaffer.Metadata.registerNode(
 			""",
 
 			"layout:section", "Features",
+
+		],
+
+		# Performance
+
+		"options.threads" : [
+
+			"description",
+			"""
+			Specifies the number of threads Arnold
+			is allowed to use. A value of 0 gives
+			Arnold access to all available threads.
+			""",
+
+			"layout:section", "Performance",
 
 		],
 
