@@ -43,9 +43,9 @@ import GafferUI
 
 class ErrorDialogue( GafferUI.Dialogue ) :
 
-	def __init__( self, title, message, details=None, parenting=None ) :
+	def __init__( self, title, message, details=None, **kw ) :
 
-		GafferUI.Dialogue.__init__( self, title, sizeMode=GafferUI.Window.SizeMode.Manual, parenting = parenting )
+		GafferUI.Dialogue.__init__( self, title, sizeMode=GafferUI.Window.SizeMode.Manual, **kw )
 
 		with GafferUI.Frame() as frame :
 

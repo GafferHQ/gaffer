@@ -48,10 +48,10 @@ QtGui = GafferUI._qtImport( "QtGui" )
 # IECore MessageHandlers.
 class MessageWidget( GafferUI.Widget ) :
 
-	def __init__( self, parenting = None ) :
+	def __init__( self, **kw ) :
 
 		row = GafferUI.ListContainer( GafferUI.ListContainer.Orientation.Horizontal, spacing=4 )
-		GafferUI.Widget.__init__( self, row, parenting = parenting )
+		GafferUI.Widget.__init__( self, row, **kw )
 
 		with row :
 

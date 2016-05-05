@@ -38,7 +38,7 @@ import GafferUI
 
 class StandardNodeToolbar( GafferUI.NodeToolbar ) :
 
-	def __init__( self, node, edge = GafferUI.Edge.Top, parenting = None ) :
+	def __init__( self, node, edge = GafferUI.Edge.Top, **kw ) :
 
 		layout = GafferUI.PlugLayout(
 			node,
@@ -47,7 +47,7 @@ class StandardNodeToolbar( GafferUI.NodeToolbar ) :
 			rootSection = str( edge )
 		)
 
-		GafferUI.NodeToolbar.__init__( self, node, layout, parenting = parenting )
+		GafferUI.NodeToolbar.__init__( self, node, layout, **kw )
 
 	@staticmethod
 	def top( node ) :

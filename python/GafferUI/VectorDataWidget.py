@@ -75,12 +75,12 @@ class VectorDataWidget( GafferUI.Widget ) :
 		columnToolTips=None,
 		sizeEditable=True,
 		columnEditability=None,
-		parenting=None
+		**kw
 	) :
 
 		self.__column = GafferUI.ListContainer( GafferUI.ListContainer.Orientation.Vertical )
 
-		GafferUI.Widget.__init__( self, self.__column, parenting = parenting )
+		GafferUI.Widget.__init__( self, self.__column, **kw )
 
 		# table view
 

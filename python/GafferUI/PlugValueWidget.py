@@ -55,9 +55,9 @@ import GafferUI
 # itself when used alone, but this might give a good speedup for the most common case.
 class PlugValueWidget( GafferUI.Widget ) :
 
-	def __init__( self, topLevelWidget, plug, parenting = None ) :
+	def __init__( self, topLevelWidget, plug, **kw ) :
 
-		GafferUI.Widget.__init__( self, topLevelWidget, parenting = parenting )
+		GafferUI.Widget.__init__( self, topLevelWidget, **kw )
 
 		# we don't want to call _updateFromPlug yet because the derived
 		# classes haven't constructed yet. they can call it themselves

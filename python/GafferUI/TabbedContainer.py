@@ -47,9 +47,9 @@ class TabbedContainer( GafferUI.ContainerWidget ) :
 
 	__DragState = IECore.Enum.create( "None", "Waiting", "Active" )
 
-	def __init__( self, cornerWidget=None, parenting=None ) :
+	def __init__( self, cornerWidget=None, **kw ) :
 
-		GafferUI.ContainerWidget.__init__( self, _TabWidget(), parenting = parenting )
+		GafferUI.ContainerWidget.__init__( self, _TabWidget(), **kw )
 
 		self.__tabBar = GafferUI.Widget( QtGui.QTabBar() )
 		self.__tabBar._qtWidget().setDrawBase( False )

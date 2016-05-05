@@ -55,9 +55,9 @@ class Slider( GafferUI.Widget ) :
 
 	PositionChangedReason = IECore.Enum.create( "Invalid", "SetPositions", "Click", "IndexAdded", "IndexRemoved", "DragBegin", "DragMove", "DragEnd", "Increment" )
 
-	def __init__( self, position=None, positions=None, parenting=None ) :
+	def __init__( self, position=None, positions=None, **kw ) :
 
-		GafferUI.Widget.__init__( self, _Widget(), parenting = parenting )
+		GafferUI.Widget.__init__( self, _Widget(), **kw )
 
 		assert( ( position is None ) or ( positions is None ) )
 

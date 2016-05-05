@@ -50,11 +50,11 @@ class SelectionMenu( GafferUI.Widget ) :
 
 	__palette = None
 
-	def __init__( self, parenting = None ) :
+	def __init__( self, **kw ) :
 
 		warnings.warn( "GafferUI.SelectionMenu is deprecated, use MultiSelectionMenu instead.", DeprecationWarning, 2 )
 
-		GafferUI.Widget.__init__( self, QtGui.QComboBox(), parenting = parenting )
+		GafferUI.Widget.__init__( self, QtGui.QComboBox(), **kw )
 
 		self._qtWidget().currentIndexChanged.connect( Gaffer.WeakMethod( self.__changed ) )
 		self._qtWidget().activated.connect( Gaffer.WeakMethod( self.__selected ) )

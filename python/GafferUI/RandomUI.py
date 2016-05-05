@@ -166,11 +166,11 @@ Gaffer.Metadata.registerNode(
 
 class _RandomColorPlugValueWidget( GafferUI.PlugValueWidget ) :
 
-	def __init__( self, plug, parenting = None ) :
+	def __init__( self, plug, **kw ) :
 
 		self.__grid = GafferUI.GridContainer( spacing = 4 )
 
-		GafferUI.PlugValueWidget.__init__( self, self.__grid, plug, parenting = parenting )
+		GafferUI.PlugValueWidget.__init__( self, self.__grid, plug, **kw )
 
 		with self.__grid :
 			for x in range( 0, 10 ) :

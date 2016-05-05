@@ -88,11 +88,11 @@ def nodeMenuCreateCommand( menu ) :
 
 class _FileNameWidget( GafferUI.Widget ) :
 
-	def __init__( self, node, parenting = None ) :
+	def __init__( self, node, **kw ) :
 
 		row = GafferUI.ListContainer( GafferUI.ListContainer.Orientation.Horizontal, spacing = 4 )
 
-		GafferUI.Widget.__init__( self, row, parenting = parenting )
+		GafferUI.Widget.__init__( self, row, **kw )
 
 		self.__node = node
 

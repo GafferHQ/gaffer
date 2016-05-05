@@ -49,9 +49,9 @@ class TextWidget( GafferUI.Widget ) :
 
 	DisplayMode = IECore.Enum.create( "Normal", "Password" )
 
-	def __init__( self, text="", editable=True, displayMode=DisplayMode.Normal, characterWidth=None, parenting=None ) :
+	def __init__( self, text="", editable=True, displayMode=DisplayMode.Normal, characterWidth=None, **kw ) :
 
-		GafferUI.Widget.__init__( self, _LineEdit(), parenting = parenting )
+		GafferUI.Widget.__init__( self, _LineEdit(), **kw )
 
 		self.setText( text )
 		self.setEditable( editable )

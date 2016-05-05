@@ -51,9 +51,9 @@ class PathVectorDataWidget( GafferUI.VectorDataWidget ) :
 	# passed either as a dictionary, or as a callable which returns a dictionary -
 	# in the latter case the callable will be evaluated just prior to opening
 	# the dialogue each time.
-	def __init__( self, data=None, editable=True, header=False, showIndices=True, path=None, pathChooserDialogueKeywords={}, parenting=None ) :
+	def __init__( self, data=None, editable=True, header=False, showIndices=True, path=None, pathChooserDialogueKeywords={}, **kw ) :
 
-		GafferUI.VectorDataWidget.__init__( self, data=data, editable=editable, header=header, showIndices=showIndices, parenting=parenting )
+		GafferUI.VectorDataWidget.__init__( self, data=data, editable=editable, header=header, showIndices=showIndices, **kw )
 
 		self.__path = path if path is not None else Gaffer.FileSystemPath( "/" )
 		self.__pathChooserDialogueKeywords = pathChooserDialogueKeywords

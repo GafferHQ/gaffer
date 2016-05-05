@@ -48,13 +48,13 @@ import GafferUI
 #	as it may not exist in the future.
 class FileSystemPathPlugValueWidget( GafferUI.PathPlugValueWidget ) :
 
-	def __init__( self, plug, path=None, parenting=None ) :
+	def __init__( self, plug, path=None, **kw ) :
 
 		GafferUI.PathPlugValueWidget.__init__(
 			self,
 			plug,
 			path,
-			parenting = parenting
+			**kw
 		)
 
 		self._updateFromPlug()

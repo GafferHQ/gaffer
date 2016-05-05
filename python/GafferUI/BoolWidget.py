@@ -46,9 +46,9 @@ class BoolWidget( GafferUI.Widget ) :
 
 	DisplayMode = IECore.Enum.create( "CheckBox", "Switch" )
 
-	def __init__( self, text="", checked=False, displayMode=DisplayMode.CheckBox, parenting=None ) :
+	def __init__( self, text="", checked=False, displayMode=DisplayMode.CheckBox, **kw ) :
 
-		GafferUI.Widget.__init__( self, QtGui.QCheckBox( text ), parenting = parenting )
+		GafferUI.Widget.__init__( self, QtGui.QCheckBox( text ), **kw )
 
 		self.setState( checked )
 		self.setDisplayMode( displayMode )

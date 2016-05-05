@@ -50,11 +50,11 @@ class CompoundEditor( GafferUI.EditorWidget ) :
 
 	__transitionDuration = 400
 
-	def __init__( self, scriptNode, children=None, parenting = None ) :
+	def __init__( self, scriptNode, children=None, **kw ) :
 
 		self.__splitContainer = _SplitContainer()
 
-		GafferUI.EditorWidget.__init__( self, self.__splitContainer, scriptNode, parenting = parenting )
+		GafferUI.EditorWidget.__init__( self, self.__splitContainer, scriptNode, **kw )
 
 		self.__splitContainer.append( _TabbedContainer() )
 
@@ -413,17 +413,17 @@ class CompoundEditor( GafferUI.EditorWidget ) :
 # The internal class used to allow hierarchical splitting of the layout.
 class _SplitContainer( GafferUI.SplitContainer ) :
 
-	def __init__( self, parenting = None ) :
+	def __init__( self, **kw ) :
 
-		GafferUI.SplitContainer.__init__( self, parenting = parenting )
+		GafferUI.SplitContainer.__init__( self, **kw )
 
 # The internal class used to keep a bunch of editors in tabs, updating the titles
 # when appropriate, and keeping a track of the pinning of nodes.
 class _TabbedContainer( GafferUI.TabbedContainer ) :
 
-	def __init__( self, cornerWidget=None, parenting=None ) :
+	def __init__( self, cornerWidget=None, **kw ) :
 
-		GafferUI.TabbedContainer.__init__( self, cornerWidget, parenting = parenting )
+		GafferUI.TabbedContainer.__init__( self, cornerWidget, **kw )
 
 		with GafferUI.ListContainer( GafferUI.ListContainer.Orientation.Horizontal, spacing = 2, borderWidth=1 ) as cornerWidget :
 

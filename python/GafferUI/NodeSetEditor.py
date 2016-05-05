@@ -47,12 +47,12 @@ QtCore = GafferUI._qtImport( "QtCore" )
 # to the ScriptNode.selection() but can be modified to be any Set of nodes.
 class NodeSetEditor( GafferUI.EditorWidget ) :
 
-	def __init__( self, topLevelWidget, scriptNode, parenting = None ) :
+	def __init__( self, topLevelWidget, scriptNode, **kw ) :
 
 		self.__nodeSet = Gaffer.StandardSet()
 		self.__nodeSetChangedSignal = GafferUI.WidgetSignal()
 
-		GafferUI.EditorWidget.__init__( self, topLevelWidget, scriptNode, parenting = parenting )
+		GafferUI.EditorWidget.__init__( self, topLevelWidget, scriptNode, **kw )
 
 		self.__titleFormat = None
 
@@ -258,9 +258,9 @@ class NodeSetEditor( GafferUI.EditorWidget ) :
 
 class _EditorWindow( GafferUI.Window ) :
 
-	def __init__( self, parentWindow, editor, parenting = None ) :
+	def __init__( self, parentWindow, editor, **kw ) :
 
-		GafferUI.Window.__init__( self, borderWidth = 8, parenting = parenting )
+		GafferUI.Window.__init__( self, borderWidth = 8, **kw )
 
 		self.setChild( editor )
 

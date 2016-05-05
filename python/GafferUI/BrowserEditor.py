@@ -45,11 +45,11 @@ import GafferUI
 
 class BrowserEditor( GafferUI.EditorWidget ) :
 
-	def __init__( self, scriptNode, parenting = None ) :
+	def __init__( self, scriptNode, **kw ) :
 
 		self.__column = GafferUI.ListContainer( borderWidth = 8, spacing = 6 )
 
-		GafferUI.EditorWidget.__init__( self, self.__column, scriptNode, parenting = parenting )
+		GafferUI.EditorWidget.__init__( self, self.__column, scriptNode, **kw )
 
 		with self.__column :
 

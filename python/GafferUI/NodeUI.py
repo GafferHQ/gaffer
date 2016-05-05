@@ -99,9 +99,9 @@ Gaffer.Metadata.registerNode(
 ## as EditorWidget and PlugValueWidget do.
 class NodeUI( GafferUI.Widget ) :
 
-	def __init__( self, node, topLevelWidget, parenting = None ) :
+	def __init__( self, node, topLevelWidget, **kw ) :
 
-		GafferUI.Widget.__init__( self, topLevelWidget, parenting = parenting )
+		GafferUI.Widget.__init__( self, topLevelWidget, **kw )
 
 		self.__node = node
 		self.__readOnly = False

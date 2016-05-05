@@ -47,9 +47,9 @@ QtGui = GafferUI._qtImport( "QtGui" )
 
 class NameWidget( GafferUI.TextWidget ) :
 
-	def __init__( self, graphComponent, parenting = None ) :
+	def __init__( self, graphComponent, **kw ) :
 
-		GafferUI.TextWidget.__init__( self, parenting = parenting )
+		GafferUI.TextWidget.__init__( self, **kw )
 
 		self._qtWidget().setValidator( _Validator( self._qtWidget() ) )
 

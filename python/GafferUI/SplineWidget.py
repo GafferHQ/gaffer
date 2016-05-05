@@ -49,11 +49,11 @@ class SplineWidget( GafferUI.Widget ) :
 
 	DrawMode = IECore.Enum.create( "Invalid", "Ramp", "Splines" )
 
-	def __init__( self, spline=None, drawMode=DrawMode.Splines, parenting=None ) :
+	def __init__( self, spline=None, drawMode=DrawMode.Splines, **kw ) :
 
 		# using QFrame rather than QWidget because it supports computing the contentsRect() based on
 		# the stylesheet.
-		GafferUI.Widget.__init__( self, QtGui.QFrame(), parenting = parenting )
+		GafferUI.Widget.__init__( self, QtGui.QFrame(), **kw )
 
 		self._qtWidget().setSizePolicy( QtGui.QSizePolicy.Expanding, QtGui.QSizePolicy.Expanding )
 		self._qtWidget().setObjectName( "gafferSplineWidget" )

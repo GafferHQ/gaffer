@@ -41,9 +41,9 @@ import GafferUI
 # Widgets which may hold other Widgets as children.
 class ContainerWidget( GafferUI.Widget ) :
 
-	def __init__( self, topLevelWidget, parenting = None ) :
+	def __init__( self, topLevelWidget, **kw ) :
 
-		GafferUI.Widget.__init__( self, topLevelWidget, parenting = parenting )
+		GafferUI.Widget.__init__( self, topLevelWidget, **kw )
 
 	## Must be implemented in subclasses to add a child.
 	# This is used by the automatic parenting mechanism.

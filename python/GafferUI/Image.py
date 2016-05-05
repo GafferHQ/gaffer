@@ -48,9 +48,9 @@ QtGui = GafferUI._qtImport( "QtGui" )
 # the IECore.Reader mechanism, or an IECore.ImagePrimitive.
 class Image( GafferUI.Widget ) :
 
-	def __init__( self, imagePrimitiveOrFileName, parenting = None ) :
+	def __init__( self, imagePrimitiveOrFileName, **kw ) :
 
-		GafferUI.Widget.__init__( self, QtGui.QLabel(), parenting = parenting )
+		GafferUI.Widget.__init__( self, QtGui.QLabel(), **kw )
 
 		# by default the widget would accept both shrinking and growing, but we'd rather it just stubbornly stayed
 		# the same size.

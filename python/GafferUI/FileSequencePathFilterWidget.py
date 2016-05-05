@@ -39,11 +39,11 @@ import GafferUI
 
 class FileSequencePathFilterWidget( GafferUI.PathFilterWidget ) :
 
-	def __init__( self, pathFilter, parenting = None ) :
+	def __init__( self, pathFilter, **kw ) :
 
 		self.__checkBox = GafferUI.BoolWidget( str( pathFilter ) )
 
-		GafferUI.PathFilterWidget.__init__( self, self.__checkBox, pathFilter, parenting = parenting )
+		GafferUI.PathFilterWidget.__init__( self, self.__checkBox, pathFilter, **kw )
 
 		self.__stateChangedConnection = self.__checkBox.stateChangedSignal().connect( Gaffer.WeakMethod( self.__stateChanged ) )
 

@@ -47,11 +47,11 @@ QtGui = GafferUI._qtImport( "QtGui" )
 # entry of a context.
 class Timeline( GafferUI.EditorWidget ) :
 
-	def __init__( self, scriptNode, parenting = None ) :
+	def __init__( self, scriptNode, **kw ) :
 
 		self.__row = GafferUI.ListContainer( GafferUI.ListContainer.Orientation.Horizontal, borderWidth = 4, spacing = 2 )
 
-		GafferUI.EditorWidget.__init__( self, self.__row, scriptNode, parenting = parenting )
+		GafferUI.EditorWidget.__init__( self, self.__row, scriptNode, **kw )
 
 		with self.__row :
 

@@ -45,11 +45,11 @@ class PathVectorDataPlugValueWidget( GafferUI.PlugValueWidget ) :
 	## path should be an instance of Gaffer.Path, optionally with
 	# filters applied. It will be used to convert string values to
 	# paths for the path uis to edit.
-	def __init__( self, plug, path, pathChooserDialogueKeywords={}, parenting=None ) :
+	def __init__( self, plug, path, pathChooserDialogueKeywords={}, **kw ) :
 
 		self.__dataWidget = GafferUI.PathVectorDataWidget( path=path, pathChooserDialogueKeywords=pathChooserDialogueKeywords )
 
-		GafferUI.PlugValueWidget.__init__( self, self.__dataWidget, plug, parenting = parenting )
+		GafferUI.PlugValueWidget.__init__( self, self.__dataWidget, plug, **kw )
 
 		self.__dataChangedConnection = self.__dataWidget.dataChangedSignal().connect( Gaffer.WeakMethod( self.__dataChanged ) )
 

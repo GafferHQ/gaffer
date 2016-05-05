@@ -56,9 +56,9 @@ class GadgetWidget( GafferUI.GLWidget ) :
 	## The gadget may either be a ViewportGadget in which case it will be used in a call
 	# to setViewportGadget, otherwise a suitable viewport will be created and the gadget will
 	# be placed within it.
-	def __init__( self, gadget=None, bufferOptions=set(), parenting=None ) :
+	def __init__( self, gadget=None, bufferOptions=set(), **kw ) :
 
-		GafferUI.GLWidget.__init__( self, bufferOptions, parenting = parenting )
+		GafferUI.GLWidget.__init__( self, bufferOptions, **kw )
 
 		self._qtWidget().setFocusPolicy( QtCore.Qt.ClickFocus )
 

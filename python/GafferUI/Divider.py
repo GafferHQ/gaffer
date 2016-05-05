@@ -44,9 +44,9 @@ class Divider( GafferUI.Widget ) :
 
 	Orientation = IECore.Enum.create( "Vertical", "Horizontal" )
 
-	def __init__( self, orientation = Orientation.Horizontal, parenting = None ) :
+	def __init__( self, orientation = Orientation.Horizontal, **kw ) :
 
-		GafferUI.Widget.__init__( self, QtGui.QFrame(), parenting = parenting )
+		GafferUI.Widget.__init__( self, QtGui.QFrame(), **kw )
 
 		self._qtWidget().setObjectName( "gafferDivider" )
 

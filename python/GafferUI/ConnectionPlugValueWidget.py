@@ -43,11 +43,11 @@ import GafferUI
 # to a Plug.
 class ConnectionPlugValueWidget( GafferUI.PlugValueWidget ) :
 
-	def __init__( self, plug, parenting = None ) :
+	def __init__( self, plug, **kw ) :
 
 		self.__frame = GafferUI.Frame( borderWidth = 2 )
 
-		GafferUI.PlugValueWidget.__init__( self, self.__frame, plug, parenting = parenting )
+		GafferUI.PlugValueWidget.__init__( self, self.__frame, plug, **kw )
 
 		self.__inputLabel = GafferUI.NameLabel(
 			None,
