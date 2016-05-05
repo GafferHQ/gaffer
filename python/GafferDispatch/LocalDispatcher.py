@@ -53,9 +53,8 @@ class LocalDispatcher( GafferDispatch.Dispatcher ) :
 
 		GafferDispatch.Dispatcher.__init__( self, name )
 
-		backgroundPlug = Gaffer.BoolPlug( "executeInBackground", defaultValue = False )
-		self.addChild( backgroundPlug )
-		self.addChild( Gaffer.BoolPlug( "ignoreScriptLoadErrors", defaultValue = False ) )
+		self["executeInBackground"] = Gaffer.BoolPlug( defaultValue = False )
+		self["ignoreScriptLoadErrors"] = Gaffer.BoolPlug( defaultValue = False )
 
 		self.__jobPool = jobPool if jobPool else LocalDispatcher.defaultJobPool()
 
