@@ -694,6 +694,55 @@ class LocalDispatcherTest( GafferTest.TestCase ) :
 		self.assertEqual( next( open( "%s/test.0004.txt" % jobDir ) ), "w on 4 from %s" % jobDir )
 		self.assertEqual( next( open( "%s/test.0006.txt" % jobDir ) ), "w on 6 from %s" % jobDir )
 
+	def testEnvironmentCommand( self ) :
+
+		s = Gaffer.ScriptNode()
+
+		testFile = os.path.join( self.temporaryDirectory(), "test" )
+
+		s["c"] = GafferDispatch.SystemCommand()
+		s["c"]["command"].setValue( "echo HELLO \$GAFFERDISPATCHTEST_ENVVAR > " + testFile )
+
+		dispatcher = GafferDispatch.Dispatcher.create( "LocalTest" )
+		dispatcher["executeInBackground"].setValue( True )
+		dispatcher["framesMode"].setValue( GafferDispatch.Dispatcher.FramesMode.CurrentFrame )
+		dispatcher.dispatch( [ s["c"] ] )
+		dispatcher.jobPool().waitForAll()
+
+		with open( testFile ) as f :
+			self.assertEqual( f.readlines(), [ "HELLO\n" ] )
+
+		dispatcher["environmentCommand"].setValue( "env GAFFERDISPATCHTEST_ENVVAR=WORLD" )
+		dispatcher.dispatch( [ s["c"] ] )
+		dispatcher.jobPool().waitForAll()
+
+		with open( testFile ) as f :
+			self.assertEqual( f.readlines(), [ "HELLO WORLD\n" ] )
+
+	def testEnvironmentCommandSubstitutions( self ) :
+
+		s = Gaffer.ScriptNode()
+
+		testFile = os.path.join( self.temporaryDirectory(), "test" )
+
+		s["c"] = GafferDispatch.SystemCommand()
+		s["c"]["command"].setValue( "echo HELLO \$GAFFERDISPATCHTEST_ENVVAR > " + testFile )
+
+		dispatcher = GafferDispatch.Dispatcher.create( "LocalTest" )
+		dispatcher["executeInBackground"].setValue( True )
+		dispatcher["framesMode"].setValue( GafferDispatch.Dispatcher.FramesMode.CurrentFrame )
+
+		dispatcher["environmentCommand"].setValue( "env GAFFERDISPATCHTEST_ENVVAR=$world" )
+
+		with Gaffer.Context() as c :
+			c["world"] = "WORLD"
+			dispatcher.dispatch( [ s["c"] ] )
+
+		dispatcher.jobPool().waitForAll()
+
+		with open( testFile ) as f :
+			self.assertEqual( f.readlines(), [ "HELLO WORLD\n" ] )
+
 	def tearDown( self ) :
 
 		GafferTest.TestCase.tearDown( self )

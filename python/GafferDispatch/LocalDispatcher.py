@@ -37,6 +37,7 @@
 import os
 import errno
 import signal
+import shlex
 import subprocess32 as subprocess
 import threading
 import time
@@ -55,6 +56,7 @@ class LocalDispatcher( GafferDispatch.Dispatcher ) :
 
 		self["executeInBackground"] = Gaffer.BoolPlug( defaultValue = False )
 		self["ignoreScriptLoadErrors"] = Gaffer.BoolPlug( defaultValue = False )
+		self["environmentCommand"] = Gaffer.StringPlug()
 
 		self.__jobPool = jobPool if jobPool else LocalDispatcher.defaultJobPool()
 
@@ -84,6 +86,11 @@ class LocalDispatcher( GafferDispatch.Dispatcher ) :
 			self.__directory = directory
 			self.__stats = {}
 			self.__ignoreScriptLoadErrors = dispatcher["ignoreScriptLoadErrors"].getValue()
+			## \todo Make `Dispatcher::dispatch()` use a Process, so we don't need to
+			# do substitutions manually like this.
+			self.__environmentCommand = Gaffer.Context.current().substitute(
+				dispatcher["environmentCommand"].getValue()
+			)
 
 			self.__messageHandler = IECore.CapturingMessageHandler()
 			self.__messageTitle = "%s : Job %s %s" % ( self.__dispatcher.getName(), self.__name, self.__id )
@@ -250,6 +257,8 @@ class LocalDispatcher( GafferDispatch.Dispatcher ) :
 				"-nodes", batch.blindData()["nodeName"].value,
 				"-frames", frames,
 			]
+
+			args = shlex.split( self.__environmentCommand ) + args
 
 			if self.__ignoreScriptLoadErrors :
 				args.append( "-ignoreScriptLoadErrors" )
