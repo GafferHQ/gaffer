@@ -142,6 +142,9 @@ class ArnoldRender( GafferScene.ExecutableRender ) :
 
 		fileName = self["fileName"].getValue()
 
+		# Although we do specify this option via Renderer::setOption(),
+		# Arnold doesn't serialise it when writing ass files, so we
+		# must specify it manually on the command line itself.
 		threads = self["in"].globals().get( "option:ai:threads", 0 )
 
 		mode = self["mode"].getValue()
