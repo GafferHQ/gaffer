@@ -142,11 +142,25 @@ class ArnoldRender( GafferScene.ExecutableRender ) :
 
 		fileName = self["fileName"].getValue()
 
+		# Although we do specify this option via Renderer::setOption(),
+		# Arnold doesn't serialise it when writing ass files, so we
+		# must specify it manually on the command line itself.
+		threads = self["in"].globals().get( "option:ai:threads", 0 )
+
 		mode = self["mode"].getValue()
 		if mode == "render" :
-			return "kick -dp -dw -v %d '%s'" % ( self["verbosity"].getValue(), fileName )
+			return "kick -dp -dw -v {verbosity} -t {threads} '{input}'".format(
+				verbosity = self["verbosity"].getValue(),
+				threads = threads,
+				input = fileName
+			)
 		elif mode == "expand" :
-			return "kick -v %d -forceexpand -resave '%s' '%s'" % ( self["verbosity"].getValue(), fileName, fileName )
+			return "kick -v {verbosity} -t {threads} -forceexpand -resave '{output}' '{input}'".format(
+				verbosity = self["verbosity"].getValue(),
+				threads = threads,
+				output = fileName,
+				input = fileName
+			)
 
 		return ""
 
