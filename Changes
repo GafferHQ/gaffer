@@ -7,6 +7,7 @@ UI
 - Added node reference documentation menu item to NodeEditor tool menus.
 - GafferUI.Collapsible supports Widget.reveal().
 - ScriptWindow no longer stops the EventLoop if it's already stopped.
+- Fixed PathWidget WeakMethod error at shutdown.
 
 Scene
 -----------------------------------------------------------------------
@@ -31,6 +32,7 @@ Dispatch
   (#1712).
 - Disabled automatic substitutions for command (#1692). This was broken
   by #1671.
+- Added LocalDispatcher environmentCommand plug.
 
 Arnold
 -----------------------------------------------------------------------
@@ -38,6 +40,9 @@ Arnold
 - Added ArnoldVDB node (#1711).
 - Added volume step size to ArnoldAttributes node (#1694).
 - Fixed metadata for ArnoldLight UIs (#1696).
+- Added "ai:threads" option
+  - Exposed via ArnoldOptions under the Performance section.
+  - ArnoldRender uses ai:threads option to drive kick -t command line arg.
 
 Apps
 -----------------------------------------------------------------------
@@ -61,7 +66,7 @@ Build
 
 - Simplified packaging. Use the gafferDependencies project if the
   dependencies are needed for your build.
-
+- Convert BUILD_DIR to an absolute path.
 
 API
 -----------------------------------------------------------------------
@@ -72,8 +77,8 @@ API
 - Added DocumentationAlgo namespace with functions to assist in
   auto-generating documentation.
 - Removed CompoundPlug usage from Shader nodes (#1701).
-- Removed deprecated Widget keyword arguments. Use the
-  `parenting = {}` dictionary instead (#655, #1704).
+- Added **kw arguments to all Widget constructors.
+- Removed deprecated Widget keyword arguments(#655, #1704).
 - Removed all use of deprecated IECorePython::Wrapper (#1116, #1703).
 - Removed deprecated `ValuePlug::inCompute()` method. Use `Process::current()`
   instead.
