@@ -145,5 +145,21 @@ class SceneSwitchTest( GafferSceneTest.SceneTestCase ) :
 
 		self.assertEqual( script["switch"]["out"].childNames( "/" ), IECore.InternedStringVectorData( [ "sphere" ] ) )
 
+	def testAcceptsInputPerformance( self ) :
+
+		s1 = GafferScene.Sphere()
+		lastPlug = s1["out"]
+
+		switches = []
+		for i in range( 0, 10 ) :
+			switch = GafferScene.SceneSwitch()
+			for i in range( 0, 10 ) :
+				switch["in"][i].setInput( lastPlug )
+			switches.append( switch )
+			lastPlug = switch["out"]
+
+		s2 = GafferScene.Sphere()
+		self.assertTrue( switches[0]["in"][0].acceptsInput( s2["out"] ) )
+
 if __name__ == "__main__":
 	unittest.main()

@@ -364,6 +364,22 @@ class SwitchTest( GafferTest.TestCase ) :
 		indexInput.setInput( indirectIndexInput2 )
 		self.assertTrue( n["out"].source().isSame( input2 ) )
 
+	def testAcceptsInputPerformance( self ) :
+
+		s1 = GafferTest.AddNode()
+		lastPlug = s1["sum"]
+
+		switches = []
+		for i in range( 0, 8 ) :
+			switch = self.intSwitch()
+			for i in range( 0, 9 ) :
+				switch["in"][i].setInput( lastPlug )
+			switches.append( switch )
+			lastPlug = switch["out"]
+
+		s2 = GafferTest.AddNode()
+		self.assertTrue( switches[0]["in"][0].acceptsInput( s2["sum"] ) )
+
 	def setUp( self ) :
 
 		GafferTest.TestCase.setUp( self )
