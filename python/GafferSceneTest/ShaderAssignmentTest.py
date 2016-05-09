@@ -233,6 +233,22 @@ class ShaderAssignmentTest( GafferSceneTest.SceneTestCase ) :
 		s["b"]["out"].setInput( s["b"]["s"]["out"] )
 		self.assertTrue( s["a"]["shader"].acceptsInput( s["b"]["out"] ) )
 
+	def testRejectInputsToBoxes( self ) :
+
+		s = Gaffer.ScriptNode()
+
+		s["n"] = Gaffer.Node()
+		s["n"]["out"] = Gaffer.Plug( direction = Gaffer.Plug.Direction.Out )
+
+		s["s"] = GafferSceneTest.TestShader()
+
+		s["b"] = Gaffer.Box()
+		s["b"]["a"] = GafferScene.ShaderAssignment()
+		p = s["b"].promotePlug( s["b"]["a"]["shader"] )
+
+		self.assertFalse( p.acceptsInput( s["n"]["out"] ) )
+		self.assertTrue( p.acceptsInput( s["s"]["out"] ) )
+
 	def testInputAcceptanceFromSwitches( self ) :
 
 		a = GafferScene.ShaderAssignment()

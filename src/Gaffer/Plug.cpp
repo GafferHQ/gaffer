@@ -41,6 +41,7 @@
 #include "boost/bind.hpp"
 #include "boost/graph/adjacency_list.hpp"
 #include "boost/graph/topological_sort.hpp"
+#include "boost/unordered_map.hpp"
 
 #include "IECore/Exception.h"
 
@@ -219,7 +220,92 @@ void Plug::setFlagsInternal( unsigned flags )
 	}
 }
 
+// The implementation of acceptsInputInternal() checks
+// that the output plugs of a plug also accept the potential
+// input. This can yield performance linear in the number
+// of downstream connections, which is acceptable. However,
+// it also calls `Node::acceptsInput()`, which can lead to
+// greater complexity and unacceptable performance where an
+// upstream `acceptsInput()` call triggers multiple identical
+// downstream calls - see `GafferTest.SwitchTest.testAcceptsInputPerformance()`
+// for a particularly bad example. To avoid this problem, we
+// use a simple cache of results from `acceptsInputInternal()`,
+// which persists only for the duration of the outermost
+// `acceptsInput()` call.
+class Plug::AcceptsInputCache
+{
+
+	private :
+
+		struct ThreadData;
+		typedef std::pair<const Plug *, const Plug *> PlugPair;
+		typedef boost::unordered_map<PlugPair, bool> ResultMap;
+
+	public :
+
+		class Accessor
+		{
+
+			public :
+
+				Accessor( const Plug *plug, const Plug *input )
+					:	m_threadData( g_threadData.local() )
+				{
+					++m_threadData.depth;
+					std::pair<ResultMap::iterator, bool> i = m_threadData.cache.insert(
+						ResultMap::value_type( PlugPair( plug, input ), false )
+					);
+					if( i.second )
+					{
+						i.first->second = plug->acceptsInputInternal( input );
+					}
+					m_result = i.first->second;
+				}
+
+				~Accessor()
+				{
+					if( --m_threadData.depth == 0 )
+					{
+						// Outermost acceptsInput() call is
+						// completing, so we clear the cache.
+						m_threadData.cache.clear();
+					}
+				}
+
+				bool get() const
+				{
+					return m_result;
+				}
+
+			private :
+
+				bool m_result;
+				ThreadData &m_threadData;
+
+		};
+
+	private :
+
+		struct ThreadData
+		{
+			ThreadData() : depth( 0 ) {}
+			int depth;
+			ResultMap cache;
+		};
+
+		static tbb::enumerable_thread_specific<ThreadData> g_threadData;
+
+};
+
+tbb::enumerable_thread_specific<Plug::AcceptsInputCache::ThreadData> Plug::AcceptsInputCache::g_threadData;
+
 bool Plug::acceptsInput( const Plug *input ) const
+{
+	AcceptsInputCache::Accessor accessor( this, input );
+	return accessor.get();
+}
+
+bool Plug::acceptsInputInternal( const Plug *input ) const
 {
 	if( !getFlags( AcceptsInputs ) || getFlags( ReadOnly ) )
 	{
@@ -256,8 +342,6 @@ bool Plug::acceptsInput( const Plug *input ) const
 	// because an input to us is indirectly an input to them.
 	for( OutputContainer::const_iterator it=m_outputs.begin(), eIt=m_outputs.end(); it!=eIt; ++it )
 	{
-		// No need to look for dependency cycles here, because we'll traverse through
-		// the outputs when we perform our own test anyway.
 		if( !(*it)->acceptsInput( input ) )
 		{
 			return false;
