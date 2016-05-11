@@ -154,18 +154,6 @@ class _InfoButton( GafferUI.Button ) :
 		self.__window.reveal()
 
 ##########################################################################
-# Nodules
-##########################################################################
-
-def __parameterNoduleType( plug ) :
-
-	return "GafferUI::StandardNodule" if isinstance( plug, Gaffer.ObjectPlug ) else ""
-
-for nodeType in __nodeTypes :
-	GafferUI.Metadata.registerPlugValue( nodeType, "parameters", "nodule:type", "GafferUI::CompoundNodule" )
-	GafferUI.Metadata.registerPlugValue( nodeType, "parameters.*", "nodule:type", __parameterNoduleType )
-
-##########################################################################
 # Metadata
 ##########################################################################
 
@@ -264,14 +252,40 @@ def __plugWidgetType( plug ) :
 
 	return None
 
+def __plugNoduleType( plug ) :
+
+	return "GafferUI::StandardNodule" if isinstance( plug, Gaffer.ObjectPlug ) else ""
+
 for nodeType in __nodeTypes :
 
-	Gaffer.Metadata.registerNodeDescription( nodeType, __nodeDescription )
-	Gaffer.Metadata.registerNodeValue( nodeType, "summary", __nodeSummary )
-	Gaffer.Metadata.registerPlugDescription( nodeType, "parameters.*", __plugDescription )
-	Gaffer.Metadata.registerPlugValue( nodeType, "parameters.*", "presetNames", __plugPresetNames )
-	Gaffer.Metadata.registerPlugValue( nodeType, "parameters.*", "presetValues", __plugPresetValues )
-	Gaffer.Metadata.registerPlugValue( nodeType, "parameters.*", "plugValueWidget:type", __plugWidgetType )
+	Gaffer.Metadata.registerNode(
+
+		nodeType,
+
+		"description", __nodeDescription,
+		"summary", __nodeSummary,
+
+		plugs = {
+
+			"parameters" : [
+
+				"nodule:type", "GafferUI::CompoundNodule",
+
+			],
+
+			"parameters.*" : [
+
+				"description", __plugDescription,
+				"presetNames", __plugPresetNames,
+				"presetValues", __plugPresetValues,
+				"plugValueWidget:type", __plugWidgetType,
+				"nodule:type", __plugNoduleType,
+
+			],
+
+		},
+
+	)
 
 ##########################################################################
 # Node menu
