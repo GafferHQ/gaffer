@@ -118,23 +118,37 @@ def __plugWidgetType( plug ) :
 		plug.node().parameterMetadata( plug, "widget" )
 	)
 
-Gaffer.Metadata.registerNodeDescription( GafferOSL.OSLShader, __nodeDescription )
-
-Gaffer.Metadata.registerPlugDescription( GafferOSL.OSLShader, "parameters.*", __plugDescription )
-Gaffer.Metadata.registerPlugValue( GafferOSL.OSLShader, "parameters.*", "label", __plugLabel )
-Gaffer.Metadata.registerPlugValue( GafferOSL.OSLShader, "parameters.*", "layout:divider", __plugDivider )
-Gaffer.Metadata.registerPlugValue( GafferOSL.OSLShader, "parameters.*", "presetNames", __plugPresetNames )
-Gaffer.Metadata.registerPlugValue( GafferOSL.OSLShader, "parameters.*", "presetValues", __plugPresetValues )
-Gaffer.Metadata.registerPlugValue( GafferOSL.OSLShader, "parameters.*", "plugValueWidget:type", __plugWidgetType )
-
-##########################################################################
-# Nodules
-##########################################################################
-
 def __outPlugNoduleType( plug ) :
 
 	return "GafferUI::CompoundNodule" if len( plug ) else "GafferUI::StandardNodule"
 
-Gaffer.Metadata.registerPlugValue( GafferOSL.OSLShader, "out", "nodule:type", __outPlugNoduleType )
-Gaffer.Metadata.registerPlugValue( GafferOSL.OSLShader, "out", "compoundNodule:spacing", 0.2 )
-Gaffer.Metadata.registerPlugValue( GafferOSL.OSLShader, "out", "compoundNodule:orientation", "y" )
+Gaffer.Metadata.registerNode(
+
+	GafferOSL.OSLShader,
+
+	"description", __nodeDescription,
+
+	plugs = {
+
+		"parameters.*" : [
+
+			"description", __plugDescription,
+			"label", __plugLabel,
+			"layout:divider", __plugDivider,
+			"presetNames", __plugPresetNames,
+			"presetValues", __plugPresetValues,
+			"plugValueWidget:type", __plugWidgetType,
+
+		],
+
+		"out" : [
+
+			"nodule:type", __outPlugNoduleType,
+			"compoundNodule:spacing", 0.2,
+			"compoundNodule:orientation", "y",
+
+		],
+
+	}
+
+)
