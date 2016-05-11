@@ -67,27 +67,6 @@ def _shaderAnnotations( shaderNode ) :
 	return shader.blindData().get( "ri:annotations", {} ) if shader is not None else {}
 
 ##########################################################################
-# Nodules
-##########################################################################
-
-def __parameterNoduleType( plug ) :
-
-	# only coshader parameters should be connectable in the node
-	# graph.
-	if plug.typeId() == Gaffer.Plug.staticTypeId() :
-		return "GafferUI::StandardNodule"
-	elif plug.typeId() == Gaffer.ArrayPlug.staticTypeId() :
-		return "GafferUI::CompoundNodule"
-
-	return ""
-
-GafferUI.Metadata.registerPlugValue( GafferRenderMan.RenderManShader, "parameters.*", "nodule:type", __parameterNoduleType )
-GafferUI.Metadata.registerPlugValue( GafferRenderMan.RenderManShader, "parameters.*", "compoundNodule:orientation", "y" )
-# coshader arrays tend to be used for layering, so we prefer to present the
-# last entry at the top, hence the increasing direction.
-GafferUI.Metadata.registerPlugValue( GafferRenderMan.RenderManShader, "parameters.*", "compoundNodule:direction", "increasing" )
-
-##########################################################################
 # PlugValueWidget creator for the parameters plug itself.
 ##########################################################################
 
@@ -395,14 +374,44 @@ def __plugActivator( plug ) :
 	annotations = _shaderAnnotations( plug.node() )
 	return annotations.get( plug.getName() + ".activator", None )
 
-Gaffer.Metadata.registerNodeDescription( GafferRenderMan.RenderManShader, __nodeDescription )
+def __plugNoduleType( plug ) :
 
-Gaffer.Metadata.registerNodeValue( GafferRenderMan.RenderManShader, "nodeGadget:color", __nodeColor )
+	# only coshader parameters should be connectable in the node
+	# graph.
+	if plug.typeId() == Gaffer.Plug.staticTypeId() :
+		return "GafferUI::StandardNodule"
+	elif plug.typeId() == Gaffer.ArrayPlug.staticTypeId() :
+		return "GafferUI::CompoundNodule"
+
+	return ""
+
+Gaffer.Metadata.registerNode(
+
+	GafferRenderMan.RenderManShader,
+
+	"description", __nodeDescription,
+	"nodeGadget:color", __nodeColor,
+
+	plugs = {
+
+		"parameters.*" : [
+
+			"nodule:type", __plugNoduleType,
+			"compoundNodule:orientation", "y",
+			# Coshader arrays tend to be used for layering, so we prefer to
+			# present the last entry at the top, hence the increasing direction.
+			"compoundNodule:direction", "increasing",
+
+		],
+
+	}
+
+)
 
 for nodeType in( GafferRenderMan.RenderManShader, GafferRenderMan.RenderManLight ) :
 
 	Gaffer.Metadata.registerPlugValue( nodeType, "parameters", "layout:activators", __parameterActivators )
-	Gaffer.Metadata.registerPlugDescription( nodeType, "parameters.*", __plugDescription )
+	Gaffer.Metadata.registerPlugValue( nodeType, "parameters.*", "description", __plugDescription )
 	Gaffer.Metadata.registerPlugValue( nodeType, "parameters.*", "label", __plugLabel )
 	Gaffer.Metadata.registerPlugValue( nodeType, "parameters.*", "layout:divider", __plugDivider )
 	Gaffer.Metadata.registerPlugValue( nodeType, "parameters.*", "ui:visibleDimensions", __plugVisibleDimensions )
