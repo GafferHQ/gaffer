@@ -35,21 +35,41 @@
 ##########################################################################
 
 import Gaffer
-import GafferUI
-
 import GafferScene
-import GafferSceneUI
 
-Gaffer.Metadata.registerNodeDescription(
+Gaffer.Metadata.registerNode(
 
-GafferScene.Prune,
+	GafferScene.Prune,
 
-"""A node for removing whole branches from the scene hierarchy.""",
+	"description",
+	"""
+	A node for removing whole branches from the scene hierarchy.
+	""",
 
-"filter",
-"""The branches to prune. The specified locations and all locations below them will be removed from the scene.""",
+	plugs = {
 
-"adjustBounds",
-"""Computes new tightened bounding boxes taking into account the removed locations. This can be an expensive operation - turn on with care.""",
+		"filter" : [
+
+			"description",
+			"""
+			Filter to specify the branches to prune. The specified
+			locations and all locations below them will be removed from
+			the scene.
+			""",
+
+		],
+
+		"adjustBounds" : [
+
+			"description",
+			"""
+			Computes new tightened bounding boxes taking into account
+			the removed locations. This can be an expensive operation -
+			turn on with care.
+			""",
+
+		],
+
+	}
 
 )
