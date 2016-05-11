@@ -37,15 +37,20 @@
 import Gaffer
 import GafferSceneUI
 
-Gaffer.Metadata.registerNodeDescription(
+Gaffer.Metadata.registerNode(
 
-GafferSceneUI.CropWindowTool,
+	GafferSceneUI.CropWindowTool,
 
-"""Tool for adjusting crop window for rendering.
+	"description",
+	"""
+	Tool for adjusting crop window for rendering. The crop window is displayed as a
+	masked area which can be adjusted using drag and drop.
 
-The crop window is displayed as a masked area which can be adjusted using drag and drop.
-
-Note that the view must be locked to a render camera for this tool to be used. Additionally, an upstream node much be capable of setting the crop window so that there is something to adjust - typically this will be a StandardOptions node. The name of the plug being manipulated is displayed underneath the cropped area - it can be used to verify that the expected node is being adjusted.
-"""
+	Note that the view must be locked to a render camera for this tool to be used.
+	Additionally, an upstream node much be capable of setting the crop window so
+	that there is something to adjust - typically this will be a StandardOptions
+	node. The name of the plug being manipulated is displayed underneath the
+	cropped area - it can be used to verify that the expected node is being adjusted.
+	"""
 
 )
