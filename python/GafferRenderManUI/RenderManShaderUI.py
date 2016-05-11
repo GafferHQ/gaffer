@@ -88,19 +88,6 @@ GafferUI.Metadata.registerPlugValue( GafferRenderMan.RenderManShader, "parameter
 GafferUI.Metadata.registerPlugValue( GafferRenderMan.RenderManShader, "parameters.*", "compoundNodule:direction", "increasing" )
 
 ##########################################################################
-# NodeUI - this exists only for backwards compatibility, and will be
-# removed.
-##########################################################################
-
-class RenderManShaderUI( GafferUI.StandardNodeUI ) :
-
-	def __init__( self, node, displayMode = None, **kw ) :
-
-		GafferUI.StandardNodeUI.__init__( self, node, displayMode, **kw )
-
-		warnings.warn( "RenderManShaderUI is deprecated, use either StandardNodeUI or LayoutPlugValueWidget.", DeprecationWarning, 2 )
-
-##########################################################################
 # PlugValueWidget creator for the parameters plug itself.
 ##########################################################################
 
