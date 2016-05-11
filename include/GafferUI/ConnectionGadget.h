@@ -72,7 +72,7 @@ class ConnectionGadget : public Gadget
 		virtual bool acceptsParent( const Gaffer::GraphComponent *potentialParent ) const;
 
 		/// Returns the Nodule representing the source plug in the connection.
-		/// Note that this may be 0 if the source plug belongs to a node which
+		/// Note that this may be NULL if the source plug belongs to a node which
 		/// has been hidden.
 		Nodule *srcNodule();
 		const Nodule *srcNodule() const;

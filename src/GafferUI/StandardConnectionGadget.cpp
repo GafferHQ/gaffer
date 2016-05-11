@@ -265,7 +265,7 @@ bool StandardConnectionGadget::dragEnd( const DragDropEvent &event )
 	{
 		// noone wanted the drop so we'll disconnect
 		Gaffer::UndoContext undoEnabler( dstNodule()->plug()->ancestor<Gaffer::ScriptNode>() );
-		dstNodule()->plug()->setInput( 0 );
+		dstNodule()->plug()->setInput( NULL );
 	}
 	else
 	{
