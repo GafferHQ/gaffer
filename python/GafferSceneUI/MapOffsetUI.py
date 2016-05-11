@@ -38,22 +38,57 @@ import Gaffer
 import GafferUI
 import GafferScene
 
-Gaffer.Metadata.registerNodeDescription(
+Gaffer.Metadata.registerNode(
 
-GafferScene.MapOffset,
+	GafferScene.MapOffset,
 
-"""Adds an offset to object texture coordinates. Provides a convenient way of looking at specific texture UDIMs.""",
+	"description",
+	"""
+	Adds an offset to object texture coordinates. This provides a convenient way of
+	looking at specific texture UDIMs.
+	""",
 
-"offset",
-"An offset added to the texture coordinates. Note that moving the texture coordinates in the positive direction will move the texture in the negative direction.",
+	plugs = {
 
-"udim",
-"A specific UDIM to offset the texture coordinates to. The UDIM is converted to an offset which is added to the offset above.",
+		"offset" : [
 
-"sName",
-"The name of the primitive variable holding the s coordinate.",
+			"description",
+			"""
+			An offset added to the texture coordinates. Note that moving the
+			texture coordinates in the positive direction will move the texture
+			in the negative direction.
+			""",
 
-"tName",
-"The name of the primitive variable holding the t coordinate.",
+		],
+
+		"udim" : [
+
+			"description",
+			"""
+			A specific UDIM to offset the texture coordinates to. The UDIM is
+			converted to an offset which is added to the offset above.
+			""",
+
+		],
+
+		"sName" : [
+
+			"description",
+			"""
+			The name of the primitive variable holding the s coordinate.
+			""",
+
+		],
+
+		"tName" : [
+
+			"description",
+			"""
+			The name of the primitive variable holding the t coordinate.
+			""",
+
+		],
+
+	}
 
 )
