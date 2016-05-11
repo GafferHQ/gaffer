@@ -37,19 +37,21 @@
 import Gaffer
 import GafferSceneUI
 
-Gaffer.Metadata.registerNodeDescription(
+Gaffer.Metadata.registerNode(
 
-GafferSceneUI.SelectionTool,
+	GafferSceneUI.SelectionTool,
 
-"""Tool for selecting objects.
+	"description",
+	"""
+	Tool for selecting objects.
 
- - Click or drag to set selection
- - Shift-click or shift-drag to add to selection
- - Drag and drop selected objects
-	- Drag to ScriptEditor to get their names
-	- Drag to PathFilter or Sets node to add/remove their paths
-"""
+	- Click or drag to set selection
+	- Shift-click or shift-drag to add to selection
+	- Drag and drop selected objects
+		- Drag to ScriptEditor to get their names
+		- Drag to PathFilter or Sets node to add/remove their paths
+	""",
+
+	"order", 0,
 
 )
-
-Gaffer.Metadata.registerNodeValue( GafferSceneUI.SelectionTool, "order", 0 )
