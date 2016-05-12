@@ -39,6 +39,7 @@
 #include "boost/bind/placeholders.hpp"
 
 #include "OpenEXR/ImathFun.h"
+#include "OpenEXR/ImathBoxAlgo.h"
 
 #include "Gaffer/UndoContext.h"
 #include "Gaffer/ScriptNode.h"
@@ -198,13 +199,45 @@ void StandardConnectionGadget::doRender( const Style *style ) const
 	style->renderConnection( adjustedSrcPos, adjustedSrcTangent, m_dstPos, m_dstTangent, state, m_userColor.get_ptr() );
 }
 
-Gaffer::Plug::Direction StandardConnectionGadget::endAt( const IECore::LineSegment3f &line )
+float StandardConnectionGadget::distanceToNodeGadget( const IECore::LineSegment3f &line, const Nodule *nodule ) const
 {
+	const NodeGadget *nodeGadget = nodule ? nodule->ancestor<NodeGadget>() : NULL;
+	if( !nodeGadget )
+	{
+		return Imath::limits<float>::max();
+	}
+
+	const M44f relativeTransform = fullTransform() * nodeGadget->fullTransform().inverse();
+	V3f p0 = line.p0 * relativeTransform; p0.z = 0;
+	const V3f p1 = closestPointOnBox( p0, nodeGadget->bound() );
+
+	return (p0 - p1).length();
+}
+
+Gaffer::Plug::Direction StandardConnectionGadget::endAt( const IECore::LineSegment3f &line ) const
+{
+	// Connections are only sensitive to hovering and dragging close
+	// to their ends, since it is confusing to accidentally pick up
+	// a connection in the middle, and some graphs use very long
+	// connections. The sensitive section is proportional to the
+	// length of the connection, with some sensible minimum and
+	// maximum limits.
 	const float length = ( m_srcPos - m_dstPos ).length();
 	const float threshold = clamp( length / 4.0f, 2.5f, 25.0f );
 
-	const float dSrc = line.distanceTo( m_srcPos );
-	const float dDst = line.distanceTo( m_dstPos );
+	float dSrc = line.distanceTo( m_srcPos );
+	float dDst = line.distanceTo( m_dstPos );
+
+	if( min( dSrc, dDst ) >= threshold )
+	{
+		// If connections go backwards, the grabbable region of the
+		// connection may be hidden behind the node it connects to.
+		// In this case  we also consider a point to be grabbable if
+		// it is less than the threshold distance from the node, rather
+		// than from the endpoint.
+		dSrc = distanceToNodeGadget( line, srcNodule() );
+		dDst = distanceToNodeGadget( line, dstNodule() );
+	}
 
 	if( min( dSrc, dDst ) < threshold )
 	{
