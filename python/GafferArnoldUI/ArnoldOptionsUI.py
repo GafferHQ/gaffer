@@ -111,6 +111,18 @@ def __errorColorsSummary( plug ) :
 
 	return ", ".join( info )
 
+def __licensingSummary( plug ) :
+
+	info = []
+	for name, label in (
+		( "abortOnLicenseFail", "Abort on Fail" ),
+		( "skipLicenseCheck", "Skip Check" )
+	) :
+		if plug[name]["enabled"].getValue() :
+			info.append( label + " " + ( "On" if plug[name]["value"].getValue() else "Off" ) )
+
+	return ", ".join( info )
+
 Gaffer.Metadata.registerNode(
 
 	GafferArnold.ArnoldOptions,
@@ -134,6 +146,7 @@ Gaffer.Metadata.registerNode(
 			"layout:section:Performance:summary", __performanceSummary,
 			"layout:section:Search Paths:summary", __searchPathsSummary,
 			"layout:section:Error Colors:summary", __errorColorsSummary,
+			"layout:section:Licensing:summary", __licensingSummary,
 
 		],
 
@@ -481,6 +494,33 @@ Gaffer.Metadata.registerNode(
 
 			"layout:section", "Error Colors",
 			"label", "Bad Shader",
+
+		],
+
+
+		# Licensing
+
+		"options.abortOnLicenseFail" : [
+
+			"description",
+			"""
+			Aborts the render if a license is not available,
+			instead of rendering with a watermark.
+			""",
+
+			"layout:section", "Licensing",
+
+		],
+
+		"options.skipLicenseCheck" : [
+
+			"description",
+			"""
+			Skips the check for a license, always rendering
+			with a watermark.
+			""",
+
+			"layout:section", "Licensing",
 
 		],
 
