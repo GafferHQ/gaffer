@@ -74,7 +74,8 @@ class StandardConnectionGadget : public ConnectionGadget
 		static ConnectionGadgetTypeDescription<StandardConnectionGadget> g_connectionGadgetTypeDescription;
 
 		void setPositionsFromNodules();
-		Gaffer::Plug::Direction endAt( const IECore::LineSegment3f &line );
+		float distanceToNodeGadget( const IECore::LineSegment3f &line, const Nodule *nodule ) const;
+		Gaffer::Plug::Direction endAt( const IECore::LineSegment3f &line ) const;
 
 		void enter( const ButtonEvent &event );
 		bool mouseMove( const ButtonEvent &event );
