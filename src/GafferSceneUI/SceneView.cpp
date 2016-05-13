@@ -48,6 +48,7 @@
 #include "IECoreGL/State.h"
 #include "IECoreGL/Camera.h"
 #include "IECoreGL/Primitive.h"
+#include "IECoreGL/CurvesPrimitive.h"
 
 #include "Gaffer/Context.h"
 #include "Gaffer/BlockedConnection.h"
@@ -108,14 +109,29 @@ class SceneView::DrawingMode : public boost::signals::trackable
 			bound->addChild( new BoolPlug( "enabled" ) );
 			bound->addChild( new BoolPlug( "override" ) );
 
+			ValuePlugPtr curves = new ValuePlug( "curves" );
+			drawingMode->addChild( curves );
+
+			ValuePlugPtr curvesUseGLLines = new ValuePlug( "useGLLines" );
+			curves->addChild( curvesUseGLLines );
+			curvesUseGLLines->addChild( new BoolPlug( "enabled", Plug::In, /* defaultValue = */ true ) );
+			curvesUseGLLines->addChild( new BoolPlug( "override" ) );
+
+			ValuePlugPtr curvesInterpolate = new ValuePlug( "interpolate" );
+			curves->addChild( curvesInterpolate );
+			curvesInterpolate->addChild( new BoolPlug( "enabled" ) );
+			curvesInterpolate->addChild( new BoolPlug( "override" ) );
+
+			updateBaseState();
+
 			view->plugSetSignal().connect( boost::bind( &DrawingMode::plugSet, this, ::_1 ) );
 		}
 
 	private :
 
-		Gaffer::StringPlug *drawingModePlug()
+		Gaffer::Plug *drawingModePlug()
 		{
-			return m_view->getChild<StringPlug>( "drawingMode" );
+			return m_view->getChild<Plug>( "drawingMode" );
 		}
 
 		SceneGadget *sceneGadget()
@@ -157,6 +173,22 @@ class SceneView::DrawingMode : public boost::signals::trackable
 			baseState->add(
 				new IECoreGL::Primitive::DrawBound( bound->getChild<BoolPlug>( "enabled" )->getValue() ),
 				bound->getChild<BoolPlug>( "override" )->getValue()
+			);
+
+			const ValuePlug *curves = drawingModePlug()->getChild<ValuePlug>( "curves" );
+			const ValuePlug *curvesUseGLLines = curves->getChild<ValuePlug>( "useGLLines" );
+			baseState->add(
+				new IECoreGL::CurvesPrimitive::UseGLLines( curvesUseGLLines->getChild<BoolPlug>( "enabled" )->getValue() ),
+				curvesUseGLLines->getChild<BoolPlug>( "override" )->getValue()
+			);
+
+			const ValuePlug *curvesInterpolate = curves->getChild<ValuePlug>( "interpolate" );
+			baseState->add(
+				/// \todo As a general rule we strive for a one-to-one mapping between cortex/gaffer/ui,
+				/// but in this case IgnoreBasis is far too technical a term. Consider changing the name
+				/// in Cortex.
+				new IECoreGL::CurvesPrimitive::IgnoreBasis( !curvesInterpolate->getChild<BoolPlug>( "enabled" )->getValue() ),
+				curvesInterpolate->getChild<BoolPlug>( "override" )->getValue()
 			);
 
 			sceneGadget()->renderRequestSignal()( sceneGadget() );

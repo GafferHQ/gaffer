@@ -622,6 +622,10 @@ SceneGadget::SceneGadget()
 		m_sceneGraph( new SceneGraph ),
 		m_selection( new PathMatcherData )
 {
+	m_baseState->add( new IECoreGL::WireframeColorStateComponent( Color4f( 0.2f, 0.2f, 0.2f, 1.0f ) ) );
+	m_baseState->add( new IECoreGL::PointColorStateComponent( Color4f( 0.9f, 0.9f, 0.9f, 1.0f ) ) );
+	m_baseState->add( new IECoreGL::Primitive::PointWidth( 2.0f ) );
+
 	setContext( new Context );
 }
 
