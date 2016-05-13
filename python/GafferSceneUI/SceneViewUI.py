@@ -52,12 +52,20 @@ Gaffer.Metadata.registerNode(
 
 		"drawingMode" : [
 
+			"description",
+			"""
+			Defines how the scene is drawn in the viewport.
+			""",
 			"plugValueWidget:type", "GafferSceneUI.SceneViewUI._DrawingModePlugValueWidget",
 
 		],
 
 		"shadingMode" : [
 
+			"description",
+			"""
+			Defines how the scene is shaded in the viewport.
+			""",
 			"toolbarLayout:divider", True,
 			"plugValueWidget:type", "GafferSceneUI.SceneViewUI._ShadingModePlugValueWidget",
 
@@ -139,10 +147,22 @@ class _DrawingModePlugValueWidget( GafferUI.PlugValueWidget ) :
 
 		m = IECore.MenuDefinition()
 
-		for n in [ "solid", "wireframe", "points" ] :
+		for n in ( "solid", "wireframe", "points" ) :
 			plug = self.getPlug()[n]["enabled"]
 			m.append(
-				"/" + n.capitalize(),
+				"/" + IECore.CamelCase.toSpaced( n ),
+				{
+					"command" : plug.setValue,
+					"checkBox" : plug.getValue(),
+				}
+			)
+
+		m.append( "/ComponentsDivider", { "divider" : True } )
+
+		for n in ( "useGLLines", "interpolate" ) :
+			plug = self.getPlug()["curves"][n]["enabled"]
+			m.append(
+				"/Curves/" + IECore.CamelCase.toSpaced( n ),
 				{
 					"command" : plug.setValue,
 					"checkBox" : plug.getValue(),
