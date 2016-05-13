@@ -144,7 +144,7 @@ class _DrawingModePlugValueWidget( GafferUI.PlugValueWidget ) :
 			m.append(
 				"/" + n.capitalize(),
 				{
-					"command" : functools.partial( plug.setValue, not plug.getValue() ),
+					"command" : plug.setValue,
 					"checkBox" : plug.getValue(),
 				}
 			)

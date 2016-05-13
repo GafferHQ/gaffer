@@ -113,9 +113,9 @@ class SceneView::DrawingMode : public boost::signals::trackable
 
 	private :
 
-		Gaffer::StringPlug *drawingModePlug()
+		Gaffer::Plug *drawingModePlug()
 		{
-			return m_view->getChild<StringPlug>( "drawingMode" );
+			return m_view->getChild<Plug>( "drawingMode" );
 		}
 
 		SceneGadget *sceneGadget()
