@@ -53,6 +53,9 @@ namespace GafferSceneUI
 
 IE_CORE_FORWARDDECLARE( SceneGadget );
 
+/// \todo Implement IECoreGLPreview::Renderer, and
+/// use an internal InteractiveGLRender node to do
+/// all the hard work.
 class SceneGadget : public GafferUI::Gadget
 {
 
