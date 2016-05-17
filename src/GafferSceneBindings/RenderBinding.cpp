@@ -42,6 +42,7 @@
 
 #include "GafferScene/OpenGLRender.h"
 #include "GafferScene/InteractiveRender.h"
+#include "GafferScene/Preview/InteractiveRender.h"
 
 #include "GafferSceneBindings/RenderBinding.h"
 
@@ -115,6 +116,11 @@ ContextPtr interactiveRenderGetContext( InteractiveRender &r )
 	return r.getContext();
 }
 
+ContextPtr previewInteractiveRenderGetContext( Preview::InteractiveRender &r )
+{
+	return r.getContext();
+}
+
 } // namespace
 
 void GafferSceneBindings::bindRender()
@@ -124,14 +130,33 @@ void GafferSceneBindings::bindRender()
 
 	ExecutableNodeClass<OpenGLRender>();
 
-	scope s = GafferBindings::NodeClass<InteractiveRender>()
-		.def( "getContext", &interactiveRenderGetContext )
-		.def( "setContext", &InteractiveRender::setContext );
+	{
+		scope s = GafferBindings::NodeClass<InteractiveRender>()
+			.def( "getContext", &interactiveRenderGetContext )
+			.def( "setContext", &InteractiveRender::setContext );
 
-	enum_<InteractiveRender::State>( "State" )
-		.value( "Stopped", InteractiveRender::Stopped )
-		.value( "Running", InteractiveRender::Running )
-		.value( "Paused", InteractiveRender::Paused )
-	;
+		enum_<InteractiveRender::State>( "State" )
+			.value( "Stopped", InteractiveRender::Stopped )
+			.value( "Running", InteractiveRender::Running )
+			.value( "Paused", InteractiveRender::Paused )
+		;
+	}
+
+	{
+		object previewModule( borrowed( PyImport_AddModule( "GafferScene.Preview" ) ) );
+		scope().attr( "Preview" ) = previewModule;
+
+		scope previewScope( previewModule );
+
+		scope s = GafferBindings::NodeClass<GafferScene::Preview::InteractiveRender>()
+			.def( "getContext", &previewInteractiveRenderGetContext )
+			.def( "setContext", &GafferScene::Preview::InteractiveRender::setContext );
+
+		enum_<GafferScene::Preview::InteractiveRender::State>( "State" )
+			.value( "Stopped", GafferScene::Preview::InteractiveRender::Stopped )
+			.value( "Running", GafferScene::Preview::InteractiveRender::Running )
+			.value( "Paused", GafferScene::Preview::InteractiveRender::Paused )
+		;
+	}
 
 }
