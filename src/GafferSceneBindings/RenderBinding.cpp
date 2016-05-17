@@ -52,6 +52,9 @@ using namespace GafferBindings;
 using namespace GafferDispatchBindings;
 using namespace GafferScene;
 
+namespace
+{
+
 class ExecutableRenderWrapper : public ExecutableNodeWrapper<ExecutableRender>
 {
 
@@ -107,10 +110,12 @@ class ExecutableRenderWrapper : public ExecutableNodeWrapper<ExecutableRender>
 
 };
 
-static ContextPtr interactiveRenderGetContext( InteractiveRender &r )
+ContextPtr interactiveRenderGetContext( InteractiveRender &r )
 {
 	return r.getContext();
 }
+
+} // namespace
 
 void GafferSceneBindings::bindRender()
 {
