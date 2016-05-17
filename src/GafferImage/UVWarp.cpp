@@ -82,12 +82,6 @@ struct UVWarp::Engine : public Warp::Engine
 		m_inputWindow.max += V2i( 1 );
 	}
 
-	virtual void hash( IECore::MurmurHash &h ) const
-	{
-		m_uData->hash( h );
-		m_vData->hash( h );
-	}
-
 	virtual Imath::Box2i inputWindow( const Imath::V2i &tileOrigin ) const
 	{
 		assert( tileOrigin == m_tileBound.min );
