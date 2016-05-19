@@ -38,6 +38,8 @@
 #include "tbb/task.h"
 #include "tbb/parallel_for.h"
 
+#include "boost/algorithm/string/predicate.hpp"
+
 #include "IECore/MatrixMotionTransform.h"
 #include "IECore/Camera.h"
 #include "IECore/CoordinateSystem.h"
@@ -137,6 +139,29 @@ void GafferScene::matchingPaths( const PathMatcher &filter, const ScenePlug *sce
 {
 	ThreadablePathAccumulator f( paths );
 	GafferScene::filteredParallelTraverse( scene, filter, f );
+}
+
+IECore::ConstCompoundObjectPtr GafferScene::globalAttributes( const IECore::CompoundObject *globals )
+{
+	static const std::string prefix( "attribute:" );
+
+	CompoundObjectPtr result = new CompoundObject;
+
+	CompoundObject::ObjectMap::const_iterator it, eIt;
+	for( it = globals->members().begin(), eIt = globals->members().end(); it != eIt; ++it )
+	{
+		if( !boost::starts_with( it->first.c_str(), "attribute:" ) )
+		{
+			continue;
+		}
+		// Cast is justified because we don't modify the data, and will return it
+		// as const from this function.
+		result->members()[it->first.string().substr( prefix.size() )] = boost::const_pointer_cast<Object>(
+			it->second
+		);
+	}
+
+	return result;
 }
 
 Imath::V2f GafferScene::shutter( const IECore::CompoundObject *globals )
