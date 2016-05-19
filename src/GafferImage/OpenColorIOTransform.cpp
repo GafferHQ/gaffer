@@ -48,7 +48,7 @@ using namespace IECore;
 using namespace Gaffer;
 using namespace GafferImage;
 
-namespace Detail
+namespace
 {
 
 // Although the OpenColorIO library is advertised as threadsafe,
@@ -66,7 +66,7 @@ typedef tbb::null_mutex OCIOMutex;
 
 static OCIOMutex g_ocioMutex;
 
-} // namespace Detail
+} // namespace
 
 IE_CORE_DEFINERUNTIMETYPED( OpenColorIOTransform );
 
@@ -118,7 +118,7 @@ void OpenColorIOTransform::processColorData( const Gaffer::Context *context, IEC
 
 	OpenColorIO::ConstProcessorRcPtr processor;
 	{
-		Detail::OCIOMutex::scoped_lock lock( Detail::g_ocioMutex );
+		OCIOMutex::scoped_lock lock( g_ocioMutex );
 		OpenColorIO::ConstConfigRcPtr config = OpenColorIO::GetCurrentConfig();
 		processor = config->getProcessor( colorTransform );
 	}

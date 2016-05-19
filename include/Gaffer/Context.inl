@@ -44,15 +44,57 @@
 namespace Gaffer
 {
 
+namespace Detail
+{
+
+// Class to dictate what IECore::Data subclass we
+// use to hold the type T. This is necessary because
+// unfortunately we can't just use TypedData<T> when
+// T is an Imath::Vec - then we need to use
+// GeometricTypedData<T>.
+/// \todo Consider how to better address this in Cortex.
+/// We could just simply provide DataTraits in Cortex,
+/// but this GeometricTypedData problem has tripped us
+/// up in several scenarios already due to non-obviousness.
+/// Is it worth considering removing GeometricTypedData
+/// and redundantly storing GeometricInterpretation for
+/// all data types? It would certainly be simpler.
+template<typename T>
+struct DataTraits
+{
+
+	typedef IECore::TypedData<T> DataType;
+
+};
+
+template<typename T>
+struct DataTraits<Imath::Vec2<T> >
+{
+
+	typedef IECore::GeometricTypedData<Imath::Vec2<T> > DataType;
+
+};
+
+template<typename T>
+struct DataTraits<Imath::Vec3<T> >
+{
+
+	typedef IECore::GeometricTypedData<Imath::Vec3<T> > DataType;
+
+};
+
+} // namespace Detail
+
 template<typename T, typename Enabler>
 struct Context::Accessor
 {
 	typedef const T &ResultType;
+	typedef typename Gaffer::Detail::DataTraits<T>::DataType DataType;
 
 	/// Returns true if the value has changed
 	bool set( Storage &storage, const T &value )
 	{
-		const IECore::TypedData<T> *d = IECore::runTimeCast<const IECore::TypedData<T> >( storage.data );
+		const DataType *d = IECore::runTimeCast<const DataType>( storage.data );
 		if( d )
 		{
 			if( d->readable() == value )
@@ -67,7 +109,7 @@ struct Context::Accessor
 				// place. storage.data is const to remind us not to mess
 				// with values we receive as Shared or Borrowed, but since this
 				// is Copied, we're free to do as we please.
-				const_cast<IECore::TypedData<T> *>( d )->writable() = value;
+				const_cast<DataType *>( d )->writable() = value;
 				return true;
 			}
 		}
@@ -79,7 +121,7 @@ struct Context::Accessor
 			storage.data->removeRef();
 		}
 
-		storage.data = new IECore::TypedData<T>( value );
+		storage.data = new DataType( value );
 		storage.data->addRef();
 		storage.ownership = Copied;
 
@@ -88,11 +130,11 @@ struct Context::Accessor
 
 	ResultType get( const IECore::Data *data )
 	{
-		if( !data->isInstanceOf( IECore::TypedData<T>::staticTypeId() ) )
+		if( !data->isInstanceOf( DataType::staticTypeId() ) )
 		{
-			throw IECore::Exception( boost::str( boost::format( "Context entry is not of type \"%s\"" ) % IECore::TypedData<T>::staticTypeName() ) );
+			throw IECore::Exception( boost::str( boost::format( "Context entry is not of type \"%s\"" ) % DataType::staticTypeName() ) );
 		}
-		return static_cast<const IECore::TypedData<T> *>( data )->readable();
+		return static_cast<const DataType *>( data )->readable();
 	}
 };
 

@@ -192,8 +192,8 @@ class OSLExpressionEngineTest( GafferOSLTest.OSLTestCase ) :
 
 			c["f"] = 10
 			c["i"] = 11
-			c["c"] = IECore.Color3fData( IECore.Color3f( 4, 5, 6 ) )
-			c["v"] = IECore.V3fData( IECore.V3f( 1, 2, 3 ) )
+			c["c"] = IECore.Color3f( 4, 5, 6 )
+			c["v"] = IECore.V3f( 1, 2, 3 )
 			c["s"] = "non-default"
 
 			self.assertEqual( s["n"]["user"]["f"].getValue(), 10 )
