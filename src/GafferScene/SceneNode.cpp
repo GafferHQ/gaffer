@@ -89,6 +89,13 @@ void SceneNode::affects( const Gaffer::Plug *input, AffectedPlugsContainer &outp
 	{
 		for( ValuePlugIterator it( outPlug() ); !it.done(); ++it )
 		{
+			if( (*it)->getInput<Plug>() )
+			{
+				// If the output has been connected as a pass-through,
+				// then it clearly can't be affected by the enabled plug,
+				// because there won't even be a compute() call for it.
+				continue;
+			}
 			outputs.push_back( it->get() );
 		}
 	}
