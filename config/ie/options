@@ -123,7 +123,8 @@ try :
 	APPLESEED_INCLUDE_PATH = os.path.join( appleseedReg["location"], "include" )
 	APPLESEED_LIB_PATH = os.path.join( appleseedReg["location"], "lib" )
 except :
-	pass
+	APPLESEED_INCLUDE_PATH = ""
+	APPLESEED_LIB_PATH = ""
 
 sphinxRoot = os.path.join( IEEnv.Environment.rootPath(), "apps", "sphinx", "1.4.1" )
 
