@@ -92,6 +92,9 @@ void filteredParallelTraverse( const ScenePlug *scene, const Gaffer::IntPlug *fi
 template <class ThreadableFunctor>
 void filteredParallelTraverse( const ScenePlug *scene, const PathMatcher &filter, ThreadableFunctor &f );
 
+/// Returns just the global attributes from the globals (everything prefixed with "attribute:").
+IECore::ConstCompoundObjectPtr globalAttributes( const IECore::CompoundObject *globals );
+
 /// Calculates the shutter specified by the globals.
 Imath::V2f shutter( const IECore::CompoundObject *globals );
 

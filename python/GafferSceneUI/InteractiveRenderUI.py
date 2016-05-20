@@ -34,14 +34,84 @@
 #
 ##########################################################################
 
-import fnmatch
-
 import Gaffer
-import GafferUI
 import GafferScene
 
 ##########################################################################
-# Metadata
+# Metadata for GafferScene.Preview.InteractiveRender node. We intend
+# for this to entirely replace the GafferScene.InteractiveRender node
+# which is registered under this section.
+##########################################################################
+
+Gaffer.Metadata.registerNode(
+
+	GafferScene.Preview.InteractiveRender,
+
+	"description",
+	"""
+	Performs interactive renders, updating the render on the fly
+	whenever the input scene changes.
+	""",
+
+	plugs = {
+
+		"*" : [
+
+			"nodule:type", "",
+
+		],
+
+		"in" : [
+
+			"description",
+			"""
+			The scene to be rendered.
+			""",
+
+			"nodule:type", "GafferUI::StandardNodule",
+
+		],
+
+		"renderer" : [
+
+			"description",
+			"""
+			The renderer to use.
+			""",
+
+		],
+
+		"state" : [
+
+			"description",
+			"""
+			Turns the rendering on and off, or pauses it.
+			""",
+
+			"preset:Stopped", GafferScene.InteractiveRender.State.Stopped,
+			"preset:Running", GafferScene.InteractiveRender.State.Running,
+			"preset:Paused", GafferScene.InteractiveRender.State.Paused,
+
+			## \todo Make a custom UI with play/pause/stop/restart buttons.
+			"plugValueWidget:type", "GafferUI.PresetsPlugValueWidget",
+
+		],
+
+		"out" : [
+
+			"description",
+			"""
+			A direct pass-through of the input scene.
+			""",
+
+		],
+
+	}
+)
+
+##########################################################################
+# Metadata for original InteractiveRender node. We hope to phase this
+# node out over time.
 ##########################################################################
 
 Gaffer.Metadata.registerNode(

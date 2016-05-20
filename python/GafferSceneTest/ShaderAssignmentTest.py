@@ -322,5 +322,13 @@ class ShaderAssignmentTest( GafferSceneTest.SceneTestCase ) :
 
 		self.assertTrue( s["r"]["a"]["shader"].getInput().node().isSame( s["r"] ) )
 
+	def testEnabledDoesntAffectPassThroughs( self ) :
+
+		s = GafferScene.ShaderAssignment()
+		cs = GafferTest.CapturingSlot( s.plugDirtiedSignal() )
+
+		s["enabled"].setValue( False )
+		self.assertEqual( set( x[0] for x in cs ), set( ( s["enabled"], s["out"]["attributes"], s["out"] ) ) )
+
 if __name__ == "__main__":
 	unittest.main()

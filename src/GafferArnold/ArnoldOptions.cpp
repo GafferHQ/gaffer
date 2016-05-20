@@ -91,6 +91,11 @@ ArnoldOptions::ArnoldOptions( const std::string &name )
 	options->addOptionalMember( "ai:error_color_bad_pixel", new IECore::Color3fData( Color3f( 0, 0, 1 ) ), "errorColorBadPixel", Gaffer::Plug::Default, false );
 	options->addOptionalMember( "ai:error_color_bad_shader", new IECore::Color3fData( Color3f( 1, 0, 1 ) ), "errorColorBadShader", Gaffer::Plug::Default, false );
 
+	// licensing
+
+	options->addOptionalMember( "ai:abort_on_license_fail", new IECore::BoolData( false ), "abortOnLicenseFail", Gaffer::Plug::Default, false );
+	options->addOptionalMember( "ai:skip_license_check", new IECore::BoolData( false ), "skipLicenseCheck", Gaffer::Plug::Default, false );
+
 }
 
 ArnoldOptions::~ArnoldOptions()

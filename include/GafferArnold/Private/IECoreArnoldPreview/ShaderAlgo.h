@@ -1,7 +1,6 @@
 //////////////////////////////////////////////////////////////////////////
 //
-//  Copyright (c) 2012, John Haddon. All rights reserved.
-//  Copyright (c) 2013, Image Engine Design Inc. All rights reserved.
+//  Copyright (c) 2016, Image Engine Design Inc. All rights reserved.
 //
 //  Redistribution and use in source and binary forms, with or without
 //  modification, are permitted provided that the following conditions are
@@ -35,24 +34,25 @@
 //
 //////////////////////////////////////////////////////////////////////////
 
-#ifndef GAFFERARNOLD_TYPEIDS_H
-#define GAFFERARNOLD_TYPEIDS_H
+#ifndef IECOREARNOLDPREVIEW_SHADERALGO_H
+#define IECOREARNOLDPREVIEW_SHADERALGO_H
 
-namespace GafferArnold
+#include <vector>
+
+#include "ai.h"
+
+#include "IECore/ObjectVector.h"
+
+namespace IECoreArnoldPreview
 {
 
-enum TypeId
+namespace ShaderAlgo
 {
-	ArnoldShaderTypeId = 110900,
-	ArnoldOptionsTypeId = 110901,
-	ArnoldAttributesTypeId = 110902,
-	ArnoldLightTypeId = 110903,
-	ArnoldVDBTypeId = 110904,
-	InteractiveArnoldRenderTypeId = 110905,
 
-	LastTypeId = 110949
-};
+std::vector<AtNode *> convert( const IECore::ObjectVector *shaderNetwork );
 
-} // namespace GafferArnold
+} // namespace ShaderAlgo
 
-#endif // GAFFERARNOLD_TYPEIDS_H
+} // namespace IECoreArnoldPreview
+
+#endif // IECOREARNOLDPREVIEW_SHADERALGO_H

@@ -111,6 +111,7 @@ if moduleSearchPath.find( "arnold" ) :
 			},
 			searchText = "ArnoldRender"
 		)
+		nodeMenu.append( "/Arnold/Interactive Render", GafferArnold.InteractiveArnoldRender, searchText = "InteractiveArnoldRender" )
 
 	except Exception, m :
 
@@ -137,7 +138,7 @@ if "DELIGHT" in os.environ :
 			},
 			searchText = "RenderManRender"
 		)
-		nodeMenu.append( "/RenderMan/InteractiveRender", GafferRenderMan.InteractiveRenderManRender, searchText = "InteractiveRender" )
+		nodeMenu.append( "/RenderMan/Interactive Render", GafferRenderMan.InteractiveRenderManRender, searchText = "InteractiveRenderManRender" )
 
 		scriptWindowMenu.append(
 			"/Help/3Delight/User Guide",
@@ -187,7 +188,7 @@ if "APPLESEED" in os.environ :
 			},
 			searchText = "AppleseedRender"
 		)
-		nodeMenu.append( "/Appleseed/InteractiveRender", GafferAppleseed.InteractiveAppleseedRender, searchText = "InteractiveRender" )
+		nodeMenu.append( "/Appleseed/Interactive Render", GafferAppleseed.InteractiveAppleseedRender, searchText = "InteractiveAppleseedRender" )
 
 		scriptWindowMenu.append(
 			"/Help/Appleseed/User Docs",

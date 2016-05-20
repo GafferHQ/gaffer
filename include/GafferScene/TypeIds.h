@@ -128,6 +128,8 @@ enum TypeId
 	AttributeVisualiserTypeId = 110583,
 	SceneLoopTypeId = 110584,
 
+	PreviewInteractiveRenderTypeId = 110649,
+
 	LastTypeId = 110650
 };
 

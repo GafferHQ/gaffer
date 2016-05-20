@@ -111,6 +111,7 @@ from AttributeVisualiserTest  import AttributeVisualiserTest
 from SceneLoopTest import SceneLoopTest
 from SceneProcessorTest import SceneProcessorTest
 from MeshToPointsTest import MeshToPointsTest
+from InteractiveRenderTest import InteractiveRenderTest
 
 if __name__ == "__main__":
 	import unittest
