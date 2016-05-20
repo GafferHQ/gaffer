@@ -36,8 +36,8 @@
 
 import os
 import platform
-import sys
 import unittest
+import shutil
 
 import IECore
 
@@ -949,6 +949,36 @@ class ImageWriterTest( GafferImageTest.ImageTestCase ) :
 		d.jobPool().waitForAll()
 
 		self.assertTrue( os.path.isfile( s["w"]["fileName"].getValue() ) )
+
+	def testDerivingInPython( self ) :
+
+		class DerivedImageWriter( GafferImage.ImageWriter ) :
+
+			def __init__( self, name = "DerivedImageWriter" ) :
+
+				GafferImage.ImageWriter.__init__( self, name )
+
+				self["copyFileName"] = Gaffer.StringPlug()
+
+			def execute( self ) :
+
+				GafferImage.ImageWriter.execute( self )
+
+				shutil.copyfile( self["fileName"].getValue(), self["copyFileName"].getValue() )
+
+		IECore.registerRunTimeTyped( DerivedImageWriter )
+
+		c = GafferImage.Constant()
+
+		w = DerivedImageWriter()
+		w["in"].setInput( c["out"] )
+		w["fileName"].setValue( os.path.join( self.temporaryDirectory(), "test.exr" ) )
+		w["copyFileName"].setValue( os.path.join( self.temporaryDirectory(), "test2.exr" ) )
+
+		w["task"].execute()
+
+		self.assertTrue( os.path.isfile( w["fileName"].getValue() ) )
+		self.assertTrue( os.path.isfile( w["copyFileName"].getValue() ) )
 
 	def __testFile( self, mode, channels, ext ) :
 
