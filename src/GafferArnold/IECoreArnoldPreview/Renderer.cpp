@@ -409,11 +409,15 @@ class ArnoldObject : public IECoreScenePreview::Renderer::ObjectInterface
 			{
 				return;
 			}
-			const ArnoldAttributes *arnoldAttributes = static_cast<const ArnoldAttributes *>( attributes );
-			AiNodeSetByte( m_node, "visibility", arnoldAttributes->visibility );
-			AiNodeSetByte( m_node, "sidedness", arnoldAttributes->sidedness );
-			m_shader = arnoldAttributes->surfaceShader; // Keep shader alive as long as we are alive
-			AiNodeSetPtr( m_node, "shader", m_shader ? m_shader->root() : AiNodeLookUpByName( "ieCoreArnold:defaultShader" ) );
+
+			if( AiNodeEntryGetType( AiNodeGetNodeEntry( m_node ) ) == AI_NODE_SHAPE )
+			{
+				const ArnoldAttributes *arnoldAttributes = static_cast<const ArnoldAttributes *>( attributes );
+				AiNodeSetByte( m_node, "visibility", arnoldAttributes->visibility );
+				AiNodeSetByte( m_node, "sidedness", arnoldAttributes->sidedness );
+				m_shader = arnoldAttributes->surfaceShader; // Keep shader alive as long as we are alive
+				AiNodeSetPtr( m_node, "shader", m_shader ? m_shader->root() : AiNodeLookUpByName( "ieCoreArnold:defaultShader" ) );
+			}
 		}
 
 	private :
