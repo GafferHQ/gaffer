@@ -35,6 +35,8 @@
 #
 ##########################################################################
 
+import IECore
+
 import Gaffer
 import GafferUI
 import GafferArnold
@@ -111,6 +113,14 @@ def __errorColorsSummary( plug ) :
 
 	return ", ".join( info )
 
+def __loggingSummary( plug ) :
+
+	info = []
+	if plug["logFileName"]["enabled"].getValue() :
+		info.append( "File name" )
+
+	return ", ".join( info )
+
 def __licensingSummary( plug ) :
 
 	info = []
@@ -146,6 +156,7 @@ Gaffer.Metadata.registerNode(
 			"layout:section:Performance:summary", __performanceSummary,
 			"layout:section:Search Paths:summary", __searchPathsSummary,
 			"layout:section:Error Colors:summary", __errorColorsSummary,
+			"layout:section:Logging:summary", __loggingSummary,
 			"layout:section:Licensing:summary", __licensingSummary,
 
 		],
@@ -497,6 +508,29 @@ Gaffer.Metadata.registerNode(
 
 		],
 
+		# Logging
+
+		"options.logFileName" : [
+
+			"description",
+			"""
+			The name of a log file which Arnold will generate
+			while rendering.
+			""",
+
+			"layout:section", "Logging",
+			"label", "File Name",
+
+		],
+
+		"options.logFileName.value" : [
+
+			"plugValueWidget:type", "GafferUI.FileSystemPathPlugValueWidget",
+			"pathPlugValueWidget:leaf", True,
+			"fileSystemPathPlugValueWidget:extensions", IECore.StringVectorData( [ "txt", "log" ] ),
+			"fileSystemPathPlugValueWidget:extensionsLabel", "Show only log files",
+
+		],
 
 		# Licensing
 

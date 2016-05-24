@@ -491,6 +491,7 @@ namespace
 IECore::InternedString g_cameraOptionName( "camera" );
 IECore::InternedString g_resolutionOptionName( "resolution" );
 IECore::InternedString g_pixelAspectRatioOptionName( "pixelAspectRatio" );
+IECore::InternedString g_logFileNameOptionName( "ai:log:filename" );
 
 class ArnoldRenderer : public IECoreScenePreview::Renderer
 {
@@ -560,6 +561,18 @@ class ArnoldRenderer : public IECoreScenePreview::Renderer
 					AiNodeSetInt( options, "aspect_ratio", 1.0f / d->readable() ); // arnold is y/x, we're x/y
 				}
 				return;
+			}
+			else if( name == g_logFileNameOptionName )
+			{
+				if( value == NULL )
+				{
+					AiMsgSetLogFileName( "" );
+				}
+				else if( const IECore::StringData *d = reportedCast<const IECore::StringData>( value, "option", name ) )
+				{
+					AiMsgSetLogFileName( d->readable().c_str() );
+
+				}
 			}
 			else if( boost::starts_with( name.c_str(), "ai:" ) )
 			{
