@@ -50,6 +50,8 @@ IE_CORE_FORWARDDECLARE( ScenePlug )
 
 /// Base class for executable nodes which perform a render of some sort
 /// in the execute() method.
+/// Note that this is in the process of being replaced by the
+/// GafferScene::Preview::Render node.
 class ExecutableRender : public GafferDispatch::ExecutableNode
 {
 
