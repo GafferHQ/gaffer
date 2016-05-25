@@ -558,11 +558,11 @@ class ArnoldRenderer : public IECoreScenePreview::Renderer
 			{
 				if( value == NULL )
 				{
-					AiNodeSetInt( options, "aspect_ratio", 1.0f );
+					AiNodeSetInt( options, "aspect_ratio", 1 );
 				}
 				else if( const IECore::FloatData *d = reportedCast<const IECore::FloatData>( value, "option", name ) )
 				{
-					AiNodeSetInt( options, "aspect_ratio", 1.0f / d->readable() ); // arnold is y/x, we're x/y
+					AiNodeSetInt( options, "aspect_ratio", int(1.0f / d->readable()) ); // arnold is y/x, we're x/y
 				}
 				return;
 			}
