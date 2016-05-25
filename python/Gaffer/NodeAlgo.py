@@ -136,5 +136,5 @@ def __applyUserDefaults( graphComponent ) :
 		if plugValue is not None :
 			graphComponent.setValue( plugValue )
 
-	for child in graphComponent.children() :
-		__applyUserDefaults( child )
+	for plug in graphComponent.children( Gaffer.Plug ) :
+		__applyUserDefaults( plug )
