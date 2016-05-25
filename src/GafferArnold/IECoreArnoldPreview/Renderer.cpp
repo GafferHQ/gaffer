@@ -386,6 +386,16 @@ class ArnoldObject : public IECoreScenePreview::Renderer::ObjectInterface
 			}
 		}
 
+		ArnoldObject( const std::string &name, const std::vector<const IECore::Object *> &samples, const std::vector<float> &times )
+			:	m_node( NULL )
+		{
+			m_node = NodeAlgo::convert( samples, times );
+			if( m_node )
+			{
+				AiNodeSetStr( m_node, "name", name.c_str() );
+			}
+		}
+
 		virtual ~ArnoldObject()
 		{
 			if( m_node )
@@ -401,6 +411,31 @@ class ArnoldObject : public IECoreScenePreview::Renderer::ObjectInterface
 				return;
 			}
 			AiNodeSetMatrix( m_node, "matrix", const_cast<float (*)[4]>( transform.x ) );
+		}
+
+		virtual void transform( const std::vector<Imath::M44f> &samples, const std::vector<float> &times )
+		{
+			if( !m_node )
+			{
+				return;
+			}
+			const size_t numSamples = samples.size();
+			AtArray *timesArray = AiArrayAllocate( samples.size(), 1, AI_TYPE_FLOAT );
+			AtArray *matricesArray = AiArrayAllocate( 1, numSamples, AI_TYPE_MATRIX );
+			for( size_t i = 0; i < numSamples; ++i )
+			{
+				AiArraySetFlt( timesArray, i, times[i] );
+				AiArraySetMtx( matricesArray, i, const_cast<float (*)[4]>( samples[i].x ) );
+			}
+			AiNodeSetArray( m_node, "matrix", matricesArray );
+			if( AiNodeEntryLookUpParameter( AiNodeGetNodeEntry( m_node ), "transform_time_samples" ) )
+			{
+				AiNodeSetArray( m_node, "transform_time_samples", timesArray );
+			}
+			else
+			{
+				AiNodeSetArray( m_node, "time_samples", matricesArray );
+			}
 		}
 
 		virtual void attributes( const IECoreScenePreview::Renderer::AttributesInterface *attributes )
@@ -657,6 +692,11 @@ class ArnoldRenderer : public IECoreScenePreview::Renderer
 		virtual Renderer::ObjectInterfacePtr object( const std::string &name, const IECore::Object *object )
 		{
 			return new ArnoldObject( name, object );
+		}
+
+		virtual ObjectInterfacePtr object( const std::string &name, const std::vector<const IECore::Object *> &samples, const std::vector<float> &times )
+		{
+			return new ArnoldObject( name, samples, times );
 		}
 
 		virtual void render()

@@ -133,6 +133,8 @@ class Renderer : public IECore::RefCounted
 				/// Assigns a transform to the object. For Interactive renders
 				/// transforms may be modified at any time the renderer is paused.
 				virtual void transform( const Imath::M44f &transform ) = 0;
+				/// As above, but specifying a moving transform.
+				virtual void transform( const std::vector<Imath::M44f> &samples, const std::vector<float> &times ) = 0;
 				/// Assigns a block of attributes to the object, replacing any
 				/// previously assigned attributes. For Interactive renders
 				/// attributes may be modified at any time the renderer is paused.
@@ -161,6 +163,8 @@ class Renderer : public IECore::RefCounted
 		/// Object here, but still pass CoordinateSystems. Or should
 		/// coordinate systems have their own dedicated calls?
 		virtual ObjectInterfacePtr object( const std::string &name, const IECore::Object *object ) = 0;
+		/// As above, but specifying a deforming object.
+		virtual ObjectInterfacePtr object( const std::string &name, const std::vector<const IECore::Object *> &samples, const std::vector<float> &times ) = 0;
 
 		/// Performs the render - should be called after the
 		/// entire scene has been specified using the methods
