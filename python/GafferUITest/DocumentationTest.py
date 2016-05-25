@@ -34,16 +34,44 @@
 #
 ##########################################################################
 
+import IECore
+
 import Gaffer
 import GafferUI
 import GafferUITest
 
 class DocumentationTest( GafferUITest.TestCase ) :
 
-	def test( self ) :
+	def testNodeDocumentation( self ) :
 
 		self.maxDiff = None
 		self.assertNodesAreDocumented( Gaffer )
+
+	def testApplicationDocumentation( self ) :
+
+		def walkParameters( parameter, undocumentedParameters, parameterName ) :
+
+			if "." in parameterName and parameter.description == "" :
+				undocumentedParameters.append( parameterName )
+
+			if isinstance( parameter, IECore.CompoundParameter ) :
+				for childParameterName, childParameter in parameter.items() :
+					walkParameters( childParameter, undocumentedParameters, parameterName + "." + childParameterName )
+
+		undocumentedApps = []
+		undocumentedParameters = []
+
+		appLoader = IECore.ClassLoader.defaultLoader( "GAFFER_APP_PATHS" )
+		for appName in appLoader.classNames() :
+			app = appLoader.load( appName )()
+
+			if app.description == "" :
+				undocumentedApps.append( appName )
+
+			walkParameters( app.parameters(), undocumentedParameters, appName )
+
+		self.assertEqual( undocumentedApps, [] )
+		self.assertEqual( undocumentedParameters, [] )
 
 if __name__ == "__main__":
 	unittest.main()
