@@ -116,7 +116,7 @@ std::vector<AtNode *> convert( const IECore::ObjectVector *shaderNetwork )
 					}
 					continue;
 				}
-				else if( value == "__handle" )
+				else if( pIt->first.value() == "__handle" )
 				{
 					shaderMap[value] = node;
 					continue;
