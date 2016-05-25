@@ -583,13 +583,27 @@ class ArnoldRenderer : public IECoreScenePreview::Renderer
 				const AtParamEntry *parameter = AiNodeEntryLookUpParameter( AiNodeGetNodeEntry( options ), name.c_str() + 3 );
 				if( parameter )
 				{
-					ParameterAlgo::setParameter( options, name.c_str() + 3, value );
+					if( value )
+					{
+						ParameterAlgo::setParameter( options, name.c_str() + 3, value );
+					}
+					else
+					{
+						AiNodeResetParameter( options, name.c_str() + 3 );
+					}
 					return;
 				}
 			}
 			else if( boost::starts_with( name.c_str(), "user:" ) )
 			{
-				ParameterAlgo::setParameter( options, name.c_str(), value );
+				if( value )
+				{
+					ParameterAlgo::setParameter( options, name.c_str(), value );
+				}
+				else
+				{
+					AiNodeResetParameter( options, name.c_str() );
+				}
 				return;
 			}
 			else if( boost::contains( name.c_str(), ":" ) )
