@@ -271,23 +271,21 @@ class InteractiveRender::SceneGraph
 		// to apply the attributes to the new object.
 		void finalise( IECoreScenePreview::Renderer *renderer )
 		{
-			if( !m_objectInterface )
+			if( m_objectInterface )
 			{
-				return;
-			}
-
-			if( m_pending & ( TransformPending | ObjectPending ) )
-			{
-				m_objectInterface->transform( m_fullTransform );
-			}
-
-			if( m_pending & ( AttributesPending | ObjectPending ) )
-			{
-				if( !m_attributesInterface )
+				if( m_pending & ( TransformPending | ObjectPending ) )
 				{
-					m_attributesInterface = renderer->attributes( m_fullAttributes.get() );
+					m_objectInterface->transform( m_fullTransform );
 				}
-				m_objectInterface->attributes( m_attributesInterface.get() );
+
+				if( m_pending & ( AttributesPending | ObjectPending ) )
+				{
+					if( !m_attributesInterface )
+					{
+						m_attributesInterface = renderer->attributes( m_fullAttributes.get() );
+					}
+					m_objectInterface->attributes( m_attributesInterface.get() );
+				}
 			}
 
 			m_pending = NonePending;
