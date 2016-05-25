@@ -47,72 +47,26 @@ Gaffer.Metadata.registerNode(
 	"description",
 	"""
 	Performs offline batch rendering using the
-	Arnold renderer. This is done in two phases -
-	first a .ass file is generated and then Arnold
-	is invoked to render it. Note though that the .ass
-	file is lightweight, and contains little more than
-	a procedural which will use Gaffer to generate the
-	scene at render time.
+	Arnold renderer, or optionally generates
+	.ass files for later rendering using a SystemCommand
+	node.
 	""",
 
 	plugs = {
-
-		"mode" : [
-
-			"description",
-			"""
-			When in the standard "Render" mode, an .ass
-			file is generated and then renderered in Arnold.
-			Alternatively, just the .ass file can be generated
-			and then another method can be used to post-process
-			it or launch the render - a SystemCommand node may
-			be useful for this. Finally, an expanded .ass file
-			may be generated - this will contain the entire
-			expanded scene rather than just a procedural, and can
-			be useful for debugging.
-			""",
-
-			"preset:Render", "render",
-			"preset:Generate .ass only", "generate",
-			"preset:Generate expanded .ass", "expand",
-
-			"nodule:type", "",
-			"plugValueWidget:type", "GafferUI.PresetsPlugValueWidget",
-
-		],
 
 		"fileName" : [
 
 			"description",
 			"""
-			The name of the .ass file to be generated.
+			The name of the .ass file to be generated when in
+			scene description mode. If a ".ass.gz" extension
+			is used, then the ass file will be compressed
+			automatically.
 			""",
 
 			"nodule:type", "",
-			"plugValueWidget:type", "GafferUI.FileSystemPathPlugValueWidget",
 			"pathPlugValueWidget:bookmarks", "ass",
-			"pathPlugValueWidget:leaf", True,
-			"fileSystemPathPlugValueWidget:extensions", IECore.StringVectorData( [ "ass" ] ),
-
-		],
-
-		"verbosity" : [
-
-			"description",
-			"""
-			Controls the verbosity of the Arnold renderer output.
-			""",
-
-			"preset:0", 0,
-			"preset:1", 1,
-			"preset:2", 2,
-			"preset:3", 3,
-			"preset:4", 4,
-			"preset:5", 5,
-			"preset:6", 6,
-
-			"nodule:type", "",
-			"plugValueWidget:type", "GafferUI.PresetsPlugValueWidget",
+			"fileSystemPathPlugValueWidget:extensions", IECore.StringVectorData( [ "ass", "ass.gz" ] ),
 
 		],
 

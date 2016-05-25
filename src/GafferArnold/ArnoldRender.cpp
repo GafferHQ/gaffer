@@ -1,7 +1,6 @@
 //////////////////////////////////////////////////////////////////////////
 //
-//  Copyright (c) 2012, John Haddon. All rights reserved.
-//  Copyright (c) 2013, Image Engine Design Inc. All rights reserved.
+//  Copyright (c) 2016, Image Engine Design Inc. All rights reserved.
 //
 //  Redistribution and use in source and binary forms, with or without
 //  modification, are permitted provided that the following conditions are
@@ -35,25 +34,18 @@
 //
 //////////////////////////////////////////////////////////////////////////
 
-#ifndef GAFFERARNOLD_TYPEIDS_H
-#define GAFFERARNOLD_TYPEIDS_H
+#include "GafferArnold/ArnoldRender.h"
 
-namespace GafferArnold
+using namespace GafferScene;
+using namespace GafferArnold;
+
+IE_CORE_DEFINERUNTIMETYPED( ArnoldRender );
+
+ArnoldRender::ArnoldRender( const std::string &name )
+	:	Render( "IECoreArnold::Renderer", name )
 {
+}
 
-enum TypeId
+ArnoldRender::~ArnoldRender()
 {
-	ArnoldShaderTypeId = 110900,
-	ArnoldOptionsTypeId = 110901,
-	ArnoldAttributesTypeId = 110902,
-	ArnoldLightTypeId = 110903,
-	ArnoldVDBTypeId = 110904,
-	InteractiveArnoldRenderTypeId = 110905,
-	ArnoldRenderTypeId = 110906,
-
-	LastTypeId = 110949
-};
-
-} // namespace GafferArnold
-
-#endif // GAFFERARNOLD_TYPEIDS_H
+}
