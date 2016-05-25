@@ -42,6 +42,7 @@
 
 #include "GafferScene/OpenGLRender.h"
 #include "GafferScene/InteractiveRender.h"
+#include "GafferScene/Preview/Render.h"
 #include "GafferScene/Preview/InteractiveRender.h"
 #include "GafferScene/Private/IECoreScenePreview/Renderer.h"
 
@@ -193,15 +194,28 @@ void GafferSceneBindings::bindRender()
 
 		scope previewScope( previewModule );
 
-		scope s = GafferBindings::NodeClass<GafferScene::Preview::InteractiveRender>()
-			.def( "getContext", &previewInteractiveRenderGetContext )
-			.def( "setContext", &GafferScene::Preview::InteractiveRender::setContext );
+		{
+			scope s = GafferBindings::NodeClass<GafferScene::Preview::InteractiveRender>()
+				.def( "getContext", &previewInteractiveRenderGetContext )
+				.def( "setContext", &GafferScene::Preview::InteractiveRender::setContext )
+			;
 
-		enum_<GafferScene::Preview::InteractiveRender::State>( "State" )
-			.value( "Stopped", GafferScene::Preview::InteractiveRender::Stopped )
-			.value( "Running", GafferScene::Preview::InteractiveRender::Running )
-			.value( "Paused", GafferScene::Preview::InteractiveRender::Paused )
-		;
+			enum_<GafferScene::Preview::InteractiveRender::State>( "State" )
+				.value( "Stopped", GafferScene::Preview::InteractiveRender::Stopped )
+				.value( "Running", GafferScene::Preview::InteractiveRender::Running )
+				.value( "Paused", GafferScene::Preview::InteractiveRender::Paused )
+			;
+		}
+
+		{
+			scope s = ExecutableNodeClass<GafferScene::Preview::Render>();
+
+			enum_<GafferScene::Preview::Render::Mode>( "Mode" )
+				.value( "RenderMode", GafferScene::Preview::Render::RenderMode )
+				.value( "SceneDescriptionMode", GafferScene::Preview::Render::SceneDescriptionMode )
+			;
+		}
+
 	}
 
 	{
