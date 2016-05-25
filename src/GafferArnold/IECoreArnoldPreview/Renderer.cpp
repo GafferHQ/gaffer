@@ -52,6 +52,8 @@
 #include "IECoreArnold/NodeAlgo.h"
 #include "IECoreArnold/UniverseBlock.h"
 
+#include "Gaffer/StringAlgo.h"
+
 #include "GafferScene/Private/IECoreScenePreview/Renderer.h"
 
 #include "GafferArnold/Private/IECoreArnoldPreview/ShaderAlgo.h"
@@ -79,6 +81,128 @@ T *reportedCast( const IECore::RunTimeTyped *v, const char *type, const IECore::
 	IECore::msg( IECore::Msg::Warning, "IECoreArnold::Renderer", boost::format( "Expected %s but got %s for %s \"%s\"." ) % T::staticTypeName() % v->typeName() % type % name.c_str() );
 	return NULL;
 }
+
+template<typename T>
+T parameter( const IECore::CompoundDataMap &parameters, const IECore::InternedString &name, const T &defaultValue )
+{
+	IECore::CompoundDataMap::const_iterator it = parameters.find( name );
+	if( it == parameters.end() )
+	{
+		return defaultValue;
+	}
+
+	typedef IECore::TypedData<T> DataType;
+	if( const DataType *d = reportedCast<const DataType>( it->second.get(), "parameter", name ) )
+	{
+		return d->readable();
+	}
+	else
+	{
+		return defaultValue;
+	}
+}
+
+} // namespace
+
+//////////////////////////////////////////////////////////////////////////
+// ArnoldOutput
+//////////////////////////////////////////////////////////////////////////
+
+namespace
+{
+
+class ArnoldOutput : public IECore::RefCounted
+{
+
+	public :
+
+		ArnoldOutput( const IECore::InternedString &name, const IECoreScenePreview::Renderer::Output *output )
+		{
+			// Create a driver node and set its parameters.
+
+			std::string driverNodeType = output->getType();
+			if( AiNodeEntryGetType( AiNodeEntryLookUp( driverNodeType.c_str() ) ) != AI_NODE_DRIVER )
+			{
+				// Automatically map tiff to driver_tiff and so on, to provide a degree of
+				// compatibility with existing renderman driver names.
+				std::string prefixedType = "driver_" + driverNodeType;
+				if( AiNodeEntryLookUp( prefixedType.c_str() ) )
+				{
+					driverNodeType = prefixedType;
+				}
+			}
+
+			m_driver.reset( AiNode( driverNodeType.c_str() ), AiNodeDestroy );
+			if( !m_driver )
+			{
+				throw IECore::Exception( boost::str( boost::format( "Unable to create output driver of type \"%s\"" ) % driverNodeType ) );
+			}
+
+			const std::string driverNodeName = boost::str( boost::format( "ieCoreArnold:display:%s" ) % name.string() );
+			AiNodeSetStr( m_driver.get(), "name", driverNodeName.c_str() );
+
+			if( const AtParamEntry *fileNameParameter = AiNodeEntryLookUpParameter( AiNodeGetNodeEntry( m_driver.get() ), "filename" ) )
+			{
+				AiNodeSetStr( m_driver.get(), AiParamGetName( fileNameParameter ), output->getName().c_str() );
+			}
+
+			ParameterAlgo::setParameters( m_driver.get(), output->parameters() );
+
+			// Create a filter.
+
+			std::string filterNodeType = parameter<std::string>( output->parameters(), "filter", "gaussian" );
+			if( AiNodeEntryGetType( AiNodeEntryLookUp( filterNodeType.c_str() ) ) != AI_NODE_FILTER )
+			{
+				filterNodeType = filterNodeType + "_filter";
+			}
+
+			m_filter.reset( AiNode( filterNodeType.c_str() ), AiNodeDestroy );
+			if( AiNodeEntryGetType( AiNodeGetNodeEntry( m_filter.get() ) ) != AI_NODE_FILTER )
+			{
+				throw IECore::Exception( boost::str( boost::format( "Unable to create filter of type \"%s\"" ) % filterNodeType ) );
+			}
+
+			const std::string filterNodeName = boost::str( boost::format( "ieCoreArnold:filter:%s" ) % name.string() );
+			AiNodeSetStr( m_filter.get(), "name", filterNodeName.c_str() );
+
+			// Convert the data specification to the form
+			// supported by Arnold.
+
+			m_data = output->getData();
+
+			if( m_data=="rgb" )
+			{
+				m_data = "RGB RGB";
+			}
+			else if( m_data=="rgba" )
+			{
+				m_data = "RGBA RGBA";
+			}
+			else
+			{
+				vector<std::string> tokens;
+				Gaffer::tokenize( m_data, ' ', tokens );
+				if( tokens.size() == 2 && tokens[0] == "color" )
+				{
+					m_data = tokens[1] + " RGBA";
+				}
+			}
+		}
+
+		std::string string() const
+		{
+			return boost::str( boost::format( "%s %s %s" ) % m_data % AiNodeGetName( m_filter.get() ) % AiNodeGetName( m_driver.get() ) );
+		}
+
+	private :
+
+		boost::shared_ptr<AtNode> m_driver;
+		boost::shared_ptr<AtNode> m_filter;
+		std::string m_data;
+
+};
+
+IE_CORE_DECLAREPTR( ArnoldOutput )
 
 } // namespace
 
@@ -285,11 +409,15 @@ class ArnoldObject : public IECoreScenePreview::Renderer::ObjectInterface
 			{
 				return;
 			}
-			const ArnoldAttributes *arnoldAttributes = static_cast<const ArnoldAttributes *>( attributes );
-			AiNodeSetByte( m_node, "visibility", arnoldAttributes->visibility );
-			AiNodeSetByte( m_node, "sidedness", arnoldAttributes->sidedness );
-			m_shader = arnoldAttributes->surfaceShader; // Keep shader alive as long as we are alive
-			AiNodeSetPtr( m_node, "shader", m_shader ? m_shader->root() : AiNodeLookUpByName( "ieCoreArnold:defaultShader" ) );
+
+			if( AiNodeEntryGetType( AiNodeGetNodeEntry( m_node ) ) == AI_NODE_SHAPE )
+			{
+				const ArnoldAttributes *arnoldAttributes = static_cast<const ArnoldAttributes *>( attributes );
+				AiNodeSetByte( m_node, "visibility", arnoldAttributes->visibility );
+				AiNodeSetByte( m_node, "sidedness", arnoldAttributes->sidedness );
+				m_shader = arnoldAttributes->surfaceShader; // Keep shader alive as long as we are alive
+				AiNodeSetPtr( m_node, "shader", m_shader ? m_shader->root() : AiNodeLookUpByName( "ieCoreArnold:defaultShader" ) );
+			}
 		}
 
 	private :
@@ -367,6 +495,7 @@ namespace
 IECore::InternedString g_cameraOptionName( "camera" );
 IECore::InternedString g_resolutionOptionName( "resolution" );
 IECore::InternedString g_pixelAspectRatioOptionName( "pixelAspectRatio" );
+IECore::InternedString g_logFileNameOptionName( "ai:log:filename" );
 
 class ArnoldRenderer : public IECoreScenePreview::Renderer
 {
@@ -380,9 +509,6 @@ class ArnoldRenderer : public IECoreScenePreview::Renderer
 		{
 			/// \todo Control with an option.
 			AiMsgSetConsoleFlags( AI_LOG_ALL );
-
-			m_defaultFilter = AiNode( "gaussian_filter" );
-			AiNodeSetStr( m_defaultFilter, "name", "ieCoreArnold:defaultFilter" );
 
 			m_defaultShader = AiNode( "utility" );
 			AiNodeSetStr( m_defaultShader, "name", "ieCoreArnold:defaultShader" );
@@ -440,18 +566,44 @@ class ArnoldRenderer : public IECoreScenePreview::Renderer
 				}
 				return;
 			}
+			else if( name == g_logFileNameOptionName )
+			{
+				if( value == NULL )
+				{
+					AiMsgSetLogFileName( "" );
+				}
+				else if( const IECore::StringData *d = reportedCast<const IECore::StringData>( value, "option", name ) )
+				{
+					AiMsgSetLogFileName( d->readable().c_str() );
+
+				}
+			}
 			else if( boost::starts_with( name.c_str(), "ai:" ) )
 			{
 				const AtParamEntry *parameter = AiNodeEntryLookUpParameter( AiNodeGetNodeEntry( options ), name.c_str() + 3 );
 				if( parameter )
 				{
-					ParameterAlgo::setParameter( options, name.c_str() + 3, value );
+					if( value )
+					{
+						ParameterAlgo::setParameter( options, name.c_str() + 3, value );
+					}
+					else
+					{
+						AiNodeResetParameter( options, name.c_str() + 3 );
+					}
 					return;
 				}
 			}
 			else if( boost::starts_with( name.c_str(), "user:" ) )
 			{
-				ParameterAlgo::setParameter( options, name.c_str(), value );
+				if( value )
+				{
+					ParameterAlgo::setParameter( options, name.c_str(), value );
+				}
+				else
+				{
+					AiNodeResetParameter( options, name.c_str() );
+				}
 				return;
 			}
 			else if( boost::contains( name.c_str(), ":" ) )
@@ -465,79 +617,23 @@ class ArnoldRenderer : public IECoreScenePreview::Renderer
 
 		virtual void output( const IECore::InternedString &name, const Output *output )
 		{
-			// Find any preexisting output of the same name and
-			// remove it.
-
-			ArnoldOutput &arnoldOutput = m_outputs[name];
-			if( arnoldOutput.driver )
+			m_outputs.erase( name );
+			if( output )
 			{
-				AiNodeDestroy( arnoldOutput.driver );
-			}
-
-			// If there is no new output, then we're done.
-
-			if( !output )
-			{
-				return;
-			}
-
-			// Make a driver for the new output.
-
-			if( AiNodeEntryLookUp( output->getType().c_str() ) )
-			{
-				arnoldOutput.driver = AiNode( output->getType().c_str() );
-			}
-			else
-			{
-				// Automatically map tiff to driver_tiff and so on, to provide a degree of
-				// compatibility with existing renderman driver names.
-				std::string prefixedType = "driver_" + output->getType();
-				if( AiNodeEntryLookUp( prefixedType.c_str() ) )
+				try
 				{
-					arnoldOutput.driver = AiNode( prefixedType.c_str() );
+					m_outputs[name] = new ArnoldOutput( name, output );
+				}
+				catch( const std::exception &e )
+				{
+					IECore::msg( IECore::Msg::Warning, "IECoreArnold::Renderer::output", e.what() );
 				}
 			}
-
-			if( arnoldOutput.driver )
-			{
-				string nodeName = boost::str( boost::format( "ieCoreArnold:display%s" ) % name.string() );
-				AiNodeSetStr( arnoldOutput.driver, "name", nodeName.c_str() );
-
-				if( const AtParamEntry *fileNameParameter = AiNodeEntryLookUpParameter( AiNodeGetNodeEntry( arnoldOutput.driver ), "filename" ) )
-				{
-					AiNodeSetStr( arnoldOutput.driver, AiParamGetName( fileNameParameter ), output->getName().c_str() );
-				}
-
-				ParameterAlgo::setParameters( arnoldOutput.driver, output->parameters() );
-			}
-			else
-			{
-				IECore::msg( IECore::Msg::Error, "IECoreArnold::Renderer::output", boost::format( "Unable to create output of type \"%s\"" ) % output->getType() );
-				return;
-			}
-
-			// Convert the data specification to the form
-			// supported by Arnold.
-
-			arnoldOutput.data = output->getData();
-
-			if( arnoldOutput.data=="rgb" )
-			{
-				arnoldOutput.data = "RGB RGB";
-			}
-			else if( arnoldOutput.data=="rgba" )
-			{
-				arnoldOutput.data = "RGBA RGBA";
-			}
-
-			// Specify all current outputs via the Arnold options node.
 
 			IECore::StringVectorDataPtr outputs = new IECore::StringVectorData;
 			for( OutputMap::const_iterator it = m_outputs.begin(), eIt = m_outputs.end(); it != eIt; ++it )
 			{
-				outputs->writable().push_back(
-					boost::str( boost::format( "%s %s %s" ) % it->second.data % AiNodeGetName( m_defaultFilter ) % AiNodeGetName( it->second.driver ) )
-				);
+				outputs->writable().push_back( it->second->string() );
 			}
 
 			IECoreArnold::ParameterAlgo::setParameter( AiUniverseGetOptions(), "outputs", outputs.get() );
@@ -546,6 +642,11 @@ class ArnoldRenderer : public IECoreScenePreview::Renderer
 		virtual Renderer::AttributesInterfacePtr attributes( const IECore::CompoundObject *attributes )
 		{
 			return new ArnoldAttributes( attributes );
+		}
+
+		virtual ObjectInterfacePtr camera( const std::string &name, const IECore::Camera *camera )
+		{
+			return new ArnoldObject( name, camera );
 		}
 
 		virtual ObjectInterfacePtr light( const std::string &name, const IECore::Object *object = NULL )
@@ -633,17 +734,10 @@ class ArnoldRenderer : public IECoreScenePreview::Renderer
 
 		boost::shared_ptr<IECoreArnold::UniverseBlock> m_universeBlock;
 
-		AtNode *m_defaultFilter;
 		AtNode *m_defaultShader;
 		AtNode *m_defaultCamera;
 
-		struct ArnoldOutput
-		{
-			ArnoldOutput() : driver( NULL ) {}
-			AtNode *driver;
-			std::string data;
-		};
-		typedef std::map<IECore::InternedString, ArnoldOutput> OutputMap;
+		typedef std::map<IECore::InternedString, ArnoldOutputPtr> OutputMap;
 		OutputMap m_outputs;
 
 		std::string m_cameraName;

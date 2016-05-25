@@ -39,6 +39,7 @@
 
 #include "IECore/CompoundObject.h"
 #include "IECore/Display.h"
+#include "IECore/Camera.h"
 
 namespace IECoreScenePreview
 {
@@ -115,7 +116,13 @@ class Renderer : public IECore::RefCounted
 
 		IE_CORE_FORWARDDECLARE( ObjectInterface );
 
-		/// A handle to an object in the renderer.
+		/// A handle to an object in the renderer. The reference counting semantics of an
+		/// ObjectInterfacePtr are as follows :
+		///
+		/// - For Interactive renders, releasing the Ptr (removing the last reference)
+		///   removes the object from the render.
+		/// - For Batch and SceneDescription renders, releasing the Ptr flushes the
+		///   object to the renderer.
 		class ObjectInterface : public IECore::RefCounted
 		{
 
@@ -137,28 +144,22 @@ class Renderer : public IECore::RefCounted
 
 		};
 
-		/// Adds a named light to the render. The reference counting semantics of
-		/// the returned Ptr are the same as for the object() method. A shader for
-		/// the light is expected to be provided by a subsequently assigned attribute
-		/// block in a renderer specific fashion. Object may be non-NULL to specify
-		/// arbitrary geometry for a geometric area light, or NULL to indicate that
-		/// the light shader specifies its own geometry internally (or is non-geometric
-		/// in nature).
+		/// Adds a named camera to the render. Cameras should be specified prior to all
+		/// other lights/objects, as some renderers (for instance a streaming OpenGL renderer)
+		/// may be unable to operate otherwise.
+		virtual ObjectInterfacePtr camera( const std::string &name, const IECore::Camera *camera ) = 0;
+
+		/// Adds a named light to the render. A shader for the light is expected to be
+		/// provided by a subsequently assigned attribute block in a renderer specific
+		/// fashion. Object may be non-NULL to specify arbitrary geometry for a geometric
+		/// area light, or NULL to indicate that the light shader specifies its own geometry
+		/// internally (or is non-geometric in nature).
 		virtual ObjectInterfacePtr light( const std::string &name, const IECore::Object *object = NULL ) = 0;
 
-		/// Adds a named object to the render. The reference counting semantics of the
-		/// returned Ptr are as follows :
-		///
-		/// - For Interactive renders, releasing the Ptr (removing the last reference)
-		///   removes the object from the render.
-		/// - For Batch and SceneDescription renders, releasing the Ptr flushes the
-		///   object to the renderer.
-		///
+		/// Adds a named object to the render.
 		/// \todo Rejig class hierarchy so we can have something less generic than
-		/// Object here, but still pass Cameras and CoordinateSystems. Or should
-		/// cameras and coordinate systems have their own dedicated calls? Perhaps they
-		/// should, on the grounds that a streaming OpenGL render would need the camera
-		/// first, and we can make that clearer if it has its own method?
+		/// Object here, but still pass CoordinateSystems. Or should
+		/// coordinate systems have their own dedicated calls?
 		virtual ObjectInterfacePtr object( const std::string &name, const IECore::Object *object ) = 0;
 
 		/// Performs the render - should be called after the

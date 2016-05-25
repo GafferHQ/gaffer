@@ -151,6 +151,27 @@ class InteractiveRenderTest( GafferSceneTest.SceneTestCase ) :
 
 		self.assertTrue( IECore.ImageDisplayDriver.storedImage( "myLovelySphere2" ) is None )
 
+		# Add a third image and check we can have that too.
+
+		s["o"].addOutput(
+			"beauty3",
+			IECore.Display(
+				"test1",
+				"ieDisplay",
+				"rgba",
+				{
+					"driverType" : "ImageDisplayDriver",
+					"handle" : "myLovelySphere3",
+				}
+			)
+		)
+
+		time.sleep( 0.5 )
+
+		self.assertTrue( isinstance( IECore.ImageDisplayDriver.storedImage( "myLovelySphere1" ), IECore.ImagePrimitive ) )
+		self.assertTrue( IECore.ImageDisplayDriver.storedImage( "myLovelySphere2" ) is None )
+		self.assertTrue( isinstance( IECore.ImageDisplayDriver.storedImage( "myLovelySphere3" ), IECore.ImagePrimitive ) )
+
 	def testAddAndRemoveLocation( self ) :
 
 		s = Gaffer.ScriptNode()
