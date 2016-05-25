@@ -36,6 +36,7 @@
 ##########################################################################
 
 import os
+import inspect
 import cProfile
 
 import IECore
@@ -46,7 +47,7 @@ class Application( IECore.Parameterised ) :
 
 	def __init__( self, description="" ) :
 
-		IECore.Parameterised.__init__( self, description )
+		IECore.Parameterised.__init__( self, inspect.cleandoc( description ) )
 
 		self.parameters().addParameters(
 

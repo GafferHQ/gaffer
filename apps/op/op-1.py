@@ -42,7 +42,13 @@ class op( Gaffer.Application ) :
 
 	def __init__( self ) :
 
-		Gaffer.Application.__init__( self )
+		Gaffer.Application.__init__(
+			self,
+			"""
+			Executes Cortex ops, either directly or via
+			a simple graphical user interface.
+			"""
+		)
 
 		self.parameters().addParameters(
 

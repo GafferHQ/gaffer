@@ -48,17 +48,28 @@ class env( Gaffer.Application ) :
 
 		Gaffer.Application.__init__(
 			self,
-			"Runs command lines in a modified Gaffer environment. "
-			"This is useful for running the binary utilities supplied with Gaffer.\n"
-			"without it.\n"
-			"\n"
-			"Usage : \n"
-			"\n"
-			"	gaffer env [name=value ...] [utility [argument ...]]\n"
-			"\n"
-			"Example : \n"
-			"\n"
-			"	gaffer env maketx input.exr"
+			"""
+			Runs shell commands in the Gaffer environment
+			(after the Gaffer wrapper has been run), so they have access
+			to all the libraries and modules available within Gaffer.
+
+			This is useful for running the binary utilities supplied with Gaffer,
+			or for running python scripts which need to import Gaffer's python
+			modules.
+
+			Usage :
+
+			```
+			gaffer env [name=value ...] [utility [argument ...]]
+			```
+
+			Examples :
+
+			```
+			gaffer env maketx input.exr
+			gaffer env python script.py
+			```
+			"""
 		)
 
 		self.parameters().addParameters(

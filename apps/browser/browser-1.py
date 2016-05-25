@@ -49,7 +49,16 @@ class browser( Gaffer.Application ) :
 
 	def __init__( self ) :
 
-		Gaffer.Application.__init__( self )
+		Gaffer.Application.__init__(
+			self,
+			"""
+			A file browser with the ability to preview
+			images and caches using Gaffer's viewers. This
+			is the same as the Browser panel from the main
+			gui application, but running as a standalone
+			application.
+			"""
+		)
 
 		self.parameters().addParameters(
 

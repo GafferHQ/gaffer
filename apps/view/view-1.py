@@ -46,7 +46,15 @@ class view( Gaffer.Application ) :
 
 	def __init__( self ) :
 
-		Gaffer.Application.__init__( self )
+		Gaffer.Application.__init__(
+			self,
+			"""
+			Uses Gaffer's viewers and widgets to provide
+			a preview of a file. This is equivalent to the
+			preview pane in the Browser panel or the browser
+			app.
+			"""
+		)
 
 		self.parameters().addParameters(
 

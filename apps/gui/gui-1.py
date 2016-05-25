@@ -49,7 +49,10 @@ class gui( Gaffer.Application ) :
 
 		Gaffer.Application.__init__(
 			self,
-			"This application provides a graphical user interface for editing node graphs."
+			"""
+			A graphical user interface for editing node graphs. This is
+			the primary user facing Gaffer application.
+			"""
 		)
 
 		self.parameters().addParameters(
