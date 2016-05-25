@@ -124,7 +124,7 @@ def exportLicenseReference( directory, about ) :
 					# but is OK for internal use at facilities which build their own.
 					pass
 
-def exportCommandLineReference( directory, appPath = "$GAFFER_ROOT/apps" ) :
+def exportCommandLineReference( directory, appPath = "$GAFFER_ROOT/apps", ignore = set() ) :
 
 	classLoader = IECore.ClassLoader(
 		IECore.SearchPath( os.path.expandvars( appPath ), ":" )
@@ -173,6 +173,9 @@ def exportCommandLineReference( directory, appPath = "$GAFFER_ROOT/apps" ) :
 	index.write( "\n\n" )
 
 	for appName in classLoader.classNames() :
+
+		if appName in ignore :
+			continue
 
 		index.write( "- [%s](%s.md)\n" % ( appName, appName ) )
 		with open( "%s.md" % appName, "w" ) as f :

@@ -1,3 +1,3 @@
 import GafferUI
 
-GafferUI.DocumentationAlgo.exportCommandLineReference( "./" )
+GafferUI.DocumentationAlgo.exportCommandLineReference( "./", ignore = { "op" } )
