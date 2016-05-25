@@ -34,10 +34,6 @@
 //
 //////////////////////////////////////////////////////////////////////////
 
-#include "Gaffer/StringPlug.h"
-
-#include "GafferScene/Private/IECoreScenePreview/Renderer.h"
-
 #include "GafferArnold/InteractiveArnoldRender.h"
 
 using namespace GafferScene;
