@@ -104,9 +104,10 @@ class InteractiveRender::SceneGraph
 		// requirement of some renderer backends.
 		enum Type
 		{
-			Light = 0,
-			Object = 1,
-			First = Light,
+			Camera = 0,
+			Light = 1,
+			Object = 2,
+			First = Camera,
 			Last = Object
 		};
 
@@ -219,7 +220,14 @@ class InteractiveRender::SceneGraph
 
 			std::string name;
 			ScenePlug::pathToString( Context::current()->get<vector<InternedString> >( ScenePlug::scenePathContextName ), name );
-			if( type == Light )
+			if( type == Camera )
+			{
+				if( const IECore::Camera *camera = runTimeCast<const IECore::Camera>( object.get() ) )
+				{
+					m_objectInterface = renderer->camera( name, camera );
+				}
+			}
+			else if( type == Light )
 			{
 				m_objectInterface = renderer->light( name, nullObject ? NULL : object.get() );
 			}
@@ -546,10 +554,15 @@ class InteractiveRender::SceneGraphUpdateTask : public tbb::task
 		{
 			switch( m_sceneGraphType )
 			{
+				case SceneGraph::Camera :
+					return m_interactiveRender->m_cameraSet.match( m_scenePath );
 				case SceneGraph::Light :
 					return m_interactiveRender->m_lightSet.match( m_scenePath );
 				case SceneGraph::Object :
-					if( m_interactiveRender->m_lightSet.match( m_scenePath ) & Filter::ExactMatch )
+				{
+					unsigned m = m_interactiveRender->m_lightSet.match( m_scenePath ) |
+					             m_interactiveRender->m_cameraSet.match( m_scenePath );
+					if( m & Filter::ExactMatch )
 					{
 						return Filter::AncestorMatch | Filter::DescendantMatch;
 					}
@@ -557,6 +570,7 @@ class InteractiveRender::SceneGraphUpdateTask : public tbb::task
 					{
 						return Filter::EveryMatch;
 					}
+				}
 				default :
 					return Filter::NoMatch;
 			}
@@ -811,6 +825,7 @@ void InteractiveRender::update()
 	if( m_dirtyFlags & SceneGraphUpdateTask::SetsDirty )
 	{
 		m_lightSet = inPlug()->set( "__lights" )->readable();
+		m_cameraSet = inPlug()->set( "__cameras" )->readable();
 	}
 
 	for( int i = SceneGraph::First; i <= SceneGraph::Last; ++i )

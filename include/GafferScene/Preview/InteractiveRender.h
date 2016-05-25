@@ -119,6 +119,7 @@ class InteractiveRender : public Gaffer::Node
 		IECore::ConstCompoundObjectPtr m_globals;
 		IECore::ConstCompoundObjectPtr m_globalAttributes;
 		GafferScene::PathMatcher m_lightSet;
+		GafferScene::PathMatcher m_cameraSet;
 
 		Gaffer::ContextPtr m_context;
 		boost::signals::scoped_connection m_contextChangedConnection;

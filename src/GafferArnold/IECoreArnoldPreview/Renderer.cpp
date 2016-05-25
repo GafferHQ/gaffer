@@ -630,6 +630,11 @@ class ArnoldRenderer : public IECoreScenePreview::Renderer
 			return new ArnoldAttributes( attributes );
 		}
 
+		virtual ObjectInterfacePtr camera( const std::string &name, const IECore::Camera *camera )
+		{
+			return new ArnoldObject( name, camera );
+		}
+
 		virtual ObjectInterfacePtr light( const std::string &name, const IECore::Object *object = NULL )
 		{
 			return new ArnoldLight( name, object );
