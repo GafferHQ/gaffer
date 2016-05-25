@@ -46,7 +46,13 @@ class license( Gaffer.Application ) :
 
 	def __init__( self ) :
 
-		Gaffer.Application.__init__( self )
+		Gaffer.Application.__init__(
+			self,
+			"""
+			Prints the software licenses for Gaffer and other open source projects
+			it is based on.
+			"""
+		)
 
 		self.parameters().addParameter(
 

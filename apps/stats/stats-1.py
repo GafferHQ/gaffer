@@ -49,7 +49,34 @@ class stats( Gaffer.Application ) :
 
 	def __init__( self ) :
 
-		Gaffer.Application.__init__( self )
+		Gaffer.Application.__init__(
+			self,
+			"""
+			Prints statistics about a Gaffer script, including the version of
+			Gaffer that created it, the values of all setting and variables and
+			the types of node in use. May also be used to perform performance
+			analysis of image and scene processing nodes within the script, using
+			a performance monitor to generate advanced statistics.
+
+			To print basic information about a script :
+
+			```
+			gaffer stats fileName.gfr
+			```
+
+			To run a scene processing node using the performance monitor :
+
+			```
+			gaffer stats fileName.gfr -scene NameOfNode -performanceMonitor
+			```
+
+			To run an image processing node using the performance monitor :
+
+			```
+			gaffer stats fileName.gfr -image NameOfNode -performanceMonitor
+			```
+			"""
+		)
 
 		self.parameters().addParameters(
 

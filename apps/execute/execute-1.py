@@ -45,7 +45,21 @@ class execute( Gaffer.Application ) :
 
 	def __init__( self ) :
 
-		Gaffer.Application.__init__( self )
+		Gaffer.Application.__init__(
+			self,
+			"""
+			Executes task nodes such as ImageWriters, SystemCommands and Render nodes
+			from within a .gfr file. This is used by Gaffer's dispatchers when executing
+			nodes in a background process or on a render farm, but can also be used to
+			perform a manual execution from the command line.
+
+			Example usage :
+
+			```
+			gaffer execute -script comp.gfr -nodes ImageWriter -frames 1-10
+			```
+			"""
+		)
 
 		self.parameters().addParameters(
 

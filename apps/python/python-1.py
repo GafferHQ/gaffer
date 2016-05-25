@@ -36,6 +36,7 @@
 
 import traceback
 import sys
+
 import IECore
 import Gaffer
 
@@ -43,7 +44,16 @@ class python( Gaffer.Application ) :
 
 	def __init__( self ) :
 
-		Gaffer.Application.__init__( self )
+		Gaffer.Application.__init__(
+			self,
+			"""
+			Runs python scripts in an environment where all the
+			Gaffer modules are available.
+
+			> Warning : This application is deprecated.
+			> Use `gaffer env python` instead.
+			"""
+		)
 
 		self.parameters().addParameters(
 

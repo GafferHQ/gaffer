@@ -42,7 +42,16 @@ class test( Gaffer.Application ) :
 
 	def __init__( self ) :
 
-		Gaffer.Application.__init__( self )
+		Gaffer.Application.__init__(
+			self,
+			"""
+			Runs the unit tests for all of Gaffer's python
+			modules and libraries. These are run automatically
+			as part of Gaffer's build and review process, but it
+			is useful to run them manually when developing for
+			Gaffer or troubleshooting an installation.
+			"""
+		)
 
 		self.parameters().addParameters(
 

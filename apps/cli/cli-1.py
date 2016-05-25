@@ -35,15 +35,25 @@
 #
 ##########################################################################
 
+import code
+
 import IECore
 import Gaffer
-import code
 
 class cli( Gaffer.Application ) :
 
 	def __init__( self ) :
 
-		Gaffer.Application.__init__( self )
+		Gaffer.Application.__init__(
+			self,
+			"""
+			A python command line interpreter which has all the
+			Gaffer modules available to it.
+
+			> Warning : This application is deprecated.
+			> Use `gaffer env python` instead.
+			"""
+		)
 
 	def _run( self, args ) :
 
