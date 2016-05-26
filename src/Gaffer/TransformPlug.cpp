@@ -51,6 +51,9 @@ TransformPlug::TransformPlug( const std::string &name, Direction direction, unsi
 {
 	storeIndexOfNextChild( g_firstPlugIndex );
 
+	// We create our children automatically, so they should never be created dynamically
+	unsigned childFlags = flags & ~Plug::Dynamic;
+
 	addChild(
 		new V3fPlug(
 			"translate",
@@ -58,7 +61,7 @@ TransformPlug::TransformPlug( const std::string &name, Direction direction, unsi
 			V3f( 0 ),
 			V3f( limits<float>::min() ),
 			V3f( limits<float>::max() ),
-			flags
+			childFlags
 		)
 	);
 
@@ -69,7 +72,7 @@ TransformPlug::TransformPlug( const std::string &name, Direction direction, unsi
 			V3f( 0 ),
 			V3f( limits<float>::min() ),
 			V3f( limits<float>::max() ),
-			flags
+			childFlags
 		)
 	);
 
@@ -80,7 +83,7 @@ TransformPlug::TransformPlug( const std::string &name, Direction direction, unsi
 			V3f( 1 ),
 			V3f( limits<float>::min() ),
 			V3f( limits<float>::max() ),
-			flags
+			childFlags
 		)
 	);
 
@@ -91,7 +94,7 @@ TransformPlug::TransformPlug( const std::string &name, Direction direction, unsi
 			V3f( 0 ),
 			V3f( limits<float>::min() ),
 			V3f( limits<float>::max() ),
-			flags
+			childFlags
 		)
 	);
 }
