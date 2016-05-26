@@ -219,10 +219,7 @@ IECore::TransformPtr GafferScene::transform( const ScenePlug *scene, const Scene
 // Camera algo
 //////////////////////////////////////////////////////////////////////////
 
-namespace
-{
-
-void applyCameraGlobals( IECore::Camera *camera, const IECore::CompoundObject *globals )
+void GafferScene::applyCameraGlobals( IECore::Camera *camera, const IECore::CompoundObject *globals )
 {
 
 	// apply the resolution, aspect ratio and crop window
@@ -368,8 +365,6 @@ void applyCameraGlobals( IECore::Camera *camera, const IECore::CompoundObject *g
 	camera->parameters()["shutter"] = new V2fData( shutter( globals ) );
 
 }
-
-} // namespace
 
 IECore::CameraPtr GafferScene::camera( const ScenePlug *scene, const IECore::CompoundObject *globals )
 {
