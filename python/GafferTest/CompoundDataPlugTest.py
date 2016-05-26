@@ -149,6 +149,34 @@ class CompoundDataPlugTest( GafferTest.TestCase ) :
 		self.assertEqual( d, IECore.V2fData( IECore.V2f( 1, 2 ) ) )
 		self.assertEqual( n, "b" )
 
+	def testImathMatrixData( self ) :
+
+		p = Gaffer.CompoundDataPlug()
+
+		m1 = p.addMember( "a", IECore.M44fData( IECore.M44f( *range(16) ) ) )
+		self.failUnless( isinstance( m1, Gaffer.ValuePlug ) )
+
+		d, n = p.memberDataAndName( m1 )
+		self.assertEqual( d, IECore.M44fData( IECore.M44f( *range(16) ) ) )
+		self.assertEqual( n, "a" )
+
+	def testTransformPlugData( self ) :
+
+		p = Gaffer.CompoundDataPlug()
+
+		m1 = p.addMember( "a", Gaffer.TransformPlug() )
+		m1["value"]["translate"].setValue( IECore.V3f( 1,2,3 ) )
+		self.failUnless( isinstance( m1, Gaffer.ValuePlug ) )
+
+		d, n = p.memberDataAndName( m1 )
+		self.assertEqual( d, IECore.M44fData( IECore.M44f( [
+			1, 0, 0, 0,
+			0, 1, 0, 0,
+			0, 0, 1, 0,
+			1, 2, 3, 1,
+		] ) ) )
+		self.assertEqual( n, "a" )
+
 	def testPlugFlags( self ) :
 
 		p = Gaffer.CompoundDataPlug()

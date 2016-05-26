@@ -45,6 +45,7 @@
 #include "Gaffer/SplinePlug.h"
 #include "Gaffer/BoxPlug.h"
 #include "Gaffer/StringPlug.h"
+#include "Gaffer/TransformPlug.h"
 
 using namespace Imath;
 using namespace IECore;
@@ -376,6 +377,15 @@ ValuePlugPtr CompoundDataPlug::createPlugFromData( const std::string &name, Plug
 		{
 			return boxValuePlug( name, direction, flags, static_cast<const Box3iData *>( value ) );
 		}
+		case M44fDataTypeId :
+		{
+			M44fPlugPtr valuePlug = new M44fPlug(
+				name,
+				direction,
+				static_cast<const M44fData *>( value )->readable(),
+				flags
+			);
+		}
 		case FloatVectorDataTypeId :
 		{
 			return typedObjectValuePlug( name, direction, flags, static_cast<const FloatVectorData *>( value ) );
@@ -492,6 +502,10 @@ IECore::DataPtr CompoundDataPlug::extractDataFromPlug( const ValuePlug *plug )
 			return new SplineffData( static_cast<const SplineffPlug *>( plug )->getValue() );
 		case SplinefColor3fPlugTypeId :
 			return new SplinefColor3fData( static_cast<const SplinefColor3fPlug *>( plug )->getValue() );
+		case TransformPlugTypeId :
+			return new M44fData( static_cast<const TransformPlug *>( plug )->matrix() );
+		case M44fPlugTypeId :
+			return new M44fData( static_cast<const M44fPlug *>( plug )->getValue() );
 		default :
 			throw IECore::Exception(
 				boost::str( boost::format( "Plug \"%s\" has unsupported type \"%s\"" ) % plug->getName().string() % plug->typeName() )
