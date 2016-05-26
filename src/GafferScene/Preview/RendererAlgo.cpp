@@ -50,18 +50,10 @@ namespace
 
 const std::string g_optionPrefix( "option:" );
 const IECore::InternedString g_cameraOptionLegacyName( "option:render:camera" );
-const IECore::InternedString g_resolutionOptionLegacyName( "option:render:resolution" );
-const IECore::InternedString g_pixelAspectRatioOptionLegacyName( "option:pixelAspectRatio:resolution" );
-const IECore::InternedString g_cropWindowOptionLegacyName( "option:cropWindow:resolution" );
 
 IECore::InternedString optionName( const IECore::InternedString &globalsName )
 {
-	if(
-		globalsName == g_cameraOptionLegacyName ||
-		globalsName == g_resolutionOptionLegacyName ||
-		globalsName == g_pixelAspectRatioOptionLegacyName ||
-		globalsName == g_cropWindowOptionLegacyName
-	)
+	if( globalsName == g_cameraOptionLegacyName )
 	{
 		/// \todo Just rename the options themselves in StandardOptions and remove this?
 		return globalsName.string().substr( g_optionPrefix.size() + 7 );
