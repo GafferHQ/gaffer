@@ -465,7 +465,7 @@ class ArnoldObject : public IECoreScenePreview::Renderer::ObjectInterface
 } // namespace
 
 //////////////////////////////////////////////////////////////////////////
-// ArnoldObject
+// ArnoldLight
 //////////////////////////////////////////////////////////////////////////
 
 namespace
@@ -528,8 +528,6 @@ namespace
 /// \todo Should these be defined in the Renderer base class?
 /// Or maybe be in a utility header somewhere?
 IECore::InternedString g_cameraOptionName( "camera" );
-IECore::InternedString g_resolutionOptionName( "resolution" );
-IECore::InternedString g_pixelAspectRatioOptionName( "pixelAspectRatio" );
 IECore::InternedString g_logFileNameOptionName( "ai:log:filename" );
 
 class ArnoldRenderer : public IECoreScenePreview::Renderer
@@ -545,13 +543,8 @@ class ArnoldRenderer : public IECoreScenePreview::Renderer
 			/// \todo Control with an option.
 			AiMsgSetConsoleFlags( AI_LOG_ALL );
 
-			m_defaultShader = AiNode( "utility" );
-			AiNodeSetStr( m_defaultShader, "name", "ieCoreArnold:defaultShader" );
-
-			IECore::ConstCameraPtr defaultCamera = new IECore::Camera();
-			m_defaultCamera = CameraAlgo::convert( defaultCamera.get() );
-
-			option( g_resolutionOptionName, NULL ); // Set resolution to default
+			AtNode *defaultShader = AiNode( "utility" );
+			AiNodeSetStr( defaultShader, "name", "ieCoreArnold:defaultShader" );
 		}
 
 		virtual ~ArnoldRenderer()
@@ -572,32 +565,6 @@ class ArnoldRenderer : public IECoreScenePreview::Renderer
 				{
 					m_cameraName = d->readable();
 
-				}
-				return;
-			}
-			else if( name == g_resolutionOptionName )
-			{
-				if( value == NULL )
-				{
-					AiNodeSetInt( options, "xres", 1920 );
-					AiNodeSetInt( options, "yres", 1080 );
-				}
-				else if( const IECore::V2iData *d = reportedCast<const IECore::V2iData>( value, "option", name ) )
-				{
-					AiNodeSetInt( options, "xres", d->readable().x );
-					AiNodeSetInt( options, "yres", d->readable().y );
-				}
-				return;
-			}
-			else if( name == g_pixelAspectRatioOptionName )
-			{
-				if( value == NULL )
-				{
-					AiNodeSetFlt( options, "aspect_ratio", 1.0f );
-				}
-				else if( const IECore::FloatData *d = reportedCast<const IECore::FloatData>( value, "option", name ) )
-				{
-					AiNodeSetFlt( options, "aspect_ratio", 1.0f / d->readable() ); // arnold is y/x, we're x/y
 				}
 				return;
 			}
@@ -681,6 +648,7 @@ class ArnoldRenderer : public IECoreScenePreview::Renderer
 
 		virtual ObjectInterfacePtr camera( const std::string &name, const IECore::Camera *camera )
 		{
+			m_cameras[name] = camera;
 			return new ArnoldObject( name, camera );
 		}
 
@@ -701,12 +669,7 @@ class ArnoldRenderer : public IECoreScenePreview::Renderer
 
 		virtual void render()
 		{
-			AtNode *options = AiUniverseGetOptions();
-
-			// Set the camera.
-			AiNodeSetPtr( options, "camera",
-				m_cameraName.size() ? AiNodeLookUpByName( m_cameraName.c_str() ) : m_defaultCamera
-			);
+			updateCamera();
 
 			// Do the appropriate render based on
 			// m_renderType.
@@ -738,6 +701,37 @@ class ArnoldRenderer : public IECoreScenePreview::Renderer
 		}
 
 	private :
+
+		void updateCamera()
+		{
+			AtNode *options = AiUniverseGetOptions();
+
+			const IECore::Camera *cortexCamera = m_cameras[m_cameraName].get();
+			if( cortexCamera )
+			{
+				AiNodeSetPtr( options, "camera", AiNodeLookUpByName( m_cameraName.c_str() ) );
+				m_defaultCamera = NULL;
+			}
+			else
+			{
+				if( !m_defaultCamera )
+				{
+					IECore::CameraPtr defaultCortexCamera = new IECore::Camera();
+					defaultCortexCamera->addStandardParameters();
+					m_defaultCamera = camera( "ieCoreArnold:defaultCamera", defaultCortexCamera.get() );
+				}
+				cortexCamera = m_cameras["ieCoreArnold:defaultCamera"].get();
+				AiNodeSetPtr( options, "camera", AiNodeLookUpByName( "ieCoreArnold:defaultCamera" ) );
+			}
+
+			const IECore::V2iData *resolution = cortexCamera->parametersData()->member<IECore::V2iData>( "resolution" );
+			AiNodeSetInt( options, "xres", resolution->readable().x );
+			AiNodeSetInt( options, "yres", resolution->readable().y );
+
+			const IECore::FloatData *pixelAspectRatio = cortexCamera->parametersData()->member<IECore::FloatData>( "pixelAspectRatio" );
+			AiNodeSetFlt( options, "aspect_ratio", 1.0f / pixelAspectRatio->readable() ); // arnold is y/x, we're x/y
+
+		}
 
 		// Called in a background thread to control a
 		// progressive interactive render.
@@ -774,13 +768,13 @@ class ArnoldRenderer : public IECoreScenePreview::Renderer
 
 		boost::shared_ptr<IECoreArnold::UniverseBlock> m_universeBlock;
 
-		AtNode *m_defaultShader;
-		AtNode *m_defaultCamera;
-
 		typedef std::map<IECore::InternedString, ArnoldOutputPtr> OutputMap;
 		OutputMap m_outputs;
 
 		std::string m_cameraName;
+		typedef std::map<std::string, IECore::ConstCameraPtr> CameraMap;
+		CameraMap m_cameras;
+		ObjectInterfacePtr m_defaultCamera;
 
 		// Members used by interactive renders
 
