@@ -67,7 +67,7 @@ class Renderer : public IECore::RefCounted
 
 		static const std::vector<IECore::InternedString> &types();
 		/// Filename is only used if the renderType is SceneDescription.
-		static Ptr create( const IECore::InternedString &type, RenderType renderType, const std::string &fileName = "" );
+		static Ptr create( const IECore::InternedString &type, RenderType renderType = Batch, const std::string &fileName = "" );
 
 		/// \todo Rename Display->Output in Cortex.
 		typedef IECore::Display Output;
