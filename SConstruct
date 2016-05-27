@@ -538,7 +538,7 @@ libraries = {
 	},
 
 	"GafferCortexTest" : {
-		"additionalFiles" : glob.glob( "python/GafferTest/*/*" ) + glob.glob( "python/GafferCortexTest/*/*/*" ) + glob.glob( "python/GafferCortexTest/images/*" ),
+		"additionalFiles" : glob.glob( "python/GafferCortexTest/*/*" ) + glob.glob( "python/GafferCortexTest/*/*/*" ) + glob.glob( "python/GafferCortexTest/images/*" ),
 	},
 
 	"GafferCortexUI" : {},
@@ -880,13 +880,16 @@ for libraryName, libraryDef in libraries.items() :
 
 	# python component of python module
 
-	for pythonFile in glob.glob( "python/" + libraryName + "/*.py" ) :
+	pythonFiles = glob.glob( "python/" + libraryName + "/*.py" ) + glob.glob( "python/" + libraryName + "/*/*.py" )
+	for pythonFile in pythonFiles :
 		pythonFileInstall = env.Command( "$BUILD_DIR/" + pythonFile, pythonFile, "sed \"" + sedSubstitutions + "\" $SOURCE > $TARGET" )
 		env.Alias( "build", pythonFileInstall )
 
 	# additional files
 
 	for additionalFile in libraryDef.get( "additionalFiles", [] ) :
+		if additionalFile in pythonFiles :
+			continue
 		additionalFileInstall = env.InstallAs( "$BUILD_DIR/" + additionalFile, additionalFile )
 		env.Alias( "build", additionalFileInstall )
 

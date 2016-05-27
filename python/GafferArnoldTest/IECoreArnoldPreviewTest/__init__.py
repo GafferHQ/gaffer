@@ -1,6 +1,6 @@
 ##########################################################################
 #
-#  Copyright (c) 2012, John Haddon. All rights reserved.
+#  Copyright (c) 2016, Image Engine Design Inc. All rights reserved.
 #
 #  Redistribution and use in source and binary forms, with or without
 #  modification, are permitted provided that the following conditions are
@@ -34,13 +34,7 @@
 #
 ##########################################################################
 
-from ArnoldShaderTest import ArnoldShaderTest
-from ArnoldRenderTest import ArnoldRenderTest
-from ArnoldOptionsTest import ArnoldOptionsTest
-from ArnoldAttributesTest import ArnoldAttributesTest
-from ArnoldVDBTest import ArnoldVDBTest
-from InteractiveArnoldRenderTest import InteractiveArnoldRenderTest
-import IECoreArnoldPreviewTest
+from RendererTest import RendererTest
 
 if __name__ == "__main__":
 	import unittest
