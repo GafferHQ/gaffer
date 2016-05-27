@@ -179,6 +179,20 @@ Gaffer::Plug *ParameterHandler::setupPlug( const AtParamEntry *parameter, Gaffer
 				);
 
 			}
+			break;
+
+		case AI_TYPE_MATRIX :
+
+			{
+				
+				M44f defaultValue( *AiParamGetDefault( parameter )->pMTX );
+				plug = new M44fPlug(
+					name,
+					direction,
+					defaultValue
+				);
+
+			}
 
 	}
 
