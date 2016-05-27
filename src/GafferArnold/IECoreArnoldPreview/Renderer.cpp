@@ -35,6 +35,7 @@
 //////////////////////////////////////////////////////////////////////////
 
 #include "tbb/compat/thread"
+#include "tbb/concurrent_vector.h"
 
 #include "boost/make_shared.hpp"
 #include "boost/format.hpp"
@@ -649,22 +650,22 @@ class ArnoldRenderer : public IECoreScenePreview::Renderer
 		virtual ObjectInterfacePtr camera( const std::string &name, const IECore::Camera *camera )
 		{
 			m_cameras[name] = camera;
-			return new ArnoldObject( name, camera );
+			return store( new ArnoldObject( name, camera ) );
 		}
 
 		virtual ObjectInterfacePtr light( const std::string &name, const IECore::Object *object = NULL )
 		{
-			return new ArnoldLight( name, object );
+			return store( new ArnoldLight( name, object ) );
 		}
 
 		virtual Renderer::ObjectInterfacePtr object( const std::string &name, const IECore::Object *object )
 		{
-			return new ArnoldObject( name, object );
+			return store( new ArnoldObject( name, object ) );
 		}
 
 		virtual ObjectInterfacePtr object( const std::string &name, const std::vector<const IECore::Object *> &samples, const std::vector<float> &times )
 		{
-			return new ArnoldObject( name, samples, times );
+			return store( new ArnoldObject( name, samples, times ) );
 		}
 
 		virtual void render()
@@ -701,6 +702,25 @@ class ArnoldRenderer : public IECoreScenePreview::Renderer
 		}
 
 	private :
+
+		ObjectInterfacePtr store( ObjectInterface *objectInterface )
+		{
+			if( m_renderType != Interactive )
+			{
+				// Our ObjectInterface class owns the AtNodes it
+				// represents. In Interactive mode the client is
+				// responsible for keeping it alive as long as the
+				// object should exist, but in non-interactive modes
+				// we are responsible for ensuring the object doesn't
+				// die. Storing it is the simplest approach.
+				//
+				// \todo We might want to save memory by not storing
+				// ObjectInterfaces, but instead giving them the notion
+				// of whether or not they own the AtNodes they created.
+				m_objects.push_back( objectInterface );
+			}
+			return objectInterface;
+		}
 
 		void updateCamera()
 		{
@@ -775,6 +795,10 @@ class ArnoldRenderer : public IECoreScenePreview::Renderer
 		typedef std::map<std::string, IECore::ConstCameraPtr> CameraMap;
 		CameraMap m_cameras;
 		ObjectInterfacePtr m_defaultCamera;
+
+		// Members used by batch renders
+
+		tbb::concurrent_vector<ObjectInterfacePtr> m_objects;
 
 		// Members used by interactive renders
 
