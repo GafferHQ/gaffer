@@ -1,3 +1,72 @@
+0.24.1.0
+========
+
+Core
+-----------------------------------------------------------------------
+
+- Fixed performance of acceptsInput() for serial Switch networks (#1722)
+- Context now uses GeometricTypedData where appropriate.
+- Disallow setting user defaults on nodes in nodes.
+- Fixed serialization of dynamic TransformPlug
+
+UI
+-----------------------------------------------------------------------
+
+- Improved picking of "backwards" connections.
+
+Apps
+-----------------------------------------------------------------------
+
+- Added basic documentation.
+
+Scene
+-----------------------------------------------------------------------
+
+- Updated several nodes to register metadata in one shot with `registerNode()`
+- SceneView
+  - Fixed drawing mode.
+  - Added controls for curve drawing.
+    - Using uninterpolated GL lines by default.
+- Restored default base state in SceneGadget.
+- GafferScene
+  - Added preview of new Cortex Renderer API.
+  - Added preview of RendererAlgo for new Renderer API.
+  - Added preview of new InteractiveRender node.
+- SceneAlgo
+  - Added `globalAttributes()` function.
+- SceneNode
+  - Reduced unnecessary dirty signalling.
+
+Image
+-----------------------------------------------------------------------
+
+- Removed unnecessary `UVWarp::Engine::hash()` method.
+- ImageWriter can now be subclassed in Python.
+
+OSL
+-----------------------------------------------------------------------
+
+- Updated OSLShaderUI to register metadata in one shot with `registerNode()`
+- OSL Expressions now support V3f data from the Context.
+
+Arnold
+-----------------------------------------------------------------------
+
+- ArnoldOptions
+  - Added licensing section.
+  - Added basic support for controlling render logs.
+- Added preview of IECoreArnold ShaderAlgo.
+- Added preview of IECoreArnold ProceduralAlgo.
+- Added preview of new IECoreArnold Renderer.
+- Added InteractiveArnoldRender node.
+- Added support for Arnold matrix parameters as M44fPlugs
+
+RenderMan
+-----------------------------------------------------------------------
+
+- Remove deprecated RenderManShaderUI class
+- Updated RenderMan shaders to register metadata in one shot with `registerNode()`
+
 0.24.0.0
 ========
 
