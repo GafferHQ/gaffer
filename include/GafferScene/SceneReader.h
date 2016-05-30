@@ -122,12 +122,17 @@ class SceneReader : public SceneNode
 			IECore::ConstSceneInterfacePtr pathScene;
 		};
 		mutable tbb::enumerable_thread_specific<LastScene> m_lastScene;
-		// Returns the SceneInterface for the current filename (in the current Context)
+		// Returns the SceneInterface for the current filename
 		// and specified path, using m_lastScene to accelerate the lookups.
-		IECore::ConstSceneInterfacePtr scene( const ScenePath &path ) const;
+		IECore::ConstSceneInterfacePtr scene( const ScenePath &path, const Gaffer::Context *context ) const;
 
 		static const double g_frameRate;
 		static size_t g_firstPlugIndex;
+
+		// Utilities to compute the fileName plug hash and value in a context
+		// that doesn't include unnecessary and frequently changing variables
+		std::string fileNameValue( const Gaffer::Context *context ) const;
+		void hashFileName( const Gaffer::Context *context, IECore::MurmurHash &h ) const;
 
 };
 

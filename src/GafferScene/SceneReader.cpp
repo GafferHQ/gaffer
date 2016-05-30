@@ -53,6 +53,28 @@ using namespace IECore;
 using namespace Gaffer;
 using namespace GafferScene;
 
+//////////////////////////////////////////////////////////////////////////
+// Utilities
+//////////////////////////////////////////////////////////////////////////
+
+namespace
+{
+
+// Removes context variables which are unnecessary when computing
+// global aspects of the scene, but which are frequently changed
+// to compute per-location aspects of the scene. This makes us
+// friendlier to the hash caching mechanism in ValuePlug,
+// since it'll see fewer unnecessarily different contexts, and will
+// therefore get more cache hits. We use this in our utility
+// methods for computing set names, sets and globals.
+void removeNonGlobalContextVariables( Context *context )
+{
+	context->remove( Filter::inputSceneContextName );
+	context->remove( ScenePlug::scenePathContextName );
+}
+
+} // namespace
+
 typedef boost::tokenizer<boost::char_separator<char> > Tokenizer;
 
 IE_CORE_DEFINERUNTIMETYPED( SceneReader );
@@ -141,10 +163,10 @@ void SceneReader::hashBound( const ScenePath &path, const Gaffer::Context *conte
 {
 	SceneNode::hashBound( path, context, parent, h );
 
-	fileNamePlug()->hash( h );
+	hashFileName( context, h );
 	refreshCountPlug()->hash( h );
 
-	ConstSceneInterfacePtr s = scene( path );
+	ConstSceneInterfacePtr s = scene( path, context );
 	if( !s )
 	{
 		return;
@@ -156,7 +178,7 @@ void SceneReader::hashBound( const ScenePath &path, const Gaffer::Context *conte
 
 Imath::Box3f SceneReader::computeBound( const ScenePath &path, const Gaffer::Context *context, const ScenePlug *parent ) const
 {
-	ConstSceneInterfacePtr s = scene( path );
+	ConstSceneInterfacePtr s = scene( path, context );
 	if( !s )
 	{
 		return Box3f();
@@ -176,10 +198,10 @@ void SceneReader::hashTransform( const ScenePath &path, const Gaffer::Context *c
 {
 	SceneNode::hashTransform( path, context, parent, h );
 
-	fileNamePlug()->hash( h );
+	hashFileName( context, h );
 	refreshCountPlug()->hash( h );
 
-	ConstSceneInterfacePtr s = scene( path );
+	ConstSceneInterfacePtr s = scene( path, context );
 	if( !s )
 	{
 		return;
@@ -190,7 +212,7 @@ void SceneReader::hashTransform( const ScenePath &path, const Gaffer::Context *c
 
 Imath::M44f SceneReader::computeTransform( const ScenePath &path, const Gaffer::Context *context, const ScenePlug *parent ) const
 {
-	ConstSceneInterfacePtr s = scene( path );
+	ConstSceneInterfacePtr s = scene( path, context );
 	if( !s )
 	{
 		return M44f();
@@ -208,7 +230,7 @@ Imath::M44f SceneReader::computeTransform( const ScenePath &path, const Gaffer::
 
 void SceneReader::hashAttributes( const ScenePath &path, const Gaffer::Context *context, const ScenePlug *parent, IECore::MurmurHash &h ) const
 {
-	ConstSceneInterfacePtr s = scene( path );
+	ConstSceneInterfacePtr s = scene( path, context );
 	if( !s )
 	{
 		h = parent->attributesPlug()->defaultValue()->Object::hash();
@@ -217,7 +239,7 @@ void SceneReader::hashAttributes( const ScenePath &path, const Gaffer::Context *
 
 	SceneNode::hashAttributes( path, context, parent, h );
 
-	fileNamePlug()->hash( h );
+	hashFileName( context, h );
 	refreshCountPlug()->hash( h );
 
 	s->hash( SceneInterface::AttributesHash, context->getTime(), h );
@@ -225,7 +247,7 @@ void SceneReader::hashAttributes( const ScenePath &path, const Gaffer::Context *
 
 IECore::ConstCompoundObjectPtr SceneReader::computeAttributes( const ScenePath &path, const Gaffer::Context *context, const ScenePlug *parent ) const
 {
-	ConstSceneInterfacePtr s = scene( path );
+	ConstSceneInterfacePtr s = scene( path, context );
 	if( !s )
 	{
 		return parent->attributesPlug()->defaultValue();
@@ -260,7 +282,7 @@ IECore::ConstCompoundObjectPtr SceneReader::computeAttributes( const ScenePath &
 void SceneReader::hashObject( const ScenePath &path, const Gaffer::Context *context, const ScenePlug *parent, IECore::MurmurHash &h ) const
 {
 
-	ConstSceneInterfacePtr s = scene( path );
+	ConstSceneInterfacePtr s = scene( path, context );
 	if( !s || !s->hasObject() )
 	{
 		// no object
@@ -270,7 +292,7 @@ void SceneReader::hashObject( const ScenePath &path, const Gaffer::Context *cont
 
 	SceneNode::hashObject( path, context, parent, h );
 
-	fileNamePlug()->hash( h );
+	hashFileName( context, h );
 	refreshCountPlug()->hash( h );
 
 	s->hash( SceneInterface::ObjectHash, context->getTime(), h );
@@ -278,7 +300,7 @@ void SceneReader::hashObject( const ScenePath &path, const Gaffer::Context *cont
 
 IECore::ConstObjectPtr SceneReader::computeObject( const ScenePath &path, const Gaffer::Context *context, const ScenePlug *parent ) const
 {
-	ConstSceneInterfacePtr s = scene( path );
+	ConstSceneInterfacePtr s = scene( path, context );
 	if( !s || !s->hasObject() )
 	{
 		return parent->objectPlug()->defaultValue();
@@ -289,7 +311,7 @@ IECore::ConstObjectPtr SceneReader::computeObject( const ScenePath &path, const 
 
 void SceneReader::hashChildNames( const ScenePath &path, const Gaffer::Context *context, const ScenePlug *parent, IECore::MurmurHash &h ) const
 {
-	ConstSceneInterfacePtr s = scene( path );
+	ConstSceneInterfacePtr s = scene( path, context );
 	if( !s )
 	{
 		h = parent->childNamesPlug()->defaultValue()->Object::hash();
@@ -298,7 +320,7 @@ void SceneReader::hashChildNames( const ScenePath &path, const Gaffer::Context *
 
 	SceneNode::hashChildNames( path, context, parent, h );
 
-	fileNamePlug()->hash( h );
+	hashFileName( context, h );
 	refreshCountPlug()->hash( h );
 
 	// append a hash of the tags plug, as restricting the tags can affect the hierarchy
@@ -309,7 +331,7 @@ void SceneReader::hashChildNames( const ScenePath &path, const Gaffer::Context *
 
 IECore::ConstInternedStringVectorDataPtr SceneReader::computeChildNames( const ScenePath &path, const Gaffer::Context *context, const ScenePlug *parent ) const
 {
-	ConstSceneInterfacePtr s = scene( path );
+	ConstSceneInterfacePtr s = scene( path, context );
 	if( !s )
 	{
 		return parent->childNamesPlug()->defaultValue();
@@ -374,13 +396,14 @@ IECore::ConstCompoundObjectPtr SceneReader::computeGlobals( const Gaffer::Contex
 void SceneReader::hashSetNames( const Gaffer::Context *context, const ScenePlug *parent, IECore::MurmurHash &h ) const
 {
 	SceneNode::hashSetNames( context, parent, h );
-	fileNamePlug()->hash( h );
+
+	hashFileName( context, h );
 	refreshCountPlug()->hash( h );
 }
 
 IECore::ConstInternedStringVectorDataPtr SceneReader::computeSetNames( const Gaffer::Context *context, const ScenePlug *parent ) const
 {
-	ConstSceneInterfacePtr s = scene( ScenePath() );
+	ConstSceneInterfacePtr s = scene( ScenePath(), context );
 	if( !s )
 	{
 		return parent->setNamesPlug()->defaultValue();
@@ -395,7 +418,8 @@ IECore::ConstInternedStringVectorDataPtr SceneReader::computeSetNames( const Gaf
 void SceneReader::hashSet( const IECore::InternedString &setName, const Gaffer::Context *context, const ScenePlug *parent, IECore::MurmurHash &h ) const
 {
 	SceneNode::hashSet( setName, context, parent, h );
-	fileNamePlug()->hash( h );
+
+	hashFileName( context, h );
 	refreshCountPlug()->hash( h );
 	h.append( setName );
 }
@@ -432,7 +456,7 @@ static void loadSetWalk( const SceneInterface *s, const InternedString &setName,
 GafferScene::ConstPathMatcherDataPtr SceneReader::computeSet( const IECore::InternedString &setName, const Gaffer::Context *context, const ScenePlug *parent ) const
 {
 	PathMatcherDataPtr result = new PathMatcherData;
-	ConstSceneInterfacePtr rootScene = scene( ScenePath() );
+	ConstSceneInterfacePtr rootScene = scene( ScenePath(), context );
 	if( rootScene )
 	{
 		loadSetWalk( rootScene.get(), setName, result->writable(), ScenePath() );
@@ -453,9 +477,10 @@ void SceneReader::plugSet( Gaffer::Plug *plug )
 	}
 }
 
-ConstSceneInterfacePtr SceneReader::scene( const ScenePath &path ) const
+ConstSceneInterfacePtr SceneReader::scene( const ScenePath &path, const Gaffer::Context *context ) const
 {
-	std::string fileName = fileNamePlug()->getValue();
+	std::string fileName = fileNameValue( context );
+
 	if( !fileName.size() )
 	{
 		return NULL;
@@ -483,4 +508,28 @@ ConstSceneInterfacePtr SceneReader::scene( const ScenePath &path ) const
 	lastScene.path = path;
 
 	return lastScene.pathScene;
+}
+
+std::string SceneReader::fileNameValue( const Gaffer::Context *context ) const
+{
+
+	ContextPtr tmpContext = new Context( *context, Context::Borrowed );
+	removeNonGlobalContextVariables( tmpContext.get() );
+	{
+		Context::Scope scopedContext( tmpContext.get() );
+		return fileNamePlug()->getValue();
+	}
+
+}
+
+void SceneReader::hashFileName( const Gaffer::Context *context, IECore::MurmurHash &h ) const
+{
+
+	ContextPtr tmpContext = new Context( *context, Context::Borrowed );
+	removeNonGlobalContextVariables( tmpContext.get() );
+	{
+		Context::Scope scopedContext( tmpContext.get() );
+		fileNamePlug()->hash( h );
+	}
+
 }
