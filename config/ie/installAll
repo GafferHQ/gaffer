@@ -15,15 +15,22 @@ def build( extraArgs = [] ) :
 	
 		raise RuntimeError( "Error : " + " ".join( buildArgs ) )
 
-if IEEnv.platform() in ( "cent6.x86_64", "cent7.x86_64" ) :
+if IEEnv.platform() in ( "cent7.x86_64" ) :
 
+	# fetch at least one active version of each renderer
+	aiVersion = IEEnv.activeVersions( IEEnv.registry["apps"]["arnold"] )[-1]
+	dlVersion = IEEnv.activeVersions( IEEnv.registry["apps"]["3delight"] )[-1]
+	appleseedVersion = IEEnv.activeVersions( IEEnv.registry["apps"]["appleseed"] )[-1]
+	
+	extraArgs = [ "ARNOLD_VERSION="+aiVersion, "APPLESEED_VERSION="+appleseedVersion, "DL_VERSION="+dlVersion ]
+	
 	# standalone build
-	build()
+	build( extraArgs )
 	
 	# app specific builds
 	for app in ( "maya", "houdini", "nuke" ) :
 		for version in IEEnv.activeAppVersions( app ) :
-			build( [ "APP=" + app, "APP_VERSION=" + version ] )
+			build( [ "APP=" + app, "APP_VERSION=" + version ] + extraArgs )
 			
 else :
 
