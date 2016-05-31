@@ -84,7 +84,7 @@ class SetTest( GafferSceneTest.SceneTestCase ) :
 		self.assertEqual( s1["out"]["setNames"].getValue(), IECore.InternedStringVectorData( [ "setOne" ] ) )
 		self.assertEqual( s1["out"].set( "setOne" ).value.paths(), [ "/one" ] )
 
-		self.assertEqual( s2["out"]["setNames"].getValue(), IECore.InternedStringVectorData( [ "setOne", "setTwo" ] ) )
+		self.assertEqual( list( set( s2["out"]["setNames"].getValue() ) ), list( set( IECore.InternedStringVectorData( [ "setOne", "setTwo" ] ) ) ) )
 		self.assertEqual( s2["out"].set( "setOne" ).value.paths(), [ "/one" ] )
 		self.assertEqual( s2["out"].set( "setTwo" ).value.paths(), [ "/two" ] )
 		self.assertTrue( s2["out"].set( "setOne", _copy = False ).isSame( s1["out"].set( "setOne", _copy = False ) ) )
@@ -216,6 +216,26 @@ class SetTest( GafferSceneTest.SceneTestCase ) :
 
 		s2["mode"].setValue( s2.Mode.Remove )
 		self.assertEqual( s2["out"].set( "set" ).value.paths(), [ "/a" ] )
+
+	def testMultipleNames( self ) :
+
+		p = GafferScene.Plane()
+		s = GafferScene.Set()
+		s["in"].setInput( p["out"] )
+
+		s["paths"].setValue( IECore.StringVectorData( [ "/one", "/plane" ] ) )
+
+		s["name"].setValue( "shinyThings dullThings" )
+
+		self.assertEqual( list( set( s["out"]["setNames"].getValue() ) ), list( set( IECore.InternedStringVectorData( [ "shinyThings", "dullThings" ] ) ) ) )
+		self.assertEqual( set( s["out"].set( "shinyThings" ).value.paths() ), set( [ "/one", "/plane" ] ) )
+		self.assertEqual( set( s["out"].set( "dullThings" ).value.paths() ), set( [ "/one", "/plane" ] ) )
+
+		s["paths"].setValue( IECore.StringVectorData( [ "/two", "/sphere" ] ) )
+
+		self.assertEqual( list( set ( s["out"]["setNames"].getValue() ) ), list( set( IECore.InternedStringVectorData( [ "shinyThings", "dullThings" ] ) ) ) )
+		self.assertEqual( set( s["out"].set( "shinyThings" ).value.paths() ), set( [ "/two", "/sphere" ] ) )
+		self.assertEqual( set( s["out"].set( "dullThings" ).value.paths() ), set( [ "/two", "/sphere" ] ) )
 
 if __name__ == "__main__":
 	unittest.main()
