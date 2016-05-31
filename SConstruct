@@ -614,12 +614,12 @@ libraries = {
 		"envAppends" : {
 			"CPPPATH" : [ "$ARNOLD_ROOT/include" ],
 			"LIBPATH" : [ "$ARNOLD_ROOT/bin" ],
-			"LIBS" : [ "Gaffer", "GafferScene", "ai", "openvdb", "IECoreArnold$CORTEX_LIB_SUFFIX" ],
+			"LIBS" : [ "Gaffer", "GafferScene", "GafferDispatch", "ai", "openvdb", "IECoreArnold$CORTEX_LIB_SUFFIX" ],
 		},
 		"pythonEnvAppends" : {
 			"CPPPATH" : [ "$ARNOLD_ROOT/include" ],
 			"LIBPATH" : [ "$ARNOLD_ROOT/bin" ],
-			"LIBS" : [ "Gaffer", "GafferScene", "GafferBindings", "GafferArnold" ],
+			"LIBS" : [ "Gaffer", "GafferScene", "GafferBindings", "GafferDispatch", "GafferArnold" ],
 		},
 		"requiredOptions" : [ "ARNOLD_ROOT" ],
 	},
