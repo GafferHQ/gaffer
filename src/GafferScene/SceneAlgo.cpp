@@ -375,7 +375,8 @@ IECore::CameraPtr GafferScene::camera( const ScenePlug *scene, const IECore::Com
 		globals = computedGlobals.get();
 	}
 
-	if( const StringData *cameraPathData = globals->member<StringData>( "option:render:camera" ) )
+	const StringData *cameraPathData = globals->member<StringData>( "option:render:camera" );
+	if( cameraPathData && !cameraPathData->readable().empty() )
 	{
 		ScenePlug::ScenePath cameraPath;
 		ScenePlug::stringToPath( cameraPathData->readable(), cameraPath );
