@@ -74,5 +74,41 @@ class RendererTest( GafferTest.TestCase ) :
 			n = arnold.AiNodeLookUpByName( "testPlane" )
 			self.assertTrue( arnold.AiNodeEntryGetType( arnold.AiNodeGetNodeEntry( n ) ), arnold.AI_NODE_SHAPE )
 
+	def testCropWindow( self ) :
+
+		r = GafferScene.Private.IECoreScenePreview.Renderer.create(
+			"IECoreArnold::Renderer",
+			GafferScene.Private.IECoreScenePreview.Renderer.RenderType.SceneDescription,
+			self.temporaryDirectory() + "/test.ass"
+		)
+
+		r.camera(
+			"testCamera",
+			IECore.Camera(
+				parameters = {
+					"resolution" : IECore.V2i( 2000, 1000 ),
+					"cropWindow" : IECore.Box2f( IECore.V2f( 0 ), IECore.V2f( 1, 0.75 ) ),
+				}
+			)
+		)
+
+		r.option( "camera", IECore.StringData( "testCamera" ) )
+
+		r.render()
+		del r
+
+		with IECoreArnold.UniverseBlock() :
+
+			arnold.AiASSLoad( self.temporaryDirectory() + "/test.ass" )
+			options = arnold.AiUniverseGetOptions()
+
+			self.assertEqual( arnold.AiNodeGetInt( options, "xres" ), 2000 )
+			self.assertEqual( arnold.AiNodeGetInt( options, "yres" ), 1000 )
+
+			self.assertEqual( arnold.AiNodeGetInt( options, "region_min_x" ), 0 )
+			self.assertEqual( arnold.AiNodeGetInt( options, "region_min_y" ), 0 )
+			self.assertEqual( arnold.AiNodeGetInt( options, "region_max_x" ), 1999 )
+			self.assertEqual( arnold.AiNodeGetInt( options, "region_max_y" ), 749 )
+
 if __name__ == "__main__":
 	unittest.main()
