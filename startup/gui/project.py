@@ -48,15 +48,22 @@ import GafferDispatch
 
 def __scriptAdded( container, script ) :
 
+
 	variables = script["variables"]
 	if "projectName" not in variables :
-		projectName = variables.addMember( "project:name", IECore.StringData( "default" ), "projectName" )
-		projectName["name"].setFlags( Gaffer.Plug.Flags.ReadOnly, True )
+		variables.addChild(Gaffer.CompoundDataPlug.MemberPlug("projectName", flags=(Gaffer.Plug.Flags.Default ) & ~Gaffer.Plug.Flags.Serialisable))
+		variables["projectName"].addChild(Gaffer.StringPlug("name", defaultValue='project:name', flags=Gaffer.Plug.Flags.Default))
+		variables["projectName"].addChild(Gaffer.StringPlug("value", defaultValue='default',
+																	  flags=Gaffer.Plug.Flags.Default ))
+		variables["projectName"].setFlags(Gaffer.Plug.Flags.ReadOnly, True)
 	if "projectRootDirectory" not in variables :
-		projectRoot = variables.addMember( "project:rootDirectory", IECore.StringData( "$HOME/gaffer/projects/${project:name}" ), "projectRootDirectory" )
-		projectRoot["name"].setFlags( Gaffer.Plug.Flags.ReadOnly, True )
+		variables.addChild(Gaffer.CompoundDataPlug.MemberPlug("projectRootDirectory", flags=(Gaffer.Plug.Flags.Default) & ~Gaffer.Plug.Flags.Serialisable))
+		variables["projectRootDirectory"].addChild(Gaffer.StringPlug("name", defaultValue='project:rootDirectory', flags=Gaffer.Plug.Flags.Default))
+		variables["projectRootDirectory"].addChild(Gaffer.StringPlug("value", defaultValue='$HOME/gaffer/projects/${project:name}',
+																	  flags=Gaffer.Plug.Flags.Default ))
+		variables["projectRootDirectory"].setFlags(Gaffer.Plug.Flags.ReadOnly, True)
 
-__scriptAddedConnection = application.root()["scripts"].childAddedSignal().connect( __scriptAdded )
+	__scriptAddedConnection = application.root()["scripts"].childAddedSignal().connect( __scriptAdded )
 
 ##########################################################################
 # Bookmarks
