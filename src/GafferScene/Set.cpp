@@ -252,10 +252,9 @@ void Set::hashSet( const IECore::InternedString &setName, const Gaffer::Context 
 
 GafferScene::ConstPathMatcherDataPtr Set::computeSet( const IECore::InternedString &setName, const Gaffer::Context *context, const ScenePlug *parent ) const
 {
-	vector<InternedString> tokenizedNames;
-	Gaffer::tokenize( namePlug()->getValue(), ' ', tokenizedNames );
-
-	if( std::find( tokenizedNames.begin(), tokenizedNames.end(), setName ) == tokenizedNames.end() )
+	const std::string allSets = " " + namePlug()->getValue() + " ";
+	const std::string setNameToFind = " " + setName.string() + " ";
+	if( allSets.find( setNameToFind ) == std::string::npos )
 	{
 		return inPlug()->setPlug()->getValue();
 	}
