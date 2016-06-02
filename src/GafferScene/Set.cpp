@@ -236,11 +236,9 @@ IECore::ConstInternedStringVectorDataPtr Set::computeSetNames( const Gaffer::Con
 
 void Set::hashSet( const IECore::InternedString &setName, const Gaffer::Context *context, const ScenePlug *parent, IECore::MurmurHash &h ) const
 {
-	/// \todo Since hashSet is quite performance critical, it may be worth not tokenizing at all, and look for setName directly in namePlug()->getValue()
-	vector<InternedString> tokenizedNames;
-	Gaffer::tokenize( namePlug()->getValue(), ' ', tokenizedNames );
-
-	if( std::find( tokenizedNames.begin(), tokenizedNames.end(), setName ) == tokenizedNames.end() )
+	const std::string allSets = " " + namePlug()->getValue() + " ";
+	const std::string setNameToFind = " " + setName.string() + " ";
+	if( allSets.find( setNameToFind ) == std::string::npos )
 	{
 		h = inPlug()->setPlug()->hash();
 		return;
