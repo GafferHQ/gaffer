@@ -206,10 +206,23 @@ IECore::ConstInternedStringVectorDataPtr Set::computeSetNames( const Gaffer::Con
 	vector<InternedString> tokenizedNames;
 	Gaffer::tokenize( names, ' ', tokenizedNames );
 
-	InternedStringVectorDataPtr resultData = inNamesData->copy();
+	// specific logic if we have only one item, to avoid the more complex logic of adding two lists together
+	if( tokenizedNames.size() == 1 ) {
+		const std::vector<InternedString> &inNames = inNamesData->readable();
+		if( std::find( inNames.begin(), inNames.end(), tokenizedNames[0] ) != inNames.end() )
+		{
+			return inNamesData;
+		}
+
+		InternedStringVectorDataPtr resultData = inNamesData->copy();
+		resultData->writable().push_back( tokenizedNames[0] );
+		return resultData;
+	}
 
 	// inserting the new names into the vector
 	// while making sure we don't have duplicates
+	InternedStringVectorDataPtr resultData = inNamesData->copy();
+
 	std::vector<InternedString> &result = resultData->writable();
 	result.reserve( result.size() + tokenizedNames.size() );
 	std::copy( tokenizedNames.begin(), tokenizedNames.end(), std::back_inserter( result ) );
