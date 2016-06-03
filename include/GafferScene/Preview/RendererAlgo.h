@@ -42,6 +42,8 @@
 namespace GafferScene
 {
 
+IE_CORE_FORWARDDECLARE( ScenePlug )
+
 namespace Preview
 {
 
@@ -50,6 +52,10 @@ void outputOptions( const IECore::CompoundObject *globals, const IECore::Compoun
 
 void outputOutputs( const IECore::CompoundObject *globals, IECoreScenePreview::Renderer *renderer );
 void outputOutputs( const IECore::CompoundObject *globals, const IECore::CompoundObject *previousGlobals, IECoreScenePreview::Renderer *renderer );
+
+void outputCameras( const ScenePlug *scene, const IECore::CompoundObject *globals, IECoreScenePreview::Renderer *renderer );
+void outputLights( const ScenePlug *scene, const IECore::CompoundObject *globals, IECoreScenePreview::Renderer *renderer );
+void outputObjects( const ScenePlug *scene, const IECore::CompoundObject *globals, IECoreScenePreview::Renderer *renderer );
 
 } // namespace Preview
 

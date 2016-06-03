@@ -34,18 +34,18 @@
 //
 //////////////////////////////////////////////////////////////////////////
 
-#include "GafferArnold/InteractiveArnoldRender.h"
+#include "GafferArnold/ArnoldRender.h"
 
 using namespace GafferScene;
 using namespace GafferArnold;
 
-IE_CORE_DEFINERUNTIMETYPED( InteractiveArnoldRender );
+IE_CORE_DEFINERUNTIMETYPED( ArnoldRender );
 
-InteractiveArnoldRender::InteractiveArnoldRender( const std::string &name )
-	:	InteractiveRender( "IECoreArnold::Renderer", name )
+ArnoldRender::ArnoldRender( const std::string &name )
+	:	Render( "IECoreArnold::Renderer", name )
 {
 }
 
-InteractiveArnoldRender::~InteractiveArnoldRender()
+ArnoldRender::~ArnoldRender()
 {
 }
