@@ -52,15 +52,13 @@ class NodeGraph( GafferUI.EditorWidget ) :
 			] ),
 		)
 
-		layoutNodes =  not self.__nodesHaveUIPosition( scriptNode )
-
 		GafferUI.EditorWidget.__init__( self, self.__gadgetWidget, scriptNode, **kw )
 
 		graphGadget = GafferUI.GraphGadget( self.scriptNode() )
 		self.__rootChangedConnection = graphGadget.rootChangedSignal().connect( Gaffer.WeakMethod( self.__rootChanged ) )
 
-		if layoutNodes :
-			self.__layoutAllNodes( graphGadget, scriptNode )
+		if not self.__nodesHaveUIPosition( graphGadget ) :
+			self.__layoutAllNodes( graphGadget )
 
 		self.__gadgetWidget.getViewportGadget().setPrimaryChild( graphGadget )
 		self.__gadgetWidget.getViewportGadget().setDragTracking( True )
@@ -356,17 +354,16 @@ class NodeGraph( GafferUI.EditorWidget ) :
 
 		self.__gadgetWidget.getViewportGadget().frame( bound )
 
-	def __nodesHaveUIPosition( self, scriptNode ) :
-
-		for node in scriptNode.children( Gaffer.Node ) :
-			if '__uiPosition' in node :
+	def __nodesHaveUIPosition( self, graphGadget ) :
+		for node in graphGadget.getRoot().children( Gaffer.Node ) :
+			if graphGadget.hasNodePosition( node ) :
 				return True
 
 		return False
 
-	def __layoutAllNodes( self , graphGadget, scriptNode ) :
+	def __layoutAllNodes( self , graphGadget ) :
 
-		graphGadget.getLayout().layoutNodes( graphGadget, Gaffer.StandardSet( scriptNode.children( Gaffer.Node ) ) )
+		graphGadget.getLayout().layoutNodes( graphGadget, Gaffer.StandardSet( graphGadget.getRoot().children( Gaffer.Node ) ) )
 
 	def __buttonDoubleClick( self, widget, event ) :
 
@@ -431,6 +428,9 @@ class NodeGraph( GafferUI.EditorWidget ) :
 			)
 		else :
 			self.__frame( self.graphGadget().getRoot().children( Gaffer.Node ) )
+
+		if not self.__nodesHaveUIPosition( graphGadget ) :
+			self.__layoutAllNodes( graphGadget )
 
 		# do what we need to do to keep our title up to date.
 
