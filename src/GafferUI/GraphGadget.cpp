@@ -419,6 +419,12 @@ Imath::V2f GraphGadget::getNodePosition( const Gaffer::Node *node ) const
 	return plug ? plug->getValue() : V2f( 0 );
 }
 
+bool GraphGadget::hasNodePosition( const Gaffer::Node *node ) const
+{
+	const Gaffer::V2fPlug *plug = node->getChild<Gaffer::V2fPlug>( g_positionPlugName );
+	return plug != NULL;
+}
+
 void GraphGadget::setNodeInputConnectionsMinimised( Gaffer::Node *node, bool minimised )
 {
 	if( minimised == getNodeInputConnectionsMinimised( node ) )
@@ -1374,12 +1380,6 @@ NodeGadget *GraphGadget::addNodeGadget( Gaffer::Node *node )
 	if( m_scriptNode && m_scriptNode->selection()->contains( node ) )
 	{
 		nodeGadget->setHighlighted( true );
-	}
-
-	// place it if it's not placed already.
-	if( !node->getChild<Gaffer::V2fPlug>( g_positionPlugName ) )
-	{
-		setNodePosition( node, V2f( 0 ) );
 	}
 
 	updateNodeGadgetTransform( nodeGadget.get() );
