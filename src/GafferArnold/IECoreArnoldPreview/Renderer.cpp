@@ -754,10 +754,10 @@ class ArnoldRenderer : public IECoreScenePreview::Renderer
 			AiNodeSetFlt( options, "aspect_ratio", 1.0f / pixelAspectRatio->readable() ); // arnold is y/x, we're x/y
 
 			const IECore::Box2fData *crop = cortexCamera->parametersData()->member<IECore::Box2fData>( "cropWindow" );
-			AiNodeSetInt( options, "region_min_x", ( resolution->readable().x - 1 ) * crop->readable().min.x );
-			AiNodeSetInt( options, "region_min_y", ( resolution->readable().y - 1 ) * crop->readable().min.y );
-			AiNodeSetInt( options, "region_max_x", ( resolution->readable().x - 1 ) * crop->readable().max.x );
-			AiNodeSetInt( options, "region_max_y", ( resolution->readable().y - 1 ) * crop->readable().max.y );
+			AiNodeSetInt( options, "region_min_x", (int)(( resolution->readable().x - 1 ) * crop->readable().min.x ) );
+			AiNodeSetInt( options, "region_min_y", (int)(( resolution->readable().y - 1 ) * crop->readable().min.y ) );
+			AiNodeSetInt( options, "region_max_x", (int)(( resolution->readable().x - 1 ) * crop->readable().max.x ) );
+			AiNodeSetInt( options, "region_max_y", (int)(( resolution->readable().y - 1 ) * crop->readable().max.y ) );
 		}
 
 		// Called in a background thread to control a
