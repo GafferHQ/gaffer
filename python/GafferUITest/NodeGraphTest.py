@@ -96,5 +96,32 @@ class NodeGraphTest( GafferUITest.TestCase ) :
 
 		self.assertEqual( g.getTitle(), "This is a test!" )
 
+	def testArrangeNodes( self ) :
+
+		s1 = Gaffer.ScriptNode()
+		s2 = Gaffer.ScriptNode()
+
+		s1["n1"] = GafferTest.AddNode()
+		s1["n2"] = GafferTest.AddNode()
+
+		s2["n1"] = GafferTest.AddNode()
+		s2["n1"].addChild( Gaffer.V2fPlug( "__uiPosition", defaultValue = IECore.V2f( 0, 0 ), flags = Gaffer.Plug.Flags.Default | Gaffer.Plug.Flags.Dynamic, ) )
+		s2["n1"]["__uiPosition"].setValue( IECore.V2f( -5.0, 10.0 ) )
+
+		s2["n2"] = GafferTest.AddNode()
+
+		g1 = GafferUI.NodeGraph( s1 )
+		g2 = GafferUI.NodeGraph( s2 )
+
+		# Check that the UI positions of the two nodes, created without positions,
+		# are not equal, i.e. have been moved by the auto-arrange.
+		self.assertNotEqual( s1["n1"]["__uiPosition"].getValue(), s1["n2"]["__uiPosition"].getValue() )
+
+		# Check that the UI positions of the two nodes, created with positions,
+		# are equal and match the position that they were given.
+		self.assertEqual( s2["n1"]["__uiPosition"].getValue(), IECore.V2f( -5.0, 10.0 ) )
+		self.assertEqual( s2["n2"]["__uiPosition"].getValue(), IECore.V2f( 0, 0 ) )
+
+
 if __name__ == "__main__":
 	unittest.main()
