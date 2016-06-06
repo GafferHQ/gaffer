@@ -675,12 +675,12 @@ libraries = {
 
 	"GafferAppleseed" : {
 		"envAppends" : {
-			"CPPPATH" : [ "$APPLESEED_INCLUDE_PATH" ],
+			"CXXFLAGS" : [ "-isystem", "$APPLESEED_INCLUDE_PATH" ],
 			"LIBPATH" : [ "$APPLESEED_LIB_PATH" ],
 			"LIBS" : [ "Gaffer", "GafferScene", "appleseed", "IECoreAppleseed$CORTEX_LIB_SUFFIX" ],
 		},
 		"pythonEnvAppends" : {
-			"CPPPATH" : [ "$APPLESEED_INCLUDE_PATH" ],
+			"CXXFLAGS" : [ "-isystem", "$APPLESEED_INCLUDE_PATH" ],
 			"LIBPATH" : [ "$APPLESEED_LIB_PATH" ],
 			"LIBS" : [ "Gaffer", "GafferScene", "GafferBindings", "GafferAppleseed" ],
 		},
