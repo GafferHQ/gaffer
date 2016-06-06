@@ -57,9 +57,6 @@ class NodeGraph( GafferUI.EditorWidget ) :
 		graphGadget = GafferUI.GraphGadget( self.scriptNode() )
 		self.__rootChangedConnection = graphGadget.rootChangedSignal().connect( Gaffer.WeakMethod( self.__rootChanged ) )
 
-		if not self.__nodesHaveUIPosition( graphGadget ) :
-			self.__layoutAllNodes( graphGadget )
-
 		self.__gadgetWidget.getViewportGadget().setPrimaryChild( graphGadget )
 		self.__gadgetWidget.getViewportGadget().setDragTracking( True )
 		self.__frame( scriptNode.selection() )
@@ -360,10 +357,6 @@ class NodeGraph( GafferUI.EditorWidget ) :
 				return True
 
 		return False
-
-	def __layoutAllNodes( self , graphGadget ) :
-
-		graphGadget.getLayout().layoutNodes( graphGadget, Gaffer.StandardSet( graphGadget.getRoot().children( Gaffer.Node ) ) )
 
 	def __buttonDoubleClick( self, widget, event ) :
 
