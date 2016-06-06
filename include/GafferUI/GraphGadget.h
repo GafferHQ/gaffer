@@ -41,6 +41,7 @@
 #include "Gaffer/Plug.h"
 
 #include "GafferUI/ContainerGadget.h"
+#include "Gaffer/CompoundNumericPlug.h"
 
 namespace Gaffer
 {
@@ -202,10 +203,12 @@ class GraphGadget : public ContainerGadget
 		void updateGraph();
 		/// May return NULL if NodeGadget::create() returns NULL, signifying that
 		/// someone has registered a creator in order to hide all nodes of a certain type.
-		NodeGadget *addNodeGadget( Gaffer::Node *node );
+		NodeGadget *addNodeGadget( Gaffer::Node *node, bool setDefaultPosition );
 		void removeNodeGadget( const Gaffer::Node *node );
 		NodeGadget *findNodeGadget( const Gaffer::Node *node ) const;
 		void updateNodeGadgetTransform( NodeGadget *nodeGadget );
+
+		Gaffer::V2fPlug *getNodePositionPlug( Gaffer::Node *node ) const;
 
 		void addConnectionGadgets( Gaffer::GraphComponent *nodeOrPlug );
 		void addConnectionGadget( Gaffer::Plug *dstPlug );

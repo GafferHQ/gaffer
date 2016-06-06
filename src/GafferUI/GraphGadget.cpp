@@ -47,7 +47,6 @@
 #include "Gaffer/NumericPlug.h"
 #include "Gaffer/TypedPlug.h"
 #include "Gaffer/StandardSet.h"
-#include "Gaffer/CompoundNumericPlug.h"
 #include "Gaffer/RecursiveChildIterator.h"
 #include "Gaffer/DependencyNode.h"
 
@@ -402,14 +401,7 @@ void GraphGadget::connectedNodeGadgetsWalk( NodeGadget *gadget, std::set<NodeGad
 
 void GraphGadget::setNodePosition( Gaffer::Node *node, const Imath::V2f &position )
 {
-	Gaffer::V2fPlug *plug = node->getChild<Gaffer::V2fPlug>( g_positionPlugName );
-	if( !plug )
-	{
-		plug = new Gaffer::V2fPlug( g_positionPlugName, Gaffer::Plug::In );
-		plug->setFlags( Gaffer::Plug::Dynamic, true );
-		node->addChild( plug );
-	}
-
+	Gaffer::V2fPlug *plug = getNodePositionPlug( node );
 	plug->setValue( position );
 }
 
@@ -424,6 +416,20 @@ bool GraphGadget::hasNodePosition( const Gaffer::Node *node ) const
 	const Gaffer::V2fPlug *plug = node->getChild<Gaffer::V2fPlug>( g_positionPlugName );
 	return plug != NULL;
 }
+
+Gaffer::V2fPlug *GraphGadget::getNodePositionPlug( Gaffer::Node *node ) const
+{
+	Gaffer::V2fPlug *plug = node->getChild<Gaffer::V2fPlug>( g_positionPlugName );
+	if( !plug )
+	{
+		plug = new Gaffer::V2fPlug( g_positionPlugName, Gaffer::Plug::In );
+		plug->setFlags( Gaffer::Plug::Dynamic, true );
+		node->addChild( plug );
+	}
+
+	return plug;
+}
+
 
 void GraphGadget::setNodeInputConnectionsMinimised( Gaffer::Node *node, bool minimised )
 {
@@ -677,7 +683,7 @@ void GraphGadget::rootChildAdded( Gaffer::GraphComponent *root, Gaffer::GraphCom
 	{
 		if( !findNodeGadget( node ) )
 		{
-			if( addNodeGadget( node ) )
+			if( addNodeGadget( node, true ) )
 			{
 				addConnectionGadgets( node );
 			}
@@ -723,7 +729,7 @@ void GraphGadget::filterMemberAdded( Gaffer::Set *set, IECore::RunTimeTyped *mem
 	{
 		if( !findNodeGadget( node ) )
 		{
-			if( addNodeGadget( node ) )
+			if( addNodeGadget( node, true ) )
 			{
 				addConnectionGadgets( node );
 			}
@@ -1289,7 +1295,7 @@ void GraphGadget::offsetNodes( Gaffer::Set *nodes, const Imath::V2f &offset )
 		NodeGadget *gadget = nodeGadget( node );
 		if( gadget )
 		{
-			Gaffer::V2fPlug *p = node->getChild<Gaffer::V2fPlug>( g_positionPlugName );
+			Gaffer::V2fPlug *p = getNodePositionPlug( node );
 			p->setValue( p->getValue() + offset );
 		}
 	}
@@ -1342,7 +1348,7 @@ void GraphGadget::updateGraph()
 		{
 			if( !findNodeGadget( it->get() ) )
 			{
-				addNodeGadget( it->get() );
+				addNodeGadget( it->get(), false );
 			}
 		}
 	}
@@ -1357,9 +1363,20 @@ void GraphGadget::updateGraph()
 		}
 	}
 
+	Gaffer::StandardSetPtr layoutNodes = new Gaffer::StandardSet();
+	for( Gaffer::NodeIterator it( m_root.get() ); !it.done(); ++it )
+	{
+		if( !hasNodePosition( it->get() ) )
+		{
+			layoutNodes->add( it->get() );
+		}
+	}
+
+	getLayout()->layoutNodes( this, layoutNodes.get() );
+
 }
 
-NodeGadget *GraphGadget::addNodeGadget( Gaffer::Node *node )
+NodeGadget *GraphGadget::addNodeGadget( Gaffer::Node *node, bool setDefaultPosition )
 {
 	NodeGadgetPtr nodeGadget = NodeGadget::create( node );
 	if( !nodeGadget )
@@ -1380,6 +1397,11 @@ NodeGadget *GraphGadget::addNodeGadget( Gaffer::Node *node )
 	if( m_scriptNode && m_scriptNode->selection()->contains( node ) )
 	{
 		nodeGadget->setHighlighted( true );
+	}
+
+	if( setDefaultPosition )
+	{
+		getNodePositionPlug( node );
 	}
 
 	updateNodeGadgetTransform( nodeGadget.get() );
