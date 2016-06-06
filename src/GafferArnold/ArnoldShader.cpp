@@ -84,7 +84,7 @@ void ArnoldShader::loadShader( const std::string &shaderName )
 
 	ParameterHandler::setupPlugs( shader, parametersPlug() );
 
-	PlugPtr outPlug = 0;
+	PlugPtr outPlug = NULL;
 	const int outputType = AiNodeEntryGetOutputType( shader );
 	switch( outputType )
 	{
@@ -118,6 +118,25 @@ void ArnoldShader::loadShader( const std::string &shaderName )
 		case AI_TYPE_INT :
 
 			outPlug = new IntPlug(
+				"out",
+				Plug::Out
+			);
+
+			break;
+
+		case AI_TYPE_POINT2 :
+
+			outPlug = new V2fPlug(
+				"out",
+				Plug::Out
+			);
+
+			break;
+
+		case AI_TYPE_POINT :
+		case AI_TYPE_VECTOR :
+
+			outPlug = new V3fPlug(
 				"out",
 				Plug::Out
 			);
