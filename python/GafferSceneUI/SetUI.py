@@ -86,6 +86,7 @@ Gaffer.Metadata.registerNode(
 			"description",
 			"""
 			The name of the set that will be created or edited.
+			You can create multiple set names at once by separating them with spaces.
 			""",
 
 			"ui:scene:acceptsSetName", True,

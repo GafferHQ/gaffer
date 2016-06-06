@@ -192,14 +192,8 @@ IECore::ConstInternedStringVectorDataPtr Set::computeSetNames( const Gaffer::Con
 {
 	ConstInternedStringVectorDataPtr inNamesData = inPlug()->setNamesPlug()->getValue();
 
-	InternedString name = namePlug()->getValue();
-	if( !name.string().size() )
-	{
-		return inNamesData;
-	}
-
-	const std::vector<InternedString> &inNames = inNamesData->readable();
-	if( std::find( inNames.begin(), inNames.end(), name ) != inNames.end() )
+	const std::string &names = namePlug()->getValue();
+	if( !names.size() )
 	{
 		return inNamesData;
 	}
@@ -209,14 +203,42 @@ IECore::ConstInternedStringVectorDataPtr Set::computeSetNames( const Gaffer::Con
 		return inNamesData;
 	}
 
-	InternedStringVectorDataPtr result = inNamesData->copy();
-	result->writable().push_back( name );
-	return result;
+	vector<InternedString> tokenizedNames;
+	Gaffer::tokenize( names, ' ', tokenizedNames );
+
+	// specific logic if we have only one item, to avoid the more complex logic of adding two lists together
+	if( tokenizedNames.size() == 1 ) {
+		const std::vector<InternedString> &inNames = inNamesData->readable();
+		if( std::find( inNames.begin(), inNames.end(), tokenizedNames[0] ) != inNames.end() )
+		{
+			return inNamesData;
+		}
+
+		InternedStringVectorDataPtr resultData = inNamesData->copy();
+		resultData->writable().push_back( tokenizedNames[0] );
+		return resultData;
+	}
+
+	// inserting the new names into the vector
+	// while making sure we don't have duplicates
+	InternedStringVectorDataPtr resultData = inNamesData->copy();
+
+	std::vector<InternedString> &result = resultData->writable();
+	result.reserve( result.size() + tokenizedNames.size() );
+	std::copy( tokenizedNames.begin(), tokenizedNames.end(), std::back_inserter( result ) );
+	std::sort( result.begin(), result.end() );
+	std::vector<InternedString>::iterator it;
+	it = std::unique( result.begin(), result.end() );
+	result.resize( std::distance( result.begin(), it ) );
+
+	return resultData;
 }
 
 void Set::hashSet( const IECore::InternedString &setName, const Gaffer::Context *context, const ScenePlug *parent, IECore::MurmurHash &h ) const
 {
-	if( setName != namePlug()->getValue() )
+	const std::string allSets = " " + namePlug()->getValue() + " ";
+	const std::string setNameToFind = " " + setName.string() + " ";
+	if( allSets.find( setNameToFind ) == std::string::npos )
 	{
 		h = inPlug()->setPlug()->hash();
 		return;
@@ -230,7 +252,9 @@ void Set::hashSet( const IECore::InternedString &setName, const Gaffer::Context 
 
 GafferScene::ConstPathMatcherDataPtr Set::computeSet( const IECore::InternedString &setName, const Gaffer::Context *context, const ScenePlug *parent ) const
 {
-	if( InternedString( namePlug()->getValue() ) != setName )
+	const std::string allSets = " " + namePlug()->getValue() + " ";
+	const std::string setNameToFind = " " + setName.string() + " ";
+	if( allSets.find( setNameToFind ) == std::string::npos )
 	{
 		return inPlug()->setPlug()->getValue();
 	}
