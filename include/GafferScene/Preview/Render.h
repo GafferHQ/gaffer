@@ -34,18 +34,77 @@
 //
 //////////////////////////////////////////////////////////////////////////
 
-#include "GafferArnold/InteractiveArnoldRender.h"
+#ifndef GAFFERSCENE_PREVIEW_RENDER_H
+#define GAFFERSCENE_PREVIEW_RENDER_H
 
-using namespace GafferScene;
-using namespace GafferArnold;
+#include "Gaffer/StringPlug.h"
+#include "Gaffer/NumericPlug.h"
 
-IE_CORE_DEFINERUNTIMETYPED( InteractiveArnoldRender );
+#include "GafferDispatch/ExecutableNode.h"
+#include "GafferScene/TypeIds.h"
 
-InteractiveArnoldRender::InteractiveArnoldRender( const std::string &name )
-	:	InteractiveRender( "IECoreArnold::Renderer", name )
+namespace GafferScene
 {
-}
 
-InteractiveArnoldRender::~InteractiveArnoldRender()
+IE_CORE_FORWARDDECLARE( ScenePlug )
+
+namespace Preview
 {
-}
+
+class Render : public GafferDispatch::ExecutableNode
+{
+
+	public :
+
+		Render( const std::string &name=defaultName<Render>() );
+		virtual ~Render();
+
+		IE_CORE_DECLARERUNTIMETYPEDEXTENSION( GafferScene::Preview::Render, GafferScene::RenderTypeId, GafferDispatch::ExecutableNode );
+
+		enum Mode
+		{
+			RenderMode = 0,
+			SceneDescriptionMode = 1
+		};
+
+		ScenePlug *inPlug();
+		const ScenePlug *inPlug() const;
+
+		Gaffer::StringPlug *rendererPlug();
+		const Gaffer::StringPlug *rendererPlug() const;
+
+		Gaffer::IntPlug *modePlug();
+		const Gaffer::IntPlug *modePlug() const;
+
+		Gaffer::StringPlug *fileNamePlug();
+		const Gaffer::StringPlug *fileNamePlug() const;
+
+		ScenePlug *outPlug();
+		const ScenePlug *outPlug() const;
+
+		virtual IECore::MurmurHash hash( const Gaffer::Context *context ) const;
+		virtual void execute() const;
+
+	protected :
+
+		// Constructor for derived classes which wish to hardcode the renderer type. Perhaps
+		// at some point we won't even have derived classes, but instead will always use the
+		// base class? At the moment the main purpose of the derived classes is to force the
+		// loading of the module which registers the required renderer type.
+		Render( const IECore::InternedString &rendererType, const std::string &name );
+
+	private :
+
+		void construct( const IECore::InternedString &rendererType = IECore::InternedString() );
+
+		static size_t g_firstPlugIndex;
+
+};
+
+IE_CORE_DECLAREPTR( Render );
+
+} // namespace Preview
+
+} // namespace GafferScene
+
+#endif // GAFFERSCENE_PREVIEW_RENDER_H

@@ -35,6 +35,7 @@
 //////////////////////////////////////////////////////////////////////////
 
 #include "tbb/compat/thread"
+#include "tbb/concurrent_vector.h"
 
 #include "boost/make_shared.hpp"
 #include "boost/format.hpp"
@@ -386,6 +387,16 @@ class ArnoldObject : public IECoreScenePreview::Renderer::ObjectInterface
 			}
 		}
 
+		ArnoldObject( const std::string &name, const std::vector<const IECore::Object *> &samples, const std::vector<float> &times )
+			:	m_node( NULL )
+		{
+			m_node = NodeAlgo::convert( samples, times );
+			if( m_node )
+			{
+				AiNodeSetStr( m_node, "name", name.c_str() );
+			}
+		}
+
 		virtual ~ArnoldObject()
 		{
 			if( m_node )
@@ -401,6 +412,31 @@ class ArnoldObject : public IECoreScenePreview::Renderer::ObjectInterface
 				return;
 			}
 			AiNodeSetMatrix( m_node, "matrix", const_cast<float (*)[4]>( transform.x ) );
+		}
+
+		virtual void transform( const std::vector<Imath::M44f> &samples, const std::vector<float> &times )
+		{
+			if( !m_node )
+			{
+				return;
+			}
+			const size_t numSamples = samples.size();
+			AtArray *timesArray = AiArrayAllocate( samples.size(), 1, AI_TYPE_FLOAT );
+			AtArray *matricesArray = AiArrayAllocate( 1, numSamples, AI_TYPE_MATRIX );
+			for( size_t i = 0; i < numSamples; ++i )
+			{
+				AiArraySetFlt( timesArray, i, times[i] );
+				AiArraySetMtx( matricesArray, i, const_cast<float (*)[4]>( samples[i].x ) );
+			}
+			AiNodeSetArray( m_node, "matrix", matricesArray );
+			if( AiNodeEntryLookUpParameter( AiNodeGetNodeEntry( m_node ), "transform_time_samples" ) )
+			{
+				AiNodeSetArray( m_node, "transform_time_samples", timesArray );
+			}
+			else
+			{
+				AiNodeSetArray( m_node, "time_samples", matricesArray );
+			}
 		}
 
 		virtual void attributes( const IECoreScenePreview::Renderer::AttributesInterface *attributes )
@@ -430,7 +466,7 @@ class ArnoldObject : public IECoreScenePreview::Renderer::ObjectInterface
 } // namespace
 
 //////////////////////////////////////////////////////////////////////////
-// ArnoldObject
+// ArnoldLight
 //////////////////////////////////////////////////////////////////////////
 
 namespace
@@ -493,8 +529,6 @@ namespace
 /// \todo Should these be defined in the Renderer base class?
 /// Or maybe be in a utility header somewhere?
 IECore::InternedString g_cameraOptionName( "camera" );
-IECore::InternedString g_resolutionOptionName( "resolution" );
-IECore::InternedString g_pixelAspectRatioOptionName( "pixelAspectRatio" );
 IECore::InternedString g_logFileNameOptionName( "ai:log:filename" );
 
 class ArnoldRenderer : public IECoreScenePreview::Renderer
@@ -510,13 +544,8 @@ class ArnoldRenderer : public IECoreScenePreview::Renderer
 			/// \todo Control with an option.
 			AiMsgSetConsoleFlags( AI_LOG_ALL );
 
-			m_defaultShader = AiNode( "utility" );
-			AiNodeSetStr( m_defaultShader, "name", "ieCoreArnold:defaultShader" );
-
-			IECore::ConstCameraPtr defaultCamera = new IECore::Camera();
-			m_defaultCamera = CameraAlgo::convert( defaultCamera.get() );
-
-			option( g_resolutionOptionName, NULL ); // Set resolution to default
+			AtNode *defaultShader = AiNode( "utility" );
+			AiNodeSetStr( defaultShader, "name", "ieCoreArnold:defaultShader" );
 		}
 
 		virtual ~ArnoldRenderer()
@@ -537,32 +566,6 @@ class ArnoldRenderer : public IECoreScenePreview::Renderer
 				{
 					m_cameraName = d->readable();
 
-				}
-				return;
-			}
-			else if( name == g_resolutionOptionName )
-			{
-				if( value == NULL )
-				{
-					AiNodeSetInt( options, "xres", 1920 );
-					AiNodeSetInt( options, "yres", 1080 );
-				}
-				else if( const IECore::V2iData *d = reportedCast<const IECore::V2iData>( value, "option", name ) )
-				{
-					AiNodeSetInt( options, "xres", d->readable().x );
-					AiNodeSetInt( options, "yres", d->readable().y );
-				}
-				return;
-			}
-			else if( name == g_pixelAspectRatioOptionName )
-			{
-				if( value == NULL )
-				{
-					AiNodeSetFlt( options, "aspect_ratio", 1.0f );
-				}
-				else if( const IECore::FloatData *d = reportedCast<const IECore::FloatData>( value, "option", name ) )
-				{
-					AiNodeSetFlt( options, "aspect_ratio", 1.0f / d->readable() ); // arnold is y/x, we're x/y
 				}
 				return;
 			}
@@ -646,27 +649,30 @@ class ArnoldRenderer : public IECoreScenePreview::Renderer
 
 		virtual ObjectInterfacePtr camera( const std::string &name, const IECore::Camera *camera )
 		{
-			return new ArnoldObject( name, camera );
+			IECore::CameraPtr cameraCopy = camera->copy();
+			cameraCopy->addStandardParameters();
+			m_cameras[name] = cameraCopy;
+			return store( new ArnoldObject( name, cameraCopy.get() ) );
 		}
 
 		virtual ObjectInterfacePtr light( const std::string &name, const IECore::Object *object = NULL )
 		{
-			return new ArnoldLight( name, object );
+			return store( new ArnoldLight( name, object ) );
 		}
 
 		virtual Renderer::ObjectInterfacePtr object( const std::string &name, const IECore::Object *object )
 		{
-			return new ArnoldObject( name, object );
+			return store( new ArnoldObject( name, object ) );
+		}
+
+		virtual ObjectInterfacePtr object( const std::string &name, const std::vector<const IECore::Object *> &samples, const std::vector<float> &times )
+		{
+			return store( new ArnoldObject( name, samples, times ) );
 		}
 
 		virtual void render()
 		{
-			AtNode *options = AiUniverseGetOptions();
-
-			// Set the camera.
-			AiNodeSetPtr( options, "camera",
-				m_cameraName.size() ? AiNodeLookUpByName( m_cameraName.c_str() ) : m_defaultCamera
-			);
+			updateCamera();
 
 			// Do the appropriate render based on
 			// m_renderType.
@@ -698,6 +704,61 @@ class ArnoldRenderer : public IECoreScenePreview::Renderer
 		}
 
 	private :
+
+		ObjectInterfacePtr store( ObjectInterface *objectInterface )
+		{
+			if( m_renderType != Interactive )
+			{
+				// Our ObjectInterface class owns the AtNodes it
+				// represents. In Interactive mode the client is
+				// responsible for keeping it alive as long as the
+				// object should exist, but in non-interactive modes
+				// we are responsible for ensuring the object doesn't
+				// die. Storing it is the simplest approach.
+				//
+				// \todo We might want to save memory by not storing
+				// ObjectInterfaces, but instead giving them the notion
+				// of whether or not they own the AtNodes they created.
+				m_objects.push_back( objectInterface );
+			}
+			return objectInterface;
+		}
+
+		void updateCamera()
+		{
+			AtNode *options = AiUniverseGetOptions();
+
+			const IECore::Camera *cortexCamera = m_cameras[m_cameraName].get();
+			if( cortexCamera )
+			{
+				AiNodeSetPtr( options, "camera", AiNodeLookUpByName( m_cameraName.c_str() ) );
+				m_defaultCamera = NULL;
+			}
+			else
+			{
+				if( !m_defaultCamera )
+				{
+					IECore::CameraPtr defaultCortexCamera = new IECore::Camera();
+					defaultCortexCamera->addStandardParameters();
+					m_defaultCamera = camera( "ieCoreArnold:defaultCamera", defaultCortexCamera.get() );
+				}
+				cortexCamera = m_cameras["ieCoreArnold:defaultCamera"].get();
+				AiNodeSetPtr( options, "camera", AiNodeLookUpByName( "ieCoreArnold:defaultCamera" ) );
+			}
+
+			const IECore::V2iData *resolution = cortexCamera->parametersData()->member<IECore::V2iData>( "resolution" );
+			AiNodeSetInt( options, "xres", resolution->readable().x );
+			AiNodeSetInt( options, "yres", resolution->readable().y );
+
+			const IECore::FloatData *pixelAspectRatio = cortexCamera->parametersData()->member<IECore::FloatData>( "pixelAspectRatio" );
+			AiNodeSetFlt( options, "aspect_ratio", 1.0f / pixelAspectRatio->readable() ); // arnold is y/x, we're x/y
+
+			const IECore::Box2fData *crop = cortexCamera->parametersData()->member<IECore::Box2fData>( "cropWindow" );
+			AiNodeSetInt( options, "region_min_x", (int)(( resolution->readable().x - 1 ) * crop->readable().min.x ) );
+			AiNodeSetInt( options, "region_min_y", (int)(( resolution->readable().y - 1 ) * crop->readable().min.y ) );
+			AiNodeSetInt( options, "region_max_x", (int)(( resolution->readable().x - 1 ) * crop->readable().max.x ) );
+			AiNodeSetInt( options, "region_max_y", (int)(( resolution->readable().y - 1 ) * crop->readable().max.y ) );
+		}
 
 		// Called in a background thread to control a
 		// progressive interactive render.
@@ -734,13 +795,17 @@ class ArnoldRenderer : public IECoreScenePreview::Renderer
 
 		boost::shared_ptr<IECoreArnold::UniverseBlock> m_universeBlock;
 
-		AtNode *m_defaultShader;
-		AtNode *m_defaultCamera;
-
 		typedef std::map<IECore::InternedString, ArnoldOutputPtr> OutputMap;
 		OutputMap m_outputs;
 
 		std::string m_cameraName;
+		typedef std::map<std::string, IECore::ConstCameraPtr> CameraMap;
+		CameraMap m_cameras;
+		ObjectInterfacePtr m_defaultCamera;
+
+		// Members used by batch renders
+
+		tbb::concurrent_vector<ObjectInterfacePtr> m_objects;
 
 		// Members used by interactive renders
 

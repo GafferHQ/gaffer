@@ -122,7 +122,15 @@ std::vector<AtNode *> convert( const IECore::ObjectVector *shaderNetwork )
 					continue;
 				}
 			}
-			ParameterAlgo::setParameter( node, pIt->first.value().c_str(), pIt->second.get() );
+			
+			if( !pIt->second )
+			{
+				msg( Msg::Warning, "IECoreArnold::ShaderAlgo", boost::format( "Trying to output null parameter \"%s\" on shader \"%s\"" ) % pIt->first.value() % nodeType );
+			}
+			else
+			{
+				ParameterAlgo::setParameter( node, pIt->first.value().c_str(), pIt->second.get() );
+			}
 		}
 
 		result.push_back( node );

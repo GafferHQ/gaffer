@@ -67,7 +67,9 @@ using namespace GafferScene::Preview;
 namespace
 {
 
-static InternedString g_visibleAttributeName( "scene:visible" );
+InternedString g_cameraGlobalName( "option:render:camera" );
+
+InternedString g_visibleAttributeName( "scene:visible" );
 
 bool visible( const CompoundObject *attributes )
 {
@@ -194,7 +196,7 @@ class InteractiveRender::SceneGraph
 			m_pending = m_pending | TransformPending;
 		}
 
-		void updateObject( const ObjectPlug *objectPlug, Type type, IECoreScenePreview::Renderer *renderer )
+		void updateObject( const ObjectPlug *objectPlug, Type type, IECoreScenePreview::Renderer *renderer, const IECore::CompoundObject *globals )
 		{
 			if( !objectPlug )
 			{
@@ -224,7 +226,9 @@ class InteractiveRender::SceneGraph
 			{
 				if( const IECore::Camera *camera = runTimeCast<const IECore::Camera>( object.get() ) )
 				{
-					m_objectInterface = renderer->camera( name, camera );
+					IECore::CameraPtr cameraCopy = camera->copy();
+					applyCameraGlobals( cameraCopy.get(), globals );
+					m_objectInterface = renderer->camera( name, cameraCopy.get() );
 				}
 			}
 			else if( type == Light )
@@ -495,12 +499,12 @@ class InteractiveRender::SceneGraphUpdateTask : public tbb::task
 			{
 				if( m_dirtyFlags & ObjectDirty )
 				{
-					m_sceneGraph->updateObject( scene()->objectPlug(), m_sceneGraphType, m_interactiveRender->m_renderer.get() );
+					m_sceneGraph->updateObject( scene()->objectPlug(), m_sceneGraphType, m_interactiveRender->m_renderer.get(), m_interactiveRender->m_globals.get() );
 				}
 			}
 			else
 			{
-				m_sceneGraph->updateObject( NULL, m_sceneGraphType, NULL );
+				m_sceneGraph->updateObject( NULL, m_sceneGraphType, NULL, NULL );
 			}
 
 			// Update the children. This just ensures that they exist - we'll
@@ -840,8 +844,22 @@ void InteractiveRender::update()
 				continue;
 			}
 		}
+		if( i == SceneGraph::Camera && ( m_dirtyFlags & SceneGraphUpdateTask::GlobalsDirty ) )
+		{
+			// Because the globals are applied to camera objects, we must update the object whenever
+			// the globals have changed, so we clear the scene graph and start again. We don't expect
+			// this to be a big overhead because typically there aren't many cameras in a scene. If it
+			// does cause a problem, we could examine the exact changes to the globals and avoid clearing
+			// if we know they won't affect the camera.
+			sceneGraph->clear();
+		}
 		SceneGraphUpdateTask *task = new( tbb::task::allocate_root() ) SceneGraphUpdateTask( this, sceneGraph, (SceneGraph::Type)i, m_dirtyFlags, ScenePlug::ScenePath() );
 		tbb::task::spawn_root_and_wait( *task );
+	}
+
+	if( m_dirtyFlags & SceneGraphUpdateTask::GlobalsDirty )
+	{
+		updateDefaultCamera();
 	}
 
 	m_dirtyFlags = SceneGraphUpdateTask::NothingDirty;
@@ -850,15 +868,30 @@ void InteractiveRender::update()
 	m_renderer->render();
 }
 
+void InteractiveRender::updateDefaultCamera()
+{
+	const StringData *cameraOption = m_globals->member<StringData>( g_cameraGlobalName );
+	m_defaultCamera = NULL;
+	if( cameraOption && !cameraOption->readable().empty() )
+	{
+		return;
+	}
+
+	CameraPtr defaultCamera = camera( inPlug(), m_globals.get() );
+	StringDataPtr name = new StringData( "gaffer:defaultCamera" );
+	m_defaultCamera = m_renderer->camera( name->readable(), defaultCamera.get() );
+	m_renderer->option( "camera", name.get() );
+}
+
 void InteractiveRender::stop()
 {
-	m_renderer = NULL;
-
 	m_sceneGraphs.clear();
 	for( int i = SceneGraph::First; i <= SceneGraph::Last; ++i )
 	{
 		m_sceneGraphs.push_back( boost::make_shared<SceneGraph>() );
 	}
+	m_defaultCamera = NULL;
+	m_renderer = NULL;
 
 	m_globals = inPlug()->globalsPlug()->defaultValue();
 	m_globalAttributes = inPlug()->globalsPlug()->defaultValue();

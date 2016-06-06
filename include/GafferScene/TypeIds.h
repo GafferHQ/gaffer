@@ -127,6 +127,7 @@ enum TypeId
 	PathMatcherDataPlugTypeId = 110582,
 	AttributeVisualiserTypeId = 110583,
 	SceneLoopTypeId = 110584,
+	RenderTypeId = 110585,
 
 	PreviewInteractiveRenderTypeId = 110649,
 

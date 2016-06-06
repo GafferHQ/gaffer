@@ -67,7 +67,7 @@ class Renderer : public IECore::RefCounted
 
 		static const std::vector<IECore::InternedString> &types();
 		/// Filename is only used if the renderType is SceneDescription.
-		static Ptr create( const IECore::InternedString &type, RenderType renderType, const std::string &fileName = "" );
+		static Ptr create( const IECore::InternedString &type, RenderType renderType = Batch, const std::string &fileName = "" );
 
 		/// \todo Rename Display->Output in Cortex.
 		typedef IECore::Display Output;
@@ -78,10 +78,7 @@ class Renderer : public IECore::RefCounted
 		/// Standard Options
 		/// ----------------
 		///
-		/// "camera", StringData, ""
-		/// "resolution", V2iData, 1920x1080
-		/// "pixelAspectRatio", FloatData, 1.0
-		/// "cropWindow", Box2fData, ( ( 0, 0 ), ( 1, 1 ) )
+		/// "camera", StringData, "", The name of the primary render camera.
 		virtual void option( const IECore::InternedString &name, const IECore::Data *value ) = 0;
 		/// Adds an output image to be rendered, In interactive renders an output may be
 		/// removed by passing NULL as the value.
@@ -133,6 +130,8 @@ class Renderer : public IECore::RefCounted
 				/// Assigns a transform to the object. For Interactive renders
 				/// transforms may be modified at any time the renderer is paused.
 				virtual void transform( const Imath::M44f &transform ) = 0;
+				/// As above, but specifying a moving transform.
+				virtual void transform( const std::vector<Imath::M44f> &samples, const std::vector<float> &times ) = 0;
 				/// Assigns a block of attributes to the object, replacing any
 				/// previously assigned attributes. For Interactive renders
 				/// attributes may be modified at any time the renderer is paused.
@@ -147,6 +146,39 @@ class Renderer : public IECore::RefCounted
 		/// Adds a named camera to the render. Cameras should be specified prior to all
 		/// other lights/objects, as some renderers (for instance a streaming OpenGL renderer)
 		/// may be unable to operate otherwise.
+		///
+		/// Standard parameters :
+		///
+		/// "resolution", V2iData
+		/// The resolution of any output images. Should default to 640x480 if not specified.
+		///
+		/// "pixelAspectRatio", FloatData
+		/// The xSize/ySize aspect ratio for a pixel.
+		///
+		/// "screenWindow", Box2fData
+		/// The region in screen space which is mapped to the output resolution.
+		///
+		/// "cropWindow", Box2fData, 0,0-1,1
+		/// The region in raster space which should actually be rendered - this allows just
+		/// a section of the full resolution to be rendered. Note that raster space runs from
+		/// 0,0 at the top left to 1,1 at the bottom right. Defaults to 0,0 1,1 if not specified.
+		///
+		/// "projection" StringData, "perspective"
+		/// The projection that determines how camera coordinates are converted to screen space
+		/// coordinates. Implementations should support "perspective" and "orthographic", with
+		/// orthographic being the default if not specified.
+		///
+		/// "projection:fov", FloatData
+		/// In the case of the "projection" parameter specifying a perspective projection, this
+		/// specifies the field of view (in degrees) which is visible between -1 and 1 in screen
+		/// space. Defaults to 90 degrees if unspecified.
+		///
+		/// "clippingPlanes", V2fData
+		/// The near and far clipping planes. Defaults to 0.01, 100000 if unspecified.
+		///
+		/// "shutter", V2fData
+		/// The time interval for which the shutter is open - this is used in conjunction with the
+		/// times passed to motionBegin() to specify motion blur. Defaults to 0,0 if unspecified.
 		virtual ObjectInterfacePtr camera( const std::string &name, const IECore::Camera *camera ) = 0;
 
 		/// Adds a named light to the render. A shader for the light is expected to be
@@ -161,6 +193,8 @@ class Renderer : public IECore::RefCounted
 		/// Object here, but still pass CoordinateSystems. Or should
 		/// coordinate systems have their own dedicated calls?
 		virtual ObjectInterfacePtr object( const std::string &name, const IECore::Object *object ) = 0;
+		/// As above, but specifying a deforming object.
+		virtual ObjectInterfacePtr object( const std::string &name, const std::vector<const IECore::Object *> &samples, const std::vector<float> &times ) = 0;
 
 		/// Performs the render - should be called after the
 		/// entire scene has been specified using the methods

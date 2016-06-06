@@ -108,6 +108,8 @@ IECore::TransformPtr transform( const ScenePlug *scene, const ScenePlug::ScenePa
 IECore::CameraPtr camera( const ScenePlug *scene, const IECore::CompoundObject *globals = NULL );
 /// As above, but choosing a specific camera rather than the primary one.
 IECore::CameraPtr camera( const ScenePlug *scene, const ScenePlug::ScenePath &cameraPath, const IECore::CompoundObject *globals = NULL );
+/// Applies the resolution, aspect ratio etc from the globals to the camera.
+void applyCameraGlobals( IECore::Camera *camera, const IECore::CompoundObject *globals );
 
 /// Returns true if the specified set exists within the scene, and false otherwise.
 /// This simply searches for the set name in the result of scene->setNamesPlug()->getValue().

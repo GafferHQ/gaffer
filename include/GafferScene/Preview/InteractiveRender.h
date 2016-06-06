@@ -107,6 +107,7 @@ class InteractiveRender : public Gaffer::Node
 		void contextChanged( const IECore::InternedString &name );
 
 		void update();
+		void updateDefaultCamera();
 		void stop();
 
 		class SceneGraph;
@@ -120,6 +121,7 @@ class InteractiveRender : public Gaffer::Node
 		IECore::ConstCompoundObjectPtr m_globalAttributes;
 		GafferScene::PathMatcher m_lightSet;
 		GafferScene::PathMatcher m_cameraSet;
+		IECoreScenePreview::Renderer::ObjectInterfacePtr m_defaultCamera;
 
 		Gaffer::ContextPtr m_context;
 		boost::signals::scoped_connection m_contextChangedConnection;

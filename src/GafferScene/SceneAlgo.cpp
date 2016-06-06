@@ -219,10 +219,7 @@ IECore::TransformPtr GafferScene::transform( const ScenePlug *scene, const Scene
 // Camera algo
 //////////////////////////////////////////////////////////////////////////
 
-namespace
-{
-
-void applyCameraGlobals( IECore::Camera *camera, const IECore::CompoundObject *globals )
+void GafferScene::applyCameraGlobals( IECore::Camera *camera, const IECore::CompoundObject *globals )
 {
 
 	// apply the resolution, aspect ratio and crop window
@@ -369,8 +366,6 @@ void applyCameraGlobals( IECore::Camera *camera, const IECore::CompoundObject *g
 
 }
 
-} // namespace
-
 IECore::CameraPtr GafferScene::camera( const ScenePlug *scene, const IECore::CompoundObject *globals )
 {
 	ConstCompoundObjectPtr computedGlobals;
@@ -380,7 +375,8 @@ IECore::CameraPtr GafferScene::camera( const ScenePlug *scene, const IECore::Com
 		globals = computedGlobals.get();
 	}
 
-	if( const StringData *cameraPathData = globals->member<StringData>( "option:render:camera" ) )
+	const StringData *cameraPathData = globals->member<StringData>( "option:render:camera" );
+	if( cameraPathData && !cameraPathData->readable().empty() )
 	{
 		ScenePlug::ScenePath cameraPath;
 		ScenePlug::stringToPath( cameraPathData->readable(), cameraPath );

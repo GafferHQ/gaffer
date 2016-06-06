@@ -192,7 +192,7 @@ void StandardLightVisualiser::addEnvLightVisualiser( GroupPtr &output, Color3f m
 
 	Imath::M44f trans;
 	trans.scale( V3f( 1, 1, -1 ) );
-	trans.rotate( V3f( -0.5 * M_PI, 0, 0 ) );
+	trans.rotate( V3f( -0.5 * M_PI, -0.5 * M_PI, 0 ) );
 	sphereGroup->setTransform( trans );
 
 	IECoreGL::SpherePrimitivePtr sphere = new IECoreGL::SpherePrimitive();
@@ -299,6 +299,7 @@ IECoreGL::ConstRenderablePtr StandardLightVisualiser::visualise( const IECore::O
 	InternedString metadataTarget = "light:" + lightShader->getName();
 
 	ConstStringDataPtr type = Metadata::value<StringData>( metadataTarget, "type" );
+	ConstM44fDataPtr orientation = Metadata::value<M44fData>( metadataTarget, "visualiserOrientation" );
 
 	const Color3f color = parameter<Color3f>( metadataTarget, lightShader, "colorParameter", Color3f( 1.0f ) );
 	const float intensity = parameter<float>( metadataTarget, lightShader, "intensityParameter", 1 );
@@ -328,6 +329,10 @@ IECoreGL::ConstRenderablePtr StandardLightVisualiser::visualise( const IECore::O
 
 	const float locatorScale = parameter<float>( metadataTarget, lightShader, "locatorScaleParameter", 1 );
 	Imath::M44f topTrans;
+	if( orientation )
+	{
+		topTrans = orientation->readable();
+	}
 	topTrans.scale( V3f( locatorScale ) );
 	result->setTransform( topTrans );
 
