@@ -42,12 +42,15 @@
 
 #include "GafferScene/OpenGLRender.h"
 #include "GafferScene/InteractiveRender.h"
+#include "GafferScene/Preview/Render.h"
 #include "GafferScene/Preview/InteractiveRender.h"
+#include "GafferScene/Private/IECoreScenePreview/Renderer.h"
 
 #include "GafferSceneBindings/RenderBinding.h"
 
 using namespace boost::python;
 
+using namespace IECoreScenePreview;
 using namespace Gaffer;
 using namespace GafferBindings;
 using namespace GafferDispatchBindings;
@@ -121,6 +124,49 @@ ContextPtr previewInteractiveRenderGetContext( Preview::InteractiveRender &r )
 	return r.getContext();
 }
 
+list rendererTypes()
+{
+	std::vector<IECore::InternedString> t = Renderer::types();
+	list result;
+	for( std::vector<IECore::InternedString>::const_iterator it = t.begin(), eIt = t.end(); it != eIt; ++it )
+	{
+		result.append( it->c_str() );
+	}
+	return result;
+}
+
+IECoreScenePreview::Renderer::ObjectInterfacePtr rendererObject1( Renderer &renderer, const std::string &name, const IECore::Object *object )
+{
+	return renderer.object( name, object );
+}
+
+IECoreScenePreview::Renderer::ObjectInterfacePtr rendererObject2( Renderer &renderer, const std::string &name, object pythonSamples, object pythonTimes )
+{
+	std::vector<const IECore::Object *> samples;
+	container_utils::extend_container( samples, pythonSamples );
+
+	std::vector<float> times;
+	container_utils::extend_container( times, pythonTimes );
+
+	return renderer.object( name, samples, times );
+}
+
+void objectInterfaceTransform1( Renderer::ObjectInterface &objectInterface, const Imath::M44f &transform )
+{
+	objectInterface.transform( transform );
+}
+
+void objectInterfaceTransform2( Renderer::ObjectInterface &objectInterface, object pythonSamples, object pythonTimes )
+{
+	std::vector<Imath::M44f> samples;
+	container_utils::extend_container( samples, pythonSamples );
+
+	std::vector<float> times;
+	container_utils::extend_container( times, pythonTimes );
+
+	return objectInterface.transform( samples, times );
+}
+
 } // namespace
 
 void GafferSceneBindings::bindRender()
@@ -148,15 +194,82 @@ void GafferSceneBindings::bindRender()
 
 		scope previewScope( previewModule );
 
-		scope s = GafferBindings::NodeClass<GafferScene::Preview::InteractiveRender>()
-			.def( "getContext", &previewInteractiveRenderGetContext )
-			.def( "setContext", &GafferScene::Preview::InteractiveRender::setContext );
+		{
+			scope s = GafferBindings::NodeClass<GafferScene::Preview::InteractiveRender>()
+				.def( "getContext", &previewInteractiveRenderGetContext )
+				.def( "setContext", &GafferScene::Preview::InteractiveRender::setContext )
+			;
 
-		enum_<GafferScene::Preview::InteractiveRender::State>( "State" )
-			.value( "Stopped", GafferScene::Preview::InteractiveRender::Stopped )
-			.value( "Running", GafferScene::Preview::InteractiveRender::Running )
-			.value( "Paused", GafferScene::Preview::InteractiveRender::Paused )
+			enum_<GafferScene::Preview::InteractiveRender::State>( "State" )
+				.value( "Stopped", GafferScene::Preview::InteractiveRender::Stopped )
+				.value( "Running", GafferScene::Preview::InteractiveRender::Running )
+				.value( "Paused", GafferScene::Preview::InteractiveRender::Paused )
+			;
+		}
+
+		{
+			scope s = ExecutableNodeClass<GafferScene::Preview::Render>();
+
+			enum_<GafferScene::Preview::Render::Mode>( "Mode" )
+				.value( "RenderMode", GafferScene::Preview::Render::RenderMode )
+				.value( "SceneDescriptionMode", GafferScene::Preview::Render::SceneDescriptionMode )
+			;
+		}
+
+	}
+
+	{
+		object privateModule( borrowed( PyImport_AddModule( "GafferScene.Private" ) ) );
+		scope().attr( "Private" ) = privateModule;
+
+		object ieCoreScenePreviewModule( borrowed( PyImport_AddModule( "GafferScene.Private.IECoreScenePreview" ) ) );
+		scope().attr( "Private" ).attr( "IECoreScenePreview" ) = ieCoreScenePreviewModule;
+
+		scope previewScope( ieCoreScenePreviewModule );
+
+		IECorePython::RefCountedClass<Renderer, IECore::RefCounted> renderer( "Renderer" );
+
+		{
+			scope rendererScope( renderer );
+
+			enum_<Renderer::RenderType>( "RenderType" )
+				.value( "Batch", Renderer::Batch )
+				.value( "SceneDescription", Renderer::SceneDescription )
+				.value( "Interactive", Renderer::Interactive )
+			;
+
+			IECorePython::RefCountedClass<Renderer::AttributesInterface, IECore::RefCounted>( "AttributesInterface" );
+
+			IECorePython::RefCountedClass<Renderer::ObjectInterface, IECore::RefCounted>( "ObjectInterface" )
+				.def( "transform", objectInterfaceTransform1 )
+				.def( "transform", objectInterfaceTransform2 )
+				.def( "attributes", &Renderer::ObjectInterface::attributes )
+			;
+		}
+
+		renderer
+
+			.def( "types", &rendererTypes )
+			.staticmethod( "types" )
+			.def( "create", &Renderer::create, ( arg( "type" ), arg( "renderType" ) = Renderer::Batch, arg( "fileName" ) = "" ) )
+			.staticmethod( "create" )
+
+			.def( "option", &Renderer::option )
+			.def( "output", &Renderer::output )
+
+			.def( "attributes", &Renderer::attributes )
+
+			.def( "camera", &Renderer::camera )
+			.def( "light", &Renderer::light )
+
+			.def( "object", &rendererObject1 )
+			.def( "object", &rendererObject2 )
+
+			.def( "render", &Renderer::render )
+			.def( "pause", &Renderer::pause )
+
 		;
+
 	}
 
 }

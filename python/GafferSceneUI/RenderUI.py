@@ -1,6 +1,6 @@
 ##########################################################################
 #
-#  Copyright (c) 2012-2014, John Haddon. All rights reserved.
+#  Copyright (c) 2016, Image Engine Design Inc. All rights reserved.
 #
 #  Redistribution and use in source and binary forms, with or without
 #  modification, are permitted provided that the following conditions are
@@ -34,42 +34,83 @@
 #
 ##########################################################################
 
-import IECore
-
 import Gaffer
-import GafferUI
-import GafferArnold
+import GafferScene
 
 Gaffer.Metadata.registerNode(
 
-	GafferArnold.ArnoldRender,
+	GafferScene.Preview.Render,
 
 	"description",
 	"""
-	Performs offline batch rendering using the
-	Arnold renderer, or optionally generates
-	.ass files for later rendering using a SystemCommand
-	node.
 	""",
 
+	"layout:activator:modeIsSceneDescription", lambda node : node["mode"].getValue() == node.Mode.SceneDescriptionMode,
+
 	plugs = {
+
+		"*" : [
+
+			"nodule:type", "",
+
+		],
+
+		"in" : [
+
+			"description",
+			"""
+			The scene to be rendered.
+			""",
+
+			"nodule:type", "GafferUI::StandardNodule",
+
+		],
+
+		"renderer" : [
+
+			"description",
+			"""
+			The renderer to use.
+			""",
+
+		],
+
+		"mode" : [
+
+			"description",
+			"""
+			The type of render to perform.
+			""",
+
+			"preset:Render", GafferScene.Preview.Render.Mode.RenderMode,
+			"preset:Scene Description", GafferScene.Preview.Render.Mode.SceneDescriptionMode,
+
+			"plugValueWidget:type", "GafferUI.PresetsPlugValueWidget",
+
+		],
 
 		"fileName" : [
 
 			"description",
 			"""
-			The name of the .ass file to be generated when in
-			scene description mode. If a ".ass.gz" extension
-			is used, then the ass file will be compressed
-			automatically.
+			The name of the file to be generated when in scene description mode.
 			""",
 
-			"nodule:type", "",
-			"pathPlugValueWidget:bookmarks", "ass",
-			"fileSystemPathPlugValueWidget:extensions", IECore.StringVectorData( [ "ass", "ass.gz" ] ),
+			"plugValueWidget:type", "GafferUI.FileSystemPathPlugValueWidget",
+			"pathPlugValueWidget:leaf", True,
+
+			"layout:activator", "modeIsSceneDescription",
+
+		],
+
+		"out" : [
+
+			"description",
+			"""
+			A direct pass-through of the input scene.
+			""",
 
 		],
 
 	}
-
 )

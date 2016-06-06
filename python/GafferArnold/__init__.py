@@ -34,6 +34,8 @@
 #
 ##########################################################################
 
+__import__( "GafferScene" )
+
 def __setupEnvironment() :
 
 	import os
@@ -43,10 +45,6 @@ def __setupEnvironment() :
 
 __setupEnvironment()
 
-import GafferScene
-
 from _GafferArnold import *
-
-from ArnoldRender import ArnoldRender
 
 __import__( "IECore" ).loadConfig( "GAFFER_STARTUP_PATHS", {}, subdirectory = "GafferArnold" )

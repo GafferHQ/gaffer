@@ -593,6 +593,11 @@ class InteractiveRenderTest( GafferSceneTest.SceneTestCase ) :
 		s = Gaffer.ScriptNode()
 
 		s["sphere"] = GafferScene.Sphere()
+		s["camera"] = GafferScene.Camera()
+
+		s["group"] = GafferScene.Group()
+		s["group"]["in"][0].setInput( s["sphere"]["out"] )
+		s["group"]["in"][1].setInput( s["camera"]["out"] )
 
 		s["outputs"] = GafferScene.Outputs()
 		s["outputs"].addOutput(
@@ -607,58 +612,65 @@ class InteractiveRenderTest( GafferSceneTest.SceneTestCase ) :
 				}
 			)
 		)
-		s["outputs"]["in"].setInput( s["sphere"]["out"] )
+		s["outputs"]["in"].setInput( s["group"]["out"] )
 
 		s["options"] = GafferScene.StandardOptions()
 		s["options"]["in"].setInput( s["outputs"]["out"] )
+		s["options"]["options"]["renderCamera"]["enabled"].setValue( True )
 
 		s["r"] = self._createInteractiveRender()
 		s["r"]["in"].setInput( s["options"]["out"] )
 
 		s["r"]["state"].setValue( s["r"].State.Running )
 
-		time.sleep( 0.5 )
+		for withDefaultCamera in ( True, False ) :
 
-		# Use the default resolution to start with
+			s["options"]["options"]["renderCamera"]["value"].setValue(
+				"" if withDefaultCamera else "/group/camera"
+			)
 
-		self.assertEqual(
-			IECore.ImageDisplayDriver.storedImage( "myLovelySphere" ).displayWindow,
-			IECore.Box2i( IECore.V2i( 0 ), IECore.V2i( 1919, 1079 ) )
-		)
+			time.sleep( 0.5 )
 
-		# Now specify a resolution
+			# Use the default resolution to start with
 
-		s["options"]["options"]["renderResolution"]["enabled"].setValue( True )
-		s["options"]["options"]["renderResolution"]["value"].setValue( IECore.V2i( 200, 100 ) )
+			self.assertEqual(
+				IECore.ImageDisplayDriver.storedImage( "myLovelySphere" ).displayWindow,
+				IECore.Box2i( IECore.V2i( 0 ), IECore.V2i( 639, 479 ) )
+			)
 
-		time.sleep( 0.5 )
+			# Now specify a resolution
 
-		self.assertEqual(
-			IECore.ImageDisplayDriver.storedImage( "myLovelySphere" ).displayWindow,
-			IECore.Box2i( IECore.V2i( 0 ), IECore.V2i( 199, 99 ) )
-		)
+			s["options"]["options"]["renderResolution"]["enabled"].setValue( True )
+			s["options"]["options"]["renderResolution"]["value"].setValue( IECore.V2i( 200, 100 ) )
 
-		# And specify another resolution
+			time.sleep( 0.5 )
 
-		s["options"]["options"]["renderResolution"]["value"].setValue( IECore.V2i( 300, 100 ) )
+			self.assertEqual(
+				IECore.ImageDisplayDriver.storedImage( "myLovelySphere" ).displayWindow,
+				IECore.Box2i( IECore.V2i( 0 ), IECore.V2i( 199, 99 ) )
+			)
 
-		time.sleep( 0.5 )
+			# And specify another resolution
 
-		self.assertEqual(
-			IECore.ImageDisplayDriver.storedImage( "myLovelySphere" ).displayWindow,
-			IECore.Box2i( IECore.V2i( 0 ), IECore.V2i( 299, 99 ) )
-		)
+			s["options"]["options"]["renderResolution"]["value"].setValue( IECore.V2i( 300, 100 ) )
 
-		# And back to the default
+			time.sleep( 0.5 )
 
-		s["options"]["options"]["renderResolution"]["enabled"].setValue( False )
+			self.assertEqual(
+				IECore.ImageDisplayDriver.storedImage( "myLovelySphere" ).displayWindow,
+				IECore.Box2i( IECore.V2i( 0 ), IECore.V2i( 299, 99 ) )
+			)
 
-		time.sleep( 0.5 )
+			# And back to the default
 
-		self.assertEqual(
-			IECore.ImageDisplayDriver.storedImage( "myLovelySphere" ).displayWindow,
-			IECore.Box2i( IECore.V2i( 0 ), IECore.V2i( 1919, 1079 ) )
-		)
+			s["options"]["options"]["renderResolution"]["enabled"].setValue( False )
+
+			time.sleep( 0.5 )
+
+			self.assertEqual(
+				IECore.ImageDisplayDriver.storedImage( "myLovelySphere" ).displayWindow,
+				IECore.Box2i( IECore.V2i( 0 ), IECore.V2i( 639, 479 ) )
+			)
 
 	def testDeleteWhilePaused( self ) :
 

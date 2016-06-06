@@ -538,7 +538,7 @@ libraries = {
 	},
 
 	"GafferCortexTest" : {
-		"additionalFiles" : glob.glob( "python/GafferTest/*/*" ) + glob.glob( "python/GafferCortexTest/*/*/*" ) + glob.glob( "python/GafferCortexTest/images/*" ),
+		"additionalFiles" : glob.glob( "python/GafferCortexTest/*/*" ) + glob.glob( "python/GafferCortexTest/*/*/*" ) + glob.glob( "python/GafferCortexTest/images/*" ),
 	},
 
 	"GafferCortexUI" : {},
@@ -614,12 +614,12 @@ libraries = {
 		"envAppends" : {
 			"CPPPATH" : [ "$ARNOLD_ROOT/include" ],
 			"LIBPATH" : [ "$ARNOLD_ROOT/bin" ],
-			"LIBS" : [ "Gaffer", "GafferScene", "ai", "openvdb", "IECoreArnold$CORTEX_LIB_SUFFIX" ],
+			"LIBS" : [ "Gaffer", "GafferScene", "GafferDispatch", "ai", "openvdb", "IECoreArnold$CORTEX_LIB_SUFFIX" ],
 		},
 		"pythonEnvAppends" : {
 			"CPPPATH" : [ "$ARNOLD_ROOT/include" ],
 			"LIBPATH" : [ "$ARNOLD_ROOT/bin" ],
-			"LIBS" : [ "Gaffer", "GafferScene", "GafferBindings", "GafferArnold" ],
+			"LIBS" : [ "Gaffer", "GafferScene", "GafferBindings", "GafferDispatch", "GafferArnold" ],
 		},
 		"requiredOptions" : [ "ARNOLD_ROOT" ],
 	},
@@ -880,13 +880,16 @@ for libraryName, libraryDef in libraries.items() :
 
 	# python component of python module
 
-	for pythonFile in glob.glob( "python/" + libraryName + "/*.py" ) :
+	pythonFiles = glob.glob( "python/" + libraryName + "/*.py" ) + glob.glob( "python/" + libraryName + "/*/*.py" )
+	for pythonFile in pythonFiles :
 		pythonFileInstall = env.Command( "$BUILD_DIR/" + pythonFile, pythonFile, "sed \"" + sedSubstitutions + "\" $SOURCE > $TARGET" )
 		env.Alias( "build", pythonFileInstall )
 
 	# additional files
 
 	for additionalFile in libraryDef.get( "additionalFiles", [] ) :
+		if additionalFile in pythonFiles :
+			continue
 		additionalFileInstall = env.InstallAs( "$BUILD_DIR/" + additionalFile, additionalFile )
 		env.Alias( "build", additionalFileInstall )
 

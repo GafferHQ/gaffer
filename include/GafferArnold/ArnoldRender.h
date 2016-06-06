@@ -34,18 +34,30 @@
 //
 //////////////////////////////////////////////////////////////////////////
 
-#include "GafferArnold/InteractiveArnoldRender.h"
+#ifndef GAFFERARNOLD_ARNOLDRENDER_H
+#define GAFFERARNOLD_ARNOLDRENDER_H
 
-using namespace GafferScene;
-using namespace GafferArnold;
+#include "GafferScene/Preview/Render.h"
 
-IE_CORE_DEFINERUNTIMETYPED( InteractiveArnoldRender );
+#include "GafferArnold/TypeIds.h"
 
-InteractiveArnoldRender::InteractiveArnoldRender( const std::string &name )
-	:	InteractiveRender( "IECoreArnold::Renderer", name )
+namespace GafferArnold
 {
-}
 
-InteractiveArnoldRender::~InteractiveArnoldRender()
+class ArnoldRender : public GafferScene::Preview::Render
 {
-}
+
+	public :
+
+		ArnoldRender( const std::string &name=defaultName<ArnoldRender>() );
+		virtual ~ArnoldRender();
+
+		IE_CORE_DECLARERUNTIMETYPEDEXTENSION( GafferArnold::ArnoldRender, ArnoldRenderTypeId, GafferScene::Preview::Render );
+
+};
+
+IE_CORE_DECLAREPTR( ArnoldRender );
+
+} // namespace GafferArnold
+
+#endif // GAFFERARNOLD_ARNOLDRENDER_H
