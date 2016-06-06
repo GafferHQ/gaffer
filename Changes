@@ -1,3 +1,50 @@
+0.25.0.0
+========
+
+Apps
+-----------------------------------------------------------------------
+
+- Fixed ordering of GAFFER_STARTUP_PATHS, so that custom scripts can
+  override Gaffer's built in configuration files (#1752).
+
+Scene
+-----------------------------------------------------------------------
+
+- Set
+  - Added support for modifying multiple sets with a single node,
+    by entering multiple names separated by spaces (#1748).
+
+Arnold
+-----------------------------------------------------------------------
+
+- ArnoldRender node now uses the same backend as the
+  InteractiveArnoldRender node. Rendering is now performed directly
+  in Gaffer rather than using a procedural (#1755).
+- ArnoldShader ( #1758)
+  - Added support for BYTE and UINT input parameters and VECTOR
+    and POINT output types.
+- Added support for crop windows, overscan and resolution multipliers
+  (#1744).
+
+Build
+-----------------------------------------------------------------------
+
+- Fixed compilation of GafferAppleseed with GCC 5 (#1757).
+
+API
+-----------------------------------------------------------------------
+
+- Made IECorePreview module private (#1731).
+- Changed default orientation of environment light visualiser (#1749).
+- Fixed SceneAlgo::camera() when "option:render:camera" is "".
+
+Incompatibilities
+-----------------------------------------------------------------------
+
+- Made IECoreScenePreview private.
+- ArnoldRender node no longer has a verbosity plug.
+- Changed default orientation of environment light visualiser.
+
 0.24.1.0
 ========
 
