@@ -56,12 +56,14 @@ Gaffer::Plug *ParameterHandler::setupPlug( const AtParamEntry *parameter, Gaffer
 	PlugPtr plug = 0;
 	switch( AiParamGetType( parameter ) )
 	{
-		case AI_TYPE_FLOAT :
+		case AI_TYPE_BYTE :
 
-			plug = new FloatPlug(
+			plug = new IntPlug(
 				name,
 				direction,
-				AiParamGetDefault( parameter )->FLT
+				AiParamGetDefault( parameter )->BYTE,
+				/* minValue = */ 0,
+				/* maxValue = */ 255
 			);
 
 			break;
@@ -76,12 +78,33 @@ Gaffer::Plug *ParameterHandler::setupPlug( const AtParamEntry *parameter, Gaffer
 
 			break;
 
+		case AI_TYPE_UINT :
+
+			plug = new IntPlug(
+				name,
+				direction,
+				AiParamGetDefault( parameter )->UINT,
+				/* minValue = */ 0
+			);
+
+			break;
+
 		case AI_TYPE_BOOLEAN :
 
 			plug = new BoolPlug(
 				name,
 				direction,
 				AiParamGetDefault( parameter )->BOOL
+			);
+
+			break;
+
+		case AI_TYPE_FLOAT :
+
+			plug = new FloatPlug(
+				name,
+				direction,
+				AiParamGetDefault( parameter )->FLT
 			);
 
 			break;
@@ -184,7 +207,7 @@ Gaffer::Plug *ParameterHandler::setupPlug( const AtParamEntry *parameter, Gaffer
 		case AI_TYPE_MATRIX :
 
 			{
-				
+
 				M44f defaultValue( *AiParamGetDefault( parameter )->pMTX );
 				plug = new M44fPlug(
 					name,

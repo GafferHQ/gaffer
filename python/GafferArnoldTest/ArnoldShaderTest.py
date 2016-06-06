@@ -366,5 +366,15 @@ class ArnoldShaderTest( unittest.TestCase ) :
 			],
 		)
 
+	def testByteParameters( self ) :
+
+		n = GafferArnold.ArnoldShader()
+		n.loadShader( "image" )
+
+		p = n["parameters"]["start_channel"]
+		self.assertTrue( isinstance( p, Gaffer.IntPlug ) )
+		self.assertEqual( p.minValue(), 0 )
+		self.assertEqual( p.maxValue(), 255 )
+
 if __name__ == "__main__":
 	unittest.main()
