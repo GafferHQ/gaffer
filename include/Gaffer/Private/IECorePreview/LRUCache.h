@@ -375,6 +375,6 @@ class LRUCache : private boost::noncopyable
 
 } // namespace IECorePreview
 
-#include "IECorePreview/LRUCache.inl"
+#include "Gaffer/Private/IECorePreview/LRUCache.inl"
 
 #endif // IECOREPREVIEW_LRUCACHE_H
