@@ -1399,9 +1399,12 @@ NodeGadget *GraphGadget::addNodeGadget( Gaffer::Node *node, bool setDefaultPosit
 		nodeGadget->setHighlighted( true );
 	}
 
-	if( setDefaultPosition )
+	if( setDefaultPosition && !hasNodePosition( node ) )
 	{
-		getNodePositionPlug( node );
+		Gaffer::StandardSetPtr layoutNodes = new Gaffer::StandardSet();
+		layoutNodes->add( node );
+
+		getLayout()->layoutNodes( this, layoutNodes.get() );
 	}
 
 	updateNodeGadgetTransform( nodeGadget.get() );
