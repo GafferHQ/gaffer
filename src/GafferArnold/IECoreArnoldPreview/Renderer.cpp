@@ -222,7 +222,7 @@ class ArnoldShader : public IECore::RefCounted
 
 		ArnoldShader( const IECore::ObjectVector *shader )
 		{
-			m_nodes = ShaderAlgo::convert( shader );
+			m_nodes = ShaderAlgo::convert( shader, "shader" + shader->Object::hash().toString() + "_" );
 		}
 
 		virtual ~ArnoldShader()

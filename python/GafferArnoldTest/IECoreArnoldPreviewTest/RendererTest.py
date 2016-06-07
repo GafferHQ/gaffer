@@ -164,6 +164,54 @@ class RendererTest( GafferTest.TestCase ) :
 			# We only want one shader to have been saved, because only one was genuinely used.
 			self.assertEqual( len( self.__allNodes( type = arnold.AI_NODE_SHADER ) ), 1 )
 
+	def testShaderNames( self ) :
+
+		r = GafferScene.Private.IECoreScenePreview.Renderer.create(
+			"IECoreArnold::Renderer",
+			GafferScene.Private.IECoreScenePreview.Renderer.RenderType.SceneDescription,
+			self.temporaryDirectory() + "/test.ass"
+		)
+
+		shader1 = IECore.ObjectVector( [
+			IECore.Shader( "noise", parameters = { "__handle" : "myHandle" } ),
+			IECore.Shader( "flat", parameters = { "color" : "link:myHandle" } ),
+		] )
+
+		o1 = r.object( "testPlane", IECore.MeshPrimitive.createPlane( IECore.Box2f( IECore.V2f( -1 ), IECore.V2f( 1 ) ) ) )
+		o1.attributes(
+			r.attributes(
+				IECore.CompoundObject( {
+					"ai:surface" : shader1
+				} )
+			)
+		)
+
+		shader2 = IECore.ObjectVector( [
+			IECore.Shader( "noise", parameters = { "__handle" : "myHandle" } ),
+			IECore.Shader( "standard", parameters = { "Kd_color" : "link:myHandle" } ),
+		] )
+
+		o2 = r.object( "testPlane", IECore.MeshPrimitive.createPlane( IECore.Box2f( IECore.V2f( -1 ), IECore.V2f( 1 ) ) ) )
+		o2.attributes(
+			r.attributes(
+				IECore.CompoundObject( {
+					"ai:surface" : shader2
+				} )
+			)
+		)
+
+		del o1, o2
+		r.render()
+		del r
+
+		with IECoreArnold.UniverseBlock() :
+
+			arnold.AiASSLoad( self.temporaryDirectory() + "/test.ass" )
+
+			shaders = self.__allNodes( type = arnold.AI_NODE_SHADER )
+			self.assertEqual( len( shaders ), 4 )
+			self.assertEqual( len( set( [ arnold.AiNodeGetName( s ) for s in shaders ] ) ), 4 )
+
 	def __allNodes( self, type = arnold.AI_NODE_ALL, ignoreBuiltIn = True ) :
 
 		result = []
