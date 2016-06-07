@@ -57,7 +57,7 @@ class screengrab( Gaffer.Application ) :
 					description = "The gfr script to load",
 					defaultValue = "",
 					extensions = "gfr",
-					allowEmptyString = False,
+					allowEmptyString = True,
 					check = IECore.FileNameParameter.CheckType.MustExist,
 				),
 
@@ -81,6 +81,12 @@ class screengrab( Gaffer.Application ) :
 					defaultValue = "",
 				),
 
+				IECore.BoolParameter(
+					name = "panel",
+					description = "Whether to the panel surrounding an editor, or just the editor contents itself.",
+					defaultValue = False,
+				),
+
 				IECore.CompoundParameter(
 					name = "nodeEditor",
 					description = "Parameters that configure NodeEditors.",
@@ -91,6 +97,18 @@ class screengrab( Gaffer.Application ) :
 							defaultValue = IECore.StringVectorData(),
 						),
 					],
+				),
+
+				IECore.CompoundParameter(
+					name = "scriptEditor",
+					description = "Parameters that configure ScriptEditors.",
+					members = [
+						IECore.StringParameter(
+							name = "execute",
+							description = "Some python code to execute in the script editor.",
+							defaultValue = "",
+						),
+					]
 				),
 
 				IECore.StringParameter(
@@ -130,8 +148,9 @@ class screengrab( Gaffer.Application ) :
 
 		# Load the specified gfr file.
 		script = Gaffer.ScriptNode()
-		script["fileName"].setValue( os.path.abspath( args["script"].value ) )
-		script.load()
+		if args["script"].value :
+			script["fileName"].setValue( os.path.abspath( args["script"].value ) )
+			script.load()
 		self.root()["scripts"].addChild( script )
 
 		# Select any nodes we've been asked to.
@@ -157,7 +176,12 @@ class screengrab( Gaffer.Application ) :
 				IECore.msg( IECore.Msg.Level.Error, "screengrab", "Unable to find an editor of type \"%s\"" % editor )
 				return 1
 
-			self.setGrabWidget( editors[0] )
+			if args["panel"].value :
+				self.setGrabWidget( editors[0].parent() )
+			else :
+				self.setGrabWidget( editors[0] )
+
+			editors[0].reveal()
 
 		# Set up some default framing for the node graphs.
 
@@ -173,6 +197,15 @@ class screengrab( Gaffer.Application ) :
 			for name in args["nodeEditor"]["reveal"] :
 				plugValueWidget = nodeEditor.nodeUI().plugValueWidget( script.descendant( name ) )
 				plugValueWidget.reveal()
+
+		# Set up the ScriptEditors as requested.
+
+		for scriptEditor in scriptWindow.getLayout().editors( GafferUI.ScriptEditor ) :
+
+			if args["scriptEditor"]["execute"].value :
+				scriptEditor.inputWidget().setText( args["scriptEditor"]["execute"].value )
+				scriptEditor.inputWidget()._qtWidget().selectAll()
+				scriptEditor.execute()
 
 		# Execute any commands we've been asked to, exposing the application
 		# and script as variables.

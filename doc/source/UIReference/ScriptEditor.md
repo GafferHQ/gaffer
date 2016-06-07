@@ -25,6 +25,6 @@ Execution
 Action                                Shortcut/gesture
 ===================================== =============================================
 Execute and clear                     Ctrl + Enter (without text selection)
-Execution selection                   Ctrl + Enter (with text selection)
+Execute selection                     Ctrl + Enter (with text selection)
 ===================================== =============================================
 ```

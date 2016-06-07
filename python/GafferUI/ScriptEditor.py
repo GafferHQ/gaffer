@@ -76,18 +76,18 @@ class ScriptEditor( GafferUI.EditorWidget ) :
 			"parent" : scriptNode
 		}
 
-	def __repr__( self ) :
+	def inputWidget( self ) :
 
-		return "GafferUI.ScriptEditor( scriptNode )"
+		return self.__inputWidget
 
-	def __activated( self, widget ) :
+	def execute( self ) :
 
 		# decide what to execute
 		haveSelection = True
-		toExecute = widget.selectedText()
+		toExecute = self.__inputWidget.selectedText()
 		if not toExecute :
 			haveSelection = False
-			toExecute = widget.getText()
+			toExecute = self.__inputWidget.getText()
 
 		# parse it first. this lets us give better error formatting
 		# for syntax errors, and also figure out whether we can eval()
@@ -114,10 +114,17 @@ class ScriptEditor( GafferUI.EditorWidget ) :
 							else :
 								exec( toExecute, self.__executionDict, self.__executionDict )
 							if not haveSelection :
-								widget.setText( "" )
+								self.__inputWidget.setText( "" )
 						except Exception, e :
 							self.__outputWidget.appendHTML( self.__exceptionToHTML() )
 
+	def __repr__( self ) :
+
+		return "GafferUI.ScriptEditor( scriptNode )"
+
+	def __activated( self, widget ) :
+
+		self.execute()
 		return True
 
 	def __dropText( self, widget, dragData ) :

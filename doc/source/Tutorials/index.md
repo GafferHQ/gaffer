@@ -1,4 +1,5 @@
 Tutorials
 =========
 
-- [Performance Guidelines](PerformanceGuidelines/index.md)
+- [Scripting](Scripting/index.md)
+- [Managing Complexity](ManagingComplexity/index.md)
