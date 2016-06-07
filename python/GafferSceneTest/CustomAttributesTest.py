@@ -311,5 +311,21 @@ class CustomAttributesTest( GafferSceneTest.SceneTestCase ) :
 		ss = s.serialise()
 		self.failIf( "out" in ss )
 
+	def testAffects( self ) :
+
+		s = Gaffer.ScriptNode()
+
+		s["a"] = GafferScene.CustomAttributes()
+		p = s["a"]["attributes"].addMember( "user:test", 10 )
+		self.assertEqual( set( s["a"].affects( p["value"] ) ), set( [ s["a"]["out"]["attributes"] ] ) )
+
+		s["a"]["global"].setValue( True )
+		self.assertEqual( set( s["a"].affects( p["value"] ) ), set( [ s["a"]["out"]["globals"] ] ) )
+
+		s["e"] = Gaffer.Expression()
+		s["e"].setExpression( """parent["a"]["global"] = context.getFrame() > 10""" )
+
+		self.assertEqual( set( s["a"].affects( p["value"] ) ), set( [ s["a"]["out"]["attributes"], s["a"]["out"]["globals"] ] ) )
+
 if __name__ == "__main__":
 	unittest.main()
