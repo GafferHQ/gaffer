@@ -110,5 +110,71 @@ class RendererTest( GafferTest.TestCase ) :
 			self.assertEqual( arnold.AiNodeGetInt( options, "region_max_x" ), 1999 )
 			self.assertEqual( arnold.AiNodeGetInt( options, "region_max_y" ), 749 )
 
+	def testShaderReuse( self ) :
+
+		r = GafferScene.Private.IECoreScenePreview.Renderer.create(
+			"IECoreArnold::Renderer",
+			GafferScene.Private.IECoreScenePreview.Renderer.RenderType.SceneDescription,
+			self.temporaryDirectory() + "/test.ass"
+		)
+
+		for i in range( 0, 10 ) :
+
+			a = IECore.CompoundObject( {
+				"ai:surface" : IECore.ObjectVector( [ IECore.Shader( "flat" ) ] ),
+			} )
+
+			o = r.object( "testPlane", IECore.MeshPrimitive.createPlane( IECore.Box2f( IECore.V2f( -1 ), IECore.V2f( 1 ) ) ) )
+			# We keep specifying the same shader, but we'd like the renderer
+			# to be frugal and reuse a single arnold shader on the other side.
+			o.attributes( r.attributes( a ) )
+			del o
+
+		r.render()
+		del r
+
+		with IECoreArnold.UniverseBlock() :
+
+			arnold.AiASSLoad( self.temporaryDirectory() + "/test.ass" )
+			self.assertEqual( len( self.__allNodes( type = arnold.AI_NODE_SHADER ) ), 1 )
+
+	def testShaderGarbageCollection( self ) :
+
+		r = GafferScene.Private.IECoreScenePreview.Renderer.create(
+			"IECoreArnold::Renderer",
+			GafferScene.Private.IECoreScenePreview.Renderer.RenderType.SceneDescription,
+			self.temporaryDirectory() + "/test.ass"
+		)
+
+		o = r.object( "testPlane", IECore.MeshPrimitive.createPlane( IECore.Box2f( IECore.V2f( -1 ), IECore.V2f( 1 ) ) ) )
+		# Replace the shader a few times.
+		for shader in ( "utility", "flat", "standard" ) :
+			a = IECore.CompoundObject( {
+				"ai:surface" : IECore.ObjectVector( [ IECore.Shader( shader ) ] ),
+			} )
+			o.attributes( r.attributes( a ) )
+
+		del o, a
+		r.render()
+		del r
+
+		with IECoreArnold.UniverseBlock() :
+
+			arnold.AiASSLoad( self.temporaryDirectory() + "/test.ass" )
+			# We only want one shader to have been saved, because only one was genuinely used.
+			self.assertEqual( len( self.__allNodes( type = arnold.AI_NODE_SHADER ) ), 1 )
+
+	def __allNodes( self, type = arnold.AI_NODE_ALL, ignoreBuiltIn = True ) :
+
+		result = []
+		i = arnold.AiUniverseGetNodeIterator( type )
+		while not arnold.AiNodeIteratorFinished( i ) :
+			node = arnold.AiNodeIteratorGetNext( i )
+			if ignoreBuiltIn and arnold.AiNodeGetName( node ) in ( "root", "ai_default_reflection_shader" ) :
+				continue
+			result.append( node )
+
+		return result
+
 if __name__ == "__main__":
 	unittest.main()

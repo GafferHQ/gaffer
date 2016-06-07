@@ -47,6 +47,7 @@
 #include "IECore/VectorTypedData.h"
 #include "IECore/SimpleTypedData.h"
 #include "IECore/ObjectVector.h"
+#include "IECore/Shader.h"
 
 #include "IECoreArnold/ParameterAlgo.h"
 #include "IECoreArnold/CameraAlgo.h"
@@ -214,8 +215,6 @@ IE_CORE_DECLAREPTR( ArnoldOutput )
 namespace
 {
 
-/// \todo Cache these so we can reuse them across multiple ArnoldAttributes
-/// instances. Bear in mind though that we don't want to cache light shaders.
 class ArnoldShader : public IECore::RefCounted
 {
 
@@ -247,6 +246,52 @@ class ArnoldShader : public IECore::RefCounted
 
 IE_CORE_DECLAREPTR( ArnoldShader )
 
+class ShaderCache : public IECore::RefCounted
+{
+
+	public :
+
+		// Can be called concurrently with other get() calls.
+		ArnoldShaderPtr get( const IECore::ObjectVector *shader )
+		{
+			Cache::accessor a;
+			m_cache.insert( a, shader->Object::hash() );
+			if( !a->second )
+			{
+				a->second = new ArnoldShader( shader );
+			}
+			return a->second;
+		}
+
+		// Must not be called concurrently with anything.
+		void clearUnused()
+		{
+			vector<IECore::MurmurHash> toErase;
+			for( Cache::iterator it = m_cache.begin(), eIt = m_cache.end(); it != eIt; ++it )
+			{
+				if( it->second->refCount() == 1 )
+				{
+					// Only one reference - this is ours, so
+					// nothing outside of the cache is using the
+					// shader.
+					toErase.push_back( it->first );
+				}
+			}
+			for( vector<IECore::MurmurHash>::const_iterator it = toErase.begin(), eIt = toErase.end(); it != eIt; ++it )
+			{
+				m_cache.erase( *it );
+			}
+		}
+
+	private :
+
+		typedef tbb::concurrent_hash_map<IECore::MurmurHash, ArnoldShaderPtr> Cache;
+		Cache m_cache;
+
+};
+
+IE_CORE_DECLAREPTR( ShaderCache )
+
 } // namespace
 
 //////////////////////////////////////////////////////////////////////////
@@ -274,7 +319,7 @@ class ArnoldAttributes : public IECoreScenePreview::Renderer::AttributesInterfac
 
 	public :
 
-		ArnoldAttributes( const IECore::CompoundObject *attributes )
+		ArnoldAttributes( const IECore::CompoundObject *attributes, ShaderCache *shaderCache )
 			:	visibility( AI_RAY_ALL ), sidedness( AI_RAY_ALL )
 		{
 			for( IECore::CompoundObject::ObjectMap::const_iterator it = attributes->members().begin(), eIt = attributes->members().end(); it != eIt; ++it )
@@ -317,7 +362,7 @@ class ArnoldAttributes : public IECoreScenePreview::Renderer::AttributesInterfac
 				{
 					if( const IECore::ObjectVector *o = reportedCast<const IECore::ObjectVector>( it->second.get(), "attribute", it->first) )
 					{
-						surfaceShader = new ArnoldShader( o );
+						surfaceShader = shaderCache->get( o );
 					}
 				}
 				else if(
@@ -327,9 +372,15 @@ class ArnoldAttributes : public IECoreScenePreview::Renderer::AttributesInterfac
 				{
 					if( const IECore::ObjectVector *o = reportedCast<const IECore::ObjectVector>( it->second.get(), "attribute", it->first) )
 					{
+						// Deliberately not using the shader cache, since Arnold
+						// lights are objects rather than shaders.
 						lightShader = new ArnoldShader( o );
 					}
 				}
+			}
+			if( !surfaceShader )
+			{
+				surfaceShader = shaderCache->get( g_defaultShader.get() );
 			}
 		}
 
@@ -355,7 +406,18 @@ class ArnoldAttributes : public IECoreScenePreview::Renderer::AttributesInterfac
 			}
 		}
 
+		static IECore::ConstObjectVectorPtr g_defaultShader;
+
 };
+
+IECore::ConstObjectVectorPtr defaultShader()
+{
+	IECore::ObjectVectorPtr result = new IECore::ObjectVector;
+	result->members().push_back( new IECore::Shader( "utility" ) );
+	return result;
+}
+
+IECore::ConstObjectVectorPtr ArnoldAttributes::g_defaultShader = defaultShader();
 
 } // namespace
 
@@ -539,13 +601,11 @@ class ArnoldRenderer : public IECoreScenePreview::Renderer
 		ArnoldRenderer( RenderType renderType, const std::string &fileName )
 			:	m_renderType( renderType ),
 				m_universeBlock( boost::make_shared<UniverseBlock>() ),
+				m_shaderCache( new ShaderCache ),
 				m_assFileName( fileName )
 		{
 			/// \todo Control with an option.
 			AiMsgSetConsoleFlags( AI_LOG_ALL );
-
-			AtNode *defaultShader = AiNode( "utility" );
-			AiNodeSetStr( defaultShader, "name", "ieCoreArnold:defaultShader" );
 		}
 
 		virtual ~ArnoldRenderer()
@@ -644,7 +704,7 @@ class ArnoldRenderer : public IECoreScenePreview::Renderer
 
 		virtual Renderer::AttributesInterfacePtr attributes( const IECore::CompoundObject *attributes )
 		{
-			return new ArnoldAttributes( attributes );
+			return new ArnoldAttributes( attributes, m_shaderCache.get() );
 		}
 
 		virtual ObjectInterfacePtr camera( const std::string &name, const IECore::Camera *camera )
@@ -673,6 +733,7 @@ class ArnoldRenderer : public IECoreScenePreview::Renderer
 		virtual void render()
 		{
 			updateCamera();
+			m_shaderCache->clearUnused();
 
 			// Do the appropriate render based on
 			// m_renderType.
@@ -802,6 +863,8 @@ class ArnoldRenderer : public IECoreScenePreview::Renderer
 		typedef std::map<std::string, IECore::ConstCameraPtr> CameraMap;
 		CameraMap m_cameras;
 		ObjectInterfacePtr m_defaultCamera;
+
+		ShaderCachePtr m_shaderCache;
 
 		// Members used by batch renders
 
