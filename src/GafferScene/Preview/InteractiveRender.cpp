@@ -458,6 +458,14 @@ class InteractiveRender::SceneGraphUpdateTask : public tbb::task
 				return NULL;
 			}
 
+			if( m_sceneGraph->cleared() )
+			{
+				// We cleared this location in the past, but now
+				// want it. So we need to start from scratch, and
+				// update everything.
+				m_dirtyFlags = AllDirty;
+			}
+
 			// Set up a context to compute the scene at the right
 			// location.
 
@@ -468,7 +476,6 @@ class InteractiveRender::SceneGraphUpdateTask : public tbb::task
 			// Update attributes. We do this first because we can then
 			// exit early if the object is invisible.
 
-			const bool previouslyCleared = m_sceneGraph->cleared();
 			bool visible = true;
 			if( m_scenePath.size() > 0 && (m_dirtyFlags & AttributesDirty ) )
 			{
@@ -480,11 +487,6 @@ class InteractiveRender::SceneGraphUpdateTask : public tbb::task
 				// No need to update further since we're not visible.
 				m_sceneGraph->clear();
 				return NULL;
-			}
-			else if( previouslyCleared )
-			{
-				// Need to start from scratch, and update everything.
-				m_dirtyFlags = AllDirty;
 			}
 
 			// Update the transform.
