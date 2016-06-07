@@ -74,6 +74,10 @@ class Attributes : public SceneElementProcessor
 
 	private :
 
+		void plugSet( Gaffer::Plug *plug );
+		void plugInputChanged( Gaffer::Plug *plug );
+		void updateInternalConnections();
+
 		static size_t g_firstPlugIndex;
 
 };

@@ -35,6 +35,9 @@
 //
 //////////////////////////////////////////////////////////////////////////
 
+#include "boost/logic/tribool.hpp"
+#include "boost/bind.hpp"
+
 #include "GafferScene/Attributes.h"
 
 using namespace IECore;
@@ -56,11 +59,11 @@ Attributes::Attributes( const std::string &name )
 	outPlug()->objectPlug()->setInput( inPlug()->objectPlug() );
 	outPlug()->transformPlug()->setInput( inPlug()->transformPlug() );
 	outPlug()->boundPlug()->setInput( inPlug()->boundPlug() );
-	// Disconnect globals pass-through the SceneElementProcessor made
-	// because we do modify the globals.
-	/// \todo Use plugInputChangedSignal() and plugSetSignal() to
-	/// keep the globals pass-through connected when possible?
-	outPlug()->globalsPlug()->setInput( NULL );
+
+	// Connect to signals we use to manage pass-throughs for globals
+	// and attributes based on the value of globalPlug().
+	plugSetSignal().connect( boost::bind( &Attributes::plugSet, this, ::_1 ) );
+	plugInputChangedSignal().connect( boost::bind( &Attributes::plugInputChanged, this, ::_1 ) );
 }
 
 Attributes::~Attributes()
@@ -93,9 +96,19 @@ void Attributes::affects( const Gaffer::Plug *input, AffectedPlugsContainer &out
 
 	if( attributesPlug()->isAncestorOf( input ) || input == globalPlug() )
 	{
-		outputs.push_back( outPlug()->attributesPlug() );
-		outputs.push_back( outPlug()->globalsPlug() );
+		// We can only affect a particular output if we haven't
+		// connected it as a pass-through in updateInternalConnections().
+		if( !outPlug()->attributesPlug()->getInput<Plug>() )
+		{
+			outputs.push_back( outPlug()->attributesPlug() );
+		}
+
+		if( !outPlug()->globalsPlug()->getInput<Plug>() )
+		{
+			outputs.push_back( outPlug()->globalsPlug() );
+		}
 	}
+
 }
 
 void Attributes::hashGlobals( const Gaffer::Context *context, const ScenePlug *parent, IECore::MurmurHash &h ) const
@@ -182,4 +195,43 @@ IECore::ConstCompoundObjectPtr Attributes::computeProcessedAttributes( const Sce
 	ap->fillCompoundObject( result->members() );
 
 	return result;
+}
+
+void Attributes::plugSet( Gaffer::Plug *plug )
+{
+	if( plug == globalPlug() )
+	{
+		updateInternalConnections();
+	}
+}
+
+void Attributes::plugInputChanged( Gaffer::Plug *plug )
+{
+	if( plug == globalPlug() )
+	{
+		updateInternalConnections();
+	}
+}
+
+void Attributes::updateInternalConnections()
+{
+	// Manage internal pass-throughs based on the value of the globalPlug().
+	const Plug *p = globalPlug()->source<Gaffer::Plug>();
+	boost::tribool global;
+	if( p->direction() == Plug::Out && runTimeCast<const ComputeNode>( p->node() ) )
+	{
+		// Can vary from compute to compute.
+		global = boost::indeterminate;
+	}
+	else
+	{
+		global = globalPlug()->getValue();
+	}
+
+	outPlug()->globalsPlug()->setInput(
+		global || boost::indeterminate( global ) ? NULL : inPlug()->globalsPlug()
+	);
+	outPlug()->attributesPlug()->setInput(
+		!global || boost::indeterminate( global ) ? NULL : inPlug()->attributesPlug()
+	);
 }

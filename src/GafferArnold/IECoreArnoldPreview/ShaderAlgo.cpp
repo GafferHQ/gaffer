@@ -36,6 +36,7 @@
 
 #include "boost/algorithm/string/predicate.hpp"
 #include "boost/unordered_map.hpp"
+#include "boost/lexical_cast.hpp"
 
 #include "IECore/Shader.h"
 #include "IECore/Light.h"
@@ -56,7 +57,7 @@ namespace IECoreArnoldPreview
 namespace ShaderAlgo
 {
 
-std::vector<AtNode *> convert( const IECore::ObjectVector *shaderNetwork )
+std::vector<AtNode *> convert( const IECore::ObjectVector *shaderNetwork, const std::string &namePrefix )
 {
 	typedef boost::unordered_map<std::string, AtNode *> ShaderMap;
 	ShaderMap shaderMap; // Maps handles to nodes
@@ -97,6 +98,7 @@ std::vector<AtNode *> convert( const IECore::ObjectVector *shaderNetwork )
 			continue;
 		}
 
+		std::string nodeName = boost::lexical_cast<string>( result.size() );
 		for( CompoundDataMap::const_iterator pIt = parameters->begin(), peIt = parameters->end(); pIt != peIt; ++pIt )
 		{
 			if( const StringData *stringData = runTimeCast<const StringData>( pIt->second.get() ) )
@@ -119,12 +121,15 @@ std::vector<AtNode *> convert( const IECore::ObjectVector *shaderNetwork )
 				else if( pIt->first.value() == "__handle" )
 				{
 					shaderMap[value] = node;
+					nodeName = value;
 					continue;
 				}
 			}
 			ParameterAlgo::setParameter( node, pIt->first.value().c_str(), pIt->second.get() );
 		}
 
+		nodeName = namePrefix + nodeName;
+		AiNodeSetStr( node, "name", nodeName.c_str() );
 		result.push_back( node );
 	}
 

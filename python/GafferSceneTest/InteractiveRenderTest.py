@@ -325,6 +325,14 @@ class InteractiveRenderTest( GafferSceneTest.SceneTestCase ) :
 		image = IECore.ImageDisplayDriver.storedImage( "myLovelySphere" )
 		self.assertAlmostEqual( self.__color4fAtUV( image, IECore.V2f( 0.5 ) ).r, 0, delta = 0.01 )
 
+		# Tweak the sphere geometry - it should remain hidden
+
+		s["s"]["radius"].setValue( 1.01 )
+		time.sleep( 0.5 )
+
+		image = IECore.ImageDisplayDriver.storedImage( "myLovelySphere" )
+		self.assertAlmostEqual( self.__color4fAtUV( image, IECore.V2f( 0.5 ) ).r, 0, delta = 0.01 )
+
 		# Show it again
 
 		s["a"]["attributes"]["visibility"]["value"].setValue( True )
