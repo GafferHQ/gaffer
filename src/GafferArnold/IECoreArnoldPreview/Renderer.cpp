@@ -370,12 +370,7 @@ class ArnoldAttributes : public IECoreScenePreview::Renderer::AttributesInterfac
 					it->first == g_arnoldLightShaderAttributeName
 				)
 				{
-					if( const IECore::ObjectVector *o = reportedCast<const IECore::ObjectVector>( it->second.get(), "attribute", it->first) )
-					{
-						// Deliberately not using the shader cache, since Arnold
-						// lights are objects rather than shaders.
-						lightShader = new ArnoldShader( o );
-					}
+					lightShader = reportedCast<const IECore::ObjectVector>( it->second.get(), "attribute", it->first );
 				}
 			}
 			if( !surfaceShader )
@@ -387,7 +382,7 @@ class ArnoldAttributes : public IECoreScenePreview::Renderer::AttributesInterfac
 		unsigned char visibility;
 		unsigned char sidedness;
 		ArnoldShaderPtr surfaceShader;
-		ArnoldShaderPtr lightShader;
+		IECore::ConstObjectVectorPtr lightShader;
 
 	private :
 
@@ -540,7 +535,7 @@ class ArnoldLight : public ArnoldObject
 	public :
 
 		ArnoldLight( const std::string &name, const IECore::Object *object )
-			:	ArnoldObject( name, object )
+			:	ArnoldObject( name, object ), m_name( name )
 		{
 		}
 
@@ -555,7 +550,12 @@ class ArnoldLight : public ArnoldObject
 		{
 			ArnoldObject::attributes( attributes );
 			const ArnoldAttributes *arnoldAttributes = static_cast<const ArnoldAttributes *>( attributes );
-			m_lightShader = arnoldAttributes->lightShader;
+			m_lightShader = NULL;
+			if( arnoldAttributes->lightShader )
+			{
+				m_lightShader = new ArnoldShader( arnoldAttributes->lightShader.get() );
+				AiNodeSetStr( m_lightShader->root(), "name", m_name.c_str() );
+			}
 			applyTransform();
 		}
 
@@ -572,8 +572,9 @@ class ArnoldLight : public ArnoldObject
 		}
 
 		// Because the AtNode for the light arrives via attributes(),
-		// we need to store the transform ourselves so we have it later
-		// when we need it.
+		// we need to store the transform and name ourselves so we have
+		// them later when we need them.
+		std::string m_name;
 		Imath::M44f m_transform;
 		ArnoldShaderPtr m_lightShader;
 

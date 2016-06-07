@@ -212,6 +212,69 @@ class RendererTest( GafferTest.TestCase ) :
 			self.assertEqual( len( shaders ), 4 )
 			self.assertEqual( len( set( [ arnold.AiNodeGetName( s ) for s in shaders ] ) ), 4 )
 
+	def testLightNames( self ) :
+
+		r = GafferScene.Private.IECoreScenePreview.Renderer.create(
+			"IECoreArnold::Renderer",
+			GafferScene.Private.IECoreScenePreview.Renderer.RenderType.SceneDescription,
+			self.temporaryDirectory() + "/test.ass"
+		)
+
+		lightShader = IECore.ObjectVector( [ IECore.Shader( "point_light", "ai:light" ), ] )
+		o = r.light( "testLight", None )
+		o.attributes(
+			r.attributes(
+				IECore.CompoundObject( {
+					"ai:light" : lightShader
+				} )
+			)
+		)
+
+		del o
+		r.render()
+		del r
+
+		with IECoreArnold.UniverseBlock() :
+
+			arnold.AiASSLoad( self.temporaryDirectory() + "/test.ass" )
+
+			lights = self.__allNodes( type = arnold.AI_NODE_LIGHT )
+			self.assertEqual( len( lights ), 1 )
+			self.assertEqual( arnold.AiNodeGetName( lights[0] ), "testLight" )
+
+	def testSharedLightAttributes( self ) :
+
+		r = GafferScene.Private.IECoreScenePreview.Renderer.create(
+			"IECoreArnold::Renderer",
+			GafferScene.Private.IECoreScenePreview.Renderer.RenderType.SceneDescription,
+			self.temporaryDirectory() + "/test.ass"
+		)
+
+		lightShader = IECore.ObjectVector( [ IECore.Shader( "point_light", "ai:light" ), ] )
+		lightAttributes = r.attributes(
+			IECore.CompoundObject( {
+				"ai:light" : lightShader
+			} )
+		)
+
+		o = r.light( "testLight1", None )
+		o.attributes( lightAttributes )
+
+		o = r.light( "testLight2", None )
+		o.attributes( lightAttributes )
+
+		del o, lightAttributes
+		r.render()
+		del r
+
+		with IECoreArnold.UniverseBlock() :
+
+			arnold.AiASSLoad( self.temporaryDirectory() + "/test.ass" )
+
+			lights = self.__allNodes( type = arnold.AI_NODE_LIGHT )
+			self.assertEqual( len( lights ), 2 )
+			self.assertEqual( set( [ arnold.AiNodeGetName( l ) for l in lights ] ), { "testLight1", "testLight2" } )
+
 	def __allNodes( self, type = arnold.AI_NODE_ALL, ignoreBuiltIn = True ) :
 
 		result = []
