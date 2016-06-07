@@ -48,6 +48,8 @@ Gaffer.Metadata.registerNode(
 	The base type for nodes that apply attributes to the scene.
 	""",
 
+	"layout:activator:isNotGlobal", lambda node : not node["global"].getValue(),
+
 	plugs = {
 
 		"attributes" : [
@@ -73,7 +75,13 @@ Gaffer.Metadata.registerNode(
 
 			"layout:section", "Filter",
 
-		]
+		],
+
+		"filter" : [
+
+			"layout:activator", "isNotGlobal",
+
+		],
 
 	}
 
