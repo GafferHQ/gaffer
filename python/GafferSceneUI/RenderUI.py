@@ -49,12 +49,6 @@ Gaffer.Metadata.registerNode(
 
 	plugs = {
 
-		"*" : [
-
-			"nodule:type", "",
-
-		],
-
 		"in" : [
 
 			"description",
