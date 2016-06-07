@@ -183,6 +183,8 @@ class GLWidget( GafferUI.Widget ) :
 		# created, and this seems like the only place that is guaranteed.
 		# calling it here does mean we call init() way more than needed,
 		# but it's safe.
+		## \todo: this might be removable if we can prove resizeEvent
+		# is always called first.
 		IECoreGL.init( True )
 
 		self._draw()
@@ -240,6 +242,18 @@ class _GLGraphicsView( QtGui.QGraphicsView ) :
 				pass
 
 			owner._makeCurrent()
+
+			# We need to call the init method after a GL context has been
+			# created, but before any events requiring GL have been triggered.
+			# We had been doing this from GLWidget.__draw(), but it was still
+			# possible to trigger mouseMove events prior to drawing by hovering
+			# over top of an about-to-become-visible GLWidget. resizeEvent
+			# seems to always be triggered prior to both draw and mouseMove,
+			# ensuring GL is initialized in time for those other events.
+			# Calling it here does mean we call init() more than needed,
+			# but it's safe.
+			IECoreGL.init( True )
+
 			owner._resize( IECore.V2i( event.size().width(), event.size().height() ) )
 
 	def keyPressEvent( self, event ) :
