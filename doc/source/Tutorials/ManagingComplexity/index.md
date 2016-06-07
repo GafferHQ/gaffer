@@ -1,5 +1,5 @@
-Performance Guidelines
-======================
+Managing Complexity
+===================
 
 Gaffer is designed to support huge scenes gracefully, by deferring the generation of each location  until requested by the user or renderer. It is also designed to be flexible, affording the user a great deal of control in how scenes are generated. These two goals are somewhat at odds; this document discusses the performance implications of various choices a user might make, and provides some guidelines for keeping Gaffer running smoothly.
 
