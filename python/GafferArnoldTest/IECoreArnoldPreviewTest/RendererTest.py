@@ -275,6 +275,65 @@ class RendererTest( GafferTest.TestCase ) :
 			self.assertEqual( len( lights ), 2 )
 			self.assertEqual( set( [ arnold.AiNodeGetName( l ) for l in lights ] ), { "testLight1", "testLight2" } )
 
+	def testAttributes( self ) :
+
+		r = GafferScene.Private.IECoreScenePreview.Renderer.create(
+			"IECoreArnold::Renderer",
+			GafferScene.Private.IECoreScenePreview.Renderer.RenderType.SceneDescription,
+			self.temporaryDirectory() + "/test.ass"
+		)
+
+		o1 = r.object( "testMesh1", IECore.MeshPrimitive.createPlane( IECore.Box2f( IECore.V2f( -1 ), IECore.V2f( 1 ) ) ) )
+		o1.attributes(
+			r.attributes( IECore.CompoundObject( {
+				"doubleSided" : IECore.BoolData( True ),
+				"ai:visibility:camera" : IECore.BoolData( False ),
+				"ai:visibility:shadow" : IECore.BoolData( True ),
+				"ai:visibility:reflected" : IECore.BoolData( False ),
+				"ai:visibility:refracted" : IECore.BoolData( True ),
+				"ai:visibility:diffuse" : IECore.BoolData( False ),
+				"ai:visibility:glossy" : IECore.BoolData( True ),
+			} ) )
+		)
+
+		o2 = r.object( "testMesh2", IECore.MeshPrimitive.createPlane( IECore.Box2f( IECore.V2f( -1 ), IECore.V2f( 1 ) ) ) )
+		o2.attributes(
+			r.attributes( IECore.CompoundObject( {
+				"doubleSided" : IECore.BoolData( False ),
+				"ai:visibility:camera" : IECore.BoolData( True ),
+				"ai:visibility:shadow" : IECore.BoolData( False ),
+				"ai:visibility:reflected" : IECore.BoolData( True ),
+				"ai:visibility:refracted" : IECore.BoolData( False ),
+				"ai:visibility:diffuse" : IECore.BoolData( True ),
+				"ai:visibility:glossy" : IECore.BoolData( False ),
+			} ) )
+		)
+
+		del o1, o2
+		r.render()
+		del r
+
+		with IECoreArnold.UniverseBlock() :
+
+			arnold.AiASSLoad( self.temporaryDirectory() + "/test.ass" )
+			o1 = self.__allNodes( type = arnold.AI_NODE_SHAPE )[0]
+			o2 = self.__allNodes( type = arnold.AI_NODE_SHAPE )[1]
+
+			self.assertEqual( arnold.AiNodeGetStr( o1, "name" ), "testMesh1" )
+			self.assertEqual( arnold.AiNodeGetStr( o2, "name" ), "testMesh2" )
+
+			self.assertEqual( arnold.AiNodeGetByte( o1, "sidedness" ), arnold.AI_RAY_ALL )
+			self.assertEqual( arnold.AiNodeGetByte( o2, "sidedness" ), arnold.AI_RAY_UNDEFINED )
+
+			self.assertEqual(
+				arnold.AiNodeGetByte( o1, "visibility" ),
+				arnold.AI_RAY_ALL & ~( arnold.AI_RAY_CAMERA | arnold.AI_RAY_REFLECTED | arnold.AI_RAY_DIFFUSE )
+			)
+			self.assertEqual(
+				arnold.AiNodeGetByte( o2, "visibility" ),
+				arnold.AI_RAY_ALL & ~( arnold.AI_RAY_SHADOW | arnold.AI_RAY_REFRACTED | arnold.AI_RAY_GLOSSY )
+			)
+
 	def __allNodes( self, type = arnold.AI_NODE_ALL, ignoreBuiltIn = True ) :
 
 		result = []
