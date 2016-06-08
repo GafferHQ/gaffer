@@ -52,19 +52,25 @@ def __samplingSummary( plug ) :
 		info.append( "Glossy %d" % plug["giGlossySamples"]["value"].getValue() )
 	if plug["giRefractionSamples"]["enabled"].getValue() :
 		info.append( "Refraction %d" % plug["giRefractionSamples"]["value"].getValue() )
+	if plug["giSSSSamples"]["enabled"].getValue() :
+		info.append( "SSS %d" % plug["giSSSSamples"]["value"].getValue() )
+	if plug["giVolumeSamples"]["enabled"].getValue() :
+		info.append( "Volume %d" % plug["giVolumeSamples"]["value"].getValue() )
 	return ", ".join( info )
 
 def __rayDepthSummary( plug ) :
 
 	info = []
 	if plug["giDiffuseDepth"]["enabled"].getValue() :
-		info.append( "Diffuse Depth %d" % plug["giDiffuseDepth"]["value"].getValue() )
+		info.append( "Diffuse %d" % plug["giDiffuseDepth"]["value"].getValue() )
 	if plug["giGlossyDepth"]["enabled"].getValue() :
-		info.append( "Glossy Depth %d" % plug["giGlossyDepth"]["value"].getValue() )
+		info.append( "Glossy %d" % plug["giGlossyDepth"]["value"].getValue() )
 	if plug["giReflectionDepth"]["enabled"].getValue() :
-		info.append( "Reflection Depth %d" % plug["giReflectionDepth"]["value"].getValue() )
+		info.append( "Reflection %d" % plug["giReflectionDepth"]["value"].getValue() )
 	if plug["giRefractionDepth"]["enabled"].getValue() :
-		info.append( "Refraction Depth %d" % plug["giRefractionDepth"]["value"].getValue() )
+		info.append( "Refraction %d" % plug["giRefractionDepth"]["value"].getValue() )
+	if plug["giVolumeDepth"]["enabled"].getValue() :
+		info.append( "Volume %d" % plug["giVolumeDepth"]["value"].getValue() )
 	return ", ".join( info )
 
 
@@ -226,6 +232,37 @@ Gaffer.Metadata.registerNode(
 
 		],
 
+		"options.giSSSSamples" : [
+
+			"description",
+			"""
+			Controls the number of rays traced when
+			computing subsurface scattering. The number of actual
+			subsurface rays traced is the square of this number.
+			""",
+
+			"layout:section", "Sampling",
+			"label", "SSS Samples",
+
+		],
+
+		"options.giVolumeSamples" : [
+
+			"description",
+			"""
+			Controls the number of rays traced when
+			computing indirect lighting for volumes.
+			The number of actual rays traced
+			is the square of this number. The volume
+			ray depth must be increased from the default
+			value of 0 before this setting is of use.
+			""",
+
+			"layout:section", "Sampling",
+			"label", "Volume Samples",
+
+		],
+
 		# Ray Depth
 
 		"options.giDiffuseDepth" : [
@@ -278,6 +315,19 @@ Gaffer.Metadata.registerNode(
 
 			"layout:section", "Ray Depth",
 			"label", "Refraction Depth",
+
+		],
+
+		"options.giVolumeDepth" : [
+
+			"description",
+			"""
+			Controls the number of ray bounces when
+			computing indirect lighting on volumes.
+			""",
+
+			"layout:section", "Ray Depth",
+			"label", "Volume Depth",
 
 		],
 

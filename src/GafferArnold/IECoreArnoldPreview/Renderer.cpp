@@ -311,8 +311,14 @@ IECore::InternedString g_reflectedVisibilityAttributeName( "ai:visibility:reflec
 IECore::InternedString g_refractedVisibilityAttributeName( "ai:visibility:refracted" );
 IECore::InternedString g_diffuseVisibilityAttributeName( "ai:visibility:diffuse" );
 IECore::InternedString g_glossyVisibilityAttributeName( "ai:visibility:glossy" );
+
 IECore::InternedString g_arnoldSurfaceShaderAttributeName( "ai:surface" );
 IECore::InternedString g_arnoldLightShaderAttributeName( "ai:light" );
+
+IECore::InternedString g_arnoldReceiveShadowsAttributeName( "ai:receive_shadows" );
+IECore::InternedString g_arnoldSelfShadowsAttributeName( "ai:self_shadows" );
+IECore::InternedString g_arnoldOpaqueAttributeName( "ai:opaque" );
+IECore::InternedString g_arnoldMatteAttributeName( "ai:matte" );
 
 class ArnoldAttributes : public IECoreScenePreview::Renderer::AttributesInterface
 {
@@ -320,75 +326,73 @@ class ArnoldAttributes : public IECoreScenePreview::Renderer::AttributesInterfac
 	public :
 
 		ArnoldAttributes( const IECore::CompoundObject *attributes, ShaderCache *shaderCache )
-			:	visibility( AI_RAY_ALL ), sidedness( AI_RAY_ALL )
+			:	visibility( AI_RAY_ALL ), sidedness( AI_RAY_ALL ), shadingFlags( Default )
 		{
-			for( IECore::CompoundObject::ObjectMap::const_iterator it = attributes->members().begin(), eIt = attributes->members().end(); it != eIt; ++it )
+			updateVisibility( g_cameraVisibilityAttributeName, AI_RAY_CAMERA, attributes );
+			updateVisibility( g_shadowVisibilityAttributeName, AI_RAY_SHADOW, attributes );
+			updateVisibility( g_reflectedVisibilityAttributeName, AI_RAY_REFLECTED, attributes );
+			updateVisibility( g_refractedVisibilityAttributeName, AI_RAY_REFRACTED, attributes );
+			updateVisibility( g_diffuseVisibilityAttributeName, AI_RAY_DIFFUSE, attributes );
+			updateVisibility( g_glossyVisibilityAttributeName, AI_RAY_GLOSSY, attributes );
+
+			if( const IECore::BoolData *d = attribute<IECore::BoolData>( g_doubleSidedAttributeName, attributes ) )
 			{
-				if( it->first == g_cameraVisibilityAttributeName )
-				{
-					updateVisibility( it->first, AI_RAY_CAMERA, it->second.get() );
-				}
-				else if( it->first == g_shadowVisibilityAttributeName )
-				{
-					updateVisibility( it->first, AI_RAY_SHADOW, it->second.get() );
-				}
-				else if( it->first == g_reflectedVisibilityAttributeName )
-				{
-					updateVisibility( it->first, AI_RAY_REFLECTED, it->second.get() );
-				}
-				else if( it->first == g_refractedVisibilityAttributeName )
-				{
-					updateVisibility( it->first, AI_RAY_REFRACTED, it->second.get() );
-				}
-				else if( it->first == g_diffuseVisibilityAttributeName )
-				{
-					updateVisibility( it->first, AI_RAY_DIFFUSE, it->second.get() );
-				}
-				else if( it->first == g_glossyVisibilityAttributeName )
-				{
-					updateVisibility( it->first, AI_RAY_GLOSSY, it->second.get() );
-				}
-				else if( it->first == g_doubleSidedAttributeName )
-				{
-					if( const IECore::BoolData *d = reportedCast<const IECore::BoolData>( it->second.get(), "attribute", it->first) )
-					{
-						sidedness = d->readable() ? AI_RAY_ALL : AI_RAY_UNDEFINED;
-					}
-				}
-				else if(
-					it->first == g_surfaceShaderAttributeName ||
-					it->first == g_arnoldSurfaceShaderAttributeName
-				)
-				{
-					if( const IECore::ObjectVector *o = reportedCast<const IECore::ObjectVector>( it->second.get(), "attribute", it->first) )
-					{
-						surfaceShader = shaderCache->get( o );
-					}
-				}
-				else if(
-					it->first == g_lightShaderAttributeName ||
-					it->first == g_arnoldLightShaderAttributeName
-				)
-				{
-					lightShader = reportedCast<const IECore::ObjectVector>( it->second.get(), "attribute", it->first );
-				}
+				sidedness = d->readable() ? AI_RAY_ALL : AI_RAY_UNDEFINED;
 			}
+
+			updateShadingFlag( g_arnoldReceiveShadowsAttributeName, ReceiveShadows, attributes );
+			updateShadingFlag( g_arnoldSelfShadowsAttributeName, SelfShadows, attributes );
+			updateShadingFlag( g_arnoldOpaqueAttributeName, Opaque, attributes );
+			updateShadingFlag( g_arnoldMatteAttributeName, Matte, attributes );
+
+			const IECore::ObjectVector *surfaceShaderAttribute = attribute<IECore::ObjectVector>( g_arnoldSurfaceShaderAttributeName, attributes );
+			surfaceShaderAttribute = surfaceShaderAttribute ? surfaceShaderAttribute : attribute<IECore::ObjectVector>( g_surfaceShaderAttributeName, attributes );
+			if( surfaceShaderAttribute )
+			{
+				surfaceShader = shaderCache->get( surfaceShaderAttribute );
+			}
+
 			if( !surfaceShader )
 			{
 				surfaceShader = shaderCache->get( g_defaultShader.get() );
 			}
+
+			lightShader = attribute<IECore::ObjectVector>( g_arnoldLightShaderAttributeName, attributes );
+			lightShader = lightShader ? lightShader : attribute<IECore::ObjectVector>( g_lightShaderAttributeName, attributes );
 		}
+
+		enum ShadingFlags
+		{
+			ReceiveShadows = 1,
+			SelfShadows = 2,
+			Opaque = 4,
+			Matte = 8,
+			Default = ReceiveShadows | SelfShadows | Opaque,
+			All = ReceiveShadows | SelfShadows | Opaque | Matte
+		};
 
 		unsigned char visibility;
 		unsigned char sidedness;
+		unsigned char shadingFlags;
 		ArnoldShaderPtr surfaceShader;
 		IECore::ConstObjectVectorPtr lightShader;
 
 	private :
 
-		void updateVisibility( const IECore::InternedString &name, unsigned char rayType, const IECore::Object *attribute )
+		template<typename T>
+		const T *attribute( const IECore::InternedString &name, const IECore::CompoundObject *attributes )
 		{
-			if( const IECore::BoolData *d = reportedCast<const IECore::BoolData>( attribute, "attribute", name ) )
+			IECore::CompoundObject::ObjectMap::const_iterator it = attributes->members().find( name );
+			if( it == attributes->members().end() )
+			{
+				return NULL;
+			}
+			return reportedCast<const T>( it->second.get(), "attribute", name );
+		}
+
+		void updateVisibility( const IECore::InternedString &name, unsigned char rayType, const IECore::CompoundObject *attributes )
+		{
+			if( const IECore::BoolData *d = attribute<IECore::BoolData>( name, attributes ) )
 			{
 				if( d->readable() )
 				{
@@ -397,6 +401,21 @@ class ArnoldAttributes : public IECoreScenePreview::Renderer::AttributesInterfac
 				else
 				{
 					visibility = visibility & ~rayType;
+				}
+			}
+		}
+
+		void updateShadingFlag( const IECore::InternedString &name, unsigned char flag, const IECore::CompoundObject *attributes )
+		{
+			if( const IECore::BoolData *d = attribute<IECore::BoolData>( name, attributes ) )
+			{
+				if( d->readable() )
+				{
+					shadingFlags |= flag;
+				}
+				else
+				{
+					shadingFlags = shadingFlags & ~flag;
 				}
 			}
 		}
@@ -508,6 +527,12 @@ class ArnoldObject : public IECoreScenePreview::Renderer::ObjectInterface
 				const ArnoldAttributes *arnoldAttributes = static_cast<const ArnoldAttributes *>( attributes );
 				AiNodeSetByte( m_node, "visibility", arnoldAttributes->visibility );
 				AiNodeSetByte( m_node, "sidedness", arnoldAttributes->sidedness );
+
+				AiNodeSetBool( m_node, "receive_shadows", arnoldAttributes->shadingFlags & ArnoldAttributes::ReceiveShadows );
+				AiNodeSetBool( m_node, "self_shadows", arnoldAttributes->shadingFlags & ArnoldAttributes::SelfShadows );
+				AiNodeSetBool( m_node, "opaque", arnoldAttributes->shadingFlags & ArnoldAttributes::Opaque );
+				AiNodeSetBool( m_node, "matte", arnoldAttributes->shadingFlags & ArnoldAttributes::Matte );
+
 				m_shader = arnoldAttributes->surfaceShader; // Keep shader alive as long as we are alive
 				AiNodeSetPtr( m_node, "shader", m_shader ? m_shader->root() : AiNodeLookUpByName( "ieCoreArnold:defaultShader" ) );
 			}

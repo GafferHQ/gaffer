@@ -37,6 +37,8 @@
 
 import string
 
+import IECore
+
 import Gaffer
 import GafferUI
 import GafferArnold
@@ -56,6 +58,15 @@ def __visibilitySummary( plug ) :
 	)	:
 		if plug[childName+"Visibility"]["enabled"].getValue() :
 			info.append( label + ( " On" if plug[childName+"Visibility"]["value"].getValue() else " Off" ) )
+
+	return ", ".join( info )
+
+def __shadingSummary( plug ) :
+
+	info = []
+	for childName in ( "matte", "opaque", "receiveShadows", "selfShadows" ) :
+		if plug[childName]["enabled"].getValue() :
+			info.append( IECore.CamelCase.toSpaced( childName ) + ( " On" if plug[childName]["value"].getValue() else " Off" ) )
 
 	return ", ".join( info )
 
@@ -96,6 +107,7 @@ Gaffer.Metadata.registerNode(
 		"attributes" : [
 
 			"layout:section:Visibility:summary", __visibilitySummary,
+			"layout:section:Shading:summary", __shadingSummary,
 			"layout:section:Subdivision:summary", __subdivisionSummary,
 			"layout:section:Volume:summary", __volumeSummary,
 
@@ -180,6 +192,56 @@ Gaffer.Metadata.registerNode(
 
 			"layout:section", "Visibility",
 			"label", "Glossy",
+
+		],
+
+		# Shading
+
+		"attributes.matte" : [
+
+			"description",
+			"""
+			Turns the object into a holdout matte.
+			This only affects primary (camera) rays.
+			""",
+
+			"layout:section", "Shading",
+
+		],
+
+		"attributes.opaque" : [
+
+			"description",
+			"""
+			Flags the object as being opaque, allowing
+			Arnold to render faster. Should be turned off
+			when using partially transparent shaders.
+			""",
+
+			"layout:section", "Shading",
+
+		],
+
+		"attributes.receiveShadows" : [
+
+			"description",
+			"""
+			Whether or not the object receives shadows.
+			""",
+
+			"layout:section", "Shading",
+
+		],
+
+		"attributes.selfShadows" : [
+
+			"description",
+			"""
+			Whether or not the object casts shadows
+			onto itself.
+			""",
+
+			"layout:section", "Shading",
 
 		],
 

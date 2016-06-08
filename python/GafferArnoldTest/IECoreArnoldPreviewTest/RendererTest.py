@@ -124,7 +124,7 @@ class RendererTest( GafferTest.TestCase ) :
 				"ai:surface" : IECore.ObjectVector( [ IECore.Shader( "flat" ) ] ),
 			} )
 
-			o = r.object( "testPlane", IECore.MeshPrimitive.createPlane( IECore.Box2f( IECore.V2f( -1 ), IECore.V2f( 1 ) ) ) )
+			o = r.object( "testPlane%d" % i, IECore.MeshPrimitive.createPlane( IECore.Box2f( IECore.V2f( -1 ), IECore.V2f( 1 ) ) ) )
 			# We keep specifying the same shader, but we'd like the renderer
 			# to be frugal and reuse a single arnold shader on the other side.
 			o.attributes( r.attributes( a ) )
@@ -177,7 +177,7 @@ class RendererTest( GafferTest.TestCase ) :
 			IECore.Shader( "flat", parameters = { "color" : "link:myHandle" } ),
 		] )
 
-		o1 = r.object( "testPlane", IECore.MeshPrimitive.createPlane( IECore.Box2f( IECore.V2f( -1 ), IECore.V2f( 1 ) ) ) )
+		o1 = r.object( "testPlane1", IECore.MeshPrimitive.createPlane( IECore.Box2f( IECore.V2f( -1 ), IECore.V2f( 1 ) ) ) )
 		o1.attributes(
 			r.attributes(
 				IECore.CompoundObject( {
@@ -191,7 +191,7 @@ class RendererTest( GafferTest.TestCase ) :
 			IECore.Shader( "standard", parameters = { "Kd_color" : "link:myHandle" } ),
 		] )
 
-		o2 = r.object( "testPlane", IECore.MeshPrimitive.createPlane( IECore.Box2f( IECore.V2f( -1 ), IECore.V2f( 1 ) ) ) )
+		o2 = r.object( "testPlane2", IECore.MeshPrimitive.createPlane( IECore.Box2f( IECore.V2f( -1 ), IECore.V2f( 1 ) ) ) )
 		o2.attributes(
 			r.attributes(
 				IECore.CompoundObject( {
@@ -274,6 +274,87 @@ class RendererTest( GafferTest.TestCase ) :
 			lights = self.__allNodes( type = arnold.AI_NODE_LIGHT )
 			self.assertEqual( len( lights ), 2 )
 			self.assertEqual( set( [ arnold.AiNodeGetName( l ) for l in lights ] ), { "testLight1", "testLight2" } )
+
+	def testAttributes( self ) :
+
+		r = GafferScene.Private.IECoreScenePreview.Renderer.create(
+			"IECoreArnold::Renderer",
+			GafferScene.Private.IECoreScenePreview.Renderer.RenderType.SceneDescription,
+			self.temporaryDirectory() + "/test.ass"
+		)
+
+		o1 = r.object( "testMesh1", IECore.MeshPrimitive.createPlane( IECore.Box2f( IECore.V2f( -1 ), IECore.V2f( 1 ) ) ) )
+		o1.attributes(
+			r.attributes( IECore.CompoundObject( {
+				"doubleSided" : IECore.BoolData( True ),
+				"ai:visibility:camera" : IECore.BoolData( False ),
+				"ai:visibility:shadow" : IECore.BoolData( True ),
+				"ai:visibility:reflected" : IECore.BoolData( False ),
+				"ai:visibility:refracted" : IECore.BoolData( True ),
+				"ai:visibility:diffuse" : IECore.BoolData( False ),
+				"ai:visibility:glossy" : IECore.BoolData( True ),
+				"ai:receive_shadows" : IECore.BoolData( True ),
+				"ai:self_shadows" : IECore.BoolData( True ),
+				"ai:matte" : IECore.BoolData( True ),
+				"ai:opaque" : IECore.BoolData( True ),
+			} ) )
+		)
+
+		o2 = r.object( "testMesh2", IECore.MeshPrimitive.createPlane( IECore.Box2f( IECore.V2f( -1 ), IECore.V2f( 1 ) ) ) )
+		o2.attributes(
+			r.attributes( IECore.CompoundObject( {
+				"doubleSided" : IECore.BoolData( False ),
+				"ai:visibility:camera" : IECore.BoolData( True ),
+				"ai:visibility:shadow" : IECore.BoolData( False ),
+				"ai:visibility:reflected" : IECore.BoolData( True ),
+				"ai:visibility:refracted" : IECore.BoolData( False ),
+				"ai:visibility:diffuse" : IECore.BoolData( True ),
+				"ai:visibility:glossy" : IECore.BoolData( False ),
+				"ai:receive_shadows" : IECore.BoolData( False ),
+				"ai:self_shadows" : IECore.BoolData( False ),
+				"ai:matte" : IECore.BoolData( False ),
+				"ai:opaque" : IECore.BoolData( False ),
+			} ) )
+		)
+
+		o3 = r.object( "testMesh3", IECore.MeshPrimitive.createPlane( IECore.Box2f( IECore.V2f( -1 ), IECore.V2f( 1 ) ) ) )
+
+		del o1, o2, o3
+		r.render()
+		del r
+
+		with IECoreArnold.UniverseBlock() :
+
+			arnold.AiASSLoad( self.temporaryDirectory() + "/test.ass" )
+			o1 = self.__allNodes( type = arnold.AI_NODE_SHAPE )[0]
+			o2 = self.__allNodes( type = arnold.AI_NODE_SHAPE )[1]
+			o3 = self.__allNodes( type = arnold.AI_NODE_SHAPE )[2]
+
+			self.assertEqual( arnold.AiNodeGetStr( o1, "name" ), "testMesh1" )
+			self.assertEqual( arnold.AiNodeGetStr( o2, "name" ), "testMesh2" )
+			self.assertEqual( arnold.AiNodeGetStr( o3, "name" ), "testMesh3" )
+
+			self.assertEqual( arnold.AiNodeGetByte( o1, "sidedness" ), arnold.AI_RAY_ALL )
+			self.assertEqual( arnold.AiNodeGetByte( o2, "sidedness" ), arnold.AI_RAY_UNDEFINED )
+			self.assertEqual( arnold.AiNodeGetByte( o3, "sidedness" ), arnold.AI_RAY_ALL )
+
+			self.assertEqual(
+				arnold.AiNodeGetByte( o1, "visibility" ),
+				arnold.AI_RAY_ALL & ~( arnold.AI_RAY_CAMERA | arnold.AI_RAY_REFLECTED | arnold.AI_RAY_DIFFUSE )
+			)
+			self.assertEqual(
+				arnold.AiNodeGetByte( o2, "visibility" ),
+				arnold.AI_RAY_ALL & ~( arnold.AI_RAY_SHADOW | arnold.AI_RAY_REFRACTED | arnold.AI_RAY_GLOSSY )
+			)
+			self.assertEqual(
+				arnold.AiNodeGetByte( o3, "visibility" ),
+				arnold.AI_RAY_ALL
+			)
+
+			for p in ( "receive_shadows", "self_shadows", "matte", "opaque" ) :
+				self.assertEqual( arnold.AiNodeGetBool( o1, p ), True )
+				self.assertEqual( arnold.AiNodeGetBool( o2, p ), False )
+				self.assertEqual( arnold.AiNodeGetBool( o3, p ), p != "matte" )
 
 	def __allNodes( self, type = arnold.AI_NODE_ALL, ignoreBuiltIn = True ) :
 

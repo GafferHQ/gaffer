@@ -50,7 +50,7 @@ ArnoldAttributes::ArnoldAttributes( const std::string &name )
 {
 	Gaffer::CompoundDataPlug *attributes = attributesPlug();
 
-	// visibility parameters
+	// Visibility parameters
 
 	attributes->addOptionalMember( "ai:visibility:camera", new IECore::BoolData( true ), "cameraVisibility", Gaffer::Plug::Default, false );
 	attributes->addOptionalMember( "ai:visibility:shadow", new IECore::BoolData( true ), "shadowVisibility", Gaffer::Plug::Default, false );
@@ -59,13 +59,21 @@ ArnoldAttributes::ArnoldAttributes( const std::string &name )
 	attributes->addOptionalMember( "ai:visibility:diffuse", new IECore::BoolData( true ), "diffuseVisibility", Gaffer::Plug::Default, false );
 	attributes->addOptionalMember( "ai:visibility:glossy", new IECore::BoolData( true ), "glossyVisibility", Gaffer::Plug::Default, false );
 
-	// subdivision parameters
+	// Shading parameters
+
+	attributes->addOptionalMember( "ai:matte", new IECore::BoolData( false ), "matte", Gaffer::Plug::Default, false );
+	attributes->addOptionalMember( "ai:opaque", new IECore::BoolData( true ), "opaque", Gaffer::Plug::Default, false );
+	attributes->addOptionalMember( "ai:receive_shadows", new IECore::BoolData( true ), "receiveShadows", Gaffer::Plug::Default, false );
+	attributes->addOptionalMember( "ai:self_shadows", new IECore::BoolData( true ), "selfShadows", Gaffer::Plug::Default, false );
+
+
+	// Subdivision parameters
 
 	attributes->addOptionalMember( "ai:polymesh:subdiv_iterations", new IntPlug( "value", Plug::In, 1, 1 ), "subdivIterations", false );
 	attributes->addOptionalMember( "ai:polymesh:subdiv_pixel_error", new FloatPlug( "value", Plug::In, 0.0f, 0.0f ), "subdivPixelError", false );
 	attributes->addOptionalMember( "ai:polymesh:subdiv_adaptive_metric", new StringPlug( "value", Plug::In, "auto" ), "subdivAdaptiveMetric", false );
 
-	// volume parameters
+	// Volume parameters
 
 	attributes->addOptionalMember( "ai:shape:step_size", new FloatPlug( "value", Plug::In, 0.0f, 0.0f ), "volumeStepSize", false );
 
