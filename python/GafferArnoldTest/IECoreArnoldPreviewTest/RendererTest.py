@@ -124,7 +124,7 @@ class RendererTest( GafferTest.TestCase ) :
 				"ai:surface" : IECore.ObjectVector( [ IECore.Shader( "flat" ) ] ),
 			} )
 
-			o = r.object( "testPlane", IECore.MeshPrimitive.createPlane( IECore.Box2f( IECore.V2f( -1 ), IECore.V2f( 1 ) ) ) )
+			o = r.object( "testPlane%d" % i, IECore.MeshPrimitive.createPlane( IECore.Box2f( IECore.V2f( -1 ), IECore.V2f( 1 ) ) ) )
 			# We keep specifying the same shader, but we'd like the renderer
 			# to be frugal and reuse a single arnold shader on the other side.
 			o.attributes( r.attributes( a ) )
@@ -177,7 +177,7 @@ class RendererTest( GafferTest.TestCase ) :
 			IECore.Shader( "flat", parameters = { "color" : "link:myHandle" } ),
 		] )
 
-		o1 = r.object( "testPlane", IECore.MeshPrimitive.createPlane( IECore.Box2f( IECore.V2f( -1 ), IECore.V2f( 1 ) ) ) )
+		o1 = r.object( "testPlane1", IECore.MeshPrimitive.createPlane( IECore.Box2f( IECore.V2f( -1 ), IECore.V2f( 1 ) ) ) )
 		o1.attributes(
 			r.attributes(
 				IECore.CompoundObject( {
@@ -191,7 +191,7 @@ class RendererTest( GafferTest.TestCase ) :
 			IECore.Shader( "standard", parameters = { "Kd_color" : "link:myHandle" } ),
 		] )
 
-		o2 = r.object( "testPlane", IECore.MeshPrimitive.createPlane( IECore.Box2f( IECore.V2f( -1 ), IECore.V2f( 1 ) ) ) )
+		o2 = r.object( "testPlane2", IECore.MeshPrimitive.createPlane( IECore.Box2f( IECore.V2f( -1 ), IECore.V2f( 1 ) ) ) )
 		o2.attributes(
 			r.attributes(
 				IECore.CompoundObject( {
