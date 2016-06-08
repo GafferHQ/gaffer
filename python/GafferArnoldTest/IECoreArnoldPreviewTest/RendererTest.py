@@ -293,6 +293,10 @@ class RendererTest( GafferTest.TestCase ) :
 				"ai:visibility:refracted" : IECore.BoolData( True ),
 				"ai:visibility:diffuse" : IECore.BoolData( False ),
 				"ai:visibility:glossy" : IECore.BoolData( True ),
+				"ai:receive_shadows" : IECore.BoolData( True ),
+				"ai:self_shadows" : IECore.BoolData( True ),
+				"ai:matte" : IECore.BoolData( True ),
+				"ai:opaque" : IECore.BoolData( True ),
 			} ) )
 		)
 
@@ -306,10 +310,16 @@ class RendererTest( GafferTest.TestCase ) :
 				"ai:visibility:refracted" : IECore.BoolData( False ),
 				"ai:visibility:diffuse" : IECore.BoolData( True ),
 				"ai:visibility:glossy" : IECore.BoolData( False ),
+				"ai:receive_shadows" : IECore.BoolData( False ),
+				"ai:self_shadows" : IECore.BoolData( False ),
+				"ai:matte" : IECore.BoolData( False ),
+				"ai:opaque" : IECore.BoolData( False ),
 			} ) )
 		)
 
-		del o1, o2
+		o3 = r.object( "testMesh3", IECore.MeshPrimitive.createPlane( IECore.Box2f( IECore.V2f( -1 ), IECore.V2f( 1 ) ) ) )
+
+		del o1, o2, o3
 		r.render()
 		del r
 
@@ -318,12 +328,15 @@ class RendererTest( GafferTest.TestCase ) :
 			arnold.AiASSLoad( self.temporaryDirectory() + "/test.ass" )
 			o1 = self.__allNodes( type = arnold.AI_NODE_SHAPE )[0]
 			o2 = self.__allNodes( type = arnold.AI_NODE_SHAPE )[1]
+			o3 = self.__allNodes( type = arnold.AI_NODE_SHAPE )[2]
 
 			self.assertEqual( arnold.AiNodeGetStr( o1, "name" ), "testMesh1" )
 			self.assertEqual( arnold.AiNodeGetStr( o2, "name" ), "testMesh2" )
+			self.assertEqual( arnold.AiNodeGetStr( o3, "name" ), "testMesh3" )
 
 			self.assertEqual( arnold.AiNodeGetByte( o1, "sidedness" ), arnold.AI_RAY_ALL )
 			self.assertEqual( arnold.AiNodeGetByte( o2, "sidedness" ), arnold.AI_RAY_UNDEFINED )
+			self.assertEqual( arnold.AiNodeGetByte( o3, "sidedness" ), arnold.AI_RAY_ALL )
 
 			self.assertEqual(
 				arnold.AiNodeGetByte( o1, "visibility" ),
@@ -333,6 +346,15 @@ class RendererTest( GafferTest.TestCase ) :
 				arnold.AiNodeGetByte( o2, "visibility" ),
 				arnold.AI_RAY_ALL & ~( arnold.AI_RAY_SHADOW | arnold.AI_RAY_REFRACTED | arnold.AI_RAY_GLOSSY )
 			)
+			self.assertEqual(
+				arnold.AiNodeGetByte( o3, "visibility" ),
+				arnold.AI_RAY_ALL
+			)
+
+			for p in ( "receive_shadows", "self_shadows", "matte", "opaque" ) :
+				self.assertEqual( arnold.AiNodeGetBool( o1, p ), True )
+				self.assertEqual( arnold.AiNodeGetBool( o2, p ), False )
+				self.assertEqual( arnold.AiNodeGetBool( o3, p ), p != "matte" )
 
 	def __allNodes( self, type = arnold.AI_NODE_ALL, ignoreBuiltIn = True ) :
 
