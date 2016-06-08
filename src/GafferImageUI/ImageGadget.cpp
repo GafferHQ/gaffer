@@ -171,6 +171,17 @@ int ImageGadget::getSoloChannel() const
 	return m_soloChannel;
 }
 
+Imath::V2f ImageGadget::pixelAt( const IECore::LineSegment3f &lineInGadgetSpace ) const
+{
+	V3f i;
+	if( !lineInGadgetSpace.intersect( Plane3f( V3f( 0, 0, 1 ), 0 ), i ) )
+	{
+		return V2f( 0 );
+	}
+
+	return V2f( i.x / format().getPixelAspect(), i.y );
+}
+
 Imath::Box3f ImageGadget::bound() const
 {
 	Format f;

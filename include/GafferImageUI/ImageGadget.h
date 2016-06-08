@@ -99,6 +99,8 @@ class ImageGadget : public GafferUI::Gadget
 		void setSoloChannel( int index );
 		int getSoloChannel() const;
 
+		Imath::V2f pixelAt( const IECore::LineSegment3f &lineInGadgetSpace ) const;
+
 	protected :
 
 		virtual void doRender( const GafferUI::Style *style ) const;
