@@ -36,13 +36,15 @@
 
 #include "boost/python.hpp"
 
+#include "OSL/oslversion.h"
+
 #include "Gaffer/StringPlug.h"
 
 #include "GafferBindings/DependencyNodeBinding.h"
 #include "GafferBindings/DataBinding.h"
 
 #include "GafferOSL/OSLShader.h"
-#include "GafferOSL/OSLRenderer.h"
+#include "GafferOSL/ShadingEngine.h"
 #include "GafferOSL/OSLImage.h"
 #include "GafferOSL/OSLObject.h"
 
@@ -123,13 +125,9 @@ BOOST_PYTHON_MODULE( _GafferOSL )
 	def( "oslLibraryVersionPatch", &oslLibraryVersionPatch );
 	def( "oslLibraryVersionCode", &oslLibraryVersionCode );
 
-	scope s = IECorePython::RunTimeTypedClass<OSLRenderer>()
-		.def( init<>() )
-		.def( "shadingEngine", &OSLRenderer::shadingEngine )
-	;
-
-	IECorePython::RefCountedClass<OSLRenderer::ShadingEngine, IECore::RefCounted>( "ShadingEngine" )
-		.def( "shade", &OSLRenderer::ShadingEngine::shade )
+	IECorePython::RefCountedClass<ShadingEngine, IECore::RefCounted>( "ShadingEngine" )
+		.def( init<const IECore::ObjectVector *>() )
+		.def( "shade", &ShadingEngine::shade )
 	;
 
 }

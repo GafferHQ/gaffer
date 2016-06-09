@@ -34,6 +34,8 @@
 //
 //////////////////////////////////////////////////////////////////////////
 
+#include "tbb/spin_mutex.h"
+
 #include "boost/algorithm/string/split.hpp"
 #include "boost/algorithm/string/predicate.hpp"
 #include "boost/algorithm/string/classification.hpp"
@@ -41,11 +43,14 @@
 #include "OSL/oslclosure.h"
 #include "OSL/genclosure.h"
 #include "OSL/oslversion.h"
+#include "OSL/oslexec.h"
 
 #include "IECore/MessageHandler.h"
 #include "IECore/SimpleTypedData.h"
+#include "IECore/VectorTypedData.h"
+#include "IECore/Shader.h"
 
-#include "GafferOSL/OSLRenderer.h"
+#include "GafferOSL/ShadingEngine.h"
 
 using namespace std;
 using namespace boost;
@@ -57,6 +62,9 @@ using namespace GafferOSL;
 //////////////////////////////////////////////////////////////////////////
 // Utility for converting IECore::Data types to OSL::TypeDesc types.
 //////////////////////////////////////////////////////////////////////////
+
+namespace
+{
 
 TypeDesc::VECSEMANTICS vecSemanticsFromGeometricInterpretation( GeometricData::Interpretation interpretation )
 {
@@ -195,11 +203,16 @@ DataPtr dataFromTypeDesc( TypeDesc type, void *&basePointer )
 	return NULL;
 }
 
+} // namespace
+
 //////////////////////////////////////////////////////////////////////////
-// OSLRenderer::RenderState
+// RenderState
 //////////////////////////////////////////////////////////////////////////
 
-class OSLRenderer::RenderState
+namespace
+{
+
+class RenderState
 {
 
 	public :
@@ -287,9 +300,14 @@ class OSLRenderer::RenderState
 
 };
 
+} // namespace
+
 //////////////////////////////////////////////////////////////////////////
-// OSLRenderer::RendererServices
+// RendererServices
 //////////////////////////////////////////////////////////////////////////
+
+namespace
+{
 
 // OSL 1.5 introduced a new argument to the front of the get_matrix()
 // methods. We use this macro to declare it or not as appropriate.
@@ -310,7 +328,7 @@ class OSLRenderer::RenderState
 	#define ACQUIRE_RENDERSTATE static_cast<RenderState *>( sg )
 #endif
 
-class OSLRenderer::RendererServices : public OSL::RendererServices
+class RendererServices : public OSL::RendererServices
 {
 
 	public :
@@ -378,47 +396,52 @@ class OSLRenderer::RendererServices : public OSL::RendererServices
 
 };
 
+} // namespace
+
 //////////////////////////////////////////////////////////////////////////
-// OSLRenderer::State
+// ShadingSystem
 //////////////////////////////////////////////////////////////////////////
 
-OSLRenderer::State::State()
-	:	surfaceShader( new IECore::Shader( "surface", "defaultsurface" ) )
+namespace
 {
-}
 
-OSLRenderer::State::State( const State &other )
-	:	shaders( other.shaders ), surfaceShader( other.surfaceShader )
+enum ClosureId
 {
-}
+	EmissionClosureId,
+	DebugClosureId
+};
 
-OSLRenderer::State::~State()
-{
-}
-
-//////////////////////////////////////////////////////////////////////////
-// OSLRenderer
-//////////////////////////////////////////////////////////////////////////
-
-IE_CORE_DEFINERUNTIMETYPED( OSLRenderer );
-
-struct OSLRenderer::EmissionParameters
+struct EmissionParameters
 {
 };
 
-struct OSLRenderer::DebugParameters
+struct DebugParameters
 {
 	ustring name;
 	static ustring typeAttrKey;
 	static ustring valueAttrKey;
 };
 
-ustring OSLRenderer::DebugParameters::typeAttrKey( "type" );
-ustring OSLRenderer::DebugParameters::valueAttrKey( "value" );
+ustring DebugParameters::typeAttrKey( "type" );
+ustring DebugParameters::valueAttrKey( "value" );
 
-OSLRenderer::OSLRenderer()
-	:	m_shadingSystem( ShadingSystem::create( new OSLRenderer::RendererServices ), ShadingSystem::destroy )
+// Must be held in order to modify the shading system.
+// Should not be acquired before calling shadingSystem(),
+// since shadingSystem() itself will use it.
+typedef tbb::spin_mutex ShadingSystemWriteMutex;
+ShadingSystemWriteMutex g_shadingSystemWriteMutex;
+
+OSL::ShadingSystem *shadingSystem()
 {
+	ShadingSystemWriteMutex::scoped_lock shadingSystemWriteLock( g_shadingSystemWriteMutex );
+	static OSL::ShadingSystem *s = NULL;
+	if( s )
+	{
+		return s;
+	}
+
+	s = ShadingSystem::create( new RendererServices );
+
 	struct ClosureDefinition{
 		const char *name;
 		int id;
@@ -438,8 +461,8 @@ OSLRenderer::OSLRenderer()
 			DebugClosureId,
 			{
 				CLOSURE_STRING_PARAM( DebugParameters, name ),
-				CLOSURE_STRING_KEYPARAM( OSLRenderer::DebugParameters::typeAttrKey.c_str() ),
-				CLOSURE_COLOR_KEYPARAM( OSLRenderer::DebugParameters::valueAttrKey.c_str() ),
+				CLOSURE_STRING_KEYPARAM( DebugParameters::typeAttrKey.c_str() ),
+				CLOSURE_COLOR_KEYPARAM( DebugParameters::valueAttrKey.c_str() ),
 				CLOSURE_FINISH_PARAM( DebugParameters )
 			}
 		},
@@ -449,7 +472,7 @@ OSLRenderer::OSLRenderer()
 
 	for( int i = 0; closureDefinitions[i].name; ++i )
 	{
-		m_shadingSystem->register_closure(
+		s->register_closure(
 			closureDefinitions[i].name,
 			closureDefinitions[i].id,
 			closureDefinitions[i].parameters,
@@ -460,324 +483,26 @@ OSLRenderer::OSLRenderer()
 #endif
 		);
 	}
-}
 
-OSLRenderer::~OSLRenderer()
-{
-}
-
-void OSLRenderer::setOption( const std::string &name, IECore::ConstDataPtr value )
-{
-	if( boost::starts_with( name, "osl:" ) )
+	if( const char *searchPath = getenv( "OSL_SHADER_PATHS" ) )
 	{
-		const void *data = 0;
-		TypeDesc typeDesc = typeDescFromData( value.get(), data );
-		if( data )
-		{
-			m_shadingSystem->attribute( name.c_str() + 4, typeDesc, data );
-		}
-		else
-		{
-			msg( Msg::Warning, "OSLRenderer::setOption", boost::format( "Option \"%s\" has unsupported type \"%s\"" ) % name % value->typeName() );
-		}
+		s->attribute( "searchpath:shader", searchPath );
 	}
-	else if( boost::starts_with( name, "user:" ) || name.find( ':' ) == string::npos )
-	{
-		msg( Msg::Warning, "OSLRenderer::setOption", boost::format( "Unsupported option \"%s\"" ) % name );
-	}
-	else
-	{
-		// option is for another renderer and can be ignored.
-	}
+	s->attribute( "lockgeom", 1 );
+
+	return s;
 }
 
-IECore::ConstDataPtr OSLRenderer::getOption( const std::string &name ) const
-{
-	return NULL;
-}
-
-void OSLRenderer::camera( const std::string &name, const IECore::CompoundDataMap &parameters )
-{
-}
-
-void OSLRenderer::display( const std::string &name, const std::string &type, const std::string &data, const IECore::CompoundDataMap &parameters )
-{
-}
-
-void OSLRenderer::worldBegin()
-{
-	if( m_stateStack.size() )
-	{
-		msg( Msg::Warning, "OSLRenderer::worldBegin", "Bad nesting" );
-		return;
-	}
-	m_stateStack.push( State() );
-}
-
-void OSLRenderer::worldEnd()
-{
-	if( m_stateStack.size() != 1 )
-	{
-		msg( Msg::Warning, "OSLRenderer::worldEnd", "Bad nesting" );
-		return;
-	}
-	m_stateStack.pop();
-}
-
-void OSLRenderer::transformBegin()
-{
-}
-
-void OSLRenderer::transformEnd()
-{
-}
-
-void OSLRenderer::setTransform( const Imath::M44f &m )
-{
-}
-
-void OSLRenderer::setTransform( const std::string &coordinateSystem )
-{
-}
-
-Imath::M44f OSLRenderer::getTransform() const
-{
-	return M44f();
-}
-
-Imath::M44f OSLRenderer::getTransform( const std::string &coordinateSystem ) const
-{
-	return M44f();
-}
-
-void OSLRenderer::concatTransform( const Imath::M44f &m )
-{
-}
-
-void OSLRenderer::coordinateSystem( const std::string &name )
-{
-}
-
-void OSLRenderer::attributeBegin()
-{
-	if( !m_stateStack.size() )
-	{
-		msg( Msg::Warning, "OSLRenderer::attributeBegin", "Not in world block" );
-		return;
-	}
-	m_stateStack.push( State( m_stateStack.top() ) );
-}
-
-void OSLRenderer::attributeEnd()
-{
-	if( !m_stateStack.size() )
-	{
-		msg( Msg::Warning, "OSLRenderer::attributeEnd", "Bad nesting" );
-		return;
-	}
-	m_stateStack.pop();
-}
-
-void OSLRenderer::setAttribute( const std::string &name, IECore::ConstDataPtr value )
-{
-}
-
-IECore::ConstDataPtr OSLRenderer::getAttribute( const std::string &name ) const
-{
-	return NULL;
-}
-
-void OSLRenderer::shader( const std::string &type, const std::string &name, const IECore::CompoundDataMap &parameters )
-{
-	if( type=="surface" || type=="osl:surface" )
-	{
-		m_stateStack.top().surfaceShader = new Shader( name, "surface", parameters );
-	}
-	else if( type=="shader" || type=="osl:shader" )
-	{
-		m_stateStack.top().shaders.push_back( new Shader( name, "shader", parameters ) );
-	}
-	else if( type.find( "osl:" ) == 0 || type.find_first_of( ":" ) == string::npos )
-	{
-		msg( Msg::Warning, "OSLRenderer::shader", boost::format( "Unsupported shader type \"%s\"." ) % type );
-	}
-}
-
-void OSLRenderer::light( const std::string &name, const std::string &handle, const IECore::CompoundDataMap &parameters )
-{
-}
-
-void OSLRenderer::illuminate( const std::string &lightHandle, bool on )
-{
-}
-
-void OSLRenderer::motionBegin( const std::set<float> &times )
-{
-}
-
-void OSLRenderer::motionEnd()
-{
-}
-
-void OSLRenderer::points( size_t numPoints, const IECore::PrimitiveVariableMap &primVars )
-{
-}
-
-void OSLRenderer::disk( float radius, float z, float thetaMax, const IECore::PrimitiveVariableMap &primVars )
-{
-}
-
-void OSLRenderer::curves( const IECore::CubicBasisf &basis, bool periodic, IECore::ConstIntVectorDataPtr numVertices, const IECore::PrimitiveVariableMap &primVars )
-{
-}
-
-void OSLRenderer::text( const std::string &font, const std::string &text, float kerning, const IECore::PrimitiveVariableMap &primVars )
-{
-}
-
-void OSLRenderer::sphere( float radius, float zMin, float zMax, float thetaMax, const IECore::PrimitiveVariableMap &primVars )
-{
-}
-
-void OSLRenderer::image( const Imath::Box2i &dataWindow, const Imath::Box2i &displayWindow, const IECore::PrimitiveVariableMap &primVars )
-{
-}
-
-void OSLRenderer::mesh( IECore::ConstIntVectorDataPtr vertsPerFace, IECore::ConstIntVectorDataPtr vertIds, const std::string &interpolation, const IECore::PrimitiveVariableMap &primVars )
-{
-}
-
-void OSLRenderer::nurbs( int uOrder, IECore::ConstFloatVectorDataPtr uKnot, float uMin, float uMax, int vOrder, IECore::ConstFloatVectorDataPtr vKnot, float vMin, float vMax, const IECore::PrimitiveVariableMap &primVars )
-{
-}
-
-void OSLRenderer::patchMesh( const IECore::CubicBasisf &uBasis, const IECore::CubicBasisf &vBasis, int nu, bool uPeriodic, int nv, bool vPeriodic, const IECore::PrimitiveVariableMap &primVars )
-{
-}
-
-void OSLRenderer::geometry( const std::string &type, const IECore::CompoundDataMap &topology, const IECore::PrimitiveVariableMap &primVars )
-{
-}
-
-void OSLRenderer::procedural( IECore::Renderer::ProceduralPtr proc )
-{
-}
-
-void OSLRenderer::instanceBegin( const std::string &name, const IECore::CompoundDataMap &parameters )
-{
-}
-
-void OSLRenderer::instanceEnd()
-{
-}
-
-void OSLRenderer::instance( const std::string &name )
-{
-}
-
-IECore::DataPtr OSLRenderer::command( const std::string &name, const IECore::CompoundDataMap &parameters )
-{
-	return NULL;
-}
-
-void OSLRenderer::editBegin( const std::string &editType, const IECore::CompoundDataMap &parameters )
-{
-}
-
-void OSLRenderer::editEnd()
-{
-}
-
-static void declareParameters( const CompoundDataMap &parameters, ShadingSystem *shadingSystem )
-{
-	for( CompoundDataMap::const_iterator it = parameters.begin(), eIt = parameters.end(); it != eIt; ++it )
-	{
-		if( it->first == "__handle" )
-		{
-			continue;
-		}
-
-		if( it->second->isInstanceOf( StringDataTypeId ) )
-		{
-			const std::string &value = static_cast<const StringData *>( it->second.get() )->readable();
-			if( boost::starts_with( value, "link:" ) )
-			{
-				// this will be handled in declareConnections()
-				continue;
-			}
-		}
-
-		const void *basePointer = 0;
-		const TypeDesc typeDesc = typeDescFromData( it->second.get(), basePointer );
-		if( basePointer )
-		{
-			shadingSystem->Parameter( it->first.c_str(), typeDesc, basePointer );
-		}
-		else
-		{
-			msg( Msg::Warning, "OSLRenderer", boost::format( "Parameter \"%s\" has unsupported type \"%s\"" ) % it->first.string() % it->second->typeName() );
-		}
-	}
-}
-
-static void declareConnections( const std::string &shaderHandle, const CompoundDataMap &parameters, ShadingSystem *shadingSystem )
-{
-	for( CompoundDataMap::const_iterator it = parameters.begin(), eIt = parameters.end(); it != eIt; ++it )
-	{
-		if( it->second->typeId() != StringDataTypeId )
-		{
-			continue;
-		}
-		const std::string &value = static_cast<const StringData *>( it->second.get() )->readable();
-		if( boost::starts_with( value, "link:" ) )
-		{
-			vector<string> splitValue;
-			split( splitValue, value, is_any_of( "." ), token_compress_on );
-			if( splitValue.size() != 2 )
-			{
-				msg( Msg::Warning, "OSLRenderer", boost::format( "Parameter \"%s\" has unexpected value \"%s\" - expected value of the form \"link:sourceShader.sourceParameter" ) % it->first.string() % value );
-				continue;
-			}
-
-			shadingSystem->ConnectShaders(
-				splitValue[0].c_str() + 5, splitValue[1].c_str(),
-				shaderHandle.c_str(), it->first.c_str()
-			);
-		}
-	}
-}
-
-OSLRenderer::ShadingEnginePtr OSLRenderer::shadingEngine() const
-{
-	const State &state = m_stateStack.top();
-
-	m_shadingSystem->ShaderGroupBegin();
-
-		for( vector<ConstShaderPtr>::const_iterator it = state.shaders.begin(), eIt = state.shaders.end(); it != eIt; ++it )
-		{
-			declareParameters( (*it)->parameters(), m_shadingSystem.get() );
-			const StringData *handle = (*it)->parametersData()->member<StringData>( "__handle" );
-			m_shadingSystem->Shader( "surface", (*it)->getName().c_str(), handle ? handle->readable().c_str() : NULL  );
-			if( handle )
-			{
-				declareConnections( handle->readable(), (*it)->parameters(), m_shadingSystem.get() );
-			}
-		}
-
-		declareParameters( state.surfaceShader->parameters(), m_shadingSystem.get() );
-		m_shadingSystem->Shader( "surface", state.surfaceShader->getName().c_str(), "oslRenderer:surface" );
-		declareConnections( "oslRenderer:surface", state.surfaceShader->parameters(), m_shadingSystem.get() );
-
-	m_shadingSystem->ShaderGroupEnd();
-
-	return new ShadingEngine( this, m_shadingSystem->state() );
-}
+} // namespace
 
 //////////////////////////////////////////////////////////////////////////
-// OSLRenderer::ShadingResults
+// ShadingResults
 //////////////////////////////////////////////////////////////////////////
 
-class OSLRenderer::ShadingResults
+namespace
+{
+
+class ShadingResults
 {
 
 	public :
@@ -937,13 +662,72 @@ class OSLRenderer::ShadingResults
 
 };
 
+} // namespace
+
 //////////////////////////////////////////////////////////////////////////
-// OSLRenderer::ShadingEngine
+// ShadingEngine
 //////////////////////////////////////////////////////////////////////////
 
-OSLRenderer::ShadingEngine::ShadingEngine( ConstOSLRendererPtr renderer, OSL::ShadingAttribStateRef shadingState )
-	:	m_renderer( renderer ), m_shadingState( shadingState )
+namespace
 {
+
+void declareParameters( const CompoundDataMap &parameters, ShadingSystem *shadingSystem )
+{
+	for( CompoundDataMap::const_iterator it = parameters.begin(), eIt = parameters.end(); it != eIt; ++it )
+	{
+		if( it->first == "__handle" )
+		{
+			continue;
+		}
+
+		if( it->second->isInstanceOf( StringDataTypeId ) )
+		{
+			const std::string &value = static_cast<const StringData *>( it->second.get() )->readable();
+			if( boost::starts_with( value, "link:" ) )
+			{
+				// this will be handled in declareConnections()
+				continue;
+			}
+		}
+
+		const void *basePointer = 0;
+		const TypeDesc typeDesc = typeDescFromData( it->second.get(), basePointer );
+		if( basePointer )
+		{
+			shadingSystem->Parameter( it->first.c_str(), typeDesc, basePointer );
+		}
+		else
+		{
+			msg( Msg::Warning, "OSLRenderer", boost::format( "Parameter \"%s\" has unsupported type \"%s\"" ) % it->first.string() % it->second->typeName() );
+		}
+	}
+}
+
+void declareConnections( const std::string &shaderHandle, const CompoundDataMap &parameters, ShadingSystem *shadingSystem )
+{
+	for( CompoundDataMap::const_iterator it = parameters.begin(), eIt = parameters.end(); it != eIt; ++it )
+	{
+		if( it->second->typeId() != StringDataTypeId )
+		{
+			continue;
+		}
+		const std::string &value = static_cast<const StringData *>( it->second.get() )->readable();
+		if( boost::starts_with( value, "link:" ) )
+		{
+			vector<string> splitValue;
+			split( splitValue, value, is_any_of( "." ), token_compress_on );
+			if( splitValue.size() != 2 )
+			{
+				msg( Msg::Warning, "OSLRenderer", boost::format( "Parameter \"%s\" has unexpected value \"%s\" - expected value of the form \"link:sourceShader.sourceParameter" ) % it->first.string() % value );
+				continue;
+			}
+
+			shadingSystem->ConnectShaders(
+				splitValue[0].c_str() + 5, splitValue[1].c_str(),
+				shaderHandle.c_str(), it->first.c_str()
+			);
+		}
+	}
 }
 
 template <typename T>
@@ -976,9 +760,52 @@ static const T *varyingValue( const IECore::CompoundData *points, const char *na
 	}
 }
 
-IECore::CompoundDataPtr OSLRenderer::ShadingEngine::shade( const IECore::CompoundData *points ) const
+} // namespace
+
+ShadingEngine::ShadingEngine( const IECore::ObjectVector *shaderNetwork )
 {
-	// get the data for "P" - this determines the number of points to be shaded.
+	ShadingSystem *shadingSystem = ::shadingSystem();
+	ShadingSystemWriteMutex::scoped_lock shadingSystemWriteLock( g_shadingSystemWriteMutex );
+
+	m_shaderGroupRef = new ShaderGroupRef( shadingSystem->ShaderGroupBegin() );
+
+		for( ObjectVector::MemberContainer::const_iterator it = shaderNetwork->members().begin(), eIt = shaderNetwork->members().end(); it != eIt; ++it )
+		{
+			const Shader *shader = runTimeCast<const Shader>( it->get() );
+			if( !shader )
+			{
+				continue;
+			}
+
+			declareParameters( shader->parameters(), shadingSystem );
+			const char *handle = NULL;
+			if( const StringData *handleData = shader->parametersData()->member<StringData>( "__handle" ) )
+			{
+				handle = handleData->readable().c_str();
+			}
+			else if( it == eIt - 1 )
+			{
+				handle = "gafferOSL:shadingSystem:root";
+			}
+
+			shadingSystem->Shader( "surface", shader->getName().c_str(), handle );
+			if( handle )
+			{
+				declareConnections( handle, shader->parameters(), shadingSystem );
+			}
+		}
+
+	shadingSystem->ShaderGroupEnd();
+}
+
+ShadingEngine::~ShadingEngine()
+{
+	delete static_cast<ShaderGroupRef *>( m_shaderGroupRef );
+}
+
+IECore::CompoundDataPtr ShadingEngine::shade( const IECore::CompoundData *points ) const
+{
+	// Get the data for "P" - this determines the number of points to be shaded.
 
 	size_t numPoints = 0;
 
@@ -993,7 +820,7 @@ IECore::CompoundDataPtr OSLRenderer::ShadingEngine::shade( const IECore::Compoun
 		throw Exception( "No P data" );
 	}
 
-	// create ShaderGlobals, and fill it with any uniform values that have
+	// Create ShaderGlobals, and fill it with any uniform values that have
 	// been provided.
 
 	ShaderGlobals shaderGlobals;
@@ -1021,13 +848,13 @@ IECore::CompoundDataPtr OSLRenderer::ShadingEngine::shade( const IECore::Compoun
 	shaderGlobals.dPdu = uniformValue<V3f>( points, "dPdu" );
 	shaderGlobals.dPdv = uniformValue<V3f>( points, "dPdv" );
 
-	// add a RenderState to the ShaderGlobals. this will
+	// Add a RenderState to the ShaderGlobals. This will
 	// get passed to our RendererServices queries.
 
 	RenderState renderState( points );
 	shaderGlobals.renderstate = &renderState;
 
-	// get pointers to varying data, we'll use these to
+	// Get pointers to varying data, we'll use these to
 	// update the shaderGlobals as we iterate over our points.
 
 	const float *u = varyingValue<float>( points, "u" );
@@ -1036,13 +863,15 @@ IECore::CompoundDataPtr OSLRenderer::ShadingEngine::shade( const IECore::Compoun
 
 	/// \todo Get the other globals - match the uniform list
 
-	// allocate data for the result
+	// Allocate data for the result
 
 	ShadingResults results( numPoints );
 
-	// iterate over the input points, doing the shading as we go
+	// Iterate over the input points, doing the shading as we go
 
-	ShadingContext *shadingContext = m_renderer->m_shadingSystem->get_context();
+	ShadingSystem *shadingSystem = ::shadingSystem();
+	ShadingContext *shadingContext = shadingSystem->get_context();
+	ShaderGroup &shaderGroup = **static_cast<ShaderGroupRef *>( m_shaderGroupRef );
 	for( size_t i = 0; i < numPoints; ++i )
 	{
 		shaderGlobals.P = *p++;
@@ -1061,12 +890,13 @@ IECore::CompoundDataPtr OSLRenderer::ShadingEngine::shade( const IECore::Compoun
 
 		shaderGlobals.Ci = NULL;
 
-		m_renderer->m_shadingSystem->execute( *shadingContext, *m_shadingState, shaderGlobals );
+		shadingSystem->execute( *shadingContext, shaderGroup, shaderGlobals );
 		results.addResult( i, shaderGlobals.Ci );
 		renderState.incrementPointIndex();
 	}
 
-	m_renderer->m_shadingSystem->release_context( shadingContext );
+	shadingSystem->release_context( shadingContext );
 
 	return results.results();
 }
+
