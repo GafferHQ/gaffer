@@ -47,7 +47,7 @@
 #include "Gaffer/StringPlug.h"
 
 #include "GafferOSL/OSLShader.h"
-#include "GafferOSL/OSLRenderer.h"
+#include "GafferOSL/ShadingEngine.h"
 
 using namespace std;
 using namespace IECore;
@@ -101,49 +101,20 @@ inline size_t tbb_hasher( const ShadingEngineCacheKey &cacheKey )
 	return tbb_hasher( cacheKey.hash );
 }
 
-OSLRenderer::ConstShadingEnginePtr getter( const ShadingEngineCacheKey &key, size_t &cost )
+ConstShadingEnginePtr getter( const ShadingEngineCacheKey &key, size_t &cost )
 {
 	cost = 1;
-
 	ConstObjectVectorPtr state = key.shader->state();
 	key.shader = NULL; // there's no guarantee the node would even exist after this call, so zero it out to avoid temptation
-
 	if( !state->members().size() )
 	{
 		return NULL;
 	}
 
-	static OSLRendererPtr g_renderer;
-	static tbb::mutex g_rendererMutex;
-
-	tbb::mutex::scoped_lock lock( g_rendererMutex );
-
-	if( !g_renderer )
-	{
-		g_renderer = new OSLRenderer;
-		if( const char *searchPath = getenv( "OSL_SHADER_PATHS" ) )
-		{
-			g_renderer->setOption( "osl:searchpath:shader", new StringData( searchPath ) );
-			g_renderer->setOption( "osl:lockgeom", new IntData( 1 ) );
-		}
-		g_renderer->worldBegin();
-	}
-
-	IECore::AttributeBlock attributeBlock( g_renderer );
-
-	for( ObjectVector::MemberContainer::const_iterator it = state->members().begin(), eIt = state->members().end(); it != eIt; it++ )
-	{
-		const StateRenderable *s = runTimeCast<const StateRenderable>( it->get() );
-		if( s )
-		{
-			s->render( g_renderer.get() );
-		}
-	}
-
-	return g_renderer->shadingEngine();
+	return new ShadingEngine( state.get() );
 }
 
-typedef LRUCache<ShadingEngineCacheKey, OSLRenderer::ConstShadingEnginePtr> ShadingEngineCache;
+typedef LRUCache<ShadingEngineCacheKey, ConstShadingEnginePtr> ShadingEngineCache;
 ShadingEngineCache g_shadingEngineCache( getter, 10000 );
 
 } // namespace
@@ -163,7 +134,7 @@ OSLShader::~OSLShader()
 {
 }
 
-OSLRenderer::ConstShadingEnginePtr OSLShader::shadingEngine() const
+ConstShadingEnginePtr OSLShader::shadingEngine() const
 {
 	return g_shadingEngineCache.get( ShadingEngineCacheKey( this ) );
 }
