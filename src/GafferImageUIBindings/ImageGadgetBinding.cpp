@@ -36,6 +36,8 @@
 
 #include "boost/python.hpp"
 
+#include "IECorePython/ScopedGILRelease.h"
+
 #include "Gaffer/Context.h"
 
 #include "GafferUIBindings/GadgetBinding.h"
@@ -60,6 +62,13 @@ ImagePlugPtr getImage( const ImageGadget &v )
 	return ImagePlugPtr( const_cast<ImagePlug *>( v.getImage() ) );
 }
 
+Imath::V2f pixelAt( const ImageGadget &g, const IECore::LineSegment3f &lineInGadgetSpace )
+{
+	// Need GIL release because this method may trigger a compute of the format.
+	IECorePython::ScopedGILRelease gilRelease;
+	return g.pixelAt( lineInGadgetSpace );
+}
+
 } // namespace
 
 void GafferImageUIBindings::bindImageGadget()
@@ -70,5 +79,8 @@ void GafferImageUIBindings::bindImageGadget()
 		.def( "getImage", &getImage )
 		.def( "setContext", &ImageGadget::setContext )
 		.def( "getContext", (Context *(ImageGadget::*)())&ImageGadget::getContext, return_value_policy<CastToIntrusivePtr>() )
+		.def( "setSoloChannel", &ImageGadget::setSoloChannel )
+		.def( "getSoloChannel", &ImageGadget::getSoloChannel )
+		.def( "pixelAt", &pixelAt )
 	;
 }

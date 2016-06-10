@@ -171,6 +171,17 @@ int ImageGadget::getSoloChannel() const
 	return m_soloChannel;
 }
 
+Imath::V2f ImageGadget::pixelAt( const IECore::LineSegment3f &lineInGadgetSpace ) const
+{
+	V3f i;
+	if( !lineInGadgetSpace.intersect( Plane3f( V3f( 0, 0, 1 ), 0 ), i ) )
+	{
+		return V2f( 0 );
+	}
+
+	return V2f( i.x / format().getPixelAspect(), i.y );
+}
+
 Imath::Box3f ImageGadget::bound() const
 {
 	Format f;
@@ -534,6 +545,7 @@ void ImageGadget::renderTiles() const
 	glUniform1i( shader->uniformParameter( "alphaTexture" )->location, textureUnits[3] );
 
 	const Box2i dataWindow = this->dataWindow();
+	const float pixelAspect = this->format().getPixelAspect();
 
 	V2i tileOrigin = ImagePlug::tileOrigin( dataWindow.min );
 	for( ; tileOrigin.y < dataWindow.max.y; tileOrigin.y += ImagePlug::tileSize() )
@@ -571,16 +583,16 @@ void ImageGadget::renderTiles() const
 			glBegin( GL_QUADS );
 
 				glTexCoord2f( uvBound.min.x, uvBound.min.y  );
-				glVertex2f( validBound.min.x, validBound.min.y );
+				glVertex2f( validBound.min.x * pixelAspect, validBound.min.y );
 
 				glTexCoord2f( uvBound.min.x, uvBound.max.y  );
-				glVertex2f( validBound.min.x, validBound.max.y );
+				glVertex2f( validBound.min.x * pixelAspect, validBound.max.y );
 
 				glTexCoord2f( uvBound.max.x, uvBound.max.y  );
-				glVertex2f( validBound.max.x, validBound.max.y );
+				glVertex2f( validBound.max.x * pixelAspect, validBound.max.y );
 
 				glTexCoord2f( uvBound.max.x, uvBound.min.y  );
-				glVertex2f( validBound.max.x, validBound.min.y );
+				glVertex2f( validBound.max.x * pixelAspect, validBound.min.y );
 
 			glEnd();
 
@@ -630,7 +642,7 @@ void ImageGadget::doRender( const GafferUI::Style *style ) const
 		return;
 	}
 
-	// Render a black background the size of the image.
+	// Early out if the image has no size.
 
 	const Box2i &displayWindow = format.getDisplayWindow();
 	if( empty( displayWindow ) )
@@ -638,11 +650,26 @@ void ImageGadget::doRender( const GafferUI::Style *style ) const
 		return;
 	}
 
+	// Render a black background the size of the image.
+	// We need to account for the pixel aspect ratio here
+	// and in all our drawing. Variables ending in F denote
+	// windows corrected for pixel aspect.
+
+	const Box2f displayWindowF(
+		V2f( displayWindow.min ) * V2f( format.getPixelAspect(), 1.0f ),
+		V2f( displayWindow.max ) * V2f( format.getPixelAspect(), 1.0f )
+	);
+
+	const Box2f dataWindowF(
+		V2f( dataWindow.min ) * V2f( format.getPixelAspect(), 1.0f ),
+		V2f( dataWindow.max ) * V2f( format.getPixelAspect(), 1.0f )
+	);
+
 	glColor3f( 0.0f, 0.0f, 0.0f );
-	style->renderSolidRectangle( Box2f( V2f( displayWindow.min ), V2f( displayWindow.max ) ) );
+	style->renderSolidRectangle( displayWindowF );
 	if( !empty( dataWindow ) )
 	{
-		style->renderSolidRectangle( Box2f( V2f( dataWindow.min ), V2f( dataWindow.max ) ) );
+		style->renderSolidRectangle( dataWindowF );
 	}
 
 	// Draw the image tiles over the top.
@@ -652,7 +679,7 @@ void ImageGadget::doRender( const GafferUI::Style *style ) const
 	// And add overlays for the display and data windows.
 
 	glColor3f( 0.1f, 0.1f, 0.1f );
-	style->renderRectangle( Box2f( V2f( displayWindow.min ), V2f( displayWindow.max ) ) );
+	style->renderRectangle( displayWindowF );
 
 	string formatText = Format::name( format );
 	const string dimensionsText = lexical_cast<string>( displayWindow.size().x ) + " x " +  lexical_cast<string>( displayWindow.size().y );
@@ -665,23 +692,23 @@ void ImageGadget::doRender( const GafferUI::Style *style ) const
 		formatText += " ( " + dimensionsText + " )";
 	}
 
-	renderText( formatText, V2f( displayWindow.center().x, displayWindow.min.y ), V2f( 0.5, 1.5 ), style );
+	renderText( formatText, V2f( displayWindowF.center().x, displayWindowF.min.y ), V2f( 0.5, 1.5 ), style );
 
 	if( displayWindow.min != V2i( 0 ) )
 	{
-		renderText( lexical_cast<string>( displayWindow.min ), displayWindow.min, V2f( 1, 1.5 ), style );
-		renderText( lexical_cast<string>( displayWindow.max ), displayWindow.max, V2f( 0, -0.5 ), style );
+		renderText( lexical_cast<string>( displayWindow.min ), displayWindowF.min, V2f( 1, 1.5 ), style );
+		renderText( lexical_cast<string>( displayWindow.max ), displayWindowF.max, V2f( 0, -0.5 ), style );
 	}
 
 	if( !empty( dataWindow ) && dataWindow != displayWindow )
 	{
 		glColor3f( 0.5f, 0.5f, 0.5f );
-		style->renderRectangle( Box2f( V2f( dataWindow.min ), V2f( dataWindow.max ) ) );
+		style->renderRectangle( dataWindowF );
 
 		if( dataWindow.min != displayWindow.min )
 		{
-			renderText( lexical_cast<string>( dataWindow.min ), dataWindow.min, V2f( 1, 1.5 ), style );
-			renderText( lexical_cast<string>( dataWindow.max ), dataWindow.max, V2f( 0, -0.5 ), style );
+			renderText( lexical_cast<string>( dataWindow.min ), dataWindowF.min, V2f( 1, 1.5 ), style );
+			renderText( lexical_cast<string>( dataWindow.max ), dataWindowF.max, V2f( 0, -0.5 ), style );
 		}
 	}
 }

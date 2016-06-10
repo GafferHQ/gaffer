@@ -127,9 +127,10 @@ class ImageView::ColorInspector : public boost::signals::trackable
 		{
 			ImageGadget *imageGadget = static_cast<ImageGadget *>( m_view->viewportGadget()->getPrimaryChild() );
 			const LineSegment3f l = m_view->viewportGadget()->rasterToGadgetSpace( V2f( event.line.p0.x, event.line.p0.y ), imageGadget );
-			const V2i pixel( floor( l.p0.x ), floor( l.p0.y ) );
-			m_sampler->pixelPlug()->setValue( V2f( pixel ) + V2f( 0.5f ) );
-			plug()->getChild<V2iPlug>( "pixel" )->setValue( pixel );
+			const V2f pixel = imageGadget->pixelAt( l );
+			const V2f pixelOrigin = V2f( floor( pixel.x ), floor( pixel.y ) );
+			m_sampler->pixelPlug()->setValue( pixelOrigin + V2f( 0.5 ) );
+			plug()->getChild<V2iPlug>( "pixel" )->setValue( pixelOrigin );
 			return false;
 		}
 
