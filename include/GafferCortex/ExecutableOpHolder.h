@@ -52,12 +52,12 @@ namespace GafferCortex
 IE_CORE_FORWARDDECLARE( ParameterHandler )
 
 /// Node for Ops that can be executed on their own in the farm or in a separate process.
-class ExecutableOpHolder : public ParameterisedHolderExecutableNode
+class ExecutableOpHolder : public ParameterisedHolderTaskNode
 {
 
 	public :
 
-		IE_CORE_DECLARERUNTIMETYPEDEXTENSION( GafferCortex::ExecutableOpHolder, ExecutableOpHolderTypeId, ParameterisedHolderExecutableNode );
+		IE_CORE_DECLARERUNTIMETYPEDEXTENSION( GafferCortex::ExecutableOpHolder, ExecutableOpHolderTypeId, ParameterisedHolderTaskNode );
 
 		ExecutableOpHolder( const std::string &name=defaultName<ExecutableOpHolder>() );
 

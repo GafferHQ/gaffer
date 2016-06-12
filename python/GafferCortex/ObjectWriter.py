@@ -45,11 +45,11 @@ import Gaffer
 import GafferDispatch
 import GafferCortex
 
-class ObjectWriter( GafferDispatch.ExecutableNode ) :
+class ObjectWriter( GafferDispatch.TaskNode ) :
 
 	def __init__( self, name="ObjectWriter" ) :
 
-		GafferDispatch.ExecutableNode.__init__( self, name )
+		GafferDispatch.TaskNode.__init__( self, name )
 
 		inPlug = Gaffer.ObjectPlug( "in", Gaffer.Plug.Direction.In, IECore.NullObject.defaultNullObject() )
 		self.addChild( inPlug )
@@ -77,7 +77,7 @@ class ObjectWriter( GafferDispatch.ExecutableNode ) :
 			if not self["fileName"].getValue() or self["in"].source() == self["in"] :
 				return IECore.MurmurHash()
 
-			h = GafferDispatch.ExecutableNode.hash( self, context )
+			h = GafferDispatch.TaskNode.hash( self, context )
 			h.append( self["fileName"].hash() )
 			h.append( self["in"].hash() )
 			if "parameters" in self.keys() :
