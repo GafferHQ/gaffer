@@ -137,5 +137,17 @@ class ImagePlugTest( GafferImageTest.ImageTestCase ) :
 
 		self.assertNotEqual( h, r['out'].imageHash() )
 
+	def testDefaultFormatForImage( self ) :
+
+		constant = GafferImage.Constant()
+
+		with Gaffer.Context() as c :
+
+			GafferImage.FormatPlug.setDefaultFormat( c, GafferImage.Format( 100, 200 ) )
+			self.assertEqual( constant["out"].image().displayWindow, IECore.Box2i( IECore.V2i( 0 ), IECore.V2i( 99, 199 ) ) )
+
+			GafferImage.FormatPlug.setDefaultFormat( c, GafferImage.Format( 200, 300 ) )
+			self.assertEqual( constant["out"].image().displayWindow, IECore.Box2i( IECore.V2i( 0 ), IECore.V2i( 199, 299 ) ) )
+
 if __name__ == "__main__":
 	unittest.main()

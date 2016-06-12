@@ -341,14 +341,6 @@ IECore::ImagePrimitivePtr ImagePlug::image() const
 		dataWindow = newDataWindow;
 	}
 
-	// use the default format if we don't have an explicit one.
-	/// \todo: remove this once FormatPlug is handling it for
-	/// us during ExecutableNode::execute (see issue #887).
-	if( format.getDisplayWindow().isEmpty() )
-	{
-		format = FormatPlug::getDefaultFormat( Context::current() );
-	}
-
 	Box2i newDisplayWindow = format.toEXRSpace( format.getDisplayWindow() );
 
 	ImagePrimitivePtr result = new ImagePrimitive( newDataWindow, newDisplayWindow );
