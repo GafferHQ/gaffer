@@ -1057,14 +1057,7 @@ void ImageWriter::execute() const
 		}
 	}
 
-	Format imageFormat = inPlug()->formatPlug()->getValue();
-
-	/// \todo Remove when Issue #887 is done
-	if( imageFormat.getDisplayWindow().isEmpty() )
-	{
-		imageFormat = FormatPlug::getDefaultFormat( Context::current() );
-	}
-
+	const Format imageFormat = inPlug()->formatPlug()->getValue();
 	Imath::Box2i dataWindow = inPlug()->dataWindowPlug()->getValue();
 	Imath::Box2i exrDataWindow( Imath::V2i( 0 ) );
 
