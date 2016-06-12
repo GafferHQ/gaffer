@@ -381,12 +381,17 @@ class _GLGraphicsScene( QtGui.QGraphicsScene ) :
 
 	def drawBackground( self, painter, rect ) :
 
+		painter.beginNativePainting()
+
+		GL.glPushAttrib( GL.GL_ALL_ATTRIB_BITS )
+		GL.glPushClientAttrib( GL.GL_CLIENT_ALL_ATTRIB_BITS )
+
 		self.__backgroundDrawFunction()
 
-		# Reset pixel store setting back to the default. IECoreGL
-		# (and the ImageGadget) meddle with this, and it throws off
-		# the QGraphicsEffects.
-		GL.glPixelStorei( GL.GL_UNPACK_ALIGNMENT, 4 );
+		GL.glPopClientAttrib()
+		GL.glPopAttrib()
+
+		painter.endNativePainting()
 
 	def __sceneRectChanged( self, sceneRect ) :
 
