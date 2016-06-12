@@ -55,13 +55,13 @@ size_t Render::g_firstPlugIndex = 0;
 IE_CORE_DEFINERUNTIMETYPED( Render );
 
 Render::Render( const std::string &name )
-	:	ExecutableNode( name )
+	:	TaskNode( name )
 {
 	construct();
 }
 
 Render::Render( const IECore::InternedString &rendererType, const std::string &name )
-	:	ExecutableNode( name )
+	:	TaskNode( name )
 {
 	construct( rendererType );
 }
@@ -151,7 +151,7 @@ IECore::MurmurHash Render::hash( const Gaffer::Context *context ) const
 		return IECore::MurmurHash();
 	}
 
-	IECore::MurmurHash h = ExecutableNode::hash( context );
+	IECore::MurmurHash h = TaskNode::hash( context );
 	h.append( (uint64_t)inPlug()->source<Plug>() );
 	h.append( context->hash() );
 	h.append( rendererType );

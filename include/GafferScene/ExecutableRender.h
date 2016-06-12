@@ -39,7 +39,7 @@
 
 #include "IECore/Renderer.h"
 
-#include "GafferDispatch/ExecutableNode.h"
+#include "GafferDispatch/TaskNode.h"
 
 #include "GafferScene/TypeIds.h"
 
@@ -52,7 +52,7 @@ IE_CORE_FORWARDDECLARE( ScenePlug )
 /// in the execute() method.
 /// Note that this is in the process of being replaced by the
 /// GafferScene::Preview::Render node.
-class ExecutableRender : public GafferDispatch::ExecutableNode
+class ExecutableRender : public GafferDispatch::TaskNode
 {
 
 	public :
@@ -60,7 +60,7 @@ class ExecutableRender : public GafferDispatch::ExecutableNode
 		ExecutableRender( const std::string &name=defaultName<ExecutableRender>() );
 		virtual ~ExecutableRender();
 
-		IE_CORE_DECLARERUNTIMETYPEDEXTENSION( GafferScene::ExecutableRender, ExecutableRenderTypeId, GafferDispatch::ExecutableNode );
+		IE_CORE_DECLARERUNTIMETYPEDEXTENSION( GafferScene::ExecutableRender, ExecutableRenderTypeId, GafferDispatch::TaskNode );
 
 		/// The scene to be rendered.
 		ScenePlug *inPlug();
