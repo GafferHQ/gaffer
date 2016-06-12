@@ -39,7 +39,7 @@ import GafferDispatch
 
 def __isPreTasksPlug( plug ) :
 
-	return plug.getName() == "preTasks" and isinstance( plug.parent(), GafferDispatch.ExecutableNode )
+	return plug.getName() == "preTasks" and isinstance( plug.parent(), GafferDispatch.TaskNode )
 
 def __preTasksPlugGetItemWrapper( originalGetItem ) :
 
@@ -64,7 +64,7 @@ def __preTasksPlugAddChildWrapper( originalAddChild ) :
 
 	return addChild
 
-def __executableNodeGetItemWrapper( originalGetItem ) :
+def __taskNodeGetItemWrapper( originalGetItem ) :
 
 	def getItem( self, key ) :
 
@@ -77,9 +77,9 @@ def __executableNodeGetItemWrapper( originalGetItem ) :
 
 	return getItem
 
-GafferDispatch.ExecutableNode.__getitem__ = __executableNodeGetItemWrapper( GafferDispatch.ExecutableNode.__getitem__ )
+GafferDispatch.TaskNode.__getitem__ = __taskNodeGetItemWrapper( GafferDispatch.TaskNode.__getitem__ )
 Gaffer.ArrayPlug.__getitem__ = __preTasksPlugGetItemWrapper( Gaffer.ArrayPlug.__getitem__ )
 Gaffer.ArrayPlug.addChild = __preTasksPlugAddChildWrapper( Gaffer.ArrayPlug.addChild )
-GafferDispatch.ExecutableNode.RequirementPlug = GafferDispatch.ExecutableNode.TaskPlug
-GafferDispatch.ExecutableNode.requirements = GafferDispatch.ExecutableNode.preTasks
+GafferDispatch.TaskNode.RequirementPlug = GafferDispatch.TaskNode.TaskPlug
+GafferDispatch.TaskNode.requirements = GafferDispatch.TaskNode.preTasks
 GafferDispatch.Dispatcher._TaskBatch.requirements = GafferDispatch.Dispatcher._TaskBatch.preTasks

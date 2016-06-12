@@ -42,11 +42,11 @@ import IECore
 import Gaffer
 import GafferDispatch
 
-class SystemCommand( GafferDispatch.ExecutableNode ) :
+class SystemCommand( GafferDispatch.TaskNode ) :
 
 	def __init__( self, name = "SystemCommand" ) :
 
-		GafferDispatch.ExecutableNode.__init__( self, name )
+		GafferDispatch.TaskNode.__init__( self, name )
 
 		self["command"] = Gaffer.StringPlug()
 		self["substitutions"] = Gaffer.CompoundDataPlug()
@@ -71,7 +71,7 @@ class SystemCommand( GafferDispatch.ExecutableNode ) :
 
 	def hash( self, context ) :
 
-		h = GafferDispatch.ExecutableNode.hash( self, context )
+		h = GafferDispatch.TaskNode.hash( self, context )
 
 		self["command"].hash( h )
 		self["substitutions"].hash( h )

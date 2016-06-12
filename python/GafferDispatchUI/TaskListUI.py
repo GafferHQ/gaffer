@@ -43,7 +43,7 @@ Gaffer.Metadata.registerNode(
 
 	"description",
 	"""
-	Used to collect executable tasks for dispatching all at once.
+	Used to collect tasks for dispatching all at once.
 	""",
 
 )

@@ -39,11 +39,11 @@ import IECore
 import Gaffer
 import GafferDispatch
 
-class TaskContextProcessor( GafferDispatch.ExecutableNode ) :
+class TaskContextProcessor( GafferDispatch.TaskNode ) :
 
 	def __init__( self, name = "TaskContextProcessor" ) :
 
-		GafferDispatch.ExecutableNode.__init__( self, name )
+		GafferDispatch.TaskNode.__init__( self, name )
 
 	def preTasks( self, context ) :
 
@@ -56,7 +56,7 @@ class TaskContextProcessor( GafferDispatch.ExecutableNode ) :
 			if source.isSame( plug ) :
 				continue
 
-			if not isinstance( source.node(), GafferDispatch.ExecutableNode ):
+			if not isinstance( source.node(), GafferDispatch.TaskNode ):
 				continue
 
 			result.extend( [ self.Task( source.node(), c ) for c in contexts ] )

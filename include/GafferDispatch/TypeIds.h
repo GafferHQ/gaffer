@@ -43,8 +43,8 @@ namespace GafferDispatch
 enum TypeId
 {
 
-	ExecutableNodeTypeId = 110160,
-	ExecutableNodeTaskPlugTypeId = 110161,
+	TaskNodeTypeId = 110160,
+	TaskNodeTaskPlugTypeId = 110161,
 	DispatcherTypeId = 110162,
 
 	LastTypeId = 110180,

@@ -34,7 +34,7 @@
 //
 //////////////////////////////////////////////////////////////////////////
 
-#include "GafferDispatchBindings/ExecutableNodeBinding.h"
+#include "GafferDispatchBindings/TaskNodeBinding.h"
 #include "GafferDispatchBindings/DispatcherBinding.h"
 
 using namespace boost::python;
@@ -43,7 +43,7 @@ using namespace GafferDispatchBindings;
 BOOST_PYTHON_MODULE( _GafferDispatch )
 {
 
-	bindExecutableNode();
+	bindTaskNode();
 	bindDispatcher();
 
 }

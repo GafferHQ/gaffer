@@ -39,7 +39,7 @@ __import__( "GafferUI" )
 import DispatcherUI
 from DispatcherUI import DispatcherWindow
 import LocalDispatcherUI
-import ExecutableNodeUI
+import TaskNodeUI
 import SystemCommandUI
 import TaskListUI
 import TaskContextProcessorUI

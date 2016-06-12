@@ -164,7 +164,7 @@ Dispatcher::PostDispatchSignal &Dispatcher::postDispatchSignal()
 
 void Dispatcher::setupPlugs( Plug *parentPlug )
 {
-	if ( const ExecutableNode *node = parentPlug->ancestor<const ExecutableNode>() )
+	if ( const TaskNode *node = parentPlug->ancestor<const TaskNode>() )
 	{
 		/// \todo: this will always return true until we sort out issue #915.
 		/// But since requiresSequenceExecution() could feasibly return different
@@ -222,12 +222,12 @@ Dispatcher::TaskBatch::TaskBatch()
 {
 }
 
-Dispatcher::TaskBatch::TaskBatch( ExecutableNode::ConstTaskPlugPtr plug, Gaffer::ConstContextPtr context )
+Dispatcher::TaskBatch::TaskBatch( TaskNode::ConstTaskPlugPtr plug, Gaffer::ConstContextPtr context )
 	:	m_plug( plug ), m_context( context ), m_blindData( new CompoundData )
 {
 }
 
-Dispatcher::TaskBatch::TaskBatch( ConstExecutableNodePtr node, Gaffer::ConstContextPtr context )
+Dispatcher::TaskBatch::TaskBatch( ConstTaskNodePtr node, Gaffer::ConstContextPtr context )
 	:	m_plug( node->taskPlug() ), m_context( context ), m_blindData( new CompoundData )
 {
 }
@@ -243,14 +243,14 @@ void Dispatcher::TaskBatch::execute() const
 	m_plug->executeSequence( m_frames );
 }
 
-const ExecutableNode::TaskPlug *Dispatcher::TaskBatch::plug() const
+const TaskNode::TaskPlug *Dispatcher::TaskBatch::plug() const
 {
 	return m_plug.get();
 }
 
-const ExecutableNode *Dispatcher::TaskBatch::node() const
+const TaskNode *Dispatcher::TaskBatch::node() const
 {
-	return m_plug ? runTimeCast<const ExecutableNode>( m_plug->node() ) : NULL;
+	return m_plug ? runTimeCast<const TaskNode>( m_plug->node() ) : NULL;
 }
 
 const Context *Dispatcher::TaskBatch::context() const
@@ -304,7 +304,7 @@ class Dispatcher::Batcher
 		{
 		}
 
-		void addTask( const ExecutableNode::Task &task )
+		void addTask( const TaskNode::Task &task )
 		{
 			addPreTask( m_rootBatch.get(), batchTasksWalk( task ) );
 		}
@@ -316,7 +316,7 @@ class Dispatcher::Batcher
 
 	private :
 
-		TaskBatchPtr batchTasksWalk( const ExecutableNode::Task &task, const std::set<const TaskBatch *> &ancestors = std::set<const TaskBatch *>() )
+		TaskBatchPtr batchTasksWalk( const TaskNode::Task &task, const std::set<const TaskBatch *> &ancestors = std::set<const TaskBatch *>() )
 		{
 			// Acquire a batch with this task placed in it,
 			// and check that we haven't discovered a cyclic
@@ -328,8 +328,8 @@ class Dispatcher::Batcher
 			}
 
 			// Ask the task what preTasks and postTasks it would like.
-			ExecutableNode::Tasks preTasks;
-			ExecutableNode::Tasks postTasks;
+			TaskNode::Tasks preTasks;
+			TaskNode::Tasks postTasks;
 			{
 				Context::Scope scopedTaskContext( task.context() );
 				task.plug()->preTasks( preTasks );
@@ -341,7 +341,7 @@ class Dispatcher::Batcher
 			// in the ancestors for cycle detection when getting
 			// the preTask batches.
 			TaskBatches postBatches;
-			for( ExecutableNode::Tasks::const_iterator it = postTasks.begin(); it != postTasks.end(); ++it )
+			for( TaskNode::Tasks::const_iterator it = postTasks.begin(); it != postTasks.end(); ++it )
 			{
 				postBatches.push_back( batchTasksWalk( *it ) );
 			}
@@ -356,7 +356,7 @@ class Dispatcher::Batcher
 				preTaskAncestors.insert( it->get() );
 			}
 
-			for( ExecutableNode::Tasks::const_iterator it = preTasks.begin(); it != preTasks.end(); ++it )
+			for( TaskNode::Tasks::const_iterator it = preTasks.begin(); it != preTasks.end(); ++it )
 			{
 				addPreTask( batch.get(), batchTasksWalk( *it, preTaskAncestors ) );
 			}
@@ -375,7 +375,7 @@ class Dispatcher::Batcher
 			return batch;
 		}
 
-		TaskBatchPtr acquireBatch( const ExecutableNode::Task &task )
+		TaskBatchPtr acquireBatch( const TaskNode::Task &task )
 		{
 			// See if we've previously visited this task, and therefore
 			// have placed it in a batch already, which we can return
@@ -459,7 +459,7 @@ class Dispatcher::Batcher
 		// Hash used to determine how to coalesce tasks into batches.
 		// If `batchHash( task1 ) == batchHash( task2 )` then the two
 		// tasks can be placed in the same batch.
-		IECore::MurmurHash batchHash( const ExecutableNode::Task &task )
+		IECore::MurmurHash batchHash( const TaskNode::Task &task )
 		{
 			MurmurHash result;
 			result.append( (uint64_t)task.node() );
@@ -548,16 +548,16 @@ class DispatcherSignalGuard
 
 	public:
 
-		DispatcherSignalGuard( const Dispatcher* d, const std::vector<ExecutableNodePtr> &executables ) : m_dispatchSuccessful( false ), m_executables( executables ), m_dispatcher( d )
+		DispatcherSignalGuard( const Dispatcher* d, const std::vector<TaskNodePtr> &taskNodes ) : m_dispatchSuccessful( false ), m_taskNodes( taskNodes ), m_dispatcher( d )
 		{
-			m_cancelledByPreDispatch = m_dispatcher->preDispatchSignal()( m_dispatcher, m_executables );
+			m_cancelledByPreDispatch = m_dispatcher->preDispatchSignal()( m_dispatcher, m_taskNodes );
 		}
 
 		~DispatcherSignalGuard()
 		{
 			try
 			{
-				m_dispatcher->postDispatchSignal()( m_dispatcher, m_executables, (m_dispatchSuccessful && ( !m_cancelledByPreDispatch )) );
+				m_dispatcher->postDispatchSignal()( m_dispatcher, m_taskNodes, (m_dispatchSuccessful && ( !m_cancelledByPreDispatch )) );
 			}
 			catch( const std::exception& e )
 			{
@@ -580,7 +580,7 @@ class DispatcherSignalGuard
 		bool m_cancelledByPreDispatch;
 		bool m_dispatchSuccessful;
 
-		const std::vector<ExecutableNodePtr> &m_executables;
+		const std::vector<TaskNodePtr> &m_taskNodes;
 		const Dispatcher* m_dispatcher;
 
 };
@@ -600,7 +600,7 @@ void Dispatcher::dispatch( const std::vector<NodePtr> &nodes ) const
 		throw IECore::Exception( getName().string() + ": Must specify at least one node to dispatch." );
 	}
 
-	std::vector<ExecutableNodePtr> executables;
+	std::vector<TaskNodePtr> taskNodes;
 	const ScriptNode *script = (*nodes.begin())->scriptNode();
 	for ( std::vector<NodePtr>::const_iterator nIt = nodes.begin(); nIt != nodes.end(); ++nIt )
 	{
@@ -610,24 +610,24 @@ void Dispatcher::dispatch( const std::vector<NodePtr> &nodes ) const
 			throw IECore::Exception( getName().string() + ": Dispatched nodes must all belong to the same ScriptNode." );
 		}
 
-		if ( ExecutableNode *executable = runTimeCast<ExecutableNode>( nIt->get() ) )
+		if ( TaskNode *taskNode = runTimeCast<TaskNode>( nIt->get() ) )
 		{
-			executables.push_back( executable );
+			taskNodes.push_back( taskNode );
 		}
 		else if ( const SubGraph *subGraph = runTimeCast<const SubGraph>( nIt->get() ) )
 		{
 			for ( RecursiveOutputPlugIterator plugIt( subGraph ); !plugIt.done(); ++plugIt )
 			{
 				Node *sourceNode = plugIt->get()->source<Plug>()->node();
-				if ( ExecutableNode *executable = runTimeCast<ExecutableNode>( sourceNode ) )
+				if ( TaskNode *taskNode = runTimeCast<TaskNode>( sourceNode ) )
 				{
-					executables.push_back( executable );
+					taskNodes.push_back( taskNode );
 				}
 			}
 		}
 		else
 		{
-			throw IECore::Exception( getName().string() + ": Dispatched nodes must be ExecutableNodes or SubGraphs containing ExecutableNodes." );
+			throw IECore::Exception( getName().string() + ": Dispatched nodes must be TaskNodes or SubGraphs containing TaskNodes." );
 		}
 	}
 
@@ -639,7 +639,7 @@ void Dispatcher::dispatch( const std::vector<NodePtr> &nodes ) const
 	// this object calls this->preDispatchSignal() in its constructor and this->postDispatchSignal()
 	// in its destructor, thereby guaranteeing that we always call this->postDispatchSignal().
 
-	DispatcherSignalGuard signalGuard( this, executables );
+	DispatcherSignalGuard signalGuard( this, taskNodes );
 	if ( signalGuard.cancelledByPreDispatch() )
 	{
 		return;
@@ -652,10 +652,10 @@ void Dispatcher::dispatch( const std::vector<NodePtr> &nodes ) const
 	Batcher batcher;
 	for( std::vector<FrameList::Frame>::const_iterator fIt = frames.begin(); fIt != frames.end(); ++fIt )
 	{
-		for( std::vector<ExecutableNodePtr>::const_iterator nIt = executables.begin(); nIt != executables.end(); ++nIt )
+		for( std::vector<TaskNodePtr>::const_iterator nIt = taskNodes.begin(); nIt != taskNodes.end(); ++nIt )
 		{
 			context->setFrame( *fIt );
-			batcher.addTask( ExecutableNode::Task( *nIt, context.get() ) );
+			batcher.addTask( TaskNode::Task( *nIt, context.get() ) );
 		}
 	}
 

@@ -34,8 +34,8 @@
 //
 //////////////////////////////////////////////////////////////////////////
 
-#ifndef GAFFERDISPATCHBINDINGS_EXECUTABLENODEBINDING_H
-#define GAFFERDISPATCHBINDINGS_EXECUTABLENODEBINDING_H
+#ifndef GAFFERDISPATCHBINDINGS_TASKNODEBINDING_H
+#define GAFFERDISPATCHBINDINGS_TASKNODEBINDING_H
 
 #include "boost/python/suite/indexing/container_utils.hpp"
 
@@ -44,33 +44,33 @@
 #include "GafferBindings/NodeBinding.h"
 #include "GafferBindings/ExceptionAlgo.h"
 
-#include "GafferDispatch/ExecutableNode.h"
+#include "GafferDispatch/TaskNode.h"
 
 namespace GafferDispatchBindings
 {
 
-void bindExecutableNode();
+void bindTaskNode();
 
 template<typename T, typename TWrapper=T>
-class ExecutableNodeClass : public GafferBindings::NodeClass<T, TWrapper>
+class TaskNodeClass : public GafferBindings::NodeClass<T, TWrapper>
 {
 	public :
 
-		ExecutableNodeClass( const char *docString = NULL );
+		TaskNodeClass( const char *docString = NULL );
 
 };
 
 template<typename WrappedType>
-class ExecutableNodeWrapper : public GafferBindings::NodeWrapper<WrappedType>
+class TaskNodeWrapper : public GafferBindings::NodeWrapper<WrappedType>
 {
 	public :
 
-		ExecutableNodeWrapper( PyObject *self, const std::string &name )
+		TaskNodeWrapper( PyObject *self, const std::string &name )
 			:	GafferBindings::NodeWrapper<WrappedType>( self, name )
 		{
 		}
 
-		virtual void preTasks( const Gaffer::Context *context, GafferDispatch::ExecutableNode::Tasks &tasks ) const
+		virtual void preTasks( const Gaffer::Context *context, GafferDispatch::TaskNode::Tasks &tasks ) const
 		{
 			if( this->isSubclassed() )
 			{
@@ -101,7 +101,7 @@ class ExecutableNodeWrapper : public GafferBindings::NodeWrapper<WrappedType>
 			WrappedType::preTasks( context, tasks );
 		}
 
-		virtual void postTasks( const Gaffer::Context *context, GafferDispatch::ExecutableNode::Tasks &tasks ) const
+		virtual void postTasks( const Gaffer::Context *context, GafferDispatch::TaskNode::Tasks &tasks ) const
 		{
 			if( this->isSubclassed() )
 			{
@@ -223,6 +223,6 @@ class ExecutableNodeWrapper : public GafferBindings::NodeWrapper<WrappedType>
 
 } // namespace GafferDispatchBindings
 
-#include "GafferDispatchBindings/ExecutableNodeBinding.inl"
+#include "GafferDispatchBindings/TaskNodeBinding.inl"
 
-#endif // GAFFERDISPATCHBINDINGS_EXECUTABLENODEBINDING_H
+#endif // GAFFERDISPATCHBINDINGS_TASKNODEBINDING_H

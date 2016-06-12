@@ -39,12 +39,12 @@ import IECore
 import Gaffer
 import GafferDispatch
 
-# Used to collect Executable tasks for dispatching all at once
-class TaskList( GafferDispatch.ExecutableNode ) :
+# Used to collect tasks for dispatching all at once
+class TaskList( GafferDispatch.TaskNode ) :
 
 	def __init__( self, name = "TaskList" ) :
 
-		GafferDispatch.ExecutableNode.__init__( self, name )
+		GafferDispatch.TaskNode.__init__( self, name )
 
 	def hash( self, context ) :
 

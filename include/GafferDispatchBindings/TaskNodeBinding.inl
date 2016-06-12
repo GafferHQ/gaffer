@@ -34,8 +34,8 @@
 //
 //////////////////////////////////////////////////////////////////////////
 
-#ifndef GAFFERDISPATCHBINDINGS_EXECUTABLENODEBINDING_INL
-#define GAFFERDISPATCHBINDINGS_EXECUTABLENODEBINDING_INL
+#ifndef GAFFERDISPATCHBINDINGS_TASKNODEBINDING_INL
+#define GAFFERDISPATCHBINDINGS_TASKNODEBINDING_INL
 
 #include "boost/python/suite/indexing/container_utils.hpp"
 
@@ -50,10 +50,10 @@ namespace Detail
 template<typename T>
 boost::python::list preTasks( T &n, Gaffer::Context *context )
 {
-	GafferDispatch::ExecutableNode::Tasks tasks;
+	GafferDispatch::TaskNode::Tasks tasks;
 	n.T::preTasks( context, tasks );
 	boost::python::list result;
-	for( GafferDispatch::ExecutableNode::Tasks::const_iterator tIt = tasks.begin(); tIt != tasks.end(); ++tIt )
+	for( GafferDispatch::TaskNode::Tasks::const_iterator tIt = tasks.begin(); tIt != tasks.end(); ++tIt )
 	{
 		result.append( *tIt );
 	}
@@ -63,10 +63,10 @@ boost::python::list preTasks( T &n, Gaffer::Context *context )
 template<typename T>
 boost::python::list postTasks( T &n, Gaffer::Context *context )
 {
-	GafferDispatch::ExecutableNode::Tasks tasks;
+	GafferDispatch::TaskNode::Tasks tasks;
 	n.T::postTasks( context, tasks );
 	boost::python::list result;
-	for( GafferDispatch::ExecutableNode::Tasks::const_iterator tIt = tasks.begin(); tIt != tasks.end(); ++tIt )
+	for( GafferDispatch::TaskNode::Tasks::const_iterator tIt = tasks.begin(); tIt != tasks.end(); ++tIt )
 	{
 		result.append( *tIt );
 	}
@@ -104,7 +104,7 @@ bool requiresSequenceExecution( T &n )
 } // namespace Detail
 
 template<typename T, typename Ptr>
-ExecutableNodeClass<T, Ptr>::ExecutableNodeClass( const char *docString )
+TaskNodeClass<T, Ptr>::TaskNodeClass( const char *docString )
 	:	GafferBindings::NodeClass<T, Ptr>( docString )
 {
 	this->def( "preTasks", &Detail::preTasks<T> );
@@ -117,4 +117,4 @@ ExecutableNodeClass<T, Ptr>::ExecutableNodeClass( const char *docString )
 
 } // namespace GafferDispatchBindings
 
-#endif // GAFFERDISPATCHBINDINGS_EXECUTABLENODEBINDING_INL
+#endif // GAFFERDISPATCHBINDINGS_TASKNODEBINDING_INL
