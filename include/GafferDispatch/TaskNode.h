@@ -52,6 +52,18 @@ IE_CORE_FORWARDDECLARE( ArrayPlug )
 
 } // namespace Gaffer
 
+namespace GafferDispatchBindings
+{
+namespace Detail
+{
+
+// Forward declaration to allow friendship declaration
+// for the bindings.
+struct TaskNodeAccessor;
+
+} // namespace Detail
+} // namespace GafferDispatchBindings
+
 namespace GafferDispatch
 {
 
@@ -110,8 +122,6 @@ class TaskNode : public Gaffer::Node
 		};
 
 		typedef std::vector<Task> Tasks;
-		/// \todo This is unused - remove it.
-		typedef std::vector<Gaffer::ConstContextPtr> Contexts;
 
 		IE_CORE_DECLARERUNTIMETYPEDEXTENSION( GafferDispatch::TaskNode, TaskNodeTypeId, Gaffer::Node );
 
@@ -183,10 +193,7 @@ class TaskNode : public Gaffer::Node
 		Gaffer::Plug *dispatcherPlug();
 		const Gaffer::Plug *dispatcherPlug() const;
 
-	/// All methods below here are considered to be protected, and will become
-	/// so in a future release. Use the TaskPlug accessor methods instead of
-	/// calling them directly.
-	/// \todo Add protected access specifier.
+	protected :
 
 		/// Called by `TaskPlug::preTasks()`. The default implementation collects
 		/// the upstream Tasks connected into the preTasksPlug().
@@ -221,6 +228,9 @@ class TaskNode : public Gaffer::Node
 		virtual bool requiresSequenceExecution() const;
 
 	private :
+
+		// Friendship for the bindings.
+		friend struct GafferDispatchBindings::Detail::TaskNodeAccessor;
 
 		static size_t g_firstPlugIndex;
 
