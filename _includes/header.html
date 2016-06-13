@@ -30,17 +30,17 @@
 				<li {% if page.url == '/index.html' %} class="active" {% endif %}>
 					<a href="{{ site.baseurl }}/index.html"> <span class="glyphicon glyphicon-home"></span> Home</a>
 				</li>
-				<li {% if page.url == '/getStarted.html' %} class="active" {% endif %}>
-					<a href="{{ site.baseurl }}/getStarted.html">Get Started</a>
+				<li {% if page.url contains '/getStarted' %} class="active" {% endif %}>
+					<a href="{{ site.baseurl }}/getStarted">Get Started</a>
 				</li>
-				<li {% if page.url == '/forum.html' %} class="active" {% endif %}>
-					<a href="{{ site.baseurl }}/forum.html">Forum</a>
+				<li {% if page.url contains '/forum' %} class="active" {% endif %}>
+					<a href="{{ site.baseurl }}/forum">Forum</a>
 				</li>
 				<li {% if page.url contains '/blog'  %} class="active" {% endif %}>
 					<a href="{{ site.baseurl }}{{ site.posts.first.url }}">Blog</a>
 				</li>
-				<li {% if page.url == '/demos.html'  %} class="active" {% endif %}>
-					<a href="{{ site.baseurl }}/demos.html">Demos</a>
+				<li {% if page.url contains '/demos'  %} class="active" {% endif %}>
+					<a href="{{ site.baseurl }}/demos">Demos</a>
 				</li>
 			</ul>
 			<ul class="nav navbar-nav navbar-right">
