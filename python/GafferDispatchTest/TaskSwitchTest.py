@@ -54,8 +54,8 @@ class TaskSwitchTest( GafferTest.TestCase ) :
 
 		s = Gaffer.ScriptNode()
 
-		s["c1"] = GafferDispatchTest.LoggingExecutableNode()
-		s["c2"] = GafferDispatchTest.LoggingExecutableNode()
+		s["c1"] = GafferDispatchTest.LoggingTaskNode()
+		s["c2"] = GafferDispatchTest.LoggingTaskNode()
 
 		s["s"] = GafferDispatch.TaskSwitch()
 		self.assertEqual( s["s"]["index"].getValue(), 0 )
@@ -85,9 +85,9 @@ class TaskSwitchTest( GafferTest.TestCase ) :
 
 		s = Gaffer.ScriptNode()
 
-		s["c1"] = GafferDispatchTest.LoggingExecutableNode()
-		s["c2"] = GafferDispatchTest.LoggingExecutableNode()
-		s["c3"] = GafferDispatchTest.LoggingExecutableNode()
+		s["c1"] = GafferDispatchTest.LoggingTaskNode()
+		s["c2"] = GafferDispatchTest.LoggingTaskNode()
+		s["c3"] = GafferDispatchTest.LoggingTaskNode()
 
 		s["s"] = GafferDispatch.TaskSwitch()
 		s["s"]["preTasks"][0].setInput( s["c1"]["task"] )
@@ -132,8 +132,8 @@ class TaskSwitchTest( GafferTest.TestCase ) :
 
 		s = Gaffer.ScriptNode()
 
-		s["c1"] = GafferDispatchTest.LoggingExecutableNode()
-		s["c2"] = GafferDispatchTest.LoggingExecutableNode()
+		s["c1"] = GafferDispatchTest.LoggingTaskNode()
+		s["c2"] = GafferDispatchTest.LoggingTaskNode()
 
 		s["s"] = GafferDispatch.TaskSwitch()
 		s["s"]["preTasks"][0].setInput( s["c1"]["task"] )

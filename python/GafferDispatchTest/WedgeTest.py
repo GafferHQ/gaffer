@@ -337,7 +337,7 @@ class WedgeTest( GafferTest.TestCase ) :
 
 		script = Gaffer.ScriptNode()
 
-		script["constant"] = GafferDispatchTest.LoggingExecutableNode()
+		script["constant"] = GafferDispatchTest.LoggingTaskNode()
 
 		script["writer"] = GafferDispatchTest.TextWriter()
 		script["writer"]["preTasks"][0].setInput( script["constant"]["task"] )

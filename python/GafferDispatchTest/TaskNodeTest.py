@@ -45,7 +45,7 @@ import GafferTest
 import GafferDispatch
 import GafferDispatchTest
 
-class ExecutableNodeTest( GafferTest.TestCase ) :
+class TaskNodeTest( GafferTest.TestCase ) :
 
 	def testTypeNamePrefixes( self ) :
 
@@ -61,8 +61,8 @@ class ExecutableNodeTest( GafferTest.TestCase ) :
 
 	def testDerivedClasses( self ) :
 
-		self.assertTrue( issubclass( GafferDispatchTest.LoggingExecutableNode, GafferDispatch.ExecutableNode ) )
-		self.assertTrue( isinstance( GafferDispatchTest.LoggingExecutableNode(), GafferDispatch.ExecutableNode ) )
+		self.assertTrue( issubclass( GafferDispatchTest.LoggingTaskNode, GafferDispatch.TaskNode ) )
+		self.assertTrue( isinstance( GafferDispatchTest.LoggingTaskNode(), GafferDispatch.TaskNode ) )
 
 	def testHash( self ) :
 
@@ -74,7 +74,7 @@ class ExecutableNodeTest( GafferTest.TestCase ) :
 		c3.setFrame( 3.0 )
 
 		# Hashes that don't use the context are equivalent
-		n = GafferDispatchTest.LoggingExecutableNode()
+		n = GafferDispatchTest.LoggingTaskNode()
 		with c1 :
 			c1h = n["task"].hash()
 		with c2 :
@@ -86,7 +86,7 @@ class ExecutableNodeTest( GafferTest.TestCase ) :
 		self.assertEqual( c1h, c3h )
 
 		# Hashes that do use the context differ
-		n2 = GafferDispatchTest.LoggingExecutableNode()
+		n2 = GafferDispatchTest.LoggingTaskNode()
 		n2["frameSensitivePlug"] = Gaffer.StringPlug( defaultValue = "####" )
 		with c1 :
 			c1h = n2["task"].hash()
@@ -99,7 +99,7 @@ class ExecutableNodeTest( GafferTest.TestCase ) :
 		self.assertNotEqual( c1h, c3h )
 
 		# Hashes match across the same node type
-		n3 = GafferDispatchTest.LoggingExecutableNode()
+		n3 = GafferDispatchTest.LoggingTaskNode()
 		n3["frameSensitivePlug"] = Gaffer.StringPlug( defaultValue = "####" )
 		with c1 :
 			c1h2 = n3["task"].hash()
@@ -113,9 +113,9 @@ class ExecutableNodeTest( GafferTest.TestCase ) :
 		self.assertEqual( c3h, c3h2 )
 
 		# Hashes differ across different node types
-		class MyNode( GafferDispatchTest.LoggingExecutableNode ) :
+		class MyNode( GafferDispatchTest.LoggingTaskNode ) :
 			def __init__( self ) :
-				GafferDispatchTest.LoggingExecutableNode.__init__( self )
+				GafferDispatchTest.LoggingTaskNode.__init__( self )
 
 		IECore.registerRunTimeTyped( MyNode )
 
@@ -134,7 +134,7 @@ class ExecutableNodeTest( GafferTest.TestCase ) :
 
 	def testExecute( self ) :
 
-		n = GafferDispatchTest.LoggingExecutableNode()
+		n = GafferDispatchTest.LoggingTaskNode()
 		self.assertEqual( len( n.log ), 0 )
 
 		n["task"].execute()
@@ -151,7 +151,7 @@ class ExecutableNodeTest( GafferTest.TestCase ) :
 
 	def testExecuteSequence( self ) :
 
-		n = GafferDispatchTest.LoggingExecutableNode()
+		n = GafferDispatchTest.LoggingTaskNode()
 		self.assertEqual( len( n.log ), 0 )
 
 		n["task"].executeSequence( [ 1, 2, 3 ] )
@@ -160,7 +160,7 @@ class ExecutableNodeTest( GafferTest.TestCase ) :
 		n["task"].executeSequence( [ 1, 5, 10 ] )
 		self.assertEqual( len( n.log ), 6 )
 
-		n2 = GafferDispatchTest.LoggingExecutableNode()
+		n2 = GafferDispatchTest.LoggingTaskNode()
 		n2["requiresSequenceExecution"].setValue( True )
 		self.assertEqual( len( n2.log ), 0 )
 
@@ -172,7 +172,7 @@ class ExecutableNodeTest( GafferTest.TestCase ) :
 
 	def testRequiresSequenceExecution( self ) :
 
-		n = GafferDispatchTest.LoggingExecutableNode()
+		n = GafferDispatchTest.LoggingTaskNode()
 		self.assertEqual( n.requiresSequenceExecution(), False )
 
 	def testPreTasks( self ) :
@@ -182,26 +182,26 @@ class ExecutableNodeTest( GafferTest.TestCase ) :
 		c2 = Gaffer.Context()
 		c2.setFrame( 2 )
 
-		n = GafferDispatchTest.LoggingExecutableNode()
-		n2 = GafferDispatchTest.LoggingExecutableNode()
+		n = GafferDispatchTest.LoggingTaskNode()
+		n2 = GafferDispatchTest.LoggingTaskNode()
 
 		# make n2 require n
 		n2["preTasks"][0].setInput( n["task"] )
 
 		with c1 :
 			self.assertEqual( n["task"].preTasks(), [] )
-			self.assertEqual( n2["task"].preTasks(), [ GafferDispatch.ExecutableNode.Task( n, c1 ) ] )
+			self.assertEqual( n2["task"].preTasks(), [ GafferDispatch.TaskNode.Task( n, c1 ) ] )
 		with c2 :
-			self.assertEqual( n2["task"].preTasks(), [ GafferDispatch.ExecutableNode.Task( n, c2 ) ] )
+			self.assertEqual( n2["task"].preTasks(), [ GafferDispatch.TaskNode.Task( n, c2 ) ] )
 
 	def testTaskConstructors( self ) :
 
 		c = Gaffer.Context()
 
 		n = Gaffer.ExecutableOpHolder()
-		t = GafferDispatch.ExecutableNode.Task( n, c )
-		t2 = GafferDispatch.ExecutableNode.Task( n, c )
-		t3 = GafferDispatch.ExecutableNode.Task( t2 )
+		t = GafferDispatch.TaskNode.Task( n, c )
+		t2 = GafferDispatch.TaskNode.Task( n, c )
+		t3 = GafferDispatch.TaskNode.Task( t2 )
 
 		self.assertEqual( t.node(), n )
 		self.assertEqual( t.context(), c )
@@ -214,13 +214,13 @@ class ExecutableNodeTest( GafferTest.TestCase ) :
 
 		c = Gaffer.Context()
 		n = Gaffer.ExecutableOpHolder()
-		t1 = GafferDispatch.ExecutableNode.Task( n, c )
-		t2 = GafferDispatch.ExecutableNode.Task( n, c )
+		t1 = GafferDispatch.TaskNode.Task( n, c )
+		t2 = GafferDispatch.TaskNode.Task( n, c )
 		c2 = Gaffer.Context()
 		c2["a"] = 2
-		t3 = GafferDispatch.ExecutableNode.Task( n, c2 )
+		t3 = GafferDispatch.TaskNode.Task( n, c2 )
 		n2 = Gaffer.ExecutableOpHolder()
-		t4 = GafferDispatch.ExecutableNode.Task( n2, c2 )
+		t4 = GafferDispatch.TaskNode.Task( n2, c2 )
 
 		self.assertEqual( t1, t1 )
 		self.assertEqual( t1, t2 )
@@ -235,17 +235,17 @@ class ExecutableNodeTest( GafferTest.TestCase ) :
 		# an empty ExecutableOpHolder doesn't actually compute anything, so all tasks are the same
 		c = Gaffer.Context()
 		n = Gaffer.ExecutableOpHolder()
-		t1 = GafferDispatch.ExecutableNode.Task( n, c )
-		t2 = GafferDispatch.ExecutableNode.Task( n, c )
+		t1 = GafferDispatch.TaskNode.Task( n, c )
+		t2 = GafferDispatch.TaskNode.Task( n, c )
 		self.assertEqual( t1, t2 )
 		c2 = Gaffer.Context()
 		c2["a"] = 2
-		t3 = GafferDispatch.ExecutableNode.Task( n, c2 )
+		t3 = GafferDispatch.TaskNode.Task( n, c2 )
 		self.assertEqual( t1, t3 )
 		n2 = Gaffer.ExecutableOpHolder()
-		t4 = GafferDispatch.ExecutableNode.Task( n2, c2 )
+		t4 = GafferDispatch.TaskNode.Task( n2, c2 )
 		self.assertEqual( t1, t4 )
-		t5 = GafferDispatch.ExecutableNode.Task( n2, c )
+		t5 = GafferDispatch.TaskNode.Task( n2, c )
 		self.assertEqual( t1, t5 )
 
 		s = set( [ t1, t2, t3, t4, t4, t4, t1, t2, t4, t3, t2 ] )
@@ -260,22 +260,22 @@ class ExecutableNodeTest( GafferTest.TestCase ) :
 		self.assertTrue( t5 in s )
 
 		# MyNode.hash() depends on the context time, so tasks will vary
-		my = GafferDispatchTest.LoggingExecutableNode()
+		my = GafferDispatchTest.LoggingTaskNode()
 		my["frameSensitivePlug"] = Gaffer.StringPlug( defaultValue = "####" )
 		c.setFrame( 1 )
-		t1 = GafferDispatch.ExecutableNode.Task( my, c )
-		t2 = GafferDispatch.ExecutableNode.Task( my, c )
+		t1 = GafferDispatch.TaskNode.Task( my, c )
+		t2 = GafferDispatch.TaskNode.Task( my, c )
 		self.assertEqual( t1, t2 )
 		c2 = Gaffer.Context()
 		c2.setFrame( 2 )
-		t3 = GafferDispatch.ExecutableNode.Task( my, c2 )
+		t3 = GafferDispatch.TaskNode.Task( my, c2 )
 		self.assertNotEqual( t1, t3 )
-		my2 = GafferDispatchTest.LoggingExecutableNode()
+		my2 = GafferDispatchTest.LoggingTaskNode()
 		my2["frameSensitivePlug"] = Gaffer.StringPlug( defaultValue = "####" )
-		t4 = GafferDispatch.ExecutableNode.Task( my2, c2 )
+		t4 = GafferDispatch.TaskNode.Task( my2, c2 )
 		self.assertNotEqual( t1, t4 )
 		self.assertEqual( t3, t4 )
-		t5 = GafferDispatch.ExecutableNode.Task( my2, c )
+		t5 = GafferDispatch.TaskNode.Task( my2, c )
 		self.assertEqual( t1, t5 )
 		self.assertNotEqual( t3, t5 )
 
@@ -299,7 +299,7 @@ class ExecutableNodeTest( GafferTest.TestCase ) :
 		s["n"] = Gaffer.Node()
 		s["n"]["task"] = Gaffer.Plug( direction = Gaffer.Plug.Direction.Out )
 
-		# the ExecutableNode shouldn't accept inputs from any old node
+		# the TaskNode shouldn't accept inputs from any old node
 
 		self.assertTrue( s["b"]["preTasks"][0].acceptsInput( s["a"]["task"] ) )
 		self.assertFalse( s["b"]["preTasks"][0].acceptsInput( s["n"]["task"] ) )
@@ -327,7 +327,7 @@ class ExecutableNodeTest( GafferTest.TestCase ) :
 		s["b"]["in"] = s["b"]["a"]["preTasks"][0].createCounterpart( "in", Gaffer.Plug.Direction.In )
 		s["b"]["out"] = s["b"]["a"]["task"].createCounterpart( "out", Gaffer.Plug.Direction.Out )
 
-		# ExecutableNodes should accept connections speculatively from unconnected box inputs and outputs
+		# TaskNodes should accept connections speculatively from unconnected box inputs and outputs
 
 		self.assertTrue( s["b"]["a"]["preTasks"][0].acceptsInput( s["b"]["in"] ) )
 		self.assertTrue( s["a"]["preTasks"][0].acceptsInput( s["b"]["out"] ) )
@@ -424,8 +424,8 @@ class ExecutableNodeTest( GafferTest.TestCase ) :
 		c = Gaffer.Context()
 		c["test"] = "test"
 		with c :
-			self.assertEqual( writer["task"].preTasks(), [ GafferDispatch.ExecutableNode.Task( preWriter, c ) ] )
-			self.assertEqual( writer["task"].postTasks(), [ GafferDispatch.ExecutableNode.Task( postWriter, c ) ] )
+			self.assertEqual( writer["task"].preTasks(), [ GafferDispatch.TaskNode.Task( preWriter, c ) ] )
+			self.assertEqual( writer["task"].postTasks(), [ GafferDispatch.TaskNode.Task( postWriter, c ) ] )
 
 	def testLoadNetworkFromVersion0_19( self ) :
 
@@ -442,7 +442,7 @@ class ExecutableNodeTest( GafferTest.TestCase ) :
 
 	def testExecuteSequenceWithIterable( self ) :
 
-		n = GafferDispatchTest.LoggingExecutableNode()
+		n = GafferDispatchTest.LoggingTaskNode()
 
 		n["task"].executeSequence( tuple( [ 1, 2, 3 ] ) )
 		self.assertEqual( len( n.log ), 3 )

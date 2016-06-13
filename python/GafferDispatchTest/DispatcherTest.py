@@ -107,7 +107,7 @@ class DispatcherTest( GafferTest.TestCase ) :
 		self.assertEqual( dispatcher["jobsDirectory"].getValue(), self.temporaryDirectory() )
 
 		s = Gaffer.ScriptNode()
-		s["n1"] = GafferDispatchTest.LoggingExecutableNode()
+		s["n1"] = GafferDispatchTest.LoggingTaskNode()
 		dispatcher.dispatch( [ s["n1"] ] )
 
 		jobDir = dispatcher.jobDirectory()
@@ -119,7 +119,7 @@ class DispatcherTest( GafferTest.TestCase ) :
 		dispatcher = GafferDispatch.Dispatcher.create( "testDispatcher" )
 
 		s = Gaffer.ScriptNode()
-		s["n1"] = GafferDispatchTest.LoggingExecutableNode()
+		s["n1"] = GafferDispatchTest.LoggingTaskNode()
 
 		dispatcher.dispatch( [ s["n1"] ] )
 
@@ -129,7 +129,7 @@ class DispatcherTest( GafferTest.TestCase ) :
 
 		dispatcher = GafferDispatch.Dispatcher.create( "testDispatcher" )
 
-		n = GafferDispatchTest.LoggingExecutableNode()
+		n = GafferDispatchTest.LoggingTaskNode()
 
 		self.assertRaises( RuntimeError, dispatcher.dispatch, [ n ] )
 		self.assertEqual( dispatcher.jobDirectory(), "" )
@@ -140,17 +140,17 @@ class DispatcherTest( GafferTest.TestCase ) :
 		dispatcher = GafferDispatch.Dispatcher.create( "testDispatcher" )
 
 		s = Gaffer.ScriptNode()
-		s["n1"] = GafferDispatchTest.LoggingExecutableNode()
+		s["n1"] = GafferDispatchTest.LoggingTaskNode()
 
 		s2 = Gaffer.ScriptNode()
-		s2["n2"] = GafferDispatchTest.LoggingExecutableNode()
+		s2["n2"] = GafferDispatchTest.LoggingTaskNode()
 
 		self.assertRaises( RuntimeError, dispatcher.dispatch, [ s["n1"], s2["n2"] ] )
 		self.assertEqual( dispatcher.jobDirectory(), "" )
 		self.assertEqual( s["n1"].log, [] )
 		self.assertEqual( s2["n2"].log, [] )
 
-	def testNonExecutables( self ) :
+	def testNonTaskNodes( self ) :
 
 		dispatcher = GafferDispatch.Dispatcher.create( "testDispatcher" )
 
@@ -184,7 +184,7 @@ class DispatcherTest( GafferTest.TestCase ) :
 		self.assertEqual( len( postCs ), 0 )
 
 		s = Gaffer.ScriptNode()
-		s["n1"] = GafferDispatchTest.LoggingExecutableNode()
+		s["n1"] = GafferDispatchTest.LoggingTaskNode()
 
 		dispatcher = GafferDispatch.Dispatcher.create( "testDispatcher" )
 		dispatcher.dispatch( [ s["n1"] ] )
@@ -211,7 +211,7 @@ class DispatcherTest( GafferTest.TestCase ) :
 		dispatcher = GafferDispatch.Dispatcher.create( "testDispatcher" )
 
 		s = Gaffer.ScriptNode()
-		s["n1"] = GafferDispatchTest.LoggingExecutableNode()
+		s["n1"] = GafferDispatchTest.LoggingTaskNode()
 
 		# never run
 		self.assertEqual( len( s["n1"].log ), 0 )
@@ -246,10 +246,10 @@ class DispatcherTest( GafferTest.TestCase ) :
 		#    -n2b
 		log = []
 		s = Gaffer.ScriptNode()
-		s["n1"] = GafferDispatchTest.LoggingExecutableNode( log = log )
-		s["n2"] = GafferDispatchTest.LoggingExecutableNode( log = log )
-		s["n2a"] = GafferDispatchTest.LoggingExecutableNode( log = log )
-		s["n2b"] = GafferDispatchTest.LoggingExecutableNode( log = log )
+		s["n1"] = GafferDispatchTest.LoggingTaskNode( log = log )
+		s["n2"] = GafferDispatchTest.LoggingTaskNode( log = log )
+		s["n2a"] = GafferDispatchTest.LoggingTaskNode( log = log )
+		s["n2b"] = GafferDispatchTest.LoggingTaskNode( log = log )
 		s["n1"]["preTasks"][0].setInput( s["n2"]["task"] )
 		s["n2"]["preTasks"][0].setInput( s["n2a"]["task"] )
 		s["n2"]["preTasks"][1].setInput( s["n2b"]["task"] )
@@ -300,10 +300,10 @@ class DispatcherTest( GafferTest.TestCase ) :
 
 		log = []
 		s = Gaffer.ScriptNode()
-		s["n1"] = GafferDispatchTest.LoggingExecutableNode( log = log )
-		s["n2"] = GafferDispatchTest.LoggingExecutableNode( log = log )
-		s["n2a"] = GafferDispatchTest.LoggingExecutableNode( log = log )
-		s["n2b"] = GafferDispatchTest.LoggingExecutableNode( log = log )
+		s["n1"] = GafferDispatchTest.LoggingTaskNode( log = log )
+		s["n2"] = GafferDispatchTest.LoggingTaskNode( log = log )
+		s["n2a"] = GafferDispatchTest.LoggingTaskNode( log = log )
+		s["n2b"] = GafferDispatchTest.LoggingTaskNode( log = log )
 		s["n1"]["preTasks"][0].setInput( s["n2"]["task"] )
 		s["n2"]["preTasks"][0].setInput( s["n2a"]["task"] )
 		s["n2"]["preTasks"][1].setInput( s["n2b"]["task"] )
@@ -395,7 +395,7 @@ class DispatcherTest( GafferTest.TestCase ) :
 	def testNoTask( self ) :
 
 		s = Gaffer.ScriptNode()
-		s["n1"] = GafferDispatchTest.LoggingExecutableNode()
+		s["n1"] = GafferDispatchTest.LoggingTaskNode()
 		s["n1"]["noOp"].setValue( True )
 		self.assertEqual( s["n1"]["task"].hash(), IECore.MurmurHash() )
 
@@ -410,7 +410,7 @@ class DispatcherTest( GafferTest.TestCase ) :
 		dispatcher["framesMode"].setValue( GafferDispatch.Dispatcher.FramesMode.CurrentFrame )
 
 		s = Gaffer.ScriptNode()
-		s["n1"] = GafferDispatchTest.LoggingExecutableNode()
+		s["n1"] = GafferDispatchTest.LoggingTaskNode()
 
 		context = Gaffer.Context( s.context() )
 		context.setFrame( s.context().getFrame() + 10 )
@@ -428,7 +428,7 @@ class DispatcherTest( GafferTest.TestCase ) :
 		dispatcher["framesMode"].setValue( GafferDispatch.Dispatcher.FramesMode.FullRange )
 
 		s = Gaffer.ScriptNode()
-		s["n1"] = GafferDispatchTest.LoggingExecutableNode()
+		s["n1"] = GafferDispatchTest.LoggingTaskNode()
 		s["n1"]["frame"] = Gaffer.StringPlug( defaultValue = "${frame}", flags = Gaffer.Plug.Flags.Default | Gaffer.Plug.Flags.Dynamic )
 
 		dispatcher.dispatch( [ s["n1"] ] )
@@ -446,7 +446,7 @@ class DispatcherTest( GafferTest.TestCase ) :
 		dispatcher["frameRange"].setValue( str(frameList) )
 
 		s = Gaffer.ScriptNode()
-		s["n1"] = GafferDispatchTest.LoggingExecutableNode()
+		s["n1"] = GafferDispatchTest.LoggingTaskNode()
 		s["n1"]["frame"] = Gaffer.StringPlug( defaultValue = "${frame}", flags = Gaffer.Plug.Flags.Default | Gaffer.Plug.Flags.Dynamic )
 
 		dispatcher.dispatch( [ s["n1"] ] )
@@ -463,7 +463,7 @@ class DispatcherTest( GafferTest.TestCase ) :
 		dispatcher["frameRange"].setValue( "notAFrameRange" )
 
 		s = Gaffer.ScriptNode()
-		s["n1"] = GafferDispatchTest.LoggingExecutableNode()
+		s["n1"] = GafferDispatchTest.LoggingTaskNode()
 
 		self.assertRaises( RuntimeError, dispatcher.dispatch, [ s["n1"] ] )
 		self.assertRaises( RuntimeError, dispatcher.frameRange, s, s.context() )
@@ -640,7 +640,7 @@ class DispatcherTest( GafferTest.TestCase ) :
 		s["r"].load( self.temporaryDirectory() + "/test.grf" )
 		s["r"][promotedPreTaskPlug.getName()].setInput( s["n1"]["task"] )
 
-		# dispatch an Executable that requires a Box
+		# dispatch a task that requires a Box
 
 		self.assertEqual( os.path.isfile( fileName ), False )
 		dispatcher.dispatch( [ s["n4"] ] )
@@ -711,7 +711,7 @@ class DispatcherTest( GafferTest.TestCase ) :
 		expectedText = "n1 on 2;n1 on 4;n1 on 6;n3 on 2;n3 on 4;n3 on 6;n2 on 2;n2 on 4;n2 on 6;"
 		self.assertEqual( text, expectedText )
 
-		# dispatch an Executable that requires a Reference
+		# dispatch an task that requires a Reference
 
 		os.remove( fileName )
 		s["n4"]["preTasks"][0].setInput( s["r"][promotedTaskPlug.getName()] )
@@ -776,7 +776,7 @@ class DispatcherTest( GafferTest.TestCase ) :
 		dispatcher["frameRange"].setValue( str(frameList) )
 
 		s = Gaffer.ScriptNode()
-		s["n1"] = GafferDispatchTest.LoggingExecutableNode()
+		s["n1"] = GafferDispatchTest.LoggingTaskNode()
 		s["n1"]["frame"] = Gaffer.StringPlug( defaultValue = "${frame}", flags = Gaffer.Plug.Flags.Default | Gaffer.Plug.Flags.Dynamic )
 
 		dispatcher["framesMode"].setValue( GafferDispatch.Dispatcher.FramesMode.CurrentFrame )
@@ -796,11 +796,11 @@ class DispatcherTest( GafferTest.TestCase ) :
 
 	def testPreTasksOverride( self ) :
 
-		class SelfRequiringNode( GafferDispatch.ExecutableNode ) :
+		class SelfRequiringNode( GafferDispatch.TaskNode ) :
 
 			def __init__( self ) :
 
-				GafferDispatch.ExecutableNode.__init__( self )
+				GafferDispatch.TaskNode.__init__( self )
 
 				self.addChild( Gaffer.IntPlug( "multiplier", defaultValue = 1 ) )
 
@@ -813,7 +813,7 @@ class DispatcherTest( GafferTest.TestCase ) :
 
 					customContext = Gaffer.Context( context )
 					customContext["selfExecutingNode:preExecute"] = True
-					preTasks = [ GafferDispatch.ExecutableNode.Task( self, customContext ) ]
+					preTasks = [ GafferDispatch.TaskNode.Task( self, customContext ) ]
 
 				else :
 
@@ -825,13 +825,13 @@ class DispatcherTest( GafferTest.TestCase ) :
 					# that has meaning for any of our external requirements.
 					customContext = Gaffer.Context( context )
 					del customContext["selfExecutingNode:preExecute"]
-					preTasks = GafferDispatch.ExecutableNode.preTasks( self, customContext )
+					preTasks = GafferDispatch.TaskNode.preTasks( self, customContext )
 
 				return preTasks
 
 			def hash( self, context ) :
 
-				h = GafferDispatch.ExecutableNode.hash( self, context )
+				h = GafferDispatch.TaskNode.hash( self, context )
 				h.append( context.get( "selfExecutingNode:preExecute", False ) )
 				h.append( self["multiplier"].hash() )
 				return h
@@ -856,13 +856,13 @@ class DispatcherTest( GafferTest.TestCase ) :
 
 		# e2 requires itself with a different context
 		with c1 :
-			self.assertEqual( s["e2"]["task"].preTasks(), [ GafferDispatch.ExecutableNode.Task( s["e2"], c2 ) ] )
+			self.assertEqual( s["e2"]["task"].preTasks(), [ GafferDispatch.TaskNode.Task( s["e2"], c2 ) ] )
 		# e2 in the other context requires e1 with the original context
 		with c2 :
-			self.assertEqual( s["e2"]["task"].preTasks(), [ GafferDispatch.ExecutableNode.Task( s["e1"], c1 ) ] )
+			self.assertEqual( s["e2"]["task"].preTasks(), [ GafferDispatch.TaskNode.Task( s["e1"], c1 ) ] )
 		# e1 requires itself with a different context
 		with c1 :
-			self.assertEqual( s["e1"]["task"].preTasks(), [ GafferDispatch.ExecutableNode.Task( s["e1"], c2 ) ] )
+			self.assertEqual( s["e1"]["task"].preTasks(), [ GafferDispatch.TaskNode.Task( s["e1"], c2 ) ] )
 		# e1 in the other context has no requirements
 		with c2 :
 			self.assertEqual( s["e1"]["task"].preTasks(), [] )
@@ -888,11 +888,11 @@ class DispatcherTest( GafferTest.TestCase ) :
 
 	def testContextChange( self ) :
 
-		class ContextChangingExecutable( GafferDispatch.ExecutableNode ) :
+		class ContextChangingTaskNode( GafferDispatch.TaskNode ) :
 
-			def __init__( self, name = "ContextChangingExecutable" ) :
+			def __init__( self, name = "ContextChangingTaskNode" ) :
 
-				GafferDispatch.ExecutableNode.__init__( self, name )
+				GafferDispatch.TaskNode.__init__( self, name )
 
 			def preTasks( self, context ) :
 
@@ -905,7 +905,7 @@ class DispatcherTest( GafferTest.TestCase ) :
 				result = []
 				for plug in self["preTasks"] :
 					node = plug.source().node()
-					if node.isSame( self ) or not isinstance( node, GafferDispatch.ExecutableNode ):
+					if node.isSame( self ) or not isinstance( node, GafferDispatch.TaskNode ):
 						continue
 
 					result.append( self.Task( node, upstreamContext ) )
@@ -928,7 +928,7 @@ class DispatcherTest( GafferTest.TestCase ) :
 		s["e"] = Gaffer.Expression()
 		s["e"].setExpression( 'parent["w"]["text"] = context["myText"]' )
 
-		s["c"] = ContextChangingExecutable()
+		s["c"] = ContextChangingTaskNode()
 		s["c"]["preTasks"][0].setInput( s["w"]["task"] )
 
 		GafferDispatch.Dispatcher.create( "testDispatcher" ).dispatch( [ s["c"] ] )
@@ -966,13 +966,13 @@ class DispatcherTest( GafferTest.TestCase ) :
 		s = Gaffer.ScriptNode()
 
 		log = []
-		s["perFrame1"] = GafferDispatchTest.LoggingExecutableNode( log = log )
+		s["perFrame1"] = GafferDispatchTest.LoggingTaskNode( log = log )
 		s["perFrame1"]["f"] = Gaffer.StringPlug( defaultValue = "perFrame1.####" )
 
 		s["contextVariables"] = GafferDispatch.TaskContextVariables()
 		s["contextVariables"]["preTasks"][0].setInput( s["perFrame1"]["task"] )
 
-		s["perFrame2"] = GafferDispatchTest.LoggingExecutableNode( log = log )
+		s["perFrame2"] = GafferDispatchTest.LoggingTaskNode( log = log )
 		s["perFrame2"]["f"] = Gaffer.StringPlug( defaultValue = "perFrame2.####" )
 		s["perFrame2"]["preTasks"][0].setInput( s["contextVariables"]["task"] )
 
@@ -988,13 +988,13 @@ class DispatcherTest( GafferTest.TestCase ) :
 
 		s = Gaffer.ScriptNode()
 
-		s["t1"] = GafferDispatchTest.LoggingExecutableNode()
+		s["t1"] = GafferDispatchTest.LoggingTaskNode()
 		s["t1"]["f"] = Gaffer.StringPlug( defaultValue = "T1.####" )
 
-		s["t2"] = GafferDispatchTest.LoggingExecutableNode()
+		s["t2"] = GafferDispatchTest.LoggingTaskNode()
 		s["t2"]["f"] = Gaffer.StringPlug( defaultValue = "T1.####" )
 
-		s["t3"] = GafferDispatchTest.LoggingExecutableNode()
+		s["t3"] = GafferDispatchTest.LoggingTaskNode()
 		s["t3"]["f"] = Gaffer.StringPlug( defaultValue = "T1.####" )
 
 		s["t2"]["preTasks"][0].setInput( s["t1"]["task"] )
@@ -1013,7 +1013,7 @@ class DispatcherTest( GafferTest.TestCase ) :
 
 		s = Gaffer.ScriptNode()
 
-		s["t"] = GafferDispatchTest.LoggingExecutableNode()
+		s["t"] = GafferDispatchTest.LoggingTaskNode()
 		s["t"]["preTasks"][0].setInput( s["t"]["task"] )
 
 		dispatcher = GafferDispatch.Dispatcher.create( "testDispatcher" )
@@ -1028,12 +1028,12 @@ class DispatcherTest( GafferTest.TestCase ) :
 		s = Gaffer.ScriptNode()
 
 		log = []
-		s["p"] = GafferDispatchTest.LoggingExecutableNode( log = log )
+		s["p"] = GafferDispatchTest.LoggingTaskNode( log = log )
 
-		s["t"] = GafferDispatchTest.LoggingExecutableNode( log = log )
+		s["t"] = GafferDispatchTest.LoggingTaskNode( log = log )
 		s["t"]["postTasks"][0].setInput( s["p"]["task"] )
 
-		s["e"] = GafferDispatchTest.LoggingExecutableNode( log = log )
+		s["e"] = GafferDispatchTest.LoggingTaskNode( log = log )
 		s["e"]["preTasks"][0].setInput( s["t"]["task"] )
 
 		dispatcher = GafferDispatch.Dispatcher.create( "testDispatcher" )
@@ -1050,10 +1050,10 @@ class DispatcherTest( GafferTest.TestCase ) :
 		s = Gaffer.ScriptNode()
 
 		log = []
-		s["p1"] = GafferDispatchTest.LoggingExecutableNode( log = log )
-		s["p2"] = GafferDispatchTest.LoggingExecutableNode( log = log )
-		s["t1"] = GafferDispatchTest.LoggingExecutableNode( log = log )
-		s["t2"] = GafferDispatchTest.LoggingExecutableNode( log = log )
+		s["p1"] = GafferDispatchTest.LoggingTaskNode( log = log )
+		s["p2"] = GafferDispatchTest.LoggingTaskNode( log = log )
+		s["t1"] = GafferDispatchTest.LoggingTaskNode( log = log )
+		s["t2"] = GafferDispatchTest.LoggingTaskNode( log = log )
 
 		s["t1"]["postTasks"][0].setInput( s["p1"]["task"] )
 		s["t2"]["postTasks"][0].setInput( s["p2"]["task"] )
@@ -1068,9 +1068,9 @@ class DispatcherTest( GafferTest.TestCase ) :
 
 		s = Gaffer.ScriptNode()
 
-		s["p"] = GafferDispatchTest.LoggingExecutableNode()
+		s["p"] = GafferDispatchTest.LoggingTaskNode()
 
-		s["t"] = GafferDispatchTest.LoggingExecutableNode()
+		s["t"] = GafferDispatchTest.LoggingTaskNode()
 		s["t"]["f"] = Gaffer.StringPlug( defaultValue = "####" )
 		s["t"]["postTasks"][0].setInput( s["p"]["task"] )
 
@@ -1091,10 +1091,10 @@ class DispatcherTest( GafferTest.TestCase ) :
 		s = Gaffer.ScriptNode()
 
 		log = []
-		s["u"] = GafferDispatchTest.LoggingExecutableNode( log = log )
-		s["p"] = GafferDispatchTest.LoggingExecutableNode( log = log )
+		s["u"] = GafferDispatchTest.LoggingTaskNode( log = log )
+		s["p"] = GafferDispatchTest.LoggingTaskNode( log = log )
 		s["p"]["preTasks"][0].setInput( s["u"]["task"] )
-		s["e"] = GafferDispatchTest.LoggingExecutableNode( log = log )
+		s["e"] = GafferDispatchTest.LoggingTaskNode( log = log )
 		s["e"]["postTasks"][0].setInput( s["p"]["task"] )
 
 		dispatcher = GafferDispatch.Dispatcher.create( "testDispatcher" )
@@ -1111,10 +1111,10 @@ class DispatcherTest( GafferTest.TestCase ) :
 		s = Gaffer.ScriptNode()
 
 		log = []
-		s["p"] = GafferDispatchTest.LoggingExecutableNode( log = log )
-		s["e"] = GafferDispatchTest.LoggingExecutableNode( log = log )
+		s["p"] = GafferDispatchTest.LoggingTaskNode( log = log )
+		s["e"] = GafferDispatchTest.LoggingTaskNode( log = log )
 		s["e"]["postTasks"][0].setInput( s["p"]["task"] )
-		s["d"] = GafferDispatchTest.LoggingExecutableNode( log = log )
+		s["d"] = GafferDispatchTest.LoggingTaskNode( log = log )
 		s["d"]["preTasks"][0].setInput( s["p"]["task"] )
 
 		dispatcher = GafferDispatch.Dispatcher.create( "testDispatcher" )
@@ -1134,8 +1134,8 @@ class DispatcherTest( GafferTest.TestCase ) :
 
 		s = Gaffer.ScriptNode()
 
-		s["t1"] = GafferDispatchTest.LoggingExecutableNode()
-		s["t2"] = GafferDispatchTest.LoggingExecutableNode()
+		s["t1"] = GafferDispatchTest.LoggingTaskNode()
+		s["t2"] = GafferDispatchTest.LoggingTaskNode()
 
 		s["t2"]["preTasks"][0].setInput( s["t1"]["task"] )
 		s["t2"]["postTasks"][0].setInput( s["t1"]["task"] )
@@ -1154,11 +1154,11 @@ class DispatcherTest( GafferTest.TestCase ) :
 		s = Gaffer.ScriptNode()
 
 		log = []
-		s["nonImmediate1"] = GafferDispatchTest.LoggingExecutableNode( log = log )
-		s["immediate"] = GafferDispatchTest.LoggingExecutableNode( log = log )
+		s["nonImmediate1"] = GafferDispatchTest.LoggingTaskNode( log = log )
+		s["immediate"] = GafferDispatchTest.LoggingTaskNode( log = log )
 		s["immediate"]["preTasks"][0].setInput( s["nonImmediate1"]["task"] )
 		s["immediate"]["dispatcher"]["immediate"].setValue( True )
-		s["nonImmediate2"] = GafferDispatchTest.LoggingExecutableNode( log = log )
+		s["nonImmediate2"] = GafferDispatchTest.LoggingTaskNode( log = log )
 		s["nonImmediate2"]["preTasks"][0].setInput( s["immediate"]["task"] )
 
 		dispatcher = self.NullDispatcher()
@@ -1177,14 +1177,14 @@ class DispatcherTest( GafferTest.TestCase ) :
 		s = Gaffer.ScriptNode()
 
 		log = []
-		s["n1"] = GafferDispatchTest.LoggingExecutableNode( log = log )
-		s["i1"] = GafferDispatchTest.LoggingExecutableNode( log = log )
+		s["n1"] = GafferDispatchTest.LoggingTaskNode( log = log )
+		s["i1"] = GafferDispatchTest.LoggingTaskNode( log = log )
 		s["i1"]["preTasks"][0].setInput( s["n1"]["task"] )
 		s["i1"]["dispatcher"]["immediate"].setValue( True )
-		s["i2"] = GafferDispatchTest.LoggingExecutableNode( log = log )
+		s["i2"] = GafferDispatchTest.LoggingTaskNode( log = log )
 		s["i2"]["preTasks"][0].setInput( s["n1"]["task"] )
 		s["i2"]["dispatcher"]["immediate"].setValue( True )
-		s["n2"] = GafferDispatchTest.LoggingExecutableNode( log = log )
+		s["n2"] = GafferDispatchTest.LoggingTaskNode( log = log )
 		s["n2"]["preTasks"][0].setInput( s["i1"]["task"] )
 		s["n2"]["preTasks"][1].setInput( s["i2"]["task"] )
 
@@ -1210,13 +1210,13 @@ class DispatcherTest( GafferTest.TestCase ) :
 		s = Gaffer.ScriptNode()
 
 		log = []
-		s["n1"] = GafferDispatchTest.LoggingExecutableNode( log = log )
-		s["i1"] = GafferDispatchTest.LoggingExecutableNode( log = log )
+		s["n1"] = GafferDispatchTest.LoggingTaskNode( log = log )
+		s["i1"] = GafferDispatchTest.LoggingTaskNode( log = log )
 		s["i1"]["preTasks"][0].setInput( s["n1"]["task"] )
 		s["i1"]["dispatcher"]["immediate"].setValue( True )
-		s["n2"] = GafferDispatchTest.LoggingExecutableNode( log = log )
+		s["n2"] = GafferDispatchTest.LoggingTaskNode( log = log )
 		s["n2"]["preTasks"][0].setInput( s["n1"]["task"] )
-		s["n3"] = GafferDispatchTest.LoggingExecutableNode( log = log )
+		s["n3"] = GafferDispatchTest.LoggingTaskNode( log = log )
 		s["n3"]["preTasks"][0].setInput( s["i1"]["task"] )
 		s["n3"]["preTasks"][1].setInput( s["n2"]["task"] )
 
@@ -1236,8 +1236,8 @@ class DispatcherTest( GafferTest.TestCase ) :
 		s = Gaffer.ScriptNode()
 
 		log = []
-		s["n1"] = GafferDispatchTest.LoggingExecutableNode( log = log )
-		s["n2"] = GafferDispatchTest.LoggingExecutableNode( log = log )
+		s["n1"] = GafferDispatchTest.LoggingTaskNode( log = log )
+		s["n2"] = GafferDispatchTest.LoggingTaskNode( log = log )
 
 		dispatcher = GafferDispatch.Dispatcher.create( "testDispatcher" )
 		dispatcher.dispatch( itertools.chain( [ s["n1"], s["n2"] ] ) )
@@ -1250,10 +1250,10 @@ class DispatcherTest( GafferTest.TestCase ) :
 		s = Gaffer.ScriptNode()
 
 		log = []
-		s["p"] = GafferDispatchTest.LoggingExecutableNode( log = log )
+		s["p"] = GafferDispatchTest.LoggingTaskNode( log = log )
 		s["p"]["f"] = Gaffer.StringPlug( defaultValue = "####" )
 
-		s["t"] = GafferDispatchTest.LoggingExecutableNode( log = log )
+		s["t"] = GafferDispatchTest.LoggingTaskNode( log = log )
 		s["t"]["postTasks"][0].setInput( s["p"]["task"] )
 		s["t"]["f"] = Gaffer.StringPlug( defaultValue = "####" )
 
@@ -1273,9 +1273,9 @@ class DispatcherTest( GafferTest.TestCase ) :
 		s = Gaffer.ScriptNode()
 
 		log = []
-		s["p"] = GafferDispatchTest.LoggingExecutableNode( log = log )
+		s["p"] = GafferDispatchTest.LoggingTaskNode( log = log )
 
-		s["t"] = GafferDispatchTest.LoggingExecutableNode( log = log )
+		s["t"] = GafferDispatchTest.LoggingTaskNode( log = log )
 		s["t"]["postTasks"][0].setInput( s["p"]["task"] )
 		s["t"]["f"] = Gaffer.StringPlug( defaultValue = "####" )
 
@@ -1295,11 +1295,11 @@ class DispatcherTest( GafferTest.TestCase ) :
 		s = Gaffer.ScriptNode()
 
 		log = []
-		s["p"] = GafferDispatchTest.LoggingExecutableNode( log = log )
+		s["p"] = GafferDispatchTest.LoggingTaskNode( log = log )
 		s["p"]["f"] = Gaffer.StringPlug( defaultValue = "####" )
 		s["p"]["requiresSequenceExecution"].setValue( True )
 
-		s["t"] = GafferDispatchTest.LoggingExecutableNode( log = log )
+		s["t"] = GafferDispatchTest.LoggingTaskNode( log = log )
 		s["t"]["postTasks"][0].setInput( s["p"]["task"] )
 		s["t"]["f"] = Gaffer.StringPlug( defaultValue = "####" )
 

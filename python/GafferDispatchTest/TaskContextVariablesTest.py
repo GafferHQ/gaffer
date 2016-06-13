@@ -131,7 +131,7 @@ class TaskContextVariablesTest( GafferTest.TestCase ) :
 	def testStringSubstitutions( self ) :
 
 		s = Gaffer.ScriptNode()
-		s["l"] = GafferDispatchTest.LoggingExecutableNode()
+		s["l"] = GafferDispatchTest.LoggingTaskNode()
 		s["v"] = GafferDispatch.TaskContextVariables()
 		s["v"]["preTasks"][0].setInput( s["l"]["task"] )
 		s["v"]["variables"].addMember( "test", "test.####.cob" )
