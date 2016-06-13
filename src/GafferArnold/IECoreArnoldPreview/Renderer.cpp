@@ -511,7 +511,7 @@ class ArnoldObject : public IECoreScenePreview::Renderer::ObjectInterface
 			}
 			else
 			{
-				AiNodeSetArray( m_node, "time_samples", matricesArray );
+				AiNodeSetArray( m_node, "time_samples", timesArray );
 			}
 		}
 
