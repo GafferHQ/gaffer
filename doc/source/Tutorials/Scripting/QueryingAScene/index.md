@@ -200,7 +200,9 @@ Our first scene queries
 
 Scenes are output from nodes through the "out" plug found at the bottom of each node. We make queries by calling methods of this plug. To refer to the plug in the ScriptEditor, we can either type a reference to it in directly, or middle-mouse drag it from the NodeGraph to the ScriptEditor. To query the output of the StandardOptions node we'll be using the following :
 
-`script["StandardOptions"]["out"]`
+```
+script["StandardOptions"]["out"]
+```
 
 Note that we're just using Python dictionary syntax to access a Node by name and then to access a named Plug within it. This plug is the gateway to our queries, so let's make our first query by getting the global settings from within the scene - these are settings created by the various Options nodes.
 
@@ -232,7 +234,9 @@ with Gaffer.Context( script.context() ) as context :
 
 The Context class is central to the way Gaffer works - a single plug can output entirely different values depending on the context in which getValue() is called. Here we provided a context as a path within the scene, but for an image node we'd provide a context with a tile location and channel name. Contexts allow Gaffer to multithread efficiently - each thread uses it's own Context so each thread can be querying a different part of the scene or a different location in an image. That was a bit wordy though wasn't it? For now let's pretend we didn't even take this detour and let's use a utility method that does the same thing instead :
 
-`camera = script["StandardOptions"]["out"].object( "/world/camera" )`
+```
+camera = script["StandardOptions"]["out"].object( "/world/camera" )
+```
 
 Much better. Let's take a look at what we got :
 
