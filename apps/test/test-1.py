@@ -50,6 +50,19 @@ class test( Gaffer.Application ) :
 			as part of Gaffer's build and review process, but it
 			is useful to run them manually when developing for
 			Gaffer or troubleshooting an installation.
+
+			Run all the tests for the scene module :
+
+			```
+			gaffer test GafferScene
+			```
+
+			Repeat a specific test 10 times :
+
+			```
+			gaffer test -repeat 10 GafferImageTest.ImageNodeTest.testCacheThreadSafet
+
+			```
 			"""
 		)
 
