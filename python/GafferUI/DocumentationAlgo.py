@@ -98,7 +98,7 @@ def exportLicenseReference( directory, about ) :
 	with open( directory + "/index.md", "w" ) as index :
 
 		index.write( __heading( "License" ) )
-		index.write( "```\n" + __fileContents( about.license() ) + "\n```\n\n" )
+		index.write( "```none\n" + __fileContents( about.license() ) + "\n```\n\n" )
 
 		index.write( __heading( "Dependencies", 1 ) )
 
@@ -116,7 +116,7 @@ def exportLicenseReference( directory, about ) :
 
 			if "license" in dependency :
 				if os.path.isfile( os.path.expandvars( dependency["license"] ) ) :
-					index.write( "```\n" + __fileContents( dependency["license"] ) + "\n```\n\n" )
+					index.write( "```none\n" + __fileContents( dependency["license"] ) + "\n```\n\n" )
 				else :
 					# Looks like Gaffer has been built with external dependencies rather
 					# than using the package provided by the gafferDependencies project.
