@@ -41,12 +41,12 @@ import GafferTractor
 Gaffer.Metadata.registerNode(
 
 	GafferTractor.TractorDispatcher,
-	
+
 	"description",
 	"""
 	Dispatches tasks by spooling them to a renderfarm
 	managed by Pixar's Tractor software.
-	
+
 	This dispatcher deliberately provides a very simple
 	one-to-one mapping between Gaffer's nodes and plugs
 	and Tractor's Tasks and attributes. This can be
@@ -70,7 +70,7 @@ Gaffer.Metadata.registerNode(
 			""",
 
 		],
-	
+
 		"envKey" : [
 
 			"description",
@@ -88,21 +88,21 @@ Gaffer.Metadata.registerNode(
 
 Gaffer.Metadata.registerNode(
 
-	GafferDispatch.ExecutableNode,
+	GafferDispatch.TaskNode,
 
 	plugs = {
-	
+
 		"dispatcher.tractor" : [
-		
+
 			"description",
 			"""
 			Settings that control how tasks are
 			dispatched to Tractor.
 			""",
-			
+
 			"layout:section", "Tractor",
 			"plugValueWidget:type", "GafferUI.LayoutPlugValueWidget",
-		
+
 		],
 
 		"dispatcher.tractor.service" : [
@@ -114,7 +114,7 @@ Gaffer.Metadata.registerNode(
 			""",
 
 		],
-		
+
 		"dispatcher.tractor.tags" : [
 
 			"description",

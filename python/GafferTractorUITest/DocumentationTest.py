@@ -46,7 +46,7 @@ class DocumentationTest( GafferUITest.TestCase ) :
 		self.maxDiff = None
 		self.assertNodesAreDocumented( GafferTractor )
 		# Also test GafferDispatch because we add plugs to
-		# ExecutableNodes.
+		# TaskNodes.
 		self.assertNodesAreDocumented( GafferDispatch )
 
 if __name__ == "__main__":
