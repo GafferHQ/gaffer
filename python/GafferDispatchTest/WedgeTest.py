@@ -337,7 +337,7 @@ class WedgeTest( GafferTest.TestCase ) :
 
 		script = Gaffer.ScriptNode()
 
-		script["constant"] = GafferDispatchTest.CountingExecutableNode()
+		script["constant"] = GafferDispatchTest.LoggingExecutableNode()
 
 		script["writer"] = GafferDispatchTest.TextWriter()
 		script["writer"]["preTasks"][0].setInput( script["constant"]["task"] )
@@ -363,7 +363,7 @@ class WedgeTest( GafferTest.TestCase ) :
 		# Even though the constant node is upstream from the wedge,
 		# it should only execute once because it doesn't reference
 		# the wedge variable at all.
-		self.assertEqual( script["constant"].executionCount, 1 )
+		self.assertEqual( len( script["constant"].log ), 1 )
 
 if __name__ == "__main__":
 	unittest.main()

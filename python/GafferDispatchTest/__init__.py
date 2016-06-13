@@ -36,7 +36,6 @@
 
 # Utility classes
 
-from CountingExecutableNode import CountingExecutableNode
 from TextWriter import TextWriter
 from LoggingExecutableNode import LoggingExecutableNode
 

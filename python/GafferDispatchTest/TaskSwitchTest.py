@@ -54,8 +54,8 @@ class TaskSwitchTest( GafferTest.TestCase ) :
 
 		s = Gaffer.ScriptNode()
 
-		s["c1"] = GafferDispatchTest.CountingExecutableNode()
-		s["c2"] = GafferDispatchTest.CountingExecutableNode()
+		s["c1"] = GafferDispatchTest.LoggingExecutableNode()
+		s["c2"] = GafferDispatchTest.LoggingExecutableNode()
 
 		s["s"] = GafferDispatch.TaskSwitch()
 		self.assertEqual( s["s"]["index"].getValue(), 0 )
@@ -66,28 +66,28 @@ class TaskSwitchTest( GafferTest.TestCase ) :
 		d = self.__dispatcher()
 		d.dispatch( [ s["s"] ] )
 
-		self.assertEqual( s["c1"].executionCount, 1 )
-		self.assertEqual( s["c2"].executionCount, 0 )
+		self.assertEqual( len( s["c1"].log ), 1 )
+		self.assertEqual( len( s["c2"].log ), 0 )
 
 		s["s"]["index"].setValue( 1 )
 		d.dispatch( [ s["s"] ] )
 
-		self.assertEqual( s["c1"].executionCount, 1 )
-		self.assertEqual( s["c2"].executionCount, 1 )
+		self.assertEqual( len( s["c1"].log ), 1 )
+		self.assertEqual( len( s["c2"].log ), 1 )
 
 		s["s"]["index"].setValue( 2 )
 		d.dispatch( [ s["s"] ] )
 
-		self.assertEqual( s["c1"].executionCount, 2 )
-		self.assertEqual( s["c2"].executionCount, 1 )
+		self.assertEqual( len( s["c1"].log ), 2 )
+		self.assertEqual( len( s["c2"].log ), 1 )
 
 	def testIndexExpression( self ) :
 
 		s = Gaffer.ScriptNode()
 
-		s["c1"] = GafferDispatchTest.CountingExecutableNode()
-		s["c2"] = GafferDispatchTest.CountingExecutableNode()
-		s["c3"] = GafferDispatchTest.CountingExecutableNode()
+		s["c1"] = GafferDispatchTest.LoggingExecutableNode()
+		s["c2"] = GafferDispatchTest.LoggingExecutableNode()
+		s["c3"] = GafferDispatchTest.LoggingExecutableNode()
 
 		s["s"] = GafferDispatch.TaskSwitch()
 		s["s"]["preTasks"][0].setInput( s["c1"]["task"] )
@@ -103,37 +103,37 @@ class TaskSwitchTest( GafferTest.TestCase ) :
 			c.setFrame( 0 )
 			d.dispatch( [ s["s"] ] )
 
-			self.assertEqual( s["c1"].executionCount, 1 )
-			self.assertEqual( s["c2"].executionCount, 0 )
-			self.assertEqual( s["c3"].executionCount, 0 )
+			self.assertEqual( len( s["c1"].log ), 1 )
+			self.assertEqual( len( s["c2"].log ), 0 )
+			self.assertEqual( len( s["c3"].log ), 0 )
 
 			c.setFrame( 1 )
 			d.dispatch( [ s["s"] ] )
 
-			self.assertEqual( s["c1"].executionCount, 1 )
-			self.assertEqual( s["c2"].executionCount, 1 )
-			self.assertEqual( s["c3"].executionCount, 0 )
+			self.assertEqual( len( s["c1"].log ), 1 )
+			self.assertEqual( len( s["c2"].log ), 1 )
+			self.assertEqual( len( s["c3"].log ), 0 )
 
 			c.setFrame( 2 )
 			d.dispatch( [ s["s"] ] )
 
-			self.assertEqual( s["c1"].executionCount, 1 )
-			self.assertEqual( s["c2"].executionCount, 1 )
-			self.assertEqual( s["c3"].executionCount, 1 )
+			self.assertEqual( len( s["c1"].log ), 1 )
+			self.assertEqual( len( s["c2"].log ), 1 )
+			self.assertEqual( len( s["c3"].log ), 1 )
 
 			c.setFrame( 3 )
 			d.dispatch( [ s["s"] ] )
 
-			self.assertEqual( s["c1"].executionCount, 2 )
-			self.assertEqual( s["c2"].executionCount, 1 )
-			self.assertEqual( s["c3"].executionCount, 1 )
+			self.assertEqual( len( s["c1"].log ), 2 )
+			self.assertEqual( len( s["c2"].log ), 1 )
+			self.assertEqual( len( s["c3"].log ), 1 )
 
 	def testUnconnectedIndex( self ) :
 
 		s = Gaffer.ScriptNode()
 
-		s["c1"] = GafferDispatchTest.CountingExecutableNode()
-		s["c2"] = GafferDispatchTest.CountingExecutableNode()
+		s["c1"] = GafferDispatchTest.LoggingExecutableNode()
+		s["c2"] = GafferDispatchTest.LoggingExecutableNode()
 
 		s["s"] = GafferDispatch.TaskSwitch()
 		s["s"]["preTasks"][0].setInput( s["c1"]["task"] )
@@ -145,8 +145,8 @@ class TaskSwitchTest( GafferTest.TestCase ) :
 
 		d.dispatch( [ s["s"] ] )
 
-		self.assertEqual( s["c1"].executionCount, 0 )
-		self.assertEqual( s["c2"].executionCount, 0 )
+		self.assertEqual( len( s["c1"].log ), 0 )
+		self.assertEqual( len( s["c1"].log ), 0 )
 
 	def testDirectCycles( self ) :
 
