@@ -205,6 +205,12 @@ class About :
 			},
 
 			{
+				"name" : "OpenVDB",
+				"url" : "http://www.openvdb.org//",
+				"license" : "$GAFFER_ROOT/doc/licenses/openvdb",
+			},
+
+			{
 				"name" : "Qt",
 				"url" : "http://qt.nokia.com/",
 				"license" : "$GAFFER_ROOT/doc/licenses/qt",
