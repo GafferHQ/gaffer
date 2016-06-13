@@ -42,6 +42,38 @@ July 13th is the day in 1919 that the British airship R34 lands in Norfolk, Engl
 completing the first airship return journey across the Atlantic in 182 hours of flight.
 ```
 
+A more useful example
+---------------------
+
+Gaffer's file browsers all support user-defined bookmarks to help users in their day-to-day navigation. In addition to users creating their own bookmarks via the UI, you can also create bookmarks via Gaffer's configuration files, making it very easy to create standard bookmarks for shared use across a facility. The following example code demonstrates how we might do so using a fictional `MyJobEnvironment` module to provide facility specific information.
+
+```
+import GafferUI
+import MyJobEnvironment
+
+# Bookmarks are associated with an application, so we must first acquire the right set
+# of bookmarks for this particular application.
+bookmarks = GafferUI.Bookmarks.acquire( application )
+
+# Now we can go about adding some bookmarks for our current job, sequence and shot,
+# assuming we have a handy custom module for getting them.
+bookmarks.add( "Job", MyJobEnvironment.currentJobPath() )
+bookmarks.add( "Sequence", MyJobEnvironment.currentSequencePath() )
+bookmarks.add( "Shot", MyJobEnvironment.currentShotPath() )
+
+# We might want some bookmarks to only appear in certain contexts related to the
+# sort of file we're interested in. These are stored in a category-specific set
+# of bookmarks which we must acquire on its own.
+bookmarks = GafferUI.Bookmarks.acquire( application, category="image" )
+bookmarks.add( "Output", MyJobEnvironment.currentShotPath() + "/outputImages" )
+bookmarks.add( "Input", MyJobEnvironment.currentShotPath() + "/inputImages" )
+
+# We can also define default locations to be used as the starting point for
+# file browsers when the path being edited is empty.
+bookmarks = GafferUI.Bookmarks.acquire( application, category="plateImport" )
+bookmarks.setDefault( MyJobEnvironment.currentJobPath() + "/fromClient/plates" )
+```
+
 Next steps
 ----------
 

@@ -1,5 +1,5 @@
-Welcome, intrepid Gafferer!
-===========================
+Introduction
+============
 
 Gaffer is a node based application for use in CG and VFX production, with a particular focus on lighting and look development. Scenes are generated procedurally via networks of nodes for loading caches, joining and partitioning, adding lights, assigning shaders and attributes and so on. Gaffer is not tied to any particular renderer, and currently provides out-of-the-box support for [3delight](http://www.3delight.com), [Arnold](https://www.solidangle.com/arnold) and [Appleseed](http://appleseedhq.net).
 
@@ -10,7 +10,7 @@ In addition to itself being highly extensible, Gaffer's underlying frameworks ar
 - [Installation](Installation/index.md)
 - [Tutorials](Tutorials/index.md)
 - [UI Reference](UIReference/index.md)
-- [Scripting Reference](ScriptingReference/index.md)
 - [Node Reference](NodeReference/index.md)
+- [Scripting Reference](ScriptingReference/index.md)
 - [Command Line Reference](CommandLineReference/index.md)
 - [Appendices](Appendices/index.md)
