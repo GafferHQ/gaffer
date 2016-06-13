@@ -198,7 +198,7 @@ class TaskNodeTest( GafferTest.TestCase ) :
 
 		c = Gaffer.Context()
 
-		n = Gaffer.ExecutableOpHolder()
+		n = GafferDispatchTest.LoggingTaskNode()
 		t = GafferDispatch.TaskNode.Task( n, c )
 		t2 = GafferDispatch.TaskNode.Task( n, c )
 		t3 = GafferDispatch.TaskNode.Task( t2 )
@@ -213,13 +213,13 @@ class TaskNodeTest( GafferTest.TestCase ) :
 	def testTaskComparison( self ) :
 
 		c = Gaffer.Context()
-		n = Gaffer.ExecutableOpHolder()
+		n = GafferDispatchTest.LoggingTaskNode()
 		t1 = GafferDispatch.TaskNode.Task( n, c )
 		t2 = GafferDispatch.TaskNode.Task( n, c )
 		c2 = Gaffer.Context()
 		c2["a"] = 2
 		t3 = GafferDispatch.TaskNode.Task( n, c2 )
-		n2 = Gaffer.ExecutableOpHolder()
+		n2 = GafferDispatchTest.LoggingTaskNode()
 		t4 = GafferDispatch.TaskNode.Task( n2, c2 )
 
 		self.assertEqual( t1, t1 )
@@ -232,9 +232,10 @@ class TaskNodeTest( GafferTest.TestCase ) :
 
 	def testTaskSet( self ) :
 
-		# an empty ExecutableOpHolder doesn't actually compute anything, so all tasks are the same
+		# A no-op TaskNode doesn't actually compute anything, so all tasks are the same
 		c = Gaffer.Context()
-		n = Gaffer.ExecutableOpHolder()
+		n = GafferDispatchTest.LoggingTaskNode()
+		n["noOp"].setValue( True )
 		t1 = GafferDispatch.TaskNode.Task( n, c )
 		t2 = GafferDispatch.TaskNode.Task( n, c )
 		self.assertEqual( t1, t2 )
@@ -242,7 +243,8 @@ class TaskNodeTest( GafferTest.TestCase ) :
 		c2["a"] = 2
 		t3 = GafferDispatch.TaskNode.Task( n, c2 )
 		self.assertEqual( t1, t3 )
-		n2 = Gaffer.ExecutableOpHolder()
+		n2 = GafferDispatchTest.LoggingTaskNode()
+		n2["noOp"].setValue( True )
 		t4 = GafferDispatch.TaskNode.Task( n2, c2 )
 		self.assertEqual( t1, t4 )
 		t5 = GafferDispatch.TaskNode.Task( n2, c )
