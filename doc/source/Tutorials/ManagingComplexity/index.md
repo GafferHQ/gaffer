@@ -10,7 +10,7 @@ Complexity and Node Graph Structure
 
 A very rough estimate for the complexity of a Gaffer scene can be made by considering the number of locations in the scene, and the number of nodes through which each location passes. For instance, we might say that 10 locations passing through 10 nodes (`10 * 10 = 100`) is roughly equivalent to 20 locations passing through 5 nodes (`20 * 5 = 100`). When we consider that most scenes will be comprised of a number of assets each with an associated look (shaders and other render attributes), we can use this knowledge to structure our node graphs for best performance.
 
-Let's consider a scene containing 4 assets, with the model for each imported into Gaffer via separate SceneReader nodes. Each asset will also have a look development setup to assign. This will be brought into Gaffer via a Reference node per asset, and placed downstream of the SceneReaders. This presents us with the two options for structuring the node graph illustrated below.
+Let's consider a scene containing 4 assets, with the model for each imported into Gaffer via separate SceneReader nodes. Each asset will also have a look development setup to be assigned. This will be brought into Gaffer via a Reference node per asset, and placed downstream of the SceneReaders. This presents us with the two options for structuring the node graph illustrated below.
 
 We can either group the models into a single scene graph and then apply the look development in series...
 
@@ -35,7 +35,7 @@ groupingSecond  = locations * nodes
                 = 400000
 ```
 
-That's a whopping factor of **4** difference in load, just from some simple restructuring of the graph. What's more, it's no coincidence that **4** is the number of assets we have - if we had **100** assets we would be looking at a factor of **100** difference in load between our two options. To state things more formally, grouping second has linear complexity with respect to the number of assets, and grouping first has quadratic complexity. Informally, that means grouping second is the only sane approach.
+That's a whopping factor of **4** difference in load, just from some simple restructuring of the graph. What's more, it's no coincidence that **4** is the number of assets we have - if we had **100** assets we would be looking at a factor of **100** difference in load between our two options. To state things more formally, grouping second has linear complexity with respect to the number of assets, and grouping first has quadratic complexity. Informally, that means that grouping second is a dramatically better approach, and should be the first consideration when structuring large graphs.
 
 > Note : Of course, much of the flexibility and power Gaffer provides comes from the ability to perform
   edits on the entire scene after grouping has been performed - this is invaluable when making edits on a per-shot or per-sequence basis. The guideline above isn't intended to discourage this at all, and is
@@ -48,7 +48,7 @@ PathFilter Wildcards
 
 The `'...'` wildcard in PathFilter expressions means "match any number of names". So, `'/world/.../house'` matches `'/world/village/house'` as well as `'/world/country/state/metropolis/neighbourhood/street/house'`. This can be very useful, but it comes at a price. Certain operations in Gaffer require the scene hierarchy to be searched for all matches below a particular location. As you might guess, the presence of `'...'` forces this search to go ever deeper, just in case a child (or a child of a child of a child) might match. For large scenes, this can become very expensive.
 
-The most painful match expression possible is `'/.../something'`, because it literally says "search the entire scene". Where possible then, searches should at least be limited by using a prefix such as `'/AssetA/.../something'`, restricting the search to just everything below `'AssetA'`. In general, the more restricted the search, the better the performance.
+The most painful expression possible is `'/.../something'`, because it literally says "search the entire scene". Although this can be necessary at times, experience has shown that such expressions are often used where a more precise form could do the same job with better performance. For instance, if it is known that all the matches are within a single asset, an expression such as `/AssetA/.../something` will limit the search to that asset only. Alternatively, if it known that all the matches are at a specific depth, a pattern such as `/*/something` or `/*/*/something` will yield the same results without needing to visit deeper locations. Small changes such as this not only have a significant impact on scene performance.
 
 > Note : It's actually a slight simplification to say that `'...'` is always costly. In fact, for
   simple nodes such as ShaderAssignment and Attributes, the performance implications are negligible.
@@ -84,8 +84,8 @@ Performance Monitor
 
 > Tip : Use the Performance Monitor.
 
-Gaffer includes a built in performance monitor which can be useful when optimising node graphs for performance or tracking down a bug. It can be turned on for batch rendering from within the statistics section of a StandardOptions node.
+Gaffer includes a built in performance monitor which can be useful when optimising node graphs for performance or tracking down a bug. It can be turned on for batch rendering in the statistics section of a StandardOptions node. This will cause performance statistics to be output into the render logs for later analysis.
 
 ![Turning on the performance monitor](images/performanceMonitor.png)
 
-This will cause performance statistics to be output into the render logs for later analysis.
+Alternatively, the [stats app](../../CommandLineReference/stats.md) allows the same monitoring to be performed from the command line, without the need to perform a render.
