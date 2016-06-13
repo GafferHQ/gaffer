@@ -92,9 +92,9 @@ bool ArrayPlug::acceptsChild( const GraphComponent *potentialChild ) const
 	}
 
 	// Ideally we'd just return false here right away, but we need this
-	// hack to provide backwards compatibility with old ExecutableNodes,
+	// hack to provide backwards compatibility with old TaskNodes,
 	// which used to use generic Plugs as children and now use TaskPlugs.
-	if( children()[0]->isInstanceOf( "GafferDispatch::ExecutableNode::TaskPlug" ) && potentialChild->typeId() == (IECore::TypeId)PlugTypeId )
+	if( children()[0]->isInstanceOf( "GafferDispatch::TaskNode::TaskPlug" ) && potentialChild->typeId() == (IECore::TypeId)PlugTypeId )
 	{
 		return true;
 	}
