@@ -35,11 +35,13 @@
 ##########################################################################
 
 import time
+import inspect
 import unittest
 
 import IECore
 
 import Gaffer
+import GafferTest
 import GafferScene
 import GafferSceneTest
 
@@ -839,11 +841,9 @@ class InteractiveRenderTest( GafferSceneTest.SceneTestCase ) :
 		time.sleep( 0.5 )
 
 		image = IECore.ImageDisplayDriver.storedImage( "myLovelySphere" )
-		self.assertAlmostEqual( self.__color4fAtUV( image, IECore.V2f( 0.5 ) ).r, 1, delta = 0.01 )
+		self.assertAlmostEqual( self.__color4fAtUV( image, IECore.V2f( 0.5 ) ).r, 0, delta = 0.01 )
 
-		c = Gaffer.Context()
 		c.setFrame( 1 )
-		s["r"].setContext( c )
 		time.sleep( 0.5 )
 
 		image = IECore.ImageDisplayDriver.storedImage( "myLovelySphere" )
@@ -1257,6 +1257,87 @@ class InteractiveRenderTest( GafferSceneTest.SceneTestCase ) :
 
 		image = IECore.ImageDisplayDriver.storedImage( "myLovelySphere" )
 		self.assertAlmostEqual( self.__color4fAtUV( image, IECore.V2f( 0.5 ) ).r, 1, delta = 0.01 )
+
+	def testEffectiveContext( self ) :
+
+		s = Gaffer.ScriptNode()
+
+		s["s"] = GafferScene.Sphere()
+		s["e"] = Gaffer.Expression()
+		s["e"].setExpression(
+			inspect.cleandoc(
+				"""
+				assert( context.getFrame() == 10 )
+				parent["s"]["radius"] = 1
+				"""
+			)
+		)
+
+		s["o"] = GafferScene.Outputs()
+		s["o"].addOutput(
+			"beauty",
+			IECore.Display(
+				"test",
+				"ieDisplay",
+				"rgba",
+				{
+					"driverType" : "ImageDisplayDriver",
+					"handle" : "myLovelySphere",
+				}
+			)
+		)
+		s["o"]["in"].setInput( s["s"]["out"] )
+
+		s["r"] = self._createInteractiveRender()
+		s["r"]["in"].setInput( s["o"]["out"] )
+
+		# No override context.
+		self.assertEqual( s["r"].getContext(), None )
+		# Meaning we should use the script context.
+		# Set the frame to 10 to keep the expression happy.
+		s.context().setFrame( 10 )
+
+		# Arrange to catch the error the expression will throw
+		# if it isn't happy.
+		errors = GafferTest.CapturingSlot( s["r"].errorSignal() )
+
+		# Start the render and assert that we're good.
+		s["r"]["state"].setValue( s["r"].State.Running )
+		time.sleep( 0.25 )
+		self.assertEqual( len( errors ), 0 )
+		s["r"]["state"].setValue( s["r"].State.Stopped )
+
+		# Now, do the same using an InteractiveRender node
+		# created in a box before parenting to the script
+
+		box = Gaffer.Box()
+		box["r"] = self._createInteractiveRender()
+		self.assertEqual( box["r"].getContext(), None )
+		s["b"] = box
+		self.assertEqual( box["r"].getContext(), None )
+		p = box.promotePlug( box["r"]["in"] )
+		p.setInput( s["o"]["out"] )
+
+		errors = GafferTest.CapturingSlot( box["r"].errorSignal() )
+
+		box["r"]["state"].setValue( box["r"].State.Running )
+		time.sleep( 0.25 )
+		self.assertEqual( len( errors ), 0 )
+		box["r"]["state"].setValue( box["r"].State.Stopped )
+
+		# Now, set the wrong frame on the script context,
+		# and instead supply our own context with the right frame.
+
+		s.context().setFrame( 1 )
+		context = Gaffer.Context()
+		context.setFrame( 10 )
+		box["r"].setContext( context )
+		self.assertTrue( box["r"].getContext().isSame( context ) )
+
+		box["r"]["state"].setValue( box["r"].State.Running )
+		time.sleep( 0.25 )
+		self.assertEqual( len( errors ), 0 )
+		box["r"]["state"].setValue( box["r"].State.Stopped )
 
 	## Should be implemented by derived classes to return an
 	# appropriate InteractiveRender node.
