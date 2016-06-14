@@ -1,3 +1,69 @@
+0.25.1.0
+========
+
+Apps
+-----------------------------------------------------------------------
+
+- Screengrab
+  - Support for grabbing the ScriptEditor.
+
+UI
+-----------------------------------------------------------------------
+
+- Fixed crash on mouse move over an about-to-become-visible GLWidget.
+
+Scene
+-----------------------------------------------------------------------
+
+- Attributes
+  - Avoided unnecessary dirty propagation.
+  - Deactivated filter field when in global mode.
+- InteractiveRender
+  - Fixed object visibility bug.
+  - Fixed context management bugs.
+- RenderUI
+  - Exposing nodules for task plugs.
+
+Image
+-----------------------------------------------------------------------
+
+- ImageGadget
+  - Taking pixel aspect into account when drawing.
+  - Fixed color inspector for non-square pixels.
+
+Arnold
+-----------------------------------------------------------------------
+
+- ArnoldRenderer
+  - Reusing shaders where possible.
+  - Ensuring shader nodes are named (uniquely).
+  - Fixed sharing of attributes between lights.
+  - Fixed time_samples.
+  - Fixed default shader override on ExternalProcedurals.
+- ArnoldOptions
+  - Added missing sampling and depth options.
+- ArnoldAttributes
+  - Supporting additional shading attributes.
+    - "ai:matte", "ai:opaque", "ai:receive_shadows" and "ai:self_shadows"
+
+Documentation
+-----------------------------------------------------------------------
+
+- Added scripting tutorials and reference.
+- Added bookmarks to config file tutorial.
+- Added examples for the "test" app.
+- Added OpenVDB license to appendices.
+- Renamed "Performance Guidelines" tutorial to "Managing Complexity".
+
+API
+-----------------------------------------------------------------------
+
+- ScriptEditor
+  - Added inputWidget() and execute() methods.
+- ImageGadget
+  - Added pixelAt() method.
+  - Added missing bindings.
+
 0.25.0.0
 ========
 
