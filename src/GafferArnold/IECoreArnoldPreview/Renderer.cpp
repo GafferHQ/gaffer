@@ -352,11 +352,6 @@ class ArnoldAttributes : public IECoreScenePreview::Renderer::AttributesInterfac
 				surfaceShader = shaderCache->get( surfaceShaderAttribute );
 			}
 
-			if( !surfaceShader )
-			{
-				surfaceShader = shaderCache->get( g_defaultShader.get() );
-			}
-
 			lightShader = attribute<IECore::ObjectVector>( g_arnoldLightShaderAttributeName, attributes );
 			lightShader = lightShader ? lightShader : attribute<IECore::ObjectVector>( g_lightShaderAttributeName, attributes );
 		}
@@ -420,18 +415,7 @@ class ArnoldAttributes : public IECoreScenePreview::Renderer::AttributesInterfac
 			}
 		}
 
-		static IECore::ConstObjectVectorPtr g_defaultShader;
-
 };
-
-IECore::ConstObjectVectorPtr defaultShader()
-{
-	IECore::ObjectVectorPtr result = new IECore::ObjectVector;
-	result->members().push_back( new IECore::Shader( "utility" ) );
-	return result;
-}
-
-IECore::ConstObjectVectorPtr ArnoldAttributes::g_defaultShader = defaultShader();
 
 } // namespace
 
@@ -534,7 +518,14 @@ class ArnoldObject : public IECoreScenePreview::Renderer::ObjectInterface
 				AiNodeSetBool( m_node, "matte", arnoldAttributes->shadingFlags & ArnoldAttributes::Matte );
 
 				m_shader = arnoldAttributes->surfaceShader; // Keep shader alive as long as we are alive
-				AiNodeSetPtr( m_node, "shader", m_shader ? m_shader->root() : AiNodeLookUpByName( "ieCoreArnold:defaultShader" ) );
+				if( m_shader && m_shader->root() )
+				{
+					AiNodeSetPtr( m_node, "shader", m_shader->root() );
+				}
+				else
+				{
+					AiNodeResetParameter( m_node, "shader" );
+				}
 			}
 		}
 
