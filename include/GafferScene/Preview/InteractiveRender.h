@@ -85,10 +85,12 @@ class InteractiveRender : public Gaffer::Node
 		GafferScene::ScenePlug *outPlug();
 		const GafferScene::ScenePlug *outPlug() const;
 
-		/// The Context in which the InteractiveRender should operate.
+		/// Specifies a context in which the InteractiveRender should operate.
+		/// The default is NULL, meaning that the context of the ancestor
+		/// ScriptNode will be used, or failing that, a default context.
+		void setContext( Gaffer::ContextPtr context );
 		Gaffer::Context *getContext();
 		const Gaffer::Context *getContext() const;
-		void setContext( Gaffer::ContextPtr context );
 
 	protected :
 
@@ -103,10 +105,10 @@ class InteractiveRender : public Gaffer::Node
 		void construct( const IECore::InternedString &rendererType = IECore::InternedString() );
 
 		void plugDirtied( const Gaffer::Plug *plug );
-		void parentChanged( Gaffer::GraphComponent *child, Gaffer::GraphComponent *oldParent );
 		void contextChanged( const IECore::InternedString &name );
 
 		void update();
+		void updateEffectiveContext();
 		void updateDefaultCamera();
 		void stop();
 
@@ -123,7 +125,8 @@ class InteractiveRender : public Gaffer::Node
 		GafferScene::PathMatcher m_cameraSet;
 		IECoreScenePreview::Renderer::ObjectInterfacePtr m_defaultCamera;
 
-		Gaffer::ContextPtr m_context;
+		Gaffer::ContextPtr m_context; // Accessed with setContext()/getContext()
+		Gaffer::ContextPtr m_effectiveContext; // Context actually used for rendering
 		boost::signals::scoped_connection m_contextChangedConnection;
 
 		static size_t g_firstPlugIndex;

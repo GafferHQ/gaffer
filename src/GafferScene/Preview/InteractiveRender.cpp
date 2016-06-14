@@ -469,7 +469,7 @@ class InteractiveRender::SceneGraphUpdateTask : public tbb::task
 			// Set up a context to compute the scene at the right
 			// location.
 
-			ContextPtr context = new Context( *m_interactiveRender->getContext(), Context::Borrowed );
+			ContextPtr context = new Context( *m_interactiveRender->m_effectiveContext, Context::Borrowed );
 			context->set( ScenePlug::scenePathContextName, m_scenePath );
 			Context::Scope scopedContext( context.get() );
 
@@ -620,9 +620,7 @@ void InteractiveRender::construct( const IECore::InternedString &rendererType )
 	outPlug()->setInput( inPlug() );
 
 	plugDirtiedSignal().connect( boost::bind( &InteractiveRender::plugDirtied, this, ::_1 ) );
-	parentChangedSignal().connect( boost::bind( &InteractiveRender::parentChanged, this, ::_1, ::_2 ) );
 
-	setContext( new Context() );
 	stop(); // Use stop to initialise remaining member variables
 }
 
@@ -683,17 +681,14 @@ const Gaffer::Context *InteractiveRender::getContext() const
 
 void InteractiveRender::setContext( Gaffer::ContextPtr context )
 {
-	if(
-		m_context &&
-		( m_context == context || *m_context == *context )
-	)
+	if( m_context == context )
 	{
 		return;
 	}
+
 	m_context = context;
-	m_contextChangedConnection = m_context->changedSignal().connect(
-		boost::bind( &InteractiveRender::contextChanged, this, ::_2 )
-	);
+	m_dirtyFlags = SceneGraphUpdateTask::AllDirty;
+	update();
 }
 
 void InteractiveRender::plugDirtied( const Gaffer::Plug *plug )
@@ -748,19 +743,6 @@ void InteractiveRender::plugDirtied( const Gaffer::Plug *plug )
 	}
 }
 
-void InteractiveRender::parentChanged( GraphComponent *child, GraphComponent *oldParent )
-{
-	ScriptNode *n = ancestor<ScriptNode>();
-	if( n )
-	{
-		setContext( n->context() );
-	}
-	else
-	{
-		setContext( new Context() );
-	}
-}
-
 void InteractiveRender::contextChanged( const IECore::InternedString &name )
 {
 	if( boost::starts_with( name.string(), "ui:" ) )
@@ -773,7 +755,8 @@ void InteractiveRender::contextChanged( const IECore::InternedString &name )
 
 void InteractiveRender::update()
 {
-	Context::Scope scopedContext( m_context.get() );
+	updateEffectiveContext();
+	Context::Scope scopedContext( m_effectiveContext.get() );
 
 	const State requiredState = (State)statePlug()->getValue();
 
@@ -868,6 +851,34 @@ void InteractiveRender::update()
 	m_state = requiredState;
 
 	m_renderer->render();
+}
+
+void InteractiveRender::updateEffectiveContext()
+{
+	if( m_context )
+	{
+		if( m_effectiveContext == m_context )
+		{
+			return;
+		}
+		m_effectiveContext = m_context;
+	}
+	else if( ScriptNode *n = ancestor<ScriptNode>() )
+	{
+		if( m_effectiveContext == n->context() )
+		{
+			return;
+		}
+		m_effectiveContext = n->context();
+	}
+	else
+	{
+		m_effectiveContext = new Context();
+	}
+
+	m_contextChangedConnection = m_effectiveContext->changedSignal().connect(
+		boost::bind( &InteractiveRender::contextChanged, this, ::_2 )
+	);
 }
 
 void InteractiveRender::updateDefaultCamera()
