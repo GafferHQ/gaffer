@@ -309,25 +309,6 @@ class RenderState
 namespace
 {
 
-// OSL 1.5 introduced a new argument to the front of the get_matrix()
-// methods. We use this macro to declare it or not as appropriate.
-#if OSL_LIBRARY_VERSION_CODE > 10500
-	#define GETMATRIX_SHADERGLOBALS_ARGUMENT OSL::ShaderGlobals *sg,
-#else
-	#define GETMATRIX_SHADERGLOBALS_ARGUMENT
-#endif
-
-// OSL 1.5 replaced "void *renderState" arguments with ShaderGlobals *sg
-// arguments. We use these macros to declare them and access our render
-// state appropriately.
-#if OSL_LIBRARY_VERSION_CODE > 10500
-	#define SHADERGLOBALS_ARGUMENT OSL::ShaderGlobals *sg
-	#define ACQUIRE_RENDERSTATE sg ? static_cast<RenderState *>( sg->renderstate ) : NULL
-#else
-	#define SHADERGLOBALS_ARGUMENT void *sg
-	#define ACQUIRE_RENDERSTATE static_cast<RenderState *>( sg )
-#endif
-
 class RendererServices : public OSL::RendererServices
 {
 
@@ -337,29 +318,29 @@ class RendererServices : public OSL::RendererServices
 		{
 		}
 
-		virtual bool get_matrix( GETMATRIX_SHADERGLOBALS_ARGUMENT OSL::Matrix44 &result, TransformationPtr xform, float time )
+		virtual bool get_matrix( OSL::ShaderGlobals *sg, OSL::Matrix44 &result, TransformationPtr xform, float time )
 		{
 			return false;
 		}
 
-		virtual bool get_matrix( GETMATRIX_SHADERGLOBALS_ARGUMENT OSL::Matrix44 &result, TransformationPtr xform )
+		virtual bool get_matrix( OSL::ShaderGlobals *sg, OSL::Matrix44 &result, TransformationPtr xform )
 		{
 			return false;
 		}
 
-		virtual bool get_matrix( GETMATRIX_SHADERGLOBALS_ARGUMENT OSL::Matrix44 &result, ustring from, float time )
+		virtual bool get_matrix( OSL::ShaderGlobals *sg, OSL::Matrix44 &result, ustring from, float time )
 		{
 			return false;
 		}
 
-		virtual bool get_matrix( GETMATRIX_SHADERGLOBALS_ARGUMENT OSL::Matrix44 &result, ustring from )
+		virtual bool get_matrix( OSL::ShaderGlobals *sg, OSL::Matrix44 &result, ustring from )
 		{
 			return false;
 		}
 
-		virtual bool get_attribute( SHADERGLOBALS_ARGUMENT, bool derivatives, ustring object, TypeDesc type, ustring name, void *value )
+		virtual bool get_attribute( OSL::ShaderGlobals *sg, bool derivatives, ustring object, TypeDesc type, ustring name, void *value )
 		{
-			const RenderState *renderState = ACQUIRE_RENDERSTATE;
+			const RenderState *renderState = sg ? static_cast<RenderState *>( sg->renderstate ) : NULL;
 			if( !renderState )
 			{
 				return false;
@@ -369,14 +350,14 @@ class RendererServices : public OSL::RendererServices
 			return get_userdata( derivatives, name, type, sg, value );
 		}
 
-		virtual bool get_array_attribute( SHADERGLOBALS_ARGUMENT, bool derivatives, ustring object, TypeDesc type, ustring name, int index, void *value )
+		virtual bool get_array_attribute( OSL::ShaderGlobals *sg, bool derivatives, ustring object, TypeDesc type, ustring name, int index, void *value )
 		{
 			return false;
 		}
 
-		virtual bool get_userdata( bool derivatives, ustring name, TypeDesc type, SHADERGLOBALS_ARGUMENT, void *value )
+		virtual bool get_userdata( bool derivatives, ustring name, TypeDesc type, OSL::ShaderGlobals *sg, void *value )
 		{
-			const RenderState *renderState = ACQUIRE_RENDERSTATE;
+			const RenderState *renderState = sg ? static_cast<RenderState *>( sg->renderstate ) : NULL;
 			if( !renderState )
 			{
 				return false;
@@ -384,9 +365,9 @@ class RendererServices : public OSL::RendererServices
 			return renderState->userData( name, type, value );
 		}
 
-		virtual bool has_userdata( ustring name, TypeDesc type, SHADERGLOBALS_ARGUMENT )
+		virtual bool has_userdata( ustring name, TypeDesc type, OSL::ShaderGlobals *sg )
 		{
-			const RenderState *renderState = ACQUIRE_RENDERSTATE;
+			const RenderState *renderState = sg ? static_cast<RenderState *>( sg->renderstate ) : NULL;
 			if( !renderState )
 			{
 				return false;
@@ -417,13 +398,20 @@ struct EmissionParameters
 
 struct DebugParameters
 {
-	ustring name;
-	static ustring typeAttrKey;
-	static ustring valueAttrKey;
-};
 
-ustring DebugParameters::typeAttrKey( "type" );
-ustring DebugParameters::valueAttrKey( "value" );
+	ustring name;
+	ustring type;
+	Color3f value;
+
+	static void prepare( OSL::RendererServices *rendererServices, int id, void *data )
+	{
+		DebugParameters *debugParameters = static_cast<DebugParameters *>( data );
+		debugParameters->name = ustring();
+		debugParameters->type = ustring();
+		debugParameters->value = Color3f( 1.0f );
+	}
+
+};
 
 // Must be held in order to modify the shading system.
 // Should not be acquired before calling shadingSystem(),
@@ -440,12 +428,13 @@ OSL::ShadingSystem *shadingSystem()
 		return s;
 	}
 
-	s = ShadingSystem::create( new RendererServices );
+	s = new ShadingSystem( new RendererServices );
 
 	struct ClosureDefinition{
 		const char *name;
 		int id;
 		ClosureParam parameters[32];
+		PrepareClosureFunc prepare;
 	};
 
 	ClosureDefinition closureDefinitions[] = {
@@ -461,10 +450,11 @@ OSL::ShadingSystem *shadingSystem()
 			DebugClosureId,
 			{
 				CLOSURE_STRING_PARAM( DebugParameters, name ),
-				CLOSURE_STRING_KEYPARAM( DebugParameters::typeAttrKey.c_str() ),
-				CLOSURE_COLOR_KEYPARAM( DebugParameters::valueAttrKey.c_str() ),
+				CLOSURE_STRING_KEYPARAM( DebugParameters, type, "type" ),
+				CLOSURE_COLOR_KEYPARAM( DebugParameters, value, "value" ),
 				CLOSURE_FINISH_PARAM( DebugParameters )
-			}
+			},
+			DebugParameters::prepare
 		},
 		// end marker
 		{ NULL, 0, {} }
@@ -476,11 +466,8 @@ OSL::ShadingSystem *shadingSystem()
 			closureDefinitions[i].name,
 			closureDefinitions[i].id,
 			closureDefinitions[i].parameters,
-			NULL,
+			closureDefinitions[i].prepare,
 			NULL
-#if OSL_LIBRARY_VERSION_MAJOR == 1 && OSL_LIBRARY_VERSION_MINOR <= 4
-			,NULL
-#endif
 		);
 	}
 
@@ -530,66 +517,40 @@ class ShadingResults
 
 	private :
 
-		const ClosureComponent::Attr *attr( const ClosureComponent *closure, ustring key )
-		{
-			const ClosureComponent::Attr *a = closure->attrs();
-			for( int i = 0; i < closure->nattrs; ++i, ++a )
-			{
-				if( a->key == key )
-				{
-					return a;
-				}
-			}
-			return NULL;
-		}
-
 		void addResult( size_t pointIndex, const ClosureColor *closure, const Color3f &weight )
 		{
 			if( closure )
 			{
-				switch( closure->type )
+				switch( closure->id )
 				{
-					case ClosureColor::COMPONENT :
-					{
-						const ClosureComponent *closureComponent = static_cast<const ClosureComponent*>( closure );
-						Color3f closureWeight = weight;
-#ifdef OSL_SUPPORTS_WEIGHTED_CLOSURE_COMPONENTS
-						closureWeight *= closureComponent->w;
-#endif
-						switch( closureComponent->id )
-						{
-							case EmissionClosureId :
-								addEmission( pointIndex, closureComponent, closureWeight );
-								break;
-							case DebugClosureId :
-								addDebug( pointIndex, closureComponent, closureWeight );
-								break;
-						}
-						break;
-					}
 					case ClosureColor::MUL :
 						addResult(
 							pointIndex,
-							static_cast<const ClosureMul *>( closure )->closure,
-							weight * static_cast<const ClosureMul *>( closure )->weight
+							closure->as_mul()->closure,
+							weight * closure->as_mul()->weight
 						);
 						break;
 					case ClosureColor::ADD :
-						addResult( pointIndex, static_cast<const ClosureAdd *>( closure )->closureA, weight );
-						addResult( pointIndex, static_cast<const ClosureAdd *>( closure )->closureB, weight );
+						addResult( pointIndex, closure->as_add()->closureA, weight );
+						addResult( pointIndex, closure->as_add()->closureB, weight );
+						break;
+					case EmissionClosureId :
+						addEmission( pointIndex, closure->as_comp()->as<EmissionParameters>(), weight * closure->as_comp()->w );
+						break;
+					case DebugClosureId :
+						addDebug( pointIndex, closure->as_comp()->as<DebugParameters>(), weight * closure->as_comp()->w );
 						break;
 				}
 			}
 		}
 
-		void addEmission( size_t pointIndex, const ClosureComponent *closure, const Color3f &weight )
+		void addEmission( size_t pointIndex, const EmissionParameters *parameters, const Color3f &weight )
 		{
 			(*m_ci)[pointIndex] += weight;
 		}
 
-		void addDebug( size_t pointIndex, const ClosureComponent *closure, const Color3f &weight )
+		void addDebug( size_t pointIndex, const DebugParameters *parameters, const Color3f &weight )
 		{
-			const DebugParameters *parameters = static_cast<const DebugParameters *>( closure->data() );
 			vector<DebugResult>::iterator it = lower_bound(
 				m_debugResults.begin(),
 				m_debugResults.end(),
@@ -600,11 +561,7 @@ class ShadingResults
 			{
 				DebugResult result;
 				result.name = parameters->name;
-				result.type = TypeDesc::TypeColor;
-				if( const ClosureComponent::Attr *typeAttr = attr( closure, DebugParameters::typeAttrKey ) )
-				{
-					result.type = TypeDesc( typeAttr->str().c_str() );
-				}
+				result.type = parameters->type != ustring() ? TypeDesc( parameters->type.c_str() ) : TypeDesc::TypeColor;
 				result.type.arraylen = m_ci->size();
 				DataPtr data = dataFromTypeDesc( result.type, result.basePointer );
 				if( !data )
@@ -616,11 +573,7 @@ class ShadingResults
 				it = m_debugResults.insert( it, result );
 			}
 
-			Color3f value = weight;
-			if( const ClosureComponent::Attr *valueAttr = attr( closure, DebugParameters::valueAttrKey ) )
-			{
-				value *= valueAttr->color();
-			}
+			Color3f value = weight * parameters->value;
 
 			char *dst = static_cast<char *>( it->basePointer );
 			dst += pointIndex * it->type.elementsize();
@@ -890,7 +843,7 @@ IECore::CompoundDataPtr ShadingEngine::shade( const IECore::CompoundData *points
 
 		shaderGlobals.Ci = NULL;
 
-		shadingSystem->execute( *shadingContext, shaderGroup, shaderGlobals );
+		shadingSystem->execute( shadingContext, shaderGroup, shaderGlobals );
 		results.addResult( i, shaderGlobals.Ci );
 		renderState.incrementPointIndex();
 	}

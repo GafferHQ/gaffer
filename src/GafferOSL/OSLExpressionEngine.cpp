@@ -57,10 +57,6 @@ using namespace OSL;
 using namespace IECore;
 using namespace Gaffer;
 
-// We require features from OSL 1.6.8, and if that is not available
-// we simply don't build OSLExpressionEngine at all.
-#if OSL_LIBRARY_VERSION_CODE >= 10608
-
 namespace
 {
 
@@ -430,7 +426,7 @@ class OSLExpressionEngine : public Gaffer::Expression::Engine
 			renderState.inPlugs = &proxyInputs;
 			shaderGlobals.renderstate = &renderState;
 
-			s->execute( *shadingContext, *m_shaderGroup, shaderGlobals );
+			s->execute( shadingContext, *m_shaderGroup, shaderGlobals );
 
 			ObjectVectorPtr result = new ObjectVector;
 			result->members().reserve( m_outSymbols.size() );
@@ -630,7 +626,7 @@ class OSLExpressionEngine : public Gaffer::Expression::Engine
 			static OSL::ShadingSystem *g_s = NULL;
 			if( !g_s )
 			{
-				g_s = ShadingSystem::create( new RendererServices );
+				g_s = new OSL::ShadingSystem( new RendererServices );
 				// All our shader parameters are for getting values from
 				// plugs, so we must turn off lockgeom so their values are
 				// queried from RendererServices::get_userdata().
@@ -876,5 +872,3 @@ class OSLExpressionEngine : public Gaffer::Expression::Engine
 Expression::Engine::EngineDescription<OSLExpressionEngine> OSLExpressionEngine::g_engineDescription( "OSL" );
 
 } // namespace
-
-#endif // OSL_LIBRARY_VERSION_CODE

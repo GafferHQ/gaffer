@@ -389,13 +389,7 @@ static Plug *loadStructParameter( const OSLQuery &query, const OSLQuery::Paramet
 		}
 	}
 
-#if OSL_LIBRARY_VERSION_CODE > 10500
-	typedef OIIO::ustring String;
-#else
-	typedef std::string String;
-#endif
-
-	for( vector<String>::const_iterator it = parameter->fields.begin(), eIt = parameter->fields.end(); it != eIt; ++it )
+	for( vector<ustring>::const_iterator it = parameter->fields.begin(), eIt = parameter->fields.end(); it != eIt; ++it )
 	{
 		std::string fieldName = std::string( parameter->name.c_str() ) + "." + it->c_str();
 		loadShaderParameter( query, query.getparam( fieldName ), result, keepExistingValues );
@@ -545,7 +539,7 @@ void OSLShader::loadShader( const std::string &shaderName, bool keepExistingValu
 	OSLQuery query;
 	if( !query.open( shaderName, searchPath ? searchPath : "" ) )
 	{
-		throw Exception( query.error() );
+		throw Exception( query.geterror() );
 	}
 
 	loadShaderParameters( query, parametersPlug(), keepExistingValues );
@@ -608,16 +602,12 @@ static IECore::DataPtr convertMetadata( const OSLQuery::Parameter &metadata )
 		}
 		else if( metadata.type.elementtype() == TypeDesc::STRING )
 		{
-#if OSL_LIBRARY_VERSION_CODE < 10600
-			return new StringVectorData( metadata.sdefault );
-# else
 			StringVectorDataPtr result = new StringVectorData;
 			for( vector<ustring>::const_iterator it = metadata.sdefault.begin(), eIt = metadata.sdefault.end(); it != eIt; ++it )
 			{
 				result->writable().push_back( it->string() );
 			}
 			return result;
-#endif
 		}
 	}
 
@@ -651,7 +641,7 @@ static IECore::ConstCompoundDataPtr metadataGetter( const std::string &key, size
 	OSLQuery query;
 	if( !query.open( key, searchPath ? searchPath : "" ) )
 	{
-		throw Exception( query.error() );
+		throw Exception( query.geterror() );
 	}
 
 	CompoundDataPtr metadata = new CompoundData;
