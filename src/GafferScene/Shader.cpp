@@ -46,8 +46,6 @@
 #include "Gaffer/Metadata.h"
 #include "Gaffer/ScriptNode.h"
 
-#include "IECore/Light.h"
-
 #include "GafferScene/Shader.h"
 
 using namespace Imath;
@@ -412,7 +410,7 @@ void Shader::NetworkBuilder::parameterHashWalk( const Shader *shaderNode, const 
 	}
 }
 
-IECore::StateRenderable *Shader::NetworkBuilder::shader( const Shader *shaderNode )
+IECore::Shader *Shader::NetworkBuilder::shader( const Shader *shaderNode )
 {
 	shaderNode = effectiveNode( shaderNode );
 	if( !shaderNode )
@@ -428,26 +426,8 @@ IECore::StateRenderable *Shader::NetworkBuilder::shader( const Shader *shaderNod
 		return shaderAndHash.shader.get();
 	}
 
-	const std::string &shaderType = shaderNode->typePlug()->getValue();
-	if( boost::ends_with( shaderType, "light" ) )
-	{
-		std::string prefix = "";
-		size_t colon = shaderType.find_first_of( ":" );
-		if( colon != std::string::npos )
-		{
-			prefix = shaderType.substr( 0, colon + 1 );
-		}
-
-		IECore::LightPtr lightShader = new IECore::Light( prefix + shaderNode->namePlug()->getValue(), "LIGHT_HANDLE_UNUSED" );
-		parameterValueWalk( shaderNode, shaderNode->parametersPlug(), IECore::InternedString(), lightShader->parameters() );
-		shaderAndHash.shader = lightShader;
-	}
-	else
-	{
-		IECore::ShaderPtr shaderShader = new IECore::Shader( shaderNode->namePlug()->getValue(), shaderType );
-		parameterValueWalk( shaderNode, shaderNode->parametersPlug(), IECore::InternedString(), shaderShader->parameters() );
-		shaderAndHash.shader = shaderShader;
-	}
+	shaderAndHash.shader = new IECore::Shader( shaderNode->namePlug()->getValue(), shaderNode->typePlug()->getValue() );
+	parameterValueWalk( shaderNode, shaderNode->parametersPlug(), IECore::InternedString(), shaderAndHash.shader->parameters() );
 
 	shaderAndHash.shader->blindData()->writable()["gaffer:nodeName"] = new IECore::StringData( shaderNode->nodeNamePlug()->getValue() );
 	shaderAndHash.shader->blindData()->writable()["gaffer:nodeColor"] = new IECore::Color3fData( shaderNode->nodeColorPlug()->getValue() );
@@ -500,7 +480,7 @@ bool Shader::NetworkBuilder::isLeafParameter( const Gaffer::Plug *parameterPlug 
 
 const std::string &Shader::NetworkBuilder::shaderHandle( const Shader *shaderNode )
 {
-	IECore::Shader *s = IECore::runTimeCast<IECore::Shader>( shader( shaderNode ) );
+	IECore::Shader *s = shader( shaderNode );
 	if( !s )
 	{
 		static std::string emptyString;
