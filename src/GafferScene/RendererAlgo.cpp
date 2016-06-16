@@ -264,7 +264,7 @@ bool outputLight( const ScenePlug *scene, const ScenePlug::ScenePath &path, IECo
 		for( IECore::CompoundObject::ObjectMap::const_iterator it = attributes->members().begin();
 			it != attributes->members().end(); it++ )
 		{
-			if( boost::ends_with( it->first.string(), "light" ) )
+			if( boost::ends_with( it->first.string(), ":light"  ) || it->first.string() == "light" )
 			{
 				const IECore::ObjectVector *lightShaders = runTimeCast<const IECore::ObjectVector>( it->second.get() );
 				if( !lightShaders || lightShaders->members().empty() )
