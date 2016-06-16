@@ -38,7 +38,6 @@ import os
 
 import IECore
 
-import Gaffer
 import GafferOSL
 import GafferOSLTest
 
