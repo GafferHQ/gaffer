@@ -132,7 +132,7 @@ class Shader : public Gaffer::DependencyNode
 				// Returns the node that should be used taking into account
 				// enabledPlug() and correspondingInput().
 				const Shader *effectiveNode( const Shader *shaderNode ) const;
-				IECore::StateRenderable *shader( const Shader *shaderNode );
+				IECore::Shader *shader( const Shader *shaderNode );
 
 				void parameterHashWalk( const Shader *shaderNode, const Gaffer::Plug *parameterPlug, IECore::MurmurHash &h );
 				void parameterValueWalk( const Shader *shaderNode, const Gaffer::Plug *parameterPlug, const IECore::InternedString &parameterName, IECore::CompoundDataMap &values );
@@ -143,7 +143,7 @@ class Shader : public Gaffer::DependencyNode
 
 				struct ShaderAndHash
 				{
-				 	IECore::StateRenderablePtr shader;
+				 	IECore::ShaderPtr shader;
 				 	IECore::MurmurHash hash;
 				};
 
