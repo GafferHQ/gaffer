@@ -57,7 +57,7 @@ class LightTest( GafferSceneTest.SceneTestCase ) :
 		self.assertEqual( l["out"].childNames( "/" ), IECore.InternedStringVectorData( [ "light" ] ) )
 
 		self.assertTrue( isinstance( l["out"].object( "/light" ), IECore.NullObject ) )
-		self.assertTrue( isinstance( l["out"].attributes( "/light" )["light"][-1], IECore.Light ) )
+		self.assertTrue( isinstance( l["out"].attributes( "/light" )["light"][-1], IECore.Shader ) )
 
 		self.assertEqual( l["out"].transform( "/light" ), IECore.M44f() )
 		self.assertEqual( l["out"].childNames( "/light" ), IECore.InternedStringVectorData() )
