@@ -914,7 +914,7 @@ class ArnoldObject : public IECoreScenePreview::Renderer::ObjectInterface
 
 		}
 
-	private :
+	protected :
 
 		Instance m_instance;
 		ArnoldShaderPtr m_shader;
@@ -951,12 +951,44 @@ class ArnoldLight : public ArnoldObject
 		{
 			ArnoldObject::attributes( attributes );
 			const ArnoldAttributes *arnoldAttributes = static_cast<const ArnoldAttributes *>( attributes );
+
+			// Update light shader.
+
 			m_lightShader = NULL;
-			if( arnoldAttributes->lightShader )
+			if( !arnoldAttributes->lightShader )
 			{
-				m_lightShader = new ArnoldShader( arnoldAttributes->lightShader.get() );
-				AiNodeSetStr( m_lightShader->root(), "name", m_name.c_str() );
+				return;
 			}
+
+			m_lightShader = new ArnoldShader( arnoldAttributes->lightShader.get() );
+
+			// Give light shader a more meaningful name.
+
+			string name = m_name;
+			if( m_instance.node() )
+			{
+				// Distinguish from shape, which will already have been
+				// named m_name.
+				name += string( "_" ) + AiNodeGetName( m_lightShader->root() );
+			}
+			AiNodeSetStr( m_lightShader->root(), "name", name.c_str() );
+
+			// Deal with mesh_lights.
+
+			if( AiNodeIs( m_lightShader->root(), "mesh_light" ) )
+			{
+				if( m_instance.node() )
+				{
+					AiNodeSetPtr( m_lightShader->root(), "mesh", m_instance.node() );
+				}
+				else
+				{
+					// Don't output mesh_lights from locations with no object
+					m_lightShader = NULL;
+					return;
+				}
+			}
+
 			applyTransform();
 		}
 
