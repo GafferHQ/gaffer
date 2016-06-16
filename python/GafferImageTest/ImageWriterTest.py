@@ -405,13 +405,7 @@ class ImageWriterTest( GafferImageTest.ImageTestCase ) :
 			for key in overrideMetadata :
 				expectedMetadata[key] = overrideMetadata[key]
 
-			# some formats support IPTC standards, and some of the standard metadata
-			# is translated automatically by OpenImageIO.
-			for key in writerMetadata.keys() :
-				if key.startswith( "IPTC:" ) :
-					expectedMetadata["IPTC:OriginatingProgram"] = expectedMetadata["Software"]
-					expectedMetadata["IPTC:Creator"] = expectedMetadata["Artist"]
-					break
+			self.__addExpectedIPTCMetadata( writerMetadata, expectedMetadata )
 
 			# some input files don't contain all the metadata that the ImageWriter
 			# will create, and some output files don't support all the metadata
@@ -451,6 +445,23 @@ class ImageWriterTest( GafferImageTest.ImageTestCase ) :
 					self.assertFalse( True, "Image data does not match : {} ({}). Matches with max error of {}".format( ext, name, matchingError ) )
 				else:
 					self.assertFalse( True, "Image data does not match : {} ({}).".format( ext, name ) )
+
+	def __addExpectedIPTCMetadata( self, metadata, expectedMetadata ) :
+
+		# Some formats support IPTC metadata, and some of the standard OIIO metadata
+		# names are translated to it automatically by OpenImageIO. We need to update the
+		# expectedMetadata to account for this.
+
+		iptcPresent = bool( [ k for k in metadata.keys() if k.startswith( "IPTC:" ) ] )
+		if not iptcPresent :
+			return
+
+		expectedMetadata["IPTC:Creator"] = expectedMetadata["Artist"]
+		if "IPTC:OriginatingProgram" in metadata :
+			# Really this shouldn't be inside a conditional, but we're working around
+			# https://github.com/OpenImageIO/oiio/commit/aeecd8181c0667a98b3ae4db2c0ea5673e2ab534
+			# whereby OIIO::TIFFInput started willfully discarding metadata.
+			expectedMetadata["IPTC:OriginatingProgram"] = expectedMetadata["Software"]
 
 	def testPadDataWindowToDisplayWindowScanline ( self ) :
 		self.__testAdjustDataWindowToDisplayWindow( "png", self.__rgbFilePath )
@@ -708,13 +719,8 @@ class ImageWriterTest( GafferImageTest.ImageTestCase ) :
 		expectedMetadata["HostComputer"] = IECore.StringData( platform.node() )
 		expectedMetadata["Artist"] = IECore.StringData( os.getlogin() )
 		expectedMetadata["DocumentName"] = IECore.StringData( "untitled" )
-		# some formats support IPTC standards, and some of the standard metadata
-		# is translated automatically by OpenImageIO.
-		for key in afterMetadata.keys() :
-			if key.startswith( "IPTC:" ) :
-				expectedMetadata["IPTC:OriginatingProgram"] = expectedMetadata["Software"]
-				expectedMetadata["IPTC:Creator"] = expectedMetadata["Artist"]
-				break
+
+		self.__addExpectedIPTCMetadata( afterMetadata, expectedMetadata )
 
 		for key in overrideMetadata :
 			expectedMetadata[key] = overrideMetadata[key]
