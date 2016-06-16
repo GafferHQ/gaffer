@@ -264,19 +264,34 @@ bool outputLight( const ScenePlug *scene, const ScenePlug::ScenePath &path, IECo
 		for( IECore::CompoundObject::ObjectMap::const_iterator it = attributes->members().begin();
 			it != attributes->members().end(); it++ )
 		{
-			const std::string &key = it->first.string();
-			if( ( key.size() >= 6 && key.compare( key.length() - 6, 6, ":light" ) == 0 ) || key == "light" )
+			if( boost::ends_with( it->first.string(), "light" ) )
 			{
 				const IECore::ObjectVector *lightShaders = runTimeCast<const IECore::ObjectVector>( it->second.get() );
+				if( !lightShaders || lightShaders->members().empty() )
+				{
+					continue;
+				}
 
-				if( !lightShaders || lightShaders->members().size() == 0 ) continue;
+				LightPtr light;
+				if( const Light *constLight = runTimeCast<const Light >( lightShaders->members().back().get() ) )
+				{
+					light = constLight->copy();
+				}
+				else if( const Shader *constShader = runTimeCast<const Shader >( lightShaders->members().back().get() ) )
+				{
+					// In the past Gaffer used IECore::Light to represent lights, but has moved
+					// to simply using IECore::Shader now that lights are just shaders assigned
+					// to a location. The new renderer backends implemented in IECoreScene::Preview
+					// make no use of IECore::Light at all, but here in the legacy backend it's
+					// still easier to convert the shader back to the old IECore::Light form rather
+					// than rewrite the output code.
+					light = new Light( constShader->getName(), "", constShader->parameters() );
+				}
 
-				IECore::ConstLightPtr constLight = runTimeCast< const IECore::Light >(
-					lightShaders->members()[ lightShaders->members().size() - 1 ] );
-
-				if( !constLight ) continue;
-
-				LightPtr light = constLight->copy();
+				if( !light )
+				{
+					continue;
+				}
 
 				bool areaLight = false;
 				const BoolData *areaLightParm = light->parametersData()->member<BoolData>( "__areaLight" );
@@ -291,7 +306,7 @@ bool outputLight( const ScenePlug *scene, const ScenePlug::ScenePath &path, IECo
 
 				if( !areaLight )
 				{
-					InternedString metadataTarget = "light:" + constLight->getName();
+					InternedString metadataTarget = "light:" + light->getName();
 					ConstM44fDataPtr orientation = Metadata::value<M44fData>( metadataTarget, "renderOrientation" );
 
 					if( orientation )

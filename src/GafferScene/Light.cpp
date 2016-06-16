@@ -35,6 +35,9 @@
 //////////////////////////////////////////////////////////////////////////
 
 #include "IECore/NullObject.h"
+#include "IECore/Shader.h"
+#include "IECore/Light.h"
+#include "IECore/MessageHandler.h"
 
 #include "Gaffer/StringPlug.h"
 
@@ -110,15 +113,24 @@ IECore::ConstCompoundObjectPtr Light::computeAttributes( const SceneNode::SceneP
 	std::string lightAttribute = "light";
 
 	IECore::ObjectVectorPtr lightShaders = computeLight( context );
-	if( lightShaders->members().size() > 0 )
+	if( lightShaders->members().size() )
 	{
-		IECore::LightPtr light = IECore::runTimeCast< IECore::Light >(
-			lightShaders->members()[ lightShaders->members().size() - 1 ] );
-		std::string lightName = light->getName();
-		size_t colon = lightName.find( ":" );
-		if( colon != std::string::npos )
+		if( const IECore::Shader *shader = IECore::runTimeCast<const IECore::Shader>( lightShaders->members().back().get() ) )
 		{
-			lightAttribute = lightName.substr( 0, colon ) + ":light";
+			lightAttribute = shader->getType();
+		}
+		else if( const IECore::Light *light = IECore::runTimeCast<const IECore::Light>( lightShaders->members().back().get() ) )
+		{
+			/// \todo We are phasing out the use of IECore::Light and replacing
+			/// it with IECore::Shader everywhere. Make sure no derived classes
+			/// are using it and then remove this special case code.
+			IECore::msg( IECore::Msg::Warning, "Light::computeAttributes", "The use of IECore::Light is deprecated - please use IECore::Shader instead." );
+			const std::string &lightName = light->getName();
+			size_t colon = lightName.find( ":" );
+			if( colon != std::string::npos )
+			{
+				lightAttribute = lightName.substr( 0, colon ) + ":light";
+			}
 		}
 	}
 
