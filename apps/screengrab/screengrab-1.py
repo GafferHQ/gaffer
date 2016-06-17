@@ -112,16 +112,17 @@ class screengrab( Gaffer.Application ) :
 				),
 
 				IECore.StringParameter(
-					name = "cmd",
-					description = "Command(s) to execute after session is launched. 'script' node is available to interact with script contents",
+					name = "command",
+					description = "Command to execute after session is launched. A 'script' variable provides access to the root ScriptNode.",
 					defaultValue = "",
 				),
 
 				IECore.StringParameter(
-					name = "cmdfile",
+					name = "commandFile",
 					description = "File containing sequence of commands to execute after session is launched.",
 					defaultValue = "",
 				),
+
 			]
 
 		)
@@ -153,15 +154,33 @@ class screengrab( Gaffer.Application ) :
 			script.load()
 		self.root()["scripts"].addChild( script )
 
-		# Select any nodes we've been asked to.
-		for name in args["selection"] :
-			script.selection().add( script.descendant( name ) )
-
 		# Choose the widget we'll grab by default. This can be overridden
 		# by the command files below by calling `application.setGrabWidget()`.
 
 		scriptWindow = GafferUI.ScriptWindow.acquire( script )
 		self.setGrabWidget( scriptWindow )
+
+		# Execute any commands we've been asked to, exposing the application
+		# and script as variables.
+
+		self.__waitForIdle()
+
+		d = {
+			"application" 	: self,
+			"script"		: script,
+		}
+
+		if args["command"].value :
+			exec( args["command"].value, d, d )
+		if args["commandFile"].value :
+			execfile( args["commandFile"].value, d, d )
+
+		# Select any nodes we've been asked to.
+		for name in args["selection"] :
+			script.selection().add( script.descendant( name ) )
+
+		# Override the default grab widget if requested by
+		# the editor command line flag.
 
 		if args["editor"].value :
 
@@ -206,21 +225,6 @@ class screengrab( Gaffer.Application ) :
 				scriptEditor.inputWidget().setText( args["scriptEditor"]["execute"].value )
 				scriptEditor.inputWidget()._qtWidget().selectAll()
 				scriptEditor.execute()
-
-		# Execute any commands we've been asked to, exposing the application
-		# and script as variables.
-
-		self.__waitForIdle()
-
-		d = {
-			"application" 	: self,
-			"script"		: script,
-		}
-
-		if args["cmd"].value :
-			exec( args["cmd"].value, d, d )
-		if args["cmdfile"].value :
-			execfile( args["cmdfile"].value, d, d )
 
 		# Write the image, creating a directory for it if necessary.
 
