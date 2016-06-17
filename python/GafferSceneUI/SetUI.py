@@ -105,6 +105,16 @@ Gaffer.Metadata.registerNode(
 
 		],
 
+		"filter" : [
+
+			"description",
+			"""
+			A filter to define additional paths to be added to
+			or removed from the set.
+			""",
+
+		],
+
 	}
 
 )

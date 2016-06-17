@@ -39,7 +39,7 @@
 
 #include "Gaffer/TypedObjectPlug.h"
 
-#include "GafferScene/SceneProcessor.h"
+#include "GafferScene/FilteredSceneProcessor.h"
 
 namespace Gaffer
 {
@@ -53,7 +53,7 @@ namespace GafferScene
 
 /// Node to define sets of locations in the scene - not to be confused
 /// with the Gaffer::Set class which is for an entirely different purpose.
-class Set : public SceneProcessor
+class Set : public FilteredSceneProcessor
 {
 
 	public :
@@ -61,7 +61,7 @@ class Set : public SceneProcessor
 		Set( const std::string &name=defaultName<Set>() );
 		virtual ~Set();
 
-		IE_CORE_DECLARERUNTIMETYPEDEXTENSION( GafferScene::Set, SetTypeId, SceneProcessor );
+		IE_CORE_DECLARERUNTIMETYPEDEXTENSION( GafferScene::Set, SetTypeId, FilteredSceneProcessor );
 
 		enum Mode
 		{
@@ -82,6 +82,8 @@ class Set : public SceneProcessor
 		virtual void affects( const Gaffer::Plug *input, AffectedPlugsContainer &outputs ) const;
 
 	protected :
+
+		virtual bool acceptsInput( const Gaffer::Plug *plug, const Gaffer::Plug *inputPlug ) const;
 
 		virtual void hash( const Gaffer::ValuePlug *output, const Gaffer::Context *context, IECore::MurmurHash &h ) const;
 		virtual void compute( Gaffer::ValuePlug *output, const Gaffer::Context *context ) const;
