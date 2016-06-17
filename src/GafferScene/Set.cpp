@@ -39,6 +39,7 @@
 
 #include "GafferScene/Set.h"
 #include "GafferScene/PathMatcherData.h"
+#include "GafferScene/SceneAlgo.h"
 
 using namespace std;
 using namespace IECore;
@@ -51,7 +52,7 @@ IE_CORE_DEFINERUNTIMETYPED( Set );
 size_t Set::g_firstPlugIndex = 0;
 
 Set::Set( const std::string &name )
-	:	SceneProcessor( name )
+	:	FilteredSceneProcessor( name, Filter::NoMatch )
 {
 	storeIndexOfNextChild( g_firstPlugIndex );
 	addChild( new Gaffer::IntPlug( "mode", Gaffer::Plug::In, Create, Create, Remove ) );
@@ -114,9 +115,9 @@ const PathMatcherDataPlug *Set::pathMatcherPlug() const
 
 void Set::affects( const Gaffer::Plug *input, AffectedPlugsContainer &outputs ) const
 {
-	SceneProcessor::affects( input, outputs );
+	FilteredSceneProcessor::affects( input, outputs );
 
-	if( pathsPlug() == input )
+	if( pathsPlug() == input || filterPlug() == input )
 	{
 		outputs.push_back( pathMatcherPlug() );
 	}
@@ -134,13 +135,54 @@ void Set::affects( const Gaffer::Plug *input, AffectedPlugsContainer &outputs ) 
 	}
 }
 
+bool Set::acceptsInput( const Gaffer::Plug *plug, const Gaffer::Plug *inputPlug ) const
+{
+	if( !FilteredSceneProcessor::acceptsInput( plug, inputPlug ) )
+	{
+		return false;
+	}
+
+	if( plug == filterPlug() )
+	{
+		if( const Filter *filter = runTimeCast<const Filter>( inputPlug->source<Gaffer::Plug>()->node() ) )
+		{
+			if(
+				filter->sceneAffectsMatch( inPlug(), inPlug()->boundPlug() ) ||
+				filter->sceneAffectsMatch( inPlug(), inPlug()->transformPlug() ) ||
+				filter->sceneAffectsMatch( inPlug(), inPlug()->attributesPlug() ) ||
+				filter->sceneAffectsMatch( inPlug(), inPlug()->objectPlug() ) ||
+				filter->sceneAffectsMatch( inPlug(), inPlug()->childNamesPlug() )
+			)
+			{
+				// We use the filter to compute our set, so the filter can not dependent
+				// on the locations within the scene - see equivalent comments in Prune
+				// for more details.
+				return false;
+			}
+		}
+	}
+
+	return true;
+}
+
 void Set::hash( const Gaffer::ValuePlug *output, const Gaffer::Context *context, IECore::MurmurHash &h ) const
 {
-	SceneProcessor::hash( output, context, h );
+	FilteredSceneProcessor::hash( output, context, h );
 
 	if( output == pathMatcherPlug() )
 	{
 		pathsPlug()->hash( h );
+		if( filterPlug()->getInput<Gaffer::Plug>() )
+		{
+			// We remove the scene path variable to cause
+			// the filter to give us a "global" hash. See
+			// equivalent comments in Prune::hashSet() for
+			// more details.
+			Gaffer::ContextPtr c = filterContext( context );
+			c->remove( ScenePlug::scenePathContextName );
+			Gaffer::Context::Scope s( c.get() );
+			filterPlug()->hash( h );
+		}
 	}
 }
 
@@ -173,16 +215,21 @@ void Set::compute( Gaffer::ValuePlug *output, const Gaffer::Context *context ) c
 			pathMatcher.addPath( tokenizedPath );
 		}
 
+		if( filterPlug()->getInput<Gaffer::Plug>() )
+		{
+			matchingPaths( filterPlug(), inPlug(), pathMatcher );
+		}
+
 		static_cast<Gaffer::ObjectPlug *>( output )->setValue( pathMatcherData );
 		return;
 	}
 
-	SceneProcessor::compute( output, context );
+	FilteredSceneProcessor::compute( output, context );
 }
 
 void Set::hashSetNames( const Gaffer::Context *context, const ScenePlug *parent, IECore::MurmurHash &h ) const
 {
-	SceneProcessor::hashSetNames( context, parent, h );
+	FilteredSceneProcessor::hashSetNames( context, parent, h );
 	inPlug()->setNamesPlug()->hash( h );
 	modePlug()->hash( h );
 	namePlug()->hash( h );
@@ -244,7 +291,7 @@ void Set::hashSet( const IECore::InternedString &setName, const Gaffer::Context 
 		return;
 	}
 
-	SceneProcessor::hashSet( setName, context, parent, h );
+	FilteredSceneProcessor::hashSet( setName, context, parent, h );
 	inPlug()->setPlug()->hash( h );
 	modePlug()->hash( h );
 	pathMatcherPlug()->hash( h );
