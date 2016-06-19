@@ -39,6 +39,7 @@
 #define GAFFERUI_GRAPHGADGET_H
 
 #include "Gaffer/Plug.h"
+#include "Gaffer/CompoundNumericPlug.h"
 
 #include "GafferUI/ContainerGadget.h"
 
@@ -142,6 +143,7 @@ class GraphGadget : public ContainerGadget
 		/// \undoable
 		void setNodePosition( Gaffer::Node *node, const Imath::V2f &position );
 		Imath::V2f getNodePosition( const Gaffer::Node *node ) const;
+		bool hasNodePosition( const Gaffer::Node *node ) const;
 
 		/// May be used to minimise the input connections for a particular node.
 		/// \undoable
@@ -170,6 +172,9 @@ class GraphGadget : public ContainerGadget
 		void doRender( const Style *style ) const;
 
 	private :
+
+		const Gaffer::V2fPlug *nodePositionPlug( const Gaffer::Node *node ) const;
+		Gaffer::V2fPlug *nodePositionPlug( Gaffer::Node *node, bool createIfMissing ) const;
 
 		void rootChildAdded( Gaffer::GraphComponent *root, Gaffer::GraphComponent *child );
 		void rootChildRemoved( Gaffer::GraphComponent *root, Gaffer::GraphComponent *child );

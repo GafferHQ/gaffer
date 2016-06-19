@@ -598,8 +598,10 @@ class GraphGadgetTest( GafferUITest.TestCase ) :
 
 		g = GafferUI.GraphGadget( s )
 
+		self.assertFalse( g.hasNodePosition( s["n"] ) )
 		g.setNodePosition( s["n"], IECore.V2f( -100, 2000 ) )
 		self.assertEqual( g.getNodePosition( s["n"] ), IECore.V2f( -100, 2000 ) )
+		self.assertTrue( g.hasNodePosition( s["n"] ) )
 
 	def testPlugConnectionGadgets( self ) :
 
@@ -1015,13 +1017,14 @@ class GraphGadgetTest( GafferUITest.TestCase ) :
 		self.assertFalse( g.nodeGadget( script["a"] ).getHighlighted() )
 		self.assertFalse( g.nodeGadget( script["b"] ).getHighlighted() )
 
-	@GafferTest.expectedFailure
 	def testNoDuplicatePositionPlugsAfterPasting( self ) :
 
 		script = Gaffer.ScriptNode()
 		script["n"] = Gaffer.Node()
 
 		g = GafferUI.GraphGadget( script )
+		g.setNodePosition( script["n"], IECore.V2f( 1, 2 ) )
+		self.assertTrue( g.hasNodePosition( script["n"] ) )
 
 		script.execute( script.serialise( script, Gaffer.StandardSet( [ script["n"] ] ) ) )
 
