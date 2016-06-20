@@ -54,9 +54,7 @@ class ArnoldMeshLightTest( GafferSceneTest.SceneTestCase ) :
 		f = GafferScene.PathFilter()
 		f["paths"].setValue( IECore.StringVectorData( [ "/group/sphere" ] ) )
 
-		with IECore.CapturingMessageHandler() as mh :
-			l = GafferArnold.ArnoldMeshLight()
-		self.assertTrue( len( mh.messages ), 1 )
+		l = GafferArnold.ArnoldMeshLight()
 
 		l["in"].setInput( g["out"] )
 		l["filter"].setInput( f["out"] )
@@ -77,9 +75,7 @@ class ArnoldMeshLightTest( GafferSceneTest.SceneTestCase ) :
 		f = GafferScene.PathFilter()
 		f["paths"].setValue( IECore.StringVectorData( [ "/sphere" ] ) )
 
-		with IECore.CapturingMessageHandler() as mh :
-			l = GafferArnold.ArnoldMeshLight()
-		self.assertTrue( len( mh.messages ), 1 )
+		l = GafferArnold.ArnoldMeshLight()
 
 		l["in"].setInput( s["out"] )
 		l["filter"].setInput( f["out"] )
@@ -98,9 +94,7 @@ class ArnoldMeshLightTest( GafferSceneTest.SceneTestCase ) :
 		f = GafferScene.PathFilter()
 		f["paths"].setValue( IECore.StringVectorData( [ "/sphere" ] ) )
 
-		with IECore.CapturingMessageHandler() as mh :
-			l = GafferArnold.ArnoldMeshLight()
-		self.assertTrue( len( mh.messages ), 1 )
+		l = GafferArnold.ArnoldMeshLight()
 
 		l["in"].setInput( s["out"] )
 		l["filter"].setInput( f["out"] )
