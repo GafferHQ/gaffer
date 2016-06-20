@@ -37,9 +37,11 @@
 #include "boost/container/flat_map.hpp"
 #include "boost/algorithm/string/predicate.hpp"
 
+#include "IECore/Light.h"
+#include "IECore/Shader.h"
+
 #include "IECoreGL/CurvesPrimitive.h"
 #include "IECoreGL/Group.h"
-#include "IECore/Light.h"
 
 #include "GafferSceneUI/LightVisualiser.h"
 #include "GafferSceneUI/AttributeVisualiser.h"
@@ -56,7 +58,9 @@ using namespace GafferSceneUI;
 namespace
 {
 
-typedef boost::container::flat_map<IECore::InternedString, ConstLightVisualiserPtr> LightVisualisers;
+typedef std::pair<IECore::InternedString, IECore::InternedString> AttributeAndShaderNames;
+
+typedef boost::container::flat_map<AttributeAndShaderNames, ConstLightVisualiserPtr> LightVisualisers;
 LightVisualisers &lightVisualisers()
 {
 	static LightVisualisers l;
@@ -70,8 +74,8 @@ const LightVisualiser *standardLightVisualiser()
 }
 
 /// Class for visualisation of lights. All lights in Gaffer are represented
-/// as IECore::Light objects, but we need to visualise them differently
-/// depending on their shader name (accessed using `IECore::Light::getName()`). A
+/// as IECore::Shader objects, but we need to visualise them differently
+/// depending on their shader name (accessed using `IECore::Shader::getName()`). A
 /// factory mechanism is provided to map from this type to a specialised
 /// LightVisualiser.
 class AttributeVisualiserForLights : public AttributeVisualiser
@@ -110,31 +114,46 @@ IECoreGL::ConstRenderablePtr AttributeVisualiserForLights::visualise( const IECo
 	for( IECore::CompoundObject::ObjectMap::const_iterator it = attributes->members().begin();
 		it != attributes->members().end(); it++ )
 	{
-		const std::string &key = it->first.string();
-		if( !( boost::ends_with( key, ":light" ) || key == "light" ) )
+		const std::string &attributeName = it->first.string();
+		if( !( boost::ends_with( attributeName, ":light" ) || attributeName == "light" ) )
 		{
 			continue;
 		}
 
 		const IECore::ObjectVector *shaderVector = IECore::runTimeCast<const IECore::ObjectVector>( it->second.get() );
-		if( !shaderVector || shaderVector->members().size() == 0 ) continue;
+		if( !shaderVector || shaderVector->members().empty() )
+		{
+			continue;
+		}
 
-		const IECore::Light *lightShader = IECore::runTimeCast<const IECore::Light>(
-			 shaderVector->members()[ shaderVector->members().size() - 1 ] ).get();
-		if( !lightShader ) continue;
+		IECore::InternedString shaderName;
+		if( const IECore::Shader *shader = IECore::runTimeCast<const IECore::Shader>( shaderVector->members().back().get() ) )
+		{
+			shaderName = shader->getName();
+		}
+		else if( const IECore::Light *light = IECore::runTimeCast<const IECore::Light>( shaderVector->members().back().get() ) )
+		{
+			/// \todo Remove once all Light node derived classes are
+			/// creating only shaders.
+			shaderName = light->getName();
+		}
 
+		if( shaderName.string().empty() )
+		{
+			continue;
+		}
 
-		const LightVisualiser *currentVisualiser = standardLightVisualiser();
+		const LightVisualiser *visualiser = standardLightVisualiser();
 
 		const LightVisualisers &l = lightVisualisers();
-		LightVisualisers::const_iterator findVis = l.find( lightShader->getName() );
-		if( findVis != l.end() )
+		LightVisualisers::const_iterator visIt = l.find( AttributeAndShaderNames( it->first, shaderName ) );
+		if( visIt != l.end() )
 		{
-			currentVisualiser = findVis->second.get();
+			visualiser = visIt->second.get();
 		}
 
 		IECoreGL::ConstStatePtr curState = NULL;
-		IECoreGL::ConstRenderablePtr curVis = currentVisualiser->visualise( shaderVector, curState );
+		IECoreGL::ConstRenderablePtr curVis = visualiser->visualise( it->first, shaderVector, curState );
 
 		if( curVis )
 		{
@@ -163,11 +182,6 @@ IECoreGL::ConstRenderablePtr AttributeVisualiserForLights::visualise( const IECo
 
 AttributeVisualiser::AttributeVisualiserDescription<AttributeVisualiserForLights> AttributeVisualiserForLights::g_visualiserDescription;
 
-
-
-
-
-
 //////////////////////////////////////////////////////////////////////////
 // LightVisualiser class
 //////////////////////////////////////////////////////////////////////////
@@ -181,7 +195,7 @@ LightVisualiser::~LightVisualiser()
 {
 }
 
-void LightVisualiser::registerLightVisualiser( const IECore::InternedString &name, ConstLightVisualiserPtr visualiser )
+void LightVisualiser::registerLightVisualiser( const IECore::InternedString &attributeName, const IECore::InternedString &shaderName, ConstLightVisualiserPtr visualiser )
 {
-	lightVisualisers()[name] = visualiser;
+	lightVisualisers()[AttributeAndShaderNames( attributeName, shaderName )] = visualiser;
 }
