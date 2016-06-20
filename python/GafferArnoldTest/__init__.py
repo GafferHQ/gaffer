@@ -40,6 +40,7 @@ from ArnoldOptionsTest import ArnoldOptionsTest
 from ArnoldAttributesTest import ArnoldAttributesTest
 from ArnoldVDBTest import ArnoldVDBTest
 from ArnoldLightTest import ArnoldLightTest
+from ArnoldMeshLightTest import ArnoldMeshLightTest
 from InteractiveArnoldRenderTest import InteractiveArnoldRenderTest
 import IECoreArnoldPreviewTest
 
