@@ -148,7 +148,14 @@ class ArnoldOutput : public IECore::RefCounted
 				AiNodeSetStr( m_driver.get(), AiParamGetName( fileNameParameter ), output->getName().c_str() );
 			}
 
-			ParameterAlgo::setParameters( m_driver.get(), output->parameters() );
+			for( IECore::CompoundDataMap::const_iterator it = output->parameters().begin(), eIt = output->parameters().end(); it != eIt; ++it )
+			{
+				if( boost::starts_with( it->first.string(), "filter" ) )
+				{
+					continue;
+				}
+				ParameterAlgo::setParameter( m_driver.get(), it->first.c_str(), it->second.get() );
+			}
 
 			// Create a filter.
 
@@ -166,6 +173,31 @@ class ArnoldOutput : public IECore::RefCounted
 
 			const std::string filterNodeName = boost::str( boost::format( "ieCoreArnold:filter:%s" ) % name.string() );
 			AiNodeSetStr( m_filter.get(), "name", filterNodeName.c_str() );
+
+			for( IECore::CompoundDataMap::const_iterator it = output->parameters().begin(), eIt = output->parameters().end(); it != eIt; ++it )
+			{
+				if( !boost::starts_with( it->first.string(), "filter" ) || it->first == "filter" )
+				{
+					continue;
+				}
+
+				if( it->first == "filterwidth" )
+				{
+					// Special case to convert RenderMan style `float filterwidth[2]` into
+					// Arnold style `float width`.
+					if( const IECore::V2fData *v = IECore::runTimeCast<const IECore::V2fData>( it->second.get() ) )
+					{
+						if( v->readable().x != v->readable().y )
+						{
+							IECore::msg( IECore::Msg::Warning, "IECoreArnold::Renderer", "Non-square filterwidth not supported" );
+						}
+						AiNodeSetFlt( m_filter.get(), "width", v->readable().x );
+						continue;
+					}
+				}
+
+				ParameterAlgo::setParameter( m_filter.get(), it->first.c_str() + 6, it->second.get() );
+			}
 
 			// Convert the data specification to the form
 			// supported by Arnold.

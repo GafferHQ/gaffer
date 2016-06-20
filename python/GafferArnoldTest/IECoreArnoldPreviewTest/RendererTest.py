@@ -356,6 +356,40 @@ class RendererTest( GafferTest.TestCase ) :
 				self.assertEqual( arnold.AiNodeGetBool( o2, p ), False )
 				self.assertEqual( arnold.AiNodeGetBool( o3, p ), p != "matte" )
 
+	def testOutputFilters( self ) :
+
+		r = GafferScene.Private.IECoreScenePreview.Renderer.create(
+			"IECoreArnold::Renderer",
+			GafferScene.Private.IECoreScenePreview.Renderer.RenderType.SceneDescription,
+			self.temporaryDirectory() + "/test.ass"
+		)
+
+		r.output(
+			"test",
+			IECore.Display(
+				"beauty.exr",
+				"exr",
+				"rgba",
+				{
+					"filter" : "gaussian",
+					"filterwidth" : IECore.V2f( 3.5 ),
+				}
+			)
+		)
+
+		r.render()
+		del r
+
+		with IECoreArnold.UniverseBlock() :
+
+			arnold.AiASSLoad( self.temporaryDirectory() + "/test.ass" )
+			filters = self.__allNodes( type = arnold.AI_NODE_FILTER )
+			self.assertEqual( len( filters ), 1 )
+			f = filters[0]
+
+			self.assertEqual( arnold.AiNodeEntryGetName( arnold.AiNodeGetNodeEntry( f ) ), "gaussian_filter" )
+			self.assertEqual( arnold.AiNodeGetFlt( f, "width" ), 3.5 )
+
 	def __allNodes( self, type = arnold.AI_NODE_ALL, ignoreBuiltIn = True ) :
 
 		result = []
