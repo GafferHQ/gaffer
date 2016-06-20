@@ -34,9 +34,10 @@
 #
 ##########################################################################
 
-import os
+import arnold
 
 import IECore
+import IECoreArnold
 
 import GafferSceneTest
 import GafferArnold
@@ -46,10 +47,7 @@ class ArnoldLightTest( GafferSceneTest.SceneTestCase ) :
 	def testUsesShaders( self ) :
 
 		l = GafferArnold.ArnoldLight()
-		with IECore.CapturingMessageHandler() as mh :
-			l.loadShader( "point_light" )
-		# Suppress warnings about unsupported parameter types.
-		self.assertTrue( len( mh.messages ) )
+		l.loadShader( "point_light" )
 
 		n = l["out"].attributes( "/light" )["ai:light"]
 		self.assertTrue( isinstance( n, IECore.ObjectVector ) )
@@ -57,6 +55,23 @@ class ArnoldLightTest( GafferSceneTest.SceneTestCase ) :
 		self.assertTrue( isinstance( n[0], IECore.Shader ) )
 		self.assertEqual( n[0].type, "ai:light" )
 		self.assertEqual( n[0].name, "point_light" )
+
+	def testLoadAllLightsWithoutWarnings( self ) :
+
+		lightNames = []
+		with IECoreArnold.UniverseBlock() :
+			it = arnold.AiUniverseGetNodeEntryIterator( arnold.AI_NODE_LIGHT )
+			while not arnold.AiNodeEntryIteratorFinished( it ) :
+				nodeEntry = arnold.AiNodeEntryIteratorGetNext( it )
+				lightNames.append( arnold.AiNodeEntryGetName( nodeEntry ) )
+
+		self.longMessage = True
+
+		for lightName in lightNames :
+			with IECore.CapturingMessageHandler() as mh :
+				l = GafferArnold.ArnoldLight()
+				l.loadShader( lightName )
+				self.assertEqual( [ m.message for m in mh.messages ], [], "Error loading %s" % lightName )
 
 if __name__ == "__main__":
 	unittest.main()
