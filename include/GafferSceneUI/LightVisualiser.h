@@ -46,9 +46,9 @@ namespace GafferSceneUI
 IE_CORE_FORWARDDECLARE( LightVisualiser )
 
 /// Class for visualisation of lights. All lights in Gaffer are represented
-/// as IECore::Light objects, but we need to visualise them differently
-/// depending on their shader name (accessed using `IECore::Light::getName()`). A
-/// factory mechanism is provided to map from this type to a specialised
+/// as IECore::Shader objects, but we need to visualise them differently
+/// depending on their shader name (accessed using `IECore::Shader::getName()`). A
+/// factory mechanism is provided to map from this name to a specialised
 /// LightVisualiser.
 class LightVisualiser : public IECore::RefCounted
 {
@@ -60,12 +60,14 @@ class LightVisualiser : public IECore::RefCounted
 		LightVisualiser();
 		virtual ~LightVisualiser();
 
-		/// Uses a custom visualisation registered via `registerLightVisualiser()` if one
-		/// is available, if not falls back to a basic point light visualisation.
-		virtual IECoreGL::ConstRenderablePtr visualise( const IECore::ObjectVector *shaderVector, IECoreGL::ConstStatePtr &state ) const = 0;
+		/// Must be implemented by derived classes to visualise
+		/// the light contained within shaderVector.
+		virtual IECoreGL::ConstRenderablePtr visualise( const IECore::InternedString &attributeName, const IECore::ObjectVector *shaderVector, IECoreGL::ConstStatePtr &state ) const = 0;
 
-		/// Registers a visualiser to use for the specified light type.
-		static void registerLightVisualiser( const IECore::InternedString &name, ConstLightVisualiserPtr visualiser );
+		/// Registers a visualiser to visualise a particular type of light.
+		/// For instance, `registerLightVisualiser( "ai:light", "point_light", visualiser )`
+		/// would register a visualiser for an Arnold point light.
+		static void registerLightVisualiser( const IECore::InternedString &attributeName, const IECore::InternedString &shaderName, ConstLightVisualiserPtr visualiser );
 };
 
 } // namespace GafferSceneUI
