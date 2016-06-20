@@ -69,6 +69,7 @@
 #include "GafferSceneBindings/ScenePlugBinding.h"
 #include "GafferSceneBindings/SceneNodeBinding.h"
 #include "GafferSceneBindings/SceneProcessorBinding.h"
+#include "GafferSceneBindings/FilteredSceneProcessorBinding.h"
 #include "GafferSceneBindings/OutputsBinding.h"
 #include "GafferSceneBindings/PathMatcherBinding.h"
 #include "GafferSceneBindings/SceneProceduralBinding.h"
@@ -113,7 +114,8 @@ BOOST_PYTHON_MODULE( _GafferScene )
 	bindScenePlug();
 	bindSceneNode();
 	bindSceneProcessor();
-	GafferBindings::DependencyNodeClass<FilteredSceneProcessor>();
+	bindFilter();
+	bindFilteredSceneProcessor();
 	GafferBindings::DependencyNodeClass<SceneElementProcessor>();
 	GafferBindings::DependencyNodeClass<MeshType>();
 	GafferBindings::DependencyNodeClass<ObjectSource>();
@@ -163,7 +165,6 @@ BOOST_PYTHON_MODULE( _GafferScene )
 	bindRender();
 	bindConstraint();
 	bindAttributes();
-	bindFilter();
 	bindMixin();
 	bindTransform();
 	bindParent();
