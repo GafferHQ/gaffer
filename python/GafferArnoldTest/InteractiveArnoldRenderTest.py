@@ -69,16 +69,7 @@ class InteractiveArnoldRenderTest( GafferSceneTest.InteractiveRenderTest ) :
 	def _createPointLight( self ) :
 
 		light = GafferArnold.ArnoldLight()
-
-		with IECore.CapturingMessageHandler() as mh :
-			light.loadShader( "point_light" )
-
-		self.assertEqual( len( mh.messages ), 4 )
-		for m in mh.messages :
-			## \todo Remove once we've figured out what to do
-			# with these parameters.
-			self.assertTrue( "of type \"ARRAY\"" in m.message )
-
+		light.loadShader( "point_light" )
 		return light, light["parameters"]["color"]
 
 if __name__ == "__main__":
