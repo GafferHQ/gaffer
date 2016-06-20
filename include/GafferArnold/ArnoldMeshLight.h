@@ -1,7 +1,6 @@
 //////////////////////////////////////////////////////////////////////////
 //
-//  Copyright (c) 2012, John Haddon. All rights reserved.
-//  Copyright (c) 2013, Image Engine Design Inc. All rights reserved.
+//  Copyright (c) 2016, Image Engine Design Inc. All rights reserved.
 //
 //  Redistribution and use in source and binary forms, with or without
 //  modification, are permitted provided that the following conditions are
@@ -35,26 +34,32 @@
 //
 //////////////////////////////////////////////////////////////////////////
 
-#ifndef GAFFERARNOLD_TYPEIDS_H
-#define GAFFERARNOLD_TYPEIDS_H
+#ifndef GAFFERARNOLD_ARNOLDMESHLIGHT_H
+#define GAFFERARNOLD_ARNOLDMESHLIGHT_H
+
+#include "GafferScene/FilteredSceneProcessor.h"
 
 namespace GafferArnold
 {
 
-enum TypeId
+class ArnoldMeshLight : public GafferScene::FilteredSceneProcessor
 {
-	ArnoldShaderTypeId = 110900,
-	ArnoldOptionsTypeId = 110901,
-	ArnoldAttributesTypeId = 110902,
-	ArnoldLightTypeId = 110903,
-	ArnoldVDBTypeId = 110904,
-	InteractiveArnoldRenderTypeId = 110905,
-	ArnoldRenderTypeId = 110906,
-	ArnoldMeshLightTypeId = 110907,
 
-	LastTypeId = 110949
+	public :
+
+		ArnoldMeshLight( const std::string &name=defaultName<ArnoldMeshLight>() );
+		virtual ~ArnoldMeshLight();
+
+		IE_CORE_DECLARERUNTIMETYPEDEXTENSION( GafferArnold::ArnoldMeshLight, ArnoldMeshLightTypeId, FilteredSceneProcessor );
+
+	private :
+
+		static size_t g_firstPlugIndex;
+
 };
+
+IE_CORE_DECLAREPTR( ArnoldMeshLight )
 
 } // namespace GafferArnold
 
-#endif // GAFFERARNOLD_TYPEIDS_H
+#endif // GAFFERARNOLD_ARNOLDMESHLIGHT_H
