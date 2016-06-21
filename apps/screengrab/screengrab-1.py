@@ -96,6 +96,11 @@ class screengrab( Gaffer.Application ) :
 							description = "The names of plugs to reveal in the NodeEditor.",
 							defaultValue = IECore.StringVectorData(),
 						),
+						IECore.StringParameter(
+							name = "grab",
+							description = "The name of a plug to grab from the NodeEditor.",
+							defaultValue = "",
+						),
 					],
 				),
 
@@ -216,6 +221,12 @@ class screengrab( Gaffer.Application ) :
 			for name in args["nodeEditor"]["reveal"] :
 				plugValueWidget = nodeEditor.nodeUI().plugValueWidget( script.descendant( name ) )
 				plugValueWidget.reveal()
+
+			if args["nodeEditor"]["grab"].value :
+				grabWidget = nodeEditor.nodeUI().plugValueWidget( script.descendant( args["nodeEditor"]["grab"].value ) )
+				grabWidget = grabWidget.ancestor( GafferUI.PlugWidget ) or grabWidget
+				grabWidget.reveal()
+				self.setGrabWidget( grabWidget )
 
 		# Set up the ScriptEditors as requested.
 
