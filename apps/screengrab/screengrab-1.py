@@ -40,6 +40,7 @@ import IECore
 
 import Gaffer
 import GafferUI
+import GafferScene
 
 QtGui = GafferUI._qtImport( "QtGui" )
 
@@ -112,6 +113,28 @@ class screengrab( Gaffer.Application ) :
 							name = "execute",
 							description = "Some python code to execute in the script editor.",
 							defaultValue = "",
+						),
+					]
+				),
+
+				IECore.CompoundParameter(
+					name = "scene",
+					description = "Parameters that configure the scene.",
+					members = [
+						IECore.StringVectorParameter(
+							name = "expandedPaths",
+							description = "A list of locations to expand in the Viewer and SceneHierarchy.",
+							defaultValue = IECore.StringVectorData(),
+						),
+						IECore.StringVectorParameter(
+							name = "fullyExpandedPaths",
+							description = "A list of locations to expand fully in the Viewer and SceneHierarchy.",
+							defaultValue = IECore.StringVectorData(),
+						),
+						IECore.StringVectorParameter(
+							name = "selectedPaths",
+							description = "A list of locations to select in the Viewer and SceneHierarchy.",
+							defaultValue = IECore.StringVectorData(),
 						),
 					]
 				),
@@ -236,6 +259,27 @@ class screengrab( Gaffer.Application ) :
 				scriptEditor.inputWidget().setText( args["scriptEditor"]["execute"].value )
 				scriptEditor.inputWidget()._qtWidget().selectAll()
 				scriptEditor.execute()
+
+		# Set up the scene expansion and selection.
+
+		pathsToExpand = GafferScene.PathMatcher()
+
+		for path in list( args["scene"]["fullyExpandedPaths"] ) + list( args["scene"]["expandedPaths"] ) :
+			# Add paths and all their ancestors.
+			while path :
+				pathsToExpand.addPath( path )
+				path = path.rpartition( "/" )[0]
+
+		fullyExpandedPathsFilter = GafferScene.PathFilter()
+		fullyExpandedPathsFilter["paths"].setValue(
+			IECore.StringVectorData( [ path + "/..." for path in args["scene"]["fullyExpandedPaths"] ] )
+		)
+		for node in script.selection() :
+			for scenePlug in [ p for p in node.children( GafferScene.ScenePlug ) if p.direction() == Gaffer.Plug.Direction.Out ] :
+				GafferScene.matchingPaths( fullyExpandedPathsFilter, scenePlug, pathsToExpand )
+
+		script.context()["ui:scene:expandedPaths"] = GafferScene.PathMatcherData( pathsToExpand )
+		script.context()["ui:scene:selectedPaths"] = args["scene"]["selectedPaths"]
 
 		# Write the image, creating a directory for it if necessary.
 
