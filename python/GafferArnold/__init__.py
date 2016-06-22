@@ -36,15 +36,6 @@
 
 __import__( "GafferScene" )
 
-def __setupEnvironment() :
-
-	import os
-	arnoldPluginPath = os.environ.get( "ARNOLD_PLUGIN_PATH", "" ).split( ":" )
-	arnoldPluginPath = [ "$GAFFER_ROOT/arnold/procedurals", "$GAFFER_ROOT/arnold/outputDrivers" ] + arnoldPluginPath
-	os.environ["ARNOLD_PLUGIN_PATH"] = os.path.expandvars( ":".join( arnoldPluginPath ) )
-
-__setupEnvironment()
-
 from _GafferArnold import *
 
 __import__( "IECore" ).loadConfig( "GAFFER_STARTUP_PATHS", {}, subdirectory = "GafferArnold" )

@@ -158,6 +158,14 @@ if [[ -z $APPLESEED && -d $GAFFER_ROOT/appleseed ]] ; then
 
 fi
 
+# Set up Arnold
+##########################################################################
+
+export ARNOLD_PLUGIN_PATH=$GAFFER_ROOT/arnold/plugins${ARNOLD_PLUGIN_PATH:+:}${ARNOLD_PLUGIN_PATH:-}
+# \todo This is just backwards compatibility for an old gafferDependencies layout - remove once
+# the new layout becomes the current one.
+export ARNOLD_PLUGIN_PATH=$GAFFER_ROOT/arnold/outputDrivers:${ARNOLD_PLUGIN_PATH}
+
 # Run gaffer itself
 ##########################################################################
 
