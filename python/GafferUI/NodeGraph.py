@@ -351,6 +351,13 @@ class NodeGraph( GafferUI.EditorWidget ) :
 
 		self.__gadgetWidget.getViewportGadget().frame( bound )
 
+	def __nodesHaveUIPosition( self, graphGadget ) :
+		for node in graphGadget.getRoot().children( Gaffer.Node ) :
+			if graphGadget.hasNodePosition( node ) :
+				return True
+
+		return False
+
 	def __buttonDoubleClick( self, widget, event ) :
 
 		nodeGadget = self.__nodeGadgetAt( event.line.p1 )
@@ -414,6 +421,9 @@ class NodeGraph( GafferUI.EditorWidget ) :
 			)
 		else :
 			self.__frame( self.graphGadget().getRoot().children( Gaffer.Node ) )
+
+		if not self.__nodesHaveUIPosition( graphGadget ) :
+			self.__layoutAllNodes( graphGadget )
 
 		# do what we need to do to keep our title up to date.
 

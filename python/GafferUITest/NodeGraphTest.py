@@ -96,5 +96,36 @@ class NodeGraphTest( GafferUITest.TestCase ) :
 
 		self.assertEqual( g.getTitle(), "This is a test!" )
 
+	def testArrangeNodes( self ) :
+
+		s1 = Gaffer.ScriptNode()
+		s2 = Gaffer.ScriptNode()
+
+		s1["n1"] = GafferTest.AddNode()
+		s1["n2"] = GafferTest.AddNode()
+
+		s2["n1"] = GafferTest.AddNode()
+
+		ggTemp = GafferUI.GraphGadget( s2 )
+		ggTemp.setNodePosition( s2["n1"], IECore.V2f( -5.0, 10.0 ) )
+
+		s2["n2"] = GafferTest.AddNode()
+
+		g1 = GafferUI.NodeGraph( s1 )
+		g2 = GafferUI.NodeGraph( s2 )
+
+		gg1 = g1.graphGadget()
+		gg2 = g2.graphGadget()
+
+		# Check that the UI positions of the two nodes, created without positions,
+		# are not equal, i.e. have been moved by the auto-arrange.
+		self.assertNotEqual( gg1.getNodePosition( s1["n1"] ), gg1.getNodePosition( s1["n2"]) )
+
+		# Check that the UI positions of the two nodes, created with positions,
+		# are equal and match the position that they were given.
+		self.assertEqual( gg2.getNodePosition( s2["n1"] ), IECore.V2f( -5.0, 10.0 ) )
+		self.assertEqual( gg2.getNodePosition( s2["n2"] ), IECore.V2f( 0, 0 ) )
+
+
 if __name__ == "__main__":
 	unittest.main()
