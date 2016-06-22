@@ -53,6 +53,9 @@ using namespace boost::python;
 using namespace GafferUIBindings;
 using namespace GafferUI;
 
+namespace
+{
+
 struct RootChangedSlotCaller
 {
 	boost::signals::detail::unusable operator()( boost::python::object slot, GraphGadgetPtr g, Gaffer::NodePtr n )
@@ -62,17 +65,17 @@ struct RootChangedSlotCaller
 	}
 };
 
-static Gaffer::NodePtr getRoot( GraphGadget &graphGadget )
+Gaffer::NodePtr getRoot( GraphGadget &graphGadget )
 {
 	return graphGadget.getRoot();
 }
 
-static Gaffer::SetPtr getFilter( GraphGadget &graphGadget )
+Gaffer::SetPtr getFilter( GraphGadget &graphGadget )
 {
 	return graphGadget.getFilter();
 }
 
-static NodeGadgetPtr nodeGadget( GraphGadget &graphGadget, const Gaffer::Node *node )
+NodeGadgetPtr nodeGadget( GraphGadget &graphGadget, const Gaffer::Node *node )
 {
 	return graphGadget.nodeGadget( node );
 }
@@ -82,7 +85,7 @@ static ConnectionGadgetPtr connectionGadget( GraphGadget &graphGadget, const Gaf
 	return graphGadget.connectionGadget( dstPlug );
 }
 
-static list connectionGadgets1( GraphGadget &graphGadget, const Gaffer::Plug *plug, const Gaffer::Set *excludedNodes = 0 )
+list connectionGadgets1( GraphGadget &graphGadget, const Gaffer::Plug *plug, const Gaffer::Set *excludedNodes = 0 )
 {
 	std::vector<ConnectionGadget *> connections;
 	graphGadget.connectionGadgets( plug, connections, excludedNodes );
@@ -95,7 +98,7 @@ static list connectionGadgets1( GraphGadget &graphGadget, const Gaffer::Plug *pl
 	return l;
 }
 
-static list connectionGadgets2( GraphGadget &graphGadget, const Gaffer::Node *node, const Gaffer::Set *excludedNodes = 0 )
+list connectionGadgets2( GraphGadget &graphGadget, const Gaffer::Node *node, const Gaffer::Set *excludedNodes = 0 )
 {
 	std::vector<ConnectionGadget *> connections;
 	graphGadget.connectionGadgets( node, connections, excludedNodes );
@@ -108,7 +111,7 @@ static list connectionGadgets2( GraphGadget &graphGadget, const Gaffer::Node *no
 	return l;
 }
 
-static list upstreamNodeGadgets( GraphGadget &graphGadget, const Gaffer::Node *node, size_t degreesOfSeparation )
+list upstreamNodeGadgets( GraphGadget &graphGadget, const Gaffer::Node *node, size_t degreesOfSeparation )
 {
 	std::vector<NodeGadget *> nodeGadgets;
 	graphGadget.upstreamNodeGadgets( node, nodeGadgets, degreesOfSeparation );
@@ -121,7 +124,7 @@ static list upstreamNodeGadgets( GraphGadget &graphGadget, const Gaffer::Node *n
 	return l;
 }
 
-static list downstreamNodeGadgets( GraphGadget &graphGadget, const Gaffer::Node *node, size_t degreesOfSeparation )
+list downstreamNodeGadgets( GraphGadget &graphGadget, const Gaffer::Node *node, size_t degreesOfSeparation )
 {
 	std::vector<NodeGadget *> nodeGadgets;
 	graphGadget.downstreamNodeGadgets( node, nodeGadgets, degreesOfSeparation );
@@ -134,7 +137,7 @@ static list downstreamNodeGadgets( GraphGadget &graphGadget, const Gaffer::Node 
 	return l;
 }
 
-static list connectedNodeGadgets( GraphGadget &graphGadget, const Gaffer::Node *node, Gaffer::Plug::Direction direction, size_t degreesOfSeparation )
+list connectedNodeGadgets( GraphGadget &graphGadget, const Gaffer::Node *node, Gaffer::Plug::Direction direction, size_t degreesOfSeparation )
 {
 	std::vector<NodeGadget *> nodeGadgets;
 	graphGadget.connectedNodeGadgets( node, nodeGadgets, direction, degreesOfSeparation );
@@ -147,25 +150,27 @@ static list connectedNodeGadgets( GraphGadget &graphGadget, const Gaffer::Node *
 	return l;
 }
 
-static void setLayout( GraphGadget &g, GraphLayoutPtr l )
+void setLayout( GraphGadget &g, GraphLayoutPtr l )
 {
 	return g.setLayout( l );
 }
 
-static GraphLayoutPtr getLayout( GraphGadget &g )
+GraphLayoutPtr getLayout( GraphGadget &g )
 {
 	return g.getLayout();
 }
 
-static NodeGadgetPtr nodeGadgetAt( GraphGadget &g, const IECore::LineSegment3f lineSegmentInGadgetSpace )
+NodeGadgetPtr nodeGadgetAt( GraphGadget &g, const IECore::LineSegment3f lineSegmentInGadgetSpace )
 {
 	return g.nodeGadgetAt( lineSegmentInGadgetSpace );
 }
 
-static ConnectionGadgetPtr connectionGadgetAt( GraphGadget &g, const IECore::LineSegment3f lineSegmentInGadgetSpace )
+ConnectionGadgetPtr connectionGadgetAt( GraphGadget &g, const IECore::LineSegment3f lineSegmentInGadgetSpace )
 {
 	return g.connectionGadgetAt( lineSegmentInGadgetSpace );
 }
+
+} // namespace
 
 void GafferUIBindings::bindGraphGadget()
 {
