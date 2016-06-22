@@ -131,6 +131,19 @@ list connectedNodeGadgets( GraphGadget &graphGadget, const Gaffer::Node *node, G
 	return l;
 }
 
+list unpositionedNodeGadgets( GraphGadget &graphGadget )
+{
+	std::vector<NodeGadget *> nodeGadgets;
+	graphGadget.unpositionedNodeGadgets( nodeGadgets );
+
+	boost::python::list l;
+	for( std::vector<NodeGadget *>::const_iterator it=nodeGadgets.begin(), eIt=nodeGadgets.end(); it!=eIt; ++it )
+	{
+		l.append( NodeGadgetPtr( *it ) );
+	}
+	return l;
+}
+
 } // namespace
 
 void GafferUIBindings::bindGraphGadget()
@@ -149,6 +162,7 @@ void GafferUIBindings::bindGraphGadget()
 		.def( "upstreamNodeGadgets", &upstreamNodeGadgets, ( arg( "node" ), arg( "degreesOfSeparation" ) = Imath::limits<size_t>::max() ) )
 		.def( "downstreamNodeGadgets", &downstreamNodeGadgets, ( arg( "node" ), arg( "degreesOfSeparation" ) = Imath::limits<size_t>::max() ) )
 		.def( "connectedNodeGadgets", &connectedNodeGadgets, ( arg( "node" ), arg( "direction" ) = Gaffer::Plug::Invalid, arg( "degreesOfSeparation" ) = Imath::limits<size_t>::max() ) )
+		.def( "unpositionedNodeGadgets", &unpositionedNodeGadgets )
 		.def( "setNodePosition", &GraphGadget::setNodePosition )
 		.def( "getNodePosition", &GraphGadget::getNodePosition )
 		.def( "hasNodePosition", &GraphGadget::hasNodePosition )

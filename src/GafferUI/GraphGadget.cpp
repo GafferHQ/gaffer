@@ -400,6 +400,18 @@ void GraphGadget::connectedNodeGadgetsWalk( NodeGadget *gadget, std::set<NodeGad
 	}
 }
 
+size_t GraphGadget::unpositionedNodeGadgets( std::vector<NodeGadget *> &nodeGadgets ) const
+{
+	for( NodeGadgetMap::const_iterator it = m_nodeGadgets.begin(), eIt = m_nodeGadgets.end(); it != eIt; ++it )
+	{
+		if( !hasNodePosition( it->first ) )
+		{
+			nodeGadgets.push_back( it->second.gadget );
+		}
+	}
+	return nodeGadgets.size();
+}
+
 void GraphGadget::setNodePosition( Gaffer::Node *node, const Imath::V2f &position )
 {
 	Gaffer::V2fPlug *plug = nodePositionPlug( node, /* createIfMissing = */ true );

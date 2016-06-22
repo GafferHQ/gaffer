@@ -1245,5 +1245,16 @@ class GraphGadgetTest( GafferUITest.TestCase ) :
 		g.setLayout( l )
 		self.assertTrue( g.getLayout().isSame( l ) )
 
+	def testUnpositionedNodeGadgets( self ) :
+
+		s = Gaffer.ScriptNode()
+		g = GafferUI.GraphGadget( s )
+
+		s["n"] = Gaffer.Node()
+		self.assertEqual( g.unpositionedNodeGadgets(), [ g.nodeGadget( s["n"] ) ] )
+
+		g.setNodePosition( s["n"], IECore.V2f( 0 ) )
+		self.assertEqual( g.unpositionedNodeGadgets(), [] )
+
 if __name__ == "__main__":
 	unittest.main()

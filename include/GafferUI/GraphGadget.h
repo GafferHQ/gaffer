@@ -134,6 +134,10 @@ class GraphGadget : public ContainerGadget
 		size_t connectedNodeGadgets( const Gaffer::Node *node, std::vector<NodeGadget *> &connectedNodeGadgets, Gaffer::Plug::Direction direction = Gaffer::Plug::Invalid, size_t degreesOfSeparation = Imath::limits<size_t>::max() );
 		size_t connectedNodeGadgets( const Gaffer::Node *node, std::vector<const NodeGadget *> &connectedNodeGadgets, Gaffer::Plug::Direction direction = Gaffer::Plug::Invalid, size_t degreesOfSeparation = Imath::limits<size_t>::max() ) const;
 
+		/// Finds all the NodeGadgets which haven't been given an explicit position
+		/// using setNodePosition().
+		size_t unpositionedNodeGadgets( std::vector<NodeGadget *> &nodeGadgets ) const;
+
 		/// Sets the position of the specified node within the graph. This
 		/// method may be used even when the node currently has no NodeGadget
 		/// associated with it, and the position will be used if and when a NodeGadget
