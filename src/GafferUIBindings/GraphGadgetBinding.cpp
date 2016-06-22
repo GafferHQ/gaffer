@@ -50,8 +50,9 @@
 #include "GafferUIBindings/GadgetBinding.h"
 
 using namespace boost::python;
-using namespace GafferUIBindings;
+using namespace IECorePython;
 using namespace GafferUI;
+using namespace GafferUIBindings;
 
 namespace
 {
@@ -64,26 +65,6 @@ struct RootChangedSlotCaller
 		return boost::signals::detail::unusable();
 	}
 };
-
-Gaffer::NodePtr getRoot( GraphGadget &graphGadget )
-{
-	return graphGadget.getRoot();
-}
-
-Gaffer::SetPtr getFilter( GraphGadget &graphGadget )
-{
-	return graphGadget.getFilter();
-}
-
-NodeGadgetPtr nodeGadget( GraphGadget &graphGadget, const Gaffer::Node *node )
-{
-	return graphGadget.nodeGadget( node );
-}
-
-static ConnectionGadgetPtr connectionGadget( GraphGadget &graphGadget, const Gaffer::Plug *dstPlug )
-{
-	return graphGadget.connectionGadget( dstPlug );
-}
 
 list connectionGadgets1( GraphGadget &graphGadget, const Gaffer::Plug *plug, const Gaffer::Set *excludedNodes = 0 )
 {
@@ -150,39 +131,19 @@ list connectedNodeGadgets( GraphGadget &graphGadget, const Gaffer::Node *node, G
 	return l;
 }
 
-void setLayout( GraphGadget &g, GraphLayoutPtr l )
-{
-	return g.setLayout( l );
-}
-
-GraphLayoutPtr getLayout( GraphGadget &g )
-{
-	return g.getLayout();
-}
-
-NodeGadgetPtr nodeGadgetAt( GraphGadget &g, const IECore::LineSegment3f lineSegmentInGadgetSpace )
-{
-	return g.nodeGadgetAt( lineSegmentInGadgetSpace );
-}
-
-ConnectionGadgetPtr connectionGadgetAt( GraphGadget &g, const IECore::LineSegment3f lineSegmentInGadgetSpace )
-{
-	return g.connectionGadgetAt( lineSegmentInGadgetSpace );
-}
-
 } // namespace
 
 void GafferUIBindings::bindGraphGadget()
 {
 	scope s = GadgetClass<GraphGadget>()
 		.def( init<Gaffer::NodePtr, Gaffer::SetPtr>( ( arg_( "root" ), arg_( "filter" ) = object() ) ) )
-		.def( "getRoot", &getRoot )
+		.def( "getRoot", (Gaffer::Node *(GraphGadget::*)())&GraphGadget::getRoot, return_value_policy<CastToIntrusivePtr>() )
 		.def( "setRoot", &GraphGadget::setRoot, ( arg_( "root" ), arg_( "filter" ) = object() ) )
 		.def( "rootChangedSignal", &GraphGadget::rootChangedSignal, return_internal_reference<1>() )
-		.def( "getFilter", &getFilter )
+		.def( "getFilter", (Gaffer::Set *(GraphGadget::*)())&GraphGadget::getFilter, return_value_policy<CastToIntrusivePtr>() )
 		.def( "setFilter", &GraphGadget::setFilter )
-		.def( "nodeGadget", &nodeGadget )
-		.def( "connectionGadget", &connectionGadget )
+		.def( "nodeGadget", (NodeGadget *(GraphGadget::*)( const Gaffer::Node * ))&GraphGadget::nodeGadget, return_value_policy<CastToIntrusivePtr>() )
+		.def( "connectionGadget", (ConnectionGadget *(GraphGadget::*)( const Gaffer::Plug * ))&GraphGadget::connectionGadget, return_value_policy<CastToIntrusivePtr>() )
 		.def( "connectionGadgets", &connectionGadgets1, ( arg_( "plug" ), arg_( "excludedNodes" ) = object() ) )
 		.def( "connectionGadgets", &connectionGadgets2, ( arg_( "node" ), arg_( "excludedNodes" ) = object() ) )
 		.def( "upstreamNodeGadgets", &upstreamNodeGadgets, ( arg( "node" ), arg( "degreesOfSeparation" ) = Imath::limits<size_t>::max() ) )
@@ -195,10 +156,10 @@ void GafferUIBindings::bindGraphGadget()
 		.def( "getNodeInputConnectionsMinimised", &GraphGadget::getNodeInputConnectionsMinimised )
 		.def( "setNodeOutputConnectionsMinimised", &GraphGadget::setNodeOutputConnectionsMinimised )
 		.def( "getNodeOutputConnectionsMinimised", &GraphGadget::getNodeOutputConnectionsMinimised )
-		.def( "setLayout", &setLayout )
-		.def( "getLayout", &getLayout )
-		.def( "nodeGadgetAt", &nodeGadgetAt )
-		.def( "connectionGadgetAt", &connectionGadgetAt )
+		.def( "setLayout", &GraphGadget::setLayout )
+		.def( "getLayout", (GraphLayout *(GraphGadget::*)())&GraphGadget::getLayout, return_value_policy<CastToIntrusivePtr>() )
+		.def( "nodeGadgetAt", &GraphGadget::nodeGadgetAt, return_value_policy<CastToIntrusivePtr>() )
+		.def( "connectionGadgetAt", &GraphGadget::connectionGadgetAt, return_value_policy<CastToIntrusivePtr>() )
 	;
 
 	GafferBindings::SignalClass<GraphGadget::RootChangedSignal, GafferBindings::DefaultSignalCaller<GraphGadget::RootChangedSignal>, RootChangedSlotCaller>( "RootChangedSignal" );

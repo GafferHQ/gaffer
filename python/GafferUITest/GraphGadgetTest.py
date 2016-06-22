@@ -1231,5 +1231,19 @@ class GraphGadgetTest( GafferUITest.TestCase ) :
 		g = GafferUI.GraphGadget( s )
 		self.assertTrue( g.nodeGadget( s["n"] ) is not None )
 
+	def testLayoutAccessors( self ) :
+
+		s = Gaffer.ScriptNode()
+		g = GafferUI.GraphGadget( s )
+		l = g.getLayout()
+		self.assertTrue( isinstance( l, GafferUI.StandardGraphLayout ) )
+
+		l2 = GafferUI.StandardGraphLayout()
+		g.setLayout( l2 )
+		self.assertTrue( g.getLayout().isSame( l2 ) )
+
+		g.setLayout( l )
+		self.assertTrue( g.getLayout().isSame( l ) )
+
 if __name__ == "__main__":
 	unittest.main()
