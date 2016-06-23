@@ -61,7 +61,11 @@ class RendererTest( GafferTest.TestCase ) :
 			self.temporaryDirectory() + "/test.ass"
 		)
 
-		o = r.object( "testPlane", IECore.MeshPrimitive.createPlane( IECore.Box2f( IECore.V2f( -1 ), IECore.V2f( 1 ) ) ) )
+		o = r.object(
+			"testPlane",
+			IECore.MeshPrimitive.createPlane( IECore.Box2f( IECore.V2f( -1 ), IECore.V2f( 1 ) ) ),
+			r.attributes( IECore.CompoundObject() ),
+		)
 		o.transform( IECore.M44f().translate( IECore.V3f( 1, 2, 3 ) ) )
 
 		r.render()
@@ -89,7 +93,8 @@ class RendererTest( GafferTest.TestCase ) :
 					"resolution" : IECore.V2i( 2000, 1000 ),
 					"cropWindow" : IECore.Box2f( IECore.V2f( 0 ), IECore.V2f( 1, 0.75 ) ),
 				}
-			)
+			),
+			r.attributes( IECore.CompoundObject() )
 		)
 
 		r.option( "camera", IECore.StringData( "testCamera" ) )
@@ -124,11 +129,13 @@ class RendererTest( GafferTest.TestCase ) :
 				"ai:surface" : IECore.ObjectVector( [ IECore.Shader( "flat" ) ] ),
 			} )
 
-			o = r.object( "testPlane%d" % i, IECore.MeshPrimitive.createPlane( IECore.Box2f( IECore.V2f( -1 ), IECore.V2f( 1 ) ) ) )
-			# We keep specifying the same shader, but we'd like the renderer
-			# to be frugal and reuse a single arnold shader on the other side.
-			o.attributes( r.attributes( a ) )
-			del o
+			r.object(
+				"testPlane%d" % i,
+				IECore.MeshPrimitive.createPlane( IECore.Box2f( IECore.V2f( -1 ), IECore.V2f( 1 ) ) ),
+				# We keep specifying the same shader, but we'd like the renderer
+				# to be frugal and reuse a single arnold shader on the other side.
+				r.attributes( a )
+			)
 
 		r.render()
 		del r
@@ -146,7 +153,12 @@ class RendererTest( GafferTest.TestCase ) :
 			self.temporaryDirectory() + "/test.ass"
 		)
 
-		o = r.object( "testPlane", IECore.MeshPrimitive.createPlane( IECore.Box2f( IECore.V2f( -1 ), IECore.V2f( 1 ) ) ) )
+		o = r.object(
+			"testPlane",
+			IECore.MeshPrimitive.createPlane( IECore.Box2f( IECore.V2f( -1 ), IECore.V2f( 1 ) ) ),
+			r.attributes( IECore.CompoundObject() )
+		)
+
 		# Replace the shader a few times.
 		for shader in ( "utility", "flat", "standard" ) :
 			a = IECore.CompoundObject( {
@@ -177,8 +189,9 @@ class RendererTest( GafferTest.TestCase ) :
 			IECore.Shader( "flat", parameters = { "color" : "link:myHandle" } ),
 		] )
 
-		o1 = r.object( "testPlane1", IECore.MeshPrimitive.createPlane( IECore.Box2f( IECore.V2f( -1 ), IECore.V2f( 1 ) ) ) )
-		o1.attributes(
+		r.object(
+			"testPlane1",
+			IECore.MeshPrimitive.createPlane( IECore.Box2f( IECore.V2f( -1 ), IECore.V2f( 1 ) ) ),
 			r.attributes(
 				IECore.CompoundObject( {
 					"ai:surface" : shader1
@@ -191,8 +204,9 @@ class RendererTest( GafferTest.TestCase ) :
 			IECore.Shader( "standard", parameters = { "Kd_color" : "link:myHandle" } ),
 		] )
 
-		o2 = r.object( "testPlane2", IECore.MeshPrimitive.createPlane( IECore.Box2f( IECore.V2f( -1 ), IECore.V2f( 1 ) ) ) )
-		o2.attributes(
+		r.object(
+			"testPlane2",
+			IECore.MeshPrimitive.createPlane( IECore.Box2f( IECore.V2f( -1 ), IECore.V2f( 1 ) ) ),
 			r.attributes(
 				IECore.CompoundObject( {
 					"ai:surface" : shader2
@@ -200,7 +214,6 @@ class RendererTest( GafferTest.TestCase ) :
 			)
 		)
 
-		del o1, o2
 		r.render()
 		del r
 
@@ -221,8 +234,9 @@ class RendererTest( GafferTest.TestCase ) :
 		)
 
 		lightShader = IECore.ObjectVector( [ IECore.Shader( "point_light", "ai:light" ), ] )
-		o = r.light( "testLight", None )
-		o.attributes(
+		r.light(
+			"testLight",
+			None,
 			r.attributes(
 				IECore.CompoundObject( {
 					"ai:light" : lightShader
@@ -230,7 +244,6 @@ class RendererTest( GafferTest.TestCase ) :
 			)
 		)
 
-		del o
 		r.render()
 		del r
 
@@ -257,13 +270,10 @@ class RendererTest( GafferTest.TestCase ) :
 			} )
 		)
 
-		o = r.light( "testLight1", None )
-		o.attributes( lightAttributes )
+		r.light( "testLight1", None, lightAttributes )
+		r.light( "testLight2", None, lightAttributes )
 
-		o = r.light( "testLight2", None )
-		o.attributes( lightAttributes )
-
-		del o, lightAttributes
+		del lightAttributes
 		r.render()
 		del r
 
@@ -283,8 +293,9 @@ class RendererTest( GafferTest.TestCase ) :
 			self.temporaryDirectory() + "/test.ass"
 		)
 
-		o1 = r.object( "testMesh1", IECore.MeshPrimitive.createPlane( IECore.Box2f( IECore.V2f( -1 ), IECore.V2f( 1 ) ) ) )
-		o1.attributes(
+		r.object(
+			"testMesh1",
+			IECore.MeshPrimitive.createPlane( IECore.Box2f( IECore.V2f( -1 ), IECore.V2f( 1 ) ) ),
 			r.attributes( IECore.CompoundObject( {
 				"doubleSided" : IECore.BoolData( True ),
 				"ai:visibility:camera" : IECore.BoolData( False ),
@@ -297,11 +308,12 @@ class RendererTest( GafferTest.TestCase ) :
 				"ai:self_shadows" : IECore.BoolData( True ),
 				"ai:matte" : IECore.BoolData( True ),
 				"ai:opaque" : IECore.BoolData( True ),
-			} ) )
+			} ) ),
 		)
 
-		o2 = r.object( "testMesh2", IECore.MeshPrimitive.createPlane( IECore.Box2f( IECore.V2f( -1 ), IECore.V2f( 1 ) ) ) )
-		o2.attributes(
+		r.object(
+			"testMesh2",
+			IECore.MeshPrimitive.createPlane( IECore.Box2f( IECore.V2f( -1 ), IECore.V2f( 1 ) ) ),
 			r.attributes( IECore.CompoundObject( {
 				"doubleSided" : IECore.BoolData( False ),
 				"ai:visibility:camera" : IECore.BoolData( True ),
@@ -314,12 +326,15 @@ class RendererTest( GafferTest.TestCase ) :
 				"ai:self_shadows" : IECore.BoolData( False ),
 				"ai:matte" : IECore.BoolData( False ),
 				"ai:opaque" : IECore.BoolData( False ),
-			} ) )
+			} ) ),
 		)
 
-		o3 = r.object( "testMesh3", IECore.MeshPrimitive.createPlane( IECore.Box2f( IECore.V2f( -1 ), IECore.V2f( 1 ) ) ) )
+		r.object(
+			"testMesh3",
+			IECore.MeshPrimitive.createPlane( IECore.Box2f( IECore.V2f( -1 ), IECore.V2f( 1 ) ) ),
+			r.attributes( IECore.CompoundObject() ),
+		)
 
-		del o1, o2, o3
 		r.render()
 		del r
 

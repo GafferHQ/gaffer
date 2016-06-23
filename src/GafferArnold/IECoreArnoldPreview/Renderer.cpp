@@ -756,27 +756,35 @@ class ArnoldRenderer : public IECoreScenePreview::Renderer
 			return new ArnoldAttributes( attributes, m_shaderCache.get() );
 		}
 
-		virtual ObjectInterfacePtr camera( const std::string &name, const IECore::Camera *camera )
+		virtual ObjectInterfacePtr camera( const std::string &name, const IECore::Camera *camera, const AttributesInterface *attributes )
 		{
 			IECore::CameraPtr cameraCopy = camera->copy();
 			cameraCopy->addStandardParameters();
 			m_cameras[name] = cameraCopy;
-			return store( new ArnoldObject( name, cameraCopy.get() ) );
+			ObjectInterfacePtr result = store( new ArnoldObject( name, cameraCopy.get() ) );
+			result->attributes( attributes );
+			return result;
 		}
 
-		virtual ObjectInterfacePtr light( const std::string &name, const IECore::Object *object = NULL )
+		virtual ObjectInterfacePtr light( const std::string &name, const IECore::Object *object, const AttributesInterface *attributes )
 		{
-			return store( new ArnoldLight( name, object ) );
+			ObjectInterfacePtr result = store( new ArnoldLight( name, object ) );
+			result->attributes( attributes );
+			return result;
 		}
 
-		virtual Renderer::ObjectInterfacePtr object( const std::string &name, const IECore::Object *object )
+		virtual Renderer::ObjectInterfacePtr object( const std::string &name, const IECore::Object *object, const AttributesInterface *attributes )
 		{
-			return store( new ArnoldObject( name, object ) );
+			ObjectInterfacePtr result = store( new ArnoldObject( name, object ) );
+			result->attributes( attributes );
+			return result;
 		}
 
-		virtual ObjectInterfacePtr object( const std::string &name, const std::vector<const IECore::Object *> &samples, const std::vector<float> &times )
+		virtual ObjectInterfacePtr object( const std::string &name, const std::vector<const IECore::Object *> &samples, const std::vector<float> &times, const AttributesInterface *attributes )
 		{
-			return store( new ArnoldObject( name, samples, times ) );
+			ObjectInterfacePtr result = store( new ArnoldObject( name, samples, times ) );
+			result->attributes( attributes );
+			return result;
 		}
 
 		virtual void render()
@@ -850,7 +858,9 @@ class ArnoldRenderer : public IECoreScenePreview::Renderer
 				{
 					IECore::CameraPtr defaultCortexCamera = new IECore::Camera();
 					defaultCortexCamera->addStandardParameters();
-					m_defaultCamera = camera( "ieCoreArnold:defaultCamera", defaultCortexCamera.get() );
+					IECore::CompoundObjectPtr defaultCortexAttributes = new IECore::CompoundObject();
+					AttributesInterfacePtr defaultAttributes = this->attributes( defaultCortexAttributes.get() );
+					m_defaultCamera = camera( "ieCoreArnold:defaultCamera", defaultCortexCamera.get(), defaultAttributes.get() );
 				}
 				cortexCamera = m_cameras["ieCoreArnold:defaultCamera"].get();
 				AiNodeSetPtr( options, "camera", AiNodeLookUpByName( "ieCoreArnold:defaultCamera" ) );
