@@ -66,12 +66,12 @@ ArnoldAttributes::ArnoldAttributes( const std::string &name )
 	attributes->addOptionalMember( "ai:receive_shadows", new IECore::BoolData( true ), "receiveShadows", Gaffer::Plug::Default, false );
 	attributes->addOptionalMember( "ai:self_shadows", new IECore::BoolData( true ), "selfShadows", Gaffer::Plug::Default, false );
 
-
 	// Subdivision parameters
 
 	attributes->addOptionalMember( "ai:polymesh:subdiv_iterations", new IntPlug( "value", Plug::In, 1, 1 ), "subdivIterations", false );
-	attributes->addOptionalMember( "ai:polymesh:subdiv_pixel_error", new FloatPlug( "value", Plug::In, 0.0f, 0.0f ), "subdivPixelError", false );
+	attributes->addOptionalMember( "ai:polymesh:subdiv_adaptive_error", new FloatPlug( "value", Plug::In, 0.0f, 0.0f ), "subdivAdaptiveError", false );
 	attributes->addOptionalMember( "ai:polymesh:subdiv_adaptive_metric", new StringPlug( "value", Plug::In, "auto" ), "subdivAdaptiveMetric", false );
+	attributes->addOptionalMember( "ai:polymesh:subdiv_adaptive_space", new StringPlug( "value", Plug::In, "raster" ), "subdivAdaptiveSpace", false );
 
 	// Volume parameters
 
