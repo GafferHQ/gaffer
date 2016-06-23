@@ -89,10 +89,9 @@ bool visible( const CompoundObject *attributes )
 // only the changed locations. A Renderer's representation of the
 // scene contains only a flat list of objects, whereas the SceneGraph
 // maintains the original hierarchy, providing the means of flattening
-// attribute and transform state for passing to the renderer. The
-// various update() methods are called in order from a threaded scene
-// traversal performed by SceneGraphUpdateTask based on which plugs
-// have been dirtied since the last traversal.
+// attribute and transform state for passing to the renderer. Calls
+// to update() are made from a threaded scene traversal performed by
+// SceneGraphUpdateTask.
 class InteractiveRender::SceneGraph
 {
 
@@ -101,16 +100,30 @@ class InteractiveRender::SceneGraph
 		// We store separate scene graphs for
 		// objects which are classified differently
 		// by the renderer. This lets us output
-		// lights (and soon cameras) prior to the
+		// lights and cameras prior to the
 		// rest of the scene, which may be a
 		// requirement of some renderer backends.
 		enum Type
 		{
-			Camera = 0,
-			Light = 1,
-			Object = 2,
-			First = Camera,
-			Last = Object
+			CameraType = 0,
+			LightType = 1,
+			ObjectType = 2,
+			FirstType = CameraType,
+			LastType = ObjectType,
+			NoType = LastType + 1
+		};
+
+		enum Component
+		{
+			NoComponent = 0,
+			BoundComponent = 1,
+			TransformComponent = 2,
+			AttributesComponent = 4,
+			ObjectComponent = 8,
+			ChildNamesComponent = 16,
+			GlobalsComponent = 32,
+			SetsComponent = 64,
+			AllComponents = BoundComponent | TransformComponent | AttributesComponent | ObjectComponent | ChildNamesComponent | GlobalsComponent | SetsComponent
 		};
 
 		// Constructs the root of the scene graph.
@@ -131,55 +144,188 @@ class InteractiveRender::SceneGraph
 			return m_name;
 		}
 
-		// Returns false if the attributes make the location invisible, true otherwise.
-		bool updateAttributes( const CompoundObjectPlug *attributesPlug, IECoreScenePreview::Renderer *renderer )
+		// Called by SceneGraphUpdateTask to update this location. Returns a bitmask
+		// of the components which were changed.
+		unsigned update( const ScenePlug *scene, unsigned dirtyComponents, unsigned changedParentComponents, Type type, IECoreScenePreview::Renderer *renderer, const IECore::CompoundObject *globals )
 		{
-			const IECore::MurmurHash attributesHash = attributesPlug->hash();
-			if( attributesHash == m_attributesHash && !parentPending( AttributesPending ) )
+			unsigned changedComponents = 0;
+
+			// Attributes
+
+			if( !m_parent )
 			{
-				return true;
+				// Root - get attributes from globals.
+				if( dirtyComponents & GlobalsComponent )
+				{
+					if( updateAttributes( globals ) )
+					{
+						changedComponents |= AttributesComponent;
+					}
+				}
+			}
+			else
+			{
+				// Non-root - get attributes the standard way.
+				const bool parentAttributesChanged = changedParentComponents & AttributesComponent;
+				if( parentAttributesChanged || ( dirtyComponents & AttributesComponent ) )
+				{
+					if( updateAttributes( scene->attributesPlug(), parentAttributesChanged ) )
+					{
+						changedComponents |= AttributesComponent;
+					}
+				}
+			}
+
+			if( !::visible( m_fullAttributes.get() ) )
+			{
+				clear();
+				return changedComponents;
+			}
+
+			// Transform
+
+			if( ( dirtyComponents & TransformComponent ) && updateTransform( scene->transformPlug(), changedParentComponents & TransformComponent ) )
+			{
+				changedComponents |= TransformComponent;
+			}
+
+			// Object
+
+			if( ( dirtyComponents & ObjectComponent ) && updateObject( scene->objectPlug(), type, renderer, globals ) )
+			{
+				changedComponents |= ObjectComponent;
+			}
+
+			// Object updates for transform and attributes
+
+			if( m_objectInterface )
+			{
+				if( changedComponents & ObjectComponent )
+				{
+					// New object always needs transform applying.
+					m_objectInterface->transform( m_fullTransform );
+				}
+				else
+				{
+					// Old object needs transform/attributes applying
+					// if they have changed.
+					if( changedComponents & AttributesComponent )
+					{
+						m_objectInterface->attributes( attributesInterface( renderer ) );
+					}
+					if( changedComponents & TransformComponent )
+					{
+						m_objectInterface->transform( m_fullTransform );
+					}
+				}
+			}
+
+			// Children
+
+			if( ( dirtyComponents & ChildNamesComponent ) && updateChildren( scene->childNamesPlug() ) )
+			{
+				changedComponents |= ChildNamesComponent;
+			}
+
+			m_cleared = false;
+
+			return changedComponents;
+		}
+
+		const std::vector<SceneGraph *> &children()
+		{
+			return m_children;
+		}
+
+		// Invalidates this location, removing any resources it
+		// holds in the renderer, and clearing all children. This is
+		// used to "remove" a location without having to delete it
+		// from the children() of its parent. We avoid the latter
+		// because it would involve some unwanted locking - we
+		// process children in parallel, and therefore want to avoid
+		// child updates having to write to the parent.
+		void clear()
+		{
+			clearChildren();
+			clearObject();
+			m_attributesHash = m_transformHash = m_childNamesHash = IECore::MurmurHash();
+			m_cleared = true;
+		}
+
+		// Returns true if the location has not been finalised
+		// since the last call to clear() - ie that it is not
+		// in a valid state.
+		bool cleared()
+		{
+			return m_cleared;
+		}
+
+	private :
+
+		SceneGraph( const InternedString &name, const SceneGraph *parent )
+			:	m_name( name ), m_parent( parent ), m_fullAttributes( new CompoundObject )
+		{
+			clear();
+		}
+
+		// Returns true if the attributes changed.
+		bool updateAttributes( const CompoundObjectPlug *attributesPlug, bool parentAttributesChanged )
+		{
+			assert( m_parent );
+
+			const IECore::MurmurHash attributesHash = attributesPlug->hash();
+			if( attributesHash == m_attributesHash && !parentAttributesChanged )
+			{
+				return false;
 			}
 
 			ConstCompoundObjectPtr attributes = attributesPlug->getValue( &attributesHash );
 			CompoundObject::ObjectMap &fullAttributes = m_fullAttributes->members();
-			if( m_parent )
-			{
-				fullAttributes = m_parent->m_fullAttributes->members();
-			}
-			else
-			{
-				fullAttributes.clear();
-			}
-
+			fullAttributes = m_parent->m_fullAttributes->members();
 			for( CompoundObject::ObjectMap::const_iterator it = attributes->members().begin(), eIt = attributes->members().end(); it != eIt; ++it )
 			{
 				fullAttributes[it->first] = it->second;
 			}
 
-			m_attributesInterface = NULL;
+			m_attributesInterface = NULL; // Will be updated lazily in attributesInterface()
 			m_attributesHash = attributesHash;
-			m_pending = m_pending | AttributesPending;
 
-			return ::visible( m_fullAttributes.get() );
+			return true;
 		}
 
-		// Version of the above for use at the root, where attributes come from the globals.
-		// Also returns false if the attributes make the location invisible, true otherwise.
-		bool updateAttributes( const CompoundObject *attributes )
+		// As above, but for use at the root.
+		bool updateAttributes( const CompoundObject *globals )
 		{
 			assert( !m_parent );
-			m_fullAttributes->members() = attributes->members();
+
+			ConstCompoundObjectPtr globalAttributes = GafferScene::globalAttributes( globals );
+			if( m_fullAttributes && *m_fullAttributes == *globalAttributes )
+			{
+				return false;
+			}
+
+			m_fullAttributes->members() = globalAttributes->members();
 			m_attributesInterface = NULL;
-			m_pending = m_pending | AttributesPending;
-			return ::visible( m_fullAttributes.get() );
+
+			return true;
 		}
 
-		void updateTransform( const M44fPlug *transformPlug )
+		IECoreScenePreview::Renderer::AttributesInterface *attributesInterface( IECoreScenePreview::Renderer *renderer )
+		{
+			if( !m_attributesInterface )
+			{
+				m_attributesInterface = renderer->attributes( m_fullAttributes.get() );
+			}
+			return m_attributesInterface.get();
+		}
+
+		// Returns true if the transform changed.
+		bool updateTransform( const M44fPlug *transformPlug, bool parentTransformChanged )
 		{
 			const IECore::MurmurHash transformHash = transformPlug->hash();
-			if( transformHash == m_transformHash && !parentPending( TransformPending ) )
+			if( transformHash == m_transformHash && !parentTransformChanged )
 			{
-				return;
+				return false;
 			}
 
 			const M44f transform = transformPlug->getValue( &transformHash );
@@ -193,54 +339,63 @@ class InteractiveRender::SceneGraph
 			}
 
 			m_transformHash = transformHash;
-			m_pending = m_pending | TransformPending;
+			return true;
 		}
 
-		void updateObject( const ObjectPlug *objectPlug, Type type, IECoreScenePreview::Renderer *renderer, const IECore::CompoundObject *globals )
+		// Returns true if the object changed.
+		bool updateObject( const ObjectPlug *objectPlug, Type type, IECoreScenePreview::Renderer *renderer, const IECore::CompoundObject *globals )
 		{
-			if( !objectPlug )
+			const bool hadObjectInterface = m_objectInterface;
+			if( type == NoType )
 			{
-				clearObject();
-				return;
+				m_objectInterface = NULL;
+				return hadObjectInterface;
 			}
 
 			const IECore::MurmurHash objectHash = objectPlug->hash();
 			if( objectHash == m_objectHash )
 			{
-				return;
+				return false;
 			}
 
 			m_objectInterface = NULL;
+
 			IECore::ConstObjectPtr object = objectPlug->getValue( &objectHash );
 			m_objectHash = objectHash;
 
 			const IECore::NullObject *nullObject = runTimeCast<const IECore::NullObject>( object.get() );
-			if( (type != Light) && nullObject )
+			if( (type != LightType) && nullObject )
 			{
-				return;
+				return hadObjectInterface;
 			}
 
 			std::string name;
 			ScenePlug::pathToString( Context::current()->get<vector<InternedString> >( ScenePlug::scenePathContextName ), name );
-			if( type == Camera )
+			if( type == CameraType )
 			{
 				if( const IECore::Camera *camera = runTimeCast<const IECore::Camera>( object.get() ) )
 				{
 					IECore::CameraPtr cameraCopy = camera->copy();
 					applyCameraGlobals( cameraCopy.get(), globals );
-					m_objectInterface = renderer->camera( name, cameraCopy.get() );
+					m_objectInterface = renderer->camera( name, cameraCopy.get(), attributesInterface( renderer ) );
 				}
 			}
-			else if( type == Light )
+			else if( type == LightType )
 			{
-				m_objectInterface = renderer->light( name, nullObject ? NULL : object.get() );
+				m_objectInterface = renderer->light( name, nullObject ? NULL : object.get(), attributesInterface( renderer ) );
 			}
 			else
 			{
-				m_objectInterface = renderer->object( name, object.get() );
+				m_objectInterface = renderer->object( name, object.get(), attributesInterface( renderer ) );
 			}
 
-			m_pending = m_pending | ObjectPending;
+			return true;
+		}
+
+		void clearObject()
+		{
+			m_objectInterface = NULL;
+			m_objectHash = MurmurHash();
 		}
 
 		// Ensures that children() contains a child for every name specified
@@ -268,80 +423,6 @@ class InteractiveRender::SceneGraph
 			return true;
 		}
 
-		const std::vector<SceneGraph *> &children()
-		{
-			return m_children;
-		}
-
-		// Called after all children have been updated.
-		// We use the finalisation step to apply our transform
-		// and attributes to the object interface within the renderer.
-		// We could actually do this in the update*() methods if
-		// we wanted, but by deferring it until now we avoid
-		// the situation where we update attributes, apply them
-		// to the current object, then replace the object and have
-		// to apply the attributes to the new object.
-		void finalise( IECoreScenePreview::Renderer *renderer )
-		{
-			if( m_objectInterface )
-			{
-				if( m_pending & ( TransformPending | ObjectPending ) )
-				{
-					m_objectInterface->transform( m_fullTransform );
-				}
-
-				if( m_pending & ( AttributesPending | ObjectPending ) )
-				{
-					if( !m_attributesInterface )
-					{
-						m_attributesInterface = renderer->attributes( m_fullAttributes.get() );
-					}
-					m_objectInterface->attributes( m_attributesInterface.get() );
-				}
-			}
-
-			m_pending = NonePending;
-			m_cleared = false;
-		}
-
-		// Invalidates this location, removing any resources it
-		// holds in the renderer, and clearing all children. This is
-		// used to "remove" a location without having to delete it
-		// from the children() of its parent. We avoid the latter
-		// because it would involve some unwanted locking - we
-		// process children in parallel, and therefore want to avoid
-		// child updates having to write to the parent.
-		void clear()
-		{
-			clearChildren();
-			clearObject();
-			m_attributesHash = m_transformHash = m_childNamesHash = IECore::MurmurHash();
-			m_pending = NonePending;
-			m_cleared = true;
-		}
-
-		// Returns true if the location has not been finalised
-		// since the last call to clear() - ie that it is not
-		// in a valid state.
-		bool cleared()
-		{
-			return m_cleared;
-		}
-
-	private :
-
-		SceneGraph( const InternedString &name, const SceneGraph *parent )
-			:	m_name( name ), m_parent( parent ), m_fullAttributes( new CompoundObject )
-		{
-			clear();
-		}
-
-		void clearObject()
-		{
-			m_objectInterface = NULL;
-			m_objectHash = MurmurHash();
-		}
-
 		void clearChildren()
 		{
 			for( std::vector<SceneGraph *>::const_iterator it = m_children.begin(), eIt = m_children.end(); it != eIt; ++it )
@@ -367,16 +448,6 @@ class InteractiveRender::SceneGraph
 			return true;
 		}
 
-		bool parentPending( unsigned pending )
-		{
-			if( !m_parent )
-			{
-				return false;
-			}
-
-			return m_parent->m_pending & pending;
-		}
-
 		IECore::InternedString m_name;
 
 		const SceneGraph *m_parent;
@@ -394,17 +465,6 @@ class InteractiveRender::SceneGraph
 		IECore::MurmurHash m_childNamesHash;
 		std::vector<SceneGraph *> m_children;
 
-		// We need to defer some changes until finalise(),
-		// and use this bitmask to keep track of what
-		// changes are pending.
-		enum Pending
-		{
-			NonePending = 0,
-			AttributesPending = 1,
-			TransformPending = 2,
-			ObjectPending = 4,
-		};
-		unsigned char m_pending;
 		bool m_cleared;
 
 };
@@ -415,30 +475,19 @@ class InteractiveRender::SceneGraphUpdateTask : public tbb::task
 
 	public :
 
-		enum DirtyFlags
-		{
-			NothingDirty = 0,
-			BoundDirty = 1,
-			TransformDirty = 2,
-			AttributesDirty = 4,
-			ObjectDirty = 8,
-			ChildNamesDirty = 16,
-			GlobalsDirty = 32,
-			SetsDirty = 64,
-			AllDirty = BoundDirty | TransformDirty | AttributesDirty | ObjectDirty | ChildNamesDirty | GlobalsDirty | SetsDirty
-		};
-
 		SceneGraphUpdateTask(
 			const InteractiveRender *interactiveRender,
 			SceneGraph *sceneGraph,
 			SceneGraph::Type sceneGraphType,
-			unsigned dirtyFlags,
+			unsigned dirtyComponents,
+			unsigned changedParentComponents,
 			const ScenePlug::ScenePath &scenePath
 		)
 			:	m_interactiveRender( interactiveRender ),
 				m_sceneGraph( sceneGraph ),
 				m_sceneGraphType( sceneGraphType ),
-				m_dirtyFlags( dirtyFlags ),
+				m_dirtyComponents( dirtyComponents ),
+				m_changedParentComponents( changedParentComponents ),
 				m_scenePath( scenePath )
 		{
 		}
@@ -463,7 +512,7 @@ class InteractiveRender::SceneGraphUpdateTask : public tbb::task
 				// We cleared this location in the past, but now
 				// want it. So we need to start from scratch, and
 				// update everything.
-				m_dirtyFlags = AllDirty;
+				m_dirtyComponents = SceneGraph::AllComponents;
 			}
 
 			// Set up a context to compute the scene at the right
@@ -473,53 +522,16 @@ class InteractiveRender::SceneGraphUpdateTask : public tbb::task
 			context->set( ScenePlug::scenePathContextName, m_scenePath );
 			Context::Scope scopedContext( context.get() );
 
-			// Update attributes. We do this first because we can then
-			// exit early if the object is invisible.
+			// Update the scene graph at this location.
 
-			bool visible = true;
-			if( m_scenePath.size() > 0 && (m_dirtyFlags & AttributesDirty ) )
-			{
-				visible = m_sceneGraph->updateAttributes( scene()->attributesPlug(), m_interactiveRender->m_renderer.get() );
-			}
-
-			if( !visible )
-			{
-				// No need to update further since we're not visible.
-				m_sceneGraph->clear();
-				return NULL;
-			}
-
-			// Update the transform.
-
-			if( m_dirtyFlags & TransformDirty )
-			{
-				m_sceneGraph->updateTransform( scene()->transformPlug() );
-			}
-
-			// Update the object.
-			if( sceneGraphMatch & Filter::ExactMatch )
-			{
-				if( m_dirtyFlags & ObjectDirty )
-				{
-					m_sceneGraph->updateObject( scene()->objectPlug(), m_sceneGraphType, m_interactiveRender->m_renderer.get(), m_interactiveRender->m_globals.get() );
-				}
-			}
-			else
-			{
-				m_sceneGraph->updateObject( NULL, m_sceneGraphType, NULL, NULL );
-			}
-
-			// Update the children. This just ensures that they exist - we'll
-			// update them in parallel in the next step.
-
-			if( m_dirtyFlags & ChildNamesDirty )
-			{
-				if( m_sceneGraph->updateChildren( scene()->childNamesPlug() ) )
-				{
-					// We have new children, so they'll need a full update.
-					m_dirtyFlags = AllDirty;
-				}
-			}
+			unsigned changedComponents = m_sceneGraph->update(
+				scene(),
+				m_dirtyComponents,
+				m_changedParentComponents,
+				sceneGraphMatch & Filter::ExactMatch ? m_sceneGraphType : SceneGraph::NoType,
+				m_interactiveRender->m_renderer.get(),
+				m_interactiveRender->m_globals.get()
+			);
 
 			// Spawn subtasks to apply updates to each child.
 
@@ -533,17 +545,12 @@ class InteractiveRender::SceneGraphUpdateTask : public tbb::task
 				for( std::vector<SceneGraph *>::const_iterator it = children.begin(), eIt = children.end(); it != eIt; ++it )
 				{
 					childPath.back() = (*it)->name();
-					SceneGraphUpdateTask *t = new( allocate_child() ) SceneGraphUpdateTask( m_interactiveRender, *it, m_sceneGraphType, m_dirtyFlags, childPath );
+					SceneGraphUpdateTask *t = new( allocate_child() ) SceneGraphUpdateTask( m_interactiveRender, *it, m_sceneGraphType, m_dirtyComponents, changedComponents, childPath );
 					spawn( *t );
 				}
 
 				wait_for_all();
 			}
-
-			// Finally give the SceneGraph an opportunity to finalise
-			// everything so the renderer is totally up to date.
-
-			m_sceneGraph->finalise( m_interactiveRender->m_renderer.get() );
 
 			return NULL;
 		}
@@ -560,11 +567,11 @@ class InteractiveRender::SceneGraphUpdateTask : public tbb::task
 		{
 			switch( m_sceneGraphType )
 			{
-				case SceneGraph::Camera :
+				case SceneGraph::CameraType :
 					return m_interactiveRender->m_cameraSet.match( m_scenePath );
-				case SceneGraph::Light :
+				case SceneGraph::LightType :
 					return m_interactiveRender->m_lightSet.match( m_scenePath );
-				case SceneGraph::Object :
+				case SceneGraph::ObjectType :
 				{
 					unsigned m = m_interactiveRender->m_lightSet.match( m_scenePath ) |
 					             m_interactiveRender->m_cameraSet.match( m_scenePath );
@@ -585,7 +592,8 @@ class InteractiveRender::SceneGraphUpdateTask : public tbb::task
 		const InteractiveRender *m_interactiveRender;
 		SceneGraph *m_sceneGraph;
 		SceneGraph::Type m_sceneGraphType;
-		unsigned m_dirtyFlags;
+		unsigned m_dirtyComponents;
+		unsigned m_changedParentComponents;
 		ScenePlug::ScenePath m_scenePath;
 
 };
@@ -687,7 +695,7 @@ void InteractiveRender::setContext( Gaffer::ContextPtr context )
 	}
 
 	m_context = context;
-	m_dirtyFlags = SceneGraphUpdateTask::AllDirty;
+	m_dirtyComponents = SceneGraph::AllComponents;
 	update();
 }
 
@@ -696,36 +704,36 @@ void InteractiveRender::plugDirtied( const Gaffer::Plug *plug )
 
 	if( plug == inPlug()->boundPlug() )
 	{
-		m_dirtyFlags |= SceneGraphUpdateTask::BoundDirty;
+		m_dirtyComponents |= SceneGraph::BoundComponent;
 	}
 	else if( plug == inPlug()->transformPlug() )
 	{
-		m_dirtyFlags |= SceneGraphUpdateTask::TransformDirty;
+		m_dirtyComponents |= SceneGraph::TransformComponent;
 	}
 	else if( plug == inPlug()->attributesPlug() )
 	{
-		m_dirtyFlags |= SceneGraphUpdateTask::AttributesDirty;
+		m_dirtyComponents |= SceneGraph::AttributesComponent;
 	}
 	else if( plug == inPlug()->objectPlug() )
 	{
-		m_dirtyFlags |= SceneGraphUpdateTask::ObjectDirty;
+		m_dirtyComponents |= SceneGraph::ObjectComponent;
 	}
 	else if( plug == inPlug()->childNamesPlug() )
 	{
-		m_dirtyFlags |= SceneGraphUpdateTask::ChildNamesDirty;
+		m_dirtyComponents |= SceneGraph::ChildNamesComponent;
 	}
 	else if( plug == inPlug()->globalsPlug() )
 	{
-		m_dirtyFlags |= SceneGraphUpdateTask::GlobalsDirty;
+		m_dirtyComponents |= SceneGraph::GlobalsComponent;
 	}
 	else if( plug == inPlug()->setPlug() )
 	{
-		m_dirtyFlags |= SceneGraphUpdateTask::SetsDirty;
+		m_dirtyComponents |= SceneGraph::SetsComponent;
 	}
 	else if( plug == rendererPlug() )
 	{
 		stop();
-		m_dirtyFlags = SceneGraphUpdateTask::AllDirty;
+		m_dirtyComponents = SceneGraph::AllComponents;
 	}
 
 	if( plug == inPlug() ||
@@ -749,7 +757,7 @@ void InteractiveRender::contextChanged( const IECore::InternedString &name )
 	{
 		return;
 	}
-	m_dirtyFlags = SceneGraphUpdateTask::AllDirty;
+	m_dirtyComponents = SceneGraph::AllComponents;
 	update();
 }
 
@@ -793,43 +801,24 @@ void InteractiveRender::update()
 	// and the scene graph, and kick off a render.
 	assert( requiredState == Running );
 
-	bool globalAttributesChanged = false;
-	if( m_dirtyFlags & SceneGraphUpdateTask::GlobalsDirty )
+	if( m_dirtyComponents & SceneGraph::GlobalsComponent )
 	{
 		ConstCompoundObjectPtr globals = inPlug()->globalsPlug()->getValue();
 		outputOptions( globals.get(), m_globals.get(), m_renderer.get() );
 		outputOutputs( globals.get(), m_globals.get(), m_renderer.get() );
 		m_globals = globals;
-		ConstCompoundObjectPtr globalAttributes = GafferScene::globalAttributes( m_globals.get() );
-		if( *globalAttributes != *m_globalAttributes )
-		{
-			m_globalAttributes = globalAttributes;
-			globalAttributesChanged = true;
-			// Force attribute changes on the root to be
-			// propagated through the scene graph.
-			m_dirtyFlags |= SceneGraphUpdateTask::AttributesDirty;
-		}
 	}
 
-	if( m_dirtyFlags & SceneGraphUpdateTask::SetsDirty )
+	if( m_dirtyComponents & SceneGraph::SetsComponent )
 	{
 		m_lightSet = inPlug()->set( "__lights" )->readable();
 		m_cameraSet = inPlug()->set( "__cameras" )->readable();
 	}
 
-	for( int i = SceneGraph::First; i <= SceneGraph::Last; ++i )
+	for( int i = SceneGraph::FirstType; i <= SceneGraph::LastType; ++i )
 	{
 		SceneGraph *sceneGraph = m_sceneGraphs[i].get();
-		if( globalAttributesChanged || sceneGraph->cleared() )
-		{
-			if( !sceneGraph->updateAttributes( m_globalAttributes.get() ) )
-			{
-				// Deal with absurd case of visibility being turned off globally.
-				sceneGraph->clear();
-				continue;
-			}
-		}
-		if( i == SceneGraph::Camera && ( m_dirtyFlags & SceneGraphUpdateTask::GlobalsDirty ) )
+		if( i == SceneGraph::CameraType && ( m_dirtyComponents & SceneGraph::GlobalsComponent ) )
 		{
 			// Because the globals are applied to camera objects, we must update the object whenever
 			// the globals have changed, so we clear the scene graph and start again. We don't expect
@@ -838,16 +827,16 @@ void InteractiveRender::update()
 			// if we know they won't affect the camera.
 			sceneGraph->clear();
 		}
-		SceneGraphUpdateTask *task = new( tbb::task::allocate_root() ) SceneGraphUpdateTask( this, sceneGraph, (SceneGraph::Type)i, m_dirtyFlags, ScenePlug::ScenePath() );
+		SceneGraphUpdateTask *task = new( tbb::task::allocate_root() ) SceneGraphUpdateTask( this, sceneGraph, (SceneGraph::Type)i, m_dirtyComponents, SceneGraph::NoComponent, ScenePlug::ScenePath() );
 		tbb::task::spawn_root_and_wait( *task );
 	}
 
-	if( m_dirtyFlags & SceneGraphUpdateTask::GlobalsDirty )
+	if( m_dirtyComponents & SceneGraph::GlobalsComponent )
 	{
 		updateDefaultCamera();
 	}
 
-	m_dirtyFlags = SceneGraphUpdateTask::NothingDirty;
+	m_dirtyComponents = SceneGraph::NoComponent;
 	m_state = requiredState;
 
 	m_renderer->render();
@@ -892,14 +881,15 @@ void InteractiveRender::updateDefaultCamera()
 
 	CameraPtr defaultCamera = camera( inPlug(), m_globals.get() );
 	StringDataPtr name = new StringData( "gaffer:defaultCamera" );
-	m_defaultCamera = m_renderer->camera( name->readable(), defaultCamera.get() );
+	IECoreScenePreview::Renderer::AttributesInterfacePtr defaultAttributes = m_renderer->attributes( inPlug()->attributesPlug()->defaultValue() );
+	m_defaultCamera = m_renderer->camera( name->readable(), defaultCamera.get(), defaultAttributes.get() );
 	m_renderer->option( "camera", name.get() );
 }
 
 void InteractiveRender::stop()
 {
 	m_sceneGraphs.clear();
-	for( int i = SceneGraph::First; i <= SceneGraph::Last; ++i )
+	for( int i = SceneGraph::FirstType; i <= SceneGraph::LastType; ++i )
 	{
 		m_sceneGraphs.push_back( boost::make_shared<SceneGraph>() );
 	}
@@ -907,9 +897,8 @@ void InteractiveRender::stop()
 	m_renderer = NULL;
 
 	m_globals = inPlug()->globalsPlug()->defaultValue();
-	m_globalAttributes = inPlug()->globalsPlug()->defaultValue();
 	m_lightSet.clear();
 
-	m_dirtyFlags = SceneGraphUpdateTask::AllDirty;
+	m_dirtyComponents = SceneGraph::AllComponents;
 	m_state = Stopped;
 }
