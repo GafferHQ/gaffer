@@ -341,13 +341,10 @@ class RendererTest( GafferTest.TestCase ) :
 		with IECoreArnold.UniverseBlock() :
 
 			arnold.AiASSLoad( self.temporaryDirectory() + "/test.ass" )
-			o1 = self.__allNodes( type = arnold.AI_NODE_SHAPE )[0]
-			o2 = self.__allNodes( type = arnold.AI_NODE_SHAPE )[1]
-			o3 = self.__allNodes( type = arnold.AI_NODE_SHAPE )[2]
 
-			self.assertEqual( arnold.AiNodeGetStr( o1, "name" ), "testMesh1" )
-			self.assertEqual( arnold.AiNodeGetStr( o2, "name" ), "testMesh2" )
-			self.assertEqual( arnold.AiNodeGetStr( o3, "name" ), "testMesh3" )
+			o1 = arnold.AiNodeLookUpByName( "testMesh1" )
+			o2 = arnold.AiNodeLookUpByName( "testMesh2" )
+			o3 = arnold.AiNodeLookUpByName( "testMesh3" )
 
 			self.assertEqual( arnold.AiNodeGetByte( o1, "sidedness" ), arnold.AI_RAY_ALL )
 			self.assertEqual( arnold.AiNodeGetByte( o2, "sidedness" ), arnold.AI_RAY_UNDEFINED )
@@ -404,6 +401,160 @@ class RendererTest( GafferTest.TestCase ) :
 
 			self.assertEqual( arnold.AiNodeEntryGetName( arnold.AiNodeGetNodeEntry( f ) ), "gaussian_filter" )
 			self.assertEqual( arnold.AiNodeGetFlt( f, "width" ), 3.5 )
+
+	def testInstancing( self ) :
+
+		r = GafferScene.Private.IECoreScenePreview.Renderer.create(
+			"IECoreArnold::Renderer",
+			GafferScene.Private.IECoreScenePreview.Renderer.RenderType.SceneDescription,
+			self.temporaryDirectory() + "/test.ass"
+		)
+
+		polyPlane = IECore.MeshPrimitive.createPlane( IECore.Box2f( IECore.V2f( -1 ), IECore.V2f( 1 ) ) )
+		subdivPlane = polyPlane.copy()
+		subdivPlane.interpolation = "catmullClark"
+
+		defaultAttributes = r.attributes( IECore.CompoundObject() )
+		adaptiveAttributes = r.attributes(
+			IECore.CompoundObject( {
+				"ai:polymesh:subdiv_adaptive_error" : IECore.FloatData( 0.1 ),
+			} )
+		)
+		nonAdaptiveAttributes = r.attributes(
+			IECore.CompoundObject( {
+				"ai:polymesh:subdiv_adaptive_error" : IECore.FloatData( 0 ),
+			} )
+		)
+		adaptiveObjectSpaceAttributes = r.attributes(
+			IECore.CompoundObject( {
+				"ai:polymesh:subdiv_adaptive_error" : IECore.FloatData( 0.1 ),
+				"ai:polymesh:subdiv_adaptive_space" : IECore.StringData( "object" ),
+			} )
+		)
+
+		# We should be able to automatically instance polygon meshes
+		# regardless of the subdivision settings, because they're
+		# irrelevant.
+
+		r.object( "polyDefaultAttributes1", polyPlane.copy(), defaultAttributes )
+		r.object( "polyDefaultAttributes2", polyPlane.copy(), defaultAttributes )
+
+		r.object( "polyAdaptiveAttributes1", polyPlane.copy(), adaptiveAttributes )
+		r.object( "polyAdaptiveAttributes2", polyPlane.copy(), adaptiveAttributes )
+
+		# And we should be able to instance subdiv meshes with
+		# non-adaptive subdivision.
+
+		r.object( "subdivDefaultAttributes1", subdivPlane.copy(), defaultAttributes )
+		r.object( "subdivDefaultAttributes2", subdivPlane.copy(), defaultAttributes )
+
+		r.object( "subdivNonAdaptiveAttributes1", subdivPlane.copy(), nonAdaptiveAttributes )
+		r.object( "subdivNonAdaptiveAttributes2", subdivPlane.copy(), nonAdaptiveAttributes )
+
+		# But if adaptive subdivision is enabled, we can't, because the
+		# mesh can't be subdivided appropriately for both instances.
+
+		r.object( "subdivAdaptiveAttributes1", subdivPlane.copy(), adaptiveAttributes )
+		r.object( "subdivAdaptiveAttributes2", subdivPlane.copy(), adaptiveAttributes )
+
+		# Although we should be able to if the adaptive space is "object".
+
+		r.object( "subdivAdaptiveObjectSpaceAttributes1", subdivPlane.copy(), adaptiveObjectSpaceAttributes )
+		r.object( "subdivAdaptiveObjectSpaceAttributes2", subdivPlane.copy(), adaptiveObjectSpaceAttributes )
+
+		r.render()
+		del r
+
+		def assertInstanced( *names ) :
+
+			firstInstanceNode = arnold.AiNodeLookUpByName( names[0] )
+			for name in names :
+
+				instanceNode = arnold.AiNodeLookUpByName( name )
+				self.assertEqual( arnold.AiNodeEntryGetName( arnold.AiNodeGetNodeEntry( instanceNode ) ), "ginstance" )
+
+				nodePtr = arnold.AiNodeGetPtr( instanceNode, "node" )
+				self.assertEqual( nodePtr, arnold.AiNodeGetPtr( firstInstanceNode, "node" ) )
+				self.assertEqual( arnold.AiNodeGetInt( arnold.AtNode.from_address( nodePtr ), "visibility" ), 0 )
+
+		def assertNotInstanced( *names ) :
+
+			for name in names :
+				node = arnold.AiNodeLookUpByName( name )
+				self.assertEqual( arnold.AiNodeEntryGetName( arnold.AiNodeGetNodeEntry( node ) ), "polymesh" )
+
+		with IECoreArnold.UniverseBlock() :
+
+			arnold.AiASSLoad( self.temporaryDirectory() + "/test.ass" )
+
+			shapes = self.__allNodes( type = arnold.AI_NODE_SHAPE )
+			numInstances = len( [ s for s in shapes if arnold.AiNodeEntryGetName( arnold.AiNodeGetNodeEntry( s ) ) == "ginstance" ] )
+			numPolyMeshes = len( [ s for s in shapes if arnold.AiNodeEntryGetName( arnold.AiNodeGetNodeEntry( s ) ) == "polymesh" ] )
+
+			self.assertEqual( numPolyMeshes, 5 )
+			self.assertEqual( numInstances, 10 )
+
+			assertInstanced(
+				"polyDefaultAttributes1",
+				"polyDefaultAttributes2",
+				"polyAdaptiveAttributes1",
+				"polyAdaptiveAttributes2",
+			)
+
+			assertInstanced(
+				"subdivDefaultAttributes1",
+				"subdivDefaultAttributes2",
+				"subdivNonAdaptiveAttributes1",
+				"subdivNonAdaptiveAttributes2",
+			)
+
+			assertNotInstanced(
+				"subdivAdaptiveAttributes1",
+				"subdivAdaptiveAttributes2"
+			)
+
+			assertInstanced(
+				"subdivAdaptiveObjectSpaceAttributes1",
+				"subdivAdaptiveObjectSpaceAttributes2",
+			)
+
+	def testSubdivisionAttributes( self ) :
+
+		r = GafferScene.Private.IECoreScenePreview.Renderer.create(
+			"IECoreArnold::Renderer",
+			GafferScene.Private.IECoreScenePreview.Renderer.RenderType.SceneDescription,
+			self.temporaryDirectory() + "/test.ass"
+		)
+
+		subdivPlane = IECore.MeshPrimitive.createPlane( IECore.Box2f( IECore.V2f( -1 ), IECore.V2f( 1 ) ) )
+		subdivPlane.interpolation = "catmullClark"
+
+		r.object(
+			"plane",
+			subdivPlane,
+			r.attributes(
+				IECore.CompoundObject( {
+					"ai:polymesh:subdiv_iterations" : IECore.IntData( 10 ),
+					"ai:polymesh:subdiv_adaptive_error" : IECore.FloatData( 0.25 ),
+					"ai:polymesh:subdiv_adaptive_metric" : IECore.StringData( "edge_length" ),
+					"ai:polymesh:subdiv_adaptive_space" : IECore.StringData( "raster" ),
+				} )
+			)
+		)
+
+		r.render()
+		del r
+
+		with IECoreArnold.UniverseBlock() :
+
+			arnold.AiASSLoad( self.temporaryDirectory() + "/test.ass" )
+
+			node = arnold.AiNodeLookUpByName( "plane" )
+			self.assertEqual( arnold.AiNodeEntryGetName( arnold.AiNodeGetNodeEntry( node ) ), "polymesh" )
+			self.assertEqual( arnold.AiNodeGetInt( node, "subdiv_iterations" ), 10 )
+			self.assertEqual( arnold.AiNodeGetFlt( node, "subdiv_adaptive_error" ), 0.25 )
+			self.assertEqual( arnold.AiNodeGetStr( node, "subdiv_adaptive_metric" ), "edge_length" )
+			self.assertEqual( arnold.AiNodeGetStr( node, "subdiv_adaptive_space" ), "raster" )
 
 	def __allNodes( self, type = arnold.AI_NODE_ALL, ignoreBuiltIn = True ) :
 
