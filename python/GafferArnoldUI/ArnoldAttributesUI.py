@@ -98,8 +98,7 @@ Gaffer.Metadata.registerNode(
 
 	"description",
 	"""
-	Applies Arnold attributes to objects
-	in the scene.
+	Applies Arnold attributes to objects in the scene.
 	""",
 
 	plugs = {
@@ -282,6 +281,10 @@ Gaffer.Metadata.registerNode(
 			number of subdivision steps, so if changing the
 			error setting appears to have no effect,
 			you may need to raise the maximum.
+
+			> Note : Objects with a non-zero value will not take part in
+			> Gaffer's automatic instancing unless subdivAdaptiveSpace is
+			> set to "object".
 			""",
 
 			"layout:section", "Subdivision",
