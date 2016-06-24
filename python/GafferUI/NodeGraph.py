@@ -35,8 +35,6 @@
 #
 ##########################################################################
 
-from __future__ import with_statement
-
 import IECore
 
 import Gaffer
@@ -66,6 +64,7 @@ class NodeGraph( GafferUI.EditorWidget ) :
 		self.__buttonDoubleClickConnection = self.__gadgetWidget.buttonDoubleClickSignal().connect( Gaffer.WeakMethod( self.__buttonDoubleClick ) )
 		self.__dragEnterConnection = self.__gadgetWidget.dragEnterSignal().connect( Gaffer.WeakMethod( self.__dragEnter ) )
 		self.__dropConnection = self.__gadgetWidget.dropSignal().connect( Gaffer.WeakMethod( self.__drop ) )
+		self.__preRenderConnection = self.__gadgetWidget.getViewportGadget().preRenderSignal().connect( Gaffer.WeakMethod( self.__preRender ) )
 
 		self.__nodeMenu = None
 
@@ -437,6 +436,34 @@ class NodeGraph( GafferUI.EditorWidget ) :
 		# Perhaps we should just signal that we're not valid in some way and the CompoundEditor should
 		# remove us? Consider how this relates to NodeEditor.__deleteWindow() too.
 		self.parent().removeChild( self )
+
+	def __preRender( self, viewportGadget ) :
+
+		# Find all unpositioned nodes.
+
+		graphGadget = self.graphGadget()
+		nodes = [ g.node() for g in graphGadget.unpositionedNodeGadgets() ]
+		if not nodes :
+			return
+
+		nodes = Gaffer.StandardSet( nodes )
+
+		# Lay them out somewhere near the centre of frame.
+
+		gadgetWidget = self.graphGadgetWidget()
+		fallbackPosition = gadgetWidget.getViewportGadget().rasterToGadgetSpace(
+			IECore.V2f( gadgetWidget.size() ) / 2.0,
+			gadget = graphGadget
+		).p0
+		fallbackPosition = IECore.V2f( fallbackPosition.x, fallbackPosition.y )
+
+		graphGadget.getLayout().positionNodes( graphGadget, nodes, fallbackPosition )
+		graphGadget.getLayout().layoutNodes( graphGadget, nodes )
+
+		# And then extend the frame to include them, in case the
+		# layout has gone off screen.
+
+		self.frame( nodes, extend = True )
 
 	@classmethod
 	def __getNodeInputConnectionsVisible( cls, graphGadget, node ) :

@@ -50,8 +50,12 @@
 #include "GafferUIBindings/GadgetBinding.h"
 
 using namespace boost::python;
-using namespace GafferUIBindings;
+using namespace IECorePython;
 using namespace GafferUI;
+using namespace GafferUIBindings;
+
+namespace
+{
 
 struct RootChangedSlotCaller
 {
@@ -62,27 +66,7 @@ struct RootChangedSlotCaller
 	}
 };
 
-static Gaffer::NodePtr getRoot( GraphGadget &graphGadget )
-{
-	return graphGadget.getRoot();
-}
-
-static Gaffer::SetPtr getFilter( GraphGadget &graphGadget )
-{
-	return graphGadget.getFilter();
-}
-
-static NodeGadgetPtr nodeGadget( GraphGadget &graphGadget, const Gaffer::Node *node )
-{
-	return graphGadget.nodeGadget( node );
-}
-
-static ConnectionGadgetPtr connectionGadget( GraphGadget &graphGadget, const Gaffer::Plug *dstPlug )
-{
-	return graphGadget.connectionGadget( dstPlug );
-}
-
-static list connectionGadgets1( GraphGadget &graphGadget, const Gaffer::Plug *plug, const Gaffer::Set *excludedNodes = 0 )
+list connectionGadgets1( GraphGadget &graphGadget, const Gaffer::Plug *plug, const Gaffer::Set *excludedNodes = 0 )
 {
 	std::vector<ConnectionGadget *> connections;
 	graphGadget.connectionGadgets( plug, connections, excludedNodes );
@@ -95,7 +79,7 @@ static list connectionGadgets1( GraphGadget &graphGadget, const Gaffer::Plug *pl
 	return l;
 }
 
-static list connectionGadgets2( GraphGadget &graphGadget, const Gaffer::Node *node, const Gaffer::Set *excludedNodes = 0 )
+list connectionGadgets2( GraphGadget &graphGadget, const Gaffer::Node *node, const Gaffer::Set *excludedNodes = 0 )
 {
 	std::vector<ConnectionGadget *> connections;
 	graphGadget.connectionGadgets( node, connections, excludedNodes );
@@ -108,7 +92,7 @@ static list connectionGadgets2( GraphGadget &graphGadget, const Gaffer::Node *no
 	return l;
 }
 
-static list upstreamNodeGadgets( GraphGadget &graphGadget, const Gaffer::Node *node, size_t degreesOfSeparation )
+list upstreamNodeGadgets( GraphGadget &graphGadget, const Gaffer::Node *node, size_t degreesOfSeparation )
 {
 	std::vector<NodeGadget *> nodeGadgets;
 	graphGadget.upstreamNodeGadgets( node, nodeGadgets, degreesOfSeparation );
@@ -121,7 +105,7 @@ static list upstreamNodeGadgets( GraphGadget &graphGadget, const Gaffer::Node *n
 	return l;
 }
 
-static list downstreamNodeGadgets( GraphGadget &graphGadget, const Gaffer::Node *node, size_t degreesOfSeparation )
+list downstreamNodeGadgets( GraphGadget &graphGadget, const Gaffer::Node *node, size_t degreesOfSeparation )
 {
 	std::vector<NodeGadget *> nodeGadgets;
 	graphGadget.downstreamNodeGadgets( node, nodeGadgets, degreesOfSeparation );
@@ -134,7 +118,7 @@ static list downstreamNodeGadgets( GraphGadget &graphGadget, const Gaffer::Node 
 	return l;
 }
 
-static list connectedNodeGadgets( GraphGadget &graphGadget, const Gaffer::Node *node, Gaffer::Plug::Direction direction, size_t degreesOfSeparation )
+list connectedNodeGadgets( GraphGadget &graphGadget, const Gaffer::Node *node, Gaffer::Plug::Direction direction, size_t degreesOfSeparation )
 {
 	std::vector<NodeGadget *> nodeGadgets;
 	graphGadget.connectedNodeGadgets( node, nodeGadgets, direction, degreesOfSeparation );
@@ -147,52 +131,49 @@ static list connectedNodeGadgets( GraphGadget &graphGadget, const Gaffer::Node *
 	return l;
 }
 
-static void setLayout( GraphGadget &g, GraphLayoutPtr l )
+list unpositionedNodeGadgets( GraphGadget &graphGadget )
 {
-	return g.setLayout( l );
+	std::vector<NodeGadget *> nodeGadgets;
+	graphGadget.unpositionedNodeGadgets( nodeGadgets );
+
+	boost::python::list l;
+	for( std::vector<NodeGadget *>::const_iterator it=nodeGadgets.begin(), eIt=nodeGadgets.end(); it!=eIt; ++it )
+	{
+		l.append( NodeGadgetPtr( *it ) );
+	}
+	return l;
 }
 
-static GraphLayoutPtr getLayout( GraphGadget &g )
-{
-	return g.getLayout();
-}
-
-static NodeGadgetPtr nodeGadgetAt( GraphGadget &g, const IECore::LineSegment3f lineSegmentInGadgetSpace )
-{
-	return g.nodeGadgetAt( lineSegmentInGadgetSpace );
-}
-
-static ConnectionGadgetPtr connectionGadgetAt( GraphGadget &g, const IECore::LineSegment3f lineSegmentInGadgetSpace )
-{
-	return g.connectionGadgetAt( lineSegmentInGadgetSpace );
-}
+} // namespace
 
 void GafferUIBindings::bindGraphGadget()
 {
 	scope s = GadgetClass<GraphGadget>()
 		.def( init<Gaffer::NodePtr, Gaffer::SetPtr>( ( arg_( "root" ), arg_( "filter" ) = object() ) ) )
-		.def( "getRoot", &getRoot )
+		.def( "getRoot", (Gaffer::Node *(GraphGadget::*)())&GraphGadget::getRoot, return_value_policy<CastToIntrusivePtr>() )
 		.def( "setRoot", &GraphGadget::setRoot, ( arg_( "root" ), arg_( "filter" ) = object() ) )
 		.def( "rootChangedSignal", &GraphGadget::rootChangedSignal, return_internal_reference<1>() )
-		.def( "getFilter", &getFilter )
+		.def( "getFilter", (Gaffer::Set *(GraphGadget::*)())&GraphGadget::getFilter, return_value_policy<CastToIntrusivePtr>() )
 		.def( "setFilter", &GraphGadget::setFilter )
-		.def( "nodeGadget", &nodeGadget )
-		.def( "connectionGadget", &connectionGadget )
+		.def( "nodeGadget", (NodeGadget *(GraphGadget::*)( const Gaffer::Node * ))&GraphGadget::nodeGadget, return_value_policy<CastToIntrusivePtr>() )
+		.def( "connectionGadget", (ConnectionGadget *(GraphGadget::*)( const Gaffer::Plug * ))&GraphGadget::connectionGadget, return_value_policy<CastToIntrusivePtr>() )
 		.def( "connectionGadgets", &connectionGadgets1, ( arg_( "plug" ), arg_( "excludedNodes" ) = object() ) )
 		.def( "connectionGadgets", &connectionGadgets2, ( arg_( "node" ), arg_( "excludedNodes" ) = object() ) )
 		.def( "upstreamNodeGadgets", &upstreamNodeGadgets, ( arg( "node" ), arg( "degreesOfSeparation" ) = Imath::limits<size_t>::max() ) )
 		.def( "downstreamNodeGadgets", &downstreamNodeGadgets, ( arg( "node" ), arg( "degreesOfSeparation" ) = Imath::limits<size_t>::max() ) )
 		.def( "connectedNodeGadgets", &connectedNodeGadgets, ( arg( "node" ), arg( "direction" ) = Gaffer::Plug::Invalid, arg( "degreesOfSeparation" ) = Imath::limits<size_t>::max() ) )
+		.def( "unpositionedNodeGadgets", &unpositionedNodeGadgets )
 		.def( "setNodePosition", &GraphGadget::setNodePosition )
 		.def( "getNodePosition", &GraphGadget::getNodePosition )
+		.def( "hasNodePosition", &GraphGadget::hasNodePosition )
 		.def( "setNodeInputConnectionsMinimised", &GraphGadget::setNodeInputConnectionsMinimised )
 		.def( "getNodeInputConnectionsMinimised", &GraphGadget::getNodeInputConnectionsMinimised )
 		.def( "setNodeOutputConnectionsMinimised", &GraphGadget::setNodeOutputConnectionsMinimised )
 		.def( "getNodeOutputConnectionsMinimised", &GraphGadget::getNodeOutputConnectionsMinimised )
-		.def( "setLayout", &setLayout )
-		.def( "getLayout", &getLayout )
-		.def( "nodeGadgetAt", &nodeGadgetAt )
-		.def( "connectionGadgetAt", &connectionGadgetAt )
+		.def( "setLayout", &GraphGadget::setLayout )
+		.def( "getLayout", (GraphLayout *(GraphGadget::*)())&GraphGadget::getLayout, return_value_policy<CastToIntrusivePtr>() )
+		.def( "nodeGadgetAt", &GraphGadget::nodeGadgetAt, return_value_policy<CastToIntrusivePtr>() )
+		.def( "connectionGadgetAt", &GraphGadget::connectionGadgetAt, return_value_policy<CastToIntrusivePtr>() )
 	;
 
 	GafferBindings::SignalClass<GraphGadget::RootChangedSignal, GafferBindings::DefaultSignalCaller<GraphGadget::RootChangedSignal>, RootChangedSlotCaller>( "RootChangedSignal" );

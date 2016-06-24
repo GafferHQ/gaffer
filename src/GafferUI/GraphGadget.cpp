@@ -400,23 +400,53 @@ void GraphGadget::connectedNodeGadgetsWalk( NodeGadget *gadget, std::set<NodeGad
 	}
 }
 
+size_t GraphGadget::unpositionedNodeGadgets( std::vector<NodeGadget *> &nodeGadgets ) const
+{
+	for( NodeGadgetMap::const_iterator it = m_nodeGadgets.begin(), eIt = m_nodeGadgets.end(); it != eIt; ++it )
+	{
+		if( !hasNodePosition( it->first ) )
+		{
+			nodeGadgets.push_back( it->second.gadget );
+		}
+	}
+	return nodeGadgets.size();
+}
+
 void GraphGadget::setNodePosition( Gaffer::Node *node, const Imath::V2f &position )
 {
-	Gaffer::V2fPlug *plug = node->getChild<Gaffer::V2fPlug>( g_positionPlugName );
-	if( !plug )
-	{
-		plug = new Gaffer::V2fPlug( g_positionPlugName, Gaffer::Plug::In );
-		plug->setFlags( Gaffer::Plug::Dynamic, true );
-		node->addChild( plug );
-	}
-
+	Gaffer::V2fPlug *plug = nodePositionPlug( node, /* createIfMissing = */ true );
 	plug->setValue( position );
 }
 
 Imath::V2f GraphGadget::getNodePosition( const Gaffer::Node *node ) const
 {
-	const Gaffer::V2fPlug *plug = node->getChild<Gaffer::V2fPlug>( g_positionPlugName );
+	const Gaffer::V2fPlug *plug = nodePositionPlug( node );
 	return plug ? plug->getValue() : V2f( 0 );
+}
+
+bool GraphGadget::hasNodePosition( const Gaffer::Node *node ) const
+{
+	return nodePositionPlug( node );
+}
+
+const Gaffer::V2fPlug *GraphGadget::nodePositionPlug( const Gaffer::Node *node ) const
+{
+	return node->getChild<Gaffer::V2fPlug>( g_positionPlugName );
+}
+
+Gaffer::V2fPlug *GraphGadget::nodePositionPlug( Gaffer::Node *node, bool createIfMissing ) const
+{
+	Gaffer::V2fPlug *plug = node->getChild<Gaffer::V2fPlug>( g_positionPlugName );
+	if( plug || !createIfMissing )
+	{
+		return plug;
+	}
+
+	plug = new Gaffer::V2fPlug( g_positionPlugName, Gaffer::Plug::In );
+	plug->setFlags( Gaffer::Plug::Dynamic, true );
+	node->addChild( plug );
+
+	return plug;
 }
 
 void GraphGadget::setNodeInputConnectionsMinimised( Gaffer::Node *node, bool minimised )
@@ -1283,7 +1313,7 @@ void GraphGadget::offsetNodes( Gaffer::Set *nodes, const Imath::V2f &offset )
 		NodeGadget *gadget = nodeGadget( node );
 		if( gadget )
 		{
-			Gaffer::V2fPlug *p = node->getChild<Gaffer::V2fPlug>( g_positionPlugName );
+			Gaffer::V2fPlug *p = nodePositionPlug( node, /* createIfMissing = */ true );
 			p->setValue( p->getValue() + offset );
 		}
 	}
@@ -1376,12 +1406,6 @@ NodeGadget *GraphGadget::addNodeGadget( Gaffer::Node *node )
 		nodeGadget->setHighlighted( true );
 	}
 
-	// place it if it's not placed already.
-	if( !node->getChild<Gaffer::V2fPlug>( g_positionPlugName ) )
-	{
-		setNodePosition( node, V2f( 0 ) );
-	}
-
 	updateNodeGadgetTransform( nodeGadget.get() );
 
 	return nodeGadget.get();
@@ -1413,10 +1437,9 @@ void GraphGadget::updateNodeGadgetTransform( NodeGadget *nodeGadget )
 	Gaffer::Node *node = nodeGadget->node();
 	M44f m;
 
-	Gaffer::V2fPlug *p = node->getChild<Gaffer::V2fPlug>( g_positionPlugName );
-	if( p )
+	if( Gaffer::V2fPlug *p = nodePositionPlug( node, /* createIfMissing = */ false ) )
 	{
-		V2f t = p->getValue();
+		const V2f t = p->getValue();
 	 	m.translate( V3f( t[0], t[1], 0 ) );
 	}
 

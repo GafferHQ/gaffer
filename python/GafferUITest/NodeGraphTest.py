@@ -96,5 +96,44 @@ class NodeGraphTest( GafferUITest.TestCase ) :
 
 		self.assertEqual( g.getTitle(), "This is a test!" )
 
+	def testAutomaticLayout( self ) :
+
+		s = Gaffer.ScriptNode()
+
+		s["n1"] = GafferTest.AddNode()
+		s["n2"] = GafferTest.AddNode()
+		s["n2"]["op1"].setInput( s["n1"]["sum"] )
+
+		s["b"] = Gaffer.Box()
+		s["b"]["n1"] = GafferTest.AddNode()
+		s["b"]["n2"] = GafferTest.AddNode()
+		s["b"]["n2"]["op1"].setInput( s["b"]["n1"]["sum"] )
+
+		with GafferUI.Window() as w :
+			nodeGraph = GafferUI.NodeGraph( s )
+
+		w.setVisible( True )
+		self.waitForIdle( 1000 )
+
+		def assertLower( graphGadget, n1, n2 ) :
+
+			self.assertLess( graphGadget.getNodePosition( n1 ).y, graphGadget.getNodePosition( n2 ).y )
+
+		self.assertEqual( nodeGraph.graphGadget().unpositionedNodeGadgets(), [] )
+		assertLower( nodeGraph.graphGadget(), s["n2"], s["n1"] )
+
+		nodeGraph.graphGadget().setRoot( s["b"] )
+		self.waitForIdle( 1000 )
+
+		self.assertEqual( nodeGraph.graphGadget().unpositionedNodeGadgets(), [] )
+		assertLower( nodeGraph.graphGadget(), s["b"]["n2"], s["b"]["n1"] )
+
+		s["b"]["n3"] = GafferTest.AddNode()
+		s["b"]["n3"]["op1"].setInput( s["b"]["n2"]["sum"] )
+		self.waitForIdle( 1000 )
+
+		self.assertEqual( nodeGraph.graphGadget().unpositionedNodeGadgets(), [] )
+		assertLower( nodeGraph.graphGadget(), s["b"]["n3"], s["b"]["n2"] )
+
 if __name__ == "__main__":
 	unittest.main()
