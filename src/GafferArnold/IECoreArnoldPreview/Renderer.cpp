@@ -40,6 +40,7 @@
 #include "boost/make_shared.hpp"
 #include "boost/format.hpp"
 #include "boost/algorithm/string/predicate.hpp"
+#include "boost/container/flat_map.hpp"
 
 #include "IECore/MessageHandler.h"
 #include "IECore/Camera.h"
@@ -427,6 +428,18 @@ class ArnoldAttributes : public IECoreScenePreview::Renderer::AttributesInterfac
 
 			lightShader = attribute<IECore::ObjectVector>( g_arnoldLightShaderAttributeName, attributes );
 			lightShader = lightShader ? lightShader : attribute<IECore::ObjectVector>( g_lightShaderAttributeName, attributes );
+
+			for( IECore::CompoundObject::ObjectMap::const_iterator it = attributes->members().begin(), eIt = attributes->members().end(); it != eIt; ++it )
+			{
+				if( !boost::starts_with( it->first.string(), "user:" ) )
+				{
+					continue;
+				}
+				if( const IECore::Data *data = IECore::runTimeCast<const IECore::Data>( it->second.get() ) )
+				{
+					user[it->first] = data;
+				}
+			}
 		}
 
 		enum ShadingFlags
@@ -445,6 +458,9 @@ class ArnoldAttributes : public IECoreScenePreview::Renderer::AttributesInterfac
 		ArnoldShaderPtr surfaceShader;
 		IECore::ConstObjectVectorPtr lightShader;
 		PolyMesh polyMesh;
+
+		typedef boost::container::flat_map<IECore::InternedString, IECore::ConstDataPtr> UserAttributes;
+		UserAttributes user;
 
 	private :
 
@@ -769,9 +785,36 @@ class ArnoldObject : public IECoreScenePreview::Renderer::ObjectInterface
 				return;
 			}
 
+			const ArnoldAttributes *arnoldAttributes = static_cast<const ArnoldAttributes *>( attributes );
+
+			// Remove old user parameters we don't want any more.
+
+			AtUserParamIterator *it= AiNodeGetUserParamIterator( node );
+			while( !AiUserParamIteratorFinished( it ) )
+			{
+				const AtUserParamEntry *param = AiUserParamIteratorGetNext( it );
+				const char *name = AiUserParamGetName( param );
+				if( boost::starts_with( name, "user:" ) )
+				{
+					if( arnoldAttributes->user.find( name ) == arnoldAttributes->user.end() )
+					{
+						AiNodeResetParameter( node, name );
+					}
+				}
+			}
+			AiUserParamIteratorDestroy( it );
+
+			// Add user parameters we do want.
+
+			for( ArnoldAttributes::UserAttributes::const_iterator it = arnoldAttributes->user.begin(), eIt = arnoldAttributes->user.end(); it != eIt; ++it )
+			{
+				ParameterAlgo::setParameter( node, it->first.c_str(), it->second.get() );
+			}
+
+			// Add shape specific parameters.
+
 			if( AiNodeEntryGetType( AiNodeGetNodeEntry( node ) ) == AI_NODE_SHAPE )
 			{
-				const ArnoldAttributes *arnoldAttributes = static_cast<const ArnoldAttributes *>( attributes );
 				AiNodeSetByte( node, "visibility", arnoldAttributes->visibility );
 				AiNodeSetByte( node, "sidedness", arnoldAttributes->sidedness );
 
@@ -790,6 +833,7 @@ class ArnoldObject : public IECoreScenePreview::Renderer::ObjectInterface
 					AiNodeResetParameter( node, "shader" );
 				}
 			}
+
 		}
 
 	private :

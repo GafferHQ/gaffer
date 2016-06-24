@@ -556,6 +556,63 @@ class RendererTest( GafferTest.TestCase ) :
 			self.assertEqual( arnold.AiNodeGetStr( node, "subdiv_adaptive_metric" ), "edge_length" )
 			self.assertEqual( arnold.AiNodeGetStr( node, "subdiv_adaptive_space" ), "raster" )
 
+	def testUserAttributes( self ) :
+
+		r = GafferScene.Private.IECoreScenePreview.Renderer.create(
+			"IECoreArnold::Renderer",
+			GafferScene.Private.IECoreScenePreview.Renderer.RenderType.SceneDescription,
+			self.temporaryDirectory() + "/test.ass"
+		)
+
+		r.object(
+			"plane1",
+			IECore.MeshPrimitive.createPlane( IECore.Box2f( IECore.V2f( -1 ), IECore.V2f( 1 ) ) ),
+			r.attributes(
+				IECore.CompoundObject( {
+					"user:testInt" : IECore.IntData( 1 ),
+					"user:testFloat" : IECore.FloatData( 2.5 ),
+					"user:testV3f" : IECore.V3fData( IECore.V3f( 1, 2, 3 ) ),
+					"user:testColor3f" : IECore.Color3fData( IECore.Color3f( 4, 5, 6 ) ),
+					"user:testString" : IECore.StringData( "we're all doomed" ),
+				} )
+			)
+		)
+
+		r.object(
+			"plane2",
+			IECore.MeshPrimitive.createPlane( IECore.Box2f( IECore.V2f( -1 ), IECore.V2f( 1 ) ) ),
+			r.attributes(
+				IECore.CompoundObject( {
+					"user:testInt" : IECore.IntData( 2 ),
+					"user:testFloat" : IECore.FloatData( 25 ),
+					"user:testV3f" : IECore.V3fData( IECore.V3f( 0, 1, 0 ) ),
+					"user:testColor3f" : IECore.Color3fData( IECore.Color3f( 1, 0.5, 0 ) ),
+					"user:testString" : IECore.StringData( "indeed" ),
+				} )
+			)
+		)
+
+		r.render()
+		del r
+
+		with IECoreArnold.UniverseBlock() :
+
+			arnold.AiASSLoad( self.temporaryDirectory() + "/test.ass" )
+
+			plane1 = arnold.AiNodeLookUpByName( "plane1" )
+			self.assertEqual( arnold.AiNodeGetInt( plane1, "user:testInt" ), 1 )
+			self.assertEqual( arnold.AiNodeGetFlt( plane1, "user:testFloat" ), 2.5 )
+			self.assertEqual( arnold.AiNodeGetVec( plane1, "user:testV3f" ), arnold.AtVector( 1, 2, 3 ) )
+			self.assertEqual( arnold.AiNodeGetRGB( plane1, "user:testColor3f" ), arnold.AtRGB( 4, 5, 6 ) )
+			self.assertEqual( arnold.AiNodeGetStr( plane1, "user:testString" ), "we're all doomed" )
+
+			plane2 = arnold.AiNodeLookUpByName( "plane2" )
+			self.assertEqual( arnold.AiNodeGetInt( plane2, "user:testInt" ), 2 )
+			self.assertEqual( arnold.AiNodeGetFlt( plane2, "user:testFloat" ), 25 )
+			self.assertEqual( arnold.AiNodeGetVec( plane2, "user:testV3f" ), arnold.AtVector( 0, 1, 0 ) )
+			self.assertEqual( arnold.AiNodeGetRGB( plane2, "user:testColor3f" ), arnold.AtRGB( 1, 0.5, 0 ) )
+			self.assertEqual( arnold.AiNodeGetStr( plane2, "user:testString" ), "indeed" )
+
 	def __allNodes( self, type = arnold.AI_NODE_ALL, ignoreBuiltIn = True ) :
 
 		result = []
