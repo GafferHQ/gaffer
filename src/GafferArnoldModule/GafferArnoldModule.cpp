@@ -46,6 +46,7 @@
 #include "GafferArnold/ArnoldVDB.h"
 #include "GafferArnold/InteractiveArnoldRender.h"
 #include "GafferArnold/ArnoldRender.h"
+#include "GafferArnold/ArnoldMeshLight.h"
 
 using namespace boost::python;
 using namespace GafferArnold;
@@ -64,6 +65,7 @@ BOOST_PYTHON_MODULE( _GafferArnold )
 	GafferBindings::DependencyNodeClass<ArnoldOptions>();
 	GafferBindings::DependencyNodeClass<ArnoldAttributes>();
 	GafferBindings::DependencyNodeClass<ArnoldVDB>();
+	GafferBindings::DependencyNodeClass<ArnoldMeshLight>();
 	GafferBindings::NodeClass<InteractiveArnoldRender>();
 	GafferDispatchBindings::ExecutableNodeClass<ArnoldRender>();
 

@@ -561,7 +561,7 @@ class ArnoldObject : public IECoreScenePreview::Renderer::ObjectInterface
 			}
 		}
 
-	private :
+	protected :
 
 		AtNode *m_node;
 		ArnoldShaderPtr m_shader;
@@ -598,12 +598,22 @@ class ArnoldLight : public ArnoldObject
 		{
 			ArnoldObject::attributes( attributes );
 			const ArnoldAttributes *arnoldAttributes = static_cast<const ArnoldAttributes *>( attributes );
+
 			m_lightShader = NULL;
-			if( arnoldAttributes->lightShader )
+			if( !arnoldAttributes->lightShader )
 			{
-				m_lightShader = new ArnoldShader( arnoldAttributes->lightShader.get() );
-				AiNodeSetStr( m_lightShader->root(), "name", m_name.c_str() );
+				return;
 			}
+
+			m_lightShader = new ArnoldShader( arnoldAttributes->lightShader.get() );
+			const string name = m_name + "_" + AiNodeGetName( m_lightShader->root() );
+			AiNodeSetStr( m_lightShader->root(), "name", name.c_str() );
+
+			if( AiNodeIs( m_lightShader->root(), "mesh_light" ) )
+			{
+				AiNodeSetPtr( m_lightShader->root(), "mesh", m_node );
+			}
+
 			applyTransform();
 		}
 

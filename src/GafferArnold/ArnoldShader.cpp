@@ -79,8 +79,11 @@ void ArnoldShader::loadShader( const std::string &shaderName )
 		throw Exception( str( format( "Shader \"%s\" not found" ) % shaderName ) );
 	}
 
+	const bool isLightShader = AiNodeEntryGetType( shader ) == AI_NODE_LIGHT;
 	namePlug()->setValue( AiNodeEntryGetName( shader ) );
-	typePlug()->setValue( "ai:surface" );
+	typePlug()->setValue(
+		isLightShader ? "ai:light" : "ai:surface"
+	);
 
 	ParameterHandler::setupPlugs( shader, parametersPlug() );
 
@@ -142,6 +145,13 @@ void ArnoldShader::loadShader( const std::string &shaderName )
 			);
 
 			break;
+
+		default :
+
+			if( isLightShader )
+			{
+				outPlug = new Plug( "out", Plug::Out );
+			}
 
 	}
 

@@ -60,7 +60,7 @@ class StandardLightVisualiser : public LightVisualiser
 		StandardLightVisualiser();
 		virtual ~StandardLightVisualiser();
 
-		virtual IECoreGL::ConstRenderablePtr visualise( const IECore::ObjectVector *shaderVector, IECoreGL::ConstStatePtr &state ) const;
+		virtual IECoreGL::ConstRenderablePtr visualise( const IECore::InternedString &attributeName, const IECore::ObjectVector *shaderVector, IECoreGL::ConstStatePtr &state ) const;
 
 	protected :
 		static const char *faceCameraVertexSource();

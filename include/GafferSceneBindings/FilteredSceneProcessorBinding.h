@@ -1,6 +1,6 @@
 //////////////////////////////////////////////////////////////////////////
 //
-//  Copyright (c) 2015, John Haddon. All rights reserved.
+//  Copyright (c) 2016, Image Engine Design Inc. All rights reserved.
 //
 //  Redistribution and use in source and binary forms, with or without
 //  modification, are permitted provided that the following conditions are
@@ -34,42 +34,14 @@
 //
 //////////////////////////////////////////////////////////////////////////
 
-#ifndef GAFFERSCENEUI_LIGHTVISUALISER_H
-#define GAFFERSCENEUI_LIGHTVISUALISER_H
+#ifndef GAFFERSCENEBINDINGS_FILTEREDSCENEPROCESSORBINDING_H
+#define GAFFERSCENEBINDINGS_FILTEREDSCENEPROCESSORBINDING_H
 
-#include "IECore/ObjectVector.h"
-#include "IECoreGL/Renderable.h"
-
-namespace GafferSceneUI
+namespace GafferSceneBindings
 {
 
-IE_CORE_FORWARDDECLARE( LightVisualiser )
+void bindFilteredSceneProcessor();
 
-/// Class for visualisation of lights. All lights in Gaffer are represented
-/// as IECore::Shader objects, but we need to visualise them differently
-/// depending on their shader name (accessed using `IECore::Shader::getName()`). A
-/// factory mechanism is provided to map from this name to a specialised
-/// LightVisualiser.
-class LightVisualiser : public IECore::RefCounted
-{
+} // namespace GafferSceneBindings
 
-	public :
-
-		IE_CORE_DECLAREMEMBERPTR( LightVisualiser )
-
-		LightVisualiser();
-		virtual ~LightVisualiser();
-
-		/// Must be implemented by derived classes to visualise
-		/// the light contained within shaderVector.
-		virtual IECoreGL::ConstRenderablePtr visualise( const IECore::InternedString &attributeName, const IECore::ObjectVector *shaderVector, IECoreGL::ConstStatePtr &state ) const = 0;
-
-		/// Registers a visualiser to visualise a particular type of light.
-		/// For instance, `registerLightVisualiser( "ai:light", "point_light", visualiser )`
-		/// would register a visualiser for an Arnold point light.
-		static void registerLightVisualiser( const IECore::InternedString &attributeName, const IECore::InternedString &shaderName, ConstLightVisualiserPtr visualiser );
-};
-
-} // namespace GafferSceneUI
-
-#endif // GAFFERSCENEUI_LIGHTVISUALISER_H
+#endif // GAFFERSCENEBINDINGS_FILTEREDSCENEPROCESSORBINDING_H

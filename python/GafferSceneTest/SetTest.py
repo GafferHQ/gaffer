@@ -237,5 +237,38 @@ class SetTest( GafferSceneTest.SceneTestCase ) :
 		self.assertEqual( set( s["out"].set( "shinyThings" ).value.paths() ), set( [ "/two", "/sphere" ] ) )
 		self.assertEqual( set( s["out"].set( "dullThings" ).value.paths() ), set( [ "/two", "/sphere" ] ) )
 
+	def testFilter( self ) :
+
+		p = GafferScene.Plane()
+		g = GafferScene.Group()
+		for i in range( 0, 30 ) :
+			g["in"][i].setInput( p["out"] )
+
+		f = GafferScene.PathFilter()
+
+		s = GafferScene.Set()
+		s["in"].setInput( g["out"] )
+		s["name"].setValue( "n" )
+
+		cs = GafferTest.CapturingSlot( s.plugDirtiedSignal() )
+		expectedFilterDependentPlugs = {
+			s["filter"],
+			s["out"]["set"],
+			s["out"],
+			s["__pathMatcher"],
+		}
+
+		s["filter"].setInput( f["out"] )
+		self.assertEqual( set( [ c[0] for c in cs ] ), expectedFilterDependentPlugs )
+
+		del cs[:]
+
+		f["paths"].setValue( IECore.StringVectorData( [ "/group/plane*1" ] ) )
+		self.assertEqual( set( [ c[0] for c in cs ] ), expectedFilterDependentPlugs )
+		self.assertEqual( set( s["out"].set( "n" ).value.paths() ), set( [ "/group/plane1", "/group/plane11", "/group/plane21" ] ) )
+
+		f["paths"].setValue( IECore.StringVectorData( [ "/group/plane*2" ] ) )
+		self.assertEqual( set( s["out"].set( "n" ).value.paths() ), set( [ "/group/plane2", "/group/plane12", "/group/plane22" ] ) )
+
 if __name__ == "__main__":
 	unittest.main()
