@@ -75,10 +75,12 @@ def __subdivisionSummary( plug ) :
 	info = []
 	if plug["subdivIterations"]["enabled"].getValue() :
 		info.append( "Iterations %d" % plug["subdivIterations"]["value"].getValue() )
-	if plug["subdivPixelError"]["enabled"].getValue() :
-		info.append( "Error %s" % GafferUI.NumericWidget.valueToString( plug["subdivPixelError"]["value"].getValue() ) )
+	if plug["subdivAdaptiveError"]["enabled"].getValue() :
+		info.append( "Error %s" % GafferUI.NumericWidget.valueToString( plug["subdivAdaptiveError"]["value"].getValue() ) )
 	if plug["subdivAdaptiveMetric"]["enabled"].getValue() :
 		info.append( string.capwords( plug["subdivAdaptiveMetric"]["value"].getValue().replace( "_", " " ) ) + " Metric" )
+	if plug["subdivAdaptiveSpace"]["enabled"].getValue() :
+		info.append( string.capwords( plug["subdivAdaptiveSpace"]["value"].getValue() ) + " Space" )
 
 	return ", ".join( info )
 
@@ -96,8 +98,7 @@ Gaffer.Metadata.registerNode(
 
 	"description",
 	"""
-	Applies Arnold attributes to objects
-	in the scene.
+	Applies Arnold attributes to objects in the scene.
 	""",
 
 	plugs = {
@@ -254,7 +255,7 @@ Gaffer.Metadata.registerNode(
 			The maximum number of subdivision
 			steps to apply when rendering subdivision
 			surface. To set an exact number of
-			subdivisions, set the pixel error to
+			subdivisions, set the adaptive error to
 			0 so that the maximum becomes the
 			controlling factor.
 
@@ -268,7 +269,7 @@ Gaffer.Metadata.registerNode(
 
 		],
 
-		"attributes.subdivPixelError" : [
+		"attributes.subdivAdaptiveError" : [
 
 			"description",
 			"""
@@ -278,12 +279,16 @@ Gaffer.Metadata.registerNode(
 			metric below. Note also that the iterations
 			value above provides a hard limit on the maximum
 			number of subdivision steps, so if changing the
-			pixel error setting appears to have no effect,
+			error setting appears to have no effect,
 			you may need to raise the maximum.
+
+			> Note : Objects with a non-zero value will not take part in
+			> Gaffer's automatic instancing unless subdivAdaptiveSpace is
+			> set to "object".
 			""",
 
 			"layout:section", "Subdivision",
-			"label", "Pixel Error",
+			"label", "Adaptive Error",
 
 		],
 
@@ -292,13 +297,13 @@ Gaffer.Metadata.registerNode(
 			"description",
 			"""
 			The metric used when performing adaptive
-			subdivision as specified by the pixel error.
+			subdivision as specified by the adaptive error.
 			The flatness metric ensures that the subdivided
 			surface doesn't deviate from the true surface
-			by more than the pixel error, and will tend to
+			by more than the error, and will tend to
 			increase detail in areas of high curvature. The
 			edge length metric ensures that the edge length
-			of a polygon is never longer than the pixel metric,
+			of a polygon is never longer than the error,
 			so will tend to subdivide evenly regardless of
 			curvature - this can be useful when applying a
 			displacement shader. The auto metric automatically
@@ -318,6 +323,34 @@ Gaffer.Metadata.registerNode(
 			"preset:Auto", "auto",
 			"preset:Edge Length", "edge_length",
 			"preset:Flatness", "flatness",
+
+			"plugValueWidget:type", "GafferUI.PresetsPlugValueWidget",
+
+		],
+
+		"attributes.subdivAdaptiveSpace" : [
+
+			"description",
+			"""
+			The space in which the error is measured when
+			performing adaptive subdivision. Raster space means
+			that the subdivision adapts to size on screen,
+			with subdivAdaptiveError being specified in pixels.
+			Object space means that the error is measured in
+			object space units and will not be sensitive to
+			size on screen.
+			""",
+
+			"layout:section", "Subdivision",
+			"label", "Adaptive Space",
+
+		],
+
+
+		"attributes.subdivAdaptiveSpace.value" : [
+
+			"preset:Raster", "raster",
+			"preset:Object", "object",
 
 			"plugValueWidget:type", "GafferUI.PresetsPlugValueWidget",
 

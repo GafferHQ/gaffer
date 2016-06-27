@@ -118,9 +118,8 @@ class InteractiveRender : public Gaffer::Node
 		std::vector<boost::shared_ptr<SceneGraph> > m_sceneGraphs;
 		IECoreScenePreview::RendererPtr m_renderer;
 		State m_state;
-		unsigned m_dirtyFlags;
+		unsigned m_dirtyComponents;
 		IECore::ConstCompoundObjectPtr m_globals;
-		IECore::ConstCompoundObjectPtr m_globalAttributes;
 		GafferScene::PathMatcher m_lightSet;
 		GafferScene::PathMatcher m_cameraSet;
 		IECoreScenePreview::Renderer::ObjectInterfacePtr m_defaultCamera;

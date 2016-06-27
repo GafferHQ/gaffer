@@ -61,7 +61,11 @@ class RendererTest( GafferTest.TestCase ) :
 			self.temporaryDirectory() + "/test.ass"
 		)
 
-		o = r.object( "testPlane", IECore.MeshPrimitive.createPlane( IECore.Box2f( IECore.V2f( -1 ), IECore.V2f( 1 ) ) ) )
+		o = r.object(
+			"testPlane",
+			IECore.MeshPrimitive.createPlane( IECore.Box2f( IECore.V2f( -1 ), IECore.V2f( 1 ) ) ),
+			r.attributes( IECore.CompoundObject() ),
+		)
 		o.transform( IECore.M44f().translate( IECore.V3f( 1, 2, 3 ) ) )
 
 		r.render()
@@ -89,7 +93,8 @@ class RendererTest( GafferTest.TestCase ) :
 					"resolution" : IECore.V2i( 2000, 1000 ),
 					"cropWindow" : IECore.Box2f( IECore.V2f( 0 ), IECore.V2f( 1, 0.75 ) ),
 				}
-			)
+			),
+			r.attributes( IECore.CompoundObject() )
 		)
 
 		r.option( "camera", IECore.StringData( "testCamera" ) )
@@ -124,11 +129,13 @@ class RendererTest( GafferTest.TestCase ) :
 				"ai:surface" : IECore.ObjectVector( [ IECore.Shader( "flat" ) ] ),
 			} )
 
-			o = r.object( "testPlane%d" % i, IECore.MeshPrimitive.createPlane( IECore.Box2f( IECore.V2f( -1 ), IECore.V2f( 1 ) ) ) )
-			# We keep specifying the same shader, but we'd like the renderer
-			# to be frugal and reuse a single arnold shader on the other side.
-			o.attributes( r.attributes( a ) )
-			del o
+			r.object(
+				"testPlane%d" % i,
+				IECore.MeshPrimitive.createPlane( IECore.Box2f( IECore.V2f( -1 ), IECore.V2f( 1 ) ) ),
+				# We keep specifying the same shader, but we'd like the renderer
+				# to be frugal and reuse a single arnold shader on the other side.
+				r.attributes( a )
+			)
 
 		r.render()
 		del r
@@ -146,7 +153,12 @@ class RendererTest( GafferTest.TestCase ) :
 			self.temporaryDirectory() + "/test.ass"
 		)
 
-		o = r.object( "testPlane", IECore.MeshPrimitive.createPlane( IECore.Box2f( IECore.V2f( -1 ), IECore.V2f( 1 ) ) ) )
+		o = r.object(
+			"testPlane",
+			IECore.MeshPrimitive.createPlane( IECore.Box2f( IECore.V2f( -1 ), IECore.V2f( 1 ) ) ),
+			r.attributes( IECore.CompoundObject() )
+		)
+
 		# Replace the shader a few times.
 		for shader in ( "utility", "flat", "standard" ) :
 			a = IECore.CompoundObject( {
@@ -177,8 +189,9 @@ class RendererTest( GafferTest.TestCase ) :
 			IECore.Shader( "flat", parameters = { "color" : "link:myHandle" } ),
 		] )
 
-		o1 = r.object( "testPlane1", IECore.MeshPrimitive.createPlane( IECore.Box2f( IECore.V2f( -1 ), IECore.V2f( 1 ) ) ) )
-		o1.attributes(
+		r.object(
+			"testPlane1",
+			IECore.MeshPrimitive.createPlane( IECore.Box2f( IECore.V2f( -1 ), IECore.V2f( 1 ) ) ),
 			r.attributes(
 				IECore.CompoundObject( {
 					"ai:surface" : shader1
@@ -191,8 +204,9 @@ class RendererTest( GafferTest.TestCase ) :
 			IECore.Shader( "standard", parameters = { "Kd_color" : "link:myHandle" } ),
 		] )
 
-		o2 = r.object( "testPlane2", IECore.MeshPrimitive.createPlane( IECore.Box2f( IECore.V2f( -1 ), IECore.V2f( 1 ) ) ) )
-		o2.attributes(
+		r.object(
+			"testPlane2",
+			IECore.MeshPrimitive.createPlane( IECore.Box2f( IECore.V2f( -1 ), IECore.V2f( 1 ) ) ),
 			r.attributes(
 				IECore.CompoundObject( {
 					"ai:surface" : shader2
@@ -200,7 +214,6 @@ class RendererTest( GafferTest.TestCase ) :
 			)
 		)
 
-		del o1, o2
 		r.render()
 		del r
 
@@ -221,8 +234,9 @@ class RendererTest( GafferTest.TestCase ) :
 		)
 
 		lightShader = IECore.ObjectVector( [ IECore.Shader( "point_light", "ai:light" ), ] )
-		o = r.light( "testLight", None )
-		o.attributes(
+		r.light(
+			"testLight",
+			None,
 			r.attributes(
 				IECore.CompoundObject( {
 					"ai:light" : lightShader
@@ -230,7 +244,6 @@ class RendererTest( GafferTest.TestCase ) :
 			)
 		)
 
-		del o
 		r.render()
 		del r
 
@@ -257,13 +270,10 @@ class RendererTest( GafferTest.TestCase ) :
 			} )
 		)
 
-		o = r.light( "testLight1", None )
-		o.attributes( lightAttributes )
+		r.light( "testLight1", None, lightAttributes )
+		r.light( "testLight2", None, lightAttributes )
 
-		o = r.light( "testLight2", None )
-		o.attributes( lightAttributes )
-
-		del o, lightAttributes
+		del lightAttributes
 		r.render()
 		del r
 
@@ -283,8 +293,9 @@ class RendererTest( GafferTest.TestCase ) :
 			self.temporaryDirectory() + "/test.ass"
 		)
 
-		o1 = r.object( "testMesh1", IECore.MeshPrimitive.createPlane( IECore.Box2f( IECore.V2f( -1 ), IECore.V2f( 1 ) ) ) )
-		o1.attributes(
+		r.object(
+			"testMesh1",
+			IECore.MeshPrimitive.createPlane( IECore.Box2f( IECore.V2f( -1 ), IECore.V2f( 1 ) ) ),
 			r.attributes( IECore.CompoundObject( {
 				"doubleSided" : IECore.BoolData( True ),
 				"ai:visibility:camera" : IECore.BoolData( False ),
@@ -297,11 +308,12 @@ class RendererTest( GafferTest.TestCase ) :
 				"ai:self_shadows" : IECore.BoolData( True ),
 				"ai:matte" : IECore.BoolData( True ),
 				"ai:opaque" : IECore.BoolData( True ),
-			} ) )
+			} ) ),
 		)
 
-		o2 = r.object( "testMesh2", IECore.MeshPrimitive.createPlane( IECore.Box2f( IECore.V2f( -1 ), IECore.V2f( 1 ) ) ) )
-		o2.attributes(
+		r.object(
+			"testMesh2",
+			IECore.MeshPrimitive.createPlane( IECore.Box2f( IECore.V2f( -1 ), IECore.V2f( 1 ) ) ),
 			r.attributes( IECore.CompoundObject( {
 				"doubleSided" : IECore.BoolData( False ),
 				"ai:visibility:camera" : IECore.BoolData( True ),
@@ -314,25 +326,25 @@ class RendererTest( GafferTest.TestCase ) :
 				"ai:self_shadows" : IECore.BoolData( False ),
 				"ai:matte" : IECore.BoolData( False ),
 				"ai:opaque" : IECore.BoolData( False ),
-			} ) )
+			} ) ),
 		)
 
-		o3 = r.object( "testMesh3", IECore.MeshPrimitive.createPlane( IECore.Box2f( IECore.V2f( -1 ), IECore.V2f( 1 ) ) ) )
+		r.object(
+			"testMesh3",
+			IECore.MeshPrimitive.createPlane( IECore.Box2f( IECore.V2f( -1 ), IECore.V2f( 1 ) ) ),
+			r.attributes( IECore.CompoundObject() ),
+		)
 
-		del o1, o2, o3
 		r.render()
 		del r
 
 		with IECoreArnold.UniverseBlock() :
 
 			arnold.AiASSLoad( self.temporaryDirectory() + "/test.ass" )
-			o1 = self.__allNodes( type = arnold.AI_NODE_SHAPE )[0]
-			o2 = self.__allNodes( type = arnold.AI_NODE_SHAPE )[1]
-			o3 = self.__allNodes( type = arnold.AI_NODE_SHAPE )[2]
 
-			self.assertEqual( arnold.AiNodeGetStr( o1, "name" ), "testMesh1" )
-			self.assertEqual( arnold.AiNodeGetStr( o2, "name" ), "testMesh2" )
-			self.assertEqual( arnold.AiNodeGetStr( o3, "name" ), "testMesh3" )
+			o1 = arnold.AiNodeLookUpByName( "testMesh1" )
+			o2 = arnold.AiNodeLookUpByName( "testMesh2" )
+			o3 = arnold.AiNodeLookUpByName( "testMesh3" )
 
 			self.assertEqual( arnold.AiNodeGetByte( o1, "sidedness" ), arnold.AI_RAY_ALL )
 			self.assertEqual( arnold.AiNodeGetByte( o2, "sidedness" ), arnold.AI_RAY_UNDEFINED )
@@ -389,6 +401,217 @@ class RendererTest( GafferTest.TestCase ) :
 
 			self.assertEqual( arnold.AiNodeEntryGetName( arnold.AiNodeGetNodeEntry( f ) ), "gaussian_filter" )
 			self.assertEqual( arnold.AiNodeGetFlt( f, "width" ), 3.5 )
+
+	def testInstancing( self ) :
+
+		r = GafferScene.Private.IECoreScenePreview.Renderer.create(
+			"IECoreArnold::Renderer",
+			GafferScene.Private.IECoreScenePreview.Renderer.RenderType.SceneDescription,
+			self.temporaryDirectory() + "/test.ass"
+		)
+
+		polyPlane = IECore.MeshPrimitive.createPlane( IECore.Box2f( IECore.V2f( -1 ), IECore.V2f( 1 ) ) )
+		subdivPlane = polyPlane.copy()
+		subdivPlane.interpolation = "catmullClark"
+
+		defaultAttributes = r.attributes( IECore.CompoundObject() )
+		adaptiveAttributes = r.attributes(
+			IECore.CompoundObject( {
+				"ai:polymesh:subdiv_adaptive_error" : IECore.FloatData( 0.1 ),
+			} )
+		)
+		nonAdaptiveAttributes = r.attributes(
+			IECore.CompoundObject( {
+				"ai:polymesh:subdiv_adaptive_error" : IECore.FloatData( 0 ),
+			} )
+		)
+		adaptiveObjectSpaceAttributes = r.attributes(
+			IECore.CompoundObject( {
+				"ai:polymesh:subdiv_adaptive_error" : IECore.FloatData( 0.1 ),
+				"ai:polymesh:subdiv_adaptive_space" : IECore.StringData( "object" ),
+			} )
+		)
+
+		# We should be able to automatically instance polygon meshes
+		# regardless of the subdivision settings, because they're
+		# irrelevant.
+
+		r.object( "polyDefaultAttributes1", polyPlane.copy(), defaultAttributes )
+		r.object( "polyDefaultAttributes2", polyPlane.copy(), defaultAttributes )
+
+		r.object( "polyAdaptiveAttributes1", polyPlane.copy(), adaptiveAttributes )
+		r.object( "polyAdaptiveAttributes2", polyPlane.copy(), adaptiveAttributes )
+
+		# And we should be able to instance subdiv meshes with
+		# non-adaptive subdivision.
+
+		r.object( "subdivDefaultAttributes1", subdivPlane.copy(), defaultAttributes )
+		r.object( "subdivDefaultAttributes2", subdivPlane.copy(), defaultAttributes )
+
+		r.object( "subdivNonAdaptiveAttributes1", subdivPlane.copy(), nonAdaptiveAttributes )
+		r.object( "subdivNonAdaptiveAttributes2", subdivPlane.copy(), nonAdaptiveAttributes )
+
+		# But if adaptive subdivision is enabled, we can't, because the
+		# mesh can't be subdivided appropriately for both instances.
+
+		r.object( "subdivAdaptiveAttributes1", subdivPlane.copy(), adaptiveAttributes )
+		r.object( "subdivAdaptiveAttributes2", subdivPlane.copy(), adaptiveAttributes )
+
+		# Although we should be able to if the adaptive space is "object".
+
+		r.object( "subdivAdaptiveObjectSpaceAttributes1", subdivPlane.copy(), adaptiveObjectSpaceAttributes )
+		r.object( "subdivAdaptiveObjectSpaceAttributes2", subdivPlane.copy(), adaptiveObjectSpaceAttributes )
+
+		r.render()
+		del r
+
+		def assertInstanced( *names ) :
+
+			firstInstanceNode = arnold.AiNodeLookUpByName( names[0] )
+			for name in names :
+
+				instanceNode = arnold.AiNodeLookUpByName( name )
+				self.assertEqual( arnold.AiNodeEntryGetName( arnold.AiNodeGetNodeEntry( instanceNode ) ), "ginstance" )
+
+				nodePtr = arnold.AiNodeGetPtr( instanceNode, "node" )
+				self.assertEqual( nodePtr, arnold.AiNodeGetPtr( firstInstanceNode, "node" ) )
+				self.assertEqual( arnold.AiNodeGetInt( arnold.AtNode.from_address( nodePtr ), "visibility" ), 0 )
+
+		def assertNotInstanced( *names ) :
+
+			for name in names :
+				node = arnold.AiNodeLookUpByName( name )
+				self.assertEqual( arnold.AiNodeEntryGetName( arnold.AiNodeGetNodeEntry( node ) ), "polymesh" )
+
+		with IECoreArnold.UniverseBlock() :
+
+			arnold.AiASSLoad( self.temporaryDirectory() + "/test.ass" )
+
+			shapes = self.__allNodes( type = arnold.AI_NODE_SHAPE )
+			numInstances = len( [ s for s in shapes if arnold.AiNodeEntryGetName( arnold.AiNodeGetNodeEntry( s ) ) == "ginstance" ] )
+			numPolyMeshes = len( [ s for s in shapes if arnold.AiNodeEntryGetName( arnold.AiNodeGetNodeEntry( s ) ) == "polymesh" ] )
+
+			self.assertEqual( numPolyMeshes, 5 )
+			self.assertEqual( numInstances, 10 )
+
+			assertInstanced(
+				"polyDefaultAttributes1",
+				"polyDefaultAttributes2",
+				"polyAdaptiveAttributes1",
+				"polyAdaptiveAttributes2",
+			)
+
+			assertInstanced(
+				"subdivDefaultAttributes1",
+				"subdivDefaultAttributes2",
+				"subdivNonAdaptiveAttributes1",
+				"subdivNonAdaptiveAttributes2",
+			)
+
+			assertNotInstanced(
+				"subdivAdaptiveAttributes1",
+				"subdivAdaptiveAttributes2"
+			)
+
+			assertInstanced(
+				"subdivAdaptiveObjectSpaceAttributes1",
+				"subdivAdaptiveObjectSpaceAttributes2",
+			)
+
+	def testSubdivisionAttributes( self ) :
+
+		r = GafferScene.Private.IECoreScenePreview.Renderer.create(
+			"IECoreArnold::Renderer",
+			GafferScene.Private.IECoreScenePreview.Renderer.RenderType.SceneDescription,
+			self.temporaryDirectory() + "/test.ass"
+		)
+
+		subdivPlane = IECore.MeshPrimitive.createPlane( IECore.Box2f( IECore.V2f( -1 ), IECore.V2f( 1 ) ) )
+		subdivPlane.interpolation = "catmullClark"
+
+		r.object(
+			"plane",
+			subdivPlane,
+			r.attributes(
+				IECore.CompoundObject( {
+					"ai:polymesh:subdiv_iterations" : IECore.IntData( 10 ),
+					"ai:polymesh:subdiv_adaptive_error" : IECore.FloatData( 0.25 ),
+					"ai:polymesh:subdiv_adaptive_metric" : IECore.StringData( "edge_length" ),
+					"ai:polymesh:subdiv_adaptive_space" : IECore.StringData( "raster" ),
+				} )
+			)
+		)
+
+		r.render()
+		del r
+
+		with IECoreArnold.UniverseBlock() :
+
+			arnold.AiASSLoad( self.temporaryDirectory() + "/test.ass" )
+
+			node = arnold.AiNodeLookUpByName( "plane" )
+			self.assertEqual( arnold.AiNodeEntryGetName( arnold.AiNodeGetNodeEntry( node ) ), "polymesh" )
+			self.assertEqual( arnold.AiNodeGetInt( node, "subdiv_iterations" ), 10 )
+			self.assertEqual( arnold.AiNodeGetFlt( node, "subdiv_adaptive_error" ), 0.25 )
+			self.assertEqual( arnold.AiNodeGetStr( node, "subdiv_adaptive_metric" ), "edge_length" )
+			self.assertEqual( arnold.AiNodeGetStr( node, "subdiv_adaptive_space" ), "raster" )
+
+	def testUserAttributes( self ) :
+
+		r = GafferScene.Private.IECoreScenePreview.Renderer.create(
+			"IECoreArnold::Renderer",
+			GafferScene.Private.IECoreScenePreview.Renderer.RenderType.SceneDescription,
+			self.temporaryDirectory() + "/test.ass"
+		)
+
+		r.object(
+			"plane1",
+			IECore.MeshPrimitive.createPlane( IECore.Box2f( IECore.V2f( -1 ), IECore.V2f( 1 ) ) ),
+			r.attributes(
+				IECore.CompoundObject( {
+					"user:testInt" : IECore.IntData( 1 ),
+					"user:testFloat" : IECore.FloatData( 2.5 ),
+					"user:testV3f" : IECore.V3fData( IECore.V3f( 1, 2, 3 ) ),
+					"user:testColor3f" : IECore.Color3fData( IECore.Color3f( 4, 5, 6 ) ),
+					"user:testString" : IECore.StringData( "we're all doomed" ),
+				} )
+			)
+		)
+
+		r.object(
+			"plane2",
+			IECore.MeshPrimitive.createPlane( IECore.Box2f( IECore.V2f( -1 ), IECore.V2f( 1 ) ) ),
+			r.attributes(
+				IECore.CompoundObject( {
+					"user:testInt" : IECore.IntData( 2 ),
+					"user:testFloat" : IECore.FloatData( 25 ),
+					"user:testV3f" : IECore.V3fData( IECore.V3f( 0, 1, 0 ) ),
+					"user:testColor3f" : IECore.Color3fData( IECore.Color3f( 1, 0.5, 0 ) ),
+					"user:testString" : IECore.StringData( "indeed" ),
+				} )
+			)
+		)
+
+		r.render()
+		del r
+
+		with IECoreArnold.UniverseBlock() :
+
+			arnold.AiASSLoad( self.temporaryDirectory() + "/test.ass" )
+
+			plane1 = arnold.AiNodeLookUpByName( "plane1" )
+			self.assertEqual( arnold.AiNodeGetInt( plane1, "user:testInt" ), 1 )
+			self.assertEqual( arnold.AiNodeGetFlt( plane1, "user:testFloat" ), 2.5 )
+			self.assertEqual( arnold.AiNodeGetVec( plane1, "user:testV3f" ), arnold.AtVector( 1, 2, 3 ) )
+			self.assertEqual( arnold.AiNodeGetRGB( plane1, "user:testColor3f" ), arnold.AtRGB( 4, 5, 6 ) )
+			self.assertEqual( arnold.AiNodeGetStr( plane1, "user:testString" ), "we're all doomed" )
+
+			plane2 = arnold.AiNodeLookUpByName( "plane2" )
+			self.assertEqual( arnold.AiNodeGetInt( plane2, "user:testInt" ), 2 )
+			self.assertEqual( arnold.AiNodeGetFlt( plane2, "user:testFloat" ), 25 )
+			self.assertEqual( arnold.AiNodeGetVec( plane2, "user:testV3f" ), arnold.AtVector( 0, 1, 0 ) )
+			self.assertEqual( arnold.AiNodeGetRGB( plane2, "user:testColor3f" ), arnold.AtRGB( 1, 0.5, 0 ) )
+			self.assertEqual( arnold.AiNodeGetStr( plane2, "user:testString" ), "indeed" )
 
 	def __allNodes( self, type = arnold.AI_NODE_ALL, ignoreBuiltIn = True ) :
 

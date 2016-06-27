@@ -100,15 +100,22 @@ class Renderer : public IECore::RefCounted
 
 		};
 
-		/// Creates a bundle of attributes which can subsequently
-		/// be assigned to objects with `ObjectInterface->attributes()`.
-		/// Each bundle of attributes may be assigned to multiple
-		/// objects.
+		/// Creates a block of attributes which can subsequently
+		/// be assigned to objects. Each block of attributes may
+		/// be assigned to multiple objects, but each object may
+		/// only have one attribute block assigned at a time.
 		///
 		/// Standard Attributes
 		/// -------------------
 		///
 		/// "doubleSided", BoolData, true
+		/// "surface", ObjectVector of IECore::Shaders
+		/// "light", ObjectVector of IECore::Shaders
+		///
+		/// Renderer Specific Attributes
+		/// ----------------------------
+		///
+		/// "<rendererSpecificPrefix>:name"
 		virtual AttributesInterfacePtr attributes( const IECore::CompoundObject *attributes ) = 0;
 
 		IE_CORE_FORWARDDECLARE( ObjectInterface );
@@ -127,14 +134,20 @@ class Renderer : public IECore::RefCounted
 
 				IE_CORE_DECLAREMEMBERPTR( ObjectInterface )
 
-				/// Assigns a transform to the object. For Interactive renders
-				/// transforms may be modified at any time the renderer is paused.
+				/// Assigns a transform to the object, replacing any previously
+				/// assigned transform. For Interactive renders transforms may be
+				/// modified at any time the renderer is paused.
+				/// \todo Should we introduce a TransformInterface that can be
+				/// passed directly to `Renderer::object()` etc in the same
+				/// way that attributes are? This might be a way of supporting
+				/// renderers with more complex transform models than just flattened
+				/// matrices.
 				virtual void transform( const Imath::M44f &transform ) = 0;
 				/// As above, but specifying a moving transform.
 				virtual void transform( const std::vector<Imath::M44f> &samples, const std::vector<float> &times ) = 0;
-				/// Assigns a block of attributes to the object, replacing any
-				/// previously assigned attributes. For Interactive renders
-				/// attributes may be modified at any time the renderer is paused.
+				/// Assigns a new block of attributes to the object, replacing any
+				/// previously assigned attributes. This may only be used in Interactive
+				/// mode, and then only when the renderer is paused.
 				virtual void attributes( const AttributesInterface *attributes ) = 0;
 
 			protected :
@@ -147,7 +160,8 @@ class Renderer : public IECore::RefCounted
 		/// other lights/objects, as some renderers (for instance a streaming OpenGL renderer)
 		/// may be unable to operate otherwise.
 		///
-		/// Standard parameters :
+		/// Standard Parameters
+		/// -------------------
 		///
 		/// "resolution", V2iData
 		/// The resolution of any output images. Should default to 640x480 if not specified.
@@ -179,22 +193,24 @@ class Renderer : public IECore::RefCounted
 		/// "shutter", V2fData
 		/// The time interval for which the shutter is open - this is used in conjunction with the
 		/// times passed to motionBegin() to specify motion blur. Defaults to 0,0 if unspecified.
-		virtual ObjectInterfacePtr camera( const std::string &name, const IECore::Camera *camera ) = 0;
+		virtual ObjectInterfacePtr camera( const std::string &name, const IECore::Camera *camera, const AttributesInterface *attributes ) = 0;
 
-		/// Adds a named light to the render. A shader for the light is expected to be
-		/// provided by a subsequently assigned attribute block in a renderer specific
-		/// fashion. Object may be non-NULL to specify arbitrary geometry for a geometric
-		/// area light, or NULL to indicate that the light shader specifies its own geometry
-		/// internally (or is non-geometric in nature).
-		virtual ObjectInterfacePtr light( const std::string &name, const IECore::Object *object = NULL ) = 0;
+		/// Adds a named light with the initially supplied set of attributes, which are expected
+		/// to provide at least a light shader. Object may be non-NULL to specify arbitrary geometry
+		/// for a geometric area light, or NULL to indicate that the light shader specifies its own
+		/// geometry internally (or is non-geometric in nature).
+		/// \todo Should object be typed as Primitive?
+		virtual ObjectInterfacePtr light( const std::string &name, const IECore::Object *object, const AttributesInterface *attributes ) = 0;
 
-		/// Adds a named object to the render.
+		/// Adds a named object to the render with the initally supplied set of attributes.
+		/// The attributes may subsequently be edited in interactive mode using
+		/// ObjectInterface::attributes().
 		/// \todo Rejig class hierarchy so we can have something less generic than
 		/// Object here, but still pass CoordinateSystems. Or should
 		/// coordinate systems have their own dedicated calls?
-		virtual ObjectInterfacePtr object( const std::string &name, const IECore::Object *object ) = 0;
+		virtual ObjectInterfacePtr object( const std::string &name, const IECore::Object *object, const AttributesInterface *attributes ) = 0;
 		/// As above, but specifying a deforming object.
-		virtual ObjectInterfacePtr object( const std::string &name, const std::vector<const IECore::Object *> &samples, const std::vector<float> &times ) = 0;
+		virtual ObjectInterfacePtr object( const std::string &name, const std::vector<const IECore::Object *> &samples, const std::vector<float> &times, const AttributesInterface *attributes ) = 0;
 
 		/// Performs the render - should be called after the
 		/// entire scene has been specified using the methods

@@ -135,12 +135,12 @@ list rendererTypes()
 	return result;
 }
 
-IECoreScenePreview::Renderer::ObjectInterfacePtr rendererObject1( Renderer &renderer, const std::string &name, const IECore::Object *object )
+IECoreScenePreview::Renderer::ObjectInterfacePtr rendererObject1( Renderer &renderer, const std::string &name, const IECore::Object *object, const Renderer::AttributesInterface *attributes )
 {
-	return renderer.object( name, object );
+	return renderer.object( name, object, attributes );
 }
 
-IECoreScenePreview::Renderer::ObjectInterfacePtr rendererObject2( Renderer &renderer, const std::string &name, object pythonSamples, object pythonTimes )
+IECoreScenePreview::Renderer::ObjectInterfacePtr rendererObject2( Renderer &renderer, const std::string &name, object pythonSamples, object pythonTimes, const Renderer::AttributesInterface *attributes )
 {
 	std::vector<const IECore::Object *> samples;
 	container_utils::extend_container( samples, pythonSamples );
@@ -148,7 +148,7 @@ IECoreScenePreview::Renderer::ObjectInterfacePtr rendererObject2( Renderer &rend
 	std::vector<float> times;
 	container_utils::extend_container( times, pythonTimes );
 
-	return renderer.object( name, samples, times );
+	return renderer.object( name, samples, times, attributes );
 }
 
 void objectInterfaceTransform1( Renderer::ObjectInterface &objectInterface, const Imath::M44f &transform )

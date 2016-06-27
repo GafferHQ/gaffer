@@ -1258,6 +1258,62 @@ class InteractiveRenderTest( GafferSceneTest.SceneTestCase ) :
 		image = IECore.ImageDisplayDriver.storedImage( "myLovelySphere" )
 		self.assertAlmostEqual( self.__color4fAtUV( image, IECore.V2f( 0.5 ) ).r, 1, delta = 0.01 )
 
+	def testGlobalCameraVisibility( self ) :
+
+		s = Gaffer.ScriptNode()
+		s["s"] = GafferScene.Sphere()
+
+		s["g"] = GafferScene.Group()
+		s["g"]["in"].setInput( s["s"]["out"] )
+
+		s["a"] = GafferScene.CustomAttributes()
+		s["a"]["in"].setInput( s["g"]["out"] )
+		s["a"]["global"].setValue( True )
+		visibilityPlug = s["a"]["attributes"].addMember( self._cameraVisibilityAttribute(), True )
+
+		s["o"] = GafferScene.Outputs()
+		s["o"].addOutput(
+			"beauty",
+			IECore.Display(
+				"test",
+				"ieDisplay",
+				"rgba",
+				{
+					"driverType" : "ImageDisplayDriver",
+					"handle" : "myLovelySphere",
+				}
+			)
+		)
+		s["o"]["in"].setInput( s["a"]["out"] )
+
+		s["r"] = self._createInteractiveRender()
+		s["r"]["in"].setInput( s["o"]["out"] )
+
+		s["r"]["state"].setValue( s["r"].State.Running )
+
+		time.sleep( 0.5 )
+
+		# Visible to start with
+
+		image = IECore.ImageDisplayDriver.storedImage( "myLovelySphere" )
+		self.assertAlmostEqual( self.__color4fAtUV( image, IECore.V2f( 0.5 ) ).r, 1, delta = 0.01 )
+
+		# Hide
+
+		visibilityPlug["value"].setValue( False )
+		time.sleep( 0.5 )
+
+		image = IECore.ImageDisplayDriver.storedImage( "myLovelySphere" )
+		self.assertAlmostEqual( self.__color4fAtUV( image, IECore.V2f( 0.5 ) ).r, 0, delta = 0.01 )
+
+		# Show again
+
+		visibilityPlug["value"].setValue( True )
+		time.sleep( 0.5 )
+
+		image = IECore.ImageDisplayDriver.storedImage( "myLovelySphere" )
+		self.assertAlmostEqual( self.__color4fAtUV( image, IECore.V2f( 0.5 ) ).r, 1, delta = 0.01 )
+
 	def testEffectiveContext( self ) :
 
 		s = Gaffer.ScriptNode()

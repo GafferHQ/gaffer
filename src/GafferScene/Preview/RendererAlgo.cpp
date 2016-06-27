@@ -247,7 +247,7 @@ struct LocationOutput
 			return motionSegments( m_options.deformationBlur, g_deformationBlurAttributeName, g_deformationBlurSegmentsAttributeName );
 		}
 
-		void applyAttributes( IECoreScenePreview::Renderer::ObjectInterface *objectInterface )
+		IECoreScenePreview::Renderer::AttributesInterfacePtr attributes()
 		{
 			/// \todo Should we keep a cache of AttributesInterfaces so we can share
 			/// them between multiple objects, or should we rely on the renderers to
@@ -255,8 +255,7 @@ struct LocationOutput
 			/// (e.g. "ai:surface") separately from others, they can do a better job,
 			/// but perhaps there might be some value in caching here at the higher
 			/// level too?
-			IECoreScenePreview::Renderer::AttributesInterfacePtr rendererAttributes = m_renderer->attributes( m_attributes.get() );
-			objectInterface->attributes( rendererAttributes.get() );
+			return m_renderer->attributes( m_attributes.get() );
 		}
 
 		void applyTransform( IECoreScenePreview::Renderer::ObjectInterface *objectInterface )
@@ -420,9 +419,12 @@ struct CameraOutput : public LocationOutput
 				std::string name;
 				ScenePlug::pathToString( path, name );
 
-				IECoreScenePreview::Renderer::ObjectInterfacePtr objectInterface = renderer()->camera( name, cameraCopy.get() );
+				IECoreScenePreview::Renderer::ObjectInterfacePtr objectInterface = renderer()->camera(
+					name,
+					cameraCopy.get(),
+					attributes().get()
+				);
 
-				applyAttributes( objectInterface.get() );
 				applyTransform( objectInterface.get() );
 			}
 		}
@@ -461,10 +463,10 @@ struct LightOutput : public LocationOutput
 			ScenePlug::pathToString( path, name );
 			IECoreScenePreview::Renderer::ObjectInterfacePtr objectInterface = renderer()->light(
 				name,
-				!runTimeCast<const NullObject>( object.get() ) ? object.get() : NULL
+				!runTimeCast<const NullObject>( object.get() ) ? object.get() : NULL,
+				attributes().get()
 			);
 
-			applyAttributes( objectInterface.get() );
 			applyTransform( objectInterface.get() );
 		}
 
@@ -505,9 +507,10 @@ struct ObjectOutput : public LocationOutput
 		std::string name;
 		ScenePlug::pathToString( path, name );
 		IECoreScenePreview::Renderer::ObjectInterfacePtr objectInterface;
+		IECoreScenePreview::Renderer::AttributesInterfacePtr attributesInterface = attributes();
 		if( !sampleTimes.size() )
 		{
-			objectInterface = renderer()->object( name, samples[0].get() );
+			objectInterface = renderer()->object( name, samples[0].get(), attributesInterface.get() );
 		}
 		else
 		{
@@ -518,10 +521,9 @@ struct ObjectOutput : public LocationOutput
 			{
 				objectsVector.push_back( it->get() );
 			}
-			objectInterface = renderer()->object( name, objectsVector, timesVector );
+			objectInterface = renderer()->object( name, objectsVector, timesVector, attributesInterface.get() );
 		}
 
-		applyAttributes( objectInterface.get() );
 		applyTransform( objectInterface.get() );
 
 		return true;
@@ -691,7 +693,12 @@ void outputCameras( const ScenePlug *scene, const IECore::CompoundObject *global
 	{
 		CameraPtr defaultCamera = camera( scene, globals );
 		StringDataPtr name = new StringData( "gaffer:defaultCamera" );
-		renderer->camera( name->readable(), defaultCamera.get() );
+		IECoreScenePreview::Renderer::AttributesInterfacePtr defaultAttributes = renderer->attributes( scene->attributesPlug()->defaultValue() ).get();
+		renderer->camera(
+			name->readable(),
+			defaultCamera.get(),
+			defaultAttributes.get()
+		);
 		renderer->option( "camera", name.get() );
 	}
 }
