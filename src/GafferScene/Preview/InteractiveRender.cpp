@@ -345,7 +345,7 @@ class InteractiveRender::SceneGraph
 		// Returns true if the object changed.
 		bool updateObject( const ObjectPlug *objectPlug, Type type, IECoreScenePreview::Renderer *renderer, const IECore::CompoundObject *globals )
 		{
-			const bool hadObjectInterface = m_objectInterface;
+			const bool hadObjectInterface = static_cast<bool>( m_objectInterface );
 			if( type == NoType )
 			{
 				m_objectInterface = NULL;
