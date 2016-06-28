@@ -34,6 +34,8 @@
 //
 //////////////////////////////////////////////////////////////////////////
 
+#include "IECore/Primitive.h"
+
 #include "Gaffer/SubGraph.h"
 #include "Gaffer/Dot.h"
 #include "Gaffer/StringPlug.h"
@@ -41,8 +43,8 @@
 #include "GafferScene/ShaderSwitch.h"
 
 #include "GafferOSL/OSLShader.h"
-#include "GafferOSL/OSLImage.h"
 #include "GafferOSL/OSLObject.h"
+#include "GafferOSL/ShadingEngine.h"
 
 using namespace Imath;
 using namespace IECore;
@@ -179,7 +181,7 @@ IECore::ConstObjectPtr OSLObject::computeProcessedObject( const ScenePath &path,
 	}
 
 	ConstOSLShaderPtr shader = runTimeCast<const OSLShader>( shaderPlug()->source<Plug>()->node() );
-	OSLRenderer::ConstShadingEnginePtr shadingEngine = shader ? shader->shadingEngine() : NULL;
+	ConstShadingEnginePtr shadingEngine = shader ? shader->shadingEngine() : NULL;
 
 	if( !shadingEngine )
 	{

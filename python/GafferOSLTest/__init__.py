@@ -36,7 +36,7 @@
 
 from OSLTestCase import OSLTestCase
 from OSLShaderTest import OSLShaderTest
-from OSLRendererTest import OSLRendererTest
+from ShadingEngineTest import ShadingEngineTest
 from OSLImageTest import OSLImageTest
 from OSLObjectTest import OSLObjectTest
 from OSLExpressionEngineTest import OSLExpressionEngineTest

@@ -362,18 +362,15 @@ class OSLShaderTest( GafferOSLTest.OSLTestCase ) :
 		state = script["shader"].state()
 		self.assertNotEqual( state[0].parameters["__handle"], state[1].parameters["__handle"] )
 
-	# As best as I can tell, OSL doesn't actually implement the shader level metadata
-	# that it describes in the language spec.
-	@unittest.expectedFailure
 	def testShaderMetadata( self ) :
 
 		s = self.compileShader( os.path.dirname( __file__ ) + "/shaders/metadata.osl" )
 		n = GafferOSL.OSLShader()
 		n.loadShader( s )
 
-		self.assertEqual( n.shaderMetadata( "stringValue" ), IECore.StringData( "s" ) )
-		self.assertEqual( n.shaderMetadata( "intValue" ), IECore.IntData( 1 ) )
-		self.assertEqual( n.shaderMetadata( "floatValue" ), IECore.FloatData( 0.5 ) )
+		self.assertEqual( n.shaderMetadata( "stringValue" ), "s" )
+		self.assertEqual( n.shaderMetadata( "intValue" ), 1 )
+		self.assertEqual( n.shaderMetadata( "floatValue" ), 0.5 )
 
 	def testParameterMetadata( self ) :
 
@@ -389,7 +386,6 @@ class OSLShaderTest( GafferOSLTest.OSLTestCase ) :
 		self.assertEqual( n.parameterMetadata( n["parameters"]["b"], "bIntValue" ), 2 )
 		self.assertEqual( n.parameterMetadata( n["parameters"]["b"], "bFloatValue" ), 0.75 )
 
-	@unittest.skipIf( GafferOSL.oslLibraryVersionCode() < 10600, "OSL doesn't support array metadata" )
 	def testParameterArrayMetadata( self ) :
 
 		s = self.compileShader( os.path.dirname( __file__ ) + "/shaders/arrayMetadata.osl" )
@@ -400,7 +396,6 @@ class OSLShaderTest( GafferOSLTest.OSLTestCase ) :
 		self.assertEqual( n.parameterMetadata( n["parameters"]["a"], "aIntValues" ), IECore.IntVectorData( [ 1, 2 ] ) )
 		self.assertEqual( n.parameterMetadata( n["parameters"]["a"], "aFloatValues" ), IECore.FloatVectorData( [ 0.25, 0.5 ] ) )
 
-	@unittest.skipIf( GafferOSL.oslLibraryVersionCode() < 10600, "OSL doesn't support array metadata" )
 	def testMetadataReuse( self ) :
 
 		s = self.compileShader( os.path.dirname( __file__ ) + "/shaders/arrayMetadata.osl" )

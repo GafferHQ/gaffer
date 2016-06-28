@@ -46,7 +46,7 @@
 
 #include "GafferOSL/OSLImage.h"
 #include "GafferOSL/OSLShader.h"
-#include "GafferOSL/OSLRenderer.h"
+#include "GafferOSL/ShadingEngine.h"
 
 using namespace std;
 using namespace Imath;
@@ -289,7 +289,7 @@ void OSLImage::hashShading( const Gaffer::Context *context, IECore::MurmurHash &
 
 IECore::ConstCompoundDataPtr OSLImage::computeShading( const Gaffer::Context *context ) const
 {
-	OSLRenderer::ConstShadingEnginePtr shadingEngine;
+	ConstShadingEnginePtr shadingEngine;
 	if( const OSLShader *shader = runTimeCast<const OSLShader>( shaderPlug()->source<Plug>()->node() ) )
 	{
 		shadingEngine = shader->shadingEngine();
