@@ -1,6 +1,6 @@
 ##########################################################################
 #
-#  Copyright (c) 2012, John Haddon. All rights reserved.
+#  Copyright (c) 2016, Image Engine Design Inc. All rights reserved.
 #
 #  Redistribution and use in source and binary forms, with or without
 #  modification, are permitted provided that the following conditions are
@@ -34,15 +34,43 @@
 #
 ##########################################################################
 
-from ArnoldShaderTest import ArnoldShaderTest
-from ArnoldRenderTest import ArnoldRenderTest
-from ArnoldOptionsTest import ArnoldOptionsTest
-from ArnoldAttributesTest import ArnoldAttributesTest
-from ArnoldVDBTest import ArnoldVDBTest
-from InteractiveArnoldRenderTest import InteractiveArnoldRenderTest
-from ArnoldDisplacementTest import ArnoldDisplacementTest
-import IECoreArnoldPreviewTest
+import unittest
+
+import IECore
+
+import GafferSceneTest
+import GafferArnold
+
+class ArnoldDisplacementTest( GafferSceneTest.SceneTestCase ) :
+
+	def test( self ) :
+
+		n = GafferArnold.ArnoldShader()
+		n.loadShader( "noise" )
+
+		d = GafferArnold.ArnoldDisplacement()
+		d["map"].setInput( n["out"] )
+		d["height"].setValue( 2.5 )
+		d["padding"].setValue( 25 )
+		d["zeroValue"].setValue( .25 )
+		d["autoBump"].setValue( True )
+
+		na = n.attributes()
+		da = d.attributes()
+
+		self.assertEqual(
+			da,
+			IECore.CompoundObject( {
+				"ai:disp_map" : na["ai:surface"],
+				"ai:disp_height" : IECore.FloatData( 2.5 ),
+				"ai:disp_padding" : IECore.FloatData( 25 ),
+				"ai:disp_zero_value" : IECore.FloatData( .25 ),
+				"ai:disp_auto_bump" : IECore.BoolData( True ),
+			} )
+		)
+
+		d["enabled"].setValue( False )
+		self.assertEqual( d.attributes(), IECore.CompoundObject() )
 
 if __name__ == "__main__":
-	import unittest
 	unittest.main()
