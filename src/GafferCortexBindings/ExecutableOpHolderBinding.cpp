@@ -40,7 +40,7 @@
 
 #include "Gaffer/Context.h"
 
-#include "GafferDispatchBindings/ExecutableNodeBinding.h"
+#include "GafferDispatchBindings/TaskNodeBinding.h"
 
 #include "GafferCortex/ExecutableOpHolder.h"
 #include "GafferCortex/CompoundParameterHandler.h"
@@ -53,7 +53,7 @@ using namespace GafferDispatchBindings;
 using namespace GafferCortex;
 using namespace GafferCortexBindings;
 
-typedef ParameterisedHolderWrapper< ExecutableNodeWrapper<ExecutableOpHolder> > ExecutableOpHolderWrapper;
+typedef ParameterisedHolderWrapper< TaskNodeWrapper<ExecutableOpHolder> > ExecutableOpHolderWrapper;
 
 static IECore::OpPtr getOp( ExecutableOpHolder &n )
 {
@@ -62,7 +62,7 @@ static IECore::OpPtr getOp( ExecutableOpHolder &n )
 
 void GafferCortexBindings::bindExecutableOpHolder()
 {
-	ExecutableNodeClass<ExecutableOpHolder, ExecutableOpHolderWrapper>()
+	TaskNodeClass<ExecutableOpHolder, ExecutableOpHolderWrapper>()
 		.def(
 			"setOp",
 			&ExecutableOpHolder::setOp,

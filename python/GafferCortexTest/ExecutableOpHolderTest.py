@@ -65,14 +65,14 @@ class ExecutableOpHolderTest( GafferTest.TestCase ) :
 
 		n = GafferCortex.ExecutableOpHolder()
 		self.assertEqual( n.typeName(), "GafferCortex::ExecutableOpHolder" )
-		self.failUnless( n.isInstanceOf( GafferCortex.ParameterisedHolderExecutableNode.staticTypeId() ) )
+		self.failUnless( n.isInstanceOf( GafferCortex.ParameterisedHolderTaskNode.staticTypeId() ) )
 		self.failUnless( n.isInstanceOf( Gaffer.Node.staticTypeId() ) )
 
-	def testIsExecutable( self ) :
+	def testIsTaskNode( self ) :
 
-		self.assertTrue( isinstance( GafferCortex.ExecutableOpHolder(), GafferDispatch.ExecutableNode ) )
+		self.assertTrue( isinstance( GafferCortex.ExecutableOpHolder(), GafferDispatch.TaskNode ) )
 
-	def testExecutablePlugs( self ) :
+	def testTaskPlugs( self ) :
 
 		n = GafferCortex.ExecutableOpHolder()
 		self.assertEqual( n["task"].direction(), Gaffer.Plug.Direction.Out )
@@ -84,7 +84,7 @@ class ExecutableOpHolderTest( GafferTest.TestCase ) :
 		opSpec = GafferCortexTest.ParameterisedHolderTest.classSpecification( "primitive/renameVariables", "IECORE_OP_PATHS" )[:-1]
 		n.setOp( *opSpec )
 
-	def testExecutableMethods( self ) :
+	def testHash( self ) :
 
 		n = GafferCortex.ExecutableOpHolder()
 		opSpec = GafferCortexTest.ParameterisedHolderTest.classSpecification( "primitive/renameVariables", "IECORE_OP_PATHS" )[:-1]
@@ -167,12 +167,12 @@ class ExecutableOpHolderTest( GafferTest.TestCase ) :
 			self.assertEqual( n2PreTasks[0].context(), c )
 			self.assertEqual( n2PreTasks[1].node(), n2b )
 			self.assertEqual( n2PreTasks[1].context(), c )
-			t1 = GafferDispatch.ExecutableNode.Task(n2a,c)
-			t2 = GafferDispatch.ExecutableNode.Task(n2b,c)
+			t1 = GafferDispatch.TaskNode.Task(n2a,c)
+			t2 = GafferDispatch.TaskNode.Task(n2b,c)
 			self.assertEqual( n2PreTasks[0], t1 )
 			self.assertEqual( n2PreTasks[1], t2 )
 			self.assertEqual( len( set( n2["task"].preTasks() ).difference( [ t1, t2] ) ), 0 )
-			self.assertEqual( n1["task"].preTasks(), [ GafferDispatch.ExecutableNode.Task( n2, c ) ] )
+			self.assertEqual( n1["task"].preTasks(), [ GafferDispatch.TaskNode.Task( n2, c ) ] )
 
 	def testSerialise( self ) :
 

@@ -36,15 +36,14 @@
 
 # Utility classes
 
-from CountingExecutableNode import CountingExecutableNode
 from TextWriter import TextWriter
-from LoggingExecutableNode import LoggingExecutableNode
+from LoggingTaskNode import LoggingTaskNode
 
 # Test cases
 
 from DispatcherTest import DispatcherTest
 from LocalDispatcherTest import LocalDispatcherTest
-from ExecutableNodeTest import ExecutableNodeTest
+from TaskNodeTest import TaskNodeTest
 from TaskSwitchTest import TaskSwitchTest
 from PythonCommandTest import PythonCommandTest
 from SystemCommandTest import SystemCommandTest

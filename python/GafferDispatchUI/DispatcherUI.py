@@ -52,7 +52,7 @@ Gaffer.Metadata.registerNode(
 	"description",
 	"""
 	Used to schedule the execution of a network
-	of ExecutableNodes.
+	of TaskNodes.
 	""",
 
 	plugs = {
@@ -119,12 +119,12 @@ Gaffer.Metadata.registerNode(
 )
 
 ##########################################################################
-# Additional Metadata for ExecutableNode
+# Additional Metadata for TaskNode
 ##########################################################################
 
 Gaffer.Metadata.registerNode(
 
-	GafferDispatch.ExecutableNode,
+	GafferDispatch.TaskNode,
 
 	"layout:customWidget:dispatchButton:widgetType", "GafferUI.DispatcherUI._DispatchButton",
 
@@ -328,7 +328,7 @@ class DispatcherWindow( GafferUI.Window ) :
 		self.__update()
 
 ##################################################################################
-# Button for dispatching - this forms the header for the ExecutableNode ui.
+# Button for dispatching - this forms the header for the TaskNode ui.
 ##################################################################################
 
 class _DispatchButton( GafferUI.Button ) :
@@ -531,10 +531,10 @@ def _showDispatcherWindow( nodes ) :
 def selectedNodes( script ) :
 	result = []
 	for n in script.selection() :
-		if isinstance( n, GafferDispatch.ExecutableNode ) :
+		if isinstance( n, GafferDispatch.TaskNode ) :
 			result.append( n )
 		elif isinstance( n, Gaffer.SubGraph ) :
-			for p in n.children( GafferDispatch.ExecutableNode.TaskPlug ) :
+			for p in n.children( GafferDispatch.TaskNode.TaskPlug ) :
 				if p.direction() == Gaffer.Plug.Direction.Out and p.source() :
 					result.append( n )
 

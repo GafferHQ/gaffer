@@ -837,7 +837,7 @@ IE_CORE_DEFINERUNTIMETYPED( ImageWriter );
 size_t ImageWriter::g_firstPlugIndex = 0;
 
 ImageWriter::ImageWriter( const std::string &name )
-	:	ExecutableNode( name )
+	:	TaskNode( name )
 {
 	storeIndexOfNextChild( g_firstPlugIndex );
 	addChild( new ImagePlug( "in" ) );
@@ -993,7 +993,7 @@ IECore::MurmurHash ImageWriter::hash( const Context *context ) const
 		return IECore::MurmurHash();
 	}
 
-	IECore::MurmurHash h = ExecutableNode::hash( context );
+	IECore::MurmurHash h = TaskNode::hash( context );
 	h.append( fileNamePlug()->hash() );
 	h.append( channelsPlug()->hash() );
 	const std::string fileFormat = currentFileFormat();
@@ -1057,14 +1057,7 @@ void ImageWriter::execute() const
 		}
 	}
 
-	Format imageFormat = inPlug()->formatPlug()->getValue();
-
-	/// \todo Remove when Issue #887 is done
-	if( imageFormat.getDisplayWindow().isEmpty() )
-	{
-		imageFormat = FormatPlug::getDefaultFormat( Context::current() );
-	}
-
+	const Format imageFormat = inPlug()->formatPlug()->getValue();
 	Imath::Box2i dataWindow = inPlug()->dataWindowPlug()->getValue();
 	Imath::Box2i exrDataWindow( Imath::V2i( 0 ) );
 

@@ -34,8 +34,8 @@
 //
 //////////////////////////////////////////////////////////////////////////
 
-#ifndef GAFFERDISPATCH_EXECUTABLENODE_H
-#define GAFFERDISPATCH_EXECUTABLENODE_H
+#ifndef GAFFERDISPATCH_TASKNODE_H
+#define GAFFERDISPATCH_TASKNODE_H
 
 #include "IECore/MurmurHash.h"
 
@@ -52,16 +52,28 @@ IE_CORE_FORWARDDECLARE( ArrayPlug )
 
 } // namespace Gaffer
 
+namespace GafferDispatchBindings
+{
+namespace Detail
+{
+
+// Forward declaration to allow friendship declaration
+// for the bindings.
+struct TaskNodeAccessor;
+
+} // namespace Detail
+} // namespace GafferDispatchBindings
+
 namespace GafferDispatch
 {
 
-IE_CORE_FORWARDDECLARE( ExecutableNode )
+IE_CORE_FORWARDDECLARE( TaskNode )
 
 /// A base class for nodes with external side effects such as the creation of files, rendering, etc.
-/// ExecutableNodes can be chained together with other ExecutableNodes to define a required execution
-/// order. Typically ExecutableNodes should be executed by Dispatcher classes that can query the
+/// TaskNode can be chained together with other TaskNodes to define a required execution
+/// order. Typically TaskNodes should be executed by Dispatcher classes that can query the
 /// required execution order and schedule Tasks appropriately.
-class ExecutableNode : public Gaffer::Node
+class TaskNode : public Gaffer::Node
 {
 
 	public :
@@ -97,9 +109,9 @@ class ExecutableNode : public Gaffer::Node
 				bool operator < ( const Task &rhs ) const;
 
 				/// \deprecated
-				Task( ExecutableNodePtr n, const Gaffer::Context *c );
+				Task( TaskNodePtr n, const Gaffer::Context *c );
 				/// \deprecated
-				const ExecutableNode *node() const;
+				const TaskNode *node() const;
 
 			private :
 
@@ -110,13 +122,11 @@ class ExecutableNode : public Gaffer::Node
 		};
 
 		typedef std::vector<Task> Tasks;
-		/// \todo This is unused - remove it.
-		typedef std::vector<Gaffer::ConstContextPtr> Contexts;
 
-		IE_CORE_DECLARERUNTIMETYPEDEXTENSION( GafferDispatch::ExecutableNode, ExecutableNodeTypeId, Gaffer::Node );
+		IE_CORE_DECLARERUNTIMETYPEDEXTENSION( GafferDispatch::TaskNode, TaskNodeTypeId, Gaffer::Node );
 
-		ExecutableNode( const std::string &name=defaultName<ExecutableNode>() );
-		virtual ~ExecutableNode();
+		TaskNode( const std::string &name=defaultName<TaskNode>() );
+		virtual ~TaskNode();
 
 		/// Plug type used to represent tasks within the
 		/// node graph. This provides the primary public
@@ -126,7 +136,7 @@ class ExecutableNode : public Gaffer::Node
 
 			public :
 
-				IE_CORE_DECLARERUNTIMETYPEDEXTENSION( GafferDispatch::ExecutableNode::TaskPlug, ExecutableNodeTaskPlugTypeId, Gaffer::Plug );
+				IE_CORE_DECLARERUNTIMETYPEDEXTENSION( GafferDispatch::TaskNode::TaskPlug, TaskNodeTaskPlugTypeId, Gaffer::Plug );
 
 				TaskPlug( const std::string &name=defaultName<TaskPlug>(), Direction direction=In, unsigned flags=Default );
 
@@ -178,19 +188,16 @@ class ExecutableNode : public Gaffer::Node
 		const TaskPlug *taskPlug() const;
 
 		/// Parent plug used by Dispatchers to expose per-node dispatcher settings.
-		/// See the "ExecutableNode Customization" section of the Gaffer::Dispatcher
+		/// See the "TaskNode Customization" section of the Gaffer::Dispatcher
 		/// documentation for more details.
 		Gaffer::Plug *dispatcherPlug();
 		const Gaffer::Plug *dispatcherPlug() const;
 
-	/// All methods below here are considered to be protected, and will become
-	/// so in a future release. Use the TaskPlug accessor methods instead of
-	/// calling them directly.
-	/// \todo Add protected access specifier.
+	protected :
 
 		/// Called by `TaskPlug::preTasks()`. The default implementation collects
 		/// the upstream Tasks connected into the preTasksPlug().
-		/// \todo Add `const TaskPlug *plug` argument, to allow ExecutableNodes to
+		/// \todo Add `const TaskPlug *plug` argument, to allow TaskNodes to
 		/// have multiple output tasks should they so desire.
 		virtual void preTasks( const Gaffer::Context *context, Tasks &tasks ) const;
 
@@ -207,7 +214,7 @@ class ExecutableNode : public Gaffer::Node
 
 		/// Called by `TaskPlug::execute()`.
 		/// \todo Add `const TaskPlug *plug, const Context *context` arguments,
-		/// to allow ExecutableNodes to have multiple output tasks should
+		/// to allow TaskNodes to have multiple output tasks should
 		/// they so desire.
 		virtual void execute() const = 0;
 
@@ -222,10 +229,13 @@ class ExecutableNode : public Gaffer::Node
 
 	private :
 
+		// Friendship for the bindings.
+		friend struct GafferDispatchBindings::Detail::TaskNodeAccessor;
+
 		static size_t g_firstPlugIndex;
 
 };
 
 } // namespace GafferDispatch
 
-#endif // GAFFERDISPATCH_EXECUTABLENODE_H
+#endif // GAFFERDISPATCH_TASKNODE_H

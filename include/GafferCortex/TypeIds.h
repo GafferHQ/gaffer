@@ -49,7 +49,7 @@ enum TypeId
 	ParameterisedHolderDependencyNodeTypeId = 110184,
 	ExecutableOpHolderTypeId = 110185,
 	ParameterisedHolderComputeNodeTypeId = 110186,
-	ParameterisedHolderExecutableNodeTypeId = 110187,
+	ParameterisedHolderTaskNodeTypeId = 110187,
 
 	LastTypeId = 110200,
 

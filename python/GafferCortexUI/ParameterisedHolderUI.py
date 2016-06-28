@@ -52,7 +52,7 @@ __nodeTypes = (
 	GafferCortex.ParameterisedHolderNode,
 	GafferCortex.ParameterisedHolderComputeNode,
 	GafferCortex.ParameterisedHolderDependencyNode,
-	GafferCortex.ParameterisedHolderExecutableNode,
+	GafferCortex.ParameterisedHolderTaskNode,
 )
 
 ##########################################################################

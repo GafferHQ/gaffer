@@ -130,20 +130,20 @@ class DispatcherWrapper : public NodeWrapper<Dispatcher>
 			batch.execute();
 		}
 
-		static ExecutableNodePtr taskBatchGetNode( const Dispatcher::TaskBatchPtr &batch )
+		static TaskNodePtr taskBatchGetNode( const Dispatcher::TaskBatchPtr &batch )
 		{
-			if ( ConstExecutableNodePtr node = batch->node() )
+			if ( ConstTaskNodePtr node = batch->node() )
 			{
-				return boost::const_pointer_cast<ExecutableNode>( node );
+				return boost::const_pointer_cast<TaskNode>( node );
 			}
 			return 0;
 		}
 
-		static ExecutableNode::TaskPlugPtr taskBatchPlug( const Dispatcher::TaskBatchPtr &batch )
+		static TaskNode::TaskPlugPtr taskBatchPlug( const Dispatcher::TaskBatchPtr &batch )
 		{
-			if( const ExecutableNode::TaskPlug *p = batch->plug() )
+			if( const TaskNode::TaskPlug *p = batch->plug() )
 			{
-				return const_cast<ExecutableNode::TaskPlug *>( p );
+				return const_cast<TaskNode::TaskPlug *>( p );
 			}
 			return NULL;
 		}
@@ -269,12 +269,12 @@ static tuple registeredDispatchersWrapper()
 
 struct PreDispatchSlotCaller
 {
-	bool operator()( boost::python::object slot, const Dispatcher *d, const std::vector<ExecutableNodePtr> &nodes )
+	bool operator()( boost::python::object slot, const Dispatcher *d, const std::vector<TaskNodePtr> &nodes )
 	{
 		try
 		{
 			list nodeList;
-			for( std::vector<ExecutableNodePtr>::const_iterator nIt = nodes.begin(); nIt != nodes.end(); nIt++ )
+			for( std::vector<TaskNodePtr>::const_iterator nIt = nodes.begin(); nIt != nodes.end(); nIt++ )
 			{
 				nodeList.append( *nIt );
 			}
@@ -291,12 +291,12 @@ struct PreDispatchSlotCaller
 
 struct PostDispatchSlotCaller
 {
-	boost::signals::detail::unusable operator()( boost::python::object slot, const Dispatcher *d, const std::vector<ExecutableNodePtr> &nodes, bool success )
+	boost::signals::detail::unusable operator()( boost::python::object slot, const Dispatcher *d, const std::vector<TaskNodePtr> &nodes, bool success )
 	{
 		try
 		{
 			list nodeList;
-			for( std::vector<ExecutableNodePtr>::const_iterator nIt = nodes.begin(); nIt != nodes.end(); nIt++ )
+			for( std::vector<TaskNodePtr>::const_iterator nIt = nodes.begin(); nIt != nodes.end(); nIt++ )
 			{
 				nodeList.append( *nIt );
 			}

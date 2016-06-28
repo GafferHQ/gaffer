@@ -38,7 +38,7 @@
 
 #include "Gaffer/Context.h"
 
-#include "GafferDispatchBindings/ExecutableNodeBinding.h"
+#include "GafferDispatchBindings/TaskNodeBinding.h"
 
 #include "GafferScene/OpenGLRender.h"
 #include "GafferScene/InteractiveRender.h"
@@ -59,13 +59,13 @@ using namespace GafferScene;
 namespace
 {
 
-class ExecutableRenderWrapper : public ExecutableNodeWrapper<ExecutableRender>
+class ExecutableRenderWrapper : public TaskNodeWrapper<ExecutableRender>
 {
 
 	public :
 
 		ExecutableRenderWrapper( PyObject *self, const std::string &name )
-			:	ExecutableNodeWrapper<ExecutableRender>( self, name )
+			:	TaskNodeWrapper<ExecutableRender>( self, name )
 		{
 		}
 
@@ -172,9 +172,9 @@ void objectInterfaceTransform2( Renderer::ObjectInterface &objectInterface, obje
 void GafferSceneBindings::bindRender()
 {
 
-	ExecutableNodeClass<ExecutableRender, ExecutableRenderWrapper>();
+	TaskNodeClass<ExecutableRender, ExecutableRenderWrapper>();
 
-	ExecutableNodeClass<OpenGLRender>();
+	TaskNodeClass<OpenGLRender>();
 
 	{
 		scope s = GafferBindings::NodeClass<InteractiveRender>()
@@ -208,7 +208,7 @@ void GafferSceneBindings::bindRender()
 		}
 
 		{
-			scope s = ExecutableNodeClass<GafferScene::Preview::Render>();
+			scope s = TaskNodeClass<GafferScene::Preview::Render>();
 
 			enum_<GafferScene::Preview::Render::Mode>( "Mode" )
 				.value( "RenderMode", GafferScene::Preview::Render::RenderMode )

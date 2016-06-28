@@ -1,6 +1,6 @@
 ##########################################################################
 #
-#  Copyright (c) 2014, Image Engine Design Inc. All rights reserved.
+#  Copyright (c) 2016, Image Engine Design Inc. All rights reserved.
 #
 #  Redistribution and use in source and binary forms, with or without
 #  modification, are permitted provided that the following conditions are
@@ -34,24 +34,6 @@
 #
 ##########################################################################
 
-import IECore
-
-import Gaffer
 import GafferDispatch
 
-# Used to collect tasks for dispatching all at once
-class TaskList( GafferDispatch.TaskNode ) :
-
-	def __init__( self, name = "TaskList" ) :
-
-		GafferDispatch.TaskNode.__init__( self, name )
-
-	def hash( self, context ) :
-
-		return IECore.MurmurHash()
-
-	def execute( self ) :
-
-		pass
-
-IECore.registerRunTimeTyped( TaskList, typeName = "GafferDispatch::TaskList" )
+GafferDispatch.ExecutableNode = GafferDispatch.TaskNode

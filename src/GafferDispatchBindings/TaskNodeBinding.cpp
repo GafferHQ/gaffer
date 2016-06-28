@@ -40,8 +40,8 @@
 #include "Gaffer/Context.h"
 #include "GafferBindings/PlugBinding.h"
 
-#include "GafferDispatch/ExecutableNode.h"
-#include "GafferDispatchBindings/ExecutableNodeBinding.h"
+#include "GafferDispatch/TaskNode.h"
+#include "GafferDispatchBindings/TaskNodeBinding.h"
 
 using namespace boost::python;
 using namespace IECore;
@@ -53,13 +53,13 @@ using namespace GafferDispatch;
 namespace
 {
 
-unsigned long taskHash( const ExecutableNode::Task &t )
+unsigned long taskHash( const TaskNode::Task &t )
 {
 	const IECore::MurmurHash h = t.hash();
 	return tbb::tbb_hasher( h.toString() );
 }
 
-ContextPtr taskContext( const ExecutableNode::Task &t, bool copy = true )
+ContextPtr taskContext( const TaskNode::Task &t, bool copy = true )
 {
 	if ( ConstContextPtr context = t.context() )
 	{
@@ -74,29 +74,29 @@ ContextPtr taskContext( const ExecutableNode::Task &t, bool copy = true )
 	return NULL;
 }
 
-ExecutableNodePtr taskNode( const ExecutableNode::Task &t )
+TaskNodePtr taskNode( const TaskNode::Task &t )
 {
-	if ( ConstExecutableNodePtr node = t.node() )
+	if ( ConstTaskNodePtr node = t.node() )
 	{
-		return boost::const_pointer_cast<ExecutableNode>( node );
+		return boost::const_pointer_cast<TaskNode>( node );
 	}
 
 	return NULL;
 }
 
-IECore::MurmurHash taskPlugHash( const ExecutableNode::TaskPlug &t )
+IECore::MurmurHash taskPlugHash( const TaskNode::TaskPlug &t )
 {
 	IECorePython::ScopedGILRelease gilRelease;
 	return t.hash();
 }
 
-void taskPlugExecute( const ExecutableNode::TaskPlug &t )
+void taskPlugExecute( const TaskNode::TaskPlug &t )
 {
 	IECorePython::ScopedGILRelease gilRelease;
 	t.execute();
 }
 
-void taskPlugExecuteSequence( const ExecutableNode::TaskPlug &t, const boost::python::object &frameList )
+void taskPlugExecuteSequence( const TaskNode::TaskPlug &t, const boost::python::object &frameList )
 {
 	std::vector<float> frames;
 	boost::python::container_utils::extend_container( frames, frameList );
@@ -104,24 +104,24 @@ void taskPlugExecuteSequence( const ExecutableNode::TaskPlug &t, const boost::py
 	t.executeSequence( frames );
 }
 
-boost::python::list taskPlugPreTasks( const ExecutableNode::TaskPlug &t )
+boost::python::list taskPlugPreTasks( const TaskNode::TaskPlug &t )
 {
-	GafferDispatch::ExecutableNode::Tasks tasks;
+	GafferDispatch::TaskNode::Tasks tasks;
 	t.preTasks( tasks );
 	boost::python::list result;
-	for( GafferDispatch::ExecutableNode::Tasks::const_iterator tIt = tasks.begin(); tIt != tasks.end(); ++tIt )
+	for( GafferDispatch::TaskNode::Tasks::const_iterator tIt = tasks.begin(); tIt != tasks.end(); ++tIt )
 	{
 		result.append( *tIt );
 	}
 	return result;
 }
 
-boost::python::list taskPlugPostTasks( const ExecutableNode::TaskPlug &t )
+boost::python::list taskPlugPostTasks( const TaskNode::TaskPlug &t )
 {
-	GafferDispatch::ExecutableNode::Tasks tasks;
+	GafferDispatch::TaskNode::Tasks tasks;
 	t.postTasks( tasks );
 	boost::python::list result;
-	for( GafferDispatch::ExecutableNode::Tasks::const_iterator tIt = tasks.begin(); tIt != tasks.end(); ++tIt )
+	for( GafferDispatch::TaskNode::Tasks::const_iterator tIt = tasks.begin(); tIt != tasks.end(); ++tIt )
 	{
 		result.append( *tIt );
 	}
@@ -130,25 +130,25 @@ boost::python::list taskPlugPostTasks( const ExecutableNode::TaskPlug &t )
 
 } // namespace
 
-void GafferDispatchBindings::bindExecutableNode()
+void GafferDispatchBindings::bindTaskNode()
 {
-	typedef ExecutableNodeWrapper<ExecutableNode> Wrapper;
+	typedef TaskNodeWrapper<TaskNode> Wrapper;
 
-	scope s = ExecutableNodeClass<ExecutableNode, Wrapper>();
+	scope s = TaskNodeClass<TaskNode, Wrapper>();
 
-	class_<ExecutableNode::Task>( "Task", no_init )
-		.def( init<ExecutableNode::Task>() )
-		.def( init<GafferDispatch::ExecutableNodePtr, const Gaffer::Context *>() )
+	class_<TaskNode::Task>( "Task", no_init )
+		.def( init<TaskNode::Task>() )
+		.def( init<GafferDispatch::TaskNodePtr, const Gaffer::Context *>() )
 		.def( "node", &taskNode )
 		.def( "context", &taskContext, ( boost::python::arg_( "_copy" ) = true ) )
-		.def("__eq__", &ExecutableNode::Task::operator== )
+		.def("__eq__", &TaskNode::Task::operator== )
 		.def("__hash__", &taskHash )
 	;
 
-	PlugClass<ExecutableNode::TaskPlug>()
+	PlugClass<TaskNode::TaskPlug>()
 		.def( init<const char *, Plug::Direction, unsigned>(
 				(
-					boost::python::arg_( "name" )=GraphComponent::defaultName<ExecutableNode::TaskPlug>(),
+					boost::python::arg_( "name" )=GraphComponent::defaultName<TaskNode::TaskPlug>(),
 					boost::python::arg_( "direction" )=Plug::In,
 					boost::python::arg_( "flags" )=Plug::Default
 				)
@@ -157,12 +157,12 @@ void GafferDispatchBindings::bindExecutableNode()
 		.def( "hash", &taskPlugHash )
 		.def( "execute", &taskPlugExecute )
 		.def( "executeSequence", &taskPlugExecuteSequence )
-		.def( "requiresSequenceExecution", &ExecutableNode::TaskPlug::requiresSequenceExecution )
+		.def( "requiresSequenceExecution", &TaskNode::TaskPlug::requiresSequenceExecution )
 		.def( "preTasks", &taskPlugPreTasks )
 		.def( "postTasks", &taskPlugPostTasks )
 		// Adjusting the name so that it correctly reflects
 		// the nesting, and can be used by the PlugSerialiser.
-		.attr( "__name__" ) = "ExecutableNode.TaskPlug"
+		.attr( "__name__" ) = "TaskNode.TaskPlug"
 	;
 
 }

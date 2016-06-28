@@ -73,7 +73,7 @@ class TractorDispatcherTest( GafferTest.TestCase ) :
 	def testPreSpoolSignal( self ) :
 
 		s = Gaffer.ScriptNode()
-		s["n"] = GafferDispatchTest.LoggingExecutableNode()
+		s["n"] = GafferDispatchTest.LoggingTaskNode()
 
 		spooled = []
 		def f( dispatcher, job ) :
@@ -91,7 +91,7 @@ class TractorDispatcherTest( GafferTest.TestCase ) :
 	def testJobScript( self ) :
 
 		s = Gaffer.ScriptNode()
-		s["n"] = GafferDispatchTest.LoggingExecutableNode()
+		s["n"] = GafferDispatchTest.LoggingTaskNode()
 
 		dispatcher = self.__dispatcher()
 		dispatcher.dispatch( [ s["n"] ] )
@@ -101,7 +101,7 @@ class TractorDispatcherTest( GafferTest.TestCase ) :
 	def testJobAttributes( self ) :
 
 		s = Gaffer.ScriptNode()
-		s["n"] = GafferDispatchTest.LoggingExecutableNode()
+		s["n"] = GafferDispatchTest.LoggingTaskNode()
 
 		dispatcher = self.__dispatcher()
 		dispatcher["jobName"].setValue( "Test Job" )
@@ -117,7 +117,7 @@ class TractorDispatcherTest( GafferTest.TestCase ) :
 	def testTaskAttributes( self ) :
 
 		s = Gaffer.ScriptNode()
-		s["n"] = GafferDispatchTest.LoggingExecutableNode()
+		s["n"] = GafferDispatchTest.LoggingTaskNode()
 		s["n"]["frame"] = Gaffer.StringPlug( defaultValue = "${frame}", flags = Gaffer.Plug.Flags.Default | Gaffer.Plug.Flags.Dynamic )
 		s["n"]["dispatcher"]["batchSize"].setValue( 10 )
 		s["n"]["dispatcher"]["tractor"]["service"].setValue( "myService" )
@@ -145,9 +145,9 @@ class TractorDispatcherTest( GafferTest.TestCase ) :
 		# n2     n3
 
 		s = Gaffer.ScriptNode()
-		s["n1"] = GafferDispatchTest.LoggingExecutableNode()
-		s["n2"] = GafferDispatchTest.LoggingExecutableNode()
-		s["n3"] = GafferDispatchTest.LoggingExecutableNode()
+		s["n1"] = GafferDispatchTest.LoggingTaskNode()
+		s["n2"] = GafferDispatchTest.LoggingTaskNode()
+		s["n3"] = GafferDispatchTest.LoggingTaskNode()
 		s["n2"]["preTasks"][0].setInput( s["n1"]["task" ] )
 
 		job = self.__job( [ s["n2"], s["n3"] ] )
@@ -172,12 +172,12 @@ class TractorDispatcherTest( GafferTest.TestCase ) :
 		s = Gaffer.ScriptNode()
 
 		log = []
-		s["n1"] = GafferDispatchTest.LoggingExecutableNode()
-		s["i1"] = GafferDispatchTest.LoggingExecutableNode()
+		s["n1"] = GafferDispatchTest.LoggingTaskNode()
+		s["i1"] = GafferDispatchTest.LoggingTaskNode()
 		s["i1"]["preTasks"][0].setInput( s["n1"]["task"] )
-		s["i2"] = GafferDispatchTest.LoggingExecutableNode()
+		s["i2"] = GafferDispatchTest.LoggingTaskNode()
 		s["i2"]["preTasks"][0].setInput( s["n1"]["task"] )
-		s["n2"] = GafferDispatchTest.LoggingExecutableNode()
+		s["n2"] = GafferDispatchTest.LoggingTaskNode()
 		s["n2"]["preTasks"][0].setInput( s["i1"]["task"] )
 		s["n2"]["preTasks"][1].setInput( s["i2"]["task"] )
 

@@ -40,7 +40,7 @@
 #include "Gaffer/StringPlug.h"
 #include "Gaffer/NumericPlug.h"
 
-#include "GafferDispatch/ExecutableNode.h"
+#include "GafferDispatch/TaskNode.h"
 #include "GafferScene/TypeIds.h"
 
 namespace GafferScene
@@ -51,7 +51,7 @@ IE_CORE_FORWARDDECLARE( ScenePlug )
 namespace Preview
 {
 
-class Render : public GafferDispatch::ExecutableNode
+class Render : public GafferDispatch::TaskNode
 {
 
 	public :
@@ -59,7 +59,7 @@ class Render : public GafferDispatch::ExecutableNode
 		Render( const std::string &name=defaultName<Render>() );
 		virtual ~Render();
 
-		IE_CORE_DECLARERUNTIMETYPEDEXTENSION( GafferScene::Preview::Render, GafferScene::RenderTypeId, GafferDispatch::ExecutableNode );
+		IE_CORE_DECLARERUNTIMETYPEDEXTENSION( GafferScene::Preview::Render, GafferScene::RenderTypeId, GafferDispatch::TaskNode );
 
 		enum Mode
 		{

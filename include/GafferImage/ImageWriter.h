@@ -37,7 +37,7 @@
 #ifndef GAFFERIMAGE_IMAGEWRITER_H
 #define GAFFERIMAGE_IMAGEWRITER_H
 
-#include "GafferDispatch/ExecutableNode.h"
+#include "GafferDispatch/TaskNode.h"
 
 #include "GafferImage/TypeIds.h"
 
@@ -53,7 +53,7 @@ namespace GafferImage
 IE_CORE_FORWARDDECLARE( ChannelMaskPlug )
 IE_CORE_FORWARDDECLARE( ImagePlug )
 
-class ImageWriter : public GafferDispatch::ExecutableNode
+class ImageWriter : public GafferDispatch::TaskNode
 {
 
 	public :
@@ -67,7 +67,7 @@ class ImageWriter : public GafferDispatch::ExecutableNode
 		ImageWriter( const std::string &name=defaultName<ImageWriter>() );
 		virtual ~ImageWriter();
 
-		IE_CORE_DECLARERUNTIMETYPEDEXTENSION( GafferImage::ImageWriter, ImageWriterTypeId, ExecutableNode );
+		IE_CORE_DECLARERUNTIMETYPEDEXTENSION( GafferImage::ImageWriter, ImageWriterTypeId, TaskNode );
 
 		Gaffer::StringPlug *fileNamePlug();
 		const Gaffer::StringPlug *fileNamePlug() const;

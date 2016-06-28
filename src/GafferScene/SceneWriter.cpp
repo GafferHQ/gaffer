@@ -55,7 +55,7 @@ IE_CORE_DEFINERUNTIMETYPED( SceneWriter );
 size_t SceneWriter::g_firstPlugIndex = 0;
 
 SceneWriter::SceneWriter( const std::string &name )
-	: ExecutableNode( name )
+	: TaskNode( name )
 {
 	storeIndexOfNextChild( g_firstPlugIndex );
 	addChild( new ScenePlug( "in", Plug::In ) );
@@ -107,7 +107,7 @@ IECore::MurmurHash SceneWriter::hash( const Gaffer::Context *context ) const
 		return IECore::MurmurHash();
 	}
 
-	IECore::MurmurHash h = ExecutableNode::hash( context );
+	IECore::MurmurHash h = TaskNode::hash( context );
 	h.append( fileNamePlug()->hash() );
 	/// \todo hash the actual scene when we have a hierarchyHash
 	h.append( (uint64_t)scenePlug );

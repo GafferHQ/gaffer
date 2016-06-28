@@ -39,7 +39,7 @@
 #define GAFFERCORTEX_PARAMETERISEDHOLDER_H
 
 #include "Gaffer/ComputeNode.h"
-#include "GafferDispatch/ExecutableNode.h"
+#include "GafferDispatch/TaskNode.h"
 
 #include "GafferCortex/TypeIds.h"
 
@@ -124,12 +124,12 @@ class ParameterisedHolder : public BaseType
 typedef ParameterisedHolder<Gaffer::Node> ParameterisedHolderNode;
 typedef ParameterisedHolder<Gaffer::DependencyNode> ParameterisedHolderDependencyNode;
 typedef ParameterisedHolder<Gaffer::ComputeNode> ParameterisedHolderComputeNode;
-typedef ParameterisedHolder<GafferDispatch::ExecutableNode> ParameterisedHolderExecutableNode;
+typedef ParameterisedHolder<GafferDispatch::TaskNode> ParameterisedHolderTaskNode;
 
 IE_CORE_DECLAREPTR( ParameterisedHolderNode )
 IE_CORE_DECLAREPTR( ParameterisedHolderDependencyNode )
 IE_CORE_DECLAREPTR( ParameterisedHolderComputeNode )
-IE_CORE_DECLAREPTR( ParameterisedHolderExecutableNode )
+IE_CORE_DECLAREPTR( ParameterisedHolderTaskNode )
 
 } // namespace GafferCortex
 

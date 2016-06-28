@@ -39,11 +39,11 @@ import IECore
 import Gaffer
 import GafferDispatch
 
-class TaskSwitch( GafferDispatch.ExecutableNode ) :
+class TaskSwitch( GafferDispatch.TaskNode ) :
 
 	def __init__( self, name = "TaskSwitch" ) :
 
-		GafferDispatch.ExecutableNode.__init__( self, name )
+		GafferDispatch.TaskNode.__init__( self, name )
 
 		self["index"] = Gaffer.IntPlug( minValue = 0 )
 
@@ -53,7 +53,7 @@ class TaskSwitch( GafferDispatch.ExecutableNode ) :
 		index = index % ( len( self["preTasks"] ) - 1 )
 
 		source = self["preTasks"][index].source()
-		if source.isSame( self["preTasks"][index] ) or not isinstance( source.node(), GafferDispatch.ExecutableNode ) :
+		if source.isSame( self["preTasks"][index] ) or not isinstance( source.node(), GafferDispatch.TaskNode ) :
 			return []
 
 		return [ self.Task( source.node(), context ) ]

@@ -1,6 +1,6 @@
 ##########################################################################
 #
-#  Copyright (c) 2013-2015, Image Engine Design Inc. All rights reserved.
+#  Copyright (c) 2016, Image Engine Design Inc. All rights reserved.
 #
 #  Redistribution and use in source and binary forms, with or without
 #  modification, are permitted provided that the following conditions are
@@ -34,47 +34,6 @@
 #
 ##########################################################################
 
-import IECore
+import GafferCortex
 
-import Gaffer
-import GafferTest
-import GafferDispatch
-
-## \todo Remove this in preference to LoggingExecutableNode.
-class CountingExecutableNode( GafferDispatch.ExecutableNode ) :
-
-	def __init__( self, name = "CountingExecutableNode", withHash = True, requiresSequenceExecution = False ) :
-
-		GafferDispatch.ExecutableNode.__init__( self, name )
-
-		self.__requiresSequenceExecution = requiresSequenceExecution
-		self.__withHash = withHash
-
-		self.executionCount = 0
-
-	def execute( self ) :
-
-		self.executionCount += 1
-
-	def executeSequence( self, frames ) :
-
-		if not self.__requiresSequenceExecution :
-			GafferDispatch.ExecutableNode.executeSequence( self, frames )
-			return
-
-		self.executionCount += 1
-
-	def hash( self, context ) :
-
-		if not self.__withHash :
-			return IECore.MurmurHash()
-
-		h = GafferDispatch.ExecutableNode.hash( self, context )
-		h.append( context.getFrame() )
-		return h
-
-	def requiresSequenceExecution( self ) :
-
-		return self.__requiresSequenceExecution
-
-IECore.registerRunTimeTyped( CountingExecutableNode, typeName = "GafferDispatchTest::CountingExecutableNode" )
+GafferCortex.ParameterisedHolderExecutableNode = GafferCortex.ParameterisedHolderTaskNode

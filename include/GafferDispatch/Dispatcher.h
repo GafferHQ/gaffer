@@ -50,7 +50,7 @@
 
 #include "Gaffer/NumericPlug.h"
 
-#include "GafferDispatch/ExecutableNode.h"
+#include "GafferDispatch/TaskNode.h"
 #include "GafferDispatchBindings/DispatcherBinding.h" // to enable friend declaration for TaskBatch.
 
 namespace Gaffer
@@ -92,8 +92,8 @@ struct PreDispatchSignalCombiner
 IE_CORE_FORWARDDECLARE( Dispatcher )
 
 /// Abstract base class which defines an interface for scheduling the execution
-/// of Context specific Tasks from ExecutableNodes which exist within a ScriptNode.
-/// Dispatchers can also modify ExecutableNodes during construction, adding
+/// of Context specific Tasks from TaskNodes which exist within a ScriptNode.
+/// Dispatchers can also modify TaskNodes during construction, adding
 /// plugs which affect Task execution.
 class Dispatcher : public Gaffer::Node
 {
@@ -104,8 +104,8 @@ class Dispatcher : public Gaffer::Node
 
 		IE_CORE_DECLARERUNTIMETYPEDEXTENSION( GafferDispatch::Dispatcher, DispatcherTypeId, Gaffer::Node );
 
-		typedef boost::signal<bool (const Dispatcher *, const std::vector<ExecutableNodePtr> &), Detail::PreDispatchSignalCombiner> PreDispatchSignal;
-		typedef boost::signal<void (const Dispatcher *, const std::vector<ExecutableNodePtr> &, bool)> PostDispatchSignal;
+		typedef boost::signal<bool (const Dispatcher *, const std::vector<TaskNodePtr> &), Detail::PreDispatchSignalCombiner> PreDispatchSignal;
+		typedef boost::signal<void (const Dispatcher *, const std::vector<TaskNodePtr> &, bool)> PostDispatchSignal;
 
 		//! @name Dispatch Signals
 		/// These signals are emitted on dispatch events for any registered Dispatcher instance.
@@ -122,7 +122,7 @@ class Dispatcher : public Gaffer::Node
 		//@}
 
 		/// Calls doDispatch, taking care to trigger the dispatch signals at the appropriate times.
-		/// Note that this will throw unless all of the nodes are either ExecutableNodes or Boxes,
+		/// Note that this will throw unless all of the nodes are either TaskNodes or Boxes,
 		/// and it will also throw if cycles are detected in the resulting TaskBatch graph.
 		/// \todo Replace this with a version taking vector<TaskPlugPtr>. This will plug the
 		/// type safety issue whereby currently any old node can be passed to dispatch.
@@ -177,7 +177,7 @@ class Dispatcher : public Gaffer::Node
 		/// type. The SetupPlugsFn must be implemented in a way that gracefully accepts situations where the
 		/// plugs already exist (i.e. nodes loaded from a script may already have the necessary dispatcher plugs).
 		/// One way to avoid this issue is to always create non-dynamic plugs. Since setupPlugs is called from
-		/// the ExecutableNode constructor, the non-dynamic plugs will always be created according to the current
+		/// the TaskNode constructor, the non-dynamic plugs will always be created according to the current
 		/// definition, and will not be serialized into scripts. The downside of using non-dynamic plugs is that
 		/// loading a script before all Dispatchers have been registered could result in lost settings.
 		typedef boost::function<void ( Gaffer::Plug *parentPlug )> SetupPlugsFn;
@@ -198,7 +198,7 @@ class Dispatcher : public Gaffer::Node
 
 	protected :
 
-		friend class ExecutableNode;
+		friend class TaskNode;
 
 		IE_CORE_FORWARDDECLARE( TaskBatch )
 
@@ -217,17 +217,17 @@ class Dispatcher : public Gaffer::Node
 			public :
 
 				TaskBatch();
-				TaskBatch( ExecutableNode::ConstTaskPlugPtr plug, Gaffer::ConstContextPtr context );
+				TaskBatch( TaskNode::ConstTaskPlugPtr plug, Gaffer::ConstContextPtr context );
 				/// \deprecated
-				TaskBatch( ConstExecutableNodePtr node, Gaffer::ConstContextPtr context );
+				TaskBatch( ConstTaskNodePtr node, Gaffer::ConstContextPtr context );
 
 				IE_CORE_DECLAREMEMBERPTR( TaskBatch );
 
 				void execute() const;
 
-				const ExecutableNode::TaskPlug *plug() const;
+				const TaskNode::TaskPlug *plug() const;
 				/// \deprecated.
-				const ExecutableNode *node() const;
+				const TaskNode *node() const;
 				const Gaffer::Context *context() const;
 
 				std::vector<float> &frames();
@@ -241,7 +241,7 @@ class Dispatcher : public Gaffer::Node
 
 			private :
 
-				ExecutableNode::ConstTaskPlugPtr m_plug;
+				TaskNode::ConstTaskPlugPtr m_plug;
 				Gaffer::ConstContextPtr m_context;
 				IECore::CompoundDataPtr m_blindData;
 				std::vector<float> m_frames;
@@ -256,8 +256,8 @@ class Dispatcher : public Gaffer::Node
 		/// batches have been dispatched in order to prevent duplicate work.
 		virtual void doDispatch( const TaskBatch *batch ) const = 0;
 
-		//! @name ExecutableNode Customization
-		/// Dispatchers are able to create custom plugs on ExecutableNodes when they are constructed.
+		//! @name TaskNode Customization
+		/// Dispatchers are able to create custom plugs on TaskNodes when they are constructed.
 		/////////////////////////////////////////////////////////////////////////////////////////////
 		//@{
 		/// Adds the custom plugs from all registered Dispatchers to the given parent Plug.

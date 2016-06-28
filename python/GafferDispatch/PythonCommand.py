@@ -41,11 +41,11 @@ import IECore
 import Gaffer
 import GafferDispatch
 
-class PythonCommand( GafferDispatch.ExecutableNode ) :
+class PythonCommand( GafferDispatch.TaskNode ) :
 
 	def __init__( self, name = "PythonCommand" ) :
 
-		GafferDispatch.ExecutableNode.__init__( self, name )
+		GafferDispatch.TaskNode.__init__( self, name )
 
 		# Turn off automatic substitutions for the command, since it's a pain
 		# to have to manually escape things, and the context is available
@@ -56,7 +56,7 @@ class PythonCommand( GafferDispatch.ExecutableNode ) :
 
 	def hash( self, context ) :
 
-		h = GafferDispatch.ExecutableNode.hash( self, context )
+		h = GafferDispatch.TaskNode.hash( self, context )
 
 		command = self["command"].getValue()
 		h.append( command )
@@ -89,7 +89,7 @@ class PythonCommand( GafferDispatch.ExecutableNode ) :
 			# At the same time we could look into properly supporting
 			# varying results for requiresSequenceExecution(), with sequences
 			# going into their own batch independent of non-sequence batches.
-			Gaffer.ExecutableNode.executeSequence( self, frames )
+			Gaffer.TaskNode.executeSequence( self, frames )
 			return
 
 		executionDict = self.__executionDict( frames )

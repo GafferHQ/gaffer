@@ -50,7 +50,7 @@ using namespace GafferCortex;
 IE_CORE_DEFINERUNTIMETYPED( ExecutableOpHolder )
 
 ExecutableOpHolder::ExecutableOpHolder( const std::string &name )
-	:	ParameterisedHolderExecutableNode( name )
+	:	ParameterisedHolderTaskNode( name )
 {
 }
 
@@ -61,12 +61,12 @@ void ExecutableOpHolder::setParameterised( IECore::RunTimeTypedPtr parameterised
 	{
 		throw IECore::Exception( "Parameterised object is not an IECore::Op" );
 	}
-	ParameterisedHolderExecutableNode::setParameterised( parameterised, keepExistingValues );
+	ParameterisedHolderTaskNode::setParameterised( parameterised, keepExistingValues );
 }
 
 void ExecutableOpHolder::setOp( const std::string &className, int classVersion, bool keepExistingValues )
 {
-	ParameterisedHolderExecutableNode::setParameterised( className, classVersion, "IECORE_OP_PATHS", keepExistingValues );
+	ParameterisedHolderTaskNode::setParameterised( className, classVersion, "IECORE_OP_PATHS", keepExistingValues );
 }
 
 IECore::Op *ExecutableOpHolder::getOp( std::string *className, int *classVersion )
@@ -88,7 +88,7 @@ IECore::MurmurHash ExecutableOpHolder::hash( const Gaffer::Context *context ) co
 		return IECore::MurmurHash();
 	}
 
-	IECore::MurmurHash h = ExecutableNode::hash( context );
+	IECore::MurmurHash h = ParameterisedHolderTaskNode::hash( context );
 	h.append( className );
 	h.append( classVersion );
 

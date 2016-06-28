@@ -41,13 +41,13 @@ import IECore
 import Gaffer
 import GafferDispatch
 
-class LoggingExecutableNode( GafferDispatch.ExecutableNode ) :
+class LoggingTaskNode( GafferDispatch.TaskNode ) :
 
 	LogEntry = collections.namedtuple( "LogEntry", [ "node", "context", "frames" ] )
 
-	def __init__( self, name = "LoggingExecutableNode", log = None ) :
+	def __init__( self, name = "LoggingTaskNode", log = None ) :
 
-		GafferDispatch.ExecutableNode.__init__( self, name )
+		GafferDispatch.TaskNode.__init__( self, name )
 
 		self["noOp"] = Gaffer.BoolPlug()
 		self["requiresSequenceExecution"] = Gaffer.BoolPlug()
@@ -67,7 +67,7 @@ class LoggingExecutableNode( GafferDispatch.ExecutableNode ) :
 	def executeSequence( self, frames ) :
 
 		if not self["requiresSequenceExecution"].getValue() :
-			GafferDispatch.ExecutableNode.executeSequence( self, frames )
+			GafferDispatch.TaskNode.executeSequence( self, frames )
 			return
 
 		self.log.append(
@@ -83,7 +83,7 @@ class LoggingExecutableNode( GafferDispatch.ExecutableNode ) :
 		if self["noOp"].getValue() :
 			return IECore.MurmurHash()
 
-		h = GafferDispatch.ExecutableNode.hash( self, context )
+		h = GafferDispatch.TaskNode.hash( self, context )
 
 		# Hash in any additional plugs that have been added after construction.
 		# This allows the test cases to customise the hashing by adding plugs
@@ -99,4 +99,4 @@ class LoggingExecutableNode( GafferDispatch.ExecutableNode ) :
 
 		return self["requiresSequenceExecution"].getValue()
 
-IECore.registerRunTimeTyped( LoggingExecutableNode, typeName = "GafferDispatchTest::LoggingExecutableNode" )
+IECore.registerRunTimeTyped( LoggingTaskNode, typeName = "GafferDispatchTest::LoggingTaskNode" )

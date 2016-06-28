@@ -53,7 +53,7 @@ IE_CORE_DEFINERUNTIMETYPED( ExecutableRender );
 size_t ExecutableRender::g_firstPlugIndex = 0;
 
 ExecutableRender::ExecutableRender( const std::string &name )
-	:	ExecutableNode( name )
+	:	TaskNode( name )
 {
 	storeIndexOfNextChild( g_firstPlugIndex );
 	addChild( new ScenePlug( "in" ) );
@@ -94,7 +94,7 @@ IECore::MurmurHash ExecutableRender::hash( const Gaffer::Context *context ) cons
 	}
 
 	Context::Scope scope( context );
-	IECore::MurmurHash h = ExecutableNode::hash( context );
+	IECore::MurmurHash h = TaskNode::hash( context );
 	/// \todo hash the actual scene when we have a hierarchyHash
 	h.append( (uint64_t)scenePlug );
 	h.append( context->hash() );

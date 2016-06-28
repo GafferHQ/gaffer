@@ -34,8 +34,8 @@
 //
 //////////////////////////////////////////////////////////////////////////
 
-#ifndef GAFFERDISPATCHBINDINGS_EXECUTABLENODEBINDING_INL
-#define GAFFERDISPATCHBINDINGS_EXECUTABLENODEBINDING_INL
+#ifndef GAFFERDISPATCHBINDINGS_TASKNODEBINDING_INL
+#define GAFFERDISPATCHBINDINGS_TASKNODEBINDING_INL
 
 #include "boost/python/suite/indexing/container_utils.hpp"
 
@@ -47,13 +47,16 @@ namespace GafferDispatchBindings
 namespace Detail
 {
 
-template<typename T>
-boost::python::list preTasks( T &n, Gaffer::Context *context )
+struct TaskNodeAccessor
 {
-	GafferDispatch::ExecutableNode::Tasks tasks;
+
+template<typename T>
+static boost::python::list preTasks( T &n, Gaffer::Context *context )
+{
+	GafferDispatch::TaskNode::Tasks tasks;
 	n.T::preTasks( context, tasks );
 	boost::python::list result;
-	for( GafferDispatch::ExecutableNode::Tasks::const_iterator tIt = tasks.begin(); tIt != tasks.end(); ++tIt )
+	for( GafferDispatch::TaskNode::Tasks::const_iterator tIt = tasks.begin(); tIt != tasks.end(); ++tIt )
 	{
 		result.append( *tIt );
 	}
@@ -61,12 +64,12 @@ boost::python::list preTasks( T &n, Gaffer::Context *context )
 }
 
 template<typename T>
-boost::python::list postTasks( T &n, Gaffer::Context *context )
+static boost::python::list postTasks( T &n, Gaffer::Context *context )
 {
-	GafferDispatch::ExecutableNode::Tasks tasks;
+	GafferDispatch::TaskNode::Tasks tasks;
 	n.T::postTasks( context, tasks );
 	boost::python::list result;
-	for( GafferDispatch::ExecutableNode::Tasks::const_iterator tIt = tasks.begin(); tIt != tasks.end(); ++tIt )
+	for( GafferDispatch::TaskNode::Tasks::const_iterator tIt = tasks.begin(); tIt != tasks.end(); ++tIt )
 	{
 		result.append( *tIt );
 	}
@@ -74,20 +77,20 @@ boost::python::list postTasks( T &n, Gaffer::Context *context )
 }
 
 template<typename T>
-IECore::MurmurHash hash( T &n, const Gaffer::Context *context )
+static IECore::MurmurHash hash( T &n, const Gaffer::Context *context )
 {
 	return n.T::hash( context );
 }
 
 template<typename T>
-void execute( T &n )
+static void execute( T &n )
 {
 	IECorePython::ScopedGILRelease gilRelease;
 	n.T::execute();
 }
 
 template<typename T>
-void executeSequence( T &n, const boost::python::object &frameList )
+static void executeSequence( T &n, const boost::python::object &frameList )
 {
 	std::vector<float> frames;
 	boost::python::container_utils::extend_container( frames, frameList );
@@ -96,25 +99,27 @@ void executeSequence( T &n, const boost::python::object &frameList )
 }
 
 template<typename T>
-bool requiresSequenceExecution( T &n )
+static bool requiresSequenceExecution( T &n )
 {
 	return n.T::requiresSequenceExecution();
 }
 
+};
+
 } // namespace Detail
 
 template<typename T, typename Ptr>
-ExecutableNodeClass<T, Ptr>::ExecutableNodeClass( const char *docString )
+TaskNodeClass<T, Ptr>::TaskNodeClass( const char *docString )
 	:	GafferBindings::NodeClass<T, Ptr>( docString )
 {
-	this->def( "preTasks", &Detail::preTasks<T> );
-	this->def( "postTasks", &Detail::postTasks<T> );
-	this->def( "hash", &Detail::hash<T> );
-	this->def( "execute", &Detail::execute<T> );
-	this->def( "executeSequence", &Detail::executeSequence<T> );
-	this->def( "requiresSequenceExecution", &Detail::requiresSequenceExecution<T> );
+	this->def( "preTasks", &Detail::TaskNodeAccessor::preTasks<T> );
+	this->def( "postTasks", &Detail::TaskNodeAccessor::postTasks<T> );
+	this->def( "hash", &Detail::TaskNodeAccessor::hash<T> );
+	this->def( "execute", &Detail::TaskNodeAccessor::execute<T> );
+	this->def( "executeSequence", &Detail::TaskNodeAccessor::executeSequence<T> );
+	this->def( "requiresSequenceExecution", &Detail::TaskNodeAccessor::requiresSequenceExecution<T> );
 }
 
 } // namespace GafferDispatchBindings
 
-#endif // GAFFERDISPATCHBINDINGS_EXECUTABLENODEBINDING_INL
+#endif // GAFFERDISPATCHBINDINGS_TASKNODEBINDING_INL
