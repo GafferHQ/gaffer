@@ -283,7 +283,7 @@ void OSLImage::hashShading( const Gaffer::Context *context, IECore::MurmurHash &
 	const OSLShader *shader = runTimeCast<const OSLShader>( shaderPlug()->source<Plug>()->node() );
 	if( shader )
 	{
-		shader->stateHash( h );
+		shader->attributesHash( h );
 	}
 }
 
