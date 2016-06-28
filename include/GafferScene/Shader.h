@@ -42,6 +42,7 @@
 
 #include "IECore/ObjectVector.h"
 #include "IECore/Shader.h"
+#include "IECore/CompoundObject.h"
 
 #include "Gaffer/DependencyNode.h"
 #include "Gaffer/TypedPlug.h"
@@ -102,11 +103,18 @@ class Shader : public Gaffer::DependencyNode
 		/// outPlug().
 		virtual void affects( const Gaffer::Plug *input, AffectedPlugsContainer &outputs ) const;
 
-		/// Returns a hash representing the result of state().
+		/// Returns a hash representing the result of attributes().
+		IECore::MurmurHash attributesHash() const;
+		virtual void attributesHash( IECore::MurmurHash &h ) const;
+		/// Returns a block of attributes representing this
+		/// shader, suitable for use in ScenePlug::attributesPlug().
+		virtual IECore::ConstCompoundObjectPtr attributes() const;
+
+		/// \deprecated
 		IECore::MurmurHash stateHash() const;
+		/// \deprecated
 		void stateHash( IECore::MurmurHash &h ) const;
-		/// Returns a series of IECore::StateRenderables suitable for specifying this
-		/// shader (and it's inputs) to an IECore::Renderer.
+		/// \deprecated
 		IECore::ConstObjectVectorPtr state() const;
 
 	protected :

@@ -156,6 +156,32 @@ const Gaffer::Color3fPlug *Shader::nodeColorPlug() const
 	return getChild<Color3fPlug>( g_firstPlugIndex + 5 );
 }
 
+IECore::MurmurHash Shader::attributesHash() const
+{
+	IECore::MurmurHash h;
+	attributesHash( h );
+	return h;
+}
+
+void Shader::attributesHash( IECore::MurmurHash &h ) const
+{
+	NetworkBuilder networkBuilder( this );
+	h.append( networkBuilder.stateHash() );
+}
+
+IECore::ConstCompoundObjectPtr Shader::attributes() const
+{
+	IECore::CompoundObjectPtr result = new IECore::CompoundObject;
+	NetworkBuilder networkBuilder( this );
+	if( !networkBuilder.state()->members().empty() )
+	{
+		result->members()[typePlug()->getValue()] = boost::const_pointer_cast<IECore::ObjectVector>(
+			networkBuilder.state()
+		);
+	}
+	return result;
+}
+
 IECore::MurmurHash Shader::stateHash() const
 {
 	NetworkBuilder networkBuilder( this );
