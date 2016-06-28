@@ -141,7 +141,7 @@ void ShaderAssignment::hashProcessedAttributes( const ScenePath &path, const Gaf
 	const Shader *shader = shaderPlug()->source<Plug>()->ancestor<Shader>();
 	if( shader )
 	{
-		shader->stateHash( h );
+		shader->attributesHash( h );
 	}
 }
 
@@ -153,14 +153,8 @@ IECore::ConstCompoundObjectPtr ShaderAssignment::computeProcessedAttributes( con
 		return inputAttributes;
 	}
 
-	ConstObjectVectorPtr state = shader->state();
-	if( !state->members().size() )
-	{
-		return inputAttributes;
-	}
-
-	const IECore::Shader *primaryShader = runTimeCast<IECore::Shader>( state->members().back().get() );
-	if( !primaryShader || !primaryShader->getType().size() )
+	ConstCompoundObjectPtr attributes = shader->attributes();
+	if( attributes->members().empty() )
 	{
 		return inputAttributes;
 	}
@@ -171,12 +165,10 @@ IECore::ConstCompoundObjectPtr ShaderAssignment::computeProcessedAttributes( con
 	// the input members in our result without copying. Be careful not to modify
 	// them though!
 	result->members() = inputAttributes->members();
-	// Shader::state() returns a const object, so that in the future it may
-	// come from a cached value. we're putting it into our result which, once
-	// returned, will also be treated as const and cached. for that reason the
-	// temporary const_cast needed to put it into the result is justified -
-	// we never change the object and nor can anyone after it is returned.
-	result->members()[primaryShader->getType()] = boost::const_pointer_cast<ObjectVector>( state );
+	for( CompoundObject::ObjectMap::const_iterator it = attributes->members().begin(), eIt = attributes->members().end(); it != eIt; ++it )
+	{
+		result->members()[it->first] = it->second;
+	}
 
 	return result;
 }
