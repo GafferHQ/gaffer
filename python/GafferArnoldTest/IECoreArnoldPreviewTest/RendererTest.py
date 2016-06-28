@@ -613,6 +613,81 @@ class RendererTest( GafferTest.TestCase ) :
 			self.assertEqual( arnold.AiNodeGetRGB( plane2, "user:testColor3f" ), arnold.AtRGB( 1, 0.5, 0 ) )
 			self.assertEqual( arnold.AiNodeGetStr( plane2, "user:testString" ), "indeed" )
 
+	def testDisplacementAttributes( self ) :
+
+		r = GafferScene.Private.IECoreScenePreview.Renderer.create(
+			"IECoreArnold::Renderer",
+			GafferScene.Private.IECoreScenePreview.Renderer.RenderType.SceneDescription,
+			self.temporaryDirectory() + "/test.ass"
+		)
+
+		plane = IECore.MeshPrimitive.createPlane( IECore.Box2f( IECore.V2f( -1 ), IECore.V2f( 1 ) ) )
+		noise = IECore.ObjectVector( [ IECore.Shader( "noise", "ai:displacement", {} ) ] )
+
+		sharedAttributes = r.attributes(
+			IECore.CompoundObject( {
+				"ai:disp_map" : noise,
+				"ai:disp_height" : IECore.FloatData( 0.25 ),
+				"ai:disp_padding" : IECore.FloatData( 2.5 ),
+				"ai:disp_zero_value" : IECore.FloatData( 0.5 ),
+				"ai:disp_autobump" : IECore.BoolData( True ),
+			} )
+		)
+
+		r.object( "plane1", plane, sharedAttributes )
+		r.object( "plane2", plane, sharedAttributes )
+
+		r.object(
+			"plane3",
+			plane,
+			r.attributes(
+				IECore.CompoundObject( {
+					"ai:disp_map" : noise,
+					"ai:disp_height" : IECore.FloatData( 0.5 ),
+					"ai:disp_padding" : IECore.FloatData( 5.0 ),
+					"ai:disp_zero_value" : IECore.FloatData( 0.0 ),
+					"ai:disp_autobump" : IECore.BoolData( True ),
+				} )
+			)
+		)
+
+		r.render()
+		del r
+
+		with IECoreArnold.UniverseBlock() :
+
+			arnold.AiASSLoad( self.temporaryDirectory() + "/test.ass" )
+
+			shapes = self.__allNodes( type = arnold.AI_NODE_SHAPE )
+			self.assertEqual( len( shapes ), 5 )
+
+			plane1 = arnold.AiNodeLookUpByName( "plane1" )
+			plane2 = arnold.AiNodeLookUpByName( "plane2" )
+			plane3 = arnold.AiNodeLookUpByName( "plane3" )
+
+			self.assertTrue( arnold.AiNodeIs( plane1, "ginstance" ) )
+			self.assertTrue( arnold.AiNodeIs( plane2, "ginstance" ) )
+			self.assertTrue( arnold.AiNodeIs( plane3, "ginstance" ) )
+
+			self.assertEqual( arnold.AiNodeGetPtr( plane1, "node" ), arnold.AiNodeGetPtr( plane2, "node" ) )
+			self.assertNotEqual( arnold.AiNodeGetPtr( plane2, "node" ), arnold.AiNodeGetPtr( plane3, "node" ) )
+
+			polymesh1 = arnold.AtNode.from_address( arnold.AiNodeGetPtr( plane1, "node" ) )
+			polymesh2 = arnold.AtNode.from_address( arnold.AiNodeGetPtr( plane3, "node" ) )
+
+			self.assertTrue( arnold.AiNodeIs( polymesh1, "polymesh" ) )
+			self.assertTrue( arnold.AiNodeIs( polymesh2, "polymesh" ) )
+
+			self.assertEqual( arnold.AiNodeGetPtr( polymesh1, "disp_map" ), arnold.AiNodeGetPtr( polymesh2, "disp_map" ) )
+			self.assertEqual( arnold.AiNodeGetFlt( polymesh1, "disp_height" ), 0.25 )
+			self.assertEqual( arnold.AiNodeGetFlt( polymesh2, "disp_height" ), 0.5 )
+			self.assertEqual( arnold.AiNodeGetFlt( polymesh1, "disp_padding" ), 2.5 )
+			self.assertEqual( arnold.AiNodeGetFlt( polymesh2, "disp_padding" ), 5.0 )
+			self.assertEqual( arnold.AiNodeGetFlt( polymesh1, "disp_zero_value" ), 0.5 )
+			self.assertEqual( arnold.AiNodeGetFlt( polymesh2, "disp_zero_value" ), 0.0 )
+			self.assertEqual( arnold.AiNodeGetBool( polymesh1, "disp_autobump" ), True )
+			self.assertEqual( arnold.AiNodeGetBool( polymesh2, "disp_autobump" ), True )
+
 	def __allNodes( self, type = arnold.AI_NODE_ALL, ignoreBuiltIn = True ) :
 
 		result = []
