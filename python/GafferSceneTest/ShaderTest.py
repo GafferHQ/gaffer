@@ -67,30 +67,30 @@ class ShaderTest( GafferSceneTest.SceneTestCase ) :
 		self.assertTrue( s["enabled"].isSame( s.enabledPlug() ) )
 		self.assertEqual( s.correspondingInput( s["out"] ), None )
 
-		h = s.stateHash()
-		self.assertEqual( len( s.state() ), 1 )
+		h = s.attributesHash()
+		self.assertEqual( len( s.attributes() ), 1 )
 
 		s["enabled"].setValue( False )
 
-		self.assertEqual( len( s.state() ), 0 )
-		self.assertNotEqual( s.stateHash(), h )
+		self.assertEqual( len( s.attributes() ), 0 )
+		self.assertNotEqual( s.attributesHash(), h )
 
 	def testNodeNameBlindData( self ) :
 
 		s = GafferSceneTest.TestShader( "node1" )
+		s["type"].setValue( "test:surface" )
 
-		h1 = s.stateHash()
-		s1 = s.state()
-
+		h1 = s.attributesHash()
+		s1 = s.attributes()["test:surface"]
 		cs = GafferTest.CapturingSlot( s.plugDirtiedSignal() )
 
 		s.setName( "node2" )
 
 		self.assertTrue( s["out"] in [ x[0] for x in cs ] )
 
-		self.assertNotEqual( s.stateHash(), h1 )
+		self.assertNotEqual( s.attributesHash(), h1 )
 
-		s2 = s.state()
+		s2 = s.attributes()["test:surface"]
 		self.assertNotEqual( s2, s1 )
 
 		self.assertEqual( s1[0].blindData()["gaffer:nodeName"], IECore.StringData( "node1" ) )
@@ -99,9 +99,10 @@ class ShaderTest( GafferSceneTest.SceneTestCase ) :
 	def testNodeColorBlindData( self ) :
 
 		s = GafferSceneTest.TestShader()
+		s["type"].setValue( "test:surface" )
 
-		h1 = s.stateHash()
-		s1 = s.state()
+		h1 = s.attributesHash()
+		s1 = s.attributes()["test:surface"]
 
 		cs = GafferTest.CapturingSlot( s.plugDirtiedSignal() )
 
@@ -109,15 +110,15 @@ class ShaderTest( GafferSceneTest.SceneTestCase ) :
 
 		self.assertTrue( s["out"] in [ x[0] for x in cs ] )
 
-		self.assertNotEqual( s.stateHash(), h1 )
+		self.assertNotEqual( s.attributesHash(), h1 )
 
-		s2 = s.state()
+		s2 = s.attributes()["test:surface"]
 		self.assertNotEqual( s2, s1 )
 
 		self.assertEqual( s1[0].blindData()["gaffer:nodeColor"], IECore.Color3fData( IECore.Color3f( 0 ) ) )
 		self.assertEqual( s2[0].blindData()["gaffer:nodeColor"], IECore.Color3fData( IECore.Color3f( 1, 0, 0 ) ) )
 
-	def testShaderTypesInState( self ) :
+	def testShaderTypesInAttributes( self ) :
 
 		surface = GafferSceneTest.TestShader( "surface" )
 		surface["name"].setValue( "testSurface" )
@@ -130,9 +131,9 @@ class ShaderTest( GafferSceneTest.SceneTestCase ) :
 
 		surface["parameters"]["t"].setInput( texture["out"] )
 
-		state = surface.state()
-		self.assertEqual( state[0].type, "test:shader" )
-		self.assertEqual( state[1].type, "test:surface" )
+		network = surface.attributes()["test:surface"]
+		self.assertEqual( network[0].type, "test:shader" )
+		self.assertEqual( network[1].type, "test:surface" )
 
 	def testDirtyPropagationThroughShaderAssignment( self ) :
 
@@ -176,8 +177,8 @@ class ShaderTest( GafferSceneTest.SceneTestCase ) :
 		# And a hard error when we attempt to actually generate
 		# the shader network.
 		for node in ( n1, n2, n3 ) :
-			self.assertRaisesRegexp( RuntimeError, "cycle", node.stateHash )
-			self.assertRaisesRegexp( RuntimeError, "cycle", node.state )
+			self.assertRaisesRegexp( RuntimeError, "cycle", node.attributesHash )
+			self.assertRaisesRegexp( RuntimeError, "cycle", node.attributes )
 
 if __name__ == "__main__":
 	unittest.main()

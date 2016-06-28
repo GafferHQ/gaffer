@@ -67,18 +67,18 @@ class OpenGLShaderTest( GafferSceneTest.SceneTestCase ) :
 		i["fileName"].setValue( os.path.expandvars( "$GAFFER_ROOT/python/GafferImageTest/images/checker.exr" ) )
 		s["parameters"]["texture"].setInput( i["out"] )
 
-		ss = s.state()
-		self.assertEqual( len( ss ), 1 )
-		self.failUnless( isinstance( ss[0], IECore.Shader ) )
+		a = s.attributes()
+		self.assertEqual( a.keys(), [ "gl:surface"] )
+		self.failUnless( isinstance( a["gl:surface"][0], IECore.Shader ) )
 
-		self.assertEqual( ss[0].name, "Texture" )
-		self.assertEqual( ss[0].type, "gl:surface" )
-		self.assertEqual( ss[0].parameters["mult"], IECore.FloatData( 0.5 ) )
-		self.assertEqual( ss[0].parameters["tint"].value, IECore.Color4f( 1, 0.5, 0.25, 1 ) )
-		self.assertTrue( isinstance( ss[0].parameters["texture"], IECore.CompoundData ) )
-		self.failUnless( "displayWindow" in ss[0].parameters["texture"] )
-		self.failUnless( "dataWindow" in ss[0].parameters["texture"] )
-		self.failUnless( "channels" in ss[0].parameters["texture"] )
+		self.assertEqual( a["gl:surface"][0].name, "Texture" )
+		self.assertEqual( a["gl:surface"][0].type, "gl:surface" )
+		self.assertEqual( a["gl:surface"][0].parameters["mult"], IECore.FloatData( 0.5 ) )
+		self.assertEqual( a["gl:surface"][0].parameters["tint"].value, IECore.Color4f( 1, 0.5, 0.25, 1 ) )
+		self.assertTrue( isinstance( a["gl:surface"][0].parameters["texture"], IECore.CompoundData ) )
+		self.failUnless( "displayWindow" in a["gl:surface"][0].parameters["texture"] )
+		self.failUnless( "dataWindow" in a["gl:surface"][0].parameters["texture"] )
+		self.failUnless( "channels" in a["gl:surface"][0].parameters["texture"] )
 
 	def testDirtyPropagation( self ) :
 
@@ -99,18 +99,18 @@ class OpenGLShaderTest( GafferSceneTest.SceneTestCase ) :
 		s = GafferScene.OpenGLShader()
 		s.loadShader( "Texture" )
 
-		h1 = s.stateHash()
+		h1 = s.attributesHash()
 
 		i = GafferImage.Constant()
 		i["format"].setValue( GafferImage.Format( 100, 100, 1 ) )
 		s["parameters"]["texture"].setInput( i["out"] )
 
-		h2 = s.stateHash()
+		h2 = s.attributesHash()
 		self.assertNotEqual( h2, h1 )
 
 		i["color"].setValue( IECore.Color4f( 1, 0, 1, 0 ) )
 
-		h3 = s.stateHash()
+		h3 = s.attributesHash()
 		self.assertNotEqual( h3, h2 )
 		self.assertNotEqual( h3, h1 )
 
