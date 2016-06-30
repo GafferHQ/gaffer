@@ -358,6 +358,7 @@ IECore::InternedString g_polyMeshSubdivIterationsAttributeName( "ai:polymesh:sub
 IECore::InternedString g_polyMeshSubdivAdaptiveErrorAttributeName( "ai:polymesh:subdiv_adaptive_error" );
 IECore::InternedString g_polyMeshSubdivAdaptiveMetricAttributeName( "ai:polymesh:subdiv_adaptive_metric" );
 IECore::InternedString g_polyMeshSubdivAdaptiveSpaceAttributeName( "ai:polymesh:subdiv_adaptive_space" );
+IECore::InternedString g_polyMeshSubdivTypeAttributeName( "ai:polymesh:subdiv_type" );
 IECore::InternedString g_objectSpace( "object" );
 
 IECore::InternedString g_dispMapAttributeName( "ai:disp_map" );
@@ -380,27 +381,40 @@ class ArnoldAttributes : public IECoreScenePreview::Renderer::AttributesInterfac
 				subdivAdaptiveError = attributeValue<float>( g_polyMeshSubdivAdaptiveErrorAttributeName, attributes, 0.0f );
 				subdivAdaptiveMetric = attributeValue<string>( g_polyMeshSubdivAdaptiveMetricAttributeName, attributes, "auto" );
 				subdivAdaptiveSpace = attributeValue<string>( g_polyMeshSubdivAdaptiveSpaceAttributeName, attributes, "raster" );
+				subdivType = attributeValue<string>( g_polyMeshSubdivTypeAttributeName, attributes, "" );
 			}
 
 			int subdivIterations;
 			float subdivAdaptiveError;
 			IECore::InternedString subdivAdaptiveMetric;
 			IECore::InternedString subdivAdaptiveSpace;
+			IECore::InternedString subdivType;
 
-			void hash( IECore::MurmurHash &h ) const
+			void hash( const IECore::MeshPrimitive *mesh, IECore::MurmurHash &h ) const
 			{
-				h.append( subdivIterations );
-				h.append( subdivAdaptiveError );
-				h.append( subdivAdaptiveMetric );
-				h.append( subdivAdaptiveSpace );
+				if( mesh->interpolation() != "linear" || subdivType != "" )
+				{
+					h.append( subdivIterations );
+					h.append( subdivAdaptiveError );
+					h.append( subdivAdaptiveMetric );
+					h.append( subdivAdaptiveSpace );
+					h.append( subdivType );
+				}
 			}
 
-			void apply( AtNode *node ) const
+			void apply( const IECore::MeshPrimitive *mesh, AtNode *node ) const
 			{
-				AiNodeSetByte( node, "subdiv_iterations", subdivIterations );
-				AiNodeSetFlt( node, "subdiv_adaptive_error", subdivAdaptiveError );
-				AiNodeSetStr( node, "subdiv_adaptive_metric", subdivAdaptiveMetric.c_str() );
-				AiNodeSetStr( node, "subdiv_adaptive_space", subdivAdaptiveSpace.c_str() );
+				if( mesh->interpolation() != "linear" || subdivType != "" )
+				{
+					AiNodeSetByte( node, "subdiv_iterations", subdivIterations );
+					AiNodeSetFlt( node, "subdiv_adaptive_error", subdivAdaptiveError );
+					AiNodeSetStr( node, "subdiv_adaptive_metric", subdivAdaptiveMetric.c_str() );
+					AiNodeSetStr( node, "subdiv_adaptive_space", subdivAdaptiveSpace.c_str() );
+					if( subdivType != "" )
+					{
+						AiNodeSetStr( node, "subdiv_type", subdivType.c_str() );
+					}
+				}
 			}
 
 		};
@@ -730,12 +744,9 @@ class InstanceCache : public IECore::RefCounted
 		{
 			if( const IECore::MeshPrimitive *mesh = IECore::runTimeCast<const IECore::MeshPrimitive>( object ) )
 			{
-				if( mesh->interpolation() != "linear" )
-				{
-					// Take account of the fact that in `convert()` we will apply poly mesh
-					// attributes to the resulting node.
-					attributes->polyMesh.hash( h );
-				}
+				// Take account of the fact that in `convert()` we will apply poly mesh
+				// attributes to the resulting node.
+				attributes->polyMesh.hash( mesh, h );
 				attributes->displacement.hash( h );
 			}
 		}
@@ -753,9 +764,9 @@ class InstanceCache : public IECore::RefCounted
 				return boost::shared_ptr<AtNode>();
 			}
 
-			if( AiNodeIs( node, "polymesh" ) )
+			if( const IECore::MeshPrimitive *mesh = IECore::runTimeCast<const IECore::MeshPrimitive>( object ) )
 			{
-				attributes->polyMesh.apply( node );
+				attributes->polyMesh.apply( mesh, node );
 				attributes->displacement.apply( node );
 			}
 
@@ -770,9 +781,9 @@ class InstanceCache : public IECore::RefCounted
 				return boost::shared_ptr<AtNode>();
 			}
 
-			if( AiNodeIs( node, "polymesh" ) )
+			if( const IECore::MeshPrimitive *mesh = IECore::runTimeCast<const IECore::MeshPrimitive>( samples.front() ) )
 			{
-				attributes->polyMesh.apply( node );
+				attributes->polyMesh.apply( mesh, node );
 				attributes->displacement.apply( node );
 			}
 

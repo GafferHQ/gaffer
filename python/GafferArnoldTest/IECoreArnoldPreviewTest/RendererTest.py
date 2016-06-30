@@ -688,6 +688,51 @@ class RendererTest( GafferTest.TestCase ) :
 			self.assertEqual( arnold.AiNodeGetBool( polymesh1, "disp_autobump" ), True )
 			self.assertEqual( arnold.AiNodeGetBool( polymesh2, "disp_autobump" ), True )
 
+	def testSubdivTypeAttribute( self ) :
+
+		r = GafferScene.Private.IECoreScenePreview.Renderer.create(
+			"IECoreArnold::Renderer",
+			GafferScene.Private.IECoreScenePreview.Renderer.RenderType.SceneDescription,
+			self.temporaryDirectory() + "/test.ass"
+		)
+
+		meshes = {}
+		meshes["linear"] = IECore.MeshPrimitive.createPlane( IECore.Box2f( IECore.V2f( -1 ), IECore.V2f( 1 ) ) )
+		meshes["catmullClark"] = meshes["linear"].copy()
+		meshes["catmullClark"].interpolation = "catmullClark"
+
+		attributes = {}
+		for t in ( "", "none", "linear", "catclark" ) :
+			a = IECore.CompoundObject()
+			if t :
+				a["ai:polymesh:subdiv_type"] = IECore.StringData( t )
+			attributes[t] = r.attributes( a )
+
+		for interpolation in meshes.keys() :
+			for subdivType in attributes.keys() :
+				r.object( interpolation + "-" + subdivType, meshes[interpolation], attributes[subdivType] )
+
+		r.render()
+		del r
+
+		with IECoreArnold.UniverseBlock() :
+
+			arnold.AiASSLoad( self.temporaryDirectory() + "/test.ass" )
+
+			for interpolation in meshes.keys() :
+				for subdivType in attributes.keys() :
+
+					instance = arnold.AiNodeLookUpByName( interpolation + "-" + subdivType )
+					self.assertTrue( arnold.AiNodeIs( instance, "ginstance" ) )
+
+					mesh = arnold.AtNode.from_address( arnold.AiNodeGetPtr( instance, "node" ) )
+					self.assertTrue( arnold.AiNodeIs( mesh, "polymesh" ) )
+
+					if subdivType :
+						self.assertEqual( arnold.AiNodeGetStr( mesh, "subdiv_type" ), subdivType )
+					else :
+						self.assertEqual( arnold.AiNodeGetStr( mesh, "subdiv_type" ), "none" if interpolation == "linear" else "catclark" )
+
 	def __allNodes( self, type = arnold.AI_NODE_ALL, ignoreBuiltIn = True ) :
 
 		result = []
