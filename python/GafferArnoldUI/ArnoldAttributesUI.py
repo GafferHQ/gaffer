@@ -73,6 +73,8 @@ def __shadingSummary( plug ) :
 def __subdivisionSummary( plug ) :
 
 	info = []
+	if plug["subdivType"]["enabled"].getValue() :
+		info.append( "Type %s" % string.capwords( plug["subdivType"]["value"].getValue() ) )
 	if plug["subdivIterations"]["enabled"].getValue() :
 		info.append( "Iterations %d" % plug["subdivIterations"]["value"].getValue() )
 	if plug["subdivAdaptiveError"]["enabled"].getValue() :
@@ -247,6 +249,35 @@ Gaffer.Metadata.registerNode(
 		],
 
 		# Subdivision
+
+		"attributes.subdivType" : [
+
+			"description",
+			"""
+			The type of subdivision to apply to mesh geometry.
+			By default, polygon meshes are not subdivided and
+			subdivision meshes are, but this attribute allows
+			that behaviour to be overridden.
+
+			> Tip : Use "Linear" subdivision to subdivide polygon
+			> meshes so they can have more detailed displacement
+			> applied, or to improve the appearance of mesh lights.
+			""",
+
+			"layout:section", "Subdivision",
+			"label", "Type",
+
+		],
+
+		"attributes.subdivType.value" : [
+
+			"preset:None", "none",
+			"preset:Linear", "linear",
+			"preset:Catclark", "catclark",
+
+			"plugValueWidget:type", "GafferUI.PresetsPlugValueWidget",
+
+		],
 
 		"attributes.subdivIterations" : [
 
