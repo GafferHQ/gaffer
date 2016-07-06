@@ -1,7 +1,7 @@
 ##########################################################################
 #
 #  Copyright (c) 2012, John Haddon. All rights reserved.
-#  Copyright (c) 2012-2014, Image Engine Design Inc. All rights reserved.
+#  Copyright (c) 2012-2016, Image Engine Design Inc. All rights reserved.
 #
 #  Redistribution and use in source and binary forms, with or without
 #  modification, are permitted provided that the following conditions are
@@ -102,6 +102,7 @@ import UnionFilterUI
 import PathFilterUI
 import GroupUI
 import OpenGLRenderUI
+import PrimitiveVariableProcessorUI
 import DeletePrimitiveVariablesUI
 import MeshTypeUI
 import DeleteOutputsUI
