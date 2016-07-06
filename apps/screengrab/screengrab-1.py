@@ -41,6 +41,7 @@ import IECore
 import Gaffer
 import GafferUI
 import GafferScene
+import GafferSceneUI
 
 QtGui = GafferUI._qtImport( "QtGui" )
 
@@ -113,6 +114,19 @@ class screengrab( Gaffer.Application ) :
 							name = "execute",
 							description = "Some python code to execute in the script editor.",
 							defaultValue = "",
+						),
+					]
+				),
+
+				IECore.CompoundParameter(
+					name = "viewer",
+					description = "Parameters that configure Viewers.",
+					members = [
+						IECore.IntParameter(
+							name = "minimumExpansionDepth",
+							description = "The minimum expansion depth in the viewer.",
+							defaultValue = 0,
+							minValue = 0,
 						),
 					]
 				),
@@ -259,6 +273,13 @@ class screengrab( Gaffer.Application ) :
 				scriptEditor.inputWidget().setText( args["scriptEditor"]["execute"].value )
 				scriptEditor.inputWidget()._qtWidget().selectAll()
 				scriptEditor.execute()
+
+		# Set up the Viewers as requested.
+
+		for viewer in scriptWindow.getLayout().editors( GafferUI.Viewer ) :
+			if isinstance( viewer.view(), GafferSceneUI.SceneView ) :
+				viewer.view()["minimumExpansionDepth"].setValue( args["viewer"]["minimumExpansionDepth"].value )
+		del viewer
 
 		# Set up the scene expansion and selection.
 
