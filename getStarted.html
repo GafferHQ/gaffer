@@ -4,69 +4,68 @@ title: Getting Started With Gaffer
 
 {% include header.html %}
 
+{% include intro.html title="Get Started" image="http://image-engine.com/wp-content/uploads/2016/07/CHPGetRich.jpg" %}
 
-<div class="container">
-	<div class="row">
-		<div class="col-sm-3">
-				<ul class="nav nav-stacked">
-					<li><br></li>
-					<li><a href="#download"> <span class="glyphicon glyphicon-chevron-right"></span> Download</a></li>
-					<li><a href="#configure"> <span class="glyphicon glyphicon-chevron-right"></span> Configure</a></li>
-					<li><a href="#tinker"> <span class="glyphicon glyphicon-chevron-right"></span> Tinker</a></li>
-				</ul>
-		</div>
+<!-- Content Section -->
 
+<section class="">
+    <div class="">
+        <section id="download" class="ptb-60 text-center">
+	    <h1>Download</h1>
+            <div class="container">
+                <br/>
+                <div>
+                    <a class="btn btn-md btn-color-b" href="https://github.com/ImageEngine/gaffer/releases/download/0.26.0.0/gaffer-0.26.0.0-linux.tar.gz">Linux Download</a>
+		    <span class="btn-space-10 xs-hidden"></span>
+		    <a class="btn btn-lg btn-color-line" href="https://github.com/ImageEngine/gaffer/releases/download/0.26.0.0/gaffer-0.26.0.0-osx.tar.gz">Mac Download</a>
+                </div>
+            </div>
+        </section>
+	<section id="configure">
+            <div class="text-center">
+                <h1>Configure</h1>
+            </div>
+	    <div class="container">
+                <br/>
+                <p>Once you have unpacked the download, you will need to add <code>&lt;GAFFER_INSTALL_PATH&gt;/bin</code> to your <code>$PATH</code> environment variable (substituting <code>&lt;GAFFER_INSTALL_PATH&gt;</code> with the path to the unpacked directory).</p>
+		<p>For example, you can achieve this in a bash shell with the following command:</p>
+                <div class="well">
+                    <code>$ export PATH=/home/jblogs/Downloads/gaffer-0.26.0.0/bin:${PATH}</code>
+                </div>
+		<p>That's it! You can launch Gaffer and start rendering with Appleseed:</p>
+                <div class="well">
+                    <code>$ gaffer</code>
+                </div>
+                <br>
+		<p>If you'd rather render with Arnold in Gaffer you will need to:</p>
+                <ul>
+                    <li>Ensure <code>&lt;ARNOLD_INSTALL_PATH&gt;/bin</code> is in your <code>$PATH</code>.</li>
+                    <li>Add <code>&lt;ARNOLD_INSTALL_PATH&gt;/bin</code> to the <code>$LD_LIBRARY_PATH</code> environment variable.</li>
+                    <li>Add <code>&lt;ARNOLD_INSTALL_PATH&gt;/python</code> to the <code>$PYTHONPATH</code> environment variable.</li>
+                </ul>
+                <p>Similarly, to use 3delight with Gaffer you will also need to:</p>
+                <ul>
+                    <li>Ensure <code>&lt;3DELIGHT_INSTALL_PATH&gt;/bin</code> is in your <code>$PATH</code>.</li>
+                    <li>Set the <code>$DELIGHT</code> environment variable to point to <code>&lt;3DELIGHT_INSTALL_PATH&gt;</code>.</li>
+                    <li>Add <code>&lt;3DELIGHT_INSTALL_PATH&gt;/shaders</code> to the <code>$DL_SHADERS_PATH</code> environment variable.</li>
+                    <li>Add <code>&lt;3DELIGHT_INSTALL_PATH&gt;/displays</code> to the <code>$DL_DISPLAYS_PATH</code> environment variable.</li>
+                    <li>Add <code>&lt;3DELIGHT_INSTALL_PATH&gt;/lib</code> to the <code>$LD_LIBRARY_PATH</code> environment variable.</li>
+                </ul>
+		<br>
+             </div>
+        </section>
+        <section id="tinker" class="dark-bg ptb-60">
+            <div class="text-center">
+                <h1>Tinker</h1>
+            </div>
+            <div class="container">
+	        <br/>
+                        <p class="mb-0">A good first step would be working through the <a class="btn btn-md btn-color-line" href="{{ site.baseurl }}/resources/documents/latest/GafferUserGuide.pdf#page=7">Quick Start Tutorial</a> in the user documentation. It covers the basics of working with Gaffer to create and render a scene, taking you from launching the application through to viewing a complete image.</p>
+            </div>
+        </section>
+    </div>
+</section>
 
-		<div class="container">
-			<div class="col-sm-9">
-				<section id="download">
-					<div class="page-header">
-					<h1>1. Download</h1>
-					</div>
-					<p>To install a pre-built release, simply download and unpack the latest bundle from <a href=https://github.com/ImageEngine/gaffer/releases>the project site</a>. The resulting directory will contain the complete application ready to run.</p>
-					<p>For linux, you will want the gaffer-<code>VERSION</code>-linux.tar.gz bundle. It's recommended that you choose the latest available version. Once you have this file downloaded, unpack it with the command (substituting in the correct version number): 
-					<div class="well">
-						<code>$ tar -xvf gaffer-0.79.0-linux.tar.gz</code>
-					</div>
-				</section>
-
-				<section id="configure">
-					<div class="page-header">
-					<h1>2. Configure</h1>
-					</div>
-					<p>Once you have unpacked the bundle, you will need to add the following location within the folder structure that gets created to your $PATH environment variable (substituting <code>&lt;GAFFER_INSTALL_PATH&gt;</code> with the path to the unpacked directory):</p>
-					<div class="well">
-						<code>&lt;GAFFER_INSTALL_PATH&gt;/bin</code>
-					</div>
-					<p>For example, you can achieve this in a bash shell with the following command:</p>
-					<div class="well">
-						<code>$ export PATH=/home/jblogs/Downloads/gaffer-0.79.0/bin:${PATH}</code>
-					</div>
-					<p> Then to use 3delight with Gaffer you will also need to:</p>
-					<ul>
-					<li>Ensure <code>&lt;3DELIGHT_INSTALL_PATH&gt;/bin</code> is in your $PATH.</li>
-					<li>Set the $DELIGHT environment variable to point to <code>&lt;3DELIGHT_INSTALL_PATH&gt;</code>.</li>
-					<li>Add <code>&lt;3DELIGHT_INSTALL_PATH&gt;/shaders</code> to the $DL_SHADERS_PATH environment variable.</li>
-					<li>Add <code>&lt;3DELIGHT_INSTALL_PATH&gt;/displays</code> to the $DL_DISPLAYS_PATH environment variable.</li>
-					<li>Add <code>&lt;3DELIGHT_INSTALL_PATH&gt;/lib</code> to the $LD_LIBRARY_PATH environment variable.</li>
-					</ul>
-					<p>Similarly, to use Arnold with Gaffer you will need to:</p>
-					<ul>
-					<li>Ensure <code>&lt;ARNOLD_INSTALL_PATH&gt;/bin</code> is in your $PATH.</li>
-					<li>Add <code>&lt;ARNOLD_INSTALL_PATH&gt;/bin</code> to the $LD_LIBRARY_PATH environment variable.</li>
-					<li>Add <code>&lt;ARNOLD_INSTALL_PATH&gt;/python</code> to the $PYTHONPATH environment variable.</li>
-					</ul>
-				</section>
-
-				<section id="tinker">
-					<div class="page-header">
-					<h1>3. Tinker</h1>
-					</div>
-					<p>A good first step would be working through the "QuickStart" tutorial in the <a href=resources/documents/latest/GafferUserGuide.pdf#page=7>user documentation.</a> It covers the very basics of working with Gaffer to create and render a scene, taking you from launching the application through to viewing a complete image.</p>
-				</section>
-			</div>
-		</div>
-	</div>
-</div>
+<!-- End Content Section -->
 
 {% include footer.html %}
