@@ -1,0 +1,67 @@
+
+/*----------------------------------*/
+/* Push Sidebar Menu Css ---*/
+/*----------------------------------*/
+.pushmenu { /*this is the nav*/
+    background: #323232;
+    font-family: Arial, Helvetics, sans-serif;
+    width: 270px;
+    height: 100%;
+    top: 0;
+    z-index: 1000;
+    position: fixed;
+}
+
+.pushmenu-push {
+    overflow-x: hidden;
+    position: relative;
+}
+
+
+/*==================================*/
+/* Left Sidebar Menu Css --------*/
+/*==================================*/
+
+.pushmenu-right {
+    right: -270px;
+}
+
+    .pushmenu-right.pushmenu-open {
+        right: 0;
+    }
+    .pushmenu-push-left {
+        left:0;
+    }
+
+.pushmenu-push-toleft {
+    left: -270px;
+}
+
+/*Transition*/
+.pushmenu, .pushmenu-push {
+    -webkit-transition: all 0.3s ease;
+    -moz-transition: all 0.3s ease;
+    transition: all 0.3s ease;
+    -o-transition: all 0.3s ease;
+}
+
+
+/*==================================*/
+/* Left Sidebar Menu Css --------*/
+/*==================================*/
+.pushmenu-left {
+    left: -270px;
+}
+
+    .pushmenu-left.pushmenu-open {
+        left: 0;
+    }
+
+    .pushmenu-push-right {
+        right:0;
+    }
+
+.pushmenu-push-toright {
+    right: -270px;
+}
+

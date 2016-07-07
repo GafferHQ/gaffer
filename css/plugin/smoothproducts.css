@@ -1,0 +1,140 @@
+/* Needed for the lightbox */
+html, body {
+    height:100%; width:100%;
+}
+
+/* Element wrapper */
+.sp-wrap {
+    display:none;
+    line-height:0;
+    font-size:0;
+    position:relative;
+    
+    /**************
+      Set max-width to your thumbnail width
+    ***************/
+    max-width: 100%;
+}
+
+/* Thumbnails */
+.sp-thumbs {
+    margin-top:15px;
+    text-align: center;
+    width: 100%;
+    display:inline-block;
+}
+.sp-thumbs img {
+    width:70px;
+    /*height:50px;*/
+}
+.sp-thumbs a:link, .sp-thumbs a:visited {
+    opacity:.4;
+    display:inline-block;
+    margin:0 5px;
+    -webkit-transition: all .2s ease-out;
+    -moz-transition: all .2s ease-out;
+    -ms-transition: all .2s ease-out;
+    -o-transition: all .2s ease-out;
+    transition: all .2s ease-out;
+}
+.sp-thumbs a:hover{
+    opacity:1;
+}
+.sp-thumbs a:active, .sp-current {
+    opacity:1!important;
+    position: relative;
+}
+.sp-current:after {
+    /*content:'';
+    border:6px solid transparent;
+    border-top:6px solid #F0353A;
+    position: absolute;
+    left:50%;
+    top:0;
+    margin-left:-6px;*/
+}
+
+/* Unzoomed, big thumbnail */
+.sp-large {
+    position:relative;
+    overflow:hidden;
+    top:0;
+    left:0;
+}
+.sp-large a img {
+    max-width:100%;
+    height:auto;
+    cursor: -webkit-zoom-in;
+    cursor: -moz-zoom-in;
+}
+.sp-large a {
+    display:block;
+}
+
+/* Panning Zoomed Image */
+.sp-zoom {
+    position:absolute;
+    left:0;
+    top:0;
+    cursor:crosshair;
+    display:none;
+}
+
+/* Button to go full size */
+.sp-full-screen {
+    position: absolute;
+    z-index: 1;
+    display: block;
+    right: 0;
+    top: 0;
+    line-height: 1em;
+   
+    
+}
+.sp-full-screen a:link,
+.sp-full-screen a {
+    background: #f7f7f7;
+    color: #323232;
+    padding:8px 10px;
+    text-decoration: none;
+    text-align: center;
+    display: block;
+    outline:none;
+    text-transform:uppercase;
+    font-size:12px;
+    letter-spacing:2px;
+     
+}
+    .sp-full-screen a i {
+        margin-right:5px;
+    }
+
+/* Lightbox */
+.sp-lightbox {
+    position: fixed;
+    top:0;
+    left:0;
+    height: 100%;
+    width:100%;
+    background:rgb(0,0,0);
+    background:rgba(0,0,0,.8);
+    z-index: 999;
+    display: none;
+}
+.sp-lightbox img {
+    position: absolute;
+    margin: auto;
+    top: 0;
+    bottom: 0;
+    left: 0;
+    right: 0;
+    max-width: 100%;
+    max-height: 100%;
+}
+
+/* Remove margin in mobile view */
+@media screen and (max-width: 400px) {
+    .sp-wrap {
+        margin:0 0 15px 0;
+    }
+}
