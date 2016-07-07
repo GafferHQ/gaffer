@@ -49,6 +49,7 @@
 #include "IECore/SimpleTypedData.h"
 #include "IECore/VectorTypedData.h"
 #include "IECore/Shader.h"
+#include "IECore/SplineData.h"
 
 #include "GafferOSL/ShadingEngine.h"
 
@@ -65,6 +66,28 @@ using namespace GafferOSL;
 
 namespace
 {
+
+template<typename T>
+struct TypeDescFromType
+{
+	static TypeDesc typeDesc()
+	{
+		return TypeDesc( OIIO::BaseTypeFromC<T>::value );
+	}
+};
+
+template<>
+struct TypeDescFromType<Color3f>
+{
+	static TypeDesc typeDesc()
+	{
+		return TypeDesc(
+			OIIO::BaseTypeFromC<Color3f::BaseType>::value,
+			TypeDesc::VEC3,
+			TypeDesc::COLOR
+		);
+	}
+};
 
 TypeDesc::VECSEMANTICS vecSemanticsFromGeometricInterpretation( GeometricData::Interpretation interpretation )
 {
@@ -624,6 +647,44 @@ class ShadingResults
 namespace
 {
 
+template<typename Spline>
+void declareSpline( const InternedString &name, const Spline &spline, ShadingSystem *shadingSystem )
+{
+	vector<typename Spline::XType> positions;
+	vector<typename Spline::YType> values;
+	positions.reserve( spline.points.size() );
+	values.reserve( spline.points.size() );
+	for( typename Spline::PointContainer::const_iterator it = spline.points.begin(), eIt = spline.points.end(); it != eIt; ++it )
+	{
+		positions.push_back( it->first );
+		values.push_back( it->second );
+	}
+
+	const char *basis = "catmull-rom";
+	if( spline.basis == Spline::Basis::bezier() )
+	{
+		basis = "bezier";
+	}
+	else if( spline.basis == Spline::Basis::bSpline() )
+	{
+		basis = "bspline";
+	}
+	else if( spline.basis == Spline::Basis::linear() )
+	{
+		basis = "linear";
+	}
+
+	TypeDesc positionsType = TypeDescFromType<typename Spline::XType>::typeDesc();
+	TypeDesc valuesType = TypeDescFromType<typename Spline::YType>::typeDesc();
+	positionsType.arraylen = positions.size();
+	valuesType.arraylen = values.size();
+
+	shadingSystem->Parameter( name.string() + "Positions", positionsType, &positions.front() );
+	shadingSystem->Parameter( name.string() + "Values", valuesType, &values.front() );
+	shadingSystem->Parameter( name.string() + "Basis", TypeDesc::TypeString, &basis );
+
+}
+
 void declareParameters( const CompoundDataMap &parameters, ShadingSystem *shadingSystem )
 {
 	for( CompoundDataMap::const_iterator it = parameters.begin(), eIt = parameters.end(); it != eIt; ++it )
@@ -641,6 +702,17 @@ void declareParameters( const CompoundDataMap &parameters, ShadingSystem *shadin
 				// this will be handled in declareConnections()
 				continue;
 			}
+		}
+
+		if( const SplinefColor3fData *spline = runTimeCast<const SplinefColor3fData>( it->second.get() ) )
+		{
+			declareSpline( it->first, spline->readable(), shadingSystem );
+			continue;
+		}
+		else if( const SplineffData *spline = runTimeCast<const SplineffData>( it->second.get() ) )
+		{
+			declareSpline( it->first, spline->readable(), shadingSystem );
+			continue;
 		}
 
 		const void *basePointer = 0;

@@ -289,5 +289,27 @@ class ShadingEngineTest( GafferOSLTest.OSLTestCase ) :
 			self.assertEqual( shading["n"][i], IECore.V3f( 0 ) )
 			self.assertEqual( shading["c"][i], IECore.Color3f( 0 ) )
 
+	def testSpline( self ) :
+
+		shader = self.compileShader( os.path.dirname( __file__ ) + "/shaders/splineParameters.osl" )
+		spline =  IECore.SplinefColor3f(
+			IECore.CubicBasisf.bSpline(),
+			[
+				( 0, IECore.Color3f( 1 ) ),
+				( 0, IECore.Color3f( 1 ) ),
+				( 1, IECore.Color3f( 0 ) ),
+				( 1, IECore.Color3f( 0 ) ),
+			]
+		)
+
+		e = GafferOSL.ShadingEngine( IECore.ObjectVector( [
+			IECore.Shader( shader, "surface", { "colorSpline" : spline } )
+		] ) )
+
+		rp = self.rectanglePoints()
+		p = e.shade( rp )
+		for i in range( 0, len( p["Ci"] ) ) :
+			self.assertTrue( p["Ci"][i].equalWithAbsError( spline( rp["v"][i] ), 0.001 ) )
+
 if __name__ == "__main__":
 	unittest.main()
