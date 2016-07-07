@@ -47,6 +47,7 @@
 #include "Gaffer/NumericPlug.h"
 #include "Gaffer/CompoundNumericPlug.h"
 #include "Gaffer/StringPlug.h"
+#include "Gaffer/SplinePlug.h"
 
 #include "GafferScene/RendererAlgo.h"
 
@@ -54,6 +55,7 @@
 #include "GafferOSL/ShadingEngine.h"
 
 using namespace std;
+using namespace Imath;
 using namespace IECore;
 using namespace OSL;
 using namespace Gaffer;
@@ -360,6 +362,129 @@ Plug *loadClosureParameter( const OSLQuery::Parameter *parameter, const Interned
 	return plug.get();
 }
 
+void updatePoints( Splineff &spline, const OSLQuery::Parameter *positionsParameter, const OSLQuery::Parameter *valuesParameter )
+{
+	const vector<float> &positions = positionsParameter->fdefault;
+	const vector<float> &values = valuesParameter->fdefault;
+
+	for( size_t i = 0; ( i < positions.size() ) && ( i < values.size() ); ++i )
+	{
+		spline.points.insert( Splineff::Point( positions[i], values[i] ) );
+	}
+}
+
+void updatePoints( SplinefColor3f &spline, const OSLQuery::Parameter *positionsParameter, const OSLQuery::Parameter *valuesParameter )
+{
+	const vector<float> &positions = positionsParameter->fdefault;
+	const vector<float> &values = valuesParameter->fdefault;
+
+	for( size_t i = 0; i < positions.size() && i*3+2 < values.size(); ++i )
+	{
+		spline.points.insert(
+			SplinefColor3f::Point(
+				positions[i],
+				Color3f(
+					values[i*3],
+					values[i*3+1],
+					values[i*3+2]
+				)
+			)
+		);
+	}
+}
+
+template <typename PlugType>
+Plug *loadSplineParameters( const OSLQuery::Parameter *positionsParameter, const OSLQuery::Parameter *valuesParameter, const OSLQuery::Parameter *basisParameter, const InternedString &name, Gaffer::Plug *parent )
+{
+	typedef typename PlugType::ValueType ValueType;
+	ValueType defaultValue;
+
+	const std::string &basis = basisParameter->sdefault.front().string();
+	if( basis == "bezier" )
+	{
+		defaultValue.basis = CubicBasisf::bezier();
+	}
+	else if( basis == "bspline" )
+	{
+		defaultValue.basis = CubicBasisf::bSpline();
+	}
+	else if( basis == "linear" )
+	{
+		defaultValue.basis = CubicBasisf::linear();
+	}
+	updatePoints( defaultValue, positionsParameter, valuesParameter );
+
+	PlugType *existingPlug = parent->getChild<PlugType>( name );
+	if( existingPlug && existingPlug->defaultValue() == defaultValue )
+	{
+		return existingPlug;
+	}
+
+	typename PlugType::Ptr plug = new PlugType( name, parent->direction(), defaultValue, Plug::Default | Plug::Dynamic );
+	parent->setChild( name, plug );
+
+	return plug.get();
+}
+
+Plug *loadSplineParameter( const OSLQuery &query, const OSLQuery::Parameter *parameter, Gaffer::Plug *parent, const std::string &prefix )
+{
+	const char *suffixes[] = { "Positions", "Values", "Basis", NULL };
+	const char *suffix = NULL;
+	for( const char **suffixPtr = suffixes; *suffixPtr; ++suffixPtr )
+	{
+		if( boost::ends_with( parameter->name.c_str(), *suffixPtr ) )
+		{
+			suffix = *suffixPtr;
+			break;
+		}
+	}
+
+	if( !suffix )
+	{
+		return NULL;
+	}
+
+	const string nameWithoutSuffix = parameter->name.string().substr( 0, parameter->name.string().size() - strlen( suffix ) );
+
+	const OSLQuery::Parameter *positionsParameter = query.getparam( nameWithoutSuffix + "Positions" );
+	if(
+		!positionsParameter ||
+		!positionsParameter->type.is_array() ||
+		positionsParameter->type.basetype != TypeDesc::FLOAT ||
+		positionsParameter->type.aggregate != TypeDesc::SCALAR
+	)
+	{
+		return NULL;
+	}
+
+	const OSLQuery::Parameter *valuesParameter = query.getparam( nameWithoutSuffix + "Values" );
+	if(
+		!valuesParameter ||
+		!valuesParameter->type.is_array() ||
+		valuesParameter->type.basetype != TypeDesc::FLOAT ||
+		( valuesParameter->type.aggregate != TypeDesc::SCALAR && valuesParameter->type.vecsemantics != TypeDesc::COLOR )
+	)
+	{
+		return NULL;
+	}
+
+	const OSLQuery::Parameter *basisParameter = query.getparam( nameWithoutSuffix + "Basis" );
+	if( !basisParameter || basisParameter->type != TypeDesc::TypeString )
+	{
+		return NULL;
+	}
+
+	const string name = nameWithoutSuffix.substr( prefix.size() );
+	if( valuesParameter->type.vecsemantics == TypeDesc::COLOR )
+	{
+		return loadSplineParameters<SplinefColor3fPlug>( positionsParameter, valuesParameter, basisParameter, name, parent );
+	}
+	else
+	{
+		return loadSplineParameters<SplineffPlug>( positionsParameter, valuesParameter, basisParameter, name, parent );
+	}
+}
+
 // Forward declaration so loadStructParameter() can call it.
 void loadShaderParameters( const OSLQuery &query, Gaffer::Plug *parent, const std::string &prefix = "" );
 
@@ -463,7 +588,7 @@ void loadShaderParameters( const OSLQuery &query, Gaffer::Plug *parent, const st
 
 	// Make sure we have a plug to represent each parameter, reusing plugs wherever possible.
 
-	set<InternedString> validPlugNames;
+	set<const Plug *> validPlugs;
 	for( size_t i = 0; i < query.nparams(); ++i )
 	{
 		const OSLQuery::Parameter *parameter = query.getparam( i );
@@ -478,18 +603,26 @@ void loadShaderParameters( const OSLQuery &query, Gaffer::Plug *parent, const st
 			continue;
 		}
 
-		const string plugName = parameter->name.string().substr( prefix.size() );
-		if( plugName.find( "." ) != string::npos )
+		const string name = parameter->name.string().substr( prefix.size() );
+		if( name.find( "." ) != string::npos )
 		{
 			// Member of a struct - will be loaded when the struct is loaded
 			continue;
 		}
 
-		const Plug *plug = loadShaderParameter( query, parameter, plugName, parent );
+		// Spline parameters are a nasty special case because multiple shader
+		// parameters become a single plug on the node, so we deal with them
+		// outside of `loadShaderParameter()`, which deals exclusively with
+		// the one-parameter-at-a-time case.
+		const Plug *plug = loadSplineParameter( query, parameter, parent, prefix );
+		if( !plug )
+		{
+			plug = loadShaderParameter( query, parameter, name, parent );
+		}
 
 		if( plug )
 		{
-			validPlugNames.insert( plugName );
+			validPlugs.insert( plug );
 		}
 	}
 
@@ -497,8 +630,8 @@ void loadShaderParameters( const OSLQuery &query, Gaffer::Plug *parent, const st
 
 	for( int i = parent->children().size() - 1; i >= 0; --i )
 	{
-		GraphComponent *child = parent->getChild<GraphComponent>( i );
-		if( validPlugNames.find( child->getName() ) == validPlugNames.end() )
+		Plug *child = parent->getChild<Plug>( i );
+		if( validPlugs.find( child ) == validPlugs.end() )
 		{
 			parent->removeChild( child );
 		}

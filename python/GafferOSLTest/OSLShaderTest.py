@@ -600,5 +600,69 @@ class OSLShaderTest( GafferOSLTest.OSLTestCase ) :
 			if isinstance( plug, Gaffer.ValuePlug ) :
 				self.assertTrue( plug.isSetToDefault() )
 
+	def testSplineParameters( self ) :
+
+		s = self.compileShader( os.path.dirname( __file__ ) + "/shaders/splineParameters.osl" )
+		n = GafferOSL.OSLShader()
+		n.loadShader( s )
+
+		self.assertEqual( n["parameters"].keys(), [ "floatSpline", "colorSpline" ] )
+
+		self.assertTrue( isinstance( n["parameters"]["floatSpline"], Gaffer.SplineffPlug ) )
+		self.assertEqual(
+			n["parameters"]["floatSpline"].getValue(),
+			IECore.Splineff(
+				IECore.CubicBasisf.catmullRom(),
+				[
+					( 0, 0 ),
+					( 0, 0 ),
+					( 1, 1 ),
+					( 1, 1 ),
+				]
+			)
+		)
+
+		self.assertTrue( isinstance( n["parameters"]["colorSpline"], Gaffer.SplinefColor3fPlug ) )
+		self.assertEqual(
+			n["parameters"]["colorSpline"].getValue(),
+			IECore.SplinefColor3f(
+				IECore.CubicBasisf.bSpline(),
+				[
+					( 0, IECore.Color3f( 0 ) ),
+					( 0, IECore.Color3f( 0 ) ),
+					( 1, IECore.Color3f( 1 ) ),
+					( 1, IECore.Color3f( 1 ) ),
+				]
+			)
+		)
+
+		shader = n.attributes()["osl:surface"][0]
+
+		self.assertEqual(
+			shader.parameters["floatSpline"].value,
+			IECore.Splineff(
+				IECore.CubicBasisf.catmullRom(),
+				[
+					( 0, 0 ),
+					( 0, 0 ),
+					( 1, 1 ),
+					( 1, 1 ),
+				]
+			)
+		)
+
+		self.assertEqual(
+			shader.parameters["colorSpline"].value,
+			IECore.SplinefColor3f(
+				IECore.CubicBasisf.bSpline(),
+				[
+					( 0, IECore.Color3f( 0 ) ),
+					( 0, IECore.Color3f( 0 ) ),
+					( 1, IECore.Color3f( 1 ) ),
+					( 1, IECore.Color3f( 1 ) ),
+				]
+			)
+		)
+
 if __name__ == "__main__":
 	unittest.main()
