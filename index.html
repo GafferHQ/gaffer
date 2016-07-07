@@ -4,65 +4,166 @@ title: Gaffer Home
 
 {% include header.html %}
 
-<div class="jumbotron">
-	<div class="container">
-		<h1>Connect nodes. Make pictures.</h1>
-		<p class="lead">
-		Gaffer is a general purpose node-based application designed for use in the visual effects industry.
-		It provides basic tools for procedural scene generation, shader authoring, rendering, and image compositing.
-		</p>
-		<p>
-			<a class="btn btn-primary btn-lg" href="getStarted"><span class="glyphicon glyphicon-download"></span> Give it a whirl</a>
-			<a class="btn btn-success btn-lg" href="https://github.com/ImageEngine/gaffer"><span class="glyphicon glyphicon-share"></span> Get involved</a>
-		</p>
-	</div>
-</div>
+<!-- Intro Section -->
+<section id="intro" class="dark-bg">
+    <!-- Hero Slider Section -->
+    <div class="owl-carousel fullwidth-slider white o-flow-hidden">
+        {% include slide.html caption="Connect nodes" image="http://image-engine.com/wp-content/uploads/2016/07/CHPHustler.jpg" %}
+        {% include slide.html caption="Make pictures" image="http://image-engine.com/wp-content/uploads/2016/07/CHPMoose.jpg" %}
+        {% include slide.html caption="Connect nodes" image="http://image-engine.com/wp-content/uploads/2016/07/JP4RaptorCloseup.jpg" %}
+        {% include slide.html caption="Make pictures" image="http://image-engine.com/wp-content/uploads/2016/07/JP4Jungle.jpg" %}
+        {% include slide.html caption="Connect nodes" image="http://image-engine.com/wp-content/uploads/2016/07/GOTKing.jpg" %}
+        {% include slide.html caption="Make pictures" image="http://image-engine.com/wp-content/uploads/2016/07/GT6Library2.jpg" %}
+        {% include slide.html caption="Connect nodes" image="http://image-engine.com/wp-content/uploads/2015/05/TMT_4S-VFX-006-LC.jpg" %}
+        {% include slide.html caption="Make pictures" image="http://image-engine.com/wp-content/uploads/2015/05/TMT_4S-VFX-004-LC.jpg" %}
+    </div>
+    <!-- End Hero Slider Section -->
+</section>
+<!-- End Intro Section -->
 
+<!--About Section-->
+<section id="about" class="wow fadeIn ptb ptb-60">
+    <div class="container">
+        <div class="row text-center">
+            <div class="col-md-8 col-md-offset-2 col-lg-offset-0 col-lg-12">
+                <h3 class="h4">About Gaffer</h3>
+                <div class="spacer-15"></div>
+                <p class="lead">Gaffer is a general purpose node-based application designed for use in the visual effects industry.</p>
+		<p>It provides basic tools for procedural scene generation, shader authoring, rendering, and image compositing.</p>
+            </div>
+        </div>    
+    </div>
+</section>
+<!-- End About Section-->
 
+<hr />
 
+<!-- Features Section -->
+<section id="service" class="ptb ptb-sm-80">
+    <div class="wow fadeInLeft container text-center">
+      <h3>features</h3>
+      <div class="spacer-20"></div>
+        <div class="row">
+            <div class="col-md-4">
+                <div class="page-icon-top"><i class="ion ion-ios-speedometer"></i></div>
+                <h5>powerful</h5>
+                <p>Gaffer provides a multithreaded deferred evaluation engine, enabling you to work with large 3D and 2D datasets, and develop flexible procedural workflows.</p>
+            </div>
+            <div class="col-md-4 col-sm-6 mb-45">
+                <div class="page-icon-top"><i class="ion ion-ios-compose"></i></div>
+                <h5>customisable</h5>
+                <p>Gaffer is built to be customisable throughout. Be it a simple scripted configuration tweak, complex expression, custom node or user interface, even a full blown application, its open APIs enable you to do what you need.</p>
+            </div>
+            <div class="col-md-4 col-sm-6 mb-45">
+                <div class="page-icon-top"><i class="ion ion-ios-people"></i></div>
+                <h5>open source</h5>
+                <p>Distributed under the BSD license, Gaffer builds upon a wealth of open-source VFX libraries including OpenEXR, OpenImageIO, OpenColorIO, OpenShadingLanguage, Cortex, and the Gaffer frameworks themselves.</p>
+            </div>
+            <div class="col-md-4 col-sm-6 mb-45">
+                <div class="page-icon-top"><i class="ion ion-ios-download"></i></div>
+                <h5>Renderer Agnostic</h5>
+                <p>Gaffer utilises a renderer abstraction layer enabling common workflows between all your favourite renderers. Gaffer currently supports Arnold, 3Delight and Appleseed.</p>
+            </div>
+            <div class="col-md-4 col-sm-6 mb-45">
+                <div class="page-icon-top"><i class="ion ion-network"></i></div>
+                <h5>extensible</h5>
+                <p>Feel free to add new renderers, new nodes, or integrate with your renderfarm. With Gaffer derived apps you can invent new datatypes to flow through the node graph, such as asset dependencies or simulation operations.</p>
+            </div>
+            <div class="col-md-4 col-sm-6 mb-45">
+                <div class="page-icon-top"><i class="ion ion-settings"></i></div>
+                <h5>unfinished</h5>
+                <p>Gaffer is becoming more capable by the day, but it is still a work in progress. Itching to fix a bug or contribute a cool new enhancement? Want to add support for OpenVDB, Bullet or a new renderer? <strong><a href="https://github.com/ImageEngine/gaffer">Fork it on GitHub.</a></strong></p>
+            </div>
+        </div>
+    </div>
+</section>
+<!-- End Service Section -->
 
-<div class="container">
-	<div class="col-sm-12">
-		<div class="col-lg-4">
-			<h2>Powerful</h2>
-			<p>Based on a multithreaded deferred scene evaluation engine, Gaffer allows you to handle large scenes
-			   and develop flexible procedural work-flows.</p>
-			<h2>Renderer Agnostic</h2>
-			<p>Gaffer utilises a renderer abstraction layer allowing it to export to your favourite renderer (assuming
-			   for now that your favourite renderer is either Arnold, 3Delight or Appleseed).
-			</p>
-		</div>
-		<div class="col-lg-4">
-			<h2>Customisable</h2>
-			<p>Gaffer is built to be customisable throughout. Be it a simple
-			   scripted configuration tweak, complex expression, custom node
-			   or user interface, even a full blown application, Gaffer's open APIs enable
-			   you to do what you need.
-			</p>
+<!-- Action Box Section -->
+<section id="action-box" class="dark-bg ptb-60">
+    <div class="container">
+        <div class="row">
+            <div class="col-md-8 col-sm-8">
+                <h4 class="">Want to see Gaffer in action?</h4>
+                <p class="mb-0">Check out our latest demos exploring all of Gaffer's capabilities.</p>
+            </div>
+            <div class="col-md-4 col-sm-4">
+                <a class="btn btn-md btn-white float-right float-none-xs" href="{{ site.baseurl }}/demos/">View Demos</a>
 
-			<h2>Extensible</h2>
-			<p>Feel free to add new renderers, new nodes, or integrate with your renderfarm.
-			   With Gaffer derived apps you could have new types of data flowing through the node graph,
- 			   such as asset dependencies or simulation operations.</p>
-		</div>
+            </div>
+        </div>
+    </div>
+</section>
+<!-- End Action Box Section -->
 
-		<div class="col-lg-4">
-			<h2>Open Source</h2>
-			<p>Distributed under the BSD license, Gaffer builds upon a
-			   wealth of open-source VFX libraries including OpenEXR, OpenImageIO,
-			   OpenColorIO, Cortex and of course the Gaffer frameworks themselves.
-			</p>
-			<h2>Unfinished</h2>
-			<p>Although Gaffer is becoming more capable by the day, it still lacks
-			   in features and useability.
+<hr />
 
-			   Itching to fix a bug or contribute a cool new enhancement? Want to
-			   add support for OpenVDB, Bullet or another renderer backend?
-			<a href="https://github.com/ImageEngine/gaffer">Fork it on GitHub...</a>
-			</p>
-		</div>
-	</div>
-</div>
+<!-- Blog Section -->
+<section id="blog" class="wow fadeIn ptb ptb-sm-80">
+    <div class="container">
+        <h3 class="float-left float-none-xs">Latest Blog</h3>
+        <a class="btn-link-a float-right float-none-xs" href="{{ site.baseurl }}/blog/drag-and-drop-shader-assignments/">View All</a>
+        <div class="clearfix"></div>
+        <div class="spacer-60"></div>
+        <div class="row">
+
+            <div class="col-lg-4 col-md-6 col-sm-6 mb-sm-30">
+                <div class="blog-post">
+                    <div class="post-media">
+                         <img class="item-container" src="{{ site.baseurl }}/img/dragAndDropShaderAssignments/assignAnimation.gif" alt="" />
+                    </div>
+                    <div class="post-meta"><span>Nov 9, 2015</span></div>
+                    <div class="post-header">
+                        <h5><a href="{{ site.baseurl }}/blog/drag-and-drop-shader-assignments/">Tip of the day: Drag and drop objects to assign shaders</a></h5>
+                    </div>
+                </div>
+            </div>
+
+            <div class="col-lg-4 col-md-6 col-sm-6 mb-sm-30">
+                <div class="blog-post">
+                    <div class="post-media">
+                         <img class="item-container" src="http://blenderdiplom.com/images/stories/fetch.oh.jpg" alt="" />
+                    </div>
+                    <div class="post-meta"><span>Oct 21, 2015</span></div>
+                    <div class="post-header">
+                        <h5><a href="{{ site.baseurl }}/blog/appleseedInterview/">Interview with François Beaune</a></h5>
+                    </div>
+                </div>
+            </div>
+
+            <div class="col-lg-4 col-md-6 col-sm-6 mb-sm-30">
+                <div class="blog-post">
+                    <div class="post-media">
+                         <img class="item-container" src="{{ site.baseurl }}/img/upstreamSelect/upstreamSelect.png" alt="" />
+                    </div>
+                    <div class="post-meta"><span>Oct 19, 2015</span></div>
+                    <div class="post-header">
+                        <h5><a href="{{ site.baseurl }}/blog/select-upstream-nodes/">Tip of the day : Shift+Alt click to select upstream nodes</a></h5>
+                    </div>
+                </div>
+            </div>
+
+        </div>
+    </div>
+</section>
+<!-- End Blog Section -->
+
+<!-- Statement Section -->
+<section id="statement" class="overlay-dark80 dark-bg ptb ptb-sm-80">
+    <div class="container text-center">
+        <div class="row">
+            <div class="col-md-8 col-md-offset-2">
+                <a class="cbox-iframe" href="">
+                    <div class="page-icon-top"><i class="ion ion-ios-film-outline"></i></div>
+                </a>
+                <h4>Watch our Introductory Video for Gaffer.</h4>
+                <div class="spacer-15"></div>
+                <a class="cbox-iframe btn btn-md btn-white" href="https://player.vimeo.com/video/127102421">Watch Now</a>
+            </div>
+        </div>
+    </div>
+</section>
+<!-- End Statement Section -->
 
 {% include footer.html %}
 
