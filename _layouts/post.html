@@ -1,28 +1,44 @@
 {% include header.html %}
 
+{% include intro.html title="Blog" image="http://image-engine.com/wp-content/uploads/2016/07/CHPSitting.jpg" %}
+
 <div class="container">
 <div class="row">
-<div class="col-md-1"></div>
 
-<div class="col-md-8">
+<div class="col-md-8 col-md-offset-2">
 
 <div class="page-header">
-	<h1> {{ page.title }} </h1>
+	<h1>{{ page.title }}</h1>
+	<h2>{{ page.subtitle }}</h2>
 	<span class="glyphicon glyphicon-calendar" aria-hidden="true"></span> {{ page.date | date: "%B %-d, %Y" }}
 </div>
 
 {{ content }}
 
-<nav>
-  <ul class="pager">
+<div class="ptb-60">
+  <div class="row">
     {% if page.previous %}
-    <li class="previous"><a href="{{ site.baseurl }}{{ page.previous.url }}"><span aria-hidden="true">&larr;</span> Older</a></li>
+    <div class="float-left">
+        <a class="btn btn-lg btn-color-line" href="{{ site.baseurl }}{{ page.previous.url }}">
+            <span aria-hidden="true">&larr;</span>
+	    {{ page.previous.title }}
+	    <br>
+	    {{ page.previous.date | date: "%B %-d, %Y" }}
+	</a>
+    </div>
     {% endif %}
     {% if page.next %}
-    <li class="next"><a href="{{ site.baseurl }}{{ page.next.url }}">Newer <span aria-hidden="true">&rarr;</span></a></li>
+    <div class="float-right">
+        <a class="btn btn-lg btn-color-line" href="{{ site.baseurl }}{{ page.next.url }}">
+            {{ page.next.title }}
+	    <br>
+	    {{ page.next.date | date: "%B %-d, %Y" }}
+	    <span aria-hidden="true">&rarr;</span>
+        </a>
+    </div>
     {% endif %}
-  </ul>
-</nav>
+  </div>
+</div>
 
 </div>
 </div>
