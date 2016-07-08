@@ -1,0 +1,49 @@
+---
+title: Gaffer Blog
+---
+
+{% include header.html %}
+
+{% include intro.html title="Blog" image="http://image-engine.com/wp-content/uploads/2016/07/CHPSitting.jpg" %}
+
+<section class="ptb ptb-60">
+    <div class="container">
+        <div class="row">
+	        <div class="col-md-8 col-md-offset-2 blog-post-hr">
+                    
+		    {% for post in site.posts %}
+                    
+                        <!-- Post Item -->
+                        <div class="blog-post mb-30">
+                            <div class="post-meta">
+	                        <span>{{ post.date | date: "%B %-d, %Y" }}</span>
+                            </div>
+                            <div class="post-header">
+                                <h4><a href="{{ post.url }}">{{ post.title }}<br>{{ post.subtitle }}</a></h4>
+                            </div>
+                            <div class="post-media">
+                                <div class="owl-carousel item1-carousel nf-carousel-theme">
+                                    <div class="item">
+                                        <img src="{{ site.baseurl }}{{ post.icon }}" alt="" />
+                                    </div>                            
+                                </div>
+                            </div>
+                            <div class="post-entry">
+                                {{ post.excerpt }}
+                            </div>
+                        <div class="pull-right">
+		            <a class="btn btn-sm btn-color-line" href="{{ post.url }}">Read More<i class="fa fa-long-arrow-right right"></i></a>
+                        </div>
+                    </div>
+                    <!-- End Post Item -->
+                    
+                    <hr/>
+                
+                {% endfor %}
+
+            </div>
+        </div>
+    </div>
+</section>
+
+{% include footer.html %}
