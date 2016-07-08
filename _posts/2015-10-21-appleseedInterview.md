@@ -1,9 +1,10 @@
 ---
 layout: post
-title: "Interview with François Beaune"
+title: "Appleseed and Gaffer"
+subtitle: "Interview with François Beaune"
 ---
 
-The [BlenderDiplom](blenderdiplom.com) website has a nice interview with Francois Beaune, developer of [Appleseed](http://appleseedhq.net/), the open source renderer behind the short film ["Fetch"](http://www.fetchaveryshortfilm.com/).
+The [BlenderDiplom](http://blenderdiplom.com) website has a nice interview with Francois Beaune, developer of [Appleseed](http://appleseedhq.net/), the open source renderer behind the short film ["Fetch"](http://www.fetchaveryshortfilm.com/).
 
 In the interview François talks briefly about the recent integration of Appleseed into Gaffer.
 

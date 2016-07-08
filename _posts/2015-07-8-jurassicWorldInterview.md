@@ -1,11 +1,13 @@
 ---
 layout: post
-title: "Gaffer at the movies : Jurassic World"
+title: "Gaffer at the movies"
+subtitle: "Jurassic World"
+icon: "http://s3.cgsociety.org/articles/2015/07/07/l_pJzPy00i0LBRcsmLgYvg.jpg"
 ---
 
-![Raptor Wrangling](http://s3.cgsociety.org/articles/2015/07/07/l_pJzPy00i0LBRcsmLgYvg.jpg)
-
 [CGSociety](http://www.cgsociety.org) has a great interview with Martyn Culpitt, VFX supervisor at Image Engine, talking about Image Engine's work on Jurassic World.
+
+![Raptor Wrangling]({{ page.icon }})
 
 Among many other topics Martyn touches briefly on how Gaffer contributed to the process.
 
