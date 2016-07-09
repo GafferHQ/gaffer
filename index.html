@@ -102,7 +102,7 @@ title: Gaffer Home
 <section id="blog" class="wow fadeIn ptb ptb-sm-80">
     <div class="container">
         <h3 class="float-left float-none-xs">Latest Blog</h3>
-        <a class="btn-link-a float-right float-none-xs" href="{{ site.baseurl }}/blog/drag-and-drop-shader-assignments/">View All</a>
+        <a class="btn-link-a float-right float-none-xs" href="{{ site.baseurl }}/blog/">View All</a>
         <div class="clearfix"></div>
         <div class="spacer-60"></div>
         <div class="row">
@@ -110,11 +110,11 @@ title: Gaffer Home
             <div class="col-lg-4 col-md-6 col-sm-6 mb-sm-30">
                 <div class="blog-post">
                     <div class="post-media">
-                         <img class="item-container" src="{{ site.baseurl }}/img/dragAndDropShaderAssignments/assignAnimation.gif" alt="" />
+                         <img class="item-container" src="{{ site.baseurl }}{{ site.posts.first.icon }}" alt="" />
                     </div>
-                    <div class="post-meta"><span>Nov 9, 2015</span></div>
+                    <div class="post-meta"><span>{{ site.posts.first.date | date: "%B %-d, %Y" }}</span></div>
                     <div class="post-header">
-                        <h5><a href="{{ site.baseurl }}/blog/drag-and-drop-shader-assignments/">Tip of the day: Drag and drop objects to assign shaders</a></h5>
+                        <h5><a href="{{ site.baseurl }}{{ site.posts.first.url }}">{{ site.posts.first.title }}<br>{{ site.posts.first.subtitle }}</a></h5>
                     </div>
                 </div>
             </div>
@@ -122,11 +122,11 @@ title: Gaffer Home
             <div class="col-lg-4 col-md-6 col-sm-6 mb-sm-30">
                 <div class="blog-post">
                     <div class="post-media">
-                         <img class="item-container" src="http://blenderdiplom.com/images/stories/fetch.oh.jpg" alt="" />
+                         <img class="item-container" src="{{ site.baseurl }}{{ site.posts.first.previous.icon }}" alt="" />
                     </div>
-                    <div class="post-meta"><span>Oct 21, 2015</span></div>
+                    <div class="post-meta"><span>{{ site.posts.first.previous.date | date: "%B %-d, %Y" }}</span></div>
                     <div class="post-header">
-                        <h5><a href="{{ site.baseurl }}/blog/appleseedInterview/">Interview with François Beaune</a></h5>
+                        <h5><a href="{{ site.baseurl }}{{ site.posts.first.previous.url }}">{{ site.posts.first.previous.title }}<br>{{ site.posts.first.previous.subtitle }}</a></h5>
                     </div>
                 </div>
             </div>
@@ -134,11 +134,11 @@ title: Gaffer Home
             <div class="col-lg-4 col-md-6 col-sm-6 mb-sm-30">
                 <div class="blog-post">
                     <div class="post-media">
-                         <img class="item-container" src="{{ site.baseurl }}/img/upstreamSelect/upstreamSelect.png" alt="" />
+                         <img class="item-container" src="{{ site.baseurl }}{{ site.posts.first.previous.previous.icon }}" alt="" />
                     </div>
-                    <div class="post-meta"><span>Oct 19, 2015</span></div>
+                    <div class="post-meta"><span>{{ site.posts.first.previous.previous.date | date: "%B %-d, %Y" }}</span></div>
                     <div class="post-header">
-                        <h5><a href="{{ site.baseurl }}/blog/select-upstream-nodes/">Tip of the day : Shift+Alt click to select upstream nodes</a></h5>
+                        <h5><a href="{{ site.baseurl }}{{ site.posts.first.previous.previous.url }}">{{ site.posts.first.previous.previous.title }}<br>{{ site.posts.first.previous.previous.subtitle }}</a></h5>
                     </div>
                 </div>
             </div>
