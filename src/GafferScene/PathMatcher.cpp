@@ -158,7 +158,7 @@ PathMatcher::Node *PathMatcher::Node::leaf()
 {
 	static NodePtr g_leaf = new Node( true );
 	assert( g_leaf->terminator );
-	assert( g_leaf->children().empty() );
+	assert( g_leaf->children.empty() );
 	return g_leaf.get();
 }
 
