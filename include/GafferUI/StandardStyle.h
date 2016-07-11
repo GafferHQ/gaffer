@@ -131,8 +131,8 @@ class StandardStyle : public Style
 		Imath::Color3f colorForState( Color c, State s, const Imath::Color3f *userColor = NULL ) const;
 		boost::array<Imath::Color3f, LastColor> m_colors;
 
-		boost::array<IECoreGL::FontPtr, LastText> m_fonts;
-		boost::array<float, LastText> m_fontScales;
+		IECoreGL::FontPtr m_fonts[LastText];
+		float m_fontScales[LastText];
 
 };
 
