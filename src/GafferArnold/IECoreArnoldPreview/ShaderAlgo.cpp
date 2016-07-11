@@ -43,6 +43,7 @@
 #include "IECore/MessageHandler.h"
 #include "IECore/SimpleTypedData.h"
 #include "IECore/VectorTypedData.h"
+#include "IECore/SplineData.h"
 
 #include "IECoreArnold/ParameterAlgo.h"
 
@@ -51,6 +52,52 @@
 using namespace std;
 using namespace IECore;
 using namespace IECoreArnold;
+
+namespace
+{
+
+template<typename Spline>
+void setSplineParameter( AtNode *node, const InternedString &name, const Spline &spline )
+{
+	typedef vector<typename Spline::XType> PositionsVector;
+	typedef vector<typename Spline::YType> ValuesVector;
+	typedef TypedData<PositionsVector> PositionsData;
+	typedef TypedData<ValuesVector> ValuesData;
+
+	typename PositionsData::Ptr positionsData = new PositionsData;
+	typename ValuesData::Ptr valuesData = new ValuesData;
+
+	PositionsVector &positions = positionsData->writable();
+	ValuesVector &values = valuesData->writable();
+	positions.reserve( spline.points.size() );
+	values.reserve( spline.points.size() );
+
+	for( typename Spline::PointContainer::const_iterator it = spline.points.begin(), eIt = spline.points.end(); it != eIt; ++it )
+	{
+		positions.push_back( it->first );
+		values.push_back( it->second );
+	}
+
+	ParameterAlgo::setParameter( node, ( name.string() + "Positions" ).c_str(), positionsData.get() );
+	ParameterAlgo::setParameter( node, ( name.string() + "Values" ).c_str(), valuesData.get() );
+
+	const char *basis = "catmull-rom";
+	if( spline.basis == Spline::Basis::bezier() )
+	{
+		basis = "bezier";
+	}
+	else if( spline.basis == Spline::Basis::bSpline() )
+	{
+		basis = "bspline";
+	}
+	else if( spline.basis == Spline::Basis::linear() )
+	{
+		basis = "linear";
+	}
+	AiNodeSetStr( node, ( name.string() + "Basis" ).c_str(), basis );
+}
+
+} // namespace
 
 namespace IECoreArnoldPreview
 {
@@ -138,8 +185,7 @@ std::vector<AtNode *> convert( const IECore::ObjectVector *shaderNetwork, const 
 					continue;
 				}
 			}
-
-			if( const StringVectorData *stringVectorData = runTimeCast<const StringVectorData>( pIt->second.get() ) )
+			else if( const StringVectorData *stringVectorData = runTimeCast<const StringVectorData>( pIt->second.get() ) )
 			{
 				const vector<string> &values = stringVectorData->readable();
 
@@ -191,7 +237,16 @@ std::vector<AtNode *> convert( const IECore::ObjectVector *shaderNetwork, const 
 					}
 				}
 			}
-
+			else if( const SplineffData *splineData = runTimeCast<const SplineffData>( pIt->second.get() ) )
+			{
+				setSplineParameter( node, pIt->first, splineData->readable() );
+				continue;
+			}
+			else if( const SplinefColor3fData *splineData = runTimeCast<const SplinefColor3fData>( pIt->second.get() ) )
+			{
+				setSplineParameter( node, pIt->first, splineData->readable() );
+				continue;
+			}
 
 			ParameterAlgo::setParameter( node, pIt->first.value().c_str(), pIt->second.get() );
 		}
