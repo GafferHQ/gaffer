@@ -440,7 +440,7 @@ GafferScene::ConstPathMatcherDataPtr BranchCreator::computeSet( const IECore::In
 		{
 			continue; // Skip root
 		}
-		assert( inputPath.size() == 1 );
+		assert( branchPath.size() == 1 );
 
 		const InternedStringData *outputName = forwardMapping->member<InternedStringData>( branchPath[0], /* throwExceptions = */ true );
 
