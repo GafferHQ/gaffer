@@ -965,6 +965,7 @@ class ArnoldRenderer : public IECoreScenePreview::Renderer
 					AiMsgSetLogFileName( d->readable().c_str() );
 
 				}
+				return;
 			}
 			else if( boost::starts_with( name.c_str(), "ai:" ) )
 			{
