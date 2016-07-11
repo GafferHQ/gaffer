@@ -120,12 +120,13 @@ class SamplerTest( GafferImageTest.ImageTestCase ) :
 		reader = GafferImage.ImageReader()
 		reader["fileName"].setValue( os.path.dirname( __file__ ) + "/images/checker2x2.exr" )
 
-		# As long as the sample region includes the valid range of our image,
-		# it should have not effect on our sampling. So test with a few such ranges.
+		# As long as the sample region includes the valid range of our image, and all
+		# the pixels we're going to request, it should have no effect on our sampling.
+		# So test with a few such ranges.
 		sampleRegions = [
 			IECore.Box2i( IECore.V2i( 0 ), IECore.V2i( GafferImage.ImagePlug.tileSize() ) ),
 			IECore.Box2i( -IECore.V2i( GafferImage.ImagePlug.tileSize() ), IECore.V2i( GafferImage.ImagePlug.tileSize() ) ),
-			IECore.Box2i( IECore.V2i( 0 ), IECore.V2i( 2 ) ),
+			IECore.Box2i( IECore.V2i( -1 ), IECore.V2i( 4 ) ),
 		]
 
 		# List of positions inside and outside of the image, along
