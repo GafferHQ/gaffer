@@ -301,7 +301,7 @@ const Serialisation::Serialiser *Serialisation::acquireSerialiser( const GraphCo
 		t = IECore::RunTimeTyped::baseTypeId( t );
 	}
 
-	assert( NULL );
+	assert( false );
 	return NULL;
 }
 
