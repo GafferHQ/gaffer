@@ -224,6 +224,8 @@ $(function () {
             navigation: true,  // Show next and prev buttons
             pagination: true,  // Show pagination buttons
             navigationText: ["<i class='fa fa-angle-left'></i>", "<i class='fa fa-angle-right'></i>"],
+	    rewindNav: true,
+	    rewindSpeed: 0,
 
         });
 
