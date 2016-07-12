@@ -359,6 +359,7 @@ void ScriptNode::popUndoState()
 
 	m_undoStateStack.pop();
 
+	bool haveUnsavedChanges = false;
 	if( m_undoStateStack.size()==0 )
 	{
 		if( m_actionAccumulator->numActions() )
@@ -388,11 +389,16 @@ void ScriptNode::popUndoState()
 				undoAddedSignal()( this );
 			}
 
-			UndoContext undoDisabled( this, UndoContext::Disabled );
-			unsavedChangesPlug()->setValue( true );
+			haveUnsavedChanges = true;
 		}
-		m_actionAccumulator = 0;
+		m_actionAccumulator = NULL;
 		m_currentActionStage = Action::Invalid;
+	}
+
+	if( haveUnsavedChanges )
+	{
+		UndoContext undoDisabled( this, UndoContext::Disabled );
+		unsavedChangesPlug()->setValue( true );
 	}
 
 }
