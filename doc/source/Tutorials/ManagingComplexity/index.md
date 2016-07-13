@@ -54,7 +54,8 @@ The most painful expression possible is `'/.../something'`, because it literally
   simple nodes such as ShaderAssignment and Attributes, the performance implications are negligible.
   This is because such nodes can operate on a single location in isolation, and never need to consider
   the big picture of the scene as a whole. Generally, it's only hierarchy-altering nodes such as Prune
-  and Isolate where `'...'` is particularly performance sensitive. Despite this, it's best to cultivate a general wariness surrounding `'...'`, and it's always best to make PathFilter expressions as precise as possible in any case. Think of the children.
+  and Isolate where `'...'` is particularly performance sensitive. Despite this, it's best to cultivate a general wariness surrounding `'...'`, and it's always best to make PathFilter expressions as precise as possible in any case,
+  to document your intentions to anyone who might inherit the setup.
 
 Expressions
 -----------
