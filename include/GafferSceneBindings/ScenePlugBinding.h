@@ -38,10 +38,6 @@
 #ifndef GAFFERSCENEBINDINGS_SCENEPLUGBINDING_H
 #define GAFFERSCENEBINDINGS_SCENEPLUGBINDING_H
 
-#include "boost/python.hpp"
-
-#include "GafferScene/ScenePlug.h"
-
 namespace GafferSceneBindings
 {
 
