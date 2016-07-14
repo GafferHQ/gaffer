@@ -49,9 +49,9 @@
      borderopacity="1"
      inkscape:pageopacity="1"
      inkscape:pageshadow="2"
-     inkscape:zoom="32"
-     inkscape:cx="441.79469"
-     inkscape:cy="984.44871"
+     inkscape:zoom="8"
+     inkscape:cx="207.54469"
+     inkscape:cy="968.38621"
      inkscape:document-units="px"
      inkscape:current-layer="layer1"
      showgrid="true"
@@ -568,7 +568,7 @@
        sodipodi:cy="38"
        sodipodi:cx="158"
        id="path3880"
-       style="fill:none;fill-opacity:1;stroke:#3c3c3c;stroke-width:2.66666675000000009;stroke-linecap:round;stroke-linejoin:round;stroke-miterlimit:4;stroke-opacity:1;stroke-dasharray:none"
+       style="fill:#787878;fill-opacity:1;stroke:#3c3c3c;stroke-width:2.66666675000000009;stroke-linecap:round;stroke-linejoin:round;stroke-miterlimit:4;stroke-opacity:1;stroke-dasharray:none"
        sodipodi:type="arc" />
     <g
        transform="translate(21.93052,25.5)"
