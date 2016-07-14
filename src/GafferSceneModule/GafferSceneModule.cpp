@@ -67,6 +67,7 @@
 #include "GafferScene/MapOffset.h"
 
 #include "GafferSceneBindings/ScenePlugBinding.h"
+#include "GafferSceneBindings/ShaderPlugBinding.h"
 #include "GafferSceneBindings/SceneNodeBinding.h"
 #include "GafferSceneBindings/SceneProcessorBinding.h"
 #include "GafferSceneBindings/FilteredSceneProcessorBinding.h"
@@ -113,6 +114,7 @@ BOOST_PYTHON_MODULE( _GafferScene )
 {
 
 	bindScenePlug();
+	bindShaderPlug();
 	bindSceneNode();
 	bindSceneProcessor();
 	bindFilter();
