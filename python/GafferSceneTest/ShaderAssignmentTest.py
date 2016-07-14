@@ -200,8 +200,11 @@ class ShaderAssignmentTest( GafferSceneTest.SceneTestCase ) :
 		s["b"]["n"] = Gaffer.Node()
 		s["b"]["a"] = GafferScene.ShaderAssignment()
 		s["b"]["n"]["out"] = Gaffer.Plug( direction = Gaffer.Plug.Direction.Out )
-		s["b"]["in"] = s["b"]["a"]["shader"].createCounterpart( "in", Gaffer.Plug.Direction.In )
-		s["b"]["out"] = s["b"]["a"]["shader"].createCounterpart( "out", Gaffer.Plug.Direction.Out )
+
+		# This emulates old plugs which were promoted when the "shader" plug on a ShaderAssignment
+		# was just a plain Plug rather than a ShaderPlug.
+		s["b"]["in"] = Gaffer.Plug( flags = Gaffer.Plug.Flags.Default | Gaffer.Plug.Flags.Dynamic )
+		s["b"]["out"] = Gaffer.Plug( flags = Gaffer.Plug.Flags.Default | Gaffer.Plug.Flags.Dynamic, direction = Gaffer.Plug.Direction.Out )
 
 		# shader assignments should accept connections speculatively
 		# from unconnected box inputs and outputs.

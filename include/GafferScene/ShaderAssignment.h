@@ -39,6 +39,7 @@
 #define GAFFERSCENE_SHADERASSIGNMENT_H
 
 #include "GafferScene/SceneElementProcessor.h"
+#include "GafferScene/ShaderPlug.h"
 
 namespace GafferScene
 {
@@ -53,14 +54,12 @@ class ShaderAssignment : public SceneElementProcessor
 
 		IE_CORE_DECLARERUNTIMETYPEDEXTENSION( GafferScene::ShaderAssignment, ShaderAssignmentTypeId, SceneElementProcessor );
 
-		Gaffer::Plug *shaderPlug();
-		const Gaffer::Plug *shaderPlug() const;
+		GafferScene::ShaderPlug *shaderPlug();
+		const GafferScene::ShaderPlug *shaderPlug() const;
 
 		virtual void affects( const Gaffer::Plug *input, AffectedPlugsContainer &outputs ) const;
 
 	protected :
-
-		virtual bool acceptsInput( const Gaffer::Plug *plug, const Gaffer::Plug *inputPlug ) const;
 
 		virtual bool processesAttributes() const;
 		virtual void hashProcessedAttributes( const ScenePath &path, const Gaffer::Context *context, IECore::MurmurHash &h ) const;
