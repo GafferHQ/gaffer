@@ -38,6 +38,7 @@
 #define GAFFEROSL_OSLOBJECT_H
 
 #include "GafferScene/SceneElementProcessor.h"
+#include "GafferScene/ShaderPlug.h"
 
 #include "GafferOSL/TypeIds.h"
 
@@ -54,8 +55,8 @@ class OSLObject : public GafferScene::SceneElementProcessor
 
 		IE_CORE_DECLARERUNTIMETYPEDEXTENSION( GafferOSL::OSLObject, OSLObjectTypeId, GafferScene::SceneElementProcessor );
 
-		Gaffer::Plug *shaderPlug();
-		const Gaffer::Plug *shaderPlug() const;
+		GafferScene::ShaderPlug *shaderPlug();
+		const GafferScene::ShaderPlug *shaderPlug() const;
 
 		virtual void affects( const Gaffer::Plug *input, AffectedPlugsContainer &outputs ) const;
 

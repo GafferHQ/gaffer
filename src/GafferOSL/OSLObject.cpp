@@ -36,11 +36,7 @@
 
 #include "IECore/Primitive.h"
 
-#include "Gaffer/SubGraph.h"
-#include "Gaffer/Dot.h"
 #include "Gaffer/StringPlug.h"
-
-#include "GafferScene/ShaderSwitch.h"
 
 #include "GafferOSL/OSLShader.h"
 #include "GafferOSL/OSLObject.h"
@@ -60,7 +56,7 @@ OSLObject::OSLObject( const std::string &name )
 	:	SceneElementProcessor( name, Filter::NoMatch )
 {
 	storeIndexOfNextChild( g_firstPlugIndex );
-	addChild( new Plug( "shader" ) );
+	addChild( new ShaderPlug( "shader" ) );
 
 	// Pass-throughs for things we don't want to modify
 	outPlug()->attributesPlug()->setInput( inPlug()->attributesPlug() );
@@ -71,14 +67,14 @@ OSLObject::~OSLObject()
 {
 }
 
-Gaffer::Plug *OSLObject::shaderPlug()
+GafferScene::ShaderPlug *OSLObject::shaderPlug()
 {
-	return getChild<Plug>( g_firstPlugIndex );
+	return getChild<ShaderPlug>( g_firstPlugIndex );
 }
 
-const Gaffer::Plug *OSLObject::shaderPlug() const
+const GafferScene::ShaderPlug *OSLObject::shaderPlug() const
 {
-	return getChild<Plug>( g_firstPlugIndex );
+	return getChild<ShaderPlug>( g_firstPlugIndex );
 }
 
 void OSLObject::affects( const Gaffer::Plug *input, AffectedPlugsContainer &outputs ) const
@@ -109,25 +105,11 @@ bool OSLObject::acceptsInput( const Gaffer::Plug *plug, const Gaffer::Plug *inpu
 
 	if( plug == shaderPlug() )
 	{
-		const Node *sourceNode = inputPlug->source<Plug>()->node();
-		if( const OSLShader *shader = runTimeCast<const OSLShader>( sourceNode ) )
+		if( const GafferScene::Shader *shader = runTimeCast<const GafferScene::Shader>( inputPlug->source<Plug>()->node() ) )
 		{
-			return shader->typePlug()->getValue() == "osl:surface";
+			const OSLShader *oslShader = runTimeCast<const OSLShader>( shader );
+			return oslShader && oslShader->typePlug()->getValue() == "osl:surface";
 		}
-		else
-		{
-			// as for the GafferScene::ShaderAssignment, we accept SubGraph and ShaderSwitch
-			// and Dot inputs as an indirect means of later getting a connection to a Shader.
-			if(
-				runTimeCast<const Gaffer::SubGraph>( sourceNode ) ||
-				runTimeCast<const ShaderSwitch>( sourceNode ) ||
-				runTimeCast<const Dot>( sourceNode )
-			)
-			{
-				return true;
-			}
-		}
-		return false;
 	}
 
 	return true;
