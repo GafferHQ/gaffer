@@ -473,6 +473,22 @@ class ArnoldRenderTest( GafferTest.TestCase ) :
 
 		self.assertRaisesRegexp( RuntimeError, "/i/dont/exist", s["render"]["task"].execute )
 
+	def testManyCameras( self ) :
+
+		camera = GafferScene.Camera()
+
+		duplicate = GafferScene.Duplicate()
+		duplicate["in"].setInput( camera["out"] )
+		duplicate["target"].setValue( "/camera" )
+		duplicate["copies"].setValue( 1000 )
+
+		render = GafferArnold.ArnoldRender()
+		render["in"].setInput( duplicate["out"] )
+		render["mode"].setValue( render.Mode.SceneDescriptionMode )
+		render["fileName"].setValue( self.temporaryDirectory() + "/test.ass" )
+
+		render["task"].execute()
+
 	def __assertStructsEqual( self, a, b ) :
 
 		for field in a._fields_ :

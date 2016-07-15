@@ -36,6 +36,7 @@
 
 #include "tbb/compat/thread"
 #include "tbb/concurrent_vector.h"
+#include "tbb/concurrent_unordered_map.h"
 
 #include "boost/make_shared.hpp"
 #include "boost/format.hpp"
@@ -1222,7 +1223,7 @@ class ArnoldRenderer : public IECoreScenePreview::Renderer
 		OutputMap m_outputs;
 
 		std::string m_cameraName;
-		typedef std::map<std::string, IECore::ConstCameraPtr> CameraMap;
+		typedef tbb::concurrent_unordered_map<std::string, IECore::ConstCameraPtr> CameraMap;
 		CameraMap m_cameras;
 		ObjectInterfacePtr m_defaultCamera;
 
