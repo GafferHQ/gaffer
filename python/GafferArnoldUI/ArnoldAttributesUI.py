@@ -73,6 +73,8 @@ def __shadingSummary( plug ) :
 def __subdivisionSummary( plug ) :
 
 	info = []
+	if plug["subdividePolygons"]["enabled"].getValue() :
+		info.append( "Subdivide Polygons " + "On" if plug["subdividePolygons"]["value"].getValue() else "Off" )
 	if plug["subdivIterations"]["enabled"].getValue() :
 		info.append( "Iterations %d" % plug["subdivIterations"]["value"].getValue() )
 	if plug["subdivAdaptiveError"]["enabled"].getValue() :
@@ -247,6 +249,32 @@ Gaffer.Metadata.registerNode(
 		],
 
 		# Subdivision
+
+		"attributes.subdividePolygons" : [
+
+			"description",
+			"""
+			Causes polygon meshes to be rendered with Arnold's
+			subdiv_type parameter set to "linear" rather than
+			"none". This can be used to increase detail when
+			using polygons with displacement shaders and/or mesh
+			lights.
+			""",
+
+			"layout:section", "Subdivision",
+			"label", "Subdivide Polygons",
+
+		],
+
+		"attributes.subdivType.value" : [
+
+			"preset:None", "none",
+			"preset:Linear", "linear",
+			"preset:Catclark", "catclark",
+
+			"plugValueWidget:type", "GafferUI.PresetsPlugValueWidget",
+
+		],
 
 		"attributes.subdivIterations" : [
 

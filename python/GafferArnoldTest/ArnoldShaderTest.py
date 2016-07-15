@@ -52,12 +52,12 @@ class ArnoldShaderTest( unittest.TestCase ) :
 		n = GafferArnold.ArnoldShader()
 		n.loadShader( "noise" )
 
-	def testState( self ) :
+	def testAttributes( self ) :
 
 		n = GafferArnold.ArnoldShader()
 		n.loadShader( "utility" )
 
-		s = n.state()
+		s = n.attributes()["ai:surface"]
 		self.failUnless( isinstance( s, IECore.ObjectVector ) )
 		self.assertEqual( len( s ), 1 )
 		self.failUnless( isinstance( s[0], IECore.Shader ) )
@@ -87,7 +87,7 @@ class ArnoldShaderTest( unittest.TestCase ) :
 		n["parameters"]["raster_space"].setValue( False )
 		n["parameters"]["edge_type"].setValue( "polygons" )
 
-		s = n.state()[0]
+		s = n.attributes()["ai:surface"][0]
 		self.assertEqual( s.parameters["line_width"], IECore.FloatData( 10 ) )
 		self.assertEqual( s.parameters["fill_color"], IECore.Color3fData( IECore.Color3f( .25, .5, 1 ) ) )
 		self.assertEqual( s.parameters["line_color"], IECore.Color3fData( IECore.Color3f( 0 ) ) )
@@ -114,15 +114,15 @@ class ArnoldShaderTest( unittest.TestCase ) :
 	def testHash( self ) :
 
 		n = GafferArnold.ArnoldShader()
-		h = n.stateHash()
+		h = n.attributesHash()
 
 		n.loadShader( "noise" )
-		h2 = n.stateHash()
+		h2 = n.attributesHash()
 
 		self.assertNotEqual( h, h2 )
 
 		n["parameters"]["octaves"].setValue( 10 )
-		h3 = n.stateHash()
+		h3 = n.attributesHash()
 
 		self.assertNotEqual( h2, h3 )
 
@@ -137,7 +137,7 @@ class ArnoldShaderTest( unittest.TestCase ) :
 		s["parameters"]["Kd"].setInput( n["out"] )
 		s["parameters"]["Ks"].setInput( n["out"] )
 
-		st = s.state()
+		st = s.attributes()["ai:surface"]
 		self.assertEqual( len( st ), 2 )
 
 		self.assertEqual( st[0].type, "ai:shader" )
@@ -168,18 +168,32 @@ class ArnoldShaderTest( unittest.TestCase ) :
 		s.loadShader( "utility" )
 		s["parameters"]["color"].setInput( f["parameters"]["color"] )
 
-		r = IECoreArnold.Renderer()
+		r = GafferScene.Private.IECoreScenePreview.Renderer.create(
+			"IECoreArnold::Renderer",
+			GafferScene.Private.IECoreScenePreview.Renderer.RenderType.Batch
+		)
 
-		r.display( "test", "ieDisplay", "rgba", { "driverType" : "ImageDisplayDriver", "handle" : "test" } )
+		r.output(
+			"test",
+			IECore.Display(
+				"test",
+				"ieDisplay",
+				"rgba",
+				{
+					"driverType" : "ImageDisplayDriver",
+					"handle" : "test"
+				}
+			)
+		)
 
-		with IECore.WorldBlock( r ) :
+		mesh = r.object(
+			"mesh",
+			IECore.MeshPrimitive.createPlane( IECore.Box2f( IECore.V2f( -1 ), IECore.V2f( 1 ) ) ),
+			r.attributes( s.attributes() )
+		)
+		mesh.transform( IECore.M44f().translate( IECore.V3f( 0, 0, -5 ) ) )
 
-			for ss in s.state() :
-				ss.render( r )
-
-			r.concatTransform( IECore.M44f.createTranslated( IECore.V3f( 0, 0, -5 ) ) )
-			mesh = IECore.MeshPrimitive.createPlane( IECore.Box2f( IECore.V2f( -1 ), IECore.V2f( 1 ) ) )
-			mesh.render( r )
+		r.render()
 
 		image = IECore.ImageDisplayDriver.removeStoredImage( "test" )
 		e = IECore.PrimitiveEvaluator.create( image )
@@ -195,18 +209,18 @@ class ArnoldShaderTest( unittest.TestCase ) :
 		s = GafferArnold.ArnoldShader()
 		s.loadShader( "standard" )
 
-		h1 = s.stateHash()
+		h1 = s.attributesHash()
 
 		n = GafferArnold.ArnoldShader()
 		n.loadShader( "noise" )
 		s["parameters"]["Kd"].setInput( n["out"] )
 
-		h2 = s.stateHash()
+		h2 = s.attributesHash()
 		self.assertNotEqual( h1, h2 )
 
 		n["parameters"]["octaves"].setValue( 3 )
 
-		h3 = s.stateHash()
+		h3 = s.attributesHash()
 		self.assertNotEqual( h3, h2 )
 		self.assertNotEqual( h3, h1 )
 
@@ -227,9 +241,9 @@ class ArnoldShaderTest( unittest.TestCase ) :
 		c = Gaffer.Context()
 		with c :
 			c["a"] = "/one/two/1"
-			h1 = s.stateHash()
+			h1 = s.attributesHash()
 			c["a"] = "/one/two/2"
-			h2 = s.stateHash()
+			h2 = s.attributesHash()
 			self.assertNotEqual( h1, h2 )
 
 	def testStandardShaderAcceptsImageInputs( self ) :
@@ -275,7 +289,7 @@ class ArnoldShaderTest( unittest.TestCase ) :
 		s["parameters"]["color"].setValue( IECore.Color3f( 0.1, 0.2, 0.3 ) )
 		s["parameters"]["opacity"].setInput( s["parameters"]["color"] )
 
-		shader = s.state()[0]
+		shader = s.attributes()["ai:surface"][0]
 
 		self.assertEqual( shader.parameters["color"].value, IECore.Color3f( 0.1, 0.2, 0.3 ) )
 		self.assertEqual( shader.parameters["opacity"].value, IECore.Color3f( 0.1, 0.2, 0.3 ) )
@@ -285,20 +299,20 @@ class ArnoldShaderTest( unittest.TestCase ) :
 		s = GafferArnold.ArnoldShader()
 		s.loadShader( "standard" )
 
-		stateHash = s.stateHash()
-		state = s.state()
-		self.assertEqual( len( state ), 1 )
-		self.assertEqual( state[0].name, "standard" )
+		attributesHash = s.attributesHash()
+		attributes = s.attributes()
+		self.assertEqual( len( attributes ), 1 )
+		self.assertEqual( attributes["ai:surface"][0].name, "standard" )
 
 		self.assertTrue( s["enabled"].isSame( s.enabledPlug() ) )
 
 		s["enabled"].setValue( False )
 
-		stateHash2 = s.stateHash()
-		self.assertNotEqual( stateHash2, stateHash )
+		attributesHash2 = s.attributesHash()
+		self.assertNotEqual( attributesHash2, attributesHash )
 
-		state2 = s.state()
-		self.assertEqual( len( state2 ), 0 )
+		attributes2 = s.attributes()
+		self.assertEqual( len( attributes2 ), 0 )
 
 	def testDisablingInNetwork( self ) :
 
@@ -310,25 +324,28 @@ class ArnoldShaderTest( unittest.TestCase ) :
 
 		s["parameters"]["Ks_color"].setInput( f["out"] )
 
-		stateHash = s.stateHash()
-		state = s.state()
-		self.assertEqual( len( state ), 2 )
-		self.assertEqual( state[1].name, "standard" )
-		self.assertEqual( state[0].name, "flat" )
+		attributesHash = s.attributesHash()
+		attributes = s.attributes()
+		self.assertEqual( len( attributes ), 1 )
+		self.assertEqual( attributes["ai:surface"][1].name, "standard" )
+		self.assertEqual( attributes["ai:surface"][0].name, "flat" )
 
 		self.assertTrue( s["enabled"].isSame( s.enabledPlug() ) )
 
 		f["enabled"].setValue( False )
 
-		stateHash2 = s.stateHash()
-		self.assertNotEqual( stateHash2, stateHash )
+		attributesHash2 = s.attributesHash()
+		self.assertNotEqual( attributesHash2, attributesHash )
 
-		state2 = s.state()
-		self.assertEqual( len( state2 ), 1 )
+		attributes2 = s.attributes()
+		self.assertEqual( len( attributes2 ), 1 )
 
-		for key in state[1].parameters.keys() :
+		for key in attributes["ai:surface"][1].parameters.keys() :
 			if key != "Ks_color" :
-				self.assertEqual( state[1].parameters[key], state2[0].parameters[key] )
+				self.assertEqual(
+					attributes["ai:surface"][1].parameters[key],
+					attributes2["ai:surface"][0].parameters[key]
+				)
 
 	def testAssignmentAttributeName( self ) :
 

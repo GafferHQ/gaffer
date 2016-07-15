@@ -49,7 +49,23 @@ using namespace Gaffer;
 using namespace GafferBindings;
 using namespace GafferScene;
 
-static IECore::ObjectVectorPtr state( const Shader &s, bool copy=true )
+namespace
+{
+
+IECore::CompoundObjectPtr attributes( const Shader &s, bool copy=true )
+{
+	IECore::ConstCompoundObjectPtr o = s.attributes();
+	if( copy )
+	{
+		return o->copy();
+	}
+	else
+	{
+		return boost::const_pointer_cast<IECore::CompoundObject>( o );
+	}
+}
+
+IECore::ObjectVectorPtr state( const Shader &s, bool copy=true )
 {
 	IECore::ConstObjectVectorPtr o = s.state();
 	if( copy )
@@ -62,10 +78,15 @@ static IECore::ObjectVectorPtr state( const Shader &s, bool copy=true )
 	}
 }
 
+} // namespace
+
 void GafferSceneBindings::bindShader()
 {
 
 	GafferBindings::DependencyNodeClass<Shader>()
+		.def( "attributesHash", (IECore::MurmurHash (Shader::*)() const )&Shader::attributesHash )
+		.def( "attributesHash", (void (Shader::*)( IECore::MurmurHash &h ) const )&Shader::attributesHash )
+		.def( "attributes", &attributes, ( boost::python::arg_( "_copy" ) = true ) )
 		.def( "stateHash", (IECore::MurmurHash (Shader::*)() const )&Shader::stateHash )
 		.def( "stateHash", (void (Shader::*)( IECore::MurmurHash &h ) const )&Shader::stateHash )
 		.def( "state", &state, ( boost::python::arg_( "_copy" ) = true ) )

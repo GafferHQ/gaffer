@@ -40,6 +40,7 @@ from ArnoldOptionsTest import ArnoldOptionsTest
 from ArnoldAttributesTest import ArnoldAttributesTest
 from ArnoldVDBTest import ArnoldVDBTest
 from InteractiveArnoldRenderTest import InteractiveArnoldRenderTest
+from ArnoldDisplacementTest import ArnoldDisplacementTest
 import IECoreArnoldPreviewTest
 
 if __name__ == "__main__":

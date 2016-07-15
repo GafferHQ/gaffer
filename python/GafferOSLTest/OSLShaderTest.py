@@ -71,14 +71,14 @@ class OSLShaderTest( GafferOSLTest.OSLTestCase ) :
 
 		self.assertEqual( n["out"].typeId(), Gaffer.Plug.staticTypeId() )
 
-		state = n.state()
-		self.assertEqual( len( state ), 1 )
-		self.assertEqual( state[0].name, s )
-		self.assertEqual( state[0].type, "osl:surface" )
-		self.assertEqual( state[0].parameters["i"], IECore.IntData( 10 ) )
-		self.assertEqual( state[0].parameters["f"], IECore.FloatData( 1 ) )
-		self.assertEqual( state[0].parameters["c"], IECore.Color3fData( IECore.Color3f( 1, 2, 3 ) ) )
-		self.assertEqual( state[0].parameters["s"], IECore.StringData( "s" ) )
+		network = n.attributes()["osl:surface"]
+		self.assertEqual( len( network ), 1 )
+		self.assertEqual( network[0].name, s )
+		self.assertEqual( network[0].type, "osl:surface" )
+		self.assertEqual( network[0].parameters["i"], IECore.IntData( 10 ) )
+		self.assertEqual( network[0].parameters["f"], IECore.FloatData( 1 ) )
+		self.assertEqual( network[0].parameters["c"], IECore.Color3fData( IECore.Color3f( 1, 2, 3 ) ) )
+		self.assertEqual( network[0].parameters["s"], IECore.StringData( "s" ) )
 
 	def testOutputTypes( self ) :
 
@@ -111,19 +111,19 @@ class OSLShaderTest( GafferOSLTest.OSLTestCase ) :
 
 		self.assertEqual( typesNode["parameters"]["i"].getValue(), 10 )
 
-		state = typesNode.state()
+		network = typesNode.attributes()["osl:surface"]
 
-		self.assertEqual( len( state ), 2 )
+		self.assertEqual( len( network ), 2 )
 
-		self.assertEqual( state[1].name, typesShader )
-		self.assertEqual( state[1].type, "osl:surface" )
-		self.assertEqual( state[1].parameters["i"], IECore.StringData( "link:" + state[0].parameters["__handle"].value + ".i" ) )
-		self.assertEqual( state[1].parameters["f"], IECore.FloatData( 1 ) )
-		self.assertEqual( state[1].parameters["c"], IECore.Color3fData( IECore.Color3f( 1, 2, 3 ) ) )
-		self.assertEqual( state[1].parameters["s"], IECore.StringData( "s" ) )
-		self.assertEqual( state[0].name, outputTypesShader )
-		self.assertEqual( state[0].type, "osl:shader" )
-		self.assertEqual( state[0].parameters["input"], IECore.FloatData( 1 ) )
+		self.assertEqual( network[1].name, typesShader )
+		self.assertEqual( network[1].type, "osl:surface" )
+		self.assertEqual( network[1].parameters["i"], IECore.StringData( "link:" + network[0].parameters["__handle"].value + ".i" ) )
+		self.assertEqual( network[1].parameters["f"], IECore.FloatData( 1 ) )
+		self.assertEqual( network[1].parameters["c"], IECore.Color3fData( IECore.Color3f( 1, 2, 3 ) ) )
+		self.assertEqual( network[1].parameters["s"], IECore.StringData( "s" ) )
+		self.assertEqual( network[0].name, outputTypesShader )
+		self.assertEqual( network[0].type, "osl:shader" )
+		self.assertEqual( network[0].parameters["input"], IECore.FloatData( 1 ) )
 
 	def testSerialiation( self ) :
 
@@ -195,20 +195,20 @@ class OSLShaderTest( GafferOSLTest.OSLTestCase ) :
 		n["parameters"]["s"]["c"].setValue( IECore.Color3f( 3, 4, 5 ) )
 		n["parameters"]["s"]["s"].setValue( "ttt" )
 
-		state = n.state()
-		self.assertEqual( len( state[0].parameters ), 7 )
-		self.assertTrue( state[0].parameters["i"], IECore.IntData( 2 ) )
-		self.assertTrue( state[0].parameters["f"], IECore.FloatData( 3 ) )
-		self.assertTrue( state[0].parameters["s.i"], IECore.IntData( 10 ) )
-		self.assertTrue( state[0].parameters["s.f"], IECore.FloatData( 21 ) )
-		self.assertTrue( state[0].parameters["s.c"], IECore.Color3fData( IECore.Color3f( 3, 4, 5 ) ) )
-		self.assertTrue( state[0].parameters["s.s"], IECore.StringData( "ttt" ) )
-		self.assertTrue( state[0].parameters["ss"], IECore.StringData( "ss" ) )
+		network = n.attributes()["osl:shader"]
+		self.assertEqual( len( network[0].parameters ), 7 )
+		self.assertTrue( network[0].parameters["i"], IECore.IntData( 2 ) )
+		self.assertTrue( network[0].parameters["f"], IECore.FloatData( 3 ) )
+		self.assertTrue( network[0].parameters["s.i"], IECore.IntData( 10 ) )
+		self.assertTrue( network[0].parameters["s.f"], IECore.FloatData( 21 ) )
+		self.assertTrue( network[0].parameters["s.c"], IECore.Color3fData( IECore.Color3f( 3, 4, 5 ) ) )
+		self.assertTrue( network[0].parameters["s.s"], IECore.StringData( "ttt" ) )
+		self.assertTrue( network[0].parameters["ss"], IECore.StringData( "ss" ) )
 
-		h1 = n.stateHash()
+		h1 = n.attributesHash()
 
 		n["parameters"]["s"]["i"].setValue( 100 )
-		h2 = n.stateHash()
+		h2 = n.attributesHash()
 		self.assertNotEqual( h1, h2 )
 
 		s2 = self.compileShader( os.path.dirname( __file__ ) + "/shaders/outputTypes.osl" )
@@ -216,7 +216,7 @@ class OSLShaderTest( GafferOSLTest.OSLTestCase ) :
 		g.loadShader( s2 )
 
 		n["parameters"]["s"]["i"].setInput( g["out"]["i"] )
-		h3 = n.stateHash()
+		h3 = n.attributesHash()
 		self.assertNotEqual( h1, h3 )
 		self.assertNotEqual( h2, h3 )
 
@@ -229,10 +229,10 @@ class OSLShaderTest( GafferOSLTest.OSLTestCase ) :
 		buildColor.loadShader( "Utility/BuildColor" )
 
 		buildColor["parameters"]["r"].setInput( globals["out"]["globalU"] )
-		h1 = buildColor.stateHash()
+		h1 = buildColor.attributesHash()
 
 		buildColor["parameters"]["r"].setInput( globals["out"]["globalV"] )
-		h2 = buildColor.stateHash()
+		h2 = buildColor.attributesHash()
 
 		self.assertNotEqual( h1, h2 )
 
@@ -261,7 +261,7 @@ class OSLShaderTest( GafferOSLTest.OSLTestCase ) :
 
 		inputClosure["parameters"]["i"].setInput( outputClosure["out"]["c"] )
 
-		s = inputClosure.state()
+		s = inputClosure.attributes()["osl:surface"]
 		self.assertEqual( len( s ), 2 )
 		self.assertEqual( s[1].parameters["i"].value, "link:" + s[0].parameters["__handle"].value + ".c" )
 
@@ -315,8 +315,8 @@ class OSLShaderTest( GafferOSLTest.OSLTestCase ) :
 
 		sn2["parameters"]["i"].setInput( sn1["out"]["i"] )
 
-		self.assertEqual( sn2.stateHash(), sn2.stateHash() )
-		self.assertEqual( sn2.state(), sn2.state() )
+		self.assertEqual( sn2.attributesHash(), sn2.attributesHash() )
+		self.assertEqual( sn2.attributes(), sn2.attributes() )
 
 	def testHandlesAreHumanReadable( self ) :
 
@@ -331,8 +331,8 @@ class OSLShaderTest( GafferOSLTest.OSLTestCase ) :
 
 		sn2["parameters"]["i"].setInput( sn1["out"]["i"] )
 
-		state = sn2.state()
-		self.assertTrue( "Shader1" in state[0].parameters["__handle"].value )
+		network = sn2.attributes()["osl:surface"]
+		self.assertTrue( "Shader1" in network[0].parameters["__handle"].value )
 
 	def testHandlesAreUniqueEvenIfNodeNamesArent( self ) :
 
@@ -359,8 +359,8 @@ class OSLShaderTest( GafferOSLTest.OSLTestCase ) :
 		box["in1"].setName( "notUnique" )
 		script["in2"].setName( "notUnique" )
 
-		state = script["shader"].state()
-		self.assertNotEqual( state[0].parameters["__handle"], state[1].parameters["__handle"] )
+		network = script["shader"].attributes()["osl:surface"]
+		self.assertNotEqual( network[0].parameters["__handle"], network[1].parameters["__handle"] )
 
 	def testShaderMetadata( self ) :
 
@@ -450,8 +450,8 @@ class OSLShaderTest( GafferOSLTest.OSLTestCase ) :
 		color["parameters"]["g"].setInput( noise["out"]["n"] )
 
 		# Should not throw - there are no cycles above.
-		color.stateHash()
-		color.state()
+		color.attributesHash()
+		color.attributes()
 
 	def testLoadNetworkFromVersion0_23( self ) :
 

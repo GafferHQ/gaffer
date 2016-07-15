@@ -46,6 +46,8 @@
 #include "Gaffer/CompoundNumericPlug.h"
 #include "Gaffer/StringPlug.h"
 
+#include "GafferScene/RendererAlgo.h"
+
 #include "GafferOSL/OSLShader.h"
 #include "GafferOSL/ShadingEngine.h"
 
@@ -72,7 +74,7 @@ struct ShadingEngineCacheKey
 	}
 
 	ShadingEngineCacheKey( const OSLShader *s )
-		:	shader( s ), hash( s->stateHash() )
+		:	shader( s ), hash( s->attributesHash() )
 	{
 	}
 
@@ -104,14 +106,23 @@ inline size_t tbb_hasher( const ShadingEngineCacheKey &cacheKey )
 ConstShadingEnginePtr getter( const ShadingEngineCacheKey &key, size_t &cost )
 {
 	cost = 1;
-	ConstObjectVectorPtr state = key.shader->state();
+
+	ConstCompoundObjectPtr attributes = key.shader->attributes();
 	key.shader = NULL; // there's no guarantee the node would even exist after this call, so zero it out to avoid temptation
-	if( !state->members().size() )
+
+	CompoundObject::ObjectMap::const_iterator it = attributes->members().find( "osl:surface" );
+	if( it == attributes->members().end() )
 	{
 		return NULL;
 	}
 
-	return new ShadingEngine( state.get() );
+	const ObjectVector *network = runTimeCast<const ObjectVector>( it->second.get() );
+	if( !network || network->members().empty() )
+	{
+		return NULL;
+	}
+
+	return new ShadingEngine( network );
 }
 
 typedef LRUCache<ShadingEngineCacheKey, ConstShadingEnginePtr> ShadingEngineCache;

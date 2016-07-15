@@ -82,7 +82,7 @@ class RenderManShaderTest( GafferRenderManTest.RenderManTestCase ) :
 		s = Gaffer.ScriptNode()
 		s.execute( ss )
 
-		st = s["n"].state()
+		st = s["n"].attributes()["ri:surface"]
 		self.assertEqual( len( st ), 1 )
 
 		self.assertEqual( st[0].type, "ri:surface" )
@@ -101,7 +101,7 @@ class RenderManShaderTest( GafferRenderManTest.RenderManTestCase ) :
 		n = GafferRenderMan.RenderManShader()
 		n.loadShader( "plastic" )
 
-		s = n.state()
+		s = n.attributes()["ri:surface"]
 		self.assertEqual( len( s ), 1 )
 
 		self.assertEqual( s[0].type, "ri:surface" )
@@ -117,10 +117,10 @@ class RenderManShaderTest( GafferRenderManTest.RenderManTestCase ) :
 
 		n = GafferRenderMan.RenderManShader()
 		n.loadShader( "matte" )
-		h1 = n.stateHash()
+		h1 = n.attributesHash()
 
 		n["parameters"]["Kd"].setValue( 0.25 )
-		self.assertNotEqual( n.stateHash(), h1 )
+		self.assertNotEqual( n.attributesHash(), h1 )
 
 	def testCoshaderHash( self ) :
 
@@ -139,11 +139,11 @@ class RenderManShaderTest( GafferRenderManTest.RenderManTestCase ) :
 
 		shaderNode["parameters"]["coshaderParameter"].setInput( coshaderNode["out"] )
 
-		h1 = shaderNode.stateHash()
+		h1 = shaderNode.attributesHash()
 
 		coshaderNode["parameters"]["floatParameter"].setValue( 0.25 )
 
-		self.assertNotEqual( shaderNode.stateHash(), h1 )
+		self.assertNotEqual( shaderNode.attributesHash(), h1 )
 
 	def testParameterOrdering( self ) :
 
@@ -179,7 +179,7 @@ class RenderManShaderTest( GafferRenderManTest.RenderManTestCase ) :
 
 		shaderNode["parameters"]["coshaderParameter"].setInput( coshaderNode["out"] )
 
-		s = shaderNode.state()
+		s = shaderNode.attributes()["ri:surface"]
 		self.assertEqual( len( s ), 2 )
 
 		self.assertEqual( s[0].name, coshader )
@@ -448,7 +448,7 @@ class RenderManShaderTest( GafferRenderManTest.RenderManTestCase ) :
 			self.assertEqual( n["parameters"][name].defaultValue(), value )
 			self.assertEqual( n["parameters"][name].getValue(), value )
 
-		s = n.state()[0]
+		s = n.attributes()["ri:surface"][0]
 
 		for name, value in expected.items() :
 
@@ -470,9 +470,9 @@ class RenderManShaderTest( GafferRenderManTest.RenderManTestCase ) :
 		self.assertTrue( isinstance( n["parameters"]["fixedShaderArray"]["fixedShaderArray2"], Gaffer.Plug ) )
 		self.assertTrue( isinstance( n["parameters"]["fixedShaderArray"]["fixedShaderArray3"], Gaffer.Plug ) )
 
-		state = n.state()
+		network = n.attributes()["ri:surface"]
 
-		self.assertEqual( state[0].parameters["fixedShaderArray"], IECore.StringVectorData( [ "" ] * 4 ) )
+		self.assertEqual( network[0].parameters["fixedShaderArray"], IECore.StringVectorData( [ "" ] * 4 ) )
 
 		coshader = self.compileShader( os.path.dirname( __file__ ) + "/shaders/coshader.sl" )
 
@@ -481,9 +481,9 @@ class RenderManShaderTest( GafferRenderManTest.RenderManTestCase ) :
 
 		n["parameters"]["fixedShaderArray"]["fixedShaderArray0"].setInput( coshaderNode["out"] )
 
-		state = n.state()
+		network = n.attributes()["ri:surface"]
 
-		self.assertEqual( state[1].parameters["fixedShaderArray"], IECore.StringVectorData( [ state[0].parameters["__handle"].value, "", "", "" ] ) )
+		self.assertEqual( network[1].parameters["fixedShaderArray"], IECore.StringVectorData( [ network[0].parameters["__handle"].value, "", "", "" ] ) )
 
 	def testCoshaderType( self ) :
 
@@ -491,7 +491,7 @@ class RenderManShaderTest( GafferRenderManTest.RenderManTestCase ) :
 		coshaderNode = GafferRenderMan.RenderManShader()
 		coshaderNode.loadShader( coshader )
 
-		self.assertEqual( coshaderNode.state()[0].type, "ri:shader" )
+		self.assertEqual( coshaderNode.attributes()["ri:shader"][0].type, "ri:shader" )
 
 	def testCantConnectSurfaceShaderIntoCoshaderInput( self ) :
 
@@ -525,7 +525,7 @@ class RenderManShaderTest( GafferRenderManTest.RenderManTestCase ) :
 		s["parameters"]["Kd"].setValue( 0.25 )
 		s["parameters"]["Ks"].setInput( s["parameters"]["Kd"] )
 
-		shader = s.state()[0]
+		shader = s.attributes()["ri:surface"][0]
 
 		self.assertEqual( shader.parameters["Kd"].value, 0.25 )
 		self.assertEqual( shader.parameters["Ks"].value, 0.25 )
@@ -536,7 +536,7 @@ class RenderManShaderTest( GafferRenderManTest.RenderManTestCase ) :
 		n = GafferRenderMan.RenderManShader()
 		n.loadShader( shader )
 
-		h1 = n.stateHash()
+		h1 = n.attributesHash()
 
 		coshader = self.compileShader( os.path.dirname( __file__ ) + "/shaders/coshader.sl" )
 		coshaderNode = GafferRenderMan.RenderManShader()
@@ -544,19 +544,19 @@ class RenderManShaderTest( GafferRenderManTest.RenderManTestCase ) :
 
 		n["parameters"]["fixedShaderArray"]["fixedShaderArray0"].setInput( coshaderNode["out"] )
 
-		h2 = n.stateHash()
+		h2 = n.attributesHash()
 		self.assertNotEqual( h2, h1 )
 
 		n["parameters"]["fixedShaderArray"]["fixedShaderArray1"].setInput( coshaderNode["out"] )
 
-		h3 = n.stateHash()
+		h3 = n.attributesHash()
 		self.assertNotEqual( h3, h2 )
 		self.assertNotEqual( h3, h1 )
 
 		n["parameters"]["fixedShaderArray"]["fixedShaderArray1"].setInput( None )
 		n["parameters"]["fixedShaderArray"]["fixedShaderArray2"].setInput( coshaderNode["out"] )
 
-		h4 = n.stateHash()
+		h4 = n.attributesHash()
 		self.assertNotEqual( h4, h3 )
 		self.assertNotEqual( h4, h2 )
 		self.assertNotEqual( h4, h1 )
@@ -566,20 +566,21 @@ class RenderManShaderTest( GafferRenderManTest.RenderManTestCase ) :
 		s = GafferRenderMan.RenderManShader()
 		s.loadShader( "plastic" )
 
-		stateHash = s.stateHash()
-		state = s.state()
-		self.assertEqual( len( state ), 1 )
-		self.assertEqual( state[0].name, "plastic" )
+		attributesHash = s.attributesHash()
+		attributes = s.attributes()
+		self.assertEqual( len( attributes ), 1 )
+		self.assertEqual( len( attributes["ri:surface"] ), 1 )
+		self.assertEqual( attributes["ri:surface"][0].name, "plastic" )
 
 		self.assertTrue( s["enabled"].isSame( s.enabledPlug() ) )
 
 		s["enabled"].setValue( False )
 
-		stateHash2 = s.stateHash()
-		self.assertNotEqual( stateHash2, stateHash )
+		attributesHash2 = s.attributesHash()
+		self.assertNotEqual( attributesHash2, attributesHash )
 
-		state2 = s.state()
-		self.assertEqual( len( state2 ), 0 )
+		attributes2 = s.attributes()
+		self.assertEqual( len( attributes2 ), 0 )
 
 	def testDisablingCoshaders( self ) :
 
@@ -595,23 +596,23 @@ class RenderManShaderTest( GafferRenderManTest.RenderManTestCase ) :
 
 		shaderNode["parameters"]["coshaderParameter"].setInput( coshaderNode["out"] )
 
-		s = shaderNode.state()
+		s = shaderNode.attributes()["ri:surface"]
 		self.assertEqual( len( s ), 2 )
 
 		self.assertEqual( s[0].name, coshader )
 		self.assertEqual( s[1].name, shader )
 
-		h = shaderNode.stateHash()
+		h = shaderNode.attributesHash()
 
 		coshaderNode["enabled"].setValue( False )
 
-		s2 = shaderNode.state()
+		s2 = shaderNode.attributes()["ri:surface"]
 		self.assertEqual( len( s2 ), 1 )
 
 		self.assertEqual( s2[0].name, shader )
 		self.assertTrue( "coshaderParameter" not in s2[0].parameters )
 
-		self.assertNotEqual( shaderNode.stateHash(), h )
+		self.assertNotEqual( shaderNode.attributesHash(), h )
 
 	def testDisablingCoshaderArrayInputs( self ) :
 
@@ -630,42 +631,42 @@ class RenderManShaderTest( GafferRenderManTest.RenderManTestCase ) :
 		n["parameters"]["fixedShaderArray"][0].setInput( coshaderNode1["out"] )
 		n["parameters"]["fixedShaderArray"][2].setInput( coshaderNode2["out"] )
 
-		state = n.state()
-		h1 = n.stateHash()
+		s = n.attributes()["ri:surface"]
+		h1 = n.attributesHash()
 
 		self.assertEqual(
-			state[2].parameters["fixedShaderArray"],
+			s[2].parameters["fixedShaderArray"],
 			IECore.StringVectorData( [
-				state[0].parameters["__handle"].value,
+				s[0].parameters["__handle"].value,
 				"",
-				state[1].parameters["__handle"].value,
+				s[1].parameters["__handle"].value,
 				""
 			] )
 		)
 
 		coshaderNode1["enabled"].setValue( False )
 
-		state = n.state()
+		s = n.attributes()["ri:surface"]
 
 		self.assertEqual(
-			state[1].parameters["fixedShaderArray"],
+			s[1].parameters["fixedShaderArray"],
 			IECore.StringVectorData( [
 				"",
 				"",
-				state[0].parameters["__handle"].value,
+				s[0].parameters["__handle"].value,
 				""
 			] )
 		)
 
-		h2 = n.stateHash()
+		h2 = n.attributesHash()
 		self.assertNotEqual( h2, h1 )
 
 		coshaderNode2["enabled"].setValue( False )
 
-		state = n.state()
+		s = n.attributes()["ri:surface"]
 
 		self.assertEqual(
-			state[0].parameters["fixedShaderArray"],
+			s[0].parameters["fixedShaderArray"],
 			IECore.StringVectorData( [
 				"",
 				"",
@@ -674,8 +675,8 @@ class RenderManShaderTest( GafferRenderManTest.RenderManTestCase ) :
 			] )
 		)
 
-		self.assertNotEqual( n.stateHash(), h1 )
-		self.assertNotEqual( n.stateHash(), h2 )
+		self.assertNotEqual( n.attributesHash(), h1 )
+		self.assertNotEqual( n.attributesHash(), h2 )
 
 	def testCorrespondingInput( self ) :
 
@@ -706,8 +707,8 @@ class RenderManShaderTest( GafferRenderManTest.RenderManTestCase ) :
 		shaderNode["parameters"]["coshaderParameter"].setInput( passThroughCoshaderNode["out"] )
 		passThroughCoshaderNode["parameters"]["aColorIWillTint"].setInput( coshaderNode["out"] )
 
-		h = shaderNode.stateHash()
-		s = shaderNode.state()
+		h = shaderNode.attributesHash()
+		s = shaderNode.attributes()["ri:surface"]
 
 		self.assertEqual( len( s ), 3 )
 		self.assertEqual( s[2].parameters["coshaderParameter"], s[1].parameters["__handle"] )
@@ -717,7 +718,7 @@ class RenderManShaderTest( GafferRenderManTest.RenderManTestCase ) :
 
 		passThroughCoshaderNode["enabled"].setValue( False )
 
-		s = shaderNode.state()
+		s = shaderNode.attributes()["ri:surface"]
 
 		self.assertEqual( len( s ), 2 )
 		self.assertEqual( s[1].parameters["coshaderParameter"], s[0].parameters["__handle"] )
@@ -789,7 +790,7 @@ class RenderManShaderTest( GafferRenderManTest.RenderManTestCase ) :
 		n["parameters"]["floatSpline"].setValue( floatValue )
 		n["parameters"]["colorSpline"].setValue( colorValue )
 
-		s = n.state()[0]
+		s = n.attributes()["ri:surface"][0]
 
 		self.assertEqual( s.parameters["floatSpline"].value, floatValue )
 		self.assertEqual( s.parameters["colorSpline"].value, colorValue )
@@ -888,7 +889,7 @@ class RenderManShaderTest( GafferRenderManTest.RenderManTestCase ) :
 
 		self.assertTrue( s["shader"]["parameters"]["coshaderParameter"].getInput().parent().isSame( b ) )
 
-		s = s["shader"].state()
+		s = s["shader"].attributes()["ri:surface"]
 
 		self.assertEqual( len( s ), 2 )
 		self.assertEqual( s[1].parameters["coshaderParameter"], s[0].parameters["__handle"] )
@@ -912,7 +913,7 @@ class RenderManShaderTest( GafferRenderManTest.RenderManTestCase ) :
 
 		self.assertTrue( b["shader"]["parameters"]["coshaderParameter"].getInput().parent().isSame( b ) )
 
-		s = b["shader"].state()
+		s = b["shader"].attributes()["ri:surface"]
 
 		self.assertEqual( len( s ), 2 )
 		self.assertEqual( s[1].parameters["coshaderParameter"], s[0].parameters["__handle"] )
@@ -1020,8 +1021,8 @@ class RenderManShaderTest( GafferRenderManTest.RenderManTestCase ) :
 		S["parameters"]["fixedShaderArray"][1].setInput( D["out"] )
 		D["parameters"]["aColorIWillTint"].setInput( C["out"] )
 
-		h = S.stateHash()
-		s = S.state()
+		h = S.attributesHash()
+		s = S.attributes()["ri:surface"]
 
 		self.assertEqual( len( s ), 3 )
 		self.assertEqual( s[2].parameters["fixedShaderArray"], IECore.StringVectorData( [ s[0].parameters["__handle"].value, s[1].parameters["__handle"].value, "", "" ] ) )
@@ -1031,9 +1032,9 @@ class RenderManShaderTest( GafferRenderManTest.RenderManTestCase ) :
 
 		D["enabled"].setValue( False )
 
-		self.assertNotEqual( S.stateHash(), h )
+		self.assertNotEqual( S.attributesHash(), h )
 
-		s = S.state()
+		s = S.attributes()["ri:surface"]
 
 		self.assertEqual( len( s ), 2 )
 		self.assertEqual( s[1].parameters["fixedShaderArray"], IECore.StringVectorData( [ s[0].parameters["__handle"].value, s[0].parameters["__handle"].value, "", "" ] ) )
@@ -1061,8 +1062,8 @@ class RenderManShaderTest( GafferRenderManTest.RenderManTestCase ) :
 		D2["parameters"]["aColorIWillTint"].setInput( D1["out"] )
 		D1["parameters"]["aColorIWillTint"].setInput( C["out"] )
 
-		h1 = S.stateHash()
-		s = S.state()
+		h1 = S.attributesHash()
+		s = S.attributes()["ri:surface"]
 
 		self.assertEqual( len( s ), 4 )
 		self.assertEqual( s[0].name, coshader )
@@ -1076,10 +1077,10 @@ class RenderManShaderTest( GafferRenderManTest.RenderManTestCase ) :
 
 		D2["enabled"].setValue( False )
 
-		h2 = S.stateHash()
+		h2 = S.attributesHash()
 		self.assertNotEqual( h1, h2 )
 
-		s = S.state()
+		s = S.attributes()["ri:surface"]
 
 		self.assertEqual( len( s ), 3 )
 		self.assertEqual( s[0].name, coshader )
@@ -1091,11 +1092,11 @@ class RenderManShaderTest( GafferRenderManTest.RenderManTestCase ) :
 
 		D1["enabled"].setValue( False )
 
-		h3 = S.stateHash()
+		h3 = S.attributesHash()
 		self.assertNotEqual( h3, h2 )
 		self.assertNotEqual( h3, h1 )
 
-		s = S.state()
+		s = S.attributes()["ri:surface"]
 
 		self.assertEqual( len( s ), 2 )
 		self.assertEqual( s[0].name, coshader )
@@ -1278,11 +1279,11 @@ class RenderManShaderTest( GafferRenderManTest.RenderManTestCase ) :
 		b["out"].setInput( intermediateCoshaderNode["out"] )
 		shaderNode["parameters"]["coshaderParameter"].setInput( b["out"] )
 
-		h1 = shaderNode.stateHash()
+		h1 = shaderNode.attributesHash()
 
 		coshaderNode["parameters"]["floatParameter"].setValue( 0.25 )
 
-		self.assertNotEqual( shaderNode.stateHash(), h1 )
+		self.assertNotEqual( shaderNode.attributesHash(), h1 )
 
 	def testDanglingBoxConnection( self ):
 
@@ -1326,7 +1327,7 @@ class RenderManShaderTest( GafferRenderManTest.RenderManTestCase ) :
 		b["in"] = b["s"]["parameters"]["coshaderParameter"].createCounterpart( "in", Gaffer.Plug.Direction.In )
 
 		b["s"]["parameters"]["coshaderParameter"].setInput( b["in"] )
-		s = b["s"].state()
+		s = b["s"].attributes()["ri:surface"]
 		self.assertEqual( len( s ), 1 )
 		self.assertEqual( s[0].name, shader )
 
@@ -1342,7 +1343,7 @@ class RenderManShaderTest( GafferRenderManTest.RenderManTestCase ) :
 		self.assertTrue( b["in"].acceptsInput( c["out"] ) )
 		b["in"].setInput( c["out"] )
 
-		s = b["s"].state()
+		s = b["s"].attributes()["ri:surface"]
 		self.assertEqual( len( s ), 2 )
 		self.assertEqual( s[1].parameters["coshaderParameter"], s[0].parameters["__handle"] )
 
@@ -1391,13 +1392,13 @@ class RenderManShaderTest( GafferRenderManTest.RenderManTestCase ) :
 		switch["in1"].setInput( coshaderNode1["out"] )
 
 		shaderNode["parameters"]["coshaderParameter"].setInput( switch["out"] )
-		self.assertEqual( shaderNode.state()[0].parameters["floatParameter"].value, 0 )
+		self.assertEqual( shaderNode.attributes()["ri:surface"][0].parameters["floatParameter"].value, 0 )
 
 		switch["index"].setValue( 1 )
-		self.assertEqual( shaderNode.state()[0].parameters["floatParameter"].value, 1 )
+		self.assertEqual( shaderNode.attributes()["ri:surface"][0].parameters["floatParameter"].value, 1 )
 
 		switch["enabled"].setValue( False )
-		self.assertEqual( shaderNode.state()[0].parameters["floatParameter"].value, 0 )
+		self.assertEqual( shaderNode.attributes()["ri:surface"][0].parameters["floatParameter"].value, 0 )
 
 	def testCoshaderTypingPreventsNewInvalidSwitchInputs( self ) :
 
@@ -1456,16 +1457,16 @@ class RenderManShaderTest( GafferRenderManTest.RenderManTestCase ) :
 
 		script["shaderNode"]["parameters"]["coshaderParameter"].setInput( script["switch"]["out"] )
 
-		self.assertEqual( script["shaderNode"].state()[0].parameters["floatParameter"].value, 0 )
+		self.assertEqual( script["shaderNode"].attributes()["ri:surface"][0].parameters["floatParameter"].value, 0 )
 
 		box = Gaffer.Box.create( script, Gaffer.StandardSet( script.children( Gaffer.Node ) ) )
-		self.assertEqual( box["shaderNode"].state()[0].parameters["floatParameter"].value, 0 )
+		self.assertEqual( box["shaderNode"].attributes()["ri:surface"][0].parameters["floatParameter"].value, 0 )
 
 		promotedIndex = box.promotePlug( box["switch"]["index"] )
-		self.assertEqual( box["shaderNode"].state()[0].parameters["floatParameter"].value, 0 )
+		self.assertEqual( box["shaderNode"].attributes()["ri:surface"][0].parameters["floatParameter"].value, 0 )
 
 		promotedIndex.setValue( 1 )
-		self.assertEqual( box["shaderNode"].state()[0].parameters["floatParameter"].value, 1 )
+		self.assertEqual( box["shaderNode"].attributes()["ri:surface"][0].parameters["floatParameter"].value, 1 )
 
 	def testRepeatability( self ) :
 
@@ -1479,8 +1480,8 @@ class RenderManShaderTest( GafferRenderManTest.RenderManTestCase ) :
 
 		sn2["parameters"]["coshaderParameter"].setInput( sn1["out"] )
 
-		self.assertEqual( sn2.stateHash(), sn2.stateHash() )
-		self.assertEqual( sn2.state(), sn2.state() )
+		self.assertEqual( sn2.attributesHash(), sn2.attributesHash() )
+		self.assertEqual( sn2.attributes(), sn2.attributes() )
 
 	def testHandlesAreHumanReadable( self ) :
 
@@ -1494,8 +1495,8 @@ class RenderManShaderTest( GafferRenderManTest.RenderManTestCase ) :
 
 		sn2["parameters"]["coshaderParameter"].setInput( sn1["out"] )
 
-		state = sn2.state()
-		self.assertTrue( "Shader1" in state[0].parameters["__handle"].value )
+		network = sn2.attributes()["ri:surface"]
+		self.assertTrue( "Shader1" in network[0].parameters["__handle"].value )
 
 	def testHandlesAreUniqueEvenIfNodeNamesArent( self ) :
 
@@ -1522,10 +1523,10 @@ class RenderManShaderTest( GafferRenderManTest.RenderManTestCase ) :
 		box["in1"].setName( "notUnique" )
 		script["in2"].setName( "notUnique" )
 
-		state = script["shader"].state()
-		self.assertNotEqual( state[0].parameters["__handle"], state[1].parameters["__handle"] )
+		network = script["shader"].attributes()["ri:surface"]
+		self.assertNotEqual( network[0].parameters["__handle"], network[1].parameters["__handle"] )
 
-	def testShaderTypesInState( self ) :
+	def testShaderTypesInNetwork( self ) :
 
 		shader = self.compileShader( os.path.dirname( __file__ ) + "/shaders/coshaderParameter.sl" )
 
@@ -1539,9 +1540,9 @@ class RenderManShaderTest( GafferRenderManTest.RenderManTestCase ) :
 
 		shaderNode["parameters"]["coshaderParameter"].setInput( coshaderNode["out"] )
 
-		state = shaderNode.state()
-		self.assertEqual( state[0].type, "ri:shader" )
-		self.assertEqual( state[1].type, "ri:surface" )
+		network = shaderNode.attributes()["ri:surface"]
+		self.assertEqual( network[0].type, "ri:shader" )
+		self.assertEqual( network[1].type, "ri:surface" )
 
 	def testAssignmentAttributeName( self ) :
 

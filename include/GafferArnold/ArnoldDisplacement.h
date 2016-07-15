@@ -1,7 +1,6 @@
 //////////////////////////////////////////////////////////////////////////
 //
-//  Copyright (c) 2012, John Haddon. All rights reserved.
-//  Copyright (c) 2013, Image Engine Design Inc. All rights reserved.
+//  Copyright (c) 2016, Image Engine Design Inc. All rights reserved.
 //
 //  Redistribution and use in source and binary forms, with or without
 //  modification, are permitted provided that the following conditions are
@@ -35,26 +34,65 @@
 //
 //////////////////////////////////////////////////////////////////////////
 
-#ifndef GAFFERARNOLD_TYPEIDS_H
-#define GAFFERARNOLD_TYPEIDS_H
+#ifndef GAFFERARNOLD_ARNOLDDISPLACEMENT_H
+#define GAFFERARNOLD_ARNOLDDISPLACEMENT_H
+
+#include "GafferScene/Shader.h"
+
+#include "GafferArnold/TypeIds.h"
 
 namespace GafferArnold
 {
 
-enum TypeId
+/// \todo It's slightly awkward that this inherits from Shader, because
+/// it inherits namePlug(), typePlug() and parametersPlug(), none of
+/// which are needed. We should consider creating a fully abstract Shader
+/// base class and renaming the current Shader class to StandardShader,
+/// or defining an even more general Assignable base class which both
+/// Shader and ArnoldDisplacement can inherit from.
+class ArnoldDisplacement : public GafferScene::Shader
 {
-	ArnoldShaderTypeId = 110900,
-	ArnoldOptionsTypeId = 110901,
-	ArnoldAttributesTypeId = 110902,
-	ArnoldLightTypeId = 110903,
-	ArnoldVDBTypeId = 110904,
-	InteractiveArnoldRenderTypeId = 110905,
-	ArnoldRenderTypeId = 110906,
-	ArnoldDisplacementTypeId = 110907,
 
-	LastTypeId = 110949
+	public :
+
+		ArnoldDisplacement( const std::string &name=defaultName<ArnoldDisplacement>() );
+		virtual ~ArnoldDisplacement();
+
+		IE_CORE_DECLARERUNTIMETYPEDEXTENSION( GafferArnold::ArnoldDisplacement, ArnoldDisplacementTypeId, GafferScene::Shader );
+
+		Gaffer::Plug *mapPlug();
+		const Gaffer::Plug *mapPlug() const;
+
+		Gaffer::FloatPlug *heightPlug();
+		const Gaffer::FloatPlug *heightPlug() const;
+
+		Gaffer::FloatPlug *paddingPlug();
+		const Gaffer::FloatPlug *paddingPlug() const;
+
+		Gaffer::FloatPlug *zeroValuePlug();
+		const Gaffer::FloatPlug *zeroValuePlug() const;
+
+		Gaffer::BoolPlug *autoBumpPlug();
+		const Gaffer::BoolPlug *autoBumpPlug() const;
+
+		Gaffer::Plug *outPlug();
+		const Gaffer::Plug *outPlug() const;
+
+		virtual void attributesHash( IECore::MurmurHash &h ) const;
+		virtual IECore::ConstCompoundObjectPtr attributes() const;
+
+	protected :
+
+		virtual bool acceptsInput( const Gaffer::Plug *plug, const Gaffer::Plug *inputPlug ) const;
+
+	private :
+
+		static size_t g_firstPlugIndex;
+
 };
+
+IE_CORE_DECLAREPTR( ArnoldDisplacement )
 
 } // namespace GafferArnold
 
-#endif // GAFFERARNOLD_TYPEIDS_H
+#endif // GAFFERARNOLD_ARNOLDDISPLACEMENT_H

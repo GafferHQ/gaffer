@@ -163,7 +163,7 @@ void OSLObject::hashProcessedObject( const ScenePath &path, const Gaffer::Contex
 	const OSLShader *shader = runTimeCast<const OSLShader>( shaderPlug()->source<Plug>()->node() );
 	if( shader )
 	{
-		shader->stateHash( h );
+		shader->attributesHash( h );
 	}
 }
 

@@ -359,7 +359,14 @@ IECore::InternedString g_polyMeshSubdivIterationsAttributeName( "ai:polymesh:sub
 IECore::InternedString g_polyMeshSubdivAdaptiveErrorAttributeName( "ai:polymesh:subdiv_adaptive_error" );
 IECore::InternedString g_polyMeshSubdivAdaptiveMetricAttributeName( "ai:polymesh:subdiv_adaptive_metric" );
 IECore::InternedString g_polyMeshSubdivAdaptiveSpaceAttributeName( "ai:polymesh:subdiv_adaptive_space" );
+IECore::InternedString g_polyMeshSubdividePolygonsAttributeName( "ai:polymesh:subdividePolygons" );
 IECore::InternedString g_objectSpace( "object" );
+
+IECore::InternedString g_dispMapAttributeName( "ai:disp_map" );
+IECore::InternedString g_dispHeightAttributeName( "ai:disp_height" );
+IECore::InternedString g_dispPaddingAttributeName( "ai:disp_padding" );
+IECore::InternedString g_dispZeroValueAttributeName( "ai:disp_zero_value" );
+IECore::InternedString g_dispAutoBumpAttributeName( "ai:disp_autobump" );
 
 class ArnoldAttributes : public IECoreScenePreview::Renderer::AttributesInterface
 {
@@ -375,33 +382,98 @@ class ArnoldAttributes : public IECoreScenePreview::Renderer::AttributesInterfac
 				subdivAdaptiveError = attributeValue<float>( g_polyMeshSubdivAdaptiveErrorAttributeName, attributes, 0.0f );
 				subdivAdaptiveMetric = attributeValue<string>( g_polyMeshSubdivAdaptiveMetricAttributeName, attributes, "auto" );
 				subdivAdaptiveSpace = attributeValue<string>( g_polyMeshSubdivAdaptiveSpaceAttributeName, attributes, "raster" );
+				subdividePolygons = attributeValue<bool>( g_polyMeshSubdividePolygonsAttributeName, attributes, false );
 			}
 
 			int subdivIterations;
 			float subdivAdaptiveError;
 			IECore::InternedString subdivAdaptiveMetric;
 			IECore::InternedString subdivAdaptiveSpace;
+			bool subdividePolygons;
+
+			void hash( const IECore::MeshPrimitive *mesh, IECore::MurmurHash &h ) const
+			{
+				if( mesh->interpolation() != "linear" || subdividePolygons )
+				{
+					h.append( subdivIterations );
+					h.append( subdivAdaptiveError );
+					h.append( subdivAdaptiveMetric );
+					h.append( subdivAdaptiveSpace );
+					h.append( subdividePolygons );
+				}
+			}
+
+			void apply( const IECore::MeshPrimitive *mesh, AtNode *node ) const
+			{
+				if( mesh->interpolation() != "linear" || subdividePolygons )
+				{
+					AiNodeSetByte( node, "subdiv_iterations", subdivIterations );
+					AiNodeSetFlt( node, "subdiv_adaptive_error", subdivAdaptiveError );
+					AiNodeSetStr( node, "subdiv_adaptive_metric", subdivAdaptiveMetric.c_str() );
+					AiNodeSetStr( node, "subdiv_adaptive_space", subdivAdaptiveSpace.c_str() );
+					if( mesh->interpolation() == "linear" )
+					{
+						AiNodeSetStr( node, "subdiv_type", "linear" );
+					}
+				}
+			}
+
+		};
+
+		struct Displacement
+		{
+
+			Displacement( const IECore::CompoundObject *attributes, ShaderCache *shaderCache )
+			{
+				if( const IECore::ObjectVector *mapAttribute = attribute<IECore::ObjectVector>( g_dispMapAttributeName, attributes ) )
+				{
+					map = shaderCache->get( mapAttribute );
+				}
+				height = attributeValue<float>( g_dispHeightAttributeName, attributes, 1.0f );
+				padding = attributeValue<float>( g_dispPaddingAttributeName, attributes, 0.0f );
+				zeroValue = attributeValue<float>( g_dispZeroValueAttributeName, attributes, 0.0f );
+				autoBump = attributeValue<bool>( g_dispAutoBumpAttributeName, attributes, false );
+			}
+
+			ArnoldShaderPtr map;
+			float height;
+			float padding;
+			float zeroValue;
+			bool autoBump;
 
 			void hash( IECore::MurmurHash &h ) const
 			{
-				h.append( subdivIterations );
-				h.append( subdivAdaptiveError );
-				h.append( subdivAdaptiveMetric );
-				h.append( subdivAdaptiveSpace );
+				if( map && map->root() )
+				{
+					h.append( AiNodeGetName( map->root() ) );
+				}
+				h.append( height );
+				h.append( padding );
+				h.append( zeroValue );
+				h.append( autoBump );
 			}
 
 			void apply( AtNode *node ) const
 			{
-				AiNodeSetByte( node, "subdiv_iterations", subdivIterations );
-				AiNodeSetFlt( node, "subdiv_adaptive_error", subdivAdaptiveError );
-				AiNodeSetStr( node, "subdiv_adaptive_metric", subdivAdaptiveMetric.c_str() );
-				AiNodeSetStr( node, "subdiv_adaptive_space", subdivAdaptiveSpace.c_str() );
+				if( map && map->root() )
+				{
+					AiNodeSetPtr( node, "disp_map", map->root() );
+				}
+				else
+				{
+					AiNodeResetParameter( node, "disp_map" );
+				}
+
+				AiNodeSetFlt( node, "disp_height", height );
+				AiNodeSetFlt( node, "disp_padding", padding );
+				AiNodeSetFlt( node, "disp_zero_value", zeroValue );
+				AiNodeSetBool( node, "disp_autobump", autoBump );
 			}
 
 		};
 
 		ArnoldAttributes( const IECore::CompoundObject *attributes, ShaderCache *shaderCache )
-			:	visibility( AI_RAY_ALL ), sidedness( AI_RAY_ALL ), shadingFlags( Default ), polyMesh( attributes )
+			:	visibility( AI_RAY_ALL ), sidedness( AI_RAY_ALL ), shadingFlags( Default ), polyMesh( attributes ), displacement( attributes, shaderCache )
 		{
 			updateVisibility( g_cameraVisibilityAttributeName, AI_RAY_CAMERA, attributes );
 			updateVisibility( g_shadowVisibilityAttributeName, AI_RAY_SHADOW, attributes );
@@ -459,6 +531,7 @@ class ArnoldAttributes : public IECoreScenePreview::Renderer::AttributesInterfac
 		ArnoldShaderPtr surfaceShader;
 		IECore::ConstObjectVectorPtr lightShader;
 		PolyMesh polyMesh;
+		Displacement displacement;
 
 		typedef boost::container::flat_map<IECore::InternedString, IECore::ConstDataPtr> UserAttributes;
 		UserAttributes user;
@@ -527,8 +600,8 @@ class Instance
 
 	public :
 
-		Instance( boost::shared_ptr<AtNode> node, bool instanced )
-			:	m_node( node )
+		Instance( boost::shared_ptr<AtNode> node, bool instanced, ArnoldShaderPtr displacementShader )
+			:	m_node( node ), m_displacementShader( displacementShader )
 		{
 			if( instanced && node )
 			{
@@ -547,6 +620,10 @@ class Instance
 
 		boost::shared_ptr<AtNode> m_node;
 		boost::shared_ptr<AtNode> m_ginstance;
+		// The displacement shader is effectively part of the geometry
+		// in Arnold, so the Instance must keep it alive in tandem with
+		// m_node.
+		ArnoldShaderPtr m_displacementShader;
 
 };
 
@@ -562,7 +639,7 @@ class InstanceCache : public IECore::RefCounted
 
 			if( !canInstance( object, arnoldAttributes ) )
 			{
-				return Instance( convert( object, arnoldAttributes ), /* instanced = */ false );
+				return Instance( convert( object, arnoldAttributes ), /* instanced = */ false, arnoldAttributes->displacement.map );
 			}
 
 			IECore::MurmurHash h = object->hash();
@@ -580,7 +657,7 @@ class InstanceCache : public IECore::RefCounted
 				}
 			}
 
-			return Instance( a->second, /* instanced = */ true );
+			return Instance( a->second, /* instanced = */ true, arnoldAttributes->displacement.map );
 		}
 
 		Instance get( const std::vector<const IECore::Object *> &samples, const std::vector<float> &times, const IECoreScenePreview::Renderer::AttributesInterface *attributes )
@@ -589,7 +666,7 @@ class InstanceCache : public IECore::RefCounted
 
 			if( !canInstance( samples.front(), arnoldAttributes ) )
 			{
-				return Instance( convert( samples, times, arnoldAttributes ), /* instanced = */ false );
+				return Instance( convert( samples, times, arnoldAttributes ), /* instanced = */ false, arnoldAttributes->displacement.map );
 			}
 
 			IECore::MurmurHash h;
@@ -615,7 +692,7 @@ class InstanceCache : public IECore::RefCounted
 				}
 			}
 
-			return Instance( a->second, /* instanced = */ true );
+			return Instance( a->second, /* instanced = */ true, arnoldAttributes->displacement.map );
 		}
 
 		// Must not be called concurrently with anything.
@@ -668,12 +745,10 @@ class InstanceCache : public IECore::RefCounted
 		{
 			if( const IECore::MeshPrimitive *mesh = IECore::runTimeCast<const IECore::MeshPrimitive>( object ) )
 			{
-				if( mesh->interpolation() != "linear" )
-				{
-					// Take account of the fact that in `convert()` we will apply poly mesh
-					// attributes to the resulting node.
-					attributes->polyMesh.hash( h );
-				}
+				// Take account of the fact that in `convert()` we will apply poly mesh
+				// attributes to the resulting node.
+				attributes->polyMesh.hash( mesh, h );
+				attributes->displacement.hash( h );
 			}
 		}
 
@@ -690,9 +765,10 @@ class InstanceCache : public IECore::RefCounted
 				return boost::shared_ptr<AtNode>();
 			}
 
-			if( AiNodeIs( node, "polymesh" ) )
+			if( const IECore::MeshPrimitive *mesh = IECore::runTimeCast<const IECore::MeshPrimitive>( object ) )
 			{
-				attributes->polyMesh.apply( node );
+				attributes->polyMesh.apply( mesh, node );
+				attributes->displacement.apply( node );
 			}
 
 			return boost::shared_ptr<AtNode>( node, AiNodeDestroy );
@@ -706,9 +782,10 @@ class InstanceCache : public IECore::RefCounted
 				return boost::shared_ptr<AtNode>();
 			}
 
-			if( AiNodeIs( node, "polymesh" ) )
+			if( const IECore::MeshPrimitive *mesh = IECore::runTimeCast<const IECore::MeshPrimitive>( samples.front() ) )
 			{
-				attributes->polyMesh.apply( node );
+				attributes->polyMesh.apply( mesh, node );
+				attributes->displacement.apply( node );
 			}
 
 			return boost::shared_ptr<AtNode>( node, AiNodeDestroy );
