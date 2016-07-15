@@ -688,7 +688,7 @@ class RendererTest( GafferTest.TestCase ) :
 			self.assertEqual( arnold.AiNodeGetBool( polymesh1, "disp_autobump" ), True )
 			self.assertEqual( arnold.AiNodeGetBool( polymesh2, "disp_autobump" ), True )
 
-	def testSubdivTypeAttribute( self ) :
+	def testSubdividePolygonsAttribute( self ) :
 
 		r = GafferScene.Private.IECoreScenePreview.Renderer.create(
 			"IECoreArnold::Renderer",
@@ -702,15 +702,15 @@ class RendererTest( GafferTest.TestCase ) :
 		meshes["catmullClark"].interpolation = "catmullClark"
 
 		attributes = {}
-		for t in ( "", "none", "linear", "catclark" ) :
+		for t in ( None, False, True ) :
 			a = IECore.CompoundObject()
-			if t :
-				a["ai:polymesh:subdiv_type"] = IECore.StringData( t )
+			if t is not None :
+				a["ai:polymesh:subdividePolygons"] = IECore.BoolData( t )
 			attributes[t] = r.attributes( a )
 
 		for interpolation in meshes.keys() :
-			for subdivType in attributes.keys() :
-				r.object( interpolation + "-" + subdivType, meshes[interpolation], attributes[subdivType] )
+			for subdividePolygons in attributes.keys() :
+				r.object( interpolation + "-" + str( subdividePolygons ), meshes[interpolation], attributes[subdividePolygons] )
 
 		r.render()
 		del r
@@ -720,18 +720,18 @@ class RendererTest( GafferTest.TestCase ) :
 			arnold.AiASSLoad( self.temporaryDirectory() + "/test.ass" )
 
 			for interpolation in meshes.keys() :
-				for subdivType in attributes.keys() :
+				for subdividePolygons in attributes.keys() :
 
-					instance = arnold.AiNodeLookUpByName( interpolation + "-" + subdivType )
+					instance = arnold.AiNodeLookUpByName( interpolation + "-" + str( subdividePolygons ) )
 					self.assertTrue( arnold.AiNodeIs( instance, "ginstance" ) )
 
 					mesh = arnold.AtNode.from_address( arnold.AiNodeGetPtr( instance, "node" ) )
 					self.assertTrue( arnold.AiNodeIs( mesh, "polymesh" ) )
 
-					if subdivType :
-						self.assertEqual( arnold.AiNodeGetStr( mesh, "subdiv_type" ), subdivType )
+					if subdividePolygons and interpolation == "linear" :
+						self.assertEqual( arnold.AiNodeGetStr( mesh, "subdiv_type" ), "linear" )
 					else :
-						self.assertEqual( arnold.AiNodeGetStr( mesh, "subdiv_type" ), "none" if interpolation == "linear" else "catclark" )
+						self.assertEqual( arnold.AiNodeGetStr( mesh, "subdiv_type" ), "catclark" if interpolation == "catmullClark" else "none" )
 
 	def __allNodes( self, type = arnold.AI_NODE_ALL, ignoreBuiltIn = True ) :
 
