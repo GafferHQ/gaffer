@@ -73,8 +73,8 @@ def __shadingSummary( plug ) :
 def __subdivisionSummary( plug ) :
 
 	info = []
-	if plug["subdivType"]["enabled"].getValue() :
-		info.append( "Type %s" % string.capwords( plug["subdivType"]["value"].getValue() ) )
+	if plug["subdividePolygons"]["enabled"].getValue() :
+		info.append( "Subdivide Polygons " + "On" if plug["subdividePolygons"]["value"].getValue() else "Off" )
 	if plug["subdivIterations"]["enabled"].getValue() :
 		info.append( "Iterations %d" % plug["subdivIterations"]["value"].getValue() )
 	if plug["subdivAdaptiveError"]["enabled"].getValue() :
@@ -250,22 +250,19 @@ Gaffer.Metadata.registerNode(
 
 		# Subdivision
 
-		"attributes.subdivType" : [
+		"attributes.subdividePolygons" : [
 
 			"description",
 			"""
-			The type of subdivision to apply to mesh geometry.
-			By default, polygon meshes are not subdivided and
-			subdivision meshes are, but this attribute allows
-			that behaviour to be overridden.
-
-			> Tip : Use "Linear" subdivision to subdivide polygon
-			> meshes so they can have more detailed displacement
-			> applied, or to improve the appearance of mesh lights.
+			Causes polygon meshes to be rendered with Arnold's
+			subdiv_type parameter set to "linear" rather than
+			"none". This can be used to increase detail when
+			using polygons with displacement shaders and/or mesh
+			lights.
 			""",
 
 			"layout:section", "Subdivision",
-			"label", "Type",
+			"label", "Subdivide Polygons",
 
 		],
 
