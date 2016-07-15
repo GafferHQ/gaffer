@@ -964,7 +964,16 @@ class ArnoldLight : public ArnoldObject
 
 			if( AiNodeIs( m_lightShader->root(), "mesh_light" ) )
 			{
-				AiNodeSetPtr( m_lightShader->root(), "mesh", m_instance.node() );
+				if( m_instance.node() )
+				{
+					AiNodeSetPtr( m_lightShader->root(), "mesh", m_instance.node() );
+				}
+				else
+				{
+					// Don't output mesh_lights from locations with no object
+					m_lightShader = NULL;
+					return;
+				}
 			}
 
 			applyTransform();
