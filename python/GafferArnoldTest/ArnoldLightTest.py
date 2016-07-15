@@ -1,6 +1,6 @@
 ##########################################################################
 #
-#  Copyright (c) 2015, Image Engine Design Inc. All rights reserved.
+#  Copyright (c) 2016, Image Engine Design Inc. All rights reserved.
 #
 #  Redistribution and use in source and binary forms, with or without
 #  modification, are permitted provided that the following conditions are
@@ -34,33 +34,44 @@
 #
 ##########################################################################
 
-import Gaffer
-import GafferRenderMan
+import arnold
 
-Gaffer.Metadata.registerNode(
+import IECore
+import IECoreArnold
 
-	GafferRenderMan.RenderManLight,
+import GafferSceneTest
+import GafferArnold
 
-	"description",
-	"""
-	Loads a RenderMan light shader and uses
-	it to output a scene with a single light.
-	""",
+class ArnoldLightTest( GafferSceneTest.SceneTestCase ) :
 
-)
+	def testUsesShaders( self ) :
 
-Gaffer.Metadata.registerValue( "ri:light:spotlight", "type", "spot" )
-Gaffer.Metadata.registerValue( "ri:light:spotlight", "coneAngleParameter", "coneangle" )
-Gaffer.Metadata.registerValue( "ri:light:spotlight", "penumbraAngleParameter", "conedeltaangle" )
-Gaffer.Metadata.registerValue( "ri:light:spotlight", "penumbraType", "inset" )
-Gaffer.Metadata.registerValue( "ri:light:spotlight", "angleUnit", "radians" )
-Gaffer.Metadata.registerValue( "ri:light:spotlight", "intensityParameter", "intensity" )
-Gaffer.Metadata.registerValue( "ri:light:spotlight", "colorParameter", "lightcolor" )
+		l = GafferArnold.ArnoldLight()
+		l.loadShader( "point_light" )
 
-Gaffer.Metadata.registerValue( "ri:light:pointlight", "type", "point" )
-Gaffer.Metadata.registerValue( "ri:light:pointlight", "intensityParameter", "intensity" )
-Gaffer.Metadata.registerValue( "ri:light:pointlight", "colorParameter", "lightcolor" )
+		n = l["out"].attributes( "/light" )["ai:light"]
+		self.assertTrue( isinstance( n, IECore.ObjectVector ) )
+		self.assertEqual( len( n ), 1 )
+		self.assertTrue( isinstance( n[0], IECore.Shader ) )
+		self.assertEqual( n[0].type, "ai:light" )
+		self.assertEqual( n[0].name, "point_light" )
 
-Gaffer.Metadata.registerValue( "ri:light:distantlight", "type", "distant" )
-Gaffer.Metadata.registerValue( "ri:light:distantlight", "intensityParameter", "intensity" )
-Gaffer.Metadata.registerValue( "ri:light:distantlight", "colorParameter", "lightcolor" )
+	def testLoadAllLightsWithoutWarnings( self ) :
+
+		lightNames = []
+		with IECoreArnold.UniverseBlock() :
+			it = arnold.AiUniverseGetNodeEntryIterator( arnold.AI_NODE_LIGHT )
+			while not arnold.AiNodeEntryIteratorFinished( it ) :
+				nodeEntry = arnold.AiNodeEntryIteratorGetNext( it )
+				lightNames.append( arnold.AiNodeEntryGetName( nodeEntry ) )
+
+		self.longMessage = True
+
+		for lightName in lightNames :
+			with IECore.CapturingMessageHandler() as mh :
+				l = GafferArnold.ArnoldLight()
+				l.loadShader( lightName )
+				self.assertEqual( [ m.message for m in mh.messages ], [], "Error loading %s" % lightName )
+
+if __name__ == "__main__":
+	unittest.main()

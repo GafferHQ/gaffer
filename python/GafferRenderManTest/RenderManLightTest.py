@@ -55,7 +55,7 @@ class RenderManLightTest( GafferRenderManTest.RenderManTestCase ) :
 		self.assertTrue( isinstance( lightObject, IECore.NullObject ) )
 
 		light = n["out"].attributes( "/light" )["ri:light"][-1]
-		self.assertTrue( isinstance( light, IECore.Light ) )
+		self.assertTrue( isinstance( light, IECore.Shader ) )
 		self.assertEqual( light.parameters["intensity"].value, 1 )
 
 		n["parameters"]["intensity"].setValue( 10 )

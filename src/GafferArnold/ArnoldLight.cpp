@@ -91,7 +91,7 @@ void ArnoldLight::hashLight( const Gaffer::Context *context, IECore::MurmurHash 
 
 IECore::ObjectVectorPtr ArnoldLight::computeLight( const Gaffer::Context *context ) const
 {
-	IECore::LightPtr result = new IECore::Light( "ai:" + shaderNamePlug()->getValue() );
+	IECore::ShaderPtr result = new IECore::Shader( shaderNamePlug()->getValue(), "ai:light" );
 	for( InputValuePlugIterator it( parametersPlug() ); !it.done(); ++it )
 	{
 		result->parameters()[(*it)->getName()] = CompoundDataPlug::extractDataFromPlug( it->get() );

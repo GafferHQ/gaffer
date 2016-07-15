@@ -34,6 +34,8 @@
 //
 //////////////////////////////////////////////////////////////////////////
 
+#include "IECore/Shader.h"
+
 #include "Gaffer/CompoundDataPlug.h"
 #include "Gaffer/StringPlug.h"
 
@@ -76,7 +78,7 @@ void RenderManLight::hashLight( const Gaffer::Context *context, IECore::MurmurHa
 
 IECore::ObjectVectorPtr RenderManLight::computeLight( const Gaffer::Context *context ) const
 {
-	IECore::LightPtr result = new IECore::Light( "ri:" + shaderNamePlug()->getValue() );
+	IECore::ShaderPtr result = new IECore::Shader( shaderNamePlug()->getValue(), "ri:light" );
 	for( InputValuePlugIterator it( parametersPlug() ); !it.done(); ++it )
 	{
 		result->parameters()[(*it)->getName()] = CompoundDataPlug::extractDataFromPlug( it->get() );

@@ -35,6 +35,8 @@
 #
 ##########################################################################
 
+import functools
+
 import arnold
 
 import IECore
@@ -57,15 +59,18 @@ def appendShaders( menuDefinition, prefix="/Arnold" ) :
 
 			if arnold.AiNodeEntryGetType( nodeEntry ) == arnold.AI_NODE_SHADER :
 				menuPath = prefix + "/Shader/" + displayName
-				nodeType = GafferArnold.ArnoldShader
+				nodeCreator = functools.partial( __shaderCreator, shaderName, GafferArnold.ArnoldShader )
 			else :
 				menuPath = prefix + "/Light/" + displayName
-				nodeType = GafferArnold.ArnoldLight
+				if shaderName != "mesh_light" :
+					nodeCreator = functools.partial( __shaderCreator, shaderName, GafferArnold.ArnoldLight )
+				else :
+					nodeCreator = GafferArnold.ArnoldMeshLight
 
 			menuDefinition.append(
 				menuPath,
 				{
-					"command" : GafferUI.NodeMenu.nodeCreatorWrapper( IECore.curry( __shaderCreator, shaderName, nodeType ) ),
+					"command" : GafferUI.NodeMenu.nodeCreatorWrapper( nodeCreator ),
 					"searchText" : "ai" + displayName.replace( " ", "" ),
 				}
 			)

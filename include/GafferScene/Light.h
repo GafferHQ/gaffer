@@ -37,8 +37,6 @@
 #ifndef GAFFERSCENE_LIGHT_H
 #define GAFFERSCENE_LIGHT_H
 
-#include "IECore/Light.h"
-
 #include "GafferScene/ObjectSource.h"
 
 namespace GafferScene
