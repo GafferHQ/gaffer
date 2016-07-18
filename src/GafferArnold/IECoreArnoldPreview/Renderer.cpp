@@ -255,9 +255,9 @@ class ArnoldShader : public IECore::RefCounted
 
 	public :
 
-		ArnoldShader( const IECore::ObjectVector *shader )
+		ArnoldShader( const IECore::ObjectVector *shaderNetwork, const std::string &namePrefix = "" )
 		{
-			m_nodes = ShaderAlgo::convert( shader, "shader" + shader->Object::hash().toString() + "_" );
+			m_nodes = ShaderAlgo::convert( shaderNetwork, namePrefix );
 		}
 
 		virtual ~ArnoldShader()
@@ -293,7 +293,7 @@ class ShaderCache : public IECore::RefCounted
 			m_cache.insert( a, shader->Object::hash() );
 			if( !a->second )
 			{
-				a->second = new ArnoldShader( shader );
+				a->second = new ArnoldShader( shader, "shader:" + shader->Object::hash().toString() + ":" );
 			}
 			return a->second;
 		}
@@ -960,17 +960,10 @@ class ArnoldLight : public ArnoldObject
 				return;
 			}
 
-			m_lightShader = new ArnoldShader( arnoldAttributes->lightShader.get() );
+			m_lightShader = new ArnoldShader( arnoldAttributes->lightShader.get(), "light:" + m_name + ":" );
 
-			// Give light shader a more meaningful name.
-
-			string name = m_name;
-			if( m_instance.node() )
-			{
-				// Distinguish from shape, which will already have been
-				// named m_name.
-				name += string( "_" ) + AiNodeGetName( m_lightShader->root() );
-			}
+			// Simplify name for the root shader, for ease of reading of ass files.
+			const std::string name = "light:" + m_name;
 			AiNodeSetStr( m_lightShader->root(), "name", name.c_str() );
 
 			// Deal with mesh_lights.
