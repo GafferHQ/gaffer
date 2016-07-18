@@ -65,7 +65,7 @@ class ArnoldDisplacementTest( GafferSceneTest.SceneTestCase ) :
 				"ai:disp_height" : IECore.FloatData( 2.5 ),
 				"ai:disp_padding" : IECore.FloatData( 25 ),
 				"ai:disp_zero_value" : IECore.FloatData( .25 ),
-				"ai:disp_auto_bump" : IECore.BoolData( True ),
+				"ai:disp_autobump" : IECore.BoolData( True ),
 			} )
 		)
 
