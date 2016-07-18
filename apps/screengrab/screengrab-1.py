@@ -132,6 +132,18 @@ class screengrab( Gaffer.Application ) :
 				),
 
 				IECore.CompoundParameter(
+					name = "nodeGraph",
+					description = "Parameters that configure NodeGraphs.",
+					members = [
+						IECore.StringVectorParameter(
+							name = "frame",
+							description = "The names of nodes to frame in the NodeGraph.",
+							defaultValue = IECore.StringVectorData(),
+						),
+					],
+				),
+
+				IECore.CompoundParameter(
 					name = "scene",
 					description = "Parameters that configure the scene.",
 					members = [
@@ -249,7 +261,10 @@ class screengrab( Gaffer.Application ) :
 		self.__waitForIdle()
 
 		for nodeGraph in scriptWindow.getLayout().editors( GafferUI.NodeGraph ) :
-			nodeGraph.frame( script.children( Gaffer.Node ) )
+			if args["nodeGraph"]["frame"] :
+				nodeGraph.frame( [ script.descendant( n ) for n in args["nodeGraph"]["frame"] ] )
+			else :
+				nodeGraph.frame( script.children( Gaffer.Node ) )
 
 		# Set up the NodeEditors as requested.
 
