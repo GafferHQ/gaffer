@@ -174,7 +174,8 @@ class _ShaderNamePlugValueWidget( GafferUI.PlugValueWidget ) :
 	def __buttonClicked( self, button ) :
 
 		node = self.getPlug().node()
-		node.shaderLoader().clear()
+		if hasattr( node, "shaderLoader" ) :
+			node.shaderLoader().clear()
 
 		with Gaffer.UndoContext( node.ancestor( Gaffer.ScriptNode ) ) :
 			node.loadShader( node["name"].getValue(), keepExistingValues = True )
