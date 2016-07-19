@@ -58,11 +58,14 @@ ArnoldOptions::ArnoldOptions( const std::string &name )
 
 	// Ray depth parameters
 
+	options->addOptionalMember( "ai:GI_total_depth", new IECore::IntData( 10 ), "giTotalDepth", Gaffer::Plug::Default, false );
 	options->addOptionalMember( "ai:GI_diffuse_depth", new IECore::IntData( 2 ), "giDiffuseDepth", Gaffer::Plug::Default, false );
 	options->addOptionalMember( "ai:GI_glossy_depth", new IECore::IntData( 2 ), "giGlossyDepth", Gaffer::Plug::Default, false );
 	options->addOptionalMember( "ai:GI_reflection_depth", new IECore::IntData( 2 ), "giReflectionDepth", Gaffer::Plug::Default, false );
 	options->addOptionalMember( "ai:GI_refraction_depth", new IECore::IntData( 2 ), "giRefractionDepth", Gaffer::Plug::Default, false );
 	options->addOptionalMember( "ai:GI_volume_depth", new IECore::IntData( 0 ), "giVolumeDepth", Gaffer::Plug::Default, false );
+	options->addOptionalMember( "ai:auto_transparency_depth", new IECore::IntData( 10 ), "autoTransparencyDepth", Gaffer::Plug::Default, false );
+	options->addOptionalMember( "ai:auto_transparency_threshold", new IECore::FloatData( 0.99 ), "autoTransparencyThreshold", Gaffer::Plug::Default, false );
 
 	// Ignore parameters
 

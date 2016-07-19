@@ -61,6 +61,8 @@ def __samplingSummary( plug ) :
 def __rayDepthSummary( plug ) :
 
 	info = []
+	if plug["giTotalDepth"]["enabled"].getValue() :
+		info.append( "Total %d" % plug["giTotalDepth"]["value"].getValue() )
 	if plug["giDiffuseDepth"]["enabled"].getValue() :
 		info.append( "Diffuse %d" % plug["giDiffuseDepth"]["value"].getValue() )
 	if plug["giGlossyDepth"]["enabled"].getValue() :
@@ -71,6 +73,10 @@ def __rayDepthSummary( plug ) :
 		info.append( "Refraction %d" % plug["giRefractionDepth"]["value"].getValue() )
 	if plug["giVolumeDepth"]["enabled"].getValue() :
 		info.append( "Volume %d" % plug["giVolumeDepth"]["value"].getValue() )
+	if plug["autoTransparencyDepth"]["enabled"].getValue() :
+		info.append( "Transparency %d" % plug["autoTransparencyDepth"]["value"].getValue() )
+	if plug["autoTransparencyThreshold"]["enabled"].getValue() :
+		info.append( "Threshold %s" % GafferUI.NumericWidget.valueToString( plug["autoTransparencyThreshold"]["value"].getValue() ) )
 	return ", ".join( info )
 
 
@@ -265,6 +271,19 @@ Gaffer.Metadata.registerNode(
 
 		# Ray Depth
 
+		"options.giTotalDepth" : [
+
+			"description",
+			"""
+			The maximum depth of any ray (Diffuse + Glossy +
+			Reflection + Refraction + Volume).
+			""",
+
+			"layout:section", "Ray Depth",
+			"label", "Total Depth",
+
+		],
+
 		"options.giDiffuseDepth" : [
 
 			"description",
@@ -329,6 +348,31 @@ Gaffer.Metadata.registerNode(
 			"layout:section", "Ray Depth",
 			"label", "Volume Depth",
 
+		],
+
+		"options.autoTransparencyDepth" : [
+
+			"description",
+			"""
+			The number of allowable transparent layers - after
+			this the last object will be treated as opaque.
+			""",
+
+			"layout:section", "Ray Depth",
+			"label", "Transparency Depth",
+
+		],
+
+		"options.autoTransparencyThreshold" : [
+
+			"description",
+			"""
+			A threshold for accumulated opacity, after which the
+			last object will be treated as opaque.
+			""",
+
+			"layout:section", "Ray Depth",
+			"label", "Opacity Threshold",
 		],
 
 		# Features
