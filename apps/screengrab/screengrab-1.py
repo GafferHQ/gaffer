@@ -128,6 +128,16 @@ class screengrab( Gaffer.Application ) :
 							defaultValue = 0,
 							minValue = 0,
 						),
+						IECore.StringVectorParameter(
+							name = "framedObjects",
+							description = "The names of objects to frame in the Viewer.",
+							defaultValue = IECore.StringVectorData(),
+						),
+						IECore.V3fParameter(
+							name = "viewDirection",
+							description = "The direction to view the framed objects in.",
+							defaultValue = IECore.V3f( -0.64, -0.422, -0.64 ),
+						),
 					]
 				),
 
@@ -294,6 +304,14 @@ class screengrab( Gaffer.Application ) :
 		for viewer in scriptWindow.getLayout().editors( GafferUI.Viewer ) :
 			if isinstance( viewer.view(), GafferSceneUI.SceneView ) :
 				viewer.view()["minimumExpansionDepth"].setValue( args["viewer"]["minimumExpansionDepth"].value )
+				if args["viewer"]["framedObjects"] :
+					bound = IECore.Box3f()
+					for path in args["viewer"]["framedObjects"] :
+						objectBound = viewer.view()["in"].bound( path )
+						objectFullTransform = viewer.view()["in"].fullTransform( path )
+						bound.extendBy( objectBound.transform( objectFullTransform ) )
+					viewer.view().viewportGadget().frame( bound, args["viewer"]["viewDirection"].value.normalized() )
+
 		del viewer
 
 		# Set up the scene expansion and selection.
