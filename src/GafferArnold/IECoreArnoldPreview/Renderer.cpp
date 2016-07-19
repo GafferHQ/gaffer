@@ -1245,6 +1245,16 @@ class ArnoldRenderer : public IECoreScenePreview::Renderer
 				}
 				cortexCamera = m_cameras["ieCoreArnold:defaultCamera"].get();
 				AiNodeSetPtr( options, "camera", AiNodeLookUpByName( "ieCoreArnold:defaultCamera" ) );
+
+				IECore::msg( IECore::Msg::Warning, "IECoreArnold::Renderer::updateCamera", "Failed to find camera: " + m_cameraName );
+				IECore::msg( IECore::Msg::Warning, "IECoreArnold::Renderer::updateCamera", "Falling back to default camera" );
+
+				std::string candidateCameras = "";
+				for(CameraMap::iterator iter = m_cameras.begin(); iter != m_cameras.end(); ++iter)
+				{
+					candidateCameras += iter->first + " ";
+				}
+				IECore::msg( IECore::Msg::Warning, "IECoreArnold::Renderer::updateCamera", "Candidate cameras were: " + candidateCameras );
 			}
 
 			const IECore::V2iData *resolution = cortexCamera->parametersData()->member<IECore::V2iData>( "resolution" );
