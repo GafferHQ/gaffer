@@ -309,6 +309,12 @@ class RendererServices : public OSL::RendererServices
 // OSLExpressionEngine
 //////////////////////////////////////////////////////////////////////////
 
+typedef pair<string, string> Replacement;
+bool replacementGreater( const Replacement &lhs, const Replacement &rhs )
+{
+	return lhs.first.size() > rhs.first.size();
+}
+
 class OSLExpressionEngine : public Gaffer::Expression::Engine
 {
 
@@ -546,7 +552,8 @@ class OSLExpressionEngine : public Gaffer::Expression::Engine
 
 		virtual std::string replace( const Expression *node, const std::string &expression, const std::vector<const ValuePlug *> &oldPlugs, const std::vector<const ValuePlug *> &newPlugs ) const
 		{
-			string result = expression;
+			vector<Replacement> replacements;
+
 			vector<const ValuePlug *>::const_iterator newIt = newPlugs.begin();
 			for( vector<const ValuePlug *>::const_iterator oldIt = oldPlugs.begin(), oldEIt = oldPlugs.end(); oldIt != oldEIt; ++oldIt, ++newIt )
 			{
@@ -569,7 +576,18 @@ class OSLExpressionEngine : public Gaffer::Expression::Engine
 						replacement = "_disconnected" + type;
 					}
 				}
-				replace_all( result, identifier( node, *oldIt ), replacement );
+				replacements.push_back( Replacement( identifier( node, *oldIt ), replacement ) );
+			}
+
+			// Sort the replacements so that we'll replace the longest identifier first.
+			// Otherwise a shorter replacement can be used inadvertently if it is a prefix
+			// of a longer one.
+			sort( replacements.begin(), replacements.end(), replacementGreater );
+
+			string result = expression;
+			for( vector<Replacement>::const_iterator it = replacements.begin(), eIt = replacements.end(); it != eIt; ++it )
+			{
+				replace_all( result, it->first, it->second );
 			}
 
 			return result;
