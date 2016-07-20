@@ -321,5 +321,18 @@ class SubTreeTest( GafferSceneTest.SceneTestCase ) :
 		self.assertEqual( s["out"]["setNames"].hash(), g["out"]["setNames"].hash() )
 		self.assertTrue( s["out"]["setNames"].getValue( _copy = False ).isSame( g["out"]["setNames"].getValue( _copy = False ) ) )
 
+	def testInvalidRoot( self ) :
+
+		p = GafferScene.Plane()
+
+		g = GafferScene.Group()
+		g["in"][0].setInput( p["out"] )
+
+		s = GafferScene.SubTree()
+		s["in"].setInput( g["out"] )
+		s["root"].setValue( "notAThing" )
+
+		self.assertRaisesRegexp( RuntimeError, r"Root \"notAThing\" does not exist", s["out"].childNames, "/" )
+
 if __name__ == "__main__":
 	unittest.main()
