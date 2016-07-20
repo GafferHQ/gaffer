@@ -60,7 +60,7 @@ Now we can create a SceneReader node to load a model, set the values of its plug
 
 ```
 read = GafferScene.SceneReader( "Cow" )
-read["fileName"].setValue( "${GAFFER_ROOT}/doc/examples/data/cow.scc" )
+read["fileName"].setValue( "${GAFFER_ROOT}/resources/cow/cow.scc" )
 script.addChild( read )
 ```
 
@@ -109,7 +109,7 @@ def __iWantAPony( menu ) :
 	with Gaffer.UndoContext( script ) :
 
 		read = GafferScene.SceneReader( "Cow" )
-		read["fileName"].setValue( "${GAFFER_ROOT}/doc/examples/data/cow.scc" )
+		read["fileName"].setValue( "${GAFFER_ROOT}/resources/cow/cow.scc" )
 		script.addChild( read )
 
 		duplicate = GafferScene.Duplicate( "Herd" )

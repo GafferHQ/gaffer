@@ -1048,12 +1048,8 @@ def buildDocs( target, source, env ) :
 
 if conf.checkSphinx() :
 
-	examples = commandEnv.Install( "$BUILD_DIR/doc", "doc/examples" )
-	commandEnv.Alias( "docs", examples )
-
 	docs = commandEnv.Command( "$BUILD_DIR/doc/gaffer/html/index.html", "doc/source", buildDocs )
 	commandEnv.Depends( docs, "build" )
-	commandEnv.Depends( docs, examples )
 	commandEnv.AlwaysBuild( docs )
 	commandEnv.NoCache( docs )
 	commandEnv.Alias( "docs", docs )
