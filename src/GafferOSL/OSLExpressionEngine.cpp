@@ -287,7 +287,7 @@ class RendererServices : public OSL::RendererServices
 						return true;
 					case StringPlugTypeId :
 					{
-						InternedString s = static_cast<const StringPlug *>( plug )->getValue();
+						ustring s( static_cast<const StringPlug *>( plug )->getValue() );
 						*(const char **)value = s.c_str();
 						return true;
 					}
