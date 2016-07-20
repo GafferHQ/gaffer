@@ -69,7 +69,7 @@ namespace
 {
 
 template<typename T>
-T parameter( InternedString metadataTarget, const IECore::Light *lightShader, InternedString parameterNameMetadata, T defaultValue )
+T parameter( InternedString metadataTarget, const IECore::CompoundData *parameters, InternedString parameterNameMetadata, T defaultValue )
 {
 	ConstStringDataPtr parameterName = Metadata::value<StringData>( metadataTarget, parameterNameMetadata );
 	if( !parameterName )
@@ -78,8 +78,7 @@ T parameter( InternedString metadataTarget, const IECore::Light *lightShader, In
 	}
 
 	typedef IECore::TypedData<T> DataType;
-	/// \todo Add a const version of Light::parametersData() so we don't need the cast.
-	if( const DataType *parameterData = const_cast<IECore::Light *>( lightShader )->parametersData()->member<DataType>( parameterName->readable() ) )
+	if( const DataType *parameterData = parameters->member<DataType>( parameterName->readable() ) )
 	{
 		return parameterData->readable();
 	}
@@ -282,40 +281,51 @@ void StandardLightVisualiser::addBasicLightVisualiser( ConstStringDataPtr type, 
 	output->addChild( const_pointer_cast<IECoreGL::Renderable>( colorIndicator( multiplier, indicatorFaceCamera ) ) );
 }
 
-IECoreGL::ConstRenderablePtr StandardLightVisualiser::visualise( const IECore::ObjectVector *shaderVector, IECoreGL::ConstStatePtr &state ) const
+IECoreGL::ConstRenderablePtr StandardLightVisualiser::visualise( const IECore::InternedString &attributeName, const IECore::ObjectVector *shaderVector, IECoreGL::ConstStatePtr &state ) const
 {
 	if( !shaderVector || shaderVector->members().size() == 0 )
 	{
 		return NULL;
 	}
 
-	const IECore::Light *lightShader = runTimeCast<const IECore::Light>(
-		 shaderVector->members()[ shaderVector->members().size() - 1 ] ).get();
-	if( !lightShader )
+	IECore::InternedString metadataTarget;
+	const IECore::CompoundData *shaderParameters = NULL;
+	if( const IECore::Shader *shader = IECore::runTimeCast<const IECore::Shader>( shaderVector->members().back().get() ) )
+	{
+		metadataTarget = attributeName.string() + ":" + shader->getName();
+		shaderParameters = shader->parametersData();
+	}
+	else if( const IECore::Light *light = IECore::runTimeCast<const IECore::Light>( shaderVector->members().back().get() ) )
+	{
+		/// \todo Remove once all Light node derived classes are
+		/// creating only shaders.
+		metadataTarget = attributeName.string() + ":" + light->getName();
+		shaderParameters = light->parametersData().get();
+	}
+
+	if( !shaderParameters )
 	{
 		return NULL;
 	}
 
-	InternedString metadataTarget = "light:" + lightShader->getName();
-
 	ConstStringDataPtr type = Metadata::value<StringData>( metadataTarget, "type" );
 	ConstM44fDataPtr orientation = Metadata::value<M44fData>( metadataTarget, "visualiserOrientation" );
 
-	const Color3f color = parameter<Color3f>( metadataTarget, lightShader, "colorParameter", Color3f( 1.0f ) );
-	const float intensity = parameter<float>( metadataTarget, lightShader, "intensityParameter", 1 );
-	const float exposure = parameter<float>( metadataTarget, lightShader, "exposureParameter", 0 );
+	const Color3f color = parameter<Color3f>( metadataTarget, shaderParameters, "colorParameter", Color3f( 1.0f ) );
+	const float intensity = parameter<float>( metadataTarget, shaderParameters, "intensityParameter", 1 );
+	const float exposure = parameter<float>( metadataTarget, shaderParameters, "exposureParameter", 0 );
 
 	const Color3f finalColor = color * intensity * pow( 2.0f, exposure );
 
 	if( type && type->readable() == "area" )
 	{
-		const std::string textureName = parameter<std::string>( metadataTarget, lightShader, "textureNameParameter", "" );
-		const bool flipNormal = parameter<bool>( metadataTarget, lightShader, "flipNormalParameter", 0 );
-		const bool doubleSided = parameter<bool>( metadataTarget, lightShader, "doubleSidedParameter", 0 );
-		const bool sphericalProjection = parameter<bool>( metadataTarget, lightShader, "sphericalProjectionParameter", 0 );
+		const std::string textureName = parameter<std::string>( metadataTarget, shaderParameters, "textureNameParameter", "" );
+		const bool flipNormal = parameter<bool>( metadataTarget, shaderParameters, "flipNormalParameter", 0 );
+		const bool doubleSided = parameter<bool>( metadataTarget, shaderParameters, "doubleSidedParameter", 0 );
+		const bool sphericalProjection = parameter<bool>( metadataTarget, shaderParameters, "sphericalProjectionParameter", 0 );
 
-		M44f projectionTransform = parameter<M44f>( metadataTarget, lightShader, "projectionTransformParameter", M44f() );
-		const std::vector<float> projectionTransformVector = parameter<std::vector<float> >( metadataTarget, lightShader, "projectionTransformParameter", std::vector<float>() );
+		M44f projectionTransform = parameter<M44f>( metadataTarget, shaderParameters, "projectionTransformParameter", M44f() );
+		const std::vector<float> projectionTransformVector = parameter<std::vector<float> >( metadataTarget, shaderParameters, "projectionTransformParameter", std::vector<float>() );
 		if( projectionTransformVector.size() == 16 )
 		{
 			projectionTransform = M44f( (float(*)[4])(&projectionTransformVector[0]) );
@@ -327,7 +337,7 @@ IECoreGL::ConstRenderablePtr StandardLightVisualiser::visualise( const IECore::O
 
 	GroupPtr result = new Group;
 
-	const float locatorScale = parameter<float>( metadataTarget, lightShader, "locatorScaleParameter", 1 );
+	const float locatorScale = parameter<float>( metadataTarget, shaderParameters, "locatorScaleParameter", 1 );
 	Imath::M44f topTrans;
 	if( orientation )
 	{
@@ -338,13 +348,13 @@ IECoreGL::ConstRenderablePtr StandardLightVisualiser::visualise( const IECore::O
 
 	if( type && type->readable() == "environment" )
 	{
-		const std::string textureName = parameter<std::string>( metadataTarget, lightShader, "textureNameParameter", "" );
+		const std::string textureName = parameter<std::string>( metadataTarget, shaderParameters, "textureNameParameter", "" );
 		addEnvLightVisualiser( result, finalColor, textureName );
 	}
 	else
 	{
-		float coneAngle = parameter<float>( metadataTarget, lightShader, "coneAngleParameter", 0.0f );
-		float penumbraAngle = parameter<float>( metadataTarget, lightShader, "penumbraAngleParameter", 0.0f );
+		float coneAngle = parameter<float>( metadataTarget, shaderParameters, "coneAngleParameter", 0.0f );
+		float penumbraAngle = parameter<float>( metadataTarget, shaderParameters, "penumbraAngleParameter", 0.0f );
 
 		if( ConstStringDataPtr angleUnit = Metadata::value<StringData>( metadataTarget, "angleUnit" ) )
 		{

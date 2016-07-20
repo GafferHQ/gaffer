@@ -255,9 +255,9 @@ class ArnoldShader : public IECore::RefCounted
 
 	public :
 
-		ArnoldShader( const IECore::ObjectVector *shader )
+		ArnoldShader( const IECore::ObjectVector *shaderNetwork, const std::string &namePrefix = "" )
 		{
-			m_nodes = ShaderAlgo::convert( shader, "shader" + shader->Object::hash().toString() + "_" );
+			m_nodes = ShaderAlgo::convert( shaderNetwork, namePrefix );
 		}
 
 		virtual ~ArnoldShader()
@@ -293,7 +293,7 @@ class ShaderCache : public IECore::RefCounted
 			m_cache.insert( a, shader->Object::hash() );
 			if( !a->second )
 			{
-				a->second = new ArnoldShader( shader );
+				a->second = new ArnoldShader( shader, "shader:" + shader->Object::hash().toString() + ":" );
 			}
 			return a->second;
 		}
@@ -914,7 +914,7 @@ class ArnoldObject : public IECoreScenePreview::Renderer::ObjectInterface
 
 		}
 
-	private :
+	protected :
 
 		Instance m_instance;
 		ArnoldShaderPtr m_shader;
@@ -951,12 +951,37 @@ class ArnoldLight : public ArnoldObject
 		{
 			ArnoldObject::attributes( attributes );
 			const ArnoldAttributes *arnoldAttributes = static_cast<const ArnoldAttributes *>( attributes );
+
+			// Update light shader.
+
 			m_lightShader = NULL;
-			if( arnoldAttributes->lightShader )
+			if( !arnoldAttributes->lightShader )
 			{
-				m_lightShader = new ArnoldShader( arnoldAttributes->lightShader.get() );
-				AiNodeSetStr( m_lightShader->root(), "name", m_name.c_str() );
+				return;
 			}
+
+			m_lightShader = new ArnoldShader( arnoldAttributes->lightShader.get(), "light:" + m_name + ":" );
+
+			// Simplify name for the root shader, for ease of reading of ass files.
+			const std::string name = "light:" + m_name;
+			AiNodeSetStr( m_lightShader->root(), "name", name.c_str() );
+
+			// Deal with mesh_lights.
+
+			if( AiNodeIs( m_lightShader->root(), "mesh_light" ) )
+			{
+				if( m_instance.node() )
+				{
+					AiNodeSetPtr( m_lightShader->root(), "mesh", m_instance.node() );
+				}
+				else
+				{
+					// Don't output mesh_lights from locations with no object
+					m_lightShader = NULL;
+					return;
+				}
+			}
+
 			applyTransform();
 		}
 

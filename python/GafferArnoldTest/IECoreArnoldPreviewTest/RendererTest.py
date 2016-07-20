@@ -34,6 +34,7 @@
 #
 ##########################################################################
 
+import ctypes
 import unittest
 
 import arnold
@@ -253,7 +254,7 @@ class RendererTest( GafferTest.TestCase ) :
 
 			lights = self.__allNodes( type = arnold.AI_NODE_LIGHT )
 			self.assertEqual( len( lights ), 1 )
-			self.assertEqual( arnold.AiNodeGetName( lights[0] ), "testLight" )
+			self.assertEqual( "light:testLight", arnold.AiNodeGetName( lights[0] ) )
 
 	def testSharedLightAttributes( self ) :
 
@@ -283,7 +284,7 @@ class RendererTest( GafferTest.TestCase ) :
 
 			lights = self.__allNodes( type = arnold.AI_NODE_LIGHT )
 			self.assertEqual( len( lights ), 2 )
-			self.assertEqual( set( [ arnold.AiNodeGetName( l ) for l in lights ] ), { "testLight1", "testLight2" } )
+			self.assertEqual( set( [ arnold.AiNodeGetName( l ) for l in lights ] ), { "light:testLight1", "light:testLight2" } )
 
 	def testAttributes( self ) :
 
@@ -548,7 +549,6 @@ class RendererTest( GafferTest.TestCase ) :
 		with IECoreArnold.UniverseBlock() :
 
 			arnold.AiASSLoad( self.temporaryDirectory() + "/test.ass" )
-
 			node = arnold.AiNodeLookUpByName( "plane" )
 			self.assertEqual( arnold.AiNodeEntryGetName( arnold.AiNodeGetNodeEntry( node ) ), "polymesh" )
 			self.assertEqual( arnold.AiNodeGetInt( node, "subdiv_iterations" ), 10 )
@@ -732,6 +732,109 @@ class RendererTest( GafferTest.TestCase ) :
 						self.assertEqual( arnold.AiNodeGetStr( mesh, "subdiv_type" ), "linear" )
 					else :
 						self.assertEqual( arnold.AiNodeGetStr( mesh, "subdiv_type" ), "catclark" if interpolation == "catmullClark" else "none" )
+
+	def testMeshLight( self ) :
+
+		r = GafferScene.Private.IECoreScenePreview.Renderer.create(
+			"IECoreArnold::Renderer",
+			GafferScene.Private.IECoreScenePreview.Renderer.RenderType.SceneDescription,
+			self.temporaryDirectory() + "/test.ass"
+		)
+
+		l = r.light(
+			"myLight",
+			IECore.MeshPrimitive.createPlane( IECore.Box2f( IECore.V2f( -1 ), IECore.V2f( 1 ) ) ),
+			r.attributes(
+				IECore.CompoundObject( {
+					"ai:light" : IECore.ObjectVector( [ IECore.Shader( "mesh_light", "ai:light" ), ] )
+				} )
+			)
+		)
+		del l
+
+		r.render()
+		del r
+
+		with IECoreArnold.UniverseBlock() :
+
+			arnold.AiASSLoad( self.temporaryDirectory() + "/test.ass" )
+
+			shapes = self.__allNodes( type = arnold.AI_NODE_SHAPE )
+			self.assertEqual( len( shapes ), 2 )
+
+			instance = arnold.AiNodeLookUpByName( "myLight" )
+			self.assertEqual( arnold.AiNodeEntryGetName( arnold.AiNodeGetNodeEntry( instance ) ), "ginstance" )
+			mesh = arnold.AtNode.from_address( arnold.AiNodeGetPtr( instance, "node" ) )
+			self.assertEqual( arnold.AiNodeEntryGetName( arnold.AiNodeGetNodeEntry( mesh ) ), "polymesh" )
+
+			lights = self.__allNodes( type = arnold.AI_NODE_LIGHT )
+			self.assertEqual( len( lights ), 1 )
+			light = lights[0]
+			self.assertEqual( arnold.AiNodeEntryGetName( arnold.AiNodeGetNodeEntry( light ) ), "mesh_light" )
+			self.assertEqual( arnold.AiNodeGetPtr( light, "mesh" ), ctypes.addressof( instance.contents ) )
+
+	def testMeshLightsWithSharedShaders( self ) :
+
+		r = GafferScene.Private.IECoreScenePreview.Renderer.create(
+			"IECoreArnold::Renderer",
+			GafferScene.Private.IECoreScenePreview.Renderer.RenderType.SceneDescription,
+			self.temporaryDirectory() + "/test.ass"
+		)
+
+		lightShaderNetwork = IECore.ObjectVector( [
+			IECore.Shader( "flat", "ai:shader", { "__handle" : "colorHandle" } ),
+			IECore.Shader( "mesh_light", "ai:light", { "color" : "link:colorHandle" } ),
+		] )
+
+		l1 = r.light(
+			"myLight1",
+			IECore.MeshPrimitive.createPlane( IECore.Box2f( IECore.V2f( -1 ), IECore.V2f( 1 ) ) ),
+			r.attributes( IECore.CompoundObject( {
+				"ai:light" : lightShaderNetwork,
+			} ) )
+		)
+		del l1
+
+		l2 = r.light(
+			"myLight2",
+			IECore.MeshPrimitive.createPlane( IECore.Box2f( IECore.V2f( -1 ), IECore.V2f( 1 ) ) ),
+			r.attributes( IECore.CompoundObject( {
+				"ai:light" : lightShaderNetwork,
+			} ) )
+		)
+		del l2
+
+		r.render()
+		del r
+
+		with IECoreArnold.UniverseBlock() :
+
+			arnold.AiASSLoad( self.temporaryDirectory() + "/test.ass" )
+
+			shapes = self.__allNodes( type = arnold.AI_NODE_SHAPE )
+			self.assertEqual( len( shapes ), 3 )
+
+			instance1 = arnold.AiNodeLookUpByName( "myLight1" )
+			instance2 = arnold.AiNodeLookUpByName( "myLight2" )
+			self.assertEqual( arnold.AiNodeEntryGetName( arnold.AiNodeGetNodeEntry( instance1 ) ), "ginstance" )
+			self.assertEqual( arnold.AiNodeEntryGetName( arnold.AiNodeGetNodeEntry( instance2 ) ), "ginstance" )
+
+			self.assertEqual( arnold.AiNodeGetPtr( instance1, "node" ), arnold.AiNodeGetPtr( instance2, "node" ) )
+
+			mesh = arnold.AtNode.from_address( arnold.AiNodeGetPtr( instance1, "node" ) )
+			self.assertEqual( arnold.AiNodeEntryGetName( arnold.AiNodeGetNodeEntry( mesh ) ), "polymesh" )
+
+			lights = self.__allNodes( type = arnold.AI_NODE_LIGHT )
+			self.assertEqual( len( lights ), 2 )
+
+			self.assertEqual( arnold.AiNodeEntryGetName( arnold.AiNodeGetNodeEntry( lights[0] ) ), "mesh_light" )
+			self.assertEqual( arnold.AiNodeEntryGetName( arnold.AiNodeGetNodeEntry( lights[1] ) ), "mesh_light" )
+
+			flat1 = arnold.AiNodeGetLink( lights[0], "color" )
+			flat2 = arnold.AiNodeGetLink( lights[1], "color" )
+
+			self.assertEqual( arnold.AiNodeEntryGetName( arnold.AiNodeGetNodeEntry( flat1 ) ), "flat" )
+			self.assertEqual( arnold.AiNodeEntryGetName( arnold.AiNodeGetNodeEntry( flat2 ) ), "flat" )
 
 	def __allNodes( self, type = arnold.AI_NODE_ALL, ignoreBuiltIn = True ) :
 

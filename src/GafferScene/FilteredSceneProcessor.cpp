@@ -100,12 +100,32 @@ bool FilteredSceneProcessor::acceptsInput( const Gaffer::Plug *plug, const Gaffe
 
 	if( plug == filterPlug() )
 	{
-		// We only want to accept inputs from Filter nodes, but we accept
-		// them from SubGraphs too, because the intermediate plugs there can
-		// be used to later connect a filter in from the outside. Likewise
-		// with Dots.
-		const Node *n = inputPlug->source<Plug>()->node();
-		return runTimeCast<const Filter>( n ) || runTimeCast<const SubGraph>( n ) || runTimeCast<const Dot>( n );
+		// We only really want to accept inputs from Filter nodes.
+		const Plug *source = inputPlug->source<Plug>();
+		const Node *n = source->node();
+		if( const Filter *filter = runTimeCast<const Filter>( n ) )
+		{
+			if( source == filter->outPlug() )
+			{
+				return true;
+			}
+		}
+		// But we can also trust connections from FilteredSceneProcessor::filterPlug()
+		// because it will have these exact same checks applied when it gets an input.
+		// This is particularly necessary for derived classes which may wish to wire
+		// up an internal network with connections to the external filter plug.
+		if( const FilteredSceneProcessor *f = runTimeCast<const FilteredSceneProcessor>( n ) )
+		{
+			if( source == f->filterPlug() )
+			{
+				return true;
+			}
+		}
+		// And we must also accept certain intermediate plugs speculatively in case they
+		// provide a filter connection in the future. We can do this because we are
+		// safe in the knowledge that this check will be called when the intermediate
+		// plug is having its input set.
+		return runTimeCast<const SubGraph>( n ) || runTimeCast<const Dot>( n );
 	}
 	return true;
 }

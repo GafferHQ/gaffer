@@ -51,6 +51,7 @@ enum TypeId
 	InteractiveArnoldRenderTypeId = 110905,
 	ArnoldRenderTypeId = 110906,
 	ArnoldDisplacementTypeId = 110907,
+	ArnoldMeshLightTypeId = 110908,
 
 	LastTypeId = 110949
 };

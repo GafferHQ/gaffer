@@ -34,43 +34,44 @@
 #
 ##########################################################################
 
-import unittest
+import arnold
 
 import IECore
+import IECoreArnold
 
 import GafferSceneTest
 import GafferArnold
 
-class ArnoldDisplacementTest( GafferSceneTest.SceneTestCase ) :
+class ArnoldLightTest( GafferSceneTest.SceneTestCase ) :
 
-	def test( self ) :
+	def testUsesShaders( self ) :
 
-		n = GafferArnold.ArnoldShader()
-		n.loadShader( "noise" )
+		l = GafferArnold.ArnoldLight()
+		l.loadShader( "point_light" )
 
-		d = GafferArnold.ArnoldDisplacement()
-		d["map"].setInput( n["out"] )
-		d["height"].setValue( 2.5 )
-		d["padding"].setValue( 25 )
-		d["zeroValue"].setValue( .25 )
-		d["autoBump"].setValue( True )
+		n = l["out"].attributes( "/light" )["ai:light"]
+		self.assertTrue( isinstance( n, IECore.ObjectVector ) )
+		self.assertEqual( len( n ), 1 )
+		self.assertTrue( isinstance( n[0], IECore.Shader ) )
+		self.assertEqual( n[0].type, "ai:light" )
+		self.assertEqual( n[0].name, "point_light" )
 
-		na = n.attributes()
-		da = d.attributes()
+	def testLoadAllLightsWithoutWarnings( self ) :
 
-		self.assertEqual(
-			da,
-			IECore.CompoundObject( {
-				"ai:disp_map" : na["ai:surface"],
-				"ai:disp_height" : IECore.FloatData( 2.5 ),
-				"ai:disp_padding" : IECore.FloatData( 25 ),
-				"ai:disp_zero_value" : IECore.FloatData( .25 ),
-				"ai:disp_autobump" : IECore.BoolData( True ),
-			} )
-		)
+		lightNames = []
+		with IECoreArnold.UniverseBlock() :
+			it = arnold.AiUniverseGetNodeEntryIterator( arnold.AI_NODE_LIGHT )
+			while not arnold.AiNodeEntryIteratorFinished( it ) :
+				nodeEntry = arnold.AiNodeEntryIteratorGetNext( it )
+				lightNames.append( arnold.AiNodeEntryGetName( nodeEntry ) )
 
-		d["enabled"].setValue( False )
-		self.assertEqual( d.attributes(), IECore.CompoundObject() )
+		self.longMessage = True
+
+		for lightName in lightNames :
+			with IECore.CapturingMessageHandler() as mh :
+				l = GafferArnold.ArnoldLight()
+				l.loadShader( lightName )
+				self.assertEqual( [ m.message for m in mh.messages ], [], "Error loading %s" % lightName )
 
 if __name__ == "__main__":
 	unittest.main()

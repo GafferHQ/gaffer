@@ -80,13 +80,6 @@ void ShaderAssignment::affects( const Gaffer::Plug *input, AffectedPlugsContaine
 {
 	SceneElementProcessor::affects( input, outputs );
 
-	/// \todo This currently only works if the incoming shader connection is from
-	/// a Plug (and not a Color3fPlug or something of that sort). This covers us for
-	/// RenderManShaders and OpenGLShaders, but not for ArnoldShaders. The problem is
-	/// that dirtiness propagates along the leaf plugs (r,g,b) and not along the parent,
-	/// and we only have a connection from the parent. The leaf propagation rule was devised
-	/// with ComputeNodes in mind (where computation must occur at the leaf levels) so perhaps
-	/// we'll be able to relax the rule for non-ComputeNodes like this one.
 	if( input == shaderPlug() )
 	{
 		outputs.push_back( outPlug()->attributesPlug() );

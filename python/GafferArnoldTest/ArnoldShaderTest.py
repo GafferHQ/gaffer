@@ -393,5 +393,16 @@ class ArnoldShaderTest( unittest.TestCase ) :
 		self.assertEqual( p.minValue(), 0 )
 		self.assertEqual( p.maxValue(), 255 )
 
+	def testMeshLight( self ) :
+
+		n = GafferArnold.ArnoldShader()
+		n.loadShader( "mesh_light" )
+
+		self.assertEqual( n["name"].getValue(), "mesh_light" )
+		self.assertEqual( n["type"].getValue(), "ai:light" )
+
+		self.assertTrue( "exposure" in n["parameters"] )
+		self.assertTrue( n["out"].typeId(), Gaffer.Plug.staticTypeId() )
+
 if __name__ == "__main__":
 	unittest.main()
