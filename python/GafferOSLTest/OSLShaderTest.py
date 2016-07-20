@@ -482,5 +482,187 @@ class OSLShaderTest( GafferOSLTest.OSLTestCase ) :
 			if expectedValue is not None :
 				self.assertEqual( s.descendant( plug ).getValue(), expectedValue )
 
+	def testReload( self ) :
+
+		s1 = self.compileShader( os.path.dirname( __file__ ) + "/shaders/version1.osl" )
+		s2 = self.compileShader( os.path.dirname( __file__ ) + "/shaders/version2.osl" )
+
+		n = GafferOSL.OSLShader()
+		n.loadShader( s1 )
+
+		self.assertEqual(
+			n["parameters"].keys(),
+			[
+				"commonI",
+				"commonF",
+				"commonColor",
+				"commonString",
+				"commonStruct",
+				"removedI",
+				"removedF",
+				"removedColor",
+				"removedString",
+				"removedStruct",
+				"typeChanged1",
+				"typeChanged2",
+				"typeChanged3",
+				"typeChanged4",
+			]
+		)
+
+		self.assertEqual(
+			n["parameters"]["commonStruct"].keys(),
+			[
+				"commonI",
+				"commonF",
+				"commonColor",
+				"commonString",
+				"removedI",
+				"removedF",
+				"removedColor",
+				"removedString",
+				"typeChanged1",
+				"typeChanged2",
+				"typeChanged3",
+				"typeChanged4",
+			]
+		)
+
+		values = {
+			"commonI" : 10,
+			"commonF" : 25,
+			"commonColor" : IECore.Color3f( 1 ),
+			"commonString" : "test",
+			"commonStruct.commonI" : 11,
+			"commonStruct.commonF" : 2.5,
+			"commonStruct.commonColor" : IECore.Color3f( 0.5 ),
+			"commonStruct.commonString" : "test2",
+		}
+
+		for key, value in values.items() :
+			n["parameters"].descendant( key ).setValue( value )
+
+		self.assertTrue( isinstance( n["parameters"]["typeChanged1"], Gaffer.IntPlug ) )
+		self.assertTrue( isinstance( n["parameters"]["typeChanged2"], Gaffer.FloatPlug ) )
+		self.assertTrue( isinstance( n["parameters"]["typeChanged3"], Gaffer.Color3fPlug ) )
+		self.assertTrue( isinstance( n["parameters"]["typeChanged4"], Gaffer.StringPlug ) )
+
+		n.loadShader( s2, keepExistingValues = True )
+
+		self.assertEqual(
+			n["parameters"].keys(),
+			[
+				"commonI",
+				"commonF",
+				"commonColor",
+				"commonString",
+				"commonStruct",
+				"typeChanged1",
+				"typeChanged2",
+				"typeChanged3",
+				"typeChanged4",
+				"addedI",
+				"addedF",
+				"addedColor",
+				"addedString",
+				"addedStruct",
+			]
+		)
+
+		self.assertEqual(
+			n["parameters"]["commonStruct"].keys(),
+			[
+				"commonI",
+				"commonF",
+				"commonColor",
+				"commonString",
+				"typeChanged1",
+				"typeChanged2",
+				"typeChanged3",
+				"typeChanged4",
+				"addedI",
+				"addedF",
+				"addedColor",
+				"addedString",
+			]
+		)
+
+		for key, value in values.items() :
+			self.assertEqual( n["parameters"].descendant( key ).getValue(), value )
+
+		self.assertTrue( isinstance( n["parameters"]["typeChanged1"], Gaffer.StringPlug ) )
+		self.assertTrue( isinstance( n["parameters"]["typeChanged2"], Gaffer.Color3fPlug ) )
+		self.assertTrue( isinstance( n["parameters"]["typeChanged3"], Gaffer.FloatPlug ) )
+		self.assertTrue( isinstance( n["parameters"]["typeChanged4"], Gaffer.IntPlug ) )
+
+		n.loadShader( s2, keepExistingValues = False )
+		for plug in n["parameters"] :
+			if isinstance( plug, Gaffer.ValuePlug ) :
+				self.assertTrue( plug.isSetToDefault() )
+
+	def testSplineParameters( self ) :
+
+		s = self.compileShader( os.path.dirname( __file__ ) + "/shaders/splineParameters.osl" )
+		n = GafferOSL.OSLShader()
+		n.loadShader( s )
+
+		self.assertEqual( n["parameters"].keys(), [ "floatSpline", "colorSpline" ] )
+
+		self.assertTrue( isinstance( n["parameters"]["floatSpline"], Gaffer.SplineffPlug ) )
+		self.assertEqual(
+			n["parameters"]["floatSpline"].getValue(),
+			IECore.Splineff(
+				IECore.CubicBasisf.catmullRom(),
+				[
+					( 0, 0 ),
+					( 0, 0 ),
+					( 1, 1 ),
+					( 1, 1 ),
+				]
+			)
+		)
+
+		self.assertTrue( isinstance( n["parameters"]["colorSpline"], Gaffer.SplinefColor3fPlug ) )
+		self.assertEqual(
+			n["parameters"]["colorSpline"].getValue(),
+			IECore.SplinefColor3f(
+				IECore.CubicBasisf.bSpline(),
+				[
+					( 0, IECore.Color3f( 0 ) ),
+					( 0, IECore.Color3f( 0 ) ),
+					( 1, IECore.Color3f( 1 ) ),
+					( 1, IECore.Color3f( 1 ) ),
+				]
+			)
+		)
+
+		shader = n.attributes()["osl:surface"][0]
+
+		self.assertEqual(
+			shader.parameters["floatSpline"].value,
+			IECore.Splineff(
+				IECore.CubicBasisf.catmullRom(),
+				[
+					( 0, 0 ),
+					( 0, 0 ),
+					( 1, 1 ),
+					( 1, 1 ),
+				]
+			)
+		)
+
+		self.assertEqual(
+			shader.parameters["colorSpline"].value,
+			IECore.SplinefColor3f(
+				IECore.CubicBasisf.bSpline(),
+				[
+					( 0, IECore.Color3f( 0 ) ),
+					( 0, IECore.Color3f( 0 ) ),
+					( 1, IECore.Color3f( 1 ) ),
+					( 1, IECore.Color3f( 1 ) ),
+				]
+			)
+		)
+
 if __name__ == "__main__":
 	unittest.main()
