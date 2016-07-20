@@ -466,5 +466,107 @@ class OSLExpressionEngineTest( GafferOSLTest.OSLTestCase ) :
 
 		self.assertEqual( s["n2"]["user"]["f"].getValue(), 4 )
 
+	def testMoreThanTenPlugs( self ) :
+
+		s = Gaffer.ScriptNode()
+
+		expression = ""
+		for i in range( 0, 20 ) :
+
+			aName = "A%d" % i
+			bName = "B%d" % i
+
+			s[aName] = Gaffer.Node()
+			s[bName] = Gaffer.Node()
+
+			s[aName]["user"]["p"] = Gaffer.IntPlug( defaultValue = i, flags = Gaffer.Plug.Flags.Default | Gaffer.Plug.Flags.Dynamic )
+			s[bName]["user"]["p"] = Gaffer.IntPlug( flags = Gaffer.Plug.Flags.Default | Gaffer.Plug.Flags.Dynamic )
+
+			expression += "parent.%s.user.p = parent.%s.user.p;\n" % ( bName, aName )
+
+		s["e"] = Gaffer.Expression()
+		s["e"].setExpression( expression, "OSL" )
+
+		self.assertEqual( s["e"].getExpression(), ( expression, "OSL" ) )
+
+		for i in range( 0, 20 ) :
+			self.assertEqual( s["B%d"%i]["user"]["p"].getValue(), i )
+
+		s2 = Gaffer.ScriptNode()
+		s2.execute( s.serialise() )
+
+		self.assertEqual( s2["e"].getExpression(), ( expression, "OSL" ) )
+
+		for i in range( 0, 20 ) :
+			self.assertEqual( s2["B%d"%i]["user"]["p"].getValue(), i )
+
+	def testPlugNamesWithCommonPrefixes( self ) :
+
+		s = Gaffer.ScriptNode()
+
+		s["n"] = Gaffer.Node()
+		s["n"]["user"]["a"] = Gaffer.IntPlug( flags = Gaffer.Plug.Flags.Default | Gaffer.Plug.Flags.Dynamic )
+		s["n"]["user"]["ab"] = Gaffer.IntPlug( flags = Gaffer.Plug.Flags.Default | Gaffer.Plug.Flags.Dynamic )
+		s["n"]["user"]["abc"] = Gaffer.IntPlug( flags = Gaffer.Plug.Flags.Default | Gaffer.Plug.Flags.Dynamic )
+
+		expression = inspect.cleandoc(
+			"""
+			parent.n.user.ab = 1;
+			parent.n.user.a = 2;
+			parent.n.user.abc = 3;
+			"""
+		)
+
+		s["e"] = Gaffer.Expression()
+		s["e"].setExpression( expression, "OSL" )
+
+		self.assertEqual( s["e"].getExpression(), ( expression, "OSL" ) )
+
+		self.assertEqual( s["n"]["user"]["ab"].getValue(), 1 )
+		self.assertEqual( s["n"]["user"]["a"].getValue(), 2 )
+		self.assertEqual( s["n"]["user"]["abc"].getValue(), 3 )
+
+		s2 = Gaffer.ScriptNode()
+		s2.execute( s.serialise() )
+
+		self.assertEqual( s2["e"].getExpression(), ( expression, "OSL" ) )
+
+		self.assertEqual( s2["n"]["user"]["ab"].getValue(), 1 )
+		self.assertEqual( s2["n"]["user"]["a"].getValue(), 2 )
+		self.assertEqual( s2["n"]["user"]["abc"].getValue(), 3 )
+
+	def testStringComparison( self ) :
+
+		s = Gaffer.ScriptNode()
+
+		s["n"] = Gaffer.Node()
+		s["n"]["user"]["bool"] = Gaffer.BoolPlug( flags = Gaffer.Plug.Flags.Default | Gaffer.Plug.Flags.Dynamic )
+		s["n"]["user"]["string"] = Gaffer.StringPlug( flags = Gaffer.Plug.Flags.Default | Gaffer.Plug.Flags.Dynamic )
+
+		s["e"] = Gaffer.Expression()
+		s["e"].setExpression( """parent.n.user.bool = "yes" == parent.n.user.string;""", "OSL" )
+
+		self.assertFalse( s["n"]["user"]["bool"].getValue() )
+
+		s["n"]["user"]["string"].setValue( "yes" )
+		self.assertTrue( s["n"]["user"]["bool"].getValue() )
+
+	def testComparisonIsNotAssignment( self ) :
+
+		s = Gaffer.ScriptNode()
+
+		s["n"] = Gaffer.Node()
+		s["n"]["user"]["i"] = Gaffer.IntPlug( flags = Gaffer.Plug.Flags.Default | Gaffer.Plug.Flags.Dynamic )
+		s["n"]["user"]["o"] = Gaffer.BoolPlug( flags = Gaffer.Plug.Flags.Default | Gaffer.Plug.Flags.Dynamic )
+
+		s["e"] = Gaffer.Expression()
+		s["e"].setExpression( """parent.n.user.o = parent.n.user.i == 2;""", "OSL" )
+
+		self.assertTrue( s["n"]["user"]["i"].getInput() is None )
+		self.assertFalse( s["n"]["user"]["o"].getValue() )
+
+		s["n"]["user"]["i"].setValue( 2 )
+		self.assertTrue( s["n"]["user"]["o"].getValue() )
+
 if __name__ == "__main__":
 	unittest.main()
