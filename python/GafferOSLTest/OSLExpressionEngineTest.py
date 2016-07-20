@@ -551,5 +551,22 @@ class OSLExpressionEngineTest( GafferOSLTest.OSLTestCase ) :
 		s["n"]["user"]["string"].setValue( "yes" )
 		self.assertTrue( s["n"]["user"]["bool"].getValue() )
 
+	def testComparisonIsNotAssignment( self ) :
+
+		s = Gaffer.ScriptNode()
+
+		s["n"] = Gaffer.Node()
+		s["n"]["user"]["i"] = Gaffer.IntPlug( flags = Gaffer.Plug.Flags.Default | Gaffer.Plug.Flags.Dynamic )
+		s["n"]["user"]["o"] = Gaffer.BoolPlug( flags = Gaffer.Plug.Flags.Default | Gaffer.Plug.Flags.Dynamic )
+
+		s["e"] = Gaffer.Expression()
+		s["e"].setExpression( """parent.n.user.o = parent.n.user.i == 2;""", "OSL" )
+
+		self.assertTrue( s["n"]["user"]["i"].getInput() is None )
+		self.assertFalse( s["n"]["user"]["o"].getValue() )
+
+		s["n"]["user"]["i"].setValue( 2 )
+		self.assertTrue( s["n"]["user"]["o"].getValue() )
+
 if __name__ == "__main__":
 	unittest.main()

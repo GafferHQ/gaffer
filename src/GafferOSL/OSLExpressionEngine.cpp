@@ -656,7 +656,7 @@ class OSLExpressionEngine : public Gaffer::Expression::Engine
 		static void findPlugPaths( const string &expression, vector<string> &inPaths, vector<string> &outPaths )
 		{
 			set<string> visited;
-			const regex plugPathRegex( "(parent\\.[A-Za-z_0-9\\.]+)[ \t]*(=?)" );
+			const regex plugPathRegex( "(parent\\.[A-Za-z_0-9\\.]+)[ \t]*(=*)" );
 			for( sregex_iterator it = make_regex_iterator( expression, plugPathRegex ); it != sregex_iterator(); ++it )
 			{
 				string plugPath( (*it)[1].str().substr( 7 ) );
