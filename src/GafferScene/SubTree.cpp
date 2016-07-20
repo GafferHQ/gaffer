@@ -41,6 +41,7 @@
 
 #include "GafferScene/SubTree.h"
 #include "GafferScene/PathMatcherData.h"
+#include "GafferScene/SceneAlgo.h"
 
 using namespace std;
 using namespace IECore;
@@ -267,6 +268,31 @@ SceneNode::ScenePath SubTree::sourcePath( const ScenePath &outputPath, bool &cre
 	else
 	{
 		result.insert( result.end(), outputPath.begin(), outputPath.end() );
+	}
+
+	if( outputPath.empty() )
+	{
+		// Validate that the root the user has specified does exist.
+		// We only do this when the output path is "/", because we don't
+		// want to pay the cost for every location.
+		//
+		// The unwritten rule of GafferScene is that client code must not query
+		// invalid locations, and nodes are therefore free to assume that
+		// all queries made to them are valid, all in the name of performance.
+		//
+		// In its role as a client, the SubTree is therefore required to make
+		// only valid queries of the input scene, and it would be useful if it
+		// met this obligation even if the user has provided an invalid root
+		// path.
+		//
+		// However, testing only at the root of the output scene is justified
+		// because clients of the SubTree have the same obligation to make
+		// only valid queries, and this will necessarily involve them computing
+		// the child names for the root first.
+		if( !exists( inPlug(), result ) )
+		{
+			throw IECore::Exception( boost::str( boost::format( "Root \"%s\" does not exist" ) % rootAsString ) );
+		}
 	}
 
 	return result;
