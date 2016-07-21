@@ -174,3 +174,41 @@ def __connectionContextMenu( nodeGraph, destinationPlug, menuDefinition ) :
 	)
 
 __connectionContextMenuConnection = GafferUI.NodeGraph.connectionContextMenuSignal().connect( __connectionContextMenu )
+
+
+def __renamePlug( menu, plug ) :
+
+	d = GafferUI.TextInputDialogue( initialText = plug.getName(), title = "Enter name", confirmLabel = "Rename" )
+	name = d.waitForText( parentWindow = menu.ancestor( GafferUI.Window ) )
+
+	if not name :
+		return
+
+	with Gaffer.UndoContext( plug.ancestor( Gaffer.ScriptNode ) ) :
+		plug.setName( name )
+
+def __setPlugMetadata( plug, key, value ) :
+
+	with Gaffer.UndoContext( plug.ancestor( Gaffer.ScriptNode ) ) :
+		Gaffer.Metadata.registerPlugValue( plug, key, value )
+
+def __nodeGraphPlugContextMenu( nodeGraph, plug, menuDefinition ) :
+
+	if isinstance( plug.node(), Gaffer.Dot ) :
+
+		menuDefinition.append( "/Rename...", { "command" : functools.partial( __renamePlug, plug = plug ) } )
+
+		currentEdge = Gaffer.Metadata.plugValue( plug, "nodeGadget:nodulePosition" )
+		if not currentEdge :
+			currentEdge = "top" if plug.direction() == plug.Direction.In else "bottom"
+
+		for edge in ( "top", "bottom", "left", "right" ) :
+			menuDefinition.append(
+				"/Move To/" + edge.capitalize(),
+				{
+					"command" : functools.partial( __setPlugMetadata, plug, "nodeGadget:nodulePosition", edge ),
+					"active" : edge != currentEdge,
+				}
+			)
+
+__nodeGraphPlugContextMenuConnection = GafferUI.NodeGraph.plugContextMenuSignal().connect( __nodeGraphPlugContextMenu )
