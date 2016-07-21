@@ -219,6 +219,12 @@ LOCATE_DEPENDENCY_PYTHONPATH = [
 
 ]
 
+LOCATE_DEPENDENCY_RESOURCESPATH = [
+
+	os.path.join( IEEnv.Environment.rootPath(), "apps", "gafferResources", "0.27.0.0", "resources" ),
+
+]
+
 os.environ["IECOREGL_SHADER_INCLUDE_PATHS"] = os.path.join( IEEnv.Environment.rootPath(), "apps", "cortex", cortexVersion, IEEnv.platform(), "base", "glsl" )
 
 if targetAppVersion :
