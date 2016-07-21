@@ -1,3 +1,73 @@
+0.27.0.0
+========
+
+Apps
+----
+
+- Screengrab (#1793, #1559)
+  - Added arguments for Viewer and NodeGraph framing
+  - Added arguments for Viewer and SceneHiearchy expansion and selection
+  - Added argument for grabbing a single plug from the NodeEditor
+
+Scene
+-----
+
+- Fixed SubTree to error when an invalid root is entered (#1786, #1790).
+- Added filter input to Set, to define additional paths to add/remove.
+
+Arnold
+------
+
+- Added ArnoldMeshLight node (#1787)
+- Added ArnoldDisplacement node (#1776)
+- Added subdivision attributes to ArnoldAttributes (#1776)
+- ArnoldOptions (#1788)
+  - Added total depth and transparency depth/threshold plugs
+- Fixed warnings about unhandled light parameters
+- Fixed crashes/errors caused by multiple cameras and a threading
+  bug (#1785)
+- Fixed bogus warning about "ai:log:filename" option.
+
+OSL
+---
+
+- Expression (#1791, #1789)
+  - Fixed string comparison bug
+  - Fixed bugs when plug names share a common prefix
+  - Fixed mistaken assignments
+- Added support for spline parameters in shaders (#1782)
+- Fixed reload button on shader UI
+
+Documenation
+------------
+
+- Added basic lighting and rendering tutorial (#1793).
+
+Build
+-----
+
+- Fixed debug builds (#1781)
+- Added debug builds to Travis tests (#1781)
+- Fixed clang compilation error in Serialisation.cpp
+
+API
+---
+
+- Made FilteredSceneProcessor subclassable in Python.
+
+Breaking Changes
+----------------
+
+- Rederived Set from FilteredSceneProcessor.
+- Changed LightVisualiser API
+  - Added attributeName argument to visualise() virtual method.
+  - Added attributeName argument to registerLightVisualiser() factory method.
+- Changed StandardLightVisualiser metadata prefix convention from
+  "light:renderer:shaderName" to "renderer:light:shaderName", to
+  match the ordering of the data as it appears in the scene module
+  (attributeName:shaderName).
+- Light nodes now output IECore::Shader objects rather than IECore::Lights
+
 0.26.0.0
 ========
 
