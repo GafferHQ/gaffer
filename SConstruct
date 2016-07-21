@@ -184,6 +184,15 @@ options.Add(
 	"the dependencies.",
 	"",
 )
+
+options.Add(
+	"LOCATE_DEPENDENCY_RESOURCESPATH",
+	"The path to the resources provided by the gafferResources project. "
+	"If you follow the build instructions using the precompiled "
+	"dependencies then you will not need this option.",
+	"",
+)
+
 options.Add(
 	"OPENEXR_LIB_SUFFIX",
 	"The suffix used when locating the OpenEXR libraries.",
@@ -1048,12 +1057,14 @@ def buildDocs( target, source, env ) :
 
 if conf.checkSphinx() :
 
-	examples = commandEnv.Install( "$BUILD_DIR/doc", "doc/examples" )
-	commandEnv.Alias( "docs", examples )
+	resources = None
+	if commandEnv.subst( "$LOCATE_DEPENDENCY_RESOURCESPATH" ) :
+		resources = commandEnv.Install( "$BUILD_DIR", "$LOCATE_DEPENDENCY_RESOURCESPATH" )
 
 	docs = commandEnv.Command( "$BUILD_DIR/doc/gaffer/html/index.html", "doc/source", buildDocs )
 	commandEnv.Depends( docs, "build" )
-	commandEnv.Depends( docs, examples )
+	if resources is not None :
+		commandEnv.Depends( docs, resources )
 	commandEnv.AlwaysBuild( docs )
 	commandEnv.NoCache( docs )
 	commandEnv.Alias( "docs", docs )

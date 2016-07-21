@@ -40,6 +40,8 @@ import IECore
 
 import Gaffer
 import GafferUI
+import GafferScene
+import GafferSceneUI
 
 QtGui = GafferUI._qtImport( "QtGui" )
 
@@ -96,6 +98,11 @@ class screengrab( Gaffer.Application ) :
 							description = "The names of plugs to reveal in the NodeEditor.",
 							defaultValue = IECore.StringVectorData(),
 						),
+						IECore.StringParameter(
+							name = "grab",
+							description = "The name of a plug to grab from the NodeEditor.",
+							defaultValue = "",
+						),
 					],
 				),
 
@@ -111,17 +118,75 @@ class screengrab( Gaffer.Application ) :
 					]
 				),
 
+				IECore.CompoundParameter(
+					name = "viewer",
+					description = "Parameters that configure Viewers.",
+					members = [
+						IECore.IntParameter(
+							name = "minimumExpansionDepth",
+							description = "The minimum expansion depth in the viewer.",
+							defaultValue = 0,
+							minValue = 0,
+						),
+						IECore.StringVectorParameter(
+							name = "framedObjects",
+							description = "The names of objects to frame in the Viewer.",
+							defaultValue = IECore.StringVectorData(),
+						),
+						IECore.V3fParameter(
+							name = "viewDirection",
+							description = "The direction to view the framed objects in.",
+							defaultValue = IECore.V3f( -0.64, -0.422, -0.64 ),
+						),
+					]
+				),
+
+				IECore.CompoundParameter(
+					name = "nodeGraph",
+					description = "Parameters that configure NodeGraphs.",
+					members = [
+						IECore.StringVectorParameter(
+							name = "frame",
+							description = "The names of nodes to frame in the NodeGraph.",
+							defaultValue = IECore.StringVectorData(),
+						),
+					],
+				),
+
+				IECore.CompoundParameter(
+					name = "scene",
+					description = "Parameters that configure the scene.",
+					members = [
+						IECore.StringVectorParameter(
+							name = "expandedPaths",
+							description = "A list of locations to expand in the Viewer and SceneHierarchy.",
+							defaultValue = IECore.StringVectorData(),
+						),
+						IECore.StringVectorParameter(
+							name = "fullyExpandedPaths",
+							description = "A list of locations to expand fully in the Viewer and SceneHierarchy.",
+							defaultValue = IECore.StringVectorData(),
+						),
+						IECore.StringVectorParameter(
+							name = "selectedPaths",
+							description = "A list of locations to select in the Viewer and SceneHierarchy.",
+							defaultValue = IECore.StringVectorData(),
+						),
+					]
+				),
+
 				IECore.StringParameter(
-					name = "cmd",
-					description = "Command(s) to execute after session is launched. 'script' node is available to interact with script contents",
+					name = "command",
+					description = "Command to execute after session is launched. A 'script' variable provides access to the root ScriptNode.",
 					defaultValue = "",
 				),
 
 				IECore.StringParameter(
-					name = "cmdfile",
+					name = "commandFile",
 					description = "File containing sequence of commands to execute after session is launched.",
 					defaultValue = "",
 				),
+
 			]
 
 		)
@@ -153,15 +218,33 @@ class screengrab( Gaffer.Application ) :
 			script.load()
 		self.root()["scripts"].addChild( script )
 
-		# Select any nodes we've been asked to.
-		for name in args["selection"] :
-			script.selection().add( script.descendant( name ) )
-
 		# Choose the widget we'll grab by default. This can be overridden
 		# by the command files below by calling `application.setGrabWidget()`.
 
 		scriptWindow = GafferUI.ScriptWindow.acquire( script )
 		self.setGrabWidget( scriptWindow )
+
+		# Execute any commands we've been asked to, exposing the application
+		# and script as variables.
+
+		self.__waitForIdle()
+
+		d = {
+			"application" 	: self,
+			"script"		: script,
+		}
+
+		if args["command"].value :
+			exec( args["command"].value, d, d )
+		if args["commandFile"].value :
+			execfile( args["commandFile"].value, d, d )
+
+		# Select any nodes we've been asked to.
+		for name in args["selection"] :
+			script.selection().add( script.descendant( name ) )
+
+		# Override the default grab widget if requested by
+		# the editor command line flag.
 
 		if args["editor"].value :
 
@@ -188,7 +271,10 @@ class screengrab( Gaffer.Application ) :
 		self.__waitForIdle()
 
 		for nodeGraph in scriptWindow.getLayout().editors( GafferUI.NodeGraph ) :
-			nodeGraph.frame( script.children( Gaffer.Node ) )
+			if args["nodeGraph"]["frame"] :
+				nodeGraph.frame( [ script.descendant( n ) for n in args["nodeGraph"]["frame"] ] )
+			else :
+				nodeGraph.frame( script.children( Gaffer.Node ) )
 
 		# Set up the NodeEditors as requested.
 
@@ -197,6 +283,12 @@ class screengrab( Gaffer.Application ) :
 			for name in args["nodeEditor"]["reveal"] :
 				plugValueWidget = nodeEditor.nodeUI().plugValueWidget( script.descendant( name ) )
 				plugValueWidget.reveal()
+
+			if args["nodeEditor"]["grab"].value :
+				grabWidget = nodeEditor.nodeUI().plugValueWidget( script.descendant( args["nodeEditor"]["grab"].value ) )
+				grabWidget = grabWidget.ancestor( GafferUI.PlugWidget ) or grabWidget
+				grabWidget.reveal()
+				self.setGrabWidget( grabWidget )
 
 		# Set up the ScriptEditors as requested.
 
@@ -207,20 +299,41 @@ class screengrab( Gaffer.Application ) :
 				scriptEditor.inputWidget()._qtWidget().selectAll()
 				scriptEditor.execute()
 
-		# Execute any commands we've been asked to, exposing the application
-		# and script as variables.
+		# Set up the Viewers as requested.
 
-		self.__waitForIdle()
+		for viewer in scriptWindow.getLayout().editors( GafferUI.Viewer ) :
+			if isinstance( viewer.view(), GafferSceneUI.SceneView ) :
+				viewer.view()["minimumExpansionDepth"].setValue( args["viewer"]["minimumExpansionDepth"].value )
+				if args["viewer"]["framedObjects"] :
+					bound = IECore.Box3f()
+					for path in args["viewer"]["framedObjects"] :
+						objectBound = viewer.view()["in"].bound( path )
+						objectFullTransform = viewer.view()["in"].fullTransform( path )
+						bound.extendBy( objectBound.transform( objectFullTransform ) )
+					viewer.view().viewportGadget().frame( bound, args["viewer"]["viewDirection"].value.normalized() )
 
-		d = {
-			"application" 	: self,
-			"script"		: script,
-		}
+		del viewer
 
-		if args["cmd"].value :
-			exec( args["cmd"].value, d, d )
-		if args["cmdfile"].value :
-			execfile( args["cmdfile"].value, d, d )
+		# Set up the scene expansion and selection.
+
+		pathsToExpand = GafferScene.PathMatcher()
+
+		for path in list( args["scene"]["fullyExpandedPaths"] ) + list( args["scene"]["expandedPaths"] ) :
+			# Add paths and all their ancestors.
+			while path :
+				pathsToExpand.addPath( path )
+				path = path.rpartition( "/" )[0]
+
+		fullyExpandedPathsFilter = GafferScene.PathFilter()
+		fullyExpandedPathsFilter["paths"].setValue(
+			IECore.StringVectorData( [ path + "/..." for path in args["scene"]["fullyExpandedPaths"] ] )
+		)
+		for node in script.selection() :
+			for scenePlug in [ p for p in node.children( GafferScene.ScenePlug ) if p.direction() == Gaffer.Plug.Direction.Out ] :
+				GafferScene.matchingPaths( fullyExpandedPathsFilter, scenePlug, pathsToExpand )
+
+		script.context()["ui:scene:expandedPaths"] = GafferScene.PathMatcherData( pathsToExpand )
+		script.context()["ui:scene:selectedPaths"] = args["scene"]["selectedPaths"]
 
 		# Write the image, creating a directory for it if necessary.
 

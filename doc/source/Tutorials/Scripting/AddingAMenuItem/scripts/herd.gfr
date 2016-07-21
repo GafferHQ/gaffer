@@ -17,7 +17,7 @@ parent["variables"]["projectRootDirectory"].addChild( Gaffer.StringPlug( "name",
 parent["variables"]["projectRootDirectory"].addChild( Gaffer.StringPlug( "value", defaultValue = '$HOME/gaffer/projects/${project:name}', flags = Gaffer.Plug.Flags.Default | Gaffer.Plug.Flags.Dynamic, ) )
 __children["Cow"] = GafferScene.SceneReader( "Cow" )
 parent.addChild( __children["Cow"] )
-__children["Cow"]["fileName"].setValue( '${GAFFER_ROOT}/doc/examples/data/cow.scc' )
+__children["Cow"]["fileName"].setValue( '${GAFFER_ROOT}/resources/cow/cow.scc' )
 __children["Cow"].addChild( Gaffer.V2fPlug( "__uiPosition", defaultValue = IECore.V2f( 0, 0 ), flags = Gaffer.Plug.Flags.Default | Gaffer.Plug.Flags.Dynamic, ) )
 __children["Herd"] = GafferScene.Duplicate( "Herd" )
 parent.addChild( __children["Herd"] )

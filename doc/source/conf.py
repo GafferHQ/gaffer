@@ -14,6 +14,7 @@
 
 import sys
 import os
+import re
 import inspect
 import docutils
 
@@ -334,10 +335,29 @@ class GafferTransform( recommonmark.transform.AutoStructify ) :
         node[0][0] = docutils.nodes.Text( partition[2] ) # Remove "admonition : " prefix
         return admonitions[admonition]( "", *node.children )
 
+    def auto_nbsp( self, node ) :
+
+        """
+        Insert non-breaking spaces where appropriate
+        to improve line wrapping. Currently deals with
+        " :" at the end of a paragraph so that the colon
+        is not detached from the space.
+        """
+
+        if not isinstance( node.parent, docutils.nodes.paragraph ) :
+            return None
+
+        if node is not node.parent[-1] :
+            return None
+
+        return docutils.nodes.Text( re.sub( u" :\s*$", u"\xa0:", node.astext(), ) )
+
     def find_replace( self, node ) :
 
         if isinstance( node, docutils.nodes.block_quote ) :
             return self.auto_admonition( node )
+        elif isinstance( node, docutils.nodes.Text ) :
+            return self.auto_nbsp( node )
         else :
             return recommonmark.transform.AutoStructify.find_replace( self, node )
 

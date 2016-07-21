@@ -1,5 +1,7 @@
 #! /bin/bash
 
+set -e
+
 gaffer screengrab -image images/scriptEditor.png -editor ScriptEditor -panel -scriptEditor.execute 'print "Hello World!", script'
 gaffer screengrab -image images/scriptEditorGetValue.png -editor ScriptEditor -panel -scriptEditor.execute 'print "Hello World!", script'
 gaffer screengrab scripts/node.gfr -selection Node -image images/nodeEditor.png -editor NodeEditor
