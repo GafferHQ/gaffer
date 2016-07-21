@@ -320,6 +320,17 @@ void ViewportGadget::doRender( const Style *style ) const
 	IECoreGL::CameraPtr camera = boost::static_pointer_cast<IECoreGL::Camera>( converter->convert() );
  	camera->render( 0 );
 
+	// Set up the camera to world matrix in gl_TextureMatrix[0] so that we can
+	// reference world space positions in shaders
+	// This should be more appropriately named in a uniform buffer, but the
+	// easiest time to get this right is probably when we switch everything 
+	// away from using fixed function stuff
+	glActiveTexture( GL_TEXTURE0 );
+	glMatrixMode( GL_TEXTURE );
+	glLoadIdentity();
+	glMultMatrixf( camera->getTransform().getValue() );
+	glMatrixMode( GL_MODELVIEW );
+
 	Gadget::doRender( style );
 }
 
