@@ -202,7 +202,7 @@ LOCATE_DEPENDENCY_LIBPATH = [
 	os.path.join( IEEnv.Environment.rootPath(), "apps", "qt", qtVersion, IEEnv.platform(), compiler, compilerVersion, "lib" ),
 	os.path.join( IEEnv.Environment.rootPath(), "apps", "OpenShadingLanguage", oslVersion, IEEnv.platform(), compiler, compilerVersion, "lib" ),	
 	os.path.join( IEEnv.Environment.rootPath(), "apps", "OpenVDB", vdbVersion, IEEnv.platform(), compiler, compilerVersion, "lib" ),
-	os.path.join( IEEnv.Environment.rootPath(), "apps", "appleseed", appleseedVersion, IEEnv.platform(), compiler, compilerVersion, "lib" ),
+	os.path.join( IEEnv.Environment.rootPath(), "apps", "appleseed", appleseedVersion, IEEnv.platform(), "lib" ),
 
 ]
 
