@@ -202,7 +202,7 @@ LOCATE_DEPENDENCY_LIBPATH = [
 	os.path.join( IEEnv.Environment.rootPath(), "apps", "qt", qtVersion, IEEnv.platform(), compiler, compilerVersion, "lib" ),
 	os.path.join( IEEnv.Environment.rootPath(), "apps", "OpenShadingLanguage", oslVersion, IEEnv.platform(), compiler, compilerVersion, "lib" ),	
 	os.path.join( IEEnv.Environment.rootPath(), "apps", "OpenVDB", vdbVersion, IEEnv.platform(), compiler, compilerVersion, "lib" ),
-	os.path.join( IEEnv.Environment.rootPath(), "apps", "appleseed", appleseedVersion, IEEnv.platform(), compiler, compilerVersion, "lib" ),
+	os.path.join( IEEnv.Environment.rootPath(), "apps", "appleseed", appleseedVersion, IEEnv.platform(), "lib" ),
 
 ]
 
@@ -216,6 +216,12 @@ LOCATE_DEPENDENCY_PYTHONPATH = [
 	os.path.join( IEEnv.Environment.rootPath(), "tools", "python", pythonVersion, "noarch" ),
 	os.path.join( sphinxRoot, "lib", "python" + pythonVersion, "site-packages" ),
 	os.path.join( sphinxRoot, "lib64", "python" + pythonVersion, "site-packages" ),
+
+]
+
+LOCATE_DEPENDENCY_RESOURCESPATH = [
+
+	os.path.join( IEEnv.Environment.rootPath(), "apps", "gafferResources", "0.27.0.0", "resources" ),
 
 ]
 
@@ -298,7 +304,7 @@ CORTEX_PYTHON_LIB_SUFFIX = "-" + cortexMajorVersion + "-python" + pythonVersion
 #os.environ["IEENV_LIBRARY_PREFIX_PATH"] = BUILD_DIR + "/lib"
 
 # we need these imported so we can run the commands to generate the documentation
-ENV_VARS_TO_IMPORT="PATH PYTHONPATH IEENV_ROOT IEENV_DISABLE_WRAPPER_ENV_CHECK IECORE_FONT_PATHS IECOREGL_SHADER_INCLUDE_PATHS OCIO IEENV_WORKING_PATH DOXYGEN_VERSION OSL_VERSION"
+ENV_VARS_TO_IMPORT="PATH PYTHONPATH IEENV_ROOT IEENV_DISABLE_WRAPPER_ENV_CHECK IECORE_FONT_PATHS IECOREGL_SHADER_INCLUDE_PATHS OCIO IEENV_WORKING_PATH DOXYGEN_VERSION OSL_VERSION IE_DEFAULT_CDL_PATH"
 # the output is pretty tedious without this disabled
 os.environ["IEENV_DISABLE_WRAPPER_ENV_CHECK"] = "1"
 
