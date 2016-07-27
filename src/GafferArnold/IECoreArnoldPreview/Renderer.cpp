@@ -1279,11 +1279,37 @@ class ArnoldRenderer : public IECoreScenePreview::Renderer
 			const IECore::FloatData *pixelAspectRatio = cortexCamera->parametersData()->member<IECore::FloatData>( "pixelAspectRatio" );
 			AiNodeSetFlt( options, "aspect_ratio", 1.0f / pixelAspectRatio->readable() ); // arnold is y/x, we're x/y
 
-			const IECore::Box2fData *crop = cortexCamera->parametersData()->member<IECore::Box2fData>( "cropWindow" );
-			AiNodeSetInt( options, "region_min_x", (int)(( resolution->readable().x - 1 ) * crop->readable().min.x ) );
-			AiNodeSetInt( options, "region_min_y", (int)(( resolution->readable().y - 1 ) * crop->readable().min.y ) );
-			AiNodeSetInt( options, "region_max_x", (int)(( resolution->readable().x - 1 ) * crop->readable().max.x ) );
-			AiNodeSetInt( options, "region_max_y", (int)(( resolution->readable().y - 1 ) * crop->readable().max.y ) );
+			const IECore::Box2iData *renderRegion = cortexCamera->parametersData()->member<IECore::Box2iData>( "renderRegion" );
+
+			if( renderRegion )
+			{
+				if( renderRegion->readable().isEmpty() )
+				{
+					// Arnold does not permit empty render regions.  The user intent of an empty render
+					// region is probably to render as little as possible ( it could happen if you
+					// built a tool to crop to an object which passed out of frame ).
+					// We just pick one pixel in the corner
+
+					AiNodeSetInt( options, "region_min_x", 0 );
+					AiNodeSetInt( options, "region_min_y", 0 );
+					AiNodeSetInt( options, "region_max_x", 0 );
+					AiNodeSetInt( options, "region_max_y", 0 );
+				}
+				else
+				{
+					AiNodeSetInt( options, "region_min_x", renderRegion->readable().min.x );
+					AiNodeSetInt( options, "region_min_y", renderRegion->readable().min.y );
+					AiNodeSetInt( options, "region_max_x", renderRegion->readable().max.x );
+					AiNodeSetInt( options, "region_max_y", renderRegion->readable().max.y );
+				}
+			}
+			else
+			{
+				AiNodeResetParameter( options, "region_min_x" );
+				AiNodeResetParameter( options, "region_min_y" );
+				AiNodeResetParameter( options, "region_max_x" );
+				AiNodeResetParameter( options, "region_max_y" );
+			}
 		}
 
 		// Called in a background thread to control a
