@@ -79,7 +79,7 @@ class RendererTest( GafferTest.TestCase ) :
 			n = arnold.AiNodeLookUpByName( "testPlane" )
 			self.assertTrue( arnold.AiNodeEntryGetType( arnold.AiNodeGetNodeEntry( n ) ), arnold.AI_NODE_SHAPE )
 
-	def testCropWindow( self ) :
+	def testRenderRegion( self ) :
 
 		r = GafferScene.Private.IECoreScenePreview.Renderer.create(
 			"IECoreArnold::Renderer",
@@ -92,7 +92,7 @@ class RendererTest( GafferTest.TestCase ) :
 			IECore.Camera(
 				parameters = {
 					"resolution" : IECore.V2i( 2000, 1000 ),
-					"cropWindow" : IECore.Box2f( IECore.V2f( 0 ), IECore.V2f( 1, 0.75 ) ),
+					"renderRegion" : IECore.Box2i( IECore.V2i( 0 ), IECore.V2i( 1999, 749 ) ),
 				}
 			),
 			r.attributes( IECore.CompoundObject() )
