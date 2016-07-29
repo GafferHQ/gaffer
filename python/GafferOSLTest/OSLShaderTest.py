@@ -57,17 +57,19 @@ class OSLShaderTest( GafferOSLTest.OSLTestCase ) :
 		self.assertEqual( n["name"].getValue(), s )
 		self.assertEqual( n["type"].getValue(), "osl:surface" )
 
-		self.assertEqual( n["parameters"].keys(), [ "i", "f", "c", "s" ] )
+		self.assertEqual( n["parameters"].keys(), [ "i", "f", "c", "s", "m" ] )
 
 		self.assertTrue( isinstance( n["parameters"]["i"], Gaffer.IntPlug ) )
 		self.assertTrue( isinstance( n["parameters"]["f"], Gaffer.FloatPlug ) )
 		self.assertTrue( isinstance( n["parameters"]["c"], Gaffer.Color3fPlug ) )
 		self.assertTrue( isinstance( n["parameters"]["s"], Gaffer.StringPlug ) )
+		self.assertTrue( isinstance( n["parameters"]["m"], Gaffer.M44fPlug ) )
 
 		self.assertEqual( n["parameters"]["i"].defaultValue(), 10 )
 		self.assertEqual( n["parameters"]["f"].defaultValue(), 1 )
 		self.assertEqual( n["parameters"]["c"].defaultValue(), IECore.Color3f( 1, 2, 3 ) )
 		self.assertEqual( n["parameters"]["s"].defaultValue(), "s" )
+		self.assertEqual( n["parameters"]["m"].defaultValue(), IECore.M44f() )
 
 		self.assertEqual( n["out"].typeId(), Gaffer.Plug.staticTypeId() )
 
@@ -79,6 +81,7 @@ class OSLShaderTest( GafferOSLTest.OSLTestCase ) :
 		self.assertEqual( network[0].parameters["f"], IECore.FloatData( 1 ) )
 		self.assertEqual( network[0].parameters["c"], IECore.Color3fData( IECore.Color3f( 1, 2, 3 ) ) )
 		self.assertEqual( network[0].parameters["s"], IECore.StringData( "s" ) )
+		self.assertEqual( network[0].parameters["m"], IECore.M44fData( IECore.M44f() ) )
 
 	def testOutputTypes( self ) :
 
@@ -94,7 +97,13 @@ class OSLShaderTest( GafferOSLTest.OSLTestCase ) :
 		self.assertEqual( n["parameters"].keys(), [ "input" ] )
 
 		self.assertEqual( n["out"].typeId(), Gaffer.Plug.staticTypeId() )
-		self.assertEqual( n["out"].keys(), [ "i", "f", "c", "s" ] )
+		self.assertEqual( n["out"].keys(), [ "i", "f", "c", "s", "m" ] )
+
+		self.assertTrue( isinstance( n["out"]["i"], Gaffer.IntPlug ) )
+		self.assertTrue( isinstance( n["out"]["f"], Gaffer.FloatPlug ) )
+		self.assertTrue( isinstance( n["out"]["c"], Gaffer.Color3fPlug ) )
+		self.assertTrue( isinstance( n["out"]["s"], Gaffer.StringPlug ) )
+		self.assertTrue( isinstance( n["out"]["m"], Gaffer.M44fPlug ) )
 
 	def testNetwork( self ) :
 
@@ -155,7 +164,7 @@ class OSLShaderTest( GafferOSLTest.OSLTestCase ) :
 		n = GafferOSL.OSLShader()
 		n.loadShader( os.path.basename( s ) )
 
-		self.assertEqual( n["parameters"].keys(), [ "i", "f", "c", "s" ] )
+		self.assertEqual( n["parameters"].keys(), [ "i", "f", "c", "s", "m" ] )
 
 	def testNoConnectionToParametersPlug( self ) :
 

@@ -39,7 +39,8 @@ surface types
 	int i = 10,
 	float f = 1,
 	color c = color( 1, 2, 3 ),
-	string s = "s"
+	string s = "s",
+	matrix m = 1
 )
 {
 	Ci = diffuse( N );

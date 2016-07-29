@@ -345,6 +345,31 @@ Plug *loadCompoundNumericParameter( const OSLQuery::Parameter *parameter, const 
 	return plug.get();
 }
 
+Plug *loadMatrixParameter( const OSLQuery::Parameter *parameter, const InternedString &name, Gaffer::Plug *parent )
+{
+	const vector<float> &d = parameter->fdefault;
+	M44f defaultValue(
+		d[0], d[1], d[2], d[3],
+		d[4], d[5], d[6], d[7],
+		d[8], d[9], d[10], d[11],
+		d[12], d[13], d[14], d[15]
+	);
+
+	M44fPlug *existingPlug = parent->getChild<M44fPlug>( name );
+	if( existingPlug && existingPlug->defaultValue() == defaultValue )
+	{
+		return existingPlug;
+	}
+
+	M44fPlugPtr plug = new M44fPlug( name, parent->direction(), defaultValue, Plug::Default | Plug::Dynamic );
+
+	transferConnectionOrValue( existingPlug, plug.get() );
+
+	parent->setChild( name, plug );
+
+	return plug.get();
+}
+
 Plug *loadClosureParameter( const OSLQuery::Parameter *parameter, const InternedString &name, Gaffer::Plug *parent )
 {
 	Plug *existingPlug = parent->getChild<Plug>( name );
@@ -562,6 +587,13 @@ Plug *loadShaderParameter( const OSLQuery &query, const OSLQuery::Parameter *par
 				else
 				{
 					result = loadCompoundNumericParameter<V3iPlug>( parameter, name, parent );
+				}
+			}
+			else if( parameter->type.aggregate == TypeDesc::MATRIX44 )
+			{
+				if( parameter->type.basetype == TypeDesc::FLOAT )
+				{
+					result = loadMatrixParameter( parameter, name, parent );
 				}
 			}
 		}
