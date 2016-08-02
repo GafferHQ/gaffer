@@ -40,11 +40,13 @@ shader outputTypes
 	output int i = 10,
 	output float f = 1,
 	output color c = color( 1, 2, 3 ),
-	output string s = "s"
+	output string s = "s",
+	output matrix m = 1
 )
 {
 	i = int( input );
 	f = input;
 	c = color( input );
 	s = "t";
+	m = matrix( 0, 1, 2, 3, 4, 5, 6, 7, 8, 9, 10, 11, 12, 13, 14, 15 );
 }

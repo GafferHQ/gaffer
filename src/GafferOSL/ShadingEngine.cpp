@@ -150,6 +150,9 @@ TypeDesc typeDescFromData( const Data *data, const void *&basePointer )
 		case StringDataTypeId :
 			basePointer = &(static_cast<const StringData *>( data )->readable() );
 			return TypeDesc::TypeString;
+		case M44fDataTypeId :
+			basePointer = static_cast<const M44fData *>( data )->baseReadable();
+			return TypeDesc::TypeMatrix;
 
 		// vector data
 
@@ -170,6 +173,9 @@ TypeDesc typeDescFromData( const Data *data, const void *&basePointer )
 		case Color3fVectorDataTypeId :
 			basePointer = static_cast<const Color3fVectorData *>( data )->baseReadable();
 			return TypeDesc( TypeDesc::FLOAT, TypeDesc::VEC3, TypeDesc::COLOR, static_cast<const IntVectorData *>( data )->readable().size() );
+		case M44fVectorDataTypeId :
+			basePointer = static_cast<const M44fVectorData *>( data )->baseReadable();
+			return TypeDesc( TypeDesc::FLOAT, TypeDesc::MATRIX44, static_cast<const M44fVectorData *>( data )->readable().size() );
 
 		default :
 			return TypeDesc();
@@ -723,7 +729,7 @@ void declareParameters( const CompoundDataMap &parameters, ShadingSystem *shadin
 		}
 		else
 		{
-			msg( Msg::Warning, "OSLRenderer", boost::format( "Parameter \"%s\" has unsupported type \"%s\"" ) % it->first.string() % it->second->typeName() );
+			msg( Msg::Warning, "ShadingEngine", boost::format( "Parameter \"%s\" has unsupported type \"%s\"" ) % it->first.string() % it->second->typeName() );
 		}
 	}
 }
@@ -743,7 +749,7 @@ void declareConnections( const std::string &shaderHandle, const CompoundDataMap 
 			split( splitValue, value, is_any_of( "." ), token_compress_on );
 			if( splitValue.size() != 2 )
 			{
-				msg( Msg::Warning, "OSLRenderer", boost::format( "Parameter \"%s\" has unexpected value \"%s\" - expected value of the form \"link:sourceShader.sourceParameter" ) % it->first.string() % value );
+				msg( Msg::Warning, "ShadingEngine", boost::format( "Parameter \"%s\" has unexpected value \"%s\" - expected value of the form \"link:sourceShader.sourceParameter" ) % it->first.string() % value );
 				continue;
 			}
 
