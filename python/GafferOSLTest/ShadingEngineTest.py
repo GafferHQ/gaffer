@@ -311,5 +311,17 @@ class ShadingEngineTest( GafferOSLTest.OSLTestCase ) :
 		for i in range( 0, len( p["Ci"] ) ) :
 			self.assertTrue( p["Ci"][i].equalWithAbsError( spline( rp["v"][i] ), 0.001 ) )
 
+	def testMatrixInput( self ) :
+
+		shader = self.compileShader( os.path.dirname( __file__ ) + "/shaders/extractTranslate.osl" )
+
+		e = GafferOSL.ShadingEngine( IECore.ObjectVector( [
+			IECore.Shader( shader, "surface", { "m" : IECore.M44f().translate( IECore.V3f( 1, 2, 3 ) ) } )
+		] ) )
+
+		p = e.shade( self.rectanglePoints() )
+		for i in range( 0, len( p["Ci"] ) ) :
+			self.assertEqual( p["translate"][i], IECore.V3f( 1, 2, 3 ) )
+
 if __name__ == "__main__":
 	unittest.main()
