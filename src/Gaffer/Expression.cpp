@@ -118,6 +118,14 @@ void Expression::setExpression( const std::string &expression, const std::string
 	// expression is invalid.
 
 	EnginePtr engine = Engine::create( language );
+	if( !engine )
+	{
+		throw Exception( boost::str(
+			boost::format(
+				"Failed to create engine for language \"%s\""
+			) % language
+		) );
+	}
 
 	std::vector<ValuePlug *> inPlugs, outPlugs;
 	std::vector<IECore::InternedString> contextNames;
