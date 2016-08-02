@@ -1235,5 +1235,15 @@ class ExpressionTest( GafferTest.TestCase ) :
 			"parent['n']['user']['p'] = parent['n']['user']['p'] * 2"
 		)
 
+	def testInvalidLanguage( self ) :
+
+		s = Gaffer.ScriptNode()
+		s["n"] = Gaffer.Node()
+		s["n"]["user"]["p"] = Gaffer.IntPlug( flags = Gaffer.Plug.Flags.Default | Gaffer.Plug.Flags.Dynamic )
+
+		s["e"] = Gaffer.Expression()
+		for language in ( "", "latin" ) :
+			self.assertRaisesRegexp( RuntimeError, "Failed to create engine", s["e"].setExpression, "parent.n.user.p = 10", language )
+
 if __name__ == "__main__":
 	unittest.main()
