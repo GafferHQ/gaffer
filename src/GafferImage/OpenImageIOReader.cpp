@@ -522,7 +522,19 @@ void OpenImageIOReader::hashFormat( const GafferImage::ImagePlug *output, const 
 	ImageNode::hashFormat( output, context, h );
 	hashFileName( context, h );
 	refreshCountPlug()->hash( h );
-	missingFrameModePlug()->hash( h );
+
+	std::string fileName = fileNamePlug()->getValue();
+	MissingFrameMode mode = (MissingFrameMode)missingFrameModePlug()->getValue();
+	mode = ( mode == Black ) ? Hold : mode;
+
+	const ImageSpec *spec = imageSpec( fileName, mode, this, context );
+
+	if( !spec )
+	{
+		Format format = FormatPlug::getDefaultFormat( context );
+		h.append(format.getDisplayWindow());
+		h.append(format.getPixelAspect());
+	}
 }
 
 GafferImage::Format OpenImageIOReader::computeFormat( const Gaffer::Context *context, const ImagePlug *parent ) const
@@ -552,16 +564,32 @@ void OpenImageIOReader::hashDataWindow( const GafferImage::ImagePlug *output, co
 	ImageNode::hashDataWindow( output, context, h );
 	hashFileName( context, h );
 	refreshCountPlug()->hash( h );
-	missingFrameModePlug()->hash( h );
+
+	std::string fileName = fileNamePlug()->getValue();
+	MissingFrameMode mode = (MissingFrameMode)missingFrameModePlug()->getValue();
+	mode = ( mode == Black ) ? Hold : mode;
+
+	const ImageSpec *spec = imageSpec( fileName, mode, this, context );
+
+	if( !spec )
+	{
+		Format format = FormatPlug::getDefaultFormat( context );
+		h.append(format.getDisplayWindow());
+		h.append(format.getPixelAspect());
+	}
 }
 
 Imath::Box2i OpenImageIOReader::computeDataWindow( const Gaffer::Context *context, const ImagePlug *parent ) const
 {
 	std::string fileName = fileNamePlug()->getValue();
-	const ImageSpec *spec = imageSpec( fileName, (MissingFrameMode)missingFrameModePlug()->getValue(), this, context );
+	MissingFrameMode mode = (MissingFrameMode)missingFrameModePlug()->getValue();
+	mode = ( mode == Black ) ? Hold : mode;
+	const ImageSpec *spec = imageSpec( fileName, mode, this, context );
 	if( !spec )
 	{
-		return parent->dataWindowPlug()->defaultValue();
+		Format format = FormatPlug::getDefaultFormat( context );
+		Imath::Box2i dataWindow(Imath::V2i(format.getDisplayWindow().min.x, format.getDisplayWindow().min.y), Imath::V2i(format.getDisplayWindow().max.x, format.getDisplayWindow().max.y));
+		return dataWindow;
 	}
 
 	Format format( Imath::Box2i( Imath::V2i( spec->full_x, spec->full_y ), Imath::V2i( spec->full_width + spec->full_x, spec->full_height + spec->full_y ) ) );
