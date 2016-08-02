@@ -35,6 +35,8 @@
 #
 ##########################################################################
 
+__import__( "GafferImageUI" )
+
 from _GafferSceneUI import *
 
 from SceneHierarchy import SceneHierarchy
@@ -68,6 +70,7 @@ import MapOffsetUI
 import CustomAttributesUI
 import CustomOptionsUI
 import SceneViewUI
+import ShaderViewUI
 import SceneSwitchUI
 import ShaderSwitchUI
 import ShaderAssignmentUI

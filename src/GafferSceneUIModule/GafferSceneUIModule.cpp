@@ -49,6 +49,7 @@
 #include "GafferSceneUIBindings/LightVisualiserBinding.h"
 #include "GafferSceneUIBindings/StandardLightVisualiserBinding.h"
 #include "GafferSceneUIBindings/SceneHierarchyBinding.h"
+#include "GafferSceneUIBindings/ShaderViewBinding.h"
 
 using namespace boost::python;
 using namespace IECorePython;
@@ -74,6 +75,7 @@ BOOST_PYTHON_MODULE( _GafferSceneUI )
 {
 
 	bindSceneView();
+	bindShaderView();
 
 	GafferUIBindings::GadgetClass<SceneGadget>()
 		.def( init<>() )
