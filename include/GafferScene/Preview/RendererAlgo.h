@@ -57,6 +57,9 @@ void outputCameras( const ScenePlug *scene, const IECore::CompoundObject *global
 void outputLights( const ScenePlug *scene, const IECore::CompoundObject *globals, IECoreScenePreview::Renderer *renderer );
 void outputObjects( const ScenePlug *scene, const IECore::CompoundObject *globals, IECoreScenePreview::Renderer *renderer );
 
+/// Applies the resolution, aspect ratio etc from the globals to the camera.
+void applyCameraGlobals( IECore::Camera *camera, const IECore::CompoundObject *globals );
+
 } // namespace Preview
 
 } // namespace GafferScene
