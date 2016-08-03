@@ -1,7 +1,6 @@
 ##########################################################################
 #
-#  Copyright (c) 2012-2014, John Haddon. All rights reserved.
-#  Copyright (c) 2013, Image Engine Design Inc. All rights reserved.
+#  Copyright (c) 2016, Image Engine Design Inc. All rights reserved.
 #
 #  Redistribution and use in source and binary forms, with or without
 #  modification, are permitted provided that the following conditions are
@@ -35,13 +34,28 @@
 #
 ##########################################################################
 
-__import__( "Gaffer" )
-__import__( "GafferImage" )
+import unittest
 
-from _GafferScene import *
+import Gaffer
+import GafferScene
+import GafferSceneTest
 
-from ScriptProcedural import ScriptProcedural
-from AlembicPath import AlembicPath
-from ShaderBall import ShaderBall
+class ShaderBallTest( GafferSceneTest.SceneTestCase ) :
 
-__import__( "IECore" ).loadConfig( "GAFFER_STARTUP_PATHS", {}, subdirectory = "GafferScene" )
+	def testEnabled( self ) :
+
+		s = GafferScene.ShaderBall()
+		self.assertEqual( s["enabled"].getValue(), True )
+		self.assertTrue( s["out"].childNames( "/" ) )
+
+		s["enabled"].setValue( False )
+		self.assertFalse( s["out"].childNames( "/" ) )
+
+	def testOutInputNotSerialised( self ) :
+
+		s = Gaffer.ScriptNode()
+		s["b"] = GafferScene.ShaderBall()
+		self.assertFalse( "setInput" in s.serialise() )
+
+if __name__ == "__main__":
+	unittest.main()

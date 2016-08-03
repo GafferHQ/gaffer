@@ -121,6 +121,7 @@ import SceneLoopUI
 import FilterProcessorUI
 import MeshToPointsUI
 import RenderUI
+import ShaderBallUI
 
 # then all the PathPreviewWidgets. note that the order
 # of import controls the order of display.

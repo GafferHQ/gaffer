@@ -1,7 +1,6 @@
 ##########################################################################
 #
-#  Copyright (c) 2012-2014, John Haddon. All rights reserved.
-#  Copyright (c) 2013, Image Engine Design Inc. All rights reserved.
+#  Copyright (c) 2016, Image Engine Design Inc. All rights reserved.
 #
 #  Redistribution and use in source and binary forms, with or without
 #  modification, are permitted provided that the following conditions are
@@ -35,13 +34,31 @@
 #
 ##########################################################################
 
-__import__( "Gaffer" )
-__import__( "GafferImage" )
+import Gaffer
+import GafferScene
 
-from _GafferScene import *
+Gaffer.Metadata.registerNode(
 
-from ScriptProcedural import ScriptProcedural
-from AlembicPath import AlembicPath
-from ShaderBall import ShaderBall
+	GafferScene.ShaderBall,
 
-__import__( "IECore" ).loadConfig( "GAFFER_STARTUP_PATHS", {}, subdirectory = "GafferScene" )
+	"description",
+	"""
+	Generates scenes suitable for rendering shader balls.
+	""",
+
+	plugs = {
+
+		"shader" : [
+
+			"description",
+			"""
+			The shader to be rendered.
+			""",
+
+			"nodeGadget:nodulePosition", "left",
+			"nodule:type", "GafferUI::StandardNodule",
+
+		]
+
+	}
+)
