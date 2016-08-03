@@ -38,4 +38,6 @@ __import__( "GafferScene" )
 
 from _GafferArnold import *
 
+from ArnoldShaderBall import ArnoldShaderBall
+
 __import__( "IECore" ).loadConfig( "GAFFER_STARTUP_PATHS", {}, subdirectory = "GafferArnold" )

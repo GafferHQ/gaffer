@@ -1,6 +1,6 @@
 ##########################################################################
 #
-#  Copyright (c) 2012, John Haddon. All rights reserved.
+#  Copyright (c) 2016, Image Engine Design Inc. All rights reserved.
 #
 #  Redistribution and use in source and binary forms, with or without
 #  modification, are permitted provided that the following conditions are
@@ -34,16 +34,36 @@
 #
 ##########################################################################
 
-import ArnoldShaderUI
-import ArnoldRenderUI
-import ShaderMenu
-import ArnoldOptionsUI
-import ArnoldAttributesUI
-import ArnoldLightUI
-import ArnoldVDBUI
-import InteractiveArnoldRenderUI
-import ArnoldDisplacementUI
-import ArnoldMeshLightUI
-import ArnoldShaderBallUI
+import IECore
 
-__import__( "IECore" ).loadConfig( "GAFFER_STARTUP_PATHS", {}, subdirectory = "GafferArnoldUI" )
+import Gaffer
+import GafferArnold
+
+Gaffer.Metadata.registerNode(
+
+	GafferArnold.ArnoldShaderBall,
+
+	"description",
+	"""
+	Generates scenes suitable for rendering shader balls with Arnold.
+	""",
+
+	plugs = {
+
+		"environment" : [
+
+			"description",
+			"""
+			An environment map used for lighting. Should be in latlong
+			format.
+			""",
+
+			"plugValueWidget:type", "GafferUI.FileSystemPathPlugValueWidget",
+			"pathPlugValueWidget:leaf", True,
+			"pathPlugValueWidget:valid", True,
+			"pathPlugValueWidget:bookmarks", "texture",
+
+		]
+
+	}
+)
