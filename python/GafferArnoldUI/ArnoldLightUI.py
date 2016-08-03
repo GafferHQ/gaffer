@@ -35,6 +35,31 @@
 ##########################################################################
 
 import Gaffer
+import GafferArnold
+
+Gaffer.Metadata.registerNode(
+
+	GafferArnold.ArnoldLight,
+
+	plugs = {
+
+		"parameters.*" : [
+
+			# Most light parameters are not connectable.
+			"nodule:type", "",
+
+		],
+
+		"parameters.color" : [
+
+			# The color parameter on quad and skydome lights is connectable.
+			"nodule:type", lambda plug : "GafferUI::StandardNodule" if plug.node()["__shaderName"].getValue() in ( "quad_light", "skydome_light" ) else ""
+
+		],
+
+	}
+
+)
 
 Gaffer.Metadata.registerValue( "ai:light:spot_light", "type", "spot" )
 Gaffer.Metadata.registerValue( "ai:light:spot_light", "coneAngleParameter", "cone_angle" )
