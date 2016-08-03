@@ -1,6 +1,6 @@
 ##########################################################################
 #
-#  Copyright (c) 2013, Image Engine Design Inc. All rights reserved.
+#  Copyright (c) 2016, Image Engine Design Inc. All rights reserved.
 #
 #  Redistribution and use in source and binary forms, with or without
 #  modification, are permitted provided that the following conditions are
@@ -34,13 +34,31 @@
 #
 ##########################################################################
 
-import RenderManRenderUI
-import RenderManAttributesUI
-import RenderManOptionsUI
-import InteractiveRenderManRenderUI
-import RenderManLightUI
-import RenderManShaderUI
-import ShaderMenu
-import RenderManShaderBallUI
+import IECore
 
-__import__( "IECore" ).loadConfig( "GAFFER_STARTUP_PATHS", {}, subdirectory = "GafferRenderManUI" )
+import Gaffer
+import GafferScene
+import GafferRenderMan
+
+## \todo This utterly sucks, because the default RSL shaders
+# utterly suck too.
+class RenderManShaderBall( GafferScene.ShaderBall ) :
+
+	def __init__( self, name = "RenderManShaderBall" ) :
+
+		GafferScene.ShaderBall.__init__( self, name )
+
+		self["environment"] = Gaffer.StringPlug( defaultValue = "${GAFFER_ROOT}/resources/hdri/studio.exr" )
+
+		self["__envLight"] = GafferRenderMan.RenderManLight()
+		self["__envLight"].loadShader( "envlight" )
+		self["__envLight"]["parameters"]["envmap"].setInput( self["environment"] )
+
+		self["__parentLights"] = GafferScene.Parent()
+		self["__parentLights"]["in"].setInput( self._outPlug().getInput() )
+		self["__parentLights"]["child"].setInput( self["__envLight"]["out"] )
+		self["__parentLights"]["parent"].setValue( "/" )
+
+		self._outPlug().setInput( self["__parentLights"]["out"] )
+
+IECore.registerRunTimeTyped( RenderManShaderBall, typeName = "GafferRenderMan::RenderManShaderBall" )

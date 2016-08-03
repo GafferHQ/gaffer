@@ -1,6 +1,6 @@
 ##########################################################################
 #
-#  Copyright (c) 2013, Image Engine Design Inc. All rights reserved.
+#  Copyright (c) 2016, Image Engine Design Inc. All rights reserved.
 #
 #  Redistribution and use in source and binary forms, with or without
 #  modification, are permitted provided that the following conditions are
@@ -34,13 +34,36 @@
 #
 ##########################################################################
 
-import RenderManRenderUI
-import RenderManAttributesUI
-import RenderManOptionsUI
-import InteractiveRenderManRenderUI
-import RenderManLightUI
-import RenderManShaderUI
-import ShaderMenu
-import RenderManShaderBallUI
+import IECore
 
-__import__( "IECore" ).loadConfig( "GAFFER_STARTUP_PATHS", {}, subdirectory = "GafferRenderManUI" )
+import Gaffer
+import GafferRenderMan
+
+Gaffer.Metadata.registerNode(
+
+	GafferRenderMan.RenderManShaderBall,
+
+	"description",
+	"""
+	Generates scenes suitable for rendering shader balls with RenderMan.
+	""",
+
+	plugs = {
+
+		"environment" : [
+
+			"description",
+			"""
+			An environment map used for lighting. Should be in latlong
+			format.
+			""",
+
+			"plugValueWidget:type", "GafferUI.FileSystemPathPlugValueWidget",
+			"pathPlugValueWidget:leaf", True,
+			"pathPlugValueWidget:valid", True,
+			"pathPlugValueWidget:bookmarks", "texture",
+
+		]
+
+	}
+)

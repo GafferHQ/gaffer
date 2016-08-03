@@ -57,5 +57,6 @@ __setupEnvironment()
 from _GafferRenderMan import *
 
 from RenderManRender import RenderManRender
+from RenderManShaderBall import RenderManShaderBall
 
 __import__( "IECore" ).loadConfig( "GAFFER_STARTUP_PATHS", {}, subdirectory = "GafferRenderMan" )
