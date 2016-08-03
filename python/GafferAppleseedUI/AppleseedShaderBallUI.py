@@ -1,6 +1,6 @@
 ##########################################################################
 #
-#  Copyright (c) 2014, Esteban Tovagliari. All rights reserved.
+#  Copyright (c) 2016, Image Engine Design Inc. All rights reserved.
 #
 #  Redistribution and use in source and binary forms, with or without
 #  modification, are permitted provided that the following conditions are
@@ -34,13 +34,36 @@
 #
 ##########################################################################
 
-import AppleseedAttributesUI
-import AppleseedLightUI
-import AppleseedOptionsUI
-import AppleseedRenderUI
-import InteractiveAppleseedRenderUI
-import LightMenu
-import AppleseedShaderAdaptorUI
-import AppleseedShaderBallUI
+import IECore
 
-__import__( "IECore" ).loadConfig( "GAFFER_STARTUP_PATHS", {}, subdirectory = "GafferAppleseedUI" )
+import Gaffer
+import GafferAppleseed
+
+Gaffer.Metadata.registerNode(
+
+	GafferAppleseed.AppleseedShaderBall,
+
+	"description",
+	"""
+	Generates scenes suitable for rendering shader balls with Appleseed.
+	""",
+
+	plugs = {
+
+		"environment" : [
+
+			"description",
+			"""
+			An environment map used for lighting. Should be in latlong
+			format.
+			""",
+
+			"plugValueWidget:type", "GafferUI.FileSystemPathPlugValueWidget",
+			"pathPlugValueWidget:leaf", True,
+			"pathPlugValueWidget:valid", True,
+			"pathPlugValueWidget:bookmarks", "texture",
+
+		]
+
+	}
+)

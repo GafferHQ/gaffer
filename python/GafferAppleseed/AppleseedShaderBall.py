@@ -1,6 +1,6 @@
 ##########################################################################
 #
-#  Copyright (c) 2014, Esteban Tovagliari. All rights reserved.
+#  Copyright (c) 2016, Image Engine Design Inc. All rights reserved.
 #
 #  Redistribution and use in source and binary forms, with or without
 #  modification, are permitted provided that the following conditions are
@@ -34,13 +34,39 @@
 #
 ##########################################################################
 
-import AppleseedAttributesUI
-import AppleseedLightUI
-import AppleseedOptionsUI
-import AppleseedRenderUI
-import InteractiveAppleseedRenderUI
-import LightMenu
-import AppleseedShaderAdaptorUI
-import AppleseedShaderBallUI
+import IECore
 
-__import__( "IECore" ).loadConfig( "GAFFER_STARTUP_PATHS", {}, subdirectory = "GafferAppleseedUI" )
+import Gaffer
+import GafferScene
+import GafferAppleseed
+
+class AppleseedShaderBall( GafferScene.ShaderBall ) :
+
+	def __init__( self, name = "AppleseedShaderBall" ) :
+
+		GafferScene.ShaderBall.__init__( self, name )
+
+		self["environment"] = Gaffer.StringPlug( defaultValue = "${GAFFER_ROOT}/resources/hdri/studio.exr" )
+
+		# Appleseed doesn't support primitives spheres
+		self["__sphere"]["type"].setValue( self["__sphere"].Type.Mesh )
+
+		self["__skyDome"] = GafferAppleseed.AppleseedLight()
+		self["__skyDome"].loadShader( "latlong_map_environment_edf" )
+		self["__skyDome"]["parameters"]["radiance_map"].setInput( self["environment"] )
+
+		self["__skyDome"]["parameters"]["horizontal_shift"].setValue( 90 )
+
+		self["__parentLights"] = GafferScene.Parent()
+		self["__parentLights"]["in"].setInput( self._outPlug().getInput() )
+		self["__parentLights"]["child"].setInput( self["__skyDome"]["out"] )
+		self["__parentLights"]["parent"].setValue( "/" )
+
+		## \todo Consider using an adaptor registry implicitly in the *Render
+		# nodes so we don't have to do it explicitly here.
+		self["__shaderAdaptor"] = GafferAppleseed.AppleseedShaderAdaptor()
+		self["__shaderAdaptor"]["in"].setInput( self["__parentLights"]["out"] )
+
+		self._outPlug().setInput( self["__shaderAdaptor"]["out"] )
+
+IECore.registerRunTimeTyped( AppleseedShaderBall, typeName = "GafferAppleseed::AppleseedShaderBall" )
