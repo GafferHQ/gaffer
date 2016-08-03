@@ -376,7 +376,10 @@ class InteractiveRender::SceneGraph
 				if( const IECore::Camera *camera = runTimeCast<const IECore::Camera>( object.get() ) )
 				{
 					IECore::CameraPtr cameraCopy = camera->copy();
-					applyCameraGlobals( cameraCopy.get(), globals );
+
+					// Explicit namespace can be removed once deprecated applyCameraGlobals
+					// is removed from GafferScene::SceneAlgo
+					GafferScene::Preview::applyCameraGlobals( cameraCopy.get(), globals );
 					m_objectInterface = renderer->camera( name, cameraCopy.get(), attributesInterface( renderer ) );
 				}
 			}
