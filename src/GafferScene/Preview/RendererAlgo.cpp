@@ -414,7 +414,10 @@ struct CameraOutput : public LocationOutput
 			if( const Camera *camera = runTimeCast<const Camera>( object.get() ) )
 			{
 				IECore::CameraPtr cameraCopy = camera->copy();
-				applyCameraGlobals( cameraCopy.get(), m_globals );
+
+				// Explicit namespace can be removed once deprecated applyCameraGlobals
+				// is removed from GafferScene::SceneAlgo
+				GafferScene::Preview::applyCameraGlobals( cameraCopy.get(), m_globals );
 
 				std::string name;
 				ScenePlug::pathToString( path, name );
@@ -716,6 +719,113 @@ void outputObjects( const ScenePlug *scene, const IECore::CompoundObject *global
 	ConstPathMatcherDataPtr lightSet = scene->set( "__lights" );
 	ObjectOutput output( renderer, globals, cameraSet->readable(), lightSet->readable() );
 	parallelProcessLocations( scene, output );
+}
+
+void applyCameraGlobals( IECore::Camera *camera, const IECore::CompoundObject *globals )
+{
+
+	// apply the resolution, aspect ratio and crop window
+
+	V2i resolution( 640, 480 );
+
+	const V2iData *resolutionOverrideData = camera->parametersData()->member<V2iData>( "resolutionOverride" );
+	if( resolutionOverrideData )
+	{
+		// We allow a parameter on the camera to override the resolution from the globals - this
+		// is useful when defining secondary cameras for doing texture projections.
+		/// \todo Consider how this might fit in as part of a more comprehensive camera setup.
+		/// Perhaps we might actually want a specific Camera subclass for such things?
+		resolution = resolutionOverrideData->readable();
+	}
+	else
+	{
+		if( const V2iData *resolutionData = globals->member<V2iData>( "option:render:resolution" ) )
+		{
+			resolution = resolutionData->readable();
+		}
+
+		if( const FloatData *resolutionMultiplierData = globals->member<FloatData>( "option:render:resolutionMultiplier" ) )
+		{
+			resolution.x = int((float)resolution.x * resolutionMultiplierData->readable());
+			resolution.y = int((float)resolution.y * resolutionMultiplierData->readable());
+		}
+
+		const FloatData *pixelAspectRatioData = globals->member<FloatData>( "option:render:pixelAspectRatio" );
+		if( pixelAspectRatioData )
+		{
+			camera->parameters()["pixelAspectRatio"] = pixelAspectRatioData->copy();
+		}
+	}
+
+	camera->parameters()["resolution"] = new V2iData( resolution );
+
+	// calculate an appropriate screen window
+
+	camera->addStandardParameters();
+
+	// apply overscan
+
+
+	Box2i renderRegion( V2i( 0 ), resolution - V2i( 1 ) );
+
+	const BoolData *overscanData = globals->member<BoolData>( "option:render:overscan" );
+	if( overscanData && overscanData->readable() )
+	{
+		// get offsets for each corner of image (as a multiplier of the image width)
+		V2f minOffset( 0.1 ), maxOffset( 0.1 );
+		if( const FloatData *overscanValueData = globals->member<FloatData>( "option:render:overscanLeft" ) )
+		{
+			minOffset.x = overscanValueData->readable();
+		}
+		if( const FloatData *overscanValueData = globals->member<FloatData>( "option:render:overscanRight" ) )
+		{
+			maxOffset.x = overscanValueData->readable();
+		}
+		if( const FloatData *overscanValueData = globals->member<FloatData>( "option:render:overscanBottom" ) )
+		{
+			minOffset.y = overscanValueData->readable();
+		}
+		if( const FloatData *overscanValueData = globals->member<FloatData>( "option:render:overscanTop" ) )
+		{
+			maxOffset.y = overscanValueData->readable();
+		}
+
+		// convert those offsets into pixel values and apply them to the render region
+		renderRegion.min -= V2i(
+			int(minOffset.x * (float)resolution.x),
+			int(minOffset.y * (float)resolution.y)
+		);
+
+		renderRegion.max += V2i(
+			int(maxOffset.x * (float)resolution.x),
+			int(maxOffset.y * (float)resolution.y)
+		);
+	}
+
+	
+	const Box2fData *cropWindowData = globals->member<Box2fData>( "option:render:cropWindow" );
+	if( cropWindowData )
+	{
+		const Box2f &cropWindow = cropWindowData->readable();
+		Box2i cropRegion(
+			V2i( (int)( round( resolution.x * cropWindow.min.x ) ),
+			     (int)( round( resolution.y * cropWindow.min.y ) ) ),
+			V2i( (int)( round( resolution.x * cropWindow.max.x ) ) - 1,
+			     (int)( round( resolution.y * cropWindow.max.y ) ) - 1 ) );
+
+		renderRegion.min.x = std::max( renderRegion.min.x, cropRegion.min.x );
+		renderRegion.max.x = std::min( renderRegion.max.x, cropRegion.max.x );
+		renderRegion.min.y = std::max( renderRegion.min.y, cropRegion.min.y );
+		renderRegion.max.y = std::min( renderRegion.max.y, cropRegion.max.y );
+			
+	}
+
+	camera->parameters()["renderRegion"] = new Box2iData( renderRegion );
+
+	// apply the shutter
+
+	camera->parameters()["shutter"] = new V2fData( shutter( globals ) );
+
 }
 
 } // namespace Preview
