@@ -497,7 +497,7 @@ class ArnoldRenderTest( GafferTest.TestCase ) :
 			self.assertEqual( arnold.AiNodeGetInt( options, "region_max_y" ), 479 )
 
 		# Test Empty Crop Window
-		s["options"]["options"]["renderCropWindow"]["value"].setValue( IECore.Box2f( IECore.V2f( 0.5, 0.5 ), IECore.V2f( 0.5, 0.5 ) ) )
+		s["options"]["options"]["renderCropWindow"]["value"].setValue( IECore.Box2f() )
 
 		s["render"]["task"].execute()
 
@@ -510,9 +510,9 @@ class ArnoldRenderTest( GafferTest.TestCase ) :
 
 			# Since Arnold doesn't support empty regions, we default to one pixel in the corner
 			self.assertEqual( arnold.AiNodeGetInt( options, "region_min_x" ), 0 )
-			self.assertEqual( arnold.AiNodeGetInt( options, "region_max_x" ), 1 )
+			self.assertEqual( arnold.AiNodeGetInt( options, "region_max_x" ), 0 )
 			self.assertEqual( arnold.AiNodeGetInt( options, "region_min_y" ), 0 )
-			self.assertEqual( arnold.AiNodeGetInt( options, "region_max_y" ), 1 )
+			self.assertEqual( arnold.AiNodeGetInt( options, "region_max_y" ), 0 )
 
 		# Apply Overscan
 		s["options"]["options"]["renderCropWindow"]["enabled"].setValue( False )
