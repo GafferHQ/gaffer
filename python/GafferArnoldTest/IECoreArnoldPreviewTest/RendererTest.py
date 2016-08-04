@@ -256,6 +256,60 @@ class RendererTest( GafferTest.TestCase ) :
 			self.assertEqual( len( lights ), 1 )
 			self.assertEqual( "light:testLight", arnold.AiNodeGetName( lights[0] ) )
 
+	def testLightTransforms( self ) :
+
+		r = GafferScene.Private.IECoreScenePreview.Renderer.create(
+			"IECoreArnold::Renderer",
+			GafferScene.Private.IECoreScenePreview.Renderer.RenderType.SceneDescription,
+			self.temporaryDirectory() + "/test.ass"
+		)
+
+		lightAttributes = r.attributes(
+			IECore.CompoundObject( {
+				"ai:light" : IECore.ObjectVector( [ IECore.Shader( "point_light", "ai:light" ), ] )
+			} )
+		)
+
+		r.light( "untransformedLight", None, lightAttributes )
+
+		staticLight = r.light( "staticLight", None, lightAttributes )
+		staticLight.transform( IECore.M44f().translate( IECore.V3f( 1, 2, 3 ) ) )
+
+		movingLight = r.light( "movingLight", None, lightAttributes )
+		movingLight.transform(
+			[ IECore.M44f().translate( IECore.V3f( 1, 2, 3 ) ), IECore.M44f().translate( IECore.V3f( 4, 5, 6 ) ) ],
+			[ 2.5, 3.5 ]
+		)
+
+		r.render()
+		del r
+
+		with IECoreArnold.UniverseBlock() :
+
+			arnold.AiASSLoad( self.temporaryDirectory() + "/test.ass" )
+
+			untransformedLight = arnold.AiNodeLookUpByName( "light:untransformedLight" )
+			staticLight = arnold.AiNodeLookUpByName( "light:staticLight" )
+			movingLight = arnold.AiNodeLookUpByName( "light:movingLight" )
+
+			m = arnold.AtMatrix()
+			arnold.AiNodeGetMatrix( untransformedLight, "matrix", m )
+			self.assertEqual( self.__m44f( m ), IECore.M44f() )
+
+			arnold.AiNodeGetMatrix( staticLight, "matrix", m )
+			self.assertEqual( self.__m44f( m ), IECore.M44f().translate( IECore.V3f( 1, 2, 3 ) ) )
+
+			matrices = arnold.AiNodeGetArray( movingLight, "matrix" )
+			times = arnold.AiNodeGetArray( movingLight, "time_samples" )
+
+			self.assertEqual( arnold.AiArrayGetFlt( times, 0 ), 2.5 )
+			self.assertEqual( arnold.AiArrayGetFlt( times, 1 ), 3.5 )
+
+			arnold.AiArrayGetMtx( matrices, 0, m )
+			self.assertEqual( self.__m44f( m ), IECore.M44f().translate( IECore.V3f( 1, 2, 3 ) ) )
+			arnold.AiArrayGetMtx( matrices, 1, m )
+			self.assertEqual( self.__m44f( m ), IECore.M44f().translate( IECore.V3f( 4, 5, 6 ) ) )
+
 	def testSharedLightAttributes( self ) :
 
 		r = GafferScene.Private.IECoreScenePreview.Renderer.create(
@@ -835,6 +889,16 @@ class RendererTest( GafferTest.TestCase ) :
 
 			self.assertEqual( arnold.AiNodeEntryGetName( arnold.AiNodeGetNodeEntry( flat1 ) ), "flat" )
 			self.assertEqual( arnold.AiNodeEntryGetName( arnold.AiNodeGetNodeEntry( flat2 ) ), "flat" )
+
+	@staticmethod
+	def __m44f( m ) :
+
+		return IECore.M44f(
+			m.a00, m.a01, m.a02, m.a03,
+			m.a10, m.a11, m.a12, m.a13,
+			m.a20, m.a21, m.a22, m.a23,
+			m.a30, m.a31, m.a32, m.a33
+		)
 
 	def __allNodes( self, type = arnold.AI_NODE_ALL, ignoreBuiltIn = True ) :
 
