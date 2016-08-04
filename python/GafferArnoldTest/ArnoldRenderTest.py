@@ -449,6 +449,97 @@ class ArnoldRenderTest( GafferTest.TestCase ) :
 			self.assertEqual( arnold.AiNodeGetInt( options, "xres" ), 400 )
 			self.assertEqual( arnold.AiNodeGetInt( options, "yres" ), 200 )
 
+	def testRenderRegion( self ) :
+
+		s = Gaffer.ScriptNode()
+
+		s["camera"] = GafferScene.Camera()
+
+		s["options"] = GafferScene.StandardOptions()
+		s["options"]["in"].setInput( s["camera"]["out"] )
+		s["options"]["options"]["renderCamera"]["enabled"].setValue( True )
+		s["options"]["options"]["renderCamera"]["value"].setValue( "/camera" )
+
+		s["render"] = GafferArnold.ArnoldRender()
+		s["render"]["in"].setInput( s["options"]["out"] )
+		s["render"]["mode"].setValue( s["render"].Mode.SceneDescriptionMode )
+		s["render"]["fileName"].setValue( self.temporaryDirectory() + "/test.ass" )
+
+		# Default region
+		s["render"]["task"].execute()
+
+		with IECoreArnold.UniverseBlock() :
+
+			arnold.AiASSLoad( self.temporaryDirectory() + "/test.ass" )
+			options = arnold.AiUniverseGetOptions()
+			self.assertEqual( arnold.AiNodeGetInt( options, "xres" ), 640 )
+			self.assertEqual( arnold.AiNodeGetInt( options, "yres" ), 480 )
+			self.assertEqual( arnold.AiNodeGetInt( options, "region_min_x" ), 0 )
+			self.assertEqual( arnold.AiNodeGetInt( options, "region_max_x" ), 639 )
+			self.assertEqual( arnold.AiNodeGetInt( options, "region_min_y" ), 0 )
+			self.assertEqual( arnold.AiNodeGetInt( options, "region_max_y" ), 479 )
+
+		# Apply Crop Window
+		s["options"]["options"]["renderCropWindow"]["enabled"].setValue( True )
+		s["options"]["options"]["renderCropWindow"]["value"].setValue( IECore.Box2f( IECore.V2f( 0.25, 0.5 ), IECore.V2f( 0.75, 1.0 ) ) )
+
+		s["render"]["task"].execute()
+
+		with IECoreArnold.UniverseBlock() :
+
+			arnold.AiASSLoad( self.temporaryDirectory() + "/test.ass" )
+			options = arnold.AiUniverseGetOptions()
+			self.assertEqual( arnold.AiNodeGetInt( options, "xres" ), 640 )
+			self.assertEqual( arnold.AiNodeGetInt( options, "yres" ), 480 )
+			self.assertEqual( arnold.AiNodeGetInt( options, "region_min_x" ), 160 )
+			self.assertEqual( arnold.AiNodeGetInt( options, "region_max_x" ), 479 )
+			self.assertEqual( arnold.AiNodeGetInt( options, "region_min_y" ), 240 )
+			self.assertEqual( arnold.AiNodeGetInt( options, "region_max_y" ), 479 )
+
+		# Test Empty Crop Window
+		s["options"]["options"]["renderCropWindow"]["value"].setValue( IECore.Box2f( IECore.V2f( 0.5, 0.5 ), IECore.V2f( 0.5, 0.5 ) ) )
+
+		s["render"]["task"].execute()
+
+		with IECoreArnold.UniverseBlock() :
+
+			arnold.AiASSLoad( self.temporaryDirectory() + "/test.ass" )
+			options = arnold.AiUniverseGetOptions()
+			self.assertEqual( arnold.AiNodeGetInt( options, "xres" ), 640 )
+			self.assertEqual( arnold.AiNodeGetInt( options, "yres" ), 480 )
+
+			# Since Arnold doesn't support empty regions, we default to one pixel in the corner
+			self.assertEqual( arnold.AiNodeGetInt( options, "region_min_x" ), 0 )
+			self.assertEqual( arnold.AiNodeGetInt( options, "region_max_x" ), 1 )
+			self.assertEqual( arnold.AiNodeGetInt( options, "region_min_y" ), 0 )
+			self.assertEqual( arnold.AiNodeGetInt( options, "region_max_y" ), 1 )
+
+		# Apply Overscan
+		s["options"]["options"]["renderCropWindow"]["enabled"].setValue( False )
+		s["options"]["options"]["overscan"]["enabled"].setValue( True )
+		s["options"]["options"]["overscan"]["value"].setValue( True )
+		s["options"]["options"]["overscanTop"]["enabled"].setValue( True )
+		s["options"]["options"]["overscanTop"]["value"].setValue( 0.1 )
+		s["options"]["options"]["overscanBottom"]["enabled"].setValue( True )
+		s["options"]["options"]["overscanBottom"]["value"].setValue( 0.2 )
+		s["options"]["options"]["overscanLeft"]["enabled"].setValue( True )
+		s["options"]["options"]["overscanLeft"]["value"].setValue( 0.3 )
+		s["options"]["options"]["overscanRight"]["enabled"].setValue( True )
+		s["options"]["options"]["overscanRight"]["value"].setValue( 0.4 )
+
+		s["render"]["task"].execute()
+
+		with IECoreArnold.UniverseBlock() :
+
+			arnold.AiASSLoad( self.temporaryDirectory() + "/test.ass" )
+			options = arnold.AiUniverseGetOptions()
+			self.assertEqual( arnold.AiNodeGetInt( options, "xres" ), 640 )
+			self.assertEqual( arnold.AiNodeGetInt( options, "yres" ), 480 )
+			self.assertEqual( arnold.AiNodeGetInt( options, "region_min_x" ), -192 )
+			self.assertEqual( arnold.AiNodeGetInt( options, "region_max_x" ), 640 + 255 )
+			self.assertEqual( arnold.AiNodeGetInt( options, "region_min_y" ), -96 )
+			self.assertEqual( arnold.AiNodeGetInt( options, "region_max_y" ), 480 + 47 )
+
 	def testMissingCameraRaises( self ) :
 
 		s = Gaffer.ScriptNode()

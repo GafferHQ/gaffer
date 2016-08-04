@@ -217,6 +217,8 @@ IECore::TransformPtr GafferScene::transform( const ScenePlug *scene, const Scene
 
 //////////////////////////////////////////////////////////////////////////
 // Camera algo
+// This is deprecated, and should be replaced by GafferScene::Preview::RendererAlgo::applyCameraGlobals
+// as we switch to new renderer backends, which will support the new renderRegion parameter
 //////////////////////////////////////////////////////////////////////////
 
 void GafferScene::applyCameraGlobals( IECore::Camera *camera, const IECore::CompoundObject *globals )
