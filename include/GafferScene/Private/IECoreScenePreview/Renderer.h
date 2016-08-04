@@ -172,10 +172,18 @@ class Renderer : public IECore::RefCounted
 		/// "screenWindow", Box2fData
 		/// The region in screen space which is mapped to the output resolution.
 		///
-		/// "cropWindow", Box2fData, 0,0-1,1
-		/// The region in raster space which should actually be rendered - this allows just
-		/// a section of the full resolution to be rendered. Note that raster space runs from
-		/// 0,0 at the top left to 1,1 at the bottom right. Defaults to 0,0 1,1 if not specified.
+		/// "renderRegion", Box2iData
+		/// The region in image pixels which should actually be rendered - this allows just
+		/// a section of the full resolution to be rendered, or an area larger than the
+		/// resolution to be rendered, creating overscan outside the displayWindow.  The
+		/// default value is the whole standard resolution, running from
+		/// 0,0 to resolution.x - 1, resolution.y - 1,
+		/// with 0,0 representing the upper left corner.  
+		///
+		/// \todo This follows the conventions of Cortex, and matches the OpenEXR display window, 
+		/// but does not match Gaffer image conventions ( origin in lower left corner,
+		/// indexing pixel corners rather than pixel centers ).  We are planning to switch
+		/// this to match the Gaffer convention instead.
 		///
 		/// "projection" StringData, "perspective"
 		/// The projection that determines how camera coordinates are converted to screen space
