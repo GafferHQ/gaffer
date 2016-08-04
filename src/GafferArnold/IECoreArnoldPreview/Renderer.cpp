@@ -826,7 +826,7 @@ class ArnoldObject : public IECoreScenePreview::Renderer::ObjectInterface
 			{
 				return;
 			}
-			AiNodeSetMatrix( node, "matrix", const_cast<float (*)[4]>( transform.x ) );
+			applyTransform( node, transform );
 		}
 
 		virtual void transform( const std::vector<Imath::M44f> &samples, const std::vector<float> &times )
@@ -836,23 +836,7 @@ class ArnoldObject : public IECoreScenePreview::Renderer::ObjectInterface
 			{
 				return;
 			}
-			const size_t numSamples = samples.size();
-			AtArray *timesArray = AiArrayAllocate( samples.size(), 1, AI_TYPE_FLOAT );
-			AtArray *matricesArray = AiArrayAllocate( 1, numSamples, AI_TYPE_MATRIX );
-			for( size_t i = 0; i < numSamples; ++i )
-			{
-				AiArraySetFlt( timesArray, i, times[i] );
-				AiArraySetMtx( matricesArray, i, const_cast<float (*)[4]>( samples[i].x ) );
-			}
-			AiNodeSetArray( node, "matrix", matricesArray );
-			if( AiNodeEntryLookUpParameter( AiNodeGetNodeEntry( node ), "transform_time_samples" ) )
-			{
-				AiNodeSetArray( node, "transform_time_samples", timesArray );
-			}
-			else
-			{
-				AiNodeSetArray( node, "time_samples", timesArray );
-			}
+			applyTransform( node, samples, times );
 		}
 
 		virtual void attributes( const IECoreScenePreview::Renderer::AttributesInterface *attributes )
@@ -916,6 +900,32 @@ class ArnoldObject : public IECoreScenePreview::Renderer::ObjectInterface
 
 	protected :
 
+		void applyTransform( AtNode *node, const Imath::M44f &transform )
+		{
+			AiNodeSetMatrix( node, "matrix", const_cast<float (*)[4]>( transform.x ) );
+		}
+
+		void applyTransform( AtNode *node, const std::vector<Imath::M44f> &samples, const std::vector<float> &times )
+		{
+			const size_t numSamples = samples.size();
+			AtArray *timesArray = AiArrayAllocate( samples.size(), 1, AI_TYPE_FLOAT );
+			AtArray *matricesArray = AiArrayAllocate( 1, numSamples, AI_TYPE_MATRIX );
+			for( size_t i = 0; i < numSamples; ++i )
+			{
+				AiArraySetFlt( timesArray, i, times[i] );
+				AiArraySetMtx( matricesArray, i, const_cast<float (*)[4]>( samples[i].x ) );
+			}
+			AiNodeSetArray( node, "matrix", matricesArray );
+			if( AiNodeEntryLookUpParameter( AiNodeGetNodeEntry( node ), "transform_time_samples" ) )
+			{
+				AiNodeSetArray( node, "transform_time_samples", timesArray );
+			}
+			else
+			{
+				AiNodeSetArray( node, "time_samples", timesArray );
+			}
+		}
+
 		Instance m_instance;
 		ArnoldShaderPtr m_shader;
 
@@ -943,8 +953,18 @@ class ArnoldLight : public ArnoldObject
 		virtual void transform( const Imath::M44f &transform )
 		{
 			ArnoldObject::transform( transform );
-			m_transform = transform;
-			applyTransform();
+			m_transformMatrices.clear();
+			m_transformTimes.clear();
+			m_transformMatrices.push_back( transform );
+			applyLightTransform();
+		}
+
+		virtual void transform( const std::vector<Imath::M44f> &samples, const std::vector<float> &times )
+		{
+			ArnoldObject::transform( samples, times );
+			m_transformMatrices = samples;
+			m_transformTimes = times;
+			applyLightTransform();
 		}
 
 		virtual void attributes( const IECoreScenePreview::Renderer::AttributesInterface *attributes )
@@ -982,26 +1002,35 @@ class ArnoldLight : public ArnoldObject
 				}
 			}
 
-			applyTransform();
+			applyLightTransform();
 		}
 
 	private :
 
-		void applyTransform()
+		void applyLightTransform()
 		{
-			if( !m_lightShader )
+			if( !m_lightShader || m_transformMatrices.empty() )
 			{
 				return;
 			}
 			AtNode *root = m_lightShader->root();
-			AiNodeSetMatrix( root, "matrix", const_cast<float (*)[4]>( m_transform.x ) );
+			if( m_transformTimes.empty() )
+			{
+				assert( m_transformMatrices.size() == 1 );
+				applyTransform( root, m_transformMatrices[0] );
+			}
+			else
+			{
+				applyTransform( root, m_transformMatrices, m_transformTimes );
+			}
 		}
 
 		// Because the AtNode for the light arrives via attributes(),
 		// we need to store the transform and name ourselves so we have
 		// them later when we need them.
 		std::string m_name;
-		Imath::M44f m_transform;
+		vector<Imath::M44f> m_transformMatrices;
+		vector<float> m_transformTimes;
 		ArnoldShaderPtr m_lightShader;
 
 };
