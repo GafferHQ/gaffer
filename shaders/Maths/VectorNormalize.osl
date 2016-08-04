@@ -39,7 +39,6 @@ shader Normalize
 (
 	vector a = 0,
 	output vector out = 0
-
 )
 {
 	out = normalize( a );
