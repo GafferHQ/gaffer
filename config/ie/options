@@ -120,11 +120,10 @@ except :
 appleseedVersion = getOption( "APPLESEED_VERSION", os.environ.get( "APPLESEED_VERSION" ) )
 try :
 	appleseedReg = IEEnv.registry["apps"]["appleseed"][appleseedVersion][IEEnv.platform()]
-	APPLESEED_INCLUDE_PATH = os.path.join( appleseedReg["location"], "include" )
-	APPLESEED_LIB_PATH = os.path.join( appleseedReg["location"], "lib" )
+	APPLESEED_ROOT = appleseedReg["location"]
+	LOCATE_DEPENDENCY_APPLESEED_SEARCHPATH = os.path.join( IEEnv.Environment.rootPath(), "apps", "cortex", cortexVersion, IEEnv.platform(), "base", "appleseed", appleseedVersion, "plugins", compiler, compilerVersion )
 except :
-	APPLESEED_INCLUDE_PATH = ""
-	APPLESEED_LIB_PATH = ""
+	APPLESEED_ROOT = ""
 
 sphinxRoot = os.path.join( IEEnv.Environment.rootPath(), "apps", "sphinx", "1.4.1" )
 
