@@ -393,6 +393,20 @@ bool ImageView::keyPress( const GafferUI::KeyEvent &event )
 				);
 				return true;
 			}
+			if(event.key == "Home")
+			{
+				
+				V2i viewport = viewportGadget()->getViewport();
+				V2i viewportCenter(viewport.x / 2, viewport.y / 2);
+				Box3f bound = m_imageGadget->bound();
+				V2i imageCenter((bound.max.x - bound.min.x) / 2, (bound.max.y - bound.min.y) / 2);
+				Box3f frame(
+					Imath::V3f(imageCenter.x - viewportCenter.x, imageCenter.y - viewportCenter.y, 0),
+					Imath::V3f(imageCenter.x + viewportCenter.x, imageCenter.y + viewportCenter.y, 0)
+				);
+				viewportGadget()->frame(frame);
+				return true;
+			}
 		}
 		if(event.key == "Home")
 		{
