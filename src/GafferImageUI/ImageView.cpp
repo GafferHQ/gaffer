@@ -381,6 +381,7 @@ void ImageView::plugSet( Gaffer::Plug *plug )
 
 bool ImageView::keyPress( const GafferUI::KeyEvent &event )
 {
+    computeZoomLevel();
 	if( !event.modifiers )
 	{
 		const char *rgba[4] = { "R", "G", "B", "A" };
@@ -479,6 +480,16 @@ void ImageView::insertDisplayTransform()
 	}
 }
 
+float ImageView::computeZoomLevel()
+{
+    Box3f imageBound = m_imageGadget->bound();
+    V3f imageSize(imageBound.max.x - imageBound.min.x, imageBound.max.y - imageBound.min.y, imageBound.max.z - imageBound.min.z);
+    V2f imageRasterSize = viewportGadget()->gadgetToRasterSpace(imageSize, m_imageGadget.get());
+    std::cout<<"imageSize: "<<imageSize<<std::endl;
+    std::cout<<"rasterSize: "<<imageRasterSize<<std::endl;
+    return 1.0;
+}
+
 void ImageView::registerDisplayTransform( const std::string &name, DisplayTransformCreator creator )
 {
 	displayTransformCreators()[name] = creator;
@@ -499,3 +510,5 @@ ImageView::DisplayTransformCreatorMap &ImageView::displayTransformCreators()
 	static DisplayTransformCreatorMap g_creators;
 	return g_creators;
 }
+
+

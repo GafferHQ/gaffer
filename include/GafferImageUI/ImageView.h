@@ -144,6 +144,8 @@ class ImageView : public GafferUI::View
 		ImageGadgetPtr m_imageGadget;
 		bool m_framed;
 
+        float computeZoomLevel();
+
 		class ColorInspector;
 		boost::shared_ptr<ColorInspector> m_colorInspector;
 
