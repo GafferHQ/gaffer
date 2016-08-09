@@ -313,8 +313,10 @@ CORTEX_PYTHON_LIB_SUFFIX = "-" + cortexMajorVersion + "-python" + pythonVersion
 os.environ["PATH"] = os.path.join( pythonReg["location"], compiler, compilerVersion, "bin" ) + ":" + os.environ["PATH"]
 os.environ["PYTHONHOME"] = os.path.join( pythonReg["location"], compiler, compilerVersion )
 
+os.environ["OCIO"] = os.path.join( IEEnv.Environment.rootPath(), "config", "openColorIO", "nuke-default", "config.ocio" )
+
 # we need these imported so we can run the commands to generate the documentation
-ENV_VARS_TO_IMPORT="PATH PYTHONPATH PYTHONHOME IEENV_ROOT IEENV_DISABLE_WRAPPER_ENV_CHECK IECORE_FONT_PATHS IECOREGL_SHADER_INCLUDE_PATHS OCIO IEENV_WORKING_PATH DOXYGEN_VERSION OSL_VERSION IE_DEFAULT_CDL_PATH"
+ENV_VARS_TO_IMPORT="PATH PYTHONPATH PYTHONHOME IEENV_ROOT IEENV_DISABLE_WRAPPER_ENV_CHECK IECORE_FONT_PATHS IECOREGL_SHADER_INCLUDE_PATHS OCIO IEENV_WORKING_PATH DOXYGEN_VERSION OSL_VERSION"
 # the output is pretty tedious without this disabled
 os.environ["IEENV_DISABLE_WRAPPER_ENV_CHECK"] = "1"
 
