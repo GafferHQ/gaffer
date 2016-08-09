@@ -226,6 +226,73 @@ class RendererTest( GafferTest.TestCase ) :
 			self.assertEqual( len( shaders ), 4 )
 			self.assertEqual( len( set( [ arnold.AiNodeGetName( s ) for s in shaders ] ) ), 4 )
 
+	def testShaderNodeConnectionType( self ) :
+
+		r = GafferScene.Private.IECoreScenePreview.Renderer.create(
+			"IECoreArnold::Renderer",
+			GafferScene.Private.IECoreScenePreview.Renderer.RenderType.SceneDescription,
+			self.temporaryDirectory() + "/test.ass"
+		)
+
+		scalarColorShader = IECore.ObjectVector( [
+			IECore.Shader( "image", parameters = { "__handle" : "scalarColorSource" } ),
+			IECore.Shader( "lambert", parameters = { "Kd_color" : "link:scalarColorSource", "__handle" : "scalarColorTarget" } ),
+		] )
+
+		# Note that a persp_camera is not at all legitimate to put in a shader vector,
+		# but it has a non-vector parameter of type NODE, so it works to test this functionality
+		scalarNodeShader = IECore.ObjectVector( [
+			IECore.Shader( "gobo", parameters = { "__handle" : "scalarNodeSource" } ),
+			IECore.Shader( "persp_camera", parameters = { "filtermap" : "link:scalarNodeSource", "__handle" : "scalarNodeTarget" } ),
+		] )
+
+		# Omitting vector color test because there are no nodes included with Arnold which use this,
+		# and we don't want a htoa dependency
+		#vectorColorShader = IECore.ObjectVector( [
+		#	IECore.Shader( "image", parameters = { "__handle" : "vectorColorSource" } ),
+		#	IECore.Shader( "htoa__ramp_rgb", parameters = { "color" : IECore.StringVectorData(["link:vectorColorSource"]), "__handle" : "vectorColorTarget" } ),
+		#] )
+
+		vectorNodeShader = IECore.ObjectVector( [
+			IECore.Shader( "gobo", parameters = { "__handle" : "vectorNodeSource" } ),
+			IECore.Shader( "spot_light", parameters = { "filters" : IECore.StringVectorData(["link:vectorNodeSource"]), "__handle" : "vectorNodeTarget" } ),
+		] )
+
+		for name,s in [ ( "scalarColor", scalarColorShader ), ( "scalarNode", scalarNodeShader ), ( "vectorNode", vectorNodeShader ) ]:
+			r.object(
+				"testPlane_%s" % name,
+				IECore.MeshPrimitive.createPlane( IECore.Box2f( IECore.V2f( -1 ), IECore.V2f( 1 ) ) ),
+				r.attributes(
+					IECore.CompoundObject( {
+						"ai:surface" : s
+					} )
+				)
+			)
+
+		r.render()
+		del r
+
+		with IECoreArnold.UniverseBlock() :
+			arnold.AiASSLoad( self.temporaryDirectory() + "/test.ass" )
+
+			target = arnold.AtNode.from_address( arnold.AiNodeGetPtr( arnold.AiNodeLookUpByName( "testPlane_scalarColor" ), "shader" ) )
+			source = arnold.AiNodeGetLink( target, "Kd_color" )
+			self.assertEqual( arnold.AiNodeEntryGetName( arnold.AiNodeGetNodeEntry( source ) ), "image" )
+
+			target = arnold.AtNode.from_address( arnold.AiNodeGetPtr( arnold.AiNodeLookUpByName( "testPlane_scalarNode" ), "shader" ) )
+			sourcePtr = arnold.AiNodeGetPtr( target, "filtermap" )
+			source = arnold.AtNode.from_address( sourcePtr )
+			self.assertEqual( arnold.AiNodeEntryGetName( arnold.AiNodeGetNodeEntry( source ) ), "gobo" )
+
+			#target = arnold.AtNode.from_address( arnold.AiNodeGetPtr( arnold.AiNodeLookUpByName( "testPlane_vectorColor" ), "shader" ) )
+			#source = arnold.AiNodeGetLink( target, "color[0]" )
+			#self.assertEqual( arnold.AiNodeEntryGetName( arnold.AiNodeGetNodeEntry( source ) ), "image" )
+
+			target = arnold.AtNode.from_address( arnold.AiNodeGetPtr( arnold.AiNodeLookUpByName( "testPlane_vectorNode" ), "shader" ) )
+			sourcePtr = arnold.AiNodeGetPtr( target, "filters" )
+			source = arnold.AtNode.from_address( sourcePtr )
+			self.assertEqual( arnold.AiNodeEntryGetName( arnold.AiNodeGetNodeEntry( source ) ), "gobo" )
+
 	def testLightNames( self ) :
 
 		r = GafferScene.Private.IECoreScenePreview.Renderer.create(
