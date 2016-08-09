@@ -142,15 +142,9 @@ options.Add(
 )
 
 options.Add(
-	"APPLESEED_INCLUDE_PATH",
-	"The path to the appleseed include directory. Used to build Gafferseed",
-	"$BUILD_DIR/appleseed/include",
-)
-
-options.Add(
-	"APPLESEED_LIB_PATH",
-	"The path to the appleseed lib directory. Used to build Gafferseed",
-	"$BUILD_DIR/appleseed/lib",
+	"APPLESEED_ROOT",
+	"The direction in which Appleseed is installed. Used to build Gafferseed",
+	"$BUILD_DIR/appleseed",
 )
 
 # variables to be used when making a build which will use dependencies previously
@@ -190,6 +184,12 @@ options.Add(
 	"The path to the resources provided by the gafferResources project. "
 	"If you follow the build instructions using the precompiled "
 	"dependencies then you will not need this option.",
+	"",
+)
+
+options.Add(
+	"LOCATE_DEPENDENCY_APPLESEED_SEARCHPATH",
+	"The paths in which Appleseed resources are installed.",
 	"",
 )
 
@@ -693,16 +693,16 @@ libraries = {
 
 	"GafferAppleseed" : {
 		"envAppends" : {
-			"CXXFLAGS" : [ "-isystem", "$APPLESEED_INCLUDE_PATH" ],
-			"LIBPATH" : [ "$APPLESEED_LIB_PATH" ],
+			"CXXFLAGS" : [ "-isystem", "$APPLESEED_ROOT/include" ],
+			"LIBPATH" : [ "$APPLESEED_ROOT/lib" ],
 			"LIBS" : [ "Gaffer", "GafferScene", "appleseed", "IECoreAppleseed$CORTEX_LIB_SUFFIX" ],
 		},
 		"pythonEnvAppends" : {
-			"CXXFLAGS" : [ "-isystem", "$APPLESEED_INCLUDE_PATH" ],
-			"LIBPATH" : [ "$APPLESEED_LIB_PATH" ],
+			"CXXFLAGS" : [ "-isystem", "$APPLESEED_ROOT/include" ],
+			"LIBPATH" : [ "$APPLESEED_ROOT/lib" ],
 			"LIBS" : [ "Gaffer", "GafferScene", "GafferBindings", "GafferAppleseed" ],
 		},
-		"requiredOptions" : [ "APPLESEED_INCLUDE_PATH", "APPLESEED_LIB_PATH" ],
+		"requiredOptions" : [ "APPLESEED_ROOT" ],
 	},
 
 	"GafferAppleseedTest" : {},
@@ -1012,10 +1012,8 @@ def buildDocs( target, source, env ) :
 			except ImportError :
 				pass
 
-	# Ensure that Arnold and 3delight are available in the documentation
+	# Ensure that Arnold, Appleseed and 3delight are available in the documentation
 	# environment.
-	## \todo Should we try to generate this automatically from the
-	# `libraries` dictionary above?
 
 	libraryPathEnvVar = "DYLD_LIBRARY_PATH" if commandEnv["PLATFORM"]=="darwin" else "LD_LIBRARY_PATH"
 
@@ -1027,6 +1025,12 @@ def buildDocs( target, source, env ) :
 	if env.subst( "$RMAN_ROOT" ) :
 		env["ENV"]["PATH"] += ":" + env.subst( "$RMAN_ROOT/bin" )
 		env["ENV"][libraryPathEnvVar] += ":" + env.subst( "$RMAN_ROOT/lib" )
+
+	if env.subst( "$APPLESEED_ROOT" ) and env["APPLESEED_ROOT"] != "$BUILD_DIR/appleseed" :
+		env["ENV"]["PATH"] += ":" + env.subst( "$APPLESEED_ROOT/bin" )
+		env["ENV"][libraryPathEnvVar] += ":" + env.subst( "$APPLESEED_ROOT/lib" )
+		env["ENV"]["OSL_SHADER_PATHS"] = env.subst( "$APPLESEED_ROOT/shaders" )
+		env["ENV"]["APPLESEED_SEARCHPATH"] = env.subst( "$APPLESEED_ROOT/shaders:$LOCATE_DEPENDENCY_APPLESEED_SEARCHPATH" )
 
 	# Run any python scripts we find in the document source tree. These are
 	# used to autogenerate source files for processing by sphinx.
