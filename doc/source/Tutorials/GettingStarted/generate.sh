@@ -99,6 +99,13 @@ gaffer screengrab \
 	-image images/parentingSceneHierarchy.png
 
 gaffer screengrab \
+	-script scripts/firstLight.gfr \
+	-command "$renderCommand" \
+	-selection Display \
+	-editor Viewer \
+	-image images/firstLighting.png
+
+gaffer screengrab \
 	-script scripts/textures.gfr \
 	-command "$renderCommand" \
 	-selection Display \

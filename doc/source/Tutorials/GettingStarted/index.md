@@ -302,15 +302,15 @@ This node outputs a new scene containing a single light. As we did before with t
 - Enter `/` in the Parent field in the NodeEditor, so that we'll be parenting the light directly under the scene root.
 - Connect the output of the light node into the second (child) input of the Parent node.
 
-![Parenting](images/parentingNodeGraph.png)
+![Parenting Node Graph](images/parentingNodeGraph.png)
 
 We should have successfully inserted the light into the scene hierarchy, without affecting the structure of the rest of the scene.
 
-![Parenting](images/parentingSceneHierarchy.png)
+![Parenting Scene Hierarchy](images/parentingSceneHierarchy.png)
 
 And our render should be in the process of updating with some basic lighting.
 
-![Parenting](images/firstLighting.png)
+![First Lighting](images/firstLighting.png)
 
 Adding some textures
 --------------------
