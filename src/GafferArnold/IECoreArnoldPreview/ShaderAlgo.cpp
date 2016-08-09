@@ -42,6 +42,7 @@
 #include "IECore/Light.h"
 #include "IECore/MessageHandler.h"
 #include "IECore/SimpleTypedData.h"
+#include "IECore/VectorTypedData.h"
 
 #include "IECoreArnold/ParameterAlgo.h"
 
@@ -110,7 +111,19 @@ std::vector<AtNode *> convert( const IECore::ObjectVector *shaderNetwork, const 
 					ShaderMap::const_iterator shaderIt = shaderMap.find( linkHandle );
 					if( shaderIt != shaderMap.end() )
 					{
-						AiNodeLinkOutput( shaderIt->second, "", node, pIt->first.value().c_str() );
+						const char *parmName = pIt->first.value().c_str();
+						const AtParamEntry *parmEntry = AiNodeEntryLookUpParameter( AiNodeGetNodeEntry( node ), parmName );
+						// If the parameter is a node pointer, we just set it to the source node.
+						// Otherwise we assume that it is of a matching type to the output of the
+						// source node, and try to link it
+						if( AiParamGetType( parmEntry ) == AI_TYPE_NODE )
+						{
+							AiNodeSetPtr( node, parmName, shaderIt->second );
+						}
+						else
+						{
+							AiNodeLinkOutput( shaderIt->second, "", node, parmName );
+						}
 					}
 					else
 					{
@@ -125,6 +138,59 @@ std::vector<AtNode *> convert( const IECore::ObjectVector *shaderNetwork, const 
 					continue;
 				}
 			}
+
+			if( const StringVectorData *stringVectorData = runTimeCast<const StringVectorData>( pIt->second.get() ) )
+			{
+				const vector<string> &values = stringVectorData->readable();
+
+				std::vector< AtNode* > filters;
+				for( unsigned int i = 0; i < values.size(); i++ )
+				{
+					const string &value = values[i];
+					if( boost::starts_with( value, "link:" ) )
+					{
+						const string linkHandle = value.c_str() + 5;
+						ShaderMap::const_iterator shaderIt = shaderMap.find( linkHandle );
+						if( shaderIt != shaderMap.end() )
+						{
+							filters.push_back( shaderIt->second );
+						}
+						else
+						{
+							msg( Msg::Warning, "IECoreArnold::ShaderAlgo", boost::format( "Couldn't find shader handle \"%s\" for linking" ) % linkHandle );
+						}
+					}
+				}
+			
+				if( filters.size() )
+				{
+					const char *parmName = pIt->first.value().c_str();
+					const AtParamEntry *parmEntry = AiNodeEntryLookUpParameter( AiNodeGetNodeEntry( node ), parmName );
+					if( AiParamGetType( parmEntry ) == AI_TYPE_ARRAY )
+					{
+						const AtParamValue *def = AiParamGetDefault( parmEntry );
+						
+						// Appropriately use SetArray vs LinkOutput depending on target type, as above
+						if( def->ARRAY->type == AI_TYPE_NODE )
+						{
+							AtArray *filterArray = AiArrayConvert( filters.size(), 1, AI_TYPE_POINTER, &filters[0] );
+							AiNodeSetArray( node, pIt->first.value().c_str(), filterArray );
+						}
+						else
+						{
+							for( unsigned int i = 0; i < filters.size(); i++ )
+							{
+								AiNodeLinkOutput( filters[i], "", node,
+									( pIt->first.value() + "[" + boost::lexical_cast<string>( i ) + "]" ).c_str() );
+							}
+						}
+
+						continue;
+					}
+				}
+			}
+
+
 			ParameterAlgo::setParameter( node, pIt->first.value().c_str(), pIt->second.get() );
 		}
 
