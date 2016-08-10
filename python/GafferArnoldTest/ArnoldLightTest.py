@@ -73,5 +73,25 @@ class ArnoldLightTest( GafferSceneTest.SceneTestCase ) :
 				l.loadShader( lightName )
 				self.assertEqual( [ m.message for m in mh.messages ], [], "Error loading %s" % lightName )
 
+	def testShaderInputs( self ) :
+
+		s = GafferArnold.ArnoldShader()
+		s.loadShader( "physical_sky" )
+		s["parameters"]["intensity"].setValue( 2 )
+
+		l = GafferArnold.ArnoldLight()
+		l.loadShader( "skydome_light" )
+		l["parameters"]["color"].setInput( s["out"] )
+
+		network = l["out"].attributes( "/light" )["ai:light"]
+		self.assertEqual( len( network ), 2 )
+		self.assertEqual( network[0].name, "physical_sky" )
+		self.assertEqual( network[0].parameters["intensity"].value, 2 )
+		self.assertEqual( network[1].parameters["color"].value, "link:" + network[0].parameters["__handle"].value )
+
+		s["parameters"]["intensity"].setValue( 4 )
+		network = l["out"].attributes( "/light" )["ai:light"]
+		self.assertEqual( network[0].parameters["intensity"].value, 4 )
+
 if __name__ == "__main__":
 	unittest.main()

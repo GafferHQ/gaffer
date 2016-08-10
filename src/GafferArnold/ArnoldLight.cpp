@@ -43,11 +43,14 @@
 #include "Gaffer/CompoundDataPlug.h"
 #include "Gaffer/StringPlug.h"
 
+#include "GafferScene/Shader.h"
+
 #include "GafferArnold/ArnoldLight.h"
 #include "GafferArnold/ArnoldShader.h"
 #include "GafferArnold/ParameterHandler.h"
 
 using namespace Gaffer;
+using namespace GafferScene;
 using namespace GafferArnold;
 
 IE_CORE_DEFINERUNTIMETYPED( ArnoldLight );
@@ -84,22 +87,52 @@ void ArnoldLight::hashLight( const Gaffer::Context *context, IECore::MurmurHash 
 {
 	for( ValuePlugIterator it( parametersPlug() ); !it.done(); ++it )
 	{
-		(*it)->hash( h );
+		if( const Shader *shader = (*it)->source<Plug>()->ancestor<Shader>() )
+		{
+			shader->stateHash( h );
+		}
+		else
+		{
+			(*it)->hash( h );
+		}
 	}
 	shaderNamePlug()->hash( h );
 }
 
 IECore::ObjectVectorPtr ArnoldLight::computeLight( const Gaffer::Context *context ) const
 {
-	IECore::ShaderPtr result = new IECore::Shader( shaderNamePlug()->getValue(), "ai:light" );
+	IECore::ObjectVectorPtr result = new IECore::ObjectVector;
+	IECore::ShaderPtr lightShader = new IECore::Shader( shaderNamePlug()->getValue(), "ai:light" );
 	for( InputValuePlugIterator it( parametersPlug() ); !it.done(); ++it )
 	{
-		result->parameters()[(*it)->getName()] = CompoundDataPlug::extractDataFromPlug( it->get() );
+		if( const Shader *shader = (*it)->source<Plug>()->ancestor<Shader>() )
+		{
+			/// \todo We should generalise Shader::NetworkBuilder so we can
+			/// use it directly to do the whole of the light generation, instead
+			/// of dealing with input networks manually one by one here.
+			IECore::ConstObjectVectorPtr inputNetwork = shader->state();
+			if( inputNetwork->members().empty() )
+			{
+				continue;
+			}
+
+			// Add input network into our result.
+			result->members().insert( result->members().end(), inputNetwork->members().begin(), inputNetwork->members().end() );
+			// Update endpoint of network with a handle we can refer to it with.
+			result->members().back() = result->members().back()->copy();
+			IECore::Shader *endpoint = static_cast<IECore::Shader *>( result->members().back().get() );
+			endpoint->parameters()["__handle"] = new IECore::StringData( (*it)->getName() );
+			// Add a parameter value linking to the input network.
+			lightShader->parameters()[(*it)->getName()] = new IECore::StringData( "link:" + (*it)->getName().string() );
+		}
+		else
+		{
+			lightShader->parameters()[(*it)->getName()] = CompoundDataPlug::extractDataFromPlug( it->get() );
+		}
 	}
 
-	IECore::ObjectVectorPtr resultVector = new IECore::ObjectVector();
-	resultVector->members().push_back( result );
-	return resultVector;
+	result->members().push_back( lightShader );
+	return result;
 }
 
 Gaffer::StringPlug *ArnoldLight::shaderNamePlug()
