@@ -957,6 +957,90 @@ class RendererTest( GafferTest.TestCase ) :
 			self.assertEqual( arnold.AiNodeEntryGetName( arnold.AiNodeGetNodeEntry( flat1 ) ), "flat" )
 			self.assertEqual( arnold.AiNodeEntryGetName( arnold.AiNodeGetNodeEntry( flat2 ) ), "flat" )
 
+	def testOSLShaders( self ) :
+
+		r = GafferScene.Private.IECoreScenePreview.Renderer.create(
+			"IECoreArnold::Renderer",
+			GafferScene.Private.IECoreScenePreview.Renderer.RenderType.SceneDescription,
+			self.temporaryDirectory() + "/test.ass"
+		)
+
+		network = IECore.ObjectVector( [
+			IECore.Shader(
+				"Pattern/Noise",
+				"osl:shader",
+				{
+					"scale" : 10.0,
+					"__handle" : "noiseHandle"
+				}
+			),
+			IECore.Shader(
+				"Pattern/ColorSpline",
+				"osl:shader",
+				{
+					"spline" : IECore.SplinefColor3f(
+						IECore.CubicBasisf.bSpline(),
+						[
+							( 0, IECore.Color3f( 0.25 ) ),
+							( 0, IECore.Color3f( 0.25 ) ),
+							( 1, IECore.Color3f( 0.5 ) ),
+							( 1, IECore.Color3f( 0.5 ) ),
+						]
+					),
+					"__handle" : "splineHandle"
+				}
+			),
+			IECore.Shader(
+				"flat",
+				"ai:surface",
+				{
+					"color" : "link:splineHandle",
+					"opacity" : "link:noiseHandle"
+				}
+			)
+		] )
+
+		o = r.object(
+			"testPlane",
+			IECore.MeshPrimitive.createPlane( IECore.Box2f( IECore.V2f( -1 ), IECore.V2f( 1 ) ) ),
+			r.attributes( IECore.CompoundObject( { "ai:surface" : network } ) )
+		)
+
+		r.render()
+		del r
+
+		with IECoreArnold.UniverseBlock() :
+
+			arnold.AiASSLoad( self.temporaryDirectory() + "/test.ass" )
+
+			options = arnold.AiUniverseGetOptions()
+			self.assertTrue( "shaders/Pattern:" in arnold.AiNodeGetStr( options, "shader_searchpath" ) )
+
+			n = arnold.AiNodeLookUpByName( "testPlane" )
+
+			flat = arnold.AtNode.from_address( arnold.AiNodeGetPtr( n, "shader" ) )
+			self.assertEqual( arnold.AiNodeEntryGetName( arnold.AiNodeGetNodeEntry( flat ) ), "flat" )
+
+			spline = arnold.AiNodeGetLink( flat, "color" )
+			self.assertEqual( arnold.AiNodeEntryGetName( arnold.AiNodeGetNodeEntry( spline ) ), "ColorSpline" )
+			self.assertEqual( arnold.AiNodeGetStr( spline, "splineBasis" ), "bspline" )
+
+			splinePositions = arnold.AiNodeGetArray( spline, "splinePositions" )
+			self.assertEqual( arnold.AiArrayGetFlt( splinePositions, 0 ), 0 )
+			self.assertEqual( arnold.AiArrayGetFlt( splinePositions, 1 ), 0 )
+			self.assertEqual( arnold.AiArrayGetFlt( splinePositions, 2 ), 1 )
+			self.assertEqual( arnold.AiArrayGetFlt( splinePositions, 3 ), 1 )
+
+			splineValues = arnold.AiNodeGetArray( spline, "splineValues" )
+			self.assertEqual( arnold.AiArrayGetRGB( splineValues, 0 ), arnold.AtRGB( 0.25, 0.25, 0.25 ) )
+			self.assertEqual( arnold.AiArrayGetRGB( splineValues, 1 ), arnold.AtRGB( 0.25, 0.25, 0.25 ) )
+			self.assertEqual( arnold.AiArrayGetRGB( splineValues, 2 ), arnold.AtRGB( 0.5, 0.5, 0.5 ) )
+			self.assertEqual( arnold.AiArrayGetRGB( splineValues, 3 ), arnold.AtRGB( 0.5, 0.5, 0.5 ) )
+
+			noise = arnold.AiNodeGetLink( flat, "opacity" )
+			self.assertEqual( arnold.AiNodeEntryGetName( arnold.AiNodeGetNodeEntry( noise ) ), "Noise" )
+			self.assertEqual( arnold.AiNodeGetFlt( noise, "scale" ), 10.0 )
+
 	@staticmethod
 	def __m44f( m ) :
 

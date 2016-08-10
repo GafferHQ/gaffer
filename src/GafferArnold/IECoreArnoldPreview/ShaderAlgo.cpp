@@ -118,6 +118,17 @@ std::vector<AtNode *> convert( const IECore::ObjectVector *shaderNetwork, const 
 		if( const Shader *shader = runTimeCast<const Shader>( it->get() ) )
 		{
 			nodeType = shader->getName().c_str();
+			const size_t slashIndex = shader->getName().find_last_of( '/' );
+			if( slashIndex != string::npos )
+			{
+				// It's pretty common to install OSL shaders in subdirectories
+				// of the main shader path. Although liboslexec itself does support
+				// this, Arnold does not. So we strip off any directory prefix here,
+				// relying on the Renderer class to have recursively loaded all OSL
+				// shaders from the searchpaths, and relying on the shader author to
+				// keep the leaf names of shaders unique. This is the best we can do.
+				nodeType += slashIndex + 1;
+			}
 			parameters = &shader->parameters();
 		}
 		else if( const Light *light = runTimeCast<const Light>( it->get() ) )
@@ -154,7 +165,16 @@ std::vector<AtNode *> convert( const IECore::ObjectVector *shaderNetwork, const 
 				const string &value = stringData->readable();
 				if( boost::starts_with( value, "link:" ) )
 				{
-					const string linkHandle = value.c_str() + 5;
+					string linkHandle = value.c_str() + 5;
+					const size_t dotIndex = linkHandle.find_first_of( '.' );
+					if( dotIndex != string::npos )
+					{
+						// Arnold does not support multiple outputs from OSL
+						// shaders, so we must strip off any suffix specifying
+						// a specific output.
+						linkHandle = linkHandle.substr( 0, dotIndex );
+					}
+
 					ShaderMap::const_iterator shaderIt = shaderMap.find( linkHandle );
 					if( shaderIt != shaderMap.end() )
 					{
