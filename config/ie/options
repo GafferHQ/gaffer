@@ -62,8 +62,9 @@ targetAppVersion = None
 ## \todo: 0.13.0.0 is the first version that we started tracking
 ## Gaffer dependency versions in IEEnv. Should we instead have a
 ## more central "libraries we care about" section in IEEnv?
-gafferReg = IEEnv.registry["apps"]["gaffer"]["0.26.0.0"][IEEnv.platform()]
+gafferReg = IEEnv.registry["apps"]["gaffer"]["0.27.0.0"][IEEnv.platform()]
 qtVersion = gafferReg["qtVersion"]
+pyqtVersion = gafferReg.get( "pyqtVersion", "4.8.6" )
 oiioVersion = gafferReg["OpenImageIO"]
 ocioVersion = gafferReg["OpenColorIO"]
 oslVersion = gafferReg["OpenShadingLanguage"]
@@ -120,11 +121,10 @@ except :
 appleseedVersion = getOption( "APPLESEED_VERSION", os.environ.get( "APPLESEED_VERSION" ) )
 try :
 	appleseedReg = IEEnv.registry["apps"]["appleseed"][appleseedVersion][IEEnv.platform()]
-	APPLESEED_INCLUDE_PATH = os.path.join( appleseedReg["location"], "include" )
-	APPLESEED_LIB_PATH = os.path.join( appleseedReg["location"], "lib" )
+	APPLESEED_ROOT = appleseedReg["location"]
+	LOCATE_DEPENDENCY_APPLESEED_SEARCHPATH = os.path.join( IEEnv.Environment.rootPath(), "apps", "cortex", cortexVersion, IEEnv.platform(), "base", "appleseed", appleseedVersion, "plugins", compiler, compilerVersion )
 except :
-	APPLESEED_INCLUDE_PATH = ""
-	APPLESEED_LIB_PATH = ""
+	APPLESEED_ROOT = ""
 
 sphinxRoot = os.path.join( IEEnv.Environment.rootPath(), "apps", "sphinx", "1.4.1" )
 
@@ -195,6 +195,7 @@ if getOption( "RELEASE", "0" )=="0" :
 
 LOCATE_DEPENDENCY_LIBPATH = [
 
+	os.path.join( pythonReg["location"], compiler, compilerVersion, "lib" ),
 	os.path.join( IEEnv.Environment.rootPath(), "tools", "lib", IEEnv.platform(), compiler, compilerVersion ),
 	os.path.join( IEEnv.Environment.rootPath(), "apps", "cortex", cortexVersion, IEEnv.platform(), "base", "lib", compiler, compilerVersion ),
 	os.path.join( IEEnv.Environment.rootPath(), "apps", "cortex", cortexVersion, IEEnv.platform(), "base", "arnold", arnoldVersion, "lib", compiler, compilerVersion ),
@@ -211,6 +212,9 @@ LOCATE_DEPENDENCY_PYTHONPATH = [
 	os.path.join( IEEnv.Environment.rootPath(), "apps", "cortex", cortexVersion, IEEnv.platform(), "base", "python", pythonVersion, compiler, compilerVersion ),	
 	os.path.join( IEEnv.Environment.rootPath(), "apps", "cortex", cortexVersion, IEEnv.platform(), "base", "arnold", arnoldVersion, "python", pythonVersion, compiler, compilerVersion ),
 	os.path.join( IEEnv.Environment.rootPath(), "apps", "cortex", cortexVersion, IEEnv.platform(), "base", "appleseed", appleseedVersion, "python", pythonVersion, compiler, compilerVersion ),
+	os.path.join( IEEnv.Environment.rootPath(), "apps", "OpenColorIO", ocioVersion, IEEnv.platform(), compiler, compilerVersion, "lib", "python" + pythonVersion, "site-packages" ),
+	os.path.join( IEEnv.Environment.rootPath(), "apps", "pyqt", pyqtVersion, "qt" + qtVersion, "python" + pythonVersion, IEEnv.platform(), compiler, compilerVersion, "python" ),
+	os.path.join( IEEnv.Environment.rootPath(), "tools", "python", pythonVersion, IEEnv.platform(), compiler, compilerVersion, "sip", "4" ),
 	os.path.join( IEEnv.Environment.rootPath(), "tools", "python", pythonVersion, IEEnv.platform(), compiler, compilerVersion, "subprocess32", "3" ),
 	os.path.join( IEEnv.Environment.rootPath(), "tools", "python", pythonVersion, IEEnv.platform(), compiler, compilerVersion, "PyOpenGL", "3" ),
 	os.path.join( IEEnv.Environment.rootPath(), "tools", "python", pythonVersion, "noarch" ),
@@ -230,11 +234,18 @@ os.environ["IECOREGL_SHADER_INCLUDE_PATHS"] = os.path.join( IEEnv.Environment.ro
 if targetAppVersion :
 	
 	targetAppLocation = targetAppReg["location"]
-	for directory in targetAppReg.get( "libPaths", [] ) :
-		LOCATE_DEPENDENCY_LIBPATH.insert(
-			0,
-			os.path.join( IEEnv.Environment.rootPath(), targetAppLocation, directory ),
-		)
+	if targetApp != "nuke" :
+		# Include any library locations from the target application. We have to skip
+		# this for Nuke at present (9.0v6) because Nuke contains a libpython2.7.so from Python 2.7.3,
+		# and this is incompatible with the Python 2.7.5 we install for Python 2.7. Better
+		# solutions might be to register Nuke's Python version as "2.7.3" in IEEnv rather than
+		# as "2.7", or to update our build system to always use the python that ships with the
+		# target app.
+		for directory in targetAppReg.get( "libPaths", [] ) :
+			LOCATE_DEPENDENCY_LIBPATH.insert(
+				0,
+				os.path.join( IEEnv.Environment.rootPath(), targetAppLocation, directory ),
+			)
 
 	LOCATE_DEPENDENCY_LIBPATH.insert(
 		0,
@@ -299,12 +310,13 @@ OPENEXR_LIB_SUFFIX = "-" + targetAppReg.get( "OpenEXRVersion", cortexReg["OpenEX
 CORTEX_LIB_SUFFIX = "-" + cortexMajorVersion
 CORTEX_PYTHON_LIB_SUFFIX = "-" + cortexMajorVersion + "-python" + pythonVersion
 
-# we set this so that LD_LIBRARY_PATH will point where we want it
-# when the gaffer sconstruct invokes the cortex sconstruct
-#os.environ["IEENV_LIBRARY_PREFIX_PATH"] = BUILD_DIR + "/lib"
+os.environ["PATH"] = os.path.join( pythonReg["location"], compiler, compilerVersion, "bin" ) + ":" + os.environ["PATH"]
+os.environ["PYTHONHOME"] = os.path.join( pythonReg["location"], compiler, compilerVersion )
+
+os.environ["OCIO"] = os.path.join( IEEnv.Environment.rootPath(), "config", "openColorIO", "nuke-default", "config.ocio" )
 
 # we need these imported so we can run the commands to generate the documentation
-ENV_VARS_TO_IMPORT="PATH PYTHONPATH IEENV_ROOT IEENV_DISABLE_WRAPPER_ENV_CHECK IECORE_FONT_PATHS IECOREGL_SHADER_INCLUDE_PATHS OCIO IEENV_WORKING_PATH DOXYGEN_VERSION OSL_VERSION IE_DEFAULT_CDL_PATH"
+ENV_VARS_TO_IMPORT="PATH PYTHONPATH PYTHONHOME IEENV_ROOT IEENV_DISABLE_WRAPPER_ENV_CHECK IECORE_FONT_PATHS IECOREGL_SHADER_INCLUDE_PATHS OCIO IEENV_WORKING_PATH DOXYGEN_VERSION OSL_VERSION"
 # the output is pretty tedious without this disabled
 os.environ["IEENV_DISABLE_WRAPPER_ENV_CHECK"] = "1"
 
