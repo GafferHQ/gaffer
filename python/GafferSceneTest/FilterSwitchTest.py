@@ -199,5 +199,18 @@ class FilterSwitchTest( GafferSceneTest.SceneTestCase ) :
 		# should still be correctly connected internally:
 		self.assertEqual( fs["out"].getInput(), fs["in"]["in1"] )
 
+	def testConnectWithoutInputs( self ) :
+
+		s = Gaffer.ScriptNode()
+
+		s["i"] = GafferScene.Isolate()
+		s["p"] = GafferScene.PathFilter()
+
+		s["s"] = GafferScene.FilterSwitch()
+		s["s"]["in"][0].setInput( s["p"]["out"] )
+		s["s"]["in"][0].setInput( None )
+
+		s["i"]["filter"].setInput( s["s"]["out"] )
+
 if __name__ == "__main__":
 	unittest.main()
