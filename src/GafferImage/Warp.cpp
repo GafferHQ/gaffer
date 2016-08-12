@@ -114,7 +114,7 @@ IE_CORE_DEFINERUNTIMETYPED( Warp );
 size_t Warp::g_firstPlugIndex = 0;
 
 Warp::Warp( const std::string &name )
-	:	ImageProcessor( name )
+	:	FlatImageProcessor( name )
 {
 	storeIndexOfNextChild( g_firstPlugIndex );
 
@@ -154,7 +154,7 @@ const Gaffer::ObjectPlug *Warp::enginePlug() const
 
 void Warp::affects( const Gaffer::Plug *input, AffectedPlugsContainer &outputs ) const
 {
-	ImageProcessor::affects( input, outputs );
+	FlatImageProcessor::affects( input, outputs );
 
 	// TypeId comparison is necessary to avoid calling pure virtual
 	// methods below if we're called before being fully constructed.
@@ -191,7 +191,7 @@ void Warp::hash( const Gaffer::ValuePlug *output, const Gaffer::Context *context
 		return;
 	}
 
-	ImageProcessor::hash( output, context, h );
+	FlatImageProcessor::hash( output, context, h );
 }
 
 void Warp::compute( Gaffer::ValuePlug *output, const Gaffer::Context *context ) const
@@ -210,12 +210,12 @@ void Warp::compute( Gaffer::ValuePlug *output, const Gaffer::Context *context ) 
 		return;
 	}
 
-	ImageProcessor::compute( output, context );
+	FlatImageProcessor::compute( output, context );
 }
 
-void Warp::hashChannelData( const GafferImage::ImagePlug *parent, const Gaffer::Context *context, IECore::MurmurHash &h ) const
+void Warp::hashFlatChannelData( const GafferImage::ImagePlug *parent, const Gaffer::Context *context, IECore::MurmurHash &h ) const
 {
-	ImageProcessor::hashChannelData( parent, context, h );
+	FlatImageProcessor::hashFlatChannelData( parent, context, h );
 
 	const IECore::MurmurHash engineHash = enginePlug()->hash();
 	h.append( engineHash );
@@ -233,7 +233,7 @@ void Warp::hashChannelData( const GafferImage::ImagePlug *parent, const Gaffer::
 	outPlug()->dataWindowPlug()->hash( h );
 }
 
-IECore::ConstFloatVectorDataPtr Warp::computeChannelData( const std::string &channelName, const Imath::V2i &tileOrigin, const Gaffer::Context *context, const ImagePlug *parent ) const
+IECore::ConstFloatVectorDataPtr Warp::computeFlatChannelData( const std::string &channelName, const Imath::V2i &tileOrigin, const Gaffer::Context *context, const ImagePlug *parent ) const
 {
 	ConstEngineDataPtr engineData = static_pointer_cast<const EngineData>( enginePlug()->getValue() );
 	const Engine *e = engineData->engine;
@@ -280,6 +280,6 @@ bool  Warp::affectsEngine( const Gaffer::Plug *input ) const
 
 void Warp::hashEngine( const std::string &channelName, const Imath::V2i &tileOrigin, const Gaffer::Context *context, IECore::MurmurHash &h ) const
 {
-	ImageProcessor::hash( enginePlug(), context, h );
+	FlatImageProcessor::hash( enginePlug(), context, h );
 }
 
