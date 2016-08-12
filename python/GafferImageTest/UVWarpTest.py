@@ -96,6 +96,34 @@ class UVWarpTest( GafferImageTest.ImageTestCase ) :
 				sampler1["pixel"].setValue( IECore.V2f( u * 2, v * 2 ) )
 				self.assertEqual( sampler1["color"].getValue(), sampler2["color"].getValue() )
 
+	def testNonFlatHashPassThrough( self ) :
+
+		deepIn = self.deepImage( GafferImage.Format( 8, 8 ) )
+		deepUv = self.deepImage( GafferImage.Format( 16, 16 ) )
+
+		warp = GafferImage.UVWarp()
+		warp["in"].setInput( deepIn['out'] )
+		warp["uv"].setInput( deepUv['out'] )
+
+		self.assertEqual( deepIn["out"]["deepState"].getValue(), GafferImage.ImagePlug.DeepState.Tidy )
+		self.assertEqual( deepUv["out"]["deepState"].getValue(), GafferImage.ImagePlug.DeepState.Tidy )
+		self.assertEqual( deepIn["out"].imageHash(), warp["out"].imageHash(), "Hashes should be equal when both inputs are Deep" )
+
+		deepUv["deepState"].setValue( GafferImage.ImagePlug.DeepState.Flat )
+		self.assertEqual( deepIn["out"]["deepState"].getValue(), GafferImage.ImagePlug.DeepState.Tidy )
+		self.assertEqual( deepUv["out"]["deepState"].getValue(), GafferImage.ImagePlug.DeepState.Flat )
+		self.assertEqual( deepIn["out"].imageHash(), warp["out"].imageHash(), "Hashes should be equal when 'in' is Deep, 'uv' is Flat" )
+
+		deepIn["deepState"].setValue( GafferImage.ImagePlug.DeepState.Flat )
+		self.assertEqual( deepIn["out"]["deepState"].getValue(), GafferImage.ImagePlug.DeepState.Flat )
+		self.assertEqual( deepUv["out"]["deepState"].getValue(), GafferImage.ImagePlug.DeepState.Flat )
+		self.assertNotEqual( deepIn["out"].imageHash(), warp["out"].imageHash(), "Hashes should not be equal when both inputs are Flat" )
+
+		deepUv["deepState"].setValue( GafferImage.ImagePlug.DeepState.Tidy )
+		self.assertEqual( deepIn["out"]["deepState"].getValue(), GafferImage.ImagePlug.DeepState.Flat )
+		self.assertEqual( deepUv["out"]["deepState"].getValue(), GafferImage.ImagePlug.DeepState.Tidy )
+		self.assertEqual( deepIn["out"].imageHash(), warp["out"].imageHash(), "Hashes should be equal when 'in' is Flat, 'uv' is Deep" )
+
 	def testNegativeDataWindowOrigin( self ) :
 
 		reader = GafferImage.ImageReader()
