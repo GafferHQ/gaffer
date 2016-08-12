@@ -128,6 +128,7 @@ enum TypeId
 	AttributeVisualiserTypeId = 110583,
 	SceneLoopTypeId = 110584,
 	RenderTypeId = 110585,
+	FilterPlugTypeId = 110586,
 
 	PreviewInteractiveRenderTypeId = 110649,
 
