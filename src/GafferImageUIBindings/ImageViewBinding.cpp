@@ -110,6 +110,7 @@ void GafferImageUIBindings::bindImageView()
 		.staticmethod( "registerDisplayTransform" )
 		.def( "registeredDisplayTransforms", &registeredDisplayTransforms )
 		.staticmethod( "registeredDisplayTransforms" )
+        .def( "setZoomLevel", &ImageView::setZoomLevel)
 	;
 
 }

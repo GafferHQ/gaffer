@@ -98,6 +98,9 @@ class ImageView : public GafferUI::View
 		Gaffer::FloatPlug *gammaPlug();
 		const Gaffer::FloatPlug *gammaPlug() const;
 
+        Gaffer::FloatPlug *zoomLevelPlug();
+		const Gaffer::FloatPlug *zoomLevelPlug() const;
+
 		/// Values should be names that exist in registeredDisplayTransforms().
 		Gaffer::StringPlug *displayTransformPlug();
 		const Gaffer::StringPlug *displayTransformPlug() const;
@@ -108,6 +111,7 @@ class ImageView : public GafferUI::View
 
 		static void registerDisplayTransform( const std::string &name, DisplayTransformCreator creator );
 		static void registeredDisplayTransforms( std::vector<std::string> &names );
+        void setZoomLevel(float zoomLevel);
 
 	protected :
 

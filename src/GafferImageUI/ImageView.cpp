@@ -82,6 +82,25 @@ using namespace GafferUI;
 using namespace GafferImage;
 using namespace GafferImageUI;
 
+
+namespace
+{
+    float EPSILON = 0.5f;
+    float round_up_to_even(float a)
+    {
+        return ceil(a * .5) * 2;
+    }
+
+    float round_down_to_even(float a)
+    {
+        return floor(a * .5) * 2;
+    }
+
+    bool cmpf(float A, float B, float epsilon = EPSILON)
+    { 
+        return (fabs(A - B) < epsilon);
+    }
+}
 //////////////////////////////////////////////////////////////////////////
 /// Implementation of ImageView::ColorInspector
 //////////////////////////////////////////////////////////////////////////
@@ -210,6 +229,8 @@ ImageView::ImageView( const std::string &name )
 	clampNode->minClampToPlug()->setValue( Color4f( 1.0f, 1.0f, 1.0f, 0.0f ) );
 	clampNode->maxClampToPlug()->setValue( Color4f( 0.0f, 0.0f, 0.0f, 1.0f ) );
 
+    addChild( new FloatPlug( "zoomLevel", Plug::In, 1.0f, 0.001, 500, Plug::Default & ~Plug::AcceptsInputs ) );
+
 	BoolPlugPtr clippingPlug = new BoolPlug( "clipping" );
 	clippingPlug->setFlags( Plug::AcceptsInputs, false );
 	addChild( clippingPlug );
@@ -290,6 +311,16 @@ void ImageView::insertConverter( Gaffer::NodePtr converter )
 
 ImageView::~ImageView()
 {
+}
+
+Gaffer::FloatPlug *ImageView::zoomLevelPlug()
+{
+	return getChild<FloatPlug>( "zoomLevel" );
+}
+
+const Gaffer::FloatPlug *ImageView::zoomLevelPlug() const
+{
+	return getChild<FloatPlug>( "zoomLevel" );
 }
 
 Gaffer::BoolPlug *ImageView::clippingPlug()
@@ -377,11 +408,14 @@ void ImageView::plugSet( Gaffer::Plug *plug )
 	{
 		insertDisplayTransform();
 	}
+	else if( plug == zoomLevelPlug() )
+	{
+		setZoomLevel(zoomLevelPlug()->getValue());
+	}
 }
 
 bool ImageView::keyPress( const GafferUI::KeyEvent &event )
 {
-    computeZoomLevel();
 	if( !event.modifiers )
 	{
 		const char *rgba[4] = { "R", "G", "B", "A" };
@@ -408,6 +442,65 @@ bool ImageView::keyPress( const GafferUI::KeyEvent &event )
 				viewportGadget()->frame(frame);
 				return true;
 			}
+            if(event.key == "Plus")
+            {
+                float zoomLevel = computeZoomLevel();
+                float roundLevel;
+
+                if((zoomLevel + EPSILON) < 1.f)
+                {
+                    zoomLevel = std::min(500.f, 1 / zoomLevel);
+                    roundLevel = round_down_to_even(zoomLevel);
+                    
+                    if(cmpf(zoomLevel, roundLevel, zoomLevel * .1))
+                    {
+                        roundLevel = roundLevel * .5;
+                    }
+                    
+                    roundLevel = 1 / roundLevel;
+                }
+                else
+                {
+                    roundLevel = round_up_to_even(zoomLevel);
+                    if(cmpf(zoomLevel, roundLevel, zoomLevel * .1))
+                    {
+                        roundLevel = roundLevel * 2;
+                    }
+                }
+				
+                zoomLevelPlug()->setValue(roundLevel) ;
+				
+                return true;
+
+            }
+            if(event.key == "Minus")
+            {
+                float zoomLevel = computeZoomLevel();
+                float roundLevel;
+                if((zoomLevel - EPSILON) < 1.f)
+                {
+                    zoomLevel = std::min(1000.0, round(1 / zoomLevel));
+                    roundLevel = round_up_to_even(zoomLevel);
+                    if(cmpf(zoomLevel, roundLevel, zoomLevel * .1))
+                    {
+                        roundLevel = roundLevel * 2;
+                    }
+
+                    roundLevel = 1 / roundLevel;
+                }
+                else
+                {
+                    roundLevel = round_down_to_even(round(zoomLevel));
+                    if(cmpf(zoomLevel, roundLevel, zoomLevel * .1))
+                    {
+                        roundLevel = roundLevel * .5;
+                    }
+                }
+
+                zoomLevelPlug()->setValue(roundLevel) ;
+
+                return true;
+            }
 		}
 		if(event.key == "Home")
 		{
@@ -426,7 +519,19 @@ bool ImageView::keyPress( const GafferUI::KeyEvent &event )
 
 	return false;
 }
-
+void ImageView::setZoomLevel(float zoomLevel)
+{
+    V2f viewport = V2f(viewportGadget()->getViewport() ) * (1 / zoomLevel) ;
+    V2i viewportCenter(viewport.x / 2, viewport.y / 2);
+    Box3f bound = m_imageGadget->bound();
+    V2i imageCenter((bound.max.x - bound.min.x) / 2, (bound.max.y - bound.min.y) / 2);
+    Box3f frame(
+        Imath::V3f(imageCenter.x - viewportCenter.x, imageCenter.y - viewportCenter.y, 0),
+        Imath::V3f(imageCenter.x + viewportCenter.x, imageCenter.y + viewportCenter.y, 0)
+    );
+    viewportGadget()->frame(frame);
+    return;
+}
 void ImageView::preRender()
 {
 	if( m_framed )
@@ -442,6 +547,8 @@ void ImageView::preRender()
 
 	viewportGadget()->frame( b );
 	m_framed = true;
+    float zoomLevel = computeZoomLevel();
+    zoomLevelPlug()->setValue(zoomLevel);
 }
 
 void ImageView::insertDisplayTransform()
@@ -482,12 +589,13 @@ void ImageView::insertDisplayTransform()
 
 float ImageView::computeZoomLevel()
 {
-    Box3f imageBound = m_imageGadget->bound();
-    V3f imageSize(imageBound.max.x - imageBound.min.x, imageBound.max.y - imageBound.min.y, imageBound.max.z - imageBound.min.z);
-    V2f imageRasterSize = viewportGadget()->gadgetToRasterSpace(imageSize, m_imageGadget.get());
-    std::cout<<"imageSize: "<<imageSize<<std::endl;
-    std::cout<<"rasterSize: "<<imageRasterSize<<std::endl;
-    return 1.0;
+
+    const Box3f b = m_imageGadget->bound();
+    const V2f imageSize = V2f(b.max.x - b.min.x, b.max.y - b.min.y);
+    const V2f c0 = viewportGadget()->gadgetToRasterSpace( b.min, m_imageGadget.get() );
+    const V2f c1 = viewportGadget()->gadgetToRasterSpace( b.max, m_imageGadget.get() );
+    const V2f rasterSize = c1 - c0;
+    return rasterSize.x / imageSize.x;
 }
 
 void ImageView::registerDisplayTransform( const std::string &name, DisplayTransformCreator creator )
