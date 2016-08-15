@@ -36,7 +36,6 @@
 
 #include "boost/bind.hpp"
 
-#include "Gaffer/BlockedConnection.h"
 #include "Gaffer/StringPlug.h"
 
 #include "GafferScene/StandardAttributes.h"

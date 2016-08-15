@@ -42,7 +42,6 @@
 
 #include "IECoreGL/Selector.h"
 
-#include "Gaffer/BlockedConnection.h"
 #include "Gaffer/Metadata.h"
 #include "Gaffer/StringPlug.h"
 
