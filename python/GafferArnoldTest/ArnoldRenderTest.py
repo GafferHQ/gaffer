@@ -39,6 +39,7 @@ import os
 import inspect
 import unittest
 import subprocess32 as subprocess
+import threading
 
 import arnold
 
@@ -579,6 +580,42 @@ class ArnoldRenderTest( GafferTest.TestCase ) :
 		render["fileName"].setValue( self.temporaryDirectory() + "/test.ass" )
 
 		render["task"].execute()
+
+	def testTwoRenders( self ) :
+
+		sphere = GafferScene.Sphere()
+
+		duplicate = GafferScene.Duplicate()
+		duplicate["in"].setInput( sphere["out"] )
+		duplicate["target"].setValue( "/sphere" )
+		duplicate["copies"].setValue( 10000 )
+
+		render = GafferArnold.ArnoldRender()
+		render["in"].setInput( duplicate["out"] )
+		render["mode"].setValue( render.Mode.SceneDescriptionMode )
+		render["fileName"].setValue( self.temporaryDirectory() + "/test.####.ass" )
+
+		errors = []
+		def executeFrame( frame ) :
+
+			with Gaffer.Context() as c :
+				c.setFrame( frame )
+				try :
+					render["task"].execute()
+				except Exception as e :
+					errors.append( str( e ) )
+
+		threads = []
+		for i in range( 0, 2 ) :
+			t = threading.Thread( target = executeFrame, args = ( i, ) )
+			t.start()
+			threads.append( t )
+
+		for t in threads :
+			t.join()
+
+		self.assertEqual( len( errors ), 1 )
+		self.assertTrue( "Arnold is already in use" in errors[0] )
 
 	def __assertStructsEqual( self, a, b ) :
 

@@ -71,7 +71,7 @@ ArnoldShader::~ArnoldShader()
 
 void ArnoldShader::loadShader( const std::string &shaderName )
 {
-	IECoreArnold::UniverseBlock arnoldUniverse;
+	IECoreArnold::UniverseBlock arnoldUniverse( /* writable = */ false );
 
 	const AtNodeEntry *shader = AiNodeEntryLookUp( shaderName.c_str() );
 	if( !shader )

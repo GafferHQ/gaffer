@@ -1056,7 +1056,7 @@ class ArnoldRenderer : public IECoreScenePreview::Renderer
 
 		ArnoldRenderer( RenderType renderType, const std::string &fileName )
 			:	m_renderType( renderType ),
-				m_universeBlock( boost::make_shared<UniverseBlock>() ),
+				m_universeBlock( boost::make_shared<UniverseBlock>(  /* writable = */ true ) ),
 				m_shaderCache( new ShaderCache ),
 				m_instanceCache( new InstanceCache ),
 				m_assFileName( fileName )
