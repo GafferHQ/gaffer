@@ -35,6 +35,7 @@
 #
 ##########################################################################
 
+import os
 import unittest
 
 import IECore
@@ -43,9 +44,10 @@ import IECoreArnold
 import Gaffer
 import GafferTest
 import GafferScene
+import GafferSceneTest
 import GafferArnold
 
-class ArnoldShaderTest( unittest.TestCase ) :
+class ArnoldShaderTest( GafferSceneTest.SceneTestCase ) :
 
 	def test( self ) :
 
@@ -403,6 +405,26 @@ class ArnoldShaderTest( unittest.TestCase ) :
 
 		self.assertTrue( "exposure" in n["parameters"] )
 		self.assertTrue( n["out"].typeId(), Gaffer.Plug.staticTypeId() )
+
+	def testColorParameterMetadata( self ) :
+
+		n = GafferArnold.ArnoldShader()
+		n.loadShader( "ray_switch" )
+
+		for p in n["parameters"] :
+			self.assertTrue( isinstance( p, Gaffer.Color4fPlug ) )
+
+		self.addCleanup( setattr, os.environ, "ARNOLD_PLUGIN_PATH", os.environ["ARNOLD_PLUGIN_PATH"] )
+		os.environ["ARNOLD_PLUGIN_PATH"] = os.environ["ARNOLD_PLUGIN_PATH"] + ":" + os.path.join( os.path.dirname( __file__ ), "metadata" )
+
+		n = GafferArnold.ArnoldShader()
+		n.loadShader( "ray_switch" )
+
+		for name in [ "camera", "shadow", "reflection" ] :
+			self.assertTrue( isinstance( n["parameters"][name], Gaffer.Color3fPlug ) )
+
+		for name in [ "refraction", "diffuse", "glossy" ] :
+			self.assertTrue( isinstance( n["parameters"][name], Gaffer.Color4fPlug ) )
 
 if __name__ == "__main__":
 	unittest.main()
