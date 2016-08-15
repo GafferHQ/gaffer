@@ -54,7 +54,7 @@ FilteredSceneProcessor::FilteredSceneProcessor( const std::string &name, Filter:
 	:	SceneProcessor( name )
 {
 	storeIndexOfNextChild( g_firstPlugIndex );
-	addChild( new IntPlug( "filter", Plug::In, filterDefault, Filter::NoMatch, Filter::EveryMatch ) );
+	addChild( new FilterPlug( "filter", Plug::In, filterDefault, Filter::NoMatch, Filter::EveryMatch, Plug::Default ) );
 }
 
 FilteredSceneProcessor::~FilteredSceneProcessor()
@@ -84,50 +84,6 @@ void FilteredSceneProcessor::affects( const Gaffer::Plug *input, AffectedPlugsCo
 			outputs.push_back( filterPlug() );
 		}
 	}
-}
-
-bool FilteredSceneProcessor::acceptsInput( const Gaffer::Plug *plug, const Gaffer::Plug *inputPlug ) const
-{
-	if( !SceneProcessor::acceptsInput( plug, inputPlug ) )
-	{
-		return false;
-	}
-
-	if( !inputPlug )
-	{
-		return true;
-	}
-
-	if( plug == filterPlug() )
-	{
-		// We only really want to accept inputs from Filter nodes.
-		const Plug *source = inputPlug->source<Plug>();
-		const Node *n = source->node();
-		if( const Filter *filter = runTimeCast<const Filter>( n ) )
-		{
-			if( source == filter->outPlug() )
-			{
-				return true;
-			}
-		}
-		// But we can also trust connections from FilteredSceneProcessor::filterPlug()
-		// because it will have these exact same checks applied when it gets an input.
-		// This is particularly necessary for derived classes which may wish to wire
-		// up an internal network with connections to the external filter plug.
-		if( const FilteredSceneProcessor *f = runTimeCast<const FilteredSceneProcessor>( n ) )
-		{
-			if( source == f->filterPlug() )
-			{
-				return true;
-			}
-		}
-		// And we must also accept certain intermediate plugs speculatively in case they
-		// provide a filter connection in the future. We can do this because we are
-		// safe in the knowledge that this check will be called when the intermediate
-		// plug is having its input set.
-		return runTimeCast<const SubGraph>( n ) || runTimeCast<const Dot>( n );
-	}
-	return true;
 }
 
 Gaffer::ContextPtr FilteredSceneProcessor::filterContext( const Gaffer::Context *context ) const

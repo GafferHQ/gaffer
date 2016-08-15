@@ -72,6 +72,7 @@ class Filter : public Gaffer::ComputeNode
 		virtual Gaffer::BoolPlug *enabledPlug();
 		virtual const Gaffer::BoolPlug *enabledPlug() const;
 
+		/// \todo Change return type to FilterPlug.
 		Gaffer::IntPlug *outPlug();
 		const Gaffer::IntPlug *outPlug() const;
 

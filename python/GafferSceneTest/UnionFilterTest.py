@@ -127,7 +127,7 @@ class UnionFilterTest( GafferSceneTest.SceneTestCase ) :
 		n["out"] = f["out"].createCounterpart( "out", Gaffer.Plug.Direction.Out )
 
 		u = GafferScene.UnionFilter()
-		self.assertFalse( u["in"][0].acceptsInput( n["out"] ) )
+		self.assertTrue( u["in"][0].acceptsInput( n["out"] ) )
 
 	def testSceneAffects( self ) :
 

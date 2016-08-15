@@ -91,11 +91,6 @@ class ShaderAssignmentTest( GafferSceneTest.SceneTestCase ) :
 		n = GafferTest.AddNode()
 		self.assertFalse( a["filter"].acceptsInput( n["sum"] ) )
 
-		p = Gaffer.IntPlug()
-		p.setInput( f["out"] )
-
-		self.assertTrue( a["filter"].acceptsInput( p ) )
-
 	def testAssignShaderFromOutsideBox( self ) :
 
 		s = Gaffer.ScriptNode()

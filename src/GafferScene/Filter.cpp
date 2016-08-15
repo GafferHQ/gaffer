@@ -37,6 +37,7 @@
 #include "Gaffer/Context.h"
 
 #include "GafferScene/Filter.h"
+#include "GafferScene/FilterPlug.h"
 
 using namespace GafferScene;
 using namespace Gaffer;
@@ -51,7 +52,7 @@ Filter::Filter( const std::string &name )
 {
 	storeIndexOfNextChild( g_firstPlugIndex );
 	addChild( new BoolPlug( "enabled", Gaffer::Plug::In, true ) );
-	addChild( new IntPlug( "out", Gaffer::Plug::Out, NoMatch, NoMatch, EveryMatch, Plug::Default & ( ~Plug::Cacheable ) ) );
+	addChild( new FilterPlug( "out", Gaffer::Plug::Out, Plug::Default & ( ~Plug::Cacheable ) ) );
 }
 
 Filter::~Filter()
@@ -132,7 +133,7 @@ void Filter::compute( ValuePlug *output, const Context *context ) const
 		{
 			match = computeMatch( getInputScene( context ), context );
 		}
-		static_cast<IntPlug *>( output )->setValue( match );
+		static_cast<FilterPlug *>( output )->setValue( match );
 		return;
 	}
 

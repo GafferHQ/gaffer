@@ -73,6 +73,7 @@ class FilterProcessor : public Filter
 		/// with a single input, it will be a plug parented directly to the
 		/// node. If the node is disabled via enabledPlug(), then the inPlug()
 		/// is automatically passed through directly to the outPlug().
+		/// \todo Change return type to FilterPlug.
 		Gaffer::IntPlug *inPlug();
 		const Gaffer::IntPlug *inPlug() const;
 
@@ -88,8 +89,6 @@ class FilterProcessor : public Filter
 		virtual const Gaffer::Plug *correspondingInput( const Gaffer::Plug *output ) const;
 
 	protected :
-
-		virtual bool acceptsInput( const Gaffer::Plug *plug, const Gaffer::Plug *inputPlug ) const;
 
 		/// Reimplemented to pass through the inPlug() hash when the node is disabled.
 		virtual void hash( const Gaffer::ValuePlug *output, const Gaffer::Context *context, IECore::MurmurHash &h ) const;
