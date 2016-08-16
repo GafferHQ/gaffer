@@ -35,8 +35,6 @@
 //////////////////////////////////////////////////////////////////////////
 
 #include "Gaffer/ArrayPlug.h"
-#include "Gaffer/SubGraph.h"
-#include "Gaffer/Dot.h"
 
 #include "GafferScene/FilterProcessor.h"
 
@@ -133,27 +131,6 @@ const Gaffer::Plug *FilterProcessor::correspondingInput( const Gaffer::Plug *out
 		return inPlug();
 	}
 	return Filter::correspondingInput( output );
-}
-
-bool FilterProcessor::acceptsInput( const Gaffer::Plug *plug, const Gaffer::Plug *inputPlug ) const
-{
-	if( !Filter::acceptsInput( plug, inputPlug ) )
-	{
-		return false;
-	}
-
-	if( !inputPlug )
-	{
-		return true;
-	}
-
-	if( plug->parent<ArrayPlug>() == inPlugs() || plug == inPlug() )
-	{
-		const Node *n = inputPlug->source<Plug>()->node();
-		return runTimeCast<const Filter>( n ) || runTimeCast<const SubGraph>( n ) || runTimeCast<const Dot>( n );
-	}
-
-	return true;
 }
 
 void FilterProcessor::hash( const Gaffer::ValuePlug *output, const Gaffer::Context *context, IECore::MurmurHash &h ) const

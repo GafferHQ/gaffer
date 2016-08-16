@@ -149,19 +149,21 @@ T NumericPlug<T>::getValue( const IECore::MurmurHash *precomputedHash ) const
 template<class T>
 void NumericPlug<T>::setFrom( const ValuePlug *other )
 {
-	switch( static_cast<Gaffer::TypeId>(other->typeId()) )
+	if( const FloatPlug *p = runTimeCast<const FloatPlug>( other ) )
 	{
-		case FloatPlugTypeId :
-			setValue( (T)static_cast<const FloatPlug *>( other )->getValue() );
-			break;
-		case IntPlugTypeId :
-			setValue( (T)static_cast<const IntPlug *>( other )->getValue() );
-			break;
-		case BoolPlugTypeId :
-			setValue( (T)static_cast<const BoolPlug *>( other )->getValue() );
-			break;
-		default :
-			throw IECore::Exception( "Unsupported plug type" );
+		setValue( static_cast<T>( p->getValue() ) );
+	}
+	else if( const IntPlug *p = runTimeCast<const IntPlug>( other ) )
+	{
+		setValue( static_cast<T>( p->getValue() ) );
+	}
+	else if( const BoolPlug *p = runTimeCast<const BoolPlug>( other ) )
+	{
+		setValue( static_cast<T>( p->getValue() ) );
+	}
+	else
+	{
+		throw IECore::Exception( "Unsupported plug type" );
 	}
 }
 

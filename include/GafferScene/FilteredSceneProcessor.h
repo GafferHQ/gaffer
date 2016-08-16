@@ -40,6 +40,7 @@
 
 #include "GafferScene/SceneProcessor.h"
 #include "GafferScene/Filter.h"
+#include "GafferScene/FilterPlug.h"
 
 namespace GafferScene
 {
@@ -56,15 +57,13 @@ class FilteredSceneProcessor : public SceneProcessor
 
 		IE_CORE_DECLARERUNTIMETYPEDEXTENSION( GafferScene::FilteredSceneProcessor, FilteredSceneProcessorTypeId, SceneProcessor );
 
+		/// \todo Change return type to FilterPlug.
 		Gaffer::IntPlug *filterPlug();
 		const Gaffer::IntPlug *filterPlug() const;
 
 		virtual void affects( const Gaffer::Plug *input, AffectedPlugsContainer &outputs ) const;
 
 	protected :
-
-		/// Implemented to prevent non-Filter nodes being connected to the filter plug.
-		virtual bool acceptsInput( const Gaffer::Plug *plug, const Gaffer::Plug *inputPlug ) const;
 
 		/// Convenience method which creates a temporary context for use in
 		/// passing the input scene to the filter. Such a context must be current

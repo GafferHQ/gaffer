@@ -73,5 +73,50 @@ class SceneProcessorTest( GafferTest.TestCase ) :
 		self.assertEqual( n["in"].minSize(), 2 )
 		self.assertEqual( n["in"].maxSize(), Gaffer.ArrayPlug().maxSize() )
 
+	def testDeriveAndUseExternalFilters( self ) :
+
+		class MatteAssignment( GafferScene.SceneProcessor ) :
+
+			def __init__( self, name = "MatteAssignment" ) :
+
+				GafferScene.SceneProcessor.__init__( self, name )
+
+				self["__red"] = GafferScene.StandardAttributes()
+				self["__red"]["in"].setInput( self["in"] )
+				self["__red"]["attributes"].addMember( "user:matteColor", IECore.Color3f( 1, 0, 0 ) )
+				self["redFilter"] = self["__red"]["filter"].createCounterpart( "redFilter", Gaffer.Plug.Direction.In )
+				self["__red"]["filter"].setInput( self["redFilter"] )
+
+				self["__green"] = GafferScene.StandardAttributes()
+				self["__green"]["in"].setInput( self["__red"]["out"] )
+				self["__green"]["attributes"].addMember( "user:matteColor", IECore.Color3f( 0, 1, 0 ) )
+				self["greenFilter"] = self["__green"]["filter"].createCounterpart( "greenFilter", Gaffer.Plug.Direction.In )
+				self["__green"]["filter"].setInput( self["greenFilter"] )
+
+				self["out"].setInput( self["__green"]["out"] )
+
+		IECore.registerRunTimeTyped( MatteAssignment )
+
+		s = GafferScene.Sphere()
+
+		g = GafferScene.Group()
+		g["in"][0].setInput( s["out"] )
+		g["in"][1].setInput( s["out"] )
+
+		f1 = GafferScene.PathFilter()
+		f1["paths"].setValue( IECore.StringVectorData( [ "/group/sphere" ] ) )
+
+		f2 = GafferScene.PathFilter()
+		f2["paths"].setValue( IECore.StringVectorData( [ "/group/sphere1" ] ) )
+
+		a = MatteAssignment()
+		a["in"].setInput( g["out"] )
+		a["redFilter"].setInput( f1["out"] )
+		a["greenFilter"].setInput( f2["out"] )
+
+		self.assertEqual( a["out"].attributes( "/group" ), IECore.CompoundObject() )
+		self.assertEqual( a["out"].attributes( "/group/sphere" )["user:matteColor"].value, IECore.Color3f( 1, 0, 0 ) )
+		self.assertEqual( a["out"].attributes( "/group/sphere1" )["user:matteColor"].value, IECore.Color3f( 0, 1, 0 ) )
+
 if __name__ == "__main__":
 	unittest.main()
