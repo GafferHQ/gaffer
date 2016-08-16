@@ -52,9 +52,121 @@ using namespace IECore;
 using namespace Gaffer;
 using namespace GafferArnold;
 
-Gaffer::Plug *ParameterHandler::setupPlug( const AtParamEntry *parameter, Gaffer::GraphComponent *plugParent, Gaffer::Plug::Direction direction )
+namespace
 {
-	std::string name = AiParamGetName( parameter );
+
+/// \todo This is repeated from OSLShader.cpp. Would it make sense in PlugAlgo.h?
+void transferConnectionOrValue( Plug *sourcePlug, Plug *destinationPlug )
+{
+	if( !sourcePlug )
+	{
+		return;
+	}
+
+	if( Plug *input = sourcePlug->getInput<Plug>() )
+	{
+		destinationPlug->setInput( input );
+	}
+	else
+	{
+		ValuePlug *sourceValuePlug = runTimeCast<ValuePlug>( sourcePlug );
+		ValuePlug *destinationValuePlug = runTimeCast<ValuePlug>( destinationPlug );
+		if( destinationValuePlug && sourceValuePlug )
+		{
+			destinationValuePlug->setFrom( sourceValuePlug );
+		}
+	}
+}
+
+template<typename PlugType>
+Gaffer::Plug *setupColorPlug( const AtNodeEntry *node, const AtParamEntry *parameter, Gaffer::GraphComponent *plugParent, Gaffer::Plug::Direction direction )
+{
+	typedef typename PlugType::ValueType ValueType;
+	typedef typename ValueType::BaseType BaseType;
+
+	ValueType defaultValue( 1 );
+	switch( AiParamGetType( parameter ) )
+	{
+		case AI_TYPE_RGB :
+			defaultValue[0] = AiParamGetDefault( parameter )->RGB.r;
+			defaultValue[1] = AiParamGetDefault( parameter )->RGB.g;
+			defaultValue[2] = AiParamGetDefault( parameter )->RGB.b;
+			break;
+		case AI_TYPE_RGBA :
+			defaultValue[0] = AiParamGetDefault( parameter )->RGBA.r;
+			defaultValue[1] = AiParamGetDefault( parameter )->RGBA.g;
+			defaultValue[2] = AiParamGetDefault( parameter )->RGBA.b;
+			defaultValue[3] = AiParamGetDefault( parameter )->RGBA.a;
+			break;
+		default :
+			return NULL;
+	}
+
+	ValueType minValue( Imath::limits<BaseType>::min() );
+	ValueType maxValue( Imath::limits<BaseType>::max() );
+
+	const char *name = AiParamGetName( parameter );
+	PlugType *existingPlug = plugParent->getChild<PlugType>( name );
+	if(
+		existingPlug &&
+		existingPlug->defaultValue() == defaultValue &&
+		existingPlug->minValue() == minValue &&
+		existingPlug->maxValue() == maxValue
+	)
+	{
+		return existingPlug;
+	}
+
+	typename PlugType::Ptr plug = new PlugType( name, direction, defaultValue, minValue, maxValue, Plug::Default | Plug::Dynamic );
+	if( existingPlug )
+	{
+		for( size_t i = 0, e = existingPlug->children().size(); i < e; ++i )
+		{
+			transferConnectionOrValue(
+				existingPlug->getChild( i ),
+				plug->getChild( i )
+			);
+		}
+	}
+
+	plugParent->setChild( name, plug );
+	return plug.get();
+}
+
+Gaffer::Plug *setupRGBAPlug( const AtNodeEntry *node, const AtParamEntry *parameter, Gaffer::GraphComponent *plugParent, Gaffer::Plug::Direction direction )
+{
+	const char *name = AiParamGetName( parameter );
+
+	const char *plugType = "Color4fPlug";
+	AiMetaDataGetStr( node, name, "gaffer.plugType", &plugType );
+	if( !strcmp( plugType, "Color4fPlug" ) )
+	{
+		return setupColorPlug<Color4fPlug>( node, parameter, plugParent, direction );
+	}
+	else if( !strcmp( plugType, "Color3fPlug" ) )
+	{
+		return setupColorPlug<Color3fPlug>( node, parameter, plugParent, direction );
+	}
+	else
+	{
+		msg(
+			Msg::Warning,
+			"GafferArnold::ParameterHandler::setupPlug",
+			format( "Unsupported plug type \"%s\" for parameter \"%s\"" ) %
+				plugType %
+				AiParamGetName( parameter )
+		);
+		return NULL;
+	}
+}
+
+} // namespace
+
+/// \todo Reuse existing plugs wherever possible (as we currently do only for RGB and RGBA parameters).
+/// Then we can add a `keepExistingValues` parameter to `ArnoldShader::loadShader()`.
+Gaffer::Plug *ParameterHandler::setupPlug( const AtNodeEntry *node, const AtParamEntry *parameter, Gaffer::GraphComponent *plugParent, Gaffer::Plug::Direction direction )
+{
+	const char *name = AiParamGetName( parameter );
 
 	PlugPtr plug = 0;
 	switch( AiParamGetType( parameter ) )
@@ -114,31 +226,12 @@ Gaffer::Plug *ParameterHandler::setupPlug( const AtParamEntry *parameter, Gaffer
 
 		case AI_TYPE_RGB :
 
-			plug = new Color3fPlug(
-				name,
-				direction,
-				Color3f(
-					AiParamGetDefault( parameter )->RGB.r,
-					AiParamGetDefault( parameter )->RGB.g,
-					AiParamGetDefault( parameter )->RGB.b
-				)
-			);
-
+			plug = setupColorPlug<Color3fPlug>( node, parameter, plugParent, direction );
 			break;
 
 		case AI_TYPE_RGBA :
 
-			plug = new Color4fPlug(
-				name,
-				direction,
-				Color4f(
-					AiParamGetDefault( parameter )->RGBA.r,
-					AiParamGetDefault( parameter )->RGBA.g,
-					AiParamGetDefault( parameter )->RGBA.b,
-					AiParamGetDefault( parameter )->RGBA.a
-				)
-			);
-
+			plug = setupRGBAPlug( node, parameter, plugParent, direction );
 			break;
 
 		case AI_TYPE_POINT2 :
@@ -320,7 +413,7 @@ void ParameterHandler::setupPlugs( const AtNodeEntry *nodeEntry, Gaffer::GraphCo
 			continue;
 		}
 
-		setupPlug( param, plugsParent, direction );
+		setupPlug( nodeEntry, param, plugsParent, direction );
 	}
 	AiParamIteratorDestroy( it );
 }

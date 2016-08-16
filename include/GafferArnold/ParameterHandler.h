@@ -45,12 +45,14 @@ namespace GafferArnold
 {
 
 /// A helper class for mapping Arnold parameters to Gaffer Plugs.
+/// \todo Should probably just be free functions in a ParameterAlgo.h
+/// header, and should maybe be private too.
 class ParameterHandler
 {
 
 	public :
 
-		static Gaffer::Plug *setupPlug( const AtParamEntry *parameter, Gaffer::GraphComponent *plugParent, Gaffer::Plug::Direction direction = Gaffer::Plug::In );
+		static Gaffer::Plug *setupPlug( const AtNodeEntry *node, const AtParamEntry *parameter, Gaffer::GraphComponent *plugParent, Gaffer::Plug::Direction direction = Gaffer::Plug::In );
 		static void setupPlugs( const AtNodeEntry *node, Gaffer::GraphComponent *plugsParent, Gaffer::Plug::Direction direction = Gaffer::Plug::In );
 };
 

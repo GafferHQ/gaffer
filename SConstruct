@@ -643,7 +643,7 @@ libraries = {
 	},
 
 	"GafferArnoldTest" : {
-		"additionalFiles" : glob.glob( "python/GafferArnoldTest/volumes/*" ),
+		"additionalFiles" : glob.glob( "python/GafferArnoldTest/volumes/*" ) + glob.glob( "python/GafferArnoldTest/metadata/*" ),
 	},
 
 	"GafferArnoldUI" : {},
