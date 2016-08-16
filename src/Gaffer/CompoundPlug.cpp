@@ -43,7 +43,6 @@
 
 #include "Gaffer/CompoundPlug.h"
 #include "Gaffer/Node.h"
-#include "Gaffer/BlockedConnection.h"
 
 using namespace Gaffer;
 using namespace boost;

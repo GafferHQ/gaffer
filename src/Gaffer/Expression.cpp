@@ -45,7 +45,6 @@
 #include "Gaffer/NumericPlug.h"
 #include "Gaffer/Context.h"
 #include "Gaffer/StringPlug.h"
-#include "Gaffer/BlockedConnection.h"
 #include "Gaffer/Action.h"
 
 using namespace IECore;
