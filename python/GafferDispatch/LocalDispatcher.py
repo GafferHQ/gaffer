@@ -115,7 +115,7 @@ class LocalDispatcher( GafferDispatch.Dispatcher ) :
 
 		def description( self ) :
 
-			batch = self.__currentBatch( self.__batch )
+			batch = self.__currentBatch()
 			if batch is None or batch.plug() is None :
 				return "N/A"
 
@@ -125,7 +125,7 @@ class LocalDispatcher( GafferDispatch.Dispatcher ) :
 
 		def statistics( self ) :
 
-			batch = self.__currentBatch( self.__batch )
+			batch = self.__currentBatch()
 			if batch is None or "pid" not in batch.blindData().keys() :
 				return {}
 
@@ -328,16 +328,26 @@ class LocalDispatcher( GafferDispatch.Dispatcher ) :
 			self.__dispatcher.jobPool()._remove( self )
 			IECore.msg( IECore.MessageHandler.Level.Info, self.__messageTitle, "Killed " + self.name() )
 
-		def __currentBatch( self, batch ) :
+		def __currentBatch( self ) :
+
+			## \todo Consider just storing the current batch, rather
+			# than searching each time it is requested.
+			return self.__currentBatchWalk( self.__batch, set() )
+
+		def __currentBatchWalk( self, batch, visited ) :
+
+			if batch in visited :
+				return None
+
+			visited.add( batch )
 
 			if self.__getStatus( batch ) == LocalDispatcher.Job.Status.Running :
 				return batch
 
 			for upstreamBatch in batch.preTasks() :
-
-				batch = self.__currentBatch( upstreamBatch )
-				if batch is not None :
-					return batch
+				currentBatch = self.__currentBatchWalk( upstreamBatch, visited )
+				if currentBatch is not None :
+					return currentBatch
 
 			return None
 
