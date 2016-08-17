@@ -57,6 +57,7 @@
 
 #include "Gaffer/Context.h"
 #include "Gaffer/StringPlug.h"
+#include "Gaffer/BlockedConnection.h"
 
 #include "GafferUI/Gadget.h"
 #include "GafferUI/Style.h"
@@ -229,7 +230,7 @@ ImageView::ImageView( const std::string &name )
 	clampNode->minClampToPlug()->setValue( Color4f( 1.0f, 1.0f, 1.0f, 0.0f ) );
 	clampNode->maxClampToPlug()->setValue( Color4f( 0.0f, 0.0f, 0.0f, 1.0f ) );
 
-    addChild( new FloatPlug( "zoomLevel", Plug::In, 1.0f, 0.001, 500, Plug::Default & ~Plug::AcceptsInputs ) );
+    addChild( new FloatPlug( "zoomLevel", Plug::In, 1.0f, 0.001, 100, Plug::Default & ~Plug::AcceptsInputs ) );
 
 	BoolPlugPtr clippingPlug = new BoolPlug( "clipping" );
 	clippingPlug->setFlags( Plug::AcceptsInputs, false );
@@ -275,6 +276,9 @@ ImageView::ImageView( const std::string &name )
 	viewportGadget()->setPrimaryChild( m_imageGadget );
 
 	m_colorInspector = shared_ptr<ColorInspector>( new ColorInspector( this ) );
+
+	m_zoomLevelChangedConnection = zoomLevelChangedSignal().connect( boost::bind( &ImageView::setZoomLevel, this, ::_1) );
+    viewportGadget()->cameraChangedSignal().connect( boost::bind( &ImageView::updateZoomLevelPlug, this ) );
 }
 
 void ImageView::insertConverter( Gaffer::NodePtr converter )
@@ -410,7 +414,7 @@ void ImageView::plugSet( Gaffer::Plug *plug )
 	}
 	else if( plug == zoomLevelPlug() )
 	{
-		setZoomLevel(zoomLevelPlug()->getValue());
+        zoomLevelChangedSignal()(zoomLevelPlug()->getValue());
 	}
 }
 
@@ -449,14 +453,13 @@ bool ImageView::keyPress( const GafferUI::KeyEvent &event )
 
                 if((zoomLevel + EPSILON) < 1.f)
                 {
-                    zoomLevel = std::min(500.f, 1 / zoomLevel);
+                    zoomLevel = std::min(100.f, 1 / zoomLevel);
                     roundLevel = round_down_to_even(zoomLevel);
                     
                     if(cmpf(zoomLevel, roundLevel, zoomLevel * .1))
                     {
                         roundLevel = roundLevel * .5;
                     }
-                    
                     roundLevel = 1 / roundLevel;
                 }
                 else
@@ -467,7 +470,6 @@ bool ImageView::keyPress( const GafferUI::KeyEvent &event )
                         roundLevel = roundLevel * 2;
                     }
                 }
-				
                 zoomLevelPlug()->setValue(roundLevel) ;
 				
                 return true;
@@ -485,7 +487,6 @@ bool ImageView::keyPress( const GafferUI::KeyEvent &event )
                     {
                         roundLevel = roundLevel * 2;
                     }
-
                     roundLevel = 1 / roundLevel;
                 }
                 else
@@ -496,7 +497,6 @@ bool ImageView::keyPress( const GafferUI::KeyEvent &event )
                         roundLevel = roundLevel * .5;
                     }
                 }
-
                 zoomLevelPlug()->setValue(roundLevel) ;
 
                 return true;
@@ -519,19 +519,12 @@ bool ImageView::keyPress( const GafferUI::KeyEvent &event )
 
 	return false;
 }
-void ImageView::setZoomLevel(float zoomLevel)
+
+ImageView::ImageViewSignal &ImageView::zoomLevelChangedSignal()
 {
-    V2f viewport = V2f(viewportGadget()->getViewport() ) * (1 / zoomLevel) ;
-    V2i viewportCenter(viewport.x / 2, viewport.y / 2);
-    Box3f bound = m_imageGadget->bound();
-    V2i imageCenter((bound.max.x - bound.min.x) / 2, (bound.max.y - bound.min.y) / 2);
-    Box3f frame(
-        Imath::V3f(imageCenter.x - viewportCenter.x, imageCenter.y - viewportCenter.y, 0),
-        Imath::V3f(imageCenter.x + viewportCenter.x, imageCenter.y + viewportCenter.y, 0)
-    );
-    viewportGadget()->frame(frame);
-    return;
+	return m_zoomLevelChanged;
 }
+
 void ImageView::preRender()
 {
 	if( m_framed )
@@ -589,7 +582,6 @@ void ImageView::insertDisplayTransform()
 
 float ImageView::computeZoomLevel()
 {
-
     const Box3f b = m_imageGadget->bound();
     const V2f imageSize = V2f(b.max.x - b.min.x, b.max.y - b.min.y);
     const V2f c0 = viewportGadget()->gadgetToRasterSpace( b.min, m_imageGadget.get() );
@@ -598,6 +590,26 @@ float ImageView::computeZoomLevel()
     return rasterSize.x / imageSize.x;
 }
 
+void ImageView::updateZoomLevelPlug()
+{
+   BlockedConnection blockedConnection( m_zoomLevelChangedConnection );
+   float zoomLevel = computeZoomLevel();
+   zoomLevelPlug()->setValue(zoomLevel);
+}
+
+void ImageView::setZoomLevel(float zoomLevel)
+{
+    V2f viewport = V2f(viewportGadget()->getViewport() ) * (1 / zoomLevel) ;
+    V2i viewportCenter(viewport.x / 2, viewport.y / 2);
+    Box3f bound = m_imageGadget->bound();
+    V2i imageCenter((bound.max.x - bound.min.x) / 2, (bound.max.y - bound.min.y) / 2);
+    Box3f frame(
+        Imath::V3f(imageCenter.x - viewportCenter.x, imageCenter.y - viewportCenter.y, 0),
+        Imath::V3f(imageCenter.x + viewportCenter.x, imageCenter.y + viewportCenter.y, 0)
+    );
+    viewportGadget()->frame(frame);
+    return;
+}
 void ImageView::registerDisplayTransform( const std::string &name, DisplayTransformCreator creator )
 {
 	displayTransformCreators()[name] = creator;
