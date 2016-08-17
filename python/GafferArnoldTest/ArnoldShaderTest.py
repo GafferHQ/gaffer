@@ -42,6 +42,7 @@ import IECore
 import IECoreArnold
 
 import Gaffer
+import GafferOSL
 import GafferTest
 import GafferScene
 import GafferSceneTest
@@ -425,6 +426,23 @@ class ArnoldShaderTest( GafferSceneTest.SceneTestCase ) :
 
 		for name in [ "refraction", "diffuse", "glossy" ] :
 			self.assertTrue( isinstance( n["parameters"][name], Gaffer.Color4fPlug ) )
+
+	def testMixAndMatchWithOSLShaders( self ) :
+
+		utility = GafferArnold.ArnoldShader()
+		utility.loadShader( "utility" )
+
+		splitColor = GafferOSL.OSLShader()
+		splitColor.loadShader( "Utility/SplitColor" )
+		splitColor["parameters"]["c"].setInput( utility["out"] )
+
+		colorSpline = GafferOSL.OSLShader()
+		colorSpline.loadShader( "Pattern/ColorSpline" )
+		colorSpline["parameters"]["x"].setInput( splitColor["out"]["r"] )
+
+		flat = GafferArnold.ArnoldShader()
+		flat.loadShader( "flat" )
+		flat["parameters"]["color"].setInput( colorSpline["out"]["c"] )
 
 if __name__ == "__main__":
 	unittest.main()

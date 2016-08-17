@@ -91,6 +91,7 @@ export GAFFER_STARTUP_PATHS=~/gaffer/startup:${GAFFER_STARTUP_PATHS:-}${GAFFER_S
 export GAFFERUI_IMAGE_PATHS=$GAFFER_ROOT/graphics${GAFFERUI_IMAGE_PATHS:+:}${GAFFERUI_IMAGE_PATHS:-}
 
 export OSLHOME=$GAFFER_ROOT
+export OSL_SHADER_PATHS=$HOME/gaffer/shaders:$GAFFER_ROOT/shaders${OSL_SHADER_PATHS:+:}${OSL_SHADER_PATHS:-}
 
 # Get python set up properly
 ##########################################################################

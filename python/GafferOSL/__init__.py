@@ -34,16 +34,6 @@
 #
 ##########################################################################
 
-def __setupEnvironment() :
-
-	import os
-	p = os.environ.get( "OSL_SHADER_PATHS", "" )
-	if p :
-		p = ":" + p
-	os.environ["OSL_SHADER_PATHS"] = os.path.expandvars( "$HOME/gaffer/shaders:$GAFFER_ROOT/shaders" ) + p
-
-__setupEnvironment()
-
 __import__( "GafferScene" )
 
 from _GafferOSL import *
