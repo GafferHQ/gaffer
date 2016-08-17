@@ -38,6 +38,7 @@ import os
 import stat
 import shutil
 import unittest
+import time
 
 import IECore
 
@@ -771,11 +772,18 @@ class LocalDispatcherTest( GafferTest.TestCase ) :
 		d["framesMode"].setValue( d.FramesMode.CustomRange )
 		d["frameRange"].setValue( "1-1000" )
 
+		t = time.clock()
 		d.dispatch( [ lastTask ] )
+		self.assertLess( time.clock() - t, 6 )
 
 		d["executeInBackground"].setValue( True )
+
 		d.dispatch( [ lastTask ] )
+
+		t = time.clock()
 		d.jobPool().jobs()[0].kill()
+		self.assertLess( time.clock() - t, 1 )
+
 		d.jobPool().waitForAll()
 
 	def tearDown( self ) :

@@ -39,6 +39,7 @@ import stat
 import unittest
 import functools
 import itertools
+import time
 
 import IECore
 
@@ -1376,7 +1377,9 @@ class DispatcherTest( GafferTest.TestCase ) :
 		d["framesMode"].setValue( d.FramesMode.CustomRange )
 		d["frameRange"].setValue( "1-1000" )
 
+		t = time.clock()
 		d.dispatch( [ lastTask ] )
+		self.assertLess( time.clock() - t, 4 )
 
 if __name__ == "__main__":
 	unittest.main()
