@@ -98,9 +98,8 @@ class LocalDispatcher( GafferDispatch.Dispatcher ) :
 			scriptFileName = script["fileName"].getValue()
 			self.__scriptFile = os.path.join( self.__directory, os.path.basename( scriptFileName ) if scriptFileName else "untitled.gfr" )
 			script.serialiseToFile( self.__scriptFile )
-			self.__storeNodeNames( script, batch )
 
-			self.__setStatus( batch, LocalDispatcher.Job.Status.Waiting, recursive = True )
+			self.__initBatchWalk( batch )
 
 		def name( self ) :
 
@@ -187,7 +186,12 @@ class LocalDispatcher( GafferDispatch.Dispatcher ) :
 			for upstreamBatch in batch.preTasks() :
 				self.__kill( upstreamBatch )
 
+		## \todo Having separate functions for foreground and background
+		# dispatch functions is error prone. Have only one.
 		def __foregroundDispatch( self, batch ) :
+
+			if self.__getStatus( batch ) == LocalDispatcher.Job.Status.Complete :
+				return True
 
 			for upstreamBatch in batch.preTasks() :
 				if not self.__foregroundDispatch( upstreamBatch ) :
@@ -197,7 +201,7 @@ class LocalDispatcher( GafferDispatch.Dispatcher ) :
 				self.__reportKilled( batch )
 				return False
 
-			if not batch.plug() or self.__getStatus( batch ) == LocalDispatcher.Job.Status.Complete :
+			if not batch.plug() :
 				self.__setStatus( batch, LocalDispatcher.Job.Status.Complete )
 				return True
 
@@ -297,13 +301,9 @@ class LocalDispatcher( GafferDispatch.Dispatcher ) :
 
 			return LocalDispatcher.Job.Status( batch.blindData().get( "status", IECore.IntData( int(LocalDispatcher.Job.Status.Waiting) ) ).value )
 
-		def __setStatus( self, batch, status, recursive = False ) :
+		def __setStatus( self, batch, status ) :
 
 			batch.blindData()["status"] = IECore.IntData( int(status) )
-
-			if recursive :
-				for upstreamBatch in batch.preTasks() :
-					self.__setStatus( upstreamBatch, status, recursive = True )
 
 		def __reportCompleted( self, batch ) :
 
@@ -337,13 +337,21 @@ class LocalDispatcher( GafferDispatch.Dispatcher ) :
 
 			return None
 
-		def __storeNodeNames( self, script, batch ) :
+		def __initBatchWalk( self, batch ) :
 
-			if batch.plug() :
-				batch.blindData()["nodeName"] = batch.plug().node().relativeName( script )
+			if "nodeName" in batch.blindData() :
+				# Already visited via another path
+				return
+
+			nodeName = ""
+			if batch.plug() is not None :
+				nodeName = batch.plug().node().relativeName( batch.plug().node().scriptNode() )
+			batch.blindData()["nodeName"] = nodeName
+
+			self.__setStatus( batch, LocalDispatcher.Job.Status.Waiting )
 
 			for upstreamBatch in batch.preTasks() :
-				self.__storeNodeNames( script, upstreamBatch )
+				self.__initBatchWalk( upstreamBatch )
 
 	class JobPool( IECore.RunTimeTyped ) :
 
