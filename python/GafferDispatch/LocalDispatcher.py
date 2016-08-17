@@ -168,7 +168,7 @@ class LocalDispatcher( GafferDispatch.Dispatcher ) :
 		def kill( self ) :
 
 			if not self.failed() :
-				self.__kill( self.__batch )
+				self.__killBatchWalk( self.__batch )
 
 		def killed( self ) :
 
@@ -178,13 +178,17 @@ class LocalDispatcher( GafferDispatch.Dispatcher ) :
 
 			self.__setStatus( self.__batch, LocalDispatcher.Job.Status.Failed )
 
-		def __kill( self, batch ) :
+		def __killBatchWalk( self, batch ) :
+
+			if "killed" in batch.blindData() :
+				# Already visited via another path
+				return
 
 			# this doesn't set the status to Killed because that could
 			# run into a race condition with a background dispatch.
 			batch.blindData()["killed"] = IECore.BoolData( True )
 			for upstreamBatch in batch.preTasks() :
-				self.__kill( upstreamBatch )
+				self.__killBatchWalk( upstreamBatch )
 
 		## \todo Having separate functions for foreground and background
 		# dispatch functions is error prone. Have only one.

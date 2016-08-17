@@ -773,6 +773,11 @@ class LocalDispatcherTest( GafferTest.TestCase ) :
 
 		d.dispatch( [ lastTask ] )
 
+		d["executeInBackground"].setValue( True )
+		d.dispatch( [ lastTask ] )
+		d.jobPool().jobs()[0].kill()
+		d.jobPool().waitForAll()
+
 	def tearDown( self ) :
 
 		GafferTest.TestCase.tearDown( self )
