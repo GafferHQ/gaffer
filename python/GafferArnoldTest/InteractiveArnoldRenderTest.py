@@ -35,15 +35,62 @@
 ##########################################################################
 
 import os
+import time
 import unittest
 
 import IECore
 
+import Gaffer
+import GafferTest
+import GafferScene
 import GafferSceneTest
 import GafferArnold
 
 @unittest.skipIf( "TRAVIS" in os.environ, "No license available on Travis" )
 class InteractiveArnoldRenderTest( GafferSceneTest.InteractiveRenderTest ) :
+
+	def testTwoRenders( self ) :
+
+		s = Gaffer.ScriptNode()
+		s["s"] = GafferScene.Sphere()
+
+		s["o"] = GafferScene.Outputs()
+		s["o"].addOutput(
+			"beauty",
+			IECore.Display(
+				"test",
+				"ieDisplay",
+				"rgba",
+				{
+					"driverType" : "ImageDisplayDriver",
+					"handle" : "myLovelySphere",
+				}
+			)
+		)
+		s["o"]["in"].setInput( s["s"]["out"] )
+
+		s["r"] = self._createInteractiveRender()
+		s["r"]["in"].setInput( s["o"]["out"] )
+
+		s["r"]["state"].setValue( s["r"].State.Running )
+
+		time.sleep( 0.5 )
+
+		image = IECore.ImageDisplayDriver.storedImage( "myLovelySphere" )
+		self.assertTrue( isinstance( image, IECore.ImagePrimitive ) )
+
+		# Try to start a second render while the first is running.
+		# Arnold is limited to one instance per process, so this
+		# will fail miserably.
+
+		s["r2"] = self._createInteractiveRender()
+		s["r2"]["in"].setInput( s["o"]["out"] )
+
+		errors = GafferTest.CapturingSlot( s["r2"].errorSignal() )
+		s["r2"]["state"].setValue( s["r"].State.Running )
+
+		self.assertEqual( len( errors ), 1 )
+		self.assertTrue( "Arnold is already in use" in errors[0][2] )
 
 	def _createInteractiveRender( self ) :
 
