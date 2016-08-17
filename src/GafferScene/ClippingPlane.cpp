@@ -67,7 +67,9 @@ IECore::ConstObjectPtr ClippingPlane::computeSource( const Context *context ) co
 	return new IECore::ClippingPlane();
 }
 
-IECore::InternedString ClippingPlane::standardSetName() const
+IECore::ConstInternedStringVectorDataPtr ClippingPlane::computeStandardSetNames() const
 {
-	return g_clippingPlanesSetName;
+	IECore::InternedStringVectorDataPtr result = new IECore::InternedStringVectorData();
+	result->writable().push_back( g_clippingPlanesSetName );
+	return result;
 }

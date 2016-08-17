@@ -126,7 +126,9 @@ IECore::ConstObjectPtr Camera::computeSource( const Context *context ) const
 	return result;
 }
 
-IECore::InternedString Camera::standardSetName() const
+IECore::ConstInternedStringVectorDataPtr Camera::computeStandardSetNames() const
 {
-	return g_camerasSetName;
+	IECore::InternedStringVectorDataPtr result = new IECore::InternedStringVectorData();
+	result->writable().push_back( g_camerasSetName );
+	return result;
 }

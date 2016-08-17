@@ -96,10 +96,6 @@ IECore::ConstObjectPtr Light::computeSource( const Context *context ) const
 	return IECore::NullObject::defaultNullObject();
 }
 
-IECore::InternedString Light::standardSetName() const
-{
-	return g_lightsSetName;
-}
 
 void Light::hashAttributes( const SceneNode::ScenePath &path, const Gaffer::Context *context, const ScenePlug *parent, IECore::MurmurHash &h ) const
 {
@@ -136,5 +132,12 @@ IECore::ConstCompoundObjectPtr Light::computeAttributes( const SceneNode::SceneP
 
 	result->members()[lightAttribute] = lightShaders;
 
+	return result;
+}
+
+IECore::ConstInternedStringVectorDataPtr Light::computeStandardSetNames() const
+{
+	IECore::InternedStringVectorDataPtr result = new IECore::InternedStringVectorData();
+	result->writable().push_back( g_lightsSetName );
 	return result;
 }

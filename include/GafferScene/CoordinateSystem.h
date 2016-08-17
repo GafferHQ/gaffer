@@ -57,8 +57,7 @@ class CoordinateSystem : public ObjectSource
 		virtual void hashSource( const Gaffer::Context *context, IECore::MurmurHash &h ) const;
 		virtual IECore::ConstObjectPtr computeSource( const Gaffer::Context *context ) const;
 
-		virtual IECore::InternedString standardSetName() const;
-
+		virtual IECore::ConstInternedStringVectorDataPtr computeStandardSetNames() const;
 };
 
 IE_CORE_DECLAREPTR( CoordinateSystem )
