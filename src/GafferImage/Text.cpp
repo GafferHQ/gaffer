@@ -395,14 +395,9 @@ IECore::ConstCompoundObjectPtr Text::computeLayout( const Gaffer::Context *conte
 			pen.y -= face->size->metrics.height;
 			lines.push_back( Line( pen.y ) );
 		}
-		else if( *it == " " )
+		else if( *it == " " || *it =="\t" )
 		{
-			/// \todo Is there a specific measurement for the width of a space?
-			pen.x += face->size->metrics.x_ppem * 16;
-		}
-		else if( *it == "\t" )
-		{
-			pen.x += face->size->metrics.x_ppem * 64;
+			pen.x += ::width( *it, face.get() );
 		}
 		else
 		{

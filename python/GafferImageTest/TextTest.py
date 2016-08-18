@@ -129,8 +129,10 @@ class TextTest( GafferImageTest.ImageTestCase ) :
 		self.assertLess( leftDW.min.x, centerDW.min.x )
 		self.assertLess( centerDW.min.x, rightDW.min.x )
 
-		self.assertEqual( leftDW.size().x, centerDW.size().x )
-		self.assertEqual( centerDW.size().x, rightDW.size().x )
+		# Delta of 1 pixel is ok because layout is done in floating point space,
+		# and then must be rounded to pixel space to make the enclosing data window.
+		self.assertAlmostEqual( leftDW.size().x, centerDW.size().x, delta = 1 )
+		self.assertAlmostEqual( centerDW.size().x, rightDW.size().x, delta = 1 )
 
 	def testVerticalAlignment( self ) :
 
@@ -148,8 +150,10 @@ class TextTest( GafferImageTest.ImageTestCase ) :
 		self.assertLess( bottomDW.min.y, centerDW.min.y )
 		self.assertLess( centerDW.min.y, topDW.min.y )
 
-		self.assertEqual( bottomDW.size().y, centerDW.size().y )
-		self.assertEqual( centerDW.size().y, topDW.size().y )
+		# Delta of 1 pixel is ok because layout is done in floating point space,
+		# and then must be rounded to pixel space to make the enclosing data window.
+		self.assertAlmostEqual( bottomDW.size().y, centerDW.size().y, delta = 1 )
+		self.assertAlmostEqual( centerDW.size().y, topDW.size().y, delta = 1 )
 
 	def testUnparenting( self ) :
 
