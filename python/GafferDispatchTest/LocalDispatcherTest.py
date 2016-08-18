@@ -38,6 +38,7 @@ import os
 import stat
 import shutil
 import unittest
+import time
 
 import IECore
 
@@ -742,6 +743,48 @@ class LocalDispatcherTest( GafferTest.TestCase ) :
 
 		with open( testFile ) as f :
 			self.assertEqual( f.readlines(), [ "HELLO WORLD\n" ] )
+
+	def testScaling( self ) :
+
+		# See DispatcherTest.testScaling for details.
+
+		s = Gaffer.ScriptNode()
+
+		lastTask = None
+		for i in range( 0, 5 ) :
+
+			perFrame = GafferDispatch.PythonCommand()
+			perFrame["command"].setValue( "context.getFrame()" )
+			s["perFrame%d" % i] = perFrame
+
+			if lastTask is not None :
+				perFrame["preTasks"][0].setInput( lastTask["task"] )
+
+			perSequence = GafferDispatch.PythonCommand()
+			perSequence["command"].setValue( "pass" )
+			perSequence["sequence"].setValue( True )
+			perSequence["preTasks"][0].setInput( perFrame["task"] )
+			s["perSequence%d" % i] = perSequence
+
+			lastTask = perSequence
+
+		d = GafferDispatch.Dispatcher.create( "LocalTest" )
+		d["framesMode"].setValue( d.FramesMode.CustomRange )
+		d["frameRange"].setValue( "1-1000" )
+
+		t = time.clock()
+		d.dispatch( [ lastTask ] )
+		self.assertLess( time.clock() - t, 6 )
+
+		d["executeInBackground"].setValue( True )
+
+		d.dispatch( [ lastTask ] )
+
+		t = time.clock()
+		d.jobPool().jobs()[0].kill()
+		self.assertLess( time.clock() - t, 1 )
+
+		d.jobPool().waitForAll()
 
 	def tearDown( self ) :
 

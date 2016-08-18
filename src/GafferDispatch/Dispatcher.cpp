@@ -56,7 +56,9 @@ static InternedString g_immediatePlugName( "immediate" );
 static InternedString g_postTaskIndexBlindDataName( "dispatcher:postTaskIndex" );
 static InternedString g_immediateBlindDataName( "dispatcher:immediate" );
 static InternedString g_executedBlindDataName( "dispatcher:executed" );
+static InternedString g_visitedBlindDataName( "dispatcher:visited" );
 static InternedString g_jobDirectoryContextEntry( "dispatcher:jobDirectory" );
+static IECore::BoolDataPtr g_trueBoolData = new BoolData( true );
 
 size_t Dispatcher::g_firstPlugIndex = 0;
 Dispatcher::PreDispatchSignal Dispatcher::g_preDispatchSignal;
@@ -446,7 +448,7 @@ class Dispatcher::Batcher
 				/// have expressions on it? If so, should we be doing the same before
 				/// calling requiresSequenceExecution()? Or should we instead require that
 				/// they always be constant?
-				batch->blindData()->writable()[g_immediateBlindDataName] = new BoolData( true );
+				batch->blindData()->writable()[g_immediateBlindDataName] = g_trueBoolData;
 			}
 
 			// Remember which batch we stored this task in, for
@@ -674,7 +676,7 @@ void Dispatcher::dispatch( const std::vector<NodePtr> &nodes ) const
 
 void Dispatcher::executeAndPruneImmediateBatches( TaskBatch *batch, bool immediate ) const
 {
-	if( batch->blindData()->member<BoolData>( g_executedBlindDataName ) )
+	if( batch->blindData()->member<BoolData>( g_visitedBlindDataName ) )
 	{
 		return;
 	}
@@ -698,8 +700,10 @@ void Dispatcher::executeAndPruneImmediateBatches( TaskBatch *batch, bool immedia
 	if( immediate )
 	{
 		batch->execute();
-		batch->blindData()->writable()[g_executedBlindDataName] = new BoolData( true );
+		batch->blindData()->writable()[g_executedBlindDataName] = g_trueBoolData;
 	}
+
+	batch->blindData()->writable()[g_visitedBlindDataName] = g_trueBoolData;
 }
 
 //////////////////////////////////////////////////////////////////////////

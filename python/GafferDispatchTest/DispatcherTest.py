@@ -39,6 +39,7 @@ import stat
 import unittest
 import functools
 import itertools
+import time
 
 import IECore
 
@@ -1312,6 +1313,73 @@ class DispatcherTest( GafferTest.TestCase ) :
 		self.assertEqual( [ l.node for l in log ], [ s["t"], s["t"], s["t"], s["t"], s["p"], ] )
 		self.assertEqual( [ l.context.getFrame() for l in log ], [ 1, 2, 3, 4, 1 ] )
 		self.assertEqual( [ l.frames for l in log ], [ None, None, None, None, [ 1, 2, 3, 4 ] ] )
+
+	def testScaling( self ) :
+
+		# A series of interleaved per-frame and per-sequence
+		# tasks like this :
+		#
+		#    perFrameA
+		#      |
+		#    perSequenceA
+		#      |
+		#    perFrameB
+		#      |
+		#    perSequenceB
+		#      |
+		#    ...
+		#
+		# Leads to a batch graph like this :
+		#
+		#    pfA1 pfA2 pfA3
+		#      \   |   /
+		#       \  |  /
+		#        \ | /
+		#      sequenceA
+		#        / | \
+		#       /  |  \
+		#      /   |   \
+		#    pfB1 pfB2 pfB3
+		#      \   |   /
+		#       \  |  /
+		#        \ | /
+		#      sequenceB
+		#        / | \
+		#    ...
+		#
+		# This fan-out/gather pattern generates a DAG with
+		# a huge number of unique paths, exposing any errors
+		# in the Dispatcher's pruning of previsited batches
+		# by utterly destroying performance.
+
+		s = Gaffer.ScriptNode()
+
+		lastTask = None
+		for i in range( 0, 5 ) :
+
+			perFrame = GafferDispatch.PythonCommand()
+			perFrame["command"].setValue( "context.getFrame()" )
+			s["perFrame%d" % i] = perFrame
+
+			if lastTask is not None :
+				perFrame["preTasks"][0].setInput( lastTask["task"] )
+
+			perSequence = GafferDispatch.PythonCommand()
+			perSequence["command"].setValue( "pass" )
+			perSequence["sequence"].setValue( True )
+			perSequence["preTasks"][0].setInput( perFrame["task"] )
+			s["perSequence%d" % i] = perSequence
+
+			lastTask = perSequence
+
+		d = self.TestDispatcher()
+
+		d["framesMode"].setValue( d.FramesMode.CustomRange )
+		d["frameRange"].setValue( "1-1000" )
+
+		t = time.clock()
+		d.dispatch( [ lastTask ] )
+		self.assertLess( time.clock() - t, 4 )
 
 if __name__ == "__main__":
 	unittest.main()
