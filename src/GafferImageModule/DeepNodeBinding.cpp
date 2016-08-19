@@ -39,6 +39,7 @@
 #include "GafferImage/FlatToDeep.h"
 #include "GafferImage/DeepMerge.h"
 #include "GafferImage/DeepState.h"
+#include "GafferImage/Empty.h"
 
 #include "DeepNodeBinding.h"
 
@@ -70,4 +71,5 @@ void GafferImageModule::bindDeepNodes()
 			.value( "Flat", DeepState::TargetState::Flat )
 		;
 	}
+	DependencyNodeClass<Empty>();
 }

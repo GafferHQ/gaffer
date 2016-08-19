@@ -121,6 +121,7 @@ enum TypeId
 	FlatToDeepTypeId = 110825,
 	DeepMergeTypeId = 110826,
 	DeepStateTypeId = 110827,
+	EmptyTypeId = 110828,
 
 	LastTypeId = 110849
 };

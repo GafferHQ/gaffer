@@ -100,6 +100,7 @@ from ModuleTest import ModuleTest
 from FlatToDeepTest import FlatToDeepTest
 from DeepMergeTest import DeepMergeTest
 from DeepStateTest import DeepStateTest
+from EmptyTest import EmptyTest
 
 if __name__ == "__main__":
 	import unittest
