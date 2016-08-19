@@ -68,7 +68,7 @@ enum TypeId
 	FlatImageProcessorTypeId = 110772,
 	DeepMergeTypeId = 110773,
 	ImageStateTypeId = 110774,
-	SplineFilterTypeId = 110775, // Obsolete - available for reuse
+	EmptyTypeId = 110775,
 	BSplineFilterTypeId = 110776, // Obsolete - available for reuse
 	HermiteFilterTypeId = 110777, // Obsolete - available for reuse
 	CubicFilterTypeId = 110778, // Obsolete - available for reuse

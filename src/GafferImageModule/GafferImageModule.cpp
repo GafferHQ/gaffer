@@ -60,6 +60,7 @@
 #include "GafferImage/Crop.h"
 #include "GafferImage/DeepMerge.h"
 #include "GafferImage/ImageState.h"
+#include "GafferImage/Empty.h"
 
 #include "GafferImageBindings/ImageNodeBinding.h"
 #include "GafferImageBindings/ImageProcessorBinding.h"
@@ -126,6 +127,7 @@ BOOST_PYTHON_MODULE( _GafferImage )
 	GafferBindings::DependencyNodeClass<Unpremultiply>();
 	GafferBindings::DependencyNodeClass<DeepMerge>();
 	GafferBindings::DependencyNodeClass<ImageState>();
+	GafferBindings::DependencyNodeClass<Empty>();
 
 	GafferImageBindings::bindDeleteChannels();
 	GafferImageBindings::bindFormat();
