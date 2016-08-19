@@ -140,8 +140,7 @@ UVWarp::UVWarp( const std::string &name )
 	storeIndexOfNextChild( g_firstPlugIndex );
 	addChild( new ImagePlug( "uv" ) );
 
-	outPlug()->formatPlug()->setInput( uvPlug()->formatPlug() );
-	outPlug()->dataWindowPlug()->setInput( uvPlug()->dataWindowPlug() );
+	outPlug()->formatPlug()->setInput( 0 );
 }
 
 UVWarp::~UVWarp()
@@ -156,6 +155,34 @@ ImagePlug *UVWarp::uvPlug()
 const ImagePlug *UVWarp::uvPlug() const
 {
 	return getChild<ImagePlug>( g_firstPlugIndex );
+}
+
+bool UVWarp::inputsAreFlat() const
+{
+	return uvPlug()->deepStatePlug()->getValue() == ImagePlug::Flat &&
+		Warp::inputsAreFlat();
+}
+
+void UVWarp::affects( const Gaffer::Plug *input, AffectedPlugsContainer &outputs ) const
+{
+	Warp::affects( input, outputs );
+
+	if( input == uvPlug()->deepStatePlug() )
+	{
+		outputs.push_back( outPlug()->formatPlug() );
+		outputs.push_back( outPlug()->dataWindowPlug() );
+		outputs.push_back( outPlug()->metadataPlug() );
+		outputs.push_back( outPlug()->channelNamesPlug() );
+		outputs.push_back( outPlug()->channelDataPlug() );
+	}
+	else if ( input == uvPlug()->formatPlug() )
+	{
+		outputs.push_back( outPlug()->formatPlug() );
+	}
+	else if ( input == uvPlug()->dataWindowPlug() )
+	{
+		outputs.push_back( outPlug()->dataWindowPlug() );
+	}
 }
 
 bool UVWarp::affectsEngine( const Gaffer::Plug *input ) const
@@ -239,4 +266,24 @@ const Warp::Engine *UVWarp::computeEngine( const std::string &channelName, const
 		vData,
 		aData
 	);
+}
+
+void UVWarp::hashFlatFormat( const GafferImage::ImagePlug *parent, const Gaffer::Context *context, IECore::MurmurHash &h ) const
+{
+	h = uvPlug()->formatPlug()->hash();
+}
+
+void UVWarp::hashFlatDataWindow( const GafferImage::ImagePlug *parent, const Gaffer::Context *context, IECore::MurmurHash &h ) const
+{
+	h = uvPlug()->dataWindowPlug()->hash();
+}
+
+GafferImage::Format UVWarp::computeFlatFormat( const Gaffer::Context *context, const ImagePlug *parent ) const
+{
+	return uvPlug()->formatPlug()->getValue();
+}
+
+Imath::Box2i UVWarp::computeFlatDataWindow( const Gaffer::Context *context, const ImagePlug *parent ) const
+{
+	return uvPlug()->dataWindowPlug()->getValue();
 }

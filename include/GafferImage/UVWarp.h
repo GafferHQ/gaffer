@@ -54,11 +54,20 @@ class UVWarp : public Warp
 		ImagePlug *uvPlug();
 		const ImagePlug *uvPlug() const;
 
+		virtual void affects( const Gaffer::Plug *input, AffectedPlugsContainer &outputs ) const;
+
 	protected :
 
 		virtual bool affectsEngine( const Gaffer::Plug *input ) const;
 		virtual void hashEngine( const std::string &channelName, const Imath::V2i &tileOrigin, const Gaffer::Context *context, IECore::MurmurHash &h ) const;
 		virtual const Engine *computeEngine( const std::string &channelName, const Imath::V2i &tileOrigin, const Gaffer::Context *context ) const;
+
+		virtual void hashFlatFormat( const GafferImage::ImagePlug *parent, const Gaffer::Context *context, IECore::MurmurHash &h ) const;
+		virtual void hashFlatDataWindow( const GafferImage::ImagePlug *parent, const Gaffer::Context *context, IECore::MurmurHash &h ) const;
+		virtual GafferImage::Format computeFlatFormat( const Gaffer::Context *context, const ImagePlug *parent ) const;
+		virtual Imath::Box2i computeFlatDataWindow( const Gaffer::Context *context, const ImagePlug *parent ) const;
+
+		virtual bool inputsAreFlat() const;
 
 	private :
 
