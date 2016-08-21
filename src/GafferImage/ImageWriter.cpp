@@ -108,12 +108,25 @@ void copyBufferArea( const float *inData, const Imath::Box2i &inArea, float *out
 
 typedef boost::shared_ptr<ImageOutput> ImageOutputPtr;
 
-class TileProcessor
+class TileSampleOffsetsProcessor
+{
+	public:
+		typedef ConstIntVectorDataPtr Result;
+
+		TileSampleOffsetsProcessor() {}
+
+		Result operator()( const ImagePlug *imagePlug, const V2i &tileOrigin )
+		{
+			return imagePlug->sampleOffsetsPlug()->getValue();
+		}
+};
+
+class TileChannelDataProcessor
 {
 	public:
 		typedef ConstFloatVectorDataPtr Result;
 
-		TileProcessor() {}
+		TileChannelDataProcessor() {}
 
 		Result operator()( const ImagePlug *imagePlug, const string &channelName, const V2i &tileOrigin )
 		{
@@ -121,10 +134,20 @@ class TileProcessor
 		}
 };
 
+class DeepTileWriter
+{
+	public:
+		DeepTileWriter() {}
+
+		void operator()( const ImagePlug *imagePlug, const V2i &tileOrigin, ConstIntVectorDataPtr sampleOffsets, const std::vector<ConstFloatVectorDataPtr> channelData )
+		{
+		}
+};
+
 class FlatTileWriter
 {
-	// This class is created to be used by parallelGatherTiles, and called in
-	// series for each Gaffer tile/channel from the top down.
+	// This class is created to be used by parallelProcessTilesGather, and called
+	// in series for each Gaffer tile/channel from the top down.
 	//
 	// This class has been designed to support any size of output tile. Because
 	// only rare cases of output image will involve the output tiles lining up
@@ -370,7 +393,7 @@ class FlatTileWriter
 
 class FlatScanlineWriter
 {
-	// This class is created to be used by parallelGatherTiles, and called in
+	// This class is created to be used by parallelProcessTilesGather, and called in
 	// series for each Gaffer tile/channel from the top down.
 	//
 	// When it is first created, it writes to the ImageOutput object any blank
@@ -1033,11 +1056,6 @@ void ImageWriter::execute() const
 		throw IECore::Exception( boost::str( boost::format( "Deep data is not supported by %s files." ) % out->format_name() ) );
 	}
 
-	if( inPlug()->deepStatePlug()->getValue() != ImagePlug::Flat )
-	{
-		throw IECore::Exception( "Deep data is not currently supported." );
-	}
-
 	// Grab the intersection of the channels from the "channels" plug and the image input to see which channels we are to write out.
 	IECore::ConstStringVectorDataPtr channelNamesData = inPlug()->channelNamesPlug()->getValue();
 	std::vector<std::string> maskChannels = channelNamesData->readable();
@@ -1131,19 +1149,29 @@ void ImageWriter::execute() const
 	const Imath::Box2i imageDataWindow( imageFormat.fromEXRSpace( extImageDataWindow ) );
 	const Imath::Box2i processDataWindow( intersection( imageDataWindow, dataWindow ) );
 
-	TileProcessor processor = TileProcessor();
-
-	if ( spec.tile_width == 0 )
+	if( inPlug()->deepStatePlug()->getValue() == ImagePlug::Flat )
 	{
-		FlatScanlineWriter flatScanlineWriter( out, fileName, processDataWindow, imageFormat );
-		parallelGatherTiles( inPlug(), spec.channelnames, processor, flatScanlineWriter, processDataWindow, TopToBottom );
-		flatScanlineWriter.finish();
+		TileChannelDataProcessor processor = TileChannelDataProcessor();
+
+		if ( spec.tile_width == 0 )
+		{
+			FlatScanlineWriter flatScanlineWriter( out, fileName, processDataWindow, imageFormat );
+			parallelProcessTilesGather( inPlug(), spec.channelnames, processor, flatScanlineWriter, processDataWindow, TopToBottom );
+			flatScanlineWriter.finish();
+		}
+		else
+		{
+			FlatTileWriter flatTileWriter( out, fileName, processDataWindow, imageFormat );
+			parallelProcessTilesGather( inPlug(), spec.channelnames, processor, flatTileWriter, processDataWindow, TopToBottom );
+			flatTileWriter.finish();
+		}
 	}
 	else
 	{
-		FlatTileWriter flatTileWriter( out, fileName, processDataWindow, imageFormat );
-		parallelGatherTiles( inPlug(), spec.channelnames, processor, flatTileWriter, processDataWindow, TopToBottom );
-		flatTileWriter.finish();
+		TileSampleOffsetsProcessor sampleOffsetsProcessor = TileSampleOffsetsProcessor();
+		TileChannelDataProcessor channelDataProcessor = TileChannelDataProcessor();
+		DeepTileWriter deepTileWriter = DeepTileWriter();
+		parallelProcessTilesChannelsGather( inPlug(), spec.channelnames, sampleOffsetsProcessor, channelDataProcessor, deepTileWriter, processDataWindow, TopToBottom );
 	}
 
 	out->close();
