@@ -891,6 +891,11 @@ void InteractiveRender::updateDefaultCamera()
 
 void InteractiveRender::stop()
 {
+	if( m_renderer )
+	{
+		m_renderer->pause();
+	}
+
 	m_sceneGraphs.clear();
 	for( int i = SceneGraph::FirstType; i <= SceneGraph::LastType; ++i )
 	{
