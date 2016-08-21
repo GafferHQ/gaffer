@@ -484,10 +484,10 @@ IECore::MurmurHash ImagePlug::imageHash() const
 	AppendHash appendHash( result );
 
 	// Parallel gather hashes of sampleOffsetsPlug.
-	parallelGatherTiles( this, hashTile, appendHash, dataWindow, BottomToTop );
+	parallelProcessTilesGather( this, hashTile, appendHash, dataWindow, BottomToTop );
 
 	// Parallel gather hashes of channelDataPlug.
-	parallelGatherTiles( this, channelNames, hashTile, appendHash, dataWindow, BottomToTop );
+	parallelProcessTilesGather( this, channelNames, hashTile, appendHash, dataWindow, BottomToTop );
 
 	return result;
 }
