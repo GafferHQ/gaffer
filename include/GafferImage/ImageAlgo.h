@@ -93,45 +93,58 @@ enum TileOrder
 };
 
 // Call the functor in parallel, once per tile
-template <class ThreadableFunctor>
+template <class ProcessTileFunctor>
 void parallelProcessTiles(
 	const ImagePlug *imagePlug,
-	ThreadableFunctor &functor, // Signature : void functor( const ImagePlug *imagePlug, const V2i &tileOrigin )
+	ProcessTileFunctor &functor, // Signature : void functor( const ImagePlug *imagePlug, const V2i &tileOrigin )
 	const Imath::Box2i &window = Imath::Box2i() // Uses dataWindow if not specified.
 );
 
 // Call the functor in parallel, once per tile per channel
-template <class ThreadableFunctor>
+template <class ProcessTileFunctor>
 void parallelProcessTiles(
 	const ImagePlug *imagePlug,
 	const std::vector<std::string> &channelNames,
-	ThreadableFunctor &functor, // Signature : void functor( const ImagePlug *imagePlug, const string &channelName, const V2i &tileOrigin )
+	ProcessTileFunctor &functor, // Signature : void functor( const ImagePlug *imagePlug, const string &channelName, const V2i &tileOrigin )
 	const Imath::Box2i &window = Imath::Box2i() // Uses dataWindow if not specified.
 );
 
-// Process all tiles in parallel using TileFunctor, passing the
-// results in series to GatherFunctor.
-template <class TileFunctor, class GatherFunctor>
-void parallelGatherTiles(
+// Process all tiles in parallel using processTileFunctor, passing the
+// results in series to gatherTileFunctor.
+template <class ProcessTileFunctor, class GatherTileFunctor>
+void parallelProcessTilesGather(
 	const ImagePlug *image,
-	TileFunctor &tileFunctor, // Signature : TileFunctor::Result tileFunctor( const ImagePlug *imagePlug, const V2i &tileOrigin )
-	GatherFunctor &gatherFunctor, // Signature : void gatherFunctor( const ImagePlug *imagePlug, const V2i &tileOrigin, TileFunctor::Result )
+	ProcessTileFunctor &processTileFunctor, // Signature : ProcessTileFunctor::Result processTileFunctor( const ImagePlug *imagePlug, const V2i &tileOrigin )
+	GatherTileFunctor &gatherTileFunctor, // Signature : void gatherTileFunctor( const ImagePlug *imagePlug, const V2i &tileOrigin, ProcessTileFunctor::Result )
 	const Imath::Box2i &window = Imath::Box2i(), // Uses dataWindow if not specified.
 	TileOrder tileOrder = Unordered
 );
 
-// Process all tiles in parallel using TileFunctor, passing the
-// results in series to GatherFunctor.
-template <class TileFunctor, class GatherFunctor>
-void parallelGatherTiles(
+// Process all channels per tile in parallel using processTileFunctor,
+// passing the results in series to gatherTileFunctor.
+template <class ProcessTileFunctor, class GatherTileFunctor>
+void parallelProcessTilesGather(
 	const ImagePlug *image,
 	const std::vector<std::string> &channelNames,
-	TileFunctor &tileFunctor, // Signature : TileFunctor::Result tileFunctor( const ImagePlug *imagePlug, const string &channelName, const V2i &tileOrigin )
-	GatherFunctor &gatherFunctor, // Signature : void gatherFunctor( const ImagePlug *imagePlug, const string &channelName, const V2i &tileOrigin, TileFunctor::Result )
+	ProcessTileFunctor &processTileFunctor, // Signature : ProcessTileFunctor::Result processTileFunctor( const ImagePlug *imagePlug, const string &channelName, const V2i &tileOrigin )
+	GatherTileFunctor &gatherTileFunctor, // Signature : void gatherTileFunctor( const ImagePlug *imagePlug, const string &channelName, const V2i &tileOrigin, ProcessTileFunctor::Result )
 	const Imath::Box2i &window = Imath::Box2i(), // Uses dataWindow if not specified.
 	TileOrder tileOrder = Unordered
 );
 
+// Process all tiles in parallel using tileFunctor, followed by all
+// channels per tile in parallel using tileChannelFunctor, then
+// pass all the results in series to gatherFunctor.
+template <class ProcessTileFunctor, class ProcessTileChannelFunctor, class GatherTileChannelFunctor>
+void parallelProcessTilesChannelsGather(
+	const ImagePlug *image,
+	const std::vector<std::string> &channelNames,
+	ProcessTileFunctor &processTileFunctor, // Signature: ProcessTileFunctor::Result tileFunctor( const ImagePlug *imagePlug, const V2i &tileOrigin )
+	ProcessTileChannelFunctor &processTileChannelFunctor, // Signature: ProcessTileChannelFunctor::Result tileChannelFunctor( const ImagePlug *imagePlug, const string &channelName, const V2i &tileOrigin )
+	GatherTileChannelFunctor &gatherTileChannelFunctor, // Signature : void gatherTileChannelFunctor( const ImagePlug *imagePlug, const V2i &tileOrigin, ProcessTileFunctor::Result, vector<ProcessTileChannelFunctor::Result> )
+	const Imath::Box2i &window = Imath::Box2i(), // Uses dataWindow if not specified
+	TileOrder tileOrder = Unordered
+);
 
 template <typename T>
 struct SampleRange
