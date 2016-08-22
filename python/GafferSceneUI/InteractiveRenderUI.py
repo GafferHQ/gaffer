@@ -63,34 +63,30 @@ class _StatePlugValueWidget( GafferUI.PlugValueWidget ) :
 		with self.getContext() :
 			state = self.getPlug().getValue()
 
-			if state == GafferScene.InteractiveRender.State.Running:
-				self.__startPauseButton.setImage( 'timelinePause.png' )
-				self.__stopButton.setEnabled( True )
-			if state == GafferScene.InteractiveRender.State.Paused:
-				self.__startPauseButton.setImage( 'timelinePlay.png' )
-				self.__stopButton.setEnabled( True )
-			if state == GafferScene.InteractiveRender.State.Stopped:
-				self.__startPauseButton.setImage( 'timelinePlay.png' )
-				self.__stopButton.setEnabled( False )
-
-	def hasLabel( self ) :
-		return False
+		if state == GafferScene.InteractiveRender.State.Running :
+			self.__startPauseButton.setImage( 'timelinePause.png' )
+			self.__stopButton.setEnabled( True )
+		elif state == GafferScene.InteractiveRender.State.Paused :
+			self.__startPauseButton.setImage( 'timelinePlay.png' )
+			self.__stopButton.setEnabled( True )
+		elif state == GafferScene.InteractiveRender.State.Stopped :
+			self.__startPauseButton.setImage( 'timelinePlay.png' )
+			self.__stopButton.setEnabled( False )
 
 	def __startPauseClicked( self, button ) :
 
 		with self.getContext() :
 			state = self.getPlug().getValue()
 
-			# When setting the plug value here, we deliberately don't use an UndoContext.
-			# Not enabling undo here is done so that users won't accidentally restart/stop their renderings.
-			if not state == GafferScene.InteractiveRender.State.Running:
-				self.getPlug().setValue( GafferScene.InteractiveRender.State.Running )
-			else:
-				self.getPlug().setValue( GafferScene.InteractiveRender.State.Paused )
+		# When setting the plug value here, we deliberately don't use an UndoContext.
+		# Not enabling undo here is done so that users won't accidentally restart/stop their renderings.
+		if state != GafferScene.InteractiveRender.State.Running:
+			self.getPlug().setValue( GafferScene.InteractiveRender.State.Running )
+		else:
+			self.getPlug().setValue( GafferScene.InteractiveRender.State.Paused )
 
 	def __stopClicked( self, button ) :
 		self.getPlug().setValue( GafferScene.InteractiveRender.State.Stopped )
-
 
 ##########################################################################
 # Metadata for GafferScene.Preview.InteractiveRender node. We intend
