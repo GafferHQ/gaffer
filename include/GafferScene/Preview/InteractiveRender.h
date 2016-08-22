@@ -125,7 +125,7 @@ class InteractiveRender : public Gaffer::Node
 		IECoreScenePreview::Renderer::ObjectInterfacePtr m_defaultCamera;
 
 		Gaffer::ContextPtr m_context; // Accessed with setContext()/getContext()
-		Gaffer::ContextPtr m_effectiveContext; // Context actually used for rendering
+		Gaffer::ContextPtr m_effectiveContext; // Base context actually used for rendering
 		boost::signals::scoped_connection m_contextChangedConnection;
 
 		static size_t g_firstPlugIndex;

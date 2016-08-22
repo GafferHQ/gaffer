@@ -71,6 +71,7 @@ InternedString g_cameraGlobalName( "option:render:camera" );
 
 InternedString g_visibleAttributeName( "scene:visible" );
 InternedString g_setsAttributeName( "sets" );
+InternedString g_rendererContextName( "scene:renderer" );
 
 bool visible( const CompoundObject *attributes )
 {
@@ -513,6 +514,7 @@ class InteractiveRender::SceneGraphUpdateTask : public tbb::task
 			SceneGraph::Type sceneGraphType,
 			unsigned dirtyComponents,
 			unsigned changedParentComponents,
+			const Context *context,
 			const ScenePlug::ScenePath &scenePath
 		)
 			:	m_interactiveRender( interactiveRender ),
@@ -520,6 +522,7 @@ class InteractiveRender::SceneGraphUpdateTask : public tbb::task
 				m_sceneGraphType( sceneGraphType ),
 				m_dirtyComponents( dirtyComponents ),
 				m_changedParentComponents( changedParentComponents ),
+				m_context( context ),
 				m_scenePath( scenePath )
 		{
 		}
@@ -550,7 +553,7 @@ class InteractiveRender::SceneGraphUpdateTask : public tbb::task
 			// Set up a context to compute the scene at the right
 			// location.
 
-			ContextPtr context = new Context( *m_interactiveRender->m_effectiveContext, Context::Borrowed );
+			ContextPtr context = new Context( *m_context, Context::Borrowed );
 			context->set( ScenePlug::scenePathContextName, m_scenePath );
 			Context::Scope scopedContext( context.get() );
 
@@ -579,7 +582,7 @@ class InteractiveRender::SceneGraphUpdateTask : public tbb::task
 				for( std::vector<SceneGraph *>::const_iterator it = children.begin(), eIt = children.end(); it != eIt; ++it )
 				{
 					childPath.back() = (*it)->name();
-					SceneGraphUpdateTask *t = new( allocate_child() ) SceneGraphUpdateTask( m_interactiveRender, *it, m_sceneGraphType, m_dirtyComponents, changedComponents, childPath );
+					SceneGraphUpdateTask *t = new( allocate_child() ) SceneGraphUpdateTask( m_interactiveRender, *it, m_sceneGraphType, m_dirtyComponents, changedComponents, m_context, childPath );
 					spawn( *t );
 				}
 
@@ -628,6 +631,7 @@ class InteractiveRender::SceneGraphUpdateTask : public tbb::task
 		SceneGraph::Type m_sceneGraphType;
 		unsigned m_dirtyComponents;
 		unsigned m_changedParentComponents;
+		const Context *m_context;
 		ScenePlug::ScenePath m_scenePath;
 
 };
@@ -797,8 +801,12 @@ void InteractiveRender::contextChanged( const IECore::InternedString &name )
 
 void InteractiveRender::update()
 {
+	const std::string rendererName = rendererPlug()->getValue();
+
 	updateEffectiveContext();
-	Context::Scope scopedContext( m_effectiveContext.get() );
+	ContextPtr context = new Context( *m_effectiveContext, Context::Borrowed );
+	context->set( g_rendererContextName, rendererName );
+	Context::Scope scopedContext( context.get() );
 
 	const State requiredState = (State)statePlug()->getValue();
 
@@ -817,7 +825,7 @@ void InteractiveRender::update()
 	if( !m_renderer )
 	{
 		m_renderer = IECoreScenePreview::Renderer::create(
-			rendererPlug()->getValue(),
+			rendererName,
 			IECoreScenePreview::Renderer::Interactive
 		);
 	}
@@ -863,7 +871,7 @@ void InteractiveRender::update()
 			// if we know they won't affect the camera.
 			sceneGraph->clear();
 		}
-		SceneGraphUpdateTask *task = new( tbb::task::allocate_root() ) SceneGraphUpdateTask( this, sceneGraph, (SceneGraph::Type)i, m_dirtyComponents, SceneGraph::NoComponent, ScenePlug::ScenePath() );
+		SceneGraphUpdateTask *task = new( tbb::task::allocate_root() ) SceneGraphUpdateTask( this, sceneGraph, (SceneGraph::Type)i, m_dirtyComponents, SceneGraph::NoComponent, context.get(), ScenePlug::ScenePath() );
 		tbb::task::spawn_root_and_wait( *task );
 	}
 

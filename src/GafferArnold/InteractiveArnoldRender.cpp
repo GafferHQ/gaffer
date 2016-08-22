@@ -70,7 +70,7 @@ typedef std::pair<IntPlug *, InteractiveRender::State> Interrupted;
 IE_CORE_DEFINERUNTIMETYPED( InteractiveArnoldRender );
 
 InteractiveArnoldRender::InteractiveArnoldRender( const std::string &name )
-	:	InteractiveRender( "IECoreArnold::Renderer", name )
+	:	InteractiveRender( "Arnold", name )
 {
 	instances().insert( this );
 }

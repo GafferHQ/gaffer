@@ -1509,6 +1509,37 @@ class InteractiveRenderTest( GafferSceneTest.SceneTestCase ) :
 		time.sleep( 0.5 )
 		assertReflected( True )
 
+	def testRendererContextVariable( self ):
+
+		s = Gaffer.ScriptNode()
+		s["s"] = GafferScene.Sphere()
+
+		s["o"] = GafferScene.Outputs()
+		s["o"].addOutput(
+			"beauty",
+			IECore.Display(
+				"test",
+				"ieDisplay",
+				"rgba",
+				{
+					"driverType" : "ImageDisplayDriver",
+					"handle" : "myLovelySphereRenderedIn${scene:renderer}",
+				}
+			)
+		)
+		s["o"]["in"].setInput( s["s"]["out"] )
+
+		s["r"] = self._createInteractiveRender()
+		s["r"]["in"].setInput( s["o"]["out"] )
+
+		s["r"]["state"].setValue( s["r"].State.Running )
+
+		time.sleep( 0.5 )
+
+		renderer = s["r"]["renderer"].getValue() if "renderer" in s["r"] else s["r"]["__renderer"].getValue()
+		image = IECore.ImageDisplayDriver.storedImage( "myLovelySphereRenderedIn" + renderer )
+		self.assertTrue( isinstance( image, IECore.ImagePrimitive ) )
+
 	## Should be implemented by derived classes to return an
 	# appropriate InteractiveRender node.
 	def _createInteractiveRender( self ) :
