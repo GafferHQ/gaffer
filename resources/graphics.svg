@@ -13,7 +13,7 @@
    height="1000"
    id="svg2"
    version="1.1"
-   inkscape:version="0.47 r22583"
+   inkscape:version="0.48.4 r9939"
    sodipodi:docname="graphics.svg">
   <defs
      id="defs4">
@@ -50,17 +50,17 @@
      inkscape:pageopacity="1"
      inkscape:pageshadow="2"
      inkscape:zoom="8"
-     inkscape:cx="207.54469"
-     inkscape:cy="968.38621"
+     inkscape:cx="339.58867"
+     inkscape:cy="967.17855"
      inkscape:document-units="px"
      inkscape:current-layer="layer1"
-     showgrid="true"
+     showgrid="false"
      inkscape:window-width="1703"
      inkscape:window-height="943"
      inkscape:window-x="203"
      inkscape:window-y="25"
      inkscape:window-maximized="0"
-     inkscape:snap-global="true"
+     inkscape:snap-global="false"
      inkscape:snap-nodes="true"
      inkscape:snap-bbox="true"
      inkscape:object-nodes="true"
@@ -241,7 +241,7 @@
          inkscape:flatsided="true"
          inkscape:rounded="0"
          inkscape:randomized="0"
-         d="M 120.71429,584.26237 110,578.07648 l 10.71429,-6.1859 0,12.37179 z"
+         d="M 120.71429,584.26237 110,578.07648 l 10.71429,-6.1859 z"
          transform="matrix(0,-0.65333366,0.646633,0,-363.80333,137.72891)" />
       <rect
          style="fill:none;stroke:none"
@@ -271,7 +271,7 @@
          inkscape:flatsided="true"
          inkscape:rounded="0"
          inkscape:randomized="0"
-         d="M 120.71429,584.26237 110,578.07648 l 10.71429,-6.1859 0,12.37179 z"
+         d="M 120.71429,584.26237 110,578.07648 l 10.71429,-6.1859 z"
          transform="matrix(0,-0.65333366,0.646633,0,-363.80333,137.7289)" />
       <rect
          style="fill:none;stroke:none"
@@ -289,7 +289,7 @@
        inkscape:export-ydpi="10">
       <path
          transform="matrix(0,-0.65333366,0.646633,0,-363.80333,137.22889)"
-         d="M 120.71429,584.26237 110,578.07648 l 10.71429,-6.1859 0,12.37179 z"
+         d="M 120.71429,584.26237 110,578.07648 l 10.71429,-6.1859 z"
          inkscape:randomized="0"
          inkscape:rounded="0"
          inkscape:flatsided="true"
@@ -356,7 +356,7 @@
          inkscape:flatsided="true"
          inkscape:rounded="0"
          inkscape:randomized="0"
-         d="M 120.71429,584.26237 110,578.07648 l 10.71429,-6.1859 0,12.37179 z"
+         d="M 120.71429,584.26237 110,578.07648 l 10.71429,-6.1859 z"
          transform="matrix(0,-0.65333366,0.646633,0,-363.80333,137.72889)" />
       <rect
          style="fill:none;stroke:none"
@@ -899,7 +899,7 @@
        height="17"
        width="13"
        id="forExport:timelinePause"
-       style="fill:none;stroke:none" />
+       style="fill:none;stroke:none;fill-opacity:1;stroke-opacity:1" />
     <rect
        style="fill:none;stroke:none"
        id="forExport:timelineStart"
@@ -2746,5 +2746,22 @@
        y="10"
        transform="translate(0,52.362183)"
        inkscape:label="#rect3197" />
+    <rect
+       style="fill:#787878;fill-opacity:0.99215686;stroke:#3c3c3c;stroke-width:1.00011265;stroke-miterlimit:4;stroke-opacity:1;stroke-dasharray:none"
+       id="rect3127-7"
+       width="13.910246"
+       height="13.999775"
+       x="369.4538"
+       y="80.832184"
+       inkscape:label="#rect3127-7" />
+    <rect
+       style="fill:none;stroke:none"
+       id="forExport:timelineStop"
+       width="17"
+       height="17"
+       x="367.95401"
+       y="79.332184"
+       ry="1.8545461"
+       inkscape:label="#rect4590" />
   </g>
 </svg>
