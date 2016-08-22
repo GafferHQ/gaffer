@@ -34,6 +34,8 @@
 //
 //////////////////////////////////////////////////////////////////////////
 
+#include "boost/python.hpp"
+
 #include "Gaffer/Reference.h"
 #include "Gaffer/ScriptNode.h"
 
