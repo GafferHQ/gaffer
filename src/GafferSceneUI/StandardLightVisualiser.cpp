@@ -154,20 +154,24 @@ void addSolidArc( int axis, const V3f &center, float majorRadius, float minorRad
 	}
 }
 
-void addCone( float angle, vector<int> &vertsPerCurve, vector<V3f> &p )
+void addCone( float angle, float startRadius, vector<int> &vertsPerCurve, vector<V3f> &p )
 {
 	const float halfAngle = 0.5 * M_PI * angle / 180.0;
 	const float baseRadius = sin( halfAngle );
 	const float baseDistance = cos( halfAngle );
 
-	addCircle( V3f( 0, 0, -baseDistance ), baseRadius, vertsPerCurve, p );
+	if( startRadius > 0 )
+	{
+		addCircle( V3f( 0 ), startRadius, vertsPerCurve, p );
+	}
+	addCircle( V3f( 0, 0, -baseDistance ), baseRadius + startRadius, vertsPerCurve, p );
 
-	p.push_back( V3f( 0 ) );
-	p.push_back( V3f( 0, baseRadius, -baseDistance ) );
+	p.push_back( V3f( 0, startRadius, 0 ) );
+	p.push_back( V3f( 0, baseRadius + startRadius, -baseDistance ) );
 	vertsPerCurve.push_back( 2 );
 
-	p.push_back( V3f( 0 ) );
-	p.push_back( V3f( 0, -baseRadius, -baseDistance ) );
+	p.push_back( V3f( 0, -startRadius, 0 ) );
+	p.push_back( V3f( 0, -baseRadius - startRadius, -baseDistance ) );
 	vertsPerCurve.push_back( 2 );
 }
 
@@ -230,7 +234,7 @@ void StandardLightVisualiser::addAreaLightVisualiser( IECoreGL::ConstStatePtr &s
 	state = newState;
 }
 
-void StandardLightVisualiser::addBasicLightVisualiser( ConstStringDataPtr type, GroupPtr &output, Color3f multiplier, float coneAngle, float penumbraAngle, const std::string *penumbraType )
+void StandardLightVisualiser::addBasicLightVisualiser( ConstStringDataPtr type, GroupPtr &output, Color3f multiplier, float coneAngle, float penumbraAngle, const std::string *penumbraType, float lensRadius )
 {
 	bool indicatorFaceCamera = false;
 	if( !type || type->readable() == "point" )
@@ -259,7 +263,7 @@ void StandardLightVisualiser::addBasicLightVisualiser( ConstStringDataPtr type, 
 			innerAngle = penumbraAngle;
 		}
 
-		output->addChild( const_pointer_cast<IECoreGL::Renderable>( spotlightCone( innerAngle, outerAngle ) ) );
+		output->addChild( const_pointer_cast<IECoreGL::Renderable>( spotlightCone( innerAngle, outerAngle, lensRadius ) ) );
 		output->addChild( const_pointer_cast<IECoreGL::Renderable>( ray() ) );
 	}
 	else if( type->readable() == "distant" )
@@ -371,7 +375,15 @@ IECoreGL::ConstRenderablePtr StandardLightVisualiser::visualise( const IECore::I
 		{
 			penumbraType = &penumbraTypeData->readable();
 		}
-		addBasicLightVisualiser( type, result, finalColor, coneAngle, penumbraAngle, penumbraType );
+
+		
+		float lensRadius = 0.0f;
+		if( parameter<bool>( metadataTarget, shaderParameters, "lensRadiusEnableParameter", true ) )
+		{
+			lensRadius = parameter<float>( metadataTarget, shaderParameters, "lensRadiusParameter", 0.0f );
+		}
+
+		addBasicLightVisualiser( type, result, finalColor, coneAngle, penumbraAngle, penumbraType, lensRadius / locatorScale );
 	}
 	return result;
 }
@@ -611,7 +623,7 @@ IECoreGL::ConstRenderablePtr StandardLightVisualiser::pointRays()
 	return group;
 }
 
-IECoreGL::ConstRenderablePtr StandardLightVisualiser::spotlightCone( float innerAngle, float outerAngle )
+IECoreGL::ConstRenderablePtr StandardLightVisualiser::spotlightCone( float innerAngle, float outerAngle, float lensRadius )
 {
 	IECoreGL::GroupPtr group = new IECoreGL::Group();
 	addWireframeCurveState( group.get() );
@@ -626,7 +638,7 @@ IECoreGL::ConstRenderablePtr StandardLightVisualiser::spotlightCone( float inner
 
 	IntVectorDataPtr vertsPerCurve = new IntVectorData;
 	V3fVectorDataPtr p = new V3fVectorData;
-	addCone( innerAngle, vertsPerCurve->writable(), p->writable() );
+	addCone( innerAngle, lensRadius, vertsPerCurve->writable(), p->writable() );
 
 	IECoreGL::CurvesPrimitivePtr curves = new IECoreGL::CurvesPrimitive( IECore::CubicBasisf::linear(), false, vertsPerCurve );
 	curves->addPrimitiveVariable( "P", IECore::PrimitiveVariable( IECore::PrimitiveVariable::Vertex, p ) );
@@ -641,7 +653,7 @@ IECoreGL::ConstRenderablePtr StandardLightVisualiser::spotlightCone( float inner
 
 		IntVectorDataPtr vertsPerCurve = new IntVectorData;
 		V3fVectorDataPtr p = new V3fVectorData;
-		addCone( outerAngle, vertsPerCurve->writable(), p->writable() );
+		addCone( outerAngle, lensRadius, vertsPerCurve->writable(), p->writable() );
 
 		IECoreGL::CurvesPrimitivePtr curves = new IECoreGL::CurvesPrimitive( IECore::CubicBasisf::linear(), false, vertsPerCurve );
 		curves->addPrimitiveVariable( "P", IECore::PrimitiveVariable( IECore::PrimitiveVariable::Vertex, p ) );
