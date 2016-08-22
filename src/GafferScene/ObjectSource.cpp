@@ -236,6 +236,10 @@ void ObjectSource::hashChildNames( const SceneNode::ScenePath &path, const Gaffe
 	h = parent->childNamesPlug()->defaultValue()->Object::hash();
 }
 
+void ObjectSource::hashStandardSetNames( const Gaffer::Context *context, IECore::MurmurHash &h ) const
+{
+}
+
 IECore::ConstInternedStringVectorDataPtr ObjectSource::computeChildNames( const SceneNode::ScenePath &path, const Gaffer::Context *context, const ScenePlug *parent ) const
 {
 	if( path.size() == 0 )
@@ -269,16 +273,17 @@ void ObjectSource::hashSetNames( const Gaffer::Context *context, const ScenePlug
 {
 	SceneNode::hashSetNames( context, parent, h );
 	setsPlug()->hash( h );
+	hashStandardSetNames( context, h );
 }
 
 IECore::ConstInternedStringVectorDataPtr ObjectSource::computeSetNames( const Gaffer::Context *context, const ScenePlug *parent ) const
 {
 	IECore::InternedStringVectorDataPtr result = new IECore::InternedStringVectorData;
 	Gaffer::tokenize( setsPlug()->getValue(), ' ', result->writable() );
-	IECore::InternedString n = standardSetName();
-	if( n.string().size() )
+	IECore::ConstInternedStringVectorDataPtr setNames = computeStandardSetNames();
+	for(unsigned int i = 0; i < setNames->readable().size(); ++i)
 	{
-		result->writable().push_back( n );
+		result->writable().push_back( setNames->readable()[i] );
 	}
 	return result;
 }
@@ -310,17 +315,17 @@ GafferScene::ConstPathMatcherDataPtr ObjectSource::computeSet( const IECore::Int
 	}
 }
 
-IECore::InternedString ObjectSource::standardSetName() const
+IECore::ConstInternedStringVectorDataPtr ObjectSource::computeStandardSetNames() const
 {
-	return g_emptyString;
+	IECore::InternedStringVectorDataPtr result = new IECore::InternedStringVectorData();
+	return result;
 }
 
 bool ObjectSource::setNameValid( const IECore::InternedString &setName ) const
 {
-	if( setName != g_emptyString && setName == standardSetName() )
-	{
+	IECore::ConstInternedStringVectorDataPtr standardSets = computeStandardSetNames();
+	if(std::find(standardSets->readable().begin(), standardSets->readable().end(), setName) != standardSets->readable().end())
 		return true;
-	}
 
 	std::vector<IECore::InternedString> setNames;
 	Gaffer::tokenize( setsPlug()->getValue(), ' ', setNames );

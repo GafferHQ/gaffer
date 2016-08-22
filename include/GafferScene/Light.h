@@ -66,7 +66,7 @@ class Light : public ObjectSource
 		virtual IECore::ConstCompoundObjectPtr computeAttributes( const SceneNode::ScenePath &path, const Gaffer::Context *context, const ScenePlug *parent ) const;
 
 
-		virtual IECore::InternedString standardSetName() const;
+		virtual IECore::ConstInternedStringVectorDataPtr computeStandardSetNames() const;
 
 		/// Must be implemented by derived classes to hash and generate the light to be placed
 		/// in the scene graph.

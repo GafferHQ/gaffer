@@ -67,7 +67,10 @@ IECore::ConstObjectPtr CoordinateSystem::computeSource( const Context *context )
 	return new IECore::CoordinateSystem();
 }
 
-IECore::InternedString CoordinateSystem::standardSetName() const
+IECore::ConstInternedStringVectorDataPtr CoordinateSystem::computeStandardSetNames() const
 {
-	return g_coordinateSystemsSetName;
+	IECore::InternedStringVectorDataPtr result = new IECore::InternedStringVectorData();
+	result->writable().push_back( g_coordinateSystemsSetName );
+	return result;
 }
+

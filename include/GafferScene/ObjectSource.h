@@ -104,9 +104,8 @@ class ObjectSource : public SceneNode
 		virtual void hashSource( const Gaffer::Context *context, IECore::MurmurHash &h ) const = 0;
 		virtual IECore::ConstObjectPtr computeSource( const Gaffer::Context *context ) const = 0;
 
-		/// May be reimplemented to returns the name of a set the object will always be a part of.
-		/// The value returned must be a constant.
-		virtual IECore::InternedString standardSetName() const;
+		virtual void hashStandardSetNames( const Gaffer::Context *context, IECore::MurmurHash &h ) const;
+		virtual IECore::ConstInternedStringVectorDataPtr computeStandardSetNames() const;
 
 	private :
 
