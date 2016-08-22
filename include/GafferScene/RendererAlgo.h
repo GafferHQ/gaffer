@@ -47,6 +47,8 @@
 namespace GafferScene
 {
 
+IE_CORE_FORWARDDECLARE( SceneProcessor )
+
 namespace RendererAlgo
 {
 
@@ -117,6 +119,17 @@ void objectSamples( const ScenePlug *scene, size_t segments, const Imath::V2f &s
 
 /// Outputs the object for the current location, using objectSamples() to generate the samples.
 void outputObject( const ScenePlug *scene, IECore::Renderer *renderer, size_t segments = 0, const Imath::V2f &shutter = Imath::V2i( 0 ) );
+
+/// Function to return a SceneProcessor used to adapt the
+/// scene for rendering.
+typedef boost::function<SceneProcessorPtr ()> Adaptor;
+/// Registers an adaptor.
+void registerAdaptor( const std::string &name, Adaptor adaptor );
+/// Removes a previously registered adaptor.
+void deregisterAdaptor( const std::string &name );
+/// Returns a SceneProcessor that will apply all the currently
+/// registered adaptors.
+SceneProcessorPtr createAdaptors();
 
 } // namespace RendererAlgo
 
