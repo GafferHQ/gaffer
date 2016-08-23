@@ -1,6 +1,6 @@
 //////////////////////////////////////////////////////////////////////////
 //
-//  Copyright (c) 2014, Esteban Tovagliari. All rights reserved.
+//  Copyright (c) 2016, Image Engine Design Inc. All rights reserved.
 //
 //  Redistribution and use in source and binary forms, with or without
 //  modification, are permitted provided that the following conditions are
@@ -34,23 +34,36 @@
 //
 //////////////////////////////////////////////////////////////////////////
 
-#ifndef GAFFERAPPLESEED_TYPEIDS_H
-#define GAFFERAPPLESEED_TYPEIDS_H
+#ifndef GAFFERAPPLESEED_APPLESEEDSHADERADAPTOR_H
+#define GAFFERAPPLESEED_APPLESEEDSHADERADAPTOR_H
+
+#include "GafferScene/SceneProcessor.h"
+
+#include "GafferAppleseed/TypeIds.h"
 
 namespace GafferAppleseed
 {
 
-enum TypeId
+class AppleseedShaderAdaptor : public GafferScene::SceneProcessor
 {
-	AppleseedOptionsTypeId = 110451,
-	AppleseedAttributesTypeId = 110452,
-	AppleseedLightTypeId = 110453,
-	InteractiveAppleseedRenderTypeId = 110454,
-	AppleseedShaderAdaptorTypeId = 110455,
 
-	LastTypeId = 110500
+	public :
+
+		AppleseedShaderAdaptor( const std::string &name=defaultName<AppleseedShaderAdaptor>() );
+
+		IE_CORE_DECLARERUNTIMETYPEDEXTENSION( GafferAppleseed::AppleseedShaderAdaptor, AppleseedShaderAdaptorTypeId, GafferScene::SceneProcessor );
+
+		virtual void affects( const Gaffer::Plug *input, AffectedPlugsContainer &outputs ) const;
+
+	protected :
+
+		virtual void hashAttributes( const ScenePath &path, const Gaffer::Context *context, const GafferScene::ScenePlug *parent, IECore::MurmurHash &h ) const;
+		virtual IECore::ConstCompoundObjectPtr computeAttributes( const ScenePath &path, const Gaffer::Context *context, const GafferScene::ScenePlug *parent ) const;
+
 };
+
+IE_CORE_DECLAREPTR( AppleseedShaderAdaptor )
 
 } // namespace GafferAppleseed
 
-#endif // GAFFERAPPLESEED_TYPEIDS_H
+#endif // GAFFERAPPLESEED_APPLESEEDSHADERADAPTOR_H

@@ -1,6 +1,6 @@
 ##########################################################################
 #
-#  Copyright (c) 2014, Esteban Tovagliari. All rights reserved.
+#  Copyright (c) 2016, Image Engine Design Inc. All rights reserved.
 #
 #  Redistribution and use in source and binary forms, with or without
 #  modification, are permitted provided that the following conditions are
@@ -34,12 +34,19 @@
 #
 ##########################################################################
 
-import AppleseedAttributesUI
-import AppleseedLightUI
-import AppleseedOptionsUI
-import AppleseedRenderUI
-import InteractiveAppleseedRenderUI
-import LightMenu
-import AppleseedShaderAdaptorUI
+import Gaffer
+import GafferAppleseed
 
-__import__( "IECore" ).loadConfig( "GAFFER_STARTUP_PATHS", {}, subdirectory = "GafferAppleseedUI" )
+Gaffer.Metadata.registerNode(
+
+	GafferAppleseed.AppleseedShaderAdaptor,
+
+	"description",
+	"""
+	Adapts assigned OSL shaders so they can be rendered in Appleseed,
+	even if the assigned shader is not a surface shader. This makes it
+	possible to render directly with shaders which output colours, floats,
+	ints, vectors or closures.
+	""",
+
+)
