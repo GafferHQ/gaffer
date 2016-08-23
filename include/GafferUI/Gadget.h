@@ -126,6 +126,9 @@ class Gadget : public Gaffer::GraphComponent
 		/// Returns true if this Gadget and all its parents up to the specified
 		/// ancestor are visible.
 		bool visible( Gadget *relativeTo = NULL );
+		typedef boost::signal<void ( Gadget * )> VisibilityChangedSignal;
+		/// Emitted when the result of `Gadget::visible()` changes.
+		VisibilityChangedSignal &visibilityChangedSignal();
 		/// Sets whether or not this Gadget should be rendered in a highlighted
 		/// state. This status is not inherited by child Gadgets. Note that highlighted
 		/// drawing has not yet been implemented for all Gadget types. Derived
@@ -273,6 +276,7 @@ class Gadget : public Gaffer::GraphComponent
 
 		void styleChanged();
 		void parentChanged( GraphComponent *child, GraphComponent *oldParent );
+		void emitDescendantVisibilityChanged();
 
 		ConstStylePtr m_style;
 
@@ -281,6 +285,7 @@ class Gadget : public Gaffer::GraphComponent
 
 		Imath::M44f m_transform;
 
+		VisibilityChangedSignal m_visibilityChangedSignal;
 		RenderRequestSignal m_renderRequestSignal;
 
 		IECore::InternedString m_toolTip;
