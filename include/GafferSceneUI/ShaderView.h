@@ -86,10 +86,13 @@ class ShaderView : public GafferImageUI::ImageView
 
 	private :
 
+		void viewportVisibilityChanged();
+
 		void plugSet( Gaffer::Plug *plug );
 		void plugInputChanged( Gaffer::Plug *plug );
 
 		void updateRenderer();
+		void updateRendererState();
 		void updateScene();
 
 		Gaffer::BoxPtr m_imageConverter;

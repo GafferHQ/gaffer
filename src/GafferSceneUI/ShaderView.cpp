@@ -150,6 +150,7 @@ ShaderView::ShaderView( const std::string &name )
 
 	// Connect to signals we need.
 
+	viewportGadget()->visibilityChangedSignal().connect( boost::bind( &ShaderView::viewportVisibilityChanged, this ) );
 	plugSetSignal().connect( boost::bind( &ShaderView::plugSet, this, ::_1 ) );
 	plugInputChangedSignal().connect( boost::bind( &ShaderView::plugInputChanged, this, ::_1 ) );
 
@@ -219,6 +220,11 @@ void ShaderView::setContext( Gaffer::ContextPtr context )
 	}
 }
 
+void ShaderView::viewportVisibilityChanged()
+{
+	updateRendererState();
+}
+
 void ShaderView::plugSet( Gaffer::Plug *plug )
 {
 	if( plug == scenePlug() )
@@ -262,8 +268,19 @@ void ShaderView::updateRenderer()
 	m_renderer->getChild<ScenePlug>( "in" )->setInput(
 		m_imageConverter->getChild<SceneNode>( "Outputs" )->outPlug()
 	);
+
+	updateRendererState();
+}
+
+void ShaderView::updateRendererState()
+{
+	if( !m_renderer )
+	{
+		return;
+	}
+
 	m_renderer->getChild<IntPlug>( "state" )->setValue(
-		InteractiveRender::Running
+		viewportGadget()->visible() ? InteractiveRender::Running : InteractiveRender::Stopped
 	);
 }
 
