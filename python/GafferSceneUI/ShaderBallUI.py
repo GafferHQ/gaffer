@@ -58,7 +58,17 @@ Gaffer.Metadata.registerNode(
 			"nodeGadget:nodulePosition", "left",
 			"nodule:type", "GafferUI::StandardNodule",
 
-		]
+		],
+
+		"resolution" : [
+
+			"description",
+			"""
+			The resolution of the shader ball image, which
+			is always a square.
+			""",
+
+		],
 
 	}
 )
