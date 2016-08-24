@@ -40,7 +40,6 @@ import IECore
 
 import Gaffer
 import GafferUI
-import GafferScene
 import GafferSceneUI
 
 Gaffer.Metadata.registerNode(

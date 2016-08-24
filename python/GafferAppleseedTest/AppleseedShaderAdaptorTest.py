@@ -34,9 +34,6 @@
 #
 ##########################################################################
 
-import IECore
-
-import Gaffer
 import GafferScene
 import GafferSceneTest
 import GafferOSL

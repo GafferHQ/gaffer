@@ -34,8 +34,6 @@
 #
 ##########################################################################
 
-import IECore
-
 import Gaffer
 import GafferAppleseed
 
