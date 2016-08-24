@@ -114,6 +114,7 @@ from MeshToPointsTest import MeshToPointsTest
 from InteractiveRenderTest import InteractiveRenderTest
 from FilteredSceneProcessorTest import FilteredSceneProcessorTest
 from ShaderBallTest import ShaderBallTest
+from LightTweaksTest import LightTweaksTest
 
 if __name__ == "__main__":
 	import unittest
