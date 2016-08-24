@@ -56,7 +56,6 @@
 
 #include "GafferSceneUI/ShaderView.h"
 
-using namespace std;
 using namespace Gaffer;
 using namespace GafferImage;
 using namespace GafferScene;
@@ -130,10 +129,10 @@ ShaderView::ShaderView( const std::string &name )
 	m_imageConverter->addChild( outputs );
 	outputs->inPlug()->setInput( deleteOutputs->outPlug() );
 	IECore::DisplayPtr output = new IECore::Display( "beauty", "ieDisplay", "rgba" );
-	output->parameters()["quantize"] = new IECore::IntVectorData( vector<int>( 4, 0 ) );
+	output->parameters()["quantize"] = new IECore::IntVectorData( std::vector<int>( 4, 0 ) );
 	output->parameters()["driverType"] = new IECore::StringData( "ClientDisplayDriver" );
 	output->parameters()["displayHost"] = new IECore::StringData( "localhost" );
-	output->parameters()["displayPort"] = new IECore::StringData( boost::lexical_cast<string>( port ) );
+	output->parameters()["displayPort"] = new IECore::StringData( boost::lexical_cast<std::string>( port ) );
 	output->parameters()["remoteDisplayType"] = new IECore::StringData( "GafferImage::GafferDisplayDriver" );
 	outputs->addOutput( "Beauty", output.get() );
 
@@ -182,7 +181,7 @@ std::string ShaderView::shaderPrefix() const
 			{
 				return "";
 			}
-			else if( boost::ends_with( it->first.string(), string( ":" ) + *shader ) )
+			else if( boost::ends_with( it->first.string(), std::string( ":" ) + *shader ) )
 			{
 				return it->first.string().substr( 0, it->first.string().find_first_of( ':' ) );
 			}
@@ -244,7 +243,7 @@ void ShaderView::plugInputChanged( Gaffer::Plug *plug )
 
 void ShaderView::updateRenderer()
 {
-	const string shaderPrefix = this->shaderPrefix();
+	const std::string shaderPrefix = this->shaderPrefix();
 	if( m_renderer && shaderPrefix == m_rendererShaderPrefix )
 	{
 		return;
