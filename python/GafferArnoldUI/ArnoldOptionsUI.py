@@ -41,6 +41,15 @@ import Gaffer
 import GafferUI
 import GafferArnold
 
+def __renderingSummary( plug ) :
+
+	info = []
+	if plug["bucketSize"]["enabled"].getValue() :
+		info.append( "Bucket Size %d" % plug["bucketSize"]["value"].getValue() )
+	if plug["bucketScanning"]["enabled"].getValue() :
+		info.append( "Bucket Scanning %s" % plug["bucketScanning"]["value"].getValue().capitalize() )
+	return ", ".join( info )
+
 def __samplingSummary( plug ) :
 
 	info = []
@@ -162,6 +171,7 @@ Gaffer.Metadata.registerNode(
 
 		"options" : [
 
+			"layout:section:Rendering:summary", __renderingSummary,
 			"layout:section:Sampling:summary", __samplingSummary,
 			"layout:section:Ray Depth:summary", __rayDepthSummary,
 			"layout:section:Features:summary", __featuresSummary,
@@ -171,6 +181,45 @@ Gaffer.Metadata.registerNode(
 			"layout:section:Logging:summary", __loggingSummary,
 			"layout:section:Licensing:summary", __licensingSummary,
 
+		],
+
+		# Rendering
+
+		"options.bucketSize": [
+
+			"description",
+			"""
+			Controls the size of the image buckets.
+			The default size is 64x64 pixels.
+			Bigger buckets will increase memory usage
+			while smaller buckets may render slower as
+			they need to perform redundant computations
+			and filtering.
+			""",
+
+			"layout:section", "Rendering",
+			"label", "Bucket Size",
+
+		],
+
+		"options.bucketScanning": [
+
+			"description",
+			"""
+			Controls the order in which buckets are
+			processed. A spiral pattern is the default.
+			""",
+
+			"layout:section", "Rendering",
+			"label", "Bucket Scanning",
+
+		],
+
+		"options.bucketScanning.value": [
+
+			"plugValueWidget:type", 'GafferUI.PresetsPlugValueWidget',
+			"presetNames", IECore.StringVectorData( ["Top", "Bottom", "Left", "Right", "Random", "Woven", "Spiral", "Spiral"] ),
+			"presetValues", IECore.StringVectorData( ["top", "bottom", "left", "right", "random", "woven", "spiral", "spiral"] ),
 		],
 
 		# Sampling

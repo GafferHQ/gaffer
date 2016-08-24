@@ -47,6 +47,10 @@ ArnoldOptions::ArnoldOptions( const std::string &name )
 {
 	Gaffer::CompoundDataPlug *options = optionsPlug();
 
+	// Rendering parameters
+	options->addOptionalMember( "ai:bucket_size", new IECore::IntData( 64 ), "bucketSize", Gaffer::Plug::Default, false );
+	options->addOptionalMember( "ai:bucket_scanning", new IECore::StringData( "spiral" ), "bucketScanning", Gaffer::Plug::Default, false );
+
 	// Sampling parameters
 
 	options->addOptionalMember( "ai:AA_samples", new IECore::IntData( 3 ), "aaSamples", Gaffer::Plug::Default, false );
