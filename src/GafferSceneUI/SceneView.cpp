@@ -878,6 +878,7 @@ class SceneView::LookThrough : public boost::signals::trackable
 				plug == scenePlug()->globalsPlug() ||
 				plug == scenePlug()->objectPlug() ||
 				plug == scenePlug()->transformPlug() ||
+				plug == scenePlug()->attributesPlug() ||
 				plug == enabledPlug() ||
 				plug == cameraPlug()
 			)
@@ -957,9 +958,9 @@ class SceneView::LookThrough : public boost::signals::trackable
 			m_view->viewportGadget()->setCameraEditable( false );
 			if( m_lookThroughCamera )
 			{
-				StringVectorDataPtr invisiblePaths = new StringVectorData();
+				/*StringVectorDataPtr invisiblePaths = new StringVectorData();
 				invisiblePaths->writable().push_back( m_lookThroughCamera->getName() );
-				m_view->hideFilter()->pathsPlug()->setValue( invisiblePaths );
+				m_view->hideFilter()->pathsPlug()->setValue( invisiblePaths );*/
 			}
 			else
 			{
