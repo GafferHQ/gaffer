@@ -34,7 +34,11 @@
 #
 ##########################################################################
 
+import math
+
 import appleseed
+
+from IECore import V3f, M44f
 
 import Gaffer
 import GafferUI
@@ -116,6 +120,7 @@ Gaffer.Metadata.registerValue( "as:light:latlong_map_environment_edf", "type", "
 Gaffer.Metadata.registerValue( "as:light:latlong_map_environment_edf", "textureNameParameter", "radiance_map" )
 Gaffer.Metadata.registerValue( "as:light:latlong_map_environment_edf", "intensityParameter", "radiance_multiplier" )
 Gaffer.Metadata.registerValue( "as:light:latlong_map_environment_edf", "exposureParameter", "exposure" )
+Gaffer.Metadata.registerValue( "as:light:latlong_map_environment_edf", "visualiserOrientation", M44f().rotate( V3f( 0, 0.5 * math.pi, 0 ) ) )
 
 Gaffer.Metadata.registerValue( "as:light:hosek_environment_edf", "type", "environment" )
 
