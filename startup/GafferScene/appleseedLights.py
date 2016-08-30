@@ -34,12 +34,14 @@
 #
 ##########################################################################
 
+import IECore
 import Gaffer
 
 Gaffer.Metadata.registerValue( "as:light:latlong_map_environment_edf", "type", "environment" )
 Gaffer.Metadata.registerValue( "as:light:latlong_map_environment_edf", "textureNameParameter", "radiance_map" )
 Gaffer.Metadata.registerValue( "as:light:latlong_map_environment_edf", "intensityParameter", "radiance_multiplier" )
 Gaffer.Metadata.registerValue( "as:light:latlong_map_environment_edf", "exposureParameter", "exposure" )
+Gaffer.Metadata.registerValue( "as:light:latlong_map_environment_edf", "visualiserOrientation", IECore.M44f().rotate( IECore.V3f( 0, 0.5 * math.pi, 0 ) ) )
 
 Gaffer.Metadata.registerValue( "as:light:hosek_environment_edf", "type", "environment" )
 
