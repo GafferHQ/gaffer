@@ -36,6 +36,9 @@
 
 #include "boost/filesystem.hpp"
 
+#include "Gaffer/PerformanceMonitor.h"
+#include "Gaffer/MonitorAlgo.h"
+
 #include "GafferScene/Private/IECoreScenePreview/Renderer.h"
 
 #include "GafferScene/Preview/Render.h"
@@ -49,6 +52,13 @@ using namespace Gaffer;
 using namespace GafferDispatch;
 using namespace GafferScene;
 using namespace GafferScene::Preview;
+
+namespace
+{
+
+InternedString g_performanceMonitorOptionName( "option:render:performanceMonitor" );
+
+} // namespace
 
 size_t Render::g_firstPlugIndex = 0;
 
@@ -206,6 +216,16 @@ void Render::execute() const
 	ConstCompoundObjectPtr globals = inPlug()->globalsPlug()->getValue();
 	createDisplayDirectories( globals.get() );
 
+	boost::shared_ptr<PerformanceMonitor> performanceMonitor;
+	if( const BoolData *d = globals->member<const BoolData>( g_performanceMonitorOptionName ) )
+	{
+		if( d->readable() )
+		{
+			performanceMonitor.reset( new PerformanceMonitor );
+		}
+	}
+	Monitor::Scope performanceMonitorScope( performanceMonitor.get() );
+
 	outputOptions( globals.get(), renderer.get() );
 	outputOutputs( globals.get(), renderer.get() );
 	outputCameras( inPlug(), globals.get(), renderer.get() );
@@ -213,4 +233,11 @@ void Render::execute() const
 	outputObjects( inPlug(), globals.get(), renderer.get() );
 
 	renderer->render();
+	renderer.reset();
+
+	if( performanceMonitor )
+	{
+		std::cerr << "\nPerformance Monitor\n===================\n\n";
+		std::cerr << formatStatistics( *performanceMonitor );
+	}
 }
