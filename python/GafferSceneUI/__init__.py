@@ -79,6 +79,7 @@ import GridUI
 import SetFilterUI
 import DeleteGlobalsUI
 import DeleteOptionsUI
+import CopyOptionsUI
 import DeleteSetsUI
 import ExternalProceduralUI
 import ExecutableRenderUI
