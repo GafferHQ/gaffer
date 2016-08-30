@@ -68,11 +68,17 @@ bool Monitor::getActive() const
 Monitor::Scope::Scope( Monitor *monitor )
 	:	m_monitor( monitor )
 {
-	m_monitor->setActive( true );
+	if( m_monitor )
+	{
+		m_monitor->setActive( true );
+	}
 }
 
 Monitor::Scope::~Scope()
 {
-	m_monitor->setActive( false );
+	if( m_monitor )
+	{
+		m_monitor->setActive( false );
+	}
 }
 
