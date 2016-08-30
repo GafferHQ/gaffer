@@ -258,7 +258,7 @@ void numericTweak( Data *data, PlugType *plug, LightTweaks::TweakPlug::Mode mode
 
 void tweak( Data *data, Plug *plug, LightTweaks::TweakPlug::Mode mode )
 {
-	switch( plug->typeId() )
+	switch( static_cast<Gaffer::TypeId>( plug->typeId() ) )
 	{
 		case FloatPlugTypeId :
 			numericTweak( data, static_cast<const FloatPlug *>( plug ), mode );
