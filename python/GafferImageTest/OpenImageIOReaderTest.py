@@ -348,9 +348,6 @@ class OpenImageIOReaderTest( GafferImageTest.ImageTestCase ) :
 		# set to a missing frame
 		context.setFrame( 2 )
 
-		# FormatPlug to query default format from context
-		formatPlug = GafferImage.FormatPlug()
-
 		# everything throws
 		reader["missingFrameMode"].setValue( GafferImage.OpenImageIOReader.MissingFrameMode.Error )
 		with context :
@@ -414,7 +411,6 @@ class OpenImageIOReaderTest( GafferImageTest.ImageTestCase ) :
 		# the windows match frame 3, but everything else is default
 		reader["missingFrameMode"].setValue( GafferImage.OpenImageIOReader.MissingFrameMode.Black )
 		with context :
-			defaultFormat = formatPlug.getDefaultFormat(context)
 			self.assertNotEqual( reader["out"]["format"].getValue(), f1Format )
 			self.assertEqual( reader["out"]["format"].getValue(), f3Format )
 			self.assertEqual( reader["out"]["dataWindow"].getValue(), f3DataWindow )
@@ -437,7 +433,6 @@ class OpenImageIOReaderTest( GafferImageTest.ImageTestCase ) :
 		# the windows match frame 1, but everything else is default
 		reader["missingFrameMode"].setValue( GafferImage.OpenImageIOReader.MissingFrameMode.Black )
 		with context :
-			defaultFormat = formatPlug.getDefaultFormat(context)
 			self.assertEqual( reader["out"]["format"].getValue(), f1Format )
 			self.assertEqual( reader["out"]["dataWindow"].getValue(), f1DataWindow )
 			self.assertEqual( reader["out"]["metadata"].getValue(), reader["out"]["metadata"].defaultValue() )
