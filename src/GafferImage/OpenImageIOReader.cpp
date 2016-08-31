@@ -588,8 +588,7 @@ Imath::Box2i OpenImageIOReader::computeDataWindow( const Gaffer::Context *contex
 	if( !spec )
 	{
 		Format format = FormatPlug::getDefaultFormat( context );
-		Imath::Box2i dataWindow(Imath::V2i(format.getDisplayWindow().min.x, format.getDisplayWindow().min.y), Imath::V2i(format.getDisplayWindow().max.x, format.getDisplayWindow().max.y));
-		return dataWindow;
+		return format.getDisplayWindow();
 	}
 
 	Format format( Imath::Box2i( Imath::V2i( spec->full_x, spec->full_y ), Imath::V2i( spec->full_width + spec->full_x, spec->full_height + spec->full_y ) ) );
