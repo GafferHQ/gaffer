@@ -1,3 +1,91 @@
+0.28.0.0
+========
+
+UI
+--
+
+- Viewer
+  - Added interactive shader swatches (#1828).
+- NodeGraph
+  - Added "Move To" menu items for Dot nodes.
+- InteractiveRender
+  - Added Play/Pause/Stop buttons.
+
+Scene
+-----
+
+- Fixed FilterSwitch serialisation bug (#1814, #1815).
+- Added ShaderBall node (#1828).
+
+Arnold
+------
+
+- Added support for shader network inputs to light parameters (#1828).
+- Added support for spline shader parameters (#1813).
+- Added support for OSL shaders (#1813).
+- Added bucketSize and bucketScanning options to ArnoldOptions node (#1827).
+- Added ArnoldShaderBall node (#1828).
+- Added performance monitor support to ArnoldRender (#1831).
+- Improved parameter linking support in renderer backend.
+- Fixed crashes caused by trying to use two render nodes at once in the same process (#1818).
+
+Appleseed
+---------
+
+- Added AppleseedShaderBall node (#1828).
+- Fixed problems with searchpath initialisation (#1828).
+
+RenderMan
+---------
+
+- Added RenderManShaderBall node (#1828).
+
+Dispatch
+--------
+
+- Fixed performance problems with complex dispatch graphs (#1820).
+
+Image
+-----
+
+- Fixed sizing of whitespace in Text node (#1822).
+
+OSL
+---
+
+- Fixed problems with OSL_SHADER_PATHS initialisation (#1813).
+
+Documentation
+-------------
+
+- Added missing image to "Getting Started" tutorial (#1810).
+
+Build
+-----
+
+- Replaced appleseed build options with single APPLESEED_ROOT option (#1812).
+
+API
+---
+
+- Scene
+  - Added FilterPlug (#1815).
+  - Added ShaderPlug (#1828).
+  - Deprecated public attributes methods on Shader node.
+  - Allowed ObjectSource derived classes to define more than one default set (#1821).
+- UI
+  - Added `Gadget::visibilityChangedSignal()` (#1828).
+- Arnold
+  - Added gaffer.plugType metadata support for shader parameters (#1817).
+- Monitor
+  - Added support for NULL argument to Scope class (#1831).
+
+Breaking Changes
+----------------
+
+- Added an argument to `GafferArnold::ParameterAlgo::setupPlug()` (#1817).
+- Modified ObjectSource virtual methods (#1821).
+
 0.27.1.0
 ========
 
