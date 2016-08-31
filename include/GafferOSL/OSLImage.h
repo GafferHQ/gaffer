@@ -40,6 +40,8 @@
 
 #include "GafferImage/ImageProcessor.h"
 
+#include "GafferScene/ShaderPlug.h"
+
 #include "GafferOSL/TypeIds.h"
 
 namespace GafferOSL
@@ -55,8 +57,8 @@ class OSLImage : public GafferImage::ImageProcessor
 
 		IE_CORE_DECLARERUNTIMETYPEDEXTENSION( GafferOSL::OSLImage, OSLImageTypeId, GafferImage::ImageProcessor );
 
-		Gaffer::Plug *shaderPlug();
-		const Gaffer::Plug *shaderPlug() const;
+		GafferScene::ShaderPlug *shaderPlug();
+		const GafferScene::ShaderPlug *shaderPlug() const;
 
 		virtual void affects( const Gaffer::Plug *input, AffectedPlugsContainer &outputs ) const;
 

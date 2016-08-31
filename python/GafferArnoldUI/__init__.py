@@ -44,5 +44,6 @@ import ArnoldVDBUI
 import InteractiveArnoldRenderUI
 import ArnoldDisplacementUI
 import ArnoldMeshLightUI
+import ArnoldShaderBallUI
 
 __import__( "IECore" ).loadConfig( "GAFFER_STARTUP_PATHS", {}, subdirectory = "GafferArnoldUI" )

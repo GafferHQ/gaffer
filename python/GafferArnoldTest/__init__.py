@@ -43,7 +43,7 @@ from ArnoldLightTest import ArnoldLightTest
 from ArnoldMeshLightTest import ArnoldMeshLightTest
 from InteractiveArnoldRenderTest import InteractiveArnoldRenderTest
 from ArnoldDisplacementTest import ArnoldDisplacementTest
-import IECoreArnoldPreviewTest
+from IECoreArnoldPreviewTest import *
 
 if __name__ == "__main__":
 	import unittest

@@ -235,5 +235,61 @@ class GadgetTest( GafferUITest.TestCase ) :
 		# the parent bound.
 		self.assertEqual( g.bound(), IECore.Box3f() )
 
+	def testVisibilityChangedSignal( self ) :
+
+		g = GafferUI.Gadget()
+		g["a"] = GafferUI.Gadget()
+		g["a"]["c"] = GafferUI.Gadget()
+		g["b"] = GafferUI.Gadget()
+
+		events = []
+		def visibilityChanged( gadget ) :
+
+			events.append( ( gadget, gadget.visible() ) )
+
+		connnections = [
+			g.visibilityChangedSignal().connect( visibilityChanged ),
+			g["a"].visibilityChangedSignal().connect( visibilityChanged ),
+			g["a"]["c"].visibilityChangedSignal().connect( visibilityChanged ),
+			g["b"].visibilityChangedSignal().connect( visibilityChanged ),
+		]
+
+		g["b"].setVisible( True )
+		self.assertEqual( len( events ), 0 )
+
+		g["b"].setVisible( False )
+		self.assertEqual( len( events ), 1 )
+		self.assertEqual( events[0], ( g["b"], False ) )
+
+		g["b"].setVisible( True )
+		self.assertEqual( len( events ), 2 )
+		self.assertEqual( events[1], ( g["b"], True ) )
+
+		g["a"].setVisible( True )
+		self.assertEqual( len( events ), 2 )
+
+		g["a"].setVisible( False )
+		self.assertEqual( len( events ), 4 )
+		self.assertEqual( events[-2], ( g["a"]["c"], False ) )
+		self.assertEqual( events[-1], ( g["a"], False ) )
+
+		g["a"].setVisible( True )
+		self.assertEqual( len( events ), 6 )
+		self.assertEqual( events[-2], ( g["a"]["c"], True ) )
+		self.assertEqual( events[-1], ( g["a"], True ) )
+
+		g["a"]["c"].setVisible( False )
+		self.assertEqual( len( events ), 7 )
+		self.assertEqual( events[-1], ( g["a"]["c"], False ) )
+
+		g.setVisible( False )
+		self.assertEqual( len( events ), 10 )
+		self.assertEqual( events[-3], ( g["a"], False ) )
+		self.assertEqual( events[-2], ( g["b"], False ) )
+		self.assertEqual( events[-1], ( g, False ) )
+
+		g["a"]["c"].setVisible( True )
+		self.assertEqual( len( events ), 10 )
+
 if __name__ == "__main__":
 	unittest.main()

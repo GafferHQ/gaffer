@@ -36,6 +36,7 @@
 ##########################################################################
 
 import os
+import re
 import traceback
 import functools
 
@@ -113,6 +114,7 @@ if moduleSearchPath.find( "arnold" ) :
 			searchText = "ArnoldRender"
 		)
 		nodeMenu.append( "/Arnold/Interactive Render", GafferArnold.InteractiveArnoldRender, searchText = "InteractiveArnoldRender" )
+		nodeMenu.append( "/Arnold/Shader Ball", GafferArnold.ArnoldShaderBall, searchText = "ArnoldShaderBall" )
 
 	except Exception, m :
 
@@ -140,6 +142,7 @@ if "DELIGHT" in os.environ :
 			searchText = "RenderManRender"
 		)
 		nodeMenu.append( "/RenderMan/Interactive Render", GafferRenderMan.InteractiveRenderManRender, searchText = "InteractiveRenderManRender" )
+		nodeMenu.append( "/RenderMan/Shader Ball", GafferRenderMan.RenderManShaderBall, searchText = "RenderManShaderBall" )
 
 		scriptWindowMenu.append(
 			"/Help/3Delight/User Guide",
@@ -190,6 +193,7 @@ if "APPLESEED" in os.environ :
 			searchText = "AppleseedRender"
 		)
 		nodeMenu.append( "/Appleseed/Interactive Render", GafferAppleseed.InteractiveAppleseedRender, searchText = "InteractiveAppleseedRender" )
+		nodeMenu.append( "/Appleseed/Shader Ball", GafferAppleseed.AppleseedShaderBall, searchText = "AppleseedShaderBall" )
 
 		scriptWindowMenu.append(
 			"/Help/Appleseed/User Docs",
@@ -319,7 +323,20 @@ if moduleSearchPath.find( "GafferOSL" ) :
 		nodeMenu.definition(), "/OSL/Shader",
 		os.environ["OSL_SHADER_PATHS"].split( ":" ),
 		[ "oso" ],
-		__shaderNodeCreator
+		__shaderNodeCreator,
+		# Appleseed comes with a library of OSL shaders which we put
+		# on the OSL_SHADER_PATHS, but we don't want to show them in
+		# this menu, because we show them in the Appleseed menu instead.
+		# This match expression filters them out :
+		#
+		# - (^|.*/) matches any number (including zero) of directory
+		#   names preceding the shader name.
+		# - (?!as_) is a negative lookahead, asserting that the shader
+		#   name does not start with "as_", the prefix for all
+		#   Appleseed shaders.
+		# - [^/]*$ matches the rest of the shader name, ensuring it
+		#   doesn't include any directory separators.
+		matchExpression = re.compile( "(^|.*/)(?!as_)[^/]*$")
 	)
 
 	nodeMenu.append( "/OSL/Image", GafferOSL.OSLImage, searchText = "OSLImage" )
@@ -355,14 +372,6 @@ nodeMenu.append( "/Utility/Box", GafferUI.BoxUI.nodeMenuCreateCommand )
 nodeMenu.append( "/Utility/Reference", GafferUI.ReferenceUI.nodeMenuCreateCommand )
 nodeMenu.definition().append( "/Utility/Backdrop", { "command" : GafferUI.BackdropUI.nodeMenuCreateCommand } )
 nodeMenu.append( "/Utility/Dot", Gaffer.Dot )
-
-# appleseed uses GafferOSL shaders so  we need to
-# add the paths to them to OSL_SHADER_PATHS environment var.
-# this has to happen after GafferOSL is initialized otherwise
-# appleseed shaders also show on the OSL menu.
-if "APPLESEED" in os.environ :
-
-	os.environ["OSL_SHADER_PATHS"] = os.environ["APPLESEED_SEARCHPATH"] + ":" + os.environ["OSL_SHADER_PATHS"]
 
 ## Miscellaneous UI
 ###########################################################################

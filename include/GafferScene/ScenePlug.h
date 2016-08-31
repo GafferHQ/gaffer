@@ -35,8 +35,8 @@
 //
 //////////////////////////////////////////////////////////////////////////
 
-#ifndef GAFFER_SCENEPLUG_H
-#define GAFFER_SCENEPLUG_H
+#ifndef GAFFERSCENE_SCENEPLUG_H
+#define GAFFERSCENE_SCENEPLUG_H
 
 #include "Gaffer/TypedObjectPlug.h"
 #include "Gaffer/TypedPlug.h"
@@ -192,4 +192,4 @@ typedef Gaffer::FilteredRecursiveChildIterator<Gaffer::PlugPredicate<Gaffer::Plu
 
 std::ostream &operator << ( std::ostream &o, const GafferScene::ScenePlug::ScenePath &path );
 
-#endif // GAFFER_SCENEPLUG_H
+#endif // GAFFERSCENE_SCENEPLUG_H

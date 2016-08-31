@@ -133,7 +133,29 @@ void Gadget::setVisible( bool visible )
 		return;
 	}
 	m_visible = visible;
+
+	Gadget *p = parent<Gadget>();
+	if( !p || p->visible() )
+	{
+		emitDescendantVisibilityChanged();
+		visibilityChangedSignal()( this );
+	}
  	requestRender();
+}
+
+void Gadget::emitDescendantVisibilityChanged()
+{
+	for( GadgetIterator it( this ); !it.done(); ++it )
+	{
+		if( !(*it)->getVisible() )
+		{
+			// The overally visibility of hidden children
+			// is unaffected by parent visibility.
+			continue;
+		}
+		(*it)->emitDescendantVisibilityChanged();
+		(*it)->visibilityChangedSignal()( it->get() );
+	}
 }
 
 bool Gadget::getVisible() const
@@ -153,6 +175,11 @@ bool Gadget::visible( Gadget *relativeTo )
 		g = g->parent<Gadget>();
 	}
 	return true;
+}
+
+Gadget::VisibilityChangedSignal &Gadget::visibilityChangedSignal()
+{
+	return m_visibilityChangedSignal;
 }
 
 void Gadget::setHighlighted( bool highlighted )

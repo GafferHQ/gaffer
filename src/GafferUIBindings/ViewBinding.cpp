@@ -97,6 +97,12 @@ void registerView2( IECore::TypeId nodeType, const std::string &plugPath, object
 	View::registerView( nodeType, plugPath, ViewCreator( creator ) );
 }
 
+ViewPtr create( Gaffer::PlugPtr input )
+{
+	IECorePython::ScopedGILRelease gilRelease;
+	return View::create( input );
+}
+
 } // namespace
 
 Gaffer::NodePtr GafferUIBindings::getPreprocessor( View &v )
@@ -114,7 +120,7 @@ void GafferUIBindings::bindView()
 		.def( "viewportGadget", (ViewportGadget *(View::*)())&View::viewportGadget, return_value_policy<IECorePython::CastToIntrusivePtr>() )
 		.def( "_setPreprocessor", &View::setPreprocessor )
 		.def( "_getPreprocessor", &getPreprocessor )
-		.def( "create", &View::create )
+		.def( "create", &create )
 		.staticmethod( "create" )
 		.def( "registerView", &registerView1 )
 		.def( "registerView", &registerView2 )

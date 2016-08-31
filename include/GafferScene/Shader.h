@@ -103,11 +103,14 @@ class Shader : public Gaffer::DependencyNode
 		/// outPlug().
 		virtual void affects( const Gaffer::Plug *input, AffectedPlugsContainer &outputs ) const;
 
-		/// Returns a hash representing the result of attributes().
+		/// \deprecated Use ShaderPlug::attributesHash() instead.
+		/// \todo Protect these methods, and enforce access via the
+		/// ShaderPlug methods - this would be consistent with our
+		/// other APIs where nodes provide the engine, but plugs
+		/// provide the interface.
 		IECore::MurmurHash attributesHash() const;
 		virtual void attributesHash( IECore::MurmurHash &h ) const;
-		/// Returns a block of attributes representing this
-		/// shader, suitable for use in ScenePlug::attributesPlug().
+		/// \deprecated See above.
 		virtual IECore::ConstCompoundObjectPtr attributes() const;
 
 		/// \deprecated

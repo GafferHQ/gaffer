@@ -39,6 +39,7 @@
 #define GAFFERIMAGEUI_IMAGEVIEW_H
 
 #include "Gaffer/NumericPlug.h"
+#include "Gaffer/TypedPlug.h"
 
 #include "GafferUI/View.h"
 

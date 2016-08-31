@@ -34,11 +34,6 @@
 //
 //////////////////////////////////////////////////////////////////////////
 
-#include "Gaffer/Dot.h"
-#include "Gaffer/SubGraph.h"
-
-#include "GafferScene/ShaderSwitch.h"
-
 #include "GafferArnold/ArnoldDisplacement.h"
 #include "GafferArnold/ArnoldShader.h"
 
@@ -61,7 +56,7 @@ ArnoldDisplacement::ArnoldDisplacement( const std::string &name )
 	:	Shader( name )
 {
 	storeIndexOfNextChild( g_firstPlugIndex );
-	addChild( new Plug( "map" ) );
+	addChild( new ShaderPlug( "map" ) );
 	addChild( new FloatPlug( "height", Plug::In, 1.0f ) );
 	addChild( new FloatPlug( "padding", Plug::In, 0.0f, 0.0f ) );
 	addChild( new FloatPlug( "zeroValue" ) );
@@ -73,14 +68,14 @@ ArnoldDisplacement::~ArnoldDisplacement()
 {
 }
 
-Gaffer::Plug *ArnoldDisplacement::mapPlug()
+GafferScene::ShaderPlug *ArnoldDisplacement::mapPlug()
 {
-	return getChild<Plug>( g_firstPlugIndex );
+	return getChild<ShaderPlug>( g_firstPlugIndex );
 }
 
-const Gaffer::Plug *ArnoldDisplacement::mapPlug() const
+const GafferScene::ShaderPlug *ArnoldDisplacement::mapPlug() const
 {
-	return getChild<Plug>( g_firstPlugIndex );
+	return getChild<ShaderPlug>( g_firstPlugIndex );
 }
 
 Gaffer::FloatPlug *ArnoldDisplacement::heightPlug()
@@ -141,10 +136,7 @@ void ArnoldDisplacement::attributesHash( IECore::MurmurHash &h ) const
 		return;
 	}
 
-	if( const ArnoldShader *arnoldShader = runTimeCast<const ArnoldShader>( mapPlug()->source<Plug>()->node() ) )
-	{
-		arnoldShader->attributesHash( h );
-	}
+	h.append( mapPlug()->attributesHash() );
 	heightPlug()->hash( h );
 	paddingPlug()->hash( h );
 	zeroValuePlug()->hash( h );
@@ -160,15 +152,12 @@ IECore::ConstCompoundObjectPtr ArnoldDisplacement::attributes() const
 	}
 
 	CompoundObject::ObjectMap &m = result->members();
-	if( const ArnoldShader *arnoldShader = runTimeCast<const ArnoldShader>( mapPlug()->source<Plug>()->node() ) )
+	m = mapPlug()->attributes()->members();
+	CompoundObject::ObjectMap::iterator it = m.find( g_surfaceAttributeName );
+	if( it != m.end() )
 	{
-		m = arnoldShader->attributes()->members();
-		CompoundObject::ObjectMap::iterator it = m.find( g_surfaceAttributeName );
-		if( it != m.end() )
-		{
-			m[g_mapAttributeName] = it->second;
-			m.erase( it );
-		}
+		m[g_mapAttributeName] = it->second;
+		m.erase( it );
 	}
 
 	m[g_heightAttributeName] = new FloatData( heightPlug()->getValue() );
@@ -193,17 +182,10 @@ bool ArnoldDisplacement::acceptsInput( const Gaffer::Plug *plug, const Gaffer::P
 
 	if( plug == mapPlug() )
 	{
-		const Node *sourceNode = inputPlug->source<Plug>()->node();
-		if(
-			runTimeCast<const ArnoldShader>( sourceNode ) ||
-			runTimeCast<const SubGraph>( sourceNode ) ||
-			runTimeCast<const ShaderSwitch>( sourceNode ) ||
-			runTimeCast<const Dot>( sourceNode )
-		)
+		if( const GafferScene::Shader *shader = runTimeCast<const GafferScene::Shader>( inputPlug->source<Plug>()->node() ) )
 		{
-			return true;
+			return runTimeCast<const ArnoldShader>( shader );
 		}
-		return false;
 	}
 
 	return true;

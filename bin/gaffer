@@ -153,7 +153,8 @@ if [[ -z $APPLESEED && -d $GAFFER_ROOT/appleseed ]] ; then
 		export PYTHONPATH=$appleseedPython:$PYTHONPATH
 	done
 
-	export APPLESEED_SEARCHPATH=$APPLESEED/shaders:$GAFFER_ROOT/appleseedDisplays
+	export OSL_SHADER_PATHS=$APPLESEED/shaders:$OSL_SHADER_PATHS
+	export APPLESEED_SEARCHPATH=$OSL_SHADER_PATHS:$GAFFER_ROOT/appleseedDisplays
 
 	export PATH=$APPLESEED/bin:$PATH
 

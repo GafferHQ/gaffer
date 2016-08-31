@@ -46,6 +46,7 @@ enum TypeId
 	AppleseedAttributesTypeId = 110452,
 	AppleseedLightTypeId = 110453,
 	InteractiveAppleseedRenderTypeId = 110454,
+	AppleseedShaderAdaptorTypeId = 110455,
 
 	LastTypeId = 110500
 };

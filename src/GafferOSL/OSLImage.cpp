@@ -38,11 +38,7 @@
 #include "IECore/CompoundData.h"
 
 #include "Gaffer/Context.h"
-#include "Gaffer/SubGraph.h"
-#include "Gaffer/Dot.h"
 #include "Gaffer/StringPlug.h"
-
-#include "GafferScene/ShaderSwitch.h"
 
 #include "GafferOSL/OSLImage.h"
 #include "GafferOSL/OSLShader.h"
@@ -64,7 +60,7 @@ OSLImage::OSLImage( const std::string &name )
 {
 	storeIndexOfNextChild( g_firstPlugIndex );
 
-	addChild( new Plug( "shader" ) );
+	addChild( new GafferScene::ShaderPlug( "shader" ) );
 
 	addChild( new Gaffer::ObjectPlug( "__shading", Gaffer::Plug::Out, new CompoundData() ) );
 
@@ -83,14 +79,14 @@ OSLImage::~OSLImage()
 {
 }
 
-Gaffer::Plug *OSLImage::shaderPlug()
+GafferScene::ShaderPlug *OSLImage::shaderPlug()
 {
-	return getChild<Plug>( g_firstPlugIndex );
+	return getChild<GafferScene::ShaderPlug>( g_firstPlugIndex );
 }
 
-const Gaffer::Plug *OSLImage::shaderPlug() const
+const GafferScene::ShaderPlug *OSLImage::shaderPlug() const
 {
-	return getChild<Plug>( g_firstPlugIndex );
+	return getChild<GafferScene::ShaderPlug>( g_firstPlugIndex );
 }
 
 Gaffer::ObjectPlug *OSLImage::shadingPlug()
@@ -132,25 +128,11 @@ bool OSLImage::acceptsInput( const Gaffer::Plug *plug, const Gaffer::Plug *input
 
 	if( plug == shaderPlug() )
 	{
-		const Node *sourceNode = inputPlug->source<Plug>()->node();
-		if( const OSLShader *shader = runTimeCast<const OSLShader>( sourceNode ) )
+		if( const GafferScene::Shader *shader = runTimeCast<const GafferScene::Shader>( inputPlug->source<Plug>()->node() ) )
 		{
-			return shader->typePlug()->getValue() == "osl:surface";
+			const OSLShader *oslShader = runTimeCast<const OSLShader>( shader );
+			return oslShader && oslShader->typePlug()->getValue() == "osl:surface";
 		}
-		else
-		{
-			// as for the GafferScene::ShaderAssignment, we accept SubGraph and ShaderSwitch
-			// and Dot inputs as an indirect means of later getting a connection to a Shader.
-			if(
-				runTimeCast<const Gaffer::SubGraph>( sourceNode ) ||
-				runTimeCast<const GafferScene::ShaderSwitch>( sourceNode ) ||
-				runTimeCast<const Dot>( sourceNode )
-			)
-			{
-				return true;
-			}
-		}
-		return false;
 	}
 
 	return true;

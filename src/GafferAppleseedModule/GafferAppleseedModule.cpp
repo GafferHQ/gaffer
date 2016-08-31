@@ -42,6 +42,7 @@
 #include "GafferAppleseed/AppleseedAttributes.h"
 #include "GafferAppleseed/AppleseedLight.h"
 #include "GafferAppleseed/InteractiveAppleseedRender.h"
+#include "GafferAppleseed/AppleseedShaderAdaptor.h"
 
 using namespace boost::python;
 using namespace GafferAppleseed;
@@ -56,5 +57,6 @@ BOOST_PYTHON_MODULE( _GafferAppleseed )
 	GafferBindings::DependencyNodeClass<AppleseedOptions>();
 	GafferBindings::DependencyNodeClass<AppleseedAttributes>();
 	GafferBindings::NodeClass<InteractiveAppleseedRender>();
+	GafferBindings::DependencyNodeClass<AppleseedShaderAdaptor>();
 
 }

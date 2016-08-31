@@ -35,12 +35,7 @@
 //
 //////////////////////////////////////////////////////////////////////////
 
-#include "Gaffer/Box.h"
-#include "Gaffer/Dot.h"
-
 #include "GafferScene/ShaderAssignment.h"
-#include "GafferScene/Shader.h"
-#include "GafferScene/ShaderSwitch.h"
 
 using namespace IECore;
 using namespace Gaffer;
@@ -54,7 +49,7 @@ ShaderAssignment::ShaderAssignment( const std::string &name )
 	:	SceneElementProcessor( name )
 {
 	storeIndexOfNextChild( g_firstPlugIndex );
-	addChild( new Plug( "shader" ) );
+	addChild( new ShaderPlug( "shader" ) );
 
 	// Fast pass-throughs for the things we don't alter.
 	outPlug()->objectPlug()->setInput( inPlug()->objectPlug() );
@@ -66,14 +61,14 @@ ShaderAssignment::~ShaderAssignment()
 {
 }
 
-Gaffer::Plug *ShaderAssignment::shaderPlug()
+GafferScene::ShaderPlug *ShaderAssignment::shaderPlug()
 {
-	return getChild<Plug>( g_firstPlugIndex );
+	return getChild<ShaderPlug>( g_firstPlugIndex );
 }
 
-const Gaffer::Plug *ShaderAssignment::shaderPlug() const
+const GafferScene::ShaderPlug *ShaderAssignment::shaderPlug() const
 {
-	return getChild<Plug>( g_firstPlugIndex );
+	return getChild<ShaderPlug>( g_firstPlugIndex );
 }
 
 void ShaderAssignment::affects( const Gaffer::Plug *input, AffectedPlugsContainer &outputs ) const
@@ -86,44 +81,6 @@ void ShaderAssignment::affects( const Gaffer::Plug *input, AffectedPlugsContaine
 	}
 }
 
-bool ShaderAssignment::acceptsInput( const Gaffer::Plug *plug, const Gaffer::Plug *inputPlug ) const
-{
-	if( !SceneElementProcessor::acceptsInput( plug, inputPlug ) )
-	{
-		return false;
-	}
-
-	if( !inputPlug )
-	{
-		return true;
-	}
-
-	if( plug == shaderPlug() )
-	{
-		const Node *sourceNode = inputPlug->source<Plug>()->node();
-		// we only really want to accept connections from
-		// shaders, because we can't assign anything else.
-		// but we also accept the unconnected inputs and outputs
-		// of subgraphs, so you can wrap shader assignments in boxes
-		// prior to connecting the other side. the same goes for
-		// shader switches - if a connection source is a switch,
-		// then that means the switch hasn't had a shader connected
-		// into it yet, but we'd still like to accept the connection
-		// in anticipation of a shader being connected later.
-		if(
-			runTimeCast<const Shader>( sourceNode ) ||
-			runTimeCast<const SubGraph>( sourceNode ) ||
-			runTimeCast<const ShaderSwitch>( sourceNode ) ||
-			runTimeCast<const Dot>( sourceNode )
-		)
-		{
-			return true;
-		}
-		return false;
-	}
-	return true;
-}
-
 bool ShaderAssignment::processesAttributes() const
 {
 	return true;
@@ -131,22 +88,12 @@ bool ShaderAssignment::processesAttributes() const
 
 void ShaderAssignment::hashProcessedAttributes( const ScenePath &path, const Gaffer::Context *context, IECore::MurmurHash &h ) const
 {
-	const Shader *shader = shaderPlug()->source<Plug>()->ancestor<Shader>();
-	if( shader )
-	{
-		shader->attributesHash( h );
-	}
+	h.append( shaderPlug()->attributesHash() );
 }
 
 IECore::ConstCompoundObjectPtr ShaderAssignment::computeProcessedAttributes( const ScenePath &path, const Gaffer::Context *context, IECore::ConstCompoundObjectPtr inputAttributes ) const
 {
-	const Shader *shader = shaderPlug()->source<Plug>()->ancestor<Shader>();
-	if( !shader )
-	{
-		return inputAttributes;
-	}
-
-	ConstCompoundObjectPtr attributes = shader->attributes();
+	ConstCompoundObjectPtr attributes = shaderPlug()->attributes();
 	if( attributes->members().empty() )
 	{
 		return inputAttributes;

@@ -38,6 +38,7 @@
 #define GAFFERARNOLD_ARNOLDDISPLACEMENT_H
 
 #include "GafferScene/Shader.h"
+#include "GafferScene/ShaderPlug.h"
 
 #include "GafferArnold/TypeIds.h"
 
@@ -60,8 +61,8 @@ class ArnoldDisplacement : public GafferScene::Shader
 
 		IE_CORE_DECLARERUNTIMETYPEDEXTENSION( GafferArnold::ArnoldDisplacement, ArnoldDisplacementTypeId, GafferScene::Shader );
 
-		Gaffer::Plug *mapPlug();
-		const Gaffer::Plug *mapPlug() const;
+		GafferScene::ShaderPlug *mapPlug();
+		const GafferScene::ShaderPlug *mapPlug() const;
 
 		Gaffer::FloatPlug *heightPlug();
 		const Gaffer::FloatPlug *heightPlug() const;

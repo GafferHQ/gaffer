@@ -35,6 +35,8 @@
 #
 ##########################################################################
 
+__import__( "GafferImageUI" )
+
 from _GafferSceneUI import *
 
 from SceneHierarchy import SceneHierarchy
@@ -68,6 +70,7 @@ import MapOffsetUI
 import CustomAttributesUI
 import CustomOptionsUI
 import SceneViewUI
+import ShaderViewUI
 import SceneSwitchUI
 import ShaderSwitchUI
 import ShaderAssignmentUI
@@ -121,6 +124,7 @@ import SceneLoopUI
 import FilterProcessorUI
 import MeshToPointsUI
 import RenderUI
+import ShaderBallUI
 
 # then all the PathPreviewWidgets. note that the order
 # of import controls the order of display.
