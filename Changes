@@ -6,6 +6,8 @@ UI
 
 - Viewer
   - Added interactive shader swatches (#1828).
+  - Added visualisation of Arnold spotlight lens radius (#1835).
+  - Fixed visualisation of lights aligned to camera (#1835).
 - NodeGraph
   - Added "Move To" menu items for Dot nodes.
 - InteractiveRender
@@ -14,8 +16,10 @@ UI
 Scene
 -----
 
-- Fixed FilterSwitch serialisation bug (#1814, #1815).
+- Added LightTweaks node (#1829).
 - Added ShaderBall node (#1828).
+- Added CopyOptions node (#1834).
+- Fixed FilterSwitch serialisation bug (#1814, #1815).
 
 Arnold
 ------
