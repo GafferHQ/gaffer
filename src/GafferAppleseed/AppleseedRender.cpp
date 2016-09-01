@@ -34,32 +34,18 @@
 //
 //////////////////////////////////////////////////////////////////////////
 
-#include "boost/python.hpp"
-
-#include "GafferBindings/DependencyNodeBinding.h"
-#include "GafferDispatchBindings/TaskNodeBinding.h"
-
-#include "GafferAppleseed/AppleseedOptions.h"
-#include "GafferAppleseed/AppleseedAttributes.h"
-#include "GafferAppleseed/AppleseedLight.h"
-#include "GafferAppleseed/InteractiveAppleseedRender.h"
-#include "GafferAppleseed/AppleseedShaderAdaptor.h"
 #include "GafferAppleseed/AppleseedRender.h"
 
-using namespace boost::python;
+using namespace GafferScene;
 using namespace GafferAppleseed;
 
-BOOST_PYTHON_MODULE( _GafferAppleseed )
+IE_CORE_DEFINERUNTIMETYPED( AppleseedRender );
+
+AppleseedRender::AppleseedRender( const std::string &name )
+	:	Render( "IECoreAppleseed::Renderer", name )
 {
+}
 
-	GafferBindings::NodeClass<AppleseedLight>()
-		.def( "loadShader", (void (AppleseedLight::*)( const std::string & ) )&AppleseedLight::loadShader )
-	;
-
-	GafferBindings::DependencyNodeClass<AppleseedOptions>();
-	GafferBindings::DependencyNodeClass<AppleseedAttributes>();
-	GafferBindings::NodeClass<InteractiveAppleseedRender>();
-	GafferBindings::DependencyNodeClass<AppleseedShaderAdaptor>();
-	GafferDispatchBindings::TaskNodeClass<AppleseedRender>();
-
+AppleseedRender::~AppleseedRender()
+{
 }
