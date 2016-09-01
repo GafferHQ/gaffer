@@ -1041,6 +1041,38 @@ class RendererTest( GafferTest.TestCase ) :
 			self.assertEqual( arnold.AiNodeEntryGetName( arnold.AiNodeGetNodeEntry( noise ) ), "Noise" )
 			self.assertEqual( arnold.AiNodeGetFlt( noise, "scale" ), 10.0 )
 
+	def testPureOSLShaders( self ) :
+
+		r = GafferScene.Private.IECoreScenePreview.Renderer.create(
+			"IECoreArnold::Renderer",
+			GafferScene.Private.IECoreScenePreview.Renderer.RenderType.SceneDescription,
+			self.temporaryDirectory() + "/test.ass"
+		)
+
+		network = IECore.ObjectVector( [ IECore.Shader( "Pattern/Noise", "osl:shader" ) ] )
+
+		o = r.object(
+			"testPlane",
+			IECore.MeshPrimitive.createPlane( IECore.Box2f( IECore.V2f( -1 ), IECore.V2f( 1 ) ) ),
+			r.attributes( IECore.CompoundObject( { "osl:shader" : network } ) )
+		)
+
+		r.render()
+		del o
+		del r
+
+		with IECoreArnold.UniverseBlock() :
+
+			arnold.AiASSLoad( self.temporaryDirectory() + "/test.ass" )
+
+			options = arnold.AiUniverseGetOptions()
+			self.assertTrue( "shaders/Pattern:" in arnold.AiNodeGetStr( options, "shader_searchpath" ) )
+
+			n = arnold.AiNodeLookUpByName( "testPlane" )
+
+			noise = arnold.AtNode.from_address( arnold.AiNodeGetPtr( n, "shader" ) )
+			self.assertEqual( arnold.AiNodeEntryGetName( arnold.AiNodeGetNodeEntry( noise ) ), "Noise" )
+
 	@staticmethod
 	def __m44f( m ) :
 
