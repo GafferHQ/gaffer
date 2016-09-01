@@ -46,19 +46,132 @@
 #include "IECore/ClippingPlane.h"
 #include "IECore/NullObject.h"
 #include "IECore/VisibleRenderable.h"
+#include "IECore/Shader.h"
 
 #include "Gaffer/Context.h"
+#include "Gaffer/Metadata.h"
 
 #include "GafferScene/SceneAlgo.h"
 #include "GafferScene/Filter.h"
 #include "GafferScene/ScenePlug.h"
 #include "GafferScene/PathMatcher.h"
 
+
+
 using namespace std;
 using namespace Imath;
 using namespace IECore;
 using namespace Gaffer;
 using namespace GafferScene;
+
+namespace 
+{
+
+	// TODO: copied from src/GafferSceneUI/StandardLightVisualiser.cpp
+	// Should this live somewhere central?  I think John talked about using the same functionality
+	// to drive light manipulators?
+	template<typename T>
+	T parameter( InternedString metadataTarget, const IECore::CompoundData *parameters, InternedString parameterNameMetadata, T defaultValue )
+	{
+		ConstStringDataPtr parameterName = Metadata::value<StringData>( metadataTarget, parameterNameMetadata );
+		if( !parameterName )
+		{
+			return defaultValue;
+		}
+
+		typedef IECore::TypedData<T> DataType;
+		if( const DataType *parameterData = parameters->member<DataType>( parameterName->readable() ) )
+		{
+			return parameterData->readable();
+		}
+
+		return defaultValue;
+	}
+
+	// TODO: John where should I put this?
+	IECore::CameraPtr convertLightToCamera( const IECore::CompoundObject *attributes, const IECore::CompoundObject *globals )
+	{
+		for( IECore::CompoundObject::ObjectMap::const_iterator it = attributes->members().begin();
+			it != attributes->members().end(); it++ )
+		{
+			const std::string &attributeName = it->first.string();
+			if( !( boost::ends_with( attributeName, ":light" ) || attributeName == "light" ) )
+			{
+				continue;
+			}
+
+			const IECore::ObjectVector *shaderVector = IECore::runTimeCast<const IECore::ObjectVector>( it->second.get() );
+			if( !shaderVector || shaderVector->members().empty() )
+			{
+				continue;
+			}
+
+			IECore::InternedString shaderName;
+			const IECore::Shader *shader = IECore::runTimeCast<const IECore::Shader>( shaderVector->members().back().get() );
+			if( !shader )
+			{
+				continue;
+			}
+
+
+			std::string metadataTarget = attributeName + ":" + shader->getName();
+			const IECore::CompoundData *shaderParameters = shader->parametersData();
+			ConstStringDataPtr type = Metadata::value<StringData>( metadataTarget, "type" );
+
+			if( !type || !shaderParameters )
+			{
+				continue;
+			}
+
+
+
+			IECore::CameraPtr result = new IECore::Camera();
+
+
+			float screenWindowScale = 1.0f;
+			if( type->readable() == "distant" )
+			{
+			    const float locatorScale = parameter<float>( metadataTarget, shaderParameters, "locatorScaleParameter", 1 );
+				
+				result->parameters()["projection"] = new StringData( "orthographic" );
+				screenWindowScale = locatorScale;
+			}
+			else if( type->readable() == "spot" )
+			{
+				float coneAngle = parameter<float>( metadataTarget, shaderParameters, "coneAngleParameter", -1.0f );
+				result->parameters()["projection"] = new StringData( "perspective" );
+				result->parameters()["projection:fov"] = new FloatData( coneAngle );
+			}
+			else
+			{
+				return NULL;
+			}
+
+			V2i resolution( 640, 480 );
+			float pixelAspectRatio = 1.0f;
+			if( const V2iData *resolutionData = globals->member<V2iData>( "option:render:resolution" ) )
+			{
+				resolution = resolutionData->readable();
+			}
+
+			if( const FloatData *pixelAspectRatioData = globals->member<FloatData>( "option:render:pixelAspectRatio" ) )
+			{
+				pixelAspectRatio = pixelAspectRatioData->readable();
+			}
+
+			float aspectRatio = ((float)resolution.x * pixelAspectRatio)/(float)resolution.y;
+			Box2f screenWindow( screenWindowScale * V2f( -aspectRatio, -1.0f ), screenWindowScale * V2f( aspectRatio, 1.0f ) );
+
+			result->parameters()["screenWindow"] = new Box2fData( screenWindow );
+
+
+			return result;
+
+		}
+
+		return NULL;
+	}
+}
 
 bool GafferScene::exists( const ScenePlug *scene, const ScenePlug::ScenePath &path )
 {
@@ -410,9 +523,15 @@ IECore::CameraPtr GafferScene::camera( const ScenePlug *scene, const ScenePlug::
 	}
 
 	IECore::ConstCameraPtr constCamera = runTimeCast<const IECore::Camera>( scene->object( cameraPath ) );
+	
 	if( !constCamera )
 	{
-		std::string path; ScenePlug::pathToString( cameraPath, path );
+		// If there's no actual camera here, see if there is a light attribute that we can make a camera from
+		constCamera = convertLightToCamera( scene->attributes( cameraPath ).get(), globals );
+	}
+
+	if( !constCamera )
+	{
 		throw IECore::Exception( "Location \"" + cameraName + "\" is not a camera" );
 	}
 
