@@ -129,6 +129,7 @@ enum TypeId
 	SceneLoopTypeId = 110584,
 	RenderTypeId = 110585,
 	FilterPlugTypeId = 110586,
+	CopyOptionsTypeId = 110587,
 
 	PreviewInteractiveRenderTypeId = 110649,
 
