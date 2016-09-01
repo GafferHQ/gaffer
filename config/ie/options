@@ -225,7 +225,7 @@ LOCATE_DEPENDENCY_PYTHONPATH = [
 
 LOCATE_DEPENDENCY_RESOURCESPATH = [
 
-	os.path.join( IEEnv.Environment.rootPath(), "apps", "gafferResources", "0.27.0.0", "resources" ),
+	os.path.join( IEEnv.Environment.rootPath(), "apps", "gafferResources", "0.28.0.0", "resources" ),
 
 ]
 
