@@ -47,32 +47,12 @@ Gaffer.Metadata.registerNode(
 	"description",
 	"""
 	Performs offline batch rendering using the
-	appleseed renderer. This is done in two phases -
-	first the scene geometry is exported to mesh files and an appleseed project
-	is generated, and then appleseed is invoked to render it.
+	appleseed renderer, or optionally generates
+	appleseed projects for later rendering using a SystemCommand
+	node.
 	""",
 
 	plugs = {
-
-		"mode" : [
-
-			"description",
-			"""
-			When in the standard "Render" mode, an appleseed project
-			is generated and then renderered in appleseed.
-			Alternatively, just the appleseed project can be generated
-			and then another method can be used to post-process
-			it or launch the render - a SystemCommand node may
-			be useful for this.
-			""",
-
-			"preset:Render", "render",
-			"preset:Generate .appleseed only", "generate",
-
-			"nodule:type", "",
-			"plugValueWidget:type", "GafferUI.PresetsPlugValueWidget",
-
-		],
 
 		"fileName" : [
 
@@ -86,24 +66,6 @@ Gaffer.Metadata.registerNode(
 			"pathPlugValueWidget:leaf", True,
 			"pathPlugValueWidget:bookmarks", "appleseed",
 			"fileSystemPathPlugValueWidget:extensions", IECore.StringVectorData( [ "appleseed" ] ),
-
-		],
-
-		"verbosity" : [
-
-			"description",
-			"""
-			Controls the verbosity of the appleseed renderer output.
-			""",
-
-			"preset:Fatal", "fatal",
-			"preset:Error", "error",
-			"preset:Warning", "warning",
-			"preset:Debug", "debug",
-			"preset:Info", "info",
-
-			"nodule:type", "",
-			"plugValueWidget:type", "GafferUI.PresetsPlugValueWidget",
 
 		],
 

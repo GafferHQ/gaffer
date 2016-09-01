@@ -61,6 +61,10 @@ AppleseedAttributes::AppleseedAttributes( const std::string &name )
 
 	// alpha map parameters
 	attributes->addOptionalMember( "as:alpha_map", new IECore::StringData(), "alphaMap", Gaffer::Plug::Default, false );
+
+	// mesh parameters
+	attributes->addOptionalMember( "as:smooth_normals", new IECore::BoolData(), "smoothNormals", Gaffer::Plug::Default, false );
+	attributes->addOptionalMember( "as:smooth_tangents", new IECore::BoolData(), "smoothTangents", Gaffer::Plug::Default, false );
 }
 
 AppleseedAttributes::~AppleseedAttributes()

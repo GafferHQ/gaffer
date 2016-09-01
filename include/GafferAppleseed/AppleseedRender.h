@@ -1,6 +1,6 @@
 //////////////////////////////////////////////////////////////////////////
 //
-//  Copyright (c) 2014, Esteban Tovagliari. All rights reserved.
+//  Copyright (c) 2016, Esteban Tovagliari. All rights reserved.
 //
 //  Redistribution and use in source and binary forms, with or without
 //  modification, are permitted provided that the following conditions are
@@ -34,32 +34,30 @@
 //
 //////////////////////////////////////////////////////////////////////////
 
-#include "boost/python.hpp"
+#ifndef GAFFERAPPLESEED_APPLESEEDRENDER_H
+#define GAFFERAPPLESEED_APPLESEEDRENDER_H
 
-#include "GafferBindings/DependencyNodeBinding.h"
-#include "GafferDispatchBindings/TaskNodeBinding.h"
+#include "GafferScene/Preview/Render.h"
 
-#include "GafferAppleseed/AppleseedOptions.h"
-#include "GafferAppleseed/AppleseedAttributes.h"
-#include "GafferAppleseed/AppleseedLight.h"
-#include "GafferAppleseed/InteractiveAppleseedRender.h"
-#include "GafferAppleseed/AppleseedShaderAdaptor.h"
-#include "GafferAppleseed/AppleseedRender.h"
+#include "GafferAppleseed/TypeIds.h"
 
-using namespace boost::python;
-using namespace GafferAppleseed;
-
-BOOST_PYTHON_MODULE( _GafferAppleseed )
+namespace GafferAppleseed
 {
 
-	GafferBindings::NodeClass<AppleseedLight>()
-		.def( "loadShader", (void (AppleseedLight::*)( const std::string & ) )&AppleseedLight::loadShader )
-	;
+class AppleseedRender : public GafferScene::Preview::Render
+{
 
-	GafferBindings::DependencyNodeClass<AppleseedOptions>();
-	GafferBindings::DependencyNodeClass<AppleseedAttributes>();
-	GafferBindings::NodeClass<InteractiveAppleseedRender>();
-	GafferBindings::DependencyNodeClass<AppleseedShaderAdaptor>();
-	GafferDispatchBindings::TaskNodeClass<AppleseedRender>();
+	public :
 
-}
+		AppleseedRender( const std::string &name=defaultName<AppleseedRender>() );
+		virtual ~AppleseedRender();
+
+		IE_CORE_DECLARERUNTIMETYPEDEXTENSION( GafferAppleseed::AppleseedRender, AppleseedRenderTypeId, GafferScene::Preview::Render );
+
+};
+
+IE_CORE_DECLAREPTR( AppleseedRender );
+
+} // namespace GafferAppleseed
+
+#endif // GAFFERAPPLESEED_APPLESEEDRENDER_H

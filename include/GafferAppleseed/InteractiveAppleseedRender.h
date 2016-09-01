@@ -37,14 +37,14 @@
 #ifndef GAFFERSCENE_INTERACTIVEAPPLESEEDRENDER_H
 #define GAFFERSCENE_INTERACTIVEAPPLESEEDRENDER_H
 
-#include "GafferScene/InteractiveRender.h"
+#include "GafferScene/Preview/InteractiveRender.h"
 
 #include "GafferAppleseed/TypeIds.h"
 
 namespace GafferAppleseed
 {
 
-class InteractiveAppleseedRender : public GafferScene::InteractiveRender
+class InteractiveAppleseedRender : public GafferScene::Preview::InteractiveRender
 {
 
 	public :
@@ -52,12 +52,7 @@ class InteractiveAppleseedRender : public GafferScene::InteractiveRender
 		InteractiveAppleseedRender( const std::string &name=defaultName<InteractiveAppleseedRender>() );
 		virtual ~InteractiveAppleseedRender();
 
-		IE_CORE_DECLARERUNTIMETYPEDEXTENSION( GafferAppleseed::InteractiveAppleseedRender, InteractiveAppleseedRenderTypeId, GafferScene::InteractiveRender );
-
-	protected :
-
-		/// Must be implemented by derived classes to return the renderer that will be used.
-		virtual IECore::RendererPtr createRenderer() const;
+		IE_CORE_DECLARERUNTIMETYPEDEXTENSION( GafferAppleseed::InteractiveAppleseedRender, InteractiveAppleseedRenderTypeId, GafferScene::Preview::InteractiveRender );
 
 };
 

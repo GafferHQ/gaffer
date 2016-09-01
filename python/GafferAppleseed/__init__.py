@@ -48,6 +48,7 @@ def __setupEnvironment() :
 		e = prefix + e
 		os.environ[envVar] = os.path.expandvars( e )
 
+	prependToPath( "APPLESEED_SEARCHPATH", "$GAFFER_ROOT/shaders" )
 	prependToPath( "APPLESEED_SEARCHPATH", "$GAFFER_ROOT/appleseed/displays" )
 
 __setupEnvironment()
