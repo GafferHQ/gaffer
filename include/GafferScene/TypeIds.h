@@ -131,6 +131,7 @@ enum TypeId
 	FilterPlugTypeId = 110586,
 	LightTweaksTypeId = 110587,
 	LightTweaksTweakPlugTypeId = 110588,
+	CopyOptionsTypeId = 110589,
 
 	PreviewInteractiveRenderTypeId = 110649,
 
