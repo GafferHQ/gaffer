@@ -55,7 +55,6 @@ __setupEnvironment()
 
 from _GafferAppleseed import *
 
-from AppleseedRender import AppleseedRender
 from AppleseedShaderBall import AppleseedShaderBall
 
 __import__( "IECore" ).loadConfig( "GAFFER_STARTUP_PATHS", {}, subdirectory = "GafferAppleseed" )
