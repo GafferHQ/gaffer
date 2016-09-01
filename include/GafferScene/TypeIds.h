@@ -129,6 +129,8 @@ enum TypeId
 	SceneLoopTypeId = 110584,
 	RenderTypeId = 110585,
 	FilterPlugTypeId = 110586,
+	LightTweaksTypeId = 110587,
+	LightTweaksTweakPlugTypeId = 110588,
 
 	PreviewInteractiveRenderTypeId = 110649,
 
