@@ -90,10 +90,18 @@ int freePort()
 	typedef boost::asio::io_service Service;
 	typedef boost::asio::ip::tcp::socket Socket;
 
-	Service service;
+	// It is totally unclear why this would be so, but if we use the
+	// default constructor we get crashes when using `--std=c++11`.
+	// So we use the form that takes a concurrency hint instead. It
+	// doesn't seem to matter what value we pass (we can even pass the
+	// same value used internally by the default constructor), but we
+	// pass 1 because we don't really care about concurrency at all.
+	// An alternative workaround appears to be to make `service` static.
+	Service service( /* concurrency_hint = */ 1 );
 	Resolver resolver( service );
 	Resolver::iterator it = resolver.resolve( Resolver::query( "localhost", "" ) );
 	Socket socket( service, it->endpoint() );
+
 	return socket.local_endpoint().port();
 }
 
