@@ -217,14 +217,7 @@ ShaderView::SceneChangedSignal &ShaderView::sceneChangedSignal()
 void ShaderView::setContext( Gaffer::ContextPtr context )
 {
 	ImageView::setContext( context );
-	if( InteractiveRender *renderer = IECore::runTimeCast<InteractiveRender>( m_renderer.get() ) )
-	{
-		renderer->setContext( context );
-	}
-	else if( Preview::InteractiveRender *renderer = IECore::runTimeCast<Preview::InteractiveRender>( m_renderer.get() ) )
-	{
-		renderer->setContext( context );
-	}
+	updateRendererContext();
 }
 
 void ShaderView::viewportVisibilityChanged()
@@ -244,8 +237,17 @@ void ShaderView::plugInputChanged( Gaffer::Plug *plug )
 {
 	if( plug == inPlug<Plug>() )
 	{
+		// If we need to make a new renderer node,
+		// then make one.
 		updateRenderer();
+		// Then update the scene if we need to.
 		updateScene();
+		// Finally update the renderer state. We
+		// do this last so that when making a new
+		// renderer, we do not ask it to render
+		// an out-of-date scene prior to it being
+		// updated.
+		updateRendererState();
 	}
 }
 
@@ -275,8 +277,19 @@ void ShaderView::updateRenderer()
 	m_renderer->getChild<ScenePlug>( "in" )->setInput(
 		m_imageConverter->getChild<SceneNode>( "Outputs" )->outPlug()
 	);
+	updateRendererContext();
+}
 
-	updateRendererState();
+void ShaderView::updateRendererContext()
+{
+	if( InteractiveRender *renderer = IECore::runTimeCast<InteractiveRender>( m_renderer.get() ) )
+	{
+		renderer->setContext( getContext() );
+	}
+	else if( Preview::InteractiveRender *renderer = IECore::runTimeCast<Preview::InteractiveRender>( m_renderer.get() ) )
+	{
+		renderer->setContext( getContext() );
+	}
 }
 
 void ShaderView::updateRendererState()

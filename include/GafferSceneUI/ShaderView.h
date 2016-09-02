@@ -92,6 +92,7 @@ class ShaderView : public GafferImageUI::ImageView
 		void plugInputChanged( Gaffer::Plug *plug );
 
 		void updateRenderer();
+		void updateRendererContext();
 		void updateRendererState();
 		void updateScene();
 
