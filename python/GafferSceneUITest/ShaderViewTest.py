@@ -34,6 +34,8 @@
 #
 ##########################################################################
 
+import functools
+
 import IECore
 
 import Gaffer
@@ -162,6 +164,35 @@ class ShaderViewTest( GafferUITest.TestCase ) :
 		self.assertTrue( isinstance( sceneB, GafferScene.ShaderBall ) )
 		self.assertFalse( sceneA.isSame( sceneB ) )
 
+	def testReregisterScene( self ) :
+
+		def shaderBallCreator( resolution ) :
+
+			result = GafferScene.ShaderBall()
+			result["resolution"].setValue( resolution )
+
+			return result
+
+		GafferSceneUI.ShaderView.registerScene( "test", "Default", functools.partial( shaderBallCreator, 16 ) )
+
+		shader = GafferSceneTest.TestShader()
+		shader["type"].setValue( "test:surface" )
+		shader["name"].setValue( "test" )
+
+		view = GafferUI.View.create( shader["out"] )
+		scene1 = view.scene()
+		self.assertEqual( view.scene()["resolution"].getValue(), 16 )
+
+		GafferSceneUI.ShaderView.registerScene( "test", "Default", functools.partial( shaderBallCreator, 32 ) )
+		self.assertFalse( view.scene().isSame( scene1 ) )
+		self.assertEqual( view.scene()["resolution"].getValue(), 32 )
+
+		GafferSceneUI.ShaderView.registerScene( "test", "HiRes", functools.partial( shaderBallCreator, 2048 ) )
+		view["scene"].setValue( "HiRes" )
+		self.assertEqual( view.scene()["resolution"].getValue(), 2048 )
+
+		GafferSceneUI.ShaderView.registerScene( "test", "HiRes", functools.partial( shaderBallCreator, 4096 ) )
+		self.assertEqual( view.scene()["resolution"].getValue(), 4096 )
 
 if __name__ == "__main__":
 	unittest.main()

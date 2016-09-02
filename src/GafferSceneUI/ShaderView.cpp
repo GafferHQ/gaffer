@@ -84,6 +84,13 @@ SceneCreators &sceneCreators()
 	return sc;
 }
 
+typedef boost::signal<void ( const PrefixAndName & )> SceneRegistrationChangedSignal;
+SceneRegistrationChangedSignal &sceneRegistrationChangedSignal()
+{
+	static SceneRegistrationChangedSignal s;
+	return s;
+}
+
 int freePort()
 {
 	typedef boost::asio::ip::tcp::resolver Resolver;
@@ -160,6 +167,7 @@ ShaderView::ShaderView( const std::string &name )
 	viewportGadget()->visibilityChangedSignal().connect( boost::bind( &ShaderView::viewportVisibilityChanged, this ) );
 	plugSetSignal().connect( boost::bind( &ShaderView::plugSet, this, ::_1 ) );
 	plugInputChangedSignal().connect( boost::bind( &ShaderView::plugInputChanged, this, ::_1 ) );
+	sceneRegistrationChangedSignal().connect( boost::bind( &ShaderView::sceneRegistrationChanged, this, ::_1 ) );
 
 }
 
@@ -248,6 +256,16 @@ void ShaderView::plugInputChanged( Gaffer::Plug *plug )
 		// an out-of-date scene prior to it being
 		// updated.
 		updateRendererState();
+	}
+}
+
+void ShaderView::sceneRegistrationChanged( const PrefixAndName &prefixAndName )
+{
+	if( prefixAndName == m_scenePrefixAndName )
+	{
+		m_scenePrefixAndName = PrefixAndName();
+		m_scenes.erase( prefixAndName );
+		updateScene();
 	}
 }
 
@@ -372,7 +390,9 @@ void ShaderView::registerScene( const std::string &shaderPrefix, const std::stri
 
 void ShaderView::registerScene( const std::string &shaderPrefix, const std::string &name, SceneCreator sceneCreator )
 {
-	sceneCreators()[PrefixAndName( shaderPrefix, name)] = sceneCreator;
+	const PrefixAndName prefixAndName( shaderPrefix, name );
+	sceneCreators()[prefixAndName] = sceneCreator;
+	sceneRegistrationChangedSignal()( prefixAndName );
 }
 
 void ShaderView::registeredScenes( const std::string &shaderPrefix, std::vector<std::string> &names )
