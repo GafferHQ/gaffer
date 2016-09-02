@@ -67,6 +67,8 @@ ViewportGadget::ViewportGadget( GadgetPtr primaryChild )
 	  m_cameraEditable( true ),
 	  m_dragTracking( false )
 {
+	// Viewport visibility is managed by GadgetWidgets,
+	setVisible( false );
 
 	setPrimaryChild( primaryChild );
 

@@ -106,6 +106,7 @@ from ReferenceUITest import ReferenceUITest
 from CompoundDataPlugValueWidgetTest import CompoundDataPlugValueWidgetTest
 from GraphGadgetTest import GraphGadgetTest
 from MenuBarTest import MenuBarTest
+from GadgetWidgetTest import GadgetWidgetTest
 
 if __name__ == "__main__":
 	unittest.main()
