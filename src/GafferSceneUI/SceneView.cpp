@@ -60,9 +60,11 @@
 #include "GafferScene/PathMatcherData.h"
 #include "GafferScene/StandardAttributes.h"
 #include "GafferScene/PathFilter.h"
+#include "GafferScene/SetFilter.h"
 #include "GafferScene/Grid.h"
 #include "GafferScene/SceneAlgo.h"
 #include "GafferScene/StandardOptions.h"
+#include "GafferScene/LightToCamera.h"
 
 #include "GafferSceneUI/SceneView.h"
 
@@ -781,14 +783,27 @@ class SceneView::LookThrough : public boost::signals::trackable
 			lookThrough->addChild( new StringPlug( "camera", Plug::In, "", Plug::Default & ~Plug::AcceptsInputs ) );
 			view->addChild( lookThrough );
 
-			// Set up our nodes. We use a standard options node to disable camera motion blur
+			// Set up our nodes.
+			// We use a LightToCamera node filtered to all lights to create camera standins so that we can
+			// look through lights
+			SetFilterPtr lightFilter = new SetFilter;
+			lightFilter->setPlug()->setValue( "__lights" );
+			
+			LightToCameraPtr lightConverter = new LightToCamera;
+			lightConverter->inPlug()->setInput( view->inPlug<ScenePlug>() );
+			lightConverter->filterPlug()->setInput( lightFilter->outPlug() );
+
+			m_internalNodes.push_back( lightFilter );
+			m_internalNodes.push_back( lightConverter );
+			
+			// We use a standard options node to disable camera motion blur
 			// and overscan because we don't want them applied to the cameras we retrieve with SceneAlgo.
 			// We also must disable transform blur and deformation blur, because if either of those is
 			// on, the shutter range becomes non-zero and the SceneAlgo transform() method will evaluate the
 			// camera at the shutter start rather than the current time, even though its only evaluating a
 			// single time sample.
 
-			m_standardOptions->inPlug()->setInput( view->inPlug<ScenePlug>() );
+			m_standardOptions->inPlug()->setInput( lightConverter->outPlug() );
 			m_standardOptions->optionsPlug()->getChild<CompoundDataPlug::MemberPlug>( "cameraBlur" )->enabledPlug()->setValue( true );
 			m_standardOptions->optionsPlug()->getChild<CompoundDataPlug::MemberPlug>( "cameraBlur" )->valuePlug<BoolPlug>()->setValue( false );
 			m_standardOptions->optionsPlug()->getChild<CompoundDataPlug::MemberPlug>( "transformBlur" )->enabledPlug()->setValue( true );
@@ -958,7 +973,16 @@ class SceneView::LookThrough : public boost::signals::trackable
 			if( m_lookThroughCamera )
 			{
 				StringVectorDataPtr invisiblePaths = new StringVectorData();
-				invisiblePaths->writable().push_back( m_lookThroughCamera->getName() );
+
+				// When looking through a camera, we hide the camera, since the overlay
+				// tells us everything we need to know about the camera.
+				// If looking through something else, such as a light, we may want to
+				// see the viewport visualisation of what we're looking through
+				if( m_view->inPlug<ScenePlug>()->set( "__cameras" )->readable().match(
+					m_lookThroughCamera->getName() ) )
+				{
+					invisiblePaths->writable().push_back( m_lookThroughCamera->getName() );
+				}
 				m_view->hideFilter()->pathsPlug()->setValue( invisiblePaths );
 			}
 			else
@@ -1040,6 +1064,11 @@ class SceneView::LookThrough : public boost::signals::trackable
 		bool m_framed;
 
 		StandardOptionsPtr m_standardOptions;
+
+		/// Nodes used in an internal processing network.
+		/// Don't need to do anything with them once their set up, but need to hold onto a pointer
+		/// so they don't get destroyed
+		std::vector< Gaffer::ConstNodePtr > m_internalNodes;
 
 		boost::signals::scoped_connection m_contextChangedConnection;
 
