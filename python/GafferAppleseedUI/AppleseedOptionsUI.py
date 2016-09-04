@@ -68,8 +68,8 @@ def __getShadingOverridesPresets():
 
 	for k in modes.keys():
 
-		presets.append( "preset:" + k)
-		presets.append( modes[k])
+		presets.append( "preset:" + k )
+		presets.append( modes[k] )
 
 	return presets
 
@@ -177,6 +177,16 @@ def __systemSummary( plug ) :
 
 	return ", ".join( info )
 
+def __loggingSummary( plug ) :
+
+	info = []
+	if plug["logLevel"]["enabled"].getValue() :
+		info.append( "Log Level %s" % plug["logLevel"]["value"].getValue().capitalize() )
+	if plug["logFileName"]["enabled"].getValue() :
+		info.append( "File name" )
+
+	return ", ".join( info )
+
 Gaffer.Metadata.registerNode(
 
 	GafferAppleseed.AppleseedOptions,
@@ -200,6 +210,7 @@ Gaffer.Metadata.registerNode(
 			"layout:section:Unidirectional Path Tracer:summary", __ptSummary,
 			"layout:section:SPPM:summary", __sppmSummary,
 			"layout:section:System:summary", __systemSummary,
+			"layout:section:Logging:summary", __loggingSummary,
 
 		],
 
@@ -671,6 +682,52 @@ Gaffer.Metadata.registerNode(
 
 		],
 
-	}
+		"options.logLevel" : [
+
+			"description",
+			"""
+			Determines the verbosity of log
+			output.
+			""",
+
+			"layout:section", "Logging",
+
+		],
+
+		"options.logLevel.value" : [
+
+			"preset:Debug", "debug",
+			"preset:Info", "info",
+			"preset:Warning", "warning",
+			"preset:Error", "error",
+			"preset:Fatal", "fata",
+
+			"plugValueWidget:type", "GafferUI.PresetsPlugValueWidget",
+
+		],
+
+		"options.logFileName" : [
+
+		"description",
+		"""
+		The name of a log file which appleseed will generate
+		while rendering.
+		""",
+
+		"layout:section", "Logging",
+		"label", "File Name",
+
+		],
+
+		"options.logFileName.value" : [
+
+		"plugValueWidget:type", "GafferUI.FileSystemPathPlugValueWidget",
+		"pathPlugValueWidget:leaf", True,
+		"fileSystemPathPlugValueWidget:extensions", IECore.StringVectorData( [ "txt", "log" ] ),
+		"fileSystemPathPlugValueWidget:extensionsLabel", "Show only log files",
+
+		],
+
+}
 
 )
