@@ -43,8 +43,11 @@
 #include "boost/smart_ptr/scoped_ptr.hpp"
 #include "boost/thread.hpp"
 
+#include "foundation/platform/timers.h"
 #include "foundation/utility/log.h"
 #include "foundation/utility/searchpaths.h"
+#include "foundation/utility/stopwatch.h"
+#include "foundation/utility/string.h"
 
 #include "renderer/api/bsdf.h"
 #include "renderer/api/camera.h"
@@ -75,16 +78,18 @@
 #include "IECoreAppleseed/CameraAlgo.h"
 #include "IECoreAppleseed/ColorAlgo.h"
 #include "IECoreAppleseed/EntityAlgo.h"
-#include "IECoreAppleseed/LogTarget.h"
 #include "IECoreAppleseed/MeshAlgo.h"
 #include "IECoreAppleseed/MotionAlgo.h"
 #include "IECoreAppleseed/ObjectAlgo.h"
 #include "IECoreAppleseed/ParameterAlgo.h"
+#include "IECoreAppleseed/ProgressTileCallback.h"
 #include "IECoreAppleseed/RendererController.h"
 #include "IECoreAppleseed/ShaderAlgo.h"
 #include "IECoreAppleseed/TransformAlgo.h"
 
 #include "GafferScene/Private/IECoreScenePreview/Renderer.h"
+
+#include "stdio.h"
 
 namespace asf = foundation;
 namespace asr = renderer;
@@ -826,6 +831,8 @@ class AppleseedPrimitive : public AppleseedEntity
 			// Create the object instance.
 			createObjectInstance( name );
 
+			// When doing interactive rendering, we put objects into its own assembly
+			// to allow editing the object transform.
 			if( isInteractiveRender() )
 			{
 				createObjectAssembly();
@@ -850,6 +857,8 @@ class AppleseedPrimitive : public AppleseedEntity
 			// Create the object instance.
 			createObjectInstance( name );
 
+			// When doing interactive rendering, we put objects into its own assembly
+			// to allow editing the object transform.
 			if( isInteractiveRender() )
 			{
 				createObjectAssembly();
@@ -1484,11 +1493,44 @@ namespace
 InternedString g_cameraOptionName( "camera" );
 InternedString g_environmentEDFName( "as:environment_edf" );
 InternedString g_environmentEDFBackground( "as:environment_edf_background" );
+InternedString g_logLevelOptionName( "as:log:level" );
 InternedString g_logFileNameOptionName( "as:log:filename" );
 InternedString g_renderPasses( "as:cfg:generic_frame_renderer:passes" );
 InternedString g_ptMaxRayIntensity( "as:cfg:pt:max_ray_intensity" );
 InternedString g_overrideShadingMode( "as:cfg:shading_engine:override_shading:mode" );
 InternedString g_searchPath( "as:searchpath" );
+
+/// Helper class to manage log targets in an exception safe way.
+class ScopedLogTarget
+{
+
+	public :
+
+		ScopedLogTarget()
+		{
+		}
+
+		~ScopedLogTarget()
+		{
+			if( m_logTarget.get() != NULL )
+			{
+				asr::global_logger().remove_target( m_logTarget.get() );
+			}
+		}
+
+		void setLogTarget( asf::auto_release_ptr<asf::ILogTarget> logTarget )
+		{
+			assert( m_logTarget.get() == NULL );
+			assert( logTarget.get() != NULL );
+
+			asr::global_logger().add_target( logTarget.get() );
+			m_logTarget = logTarget;
+		}
+
+	private :
+
+		asf::auto_release_ptr<asf::ILogTarget> m_logTarget;
+};
 
 class AppleseedRenderer : public IECoreScenePreview::Renderer
 {
@@ -1498,18 +1540,6 @@ class AppleseedRenderer : public IECoreScenePreview::Renderer
 		AppleseedRenderer( RenderType renderType, const string &fileName )
 			:	m_renderType( renderType ), m_shutterOpenTime( 0.0f ), m_shutterCloseTime( 0.0f ), m_environmentEDFVisible( false ), m_appleseedFileName( fileName )
 		{
-			// Create a default log target.
-			m_logTarget.reset( new IECoreLogTarget() );
-			asr::global_logger().add_target( m_logTarget.get() );
-
-			// Enable all log output while debugging.
-			asr::global_logger().set_all_formats(string());
-			asr::global_logger().reset_format(asf::LogMessage::Info);
-			asr::global_logger().reset_format(asf::LogMessage::Debug);
-			asr::global_logger().reset_format(asf::LogMessage::Warning);
-			asr::global_logger().reset_format(asf::LogMessage::Error);
-			asr::global_logger().reset_format(asf::LogMessage::Fatal);
-
 			// Create the renderer controller and the project.
 			m_rendererController = new RendererController();
 			createProject();
@@ -1522,9 +1552,6 @@ class AppleseedRenderer : public IECoreScenePreview::Renderer
 		{
 			pause();
 			delete m_rendererController;
-
-			// Remove the log target.
-			asr::global_logger().remove_target( m_logTarget.get() );
 		}
 
 		virtual void option( const InternedString &name, const Data *value )
@@ -1712,31 +1739,29 @@ class AppleseedRenderer : public IECoreScenePreview::Renderer
 					return;
 				}
 
+				if( name == g_logLevelOptionName )
+				{
+					if( value == NULL )
+					{
+						asr::global_logger().set_verbosity_level( asf::LogMessage::Info );
+					}
+					else if( const StringData *d = reportedCast<const StringData>( value, "option", name ) )
+					{
+						const asf::LogMessage::Category logCategory = asf::LogMessage::get_category_value( d->readable().c_str() );
+						asr::global_logger().set_verbosity_level( logCategory );
+					}
+					return;
+				}
+
 				if( name == g_logFileNameOptionName )
 				{
 					if( value == NULL )
 					{
-						// Reset the log target
-						asr::global_logger().remove_target( m_logTarget.get() );
-						m_logTarget.reset( new IECoreLogTarget() );
-						asr::global_logger().add_target( m_logTarget.get() );
+						m_logFileName.clear();
 					}
 					else if( const StringData *d = reportedCast<const StringData>( value, "option", name ) )
 					{
-						// Create the file log target and make sure it's open.
-						asf::auto_release_ptr<asf::FileLogTarget> l( asf::create_file_log_target() );
-						l->open( d->readable().c_str() );
-
-						if( !l->is_open() )
-						{
-							msg( MessageHandler::Error, "AppleseedRenderer", "Couldn't open log file" );
-							return;
-						}
-
-						// Replace the previous log target.
-						asr::global_logger().remove_target( m_logTarget.get() );
-						m_logTarget.reset( l.release() );
-						asr::global_logger().add_target( m_logTarget.get() );
+						m_logFileName = d->readable();
 					}
 					return;
 				}
@@ -2041,21 +2066,50 @@ class AppleseedRenderer : public IECoreScenePreview::Renderer
 			// Reset the renderer controller.
 			m_rendererController->set_status( asr::IRendererController::ContinueRendering );
 
-			// Create or update the master renderer.
+			// Logging.
+			ScopedLogTarget logTarget;
+			if( !m_logFileName.empty() )
+			{
+				// Create the file log target and make sure it's open.
+				asf::auto_release_ptr<asf::FileLogTarget> l( asf::create_file_log_target() );
+				l->open( m_logFileName.c_str() );
+
+				if( !l->is_open() )
+				{
+					msg( MessageHandler::Error, "AppleseedRenderer", "Couldn't open log file" );
+					return;
+				}
+
+				logTarget.setLogTarget( asf::auto_release_ptr<asf::ILogTarget>( l.release() ) );
+			}
+
+			// Render progress logging.
+			ProgressTileCallbackFactory tileCallbackFactory;
+			asr::ITileCallbackFactory *tileCallbackFactoryPtr = 0;
+
+			if( m_project->get_display() == NULL )
+			{
+				// If we don't have a display, because we are rendering
+				// directly to an image file, use a progress reporting
+				// tile callback to log render progress.
+				tileCallbackFactoryPtr = &tileCallbackFactory;
+			}
+
+			// Create the master renderer.
 			asr::Configuration *cfg = m_project->configurations().get_by_name( "final" );
 			const asr::ParamArray &params = cfg->get_parameters();
-
-			if( !m_renderer.get() )
-			{
-				m_renderer.reset( new asr::MasterRenderer( *m_project, params, m_rendererController ) );
-			}
-			else
-			{
-				m_renderer->get_parameters() = params;
-			}
+			m_renderer.reset( new asr::MasterRenderer( *m_project, params, m_rendererController, tileCallbackFactoryPtr ) );
 
 			// Render!.
+			RENDERER_LOG_INFO( "rendering frame..." );
+			asf::Stopwatch<asf::DefaultWallclockTimer> stopwatch;
+			stopwatch.start();
 			m_renderer->render();
+			stopwatch.measure();
+
+			// Log the total rendering time.
+			const double seconds = stopwatch.get_seconds();
+			RENDERER_LOG_INFO( "rendering finished in %s.", asf::pretty_time( seconds, 3 ).c_str() );
 		}
 
 		void interactiveRender()
@@ -2089,8 +2143,7 @@ class AppleseedRenderer : public IECoreScenePreview::Renderer
 			}
 			catch( const exception &e )
 			{
-				msg( MessageHandler::Error, "AppleseedRenderer",
-							 boost::format( "Exception in render thread, what = %s" ) % e.what() );
+				msg( MessageHandler::Error, "AppleseedRenderer", boost::format( "Exception in render thread, what = %s" ) % e.what() );
 			}
 			catch( ... )
 			{
@@ -2102,7 +2155,6 @@ class AppleseedRenderer : public IECoreScenePreview::Renderer
 
 		RenderType m_renderType;
 
-		asf::auto_release_ptr<asf::ILogTarget> m_logTarget;
 		asf::auto_release_ptr<asr::Project> m_project;
 
 		string m_cameraName;
@@ -2118,6 +2170,9 @@ class AppleseedRenderer : public IECoreScenePreview::Renderer
 
 		RendererController *m_rendererController;
 		boost::scoped_ptr<asr::MasterRenderer> m_renderer;
+
+		// Members used by batch renders
+		std::string m_logFileName;
 
 		// Members used by interactive renders
 
