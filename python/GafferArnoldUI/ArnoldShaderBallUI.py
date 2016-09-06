@@ -61,7 +61,20 @@ Gaffer.Metadata.registerNode(
 			"pathPlugValueWidget:valid", True,
 			"pathPlugValueWidget:bookmarks", "texture",
 
-		]
+		],
+
+		"threads" : [
+
+			"description",
+			"""
+			The number of threads used by Arnold to render the
+			shader ball. A value of 0 uses all cores, and negative
+			values reserve cores for other uses - to be used by
+			the rest of the UI for instance.
+			"""
+
+		],
 
 	}
+
 )

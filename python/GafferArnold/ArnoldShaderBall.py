@@ -67,6 +67,11 @@ class ArnoldShaderBall( GafferScene.ShaderBall ) :
 		self["__arnoldOptions"]["options"]["aaSamples"]["enabled"].setValue( True )
 		self["__arnoldOptions"]["options"]["aaSamples"]["value"].setValue( 3 )
 
+		self.addChild(
+			self["__arnoldOptions"]["options"]["threads"].createCounterpart( "threads", Gaffer.Plug.Direction.In )
+		)
+		self["__arnoldOptions"]["options"]["threads"].setInput( self["threads"] )
+
 		self._outPlug().setInput( self["__arnoldOptions"]["out"] )
 
 IECore.registerRunTimeTyped( ArnoldShaderBall, typeName = "GafferArnold::ArnoldShaderBall" )
