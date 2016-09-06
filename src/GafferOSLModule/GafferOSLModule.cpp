@@ -38,15 +38,19 @@
 
 #include "OSL/oslversion.h"
 
+#include "IECorePython/ScopedGILRelease.h"
+
 #include "Gaffer/StringPlug.h"
 
 #include "GafferBindings/DependencyNodeBinding.h"
 #include "GafferBindings/DataBinding.h"
+#include "GafferBindings/SignalBinding.h"
 
 #include "GafferOSL/OSLShader.h"
 #include "GafferOSL/ShadingEngine.h"
 #include "GafferOSL/OSLImage.h"
 #include "GafferOSL/OSLObject.h"
+#include "GafferOSL/OSLCode.h"
 
 using namespace boost::python;
 using namespace GafferBindings;
@@ -62,13 +66,26 @@ class OSLShaderSerialiser : public GafferBindings::NodeSerialiser
 
 	virtual std::string postScript( const Gaffer::GraphComponent *graphComponent, const std::string &identifier, const Serialisation &serialisation ) const
 	{
-		const OSLShader *shader = static_cast<const OSLShader *>( graphComponent );
-		std::string shaderName = shader->namePlug()->getValue();
-		if( shaderName.size() )
+		const OSLShader *oslShader = static_cast<const OSLShader *>( graphComponent );
+		if( const OSLCode *oslCode = IECore::runTimeCast<const OSLCode>( oslShader ) )
 		{
-			return boost::str( boost::format( "%s.loadShader( \"%s\", keepExistingValues=True )\n" ) % identifier % shaderName );
+			const std::string code = oslCode->getCode();
+			if( code.size() )
+			{
+				object pythonCode( code );
+				object pythonCodeRepr = pythonCode.attr( "__repr__" )();
+				extract<std::string> codeExtractor( pythonCodeRepr );
+				return boost::str( boost::format( "%s.setCode( %s )\n" ) % identifier % codeExtractor() );
+			}
 		}
-
+		else
+		{
+			const std::string shaderName = oslShader->namePlug()->getValue();
+			if( shaderName.size() )
+			{
+				return boost::str( boost::format( "%s.loadShader( \"%s\", keepExistingValues=True )\n" ) % identifier % shaderName );
+			}
+		}
 		return "";
 	}
 
@@ -104,6 +121,28 @@ int oslLibraryVersionCode()
 	return OSL_LIBRARY_VERSION_CODE;
 }
 
+struct CodeChangedSlotCaller
+{
+	boost::signals::detail::unusable operator()( boost::python::object slot, OSLCodePtr n )
+	{
+		try
+		{
+			slot( n );
+		}
+		catch( const error_already_set &e )
+		{
+			translatePythonException();
+		}
+		return boost::signals::detail::unusable();
+	}
+};
+
+void setCode( OSLCode &node, const std::string &code )
+{
+	IECorePython::ScopedGILRelease gilRelease;
+	node.setCode( code );
+}
+
 } // namespace
 
 BOOST_PYTHON_MODULE( _GafferOSL )
@@ -129,5 +168,13 @@ BOOST_PYTHON_MODULE( _GafferOSL )
 		.def( init<const IECore::ObjectVector *>() )
 		.def( "shade", &ShadingEngine::shade )
 	;
+
+	scope s = GafferBindings::DependencyNodeClass<OSLCode>()
+		.def( "setCode", &setCode )
+		.def( "getCode", &OSLCode::getCode )
+		.def( "codeChangedSignal", &OSLCode::codeChangedSignal, return_internal_reference<1>() )
+	;
+
+	SignalClass<OSLCode::CodeChangedSignal, DefaultSignalCaller<OSLCode::CodeChangedSignal>, CodeChangedSlotCaller >( "CodeChangedSignal" );
 
 }
