@@ -86,12 +86,17 @@ class ShaderView : public GafferImageUI::ImageView
 
 	private :
 
+		typedef std::pair<std::string, std::string> PrefixAndName;
+		typedef std::map<PrefixAndName, Gaffer::NodePtr> Scenes;
+
 		void viewportVisibilityChanged();
 
 		void plugSet( Gaffer::Plug *plug );
 		void plugInputChanged( Gaffer::Plug *plug );
+		void sceneRegistrationChanged( const PrefixAndName &prefixAndName );
 
 		void updateRenderer();
+		void updateRendererContext();
 		void updateRendererState();
 		void updateScene();
 
@@ -100,8 +105,6 @@ class ShaderView : public GafferImageUI::ImageView
 		Gaffer::NodePtr m_renderer;
 		std::string m_rendererShaderPrefix;
 
-		typedef std::pair<std::string, std::string> PrefixAndName;
-		typedef std::map<PrefixAndName, Gaffer::NodePtr> Scenes;
 		Scenes m_scenes;
 		Gaffer::NodePtr m_scene;
 		PrefixAndName m_scenePrefixAndName;

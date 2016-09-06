@@ -84,6 +84,13 @@ SceneCreators &sceneCreators()
 	return sc;
 }
 
+typedef boost::signal<void ( const PrefixAndName & )> SceneRegistrationChangedSignal;
+SceneRegistrationChangedSignal &sceneRegistrationChangedSignal()
+{
+	static SceneRegistrationChangedSignal s;
+	return s;
+}
+
 int freePort()
 {
 	typedef boost::asio::ip::tcp::resolver Resolver;
@@ -160,6 +167,7 @@ ShaderView::ShaderView( const std::string &name )
 	viewportGadget()->visibilityChangedSignal().connect( boost::bind( &ShaderView::viewportVisibilityChanged, this ) );
 	plugSetSignal().connect( boost::bind( &ShaderView::plugSet, this, ::_1 ) );
 	plugInputChangedSignal().connect( boost::bind( &ShaderView::plugInputChanged, this, ::_1 ) );
+	sceneRegistrationChangedSignal().connect( boost::bind( &ShaderView::sceneRegistrationChanged, this, ::_1 ) );
 
 }
 
@@ -217,14 +225,7 @@ ShaderView::SceneChangedSignal &ShaderView::sceneChangedSignal()
 void ShaderView::setContext( Gaffer::ContextPtr context )
 {
 	ImageView::setContext( context );
-	if( InteractiveRender *renderer = IECore::runTimeCast<InteractiveRender>( m_renderer.get() ) )
-	{
-		renderer->setContext( context );
-	}
-	else if( Preview::InteractiveRender *renderer = IECore::runTimeCast<Preview::InteractiveRender>( m_renderer.get() ) )
-	{
-		renderer->setContext( context );
-	}
+	updateRendererContext();
 }
 
 void ShaderView::viewportVisibilityChanged()
@@ -244,7 +245,26 @@ void ShaderView::plugInputChanged( Gaffer::Plug *plug )
 {
 	if( plug == inPlug<Plug>() )
 	{
+		// If we need to make a new renderer node,
+		// then make one.
 		updateRenderer();
+		// Then update the scene if we need to.
+		updateScene();
+		// Finally update the renderer state. We
+		// do this last so that when making a new
+		// renderer, we do not ask it to render
+		// an out-of-date scene prior to it being
+		// updated.
+		updateRendererState();
+	}
+}
+
+void ShaderView::sceneRegistrationChanged( const PrefixAndName &prefixAndName )
+{
+	if( prefixAndName == m_scenePrefixAndName )
+	{
+		m_scenePrefixAndName = PrefixAndName();
+		m_scenes.erase( prefixAndName );
 		updateScene();
 	}
 }
@@ -275,8 +295,19 @@ void ShaderView::updateRenderer()
 	m_renderer->getChild<ScenePlug>( "in" )->setInput(
 		m_imageConverter->getChild<SceneNode>( "Outputs" )->outPlug()
 	);
+	updateRendererContext();
+}
 
-	updateRendererState();
+void ShaderView::updateRendererContext()
+{
+	if( InteractiveRender *renderer = IECore::runTimeCast<InteractiveRender>( m_renderer.get() ) )
+	{
+		renderer->setContext( getContext() );
+	}
+	else if( Preview::InteractiveRender *renderer = IECore::runTimeCast<Preview::InteractiveRender>( m_renderer.get() ) )
+	{
+		renderer->setContext( getContext() );
+	}
 }
 
 void ShaderView::updateRendererState()
@@ -359,7 +390,9 @@ void ShaderView::registerScene( const std::string &shaderPrefix, const std::stri
 
 void ShaderView::registerScene( const std::string &shaderPrefix, const std::string &name, SceneCreator sceneCreator )
 {
-	sceneCreators()[PrefixAndName( shaderPrefix, name)] = sceneCreator;
+	const PrefixAndName prefixAndName( shaderPrefix, name );
+	sceneCreators()[prefixAndName] = sceneCreator;
+	sceneRegistrationChangedSignal()( prefixAndName );
 }
 
 void ShaderView::registeredScenes( const std::string &shaderPrefix, std::vector<std::string> &names )

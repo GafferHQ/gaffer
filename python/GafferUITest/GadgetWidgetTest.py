@@ -34,44 +34,37 @@
 #
 ##########################################################################
 
-import IECore
+import unittest
 
-import Gaffer
-import GafferScene
-import GafferArnold
+import GafferUI
+import GafferUITest
 
-class ArnoldShaderBall( GafferScene.ShaderBall ) :
+class GadgetWidgetTest( GafferUITest.TestCase ) :
 
-	def __init__( self, name = "ArnoldShaderBall" ) :
+	def testViewportVisibility( self ) :
 
-		GafferScene.ShaderBall.__init__( self, name )
+		with GafferUI.Window() as w :
+			gw = GafferUI.GadgetWidget()
 
-		self["environment"] = Gaffer.StringPlug( defaultValue = "${GAFFER_ROOT}/resources/hdri/studio.exr" )
+		vg1 = gw.getViewportGadget()
 
-		self["__envMap"] = GafferArnold.ArnoldShader()
-		self["__envMap"].loadShader( "image" )
-		self["__envMap"]["parameters"]["filename"].setInput( self["environment"] )
+		self.assertFalse( gw.visible() )
+		self.assertFalse( vg1.visible() )
 
-		self["__skyDome"] = GafferArnold.ArnoldLight()
-		self["__skyDome"].loadShader( "skydome_light" )
-		self["__skyDome"]["parameters"]["color"].setInput( self["__envMap"]["out"] )
-		self["__skyDome"]["parameters"]["format"].setValue( "latlong" )
+		w.setVisible( True )
+		self.assertTrue( gw.visible() )
+		self.assertTrue( vg1.visible() )
 
-		self["__parentLights"] = GafferScene.Parent()
-		self["__parentLights"]["in"].setInput( self._outPlug().getInput() )
-		self["__parentLights"]["child"].setInput( self["__skyDome"]["out"] )
-		self["__parentLights"]["parent"].setValue( "/" )
+		vg2 = GafferUI.ViewportGadget()
+		self.assertFalse( vg2.visible() )
 
-		self["__arnoldOptions"] = GafferArnold.ArnoldOptions()
-		self["__arnoldOptions"]["in"].setInput( self["__parentLights"]["out"] )
-		self["__arnoldOptions"]["options"]["aaSamples"]["enabled"].setValue( True )
-		self["__arnoldOptions"]["options"]["aaSamples"]["value"].setValue( 3 )
+		gw.setViewportGadget( vg2 )
+		self.assertTrue( vg2.visible() )
+		self.assertFalse( vg1.visible() )
 
-		self.addChild(
-			self["__arnoldOptions"]["options"]["threads"].createCounterpart( "threads", Gaffer.Plug.Direction.In )
-		)
-		self["__arnoldOptions"]["options"]["threads"].setInput( self["threads"] )
+		w.setVisible( False )
+		self.assertFalse( vg1.visible() )
+		self.assertFalse( vg2.visible() )
 
-		self._outPlug().setInput( self["__arnoldOptions"]["out"] )
-
-IECore.registerRunTimeTyped( ArnoldShaderBall, typeName = "GafferArnold::ArnoldShaderBall" )
+if __name__ == "__main__":
+	unittest.main()
