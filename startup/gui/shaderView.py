@@ -54,4 +54,15 @@ with IECore.IgnoredExceptions( ImportError ) :
 
 	import GafferArnold
 	GafferSceneUI.ShaderView.registerRenderer( "ai", GafferArnold.InteractiveArnoldRender )
-	GafferSceneUI.ShaderView.registerScene( "ai", "Default", GafferArnold.ArnoldShaderBall )
+
+	def __arnoldShaderBall() :
+
+		result = GafferArnold.ArnoldShaderBall()
+
+		# Reserve some cores for the rest of the UI
+		result["threads"]["enabled"].setValue( True )
+		result["threads"]["value"].setValue( -3 )
+
+		return result
+
+	GafferSceneUI.ShaderView.registerScene( "ai", "Default", __arnoldShaderBall )
