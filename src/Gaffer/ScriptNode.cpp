@@ -668,7 +668,7 @@ void ScriptNode::plugSet( Plug *plug )
 	}
 	else if( plug == fileNamePlug() )
 	{
-		boost::filesystem::path fileName( fileNamePlug()->getValue() );
-		context()->set( "script:name", boost::filesystem::basename( fileName ) );
+		const boost::filesystem::path fileName( fileNamePlug()->getValue() );
+		context()->set( "script:name", fileName.stem().string() );
 	}
 }
