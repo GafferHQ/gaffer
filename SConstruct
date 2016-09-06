@@ -991,6 +991,16 @@ for source, target in (
 	env.Alias( "build", graphicsBuild )
 
 #########################################################################################################
+# Resources
+#########################################################################################################
+
+resources = None
+if commandEnv.subst( "$LOCATE_DEPENDENCY_RESOURCESPATH" ) :
+	resources = commandEnv.Install( "$BUILD_DIR", "$LOCATE_DEPENDENCY_RESOURCESPATH" )
+	commandEnv.NoCache( resources )
+	commandEnv.Alias( "build", resources )
+
+#########################################################################################################
 # Documentation
 #########################################################################################################
 
@@ -1060,10 +1070,6 @@ def buildDocs( target, source, env ) :
 	)
 
 if conf.checkSphinx() :
-
-	resources = None
-	if commandEnv.subst( "$LOCATE_DEPENDENCY_RESOURCESPATH" ) :
-		resources = commandEnv.Install( "$BUILD_DIR", "$LOCATE_DEPENDENCY_RESOURCESPATH" )
 
 	docs = commandEnv.Command( "$BUILD_DIR/doc/gaffer/html/index.html", "doc/source", buildDocs )
 	commandEnv.Depends( docs, "build" )
