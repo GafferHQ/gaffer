@@ -341,6 +341,7 @@ if moduleSearchPath.find( "GafferOSL" ) :
 		matchExpression = re.compile( "(^|.*/)(?!as_)[^/]*$")
 	)
 
+	nodeMenu.append( "/OSL/Code", GafferOSL.OSLCode, searchText = "OSLCode" )
 	nodeMenu.append( "/OSL/Image", GafferOSL.OSLImage, searchText = "OSLImage" )
 	nodeMenu.append( "/OSL/Object", GafferOSL.OSLObject, searchText = "OSLObject" )
 
