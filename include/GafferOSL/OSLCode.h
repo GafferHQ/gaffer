@@ -1,6 +1,6 @@
 //////////////////////////////////////////////////////////////////////////
 //
-//  Copyright (c) 2013, John Haddon. All rights reserved.
+//  Copyright (c) 2016, Image Engine Design Inc. All rights reserved.
 //
 //  Redistribution and use in source and binary forms, with or without
 //  modification, are permitted provided that the following conditions are
@@ -34,23 +34,53 @@
 //
 //////////////////////////////////////////////////////////////////////////
 
-#ifndef GAFFEROSL_TYPEIDS_H
-#define GAFFEROSL_TYPEIDS_H
+#ifndef GAFFEROSL_OSLCODE_H
+#define GAFFEROSL_OSLCODE_H
+
+#include "GafferOSL/OSLShader.h"
 
 namespace GafferOSL
 {
 
-enum TypeId
+/// \todo It would be better if this node generated the .oso file
+/// on disk on demand, during shader network generation. Rejig the
+/// generation process to allow for this. Also bear in mind the related
+/// todo items in ArnoldDisplacement and ArnoldLight.
+class OSLCode : public OSLShader
 {
-	OSLShaderTypeId = 110975,
-	OSLRendererTypeId = 110976,
-	OSLImageTypeId = 110977,
-	OSLObjectTypeId = 110978,
-	OSLCodeTypeId = 110979,
 
-	LastTypeId = 110999
+	public :
+
+		OSLCode( const std::string &name=defaultName<OSLCode>() );
+		virtual ~OSLCode();
+
+		IE_CORE_DECLARERUNTIMETYPEDEXTENSION( GafferOSL::OSLCode, OSLCodeTypeId, OSLShader );
+
+		Gaffer::StringPlug *codePlug();
+		const Gaffer::StringPlug *codePlug() const;
+
+		typedef boost::signal<void ()> ShaderCompiledSignal;
+		/// Signal emitted when a shader is compiled successfully.
+		/// \todo This exists only so the UI knows when to clear
+		/// the error indicator. When we compile shaders on demand,
+		/// we can instead use the same `errorSignal()`/`plugDirtiedSignal()`
+		/// combo we use everywhere else.
+		ShaderCompiledSignal &shaderCompiledSignal();
+
+	private :
+
+		void updateShader();
+		void plugSet( const Gaffer::Plug *plug );
+		void parameterAddedOrRemoved( const Gaffer::GraphComponent *parent );
+
+		static size_t g_firstPlugIndex;
+
+		ShaderCompiledSignal m_shaderCompiledSignal;
+
 };
+
+IE_CORE_DECLAREPTR( OSLCode )
 
 } // namespace GafferOSL
 
-#endif // GAFFEROSL_TYPEIDS_H
+#endif // GAFFEROSL_OSLCODE_H

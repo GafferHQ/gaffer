@@ -93,6 +93,10 @@ export GAFFERUI_IMAGE_PATHS=$GAFFER_ROOT/graphics${GAFFERUI_IMAGE_PATHS:+:}${GAF
 export OSLHOME=$GAFFER_ROOT
 export OSL_SHADER_PATHS=$HOME/gaffer/shaders:$GAFFER_ROOT/shaders${OSL_SHADER_PATHS:+:}${OSL_SHADER_PATHS:-}
 
+if [[ -z $GAFFEROSL_CODE_DIRECTORY ]] ; then
+	export GAFFEROSL_CODE_DIRECTORY=$HOME/gaffer/oslCode
+fi
+
 # Get python set up properly
 ##########################################################################
 
