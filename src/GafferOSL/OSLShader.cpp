@@ -730,6 +730,19 @@ void loadShaderParameters( const OSLQuery &query, Gaffer::Plug *parent, const Co
 
 void OSLShader::loadShader( const std::string &shaderName, bool keepExistingValues )
 {
+	Plug *existingOut = outPlug();
+	if( shaderName.empty() )
+	{
+		parametersPlug()->clearChildren();
+		namePlug()->setValue( "" );
+		typePlug()->setValue( "" );
+		if( existingOut )
+		{
+			existingOut->clearChildren();
+		}
+		return;
+	}
+
 	const char *searchPath = getenv( "OSL_SHADER_PATHS" );
 
 	OSLQuery query;
@@ -738,7 +751,6 @@ void OSLShader::loadShader( const std::string &shaderName, bool keepExistingValu
 		throw Exception( query.geterror() );
 	}
 
-	Plug *existingOut = outPlug();
 	if( !keepExistingValues )
 	{
 		// If we're not preserving existing values then remove all existing
