@@ -346,6 +346,7 @@ if moduleSearchPath.find( "GafferOSL" ) :
 		searchTextPrefix = "osl",
 	)
 
+	nodeMenu.append( "/OSL/Code", GafferOSL.OSLCode, searchText = "OSLCode" )
 	nodeMenu.append( "/OSL/Image", GafferOSL.OSLImage, searchText = "OSLImage" )
 	nodeMenu.append( "/OSL/Object", GafferOSL.OSLObject, searchText = "OSLObject" )
 
