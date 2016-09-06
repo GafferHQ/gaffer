@@ -212,5 +212,22 @@ class FilterSwitchTest( GafferSceneTest.SceneTestCase ) :
 
 		s["i"]["filter"].setInput( s["s"]["out"] )
 
+	def testCompatibilityWithIntPlugs( self ) :
+
+		s = Gaffer.ScriptNode()
+		s["p"] = GafferScene.PathFilter()
+
+		s["d"] = Gaffer.Dot()
+		s["d"].setup( Gaffer.IntPlug() )
+		s["d"]["in"].setInput( s["p"]["out"] )
+		s["s"] = GafferScene.FilterSwitch()
+		s["s"]["in"][0].setInput( s["d"]["out"] )
+
+		s["b"] = Gaffer.Box()
+		s["b"]["filter"] = Gaffer.IntPlug()
+		s["b"]["filter"].setInput( s["p"]["out"] )
+		s["b"]["s"] = GafferScene.FilterSwitch()
+		s["b"]["s"]["in"][0].setInput( s["b"]["filter"] )
+
 if __name__ == "__main__":
 	unittest.main()
