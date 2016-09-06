@@ -1,0 +1,259 @@
+##########################################################################
+#
+#  Copyright (c) 2016, Image Engine Design Inc. All rights reserved.
+#
+#  Redistribution and use in source and binary forms, with or without
+#  modification, are permitted provided that the following conditions are
+#  met:
+#
+#      * Redistributions of source code must retain the above
+#        copyright notice, this list of conditions and the following
+#        disclaimer.
+#
+#      * Redistributions in binary form must reproduce the above
+#        copyright notice, this list of conditions and the following
+#        disclaimer in the documentation and/or other materials provided with
+#        the distribution.
+#
+#      * Neither the name of John Haddon nor the names of
+#        any other contributors to this software may be used to endorse or
+#        promote products derived from this software without specific prior
+#        written permission.
+#
+#  THIS SOFTWARE IS PROVIDED BY THE COPYRIGHT HOLDERS AND CONTRIBUTORS "AS
+#  IS" AND ANY EXPRESS OR IMPLIED WARRANTIES, INCLUDING, BUT NOT LIMITED TO,
+#  THE IMPLIED WARRANTIES OF MERCHANTABILITY AND FITNESS FOR A PARTICULAR
+#  PURPOSE ARE DISCLAIMED. IN NO EVENT SHALL THE COPYRIGHT OWNER OR
+#  CONTRIBUTORS BE LIABLE FOR ANY DIRECT, INDIRECT, INCIDENTAL, SPECIAL,
+#  EXEMPLARY, OR CONSEQUENTIAL DAMAGES (INCLUDING, BUT NOT LIMITED TO,
+#  PROCUREMENT OF SUBSTITUTE GOODS OR SERVICES; LOSS OF USE, DATA, OR
+#  PROFITS; OR BUSINESS INTERRUPTION) HOWEVER CAUSED AND ON ANY THEORY OF
+#  LIABILITY, WHETHER IN CONTRACT, STRICT LIABILITY, OR TORT (INCLUDING
+#  NEGLIGENCE OR OTHERWISE) ARISING IN ANY WAY OUT OF THE USE OF THIS
+#  SOFTWARE, EVEN IF ADVISED OF THE POSSIBILITY OF SUCH DAMAGE.
+#
+##########################################################################
+
+import os
+import subprocess
+import unittest
+
+import IECore
+
+import Gaffer
+import GafferTest
+import GafferOSL
+import GafferOSLTest
+
+class OSLCodeTest( GafferOSLTest.OSLTestCase ) :
+
+	def testPlugTypes( self ) :
+
+		oslCode = GafferOSL.OSLCode()
+		code = ""
+
+		for i, plugType in enumerate( [
+			Gaffer.IntPlug,
+			Gaffer.FloatPlug,
+			Gaffer.V3fPlug,
+			Gaffer.Color3fPlug,
+			Gaffer.M44fPlug,
+			Gaffer.StringPlug,
+			Gaffer.Plug,
+		] ) :
+
+			inName = "in%d" % i
+			outName = "out%d" % i
+
+			oslCode["parameters"][inName] = plugType( flags = Gaffer.Plug.Flags.Default | Gaffer.Plug.Flags.Dynamic )
+			oslCode["out"][outName] = plugType( direction = Gaffer.Plug.Direction.Out, flags = Gaffer.Plug.Flags.Default | Gaffer.Plug.Flags.Dynamic )
+
+			code += "%s = %s;\n" % ( outName, inName )
+
+		oslCode["code"].setValue( code )
+
+		# The OSLCode node will have generated a shader from
+		# the code and parameters we gave it. Load this onto
+		# a regular OSLShader node to check it.
+
+		oslShader = GafferOSL.OSLShader()
+		oslShader.loadShader( self._osoFileName( oslCode ) )
+
+		self.assertEqual( oslShader["parameters"].keys(), oslCode["parameters"].keys() )
+		self.assertEqual( oslShader["out"].keys(), oslCode["out"].keys() )
+
+		for p in oslShader["parameters"].children() :
+			self.assertEqual( repr( p ), repr( oslCode["parameters"][p.getName()] ) )
+
+		for p in oslShader["out"].children() :
+			self.assertEqual( repr( p ), repr( oslCode["out"][p.getName()] ) )
+
+	def testParseError( self ) :
+
+		n = GafferOSL.OSLCode()
+
+		cs = GafferTest.CapturingSlot( n.errorSignal() )
+		self.assertRaises( RuntimeError, n["code"].setValue, "oops" )
+		self.assertEqual( len( cs ), 1 )
+
+	def testParseErrorDoesntDestroyExistingPlugs( self ) :
+
+		n = GafferOSL.OSLCode()
+		n["parameters"]["in"] = Gaffer.IntPlug( flags = Gaffer.Plug.Flags.Default | Gaffer.Plug.Flags.Dynamic )
+		n["out"]["out"] = Gaffer.IntPlug( direction = Gaffer.Plug.Direction.Out, flags = Gaffer.Plug.Flags.Default | Gaffer.Plug.Flags.Dynamic )
+		originalPlugs = n["parameters"].children() + n["out"].children()
+
+	 	self.assertRaises( RuntimeError, n["code"].setValue, "oops" )
+
+	 	self.assertEqual( n["parameters"].children() + n["out"].children(), originalPlugs )
+
+	def testEmpty( self ) :
+
+		# We want empty shaders to still output a
+		# shader so that the ShaderView picks it
+		# up, ready to update when an output is
+		# added.
+
+		n = GafferOSL.OSLCode()
+		self.assertTrue( self._osoFileName( n ) )
+		self.assertEqual( n["type"].getValue(), "osl:shader" )
+
+		n["code"].setValue( "//" )
+		self.assertTrue( self._osoFileName( n ) )
+		self.assertEqual( n["type"].getValue(), "osl:shader" )
+
+		n["code"].setValue( "" )
+		self.assertTrue( self._osoFileName( n ) )
+		self.assertEqual( n["type"].getValue(), "osl:shader" )
+
+	def testMissingSemiColon( self ) :
+
+		n = GafferOSL.OSLCode()
+		n["parameters"]["in"] = Gaffer.IntPlug( flags = Gaffer.Plug.Flags.Default | Gaffer.Plug.Flags.Dynamic )
+		n["out"]["out"] = Gaffer.IntPlug( direction = Gaffer.Plug.Direction.Out, flags = Gaffer.Plug.Flags.Default | Gaffer.Plug.Flags.Dynamic )
+
+		# The OSLCode node will often be used to throw in a one-liner,
+		# and omitting a semicolon is an easy mistake that we should
+		# correct automatically.
+		n["code"].setValue( "out = in * 2;" )
+
+	def testAddingAndRemovingPlugsUpdatesShader( self ) :
+
+		oslCode = GafferOSL.OSLCode()
+		oslCode["parameters"]["in"] = Gaffer.IntPlug( flags = Gaffer.Plug.Flags.Default | Gaffer.Plug.Flags.Dynamic )
+		oslCode["out"]["out"] = Gaffer.IntPlug( direction = Gaffer.Plug.Direction.Out, flags = Gaffer.Plug.Flags.Default | Gaffer.Plug.Flags.Dynamic )
+
+		oslShader = GafferOSL.OSLShader()
+		oslShader.loadShader( self._osoFileName( oslCode ) )
+		self.assertTrue( "in" in oslShader["parameters"] )
+		self.assertTrue( "out" in oslShader["out"] )
+
+	def testObjectProcessingFunctions( self ) :
+
+		oslCode = GafferOSL.OSLCode()
+		oslCode["out"]["out"] = Gaffer.FloatPlug( direction = Gaffer.Plug.Direction.Out, flags = Gaffer.Plug.Flags.Default | Gaffer.Plug.Flags.Dynamic )
+		oslCode["code"].setValue( 'out = inFloat( "s", 0 );' )
+
+	def testImageProcessingFunctions( self ) :
+
+		oslCode = GafferOSL.OSLCode()
+		oslCode["out"]["out"] = Gaffer.FloatPlug( direction = Gaffer.Plug.Direction.Out, flags = Gaffer.Plug.Flags.Default | Gaffer.Plug.Flags.Dynamic )
+		oslCode["code"].setValue( 'out = inChannel( "R", 0 );' )
+
+	def testColorSpline( self ) :
+
+		oslCode = GafferOSL.OSLCode()
+		oslCode["parameters"]["sp"] = Gaffer.SplinefColor3fPlug(
+			defaultValue = IECore.SplinefColor3f(
+				IECore.CubicBasisf.catmullRom(),
+				(
+					( 0, IECore.Color3f( 0 ) ),
+					( 0, IECore.Color3f( 0 ) ),
+					( 1, IECore.Color3f( 1 ) ),
+					( 1, IECore.Color3f( 1 ) ),
+				)
+			),
+			flags = Gaffer.Plug.Flags.Default | Gaffer.Plug.Flags.Dynamic
+		)
+		oslCode["out"]["o"] = Gaffer.Color3fPlug( direction = Gaffer.Plug.Direction.Out, flags = Gaffer.Plug.Flags.Default | Gaffer.Plug.Flags.Dynamic )
+
+		oslCode["code"].setValue( "o = colorSpline( spPositions, spValues, spBasis, u );" )
+
+		# Load the generated shader onto an OSLShader
+		# node to verify it.
+
+		oslShader = GafferOSL.OSLShader()
+		oslShader.loadShader( self._osoFileName( oslCode ) )
+
+		self.assertEqual( repr( oslShader["parameters"]["sp"] ), repr( oslCode["parameters"]["sp"] ) )
+
+	def testShaderNameMatchesFileName( self ) :
+
+		oslCode = GafferOSL.OSLCode()
+		oslCode["out"]["o"] = Gaffer.Color3fPlug( direction = Gaffer.Plug.Direction.Out, flags = Gaffer.Plug.Flags.Default | Gaffer.Plug.Flags.Dynamic )
+		oslCode["code"].setValue( "o = color( 0, 1, 0 );" )
+
+		info = subprocess.check_output( [ "oslinfo", self._osoFileName( oslCode ) ] )
+		self.assertTrue(
+			info.startswith( "shader \"{0}\"".format( os.path.basename( self._osoFileName( oslCode ) ) ) )
+		)
+
+	def testSerialisation( self ) :
+
+		s = Gaffer.ScriptNode()
+		s["o"] = GafferOSL.OSLCode()
+		s["o"]["parameters"]["i"] = Gaffer.Color3fPlug( flags = Gaffer.Plug.Flags.Default | Gaffer.Plug.Flags.Dynamic )
+		s["o"]["out"]["o"] = Gaffer.Color3fPlug( direction = Gaffer.Plug.Direction.Out, flags = Gaffer.Plug.Flags.Default | Gaffer.Plug.Flags.Dynamic )
+		s["o"]["code"].setValue( "o = i * color( u, v, 0 );")
+
+		s2 = Gaffer.ScriptNode()
+		s2.execute( s.serialise() )
+
+		self.assertEqual( self._osoFileName( s2["o"] ), self._osoFileName( s["o"] ) )
+
+	def testUndo( self ) :
+
+		s = Gaffer.ScriptNode()
+		s["o"] = GafferOSL.OSLCode()
+
+		f1 = self._osoFileName( s["o"] )
+
+		with Gaffer.UndoContext( s ) :
+			s["o"]["parameters"]["i"] = Gaffer.Color3fPlug( flags = Gaffer.Plug.Flags.Default | Gaffer.Plug.Flags.Dynamic )
+			s["o"]["out"]["o"] = Gaffer.Color3fPlug( direction = Gaffer.Plug.Direction.Out, flags = Gaffer.Plug.Flags.Default | Gaffer.Plug.Flags.Dynamic )
+
+		f2 = self._osoFileName( s["o"] )
+
+		with Gaffer.UndoContext( s ) :
+			s["o"]["code"].setValue( "o = i * color( u, v, 0 );")
+
+		f3 = self._osoFileName( s["o"] )
+
+		s.undo()
+		self.assertEqual( self._osoFileName( s["o"] ), f2 )
+
+		s.undo()
+		self.assertEqual( self._osoFileName( s["o"] ), f1 )
+
+		s.redo()
+		self.assertEqual( self._osoFileName( s["o"] ), f2 )
+
+		s.redo()
+		self.assertEqual( self._osoFileName( s["o"] ), f3 )
+
+	def _osoFileName( self, oslCode ) :
+
+		# Right now we could get this information by
+		# getting the value directly from the "name" plug
+		# on the OSLCode node, but we're getting it from
+		# the computed shader instead, in the hope that
+		# one day we can refactor things so that it's the
+		# generation of the shader network that also generates
+		# the file on disk. It might be that the
+		# `GafferScene::Shader` base class shouldn't even
+		# mandate the existence of "name" and "type" plugs.
+
+		return oslCode.attributes()["osl:shader"][0].name
+
+if __name__ == "__main__":
+	unittest.main()
