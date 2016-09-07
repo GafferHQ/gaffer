@@ -178,7 +178,10 @@ if "APPLESEED" in os.environ :
 			nodeMenu.definition(), "/Appleseed/Shader",
 			os.environ["APPLESEED_SEARCHPATH"].split( ":" ),
 			[ "oso" ],
-			__shaderNodeCreator
+			__shaderNodeCreator,
+			# Show only the OSL shaders from the Appleseed shader
+			# library.
+			matchExpression = re.compile( "^.*/as_[^/]*$")
 		)
 
 		GafferAppleseedUI.LightMenu.appendLights( nodeMenu.definition() )
