@@ -342,6 +342,7 @@ namespace
 IECore::InternedString g_surfaceShaderAttributeName( "surface" );
 IECore::InternedString g_lightShaderAttributeName( "light" );
 IECore::InternedString g_doubleSidedAttributeName( "doubleSided" );
+IECore::InternedString g_setsAttributeName( "sets" );
 
 IECore::InternedString g_oslSurfaceShaderAttributeName( "osl:surface" );
 IECore::InternedString g_oslShaderAttributeName( "osl:shader" );
@@ -510,6 +511,8 @@ class ArnoldAttributes : public IECoreScenePreview::Renderer::AttributesInterfac
 			lightShader = attribute<IECore::ObjectVector>( g_arnoldLightShaderAttributeName, attributes );
 			lightShader = lightShader ? lightShader : attribute<IECore::ObjectVector>( g_lightShaderAttributeName, attributes );
 
+			traceSets = attribute<IECore::InternedStringVectorData>( g_setsAttributeName, attributes );
+
 			for( IECore::CompoundObject::ObjectMap::const_iterator it = attributes->members().begin(), eIt = attributes->members().end(); it != eIt; ++it )
 			{
 				if( !boost::starts_with( it->first.string(), "user:" ) )
@@ -538,6 +541,7 @@ class ArnoldAttributes : public IECoreScenePreview::Renderer::AttributesInterfac
 		unsigned char shadingFlags;
 		ArnoldShaderPtr surfaceShader;
 		IECore::ConstObjectVectorPtr lightShader;
+		IECore::ConstInternedStringVectorDataPtr traceSets;
 		PolyMesh polyMesh;
 		Displacement displacement;
 
@@ -901,6 +905,24 @@ class ArnoldObject : public IECoreScenePreview::Renderer::ObjectInterface
 				else
 				{
 					AiNodeResetParameter( node, "shader" );
+				}
+
+				if( arnoldAttributes->traceSets && arnoldAttributes->traceSets->readable().size() )
+				{
+					const vector<IECore::InternedString> &v = arnoldAttributes->traceSets->readable();
+					AtArray *array = AiArrayAllocate( v.size(), 1, AI_TYPE_STRING );
+					for( size_t i = 0, e = v.size(); i < e; ++i )
+					{
+						AiArraySetStr( array, i, v[i].c_str() );
+					}
+					AiNodeSetArray( node, "trace_sets", array );
+				}
+				else
+				{
+					// Arnold very unhelpfully treats `trace_sets == []` as meaning the object
+					// is in every trace set. So we instead make `trace_sets == [ "__none__" ]`
+					// to get the behaviour people expect.
+					AiNodeSetArray( node, "trace_sets", AiArray( 1, 1, AI_TYPE_STRING, "__none__" ) );
 				}
 			}
 

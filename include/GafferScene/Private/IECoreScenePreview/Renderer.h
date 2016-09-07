@@ -111,6 +111,7 @@ class Renderer : public IECore::RefCounted
 		/// "doubleSided", BoolData, true
 		/// "surface", ObjectVector of IECore::Shaders
 		/// "light", ObjectVector of IECore::Shaders
+		/// "sets", InternedStringVectorData of set names
 		///
 		/// Renderer Specific Attributes
 		/// ----------------------------
@@ -178,9 +179,9 @@ class Renderer : public IECore::RefCounted
 		/// resolution to be rendered, creating overscan outside the displayWindow.  The
 		/// default value is the whole standard resolution, running from
 		/// 0,0 to resolution.x - 1, resolution.y - 1,
-		/// with 0,0 representing the upper left corner.  
+		/// with 0,0 representing the upper left corner.
 		///
-		/// \todo This follows the conventions of Cortex, and matches the OpenEXR display window, 
+		/// \todo This follows the conventions of Cortex, and matches the OpenEXR display window,
 		/// but does not match Gaffer image conventions ( origin in lower left corner,
 		/// indexing pixel corners rather than pixel centers ).  We are planning to switch
 		/// this to match the Gaffer convention instead.
