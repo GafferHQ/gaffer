@@ -733,6 +733,10 @@ void OSLShader::loadShader( const std::string &shaderName, bool keepExistingValu
 	{
 		loadShaderParameters( query, outPlug() );
 	}
+	else
+	{
+		outPlug()->clearChildren();
+	}
 
 	namePlug()->setValue( shaderName );
 	typePlug()->setValue( std::string( "osl:" ) + query.shadertype().c_str() );
