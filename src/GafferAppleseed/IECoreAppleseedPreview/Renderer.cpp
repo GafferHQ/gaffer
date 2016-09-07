@@ -143,6 +143,7 @@ MutexType g_objectsInstancesMutex;
 MutexType g_materialsMutex;
 MutexType g_surfaceShadersMutex;
 MutexType g_shaderGroupsMutex;
+MutexType g_environmentMutex;
 MutexType g_lightsMutex;
 MutexType g_texturesMutex;
 MutexType g_textureInstancesMutex;
@@ -202,33 +203,29 @@ class AppleseedEntity : public IECoreScenePreview::Renderer::ObjectInterface
 			resetFrame( NULL );
 		}
 
-		void setEnvironmentEDF( asf::auto_release_ptr<asr::EnvironmentEDF> environment, bool visibleInBackground )
+		void insertEnvironmentEDF( asf::auto_release_ptr<asr::EnvironmentEDF> environment )
 		{
-			// Set the environment.
-			m_project.get_scene()->get_environment()->get_parameters().insert( "environment_edf", environment->get_name() );
+			LockGuardType lock( g_environmentMutex );
 
-			// Create an environment shader if the environment is visible.
-			if( visibleInBackground )
-			{
-				asr::EnvironmentShaderFactoryRegistrar factoryRegistrar;
-				const asr::IEnvironmentShaderFactory *factory = factoryRegistrar.lookup( "edf_environment_shader" );
-				asf::auto_release_ptr<asr::EnvironmentShader> envShader( factory->create( "environment_shader", asr::ParamArray().insert( "environment_edf", environment->get_name() ) ) );
+			const string envShaderName = string( environment->get_name() ) + "_shader";
+			asr::EnvironmentShaderFactoryRegistrar factoryRegistrar;
+			const asr::IEnvironmentShaderFactory *factory = factoryRegistrar.lookup( "edf_environment_shader" );
+			asf::auto_release_ptr<asr::EnvironmentShader> envShader( factory->create( envShaderName.c_str(), asr::ParamArray() ) );
+			envShader->get_parameters().insert( "environment_edf", environment->get_name() );
+			m_project.get_scene()->environment_shaders().insert( envShader );
 
-				m_project.get_scene()->environment_shaders().insert( envShader );
-				m_project.get_scene()->get_environment()->get_parameters().insert( "environment_shader", "environment_shader" );
-			}
-
-			// Add the environment light to the project.
 			m_project.get_scene()->environment_edfs().insert( environment );
 		}
 
-		void removeEnvironmentEDF()
+		void removeEnvironmentEDF( asr::EnvironmentEDF *environment )
 		{
-			m_project.get_scene()->environment_edfs().clear();
-			m_project.get_scene()->get_environment()->get_parameters().remove_path( "environment_edf" );
+			LockGuardType lock( g_environmentMutex );
 
-			m_project.get_scene()->environment_shaders().clear();
-			m_project.get_scene()->get_environment()->get_parameters().remove_path( "environment_shader" );
+			const string envShaderName = string( environment->get_name() ) + "_shader";
+			asr::EnvironmentShader *envShader = m_project.get_scene()->environment_shaders().get_by_name( envShaderName.c_str() );
+			m_project.get_scene()->environment_shaders().remove( envShader );
+
+			m_project.get_scene()->environment_edfs().remove( environment );
 		}
 
 		void insertAssembly( asf::auto_release_ptr<asr::Assembly> assembly )
@@ -1322,10 +1319,9 @@ class AppleseedEnvironmentLight : public AppleseedLight
 {
 	public :
 
-		AppleseedEnvironmentLight( asr::Project &project, const string &name,  const IECoreScenePreview::Renderer::AttributesInterface *attributes, bool visibleInBackground, bool interactive )
+		AppleseedEnvironmentLight( asr::Project &project, const string &name,  const IECoreScenePreview::Renderer::AttributesInterface *attributes, bool interactive )
 			:	AppleseedLight( project, name, attributes, interactive )
 			,	m_environment( NULL )
-			,	m_visibleInBackground( visibleInBackground )
 		{
 			AppleseedEnvironmentLight::attributes( attributes );
 		}
@@ -1379,7 +1375,7 @@ class AppleseedEnvironmentLight : public AppleseedLight
 					convertLightParams( lightParams, envLight->get_parameters(), true );
 
 					m_environment = envLight.get();
-					setEnvironmentEDF( envLight, m_visibleInBackground );
+					insertEnvironmentEDF( envLight );
 				}
 			}
 		}
@@ -1390,7 +1386,7 @@ class AppleseedEnvironmentLight : public AppleseedLight
 		{
 			if( m_environment )
 			{
-				removeEnvironmentEDF();
+				removeEnvironmentEDF( m_environment );
 				removeSceneTextures();
 				removeSceneColors();
 				m_environment = 0;
@@ -1875,9 +1871,9 @@ class AppleseedRenderer : public IECoreScenePreview::Renderer
 				if( appleseedAttributes && appleseedAttributes->m_lightShader )
 				{
 					string lightModel = getLightModel( appleseedAttributes->m_lightShader.get() );
-					if( isEnvironmentLight( lightModel ) && name == m_environmentEDFName )
+					if( isEnvironmentLight( lightModel ) )
 					{
-						return new AppleseedEnvironmentLight( *m_project, name, attributes, m_environmentEDFVisible, isInteractiveRender() );
+						return new AppleseedEnvironmentLight( *m_project, name, attributes, isInteractiveRender() );
 					}
 					else if( isDeltaLight( lightModel ) )
 					{
@@ -1932,6 +1928,26 @@ class AppleseedRenderer : public IECoreScenePreview::Renderer
 				m_project->get_scene()->set_camera( camera );
 				m_project->get_frame()->get_parameters().insert( "camera", "camera" );
 			}
+
+			// Setup the environment.
+			asf::auto_release_ptr<asr::Environment> environment( asr::EnvironmentFactory().create( "environment", asr::ParamArray() ) );
+
+			if( !m_environmentEDFName.empty() )
+			{
+				// Enable the environment light.
+				environment->get_parameters().insert( "environment_edf", m_environmentEDFName.c_str() );
+
+				if( m_environmentEDFVisible )
+				{
+					// Enable the environment shader.
+					const string envShaderName = m_environmentEDFName + "_shader";
+					environment->get_parameters().insert( "environment_shader", envShaderName );
+					asr::EnvironmentShader *envShader = m_project->get_scene()->environment_shaders().get_by_name( envShaderName.c_str() );
+					envShader->bump_version_id();
+				}
+			}
+
+			m_project->get_scene()->set_environment( environment );
 
 			// Clear unused shaders.
 			m_shaderCache->clearUnused();
@@ -2011,7 +2027,6 @@ class AppleseedRenderer : public IECoreScenePreview::Renderer
 			// Create the scene
 			asf::auto_release_ptr<asr::Scene> scene = asr::SceneFactory::create();
 			m_project->set_scene( scene );
-			m_project->get_scene()->set_environment( asr::EnvironmentFactory().create( "environment", asr::ParamArray() ) );
 
 			// Create the main assembly
 			asf::auto_release_ptr<asr::Assembly> assembly = asr::AssemblyFactory().create( "assembly", asr::ParamArray() );
