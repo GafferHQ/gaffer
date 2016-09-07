@@ -797,6 +797,10 @@ void OSLShader::loadShader( const std::string &shaderName, bool keepExistingValu
 	{
 		loadShaderParameters( query, outPlug(), parameterMetadata );
 	}
+	else
+	{
+		outPlug()->clearChildren();
+	}
 
 
 }

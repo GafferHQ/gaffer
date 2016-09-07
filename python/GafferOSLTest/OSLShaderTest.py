@@ -724,5 +724,14 @@ class OSLShaderTest( GafferOSLTest.OSLTestCase ) :
 		self.assertEqual( n["name"].getValue(), "" )
 		self.assertFalse( "osl:surface" in n.attributes() )
 
+	def testLoadSurfaceAfterShader( self ) :
+
+		n = GafferOSL.OSLShader()
+		n.loadShader( self.compileShader( os.path.dirname( __file__ ) + "/shaders/outputTypes.osl" ) )
+		self.assertEqual( len( n["out"] ), 5 )
+
+		n.loadShader( self.compileShader( os.path.dirname( __file__ ) + "/shaders/constant.osl" ) )
+		self.assertEqual( len( n["out"] ), 0 )
+
 if __name__ == "__main__":
 	unittest.main()
