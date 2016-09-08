@@ -1,3 +1,36 @@
+0.28.0.1
+========
+
+UI
+--
+
+- Viewer
+  - Construct as invisible to avoid unnecessary updates
+  - Improved renderer management for shader swatches
+  - Support reregistration of shader swatch scenes
+
+Scene
+-----
+
+- FilterPlug
+  - Fixed compatibility with legacy SubGraphs and Dots
+
+Arnold
+------
+
+- ArnoldShaderBall
+  - Added threads plug and limited cores used by the shader swatches
+
+Appleseed
+---------
+
+- Removed unwanted shaders from Appleseed shader menu
+
+Build
+-----
+
+- Resources now install even when not building docs
+
 0.28.0.0
 ========
 
