@@ -61,7 +61,29 @@ Gaffer.Metadata.registerNode(
 			"pathPlugValueWidget:valid", True,
 			"pathPlugValueWidget:bookmarks", "texture",
 
-		]
+		],
+
+		"maxSamples" : [
+
+			"description",
+			"""
+			The maximum number of samples used by appleseed to render the
+			shader ball. A value of 0 disables the limit.
+			"""
+
+		],
+
+		"threads" : [
+
+			"description",
+			"""
+			The number of threads used by appleseed to render the
+			shader ball. A value of 0 uses all cores, and negative
+			values reserve cores for other uses - to be used by
+			the rest of the UI for instance.
+			"""
+
+		],
 
 	}
 )

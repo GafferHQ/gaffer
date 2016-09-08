@@ -68,8 +68,16 @@ class AppleseedShaderBall( GafferScene.ShaderBall ) :
 		self["__appleseedOptions"]["options"]["sampler"]["value"].setValue( 'qmc' )
 		self["__appleseedOptions"]["options"]["environmentEDF"]["enabled"].setValue( True )
 		self["__appleseedOptions"]["options"]["environmentEDF"]["value"].setValue( '/light' )
-		self["__appleseedOptions"]["options"]["numThreads"]["enabled"].setValue( True )
-		self["__appleseedOptions"]["options"]["numThreads"]["value"].setValue( -2 )
+
+		self.addChild(
+			self["__appleseedOptions"]["options"]["interactiveRenderMaxSamples"].createCounterpart( "maxSamples", Gaffer.Plug.Direction.In )
+		)
+		self["__appleseedOptions"]["options"]["interactiveRenderMaxSamples"].setInput( self["maxSamples"] )
+
+		self.addChild(
+			self["__appleseedOptions"]["options"]["numThreads"].createCounterpart( "threads", Gaffer.Plug.Direction.In )
+		)
+		self["__appleseedOptions"]["options"]["numThreads"].setInput( self["threads"] )
 
 		## \todo Consider using an adaptor registry implicitly in the *Render
 		# nodes so we don't have to do it explicitly here.
