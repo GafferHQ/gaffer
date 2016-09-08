@@ -137,11 +137,82 @@ class TileChannelDataProcessor
 class DeepTileWriter
 {
 	public:
-		DeepTileWriter() {}
+		DeepTileWriter(
+				ImageOutputPtr out,
+				const std::string &fileName,
+				const Imath::Box2i &processWindow,
+				const GafferImage::Format &format
+			) :
+				m_out( out ),
+				m_fileName( fileName ),
+				m_format( format ),
+				m_spec( m_out->spec() ),
+				m_processWindow( processWindow )
+		{}
+
+		void finish()
+		{
+		}
 
 		void operator()( const ImagePlug *imagePlug, const V2i &tileOrigin, ConstIntVectorDataPtr sampleOffsets, const std::vector<ConstFloatVectorDataPtr> channelData )
 		{
 		}
+
+	private:
+		ImageOutputPtr m_out;
+		const std::string &m_fileName;
+		const GafferImage::Format &m_format;
+		const ImageSpec m_spec;
+		const Imath::Box2i m_processWindow;
+};
+
+class DeepScanlineWriter
+{
+	public:
+		DeepScanlineWriter(
+				ImageOutputPtr out,
+				const std::string &fileName,
+				const Imath::Box2i &processWindow,
+				const GafferImage::Format &format
+			) :
+				m_out( out ),
+				m_fileName( fileName ),
+				m_format( format ),
+				m_spec( m_out->spec() ),
+				m_processWindow( processWindow ),
+				m_tilesBounds( Imath::Box2i( ImagePlug::tileOrigin( processWindow.min ), ImagePlug::tileOrigin( processWindow.max - Imath::V2i( 1 ) ) + Imath::V2i( ImagePlug::tileSize() ) ) )
+
+		{
+			// m_deepData.init( m_spec.width * ImagePlug::tileSize(), m_spec.channelnames.size() )
+		}
+
+
+		void finish()
+		{
+		}
+
+		void operator()( const ImagePlug *imagePlug, const V2i &tileOrigin, ConstIntVectorDataPtr sampleOffsets, const std::vector<ConstFloatVectorDataPtr> channelData )
+		{
+		}
+
+	private:
+		inline bool firstTileOfRow( const Imath::V2i &tileOrigin ) const
+		{
+			return tileOrigin.x == m_tilesBounds.min.x;
+		}
+
+		inline bool lastTileOfRow( const Imath::V2i &tileOrigin ) const
+		{
+			return tileOrigin.x == ( m_tilesBounds.max.x - ImagePlug::tileSize() ) ;
+		}
+
+		ImageOutputPtr m_out;
+		const std::string &m_fileName;
+		const GafferImage::Format &m_format;
+		const ImageSpec m_spec;
+		const Imath::Box2i m_processWindow;
+		const Imath::Box2i m_tilesBounds;
+		DeepData m_deepData;
 };
 
 class FlatTileWriter
@@ -1170,8 +1241,19 @@ void ImageWriter::execute() const
 	{
 		TileSampleOffsetsProcessor sampleOffsetsProcessor = TileSampleOffsetsProcessor();
 		TileChannelDataProcessor channelDataProcessor = TileChannelDataProcessor();
-		DeepTileWriter deepTileWriter = DeepTileWriter();
-		parallelProcessTilesChannelsGather( inPlug(), spec.channelnames, sampleOffsetsProcessor, channelDataProcessor, deepTileWriter, processDataWindow, TopToBottom );
+
+		if( spec.tile_width == 0 )
+		{
+			DeepScanlineWriter deepScanlineWriter( out, fileName, processDataWindow, imageFormat );
+			parallelProcessTilesChannelsGather( inPlug(), spec.channelnames, sampleOffsetsProcessor, channelDataProcessor, deepScanlineWriter, processDataWindow, TopToBottom );
+			deepScanlineWriter.finish();
+		}
+		else
+		{
+			DeepTileWriter deepTileWriter( out, fileName, processDataWindow, imageFormat );
+			parallelProcessTilesChannelsGather( inPlug(), spec.channelnames, sampleOffsetsProcessor, channelDataProcessor, deepTileWriter, processDataWindow, TopToBottom );
+			deepTileWriter.finish();
+		}
 	}
 
 	out->close();
