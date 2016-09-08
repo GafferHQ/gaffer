@@ -36,6 +36,7 @@
 
 from DocumentationTest import DocumentationTest
 from ArnoldShaderUITest import ArnoldShaderUITest
+from LightToCameraTest import LightToCameraTest
 
 if __name__ == "__main__":
 	unittest.main()
