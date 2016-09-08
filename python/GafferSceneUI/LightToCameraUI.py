@@ -1,6 +1,6 @@
 ##########################################################################
 #
-#  Copyright (c) 2015, Image Engine Design Inc. All rights reserved.
+#  Copyright (c) 2016, Image Engine Design Inc. All rights reserved.
 #
 #  Redistribution and use in source and binary forms, with or without
 #  modification, are permitted provided that the following conditions are
@@ -34,9 +34,31 @@
 #
 ##########################################################################
 
-from DocumentationTest import DocumentationTest
-from ArnoldShaderUITest import ArnoldShaderUITest
-from LightToCameraTest import LightToCameraTest
+import Gaffer
+import GafferScene
 
-if __name__ == "__main__":
-	unittest.main()
+Gaffer.Metadata.registerNode(
+
+	GafferScene.LightToCamera,
+
+	"description",
+	"""
+	A node to convert lights into cameras with a field of view matching the cone of the light.
+	Supports spot lights, and for directional lights creates a basic ortho camera.
+	Intended for use in the viewport SceneView, but could also be used if you wished to render
+	through a light.
+	""",
+
+	plugs = {
+
+		"filter" : [
+
+			"description",
+			"""
+			Filter to specify the locations to look for lights to convert.
+			""",
+
+		],
+	}
+
+)

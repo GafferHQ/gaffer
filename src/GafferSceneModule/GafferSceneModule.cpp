@@ -105,6 +105,7 @@
 #include "GafferSceneBindings/MeshToPointsBinding.h"
 #include "GafferSceneBindings/FilterPlugBinding.h"
 #include "GafferSceneBindings/LightTweaksBinding.h"
+#include "GafferSceneBindings/LightToCameraBinding.h"
 
 using namespace boost::python;
 using namespace GafferBindings;
@@ -191,5 +192,6 @@ BOOST_PYTHON_MODULE( _GafferScene )
 	bindPathMatcherDataPlug();
 	bindMeshToPoints();
 	bindLightTweaks();
+	bindLightToCamera();
 
 }
