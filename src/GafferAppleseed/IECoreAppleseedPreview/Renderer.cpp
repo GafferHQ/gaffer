@@ -1495,6 +1495,7 @@ InternedString g_renderPasses( "as:cfg:generic_frame_renderer:passes" );
 InternedString g_ptMaxRayIntensity( "as:cfg:pt:max_ray_intensity" );
 InternedString g_overrideShadingMode( "as:cfg:shading_engine:override_shading:mode" );
 InternedString g_searchPath( "as:searchpath" );
+InternedString g_maxInteractiveRenderSamples( "as:cfg:progressive_frame_renderer:max_samples" );
 
 /// Helper class to manage log targets in an exception safe way.
 class ScopedLogTarget
@@ -1534,7 +1535,7 @@ class AppleseedRenderer : public IECoreScenePreview::Renderer
 	public :
 
 		AppleseedRenderer( RenderType renderType, const string &fileName )
-			:	m_renderType( renderType ), m_shutterOpenTime( 0.0f ), m_shutterCloseTime( 0.0f ), m_environmentEDFVisible( false ), m_appleseedFileName( fileName )
+			:	m_renderType( renderType ), m_shutterOpenTime( 0.0f ), m_shutterCloseTime( 0.0f ), m_environmentEDFVisible( false ), m_appleseedFileName( fileName ), m_maxInteractiveRenderSamples( 0 )
 		{
 			// Create the renderer controller and the project.
 			m_rendererController = new RendererController();
@@ -1644,6 +1645,23 @@ class AppleseedRenderer : public IECoreScenePreview::Renderer
 							m_project->configurations().get_by_name( "final" )->get_parameters().insert_path( optName.c_str(), maxRayIntensity );
 							m_project->configurations().get_by_name( "interactive" )->get_parameters().insert_path( optName.c_str(), maxRayIntensity );
 						}
+					}
+					return;
+				}
+
+				if( name == g_maxInteractiveRenderSamples )
+				{
+					// We cannot set this config now because appleseed
+					// expects the total number of samples, not samples per pixels.
+					// We save the value and set it later in the render() method,
+					// where we have all the information we need.
+					if( value == NULL )
+					{
+						m_maxInteractiveRenderSamples = 0;
+					}
+					else if( const IntData *d = reportedCast<const IntData>( value, "option", name ) )
+					{
+						m_maxInteractiveRenderSamples = d->readable();
 					}
 					return;
 				}
@@ -1949,6 +1967,19 @@ class AppleseedRenderer : public IECoreScenePreview::Renderer
 
 			m_project->get_scene()->set_environment( environment );
 
+			// Set the max number of interactive render samples.
+			if( m_maxInteractiveRenderSamples <= 0 )
+			{
+				// if maxInteractiveRenderSamples is 0 or nagative, disable it.
+				m_project->configurations().get_by_name( "interactive" )->get_parameters().remove_path( "progressive_frame_renderer.max_samples" );
+			}
+			else
+			{
+				asr::Frame *frame = m_project->get_frame();
+				size_t numPixels = frame->get_pixel_count();
+				m_project->configurations().get_by_name( "interactive" )->get_parameters().insert_path( "progressive_frame_renderer.max_samples", numPixels * m_maxInteractiveRenderSamples );
+			}
+
 			// Clear unused shaders.
 			m_shaderCache->clearUnused();
 
@@ -2191,6 +2222,7 @@ class AppleseedRenderer : public IECoreScenePreview::Renderer
 
 		// Members used by interactive renders
 
+		int m_maxInteractiveRenderSamples;
 		boost::thread m_renderThread;
 
 		// Members used by project generation renderer
