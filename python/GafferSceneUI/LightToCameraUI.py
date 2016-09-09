@@ -1,6 +1,6 @@
 ##########################################################################
 #
-#  Copyright (c) 2015, John Haddon. All rights reserved.
+#  Copyright (c) 2016, Image Engine Design Inc. All rights reserved.
 #
 #  Redistribution and use in source and binary forms, with or without
 #  modification, are permitted provided that the following conditions are
@@ -35,28 +35,29 @@
 ##########################################################################
 
 import Gaffer
-import GafferArnold
+import GafferScene
 
 Gaffer.Metadata.registerNode(
 
-	GafferArnold.ArnoldLight,
+	GafferScene.LightToCamera,
+
+	"description",
+	"""
+	Converts lights into cameras. Spotlights are converted to a perspective
+	camera with the field of view matching the cone angle, and distant lights are
+	converted to an orthographic camera.
+	""",
 
 	plugs = {
 
-		"parameters.*" : [
+		"filter" : [
 
-			# Most light parameters are not connectable.
-			"nodule:type", "",
-
-		],
-
-		"parameters.color" : [
-
-			# The color parameter on quad and skydome lights is connectable.
-			"nodule:type", lambda plug : "GafferUI::StandardNodule" if plug.node()["__shaderName"].getValue() in ( "quad_light", "skydome_light" ) else ""
+			"description",
+			"""
+			Specifies which lights to convert.
+			""",
 
 		],
-
 	}
 
 )

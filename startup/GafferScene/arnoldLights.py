@@ -1,6 +1,6 @@
 ##########################################################################
 #
-#  Copyright (c) 2015, John Haddon. All rights reserved.
+#  Copyright (c) 2016, Image Engine Design Inc. All rights reserved.
 #
 #  Redistribution and use in source and binary forms, with or without
 #  modification, are permitted provided that the following conditions are
@@ -35,28 +35,22 @@
 ##########################################################################
 
 import Gaffer
-import GafferArnold
 
-Gaffer.Metadata.registerNode(
+Gaffer.Metadata.registerValue( "ai:light:spot_light", "type", "spot" )
+Gaffer.Metadata.registerValue( "ai:light:spot_light", "coneAngleParameter", "cone_angle" )
+Gaffer.Metadata.registerValue( "ai:light:spot_light", "penumbraAngleParameter", "penumbra_angle" )
+Gaffer.Metadata.registerValue( "ai:light:spot_light", "penumbraType", "inset" )
+Gaffer.Metadata.registerValue( "ai:light:spot_light", "intensityParameter", "intensity" )
+Gaffer.Metadata.registerValue( "ai:light:spot_light", "exposureParameter", "exposure" )
+Gaffer.Metadata.registerValue( "ai:light:spot_light", "colorParameter", "color" )
+Gaffer.Metadata.registerValue( "ai:light:spot_light", "lensRadiusParameter", "lens_radius" )
 
-	GafferArnold.ArnoldLight,
+Gaffer.Metadata.registerValue( "ai:light:point_light", "type", "point" )
+Gaffer.Metadata.registerValue( "ai:light:point_light", "intensityParameter", "intensity" )
+Gaffer.Metadata.registerValue( "ai:light:point_light", "exposureParameter", "exposure" )
+Gaffer.Metadata.registerValue( "ai:light:point_light", "colorParameter", "color" )
 
-	plugs = {
-
-		"parameters.*" : [
-
-			# Most light parameters are not connectable.
-			"nodule:type", "",
-
-		],
-
-		"parameters.color" : [
-
-			# The color parameter on quad and skydome lights is connectable.
-			"nodule:type", lambda plug : "GafferUI::StandardNodule" if plug.node()["__shaderName"].getValue() in ( "quad_light", "skydome_light" ) else ""
-
-		],
-
-	}
-
-)
+Gaffer.Metadata.registerValue( "ai:light:distant_light", "type", "distant" )
+Gaffer.Metadata.registerValue( "ai:light:distant_light", "intensityParameter", "intensity" )
+Gaffer.Metadata.registerValue( "ai:light:distant_light", "exposureParameter", "exposure" )
+Gaffer.Metadata.registerValue( "ai:light:distant_light", "colorParameter", "color" )
