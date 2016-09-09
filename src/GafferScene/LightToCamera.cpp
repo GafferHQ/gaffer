@@ -34,16 +34,20 @@
 //
 //////////////////////////////////////////////////////////////////////////
 
+#include "boost/algorithm/string.hpp"
+
+#include "OpenEXR/ImathMatrix.h"
+#include "OpenEXR/ImathVec.h"
+
 #include "IECore/CompoundData.h"
 #include "IECore/Camera.h"
 #include "IECore/Shader.h"
 #include "IECore/Transform.h"
-#include "OpenEXR/ImathMatrix.h"
-#include "OpenEXR/ImathVec.h"
-#include "GafferScene/LightToCamera.h"
+
 #include "Gaffer/Metadata.h"
 #include "Gaffer/Context.h"
-#include "boost/algorithm/string.hpp"
+
+#include "GafferScene/LightToCamera.h"
 
 using namespace IECore;
 using namespace Gaffer;
@@ -55,7 +59,7 @@ static IECore::InternedString g_camerasSetName( "__cameras" );
 
 /// \todo: This stuff should all end up as part of the light accessor API once that exists
 /// In the meantime, I've tried to set it up vaguely similarly to how that will work
-namespace 
+namespace
 {
 
 template<typename T>
@@ -111,7 +115,7 @@ void light( const CompoundObject *attributes, const IECore::CompoundData* &shade
 	return;
 }
 
-const char *light_type( const IECore::CompoundData *shaderParameters, const std::string &metadataTarget )
+const char *lightType( const IECore::CompoundData *shaderParameters, const std::string &metadataTarget )
 {
 	ConstStringDataPtr type = Metadata::value<StringData>( metadataTarget, "type" );
 	if( !type || !shaderParameters )
@@ -122,7 +126,7 @@ const char *light_type( const IECore::CompoundData *shaderParameters, const std:
 	return type->readable().c_str();
 }
 
-float light_outerAngle( const IECore::CompoundData *shaderParameters, const std::string &metadataTarget )
+float lightOuterAngle( const IECore::CompoundData *shaderParameters, const std::string &metadataTarget )
 {
 	float coneAngle = parameter<float>( metadataTarget, shaderParameters, "coneAngleParameter", 0.0f );
 	float penumbraAngle = parameter<float>( metadataTarget, shaderParameters, "penumbraAngleParameter", 0.0f );
@@ -146,7 +150,7 @@ float light_outerAngle( const IECore::CompoundData *shaderParameters, const std:
 	float outerAngle = coneAngle;
 
 	// In "inset" or "absolute" modes, the outer angle is just the cone angle.  "outset" needs
-	// adjustment 
+	// adjustment
 	if( penumbraType && *penumbraType == "outset" )
 	{
 		outerAngle = coneAngle + 2.0f * penumbraAngle;
@@ -158,7 +162,7 @@ float light_outerAngle( const IECore::CompoundData *shaderParameters, const std:
 	return outerAngle;
 }
 
-float light_lensRadius( const IECore::CompoundData *shaderParameters, const std::string &metadataTarget )
+float lightLensRadius( const IECore::CompoundData *shaderParameters, const std::string &metadataTarget )
 {
 	if( parameter<bool>( metadataTarget, shaderParameters, "lensRadiusEnableParameter", true ) )
 	{
@@ -167,21 +171,21 @@ float light_lensRadius( const IECore::CompoundData *shaderParameters, const std:
 	return 0.0f;
 }
 
-float light_focalPointOffset( float lensRadius, float outerAngle )
+float lightFocalPointOffset( float lensRadius, float outerAngle )
 {
 	return lensRadius / tan( 0.5f * outerAngle * M_PI / 180.0f );
 }
 
-M44f light_cameraTransform( const IECore::CompoundData *shaderParameters, const std::string &metadataTarget )
+M44f lightCameraTransform( const IECore::CompoundData *shaderParameters, const std::string &metadataTarget )
 {
-	const char *type = light_type( shaderParameters, metadataTarget );
+	const char *type = lightType( shaderParameters, metadataTarget );
 
 	if( type && !strcmp( type, "spot" ) )
 	{
-		float lensRadius = light_lensRadius( shaderParameters, metadataTarget );
-		float outerAngle = light_outerAngle( shaderParameters, metadataTarget );
+		float lensRadius = lightLensRadius( shaderParameters, metadataTarget );
+		float outerAngle = lightOuterAngle( shaderParameters, metadataTarget );
 
-		float focalPointOffset = light_focalPointOffset( lensRadius, outerAngle );
+		float focalPointOffset = lightFocalPointOffset( lensRadius, outerAngle );
 		M44f transformOffset;
 		transformOffset.setTranslation( V3f( 0.0f, 0.0f, focalPointOffset ) );
 		return transformOffset;
@@ -192,27 +196,27 @@ M44f light_cameraTransform( const IECore::CompoundData *shaderParameters, const 
 	}
 }
 
-IECore::CameraPtr light_toCamera( const IECore::CompoundData *shaderParameters, const std::string &metadataTarget )
+IECore::CameraPtr lightToCamera( const IECore::CompoundData *shaderParameters, const std::string &metadataTarget )
 {
 	IECore::CameraPtr result = new IECore::Camera();
-	const char *type = light_type( shaderParameters, metadataTarget );
+	const char *type = lightType( shaderParameters, metadataTarget );
 
 
 	float screenWindowScale = 1.0f;
 	if( type && !strcmp( type, "distant" ) )
 	{
 		const float locatorScale = parameter<float>( metadataTarget, shaderParameters, "locatorScaleParameter", 1 );
-		
+
 		result->parameters()["projection"] = new StringData( "orthographic" );
 		result->parameters()["clippingPlanes"] = new V2fData( V2f( -100000, 100000 ) );
 		screenWindowScale = locatorScale;
 	}
 	else if( type && !strcmp( type, "spot" ) )
 	{
-		float lensRadius = light_lensRadius( shaderParameters, metadataTarget );
-		float outerAngle = light_outerAngle( shaderParameters, metadataTarget );
+		float lensRadius = lightLensRadius( shaderParameters, metadataTarget );
+		float outerAngle = lightOuterAngle( shaderParameters, metadataTarget );
 
-		float focalPointOffset = light_focalPointOffset( lensRadius, outerAngle );
+		float focalPointOffset = lightFocalPointOffset( lensRadius, outerAngle );
 
 		// Set clipping plane to cover the area in front of the spot, with small adjustments
 		// to make sure that we don't go under 0.01 in near clip to preserve depth range,
@@ -330,7 +334,7 @@ IECore::ConstObjectPtr LightToCamera::computeProcessedObject( const ScenePath &p
 	IECore::ConstCameraPtr camera = NULL;
 	if( shaderParameters )
 	{
-		camera = light_toCamera( shaderParameters, metadataTarget );
+		camera = lightToCamera( shaderParameters, metadataTarget );
 	}
 
 	if( camera )
@@ -364,7 +368,7 @@ M44f LightToCamera::computeProcessedTransform( const ScenePath &path, const Gaff
 	IECore::ConstCameraPtr camera = NULL;
 	if( shaderParameters )
 	{
-		return light_cameraTransform( shaderParameters, metadataTarget ) * inputTransform;
+		return lightCameraTransform( shaderParameters, metadataTarget ) * inputTransform;
 	}
 
 	return inputTransform;
@@ -379,7 +383,6 @@ void LightToCamera::hashProcessedAttributes( const ScenePath &path, const Gaffer
 {
 	// Attributes depend only on input attributes
 }
-	
 
 IECore::ConstCompoundObjectPtr LightToCamera::computeProcessedAttributes( const ScenePath &path, const Gaffer::Context *context, IECore::ConstCompoundObjectPtr inputAttributes ) const
 {
@@ -402,7 +405,6 @@ void LightToCamera::hashSetNames( const Gaffer::Context *context, const ScenePlu
 	// We always just add a __cameras set if it doesn't yet exist, without spending time checking
 	// whether it will be non-empty ( usually there will already be a __cameras set anyway )
 }
-
 
 IECore::ConstInternedStringVectorDataPtr LightToCamera::computeSetNames( const Gaffer::Context *context, const ScenePlug *parent ) const
 {
@@ -429,7 +431,6 @@ void LightToCamera::hashSet( const IECore::InternedString &setName, const Gaffer
 
 	SceneElementProcessor::hashSet( setName, context, parent, h );
 	inPlug()->setPlug()->hash( h );
-
 
 	// This setup is copied from Prune
 
@@ -473,14 +474,18 @@ GafferScene::ConstPathMatcherDataPtr LightToCamera::computeSet( const IECore::In
 
 	const PathMatcher &lightSet = lightSetData->readable();
 
-
 	PathMatcherDataPtr outputSetData = inputSetData->copy();
 	PathMatcher &outputSet = outputSetData->writable();
 
 	ContextPtr tmpContext = filterContext( context );
 	Context::Scope scopedContext( tmpContext.get() );
 
-	for( PathMatcher::RawIterator pIt = lightSet.begin(), peIt = lightSet.end(); pIt != peIt; ++pIt )
+	/// \todo We're assuming here that the filter won't match
+	/// anything outside the light set, but we're not doing anything
+	/// to enforce that. If we had a FilterResults node, we could use
+	/// that internally in conjunction with a Sets node to do all the
+	/// work for us.
+	for( PathMatcher::Iterator pIt = lightSet.begin(), peIt = lightSet.end(); pIt != peIt; ++pIt )
 	{
 		tmpContext->set( ScenePlug::scenePathContextName, *pIt );
 		const int m = filterPlug()->getValue();

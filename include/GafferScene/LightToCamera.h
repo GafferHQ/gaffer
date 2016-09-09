@@ -39,13 +39,6 @@
 
 #include "GafferScene/SceneElementProcessor.h"
 
-namespace Gaffer
-{
-
-IE_CORE_FORWARDDECLARE( StringPlug )
-
-} // namespace Gaffer
-
 namespace GafferScene
 {
 
@@ -81,8 +74,6 @@ class LightToCamera : public SceneElementProcessor
 
 		virtual IECore::ConstInternedStringVectorDataPtr computeSetNames( const Gaffer::Context *context, const ScenePlug *parent ) const;
 		virtual GafferScene::ConstPathMatcherDataPtr computeSet( const IECore::InternedString &setName, const Gaffer::Context *context, const ScenePlug *parent ) const;
-
-
 
 	private :
 
