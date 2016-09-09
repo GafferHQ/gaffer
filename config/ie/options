@@ -35,6 +35,8 @@
 ##########################################################################
 
 import os
+import sys
+
 import IEEnv
 
 ##########################################################################
@@ -141,13 +143,16 @@ else :
 	installRoot = os.path.expanduser( "/tmp/gafferTestInstalls" )
 	versionString += "dev"
 
-BUILD_DIR = buildRoot + "/apps/gaffer/" + versionString + "/" + IEEnv.platform() + "/cortex/" + cortexMajorVersion + "/" + targetApp
-INSTALL_DIR = installRoot + "/apps/gaffer/" + versionString + "/" + IEEnv.platform() + "/cortex/" + cortexMajorVersion + "/" + targetApp
+baseBuildDir = os.path.join( buildRoot, "apps", "gaffer", versionString, IEEnv.platform(), "cortex", cortexMajorVersion )
+baseInstallDir = os.path.join( installRoot, "apps", "gaffer", versionString, IEEnv.platform(), "cortex", cortexMajorVersion )
+
+BUILD_DIR = os.path.join( baseBuildDir, targetApp )
+INSTALL_DIR = os.path.join( baseInstallDir, targetApp )
 
 if targetAppVersion :
 	
-	BUILD_DIR = BUILD_DIR + "/" + targetAppMajorVersion
-	INSTALL_DIR = INSTALL_DIR + "/" + targetAppMajorVersion
+	BUILD_DIR = os.path.join( BUILD_DIR, targetAppMajorVersion )
+	INSTALL_DIR = os.path.join( INSTALL_DIR, targetAppMajorVersion )
 
 ##########################################################################
 # get include locations right
@@ -288,6 +293,12 @@ CXX = os.path.join( compilerReg["location"], compilerReg["bin"] )
 
 SPHINX = os.path.join( sphinxRoot, "bin", "sphinx-build" )
 
+# for app installs we copy the docs and graphics from the standalone install
+if targetAppVersion and "install" in sys.argv :
+	SPHINX = "disableDocs"
+	INKSCAPE = "disableGraphics"
+	INSTALL_POST_COMMAND="scons -i -f config/ie/postInstall STANDALONE_INSTALL_DIR={baseInstallDir}/gaffer INSTALL_DIR=$INSTALL_DIR".format( baseInstallDir = baseInstallDir )
+
 ##########################################################################
 # figure out the lib suffixes
 ##########################################################################
@@ -316,7 +327,7 @@ os.environ["PYTHONHOME"] = os.path.join( pythonReg["location"], compiler, compil
 os.environ["OCIO"] = os.path.join( IEEnv.Environment.rootPath(), "config", "openColorIO", "nuke-default", "config.ocio" )
 
 # we need these imported so we can run the commands to generate the documentation
-ENV_VARS_TO_IMPORT="PATH PYTHONPATH PYTHONHOME IEENV_ROOT IEENV_DISABLE_WRAPPER_ENV_CHECK IECORE_FONT_PATHS IECOREGL_SHADER_INCLUDE_PATHS OCIO IEENV_WORKING_PATH DOXYGEN_VERSION OSL_VERSION"
+ENV_VARS_TO_IMPORT="PATH PYTHONPATH PYTHONHOME IEENV_ROOT IEENV_DISABLE_WRAPPER_ENV_CHECK IECORE_FONT_PATHS IECOREGL_SHADER_INCLUDE_PATHS OCIO IEENV_WORKING_PATH DOXYGEN_VERSION OSL_VERSION SCONS_VERSION"
 # the output is pretty tedious without this disabled
 os.environ["IEENV_DISABLE_WRAPPER_ENV_CHECK"] = "1"
 
