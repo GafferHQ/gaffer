@@ -372,7 +372,8 @@ def checkSphinx( context ) :
 
 conf = Configure( env, custom_tests = { "checkInkscape" : checkInkscape, "checkSphinx" : checkSphinx } )
 
-if not conf.checkInkscape():
+haveInkscape = conf.checkInkscape()
+if not haveInkscape and env["INKSCAPE"] != "disableGraphics" :
 	print 'Inkscape is not installed!'
 	Exit(1)
 
@@ -989,15 +990,21 @@ def buildGraphics( target, source, env ) :
 				shell = True,
 			)
 
-for source, target in (
-	( "resources/graphics.svg", "arrowDown10.png" ),
-	( "resources/GafferLogo.svg", "GafferLogo.png" ),
-	( "resources/GafferLogoMini.svg", "GafferLogoMini.png" ),
-) :
+if haveInkscape :
 
-	graphicsBuild = env.Command( os.path.join( "$BUILD_DIR/graphics/", target ), source, buildGraphics )
-	env.NoCache( graphicsBuild )
-	env.Alias( "build", graphicsBuild )
+	for source, target in (
+		( "resources/graphics.svg", "arrowDown10.png" ),
+		( "resources/GafferLogo.svg", "GafferLogo.png" ),
+		( "resources/GafferLogoMini.svg", "GafferLogoMini.png" ),
+	) :
+
+		graphicsBuild = env.Command( os.path.join( "$BUILD_DIR/graphics/", target ), source, buildGraphics )
+		env.NoCache( graphicsBuild )
+		env.Alias( "build", graphicsBuild )
+
+else :
+
+	sys.stderr.write( "WARNING : Inkscape not found - not building graphics. Check INKSCAPE build variable.\n" )
 
 #########################################################################################################
 # Resources
