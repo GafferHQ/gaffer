@@ -43,10 +43,9 @@ Gaffer.Metadata.registerNode(
 
 	"description",
 	"""
-	A node to convert lights into cameras with a field of view matching the cone of the light.
-	Supports spot lights, and for directional lights creates a basic ortho camera.
-	Intended for use in the viewport SceneView, but could also be used if you wished to render
-	through a light.
+	Converts lights into cameras. Spotlights are converted to a perspective
+	camera with the field of view matching the cone angle, and distant lights are
+	converted to an orthographic camera.
 	""",
 
 	plugs = {
@@ -55,7 +54,7 @@ Gaffer.Metadata.registerNode(
 
 			"description",
 			"""
-			Filter to specify the locations to look for lights to convert.
+			Specifies which lights to convert.
 			""",
 
 		],
