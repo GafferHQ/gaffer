@@ -264,6 +264,14 @@ options.Add(
 	"sphinx-build",
 )
 
+options.Add(
+	"INSTALL_POST_COMMAND",
+	"A command which is run following a successful install process. "
+	"This could be used to customise installation further for a "
+	"particular site.",
+	"",
+)
+
 ###############################################################################################
 # Basic environment object. All the other environments will be based on this.
 ###############################################################################################
@@ -1114,6 +1122,10 @@ else :
 	env.NoCache( install )
 
 	env.Alias( "install", install )
+
+	if env["INSTALL_POST_COMMAND"] != "" :
+		# this is the only way we could find to get a post action to run for an alias
+		env.Alias( "install", install, "$INSTALL_POST_COMMAND" )
 
 #########################################################################################################
 # Packaging
