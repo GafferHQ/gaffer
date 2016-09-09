@@ -34,10 +34,7 @@
 #
 ##########################################################################
 
-import arnold
-
 import IECore
-import IECoreArnold
 
 import GafferScene
 import GafferSceneTest
@@ -57,7 +54,7 @@ class LightToCameraTest( GafferSceneTest.SceneTestCase ) :
 			("spot_light", "spot2"),
 			("distant_light", "distant1"),
 			("skydome_light", "env1"),
-				]:
+		] :
 			l = GafferArnold.ArnoldLight()
 			l.loadShader( shader )
 			l["name"].setValue( name )
@@ -75,31 +72,42 @@ class LightToCameraTest( GafferSceneTest.SceneTestCase ) :
 		lc["filter"].setInput( f["out"] )
 
 		# Test spot to persp cam
-		self.assertEqual( lc["out"].object( "/group/spot1" ).parameters(),IECore.CompoundData({
-			'projection:fov':IECore.FloatData( 65 ),
-			'clippingPlanes':IECore.V2fData( IECore.V2f( 0.01, 100000 ) ),
-			'projection':IECore.StringData( 'perspective' ),
-			'resolutionOverride':IECore.V2iData( IECore.V2i( 512, 512 ) ),
-			'screenWindow':IECore.Box2fData( IECore.Box2f( IECore.V2f( -1, -1 ), IECore.V2f( 1, 1 ) ) )
-		} ) )
+		self.assertEqual(
+			lc["out"].object( "/group/spot1" ).parameters(),
+			IECore.CompoundData( {
+				'projection:fov':IECore.FloatData( 65 ),
+				'clippingPlanes':IECore.V2fData( IECore.V2f( 0.01, 100000 ) ),
+				'projection':IECore.StringData( 'perspective' ),
+				'resolutionOverride':IECore.V2iData( IECore.V2i( 512, 512 ) ),
+				'screenWindow':IECore.Box2fData( IECore.Box2f( IECore.V2f( -1, -1 ), IECore.V2f( 1, 1 ) ) )
+			} )
+		)
 
 		# Test distant to ortho cam
-		self.assertEqual( lc["out"].object( "/group/distant1" ).parameters(),IECore.CompoundData({
-			'clippingPlanes':IECore.V2fData( IECore.V2f( -100000, 100000 ) ),
-			'projection':IECore.StringData( 'orthographic' ),
-			'resolutionOverride':IECore.V2iData( IECore.V2i( 512, 512 ) ),
-			'screenWindow':IECore.Box2fData( IECore.Box2f( IECore.V2f( -1, -1 ), IECore.V2f( 1, 1 ) ) )
-		} ) )
+		self.assertEqual(
+			lc["out"].object( "/group/distant1" ).parameters(),
+			IECore.CompoundData( {
+				'clippingPlanes':IECore.V2fData( IECore.V2f( -100000, 100000 ) ),
+				'projection':IECore.StringData( 'orthographic' ),
+				'resolutionOverride':IECore.V2iData( IECore.V2i( 512, 512 ) ),
+				'screenWindow':IECore.Box2fData( IECore.Box2f( IECore.V2f( -1, -1 ), IECore.V2f( 1, 1 ) ) )
+			} )
+		)
 
 		# Test light with no corresponding camera ( gets default cam )
-		self.assertEqual( lc["out"].object( "/group/env1" ).parameters(),IECore.CompoundData({
-            'projection':IECore.StringData( 'perspective' ),
-            'resolutionOverride':IECore.V2iData( IECore.V2i( 512, 512 ) )
-        } ) )
+		self.assertEqual(
+			lc["out"].object( "/group/env1" ).parameters(),
+			IECore.CompoundData({
+				'projection':IECore.StringData( 'perspective' ),
+				'resolutionOverride':IECore.V2iData( IECore.V2i( 512, 512 ) )
+			} )
+		)
 
 		self.assertEqual( lc["out"].set( "__lights" ).value.paths(), [ "/group/spot2" ] )
-		self.assertEqual( set( lc["out"].set( "__cameras" ).value.paths() ) ,
-			set( [ "/group/camera", "/group/spot1", "/group/distant1", "/group/env1" ] ) )
+		self.assertEqual(
+			set( lc["out"].set( "__cameras" ).value.paths() ),
+			set( [ "/group/camera", "/group/spot1", "/group/distant1", "/group/env1" ] )
+		)
 
 if __name__ == "__main__":
 	unittest.main()
