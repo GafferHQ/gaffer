@@ -1,6 +1,6 @@
 ##########################################################################
 #
-#  Copyright (c) 2015, Image Engine Design Inc. All rights reserved.
+#  Copyright (c) 2016, Image Engine Design Inc. All rights reserved.
 #
 #  Redistribution and use in source and binary forms, with or without
 #  modification, are permitted provided that the following conditions are
@@ -34,8 +34,20 @@
 #
 ##########################################################################
 
-from DocumentationTest import DocumentationTest
-from ArnoldShaderUITest import ArnoldShaderUITest
+import Gaffer
 
-if __name__ == "__main__":
-	unittest.main()
+Gaffer.Metadata.registerValue( "ri:light:spotlight", "type", "spot" )
+Gaffer.Metadata.registerValue( "ri:light:spotlight", "coneAngleParameter", "coneangle" )
+Gaffer.Metadata.registerValue( "ri:light:spotlight", "penumbraAngleParameter", "conedeltaangle" )
+Gaffer.Metadata.registerValue( "ri:light:spotlight", "penumbraType", "inset" )
+Gaffer.Metadata.registerValue( "ri:light:spotlight", "angleUnit", "radians" )
+Gaffer.Metadata.registerValue( "ri:light:spotlight", "intensityParameter", "intensity" )
+Gaffer.Metadata.registerValue( "ri:light:spotlight", "colorParameter", "lightcolor" )
+
+Gaffer.Metadata.registerValue( "ri:light:pointlight", "type", "point" )
+Gaffer.Metadata.registerValue( "ri:light:pointlight", "intensityParameter", "intensity" )
+Gaffer.Metadata.registerValue( "ri:light:pointlight", "colorParameter", "lightcolor" )
+
+Gaffer.Metadata.registerValue( "ri:light:distantlight", "type", "distant" )
+Gaffer.Metadata.registerValue( "ri:light:distantlight", "intensityParameter", "intensity" )
+Gaffer.Metadata.registerValue( "ri:light:distantlight", "colorParameter", "lightcolor" )

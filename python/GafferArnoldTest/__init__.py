@@ -43,6 +43,7 @@ from ArnoldLightTest import ArnoldLightTest
 from ArnoldMeshLightTest import ArnoldMeshLightTest
 from InteractiveArnoldRenderTest import InteractiveArnoldRenderTest
 from ArnoldDisplacementTest import ArnoldDisplacementTest
+from LightToCameraTest import LightToCameraTest
 from IECoreArnoldPreviewTest import *
 
 if __name__ == "__main__":
