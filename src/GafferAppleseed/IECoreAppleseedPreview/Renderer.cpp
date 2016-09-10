@@ -53,6 +53,7 @@
 #include "renderer/api/camera.h"
 #include "renderer/api/color.h"
 #include "renderer/api/display.h"
+#include "renderer/api/environment.h"
 #include "renderer/api/environmentedf.h"
 #include "renderer/api/environmentshader.h"
 #include "renderer/api/frame.h"
@@ -89,7 +90,6 @@
 
 #include "GafferScene/Private/IECoreScenePreview/Renderer.h"
 
-#include "stdio.h"
 
 namespace asf = foundation;
 namespace asr = renderer;
@@ -234,10 +234,10 @@ class AppleseedEntity : public IECoreScenePreview::Renderer::ObjectInterface
 			m_mainAssembly->assemblies().insert( assembly );
 		}
 
-		asf::auto_release_ptr<asr::Assembly> removeAssembly( asr::Assembly *assembly )
+		void removeAssembly( asr::Assembly *assembly )
 		{
 			LockGuardType lock( g_assembliesMutex );
-			return m_mainAssembly->assemblies().remove( assembly );
+			m_mainAssembly->assemblies().remove( assembly );
 		}
 
 		void insertAssemblyInstance( asf::auto_release_ptr<asr::AssemblyInstance> assemblyInstance )
@@ -247,10 +247,10 @@ class AppleseedEntity : public IECoreScenePreview::Renderer::ObjectInterface
 			bumpMainAssemblyVersionId();
 		}
 
-		asf::auto_release_ptr<asr::AssemblyInstance> removeAssemblyInstance( asr::AssemblyInstance *assemblyInstance )
+		void removeAssemblyInstance( asr::AssemblyInstance *assemblyInstance )
 		{
 			LockGuardType lock( g_assemblyInstancesMutex );
-			return m_mainAssembly->assembly_instances().remove( assemblyInstance );
+			m_mainAssembly->assembly_instances().remove( assemblyInstance );
 			bumpMainAssemblyVersionId();
 		}
 
@@ -272,10 +272,10 @@ class AppleseedEntity : public IECoreScenePreview::Renderer::ObjectInterface
 			m_mainAssembly->lights().insert( light );
 		}
 
-		asf::auto_release_ptr<asr::Light> removeLight( asr::Light *light )
+		void removeLight( asr::Light *light )
 		{
 			LockGuardType lock( g_lightsMutex );
-			return m_mainAssembly->lights().remove( light );
+			m_mainAssembly->lights().remove( light );
 		}
 
 		void insertMaterial( asf::auto_release_ptr<asr::Material> material )
@@ -437,6 +437,7 @@ class AppleseedEntity : public IECoreScenePreview::Renderer::ObjectInterface
 				asr::ParamArray params;
 				params.insert( "filename", fileName.c_str() );
 				params.insert( "color_space", "linear_rgb" );
+
 				if( alphaMap )
 				{
 					params.insert( "alpha_mode", "detect" );
@@ -1429,7 +1430,7 @@ class AppleseedDeltaLight : public AppleseedLight
 
 		virtual void transform( const vector<M44f> &samples, const vector<float> &times )
 		{
-			// We don't support light transform motion blur yet.
+			// appleseed does not support light transform motion blur yet.
 			transform(samples[0]);
 		}
 
