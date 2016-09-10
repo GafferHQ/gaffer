@@ -276,7 +276,7 @@ class _LookThroughPlugValueWidget( GafferUI.PlugValueWidget ) :
 					plug.node()["in"],
 					plug.node().getContext(),
 					"/",
-					filter = GafferScene.ScenePath.createStandardFilter( [ "__cameras" ], "Show only cameras" )
+					filter = self.__pathFilter()
 				),
 			)
 			self.__cameraWidget.pathWidget().setFixedCharacterWidth( 13 )
@@ -289,6 +289,38 @@ class _LookThroughPlugValueWidget( GafferUI.PlugValueWidget ) :
 
 		with self.getContext() :
 			self.__cameraWidget.setEnabled( self.getPlug()["enabled"].getValue() )
+
+	@staticmethod
+	def __pathFilter() :
+
+		# First make a filter that strips the scene down to
+		# only things it is valid to look through - the union
+		# of lights and cameras.
+
+		validFilter = GafferScene.UnionFilter()
+
+		# Must parent this filter to validFilter so it remains alive
+		# after returning from this method.
+		validFilter["__camerasFilter"] = GafferScene.SetFilter()
+		validFilter["__camerasFilter"]["set"].setValue( "__cameras" )
+
+		validFilter["__lightsFilter"] = GafferScene.SetFilter()
+		validFilter["__lightsFilter"]["set"].setValue( "__lights" )
+
+		validFilter["in"][0].setInput( validFilter["__camerasFilter"]["out"] )
+		validFilter["in"][1].setInput( validFilter["__lightsFilter"]["out"] )
+
+		validPathFilter = GafferScene.SceneFilterPathFilter( validFilter )
+		validPathFilter.userData()["UI"] = { "visible" : False }
+
+		# Now intersect that with a filter to show only cameras.
+		# By turning this second filter on and off, we can give the
+		# user a "Show Lights" toggle.
+
+		camerasPathFilter = GafferScene.SceneFilterPathFilter( validFilter["__camerasFilter"] )
+		camerasPathFilter.userData()["UI"] = { "label" : "Show Lights", "invertEnabled" : True }
+
+		return Gaffer.CompoundPathFilter( [ validPathFilter, camerasPathFilter ] )
 
 ##########################################################################
 # _GridPlugValueWidget

@@ -247,7 +247,7 @@ void Prune::hashSet( const IECore::InternedString &setName, const Gaffer::Contex
 	// calls to computeSet() and a huge overhead in recomputing
 	// the same sets repeatedly.
 	//
-	// See further comments in FilteredSceneProcessor::affects().
+	// See further comments in acceptsInput()
 	ContextPtr c = filterContext( context );
 	c->remove( ScenePlug::scenePathContextName );
 	Context::Scope s( c.get() );

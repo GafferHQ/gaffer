@@ -1,6 +1,6 @@
 ##########################################################################
 #
-#  Copyright (c) 2015, John Haddon. All rights reserved.
+#  Copyright (c) 2016, Image Engine Design Inc. All rights reserved.
 #
 #  Redistribution and use in source and binary forms, with or without
 #  modification, are permitted provided that the following conditions are
@@ -35,28 +35,19 @@
 ##########################################################################
 
 import Gaffer
-import GafferArnold
 
-Gaffer.Metadata.registerNode(
+Gaffer.Metadata.registerValue( "ri:light:spotlight", "type", "spot" )
+Gaffer.Metadata.registerValue( "ri:light:spotlight", "coneAngleParameter", "coneangle" )
+Gaffer.Metadata.registerValue( "ri:light:spotlight", "penumbraAngleParameter", "conedeltaangle" )
+Gaffer.Metadata.registerValue( "ri:light:spotlight", "penumbraType", "inset" )
+Gaffer.Metadata.registerValue( "ri:light:spotlight", "angleUnit", "radians" )
+Gaffer.Metadata.registerValue( "ri:light:spotlight", "intensityParameter", "intensity" )
+Gaffer.Metadata.registerValue( "ri:light:spotlight", "colorParameter", "lightcolor" )
 
-	GafferArnold.ArnoldLight,
+Gaffer.Metadata.registerValue( "ri:light:pointlight", "type", "point" )
+Gaffer.Metadata.registerValue( "ri:light:pointlight", "intensityParameter", "intensity" )
+Gaffer.Metadata.registerValue( "ri:light:pointlight", "colorParameter", "lightcolor" )
 
-	plugs = {
-
-		"parameters.*" : [
-
-			# Most light parameters are not connectable.
-			"nodule:type", "",
-
-		],
-
-		"parameters.color" : [
-
-			# The color parameter on quad and skydome lights is connectable.
-			"nodule:type", lambda plug : "GafferUI::StandardNodule" if plug.node()["__shaderName"].getValue() in ( "quad_light", "skydome_light" ) else ""
-
-		],
-
-	}
-
-)
+Gaffer.Metadata.registerValue( "ri:light:distantlight", "type", "distant" )
+Gaffer.Metadata.registerValue( "ri:light:distantlight", "intensityParameter", "intensity" )
+Gaffer.Metadata.registerValue( "ri:light:distantlight", "colorParameter", "lightcolor" )
