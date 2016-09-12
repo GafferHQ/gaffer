@@ -36,6 +36,8 @@
 //////////////////////////////////////////////////////////////////////////
 
 #include "tbb/task.h"
+#include "tbb/parallel_reduce.h"
+#include "tbb/blocked_range.h"
 
 #include "boost/algorithm/string/predicate.hpp"
 
@@ -52,6 +54,7 @@
 using namespace std;
 using namespace Imath;
 using namespace IECore;
+using namespace Gaffer;
 using namespace GafferScene;
 
 //////////////////////////////////////////////////////////////////////////
@@ -163,6 +166,189 @@ void parallelProcessLocations( const GafferScene::ScenePlug *scene, Functor &f )
 }
 
 } // namespace
+
+
+//////////////////////////////////////////////////////////////////////////
+// RenderSets class
+//////////////////////////////////////////////////////////////////////////
+
+namespace
+{
+
+InternedString g_camerasSetName( "__cameras" );
+InternedString g_lightsSetName( "__lights" );
+std::string g_renderSetsPrefix( "render:" );
+ConstInternedStringVectorDataPtr g_emptySetsAttribute = new InternedStringVectorData;
+
+} // namespace
+
+namespace GafferScene
+{
+
+namespace Preview
+{
+
+struct RenderSets::Updater
+{
+
+	Updater( const ScenePlug *scene, RenderSets &renderSets, unsigned changed )
+		:	changed( changed ), m_scene( scene ), m_renderSets( renderSets )
+	{
+	}
+
+	Updater( const Updater &updater, tbb::split )
+		:	changed( NothingChanged ), m_scene( updater.m_scene ), m_renderSets( updater.m_renderSets )
+	{
+	}
+
+	void operator()( const tbb::blocked_range<size_t> &r )
+	{
+		ContextPtr context = new Context( *Context::current(), Context::Borrowed );
+		Context::Scope scopedContext( context.get() );
+
+		for( size_t i=r.begin(); i!=r.end(); ++i )
+		{
+			Set *s = NULL;
+			InternedString n;
+			unsigned potentialChange = NothingChanged;
+			if( i < m_renderSets.m_sets.size() )
+			{
+				Sets::iterator it = m_renderSets.m_sets.begin() + i;
+				s = &(it->second);
+				n = it->first;
+				potentialChange = RenderSetsChanged;
+			}
+			else if( i == m_renderSets.m_sets.size() )
+			{
+				s = &m_renderSets.m_camerasSet;
+				n = g_camerasSetName;
+				potentialChange = CamerasSetChanged;
+			}
+			else
+			{
+				assert( i == m_renderSets.m_sets.size() + 1 );
+				s = &m_renderSets.m_lightsSet;
+				n = g_lightsSetName;
+				potentialChange = LightsSetChanged;
+			}
+
+			context->set( ScenePlug::setNameContextName, n );
+			const IECore::MurmurHash &hash = m_scene->setPlug()->hash();
+			if( s->hash != hash )
+			{
+				s->set = m_scene->setPlug()->getValue( &hash )->readable();
+				s->hash = hash;
+				changed |= potentialChange;
+			}
+		}
+	}
+
+	void join( Updater &rhs )
+	{
+		changed |= rhs.changed;
+	}
+
+	unsigned changed;
+
+	private :
+
+		const ScenePlug *m_scene;
+		RenderSets &m_renderSets;
+
+};
+
+RenderSets::RenderSets()
+{
+}
+
+RenderSets::RenderSets( const ScenePlug *scene )
+{
+	m_camerasSet.unprefixedName = g_camerasSetName;
+	m_lightsSet.unprefixedName = g_lightsSetName;
+	update( scene );
+}
+
+unsigned RenderSets::update( const ScenePlug *scene )
+{
+	unsigned changed = NothingChanged;
+
+	// Figure out the names of the sets we want, and make
+	// sure we have an entry for each of them in m_renderSets.
+
+	ConstInternedStringVectorDataPtr setNamesData = scene->setNamesPlug()->getValue();
+	const vector<InternedString> &setNames = setNamesData->readable();
+
+	for( vector<InternedString>::const_iterator it = setNames.begin(), eIt = setNames.end(); it != eIt; ++it )
+	{
+		if( boost::starts_with( it->string(), g_renderSetsPrefix ) )
+		{
+			m_sets[*it].unprefixedName = it->string().substr( g_renderSetsPrefix.size() );
+		}
+	}
+
+	// Remove anything from m_renderSets that no longer exists
+	// in the scene.
+
+	for( Sets::const_iterator it = m_sets.begin(); it != m_sets.end(); )
+	{
+		if( std::find( setNames.begin(), setNames.end(), it->first ) == setNames.end() )
+		{
+			it = m_sets.erase( it );
+			changed |= RenderSetsChanged;
+		}
+		else
+		{
+			++it;
+		}
+	}
+
+	// Update all the sets we want in parallel.
+
+	Updater updater( scene, *this, changed );
+	parallel_reduce( tbb::blocked_range<size_t>( 0, m_sets.size() + 2 ), updater );
+
+	return updater.changed;
+}
+
+void RenderSets::clear()
+{
+	m_sets.clear();
+	m_camerasSet = Set();
+	m_lightsSet = Set();
+}
+
+const PathMatcher &RenderSets::camerasSet() const
+{
+	return m_camerasSet.set;
+}
+
+const PathMatcher &RenderSets::lightsSet() const
+{
+	return m_lightsSet.set;
+}
+
+ConstInternedStringVectorDataPtr RenderSets::setsAttribute( const std::vector<IECore::InternedString> &path ) const
+{
+	InternedStringVectorDataPtr resultData = NULL;
+	vector<InternedString> *result = NULL;
+	for( Sets::const_iterator it = m_sets.begin(), eIt = m_sets.end(); it != eIt; ++it )
+	{
+		if( it->second.set.match( path ) & ( Filter::ExactMatch | Filter::AncestorMatch ) )
+		{
+			if( !result )
+			{
+				resultData = new InternedStringVectorData;
+				result = &resultData->writable();
+			}
+			result->push_back( it->second.unprefixedName );
+		}
+	}
+	return resultData ? resultData : g_emptySetsAttribute;
+}
+
+} // namespace Preview
+
+} // namespace GafferScene
 
 //////////////////////////////////////////////////////////////////////////
 // Internal utilities
