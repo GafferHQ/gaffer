@@ -68,6 +68,12 @@ void traverseOnDirty( const Gaffer::Plug *dirtiedPlug, ConstScenePlugPtr scene )
 	}
 }
 
+void traverseOnChanged( ConstScenePlugPtr scene, ConstContextPtr context )
+{
+	Context::Scope scopedContext( context.get() );
+	traverseScene( scene.get() );
+}
+
 } // namespace
 
 void GafferSceneTest::traverseScene( const GafferScene::ScenePlug *scenePlug )
@@ -90,4 +96,9 @@ boost::signals::connection GafferSceneTest::connectTraverseSceneToPlugDirtiedSig
 	}
 
 	return const_cast<Node *>( node )->plugDirtiedSignal().connect( boost::bind( &traverseOnDirty, ::_1, scene ) );
+}
+
+boost::signals::connection GafferSceneTest::connectTraverseSceneToContextChangedSignal( const GafferScene::ConstScenePlugPtr &scene, const Gaffer::ContextPtr &context )
+{
+	return context->changedSignal().connect( boost::bind( &traverseOnChanged, scene, context ) );
 }

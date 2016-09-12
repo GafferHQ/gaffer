@@ -66,6 +66,7 @@ BOOST_PYTHON_MODULE( _GafferSceneTest )
 
 	def( "traverseScene", &traverseSceneWrapper );
 	def( "connectTraverseSceneToPlugDirtiedSignal", &connectTraverseSceneToPlugDirtiedSignal );
+	def( "connectTraverseSceneToContextChangedSignal", &connectTraverseSceneToContextChangedSignal );
 
 	def( "testManyStringToPathCalls", &testManyStringToPathCalls );
 

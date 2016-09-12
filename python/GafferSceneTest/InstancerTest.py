@@ -457,5 +457,63 @@ class InstancerTest( GafferSceneTest.SceneTestCase ) :
 
 			script["reference"].load( self.temporaryDirectory() + "/test.grf" )
 
+	def testContextChangedAndGIL( self ) :
+
+		script = Gaffer.ScriptNode()
+
+		script["plane"] = GafferScene.Plane()
+		script["plane"]["divisions"].setValue( IECore.V2i( 20 ) )
+
+		script["sphere"] = GafferScene.Sphere()
+
+		script["expression"] = Gaffer.Expression()
+		script["expression"].setExpression( "parent['sphere']['radius'] = context.get( 'minRadius', 0.1 ) + context.getFrame() + float( context['instancer:id'] )" )
+
+		script["instancer"] = GafferScene.Instancer()
+		script["instancer"]["in"].setInput( script["plane"]["out"] )
+		script["instancer"]["instance"].setInput( script["sphere"]["out"] )
+		script["instancer"]["parent"].setValue( "/plane" )
+
+		context = Gaffer.Context()
+		traverseConnection = Gaffer.ScopedConnection( GafferSceneTest.connectTraverseSceneToContextChangedSignal( script["instancer"]["out"], context ) )
+		with context :
+
+			context.setFrame( 10 )
+			context.setFramesPerSecond( 50 )
+			context.setTime( 1 )
+
+			context.set( "a", 1 )
+			context.set( "a", 2.0 )
+			context.set( "a", "a" )
+			context.set( "a", IECore.V2i() )
+			context.set( "a", IECore.V3i() )
+			context.set( "a", IECore.V2f() )
+			context.set( "a", IECore.V3f() )
+			context.set( "a", IECore.Color3f() )
+			context.set( "a", IECore.BoolData( True ) )
+
+			context["b"] = 1
+			context["b"] = 2.0
+			context["b"] = "b"
+			context["b"] = IECore.V2i()
+			context["b"] = IECore.V3i()
+			context["b"] = IECore.V2f()
+			context["b"] = IECore.V3f()
+			context["b"] = IECore.Color3f()
+			context["b"] = IECore.BoolData( True )
+
+			with Gaffer.BlockedConnection( traverseConnection ) :
+				# Must add it with the connection disabled, otherwise
+				# the addition causes a traversal, and then remove() gets
+				# all its results from the cache.
+				context["minRadius"] = 0.2
+
+			context.remove( "minRadius" )
+
+			with Gaffer.BlockedConnection( traverseConnection ) :
+				context["minRadius"] = 0.3
+
+			del context["minRadius"]
+
 if __name__ == "__main__":
 	unittest.main()
