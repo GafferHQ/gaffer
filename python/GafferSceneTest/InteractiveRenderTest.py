@@ -1395,6 +1395,120 @@ class InteractiveRenderTest( GafferSceneTest.SceneTestCase ) :
 		self.assertEqual( len( errors ), 0 )
 		box["r"]["state"].setValue( box["r"].State.Stopped )
 
+	def testTraceSets( self ) :
+
+		s = Gaffer.ScriptNode()
+
+		s["reflector"] = GafferScene.Plane()
+		s["reflector"]["name"].setValue( "reflector" )
+		s["reflector"]["transform"]["translate"].setValue( IECore.V3f( 0, 0, -1 ) )
+
+		s["reflected"] = GafferScene.Plane()
+		s["reflected"]["name"].setValue( "reflected" )
+		s["reflected"]["transform"]["translate"].setValue( IECore.V3f( 0, 0, 1 ) )
+
+		s["group"] = GafferScene.Group()
+		s["group"]["in"][0].setInput( s["reflector"]["out"] )
+		s["group"]["in"][1].setInput( s["reflected"]["out"] )
+
+		s["constant"], constantParameter = self._createConstantShader()
+		s["constantAssignment"] = GafferScene.ShaderAssignment()
+		s["constantAssignment"]["in"].setInput( s["group"]["out"] )
+		s["constantAssignment"]["shader"].setInput( s["constant"]["out"] )
+
+		traceShader, traceSetParameter = self._createTraceSetShader()
+		if traceShader is None :
+			self.skipTest( "Trace set shader not available" )
+
+		s["traceShader"] = traceShader
+
+		s["traceAssignmentFilter"] = GafferScene.PathFilter()
+		s["traceAssignmentFilter"]["paths"].setValue( IECore.StringVectorData( [ "/group/reflector" ] ) )
+
+		s["traceAssignment"] = GafferScene.ShaderAssignment()
+		s["traceAssignment"]["in"].setInput( s["constantAssignment"]["out"] )
+		s["traceAssignment"]["shader"].setInput( s["traceShader"]["out"] )
+		s["traceAssignment"]["filter"].setInput( s["traceAssignmentFilter"]["out"] )
+
+		s["set"] = GafferScene.Set()
+		s["set"]["in"].setInput( s["traceAssignment"]["out"] )
+		s["set"]["name"].setValue( "render:myTraceSet" )
+
+		s["options"] = GafferScene.CustomOptions()
+		s["options"]["in"].setInput( s["set"]["out"] )
+		for o in self._traceDepthOptions() :
+			s["options"]["options"].addMember( o, IECore.IntData( 1 ) )
+
+		s["outputs"] = GafferScene.Outputs()
+		s["outputs"].addOutput(
+			"beauty",
+			IECore.Display(
+				"test",
+				"ieDisplay",
+				"rgba",
+				{
+					"driverType" : "ImageDisplayDriver",
+					"handle" : "traceSetsTest",
+				}
+			)
+		)
+		s["outputs"]["in"].setInput( s["options"]["out"] )
+
+		s["render"] = self._createInteractiveRender()
+		s["render"]["in"].setInput( s["outputs"]["out"] )
+		s["render"]["state"].setValue( s["render"].State.Running )
+
+		time.sleep( 0.5 )
+
+		# We haven't used the trace sets yet, so should be able to see
+		# the reflection.
+
+		def assertReflected( reflected ) :
+
+			image = IECore.ImageDisplayDriver.storedImage( "traceSetsTest" )
+			self.assertGreater( self.__color4fAtUV( image, IECore.V2f( 0.5 ) ).a, 0.9 )
+			if reflected :
+				self.assertGreater( self.__color4fAtUV( image, IECore.V2f( 0.5 ) ).r, 0.9 )
+			else :
+				self.assertLess( self.__color4fAtUV( image, IECore.V2f( 0.5 ) ).r, 0.1 )
+
+		assertReflected( True )
+
+		# Ask to use a trace set. Reflection should disappear because
+		# we haven't added anything to the set.
+
+		traceSetParameter.setValue( "myTraceSet" )
+		time.sleep( 0.5 )
+		assertReflected( False )
+
+		# Now add the reflected object into the set. Reflection should
+		# come back.
+
+		s["set"]["paths"].setValue( IECore.StringVectorData( [ "/group/reflected" ] ) )
+		time.sleep( 0.5 )
+		assertReflected( True )
+
+		# Rename the set so that it's not a trace set any more. Reflection
+		# should disappear.
+
+		s["set"]["name"].setValue( "myTraceSet" )
+		time.sleep( 0.5 )
+		assertReflected( False )
+
+		# Rename the set so that it is a trace set, but with a different namer.
+		# Reflection should not reappear.
+
+		s["set"]["name"].setValue( "render:myOtherTraceSet" )
+		time.sleep( 0.5 )
+		assertReflected( False )
+
+		# Update the shader to use this new trace set. Reflection should
+		# reappear.
+
+		traceSetParameter.setValue( "myOtherTraceSet" )
+		time.sleep( 0.5 )
+		assertReflected( True )
+
 	## Should be implemented by derived classes to return an
 	# appropriate InteractiveRender node.
 	def _createInteractiveRender( self ) :
@@ -1416,9 +1530,22 @@ class InteractiveRenderTest( GafferSceneTest.SceneTestCase ) :
 		raise NotImplementedError
 
 	## Should be implemented by derived classes to return
+	# a shader which traces against only geometry in a trace
+	# set parameter.
+	def _createTraceSetShader( self ) :
+
+		raise NotImplementedError
+
+	## Should be implemented by derived classes to return
 	# the name of a bool attribute which controls camera
 	# visibility.
 	def _cameraVisibilityAttribute( self ) :
+
+		raise NotImplementedError
+
+	## Should be implemented by derived classes to return the
+	# names of int options which control trace depth.
+	def _traceDepthOptions( self ) :
 
 		raise NotImplementedError
 
