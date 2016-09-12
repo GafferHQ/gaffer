@@ -174,6 +174,10 @@ void Context::remove( const IECore::InternedString &name )
 	{
 		m_map.erase( it );
 		m_hashValid = false;
+		if( m_changedSignal )
+		{
+			(*m_changedSignal)( this, name );
+		}
 	}
 }
 
