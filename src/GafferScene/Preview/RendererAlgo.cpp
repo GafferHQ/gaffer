@@ -364,6 +364,7 @@ const InternedString g_transformBlurOptionName( "option:render:transformBlur" );
 const InternedString g_deformationBlurOptionName( "option:render:deformationBlur" );
 const InternedString g_shutterOptionName( "option:render:shutter" );
 
+static InternedString g_setsAttributeName( "sets" );
 static InternedString g_visibleAttributeName( "scene:visible" );
 static InternedString g_transformBlurAttributeName( "gaffer:transformBlur" );
 static InternedString g_transformBlurSegmentsAttributeName( "gaffer:transformBlurSegments" );
@@ -385,8 +386,8 @@ IECore::InternedString optionName( const IECore::InternedString &globalsName )
 struct LocationOutput
 {
 
-	LocationOutput( IECoreScenePreview::Renderer *renderer, const IECore::CompoundObject *globals )
-		:	m_renderer( renderer ), m_attributes( globalAttributes( globals ) )
+	LocationOutput( IECoreScenePreview::Renderer *renderer, const IECore::CompoundObject *globals, const GafferScene::Preview::RenderSets &renderSets )
+		:	m_renderer( renderer ), m_attributes( globalAttributes( globals ) ), m_renderSets( renderSets )
 	{
 		const BoolData *transformBlurData = globals->member<BoolData>( g_transformBlurOptionName );
 		m_options.transformBlur = transformBlurData ? transformBlurData->readable() : false;
@@ -401,7 +402,7 @@ struct LocationOutput
 
 	bool operator()( const ScenePlug *scene, const ScenePlug::ScenePath &path )
 	{
-		updateAttributes( scene );
+		updateAttributes( scene, path );
 
 		if( const IECore::BoolData *d = m_attributes->member<IECore::BoolData>( g_visibleAttributeName ) )
 		{
@@ -481,10 +482,12 @@ struct LocationOutput
 			return d ? d->readable() : 1;
 		}
 
-		void updateAttributes( const ScenePlug *scene )
+		void updateAttributes( const ScenePlug *scene, const ScenePlug::ScenePath &path )
 		{
 			IECore::ConstCompoundObjectPtr attributes = scene->attributesPlug()->getValue();
-			if( attributes->members().empty() )
+			IECore::ConstInternedStringVectorDataPtr setsAttribute = m_renderSets.setsAttribute( path );
+
+			if( attributes->members().empty() && !setsAttribute )
 			{
 				return;
 			}
@@ -495,6 +498,11 @@ struct LocationOutput
 			for( CompoundObject::ObjectMap::const_iterator it = attributes->members().begin(), eIt = attributes->members().end(); it != eIt; ++it )
 			{
 				updatedAttributes->members()[it->first] = it->second;
+			}
+
+			if( setsAttribute )
+			{
+				updatedAttributes->members()[g_setsAttributeName] = boost::const_pointer_cast<InternedStringVectorData>( setsAttribute );
 			}
 
 			m_attributes = updatedAttributes;
@@ -572,6 +580,7 @@ struct LocationOutput
 
 		Options m_options;
 		IECore::ConstCompoundObjectPtr m_attributes;
+		const GafferScene::Preview::RenderSets &m_renderSets;
 
 		std::vector<M44f> m_transformSamples;
 		std::vector<float> m_transformTimes;
@@ -581,8 +590,8 @@ struct LocationOutput
 struct CameraOutput : public LocationOutput
 {
 
-	CameraOutput( IECoreScenePreview::Renderer *renderer, const IECore::CompoundObject *globals, const PathMatcher &cameraSet )
-		:	LocationOutput( renderer, globals ), m_globals( globals ), m_cameraSet( cameraSet )
+	CameraOutput( IECoreScenePreview::Renderer *renderer, const IECore::CompoundObject *globals, const GafferScene::Preview::RenderSets &renderSets )
+		:	LocationOutput( renderer, globals, renderSets ), m_globals( globals ), m_cameraSet( renderSets.camerasSet() )
 	{
 	}
 
@@ -631,8 +640,8 @@ struct CameraOutput : public LocationOutput
 struct LightOutput : public LocationOutput
 {
 
-	LightOutput( IECoreScenePreview::Renderer *renderer, const IECore::CompoundObject *globals, const PathMatcher &lightSet )
-		:	LocationOutput( renderer, globals ), m_lightSet( lightSet )
+	LightOutput( IECoreScenePreview::Renderer *renderer, const IECore::CompoundObject *globals, const GafferScene::Preview::RenderSets &renderSets )
+		:	LocationOutput( renderer, globals, renderSets ), m_lightSet( renderSets.lightsSet() )
 	{
 	}
 
@@ -669,8 +678,8 @@ struct LightOutput : public LocationOutput
 struct ObjectOutput : public LocationOutput
 {
 
-	ObjectOutput( IECoreScenePreview::Renderer *renderer, const IECore::CompoundObject *globals, const PathMatcher &cameraSet, const PathMatcher &lightSet )
-		:	LocationOutput( renderer, globals ), m_cameraSet( cameraSet ), m_lightSet( lightSet )
+	ObjectOutput( IECoreScenePreview::Renderer *renderer, const IECore::CompoundObject *globals, const GafferScene::Preview::RenderSets &renderSets )
+		:	LocationOutput( renderer, globals, renderSets ), m_cameraSet( renderSets.camerasSet() ), m_lightSet( renderSets.lightsSet() )
 	{
 	}
 
@@ -857,10 +866,8 @@ void outputOutputs( const IECore::CompoundObject *globals, const IECore::Compoun
 	}
 }
 
-void outputCameras( const ScenePlug *scene, const IECore::CompoundObject *globals, IECoreScenePreview::Renderer *renderer )
+void outputCameras( const ScenePlug *scene, const IECore::CompoundObject *globals, const RenderSets &renderSets, IECoreScenePreview::Renderer *renderer )
 {
-	ConstPathMatcherDataPtr cameraSet = scene->set( "__cameras" );
-
 	const StringData *cameraOption = globals->member<StringData>( g_cameraOptionLegacyName );
 	if( cameraOption && !cameraOption->readable().empty() )
 	{
@@ -869,13 +876,13 @@ void outputCameras( const ScenePlug *scene, const IECore::CompoundObject *global
 		{
 			throw IECore::Exception( "Camera \"" + cameraOption->readable() + "\" does not exist" );
 		}
-		if( !(cameraSet->readable().match( cameraPath ) & Filter::ExactMatch) )
+		if( !( renderSets.camerasSet().match( cameraPath ) & Filter::ExactMatch ) )
 		{
 			throw IECore::Exception( "Camera \"" + cameraOption->readable() + "\" is not in the camera set" );
 		}
 	}
 
-	CameraOutput output( renderer, globals, cameraSet->readable() );
+	CameraOutput output( renderer, globals, renderSets );
 	parallelProcessLocations( scene, output );
 
 	if( !cameraOption || cameraOption->readable().empty() )
@@ -892,18 +899,15 @@ void outputCameras( const ScenePlug *scene, const IECore::CompoundObject *global
 	}
 }
 
-void outputLights( const ScenePlug *scene, const IECore::CompoundObject *globals, IECoreScenePreview::Renderer *renderer )
+void outputLights( const ScenePlug *scene, const IECore::CompoundObject *globals, const RenderSets &renderSets, IECoreScenePreview::Renderer *renderer )
 {
-	ConstPathMatcherDataPtr lightSet = scene->set( "__lights" );
-	LightOutput output( renderer, globals, lightSet->readable() );
+	LightOutput output( renderer, globals, renderSets );
 	parallelProcessLocations( scene, output );
 }
 
-void outputObjects( const ScenePlug *scene, const IECore::CompoundObject *globals, IECoreScenePreview::Renderer *renderer )
+void outputObjects( const ScenePlug *scene, const IECore::CompoundObject *globals, const RenderSets &renderSets, IECoreScenePreview::Renderer *renderer )
 {
-	ConstPathMatcherDataPtr cameraSet = scene->set( "__cameras" );
-	ConstPathMatcherDataPtr lightSet = scene->set( "__lights" );
-	ObjectOutput output( renderer, globals, cameraSet->readable(), lightSet->readable() );
+	ObjectOutput output( renderer, globals, renderSets );
 	parallelProcessLocations( scene, output );
 }
 
@@ -988,7 +992,7 @@ void applyCameraGlobals( IECore::Camera *camera, const IECore::CompoundObject *g
 		);
 	}
 
-	
+
 	const Box2fData *cropWindowData = globals->member<Box2fData>( "option:render:cropWindow" );
 	if( cropWindowData )
 	{
@@ -1003,7 +1007,7 @@ void applyCameraGlobals( IECore::Camera *camera, const IECore::CompoundObject *g
 		renderRegion.max.x = std::min( renderRegion.max.x, cropRegion.max.x );
 		renderRegion.min.y = std::max( renderRegion.min.y, cropRegion.min.y );
 		renderRegion.max.y = std::min( renderRegion.max.y, cropRegion.max.y );
-			
+
 	}
 
 	camera->parameters()["renderRegion"] = new Box2iData( renderRegion );

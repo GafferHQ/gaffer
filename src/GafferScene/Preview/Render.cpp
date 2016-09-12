@@ -228,9 +228,12 @@ void Render::execute() const
 
 	outputOptions( globals.get(), renderer.get() );
 	outputOutputs( globals.get(), renderer.get() );
-	outputCameras( inPlug(), globals.get(), renderer.get() );
-	outputLights( inPlug(), globals.get(), renderer.get() );
-	outputObjects( inPlug(), globals.get(), renderer.get() );
+
+	RenderSets renderSets( inPlug() );
+
+	outputCameras( inPlug(), globals.get(), renderSets, renderer.get() );
+	outputLights( inPlug(), globals.get(), renderSets, renderer.get() );
+	outputObjects( inPlug(), globals.get(), renderSets, renderer.get() );
 
 	renderer->render();
 	renderer.reset();
