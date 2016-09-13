@@ -52,6 +52,31 @@ using namespace IECore;
 namespace
 {
 
+void setFrame( Context &c, float frame )
+{
+	IECorePython::ScopedGILRelease gilRelease;
+	c.setFrame( frame );
+}
+
+void setFramesPerSecond( Context &c, float framesPerSecond )
+{
+	IECorePython::ScopedGILRelease gilRelease;
+	c.setFramesPerSecond( framesPerSecond );
+}
+
+void setTime( Context &c, float time )
+{
+	IECorePython::ScopedGILRelease gilRelease;
+	c.setTime( time );
+}
+
+template<typename T>
+void set( Context &c, const IECore::InternedString &name, const T &value )
+{
+	IECorePython::ScopedGILRelease gilRelease;
+	c.set( name, value );
+}
+
 // In the C++ API, get() returns "const Data *". Because python has no idea of constness,
 // by default we return a copy from the bindings because we don't want the unwitting Python
 // scripter to accidentally modify the internals of a Context. We do however expose the
@@ -83,6 +108,7 @@ bool contains( Context &c, const IECore::InternedString &name )
 
 void delItem( Context &context, const IECore::InternedString &name )
 {
+	IECorePython::ScopedGILRelease gilRelease;
 	context.remove( name );
 }
 
@@ -145,35 +171,35 @@ void GafferBindings::bindContext()
 	contextClass
 		.def( init<>() )
 		.def( init<const Context &, Context::Ownership>( ( arg( "other" ), arg( "ownership" ) = Context::Copied ) ) )
-		.def( "setFrame", &Context::setFrame )
+		.def( "setFrame", &setFrame )
 		.def( "getFrame", &Context::getFrame )
-		.def( "setFramesPerSecond", &Context::setFramesPerSecond )
+		.def( "setFramesPerSecond", &setFramesPerSecond )
 		.def( "getFramesPerSecond", &Context::getFramesPerSecond )
-		.def( "setTime", &Context::setTime )
+		.def( "setTime", &setTime )
 		.def( "getTime", &Context::getTime )
-		.def( "set", &Context::set<float> )
-		.def( "set", &Context::set<int> )
-		.def( "set", &Context::set<std::string> )
-		.def( "set", &Context::set<Imath::V2i> )
-		.def( "set", &Context::set<Imath::V3i> )
-		.def( "set", &Context::set<Imath::V2f> )
-		.def( "set", &Context::set<Imath::V3f> )
-		.def( "set", &Context::set<Imath::Color3f> )
-		.def( "set", &Context::set<Data *> )
-		.def( "__setitem__", &Context::set<float> )
-		.def( "__setitem__", &Context::set<int> )
-		.def( "__setitem__", &Context::set<std::string> )
-		.def( "__setitem__", &Context::set<Imath::V2i> )
-		.def( "__setitem__", &Context::set<Imath::V3i> )
-		.def( "__setitem__", &Context::set<Imath::V2f> )
-		.def( "__setitem__", &Context::set<Imath::V3f> )
-		.def( "__setitem__", &Context::set<Imath::Color3f> )
-		.def( "__setitem__", &Context::set<Data *> )
+		.def( "set", &set<float> )
+		.def( "set", &set<int> )
+		.def( "set", &set<std::string> )
+		.def( "set", &set<Imath::V2i> )
+		.def( "set", &set<Imath::V3i> )
+		.def( "set", &set<Imath::V2f> )
+		.def( "set", &set<Imath::V3f> )
+		.def( "set", &set<Imath::Color3f> )
+		.def( "set", &set<Data *> )
+		.def( "__setitem__", &set<float> )
+		.def( "__setitem__", &set<int> )
+		.def( "__setitem__", &set<std::string> )
+		.def( "__setitem__", &set<Imath::V2i> )
+		.def( "__setitem__", &set<Imath::V3i> )
+		.def( "__setitem__", &set<Imath::V2f> )
+		.def( "__setitem__", &set<Imath::V3f> )
+		.def( "__setitem__", &set<Imath::Color3f> )
+		.def( "__setitem__", &set<Data *> )
 		.def( "get", &get, arg( "_copy" ) = true )
 		.def( "get", &getWithDefault, ( arg( "defaultValue" ), arg( "_copy" ) = true ) )
 		.def( "__getitem__", &getItem )
 		.def( "__contains__", &contains )
-		.def( "remove", &Context::remove )
+		.def( "remove", &delItem )
 		.def( "__delitem__", &delItem )
 		.def( "changed", &Context::changed )
 		.def( "names", &names )

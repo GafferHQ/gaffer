@@ -34,48 +34,17 @@
 #
 ##########################################################################
 
-import unittest
+import os
+import shutil
 
-import IECore
+for subdir in ( "doc", "graphics" ) :
 
-import GafferSceneTest
-import GafferArnold
+	standaloneDir = os.path.join( ARGUMENTS['STANDALONE_INSTALL_DIR'], subdir )
+	appDir = os.path.join( ARGUMENTS['INSTALL_DIR'], subdir )
 
-class ArnoldDisplacementTest( GafferSceneTest.SceneTestCase ) :
+	if os.path.isdir( standaloneDir ) :
 
-	def test( self ) :
+		if os.path.isdir( appDir ) :
+			shutil.rmtree( appDir )
 
-		n = GafferArnold.ArnoldShader()
-		n.loadShader( "noise" )
-
-		d = GafferArnold.ArnoldDisplacement()
-		d["map"].setInput( n["out"] )
-		d["height"].setValue( 2.5 )
-		d["padding"].setValue( 25 )
-		d["zeroValue"].setValue( .25 )
-		d["autoBump"].setValue( True )
-
-		na = n.attributes()
-		da = d.attributes()
-
-		self.assertEqual(
-			da,
-			IECore.CompoundObject( {
-				"ai:disp_map" : na["ai:surface"],
-				"ai:disp_height" : IECore.FloatData( 2.5 ),
-				"ai:disp_padding" : IECore.FloatData( 25 ),
-				"ai:disp_zero_value" : IECore.FloatData( .25 ),
-				"ai:disp_autobump" : IECore.BoolData( True ),
-			} )
-		)
-
-		d["enabled"].setValue( False )
-		self.assertEqual( d.attributes(), IECore.CompoundObject() )
-
-	def testNoInput( self ) :
-
-		d = GafferArnold.ArnoldDisplacement()
-		self.assertTrue( "ai:disp_map" not in d.attributes() )
-
-if __name__ == "__main__":
-	unittest.main()
+		shutil.copytree( standaloneDir, appDir, symlinks=True )

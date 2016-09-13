@@ -64,7 +64,7 @@ class ContextTest( GafferTest.TestCase ) :
 		def f( context, name ) :
 
 			self.failUnless( context.isSame( c ) )
-			changes.append( ( name, context[name] ) )
+			changes.append( ( name, context.get( name, None ) ) )
 
 		cn = c.changedSignal().connect( f )
 
@@ -81,6 +81,16 @@ class ContextTest( GafferTest.TestCase ) :
 		# be triggered again.
 		c["b"] = 1
 		self.assertEqual( changes, [ ( "a", 2 ), ( "a", 3 ), ( "b", 1 ) ] )
+
+		# Removing variables should also trigger the changed signal.
+
+		del changes[:]
+
+		c.remove( "a" )
+		self.assertEqual( changes, [ ( "a", None ) ] )
+
+		del c["b"]
+		self.assertEqual( changes, [ ( "a", None ), ( "b", None ) ] )
 
 	def testTypes( self ) :
 
