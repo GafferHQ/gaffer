@@ -37,6 +37,8 @@
 #ifndef GAFFERSCENETEST_TRAVERSESCENE_H
 #define GAFFERSCENETEST_TRAVERSESCENE_H
 
+#include "Gaffer/Context.h"
+
 #include "GafferScene/ScenePlug.h"
 
 namespace GafferSceneTest
@@ -53,6 +55,11 @@ void traverseScene( GafferScene::ScenePlug *scenePlug );
 /// for exposing bugs caused by things like InteractiveRender and SceneView, where threaded
 /// traversals will be triggered automatically by plugDirtiedSignal().
 boost::signals::connection connectTraverseSceneToPlugDirtiedSignal( const GafferScene::ConstScenePlugPtr &scene );
+
+/// Arranges for traverseScene() to be called every time the context is changed. This is useful
+/// for exposing bugs caused by things like InteractiveRender and SceneView, where threaded
+/// traversals will be triggered automatically from Context::changedSignal().
+boost::signals::connection connectTraverseSceneToContextChangedSignal( const GafferScene::ConstScenePlugPtr &scene, const Gaffer::ContextPtr &context );
 
 } // namespace GafferSceneTest
 
