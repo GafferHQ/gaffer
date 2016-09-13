@@ -72,5 +72,10 @@ class ArnoldDisplacementTest( GafferSceneTest.SceneTestCase ) :
 		d["enabled"].setValue( False )
 		self.assertEqual( d.attributes(), IECore.CompoundObject() )
 
+	def testNoInput( self ) :
+
+		d = GafferArnold.ArnoldDisplacement()
+		self.assertTrue( "ai:disp_map" not in d.attributes() )
+
 if __name__ == "__main__":
 	unittest.main()
