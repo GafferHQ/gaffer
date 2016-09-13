@@ -47,6 +47,30 @@ using namespace IECore;
 using namespace Gaffer;
 using namespace GafferScene;
 
+//////////////////////////////////////////////////////////////////////////
+// Internal utilities
+//////////////////////////////////////////////////////////////////////////
+
+namespace
+{
+
+const GafferScene::Shader *shader( const ShaderPlug *plug )
+{
+	const Plug *source = plug->source<Plug>();
+	if( source == plug )
+	{
+		// No input
+		return NULL;
+	}
+	return runTimeCast<const GafferScene::Shader>( source->node() );
+}
+
+} // namespace
+
+//////////////////////////////////////////////////////////////////////////
+// ShaderPlug
+//////////////////////////////////////////////////////////////////////////
+
 IE_CORE_DEFINERUNTIMETYPED( ShaderPlug );
 
 ShaderPlug::ShaderPlug( const std::string &name, Direction direction, unsigned flags )
@@ -115,12 +139,12 @@ bool ShaderPlug::acceptsInput( const Gaffer::Plug *input ) const
 
 IECore::MurmurHash ShaderPlug::attributesHash() const
 {
-	const Shader *shader = source<Plug>()->ancestor<Shader>();
-	return shader ? shader->attributesHash() : MurmurHash();
+	const Shader *s = shader( this );
+	return s ? s->attributesHash() : MurmurHash();
 }
 
 IECore::ConstCompoundObjectPtr ShaderPlug::attributes() const
 {
-	const Shader *shader = source<Plug>()->ancestor<Shader>();
-	return shader ? shader->attributes() : new CompoundObject;
+	const Shader *s = shader( this );
+	return s ? s->attributes() : new CompoundObject;
 }
