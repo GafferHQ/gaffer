@@ -673,5 +673,26 @@ class OSLShaderTest( GafferOSLTest.OSLTestCase ) :
 			)
 		)
 
+	def testUnload( self ) :
+
+		n = GafferOSL.OSLShader()
+		n.loadShader( self.compileShader( os.path.dirname( __file__ ) + "/shaders/types.osl" ) )
+		self.assertTrue( "osl:surface" in n.attributes() )
+
+		n.loadShader( "" )
+		self.assertEqual( len( n["parameters"] ), 0 )
+		self.assertEqual( n["type"].getValue(), "" )
+		self.assertEqual( n["name"].getValue(), "" )
+		self.assertFalse( "osl:surface" in n.attributes() )
+
+	def testLoadSurfaceAfterShader( self ) :
+
+		n = GafferOSL.OSLShader()
+		n.loadShader( self.compileShader( os.path.dirname( __file__ ) + "/shaders/outputTypes.osl" ) )
+		self.assertEqual( len( n["out"] ), 5 )
+
+		n.loadShader( self.compileShader( os.path.dirname( __file__ ) + "/shaders/constant.osl" ) )
+		self.assertEqual( len( n["out"] ), 0 )
+
 if __name__ == "__main__":
 	unittest.main()

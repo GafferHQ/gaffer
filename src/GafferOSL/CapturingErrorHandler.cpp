@@ -1,6 +1,6 @@
 //////////////////////////////////////////////////////////////////////////
 //
-//  Copyright (c) 2013, John Haddon. All rights reserved.
+//  Copyright (c) 2016, Image Engine Design Inc. All rights reserved.
 //
 //  Redistribution and use in source and binary forms, with or without
 //  modification, are permitted provided that the following conditions are
@@ -34,23 +34,27 @@
 //
 //////////////////////////////////////////////////////////////////////////
 
-#ifndef GAFFEROSL_TYPEIDS_H
-#define GAFFEROSL_TYPEIDS_H
+#include "GafferOSL/Private/CapturingErrorHandler.h"
 
-namespace GafferOSL
+using namespace GafferOSL::Private;
+
+CapturingErrorHandler::CapturingErrorHandler()
 {
+}
 
-enum TypeId
+void CapturingErrorHandler::operator()( int errorCode, const std::string &message )
 {
-	OSLShaderTypeId = 110975,
-	OSLRendererTypeId = 110976,
-	OSLImageTypeId = 110977,
-	OSLObjectTypeId = 110978,
-	OSLCodeTypeId = 110979,
+	if( errorCode >= EH_ERROR )
+	{
+		if( m_errors.size() && *m_errors.rbegin() != '\n' )
+		{
+			m_errors += "\n";
+		}
+		m_errors += message;
+	}
+}
 
-	LastTypeId = 110999
-};
-
-} // namespace GafferOSL
-
-#endif // GAFFEROSL_TYPEIDS_H
+const std::string &CapturingErrorHandler::errors()
+{
+	return m_errors;
+}

@@ -35,6 +35,7 @@
 ##########################################################################
 
 from DocumentationTest import DocumentationTest
+from OSLShaderUITest import OSLShaderUITest
 
 if __name__ == "__main__":
 	unittest.main()

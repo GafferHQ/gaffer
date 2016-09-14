@@ -1,6 +1,6 @@
 //////////////////////////////////////////////////////////////////////////
 //
-//  Copyright (c) 2013, John Haddon. All rights reserved.
+//  Copyright (c) 2016, Image Engine Design Inc. All rights reserved.
 //
 //  Redistribution and use in source and binary forms, with or without
 //  modification, are permitted provided that the following conditions are
@@ -34,23 +34,39 @@
 //
 //////////////////////////////////////////////////////////////////////////
 
-#ifndef GAFFEROSL_TYPEIDS_H
-#define GAFFEROSL_TYPEIDS_H
+#ifndef GAFFEROSL_OSLCODE_H
+#define GAFFEROSL_OSLCODE_H
+
+#include "GafferOSL/OSLShader.h"
 
 namespace GafferOSL
 {
 
-enum TypeId
+class OSLCode : public OSLShader
 {
-	OSLShaderTypeId = 110975,
-	OSLRendererTypeId = 110976,
-	OSLImageTypeId = 110977,
-	OSLObjectTypeId = 110978,
-	OSLCodeTypeId = 110979,
 
-	LastTypeId = 110999
+	public :
+
+		OSLCode( const std::string &name=defaultName<OSLCode>() );
+		virtual ~OSLCode();
+
+		IE_CORE_DECLARERUNTIMETYPEDEXTENSION( GafferOSL::OSLCode, OSLCodeTypeId, OSLShader );
+
+		void setCode( const std::string &code );
+		std::string getCode() const;
+
+		typedef boost::signal<void (OSLCode *)> CodeChangedSignal;
+		CodeChangedSignal &codeChangedSignal();
+
+	private :
+
+		std::string m_code;
+		CodeChangedSignal m_codeChangedSignal;
+
 };
+
+IE_CORE_DECLAREPTR( OSLCode )
 
 } // namespace GafferOSL
 
-#endif // GAFFEROSL_TYPEIDS_H
+#endif // GAFFEROSL_OSLCODE_H

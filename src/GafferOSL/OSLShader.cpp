@@ -48,6 +48,7 @@
 #include "Gaffer/CompoundNumericPlug.h"
 #include "Gaffer/StringPlug.h"
 #include "Gaffer/SplinePlug.h"
+#include "Gaffer/Metadata.h"
 
 #include "GafferScene/RendererAlgo.h"
 
@@ -678,6 +679,19 @@ void loadShaderParameters( const OSLQuery &query, Gaffer::Plug *parent, const st
 
 void OSLShader::loadShader( const std::string &shaderName, bool keepExistingValues )
 {
+	Plug *existingOut = outPlug();
+	if( shaderName.empty() )
+	{
+		parametersPlug()->clearChildren();
+		namePlug()->setValue( "" );
+		typePlug()->setValue( "" );
+		if( existingOut )
+		{
+			existingOut->clearChildren();
+		}
+		return;
+	}
+
 	const char *searchPath = getenv( "OSL_SHADER_PATHS" );
 
 	OSLQuery query;
@@ -686,7 +700,7 @@ void OSLShader::loadShader( const std::string &shaderName, bool keepExistingValu
 		throw Exception( query.geterror() );
 	}
 
-	Plug *existingOut = outPlug();
+	const bool outPlugHadChildren = existingOut ? existingOut->children().size() : false;
 	if( !keepExistingValues )
 	{
 		// If we're not preserving existing values then remove all existing
@@ -721,9 +735,21 @@ void OSLShader::loadShader( const std::string &shaderName, bool keepExistingValu
 	{
 		loadShaderParameters( query, outPlug() );
 	}
+	else
+	{
+		outPlug()->clearChildren();
+	}
 
 	namePlug()->setValue( shaderName );
 	typePlug()->setValue( std::string( "osl:" ) + query.shadertype().c_str() );
+
+	if( static_cast<bool>( outPlug()->children().size() ) != outPlugHadChildren )
+	{
+		// OSLShaderUI registers a dynamic metadata entry which depends on whether or
+		// not the plug has children, so we must notify the world that the value will
+		// have changed.
+		Metadata::plugValueChangedSignal()( staticTypeId(), "out", "nodule:type", outPlug() );
+	}
 
 	m_metadata = NULL;
 }
