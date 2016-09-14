@@ -198,9 +198,9 @@ GafferUI.NodeFinderDialogue.registerMode( "Shader Names", __shaderNameExtractor 
 ##########################################################################
 
 ## Appends menu items for the creation of all shaders found on some searchpaths.
-def appendShaders( menuDefinition, prefix, searchPaths, extensions, nodeCreator, matchExpression = "*" ) :
+def appendShaders( menuDefinition, prefix, searchPaths, extensions, nodeCreator, matchExpression = "*", searchTextPrefix = "" ) :
 
-	menuDefinition.append( prefix, { "subMenu" : IECore.curry( __shaderSubMenu, searchPaths, extensions, nodeCreator, matchExpression ) } )
+	menuDefinition.append( prefix, { "subMenu" : IECore.curry( __shaderSubMenu, searchPaths, extensions, nodeCreator, matchExpression, searchTextPrefix ) } )
 
 def __nodeName( shaderName ) :
 
@@ -224,7 +224,7 @@ def __loadFromFile( menu, extensions, nodeCreator ) :
 
 	return nodeCreator( __nodeName( shaderName ), shaderName )
 
-def __shaderSubMenu( searchPaths, extensions, nodeCreator, matchExpression ) :
+def __shaderSubMenu( searchPaths, extensions, nodeCreator, matchExpression, searchTextPrefix ) :
 
 	if isinstance( matchExpression, str ) :
 		matchExpression = re.compile( fnmatch.translate( matchExpression ) )
@@ -266,7 +266,7 @@ def __shaderSubMenu( searchPaths, extensions, nodeCreator, matchExpression ) :
 			menuPath,
 			{
 				"command" : GafferUI.NodeMenu.nodeCreatorWrapper( IECore.curry( nodeCreator, __nodeName( shader ), shader ) ),
-				"searchText" : menuPath.rpartition( "/" )[-1].replace( " ", "" ),
+				"searchText" : searchTextPrefix + menuPath.rpartition( "/" )[-1].replace( " ", "" ),
 			},
 		)
 
