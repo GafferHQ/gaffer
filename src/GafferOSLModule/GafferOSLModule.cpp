@@ -56,7 +56,7 @@ namespace
 {
 
 /// \todo Move this serialisation to the bindings for GafferScene::Shader, once we've made Shader::loadShader() virtual
-/// and implemented it so reloading works in ArnoldShader and OpenGLShader.
+/// and implemented it so reloading works in OpenGLShader.
 class OSLShaderSerialiser : public GafferBindings::NodeSerialiser
 {
 
