@@ -56,7 +56,13 @@ BOOST_PYTHON_MODULE( _GafferArnold )
 {
 
 	GafferBindings::DependencyNodeClass<ArnoldShader>()
-		.def( "loadShader", (void (ArnoldShader::*)( const std::string & ) )&ArnoldShader::loadShader )
+		.def(
+			"loadShader", (void (ArnoldShader::*)( const std::string &, bool ))&ArnoldShader::loadShader,
+			(
+				arg( "shaderName" ),
+				arg( "keepExistingValues" ) = false
+			)
+		)
 	;
 
 	GafferBindings::NodeClass<ArnoldLight>()

@@ -55,7 +55,10 @@ class ArnoldShader : public GafferScene::Shader
 
 		IE_CORE_DECLARERUNTIMETYPEDEXTENSION( GafferArnold::ArnoldShader, ArnoldShaderTypeId, GafferScene::Shader );
 
+		/// \todo Remove this version, and add `keepExistingValues = false` default
+		/// to version below.
 		void loadShader( const std::string &shaderName );
+		void loadShader( const std::string &shaderName, bool keepExistingValues );
 
 };
 
