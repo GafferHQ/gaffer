@@ -36,6 +36,7 @@
 ##########################################################################
 
 import functools
+import collections
 
 import arnold
 
@@ -47,6 +48,12 @@ import GafferArnold
 
 def appendShaders( menuDefinition, prefix="/Arnold" ) :
 
+	MenuItem = collections.namedtuple( "MenuItem", [ "menuPath", "nodeCreator" ] )
+
+	# Build a list of menu items we want to create.
+
+	categorisedMenuItems = []
+	uncategorisedMenuItems = []
 	with IECoreArnold.UniverseBlock() :
 
 		it = arnold.AiUniverseGetNodeEntryIterator( arnold.AI_NODE_SHADER | arnold.AI_NODE_LIGHT )
@@ -57,30 +64,61 @@ def appendShaders( menuDefinition, prefix="/Arnold" ) :
 			shaderName = arnold.AiNodeEntryGetName( nodeEntry )
 			displayName = " ".join( [ IECore.CamelCase.toSpaced( x ) for x in shaderName.split( "_" ) ] )
 
+			category = __aiMetadataGetStr( nodeEntry, "", "gaffer.nodeMenu.category" )
+			if category == "" :
+				continue
+
 			if arnold.AiNodeEntryGetType( nodeEntry ) == arnold.AI_NODE_SHADER :
-				menuPath = prefix + "/Shader/" + displayName
+				menuPath = "Shader"
 				nodeCreator = functools.partial( __shaderCreator, shaderName, GafferArnold.ArnoldShader )
 			else :
-				menuPath = prefix + "/Light/" + displayName
+				menuPath = "Light"
 				if shaderName != "mesh_light" :
 					nodeCreator = functools.partial( __shaderCreator, shaderName, GafferArnold.ArnoldLight )
 				else :
 					nodeCreator = GafferArnold.ArnoldMeshLight
 
-			menuDefinition.append(
-				menuPath,
-				{
-					"command" : GafferUI.NodeMenu.nodeCreatorWrapper( nodeCreator ),
-					"searchText" : "ai" + displayName.replace( " ", "" ),
-				}
-			)
+			if category :
+				menuPath += "/" + category.strip( "/" )
+			menuPath += "/" + displayName
+
+			if category :
+				categorisedMenuItems.append( MenuItem( menuPath, nodeCreator ) )
+			else :
+				uncategorisedMenuItems.append( MenuItem( menuPath, nodeCreator ) )
 
 		arnold.AiNodeEntryIteratorDestroy( it )
 
-		arnold.AiEnd()
+	# Tidy up uncategorised shaders into a submenu if necessary.
+
+	rootsWithCategories = set( [ m.menuPath.partition( "/" )[0] for m in categorisedMenuItems ] )
+
+	for i, menuItem in enumerate( uncategorisedMenuItems ) :
+		s = menuItem.menuPath.split( "/" )
+		if s[0] in rootsWithCategories :
+			uncategorisedMenuItems[i] = MenuItem( "/".join( [ s[0], "Other", s[1] ] ), menuItem.nodeCreator )
+
+	# Create the actual menu items.
+
+	for menuItem in categorisedMenuItems + uncategorisedMenuItems :
+		menuDefinition.append(
+			prefix + "/" + menuItem.menuPath,
+			{
+				"command" : GafferUI.NodeMenu.nodeCreatorWrapper( menuItem.nodeCreator ),
+				"searchText" : "ai" + menuItem.menuPath.rpartition( "/" )[2].replace( " ", "" ),
+			}
+		)
 
 def __shaderCreator( name, nodeType ) :
 
 	shader = nodeType( name )
 	shader.loadShader( name )
 	return shader
+
+def __aiMetadataGetStr( nodeEntry, paramName, name ) :
+
+	value = arnold.AtString()
+	if arnold.AiMetaDataGetStr( nodeEntry, paramName, name, value ) :
+		return value.value
+
+	return None

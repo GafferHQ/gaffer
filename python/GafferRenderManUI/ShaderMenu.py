@@ -49,7 +49,7 @@ def appendShaders( menuDefinition, prefix="/RenderMan/Shader", matchExpression =
 	searchPaths = [ p for p in searchPaths if p != "." ]
 
 	GafferSceneUI.ShaderUI.appendShaders(
-		menuDefinition, prefix, searchPaths, [ "slo", "sdl" ], __nodeCreator, matchExpression
+		menuDefinition, prefix, searchPaths, [ "slo", "sdl" ], __nodeCreator, matchExpression, searchTextPrefix = "ri"
 	)
 
 def __nodeCreator( nodeName, shaderName ) :

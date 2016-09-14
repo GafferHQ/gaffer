@@ -342,7 +342,8 @@ if moduleSearchPath.find( "GafferOSL" ) :
 		#   Appleseed shaders.
 		# - [^/]*$ matches the rest of the shader name, ensuring it
 		#   doesn't include any directory separators.
-		matchExpression = re.compile( "(^|.*/)(?!as_)[^/]*$")
+		matchExpression = re.compile( "(^|.*/)(?!as_)[^/]*$"),
+		searchTextPrefix = "osl",
 	)
 
 	nodeMenu.append( "/OSL/Image", GafferOSL.OSLImage, searchText = "OSLImage" )
