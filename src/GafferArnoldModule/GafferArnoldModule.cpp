@@ -52,6 +52,30 @@
 using namespace boost::python;
 using namespace GafferArnold;
 
+namespace
+{
+
+/// \todo Move this serialisation to the bindings for GafferScene::Shader, once we've made Shader::loadShader() virtual
+/// and implemented it so reloading works in OpenGLShader.
+class ArnoldShaderSerialiser : public GafferBindings::NodeSerialiser
+{
+
+	virtual std::string postScript( const Gaffer::GraphComponent *graphComponent, const std::string &identifier, const GafferBindings::Serialisation &serialisation ) const
+	{
+		const ArnoldShader *shader = static_cast<const ArnoldShader *>( graphComponent );
+		std::string shaderName = shader->namePlug()->getValue();
+		if( shaderName.size() )
+		{
+			return boost::str( boost::format( "%s.loadShader( \"%s\", keepExistingValues=True )\n" ) % identifier % shaderName );
+		}
+
+		return "";
+	}
+
+};
+
+} // namespace
+
 BOOST_PYTHON_MODULE( _GafferArnold )
 {
 
@@ -64,6 +88,8 @@ BOOST_PYTHON_MODULE( _GafferArnold )
 			)
 		)
 	;
+
+	GafferBindings::Serialisation::registerSerialiser( ArnoldShader::staticTypeId(), new ArnoldShaderSerialiser() );
 
 	GafferBindings::NodeClass<ArnoldLight>()
 		.def( "loadShader", (void (ArnoldLight::*)( const std::string & ) )&ArnoldLight::loadShader )

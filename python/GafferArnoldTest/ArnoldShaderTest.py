@@ -533,5 +533,13 @@ class ArnoldShaderTest( GafferSceneTest.SceneTestCase ) :
 		shader.loadShader( "lambert", keepExistingValues = False )
 		assertParametersEqual( shader, lambert )
 
+	def testLoadShaderInSerialisation( self ) :
+
+		s = Gaffer.ScriptNode()
+		s["s"] = GafferArnold.ArnoldShader()
+		s["s"].loadShader( "lambert" )
+
+		self.assertTrue( """loadShader( "lambert", keepExistingValues=True )""" in s.serialise() )
+
 if __name__ == "__main__":
 	unittest.main()
