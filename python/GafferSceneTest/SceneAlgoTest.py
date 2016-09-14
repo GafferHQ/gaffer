@@ -165,6 +165,11 @@ class SceneAlgoTest( GafferSceneTest.SceneTestCase ) :
 		for n in sets.keys() :
 			self.assertTrue( sets[n].isSame( light["out"].set( n, _copy = False ) ) )
 
+		someSets = GafferScene.sets( light["out"], ( "A", "B" ), _copy = False )
+		self.assertEqual( set( someSets.keys() ), { "A", "B" } )
+		for n in someSets.keys() :
+			self.assertTrue( someSets[n].isSame( light["out"].set( n, _copy = False ) ) )
+
 	def testMatchingPathsWithPathMatcher( self ) :
 
 		s = GafferScene.Sphere()

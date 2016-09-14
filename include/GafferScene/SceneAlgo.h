@@ -118,6 +118,8 @@ bool setExists( const ScenePlug *scene, const IECore::InternedString &setName );
 /// Returns all the sets in the scene, indexed by name. Performs individual set
 /// computations in parallel for improved performance.
 IECore::ConstCompoundDataPtr sets( const ScenePlug *scene );
+/// As above, but returning only the requested sets.
+IECore::ConstCompoundDataPtr sets( const ScenePlug *scene, const std::vector<IECore::InternedString> &setNames );
 
 /// Returns a bounding box for the specified object. Typically
 /// this is provided by the VisibleRenderable::bound() method, but

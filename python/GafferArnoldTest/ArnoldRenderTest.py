@@ -617,6 +617,61 @@ class ArnoldRenderTest( GafferTest.TestCase ) :
 		self.assertEqual( len( errors ), 1 )
 		self.assertTrue( "Arnold is already in use" in errors[0] )
 
+	def testTraceSets( self ) :
+
+		sphere = GafferScene.Sphere()
+		group = GafferScene.Group()
+		group["in"][0].setInput( sphere["out"] )
+		group["in"][1].setInput( sphere["out"] )
+
+		set1 = GafferScene.Set()
+		set1["name"].setValue( "render:firstSphere" )
+		set1["paths"].setValue( IECore.StringVectorData( [ "/group/sphere" ] ) )
+		set1["in"].setInput( group["out"] )
+
+		set2 = GafferScene.Set()
+		set2["name"].setValue( "render:secondSphere" )
+		set2["paths"].setValue( IECore.StringVectorData( [ "/group/sphere1" ] ) )
+		set2["in"].setInput( set1["out"] )
+
+		set3 = GafferScene.Set()
+		set3["name"].setValue( "render:group" )
+		set3["paths"].setValue( IECore.StringVectorData( [ "/group" ] ) )
+		set3["in"].setInput( set2["out"] )
+
+		set4 = GafferScene.Set()
+		set4["name"].setValue( "render:bothSpheres" )
+		set4["paths"].setValue( IECore.StringVectorData( [ "/group/sphere", "/group/sphere1" ] ) )
+		set4["in"].setInput( set3["out"] )
+
+		render = GafferArnold.ArnoldRender()
+		render["in"].setInput( set4["out"] )
+		render["mode"].setValue( render.Mode.SceneDescriptionMode )
+		render["fileName"].setValue( self.temporaryDirectory() + "/test.ass" )
+
+		render["task"].execute()
+
+		with IECoreArnold.UniverseBlock() :
+
+			arnold.AiASSLoad( self.temporaryDirectory() + "/test.ass" )
+
+			firstSphere = arnold.AiNodeLookUpByName( "/group/sphere" )
+			secondSphere = arnold.AiNodeLookUpByName( "/group/sphere1" )
+
+			self.assertEqual( self.__arrayToSet( arnold.AiNodeGetArray( firstSphere, "trace_sets" ) ), { "firstSphere", "group", "bothSpheres" } )
+			self.assertEqual( self.__arrayToSet( arnold.AiNodeGetArray( secondSphere, "trace_sets" ) ), { "secondSphere", "group", "bothSpheres" } )
+
+	def __arrayToSet( self, a ) :
+
+		result = set()
+		for i in range( 0, a.contents.nelements ) :
+			if a.contents.type == arnold.AI_TYPE_STRING :
+				result.add( arnold.AiArrayGetStr( a, i ) )
+			else :
+				raise TypeError
+
+		return result
+
 	def __assertStructsEqual( self, a, b ) :
 
 		for field in a._fields_ :

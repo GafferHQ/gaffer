@@ -470,10 +470,15 @@ struct Sets
 IECore::ConstCompoundDataPtr GafferScene::sets( const ScenePlug *scene )
 {
 	ConstInternedStringVectorDataPtr setNamesData = scene->setNamesPlug()->getValue();
-	std::vector<GafferScene::ConstPathMatcherDataPtr> setsVector;
-	setsVector.resize( setNamesData->readable().size(), NULL );
+	return sets( scene, setNamesData->readable() );
+}
 
-	Sets setsCompute( scene, setNamesData->readable(), setsVector );
+IECore::ConstCompoundDataPtr GafferScene::sets( const ScenePlug *scene, const std::vector<IECore::InternedString> &setNames )
+{
+	std::vector<GafferScene::ConstPathMatcherDataPtr> setsVector;
+	setsVector.resize( setNames.size(), NULL );
+
+	Sets setsCompute( scene, setNames, setsVector );
 	parallel_for( tbb::blocked_range<size_t>( 0, setsVector.size() ), setsCompute );
 
 	CompoundDataPtr result = new CompoundData;
@@ -481,7 +486,7 @@ IECore::ConstCompoundDataPtr GafferScene::sets( const ScenePlug *scene )
 	{
 		// The const_pointer_cast is ok because we're just using it to put the set into
 		// a container that will be const on return - we never modify the set itself.
-		result->writable()[setNamesData->readable()[i]] = boost::const_pointer_cast<GafferScene::PathMatcherData>( setsVector[i] );
+		result->writable()[setNames[i]] = boost::const_pointer_cast<GafferScene::PathMatcherData>( setsVector[i] );
 	}
 	return result;
 }

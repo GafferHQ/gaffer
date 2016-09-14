@@ -1073,6 +1073,54 @@ class RendererTest( GafferTest.TestCase ) :
 			noise = arnold.AtNode.from_address( arnold.AiNodeGetPtr( n, "shader" ) )
 			self.assertEqual( arnold.AiNodeEntryGetName( arnold.AiNodeGetNodeEntry( noise ) ), "Noise" )
 
+	def testTraceSets( self ) :
+
+		r = GafferScene.Private.IECoreScenePreview.Renderer.create(
+			"IECoreArnold::Renderer",
+			GafferScene.Private.IECoreScenePreview.Renderer.RenderType.SceneDescription,
+			self.temporaryDirectory() + "/test.ass"
+		)
+
+		objectNamesAndSets = [
+			( "crimsonSphere", IECore.InternedStringVectorData( [ "roundThings", "redThings" ] ) ),
+			( "emeraldBall", IECore.InternedStringVectorData( [ "roundThings", "greenThings" ] ) ),
+			( "greenFrog", IECore.InternedStringVectorData( [ "livingThings", "greenThings" ] ) ),
+			( "scarletPimpernel", IECore.InternedStringVectorData( [ "livingThings", "redThings" ] ) ),
+			( "mysterious", IECore.InternedStringVectorData() ),
+			( "evasive", None ),
+		]
+
+		for objectName, sets in objectNamesAndSets :
+
+			attributes = IECore.CompoundObject()
+			if sets is not None :
+				attributes["sets"] = sets
+
+			r.object(
+				objectName,
+				IECore.MeshPrimitive.createPlane( IECore.Box2f( IECore.V2f( -1 ), IECore.V2f( 1 ) ) ),
+				r.attributes( attributes ),
+			)
+
+		r.render()
+		del r
+
+		with IECoreArnold.UniverseBlock() :
+
+			arnold.AiASSLoad( self.temporaryDirectory() + "/test.ass" )
+
+			for objectName, sets in objectNamesAndSets :
+
+				n = arnold.AiNodeLookUpByName( objectName )
+				a = arnold.AiNodeGetArray( n, "trace_sets" )
+
+				if sets is None or len( sets ) == 0 :
+					sets = [ "__none__" ]
+
+				self.assertEqual( a.contents.nelements, len( sets ) )
+				for i in range( 0, a.contents.nelements ) :
+					self.assertEqual( arnold.AiArrayGetStr( a, i ), sets[i] )
+
 	@staticmethod
 	def __m44f( m ) :
 
