@@ -103,7 +103,7 @@ class CompoundPlugValueWidget( GafferUI.PlugValueWidget ) :
 
 		self.__visibilityChangedConnection = self.__column.visibilityChangedSignal().connect( Gaffer.WeakMethod( self.__visibilityChanged ) )
 
-		self.__childPlugUIs = {} # mapping from child plug name to PlugWidget
+		self.__childPlugUIs = {} # mapping from child plug to PlugWidget
 
 		self.__summary = summary
 
@@ -118,7 +118,7 @@ class CompoundPlugValueWidget( GafferUI.PlugValueWidget ) :
 		if not lazy and len( self.__childPlugUIs ) == 0 :
 			self.__updateChildPlugUIs()
 
-		w = self.__childPlugUIs.get( childPlug.getName(), None )
+		w = self.__childPlugUIs.get( childPlug, None )
 		if w is None :
 			return w
 		elif isinstance( w, GafferUI.PlugValueWidget ) :
@@ -199,20 +199,19 @@ class CompoundPlugValueWidget( GafferUI.PlugValueWidget ) :
 	def __updateChildPlugUIs( self ) :
 
 		# ditch child uis we don't need any more
-		childNames = set( self.getPlug().keys() )
-		for childName in self.__childPlugUIs.keys() :
-			if childName not in childNames :
-				del self.__childPlugUIs[childName]
+		for childPlug in self.__childPlugUIs.keys() :
+			if childPlug not in self._childPlugs() :
+				del self.__childPlugUIs[childPlug]
 
 		# make (or reuse existing) uis for each child plug
 		orderedChildUIs = []
 		for childPlug in self._childPlugs() :
 			if childPlug.getName().startswith( "__" ) :
 				continue
-			if childPlug.getName() not in self.__childPlugUIs :
+			if childPlug not in self.__childPlugUIs :
 				widget = self._childPlugWidget( childPlug )
 				assert( isinstance( widget, ( GafferUI.PlugValueWidget, type( None ) ) ) or hasattr( widget, "plugValueWidget" ) )
-				self.__childPlugUIs[childPlug.getName()] = widget
+				self.__childPlugUIs[childPlug] = widget
 				if widget is not None :
 					if isinstance( widget, GafferUI.PlugValueWidget ) :
 						widget.setReadOnly( self.getReadOnly() )
@@ -222,7 +221,7 @@ class CompoundPlugValueWidget( GafferUI.PlugValueWidget ) :
 					else :
 						widget.plugValueWidget().setReadOnly( self.getReadOnly() )
 			else :
-				widget = self.__childPlugUIs[childPlug.getName()]
+				widget = self.__childPlugUIs[childPlug]
 			if widget is not None :
 				orderedChildUIs.append( widget )
 				if Gaffer.Metadata.plugValue( childPlug, "divider" ) :
