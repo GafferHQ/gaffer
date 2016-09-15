@@ -384,6 +384,200 @@ class ArnoldAttributes : public IECoreScenePreview::Renderer::AttributesInterfac
 
 	public :
 
+		ArnoldAttributes( const IECore::CompoundObject *attributes, ShaderCache *shaderCache )
+			:	m_visibility( AI_RAY_ALL ), m_sidedness( AI_RAY_ALL ), m_shadingFlags( Default ), m_polyMesh( attributes ), m_displacement( attributes, shaderCache ), m_curves( attributes )
+		{
+			updateVisibility( g_cameraVisibilityAttributeName, AI_RAY_CAMERA, attributes );
+			updateVisibility( g_shadowVisibilityAttributeName, AI_RAY_SHADOW, attributes );
+			updateVisibility( g_reflectedVisibilityAttributeName, AI_RAY_REFLECTED, attributes );
+			updateVisibility( g_refractedVisibilityAttributeName, AI_RAY_REFRACTED, attributes );
+			updateVisibility( g_diffuseVisibilityAttributeName, AI_RAY_DIFFUSE, attributes );
+			updateVisibility( g_glossyVisibilityAttributeName, AI_RAY_GLOSSY, attributes );
+
+			if( const IECore::BoolData *d = attribute<IECore::BoolData>( g_doubleSidedAttributeName, attributes ) )
+			{
+				m_sidedness = d->readable() ? AI_RAY_ALL : AI_RAY_UNDEFINED;
+			}
+
+			updateShadingFlag( g_arnoldReceiveShadowsAttributeName, ReceiveShadows, attributes );
+			updateShadingFlag( g_arnoldSelfShadowsAttributeName, SelfShadows, attributes );
+			updateShadingFlag( g_arnoldOpaqueAttributeName, Opaque, attributes );
+			updateShadingFlag( g_arnoldMatteAttributeName, Matte, attributes );
+
+			const IECore::ObjectVector *surfaceShaderAttribute = attribute<IECore::ObjectVector>( g_arnoldSurfaceShaderAttributeName, attributes );
+			surfaceShaderAttribute = surfaceShaderAttribute ? surfaceShaderAttribute : attribute<IECore::ObjectVector>( g_oslSurfaceShaderAttributeName, attributes );
+			surfaceShaderAttribute = surfaceShaderAttribute ? surfaceShaderAttribute : attribute<IECore::ObjectVector>( g_oslShaderAttributeName, attributes );
+			surfaceShaderAttribute = surfaceShaderAttribute ? surfaceShaderAttribute : attribute<IECore::ObjectVector>( g_surfaceShaderAttributeName, attributes );
+			if( surfaceShaderAttribute )
+			{
+				m_surfaceShader = shaderCache->get( surfaceShaderAttribute );
+			}
+
+			m_lightShader = attribute<IECore::ObjectVector>( g_arnoldLightShaderAttributeName, attributes );
+			m_lightShader = m_lightShader ? m_lightShader : attribute<IECore::ObjectVector>( g_lightShaderAttributeName, attributes );
+
+			m_traceSets = attribute<IECore::InternedStringVectorData>( g_setsAttributeName, attributes );
+
+			for( IECore::CompoundObject::ObjectMap::const_iterator it = attributes->members().begin(), eIt = attributes->members().end(); it != eIt; ++it )
+			{
+				if( !boost::starts_with( it->first.string(), "user:" ) )
+				{
+					continue;
+				}
+				if( const IECore::Data *data = IECore::runTimeCast<const IECore::Data>( it->second.get() ) )
+				{
+					m_user[it->first] = data;
+				}
+			}
+		}
+
+		// Some attributes affect the geometric properties of a node, which means they
+		// go on the shape rather than the ginstance. These are problematic because they
+		// must be taken into account when determining the hash for instancing, and
+		// because they cannot be edited interactively. This method applies those
+		// attributes, and is called from InstanceCache during geometry conversion.
+		void applyGeometry( const IECore::Object *object, AtNode *node ) const
+		{
+			if( const IECore::MeshPrimitive *mesh = IECore::runTimeCast<const IECore::MeshPrimitive>( object ) )
+			{
+				m_polyMesh.apply( mesh, node );
+				m_displacement.apply( node );
+			}
+			else if( IECore::runTimeCast<const IECore::CurvesPrimitive>( object ) )
+			{
+				m_curves.apply( node );
+			}
+		}
+
+		// Generates a signature for the work done by applyGeometry.
+		void hashGeometry( const IECore::Object *object, IECore::MurmurHash &h ) const
+		{
+			if( const IECore::MeshPrimitive *mesh = IECore::runTimeCast<const IECore::MeshPrimitive>( object ) )
+			{
+				m_polyMesh.hash( mesh, h );
+				m_displacement.hash( h );
+			}
+			else if( IECore::runTimeCast<const IECore::CurvesPrimitive>( object ) )
+			{
+				m_curves.hash( h );
+			}
+		}
+
+		// Returns true if the given geometry can be instanced, given the attributes that
+		// will be applied in `applyGeometry()`.
+		bool canInstanceGeometry( const IECore::Object *object ) const
+		{
+			if( !IECore::runTimeCast<const IECore::VisibleRenderable>( object ) )
+			{
+				return false;
+			}
+
+			if( const IECore::MeshPrimitive *mesh = IECore::runTimeCast<const IECore::MeshPrimitive>( object ) )
+			{
+				if( mesh->interpolation() == "linear" )
+				{
+					return true;
+				}
+				else
+				{
+					// We shouldn't instance poly meshes with view dependent subdivision, because the subdivision
+					// for the master mesh might be totally inappropriate for the position of the ginstances in frame.
+					return m_polyMesh.subdivAdaptiveError == 0.0f || m_polyMesh.subdivAdaptiveSpace == g_objectSpace;
+				}
+			}
+
+			return true;
+		}
+
+		// Most attributes (visibility, surface shader etc) are orthogonal to the
+		// type of object to which they are applied. These are the good kind, because
+		// they can be applied to ginstance nodes, making attribute edits easy. This
+		// method applies those attributes, and is called from `Renderer::object()`
+		// and `Renderer::attributes()`.
+		void apply( AtNode *node ) const
+		{
+			// Remove old user parameters we don't want any more.
+
+			AtUserParamIterator *it= AiNodeGetUserParamIterator( node );
+			while( !AiUserParamIteratorFinished( it ) )
+			{
+				const AtUserParamEntry *param = AiUserParamIteratorGetNext( it );
+				const char *name = AiUserParamGetName( param );
+				if( boost::starts_with( name, "user:" ) )
+				{
+					if( m_user.find( name ) == m_user.end() )
+					{
+						AiNodeResetParameter( node, name );
+					}
+				}
+			}
+			AiUserParamIteratorDestroy( it );
+
+			// Add user parameters we do want.
+
+			for( ArnoldAttributes::UserAttributes::const_iterator it = m_user.begin(), eIt = m_user.end(); it != eIt; ++it )
+			{
+				ParameterAlgo::setParameter( node, it->first.c_str(), it->second.get() );
+			}
+
+			// Add shape specific parameters.
+
+			if( AiNodeEntryGetType( AiNodeGetNodeEntry( node ) ) == AI_NODE_SHAPE )
+			{
+				AiNodeSetByte( node, "visibility", m_visibility );
+				AiNodeSetByte( node, "sidedness", m_sidedness );
+
+				AiNodeSetBool( node, "receive_shadows", m_shadingFlags & ArnoldAttributes::ReceiveShadows );
+				AiNodeSetBool( node, "self_shadows", m_shadingFlags & ArnoldAttributes::SelfShadows );
+				AiNodeSetBool( node, "opaque", m_shadingFlags & ArnoldAttributes::Opaque );
+				AiNodeSetBool( node, "matte", m_shadingFlags & ArnoldAttributes::Matte );
+
+				if( m_surfaceShader && m_surfaceShader->root() )
+				{
+					AiNodeSetPtr( node, "shader", m_surfaceShader->root() );
+				}
+				else
+				{
+					AiNodeResetParameter( node, "shader" );
+				}
+
+				if( m_traceSets && m_traceSets->readable().size() )
+				{
+					const vector<IECore::InternedString> &v = m_traceSets->readable();
+					AtArray *array = AiArrayAllocate( v.size(), 1, AI_TYPE_STRING );
+					for( size_t i = 0, e = v.size(); i < e; ++i )
+					{
+						AiArraySetStr( array, i, v[i].c_str() );
+					}
+					AiNodeSetArray( node, "trace_sets", array );
+				}
+				else
+				{
+					// Arnold very unhelpfully treats `trace_sets == []` as meaning the object
+					// is in every trace set. So we instead make `trace_sets == [ "__none__" ]`
+					// to get the behaviour people expect.
+					AiNodeSetArray( node, "trace_sets", AiArray( 1, 1, AI_TYPE_STRING, "__none__" ) );
+				}
+			}
+		}
+
+		ArnoldShaderPtr displacementMap() const
+		{
+			return m_displacement.map;
+		}
+
+		ArnoldShaderPtr surfaceShader() const
+		{
+			return m_surfaceShader;
+		}
+
+		const IECore::ObjectVector *lightShader() const
+		{
+			return m_lightShader.get();
+		}
+
+	private :
+
 		struct PolyMesh
 		{
 
@@ -525,53 +719,6 @@ class ArnoldAttributes : public IECoreScenePreview::Renderer::AttributesInterfac
 
 		};
 
-		ArnoldAttributes( const IECore::CompoundObject *attributes, ShaderCache *shaderCache )
-			:	visibility( AI_RAY_ALL ), sidedness( AI_RAY_ALL ), shadingFlags( Default ), polyMesh( attributes ), displacement( attributes, shaderCache ), curves( attributes )
-		{
-			updateVisibility( g_cameraVisibilityAttributeName, AI_RAY_CAMERA, attributes );
-			updateVisibility( g_shadowVisibilityAttributeName, AI_RAY_SHADOW, attributes );
-			updateVisibility( g_reflectedVisibilityAttributeName, AI_RAY_REFLECTED, attributes );
-			updateVisibility( g_refractedVisibilityAttributeName, AI_RAY_REFRACTED, attributes );
-			updateVisibility( g_diffuseVisibilityAttributeName, AI_RAY_DIFFUSE, attributes );
-			updateVisibility( g_glossyVisibilityAttributeName, AI_RAY_GLOSSY, attributes );
-
-			if( const IECore::BoolData *d = attribute<IECore::BoolData>( g_doubleSidedAttributeName, attributes ) )
-			{
-				sidedness = d->readable() ? AI_RAY_ALL : AI_RAY_UNDEFINED;
-			}
-
-			updateShadingFlag( g_arnoldReceiveShadowsAttributeName, ReceiveShadows, attributes );
-			updateShadingFlag( g_arnoldSelfShadowsAttributeName, SelfShadows, attributes );
-			updateShadingFlag( g_arnoldOpaqueAttributeName, Opaque, attributes );
-			updateShadingFlag( g_arnoldMatteAttributeName, Matte, attributes );
-
-			const IECore::ObjectVector *surfaceShaderAttribute = attribute<IECore::ObjectVector>( g_arnoldSurfaceShaderAttributeName, attributes );
-			surfaceShaderAttribute = surfaceShaderAttribute ? surfaceShaderAttribute : attribute<IECore::ObjectVector>( g_oslSurfaceShaderAttributeName, attributes );
-			surfaceShaderAttribute = surfaceShaderAttribute ? surfaceShaderAttribute : attribute<IECore::ObjectVector>( g_oslShaderAttributeName, attributes );
-			surfaceShaderAttribute = surfaceShaderAttribute ? surfaceShaderAttribute : attribute<IECore::ObjectVector>( g_surfaceShaderAttributeName, attributes );
-			if( surfaceShaderAttribute )
-			{
-				surfaceShader = shaderCache->get( surfaceShaderAttribute );
-			}
-
-			lightShader = attribute<IECore::ObjectVector>( g_arnoldLightShaderAttributeName, attributes );
-			lightShader = lightShader ? lightShader : attribute<IECore::ObjectVector>( g_lightShaderAttributeName, attributes );
-
-			traceSets = attribute<IECore::InternedStringVectorData>( g_setsAttributeName, attributes );
-
-			for( IECore::CompoundObject::ObjectMap::const_iterator it = attributes->members().begin(), eIt = attributes->members().end(); it != eIt; ++it )
-			{
-				if( !boost::starts_with( it->first.string(), "user:" ) )
-				{
-					continue;
-				}
-				if( const IECore::Data *data = IECore::runTimeCast<const IECore::Data>( it->second.get() ) )
-				{
-					user[it->first] = data;
-				}
-			}
-		}
-
 		enum ShadingFlags
 		{
 			ReceiveShadows = 1,
@@ -581,21 +728,6 @@ class ArnoldAttributes : public IECoreScenePreview::Renderer::AttributesInterfac
 			Default = ReceiveShadows | SelfShadows | Opaque,
 			All = ReceiveShadows | SelfShadows | Opaque | Matte
 		};
-
-		unsigned char visibility;
-		unsigned char sidedness;
-		unsigned char shadingFlags;
-		ArnoldShaderPtr surfaceShader;
-		IECore::ConstObjectVectorPtr lightShader;
-		IECore::ConstInternedStringVectorDataPtr traceSets;
-		PolyMesh polyMesh;
-		Displacement displacement;
-		Curves curves;
-
-		typedef boost::container::flat_map<IECore::InternedString, IECore::ConstDataPtr> UserAttributes;
-		UserAttributes user;
-
-	private :
 
 		template<typename T>
 		static const T *attribute( const IECore::InternedString &name, const IECore::CompoundObject *attributes )
@@ -622,11 +754,11 @@ class ArnoldAttributes : public IECoreScenePreview::Renderer::AttributesInterfac
 			{
 				if( d->readable() )
 				{
-					visibility |= rayType;
+					m_visibility |= rayType;
 				}
 				else
 				{
-					visibility = visibility & ~rayType;
+					m_visibility = m_visibility & ~rayType;
 				}
 			}
 		}
@@ -637,14 +769,27 @@ class ArnoldAttributes : public IECoreScenePreview::Renderer::AttributesInterfac
 			{
 				if( d->readable() )
 				{
-					shadingFlags |= flag;
+					m_shadingFlags |= flag;
 				}
 				else
 				{
-					shadingFlags = shadingFlags & ~flag;
+					m_shadingFlags = m_shadingFlags & ~flag;
 				}
 			}
 		}
+
+		unsigned char m_visibility;
+		unsigned char m_sidedness;
+		unsigned char m_shadingFlags;
+		ArnoldShaderPtr m_surfaceShader;
+		IECore::ConstObjectVectorPtr m_lightShader;
+		IECore::ConstInternedStringVectorDataPtr m_traceSets;
+		PolyMesh m_polyMesh;
+		Displacement m_displacement;
+		Curves m_curves;
+
+		typedef boost::container::flat_map<IECore::InternedString, IECore::ConstDataPtr> UserAttributes;
+		UserAttributes m_user;
 
 };
 
@@ -696,13 +841,13 @@ class InstanceCache : public IECore::RefCounted
 		{
 			const ArnoldAttributes *arnoldAttributes = static_cast<const ArnoldAttributes *>( attributes );
 
-			if( !canInstance( object, arnoldAttributes ) )
+			if( !arnoldAttributes->canInstanceGeometry( object ) )
 			{
-				return Instance( convert( object, arnoldAttributes ), /* instanced = */ false, arnoldAttributes->displacement.map );
+				return Instance( convert( object, arnoldAttributes ), /* instanced = */ false, arnoldAttributes->displacementMap() );
 			}
 
 			IECore::MurmurHash h = object->hash();
-			hashAttributes( object, arnoldAttributes, h );
+			arnoldAttributes->hashGeometry( object, h );
 
 			Cache::accessor a;
 			m_cache.insert( a, h );
@@ -716,16 +861,16 @@ class InstanceCache : public IECore::RefCounted
 				}
 			}
 
-			return Instance( a->second, /* instanced = */ true, arnoldAttributes->displacement.map );
+			return Instance( a->second, /* instanced = */ true, arnoldAttributes->displacementMap() );
 		}
 
 		Instance get( const std::vector<const IECore::Object *> &samples, const std::vector<float> &times, const IECoreScenePreview::Renderer::AttributesInterface *attributes )
 		{
 			const ArnoldAttributes *arnoldAttributes = static_cast<const ArnoldAttributes *>( attributes );
 
-			if( !canInstance( samples.front(), arnoldAttributes ) )
+			if( !arnoldAttributes->canInstanceGeometry( samples.front() ) )
 			{
-				return Instance( convert( samples, times, arnoldAttributes ), /* instanced = */ false, arnoldAttributes->displacement.map );
+				return Instance( convert( samples, times, arnoldAttributes ), /* instanced = */ false, arnoldAttributes->displacementMap() );
 			}
 
 			IECore::MurmurHash h;
@@ -737,7 +882,7 @@ class InstanceCache : public IECore::RefCounted
 			{
 				h.append( *it );
 			}
-			hashAttributes( samples.front(), arnoldAttributes, h );
+			arnoldAttributes->hashGeometry( samples.front(), h );
 
 			Cache::accessor a;
 			m_cache.insert( a, h );
@@ -751,7 +896,7 @@ class InstanceCache : public IECore::RefCounted
 				}
 			}
 
-			return Instance( a->second, /* instanced = */ true, arnoldAttributes->displacement.map );
+			return Instance( a->second, /* instanced = */ true, arnoldAttributes->displacementMap() );
 		}
 
 		// Must not be called concurrently with anything.
@@ -776,58 +921,6 @@ class InstanceCache : public IECore::RefCounted
 
 	private :
 
-		bool canInstance( const IECore::Object *object, const ArnoldAttributes *attributes )
-		{
-			if( !IECore::runTimeCast<const IECore::VisibleRenderable>( object ) )
-			{
-				return false;
-			}
-
-			if( const IECore::MeshPrimitive *mesh = IECore::runTimeCast<const IECore::MeshPrimitive>( object ) )
-			{
-				if( mesh->interpolation() == "linear" )
-				{
-					return true;
-				}
-				else
-				{
-					// We shouldn't instance poly meshes with view dependent subdivision, because the subdivision
-					// for the master mesh might be totally inappropriate for the position of the ginstances in frame.
-					return attributes->polyMesh.subdivAdaptiveError == 0.0f || attributes->polyMesh.subdivAdaptiveSpace == g_objectSpace;
-				}
-			}
-
-			return true;
-		}
-
-		void hashAttributes( const IECore::Object *object, const ArnoldAttributes *attributes, IECore::MurmurHash &h )
-		{
-			// Take account of the fact that in `convert()` we will apply shape specific
-			// attributes to the resulting node (via `applyAttributes()`).
-			if( const IECore::MeshPrimitive *mesh = IECore::runTimeCast<const IECore::MeshPrimitive>( object ) )
-			{
-				attributes->polyMesh.hash( mesh, h );
-				attributes->displacement.hash( h );
-			}
-			else if( IECore::runTimeCast<const IECore::CurvesPrimitive>( object ) )
-			{
-				attributes->curves.hash( h );
-			}
-		}
-
-		void applyAttributes( const IECore::Object *object, const ArnoldAttributes *attributes, AtNode *node )
-		{
-			if( const IECore::MeshPrimitive *mesh = IECore::runTimeCast<const IECore::MeshPrimitive>( object ) )
-			{
-				attributes->polyMesh.apply( mesh, node );
-				attributes->displacement.apply( node );
-			}
-			else if( IECore::runTimeCast<const IECore::CurvesPrimitive>( object ) )
-			{
-				attributes->curves.apply( node );
-			}
-		}
-
 		boost::shared_ptr<AtNode> convert( const IECore::Object *object, const ArnoldAttributes *attributes )
 		{
 			if( !object )
@@ -841,7 +934,7 @@ class InstanceCache : public IECore::RefCounted
 				return boost::shared_ptr<AtNode>();
 			}
 
-			applyAttributes( object, attributes, node );
+			attributes->applyGeometry( object, node );
 
 			return boost::shared_ptr<AtNode>( node, AiNodeDestroy );
 		}
@@ -854,7 +947,7 @@ class InstanceCache : public IECore::RefCounted
 				return boost::shared_ptr<AtNode>();
 			}
 
-			applyAttributes( samples.front(), attributes, node );
+			attributes->applyGeometry( samples.front(), node );
 
 			return boost::shared_ptr<AtNode>( node, AiNodeDestroy );
 
@@ -916,72 +1009,8 @@ class ArnoldObject : public IECoreScenePreview::Renderer::ObjectInterface
 			}
 
 			const ArnoldAttributes *arnoldAttributes = static_cast<const ArnoldAttributes *>( attributes );
-
-			// Remove old user parameters we don't want any more.
-
-			AtUserParamIterator *it= AiNodeGetUserParamIterator( node );
-			while( !AiUserParamIteratorFinished( it ) )
-			{
-				const AtUserParamEntry *param = AiUserParamIteratorGetNext( it );
-				const char *name = AiUserParamGetName( param );
-				if( boost::starts_with( name, "user:" ) )
-				{
-					if( arnoldAttributes->user.find( name ) == arnoldAttributes->user.end() )
-					{
-						AiNodeResetParameter( node, name );
-					}
-				}
-			}
-			AiUserParamIteratorDestroy( it );
-
-			// Add user parameters we do want.
-
-			for( ArnoldAttributes::UserAttributes::const_iterator it = arnoldAttributes->user.begin(), eIt = arnoldAttributes->user.end(); it != eIt; ++it )
-			{
-				ParameterAlgo::setParameter( node, it->first.c_str(), it->second.get() );
-			}
-
-			// Add shape specific parameters.
-
-			if( AiNodeEntryGetType( AiNodeGetNodeEntry( node ) ) == AI_NODE_SHAPE )
-			{
-				AiNodeSetByte( node, "visibility", arnoldAttributes->visibility );
-				AiNodeSetByte( node, "sidedness", arnoldAttributes->sidedness );
-
-				AiNodeSetBool( node, "receive_shadows", arnoldAttributes->shadingFlags & ArnoldAttributes::ReceiveShadows );
-				AiNodeSetBool( node, "self_shadows", arnoldAttributes->shadingFlags & ArnoldAttributes::SelfShadows );
-				AiNodeSetBool( node, "opaque", arnoldAttributes->shadingFlags & ArnoldAttributes::Opaque );
-				AiNodeSetBool( node, "matte", arnoldAttributes->shadingFlags & ArnoldAttributes::Matte );
-
-				m_shader = arnoldAttributes->surfaceShader; // Keep shader alive as long as we are alive
-				if( m_shader && m_shader->root() )
-				{
-					AiNodeSetPtr( node, "shader", m_shader->root() );
-				}
-				else
-				{
-					AiNodeResetParameter( node, "shader" );
-				}
-
-				if( arnoldAttributes->traceSets && arnoldAttributes->traceSets->readable().size() )
-				{
-					const vector<IECore::InternedString> &v = arnoldAttributes->traceSets->readable();
-					AtArray *array = AiArrayAllocate( v.size(), 1, AI_TYPE_STRING );
-					for( size_t i = 0, e = v.size(); i < e; ++i )
-					{
-						AiArraySetStr( array, i, v[i].c_str() );
-					}
-					AiNodeSetArray( node, "trace_sets", array );
-				}
-				else
-				{
-					// Arnold very unhelpfully treats `trace_sets == []` as meaning the object
-					// is in every trace set. So we instead make `trace_sets == [ "__none__" ]`
-					// to get the behaviour people expect.
-					AiNodeSetArray( node, "trace_sets", AiArray( 1, 1, AI_TYPE_STRING, "__none__" ) );
-				}
-			}
-
+			arnoldAttributes->apply( node );
+			m_shader = arnoldAttributes->surfaceShader(); // Keep shader alive as long as we are alive
 		}
 
 	protected :
@@ -1061,12 +1090,12 @@ class ArnoldLight : public ArnoldObject
 			// Update light shader.
 
 			m_lightShader = NULL;
-			if( !arnoldAttributes->lightShader )
+			if( !arnoldAttributes->lightShader() )
 			{
 				return;
 			}
 
-			m_lightShader = new ArnoldShader( arnoldAttributes->lightShader.get(), "light:" + m_name + ":" );
+			m_lightShader = new ArnoldShader( arnoldAttributes->lightShader(), "light:" + m_name + ":" );
 
 			// Simplify name for the root shader, for ease of reading of ass files.
 			const std::string name = "light:" + m_name;
