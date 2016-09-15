@@ -74,6 +74,11 @@ ArnoldAttributes::ArnoldAttributes( const std::string &name )
 	attributes->addOptionalMember( "ai:polymesh:subdiv_adaptive_metric", new StringPlug( "value", Plug::In, "auto" ), "subdivAdaptiveMetric", false );
 	attributes->addOptionalMember( "ai:polymesh:subdiv_adaptive_space", new StringPlug( "value", Plug::In, "raster" ), "subdivAdaptiveSpace", false );
 
+	// Curves parameters
+
+	attributes->addOptionalMember( "ai:curves:mode", new StringPlug( "value", Plug::In, "ribbon" ), "curvesMode", false );
+	attributes->addOptionalMember( "ai:curves:min_pixel_width", new FloatPlug( "value", Plug::In, 0.0f, 0.0f ), "curvesMinPixelWidth", false );
+
 	// Volume parameters
 
 	attributes->addOptionalMember( "ai:shape:step_size", new FloatPlug( "value", Plug::In, 0.0f, 0.0f ), "volumeStepSize", false );
