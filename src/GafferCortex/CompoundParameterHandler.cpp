@@ -105,33 +105,27 @@ Gaffer::Plug *CompoundParameterHandler::setupPlug( Gaffer::GraphComponent *plugP
 
 	setupPlugFlags( m_plug.get(), flags );
 
-	// remove any child plugs we don't need
-
+	// loop through the handlers and remove any that are not linked to a new parameter
+	const CompoundParameter::ParameterVector &children = m_parameter->orderedParameters();
 	std::vector<Gaffer::PlugPtr> toRemove;
-	for( Gaffer::PlugIterator pIt( m_plug.get() ); !pIt.done(); ++pIt )
+	for( HandlerMap::iterator it = m_handlers.begin(), eIt = m_handlers.end(); it!=eIt; )
 	{
-		if( (*pIt)->getName().string().compare( 0, 2, "__" ) == 0 )
+		HandlerMap::iterator nextIt = it; nextIt++; // increment now because removing will invalidate iterator
+		if( std::find( children.begin(), children.end(), it->first ) == children.end() )
 		{
-			// we leave any plugs prefixed with __ alone, on the assumption
-			// that they don't represent child parameters but instead are
-			// used for bookkeeping by a derived parameter handler (ClassParameterHandler
-			// or ClassVectorParameterHandler for instance).
-			continue;
+			toRemove.push_back( it->second->plug() );
+			m_handlers.erase( it );
 		}
-		if( !m_parameter->parameter<Parameter>( (*pIt)->getName() ) )
-		{
-			toRemove.push_back( *pIt );
-		}
+		it = nextIt;
 	}
 
+	// remove the old plugs
 	for( std::vector<Gaffer::PlugPtr>::const_iterator pIt = toRemove.begin(), eIt = toRemove.end(); pIt != eIt; pIt++ )
 	{
 		m_plug->removeChild( *pIt );
 	}
 
-	// and add or update the child plug for each child parameter
-
-	const CompoundParameter::ParameterVector &children = m_parameter->orderedParameters();
+	// loop through the new parameters, adding handlers to them
 	for( CompoundParameter::ParameterVector::const_iterator it = children.begin(); it!=children.end(); it++ )
 	{
 		ParameterHandler *h = handler( it->get(), true );
@@ -139,18 +133,6 @@ Gaffer::Plug *CompoundParameterHandler::setupPlug( Gaffer::GraphComponent *plugP
 		{
 			h->setupPlug( m_plug.get(), direction, flags );
 		}
-	}
-
-	// remove any old child handlers we don't need any more
-
-	for( HandlerMap::iterator it = m_handlers.begin(), eIt = m_handlers.end(); it!=eIt; )
-	{
-		HandlerMap::iterator nextIt = it; nextIt++; // increment now because removing will invalidate iterator
-		if( it->first != m_parameter->parameter<Parameter>( it->first->name() ) )
-		{
-			m_handlers.erase( it );
-		}
-		it = nextIt;
 	}
 
 	return m_plug.get();
