@@ -53,6 +53,7 @@
 #include "IECore/ObjectVector.h"
 #include "IECore/Shader.h"
 #include "IECore/MeshPrimitive.h"
+#include "IECore/CurvesPrimitive.h"
 
 #include "IECoreArnold/ParameterAlgo.h"
 #include "IECoreArnold/CameraAlgo.h"
@@ -375,6 +376,9 @@ IECore::InternedString g_dispPaddingAttributeName( "ai:disp_padding" );
 IECore::InternedString g_dispZeroValueAttributeName( "ai:disp_zero_value" );
 IECore::InternedString g_dispAutoBumpAttributeName( "ai:disp_autobump" );
 
+IECore::InternedString g_curvesMinPixelWidthAttributeName( "ai:curves:min_pixel_width" );
+IECore::InternedString g_curvesModeAttributeName( "ai:curves:mode" );
+
 class ArnoldAttributes : public IECoreScenePreview::Renderer::AttributesInterface
 {
 
@@ -479,8 +483,50 @@ class ArnoldAttributes : public IECoreScenePreview::Renderer::AttributesInterfac
 
 		};
 
+		struct Curves
+		{
+
+			Curves( const IECore::CompoundObject *attributes )
+			{
+				minPixelWidth = attributeValue<float>( g_curvesMinPixelWidthAttributeName, attributes, 0.0f );
+				// Arnold actually has three modes - "ribbon", "oriented" and "thick".
+				// The Cortex convention (inherited from RenderMan) is that curves without
+				// normals ("N" primitive variable) are rendered as camera facing ribbons,
+				// and those with normals are rendered as ribbons oriented by "N".
+				// IECoreArnold::CurvesAlgo takes care of this part for us automatically, so all that
+				// remains for us to do is to override the mode to "thick" if necessary to
+				// expose Arnold's remaining functionality.
+				//
+				// The semantics for our "ai:curves:mode" attribute are therefore as follows :
+				//
+				//	  "ribbon" : Automatically choose `mode = "ribbon"` or `mode = "oriented"`
+				//               according to the existence of "N".
+				//    "thick"  : Render with `mode = "thick"`.
+				thick = attributeValue<string>( g_curvesModeAttributeName, attributes, "ribbon" ) == "thick";
+			}
+
+			float minPixelWidth;
+			bool thick;
+
+			void hash( IECore::MurmurHash &h ) const
+			{
+				h.append( minPixelWidth );
+				h.append( thick );
+			}
+
+			void apply( AtNode *node ) const
+			{
+				AiNodeSetFlt( node, "min_pixel_width", minPixelWidth );
+				if( thick )
+				{
+					AiNodeSetStr( node, "mode", "thick" );
+				}
+			}
+
+		};
+
 		ArnoldAttributes( const IECore::CompoundObject *attributes, ShaderCache *shaderCache )
-			:	visibility( AI_RAY_ALL ), sidedness( AI_RAY_ALL ), shadingFlags( Default ), polyMesh( attributes ), displacement( attributes, shaderCache )
+			:	visibility( AI_RAY_ALL ), sidedness( AI_RAY_ALL ), shadingFlags( Default ), polyMesh( attributes ), displacement( attributes, shaderCache ), curves( attributes )
 		{
 			updateVisibility( g_cameraVisibilityAttributeName, AI_RAY_CAMERA, attributes );
 			updateVisibility( g_shadowVisibilityAttributeName, AI_RAY_SHADOW, attributes );
@@ -544,6 +590,7 @@ class ArnoldAttributes : public IECoreScenePreview::Renderer::AttributesInterfac
 		IECore::ConstInternedStringVectorDataPtr traceSets;
 		PolyMesh polyMesh;
 		Displacement displacement;
+		Curves curves;
 
 		typedef boost::container::flat_map<IECore::InternedString, IECore::ConstDataPtr> UserAttributes;
 		UserAttributes user;
@@ -755,12 +802,29 @@ class InstanceCache : public IECore::RefCounted
 
 		void hashAttributes( const IECore::Object *object, const ArnoldAttributes *attributes, IECore::MurmurHash &h )
 		{
+			// Take account of the fact that in `convert()` we will apply shape specific
+			// attributes to the resulting node (via `applyAttributes()`).
 			if( const IECore::MeshPrimitive *mesh = IECore::runTimeCast<const IECore::MeshPrimitive>( object ) )
 			{
-				// Take account of the fact that in `convert()` we will apply poly mesh
-				// attributes to the resulting node.
 				attributes->polyMesh.hash( mesh, h );
 				attributes->displacement.hash( h );
+			}
+			else if( IECore::runTimeCast<const IECore::CurvesPrimitive>( object ) )
+			{
+				attributes->curves.hash( h );
+			}
+		}
+
+		void applyAttributes( const IECore::Object *object, const ArnoldAttributes *attributes, AtNode *node )
+		{
+			if( const IECore::MeshPrimitive *mesh = IECore::runTimeCast<const IECore::MeshPrimitive>( object ) )
+			{
+				attributes->polyMesh.apply( mesh, node );
+				attributes->displacement.apply( node );
+			}
+			else if( IECore::runTimeCast<const IECore::CurvesPrimitive>( object ) )
+			{
+				attributes->curves.apply( node );
 			}
 		}
 
@@ -777,11 +841,7 @@ class InstanceCache : public IECore::RefCounted
 				return boost::shared_ptr<AtNode>();
 			}
 
-			if( const IECore::MeshPrimitive *mesh = IECore::runTimeCast<const IECore::MeshPrimitive>( object ) )
-			{
-				attributes->polyMesh.apply( mesh, node );
-				attributes->displacement.apply( node );
-			}
+			applyAttributes( object, attributes, node );
 
 			return boost::shared_ptr<AtNode>( node, AiNodeDestroy );
 		}
@@ -794,11 +854,7 @@ class InstanceCache : public IECore::RefCounted
 				return boost::shared_ptr<AtNode>();
 			}
 
-			if( const IECore::MeshPrimitive *mesh = IECore::runTimeCast<const IECore::MeshPrimitive>( samples.front() ) )
-			{
-				attributes->polyMesh.apply( mesh, node );
-				attributes->displacement.apply( node );
-			}
+			applyAttributes( samples.front(), attributes, node );
 
 			return boost::shared_ptr<AtNode>( node, AiNodeDestroy );
 
