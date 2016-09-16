@@ -86,7 +86,7 @@ using namespace GafferImageUI;
 
 namespace
 {
-    float EPSILON = 0.5f;
+    float EPSILON = 0.05f;
     float roundUpToEven(float a)
     {
         return ceil(a * .5) * 2;
@@ -432,43 +432,47 @@ bool ImageView::keyPress( const GafferUI::KeyEvent &event )
 				);
 				return true;
 			}
-			if(event.key == "Home")
-			{
-				
-				V2i viewport = viewportGadget()->getViewport();
-				V2i viewportCenter(viewport.x / 2, viewport.y / 2);
-				Box3f bound = m_imageGadget->bound();
-				V2i imageCenter((bound.max.x - bound.min.x) / 2, (bound.max.y - bound.min.y) / 2);
-				Box3f frame(
-					Imath::V3f(imageCenter.x - viewportCenter.x, imageCenter.y - viewportCenter.y, 0),
-					Imath::V3f(imageCenter.x + viewportCenter.x, imageCenter.y + viewportCenter.y, 0)
-				);
-				viewportGadget()->frame(frame);
-				return true;
-			}
 		if(event.key == "Plus")
 		{
 			float zoomLevel = computeZoomLevel();
 			float roundLevel;
+			std::setprecision(12);
+			std::cout<<"zoom level :"<<zoomLevel<<std::endl;
 
-			if((zoomLevel + EPSILON) < 1.f)
+			if(zoomLevel + EPSILON < 1.f)
 			{
-				zoomLevel = std::min(100.f, 1 / zoomLevel);
-				roundLevel = roundDownToEven(zoomLevel);
-			    
-				if(cmpf(zoomLevel, roundLevel, zoomLevel * .1))
+				std::cout<<"fraction"<<std::endl;
+				float inverse = 1.f / zoomLevel;
+				roundLevel = floor(inverse);
+				if (roundLevel > 10.f)
 				{
-					roundLevel = roundLevel * .5;
+					std::cout<<"large decrement"<<std::endl;
+					roundLevel *= .5f;
 				}
-				roundLevel = 1 / roundLevel;
+				else
+				{
+					if (cmpf(roundLevel, inverse))
+					{
+						std::cout<<"increment"<<std::endl;
+						roundLevel -= 1;
+					}
+				}
+				roundLevel = 1.f / roundLevel;
+				std::cout<<"inverse round level: "<<roundLevel<<std::endl;
+			}
+			else if(zoomLevel >  10.f)
+			{
+				roundLevel = ceil(zoomLevel) * 2;
+				std::cout<<"updated: "<<roundLevel<<std::endl;
 			}
 			else
 			{
-				roundLevel = roundUpToEven(zoomLevel);
-				if(cmpf(zoomLevel, roundLevel, zoomLevel * .1))
+				roundLevel = ceil(zoomLevel);
+				if (cmpf(roundLevel, zoomLevel))
 				{
-					round(roundLevel = roundLevel * 2);
+					roundLevel += 1;		
 				}
+				std::cout<<"updated: "<<roundLevel<<std::endl;
 			}
 			zoomLevelPlug()->setValue(roundLevel) ;
 					
@@ -477,28 +481,52 @@ bool ImageView::keyPress( const GafferUI::KeyEvent &event )
 		}
 		if(event.key == "Minus")
 		{
+
 			float zoomLevel = computeZoomLevel();
-			float roundLevel;
-			if((zoomLevel - EPSILON) < 1.f)
+			//float roundLevel;
+			std::setprecision(12);
+			std::cout<<"zoom level :"<<zoomLevel<<std::endl;
+
+			if(zoomLevel - EPSILON < 1.f)
 			{
-				zoomLevel = std::min(1000.0, round(1 / zoomLevel));
-				roundLevel = roundUpToEven(zoomLevel);
-				if(cmpf(zoomLevel, roundLevel, zoomLevel * .1))
-				{
-					roundLevel = roundLevel * 2;
-				}
-				roundLevel = 1 / roundLevel;
+				std::cout<<"fraction"<<std::endl;
+				float inverse = 1.f / zoomLevel;
+				std::cout<<"inverse: "<<inverse<<std::endl;
+				//roundLevel = ceil(inverse);
+				//if (roundLevel > 10.f)
+				//{
+				//	std::cout<<"large decrement"<<std::endl;
+				//	roundLevel *= 2.f;
+				//}
+				//else
+				//{
+				//	if (cmpf(roundLevel, inverse))
+				//	{
+				//		std::cout<<"increment"<<std::endl;
+				//		roundLevel += 1;
+				//	}
+				//}
+				//roundLevel = 1.f / roundLevel;
+				//std::cout<<"inverse round level: "<<roundLevel<<std::endl;
+			}
+			else if(zoomLevel >  10.f)
+			{
+				std::cout<<"above 10"<<std::endl;
+				//roundLevel = floor(zoomLevel) * 2;
+				//std::cout<<"updated: "<<roundLevel<<std::endl;
 			}
 			else
 			{
-				roundLevel = roundDownToEven(round(zoomLevel));
-				if(cmpf(zoomLevel, roundLevel, zoomLevel * .1))
-				{
-					round(roundLevel = roundLevel * .5);
-				}
+				std::cout<<"between 1 and 10"<<std::endl;
+				//roundLevel = floor(zoomLevel);
+				//if (cmpf(roundLevel, zoomLevel))
+				//{
+				//	roundLevel -= 1;		
+				//}
+				//std::cout<<"updated: "<<roundLevel<<std::endl;
 			}
-			zoomLevelPlug()->setValue(roundLevel) ;
-
+			//zoomLevelPlug()->setValue(roundLevel) ;
+					
 			return true;
 		    }
 		}
@@ -516,6 +544,7 @@ bool ImageView::keyPress( const GafferUI::KeyEvent &event )
 			return true;
 		}
 	}
+}
 
 	return false;
 }
