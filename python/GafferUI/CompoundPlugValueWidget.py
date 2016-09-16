@@ -199,13 +199,14 @@ class CompoundPlugValueWidget( GafferUI.PlugValueWidget ) :
 	def __updateChildPlugUIs( self ) :
 
 		# ditch child uis we don't need any more
+		childPlugs = self._childPlugs()
 		for childPlug in self.__childPlugUIs.keys() :
-			if childPlug not in self._childPlugs() :
+			if childPlug not in childPlugs :
 				del self.__childPlugUIs[childPlug]
 
 		# make (or reuse existing) uis for each child plug
 		orderedChildUIs = []
-		for childPlug in self._childPlugs() :
+		for childPlug in childPlugs :
 			if childPlug.getName().startswith( "__" ) :
 				continue
 			if childPlug not in self.__childPlugUIs :
