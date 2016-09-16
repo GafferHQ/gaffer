@@ -35,6 +35,8 @@
 //
 //////////////////////////////////////////////////////////////////////////
 
+#include "boost/container/flat_set.hpp"
+
 #include "IECore/MessageHandler.h"
 #include "IECore/SimpleTypedData.h"
 
@@ -107,11 +109,15 @@ Gaffer::Plug *CompoundParameterHandler::setupPlug( Gaffer::GraphComponent *plugP
 
 	// loop through the handlers and remove any that are not linked to a new parameter
 	const CompoundParameter::ParameterVector &children = m_parameter->orderedParameters();
+
+	// using a flat_set for fast searches
+	boost::container::flat_set<IECore::ParameterPtr> searchParameters(children.begin(), children.end());
+
 	std::vector<Gaffer::PlugPtr> toRemove;
 	for( HandlerMap::iterator it = m_handlers.begin(), eIt = m_handlers.end(); it!=eIt; )
 	{
 		HandlerMap::iterator nextIt = it; nextIt++; // increment now because removing will invalidate iterator
-		if( std::find( children.begin(), children.end(), it->first ) == children.end() )
+		if( searchParameters.find( it->first ) == searchParameters.end() )
 		{
 			toRemove.push_back( it->second->plug() );
 			m_handlers.erase( it );
