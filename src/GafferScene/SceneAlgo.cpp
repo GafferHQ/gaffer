@@ -444,13 +444,14 @@ namespace
 struct Sets
 {
 
-	Sets( const ScenePlug *scene, const std::vector<InternedString> &names, std::vector<GafferScene::ConstPathMatcherDataPtr> &sets )
-		:	m_scene( scene ), m_names( names ), m_sets( sets )
+	Sets( const ScenePlug *scene, const Context *context, const std::vector<InternedString> &names, std::vector<GafferScene::ConstPathMatcherDataPtr> &sets )
+		:	m_scene( scene ), m_context( context ), m_names( names ), m_sets( sets )
 	{
 	}
 
 	void operator()( const tbb::blocked_range<size_t> &r ) const
 	{
+		Context::Scope scopedContext( m_context );
 		for( size_t i=r.begin(); i!=r.end(); ++i )
 		{
 			m_sets[i] = m_scene->set( m_names[i] );
@@ -460,6 +461,7 @@ struct Sets
 	private :
 
 		const ScenePlug *m_scene;
+		const Context *m_context;
 		const std::vector<InternedString> &m_names;
 		std::vector<GafferScene::ConstPathMatcherDataPtr> &m_sets;
 
@@ -478,7 +480,7 @@ IECore::ConstCompoundDataPtr GafferScene::sets( const ScenePlug *scene, const st
 	std::vector<GafferScene::ConstPathMatcherDataPtr> setsVector;
 	setsVector.resize( setNames.size(), NULL );
 
-	Sets setsCompute( scene, setNames, setsVector );
+	Sets setsCompute( scene, Context::current(), setNames, setsVector );
 	parallel_for( tbb::blocked_range<size_t>( 0, setsVector.size() ), setsCompute );
 
 	CompoundDataPtr result = new CompoundData;
