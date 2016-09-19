@@ -65,6 +65,10 @@ def __plugDivider( plug ) :
 
 	return plug.node().parameterMetadata( plug, "divider" ) or False
 
+def __plugPage( plug ) :
+
+	return plug.node().parameterMetadata( plug, "page" ) or None
+
 def __plugPresetNames( plug ) :
 
 	options = plug.node().parameterMetadata( plug, "options" )
@@ -135,6 +139,7 @@ Gaffer.Metadata.registerNode(
 			"description", __plugDescription,
 			"label", __plugLabel,
 			"layout:divider", __plugDivider,
+			"layout:section", __plugPage,
 			"presetNames", __plugPresetNames,
 			"presetValues", __plugPresetValues,
 			"plugValueWidget:type", __plugWidgetType,
