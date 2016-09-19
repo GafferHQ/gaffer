@@ -1,3 +1,42 @@
+0.28.2.0
+========
+
+UI
+--
+
+- Fixed incorrect re-use of widgets when swapping plugs with the same name.
+
+Scene
+-----
+
+- Fixed context scoping issue during renders.
+
+Arnold
+------
+
+- Added curve min_pixel_width and mode attributes.
+- Shaders are now re-loadable, and will automatically reload during script load.
+
+Cortex
+------
+
+- Fixed incorrect re-use of plugs when swapping parameters with the same name.
+
+API
+---
+
+- SceneAlgo
+  - Fixed context used by `sets()` function.
+- RendererAlgo (preview)
+  - Fixed context used by `RenderSets` class.
+- ArnoldShader
+  - Added keepExistingValue argument to `loadShader()`.
+  - Added `loadShader()` to serialisation.
+  - Reusing existing plugs wherever possible.
+- CompoundParameterHandler
+  - Match by parameter object instead of name.
+- CompoundPlugValueWidget
+  - Match by plug object instead of name.
 
 0.28.1.0
 ========
