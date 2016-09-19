@@ -191,19 +191,19 @@ namespace Preview
 struct RenderSets::Updater
 {
 
-	Updater( const ScenePlug *scene, RenderSets &renderSets, unsigned changed )
-		:	changed( changed ), m_scene( scene ), m_renderSets( renderSets )
+	Updater( const ScenePlug *scene, const Context *context, RenderSets &renderSets, unsigned changed )
+		:	changed( changed ), m_scene( scene ), m_context( context ), m_renderSets( renderSets )
 	{
 	}
 
 	Updater( const Updater &updater, tbb::split )
-		:	changed( NothingChanged ), m_scene( updater.m_scene ), m_renderSets( updater.m_renderSets )
+		:	changed( NothingChanged ), m_scene( updater.m_scene ), m_context( updater.m_context ), m_renderSets( updater.m_renderSets )
 	{
 	}
 
 	void operator()( const tbb::blocked_range<size_t> &r )
 	{
-		ContextPtr context = new Context( *Context::current(), Context::Borrowed );
+		ContextPtr context = new Context( *m_context, Context::Borrowed );
 		Context::Scope scopedContext( context.get() );
 
 		for( size_t i=r.begin(); i!=r.end(); ++i )
@@ -253,6 +253,7 @@ struct RenderSets::Updater
 	private :
 
 		const ScenePlug *m_scene;
+		const Context *m_context;
 		RenderSets &m_renderSets;
 
 };
@@ -304,7 +305,7 @@ unsigned RenderSets::update( const ScenePlug *scene )
 
 	// Update all the sets we want in parallel.
 
-	Updater updater( scene, *this, changed );
+	Updater updater( scene, Context::current(), *this, changed );
 	parallel_reduce( tbb::blocked_range<size_t>( 0, m_sets.size() + 2 ), updater );
 
 	return updater.changed;
