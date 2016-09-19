@@ -661,6 +661,29 @@ class ArnoldRenderTest( GafferTest.TestCase ) :
 			self.assertEqual( self.__arrayToSet( arnold.AiNodeGetArray( firstSphere, "trace_sets" ) ), { "firstSphere", "group", "bothSpheres" } )
 			self.assertEqual( self.__arrayToSet( arnold.AiNodeGetArray( secondSphere, "trace_sets" ) ), { "secondSphere", "group", "bothSpheres" } )
 
+	def testSetsNeedContextEntry( self ) :
+
+		script = Gaffer.ScriptNode()
+
+		script["light"] = GafferArnold.ArnoldLight()
+		script["light"].loadShader( "point_light" )
+
+		script["expression"] = Gaffer.Expression()
+		script["expression"].setExpression(
+			"""parent["light"]["name"] = context["lightName"]"""
+		)
+
+		script["render"] = GafferArnold.ArnoldRender()
+		script["render"]["in"].setInput( script["light"]["out"] )
+		script["render"]["mode"].setValue( script["render"].Mode.SceneDescriptionMode )
+		script["render"]["fileName"].setValue( self.temporaryDirectory() + "/test.ass" )
+
+		for i in range( 0, 100 ) :
+
+			with Gaffer.Context() as context :
+				context["lightName"] = "light%d" % i
+				script["render"]["task"].execute()
+
 	def __arrayToSet( self, a ) :
 
 		result = set()
