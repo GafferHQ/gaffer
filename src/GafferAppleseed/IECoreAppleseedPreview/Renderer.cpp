@@ -1536,7 +1536,7 @@ class AppleseedRenderer : public IECoreScenePreview::Renderer
 	public :
 
 		AppleseedRenderer( RenderType renderType, const string &fileName )
-			:	m_renderType( renderType ), m_shutterOpenTime( 0.0f ), m_shutterCloseTime( 0.0f ), m_environmentEDFVisible( false ), m_appleseedFileName( fileName ), m_maxInteractiveRenderSamples( 0 )
+			:	m_renderType( renderType ), m_shutterOpenTime( 0.0f ), m_shutterCloseTime( 0.0f ), m_environmentEDFVisible( false ), m_maxInteractiveRenderSamples( 0 ), m_appleseedFileName( fileName )
 		{
 			// Create the renderer controller and the project.
 			m_rendererController = new RendererController();
@@ -1971,7 +1971,7 @@ class AppleseedRenderer : public IECoreScenePreview::Renderer
 			// Set the max number of interactive render samples.
 			if( m_maxInteractiveRenderSamples <= 0 )
 			{
-				// if maxInteractiveRenderSamples is 0 or nagative, disable it.
+				// if maxInteractiveRenderSamples is 0 or negative, disable it.
 				m_project->configurations().get_by_name( "interactive" )->get_parameters().remove_path( "progressive_frame_renderer.max_samples" );
 			}
 			else

@@ -37,7 +37,7 @@
 #ifndef GAFFERAPPLESEED_APPLESEEDLIGHT_H
 #define GAFFERAPPLESEED_APPLESEEDLIGHT_H
 
-#include "foundation/utility/containers/specializedarrays.h"
+#include "foundation/utility/api/specializedapiarrays.h"
 
 #include "GafferScene/Light.h"
 
