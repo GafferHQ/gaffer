@@ -452,15 +452,13 @@ class ArnoldAttributes : public IECoreScenePreview::Renderer::AttributesInterfac
 		// Generates a signature for the work done by applyGeometry.
 		void hashGeometry( const IECore::Object *object, IECore::MurmurHash &h ) const
 		{
-			if( const IECore::MeshPrimitive *mesh = IECore::runTimeCast<const IECore::MeshPrimitive>( object ) )
+			const IECore::TypeId objectType = object->typeId();
+			bool meshInterpolationIsLinear = false;
+			if( objectType == IECore::MeshPrimitiveTypeId )
 			{
-				m_polyMesh.hash( mesh, h );
-				m_displacement.hash( h );
+				meshInterpolationIsLinear = static_cast<const IECore::MeshPrimitive *>( object )->interpolation() == "linear";
 			}
-			else if( IECore::runTimeCast<const IECore::CurvesPrimitive>( object ) )
-			{
-				m_curves.hash( h );
-			}
+			hashGeometryInternal( objectType, meshInterpolationIsLinear, h );
 		}
 
 		// Returns true if the given geometry can be instanced, given the attributes that
@@ -494,8 +492,49 @@ class ArnoldAttributes : public IECoreScenePreview::Renderer::AttributesInterfac
 		// they can be applied to ginstance nodes, making attribute edits easy. This
 		// method applies those attributes, and is called from `Renderer::object()`
 		// and `Renderer::attributes()`.
-		void apply( AtNode *node ) const
+		//
+		// The previousAttributes are passed so that we can check that the new
+		// geometry attributes are compatible with those which were applied previously
+		// (and which cannot be changed now). Returns true if all is well and false
+		// if there is a clash (and the edit has therefore failed).
+		bool apply( AtNode *node, const ArnoldAttributes *previousAttributes ) const
 		{
+
+			// Check that we're not looking at an impossible request
+			// to edit geometric attributes.
+
+			if( previousAttributes )
+			{
+				const AtNode *geometry = node;
+				if( AiNodeIs( node, "ginstance" ) )
+				{
+					geometry = static_cast<const AtNode *>( AiNodeGetPtr( node, "node" ) );
+				}
+
+				IECore::TypeId objectType = IECore::InvalidTypeId;
+				bool meshInterpolationIsLinear = false;
+				if( AiNodeIs( geometry, "polymesh" ) )
+				{
+					objectType = IECore::MeshPrimitiveTypeId;
+					meshInterpolationIsLinear = strcmp( AiNodeGetStr( geometry, "subdiv_type" ), "catclark" );
+				}
+				else if( AiNodeIs( geometry, "curves" ) )
+				{
+					objectType = IECore::CurvesPrimitiveTypeId;
+				}
+
+				IECore::MurmurHash previousGeometryHash;
+				previousAttributes->hashGeometryInternal( objectType, meshInterpolationIsLinear, previousGeometryHash );
+
+				IECore::MurmurHash currentGeometryHash;
+				hashGeometryInternal( objectType, meshInterpolationIsLinear, currentGeometryHash );
+
+				if( previousGeometryHash != currentGeometryHash )
+				{
+					return false;
+				}
+			}
+
 			// Remove old user parameters we don't want any more.
 
 			AtUserParamIterator *it= AiNodeGetUserParamIterator( node );
@@ -559,16 +598,8 @@ class ArnoldAttributes : public IECoreScenePreview::Renderer::AttributesInterfac
 					AiNodeSetArray( node, "trace_sets", AiArray( 1, 1, AI_TYPE_STRING, "__none__" ) );
 				}
 			}
-		}
 
-		ArnoldShaderPtr displacementMap() const
-		{
-			return m_displacement.map;
-		}
-
-		ArnoldShaderPtr surfaceShader() const
-		{
-			return m_surfaceShader;
+			return true;
 		}
 
 		const IECore::ObjectVector *lightShader() const
@@ -596,15 +627,14 @@ class ArnoldAttributes : public IECoreScenePreview::Renderer::AttributesInterfac
 			IECore::InternedString subdivAdaptiveSpace;
 			bool subdividePolygons;
 
-			void hash( const IECore::MeshPrimitive *mesh, IECore::MurmurHash &h ) const
+			void hash( bool meshInterpolationIsLinear, IECore::MurmurHash &h ) const
 			{
-				if( mesh->interpolation() != "linear" || subdividePolygons )
+				if( !meshInterpolationIsLinear || subdividePolygons )
 				{
 					h.append( subdivIterations );
 					h.append( subdivAdaptiveError );
 					h.append( subdivAdaptiveMetric );
 					h.append( subdivAdaptiveSpace );
-					h.append( subdividePolygons );
 				}
 			}
 
@@ -778,6 +808,23 @@ class ArnoldAttributes : public IECoreScenePreview::Renderer::AttributesInterfac
 			}
 		}
 
+		void hashGeometryInternal( IECore::TypeId objectType, bool meshInterpolationIsLinear, IECore::MurmurHash &h ) const
+		{
+			switch( objectType )
+			{
+				case IECore::MeshPrimitiveTypeId :
+					m_polyMesh.hash( meshInterpolationIsLinear, h );
+					m_displacement.hash( h );
+					break;
+				case IECore::CurvesPrimitiveTypeId :
+					m_curves.hash( h );
+					break;
+				default :
+					// No geometry attributes for this type.
+					break;
+			}
+		}
+
 		unsigned char m_visibility;
 		unsigned char m_sidedness;
 		unsigned char m_shadingFlags;
@@ -793,6 +840,8 @@ class ArnoldAttributes : public IECoreScenePreview::Renderer::AttributesInterfac
 
 };
 
+IE_CORE_DECLAREPTR( ArnoldAttributes )
+
 } // namespace
 
 //////////////////////////////////////////////////////////////////////////
@@ -804,8 +853,8 @@ class Instance
 
 	public :
 
-		Instance( boost::shared_ptr<AtNode> node, bool instanced, ArnoldShaderPtr displacementShader )
-			:	m_node( node ), m_displacementShader( displacementShader )
+		Instance( boost::shared_ptr<AtNode> node, bool instanced )
+			:	m_node( node )
 		{
 			if( instanced && node )
 			{
@@ -824,10 +873,6 @@ class Instance
 
 		boost::shared_ptr<AtNode> m_node;
 		boost::shared_ptr<AtNode> m_ginstance;
-		// The displacement shader is effectively part of the geometry
-		// in Arnold, so the Instance must keep it alive in tandem with
-		// m_node.
-		ArnoldShaderPtr m_displacementShader;
 
 };
 
@@ -843,7 +888,7 @@ class InstanceCache : public IECore::RefCounted
 
 			if( !arnoldAttributes->canInstanceGeometry( object ) )
 			{
-				return Instance( convert( object, arnoldAttributes ), /* instanced = */ false, arnoldAttributes->displacementMap() );
+				return Instance( convert( object, arnoldAttributes ), /* instanced = */ false );
 			}
 
 			IECore::MurmurHash h = object->hash();
@@ -861,7 +906,7 @@ class InstanceCache : public IECore::RefCounted
 				}
 			}
 
-			return Instance( a->second, /* instanced = */ true, arnoldAttributes->displacementMap() );
+			return Instance( a->second, /* instanced = */ true );
 		}
 
 		Instance get( const std::vector<const IECore::Object *> &samples, const std::vector<float> &times, const IECoreScenePreview::Renderer::AttributesInterface *attributes )
@@ -870,7 +915,7 @@ class InstanceCache : public IECore::RefCounted
 
 			if( !arnoldAttributes->canInstanceGeometry( samples.front() ) )
 			{
-				return Instance( convert( samples, times, arnoldAttributes ), /* instanced = */ false, arnoldAttributes->displacementMap() );
+				return Instance( convert( samples, times, arnoldAttributes ), /* instanced = */ false );
 			}
 
 			IECore::MurmurHash h;
@@ -896,7 +941,7 @@ class InstanceCache : public IECore::RefCounted
 				}
 			}
 
-			return Instance( a->second, /* instanced = */ true, arnoldAttributes->displacementMap() );
+			return Instance( a->second, /* instanced = */ true );
 		}
 
 		// Must not be called concurrently with anything.
@@ -976,7 +1021,7 @@ class ArnoldObject : public IECoreScenePreview::Renderer::ObjectInterface
 	public :
 
 		ArnoldObject( const Instance &instance )
-			:	m_instance( instance )
+			:	m_instance( instance ), m_attributes( NULL )
 		{
 		}
 
@@ -1000,17 +1045,21 @@ class ArnoldObject : public IECoreScenePreview::Renderer::ObjectInterface
 			applyTransform( node, samples, times );
 		}
 
-		virtual void attributes( const IECoreScenePreview::Renderer::AttributesInterface *attributes )
+		virtual bool attributes( const IECoreScenePreview::Renderer::AttributesInterface *attributes )
 		{
 			AtNode *node = m_instance.node();
 			if( !node )
 			{
-				return;
+				return true;
 			}
 
 			const ArnoldAttributes *arnoldAttributes = static_cast<const ArnoldAttributes *>( attributes );
-			arnoldAttributes->apply( node );
-			m_shader = arnoldAttributes->surfaceShader(); // Keep shader alive as long as we are alive
+			if( arnoldAttributes->apply( node, m_attributes.get() ) )
+			{
+				m_attributes = arnoldAttributes;
+				return true;
+			}
+			return false;
 		}
 
 	protected :
@@ -1042,7 +1091,16 @@ class ArnoldObject : public IECoreScenePreview::Renderer::ObjectInterface
 		}
 
 		Instance m_instance;
-		ArnoldShaderPtr m_shader;
+		// We keep a reference to the currently applied attributes
+		// for a couple of reasons :
+		//
+		//  - We need to keep the displacement and surface shaders
+		//    alive for as long as they are referenced by m_instance.
+		//  - We can use the previously applied attributes to determine
+		//    if an incoming attribute edit is impossible because it
+		//    would affect the instance itself, and return failure from
+		//    `attributes()`.
+		ConstArnoldAttributesPtr m_attributes;
 
 };
 
@@ -1082,9 +1140,13 @@ class ArnoldLight : public ArnoldObject
 			applyLightTransform();
 		}
 
-		virtual void attributes( const IECoreScenePreview::Renderer::AttributesInterface *attributes )
+		virtual bool attributes( const IECoreScenePreview::Renderer::AttributesInterface *attributes )
 		{
-			ArnoldObject::attributes( attributes );
+			if( !ArnoldObject::attributes( attributes ) )
+			{
+				return false;
+			}
+
 			const ArnoldAttributes *arnoldAttributes = static_cast<const ArnoldAttributes *>( attributes );
 
 			// Update light shader.
@@ -1092,7 +1154,7 @@ class ArnoldLight : public ArnoldObject
 			m_lightShader = NULL;
 			if( !arnoldAttributes->lightShader() )
 			{
-				return;
+				return true;
 			}
 
 			m_lightShader = new ArnoldShader( arnoldAttributes->lightShader(), "light:" + m_name + ":" );
@@ -1113,11 +1175,12 @@ class ArnoldLight : public ArnoldObject
 				{
 					// Don't output mesh_lights from locations with no object
 					m_lightShader = NULL;
-					return;
+					return true;
 				}
 			}
 
 			applyLightTransform();
+			return true;
 		}
 
 	private :

@@ -44,6 +44,7 @@ import Gaffer
 import GafferTest
 import GafferScene
 import GafferSceneTest
+import GafferImage
 import GafferArnold
 
 @unittest.skipIf( "TRAVIS" in os.environ, "No license available on Travis" )
@@ -91,6 +92,66 @@ class InteractiveArnoldRenderTest( GafferSceneTest.InteractiveRenderTest ) :
 
 		self.assertEqual( len( errors ), 1 )
 		self.assertTrue( "Arnold is already in use" in errors[0][2] )
+
+	def testEditSubdivisionAttributes( self ) :
+
+		script = Gaffer.ScriptNode()
+
+		script["cube"] = GafferScene.Cube()
+		script["cube"]["dimensions"].setValue( IECore.V3f( 2 ) )
+
+		script["meshType"] = GafferScene.MeshType()
+		script["meshType"]["in"].setInput( script["cube"]["out"] )
+		script["meshType"]["meshType"].setValue( "catmullClark" )
+
+		script["attributes"] = GafferArnold.ArnoldAttributes()
+		script["attributes"]["in"].setInput( script["meshType"]["out"] )
+		script["attributes"]["attributes"]["subdivIterations"]["enabled"].setValue( True )
+
+		script["outputs"] = GafferScene.Outputs()
+		script["outputs"].addOutput(
+			"beauty",
+			IECore.Display(
+				"test",
+				"ieDisplay",
+				"rgba",
+				{
+					"driverType" : "ClientDisplayDriver",
+					"displayType" : "IECore::ClientDisplayDriver",
+					"displayHost" : "localhost",
+					"displayPort" : "2500",
+					"remoteDisplayType" : "GafferImage::GafferDisplayDriver",
+				}
+			)
+		)
+		script["outputs"]["in"].setInput( script["attributes"]["out"] )
+
+		script["display"] = GafferImage.Display()
+		script["display"]["port"].setValue( 2500 )
+
+		script["imageStats"] = GafferImage.ImageStats()
+		script["imageStats"]["in"].setInput( script["display"]["out"] )
+		script["imageStats"]["channels"].setValue( IECore.StringVectorData( [ "R", "G", "B", "A" ] ) )
+		script["imageStats"]["regionOfInterest"].setValue( IECore.Box2i( IECore.V2i( 0 ), IECore.V2i( 640, 480 ) ) )
+
+		script["render"] = self._createInteractiveRender()
+		script["render"]["in"].setInput( script["outputs"]["out"] )
+
+		# Render the cube with one level of subdivision. Check we get roughly the
+		# alpha coverage we expect.
+
+		script["render"]["state"].setValue( script["render"].State.Running )
+		time.sleep( 1 )
+
+		self.assertAlmostEqual( script["imageStats"]["average"][3].getValue(), 0.381, delta = 0.001 )
+
+		# Now up the number of subdivision levels. The alpha coverage should
+		# increase as the shape tends towards the limit surface.
+
+		script["attributes"]["attributes"]["subdivIterations"]["value"].setValue( 4 )
+		time.sleep( 1 )
+
+		self.assertAlmostEqual( script["imageStats"]["average"][3].getValue(), 0.424, delta = 0.001 )
 
 	def _createInteractiveRender( self ) :
 

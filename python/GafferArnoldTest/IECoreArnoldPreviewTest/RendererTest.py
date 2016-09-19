@@ -1199,6 +1199,76 @@ class RendererTest( GafferTest.TestCase ) :
 				self.assertEqual( arnold.AiNodeGetFlt( shape, "min_pixel_width" ), minPixelWidth )
 				self.assertEqual( arnold.AiNodeGetStr( shape, "mode" ), mode )
 
+	def testAttributeEditFailures( self ) :
+
+		r = GafferScene.Private.IECoreScenePreview.Renderer.create(
+			"IECoreArnold::Renderer",
+			GafferScene.Private.IECoreScenePreview.Renderer.RenderType.Interactive
+		)
+
+		polygonMesh = IECore.MeshPrimitive.createPlane( IECore.Box2f( IECore.V2f( -1 ), IECore.V2f( 1 ) ) )
+		subdivMesh = polygonMesh.copy()
+		subdivMesh.interpolation = "catmullClark"
+
+		defaultAttributes = r.attributes( IECore.CompoundObject() )
+
+		defaultIterationsAttributes = r.attributes( IECore.CompoundObject( {
+			"ai:polymesh:subdiv_iterations" : IECore.IntData( 1 ),
+		} ) )
+
+		nonDefaultIterationsAttributes = r.attributes( IECore.CompoundObject( {
+			"ai:polymesh:subdiv_iterations" : IECore.IntData( 2 ),
+		} ) )
+
+		subdividePolygonsAttributes = r.attributes( IECore.CompoundObject( {
+			"ai:polymesh:subdividePolygons" : IECore.BoolData( True )
+		} ) )
+
+		# Polygon mesh
+		##############
+
+		# No-op attribute edit should succeed.
+
+		polygonMeshObject = r.object( "polygonMesh", polygonMesh, defaultAttributes )
+		self.assertTrue( polygonMeshObject.attributes( defaultAttributes ) )
+		self.assertTrue( polygonMeshObject.attributes( defaultIterationsAttributes ) )
+
+		# Changing subdiv iterations should succeed, because it
+		# doesn't apply to polygon meshes.
+
+		self.assertTrue( polygonMeshObject.attributes( nonDefaultIterationsAttributes ) )
+		self.assertTrue( polygonMeshObject.attributes( defaultAttributes ) )
+
+		# But turning on subdivide polygons should fail, because then
+		# we have changed the geometry.
+
+		self.assertFalse( polygonMeshObject.attributes( subdividePolygonsAttributes ) )
+
+		# Likewise, turning off subdivide polygons should fail.
+
+		polygonMeshObject = r.object( "polygonMesh", polygonMesh, subdividePolygonsAttributes )
+		self.assertTrue( polygonMeshObject.attributes( subdividePolygonsAttributes ) )
+		self.assertFalse( polygonMeshObject.attributes( defaultAttributes ) )
+
+		# Subdivision mesh
+		##################
+
+		# No-op attribute edit should succeed.
+
+		subdivMeshObject = r.object( "subdivMesh", subdivMesh, defaultAttributes )
+		self.assertTrue( subdivMeshObject.attributes( defaultAttributes ) )
+		self.assertTrue( subdivMeshObject.attributes( defaultIterationsAttributes ) )
+
+		# Turning on subdivide polygons should succeed, because we're already
+		# subdividing anyway.
+
+		self.assertTrue( subdivMeshObject.attributes( subdividePolygonsAttributes ) )
+
+		# But changing iterations should fail, because then we're changing the
+		# geometry.
+
+		self.assertFalse( subdivMeshObject.attributes( nonDefaultIterationsAttributes ) )
+
 	@staticmethod
 	def __m44f( m ) :
 
