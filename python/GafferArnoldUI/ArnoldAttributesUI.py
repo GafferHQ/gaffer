@@ -86,6 +86,16 @@ def __subdivisionSummary( plug ) :
 
 	return ", ".join( info )
 
+def __curvesSummary( plug ) :
+
+	info = []
+	if plug["curvesMode"]["enabled"].getValue() :
+		info.append( string.capwords( plug["curvesMode"]["value"].getValue() ) )
+	if plug["curvesMinPixelWidth"]["enabled"].getValue() :
+		info.append( "Min Pixel Width %s" % GafferUI.NumericWidget.valueToString( plug["curvesMinPixelWidth"]["value"].getValue() ) )
+
+	return ", ".join( info )
+
 def __volumeSummary( plug ) :
 
 	info = []
@@ -112,6 +122,7 @@ Gaffer.Metadata.registerNode(
 			"layout:section:Visibility:summary", __visibilitySummary,
 			"layout:section:Shading:summary", __shadingSummary,
 			"layout:section:Subdivision:summary", __subdivisionSummary,
+			"layout:section:Curves:summary", __curvesSummary,
 			"layout:section:Volume:summary", __volumeSummary,
 
 		],
@@ -381,6 +392,57 @@ Gaffer.Metadata.registerNode(
 			"preset:Object", "object",
 
 			"plugValueWidget:type", "GafferUI.PresetsPlugValueWidget",
+
+		],
+
+		# Curves
+
+		"attributes.curvesMode" : [
+
+			"description",
+			"""
+			How the curves are rendered. Ribbon mode treats
+			the curves as flat ribbons facing the camera, and is
+			most suited for rendering of thin curves with a
+			dedicated hair shader. Thick mode treats the curves
+			as tubes, and is suited for use with a regular
+			surface shader.
+
+			> Note : To render using Arnold's "oriented" mode, set
+			> mode to "ribbon" and add per-vertex normals to the
+			> curves as a primitive variable named "N".
+			""",
+
+			"layout:section", "Curves",
+			"label", "Mode",
+
+		],
+
+		"attributes.curvesMode.value" : [
+
+			"preset:Ribbon", "ribbon",
+			"preset:Thick", "thick",
+
+			"plugValueWidget:type", "GafferUI.PresetsPlugValueWidget",
+
+		],
+
+		"attributes.curvesMinPixelWidth" : [
+
+			"description",
+			"""
+			The minimum thickness of the curves, measured
+			in pixels on the screen. When rendering very thin curves, a
+			large number of AA samples are required
+			to avoid aliasing. In these cases a minimum pixel
+			width may be specified to artificially thicken the curves,
+			meaning that fewer AA samples may be used. The additional width is
+			compensated for automatically by lowering the opacity
+			of the curves.
+			""",
+
+			"layout:section", "Curves",
+			"label", "Min Pixel Width",
 
 		],
 
