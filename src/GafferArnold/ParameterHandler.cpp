@@ -90,19 +90,19 @@ Gaffer::Plug *setupNumericPlug( const AtNodeEntry *node, const AtParamEntry *par
 	switch( AiParamGetType( parameter ) )
 	{
 		case AI_TYPE_BYTE :
-			defaultValue = AiParamGetDefault( parameter )->BYTE;
+			defaultValue = (ValueType)AiParamGetDefault( parameter )->BYTE;
 			minValue = 0;
 			maxValue = 255;
 			break;
 		case AI_TYPE_INT :
-			defaultValue = AiParamGetDefault( parameter )->INT;
+			defaultValue = (ValueType)AiParamGetDefault( parameter )->INT;
 			break;
 		case AI_TYPE_UINT :
-			defaultValue = AiParamGetDefault( parameter )->UINT;
+			defaultValue = (ValueType)AiParamGetDefault( parameter )->UINT;
 			minValue = 0;
 			break;
 		case AI_TYPE_FLOAT :
-			defaultValue = AiParamGetDefault( parameter )->FLT;
+			defaultValue = (ValueType)AiParamGetDefault( parameter )->FLT;
 			break;
 	}
 
