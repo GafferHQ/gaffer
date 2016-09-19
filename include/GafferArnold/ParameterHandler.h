@@ -52,8 +52,10 @@ class ParameterHandler
 
 	public :
 
+		static Gaffer::Plug *setupPlug( const IECore::InternedString &parameterName, int parameterType, Gaffer::GraphComponent *plugParent, Gaffer::Plug::Direction direction = Gaffer::Plug::In );
 		static Gaffer::Plug *setupPlug( const AtNodeEntry *node, const AtParamEntry *parameter, Gaffer::GraphComponent *plugParent, Gaffer::Plug::Direction direction = Gaffer::Plug::In );
 		static void setupPlugs( const AtNodeEntry *node, Gaffer::GraphComponent *plugsParent, Gaffer::Plug::Direction direction = Gaffer::Plug::In );
+
 };
 
 } // namespace GafferArnold

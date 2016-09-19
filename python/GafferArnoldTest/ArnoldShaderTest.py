@@ -444,5 +444,102 @@ class ArnoldShaderTest( GafferSceneTest.SceneTestCase ) :
 		flat.loadShader( "flat" )
 		flat["parameters"]["color"].setInput( colorSpline["out"]["c"] )
 
+	def testReload( self ) :
+
+		image = GafferArnold.ArnoldShader()
+		image.loadShader( "image" )
+
+		image["parameters"]["swap_st"].setValue( True )
+		image["parameters"]["uvcoords"].setValue( IECore.V2f( 0.5, 1 ) )
+		image["parameters"]["missing_tile_color"].setValue( IECore.Color4f( 0.25, 0.5, 0.75, 1 ) )
+		image["parameters"]["start_channel"].setValue( 1 )
+		image["parameters"]["swrap"].setValue( "black" )
+
+		lambert = GafferArnold.ArnoldShader()
+		lambert.loadShader( "lambert" )
+
+		lambert["parameters"]["Kd"].setValue( 0.25 )
+		lambert["parameters"]["Kd_color"].setInput( image["out"] )
+		lambert["parameters"]["opacity"].setValue( IECore.Color3f( 0.1 ) )
+		lambert["parameters"]["aov_direct_diffuse"].setValue( "test" )
+
+		originalImagePlugs = image.children()
+		originalImageParameterPlugs = image["parameters"].children()
+
+		originalLambertPlugs = lambert.children()
+		originalLambertParameterPlugs = lambert["parameters"].children()
+
+		lambert.loadShader( "lambert", keepExistingValues = True )
+
+		def assertValuesWereKept() :
+
+			self.assertEqual( image["parameters"]["swap_st"].getValue(), True )
+			self.assertEqual( image["parameters"]["uvcoords"].getValue(), IECore.V2f( 0.5, 1 ) )
+			self.assertEqual( image["parameters"]["missing_tile_color"].getValue(), IECore.Color4f( 0.25, 0.5, 0.75, 1 ) )
+			self.assertEqual( image["parameters"]["start_channel"].getValue(), 1 )
+			self.assertEqual( image["parameters"]["swrap"].getValue(), "black" )
+
+			self.assertEqual( image.children(), originalImagePlugs )
+			self.assertEqual( image["parameters"].children(), originalImageParameterPlugs )
+
+			self.assertEqual( lambert["parameters"]["Kd"].getValue(), 0.25 )
+			self.assertTrue( lambert["parameters"]["Kd_color"].getInput().isSame( image["out"] ) )
+			self.assertEqual( lambert["parameters"]["opacity"].getValue(), IECore.Color3f( 0.1 ) )
+			self.assertEqual( lambert["parameters"]["aov_direct_diffuse"].getValue(), "test" )
+
+			self.assertEqual( lambert.children(), originalLambertPlugs )
+			self.assertEqual( lambert["parameters"].children(), originalLambertParameterPlugs )
+
+		assertValuesWereKept()
+
+		image.loadShader( "image", keepExistingValues = True )
+
+		assertValuesWereKept()
+
+		image.loadShader( "image", keepExistingValues = False )
+
+		for p in image["parameters"].children() :
+			self.assertTrue( p.isSetToDefault() )
+
+		self.assertTrue( lambert["parameters"]["Kd_color"].getInput() is None )
+
+	def testLoadDifferentShader( self ) :
+
+		standard = GafferArnold.ArnoldShader()
+		standard.loadShader( "standard" )
+
+		lambert = GafferArnold.ArnoldShader()
+		lambert.loadShader( "lambert" )
+
+		shader = GafferArnold.ArnoldShader()
+		shader.loadShader( "lambert" )
+
+		def assertParametersEqual( s1, s2, ignore = [] ) :
+
+			self.assertEqual( set( s1["parameters"].keys() ), set( s2["parameters"].keys() ) )
+			for k in s1["parameters"].keys() :
+				if k in ignore :
+					continue
+				self.assertEqual( s1["parameters"][k].getValue(), s2["parameters"][k].getValue() )
+
+		assertParametersEqual( shader, lambert )
+
+		shader["parameters"]["Kd"].setValue( 0.25 )
+
+		shader.loadShader( "standard", keepExistingValues = True )
+		assertParametersEqual( shader, standard, ignore = [ "Kd" ] )
+		self.assertEqual( shader["parameters"]["Kd"].getValue(), 0.25 )
+
+		shader.loadShader( "lambert", keepExistingValues = False )
+		assertParametersEqual( shader, lambert )
+
+	def testLoadShaderInSerialisation( self ) :
+
+		s = Gaffer.ScriptNode()
+		s["s"] = GafferArnold.ArnoldShader()
+		s["s"].loadShader( "lambert" )
+
+		self.assertTrue( """loadShader( "lambert", keepExistingValues=True )""" in s.serialise() )
+
 if __name__ == "__main__":
 	unittest.main()
