@@ -53,6 +53,9 @@ def __nodeDescription( node ) :
 	description = node.shaderMetadata( "help" )
 	return description or __defaultDescription
 
+def __nodeUrl( node ) :
+	return node.shaderMetadata( "URL" )
+
 def __plugDescription( plug ) :
 
 	return plug.node().parameterMetadata( plug, "help" ) or ""
@@ -135,6 +138,7 @@ Gaffer.Metadata.registerNode(
 	GafferOSL.OSLShader,
 
 	"description", __nodeDescription,
+	"documentation:url", __nodeUrl,
 
 	plugs = {
 
