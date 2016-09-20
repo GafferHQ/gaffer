@@ -122,6 +122,10 @@ def __plugWidgetType( plug ) :
 		plug.node().parameterMetadata( plug, "widget" )
 	)
 
+def __plugNoduleType( plug ) :
+
+	return "" if plug.node().parameterMetadata( plug, "connectable" ) == 0 else "GafferUI::StandardNodule"
+
 def __outPlugNoduleType( plug ) :
 
 	return "GafferUI::CompoundNodule" if len( plug ) else "GafferUI::StandardNodule"
@@ -143,6 +147,7 @@ Gaffer.Metadata.registerNode(
 			"presetNames", __plugPresetNames,
 			"presetValues", __plugPresetValues,
 			"plugValueWidget:type", __plugWidgetType,
+			"nodule:type", __plugNoduleType,
 
 		],
 
