@@ -66,6 +66,12 @@ Gaffer.Metadata.registerNode(
 
 	plugs = {
 
+		"*" : [
+
+			"labelPlugValueWidget:renameable", True,
+
+		],
+
 		"user" : [
 
 			# Disable the + button added by NodeUI, since
