@@ -454,7 +454,7 @@ Plug *loadSplineParameters( const OSLQuery::Parameter *positionsParameter, const
 	return plug.get();
 }
 
-Plug *loadSplineParameter( const OSLQuery &query, const OSLQuery::Parameter *parameter, Gaffer::Plug *parent, const std::string &prefix )
+bool findSplineParameters( const OSLQuery &query, const OSLQuery::Parameter *parameter, std::string &nameWithoutSuffix, const OSLQuery::Parameter * &positionsParameter, const OSLQuery::Parameter * &valuesParameter, const OSLQuery::Parameter * &basisParameter )
 {
 	const char *suffixes[] = { "Positions", "Values", "Basis", NULL };
 	const char *suffix = NULL;
@@ -469,12 +469,12 @@ Plug *loadSplineParameter( const OSLQuery &query, const OSLQuery::Parameter *par
 
 	if( !suffix )
 	{
-		return NULL;
+		return false;
 	}
 
-	const string nameWithoutSuffix = parameter->name.string().substr( 0, parameter->name.string().size() - strlen( suffix ) );
+	nameWithoutSuffix = parameter->name.string().substr( 0, parameter->name.string().size() - strlen( suffix ) );
 
-	const OSLQuery::Parameter *positionsParameter = query.getparam( nameWithoutSuffix + "Positions" );
+	positionsParameter = query.getparam( nameWithoutSuffix + "Positions" );
 	if(
 		!positionsParameter ||
 		!positionsParameter->type.is_array() ||
@@ -482,10 +482,10 @@ Plug *loadSplineParameter( const OSLQuery &query, const OSLQuery::Parameter *par
 		positionsParameter->type.aggregate != TypeDesc::SCALAR
 	)
 	{
-		return NULL;
+		return false;
 	}
 
-	const OSLQuery::Parameter *valuesParameter = query.getparam( nameWithoutSuffix + "Values" );
+	valuesParameter = query.getparam( nameWithoutSuffix + "Values" );
 	if(
 		!valuesParameter ||
 		!valuesParameter->type.is_array() ||
@@ -493,11 +493,27 @@ Plug *loadSplineParameter( const OSLQuery &query, const OSLQuery::Parameter *par
 		( valuesParameter->type.aggregate != TypeDesc::SCALAR && valuesParameter->type.vecsemantics != TypeDesc::COLOR )
 	)
 	{
-		return NULL;
+		return false;
 	}
 
-	const OSLQuery::Parameter *basisParameter = query.getparam( nameWithoutSuffix + "Basis" );
+	basisParameter = query.getparam( nameWithoutSuffix + "Basis" );
 	if( !basisParameter || basisParameter->type != TypeDesc::TypeString )
+	{
+		return false;
+	}
+
+	return true;
+}
+
+Plug *loadSplineParameter( const OSLQuery &query, const OSLQuery::Parameter *parameter, Gaffer::Plug *parent, const std::string &prefix )
+{
+
+	string nameWithoutSuffix;
+	const OSLQuery::Parameter *positionsParameter;
+	const OSLQuery::Parameter *valuesParameter;
+	const OSLQuery::Parameter *basisParameter;
+
+	if( !findSplineParameters( query, parameter, nameWithoutSuffix, positionsParameter, valuesParameter, basisParameter ) )
 	{
 		return NULL;
 	}
@@ -810,7 +826,29 @@ static IECore::ConstCompoundDataPtr metadataGetter( const std::string &key, size
 		const OSLQuery::Parameter *parameter = query.getparam( i );
 		if( parameter->metadata.size() )
 		{
-			parameterMetadata->writable()[parameter->name.c_str()] = convertMetadata( parameter->metadata );
+			string nameWithoutSuffix;
+			const OSLQuery::Parameter *positionsParameter;
+			const OSLQuery::Parameter *valuesParameter;
+			const OSLQuery::Parameter *basisParameter;
+
+			// If this parameter is part of a spline, register the metadata onto the spline plug
+			if( findSplineParameters( query, parameter, nameWithoutSuffix, positionsParameter, valuesParameter, basisParameter ) )
+			{
+				// We merge metadata found on all the parameters that make up the plug, but in no particular order.
+				// If you specify conflicting metadata on the different parameters you may get inconsistent results.
+				CompoundData *prevData = parameterMetadata->member<CompoundData>( nameWithoutSuffix );
+				CompoundDataPtr data = convertMetadata( parameter->metadata );
+				if( prevData )
+				{
+					data->writable().insert( prevData->readable().begin(), prevData->readable().end() );
+				}
+				
+				parameterMetadata->writable()[nameWithoutSuffix] = data;
+			}
+			else
+			{
+				parameterMetadata->writable()[parameter->name.c_str()] = convertMetadata( parameter->metadata );
+			}
 		}
 	}
 

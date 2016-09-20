@@ -405,6 +405,22 @@ class OSLShaderTest( GafferOSLTest.OSLTestCase ) :
 		self.assertEqual( n.parameterMetadata( n["parameters"]["a"], "aIntValues" ), IECore.IntVectorData( [ 1, 2 ] ) )
 		self.assertEqual( n.parameterMetadata( n["parameters"]["a"], "aFloatValues" ), IECore.FloatVectorData( [ 0.25, 0.5 ] ) )
 
+	def testParameterSplineMetadata( self ) :
+
+		s = self.compileShader( os.path.dirname( __file__ ) + "/shaders/splineMetadata.osl" )
+		n = GafferOSL.OSLShader()
+		n.loadShader( s )
+
+		# If the components of the spline all match, the metadata is registered to the spline plug
+		self.assertEqual( n.parameterMetadata( n["parameters"]["correctSpline"], "a" ), 1 )
+		self.assertEqual( n.parameterMetadata( n["parameters"]["correctSpline"], "b" ), 2 )
+		self.assertEqual( n.parameterMetadata( n["parameters"]["correctSpline"], "c" ), 3 )
+
+		# If the components don't match, the metadata is registered to the individual plugs
+		# Note that array plugs are not supported, so we can't test Values and Positions
+		self.assertEqual( n.parameterMetadata( n["parameters"]["incompleteSplineBasis"], "c" ), 3 )
+
+
 	def testMetadataReuse( self ) :
 
 		s = self.compileShader( os.path.dirname( __file__ ) + "/shaders/arrayMetadata.osl" )
