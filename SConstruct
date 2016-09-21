@@ -715,7 +715,9 @@ libraries = {
 		"requiredOptions" : [ "APPLESEED_ROOT" ],
 	},
 
-	"GafferAppleseedTest" : {},
+	"GafferAppleseedTest" : {
+		"additionalFiles" : glob.glob( "python/GafferAppleseedTest/*/*" ),
+	},
 
 	"GafferAppleseedUI" : {},
 

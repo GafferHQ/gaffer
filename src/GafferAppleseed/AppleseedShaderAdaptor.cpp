@@ -153,21 +153,17 @@ IECore::ConstCompoundObjectPtr AppleseedShaderAdaptor::computeAttributes( const 
 	}
 
 	OSLQuery::Parameter *firstOutput = firstOutputParameter( rootShader->getName() );
-	if( !firstOutput )
-	{
-		return inputAttributes;
-	}
 
 	// Build an adapter network if we can.
 
 	vector<ShaderPtr> adapters;
-	if( firstOutput->isclosure )
+	if( firstOutput && firstOutput->isclosure )
 	{
 		ShaderPtr material = new Shader( "material/as_material_builder", "osl:surface" );
 		material->parameters()[g_bsdfParameterName] = new StringData( "link:adapterInputHandle." + firstOutput->name.string() );
 		adapters.push_back( material );
 	}
-	else if( firstOutput->type == TypeDesc::TypeColor )
+	else if( firstOutput && firstOutput->type == TypeDesc::TypeColor )
 	{
 		ShaderPtr emission = new Shader( "surface/as_emission_surface", "osl:shader" );
 		emission->parameters()["Color"] = new StringData( "link:adapterInputHandle." + firstOutput->name.string() );
@@ -179,7 +175,7 @@ IECore::ConstCompoundObjectPtr AppleseedShaderAdaptor::computeAttributes( const 
 		adapters.push_back( emission );
 		adapters.push_back( material );
 	}
-	else if( firstOutput->type == TypeDesc::TypeFloat || firstOutput->type == TypeDesc::TypeInt )
+	else if( firstOutput && ( firstOutput->type == TypeDesc::TypeFloat || firstOutput->type == TypeDesc::TypeInt ) )
 	{
 		ShaderPtr colorBuild = new Shader( "color/as_color_build", "osl:shader" );
 		StringDataPtr colorLink = new StringData( "link:adapterInputHandle." + firstOutput->name.string() );
@@ -199,7 +195,7 @@ IECore::ConstCompoundObjectPtr AppleseedShaderAdaptor::computeAttributes( const 
 		adapters.push_back( emission );
 		adapters.push_back( material );
 	}
-	else if( firstOutput->type == TypeDesc::TypeVector )
+	else if( firstOutput && firstOutput->type == TypeDesc::TypeVector )
 	{
 		ShaderPtr vectorSplit = new Shader( "vector/as_vector_split", "osl:shader" );
 		vectorSplit->parameters()["Vector"] = new StringData( "link:adapterInputHandle." + firstOutput->name.string() );
@@ -223,10 +219,19 @@ IECore::ConstCompoundObjectPtr AppleseedShaderAdaptor::computeAttributes( const 
 		adapters.push_back( emission );
 		adapters.push_back( material );
 	}
-
-	if( adapters.empty() )
+	else
 	{
-		return inputAttributes;
+		// Shader has no output, or an output we can't map sensibly.
+		// Make an "error" shader.
+		ShaderPtr emission = new Shader( "surface/as_emission_surface", "osl:shader" );
+		emission->parameters()["Color"] = new Color3fData( Imath::Color3f( 1, 0, 0 ) );
+		emission->parameters()[g_handleParameterName] = new StringData( "adapterEmissionHandle" );
+
+		ShaderPtr material = new Shader( "material/as_material_builder", "osl:surface" );
+		material->parameters()[g_bsdfParameterName] = new StringData( "link:adapterEmissionHandle.BSDF" );
+
+		adapters.push_back( emission );
+		adapters.push_back( material );
 	}
 
 	// Make a new network with the adapter network
