@@ -166,7 +166,7 @@ ShaderView::ShaderView( const std::string &name )
 
 	viewportGadget()->visibilityChangedSignal().connect( boost::bind( &ShaderView::viewportVisibilityChanged, this ) );
 	plugSetSignal().connect( boost::bind( &ShaderView::plugSet, this, ::_1 ) );
-	plugInputChangedSignal().connect( boost::bind( &ShaderView::plugInputChanged, this, ::_1 ) );
+	plugDirtiedSignal().connect( boost::bind( &ShaderView::plugDirtied, this, ::_1 ) );
 	sceneRegistrationChangedSignal().connect( boost::bind( &ShaderView::sceneRegistrationChanged, this, ::_1 ) );
 
 }
@@ -209,11 +209,13 @@ std::string ShaderView::shaderPrefix() const
 
 Gaffer::Node *ShaderView::scene()
 {
+	updateScene();
 	return m_scene.get();
 }
 
 const Gaffer::Node *ShaderView::scene() const
 {
+	const_cast<ShaderView *>( this )->updateScene();
 	return m_scene.get();
 }
 
@@ -241,21 +243,20 @@ void ShaderView::plugSet( Gaffer::Plug *plug )
 	}
 }
 
-void ShaderView::plugInputChanged( Gaffer::Plug *plug )
+void ShaderView::plugDirtied( Gaffer::Plug *plug )
 {
 	if( plug == inPlug<Plug>() )
 	{
-		// If we need to make a new renderer node,
-		// then make one.
-		updateRenderer();
-		// Then update the scene if we need to.
-		updateScene();
-		// Finally update the renderer state. We
-		// do this last so that when making a new
-		// renderer, we do not ask it to render
-		// an out-of-date scene prior to it being
-		// updated.
-		updateRendererState();
+		// The shader has changed, so we may need to update
+		// our scene and renderer. But we're not allowed to
+		// rewire the graph while dirtiness is being signalled,
+		// so must defer the work to the next idle moment.
+		if( !m_idleConnection.connected() )
+		{
+			m_idleConnection = GafferUI::Gadget::idleSignal().connect(
+				boost::bind( &ShaderView::idleUpdate, ShaderViewPtr( this ) )
+			);
+		}
 	}
 }
 
@@ -267,6 +268,23 @@ void ShaderView::sceneRegistrationChanged( const PrefixAndName &prefixAndName )
 		m_scenes.erase( prefixAndName );
 		updateScene();
 	}
+}
+
+void ShaderView::idleUpdate()
+{
+	// We only need to run once.
+	m_idleConnection.disconnect();
+	// If we need to make a new renderer node,
+	// then make one.
+	updateRenderer();
+	// Then update the scene if we need to.
+	updateScene();
+	// Finally update the renderer state. We
+	// do this last so that when making a new
+	// renderer, we do not ask it to render
+	// an out-of-date scene prior to it being
+	// updated.
+	updateRendererState();
 }
 
 void ShaderView::updateRenderer()
@@ -295,6 +313,7 @@ void ShaderView::updateRenderer()
 	m_renderer->getChild<ScenePlug>( "in" )->setInput(
 		m_imageConverter->getChild<SceneNode>( "Outputs" )->outPlug()
 	);
+
 	updateRendererContext();
 }
 

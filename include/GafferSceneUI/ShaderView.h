@@ -92,15 +92,18 @@ class ShaderView : public GafferImageUI::ImageView
 		void viewportVisibilityChanged();
 
 		void plugSet( Gaffer::Plug *plug );
-		void plugInputChanged( Gaffer::Plug *plug );
+		void plugDirtied( Gaffer::Plug *plug );
 		void sceneRegistrationChanged( const PrefixAndName &prefixAndName );
 
+		void idleUpdate();
 		void updateRenderer();
 		void updateRendererContext();
 		void updateRendererState();
 		void updateScene();
 
 		Gaffer::BoxPtr m_imageConverter;
+
+		boost::signals::scoped_connection m_idleConnection;
 
 		Gaffer::NodePtr m_renderer;
 		std::string m_rendererShaderPrefix;
