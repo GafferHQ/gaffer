@@ -98,9 +98,6 @@ CompoundNodule::CompoundNodule( Gaffer::PlugPtr plug, LinearContainer::Orientati
 	m_row = new LinearContainer( "row", orientation, LinearContainer::Centre, spacing, direction );
 	addChild( m_row );
 
-	plug->childAddedSignal().connect( boost::bind( &CompoundNodule::childAdded, this, ::_1,  ::_2 ) );
-	plug->childRemovedSignal().connect( boost::bind( &CompoundNodule::childRemoved, this, ::_1,  ::_2 ) );
-
 	for( Gaffer::PlugIterator it( plug.get() ); !it.done(); ++it )
 	{
 		NodulePtr nodule = Nodule::create( *it );
@@ -109,6 +106,9 @@ CompoundNodule::CompoundNodule( Gaffer::PlugPtr plug, LinearContainer::Orientati
 			m_row->addChild( nodule );
 		}
 	}
+
+	plug->childAddedSignal().connect( boost::bind( &CompoundNodule::childAdded, this, ::_1,  ::_2 ) );
+	plug->childRemovedSignal().connect( boost::bind( &CompoundNodule::childRemoved, this, ::_1,  ::_2 ) );
 }
 
 CompoundNodule::~CompoundNodule()
@@ -152,6 +152,11 @@ void CompoundNodule::childAdded( Gaffer::GraphComponent *parent, Gaffer::GraphCo
 {
 	Gaffer::Plug *plug = IECore::runTimeCast<Gaffer::Plug>( child );
 	if( !plug )
+	{
+		return;
+	}
+
+	if( nodule( plug ) )
 	{
 		return;
 	}
