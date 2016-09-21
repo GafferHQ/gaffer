@@ -541,5 +541,58 @@ class ArnoldShaderTest( GafferSceneTest.SceneTestCase ) :
 
 		self.assertTrue( """loadShader( "lambert", keepExistingValues=True )""" in s.serialise() )
 
+	def testReloadShaderWithPartialColourConnections( self ) :
+
+		n = GafferArnold.ArnoldShader()
+		n.loadShader( "flat" )
+		n["parameters"]["color"]["b"].setInput( n["parameters"]["color"]["g"] )
+
+		n.loadShader( "flat", keepExistingValues = True )
+		self.assertTrue( n["parameters"]["color"]["b"].getInput().isSame( n["parameters"]["color"]["g"] ) )
+
+	def testDefaultValuesForOutput( self ) :
+
+		for i in range( 0, 100 ) :
+
+			n = GafferArnold.ArnoldShader()
+			n.loadShader( "flat" )
+			self.assertEqual( n["out"].defaultValue(), IECore.Color3f( 0 ) )
+
+	def testRecoverFromIncorrectSerialisedDefaultValue( self ) :
+
+		s = Gaffer.ScriptNode()
+
+		s["n1"] = GafferArnold.ArnoldShader()
+		s["n1"].loadShader( "flat" )
+
+		s["n2"] = GafferArnold.ArnoldShader()
+		s["n2"].loadShader( "flat" )
+
+		# Emulate the incorrect loading of
+		# default value for output plugs -
+		# bug introduced in 0.28.2.0.
+		s["n1"]["out"] = Gaffer.Color3fPlug(
+			direction = Gaffer.Plug.Direction.Out,
+			defaultValue = IECore.Color3f( -1 ),
+			flags = Gaffer.Plug.Flags.Default | Gaffer.Plug.Flags.Dynamic
+		)
+		s["n2"]["out"] = Gaffer.Color3fPlug(
+			direction = Gaffer.Plug.Direction.Out,
+			defaultValue = IECore.Color3f( -1 ),
+			flags = Gaffer.Plug.Flags.Default | Gaffer.Plug.Flags.Dynamic
+		)
+
+		s["a"] = GafferScene.ShaderAssignment()
+		s["a"]["shader"].setInput( s["n2"]["out"] )
+
+		s["n2"]["parameters"]["color"].setInput( s["n1"]["out"] )
+
+		s2 = Gaffer.ScriptNode()
+		s2.execute( s.serialise() )
+
+		self.assertEqual( s2["n1"]["out"].defaultValue(), IECore.Color3f( 0 ) )
+		self.assertTrue( s2["n2"]["parameters"]["color"].getInput().isSame( s2["n1"]["out"] ) )
+		self.assertTrue( s2["a"]["shader"].getInput().isSame( s2["n2"]["out"] ) )
+
 if __name__ == "__main__":
 	unittest.main()

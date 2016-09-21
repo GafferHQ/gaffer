@@ -46,6 +46,7 @@
 
 #include "GafferArnold/ParameterHandler.h"
 
+using namespace std;
 using namespace Imath;
 using namespace boost;
 using namespace IECore;
@@ -55,27 +56,91 @@ using namespace GafferArnold;
 namespace
 {
 
-/// \todo This is repeated from OSLShader.cpp. Would it make sense in PlugAlgo.h?
-void transferConnectionOrValue( Plug *sourcePlug, Plug *destinationPlug )
+struct Connections
 {
-	if( !sourcePlug )
-	{
-		return;
-	}
+	Plug *plug;
+	PlugPtr input;
+	vector<PlugPtr> outputs;
+};
 
-	if( Plug *input = sourcePlug->getInput<Plug>() )
+typedef vector<Connections> ConnectionsVector;
+
+void replacePlugWalk( Plug *existingPlug, Plug *plug, ConnectionsVector &connections )
+{
+	// Record output connections.
+	Connections c;
+	c.plug = plug;
+	c.outputs.insert( c.outputs.begin(), existingPlug->outputs().begin(), existingPlug->outputs().end() );
+
+	if( plug->children().size() )
 	{
-		destinationPlug->setInput( input );
+		// Recurse
+		for( PlugIterator it( plug ); !it.done(); ++it )
+		{
+			if( Plug *existingChildPlug = existingPlug->getChild<Plug>( (*it)->getName() ) )
+			{
+				replacePlugWalk( existingChildPlug, it->get(), connections );
+			}
+		}
 	}
 	else
 	{
-		ValuePlug *sourceValuePlug = runTimeCast<ValuePlug>( sourcePlug );
-		ValuePlug *destinationValuePlug = runTimeCast<ValuePlug>( destinationPlug );
-		if( destinationValuePlug && sourceValuePlug )
+		// At a leaf - record input connection and transfer values if
+		// necessary. We only store inputs for leaves because automatic
+		// connection tracking will take care of connecting the parent
+		// levels when all children are connected.
+		c.input = existingPlug->getInput<Plug>();
+		if( !c.input && plug->direction() == Plug::In )
 		{
-			destinationValuePlug->setFrom( sourceValuePlug );
+			ValuePlug *existingValuePlug = runTimeCast<ValuePlug>( existingPlug );
+			ValuePlug *valuePlug = runTimeCast<ValuePlug>( plug );
+			if( existingValuePlug && valuePlug )
+			{
+				valuePlug->setFrom( existingValuePlug );
+			}
 		}
 	}
+
+	connections.push_back( c );
+}
+
+/// \todo Move to PlugAlgo.h and use in `OSLShader::loadShader()` too?
+void replacePlug( Gaffer::GraphComponent *parent, PlugPtr plug )
+{
+	Plug *existingPlug = parent->getChild<Plug>( plug->getName() );
+	if( !existingPlug )
+	{
+		parent->addChild( plug );
+		return;
+	}
+
+	// Transfer values where necessary, and store connections
+	// to transfer after reparenting.
+
+	ConnectionsVector connections;
+	replacePlugWalk( existingPlug, plug.get(), connections );
+
+	// Replace old plug by parenting in new one.
+
+	parent->setChild( plug->getName(), plug );
+
+	// Transfer old connections. We do this after
+	// parenting because downstream acceptsInput() methods
+	// might care what sort of node the connection is coming
+	// from.
+
+	for( ConnectionsVector::const_iterator it = connections.begin(), eIt = connections.end(); it != eIt; ++it )
+	{
+		if( it->input )
+		{
+			it->plug->setInput( it->input.get() );
+		}
+		for( vector<PlugPtr>::const_iterator oIt = it->outputs.begin(), oeIt = it->outputs.end(); oIt != oeIt; ++oIt )
+		{
+			(*oIt)->setInput( it->plug );
+		}
+	}
+
 }
 
 template<typename PlugType>
@@ -120,9 +185,7 @@ Gaffer::Plug *setupNumericPlug( const AtNodeEntry *node, const AtParamEntry *par
 	}
 
 	typename PlugType::Ptr plug = new PlugType( name, direction, defaultValue, minValue, maxValue, Plug::Default | Plug::Dynamic );
-	transferConnectionOrValue( existingPlug, plug.get() );
-
-	plugParent->setChild( name, plug );
+	replacePlug( plugParent, plug );
 
 	return plug.get();
 }
@@ -140,16 +203,13 @@ Gaffer::Plug *setupPlug( const IECore::InternedString &parameterName, Gaffer::Gr
 	}
 
 	PlugPtr plug = new Plug( parameterName, direction, Plug::Default | Plug::Dynamic );
-
-	transferConnectionOrValue( existingPlug, plug.get() );
-
-	plugParent->setChild( parameterName, plug );
+	replacePlug( plugParent, plug );
 
 	return plug.get();
 }
 
 template<typename PlugType>
-Gaffer::Plug *setupTypedPlug( const IECore::InternedString &parameterName, Gaffer::GraphComponent *plugParent, Gaffer::Plug::Direction direction, const typename PlugType::ValueType &defaultValue = typename PlugType::ValueType() )
+Gaffer::Plug *setupTypedPlug( const IECore::InternedString &parameterName, Gaffer::GraphComponent *plugParent, Gaffer::Plug::Direction direction, const typename PlugType::ValueType &defaultValue )
 {
 	PlugType *existingPlug = plugParent->getChild<PlugType>( parameterName );
 	if(
@@ -164,9 +224,7 @@ Gaffer::Plug *setupTypedPlug( const IECore::InternedString &parameterName, Gaffe
 	typename PlugType::Ptr plug = new PlugType( parameterName, direction, defaultValue );
 	plug->setFlags( Plug::Dynamic, true );
 
-	transferConnectionOrValue( existingPlug, plug.get() );
-
-	plugParent->setChild( parameterName, plug );
+	replacePlug( plugParent, plug );
 
 	return plug.get();
 }
@@ -218,18 +276,8 @@ Gaffer::Plug *setupColorPlug( const AtNodeEntry *node, const AtParamEntry *param
 	}
 
 	typename PlugType::Ptr plug = new PlugType( name, direction, defaultValue, minValue, maxValue, Plug::Default | Plug::Dynamic );
-	if( existingPlug )
-	{
-		for( size_t i = 0, e = existingPlug->children().size(); i < e; ++i )
-		{
-			transferConnectionOrValue(
-				existingPlug->getChild( i ),
-				plug->getChild( i )
-			);
-		}
-	}
+	replacePlug( plugParent, plug );
 
-	plugParent->setChild( name, plug );
 	return plug.get();
 }
 
@@ -268,28 +316,28 @@ Gaffer::Plug *ParameterHandler::setupPlug( const IECore::InternedString &paramet
 	{
 		case AI_TYPE_RGB :
 
-			return setupTypedPlug<Color3fPlug>( parameterName, plugParent, direction );
+			return setupTypedPlug<Color3fPlug>( parameterName, plugParent, direction, Color3f( 0.0f ) );
 
 		case AI_TYPE_RGBA :
 
-			return setupTypedPlug<Color4fPlug>( parameterName, plugParent, direction );
+			return setupTypedPlug<Color4fPlug>( parameterName, plugParent, direction, Color4f( 0.0f ) );
 
 		case AI_TYPE_FLOAT :
 
-			return setupTypedPlug<FloatPlug>( parameterName, plugParent, direction );
+			return setupTypedPlug<FloatPlug>( parameterName, plugParent, direction, 0.0f );
 
 		case AI_TYPE_INT :
 
-			return setupTypedPlug<IntPlug>( parameterName, plugParent, direction );
+			return setupTypedPlug<IntPlug>( parameterName, plugParent, direction, 0 );
 
 		case AI_TYPE_POINT2 :
 
-			return setupTypedPlug<V2fPlug>( parameterName, plugParent, direction );
+			return setupTypedPlug<V2fPlug>( parameterName, plugParent, direction, V2f( 0.0f ) );
 
 		case AI_TYPE_POINT :
 		case AI_TYPE_VECTOR :
 
-			return setupTypedPlug<V3fPlug>( parameterName, plugParent, direction );
+			return setupTypedPlug<V3fPlug>( parameterName, plugParent, direction, V3f( 0.0f ) );
 
 		case AI_TYPE_POINTER :
 
