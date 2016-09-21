@@ -415,7 +415,7 @@ class ArnoldShaderTest( GafferSceneTest.SceneTestCase ) :
 		for p in n["parameters"] :
 			self.assertTrue( isinstance( p, Gaffer.Color4fPlug ) )
 
-		self.addCleanup( setattr, os.environ, "ARNOLD_PLUGIN_PATH", os.environ["ARNOLD_PLUGIN_PATH"] )
+		self.addCleanup( os.environ.__setitem__, "ARNOLD_PLUGIN_PATH", os.environ["ARNOLD_PLUGIN_PATH"] )
 		os.environ["ARNOLD_PLUGIN_PATH"] = os.environ["ARNOLD_PLUGIN_PATH"] + ":" + os.path.join( os.path.dirname( __file__ ), "metadata" )
 
 		n = GafferArnold.ArnoldShader()
