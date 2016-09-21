@@ -34,20 +34,19 @@
 //
 //////////////////////////////////////////////////////////////////////////
 
-#include "GafferOSL/Spline.h"
+#ifndef GAFFEROSL_SPLINE_H
+#define GAFFEROSL_SPLINE_H
 
-shader ColorSpline
-(
-
-	float splinePositions[] = { 0, 0, 1, 1 },
-	color splineValues[] = { 0, 0, 1, 1 },
-	string splineBasis = "catmull-rom",
-
-	float x = 0,
-
-	output color c = 0
-
-)
+float floatSpline( float positions[], float values[], string basis, float x )
 {
-	c = colorSpline( splinePositions, splineValues, splineBasis, x );
+	float t = splineinverse( basis, x, positions  );
+	return spline( basis, t, values );
 }
+
+color colorSpline( float positions[], color values[], string basis, float x )
+{
+	float t = splineinverse( basis, x, positions  );
+	return spline( basis, t, values );
+}
+
+#endif // GAFFEROSL_SPLINE_H
