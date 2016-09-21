@@ -405,6 +405,29 @@ class OSLShaderTest( GafferOSLTest.OSLTestCase ) :
 		self.assertEqual( n.parameterMetadata( n["parameters"]["a"], "aIntValues" ), IECore.IntVectorData( [ 1, 2 ] ) )
 		self.assertEqual( n.parameterMetadata( n["parameters"]["a"], "aFloatValues" ), IECore.FloatVectorData( [ 0.25, 0.5 ] ) )
 
+	def testParameterMinMaxMetadata( self ) :
+
+		s = self.compileShader( os.path.dirname( __file__ ) + "/shaders/metadataMinMax.osl" )
+		n = GafferOSL.OSLShader()
+		n.loadShader( s )
+
+		self.assertAlmostEqual( n["parameters"]["b"].minValue(), 2.3, delta = 0.00001 )
+		self.assertAlmostEqual( n["parameters"]["b"].maxValue(), 4.7, delta = 0.00001 )
+		self.assertEqual( n["parameters"]["c"].minValue(), 23 )
+		self.assertEqual( n["parameters"]["c"].maxValue(), 47 )
+		self.assertEqual( n["parameters"]["d"].minValue(), IECore.Color3f( 1, 2, 3 ) )
+		self.assertEqual( n["parameters"]["d"].maxValue(), IECore.Color3f( 4, 5, 6 ) )
+		self.assertEqual( n["parameters"]["e"].minValue(), IECore.V3f( 1, 2, 3 ) )
+		self.assertEqual( n["parameters"]["e"].maxValue(), IECore.V3f( 4, 5, 6 ) )
+		self.assertEqual( n["parameters"]["f"].minValue(), IECore.V3f( 1, 2, 3 ) )
+		self.assertEqual( n["parameters"]["f"].maxValue(), IECore.V3f( 4, 5, 6 ) )
+		self.assertEqual( n["parameters"]["g"].minValue(), IECore.V3f( 1, 2, 3 ) )
+		self.assertEqual( n["parameters"]["g"].maxValue(), IECore.V3f( 4, 5, 6 ) )
+
+		# Check default min/max if not specified
+		self.assertFalse( n["parameters"]["h"].hasMinValue() )
+		self.assertFalse( n["parameters"]["h"].hasMaxValue() )
+
 	def testParameterSplineMetadata( self ) :
 
 		s = self.compileShader( os.path.dirname( __file__ ) + "/shaders/splineMetadata.osl" )
