@@ -95,6 +95,7 @@ export OSL_SHADER_PATHS=$HOME/gaffer/shaders:$GAFFER_ROOT/shaders${OSL_SHADER_PA
 
 if [[ -z $GAFFEROSL_CODE_DIRECTORY ]] ; then
 	export GAFFEROSL_CODE_DIRECTORY=$HOME/gaffer/oslCode
+	export OSL_SHADER_PATHS=$OSL_SHADER_PATHS:$GAFFEROSL_CODE_DIRECTORY
 fi
 
 # Get python set up properly

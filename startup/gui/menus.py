@@ -333,16 +333,28 @@ if moduleSearchPath.find( "GafferOSL" ) :
 		# Appleseed comes with a library of OSL shaders which we put
 		# on the OSL_SHADER_PATHS, but we don't want to show them in
 		# this menu, because we show them in the Appleseed menu instead.
-		# This match expression filters them out :
+		#
+		# The OSLCode node also generates a great many shaders behind
+		# the scenes that we don't want to place in the menus. Typically
+		# these aren't on the OSL_SHADER_PATHS anyway because they are
+		# given to the renderer via absolute paths, but at the time of
+		# writing it is necessary to place them on the OSL_SHADER_PATHS
+		# in order to use them in Arnold. We don't enable this by default
+		# because it causes Arnold to potentially load a huge number of
+		# shader plugins at startup, but we hide any oslCode shaders here
+		# in case someone else enables it.
+		#
+		# This match expression filters both categories of shader out :
 		#
 		# - (^|.*/) matches any number (including zero) of directory
 		#   names preceding the shader name.
-		# - (?!as_) is a negative lookahead, asserting that the shader
+		# - (?!as_|oslCode) is a negative lookahead, asserting that the shader
 		#   name does not start with "as_", the prefix for all
-		#   Appleseed shaders.
+		#   Appleseed shaders, or "oslCode", the prefix for all OSLCode
+		#   shaders.
 		# - [^/]*$ matches the rest of the shader name, ensuring it
 		#   doesn't include any directory separators.
-		matchExpression = re.compile( "(^|.*/)(?!as_)[^/]*$"),
+		matchExpression = re.compile( "(^|.*/)(?!as_|oslCode)[^/]*$"),
 		searchTextPrefix = "osl",
 	)
 
