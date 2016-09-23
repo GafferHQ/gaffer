@@ -242,7 +242,19 @@ class StringPlugTest( GafferTest.TestCase ) :
 		# The third case is trickier. The "in" plug on the node
 		# itself requests no substitutions, but it receives its
 		# input via an indirect connection with substitutions
-		# turned on.
+		# turned on. We resolve this by defining substitutions
+		# to occur only when observing a value inside a compute,
+		# and to always be determined by the plug used to access
+		# the value. A chain of connections can be thought of as
+		# carrying an unsubstituted string all the way along
+		# internally, with each plug along the way determining
+		# the substitutions applied when peeking in to see the value
+		# at that point.
+		#
+		# In practice this works best because typically it is only
+		# nodes that know when a substitution is relevant, and the
+		# user shouldn't be burdened with the job of thinking about
+		# them when making intermediate connections to that node.
 		s["substitionsOnIndirectly"] = GafferTest.StringInOutNode( substitutions = Gaffer.Context.Substitutions.NoSubstitutions )
 		s["substitionsOnIndirectly"]["user"]["in"] = Gaffer.StringPlug()
 		s["substitionsOnIndirectly"]["in"].setInput( s["substitionsOnIndirectly"]["user"]["in"] )
@@ -286,12 +298,14 @@ class StringPlugTest( GafferTest.TestCase ) :
 			self.assertEqual( s["substitionsOff"]["out"].getValue( _precomputedHash = substitutionsOffHash1 ), "test.#.exr" )
 			self.assertNotEqual( substitutionsOnHash1, substitutionsOffHash1 )
 
-			# We should get frame numbers out of the third node, because the intermediate
-			# plug performs the substitutions before they even get to the node.
+			# We shouldn't get frame numbers out of the third node, because the
+			# requirements of the node (no substitutions) trump any upstream opinions.
+			# Substitutions are performed by the plug during value access, and do not
+			# affect the actual data flow.
 
-			self.assertEqual( s["substitionsOnIndirectly"]["out"].getValue(), "test.1.exr" )
+			self.assertEqual( s["substitionsOnIndirectly"]["out"].getValue(), "test.#.exr" )
 			substitionsOnIndirectlyHash1 = s["substitionsOnIndirectly"]["out"].hash()
-			self.assertEqual( s["substitionsOnIndirectly"]["out"].getValue( _precomputedHash = substitionsOnIndirectlyHash1 ), "test.1.exr" )
+			self.assertEqual( s["substitionsOnIndirectly"]["out"].getValue( _precomputedHash = substitionsOnIndirectlyHash1 ), "test.#.exr" )
 
 			# Frame 2
 			#########
@@ -322,13 +336,12 @@ class StringPlugTest( GafferTest.TestCase ) :
 			self.assertEqual( substitutionsOffHash1, substitutionsOffHash2 )
 			self.assertNotEqual( substitutionsOnHash2, substitutionsOffHash2 )
 
-			# The third node should still be substituting, also with an updated hash
-			# and frame number.
+			# The third node should still be non-substituting.
 
-			self.assertEqual( s["substitionsOnIndirectly"]["out"].getValue(), "test.2.exr" )
+			self.assertEqual( s["substitionsOnIndirectly"]["out"].getValue(), "test.#.exr" )
 			substitionsOnIndirectlyHash2 = s["substitionsOnIndirectly"]["out"].hash()
-			self.assertEqual( s["substitionsOnIndirectly"]["out"].getValue( _precomputedHash = substitionsOnIndirectlyHash2 ), "test.2.exr" )
-			self.assertNotEqual( substitionsOnIndirectlyHash2, substitionsOnIndirectlyHash1 )
+			self.assertEqual( s["substitionsOnIndirectly"]["out"].getValue( _precomputedHash = substitionsOnIndirectlyHash2 ), "test.#.exr" )
+			self.assertEqual( substitionsOnIndirectlyHash2, substitionsOnIndirectlyHash1 )
 
 if __name__ == "__main__":
 	unittest.main()
