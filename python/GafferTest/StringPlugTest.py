@@ -38,6 +38,7 @@
 from __future__ import with_statement
 
 import os
+import inspect
 import unittest
 
 import IECore
@@ -227,6 +228,107 @@ class StringPlugTest( GafferTest.TestCase ) :
 
 		p2 = p.createCounterpart( "p2", p.Direction.In )
 		self.assertEqual( p.substitutions(), p2.substitutions() )
+
+	def testSubstitutionsFromExpressionInput( self ) :
+
+		s = Gaffer.ScriptNode()
+
+		# Should output a substituted version of the input.
+		s["substitionsOn"] = GafferTest.StringInOutNode()
+
+		# Should pass through the input directly, without substitutions.
+		s["substitionsOff"] = GafferTest.StringInOutNode( substitutions = Gaffer.Context.Substitutions.NoSubstitutions )
+
+		# The third case is trickier. The "in" plug on the node
+		# itself requests no substitutions, but it receives its
+		# input via an indirect connection with substitutions
+		# turned on.
+		s["substitionsOnIndirectly"] = GafferTest.StringInOutNode( substitutions = Gaffer.Context.Substitutions.NoSubstitutions )
+		s["substitionsOnIndirectly"]["user"]["in"] = Gaffer.StringPlug()
+		s["substitionsOnIndirectly"]["in"].setInput( s["substitionsOnIndirectly"]["user"]["in"] )
+
+		# All three nodes above receive their input from this expression
+		# which outputs a sequence value to be substituted (or not).
+
+		s["e"] = Gaffer.Expression()
+		s["e"].setExpression( inspect.cleandoc(
+			"""
+			parent["substitionsOn"]["in"] = "test.#.exr"
+			parent["substitionsOff"]["in"] = "test.#.exr"
+			parent["substitionsOnIndirectly"]["user"]["in"] = "test.#.exr"
+			"""
+		) )
+
+		with Gaffer.Context() as c :
+
+			# Frame 1
+			#########
+
+			c.setFrame( 1 )
+
+			# The output of the expression itself is not substituted.
+			# Substitutions occur only on input plugs.
+
+			self.assertEqual( s["substitionsOn"]["in"].getInput().getValue(), "test.#.exr" )
+			self.assertEqual( s["substitionsOff"]["in"].getInput().getValue(), "test.#.exr" )
+			self.assertEqual( s["substitionsOnIndirectly"]["user"]["in"].getInput().getValue(), "test.#.exr" )
+
+			# We should get frame numbers out of the substituting node.
+
+			self.assertEqual( s["substitionsOn"]["out"].getValue(), "test.1.exr" )
+			substitutionsOnHash1 = s["substitionsOn"]["out"].hash()
+			self.assertEqual( s["substitionsOn"]["out"].getValue( _precomputedHash = substitutionsOnHash1 ), "test.1.exr" )
+
+			# We should get sequences out of the non-substituting node.
+
+			self.assertEqual( s["substitionsOff"]["out"].getValue(), "test.#.exr" )
+			substitutionsOffHash1 = s["substitionsOff"]["out"].hash()
+			self.assertEqual( s["substitionsOff"]["out"].getValue( _precomputedHash = substitutionsOffHash1 ), "test.#.exr" )
+			self.assertNotEqual( substitutionsOnHash1, substitutionsOffHash1 )
+
+			# We should get frame numbers out of the third node, because the intermediate
+			# plug performs the substitutions before they even get to the node.
+
+			self.assertEqual( s["substitionsOnIndirectly"]["out"].getValue(), "test.1.exr" )
+			substitionsOnIndirectlyHash1 = s["substitionsOnIndirectly"]["out"].hash()
+			self.assertEqual( s["substitionsOnIndirectly"]["out"].getValue( _precomputedHash = substitionsOnIndirectlyHash1 ), "test.1.exr" )
+
+			# Frame 2
+			#########
+
+			c.setFrame( 2 )
+
+			# The output of the expression itself is not substituted.
+			# Substitutions occur only on input plugs.
+
+			self.assertEqual( s["substitionsOn"]["in"].getInput().getValue(), "test.#.exr" )
+			self.assertEqual( s["substitionsOff"]["in"].getInput().getValue(), "test.#.exr" )
+			self.assertEqual( s["substitionsOnIndirectly"]["user"]["in"].getInput().getValue(), "test.#.exr" )
+
+			# We should get frame numbers out of the substituting node.
+			# The hash must has changed to make this possible.
+
+			self.assertEqual( s["substitionsOn"]["out"].getValue(), "test.2.exr" )
+			substitutionsOnHash2 = s["substitionsOn"]["out"].hash()
+			self.assertEqual( s["substitionsOn"]["out"].getValue( _precomputedHash = substitutionsOnHash2 ), "test.2.exr" )
+			self.assertNotEqual( substitutionsOnHash2, substitutionsOnHash1 )
+
+			# We should still get sequences out of the non-substituting node,
+			# and it should have the same output hash as it had on frame 1.
+
+			self.assertEqual( s["substitionsOff"]["out"].getValue(), "test.#.exr" )
+			substitutionsOffHash2 = s["substitionsOff"]["out"].hash()
+			self.assertEqual( s["substitionsOff"]["out"].getValue( _precomputedHash = substitutionsOffHash2 ), "test.#.exr" )
+			self.assertEqual( substitutionsOffHash1, substitutionsOffHash2 )
+			self.assertNotEqual( substitutionsOnHash2, substitutionsOffHash2 )
+
+			# The third node should still be substituting, also with an updated hash
+			# and frame number.
+
+			self.assertEqual( s["substitionsOnIndirectly"]["out"].getValue(), "test.2.exr" )
+			substitionsOnIndirectlyHash2 = s["substitionsOnIndirectly"]["out"].hash()
+			self.assertEqual( s["substitionsOnIndirectly"]["out"].getValue( _precomputedHash = substitionsOnIndirectlyHash2 ), "test.2.exr" )
+			self.assertNotEqual( substitionsOnIndirectlyHash2, substitionsOnIndirectlyHash1 )
 
 if __name__ == "__main__":
 	unittest.main()

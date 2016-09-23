@@ -42,6 +42,40 @@
 using namespace IECore;
 using namespace Gaffer;
 
+//////////////////////////////////////////////////////////////////////////
+// Internal utilities
+//////////////////////////////////////////////////////////////////////////
+
+namespace
+{
+
+const StringPlug *sourceAndSubstitutions( const StringPlug *plug, unsigned &substitutions )
+{
+	substitutions = Context::NoSubstitutions;
+	const StringPlug *input = NULL;
+	do
+	{
+		if( ( plug->direction() == Plug::In ) && ( plug->getFlags() & Plug::PerformsSubstitutions ) )
+		{
+			substitutions |= plug->substitutions();
+		}
+
+		input = plug->getInput<StringPlug>();
+		if( input )
+		{
+			plug = input;
+		}
+	} while( input );
+
+	return plug;
+}
+
+} // namespace
+
+//////////////////////////////////////////////////////////////////////////
+// StringPlug
+//////////////////////////////////////////////////////////////////////////
+
 IE_CORE_DEFINERUNTIMETYPED( StringPlug );
 
 StringPlug::StringPlug(
@@ -94,21 +128,18 @@ void StringPlug::setValue( const std::string &value )
 
 std::string StringPlug::getValue( const IECore::MurmurHash *precomputedHash ) const
 {
-	IECore::ConstObjectPtr o = getObjectValue( precomputedHash );
+	unsigned substitutions;
+	const StringPlug *p = sourceAndSubstitutions( this, substitutions );
+
+	IECore::ConstObjectPtr o = p->getObjectValue( precomputedHash );
 	const IECore::StringData *s = IECore::runTimeCast<const IECore::StringData>( o.get() );
 	if( !s )
 	{
 		throw IECore::Exception( "StringPlug::getObjectValue() didn't return StringData - is the hash being computed correctly?" );
 	}
 
-	bool performSubstitution =
-		m_substitutions &&
-		direction()==Plug::In &&
-		Process::current() &&
-		Plug::getFlags( Plug::PerformsSubstitutions ) &&
-		Context::hasSubstitutions( s->readable() );
-
-	return performSubstitution ? Context::current()->substitute( s->readable(), m_substitutions ) : s->readable();
+	const bool performSubstitutions = substitutions && Process::current() && Context::hasSubstitutions( s->readable() );
+	return performSubstitutions ? Context::current()->substitute( s->readable(), substitutions ) : s->readable();
 }
 
 void StringPlug::setFrom( const ValuePlug *other )
@@ -126,10 +157,10 @@ void StringPlug::setFrom( const ValuePlug *other )
 
 IECore::MurmurHash StringPlug::hash() const
 {
-	const StringPlug *p = source<StringPlug>();
+	unsigned substitutions;
+	const StringPlug *p = sourceAndSubstitutions( this, substitutions );
 
-	const bool performSubstitution = m_substitutions && p->direction()==Plug::In && p->getFlags( Plug::PerformsSubstitutions );
-	if( performSubstitution )
+	if( substitutions )
 	{
 		IECore::ConstObjectPtr o = p->getObjectValue();
 		const IECore::StringData *s = IECore::runTimeCast<const IECore::StringData>( o.get() );
@@ -141,7 +172,7 @@ IECore::MurmurHash StringPlug::hash() const
 		if( Context::hasSubstitutions( s->readable() ) )
 		{
 			IECore::MurmurHash result;
-			result.append( Context::current()->substitute( s->readable(), m_substitutions ) );
+			result.append( Context::current()->substitute( s->readable(), substitutions ) );
 			return result;
 		}
 	}
