@@ -70,6 +70,7 @@ namespace
 InternedString g_cameraGlobalName( "option:render:camera" );
 
 InternedString g_visibleAttributeName( "scene:visible" );
+InternedString g_setsAttributeName( "sets" );
 
 bool visible( const CompoundObject *attributes )
 {
@@ -123,7 +124,8 @@ class InteractiveRender::SceneGraph
 			ChildNamesComponent = 16,
 			GlobalsComponent = 32,
 			SetsComponent = 64,
-			AllComponents = BoundComponent | TransformComponent | AttributesComponent | ObjectComponent | ChildNamesComponent | GlobalsComponent | SetsComponent
+			RenderSetsComponent = 128, // Sets prefixed with "render:"
+			AllComponents = BoundComponent | TransformComponent | AttributesComponent | ObjectComponent | ChildNamesComponent | GlobalsComponent | SetsComponent | RenderSetsComponent
 		};
 
 		// Constructs the root of the scene graph.
@@ -146,7 +148,7 @@ class InteractiveRender::SceneGraph
 
 		// Called by SceneGraphUpdateTask to update this location. Returns a bitmask
 		// of the components which were changed.
-		unsigned update( const ScenePlug *scene, unsigned dirtyComponents, unsigned changedParentComponents, Type type, IECoreScenePreview::Renderer *renderer, const IECore::CompoundObject *globals )
+		unsigned update( const ScenePlug *scene, const ScenePlug::ScenePath &path, unsigned dirtyComponents, unsigned changedParentComponents, Type type, IECoreScenePreview::Renderer *renderer, const IECore::CompoundObject *globals, const RenderSets &renderSets )
 		{
 			unsigned changedComponents = 0;
 
@@ -180,6 +182,19 @@ class InteractiveRender::SceneGraph
 			{
 				clear();
 				return changedComponents;
+			}
+
+			// Render Sets. We must obviously update these if
+			// the sets have changed, but we also need to do an
+			// update if the attributes have changed, because in
+			// that case we may have overwritten the sets attribute.
+
+			if( ( dirtyComponents & RenderSetsComponent ) || ( changedComponents & AttributesComponent ) )
+			{
+				if( updateRenderSets( path, renderSets ) )
+				{
+					changedComponents |= AttributesComponent;
+				}
 			}
 
 			// Transform
@@ -307,6 +322,15 @@ class InteractiveRender::SceneGraph
 			m_fullAttributes->members() = globalAttributes->members();
 			m_attributesInterface = NULL;
 
+			return true;
+		}
+
+		bool updateRenderSets( const ScenePlug::ScenePath &path, const RenderSets &renderSets )
+		{
+			m_fullAttributes->members()[g_setsAttributeName] = boost::const_pointer_cast<InternedStringVectorData>(
+				renderSets.setsAttribute( path )
+			);
+			m_attributesInterface = NULL;
 			return true;
 		}
 
@@ -529,11 +553,13 @@ class InteractiveRender::SceneGraphUpdateTask : public tbb::task
 
 			unsigned changedComponents = m_sceneGraph->update(
 				scene(),
+				m_scenePath,
 				m_dirtyComponents,
 				m_changedParentComponents,
 				sceneGraphMatch & Filter::ExactMatch ? m_sceneGraphType : SceneGraph::NoType,
 				m_interactiveRender->m_renderer.get(),
-				m_interactiveRender->m_globals.get()
+				m_interactiveRender->m_globals.get(),
+				m_interactiveRender->m_renderSets
 			);
 
 			// Spawn subtasks to apply updates to each child.
@@ -571,13 +597,13 @@ class InteractiveRender::SceneGraphUpdateTask : public tbb::task
 			switch( m_sceneGraphType )
 			{
 				case SceneGraph::CameraType :
-					return m_interactiveRender->m_cameraSet.match( m_scenePath );
+					return m_interactiveRender->m_renderSets.camerasSet().match( m_scenePath );
 				case SceneGraph::LightType :
-					return m_interactiveRender->m_lightSet.match( m_scenePath );
+					return m_interactiveRender->m_renderSets.lightsSet().match( m_scenePath );
 				case SceneGraph::ObjectType :
 				{
-					unsigned m = m_interactiveRender->m_lightSet.match( m_scenePath ) |
-					             m_interactiveRender->m_cameraSet.match( m_scenePath );
+					unsigned m = m_interactiveRender->m_renderSets.lightsSet().match( m_scenePath ) |
+					             m_interactiveRender->m_renderSets.camerasSet().match( m_scenePath );
 					if( m & Filter::ExactMatch )
 					{
 						return Filter::AncestorMatch | Filter::DescendantMatch;
@@ -814,8 +840,10 @@ void InteractiveRender::update()
 
 	if( m_dirtyComponents & SceneGraph::SetsComponent )
 	{
-		m_lightSet = inPlug()->set( "__lights" )->readable();
-		m_cameraSet = inPlug()->set( "__cameras" )->readable();
+		if( m_renderSets.update( inPlug() ) & RenderSets::RenderSetsChanged )
+		{
+			m_dirtyComponents |= SceneGraph::RenderSetsComponent;
+		}
 	}
 
 	for( int i = SceneGraph::FirstType; i <= SceneGraph::LastType; ++i )
@@ -905,7 +933,7 @@ void InteractiveRender::stop()
 	m_renderer = NULL;
 
 	m_globals = inPlug()->globalsPlug()->defaultValue();
-	m_lightSet.clear();
+	m_renderSets.clear();
 
 	m_dirtyComponents = SceneGraph::AllComponents;
 	m_state = Stopped;

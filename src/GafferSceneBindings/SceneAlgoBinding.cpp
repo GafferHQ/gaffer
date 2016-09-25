@@ -35,6 +35,7 @@
 //////////////////////////////////////////////////////////////////////////
 
 #include "boost/python.hpp"
+#include "boost/python/suite/indexing/container_utils.hpp"
 
 #include "IECore/Camera.h"
 
@@ -111,10 +112,20 @@ bool setExistsWrapper( const ScenePlug *scene, const IECore::InternedString &set
 	return setExists( scene, setName );
 }
 
-IECore::CompoundDataPtr setsWrapper( const ScenePlug *scene, bool copy )
+IECore::CompoundDataPtr setsWrapper1( const ScenePlug *scene, bool copy )
 {
 	IECorePython::ScopedGILRelease r;
 	IECore::ConstCompoundDataPtr result = sets( scene );
+	return copy ? result->copy() : boost::const_pointer_cast<IECore::CompoundData>( result );
+}
+
+IECore::CompoundDataPtr setsWrapper2( const ScenePlug *scene, object pythonSetNames, bool copy )
+{
+	std::vector<IECore::InternedString> setNames;
+	boost::python::container_utils::extend_container( setNames, pythonSetNames );
+
+	IECorePython::ScopedGILRelease r;
+	IECore::ConstCompoundDataPtr result = sets( scene, setNames );
 	return copy ? result->copy() : boost::const_pointer_cast<IECore::CompoundData>( result );
 }
 
@@ -144,8 +155,13 @@ void bindSceneAlgo()
 	def( "setExists", &setExistsWrapper );
 	def(
 		"sets",
-		&setsWrapper,
+		&setsWrapper1,
 		( arg( "scene" ), arg( "_copy" ) = true )
+	);
+	def(
+		"sets",
+		&setsWrapper2,
+		( arg( "scene" ), arg( "setNames" ), arg( "_copy" ) = true )
 	);
 }
 

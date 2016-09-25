@@ -1,3 +1,95 @@
+0.28.2.1
+========
+
+API
+---
+
+- ArnoldShader
+  - Fix `outPlug()` loading bug introduced in 0.28.2.0.
+
+
+0.28.2.0
+========
+
+UI
+--
+
+- Fixed incorrect re-use of widgets when swapping plugs with the same name.
+
+Scene
+-----
+
+- Fixed context scoping issue during renders.
+
+Arnold
+------
+
+- Added curve min_pixel_width and mode attributes.
+- Shaders are now re-loadable, and will automatically reload during script load.
+
+Cortex
+------
+
+- Fixed incorrect re-use of plugs when swapping parameters with the same name.
+
+API
+---
+
+- SceneAlgo
+  - Fixed context used by `sets()` function.
+- RendererAlgo (preview)
+  - Fixed context used by `RenderSets` class.
+- ArnoldShader
+  - Added keepExistingValue argument to `loadShader()`.
+  - Added `loadShader()` to serialisation.
+  - Reusing existing plugs wherever possible.
+- CompoundParameterHandler
+  - Match by parameter object instead of name.
+- CompoundPlugValueWidget
+  - Match by plug object instead of name.
+
+0.28.1.0
+========
+
+UI
+--
+
+- The 3D Viewer can now look through lights (#1846).
+- Prefixed NodeMenu search text for RSL and OSL shaders with ri and osl respectively (#1850).
+
+Arnold
+------
+
+- Added support for trace sets (#1847). Any standard gaffer set with a name beginning with "render:" will be exported to Arnold as a trace set.
+- Fixed ArnoldDisplacement crash (#1849).
+- Added support for a `gaffer.nodeMenu.category` metadata value to customise the shader menu (#1850).
+
+Scene
+-----
+
+- Added LightToCamera node (#1846).
+
+API
+---
+
+- Context (#1848)
+  - Added GIL release in `set()` method bindings to
+    fix potential deadlocks.
+  - Fixed bug which meant that `remove()` wasn't
+    emitting `changedSignal()`.
+- SceneAlgo
+  - Added `sets()` overload to compute a subset of all sets.
+- RendererAlgo (preview)
+  - Added RenderSets utility class.
+  - Modified output methods to take a RenderSets argument.
+- ShaderPlug
+  - Fixed bug involving plugs with no input (#1849).
+
+Build
+-----
+
+- Added INSTALL_POST_COMMAND option, to allow custom commands to be run after installation (#1845).
+
 0.28.0.1
 ========
 

@@ -444,13 +444,14 @@ namespace
 struct Sets
 {
 
-	Sets( const ScenePlug *scene, const std::vector<InternedString> &names, std::vector<GafferScene::ConstPathMatcherDataPtr> &sets )
-		:	m_scene( scene ), m_names( names ), m_sets( sets )
+	Sets( const ScenePlug *scene, const Context *context, const std::vector<InternedString> &names, std::vector<GafferScene::ConstPathMatcherDataPtr> &sets )
+		:	m_scene( scene ), m_context( context ), m_names( names ), m_sets( sets )
 	{
 	}
 
 	void operator()( const tbb::blocked_range<size_t> &r ) const
 	{
+		Context::Scope scopedContext( m_context );
 		for( size_t i=r.begin(); i!=r.end(); ++i )
 		{
 			m_sets[i] = m_scene->set( m_names[i] );
@@ -460,6 +461,7 @@ struct Sets
 	private :
 
 		const ScenePlug *m_scene;
+		const Context *m_context;
 		const std::vector<InternedString> &m_names;
 		std::vector<GafferScene::ConstPathMatcherDataPtr> &m_sets;
 
@@ -470,10 +472,15 @@ struct Sets
 IECore::ConstCompoundDataPtr GafferScene::sets( const ScenePlug *scene )
 {
 	ConstInternedStringVectorDataPtr setNamesData = scene->setNamesPlug()->getValue();
-	std::vector<GafferScene::ConstPathMatcherDataPtr> setsVector;
-	setsVector.resize( setNamesData->readable().size(), NULL );
+	return sets( scene, setNamesData->readable() );
+}
 
-	Sets setsCompute( scene, setNamesData->readable(), setsVector );
+IECore::ConstCompoundDataPtr GafferScene::sets( const ScenePlug *scene, const std::vector<IECore::InternedString> &setNames )
+{
+	std::vector<GafferScene::ConstPathMatcherDataPtr> setsVector;
+	setsVector.resize( setNames.size(), NULL );
+
+	Sets setsCompute( scene, Context::current(), setNames, setsVector );
 	parallel_for( tbb::blocked_range<size_t>( 0, setsVector.size() ), setsCompute );
 
 	CompoundDataPtr result = new CompoundData;
@@ -481,7 +488,7 @@ IECore::ConstCompoundDataPtr GafferScene::sets( const ScenePlug *scene )
 	{
 		// The const_pointer_cast is ok because we're just using it to put the set into
 		// a container that will be const on return - we never modify the set itself.
-		result->writable()[setNamesData->readable()[i]] = boost::const_pointer_cast<GafferScene::PathMatcherData>( setsVector[i] );
+		result->writable()[setNames[i]] = boost::const_pointer_cast<GafferScene::PathMatcherData>( setsVector[i] );
 	}
 	return result;
 }

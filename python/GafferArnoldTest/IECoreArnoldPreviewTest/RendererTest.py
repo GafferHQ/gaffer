@@ -587,24 +587,6 @@ class RendererTest( GafferTest.TestCase ) :
 		r.render()
 		del r
 
-		def assertInstanced( *names ) :
-
-			firstInstanceNode = arnold.AiNodeLookUpByName( names[0] )
-			for name in names :
-
-				instanceNode = arnold.AiNodeLookUpByName( name )
-				self.assertEqual( arnold.AiNodeEntryGetName( arnold.AiNodeGetNodeEntry( instanceNode ) ), "ginstance" )
-
-				nodePtr = arnold.AiNodeGetPtr( instanceNode, "node" )
-				self.assertEqual( nodePtr, arnold.AiNodeGetPtr( firstInstanceNode, "node" ) )
-				self.assertEqual( arnold.AiNodeGetInt( arnold.AtNode.from_address( nodePtr ), "visibility" ), 0 )
-
-		def assertNotInstanced( *names ) :
-
-			for name in names :
-				node = arnold.AiNodeLookUpByName( name )
-				self.assertEqual( arnold.AiNodeEntryGetName( arnold.AiNodeGetNodeEntry( node ) ), "polymesh" )
-
 		with IECoreArnold.UniverseBlock() :
 
 			arnold.AiASSLoad( self.temporaryDirectory() + "/test.ass" )
@@ -616,26 +598,26 @@ class RendererTest( GafferTest.TestCase ) :
 			self.assertEqual( numPolyMeshes, 5 )
 			self.assertEqual( numInstances, 10 )
 
-			assertInstanced(
+			self.__assertInstanced(
 				"polyDefaultAttributes1",
 				"polyDefaultAttributes2",
 				"polyAdaptiveAttributes1",
 				"polyAdaptiveAttributes2",
 			)
 
-			assertInstanced(
+			self.__assertInstanced(
 				"subdivDefaultAttributes1",
 				"subdivDefaultAttributes2",
 				"subdivNonAdaptiveAttributes1",
 				"subdivNonAdaptiveAttributes2",
 			)
 
-			assertNotInstanced(
+			self.__assertNotInstanced(
 				"subdivAdaptiveAttributes1",
 				"subdivAdaptiveAttributes2"
 			)
 
-			assertInstanced(
+			self.__assertInstanced(
 				"subdivAdaptiveObjectSpaceAttributes1",
 				"subdivAdaptiveObjectSpaceAttributes2",
 			)
@@ -1073,6 +1055,150 @@ class RendererTest( GafferTest.TestCase ) :
 			noise = arnold.AtNode.from_address( arnold.AiNodeGetPtr( n, "shader" ) )
 			self.assertEqual( arnold.AiNodeEntryGetName( arnold.AiNodeGetNodeEntry( noise ) ), "Noise" )
 
+	def testTraceSets( self ) :
+
+		r = GafferScene.Private.IECoreScenePreview.Renderer.create(
+			"IECoreArnold::Renderer",
+			GafferScene.Private.IECoreScenePreview.Renderer.RenderType.SceneDescription,
+			self.temporaryDirectory() + "/test.ass"
+		)
+
+		objectNamesAndSets = [
+			( "crimsonSphere", IECore.InternedStringVectorData( [ "roundThings", "redThings" ] ) ),
+			( "emeraldBall", IECore.InternedStringVectorData( [ "roundThings", "greenThings" ] ) ),
+			( "greenFrog", IECore.InternedStringVectorData( [ "livingThings", "greenThings" ] ) ),
+			( "scarletPimpernel", IECore.InternedStringVectorData( [ "livingThings", "redThings" ] ) ),
+			( "mysterious", IECore.InternedStringVectorData() ),
+			( "evasive", None ),
+		]
+
+		for objectName, sets in objectNamesAndSets :
+
+			attributes = IECore.CompoundObject()
+			if sets is not None :
+				attributes["sets"] = sets
+
+			r.object(
+				objectName,
+				IECore.MeshPrimitive.createPlane( IECore.Box2f( IECore.V2f( -1 ), IECore.V2f( 1 ) ) ),
+				r.attributes( attributes ),
+			)
+
+		r.render()
+		del r
+
+		with IECoreArnold.UniverseBlock() :
+
+			arnold.AiASSLoad( self.temporaryDirectory() + "/test.ass" )
+
+			for objectName, sets in objectNamesAndSets :
+
+				n = arnold.AiNodeLookUpByName( objectName )
+				a = arnold.AiNodeGetArray( n, "trace_sets" )
+
+				if sets is None or len( sets ) == 0 :
+					sets = [ "__none__" ]
+
+				self.assertEqual( a.contents.nelements, len( sets ) )
+				for i in range( 0, a.contents.nelements ) :
+					self.assertEqual( arnold.AiArrayGetStr( a, i ), sets[i] )
+
+	def testCurvesAttributes( self ) :
+
+		r = GafferScene.Private.IECoreScenePreview.Renderer.create(
+			"IECoreArnold::Renderer",
+			GafferScene.Private.IECoreScenePreview.Renderer.RenderType.SceneDescription,
+			self.temporaryDirectory() + "/test.ass"
+		)
+
+		curves = IECore.CurvesPrimitive.createBox( IECore.Box3f( IECore.V3f( -1 ), IECore.V3f( 1 ) ) )
+
+		defaultAttributes = r.attributes( IECore.CompoundObject() )
+
+		pixelWidth1Attributes = r.attributes(
+			IECore.CompoundObject( {
+				"ai:curves:min_pixel_width" : IECore.FloatData( 1 ),
+			} )
+		)
+
+		pixelWidth2Attributes = r.attributes(
+			IECore.CompoundObject( {
+				"ai:curves:min_pixel_width" : IECore.FloatData( 2 ),
+			} )
+		)
+
+		modeRibbonAttributes = r.attributes(
+			IECore.CompoundObject( {
+				"ai:curves:mode" : IECore.StringData( "ribbon" ),
+			} )
+		)
+
+		modeThickAttributes = r.attributes(
+			IECore.CompoundObject( {
+				"ai:curves:mode" : IECore.StringData( "thick" ),
+			} )
+		)
+
+		pixelWidth0ModeRibbonAttributes = r.attributes(
+			IECore.CompoundObject( {
+				"ai:curves:min_pixel_width" : IECore.FloatData( 0 ),
+				"ai:curves:mode" : IECore.StringData( "ribbon" ),
+			} )
+		)
+
+		r.object( "default", curves.copy(), defaultAttributes )
+		r.object( "pixelWidth1", curves.copy(), pixelWidth1Attributes )
+		r.object( "pixelWidth1Duplicate", curves.copy(), pixelWidth1Attributes )
+		r.object( "pixelWidth2", curves.copy(), pixelWidth2Attributes )
+		r.object( "modeRibbon", curves.copy(), modeRibbonAttributes )
+		r.object( "modeThick", curves.copy(), modeThickAttributes )
+		r.object( "pixelWidth0ModeRibbon", curves.copy(), pixelWidth0ModeRibbonAttributes )
+
+		r.render()
+		del r
+
+		with IECoreArnold.UniverseBlock() :
+
+			arnold.AiASSLoad( self.temporaryDirectory() + "/test.ass" )
+
+			shapes = self.__allNodes( type = arnold.AI_NODE_SHAPE )
+			numInstances = len( [ s for s in shapes if arnold.AiNodeEntryGetName( arnold.AiNodeGetNodeEntry( s ) ) == "ginstance" ] )
+			numCurves = len( [ s for s in shapes if arnold.AiNodeEntryGetName( arnold.AiNodeGetNodeEntry( s ) ) == "curves" ] )
+
+			self.assertEqual( numInstances, 7 )
+			self.assertEqual( numCurves, 4 )
+
+			self.__assertInstanced(
+				"default",
+				"modeRibbon",
+				"pixelWidth0ModeRibbon",
+			)
+
+			self.__assertInstanced(
+				"pixelWidth1",
+				"pixelWidth1Duplicate",
+			)
+
+			for name in ( "pixelWidth2", "modeRibbon", "modeThick" ) :
+				self.__assertInstanced( name )
+
+			for name, minPixelWidth, mode in (
+				( "default", 0, "ribbon" ),
+				( "pixelWidth1", 1, "ribbon" ),
+				( "pixelWidth1Duplicate", 1, "ribbon" ),
+				( "pixelWidth2", 2, "ribbon" ),
+				( "modeRibbon", 0, "ribbon" ),
+				( "modeThick", 0, "thick" ),
+				( "pixelWidth0ModeRibbon", 0, "ribbon" ),
+			) :
+
+				instance = arnold.AiNodeLookUpByName( name )
+				self.assertEqual( arnold.AiNodeEntryGetName( arnold.AiNodeGetNodeEntry( instance ) ), "ginstance" )
+
+				shape = arnold.AtNode.from_address( arnold.AiNodeGetPtr( instance, "node" ) )
+				self.assertEqual( arnold.AiNodeGetFlt( shape, "min_pixel_width" ), minPixelWidth )
+				self.assertEqual( arnold.AiNodeGetStr( shape, "mode" ), mode )
+
 	@staticmethod
 	def __m44f( m ) :
 
@@ -1094,6 +1220,24 @@ class RendererTest( GafferTest.TestCase ) :
 			result.append( node )
 
 		return result
+
+	def __assertInstanced( self, *names ) :
+
+		firstInstanceNode = arnold.AiNodeLookUpByName( names[0] )
+		for name in names :
+
+			instanceNode = arnold.AiNodeLookUpByName( name )
+			self.assertEqual( arnold.AiNodeEntryGetName( arnold.AiNodeGetNodeEntry( instanceNode ) ), "ginstance" )
+
+			nodePtr = arnold.AiNodeGetPtr( instanceNode, "node" )
+			self.assertEqual( nodePtr, arnold.AiNodeGetPtr( firstInstanceNode, "node" ) )
+			self.assertEqual( arnold.AiNodeGetInt( arnold.AtNode.from_address( nodePtr ), "visibility" ), 0 )
+
+	def __assertNotInstanced( self, *names ) :
+
+		for name in names :
+			node = arnold.AiNodeLookUpByName( name )
+			self.assertNotEqual( arnold.AiNodeEntryGetName( arnold.AiNodeGetNodeEntry( node ) ), "ginstance" )
 
 if __name__ == "__main__":
 	unittest.main()

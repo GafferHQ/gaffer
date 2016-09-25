@@ -71,12 +71,26 @@ ArnoldShader::~ArnoldShader()
 
 void ArnoldShader::loadShader( const std::string &shaderName )
 {
+	loadShader( shaderName, false );
+}
+
+void ArnoldShader::loadShader( const std::string &shaderName, bool keepExistingValues )
+{
 	IECoreArnold::UniverseBlock arnoldUniverse( /* writable = */ false );
 
 	const AtNodeEntry *shader = AiNodeEntryLookUp( shaderName.c_str() );
 	if( !shader )
 	{
 		throw Exception( str( format( "Shader \"%s\" not found" ) % shaderName ) );
+	}
+
+	if( !keepExistingValues )
+	{
+		parametersPlug()->clearChildren();
+		if( Plug *out = outPlug() )
+		{
+			removeChild( out );
+		}
 	}
 
 	const bool isLightShader = AiNodeEntryGetType( shader ) == AI_NODE_LIGHT;
@@ -86,91 +100,6 @@ void ArnoldShader::loadShader( const std::string &shaderName )
 	);
 
 	ParameterHandler::setupPlugs( shader, parametersPlug() );
-
-	PlugPtr outPlug = NULL;
-	const int outputType = AiNodeEntryGetOutputType( shader );
-	switch( outputType )
-	{
-		case AI_TYPE_RGB :
-
-			outPlug = new Color3fPlug(
-				"out",
-				Plug::Out
-			);
-
-			break;
-
-		case AI_TYPE_RGBA :
-
-			outPlug = new Color4fPlug(
-				"out",
-				Plug::Out
-			);
-
-			break;
-
-		case AI_TYPE_FLOAT :
-
-			outPlug = new FloatPlug(
-				"out",
-				Plug::Out
-			);
-
-			break;
-
-		case AI_TYPE_INT :
-
-			outPlug = new IntPlug(
-				"out",
-				Plug::Out
-			);
-
-			break;
-
-		case AI_TYPE_POINT2 :
-
-			outPlug = new V2fPlug(
-				"out",
-				Plug::Out
-			);
-
-			break;
-
-		case AI_TYPE_POINT :
-		case AI_TYPE_VECTOR :
-
-			outPlug = new V3fPlug(
-				"out",
-				Plug::Out
-			);
-
-			break;
-
-		default :
-
-			if( isLightShader )
-			{
-				outPlug = new Plug( "out", Plug::Out );
-			}
-
-	}
-
-	if( outPlug )
-	{
-		outPlug->setFlags( Plug::Dynamic, true );
-		addChild( outPlug );
-	}
-	else
-	{
-		if( outputType != AI_TYPE_NONE )
-		{
-			msg(
-				Msg::Warning,
-				"ArnoldShader::loadShader",
-				format( "Unsupported output parameter of type \"%s\"" ) %
-					AiParamGetTypeName( AiNodeEntryGetOutputType( shader ) )
-			);
-		}
-	}
+	ParameterHandler::setupPlug( "out", isLightShader ? AI_TYPE_POINTER : AiNodeEntryGetOutputType( shader ), this, Plug::Out );
 
 }

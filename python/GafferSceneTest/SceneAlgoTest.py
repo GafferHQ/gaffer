@@ -38,6 +38,7 @@ import unittest
 
 import IECore
 
+import Gaffer
 import GafferScene
 import GafferSceneTest
 
@@ -165,6 +166,11 @@ class SceneAlgoTest( GafferSceneTest.SceneTestCase ) :
 		for n in sets.keys() :
 			self.assertTrue( sets[n].isSame( light["out"].set( n, _copy = False ) ) )
 
+		someSets = GafferScene.sets( light["out"], ( "A", "B" ), _copy = False )
+		self.assertEqual( set( someSets.keys() ), { "A", "B" } )
+		for n in someSets.keys() :
+			self.assertTrue( someSets[n].isSame( light["out"].set( n, _copy = False ) ) )
+
 	def testMatchingPathsWithPathMatcher( self ) :
 
 		s = GafferScene.Sphere()
@@ -188,6 +194,22 @@ class SceneAlgoTest( GafferSceneTest.SceneTestCase ) :
 		o["options"]["renderCamera"]["enabled"].setValue( True )
 		c2 = GafferScene.camera( o["out"] )
 		self.assertEqual( c1, c2 )
+
+	def testSetsNeedContextEntry( self ) :
+
+		script = Gaffer.ScriptNode()
+		script["light"] = GafferSceneTest.TestLight()
+		script["light"]["sets"].setValue( "A B C" )
+
+		script["expression"] = Gaffer.Expression()
+		script["expression"].setExpression(
+			"""parent["light"]["name"] = context["lightName"]"""
+		)
+
+		for i in range( 0, 100 ) :
+			with Gaffer.Context() as context :
+				context["lightName"] = "light%d" % i
+				GafferScene.sets( script["light"]["out"] )
 
 if __name__ == "__main__":
 	unittest.main()

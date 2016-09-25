@@ -109,9 +109,34 @@ class InteractiveArnoldRenderTest( GafferSceneTest.InteractiveRenderTest ) :
 		shader["parameters"]["Kd"].setValue( 1 )
 		return shader, shader["parameters"]["Kd_color"]
 
+	def _createTraceSetShader( self ) :
+
+		# There appears to be no standard Arnold shader
+		# which uses trace sets, so we use an AlSurface.
+		# If one is not available, the base class will
+		# skip the test.
+
+		shader = GafferArnold.ArnoldShader()
+		try :
+			shader.loadShader( "alSurface" )
+		except :
+			return None, None
+
+		shader["parameters"]["diffuseStrength"].setValue( 0 )
+		shader["parameters"]["specular1Roughness"].setValue( 0 )
+		shader["parameters"]["specular1FresnelMode"].setValue( "metallic" )
+		shader["parameters"]["specular1Reflectivity"].setValue( IECore.Color3f( 1 ) )
+		shader["parameters"]["specular1EdgeTint"].setValue( IECore.Color3f( 1 ) )
+
+		return shader, shader["parameters"]["traceSetSpecular1"]
+
 	def _cameraVisibilityAttribute( self ) :
 
 		return "ai:visibility:camera"
+
+	def _traceDepthOptions( self ) :
+
+		return "ai:GI_glossy_depth", "ai:GI_diffuse_depth", "ai:GI_reflection_depth"
 
 	def _createPointLight( self ) :
 
