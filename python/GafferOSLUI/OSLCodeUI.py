@@ -53,8 +53,12 @@ Gaffer.Metadata.registerNode(
 	""",
 
 	"layout:customWidget:error:widgetType", "GafferOSLUI.OSLCodeUI._ErrorWidget",
-	"layout:customWidget:error:section", "Settings",
+	"layout:customWidget:error:section", "Settings.Code",
 	"layout:customWidget:error:index", -1,
+
+	"layout:section:Settings.Inputs:collapsed", False,
+	"layout:section:Settings.Outputs:collapsed", False,
+	"layout:section:Settings.Code:collapsed", False,
 
 	plugs = {
 
@@ -92,6 +96,7 @@ Gaffer.Metadata.registerNode(
 
 			"layout:customWidget:footer:widgetType", "GafferOSLUI.OSLCodeUI._ParametersFooter",
 			"layout:customWidget:footer:index", -1,
+			"layout:section", "Settings.Inputs",
 
 		],
 
@@ -115,6 +120,7 @@ Gaffer.Metadata.registerNode(
 
 			"layout:customWidget:footer:widgetType", "GafferOSLUI.OSLCodeUI._ParametersFooter",
 			"layout:customWidget:footer:index", -1,
+			"layout:section", "Settings.Outputs",
 
 		],
 
@@ -136,6 +142,7 @@ Gaffer.Metadata.registerNode(
 			"plugValueWidget:type", "GafferOSLUI.OSLCodeUI._CodePlugValueWidget",
 			"multiLineStringPlugValueWidget:role", "code",
 			"layout:label", "",
+			"layout:section", "Settings.Code",
 
 		],
 
