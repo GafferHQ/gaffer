@@ -400,3 +400,39 @@ def __plugPopupMenu( menuDefinition, plugValueWidget ) :
 			)
 
 __plugPopupMenuConnection = GafferUI.PlugValueWidget.popupMenuSignal().connect( __plugPopupMenu )
+
+##########################################################################
+# NodeEditor tool menu
+##########################################################################
+
+def __toolMenu( nodeEditor, node, menuDefinition ) :
+
+	if not isinstance( node, GafferOSL.OSLCode ) :
+		return
+
+	menuDefinition.append( "/ExportDivider", { "divider" : True } )
+	menuDefinition.append( "/Export OSL Shader...", { "command" : functools.partial( __exportOSLShader, nodeEditor, node ) } )
+
+def __exportOSLShader( nodeEditor, node ) :
+
+	bookmarks = GafferUI.Bookmarks.acquire( node, category="shader" )
+
+	path = Gaffer.FileSystemPath( bookmarks.getDefault( nodeEditor ) )
+	path.setFilter( Gaffer.FileSystemPath.createStandardFilter( [ "osl" ] ) )
+
+	dialogue = GafferUI.PathChooserDialogue( path, title="Export OSL Shader", confirmLabel="Export", leaf=True, bookmarks=bookmarks )
+	path = dialogue.waitForPath( parentWindow = nodeEditor.ancestor( GafferUI.Window ) )
+
+	if not path :
+		return
+
+	path = str( path )
+	if not path.endswith( ".osl" ) :
+		path += ".osl"
+
+	with GafferUI.ErrorDialogue.ExceptionHandler( title = "Error Exporting Shader", parentWindow = nodeEditor.ancestor( GafferUI.Window ) ) :
+		with open( path, "w" ) as f :
+			with nodeEditor.getContext() :
+				f.write( node.source() )
+
+__nodeEditorToolMenuConnection = GafferUI.NodeEditor.toolMenuSignal().connect( __toolMenu )

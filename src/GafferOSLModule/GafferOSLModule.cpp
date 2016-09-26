@@ -108,6 +108,12 @@ int oslLibraryVersionCode()
 	return OSL_LIBRARY_VERSION_CODE;
 }
 
+std::string oslCodeSource( const OSLCode &oslCode, const std::string &shaderName )
+{
+	IECorePython::ScopedGILRelease gilRelease;
+	return oslCode.source( shaderName );
+}
+
 } // namespace
 
 BOOST_PYTHON_MODULE( _GafferOSL )
@@ -135,6 +141,7 @@ BOOST_PYTHON_MODULE( _GafferOSL )
 	;
 
 	scope s = GafferBindings::DependencyNodeClass<OSLCode>()
+		.def( "source", &oslCodeSource, ( arg_( "shaderName" ) = "" ) )
 		.def( "shaderCompiledSignal", &OSLCode::shaderCompiledSignal, return_internal_reference<1>() )
 	;
 

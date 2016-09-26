@@ -59,6 +59,11 @@ class OSLCode : public OSLShader
 		Gaffer::StringPlug *codePlug();
 		const Gaffer::StringPlug *codePlug() const;
 
+		/// Returns the source to a complete OSL shader created
+		/// from this node, optionally specifying a specific name
+		/// to give to it.
+		std::string source( const std::string shaderName = "" ) const;
+
 		typedef boost::signal<void ()> ShaderCompiledSignal;
 		/// Signal emitted when a shader is compiled successfully.
 		/// \todo This exists only so the UI knows when to clear

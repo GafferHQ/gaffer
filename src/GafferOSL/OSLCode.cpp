@@ -384,6 +384,12 @@ const Gaffer::StringPlug *OSLCode::codePlug() const
 	return getChild<StringPlug>( g_firstPlugIndex + 1 );
 }
 
+std::string OSLCode::source( const std::string shaderName ) const
+{
+	string shaderNameCopy = shaderName;
+	return generate( this, shaderNameCopy );
+}
+
 OSLCode::ShaderCompiledSignal &OSLCode::shaderCompiledSignal()
 {
 	return m_shaderCompiledSignal;

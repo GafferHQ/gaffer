@@ -241,6 +241,39 @@ class OSLCodeTest( GafferOSLTest.OSLTestCase ) :
 		s.redo()
 		self.assertEqual( self._osoFileName( s["o"] ), f3 )
 
+	def testSource( self ) :
+
+		# Make a shader using the OSLCode node.
+
+		oslCode = GafferOSL.OSLCode()
+
+		oslCode["parameters"]["i"] = Gaffer.Color3fPlug( flags = Gaffer.Plug.Flags.Default | Gaffer.Plug.Flags.Dynamic )
+		oslCode["out"]["o"] = Gaffer.Color3fPlug( direction = Gaffer.Plug.Direction.Out, flags = Gaffer.Plug.Flags.Default | Gaffer.Plug.Flags.Dynamic )
+		oslCode["code"].setValue( "o = i * color( u, v, 0 );")
+
+		# Export it to a .osl file and compile it.
+
+		oslFileName = os.path.join( self.temporaryDirectory(), "test.osl" )
+		with open( oslFileName, "w" ) as f :
+			f.write( oslCode.source( "test") )
+
+		shader = self.compileShader( oslFileName )
+
+		# Load that onto an OSLShader and check that
+		# it matches.
+
+		oslShader = GafferOSL.OSLShader()
+		oslShader.loadShader( shader )
+
+		self.assertEqual( oslShader["parameters"].keys(), oslCode["parameters"].keys() )
+		self.assertEqual( oslShader["out"].keys(), oslCode["out"].keys() )
+
+		for p in oslShader["parameters"].children() :
+			self.assertEqual( repr( p ), repr( oslCode["parameters"][p.getName()] ) )
+
+		for p in oslShader["out"].children() :
+			self.assertEqual( repr( p ), repr( oslCode["out"][p.getName()] ) )
+
 	def _osoFileName( self, oslCode ) :
 
 		# Right now we could get this information by
