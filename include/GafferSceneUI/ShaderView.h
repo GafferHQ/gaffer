@@ -100,7 +100,9 @@ class ShaderView : public GafferImageUI::ImageView
 		void updateRendererContext();
 		void updateRendererState();
 		void updateScene();
+		void preRender();
 
+		bool m_framed;
 		Gaffer::BoxPtr m_imageConverter;
 
 		boost::signals::scoped_connection m_idleConnection;

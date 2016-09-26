@@ -124,7 +124,7 @@ IE_CORE_DEFINERUNTIMETYPED( ShaderView );
 ShaderView::ViewDescription<ShaderView> ShaderView::g_viewDescription( GafferScene::Shader::staticTypeId(), "out" );
 
 ShaderView::ShaderView( const std::string &name )
-	:	ImageView( name )
+	:	ImageView( name ), m_framed( false )
 {
 	// Create a converter to generate an image
 	// from the input shader.
@@ -165,6 +165,7 @@ ShaderView::ShaderView( const std::string &name )
 	// Connect to signals we need.
 
 	viewportGadget()->visibilityChangedSignal().connect( boost::bind( &ShaderView::viewportVisibilityChanged, this ) );
+	viewportGadget()->preRenderSignal().connect( boost::bind( &ShaderView::preRender, this ) );
 	plugSetSignal().connect( boost::bind( &ShaderView::plugSet, this, ::_1 ) );
 	plugDirtiedSignal().connect( boost::bind( &ShaderView::plugDirtied, this, ::_1 ) );
 	sceneRegistrationChangedSignal().connect( boost::bind( &ShaderView::sceneRegistrationChanged, this, ::_1 ) );
@@ -394,6 +395,36 @@ void ShaderView::updateScene()
 	m_imageConverter->getChild<DeleteOutputs>( "DeleteOutputs" )->inPlug()->setInput( outPlug );
 
 	sceneChangedSignal()( this );
+}
+
+void ShaderView::preRender()
+{
+	if( m_framed || !m_scene )
+	{
+		return;
+	}
+
+	// Do our best to give a sensible framing the first time the
+	// shader ball image is viewed. Because the render may not have
+	// opened the display driver yet, the internal Display node that
+	// we are viewing may well be outputting a blank image of default
+	// format, which is likely totally different to the shader ball
+	// resolution, and the ImageViewer has just framed for that. So
+	// we get the resolution of the upcoming render from the render
+	// globals and frame ready for that.
+
+	Context::Scope scopedContext( getContext() );
+	/// \todo Maybe we should wrap this up into a `SceneAlgo::resolution()`
+	/// method that also takes care of overscan, multiplier etc?
+	IECore::ConstCompoundObjectPtr globals = m_scene->getChild<ScenePlug>( "out" )->globalsPlug()->getValue();
+	Imath::V2i resolution( 640, 480 );
+	if( const IECore::V2iData *resolutionData = globals->member<const IECore::V2iData>( "option:render:resolution" ) )
+	{
+		resolution = resolutionData->readable();
+	}
+
+	viewportGadget()->frame( Imath::Box3f( Imath::V3f( 0 ), Imath::V3f( resolution.x, resolution.y, 0.0f ) ) );
+	m_framed = true;
 }
 
 void ShaderView::registerRenderer( const std::string &shaderPrefix, RendererCreator rendererCreator )
