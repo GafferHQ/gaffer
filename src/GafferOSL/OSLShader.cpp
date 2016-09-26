@@ -256,7 +256,7 @@ Plug *loadStringParameter( const OSLQuery::Parameter *parameter, const InternedS
 }
 
 template<typename PlugType>
-Plug *loadNumericParameter( const OSLQuery::Parameter *parameter, const InternedString &name, Gaffer::Plug *parent )
+Plug *loadNumericParameter( const OSLQuery::Parameter *parameter, const InternedString &name, Gaffer::Plug *parent, const CompoundData *metadata )
 {
 	typedef typename PlugType::ValueType ValueType;
 
@@ -270,9 +270,21 @@ Plug *loadNumericParameter( const OSLQuery::Parameter *parameter, const Interned
 		defaultValue = ValueType( parameter->fdefault[0] );
 	}
 
-	/// \todo Get from metadata
 	ValueType minValue( Imath::limits<ValueType>::min() );
 	ValueType maxValue( Imath::limits<ValueType>::max() );
+	if( metadata )
+	{
+		const TypedData<ValueType> *minMeta = metadata->member< TypedData<ValueType> >( "min" );
+		const TypedData<ValueType> *maxMeta = metadata->member< TypedData<ValueType> >( "max" );
+		if( minMeta )
+		{
+			minValue = minMeta->readable();
+		}
+		if( maxMeta )
+		{
+			maxValue = maxMeta->readable();
+		}
+	}
 
 	PlugType *existingPlug = parent->getChild<PlugType>( name );
 	if(
@@ -295,7 +307,7 @@ Plug *loadNumericParameter( const OSLQuery::Parameter *parameter, const Interned
 }
 
 template <typename PlugType>
-Plug *loadCompoundNumericParameter( const OSLQuery::Parameter *parameter, const InternedString &name, Gaffer::Plug *parent )
+Plug *loadCompoundNumericParameter( const OSLQuery::Parameter *parameter, const InternedString &name, Gaffer::Plug *parent, const CompoundData *metadata )
 {
 	typedef typename PlugType::ValueType ValueType;
 	typedef typename ValueType::BaseType BaseType;
@@ -319,6 +331,19 @@ Plug *loadCompoundNumericParameter( const OSLQuery::Parameter *parameter, const 
 	/// \todo Get from metadata
 	ValueType minValue( Imath::limits<BaseType>::min() );
 	ValueType maxValue( Imath::limits<BaseType>::max() );
+	if( metadata )
+	{
+		const TypedData<ValueType> *minMeta = metadata->member< TypedData<ValueType> >( "min" );
+		const TypedData<ValueType> *maxMeta = metadata->member< TypedData<ValueType> >( "max" );
+		if( minMeta )
+		{
+			minValue = minMeta->readable();
+		}
+		if( maxMeta )
+		{
+			maxValue = maxMeta->readable();
+		}
+	}
 
 	PlugType *existingPlug = parent->getChild<PlugType>( name );
 	if(
@@ -454,7 +479,7 @@ Plug *loadSplineParameters( const OSLQuery::Parameter *positionsParameter, const
 	return plug.get();
 }
 
-Plug *loadSplineParameter( const OSLQuery &query, const OSLQuery::Parameter *parameter, Gaffer::Plug *parent, const std::string &prefix )
+bool findSplineParameters( const OSLQuery &query, const OSLQuery::Parameter *parameter, std::string &nameWithoutSuffix, const OSLQuery::Parameter * &positionsParameter, const OSLQuery::Parameter * &valuesParameter, const OSLQuery::Parameter * &basisParameter )
 {
 	const char *suffixes[] = { "Positions", "Values", "Basis", NULL };
 	const char *suffix = NULL;
@@ -469,12 +494,12 @@ Plug *loadSplineParameter( const OSLQuery &query, const OSLQuery::Parameter *par
 
 	if( !suffix )
 	{
-		return NULL;
+		return false;
 	}
 
-	const string nameWithoutSuffix = parameter->name.string().substr( 0, parameter->name.string().size() - strlen( suffix ) );
+	nameWithoutSuffix = parameter->name.string().substr( 0, parameter->name.string().size() - strlen( suffix ) );
 
-	const OSLQuery::Parameter *positionsParameter = query.getparam( nameWithoutSuffix + "Positions" );
+	positionsParameter = query.getparam( nameWithoutSuffix + "Positions" );
 	if(
 		!positionsParameter ||
 		!positionsParameter->type.is_array() ||
@@ -482,10 +507,10 @@ Plug *loadSplineParameter( const OSLQuery &query, const OSLQuery::Parameter *par
 		positionsParameter->type.aggregate != TypeDesc::SCALAR
 	)
 	{
-		return NULL;
+		return false;
 	}
 
-	const OSLQuery::Parameter *valuesParameter = query.getparam( nameWithoutSuffix + "Values" );
+	valuesParameter = query.getparam( nameWithoutSuffix + "Values" );
 	if(
 		!valuesParameter ||
 		!valuesParameter->type.is_array() ||
@@ -493,11 +518,27 @@ Plug *loadSplineParameter( const OSLQuery &query, const OSLQuery::Parameter *par
 		( valuesParameter->type.aggregate != TypeDesc::SCALAR && valuesParameter->type.vecsemantics != TypeDesc::COLOR )
 	)
 	{
-		return NULL;
+		return false;
 	}
 
-	const OSLQuery::Parameter *basisParameter = query.getparam( nameWithoutSuffix + "Basis" );
+	basisParameter = query.getparam( nameWithoutSuffix + "Basis" );
 	if( !basisParameter || basisParameter->type != TypeDesc::TypeString )
+	{
+		return false;
+	}
+
+	return true;
+}
+
+Plug *loadSplineParameter( const OSLQuery &query, const OSLQuery::Parameter *parameter, Gaffer::Plug *parent, const std::string &prefix )
+{
+
+	string nameWithoutSuffix;
+	const OSLQuery::Parameter *positionsParameter;
+	const OSLQuery::Parameter *valuesParameter;
+	const OSLQuery::Parameter *basisParameter;
+
+	if( !findSplineParameters( query, parameter, nameWithoutSuffix, positionsParameter, valuesParameter, basisParameter ) )
 	{
 		return NULL;
 	}
@@ -514,7 +555,7 @@ Plug *loadSplineParameter( const OSLQuery &query, const OSLQuery::Parameter *par
 }
 
 // Forward declaration so loadStructParameter() can call it.
-void loadShaderParameters( const OSLQuery &query, Gaffer::Plug *parent, const std::string &prefix = "" );
+void loadShaderParameters( const OSLQuery &query, Gaffer::Plug *parent, const CompoundData *metadata, const std::string &prefix = "" );
 
 Plug *loadStructParameter( const OSLQuery &query, const OSLQuery::Parameter *parameter, const InternedString &name, Gaffer::Plug *parent )
 {
@@ -539,14 +580,18 @@ Plug *loadStructParameter( const OSLQuery &query, const OSLQuery::Parameter *par
 		result = existingPlug;
 	}
 
-	loadShaderParameters( query, result, parameter->name.string() + "." );
+	/// \todo Should we support metadata on the children of a struct parameter?
+	/// The OSL spec doesn't appear to standardize a way to specify this.
+	/// We could attach metadata to the struct, but would it then be named
+	/// something like "structElementName_min"?
+	loadShaderParameters( query, result, NULL, parameter->name.string() + "." );
 
 	parent->setChild( name, result );
 
 	return result;
 }
 
-Plug *loadShaderParameter( const OSLQuery &query, const OSLQuery::Parameter *parameter, const InternedString &name, Gaffer::Plug *parent )
+Plug *loadShaderParameter( const OSLQuery &query, const OSLQuery::Parameter *parameter, const InternedString &name, Gaffer::Plug *parent, const CompoundData *metadata )
 {
 	Plug *result = NULL;
 
@@ -567,11 +612,11 @@ Plug *loadShaderParameter( const OSLQuery &query, const OSLQuery::Parameter *par
 			{
 				if( parameter->type.basetype == TypeDesc::FLOAT )
 				{
-					result = loadNumericParameter<FloatPlug>( parameter, name, parent );
+					result = loadNumericParameter<FloatPlug>( parameter, name, parent, metadata );
 				}
 				else
 				{
-					result = loadNumericParameter<IntPlug>( parameter, name, parent );
+					result = loadNumericParameter<IntPlug>( parameter, name, parent, metadata );
 				}
 			}
 			else if( parameter->type.aggregate == TypeDesc::VEC3 )
@@ -580,16 +625,16 @@ Plug *loadShaderParameter( const OSLQuery &query, const OSLQuery::Parameter *par
 				{
 					if( parameter->type.vecsemantics == TypeDesc::COLOR )
 					{
-						result = loadCompoundNumericParameter<Color3fPlug>( parameter, name, parent );
+						result = loadCompoundNumericParameter<Color3fPlug>( parameter, name, parent, metadata );
 					}
 					else
 					{
-						result = loadCompoundNumericParameter<V3fPlug>( parameter, name, parent );
+						result = loadCompoundNumericParameter<V3fPlug>( parameter, name, parent, metadata );
 					}
 				}
 				else
 				{
-					result = loadCompoundNumericParameter<V3iPlug>( parameter, name, parent );
+					result = loadCompoundNumericParameter<V3iPlug>( parameter, name, parent, metadata );
 				}
 			}
 			else if( parameter->type.aggregate == TypeDesc::MATRIX44 )
@@ -618,7 +663,7 @@ Plug *loadShaderParameter( const OSLQuery &query, const OSLQuery::Parameter *par
 	return result;
 }
 
-void loadShaderParameters( const OSLQuery &query, Gaffer::Plug *parent, const std::string &prefix )
+void loadShaderParameters( const OSLQuery &query, Gaffer::Plug *parent, const CompoundData *metadata, const std::string &prefix )
 {
 
 	// Make sure we have a plug to represent each parameter, reusing plugs wherever possible.
@@ -652,7 +697,14 @@ void loadShaderParameters( const OSLQuery &query, Gaffer::Plug *parent, const st
 		const Plug *plug = loadSplineParameter( query, parameter, parent, prefix );
 		if( !plug )
 		{
-			plug = loadShaderParameter( query, parameter, name, parent );
+			const CompoundData *parameterMetadata = NULL;
+			if( metadata )
+			{
+				parameterMetadata = metadata->member<IECore::CompoundData>( name );
+			}
+			
+
+			plug = loadShaderParameter( query, parameter, name, parent, parameterMetadata );
 		}
 
 		if( plug )
@@ -699,7 +751,19 @@ void OSLShader::loadShader( const std::string &shaderName, bool keepExistingValu
 		}
 	}
 
-	loadShaderParameters( query, parametersPlug() );
+	m_metadata = NULL;
+	namePlug()->setValue( shaderName );
+	typePlug()->setValue( std::string( "osl:" ) + query.shadertype().c_str() );
+
+	const IECore::CompoundData *metadata = OSLShader::metadata();
+	const IECore::CompoundData *parameterMetadata = NULL;
+	if( metadata )
+	{
+		parameterMetadata = metadata->member<IECore::CompoundData>( "parameter" );
+	}
+	
+
+	loadShaderParameters( query, parametersPlug(), parameterMetadata );
 
 	if( !existingOut || existingOut->typeId() != Plug::staticTypeId() )
 	{
@@ -719,13 +783,10 @@ void OSLShader::loadShader( const std::string &shaderName, bool keepExistingValu
 
 	if( query.shadertype() == "shader" )
 	{
-		loadShaderParameters( query, outPlug() );
+		loadShaderParameters( query, outPlug(), parameterMetadata );
 	}
 
-	namePlug()->setValue( shaderName );
-	typePlug()->setValue( std::string( "osl:" ) + query.shadertype().c_str() );
 
-	m_metadata = NULL;
 }
 
 //////////////////////////////////////////////////////////////////////////
@@ -745,6 +806,36 @@ static IECore::DataPtr convertMetadata( const OSLQuery::Parameter &metadata )
 	else if( metadata.type == TypeDesc::STRING )
 	{
 		return new IECore::StringData( metadata.sdefault[0].c_str() );
+	}
+	else if( metadata.type.aggregate == TypeDesc::VEC3 )
+	{
+		if( metadata.type.basetype == TypeDesc::FLOAT )
+		{
+			if( metadata.type.vecsemantics == TypeDesc::COLOR )
+			{
+				return new IECore::Color3fData( Imath::Color3f(
+					metadata.fdefault[0],
+					metadata.fdefault[1],
+					metadata.fdefault[2]
+				) );
+			}
+			else
+			{
+				return new IECore::V3fData( Imath::V3f(
+					metadata.fdefault[0],
+					metadata.fdefault[1],
+					metadata.fdefault[2]
+				) );
+			}
+		}
+		else
+		{
+			return new IECore::V3iData( Imath::V3i(
+				metadata.idefault[0],
+				metadata.idefault[1],
+				metadata.idefault[2]
+			) );
+		}
 	}
 	else if( metadata.type.arraylen > 0 )
 	{
@@ -810,7 +901,29 @@ static IECore::ConstCompoundDataPtr metadataGetter( const std::string &key, size
 		const OSLQuery::Parameter *parameter = query.getparam( i );
 		if( parameter->metadata.size() )
 		{
-			parameterMetadata->writable()[parameter->name.c_str()] = convertMetadata( parameter->metadata );
+			string nameWithoutSuffix;
+			const OSLQuery::Parameter *positionsParameter;
+			const OSLQuery::Parameter *valuesParameter;
+			const OSLQuery::Parameter *basisParameter;
+
+			// If this parameter is part of a spline, register the metadata onto the spline plug
+			if( findSplineParameters( query, parameter, nameWithoutSuffix, positionsParameter, valuesParameter, basisParameter ) )
+			{
+				// We merge metadata found on all the parameters that make up the plug, but in no particular order.
+				// If you specify conflicting metadata on the different parameters you may get inconsistent results.
+				CompoundData *prevData = parameterMetadata->member<CompoundData>( nameWithoutSuffix );
+				CompoundDataPtr data = convertMetadata( parameter->metadata );
+				if( prevData )
+				{
+					data->writable().insert( prevData->readable().begin(), prevData->readable().end() );
+				}
+				
+				parameterMetadata->writable()[nameWithoutSuffix] = data;
+			}
+			else
+			{
+				parameterMetadata->writable()[parameter->name.c_str()] = convertMetadata( parameter->metadata );
+			}
 		}
 	}
 
