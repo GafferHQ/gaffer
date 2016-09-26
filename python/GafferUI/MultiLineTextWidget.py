@@ -46,8 +46,9 @@ QtCore = GafferUI._qtImport( "QtCore" )
 class MultiLineTextWidget( GafferUI.Widget ) :
 
 	WrapMode = IECore.Enum.create( "None", "Word", "Character", "WordOrCharacter" )
+	Role = IECore.Enum.create( "Text", "Code" )
 
-	def __init__( self, text="", editable=True, wrapMode=WrapMode.WordOrCharacter, fixedLineHeight=None, **kw ) :
+	def __init__( self, text="", editable=True, wrapMode=WrapMode.WordOrCharacter, fixedLineHeight=None, role=Role.Text, **kw ) :
 
 		GafferUI.Widget.__init__( self, _PlainTextEdit(), **kw )
 
@@ -69,6 +70,7 @@ class MultiLineTextWidget( GafferUI.Widget ) :
 		self.setEditable( editable )
 		self.setWrapMode( wrapMode )
 		self.setFixedLineHeight( fixedLineHeight )
+		self.setRole( role )
 
 		self.__dragEnterConnection = self.dragEnterSignal().connect( Gaffer.WeakMethod( self.__dragEnter ) )
 		self.__dragMoveConnection = self.dragMoveSignal().connect( Gaffer.WeakMethod( self.__dragMove ) )
@@ -214,6 +216,22 @@ class MultiLineTextWidget( GafferUI.Widget ) :
 	def getFocussed( self ) :
 
 		return self._qtWidget().hasFocus()
+
+	def setRole( self, role ) :
+
+		if role == self.getRole() :
+			return
+
+		self._qtWidget().setProperty( "gafferRole", GafferUI._Variant.toVariant( str( role ) ) )
+		self._repolish()
+
+	def getRole( self ) :
+
+		role = GafferUI._Variant.fromVariant( self._qtWidget().property( "gafferRole" ) )
+		if role is None :
+			return self.Role.Text
+
+		return getattr( self.Role, role )
 
 	## A signal emitted when the widget loses focus.
 	def editingFinishedSignal( self ) :

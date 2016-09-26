@@ -215,6 +215,12 @@ _styleSheet = string.Template(
 
 	}
 
+	QPlainTextEdit[gafferRole="Code"] {
+
+		font-family: monospace;
+
+	}
+
 	QLineEdit:focus, QPlainTextEdit[readOnly="false"]:focus, QLineEdit[gafferHighlighted=\"true\"] {
 
 		border: 2px solid $brightColor;
