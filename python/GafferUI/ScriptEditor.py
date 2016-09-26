@@ -59,8 +59,15 @@ class ScriptEditor( GafferUI.EditorWidget ) :
 
 		GafferUI.EditorWidget.__init__( self, self.__splittable, scriptNode, **kw )
 
-		self.__outputWidget = GafferUI.MultiLineTextWidget( editable = False, wrapMode = GafferUI.MultiLineTextWidget.WrapMode.None )
-		self.__inputWidget = GafferUI.MultiLineTextWidget( wrapMode = GafferUI.MultiLineTextWidget.WrapMode.None )
+		self.__outputWidget = GafferUI.MultiLineTextWidget(
+			editable = False,
+			wrapMode = GafferUI.MultiLineTextWidget.WrapMode.None,
+			role = GafferUI.MultiLineTextWidget.Role.Code,
+		)
+		self.__inputWidget = GafferUI.MultiLineTextWidget(
+			wrapMode = GafferUI.MultiLineTextWidget.WrapMode.None,
+			role = GafferUI.MultiLineTextWidget.Role.Code,
+		)
 
 		self.__splittable.append( self.__outputWidget )
 		self.__splittable.append( self.__inputWidget )
