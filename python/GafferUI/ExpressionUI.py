@@ -114,6 +114,9 @@ def __editExpression( plug ) :
 def __popupMenu( menuDefinition, plugValueWidget ) :
 
 	plug = plugValueWidget.getPlug()
+	if not isinstance( plug, Gaffer.ValuePlug ) :
+		return
+
 	node = plug.node()
 	if node is None or node.parent() is None :
 		return
