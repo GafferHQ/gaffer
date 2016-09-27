@@ -53,13 +53,21 @@ import GafferArnold
 # fairly bare wrapping using ctypes.
 ##########################################################################
 
-def __aiMetadataGetStr( nodeEntry, paramName, name ) :
+def __aiMetadataGetStr( nodeEntry, paramName, name, defaultValue = None ) :
 
 	value = arnold.AtString()
 	if arnold.AiMetaDataGetStr( nodeEntry, paramName, name, value ) :
 		return value.value
 
-	return None
+	return defaultValue
+
+def __aiMetadataGetBool( nodeEntry, paramName, name, defaultValue = None ) :
+
+	value = ctypes.c_bool()
+	if arnold.AiMetaDataGetBool( nodeEntry, paramName, name, value ) :
+		return bool( value )
+
+	return defaultValue
 
 ##########################################################################
 # Build a registry of information retrieved from Arnold metadata. We fill this
@@ -109,6 +117,16 @@ with IECoreArnold.UniverseBlock() :
 				__metadata[paramPath]["presetNames"] = presets
 				__metadata[paramPath]["presetValues"] = presets
 
+			linkable = __aiMetadataGetBool(
+				nodeEntry, paramName, "linkable",
+				defaultValue = paramType not in (
+					arnold.AI_TYPE_BYTE, arnold.AI_TYPE_INT, arnold.AI_TYPE_UINT,
+					arnold.AI_TYPE_BOOLEAN, arnold.AI_TYPE_ENUM, arnold.AI_TYPE_STRING
+				)
+			)
+			__metadata[paramPath]["nodule:type"] = "GafferUI::StandardNodule" if linkable else ""
+
+
 ##########################################################################
 # Gaffer Metadata queries. These are implemented using the preconstructed
 # registry above.
@@ -137,23 +155,16 @@ def __plugMetadata( plug, name ) :
 
 	return __metadata[key].get( name )
 
-def __noduleType( plug ) :
-
-	if isinstance( plug, ( Gaffer.BoolPlug, Gaffer.IntPlug, Gaffer.StringPlug ) ) :
-		return ""
-
-	return "GafferUI::StandardNodule"
-
 for nodeType in ( GafferArnold.ArnoldShader, GafferArnold.ArnoldLight ) :
 
 	Gaffer.Metadata.registerNodeValue( nodeType, "description", __nodeDescription )
-	GafferUI.Metadata.registerPlugValue( nodeType, "parameters.*", "nodule:type", __noduleType )
 
 	for name in [
 		"description",
 		"presetNames",
 		"presetValues",
-		"plugValueWidget:type"
+		"plugValueWidget:type",
+		"nodule:type",
 	] :
 
 		Gaffer.Metadata.registerPlugValue(
