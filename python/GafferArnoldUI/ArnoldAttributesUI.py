@@ -74,7 +74,7 @@ def __subdivisionSummary( plug ) :
 
 	info = []
 	if plug["subdividePolygons"]["enabled"].getValue() :
-		info.append( "Subdivide Polygons " + "On" if plug["subdividePolygons"]["value"].getValue() else "Off" )
+		info.append( "Subdivide Polygons " + ( "On" if plug["subdividePolygons"]["value"].getValue() else "Off" ) )
 	if plug["subdivIterations"]["enabled"].getValue() :
 		info.append( "Iterations %d" % plug["subdivIterations"]["value"].getValue() )
 	if plug["subdivAdaptiveError"]["enabled"].getValue() :

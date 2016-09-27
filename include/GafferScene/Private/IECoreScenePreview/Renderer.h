@@ -148,8 +148,12 @@ class Renderer : public IECore::RefCounted
 				virtual void transform( const std::vector<Imath::M44f> &samples, const std::vector<float> &times ) = 0;
 				/// Assigns a new block of attributes to the object, replacing any
 				/// previously assigned attributes. This may only be used in Interactive
-				/// mode, and then only when the renderer is paused.
-				virtual void attributes( const AttributesInterface *attributes ) = 0;
+				/// mode, and then only when the renderer is paused. Returns true on
+				/// success and false if the entire object must be replaced in order
+				/// to produce the requested update - this is necessary for renderers
+				/// such as Arnold where the attributes are not orthogonal to the
+				/// geometric representation.
+				virtual bool attributes( const AttributesInterface *attributes ) = 0;
 
 			protected :
 
