@@ -73,6 +73,23 @@ def __aiMetadataGetBool( nodeEntry, paramName, name, defaultValue = None ) :
 # Build a registry of information retrieved from Arnold metadata. We fill this
 # once at startup, as we can only get it from within an AiUniverse block,
 # and we don't want to have to keep making those temporarily later.
+#
+# We take a pragmatic approach to what metadata we support, since there
+# are multiple conflicting "standards" in use in practice. In order of
+# precedence (most important first), we aim to support the following :
+#
+# - Arnold's metadata convention. This doesn't define much, but gives
+#   us min/max/desc/linkable.
+# - The OSL metadata convention. This gives us a bit more, and is also
+#   the convention we support already for RSL and OSL shaders.
+# - Houdini's metadata convention. We support this so that we can pull
+#   otherwise unavailable information out of 3rd party shaders - AlShaders
+#   in particular.
+#
+# The alternative to this would be to add one more "standard" by defining
+# a Gaffer-specific convention, and then contribute to the AlShaders
+# project to add all the necessary metadata. This would be more work
+# for no real gain.
 ##########################################################################
 
 __metadata = collections.defaultdict( dict )
@@ -85,9 +102,23 @@ with IECoreArnold.UniverseBlock() :
 		nodeEntry = arnold.AiNodeEntryIteratorGetNext( nodeIt )
 		nodeName = arnold.AiNodeEntryGetName( nodeEntry )
 
-		description = __aiMetadataGetStr( nodeEntry, None, "desc" )
+		# Shader description. We support Arnold-style "desc" and
+		# OSL style "help".
+
+		description = __aiMetadataGetStr( nodeEntry, None, "desc",
+			defaultValue = __aiMetadataGetStr( nodeEntry, None, "help" )
+		)
 		if description is not None :
 			__metadata[nodeName]["description"] = description
+
+		# Documentation URL. We support OSL-style "URL" and
+		# Houdini-style "help_url".
+
+		url = __aiMetadataGetStr( nodeEntry, None, "URL",
+			defaultValue = __aiMetadataGetStr( nodeEntry, None, "houdini.help_url" )
+		)
+		if url is not None :
+			__metadata[nodeName]["documentation:url"] = url
 
 		paramIt = arnold.AiNodeEntryGetParamIterator( nodeEntry )
 		while not arnold.AiParamIteratorFinished( paramIt ) :
@@ -98,9 +129,13 @@ with IECoreArnold.UniverseBlock() :
 			paramName = arnold.AiParamGetName( param )
 			paramPath = nodeName + "." + paramName
 
+			# Parameter description
+
 			description = __aiMetadataGetStr( nodeEntry, paramName, "desc" )
 			if description is not None :
 				__metadata[paramPath]["description"] = description
+
+			# Parameter presets from enum values
 
 			paramType = arnold.AiParamGetType( param )
 			if paramType == arnold.AI_TYPE_ENUM :
@@ -117,6 +152,8 @@ with IECoreArnold.UniverseBlock() :
 				__metadata[paramPath]["presetNames"] = presets
 				__metadata[paramPath]["presetValues"] = presets
 
+			# Nodule type from linkable metadata and parameter type
+
 			linkable = __aiMetadataGetBool(
 				nodeEntry, paramName, "linkable",
 				defaultValue = paramType not in (
@@ -125,7 +162,6 @@ with IECoreArnold.UniverseBlock() :
 				)
 			)
 			__metadata[paramPath]["nodule:type"] = "GafferUI::StandardNodule" if linkable else ""
-
 
 ##########################################################################
 # Gaffer Metadata queries. These are implemented using the preconstructed
@@ -145,6 +181,16 @@ def __nodeDescription( node ) :
 			"""Loads an Arnold light shader and uses it to output a scene with a single light."""
 		)
 
+def __nodeMetadata( node, name ) :
+
+	if isinstance( node, GafferArnold.ArnoldShader ) :
+		key = node["name"].getValue()
+	else :
+		# Node type is ArnoldLight.
+		key = node["__shaderName"].getValue()
+
+	return __metadata[key].get( name )
+
 def __plugMetadata( plug, name ) :
 
 	if isinstance( plug.node(), GafferArnold.ArnoldShader ) :
@@ -158,6 +204,9 @@ def __plugMetadata( plug, name ) :
 for nodeType in ( GafferArnold.ArnoldShader, GafferArnold.ArnoldLight ) :
 
 	Gaffer.Metadata.registerNodeValue( nodeType, "description", __nodeDescription )
+
+	for name in [ "documentation:url" ] :
+		Gaffer.Metadata.registerNodeValue( nodeType, name, functools.partial( __nodeMetadata, name = name ) )
 
 	for name in [
 		"description",
