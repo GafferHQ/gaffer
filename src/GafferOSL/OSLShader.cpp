@@ -48,6 +48,7 @@
 #include "Gaffer/CompoundNumericPlug.h"
 #include "Gaffer/StringPlug.h"
 #include "Gaffer/SplinePlug.h"
+#include "Gaffer/Metadata.h"
 
 #include "GafferScene/RendererAlgo.h"
 
@@ -702,7 +703,7 @@ void loadShaderParameters( const OSLQuery &query, Gaffer::Plug *parent, const Co
 			{
 				parameterMetadata = metadata->member<IECore::CompoundData>( name );
 			}
-			
+
 
 			plug = loadShaderParameter( query, parameter, name, parent, parameterMetadata );
 		}
@@ -730,6 +731,19 @@ void loadShaderParameters( const OSLQuery &query, Gaffer::Plug *parent, const Co
 
 void OSLShader::loadShader( const std::string &shaderName, bool keepExistingValues )
 {
+	Plug *existingOut = outPlug();
+	if( shaderName.empty() )
+	{
+		parametersPlug()->clearChildren();
+		namePlug()->setValue( "" );
+		typePlug()->setValue( "" );
+		if( existingOut )
+		{
+			existingOut->clearChildren();
+		}
+		return;
+	}
+
 	const char *searchPath = getenv( "OSL_SHADER_PATHS" );
 
 	OSLQuery query;
@@ -738,7 +752,7 @@ void OSLShader::loadShader( const std::string &shaderName, bool keepExistingValu
 		throw Exception( query.geterror() );
 	}
 
-	Plug *existingOut = outPlug();
+	const bool outPlugHadChildren = existingOut ? existingOut->children().size() : false;
 	if( !keepExistingValues )
 	{
 		// If we're not preserving existing values then remove all existing
@@ -761,7 +775,7 @@ void OSLShader::loadShader( const std::string &shaderName, bool keepExistingValu
 	{
 		parameterMetadata = metadata->member<IECore::CompoundData>( "parameter" );
 	}
-	
+
 
 	loadShaderParameters( query, parametersPlug(), parameterMetadata );
 
@@ -785,8 +799,18 @@ void OSLShader::loadShader( const std::string &shaderName, bool keepExistingValu
 	{
 		loadShaderParameters( query, outPlug(), parameterMetadata );
 	}
+	else
+	{
+		outPlug()->clearChildren();
+	}
 
-
+	if( static_cast<bool>( outPlug()->children().size() ) != outPlugHadChildren )
+	{
+		// OSLShaderUI registers a dynamic metadata entry which depends on whether or
+		// not the plug has children, so we must notify the world that the value will
+		// have changed.
+		Metadata::plugValueChangedSignal()( staticTypeId(), "out", "nodule:type", outPlug() );
+	}
 }
 
 //////////////////////////////////////////////////////////////////////////
@@ -917,7 +941,7 @@ static IECore::ConstCompoundDataPtr metadataGetter( const std::string &key, size
 				{
 					data->writable().insert( prevData->readable().begin(), prevData->readable().end() );
 				}
-				
+
 				parameterMetadata->writable()[nameWithoutSuffix] = data;
 			}
 			else
