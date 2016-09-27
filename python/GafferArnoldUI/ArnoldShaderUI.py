@@ -163,6 +163,24 @@ with IECoreArnold.UniverseBlock() :
 			)
 			__metadata[paramPath]["nodule:type"] = "GafferUI::StandardNodule" if linkable else ""
 
+			# PlugValueWidget type from OSL "widget" or "houdini.type".
+
+			widget = None
+			if __aiMetadataGetStr( nodeEntry, paramName, "houdini.type" ) == "file:image" :
+				widget = "filename"
+			widget = __aiMetadataGetStr( nodeEntry, paramName, "widget", widget )
+			if widget is not None :
+				__metadata[paramPath]["plugValueWidget:type"] = {
+					"number" : "GafferUI.NumericPlugValueWidget",
+					"string" : "GafferUI.StringPlugValueWidget",
+					"boolean" : "GafferUI.BoolPlugValueWidget",
+					"checkBox" : "GafferUI.BoolPlugValueWidget",
+					"popup" : "GafferUI.PresetsPlugValueWidget",
+					"mapper" : "GafferUI.PresetsPlugValueWidget",
+					"filename" : "GafferUI.PathPlugValueWidget",
+					"null" : "",
+				}[widget]
+
 ##########################################################################
 # Gaffer Metadata queries. These are implemented using the preconstructed
 # registry above.
