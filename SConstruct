@@ -650,6 +650,7 @@ libraries = {
 			"LIBS" : [ "Gaffer", "GafferScene", "GafferBindings", "GafferDispatch", "GafferArnold" ],
 		},
 		"requiredOptions" : [ "ARNOLD_ROOT" ],
+		"additionalFiles" : [ "arnold/plugins/gaffer.mtd" ],
 	},
 
 	"GafferArnoldTest" : {
