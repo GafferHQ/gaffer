@@ -134,14 +134,21 @@ class OSLCodeTest( GafferOSLTest.OSLTestCase ) :
 
 	def testMissingSemiColon( self ) :
 
-		n = GafferOSL.OSLCode()
-		n["parameters"]["in"] = Gaffer.IntPlug( flags = Gaffer.Plug.Flags.Default | Gaffer.Plug.Flags.Dynamic )
-		n["out"]["out"] = Gaffer.IntPlug( direction = Gaffer.Plug.Direction.Out, flags = Gaffer.Plug.Flags.Default | Gaffer.Plug.Flags.Dynamic )
+		n1 = GafferOSL.OSLCode()
+		n1["parameters"]["in"] = Gaffer.IntPlug( flags = Gaffer.Plug.Flags.Default | Gaffer.Plug.Flags.Dynamic )
+		n1["out"]["out"] = Gaffer.IntPlug( direction = Gaffer.Plug.Direction.Out, flags = Gaffer.Plug.Flags.Default | Gaffer.Plug.Flags.Dynamic )
+
+		n2 = GafferOSL.OSLCode()
+		n2["parameters"]["in"] = Gaffer.IntPlug( flags = Gaffer.Plug.Flags.Default | Gaffer.Plug.Flags.Dynamic )
+		n2["out"]["out"] = Gaffer.IntPlug( direction = Gaffer.Plug.Direction.Out, flags = Gaffer.Plug.Flags.Default | Gaffer.Plug.Flags.Dynamic )
 
 		# The OSLCode node will often be used to throw in a one-liner,
 		# and omitting a semicolon is an easy mistake that we should
 		# correct automatically.
-		n["code"].setValue( "out = in * 2;" )
+		n1["code"].setValue( "out = in * 2" )
+		n2["code"].setValue( "out = in * 2;" )
+
+		self.assertEqual( self.__osoFileName( n1 ), self.__osoFileName( n2 ) )
 
 	def testAddingAndRemovingPlugsUpdatesShader( self ) :
 
