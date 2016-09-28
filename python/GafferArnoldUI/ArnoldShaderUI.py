@@ -186,6 +186,13 @@ def __translateNodeMetadata( nodeEntry ) :
 			havePages = True
 			__metadata[paramPath]["layout:section"] = page
 
+		# Label from OSL "label" or "houdini.label".
+
+		label = __aiMetadataGetStr( nodeEntry, paramName, "houdini.label" )
+		label = __aiMetadataGetStr( nodeEntry, paramName, "label", label )
+		if label is not None :
+			__metadata[paramPath]["label"] = label
+
 	# If we haven't seen any nice sane OSL "page" metadata, then have
 	# a go at translating the houdini layout metadata. Surely one of the
 	# most tortured ways of defining a UI ever.
