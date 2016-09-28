@@ -2151,7 +2151,20 @@ class AppleseedRenderer : public IECoreScenePreview::Renderer
 			RENDERER_LOG_INFO( "rendering frame..." );
 			asf::Stopwatch<asf::DefaultWallclockTimer> stopwatch;
 			stopwatch.start();
-			m_renderer->render();
+
+			try
+			{
+				m_renderer->render();
+			}
+			catch( const exception &e )
+			{
+				msg( MessageHandler::Error, "AppleseedRenderer", boost::format( "Exception in render thread, what = %s" ) % e.what() );
+			}
+			catch( ... )
+			{
+				msg( MessageHandler::Error, "AppleseedRenderer", "Unknown exception in render thread" );
+			}
+
 			stopwatch.measure();
 
 			// Log the total rendering time.
