@@ -116,7 +116,7 @@ __widgetTypes = {
 	"popup" : "GafferUI.PresetsPlugValueWidget",
 	"mapper" : "GafferUI.PresetsPlugValueWidget",
 	"filename" : "GafferUI.PathPlugValueWidget",
-	"null" : "None",
+	"null" : "",
 }
 
 def __plugWidgetType( plug ) :
