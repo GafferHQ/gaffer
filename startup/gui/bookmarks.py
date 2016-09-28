@@ -45,3 +45,15 @@ bookmarks.add( "Desktop", os.path.expandvars( "$HOME/Desktop" ) )
 
 fontBookmarks = GafferUI.Bookmarks.acquire( application, category="font" )
 fontBookmarks.add( "Gaffer Fonts", os.path.expandvars( "$GAFFER_ROOT/fonts" ) )
+
+shaderBookmarks = GafferUI.Bookmarks.acquire( application, category="shader" )
+defaultShaderDirectory = os.path.expandvars( "$HOME/gaffer/shaders" )
+try :
+	os.makedirs( defaultShaderDirectory )
+except OSError :
+	# makedirs very unhelpfully raises an exception if
+	# the directory already exists, but it might also
+	# raise if it fails. we reraise only in the latter case.
+	if not os.path.isdir( defaultShaderDirectory ) :
+		raise
+shaderBookmarks.setDefault( defaultShaderDirectory )

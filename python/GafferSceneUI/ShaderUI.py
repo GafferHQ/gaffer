@@ -209,10 +209,10 @@ def __nodeName( shaderName ) :
 
 def __loadFromFile( menu, extensions, nodeCreator ) :
 
-	path = Gaffer.FileSystemPath( os.getcwd() )
+	bookmarks = GafferUI.Bookmarks.acquire( menu, category = "shader" )
+	path = Gaffer.FileSystemPath( bookmarks.getDefault( menu ) )
 	path.setFilter( Gaffer.FileSystemPath.createStandardFilter( extensions ) )
 
-	bookmarks = GafferUI.Bookmarks.acquire( menu, category = "shader" )
 	dialogue = GafferUI.PathChooserDialogue( path, title="Load Shader", confirmLabel = "Load", valid=True, leaf=True, bookmarks = bookmarks )
 	path = dialogue.waitForPath( parentWindow = menu.ancestor( GafferUI.ScriptWindow ) )
 
