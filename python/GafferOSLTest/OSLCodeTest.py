@@ -77,7 +77,7 @@ class OSLCodeTest( GafferOSLTest.OSLTestCase ) :
 		# a regular OSLShader node to check it.
 
 		oslShader = GafferOSL.OSLShader()
-		oslShader.loadShader( self._osoFileName( oslCode ) )
+		oslShader.loadShader( self.__osoFileName( oslCode ) )
 
 		self.assertEqual( oslShader["parameters"].keys(), oslCode["parameters"].keys() )
 		self.assertEqual( oslShader["out"].keys(), oslCode["out"].keys() )
@@ -91,10 +91,7 @@ class OSLCodeTest( GafferOSLTest.OSLTestCase ) :
 	def testParseError( self ) :
 
 		n = GafferOSL.OSLCode()
-
-		cs = GafferTest.CapturingSlot( n.errorSignal() )
-		self.assertRaises( RuntimeError, n["code"].setValue, "oops" )
-		self.assertEqual( len( cs ), 1 )
+		self.__assertError( n, n["code"].setValue, "oops" )
 
 	def testParseErrorDoesntDestroyExistingPlugs( self ) :
 
@@ -103,9 +100,18 @@ class OSLCodeTest( GafferOSLTest.OSLTestCase ) :
 		n["out"]["out"] = Gaffer.IntPlug( direction = Gaffer.Plug.Direction.Out, flags = Gaffer.Plug.Flags.Default | Gaffer.Plug.Flags.Dynamic )
 		originalPlugs = n["parameters"].children() + n["out"].children()
 
-	 	self.assertRaises( RuntimeError, n["code"].setValue, "oops" )
+		self.__assertError( n, n["code"].setValue, "oops" )
 
-	 	self.assertEqual( n["parameters"].children() + n["out"].children(), originalPlugs )
+		self.assertEqual( n["parameters"].children() + n["out"].children(), originalPlugs )
+
+	def testChildAddedSignalNotSuppressedByError( self ) :
+
+		n = GafferOSL.OSLCode()
+		self.__assertError( n, n["code"].setValue, "oops" )
+
+		cs = GafferTest.CapturingSlot( n["parameters"].childAddedSignal() )
+		n["parameters"]["in"] = Gaffer.IntPlug( flags = Gaffer.Plug.Flags.Default | Gaffer.Plug.Flags.Dynamic )
+		self.assertEqual( len( cs ), 1 )
 
 	def testEmpty( self ) :
 
@@ -115,15 +121,15 @@ class OSLCodeTest( GafferOSLTest.OSLTestCase ) :
 		# added.
 
 		n = GafferOSL.OSLCode()
-		self.assertTrue( self._osoFileName( n ) )
+		self.assertTrue( self.__osoFileName( n ) )
 		self.assertEqual( n["type"].getValue(), "osl:shader" )
 
 		n["code"].setValue( "//" )
-		self.assertTrue( self._osoFileName( n ) )
+		self.assertTrue( self.__osoFileName( n ) )
 		self.assertEqual( n["type"].getValue(), "osl:shader" )
 
 		n["code"].setValue( "" )
-		self.assertTrue( self._osoFileName( n ) )
+		self.assertTrue( self.__osoFileName( n ) )
 		self.assertEqual( n["type"].getValue(), "osl:shader" )
 
 	def testMissingSemiColon( self ) :
@@ -144,7 +150,7 @@ class OSLCodeTest( GafferOSLTest.OSLTestCase ) :
 		oslCode["out"]["out"] = Gaffer.IntPlug( direction = Gaffer.Plug.Direction.Out, flags = Gaffer.Plug.Flags.Default | Gaffer.Plug.Flags.Dynamic )
 
 		oslShader = GafferOSL.OSLShader()
-		oslShader.loadShader( self._osoFileName( oslCode ) )
+		oslShader.loadShader( self.__osoFileName( oslCode ) )
 		self.assertTrue( "in" in oslShader["parameters"] )
 		self.assertTrue( "out" in oslShader["out"] )
 
@@ -183,7 +189,7 @@ class OSLCodeTest( GafferOSLTest.OSLTestCase ) :
 		# node to verify it.
 
 		oslShader = GafferOSL.OSLShader()
-		oslShader.loadShader( self._osoFileName( oslCode ) )
+		oslShader.loadShader( self.__osoFileName( oslCode ) )
 
 		self.assertEqual( repr( oslShader["parameters"]["sp"] ), repr( oslCode["parameters"]["sp"] ) )
 
@@ -193,9 +199,9 @@ class OSLCodeTest( GafferOSLTest.OSLTestCase ) :
 		oslCode["out"]["o"] = Gaffer.Color3fPlug( direction = Gaffer.Plug.Direction.Out, flags = Gaffer.Plug.Flags.Default | Gaffer.Plug.Flags.Dynamic )
 		oslCode["code"].setValue( "o = color( 0, 1, 0 );" )
 
-		info = subprocess.check_output( [ "oslinfo", self._osoFileName( oslCode ) ] )
+		info = subprocess.check_output( [ "oslinfo", self.__osoFileName( oslCode ) ] )
 		self.assertTrue(
-			info.startswith( "shader \"{0}\"".format( os.path.basename( self._osoFileName( oslCode ) ) ) )
+			info.startswith( "shader \"{0}\"".format( os.path.basename( self.__osoFileName( oslCode ) ) ) )
 		)
 
 	def testSerialisation( self ) :
@@ -209,37 +215,37 @@ class OSLCodeTest( GafferOSLTest.OSLTestCase ) :
 		s2 = Gaffer.ScriptNode()
 		s2.execute( s.serialise() )
 
-		self.assertEqual( self._osoFileName( s2["o"] ), self._osoFileName( s["o"] ) )
+		self.assertEqual( self.__osoFileName( s2["o"] ), self.__osoFileName( s["o"] ) )
 
 	def testUndo( self ) :
 
 		s = Gaffer.ScriptNode()
 		s["o"] = GafferOSL.OSLCode()
 
-		f1 = self._osoFileName( s["o"] )
+		f1 = self.__osoFileName( s["o"] )
 
 		with Gaffer.UndoContext( s ) :
 			s["o"]["parameters"]["i"] = Gaffer.Color3fPlug( flags = Gaffer.Plug.Flags.Default | Gaffer.Plug.Flags.Dynamic )
 			s["o"]["out"]["o"] = Gaffer.Color3fPlug( direction = Gaffer.Plug.Direction.Out, flags = Gaffer.Plug.Flags.Default | Gaffer.Plug.Flags.Dynamic )
 
-		f2 = self._osoFileName( s["o"] )
+		f2 = self.__osoFileName( s["o"] )
 
 		with Gaffer.UndoContext( s ) :
 			s["o"]["code"].setValue( "o = i * color( u, v, 0 );")
 
-		f3 = self._osoFileName( s["o"] )
+		f3 = self.__osoFileName( s["o"] )
 
 		s.undo()
-		self.assertEqual( self._osoFileName( s["o"] ), f2 )
+		self.assertEqual( self.__osoFileName( s["o"] ), f2 )
 
 		s.undo()
-		self.assertEqual( self._osoFileName( s["o"] ), f1 )
+		self.assertEqual( self.__osoFileName( s["o"] ), f1 )
 
 		s.redo()
-		self.assertEqual( self._osoFileName( s["o"] ), f2 )
+		self.assertEqual( self.__osoFileName( s["o"] ), f2 )
 
 		s.redo()
-		self.assertEqual( self._osoFileName( s["o"] ), f3 )
+		self.assertEqual( self.__osoFileName( s["o"] ), f3 )
 
 	def testSource( self ) :
 
@@ -274,7 +280,7 @@ class OSLCodeTest( GafferOSLTest.OSLTestCase ) :
 		for p in oslShader["out"].children() :
 			self.assertEqual( repr( p ), repr( oslCode["out"][p.getName()] ) )
 
-	def _osoFileName( self, oslCode ) :
+	def __osoFileName( self, oslCode ) :
 
 		# Right now we could get this information by
 		# getting the value directly from the "name" plug
@@ -287,6 +293,15 @@ class OSLCodeTest( GafferOSLTest.OSLTestCase ) :
 		# mandate the existence of "name" and "type" plugs.
 
 		return oslCode.attributes()["osl:shader"][0].name
+
+	def __assertError( self, oslCode, fn, *args, **kw ) :
+
+		cs = GafferTest.CapturingSlot( oslCode.errorSignal() )
+
+		fn( *args, **kw )
+		self.__osoFileName( oslCode )
+
+		self.assertEqual( len( cs ), 1 )
 
 if __name__ == "__main__":
 	unittest.main()

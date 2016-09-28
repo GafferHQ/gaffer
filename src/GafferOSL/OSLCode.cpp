@@ -397,8 +397,40 @@ OSLCode::ShaderCompiledSignal &OSLCode::shaderCompiledSignal()
 
 void OSLCode::updateShader()
 {
-	CompileProcess compileProcess( this );
-	shaderCompiledSignal()();
+	try
+	{
+		CompileProcess compileProcess( this );
+		shaderCompiledSignal()();
+	}
+	catch( ... )
+	{
+		// We call updateShader() from `plugSet()`
+		// and `parameterAddedOrRemoved()`, and the
+		// client code that set the plug or added
+		// the parameter is not designed to deal with
+		// such fundamental actions throwing. So we suppress
+		// any exceptions here rather than let them
+		// percolate back out to the caller.
+		//
+		// This doesn't affect the exception handling
+		// already being performed by the CompileProcess,
+		// so we're not totally suppressing errors - they're
+		// still being reported via errorSignal().
+		//
+		// When we refactor to perform the shader
+		// generation on the fly at network
+		// generation time, this will not be necessary
+		// because client code for performing
+		// computations is designed to handle exceptions.
+		//
+		/// \todo There might well be a case for redefining
+		/// the signals themselves to use a CatchingSignalCombiner,
+		/// since then we'd be making the whole system robust
+		/// to badly behaving slots. Currently we have
+		/// a mixture of catching and non-catching signals,
+		/// but I think that's mostly a historical artifact
+		/// rather than through any thought-out design.
+	}
 }
 
 void OSLCode::plugSet( const Gaffer::Plug *plug )
