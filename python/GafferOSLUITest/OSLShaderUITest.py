@@ -1,6 +1,6 @@
 ##########################################################################
 #
-#  Copyright (c) 2015, Image Engine Design Inc. All rights reserved.
+#  Copyright (c) 2016, Image Engine Design Inc. All rights reserved.
 #
 #  Redistribution and use in source and binary forms, with or without
 #  modification, are permitted provided that the following conditions are
@@ -34,8 +34,43 @@
 #
 ##########################################################################
 
-from DocumentationTest import DocumentationTest
-from OSLShaderUITest import OSLShaderUITest
+import os
+
+import GafferUI
+
+import GafferOSL
+import GafferOSLTest
+import GafferOSLUI
+
+class OSLShaderUITest( GafferOSLTest.OSLTestCase ) :
+
+	def testChangingOutputNodules( self ) :
+
+		shaderDirectory = os.path.join(
+			os.path.dirname( __file__ ).replace( "GafferOSLUITest", "GafferOSLTest" ),
+			"shaders"
+		)
+		surfaceShader = self.compileShader( os.path.join( shaderDirectory, "constant.osl" ) )
+		utilityShader1 = self.compileShader( os.path.join( shaderDirectory, "version1.osl" ) )
+		utilityShader2 = self.compileShader( os.path.join( shaderDirectory, "outputTypes.osl" ) )
+
+		node = GafferOSL.OSLShader()
+		nodeGadget = GafferUI.NodeGadget.create( node )
+
+		node.loadShader( surfaceShader )
+		self.assertTrue( isinstance( nodeGadget.nodule( node["out"] ), GafferUI.StandardNodule ) )
+
+		node.loadShader( utilityShader1 )
+		self.assertTrue( isinstance( nodeGadget.nodule( node["out"] ), GafferUI.CompoundNodule ) )
+		self.assertTrue( isinstance( nodeGadget.nodule( node["out"]["c"] ), GafferUI.StandardNodule ) )
+
+		node.loadShader( utilityShader2 )
+		self.assertTrue( isinstance( nodeGadget.nodule( node["out"] ), GafferUI.CompoundNodule ) )
+		self.assertTrue( isinstance( nodeGadget.nodule( node["out"]["i"] ), GafferUI.StandardNodule ) )
+		self.assertTrue( isinstance( nodeGadget.nodule( node["out"]["f"] ), GafferUI.StandardNodule ) )
+
+		node.loadShader( surfaceShader )
+		self.assertTrue( isinstance( nodeGadget.nodule( node["out"] ), GafferUI.StandardNodule ) )
 
 if __name__ == "__main__":
 	unittest.main()

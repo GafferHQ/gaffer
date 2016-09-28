@@ -53,6 +53,9 @@ def __nodeDescription( node ) :
 	description = node.shaderMetadata( "help" )
 	return description or __defaultDescription
 
+def __nodeUrl( node ) :
+	return node.shaderMetadata( "URL" )
+
 def __plugDescription( plug ) :
 
 	return plug.node().parameterMetadata( plug, "help" ) or ""
@@ -64,6 +67,10 @@ def __plugLabel( plug ) :
 def __plugDivider( plug ) :
 
 	return plug.node().parameterMetadata( plug, "divider" ) or False
+
+def __plugPage( plug ) :
+
+	return plug.node().parameterMetadata( plug, "page" ) or None
 
 def __plugPresetNames( plug ) :
 
@@ -118,6 +125,10 @@ def __plugWidgetType( plug ) :
 		plug.node().parameterMetadata( plug, "widget" )
 	)
 
+def __plugNoduleType( plug ) :
+
+	return "" if plug.node().parameterMetadata( plug, "connectable" ) == 0 else "GafferUI::StandardNodule"
+
 def __outPlugNoduleType( plug ) :
 
 	return "GafferUI::CompoundNodule" if len( plug ) else "GafferUI::StandardNodule"
@@ -127,6 +138,7 @@ Gaffer.Metadata.registerNode(
 	GafferOSL.OSLShader,
 
 	"description", __nodeDescription,
+	"documentation:url", __nodeUrl,
 
 	plugs = {
 
@@ -135,9 +147,11 @@ Gaffer.Metadata.registerNode(
 			"description", __plugDescription,
 			"label", __plugLabel,
 			"layout:divider", __plugDivider,
+			"layout:section", __plugPage,
 			"presetNames", __plugPresetNames,
 			"presetValues", __plugPresetValues,
 			"plugValueWidget:type", __plugWidgetType,
+			"nodule:type", __plugNoduleType,
 
 		],
 

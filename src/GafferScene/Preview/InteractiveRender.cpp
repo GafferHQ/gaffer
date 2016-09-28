@@ -215,23 +215,28 @@ class InteractiveRender::SceneGraph
 
 			if( m_objectInterface )
 			{
-				if( changedComponents & ObjectComponent )
+				if( !(changedComponents & ObjectComponent) )
 				{
-					// New object always needs transform applying.
-					m_objectInterface->transform( m_fullTransform );
-				}
-				else
-				{
-					// Old object needs transform/attributes applying
-					// if they have changed.
+					// Apply attribute update to old object if necessary.
 					if( changedComponents & AttributesComponent )
 					{
-						m_objectInterface->attributes( attributesInterface( renderer ) );
+						if( !m_objectInterface->attributes( attributesInterface( renderer ) ) )
+						{
+							// Failed to apply attributes - must replace entire object.
+							m_objectHash = MurmurHash();
+							if( updateObject( scene->objectPlug(), type, renderer, globals ) )
+							{
+								changedComponents |= ObjectComponent;
+							}
+						}
 					}
-					if( changedComponents & TransformComponent )
-					{
-						m_objectInterface->transform( m_fullTransform );
-					}
+				}
+
+				// If the transform has changed, or we have an entirely new object,
+				// the apply the transform.
+				if( changedComponents & ( ObjectComponent | TransformComponent ) )
+				{
+					m_objectInterface->transform( m_fullTransform );
 				}
 			}
 

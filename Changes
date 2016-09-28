@@ -1,3 +1,14 @@
+0.28.3.0
+========
+
+OSL
+---
+
+- Metadata
+  - Support OSL "page", "connectable", and "URL" metadata
+  - Support metadata on spline plugs
+  - Support min/max metadata
+
 0.28.2.1
 ========
 
