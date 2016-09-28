@@ -165,13 +165,13 @@ class OSLCodeTest( GafferOSLTest.OSLTestCase ) :
 
 		oslCode = GafferOSL.OSLCode()
 		oslCode["out"]["out"] = Gaffer.FloatPlug( direction = Gaffer.Plug.Direction.Out, flags = Gaffer.Plug.Flags.Default | Gaffer.Plug.Flags.Dynamic )
-		oslCode["code"].setValue( 'out = inFloat( "s", 0 );' )
+		self.__assertNoError( oslCode, oslCode["code"].setValue, 'out = inFloat( "s", 0 );' )
 
 	def testImageProcessingFunctions( self ) :
 
 		oslCode = GafferOSL.OSLCode()
 		oslCode["out"]["out"] = Gaffer.FloatPlug( direction = Gaffer.Plug.Direction.Out, flags = Gaffer.Plug.Flags.Default | Gaffer.Plug.Flags.Dynamic )
-		oslCode["code"].setValue( 'out = inChannel( "R", 0 );' )
+		self.__assertNoError( oslCode, oslCode["code"].setValue, 'out = inChannel( "R", 0 );' )
 
 	def testColorSpline( self ) :
 
@@ -315,6 +315,15 @@ class OSLCodeTest( GafferOSLTest.OSLTestCase ) :
 		self.__osoFileName( oslCode )
 
 		self.assertEqual( len( cs ), 1 )
+
+	def __assertNoError( self, oslCode, fn, *args, **kw ) :
+
+		cs = GafferTest.CapturingSlot( oslCode.errorSignal() )
+
+		fn( *args, **kw )
+		self.__osoFileName( oslCode )
+
+		self.assertEqual( len( cs ), 0 )
 
 if __name__ == "__main__":
 	unittest.main()
