@@ -156,6 +156,7 @@ IECore::ConstCompoundObjectPtr AppleseedShaderAdaptor::computeAttributes( const 
 
 	// Build an adapter network if we can.
 
+	bool prependInputNetwork = true;
 	vector<ShaderPtr> adapters;
 	if( firstOutput && firstOutput->isclosure )
 	{
@@ -232,17 +233,23 @@ IECore::ConstCompoundObjectPtr AppleseedShaderAdaptor::computeAttributes( const 
 
 		adapters.push_back( emission );
 		adapters.push_back( material );
+
+		prependInputNetwork = false; // We don't need the original shaders at all
 	}
 
 	// Make a new network with the adapter network
 	// appended onto the input network
 
 	ObjectVectorPtr adaptedNetwork = new ObjectVector();
-	adaptedNetwork->members() = shaderNetwork->members(); // Shallow copy for speed - do not modify in place!
 
-	ShaderPtr rootShaderCopy = rootShader->copy();
-	rootShaderCopy->parameters()[g_handleParameterName] = new StringData( "adapterInputHandle" );;
-	adaptedNetwork->members().back() = rootShaderCopy;
+	if( prependInputNetwork )
+	{
+		adaptedNetwork->members() = shaderNetwork->members(); // Shallow copy for speed - do not modify in place!
+
+		ShaderPtr rootShaderCopy = rootShader->copy();
+		rootShaderCopy->parameters()[g_handleParameterName] = new StringData( "adapterInputHandle" );;
+		adaptedNetwork->members().back() = rootShaderCopy;
+	}
 
 	std::copy( adapters.begin(), adapters.end(), back_inserter( adaptedNetwork->members() ) );
 
