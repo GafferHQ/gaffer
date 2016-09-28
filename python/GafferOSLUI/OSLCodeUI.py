@@ -34,6 +34,7 @@
 #
 ##########################################################################
 
+import os
 import functools
 
 import IECore
@@ -433,6 +434,6 @@ def __exportOSLShader( nodeEditor, node ) :
 	with GafferUI.ErrorDialogue.ExceptionHandler( title = "Error Exporting Shader", parentWindow = nodeEditor.ancestor( GafferUI.Window ) ) :
 		with open( path, "w" ) as f :
 			with nodeEditor.getContext() :
-				f.write( node.source() )
+				f.write( node.source( os.path.splitext( os.path.basename( path ) )[0] ) )
 
 __nodeEditorToolMenuConnection = GafferUI.NodeEditor.toolMenuSignal().connect( __toolMenu )

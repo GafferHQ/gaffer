@@ -155,11 +155,15 @@ string generate( const OSLCode *shader, string &shaderName )
 	result += "\n}\n";
 
 	// The result so far uniquely characterises our shader,
-	// so generate the shader name from its hash.
+	// so generate the shader name from its hash (unless we've
+	// been given a name explicitly).
 
-	IECore::MurmurHash hash;
-	hash.append( result );
-	shaderName = "oslCode" + hash.toString();
+	if( shaderName.empty() )
+	{
+		IECore::MurmurHash hash;
+		hash.append( result );
+		shaderName = "oslCode" + hash.toString();
+	}
 
 	// Now we have the shader name, we can add on the header
 	// for the shader, consisting of a constant set of includes

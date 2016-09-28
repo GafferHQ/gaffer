@@ -280,6 +280,12 @@ class OSLCodeTest( GafferOSLTest.OSLTestCase ) :
 		for p in oslShader["out"].children() :
 			self.assertEqual( repr( p ), repr( oslCode["out"][p.getName()] ) )
 
+	def testSourceUsesRequestedName( self ) :
+
+		oslCode = GafferOSL.OSLCode()
+		source = oslCode.source( "test" )
+		self.assertTrue( "shader test" in source )
+
 	def __osoFileName( self, oslCode ) :
 
 		# Right now we could get this information by
