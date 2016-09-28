@@ -391,6 +391,9 @@ def __plugPopupMenu( menuDefinition, plugValueWidget ) :
 			( "/Texture/Texture", "texture( filename, s, t )" ),
 			( "/Texture/Environment", "environment( filename, R )" ),
 
+			( "/Parameter/Is Connected", "isconnected( parameter )" ),
+			( "/Parameter/Is Constant", "isconstant( parameter )" ),
+
 		] ) :
 
 			menuDefinition.prepend( "/InsertDivider", { "divider" : True } )
