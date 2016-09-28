@@ -398,6 +398,10 @@ ValuePlugPtr CompoundDataPlug::createPlugFromData( const std::string &name, Plug
 		{
 			return typedObjectValuePlug( name, direction, flags, static_cast<const StringVectorData *>( value ) );
 		}
+		case BoolVectorDataTypeId :
+		{
+			return typedObjectValuePlug( name, direction, flags, static_cast<const BoolVectorData *>( value ) );
+		}
 		case V3fVectorDataTypeId :
 		{
 			return typedObjectValuePlug( name, direction, flags, static_cast<const V3fVectorData *>( value ) );
@@ -494,6 +498,8 @@ IECore::DataPtr CompoundDataPlug::extractDataFromPlug( const ValuePlug *plug )
 			return static_cast<const IntVectorDataPlug *>( plug )->getValue()->copy();
 		case StringVectorDataPlugTypeId :
 			return static_cast<const StringVectorDataPlug *>( plug )->getValue()->copy();
+		case BoolVectorDataPlugTypeId :
+			return static_cast<const BoolVectorDataPlug *>( plug )->getValue()->copy();
 		case V3fVectorDataPlugTypeId :
 			return static_cast<const V3fVectorDataPlug *>( plug )->getValue()->copy();
 		case Color3fVectorDataPlugTypeId :
