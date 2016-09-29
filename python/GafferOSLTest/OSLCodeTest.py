@@ -293,6 +293,20 @@ class OSLCodeTest( GafferOSLTest.OSLTestCase ) :
 		source = oslCode.source( "test" )
 		self.assertTrue( "shader test" in source )
 
+	def testParameterRenaming( self ) :
+
+		oslCode = GafferOSL.OSLCode()
+		oslCode["parameters"]["i"] = Gaffer.Color3fPlug( flags = Gaffer.Plug.Flags.Default | Gaffer.Plug.Flags.Dynamic )
+		oslCode["out"]["o"] = Gaffer.Color3fPlug( direction = Gaffer.Plug.Direction.Out, flags = Gaffer.Plug.Flags.Default | Gaffer.Plug.Flags.Dynamic )
+
+		self.__assertError( oslCode, oslCode["code"].setValue, "o = in" )
+
+		cs = GafferTest.CapturingSlot( oslCode.plugDirtiedSignal() )
+		self.__assertNoError( oslCode, oslCode["parameters"]["i"].setName, "in" )
+		self.assertTrue( oslCode["out"] in [ x[0] for x in cs ] )
+
+		self.__assertError( oslCode, oslCode["parameters"]["in"].setName, "i" )
+
 	def __osoFileName( self, oslCode ) :
 
 		# Right now we could get this information by

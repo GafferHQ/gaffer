@@ -76,7 +76,9 @@ class OSLCode : public OSLShader
 
 		void updateShader();
 		void plugSet( const Gaffer::Plug *plug );
-		void parameterAddedOrRemoved( const Gaffer::GraphComponent *parent );
+		void parameterAdded( const Gaffer::GraphComponent *parent, Gaffer::GraphComponent *child );
+		void parameterRemoved( const Gaffer::GraphComponent *parent, Gaffer::GraphComponent *child );
+		void parameterNameChanged();
 
 		static size_t g_firstPlugIndex;
 

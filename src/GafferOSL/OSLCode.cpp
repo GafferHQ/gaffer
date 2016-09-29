@@ -363,11 +363,11 @@ OSLCode::OSLCode( const std::string &name )
 	/// again.
 	addChild( new StringPlug( "code", Plug::In, "", Plug::Default & ~Plug::AcceptsInputs ) );
 
-	parametersPlug()->childAddedSignal().connect( boost::bind( &OSLCode::parameterAddedOrRemoved, this, ::_1 ) );
-	parametersPlug()->childRemovedSignal().connect( boost::bind( &OSLCode::parameterAddedOrRemoved, this, ::_1 ) );
+	parametersPlug()->childAddedSignal().connect( boost::bind( &OSLCode::parameterAdded, this, ::_1, ::_2 ) );
+	parametersPlug()->childRemovedSignal().connect( boost::bind( &OSLCode::parameterRemoved, this, ::_1, ::_2 ) );
 
-	outPlug()->childAddedSignal().connect( boost::bind( &OSLCode::parameterAddedOrRemoved, this, ::_1 ) );
-	outPlug()->childRemovedSignal().connect( boost::bind( &OSLCode::parameterAddedOrRemoved, this, ::_1 ) );
+	outPlug()->childAddedSignal().connect( boost::bind( &OSLCode::parameterAdded, this, ::_1, ::_2 ) );
+	outPlug()->childRemovedSignal().connect( boost::bind( &OSLCode::parameterRemoved, this, ::_1, ::_2 ) );
 
 	plugSetSignal().connect( boost::bind( &OSLCode::plugSet, this, ::_1 ) );
 
@@ -445,14 +445,35 @@ void OSLCode::plugSet( const Gaffer::Plug *plug )
 	}
 }
 
-void OSLCode::parameterAddedOrRemoved( const Gaffer::GraphComponent *parent )
+void OSLCode::parameterAdded( const Gaffer::GraphComponent *parent, Gaffer::GraphComponent *child )
 {
-	if( parent == outPlug() && ( parent->children().size() == 0 || parent->children().size() == 1 ) )
+	if( parent == outPlug() && parent->children().size() == 1 )
 	{
 		// OSLShaderUI registers a dynamic metadata entry which depends on whether or
 		// not the plug has children, so we must notify the world that the value will
 		// have changed.
 		Metadata::plugValueChangedSignal()( staticTypeId(), "out", "nodule:type", outPlug() );
 	}
+
+	child->nameChangedSignal().connect( boost::bind( &OSLCode::parameterNameChanged, this ) );
+	updateShader();
+}
+
+void OSLCode::parameterRemoved( const Gaffer::GraphComponent *parent, Gaffer::GraphComponent *child )
+{
+	if( parent == outPlug() && parent->children().size() == 0 )
+	{
+		// OSLShaderUI registers a dynamic metadata entry which depends on whether or
+		// not the plug has children, so we must notify the world that the value will
+		// have changed.
+		Metadata::plugValueChangedSignal()( staticTypeId(), "out", "nodule:type", outPlug() );
+	}
+
+	child->nameChangedSignal().disconnect( boost::bind( &OSLCode::parameterNameChanged, this ) );
+	updateShader();
+}
+
+void OSLCode::parameterNameChanged()
+{
 	updateShader();
 }
