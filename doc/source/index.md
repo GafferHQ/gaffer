@@ -9,8 +9,5 @@ In addition to itself being highly extensible, Gaffer's underlying frameworks ar
 
 - [Installation](Installation/index.md)
 - [Tutorials](Tutorials/index.md)
-- [UI Reference](UIReference/index.md)
-- [Node Reference](NodeReference/index.md)
-- [Scripting Reference](ScriptingReference/index.md)
-- [Command Line Reference](CommandLineReference/index.md)
+- [Reference](Reference/index.md)
 - [Appendices](Appendices/index.md)

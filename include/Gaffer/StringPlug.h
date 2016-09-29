@@ -44,6 +44,41 @@
 namespace Gaffer
 {
 
+/// Plug for providing string values.
+///
+/// Substitutions
+/// =============
+///
+/// Substitutions allow the user to enter values containing
+/// frame numbers and the values of context variables, and
+/// have the appropriate values substituted in automatically
+/// during computation.
+///
+/// e.g. "~/images/${name}.####.exr" -> "/home/bob/beauty.0001.exr"
+///
+/// Substitutions are performed transparently when `getValue()`
+/// is called for an input plug from within a current `Process`,
+/// so no specific action is required on the part of the Node
+/// developer to support them.
+///
+///	If a node needs to deal with sequences directly, or otherwise
+/// access unsubstituted values, the `substitutions` constructor
+/// argument may be used to disable specific substitutions.
+///
+/// > Note : This feature does not affect the values passed
+///	> internally between string plugs - substitutions are only
+/// > applied to the return value generated for `getValue()`.
+/// > This is important, since it allows a downstream node to
+/// > access an unsubstituted value from its input, even if
+/// > an intermediate upstream plug has substitutions enabled
+/// > for other purposes.
+/// >
+/// > In other words, substitutions could just as well be
+/// > implemented using an explicit `getSubstitutedValue()`
+/// > method or by performing a manual substitution after using
+/// > `getValue()`. However, in practice, it was determined to
+/// > be too error prone to remember to do this for every
+/// > value access in every node.
 class StringPlug : public ValuePlug
 {
 
