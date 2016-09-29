@@ -80,6 +80,12 @@ Gaffer.Metadata.registerNode(
 
 		),
 
+		"user.*" : (
+
+			"labelPlugValueWidget:renameable", True,
+
+		),
+
 		"*" : (
 
 			"layout:section", lambda plug : "Settings" if isinstance( plug.parent(), Gaffer.Node ) else ""

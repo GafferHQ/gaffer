@@ -58,7 +58,9 @@ Gaffer.Metadata.registerNode(
 			and the current context as `context`.
 			""",
 
-			"plugValueWidget:type", "GafferUI.PythonCommandUI._CommandPlugValueWidget",
+			"plugValueWidget:type", "GafferUI.MultiLineStringPlugValueWidget",
+			"multiLineStringPlugValueWidget:role", "code",
+			"layout:label", "",
 
 		),
 
@@ -109,16 +111,3 @@ Gaffer.Metadata.registerNode(
 	}
 
 )
-
-class _CommandPlugValueWidget( GafferUI.MultiLineStringPlugValueWidget ) :
-
-	def __init__( self, plug, **kw ) :
-
-		GafferUI.MultiLineStringPlugValueWidget.__init__( self, plug, **kw )
-
-	def hasLabel( self ) :
-
-		## \todo Maybe there should be some metadata we could use
-		# to disable the label, rather than having to tell this little
-		# porky pie?
-		return True

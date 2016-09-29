@@ -124,7 +124,7 @@ IE_CORE_DEFINERUNTIMETYPED( ShaderView );
 ShaderView::ViewDescription<ShaderView> ShaderView::g_viewDescription( GafferScene::Shader::staticTypeId(), "out" );
 
 ShaderView::ShaderView( const std::string &name )
-	:	ImageView( name )
+	:	ImageView( name ), m_framed( false )
 {
 	// Create a converter to generate an image
 	// from the input shader.
@@ -165,8 +165,9 @@ ShaderView::ShaderView( const std::string &name )
 	// Connect to signals we need.
 
 	viewportGadget()->visibilityChangedSignal().connect( boost::bind( &ShaderView::viewportVisibilityChanged, this ) );
+	viewportGadget()->preRenderSignal().connect( boost::bind( &ShaderView::preRender, this ) );
 	plugSetSignal().connect( boost::bind( &ShaderView::plugSet, this, ::_1 ) );
-	plugInputChangedSignal().connect( boost::bind( &ShaderView::plugInputChanged, this, ::_1 ) );
+	plugDirtiedSignal().connect( boost::bind( &ShaderView::plugDirtied, this, ::_1 ) );
 	sceneRegistrationChangedSignal().connect( boost::bind( &ShaderView::sceneRegistrationChanged, this, ::_1 ) );
 
 }
@@ -209,11 +210,13 @@ std::string ShaderView::shaderPrefix() const
 
 Gaffer::Node *ShaderView::scene()
 {
+	updateScene();
 	return m_scene.get();
 }
 
 const Gaffer::Node *ShaderView::scene() const
 {
+	const_cast<ShaderView *>( this )->updateScene();
 	return m_scene.get();
 }
 
@@ -241,21 +244,20 @@ void ShaderView::plugSet( Gaffer::Plug *plug )
 	}
 }
 
-void ShaderView::plugInputChanged( Gaffer::Plug *plug )
+void ShaderView::plugDirtied( Gaffer::Plug *plug )
 {
 	if( plug == inPlug<Plug>() )
 	{
-		// If we need to make a new renderer node,
-		// then make one.
-		updateRenderer();
-		// Then update the scene if we need to.
-		updateScene();
-		// Finally update the renderer state. We
-		// do this last so that when making a new
-		// renderer, we do not ask it to render
-		// an out-of-date scene prior to it being
-		// updated.
-		updateRendererState();
+		// The shader has changed, so we may need to update
+		// our scene and renderer. But we're not allowed to
+		// rewire the graph while dirtiness is being signalled,
+		// so must defer the work to the next idle moment.
+		if( !m_idleConnection.connected() )
+		{
+			m_idleConnection = GafferUI::Gadget::idleSignal().connect(
+				boost::bind( &ShaderView::idleUpdate, ShaderViewPtr( this ) )
+			);
+		}
 	}
 }
 
@@ -267,6 +269,23 @@ void ShaderView::sceneRegistrationChanged( const PrefixAndName &prefixAndName )
 		m_scenes.erase( prefixAndName );
 		updateScene();
 	}
+}
+
+void ShaderView::idleUpdate()
+{
+	// We only need to run once.
+	m_idleConnection.disconnect();
+	// If we need to make a new renderer node,
+	// then make one.
+	updateRenderer();
+	// Then update the scene if we need to.
+	updateScene();
+	// Finally update the renderer state. We
+	// do this last so that when making a new
+	// renderer, we do not ask it to render
+	// an out-of-date scene prior to it being
+	// updated.
+	updateRendererState();
 }
 
 void ShaderView::updateRenderer()
@@ -295,6 +314,7 @@ void ShaderView::updateRenderer()
 	m_renderer->getChild<ScenePlug>( "in" )->setInput(
 		m_imageConverter->getChild<SceneNode>( "Outputs" )->outPlug()
 	);
+
 	updateRendererContext();
 }
 
@@ -375,6 +395,36 @@ void ShaderView::updateScene()
 	m_imageConverter->getChild<DeleteOutputs>( "DeleteOutputs" )->inPlug()->setInput( outPlug );
 
 	sceneChangedSignal()( this );
+}
+
+void ShaderView::preRender()
+{
+	if( m_framed || !m_scene )
+	{
+		return;
+	}
+
+	// Do our best to give a sensible framing the first time the
+	// shader ball image is viewed. Because the render may not have
+	// opened the display driver yet, the internal Display node that
+	// we are viewing may well be outputting a blank image of default
+	// format, which is likely totally different to the shader ball
+	// resolution, and the ImageViewer has just framed for that. So
+	// we get the resolution of the upcoming render from the render
+	// globals and frame ready for that.
+
+	Context::Scope scopedContext( getContext() );
+	/// \todo Maybe we should wrap this up into a `SceneAlgo::resolution()`
+	/// method that also takes care of overscan, multiplier etc?
+	IECore::ConstCompoundObjectPtr globals = m_scene->getChild<ScenePlug>( "out" )->globalsPlug()->getValue();
+	Imath::V2i resolution( 640, 480 );
+	if( const IECore::V2iData *resolutionData = globals->member<const IECore::V2iData>( "option:render:resolution" ) )
+	{
+		resolution = resolutionData->readable();
+	}
+
+	viewportGadget()->frame( Imath::Box3f( Imath::V3f( 0 ), Imath::V3f( resolution.x, resolution.y, 0.0f ) ) );
+	m_framed = true;
 }
 
 void ShaderView::registerRenderer( const std::string &shaderPrefix, RendererCreator rendererCreator )

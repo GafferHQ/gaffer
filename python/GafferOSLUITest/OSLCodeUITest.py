@@ -1,6 +1,6 @@
 ##########################################################################
 #
-#  Copyright (c) 2013, John Haddon. All rights reserved.
+#  Copyright (c) 2016, Image Engine Design Inc. All rights reserved.
 #
 #  Redistribution and use in source and binary forms, with or without
 #  modification, are permitted provided that the following conditions are
@@ -34,9 +34,37 @@
 #
 ##########################################################################
 
-import OSLShaderUI
-import OSLImageUI
-import OSLObjectUI
-import OSLCodeUI
+import Gaffer
+import GafferUI
+import GafferOSL
+import GafferOSLTest
+import GafferOSLUI
 
-__import__( "IECore" ).loadConfig( "GAFFER_STARTUP_PATHS", {}, subdirectory = "GafferOSLUI" )
+class OSLCodeUITest( GafferOSLTest.OSLTestCase ) :
+
+	def testChangingOutputNodules( self ) :
+
+		node = GafferOSL.OSLCode()
+		nodeGadget1 = GafferUI.NodeGadget.create( node )
+
+		self.assertTrue( isinstance( nodeGadget1.nodule( node["out"] ), GafferUI.StandardNodule ) )
+
+		node["out"]["o"] = Gaffer.FloatPlug(
+			direction = Gaffer.Plug.Direction.Out,
+			flags = Gaffer.Plug.Flags.Default | Gaffer.Plug.Flags.Dynamic
+		)
+
+		nodeGadget2 = GafferUI.NodeGadget.create( node )
+
+		self.assertTrue( isinstance( nodeGadget1.nodule( node["out"] ), GafferUI.CompoundNodule ) )
+		self.assertTrue( isinstance( nodeGadget1.nodule( node["out"]["o"] ), GafferUI.StandardNodule ) )
+		self.assertTrue( isinstance( nodeGadget2.nodule( node["out"] ), GafferUI.CompoundNodule ) )
+		self.assertTrue( isinstance( nodeGadget2.nodule( node["out"]["o"] ), GafferUI.StandardNodule ) )
+		self.assertEqual( nodeGadget1.nodule( node["out"] ).bound(), nodeGadget2.nodule( node["out"] ).bound() )
+
+		del node["out"]["o"]
+		self.assertTrue( isinstance( nodeGadget1.nodule( node["out"] ), GafferUI.StandardNodule ) )
+		self.assertTrue( isinstance( nodeGadget2.nodule( node["out"] ), GafferUI.StandardNodule ) )
+
+if __name__ == "__main__":
+	unittest.main()

@@ -36,6 +36,7 @@
 
 from DocumentationTest import DocumentationTest
 from OSLShaderUITest import OSLShaderUITest
+from OSLCodeUITest import OSLCodeUITest
 
 if __name__ == "__main__":
 	unittest.main()

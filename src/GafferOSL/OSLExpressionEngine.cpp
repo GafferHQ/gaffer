@@ -50,6 +50,8 @@
 #include "Gaffer/CompoundNumericPlug.h"
 #include "Gaffer/StringPlug.h"
 
+#include "GafferOSL/Private/CapturingErrorHandler.h"
+
 using namespace std;
 using namespace boost;
 using namespace Imath;
@@ -59,43 +61,6 @@ using namespace Gaffer;
 
 namespace
 {
-
-//////////////////////////////////////////////////////////////////////////
-// Error handler. We use this to capture error messages when
-// compiling the OSL shader.
-//////////////////////////////////////////////////////////////////////////
-
-class CapturingErrorHandler : public OIIO::ErrorHandler
-{
-
-	public :
-
-		CapturingErrorHandler()
-		{
-		}
-
-		virtual void operator()( int errorCode, const std::string &message )
-		{
-			if( errorCode >= EH_ERROR )
-			{
-				if( m_errors.size() && *m_errors.rbegin() != '\n' )
-				{
-					m_errors += "\n";
-				}
-				m_errors += message;
-			}
-		}
-
-		const std::string &errors()
-		{
-			return m_errors;
-		}
-
-	private :
-
-		string m_errors;
-
-};
 
 //////////////////////////////////////////////////////////////////////////
 // RenderState. OSL would think of this as representing the object
@@ -820,7 +785,7 @@ class OSLExpressionEngine : public Gaffer::Expression::Engine
 
 			// Compile the shader source into an in-memory oso buffer.
 
-			CapturingErrorHandler errorHandler;
+			GafferOSL::Private::CapturingErrorHandler errorHandler;
 			OSLCompiler compiler( &errorHandler );
 
 			vector<string> options;

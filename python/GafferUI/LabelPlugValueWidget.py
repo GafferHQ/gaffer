@@ -41,6 +41,10 @@ QtGui = GafferUI._qtImport( "QtGui" )
 
 ## A simple PlugValueWidget which just displays the name of the plug,
 # with the popup action menu for the plug.
+#
+# Supported plug metadata :
+#
+#  - "labelPlugValueWidget:renameable"
 class LabelPlugValueWidget( GafferUI.PlugValueWidget ) :
 
 	def __init__( self, plug, horizontalAlignment=GafferUI.Label.HorizontalAlignment.Left, verticalAlignment=GafferUI.Label.VerticalAlignment.Center, **kw ) :
@@ -179,19 +183,10 @@ class LabelPlugValueWidget( GafferUI.PlugValueWidget ) :
 
 	def __updateDoubleClickConnection( self ) :
 
-		# If the plug is a user plug or the child of a box, then set things up so it can be
-		# renamed by double clicking on the label. Currently we only accept plugs immediately
-		# parented to the user plug, so as to avoid allowing the renaming of child plugs inside
-		# SplinePlugs and the like, where plug names have specific meanings.
-
 		self.__labelDoubleClickConnection = None
 
-		if self.getPlug() is None :
+		if self.getPlug() is None or not Gaffer.Metadata.plugValue( self.getPlug(), "labelPlugValueWidget:renameable" ) :
 			return
-
-		if not isinstance( self.getPlug().node(), Gaffer.Box ) :
-			if not self.getPlug().node()["user"].isSame( self.getPlug().parent() ) :
-				return
 
 		self.__labelDoubleClickConnection = self.__label.buttonDoubleClickSignal().connect( Gaffer.WeakMethod( self.__labelDoubleClicked ) )
 

@@ -1,6 +1,6 @@
 //////////////////////////////////////////////////////////////////////////
 //
-//  Copyright (c) 2013, John Haddon. All rights reserved.
+//  Copyright (c) 2016, Image Engine Design Inc. All rights reserved.
 //
 //  Redistribution and use in source and binary forms, with or without
 //  modification, are permitted provided that the following conditions are
@@ -34,23 +34,19 @@
 //
 //////////////////////////////////////////////////////////////////////////
 
-#ifndef GAFFEROSL_TYPEIDS_H
-#define GAFFEROSL_TYPEIDS_H
+#ifndef GAFFEROSL_SPLINE_H
+#define GAFFEROSL_SPLINE_H
 
-namespace GafferOSL
+float floatSpline( float positions[], float values[], string basis, float x )
 {
+	float t = splineinverse( basis, x, positions  );
+	return spline( basis, t, values );
+}
 
-enum TypeId
+color colorSpline( float positions[], color values[], string basis, float x )
 {
-	OSLShaderTypeId = 110975,
-	OSLRendererTypeId = 110976,
-	OSLImageTypeId = 110977,
-	OSLObjectTypeId = 110978,
-	OSLCodeTypeId = 110979,
+	float t = splineinverse( basis, x, positions  );
+	return spline( basis, t, values );
+}
 
-	LastTypeId = 110999
-};
-
-} // namespace GafferOSL
-
-#endif // GAFFEROSL_TYPEIDS_H
+#endif // GAFFEROSL_SPLINE_H

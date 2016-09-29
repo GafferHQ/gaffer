@@ -144,10 +144,6 @@ class View : public Gaffer::Node
 		/// classes may block this temporarily if they want to prevent the triggering -
 		/// this can be useful when modifying the context.
 		boost::signals::connection &contextChangedConnection();
-		/// Called when a plug on this node or on the preprocessor is dirtied.
-		/// Derived classes should call the base class implementation if they
-		/// override this method.
-		virtual void plugDirtied( const Gaffer::Plug *plug );
 
 		/// May be overridden by derived classes to control the region that is framed
 		/// when "F" is pressed.
@@ -167,7 +163,6 @@ class View : public Gaffer::Node
 		Gaffer::ContextPtr m_context;
 		UnarySignal m_contextChangedSignal;
 		boost::signals::scoped_connection m_contextChangedConnection;
-		boost::signals::scoped_connection m_preprocessorPlugDirtiedConnection;
 
 		bool keyPress( GadgetPtr gadget, const KeyEvent &keyEvent );
 

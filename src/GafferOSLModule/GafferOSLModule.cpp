@@ -38,15 +38,19 @@
 
 #include "OSL/oslversion.h"
 
+#include "IECorePython/ScopedGILRelease.h"
+
 #include "Gaffer/StringPlug.h"
 
 #include "GafferBindings/DependencyNodeBinding.h"
 #include "GafferBindings/DataBinding.h"
+#include "GafferBindings/SignalBinding.h"
 
 #include "GafferOSL/OSLShader.h"
 #include "GafferOSL/ShadingEngine.h"
 #include "GafferOSL/OSLImage.h"
 #include "GafferOSL/OSLObject.h"
+#include "GafferOSL/OSLCode.h"
 
 using namespace boost::python;
 using namespace GafferBindings;
@@ -62,8 +66,8 @@ class OSLShaderSerialiser : public GafferBindings::NodeSerialiser
 
 	virtual std::string postScript( const Gaffer::GraphComponent *graphComponent, const std::string &identifier, const Serialisation &serialisation ) const
 	{
-		const OSLShader *shader = static_cast<const OSLShader *>( graphComponent );
-		std::string shaderName = shader->namePlug()->getValue();
+		const OSLShader *oslShader = static_cast<const OSLShader *>( graphComponent );
+		const std::string shaderName = oslShader->namePlug()->getValue();
 		if( shaderName.size() )
 		{
 			return boost::str( boost::format( "%s.loadShader( \"%s\", keepExistingValues=True )\n" ) % identifier % shaderName );
@@ -104,6 +108,12 @@ int oslLibraryVersionCode()
 	return OSL_LIBRARY_VERSION_CODE;
 }
 
+std::string oslCodeSource( const OSLCode &oslCode, const std::string &shaderName )
+{
+	IECorePython::ScopedGILRelease gilRelease;
+	return oslCode.source( shaderName );
+}
+
 } // namespace
 
 BOOST_PYTHON_MODULE( _GafferOSL )
@@ -129,5 +139,12 @@ BOOST_PYTHON_MODULE( _GafferOSL )
 		.def( init<const IECore::ObjectVector *>() )
 		.def( "shade", &ShadingEngine::shade )
 	;
+
+	scope s = GafferBindings::DependencyNodeClass<OSLCode>()
+		.def( "source", &oslCodeSource, ( arg_( "shaderName" ) = "" ) )
+		.def( "shaderCompiledSignal", &OSLCode::shaderCompiledSignal, return_internal_reference<1>() )
+	;
+
+	SignalClass<OSLCode::ShaderCompiledSignal>( "ShaderCompiledSignal" );
 
 }
