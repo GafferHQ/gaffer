@@ -35,6 +35,7 @@
 ##########################################################################
 
 import os
+import time
 
 import IECore
 
@@ -187,6 +188,12 @@ class screengrab( Gaffer.Application ) :
 					defaultValue = "",
 				),
 
+				IECore.FloatParameter(
+					name = "delay",
+					description = "A delay between setting up the script and grabbing the image.",
+					defaultValue = 0,
+				),
+
 			]
 
 		)
@@ -334,6 +341,12 @@ class screengrab( Gaffer.Application ) :
 
 		script.context()["ui:scene:expandedPaths"] = GafferScene.PathMatcherData( pathsToExpand )
 		script.context()["ui:scene:selectedPaths"] = args["scene"]["selectedPaths"]
+
+		# Add a delay.
+
+		t = time.time() + args["delay"].value
+		while time.time() < t :
+			self.__waitForIdle( 1 )
 
 		# Write the image, creating a directory for it if necessary.
 

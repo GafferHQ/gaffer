@@ -650,6 +650,7 @@ libraries = {
 			"LIBS" : [ "Gaffer", "GafferScene", "GafferBindings", "GafferDispatch", "GafferArnold" ],
 		},
 		"requiredOptions" : [ "ARNOLD_ROOT" ],
+		"additionalFiles" : [ "arnold/plugins/gaffer.mtd" ],
 	},
 
 	"GafferArnoldTest" : {
@@ -715,7 +716,9 @@ libraries = {
 		"requiredOptions" : [ "APPLESEED_ROOT" ],
 	},
 
-	"GafferAppleseedTest" : {},
+	"GafferAppleseedTest" : {
+		"additionalFiles" : glob.glob( "python/GafferAppleseedTest/*/*" ),
+	},
 
 	"GafferAppleseedUI" : {},
 

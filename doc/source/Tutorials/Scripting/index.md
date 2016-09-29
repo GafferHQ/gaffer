@@ -9,3 +9,4 @@ There is a direct one to one correspondence between the C++ and Python APIs for 
 - [Creating Configuration Files](CreatingConfigurationFiles/index.md)
 - [Adding a Menu Item](AddingAMenuItem/index.md)
 - [Querying a Scene](QueryingAScene/index.md)
+- [Using the OSLCode Node](UsingTheOSLCodeNode/index.md)

@@ -34,6 +34,8 @@
 //
 //////////////////////////////////////////////////////////////////////////
 
+#include "GafferOSL/Spline.h"
+
 shader ColorSpline
 (
 
@@ -47,6 +49,5 @@ shader ColorSpline
 
 )
 {
-	float t = splineinverse( splineBasis, x, splinePositions  );
-	c = spline( splineBasis, t, splineValues );
+	c = colorSpline( splinePositions, splineValues, splineBasis, x );
 }

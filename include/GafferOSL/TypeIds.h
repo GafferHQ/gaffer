@@ -46,6 +46,7 @@ enum TypeId
 	OSLRendererTypeId = 110976,
 	OSLImageTypeId = 110977,
 	OSLObjectTypeId = 110978,
+	OSLCodeTypeId = 110979,
 
 	LastTypeId = 110999
 };

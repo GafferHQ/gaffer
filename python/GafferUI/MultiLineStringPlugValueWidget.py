@@ -43,6 +43,7 @@ import GafferUI
 ## Supported Metadata :
 #
 # - "multiLineStringPlugValueWidget:continuousUpdate"
+# - "multiLineStringPlugValueWidget:role"
 class MultiLineStringPlugValueWidget( GafferUI.PlugValueWidget ) :
 
 	def __init__( self, plug, **kw ) :
@@ -80,6 +81,10 @@ class MultiLineStringPlugValueWidget( GafferUI.PlugValueWidget ) :
 
 			fixedLineHeight = Gaffer.Metadata.plugValue( self.getPlug(), "fixedLineHeight" )
 			self.__textWidget.setFixedLineHeight( fixedLineHeight )
+
+			role = Gaffer.Metadata.plugValue( self.getPlug(), "multiLineStringPlugValueWidget:role" )
+			role = getattr( self.__textWidget.Role, role.capitalize() ) if role else self.__textWidget.Role.Text
+			self.__textWidget.setRole( role )
 
 			self.__textChangedConnection.block(
 				not Gaffer.Metadata.plugValue( self.getPlug(), "multiLineStringPlugValueWidget:continuousUpdate" )
