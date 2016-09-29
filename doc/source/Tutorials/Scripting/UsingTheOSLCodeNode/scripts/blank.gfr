@@ -17,13 +17,11 @@ parent["variables"]["projectRootDirectory"].addChild( Gaffer.StringPlug( "name",
 parent["variables"]["projectRootDirectory"].addChild( Gaffer.StringPlug( "value", defaultValue = '$HOME/gaffer/projects/${project:name}', flags = Gaffer.Plug.Flags.Default | Gaffer.Plug.Flags.Dynamic, ) )
 __children["OSLCode"] = GafferOSL.OSLCode( "OSLCode" )
 parent.addChild( __children["OSLCode"] )
-__children["OSLCode"]["name"].setValue( '/home/john/gaffer/oslCode/oslCode6/0ca1740a/de7e8a48/019a23e3/a46ae35/oslCode60ca1740ade7e8a48019a23e3a46ae35' )
 __children["OSLCode"]["type"].setValue( 'osl:shader' )
 __children["OSLCode"].addChild( Gaffer.V2fPlug( "__uiPosition", defaultValue = IECore.V2f( 0, 0 ), flags = Gaffer.Plug.Flags.Default | Gaffer.Plug.Flags.Dynamic, ) )
 __children["OSLCode"]["__uiPosition"].setValue( IECore.V2f( -4.30000019, -4.10000086 ) )
 parent["variables"]["projectName"]["name"].setFlags( Gaffer.Plug.Flags.ReadOnly, True )
 parent["variables"]["projectRootDirectory"]["name"].setFlags( Gaffer.Plug.Flags.ReadOnly, True )
-__children["OSLCode"].loadShader( "/home/john/gaffer/oslCode/oslCode6/0ca1740a/de7e8a48/019a23e3/a46ae35/oslCode60ca1740ade7e8a48019a23e3a46ae35", keepExistingValues=True )
 
 
 del __children
