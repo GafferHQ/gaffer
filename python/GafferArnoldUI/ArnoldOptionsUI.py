@@ -48,6 +48,8 @@ def __renderingSummary( plug ) :
 		info.append( "Bucket Size %d" % plug["bucketSize"]["value"].getValue() )
 	if plug["bucketScanning"]["enabled"].getValue() :
 		info.append( "Bucket Scanning %s" % plug["bucketScanning"]["value"].getValue().capitalize() )
+	if plug["threads"]["enabled"].getValue() :
+		info.append( "Threads %d" % plug["threads"]["value"].getValue() )
 	return ", ".join( info )
 
 def __samplingSummary( plug ) :
@@ -109,13 +111,6 @@ def __featuresSummary( plug ) :
 
 	return ", ".join( info )
 
-def __performanceSummary( plug ) :
-
-	info = []
-	if plug["threads"]["enabled"].getValue() :
-		info.append( "Threads %d" % plug["threads"]["value"].getValue() )
-	return ", ".join( info )
-
 def __searchPathsSummary( plug ) :
 
 	info = []
@@ -175,7 +170,6 @@ Gaffer.Metadata.registerNode(
 			"layout:section:Sampling:summary", __samplingSummary,
 			"layout:section:Ray Depth:summary", __rayDepthSummary,
 			"layout:section:Features:summary", __featuresSummary,
-			"layout:section:Performance:summary", __performanceSummary,
 			"layout:section:Search Paths:summary", __searchPathsSummary,
 			"layout:section:Error Colors:summary", __errorColorsSummary,
 			"layout:section:Logging:summary", __loggingSummary,
@@ -220,6 +214,19 @@ Gaffer.Metadata.registerNode(
 			"plugValueWidget:type", 'GafferUI.PresetsPlugValueWidget',
 			"presetNames", IECore.StringVectorData( ["Top", "Bottom", "Left", "Right", "Random", "Woven", "Spiral", "Spiral"] ),
 			"presetValues", IECore.StringVectorData( ["top", "bottom", "left", "right", "random", "woven", "spiral", "spiral"] ),
+		],
+
+		"options.threads" : [
+
+			"description",
+			"""
+			Specifies the number of threads Arnold
+			is allowed to use. A value of 0 gives
+			Arnold access to all available threads.
+			""",
+
+			"layout:section", "Rendering",
+
 		],
 
 		# Sampling
@@ -539,21 +546,6 @@ Gaffer.Metadata.registerNode(
 			""",
 
 			"layout:section", "Features",
-
-		],
-
-		# Performance
-
-		"options.threads" : [
-
-			"description",
-			"""
-			Specifies the number of threads Arnold
-			is allowed to use. A value of 0 gives
-			Arnold access to all available threads.
-			""",
-
-			"layout:section", "Performance",
 
 		],
 
