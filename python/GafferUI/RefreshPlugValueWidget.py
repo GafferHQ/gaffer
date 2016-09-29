@@ -1,6 +1,6 @@
 ##########################################################################
 #
-#  Copyright (c) 2013, Image Engine Design Inc. All rights reserved.
+#  Copyright (c) 2016, Image Engine Design Inc. All rights reserved.
 #
 #  Redistribution and use in source and binary forms, with or without
 #  modification, are permitted provided that the following conditions are
@@ -39,19 +39,15 @@ from __future__ import with_statement
 import Gaffer
 import GafferUI
 
-## \deprecated The extra arguments to the constructor force this widget
-# to be used by the deprecated `PlugValueWidget.registerCreator()`. Use
-# `RefreshPlugValueWidget` instead.
-class IncrementingPlugValueWidget( GafferUI.PlugValueWidget ) :
+## PlugValueWidget suitable for incrementing a plug to trigger a refresh
+# of nodes which access the filesystem.
+class RefreshPlugValueWidget( GafferUI.PlugValueWidget ) :
 
-	def __init__( self, plug, label, increment = 1, undoable = True, **kw ) :
+	def __init__( self, plug, **kw ) :
 
-		self.__button = GafferUI.Button( label )
+		self.__button = GafferUI.Button( image = "refresh.png", hasFrame = False )
 
 		GafferUI.PlugValueWidget.__init__( self, self.__button, plug, **kw )
-
-		self.__increment = increment
-		self.__undoable = undoable
 
 		self.__clickedConnection = self.__button.clickedSignal().connect( Gaffer.WeakMethod( self.__clicked ) )
 
@@ -59,15 +55,8 @@ class IncrementingPlugValueWidget( GafferUI.PlugValueWidget ) :
 
 		pass
 
-	def hasLabel( self ) :
-
-		return True
-
 	def __clicked( self, widget ) :
 
-		assert( widget is self.__button )
-
-		undoState = Gaffer.UndoContext.State.Enabled if self.__undoable else Gaffer.UndoContext.State.Disabled
-
-		with Gaffer.UndoContext( self.getPlug().ancestor( Gaffer.ScriptNode ), undoState ) :
-			self.getPlug().setValue( self.getPlug().getValue() + self.__increment )
+		# Deliberately not making this undoable, as once we've refreshed
+		# a loaded file, there's no going back.
+		self.getPlug().setValue( self.getPlug().getValue() + 1 )

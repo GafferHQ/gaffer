@@ -252,6 +252,7 @@ from CompoundDataPlugValueWidget import CompoundDataPlugValueWidget
 from LayoutPlugValueWidget import LayoutPlugValueWidget
 import ScriptNodeUI
 from IncrementingPlugValueWidget import IncrementingPlugValueWidget
+from RefreshPlugValueWidget import RefreshPlugValueWidget
 import PreferencesUI
 from SplinePlugValueWidget import SplinePlugValueWidget
 from RampPlugValueWidget import RampPlugValueWidget
