@@ -1,6 +1,6 @@
 ##########################################################################
 #
-#  Copyright (c) 2015, Image Engine Design Inc. All rights reserved.
+#  Copyright (c) 2016, Image Engine Design Inc. All rights reserved.
 #
 #  Redistribution and use in source and binary forms, with or without
 #  modification, are permitted provided that the following conditions are
@@ -34,62 +34,29 @@
 #
 ##########################################################################
 
-import IECore
+from __future__ import with_statement
 
 import Gaffer
 import GafferUI
-import GafferScene
 
-Gaffer.Metadata.registerNode(
+## PlugValueWidget suitable for incrementing a plug to trigger a refresh
+# of nodes which access the filesystem.
+class RefreshPlugValueWidget( GafferUI.PlugValueWidget ) :
 
-	GafferScene.AlembicSource,
+	def __init__( self, plug, **kw ) :
 
-	"description",
-	"""
-	Loads Alembic caches. Please note that Gaffer requires
-	a bounding box to be computable for every location in the
-	scene. Alembic files can store such bounding boxes, but
-	in practice they often don't. In this case Gaffer must perform
-	a full scene traversal to compute the appropriate bounding box.
-	It is recommended that if performance is a priority, bounding
-	boxes should be stored explicitly in the Alembic cache, or the
-	Cortex SceneCache (.scc) format should be used instead, since it
-	always stores accurate bounds.
-	""",
+		self.__button = GafferUI.Button( image = "refresh.png", hasFrame = False )
 
-	plugs = {
+		GafferUI.PlugValueWidget.__init__( self, self.__button, plug, **kw )
 
-		"fileName" : [
+		self.__clickedConnection = self.__button.clickedSignal().connect( Gaffer.WeakMethod( self.__clicked ) )
 
-			"description",
-			"""
-			The path to the .abc file to load. Both
-			older HDF5 and newer Ogawa caches are supported.
-			""",
+	def _updateFromPlug( self ) :
 
-			"plugValueWidget:type", "GafferUI.FileSystemPathPlugValueWidget",
-			"pathPlugValueWidget:leaf", True,
-			"pathPlugValueWidget:valid", True,
-			"pathPlugValueWidget:bookmarks", "sceneCache",
-			"fileSystemPathPlugValueWidget:extensions", IECore.StringVectorData( [ "abc" ] ),
+		pass
 
-		],
+	def __clicked( self, widget ) :
 
-		"refreshCount" : [
-
-			"description",
-			"""
-			Can be incremented to invalidate Gaffer's memory
-			cache and force a reload if the .abc file is
-			changed on disk.
-			""",
-
-			"plugValueWidget:type", "GafferUI.RefreshPlugValueWidget",
-			"layout:label", "",
-			"layout:accessory", True,
-
-		],
-
-	}
-
-)
+		# Deliberately not making this undoable, as once we've refreshed
+		# a loaded file, there's no going back.
+		self.getPlug().setValue( self.getPlug().getValue() + 1 )

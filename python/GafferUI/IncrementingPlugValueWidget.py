@@ -39,6 +39,9 @@ from __future__ import with_statement
 import Gaffer
 import GafferUI
 
+## \deprecated The extra arguments to the constructor force this widget
+# to be used by the deprecated `PlugValueWidget.registerCreator()`. Use
+# `RefreshPlugValueWidget` instead.
 class IncrementingPlugValueWidget( GafferUI.PlugValueWidget ) :
 
 	def __init__( self, plug, label, increment = 1, undoable = True, **kw ) :

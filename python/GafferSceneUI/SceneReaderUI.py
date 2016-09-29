@@ -89,6 +89,10 @@ Gaffer.Metadata.registerNode(
 			be loaded via Gaffer's cache.
 			""",
 
+			"plugValueWidget:type", "GafferUI.RefreshPlugValueWidget",
+			"layout:label", "",
+			"layout:accessory", True,
+
 		],
 
 		"tags" : [
@@ -104,20 +108,6 @@ Gaffer.Metadata.registerNode(
 	}
 
 )
-
-##########################################################################
-# Widgets
-##########################################################################
-
-GafferUI.PlugValueWidget.registerCreator(
-	GafferScene.SceneReader,
-	"refreshCount",
-	GafferUI.IncrementingPlugValueWidget,
-	label = "Refresh",
-	undoable = False
-)
-
-## \todo Once it's possible to register Widgets to go on the right of a PlugWidget, place the refresh button there.
 
 ##########################################################################
 # Right click menu for tags
