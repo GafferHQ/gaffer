@@ -68,7 +68,10 @@ class OSLShaderSerialiser : public GafferBindings::NodeSerialiser
 	{
 		const OSLShader *oslShader = static_cast<const OSLShader *>( graphComponent );
 		const std::string shaderName = oslShader->namePlug()->getValue();
-		if( shaderName.size() )
+		// We don't serialise a `loadShader()` call for OSLCode nodes
+		// because the OSLCode node generates the shader from the plugs,
+		// and not the other way around.
+		if( shaderName.size() && !IECore::runTimeCast<const OSLCode>( oslShader ) )
 		{
 			return boost::str( boost::format( "%s.loadShader( \"%s\", keepExistingValues=True )\n" ) % identifier % shaderName );
 		}
