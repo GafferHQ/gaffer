@@ -81,6 +81,10 @@ Gaffer.Metadata.registerNode(
 			be loaded via Gaffer's cache.
 			""",
 
+			"plugValueWidget:type", "GafferUI.RefreshPlugValueWidget",
+			"layout:label", "",
+			"layout:accessory", True,
+
 		],
 
 		"missingFrameMode" : [
@@ -121,5 +125,3 @@ Gaffer.Metadata.registerNode(
 	}
 
 )
-
-GafferUI.PlugValueWidget.registerCreator( GafferImage.OpenImageIOReader, "refreshCount", GafferUI.IncrementingPlugValueWidget, label = "Refresh", undoable = False )

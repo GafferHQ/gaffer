@@ -84,20 +84,12 @@ Gaffer.Metadata.registerNode(
 			changed on disk.
 			""",
 
+			"plugValueWidget:type", "GafferUI.RefreshPlugValueWidget",
+			"layout:label", "",
+			"layout:accessory", True,
+
 		],
 
 	}
 
-)
-
-##########################################################################
-# PlugValueWidgets
-##########################################################################
-
-GafferUI.PlugValueWidget.registerCreator(
-	GafferScene.AlembicSource,
-	"refreshCount",
-	GafferUI.IncrementingPlugValueWidget,
-	label = "Refresh",
-	undoable = False
 )
