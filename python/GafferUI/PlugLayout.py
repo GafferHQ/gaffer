@@ -54,6 +54,7 @@ QtGui = GafferUI._qtImport( "QtGui" )
 #	- "<layoutName>:divider" specifies whether or not a plug should be followed by a divider
 #	- "<layoutName>:activator" the name of an activator to control editability
 #	- "<layoutName>:visibilityActivator" the name of an activator to control visibility
+#	- "<layoutName>:accessory" groups as an accessory to the previous widget
 #
 # Per-parent metadata support :
 #
@@ -306,7 +307,14 @@ class PlugLayout( GafferUI.Widget ) :
 			for sectionName in self.__sectionPath( item )[rootSectionDepth:] :
 				section = section.subsection( sectionName )
 
-			section.widgets.append( widget )
+			if len( section.widgets ) and self.__itemMetadataValue( item, "accessory" ) :
+				row = GafferUI.ListContainer( GafferUI.ListContainer.Orientation.Horizontal, spacing = 4 )
+				row.append( section.widgets[-1] )
+				row.append( widget )
+				section.widgets[-1] = row
+			else :
+				section.widgets.append( widget )
+
 			if self.__itemMetadataValue( item, "divider" ) :
 				section.widgets.append( GafferUI.Divider(
 					GafferUI.Divider.Orientation.Horizontal if self.__layout.orientation() == GafferUI.ListContainer.Orientation.Vertical else GafferUI.Divider.Orientation.Vertical
@@ -483,6 +491,7 @@ class PlugLayout( GafferUI.Widget ) :
 			self.__layoutName + ":divider",
 			self.__layoutName + ":index",
 			self.__layoutName + ":section",
+			self.__layoutName + ":accessory",
 			"plugValueWidget:type"
 		) :
 			# we often see sequences of several metadata changes - so
