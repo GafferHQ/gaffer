@@ -43,6 +43,11 @@ class OSLTestCase( GafferSceneTest.SceneTestCase ) :
 	def compileShader( self, sourceFileName ) :
 
 		outputFileName = self.temporaryDirectory() + "/" + os.path.splitext( os.path.basename( sourceFileName ) )[0] + ".oso"
-		os.system( "oslc -q -o %s %s" % ( outputFileName, sourceFileName ) )
+
+		includes = os.environ.get( "OSL_SHADER_PATHS", "" )
+		if includes :
+			includes = "-I" + " -I".join( includes.split( ":" ) )
+
+		os.system( "oslc -q %s -o %s %s" % ( includes, outputFileName, sourceFileName ) )
 
 		return os.path.splitext( outputFileName )[0]

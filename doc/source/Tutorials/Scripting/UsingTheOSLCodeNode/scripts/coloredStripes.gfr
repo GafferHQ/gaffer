@@ -17,7 +17,6 @@ parent["variables"]["projectRootDirectory"].addChild( Gaffer.StringPlug( "name",
 parent["variables"]["projectRootDirectory"].addChild( Gaffer.StringPlug( "value", defaultValue = '$HOME/gaffer/projects/${project:name}', flags = Gaffer.Plug.Flags.Default | Gaffer.Plug.Flags.Dynamic, ) )
 __children["OSLCode"] = GafferOSL.OSLCode( "OSLCode" )
 parent.addChild( __children["OSLCode"] )
-__children["OSLCode"]["name"].setValue( '/home/john/gaffer/oslCode/oslCode6/2a70db9d/6970563a/ae48f4fe/f60be6a/oslCode62a70db9d6970563aae48f4fef60be6a' )
 __children["OSLCode"]["type"].setValue( 'osl:shader' )
 __children["OSLCode"]["parameters"].addChild( Gaffer.FloatPlug( "width", defaultValue = 0.0, flags = Gaffer.Plug.Flags.Default | Gaffer.Plug.Flags.Dynamic, ) )
 __children["OSLCode"]["parameters"]["width"].setValue( 0.02500000037252903 )
@@ -31,7 +30,6 @@ __children["OSLCode"].addChild( Gaffer.V2fPlug( "__uiPosition", defaultValue = I
 __children["OSLCode"]["__uiPosition"].setValue( IECore.V2f( -6.90000153, 7.79999971 ) )
 parent["variables"]["projectName"]["name"].setFlags( Gaffer.Plug.Flags.ReadOnly, True )
 parent["variables"]["projectRootDirectory"]["name"].setFlags( Gaffer.Plug.Flags.ReadOnly, True )
-__children["OSLCode"].loadShader( "/home/john/gaffer/oslCode/oslCode6/2a70db9d/6970563a/ae48f4fe/f60be6a/oslCode62a70db9d6970563aae48f4fef60be6a", keepExistingValues=True )
 
 
 del __children

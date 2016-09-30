@@ -36,6 +36,7 @@
 
 import os
 import subprocess
+import shutil
 import unittest
 
 import IECore
@@ -306,6 +307,36 @@ class OSLCodeTest( GafferOSLTest.OSLTestCase ) :
 		self.assertTrue( oslCode["out"] in [ x[0] for x in cs ] )
 
 		self.__assertError( oslCode, oslCode["parameters"]["in"].setName, "i" )
+
+	def testMoveCodeDirectory( self ) :
+
+		self.addCleanup( os.environ.__setitem__, "GAFFEROSL_CODE_DIRECTORY", os.environ["GAFFEROSL_CODE_DIRECTORY"] )
+
+		# Make an OSL shader in a specific code directory.
+
+		os.environ["GAFFEROSL_CODE_DIRECTORY"] = os.path.join( self.temporaryDirectory(), "codeDirectoryA" )
+
+		s = Gaffer.ScriptNode()
+
+		s["o"] = GafferOSL.OSLCode()
+		s["o"]["parameters"]["i"] = Gaffer.Color3fPlug( flags = Gaffer.Plug.Flags.Default | Gaffer.Plug.Flags.Dynamic )
+		s["o"]["out"]["o"] = Gaffer.Color3fPlug( direction = Gaffer.Plug.Direction.Out, flags = Gaffer.Plug.Flags.Default | Gaffer.Plug.Flags.Dynamic )
+		s["o"]["code"].setValue( "o = i * color( u, v, 0 );")
+
+		self.assertTrue( self.__osoFileName( s["o"] ).startswith( os.environ["GAFFEROSL_CODE_DIRECTORY"] ) )
+
+		# Now simulate the loading of that script in a different environment,
+		# with a different code directory.
+
+		ss = s.serialise()
+
+		shutil.rmtree( os.environ["GAFFEROSL_CODE_DIRECTORY"] )
+		os.environ["GAFFEROSL_CODE_DIRECTORY"] = os.path.join( self.temporaryDirectory(), "codeDirectoryB" )
+
+		s2 = Gaffer.ScriptNode()
+		s2.execute( ss )
+
+		self.assertTrue( self.__osoFileName( s2["o"] ).startswith( os.environ["GAFFEROSL_CODE_DIRECTORY"] ) )
 
 	def __osoFileName( self, oslCode ) :
 
