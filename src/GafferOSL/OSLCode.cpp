@@ -363,6 +363,9 @@ OSLCode::OSLCode( const std::string &name )
 	/// again.
 	addChild( new StringPlug( "code", Plug::In, "", Plug::Default & ~Plug::AcceptsInputs ) );
 
+	// Must disable serialisation on the name because it might represent a local filepath
+	namePlug()->setFlags( Plug::Serialisable, false );
+
 	parametersPlug()->childAddedSignal().connect( boost::bind( &OSLCode::parameterAdded, this, ::_1, ::_2 ) );
 	parametersPlug()->childRemovedSignal().connect( boost::bind( &OSLCode::parameterRemoved, this, ::_1, ::_2 ) );
 
