@@ -513,8 +513,9 @@ class AppleseedNullObject : public AppleseedEntity
 		{
 		}
 
-		virtual void attributes( const IECoreScenePreview::Renderer::AttributesInterface *attributes )
+		virtual bool attributes( const IECoreScenePreview::Renderer::AttributesInterface *attributes )
 		{
+			return true;
 		}
 
 };
@@ -559,8 +560,9 @@ class AppleseedShader : public AppleseedEntity
 		{
 		}
 
-		virtual void attributes( const IECoreScenePreview::Renderer::AttributesInterface *attributes )
+		virtual bool attributes( const IECoreScenePreview::Renderer::AttributesInterface *attributes )
 		{
+			return true;
 		}
 
 		const char *shaderGroupName() const
@@ -788,9 +790,10 @@ class AppleseedCamera : public AppleseedEntity
 			TransformAlgo::makeTransformSequence( times, samples, m_camera->transform_sequence() );
 		}
 
-		virtual void attributes( const IECoreScenePreview::Renderer::AttributesInterface *attributes )
+		virtual bool attributes( const IECoreScenePreview::Renderer::AttributesInterface *attributes )
 		{
 			// todo: check if this has to be implemented...
+			return true;
 		}
 
 	private :
@@ -850,7 +853,7 @@ class AppleseedPrimitive : public AppleseedEntity
 
 			// Compute smooth normals and tangents if needed.
 			const AppleseedAttributes *appleseedAttributes = static_cast<const AppleseedAttributes*>( attributes );
-			computeSmoothNormalsAndTangents( appleseedAttributes->m_meshSmoothNormals, appleseedAttributes->m_meshSmoothTangents);
+			computeSmoothNormalsAndTangents( appleseedAttributes->m_meshSmoothNormals, appleseedAttributes->m_meshSmoothTangents );
 
 			// Create the object instance.
 			createObjectInstance( name );
@@ -969,7 +972,7 @@ class AppleseedPrimitive : public AppleseedEntity
 			}
 		}
 
-		virtual void attributes( const IECoreScenePreview::Renderer::AttributesInterface *attributes )
+		virtual bool attributes( const IECoreScenePreview::Renderer::AttributesInterface *attributes )
 		{
 			if( isInteractiveRender() )
 			{
@@ -1026,6 +1029,9 @@ class AppleseedPrimitive : public AppleseedEntity
 			// Set the object instance params.
 			m_objectInstance->get_parameters().insert( "medium_priority", appleseedAttributes->m_mediumPriority );
 			m_objectInstance->get_parameters().insert( "visibility", appleseedAttributes->m_visibilityDictionary );
+
+			// todo: support edits of smooth normals and tangents attribute.
+			return true;
 		}
 
 	private :
@@ -1355,7 +1361,7 @@ class AppleseedEnvironmentLight : public AppleseedLight
 			}
 		}
 
-		virtual void attributes( const IECoreScenePreview::Renderer::AttributesInterface *attributes )
+		virtual bool attributes( const IECoreScenePreview::Renderer::AttributesInterface *attributes )
 		{
 			// Remove any previously created environment.
 			removeEnvironmentEntities();
@@ -1379,6 +1385,8 @@ class AppleseedEnvironmentLight : public AppleseedLight
 					insertEnvironmentEDF( envLight );
 				}
 			}
+
+			return true;
 		}
 
 	private :
@@ -1434,7 +1442,7 @@ class AppleseedDeltaLight : public AppleseedLight
 			transform(samples[0]);
 		}
 
-		virtual void attributes( const IECoreScenePreview::Renderer::AttributesInterface *attributes )
+		virtual bool attributes( const IECoreScenePreview::Renderer::AttributesInterface *attributes )
 		{
 			// Remove any previously created light.
 			removeLightEntities();
@@ -1459,6 +1467,8 @@ class AppleseedDeltaLight : public AppleseedLight
 					insertLight( light );
 				}
 			}
+
+			return true;
 		}
 
 	private :
