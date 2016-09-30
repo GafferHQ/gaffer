@@ -1226,7 +1226,14 @@ namespace
 /// Or maybe be in a utility header somewhere?
 IECore::InternedString g_cameraOptionName( "camera" );
 IECore::InternedString g_logFileNameOptionName( "ai:log:filename" );
+IECore::InternedString g_logMaxWarningsOptionName( "ai:log:max_warnings" );
 IECore::InternedString g_shaderSearchPathOptionName( "ai:shader_searchpath" );
+
+std::string g_logFlagsOptionPrefix( "ai:log:" );
+std::string g_consoleFlagsOptionPrefix( "ai:console:" );
+
+const int g_logFlagsDefault = AI_LOG_ALL;
+const int g_consoleFlagsDefault = AI_LOG_WARNINGS | AI_LOG_ERRORS | AI_LOG_TIMESTAMP | AI_LOG_BACKTRACE | AI_LOG_MEMORY | AI_LOG_COLOR;
 
 class ArnoldRenderer : public IECoreScenePreview::Renderer
 {
@@ -1238,11 +1245,13 @@ class ArnoldRenderer : public IECoreScenePreview::Renderer
 				m_universeBlock( boost::make_shared<UniverseBlock>(  /* writable = */ true ) ),
 				m_shaderCache( new ShaderCache ),
 				m_instanceCache( new InstanceCache ),
+				m_logFileFlags( g_logFlagsDefault ),
+				m_consoleFlags( g_consoleFlagsDefault ),
 				m_assFileName( fileName )
 		{
 			loadOSLShaders();
-			/// \todo Control with an option.
-			AiMsgSetConsoleFlags( AI_LOG_ALL );
+			AiMsgSetLogFileFlags( m_logFileFlags );
+			AiMsgSetConsoleFlags( m_consoleFlags );
 		}
 
 		virtual ~ArnoldRenderer()
@@ -1278,6 +1287,32 @@ class ArnoldRenderer : public IECoreScenePreview::Renderer
 
 				}
 				return;
+			}
+			else if( name == g_logMaxWarningsOptionName )
+			{
+				if( value == NULL )
+				{
+					AiMsgSetMaxWarnings( 100 );
+				}
+				else if( const IECore::IntData *d = reportedCast<const IECore::IntData>( value, "option", name ) )
+				{
+					AiMsgSetMaxWarnings( d->readable() );
+				}
+				return;
+			}
+			else if( boost::starts_with( name.c_str(), g_logFlagsOptionPrefix ) )
+			{
+				if( updateLogFlags( name.string().substr( g_logFlagsOptionPrefix.size() ), value, /* console = */ false ) )
+				{
+					return;
+				}
+			}
+			else if( boost::starts_with( name.c_str(), g_consoleFlagsOptionPrefix ) )
+			{
+				if( updateLogFlags( name.string().substr( g_consoleFlagsOptionPrefix.size() ), value, /* console = */ true ) )
+				{
+					return;
+				}
 			}
 			else if( name == g_shaderSearchPathOptionName )
 			{
@@ -1505,6 +1540,103 @@ class ArnoldRenderer : public IECoreScenePreview::Renderer
 			option( g_shaderSearchPathOptionName, NULL );
 		}
 
+		bool updateLogFlags( const std::string name, const IECore::Data *value, bool console )
+		{
+			int flagToModify = AI_LOG_NONE;
+			if( name == "info" )
+			{
+				flagToModify = AI_LOG_INFO;
+			}
+			else if( name == "warnings" )
+			{
+				flagToModify = AI_LOG_WARNINGS;
+			}
+			else if( name == "errors" )
+			{
+				flagToModify = AI_LOG_ERRORS;
+			}
+			else if( name == "debug" )
+			{
+				flagToModify = AI_LOG_DEBUG;
+			}
+			else if( name == "stats" )
+			{
+				flagToModify = AI_LOG_STATS;
+			}
+			else if( name == "ass_parse" )
+			{
+				flagToModify = AI_LOG_ASS_PARSE;
+			}
+			else if( name == "plugins" )
+			{
+				flagToModify = AI_LOG_PLUGINS;
+			}
+			else if( name == "progress" )
+			{
+				flagToModify = AI_LOG_PROGRESS;
+			}
+			else if( name == "nan" )
+			{
+				flagToModify = AI_LOG_NAN;
+			}
+			else if( name == "timestamp" )
+			{
+				flagToModify = AI_LOG_TIMESTAMP;
+			}
+			else if( name == "backtrace" )
+			{
+				flagToModify = AI_LOG_BACKTRACE;
+			}
+			else if( name == "memory" )
+			{
+				flagToModify = AI_LOG_MEMORY;
+			}
+			else if( name == "color" )
+			{
+				flagToModify = AI_LOG_COLOR;
+			}
+			else
+			{
+				return false;
+			}
+
+			bool turnOn = false;
+			if( value == NULL )
+			{
+				turnOn = flagToModify & ( console == false ? g_logFlagsDefault : g_consoleFlagsDefault );
+			}
+			else if( const IECore::BoolData *d = reportedCast<const IECore::BoolData>( value, "option", name ) )
+			{
+				turnOn = d->readable();
+			}
+			else
+			{
+				return true;
+			}
+
+			int &flags = console ? m_consoleFlags : m_logFileFlags;
+			if( turnOn )
+			{
+				flags |= flagToModify;
+			}
+			else
+			{
+				flags = flags & ~flagToModify;
+			}
+
+			if( console )
+			{
+				AiMsgSetConsoleFlags( flags );
+			}
+			else
+			{
+				AiMsgSetLogFileFlags( flags );
+			}
+
+			return true;
+		}
+
+
 		ObjectInterfacePtr store( ObjectInterface *objectInterface )
 		{
 			if( m_renderType != Interactive )
@@ -1635,6 +1767,9 @@ class ArnoldRenderer : public IECoreScenePreview::Renderer
 
 		ShaderCachePtr m_shaderCache;
 		InstanceCachePtr m_instanceCache;
+
+		int m_logFileFlags;
+		int m_consoleFlags;
 
 		// Members used by batch renders
 

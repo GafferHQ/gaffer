@@ -516,6 +516,13 @@ _styleSheet = string.Template(
 		font-weight: bold;
 	}
 
+	QWidget#gafferCollapsible QWidget#gafferCollapsible > QCheckBox#gafferCollapsibleToggle {
+
+		margin-left: 12px;
+		font-weight: normal;
+
+	}
+
 	QCheckBox#gafferCollapsibleToggle:disabled {
 
 		color: $foregroundFaded;

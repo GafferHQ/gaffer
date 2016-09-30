@@ -48,6 +48,8 @@ def __renderingSummary( plug ) :
 		info.append( "Bucket Size %d" % plug["bucketSize"]["value"].getValue() )
 	if plug["bucketScanning"]["enabled"].getValue() :
 		info.append( "Bucket Scanning %s" % plug["bucketScanning"]["value"].getValue().capitalize() )
+	if plug["threads"]["enabled"].getValue() :
+		info.append( "Threads %d" % plug["threads"]["value"].getValue() )
 	return ", ".join( info )
 
 def __samplingSummary( plug ) :
@@ -109,13 +111,6 @@ def __featuresSummary( plug ) :
 
 	return ", ".join( info )
 
-def __performanceSummary( plug ) :
-
-	info = []
-	if plug["threads"]["enabled"].getValue() :
-		info.append( "Threads %d" % plug["threads"]["value"].getValue() )
-	return ", ".join( info )
-
 def __searchPathsSummary( plug ) :
 
 	info = []
@@ -139,6 +134,8 @@ def __loggingSummary( plug ) :
 	info = []
 	if plug["logFileName"]["enabled"].getValue() :
 		info.append( "File name" )
+	if plug["logMaxWarnings"]["enabled"].getValue() :
+		info.append( "Max Warnings %d" % plug["logMaxWarnings"]["value"].getValue() )
 
 	return ", ".join( info )
 
@@ -175,7 +172,6 @@ Gaffer.Metadata.registerNode(
 			"layout:section:Sampling:summary", __samplingSummary,
 			"layout:section:Ray Depth:summary", __rayDepthSummary,
 			"layout:section:Features:summary", __featuresSummary,
-			"layout:section:Performance:summary", __performanceSummary,
 			"layout:section:Search Paths:summary", __searchPathsSummary,
 			"layout:section:Error Colors:summary", __errorColorsSummary,
 			"layout:section:Logging:summary", __loggingSummary,
@@ -220,6 +216,19 @@ Gaffer.Metadata.registerNode(
 			"plugValueWidget:type", 'GafferUI.PresetsPlugValueWidget',
 			"presetNames", IECore.StringVectorData( ["Top", "Bottom", "Left", "Right", "Random", "Woven", "Spiral", "Spiral"] ),
 			"presetValues", IECore.StringVectorData( ["top", "bottom", "left", "right", "random", "woven", "spiral", "spiral"] ),
+		],
+
+		"options.threads" : [
+
+			"description",
+			"""
+			Specifies the number of threads Arnold
+			is allowed to use. A value of 0 gives
+			Arnold access to all available threads.
+			""",
+
+			"layout:section", "Rendering",
+
 		],
 
 		# Sampling
@@ -542,21 +551,6 @@ Gaffer.Metadata.registerNode(
 
 		],
 
-		# Performance
-
-		"options.threads" : [
-
-			"description",
-			"""
-			Specifies the number of threads Arnold
-			is allowed to use. A value of 0 gives
-			Arnold access to all available threads.
-			""",
-
-			"layout:section", "Performance",
-
-		],
-
 		# Search Paths
 
 		"options.textureSearchPath" : [
@@ -675,6 +669,18 @@ Gaffer.Metadata.registerNode(
 
 		],
 
+		"options.logMaxWarnings" : [
+
+			"description",
+			"""
+			The maximum number of warnings that will be reported.
+			""",
+
+			"layout:section", "Logging",
+			"label", "Max Warnings",
+
+		],
+
 		# Licensing
 
 		"options.abortOnLicenseFail" : [
@@ -704,3 +710,44 @@ Gaffer.Metadata.registerNode(
 	}
 
 )
+
+for plugPrefix in ( "log", "console" ) :
+
+	for plugSuffix, description in (
+		( "Info", "information messages" ),
+		( "Warnings", "warning messages" ),
+		( "Errors", "error messages" ),
+		( "Debug", "debug messages" ),
+		( "AssParse", "ass parsing" ),
+		( "Plugins", "plugin loading" ),
+		( "Progress", "progress messages" ),
+		( "NAN", "pixels with NaNs" ),
+		( "Timestamp", "timestamp prefixes" ),
+		( "Stats", "statistics" ),
+		( "Backtrace", "stack backtraces from crashes" ),
+		( "Memory", "memory usage prefixes" ),
+		( "Color", "coloured messages" ),
+	) :
+
+		Gaffer.Metadata.registerNode(
+
+			GafferArnold.ArnoldOptions,
+
+			plugs = {
+
+				"options." + plugPrefix + plugSuffix : [
+
+					"description",
+					"""
+					Whether or not {0} {1} included in the {2} output.
+					""".format( description, "are" if description.endswith( "s" ) else "is", plugPrefix ),
+
+					"label", plugSuffix,
+					"layout:section", "Logging." + ( "Console " if plugPrefix == "console" else "" ) + "Verbosity",
+
+				],
+
+			}
+
+		)
+
