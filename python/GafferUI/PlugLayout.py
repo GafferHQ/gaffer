@@ -667,7 +667,14 @@ class _CollapsibleLayout( _Layout ) :
 			collapsible = self.__collapsibles.get( name )
 			if collapsible is None :
 
-				collapsible = GafferUI.Collapsible( name, _CollapsibleLayout( self.orientation() ), borderWidth = 2, collapsed = True )
+				collapsible = GafferUI.Collapsible( name, _CollapsibleLayout( self.orientation() ), collapsed = True )
+				# Hack to add margins at the top and bottom but not at the sides.
+				## \todo This is exposed in the public API via the borderWidth
+				# parameter to the Collapsible. That parameter sucks because a) it
+				# makes a margin rather than a border, and b) it doesn't allow per-edge
+				# control. Either make that make sense, or remove it and find a way
+				# of deferring all this to the style.
+				collapsible._qtWidget().layout().setContentsMargins( 0, 2, 0, 2 )
 
 				collapsible.setCornerWidget( GafferUI.Label(), True )
 				## \todo This is fighting the default sizing applied in the Label constructor. Really we need a standard
