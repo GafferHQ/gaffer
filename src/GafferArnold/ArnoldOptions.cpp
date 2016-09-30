@@ -121,18 +121,18 @@ ArnoldOptions::ArnoldOptions( const std::string &name )
 	options->addOptionalMember( "ai:log:color", new IECore::BoolData( true ), "logColor", Gaffer::Plug::Default, false );
 
 	options->addOptionalMember( "ai:console:info", new IECore::BoolData( false ), "consoleInfo", Gaffer::Plug::Default, false );
-	options->addOptionalMember( "ai:console:warnings", new IECore::BoolData( false ), "consoleWarnings", Gaffer::Plug::Default, false );
-	options->addOptionalMember( "ai:console:errors", new IECore::BoolData( false ), "consoleErrors", Gaffer::Plug::Default, false );
+	options->addOptionalMember( "ai:console:warnings", new IECore::BoolData( true ), "consoleWarnings", Gaffer::Plug::Default, false );
+	options->addOptionalMember( "ai:console:errors", new IECore::BoolData( true ), "consoleErrors", Gaffer::Plug::Default, false );
 	options->addOptionalMember( "ai:console:debug", new IECore::BoolData( false ), "consoleDebug", Gaffer::Plug::Default, false );
 	options->addOptionalMember( "ai:console:ass_parse", new IECore::BoolData( false ), "consoleAssParse", Gaffer::Plug::Default, false );
 	options->addOptionalMember( "ai:console:plugins", new IECore::BoolData( false ), "consolePlugins", Gaffer::Plug::Default, false );
 	options->addOptionalMember( "ai:console:progress", new IECore::BoolData( false ), "consoleProgress", Gaffer::Plug::Default, false );
 	options->addOptionalMember( "ai:console:nan", new IECore::BoolData( false ), "consoleNAN", Gaffer::Plug::Default, false );
-	options->addOptionalMember( "ai:console:timestamp", new IECore::BoolData( false ), "consoleTimestamp", Gaffer::Plug::Default, false );
+	options->addOptionalMember( "ai:console:timestamp", new IECore::BoolData( true ), "consoleTimestamp", Gaffer::Plug::Default, false );
 	options->addOptionalMember( "ai:console:stats", new IECore::BoolData( false ), "consoleStats", Gaffer::Plug::Default, false );
-	options->addOptionalMember( "ai:console:backtrace", new IECore::BoolData( false ), "consoleBacktrace", Gaffer::Plug::Default, false );
-	options->addOptionalMember( "ai:console:memory", new IECore::BoolData( false ), "consoleMemory", Gaffer::Plug::Default, false );
-	options->addOptionalMember( "ai:console:color", new IECore::BoolData( false ), "consoleColor", Gaffer::Plug::Default, false );
+	options->addOptionalMember( "ai:console:backtrace", new IECore::BoolData( true ), "consoleBacktrace", Gaffer::Plug::Default, false );
+	options->addOptionalMember( "ai:console:memory", new IECore::BoolData( true ), "consoleMemory", Gaffer::Plug::Default, false );
+	options->addOptionalMember( "ai:console:color", new IECore::BoolData( true ), "consoleColor", Gaffer::Plug::Default, false );
 
 	// Licensing
 

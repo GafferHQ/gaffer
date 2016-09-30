@@ -1232,6 +1232,9 @@ IECore::InternedString g_shaderSearchPathOptionName( "ai:shader_searchpath" );
 std::string g_logFlagsOptionPrefix( "ai:log:" );
 std::string g_consoleFlagsOptionPrefix( "ai:console:" );
 
+const int g_logFlagsDefault = AI_LOG_ALL;
+const int g_consoleFlagsDefault = AI_LOG_WARNINGS | AI_LOG_ERRORS | AI_LOG_TIMESTAMP | AI_LOG_BACKTRACE | AI_LOG_MEMORY | AI_LOG_COLOR;
+
 class ArnoldRenderer : public IECoreScenePreview::Renderer
 {
 
@@ -1242,8 +1245,8 @@ class ArnoldRenderer : public IECoreScenePreview::Renderer
 				m_universeBlock( boost::make_shared<UniverseBlock>(  /* writable = */ true ) ),
 				m_shaderCache( new ShaderCache ),
 				m_instanceCache( new InstanceCache ),
-				m_logFileFlags( AI_LOG_ALL ),
-				m_consoleFlags( AI_LOG_NONE ),
+				m_logFileFlags( g_logFlagsDefault ),
+				m_consoleFlags( g_consoleFlagsDefault ),
 				m_assFileName( fileName )
 		{
 			loadOSLShaders();
@@ -1600,9 +1603,7 @@ class ArnoldRenderer : public IECoreScenePreview::Renderer
 			bool turnOn = false;
 			if( value == NULL )
 			{
-				// All console flags default off, and all
-				// log flags default on.
-				turnOn = console == false;
+				turnOn = flagToModify & ( console == false ? g_logFlagsDefault : g_consoleFlagsDefault );
 			}
 			else if( const IECore::BoolData *d = reportedCast<const IECore::BoolData>( value, "option", name ) )
 			{
