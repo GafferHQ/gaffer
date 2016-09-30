@@ -2180,6 +2180,16 @@ class AppleseedRenderer : public IECoreScenePreview::Renderer
 			// Log the total rendering time.
 			const double seconds = stopwatch.get_seconds();
 			RENDERER_LOG_INFO( "rendering finished in %s.", asf::pretty_time( seconds, 3 ).c_str() );
+
+			// Save the frame to disk if needed.
+			const asr::Frame* frame = m_project->get_frame();
+			const string output_filename = frame->get_parameters().get_optional<string>("output_filename");
+
+			if( !output_filename.empty() )
+			{
+				RENDERER_LOG_INFO("writing frame to disk...");
+				frame->write_main_image(output_filename.c_str());
+			}
 		}
 
 		void interactiveRender()
