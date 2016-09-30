@@ -84,8 +84,6 @@ def __mainSummary( plug ) :
 		info.append( "AA Samples %d" % plug["aaSamples"]["value"].getValue() )
 	if plug["lightingEngine"]["enabled"].getValue() :
 		info.append( "Lighting Engine %s" % plug["lightingEngine"]["value"].getValue() )
-	if plug["meshFileFormat"]["enabled"].getValue() :
-		info.append( "Mesh File Format %s" % plug["meshFileFormat"]["value"].getValue() )
 
 	return ", ".join( info )
 
@@ -289,14 +287,8 @@ Gaffer.Metadata.registerNode(
 
 			"layout:section", "Main",
 
-		],
-
-		"options.meshFileFormat.value" : [
-
-			"preset:BinaryMesh", "binarymesh",
-			"preset:Obj", "obj",
-
-			"plugValueWidget:type", "GafferUI.PresetsPlugValueWidget",
+			# Hidden because it's not used in the new renderer.
+			"plugValueWidget:type", ""
 
 		],
 
@@ -649,6 +641,19 @@ Gaffer.Metadata.registerNode(
 			__getDescriptionString( "progressive_frame_renderer:max_fps" ),
 
 			"layout:section", "System",
+
+		],
+
+		"options.interactiveRenderMaxSamples" : [
+
+			"description",
+			"""
+			Sets the maximum number of samples to use when doing
+			interactive rendering.
+			""",
+
+			"layout:section", "System",
+			"plugValueWidget:type", ""
 
 		],
 
