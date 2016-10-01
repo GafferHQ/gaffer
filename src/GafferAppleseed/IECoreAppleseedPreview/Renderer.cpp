@@ -1403,7 +1403,6 @@ class AppleseedEnvironmentLight : public AppleseedLight
 		}
 
 		asr::EnvironmentEDF *m_environment;
-		bool m_visibleInBackground;
 		asr::TransformSequence m_transformSequence;
 };
 
