@@ -74,7 +74,7 @@ gaffer screengrab \
 
 gaffer screengrab \
 	-script scripts/renderSettingsWithGap.gfr \
-	-selection StandardOptions Outputs InteractiveAppleseedRender Display \
+	-selection StandardOptions AppleseedOptions Outputs InteractiveAppleseedRender Display \
 	-editor NodeGraph \
 	-image images/renderSettingsWithGap.png
 

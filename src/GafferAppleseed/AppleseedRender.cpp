@@ -34,48 +34,18 @@
 //
 //////////////////////////////////////////////////////////////////////////
 
-#ifndef GAFFERAPPLESEED_APPLESEEDLIGHT_H
-#define GAFFERAPPLESEED_APPLESEEDLIGHT_H
+#include "GafferAppleseed/AppleseedRender.h"
 
-#include "foundation/utility/api/specializedapiarrays.h"
+using namespace GafferScene;
+using namespace GafferAppleseed;
 
-#include "GafferScene/Light.h"
+IE_CORE_DEFINERUNTIMETYPED( AppleseedRender );
 
-#include "GafferAppleseed/TypeIds.h"
-
-namespace GafferAppleseed
+AppleseedRender::AppleseedRender( const std::string &name )
+	:	Render( "IECoreAppleseed::Renderer", name )
 {
+}
 
-class AppleseedLight : public GafferScene::Light
+AppleseedRender::~AppleseedRender()
 {
-
-	public :
-
-		IE_CORE_DECLARERUNTIMETYPEDEXTENSION( GafferAppleseed::AppleseedLight, AppleseedLightTypeId, GafferScene::Light );
-
-		AppleseedLight( const std::string &name=defaultName<AppleseedLight>() );
-		virtual ~AppleseedLight();
-
-		void loadShader( const std::string &shaderName );
-
-	protected :
-
-		virtual void hashLight( const Gaffer::Context *context, IECore::MurmurHash &h ) const;
-		virtual IECore::ObjectVectorPtr computeLight( const Gaffer::Context *context ) const;
-
-	private :
-
-		Gaffer::StringPlug *modelPlug();
-		const Gaffer::StringPlug *modelPlug() const;
-
-		void setupPlugs( const std::string &shaderName, const foundation::DictionaryArray &metadata );
-
-		static size_t g_firstPlugIndex;
-
-};
-
-IE_CORE_DECLAREPTR( AppleseedLight )
-
-} // namespace GafferAppleseed
-
-#endif // GAFFERAPPLESEED_APPLESEEDLIGHT_H
+}

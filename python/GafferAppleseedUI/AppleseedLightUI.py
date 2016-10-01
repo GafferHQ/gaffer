@@ -34,7 +34,11 @@
 #
 ##########################################################################
 
+import math
+
 import appleseed
+
+from IECore import V3f, M44f
 
 import Gaffer
 import GafferUI

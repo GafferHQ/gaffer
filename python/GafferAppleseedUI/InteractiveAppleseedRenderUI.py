@@ -43,15 +43,9 @@ Gaffer.Metadata.registerNode(
 
 	"description",
 	"""
-	Performs interactive renders using the appleseed renderer.
-	The following edits are currently supported :
-
-	- Adding/removing lights
-	- Adjusting light parameters
-	- Moving the camera
-	- Changing shader assignments
-	- Editing shader networks
-	- Editing shader parameters
+	Performs interactive renders using appleseed, updating the render on the fly
+	whenever the input scene changes. appleseed supports edits to all aspects of
+	the scene without needing to restart the render.
 	""",
 
 )

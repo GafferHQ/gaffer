@@ -5,8 +5,8 @@ import GafferScene
 import IECore
 
 Gaffer.Metadata.registerNodeValue( parent, "serialiser:milestoneVersion", 0, persistent=False )
-Gaffer.Metadata.registerNodeValue( parent, "serialiser:majorVersion", 26, persistent=False )
-Gaffer.Metadata.registerNodeValue( parent, "serialiser:minorVersion", 0, persistent=False )
+Gaffer.Metadata.registerNodeValue( parent, "serialiser:majorVersion", 28, persistent=False )
+Gaffer.Metadata.registerNodeValue( parent, "serialiser:minorVersion", 3, persistent=False )
 Gaffer.Metadata.registerNodeValue( parent, "serialiser:patchVersion", 0, persistent=False )
 
 __children = {}
@@ -71,22 +71,27 @@ __children["Outputs"]["outputs"]["output1"]["parameters"].addChild( Gaffer.Compo
 __children["Outputs"]["outputs"]["output1"]["parameters"]["remoteDisplayType"].addChild( Gaffer.StringPlug( "name", defaultValue = 'remoteDisplayType', flags = Gaffer.Plug.Flags.Default | Gaffer.Plug.Flags.Dynamic, ) )
 __children["Outputs"]["outputs"]["output1"]["parameters"]["remoteDisplayType"].addChild( Gaffer.StringPlug( "value", defaultValue = 'GafferImage::GafferDisplayDriver', flags = Gaffer.Plug.Flags.Default | Gaffer.Plug.Flags.Dynamic, ) )
 __children["Outputs"].addChild( Gaffer.V2fPlug( "__uiPosition", defaultValue = IECore.V2f( 0, 0 ), flags = Gaffer.Plug.Flags.Default | Gaffer.Plug.Flags.Dynamic, ) )
-__children["Outputs"]["__uiPosition"].setValue( IECore.V2f( 8.40072632, -95.9580917 ) )
+__children["Outputs"]["__uiPosition"].setValue( IECore.V2f( 8.40511799, -105.122162 ) )
 __children["InteractiveAppleseedRender"] = GafferAppleseed.InteractiveAppleseedRender( "InteractiveAppleseedRender" )
 parent.addChild( __children["InteractiveAppleseedRender"] )
 __children["InteractiveAppleseedRender"].addChild( Gaffer.V2fPlug( "__uiPosition", defaultValue = IECore.V2f( 0, 0 ), flags = Gaffer.Plug.Flags.Default | Gaffer.Plug.Flags.Dynamic, ) )
-__children["InteractiveAppleseedRender"]["__uiPosition"].setValue( IECore.V2f( 8.40158939, -105.122169 ) )
+__children["InteractiveAppleseedRender"]["__uiPosition"].setValue( IECore.V2f( 8.40703678, -114.286224 ) )
 __children["Display"] = GafferImage.Display( "Display" )
 parent.addChild( __children["Display"] )
 __children["Display"].addChild( Gaffer.V2fPlug( "__uiPosition", defaultValue = IECore.V2f( 0, 0 ), flags = Gaffer.Plug.Flags.Default | Gaffer.Plug.Flags.Dynamic, ) )
-__children["Display"]["__uiPosition"].setValue( IECore.V2f( 25.9345436, -104.9636 ) )
+__children["Display"]["__uiPosition"].setValue( IECore.V2f( 26.5055332, -114.242188 ) )
+__children["AppleseedOptions"] = GafferAppleseed.AppleseedOptions( "AppleseedOptions" )
+parent.addChild( __children["AppleseedOptions"] )
+__children["AppleseedOptions"].addChild( Gaffer.V2fPlug( "__uiPosition", defaultValue = IECore.V2f( 0, 0 ), flags = Gaffer.Plug.Flags.Default | Gaffer.Plug.Flags.Dynamic, ) )
+__children["AppleseedOptions"]["__uiPosition"].setValue( IECore.V2f( 8.40179634, -95.9581146 ) )
 parent["variables"]["projectName"]["name"].setFlags( Gaffer.Plug.Flags.ReadOnly, True )
 parent["variables"]["projectRootDirectory"]["name"].setFlags( Gaffer.Plug.Flags.ReadOnly, True )
 __children["Group"]["in"]["in0"].setInput( __children["SceneReader"]["out"] )
 __children["Group"]["in"]["in1"].setInput( __children["Camera"]["out"] )
 __children["StandardOptions"]["in"].setInput( __children["Group"]["out"] )
-__children["Outputs"]["in"].setInput( __children["StandardOptions"]["out"] )
+__children["Outputs"]["in"].setInput( __children["AppleseedOptions"]["out"] )
 __children["InteractiveAppleseedRender"]["in"].setInput( __children["Outputs"]["out"] )
+__children["AppleseedOptions"]["in"].setInput( __children["StandardOptions"]["out"] )
 
 
 del __children
