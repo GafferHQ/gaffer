@@ -128,6 +128,8 @@ try :
 except :
 	APPLESEED_ROOT = ""
 
+OSLHOME = os.path.join( IEEnv.Environment.rootPath(), "apps", "OpenShadingLanguage", oslVersion, IEEnv.platform(), compiler, compilerVersion )
+
 sphinxRoot = os.path.join( IEEnv.Environment.rootPath(), "apps", "sphinx", "1.4.1" )
 
 ##########################################################################
@@ -163,7 +165,7 @@ LOCATE_DEPENDENCY_SYSTEMPATH = [
 	os.path.join( IEEnv.Environment.rootPath(), "apps", "OpenVDB", vdbVersion, IEEnv.platform(), compiler, compilerVersion, "include" ),
 	os.path.join( IEEnv.Environment.rootPath(), "apps", "OpenColorIO", ocioVersion, IEEnv.platform(), compiler, compilerVersion, "include" ),
 	os.path.join( IEEnv.Environment.rootPath(), "apps", "OpenImageIO", oiioVersion, IEEnv.platform(), compiler, compilerVersion, "include" ),
-	os.path.join( IEEnv.Environment.rootPath(), "apps", "OpenShadingLanguage", oslVersion, IEEnv.platform(), compiler, compilerVersion, "include" ),
+	os.path.join( OSLHOME, "include" ),
 	os.path.join( IEEnv.Environment.rootPath(), "apps", "qt", qtVersion, IEEnv.platform(), compiler, compilerVersion, "include" ),
 	os.path.join( IEEnv.Environment.rootPath(), "tools", "include", IEEnv.platform(), "glew", targetAppReg.get( "glew", cortexReg["glewVersion"] ) ),
 	os.path.join( IEEnv.Environment.rootPath(), "tools", "include", IEEnv.platform(), "OpenEXR", targetAppReg.get( "OpenEXRVersion", cortexReg["OpenEXRVersion"] ) ),
@@ -206,7 +208,7 @@ LOCATE_DEPENDENCY_LIBPATH = [
 	os.path.join( IEEnv.Environment.rootPath(), "apps", "cortex", cortexVersion, IEEnv.platform(), "base", "arnold", arnoldVersion, "lib", compiler, compilerVersion ),
 	os.path.join( IEEnv.Environment.rootPath(), "apps", "cortex", cortexVersion, IEEnv.platform(), "base", "appleseed", appleseedVersion, "lib", compiler, compilerVersion ),
 	os.path.join( IEEnv.Environment.rootPath(), "apps", "qt", qtVersion, IEEnv.platform(), compiler, compilerVersion, "lib" ),
-	os.path.join( IEEnv.Environment.rootPath(), "apps", "OpenShadingLanguage", oslVersion, IEEnv.platform(), compiler, compilerVersion, "lib" ),	
+	os.path.join( OSLHOME, "lib" ),	
 	os.path.join( IEEnv.Environment.rootPath(), "apps", "OpenVDB", vdbVersion, IEEnv.platform(), compiler, compilerVersion, "lib" ),
 	os.path.join( IEEnv.Environment.rootPath(), "apps", "appleseed", appleseedVersion, IEEnv.platform(), "lib" ),
 
