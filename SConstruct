@@ -143,8 +143,14 @@ options.Add(
 
 options.Add(
 	"APPLESEED_ROOT",
-	"The direction in which Appleseed is installed. Used to build Gafferseed",
+	"The directory in which Appleseed is installed. Used to build Gafferseed",
 	"$BUILD_DIR/appleseed",
+)
+
+options.Add(
+	"OSLHOME",
+	"The directory in which OpenShadingLanguage is installed. Used to run OSL when building documentation",
+	"$BUILD_DIR",
 )
 
 # variables to be used when making a build which will use dependencies previously
@@ -683,11 +689,11 @@ libraries = {
 
 	"GafferOSL" : {
 		"envAppends" : {
-			"CPPPATH" : [ "$BUILD_DIR/include/OSL" ],
+			"CPPPATH" : [ "$OSLHOME/include/OSL" ],
 			"LIBS" : [ "Gaffer", "GafferScene", "GafferImage", "OpenImageIO$OIIO_LIB_SUFFIX", "oslquery$OSL_LIB_SUFFIX", "oslexec$OSL_LIB_SUFFIX" ],
 		},
 		"pythonEnvAppends" : {
-			"CPPPATH" : [ "$BUILD_DIR/include/OSL" ],
+			"CPPPATH" : [ "$OSLHOME/include/OSL" ],
 			"LIBS" : [ "GafferBindings", "GafferScene", "GafferImage", "GafferOSL" ],
 		},
 		"oslHeaders" : glob.glob( "shaders/*/*.h" ),
@@ -1058,6 +1064,7 @@ def buildDocs( target, source, env ) :
 	if env.subst( "$APPLESEED_ROOT" ) and env["APPLESEED_ROOT"] != "$BUILD_DIR/appleseed" :
 		env["ENV"]["PATH"] += ":" + env.subst( "$APPLESEED_ROOT/bin" )
 		env["ENV"][libraryPathEnvVar] += ":" + env.subst( "$APPLESEED_ROOT/lib" )
+		env["ENV"]["OSLHOME"] = env.subst( "$OSLHOME" )
 		env["ENV"]["OSL_SHADER_PATHS"] = env.subst( "$APPLESEED_ROOT/shaders" )
 		env["ENV"]["APPLESEED_SEARCHPATH"] = env.subst( "$APPLESEED_ROOT/shaders:$LOCATE_DEPENDENCY_APPLESEED_SEARCHPATH" )
 
