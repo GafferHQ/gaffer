@@ -114,20 +114,18 @@ std::vector<AtNode *> convert( const IECore::ObjectVector *shaderNetwork, const 
 	for( ObjectVector::MemberContainer::const_iterator it = shaderNetwork->members().begin(), eIt = shaderNetwork->members().end(); it != eIt; ++it )
 	{
 		const char *nodeType = NULL;
+		const char *oslShaderName = NULL;
 		const CompoundDataMap *parameters = NULL;
 		if( const Shader *shader = runTimeCast<const Shader>( it->get() ) )
 		{
-			nodeType = shader->getName().c_str();
-			const size_t slashIndex = shader->getName().find_last_of( '/' );
-			if( slashIndex != string::npos )
+			if( boost::starts_with( shader->getType(), "osl:" ) )
 			{
-				// It's pretty common to install OSL shaders in subdirectories
-				// of the main shader path. Although liboslexec itself does support
-				// this, Arnold does not. So we strip off any directory prefix here,
-				// relying on the Renderer class to have recursively loaded all OSL
-				// shaders from the searchpaths, and relying on the shader author to
-				// keep the leaf names of shaders unique. This is the best we can do.
-				nodeType += slashIndex + 1;
+				nodeType = "osl_shader";
+				oslShaderName = shader->getName().c_str();
+			}
+			else
+			{
+				nodeType = shader->getName().c_str();
 			}
 			parameters = &shader->parameters();
 		}
@@ -157,9 +155,20 @@ std::vector<AtNode *> convert( const IECore::ObjectVector *shaderNetwork, const 
 			continue;
 		}
 
+		if( oslShaderName )
+		{
+			AiNodeSetStr( node, "shadername", oslShaderName );
+		}
+
 		std::string nodeName = boost::lexical_cast<string>( result.size() );
 		for( CompoundDataMap::const_iterator pIt = parameters->begin(), peIt = parameters->end(); pIt != peIt; ++pIt )
 		{
+			std::string parameterName = pIt->first;
+			if( oslShaderName )
+			{
+				parameterName = "param_" + parameterName;
+			}
+
 			if( const StringData *stringData = runTimeCast<const StringData>( pIt->second.get() ) )
 			{
 				const string &value = stringData->readable();
@@ -178,18 +187,17 @@ std::vector<AtNode *> convert( const IECore::ObjectVector *shaderNetwork, const 
 					ShaderMap::const_iterator shaderIt = shaderMap.find( linkHandle );
 					if( shaderIt != shaderMap.end() )
 					{
-						const char *parmName = pIt->first.value().c_str();
-						const AtParamEntry *parmEntry = AiNodeEntryLookUpParameter( AiNodeGetNodeEntry( node ), parmName );
+						const AtParamEntry *parmEntry = AiNodeEntryLookUpParameter( AiNodeGetNodeEntry( node ), parameterName.c_str() );
 						// If the parameter is a node pointer, we just set it to the source node.
 						// Otherwise we assume that it is of a matching type to the output of the
 						// source node, and try to link it
 						if( AiParamGetType( parmEntry ) == AI_TYPE_NODE )
 						{
-							AiNodeSetPtr( node, parmName, shaderIt->second );
+							AiNodeSetPtr( node, parameterName.c_str(), shaderIt->second );
 						}
 						else
 						{
-							AiNodeLinkOutput( shaderIt->second, "", node, parmName );
+							AiNodeLinkOutput( shaderIt->second, "", node, parameterName.c_str() );
 						}
 					}
 					else
@@ -230,8 +238,7 @@ std::vector<AtNode *> convert( const IECore::ObjectVector *shaderNetwork, const 
 
 				if( nodes.size() )
 				{
-					const char *parmName = pIt->first.value().c_str();
-					const AtParamEntry *parmEntry = AiNodeEntryLookUpParameter( AiNodeGetNodeEntry( node ), parmName );
+					const AtParamEntry *parmEntry = AiNodeEntryLookUpParameter( AiNodeGetNodeEntry( node ), parameterName.c_str() );
 					if( AiParamGetType( parmEntry ) == AI_TYPE_ARRAY )
 					{
 						const AtParamValue *def = AiParamGetDefault( parmEntry );
@@ -240,7 +247,7 @@ std::vector<AtNode *> convert( const IECore::ObjectVector *shaderNetwork, const 
 						if( def->ARRAY->type == AI_TYPE_NODE )
 						{
 							AtArray *nodesArray = AiArrayConvert( nodes.size(), 1, AI_TYPE_POINTER, &nodes[0] );
-							AiNodeSetArray( node, parmName, nodesArray );
+							AiNodeSetArray( node, parameterName.c_str(), nodesArray );
 						}
 						else
 						{
@@ -248,7 +255,7 @@ std::vector<AtNode *> convert( const IECore::ObjectVector *shaderNetwork, const 
 							{
 								AiNodeLinkOutput(
 									nodes[i], "", node,
-									( pIt->first.value() + "[" + boost::lexical_cast<string>( i ) + "]" ).c_str()
+									( parameterName + "[" + boost::lexical_cast<string>( i ) + "]" ).c_str()
 								);
 							}
 						}
@@ -259,16 +266,16 @@ std::vector<AtNode *> convert( const IECore::ObjectVector *shaderNetwork, const 
 			}
 			else if( const SplineffData *splineData = runTimeCast<const SplineffData>( pIt->second.get() ) )
 			{
-				setSplineParameter( node, pIt->first, splineData->readable() );
+				setSplineParameter( node, parameterName.c_str(), splineData->readable() );
 				continue;
 			}
 			else if( const SplinefColor3fData *splineData = runTimeCast<const SplinefColor3fData>( pIt->second.get() ) )
 			{
-				setSplineParameter( node, pIt->first, splineData->readable() );
+				setSplineParameter( node, parameterName.c_str(), splineData->readable() );
 				continue;
 			}
 
-			ParameterAlgo::setParameter( node, pIt->first.value().c_str(), pIt->second.get() );
+			ParameterAlgo::setParameter( node, parameterName.c_str(), pIt->second.get() );
 		}
 
 		nodeName = namePrefix + nodeName;

@@ -34,6 +34,7 @@
 #
 ##########################################################################
 
+import os
 import ctypes
 import unittest
 
@@ -1003,7 +1004,7 @@ class RendererTest( GafferTest.TestCase ) :
 			arnold.AiASSLoad( self.temporaryDirectory() + "/test.ass" )
 
 			options = arnold.AiUniverseGetOptions()
-			self.assertTrue( "shaders/Pattern:" in arnold.AiNodeGetStr( options, "shader_searchpath" ) )
+			self.assertTrue( os.path.expandvars( "$GAFFER_ROOT/shaders" ) in arnold.AiNodeGetStr( options, "shader_searchpath" ) )
 
 			n = arnold.AiNodeLookUpByName( "testPlane" )
 
@@ -1011,24 +1012,26 @@ class RendererTest( GafferTest.TestCase ) :
 			self.assertEqual( arnold.AiNodeEntryGetName( arnold.AiNodeGetNodeEntry( flat ) ), "flat" )
 
 			spline = arnold.AiNodeGetLink( flat, "color" )
-			self.assertEqual( arnold.AiNodeEntryGetName( arnold.AiNodeGetNodeEntry( spline ) ), "ColorSpline" )
-			self.assertEqual( arnold.AiNodeGetStr( spline, "splineBasis" ), "bspline" )
+			self.assertEqual( arnold.AiNodeEntryGetName( arnold.AiNodeGetNodeEntry( spline ) ), "osl_shader" )
+			self.assertEqual( arnold.AiNodeGetStr( spline, "shadername" ), "Pattern/ColorSpline" )
+			self.assertEqual( arnold.AiNodeGetStr( spline, "param_splineBasis" ), "bspline" )
 
-			splinePositions = arnold.AiNodeGetArray( spline, "splinePositions" )
+			splinePositions = arnold.AiNodeGetArray( spline, "param_splinePositions" )
 			self.assertEqual( arnold.AiArrayGetFlt( splinePositions, 0 ), 0 )
 			self.assertEqual( arnold.AiArrayGetFlt( splinePositions, 1 ), 0 )
 			self.assertEqual( arnold.AiArrayGetFlt( splinePositions, 2 ), 1 )
 			self.assertEqual( arnold.AiArrayGetFlt( splinePositions, 3 ), 1 )
 
-			splineValues = arnold.AiNodeGetArray( spline, "splineValues" )
+			splineValues = arnold.AiNodeGetArray( spline, "param_splineValues" )
 			self.assertEqual( arnold.AiArrayGetRGB( splineValues, 0 ), arnold.AtRGB( 0.25, 0.25, 0.25 ) )
 			self.assertEqual( arnold.AiArrayGetRGB( splineValues, 1 ), arnold.AtRGB( 0.25, 0.25, 0.25 ) )
 			self.assertEqual( arnold.AiArrayGetRGB( splineValues, 2 ), arnold.AtRGB( 0.5, 0.5, 0.5 ) )
 			self.assertEqual( arnold.AiArrayGetRGB( splineValues, 3 ), arnold.AtRGB( 0.5, 0.5, 0.5 ) )
 
 			noise = arnold.AiNodeGetLink( flat, "opacity" )
-			self.assertEqual( arnold.AiNodeEntryGetName( arnold.AiNodeGetNodeEntry( noise ) ), "Noise" )
-			self.assertEqual( arnold.AiNodeGetFlt( noise, "scale" ), 10.0 )
+			self.assertEqual( arnold.AiNodeEntryGetName( arnold.AiNodeGetNodeEntry( noise ) ), "osl_shader" )
+			self.assertEqual( arnold.AiNodeGetStr( noise, "shadername" ), "Pattern/Noise" )
+			self.assertEqual( arnold.AiNodeGetFlt( noise, "param_scale" ), 10.0 )
 
 	def testPureOSLShaders( self ) :
 
@@ -1055,12 +1058,12 @@ class RendererTest( GafferTest.TestCase ) :
 			arnold.AiASSLoad( self.temporaryDirectory() + "/test.ass" )
 
 			options = arnold.AiUniverseGetOptions()
-			self.assertTrue( "shaders/Pattern:" in arnold.AiNodeGetStr( options, "shader_searchpath" ) )
 
 			n = arnold.AiNodeLookUpByName( "testPlane" )
 
 			noise = arnold.AtNode.from_address( arnold.AiNodeGetPtr( n, "shader" ) )
-			self.assertEqual( arnold.AiNodeEntryGetName( arnold.AiNodeGetNodeEntry( noise ) ), "Noise" )
+			self.assertEqual( arnold.AiNodeEntryGetName( arnold.AiNodeGetNodeEntry( noise ) ), "osl_shader" )
+			self.assertEqual( arnold.AiNodeGetStr( noise, "shadername" ), "Pattern/Noise" )
 
 	def testTraceSets( self ) :
 

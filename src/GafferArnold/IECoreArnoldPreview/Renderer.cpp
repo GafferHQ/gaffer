@@ -1249,9 +1249,10 @@ class ArnoldRenderer : public IECoreScenePreview::Renderer
 				m_consoleFlags( g_consoleFlagsDefault ),
 				m_assFileName( fileName )
 		{
-			loadOSLShaders();
 			AiMsgSetLogFileFlags( m_logFileFlags );
 			AiMsgSetConsoleFlags( m_consoleFlags );
+			// Get OSL shaders onto the shader searchpath.
+			option( g_shaderSearchPathOptionName, new IECore::StringData( "" ) );
 		}
 
 		virtual ~ArnoldRenderer()
@@ -1316,11 +1317,10 @@ class ArnoldRenderer : public IECoreScenePreview::Renderer
 			}
 			else if( name == g_shaderSearchPathOptionName )
 			{
-				// When generating an ASS file, we must manually insert
-				// the paths used by loadOSLShaders() into the shader_searchpath
-				// option, otherwise standalone rendering via `kick` will fail
-				// to find the shaders.
-				string s = m_oslShaderDirectories;
+				// We must include the OSL searchpaths in Arnold's shader
+				// searchpaths so that the OSL shaders can be found.
+				const char *searchPath = getenv( "OSL_SHADER_PATHS" );
+				std::string s( searchPath ? searchPath : "" );
 				if( value )
 				{
 					if( const IECore::StringData *d = reportedCast<const IECore::StringData>( value, "option", name ) )
@@ -1489,56 +1489,6 @@ class ArnoldRenderer : public IECoreScenePreview::Renderer
 		}
 
 	private :
-
-		// Arnold supports OSL shaders out of the box if they are
-		// placed on the ARNOLD_PLUGIN_PATH. But we want to support
-		// any OSL shaders found on the OSL_SHADER_PATHS as well, to
-		// be compatible with other OSL hosts within Gaffer. We also
-		// want to support shader libraries with shaders in subdirectories,
-		// so here we search for such shaders and load them explicitly.
-		void loadOSLShaders()
-		{
-			const char *searchPath = getenv( "OSL_SHADER_PATHS" );
-			if( !searchPath )
-			{
-				return;
-			}
-
-			vector<string> paths;
-			Gaffer::tokenize( searchPath, ':', paths );
-
-			vector<string> directories;
-			for( vector<string>::const_iterator pIt = paths.begin(), peIt = paths.end(); pIt != peIt; ++pIt )
-			{
-				if( !is_directory( *pIt ) )
-				{
-					continue;
-				}
-
-				AiLoadPlugins( pIt->c_str() );
-				directories.push_back( *pIt );
-
-				try
-				{
-					for( recursive_directory_iterator dIt( *pIt ), deIt; dIt != deIt; ++dIt )
-					{
-						if( is_directory( *dIt ) )
-						{
-							AiLoadPlugins( dIt->path().c_str() );
-							directories.push_back( dIt->path().string() );
-						}
-					}
-				}
-				catch( const filesystem_error & )
-				{
-				}
-			}
-
-			// Make sure SceneDescription mode includes the necessary paths in the
-			// ass file.
-			m_oslShaderDirectories = boost::algorithm::join( directories, ":" );
-			option( g_shaderSearchPathOptionName, NULL );
-		}
 
 		bool updateLogFlags( const std::string name, const IECore::Data *value, bool console )
 		{
@@ -1754,8 +1704,6 @@ class ArnoldRenderer : public IECoreScenePreview::Renderer
 		RenderType m_renderType;
 
 		boost::shared_ptr<IECoreArnold::UniverseBlock> m_universeBlock;
-
-		std::string m_oslShaderDirectories;
 
 		typedef std::map<IECore::InternedString, ArnoldOutputPtr> OutputMap;
 		OutputMap m_outputs;
