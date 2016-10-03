@@ -170,7 +170,7 @@ Next we need to position the camera so that it frames our subject :
 
 ![Group](images/cameraTransform.png)
 
-> Note : In the previous section we referred to the inputs and ouputs of the nodes as **plugs**,
+> Note : In the previous section we referred to the inputs and outputs of the nodes as **plugs**,
 > and connected them by dragging and dropping within the NodeGraph. But in fact, the **Translate**
 > and **Rotate** values we have just edited on the Camera node are _also_ **plugs** : they also
 > provide input to the node, and can also be connected together if needed. The NodeGraph and NodeEditor
@@ -187,8 +187,10 @@ working as expected. To do that we need to lay down some more nodes to define ou
 - Select the Group node in the NodeGraph.
 - Create a StandardOptions node (_/Scene/Globals/StandardOptions_). Note that it has been automatically
   connected to the output of the Group, and selected.
-- Create an Outputs node (_Scene/Globals/Outputs_). Note that it has been automatically connected to
-  the output of the StandardOptions node.
+- Create an AppleseedOptions node (_/Appleseed/Options_). Note that it has been automatically connected to
+  the output of the StandardOptions node and selected.
+- Create an Outputs node (_Scene/Globals/Outputs_). This too will be automatically added to the end of
+  the chain.
 - Create an InteractiveAppleseedRender node (_/Appleseed/InteractiveRender/_) to complete the chain.
 - Create a Display node (_/Image/Source/Display_) node. This doesn't need any input connections - just
   place it to one side of the InteractiveAppleseedRender node.
@@ -264,7 +266,7 @@ Assigning a shader
 
 It makes sense to think of our node graph as being composed of three distinct phases - generating the geometry, applying the lighting and shading, and finally rendering. Let's create some empty space in the centre of the graph so that we have somewhere to insert the nodes for our lighting and shading phase.
 
-- In the NodeGraph, _Left-Drag_ over the lower four nodes to select them.
+- In the NodeGraph, _Left-Drag_ over the lower five nodes to select them.
 - _Left-Drag_ on one of the nodes to move them all down to leave some space in the middle.
 - Use the _scroll wheel_ or hold down _Alt_ and _Right-Drag_ to zoom out and frame the whole node graph.
 
@@ -308,7 +310,14 @@ We should have successfully inserted the light into the scene hierarchy, without
 
 ![Parenting Scene Hierarchy](images/parentingSceneHierarchy.png)
 
-And our render should be in the process of updating with some basic lighting.
+Now we need to enable environment lighting in Appleseed for our light to take effect.
+
+- Edit the AppleseedOptions node in the NodeEditor
+- Open the Environment section
+- Turn on the **Environment Light** switch
+- Enter `/light` into the text field
+
+Our render should now be in the process of updating with some basic lighting.
 
 ![First Lighting](images/firstLighting.png)
 

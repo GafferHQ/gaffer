@@ -92,4 +92,12 @@ AppleseedOptions::AppleseedOptions( const std::string &name )
 	options->addOptionalMember( "as:cfg:progressive_frame_renderer:max_fps", new IECore::FloatData( 5.0f ), "interactiveRenderFps", Gaffer::Plug::Default, false );
 	options->addOptionalMember( "as:cfg:texture_store:max_size", new IECore::IntData( 256 * 1024 * 1024 ), "textureMem", Gaffer::Plug::Default, false );
 	options->addOptionalMember( "as:cfg:generic_frame_renderer:tile_ordering", new IECore::StringData( "spiral" ), "tileOrdering", Gaffer::Plug::Default, false );
+
+	// logging
+	options->addOptionalMember( "as:log:level", new IECore::StringData( "info" ), "logLevel", Gaffer::Plug::Default, false );
+	options->addOptionalMember( "as:log:filename", new IECore::StringData( "" ), "logFileName", Gaffer::Plug::Default, false );
+
+	// currently being used by the ShaderBall preview,
+	// not exposed in the options node UI,
+	options->addOptionalMember( "as:cfg:progressive_frame_renderer:max_samples", new IECore::IntData( 0 ), "interactiveRenderMaxSamples", Gaffer::Plug::Default, false );
 }

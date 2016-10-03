@@ -1,6 +1,6 @@
 //////////////////////////////////////////////////////////////////////////
 //
-//  Copyright (c) 2014, Esteban Tovagliari. All rights reserved.
+//  Copyright (c) 2016, Esteban Tovagliari. All rights reserved.
 //
 //  Redistribution and use in source and binary forms, with or without
 //  modification, are permitted provided that the following conditions are
@@ -34,48 +34,30 @@
 //
 //////////////////////////////////////////////////////////////////////////
 
-#ifndef GAFFERAPPLESEED_APPLESEEDLIGHT_H
-#define GAFFERAPPLESEED_APPLESEEDLIGHT_H
+#ifndef GAFFERAPPLESEED_APPLESEEDRENDER_H
+#define GAFFERAPPLESEED_APPLESEEDRENDER_H
 
-#include "foundation/utility/api/specializedapiarrays.h"
-
-#include "GafferScene/Light.h"
+#include "GafferScene/Preview/Render.h"
 
 #include "GafferAppleseed/TypeIds.h"
 
 namespace GafferAppleseed
 {
 
-class AppleseedLight : public GafferScene::Light
+class AppleseedRender : public GafferScene::Preview::Render
 {
 
 	public :
 
-		IE_CORE_DECLARERUNTIMETYPEDEXTENSION( GafferAppleseed::AppleseedLight, AppleseedLightTypeId, GafferScene::Light );
+		AppleseedRender( const std::string &name=defaultName<AppleseedRender>() );
+		virtual ~AppleseedRender();
 
-		AppleseedLight( const std::string &name=defaultName<AppleseedLight>() );
-		virtual ~AppleseedLight();
-
-		void loadShader( const std::string &shaderName );
-
-	protected :
-
-		virtual void hashLight( const Gaffer::Context *context, IECore::MurmurHash &h ) const;
-		virtual IECore::ObjectVectorPtr computeLight( const Gaffer::Context *context ) const;
-
-	private :
-
-		Gaffer::StringPlug *modelPlug();
-		const Gaffer::StringPlug *modelPlug() const;
-
-		void setupPlugs( const std::string &shaderName, const foundation::DictionaryArray &metadata );
-
-		static size_t g_firstPlugIndex;
+		IE_CORE_DECLARERUNTIMETYPEDEXTENSION( GafferAppleseed::AppleseedRender, AppleseedRenderTypeId, GafferScene::Preview::Render );
 
 };
 
-IE_CORE_DECLAREPTR( AppleseedLight )
+IE_CORE_DECLAREPTR( AppleseedRender );
 
 } // namespace GafferAppleseed
 
-#endif // GAFFERAPPLESEED_APPLESEEDLIGHT_H
+#endif // GAFFERAPPLESEED_APPLESEEDRENDER_H

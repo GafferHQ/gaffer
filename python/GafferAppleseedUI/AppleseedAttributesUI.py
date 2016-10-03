@@ -77,6 +77,18 @@ def __alphaMapSummary( plug ) :
 
 	return ", ".join( info )
 
+def __meshSummary( plug ) :
+
+	info = []
+
+	if plug["smoothNormals"]["enabled"].getValue() :
+		info.append( "Smooth Normals %s" % plug["smoothNormals"]["value"].getValue() )
+
+	if plug["smoothTangents"]["enabled"].getValue() :
+		info.append( "Smooth Tangents %s" % plug["smoothTangents"]["value"].getValue() )
+
+	return ", ".join( info )
+
 Gaffer.Metadata.registerNode(
 
 	GafferAppleseed.AppleseedAttributes,
@@ -96,6 +108,7 @@ Gaffer.Metadata.registerNode(
 			"layout:section:Visibility:summary", __visibilitySummary,
 			"layout:section:Shading:summary", __shadingSummary,
 			"layout:section:Alpha Map:summary", __alphaMapSummary,
+			"layout:section:Mesh :summary", __meshSummary,
 
 		],
 
@@ -227,6 +240,30 @@ Gaffer.Metadata.registerNode(
 			"plugValueWidget:type", "GafferUI.FileSystemPathPlugValueWidget",
 			"pathPlugValueWidget:leaf", True,
 			"pathPlugValueWidget:bookmarks", "texture",
+
+		],
+
+		"attributes.smoothNormals" : [
+
+		"description",
+		"""
+		Compute smooth normals.
+		""",
+
+		"layout:section", "Mesh",
+		"label", "Smooth Normals",
+
+		],
+
+		"attributes.smoothTangents" : [
+
+		"description",
+		"""
+		Compute smooth tangents.
+		""",
+
+		"layout:section", "Mesh",
+		"label", "Smooth Tangents",
 
 		],
 

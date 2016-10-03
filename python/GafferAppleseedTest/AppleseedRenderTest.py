@@ -60,7 +60,7 @@ class AppleseedRenderTest( GafferTest.TestCase ) :
 
 		s["plane"] = GafferScene.Plane()
 		s["render"] = GafferAppleseed.AppleseedRender()
-		s["render"]["mode"].setValue( "generate" )
+		s["render"]["mode"].setValue( s["render"].Mode.SceneDescriptionMode )
 		s["render"]["in"].setInput( s["plane"]["out"] )
 
 		s["expression"] = Gaffer.Expression()
@@ -101,7 +101,6 @@ class AppleseedRenderTest( GafferTest.TestCase ) :
 		s["render"] = GafferAppleseed.AppleseedRender()
 		s["render"]["in"].setInput( s["outputs"]["out"] )
 
-		s["render"]["verbosity"].setValue( "fatal" )
 		s["render"]["fileName"].setValue( self.temporaryDirectory() + "/test.appleseed" )
 
 		s["fileName"].setValue( self.__scriptFileName )
@@ -117,7 +116,7 @@ class AppleseedRenderTest( GafferTest.TestCase ) :
 
 		s["plane"] = GafferScene.Plane()
 		s["render"] = GafferAppleseed.AppleseedRender()
-		s["render"]["mode"].setValue( "generate" )
+		s["render"]["mode"].setValue( s["render"].Mode.SceneDescriptionMode )
 		s["render"]["in"].setInput( s["plane"]["out"] )
 		s["render"]["fileName"].setValue( self.temporaryDirectory() + "/test.####.appleseed" )
 
@@ -156,7 +155,6 @@ class AppleseedRenderTest( GafferTest.TestCase ) :
 		s["render"] = GafferAppleseed.AppleseedRender()
 		s["render"]["in"].setInput( s["outputs"]["out"] )
 
-		s["render"]["verbosity"].setValue( "fatal" )
 		s["render"]["fileName"].setValue( self.temporaryDirectory() + "/test.####.appleseed" )
 
 		s["fileName"].setValue( self.__scriptFileName )
@@ -209,7 +207,7 @@ class AppleseedRenderTest( GafferTest.TestCase ) :
 		s["render"] = GafferAppleseed.AppleseedRender()
 		s["render"]["in"].setInput( s["outputs"]["out"] )
 		s["render"]["fileName"].setValue( "$appleseedDirectory/test.####.appleseed" )
-		s["render"]["mode"].setValue( "generate" )
+		s["render"]["mode"].setValue( s["render"].Mode.SceneDescriptionMode )
 
 		self.assertFalse( os.path.exists( self.temporaryDirectory() + "/renderTests" ) )
 		self.assertFalse( os.path.exists( self.temporaryDirectory() + "/appleseedTests" ) )

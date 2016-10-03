@@ -42,7 +42,22 @@ with IECore.IgnoredExceptions( ImportError ) :
 
 	import GafferAppleseed
 	GafferSceneUI.ShaderView.registerRenderer( "osl", GafferAppleseed.InteractiveAppleseedRender )
-	GafferSceneUI.ShaderView.registerScene( "osl", "Default", GafferAppleseed.AppleseedShaderBall )
+
+	def __appleseedShaderBall() :
+
+		result = GafferAppleseed.AppleseedShaderBall()
+
+		# Limit the number of samples.
+		result["maxSamples"]["enabled"].setValue( True )
+		result["maxSamples"]["value"].setValue( 32 )
+
+		# Reserve some cores for the rest of the UI
+		result["threads"]["enabled"].setValue( True )
+		result["threads"]["value"].setValue( -3 )
+
+		return result
+
+	GafferSceneUI.ShaderView.registerScene( "osl", "Default", __appleseedShaderBall )
 
 with IECore.IgnoredExceptions( ImportError ) :
 
