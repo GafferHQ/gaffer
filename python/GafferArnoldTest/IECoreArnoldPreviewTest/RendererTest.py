@@ -68,6 +68,7 @@ class RendererTest( GafferTest.TestCase ) :
 			r.attributes( IECore.CompoundObject() ),
 		)
 		o.transform( IECore.M44f().translate( IECore.V3f( 1, 2, 3 ) ) )
+		del o
 
 		r.render()
 		del r
@@ -167,7 +168,7 @@ class RendererTest( GafferTest.TestCase ) :
 			} )
 			o.attributes( r.attributes( a ) )
 
-		del o, a
+		del o
 		r.render()
 		del r
 
@@ -348,6 +349,7 @@ class RendererTest( GafferTest.TestCase ) :
 			[ 2.5, 3.5 ]
 		)
 
+		del lightAttributes, staticLight, movingLight
 		r.render()
 		del r
 
@@ -585,6 +587,7 @@ class RendererTest( GafferTest.TestCase ) :
 		r.object( "subdivAdaptiveObjectSpaceAttributes2", subdivPlane.copy(), adaptiveObjectSpaceAttributes )
 
 		r.render()
+		del defaultAttributes, adaptiveAttributes, nonAdaptiveAttributes, adaptiveObjectSpaceAttributes
 		del r
 
 		with IECoreArnold.UniverseBlock() :
@@ -739,6 +742,7 @@ class RendererTest( GafferTest.TestCase ) :
 
 		r.object( "plane1", plane, sharedAttributes )
 		r.object( "plane2", plane, sharedAttributes )
+		del sharedAttributes
 
 		r.object(
 			"plane3",
@@ -805,15 +809,17 @@ class RendererTest( GafferTest.TestCase ) :
 		meshes["catmullClark"].interpolation = "catmullClark"
 
 		attributes = {}
-		for t in ( None, False, True ) :
+		for subdividePolygons in ( None, False, True ) :
 			a = IECore.CompoundObject()
-			if t is not None :
-				a["ai:polymesh:subdividePolygons"] = IECore.BoolData( t )
-			attributes[t] = r.attributes( a )
+			if subdividePolygons is not None :
+				a["ai:polymesh:subdividePolygons"] = IECore.BoolData( subdividePolygons )
+			attributes[subdividePolygons] = r.attributes( a )
 
 		for interpolation in meshes.keys() :
 			for subdividePolygons in attributes.keys() :
 				r.object( interpolation + "-" + str( subdividePolygons ), meshes[interpolation], attributes[subdividePolygons] )
+
+		del attributes
 
 		r.render()
 		del r
@@ -823,7 +829,7 @@ class RendererTest( GafferTest.TestCase ) :
 			arnold.AiASSLoad( self.temporaryDirectory() + "/test.ass" )
 
 			for interpolation in meshes.keys() :
-				for subdividePolygons in attributes.keys() :
+				for subdividePolygons in ( None, False, True ) :
 
 					instance = arnold.AiNodeLookUpByName( interpolation + "-" + str( subdividePolygons ) )
 					self.assertTrue( arnold.AiNodeIs( instance, "ginstance" ) )
@@ -987,6 +993,7 @@ class RendererTest( GafferTest.TestCase ) :
 			IECore.MeshPrimitive.createPlane( IECore.Box2f( IECore.V2f( -1 ), IECore.V2f( 1 ) ) ),
 			r.attributes( IECore.CompoundObject( { "ai:surface" : network } ) )
 		)
+		del o
 
 		r.render()
 		del r
@@ -1038,9 +1045,9 @@ class RendererTest( GafferTest.TestCase ) :
 			IECore.MeshPrimitive.createPlane( IECore.Box2f( IECore.V2f( -1 ), IECore.V2f( 1 ) ) ),
 			r.attributes( IECore.CompoundObject( { "osl:shader" : network } ) )
 		)
+		del o
 
 		r.render()
-		del o
 		del r
 
 		with IECoreArnold.UniverseBlock() :
@@ -1153,6 +1160,8 @@ class RendererTest( GafferTest.TestCase ) :
 		r.object( "modeRibbon", curves.copy(), modeRibbonAttributes )
 		r.object( "modeThick", curves.copy(), modeThickAttributes )
 		r.object( "pixelWidth0ModeRibbon", curves.copy(), pixelWidth0ModeRibbonAttributes )
+
+		del defaultAttributes, pixelWidth1Attributes, pixelWidth2Attributes, modeRibbonAttributes, modeThickAttributes, pixelWidth0ModeRibbonAttributes
 
 		r.render()
 		del r
@@ -1268,6 +1277,10 @@ class RendererTest( GafferTest.TestCase ) :
 		# geometry.
 
 		self.assertFalse( subdivMeshObject.attributes( nonDefaultIterationsAttributes ) )
+
+		del defaultAttributes, defaultIterationsAttributes, nonDefaultIterationsAttributes, subdividePolygonsAttributes
+		del polygonMeshObject, subdivMeshObject
+		del r
 
 	@staticmethod
 	def __m44f( m ) :
