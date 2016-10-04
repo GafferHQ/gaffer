@@ -1522,7 +1522,10 @@ class __ObjectSection( Section ) :
 		if not len( targets ) :
 			return ""
 
-		objects = [ target.object() for target in targets ]
+		objects = [
+			target.object() if target.path is not None else IECore.NullObject.defaultNullObject()
+			for target in targets
+		]
 		typeNames = [ o.typeName().split( ":" )[-1] for o in objects ]
 		typeNames = [ "None" if t == "NullObject" else t for t in typeNames ]
 
@@ -1563,8 +1566,11 @@ class __ObjectSection( Section ) :
 
 		def children( self, target ) :
 
+			if target.path is None :
+				return []
+
 			object = target.object()
-			if object is None or not isinstance( object, IECore.Primitive ) :
+			if not isinstance( object, IECore.Primitive ) :
 				return []
 
 			result = []
@@ -1651,6 +1657,9 @@ class __ObjectSection( Section ) :
 			return object[self.__primitiveVariableName]
 
 		def children( self, target ) :
+
+			if target.path is None :
+				return []
 
 			object = target.object()
 			if not isinstance( object, IECore.Primitive ) :
