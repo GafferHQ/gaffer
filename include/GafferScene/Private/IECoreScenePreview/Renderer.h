@@ -46,6 +46,29 @@ namespace IECoreScenePreview
 
 /// \todo Derive from RunTimeTyped - we're just avoiding doing that
 /// right now so we don't have to shuffle TypeIds between Gaffer and Cortex.
+///
+/// \todo Improve the API, particularly in terms of ownership
+/// semantics and the python bindings :
+///
+/// - For python code, it is too much of a burden to expect the coder
+///   to delete all handles before deleting the renderer.
+/// - For non-interactive modes, the "releasing the handle flushes
+///   the object" semantics are also highly inconvenient.
+///   We defined those semantics thinking that we'd need a way of
+///   flushing for RenderMan style renders, where we must close an
+///   attribute block, but only when we know the client is done with
+///   an object.
+///
+/// A potential solution is this :
+///
+/// - Change `object()` etc so that they only return a handle from
+///   interactive renders. We would need to add a transform argument
+///   to those methods so that a single call could fully specify the
+///   object, but this would let us get rid of the awkward
+///   "flush on delete" semantics.
+/// - Change the python bindings so that the lifetime of the object
+///   handles and the renderer are tied together, or have the object
+///   handles keep the renderer alive on the C++ side anyway.
 class Renderer : public IECore::RefCounted
 {
 
@@ -86,7 +109,9 @@ class Renderer : public IECore::RefCounted
 
 		IE_CORE_FORWARDDECLARE( AttributesInterface );
 
-		/// A handle to a block of attributes.
+		/// A handle to a block of attributes. Currently all
+		/// AttributesInterfaces _must_ be destroyed prior
+		/// to destruction of the renderer itself.
 		class AttributesInterface : public IECore::RefCounted
 		{
 
@@ -128,6 +153,9 @@ class Renderer : public IECore::RefCounted
 		///   removes the object from the render.
 		/// - For Batch and SceneDescription renders, releasing the Ptr flushes the
 		///   object to the renderer.
+		///
+		/// Currently all ObjectInterfaces _must_ be destroyed prior to destruction
+		/// of the renderer itself.
 		class ObjectInterface : public IECore::RefCounted
 		{
 

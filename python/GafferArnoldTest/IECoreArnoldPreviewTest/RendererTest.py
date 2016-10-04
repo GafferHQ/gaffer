@@ -34,6 +34,7 @@
 #
 ##########################################################################
 
+import os
 import ctypes
 import unittest
 
@@ -68,6 +69,7 @@ class RendererTest( GafferTest.TestCase ) :
 			r.attributes( IECore.CompoundObject() ),
 		)
 		o.transform( IECore.M44f().translate( IECore.V3f( 1, 2, 3 ) ) )
+		del o
 
 		r.render()
 		del r
@@ -167,7 +169,7 @@ class RendererTest( GafferTest.TestCase ) :
 			} )
 			o.attributes( r.attributes( a ) )
 
-		del o, a
+		del o
 		r.render()
 		del r
 
@@ -348,6 +350,7 @@ class RendererTest( GafferTest.TestCase ) :
 			[ 2.5, 3.5 ]
 		)
 
+		del lightAttributes, staticLight, movingLight
 		r.render()
 		del r
 
@@ -585,6 +588,7 @@ class RendererTest( GafferTest.TestCase ) :
 		r.object( "subdivAdaptiveObjectSpaceAttributes2", subdivPlane.copy(), adaptiveObjectSpaceAttributes )
 
 		r.render()
+		del defaultAttributes, adaptiveAttributes, nonAdaptiveAttributes, adaptiveObjectSpaceAttributes
 		del r
 
 		with IECoreArnold.UniverseBlock() :
@@ -739,6 +743,7 @@ class RendererTest( GafferTest.TestCase ) :
 
 		r.object( "plane1", plane, sharedAttributes )
 		r.object( "plane2", plane, sharedAttributes )
+		del sharedAttributes
 
 		r.object(
 			"plane3",
@@ -805,15 +810,17 @@ class RendererTest( GafferTest.TestCase ) :
 		meshes["catmullClark"].interpolation = "catmullClark"
 
 		attributes = {}
-		for t in ( None, False, True ) :
+		for subdividePolygons in ( None, False, True ) :
 			a = IECore.CompoundObject()
-			if t is not None :
-				a["ai:polymesh:subdividePolygons"] = IECore.BoolData( t )
-			attributes[t] = r.attributes( a )
+			if subdividePolygons is not None :
+				a["ai:polymesh:subdividePolygons"] = IECore.BoolData( subdividePolygons )
+			attributes[subdividePolygons] = r.attributes( a )
 
 		for interpolation in meshes.keys() :
 			for subdividePolygons in attributes.keys() :
 				r.object( interpolation + "-" + str( subdividePolygons ), meshes[interpolation], attributes[subdividePolygons] )
+
+		del attributes
 
 		r.render()
 		del r
@@ -823,7 +830,7 @@ class RendererTest( GafferTest.TestCase ) :
 			arnold.AiASSLoad( self.temporaryDirectory() + "/test.ass" )
 
 			for interpolation in meshes.keys() :
-				for subdividePolygons in attributes.keys() :
+				for subdividePolygons in ( None, False, True ) :
 
 					instance = arnold.AiNodeLookUpByName( interpolation + "-" + str( subdividePolygons ) )
 					self.assertTrue( arnold.AiNodeIs( instance, "ginstance" ) )
@@ -987,6 +994,7 @@ class RendererTest( GafferTest.TestCase ) :
 			IECore.MeshPrimitive.createPlane( IECore.Box2f( IECore.V2f( -1 ), IECore.V2f( 1 ) ) ),
 			r.attributes( IECore.CompoundObject( { "ai:surface" : network } ) )
 		)
+		del o
 
 		r.render()
 		del r
@@ -996,7 +1004,7 @@ class RendererTest( GafferTest.TestCase ) :
 			arnold.AiASSLoad( self.temporaryDirectory() + "/test.ass" )
 
 			options = arnold.AiUniverseGetOptions()
-			self.assertTrue( "shaders/Pattern:" in arnold.AiNodeGetStr( options, "shader_searchpath" ) )
+			self.assertTrue( os.path.expandvars( "$GAFFER_ROOT/shaders" ) in arnold.AiNodeGetStr( options, "shader_searchpath" ) )
 
 			n = arnold.AiNodeLookUpByName( "testPlane" )
 
@@ -1004,24 +1012,26 @@ class RendererTest( GafferTest.TestCase ) :
 			self.assertEqual( arnold.AiNodeEntryGetName( arnold.AiNodeGetNodeEntry( flat ) ), "flat" )
 
 			spline = arnold.AiNodeGetLink( flat, "color" )
-			self.assertEqual( arnold.AiNodeEntryGetName( arnold.AiNodeGetNodeEntry( spline ) ), "ColorSpline" )
-			self.assertEqual( arnold.AiNodeGetStr( spline, "splineBasis" ), "bspline" )
+			self.assertEqual( arnold.AiNodeEntryGetName( arnold.AiNodeGetNodeEntry( spline ) ), "osl_shader" )
+			self.assertEqual( arnold.AiNodeGetStr( spline, "shadername" ), "Pattern/ColorSpline" )
+			self.assertEqual( arnold.AiNodeGetStr( spline, "param_splineBasis" ), "bspline" )
 
-			splinePositions = arnold.AiNodeGetArray( spline, "splinePositions" )
+			splinePositions = arnold.AiNodeGetArray( spline, "param_splinePositions" )
 			self.assertEqual( arnold.AiArrayGetFlt( splinePositions, 0 ), 0 )
 			self.assertEqual( arnold.AiArrayGetFlt( splinePositions, 1 ), 0 )
 			self.assertEqual( arnold.AiArrayGetFlt( splinePositions, 2 ), 1 )
 			self.assertEqual( arnold.AiArrayGetFlt( splinePositions, 3 ), 1 )
 
-			splineValues = arnold.AiNodeGetArray( spline, "splineValues" )
+			splineValues = arnold.AiNodeGetArray( spline, "param_splineValues" )
 			self.assertEqual( arnold.AiArrayGetRGB( splineValues, 0 ), arnold.AtRGB( 0.25, 0.25, 0.25 ) )
 			self.assertEqual( arnold.AiArrayGetRGB( splineValues, 1 ), arnold.AtRGB( 0.25, 0.25, 0.25 ) )
 			self.assertEqual( arnold.AiArrayGetRGB( splineValues, 2 ), arnold.AtRGB( 0.5, 0.5, 0.5 ) )
 			self.assertEqual( arnold.AiArrayGetRGB( splineValues, 3 ), arnold.AtRGB( 0.5, 0.5, 0.5 ) )
 
 			noise = arnold.AiNodeGetLink( flat, "opacity" )
-			self.assertEqual( arnold.AiNodeEntryGetName( arnold.AiNodeGetNodeEntry( noise ) ), "Noise" )
-			self.assertEqual( arnold.AiNodeGetFlt( noise, "scale" ), 10.0 )
+			self.assertEqual( arnold.AiNodeEntryGetName( arnold.AiNodeGetNodeEntry( noise ) ), "osl_shader" )
+			self.assertEqual( arnold.AiNodeGetStr( noise, "shadername" ), "Pattern/Noise" )
+			self.assertEqual( arnold.AiNodeGetFlt( noise, "param_scale" ), 10.0 )
 
 	def testPureOSLShaders( self ) :
 
@@ -1038,9 +1048,9 @@ class RendererTest( GafferTest.TestCase ) :
 			IECore.MeshPrimitive.createPlane( IECore.Box2f( IECore.V2f( -1 ), IECore.V2f( 1 ) ) ),
 			r.attributes( IECore.CompoundObject( { "osl:shader" : network } ) )
 		)
+		del o
 
 		r.render()
-		del o
 		del r
 
 		with IECoreArnold.UniverseBlock() :
@@ -1048,12 +1058,12 @@ class RendererTest( GafferTest.TestCase ) :
 			arnold.AiASSLoad( self.temporaryDirectory() + "/test.ass" )
 
 			options = arnold.AiUniverseGetOptions()
-			self.assertTrue( "shaders/Pattern:" in arnold.AiNodeGetStr( options, "shader_searchpath" ) )
 
 			n = arnold.AiNodeLookUpByName( "testPlane" )
 
 			noise = arnold.AtNode.from_address( arnold.AiNodeGetPtr( n, "shader" ) )
-			self.assertEqual( arnold.AiNodeEntryGetName( arnold.AiNodeGetNodeEntry( noise ) ), "Noise" )
+			self.assertEqual( arnold.AiNodeEntryGetName( arnold.AiNodeGetNodeEntry( noise ) ), "osl_shader" )
+			self.assertEqual( arnold.AiNodeGetStr( noise, "shadername" ), "Pattern/Noise" )
 
 	def testTraceSets( self ) :
 
@@ -1153,6 +1163,8 @@ class RendererTest( GafferTest.TestCase ) :
 		r.object( "modeRibbon", curves.copy(), modeRibbonAttributes )
 		r.object( "modeThick", curves.copy(), modeThickAttributes )
 		r.object( "pixelWidth0ModeRibbon", curves.copy(), pixelWidth0ModeRibbonAttributes )
+
+		del defaultAttributes, pixelWidth1Attributes, pixelWidth2Attributes, modeRibbonAttributes, modeThickAttributes, pixelWidth0ModeRibbonAttributes
 
 		r.render()
 		del r
@@ -1268,6 +1280,10 @@ class RendererTest( GafferTest.TestCase ) :
 		# geometry.
 
 		self.assertFalse( subdivMeshObject.attributes( nonDefaultIterationsAttributes ) )
+
+		del defaultAttributes, defaultIterationsAttributes, nonDefaultIterationsAttributes, subdividePolygonsAttributes
+		del polygonMeshObject, subdivMeshObject
+		del r
 
 	@staticmethod
 	def __m44f( m ) :
