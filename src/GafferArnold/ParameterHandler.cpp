@@ -43,6 +43,8 @@
 #include "Gaffer/CompoundNumericPlug.h"
 #include "Gaffer/TypedPlug.h"
 #include "Gaffer/StringPlug.h"
+#include "Gaffer/Node.h"
+#include "Gaffer/ScriptNode.h"
 
 #include "GafferArnold/ParameterHandler.h"
 
@@ -308,6 +310,17 @@ Gaffer::Plug *setupRGBAPlug( const AtNodeEntry *node, const AtParamEntry *parame
 	}
 }
 
+const string nodeName ( Gaffer::GraphComponent *plugParent )
+{
+	const Gaffer::Node *node = IECore::runTimeCast<const Gaffer::Node>( plugParent );
+	if( !node )
+	{
+		node = plugParent->ancestor<Gaffer::Node>();
+	}
+
+	return node->relativeName( node->scriptNode() );
+}
+
 } // namespace
 
 Gaffer::Plug *ParameterHandler::setupPlug( const IECore::InternedString &parameterName, int parameterType, Gaffer::GraphComponent *plugParent, Gaffer::Plug::Direction direction )
@@ -348,7 +361,10 @@ Gaffer::Plug *ParameterHandler::setupPlug( const IECore::InternedString &paramet
 			msg(
 				Msg::Warning,
 				"GafferArnold::ParameterHandler::setupPlug",
-				format( "Unsupported parameter type \"%s\"" ) % AiParamGetTypeName( parameterType )
+				format( "Unsupported parameter type \"%s\" for \"%s\" on node \"%s\"" ) %
+					AiParamGetTypeName( parameterType ) %
+					parameterName.string() %
+					nodeName( plugParent )
 			);
 			return NULL;
 
@@ -481,9 +497,10 @@ Gaffer::Plug *ParameterHandler::setupPlug( const AtNodeEntry *node, const AtPara
 		msg(
 			Msg::Warning,
 			"GafferArnold::ParameterHandler::setupPlug",
-			format( "Unsupported parameter \"%s\" of type \"%s\"" ) %
+			format( "Unsupported parameter \"%s\" of type \"%s\" on node \"%s\"" ) %
 				AiParamGetName( parameter ) %
-				AiParamGetTypeName( AiParamGetType( parameter ) )
+				AiParamGetTypeName( AiParamGetType( parameter ) ) %
+				nodeName( plugParent )
 		);
 	}
 
