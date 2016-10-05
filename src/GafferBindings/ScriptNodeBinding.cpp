@@ -388,29 +388,6 @@ void deleteNodes( ScriptNode &s, Node *parent, const Set *filter, bool reconnect
 	s.deleteNodes( parent, filter, reconnect );
 }
 
-class ScriptNodeSerialiser : public NodeSerialiser
-{
-
-	virtual bool childNeedsSerialisation( const Gaffer::GraphComponent *child, const Serialisation &serialisation ) const
-	{
-		if( child->isInstanceOf( Node::staticTypeId() ) )
-		{
-			return true;
-		}
-		return NodeSerialiser::childNeedsSerialisation( child, serialisation );
-	}
-
-	virtual bool childNeedsConstruction( const Gaffer::GraphComponent *child, const Serialisation &serialisation ) const
-	{
-		if( child->isInstanceOf( Node::staticTypeId() ) )
-		{
-			return true;
-		}
-		return NodeSerialiser::childNeedsConstruction( child, serialisation );
-	}
-
-};
-
 struct ActionSlotCaller
 {
 
@@ -482,7 +459,5 @@ void GafferBindings::bindScriptNode()
 
 	SignalClass<ScriptNode::ScriptExecutedSignal>( "ScriptExecutedSignal" );
 	SignalClass<ScriptNode::ScriptEvaluatedSignal, DefaultSignalCaller<ScriptNode::ScriptEvaluatedSignal>, ScriptEvaluatedSlotCaller>( "ScriptEvaluatedSignal" );
-
-	Serialisation::registerSerialiser( ScriptNode::staticTypeId(), new ScriptNodeSerialiser );
 
 }
