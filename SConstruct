@@ -141,6 +141,10 @@ options.Add(
 	"",
 )
 
+# Variables to be used when making a build which will use dependencies previously
+# installed in some central location, rather than using the precompiled dependencies
+# provided by the GafferHQ/dependencies project.
+
 options.Add(
 	"APPLESEED_ROOT",
 	"The directory in which Appleseed is installed. Used to build Gafferseed",
@@ -149,13 +153,9 @@ options.Add(
 
 options.Add(
 	"OSLHOME",
-	"The directory in which OpenShadingLanguage is installed. Used to run OSL when building documentation",
+	"The directory in which OpenShadingLanguage is installed.",
 	"$BUILD_DIR",
 )
-
-# variables to be used when making a build which will use dependencies previously
-# installed in some central location, rather than using the precompiled dependencies
-# provided by the gafferDependencies project.
 
 options.Add(
 	"LOCATE_DEPENDENCY_CPPPATH",
