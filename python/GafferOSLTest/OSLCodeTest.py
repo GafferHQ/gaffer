@@ -310,7 +310,11 @@ class OSLCodeTest( GafferOSLTest.OSLTestCase ) :
 
 	def testMoveCodeDirectory( self ) :
 
-		self.addCleanup( os.environ.__setitem__, "GAFFEROSL_CODE_DIRECTORY", os.environ["GAFFEROSL_CODE_DIRECTORY"] )
+		oslCodeDir = os.environ.get( "GAFFEROSL_CODE_DIRECTORY" )
+		if oslCodeDir :
+			self.addCleanup( os.environ.__setitem__, "GAFFEROSL_CODE_DIRECTORY", oslCodeDir )
+		else :
+			self.addCleanup( os.environ.__delitem__, "GAFFEROSL_CODE_DIRECTORY" )
 
 		# Make an OSL shader in a specific code directory.
 
