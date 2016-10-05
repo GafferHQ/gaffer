@@ -991,6 +991,26 @@ class ReferenceTest( GafferTest.TestCase ) :
 		self.assertTrue( "a" in s2["r"]["user"] )
 		self.assertTrue( "b" in s2["r"]["user"] )
 
+	def testCopyPaste( self ) :
+
+		s = Gaffer.ScriptNode()
+
+		s["b"] = Gaffer.Box()
+		s["b"]["a1"] = GafferTest.AddNode()
+		s["b"]["a2"] = GafferTest.AddNode()
+		s["b"]["a2"]["op1"].setInput( s["b"]["a1"]["sum"] )
+		s["b"].promotePlug( s["b"]["a1"]["op1"] )
+		s["b"].exportForReference( self.temporaryDirectory() + "/test.grf" )
+
+		s["r"] = Gaffer.Reference()
+		s["r"].load( self.temporaryDirectory() + "/test.grf" )
+
+		s.execute( s.serialise( parent = s["r"], filter = Gaffer.StandardSet( [ s["r"]["a1"], s["r"]["a2"] ] ) ) )
+
+		self.assertTrue( "a1" in s )
+		self.assertTrue( "a2" in s )
+		self.assertTrue( s["a2"]["op1"].getInput().isSame( s["a1"]["sum"] ) )
+
 	def tearDown( self ) :
 
 		GafferTest.TestCase.tearDown( self )
