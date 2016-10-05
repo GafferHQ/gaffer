@@ -58,7 +58,7 @@ class SerialisationTest( GafferTest.TestCase ) :
 
 		class CustomSerialiser( Gaffer.Serialisation.Serialiser ) :
 
-			def moduleDependencies( self, node ) :
+			def moduleDependencies( self, node, serialisation ) :
 
 				return ( "GafferTest", )
 
@@ -78,7 +78,7 @@ class SerialisationTest( GafferTest.TestCase ) :
 
 				return identifier + ".postScriptWasHere = True\n"
 
-			def childNeedsSerialisation( self, child ) :
+			def childNeedsSerialisation( self, child, serialisation ) :
 
 				if isinstance( child, Gaffer.Node ) :
 					return child.getName() == "childNodeNeedingSerialisation"
@@ -87,7 +87,7 @@ class SerialisationTest( GafferTest.TestCase ) :
 
 				return False
 
-			def childNeedsConstruction( self, child ) :
+			def childNeedsConstruction( self, child, serialisation ) :
 
 				if isinstance( child, Gaffer.Node ) :
 					return False

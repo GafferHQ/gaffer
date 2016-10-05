@@ -141,10 +141,10 @@ class PlugSerialiser : public Serialisation::Serialiser
 
 	public :
 
-		virtual void moduleDependencies( const Gaffer::GraphComponent *graphComponent, std::set<std::string> &modules ) const;
+		virtual void moduleDependencies( const Gaffer::GraphComponent *graphComponent, std::set<std::string> &modules, const Serialisation &serialisation ) const;
 		virtual std::string constructor( const Gaffer::GraphComponent *graphComponent, const Serialisation &serialisation ) const;
 		virtual std::string postHierarchy( const Gaffer::GraphComponent *graphComponent, const std::string &identifier, const Serialisation &serialisation ) const;
-		virtual bool childNeedsConstruction( const Gaffer::GraphComponent *child ) const;
+		virtual bool childNeedsConstruction( const Gaffer::GraphComponent *child, const Serialisation &serialisation ) const;
 
 		static std::string directionRepr( Gaffer::Plug::Direction direction );
 		static std::string flagsRepr( unsigned flags );

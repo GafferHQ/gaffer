@@ -75,10 +75,10 @@ class FormatPlugSerialiser : public GafferBindings::ValuePlugSerialiser
 
 	public :
 
-		virtual void moduleDependencies( const Gaffer::GraphComponent *graphComponent, std::set<std::string> &modules ) const
+		virtual void moduleDependencies( const Gaffer::GraphComponent *graphComponent, std::set<std::string> &modules, const Serialisation &serialisation ) const
 		{
 			// IECore is needed when reloading Format values which reference Box2i.
-			ValuePlugSerialiser::moduleDependencies( graphComponent, modules );
+			ValuePlugSerialiser::moduleDependencies( graphComponent, modules, serialisation );
 			modules.insert( "IECore" );
 		}
 

@@ -150,9 +150,9 @@ std::string ValuePlugSerialiser::repr( const Gaffer::ValuePlug *plug, unsigned f
 
 }
 
-void ValuePlugSerialiser::moduleDependencies( const Gaffer::GraphComponent *graphComponent, std::set<std::string> &modules ) const
+void ValuePlugSerialiser::moduleDependencies( const Gaffer::GraphComponent *graphComponent, std::set<std::string> &modules, const Serialisation &serialisation ) const
 {
-	PlugSerialiser::moduleDependencies( graphComponent, modules );
+	PlugSerialiser::moduleDependencies( graphComponent, modules, serialisation );
 
 	const ValuePlug *valuePlug = static_cast<const ValuePlug *> ( graphComponent );
 	object pythonPlug( ValuePlugPtr( const_cast<ValuePlug *>( valuePlug ) ) );

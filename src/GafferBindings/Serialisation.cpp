@@ -208,16 +208,16 @@ void Serialisation::walk( const Gaffer::GraphComponent *parent, const std::strin
 		{
 			continue;
 		}
-		if( !parentSerialiser->childNeedsSerialisation( child ) )
+		if( !parentSerialiser->childNeedsSerialisation( child, *this ) )
 		{
 			continue;
 		}
 
 		const Serialiser *childSerialiser = acquireSerialiser( child );
-		childSerialiser->moduleDependencies( child, m_modules );
+		childSerialiser->moduleDependencies( child, m_modules, *this );
 
 		std::string childConstructor;
-		if( parentSerialiser->childNeedsConstruction( child ) )
+		if( parentSerialiser->childNeedsConstruction( child, *this ) )
 		{
 			childConstructor = childSerialiser->constructor( child, *this );
 		}
@@ -266,7 +266,7 @@ std::string Serialisation::identifier( const Gaffer::GraphComponent *graphCompon
 				return "";
 			}
 			const Serialiser *parentSerialiser = acquireSerialiser( parent );
-			if( parentSerialiser->childNeedsConstruction( graphComponent ) )
+			if( parentSerialiser->childNeedsConstruction( graphComponent, *this ) )
 			{
 				return "__children[\"" + graphComponent->getName().string() + "\"]" + result;
 			}
@@ -319,7 +319,7 @@ Serialisation::SerialiserMap &Serialisation::serialiserMap()
 // Serialisation::Serialiser
 //////////////////////////////////////////////////////////////////////////
 
-void Serialisation::Serialiser::moduleDependencies( const Gaffer::GraphComponent *graphComponent, std::set<std::string> &modules ) const
+void Serialisation::Serialiser::moduleDependencies( const Gaffer::GraphComponent *graphComponent, std::set<std::string> &modules, const Serialisation &serialisation ) const
 {
 	modules.insert( Serialisation::modulePath( graphComponent ) );
 }
@@ -346,12 +346,12 @@ std::string Serialisation::Serialiser::postScript( const Gaffer::GraphComponent 
 	return "";
 }
 
-bool Serialisation::Serialiser::childNeedsSerialisation( const Gaffer::GraphComponent *child ) const
+bool Serialisation::Serialiser::childNeedsSerialisation( const Gaffer::GraphComponent *child, const Serialisation &serialisation ) const
 {
 	return true;
 }
 
-bool Serialisation::Serialiser::childNeedsConstruction( const Gaffer::GraphComponent *child ) const
+bool Serialisation::Serialiser::childNeedsConstruction( const Gaffer::GraphComponent *child, const Serialisation &serialisation ) const
 {
 	return false;
 }
@@ -373,7 +373,7 @@ class SerialiserWrapper : public IECorePython::RefCountedWrapper<Serialisation::
 		{
 		}
 
-		virtual void moduleDependencies( const Gaffer::GraphComponent *graphComponent, std::set<std::string> &modules ) const
+		virtual void moduleDependencies( const Gaffer::GraphComponent *graphComponent, std::set<std::string> &modules, const Serialisation &serialisation ) const
 		{
 			if( this->isSubclassed() )
 			{
@@ -381,14 +381,14 @@ class SerialiserWrapper : public IECorePython::RefCountedWrapper<Serialisation::
 				boost::python::object f = this->methodOverride( "moduleDependencies" );
 				if( f )
 				{
-					object mo = f( GraphComponentPtr( const_cast<GraphComponent *>( graphComponent ) ) );
+					object mo = f( GraphComponentPtr( const_cast<GraphComponent *>( graphComponent ) ), serialisation );
 					std::vector<std::string> mv;
 					container_utils::extend_container( mv, mo );
 					modules.insert( mv.begin(), mv.end() );
 					return;
 				}
 			}
-			Serialiser::moduleDependencies( graphComponent, modules );
+			Serialiser::moduleDependencies( graphComponent, modules, serialisation );
 		}
 
 		virtual std::string constructor( const Gaffer::GraphComponent *graphComponent, const Serialisation &serialisation ) const
@@ -455,7 +455,7 @@ class SerialiserWrapper : public IECorePython::RefCountedWrapper<Serialisation::
 			return Serialiser::postScript( graphComponent, identifier, serialisation );
 		}
 
-		virtual bool childNeedsSerialisation( const Gaffer::GraphComponent *child ) const
+		virtual bool childNeedsSerialisation( const Gaffer::GraphComponent *child, const Serialisation &serialisation ) const
 		{
 			if( this->isSubclassed() )
 			{
@@ -463,13 +463,13 @@ class SerialiserWrapper : public IECorePython::RefCountedWrapper<Serialisation::
 				boost::python::object f = this->methodOverride( "childNeedsSerialisation" );
 				if( f )
 				{
-					return f( GraphComponentPtr( const_cast<GraphComponent *>( child ) ) );
+					return f( GraphComponentPtr( const_cast<GraphComponent *>( child ) ), serialisation );
 				}
 			}
-			return Serialiser::childNeedsSerialisation( child );
+			return Serialiser::childNeedsSerialisation( child, serialisation );
 		}
 
-		virtual bool childNeedsConstruction( const Gaffer::GraphComponent *child ) const
+		virtual bool childNeedsConstruction( const Gaffer::GraphComponent *child, const Serialisation &serialisation ) const
 		{
 			if( this->isSubclassed() )
 			{
@@ -477,10 +477,10 @@ class SerialiserWrapper : public IECorePython::RefCountedWrapper<Serialisation::
 				boost::python::object f = this->methodOverride( "childNeedsConstruction" );
 				if( f )
 				{
-					return f( GraphComponentPtr( const_cast<GraphComponent *>( child ) ) );
+					return f( GraphComponentPtr( const_cast<GraphComponent *>( child ) ), serialisation );
 				}
 			}
-			return Serialiser::childNeedsConstruction( child );
+			return Serialiser::childNeedsConstruction( child, serialisation );
 		}
 
 };
@@ -490,10 +490,10 @@ GraphComponentPtr parent( const Serialisation &serialisation )
 	return const_cast<GraphComponent *>( serialisation.parent() );
 }
 
-object moduleDependencies( Serialisation::Serialiser &serialiser, const Gaffer::GraphComponent *graphComponent )
+object moduleDependencies( Serialisation::Serialiser &serialiser, const Gaffer::GraphComponent *graphComponent, const Serialisation &serialisation )
 {
 	std::set<std::string> modules;
-	serialiser.moduleDependencies( graphComponent, modules );
+	serialiser.moduleDependencies( graphComponent, modules, serialisation );
 	boost::python::list modulesList;
 	for( std::set<std::string>::const_iterator it = modules.begin(); it != modules.end(); ++it )
 	{

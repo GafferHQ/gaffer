@@ -102,9 +102,9 @@ struct ErrorSlotCaller
 
 } // namespace
 
-void NodeSerialiser::moduleDependencies( const Gaffer::GraphComponent *graphComponent, std::set<std::string> &modules ) const
+void NodeSerialiser::moduleDependencies( const Gaffer::GraphComponent *graphComponent, std::set<std::string> &modules, const Serialisation &serialisation ) const
 {
-	Serialiser::moduleDependencies( graphComponent, modules );
+	Serialiser::moduleDependencies( graphComponent, modules, serialisation );
 	metadataModuleDependencies( static_cast<const Gaffer::Node *>( graphComponent ), modules );
 }
 
@@ -114,7 +114,7 @@ std::string NodeSerialiser::postHierarchy( const Gaffer::GraphComponent *graphCo
 		metadataSerialisation( static_cast<const Gaffer::Node *>( graphComponent ), identifier );
 }
 
-bool NodeSerialiser::childNeedsSerialisation( const Gaffer::GraphComponent *child ) const
+bool NodeSerialiser::childNeedsSerialisation( const Gaffer::GraphComponent *child, const Serialisation &serialisation ) const
 {
 	if( const Plug *childPlug = IECore::runTimeCast<const Plug>( child ) )
 	{
@@ -123,7 +123,7 @@ bool NodeSerialiser::childNeedsSerialisation( const Gaffer::GraphComponent *chil
 	return false;
 }
 
-bool NodeSerialiser::childNeedsConstruction( const Gaffer::GraphComponent *child ) const
+bool NodeSerialiser::childNeedsConstruction( const Gaffer::GraphComponent *child, const Serialisation &serialisation ) const
 {
 	if( const Plug *childPlug = IECore::runTimeCast<const Plug>( child ) )
 	{

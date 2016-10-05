@@ -136,15 +136,15 @@ class NodeSerialiser : public Serialisation::Serialiser
 
 	public :
 
-		virtual void moduleDependencies( const Gaffer::GraphComponent *graphComponent, std::set<std::string> &modules ) const;
+		virtual void moduleDependencies( const Gaffer::GraphComponent *graphComponent, std::set<std::string> &modules, const Serialisation &serialisation ) const;
 		/// Implemented to serialise per-instance metadata.
 		virtual std::string postHierarchy( const Gaffer::GraphComponent *graphComponent, const std::string &identifier, const Serialisation &serialisation ) const;
 		/// Implemented so that only plugs are serialised - child nodes are expected to
 		/// be a part of the implementation of the node rather than something the user
 		/// has created themselves.
-		virtual bool childNeedsSerialisation( const Gaffer::GraphComponent *child ) const;
+		virtual bool childNeedsSerialisation( const Gaffer::GraphComponent *child, const Serialisation &serialisation ) const;
 		/// Implemented so that dynamic plugs are constructed appropriately.
-		virtual bool childNeedsConstruction( const Gaffer::GraphComponent *child ) const;
+		virtual bool childNeedsConstruction( const Gaffer::GraphComponent *child, const Serialisation &serialisation ) const;
 
 };
 
