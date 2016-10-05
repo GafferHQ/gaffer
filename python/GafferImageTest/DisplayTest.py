@@ -38,11 +38,13 @@ import os
 import unittest
 import random
 import threading
+import subprocess32 as subprocess
 
 import IECore
 
 import Gaffer
 import GafferTest
+import GafferDispatch
 import GafferImage
 import GafferImageTest
 
@@ -156,6 +158,22 @@ class DisplayTest( GafferImageTest.ImageTestCase ) :
 			node["out"].channelData( "R", 10 * IECore.V2i( GafferImage.ImagePlug.tileSize() ) ),
 			blackTile
 		)
+
+	def testNoErrorOnBackgroundDispatch( self ) :
+
+		s = Gaffer.ScriptNode()
+
+		s["d"] = GafferImage.Display()
+		s["d"]["port"].setValue( 2500 )
+
+		s["p"] = GafferDispatch.PythonCommand()
+		s["p"]["command"].setValue( "pass" )
+
+		s["fileName"].setValue( self.temporaryDirectory() + "test.gfr" )
+		s.save()
+
+		output = subprocess.check_output( [ "gaffer", "execute", self.temporaryDirectory() + "test.gfr", "-nodes", "p" ], stderr = subprocess.STDOUT )
+		self.assertEqual( output, "" )
 
 	def __testTransferImage( self, fileName ) :
 
