@@ -1,3 +1,124 @@
+0.29.0.0
+========
+
+Highlights of this release include an entirely rewritten Appleseed backend with support
+for editing geometry and environment lights during interactive renders, an OSLCode node
+for the writing of OSL shaders within Gaffer, and much improved OSL support in GafferArnold.
+
+Apps
+----
+
+- Screengrab
+  - Added delay command line argument (#1861).
+
+Core
+----
+
+- StringPlug
+  - Fixed substitutions when plug has an input (#1860).
+
+Appleseed
+---------
+
+- InteractiveAppleseedRender (#1833)
+  - Reimplemented completely to using new Gaffer scene description
+    APIs.
+  - Added support for adding/removing/deforming/transforming objects during rendering.
+  - Added support for changing environment lights during rendering.
+  - Improved performance and responsiveness.
+- AppleseedRender (#1833)
+  - Reimplemented completely to using new Gaffer scene description APIs.
+- AppleseedShaderBall
+  - Added threads and max samples settings (#1833).
+  - Increased sphere tesselation #1869.
+
+Arnold
+------
+
+- InteractiveArnoldRender
+  - Added support for editing subdivision attributes while rendering (#1855).
+- ArnoldOptions
+  - Added log verbosity settings (#1866).
+- OSL
+  - Improved OSL shader support using Arnold's new osl_shader node (#1873).
+- Improved warning messages for unsupported parameters (#1872).
+
+OSL
+---
+
+- Added OSLCode node, to allow editing of OSL shader snippets on the fly (#1861).
+
+UI
+--
+
+- ArnoldShader
+  - Added support for specifying UI layout via Arnold metadata.
+    In particular, this greatly improves the NodeEditor UI for the
+    AlShaders (#757, #1864).
+- ArnoldAttributes
+  - Fixed formatting of Subdivision section summary (#1855).
+- NodeMenu
+  - Sorted Arnold shaders into submenus (#1870).
+- ScriptEditor/Expression/PythonCommand
+  - Made code font monospaced (#1861).
+- ShaderView
+  - Fixed initial framing  (#1861).
+  - Fixed bug triggered by shaders changing type  (#1861).
+- Expression
+  - Fixed broken popup menus on non-ValuePlugs (#1861).
+- OSLShader
+  - Fixed support for "null" widget type (#1865).
+- ImageReader/SceneReader/AlembicSource
+  - Improved layout of reload button (#1867).
+- ArnoldOptions
+  - Moved threads setting to Rendering section.
+- Added indentation to nested collapsible widgets (#1866).
+- SceneInspector
+  - Fixed errors when selected path doesn't exist (#1874).
+
+Documentation
+-------------
+
+- Consolidated reference docs into a parent section (#1860).
+- Added string substitutions reference (#1860).
+
+API
+---
+
+- Renderer
+  - Added bool return value to ObjectInterface::attributes(), to signify
+    success/failure #1855.
+- OSLShader
+  - Added support for unloading with `OSLShader::loadShader( "" )` (#1859).
+  - Fixed loading of surface type after loading of shader type (#1859).
+- LabelPlugValueWidget
+  - Added support for "labelPlugValueWidget:renameable" metadata (#1861).
+- MultiLineTextWidget
+  - Added "role" property (#1861).
+- MultiLineStringPlugValueWidget
+  - Added support for specifying role via "multiLineStringPlugValueWidget:role"
+    metadata (#1861).
+- OSL
+  - Added GafferOSL/Spline.h header, to simplify use of splines in shaders (#1861).
+- View
+  - Removed `virtual void plugDirtied()`.
+- CompoundDataPlug
+  - Added support for BoolVectorData (#1863).
+- PlugLayout
+  - Added support for "layout:accessory" metadata.
+- Added RefreshPlugValueWidget and deprecated IncrementingPlugValueWidget (#1867).
+
+Build
+-----
+
+- Added OSLHOME build option, only necessary when building without using GafferHQ/dependencies (#1871).
+
+Breaking changes
+----------------
+
+- View
+  - Removed `virtual void plugDirtied()`.
+
 0.28.3.0
 ========
 
