@@ -35,20 +35,48 @@
 #include "boost/python.hpp"
 
 #include "GafferBindings/DependencyNodeBinding.h"
+#include "GafferBindings/SignalBinding.h"
 
 #include "GafferImage/Display.h"
 #include "GafferImageBindings/DisplayBinding.h"
 
 using namespace boost::python;
+using namespace IECorePython;
 using namespace GafferImage;
 using namespace GafferBindings;
+
+namespace
+{
+
+struct DriverCreatedSlotCaller
+{
+	boost::signals::detail::unusable operator()( boost::python::object slot, IECore::DisplayDriver *driver, const IECore::CompoundData *parameters )
+	{
+		try
+		{
+			slot( IECore::DisplayDriverPtr( driver ), IECore::CompoundDataPtr( const_cast<IECore::CompoundData *>( parameters ) ) );
+		}
+		catch( const error_already_set &e )
+		{
+			translatePythonException();
+		}
+		return boost::signals::detail::unusable();
+	}
+};
+
+} // namespace
 
 void GafferImageBindings::bindDisplay()
 {
 
-	GafferBindings::DependencyNodeClass<Display>()
+	scope s = GafferBindings::DependencyNodeClass<Display>()
+		.def( "setDriver", &Display::setDriver )
+		.def( "getDriver", (IECore::DisplayDriver *(Display::*)())&Display::getDriver, return_value_policy<CastToIntrusivePtr>() )
+		.def( "driverCreatedSignal", &Display::driverCreatedSignal, return_value_policy<reference_existing_object>() ).staticmethod( "driverCreatedSignal" )
 		.def( "dataReceivedSignal", &Display::dataReceivedSignal, return_value_policy<reference_existing_object>() ).staticmethod( "dataReceivedSignal" )
 		.def( "imageReceivedSignal", &Display::imageReceivedSignal, return_value_policy<reference_existing_object>() ).staticmethod( "imageReceivedSignal" )
 	;
+
+	SignalClass<Display::DriverCreatedSignal, DefaultSignalCaller<Display::DriverCreatedSignal>, DriverCreatedSlotCaller>( "DriverCreated" );
 
 }

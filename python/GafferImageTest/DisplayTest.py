@@ -225,6 +225,43 @@ class DisplayTest( GafferImageTest.ImageTestCase ) :
 		output = subprocess.check_output( [ "gaffer", "execute", self.temporaryDirectory() + "test.gfr", "-nodes", "p" ], stderr = subprocess.STDOUT )
 		self.assertEqual( output, "" )
 
+	def testSetDriver( self ) :
+
+		driversCreated = GafferTest.CapturingSlot( GafferImage.Display.driverCreatedSignal() )
+
+		server = IECore.DisplayDriverServer()
+		cortexWindow = IECore.Box2i( IECore.V2i( 0 ), IECore.V2i( 99 ) )
+		gafferWindow = IECore.Box2i( IECore.V2i( 0 ), IECore.V2i( 100 ) )
+		driver = IECore.ClientDisplayDriver(
+			cortexWindow,
+			cortexWindow,
+			[ "Y" ],
+			{
+				"displayHost" : "localHost",
+				"displayPort" : str( server.portNumber() ),
+				"remoteDisplayType" : "GafferImage::GafferDisplayDriver",
+			}
+		)
+
+		display = GafferImage.Display()
+		self.assertTrue( display.getDriver() is None )
+
+		self.assertTrue( len( driversCreated ), 1 )
+		display.setDriver( driversCreated[0][0] )
+		self.assertTrue( display.getDriver().isSame( driversCreated[0][0] ) )
+
+		self.__sendBucket( driver, cortexWindow, IECore.FloatVectorData( [ 0.5 ] * gafferWindow.size().x * gafferWindow.size().y ) )
+
+		driver.imageClose()
+
+		self.assertEqual( display["out"]["format"].getValue().getDisplayWindow(), gafferWindow )
+		self.assertEqual( display["out"]["dataWindow"].getValue(), gafferWindow )
+		self.assertEqual( display["out"]["channelNames"].getValue(), IECore.StringVectorData( [ "Y" ] ) )
+		self.assertEqual(
+			display["out"].channelData( "Y", IECore.V2i( 0 ) ),
+			IECore.FloatVectorData( [ 0.5 ] * GafferImage.ImagePlug.tileSize() * GafferImage.ImagePlug.tileSize() )
+		)
+
 	def __testTransferImage( self, fileName ) :
 
 		imageReader = GafferImage.ImageReader()

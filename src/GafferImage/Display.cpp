@@ -104,7 +104,7 @@ class GafferDisplayDriver : public IECore::DisplayDriver
 			);
 
 			m_parameters = parameters ? parameters->copy() : CompoundDataPtr( new CompoundData );
-			instanceCreatedSignal()( this );
+			Display::driverCreatedSignal()( this, parameters.get() );
 		}
 
 		virtual ~GafferDisplayDriver()
@@ -223,13 +223,6 @@ class GafferDisplayDriver : public IECore::DisplayDriver
 			return m_imageReceivedSignal;
 		}
 
-		typedef boost::signal<void ( GafferDisplayDriver * )> InstanceCreatedSignal;
-		static InstanceCreatedSignal &instanceCreatedSignal()
-		{
-			static InstanceCreatedSignal s;
-			return s;
-		}
-
 	private :
 
 		static const DisplayDriverDescription<GafferDisplayDriver> g_description;
@@ -328,7 +321,7 @@ Display::Display( const std::string &name )
 	);
 
 	plugSetSignal().connect( boost::bind( &Display::plugSet, this, ::_1 ) );
-	GafferDisplayDriver::instanceCreatedSignal().connect( boost::bind( &Display::driverCreated, this, ::_1 ) );
+	driverCreatedSignal().connect( boost::bind( &Display::driverCreated, this, ::_1 ) );
 	setupServer();
 }
 
@@ -369,6 +362,12 @@ void Display::affects( const Gaffer::Plug *input, AffectedPlugsContainer &output
 	}
 }
 
+Display::DriverCreatedSignal &Display::driverCreatedSignal()
+{
+	static DriverCreatedSignal s;
+	return s;
+}
+
 Node::UnaryPlugSignal &Display::dataReceivedSignal()
 {
 	static UnaryPlugSignal s;
@@ -379,6 +378,27 @@ Node::UnaryPlugSignal &Display::imageReceivedSignal()
 {
 	static UnaryPlugSignal s;
 	return s;
+}
+
+void Display::setDriver( IECore::DisplayDriverPtr driver )
+{
+	GafferDisplayDriver *gafferDisplayDriver = runTimeCast<GafferDisplayDriver>( driver.get() );
+	if( !gafferDisplayDriver )
+	{
+		throw IECore::Exception( "Expected GafferDisplayDriver" );
+	}
+
+	setupDriver( gafferDisplayDriver );
+}
+
+IECore::DisplayDriver *Display::getDriver()
+{
+	return m_driver.get();
+}
+
+const IECore::DisplayDriver *Display::getDriver() const
+{
+	return m_driver.get();
 }
 
 void Display::hashFormat( const GafferImage::ImagePlug *output, const Gaffer::Context *context, IECore::MurmurHash &h ) const
@@ -525,12 +545,18 @@ void Display::setupServer()
 	}
 }
 
-void Display::driverCreated( GafferDisplayDriver *driver )
+void Display::driverCreated( IECore::DisplayDriver *driver )
 {
-	ConstStringDataPtr portNumber = driver->parameters()->member<StringData>( "displayPort" );
+	GafferDisplayDriver *gafferDisplayDriver = runTimeCast<GafferDisplayDriver>( driver );
+	if( !gafferDisplayDriver )
+	{
+		return;
+	}
+
+	const StringData *portNumber = gafferDisplayDriver->parameters()->member<StringData>( "displayPort" );
 	if( portNumber && boost::lexical_cast<int>( portNumber->readable() ) == portPlug()->getValue() )
 	{
-		setupDriver( driver );
+		setupDriver( gafferDisplayDriver );
 	}
 }
 
