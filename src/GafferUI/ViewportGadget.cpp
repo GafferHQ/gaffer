@@ -325,7 +325,7 @@ void ViewportGadget::doRender( const Style *style ) const
 	// Set up the camera to world matrix in gl_TextureMatrix[0] so that we can
 	// reference world space positions in shaders
 	// This should be more appropriately named in a uniform buffer, but the
-	// easiest time to get this right is probably when we switch everything 
+	// easiest time to get this right is probably when we switch everything
 	// away from using fixed function stuff
 	glActiveTexture( GL_TEXTURE0 );
 	glMatrixMode( GL_TEXTURE );
@@ -918,7 +918,7 @@ ViewportGadget::SelectionScope::SelectionScope( const IECore::LineSegment3f &lin
 	:	m_selection( selection )
 {
 	const ViewportGadget *viewportGadget = gadget->ancestor<ViewportGadget>();
-	V2f rasterPosition = viewportGadget->gadgetToRasterSpace( lineInGadgetSpace.p0, gadget );
+	V2f rasterPosition = viewportGadget->gadgetToRasterSpace( lineInGadgetSpace.p1, gadget );
 	begin( viewportGadget, rasterPosition, gadget->fullTransform(), mode );
 }
 
