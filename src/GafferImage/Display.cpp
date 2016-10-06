@@ -496,6 +496,23 @@ void Display::plugSet( Gaffer::Plug *plug )
 
 void Display::setupServer()
 {
+	if( dataReceivedSignal().empty() )
+	{
+		// If the dataReceivedSignal is empty,
+		// it means that GafferImageUI hasn't
+		// been imported (see DisplayUI.py).
+		// If there's no UI then there's no point
+		// running a server because no-one will
+		// be looking anyway.
+		//
+		// This allows us to avoid confusing error output
+		// when the script is loaded in a separate process
+		// to do a local render dispatch, and the
+		// Display node trys to reuse the port that
+		// is already in use in the main GUI process.
+		return;
+	}
+
 	try
 	{
 		m_server = g_serverCache.get( portPlug()->getValue() );
