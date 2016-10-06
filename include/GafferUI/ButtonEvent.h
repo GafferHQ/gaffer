@@ -48,6 +48,10 @@ namespace GafferUI
 /// A class to represent events involving mouse buttons.
 /// \todo Now this is being used to represent mouse movement and the scroll wheel,
 /// it should be called MouseEvent.
+/// \todo Add a `V2f point` field containing the Widget-relative position.
+/// This will be convenient for 2d-only Widgets but also allow Gadgets to
+/// get the original raster position for an event without jumping through
+/// hoops and running the gauntlet of precision issues.
 struct ButtonEvent : public ModifiableEvent
 {
 	/// An enum to represent the mouse buttons.
