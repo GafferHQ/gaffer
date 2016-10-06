@@ -275,7 +275,7 @@ IECore::LineSegment3f ViewportGadget::rasterToGadgetSpace( const Imath::V2f &pos
 {
 	LineSegment3f result;
 	/// \todo The CameraController::unproject() method should be const.
-	const_cast<IECore::CameraController &>( m_cameraController ).unproject( V2i( (int)position.x, (int)position.y ), result.p0, result.p1 );
+	const_cast<IECore::CameraController &>( m_cameraController ).unproject( position, result.p0, result.p1 );
 	if( gadget )
 	{
 		M44f m = gadget->fullTransform();
@@ -296,7 +296,7 @@ IECore::LineSegment3f ViewportGadget::rasterToWorldSpace( const Imath::V2f &rast
 {
 	LineSegment3f result;
 	/// \todo The CameraController::unproject() method should be const.
-	const_cast<IECore::CameraController &>( m_cameraController ).unproject( V2i( (int)rasterPosition.x, (int)rasterPosition.y ), result.p0, result.p1 );
+	const_cast<IECore::CameraController &>( m_cameraController ).unproject( rasterPosition, result.p0, result.p1 );
 	return result;
 }
 
@@ -837,10 +837,10 @@ bool ViewportGadget::wheel( GadgetPtr gadget, const ButtonEvent &event )
 		return true;
 	}
 
-	V2i position( (int)event.line.p0.x, (int)event.line.p0.y );
+	V2f position( event.line.p0.x, event.line.p0.y );
 
 	m_cameraController.motionStart( CameraController::Dolly, position );
-	position.x += (int)(event.wheelRotation * getViewport().x / 140.0f);
+	position.x += event.wheelRotation * getViewport().x / 140.0f;
 	m_cameraController.motionUpdate( position );
 	m_cameraController.motionEnd( position );
 
