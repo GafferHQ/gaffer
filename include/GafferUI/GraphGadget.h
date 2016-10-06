@@ -67,7 +67,7 @@ class GraphGadget : public ContainerGadget
 		/// Creates a graph showing the children of root, optionally
 		/// filtered by the specified set. Nodes are only displayed if
 		/// they are both a child of root and a member of filter.
-		GraphGadget( Gaffer::NodePtr root, Gaffer::SetPtr filter = 0 );
+		GraphGadget( Gaffer::NodePtr root, Gaffer::SetPtr filter = NULL );
 
 		virtual ~GraphGadget();
 
@@ -75,24 +75,24 @@ class GraphGadget : public ContainerGadget
 
 		Gaffer::Node *getRoot();
 		const Gaffer::Node *getRoot() const;
-		void setRoot( Gaffer::NodePtr root, Gaffer::SetPtr filter = 0 );
+		void setRoot( Gaffer::NodePtr root, Gaffer::SetPtr filter = NULL );
 		typedef boost::signal<void ( GraphGadget *, Gaffer::Node * )> RootChangedSignal;
 		/// A signal emitted when the root has been changed - the signature
 		/// of the signal is ( graphGadget, previousRoot ).
 		RootChangedSignal &rootChangedSignal();
 
-		/// May return 0 if no filter has been specified.
+		/// May return NULL if no filter has been specified.
 		Gaffer::Set *getFilter();
 		const Gaffer::Set *getFilter() const;
 		void setFilter( Gaffer::SetPtr filter );
 
-		/// Returns the NodeGadget representing the specified node or 0
+		/// Returns the NodeGadget representing the specified node or NULL
 		/// if none exists.
 		NodeGadget *nodeGadget( const Gaffer::Node *node );
 		const NodeGadget *nodeGadget( const Gaffer::Node *node ) const;
 
 		/// Returns the ConnectionGadget representing the specified
-		/// destination Plug or 0 if none exists.
+		/// destination Plug or NULL if none exists.
 		ConnectionGadget *connectionGadget( const Gaffer::Plug *dstPlug );
 		const ConnectionGadget *connectionGadget( const Gaffer::Plug *dstPlug ) const;
 
@@ -100,15 +100,15 @@ class GraphGadget : public ContainerGadget
 		/// to the specified plug and appends them to the connections vector.
 		/// Returns the new size of the vector. If excludedNodes is specified,
 		/// then connections to any nodes it contains will be ignored.
-		size_t connectionGadgets( const Gaffer::Plug *plug, std::vector<ConnectionGadget *> &connections, const Gaffer::Set *excludedNodes = 0 );
-		size_t connectionGadgets( const Gaffer::Plug *plug, std::vector<const ConnectionGadget *> &connections, const Gaffer::Set *excludedNodes = 0 ) const;
+		size_t connectionGadgets( const Gaffer::Plug *plug, std::vector<ConnectionGadget *> &connections, const Gaffer::Set *excludedNodes = NULL );
+		size_t connectionGadgets( const Gaffer::Plug *plug, std::vector<const ConnectionGadget *> &connections, const Gaffer::Set *excludedNodes = NULL ) const;
 
 		/// Finds all the ConnectionGadgets connected to the specified node and
 		/// appends them to the connections vector. Returns the new size of the
 		/// vector. If excludedNodes is specified, then connections to any
 		/// nodes it contains will be ignored.
-		size_t connectionGadgets( const Gaffer::Node *node, std::vector<ConnectionGadget *> &connections, const Gaffer::Set *excludedNodes = 0 );
-		size_t connectionGadgets( const Gaffer::Node *node, std::vector<const ConnectionGadget *> &connections, const Gaffer::Set *excludedNodes = 0 ) const;
+		size_t connectionGadgets( const Gaffer::Node *node, std::vector<ConnectionGadget *> &connections, const Gaffer::Set *excludedNodes = NULL );
+		size_t connectionGadgets( const Gaffer::Node *node, std::vector<const ConnectionGadget *> &connections, const Gaffer::Set *excludedNodes = NULL ) const;
 
 		/// Finds all the upstream NodeGadgets connected to the specified node
 		/// and appends them to the specified vector. Returns the new size of the vector.
