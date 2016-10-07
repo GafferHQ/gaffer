@@ -169,14 +169,14 @@ class CompoundNumericPlugValueWidget( GafferUI.PlugValueWidget ) :
 			menuDefinition.append( "/Ungang", {
 				"command" : Gaffer.WeakMethod( compoundNumericPlugValueWidget.__ungang ),
 				"shortCut" : "Ctrl+G",
-				"active" : not plugValueWidget.getReadOnly(),
+				"active" : not plugValueWidget.getReadOnly() and not Gaffer.readOnly( compoundNumericPlugValueWidget.getPlug() ),
 			} )
 		elif compoundNumericPlugValueWidget.getPlug().canGang() :
 			menuDefinition.append( "/GangDivider", { "divider" : True } )
 			menuDefinition.append( "/Gang", {
 				"command" : Gaffer.WeakMethod( compoundNumericPlugValueWidget.__gang ),
 				"shortCut" : "Ctrl+G",
-				"active" : not plugValueWidget.getReadOnly(),
+				"active" : not plugValueWidget.getReadOnly() and not Gaffer.readOnly( compoundNumericPlugValueWidget.getPlug() ),
 			} )
 
 	def __applyVisibleDimensions( self ) :

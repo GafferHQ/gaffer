@@ -342,9 +342,16 @@ def __reorderPlugs( plugs, plug, newIndex ) :
 
 def __nodeGraphPlugContextMenu( nodeGraph, plug, menuDefinition ) :
 
+	readOnly = Gaffer.readOnly( plug )
 	if isinstance( plug.node(), Gaffer.Box ) :
 
-		menuDefinition.append( "/Rename...", { "command" : functools.partial( __renamePlug, plug = plug ) } )
+		menuDefinition.append(
+			"/Rename...",
+			{
+				"command" : functools.partial( __renamePlug, plug = plug ),
+				"active" : not readOnly,
+			}
+		)
 
 		menuDefinition.append( "/MoveDivider", { "divider" : True } )
 
@@ -357,7 +364,7 @@ def __nodeGraphPlugContextMenu( nodeGraph, plug, menuDefinition ) :
 				"/Move To/" + edge.capitalize(),
 				{
 					"command" : functools.partial( __setPlugMetadata, plug, "nodeGadget:nodulePosition", edge ),
-					"active" : edge != currentEdge,
+					"active" : edge != currentEdge and not readOnly,
 				}
 			)
 
@@ -367,7 +374,7 @@ def __nodeGraphPlugContextMenu( nodeGraph, plug, menuDefinition ) :
 			"/Move " + ( "Up" if currentEdge in ( "left", "right" ) else "Left" ),
 			{
 				"command" : functools.partial( __reorderPlugs, edgePlugs, plug, edgeIndex - 1 ),
-				"active" : edgeIndex > 0,
+				"active" : edgeIndex > 0 and not readOnly,
 			}
 		)
 
@@ -375,11 +382,11 @@ def __nodeGraphPlugContextMenu( nodeGraph, plug, menuDefinition ) :
 			"/Move " + ( "Down" if currentEdge in ( "left", "right" ) else "Right" ),
 			{
 				"command" : functools.partial( __reorderPlugs, edgePlugs, plug, edgeIndex + 1 ),
-				"active" : edgeIndex < len( edgePlugs ) - 1,
+				"active" : edgeIndex < len( edgePlugs ) - 1 and not readOnly,
 			}
 		)
 
-	__appendPlugDeletionMenuItems( menuDefinition, plug )
-	__appendPlugPromotionMenuItems( menuDefinition, plug )
+	__appendPlugDeletionMenuItems( menuDefinition, plug, readOnly )
+	__appendPlugPromotionMenuItems( menuDefinition, plug, readOnly )
 
 __nodeGraphPlugContextMenuConnection = GafferUI.NodeGraph.plugContextMenuSignal().connect( __nodeGraphPlugContextMenu )

@@ -170,7 +170,7 @@ class NodeGraph( GafferUI.EditorWidget ) :
 				{
 					"command" : IECore.curry( cls.__setEnabled, node ),
 					"checkBox" : enabledPlug.getValue(),
-					"active" : enabledPlug.settable()
+					"active" : enabledPlug.settable() and not Gaffer.readOnly( enabledPlug )
 				}
 			)
 

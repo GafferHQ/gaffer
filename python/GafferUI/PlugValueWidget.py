@@ -191,6 +191,9 @@ class PlugValueWidget( GafferUI.Widget ) :
 			if not canEditAnimation or not Gaffer.Animation.isAnimated( plug ) :
 				return False
 
+		if Gaffer.readOnly( plug ) :
+			return False
+
 		return True
 
 	## Called to convert the specified value into something
@@ -271,7 +274,7 @@ class PlugValueWidget( GafferUI.Widget ) :
 			menuDefinition.append(
 				"/Paste Value", {
 					"command" : functools.partial( Gaffer.WeakMethod( self.__setValue ), pasteValue ),
-					"active" : pasteValue is not None
+					"active" : self._editable() and pasteValue is not None
 				}
 			)
 
@@ -283,7 +286,7 @@ class PlugValueWidget( GafferUI.Widget ) :
 			menuDefinition.append(
 				"/Remove input", {
 					"command" : Gaffer.WeakMethod( self.__removeInput ),
-					"active" : self.getPlug().acceptsInput( None ) and not self.getReadOnly(),
+					"active" : self.getPlug().acceptsInput( None ) and not self.getReadOnly() and not Gaffer.readOnly( self.getPlug() ),
 				}
 			)
 		if hasattr( self.getPlug(), "defaultValue" ) and self.getPlug().direction() == Gaffer.Plug.Direction.In :

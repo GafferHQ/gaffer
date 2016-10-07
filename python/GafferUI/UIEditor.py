@@ -141,7 +141,13 @@ class UIEditor( GafferUI.NodeSetEditor ) :
 	def appendNodeContextMenuDefinitions( cls, nodeGraph, node, menuDefinition ) :
 
 		menuDefinition.append( "/UIEditorDivider", { "divider" : True } )
-		menuDefinition.append( "/Set Color...", { "command" : functools.partial( cls.__setColor, node = node ) } )
+		menuDefinition.append(
+			"/Set Color...",
+			{
+				"command" : functools.partial( cls.__setColor, node = node ),
+				"active" : not Gaffer.readOnly( node ),
+			}
+		)
 
 	@classmethod
 	def appendNodeEditorToolMenuDefinitions( cls, nodeEditor, node, menuDefinition ) :
@@ -150,7 +156,10 @@ class UIEditor( GafferUI.NodeSetEditor ) :
 			"/Edit UI...",
 			{
 				"command" : functools.partial( GafferUI.UIEditor.acquire, node ),
-				"active" : isinstance( node, Gaffer.Box ) or nodeEditor.nodeUI().plugValueWidget( node["user"] ) is not None
+				"active" : (
+					( isinstance( node, Gaffer.Box ) or nodeEditor.nodeUI().plugValueWidget( node["user"] ) is not None ) and
+					not Gaffer.readOnly( node )
+				)
 			}
 		)
 
@@ -249,7 +258,12 @@ def __plugPopupMenu( menuDefinition, plugValueWidget ) :
 			return
 
 	menuDefinition.append( "/EditUIDivider", { "divider" : True } )
-	menuDefinition.append( "/Edit UI...", { "command" : IECore.curry( __editPlugUI, node, plug ), "active" : not plugValueWidget.getReadOnly() } )
+	menuDefinition.append( "/Edit UI...",
+		{
+			"command" : IECore.curry( __editPlugUI, node, plug ),
+			"active" : not plugValueWidget.getReadOnly() and not Gaffer.readOnly( plug )
+		}
+	)
 
 __plugPopupMenuConnection = GafferUI.PlugValueWidget.popupMenuSignal().connect( __plugPopupMenu )
 

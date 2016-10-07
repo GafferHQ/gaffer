@@ -244,6 +244,12 @@ def __plugPopupMenu( menuDefinition, plugValueWidget ) :
 		return
 
 	menuDefinition.append( "/DeleteDivider", { "divider" : True } )
-	menuDefinition.append( "/Delete", { "command" : IECore.curry( __deletePlug, memberPlug ), "active" : not plugValueWidget.getReadOnly() } )
+	menuDefinition.append(
+		"/Delete",
+		{
+			"command" : IECore.curry( __deletePlug, memberPlug ),
+			"active" : not plugValueWidget.getReadOnly() and not Gaffer.readOnly( memberPlug ),
+		}
+	)
 
 __plugPopupMenuConnection = GafferUI.PlugValueWidget.popupMenuSignal().connect( __plugPopupMenu )
