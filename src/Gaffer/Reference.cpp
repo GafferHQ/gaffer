@@ -43,6 +43,7 @@
 #include "Gaffer/Reference.h"
 #include "Gaffer/ScriptNode.h"
 #include "Gaffer/Metadata.h"
+#include "Gaffer/MetadataAlgo.h"
 #include "Gaffer/StringPlug.h"
 #include "Gaffer/StandardSet.h"
 
@@ -155,15 +156,16 @@ void Reference::loadInternal( const std::string &fileName )
 		errors = script->executeFile( fileName, this, /* continueOnError = */ true );
 	}
 
-	// Make the loaded plugs non-dynamic, because we don't want them
-	// to be serialised in the script the reference is in - the whole
-	// point is that they are referenced. For the same reason, make
-	// their instance metadata non-persistent.
+	// Do a little bit of post processing on everything that was loaded.
 
 	for( size_t i = 0, e = newChildren->size(); i < e; ++i )
 	{
 		if( Plug *plug = runTimeCast<Plug>( newChildren->member( i ) ) )
 		{
+			// Make the loaded plugs non-dynamic, because we don't want them
+			// to be serialised in the script the reference is in - the whole
+			// point is that they are referenced. For the same reason, make
+			// their instance metadata non-persistent.
 			plug->setFlags( Plug::Dynamic, false );
 			convertPersistentMetadata( plug );
 			for( RecursivePlugIterator it( plug ); !it.done(); ++it )
@@ -171,6 +173,15 @@ void Reference::loadInternal( const std::string &fileName )
 				(*it)->setFlags( Plug::Dynamic, false );
 				convertPersistentMetadata( it->get() );
 			}
+		}
+		else if( Node *node = runTimeCast<Node>( newChildren->member( i ) ) )
+		{
+			// Make the loaded nodes read-only as far as the UI is
+			// concerned, because any changes the user did make
+			// would be lost on save/reload. We use non-persistent
+			// metadata for this so that they can copy/paste nodes
+			// out of the reference and have the copies be editable.
+			setReadOnly( node, true, /* persistent = */ false );
 		}
 	}
 

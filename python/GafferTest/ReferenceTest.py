@@ -1005,11 +1005,17 @@ class ReferenceTest( GafferTest.TestCase ) :
 		s["r"] = Gaffer.Reference()
 		s["r"].load( self.temporaryDirectory() + "/test.grf" )
 
+		self.assertTrue( Gaffer.readOnly( s["r"]["a1"] ) )
+		self.assertTrue( Gaffer.readOnly( s["r"]["a2"] ) )
+
 		s.execute( s.serialise( parent = s["r"], filter = Gaffer.StandardSet( [ s["r"]["a1"], s["r"]["a2"] ] ) ) )
 
 		self.assertTrue( "a1" in s )
 		self.assertTrue( "a2" in s )
 		self.assertTrue( s["a2"]["op1"].getInput().isSame( s["a1"]["sum"] ) )
+
+		self.assertFalse( Gaffer.readOnly( s["a1"] ) )
+		self.assertFalse( Gaffer.readOnly( s["a2"] ) )
 
 	def tearDown( self ) :
 
