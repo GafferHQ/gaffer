@@ -182,7 +182,7 @@ def __setsPopupMenu( menuDefinition, plugValueWidget ) :
 			{
 				"command" : functools.partial( __setValue, plug, " ".join( sorted( newNames ) ) ),
 				"checkBox" : setName in currentNames,
-				"active" : plug.settable() and not plugValueWidget.getReadOnly(),
+				"active" : plug.settable() and not plugValueWidget.getReadOnly() and not Gaffer.readOnly( plug ),
 			}
 		)
 
