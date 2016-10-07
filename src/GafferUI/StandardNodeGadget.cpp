@@ -46,6 +46,7 @@
 #include "Gaffer/StandardSet.h"
 #include "Gaffer/DependencyNode.h"
 #include "Gaffer/Metadata.h"
+#include "Gaffer/MetadataAlgo.h"
 #include "Gaffer/ScriptNode.h"
 
 #include "GafferUI/StandardNodeGadget.h"
@@ -693,10 +694,15 @@ bool StandardNodeGadget::noduleIsCompatible( const Nodule *nodule, const DragDro
 	const Plug *dropPlug = IECore::runTimeCast<Gaffer::Plug>( event.data.get() );
 	if( !dropPlug || dropPlug->node() == node() )
 	{
-		return 0;
+		return false;
 	}
 
 	const Plug *nodulePlug = nodule->plug();
+	if( readOnly( nodulePlug ) )
+	{
+		return false;
+	}
+
 	if( dropPlug->direction() == Plug::Out )
 	{
 		return nodulePlug->direction() == Plug::In && nodulePlug->acceptsInput( dropPlug );

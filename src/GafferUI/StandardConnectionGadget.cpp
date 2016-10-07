@@ -45,6 +45,7 @@
 #include "Gaffer/ScriptNode.h"
 #include "Gaffer/StandardSet.h"
 #include "Gaffer/Metadata.h"
+#include "Gaffer/MetadataAlgo.h"
 #include "Gaffer/Dot.h"
 
 #include "GafferUI/StandardConnectionGadget.h"
@@ -264,6 +265,14 @@ bool StandardConnectionGadget::buttonPress( const ButtonEvent &event )
 
 IECore::RunTimeTypedPtr StandardConnectionGadget::dragBegin( const DragDropEvent &event )
 {
+	if(
+		readOnly( dstNodule()->plug() ) ||
+		( srcNodule() && readOnly( srcNodule()->plug() ) )
+	)
+	{
+		return NULL;
+	}
+
 	setPositionsFromNodules();
 	m_dragEnd = endAt( event.line );
 	switch( m_dragEnd )

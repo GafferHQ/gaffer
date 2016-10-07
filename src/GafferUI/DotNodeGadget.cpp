@@ -43,6 +43,7 @@
 #include "Gaffer/UndoContext.h"
 #include "Gaffer/ScriptNode.h"
 #include "Gaffer/StringPlug.h"
+#include "Gaffer/MetadataAlgo.h"
 
 #include "GafferUI/DotNodeGadget.h"
 #include "GafferUI/Style.h"
@@ -208,6 +209,11 @@ void DotNodeGadget::updateLabel()
 
 bool DotNodeGadget::dragEnter( const DragDropEvent &event )
 {
+	if( readOnly( dotNode() ) )
+	{
+		return false;
+	}
+
 	if( dotNode()->inPlug<Plug>() )
 	{
 		// We've already got our plugs set up - StandardNodeGadget

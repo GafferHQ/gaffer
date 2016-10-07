@@ -46,6 +46,7 @@
 #include "Gaffer/UndoContext.h"
 #include "Gaffer/ScriptNode.h"
 #include "Gaffer/Metadata.h"
+#include "Gaffer/MetadataAlgo.h"
 
 #include "GafferUI/StandardNodule.h"
 #include "GafferUI/Style.h"
@@ -230,6 +231,11 @@ IECore::RunTimeTypedPtr StandardNodule::dragBegin( GadgetPtr gadget, const Butto
 
 bool StandardNodule::dragEnter( GadgetPtr gadget, const DragDropEvent &event )
 {
+	if( readOnly( plug() ) )
+	{
+		return false;
+	}
+
 	if( event.buttons != DragDropEvent::Left )
 	{
 		// we only accept drags with the left button, so as to
