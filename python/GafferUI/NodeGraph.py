@@ -280,16 +280,12 @@ class NodeGraph( GafferUI.EditorWidget ) :
 		if event.key == "F" and not event.modifiers :
 			self.__frame( self.scriptNode().selection() )
 			return True
-		## \todo This cursor key navigation might not make sense for all applications,
-		# so we should move it into BoxUI and load it in a config file that the gui app uses.
-		# I think this implies that every Widget.*Signal() method should have a
-		# Widget.static*Signal() method to allow global handlers to be registered by widget type.
-		# We already have a mix of static/nonstatic signals for menus, so that might make a nice
-		# generalisation.
 		elif event.key == "Down" :
 			selection = self.scriptNode().selection()
 			if selection.size() :
-				if isinstance( selection[0], Gaffer.Box ) or event.modifiers == event.modifiers.Shift | event.modifiers.Control :
+				needsModifiers = not isinstance( selection[0], ( Gaffer.Reference, Gaffer.Box ) )
+				haveModifiers = bool( event.modifiers & ( event.modifiers.Shift | event.modifiers.Control ) )
+				if needsModifiers == haveModifiers :
 					self.graphGadget().setRoot( selection[0] )
 					return True
 		elif event.key == "Up" :
