@@ -418,6 +418,21 @@ IECore::ConstDataPtr Metadata::nodeValueInternal( const Node *node, IECore::Inte
 	return NULL;
 }
 
+void Metadata::deregisterValue( IECore::TypeId nodeTypeId, IECore::InternedString key )
+{
+	deregisterNodeValue( nodeTypeId, key );
+}
+
+void Metadata::deregisterValue( IECore::TypeId nodeTypeId, const MatchPattern &plugPath, IECore::InternedString key )
+{
+	deregisterPlugValue( nodeTypeId, plugPath, key );
+}
+
+void Metadata::deregisterValue( GraphComponent *target, IECore::InternedString key )
+{
+	registerInstanceValue( target, key, OptionalData(), /* persistent = */ false );
+}
+
 void Metadata::deregisterNodeValue( IECore::TypeId nodeTypeId, IECore::InternedString key )
 {
 	NodeMetadata::NodeValues &m = nodeMetadataMap()[nodeTypeId].nodeValues;
@@ -491,7 +506,6 @@ std::vector<Node*> Metadata::nodesWithMetadata( GraphComponent *root, IECore::In
 	}
 	return nodes;
 }
-
 
 void Metadata::registerPlugValue( IECore::TypeId nodeTypeId, const MatchPattern &plugPath, IECore::InternedString key, IECore::ConstDataPtr value )
 {
@@ -689,6 +703,47 @@ std::vector<Plug*> Metadata::plugsWithMetadata( GraphComponent *root, IECore::In
 		}
 	}
 	return plugs;
+}
+
+void Metadata::registerValue( GraphComponent *target, IECore::InternedString key, IECore::ConstDataPtr value, bool persistent )
+{
+	registerInstanceValue( target, key, value, persistent );
+}
+
+void Metadata::registeredValues( const GraphComponent *target, std::vector<IECore::InternedString> &keys, bool inherit, bool instanceOnly, bool persistentOnly )
+{
+	if( const Node *node = runTimeCast<const Node>( target ) )
+	{
+		registeredNodeValues( node, keys, inherit, instanceOnly, persistentOnly );
+	}
+	else if( const Plug *plug = runTimeCast<const Plug>( target ) )
+	{
+		registeredPlugValues( plug, keys, inherit, instanceOnly, persistentOnly );
+	}
+	else
+	{
+		registeredInstanceValues( plug, keys, persistentOnly );
+	}
+}
+
+IECore::ConstDataPtr Metadata::valueInternal( const GraphComponent *target, IECore::InternedString key, bool inherit, bool instanceOnly )
+{
+	if( const Node *node = runTimeCast<const Node>( target ) )
+	{
+		return nodeValueInternal( node, key, inherit, instanceOnly );
+	}
+	else if( const Plug *plug = runTimeCast<const Plug>( target ) )
+	{
+		return plugValueInternal( plug, key, inherit, instanceOnly );
+	}
+	else if( !instanceOnly )
+	{
+		if( OptionalData iv = instanceValue( target, key ) )
+		{
+			return *iv;
+		}
+	}
+	return NULL;
 }
 
 Metadata::ValueChangedSignal &Metadata::valueChangedSignal()

@@ -997,5 +997,24 @@ class MetadataTest( GafferTest.TestCase ) :
 			self.assertEqual( Gaffer.Metadata.nodeValue( s2["n"], "test" ), value )
 			self.assertEqual( Gaffer.Metadata.plugValue( s2["n"]["p"], "test" ), value )
 
+	def testOverloadedMethods( self ) :
+
+		n = GafferTest.AddNode()
+
+		Gaffer.Metadata.registerValue( n, "one", 1 )
+		Gaffer.Metadata.registerValue( n["op1"], "two", 2 )
+
+		self.assertEqual( Gaffer.Metadata.registeredValues( n, instanceOnly = True ), [ "one" ] )
+		self.assertEqual( Gaffer.Metadata.registeredValues( n["op1"], instanceOnly = True ), [ "two" ] )
+
+		self.assertEqual( Gaffer.Metadata.value( n, "one" ), 1 )
+		self.assertEqual( Gaffer.Metadata.value( n["op1"], "two" ), 2 )
+
+		Gaffer.Metadata.deregisterValue( n, "one" )
+		Gaffer.Metadata.deregisterValue( n["op1"], "two" )
+
+		self.assertEqual( Gaffer.Metadata.registeredValues( n, instanceOnly = True ), [] )
+		self.assertEqual( Gaffer.Metadata.registeredValues( n["op1"], instanceOnly = True ), [] )
+
 if __name__ == "__main__":
 	unittest.main()

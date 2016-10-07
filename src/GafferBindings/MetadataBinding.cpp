@@ -189,6 +189,12 @@ object value( const char *target, const char *key, bool copy )
 	return dataToPython( d.get(), copy );
 }
 
+object graphComponentValue( const GraphComponent *graphComponent, const char *key, bool inherit, bool instanceOnly, bool copy )
+{
+	ConstDataPtr d = Metadata::value<Data>( graphComponent, key, inherit, instanceOnly );
+	return dataToPython( d.get(), copy );
+}
+
 void registerNodeValue( IECore::TypeId nodeTypeId, IECore::InternedString key, object &value )
 {
 	Metadata::registerNodeValue( nodeTypeId, key, objectToNodeValueFunction( key, value ) );
@@ -323,6 +329,13 @@ list registeredValues( IECore::InternedString target )
 	return keysToList( keys );
 }
 
+list registeredGraphComponentValues( const GraphComponent *target, bool inherit, bool instanceOnly, bool persistentOnly )
+{
+	std::vector<InternedString> keys;
+	Metadata::registeredValues( target, keys, inherit, instanceOnly, persistentOnly );
+	return keysToList( keys );
+}
+
 list registeredNodeValues( const Node *node, bool inherit, bool instanceOnly, bool persistentOnly )
 {
 	std::vector<InternedString> keys;
@@ -372,9 +385,26 @@ void bindMetadata()
 	scope s = class_<Metadata>( "Metadata", no_init )
 
 		.def( "registerValue", &registerValue )
+		.def( "registerValue", &registerNodeValue )
+		.def( "registerValue", &registerPlugValue )
+		.def( "registerValue", (void (*)( GraphComponent *, InternedString key, ConstDataPtr value, bool ))&Metadata::registerValue,
+			(
+				boost::python::arg( "target" ),
+				boost::python::arg( "value" ),
+				boost::python::arg( "persistent" ) = true
+			)
+		)
 		.staticmethod( "registerValue" )
 
 		.def( "registeredValues", &registeredValues )
+		.def( "registeredValues", &registeredGraphComponentValues,
+			(
+				boost::python::arg( "target" ),
+				boost::python::arg( "inherit" ) = true,
+				boost::python::arg( "instanceOnly" ) = false,
+				boost::python::arg( "persistentOnly" ) = false
+			)
+		)
 		.staticmethod( "registeredValues" )
 
 		.def( "value", &value,
@@ -384,7 +414,21 @@ void bindMetadata()
 				boost::python::arg( "_copy" ) = true
 			)
 		)
+		.def( "value", &graphComponentValue,
+			(
+				boost::python::arg( "target" ),
+				boost::python::arg( "key" ),
+				boost::python::arg( "inherit" ) = true,
+				boost::python::arg( "instanceOnly" ) = false,
+				boost::python::arg( "_copy" ) = true
+			)
+		)
 		.staticmethod( "value" )
+
+		.def( "deregisterValue", (void (*)( IECore::TypeId, IECore::InternedString ) )&Metadata::deregisterValue )
+		.def( "deregisterValue", (void (*)( IECore::TypeId, const MatchPattern &, IECore::InternedString ) )&Metadata::deregisterValue )
+		.def( "deregisterValue", (void (*)( GraphComponent *, IECore::InternedString ) )&Metadata::deregisterValue )
+		.staticmethod( "deregisterValue" )
 
 		.def( "registerNodeValue", &registerNodeValue )
 		.def( "registerNodeValue", (void (*)( Node *, InternedString key, ConstDataPtr value, bool ))&Metadata::registerNodeValue,
@@ -536,7 +580,7 @@ void metadataModuleDependencies( const Gaffer::Plug *plug, std::set<std::string>
 std::string metadataSerialisation( const Gaffer::Node *node, const std::string &identifier )
 {
 	std::vector<InternedString> keys;
-	Metadata::registeredNodeValues( node, keys, /* inherit = */ false, /* instanceOnly = */ true, /* persistentOnly = */ true );
+	Metadata::registeredValues( node, keys, /* inherit = */ false, /* instanceOnly = */ true, /* persistentOnly = */ true );
 
 	std::string result;
 	for( std::vector<InternedString>::const_iterator it = keys.begin(), eIt = keys.end(); it != eIt; ++it )
@@ -544,7 +588,7 @@ std::string metadataSerialisation( const Gaffer::Node *node, const std::string &
 		object pythonKey( it->c_str() );
 		std::string key = extract<std::string>( pythonKey.attr( "__repr__" )() );
 
-		ConstDataPtr value = Metadata::nodeValue<Data>( node, *it );
+		ConstDataPtr value = Metadata::value<Data>( node, *it );
 		object pythonValue = dataToPython( value.get(), /* copy = */ false );
 		std::string stringValue = extract<std::string>( pythonValue.attr( "__repr__" )() );
 
@@ -562,7 +606,7 @@ std::string metadataSerialisation( const Gaffer::Node *node, const std::string &
 std::string metadataSerialisation( const Plug *plug, const std::string &identifier )
 {
 	std::vector<InternedString> keys;
-	Metadata::registeredPlugValues( plug, keys, /* inherit = */ false, /* instanceOnly = */ true, /* persistentOnly = */ true );
+	Metadata::registeredValues( plug, keys, /* inherit = */ false, /* instanceOnly = */ true, /* persistentOnly = */ true );
 
 	std::string result;
 	for( std::vector<InternedString>::const_iterator it = keys.begin(), eIt = keys.end(); it != eIt; ++it )
@@ -570,7 +614,7 @@ std::string metadataSerialisation( const Plug *plug, const std::string &identifi
 		object pythonKey( it->c_str() );
 		std::string key = extract<std::string>( pythonKey.attr( "__repr__" )() );
 
-		ConstDataPtr value = Metadata::plugValue<Data>( plug, *it );
+		ConstDataPtr value = Metadata::value<Data>( plug, *it );
 		object pythonValue = dataToPython( value.get(), /* copy = */ false );
 		std::string stringValue = extract<std::string>( pythonValue.attr( "__repr__" )() );
 
