@@ -374,7 +374,7 @@ class CropWindowTool::Rectangle : public GafferUI::Gadget
 		V2f eventPosition( const ButtonEvent &event ) const
 		{
 			const ViewportGadget *viewportGadget = ancestor<ViewportGadget>();
-			return viewportGadget->gadgetToRasterSpace( event.line.p0, this );
+			return viewportGadget->gadgetToRasterSpace( event.line.p1, this );
 		}
 
 		Imath::Box2f m_rectangle;

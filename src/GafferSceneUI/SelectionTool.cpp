@@ -229,8 +229,8 @@ IECore::RunTimeTypedPtr SelectionTool::dragBegin( GafferUI::Gadget *gadget, cons
 	if( !sg->objectAt( event.line, objectUnderMouse ) )
 	{
 		// drag to select
-		m_dragOverlay->setStartPosition( event.line.p0 );
-		m_dragOverlay->setEndPosition( event.line.p0 );
+		m_dragOverlay->setStartPosition( event.line.p1 );
+		m_dragOverlay->setEndPosition( event.line.p1 );
 		m_dragOverlay->setVisible( true );
 		return gadget;
 	}
@@ -256,7 +256,7 @@ bool SelectionTool::dragEnter( const GafferUI::Gadget *gadget, const GafferUI::D
 
 bool SelectionTool::dragMove( const GafferUI::DragDropEvent &event )
 {
-	m_dragOverlay->setEndPosition( event.line.p0 );
+	m_dragOverlay->setEndPosition( event.line.p1 );
 	return true;
 }
 
