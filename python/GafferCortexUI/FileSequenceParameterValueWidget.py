@@ -100,5 +100,5 @@ def __includeFrameRange( plug ) :
 	return includeFrameRange
 
 for nodeType in __nodeTypes :
-	Gaffer.Metadata.registerPlugValue( nodeType, "parameters.*", "fileSystemPathPlugValueWidget:includeSequences", __isFileSequence )
-	Gaffer.Metadata.registerPlugValue( nodeType, "parameters.*", "fileSystemPathPlugValueWidget:includeSequenceFrameRange", __includeFrameRange )
+	Gaffer.Metadata.registerValue( nodeType, "parameters.*", "fileSystemPathPlugValueWidget:includeSequences", __isFileSequence )
+	Gaffer.Metadata.registerValue( nodeType, "parameters.*", "fileSystemPathPlugValueWidget:includeSequenceFrameRange", __includeFrameRange )

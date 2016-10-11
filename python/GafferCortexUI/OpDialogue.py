@@ -484,7 +484,7 @@ class OpDialogue( GafferUI.Dialogue ) :
 
 		if isinstance( graphComponent, Gaffer.Plug ) and hasattr( graphComponent, "getValue" ) :
 			with IECore.IgnoredExceptions( Exception ) :
-				Gaffer.Metadata.registerPlugValue( graphComponent, "userDefault", graphComponent.getValue() )
+				Gaffer.Metadata.registerValue( graphComponent, "userDefault", graphComponent.getValue() )
 
 		for child in graphComponent.children() :
 			self.__setUserDefaults( child )
