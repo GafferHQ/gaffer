@@ -136,8 +136,8 @@ def __setsPopupMenu( menuDefinition, plugValueWidget ) :
 	if plug is None :
 		return
 
-	acceptsSetName = Gaffer.Metadata.plugValue( plug, "ui:scene:acceptsSetName" )
-	acceptsSetNames = Gaffer.Metadata.plugValue( plug, "ui:scene:acceptsSetNames" )
+	acceptsSetName = Gaffer.Metadata.value( plug, "ui:scene:acceptsSetName" )
+	acceptsSetNames = Gaffer.Metadata.value( plug, "ui:scene:acceptsSetNames" )
 	if not acceptsSetName and not acceptsSetNames :
 		return
 

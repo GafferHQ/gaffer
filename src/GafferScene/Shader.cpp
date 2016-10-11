@@ -307,7 +307,7 @@ void Shader::nodeMetadataChanged( IECore::TypeId nodeTypeId, IECore::InternedStr
 
 	if( key == g_nodeColorMetadataName && this->isInstanceOf( nodeTypeId ) )
 	{
-		IECore::ConstColor3fDataPtr d = Metadata::nodeValue<const IECore::Color3fData>( this, g_nodeColorMetadataName );
+		IECore::ConstColor3fDataPtr d = Metadata::value<const IECore::Color3fData>( this, g_nodeColorMetadataName );
 		nodeColorPlug()->setValue( d ? d->readable() : Color3f( 0.0f ) );
 	}
 }

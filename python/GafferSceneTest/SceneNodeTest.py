@@ -263,12 +263,12 @@ class SceneNodeTest( GafferSceneTest.SceneTestCase ) :
 		self.assertEqual( n["out"].childNames( "/"), IECore.InternedStringVectorData() )
 
 		self.assertEqual(
-			Gaffer.Metadata.nodeValue( n, "description" ),
+			Gaffer.Metadata.value( n, "description" ),
 			"A little test node",
 		)
 
 		self.assertEqual(
-			Gaffer.Metadata.plugValue( n["type"], "description" ),
+			Gaffer.Metadata.value( n["type"], "description" ),
 			"Pick yer lovely primitive here.",
 		)
 

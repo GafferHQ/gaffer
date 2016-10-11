@@ -89,8 +89,8 @@ def __attributePopupMenu( menuDefinition, plugValueWidget ) :
 	if plug is None :
 		return
 
-	acceptsAttributeName = Gaffer.Metadata.plugValue( plug, "ui:scene:acceptsAttributeName" )
-	acceptsAttributeNames = Gaffer.Metadata.plugValue( plug, "ui:scene:acceptsAttributeNames" )
+	acceptsAttributeName = Gaffer.Metadata.value( plug, "ui:scene:acceptsAttributeName" )
+	acceptsAttributeNames = Gaffer.Metadata.value( plug, "ui:scene:acceptsAttributeNames" )
 	if not acceptsAttributeName and not acceptsAttributeNames :
 		return
 
