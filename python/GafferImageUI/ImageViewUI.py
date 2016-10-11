@@ -149,7 +149,7 @@ class _TogglePlugValueWidget( GafferUI.PlugValueWidget ) :
 
 		GafferUI.PlugValueWidget.__init__( self, row, plug, **kw )
 
-		self.__imagePrefix = Gaffer.Metadata.plugValue( plug, "togglePlugValueWidget:imagePrefix" )
+		self.__imagePrefix = Gaffer.Metadata.value( plug, "togglePlugValueWidget:imagePrefix" )
 		with row :
 
 			self.__button = GafferUI.Button( "", self.__imagePrefix + "Off.png", hasFrame=False )
@@ -159,7 +159,7 @@ class _TogglePlugValueWidget( GafferUI.PlugValueWidget ) :
 				plugValueWidget = GafferUI.PlugValueWidget.create( plug, useTypeOnly=True )
 				plugValueWidget.numericWidget().setFixedCharacterWidth( 5 )
 
-		self.__toggleValue = Gaffer.Metadata.plugValue( plug, "togglePlugValueWidget:defaultToggleValue" )
+		self.__toggleValue = Gaffer.Metadata.value( plug, "togglePlugValueWidget:defaultToggleValue" )
 		self._updateFromPlug()
 
 	def hasLabel( self ) :

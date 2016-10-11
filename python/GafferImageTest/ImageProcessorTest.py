@@ -89,7 +89,7 @@ class ImageProcessorTest( GafferImageTest.ImageTestCase ) :
 		self.assertTrue( "A" in n["out"]["channelNames"].getValue() )
 
 		self.assertEqual(
-			Gaffer.Metadata.nodeValue( n, "description" ),
+			Gaffer.Metadata.value( n, "description" ),
 			"Deletes the alpha channel.",
 		)
 
