@@ -81,7 +81,7 @@ class BoolPlugValueWidget( GafferUI.PlugValueWidget ) :
 				with Gaffer.BlockedConnection( self.__stateChangedConnection ) :
 					self.__boolWidget.setState( value )
 
-			displayMode = Gaffer.Metadata.plugValue( self.getPlug(), "boolPlugValueWidget:displayMode" )
+			displayMode = Gaffer.Metadata.value( self.getPlug(), "boolPlugValueWidget:displayMode" )
 			if displayMode is not None :
 				self.__boolWidget.setDisplayMode( self.__boolWidget.DisplayMode.Switch if displayMode == "switch" else self.__boolWidget.DisplayMode.CheckBox )
 

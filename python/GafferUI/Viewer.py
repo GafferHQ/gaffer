@@ -208,7 +208,7 @@ class Viewer( GafferUI.NodeSetEditor ) :
 						if self.__currentView is not None:
 							self.__currentView.setContext( self.getContext() )
 							self.__viewTools[self.__currentView] = [ GafferUI.Tool.create( n, self.__currentView ) for n in GafferUI.Tool.registeredTools( self.__currentView.typeId() ) ]
-							self.__viewTools[self.__currentView].sort( key = lambda v : Gaffer.Metadata.nodeValue( v, "order" ) if Gaffer.Metadata.nodeValue( v, "order" ) is not None else 999 )
+							self.__viewTools[self.__currentView].sort( key = lambda v : Gaffer.Metadata.value( v, "order" ) if Gaffer.Metadata.value( v, "order" ) is not None else 999 )
 							if len( self.__viewTools[self.__currentView] ) :
 								self.__activateTool( self.__viewTools[self.__currentView][0] )
 							self.__views.append( self.__currentView )

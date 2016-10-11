@@ -185,7 +185,7 @@ def exportCommandLineReference( directory, appPath = "$GAFFER_ROOT/apps", ignore
 def __nodeDocumentation( node ) :
 
 	result = __heading( node.typeName().rpartition( ":" )[2] )
-	result += Gaffer.Metadata.nodeValue( node, "description" )
+	result += Gaffer.Metadata.value( node, "description" )
 
 	def walkPlugs( parent ) :
 
@@ -195,14 +195,14 @@ def __nodeDocumentation( node ) :
 			if plug.getName().startswith( "__" ) :
 				continue
 
-			description = Gaffer.Metadata.plugValue( plug, "description" )
+			description = Gaffer.Metadata.value( plug, "description" )
 			if not description :
 				continue
 
 			result += "\n\n" + __heading( plug.relativeName( node ), 1 )
 			result += description
 
-			extensions = Gaffer.Metadata.plugValue( plug, "fileSystemPathPlugValueWidget:extensions" ) or []
+			extensions = Gaffer.Metadata.value( plug, "fileSystemPathPlugValueWidget:extensions" ) or []
 			if extensions :
 				result += "\n\n**Supported file extensions** : "+ ", ".join( extensions )
 

@@ -68,7 +68,7 @@ class DotNodeGadgetTest( GafferUITest.TestCase ) :
 		s = Gaffer.ScriptNode()
 
 		s["n"] = GafferTest.AddNode()
-		Gaffer.Metadata.registerPlugValue( s["n"]["sum"], "nodeGadget:nodulePosition", "right" )
+		Gaffer.Metadata.registerValue( s["n"]["sum"], "nodeGadget:nodulePosition", "right" )
 
 		s["d"] = Gaffer.Dot()
 
@@ -87,7 +87,7 @@ class DotNodeGadgetTest( GafferUITest.TestCase ) :
 		s = Gaffer.ScriptNode()
 
 		s["n"] = GafferTest.AddNode()
-		Gaffer.Metadata.registerPlugValue( s["n"]["op1"], "nodeGadget:nodulePosition", "left" )
+		Gaffer.Metadata.registerValue( s["n"]["op1"], "nodeGadget:nodulePosition", "left" )
 
 		s["d"] = Gaffer.Dot()
 
@@ -109,7 +109,7 @@ class DotNodeGadgetTest( GafferUITest.TestCase ) :
 		s["n2"] = GafferTest.AddNode()
 		s["n2"]["op1"].setInput( s["n1"]["sum"] )
 
-		Gaffer.Metadata.registerPlugValue( s["n1"]["sum"], "nodeGadget:nodulePosition", "right" )
+		Gaffer.Metadata.registerValue( s["n1"]["sum"], "nodeGadget:nodulePosition", "right" )
 
 		s["d"] = Gaffer.Dot()
 
@@ -128,7 +128,7 @@ class DotNodeGadgetTest( GafferUITest.TestCase ) :
 		s = Gaffer.ScriptNode()
 
 		s["n"] = GafferTest.AddNode()
-		Gaffer.Metadata.registerPlugValue( s["n"]["sum"], "nodeGadget:nodulePosition", "right" )
+		Gaffer.Metadata.registerValue( s["n"]["sum"], "nodeGadget:nodulePosition", "right" )
 
 		graphGadget = GafferUI.GraphGadget( s )
 

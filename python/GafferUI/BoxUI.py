@@ -324,7 +324,7 @@ def __renamePlug( menu, plug ) :
 def __setPlugMetadata( plug, key, value ) :
 
 	with Gaffer.UndoContext( plug.ancestor( Gaffer.ScriptNode ) ) :
-		Gaffer.Metadata.registerPlugValue( plug, key, value )
+		Gaffer.Metadata.registerValue( plug, key, value )
 
 def __edgePlugs( nodeGraph, plug ) :
 
@@ -338,7 +338,7 @@ def __reorderPlugs( plugs, plug, newIndex ) :
 	plugs.insert( newIndex, plug )
 	with Gaffer.UndoContext( plug.ancestor( Gaffer.ScriptNode ) ) :
 		for index, plug in enumerate( plugs ) :
-			Gaffer.Metadata.registerPlugValue( plug, "nodeGadget:noduleIndex", index )
+			Gaffer.Metadata.registerValue( plug, "nodeGadget:noduleIndex", index )
 
 def __nodeGraphPlugContextMenu( nodeGraph, plug, menuDefinition ) :
 
@@ -348,7 +348,7 @@ def __nodeGraphPlugContextMenu( nodeGraph, plug, menuDefinition ) :
 
 		menuDefinition.append( "/MoveDivider", { "divider" : True } )
 
-		currentEdge = Gaffer.Metadata.plugValue( plug, "nodeGadget:nodulePosition" )
+		currentEdge = Gaffer.Metadata.value( plug, "nodeGadget:nodulePosition" )
 		if not currentEdge :
 			currentEdge = "top" if plug.direction() == plug.Direction.In else "bottom"
 

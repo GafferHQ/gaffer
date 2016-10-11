@@ -468,7 +468,7 @@ void BackdropNodeGadget::nodeMetadataChanged( IECore::TypeId nodeTypeId, IECore:
 bool BackdropNodeGadget::updateUserColor()
 {
 	boost::optional<Color3f> c;
-	if( IECore::ConstColor3fDataPtr d = Metadata::nodeValue<IECore::Color3fData>( node(), g_colorKey ) )
+	if( IECore::ConstColor3fDataPtr d = Metadata::value<IECore::Color3fData>( node(), g_colorKey ) )
 	{
 		c = d->readable();
 	}

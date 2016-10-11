@@ -178,7 +178,7 @@ __connectionContextMenuConnection = GafferUI.NodeGraph.connectionContextMenuSign
 def __setPlugMetadata( plug, key, value ) :
 
 	with Gaffer.UndoContext( plug.ancestor( Gaffer.ScriptNode ) ) :
-		Gaffer.Metadata.registerPlugValue( plug, key, value )
+		Gaffer.Metadata.registerValue( plug, key, value )
 
 def __nodeGraphPlugContextMenu( nodeGraph, plug, menuDefinition ) :
 
@@ -186,7 +186,7 @@ def __nodeGraphPlugContextMenu( nodeGraph, plug, menuDefinition ) :
 
 		## \todo This duplicates functionality from BoxUI. Is there some way
 		# we could share it?
-		currentEdge = Gaffer.Metadata.plugValue( plug, "nodeGadget:nodulePosition" )
+		currentEdge = Gaffer.Metadata.value( plug, "nodeGadget:nodulePosition" )
 		if not currentEdge :
 			currentEdge = "top" if plug.direction() == plug.Direction.In else "bottom"
 

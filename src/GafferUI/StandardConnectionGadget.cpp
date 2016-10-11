@@ -433,7 +433,7 @@ void StandardConnectionGadget::plugMetadataChanged( IECore::TypeId nodeTypeId, c
 bool StandardConnectionGadget::updateUserColor()
 {
 	boost::optional<Color3f> c;
-	if( IECore::ConstColor3fDataPtr d = Metadata::plugValue<IECore::Color3fData>( dstNodule()->plug(), g_colorKey ) )
+	if( IECore::ConstColor3fDataPtr d = Metadata::value<IECore::Color3fData>( dstNodule()->plug(), g_colorKey ) )
 	{
 		c = d->readable();
 	}

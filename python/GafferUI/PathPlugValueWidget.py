@@ -114,10 +114,10 @@ class PathPlugValueWidget( GafferUI.PlugValueWidget ) :
 		# get the keywords for the dialogue constructor
 		# from the plug metadata.
 		pathChooserDialogueKeywords = {}
-		pathChooserDialogueKeywords["leaf"] = Gaffer.Metadata.plugValue( self.getPlug(), "pathPlugValueWidget:leaf" )
-		pathChooserDialogueKeywords["valid"] = Gaffer.Metadata.plugValue( self.getPlug(), "pathPlugValueWidget:valid" )
+		pathChooserDialogueKeywords["leaf"] = Gaffer.Metadata.value( self.getPlug(), "pathPlugValueWidget:leaf" )
+		pathChooserDialogueKeywords["valid"] = Gaffer.Metadata.value( self.getPlug(), "pathPlugValueWidget:valid" )
 
-		bookmarks = Gaffer.Metadata.plugValue( self.getPlug(), "pathPlugValueWidget:bookmarks" )
+		bookmarks = Gaffer.Metadata.value( self.getPlug(), "pathPlugValueWidget:bookmarks" )
 		if bookmarks is not None :
 			pathChooserDialogueKeywords["bookmarks"] = GafferUI.Bookmarks.acquire( self.getPlug(), type( pathCopy ), bookmarks )
 

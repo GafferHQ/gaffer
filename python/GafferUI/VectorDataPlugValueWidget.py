@@ -76,7 +76,7 @@ class VectorDataPlugValueWidget( GafferUI.PlugValueWidget ) :
 					plugValue = plug.ValueType()
 				self.__dataWidget.setData( plugValue )
 
-			dragPointer = Gaffer.Metadata.plugValue( plug, "vectorDataPlugValueWidget:dragPointer" )
+			dragPointer = Gaffer.Metadata.value( plug, "vectorDataPlugValueWidget:dragPointer" )
 			if dragPointer is not None :
 				self.__dataWidget.setDragPointer( dragPointer )
 

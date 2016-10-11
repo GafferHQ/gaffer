@@ -90,7 +90,7 @@ class StringPlugValueWidget( GafferUI.PlugValueWidget ) :
 			self.__textWidget.setErrored( value is None )
 
 			self.__textChangedConnection.block(
-				not Gaffer.Metadata.plugValue( self.getPlug(), "stringPlugValueWidget:continuousUpdate" )
+				not Gaffer.Metadata.value( self.getPlug(), "stringPlugValueWidget:continuousUpdate" )
 			)
 
 		self.__textWidget.setEditable( self._editable() )

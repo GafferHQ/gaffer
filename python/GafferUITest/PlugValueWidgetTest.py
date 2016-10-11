@@ -94,7 +94,7 @@ class PlugValueWidgetTest( unittest.TestCase ) :
 		self.assertTrue( isinstance( w, GafferUI.NumericPlugValueWidget ) )
 		self.assertTrue( w.getPlug().isSame( n["p"] ) )
 
-		Gaffer.Metadata.registerPlugValue( n["p"], "plugValueWidget:type", "GafferUI.ConnectionPlugValueWidget" )
+		Gaffer.Metadata.registerValue( n["p"], "plugValueWidget:type", "GafferUI.ConnectionPlugValueWidget" )
 
 		w = GafferUI.PlugValueWidget.create( n["p"] )
 		self.assertTrue( isinstance( w, GafferUI.ConnectionPlugValueWidget ) )

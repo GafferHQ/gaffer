@@ -152,7 +152,7 @@ std::string NodeGadget::getToolTip( const IECore::LineSegment3f &line ) const
 		result += "\n\n" + description;
 	}
 
-	if( ConstStringDataPtr summary = Gaffer::Metadata::nodeValue<StringData>( m_node, "summary" ) )
+	if( ConstStringDataPtr summary = Gaffer::Metadata::value<StringData>( m_node, "summary" ) )
 	{
 		result += "\n\n" + summary->readable();
 	}

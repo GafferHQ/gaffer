@@ -175,7 +175,7 @@ class LabelPlugValueWidget( GafferUI.PlugValueWidget ) :
 	def __updateFormatter( self ) :
 
 		plug = self.getPlug()
-		label = Gaffer.Metadata.plugValue( plug, "label" ) if plug is not None else None
+		label = Gaffer.Metadata.value( plug, "label" ) if plug is not None else None
 		if label is not None :
 			self.__label.setFormatter( lambda graphComponents : label )
 		else :
@@ -185,7 +185,7 @@ class LabelPlugValueWidget( GafferUI.PlugValueWidget ) :
 
 		self.__labelDoubleClickConnection = None
 
-		if self.getPlug() is None or not Gaffer.Metadata.plugValue( self.getPlug(), "labelPlugValueWidget:renameable" ) :
+		if self.getPlug() is None or not Gaffer.Metadata.value( self.getPlug(), "labelPlugValueWidget:renameable" ) :
 			return
 
 		self.__labelDoubleClickConnection = self.__label.buttonDoubleClickSignal().connect( Gaffer.WeakMethod( self.__labelDoubleClicked ) )
@@ -219,7 +219,7 @@ class LabelPlugValueWidget( GafferUI.PlugValueWidget ) :
 			# Remove any metadata label which would mask the name - if a user
 			# has gone to the trouble of setting a sensible name, then it should
 			# take precedence.
-			Gaffer.Metadata.deregisterPlugValue( self.getPlug(), "label" )
+			Gaffer.Metadata.deregisterValue( self.getPlug(), "label" )
 
 		self.__label.setVisible( True )
 		self.__editableLabel.setVisible( False )

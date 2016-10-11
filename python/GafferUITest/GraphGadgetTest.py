@@ -1125,7 +1125,7 @@ class GraphGadgetTest( GafferUITest.TestCase ) :
 		self.assertTrue( g.nodeGadget( script["n2"] ).nodule( script["n2"]["p"] ) is not None )
 		self.assertTrue( g.connectionGadget( script["n2"]["p"] ) is not None )
 
-		Gaffer.Metadata.registerPlugValue( script["n2"]["p"], "nodule:type", "" )
+		Gaffer.Metadata.registerValue( script["n2"]["p"], "nodule:type", "" )
 		self.assertTrue( g.nodeGadget( script["n2"] ).nodule( script["n2"]["p"] ) is None )
 		self.assertTrue( g.connectionGadget( script["n2"]["p"] ) is None )
 
@@ -1147,14 +1147,14 @@ class GraphGadgetTest( GafferUITest.TestCase ) :
 		self.assertTrue( c.srcNodule().plug().isSame( script["n1"]["out"] ) )
 		self.assertTrue( c.dstNodule().plug().isSame( script["n2"]["in"] ) )
 
-		Gaffer.Metadata.registerPlugValue( script["n1"]["out"], "nodule:type", "" )
+		Gaffer.Metadata.registerValue( script["n1"]["out"], "nodule:type", "" )
 
 		c = g.connectionGadget( script["n2"]["in"] )
 		self.assertTrue( c is not None )
 		self.assertTrue( c.srcNodule() is None )
 		self.assertTrue( c.dstNodule().plug().isSame( script["n2"]["in"] ) )
 
-		Gaffer.Metadata.registerPlugValue( script["n1"]["out"], "nodule:type", "GafferUI::StandardNodule" )
+		Gaffer.Metadata.registerValue( script["n1"]["out"], "nodule:type", "GafferUI::StandardNodule" )
 
 		c = g.connectionGadget( script["n2"]["in"] )
 		self.assertTrue( c is not None )
@@ -1170,13 +1170,13 @@ class GraphGadgetTest( GafferUITest.TestCase ) :
 		script["n"]["out"] = Gaffer.Plug( direction = Gaffer.Plug.Direction.Out )
 		script["n"]["out"].setInput( script["n"]["in"] )
 
-		Gaffer.Metadata.registerPlugValue( script["n"]["out"], "nodule:type", "" )
+		Gaffer.Metadata.registerValue( script["n"]["out"], "nodule:type", "" )
 
 		g = GafferUI.GraphGadget( script )
 		self.assertTrue( g.nodeGadget( script["n"] ).nodule( script["n"]["out"] ) is None )
 		self.assertTrue( g.connectionGadget( script["n"]["out"] ) is None )
 
-		Gaffer.Metadata.registerPlugValue( script["n"]["out"], "nodule:type", "GafferUI::StandardNodule" )
+		Gaffer.Metadata.registerValue( script["n"]["out"], "nodule:type", "GafferUI::StandardNodule" )
 
 		self.assertTrue( g.nodeGadget( script["n"] ).nodule( script["n"]["out"] ) is not None )
 		self.assertTrue( g.connectionGadget( script["n"]["out"] ) is None )
@@ -1192,14 +1192,14 @@ class GraphGadgetTest( GafferUITest.TestCase ) :
 		script["n2"]["in"] = Gaffer.Plug()
 		script["n2"]["in"].setInput( script["n1"]["out"] )
 
-		Gaffer.Metadata.registerPlugValue( script["n1"]["out"], "nodule:type", "" )
+		Gaffer.Metadata.registerValue( script["n1"]["out"], "nodule:type", "" )
 
 		g = GafferUI.GraphGadget( script )
 		self.assertTrue( g.nodeGadget( script["n1"] ).nodule( script["n1"]["out"] ) is None )
 		self.assertTrue( g.connectionGadget( script["n2"]["in"] ) is not None )
 		self.assertTrue( g.connectionGadget( script["n2"]["in"] ).srcNodule() is None )
 
-		Gaffer.Metadata.registerPlugValue( script["n1"]["out"], "nodule:type", "GafferUI::StandardNodule" )
+		Gaffer.Metadata.registerValue( script["n1"]["out"], "nodule:type", "GafferUI::StandardNodule" )
 
 		self.assertTrue( g.nodeGadget( script["n1"] ).nodule( script["n1"]["out"] ) is not None )
 		self.assertTrue( g.connectionGadget( script["n2"]["in"] ) is not None )
@@ -1211,7 +1211,7 @@ class GraphGadgetTest( GafferUITest.TestCase ) :
 
 		s["n"] = Gaffer.Node()
 		s["n"]["p"] = Gaffer.Plug()
-		Gaffer.Metadata.registerPlugValue( s["n"]["p"], "nodule:type", "" )
+		Gaffer.Metadata.registerValue( s["n"]["p"], "nodule:type", "" )
 
 		g = GafferUI.GraphGadget( s )
 		self.assertTrue( g.nodeGadget( s["n"] ).nodule( s["n"]["p"] ) is None )

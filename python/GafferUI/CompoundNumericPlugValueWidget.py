@@ -182,7 +182,7 @@ class CompoundNumericPlugValueWidget( GafferUI.PlugValueWidget ) :
 	def __applyVisibleDimensions( self ) :
 
 		actualDimensions = len( self.getPlug() )
-		visibleDimensions = Gaffer.Metadata.plugValue( self.getPlug(), "ui:visibleDimensions" )
+		visibleDimensions = Gaffer.Metadata.value( self.getPlug(), "ui:visibleDimensions" )
 		visibleDimensions = visibleDimensions if visibleDimensions is not None else actualDimensions
 
 		for i in range( 0, actualDimensions ) :

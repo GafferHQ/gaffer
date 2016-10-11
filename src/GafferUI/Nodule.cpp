@@ -92,7 +92,7 @@ Nodule::NamedCreatorMap &Nodule::namedCreators()
 
 NodulePtr Nodule::create( Gaffer::PlugPtr plug )
 {
-	IECore::ConstStringDataPtr noduleType = Gaffer::Metadata::plugValue<IECore::StringData>( plug.get(), "nodule:type" );
+	IECore::ConstStringDataPtr noduleType = Gaffer::Metadata::value<IECore::StringData>( plug.get(), "nodule:type" );
 	if( noduleType )
 	{
 		if( noduleType->readable() == "" )

@@ -99,7 +99,7 @@ class CompoundDataPlugValueWidget( GafferUI.PlugValueWidget ) :
 
 		editable = True
 		if self.getPlug() is not None :
-			editable = Gaffer.Metadata.plugValue( self.getPlug(), "compoundDataPlugValueWidget:editable" )
+			editable = Gaffer.Metadata.value( self.getPlug(), "compoundDataPlugValueWidget:editable" )
 			editable = editable if editable is not None else True
 
 		self.__editRow.setVisible( editable )

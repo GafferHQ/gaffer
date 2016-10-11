@@ -99,12 +99,12 @@ def appendPlugContextMenuDefinitions( nodeGraph, plug, menuDefinition ) :
 
 def __getBookmarked( node ) :
 
-	return Gaffer.Metadata.nodeValue( node, "graphBookmarks:bookmarked" ) or False
+	return Gaffer.Metadata.value( node, "graphBookmarks:bookmarked" ) or False
 
 def __setBookmarked( node, bookmarked ) :
 
 	with Gaffer.UndoContext( node.scriptNode() ) :
-		Gaffer.Metadata.registerNodeValue( node, "graphBookmarks:bookmarked", bookmarked )
+		Gaffer.Metadata.registerValue( node, "graphBookmarks:bookmarked", bookmarked )
 
 def __bookmarks( parent ) :
 

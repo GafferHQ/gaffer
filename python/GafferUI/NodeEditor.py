@@ -116,7 +116,7 @@ class NodeEditor( GafferUI.NodeSetEditor ) :
 					GafferUI.Label( "<h4>" + node.typeName().rpartition( ":" )[-1] + "</h4>" )
 
 					button = GafferUI.Button( image = "info.png", hasFrame = False )
-					url = Gaffer.Metadata.nodeValue( node, "documentation:url" )
+					url = Gaffer.Metadata.value( node, "documentation:url" )
 					if url :
 						button.clickedSignal().connect(
 							lambda button : GafferUI.showURL( url ),
@@ -149,7 +149,7 @@ class NodeEditor( GafferUI.NodeSetEditor ) :
 
 		result = IECore.MenuDefinition()
 
-		url = Gaffer.Metadata.nodeValue( self.nodeUI().node(), "documentation:url" )
+		url = Gaffer.Metadata.value( self.nodeUI().node(), "documentation:url" )
 		result.append(
 			"/Documentation...",
 			{

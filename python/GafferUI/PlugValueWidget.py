@@ -350,9 +350,9 @@ class PlugValueWidget( GafferUI.Widget ) :
 		# first try to create one using a creator registered for the specific plug
 		if not useTypeOnly :
 
-			widgetType = Gaffer.Metadata.plugValue( plug, "plugValueWidget:type" )
+			widgetType = Gaffer.Metadata.value( plug, "plugValueWidget:type" )
 			if widgetType is None :
-				widgetType = Gaffer.Metadata.plugValue( plug, "layout:widgetType" )
+				widgetType = Gaffer.Metadata.value( plug, "layout:widgetType" )
 				if widgetType is not None :
 					warnings.warn( "The \"layout:widgetType\" metadata entry is deprecated, use \"plugValueWidget:type\" instead.", DeprecationWarning )
 					if widgetType == "None" :
