@@ -75,6 +75,11 @@ UI
 - Added indentation to nested collapsible widgets (#1866).
 - SceneInspector
   - Fixed errors when selected path doesn't exist (#1874).
+- Display
+  - Don't attempt to start server unless UI is connected (#222).
+- Added home shortcut for image view.
+- Selection/Crop Tools
+  - Fixed precision issues when far from origin.
 
 Documentation
 -------------
@@ -107,6 +112,8 @@ API
 - PlugLayout
   - Added support for "layout:accessory" metadata.
 - Added RefreshPlugValueWidget and deprecated IncrementingPlugValueWidget (#1867).
+- ViewportGadget
+  - Don't convert raster positions to V2i.
 
 Build
 -----
