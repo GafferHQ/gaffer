@@ -215,12 +215,12 @@ class UIEditor( GafferUI.NodeSetEditor ) :
 	@classmethod
 	def __setColor( cls, menu, node ) :
 
-		color = Gaffer.Metadata.nodeValue( node, "nodeGadget:color" ) or IECore.Color3f( 1 )
+		color = Gaffer.Metadata.value( node, "nodeGadget:color" ) or IECore.Color3f( 1 )
 		dialogue = GafferUI.ColorChooserDialogue( color = color, useDisplayTransform = False )
 		color = dialogue.waitForColor( parentWindow = menu.ancestor( GafferUI.Window ) )
 		if color is not None :
 			with Gaffer.UndoContext( node.ancestor( Gaffer.ScriptNode ) ) :
-				Gaffer.Metadata.registerNodeValue( node, "nodeGadget:color", color )
+				Gaffer.Metadata.registerValue( node, "nodeGadget:color", color )
 
 GafferUI.EditorWidget.registerType( "UIEditor", UIEditor )
 
@@ -341,7 +341,7 @@ class _MetadataWidget( GafferUI.Widget ) :
 			return
 
 		with Gaffer.UndoContext( self.__target.ancestor( Gaffer.ScriptNode ) ) :
-			_registerMetadata( self.__target, self.__key, value )
+			Gaffer.Metadata.registerValue( self.__target, self.__key, value )
 
 	## May be called by derived classes to deregister the
 	# metadata value.
@@ -351,7 +351,7 @@ class _MetadataWidget( GafferUI.Widget ) :
 			return
 
 		with Gaffer.UndoContext( self.__target.ancestor( Gaffer.ScriptNode ) ) :
-			_deregisterMetadata( self.__target, self.__key )
+			Gaffer.Metadata.deregisterValue( self.__target, self.__key )
 
 	def __update( self ) :
 
@@ -849,8 +849,8 @@ class _PlugListing( GafferUI.Widget ) :
 			for plug in GafferUI.PlugLayout.layoutOrder( self.__parent, section = sectionPath ) :
 				sectionItem.append( _PlugLayoutItem( plug ) )
 
-		emptySections = _metadata( self.getPlugParent(), "uiEditor:emptySections" )
-		emptySectionIndices = _metadata( self.getPlugParent(), "uiEditor:emptySectionIndices" )
+		emptySections = Gaffer.Metadata.value( self.getPlugParent(), "uiEditor:emptySections" )
+		emptySectionIndices = Gaffer.Metadata.value( self.getPlugParent(), "uiEditor:emptySectionIndices" )
 		if emptySections and emptySectionIndices :
 			for sectionPath, sectionIndex in zip( emptySections, emptySectionIndices ) :
 				parentPath, unused, sectionName = sectionPath.rpartition( "." )
@@ -898,8 +898,8 @@ class _PlugListing( GafferUI.Widget ) :
 
 		with Gaffer.BlockedConnection( self.__plugMetadataChangedConnection ) :
 			walk( self.__pathListing.getPath().copy().setFromString( "/" ).item() )
-			_registerMetadata( self.getPlugParent(), "uiEditor:emptySections", emptySections )
-			_registerMetadata( self.getPlugParent(), "uiEditor:emptySectionIndices", emptySectionIndices )
+			Gaffer.Metadata.registerValue( self.getPlugParent(), "uiEditor:emptySections", emptySections )
+			Gaffer.Metadata.registerValue( self.getPlugParent(), "uiEditor:emptySectionIndices", emptySectionIndices )
 
 	def __childAddedOrRemoved( self, parent, child ) :
 
@@ -1102,7 +1102,7 @@ class _PlugListing( GafferUI.Widget ) :
 	def __addPlug( self, plugType ) :
 
 		plug = plugType( flags = Gaffer.Plug.Flags.Default | Gaffer.Plug.Flags.Dynamic )
-		_registerMetadata( plug, "nodule:type", "" )
+		Gaffer.Metadata.registerValue( plug, "nodule:type", "" )
 
 		parentItem = self.__selectedItem()
 		if parentItem is not None :
@@ -1115,7 +1115,7 @@ class _PlugListing( GafferUI.Widget ) :
 				parentItem
 			)
 
-		_registerMetadata( plug, "layout:section", parentItem.fullName() )
+		Gaffer.Metadata.registerValue( plug, "layout:section", parentItem.fullName() )
 
 		with Gaffer.UndoContext( self.__parent.ancestor( Gaffer.ScriptNode ) ) :
 			self.getPlugParent().addChild( plug )
@@ -1260,9 +1260,9 @@ class _PresetsEditor( GafferUI.Widget ) :
 		d = self.__pathListing.getPath().dict()
 		d.clear()
 		if self.__plug is not None :
-			for name in _registeredMetadata( self.__plug, instanceOnly = True, persistentOnly = True ) :
+			for name in Gaffer.Metadata.registeredValues( self.__plug, instanceOnly = True, persistentOnly = True ) :
 				if name.startswith( "preset:" ) :
-					d[name[7:]] = _metadata( self.__plug, name )
+					d[name[7:]] = Gaffer.Metadata.value( self.__plug, name )
 
 		self.__pathListing.getPath().pathChangedSignal()( self.__pathListing.getPath() )
 
@@ -1758,60 +1758,26 @@ class _SectionEditor( GafferUI.Widget ) :
 		with Gaffer.UndoContext( self.__plugParent.ancestor( Gaffer.ScriptNode ) ) :
 
 			for plug in self.__plugParent.children( Gaffer.Plug ) :
-				s = _metadata( plug, "layout:section" )
+				s = Gaffer.Metadata.value( plug, "layout:section" )
 				if s is not None :
-					_registerMetadata( plug, "layout:section", newSection( s ) )
+					Gaffer.Metadata.registerValue( plug, "layout:section", newSection( s ) )
 
-			emptySections = _metadata( self.getPlugParent(), "uiEditor:emptySections" )
+			emptySections = Gaffer.Metadata.value( self.getPlugParent(), "uiEditor:emptySections" )
 			if emptySections :
 				for i in range( 0, len( emptySections ) ) :
 					emptySections[i] = newSection( emptySections[i] )
-				_registerMetadata( self.getPlugParent(), "uiEditor:emptySections", emptySections )
+				Gaffer.Metadata.registerValue( self.getPlugParent(), "uiEditor:emptySections", emptySections )
 
-			for name in _registeredMetadata( self.getPlugParent(), instanceOnly = True, persistentOnly = True ) :
+			for name in Gaffer.Metadata.registeredValues( self.getPlugParent(), instanceOnly = True, persistentOnly = True ) :
 				m = re.match( "(layout:section:)(.*)(:.*)", name )
 				if m :
 					if newSection( m.group( 2 ) ) != m.group( 2 ) :
-						_registerMetadata(
+						Gaffer.Metadata.registerValue(
 							self.getPlugParent(),
 							m.group( 1 ) + newSection( m.group( 2 ) ) + m.group( 3 ),
-							_metadata( self.getPlugParent(), name )
+							Gaffer.Metadata.value( self.getPlugParent(), name )
 						)
-						_deregisterMetadata( self.getPlugParent(), name )
+						Gaffer.Metadata.deregisterValue( self.getPlugParent(), name )
 
 		self.setSection( ".".join( newSectionPath ) )
 		self.nameChangedSignal()( self, ".".join( oldSectionPath ), ".".join( newSectionPath ) )
-
-# Metadata utility methods.
-# \todo We should change the Metadata API to provide overloads
-# rather than functions with distinct names, so we don't have to
-# do this hoop jumping ourselves.
-##########################################################################
-
-def _registerMetadata( target, name, value ) :
-
-	if isinstance( target, Gaffer.Node ) :
-		Gaffer.Metadata.registerNodeValue( target, name, value )
-	else :
-		Gaffer.Metadata.registerPlugValue( target, name, value )
-
-def _registeredMetadata( target, inherit = True, instanceOnly = False, persistentOnly = False ) :
-
-	if isinstance( target, Gaffer.Node ) :
-		return Gaffer.Metadata.registeredNodeValues( target, inherit, instanceOnly, persistentOnly )
-	else :
-		return Gaffer.Metadata.registeredPlugValues( target, inherit, instanceOnly, persistentOnly )
-
-def _metadata( target, name ) :
-
-	if isinstance( target, Gaffer.Node ) :
-		return Gaffer.Metadata.nodeValue( target, name )
-	else :
-		return Gaffer.Metadata.plugValue( target, name )
-
-def _deregisterMetadata( target, name ) :
-
-	if isinstance( target, Gaffer.Node ) :
-		return Gaffer.Metadata.deregisterNodeValue( target, name )
-	else :
-		return Gaffer.Metadata.deregisterPlugValue( target, name )
