@@ -85,7 +85,7 @@ def __parametersPlugValueWidgetCreator( plug ) :
 	for name, value in annotations.items() :
 		m = collapsedRe.match( name )
 		if m :
-			Gaffer.Metadata.registerPlugValue(
+			Gaffer.Metadata.registerValue(
 				plug,
 				"layout:section:" + m.group( 1 ) + ":collapsed",
 				value in ( "True", "true", "1" ),
@@ -108,7 +108,7 @@ def __parametersPlugValueWidgetCreator( plug ) :
 			elif name.endswith( "Positions" ) and name[:-9] + "Values" in shader.parameters :
 				continue
 			if name in plug :
-				Gaffer.Metadata.registerPlugValue( plug[name], "layout:index", index, persistent = False )
+				Gaffer.Metadata.registerValue( plug[name], "layout:index", index, persistent = False )
 				index += 1
 
 	# Now we've created the appropriate metadata, we can just defer to a standard LayoutPlugValueWidget
@@ -410,10 +410,10 @@ Gaffer.Metadata.registerNode(
 
 for nodeType in( GafferRenderMan.RenderManShader, GafferRenderMan.RenderManLight ) :
 
-	Gaffer.Metadata.registerPlugValue( nodeType, "parameters", "layout:activators", __parameterActivators )
-	Gaffer.Metadata.registerPlugValue( nodeType, "parameters.*", "description", __plugDescription )
-	Gaffer.Metadata.registerPlugValue( nodeType, "parameters.*", "label", __plugLabel )
-	Gaffer.Metadata.registerPlugValue( nodeType, "parameters.*", "layout:divider", __plugDivider )
-	Gaffer.Metadata.registerPlugValue( nodeType, "parameters.*", "ui:visibleDimensions", __plugVisibleDimensions )
-	Gaffer.Metadata.registerPlugValue( nodeType, "parameters.*", "layout:section", __plugSection )
-	Gaffer.Metadata.registerPlugValue( nodeType, "parameters.*", "layout:activator", __plugActivator )
+	Gaffer.Metadata.registerValue( nodeType, "parameters", "layout:activators", __parameterActivators )
+	Gaffer.Metadata.registerValue( nodeType, "parameters.*", "description", __plugDescription )
+	Gaffer.Metadata.registerValue( nodeType, "parameters.*", "label", __plugLabel )
+	Gaffer.Metadata.registerValue( nodeType, "parameters.*", "layout:divider", __plugDivider )
+	Gaffer.Metadata.registerValue( nodeType, "parameters.*", "ui:visibleDimensions", __plugVisibleDimensions )
+	Gaffer.Metadata.registerValue( nodeType, "parameters.*", "layout:section", __plugSection )
+	Gaffer.Metadata.registerValue( nodeType, "parameters.*", "layout:activator", __plugActivator )
