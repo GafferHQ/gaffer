@@ -193,11 +193,11 @@ std::string ValuePlugSerialiser::postConstructor( const Gaffer::GraphComponent *
 		// in the `.grf` file.
 		int milestoneVersion = 0;
 		int majorVersion = 0;
-		if( IECore::ConstIntDataPtr v = Metadata::nodeValue<IECore::IntData>( reference, "serialiser:milestoneVersion" ) )
+		if( IECore::ConstIntDataPtr v = Metadata::value<IECore::IntData>( reference, "serialiser:milestoneVersion" ) )
 		{
 			milestoneVersion = v->readable();
 		}
-		if( IECore::ConstIntDataPtr v = Metadata::nodeValue<IECore::IntData>( reference, "serialiser:majorVersion" ) )
+		if( IECore::ConstIntDataPtr v = Metadata::value<IECore::IntData>( reference, "serialiser:majorVersion" ) )
 		{
 			majorVersion = v->readable();
 		}

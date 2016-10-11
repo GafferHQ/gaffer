@@ -249,7 +249,7 @@ class ReferenceTest( GafferTest.TestCase ) :
 		b = Gaffer.Box.create( s, Gaffer.StandardSet( [ s["n1"] ] ) )
 		p = b.promotePlug( b["n1"]["op1"] )
 
-		Gaffer.Metadata.registerPlugValue( p, "description", "ppp" )
+		Gaffer.Metadata.registerValue( p, "description", "ppp" )
 
 		b.exportForReference( self.temporaryDirectory() + "/test.grf" )
 
@@ -257,11 +257,11 @@ class ReferenceTest( GafferTest.TestCase ) :
 		s2["r"] = Gaffer.Reference()
 		s2["r"].load( self.temporaryDirectory() + "/test.grf" )
 
-		self.assertEqual( Gaffer.Metadata.plugValue( s2["r"].descendant( p.relativeName( b ) ), "description" ), "ppp" )
+		self.assertEqual( Gaffer.Metadata.value( s2["r"].descendant( p.relativeName( b ) ), "description" ), "ppp" )
 
 		s3 = Gaffer.ScriptNode()
 		s3.execute( s2.serialise() )
-		self.assertEqual( Gaffer.Metadata.plugValue( s3["r"].descendant( p.relativeName( b ) ), "description" ), "ppp" )
+		self.assertEqual( Gaffer.Metadata.value( s3["r"].descendant( p.relativeName( b ) ), "description" ), "ppp" )
 
 	def testMetadataIsntResaved( self ) :
 
@@ -271,7 +271,7 @@ class ReferenceTest( GafferTest.TestCase ) :
 		b = Gaffer.Box.create( s, Gaffer.StandardSet( [ s["n1"] ] ) )
 		p = b.promotePlug( b["n1"]["op1"] )
 
-		Gaffer.Metadata.registerPlugValue( p, "description", "ppp" )
+		Gaffer.Metadata.registerValue( p, "description", "ppp" )
 
 		b.exportForReference( self.temporaryDirectory() + "/test.grf" )
 
@@ -287,14 +287,14 @@ class ReferenceTest( GafferTest.TestCase ) :
 		s["b"] = Gaffer.Box()
 		s["b"]["p"] = Gaffer.Plug( flags = Gaffer.Plug.Flags.Default | Gaffer.Plug.Flags.Dynamic )
 
-		Gaffer.Metadata.registerPlugValue( s["b"]["p"], "description", "ddd" )
+		Gaffer.Metadata.registerValue( s["b"]["p"], "description", "ddd" )
 
 		s["b"].exportForReference( self.temporaryDirectory() + "/test.grf" )
 
 		s["r"] = Gaffer.Reference()
 		s["r"].load( self.temporaryDirectory() + "/test.grf" )
 
-		self.assertEqual( Gaffer.Metadata.plugValue( s["r"]["p"], "description" ), "ddd" )
+		self.assertEqual( Gaffer.Metadata.value( s["r"]["p"], "description" ), "ddd" )
 
 	def testEditPlugMetadata( self ) :
 
@@ -307,7 +307,7 @@ class ReferenceTest( GafferTest.TestCase ) :
 		p = b.promotePlug( b["n1"]["op1"] )
 		p.setName( "p" )
 
-		Gaffer.Metadata.registerPlugValue( p, "test", "referenced" )
+		Gaffer.Metadata.registerValue( p, "test", "referenced" )
 
 		b.exportForReference( self.temporaryDirectory() + "/test.grf" )
 
@@ -317,23 +317,23 @@ class ReferenceTest( GafferTest.TestCase ) :
 		s2["r"] = Gaffer.Reference()
 		s2["r"].load( self.temporaryDirectory() + "/test.grf" )
 
-		self.assertEqual( Gaffer.Metadata.plugValue( s2["r"]["p"], "test" ), "referenced" )
+		self.assertEqual( Gaffer.Metadata.value( s2["r"]["p"], "test" ), "referenced" )
 
 		# Edit it, and check it overwrote the original.
 
-		Gaffer.Metadata.registerPlugValue( s2["r"]["p"], "test", "edited" )
-		self.assertEqual( Gaffer.Metadata.plugValue( s2["r"]["p"], "test" ), "edited" )
+		Gaffer.Metadata.registerValue( s2["r"]["p"], "test", "edited" )
+		self.assertEqual( Gaffer.Metadata.value( s2["r"]["p"], "test" ), "edited" )
 
 		# Save and load the script, and check the edit stays in place.
 
 		s3 = Gaffer.ScriptNode()
 		s3.execute( s2.serialise() )
-		self.assertEqual( Gaffer.Metadata.plugValue( s3["r"]["p"], "test" ), "edited" )
+		self.assertEqual( Gaffer.Metadata.value( s3["r"]["p"], "test" ), "edited" )
 
 		# Reload the reference, and check the edit stays in place.
 
 		s3["r"].load( self.temporaryDirectory() + "/test.grf" )
-		self.assertEqual( Gaffer.Metadata.plugValue( s3["r"]["p"], "test" ), "edited" )
+		self.assertEqual( Gaffer.Metadata.value( s3["r"]["p"], "test" ), "edited" )
 
 	def testAddPlugMetadata( self ) :
 
@@ -356,19 +356,19 @@ class ReferenceTest( GafferTest.TestCase ) :
 
 		# Add some metadata to the Reference node (not the reference file)
 
-		Gaffer.Metadata.registerPlugValue( s2["r"]["p"], "test", "added" )
-		self.assertEqual( Gaffer.Metadata.plugValue( s2["r"]["p"], "test" ), "added" )
+		Gaffer.Metadata.registerValue( s2["r"]["p"], "test", "added" )
+		self.assertEqual( Gaffer.Metadata.value( s2["r"]["p"], "test" ), "added" )
 
 		# Save and load the script, and check the added metadata stays in place.
 
 		s3 = Gaffer.ScriptNode()
 		s3.execute( s2.serialise() )
-		self.assertEqual( Gaffer.Metadata.plugValue( s3["r"]["p"], "test" ), "added" )
+		self.assertEqual( Gaffer.Metadata.value( s3["r"]["p"], "test" ), "added" )
 
 		# Reload the reference, and check the edit stays in place.
 
 		s3["r"].load( self.temporaryDirectory() + "/test.grf" )
-		self.assertEqual( Gaffer.Metadata.plugValue( s3["r"]["p"], "test" ), "added" )
+		self.assertEqual( Gaffer.Metadata.value( s3["r"]["p"], "test" ), "added" )
 
 	def testReloadWithUnconnectedPlugs( self ) :
 
@@ -397,14 +397,14 @@ class ReferenceTest( GafferTest.TestCase ) :
 		s["r"] = Gaffer.Reference()
 		s["r"].load( self.temporaryDirectory() + "/test.grf" )
 
-		self.assertEqual( Gaffer.Metadata.plugValue( s["r"]["p"], "test" ), None )
+		self.assertEqual( Gaffer.Metadata.value( s["r"]["p"], "test" ), None )
 
-		Gaffer.Metadata.registerPlugValue( s["b"]["p"], "test", 10 )
+		Gaffer.Metadata.registerValue( s["b"]["p"], "test", 10 )
 		s["b"].exportForReference( self.temporaryDirectory() + "/test.grf" )
 
 		s["r"].load( self.temporaryDirectory() + "/test.grf" )
 
-		self.assertEqual( Gaffer.Metadata.plugValue( s["r"]["p"], "test" ), 10 )
+		self.assertEqual( Gaffer.Metadata.value( s["r"]["p"], "test" ), 10 )
 
 	def testDefaultValueClashes( self ) :
 
@@ -736,16 +736,16 @@ class ReferenceTest( GafferTest.TestCase ) :
 		s = Gaffer.ScriptNode()
 		s["b"] = Gaffer.Box()
 
-		Gaffer.Metadata.registerNodeValue( s["b"], "description", "Test description" )
-		Gaffer.Metadata.registerNodeValue( s["b"], "nodeGadget:color", IECore.Color3f( 1, 0, 0 ) )
+		Gaffer.Metadata.registerValue( s["b"], "description", "Test description" )
+		Gaffer.Metadata.registerValue( s["b"], "nodeGadget:color", IECore.Color3f( 1, 0, 0 ) )
 
 		s["b"].exportForReference( self.temporaryDirectory() + "/test.grf" )
 
 		s["r"] = Gaffer.Reference()
 		s["r"].load( self.temporaryDirectory() + "/test.grf" )
 
-		self.assertEqual( Gaffer.Metadata.nodeValue( s["r"], "description" ), "Test description" )
-		self.assertEqual( Gaffer.Metadata.nodeValue( s["r"], "nodeGadget:color" ), IECore.Color3f( 1, 0, 0 ) )
+		self.assertEqual( Gaffer.Metadata.value( s["r"], "description" ), "Test description" )
+		self.assertEqual( Gaffer.Metadata.value( s["r"], "nodeGadget:color" ), IECore.Color3f( 1, 0, 0 ) )
 
 	def testVersionMetadata( self ) :
 
@@ -756,15 +756,15 @@ class ReferenceTest( GafferTest.TestCase ) :
 		s["r"] = Gaffer.Reference()
 		s["r"].load( self.temporaryDirectory() + "/test.grf" )
 
-		self.assertEqual( Gaffer.Metadata.nodeValue( s["r"], "serialiser:milestoneVersion" ), Gaffer.About.milestoneVersion() )
-		self.assertEqual( Gaffer.Metadata.nodeValue( s["r"], "serialiser:majorVersion" ), Gaffer.About.majorVersion() )
-		self.assertEqual( Gaffer.Metadata.nodeValue( s["r"], "serialiser:minorVersion" ), Gaffer.About.minorVersion() )
-		self.assertEqual( Gaffer.Metadata.nodeValue( s["r"], "serialiser:patchVersion" ), Gaffer.About.patchVersion() )
+		self.assertEqual( Gaffer.Metadata.value( s["r"], "serialiser:milestoneVersion" ), Gaffer.About.milestoneVersion() )
+		self.assertEqual( Gaffer.Metadata.value( s["r"], "serialiser:majorVersion" ), Gaffer.About.majorVersion() )
+		self.assertEqual( Gaffer.Metadata.value( s["r"], "serialiser:minorVersion" ), Gaffer.About.minorVersion() )
+		self.assertEqual( Gaffer.Metadata.value( s["r"], "serialiser:patchVersion" ), Gaffer.About.patchVersion() )
 
-		self.assertTrue( "serialiser:milestoneVersion" not in Gaffer.Metadata.registeredNodeValues( s["r"], persistentOnly = True ) )
-		self.assertTrue( "serialiser:majorVersion" not in Gaffer.Metadata.registeredNodeValues( s["r"], persistentOnly = True ) )
-		self.assertTrue( "serialiser:minorVersion" not in Gaffer.Metadata.registeredNodeValues( s["r"], persistentOnly = True ) )
-		self.assertTrue( "serialiser:patchVersion" not in Gaffer.Metadata.registeredNodeValues( s["r"], persistentOnly = True ) )
+		self.assertTrue( "serialiser:milestoneVersion" not in Gaffer.Metadata.registeredValues( s["r"], persistentOnly = True ) )
+		self.assertTrue( "serialiser:majorVersion" not in Gaffer.Metadata.registeredValues( s["r"], persistentOnly = True ) )
+		self.assertTrue( "serialiser:minorVersion" not in Gaffer.Metadata.registeredValues( s["r"], persistentOnly = True ) )
+		self.assertTrue( "serialiser:patchVersion" not in Gaffer.Metadata.registeredValues( s["r"], persistentOnly = True ) )
 
 	def testBackwardCompatibility( self ) :
 
@@ -845,26 +845,26 @@ class ReferenceTest( GafferTest.TestCase ) :
 		s["r"] = Gaffer.Reference()
 		s["r"]["user"]["p"] = Gaffer.IntPlug( flags = Gaffer.Plug.Flags.Default | Gaffer.Plug.Flags.Dynamic )
 
-		Gaffer.Metadata.registerPlugValue( s["r"]["user"], "testPersistent", 1, persistent = True )
-		Gaffer.Metadata.registerPlugValue( s["r"]["user"], "testNonPersistent", 2, persistent = False )
+		Gaffer.Metadata.registerValue( s["r"]["user"], "testPersistent", 1, persistent = True )
+		Gaffer.Metadata.registerValue( s["r"]["user"], "testNonPersistent", 2, persistent = False )
 
-		Gaffer.Metadata.registerPlugValue( s["r"]["user"]["p"], "testPersistent", 3, persistent = True )
-		Gaffer.Metadata.registerPlugValue( s["r"]["user"]["p"], "testNonPersistent", 4, persistent = False )
+		Gaffer.Metadata.registerValue( s["r"]["user"]["p"], "testPersistent", 3, persistent = True )
+		Gaffer.Metadata.registerValue( s["r"]["user"]["p"], "testNonPersistent", 4, persistent = False )
 
-		self.assertEqual( Gaffer.Metadata.plugValue( s["r"]["user"], "testPersistent" ), 1 )
-		self.assertEqual( Gaffer.Metadata.plugValue( s["r"]["user"], "testNonPersistent" ), 2 )
+		self.assertEqual( Gaffer.Metadata.value( s["r"]["user"], "testPersistent" ), 1 )
+		self.assertEqual( Gaffer.Metadata.value( s["r"]["user"], "testNonPersistent" ), 2 )
 
-		self.assertEqual( Gaffer.Metadata.plugValue( s["r"]["user"]["p"], "testPersistent" ), 3 )
-		self.assertEqual( Gaffer.Metadata.plugValue( s["r"]["user"]["p"], "testNonPersistent" ), 4 )
+		self.assertEqual( Gaffer.Metadata.value( s["r"]["user"]["p"], "testPersistent" ), 3 )
+		self.assertEqual( Gaffer.Metadata.value( s["r"]["user"]["p"], "testNonPersistent" ), 4 )
 
 		s2 = Gaffer.ScriptNode()
 		s2.execute( s.serialise() )
 
-		self.assertEqual( Gaffer.Metadata.plugValue( s2["r"]["user"], "testPersistent" ), 1 )
-		self.assertEqual( Gaffer.Metadata.plugValue( s2["r"]["user"], "testNonPersistent" ), None )
+		self.assertEqual( Gaffer.Metadata.value( s2["r"]["user"], "testPersistent" ), 1 )
+		self.assertEqual( Gaffer.Metadata.value( s2["r"]["user"], "testNonPersistent" ), None )
 
-		self.assertEqual( Gaffer.Metadata.plugValue( s2["r"]["user"]["p"], "testPersistent" ), 3 )
-		self.assertEqual( Gaffer.Metadata.plugValue( s2["r"]["user"]["p"], "testNonPersistent" ), None )
+		self.assertEqual( Gaffer.Metadata.value( s2["r"]["user"]["p"], "testPersistent" ), 3 )
+		self.assertEqual( Gaffer.Metadata.value( s2["r"]["user"]["p"], "testNonPersistent" ), None )
 
 	def testNamespaceIsClear( self ) :
 

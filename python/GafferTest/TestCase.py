@@ -212,14 +212,14 @@ class TestCase( unittest.TestCase ) :
 			except :
 				continue
 
-			description = Gaffer.Metadata.nodeValue( node, "description", inherit = False )
+			description = Gaffer.Metadata.value( node, "description", inherit = False )
 			if (not description) or description.isspace() :
 				undocumentedNodes.append( node.getName() )
 
 			def checkPlugs( graphComponent ) :
 
 				if isinstance( graphComponent, Gaffer.Plug ) and not graphComponent.getName().startswith( "__" ) :
-					description = Gaffer.Metadata.plugValue( graphComponent, "description" )
+					description = Gaffer.Metadata.value( graphComponent, "description" )
 					if (not description) or description.isspace() :
 						undocumentedPlugs.append( graphComponent.fullName() )
 

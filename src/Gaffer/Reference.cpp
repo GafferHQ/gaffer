@@ -179,11 +179,11 @@ void Reference::loadInternal( const std::string &fileName )
 	// and we must make sure they don't clobber the user-set values on the reference node.
 	int milestoneVersion = 0;
 	int majorVersion = 0;
-	if( IECore::ConstIntDataPtr v = Metadata::nodeValue<IECore::IntData>( this, "serialiser:milestoneVersion" ) )
+	if( IECore::ConstIntDataPtr v = Metadata::value<IECore::IntData>( this, "serialiser:milestoneVersion" ) )
 	{
 		milestoneVersion = v->readable();
 	}
-	if( IECore::ConstIntDataPtr v = Metadata::nodeValue<IECore::IntData>( this, "serialiser:majorVersion" ) )
+	if( IECore::ConstIntDataPtr v = Metadata::value<IECore::IntData>( this, "serialiser:majorVersion" ) )
 	{
 		majorVersion = v->readable();
 	}
@@ -308,22 +308,22 @@ bool Reference::isReferencePlug( const Plug *plug ) const
 void Reference::convertPersistentMetadata( Plug *plug ) const
 {
 	vector<InternedString> keys;
-	Metadata::registeredPlugValues( plug, keys, /* inherit = */ false, /* instanceOnly = */ true, /* persistentOnly = */ true );
+	Metadata::registeredValues( plug, keys, /* inherit = */ false, /* instanceOnly = */ true, /* persistentOnly = */ true );
 	for( vector<InternedString>::const_iterator it = keys.begin(), eIt = keys.end(); it != eIt; ++it )
 	{
-		ConstDataPtr value = Metadata::plugValue<Data>( plug, *it );
-		Metadata::registerPlugValue( plug, *it, value, /* persistent = */ false );
+		ConstDataPtr value = Metadata::value<Data>( plug, *it );
+		Metadata::registerValue( plug, *it, value, /* persistent = */ false );
 	}
 }
 
 void Reference::transferPersistentMetadata( const Plug *srcPlug, Plug *dstPlug ) const
 {
 	vector<InternedString> keys;
-	Metadata::registeredPlugValues( srcPlug, keys, /* inherit = */ false, /* instanceOnly = */ true, /* persistentOnly = */ true );
+	Metadata::registeredValues( srcPlug, keys, /* inherit = */ false, /* instanceOnly = */ true, /* persistentOnly = */ true );
 	for( vector<InternedString>::const_iterator it = keys.begin(), eIt = keys.end(); it != eIt; ++it )
 	{
-		ConstDataPtr value = Metadata::plugValue<Data>( srcPlug, *it );
-		Metadata::registerPlugValue( dstPlug, *it, value );
+		ConstDataPtr value = Metadata::value<Data>( srcPlug, *it );
+		Metadata::registerValue( dstPlug, *it, value );
 	}
 
 	for( PlugIterator it( srcPlug ); !it.done(); ++it )
