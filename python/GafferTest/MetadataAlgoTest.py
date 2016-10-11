@@ -71,5 +71,58 @@ class MetadataAlgoTest( GafferTest.TestCase ) :
 		self.assertEqual( Gaffer.readOnly( n ), True )
 		self.assertEqual( Gaffer.readOnly( n["op1"] ), True )
 
+	def testAffected( self ) :
+
+		n = GafferTest.CompoundPlugNode()
+
+		affected = []
+		ancestorAffected = []
+		childAffected = []
+		def plugValueChanged( nodeTypeId, plugPath, key, plug ) :
+			affected.append( Gaffer.affectedByChange( n["p"]["s"], nodeTypeId, plugPath, plug ) )
+			ancestorAffected.append( Gaffer.ancestorAffectedByChange( n["p"]["s"], nodeTypeId, plugPath, plug ) )
+			childAffected.append( Gaffer.childAffectedByChange( n["p"], nodeTypeId, plugPath, plug ) )
+
+		c = Gaffer.Metadata.plugValueChangedSignal().connect( plugValueChanged )
+
+		Gaffer.Metadata.registerValue( Gaffer.Node, "user", "test", 1 )
+		self.assertEqual( affected, [ False ] )
+		self.assertEqual( ancestorAffected, [ False ] )
+		self.assertEqual( childAffected, [ False ] )
+
+		Gaffer.Metadata.registerValue( GafferTest.SphereNode, "p.s", "test", 1 )
+		self.assertEqual( affected, [ False, False ] )
+		self.assertEqual( ancestorAffected, [ False, False ] )
+		self.assertEqual( childAffected, [ False, False ] )
+
+		Gaffer.Metadata.registerValue( GafferTest.CompoundPlugNode, "p.s", "test", 1 )
+		self.assertEqual( affected, [ False, False, True ] )
+		self.assertEqual( ancestorAffected, [ False, False, False ] )
+		self.assertEqual( childAffected, [ False, False, True ] )
+
+		Gaffer.Metadata.registerValue( GafferTest.CompoundPlugNode, "p", "test", 2 )
+		self.assertEqual( affected, [ False, False, True, False ] )
+		self.assertEqual( ancestorAffected, [ False, False, False, True ] )
+		self.assertEqual( childAffected, [ False, False, True, False ] )
+
+		del affected[:]
+		del ancestorAffected[:]
+		del childAffected[:]
+
+		Gaffer.Metadata.registerValue( n["user"], "test", 3 )
+		self.assertEqual( affected, [ False ] )
+		self.assertEqual( ancestorAffected, [ False ] )
+		self.assertEqual( childAffected, [ False ] )
+
+		Gaffer.Metadata.registerValue( n["p"]["s"], "test", 4 )
+		self.assertEqual( affected, [ False, True ] )
+		self.assertEqual( ancestorAffected, [ False, False ] )
+		self.assertEqual( childAffected, [ False, True ] )
+
+		Gaffer.Metadata.registerValue( n["p"], "test", 5 )
+		self.assertEqual( affected, [ False, True, False ] )
+		self.assertEqual( ancestorAffected, [ False, False, True ] )
+		self.assertEqual( childAffected, [ False, True, False ] )
+
 if __name__ == "__main__":
 	unittest.main()

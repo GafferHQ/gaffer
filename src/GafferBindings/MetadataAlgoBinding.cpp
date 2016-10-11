@@ -38,6 +38,7 @@
 
 #include "Gaffer/MetadataAlgo.h"
 #include "Gaffer/GraphComponent.h"
+#include "Gaffer/Plug.h"
 
 using namespace boost::python;
 using namespace Gaffer;
@@ -51,6 +52,9 @@ void bindMetadataAlgo()
 	def( "setReadOnly", &setReadOnly, ( arg( "graphComponent" ), arg( "readOnly"), arg( "persistent" ) = true ) );
 	def( "getReadOnly", &getReadOnly );
 	def( "readOnly", &readOnly );
+	def( "affectedByChange", &affectedByChange, ( arg( "plug" ), arg( "changedNodeTypeId"), arg( "changedPlugPath" ), arg( "changedPlug" ) ) );
+	def( "childAffectedByChange", &childAffectedByChange, ( arg( "parent" ), arg( "changedNodeTypeId"), arg( "changedPlugPath" ), arg( "changedPlug" ) ) );
+	def( "ancestorAffectedByChange", &ancestorAffectedByChange, ( arg( "plug" ), arg( "changedNodeTypeId"), arg( "changedPlugPath" ), arg( "changedPlug" ) ) );
 
 }
 

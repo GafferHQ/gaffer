@@ -37,15 +37,29 @@
 #include "IECore/SimpleTypedData.h"
 
 #include "Gaffer/GraphComponent.h"
+#include "Gaffer/Plug.h"
+#include "Gaffer/Node.h"
 #include "Gaffer/Metadata.h"
 #include "Gaffer/MetadataAlgo.h"
 
+using namespace std;
 using namespace IECore;
 
 namespace
 {
 
 InternedString g_readOnlyName( "readOnly" );
+
+size_t findNth( const std::string &s, char c, int n )
+{
+	size_t result = 0;
+	while( n-- && result != string::npos )
+	{
+		result = s.find( c, result );
+	}
+
+	return result;
+}
 
 } // namespace
 
@@ -73,6 +87,80 @@ bool readOnly( const GraphComponent *graphComponent )
 		}
 		graphComponent = graphComponent->parent<GraphComponent>();
 	}
+	return false;
+}
+
+bool affectedByChange( const Plug *plug, IECore::TypeId changedNodeTypeId, const MatchPattern &changedPlugPath, const Gaffer::Plug *changedPlug )
+{
+	if( changedPlug )
+	{
+		return plug == changedPlug;
+	}
+
+	const Node *node = plug->node();
+	if( !node || !node->isInstanceOf( changedNodeTypeId ) )
+	{
+		return false;
+	}
+
+	if( match( plug->relativeName( node ), changedPlugPath ) )
+	{
+		return true;
+	}
+
+	return false;
+}
+
+bool childAffectedByChange( const GraphComponent *parent, IECore::TypeId changedNodeTypeId, const MatchPattern &changedPlugPath, const Gaffer::Plug *changedPlug )
+{
+	if( changedPlug )
+	{
+		return parent == changedPlug->parent<GraphComponent>();
+	}
+
+	const Node *node = runTimeCast<const Node>( parent );
+	if( !node )
+	{
+		node = parent->ancestor<Node>();
+	}
+
+	if( !node || !node->isInstanceOf( changedNodeTypeId ) )
+	{
+		return false;
+	}
+
+	if( parent == node )
+	{
+		return changedPlugPath.find( '.' ) == string::npos;
+	}
+
+	const string parentName = parent->relativeName( node );
+	const size_t n = count( parentName.begin(), parentName.end(), '.' ) + 1;
+	const size_t parentMatchPatternEnd = findNth( changedPlugPath, '.', n );
+
+	if( parentMatchPatternEnd == string::npos )
+	{
+		return false;
+	}
+
+	return match( parentName, changedPlugPath.substr( 0, parentMatchPatternEnd ) );
+}
+
+bool ancestorAffectedByChange( const Plug *plug, IECore::TypeId changedNodeTypeId, const MatchPattern &changedPlugPath, const Gaffer::Plug *changedPlug )
+{
+	if( changedPlug )
+	{
+		return changedPlug->isAncestorOf( plug );
+	}
+
+	while( ( plug = plug->parent<Plug>() ) )
+	{
+		if( affectedByChange( plug, changedNodeTypeId, changedPlugPath, changedPlug ) )
+		{
+			return true;
+		}
+	}
+
 	return false;
 }
 

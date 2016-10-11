@@ -37,10 +37,15 @@
 #ifndef GAFFER_METADATAALGO_H
 #define GAFFER_METADATAALGO_H
 
+#include "IECore/TypeIds.h"
+
+#include "Gaffer/StringAlgo.h"
+
 namespace Gaffer
 {
 
 class GraphComponent;
+class Plug;
 
 /// Read-only-ness
 /// ==============
@@ -74,6 +79,18 @@ bool getReadOnly( const GraphComponent *graphComponent );
 /// is inherited. This is the method that should be used to determine if a graphComponent
 /// should be editable by the user or not.
 bool readOnly( const GraphComponent *graphComponent );
+
+/// Utilities
+/// =========
+
+/// Utility to determine if a metadata value change (as signalled by `Metadata::plugValueChangedSignal()`)
+/// affects a given plug.
+bool affectedByChange( const Plug *plug, IECore::TypeId changedNodeTypeId, const MatchPattern &changedPlugPath, const Gaffer::Plug *changedPlug );
+/// As above, but determines if any child plug will be affected.
+bool childAffectedByChange( const GraphComponent *parent, IECore::TypeId changedNodeTypeId, const MatchPattern &changedPlugPath, const Gaffer::Plug *changedPlug );
+/// As above, but determines if any ancestor plug will be affected. This is particularly useful in conjunction with
+/// the `readOnly()` method.
+bool ancestorAffectedByChange( const Plug *plug, IECore::TypeId changedNodeTypeId, const MatchPattern &changedPlugPath, const Gaffer::Plug *changedPlug );
 
 } // namespace Gaffer
 
