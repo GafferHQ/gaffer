@@ -189,9 +189,9 @@ object value( const char *target, const char *key, bool copy )
 	return dataToPython( d.get(), copy );
 }
 
-object graphComponentValue( const GraphComponent *graphComponent, const char *key, bool inherit, bool instanceOnly, bool copy )
+object graphComponentValue( const GraphComponent *graphComponent, const char *key, bool instanceOnly, bool copy )
 {
-	ConstDataPtr d = Metadata::value<Data>( graphComponent, key, inherit, instanceOnly );
+	ConstDataPtr d = Metadata::value<Data>( graphComponent, key, instanceOnly );
 	return dataToPython( d.get(), copy );
 }
 
@@ -329,10 +329,10 @@ list registeredValues( IECore::InternedString target )
 	return keysToList( keys );
 }
 
-list registeredGraphComponentValues( const GraphComponent *target, bool inherit, bool instanceOnly, bool persistentOnly )
+list registeredGraphComponentValues( const GraphComponent *target, bool instanceOnly, bool persistentOnly )
 {
 	std::vector<InternedString> keys;
-	Metadata::registeredValues( target, keys, inherit, instanceOnly, persistentOnly );
+	Metadata::registeredValues( target, keys, instanceOnly, persistentOnly );
 	return keysToList( keys );
 }
 
@@ -351,9 +351,9 @@ list registeredPlugValues( const Plug *plug, bool inherit, bool instanceOnly, bo
 }
 
 
-list plugsWithMetadata( GraphComponent *root, const std::string &key, bool inherit, bool instanceOnly )
+list plugsWithMetadata( GraphComponent *root, const std::string &key, bool instanceOnly )
 {
-	std::vector<Plug*> plugs = Metadata::plugsWithMetadata( root, key, inherit, instanceOnly );
+	std::vector<Plug*> plugs = Metadata::plugsWithMetadata( root, key, instanceOnly );
 	list result;
 	for( std::vector<Plug*>::const_iterator it = plugs.begin(); it != plugs.end(); ++it )
 	{
@@ -363,9 +363,9 @@ list plugsWithMetadata( GraphComponent *root, const std::string &key, bool inher
 	return result;
 }
 
-list nodesWithMetadata( GraphComponent *root, const std::string &key, bool inherit, bool instanceOnly )
+list nodesWithMetadata( GraphComponent *root, const std::string &key, bool instanceOnly )
 {
-	std::vector<Node*> nodes = Metadata::nodesWithMetadata( root, key, inherit, instanceOnly );
+	std::vector<Node*> nodes = Metadata::nodesWithMetadata( root, key, instanceOnly );
 	list result;
 	for( std::vector<Node*>::const_iterator it = nodes.begin(); it != nodes.end(); ++it )
 	{
@@ -400,7 +400,6 @@ void bindMetadata()
 		.def( "registeredValues", &registeredGraphComponentValues,
 			(
 				boost::python::arg( "target" ),
-				boost::python::arg( "inherit" ) = true,
 				boost::python::arg( "instanceOnly" ) = false,
 				boost::python::arg( "persistentOnly" ) = false
 			)
@@ -418,7 +417,6 @@ void bindMetadata()
 			(
 				boost::python::arg( "target" ),
 				boost::python::arg( "key" ),
-				boost::python::arg( "inherit" ) = true,
 				boost::python::arg( "instanceOnly" ) = false,
 				boost::python::arg( "_copy" ) = true
 			)
@@ -538,7 +536,6 @@ void bindMetadata()
 			(
 				boost::python::arg( "root" ),
 				boost::python::arg( "key" ),
-				boost::python::arg( "inherit" ) = true,
 				boost::python::arg( "instanceOnly" ) = false
 			)
 		)
@@ -548,7 +545,6 @@ void bindMetadata()
 			(
 				boost::python::arg( "root" ),
 				boost::python::arg( "key" ),
-				boost::python::arg( "inherit" ) = true,
 				boost::python::arg( "instanceOnly" ) = false
 			)
 		)
@@ -580,7 +576,7 @@ void metadataModuleDependencies( const Gaffer::Plug *plug, std::set<std::string>
 std::string metadataSerialisation( const Gaffer::Node *node, const std::string &identifier )
 {
 	std::vector<InternedString> keys;
-	Metadata::registeredValues( node, keys, /* inherit = */ false, /* instanceOnly = */ true, /* persistentOnly = */ true );
+	Metadata::registeredValues( node, keys, /* instanceOnly = */ true, /* persistentOnly = */ true );
 
 	std::string result;
 	for( std::vector<InternedString>::const_iterator it = keys.begin(), eIt = keys.end(); it != eIt; ++it )
@@ -606,7 +602,7 @@ std::string metadataSerialisation( const Gaffer::Node *node, const std::string &
 std::string metadataSerialisation( const Plug *plug, const std::string &identifier )
 {
 	std::vector<InternedString> keys;
-	Metadata::registeredValues( plug, keys, /* inherit = */ false, /* instanceOnly = */ true, /* persistentOnly = */ true );
+	Metadata::registeredValues( plug, keys, /* instanceOnly = */ true, /* persistentOnly = */ true );
 
 	std::string result;
 	for( std::vector<InternedString>::const_iterator it = keys.begin(), eIt = keys.end(); it != eIt; ++it )

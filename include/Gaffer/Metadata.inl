@@ -47,9 +47,9 @@ typename T::ConstPtr Metadata::value( IECore::InternedString target, IECore::Int
 }
 
 template<typename T>
-typename T::ConstPtr Metadata::value( const GraphComponent *target, IECore::InternedString key, bool inherit, bool instanceOnly )
+typename T::ConstPtr Metadata::value( const GraphComponent *target, IECore::InternedString key, bool instanceOnly )
 {
-	return IECore::runTimeCast<const T>( valueInternal( target, key, inherit, instanceOnly ) );
+	return IECore::runTimeCast<const T>( valueInternal( target, key, instanceOnly ) );
 }
 
 template<typename T>

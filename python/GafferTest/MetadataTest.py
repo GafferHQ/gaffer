@@ -140,17 +140,13 @@ class MetadataTest( GafferTest.TestCase ) :
 
 		derivedAdd = self.DerivedAddNode()
 		self.assertEqual( Gaffer.Metadata.value( derivedAdd, "iKey" ), "Base class value" )
-		self.assertEqual( Gaffer.Metadata.value( derivedAdd, "iKey", inherit=False ), None )
 
 		Gaffer.Metadata.registerValue( self.DerivedAddNode, "iKey", "Derived class value" )
-		self.assertEqual( Gaffer.Metadata.value( derivedAdd, "iKey", inherit=False ), "Derived class value" )
 
 		Gaffer.Metadata.registerValue( GafferTest.AddNode, "op1", "iKey", "Base class plug value" )
 		self.assertEqual( Gaffer.Metadata.value( derivedAdd["op1"], "iKey" ), "Base class plug value" )
-		self.assertEqual( Gaffer.Metadata.value( derivedAdd["op1"], "iKey", inherit=False ), None )
 
 		Gaffer.Metadata.registerValue( self.DerivedAddNode, "op1", "iKey", "Derived class plug value" )
-		self.assertEqual( Gaffer.Metadata.value( derivedAdd["op1"], "iKey", inherit=False ), "Derived class plug value" )
 
 	def testNodeSignals( self ) :
 

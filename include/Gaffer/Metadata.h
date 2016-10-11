@@ -111,7 +111,7 @@ class Metadata
 		/// Fills the keys vector with keys for all values registered for the specified graphComponent.
 		/// If instanceOnly is true, then only the values registered for that exact instance are returned.
 		/// If persistentOnly is true, then non-persistent instance values are ignored.
-		static void registeredValues( const GraphComponent *target, std::vector<IECore::InternedString> &keys, bool inherit = true, bool instanceOnly = false, bool persistentOnly = false );
+		static void registeredValues( const GraphComponent *target, std::vector<IECore::InternedString> &keys, bool instanceOnly = false, bool persistentOnly = false );
 
 		/// Value retrieval
 		/// ===============
@@ -120,7 +120,7 @@ class Metadata
 		template<typename T>
 		static typename T::ConstPtr value( IECore::InternedString target, IECore::InternedString key );
 		template<typename T>
-		static typename T::ConstPtr value( const GraphComponent *target, IECore::InternedString key, bool inherit = true, bool instanceOnly = false );
+		static typename T::ConstPtr value( const GraphComponent *target, IECore::InternedString key, bool instanceOnly = false );
 
 		/// Value deregistration
 		/// ====================
@@ -135,12 +135,12 @@ class Metadata
 		/// Lists all node descendants of "root" with the specified metadata key. If inherit is true
 		/// then the search falls through to the base classes of the node if the node itself doesn't have a value,
 		/// and if instanceOnly is true the search is restricted to instance metadata.
-		static std::vector<Node*> nodesWithMetadata( GraphComponent *root, IECore::InternedString key, bool inherit = true, bool instanceOnly = false );
+		static std::vector<Node*> nodesWithMetadata( GraphComponent *root, IECore::InternedString key, bool instanceOnly = false );
 
 		/// Lists all plug descendants of "root" with the specified metadata key. If inherit is true
 		/// then the search falls through to the base classes of the node if the node itself doesn't have a value,
 		/// and if instanceOnly is true the search is restricted to instance metadata.
-		static std::vector<Plug*> plugsWithMetadata( GraphComponent *root, IECore::InternedString key, bool inherit = true, bool instanceOnly = false );
+		static std::vector<Plug*> plugsWithMetadata( GraphComponent *root, IECore::InternedString key, bool instanceOnly = false );
 
 		/// Signals
 		/// =======
@@ -217,7 +217,7 @@ class Metadata
 		static void clearInstanceMetadata( const GraphComponent *graphComponent );
 
 		static IECore::ConstDataPtr valueInternal( IECore::InternedString target, IECore::InternedString key );
-		static IECore::ConstDataPtr valueInternal( const GraphComponent *target, IECore::InternedString key, bool inherit, bool instanceOnly );
+		static IECore::ConstDataPtr valueInternal( const GraphComponent *target, IECore::InternedString key, bool instanceOnly );
 		static IECore::ConstDataPtr nodeValueInternal( const Node *node, IECore::InternedString key, bool inherit, bool instanceOnly );
 		static IECore::ConstDataPtr plugValueInternal( const Plug *plug, IECore::InternedString key, bool inherit, bool instanceOnly );
 

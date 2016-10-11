@@ -319,7 +319,7 @@ bool Reference::isReferencePlug( const Plug *plug ) const
 void Reference::convertPersistentMetadata( Plug *plug ) const
 {
 	vector<InternedString> keys;
-	Metadata::registeredValues( plug, keys, /* inherit = */ false, /* instanceOnly = */ true, /* persistentOnly = */ true );
+	Metadata::registeredValues( plug, keys, /* instanceOnly = */ true, /* persistentOnly = */ true );
 	for( vector<InternedString>::const_iterator it = keys.begin(), eIt = keys.end(); it != eIt; ++it )
 	{
 		ConstDataPtr value = Metadata::value<Data>( plug, *it );
@@ -330,7 +330,7 @@ void Reference::convertPersistentMetadata( Plug *plug ) const
 void Reference::transferPersistentMetadata( const Plug *srcPlug, Plug *dstPlug ) const
 {
 	vector<InternedString> keys;
-	Metadata::registeredValues( srcPlug, keys, /* inherit = */ false, /* instanceOnly = */ true, /* persistentOnly = */ true );
+	Metadata::registeredValues( srcPlug, keys, /* instanceOnly = */ true, /* persistentOnly = */ true );
 	for( vector<InternedString>::const_iterator it = keys.begin(), eIt = keys.end(); it != eIt; ++it )
 	{
 		ConstDataPtr value = Metadata::value<Data>( srcPlug, *it );

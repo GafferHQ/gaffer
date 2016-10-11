@@ -494,7 +494,7 @@ void Box::copyMetadata( const Plug *from, Plug *to )
 	/// know all valid names. We'd also need to put a lot of thought into how we allowed the
 	/// user to delete values which were being mirrored dynamically.
 	vector<IECore::InternedString> keys;
-	Metadata::registeredValues( from, keys, /* inherit = */ true, /* instanceOnly = */ false, /* persistentOnly = */ true );
+	Metadata::registeredValues( from, keys, /* instanceOnly = */ false, /* persistentOnly = */ true );
 	for( vector<IECore::InternedString>::const_iterator it = keys.begin(), eIt = keys.end(); it != eIt; ++it )
 	{
 		if( boost::starts_with( it->string(), "layout:" ) )
