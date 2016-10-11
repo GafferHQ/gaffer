@@ -49,33 +49,33 @@ class ArnoldShaderUITest( GafferUITest.TestCase ) :
 		shader.loadShader( "noise" )
 
 		self.assertEqual(
-			Gaffer.Metadata.plugValue( shader["parameters"]["octaves"], "nodule:type" ),
+			Gaffer.Metadata.value( shader["parameters"]["octaves"], "nodule:type" ),
 			""
 		)
 
 		self.assertEqual(
-			Gaffer.Metadata.plugValue( shader["parameters"]["amplitude"], "nodule:type" ),
+			Gaffer.Metadata.value( shader["parameters"]["amplitude"], "nodule:type" ),
 			"GafferUI::StandardNodule"
 		)
 
 		self.assertEqual(
-			Gaffer.Metadata.plugValue( shader["parameters"]["octaves"], "plugValueWidget:type" ),
+			Gaffer.Metadata.value( shader["parameters"]["octaves"], "plugValueWidget:type" ),
 			None
 		)
 
 		self.assertEqual(
-			Gaffer.Metadata.plugValue( shader["parameters"]["coord_space"], "plugValueWidget:type" ),
+			Gaffer.Metadata.value( shader["parameters"]["coord_space"], "plugValueWidget:type" ),
 			"GafferUI.PresetsPlugValueWidget"
 		)
 
 		self.assertEqual(
-			Gaffer.Metadata.plugValue( shader["parameters"]["coord_space"], "presetNames" ),
+			Gaffer.Metadata.value( shader["parameters"]["coord_space"], "presetNames" ),
 			IECore.StringVectorData( [ "world", "object", "Pref" ] ),
 		)
 
 		self.assertEqual(
-			Gaffer.Metadata.plugValue( shader["parameters"]["coord_space"], "presetValues" ),
-			Gaffer.Metadata.plugValue( shader["parameters"]["coord_space"], "presetNames" ),
+			Gaffer.Metadata.value( shader["parameters"]["coord_space"], "presetValues" ),
+			Gaffer.Metadata.value( shader["parameters"]["coord_space"], "presetNames" ),
 		)
 
 	def testLightMetadata( self ) :
@@ -96,28 +96,28 @@ class ArnoldShaderUITest( GafferUITest.TestCase ) :
 			self.assertTrue( "Unsupported parameter" in message.message )
 
 		self.assertEqual(
-			Gaffer.Metadata.plugValue( light["parameters"]["cast_shadows"], "nodule:type" ),
+			Gaffer.Metadata.value( light["parameters"]["cast_shadows"], "nodule:type" ),
 			""
 		)
 
 		self.assertEqual(
-			Gaffer.Metadata.plugValue( light["parameters"]["color"], "nodule:type" ),
+			Gaffer.Metadata.value( light["parameters"]["color"], "nodule:type" ),
 			"GafferUI::StandardNodule"
 		)
 
 		self.assertEqual(
-			Gaffer.Metadata.plugValue( light["parameters"]["format"], "plugValueWidget:type" ),
+			Gaffer.Metadata.value( light["parameters"]["format"], "plugValueWidget:type" ),
 			"GafferUI.PresetsPlugValueWidget"
 		)
 
 		self.assertEqual(
-			Gaffer.Metadata.plugValue( light["parameters"]["format"], "presetNames" ),
+			Gaffer.Metadata.value( light["parameters"]["format"], "presetNames" ),
 			IECore.StringVectorData( [ "mirrored_ball", "angular", "latlong" ] ),
 		)
 
 		self.assertEqual(
-			Gaffer.Metadata.plugValue( light["parameters"]["format"], "presetValues" ),
-			Gaffer.Metadata.plugValue( light["parameters"]["format"], "presetNames" ),
+			Gaffer.Metadata.value( light["parameters"]["format"], "presetValues" ),
+			Gaffer.Metadata.value( light["parameters"]["format"], "presetNames" ),
 		)
 
 if __name__ == "__main__":

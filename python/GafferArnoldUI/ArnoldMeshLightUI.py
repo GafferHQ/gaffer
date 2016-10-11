@@ -41,7 +41,7 @@ import GafferArnold
 
 def __shaderMetadata( plug, name ) :
 
-	return Gaffer.Metadata.plugValue( plug.node()["__shader"].descendant( plug.relativeName( plug.node() ) ), name )
+	return Gaffer.Metadata.value( plug.node()["__shader"].descendant( plug.relativeName( plug.node() ) ), name )
 
 Gaffer.Metadata.registerNode(
 
