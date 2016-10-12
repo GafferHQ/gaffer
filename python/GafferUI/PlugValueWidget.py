@@ -169,7 +169,8 @@ class PlugValueWidget( GafferUI.Widget ) :
 		return [
 			self.__plugDirtiedConnection,
 			self.__plugInputChangedConnection,
-			self.__plugFlagsChangedConnection
+			self.__plugFlagsChangedConnection,
+			self.__plugMetadataChangedConnection,
 		]
 
 	## Returns True if the plug value is editable as far as this ui is concerned
@@ -316,12 +317,12 @@ class PlugValueWidget( GafferUI.Widget ) :
 		if len( menuDefinition.items() ) :
 			menuDefinition.append( "/LockDivider", { "divider" : True } )
 
-		readOnlyFlagSet = self.getPlug().getFlags( Gaffer.Plug.Flags.ReadOnly )
+		readOnly = Gaffer.getReadOnly( self.getPlug() ) or self.getPlug().getFlags( Gaffer.Plug.Flags.ReadOnly )
 		menuDefinition.append(
-			"/Unlock" if readOnlyFlagSet else "/Lock",
+			"/Unlock" if readOnly else "/Lock",
 			{
-				"command" : functools.partial( Gaffer.WeakMethod( self.__applyReadOnly ), not readOnlyFlagSet ),
-				"active" : not self.getReadOnly()
+				"command" : functools.partial( Gaffer.WeakMethod( self.__applyReadOnly ), not readOnly ),
+				"active" : not self.getReadOnly() and not Gaffer.readOnly( self.getPlug().parent() ),
 			}
 		)
 
@@ -453,6 +454,17 @@ class PlugValueWidget( GafferUI.Widget ) :
 		if plug.isSame( self.__plug ) :
 			self._updateFromPlug()
 
+	def __plugMetadataChanged( self, nodeTypeId, plugPath, key, plug ) :
+
+		if self.__plug is None :
+			return
+
+		if (
+			Gaffer.affectedByChange( self.__plug, nodeTypeId, plugPath, plug ) or
+			( key == "readOnly" and Gaffer.ancestorAffectedByChange( self.__plug, nodeTypeId, plugPath, plug ) )
+		) :
+			self._updateFromPlug()
+
 	def __contextChanged( self, context, key ) :
 
 		self._updateFromPlug()
@@ -467,6 +479,7 @@ class PlugValueWidget( GafferUI.Widget ) :
 			self.__plugDirtiedConnection = plug.node().plugDirtiedSignal().connect( Gaffer.WeakMethod( self.__plugDirtied ) )
 			self.__plugInputChangedConnection = plug.node().plugInputChangedSignal().connect( Gaffer.WeakMethod( self.__plugInputChanged ) )
 			self.__plugFlagsChangedConnection = plug.node().plugFlagsChangedSignal().connect( Gaffer.WeakMethod( self.__plugFlagsChanged ) )
+			self.__plugMetadataChangedConnection = Gaffer.Metadata.plugValueChangedSignal().connect( Gaffer.WeakMethod( self.__plugMetadataChanged ) )
 			scriptNode = self.__plug.ancestor( Gaffer.ScriptNode.staticTypeId() )
 			if scriptNode is not None :
 				context = scriptNode.context()
@@ -474,6 +487,7 @@ class PlugValueWidget( GafferUI.Widget ) :
 			self.__plugDirtiedConnection = None
 			self.__plugInputChangedConnection = None
 			self.__plugFlagsChangedConnection = None
+			self.__plugMetadataChangedConnection = None
 
 		self.__context = context
 		self.__updateContextConnection()
@@ -589,13 +603,17 @@ class PlugValueWidget( GafferUI.Widget ) :
 
 	def __applyReadOnly( self, readOnly ) :
 
-		def apply( plug ) :
-			plug.setFlags( Gaffer.Plug.Flags.ReadOnly, readOnly )
+		def clearFlags( plug ) :
+			plug.setFlags( Gaffer.Plug.Flags.ReadOnly, False )
 			for child in plug.children() :
-				apply( child )
+				clearFlags( child )
 
 		with Gaffer.UndoContext( self.getPlug().ancestor( Gaffer.ScriptNode.staticTypeId() ) ) :
-			apply( self.getPlug() )
+			# We used to use a plug flag, but we use metadata now
+			# instead. Clear the old flags so that metadata is in
+			# control.
+			clearFlags( self.getPlug() )
+			Gaffer.setReadOnly( self.getPlug(), readOnly )
 
 	# drag and drop stuff
 
