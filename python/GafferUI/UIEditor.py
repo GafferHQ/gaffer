@@ -389,14 +389,9 @@ class _MetadataWidget( GafferUI.Widget ) :
 
 		if self.__key != key :
 			return
-		if plug is not None and not plug.isSame( self.__target ) :
-			return
-		if not self.__target.node().isInstanceOf( nodeTypeId ) :
-			return
-		if not Gaffer.match( self.__target.relativeName( self.__target.node() ), plugPath ) :
-			return
 
-		self.__update()
+		if Gaffer.affectedByChange( self.__target, nodeTypeId, plugPath, plug ) :
+			self.__update()
 
 class _BoolMetadataWidget( _MetadataWidget ) :
 
@@ -1063,11 +1058,9 @@ class _PlugListing( GafferUI.Widget ) :
 		if self.__parent is None :
 			return
 
-		if plug is not None and not self.__parent.isSame( plug ) and not self.__parent.isSame( plug.parent() ) :
-			return
-
-		node = self.__parent.node() if isinstance( self.__parent, Gaffer.Plug ) else self.__parent
-		if not node.isInstanceOf( nodeTypeId ) :
+		parentAffected = isinstance( self.__parent, Gaffer.Plug ) and Gaffer.affectedByChange( self.__parent, nodeTypeId, plugPath, plug )
+		childAffected = Gaffer.childAffectedByChange( self.__parent, nodeTypeId, plugPath, plug )
+		if not parentAffected and not childAffected :
 			return
 
 		if key in ( "layout:index", "layout:section", "uiEditor:emptySections", "uiEditor:emptySectionIndices" ) :
@@ -1280,7 +1273,7 @@ class _PresetsEditor( GafferUI.Widget ) :
 
 	def __plugMetadataChanged( self, nodeTypeId, plugPath, key, plug ) :
 
-		if plug is None or not plug.isSame( self.__plug ) :
+		if self.__plug is None or not Gaffer.affectedByChange( self.__plug, nodeTypeId, plugPath, plug ) :
 			return
 
 		if key.startswith( "preset:" ) :
@@ -1553,10 +1546,7 @@ class _PlugEditor( GafferUI.Widget ) :
 		if self.getPlug() is None :
 			return
 
-		if plug is not None and not plug.isSame( self.getPlug() ) :
-			return
-
-		if not self.getPlug().node().isInstanceOf( nodeTypeId ) :
+		if not Gaffer.affectedByChange( self.getPlug(), nodeTypeId, plugPath, plug ) :
 			return
 
 		if key == "plugValueWidget:type" :

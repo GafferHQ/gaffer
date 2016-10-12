@@ -233,11 +233,5 @@ class LabelPlugValueWidget( GafferUI.PlugValueWidget ) :
 		if self.getPlug() is None :
 			return
 
-		if plug is not None and not plug.isSame( self.getPlug() ) :
-			return
-
-		if not self.getPlug().node().isInstanceOf( nodeTypeId ) :
-			return
-
-		if key=="label" :
+		if key=="label" and Gaffer.affectedByChange( self.getPlug(), nodeTypeId, plugPath, plug ) :
 			self.__updateFormatter()

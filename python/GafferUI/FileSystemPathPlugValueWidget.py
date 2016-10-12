@@ -59,8 +59,6 @@ class FileSystemPathPlugValueWidget( GafferUI.PathPlugValueWidget ) :
 
 		self._updateFromPlug()
 
-		self.__plugMetadataChangedConnection = Gaffer.Metadata.plugValueChangedSignal().connect( Gaffer.WeakMethod( self.__plugMetadataChanged ) )
-
 	def getToolTip( self ) :
 
 		result = GafferUI.PathPlugValueWidget.getToolTip( self )
@@ -108,20 +106,6 @@ class FileSystemPathPlugValueWidget( GafferUI.PathPlugValueWidget ) :
 				return
 
 		GafferUI.PathPlugValueWidget._setPlugFromPath( self, path )
-
-	def __plugMetadataChanged( self, nodeTypeId, plugPath, key, plug ) :
-
-		if self.getPlug() is None :
-			return
-
-		if plug is not None and not plug.isSame( self.getPlug() ) :
-			return
-
-		if not self.getPlug().node().isInstanceOf( nodeTypeId ) :
-			return
-
-		if key.startswith( "fileSystemPathPlugValueWidget:" ) :
-			self._updateFromPlug()
 
 	def __extensions( self ) :
 

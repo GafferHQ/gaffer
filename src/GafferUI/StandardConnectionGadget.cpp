@@ -417,18 +417,7 @@ bool StandardConnectionGadget::nodeSelected( const Nodule *nodule ) const
 
 void StandardConnectionGadget::plugMetadataChanged( IECore::TypeId nodeTypeId, const Gaffer::MatchPattern &plugPath, IECore::InternedString key, const Gaffer::Plug *plug )
 {
-	const Plug *dstPlug = dstNodule()->plug();
-	if( plug && plug != dstPlug )
-	{
-		return;
-	}
-
-	const Node *node = dstPlug->node();
-	if(
-		key != g_colorKey ||
-		!node->isInstanceOf( nodeTypeId ) ||
-		!match( dstPlug->relativeName( node ), plugPath )
-	)
+	if( key != g_colorKey || !affectedByChange( dstNodule()->plug(), nodeTypeId, plugPath, plug ) )
 	{
 		return;
 	}

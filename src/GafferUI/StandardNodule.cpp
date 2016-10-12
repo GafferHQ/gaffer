@@ -428,17 +428,7 @@ void StandardNodule::setCompatibleLabelsVisible( const DragDropEvent &event, boo
 
 void StandardNodule::plugMetadataChanged( IECore::TypeId nodeTypeId, const Gaffer::MatchPattern &plugPath, IECore::InternedString key, const Gaffer::Plug *plug )
 {
-	if( plug && plug != this->plug() )
-	{
-		return;
-	}
-
-	const Node *node = this->plug()->node();
-	if(
-		key != g_colorKey ||
-		!node->isInstanceOf( nodeTypeId ) ||
-		!match( this->plug()->relativeName( node ), plugPath )
-	)
+	if( key != g_colorKey || !affectedByChange( this->plug(), nodeTypeId, plugPath, plug ) )
 	{
 		return;
 	}
