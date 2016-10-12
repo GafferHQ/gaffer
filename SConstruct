@@ -712,12 +712,12 @@ libraries = {
 		"envAppends" : {
 			"CXXFLAGS" : [ "-isystem", "$APPLESEED_ROOT/include", "-DAPPLESEED_ENABLE_IMATH_INTEROP", "-DAPPLESEED_WITH_OIIO", "-DAPPLESEED_WITH_OSL", "-DAPPLESEED_USE_SSE" ],
 			"LIBPATH" : [ "$APPLESEED_ROOT/lib" ],
-			"LIBS" : [ "Gaffer", "GafferScene", "appleseed", "IECoreAppleseed$CORTEX_LIB_SUFFIX", "OpenImageIO$OIIO_LIB_SUFFIX", "oslquery$OSL_LIB_SUFFIX" ],
+			"LIBS" : [ "Gaffer", "GafferDispatch", "GafferScene", "appleseed", "IECoreAppleseed$CORTEX_LIB_SUFFIX", "OpenImageIO$OIIO_LIB_SUFFIX", "oslquery$OSL_LIB_SUFFIX" ],
 		},
 		"pythonEnvAppends" : {
 			"CXXFLAGS" : [ "-isystem", "$APPLESEED_ROOT/include", "-DAPPLESEED_ENABLE_IMATH_INTEROP", "-DAPPLESEED_WITH_OIIO", "-DAPPLESEED_WITH_OSL", "-DAPPLESEED_USE_SSE" ],
 			"LIBPATH" : [ "$APPLESEED_ROOT/lib" ],
-			"LIBS" : [ "Gaffer", "GafferScene", "GafferBindings", "GafferAppleseed" ],
+			"LIBS" : [ "Gaffer", "GafferDispatch", "GafferScene", "GafferBindings", "GafferAppleseed" ],
 		},
 		"requiredOptions" : [ "APPLESEED_ROOT" ],
 	},
@@ -906,8 +906,20 @@ for libraryName, libraryDef in libraries.items() :
 		pythonModuleEnv = pythonEnv.Clone()
 		if bindingsSource :
 			pythonModuleEnv.Append( LIBS = [ libraryName + "Bindings" ] )
+
 		pythonModuleEnv["SHLIBPREFIX"] = ""
-		pythonModuleEnv["SHLIBSUFFIX"] = ".so"
+		if pythonModuleEnv["PLATFORM"] == "darwin" :
+			# On OSX, we must build Python modules with the ".so"
+			# prefix rather than the ".dylib" you might expect.
+			# This is done by changing the SHLIBSUFFIX variable.
+			# But this causes a problem with SCons' automatic
+			# scanning for the library dependencies of those modules,
+			# because by default it expects the libraries to end in
+			# "$SHLIBSUFFIX". So we must also explicitly add
+			# the original value of SHLIBSUFFIX (.dylib) to the
+			# LIBSUFFIXES variable used by the library scanner.
+			pythonModuleEnv["LIBSUFFIXES"].append( pythonModuleEnv.subst( "$SHLIBSUFFIX" ) )
+			pythonModuleEnv["SHLIBSUFFIX"] = ".so"
 
 		pythonModule = pythonModuleEnv.SharedLibrary( "python/" + libraryName + "/_" + libraryName, pythonModuleSource )
 		pythonModuleEnv.Default( pythonModule )
