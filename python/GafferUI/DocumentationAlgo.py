@@ -77,7 +77,7 @@ def exportNodeReference( directory, modules = [], modulePath = "" ) :
 
 			if not node.__module__.startswith( module.__name__ + "." ) :
 				# Skip nodes which look like they've been injected from
-				# another module by one of the compatibility onfig files.
+				# another module by one of the compatibility config files.
 				continue
 
 			__makeDirs( directory + "/" + module.__name__ )
