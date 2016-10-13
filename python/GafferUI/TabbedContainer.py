@@ -47,6 +47,7 @@ from Qt import QtWidgets
 class TabbedContainer( GafferUI.ContainerWidget ) :
 
 	__DragState = IECore.Enum.create( "None", "Waiting", "Active" )
+	__palette = None
 
 	def __init__( self, cornerWidget=None, **kw ) :
 
@@ -58,6 +59,13 @@ class TabbedContainer( GafferUI.ContainerWidget ) :
 		self.__tabBarDragMoveConnection = self.__tabBar.dragMoveSignal().connect( Gaffer.WeakMethod( self.__tabBarDragMove ) )
 		self.__tabBarDragLeaveConnection = self.__tabBar.dragLeaveSignal().connect( Gaffer.WeakMethod( self.__tabBarDragLeave ) )
 		self.__tabBarDragState = self.__DragState.None
+
+		# See comments in Button.py
+		if TabbedContainer.__palette is None :
+			TabbedContainer.__palette = QtGui.QPalette( QtWidgets.QApplication.instance().palette() )
+			TabbedContainer.__palette.setColor( QtGui.QPalette.Disabled, QtGui.QPalette.Light, QtGui.QColor( 0, 0, 0, 0 ) )
+
+		self.__tabBar._qtWidget().setPalette( TabbedContainer.__palette )
 
 		self._qtWidget().setTabBar( self.__tabBar._qtWidget() )
 
