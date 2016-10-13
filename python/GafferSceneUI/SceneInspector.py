@@ -294,6 +294,8 @@ class SceneInspector( GafferUI.NodeSetEditor ) :
 			for section in self.__sections :
 				section.update( targets )
 
+			self.setEnabled( bool( targets ) )
+
 			return False # remove idle callback
 
 GafferUI.EditorWidget.registerType( "SceneInspector", SceneInspector )
