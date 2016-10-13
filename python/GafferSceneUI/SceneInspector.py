@@ -273,12 +273,12 @@ class SceneInspector( GafferUI.NodeSetEditor ) :
 				paths = GafferSceneUI.ContextAlgo.getSelectedPaths( self.getContext() ).paths()
 			paths = paths[:2] if len( self.__scenePlugs ) < 2 else paths[:1]
 			if not paths :
-				paths = [ "/" ]
+				paths = [ None ]
 
 			targets = []
 			for scene in self.__scenePlugs :
 				for path in paths :
-					if not GafferScene.SceneAlgo.exists( scene, path ) :
+					if path is not None and not GafferScene.SceneAlgo.exists( scene, path ) :
 						# selection may not be valid for both scenes,
 						# and we can't inspect invalid paths.
 						path = None
@@ -1011,7 +1011,24 @@ class Section( GafferUI.Widget ) :
 
 		return self.__mainColumn
 
-# export classes for use in custom sections
+## Base class for sections which display information about
+#  scene locations.
+class LocationSection( Section ) :
+
+	def __init__( self, collapsed = False, label = None, **kw ) :
+
+		Section.__init__( self, collapsed, label, **kw )
+
+	def update( self, targets ) :
+
+		Section.update( self, targets )
+
+		self.setEnabled( bool( [ t.path for t in targets if t.path is not None ] ) )
+
+##########################################################################
+# Export classes for use in custom sections
+##########################################################################
+
 SceneInspector.Diff = Diff
 SceneInspector.SideBySideDiff = SideBySideDiff
 SceneInspector.TextDiff = TextDiff
@@ -1020,6 +1037,7 @@ SceneInspector.Inspector = Inspector
 SceneInspector.DiffRow = DiffRow
 SceneInspector.DiffColumn = DiffColumn
 SceneInspector.Section = Section
+SceneInspector.LocationSection = LocationSection
 
 ##########################################################################
 # Section window
@@ -1287,18 +1305,18 @@ SceneInspector.registerSection( __NodeSection, tab = None )
 # Path section
 ##########################################################################
 
-class __PathSection( Section ) :
+class __PathSection( LocationSection ) :
 
 	def __init__( self ) :
 
-		Section.__init__( self, collapsed = None )
+		LocationSection.__init__( self, collapsed = None )
 
 		with self._mainColumn() :
 			self.__row = DiffRow( self.__Inspector(), functools.partial( TextDiff, highlightDiffs = False ) )
 
 	def update( self, targets ) :
 
-		Section.update( self, targets )
+		LocationSection.update( self, targets )
 
 		self.__row.update( targets )
 
@@ -1314,7 +1332,7 @@ class __PathSection( Section ) :
 
 		def __call__( self, target ) :
 
-			return target.path or "Invalid"
+			return target.path or "None"
 
 SceneInspector.registerSection( __PathSection, tab = "Selection" )
 
@@ -1322,11 +1340,11 @@ SceneInspector.registerSection( __PathSection, tab = "Selection" )
 # Transform section
 ##########################################################################
 
-class __TransformSection( Section ) :
+class __TransformSection( LocationSection ) :
 
 	def __init__( self ) :
 
-		Section.__init__( self, collapsed = True, label = "Transform" )
+		LocationSection.__init__( self, collapsed = True, label = "Transform" )
 
 		with self._mainColumn() :
 			index = 0
@@ -1350,7 +1368,7 @@ class __TransformSection( Section ) :
 
 	def update( self, targets ) :
 
-		Section.update( self, targets )
+		LocationSection.update( self, targets )
 
 		for row in self._mainColumn() :
 			if isinstance( row, DiffRow ) :
@@ -1411,11 +1429,11 @@ SceneInspector.registerSection( __TransformSection, tab = "Selection" )
 # Bound section
 ##########################################################################
 
-class __BoundSection( Section ) :
+class __BoundSection( LocationSection ) :
 
 	def __init__( self ) :
 
-		Section.__init__( self, collapsed = True, label = "Bounding box" )
+		LocationSection.__init__( self, collapsed = True, label = "Bounding box" )
 
 		with self._mainColumn() :
 			self.__localBoundRow = DiffRow( self.__Inspector() )
@@ -1423,7 +1441,7 @@ class __BoundSection( Section ) :
 
 	def update( self, targets ) :
 
-		Section.update( self, targets )
+		LocationSection.update( self, targets )
 
 		self.__localBoundRow.update( targets )
 		self.__worldBoundRow.update( targets )
@@ -1456,18 +1474,18 @@ SceneInspector.registerSection( __BoundSection, tab = "Selection" )
 # Attributes section
 ##########################################################################
 
-class __AttributesSection( Section ) :
+class __AttributesSection( LocationSection ) :
 
 	def __init__( self ) :
 
-		Section.__init__( self, collapsed = True, label = "Attributes" )
+		LocationSection.__init__( self, collapsed = True, label = "Attributes" )
 
 		with self._mainColumn() :
 			self.__diffColumn = DiffColumn( self.__Inspector(), filterable=True )
 
 	def update( self, targets ) :
 
-		Section.update( self, targets )
+		LocationSection.update( self, targets )
 
 		self.__diffColumn.update( targets )
 
@@ -1508,11 +1526,11 @@ SceneInspector.registerSection( __AttributesSection, tab = "Selection" )
 # Object section
 ##########################################################################
 
-class __ObjectSection( Section ) :
+class __ObjectSection( LocationSection ) :
 
 	def __init__( self ) :
 
-		Section.__init__( self, collapsed = True, label = "Object" )
+		LocationSection.__init__( self, collapsed = True, label = "Object" )
 
 		with self._mainColumn() :
 
@@ -1533,7 +1551,7 @@ class __ObjectSection( Section ) :
 
 	def update( self, targets ) :
 
-		Section.update( self, targets )
+		LocationSection.update( self, targets )
 
 		for diffColumn in self._mainColumn() :
 			diffColumn.update( targets )
@@ -1704,18 +1722,18 @@ class _SetMembershipDiff( SideBySideDiff ) :
 			self.frame( i )._qtWidget().layout().setContentsMargins( 2, 2, 2, 2 )
 			self.frame( i ).setChild( GafferUI.Image( "setMembershipDot.png" ) )
 
-class __SetMembershipSection( Section ) :
+class __SetMembershipSection( LocationSection ) :
 
 	def __init__( self ) :
 
-		Section.__init__( self, collapsed = True, label = "Set Membership" )
+		LocationSection.__init__( self, collapsed = True, label = "Set Membership" )
 
 		with self._mainColumn() :
 			self.__diffColumn = DiffColumn( self.__Inspector(), _SetMembershipDiff )
 
 	def update( self, targets ) :
 
-		Section.update( self, targets )
+		LocationSection.update( self, targets )
 
 		self.__diffColumn.update( targets )
 
