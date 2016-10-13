@@ -677,14 +677,14 @@ class Inspector( object ) :
 		raise NotImplementedError
 
 	## Should return True if the Inspector's results
-	# are based on attributes - this will enable inheritance
-	# queries for the inspector.
-	def inspectsAttributes( self ) :
+	# may be inherited from parent locations - this will
+	# enable inheritance queries for the inspector.
+	def supportsInheritance( self ) :
 
 		return False
 
 	## Must be implemented to inspect the target and return
-	# a value to be displayed. When inspectsAttributes()==True,
+	# a value to be displayed. When supportsInheritance()==True,
 	# this method must accept an ignoreInheritance keyword
 	# argument (defaulting to False).
 	def __call__( self, target, **kw ) :
@@ -722,7 +722,7 @@ class DiffRow( Row ) :
 			diff = diffCreator()
 			self.listContainer().append( diff )
 
-			if inspector.inspectsAttributes() and isinstance( diff, SideBySideDiff ) :
+			if inspector.supportsInheritance() and isinstance( diff, SideBySideDiff ) :
 
 				diff.setCornerWidget( 0, GafferUI.Label( "" ) )
 				diff.setCornerWidget( 1, GafferUI.Label( "" ) )
@@ -751,7 +751,7 @@ class DiffRow( Row ) :
 		self.__values = [ self.__inspector( target ) for target in targets ]
 		self.__diff().update( self.__values )
 
-		if self.__inspector.inspectsAttributes() and isinstance( self.__diff(), SideBySideDiff ) :
+		if self.__inspector.supportsInheritance() and isinstance( self.__diff(), SideBySideDiff ) :
 			localValues = [ self.__inspector( target, ignoreInheritance=True ) for target in targets ]
 			for i, value in enumerate( localValues ) :
 				self.__diff().getCornerWidget( i ).setText( "<sup>Inherited</sup>" if value is None else "" )
@@ -806,7 +806,7 @@ class DiffRow( Row ) :
 				}
 			)
 
-			if self.__inspector.inspectsAttributes() :
+			if self.__inspector.supportsInheritance() :
 
 				m.append(
 					"/Show Inheritance" + labelSuffix,
@@ -1461,7 +1461,7 @@ class __AttributesSection( Section ) :
 
 			return self.__attributeName or ""
 
-		def inspectsAttributes( self ) :
+		def supportsInheritance( self ) :
 
 			return True
 
@@ -1712,11 +1712,8 @@ class __SetMembershipSection( Section ) :
 			else :
 				return self.__setName or ""
 
-		def inspectsAttributes( self ) :
+		def supportsInheritance( self ) :
 
-			# strictly speaking we're not actually inspecting attributes,
-			# but we can support ignoreInheritance arguments in __call__,
-			# which is what we're really being asked about.
 			return True
 
 		def __call__( self, target, ignoreInheritance = False ) :
