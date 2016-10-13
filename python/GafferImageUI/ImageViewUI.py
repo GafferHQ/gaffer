@@ -41,6 +41,86 @@ import GafferUI
 import GafferImageUI
 
 ##########################################################################
+# Metadata registration.
+##########################################################################
+
+Gaffer.Metadata.registerNode(
+
+	GafferImageUI.ImageView,
+
+	"nodeToolbar:bottom:type", "GafferUI.StandardNodeToolbar.bottom",
+
+	plugs = {
+
+		"clipping" : [
+
+			"description",
+			"""
+			Highlights the regions in which the colour values go above 1 or below 0.
+			""",
+
+			"plugValueWidget:type", "GafferImageUI.ImageViewUI._TogglePlugValueWidget",
+			"togglePlugValueWidget:imagePrefix", "clipping",
+			"togglePlugValueWidget:defaultToggleValue", True,
+			"toolbarLayout:divider", True,
+
+		],
+
+		"exposure" : [
+
+			"description",
+			"""
+			Applies an exposure adjustment to the image.
+			""",
+
+			"plugValueWidget:type", "GafferImageUI.ImageViewUI._TogglePlugValueWidget",
+			"togglePlugValueWidget:imagePrefix", "exposure",
+			"togglePlugValueWidget:defaultToggleValue", 1,
+
+		],
+
+		"gamma" : [
+
+			"description",
+			"""
+			Applies a gamma correction to the image.
+			""",
+
+			"plugValueWidget:type", "GafferImageUI.ImageViewUI._TogglePlugValueWidget",
+			"togglePlugValueWidget:imagePrefix", "gamma",
+			"togglePlugValueWidget:defaultToggleValue", 2,
+
+		],
+
+		"displayTransform" : [
+
+			"description",
+			"""
+			Applies colour space transformations for viewing the image correctly.
+			""",
+
+
+			"plugValueWidget:type", "GafferImageUI.ImageViewUI._DisplayTransformPlugValueWidget",
+			"label", "",
+
+			"presetNames", lambda plug : IECore.StringVectorData( GafferImageUI.ImageView.registeredDisplayTransforms() ),
+			"presetValues", lambda plug : IECore.StringVectorData( GafferImageUI.ImageView.registeredDisplayTransforms() ),
+
+		],
+
+		"colorInspector" : [
+
+			"plugValueWidget:type", "GafferImageUI.ImageViewUI._ColorInspectorPlugValueWidget",
+			"label", "",
+			"toolbarLayout:section", "Bottom",
+
+		],
+
+	}
+
+)
+
+##########################################################################
 # _TogglePlugValueWidget
 ##########################################################################
 
@@ -178,82 +258,3 @@ class _ColorInspectorPlugValueWidget( GafferUI.PlugValueWidget ) :
 		hsv = color.rgbToHSV()
 		self.__hsvLabel.setText( "<b>HSV : %.3f %.3f %.3f</b>" % ( hsv.r, hsv.g, hsv.b ) )
 
-##########################################################################
-# Metadata registration.
-##########################################################################
-
-Gaffer.Metadata.registerNode(
-
-	GafferImageUI.ImageView,
-
-	"nodeToolbar:bottom:type", "GafferUI.StandardNodeToolbar.bottom",
-
-	plugs = {
-
-		"clipping" : [
-
-			"description",
-			"""
-			Highlights the regions in which the colour values go above 1 or below 0.
-			""",
-
-			"plugValueWidget:type", "GafferImageUI.ImageViewToolbar._TogglePlugValueWidget",
-			"togglePlugValueWidget:imagePrefix", "clipping",
-			"togglePlugValueWidget:defaultToggleValue", True,
-			"toolbarLayout:divider", True,
-
-		],
-
-		"exposure" : [
-
-			"description",
-			"""
-			Applies an exposure adjustment to the image.
-			""",
-
-			"plugValueWidget:type", "GafferImageUI.ImageViewToolbar._TogglePlugValueWidget",
-			"togglePlugValueWidget:imagePrefix", "exposure",
-			"togglePlugValueWidget:defaultToggleValue", 1,
-
-		],
-
-		"gamma" : [
-
-			"description",
-			"""
-			Applies a gamma correction to the image.
-			""",
-
-			"plugValueWidget:type", "GafferImageUI.ImageViewToolbar._TogglePlugValueWidget",
-			"togglePlugValueWidget:imagePrefix", "gamma",
-			"togglePlugValueWidget:defaultToggleValue", 2,
-
-		],
-
-		"displayTransform" : [
-
-			"description",
-			"""
-			Applies colour space transformations for viewing the image correctly.
-			""",
-
-
-			"plugValueWidget:type", "GafferImageUI.ImageViewToolbar._DisplayTransformPlugValueWidget",
-			"label", "",
-
-			"presetNames", lambda plug : IECore.StringVectorData( GafferImageUI.ImageView.registeredDisplayTransforms() ),
-			"presetValues", lambda plug : IECore.StringVectorData( GafferImageUI.ImageView.registeredDisplayTransforms() ),
-
-		],
-
-		"colorInspector" : [
-
-			"plugValueWidget:type", "GafferImageUI.ImageViewToolbar._ColorInspectorPlugValueWidget",
-			"label", "",
-			"toolbarLayout:section", "Bottom",
-
-		],
-
-	}
-
-)
