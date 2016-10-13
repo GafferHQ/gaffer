@@ -455,6 +455,12 @@ _styleSheet = string.Template(
 		margin-top: 4px;
 	}
 
+	QTabBar::tab:disabled {
+
+		color: $foregroundFaded;
+
+	}
+
 	QSplitter::handle:vertical {
 
 		background-color: $backgroundDark;
