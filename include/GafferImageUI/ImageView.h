@@ -84,7 +84,10 @@ class ImageView : public GafferUI::View
 
 	public :
 
-		ImageView( const std::string &name = defaultName<ImageView>() );
+        typedef boost::signal<void (float)> ImageViewSignal;
+		boost::signals::scoped_connection m_zoomLevelChangedConnection;
+        
+        ImageView( const std::string &name = defaultName<ImageView>() );
 		virtual ~ImageView();
 
 		IE_CORE_DECLARERUNTIMETYPEDEXTENSION( GafferImageUI::ImageView, ImageViewTypeId, GafferUI::View );
@@ -98,6 +101,9 @@ class ImageView : public GafferUI::View
 		Gaffer::FloatPlug *gammaPlug();
 		const Gaffer::FloatPlug *gammaPlug() const;
 
+        Gaffer::FloatPlug *zoomLevelPlug();
+		const Gaffer::FloatPlug *zoomLevelPlug() const;
+
 		/// Values should be names that exist in registeredDisplayTransforms().
 		Gaffer::StringPlug *displayTransformPlug();
 		const Gaffer::StringPlug *displayTransformPlug() const;
@@ -109,7 +115,9 @@ class ImageView : public GafferUI::View
 		static void registerDisplayTransform( const std::string &name, DisplayTransformCreator creator );
 		static void registeredDisplayTransforms( std::vector<std::string> &names );
 
-	protected :
+        ImageViewSignal &zoomLevelChangedSignal();
+
+    protected :
 
 		/// May be called from a subclass constructor to add a converter
 		/// from non-image input types, allowing them to be viewed as images.
@@ -144,6 +152,10 @@ class ImageView : public GafferUI::View
 		ImageGadgetPtr m_imageGadget;
 		bool m_framed;
 
+        float computeZoomLevel();
+        void updateZoomLevelPlug();
+        void setZoomLevel(float zoomLevel);
+
 		class ColorInspector;
 		boost::shared_ptr<ColorInspector> m_colorInspector;
 
@@ -154,6 +166,8 @@ class ImageView : public GafferUI::View
 
 		friend void GafferImageUIBindings::bindImageView();
 
+
+        ImageViewSignal m_zoomLevelChanged;
 };
 
 IE_CORE_DECLAREPTR( ImageView );

@@ -57,6 +57,7 @@
 
 #include "Gaffer/Context.h"
 #include "Gaffer/StringPlug.h"
+#include "Gaffer/BlockedConnection.h"
 
 #include "GafferUI/Gadget.h"
 #include "GafferUI/Style.h"
@@ -82,6 +83,25 @@ using namespace GafferUI;
 using namespace GafferImage;
 using namespace GafferImageUI;
 
+
+namespace
+{
+    float EPSILON = 0.05f;
+    float roundUpToEven(float a)
+    {
+        return ceil(a * .5) * 2;
+    }
+
+    float roundDownToEven(float a)
+    {
+        return floor(a * .5) * 2;
+    }
+
+    bool cmpf(float A, float B, float epsilon = EPSILON)
+    { 
+        return (fabs(A - B) < epsilon);
+    }
+}
 //////////////////////////////////////////////////////////////////////////
 /// Implementation of ImageView::ColorInspector
 //////////////////////////////////////////////////////////////////////////
@@ -210,6 +230,8 @@ ImageView::ImageView( const std::string &name )
 	clampNode->minClampToPlug()->setValue( Color4f( 1.0f, 1.0f, 1.0f, 0.0f ) );
 	clampNode->maxClampToPlug()->setValue( Color4f( 0.0f, 0.0f, 0.0f, 1.0f ) );
 
+	addChild( new FloatPlug( "zoomLevel", Plug::In, 1.0f, 0.001, 100, Plug::Default & ~Plug::AcceptsInputs ) );
+
 	BoolPlugPtr clippingPlug = new BoolPlug( "clipping" );
 	clippingPlug->setFlags( Plug::AcceptsInputs, false );
 	addChild( clippingPlug );
@@ -254,6 +276,9 @@ ImageView::ImageView( const std::string &name )
 	viewportGadget()->setPrimaryChild( m_imageGadget );
 
 	m_colorInspector = shared_ptr<ColorInspector>( new ColorInspector( this ) );
+
+	m_zoomLevelChangedConnection = zoomLevelChangedSignal().connect( boost::bind( &ImageView::setZoomLevel, this, ::_1) );
+	viewportGadget()->cameraChangedSignal().connect( boost::bind( &ImageView::updateZoomLevelPlug, this ) );
 }
 
 void ImageView::insertConverter( Gaffer::NodePtr converter )
@@ -290,6 +315,16 @@ void ImageView::insertConverter( Gaffer::NodePtr converter )
 
 ImageView::~ImageView()
 {
+}
+
+Gaffer::FloatPlug *ImageView::zoomLevelPlug()
+{
+	return getChild<FloatPlug>( "zoomLevel" );
+}
+
+const Gaffer::FloatPlug *ImageView::zoomLevelPlug() const
+{
+	return getChild<FloatPlug>( "zoomLevel" );
 }
 
 Gaffer::BoolPlug *ImageView::clippingPlug()
@@ -377,6 +412,10 @@ void ImageView::plugSet( Gaffer::Plug *plug )
 	{
 		insertDisplayTransform();
 	}
+	else if( plug == zoomLevelPlug() )
+	{
+        zoomLevelChangedSignal()(zoomLevelPlug()->getValue());
+	}
 }
 
 bool ImageView::keyPress( const GafferUI::KeyEvent &event )
@@ -393,6 +432,103 @@ bool ImageView::keyPress( const GafferUI::KeyEvent &event )
 				);
 				return true;
 			}
+		if(event.key == "Plus")
+		{
+			float zoomLevel = computeZoomLevel();
+			float roundLevel;
+			std::setprecision(12);
+			std::cout<<"zoom level :"<<zoomLevel<<std::endl;
+
+			if(zoomLevel + EPSILON < 1.f)
+			{
+				std::cout<<"fraction"<<std::endl;
+				float inverse = 1.f / zoomLevel;
+				roundLevel = floor(inverse);
+				if (roundLevel > 10.f)
+				{
+					std::cout<<"large decrement"<<std::endl;
+					roundLevel *= .5f;
+				}
+				else
+				{
+					if (cmpf(roundLevel, inverse))
+					{
+						std::cout<<"increment"<<std::endl;
+						roundLevel -= 1;
+					}
+				}
+				roundLevel = 1.f / roundLevel;
+				std::cout<<"inverse round level: "<<roundLevel<<std::endl;
+			}
+			else if(zoomLevel >  10.f)
+			{
+				roundLevel = ceil(zoomLevel) * 2;
+				std::cout<<"updated: "<<roundLevel<<std::endl;
+			}
+			else
+			{
+				roundLevel = ceil(zoomLevel);
+				if (cmpf(roundLevel, zoomLevel))
+				{
+					roundLevel += 1;		
+				}
+				std::cout<<"updated: "<<roundLevel<<std::endl;
+			}
+			zoomLevelPlug()->setValue(roundLevel) ;
+					
+			return true;
+
+		}
+		if(event.key == "Minus")
+		{
+
+			float zoomLevel = computeZoomLevel();
+			//float roundLevel;
+			std::setprecision(12);
+			std::cout<<"zoom level :"<<zoomLevel<<std::endl;
+
+			if(zoomLevel - EPSILON < 1.f)
+			{
+				std::cout<<"fraction"<<std::endl;
+				float inverse = 1.f / zoomLevel;
+				std::cout<<"inverse: "<<inverse<<std::endl;
+				//roundLevel = ceil(inverse);
+				//if (roundLevel > 10.f)
+				//{
+				//	std::cout<<"large decrement"<<std::endl;
+				//	roundLevel *= 2.f;
+				//}
+				//else
+				//{
+				//	if (cmpf(roundLevel, inverse))
+				//	{
+				//		std::cout<<"increment"<<std::endl;
+				//		roundLevel += 1;
+				//	}
+				//}
+				//roundLevel = 1.f / roundLevel;
+				//std::cout<<"inverse round level: "<<roundLevel<<std::endl;
+			}
+			else if(zoomLevel >  10.f)
+			{
+				std::cout<<"above 10"<<std::endl;
+				//roundLevel = floor(zoomLevel) * 2;
+				//std::cout<<"updated: "<<roundLevel<<std::endl;
+			}
+			else
+			{
+				std::cout<<"between 1 and 10"<<std::endl;
+				//roundLevel = floor(zoomLevel);
+				//if (cmpf(roundLevel, zoomLevel))
+				//{
+				//	roundLevel -= 1;		
+				//}
+				//std::cout<<"updated: "<<roundLevel<<std::endl;
+			}
+			//zoomLevelPlug()->setValue(roundLevel) ;
+					
+			return true;
+		    }
 		}
 		if(event.key == "Home")
 		{
@@ -408,8 +544,14 @@ bool ImageView::keyPress( const GafferUI::KeyEvent &event )
 			return true;
 		}
 	}
+}
 
 	return false;
+}
+
+ImageView::ImageViewSignal &ImageView::zoomLevelChangedSignal()
+{
+	return m_zoomLevelChanged;
 }
 
 void ImageView::preRender()
@@ -427,6 +569,8 @@ void ImageView::preRender()
 
 	viewportGadget()->frame( b );
 	m_framed = true;
+    float zoomLevel = computeZoomLevel();
+    zoomLevelPlug()->setValue(zoomLevel);
 }
 
 void ImageView::insertDisplayTransform()
@@ -465,6 +609,36 @@ void ImageView::insertDisplayTransform()
 	}
 }
 
+float ImageView::computeZoomLevel()
+{
+	const Box3f b = m_imageGadget->bound();
+	const V2f imageSize = V2f(b.max.x - b.min.x, b.max.y - b.min.y);
+	const V2f c0 = viewportGadget()->gadgetToRasterSpace( b.min, m_imageGadget.get() );
+	const V2f c1 = viewportGadget()->gadgetToRasterSpace( b.max, m_imageGadget.get() );
+	const V2f rasterSize = c1 - c0;
+	return rasterSize.x / imageSize.x;
+}
+
+void ImageView::updateZoomLevelPlug()
+{
+	BlockedConnection blockedConnection( m_zoomLevelChangedConnection );
+	float zoomLevel = computeZoomLevel();
+	zoomLevelPlug()->setValue(zoomLevel);
+}
+
+void ImageView::setZoomLevel(float zoomLevel)
+{
+	V2f viewport = V2f(viewportGadget()->getViewport() ) * (1 / zoomLevel) ;
+	V2i viewportCenter(viewport.x / 2, viewport.y / 2);
+	Box3f bound = m_imageGadget->bound();
+	V2i imageCenter((bound.max.x - bound.min.x) / 2, (bound.max.y - bound.min.y) / 2);
+	Box3f frame(
+		Imath::V3f(imageCenter.x - viewportCenter.x, imageCenter.y - viewportCenter.y, 0),
+		Imath::V3f(imageCenter.x + viewportCenter.x, imageCenter.y + viewportCenter.y, 0)
+	);
+	viewportGadget()->frame(frame);
+	return;
+}
 void ImageView::registerDisplayTransform( const std::string &name, DisplayTransformCreator creator )
 {
 	displayTransformCreators()[name] = creator;
@@ -485,3 +659,5 @@ ImageView::DisplayTransformCreatorMap &ImageView::displayTransformCreators()
 	static DisplayTransformCreatorMap g_creators;
 	return g_creators;
 }
+
+
