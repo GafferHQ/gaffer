@@ -83,6 +83,78 @@ using namespace GafferImage;
 using namespace GafferImageUI;
 
 //////////////////////////////////////////////////////////////////////////
+/// Implementation of ImageView::ChannelChooser
+//////////////////////////////////////////////////////////////////////////
+
+/// \todo Allow the user to choose which layer to view (beauty, spec etc)
+class ImageView::ChannelChooser : public boost::signals::trackable
+{
+
+	public :
+
+		ChannelChooser( ImageView *view )
+			:	m_view( view )
+		{
+			view->addChild(
+				new IntPlug(
+					"soloChannel",
+					Plug::In,
+					/* defaultValue = */ -1,
+					/* minValue = */ -1,
+					/* maxValue = */ 3
+				)
+			);
+
+			m_view->plugSetSignal().connect( boost::bind( &ChannelChooser::plugSet, this, ::_1 ) );
+			m_view->viewportGadget()->keyPressSignal().connect( boost::bind( &ChannelChooser::keyPress, this, ::_2 ) );
+
+		}
+
+	private :
+
+		IntPlug *soloChannelPlug()
+		{
+			return m_view->getChild<IntPlug>( "soloChannel" );
+		}
+
+		void plugSet( const Gaffer::Plug *plug )
+		{
+			if( plug == soloChannelPlug() )
+			{
+				ImageGadget *imageGadget = static_cast<ImageGadget *>(
+					m_view->viewportGadget()->getPrimaryChild()
+				);
+				imageGadget->setSoloChannel( soloChannelPlug()->getValue() );
+			}
+		}
+
+		bool keyPress( const GafferUI::KeyEvent &event )
+		{
+			if( event.modifiers )
+			{
+				return false;
+			}
+
+			const char *rgba[4] = { "R", "G", "B", "A" };
+			for( int i = 0; i < 4; ++i )
+			{
+				if( event.key == rgba[i] )
+				{
+					soloChannelPlug()->setValue(
+						soloChannelPlug()->getValue() == i ? -1 : i
+					);
+					return true;
+				}
+			}
+
+			return false;
+		}
+
+		ImageView *m_view;
+
+};
+
+//////////////////////////////////////////////////////////////////////////
 /// Implementation of ImageView::ColorInspector
 //////////////////////////////////////////////////////////////////////////
 
@@ -253,6 +325,7 @@ ImageView::ImageView( const std::string &name )
 	m_imageGadget->setContext( getContext() );
 	viewportGadget()->setPrimaryChild( m_imageGadget );
 
+	m_channelChooser = shared_ptr<ChannelChooser>( new ChannelChooser( this ) );
 	m_colorInspector = shared_ptr<ColorInspector>( new ColorInspector( this ) );
 }
 
@@ -383,17 +456,6 @@ bool ImageView::keyPress( const GafferUI::KeyEvent &event )
 {
 	if( !event.modifiers )
 	{
-		const char *rgba[4] = { "R", "G", "B", "A" };
-		for( int i = 0; i < 4; ++i )
-		{
-			if( event.key == rgba[i] )
-			{
-				m_imageGadget->setSoloChannel(
-					m_imageGadget->getSoloChannel() == i ? -1 : i
-				);
-				return true;
-			}
-		}
 		if(event.key == "Home")
 		{
 			V2i viewport = viewportGadget()->getViewport();

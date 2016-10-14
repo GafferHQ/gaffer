@@ -34,6 +34,8 @@
 #
 ##########################################################################
 
+import functools
+
 import IECore
 
 import Gaffer
@@ -113,6 +115,20 @@ Gaffer.Metadata.registerNode(
 			"plugValueWidget:type", "GafferImageUI.ImageViewUI._ColorInspectorPlugValueWidget",
 			"label", "",
 			"toolbarLayout:section", "Bottom",
+
+		],
+
+		"soloChannel" : [
+
+			"description",
+			"""
+			Chooses a channel to show in isolation.
+			""",
+
+			"plugValueWidget:type", "GafferImageUI.ImageViewUI._SoloChannelPlugValueWidget",
+			"toolbarLayout:index", 0,
+			"toolbarLayout:divider", True,
+			"label", "",
 
 		],
 
@@ -258,3 +274,56 @@ class _ColorInspectorPlugValueWidget( GafferUI.PlugValueWidget ) :
 		hsv = color.rgbToHSV()
 		self.__hsvLabel.setText( "<b>HSV : %.3f %.3f %.3f</b>" % ( hsv.r, hsv.g, hsv.b ) )
 
+##########################################################################
+# _SoloChannelPlugValueWidget
+##########################################################################
+
+class _SoloChannelPlugValueWidget( GafferUI.PlugValueWidget ) :
+
+	def __init__( self, plug, **kw ) :
+
+		self.__button = GafferUI.MenuButton(
+			image = "soloChannel-1.png",
+			hasFrame = False,
+			menu = GafferUI.Menu(
+				Gaffer.WeakMethod( self.__menuDefinition ),
+				title = "Channel",
+			)
+		)
+
+		GafferUI.PlugValueWidget.__init__( self, self.__button, plug, **kw )
+
+		self._updateFromPlug()
+
+	def _updateFromPlug( self ) :
+
+		with Gaffer.Context() :
+
+			self.__button.setImage( "soloChannel{0}.png".format( self.getPlug().getValue() ) )
+
+	def __menuDefinition( self ) :
+
+		with self.getContext() :
+			soloChannel = self.getPlug().getValue()
+
+		m = IECore.MenuDefinition()
+		for name, value in [
+			( "All", -1 ),
+			( "R", 0 ),
+			( "G", 1 ),
+			( "B", 2 ),
+			( "A", 3 ),
+		] :
+			m.append(
+				"/" + name,
+				{
+					"command" : functools.partial( Gaffer.WeakMethod( self.__setValue ), value ),
+					"checkBox" : soloChannel == value
+				}
+			)
+
+		return m
+
+	def __setValue( self, value, *unused ) :
+
+		self.getPlug().setValue( value )

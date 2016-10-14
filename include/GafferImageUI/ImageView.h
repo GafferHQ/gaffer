@@ -138,6 +138,8 @@ class ImageView : public GafferUI::View
 		ImageGadgetPtr m_imageGadget;
 		bool m_framed;
 
+		class ChannelChooser;
+		boost::shared_ptr<ChannelChooser> m_channelChooser;
 		class ColorInspector;
 		boost::shared_ptr<ColorInspector> m_colorInspector;
 
