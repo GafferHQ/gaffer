@@ -72,13 +72,7 @@ IE_CORE_FORWARDDECLARE( ImageGadget )
 
 /// \todo Refactor this into smaller components, along the lines of the SceneView class.
 /// Consider redesigning the View/Tool classes so that view functionality can be built up
-/// by adding tools like samplers etc. A good starting point for this refactoring would be
-/// to create an ImageGadget analogous to the SceneGadget. This could offer much improved
-/// performance over the existing implementation by drawing the image with many small tiles
-/// each corresponding to a single tile from the ImagePlug. This would mean that nodes like
-/// the Display node which are continuously updating isolated regions of the image could
-/// be displayed much more efficiently - just updating the few tiles which had changed rather
-/// than the whole image.
+/// by adding tools like samplers etc.
 class ImageView : public GafferUI::View
 {
 
@@ -144,6 +138,8 @@ class ImageView : public GafferUI::View
 		ImageGadgetPtr m_imageGadget;
 		bool m_framed;
 
+		class ChannelChooser;
+		boost::shared_ptr<ChannelChooser> m_channelChooser;
 		class ColorInspector;
 		boost::shared_ptr<ColorInspector> m_colorInspector;
 

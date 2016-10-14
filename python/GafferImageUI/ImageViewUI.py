@@ -34,11 +34,107 @@
 #
 ##########################################################################
 
+import functools
+
 import IECore
 
 import Gaffer
 import GafferUI
 import GafferImageUI
+
+##########################################################################
+# Metadata registration.
+##########################################################################
+
+Gaffer.Metadata.registerNode(
+
+	GafferImageUI.ImageView,
+
+	"nodeToolbar:bottom:type", "GafferUI.StandardNodeToolbar.bottom",
+
+	plugs = {
+
+		"clipping" : [
+
+			"description",
+			"""
+			Highlights the regions in which the colour values go above 1 or below 0.
+			""",
+
+			"plugValueWidget:type", "GafferImageUI.ImageViewUI._TogglePlugValueWidget",
+			"togglePlugValueWidget:imagePrefix", "clipping",
+			"togglePlugValueWidget:defaultToggleValue", True,
+			"toolbarLayout:divider", True,
+
+		],
+
+		"exposure" : [
+
+			"description",
+			"""
+			Applies an exposure adjustment to the image.
+			""",
+
+			"plugValueWidget:type", "GafferImageUI.ImageViewUI._TogglePlugValueWidget",
+			"togglePlugValueWidget:imagePrefix", "exposure",
+			"togglePlugValueWidget:defaultToggleValue", 1,
+
+		],
+
+		"gamma" : [
+
+			"description",
+			"""
+			Applies a gamma correction to the image.
+			""",
+
+			"plugValueWidget:type", "GafferImageUI.ImageViewUI._TogglePlugValueWidget",
+			"togglePlugValueWidget:imagePrefix", "gamma",
+			"togglePlugValueWidget:defaultToggleValue", 2,
+
+		],
+
+		"displayTransform" : [
+
+			"description",
+			"""
+			Applies colour space transformations for viewing the image correctly.
+			""",
+
+
+			"plugValueWidget:type", "GafferImageUI.ImageViewUI._DisplayTransformPlugValueWidget",
+			"label", "",
+
+			"presetNames", lambda plug : IECore.StringVectorData( GafferImageUI.ImageView.registeredDisplayTransforms() ),
+			"presetValues", lambda plug : IECore.StringVectorData( GafferImageUI.ImageView.registeredDisplayTransforms() ),
+
+		],
+
+		"colorInspector" : [
+
+			"plugValueWidget:type", "GafferImageUI.ImageViewUI._ColorInspectorPlugValueWidget",
+			"label", "",
+			"toolbarLayout:section", "Bottom",
+
+		],
+
+		"soloChannel" : [
+
+			"description",
+			"""
+			Chooses a channel to show in isolation.
+			""",
+
+			"plugValueWidget:type", "GafferImageUI.ImageViewUI._SoloChannelPlugValueWidget",
+			"toolbarLayout:index", 0,
+			"toolbarLayout:divider", True,
+			"label", "",
+
+		],
+
+	}
+
+)
 
 ##########################################################################
 # _TogglePlugValueWidget
@@ -179,81 +275,55 @@ class _ColorInspectorPlugValueWidget( GafferUI.PlugValueWidget ) :
 		self.__hsvLabel.setText( "<b>HSV : %.3f %.3f %.3f</b>" % ( hsv.r, hsv.g, hsv.b ) )
 
 ##########################################################################
-# Metadata registration.
+# _SoloChannelPlugValueWidget
 ##########################################################################
 
-Gaffer.Metadata.registerNode(
+class _SoloChannelPlugValueWidget( GafferUI.PlugValueWidget ) :
 
-	GafferImageUI.ImageView,
+	def __init__( self, plug, **kw ) :
 
-	"nodeToolbar:bottom:type", "GafferUI.StandardNodeToolbar.bottom",
+		self.__button = GafferUI.MenuButton(
+			image = "soloChannel-1.png",
+			hasFrame = False,
+			menu = GafferUI.Menu(
+				Gaffer.WeakMethod( self.__menuDefinition ),
+				title = "Channel",
+			)
+		)
 
-	plugs = {
+		GafferUI.PlugValueWidget.__init__( self, self.__button, plug, **kw )
 
-		"clipping" : [
+		self._updateFromPlug()
 
-			"description",
-			"""
-			Highlights the regions in which the colour values go above 1 or below 0.
-			""",
+	def _updateFromPlug( self ) :
 
-			"plugValueWidget:type", "GafferImageUI.ImageViewToolbar._TogglePlugValueWidget",
-			"togglePlugValueWidget:imagePrefix", "clipping",
-			"togglePlugValueWidget:defaultToggleValue", True,
-			"toolbarLayout:divider", True,
+		with Gaffer.Context() :
 
-		],
+			self.__button.setImage( "soloChannel{0}.png".format( self.getPlug().getValue() ) )
 
-		"exposure" : [
+	def __menuDefinition( self ) :
 
-			"description",
-			"""
-			Applies an exposure adjustment to the image.
-			""",
+		with self.getContext() :
+			soloChannel = self.getPlug().getValue()
 
-			"plugValueWidget:type", "GafferImageUI.ImageViewToolbar._TogglePlugValueWidget",
-			"togglePlugValueWidget:imagePrefix", "exposure",
-			"togglePlugValueWidget:defaultToggleValue", 1,
+		m = IECore.MenuDefinition()
+		for name, value in [
+			( "All", -1 ),
+			( "R", 0 ),
+			( "G", 1 ),
+			( "B", 2 ),
+			( "A", 3 ),
+		] :
+			m.append(
+				"/" + name,
+				{
+					"command" : functools.partial( Gaffer.WeakMethod( self.__setValue ), value ),
+					"checkBox" : soloChannel == value
+				}
+			)
 
-		],
+		return m
 
-		"gamma" : [
+	def __setValue( self, value, *unused ) :
 
-			"description",
-			"""
-			Applies a gamma correction to the image.
-			""",
-
-			"plugValueWidget:type", "GafferImageUI.ImageViewToolbar._TogglePlugValueWidget",
-			"togglePlugValueWidget:imagePrefix", "gamma",
-			"togglePlugValueWidget:defaultToggleValue", 2,
-
-		],
-
-		"displayTransform" : [
-
-			"description",
-			"""
-			Applies colour space transformations for viewing the image correctly.
-			""",
-
-
-			"plugValueWidget:type", "GafferImageUI.ImageViewToolbar._DisplayTransformPlugValueWidget",
-			"label", "",
-
-			"presetNames", lambda plug : IECore.StringVectorData( GafferImageUI.ImageView.registeredDisplayTransforms() ),
-			"presetValues", lambda plug : IECore.StringVectorData( GafferImageUI.ImageView.registeredDisplayTransforms() ),
-
-		],
-
-		"colorInspector" : [
-
-			"plugValueWidget:type", "GafferImageUI.ImageViewToolbar._ColorInspectorPlugValueWidget",
-			"label", "",
-			"toolbarLayout:section", "Bottom",
-
-		],
-
-	}
-
-)
+		self.getPlug().setValue( value )

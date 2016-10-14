@@ -43,7 +43,7 @@ from ChannelMaskPlugValueWidget import ChannelMaskPlugValueWidget
 
 import OpenImageIOReaderUI
 import ImageReaderUI
-import ImageViewToolbar
+import ImageViewUI
 import ImageTransformUI
 import ConstantUI
 import ImageSwitchUI
