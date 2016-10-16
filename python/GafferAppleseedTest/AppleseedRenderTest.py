@@ -69,13 +69,9 @@ class AppleseedRenderTest( GafferTest.TestCase ) :
 		s["fileName"].setValue( self.__scriptFileName )
 		s.save()
 
-		p = subprocess.Popen(
-			"gaffer execute " + self.__scriptFileName + " -frames 1-3",
-			shell=True,
-			stderr = subprocess.PIPE,
+		subprocess.check_call(
+			[ "gaffer", "execute", self.__scriptFileName, "-frames", "1-3" ]
 		)
-		p.wait()
-		self.failIf( p.returncode )
 
 		for i in range( 1, 4 ) :
 			self.failUnless( os.path.exists( self.temporaryDirectory() + "/test.%d.appleseed" % i ) )
@@ -123,13 +119,9 @@ class AppleseedRenderTest( GafferTest.TestCase ) :
 		s["fileName"].setValue( self.__scriptFileName )
 		s.save()
 
-		p = subprocess.Popen(
-			"gaffer execute " + self.__scriptFileName + " -frames 1-3",
-			shell=True,
-			stderr = subprocess.PIPE,
+		subprocess.check_call(
+			[ "gaffer", "execute", self.__scriptFileName, "-frames", "1-3" ]
 		)
-		p.wait()
-		self.failIf( p.returncode )
 
 		for i in range( 1, 4 ) :
 			self.failUnless( os.path.exists( self.temporaryDirectory() + "/test.%04d.appleseed" % i ) )
