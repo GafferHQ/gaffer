@@ -35,6 +35,7 @@
 ##########################################################################
 
 import os
+import subprocess32 as subprocess
 
 import GafferSceneTest
 
@@ -44,10 +45,10 @@ class OSLTestCase( GafferSceneTest.SceneTestCase ) :
 
 		outputFileName = self.temporaryDirectory() + "/" + os.path.splitext( os.path.basename( sourceFileName ) )[0] + ".oso"
 
-		includes = os.environ.get( "OSL_SHADER_PATHS", "" )
-		if includes :
-			includes = "-I" + " -I".join( includes.split( ":" ) )
-
-		os.system( "oslc -q %s -o %s %s" % ( includes, outputFileName, sourceFileName ) )
+		subprocess.check_call(
+			[ "oslc", "-q" ] +
+			[ "-I" + p for p in os.environ.get( "OSL_SHADER_PATHS", "" ).split( ":" ) ] +
+			[ "-o", outputFileName, sourceFileName ]
+		)
 
 		return os.path.splitext( outputFileName )[0]
