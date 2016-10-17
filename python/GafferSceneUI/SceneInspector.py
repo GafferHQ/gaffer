@@ -361,10 +361,15 @@ class SideBySideDiff( Diff ) :
 	# If they are equal or if there is only one, then only the first
 	# frame is shown, with a default background colour. If there are
 	# two and they differ, then both frames are shown, with red and
-	# green backgrounds respectively. Derived classes are expected to
-	# override this method to additionally edit widgets inside the
-	# frames to display the actual values.
-	def update( self, values ) :
+	# green backgrounds respectively.
+	#
+	# The visibilities argument can be passed a sequence containing
+	# a boolean per value to override the default visibility. This
+	# is used by the history and inheritance sections.
+	#
+	# Derived classes are expected to override this method to additionally
+	# edit widgets inside the frames to display the actual values.
+	def update( self, values, visibilities = None ) :
 
 		assert( len( values ) <= 2 )
 
@@ -372,10 +377,11 @@ class SideBySideDiff( Diff ) :
 		# poor VectorTypedData.__cmp__ implementation.
 		different = len( values ) > 1 and ( type( values[0] ) != type( values[1] ) or values[0] != values[1] )
 
-		visibilities = [
-			len( values ) > 0 and values[0] is not None,
-			len( values ) > 1 and values[1] is not None and different
-		]
+		if visibilities is None :
+			visibilities = [
+				len( values ) > 0 and values[0] is not None,
+				len( values ) > 1 and values[1] is not None and different
+			]
 
 		for i in range( 0, 2 ) :
 			self.frame( i ).setVisible( visibilities[i] )
@@ -404,9 +410,9 @@ class TextDiff( SideBySideDiff ) :
 
 		self.__highlightDiffs = highlightDiffs
 
-	def update( self, values ) :
+	def update( self, values, **kw ) :
 
-		SideBySideDiff.update( self, values )
+		SideBySideDiff.update( self, values, **kw )
 
 		self.__values = values
 
@@ -1154,10 +1160,11 @@ class _InheritanceSection( Section ) :
 					GafferUI.Spacer( IECore.V2i( 0 ), parenting = { "expand" : True } )
 
 					if atEitherEnd or value is not None :
-						d = self.__diffCreator()
-						d.update( ( prevDisplayedValue, fullValue ) )
-						if prevDisplayedValue != fullValue and isinstance( d, SideBySideDiff ) :
-							d.frame( 0 ).setVisible( False )
+						diff = self.__diffCreator()
+						diffKW = {}
+						if prevDisplayedValue != fullValue and isinstance( diff, SideBySideDiff ) :
+							diffKW["visibilities"] = [ False, True ]
+						diff.update( ( prevDisplayedValue, fullValue ), **diffKW )
 
 				prevDisplayedValue = fullValue
 
@@ -1233,14 +1240,17 @@ class _HistorySection( Section ) :
 
 				GafferUI.Spacer( IECore.V2i( 0 ), parenting = { "expand" : True } )
 
-				diff = self.__diffCreator()
-				diff.update( [
-					history[i-1].value if i > 0 else None,
-					history[i].value
-				] )
+				values = [ history[i-1].value if i > 0 else None, history[i].value ]
 
-				if (i == 0 or history[i-1].value != history[i].value) and isinstance( diff, SideBySideDiff ) :
-					diff.frame( 0 if history[i].value is not None else 1 ).setVisible( False )
+				diff = self.__diffCreator()
+				diffKW = {}
+				if isinstance( diff, SideBySideDiff ) :
+					if values[0] != values[1] :
+						# We don't want to show both values, just the one
+						# representative of the change at this point in the
+						# history.
+						diffKW["visibilities"] = [ False, True ] if values[1] is not None else [ True, False ]
+				diff.update( values, **diffKW )
 
 		self._mainColumn()[:] = rows
 
