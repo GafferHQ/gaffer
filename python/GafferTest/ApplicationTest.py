@@ -34,6 +34,9 @@
 #
 ##########################################################################
 
+import os
+import subprocess32 as subprocess
+
 import Gaffer
 import GafferTest
 
@@ -48,6 +51,17 @@ class ApplicationTest( GafferTest.TestCase ) :
 				raise Exception( "Woops!")
 
 		self.assertRaises( Exception, f )
+
+	def testWrapperDoesntDuplicatePaths( self ) :
+
+		output = subprocess.check_output( [ "gaffer", "env", "env" ] )
+		externalEnv = {}
+		for line in output.split( '\n' ) :
+			partition = line.partition( "=" )
+			externalEnv[partition[0]] = partition[2]
+
+		self.assertEqual( externalEnv["GAFFER_STARTUP_PATHS"], os.environ["GAFFER_STARTUP_PATHS"] )
+		self.assertEqual( externalEnv["GAFFER_APP_PATHS"], os.environ["GAFFER_APP_PATHS"] )
 
 if __name__ == "__main__":
 	unittest.main()
