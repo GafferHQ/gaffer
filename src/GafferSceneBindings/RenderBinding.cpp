@@ -98,20 +98,6 @@ class ExecutableRenderWrapper : public TaskNodeWrapper<ExecutableRender>
 			return ExecutableRender::outputWorldProcedural( scene, renderer );
 		}
 
-		virtual std::string command() const
-		{
-			if( this->isSubclassed() )
-			{
-				IECorePython::ScopedGILLock gilLock;
-				boost::python::object f = this->methodOverride( "_command" );
-				if( f )
-				{
-					return extract<std::string>( f() );
-				}
-			}
-			return ExecutableRender::command();
-		}
-
 };
 
 ContextPtr interactiveRenderGetContext( InteractiveRender &r )

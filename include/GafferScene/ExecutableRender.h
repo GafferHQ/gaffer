@@ -85,10 +85,6 @@ class ExecutableRender : public GafferDispatch::TaskNode
 		/// generating just such a file. The default implementation just outputs a SceneProcedural
 		/// which is suitable for immediate mode rendering.
 		virtual void outputWorldProcedural( const ScenePlug *scene, IECore::Renderer *renderer ) const;
-		/// May be implemented to return a shell command which should be run after doing the "render".
-		/// This can be useful for nodes which wish to render in two stages by creating a scene file
-		/// with the createRenderer() and then rendering it with a command.
-		virtual std::string command() const;
 
 	private :
 
