@@ -399,7 +399,7 @@ class ImageWriterTest( GafferImageTest.ImageTestCase ) :
 			# the writer adds several standard attributes that aren't in the original file
 			expectedMetadata["Software"] = IECore.StringData( "Gaffer " + Gaffer.About.versionString() )
 			expectedMetadata["HostComputer"] = IECore.StringData( platform.node() )
-			expectedMetadata["Artist"] = IECore.StringData( os.getlogin() )
+			expectedMetadata["Artist"] = IECore.StringData( os.environ["USER"] )
 			expectedMetadata["DocumentName"] = IECore.StringData( "untitled" )
 
 			for key in overrideMetadata :
@@ -717,7 +717,7 @@ class ImageWriterTest( GafferImageTest.ImageTestCase ) :
 		# the writer adds several standard attributes that aren't in the original file
 		expectedMetadata["Software"] = IECore.StringData( "Gaffer " + Gaffer.About.versionString() )
 		expectedMetadata["HostComputer"] = IECore.StringData( platform.node() )
-		expectedMetadata["Artist"] = IECore.StringData( os.getlogin() )
+		expectedMetadata["Artist"] = IECore.StringData( os.environ["USER"] )
 		expectedMetadata["DocumentName"] = IECore.StringData( "untitled" )
 
 		self.__addExpectedIPTCMetadata( afterMetadata, expectedMetadata )
