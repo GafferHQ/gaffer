@@ -785,7 +785,13 @@ class DiffRow( Row ) :
 					diffWidget.contextMenuSignal().connect( Gaffer.WeakMethod( self.__contextMenu ) ),
 				] )
 
-			GafferUI.Spacer( IECore.V2i( 0 ), parenting = { "expand" : True } )
+			GafferUI.Spacer( IECore.V2i( 1, 20 ), parenting = { "expand" : True } )
+
+			GafferUI.MenuButton(
+				image = "gear.png",
+				hasFrame = False,
+				menu = GafferUI.Menu( Gaffer.WeakMethod( self.__menuDefinition ) )
+			)
 
 		self.__inspector = inspector
 		self.__diffCreator = diffCreator
@@ -828,16 +834,17 @@ class DiffRow( Row ) :
 		self.__menu = GafferUI.Menu( IECore.curry( Gaffer.WeakMethod( self.__menuDefinition ), widget ) )
 		self.__menu.popup()
 
-	def __menuDefinition( self, widget ) :
+	def __menuDefinition( self, widget = None ) :
 
 		diff = self.__diff()
-		if isinstance( diff, SideBySideDiff ) :
+		if isinstance( diff, SideBySideDiff ) and widget is not None :
 			# For SideBySideDiffs, we know which target the user has clicked on
 			# and only present menu items for that target.
 			targets = [ self.__targets[ 0 if widget is diff.getValueWidget( 0 ) else 1 ] ]
 		else :
 			# But for other Diff types we don't know, and so present menu items
-			# for any target which has a value.
+			# for any target which has a value. The same applies when the user
+			# has raised the menu via the tool button rather than a right click.
 			targets = [ t for i, t in enumerate( self.__targets ) if self.__values[i] is not None ]
 
 		m = IECore.MenuDefinition()
