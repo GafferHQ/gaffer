@@ -79,15 +79,15 @@ class MultiLineStringPlugValueWidget( GafferUI.PlugValueWidget ) :
 
 			self.__textWidget.setErrored( value is None )
 
-			fixedLineHeight = Gaffer.Metadata.plugValue( self.getPlug(), "fixedLineHeight" )
+			fixedLineHeight = Gaffer.Metadata.value( self.getPlug(), "fixedLineHeight" )
 			self.__textWidget.setFixedLineHeight( fixedLineHeight )
 
-			role = Gaffer.Metadata.plugValue( self.getPlug(), "multiLineStringPlugValueWidget:role" )
+			role = Gaffer.Metadata.value( self.getPlug(), "multiLineStringPlugValueWidget:role" )
 			role = getattr( self.__textWidget.Role, role.capitalize() ) if role else self.__textWidget.Role.Text
 			self.__textWidget.setRole( role )
 
 			self.__textChangedConnection.block(
-				not Gaffer.Metadata.plugValue( self.getPlug(), "multiLineStringPlugValueWidget:continuousUpdate" )
+				not Gaffer.Metadata.value( self.getPlug(), "multiLineStringPlugValueWidget:continuousUpdate" )
 			)
 
 		self.__textWidget.setEditable( self._editable() )

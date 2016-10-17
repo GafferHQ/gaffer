@@ -109,14 +109,20 @@ class NodeEditor( GafferUI.NodeSetEditor ) :
 
 				GafferUI.Label( "<h4>Node Name</h4>" )
 				self.__nameWidget = GafferUI.NameWidget( node )
-				self.__nameWidget.setEditable( not self.getReadOnly() )
+				## \todo Make NameWidget support the readOnly metadata internally itself.
+				# We can't do that easily right now, because it would need to be managing
+				# the exact same `setEditable()` call that we're using here to propagate
+				# our Widget readonlyness. Really our Widget readonlyness mechanism is a
+				# bit lacking, and it should really be inherited automatically so we don't
+				# have to propagate it like this.
+				self.__nameWidget.setEditable( not self.getReadOnly() and not Gaffer.readOnly( node ) )
 
 				with GafferUI.ListContainer( GafferUI.ListContainer.Orientation.Horizontal, spacing=4 ) as infoSection :
 
 					GafferUI.Label( "<h4>" + node.typeName().rpartition( ":" )[-1] + "</h4>" )
 
 					button = GafferUI.Button( image = "info.png", hasFrame = False )
-					url = Gaffer.Metadata.nodeValue( node, "documentation:url" )
+					url = Gaffer.Metadata.value( node, "documentation:url" )
 					if url :
 						button.clickedSignal().connect(
 							lambda button : GafferUI.showURL( url ),
@@ -149,7 +155,7 @@ class NodeEditor( GafferUI.NodeSetEditor ) :
 
 		result = IECore.MenuDefinition()
 
-		url = Gaffer.Metadata.nodeValue( self.nodeUI().node(), "documentation:url" )
+		url = Gaffer.Metadata.value( self.nodeUI().node(), "documentation:url" )
 		result.append(
 			"/Documentation...",
 			{
@@ -164,6 +170,7 @@ class NodeEditor( GafferUI.NodeSetEditor ) :
 			"/Revert to Defaults",
 			{
 				"command" : Gaffer.WeakMethod( self.__revertToDefaults ),
+				"active" : not Gaffer.readOnly( self.nodeUI().node() ),
 			}
 		)
 
@@ -180,13 +187,15 @@ class NodeEditor( GafferUI.NodeSetEditor ) :
 				plug = graphComponent
 				if plug.direction() == plug.Direction.Out :
 					return
-				if plug.isSame( plug.node()["user"] ) :
+				elif plug.isSame( plug.node()["user"] ) :
 					# Not much sense reverting user plugs, since we
 					# don't expect the user to have gone to the trouble
 					# of giving them defaults.
 					return
 				elif plug.getName().startswith( "__" ) :
 					# Private plugs are none of our business.
+					return
+				elif Gaffer.readOnly( plug ) :
 					return
 
 				if isinstance( plug, Gaffer.ValuePlug ) :

@@ -207,19 +207,36 @@ class TestCase( unittest.TestCase ) :
 			if not inspect.isclass( cls ) or not issubclass( cls, Gaffer.Node ) :
 				continue
 
+			if not cls.__module__.startswith( module.__name__ + "." ) :
+				# Skip nodes which look like they've been injected from
+				# another module by one of the compatibility config files.
+				# We use this same test in `DocumentationAlgo.exportNodeReference()`.
+				continue
+
 			try :
 				node = cls()
 			except :
 				continue
 
-			description = Gaffer.Metadata.nodeValue( node, "description", inherit = False )
+			description = Gaffer.Metadata.value( node, "description" )
 			if (not description) or description.isspace() :
+				# No description.
 				undocumentedNodes.append( node.getName() )
+			else :
+				baseNode = None
+				try :
+					baseNode = cls.__bases__[0]()
+				except :
+					pass
+				if baseNode is not None :
+					if description == Gaffer.Metadata.value( baseNode, "description" ) :
+						# Same description as base class
+						undocumentedNodes.append( node.getName() )
 
 			def checkPlugs( graphComponent ) :
 
 				if isinstance( graphComponent, Gaffer.Plug ) and not graphComponent.getName().startswith( "__" ) :
-					description = Gaffer.Metadata.plugValue( graphComponent, "description" )
+					description = Gaffer.Metadata.value( graphComponent, "description" )
 					if (not description) or description.isspace() :
 						undocumentedPlugs.append( graphComponent.fullName() )
 

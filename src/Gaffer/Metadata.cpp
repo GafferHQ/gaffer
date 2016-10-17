@@ -418,6 +418,21 @@ IECore::ConstDataPtr Metadata::nodeValueInternal( const Node *node, IECore::Inte
 	return NULL;
 }
 
+void Metadata::deregisterValue( IECore::TypeId nodeTypeId, IECore::InternedString key )
+{
+	deregisterNodeValue( nodeTypeId, key );
+}
+
+void Metadata::deregisterValue( IECore::TypeId nodeTypeId, const MatchPattern &plugPath, IECore::InternedString key )
+{
+	deregisterPlugValue( nodeTypeId, plugPath, key );
+}
+
+void Metadata::deregisterValue( GraphComponent *target, IECore::InternedString key )
+{
+	registerInstanceValue( target, key, OptionalData(), /* persistent = */ false );
+}
+
 void Metadata::deregisterNodeValue( IECore::TypeId nodeTypeId, IECore::InternedString key )
 {
 	NodeMetadata::NodeValues &m = nodeMetadataMap()[nodeTypeId].nodeValues;
@@ -456,7 +471,7 @@ std::string Metadata::nodeDescription( const Node *node, bool inherit )
 	return "";
 }
 
-std::vector<Node*> Metadata::nodesWithMetadata( GraphComponent *root, IECore::InternedString key, bool inherit, bool instanceOnly )
+std::vector<Node*> Metadata::nodesWithMetadata( GraphComponent *root, IECore::InternedString key, bool instanceOnly )
 {
 	std::vector<Node*> nodes;
 	if( instanceOnly )
@@ -483,7 +498,7 @@ std::vector<Node*> Metadata::nodesWithMetadata( GraphComponent *root, IECore::In
 	{
 		for( RecursiveNodeIterator it( root ); !it.done(); ++it )
 		{
-			if( nodeValueInternal( it->get(), key, inherit, instanceOnly ) )
+			if( nodeValueInternal( it->get(), key, /* inherit = */ true, instanceOnly ) )
 			{
 				nodes.push_back( it->get() );
 			}
@@ -491,7 +506,6 @@ std::vector<Node*> Metadata::nodesWithMetadata( GraphComponent *root, IECore::In
 	}
 	return nodes;
 }
-
 
 void Metadata::registerPlugValue( IECore::TypeId nodeTypeId, const MatchPattern &plugPath, IECore::InternedString key, IECore::ConstDataPtr value )
 {
@@ -652,7 +666,7 @@ std::string Metadata::plugDescription( const Plug *plug, bool inherit )
 	return "";
 }
 
-std::vector<Plug*> Metadata::plugsWithMetadata( GraphComponent *root, IECore::InternedString key, bool inherit, bool instanceOnly )
+std::vector<Plug*> Metadata::plugsWithMetadata( GraphComponent *root, IECore::InternedString key, bool instanceOnly )
 {
 	std::vector<Plug*> plugs;
 	if( instanceOnly )
@@ -682,13 +696,54 @@ std::vector<Plug*> Metadata::plugsWithMetadata( GraphComponent *root, IECore::In
 	{
 		for( FilteredRecursiveChildIterator<TypePredicate<Plug> > it( root ); !it.done(); ++it )
 		{
-			if( plugValueInternal( it->get(), key, inherit, false ) )
+			if( plugValueInternal( it->get(), key, /* inherit = */ true, false ) )
 			{
 				plugs.push_back( it->get() );
 			}
 		}
 	}
 	return plugs;
+}
+
+void Metadata::registerValue( GraphComponent *target, IECore::InternedString key, IECore::ConstDataPtr value, bool persistent )
+{
+	registerInstanceValue( target, key, value, persistent );
+}
+
+void Metadata::registeredValues( const GraphComponent *target, std::vector<IECore::InternedString> &keys, bool instanceOnly, bool persistentOnly )
+{
+	if( const Node *node = runTimeCast<const Node>( target ) )
+	{
+		registeredNodeValues( node, keys, /* inherit = */ true, instanceOnly, persistentOnly );
+	}
+	else if( const Plug *plug = runTimeCast<const Plug>( target ) )
+	{
+		registeredPlugValues( plug, keys, /* inherit = */ true, instanceOnly, persistentOnly );
+	}
+	else
+	{
+		registeredInstanceValues( plug, keys, persistentOnly );
+	}
+}
+
+IECore::ConstDataPtr Metadata::valueInternal( const GraphComponent *target, IECore::InternedString key, bool instanceOnly )
+{
+	if( const Node *node = runTimeCast<const Node>( target ) )
+	{
+		return nodeValueInternal( node, key, /* inherit = */ true, instanceOnly );
+	}
+	else if( const Plug *plug = runTimeCast<const Plug>( target ) )
+	{
+		return plugValueInternal( plug, key, /* inherit = */ true, instanceOnly );
+	}
+	else if( !instanceOnly )
+	{
+		if( OptionalData iv = instanceValue( target, key ) )
+		{
+			return *iv;
+		}
+	}
+	return NULL;
 }
 
 Metadata::ValueChangedSignal &Metadata::valueChangedSignal()

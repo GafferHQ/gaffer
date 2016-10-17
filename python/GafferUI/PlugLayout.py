@@ -215,11 +215,7 @@ class PlugLayout( GafferUI.Widget ) :
 		items = [ plug for plug in items if not plug.getName().startswith( "__" ) ]
 
 		if includeCustomWidgets :
-			if isinstance( parent, Gaffer.Node ) :
-				metadataNames = Gaffer.Metadata.registeredNodeValues( parent )
-			else :
-				metadataNames = Gaffer.Metadata.registeredPlugValues( parent )
-			for name in metadataNames :
+			for name in Gaffer.Metadata.registeredValues( parent ) :
 				m = re.match( layoutName + ":customWidget:(.+):widgetType", name )
 				if m and cls.__metadataValue( parent, name ) :
 					items.append( m.group( 1 ) )
@@ -281,7 +277,7 @@ class PlugLayout( GafferUI.Widget ) :
 		# ditch widgets whose metadata type has changed - we must recreate these.
 		self.__widgets = {
 			k : v for k, v in self.__widgets.items()
-			if isinstance( k, str ) or v is not None and Gaffer.Metadata.plugValue( k, "plugValueWidget:type" ) == v.__plugValueWidgetType
+			if isinstance( k, str ) or v is not None and Gaffer.Metadata.value( k, "plugValueWidget:type" ) == v.__plugValueWidgetType
 		}
 
 
@@ -388,7 +384,7 @@ class PlugLayout( GafferUI.Widget ) :
 
 		# Store the metadata value that controlled the type created, so we can compare to it
 		# in the future to determine if we can reuse the widget.
-		result.__plugValueWidgetType = Gaffer.Metadata.plugValue( plug, "plugValueWidget:type" )
+		result.__plugValueWidgetType = Gaffer.Metadata.value( plug, "plugValueWidget:type" )
 
  		return result
 
@@ -407,18 +403,18 @@ class PlugLayout( GafferUI.Widget ) :
 	def __metadataValue( cls, plugOrNode, name ) :
 
 		if isinstance( plugOrNode, Gaffer.Node ) :
-			return Gaffer.Metadata.nodeValue( plugOrNode, name )
+			return Gaffer.Metadata.value( plugOrNode, name )
 		else :
-			return Gaffer.Metadata.plugValue( plugOrNode, name )
+			return Gaffer.Metadata.value( plugOrNode, name )
 
 	@classmethod
 	def __staticItemMetadataValue( cls, item, name, parent, layoutName ) :
 
 		if isinstance( item, Gaffer.Plug ) :
-			v = Gaffer.Metadata.plugValue( item, layoutName + ":" + name )
+			v = Gaffer.Metadata.value( item, layoutName + ":" + name )
 			if v is None and name in ( "divider", "label" ) :
 				# Backwards compatibility with old unprefixed metadata names.
-				v = Gaffer.Metadata.plugValue( item, name )
+				v = Gaffer.Metadata.value( item, name )
 			return v
 		else :
 			return cls.__metadataValue( parent, layoutName + ":customWidget:" + item + ":" + name )
@@ -480,10 +476,9 @@ class PlugLayout( GafferUI.Widget ) :
 
 	def __plugMetadataChanged( self, nodeTypeId, plugPath, key, plug ) :
 
-		if plug is not None and not self.__parent.isSame( plug ) and not self.__parent.isSame( plug.parent() ) :
-			return
-
-		if not self.__node().isInstanceOf( nodeTypeId ) :
+		parentAffected = isinstance( self.__parent, Gaffer.Plug ) and Gaffer.affectedByChange( self.__parent, nodeTypeId, plugPath, plug )
+		childAffected = Gaffer.childAffectedByChange( self.__parent, nodeTypeId, plugPath, plug )
+		if not parentAffected and not childAffected :
 			return
 
 		if key in (
@@ -552,16 +547,16 @@ class _Section( object ) :
 	def saveState( self, name, value ) :
 
 		if isinstance( self.__parent, Gaffer.Node ) :
-			Gaffer.Metadata.registerNodeValue( self.__parent, self.__stateName( name ), value, persistent = False )
+			Gaffer.Metadata.registerValue( self.__parent, self.__stateName( name ), value, persistent = False )
 		else :
-			Gaffer.Metadata.registerPlugValue( self.__parent, self.__stateName( name ), value, persistent = False )
+			Gaffer.Metadata.registerValue( self.__parent, self.__stateName( name ), value, persistent = False )
 
 	def restoreState( self, name ) :
 
 		if isinstance( self.__parent, Gaffer.Node ) :
-			return Gaffer.Metadata.nodeValue( self.__parent, self.__stateName( name ) )
+			return Gaffer.Metadata.value( self.__parent, self.__stateName( name ) )
 		else :
-			return Gaffer.Metadata.plugValue( self.__parent, self.__stateName( name ) )
+			return Gaffer.Metadata.value( self.__parent, self.__stateName( name ) )
 
 	def __stateName( self, name ) :
 

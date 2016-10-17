@@ -51,10 +51,10 @@ class BoxUITest( GafferUITest.TestCase ) :
 
 	IECore.registerRunTimeTyped( NodulePositionNode )
 
-	Gaffer.Metadata.registerPlugValue( NodulePositionNode, "op1", "nodeGadget:nodulePosition", "left" )
-	Gaffer.Metadata.registerPlugValue( NodulePositionNode, "sum", "nodeGadget:nodulePosition", "right" )
+	Gaffer.Metadata.registerValue( NodulePositionNode, "op1", "nodeGadget:nodulePosition", "left" )
+	Gaffer.Metadata.registerValue( NodulePositionNode, "sum", "nodeGadget:nodulePosition", "right" )
 
-	Gaffer.Metadata.registerPlugValue( NodulePositionNode, "op2", "nodule:type", "" )
+	Gaffer.Metadata.registerValue( NodulePositionNode, "op2", "nodule:type", "" )
 
 	def testNodulePositions( self ) :
 
@@ -188,10 +188,10 @@ class BoxUITest( GafferUITest.TestCase ) :
 		s["b"]["n"] = Gaffer.Node()
 
 		s["b"]["n"]["user"]["p"] = Gaffer.IntPlug( flags = Gaffer.Plug.Flags.Default | Gaffer.Plug.Flags.Dynamic )
-		Gaffer.Metadata.registerPlugValue( s["b"]["n"]["user"]["p"], "layout:section", "SomeWeirdSection" )
+		Gaffer.Metadata.registerValue( s["b"]["n"]["user"]["p"], "layout:section", "SomeWeirdSection" )
 
 		p = s["b"].promotePlug( s["b"]["n"]["user"]["p"] )
-		self.assertNotEqual( Gaffer.Metadata.plugValue( p, "layout:section" ), "SomeWeirdSection" )
+		self.assertNotEqual( Gaffer.Metadata.value( p, "layout:section" ), "SomeWeirdSection" )
 
 if __name__ == "__main__":
 	unittest.main()

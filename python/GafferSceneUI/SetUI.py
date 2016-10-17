@@ -136,8 +136,8 @@ def __setsPopupMenu( menuDefinition, plugValueWidget ) :
 	if plug is None :
 		return
 
-	acceptsSetName = Gaffer.Metadata.plugValue( plug, "ui:scene:acceptsSetName" )
-	acceptsSetNames = Gaffer.Metadata.plugValue( plug, "ui:scene:acceptsSetNames" )
+	acceptsSetName = Gaffer.Metadata.value( plug, "ui:scene:acceptsSetName" )
+	acceptsSetNames = Gaffer.Metadata.value( plug, "ui:scene:acceptsSetNames" )
 	if not acceptsSetName and not acceptsSetNames :
 		return
 
@@ -182,7 +182,7 @@ def __setsPopupMenu( menuDefinition, plugValueWidget ) :
 			{
 				"command" : functools.partial( __setValue, plug, " ".join( sorted( newNames ) ) ),
 				"checkBox" : setName in currentNames,
-				"active" : plug.settable() and not plugValueWidget.getReadOnly(),
+				"active" : plug.settable() and not plugValueWidget.getReadOnly() and not Gaffer.readOnly( plug ),
 			}
 		)
 

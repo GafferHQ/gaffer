@@ -52,22 +52,22 @@ namespace GafferBindings
 class BoxSerialiser : public NodeSerialiser
 {
 
-	virtual bool childNeedsSerialisation( const Gaffer::GraphComponent *child ) const
+	virtual bool childNeedsSerialisation( const Gaffer::GraphComponent *child, const Serialisation &serialisation ) const
 	{
 		if( child->isInstanceOf( Node::staticTypeId() ) )
 		{
 			return true;
 		}
-		return NodeSerialiser::childNeedsSerialisation( child );
+		return NodeSerialiser::childNeedsSerialisation( child, serialisation );
 	}
 
-	virtual bool childNeedsConstruction( const Gaffer::GraphComponent *child ) const
+	virtual bool childNeedsConstruction( const Gaffer::GraphComponent *child, const Serialisation &serialisation ) const
 	{
 		if( child->isInstanceOf( Node::staticTypeId() ) )
 		{
 			return true;
 		}
-		return NodeSerialiser::childNeedsConstruction( child );
+		return NodeSerialiser::childNeedsConstruction( child, serialisation );
 	}
 
 };

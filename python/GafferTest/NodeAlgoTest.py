@@ -47,7 +47,7 @@ class NodeAlgoTest( GafferTest.TestCase ) :
 
 		self.assertEqual( node["op1"].getValue(), 0 )
 		self.assertFalse( Gaffer.NodeAlgo.hasUserDefault( node["op1"] ) )
-		Gaffer.Metadata.registerPlugValue( GafferTest.AddNode.staticTypeId(), "op1", "userDefault", IECore.IntData( 7 ) )
+		Gaffer.Metadata.registerValue( GafferTest.AddNode.staticTypeId(), "op1", "userDefault", IECore.IntData( 7 ) )
 		self.assertTrue( Gaffer.NodeAlgo.hasUserDefault( node["op1"] ) )
 		self.assertFalse( Gaffer.NodeAlgo.isSetToUserDefault( node["op1"] ) )
 		Gaffer.NodeAlgo.applyUserDefaults( node )
@@ -67,7 +67,7 @@ class NodeAlgoTest( GafferTest.TestCase ) :
 
 		# the userDefault can be unregistered by overriding with None
 		node3 = GafferTest.AddNode()
-		Gaffer.Metadata.registerPlugValue( GafferTest.AddNode.staticTypeId(), "op1", "userDefault", None )
+		Gaffer.Metadata.registerValue( GafferTest.AddNode.staticTypeId(), "op1", "userDefault", None )
 		self.assertFalse( Gaffer.NodeAlgo.hasUserDefault( node3["op1"] ) )
 		Gaffer.NodeAlgo.applyUserDefaults( node3 )
 		self.assertEqual( node3["op1"].getValue(), 0 )
@@ -78,14 +78,14 @@ class NodeAlgoTest( GafferTest.TestCase ) :
 		node = GafferTest.CompoundPlugNode()
 
 		self.assertEqual( node["p"]["s"].getValue(), "" )
-		Gaffer.Metadata.registerPlugValue( GafferTest.CompoundPlugNode.staticTypeId(), "p.s", "userDefault", IECore.StringData( "from the metadata" ) )
+		Gaffer.Metadata.registerValue( GafferTest.CompoundPlugNode.staticTypeId(), "p.s", "userDefault", IECore.StringData( "from the metadata" ) )
 		self.assertFalse( Gaffer.NodeAlgo.isSetToUserDefault( node["p"]["s"] ) )
 		Gaffer.NodeAlgo.applyUserDefaults( node )
 		self.assertEqual( node["p"]["s"].getValue(), "from the metadata" )
 		self.assertTrue( Gaffer.NodeAlgo.isSetToUserDefault( node["p"]["s"] ) )
 
 		# override the metadata for this particular instance
-		Gaffer.Metadata.registerPlugValue( node["p"]["s"], "userDefault", IECore.StringData( "i am special" ) )
+		Gaffer.Metadata.registerValue( node["p"]["s"], "userDefault", IECore.StringData( "i am special" ) )
 		self.assertFalse( Gaffer.NodeAlgo.isSetToUserDefault( node["p"]["s"] ) )
 		Gaffer.NodeAlgo.applyUserDefaults( node )
 		self.assertEqual( node["p"]["s"].getValue(), "i am special" )
@@ -106,8 +106,8 @@ class NodeAlgoTest( GafferTest.TestCase ) :
 		self.assertEqual( node["op1"].getValue(), 0 )
 		self.assertEqual( node2["op1"].getValue(), 0 )
 
-		Gaffer.Metadata.registerPlugValue( GafferTest.AddNode.staticTypeId(), "op1", "userDefault", IECore.IntData( 1 ) )
-		Gaffer.Metadata.registerPlugValue( node2["op1"], "userDefault", IECore.IntData( 2 ) )
+		Gaffer.Metadata.registerValue( GafferTest.AddNode.staticTypeId(), "op1", "userDefault", IECore.IntData( 1 ) )
+		Gaffer.Metadata.registerValue( node2["op1"], "userDefault", IECore.IntData( 2 ) )
 		Gaffer.NodeAlgo.applyUserDefaults( [ node, node2 ] )
 
 		self.assertEqual( node["op1"].getValue(), 1 )
@@ -120,8 +120,8 @@ class NodeAlgoTest( GafferTest.TestCase ) :
 		self.assertEqual( Gaffer.NodeAlgo.presets( node["op1"] ), [] )
 		self.assertEqual( Gaffer.NodeAlgo.currentPreset( node["op1"] ), None )
 
-		Gaffer.Metadata.registerPlugValue( node["op1"], "preset:one", 1 )
-		Gaffer.Metadata.registerPlugValue( node["op1"], "preset:two", 2 )
+		Gaffer.Metadata.registerValue( node["op1"], "preset:one", 1 )
+		Gaffer.Metadata.registerValue( node["op1"], "preset:two", 2 )
 
 		self.assertEqual( Gaffer.NodeAlgo.presets( node["op1"] ), [ "one", "two" ] )
 		self.assertEqual( Gaffer.NodeAlgo.currentPreset( node["op1"] ), None )
@@ -139,12 +139,12 @@ class NodeAlgoTest( GafferTest.TestCase ) :
 		node = GafferTest.AddNode()
 		self.assertEqual( Gaffer.NodeAlgo.presets( node["op1"] ), [] )
 
-		Gaffer.Metadata.registerPlugValue(
+		Gaffer.Metadata.registerValue(
 			node["op1"], "presetNames",
 			IECore.StringVectorData( [ "a", "b", "c" ] )
 		)
 
-		Gaffer.Metadata.registerPlugValue(
+		Gaffer.Metadata.registerValue(
 			node["op1"], "presetValues",
 			IECore.IntVectorData( [ 1, 2, 3 ] )
 		)
@@ -165,7 +165,7 @@ class NodeAlgoTest( GafferTest.TestCase ) :
 
 		# a preset registered individually should take precedence
 
-		Gaffer.Metadata.registerPlugValue( node["op1"], "preset:c", 10 )
+		Gaffer.Metadata.registerValue( node["op1"], "preset:c", 10 )
 		self.assertEqual( Gaffer.NodeAlgo.currentPreset( node["op1"] ), None )
 
 		Gaffer.NodeAlgo.applyPreset( node["op1"], "c" )

@@ -169,7 +169,7 @@ def __connectionContextMenu( nodeGraph, destinationPlug, menuDefinition ) :
 		"/Insert Dot",
 		{
 			"command" : functools.partial( __insertDot, destinationPlug = destinationPlug ),
-			"active" : not destinationPlug.getFlags( Gaffer.Plug.Flags.ReadOnly ),
+			"active" : not destinationPlug.getFlags( Gaffer.Plug.Flags.ReadOnly ) and not Gaffer.readOnly( destinationPlug ),
 		}
 	)
 
@@ -178,7 +178,7 @@ __connectionContextMenuConnection = GafferUI.NodeGraph.connectionContextMenuSign
 def __setPlugMetadata( plug, key, value ) :
 
 	with Gaffer.UndoContext( plug.ancestor( Gaffer.ScriptNode ) ) :
-		Gaffer.Metadata.registerPlugValue( plug, key, value )
+		Gaffer.Metadata.registerValue( plug, key, value )
 
 def __nodeGraphPlugContextMenu( nodeGraph, plug, menuDefinition ) :
 
@@ -186,16 +186,17 @@ def __nodeGraphPlugContextMenu( nodeGraph, plug, menuDefinition ) :
 
 		## \todo This duplicates functionality from BoxUI. Is there some way
 		# we could share it?
-		currentEdge = Gaffer.Metadata.plugValue( plug, "nodeGadget:nodulePosition" )
+		currentEdge = Gaffer.Metadata.value( plug, "nodeGadget:nodulePosition" )
 		if not currentEdge :
 			currentEdge = "top" if plug.direction() == plug.Direction.In else "bottom"
 
+		readOnly = Gaffer.readOnly( plug )
 		for edge in ( "top", "bottom", "left", "right" ) :
 			menuDefinition.append(
 				"/Move To/" + edge.capitalize(),
 				{
 					"command" : functools.partial( __setPlugMetadata, plug, "nodeGadget:nodulePosition", edge ),
-					"active" : edge != currentEdge,
+					"active" : edge != currentEdge and not readOnly,
 				}
 			)
 

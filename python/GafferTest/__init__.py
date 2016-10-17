@@ -129,6 +129,7 @@ from AnimationTest import AnimationTest
 from StatsApplicationTest import StatsApplicationTest
 from DownstreamIteratorTest import DownstreamIteratorTest
 from PerformanceMonitorTest import PerformanceMonitorTest
+from MetadataAlgoTest import MetadataAlgoTest
 
 if __name__ == "__main__":
 	import unittest

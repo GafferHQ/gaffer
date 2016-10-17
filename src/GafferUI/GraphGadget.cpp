@@ -50,6 +50,7 @@
 #include "Gaffer/CompoundNumericPlug.h"
 #include "Gaffer/RecursiveChildIterator.h"
 #include "Gaffer/DependencyNode.h"
+#include "Gaffer/MetadataAlgo.h"
 
 #include "GafferUI/GraphGadget.h"
 #include "GafferUI/NodeGadget.h"
@@ -66,6 +67,30 @@ using namespace GafferUI;
 using namespace Imath;
 using namespace IECore;
 using namespace std;
+
+//////////////////////////////////////////////////////////////////////////
+// Private utilities
+//////////////////////////////////////////////////////////////////////////
+
+namespace
+{
+
+bool readOnly( const Gaffer::StandardSet *set )
+{
+	for( size_t i = 0, s = set->size(); i < s; ++i )
+	{
+		if( const Gaffer::GraphComponent *g = runTimeCast<const Gaffer::GraphComponent>( set->member( i ) ) )
+		{
+			if( readOnly( g ) )
+			{
+				return true;
+			}
+		}
+	}
+	return false;
+}
+
+} // namespace
 
 //////////////////////////////////////////////////////////////////////////
 // GraphGadget implementation
@@ -681,7 +706,7 @@ bool GraphGadget::keyPressed( GadgetPtr gadget, const KeyEvent &event )
 		for( size_t i = 0, s = selection->size(); i != s; i++ )
 		{
 			Gaffer::DependencyNode *node = IECore::runTimeCast<Gaffer::DependencyNode>( selection->member( i ) );
-			if( node && findNodeGadget( node ) )
+			if( node && findNodeGadget( node ) && !readOnly( node ) )
 			{
 				Gaffer::BoolPlug *enabledPlug = node->enabledPlug();
 				if( enabledPlug && enabledPlug->settable() )
@@ -931,7 +956,11 @@ IECore::RunTimeTypedPtr GraphGadget::dragBegin( GadgetPtr gadget, const DragDrop
 	NodeGadget *nodeGadget = nodeGadgetAt( event.line );
 	if( event.buttons == ButtonEvent::Left )
 	{
-		if( nodeGadget && m_scriptNode->selection()->contains( nodeGadget->node() ) )
+		if(
+			nodeGadget &&
+			m_scriptNode->selection()->contains( nodeGadget->node() ) &&
+			!readOnly( m_scriptNode->selection() )
+		)
 		{
 			m_dragMode = Moving;
 			// we have to return an object to start the drag but the drag we're

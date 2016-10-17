@@ -137,7 +137,7 @@ class _SettingsWindow( GafferUI.Window ) :
 
 		plugLayout = None
 		if self.__shaderView.scene() is not None :
-			Gaffer.Metadata.registerPlugValue( self.__shaderView.scene()["shader"], "plugValueWidget:type", "" )
+			Gaffer.Metadata.registerValue( self.__shaderView.scene()["shader"], "plugValueWidget:type", "" )
 			plugLayout = GafferUI.PlugLayout( self.__shaderView.scene(), rootSection = "Settings" )
 
 		self.__frame.setChild( plugLayout )

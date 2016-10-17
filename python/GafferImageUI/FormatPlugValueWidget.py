@@ -69,7 +69,6 @@ class FormatPlugValueWidget( GafferUI.PlugValueWidget ) :
 		self.__pixelAspectWidget = GafferUI.NumericPlugValueWidget( plug["pixelAspect"] )
 		grid[1,3] = self.__pixelAspectWidget
 
-		self.__plugMetadataChangedConnection = Gaffer.Metadata.plugValueChangedSignal().connect( Gaffer.WeakMethod( self.__plugMetadataChanged ) )
 		# If the plug hasn't got an input, the PlugValueWidget base class assumes we're not
 		# sensitive to contex changes and omits calls to _updateFromPlug(). But the default
 		# format mechanism uses the context, so we must arrange to do updates ourselves when
@@ -95,7 +94,7 @@ class FormatPlugValueWidget( GafferUI.PlugValueWidget ) :
 		mode = "standard"
 		if self.getPlug() is not None :
 
-			mode = Gaffer.Metadata.plugValue( self.getPlug(), "formatPlugValueWidget:mode" )
+			mode = Gaffer.Metadata.value( self.getPlug(), "formatPlugValueWidget:mode" )
 			with self.getContext() :
 				fmt = self.getPlug().getValue()
 
@@ -133,7 +132,7 @@ class FormatPlugValueWidget( GafferUI.PlugValueWidget ) :
 			formats.insert( 0, GafferImage.Format() )
 
 		currentFormat = self.getPlug().getValue()
-		modeIsCustom = Gaffer.Metadata.plugValue( self.getPlug(), "formatPlugValueWidget:mode" ) == "custom"
+		modeIsCustom = Gaffer.Metadata.value( self.getPlug(), "formatPlugValueWidget:mode" ) == "custom"
 		for fmt in formats :
 			result.append(
 				"/" + self.__formatLabel( fmt ),
@@ -169,7 +168,7 @@ class FormatPlugValueWidget( GafferUI.PlugValueWidget ) :
 	def __applyFormat( self, unused, fmt ) :
 
 		with Gaffer.UndoContext( self.getPlug().ancestor( Gaffer.ScriptNode ) ) :
-			Gaffer.Metadata.registerPlugValue( self.getPlug(), "formatPlugValueWidget:mode", "standard", persistent = False )
+			Gaffer.Metadata.registerValue( self.getPlug(), "formatPlugValueWidget:mode", "standard", persistent = False )
 			self.getPlug().setValue( fmt )
 
 	def __applyCustomFormat( self, unused ) :
@@ -190,18 +189,7 @@ class FormatPlugValueWidget( GafferUI.PlugValueWidget ) :
 			# custom mode despite of this fact. We use metadata rather than
 			# a member variable so that undo will take us back to the non-custom
 			# state automatically.
-			Gaffer.Metadata.registerPlugValue( self.getPlug(), "formatPlugValueWidget:mode", "custom", persistent = False )
-
-	def __plugMetadataChanged( self, nodeTypeId, plugPath, key, plug ) :
-
-		if self.getPlug() is None or plug is None :
-			return
-
-		if not self.getPlug().isSame( plug ) :
-			return
-
-		if key == "formatPlugValueWidget:mode" :
-			self._updateFromPlug()
+			Gaffer.Metadata.registerValue( self.getPlug(), "formatPlugValueWidget:mode", "custom", persistent = False )
 
 	def __contextChanged( self, context, key ) :
 

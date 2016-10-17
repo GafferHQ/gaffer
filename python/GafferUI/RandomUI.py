@@ -34,7 +34,8 @@
 #
 ##########################################################################
 
-import IECore
+import functools
+
 import Gaffer
 import GafferUI
 
@@ -223,6 +224,12 @@ def __popupMenu( menuDefinition, plugValueWidget ) :
 	input = plug.getInput()
 	if input is None and plugValueWidget._editable() :
 		menuDefinition.prepend( "/RandomiseDivider", { "divider" : True } )
-		menuDefinition.prepend( "/Randomise...", { "command" : IECore.curry( __createRandom, plug ) } )
+		menuDefinition.prepend(
+			"/Randomise...",
+			{
+				"command" : functools.partial( __createRandom, plug ),
+				"active" : not plugValueWidget.getReadOnly() and not Gaffer.readOnly( plug ),
+			}
+		)
 
 __popupMenuConnection = GafferUI.PlugValueWidget.popupMenuSignal().connect( __popupMenu )

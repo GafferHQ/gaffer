@@ -73,9 +73,9 @@ class PlugLayoutTest( GafferUITest.TestCase ) :
 			[ n["user"]["a"], n["user"]["b"], n["user"]["c"] ],
 		)
 
-		Gaffer.Metadata.registerPlugValue( n["user"]["a"], "layout:index", 3 )
-		Gaffer.Metadata.registerPlugValue( n["user"]["b"], "layout:index", 2 )
-		Gaffer.Metadata.registerPlugValue( n["user"]["c"], "layout:index", 1 )
+		Gaffer.Metadata.registerValue( n["user"]["a"], "layout:index", 3 )
+		Gaffer.Metadata.registerValue( n["user"]["b"], "layout:index", 2 )
+		Gaffer.Metadata.registerValue( n["user"]["c"], "layout:index", 1 )
 
 		self.assertEqual(
 			GafferUI.PlugLayout.layoutOrder( n["user"] ),
@@ -93,7 +93,7 @@ class PlugLayoutTest( GafferUITest.TestCase ) :
 	def testCustomWidgets( self ) :
 
 		n = Gaffer.Node()
-		Gaffer.Metadata.registerNodeValue( n, "layout:customWidget:test:widgetType", "GafferUITest.PlugLayoutTest.CustomWidget" )
+		Gaffer.Metadata.registerValue( n, "layout:customWidget:test:widgetType", "GafferUITest.PlugLayoutTest.CustomWidget" )
 
 		p = GafferUI.PlugLayout( n )
 
@@ -123,13 +123,13 @@ class PlugLayoutTest( GafferUITest.TestCase ) :
 
 		self.assertEqual( GafferUI.PlugLayout.layoutSections( n["user"] ), [ "" ] )
 
-		Gaffer.Metadata.registerPlugValue( n["user"]["a"], "layout:section", "A" )
-		Gaffer.Metadata.registerPlugValue( n["user"]["b"], "layout:section", "B" )
-		Gaffer.Metadata.registerPlugValue( n["user"]["c"], "layout:section", "C" )
+		Gaffer.Metadata.registerValue( n["user"]["a"], "layout:section", "A" )
+		Gaffer.Metadata.registerValue( n["user"]["b"], "layout:section", "B" )
+		Gaffer.Metadata.registerValue( n["user"]["c"], "layout:section", "C" )
 
 		self.assertEqual( GafferUI.PlugLayout.layoutSections( n["user"] ), [ "A", "B", "C" ] )
 
-		Gaffer.Metadata.registerPlugValue( n["user"]["a"], "layout:index", 3 )
+		Gaffer.Metadata.registerValue( n["user"]["a"], "layout:index", 3 )
 		self.assertEqual( GafferUI.PlugLayout.layoutSections( n["user"] ), [ "B", "C", "A" ] )
 
 	def testLayoutOrderSectionArgument( self ) :
@@ -144,9 +144,9 @@ class PlugLayoutTest( GafferUITest.TestCase ) :
 			[ n["user"]["a"], n["user"]["b"], n["user"]["c"] ],
 		)
 
-		Gaffer.Metadata.registerPlugValue( n["user"]["a"], "layout:section", "AB" )
-		Gaffer.Metadata.registerPlugValue( n["user"]["b"], "layout:section", "AB" )
-		Gaffer.Metadata.registerPlugValue( n["user"]["c"], "layout:section", "C" )
+		Gaffer.Metadata.registerValue( n["user"]["a"], "layout:section", "AB" )
+		Gaffer.Metadata.registerValue( n["user"]["b"], "layout:section", "AB" )
+		Gaffer.Metadata.registerValue( n["user"]["c"], "layout:section", "C" )
 
 		self.assertEqual(
 			GafferUI.PlugLayout.layoutOrder( n["user"], section = "AB" ),
@@ -169,11 +169,11 @@ class PlugLayoutTest( GafferUITest.TestCase ) :
 		w2 = l.plugValueWidget( n["p2"], lazy = False )
 		self.assertTrue( isinstance( w2, GafferUI.NumericPlugValueWidget ) )
 
-		Gaffer.Metadata.registerPlugValue( n["p1"], "plugValueWidget:type", "GafferUI.ConnectionPlugValueWidget" )
+		Gaffer.Metadata.registerValue( n["p1"], "plugValueWidget:type", "GafferUI.ConnectionPlugValueWidget" )
 		self.assertTrue( isinstance( l.plugValueWidget( n["p1"], lazy = False ), GafferUI.ConnectionPlugValueWidget ) )
 		self.assertTrue( w2 is l.plugValueWidget( n["p2"], lazy = False ) )
 
-		Gaffer.Metadata.deregisterPlugValue( n["p1"], "plugValueWidget:type" )
+		Gaffer.Metadata.deregisterValue( n["p1"], "plugValueWidget:type" )
 		self.assertTrue( isinstance( l.plugValueWidget( n["p1"], lazy = False ), GafferUI.NumericPlugValueWidget ) )
 		self.assertTrue( w2 is l.plugValueWidget( n["p2"], lazy = False ) )
 
@@ -185,10 +185,10 @@ class PlugLayoutTest( GafferUITest.TestCase ) :
 		l = GafferUI.PlugLayout( n )
 		self.assertTrue( isinstance( l.plugValueWidget( n["p"], lazy = False ), GafferUI.NumericPlugValueWidget ) )
 
-		Gaffer.Metadata.registerPlugValue( n["p"], "plugValueWidget:type", "" )
+		Gaffer.Metadata.registerValue( n["p"], "plugValueWidget:type", "" )
 		self.assertTrue( l.plugValueWidget( n["p"], lazy = False ) is None )
 
-		Gaffer.Metadata.deregisterPlugValue( n["p"], "plugValueWidget:type" )
+		Gaffer.Metadata.deregisterValue( n["p"], "plugValueWidget:type" )
 		self.assertTrue( isinstance( l.plugValueWidget( n["p"], lazy = False ), GafferUI.NumericPlugValueWidget ) )
 
 	def testContext( self ) :
@@ -272,17 +272,17 @@ class PlugLayoutTest( GafferUITest.TestCase ) :
 		n["p1"] = Gaffer.Plug( flags = Gaffer.Plug.Flags.Default | Gaffer.Plug.Flags.Dynamic )
 		n["p2"] = Gaffer.Plug( flags = Gaffer.Plug.Flags.Default | Gaffer.Plug.Flags.Dynamic )
 
-		Gaffer.Metadata.registerNodeValue( n, "layout1:activator:true", True )
-		Gaffer.Metadata.registerNodeValue( n, "layout1:activator:false", False )
+		Gaffer.Metadata.registerValue( n, "layout1:activator:true", True )
+		Gaffer.Metadata.registerValue( n, "layout1:activator:false", False )
 
-		Gaffer.Metadata.registerNodeValue( n, "layout2:activator:true", True )
-		Gaffer.Metadata.registerNodeValue( n, "layout2:activator:false", False )
+		Gaffer.Metadata.registerValue( n, "layout2:activator:true", True )
+		Gaffer.Metadata.registerValue( n, "layout2:activator:false", False )
 
-		Gaffer.Metadata.registerPlugValue( n["p1"], "layout1:activator", "true" )
-		Gaffer.Metadata.registerPlugValue( n["p1"], "layout2:activator", "false" )
+		Gaffer.Metadata.registerValue( n["p1"], "layout1:activator", "true" )
+		Gaffer.Metadata.registerValue( n["p1"], "layout2:activator", "false" )
 
-		Gaffer.Metadata.registerPlugValue( n["p2"], "layout1:activator", "false" )
-		Gaffer.Metadata.registerPlugValue( n["p2"], "layout2:activator", "true" )
+		Gaffer.Metadata.registerValue( n["p2"], "layout1:activator", "false" )
+		Gaffer.Metadata.registerValue( n["p2"], "layout2:activator", "true" )
 
 		l1 = GafferUI.PlugLayout( n, layoutName = "layout1" )
 		l2 = GafferUI.PlugLayout( n, layoutName = "layout2" )
@@ -299,7 +299,7 @@ class PlugLayoutTest( GafferUITest.TestCase ) :
 		n["p1"] = Gaffer.Plug( flags = Gaffer.Plug.Flags.Default | Gaffer.Plug.Flags.Dynamic )
 		n["p2"] = Gaffer.Plug( flags = Gaffer.Plug.Flags.Default | Gaffer.Plug.Flags.Dynamic )
 
-		Gaffer.Metadata.registerPlugValue( n["p2"], "layout:section", "sectionA" )
+		Gaffer.Metadata.registerValue( n["p2"], "layout:section", "sectionA" )
 
 		l = GafferUI.PlugLayout( n, rootSection = "sectionA" )
 

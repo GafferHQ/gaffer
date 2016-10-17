@@ -156,7 +156,7 @@ def __tagsPopupMenu( menuDefinition, plugValueWidget ) :
 			{
 				"command" : IECore.curry( __toggleTag, plug, tag ),
 				"checkBox" : tag in currentTags,
-				"active" : plug.settable() and not plugValueWidget.getReadOnly(),
+				"active" : plug.settable() and not plugValueWidget.getReadOnly() and not Gaffer.readOnly( plug ),
 			}
 		)
 

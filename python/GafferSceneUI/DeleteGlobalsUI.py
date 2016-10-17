@@ -125,7 +125,7 @@ def __namesPopupMenu( menuDefinition, plugValueWidget ) :
 			menuPrefix + nameWithoutPrefix,
 			{
 				"command" : IECore.curry( __toggleName, plug, nameWithoutPrefix ),
-				"active" : plug.settable() and not plugValueWidget.getReadOnly(),
+				"active" : plug.settable() and not plugValueWidget.getReadOnly() and not Gaffer.readOnly( plug ),
 				"checkBox" : nameWithoutPrefix in currentNames,
 			}
 		)

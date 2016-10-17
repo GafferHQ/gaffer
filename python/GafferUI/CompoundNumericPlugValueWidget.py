@@ -169,20 +169,20 @@ class CompoundNumericPlugValueWidget( GafferUI.PlugValueWidget ) :
 			menuDefinition.append( "/Ungang", {
 				"command" : Gaffer.WeakMethod( compoundNumericPlugValueWidget.__ungang ),
 				"shortCut" : "Ctrl+G",
-				"active" : not plugValueWidget.getReadOnly(),
+				"active" : not plugValueWidget.getReadOnly() and not Gaffer.readOnly( compoundNumericPlugValueWidget.getPlug() ),
 			} )
 		elif compoundNumericPlugValueWidget.getPlug().canGang() :
 			menuDefinition.append( "/GangDivider", { "divider" : True } )
 			menuDefinition.append( "/Gang", {
 				"command" : Gaffer.WeakMethod( compoundNumericPlugValueWidget.__gang ),
 				"shortCut" : "Ctrl+G",
-				"active" : not plugValueWidget.getReadOnly(),
+				"active" : not plugValueWidget.getReadOnly() and not Gaffer.readOnly( compoundNumericPlugValueWidget.getPlug() ),
 			} )
 
 	def __applyVisibleDimensions( self ) :
 
 		actualDimensions = len( self.getPlug() )
-		visibleDimensions = Gaffer.Metadata.plugValue( self.getPlug(), "ui:visibleDimensions" )
+		visibleDimensions = Gaffer.Metadata.value( self.getPlug(), "ui:visibleDimensions" )
 		visibleDimensions = visibleDimensions if visibleDimensions is not None else actualDimensions
 
 		for i in range( 0, actualDimensions ) :

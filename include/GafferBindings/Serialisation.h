@@ -86,7 +86,7 @@ class Serialisation
 
 				/// Should be implemented to insert the names of any modules the serialiser will need
 				/// into the modules set. The default implementation returns modulePath( graphComponent ).
-				virtual void moduleDependencies( const Gaffer::GraphComponent *graphComponent, std::set<std::string> &modules ) const;
+				virtual void moduleDependencies( const Gaffer::GraphComponent *graphComponent, std::set<std::string> &modules, const Serialisation &serialisation ) const;
 				/// Should be implemented to return a string which when executed will reconstruct the specified object.
 				/// The default implementation uses repr().
 				virtual std::string constructor( const Gaffer::GraphComponent *graphComponent, const Serialisation &serialisation ) const;
@@ -104,11 +104,11 @@ class Serialisation
 				virtual std::string postScript( const Gaffer::GraphComponent *graphComponent, const std::string &identifier, const Serialisation &serialisation ) const;
 				/// May be implemented to say whether or not the child needs to be serialised. The default
 				/// implementation returns true.
-				virtual bool childNeedsSerialisation( const Gaffer::GraphComponent *child ) const;
+				virtual bool childNeedsSerialisation( const Gaffer::GraphComponent *child, const Serialisation &serialisation ) const;
 				/// May be implemented to say whether or not the child needs to be constructed explicitly by the serialisation,
 				/// or it will be created by the parent automatically on construction of the parent. Default
 				/// implementation returns false.
-				virtual bool childNeedsConstruction( const Gaffer::GraphComponent *child ) const;
+				virtual bool childNeedsConstruction( const Gaffer::GraphComponent *child, const Serialisation &serialisation ) const;
 
 		};
 

@@ -102,9 +102,9 @@ struct ErrorSlotCaller
 
 } // namespace
 
-void NodeSerialiser::moduleDependencies( const Gaffer::GraphComponent *graphComponent, std::set<std::string> &modules ) const
+void NodeSerialiser::moduleDependencies( const Gaffer::GraphComponent *graphComponent, std::set<std::string> &modules, const Serialisation &serialisation ) const
 {
-	Serialiser::moduleDependencies( graphComponent, modules );
+	Serialiser::moduleDependencies( graphComponent, modules, serialisation );
 	metadataModuleDependencies( static_cast<const Gaffer::Node *>( graphComponent ), modules );
 }
 
@@ -114,22 +114,38 @@ std::string NodeSerialiser::postHierarchy( const Gaffer::GraphComponent *graphCo
 		metadataSerialisation( static_cast<const Gaffer::Node *>( graphComponent ), identifier );
 }
 
-bool NodeSerialiser::childNeedsSerialisation( const Gaffer::GraphComponent *child ) const
+bool NodeSerialiser::childNeedsSerialisation( const Gaffer::GraphComponent *child, const Serialisation &serialisation ) const
 {
 	if( const Plug *childPlug = IECore::runTimeCast<const Plug>( child ) )
 	{
 		return childPlug->getFlags( Plug::Serialisable );
 	}
-	return false;
+	else
+	{
+		assert( child->isInstanceOf( Node::staticTypeId() ) );
+		// Typically we expect internal nodes to be part of the private
+		// implementation of the parent node, and to be created explicitly
+		// in the parent constructor. Therefore we don't expect them to
+		// need serialisation. But, if the root of the serialisation is
+		// the node itself, it won't be included, so we must serialise the
+		// children explicitly. This is most useful to allow nodes to be
+		// cut + pasted out of Reference nodes, but implementing it here
+		// makes it possible to inspect the internals of other nodes too.
+		return serialisation.parent() == child->parent<GraphComponent>();
+	}
 }
 
-bool NodeSerialiser::childNeedsConstruction( const Gaffer::GraphComponent *child ) const
+bool NodeSerialiser::childNeedsConstruction( const Gaffer::GraphComponent *child, const Serialisation &serialisation ) const
 {
 	if( const Plug *childPlug = IECore::runTimeCast<const Plug>( child ) )
 	{
 		return childPlug->getFlags( Plug::Dynamic );
 	}
-	return false;
+	else
+	{
+		assert( child->isInstanceOf( Node::staticTypeId() ) );
+		return true;
+	}
 }
 
 void GafferBindings::bindNode()

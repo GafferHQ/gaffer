@@ -106,6 +106,7 @@ class Plug : public GraphComponent
 			/// an exception if an attempt is made to call their setValue() method. It is
 			/// not valid to make an output plug read only - in the case of an attempt to
 			/// do so an exception will be thrown from setFlags().
+			/// \deprecated Use MetadataAlgo instead.
 			ReadOnly = 0x00000020,
 			/// Generally it is an error to have cyclic dependencies between plugs,
 			/// and creating them will cause an exception to be thrown during dirty
