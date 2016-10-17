@@ -1978,8 +1978,7 @@ class _SetDiff( Diff ) :
 		if event.buttons != event.Buttons.None or event.button != event.Buttons.Left :
 			return False
 
-		section = self.ancestor( _SetsSection )
-		editor = section.ancestor( SceneInspector )
+		editor = self.ancestor( SceneInspector )
 
 		context = editor.getContext()
 		GafferSceneUI.ContextAlgo.setSelectedPaths( context, GafferScene.PathMatcher( widget.paths ) )
