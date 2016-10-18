@@ -54,6 +54,7 @@
 #include "IECore/Shader.h"
 #include "IECore/MeshPrimitive.h"
 #include "IECore/CurvesPrimitive.h"
+#include "IECore/ExternalProcedural.h"
 
 #include "IECoreArnold/ParameterAlgo.h"
 #include "IECoreArnold/CameraAlgo.h"
@@ -109,6 +110,26 @@ T parameter( const IECore::CompoundDataMap &parameters, const IECore::InternedSt
 	{
 		return defaultValue;
 	}
+}
+
+AtNode *convertToBox( const IECore::Object *object )
+{
+	AtNode *node = AiNode( "box" );
+	if( const IECore::VisibleRenderable *visibleRenderable = IECore::runTimeCast<const IECore::VisibleRenderable>( object ) )
+	{
+		const Imath::Box3f b = visibleRenderable->bound();
+		AiNodeSetPnt( node, "min", b.min.x, b.min.y, b.min.z );
+		AiNodeSetPnt( node, "max", b.max.x, b.max.y, b.max.z );
+	}
+
+	return node;
+}
+
+AtNode *convertToBox( const std::vector<const IECore::Object *> &samples, const std::vector<float> &times )
+{
+	// Boxes don't support motion blurred extent, so just convert
+	// the first sample.
+	return convertToBox( samples.front() );
 }
 
 } // namespace
@@ -363,6 +384,8 @@ IECore::InternedString g_arnoldSelfShadowsAttributeName( "ai:self_shadows" );
 IECore::InternedString g_arnoldOpaqueAttributeName( "ai:opaque" );
 IECore::InternedString g_arnoldMatteAttributeName( "ai:matte" );
 
+IECore::InternedString g_stepSizeAttributeName( "ai:shape:step_size" );
+
 IECore::InternedString g_polyMeshSubdivIterationsAttributeName( "ai:polymesh:subdiv_iterations" );
 IECore::InternedString g_polyMeshSubdivAdaptiveErrorAttributeName( "ai:polymesh:subdiv_adaptive_error" );
 IECore::InternedString g_polyMeshSubdivAdaptiveMetricAttributeName( "ai:polymesh:subdiv_adaptive_metric" );
@@ -385,7 +408,7 @@ class ArnoldAttributes : public IECoreScenePreview::Renderer::AttributesInterfac
 	public :
 
 		ArnoldAttributes( const IECore::CompoundObject *attributes, ShaderCache *shaderCache )
-			:	m_visibility( AI_RAY_ALL ), m_sidedness( AI_RAY_ALL ), m_shadingFlags( Default ), m_polyMesh( attributes ), m_displacement( attributes, shaderCache ), m_curves( attributes )
+			:	m_visibility( AI_RAY_ALL ), m_sidedness( AI_RAY_ALL ), m_shadingFlags( Default ), m_stepSize( 0.0f ), m_polyMesh( attributes ), m_displacement( attributes, shaderCache ), m_curves( attributes )
 		{
 			updateVisibility( g_cameraVisibilityAttributeName, AI_RAY_CAMERA, attributes );
 			updateVisibility( g_shadowVisibilityAttributeName, AI_RAY_SHADOW, attributes );
@@ -417,6 +440,7 @@ class ArnoldAttributes : public IECoreScenePreview::Renderer::AttributesInterfac
 			m_lightShader = m_lightShader ? m_lightShader : attribute<IECore::ObjectVector>( g_lightShaderAttributeName, attributes );
 
 			m_traceSets = attribute<IECore::InternedStringVectorData>( g_setsAttributeName, attributes );
+			m_stepSize = attributeValue<float>( g_stepSizeAttributeName, attributes, 0.0f );
 
 			for( IECore::CompoundObject::ObjectMap::const_iterator it = attributes->members().begin(), eIt = attributes->members().end(); it != eIt; ++it )
 			{
@@ -440,12 +464,33 @@ class ArnoldAttributes : public IECoreScenePreview::Renderer::AttributesInterfac
 		{
 			if( const IECore::MeshPrimitive *mesh = IECore::runTimeCast<const IECore::MeshPrimitive>( object ) )
 			{
-				m_polyMesh.apply( mesh, node );
-				m_displacement.apply( node );
+				if( m_stepSize == 0.0f )
+				{
+					m_polyMesh.apply( mesh, node );
+					m_displacement.apply( node );
+				}
+				else
+				{
+					// Non-zero step sizes will have caused conversion to a box,
+					// so we can't apply our mesh attributes at all.
+				}
 			}
 			else if( IECore::runTimeCast<const IECore::CurvesPrimitive>( object ) )
 			{
 				m_curves.apply( node );
+			}
+
+			if( m_stepSize != 0.0f && AiNodeEntryLookUpParameter( AiNodeGetNodeEntry( node ), "step_size" ) )
+			{
+				// Only apply step_size if it hasn't already been set to a non-zero
+				// value by the geometry converter. This allows procedurals to carry
+				// their step size as a parameter and have it trump the attribute value.
+				// This is important for Gaffer nodes like ArnoldVDB, which carefully
+				// calculate the correct step size and provide it via a parameter.
+				if( AiNodeGetFlt( node, "step_size" ) == 0.0f )
+				{
+					AiNodeSetFlt( node, "step_size", m_stepSize );
+				}
 			}
 		}
 
@@ -454,11 +499,20 @@ class ArnoldAttributes : public IECoreScenePreview::Renderer::AttributesInterfac
 		{
 			const IECore::TypeId objectType = object->typeId();
 			bool meshInterpolationIsLinear = false;
+			bool proceduralIsVolumetric = false;
 			if( objectType == IECore::MeshPrimitiveTypeId )
 			{
 				meshInterpolationIsLinear = static_cast<const IECore::MeshPrimitive *>( object )->interpolation() == "linear";
 			}
-			hashGeometryInternal( objectType, meshInterpolationIsLinear, h );
+			else if( objectType == IECore::ExternalProceduralTypeId )
+			{
+				const IECore::ExternalProcedural *procedural = static_cast<const IECore::ExternalProcedural *>( object );
+				if( const IECore::StringData *nodeType = procedural->parameters()->member<const IECore::StringData>( "ai:nodeType" ) )
+				{
+					proceduralIsVolumetric = nodeType->readable() == "volume";
+				}
+			}
+			hashGeometryInternal( objectType, meshInterpolationIsLinear, proceduralIsVolumetric, h );
 		}
 
 		// Returns true if the given geometry can be instanced, given the attributes that
@@ -487,6 +541,17 @@ class ArnoldAttributes : public IECoreScenePreview::Renderer::AttributesInterfac
 			return true;
 		}
 
+		// As if the interaction between attributes and geometry wasn't
+		// bad enough, we want a non-zero step_size value to cause meshes
+		// to be rendered as boxes, because Arnold doesn't currently support
+		// volume rendering of meshes. This method tells the InstanceCache
+		// when this is the case, so it can be taken into account in the
+		// geometry conversion.
+		bool requiresBoxGeometry( const IECore::Object *object ) const
+		{
+			return m_stepSize != 0.0f && IECore::runTimeCast<const IECore::MeshPrimitive>( object );
+		}
+
 		// Most attributes (visibility, surface shader etc) are orthogonal to the
 		// type of object to which they are applied. These are the good kind, because
 		// they can be applied to ginstance nodes, making attribute edits easy. This
@@ -513,6 +578,7 @@ class ArnoldAttributes : public IECoreScenePreview::Renderer::AttributesInterfac
 
 				IECore::TypeId objectType = IECore::InvalidTypeId;
 				bool meshInterpolationIsLinear = false;
+				bool proceduralIsVolumetric = false;
 				if( AiNodeIs( geometry, "polymesh" ) )
 				{
 					objectType = IECore::MeshPrimitiveTypeId;
@@ -522,12 +588,25 @@ class ArnoldAttributes : public IECoreScenePreview::Renderer::AttributesInterfac
 				{
 					objectType = IECore::CurvesPrimitiveTypeId;
 				}
+				else if( AiNodeIs( geometry, "box" ) )
+				{
+					objectType = IECore::MeshPrimitiveTypeId;
+				}
+				else if( AiNodeIs( geometry, "volume" ) )
+				{
+					objectType = IECore::ExternalProceduralTypeId;
+					proceduralIsVolumetric = true;
+				}
+				else if( AiNodeIs( geometry, "sphere" ) )
+				{
+					objectType = IECore::SpherePrimitiveTypeId;
+				}
 
 				IECore::MurmurHash previousGeometryHash;
-				previousAttributes->hashGeometryInternal( objectType, meshInterpolationIsLinear, previousGeometryHash );
+				previousAttributes->hashGeometryInternal( objectType, meshInterpolationIsLinear, proceduralIsVolumetric, previousGeometryHash );
 
 				IECore::MurmurHash currentGeometryHash;
-				hashGeometryInternal( objectType, meshInterpolationIsLinear, currentGeometryHash );
+				hashGeometryInternal( objectType, meshInterpolationIsLinear, proceduralIsVolumetric, currentGeometryHash );
 
 				if( previousGeometryHash != currentGeometryHash )
 				{
@@ -808,16 +887,26 @@ class ArnoldAttributes : public IECoreScenePreview::Renderer::AttributesInterfac
 			}
 		}
 
-		void hashGeometryInternal( IECore::TypeId objectType, bool meshInterpolationIsLinear, IECore::MurmurHash &h ) const
+		void hashGeometryInternal( IECore::TypeId objectType, bool meshInterpolationIsLinear, bool proceduralIsVolumetric, IECore::MurmurHash &h ) const
 		{
 			switch( objectType )
 			{
 				case IECore::MeshPrimitiveTypeId :
 					m_polyMesh.hash( meshInterpolationIsLinear, h );
 					m_displacement.hash( h );
+					h.append( m_stepSize );
 					break;
 				case IECore::CurvesPrimitiveTypeId :
 					m_curves.hash( h );
+					break;
+				case IECore::SpherePrimitiveTypeId :
+					h.append( m_stepSize );
+					break;
+				case IECore::ExternalProceduralTypeId :
+					if( proceduralIsVolumetric )
+					{
+						h.append( m_stepSize );
+					}
 					break;
 				default :
 					// No geometry attributes for this type.
@@ -831,6 +920,7 @@ class ArnoldAttributes : public IECoreScenePreview::Renderer::AttributesInterfac
 		ArnoldShaderPtr m_surfaceShader;
 		IECore::ConstObjectVectorPtr m_lightShader;
 		IECore::ConstInternedStringVectorDataPtr m_traceSets;
+		float m_stepSize;
 		PolyMesh m_polyMesh;
 		Displacement m_displacement;
 		Curves m_curves;
@@ -973,7 +1063,16 @@ class InstanceCache : public IECore::RefCounted
 				return boost::shared_ptr<AtNode>();
 			}
 
-			AtNode *node = NodeAlgo::convert( object );
+			AtNode *node = NULL;
+			if( attributes->requiresBoxGeometry( object ) )
+			{
+				node = convertToBox( object );
+			}
+			else
+			{
+				node = NodeAlgo::convert( object );
+			}
+
 			if( !node )
 			{
 				return boost::shared_ptr<AtNode>();
@@ -986,7 +1085,16 @@ class InstanceCache : public IECore::RefCounted
 
 		boost::shared_ptr<AtNode> convert( const std::vector<const IECore::Object *> &samples, const std::vector<float> &times, const ArnoldAttributes *attributes )
 		{
-			AtNode *node = NodeAlgo::convert( samples, times );
+			AtNode *node = NULL;
+			if( attributes->requiresBoxGeometry( samples.front() ) )
+			{
+				node = convertToBox( samples, times );
+			}
+			else
+			{
+				node = NodeAlgo::convert( samples, times );
+			}
+
 			if( !node )
 			{
 				return boost::shared_ptr<AtNode>();
