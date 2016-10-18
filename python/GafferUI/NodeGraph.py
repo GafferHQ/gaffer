@@ -263,9 +263,9 @@ class NodeGraph( GafferUI.EditorWidget ) :
 					self._m.popup( self )
 					return True
 
-			self._nodeMenu().popup( self )
-
-			return True
+			if not isinstance( self.graphGadget().getRoot(), Gaffer.Reference ) :
+				self._nodeMenu().popup( self )
+				return True
 
 		return False
 
@@ -294,8 +294,9 @@ class NodeGraph( GafferUI.EditorWidget ) :
 				self.graphGadget().setRoot( root.parent() )
 				return True
 		elif event.key == "Tab" :
-			self._nodeMenu().popup( self )
-			return True
+			if not isinstance( self.graphGadget().getRoot(), Gaffer.Reference ) :
+				self._nodeMenu().popup( self )
+				return True
 
 		return False
 
