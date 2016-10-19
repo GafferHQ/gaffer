@@ -51,16 +51,16 @@ def appendDefinitions( menuDefinition, prefix="" ) :
 	menuDefinition.append( prefix + "/Redo", { "command" : redo, "shortCut" : "Shift+Ctrl+Z", "active" : __redoAvailable } )
 	menuDefinition.append( prefix + "/UndoDivider", { "divider" : True } )
 
-	menuDefinition.append( prefix + "/Cut", { "command" : cut, "shortCut" : "Ctrl+X", "active" : selectionAvailable } )
+	menuDefinition.append( prefix + "/Cut", { "command" : cut, "shortCut" : "Ctrl+X", "active" : __mutableSelectionAvailable } )
 	menuDefinition.append( prefix + "/Copy", { "command" : copy, "shortCut" : "Ctrl+C", "active" : selectionAvailable } )
 	menuDefinition.append( prefix + "/Paste", { "command" : paste, "shortCut" : "Ctrl+V", "active" : __pasteAvailable } )
-	menuDefinition.append( prefix + "/Delete", { "command" : delete, "shortCut" : "Backspace, Delete", "active" : selectionAvailable } )
+	menuDefinition.append( prefix + "/Delete", { "command" : delete, "shortCut" : "Backspace, Delete", "active" : __mutableSelectionAvailable } )
 	menuDefinition.append( prefix + "/CutCopyPasteDeleteDivider", { "divider" : True } )
 
 	menuDefinition.append( prefix + "/Find...", { "command" : find, "shortCut" : "Ctrl+F" } )
 	menuDefinition.append( prefix + "/FindDivider", { "divider" : True } )
 
-	menuDefinition.append( prefix + "/Arrange", { "command" : arrange, "shortCut" : "Ctrl+L" } )
+	menuDefinition.append( prefix + "/Arrange", { "command" : arrange, "shortCut" : "Ctrl+L", "active" : __arrangeAvailable } )
 	menuDefinition.append( prefix + "/ArrangeDivider", { "divider" : True } )
 
 	menuDefinition.append( prefix + "/Select All", { "command" : selectAll, "shortCut" : "Ctrl+A" } )
@@ -87,7 +87,7 @@ def appendDefinitions( menuDefinition, prefix="" ) :
 __Scope = collections.namedtuple( "Scope", [ "scriptWindow", "script", "parent", "nodeGraph" ] )
 
 ## Returns the scope in which an edit menu item should operate. The return
-# value has "scriptWindow", "script", "root" and "nodeGraph" attributes.
+# value has "scriptWindow", "script", "parent" and "nodeGraph" attributes.
 # The "nodeGraph" attribute may be None if no NodeGraph can be found. Note
 # that in many cases user expectation is that an operation will only apply
 # to nodes currently visible within the NodeGraph, and that nodes can be
@@ -313,10 +313,25 @@ def __selectConnected( menu, direction, degreesOfSeparation, add ) :
 		selection.clear()
 	selection.add( connected )
 
+def __mutableSelectionAvailable( menu ) :
+
+	if not selectionAvailable( menu ) :
+		return False
+
+	return not isinstance( scope( menu ).parent, Gaffer.Reference )
+
 def __pasteAvailable( menu ) :
 
-	root = scope( menu ).script.ancestor( Gaffer.ApplicationRoot )
+	s = scope( menu )
+	if isinstance( s.parent, Gaffer.Reference ) :
+		return False
+
+	root = s.script.ancestor( Gaffer.ApplicationRoot )
 	return isinstance( root.getClipboardContents(), IECore.StringData )
+
+def __arrangeAvailable( menu ) :
+
+	return not isinstance( scope( menu ).parent, Gaffer.Reference )
 
 def __undoAvailable( menu ) :
 
