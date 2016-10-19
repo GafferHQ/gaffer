@@ -149,6 +149,172 @@
 
 	gaffer.nodeMenu.category STRING "Surface"
 
+[node point_light]
+
+	[attr position]
+
+		gaffer.plugType STRING ""
+
+	[attr matrix]
+
+		gaffer.plugType STRING ""
+
+	[attr filters]
+
+		gaffer.plugType STRING ""
+
+	[attr time_samples]
+
+		gaffer.plugType STRING ""
+
+[node distant_light]
+
+	[attr matrix]
+
+		gaffer.plugType STRING ""
+
+	[attr filters]
+
+		gaffer.plugType STRING ""
+
+	[attr time_samples]
+
+		gaffer.plugType STRING ""
+
+[node quad_light]
+
+	[attr vertices]
+
+		gaffer.plugType STRING ""
+
+	[attr matrix]
+
+		gaffer.plugType STRING ""
+
+	[attr filters]
+
+		gaffer.plugType STRING ""
+
+	[attr time_samples]
+
+		gaffer.plugType STRING ""
+
+[node spot_light]
+
+	[attr position]
+
+		gaffer.plugType STRING ""
+
+	[attr look_at]
+
+		gaffer.plugType STRING ""
+
+	[attr up]
+
+		gaffer.plugType STRING ""
+
+	[attr matrix]
+
+		gaffer.plugType STRING ""
+
+	[attr filters]
+
+		gaffer.plugType STRING ""
+
+	[attr time_samples]
+
+		gaffer.plugType STRING ""
+
+[node skydome_light]
+
+	[attr matrix]
+
+		gaffer.plugType STRING ""
+
+	[attr filters]
+
+		gaffer.plugType STRING ""
+
+	[attr time_samples]
+
+		gaffer.plugType STRING ""
+
+[node cylinder_light]
+
+	[attr bottom]
+
+		gaffer.plugType STRING ""
+
+	[attr top]
+
+		gaffer.plugType STRING ""
+
+	[attr matrix]
+
+		gaffer.plugType STRING ""
+
+	[attr filters]
+
+		gaffer.plugType STRING ""
+
+	[attr time_samples]
+
+		gaffer.plugType STRING ""
+
+[node disk_light]
+
+	[attr position]
+
+		gaffer.plugType STRING ""
+
+	[attr direction]
+
+		gaffer.plugType STRING ""
+
+	[attr matrix]
+
+		gaffer.plugType STRING ""
+
+	[attr filters]
+
+		gaffer.plugType STRING ""
+
+	[attr time_samples]
+
+		gaffer.plugType STRING ""
+
+[node mesh_light]
+
+	[attr mesh]
+
+		gaffer.plugType STRING ""
+
+	[attr matrix]
+
+		gaffer.plugType STRING ""
+
+	[attr filters]
+
+		gaffer.plugType STRING ""
+
+	[attr time_samples]
+
+		gaffer.plugType STRING ""
+
+[node photometric_light]
+
+	[attr matrix]
+
+		gaffer.plugType STRING ""
+
+	[attr filters]
+
+		gaffer.plugType STRING ""
+
+	[attr time_samples]
+
+		gaffer.plugType STRING ""
+
 # MtoA nodes
 #
 # We add these to "Maya" submenus based on the classification
