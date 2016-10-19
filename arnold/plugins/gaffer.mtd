@@ -34,14 +34,8 @@
 #
 ##########################################################################
 
-[node image]
-
-	[attr filename]
-
-		widget STRING "filename"
-
-
-# put built-in nodes into submenus
+# Standard Arnold nodes.
+##########################################################################
 
 [node ambient_occlusion]
 
@@ -92,6 +86,9 @@
 
 	gaffer.nodeMenu.category STRING "Texture"
 
+	[attr filename]
+
+		widget STRING "filename"
 
 [node lambert]
 
@@ -152,10 +149,11 @@
 
 	gaffer.nodeMenu.category STRING "Surface"
 
-
-
-# add mtoa nodes to 'Maya' submenus
-# classification based on https://support.solidangle.com/display/AFMUG/Maya+Shaders
+# MtoA nodes
+#
+# We add these to "Maya" submenus based on the classification
+# at https://support.solidangle.com/display/AFMUG/Maya+Shaders
+##########################################################################
 
 [node MayaBlendColors]
 
@@ -602,8 +600,8 @@
 	gaffer.nodeMenu.category STRING "Maya/General Utilities"
 
 
-
-# add htoa nodes to a 'Houdini' submenu
+# HtoA nodes. We add these to a Houdini submenu.
+##########################################################################
 
 [node htoa__abs]
 
@@ -1065,8 +1063,8 @@
 	gaffer.nodeMenu.category STRING "Houdini/General Utilities"
 
 
-# define submenus for alShaders
-
+# ALShaders
+##########################################################################
 
 [node alBlackbody]
 
