@@ -10,4 +10,5 @@ In addition to itself being highly extensible, Gaffer's underlying frameworks ar
 - [Installation](Installation/index.md)
 - [Tutorials](Tutorials/index.md)
 - [Reference](Reference/index.md)
+- [Release Notes](ReleaseNotes/index.md)
 - [Appendices](Appendices/index.md)
