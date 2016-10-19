@@ -427,6 +427,22 @@ class ArnoldShaderTest( GafferSceneTest.SceneTestCase ) :
 		for name in [ "refraction", "diffuse", "glossy" ] :
 			self.assertTrue( isinstance( n["parameters"][name], Gaffer.Color4fPlug ) )
 
+	def testEmptyPlugTypeMetadata( self ) :
+
+		n = GafferArnold.ArnoldShader()
+		n.loadShader( "standard" )
+		self.assertTrue( "aov_direct_diffuse" in n["parameters"] )
+
+		self.addCleanup( os.environ.__setitem__, "ARNOLD_PLUGIN_PATH", os.environ["ARNOLD_PLUGIN_PATH"] )
+		os.environ["ARNOLD_PLUGIN_PATH"] = os.environ["ARNOLD_PLUGIN_PATH"] + ":" + os.path.join( os.path.dirname( __file__ ), "metadata" )
+
+		n.loadShader( "standard" )
+		self.assertTrue( "aov_direct_diffuse" not in n["parameters"] )
+
+		n = GafferArnold.ArnoldShader()
+		n.loadShader( "standard" )
+		self.assertTrue( "aov_direct_diffuse" not in n["parameters"] )
+
 	def testMixAndMatchWithOSLShaders( self ) :
 
 		utility = GafferArnold.ArnoldShader()

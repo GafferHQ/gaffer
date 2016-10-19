@@ -34,1165 +34,1329 @@
 #
 ##########################################################################
 
+# Standard Arnold nodes.
+##########################################################################
+
+[node ambient_occlusion]
+
+	gaffer.nodeMenu.category STRING "Surface"
+
+
+[node barndoor]
+
+	gaffer.nodeMenu.category STRING "Light"
+
+
+[node bump2d]
+
+	gaffer.nodeMenu.category STRING "Texture"
+
+
+[node bump3d]
+
+	gaffer.nodeMenu.category STRING "Texture"
+
+
+[node density]
+
+	gaffer.nodeMenu.category STRING "Volume"
+
+
+[node flat]
+
+	gaffer.nodeMenu.category STRING "Surface"
+
+
+[node fog]
+
+	gaffer.nodeMenu.category STRING "Atmosphere"
+
+
+[node gobo]
+
+	gaffer.nodeMenu.category STRING "Light"
+
+
+[node hair]
+
+	gaffer.nodeMenu.category STRING "Surface"
+
+
 [node image]
+
+	gaffer.nodeMenu.category STRING "Texture"
 
 	[attr filename]
 
 		widget STRING "filename"
 
-
-# put built-in nodes into submenus
-
-[node ambient_occlusion]
-
-  gaffer.nodeMenu.category STRING "Surface"
-
-
-[node barndoor]
-
-  gaffer.nodeMenu.category STRING "Light"
-
-
-[node bump2d]
-
-  gaffer.nodeMenu.category STRING "Texture"
-
-
-[node bump3d]
-
-  gaffer.nodeMenu.category STRING "Texture"
-
-
-[node density]
-
-  gaffer.nodeMenu.category STRING "Volume"
-
-
-[node flat]
-
-  gaffer.nodeMenu.category STRING "Surface"
-
-
-[node fog]
-
-  gaffer.nodeMenu.category STRING "Atmosphere"
-
-
-[node gobo]
-
-  gaffer.nodeMenu.category STRING "Light"
-
-
-[node hair]
-
-  gaffer.nodeMenu.category STRING "Surface"
-
-
-[node image]
-
-  gaffer.nodeMenu.category STRING "Texture"
-
-
 [node lambert]
 
-  gaffer.nodeMenu.category STRING "Surface"
+	gaffer.nodeMenu.category STRING "Surface"
 
 
 [node light_blocker]
 
-  gaffer.nodeMenu.category STRING "Light"
+	gaffer.nodeMenu.category STRING "Light"
 
 
 [node light_decay]
 
-  gaffer.nodeMenu.category STRING "Light"
+	gaffer.nodeMenu.category STRING "Light"
 
 
 [node motion_vector]
 
-  gaffer.nodeMenu.category STRING "Utility"
+	gaffer.nodeMenu.category STRING "Utility"
 
 
 [node noise]
 
-  gaffer.nodeMenu.category STRING "Texture"
+	gaffer.nodeMenu.category STRING "Texture"
 
 
 [node physical_sky]
 
-  gaffer.nodeMenu.category STRING "Light"
+	gaffer.nodeMenu.category STRING "Light"
 
 
 [node ray_switch]
 
-  gaffer.nodeMenu.category STRING "Utility"
+	gaffer.nodeMenu.category STRING "Utility"
 
 
 [node sky]
 
-  gaffer.nodeMenu.category STRING "Light"
+	gaffer.nodeMenu.category STRING "Light"
 
 
 [node standard]
 
-  gaffer.nodeMenu.category STRING "Surface"
+	gaffer.nodeMenu.category STRING "Surface"
 
 
 [node utility]
 
-  gaffer.nodeMenu.category STRING "Utility"
+	gaffer.nodeMenu.category STRING "Utility"
 
 
 [node volume_scattering]
 
-  gaffer.nodeMenu.category STRING "Volume"
+	gaffer.nodeMenu.category STRING "Volume"
 
 
 [node wireframe]
 
-  gaffer.nodeMenu.category STRING "Surface"
+	gaffer.nodeMenu.category STRING "Surface"
 
+[node point_light]
 
+	[attr position]
 
-# add mtoa nodes to 'Maya' submenus
-# classification based on https://support.solidangle.com/display/AFMUG/Maya+Shaders  
+		gaffer.plugType STRING ""
+
+	[attr matrix]
+
+		gaffer.plugType STRING ""
+
+	[attr filters]
+
+		gaffer.plugType STRING ""
+
+	[attr time_samples]
+
+		gaffer.plugType STRING ""
+
+[node distant_light]
+
+	[attr matrix]
+
+		gaffer.plugType STRING ""
+
+	[attr filters]
+
+		gaffer.plugType STRING ""
+
+	[attr time_samples]
+
+		gaffer.plugType STRING ""
+
+[node quad_light]
+
+	[attr vertices]
+
+		gaffer.plugType STRING ""
+
+	[attr matrix]
+
+		gaffer.plugType STRING ""
+
+	[attr filters]
+
+		gaffer.plugType STRING ""
+
+	[attr time_samples]
+
+		gaffer.plugType STRING ""
+
+[node spot_light]
+
+	[attr position]
+
+		gaffer.plugType STRING ""
+
+	[attr look_at]
+
+		gaffer.plugType STRING ""
+
+	[attr up]
+
+		gaffer.plugType STRING ""
+
+	[attr matrix]
+
+		gaffer.plugType STRING ""
+
+	[attr filters]
+
+		gaffer.plugType STRING ""
+
+	[attr time_samples]
+
+		gaffer.plugType STRING ""
+
+[node skydome_light]
+
+	[attr matrix]
+
+		gaffer.plugType STRING ""
+
+	[attr filters]
+
+		gaffer.plugType STRING ""
+
+	[attr time_samples]
+
+		gaffer.plugType STRING ""
+
+[node cylinder_light]
+
+	[attr bottom]
+
+		gaffer.plugType STRING ""
+
+	[attr top]
+
+		gaffer.plugType STRING ""
+
+	[attr matrix]
+
+		gaffer.plugType STRING ""
+
+	[attr filters]
+
+		gaffer.plugType STRING ""
+
+	[attr time_samples]
+
+		gaffer.plugType STRING ""
+
+[node disk_light]
+
+	[attr position]
+
+		gaffer.plugType STRING ""
+
+	[attr direction]
+
+		gaffer.plugType STRING ""
+
+	[attr matrix]
+
+		gaffer.plugType STRING ""
+
+	[attr filters]
+
+		gaffer.plugType STRING ""
+
+	[attr time_samples]
+
+		gaffer.plugType STRING ""
+
+[node mesh_light]
+
+	[attr mesh]
+
+		gaffer.plugType STRING ""
+
+	[attr matrix]
+
+		gaffer.plugType STRING ""
+
+	[attr filters]
+
+		gaffer.plugType STRING ""
+
+	[attr time_samples]
+
+		gaffer.plugType STRING ""
+
+[node photometric_light]
+
+	[attr matrix]
+
+		gaffer.plugType STRING ""
+
+	[attr filters]
+
+		gaffer.plugType STRING ""
+
+	[attr time_samples]
+
+		gaffer.plugType STRING ""
+
+# MtoA nodes
+#
+# We add these to "Maya" submenus based on the classification
+# at https://support.solidangle.com/display/AFMUG/Maya+Shaders
+##########################################################################
 
 [node MayaBlendColors]
 
-  gaffer.nodeMenu.category STRING "Maya/Color Utilities"
+	gaffer.nodeMenu.category STRING "Maya/Color Utilities"
 
 
-[node  MayaBrownian]
+[node	MayaBrownian]
 
-  gaffer.nodeMenu.category STRING "Maya/3D Textures"
+	gaffer.nodeMenu.category STRING "Maya/3D Textures"
 
 
 [node MayaBulge]
 
-  gaffer.nodeMenu.category STRING "Maya/2D Textures"
+	gaffer.nodeMenu.category STRING "Maya/2D Textures"
 
 
 [node MayaChecker]
 
-  gaffer.nodeMenu.category STRING "Maya/2D Textures"
+	gaffer.nodeMenu.category STRING "Maya/2D Textures"
 
 
 [node MayaClamp]
 
-  gaffer.nodeMenu.category STRING "Maya/Color Utilities"
+	gaffer.nodeMenu.category STRING "Maya/Color Utilities"
 
 
 [node MayaCloth]
 
-  gaffer.nodeMenu.category STRING "Maya/2D Textures"
+	gaffer.nodeMenu.category STRING "Maya/2D Textures"
 
 
 [node MayaCloud]
 
-  gaffer.nodeMenu.category STRING "Maya/3D Textures"
+	gaffer.nodeMenu.category STRING "Maya/3D Textures"
 
 
 [node MayaCloudAlpha]
 
-  gaffer.nodeMenu.category STRING "Maya/3D Textures"
+	gaffer.nodeMenu.category STRING "Maya/3D Textures"
 
 
 [node MayaCondition]
 
-  gaffer.nodeMenu.category STRING "Maya/General Utilities"
+	gaffer.nodeMenu.category STRING "Maya/General Utilities"
 
 
 [node MayaContrast]
 
-  gaffer.nodeMenu.category STRING "Maya/Color Utilities"
+	gaffer.nodeMenu.category STRING "Maya/Color Utilities"
 
 
 [node MayaDoubleShadingSwitch]
 
-  gaffer.nodeMenu.category STRING "Maya/General Utilities"
+	gaffer.nodeMenu.category STRING "Maya/General Utilities"
 
 
 [node MayaEnvSphere]
 
-  gaffer.nodeMenu.category STRING "Maya/Env Textures"
+	gaffer.nodeMenu.category STRING "Maya/Env Textures"
 
 
 [node MayaFile]
 
-  gaffer.nodeMenu.category STRING "Maya/2D Textures"
+	gaffer.nodeMenu.category STRING "Maya/2D Textures"
 
 
 [node MayaFluidData]
 
-  gaffer.nodeMenu.category STRING "Maya/General Utilities"
+	gaffer.nodeMenu.category STRING "Maya/General Utilities"
 
 
 [node MayaFluidTexture2D]
 
-  gaffer.nodeMenu.category STRING "Maya/2D Textures"
+	gaffer.nodeMenu.category STRING "Maya/2D Textures"
 
 
 [node MayaFractal]
 
-  gaffer.nodeMenu.category STRING "Maya/2D Textures"
+	gaffer.nodeMenu.category STRING "Maya/2D Textures"
 
 
 [node MayaGammaCorrect]
 
-  gaffer.nodeMenu.category STRING "Maya/Color Utilities"
+	gaffer.nodeMenu.category STRING "Maya/Color Utilities"
 
 
 [node MayaGrid]
 
-  gaffer.nodeMenu.category STRING "Maya/2D Textures"
+	gaffer.nodeMenu.category STRING "Maya/2D Textures"
 
 
 [node MayaHair]
 
-  gaffer.nodeMenu.category STRING "Maya/Surface"
+	gaffer.nodeMenu.category STRING "Maya/Surface"
 
 
 [node MayaHsvToRgb]
 
-  gaffer.nodeMenu.category STRING "Maya/Color Utilities"
+	gaffer.nodeMenu.category STRING "Maya/Color Utilities"
 
 
 [node MayaImagePlane]
 
-  gaffer.nodeMenu.category STRING "Maya/General Utilities"
+	gaffer.nodeMenu.category STRING "Maya/General Utilities"
 
 
 [node MayaLayeredShader]
 
-  gaffer.nodeMenu.category STRING "Maya/Surface"
+	gaffer.nodeMenu.category STRING "Maya/Surface"
 
 
 [node MayaLayeredTexture]
 
-  gaffer.nodeMenu.category STRING "Maya/2D Textures"
+	gaffer.nodeMenu.category STRING "Maya/2D Textures"
 
 
 [node MayaLuminance]
 
-  gaffer.nodeMenu.category STRING "Maya/Color Utilities"
+	gaffer.nodeMenu.category STRING "Maya/Color Utilities"
 
 
 [node MayaMultiplyDivide]
 
-  gaffer.nodeMenu.category STRING "Maya/General Utilities"
+	gaffer.nodeMenu.category STRING "Maya/General Utilities"
 
 
 [node MayaNoise]
 
-  gaffer.nodeMenu.category STRING "Maya/2D Textures"
+	gaffer.nodeMenu.category STRING "Maya/2D Textures"
 
 
 [node MayaNormalDisplacement]
 
-  gaffer.nodeMenu.category STRING "Maya/General Utilities"
+	gaffer.nodeMenu.category STRING "Maya/General Utilities"
 
 
 [node MayaPlace2DTexture]
 
-  gaffer.nodeMenu.category STRING "Maya/General Utilities"
+	gaffer.nodeMenu.category STRING "Maya/General Utilities"
 
 
 [node MayaPlace3DTexture]
 
-  gaffer.nodeMenu.category STRING "Maya/General Utilities"
+	gaffer.nodeMenu.category STRING "Maya/General Utilities"
 
 
 [node MayaPlusMinusAverage1D]
 
-  gaffer.nodeMenu.category STRING "Maya/General Utilities"
+	gaffer.nodeMenu.category STRING "Maya/General Utilities"
 
 
 [node MayaPlusMinusAverage2D]
 
-  gaffer.nodeMenu.category STRING "Maya/General Utilities"
+	gaffer.nodeMenu.category STRING "Maya/General Utilities"
 
 
 [node MayaPlusMinusAverage3D]
 
-  gaffer.nodeMenu.category STRING "Maya/General Utilities"
+	gaffer.nodeMenu.category STRING "Maya/General Utilities"
 
 
 [node MayaProjection]
 
-  gaffer.nodeMenu.category STRING "Maya/General Utilities"
+	gaffer.nodeMenu.category STRING "Maya/General Utilities"
 
 
 [node MayaQuadShadingSwitch]
 
-  gaffer.nodeMenu.category STRING "Maya/General Utilities"
+	gaffer.nodeMenu.category STRING "Maya/General Utilities"
 
 
 [node MayaRamp]
 
-  gaffer.nodeMenu.category STRING "Maya/2D Textures"
+	gaffer.nodeMenu.category STRING "Maya/2D Textures"
 
 
 [node MayaRemapColor]
 
-  gaffer.nodeMenu.category STRING "Maya/Color Utilities"
+	gaffer.nodeMenu.category STRING "Maya/Color Utilities"
 
 
 [node MayaRemapHsv]
 
-  gaffer.nodeMenu.category STRING "Maya/Color Utilities"
+	gaffer.nodeMenu.category STRING "Maya/Color Utilities"
 
 
 [node MayaRemapValueToColor]
 
-  gaffer.nodeMenu.category STRING "Maya/General Utilities"
+	gaffer.nodeMenu.category STRING "Maya/General Utilities"
 
 
 [node MayaRemapValueToValue]
 
-  gaffer.nodeMenu.category STRING "Maya/General Utilities"
+	gaffer.nodeMenu.category STRING "Maya/General Utilities"
 
 
 [node MayaReverse]
 
-  gaffer.nodeMenu.category STRING "Maya/General Utilities"
+	gaffer.nodeMenu.category STRING "Maya/General Utilities"
 
 
 [node MayaRgbToHsv]
 
-  gaffer.nodeMenu.category STRING "Maya/Color Utilities"
+	gaffer.nodeMenu.category STRING "Maya/Color Utilities"
 
 
 [node MayaSamplerInfo1D]
 
-  gaffer.nodeMenu.category STRING "Maya/General Utilities"
+	gaffer.nodeMenu.category STRING "Maya/General Utilities"
 
 
 [node MayaSamplerInfo2D]
 
-  gaffer.nodeMenu.category STRING "Maya/General Utilities"
+	gaffer.nodeMenu.category STRING "Maya/General Utilities"
 
 
 [node MayaSamplerInfo3D]
 
-  gaffer.nodeMenu.category STRING "Maya/General Utilities"
+	gaffer.nodeMenu.category STRING "Maya/General Utilities"
 
 
 [node MayaSetRange]
 
-  gaffer.nodeMenu.category STRING "Maya/General Utilities"
+	gaffer.nodeMenu.category STRING "Maya/General Utilities"
 
 
 [node MayaShadingEngine]
 
-  gaffer.nodeMenu.category STRING "Maya/General Utilities"
+	gaffer.nodeMenu.category STRING "Maya/General Utilities"
 
 
 [node MayaSingleShadingSwitch]
 
-  gaffer.nodeMenu.category STRING "Maya/General Utilities"
+	gaffer.nodeMenu.category STRING "Maya/General Utilities"
 
 
 [node MayaSnow]
 
-  gaffer.nodeMenu.category STRING "Maya/3D Textures"
+	gaffer.nodeMenu.category STRING "Maya/3D Textures"
 
 
 [node MayaSolidFractal]
 
-  gaffer.nodeMenu.category STRING "Maya/3D Textures"
+	gaffer.nodeMenu.category STRING "Maya/3D Textures"
 
 
 [node MayaStucco]
 
-  gaffer.nodeMenu.category STRING "Maya/3D Textures"
+	gaffer.nodeMenu.category STRING "Maya/3D Textures"
 
 
 [node MayaSurfaceLuminance]
 
-  gaffer.nodeMenu.category STRING "Maya/General Utilities"
+	gaffer.nodeMenu.category STRING "Maya/General Utilities"
 
 
 [node MayaSurfaceShader]
 
-  gaffer.nodeMenu.category STRING "Maya/Surface"
+	gaffer.nodeMenu.category STRING "Maya/Surface"
 
 
 [node MayaTripleShadingSwitch]
 
-  gaffer.nodeMenu.category STRING "Maya/General Utilities"
+	gaffer.nodeMenu.category STRING "Maya/General Utilities"
 
 
 [node MayaVectorDisplacement]
 
-  gaffer.nodeMenu.category STRING "Maya/General Utilities"
+	gaffer.nodeMenu.category STRING "Maya/General Utilities"
 
 
 [node MayaVolumeNoise]
 
-  gaffer.nodeMenu.category STRING "Maya/3D Textures"
+	gaffer.nodeMenu.category STRING "Maya/3D Textures"
 
 
 [node MeshInfo]
 
-  gaffer.nodeMenu.category STRING "Maya/General Utilities"
+	gaffer.nodeMenu.category STRING "Maya/General Utilities"
 
 
 [node anim_color]
 
-  gaffer.nodeMenu.category STRING ""
+	gaffer.nodeMenu.category STRING ""
 
 
 [node anim_float]
 
-  gaffer.nodeMenu.category STRING ""
+	gaffer.nodeMenu.category STRING ""
 
 
 [node anim_matrix]
 
-  gaffer.nodeMenu.category STRING ""
+	gaffer.nodeMenu.category STRING ""
 
 
 [node anim_point]
 
-  gaffer.nodeMenu.category STRING ""
+	gaffer.nodeMenu.category STRING ""
 
 
 [node anim_vector]
 
-  gaffer.nodeMenu.category STRING ""
+	gaffer.nodeMenu.category STRING ""
 
 
 [node aovWriteColor]
 
-  gaffer.nodeMenu.category STRING "Maya/General Utilities"
+	gaffer.nodeMenu.category STRING "Maya/General Utilities"
 
 
 [node aovWriteFloat]
 
-  gaffer.nodeMenu.category STRING "Maya/General Utilities"
+	gaffer.nodeMenu.category STRING "Maya/General Utilities"
 
 
 [node aovWritePoint]
 
-  gaffer.nodeMenu.category STRING "Maya/General Utilities"
+	gaffer.nodeMenu.category STRING "Maya/General Utilities"
 
 
 [node aovWritePoint2]
 
-  gaffer.nodeMenu.category STRING "Maya/General Utilities"
+	gaffer.nodeMenu.category STRING "Maya/General Utilities"
 
 
 [node aovWriteVector]
 
-  gaffer.nodeMenu.category STRING "Maya/General Utilities"
+	gaffer.nodeMenu.category STRING "Maya/General Utilities"
 
 
 [node cameraUvMapper]
 
-  gaffer.nodeMenu.category STRING "Maya/General Utilities"
+	gaffer.nodeMenu.category STRING "Maya/General Utilities"
 
 
 [node colorToFloat]
 
-  gaffer.nodeMenu.category STRING "Maya/Color Utilities"
+	gaffer.nodeMenu.category STRING "Maya/Color Utilities"
 
 
 [node mayaBump2D]
 
-  gaffer.nodeMenu.category STRING "Maya/General Utilities"
+	gaffer.nodeMenu.category STRING "Maya/General Utilities"
 
 
 [node mayaFluid]
 
-  gaffer.nodeMenu.category STRING "Maya/3D Textures"
+	gaffer.nodeMenu.category STRING "Maya/3D Textures"
 
 
 [node mayaMarble]
 
-  gaffer.nodeMenu.category STRING "Maya/3D Textures"
+	gaffer.nodeMenu.category STRING "Maya/3D Textures"
 
 
 [node meshLightMaterial]
 
-  gaffer.nodeMenu.category STRING "Maya/Surface"
+	gaffer.nodeMenu.category STRING "Maya/Surface"
 
 
 [node point2ToFloat]
 
-  gaffer.nodeMenu.category STRING "Maya/General Utilities"
+	gaffer.nodeMenu.category STRING "Maya/General Utilities"
 
 
 [node pointToFloat]
 
-  gaffer.nodeMenu.category STRING "Maya/General Utilities"
+	gaffer.nodeMenu.category STRING "Maya/General Utilities"
 
 
 [node shadowCatcher]
 
-  gaffer.nodeMenu.category STRING "Maya/Surface"
+	gaffer.nodeMenu.category STRING "Maya/Surface"
 
 
 [node skin]
 
-  gaffer.nodeMenu.category STRING "Maya/Surface"
+	gaffer.nodeMenu.category STRING "Maya/Surface"
 
 
 [node userDataBool]
 
-  gaffer.nodeMenu.category STRING "Maya/General Utilities"
+	gaffer.nodeMenu.category STRING "Maya/General Utilities"
 
 
 [node userDataColor]
 
-  gaffer.nodeMenu.category STRING "Maya/General Utilities"
+	gaffer.nodeMenu.category STRING "Maya/General Utilities"
 
 
 [node userDataFloat]
 
-  gaffer.nodeMenu.category STRING "Maya/General Utilities"
+	gaffer.nodeMenu.category STRING "Maya/General Utilities"
 
 
 [node userDataInt]
 
-  gaffer.nodeMenu.category STRING "Maya/General Utilities"
+	gaffer.nodeMenu.category STRING "Maya/General Utilities"
 
 
 [node userDataPnt2]
 
-  gaffer.nodeMenu.category STRING "Maya/General Utilities"
+	gaffer.nodeMenu.category STRING "Maya/General Utilities"
 
 
 [node userDataString]
 
-  gaffer.nodeMenu.category STRING "Maya/General Utilities"
+	gaffer.nodeMenu.category STRING "Maya/General Utilities"
 
 
 [node userDataVector]
 
-  gaffer.nodeMenu.category STRING "Maya/General Utilities"
+	gaffer.nodeMenu.category STRING "Maya/General Utilities"
 
 
 [node vectorToFloat]
 
-  gaffer.nodeMenu.category STRING "Maya/General Utilities"
+	gaffer.nodeMenu.category STRING "Maya/General Utilities"
 
 
 [node volume_collector]
 
-  gaffer.nodeMenu.category STRING "Maya/Volume"
+	gaffer.nodeMenu.category STRING "Maya/Volume"
 
 
 [node volume_sample_float]
 
-  gaffer.nodeMenu.category STRING "Maya/General Utilities"
+	gaffer.nodeMenu.category STRING "Maya/General Utilities"
 
 
 [node volume_sample_rgb]
 
-  gaffer.nodeMenu.category STRING "Maya/General Utilities"
+	gaffer.nodeMenu.category STRING "Maya/General Utilities"
 
 
 [node writeColor]
 
-  gaffer.nodeMenu.category STRING "Maya/General Utilities"
+	gaffer.nodeMenu.category STRING "Maya/General Utilities"
 
 
 [node writeFloat]
 
-  gaffer.nodeMenu.category STRING "Maya/General Utilities"
+	gaffer.nodeMenu.category STRING "Maya/General Utilities"
 
 
-
-# add htoa nodes to a 'Houdini' submenu
+# HtoA nodes. We add these to a Houdini submenu.
+##########################################################################
 
 [node htoa__abs]
 
-  gaffer.nodeMenu.category STRING "Houdini/Maths"
+	gaffer.nodeMenu.category STRING "Houdini/Maths"
 
 
 [node htoa__add]
 
-  gaffer.nodeMenu.category STRING "Houdini/Maths"
+	gaffer.nodeMenu.category STRING "Houdini/Maths"
 
 
 [node htoa__aov_read_float]
 
-  gaffer.nodeMenu.category STRING "Houdini/General Utilities"
+	gaffer.nodeMenu.category STRING "Houdini/General Utilities"
 
 
 [node htoa__aov_read_int]
 
-  gaffer.nodeMenu.category STRING "Houdini/General Utilities"
+	gaffer.nodeMenu.category STRING "Houdini/General Utilities"
 
 
 [node htoa__aov_read_rgb]
 
-  gaffer.nodeMenu.category STRING "Houdini/General Utilities"
+	gaffer.nodeMenu.category STRING "Houdini/General Utilities"
 
 
 [node htoa__aov_write_float]
 
-  gaffer.nodeMenu.category STRING "Houdini/General Utilities"
+	gaffer.nodeMenu.category STRING "Houdini/General Utilities"
 
 
 [node htoa__aov_write_int]
 
-  gaffer.nodeMenu.category STRING "Houdini/General Utilities"
+	gaffer.nodeMenu.category STRING "Houdini/General Utilities"
 
 
 [node htoa__aov_write_rgb]
 
-  gaffer.nodeMenu.category STRING "Houdini/General Utilities"
+	gaffer.nodeMenu.category STRING "Houdini/General Utilities"
 
 
 [node htoa__atan]
 
-  gaffer.nodeMenu.category STRING "Houdini/Maths"
+	gaffer.nodeMenu.category STRING "Houdini/Maths"
 
 
 [node htoa__blackbody]
 
-  gaffer.nodeMenu.category STRING "Houdini/Texture"
+	gaffer.nodeMenu.category STRING "Houdini/Texture"
 
 
 [node htoa__cache]
 
-  gaffer.nodeMenu.category STRING "Houdini/Texture"
+	gaffer.nodeMenu.category STRING "Houdini/Texture"
 
 
 [node htoa__camera_projection]
 
-  gaffer.nodeMenu.category STRING "Houdini/General Utilities"
+	gaffer.nodeMenu.category STRING "Houdini/General Utilities"
 
 
 [node htoa__checkerboard]
 
-  gaffer.nodeMenu.category STRING "Houdini/Texture"
+	gaffer.nodeMenu.category STRING "Houdini/Texture"
 
 
 [node htoa__clamp]
 
-  gaffer.nodeMenu.category STRING "Houdini/Maths"
+	gaffer.nodeMenu.category STRING "Houdini/Maths"
 
 
 [node htoa__color_convert]
 
-  gaffer.nodeMenu.category STRING "Houdini/Color Utilities"
+	gaffer.nodeMenu.category STRING "Houdini/Color Utilities"
 
 
 [node htoa__color_correct]
 
-  gaffer.nodeMenu.category STRING "Houdini/Color Utilities"
+	gaffer.nodeMenu.category STRING "Houdini/Color Utilities"
 
 
 [node htoa__compare]
 
-  gaffer.nodeMenu.category STRING "Houdini/Maths"
+	gaffer.nodeMenu.category STRING "Houdini/Maths"
 
 
 [node htoa__complement]
 
-  gaffer.nodeMenu.category STRING "Houdini/Maths"
+	gaffer.nodeMenu.category STRING "Houdini/Maths"
 
 
 [node htoa__composite]
 
-  gaffer.nodeMenu.category STRING "Houdini/Maths"
+	gaffer.nodeMenu.category STRING "Houdini/Maths"
 
 
 [node htoa__cross]
 
-  gaffer.nodeMenu.category STRING "Houdini/Maths"
+	gaffer.nodeMenu.category STRING "Houdini/Maths"
 
 
 [node htoa__curvature]
 
-  gaffer.nodeMenu.category STRING "Houdini/General Utilities"
+	gaffer.nodeMenu.category STRING "Houdini/General Utilities"
 
 
 [node htoa__determinant]
 
-  gaffer.nodeMenu.category STRING "Houdini/Maths"
+	gaffer.nodeMenu.category STRING "Houdini/Maths"
 
 
 [node htoa__divide]
 
-  gaffer.nodeMenu.category STRING "Houdini/Maths"
+	gaffer.nodeMenu.category STRING "Houdini/Maths"
 
 
 [node htoa__dot]
 
-  gaffer.nodeMenu.category STRING "Houdini/Maths"
+	gaffer.nodeMenu.category STRING "Houdini/Maths"
 
 
 [node htoa__exp]
 
-  gaffer.nodeMenu.category STRING "Houdini/Maths"
+	gaffer.nodeMenu.category STRING "Houdini/Maths"
 
 
 [node htoa__facing_ratio]
 
-  gaffer.nodeMenu.category STRING "Houdini/Maths"
+	gaffer.nodeMenu.category STRING "Houdini/Maths"
 
 
 [node htoa__float_to_int]
 
-  gaffer.nodeMenu.category STRING "Houdini/General Utilities"
+	gaffer.nodeMenu.category STRING "Houdini/General Utilities"
 
 
 [node htoa__float_to_matrix]
 
-  gaffer.nodeMenu.category STRING "Houdini/General Utilities"
+	gaffer.nodeMenu.category STRING "Houdini/General Utilities"
 
 
 [node htoa__float_to_rgb]
 
-  gaffer.nodeMenu.category STRING "Houdini/General Utilities"
+	gaffer.nodeMenu.category STRING "Houdini/General Utilities"
 
 
 [node htoa__float_to_rgba]
 
-  gaffer.nodeMenu.category STRING "Houdini/General Utilities"
+	gaffer.nodeMenu.category STRING "Houdini/General Utilities"
 
 
 [node htoa__fraction]
 
-  gaffer.nodeMenu.category STRING "Houdini/Maths"
+	gaffer.nodeMenu.category STRING "Houdini/Maths"
 
 
 [node htoa__int_to_float]
 
-  gaffer.nodeMenu.category STRING "Houdini/General Utilities"
+	gaffer.nodeMenu.category STRING "Houdini/General Utilities"
 
 
 [node htoa__is_finite]
 
-  gaffer.nodeMenu.category STRING "Houdini/Maths"
+	gaffer.nodeMenu.category STRING "Houdini/Maths"
 
 
 [node htoa__length]
 
-  gaffer.nodeMenu.category STRING "Houdini/Maths"
+	gaffer.nodeMenu.category STRING "Houdini/Maths"
 
 
 [node htoa__linearize]
 
-  gaffer.nodeMenu.category STRING "Houdini/Maths"
+	gaffer.nodeMenu.category STRING "Houdini/Maths"
 
 
 [node htoa__ln]
 
-  gaffer.nodeMenu.category STRING "Houdini/Maths"
+	gaffer.nodeMenu.category STRING "Houdini/Maths"
 
 
 [node htoa__log]
 
-  gaffer.nodeMenu.category STRING "Houdini/Maths"
+	gaffer.nodeMenu.category STRING "Houdini/Maths"
 
 
 [node htoa__matrix_berp]
 
-  gaffer.nodeMenu.category STRING "Houdini/Maths"
+	gaffer.nodeMenu.category STRING "Houdini/Maths"
 
 
 [node htoa__matrix_frame]
 
-  gaffer.nodeMenu.category STRING "Houdini/Maths"
+	gaffer.nodeMenu.category STRING "Houdini/Maths"
 
 
 [node htoa__matrix_invert]
 
-  gaffer.nodeMenu.category STRING "Houdini/Maths"
+	gaffer.nodeMenu.category STRING "Houdini/Maths"
 
 
 [node htoa__matrix_lerp]
 
-  gaffer.nodeMenu.category STRING "Houdini/Maths"
+	gaffer.nodeMenu.category STRING "Houdini/Maths"
 
 
 [node htoa__matrix_multiply]
 
-  gaffer.nodeMenu.category STRING "Houdini/Maths"
+	gaffer.nodeMenu.category STRING "Houdini/Maths"
 
 
 [node htoa__matrix_multiply_vector]
 
-  gaffer.nodeMenu.category STRING "Houdini/Maths"
+	gaffer.nodeMenu.category STRING "Houdini/Maths"
 
 
 [node htoa__matrix_to_float]
 
-  gaffer.nodeMenu.category STRING "Houdini/Maths"
+	gaffer.nodeMenu.category STRING "Houdini/Maths"
 
 
 [node htoa__matrix_transform]
 
-  gaffer.nodeMenu.category STRING "Houdini/Maths"
+	gaffer.nodeMenu.category STRING "Houdini/Maths"
 
 
 [node htoa__matte]
 
-  gaffer.nodeMenu.category STRING "Houdini/General Utilities"
+	gaffer.nodeMenu.category STRING "Houdini/General Utilities"
 
 
 [node htoa__max]
 
-  gaffer.nodeMenu.category STRING "Houdini/Maths"
+	gaffer.nodeMenu.category STRING "Houdini/Maths"
 
 
 [node htoa__min]
 
-  gaffer.nodeMenu.category STRING "Houdini/Maths"
+	gaffer.nodeMenu.category STRING "Houdini/Maths"
 
 
 [node htoa__mix]
 
-  gaffer.nodeMenu.category STRING "Houdini/Maths"
+	gaffer.nodeMenu.category STRING "Houdini/Maths"
 
 
 [node htoa__modulo]
 
-  gaffer.nodeMenu.category STRING "Houdini/Maths"
+	gaffer.nodeMenu.category STRING "Houdini/Maths"
 
 
 [node htoa__multiply]
 
-  gaffer.nodeMenu.category STRING "Houdini/Maths"
+	gaffer.nodeMenu.category STRING "Houdini/Maths"
 
 
 [node htoa__negate]
 
-  gaffer.nodeMenu.category STRING "Houdini/Maths"
+	gaffer.nodeMenu.category STRING "Houdini/Maths"
 
 
 [node htoa__normalize]
 
-  gaffer.nodeMenu.category STRING "Houdini/Maths"
+	gaffer.nodeMenu.category STRING "Houdini/Maths"
 
 
 [node htoa__passthrough]
 
-  gaffer.nodeMenu.category STRING "Houdini/General Utilities"
+	gaffer.nodeMenu.category STRING "Houdini/General Utilities"
 
 
 [node htoa__pow]
 
-  gaffer.nodeMenu.category STRING "Houdini/Maths"
+	gaffer.nodeMenu.category STRING "Houdini/Maths"
 
 
 [node htoa__print]
 
-  gaffer.nodeMenu.category STRING "Houdini/General Utilities"
+	gaffer.nodeMenu.category STRING "Houdini/General Utilities"
 
 
 [node htoa__ramp_float]
 
-  gaffer.nodeMenu.category STRING "Houdini/General Utilities"
+	gaffer.nodeMenu.category STRING "Houdini/General Utilities"
 
 
 [node htoa__ramp_rgb]
 
-  gaffer.nodeMenu.category STRING "Houdini/General Utilities"
+	gaffer.nodeMenu.category STRING "Houdini/General Utilities"
 
 
 [node htoa__random]
 
-  gaffer.nodeMenu.category STRING "Houdini/Maths"
+	gaffer.nodeMenu.category STRING "Houdini/Maths"
 
 
 [node htoa__range]
 
-  gaffer.nodeMenu.category STRING "Houdini/Maths"
+	gaffer.nodeMenu.category STRING "Houdini/Maths"
 
 
 [node htoa__reciprocal]
 
-  gaffer.nodeMenu.category STRING "Houdini/Maths"
+	gaffer.nodeMenu.category STRING "Houdini/Maths"
 
 
 [node htoa__rgb_to_float]
 
-  gaffer.nodeMenu.category STRING "Houdini/General Utilities"
+	gaffer.nodeMenu.category STRING "Houdini/General Utilities"
 
 
 [node htoa__rgb_to_rgba]
 
-  gaffer.nodeMenu.category STRING "Houdini/General Utilities"
+	gaffer.nodeMenu.category STRING "Houdini/General Utilities"
 
 
 [node htoa__rgb_to_vector]
 
-  gaffer.nodeMenu.category STRING "Houdini/General Utilities"
+	gaffer.nodeMenu.category STRING "Houdini/General Utilities"
 
 
 [node htoa__rgba_to_float]
 
-  gaffer.nodeMenu.category STRING "Houdini/General Utilities"
+	gaffer.nodeMenu.category STRING "Houdini/General Utilities"
 
 
 [node htoa__shadow_matte]
 
-  gaffer.nodeMenu.category STRING "Houdini/General Utilities"
+	gaffer.nodeMenu.category STRING "Houdini/General Utilities"
 
 
 [node htoa__sign]
 
-  gaffer.nodeMenu.category STRING "Houdini/Maths"
+	gaffer.nodeMenu.category STRING "Houdini/Maths"
 
 
 [node htoa__skin]
 
-  gaffer.nodeMenu.category STRING "Houdini/Surface"
+	gaffer.nodeMenu.category STRING "Houdini/Surface"
 
 
 [node htoa__space_transform]
 
-  gaffer.nodeMenu.category STRING "Houdini/Maths"
+	gaffer.nodeMenu.category STRING "Houdini/Maths"
 
 
 [node htoa__sqrt]
 
-  gaffer.nodeMenu.category STRING "Houdini/Maths"
+	gaffer.nodeMenu.category STRING "Houdini/Maths"
 
 
 [node htoa__state_float]
 
-  gaffer.nodeMenu.category STRING "Houdini/General Utilities"
+	gaffer.nodeMenu.category STRING "Houdini/General Utilities"
 
 
 [node htoa__state_int]
 
-  gaffer.nodeMenu.category STRING "Houdini/General Utilities"
+	gaffer.nodeMenu.category STRING "Houdini/General Utilities"
 
 
 [node htoa__state_matrix]
 
-  gaffer.nodeMenu.category STRING "Houdini/General Utilities"
+	gaffer.nodeMenu.category STRING "Houdini/General Utilities"
 
 
 [node htoa__state_rgb]
 
-  gaffer.nodeMenu.category STRING "Houdini/General Utilities"
+	gaffer.nodeMenu.category STRING "Houdini/General Utilities"
 
 
 [node htoa__state_vector]
 
-  gaffer.nodeMenu.category STRING "Houdini/General Utilities"
+	gaffer.nodeMenu.category STRING "Houdini/General Utilities"
 
 
 [node htoa__subtract]
 
-  gaffer.nodeMenu.category STRING "Houdini/Maths"
+	gaffer.nodeMenu.category STRING "Houdini/Maths"
 
 
 [node htoa__switch]
 
-  gaffer.nodeMenu.category STRING "Houdini/General Utilities"
+	gaffer.nodeMenu.category STRING "Houdini/General Utilities"
 
 
 [node htoa__trace_set]
 
-  gaffer.nodeMenu.category STRING "Houdini/General Utilities"
+	gaffer.nodeMenu.category STRING "Houdini/General Utilities"
 
 
 [node htoa__transpose]
 
-  gaffer.nodeMenu.category STRING "Houdini/Maths"
+	gaffer.nodeMenu.category STRING "Houdini/Maths"
 
 
 [node htoa__trigo]
 
-  gaffer.nodeMenu.category STRING "Houdini/Maths"
+	gaffer.nodeMenu.category STRING "Houdini/Maths"
 
 
 [node htoa__two_sided]
 
-  gaffer.nodeMenu.category STRING "Houdini/General Utilities"
+	gaffer.nodeMenu.category STRING "Houdini/General Utilities"
 
 
 [node htoa__user_data_float]
 
-  gaffer.nodeMenu.category STRING "Houdini/General Utilities"
+	gaffer.nodeMenu.category STRING "Houdini/General Utilities"
 
 
 [node htoa__user_data_int]
 
-  gaffer.nodeMenu.category STRING "Houdini/General Utilities"
+	gaffer.nodeMenu.category STRING "Houdini/General Utilities"
 
 
 [node htoa__user_data_rgb]
 
-  gaffer.nodeMenu.category STRING "Houdini/General Utilities"
+	gaffer.nodeMenu.category STRING "Houdini/General Utilities"
 
 
 [node htoa__user_data_rgba]
 
-  gaffer.nodeMenu.category STRING "Houdini/General Utilities"
+	gaffer.nodeMenu.category STRING "Houdini/General Utilities"
 
 
 [node htoa__user_data_string]
 
-  gaffer.nodeMenu.category STRING "Houdini/General Utilities"
+	gaffer.nodeMenu.category STRING "Houdini/General Utilities"
 
 
 [node htoa__uv_transform]
 
-  gaffer.nodeMenu.category STRING "Houdini/General Utilities"
+	gaffer.nodeMenu.category STRING "Houdini/General Utilities"
 
 
 [node htoa__vector_to_rgb]
 
-  gaffer.nodeMenu.category STRING "Houdini/General Utilities"
+	gaffer.nodeMenu.category STRING "Houdini/General Utilities"
 
 
 [node htoa__volume_collector]
 
-  gaffer.nodeMenu.category STRING "Houdini/Volume"
+	gaffer.nodeMenu.category STRING "Houdini/Volume"
 
 
 [node htoa__volume_sample_float]
 
-  gaffer.nodeMenu.category STRING "Houdini/General Utilities"
+	gaffer.nodeMenu.category STRING "Houdini/General Utilities"
 
 
 [node htoa__volume_sample_rgb]
 
-  gaffer.nodeMenu.category STRING "Houdini/General Utilities"
+	gaffer.nodeMenu.category STRING "Houdini/General Utilities"
 
 
 [node htoa__volume_vdb]
 
-  gaffer.nodeMenu.category STRING "Houdini/General Utilities"
+	gaffer.nodeMenu.category STRING "Houdini/General Utilities"
 
 
-# define submenus for alShaders
-
+# ALShaders
+##########################################################################
 
 [node alBlackbody]
 
-  gaffer.nodeMenu.category STRING "Texture"
+	gaffer.nodeMenu.category STRING "Texture"
 
 
 [node alCache]
 
-  gaffer.nodeMenu.category STRING "Utility"
+	gaffer.nodeMenu.category STRING "Utility"
 
 
 [node alCel]
 
-  gaffer.nodeMenu.category STRING "Texture"
+	gaffer.nodeMenu.category STRING "Texture"
 
 
 [node alCellNoise]
 
-  gaffer.nodeMenu.category STRING "Texture"
+	gaffer.nodeMenu.category STRING "Texture"
 
 
 [node alColorSpace]
 
-  gaffer.nodeMenu.category STRING "Utility"
+	gaffer.nodeMenu.category STRING "Utility"
 
 
 [node alCombineColor]
 
-  gaffer.nodeMenu.category STRING "Utility"
+	gaffer.nodeMenu.category STRING "Utility"
 
 
 [node alCombineFloat]
 
-  gaffer.nodeMenu.category STRING "Utility"
+	gaffer.nodeMenu.category STRING "Utility"
 
 
 [node alCurvature]
 
-  gaffer.nodeMenu.category STRING "Utility"
+	gaffer.nodeMenu.category STRING "Utility"
 
 
 [node alFlake]
 
-  gaffer.nodeMenu.category STRING "Texture"
+	gaffer.nodeMenu.category STRING "Texture"
 
 
 [node alFlowNoise]
 
-  gaffer.nodeMenu.category STRING "Texture"
+	gaffer.nodeMenu.category STRING "Texture"
 
 
 [node alFractal]
 
-  gaffer.nodeMenu.category STRING "Texture"
+	gaffer.nodeMenu.category STRING "Texture"
 
 
 [node alGaborNoise]
 
-  gaffer.nodeMenu.category STRING "Texture"
+	gaffer.nodeMenu.category STRING "Texture"
 
 
 [node alHair]
 
-  gaffer.nodeMenu.category STRING "Surface"
+	gaffer.nodeMenu.category STRING "Surface"
 
 
 [node alInputScalar]
 
-  gaffer.nodeMenu.category STRING "Utility"
+	gaffer.nodeMenu.category STRING "Utility"
 
 
 [node alInputVector]
 
-  gaffer.nodeMenu.category STRING "Utility"
+	gaffer.nodeMenu.category STRING "Utility"
 
 
 [node alJitterColor]
 
-  gaffer.nodeMenu.category STRING "Utility"
+	gaffer.nodeMenu.category STRING "Utility"
 
 
 [node alLayer]
 
-  gaffer.nodeMenu.category STRING "Surface"
+	gaffer.nodeMenu.category STRING "Surface"
 
 
 [node alLayerColor]
 
-  gaffer.nodeMenu.category STRING "Utility"
+	gaffer.nodeMenu.category STRING "Utility"
 
 
 [node alLayerFloat]
 
-  gaffer.nodeMenu.category STRING "Utility"
+	gaffer.nodeMenu.category STRING "Utility"
 
 
 [node alPattern]
 
-  gaffer.nodeMenu.category STRING "Texture"
+	gaffer.nodeMenu.category STRING "Texture"
 
 
 [node alRemapColor]
 
-  gaffer.nodeMenu.category STRING "Utility"
+	gaffer.nodeMenu.category STRING "Utility"
 
 
 [node alRemapFloat]
 
-  gaffer.nodeMenu.category STRING "Utility"
+	gaffer.nodeMenu.category STRING "Utility"
 
 
 [node alSurface]
 
-  gaffer.nodeMenu.category STRING "Surface"
+	gaffer.nodeMenu.category STRING "Surface"
 
 
 [node alSwitchColor]
 
-  gaffer.nodeMenu.category STRING "Utility"
+	gaffer.nodeMenu.category STRING "Utility"
 
 
 [node alSwitchFloat]
 
-  gaffer.nodeMenu.category STRING "Utility"
+	gaffer.nodeMenu.category STRING "Utility"
 
 
- [node alTriplanar]
+	[node alTriplanar]
 
-   gaffer.nodeMenu.category STRING "Texture"
+	gaffer.nodeMenu.category STRING "Texture"

@@ -507,65 +507,6 @@ Gaffer::Plug *ParameterHandler::setupPlug( const AtNodeEntry *node, const AtPara
 	return plug;
 }
 
-namespace
-{
-
-// Names of parameters which it doesn't make sense to represent
-// in Gaffer - typically because they are geometric properties
-// of lights which are dealt with separately.
-typedef boost::container::flat_set<std::string> ParameterSet;
-ParameterSet g_parametersToIgnore = assign::list_of
-
-	( "point_light.position" )
-	( "point_light.matrix" )
-	( "point_light.filters" )
-	( "point_light.time_samples" )
-
-	( "distant_light.matrix" )
-	( "distant_light.filters" )
-	( "distant_light.time_samples" )
-
-	( "quad_light.vertices" )
-	( "quad_light.matrix" )
-	( "quad_light.filters" )
-	( "quad_light.time_samples" )
-
-	( "spot_light.position" )
-	( "spot_light.look_at" )
-	( "spot_light.up" )
-	( "spot_light.matrix" )
-	( "spot_light.filters" )
-	( "spot_light.time_samples" )
-
-	( "skydome_light.matrix" )
-	( "skydome_light.filters" )
-	( "skydome_light.time_samples" )
-
-	( "cylinder_light.bottom" )
-	( "cylinder_light.top" )
-	( "cylinder_light.matrix" )
-	( "cylinder_light.filters" )
-	( "cylinder_light.time_samples" )
-
-	( "disk_light.position" )
-	( "disk_light.direction" )
-	( "disk_light.matrix" )
-	( "disk_light.filters" )
-	( "disk_light.time_samples" )
-
-	( "mesh_light.mesh" )
-	( "mesh_light.matrix" )
-	( "mesh_light.filters" )
-	( "mesh_light.time_samples" )
-
-	( "photometric_light.matrix" )
-	( "photometric_light.filters" )
-	( "photometric_light.time_samples" )
-
-;
-
-} // namespace
-
 void ParameterHandler::setupPlugs( const AtNodeEntry *nodeEntry, Gaffer::GraphComponent *plugsParent, Gaffer::Plug::Direction direction )
 {
 
@@ -583,12 +524,13 @@ void ParameterHandler::setupPlugs( const AtNodeEntry *nodeEntry, Gaffer::GraphCo
 			continue;
 		}
 
-		/// \todo Use a "gaffer.mtd" Arnold metadata file to define the parameters to ignore,
-		/// and use that rather than this static list. To do this we need to define a mechanism
-		/// by which IECoreArnold::UniverseBlock finds non-standard metadata files to load.
-		if( g_parametersToIgnore.find( nodeName + "." + name ) != g_parametersToIgnore.end() )
+		const char *plugType = NULL;
+		if( AiMetaDataGetStr( nodeEntry, name.c_str(), "gaffer.plugType", &plugType ) )
 		{
-			continue;
+			if( !strcmp( plugType, "" ) )
+			{
+				continue;
+			}
 		}
 
 		validPlugs.insert( setupPlug( nodeEntry, param, plugsParent, direction ) );
