@@ -376,12 +376,12 @@ for nodeType in ( GafferArnold.ArnoldShader, GafferArnold.ArnoldLight ) :
 		keys.update( metadata.keys() )
 
 	for key in nodeKeys :
-		Gaffer.Metadata.registerNodeValue( nodeType, key, functools.partial( __nodeMetadata, name = key ) )
+		Gaffer.Metadata.registerValue( nodeType, key, functools.partial( __nodeMetadata, name = key ) )
 
 	for key in parametersPlugKeys :
-		Gaffer.Metadata.registerPlugValue( nodeType, "parameters", key, functools.partial( __plugMetadata, name = key ) )
+		Gaffer.Metadata.registerValue( nodeType, "parameters", key, functools.partial( __plugMetadata, name = key ) )
 
 	for key in parameterPlugKeys :
-		Gaffer.Metadata.registerPlugValue( nodeType, "parameters.*", key, functools.partial( __plugMetadata, name = key ) )
+		Gaffer.Metadata.registerValue( nodeType, "parameters.*", key, functools.partial( __plugMetadata, name = key ) )
 
-	Gaffer.Metadata.registerNodeValue( nodeType, "description", __nodeDescription )
+	Gaffer.Metadata.registerValue( nodeType, "description", __nodeDescription )

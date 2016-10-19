@@ -411,7 +411,7 @@ class _FramesModePlugValueWidget( GafferUI.PlugValueWidget ) :
 		label = selectionMenu.getSelection()[0]
 		value = self.__labelsAndValues[ selectionMenu.index( label ) ][1]
 
-		Gaffer.Metadata.registerNodeValue(
+		Gaffer.Metadata.registerValue(
 			self.getPlug().node(),
 			"layout:activator:customRange",
 			label == "CustomRange",
@@ -440,7 +440,7 @@ class _FramesModePlugValueWidget( GafferUI.PlugValueWidget ) :
 			self.__updateFrameRangeConnection = playback.frameRangeChangedSignal().connect( Gaffer.WeakMethod( self.__playbackFrameRangeChanged ) )
 			self.__playbackFrameRangeChanged( playback )
 		else :
-			frameRange = Gaffer.Metadata.plugValue( self.getPlug(), "dispatcherWindow:frameRange", inherit=False )
+			frameRange = Gaffer.Metadata.value( self.getPlug(), "dispatcherWindow:frameRange", inherit=False )
 			if frameRange is not None :
 				self.getPlug().node()["frameRange"].setValue( frameRange )
 			self.__updateFrameRangeConnection = self.getPlug().node().plugDirtiedSignal().connect( Gaffer.WeakMethod( self.__customFrameRangeChanged ) )
@@ -480,7 +480,7 @@ class _FramesModePlugValueWidget( GafferUI.PlugValueWidget ) :
 
 		if plug.isSame( self.getPlug().node()["frameRange"] ) :
 			with self.getContext() :
-				Gaffer.Metadata.registerPlugValue( self.getPlug(), "dispatcherWindow:frameRange", plug.getValue() )
+				Gaffer.Metadata.registerValue( self.getPlug(), "dispatcherWindow:frameRange", plug.getValue() )
 
 class _FrameRangePlugValueWidget( GafferUI.StringPlugValueWidget ) :
 

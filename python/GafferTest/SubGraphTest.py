@@ -66,7 +66,7 @@ class SubGraphTest( GafferTest.TestCase ) :
 
 		n = MySubGraph()
 		self.assertEqual(
-			Gaffer.Metadata.nodeValue( n, "description" ),
+			Gaffer.Metadata.value( n, "description" ),
 			"If you're retrieving this, the subclassing has worked."
 		)
 

@@ -64,7 +64,7 @@ CompoundNodule::CompoundNodule( Gaffer::PlugPtr plug, LinearContainer::Orientati
 	float spacing, LinearContainer::Direction direction )
 	:	Nodule( plug )
 {
-	if( ConstStringDataPtr orientationData = Metadata::plugValue<StringData>( plug.get(), g_orientationKey ) )
+	if( ConstStringDataPtr orientationData = Metadata::value<StringData>( plug.get(), g_orientationKey ) )
 	{
 		if( orientationData->readable() == "x" )
 		{
@@ -80,12 +80,12 @@ CompoundNodule::CompoundNodule( Gaffer::PlugPtr plug, LinearContainer::Orientati
 		}
 	}
 
-	if( ConstFloatDataPtr spacingData = Metadata::plugValue<FloatData>( plug.get(), g_spacingKey ) )
+	if( ConstFloatDataPtr spacingData = Metadata::value<FloatData>( plug.get(), g_spacingKey ) )
 	{
 		spacing = spacingData->readable();
 	}
 
-	if( ConstStringDataPtr directionData = Metadata::plugValue<StringData>( plug.get(), g_directionKey ) )
+	if( ConstStringDataPtr directionData = Metadata::value<StringData>( plug.get(), g_directionKey ) )
 	{
 		direction = directionData->readable() == "increasing" ? LinearContainer::Increasing : LinearContainer::Decreasing;
 	}

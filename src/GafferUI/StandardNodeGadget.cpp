@@ -46,6 +46,7 @@
 #include "Gaffer/StandardSet.h"
 #include "Gaffer/DependencyNode.h"
 #include "Gaffer/Metadata.h"
+#include "Gaffer/MetadataAlgo.h"
 #include "Gaffer/ScriptNode.h"
 
 #include "GafferUI/StandardNodeGadget.h"
@@ -215,17 +216,17 @@ StandardNodeGadget::StandardNodeGadget( Gaffer::NodePtr node )
 	float verticalNoduleSpacing = 0.2f;
 	float minWidth = 10.0f;
 
-	if( IECore::ConstFloatDataPtr d = Metadata::nodeValue<IECore::FloatData>( node.get(), g_horizontalNoduleSpacingKey ) )
+	if( IECore::ConstFloatDataPtr d = Metadata::value<IECore::FloatData>( node.get(), g_horizontalNoduleSpacingKey ) )
 	{
 		horizontalNoduleSpacing = d->readable();
 	}
 
-	if( IECore::ConstFloatDataPtr d = Metadata::nodeValue<IECore::FloatData>( node.get(), g_verticalNoduleSpacingKey ) )
+	if( IECore::ConstFloatDataPtr d = Metadata::value<IECore::FloatData>( node.get(), g_verticalNoduleSpacingKey ) )
 	{
 		verticalNoduleSpacing = d->readable();
 	}
 
-	if( IECore::ConstFloatDataPtr d = Metadata::nodeValue<IECore::FloatData>( node.get(), g_minWidthKey ) )
+	if( IECore::ConstFloatDataPtr d = Metadata::value<IECore::FloatData>( node.get(), g_minWidthKey ) )
 	{
 		minWidth = d->readable();
 	}
@@ -432,7 +433,7 @@ StandardNodeGadget::Edge StandardNodeGadget::plugEdge( const Gaffer::Plug *plug 
 {
 	Edge edge = plug->direction() == Gaffer::Plug::In ? TopEdge : BottomEdge;
 
-	if( IECore::ConstStringDataPtr d = Metadata::plugValue<IECore::StringData>( plug, g_nodulePositionKey ) )
+	if( IECore::ConstStringDataPtr d = Metadata::value<IECore::StringData>( plug, g_nodulePositionKey ) )
 	{
 		if( d->readable() == "left" )
 		{
@@ -693,10 +694,15 @@ bool StandardNodeGadget::noduleIsCompatible( const Nodule *nodule, const DragDro
 	const Plug *dropPlug = IECore::runTimeCast<Gaffer::Plug>( event.data.get() );
 	if( !dropPlug || dropPlug->node() == node() )
 	{
-		return 0;
+		return false;
 	}
 
 	const Plug *nodulePlug = nodule->plug();
+	if( readOnly( nodulePlug ) )
+	{
+		return false;
+	}
+
 	if( dropPlug->direction() == Plug::Out )
 	{
 		return nodulePlug->direction() == Plug::In && nodulePlug->acceptsInput( dropPlug );
@@ -745,7 +751,7 @@ void StandardNodeGadget::updateNodules( std::vector<Nodule *> &nodules, std::vec
 			continue;
 		}
 
-		IECore::ConstStringDataPtr typeData = Metadata::plugValue<IECore::StringData>( plug, g_noduleTypeKey );
+		IECore::ConstStringDataPtr typeData = Metadata::value<IECore::StringData>( plug, g_noduleTypeKey );
 		IECore::InternedString type = typeData ? typeData->readable() : "GafferUI::StandardNodule";
 
 		Nodule *nodule = NULL;
@@ -772,7 +778,7 @@ void StandardNodeGadget::updateNodules( std::vector<Nodule *> &nodules, std::vec
 		if( nodule )
 		{
 			int index = sortedNodules.size();
-			if( IECore::ConstIntDataPtr indexData = Metadata::plugValue<IECore::IntData>( plug, g_noduleIndexKey ) )
+			if( IECore::ConstIntDataPtr indexData = Metadata::value<IECore::IntData>( plug, g_noduleIndexKey ) )
 			{
 				index = indexData->readable();
 			}
@@ -856,7 +862,7 @@ void StandardNodeGadget::updateNoduleLayout()
 bool StandardNodeGadget::updateUserColor()
 {
 	boost::optional<Color3f> c;
-	if( IECore::ConstColor3fDataPtr d = Metadata::nodeValue<IECore::Color3fData>( node(), g_colorKey ) )
+	if( IECore::ConstColor3fDataPtr d = Metadata::value<IECore::Color3fData>( node(), g_colorKey ) )
 	{
 		c = d->readable();
 	}
@@ -873,7 +879,7 @@ bool StandardNodeGadget::updateUserColor()
 void StandardNodeGadget::updatePadding()
 {
 	float padding = 1.0f;
-	if( IECore::ConstFloatDataPtr d = Metadata::nodeValue<IECore::FloatData>( node(), g_paddingKey ) )
+	if( IECore::ConstFloatDataPtr d = Metadata::value<IECore::FloatData>( node(), g_paddingKey ) )
 	{
 		padding = d->readable();
 	}

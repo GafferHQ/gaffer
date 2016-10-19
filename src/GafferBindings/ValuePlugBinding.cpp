@@ -150,9 +150,9 @@ std::string ValuePlugSerialiser::repr( const Gaffer::ValuePlug *plug, unsigned f
 
 }
 
-void ValuePlugSerialiser::moduleDependencies( const Gaffer::GraphComponent *graphComponent, std::set<std::string> &modules ) const
+void ValuePlugSerialiser::moduleDependencies( const Gaffer::GraphComponent *graphComponent, std::set<std::string> &modules, const Serialisation &serialisation ) const
 {
-	PlugSerialiser::moduleDependencies( graphComponent, modules );
+	PlugSerialiser::moduleDependencies( graphComponent, modules, serialisation );
 
 	const ValuePlug *valuePlug = static_cast<const ValuePlug *> ( graphComponent );
 	object pythonPlug( ValuePlugPtr( const_cast<ValuePlug *>( valuePlug ) ) );
@@ -193,11 +193,11 @@ std::string ValuePlugSerialiser::postConstructor( const Gaffer::GraphComponent *
 		// in the `.grf` file.
 		int milestoneVersion = 0;
 		int majorVersion = 0;
-		if( IECore::ConstIntDataPtr v = Metadata::nodeValue<IECore::IntData>( reference, "serialiser:milestoneVersion" ) )
+		if( IECore::ConstIntDataPtr v = Metadata::value<IECore::IntData>( reference, "serialiser:milestoneVersion" ) )
 		{
 			milestoneVersion = v->readable();
 		}
-		if( IECore::ConstIntDataPtr v = Metadata::nodeValue<IECore::IntData>( reference, "serialiser:majorVersion" ) )
+		if( IECore::ConstIntDataPtr v = Metadata::value<IECore::IntData>( reference, "serialiser:majorVersion" ) )
 		{
 			majorVersion = v->readable();
 		}

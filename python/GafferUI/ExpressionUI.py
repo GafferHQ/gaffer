@@ -122,7 +122,7 @@ def __popupMenu( menuDefinition, plugValueWidget ) :
 		return
 
 	input = plug.getInput()
-	if input is not None or not plugValueWidget._editable() :
+	if input is not None or not plugValueWidget._editable() or Gaffer.readOnly( plug ) :
 		return
 
 	languages = [ l for l in Gaffer.Expression.languages() if Gaffer.Expression.defaultExpression( plug, l ) ]

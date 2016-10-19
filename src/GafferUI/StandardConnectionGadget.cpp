@@ -45,6 +45,7 @@
 #include "Gaffer/ScriptNode.h"
 #include "Gaffer/StandardSet.h"
 #include "Gaffer/Metadata.h"
+#include "Gaffer/MetadataAlgo.h"
 #include "Gaffer/Dot.h"
 
 #include "GafferUI/StandardConnectionGadget.h"
@@ -264,6 +265,14 @@ bool StandardConnectionGadget::buttonPress( const ButtonEvent &event )
 
 IECore::RunTimeTypedPtr StandardConnectionGadget::dragBegin( const DragDropEvent &event )
 {
+	if(
+		readOnly( dstNodule()->plug() ) ||
+		( srcNodule() && readOnly( srcNodule()->plug() ) )
+	)
+	{
+		return NULL;
+	}
+
 	setPositionsFromNodules();
 	m_dragEnd = endAt( event.line );
 	switch( m_dragEnd )
@@ -408,18 +417,7 @@ bool StandardConnectionGadget::nodeSelected( const Nodule *nodule ) const
 
 void StandardConnectionGadget::plugMetadataChanged( IECore::TypeId nodeTypeId, const Gaffer::MatchPattern &plugPath, IECore::InternedString key, const Gaffer::Plug *plug )
 {
-	const Plug *dstPlug = dstNodule()->plug();
-	if( plug && plug != dstPlug )
-	{
-		return;
-	}
-
-	const Node *node = dstPlug->node();
-	if(
-		key != g_colorKey ||
-		!node->isInstanceOf( nodeTypeId ) ||
-		!match( dstPlug->relativeName( node ), plugPath )
-	)
+	if( key != g_colorKey || !affectedByChange( dstNodule()->plug(), nodeTypeId, plugPath, plug ) )
 	{
 		return;
 	}
@@ -433,7 +431,7 @@ void StandardConnectionGadget::plugMetadataChanged( IECore::TypeId nodeTypeId, c
 bool StandardConnectionGadget::updateUserColor()
 {
 	boost::optional<Color3f> c;
-	if( IECore::ConstColor3fDataPtr d = Metadata::plugValue<IECore::Color3fData>( dstNodule()->plug(), g_colorKey ) )
+	if( IECore::ConstColor3fDataPtr d = Metadata::value<IECore::Color3fData>( dstNodule()->plug(), g_colorKey ) )
 	{
 		c = d->readable();
 	}

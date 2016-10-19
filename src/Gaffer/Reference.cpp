@@ -43,6 +43,7 @@
 #include "Gaffer/Reference.h"
 #include "Gaffer/ScriptNode.h"
 #include "Gaffer/Metadata.h"
+#include "Gaffer/MetadataAlgo.h"
 #include "Gaffer/StringPlug.h"
 #include "Gaffer/StandardSet.h"
 
@@ -155,15 +156,16 @@ void Reference::loadInternal( const std::string &fileName )
 		errors = script->executeFile( fileName, this, /* continueOnError = */ true );
 	}
 
-	// Make the loaded plugs non-dynamic, because we don't want them
-	// to be serialised in the script the reference is in - the whole
-	// point is that they are referenced. For the same reason, make
-	// their instance metadata non-persistent.
+	// Do a little bit of post processing on everything that was loaded.
 
 	for( size_t i = 0, e = newChildren->size(); i < e; ++i )
 	{
 		if( Plug *plug = runTimeCast<Plug>( newChildren->member( i ) ) )
 		{
+			// Make the loaded plugs non-dynamic, because we don't want them
+			// to be serialised in the script the reference is in - the whole
+			// point is that they are referenced. For the same reason, make
+			// their instance metadata non-persistent.
 			plug->setFlags( Plug::Dynamic, false );
 			convertPersistentMetadata( plug );
 			for( RecursivePlugIterator it( plug ); !it.done(); ++it )
@@ -172,6 +174,15 @@ void Reference::loadInternal( const std::string &fileName )
 				convertPersistentMetadata( it->get() );
 			}
 		}
+		else if( Node *node = runTimeCast<Node>( newChildren->member( i ) ) )
+		{
+			// Make the loaded nodes read-only as far as the UI is
+			// concerned, because any changes the user did make
+			// would be lost on save/reload. We use non-persistent
+			// metadata for this so that they can copy/paste nodes
+			// out of the reference and have the copies be editable.
+			setReadOnly( node, true, /* persistent = */ false );
+		}
 	}
 
 	// figure out what version of gaffer was used to save the reference. prior to
@@ -179,11 +190,11 @@ void Reference::loadInternal( const std::string &fileName )
 	// and we must make sure they don't clobber the user-set values on the reference node.
 	int milestoneVersion = 0;
 	int majorVersion = 0;
-	if( IECore::ConstIntDataPtr v = Metadata::nodeValue<IECore::IntData>( this, "serialiser:milestoneVersion" ) )
+	if( IECore::ConstIntDataPtr v = Metadata::value<IECore::IntData>( this, "serialiser:milestoneVersion" ) )
 	{
 		milestoneVersion = v->readable();
 	}
-	if( IECore::ConstIntDataPtr v = Metadata::nodeValue<IECore::IntData>( this, "serialiser:majorVersion" ) )
+	if( IECore::ConstIntDataPtr v = Metadata::value<IECore::IntData>( this, "serialiser:majorVersion" ) )
 	{
 		majorVersion = v->readable();
 	}
@@ -308,22 +319,22 @@ bool Reference::isReferencePlug( const Plug *plug ) const
 void Reference::convertPersistentMetadata( Plug *plug ) const
 {
 	vector<InternedString> keys;
-	Metadata::registeredPlugValues( plug, keys, /* inherit = */ false, /* instanceOnly = */ true, /* persistentOnly = */ true );
+	Metadata::registeredValues( plug, keys, /* instanceOnly = */ true, /* persistentOnly = */ true );
 	for( vector<InternedString>::const_iterator it = keys.begin(), eIt = keys.end(); it != eIt; ++it )
 	{
-		ConstDataPtr value = Metadata::plugValue<Data>( plug, *it );
-		Metadata::registerPlugValue( plug, *it, value, /* persistent = */ false );
+		ConstDataPtr value = Metadata::value<Data>( plug, *it );
+		Metadata::registerValue( plug, *it, value, /* persistent = */ false );
 	}
 }
 
 void Reference::transferPersistentMetadata( const Plug *srcPlug, Plug *dstPlug ) const
 {
 	vector<InternedString> keys;
-	Metadata::registeredPlugValues( srcPlug, keys, /* inherit = */ false, /* instanceOnly = */ true, /* persistentOnly = */ true );
+	Metadata::registeredValues( srcPlug, keys, /* instanceOnly = */ true, /* persistentOnly = */ true );
 	for( vector<InternedString>::const_iterator it = keys.begin(), eIt = keys.end(); it != eIt; ++it )
 	{
-		ConstDataPtr value = Metadata::plugValue<Data>( srcPlug, *it );
-		Metadata::registerPlugValue( dstPlug, *it, value );
+		ConstDataPtr value = Metadata::value<Data>( srcPlug, *it );
+		Metadata::registerValue( dstPlug, *it, value );
 	}
 
 	for( PlugIterator it( srcPlug ); !it.done(); ++it )

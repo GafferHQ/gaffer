@@ -51,7 +51,7 @@ class ReferenceUITest( GafferUITest.TestCase ) :
 		s["b"]["n"] = Gaffer.Node()
 		s["b"]["n"]["p"] = Gaffer.Plug( flags = Gaffer.Plug.Flags.Default | Gaffer.Plug.Flags.Dynamic )
 
-		Gaffer.Metadata.registerPlugValue( s["b"]["n"]["p"], "nodule:type", "" )
+		Gaffer.Metadata.registerValue( s["b"]["n"]["p"], "nodule:type", "" )
 
 		p = s["b"].promotePlug( s["b"]["n"]["p"] )
 		p.setName( "p" )

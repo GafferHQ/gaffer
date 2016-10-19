@@ -93,7 +93,7 @@ class TweakPlugSerialiser : public PlugSerialiser
 			return maskedTweakPlugRepr( static_cast<const LightTweaks::TweakPlug *>( graphComponent ), Plug::All & ~Plug::ReadOnly );
 		}
 
-		virtual bool childNeedsConstruction( const Gaffer::GraphComponent *child ) const
+		virtual bool childNeedsConstruction( const Gaffer::GraphComponent *child, const Serialisation &serialisation ) const
 		{
 			// If the parent is dynamic then all the children will need construction.
 			const Plug *parent = child->parent<Plug>();

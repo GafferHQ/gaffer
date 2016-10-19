@@ -60,9 +60,9 @@ class AtomicFormatPlugSerialiser : public GafferBindings::ValuePlugSerialiser
 
 	public :
 
-		virtual void moduleDependencies( const Gaffer::GraphComponent *graphComponent, std::set<std::string> &modules ) const
+		virtual void moduleDependencies( const Gaffer::GraphComponent *graphComponent, std::set<std::string> &modules, const Serialisation &serialisation ) const
 		{
-			ValuePlugSerialiser::moduleDependencies( graphComponent, modules );
+			ValuePlugSerialiser::moduleDependencies( graphComponent, modules, serialisation );
 			modules.insert( "IECore" );
 		}
 

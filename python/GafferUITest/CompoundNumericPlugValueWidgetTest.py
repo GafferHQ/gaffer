@@ -76,7 +76,7 @@ class CompoundNumericPlugValueWidgetTest( unittest.TestCase ) :
 
 		n = Gaffer.Node()
 		n["v"] = Gaffer.V3fPlug()
-		Gaffer.Metadata.registerPlugValue( n["v"], "ui:visibleDimensions", 2 )
+		Gaffer.Metadata.registerValue( n["v"], "ui:visibleDimensions", 2 )
 
 		w = GafferUI.CompoundNumericPlugValueWidget( n["v"] )
 

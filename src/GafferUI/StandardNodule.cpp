@@ -46,6 +46,7 @@
 #include "Gaffer/UndoContext.h"
 #include "Gaffer/ScriptNode.h"
 #include "Gaffer/Metadata.h"
+#include "Gaffer/MetadataAlgo.h"
 
 #include "GafferUI/StandardNodule.h"
 #include "GafferUI/Style.h"
@@ -230,6 +231,11 @@ IECore::RunTimeTypedPtr StandardNodule::dragBegin( GadgetPtr gadget, const Butto
 
 bool StandardNodule::dragEnter( GadgetPtr gadget, const DragDropEvent &event )
 {
+	if( readOnly( plug() ) )
+	{
+		return false;
+	}
+
 	if( event.buttons != DragDropEvent::Left )
 	{
 		// we only accept drags with the left button, so as to
@@ -422,17 +428,7 @@ void StandardNodule::setCompatibleLabelsVisible( const DragDropEvent &event, boo
 
 void StandardNodule::plugMetadataChanged( IECore::TypeId nodeTypeId, const Gaffer::MatchPattern &plugPath, IECore::InternedString key, const Gaffer::Plug *plug )
 {
-	if( plug && plug != this->plug() )
-	{
-		return;
-	}
-
-	const Node *node = this->plug()->node();
-	if(
-		key != g_colorKey ||
-		!node->isInstanceOf( nodeTypeId ) ||
-		!match( this->plug()->relativeName( node ), plugPath )
-	)
+	if( key != g_colorKey || !affectedByChange( this->plug(), nodeTypeId, plugPath, plug ) )
 	{
 		return;
 	}
@@ -446,7 +442,7 @@ void StandardNodule::plugMetadataChanged( IECore::TypeId nodeTypeId, const Gaffe
 bool StandardNodule::updateUserColor()
 {
 	boost::optional<Color3f> c;
-	if( IECore::ConstColor3fDataPtr d = Metadata::plugValue<IECore::Color3fData>( plug(), g_colorKey ) )
+	if( IECore::ConstColor3fDataPtr d = Metadata::value<IECore::Color3fData>( plug(), g_colorKey ) )
 	{
 		c = d->readable();
 	}

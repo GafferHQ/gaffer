@@ -43,6 +43,7 @@
 #include "IECoreGL/Selector.h"
 
 #include "Gaffer/Metadata.h"
+#include "Gaffer/MetadataAlgo.h"
 #include "Gaffer/StringPlug.h"
 
 #include "GafferUI/BackdropNodeGadget.h"
@@ -302,6 +303,11 @@ void BackdropNodeGadget::plugDirtied( const Gaffer::Plug *plug )
 
 bool BackdropNodeGadget::mouseMove( Gadget *gadget, const ButtonEvent &event )
 {
+	if( readOnly( node() ) )
+	{
+		return false;
+	}
+
 	int h, v;
 	hoveredEdges( event, h, v );
 	if( h && v )
@@ -333,6 +339,11 @@ bool BackdropNodeGadget::mouseMove( Gadget *gadget, const ButtonEvent &event )
 
 bool BackdropNodeGadget::buttonPress( Gadget *gadget, const ButtonEvent &event )
 {
+	if( readOnly( node() ) )
+	{
+		return false;
+	}
+
 	if( event.buttons != ButtonEvent::Left )
 	{
 		return false;
@@ -468,7 +479,7 @@ void BackdropNodeGadget::nodeMetadataChanged( IECore::TypeId nodeTypeId, IECore:
 bool BackdropNodeGadget::updateUserColor()
 {
 	boost::optional<Color3f> c;
-	if( IECore::ConstColor3fDataPtr d = Metadata::nodeValue<IECore::Color3fData>( node(), g_colorKey ) )
+	if( IECore::ConstColor3fDataPtr d = Metadata::value<IECore::Color3fData>( node(), g_colorKey ) )
 	{
 		c = d->readable();
 	}

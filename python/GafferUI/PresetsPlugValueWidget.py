@@ -48,8 +48,6 @@ class PresetsPlugValueWidget( GafferUI.PlugValueWidget ) :
 		self.__menuButton = GafferUI.MenuButton( "", menu = GafferUI.Menu( Gaffer.WeakMethod( self.__menuDefinition ) ) )
 		GafferUI.PlugValueWidget.__init__( self, self.__menuButton, plug, **kw )
 
-		self.__plugMetadataChangedConnection = Gaffer.Metadata.plugValueChangedSignal().connect( Gaffer.WeakMethod( self.__plugMetadataChanged ) )
-
 		self._addPopupMenu( self.__menuButton )
 		self._updateFromPlug()
 
@@ -86,17 +84,3 @@ class PresetsPlugValueWidget( GafferUI.PlugValueWidget ) :
 
 		with Gaffer.UndoContext( self.getPlug().ancestor( Gaffer.ScriptNode ) ) :
 			Gaffer.NodeAlgo.applyPreset( self.getPlug(), preset )
-
-	def __plugMetadataChanged( self, nodeTypeId, plugPath, key, plug ) :
-
-		if self.getPlug() is None :
-			return
-
-		if plug is not None and not plug.isSame( self.getPlug() ) :
-			return
-
-		if not self.getPlug().node().isInstanceOf( nodeTypeId ) :
-			return
-
-		if key.startswith( "preset:" ) :
-			self._updateFromPlug()

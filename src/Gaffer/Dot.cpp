@@ -83,7 +83,7 @@ void Dot::setup( const Plug *plug )
 	ConstStringDataPtr nodulePosition;
 	for( const Plug *metadataPlug = plug; metadataPlug; metadataPlug = metadataPlug->parent<Plug>() )
 	{
-		if( ( nodulePosition = Metadata::plugValue<StringData>( metadataPlug, g_nodulePositionName ) ) )
+		if( ( nodulePosition = Metadata::value<StringData>( metadataPlug, g_nodulePositionName ) ) )
 		{
 			break;
 		}
@@ -110,11 +110,11 @@ void Dot::setup( const Plug *plug )
 			oppositePosition = "bottom";
 		}
 
-		Metadata::registerPlugValue(
+		Metadata::registerValue(
 			plug->direction() == Plug::In ? in.get() : out.get(),
 			g_nodulePositionName, nodulePosition
 		);
-		Metadata::registerPlugValue(
+		Metadata::registerValue(
 			plug->direction() == Plug::In ? out.get() : in.get(),
 			g_nodulePositionName, new StringData( oppositePosition )
 		);

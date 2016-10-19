@@ -110,7 +110,7 @@ __originalDragPointer = None
 def __pathsPlug( node ) :
 
 	for plug in node.children( Gaffer.Plug ) :
-		if Gaffer.Metadata.plugValue( plug, "ui:scene:acceptsPaths" ) :
+		if Gaffer.Metadata.value( plug, "ui:scene:acceptsPaths" ) :
 			return plug
 
 	return None

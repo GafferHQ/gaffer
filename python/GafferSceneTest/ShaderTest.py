@@ -106,7 +106,7 @@ class ShaderTest( GafferSceneTest.SceneTestCase ) :
 
 		cs = GafferTest.CapturingSlot( s.plugDirtiedSignal() )
 
-		Gaffer.Metadata.registerNodeValue( s, "nodeGadget:color", IECore.Color3f( 1, 0, 0 ) )
+		Gaffer.Metadata.registerValue( s, "nodeGadget:color", IECore.Color3f( 1, 0, 0 ) )
 
 		self.assertTrue( s["out"] in [ x[0] for x in cs ] )
 

@@ -1,6 +1,6 @@
 //////////////////////////////////////////////////////////////////////////
 //
-//  Copyright (c) 2014, Image Engine Design Inc. All rights reserved.
+//  Copyright (c) 2016, Image Engine Design Inc. All rights reserved.
 //
 //  Redistribution and use in source and binary forms, with or without
 //  modification, are permitted provided that the following conditions are
@@ -34,49 +34,16 @@
 //
 //////////////////////////////////////////////////////////////////////////
 
-#include "tbb/tbb.h"
-
-#include "IECore/SimpleTypedData.h"
+#ifndef GAFFERBINDINGS_METADATAALGOBINDING_H
+#define GAFFERBINDINGS_METADATAALGOBINDING_H
 
 #include "Gaffer/Node.h"
-#include "Gaffer/Plug.h"
-#include "Gaffer/Metadata.h"
 
-#include "GafferTest/Assert.h"
-#include "GafferTest/MetadataTest.h"
-
-using namespace tbb;
-using namespace IECore;
-using namespace Gaffer;
-
-struct TestThreading
+namespace GafferBindings
 {
 
-	void operator()( const blocked_range<size_t> &r ) const
-	{
-		for( size_t i=r.begin(); i!=r.end(); ++i )
-		{
-			NodePtr n = new Node();
-			PlugPtr p = new Plug();
+void bindMetadataAlgo();
 
-			GAFFERTEST_ASSERT( Metadata::value<Data>( n.get(), "threadingTest" ) == NULL );
-			GAFFERTEST_ASSERT( Metadata::value<Data>( p.get(), "threadingTest" ) == NULL );
+} // namespace GafferBindings
 
-			Metadata::registerValue( n.get(), "threadingTest", new IECore::IntData( 1 ) );
-			Metadata::registerValue( p.get(), "threadingTest", new IECore::IntData( 2 ) );
-
-			GAFFERTEST_ASSERT( Metadata::value<IntData>( n.get(), "threadingTest" )->readable() == 1 );
-			GAFFERTEST_ASSERT( Metadata::value<IntData>( p.get(), "threadingTest" )->readable() == 2 );
-		}
-	}
-
-};
-
-void GafferTest::testMetadataThreading()
-{
-	// this test simulates many different scripts being loaded
-	// concurrently in separate threads, with each script registering
-	// per-instance metadata for its members.
-	TestThreading t;
-	parallel_for( blocked_range<size_t>( 0, 10000 ), t );
-}
+#endif // GAFFERBINDINGS_METADATAALGOBINDING_H

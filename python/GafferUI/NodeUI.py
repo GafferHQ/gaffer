@@ -179,6 +179,6 @@ def __plugPopupMenu( menuDefinition, plugValueWidget ) :
 	node = plug.node()
 	if plug.parent().isSame( node["user"] ) :
 		menuDefinition.append( "/DeleteDivider", { "divider" : True } )
-		menuDefinition.append( "/Delete", { "command" : IECore.curry( __deletePlug, plug ), "active" : not plugValueWidget.getReadOnly() } )
+		menuDefinition.append( "/Delete", { "command" : IECore.curry( __deletePlug, plug ), "active" : not plugValueWidget.getReadOnly() and not Gaffer.readOnly( plug ) } )
 
 __plugPopupMenuConnection = GafferUI.PlugValueWidget.popupMenuSignal().connect( __plugPopupMenu )

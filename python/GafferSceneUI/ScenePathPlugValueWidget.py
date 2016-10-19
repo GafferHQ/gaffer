@@ -45,11 +45,11 @@ class ScenePathPlugValueWidget( GafferUI.PathPlugValueWidget ) :
 		if path is None :
 
 			filter = None
-			sets = Gaffer.Metadata.plugValue( plug, "scenePathPlugValueWidget:setNames" )
+			sets = Gaffer.Metadata.value( plug, "scenePathPlugValueWidget:setNames" )
 			if sets :
 				filter = GafferScene.ScenePath.createStandardFilter(
 					list( sets ),
-					Gaffer.Metadata.plugValue( plug, "scenePathPlugValueWidget:setsLabel" )
+					Gaffer.Metadata.value( plug, "scenePathPlugValueWidget:setsLabel" )
 				)
 
 			path = GafferScene.ScenePath(

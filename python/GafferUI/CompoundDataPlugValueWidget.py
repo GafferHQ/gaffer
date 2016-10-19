@@ -99,7 +99,7 @@ class CompoundDataPlugValueWidget( GafferUI.PlugValueWidget ) :
 
 		editable = True
 		if self.getPlug() is not None :
-			editable = Gaffer.Metadata.plugValue( self.getPlug(), "compoundDataPlugValueWidget:editable" )
+			editable = Gaffer.Metadata.value( self.getPlug(), "compoundDataPlugValueWidget:editable" )
 			editable = editable if editable is not None else True
 
 		self.__editRow.setVisible( editable )
@@ -244,6 +244,12 @@ def __plugPopupMenu( menuDefinition, plugValueWidget ) :
 		return
 
 	menuDefinition.append( "/DeleteDivider", { "divider" : True } )
-	menuDefinition.append( "/Delete", { "command" : IECore.curry( __deletePlug, memberPlug ), "active" : not plugValueWidget.getReadOnly() } )
+	menuDefinition.append(
+		"/Delete",
+		{
+			"command" : IECore.curry( __deletePlug, memberPlug ),
+			"active" : not plugValueWidget.getReadOnly() and not Gaffer.readOnly( memberPlug ),
+		}
+	)
 
 __plugPopupMenuConnection = GafferUI.PlugValueWidget.popupMenuSignal().connect( __plugPopupMenu )

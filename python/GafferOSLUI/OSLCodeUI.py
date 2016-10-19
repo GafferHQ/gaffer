@@ -167,15 +167,16 @@ class _ParametersFooter( GafferUI.PlugValueWidget ) :
 
 				GafferUI.Spacer( IECore.V2i( GafferUI.PlugWidget.labelWidth(), 1 ) )
 
-				GafferUI.MenuButton(
+				menuButton = GafferUI.MenuButton(
 					image = "plus.png",
 					hasFrame = False,
 					menu = GafferUI.Menu(
 						Gaffer.WeakMethod( self.__menuDefinition ),
 						title = "Add " + ( "Input" if plug.direction() == plug.Direction.In else "Output" )
 					),
-					toolTip = "Add " + ( "Input" if plug.direction() == plug.Direction.In else "Output" )
+					toolTip = "Add " + ( "Input" if plug.direction() == plug.Direction.In else "Output" ),
 				)
+				menuButton.setEnabled( not Gaffer.readOnly( plug ) )
 
 				GafferUI.Spacer( IECore.V2i( 1 ), IECore.V2i( 999999, 1 ), parenting = { "expand" : True } )
 
@@ -322,7 +323,13 @@ def __plugPopupMenu( menuDefinition, plugValueWidget ) :
 	if plug.parent() in ( node["parameters"], node["out"] ) :
 
 		menuDefinition.append( "/DeleteDivider", { "divider" : True } )
-		menuDefinition.append( "/Delete", { "command" : IECore.curry( __deletePlug, plug ), "active" : not plugValueWidget.getReadOnly() } )
+		menuDefinition.append(
+			"/Delete",
+			{
+				"command" : IECore.curry( __deletePlug, plug ),
+				"active" : not plugValueWidget.getReadOnly() and not Gaffer.readOnly( plug )
+			}
+		)
 
 	elif plug.isSame( node["code"] ) :
 
@@ -400,7 +407,10 @@ def __plugPopupMenu( menuDefinition, plugValueWidget ) :
 
 			menuDefinition.prepend(
 				"/Insert" + label,
-				{ "command" : functools.partial( plugValueWidget.textWidget().insertText, text ) },
+				{
+					"command" : functools.partial( plugValueWidget.textWidget().insertText, text ),
+					"active" : not plugValueWidget.getReadOnly() and not Gaffer.readOnly( plug ),
+				},
 			)
 
 __plugPopupMenuConnection = GafferUI.PlugValueWidget.popupMenuSignal().connect( __plugPopupMenu )

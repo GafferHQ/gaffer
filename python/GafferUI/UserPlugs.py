@@ -78,7 +78,7 @@ def __addPlug( plugParent, plugType ) :
 
 	with Gaffer.UndoContext( plugParent.ancestor( Gaffer.ScriptNode ) ) :
 		plug = plugType( flags = Gaffer.Plug.Flags.Default | Gaffer.Plug.Flags.Dynamic )
-		Gaffer.Metadata.registerPlugValue( plug, "nodule:type", "" )
+		Gaffer.Metadata.registerValue( plug, "nodule:type", "" )
 		plugParent.addChild( plug )
 
 def __plugCreationMenuDefinition( plugParent ) :

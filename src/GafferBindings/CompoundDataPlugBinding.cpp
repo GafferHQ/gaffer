@@ -148,7 +148,7 @@ class MemberPlugSerialiser : public ValuePlugSerialiser
 			return maskedMemberPlugRepr( static_cast<const CompoundDataPlug::MemberPlug *>( graphComponent ), Plug::All & ~Plug::ReadOnly );
 		}
 
-		virtual bool childNeedsConstruction( const Gaffer::GraphComponent *child ) const
+		virtual bool childNeedsConstruction( const Gaffer::GraphComponent *child, const Serialisation &serialisation ) const
 		{
 			// if the parent is dynamic then all the children will need construction.
 			const Plug *parent = child->parent<Plug>();

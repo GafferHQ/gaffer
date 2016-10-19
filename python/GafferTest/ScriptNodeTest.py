@@ -1127,9 +1127,9 @@ a = A()"""
 		self.assertEqual( s.refCount(), c )
 
 		with Gaffer.UndoContext( s ) :
-			Gaffer.Metadata.registerNodeValue( s, "test", 10 )
-			Gaffer.Metadata.registerNodeValue( s["n2"], "test", 10 )
-			Gaffer.Metadata.registerPlugValue( s["n2"]["p"], "test", 10 )
+			Gaffer.Metadata.registerValue( s, "test", 10 )
+			Gaffer.Metadata.registerValue( s["n2"], "test", 10 )
+			Gaffer.Metadata.registerValue( s["n2"]["p"], "test", 10 )
 		self.assertEqual( s.refCount(), c )
 
 		with Gaffer.UndoContext( s ) :
@@ -1189,36 +1189,36 @@ a = A()"""
 
 		s = Gaffer.ScriptNode()
 
-		self.assertEqual( Gaffer.Metadata.nodeValue( s, "serialiser:milestoneVersion" ), None )
-		self.assertEqual( Gaffer.Metadata.nodeValue( s, "serialiser:majorVersion" ), None )
-		self.assertEqual( Gaffer.Metadata.nodeValue( s, "serialiser:minorVersion" ), None )
-		self.assertEqual( Gaffer.Metadata.nodeValue( s, "serialiser:patchVersion" ), None )
+		self.assertEqual( Gaffer.Metadata.value( s, "serialiser:milestoneVersion" ), None )
+		self.assertEqual( Gaffer.Metadata.value( s, "serialiser:majorVersion" ), None )
+		self.assertEqual( Gaffer.Metadata.value( s, "serialiser:minorVersion" ), None )
+		self.assertEqual( Gaffer.Metadata.value( s, "serialiser:patchVersion" ), None )
 
 		s.serialiseToFile( self.temporaryDirectory() + "/test.gfr" )
 
-		self.assertEqual( Gaffer.Metadata.nodeValue( s, "serialiser:milestoneVersion" ), None )
-		self.assertEqual( Gaffer.Metadata.nodeValue( s, "serialiser:majorVersion" ), None )
-		self.assertEqual( Gaffer.Metadata.nodeValue( s, "serialiser:minorVersion" ), None )
-		self.assertEqual( Gaffer.Metadata.nodeValue( s, "serialiser:patchVersion" ), None )
+		self.assertEqual( Gaffer.Metadata.value( s, "serialiser:milestoneVersion" ), None )
+		self.assertEqual( Gaffer.Metadata.value( s, "serialiser:majorVersion" ), None )
+		self.assertEqual( Gaffer.Metadata.value( s, "serialiser:minorVersion" ), None )
+		self.assertEqual( Gaffer.Metadata.value( s, "serialiser:patchVersion" ), None )
 
 		s2 = Gaffer.ScriptNode()
 		s2["fileName"].setValue( self.temporaryDirectory() + "/test.gfr" )
 		s2.load()
 
-		self.assertEqual( Gaffer.Metadata.nodeValue( s2, "serialiser:milestoneVersion" ), Gaffer.About.milestoneVersion() )
-		self.assertEqual( Gaffer.Metadata.nodeValue( s2, "serialiser:majorVersion" ), Gaffer.About.majorVersion() )
-		self.assertEqual( Gaffer.Metadata.nodeValue( s2, "serialiser:minorVersion" ), Gaffer.About.minorVersion() )
-		self.assertEqual( Gaffer.Metadata.nodeValue( s2, "serialiser:patchVersion" ), Gaffer.About.patchVersion() )
+		self.assertEqual( Gaffer.Metadata.value( s2, "serialiser:milestoneVersion" ), Gaffer.About.milestoneVersion() )
+		self.assertEqual( Gaffer.Metadata.value( s2, "serialiser:majorVersion" ), Gaffer.About.majorVersion() )
+		self.assertEqual( Gaffer.Metadata.value( s2, "serialiser:minorVersion" ), Gaffer.About.minorVersion() )
+		self.assertEqual( Gaffer.Metadata.value( s2, "serialiser:patchVersion" ), Gaffer.About.patchVersion() )
 
 		s["fileName"].setValue( self.temporaryDirectory() + "/test.gfr" )
 		s.save()
 
 		s2.load()
 
-		self.assertEqual( Gaffer.Metadata.nodeValue( s2, "serialiser:milestoneVersion" ), Gaffer.About.milestoneVersion() )
-		self.assertEqual( Gaffer.Metadata.nodeValue( s2, "serialiser:majorVersion" ), Gaffer.About.majorVersion() )
-		self.assertEqual( Gaffer.Metadata.nodeValue( s2, "serialiser:minorVersion" ), Gaffer.About.minorVersion() )
-		self.assertEqual( Gaffer.Metadata.nodeValue( s2, "serialiser:patchVersion" ), Gaffer.About.patchVersion() )
+		self.assertEqual( Gaffer.Metadata.value( s2, "serialiser:milestoneVersion" ), Gaffer.About.milestoneVersion() )
+		self.assertEqual( Gaffer.Metadata.value( s2, "serialiser:majorVersion" ), Gaffer.About.majorVersion() )
+		self.assertEqual( Gaffer.Metadata.value( s2, "serialiser:minorVersion" ), Gaffer.About.minorVersion() )
+		self.assertEqual( Gaffer.Metadata.value( s2, "serialiser:patchVersion" ), Gaffer.About.patchVersion() )
 
 	def testFileVersioningUpdatesOnSave( self ) :
 
@@ -1226,10 +1226,10 @@ a = A()"""
 		s["fileName"].setValue( os.path.dirname( __file__ ) + "/scripts/previousSerialisationVersion.gfr" )
 		s.load()
 
-		self.assertEqual( Gaffer.Metadata.nodeValue( s, "serialiser:milestoneVersion" ), 0 )
-		self.assertEqual( Gaffer.Metadata.nodeValue( s, "serialiser:majorVersion" ), 14 )
-		self.assertEqual( Gaffer.Metadata.nodeValue( s, "serialiser:minorVersion" ), 0 )
-		self.assertEqual( Gaffer.Metadata.nodeValue( s, "serialiser:patchVersion" ), 0 )
+		self.assertEqual( Gaffer.Metadata.value( s, "serialiser:milestoneVersion" ), 0 )
+		self.assertEqual( Gaffer.Metadata.value( s, "serialiser:majorVersion" ), 14 )
+		self.assertEqual( Gaffer.Metadata.value( s, "serialiser:minorVersion" ), 0 )
+		self.assertEqual( Gaffer.Metadata.value( s, "serialiser:patchVersion" ), 0 )
 
 		s["fileName"].setValue( self.temporaryDirectory() + "/test.gfr" )
 		s.save()
@@ -1238,10 +1238,10 @@ a = A()"""
 		s2["fileName"].setValue( self.temporaryDirectory() + "/test.gfr" )
 		s2.load()
 
-		self.assertEqual( Gaffer.Metadata.nodeValue( s2, "serialiser:milestoneVersion" ), Gaffer.About.milestoneVersion() )
-		self.assertEqual( Gaffer.Metadata.nodeValue( s2, "serialiser:majorVersion" ), Gaffer.About.majorVersion() )
-		self.assertEqual( Gaffer.Metadata.nodeValue( s2, "serialiser:minorVersion" ), Gaffer.About.minorVersion() )
-		self.assertEqual( Gaffer.Metadata.nodeValue( s2, "serialiser:patchVersion" ), Gaffer.About.patchVersion() )
+		self.assertEqual( Gaffer.Metadata.value( s2, "serialiser:milestoneVersion" ), Gaffer.About.milestoneVersion() )
+		self.assertEqual( Gaffer.Metadata.value( s2, "serialiser:majorVersion" ), Gaffer.About.majorVersion() )
+		self.assertEqual( Gaffer.Metadata.value( s2, "serialiser:minorVersion" ), Gaffer.About.minorVersion() )
+		self.assertEqual( Gaffer.Metadata.value( s2, "serialiser:patchVersion" ), Gaffer.About.patchVersion() )
 
 	def testFramesPerSecond( self ) :
 

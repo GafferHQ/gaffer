@@ -88,9 +88,9 @@ static NodePtr node( Plug &p )
 	return p.node();
 }
 
-void PlugSerialiser::moduleDependencies( const Gaffer::GraphComponent *graphComponent, std::set<std::string> &modules ) const
+void PlugSerialiser::moduleDependencies( const Gaffer::GraphComponent *graphComponent, std::set<std::string> &modules, const Serialisation &serialisation ) const
 {
-	Serialiser::moduleDependencies( graphComponent, modules );
+	Serialiser::moduleDependencies( graphComponent, modules, serialisation );
 	metadataModuleDependencies( static_cast<const Plug *>( graphComponent ), modules );
 }
 
@@ -122,7 +122,7 @@ std::string PlugSerialiser::postHierarchy( const Gaffer::GraphComponent *graphCo
 	return "";
 }
 
-bool PlugSerialiser::childNeedsConstruction( const Gaffer::GraphComponent *child ) const
+bool PlugSerialiser::childNeedsConstruction( const Gaffer::GraphComponent *child, const Serialisation &serialisation ) const
 {
 	// cast is safe because of constraints maintained by Plug::acceptsChild().
 	const Plug *childPlug = static_cast<const Plug *>( child );

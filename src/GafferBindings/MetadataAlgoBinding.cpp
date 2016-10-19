@@ -1,6 +1,6 @@
 //////////////////////////////////////////////////////////////////////////
 //
-//  Copyright (c) 2014, Image Engine Design Inc. All rights reserved.
+//  Copyright (c) 2016, Image Engine Design Inc. All rights reserved.
 //
 //  Redistribution and use in source and binary forms, with or without
 //  modification, are permitted provided that the following conditions are
@@ -34,49 +34,28 @@
 //
 //////////////////////////////////////////////////////////////////////////
 
-#include "tbb/tbb.h"
+#include "boost/python.hpp"
 
-#include "IECore/SimpleTypedData.h"
-
-#include "Gaffer/Node.h"
+#include "Gaffer/MetadataAlgo.h"
+#include "Gaffer/GraphComponent.h"
 #include "Gaffer/Plug.h"
-#include "Gaffer/Metadata.h"
 
-#include "GafferTest/Assert.h"
-#include "GafferTest/MetadataTest.h"
-
-using namespace tbb;
-using namespace IECore;
+using namespace boost::python;
 using namespace Gaffer;
 
-struct TestThreading
+namespace GafferBindings
 {
 
-	void operator()( const blocked_range<size_t> &r ) const
-	{
-		for( size_t i=r.begin(); i!=r.end(); ++i )
-		{
-			NodePtr n = new Node();
-			PlugPtr p = new Plug();
-
-			GAFFERTEST_ASSERT( Metadata::value<Data>( n.get(), "threadingTest" ) == NULL );
-			GAFFERTEST_ASSERT( Metadata::value<Data>( p.get(), "threadingTest" ) == NULL );
-
-			Metadata::registerValue( n.get(), "threadingTest", new IECore::IntData( 1 ) );
-			Metadata::registerValue( p.get(), "threadingTest", new IECore::IntData( 2 ) );
-
-			GAFFERTEST_ASSERT( Metadata::value<IntData>( n.get(), "threadingTest" )->readable() == 1 );
-			GAFFERTEST_ASSERT( Metadata::value<IntData>( p.get(), "threadingTest" )->readable() == 2 );
-		}
-	}
-
-};
-
-void GafferTest::testMetadataThreading()
+void bindMetadataAlgo()
 {
-	// this test simulates many different scripts being loaded
-	// concurrently in separate threads, with each script registering
-	// per-instance metadata for its members.
-	TestThreading t;
-	parallel_for( blocked_range<size_t>( 0, 10000 ), t );
+
+	def( "setReadOnly", &setReadOnly, ( arg( "graphComponent" ), arg( "readOnly"), arg( "persistent" ) = true ) );
+	def( "getReadOnly", &getReadOnly );
+	def( "readOnly", &readOnly );
+	def( "affectedByChange", &affectedByChange, ( arg( "plug" ), arg( "changedNodeTypeId"), arg( "changedPlugPath" ), arg( "changedPlug" ) ) );
+	def( "childAffectedByChange", &childAffectedByChange, ( arg( "parent" ), arg( "changedNodeTypeId"), arg( "changedPlugPath" ), arg( "changedPlug" ) ) );
+	def( "ancestorAffectedByChange", &ancestorAffectedByChange, ( arg( "plug" ), arg( "changedNodeTypeId"), arg( "changedPlugPath" ), arg( "changedPlug" ) ) );
+
 }
+
+} // namespace GafferBindings
