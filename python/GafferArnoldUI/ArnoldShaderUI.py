@@ -319,7 +319,7 @@ def __walkHoudiniParameters( nodeEntry, parameters, sectionName ) :
 
 			__metadata[nodeName + ".parameters." + parameter.name]["layout:section"] = sectionNameWithHeading
 
-with IECoreArnold.UniverseBlock() :
+with IECoreArnold.UniverseBlock( writable = False ) :
 
 	nodeIt = arnold.AiUniverseGetNodeEntryIterator( arnold.AI_NODE_SHADER | arnold.AI_NODE_LIGHT )
 	while not arnold.AiNodeEntryIteratorFinished( nodeIt ) :

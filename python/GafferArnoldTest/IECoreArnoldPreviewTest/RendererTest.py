@@ -74,7 +74,7 @@ class RendererTest( GafferTest.TestCase ) :
 		r.render()
 		del r
 
-		with IECoreArnold.UniverseBlock() :
+		with IECoreArnold.UniverseBlock( writable = True ) :
 
 			arnold.AiASSLoad( self.temporaryDirectory() + "/test.ass" )
 
@@ -105,7 +105,7 @@ class RendererTest( GafferTest.TestCase ) :
 		r.render()
 		del r
 
-		with IECoreArnold.UniverseBlock() :
+		with IECoreArnold.UniverseBlock( writable = True ) :
 
 			arnold.AiASSLoad( self.temporaryDirectory() + "/test.ass" )
 			options = arnold.AiUniverseGetOptions()
@@ -143,7 +143,7 @@ class RendererTest( GafferTest.TestCase ) :
 		r.render()
 		del r
 
-		with IECoreArnold.UniverseBlock() :
+		with IECoreArnold.UniverseBlock( writable = True ) :
 
 			arnold.AiASSLoad( self.temporaryDirectory() + "/test.ass" )
 			self.assertEqual( len( self.__allNodes( type = arnold.AI_NODE_SHADER ) ), 1 )
@@ -173,7 +173,7 @@ class RendererTest( GafferTest.TestCase ) :
 		r.render()
 		del r
 
-		with IECoreArnold.UniverseBlock() :
+		with IECoreArnold.UniverseBlock( writable = True ) :
 
 			arnold.AiASSLoad( self.temporaryDirectory() + "/test.ass" )
 			# We only want one shader to have been saved, because only one was genuinely used.
@@ -220,7 +220,7 @@ class RendererTest( GafferTest.TestCase ) :
 		r.render()
 		del r
 
-		with IECoreArnold.UniverseBlock() :
+		with IECoreArnold.UniverseBlock( writable = True ) :
 
 			arnold.AiASSLoad( self.temporaryDirectory() + "/test.ass" )
 
@@ -274,7 +274,7 @@ class RendererTest( GafferTest.TestCase ) :
 		r.render()
 		del r
 
-		with IECoreArnold.UniverseBlock() :
+		with IECoreArnold.UniverseBlock( writable = True ) :
 			arnold.AiASSLoad( self.temporaryDirectory() + "/test.ass" )
 
 			target = arnold.AtNode.from_address( arnold.AiNodeGetPtr( arnold.AiNodeLookUpByName( "testPlane_scalarColor" ), "shader" ) )
@@ -317,7 +317,7 @@ class RendererTest( GafferTest.TestCase ) :
 		r.render()
 		del r
 
-		with IECoreArnold.UniverseBlock() :
+		with IECoreArnold.UniverseBlock( writable = True ) :
 
 			arnold.AiASSLoad( self.temporaryDirectory() + "/test.ass" )
 
@@ -354,7 +354,7 @@ class RendererTest( GafferTest.TestCase ) :
 		r.render()
 		del r
 
-		with IECoreArnold.UniverseBlock() :
+		with IECoreArnold.UniverseBlock( writable = True ) :
 
 			arnold.AiASSLoad( self.temporaryDirectory() + "/test.ass" )
 
@@ -402,7 +402,7 @@ class RendererTest( GafferTest.TestCase ) :
 		r.render()
 		del r
 
-		with IECoreArnold.UniverseBlock() :
+		with IECoreArnold.UniverseBlock( writable = True ) :
 
 			arnold.AiASSLoad( self.temporaryDirectory() + "/test.ass" )
 
@@ -463,7 +463,7 @@ class RendererTest( GafferTest.TestCase ) :
 		r.render()
 		del r
 
-		with IECoreArnold.UniverseBlock() :
+		with IECoreArnold.UniverseBlock( writable = True ) :
 
 			arnold.AiASSLoad( self.temporaryDirectory() + "/test.ass" )
 
@@ -517,7 +517,7 @@ class RendererTest( GafferTest.TestCase ) :
 		r.render()
 		del r
 
-		with IECoreArnold.UniverseBlock() :
+		with IECoreArnold.UniverseBlock( writable = True ) :
 
 			arnold.AiASSLoad( self.temporaryDirectory() + "/test.ass" )
 			filters = self.__allNodes( type = arnold.AI_NODE_FILTER )
@@ -591,7 +591,7 @@ class RendererTest( GafferTest.TestCase ) :
 		del defaultAttributes, adaptiveAttributes, nonAdaptiveAttributes, adaptiveObjectSpaceAttributes
 		del r
 
-		with IECoreArnold.UniverseBlock() :
+		with IECoreArnold.UniverseBlock( writable = True ) :
 
 			arnold.AiASSLoad( self.temporaryDirectory() + "/test.ass" )
 
@@ -653,7 +653,7 @@ class RendererTest( GafferTest.TestCase ) :
 		r.render()
 		del r
 
-		with IECoreArnold.UniverseBlock() :
+		with IECoreArnold.UniverseBlock( writable = True ) :
 
 			arnold.AiASSLoad( self.temporaryDirectory() + "/test.ass" )
 			node = arnold.AiNodeLookUpByName( "plane" )
@@ -702,7 +702,7 @@ class RendererTest( GafferTest.TestCase ) :
 		r.render()
 		del r
 
-		with IECoreArnold.UniverseBlock() :
+		with IECoreArnold.UniverseBlock( writable = True ) :
 
 			arnold.AiASSLoad( self.temporaryDirectory() + "/test.ass" )
 
@@ -762,7 +762,7 @@ class RendererTest( GafferTest.TestCase ) :
 		r.render()
 		del r
 
-		with IECoreArnold.UniverseBlock() :
+		with IECoreArnold.UniverseBlock( writable = True ) :
 
 			arnold.AiASSLoad( self.temporaryDirectory() + "/test.ass" )
 
@@ -825,7 +825,7 @@ class RendererTest( GafferTest.TestCase ) :
 		r.render()
 		del r
 
-		with IECoreArnold.UniverseBlock() :
+		with IECoreArnold.UniverseBlock( writable = True ) :
 
 			arnold.AiASSLoad( self.temporaryDirectory() + "/test.ass" )
 
@@ -865,7 +865,7 @@ class RendererTest( GafferTest.TestCase ) :
 		r.render()
 		del r
 
-		with IECoreArnold.UniverseBlock() :
+		with IECoreArnold.UniverseBlock( writable = True ) :
 
 			arnold.AiASSLoad( self.temporaryDirectory() + "/test.ass" )
 
@@ -917,7 +917,7 @@ class RendererTest( GafferTest.TestCase ) :
 		r.render()
 		del r
 
-		with IECoreArnold.UniverseBlock() :
+		with IECoreArnold.UniverseBlock( writable = True ) :
 
 			arnold.AiASSLoad( self.temporaryDirectory() + "/test.ass" )
 
@@ -999,7 +999,7 @@ class RendererTest( GafferTest.TestCase ) :
 		r.render()
 		del r
 
-		with IECoreArnold.UniverseBlock() :
+		with IECoreArnold.UniverseBlock( writable = True ) :
 
 			arnold.AiASSLoad( self.temporaryDirectory() + "/test.ass" )
 
@@ -1053,7 +1053,7 @@ class RendererTest( GafferTest.TestCase ) :
 		r.render()
 		del r
 
-		with IECoreArnold.UniverseBlock() :
+		with IECoreArnold.UniverseBlock( writable = True ) :
 
 			arnold.AiASSLoad( self.temporaryDirectory() + "/test.ass" )
 
@@ -1097,7 +1097,7 @@ class RendererTest( GafferTest.TestCase ) :
 		r.render()
 		del r
 
-		with IECoreArnold.UniverseBlock() :
+		with IECoreArnold.UniverseBlock( writable = True ) :
 
 			arnold.AiASSLoad( self.temporaryDirectory() + "/test.ass" )
 
@@ -1169,7 +1169,7 @@ class RendererTest( GafferTest.TestCase ) :
 		r.render()
 		del r
 
-		with IECoreArnold.UniverseBlock() :
+		with IECoreArnold.UniverseBlock( writable = True ) :
 
 			arnold.AiASSLoad( self.temporaryDirectory() + "/test.ass" )
 
@@ -1330,7 +1330,7 @@ class RendererTest( GafferTest.TestCase ) :
 		r.render()
 		del r
 
-		with IECoreArnold.UniverseBlock() :
+		with IECoreArnold.UniverseBlock( writable = True ) :
 
 			arnold.AiASSLoad( self.temporaryDirectory() + "/test.ass" )
 
@@ -1424,7 +1424,7 @@ class RendererTest( GafferTest.TestCase ) :
 		r.render()
 		del r
 
-		with IECoreArnold.UniverseBlock() :
+		with IECoreArnold.UniverseBlock( writable = True ) :
 
 			arnold.AiASSLoad( self.temporaryDirectory() + "/test.ass" )
 

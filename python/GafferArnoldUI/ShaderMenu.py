@@ -54,7 +54,7 @@ def appendShaders( menuDefinition, prefix="/Arnold" ) :
 
 	categorisedMenuItems = []
 	uncategorisedMenuItems = []
-	with IECoreArnold.UniverseBlock() :
+	with IECoreArnold.UniverseBlock( writable = False ) :
 
 		it = arnold.AiUniverseGetNodeEntryIterator( arnold.AI_NODE_SHADER | arnold.AI_NODE_LIGHT )
 
