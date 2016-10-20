@@ -1,4 +1,4 @@
-#!/usr/bin/env python 
+#!/usr/bin/env python
 
 import os
 import re
@@ -20,14 +20,14 @@ def __query( url ) :
 
 		l = urllib.urlopen( url )
 		result.extend( json.load( l ) )
-		
+
 		h = dict( l.info() )
 		if "link" in h :
 			s = re.search( "^<(.*)>; rel=\"next\"", h["link"] )
 			url = s.group( 1 ) if s is not None else None
 		else :
 			url = None
-			
+
 	return result
 
 # check we have a token available for the upload
@@ -37,13 +37,13 @@ if "GITHUB_RELEASE_TOKEN" not in os.environ	:
 
 # get tag and corresponding release
 
-tags = __query( "https://api.github.com/repos/ImageEngine/gaffer/tags" )
+tags = __query( "https://api.github.com/repos/GafferHQ/gaffer/tags" )
 tag = next( ( t for t in tags if t["name"] == args.tag ), None )
 
 if tag is None :
 	raise Exception( "Tag \"%s\" does not exist" % args.tag )
 
-releases = __query( "https://api.github.com/repos/ImageEngine/gaffer/releases" )
+releases = __query( "https://api.github.com/repos/GafferHQ/gaffer/releases" )
 release = next( ( r for r in releases if r["tag_name"] == args.tag ), None )
 
 if release is None :
@@ -51,13 +51,13 @@ if release is None :
 
 # download source code from tag
 
-sys.stderr.write( "Downloading source \"%s\"\n" % tag["tarball_url"] ) 
+sys.stderr.write( "Downloading source \"%s\"\n" % tag["tarball_url"] )
 
 sourceDirName = "gaffer-%s-source" % args.tag
 tarFileName = sourceDirName + ".tar.gz"
 tarFileName, headers = urllib.urlretrieve( tag["tarball_url"] )
 
-sys.stderr.write( "Decompressing source to \"%s\"\n" % sourceDirName ) 
+sys.stderr.write( "Decompressing source to \"%s\"\n" % sourceDirName )
 
 os.makedirs( sourceDirName )
 os.system( "tar xf %s -C %s --strip-components=1" % ( tarFileName, sourceDirName ) )
@@ -70,15 +70,15 @@ buildDir = "build/gaffer-%s-%s" % ( args.tag, platform )
 installDir = "install/gaffer-%s-%s" % ( args.tag, platform )
 os.makedirs( buildDir )
 
-dependenciesReleases = __query( "https://api.github.com/repos/johnhaddon/gafferDependencies/releases" )
+dependenciesReleases = __query( "https://api.github.com/repos/GafferHQ/dependencies/releases" )
 dependenciesRelease = next( r for r in dependenciesReleases if len( r["assets"] ) )
 dependenciesAsset = next( a for a in dependenciesRelease["assets"] if platform in a["name"] )
- 
-sys.stderr.write( "Downloading dependencies \"%s\"\n" % dependenciesAsset["browser_download_url"] ) 
+
+sys.stderr.write( "Downloading dependencies \"%s\"\n" % dependenciesAsset["browser_download_url"] )
 
 dependenciesTarFileName, headers = urllib.urlretrieve( dependenciesAsset["browser_download_url"] )
 
-sys.stderr.write( "Decompressing dependencies to \"%s\"\n" % buildDir ) 
+sys.stderr.write( "Decompressing dependencies to \"%s\"\n" % buildDir )
 
 os.system( "tar xf %s -C %s --strip-components=1" % ( dependenciesTarFileName, buildDir ) )
 
