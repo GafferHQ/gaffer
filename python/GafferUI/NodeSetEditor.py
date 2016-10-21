@@ -111,15 +111,14 @@ class NodeSetEditor( GafferUI.EditorWidget ) :
 		return result
 
 	## Ensures that the specified node has a visible editor of this class type editing
-	# it, creating one if necessary.
-	## \todo User preferences for whether these are made floating, embedded, whether
-	# they are reused etc. This class should provide the behaviour, but the code for
-	# linking it to preferences should be in a startup file.
+	# it, creating one if necessary. The `floating` argument may be passed a value of
+	# `True` or `False`, to force the acquisition of a panel that is either floating or
+	# docked respectively.
 	## \todo Consider how this relates to draggable editor tabs and editor floating
 	# once we implement that in CompoundEditor - perhaps acquire will become a method
 	# on CompoundEditor instead at this point.
 	@classmethod
-	def acquire( cls, node ) :
+	def acquire( cls, node, floating = None ) :
 
 		if isinstance( node, Gaffer.ScriptNode ) :
 			script = node
@@ -128,23 +127,33 @@ class NodeSetEditor( GafferUI.EditorWidget ) :
 
 		scriptWindow = GafferUI.ScriptWindow.acquire( script )
 
-		for editor in scriptWindow.getLayout().editors( type = cls ) :
-			if node.isSame( editor._lastAddedNode() ) :
-				editor.reveal()
-				return editor
+		if floating in ( None, False ) :
+			for editor in scriptWindow.getLayout().editors( type = cls ) :
+				if node.isSame( editor._lastAddedNode() ) :
+					editor.reveal()
+					return editor
 
-		childWindows = scriptWindow.childWindows()
-		for window in childWindows :
-			if isinstance( window, _EditorWindow ) :
-				if isinstance( window.getChild(), cls ) and node in window.getChild().getNodeSet() :
-					window.setVisible( True )
-					return window.getChild()
+		if floating in ( None, True ) :
+			childWindows = scriptWindow.childWindows()
+			for window in childWindows :
+				if isinstance( window, _EditorWindow ) :
+					if isinstance( window.getChild(), cls ) and node in window.getChild().getNodeSet() :
+						window.setVisible( True )
+						return window.getChild()
 
 		editor = cls( script )
 		editor.setNodeSet( Gaffer.StandardSet( [ node ] ) )
 
-		window = _EditorWindow( scriptWindow, editor )
-		window.setVisible( True )
+		if floating is False :
+			scriptWindow.getLayout().addEditor( editor )
+		else :
+			window = _EditorWindow( scriptWindow, editor )
+			window.setVisible( True )
+			## \todo Can we do better using `window.resizeToFitChild()`?
+			# Our problem is that some NodeEditors (for GafferImage.Text for instance)
+			# are very large, whereas some (GafferScene.Shader) don't have
+			# a valid size until the UI has been built lazily.
+			window._qtWidget().resize( 400, 400 )
 
 		return editor
 
