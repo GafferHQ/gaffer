@@ -98,7 +98,11 @@ def _qtAddress( o ) :
 		import sip
 		return sip.unwrapinstance( o )
 	else :
-		import shiboken
+		try :
+			import PySide.shiboken as shiboken
+		except ImportError :
+			import shiboken
+
 		return shiboken.getCppPointer( o )[0]
 
 ##########################################################################
@@ -114,7 +118,11 @@ def _qtObject( address, type ) :
 		import sip
 		return sip.wrapinstance( address, type )
 	else :
-		import shiboken
+		try :
+			import PySide.shiboken as shiboken
+		except ImportError :
+			import shiboken
+
 		return shiboken.wrapInstance( address, type )
 
 ##########################################################################
