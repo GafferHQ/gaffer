@@ -64,6 +64,7 @@ IE_CORE_DEFINERUNTIMETYPED( StandardNodule );
 Nodule::NoduleTypeDescription<StandardNodule> StandardNodule::g_noduleTypeDescription( Gaffer::Plug::staticTypeId() );
 
 static IECore::InternedString g_colorKey( "nodule:color" );
+static IECore::InternedString g_labelKey( "label" );
 
 StandardNodule::StandardNodule( Gaffer::PlugPtr plug )
 	:	Nodule( plug ), m_labelVisible( false ), m_draggingConnection( false )
@@ -156,7 +157,16 @@ void StandardNodule::renderLabel( const Style *style ) const
 		return;
 	}
 
-	const std::string &label = plug()->getName().string();
+	const std::string *label = NULL;
+	IECore::ConstStringDataPtr labelData = Metadata::value<IECore::StringData>( plug(), g_labelKey );
+	if( labelData )
+	{
+		label = &labelData->readable();
+	}
+	else
+	{
+		label = &plug()->getName().string();
+	}
 
 	// we rotate the label based on the angle the connection exits the node at.
 	V3f tangent = nodeGadget->noduleTangent( this );
@@ -175,7 +185,7 @@ void StandardNodule::renderLabel( const Style *style ) const
 
 	// we also don't want the text to be upside down, so we correct the rotation
 	// if that would be the case.
-	Box3f labelBound = style->textBound( Style::LabelText, label );
+	Box3f labelBound = style->textBound( Style::LabelText, *label );
 	V2f anchor( labelBound.min.x - 1.0f, labelBound.center().y );
 
 	if( theta > 90.0f || theta < -90.0f )
@@ -194,7 +204,7 @@ void StandardNodule::renderLabel( const Style *style ) const
 	glRotatef( theta, 0, 0, 1.0f );
 	glTranslatef( -anchor.x, -anchor.y, 0.0f );
 
-	style->renderText( Style::LabelText, label );
+	style->renderText( Style::LabelText, *label );
 }
 
 void StandardNodule::enter( GadgetPtr gadget, const ButtonEvent &event )
@@ -428,14 +438,24 @@ void StandardNodule::setCompatibleLabelsVisible( const DragDropEvent &event, boo
 
 void StandardNodule::plugMetadataChanged( IECore::TypeId nodeTypeId, const Gaffer::MatchPattern &plugPath, IECore::InternedString key, const Gaffer::Plug *plug )
 {
-	if( key != g_colorKey || !affectedByChange( this->plug(), nodeTypeId, plugPath, plug ) )
+	if( !affectedByChange( this->plug(), nodeTypeId, plugPath, plug ) )
 	{
 		return;
 	}
 
-	if( updateUserColor() )
+	if( key == g_colorKey )
 	{
- 		requestRender();
+		if( updateUserColor() )
+		{
+			requestRender();
+		}
+	}
+	else if( key == g_labelKey )
+	{
+		if( m_labelVisible )
+		{
+			requestRender();
+		}
 	}
 }
 
