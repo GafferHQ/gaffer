@@ -131,6 +131,13 @@ class CompoundDataPlugTest( GafferTest.TestCase ) :
 		self.assertEqual( d, IECore.Color3fVectorData( [ IECore.Color3f( x ) for x in range( 1, 5 ) ] ) )
 		self.assertEqual( n, "e" )
 
+		m6 = p.addMember( "f", IECore.M44fVectorData( [ IECore.M44f() * x for x in range( 1, 5 ) ] ) )
+		self.failUnless( isinstance( m6, Gaffer.ValuePlug ) )
+
+		d, n = p.memberDataAndName( m6 )
+		self.assertEqual( d, IECore.M44fVectorData( [ IECore.M44f() * x for x in range( 1, 5 ) ] ) )
+		self.assertEqual( n, "f" )
+
 	def testImathVectorData( self ) :
 
 		p = Gaffer.CompoundDataPlug()

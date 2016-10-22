@@ -49,6 +49,7 @@ IECORE_RUNTIMETYPED_DEFINETEMPLATESPECIALISATION( Gaffer::StringVectorDataPlug, 
 IECORE_RUNTIMETYPED_DEFINETEMPLATESPECIALISATION( Gaffer::InternedStringVectorDataPlug, InternedStringVectorDataPlugTypeId )
 IECORE_RUNTIMETYPED_DEFINETEMPLATESPECIALISATION( Gaffer::V3fVectorDataPlug, V3fVectorDataPlugTypeId )
 IECORE_RUNTIMETYPED_DEFINETEMPLATESPECIALISATION( Gaffer::Color3fVectorDataPlug, Color3fVectorDataPlugTypeId )
+IECORE_RUNTIMETYPED_DEFINETEMPLATESPECIALISATION( Gaffer::M44fVectorDataPlug, M44fVectorDataPlugTypeId )
 IECORE_RUNTIMETYPED_DEFINETEMPLATESPECIALISATION( Gaffer::ObjectVectorPlug, ObjectVectorPlugTypeId )
 IECORE_RUNTIMETYPED_DEFINETEMPLATESPECIALISATION( Gaffer::CompoundObjectPlug, CompoundObjectPlugTypeId )
 
@@ -61,6 +62,7 @@ template class TypedObjectPlug<IECore::StringVectorData>;
 template class TypedObjectPlug<IECore::InternedStringVectorData>;
 template class TypedObjectPlug<IECore::V3fVectorData>;
 template class TypedObjectPlug<IECore::Color3fVectorData>;
+template class TypedObjectPlug<IECore::M44fVectorData>;
 template class TypedObjectPlug<IECore::ObjectVector>;
 template class TypedObjectPlug<IECore::CompoundObject>;
 
