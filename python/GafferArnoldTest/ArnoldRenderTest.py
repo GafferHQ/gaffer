@@ -337,7 +337,7 @@ class ArnoldRenderTest( GafferTest.TestCase ) :
 		s["options"]["options"]["transformBlur"]["value"].setValue( False )
 		s["render"]["task"].execute()
 
-		with IECoreArnold.UniverseBlock() :
+		with IECoreArnold.UniverseBlock( writable = True ) :
 
 			arnold.AiASSLoad( self.temporaryDirectory() + "/test.ass" )
 
@@ -365,7 +365,7 @@ class ArnoldRenderTest( GafferTest.TestCase ) :
 		s["options"]["options"]["transformBlur"]["value"].setValue( True )
 		s["render"]["task"].execute()
 
-		with IECoreArnold.UniverseBlock() :
+		with IECoreArnold.UniverseBlock( writable = True ) :
 
 			arnold.AiASSLoad( self.temporaryDirectory() + "/test.ass" )
 
@@ -430,7 +430,7 @@ class ArnoldRenderTest( GafferTest.TestCase ) :
 
 		s["render"]["task"].execute()
 
-		with IECoreArnold.UniverseBlock() :
+		with IECoreArnold.UniverseBlock( writable = True ) :
 
 			arnold.AiASSLoad( self.temporaryDirectory() + "/test.ass" )
 			options = arnold.AiUniverseGetOptions()
@@ -443,7 +443,7 @@ class ArnoldRenderTest( GafferTest.TestCase ) :
 		s["options"]["options"]["renderCamera"]["value"].setValue( "/camera" )
 		s["render"]["task"].execute()
 
-		with IECoreArnold.UniverseBlock() :
+		with IECoreArnold.UniverseBlock( writable = True ) :
 
 			arnold.AiASSLoad( self.temporaryDirectory() + "/test.ass" )
 			options = arnold.AiUniverseGetOptions()
@@ -469,7 +469,7 @@ class ArnoldRenderTest( GafferTest.TestCase ) :
 		# Default region
 		s["render"]["task"].execute()
 
-		with IECoreArnold.UniverseBlock() :
+		with IECoreArnold.UniverseBlock( writable = True ) :
 
 			arnold.AiASSLoad( self.temporaryDirectory() + "/test.ass" )
 			options = arnold.AiUniverseGetOptions()
@@ -486,7 +486,7 @@ class ArnoldRenderTest( GafferTest.TestCase ) :
 
 		s["render"]["task"].execute()
 
-		with IECoreArnold.UniverseBlock() :
+		with IECoreArnold.UniverseBlock( writable = True ) :
 
 			arnold.AiASSLoad( self.temporaryDirectory() + "/test.ass" )
 			options = arnold.AiUniverseGetOptions()
@@ -502,7 +502,7 @@ class ArnoldRenderTest( GafferTest.TestCase ) :
 
 		s["render"]["task"].execute()
 
-		with IECoreArnold.UniverseBlock() :
+		with IECoreArnold.UniverseBlock( writable = True ) :
 
 			arnold.AiASSLoad( self.temporaryDirectory() + "/test.ass" )
 			options = arnold.AiUniverseGetOptions()
@@ -530,7 +530,7 @@ class ArnoldRenderTest( GafferTest.TestCase ) :
 
 		s["render"]["task"].execute()
 
-		with IECoreArnold.UniverseBlock() :
+		with IECoreArnold.UniverseBlock( writable = True ) :
 
 			arnold.AiASSLoad( self.temporaryDirectory() + "/test.ass" )
 			options = arnold.AiUniverseGetOptions()
@@ -651,7 +651,7 @@ class ArnoldRenderTest( GafferTest.TestCase ) :
 
 		render["task"].execute()
 
-		with IECoreArnold.UniverseBlock() :
+		with IECoreArnold.UniverseBlock( writable = True ) :
 
 			arnold.AiASSLoad( self.temporaryDirectory() + "/test.ass" )
 

@@ -409,6 +409,8 @@ class ArnoldShaderTest( GafferSceneTest.SceneTestCase ) :
 
 	def testColorParameterMetadata( self ) :
 
+		self.__forceArnoldRestart()
+
 		n = GafferArnold.ArnoldShader()
 		n.loadShader( "ray_switch" )
 
@@ -417,6 +419,8 @@ class ArnoldShaderTest( GafferSceneTest.SceneTestCase ) :
 
 		self.addCleanup( os.environ.__setitem__, "ARNOLD_PLUGIN_PATH", os.environ["ARNOLD_PLUGIN_PATH"] )
 		os.environ["ARNOLD_PLUGIN_PATH"] = os.environ["ARNOLD_PLUGIN_PATH"] + ":" + os.path.join( os.path.dirname( __file__ ), "metadata" )
+
+		self.__forceArnoldRestart()
 
 		n = GafferArnold.ArnoldShader()
 		n.loadShader( "ray_switch" )
@@ -429,12 +433,16 @@ class ArnoldShaderTest( GafferSceneTest.SceneTestCase ) :
 
 	def testEmptyPlugTypeMetadata( self ) :
 
+		self.__forceArnoldRestart()
+
 		n = GafferArnold.ArnoldShader()
 		n.loadShader( "standard" )
 		self.assertTrue( "aov_direct_diffuse" in n["parameters"] )
 
 		self.addCleanup( os.environ.__setitem__, "ARNOLD_PLUGIN_PATH", os.environ["ARNOLD_PLUGIN_PATH"] )
 		os.environ["ARNOLD_PLUGIN_PATH"] = os.environ["ARNOLD_PLUGIN_PATH"] + ":" + os.path.join( os.path.dirname( __file__ ), "metadata" )
+
+		self.__forceArnoldRestart()
 
 		n.loadShader( "standard" )
 		self.assertTrue( "aov_direct_diffuse" not in n["parameters"] )
@@ -609,6 +617,11 @@ class ArnoldShaderTest( GafferSceneTest.SceneTestCase ) :
 		self.assertEqual( s2["n1"]["out"].defaultValue(), IECore.Color3f( 0 ) )
 		self.assertTrue( s2["n2"]["parameters"]["color"].getInput().isSame( s2["n1"]["out"] ) )
 		self.assertTrue( s2["a"]["shader"].getInput().isSame( s2["n2"]["out"] ) )
+
+	def __forceArnoldRestart( self ) :
+
+		with IECoreArnold.UniverseBlock( writable = True ) :
+			pass
 
 if __name__ == "__main__":
 	unittest.main()

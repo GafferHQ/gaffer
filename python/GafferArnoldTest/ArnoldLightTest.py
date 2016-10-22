@@ -59,7 +59,7 @@ class ArnoldLightTest( GafferSceneTest.SceneTestCase ) :
 	def testLoadAllLightsWithoutWarnings( self ) :
 
 		lightNames = []
-		with IECoreArnold.UniverseBlock() :
+		with IECoreArnold.UniverseBlock( writable = False ) :
 			it = arnold.AiUniverseGetNodeEntryIterator( arnold.AI_NODE_LIGHT )
 			while not arnold.AiNodeEntryIteratorFinished( it ) :
 				nodeEntry = arnold.AiNodeEntryIteratorGetNext( it )
