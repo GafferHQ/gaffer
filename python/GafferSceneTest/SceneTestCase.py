@@ -97,7 +97,14 @@ class SceneTestCase( GafferTest.TestCase ) :
 			path = path.strip( "/" ).split( "/" )
 
 		for i in range( 0, len( path ) ) :
-			self.assertTrue( path[i] in scenePlug.childNames( "/" + "/".join( path[:i] ) ) )
+			self.assertTrue(
+				path[i] in scenePlug.childNames( "/" + "/".join( path[:i] ) ),
+				"\"{childName}\" in {scene}.childNames( \"{location}\" )".format(
+					childName = path[i],
+					scene = scenePlug.relativeName( scenePlug.ancestor( Gaffer.ScriptNode ) ),
+					location =  "/" + "/".join( path[:i] )
+				)
+			)
 
 	## Checks that all paths referenced by sets do exist.
 	def assertSetsValid( self, scenePlug ) :
