@@ -58,7 +58,6 @@ Blur::Blur( const std::string &name )
 	addChild( resample->boundingModePlug()->createCounterpart( "boundingMode", Plug::In ) );
 	addChild( new BoolPlug( "expandDataWindow" ) );
 
-	addChild( new AtomicBox2fPlug( "__dataWindow", Plug::Out ) );
 	addChild( new V2fPlug( "__filterWidth", Plug::Out ) );
 
 	addChild( new AtomicBox2iPlug( "__resampledDataWindow", Plug::In, Box2i(), Plug::Default & ~Plug::Serialisable ) );
@@ -71,7 +70,6 @@ Blur::Blur( const std::string &name )
 	resample->boundingModePlug()->setInput( boundingModePlug() );
 	resample->filterWidthPlug()->setInput( filterWidthPlug() );
 	resample->expandDataWindowPlug()->setValue( true );
-	resample->dataWindowPlug()->setInput( dataWindowPlug() );
 
 	resampledDataWindowPlug()->setInput( resample->outPlug()->dataWindowPlug() );
 	resampledChannelDataPlug()->setInput( resample->outPlug()->channelDataPlug() );
@@ -115,66 +113,51 @@ const Gaffer::BoolPlug *Blur::expandDataWindowPlug() const
 	return getChild<BoolPlug>( g_firstPlugIndex + 2 );
 }
 
-Gaffer::AtomicBox2fPlug *Blur::dataWindowPlug()
-{
-	return getChild<AtomicBox2fPlug>( g_firstPlugIndex + 3 );
-}
-
-const Gaffer::AtomicBox2fPlug *Blur::dataWindowPlug() const
-{
-	return getChild<AtomicBox2fPlug>( g_firstPlugIndex + 3 );
-}
-
 Gaffer::V2fPlug *Blur::filterWidthPlug()
 {
-	return getChild<V2fPlug>( g_firstPlugIndex + 4 );
+	return getChild<V2fPlug>( g_firstPlugIndex + 3 );
 }
 
 const Gaffer::V2fPlug *Blur::filterWidthPlug() const
 {
-	return getChild<V2fPlug>( g_firstPlugIndex + 4 );
+	return getChild<V2fPlug>( g_firstPlugIndex + 3 );
 }
 
 Gaffer::AtomicBox2iPlug *Blur::resampledDataWindowPlug()
 {
-	return getChild<AtomicBox2iPlug>( g_firstPlugIndex + 5 );
+	return getChild<AtomicBox2iPlug>( g_firstPlugIndex + 4 );
 }
 
 const Gaffer::AtomicBox2iPlug *Blur::resampledDataWindowPlug() const
 {
-	return getChild<AtomicBox2iPlug>( g_firstPlugIndex + 5 );
+	return getChild<AtomicBox2iPlug>( g_firstPlugIndex + 4 );
 }
 
 Gaffer::FloatVectorDataPlug *Blur::resampledChannelDataPlug()
 {
-	return getChild<FloatVectorDataPlug>( g_firstPlugIndex + 6 );
+	return getChild<FloatVectorDataPlug>( g_firstPlugIndex + 5 );
 }
 
 const Gaffer::FloatVectorDataPlug *Blur::resampledChannelDataPlug() const
 {
-	return getChild<FloatVectorDataPlug>( g_firstPlugIndex + 6 );
+	return getChild<FloatVectorDataPlug>( g_firstPlugIndex + 5 );
 }
 
 Resample *Blur::resample()
 {
-	return getChild<Resample>( g_firstPlugIndex + 7 );
+	return getChild<Resample>( g_firstPlugIndex + 6 );
 }
 
 const Resample *Blur::resample() const
 {
-	return getChild<Resample>( g_firstPlugIndex + 7 );
+	return getChild<Resample>( g_firstPlugIndex + 6 );
 }
 
 void Blur::affects( const Gaffer::Plug *input, AffectedPlugsContainer &outputs ) const
 {
 	ImageProcessor::affects( input, outputs );
 
-	if( input == inPlug()->dataWindowPlug() )
-	{
-		outputs.push_back( dataWindowPlug() );
-		outputs.push_back( outPlug()->dataWindowPlug() );
-	}
-	else if(
+	if(
 		input == expandDataWindowPlug() ||
 		input == resampledDataWindowPlug()
 	)
@@ -199,11 +182,7 @@ void Blur::hash( const ValuePlug *output, const Context *context, IECore::Murmur
 {
 	ImageProcessor::hash( output, context, h );
 
-	if( output == dataWindowPlug() )
-	{
-		inPlug()->dataWindowPlug()->hash( h );
-	}
-	else if( output->parent<ValuePlug>() == filterWidthPlug() )
+	if( output->parent<ValuePlug>() == filterWidthPlug() )
 	{
 		radiusPlug()->getChild<ValuePlug>( output->getName() )->hash( h );
 	}
@@ -211,13 +190,7 @@ void Blur::hash( const ValuePlug *output, const Context *context, IECore::Murmur
 
 void Blur::compute( ValuePlug *output, const Context *context ) const
 {
-	if( output == dataWindowPlug() )
-	{
-		const Box2i b = inPlug()->dataWindowPlug()->getValue();
-		static_cast<AtomicBox2fPlug *>( output )->setValue( Box2f( b.min, b.max ) );
-		return;
-	}
-	else if( output->parent<ValuePlug>() == filterWidthPlug() )
+	if( output->parent<ValuePlug>() == filterWidthPlug() )
 	{
 		static_cast<FloatPlug *>( output )->setValue(
 			2.0f * ( 1.0f + radiusPlug()->getChild<FloatPlug>( output->getName() )->getValue() )

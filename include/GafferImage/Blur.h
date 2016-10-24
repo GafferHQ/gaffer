@@ -68,10 +68,6 @@ class Blur : public ImageProcessor
 
 	protected :
 
-		// Output plug to compute the data window for the internal Resample.
-		Gaffer::AtomicBox2fPlug *dataWindowPlug();
-		const Gaffer::AtomicBox2fPlug *dataWindowPlug() const;
-
 		// Output plug to compute the filter width for the internal Resample.
 		Gaffer::V2fPlug *filterWidthPlug();
 		const Gaffer::V2fPlug *filterWidthPlug() const;
