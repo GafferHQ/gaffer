@@ -75,9 +75,10 @@ class Resample : public ImageProcessor
 
 		/// Atomic plug, since values for this will most
 		/// commonly be computed by a wrapping class, rather
-		/// than set directly by a user.
-		Gaffer::AtomicBox2fPlug *dataWindowPlug();
-		const Gaffer::AtomicBox2fPlug *dataWindowPlug() const;
+		/// than set directly by a user. Input matrices must
+		/// not contain rotation.
+		Gaffer::M33fPlug *matrixPlug();
+		const Gaffer::M33fPlug *matrixPlug() const;
 
 		Gaffer::StringPlug *filterPlug();
 		const Gaffer::StringPlug *filterPlug() const;

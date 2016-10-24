@@ -51,13 +51,12 @@ Gaffer.Metadata.registerNode(
 
 	plugs = {
 
-		"dataWindow" : [
+		"matrix" : [
 
 			"description",
 			"""
-			The output data window. The contents of the input
-			data window will be scaled and offset as necessary
-			to fill this.
+			The transform to be applied to the input image.
+			This must contain only translation and scaling.
 			""",
 
 		],
