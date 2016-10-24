@@ -481,6 +481,9 @@ Imath::Box2i Resample::computeDataWindow( const Gaffer::Context *context, const 
 		return srcDataWindow;
 	}
 
+	// Figure out our data window as a Box2f with fractional
+	// pixel values.
+
 	const M33f matrix = matrixPlug()->getValue();
 	Box2f dstDataWindow = transform( Box2f( srcDataWindow.min, srcDataWindow.max ), matrix );
 
@@ -496,7 +499,35 @@ Imath::Box2i Resample::computeDataWindow( const Gaffer::Context *context, const 
 		dstDataWindow.max += filterRadius;
 	}
 
+	// Convert that Box2f to a Box2i that fully encloses it.
+	// Cheat a little to avoid adding additional pixels when
+	// we're really close to the edge. This is primarily to
+	// meet user expectations in the Resize node, where it is
+	// expected that the dataWindow will exactly match the format.
+
+	const float eps = 1e-4;
+	if( ceilf( dstDataWindow.min.x ) - dstDataWindow.min.x < eps )
+	{
+		dstDataWindow.min.x = ceilf( dstDataWindow.min.x );
+	}
+	if( dstDataWindow.max.x - floorf( dstDataWindow.max.x ) < eps )
+	{
+		dstDataWindow.max.x = floorf( dstDataWindow.max.x );
+	}
+	if( ceilf( dstDataWindow.min.y ) - dstDataWindow.min.y < eps )
+	{
+		dstDataWindow.min.y = ceilf( dstDataWindow.min.y );
+	}
+	if( dstDataWindow.max.y - floorf( dstDataWindow.max.y ) < eps )
+	{
+		dstDataWindow.max.y = floorf( dstDataWindow.max.y );
+	}
+
 	Box2i dataWindow = box2fToBox2i( dstDataWindow );
+
+	// If we're outputting the horizontal pass, then replace
+	// the vertical range with the original.
+
 	if( parent  == horizontalPassPlug() || debugPlug()->getValue() == HorizontalPass )
 	{
 		dataWindow.min.y = srcDataWindow.min.y;
