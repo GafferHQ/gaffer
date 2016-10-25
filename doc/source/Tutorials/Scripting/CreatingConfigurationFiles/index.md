@@ -80,4 +80,4 @@ Next steps
 Naturally, we might want to do something slightly more useful at startup. Taking a look at [Gaffer’s internal config
 files][1] might provide some good starting points for more useful customisations.
 
-[1]: https://github.com/ImageEngine/gaffer/tree/!GAFFER_VERSION!/startup/gui
+[1]: https://github.com/GafferHQ/gaffer/tree/!GAFFER_VERSION!/startup/gui

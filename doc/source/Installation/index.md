@@ -1,7 +1,7 @@
 Installation
 ============
 
-To install Gaffer, simply download and unpackage the appropriate bundle for your platform from the [GitHub release page](https://github.com/ImageEngine/gaffer/releases/!GAFFER_VERSION!). The resulting directory will contain the complete application ready to use, and you can launch Gaffer immediately by running the `bin/gaffer` script from within that directory.
+To install Gaffer, simply download and unpackage the appropriate bundle for your platform from the [GitHub release page](https://github.com/GafferHQ/gaffer/releases/!GAFFER_VERSION!). The resulting directory will contain the complete application ready to use, and you can launch Gaffer immediately by running the `bin/gaffer` script from within that directory.
 
 The gaffer distribution can be moved to any suitable location on the filesystem. For convenience, you should add `<GAFFER_INSTALL_PATH>/bin` to the `PATH` environment variable so that Gaffer can be run more simply as `gaffer` (where `<GAFFER_INSTALL_PATH>` is the location where you have moved the gaffer directory).
 
