@@ -146,7 +146,7 @@ We've seen that Gaffer's node graphs can be constructed using a minimal set of s
 
 
 
-[1]: ../../../UIReference/ScriptEditor.md
-[2]: ../../../NodeReference/index.md
-[3]: ../../../ScriptingReference/index.md
-[4]: https://github.com/ImageEngine/gaffer/tree/!GAFFER_VERSION!
+[1]: ../../../Reference/UIReference/ScriptEditor.md
+[2]: ../../../Reference/NodeReference/index.md
+[3]: ../../../Reference/ScriptingReference/index.md
+[4]: https://github.com/GafferHQ/gaffer/tree/!GAFFER_VERSION!

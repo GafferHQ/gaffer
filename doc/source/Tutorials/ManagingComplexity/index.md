@@ -89,4 +89,4 @@ Gaffer includes a built in performance monitor which can be useful when optimisi
 
 ![Turning on the performance monitor](images/performanceMonitor.png)
 
-Alternatively, the [stats app](../../CommandLineReference/stats.md) allows the same monitoring to be performed from the command line, without the need to perform a render.
+Alternatively, the [stats app](../../Reference/CommandLineReference/stats.md) allows the same monitoring to be performed from the command line, without the need to perform a render.

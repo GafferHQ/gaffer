@@ -126,5 +126,5 @@ def __iWantAPony( menu ) :
 GafferUI.ScriptWindow.menuDefinition(application).append( "/Help/I Want A Pony", { "command" : __iWantAPony } )
 ```
 
-[1]: ../ConfigurationFiles/index.md
-[2]: https://github.com/ImageEngine/gaffer/tree/!GAFFER_VERSION!/startup/gui
+[1]: ../CreatingConfigurationFiles/index.md
+[2]: https://github.com/GafferHQ/gaffer/tree/!GAFFER_VERSION!/startup/gui

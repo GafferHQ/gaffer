@@ -402,6 +402,6 @@ There is no doubt still a lot that could be done to improve our render, but alas
 Hopefully this provides a solid basis for your own further exploration, which will no doubt be less creatively challenged. You might like to start by exploring the addition of more lights, found in the _/Appleseed/Lights_ node menu, or by creating more expansive shading networks using the shaders found in the _/Appleseed/Shaders_ node menu.
 
 [1]: ../../Installation/index.md
-[2]: ../../NodeReference/GafferScene/SceneReader.md
-[3]: ../../UIReference/NodeGraph.md
-[4]: ../../UIReference/Viewer.md
+[2]: ../../Reference/NodeReference/GafferScene/SceneReader.md
+[3]: ../../Reference/UIReference/NodeGraph.md
+[4]: ../../Reference/UIReference/Viewer.md
