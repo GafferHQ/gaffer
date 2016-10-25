@@ -2860,8 +2860,6 @@ Build
 - Enabled testing of UI modules on Travis CI.
 - Added debug output to installDependencies.py.
 
------------------------------------------------------------------------
-
 0.8.0.0
 =======
 
@@ -2960,8 +2958,6 @@ Incompatibilities
 - Removed Source node.
 - Removed FileSource node.
 - Detemplatized ObjectSource.
-
------------------------------------------------------------------------
 
 0.7.0.0
 ========
@@ -3533,8 +3529,6 @@ This release features significant improvements to Dispatcher and SceneInspector 
 - Requires Cortex-9.0.0a2
 - Updated default build to use PySide 1.2.2.
 - Stopped using python-config for build configuration. It was unreliable on Mac, and the hardcoded paths it returns prevented us from building with prebuilt binary dependencies.
-
--------------------------------------------------------------------------------
 
 0.98.0
 ======
