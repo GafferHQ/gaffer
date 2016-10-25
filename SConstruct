@@ -41,6 +41,7 @@ import sys
 import glob
 import shutil
 import fnmatch
+import platform
 import py_compile
 import subprocess
 
@@ -313,6 +314,11 @@ if env["PLATFORM"] == "darwin" :
 	env["ENV"]["MACOSX_DEPLOYMENT_TARGET"] = "10.4"
 	env.Append( CXXFLAGS = [ "-D__USE_ISOC99" ] )
 	env["GAFFER_PLATFORM"] = "osx"
+
+	osxVersion = [ int( v ) for v in platform.mac_ver()[0].split( "." ) ]
+	if osxVersion[0] == 10 and osxVersion[1] > 7 :
+		# Fix problems with Boost 1.55 and recent versions of Clang.
+		env.Append( CXXFLAGS = [ "-DBOOST_HAS_INT128", "-Wno-unused-local-typedef" ] )
 
 elif env["PLATFORM"] == "posix" :
 
@@ -951,10 +957,14 @@ for libraryName, libraryDef in libraries.items() :
 
 	# osl shaders
 
+	def buildOSL( target, source, env ) :
+
+		subprocess.check_call( [ "oslc", "-I./shaders", "-o", str( target[0] ), str( source[0] ) ], env = env["ENV"] )
+
 	for oslShader in libraryDef.get( "oslShaders", [] ) :
 		oslShaderInstall = env.InstallAs( "$BUILD_DIR/" + oslShader, oslShader )
 		env.Alias( "build", oslShader )
-		compiledFile = commandEnv.Command( os.path.splitext( str( oslShaderInstall[0] ) )[0] + ".oso", oslShader, "oslc -I./shaders -o $TARGET $SOURCE" )
+		compiledFile = commandEnv.Command( os.path.splitext( str( oslShaderInstall[0] ) )[0] + ".oso", oslShader, buildOSL )
 		env.Depends( compiledFile, "oslHeaders" )
 		env.Alias( "build", compiledFile )
 

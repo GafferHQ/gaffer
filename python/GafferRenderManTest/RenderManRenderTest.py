@@ -35,6 +35,7 @@
 ##########################################################################
 
 import os
+import sys
 import unittest
 import subprocess32 as subprocess
 
@@ -82,14 +83,12 @@ class RenderManRenderTest( GafferRenderManTest.RenderManTestCase ) :
 
 		self.assertTrue( os.path.exists( self.temporaryDirectory() + "/test.rib" ) )
 
-		p = subprocess.Popen(
-			"renderdl " + self.temporaryDirectory() + "/test.rib",
-			shell = True,
-			stderr = subprocess.PIPE
+		output = subprocess.check_output(
+			[ "renderdl", self.temporaryDirectory() + "/test.rib" ],
+			stderr = subprocess.STDOUT
 		)
-		p.wait()
 
-		self.failIf( "exceeded its bounds" in "".join( p.stderr.readlines() ) )
+		self.failIf( "exceeded its bounds" in output )
 
 		self.assertTrue( os.path.exists( self.temporaryDirectory() + "/test.tif" ) )
 

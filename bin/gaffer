@@ -73,32 +73,71 @@ popd &> /dev/null
 # Make sure resource paths are set appropriately
 ##########################################################################
 
-export IECOREGL_SHADER_PATHS=$GAFFER_ROOT/glsl${IECOREGL_SHADER_PATHS:+:}${IECOREGL_SHADER_PATHS:-}
-export IECOREGL_SHADER_INCLUDE_PATHS=$GAFFER_ROOT/glsl${IECOREGL_SHADER_INCLUDE_PATHS:+:}${IECOREGL_SHADER_INCLUDE_PATHS:-}
-export IECORE_FONT_PATHS=$GAFFER_ROOT/fonts${IECORE_FONT_PATHS:+:}${IECORE_FONT_PATHS:-}
-export IECORE_OP_PATHS=~/gaffer/ops:$GAFFER_ROOT/ops${IECORE_OP_PATHS:+:}${IECORE_OP_PATHS:-}
-export IECORE_OP_PRESET_PATHS=~/gaffer/opPresets:$GAFFER_ROOT/opPresets${IECORE_OP_PRESET_PATHS:+:}${IECORE_OP_PRESET_PATHS:-}
-export IECORE_PROCEDURAL_PATHS=~/gaffer/procedurals:$GAFFER_ROOT/procedurals${IECORE_PROCEDURAL_PATHS:+:}${IECORE_PROCEDURAL_PATHS:-}
-export IECORE_PROCEDURAL_PRESET_PATHS=~/gaffer/proceduralPresets:$GAFFER_ROOT/proceduralPresets${IECORE_PROCEDURAL_PRESET_PATHS:+:}${IECORE_PROCEDURAL_PRESET_PATHS:-}
+# Prepend a directory to a path if it is not
+# already there.
+#
+# $1 is the value to include in the path
+# $2 is the name of the path to edit
+#
+# e.g. includeInPath ~/bin PATH
+function prependToPath {
+
+	if [[ ":${!2}:" != *":$1:"* ]] ; then
+
+		if [[ ${!2} ]] ; then
+			eval "export $2=$1:${!2}"
+		else
+			eval "export $2=$1"
+		fi
+
+	fi
+
+}
+
+function appendToPath {
+
+	if [[ ":${!2}:" != *":$1:"* ]] ; then
+
+		if [[ ${!2} ]] ; then
+			eval "export $2=${!2}:$1"
+		else
+			eval "export $2=$1"
+		fi
+
+	fi
+
+}
+
+prependToPath $GAFFER_ROOT/glsl IECOREGL_SHADER_PATHS
+prependToPath $GAFFER_ROOT/glsl IECOREGL_SHADER_INCLUDE_PATHS
+
+prependToPath $GAFFER_ROOT/fonts IECORE_FONT_PATHS
+prependToPath ~/gaffer/ops:$GAFFER_ROOT/ops IECORE_OP_PATHS
+
+prependToPath ~/gaffer/opPresets:$GAFFER_ROOT/opPresets IECORE_OP_PRESET_PATHS
+prependToPath ~/gaffer/procedurals:$GAFFER_ROOT/procedurals IECORE_PROCEDURAL_PATHS
+prependToPath ~/gaffer/proceduralPresets:$GAFFER_ROOT/proceduralPresets IECORE_PROCEDURAL_PRESET_PATHS
 
 if [[ -z $CORTEX_POINTDISTRIBUTION_TILESET ]] ; then
 	export CORTEX_POINTDISTRIBUTION_TILESET=$GAFFER_ROOT/resources/cortex/tileset_2048.dat
 fi
 
-export GAFFER_APP_PATHS=~/gaffer/apps:$GAFFER_ROOT/apps${GAFFER_APP_PATHS:+:}${GAFFER_APP_PATHS:-}
-export GAFFER_STARTUP_PATHS=~/gaffer/startup:${GAFFER_STARTUP_PATHS:-}${GAFFER_STARTUP_PATHS:+:}$GAFFER_ROOT/startup
+prependToPath ~/gaffer/apps:$GAFFER_ROOT/apps GAFFER_APP_PATHS
 
-export GAFFERUI_IMAGE_PATHS=$GAFFER_ROOT/graphics${GAFFERUI_IMAGE_PATHS:+:}${GAFFERUI_IMAGE_PATHS:-}
+prependToPath ~/gaffer/startup GAFFER_STARTUP_PATHS
+appendToPath $GAFFER_ROOT/startup GAFFER_STARTUP_PATHS
+
+prependToPath $GAFFER_ROOT/graphics GAFFERUI_IMAGE_PATHS
 
 if [[ -e $GAFFER_ROOT/bin/oslc ]] ; then
 	export OSLHOME=$GAFFER_ROOT
 fi
 
-export OSL_SHADER_PATHS=$HOME/gaffer/shaders:$GAFFER_ROOT/shaders${OSL_SHADER_PATHS:+:}${OSL_SHADER_PATHS:-}
+prependToPath $HOME/gaffer/shaders:$GAFFER_ROOT/shaders OSL_SHADER_PATHS
 
 if [[ -z $GAFFEROSL_CODE_DIRECTORY ]] ; then
 	export GAFFEROSL_CODE_DIRECTORY=$HOME/gaffer/oslCode
-	export OSL_SHADER_PATHS=$OSL_SHADER_PATHS:$GAFFEROSL_CODE_DIRECTORY
+	appendToPath $GAFFEROSL_CODE_DIRECTORY OSL_SHADER_PATHS
 fi
 
 # Get python set up properly
@@ -127,51 +166,54 @@ export PYTHONPATH=$GAFFER_ROOT/python${PYTHONPATH:+:}${PYTHONPATH:-}
 ##########################################################################
 
 if [[ `uname` = "Linux" ]] ; then
-	export LD_LIBRARY_PATH=$GAFFER_ROOT/lib/${LD_LIBRARY_PATH:+:}${LD_LIBRARY_PATH:-}
+	prependToPath $GAFFER_ROOT/lib LD_LIBRARY_PATH
 else
-	export DYLD_FRAMEWORK_PATH=$GAFFER_ROOT/lib${DYLD_FRAMEWORK_PATH:+:}${DYLD_FRAMEWORK_PATH:-}
-	export DYLD_LIBRARY_PATH=$GAFFER_ROOT/lib/${DYLD_LIBRARY_PATH:+:}${DYLD_LIBRARY_PATH:-}
-	export DYLD_LIBRARY_PATH=/System/Library/Frameworks/ApplicationServices.framework/Versions/A/Frameworks/ImageIO.framework/Resources/:$DYLD_LIBRARY_PATH
+	prependToPath $GAFFER_ROOT/lib DYLD_FRAMEWORK_PATH
+	prependToPath $GAFFER_ROOT/lib DYLD_LIBRARY_PATH
+	prependToPath /System/Library/Frameworks/ApplicationServices.framework/Versions/A/Frameworks/ImageIO.framework/Resources/ DYLD_LIBRARY_PATH
 	if [[ -n $DELIGHT ]] ; then
-		export DYLD_LIBRARY_PATH=$DYLD_LIBRARY_PATH:$DELIGHT/lib
+		appendToPath $DELIGHT/lib DYLD_LIBRARY_PATH
 	fi
 fi
 
 # Get the executable path set up, for running child processes from Gaffer
 ##########################################################################
 
-export PATH=$GAFFER_ROOT/bin:$PATH
+prependToPath $GAFFER_ROOT/bin PATH
 
-# If appleseed isn't configured in the environment, and we've been
-# shipped with it, then get that set up.
+# Set up Appleseed
 ##########################################################################
 
 if [[ -z $APPLESEED && -d $GAFFER_ROOT/appleseed ]] ; then
 
 	export APPLESEED=$GAFFER_ROOT/appleseed
 
+fi
+
+if [[ $APPLESEED ]] ; then
+
 	if [[ `uname` = "Linux" ]] ; then
-		export LD_LIBRARY_PATH=$APPLESEED/lib:$LD_LIBRARY_PATH
+		prependToPath $APPLESEED/lib LD_LIBRARY_PATH
 	else
-		export DYLD_LIBRARY_PATH=$APPLESEED/lib:$DYLD_LIBRARY_PATH
+		prependToPath $APPLESEED/lib DYLD_LIBRARY_PATH
 	fi
 
 	# Using a glob to keep the wrapper agnostic of python version.
 	for appleseedPython in $APPLESEED/lib/python* ; do
-		export PYTHONPATH=$appleseedPython:$PYTHONPATH
+		prependToPath $appleseedPython PYTHONPATH
 	done
 
-	export OSL_SHADER_PATHS=$APPLESEED/shaders:$OSL_SHADER_PATHS
-	export APPLESEED_SEARCHPATH=$OSL_SHADER_PATHS:$GAFFER_ROOT/appleseedDisplays
+	prependToPath $APPLESEED/shaders OSL_SHADER_PATHS
+	prependToPath $GAFFER_ROOT/appleseedDisplays APPLESEED_SEARCHPATH
 
-	export PATH=$APPLESEED/bin:$PATH
+	prependToPath $APPLESEED/bin PATH
 
 fi
 
 # Set up Arnold
 ##########################################################################
 
-export ARNOLD_PLUGIN_PATH=$GAFFER_ROOT/arnold/plugins${ARNOLD_PLUGIN_PATH:+:}${ARNOLD_PLUGIN_PATH:-}
+prependToPath $GAFFER_ROOT/arnold/plugins ARNOLD_PLUGIN_PATH
 
 # Run gaffer itself
 ##########################################################################

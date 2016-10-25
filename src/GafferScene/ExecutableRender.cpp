@@ -134,24 +134,9 @@ void ExecutableRender::execute() const
 			outputWorldProcedural( scene, renderer.get() );
 		}
 	}
-
-	std::string systemCommand = command();
-	if( systemCommand.size() )
-	{
-		int result = system( systemCommand.c_str() );
-		if( result )
-		{
-			throw Exception( "System command failed" );
-		}
-	}
 }
 
 void ExecutableRender::outputWorldProcedural( const ScenePlug *scene, IECore::Renderer *renderer ) const
 {
 	renderer->procedural( new SceneProcedural( scene, Context::current() ) );
-}
-
-std::string ExecutableRender::command() const
-{
-	return "";
 }

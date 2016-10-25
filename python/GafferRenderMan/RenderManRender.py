@@ -35,6 +35,8 @@
 ##########################################################################
 
 import os
+import shlex
+import subprocess32 as subprocess
 
 import IECore
 import IECoreRI
@@ -68,6 +70,22 @@ class RenderManRender( GafferScene.ExecutableRender ) :
 				defaultValue = "renderdl",
 			)
 		)
+
+	def execute( self ) :
+
+		GafferScene.ExecutableRender.execute( self )
+
+		if self["mode"].getValue() != "render" :
+			return
+
+		command = self["command"].getValue().strip()
+		if not command :
+			return
+
+		args = shlex.split( command )
+		args.append( self["ribFileName"].getValue() )
+
+		subprocess.check_call( args )
 
 	def _createRenderer( self ) :
 
@@ -138,19 +156,5 @@ class RenderManRender( GafferScene.ExecutableRender ) :
 			}
 		)
 		renderer.procedural( externalProcedural )
-
-	def _command( self ) :
-
-		if self["mode"].getValue() != "render" :
-			return ""
-
-		result = self["command"].getValue()
-		result = result.strip()
-		if result == "" :
-			return
-
-		result += " '" + self["ribFileName"].getValue() + "'"
-
-		return result
 
 IECore.registerRunTimeTyped( RenderManRender, typeName = "GafferRenderMan::RenderManRender" )

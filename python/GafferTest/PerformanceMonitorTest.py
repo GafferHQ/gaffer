@@ -34,6 +34,7 @@
 #
 ##########################################################################
 
+import os
 import time
 import unittest
 
@@ -204,15 +205,17 @@ class PerformanceMonitorTest( GafferTest.TestCase ) :
 
 		self.assertEqual( len( m.allStatistics() ), 2 )
 
+		delta = 0.01 if "TRAVIS" not in os.environ else 0.12
+
 		self.assertEqual( m.plugStatistics( n1["out"] ).hashCount, 1 )
 		self.assertEqual( m.plugStatistics( n1["out"] ).computeCount, 1 )
-		self.assertAlmostEqual( seconds( m.plugStatistics( n1["out"] ).hashDuration ), 0.2, delta = 0.01 )
-		self.assertAlmostEqual( seconds( m.plugStatistics( n1["out"] ).computeDuration ), 0.4, delta = 0.01 )
+		self.assertAlmostEqual( seconds( m.plugStatistics( n1["out"] ).hashDuration ), 0.2, delta = delta )
+		self.assertAlmostEqual( seconds( m.plugStatistics( n1["out"] ).computeDuration ), 0.4, delta = delta )
 
 		self.assertEqual( m.plugStatistics( n2["out"] ).hashCount, 1 )
 		self.assertEqual( m.plugStatistics( n2["out"] ).computeCount, 1 )
-		self.assertAlmostEqual( seconds( m.plugStatistics( n2["out"] ).hashDuration ), 0.1, delta = 0.01 )
-		self.assertAlmostEqual( seconds( m.plugStatistics( n2["out"] ).computeDuration ), 0.2, delta = 0.01 )
+		self.assertAlmostEqual( seconds( m.plugStatistics( n2["out"] ).hashDuration ), 0.1, delta = delta )
+		self.assertAlmostEqual( seconds( m.plugStatistics( n2["out"] ).computeDuration ), 0.2, delta = delta )
 
 		with m :
 			with Gaffer.Context() as c :
@@ -221,13 +224,13 @@ class PerformanceMonitorTest( GafferTest.TestCase ) :
 
 		self.assertEqual( m.plugStatistics( n1["out"] ).hashCount, 2 )
 		self.assertEqual( m.plugStatistics( n1["out"] ).computeCount, 1 )
-		self.assertAlmostEqual( seconds( m.plugStatistics( n1["out"] ).hashDuration ), 0.4, delta = 0.01 )
-		self.assertAlmostEqual( seconds( m.plugStatistics( n1["out"] ).computeDuration ), 0.4, delta = 0.01 )
+		self.assertAlmostEqual( seconds( m.plugStatistics( n1["out"] ).hashDuration ), 0.4, delta = delta )
+		self.assertAlmostEqual( seconds( m.plugStatistics( n1["out"] ).computeDuration ), 0.4, delta = delta )
 
 		self.assertEqual( m.plugStatistics( n2["out"] ).hashCount, 2 )
 		self.assertEqual( m.plugStatistics( n2["out"] ).computeCount, 1 )
-		self.assertAlmostEqual( seconds( m.plugStatistics( n2["out"] ).hashDuration ), 0.2, delta = 0.01 )
-		self.assertAlmostEqual( seconds( m.plugStatistics( n2["out"] ).computeDuration ), 0.2, delta = 0.01 )
+		self.assertAlmostEqual( seconds( m.plugStatistics( n2["out"] ).hashDuration ), 0.2, delta = delta )
+		self.assertAlmostEqual( seconds( m.plugStatistics( n2["out"] ).computeDuration ), 0.2, delta = delta )
 
 if __name__ == "__main__":
 	unittest.main()
