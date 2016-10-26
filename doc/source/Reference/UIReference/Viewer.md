@@ -10,6 +10,7 @@ Action			                      Shortcut/gesture
 ===================================== =============================================
 Pan                                   Alt + left drag
 Zoom                                  Alt + right drag, or mouse wheel
+Centre image at 1:1 scale             Home
 Toggle red channel                    R
 Toggle green channel                  G
 Toggle blue channel                   B
