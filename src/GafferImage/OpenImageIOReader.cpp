@@ -684,6 +684,13 @@ void OpenImageIOReader::setCacheMemoryLimit( size_t mb )
 	imageCache()->attribute( "max_memory_MB", float( mb ) );
 }
 
+size_t OpenImageIOReader::cacheMemoryUsage()
+{
+	long long v = 0;
+	imageCache()->getattribute( "stat:cache_memory_used", BaseTypeFromC<long long>::value, &v );
+	return v;
+}
+
 void OpenImageIOReader::plugSet( Gaffer::Plug *plug )
 {
 	// this clears the cache every time the refresh count is updated, so you don't get entries

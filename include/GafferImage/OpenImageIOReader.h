@@ -90,6 +90,8 @@ class OpenImageIOReader : public ImageNode
 		static size_t getCacheMemoryLimit();
 		/// Sets the maximum amount of memory the cache may use in Mb.
 		static void setCacheMemoryLimit( size_t mb );
+		/// Returns the current memory usage of the cache in _bytes_.
+		static size_t cacheMemoryUsage();
 
 	protected :
 
