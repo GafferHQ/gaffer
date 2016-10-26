@@ -12,7 +12,6 @@ for line in changes :
 
 	m = re.match( r"^(Gaffer )?(([0-9]+\.){2,3}[0-9]+)", line )
 	if m :
-		print m.group( 2 )
 		index.write( "- [{0}]({0}.md)\n".format( m.group( 2 ) ) )
 		versionFile = open( m.group( 2 ) + ".md", "w" )
 		versionFile.write( m.group( 2 ) + "\n" )
