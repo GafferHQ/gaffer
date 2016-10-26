@@ -87,6 +87,7 @@
 #include "GafferImageBindings/OpenColorIOTransformBinding.h"
 #include "GafferImageBindings/WarpBinding.h"
 #include "GafferImageBindings/UVWarpBinding.h"
+#include "GafferImageBindings/MirrorBinding.h"
 
 using namespace boost::python;
 using namespace GafferImage;
@@ -145,5 +146,6 @@ BOOST_PYTHON_MODULE( _GafferImage )
 	GafferImageBindings::bindOpenColorIOTransform();
 	GafferImageBindings::bindWarp();
 	GafferImageBindings::bindUVWarp();
+	GafferImageBindings::bindMirror();
 
 }

@@ -56,7 +56,7 @@ Resize::Resize( const std::string &name )
 	addChild( new FormatPlug( "format" ) );
 	addChild( new IntPlug( "fitMode", Plug::In, Horizontal, Horizontal, Distort ) );
 	addChild( new StringPlug( "filter" ) );
-	addChild( new AtomicBox2fPlug( "__dataWindow", Plug::Out ) );
+	addChild( new M33fPlug( "__matrix", Plug::Out ) );
 	addChild( new ImagePlug( "__resampledIn", Plug::In, Plug::Default & ~Plug::Serialisable ) );
 
 	// We don't really do much work ourselves - we just
@@ -69,7 +69,7 @@ Resize::Resize( const std::string &name )
 	resample->inPlug()->setInput( inPlug() );
 
 	resample->filterPlug()->setInput( filterPlug() );
-	resample->dataWindowPlug()->setInput( dataWindowPlug() );
+	resample->matrixPlug()->setInput( matrixPlug() );
 	resample->boundingModePlug()->setValue( Sampler::Clamp );
 
 	resampledInPlug()->setInput( resample->outPlug() );
@@ -113,14 +113,14 @@ const Gaffer::StringPlug *Resize::filterPlug() const
 	return getChild<StringPlug>( g_firstPlugIndex + 2 );
 }
 
-Gaffer::AtomicBox2fPlug *Resize::dataWindowPlug()
+Gaffer::M33fPlug *Resize::matrixPlug()
 {
-	return getChild<AtomicBox2fPlug>( g_firstPlugIndex + 3 );
+	return getChild<M33fPlug>( g_firstPlugIndex + 3 );
 }
 
-const Gaffer::AtomicBox2fPlug *Resize::dataWindowPlug() const
+const Gaffer::M33fPlug *Resize::matrixPlug() const
 {
-	return getChild<AtomicBox2fPlug>( g_firstPlugIndex + 3 );
+	return getChild<M33fPlug>( g_firstPlugIndex + 3 );
 }
 
 ImagePlug *Resize::resampledInPlug()
@@ -144,7 +144,7 @@ void Resize::affects( const Gaffer::Plug *input, AffectedPlugsContainer &outputs
 		input == inPlug()->dataWindowPlug()
 	)
 	{
-		outputs.push_back( dataWindowPlug() );
+		outputs.push_back( matrixPlug() );
 	}
 
 	if( formatPlug()->isAncestorOf( input ) )
@@ -173,7 +173,7 @@ void Resize::hash( const ValuePlug *output, const Context *context, IECore::Murm
 {
 	ImageProcessor::hash( output, context, h );
 
-	if( output == dataWindowPlug() )
+	if( output == matrixPlug() )
 	{
 		formatPlug()->hash( h );
 		fitModePlug()->hash( h );
@@ -184,7 +184,7 @@ void Resize::hash( const ValuePlug *output, const Context *context, IECore::Murm
 
 void Resize::compute( ValuePlug *output, const Context *context ) const
 {
-	if( output == dataWindowPlug() )
+	if( output == matrixPlug() )
 	{
 		const Format inFormat = inPlug()->formatPlug()->getValue();
 		const Format outFormat = formatPlug()->getValue();
@@ -193,60 +193,34 @@ void Resize::compute( ValuePlug *output, const Context *context ) const
 		const V2f outSize( outFormat.width(), outFormat.height() );
 		const V2f formatScale = outSize / inSize;
 
-		V2f dataWindowScale( 1 );
+		V2f scale( 1 );
 		switch( (FitMode)fitModePlug()->getValue() )
 		{
 			case Horizontal :
-				dataWindowScale = V2f( formatScale.x );
+				scale = V2f( formatScale.x );
 				break;
 			case Vertical :
-				dataWindowScale = V2f( formatScale.y );
+				scale = V2f( formatScale.y );
 				break;
 			case Fit :
-				dataWindowScale = V2f( std::min( formatScale.x, formatScale.y ) );
+				scale = V2f( std::min( formatScale.x, formatScale.y ) );
 				break;
 			case Fill :
-				dataWindowScale = V2f( std::max( formatScale.x, formatScale.y ) );
+				scale = V2f( std::max( formatScale.x, formatScale.y ) );
 				break;
 			case Distort :
 			default :
-				dataWindowScale = formatScale;
+				scale = formatScale;
 				break;
 		}
 
-		const V2f dataWindowOffset = ( outSize - ( inSize * dataWindowScale ) ) / 2.0f;
-		const Box2i inDataWindow = inPlug()->dataWindowPlug()->getValue();
-		Box2f outDataWindow(
-			V2f( inDataWindow.min ) * dataWindowScale + dataWindowOffset,
-			V2f( inDataWindow.max ) * dataWindowScale + dataWindowOffset
-		);
+		const V2f translate = ( outSize - ( inSize * scale ) ) / 2.0f;
 
-		// It's important that we use floating point data windows in the Resample node
-		// so we can accurately represent scaling which produces border pixels without full
-		// coverage. In this case, the Resample outputs an integer data window expanded to
-		// cover the floating point one fully, and samples the edges appropriately. But
-		// floating point error can mean that our data window is a tiny bit above or below the
-		// exact integer values the user expects, so we must detect this case and adjust
-		// accordingly.
-		const float eps = 1e-4;
-		if( ceilf( outDataWindow.min.x ) - outDataWindow.min.x < eps )
-		{
-			outDataWindow.min.x = ceilf( outDataWindow.min.x );
-		}
-		if( outDataWindow.max.x - floorf( outDataWindow.max.x ) < eps )
-		{
-			outDataWindow.max.x = floorf( outDataWindow.max.x );
-		}
-		if( ceilf( outDataWindow.min.y ) - outDataWindow.min.y < eps )
-		{
-			outDataWindow.min.y = ceilf( outDataWindow.min.y );
-		}
-		if( outDataWindow.max.y - floorf( outDataWindow.max.y ) < eps )
-		{
-			outDataWindow.max.y = floorf( outDataWindow.max.y );
-		}
+		M33f matrix;
+		matrix.translate( translate );
+		matrix.scale( scale );
 
-		static_cast<AtomicBox2fPlug *>( output )->setValue( outDataWindow );
+		static_cast<M33fPlug *>( output )->setValue( matrix );
 	}
 
 	ImageProcessor::compute( output, context );

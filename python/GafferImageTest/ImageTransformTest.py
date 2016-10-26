@@ -291,5 +291,26 @@ class ImageTransformTest( GafferImageTest.ImageTestCase ) :
 		self.assertGreater( sample( IECore.V2i( 10, 10 ) ), 0.9 )
 		self.assertGreater( sample( IECore.V2i( 11, 10 ) ), 0.09 )
 
+	def testNegativeScale( self ) :
+
+		r = GafferImage.ImageReader()
+		r["fileName"].setValue( os.path.expandvars( "$GAFFER_ROOT/python/GafferImageTest/images/checker2x2.exr" ) )
+
+		t = GafferImage.ImageTransform()
+		t["in"].setInput( r["out"] )
+		t["transform"]["pivot"].setValue( IECore.V2f( 1 ) )
+		t["transform"]["scale"]["x"].setValue( -1 )
+
+		sampler = GafferImage.Sampler(
+			t["out"],
+			"R",
+			t["out"]["dataWindow"].getValue()
+		)
+
+		self.assertEqual( sampler.sample( 0, 0 ), 0 )
+		self.assertEqual( sampler.sample( 1, 0 ), 1 )
+		self.assertEqual( sampler.sample( 0, 1 ), 1 )
+		self.assertEqual( sampler.sample( 1, 1 ), 0 )
+
 if __name__ == "__main__":
 	unittest.main()

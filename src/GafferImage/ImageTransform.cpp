@@ -104,7 +104,7 @@ ImageTransform::ImageTransform( const std::string &name )
 	// if we also have a rotation component we sample that
 	// from the intermediate result in computeChannelData().
 
-	addChild( new AtomicBox2fPlug( "__resampleDataWindow", Plug::Out ) );
+	addChild( new M33fPlug( "__resampleMatrix", Plug::Out ) );
 	addChild( new ImagePlug( "__resampledIn", Plug::In, Plug::Default & ~Plug::Serialisable ) );
 
 	ResamplePtr resample = new Resample( "__resample" );
@@ -112,7 +112,7 @@ ImageTransform::ImageTransform( const std::string &name )
 
 	resample->inPlug()->setInput( inPlug() );
 	resample->filterPlug()->setInput( filterPlug() );
-	resample->dataWindowPlug()->setInput( resampleDataWindowPlug() );
+	resample->matrixPlug()->setInput( resampleMatrixPlug() );
 	resampledInPlug()->setInput( resample->outPlug() );
 
 	// Pass through the things we don't change at all.
@@ -145,14 +145,14 @@ const Gaffer::StringPlug *ImageTransform::filterPlug() const
 	return getChild<StringPlug>( g_firstPlugIndex + 1 );
 }
 
-Gaffer::AtomicBox2fPlug *ImageTransform::resampleDataWindowPlug()
+Gaffer::M33fPlug *ImageTransform::resampleMatrixPlug()
 {
-	return getChild<AtomicBox2fPlug>( g_firstPlugIndex + 2 );
+	return getChild<M33fPlug>( g_firstPlugIndex + 2 );
 }
 
-const Gaffer::AtomicBox2fPlug *ImageTransform::resampleDataWindowPlug() const
+const Gaffer::M33fPlug *ImageTransform::resampleMatrixPlug() const
 {
-	return getChild<AtomicBox2fPlug>( g_firstPlugIndex + 2 );
+	return getChild<M33fPlug>( g_firstPlugIndex + 2 );
 }
 
 ImagePlug *ImageTransform::resampledInPlug()
@@ -180,13 +180,12 @@ void ImageTransform::affects( const Gaffer::Plug *input, AffectedPlugsContainer 
 	ImageProcessor::affects( input, outputs );
 
 	if(
-		input == inPlug()->dataWindowPlug() ||
 		input->parent<Plug>() == transformPlug()->translatePlug() ||
 		input->parent<Plug>() == transformPlug()->scalePlug() ||
 		input->parent<Plug>() == transformPlug()->pivotPlug()
 	)
 	{
-		outputs.push_back( resampleDataWindowPlug() );
+		outputs.push_back( resampleMatrixPlug() );
 	}
 
 	if(
@@ -214,9 +213,8 @@ void ImageTransform::hash( const ValuePlug *output, const Context *context, IECo
 {
 	ImageProcessor::hash( output, context, h );
 
-	if( output == resampleDataWindowPlug() )
+	if( output == resampleMatrixPlug() )
 	{
-		inPlug()->dataWindowPlug()->hash( h );
 		transformPlug()->translatePlug()->hash( h );
 		transformPlug()->scalePlug()->hash( h );
 		transformPlug()->pivotPlug()->hash( h );
@@ -225,13 +223,12 @@ void ImageTransform::hash( const ValuePlug *output, const Context *context, IECo
 
 void ImageTransform::compute( ValuePlug *output, const Context *context ) const
 {
-	if( output == resampleDataWindowPlug() )
+	if( output == resampleMatrixPlug() )
 	{
-		const Box2i in = inPlug()->dataWindowPlug()->getValue();
 		M33f matrix, resampleMatrix;
 		operation( matrix, resampleMatrix );
-		const Box2f out = transform( Box2f( in.min, in.max ), resampleMatrix );
-		static_cast<AtomicBox2fPlug *>( output )->setValue( out );
+		static_cast<M33fPlug *>( output )->setValue( resampleMatrix );
+		return;
 	}
 
 	ImageProcessor::compute( output, context );

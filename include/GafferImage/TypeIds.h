@@ -107,6 +107,7 @@ enum TypeId
 	ShapeTypeId = 110811,
 	TextTypeId = 110812,
 	OpenImageIOReaderTypeId = 110813,
+	MirrorTypeId = 110814,
 
 	LastTypeId = 110849
 };

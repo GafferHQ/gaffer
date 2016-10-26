@@ -82,10 +82,10 @@ class ImageTransform : public ImageProcessor
 
 	private :
 
-		// Output plug to compute the data window for the internal
+		// Output plug to compute the matrix for the internal
 		// Resample.
-		Gaffer::AtomicBox2fPlug *resampleDataWindowPlug();
-		const Gaffer::AtomicBox2fPlug *resampleDataWindowPlug() const;
+		Gaffer::M33fPlug *resampleMatrixPlug();
+		const Gaffer::M33fPlug *resampleMatrixPlug() const;
 
 		// Input plug to receive the scaled and translated image
 		// from the internal Resample.

@@ -1,6 +1,6 @@
 //////////////////////////////////////////////////////////////////////////
 //
-//  Copyright (c) 2015, John Haddon. All rights reserved.
+//  Copyright (c) 2016, Image Engine Design Inc. All rights reserved.
 //
 //  Redistribution and use in source and binary forms, with or without
 //  modification, are permitted provided that the following conditions are
@@ -34,8 +34,8 @@
 //
 //////////////////////////////////////////////////////////////////////////
 
-#ifndef GAFFERIMAGE_BLUR_H
-#define GAFFERIMAGE_BLUR_H
+#ifndef GAFFERIMAGE_MIRROR_H
+#define GAFFERIMAGE_MIRROR_H
 
 #include "Gaffer/CompoundNumericPlug.h"
 
@@ -44,61 +44,40 @@
 namespace GafferImage
 {
 
-IE_CORE_FORWARDDECLARE( Resample )
-
-class Blur : public ImageProcessor
+class Mirror : public ImageProcessor
 {
+
 	public :
 
-		Blur( const std::string &name=defaultName<Blur>() );
-		virtual ~Blur();
+		Mirror( const std::string &name=defaultName<Mirror>() );
+		virtual ~Mirror();
 
-		IE_CORE_DECLARERUNTIMETYPEDEXTENSION( GafferImage::Blur, BlurTypeId, ImageProcessor );
+		IE_CORE_DECLARERUNTIMETYPEDEXTENSION( GafferImage::Mirror, MirrorTypeId, ImageProcessor );
 
-		Gaffer::V2fPlug *radiusPlug();
-		const Gaffer::V2fPlug *radiusPlug() const;
+		Gaffer::BoolPlug *horizontalPlug();
+		const Gaffer::BoolPlug *horizontalPlug() const;
 
-		Gaffer::IntPlug *boundingModePlug();
-		const Gaffer::IntPlug *boundingModePlug() const;
-
-		Gaffer::BoolPlug *expandDataWindowPlug();
-		const Gaffer::BoolPlug *expandDataWindowPlug() const;
+		Gaffer::BoolPlug *verticalPlug();
+		const Gaffer::BoolPlug *verticalPlug() const;
 
 		virtual void affects( const Gaffer::Plug *input, AffectedPlugsContainer &outputs ) const;
 
 	protected :
 
-		// Output plug to compute the filter width for the internal Resample.
-		Gaffer::V2fPlug *filterWidthPlug();
-		const Gaffer::V2fPlug *filterWidthPlug() const;
-
-		// Input plug to receive the expanded data window from the internal Resample.
-		Gaffer::AtomicBox2iPlug *resampledDataWindowPlug();
-		const Gaffer::AtomicBox2iPlug *resampledDataWindowPlug() const;
-
-		// Input plug to receive the blurred channel data from the internal Resample.
-		Gaffer::FloatVectorDataPlug *resampledChannelDataPlug();
-		const Gaffer::FloatVectorDataPlug *resampledChannelDataPlug() const;
-
-		// Internal resample node.
-		Resample *resample();
-		const Resample *resample() const;
-
-		virtual void hash( const Gaffer::ValuePlug *output, const Gaffer::Context *context, IECore::MurmurHash &h ) const;
-		virtual void compute( Gaffer::ValuePlug *output, const Gaffer::Context *context ) const;
-
 		virtual void hashDataWindow( const GafferImage::ImagePlug *parent, const Gaffer::Context *context, IECore::MurmurHash &h ) const;
-		virtual Imath::Box2i computeDataWindow( const Gaffer::Context *context, const ImagePlug *parent ) const;
-
 		virtual void hashChannelData( const GafferImage::ImagePlug *parent, const Gaffer::Context *context, IECore::MurmurHash &h ) const;
+
+		virtual Imath::Box2i computeDataWindow( const Gaffer::Context *context, const ImagePlug *parent ) const;
 		virtual IECore::ConstFloatVectorDataPtr computeChannelData( const std::string &channelName, const Imath::V2i &tileOrigin, const Gaffer::Context *context, const ImagePlug *parent ) const;
+
+	private :
 
 		static size_t g_firstPlugIndex;
 
 };
 
-IE_CORE_DECLAREPTR( Blur )
+IE_CORE_DECLAREPTR( Mirror )
 
 } // namespace GafferImage
 
-#endif // GAFFERIMAGE_BLUR_H
+#endif // GAFFERIMAGE_MIRROR_H

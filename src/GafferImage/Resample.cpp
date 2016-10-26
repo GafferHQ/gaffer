@@ -154,13 +154,10 @@ Box2i box2fToBox2i( const Box2f &b )
 
 // Calculates the scale and offset needed to convert from output
 // coordinates to input coordinates.
-void ratioAndOffset( const Box2f &dstDataWindow, const Box2i &srcDataWindow, V2f &ratio, V2f &offset )
+void ratioAndOffset( const M33f &matrix, V2f &ratio, V2f &offset )
 {
-	const V2f dstSize = dstDataWindow.size();
-	const V2f srcSize = srcDataWindow.size();
-
-	ratio = dstSize / srcSize;
-	offset = V2f( srcDataWindow.min ) - dstDataWindow.min / ratio;
+	ratio = V2f( matrix[0][0], matrix[1][1] );
+	offset = -V2f( matrix[2][0], matrix[2][1] ) / ratio;
 }
 
 // The radius for the filter is specified in the output space. This
@@ -168,8 +165,8 @@ void ratioAndOffset( const Box2f &dstDataWindow, const Box2i &srcDataWindow, V2f
 V2i inputFilterRadius( const OIIO::Filter2D *filter, const V2f &ratio )
 {
 	return V2i(
-		(int)ceilf( filter->width() / ( 2.0f * ratio.x ) ),
-		(int)ceilf( filter->height() / ( 2.0f * ratio.y ) )
+		(int)ceilf( filter->width() / ( 2.0f * fabs( ratio.x ) ) ),
+		(int)ceilf( filter->height() / ( 2.0f * fabs( ratio.y ) ) )
 	);
 }
 
@@ -183,21 +180,38 @@ Box2i inputRegion( const V2i &tileOrigin, unsigned passes, const V2f &ratio, con
 	Box2f result = outputRegion;
 	if( passes & Horizontal )
 	{
-		result.min.x = result.min.x / ratio.x + offset.x - filterRadius.x;
-		result.max.x = result.max.x / ratio.x + offset.x + filterRadius.x;
+		result.min.x = result.min.x / ratio.x + offset.x;
+		result.max.x = result.max.x / ratio.x + offset.x;
+		if( result.min.x > result.max.x )
+		{
+			// Correct for negative scaling inverting
+			// the relationship between min and max.
+			std::swap( result.min.x, result.max.x );
+		}
+		result.min.x -= filterRadius.x;
+		result.max.x += filterRadius.x;
 	}
 	if( passes & Vertical )
 	{
-		result.min.y = result.min.y / ratio.y + offset.y - filterRadius.y;
-		result.max.y = result.max.y / ratio.y + offset.y + filterRadius.y;
+		result.min.y = result.min.y / ratio.y + offset.y;
+		result.max.y = result.max.y / ratio.y + offset.y;
+		if( result.min.y > result.max.y )
+		{
+			std::swap( result.min.y, result.max.y );
+		}
+		result.min.y -= filterRadius.y;
+		result.max.y += filterRadius.y;
 	}
 
 	return box2fToBox2i( result );
 }
 
 typedef boost::shared_ptr<OIIO::Filter2D> Filter2DPtr;
-Filter2DPtr createFilter( const std::string &name, const V2f &filterWidth, const V2f &ratio )
+Filter2DPtr createFilter( const std::string &name, const V2f &filterWidth, V2f ratio )
 {
+	ratio.x = fabs( ratio.x );
+	ratio.y = fabs( ratio.y );
+
 	const char *filterName = name.c_str();
 	if( name == "" )
 	{
@@ -277,6 +291,21 @@ void filterWeights( const OIIO::Filter2D *filter, const int filterRadius, const 
 	}
 }
 
+Box2f transform( const Box2f &b, const M33f &m )
+{
+	if( b.isEmpty() )
+	{
+		return b;
+	}
+
+	Box2f r;
+	r.extendBy( V2f( b.min.x, b.min.y ) * m );
+	r.extendBy( V2f( b.max.x, b.min.y ) * m );
+	r.extendBy( V2f( b.max.x, b.max.y ) * m );
+	r.extendBy( V2f( b.min.x, b.max.y ) * m );
+	return r;
+}
+
 } // namespace
 
 //////////////////////////////////////////////////////////////////////////
@@ -291,7 +320,7 @@ Resample::Resample( const std::string &name )
 	:   ImageProcessor( name )
 {
 	storeIndexOfNextChild( g_firstPlugIndex );
-	addChild( new AtomicBox2fPlug( "dataWindow" ) );
+	addChild( new M33fPlug( "matrix" ) );
 	addChild( new StringPlug( "filter" ) );
 	addChild( new V2fPlug( "filterWidth", Plug::In, V2f( 0 ), V2f( 0 ) ) );
 	addChild( new IntPlug( "boundingMode", Plug::In, Sampler::Black, Sampler::Black, Sampler::Clamp ) );
@@ -315,14 +344,14 @@ Resample::~Resample()
 {
 }
 
-Gaffer::AtomicBox2fPlug *Resample::dataWindowPlug()
+Gaffer::M33fPlug *Resample::matrixPlug()
 {
-	return getChild<AtomicBox2fPlug>( g_firstPlugIndex );
+	return getChild<M33fPlug>( g_firstPlugIndex );
 }
 
-const Gaffer::AtomicBox2fPlug *Resample::dataWindowPlug() const
+const Gaffer::M33fPlug *Resample::matrixPlug() const
 {
-	return getChild<AtomicBox2fPlug>( g_firstPlugIndex );
+	return getChild<M33fPlug>( g_firstPlugIndex );
 }
 
 Gaffer::StringPlug *Resample::filterPlug()
@@ -391,7 +420,7 @@ void Resample::affects( const Gaffer::Plug *input, AffectedPlugsContainer &outpu
 
 	if(
 		input == inPlug()->dataWindowPlug() ||
-		input == dataWindowPlug() ||
+		input == matrixPlug() ||
 		input == expandDataWindowPlug() ||
 		input == filterPlug() ||
 		input->parent<V2fPlug>() == filterWidthPlug() ||
@@ -404,7 +433,7 @@ void Resample::affects( const Gaffer::Plug *input, AffectedPlugsContainer &outpu
 
 	if(
 		input == inPlug()->dataWindowPlug() ||
-		input == dataWindowPlug() ||
+		input == matrixPlug() ||
 		input == filterPlug() ||
 		input->parent<V2fPlug>() == filterWidthPlug() ||
 		input == inPlug()->channelDataPlug() ||
@@ -437,7 +466,7 @@ void Resample::hashDataWindow( const GafferImage::ImagePlug *parent, const Gaffe
 	ImageProcessor::hashDataWindow( parent, context, h );
 
 	inPlug()->dataWindowPlug()->hash( h );
-	dataWindowPlug()->hash( h );
+	matrixPlug()->hash( h );
 	expandDataWindowPlug()->hash( h );
 	filterPlug()->hash( h );
 	filterWidthPlug()->hash( h );
@@ -447,35 +476,58 @@ void Resample::hashDataWindow( const GafferImage::ImagePlug *parent, const Gaffe
 Imath::Box2i Resample::computeDataWindow( const Gaffer::Context *context, const ImagePlug *parent ) const
 {
 	const Box2i srcDataWindow = inPlug()->dataWindowPlug()->getValue();
-	const Box2f dstDataWindow = dataWindowPlug()->getValue();
-	if( empty( srcDataWindow ) || dstDataWindow.isEmpty() )
+	if( empty( srcDataWindow ) )
 	{
-		// This is a meaningless transformation, so we output an empty data
-		// window. It is perhaps a little odd that you can request a specific
-		// (non-empty) data window via dataWindowPlug(), but then be
-		// overruled by an empty data window from inPlug()->dataWindowPlug().
-		// This is perhaps an indication that the API for Resample is a little
-		// unnatural, and it'd be better to use a scale/translate pair to
-		// define the transformation rather than using a target window. Using
-		// scale/translate would also make concatenation of Resample nodes
-		// more natural, so perhaps we'll need to go that way at some point.
-		return Box2i();
+		return srcDataWindow;
 	}
 
-	Box2f expandedDataWindow = dstDataWindow;
+	// Figure out our data window as a Box2f with fractional
+	// pixel values.
+
+	const M33f matrix = matrixPlug()->getValue();
+	Box2f dstDataWindow = transform( Box2f( srcDataWindow.min, srcDataWindow.max ), matrix );
+
 	if( expandDataWindowPlug()->getValue() )
 	{
 		V2f ratio, offset;
-		ratioAndOffset( dstDataWindow, srcDataWindow, ratio, offset );
+		ratioAndOffset( matrix, ratio, offset );
 
 		const Filter2DPtr filter = createFilter( filterPlug()->getValue(), filterWidthPlug()->getValue(), ratio );
 		const V2f filterRadius = V2f( filter->width(), filter->height() ) / 2.0f;
 
-		expandedDataWindow.min -= filterRadius;
-		expandedDataWindow.max += filterRadius;
+		dstDataWindow.min -= filterRadius;
+		dstDataWindow.max += filterRadius;
 	}
 
-	Box2i dataWindow = box2fToBox2i( expandedDataWindow );
+	// Convert that Box2f to a Box2i that fully encloses it.
+	// Cheat a little to avoid adding additional pixels when
+	// we're really close to the edge. This is primarily to
+	// meet user expectations in the Resize node, where it is
+	// expected that the dataWindow will exactly match the format.
+
+	const float eps = 1e-4;
+	if( ceilf( dstDataWindow.min.x ) - dstDataWindow.min.x < eps )
+	{
+		dstDataWindow.min.x = ceilf( dstDataWindow.min.x );
+	}
+	if( dstDataWindow.max.x - floorf( dstDataWindow.max.x ) < eps )
+	{
+		dstDataWindow.max.x = floorf( dstDataWindow.max.x );
+	}
+	if( ceilf( dstDataWindow.min.y ) - dstDataWindow.min.y < eps )
+	{
+		dstDataWindow.min.y = ceilf( dstDataWindow.min.y );
+	}
+	if( dstDataWindow.max.y - floorf( dstDataWindow.max.y ) < eps )
+	{
+		dstDataWindow.max.y = floorf( dstDataWindow.max.y );
+	}
+
+	Box2i dataWindow = box2fToBox2i( dstDataWindow );
+
+	// If we're outputting the horizontal pass, then replace
+	// the vertical range with the original.
+
 	if( parent  == horizontalPassPlug() || debugPlug()->getValue() == HorizontalPass )
 	{
 		dataWindow.min.y = srcDataWindow.min.y;
@@ -489,11 +541,8 @@ void Resample::hashChannelData( const GafferImage::ImagePlug *parent, const Gaff
 {
 	ImageProcessor::hashChannelData( parent, context, h );
 
-	const Box2i srcDataWindow = inPlug()->dataWindowPlug()->getValue();
-	const Box2f dstDataWindow = dataWindowPlug()->getValue();
-
 	V2f ratio, offset;
-	ratioAndOffset( dstDataWindow, srcDataWindow, ratio, offset );
+	ratioAndOffset( matrixPlug()->getValue(), ratio, offset );
 
 	const Filter2DPtr filter = createFilter( filterPlug()->getValue(), filterWidthPlug()->getValue(), ratio );
 	h.append( filter->name().c_str() );
@@ -530,7 +579,7 @@ void Resample::hashChannelData( const GafferImage::ImagePlug *parent, const Gaff
 IECore::ConstFloatVectorDataPtr Resample::computeChannelData( const std::string &channelName, const Imath::V2i &tileOrigin, const Gaffer::Context *context, const ImagePlug *parent ) const
 {
 	V2f ratio, offset;
-	ratioAndOffset( dataWindowPlug()->getValue(), inPlug()->dataWindowPlug()->getValue(), ratio, offset );
+	ratioAndOffset( matrixPlug()->getValue(), ratio, offset );
 
 	Filter2DPtr filter = createFilter( filterPlug()->getValue(), filterWidthPlug()->getValue(), ratio );
 	const unsigned passes = requiredPasses( this, parent, filter.get() );

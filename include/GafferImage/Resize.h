@@ -99,8 +99,8 @@ class Resize : public ImageProcessor
 
 	private :
 
-		Gaffer::AtomicBox2fPlug *dataWindowPlug();
-		const Gaffer::AtomicBox2fPlug *dataWindowPlug() const;
+		Gaffer::M33fPlug *matrixPlug();
+		const Gaffer::M33fPlug *matrixPlug() const;
 
 		// We use an internal Resample node to do all the hard
 		// work of filtering the image into a new data window,

@@ -51,15 +51,13 @@ class ResampleTest( GafferImageTest.ImageTestCase ) :
 	def testDataWindow( self ) :
 
 		c = GafferImage.Constant()
+		c["format"].setValue( GafferImage.Format( 100, 100 ) )
 		c["color"].setValue( IECore.Color4f( 1 ) )
 
 		r = GafferImage.Resample()
 		r["in"].setInput( c["out"] )
-		r["dataWindow"].setValue(
-			IECore.Box2f(
-				IECore.V2f( 10.5, 11.5 ),
-				IECore.V2f( 20.5, 21.5 )
-			)
+		r["matrix"].setValue(
+			IECore.M33f().translate( IECore.V2f( 10.5, 11.5 ) ).scale( IECore.V2f( 0.1 ) )
 		)
 
 		self.assertEqual(
@@ -79,9 +77,14 @@ class ResampleTest( GafferImageTest.ImageTestCase ) :
 			reader = GafferImage.ImageReader()
 			reader["fileName"].setValue( inputFileName )
 
+			inSize = reader["out"]["format"].getValue().getDisplayWindow().size()
+			inSize = IECore.V2f( inSize.x, inSize.y )
+
 			resample = GafferImage.Resample()
 			resample["in"].setInput( reader["out"] )
-			resample["dataWindow"].setValue( IECore.Box2f( IECore.V2f( 0 ), IECore.V2f( size.x, size.y ) ) )
+			resample["matrix"].setValue(
+				IECore.M33f().scale( IECore.V2f( size.x, size.y ) / inSize )
+			)
 			resample["filter"].setValue( filter )
 			resample["boundingMode"].setValue( GafferImage.Sampler.BoundingMode.Clamp )
 
@@ -151,7 +154,7 @@ class ResampleTest( GafferImageTest.ImageTestCase ) :
 		c["color"].setValue( IECore.Color4f( 1 ) )
 
 		r = GafferImage.Resample()
-		r["dataWindow"].setValue( IECore.Box2f( IECore.V2f( 0 ), IECore.V2f( 400 ) ) )
+		r["matrix"].setValue( IECore.M33f().scale( IECore.V2f( 4 ) ) )
 		r["boundingMode"].setValue( GafferImage.Sampler.BoundingMode.Clamp )
 		r["filter"].setValue( "sinc" )
 		r["in"].setInput( c["out"] )
@@ -167,7 +170,6 @@ class ResampleTest( GafferImageTest.ImageTestCase ) :
 
 		r = GafferImage.Resample()
 		r["in"].setInput( c["out"] )
-		r["dataWindow"].setValue( IECore.Box2f( IECore.V2f( d.min ), IECore.V2f( d.max ) ) )
 		r["filter"].setValue( "box" )
 		self.assertEqual( r["out"]["dataWindow"].getValue(), d )
 
@@ -176,6 +178,10 @@ class ResampleTest( GafferImageTest.ImageTestCase ) :
 
 		r["filterWidth"].setValue( IECore.V2f( 10 ) )
 		self.assertEqual( r["out"]["dataWindow"].getValue(), IECore.Box2i( d.min - IECore.V2i( 5 ), d.max + IECore.V2i( 5 ) ) )
+
+	def __matrix( self, inputDataWindow, outputDataWindow ) :
+
+		return IECore.M33f()
 
 if __name__ == "__main__":
 	unittest.main()
