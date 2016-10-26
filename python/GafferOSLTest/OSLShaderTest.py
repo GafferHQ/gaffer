@@ -546,6 +546,7 @@ class OSLShaderTest( GafferOSLTest.OSLTestCase ) :
 				"commonColor",
 				"commonString",
 				"commonStruct",
+				"commonArray",
 				"removedI",
 				"removedF",
 				"removedColor",
@@ -555,6 +556,7 @@ class OSLShaderTest( GafferOSLTest.OSLTestCase ) :
 				"typeChanged2",
 				"typeChanged3",
 				"typeChanged4",
+				"defaultChangedArray",
 			]
 		)
 
@@ -585,10 +587,14 @@ class OSLShaderTest( GafferOSLTest.OSLTestCase ) :
 			"commonStruct.commonF" : 2.5,
 			"commonStruct.commonColor" : IECore.Color3f( 0.5 ),
 			"commonStruct.commonString" : "test2",
+			"commonArray" : IECore.FloatVectorData( [ 0, 1, 2 ] )
 		}
 
 		for key, value in values.items() :
 			n["parameters"].descendant( key ).setValue( value )
+
+		arrayToNotGetReloaded = n["parameters"]["commonArray"]
+		arrayToGetReloaded = n["parameters"]["defaultChangedArray"]
 
 		self.assertTrue( isinstance( n["parameters"]["typeChanged1"], Gaffer.IntPlug ) )
 		self.assertTrue( isinstance( n["parameters"]["typeChanged2"], Gaffer.FloatPlug ) )
@@ -605,6 +611,7 @@ class OSLShaderTest( GafferOSLTest.OSLTestCase ) :
 				"commonColor",
 				"commonString",
 				"commonStruct",
+				"commonArray",
 				"typeChanged1",
 				"typeChanged2",
 				"typeChanged3",
@@ -614,6 +621,7 @@ class OSLShaderTest( GafferOSLTest.OSLTestCase ) :
 				"addedColor",
 				"addedString",
 				"addedStruct",
+				"defaultChangedArray",
 			]
 		)
 
@@ -634,6 +642,9 @@ class OSLShaderTest( GafferOSLTest.OSLTestCase ) :
 				"addedString",
 			]
 		)
+
+		self.assertEqual( arrayToNotGetReloaded, n["parameters"]["commonArray"] )
+		self.assertNotEqual( arrayToGetReloaded, n["parameters"]["defaultChangedArray"] )
 
 		for key, value in values.items() :
 			self.assertEqual( n["parameters"].descendant( key ).getValue(), value )
@@ -711,6 +722,53 @@ class OSLShaderTest( GafferOSLTest.OSLTestCase ) :
 				]
 			)
 		)
+
+	def testArrays( self ) :
+
+		s = self.compileShader( os.path.dirname( __file__ ) + "/shaders/arrays.osl" )
+
+		n = GafferOSL.OSLShader()
+		n.loadShader( s )
+
+		self.assertEqual( n["parameters"].keys(), [ "i", "f", "c", "p", "q", "s", "m" ] )
+
+		self.assertTrue( isinstance( n["parameters"]["i"], Gaffer.IntVectorDataPlug ) )
+		self.assertTrue( isinstance( n["parameters"]["f"], Gaffer.FloatVectorDataPlug ) )
+		self.assertTrue( isinstance( n["parameters"]["c"], Gaffer.Color3fVectorDataPlug ) )
+		self.assertTrue( isinstance( n["parameters"]["p"], Gaffer.V3fVectorDataPlug ) )
+		self.assertTrue( isinstance( n["parameters"]["q"], Gaffer.V3fVectorDataPlug ) )
+		self.assertTrue( isinstance( n["parameters"]["s"], Gaffer.StringVectorDataPlug ) )
+		self.assertTrue( isinstance( n["parameters"]["m"], Gaffer.M44fVectorDataPlug ) )
+
+		self.assertEqual( n["parameters"]["i"].defaultValue(), IECore.IntVectorData( [ 10, 11, 12 ] ) )
+		self.assertEqual( n["parameters"]["f"].defaultValue(), IECore.FloatVectorData( [ 1, 2 ] ) )
+		self.assertEqual( n["parameters"]["c"].defaultValue(), IECore.Color3fVectorData(
+			[ IECore.Color3f( 1, 2, 3 ), IECore.Color3f( 4, 5, 6 ) ] ) )
+		self.assertEqual( n["parameters"]["p"].defaultValue(), IECore.V3fVectorData(
+			[ IECore.V3f( 1, 2, 3 ), IECore.V3f( 4, 5, 6 ) ] ) )
+		self.assertEqual( n["parameters"]["q"].defaultValue(), IECore.V3fVectorData(
+			[ IECore.V3f( 1, 2, 3 ), IECore.V3f( 4, 5, 6 ) ] ) )
+		self.assertEqual( n["parameters"]["s"].defaultValue(), IECore.StringVectorData( [ "s", "t", "u", "v", "word" ] ) )
+		self.assertEqual( n["parameters"]["m"].defaultValue(), IECore.M44fVectorData(
+			[ IECore.M44f() * 1, IECore.M44f() * 0, IECore.M44f() * 1 ] ) )
+
+		self.assertEqual( n["out"].typeId(), Gaffer.Plug.staticTypeId() )
+
+		network = n.attributes()["osl:surface"]
+		self.assertEqual( len( network ), 1 )
+		self.assertEqual( network[0].name, s )
+		self.assertEqual( network[0].type, "osl:surface" )
+		self.assertEqual( network[0].parameters["i"], IECore.IntVectorData( [ 10, 11, 12 ] ) )
+		self.assertEqual( network[0].parameters["f"], IECore.FloatVectorData( [ 1, 2 ] ) )
+		self.assertEqual( network[0].parameters["c"], IECore.Color3fVectorData(
+			[ IECore.Color3f( 1, 2, 3 ), IECore.Color3f( 4, 5, 6 ) ] ) )
+		self.assertEqual( network[0].parameters["p"], IECore.V3fVectorData(
+			[ IECore.V3f( 1, 2, 3 ), IECore.V3f( 4, 5, 6 ) ] ) )
+		self.assertEqual( network[0].parameters["q"], IECore.V3fVectorData(
+			[ IECore.V3f( 1, 2, 3 ), IECore.V3f( 4, 5, 6 ) ] ) )
+		self.assertEqual( network[0].parameters["s"], IECore.StringVectorData( [ "s", "t", "u", "v", "word" ] ) )
+		self.assertEqual( network[0].parameters["m"], IECore.M44fVectorData(
+			[ IECore.M44f() * 1, IECore.M44f() * 0, IECore.M44f() * 1 ] ) )
 
 	def testUnload( self ) :
 

@@ -1132,6 +1132,8 @@ class ExpressionTest( GafferTest.TestCase ) :
 		s["n"]["user"].addChild( Gaffer.FloatVectorDataPlug( defaultValue = IECore.FloatVectorData( [ 0, 1 ] ), flags = Gaffer.Plug.Flags.Default | Gaffer.Plug.Flags.Dynamic ) )
 		s["n"]["user"].addChild( Gaffer.StringVectorDataPlug( defaultValue = IECore.StringVectorData( [ "a", "b" ] ), flags = Gaffer.Plug.Flags.Default | Gaffer.Plug.Flags.Dynamic ) )
 		s["n"]["user"].addChild( Gaffer.V3fVectorDataPlug( defaultValue = IECore.V3fVectorData( [ IECore.V3f( 1 ) ] ), flags = Gaffer.Plug.Flags.Default | Gaffer.Plug.Flags.Dynamic ) )
+		s["n"]["user"].addChild( Gaffer.Color3fVectorDataPlug( defaultValue = IECore.Color3fVectorData( [ IECore.Color3f( 1 ) ] ), flags = Gaffer.Plug.Flags.Default | Gaffer.Plug.Flags.Dynamic ) )
+		s["n"]["user"].addChild( Gaffer.M44fVectorDataPlug( defaultValue = IECore.M44fVectorData( [ IECore.M44f() ] ), flags = Gaffer.Plug.Flags.Default | Gaffer.Plug.Flags.Dynamic ) )
 
 		s["e"] = Gaffer.Expression()
 

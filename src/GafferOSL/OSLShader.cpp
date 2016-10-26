@@ -256,6 +256,33 @@ Plug *loadStringParameter( const OSLQuery::Parameter *parameter, const InternedS
 	return plug.get();
 }
 
+Plug *loadStringArrayParameter( const OSLQuery::Parameter *parameter, const InternedString &name, Gaffer::Plug *parent )
+{
+	StringVectorDataPtr defaultValueData = new StringVectorData();
+	if( parameter->sdefault.size() )
+	{
+		defaultValueData->writable().resize( parameter->sdefault.size() );
+		for( size_t i = 0; i < parameter->sdefault.size(); i++ )
+		{
+			defaultValueData->writable()[i] = parameter->sdefault[i].c_str();
+		}
+	}
+
+	StringVectorDataPlug *existingPlug = parent->getChild<StringVectorDataPlug>( name );
+	if(	existingPlug && *existingPlug->defaultValue() == *defaultValueData )
+	{
+		return existingPlug;
+	}
+
+	StringVectorDataPlugPtr plug = new StringVectorDataPlug( name, parent->direction(), defaultValueData, Plug::Default | Plug::Dynamic );
+
+	transferConnectionOrValue( existingPlug, plug.get() );
+
+	parent->setChild( name, plug );
+
+	return plug.get();
+}
+
 template<typename PlugType>
 Plug *loadNumericParameter( const OSLQuery::Parameter *parameter, const InternedString &name, Gaffer::Plug *parent, const CompoundData *metadata )
 {
@@ -299,6 +326,43 @@ Plug *loadNumericParameter( const OSLQuery::Parameter *parameter, const Interned
 	}
 
 	typename PlugType::Ptr plug = new PlugType( name, parent->direction(), defaultValue, minValue, maxValue, Plug::Default | Plug::Dynamic );
+
+	transferConnectionOrValue( existingPlug, plug.get() );
+
+	parent->setChild( name, plug );
+
+	return plug.get();
+}
+
+template<typename PlugType>
+Plug *loadNumericArrayParameter( const OSLQuery::Parameter *parameter, const InternedString &name, Gaffer::Plug *parent, const CompoundData *metadata )
+{
+	typedef typename PlugType::ValueType DataType;
+	typedef typename DataType::ValueType ValueType;
+
+	ValueType defaultValue;
+	if( parameter->idefault.size() )
+	{
+		defaultValue.resize( parameter->idefault.size() );
+		std::copy( parameter->idefault.begin(), parameter->idefault.end(), defaultValue.begin() );
+	}
+	else if( parameter->fdefault.size() )
+	{
+		defaultValue.resize( parameter->fdefault.size() );
+		std::copy( parameter->fdefault.begin(), parameter->fdefault.end(), defaultValue.begin() );
+	}
+	typename DataType::Ptr defaultValueData( new DataType( defaultValue ) );
+
+	PlugType *existingPlug = parent->getChild<PlugType>( name );
+	if(
+		existingPlug &&
+		*existingPlug->defaultValue() == *defaultValueData
+	)
+	{
+		return existingPlug;
+	}
+
+	typename PlugType::Ptr plug = new PlugType( name, parent->direction(), defaultValueData, Plug::Default | Plug::Dynamic );
 
 	transferConnectionOrValue( existingPlug, plug.get() );
 
@@ -374,6 +438,61 @@ Plug *loadCompoundNumericParameter( const OSLQuery::Parameter *parameter, const 
 	return plug.get();
 }
 
+template <typename PlugType>
+Plug *loadCompoundNumericArrayParameter( const OSLQuery::Parameter *parameter, const InternedString &name, Gaffer::Plug *parent, const CompoundData *metadata )
+{
+	typedef typename PlugType::ValueType DataType;
+	typedef typename DataType::ValueType ValueType;
+	typedef typename ValueType::value_type ElementType;
+	typedef typename ElementType::BaseType BaseType;
+
+	ValueType defaultValue;
+	if( parameter->idefault.size() )
+	{
+		defaultValue.resize( parameter->idefault.size() / ElementType::dimensions() );
+		for( size_t j = 0; j < defaultValue.size(); j++ )
+		{
+			for( size_t i = 0; i < ElementType::dimensions(); ++i )
+			{
+				defaultValue[j][i] = BaseType( parameter->idefault[ j * ElementType::dimensions() + i] );
+			}
+		}
+	}
+	else if( parameter->fdefault.size() )
+	{
+		defaultValue.resize( parameter->fdefault.size() / ElementType::dimensions() );
+		for( size_t j = 0; j < defaultValue.size(); j++ )
+		{
+			for( size_t i = 0; i < ElementType::dimensions(); ++i )
+			{
+				defaultValue[j][i] = BaseType( parameter->fdefault[ j * ElementType::dimensions() + i] );
+			}
+		}
+	}
+
+	typename DataType::Ptr defaultValueData( new DataType( defaultValue ) );
+
+
+	PlugType *existingPlug = parent->getChild<PlugType>( name );
+	if(
+		existingPlug &&
+		*existingPlug->defaultValue() == *defaultValueData
+	)
+	{
+		return existingPlug;
+	}
+
+	typename PlugType::Ptr plug = new PlugType( name, parent->direction(), defaultValueData, Plug::Default | Plug::Dynamic );
+
+	if( existingPlug )
+	{
+		transferConnectionOrValue( existingPlug, plug.get() );
+	}
+
+	parent->setChild( name, plug );
+	return plug.get();
+}
+
 Plug *loadMatrixParameter( const OSLQuery::Parameter *parameter, const InternedString &name, Gaffer::Plug *parent )
 {
 	const vector<float> &d = parameter->fdefault;
@@ -391,6 +510,40 @@ Plug *loadMatrixParameter( const OSLQuery::Parameter *parameter, const InternedS
 	}
 
 	M44fPlugPtr plug = new M44fPlug( name, parent->direction(), defaultValue, Plug::Default | Plug::Dynamic );
+
+	transferConnectionOrValue( existingPlug, plug.get() );
+
+	parent->setChild( name, plug );
+
+	return plug.get();
+}
+
+Plug *loadMatrixArrayParameter( const OSLQuery::Parameter *parameter, const InternedString &name, Gaffer::Plug *parent )
+{
+	const vector<float> &d = parameter->fdefault;
+
+	vector<M44f> defaultValue;
+	if( parameter->fdefault.size() )
+	{
+		defaultValue.resize( parameter->fdefault.size() / 16 );
+		for( size_t i = 0; i < defaultValue.size(); i++ )
+		{
+			defaultValue[i] = M44f(
+				d[i*16+0], d[i*16+1], d[i*16+2], d[i*16+3],
+				d[i*16+4], d[i*16+5], d[i*16+6], d[i*16+7],
+				d[i*16+8], d[i*16+9], d[i*16+10], d[i*16+11],
+				d[i*16+12], d[i*16+13], d[i*16+14], d[i*16+15] );
+		}
+	}
+
+	M44fVectorDataPtr defaultValueData = new M44fVectorData( defaultValue );
+	M44fVectorDataPlug *existingPlug = parent->getChild<M44fVectorDataPlug>( name );
+	if( existingPlug && *existingPlug->defaultValue() == *defaultValueData )
+	{
+		return existingPlug;
+	}
+
+	M44fVectorDataPlugPtr plug = new M44fVectorDataPlug( name, parent->direction(), defaultValueData, Plug::Default | Plug::Dynamic );
 
 	transferConnectionOrValue( existingPlug, plug.get() );
 
@@ -653,7 +806,51 @@ Plug *loadShaderParameter( const OSLQuery &query, const OSLQuery::Parameter *par
 	}
 	else
 	{
-		/// \todo support array parameters
+		// Arrays
+		if( parameter->type.basetype == TypeDesc::FLOAT || parameter->type.basetype == TypeDesc::INT )
+		{
+			// Numeric in some way.
+			if( parameter->type.aggregate == TypeDesc::SCALAR )
+			{
+				if( parameter->type.basetype == TypeDesc::FLOAT )
+				{
+					result = loadNumericArrayParameter<FloatVectorDataPlug>( parameter, name, parent, metadata );
+				}
+				else
+				{
+					result = loadNumericArrayParameter<IntVectorDataPlug>( parameter, name, parent, metadata );
+				}
+			}
+			else if( parameter->type.aggregate == TypeDesc::VEC3 )
+			{
+				if( parameter->type.basetype == TypeDesc::FLOAT )
+				{
+					if( parameter->type.vecsemantics == TypeDesc::COLOR )
+					{
+						result = loadCompoundNumericArrayParameter<Color3fVectorDataPlug>( parameter, name, parent, metadata );
+					}
+					else
+					{
+						result = loadCompoundNumericArrayParameter<V3fVectorDataPlug>( parameter, name, parent, metadata );
+					}
+				}
+				else
+				{
+					result = loadCompoundNumericParameter<V3iPlug>( parameter, name, parent, metadata );
+				}
+			}
+			else if( parameter->type.aggregate == TypeDesc::MATRIX44 )
+			{
+				if( parameter->type.basetype == TypeDesc::FLOAT )
+				{
+					result = loadMatrixArrayParameter( parameter, name, parent );
+				}
+			}
+		}
+		else if( parameter->type.basetype == TypeDesc::STRING )
+		{
+			result = loadStringArrayParameter( parameter, name, parent );
+		}
 	}
 
 	if( !result )

@@ -127,6 +127,7 @@ enum TypeId
 	FileSystemPathTypeId = 110080,
 	LoopComputeNodeTypeId = 110081,
 	FileSequencePathFilterTypeId = 110082,
+	M44fVectorDataPlugTypeId = 110083,
 
 	LastTypeId = 110159,
 

@@ -67,6 +67,7 @@ shader version1
 	color commonColor = 1,
 	string commonString = "ss",
 	TestStruct commonStruct = { 1, 2, color( 1, 2, 3 ), "s", 2, 4, color( 2, 3, 4 ), "t", 1, 2, 3, "four" },
+	float commonArray[3] = { 0, 1, 2 },
 
 	// Parameters added in version 2
 
@@ -82,6 +83,9 @@ shader version1
 	float typeChanged2 = 2,
 	color typeChanged3 = 3,
 	string typeChanged4 = "four",
+
+	// Parameters which change defaults in version 2
+	float defaultChangedArray[3] = { 0, 1, 2 },
 
 	output color c = 0
 

@@ -410,6 +410,10 @@ ValuePlugPtr CompoundDataPlug::createPlugFromData( const std::string &name, Plug
 		{
 			return typedObjectValuePlug( name, direction, flags, static_cast<const Color3fVectorData *>( value ) );
 		}
+		case M44fVectorDataTypeId :
+		{
+			return typedObjectValuePlug( name, direction, flags, static_cast<const M44fVectorData *>( value ) );
+		}
 		default :
 			throw IECore::Exception(
 				boost::str( boost::format( "Data for \"%s\" has unsupported value data type \"%s\"" ) % name % value->typeName() )
@@ -504,6 +508,8 @@ IECore::DataPtr CompoundDataPlug::extractDataFromPlug( const ValuePlug *plug )
 			return static_cast<const V3fVectorDataPlug *>( plug )->getValue()->copy();
 		case Color3fVectorDataPlugTypeId :
 			return static_cast<const Color3fVectorDataPlug *>( plug )->getValue()->copy();
+		case M44fVectorDataPlugTypeId :
+			return static_cast<const M44fVectorDataPlug *>( plug )->getValue()->copy();
 		case SplineffPlugTypeId :
 			return new SplineffData( static_cast<const SplineffPlug *>( plug )->getValue() );
 		case SplinefColor3fPlugTypeId :
