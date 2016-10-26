@@ -39,7 +39,7 @@
 
 #include "Gaffer/NumericPlug.h"
 
-#include "GafferScene/Filter.h"
+#include "GafferScene/TypeIds.h"
 
 namespace GafferScene
 {

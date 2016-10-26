@@ -61,14 +61,14 @@ FilteredSceneProcessor::~FilteredSceneProcessor()
 {
 }
 
-Gaffer::IntPlug *FilteredSceneProcessor::filterPlug()
+FilterPlug *FilteredSceneProcessor::filterPlug()
 {
-	return getChild<IntPlug>( g_firstPlugIndex );
+	return getChild<FilterPlug>( g_firstPlugIndex );
 }
 
-const Gaffer::IntPlug *FilteredSceneProcessor::filterPlug() const
+const FilterPlug *FilteredSceneProcessor::filterPlug() const
 {
-	return getChild<IntPlug>( g_firstPlugIndex );
+	return getChild<FilterPlug>( g_firstPlugIndex );
 }
 
 void FilteredSceneProcessor::affects( const Gaffer::Plug *input, AffectedPlugsContainer &outputs ) const

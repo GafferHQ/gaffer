@@ -57,9 +57,8 @@ class FilteredSceneProcessor : public SceneProcessor
 
 		IE_CORE_DECLARERUNTIMETYPEDEXTENSION( GafferScene::FilteredSceneProcessor, FilteredSceneProcessorTypeId, SceneProcessor );
 
-		/// \todo Change return type to FilterPlug.
-		Gaffer::IntPlug *filterPlug();
-		const Gaffer::IntPlug *filterPlug() const;
+		FilterPlug *filterPlug();
+		const FilterPlug *filterPlug() const;
 
 		virtual void affects( const Gaffer::Plug *input, AffectedPlugsContainer &outputs ) const;
 

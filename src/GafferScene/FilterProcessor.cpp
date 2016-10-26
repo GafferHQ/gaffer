@@ -66,29 +66,29 @@ FilterProcessor::~FilterProcessor()
 {
 }
 
-Gaffer::IntPlug *FilterProcessor::inPlug()
+FilterPlug *FilterProcessor::inPlug()
 {
 	GraphComponent *p = getChild<GraphComponent>( g_firstPlugIndex );
-	if( IntPlug *s = IECore::runTimeCast<IntPlug>( p ) )
+	if( FilterPlug *s = IECore::runTimeCast<FilterPlug>( p ) )
 	{
 		return s;
 	}
 	else
 	{
-		return static_cast<ArrayPlug *>( p )->getChild<IntPlug>( 0 );
+		return static_cast<ArrayPlug *>( p )->getChild<FilterPlug>( 0 );
 	}
 }
 
-const Gaffer::IntPlug *FilterProcessor::inPlug() const
+const FilterPlug *FilterProcessor::inPlug() const
 {
 	const GraphComponent *p = getChild<GraphComponent>( g_firstPlugIndex );
-	if( const IntPlug *s = IECore::runTimeCast<const IntPlug>( p ) )
+	if( const FilterPlug *s = IECore::runTimeCast<const FilterPlug>( p ) )
 	{
 		return s;
 	}
 	else
 	{
-		return static_cast<const ArrayPlug *>( p )->getChild<IntPlug>( 0 );
+		return static_cast<const ArrayPlug *>( p )->getChild<FilterPlug>( 0 );
 	}
 }
 

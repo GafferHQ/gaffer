@@ -39,6 +39,7 @@
 #include "GafferBindings/PlugBinding.h"
 
 #include "GafferScene/FilterPlug.h"
+#include "GafferScene/Filter.h"
 
 #include "GafferSceneBindings/FilterPlugBinding.h"
 
