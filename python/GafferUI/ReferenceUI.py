@@ -35,6 +35,7 @@
 ##########################################################################
 
 import os
+import functools
 
 import IECore
 
@@ -160,3 +161,45 @@ def _load( node, fileName, parentWindow ) :
 
 	with GafferUI.ErrorDialogue.ErrorHandler( title = "Errors Occurred During Loading", closeLabel = "Oy vey", parentWindow = parentWindow ) :
 		node.load( fileName )
+
+##########################################################################
+# NodeGraph node context menu
+##########################################################################
+
+def __duplicateAsBox( nodeGraph, node ) :
+
+	script = node.scriptNode()
+	with Gaffer.UndoContext( script ) :
+
+		box = Gaffer.Box()
+		script.addChild( box )
+
+		graphGadget = nodeGraph.graphGadget()
+		graphGadget.getLayout().positionNode(
+			graphGadget, box, fallbackPosition = graphGadget.getNodePosition( node )
+		)
+
+		script.selection().clear()
+		script.selection().add( box )
+
+		with GafferUI.ErrorDialogue.ErrorHandler(
+			title = "Errors Occurred During Loading",
+			closeLabel = "Oy vey",
+			parentWindow = nodeGraph.ancestor( GafferUI.Window ),
+		) :
+			script.executeFile( node.fileName(), parent = box, continueOnError = True )
+
+def __nodeGraphNodeContextMenu( nodeGraph, node, menuDefinition ) :
+
+	if not isinstance( node, Gaffer.Reference ) :
+		return
+
+	menuDefinition.append(
+		"/Duplicate as Box",
+		{
+			"command" : functools.partial( __duplicateAsBox, nodeGraph, node ),
+			"active" : bool( node.fileName() ),
+		}
+	)
+
+__nodeGraphNodeContextMenuConnection = GafferUI.NodeGraph.nodeContextMenuSignal().connect( __nodeGraphNodeContextMenu )
