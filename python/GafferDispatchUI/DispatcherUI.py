@@ -504,7 +504,7 @@ def _dispatch( nodes ) :
 	script = nodes[0].scriptNode()
 	with script.context() :
 		success = False
-		with GafferUI.ErrorDialogue.ExceptionHandler( title = "Dispatch Error" ) :
+		with GafferUI.ErrorDialogue.ErrorHandler( title = "Dispatch Error" ) :
 			__dispatcherWindow( script ).getCurrentDispatcher().dispatch( nodes )
 			success = True
 
