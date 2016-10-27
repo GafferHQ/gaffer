@@ -444,7 +444,7 @@ def __exportOSLShader( nodeEditor, node ) :
 	if not path.endswith( ".osl" ) :
 		path += ".osl"
 
-	with GafferUI.ErrorDialogue.ExceptionHandler( title = "Error Exporting Shader", parentWindow = nodeEditor.ancestor( GafferUI.Window ) ) :
+	with GafferUI.ErrorDialogue.ErrorHandler( title = "Error Exporting Shader", parentWindow = nodeEditor.ancestor( GafferUI.Window ) ) :
 		with open( path, "w" ) as f :
 			with nodeEditor.getContext() :
 				f.write( node.source( os.path.splitext( os.path.basename( path ) )[0] ) )
