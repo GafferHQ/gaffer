@@ -102,7 +102,9 @@ TypeDesc::VECSEMANTICS vecSemanticsFromGeometricInterpretation( GeometricData::I
 		case GeometricData::Color :
 			return TypeDesc::COLOR;
 		default :
-			return TypeDesc::NOXFORM;
+			// Strictly speaking, having no interpretation set could correspond to NOXFORM.  But there
+			// is no vector type in OSL which uses this description, so VECTOR is a more useful default
+			return TypeDesc::VECTOR;
 	}
 }
 

@@ -1,0 +1,61 @@
+//////////////////////////////////////////////////////////////////////////
+//
+//  Copyright (c) 2016, Image Engine Design Inc. All rights reserved.
+//
+//  Redistribution and use in source and binary forms, with or without
+//  modification, are permitted provided that the following conditions are
+//  met:
+//
+//      * Redistributions of source code must retain the above
+//        copyright notice, this list of conditions and the following
+//        disclaimer.
+//
+//      * Redistributions in binary form must reproduce the above
+//        copyright notice, this list of conditions and the following
+//        disclaimer in the documentation and/or other materials provided with
+//        the distribution.
+//
+//      * Neither the name of John Haddon nor the names of
+//        any other contributors to this software may be used to endorse or
+//        promote products derived from this software without specific prior
+//        written permission.
+//
+//  THIS SOFTWARE IS PROVIDED BY THE COPYRIGHT HOLDERS AND CONTRIBUTORS "AS
+//  IS" AND ANY EXPRESS OR IMPLIED WARRANTIES, INCLUDING, BUT NOT LIMITED TO,
+//  THE IMPLIED WARRANTIES OF MERCHANTABILITY AND FITNESS FOR A PARTICULAR
+//  PURPOSE ARE DISCLAIMED. IN NO EVENT SHALL THE COPYRIGHT OWNER OR
+//  CONTRIBUTORS BE LIABLE FOR ANY DIRECT, INDIRECT, INCIDENTAL, SPECIAL,
+//  EXEMPLARY, OR CONSEQUENTIAL DAMAGES (INCLUDING, BUT NOT LIMITED TO,
+//  PROCUREMENT OF SUBSTITUTE GOODS OR SERVICES; LOSS OF USE, DATA, OR
+//  PROFITS; OR BUSINESS INTERRUPTION) HOWEVER CAUSED AND ON ANY THEORY OF
+//  LIABILITY, WHETHER IN CONTRACT, STRICT LIABILITY, OR TORT (INCLUDING
+//  NEGLIGENCE OR OTHERWISE) ARISING IN ANY WAY OUT OF THE USE OF THIS
+//  SOFTWARE, EVEN IF ADVISED OF THE POSSIBILITY OF SUCH DAMAGE.
+//
+//////////////////////////////////////////////////////////////////////////
+
+surface parameterTypes
+(
+
+	float f = 0,
+	int i = 0,
+	string s = "",
+	color c = 0,
+	vector vec = 0,
+	point p = 0,
+	normal n = 0,
+	vector noInterp = 0,
+)
+{
+	int success = 1;
+	if( f != 1 ) success = 0;
+	if( i != 2 ) success = 0;
+	if( s != "three" ) success = 0;
+	if( c != color( 4, 5, 6 ) ) success = 0;
+	if( vec != vector( 7, 8, 9 ) ) success = 0;
+	if( p != point( 10, 11, 12 ) ) success = 0;
+	if( n != normal( 13, 14, 15 ) ) success = 0;
+	if( noInterp != vector( 16, 17, 18 ) ) success = 0;
+
+	Ci = ( success > 0 ? color( 0, 1, 0 ) : color( 1, 0, 0 ) ) * emission();
+}
