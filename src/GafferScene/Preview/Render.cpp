@@ -36,6 +36,8 @@
 
 #include "boost/filesystem.hpp"
 
+#include "IECore/ObjectPool.h"
+
 #include "Gaffer/PerformanceMonitor.h"
 #include "Gaffer/MonitorAlgo.h"
 
@@ -234,6 +236,18 @@ void Render::execute() const
 	outputCameras( inPlug(), globals.get(), renderSets, renderer.get() );
 	outputLights( inPlug(), globals.get(), renderSets, renderer.get() );
 	outputObjects( inPlug(), globals.get(), renderSets, renderer.get() );
+
+	// Now we have generated the scene, flush Cortex and Gaffer caches to
+	// provide more memory to the renderer.
+	/// \todo This is not ideal. If dispatch is batched then multiple
+	/// renders in the same process might actually benefit from sharing
+	/// the cache. And if executing directly within the gui app
+	/// flushing the caches is definitely not wanted. Since these
+	/// scenarios are currently uncommon, we prioritise the common
+	/// case of performing a single render from within `gaffer execute`,
+	/// but it would be good to do better.
+	ObjectPool::defaultObjectPool()->clear();
+	ValuePlug::clearCache();
 
 	renderer->render();
 	renderer.reset();
