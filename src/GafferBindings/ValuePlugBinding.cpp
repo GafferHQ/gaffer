@@ -290,6 +290,8 @@ void GafferBindings::bindValuePlug()
 		.staticmethod( "setCacheMemoryLimit" )
 		.def( "cacheMemoryUsage", &ValuePlug::cacheMemoryUsage )
 		.staticmethod( "cacheMemoryUsage" )
+		.def( "clearCache", &ValuePlug::clearCache )
+		.staticmethod( "clearCache" )
 		.def( "__repr__", &repr )
 	;
 
