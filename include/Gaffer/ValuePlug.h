@@ -112,6 +112,8 @@ class ValuePlug : public Plug
 		static void setCacheMemoryLimit( size_t bytes );
 		/// Returns the current memory usage of the cache in bytes.
 		static size_t cacheMemoryUsage();
+		/// Clears the cache.
+		static void clearCache();
 		//@}
 
 	protected :

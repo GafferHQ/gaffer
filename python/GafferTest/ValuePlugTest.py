@@ -79,6 +79,15 @@ class ValuePlugTest( GafferTest.TestCase ) :
 		# the objects should be one and the same, as we reenabled the cache.
 		self.failUnless( v1.isSame( v2 ) )
 
+		Gaffer.ValuePlug.clearCache()
+		self.assertEqual( Gaffer.ValuePlug.cacheMemoryUsage(), 0 )
+
+		v3 = n["out"].getValue( _copy=False )
+		self.failIf( v3.isSame( v2 ) )
+
+		v4 = n["out"].getValue( _copy=False )
+		self.failUnless( v4.isSame( v3 ) )
+
 	def testSettable( self ) :
 
 		p1 = Gaffer.IntPlug( direction = Gaffer.Plug.Direction.In )
