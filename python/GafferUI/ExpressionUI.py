@@ -158,8 +158,11 @@ class _ExpressionWidget( GafferUI.Widget ) :
 
 				GafferUI.Label( "Language" )
 				self.__languageMenu = GafferUI.MenuButton( "", menu = GafferUI.Menu( Gaffer.WeakMethod( self.__languageMenuDefinition ) ) )
+				self.__languageMenu.setEnabled( not Gaffer.readOnly( node ) )
 
 			self.__textWidget = GafferUI.MultiLineTextWidget( role = GafferUI.MultiLineTextWidget.Role.Code )
+			self.__textWidget.setEditable( not Gaffer.readOnly( node ) )
+
 			self.__activatedConnection = self.__textWidget.activatedSignal().connect( Gaffer.WeakMethod( self.__activated ) )
 			self.__editingFinishedConnection = self.__textWidget.editingFinishedSignal().connect( Gaffer.WeakMethod( self.__editingFinished ) )
 			self.__dropTextConnection = self.__textWidget.dropTextSignal().connect( Gaffer.WeakMethod( self.__dropText ) )
