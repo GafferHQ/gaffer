@@ -259,12 +259,13 @@ Plug *loadStringParameter( const OSLQuery::Parameter *parameter, const InternedS
 Plug *loadStringArrayParameter( const OSLQuery::Parameter *parameter, const InternedString &name, Gaffer::Plug *parent )
 {
 	StringVectorDataPtr defaultValueData = new StringVectorData();
+	std::vector<std::string> &defaultValueDataWritable = defaultValueData->writable();
 	if( parameter->sdefault.size() )
 	{
-		defaultValueData->writable().resize( parameter->sdefault.size() );
+		defaultValueDataWritable.resize( parameter->sdefault.size() );
 		for( size_t i = 0; i < parameter->sdefault.size(); i++ )
 		{
-			defaultValueData->writable()[i] = parameter->sdefault[i].c_str();
+			defaultValueDataWritable[i] = parameter->sdefault[i].c_str();
 		}
 	}
 
@@ -339,19 +340,26 @@ Plug *loadNumericArrayParameter( const OSLQuery::Parameter *parameter, const Int
 {
 	typedef typename PlugType::ValueType DataType;
 	typedef typename DataType::ValueType ValueType;
+	typedef typename ValueType::value_type ElementType;
 
-	ValueType defaultValue;
+	typename DataType::Ptr defaultValueData = new DataType();
+	ValueType &defaultValueDataWritable = defaultValueData->writable();
 	if( parameter->idefault.size() )
 	{
-		defaultValue.resize( parameter->idefault.size() );
-		std::copy( parameter->idefault.begin(), parameter->idefault.end(), defaultValue.begin() );
+		defaultValueDataWritable.resize( parameter->idefault.size() );
+		for( size_t i = 0; i < parameter->idefault.size(); i++ )
+		{
+			defaultValueDataWritable[i] = ElementType( parameter->idefault[i] );
+		}
 	}
 	else if( parameter->fdefault.size() )
 	{
-		defaultValue.resize( parameter->fdefault.size() );
-		std::copy( parameter->fdefault.begin(), parameter->fdefault.end(), defaultValue.begin() );
+		defaultValueDataWritable.resize( parameter->fdefault.size() );
+		for( size_t i = 0; i < parameter->fdefault.size(); i++ )
+		{
+			defaultValueDataWritable[i] = ElementType( parameter->fdefault[i] );
+		}
 	}
-	typename DataType::Ptr defaultValueData( new DataType( defaultValue ) );
 
 	PlugType *existingPlug = parent->getChild<PlugType>( name );
 	if(
@@ -446,31 +454,31 @@ Plug *loadCompoundNumericArrayParameter( const OSLQuery::Parameter *parameter, c
 	typedef typename ValueType::value_type ElementType;
 	typedef typename ElementType::BaseType BaseType;
 
-	ValueType defaultValue;
+	typename DataType::Ptr defaultValueData = new DataType();
+	ValueType &defaultValueDataWritable = defaultValueData->writable();
 	if( parameter->idefault.size() )
 	{
-		defaultValue.resize( parameter->idefault.size() / ElementType::dimensions() );
-		for( size_t j = 0; j < defaultValue.size(); j++ )
+		defaultValueDataWritable.resize( parameter->idefault.size() / ElementType::dimensions() );
+		for( size_t j = 0; j < defaultValueDataWritable.size(); j++ )
 		{
 			for( size_t i = 0; i < ElementType::dimensions(); ++i )
 			{
-				defaultValue[j][i] = BaseType( parameter->idefault[ j * ElementType::dimensions() + i] );
+				defaultValueDataWritable[j][i] = BaseType( parameter->idefault[ j * ElementType::dimensions() + i] );
 			}
 		}
 	}
 	else if( parameter->fdefault.size() )
 	{
-		defaultValue.resize( parameter->fdefault.size() / ElementType::dimensions() );
-		for( size_t j = 0; j < defaultValue.size(); j++ )
+		defaultValueDataWritable.resize( parameter->fdefault.size() / ElementType::dimensions() );
+		for( size_t j = 0; j < defaultValueDataWritable.size(); j++ )
 		{
 			for( size_t i = 0; i < ElementType::dimensions(); ++i )
 			{
-				defaultValue[j][i] = BaseType( parameter->fdefault[ j * ElementType::dimensions() + i] );
+				defaultValueDataWritable[j][i] = BaseType( parameter->fdefault[ j * ElementType::dimensions() + i] );
 			}
 		}
 	}
 
-	typename DataType::Ptr defaultValueData( new DataType( defaultValue ) );
 
 
 	PlugType *existingPlug = parent->getChild<PlugType>( name );
@@ -522,13 +530,14 @@ Plug *loadMatrixArrayParameter( const OSLQuery::Parameter *parameter, const Inte
 {
 	const vector<float> &d = parameter->fdefault;
 
-	vector<M44f> defaultValue;
+	M44fVectorDataPtr defaultValueData = new M44fVectorData();
+	std::vector<Imath::M44f> &defaultValueDataWritable = defaultValueData->writable();
 	if( parameter->fdefault.size() )
 	{
-		defaultValue.resize( parameter->fdefault.size() / 16 );
-		for( size_t i = 0; i < defaultValue.size(); i++ )
+		defaultValueDataWritable.resize( parameter->fdefault.size() / 16 );
+		for( size_t i = 0; i < defaultValueDataWritable.size(); i++ )
 		{
-			defaultValue[i] = M44f(
+			defaultValueDataWritable[i] = M44f(
 				d[i*16+0], d[i*16+1], d[i*16+2], d[i*16+3],
 				d[i*16+4], d[i*16+5], d[i*16+6], d[i*16+7],
 				d[i*16+8], d[i*16+9], d[i*16+10], d[i*16+11],
@@ -536,7 +545,6 @@ Plug *loadMatrixArrayParameter( const OSLQuery::Parameter *parameter, const Inte
 		}
 	}
 
-	M44fVectorDataPtr defaultValueData = new M44fVectorData( defaultValue );
 	M44fVectorDataPlug *existingPlug = parent->getChild<M44fVectorDataPlug>( name );
 	if( existingPlug && *existingPlug->defaultValue() == *defaultValueData )
 	{
