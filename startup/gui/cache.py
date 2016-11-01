@@ -51,7 +51,8 @@ Gaffer.Metadata.registerPlugValue(
     "description",
     """
     Controls the memory limit for Gaffer's ValuePlug cache.
-    """
+    """,
+    persistent = False
 )
 
 Gaffer.Metadata.registerPlugValue(
@@ -59,9 +60,9 @@ Gaffer.Metadata.registerPlugValue(
     "description",
     """
     Controls the memory limit for the OpenImageIO cache that the OpenImageIOReader node uses.
-    """
+    """,
+    persistent = False
 )
-
 
 # update cache settings when they change
 
