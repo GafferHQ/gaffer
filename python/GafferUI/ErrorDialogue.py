@@ -43,6 +43,12 @@ import GafferUI
 
 class ErrorDialogue( GafferUI.Dialogue ) :
 
+	# Constructs a dialogue to display errors specified by any combination of the
+	# following arguments :
+	#
+	#  - message : A simple (string) message to display.
+	#  - messages : A list of messages in the format stored by `IECore.CapturingMessageHandler.messages`
+	#  - details : A string containing additional details to be shown in a collapsed section.
 	def __init__( self, title, message = None, details = None, messages = None, closeLabel = "Close", **kw ) :
 
 		GafferUI.Dialogue.__init__( self, title, sizeMode=GafferUI.Window.SizeMode.Manual, **kw )
