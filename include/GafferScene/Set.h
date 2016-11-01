@@ -83,8 +83,6 @@ class Set : public FilteredSceneProcessor
 
 	protected :
 
-		virtual bool acceptsInput( const Gaffer::Plug *plug, const Gaffer::Plug *inputPlug ) const;
-
 		virtual void hash( const Gaffer::ValuePlug *output, const Gaffer::Context *context, IECore::MurmurHash &h ) const;
 		virtual void compute( Gaffer::ValuePlug *output, const Gaffer::Context *context ) const;
 
@@ -95,6 +93,9 @@ class Set : public FilteredSceneProcessor
 		virtual ConstPathMatcherDataPtr computeSet( const IECore::InternedString &setName, const Gaffer::Context *context, const ScenePlug *parent ) const;
 
 	private :
+
+		PathMatcherDataPlug *filterResultsPlug();
+		const PathMatcherDataPlug *filterResultsPlug() const;
 
 		PathMatcherDataPlug *pathMatcherPlug();
 		const PathMatcherDataPlug *pathMatcherPlug() const;

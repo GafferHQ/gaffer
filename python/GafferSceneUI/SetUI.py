@@ -111,6 +111,13 @@ Gaffer.Metadata.registerNode(
 			"""
 			A filter to define additional paths to be added to
 			or removed from the set.
+
+			> Warning : Using a filter can be very expensive.
+			It is advisable to limit use to filters with a
+			limited number of matches and/or sets which are
+			not used heavily downstream. Wherever possible,
+			prefer to use the `paths` plug directly instead
+			of using a filter.
 			""",
 
 		],
