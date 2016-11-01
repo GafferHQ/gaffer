@@ -63,6 +63,7 @@ class StandardLightVisualiser : public LightVisualiser
 		virtual IECoreGL::ConstRenderablePtr visualise( const IECore::InternedString &attributeName, const IECore::ObjectVector *shaderVector, IECoreGL::ConstStatePtr &state ) const;
 
 	protected :
+
 		static const char *faceCameraVertexSource();
 
 		static IECoreGL::ConstRenderablePtr ray();
@@ -71,15 +72,12 @@ class StandardLightVisualiser : public LightVisualiser
 		static IECoreGL::ConstRenderablePtr colorIndicator( const Imath::Color3f &color, bool indicatorFaceCamera = true );
 
 	private:
+
 		/// These methods are private because we haven't yet completely nailed down the API for this stuff
 		static const char *environmentLightDrawFragSource();
-		static const char *areaLightDrawVertexSource();
-		static const char *areaLightDrawFragSource();
 
 		static void addEnvLightVisualiser( IECoreGL::GroupPtr &output, Imath::Color3f multiplier, const std::string &textureName );
-		static void addAreaLightVisualiser( IECoreGL::ConstStatePtr &state, Imath::Color3f multiplier, const std::string &textureName, bool flipNormal, bool doubleSided, bool sphericalProjection, const Imath::M44f &projectionTransform );
 		static void addBasicLightVisualiser( IECore::ConstStringDataPtr type, IECoreGL::GroupPtr &output, Imath::Color3f multiplier, float coneAngle, float penumbraAngle, const std::string *penumbraType, float lensRadius );
-
 
 };
 
