@@ -73,6 +73,15 @@ class StandardLightVisualiser : public LightVisualiser
 		static IECoreGL::ConstRenderablePtr environmentSphere( const Imath::Color3f &color, const std::string &textureFileName );
 		static IECoreGL::ConstRenderablePtr colorIndicator( const Imath::Color3f &color, bool cameraFacing = true );
 
+	private :
+
+		/// \todo Expose publicly once we have enough uses to dictate
+		/// the most general set of parameters.
+		static IECoreGL::ConstRenderablePtr quadShape();
+		static IECoreGL::ConstRenderablePtr diskShape( float radius );
+		static IECoreGL::ConstRenderablePtr cylinderShape( float radius );
+		static IECoreGL::ConstRenderablePtr cylinderRays( float radius );
+
 };
 
 IE_CORE_DECLAREPTR( StandardLightVisualiser )
