@@ -116,6 +116,7 @@ from InteractiveRenderTest import InteractiveRenderTest
 from FilteredSceneProcessorTest import FilteredSceneProcessorTest
 from ShaderBallTest import ShaderBallTest
 from LightTweaksTest import LightTweaksTest
+from FilterResultsTest import FilterResultsTest
 
 if __name__ == "__main__":
 	import unittest
