@@ -68,6 +68,29 @@ using namespace GafferSceneUI;
 namespace
 {
 
+const IECore::CompoundData *parametersAndMetadataTarget( const IECore::InternedString &attributeName, const IECore::ObjectVector *shaderVector, InternedString &metadataTarget )
+{
+	if( !shaderVector || shaderVector->members().size() == 0 )
+	{
+		return NULL;
+	}
+
+	if( const IECore::Shader *shader = IECore::runTimeCast<const IECore::Shader>( shaderVector->members().back().get() ) )
+	{
+		metadataTarget = attributeName.string() + ":" + shader->getName();
+		return shader->parametersData();
+	}
+	else if( const IECore::Light *light = IECore::runTimeCast<const IECore::Light>( shaderVector->members().back().get() ) )
+	{
+		/// \todo Remove once all Light node derived classes are
+		/// creating only shaders.
+		metadataTarget = attributeName.string() + ":" + light->getName();
+		return light->parametersData().get();
+	}
+
+	return NULL;
+}
+
 template<typename T>
 T parameter( InternedString metadataTarget, const IECore::CompoundData *parameters, InternedString parameterNameMetadata, T defaultValue )
 {
@@ -84,6 +107,48 @@ T parameter( InternedString metadataTarget, const IECore::CompoundData *paramete
 	}
 
 	return defaultValue;
+}
+
+void spotlightParameters( InternedString metadataTarget, const IECore::CompoundData *parameters, float &innerAngle, float &outerAngle, float &lensRadius )
+{
+	float coneAngle = parameter<float>( metadataTarget, parameters, "coneAngleParameter", 0.0f );
+	float penumbraAngle = parameter<float>( metadataTarget, parameters, "penumbraAngleParameter", 0.0f );
+	if( ConstStringDataPtr angleUnit = Metadata::value<StringData>( metadataTarget, "angleUnit" ) )
+	{
+		if( angleUnit->readable() == "radians" )
+		{
+			coneAngle *= 180.0 / M_PI;
+			penumbraAngle *= 180 / M_PI;
+		}
+	}
+
+	innerAngle = 0;
+	outerAngle = 0;
+
+	ConstStringDataPtr penumbraTypeData = Metadata::value<StringData>( metadataTarget, "penumbraType" );
+	const std::string *penumbraType = penumbraTypeData ? &penumbraTypeData->readable() : NULL;
+
+	if( !penumbraType || *penumbraType == "inset" )
+	{
+		outerAngle = coneAngle;
+		innerAngle = coneAngle - 2.0f * penumbraAngle;
+	}
+	else if( *penumbraType == "outset" )
+	{
+		outerAngle = coneAngle + 2.0f * penumbraAngle;
+		innerAngle = coneAngle ;
+	}
+	else if( *penumbraType == "absolute" )
+	{
+		outerAngle = coneAngle;
+		innerAngle = penumbraAngle;
+	}
+
+	lensRadius = 0.0f;
+	if( parameter<bool>( metadataTarget, parameters, "lensRadiusEnableParameter", true ) )
+	{
+		lensRadius = parameter<float>( metadataTarget, parameters, "lensRadiusParameter", 0.0f );
+	}
 }
 
 void addWireframeCurveState( IECoreGL::Group *group )
@@ -175,6 +240,33 @@ void addCone( float angle, float startRadius, vector<int> &vertsPerCurve, vector
 	vertsPerCurve.push_back( 2 );
 }
 
+const char *environmentSphereFragSource()
+{
+	return
+		"#version 120\n"
+		""
+		"#if __VERSION__ <= 120\n"
+		"#define in varying\n"
+		"#endif\n"
+		""
+		"#include \"IECoreGL/ColorAlgo.h\"\n"
+		""
+		"in vec2 fragmentst;"
+		""
+		"uniform vec3 lightMultiplier;"
+		"uniform vec3 defaultColor;"
+		"uniform float previewOpacity;"
+		""
+		"uniform sampler2D mapSampler;"
+		""
+		"void main()"
+		"{"
+			"vec3 c = defaultColor + texture2D( mapSampler, fragmentst ).xyz;"
+			"gl_FragColor = vec4( ieLinToSRGB( c * lightMultiplier ), previewOpacity );"
+		"}"
+	;
+}
+
 } // namespace
 
 //////////////////////////////////////////////////////////////////////////
@@ -189,106 +281,10 @@ StandardLightVisualiser::~StandardLightVisualiser()
 {
 }
 
-void StandardLightVisualiser::addEnvLightVisualiser( GroupPtr &output, Color3f multiplier, const std::string &textureName )
-{
-	IECoreGL::GroupPtr sphereGroup = new IECoreGL::Group();
-
-	Imath::M44f trans;
-	trans.scale( V3f( 1, 1, -1 ) );
-	trans.rotate( V3f( -0.5 * M_PI, -0.5 * M_PI, 0 ) );
-	sphereGroup->setTransform( trans );
-
-	IECoreGL::SpherePrimitivePtr sphere = new IECoreGL::SpherePrimitive();
-	sphereGroup->addChild( sphere );
-
-	IECore::CompoundObjectPtr parameters = new CompoundObject;
-	parameters->members()["lightMultiplier"] = new Color3fData( multiplier );
-	parameters->members()["previewOpacity"] = new FloatData( 1 );
-	parameters->members()["mapSampler"] = new StringData( textureName );
-	parameters->members()["defaultColor"] = new Color3fData( Color3f( textureName == "" ? 1.0f : 0.0f ) );
-	sphereGroup->getState()->add(
-		new IECoreGL::ShaderStateComponent( ShaderLoader::defaultShaderLoader(), TextureLoader::defaultTextureLoader(), IECoreGL::Shader::defaultVertexSource(), "", environmentLightDrawFragSource(), parameters )
-	);
-	sphereGroup->getState()->add(
-		new IECoreGL::DoubleSidedStateComponent( false )
-	);
-
-	output->addChild( sphereGroup );
-}
-
-void StandardLightVisualiser::addBasicLightVisualiser( ConstStringDataPtr type, GroupPtr &output, Color3f multiplier, float coneAngle, float penumbraAngle, const std::string *penumbraType, float lensRadius )
-{
-	bool indicatorFaceCamera = false;
-	if( !type || type->readable() == "point" )
-	{
-		output->addChild( const_pointer_cast<IECoreGL::Renderable>( pointRays() ) );
-		indicatorFaceCamera = true;
-	}
-	else if( type->readable() == "spot" )
-	{
-		float innerAngle = 0;
-		float outerAngle = 0;
-
-		if( !penumbraType || *penumbraType == "inset" )
-		{
-			outerAngle = coneAngle;
-			innerAngle = coneAngle - 2.0f * penumbraAngle;
-		}
-		else if( *penumbraType == "outset" )
-		{
-			outerAngle = coneAngle + 2.0f * penumbraAngle;
-			innerAngle = coneAngle ;
-		}
-		else if( *penumbraType == "absolute" )
-		{
-			outerAngle = coneAngle;
-			innerAngle = penumbraAngle;
-		}
-
-		output->addChild( const_pointer_cast<IECoreGL::Renderable>( spotlightCone( innerAngle, outerAngle, lensRadius ) ) );
-		output->addChild( const_pointer_cast<IECoreGL::Renderable>( ray() ) );
-	}
-	else if( type->readable() == "distant" )
-	{
-		for ( int i = 0; i < 3; i++ )
-		{
-			IECoreGL::GroupPtr rayGroup = new IECoreGL::Group();
-
-			Imath::M44f trans;
-			trans.rotate( V3f( 0, 0, 2.0 * M_PI / 3.0 * i ) );
-			trans.translate( V3f( 0, 0.4, 0.5 ) );
-			rayGroup->addChild( const_pointer_cast<IECoreGL::Renderable>( ray() ) );
-			rayGroup->setTransform( trans );
-
-			output->addChild( rayGroup );
-		}
-	}
-
-	output->addChild( const_pointer_cast<IECoreGL::Renderable>( colorIndicator( multiplier, indicatorFaceCamera ) ) );
-}
-
 IECoreGL::ConstRenderablePtr StandardLightVisualiser::visualise( const IECore::InternedString &attributeName, const IECore::ObjectVector *shaderVector, IECoreGL::ConstStatePtr &state ) const
 {
-	if( !shaderVector || shaderVector->members().size() == 0 )
-	{
-		return NULL;
-	}
-
-	IECore::InternedString metadataTarget;
-	const IECore::CompoundData *shaderParameters = NULL;
-	if( const IECore::Shader *shader = IECore::runTimeCast<const IECore::Shader>( shaderVector->members().back().get() ) )
-	{
-		metadataTarget = attributeName.string() + ":" + shader->getName();
-		shaderParameters = shader->parametersData();
-	}
-	else if( const IECore::Light *light = IECore::runTimeCast<const IECore::Light>( shaderVector->members().back().get() ) )
-	{
-		/// \todo Remove once all Light node derived classes are
-		/// creating only shaders.
-		metadataTarget = attributeName.string() + ":" + light->getName();
-		shaderParameters = light->parametersData().get();
-	}
-
+	InternedString metadataTarget;
+	const IECore::CompoundData *shaderParameters = parametersAndMetadataTarget( attributeName, shaderVector, metadataTarget );
 	if( !shaderParameters )
 	{
 		return NULL;
@@ -317,38 +313,28 @@ IECoreGL::ConstRenderablePtr StandardLightVisualiser::visualise( const IECore::I
 	if( type && type->readable() == "environment" )
 	{
 		const std::string textureName = parameter<std::string>( metadataTarget, shaderParameters, "textureNameParameter", "" );
-		addEnvLightVisualiser( result, finalColor, textureName );
+		result->addChild( const_pointer_cast<IECoreGL::Renderable>( environmentSphere( finalColor, textureName ) ) );
+	}
+	else if( type && type->readable() == "spot" )
+	{
+		float innerAngle, outerAngle, lensRadius;
+		spotlightParameters( metadataTarget, shaderParameters, innerAngle, outerAngle, lensRadius );
+		result->addChild( const_pointer_cast<IECoreGL::Renderable>( spotlightCone( innerAngle, outerAngle, lensRadius / locatorScale ) ) );
+		result->addChild( const_pointer_cast<IECoreGL::Renderable>( ray() ) );
+		result->addChild( const_pointer_cast<IECoreGL::Renderable>( colorIndicator( finalColor, /* cameraFacing = */ false ) ) );
+	}
+	else if( type && type->readable() == "distant" )
+	{
+		result->addChild( const_pointer_cast<IECoreGL::Renderable>( distantRays() ) );
+		result->addChild( const_pointer_cast<IECoreGL::Renderable>( colorIndicator( finalColor, /* cameraFacing = */ false ) ) );
 	}
 	else
 	{
-		float coneAngle = parameter<float>( metadataTarget, shaderParameters, "coneAngleParameter", 0.0f );
-		float penumbraAngle = parameter<float>( metadataTarget, shaderParameters, "penumbraAngleParameter", 0.0f );
-
-		if( ConstStringDataPtr angleUnit = Metadata::value<StringData>( metadataTarget, "angleUnit" ) )
-		{
-			if( angleUnit->readable() == "radians" )
-			{
-				coneAngle *= 180.0 / M_PI;
-				penumbraAngle *= 180 / M_PI;
-			}
-		}
-
-		const std::string *penumbraType = NULL;
-		ConstStringDataPtr penumbraTypeData = Metadata::value<StringData>( metadataTarget, "penumbraType" );
-		if( penumbraTypeData )
-		{
-			penumbraType = &penumbraTypeData->readable();
-		}
-
-
-		float lensRadius = 0.0f;
-		if( parameter<bool>( metadataTarget, shaderParameters, "lensRadiusEnableParameter", true ) )
-		{
-			lensRadius = parameter<float>( metadataTarget, shaderParameters, "lensRadiusParameter", 0.0f );
-		}
-
-		addBasicLightVisualiser( type, result, finalColor, coneAngle, penumbraAngle, penumbraType, lensRadius / locatorScale );
+		// Treat everything else as a point light.
+		result->addChild( const_pointer_cast<IECoreGL::Renderable>( pointRays() ) );
+		result->addChild( const_pointer_cast<IECoreGL::Renderable>( colorIndicator( finalColor, /* cameraFacing = */ true ) ) );
 	}
+
 	return result;
 }
 
@@ -433,33 +419,6 @@ const char *StandardLightVisualiser::faceCameraVertexSource()
 	;
 }
 
-const char *StandardLightVisualiser::environmentLightDrawFragSource()
-{
-	return
-		"#version 120\n"
-		""
-		"#if __VERSION__ <= 120\n"
-		"#define in varying\n"
-		"#endif\n"
-		""
-		"#include \"IECoreGL/ColorAlgo.h\"\n"
-		""
-		"in vec2 fragmentst;"
-		""
-		"uniform vec3 lightMultiplier;"
-		"uniform vec3 defaultColor;"
-		"uniform float previewOpacity;"
-		""
-		"uniform sampler2D mapSampler;"
-		""
-		"void main()"
-		"{"
-			"vec3 c = defaultColor + texture2D( mapSampler, fragmentst ).xyz;"
-			"gl_FragColor = vec4( ieLinToSRGB( c * lightMultiplier ), previewOpacity );"
-		"}"
-	;
-}
-
 IECoreGL::ConstRenderablePtr StandardLightVisualiser::ray()
 {
 	IECoreGL::GroupPtr group = new IECoreGL::Group();
@@ -515,6 +474,25 @@ IECoreGL::ConstRenderablePtr StandardLightVisualiser::pointRays()
 	return group;
 }
 
+IECoreGL::ConstRenderablePtr StandardLightVisualiser::distantRays()
+{
+	GroupPtr result = new Group;
+	for( int i = 0; i < 3; i++ )
+	{
+		IECoreGL::GroupPtr rayGroup = new IECoreGL::Group();
+
+		Imath::M44f trans;
+		trans.rotate( V3f( 0, 0, 2.0 * M_PI / 3.0 * i ) );
+		trans.translate( V3f( 0, 0.4, 0.5 ) );
+		rayGroup->addChild( const_pointer_cast<IECoreGL::Renderable>( ray() ) );
+		rayGroup->setTransform( trans );
+
+		result->addChild( rayGroup );
+	}
+
+	return result;
+}
+
 IECoreGL::ConstRenderablePtr StandardLightVisualiser::spotlightCone( float innerAngle, float outerAngle, float lensRadius )
 {
 	IECoreGL::GroupPtr group = new IECoreGL::Group();
@@ -555,6 +533,33 @@ IECoreGL::ConstRenderablePtr StandardLightVisualiser::spotlightCone( float inner
 
 		group->addChild( outerGroup );
 	}
+
+	return group;
+}
+
+IECoreGL::ConstRenderablePtr StandardLightVisualiser::environmentSphere( const Imath::Color3f &color, const std::string &textureFileName )
+{
+	IECoreGL::GroupPtr group = new IECoreGL::Group();
+
+	Imath::M44f trans;
+	trans.scale( V3f( 1, 1, -1 ) );
+	trans.rotate( V3f( -0.5 * M_PI, -0.5 * M_PI, 0 ) );
+	group->setTransform( trans );
+
+	IECoreGL::SpherePrimitivePtr sphere = new IECoreGL::SpherePrimitive();
+	group->addChild( sphere );
+
+	IECore::CompoundObjectPtr parameters = new CompoundObject;
+	parameters->members()["lightMultiplier"] = new Color3fData( color );
+	parameters->members()["previewOpacity"] = new FloatData( 1 );
+	parameters->members()["mapSampler"] = new StringData( textureFileName );
+	parameters->members()["defaultColor"] = new Color3fData( Color3f( textureFileName == "" ? 1.0f : 0.0f ) );
+	group->getState()->add(
+		new IECoreGL::ShaderStateComponent( ShaderLoader::defaultShaderLoader(), TextureLoader::defaultTextureLoader(), IECoreGL::Shader::defaultVertexSource(), "", environmentSphereFragSource(), parameters )
+	);
+	group->getState()->add(
+		new IECoreGL::DoubleSidedStateComponent( false )
+	);
 
 	return group;
 }

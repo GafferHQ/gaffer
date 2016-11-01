@@ -68,16 +68,10 @@ class StandardLightVisualiser : public LightVisualiser
 
 		static IECoreGL::ConstRenderablePtr ray();
 		static IECoreGL::ConstRenderablePtr pointRays();
+		static IECoreGL::ConstRenderablePtr distantRays();
 		static IECoreGL::ConstRenderablePtr spotlightCone( float innerAngle, float outerAngle, float lensRadius );
-		static IECoreGL::ConstRenderablePtr colorIndicator( const Imath::Color3f &color, bool indicatorFaceCamera = true );
-
-	private:
-
-		/// These methods are private because we haven't yet completely nailed down the API for this stuff
-		static const char *environmentLightDrawFragSource();
-
-		static void addEnvLightVisualiser( IECoreGL::GroupPtr &output, Imath::Color3f multiplier, const std::string &textureName );
-		static void addBasicLightVisualiser( IECore::ConstStringDataPtr type, IECoreGL::GroupPtr &output, Imath::Color3f multiplier, float coneAngle, float penumbraAngle, const std::string *penumbraType, float lensRadius );
+		static IECoreGL::ConstRenderablePtr environmentSphere( const Imath::Color3f &color, const std::string &textureFileName );
+		static IECoreGL::ConstRenderablePtr colorIndicator( const Imath::Color3f &color, bool cameraFacing = true );
 
 };
 
