@@ -86,10 +86,14 @@ class OpenImageIOReader : public ImageNode
 
 		static size_t supportedExtensions( std::vector<std::string> &extensions );
 
-		/// Returns the maximum amount of memory in Mb to use for the cache.
+		/// Returns the maximum number of bytes OIIO will use
+		/// to cache file loading.
 		static size_t getCacheMemoryLimit();
-		/// Sets the maximum amount of memory the cache may use in Mb.
-		static void setCacheMemoryLimit( size_t mb );
+		/// Sets the maximum number of bytes OIIO will use to
+		/// cache file loading.
+		static void setCacheMemoryLimit( size_t bytes );
+		/// Returns the current memory usage of OIIO's cache in bytes.
+		static size_t cacheMemoryUsage();
 
 	protected :
 

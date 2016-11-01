@@ -399,7 +399,7 @@ class ValuePlug::ComputeProcess : public Process
 };
 
 const IECore::InternedString ValuePlug::ComputeProcess::staticType( "computeNode:compute" );
-ValuePlug::ComputeProcess::Cache ValuePlug::ComputeProcess::g_cache( nullGetter, 1024 * 1024 * 500 );
+ValuePlug::ComputeProcess::Cache ValuePlug::ComputeProcess::g_cache( nullGetter, 1024 * 1024 * 1024 * 1 ); // 1 gig
 
 //////////////////////////////////////////////////////////////////////////
 // SetValueAction implementation
