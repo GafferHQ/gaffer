@@ -309,7 +309,7 @@ class stats( Gaffer.Application ) :
 				GafferImageTest.processTiles( image )
 		self.__timers["Image generation"] = sceneTimer
 		self.__memory["Image generation"] = _Memory.maxRSS() - memory
-		self.__memory["OIIO cache limit"] = _Memory( GafferImage.OpenImageIOReader.getCacheMemoryLimit() * 1024 * 1024 )
+		self.__memory["OIIO cache limit"] = _Memory( GafferImage.OpenImageIOReader.getCacheMemoryLimit() )
 		self.__memory["OIIO cache usage"] = _Memory( GafferImage.OpenImageIOReader.cacheMemoryUsage() )
 
 		items = [

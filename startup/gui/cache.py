@@ -44,7 +44,7 @@ preferences = application.root()["preferences"]
 preferences["cache"] = Gaffer.CompoundPlug()
 preferences["cache"]["enabled"] = Gaffer.BoolPlug( defaultValue = True )
 preferences["cache"]["memoryLimit"] = Gaffer.IntPlug( defaultValue = Gaffer.ValuePlug.getCacheMemoryLimit() / ( 1024 * 1024 ) )
-preferences["cache"]["imageReaderMemoryLimit"] = Gaffer.IntPlug( defaultValue = GafferImage.OpenImageIOReader.getCacheMemoryLimit() )
+preferences["cache"]["imageReaderMemoryLimit"] = Gaffer.IntPlug( defaultValue = GafferImage.OpenImageIOReader.getCacheMemoryLimit() / ( 1024 * 1024 ) )
 
 Gaffer.Metadata.registerPlugValue(
     preferences["cache"]["memoryLimit"],
@@ -71,7 +71,7 @@ def __plugSet( plug ) :
 		return
 
 	memoryLimit = plug["memoryLimit"].getValue() * 1024 * 1024
-	imageReaderMemoryLimit = plug["imageReaderMemoryLimit"].getValue()
+	imageReaderMemoryLimit = plug["imageReaderMemoryLimit"].getValue() * 1024 * 1024
 	if not plug["enabled"].getValue() :
 		memoryLimit = 0
 		imageReaderMemoryLimit = 0

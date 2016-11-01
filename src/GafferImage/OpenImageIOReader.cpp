@@ -676,12 +676,12 @@ size_t OpenImageIOReader::getCacheMemoryLimit()
 {
 	float memoryLimit;
 	imageCache()->getattribute( "max_memory_MB", memoryLimit );
-	return (size_t)memoryLimit;
+	return (size_t)(memoryLimit * 1024 * 1024);
 }
 
-void OpenImageIOReader::setCacheMemoryLimit( size_t mb )
+void OpenImageIOReader::setCacheMemoryLimit( size_t bytes )
 {
-	imageCache()->attribute( "max_memory_MB", float( mb ) );
+	imageCache()->attribute( "max_memory_MB", ((float)bytes) / (1024.0f * 1024.0f) );
 }
 
 size_t OpenImageIOReader::cacheMemoryUsage()

@@ -503,5 +503,13 @@ class OpenImageIOReaderTest( GafferImageTest.ImageTestCase ) :
 			self.assertEqual( reader["out"]["metadata"].hash(), explicitMetadataHash )
 			self.assertEqual( reader["out"]["metadata"].getValue(), sequenceMetadataValue )
 
+	def testCacheLimits( self ) :
+
+		l = GafferImage.OpenImageIOReader.getCacheMemoryLimit()
+		self.addCleanup( GafferImage.OpenImageIOReader.setCacheMemoryLimit, l )
+
+		GafferImage.OpenImageIOReader.setCacheMemoryLimit( 100 * 1024 * 1024 ) # 100 megs
+		self.assertEqual( GafferImage.OpenImageIOReader.getCacheMemoryLimit(), 100 * 1024 * 1024 )
+
 if __name__ == "__main__":
 	unittest.main()
