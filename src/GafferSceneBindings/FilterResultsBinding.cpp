@@ -36,42 +36,16 @@
 
 #include "boost/python.hpp"
 
-#include "GafferBindings/PlugBinding.h"
+#include "GafferBindings/DependencyNodeBinding.h"
 
-#include "GafferScene/FilterPlug.h"
-#include "GafferScene/Filter.h"
+#include "GafferScene/FilterResults.h"
 
-#include "GafferSceneBindings/FilterPlugBinding.h"
+#include "GafferSceneBindings/FilterResultsBinding.h"
 
-using namespace boost::python;
-using namespace Gaffer;
 using namespace GafferBindings;
 using namespace GafferScene;
-using namespace GafferSceneBindings;
 
-void GafferSceneBindings::bindFilterPlug()
+void GafferSceneBindings::bindFilterResults()
 {
-
-	PlugClass<FilterPlug>()
-		.def( init<const std::string &, Plug::Direction, unsigned>(
-				(
-					arg( "name" ) = Gaffer::GraphComponent::defaultName<FilterPlug>(),
-					arg( "direction" ) = Gaffer::Plug::In,
-					arg( "flags" ) = Gaffer::Plug::Default
-				)
-			)
-		)
-		.def( init<const std::string &, Plug::Direction, int, int, int, unsigned>(
-				(
-					arg( "name" ) = Gaffer::GraphComponent::defaultName<FilterPlug>(),
-					arg( "direction" ) = Gaffer::Plug::In,
-					arg( "defaultValue" ) = GafferScene::Filter::NoMatch,
-					arg( "minValue" ) = GafferScene::Filter::NoMatch,
-					arg( "maxValue" ) = GafferScene::Filter::EveryMatch,
-					arg( "flags" ) = Gaffer::Plug::Default
-				)
-			)
-		)
-	;
-
+	DependencyNodeClass<FilterResults>();
 }

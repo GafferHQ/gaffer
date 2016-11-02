@@ -34,61 +34,54 @@
 //
 //////////////////////////////////////////////////////////////////////////
 
-#ifndef GAFFERSCENE_FILTERPLUG_H
-#define GAFFERSCENE_FILTERPLUG_H
+#ifndef GAFFERSCENE_FILTERRESULTS_H
+#define GAFFERSCENE_FILTERRESULTS_H
 
-#include "Gaffer/NumericPlug.h"
+#include "Gaffer/ComputeNode.h"
 
 #include "GafferScene/TypeIds.h"
+#include "GafferScene/PathMatcherDataPlug.h"
 
 namespace GafferScene
 {
 
-/// Plug type to provide the output from Filter nodes, and
-/// an input for nodes which wish to use Filters.
-/// \todo This derives from IntPlug for backwards compatibility
-/// reasons, but it may be preferable to derive straight from
-/// ValuePlug for version 1.0.0.0.
-class FilterPlug : public Gaffer::IntPlug
+IE_CORE_FORWARDDECLARE( ScenePlug )
+IE_CORE_FORWARDDECLARE( FilterPlug )
+
+class FilterResults : public Gaffer::ComputeNode
 {
 
 	public :
 
-		FilterPlug(
-			const std::string &name = defaultName<FilterPlug>(),
-			Direction direction = In,
-			unsigned flags = Default
-		);
+		FilterResults( const std::string &name=defaultName<FilterResults>() );
+		virtual ~FilterResults();
 
-		/// \deprecated
-		FilterPlug(
-			const std::string &name,
-			Direction direction ,
-			int defaultValue,
-			int minValue,
-			int maxValue,
-			unsigned flags
-		);
+		IE_CORE_DECLARERUNTIMETYPEDEXTENSION( GafferScene::FilterResults, FilterResultsTypeId, ComputeNode );
 
-		virtual ~FilterPlug();
+		ScenePlug *scenePlug();
+		const ScenePlug *scenePlug() const;
 
-		IE_CORE_DECLARERUNTIMETYPEDEXTENSION( GafferScene::FilterPlug, FilterPlugTypeId, Gaffer::IntPlug );
+		FilterPlug *filterPlug();
+		const FilterPlug *filterPlug() const;
 
-		virtual bool acceptsInput( const Gaffer::Plug *input ) const;
-		virtual Gaffer::PlugPtr createCounterpart( const std::string &name, Direction direction ) const;
+		PathMatcherDataPlug *outPlug();
+		const PathMatcherDataPlug *outPlug() const;
+
+		virtual void affects( const Gaffer::Plug *input, AffectedPlugsContainer &outputs ) const;
+
+	protected :
+
+		virtual void hash( const Gaffer::ValuePlug *output, const Gaffer::Context *context, IECore::MurmurHash &h ) const;
+		virtual void compute( Gaffer::ValuePlug *output, const Gaffer::Context *context ) const;
+
+	private :
+
+		static size_t g_firstPlugIndex;
 
 };
 
-IE_CORE_DECLAREPTR( FilterPlug );
-
-typedef Gaffer::FilteredChildIterator<Gaffer::PlugPredicate<Gaffer::Plug::Invalid, FilterPlug> > FilterPlugIterator;
-typedef Gaffer::FilteredChildIterator<Gaffer::PlugPredicate<Gaffer::Plug::In, FilterPlug> > InputFilterPlugIterator;
-typedef Gaffer::FilteredChildIterator<Gaffer::PlugPredicate<Gaffer::Plug::Out, FilterPlug> > OutputFilterPlugIterator;
-
-typedef Gaffer::FilteredRecursiveChildIterator<Gaffer::PlugPredicate<Gaffer::Plug::Invalid, FilterPlug>, Gaffer::PlugPredicate<> > RecursiveFilterPlugIterator;
-typedef Gaffer::FilteredRecursiveChildIterator<Gaffer::PlugPredicate<Gaffer::Plug::In, FilterPlug>, Gaffer::PlugPredicate<> > RecursiveInputFilterPlugIterator;
-typedef Gaffer::FilteredRecursiveChildIterator<Gaffer::PlugPredicate<Gaffer::Plug::Out, FilterPlug>, Gaffer::PlugPredicate<> > RecursiveOutputFilterPlugIterator;
+IE_CORE_DECLAREPTR( FilterResults )
 
 } // namespace GafferScene
 
-#endif // GAFFERSCENE_FILTERPLUG_H
+#endif // GAFFERSCENE_FILTERRESULTS_H

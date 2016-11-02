@@ -39,10 +39,11 @@
 
 #include "GafferScene/Set.h"
 #include "GafferScene/PathMatcherData.h"
-#include "GafferScene/SceneAlgo.h"
+#include "GafferScene/FilterResults.h"
 
 using namespace std;
 using namespace IECore;
+using namespace Gaffer;
 using namespace GafferScene;
 
 static InternedString g_ellipsis( "..." );
@@ -58,7 +59,16 @@ Set::Set( const std::string &name )
 	addChild( new Gaffer::IntPlug( "mode", Gaffer::Plug::In, Create, Create, Remove ) );
 	addChild( new Gaffer::StringPlug( "name", Gaffer::Plug::In, "set" ) );
 	addChild( new Gaffer::StringVectorDataPlug( "paths", Gaffer::Plug::In, new StringVectorData ) );
+
+	addChild( new PathMatcherDataPlug( "__filterResults", Gaffer::Plug::In, new PathMatcherData, Plug::Default & ~Plug::Serialisable ) );
 	addChild( new PathMatcherDataPlug( "__pathMatcher", Gaffer::Plug::Out, new PathMatcherData ) );
+
+	FilterResultsPtr filterResults = new FilterResults( "__FilterResults" );
+	addChild( filterResults );
+
+	filterResults->scenePlug()->setInput( inPlug() );
+	filterResults->filterPlug()->setInput( filterPlug() );
+	filterResultsPlug()->setInput( filterResults->outPlug() );
 
 	// Direct pass-throughs for the things we don't process
 	outPlug()->boundPlug()->setInput( inPlug()->boundPlug() );
@@ -103,21 +113,31 @@ const Gaffer::StringVectorDataPlug *Set::pathsPlug() const
 	return getChild<Gaffer::StringVectorDataPlug>( g_firstPlugIndex + 2 );
 }
 
-PathMatcherDataPlug *Set::pathMatcherPlug()
+PathMatcherDataPlug *Set::filterResultsPlug()
 {
 	return getChild<PathMatcherDataPlug>( g_firstPlugIndex + 3 );
 }
 
-const PathMatcherDataPlug *Set::pathMatcherPlug() const
+const PathMatcherDataPlug *Set::filterResultsPlug() const
 {
 	return getChild<PathMatcherDataPlug>( g_firstPlugIndex + 3 );
+}
+
+PathMatcherDataPlug *Set::pathMatcherPlug()
+{
+	return getChild<PathMatcherDataPlug>( g_firstPlugIndex + 4 );
+}
+
+const PathMatcherDataPlug *Set::pathMatcherPlug() const
+{
+	return getChild<PathMatcherDataPlug>( g_firstPlugIndex + 4 );
 }
 
 void Set::affects( const Gaffer::Plug *input, AffectedPlugsContainer &outputs ) const
 {
 	FilteredSceneProcessor::affects( input, outputs );
 
-	if( pathsPlug() == input || filterPlug() == input )
+	if( pathsPlug() == input || filterResultsPlug() == input )
 	{
 		outputs.push_back( pathMatcherPlug() );
 	}
@@ -135,36 +155,6 @@ void Set::affects( const Gaffer::Plug *input, AffectedPlugsContainer &outputs ) 
 	}
 }
 
-bool Set::acceptsInput( const Gaffer::Plug *plug, const Gaffer::Plug *inputPlug ) const
-{
-	if( !FilteredSceneProcessor::acceptsInput( plug, inputPlug ) )
-	{
-		return false;
-	}
-
-	if( plug == filterPlug() )
-	{
-		if( const Filter *filter = runTimeCast<const Filter>( inputPlug->source<Gaffer::Plug>()->node() ) )
-		{
-			if(
-				filter->sceneAffectsMatch( inPlug(), inPlug()->boundPlug() ) ||
-				filter->sceneAffectsMatch( inPlug(), inPlug()->transformPlug() ) ||
-				filter->sceneAffectsMatch( inPlug(), inPlug()->attributesPlug() ) ||
-				filter->sceneAffectsMatch( inPlug(), inPlug()->objectPlug() ) ||
-				filter->sceneAffectsMatch( inPlug(), inPlug()->childNamesPlug() )
-			)
-			{
-				// We use the filter to compute our set, so the filter can not dependent
-				// on the locations within the scene - see equivalent comments in Prune
-				// for more details.
-				return false;
-			}
-		}
-	}
-
-	return true;
-}
-
 void Set::hash( const Gaffer::ValuePlug *output, const Gaffer::Context *context, IECore::MurmurHash &h ) const
 {
 	FilteredSceneProcessor::hash( output, context, h );
@@ -172,17 +162,7 @@ void Set::hash( const Gaffer::ValuePlug *output, const Gaffer::Context *context,
 	if( output == pathMatcherPlug() )
 	{
 		pathsPlug()->hash( h );
-		if( filterPlug()->getInput<Gaffer::Plug>() )
-		{
-			// We remove the scene path variable to cause
-			// the filter to give us a "global" hash. See
-			// equivalent comments in Prune::hashSet() for
-			// more details.
-			Gaffer::ContextPtr c = filterContext( context );
-			c->remove( ScenePlug::scenePathContextName );
-			Gaffer::Context::Scope s( c.get() );
-			filterPlug()->hash( h );
-		}
+		filterResultsPlug()->hash( h );
 	}
 }
 
@@ -215,12 +195,9 @@ void Set::compute( Gaffer::ValuePlug *output, const Gaffer::Context *context ) c
 			pathMatcher.addPath( tokenizedPath );
 		}
 
-		if( filterPlug()->getInput<Gaffer::Plug>() )
-		{
-			matchingPaths( filterPlug(), inPlug(), pathMatcher );
-		}
+		pathMatcher.addPaths( filterResultsPlug()->getValue()->readable() );
 
-		static_cast<Gaffer::ObjectPlug *>( output )->setValue( pathMatcherData );
+		static_cast<PathMatcherDataPlug *>( output )->setValue( pathMatcherData );
 		return;
 	}
 

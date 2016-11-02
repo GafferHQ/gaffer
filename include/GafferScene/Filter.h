@@ -41,6 +41,7 @@
 #include "Gaffer/NumericPlug.h"
 
 #include "GafferScene/TypeIds.h"
+#include "GafferScene/FilterPlug.h"
 
 namespace GafferScene
 {
@@ -72,9 +73,8 @@ class Filter : public Gaffer::ComputeNode
 		virtual Gaffer::BoolPlug *enabledPlug();
 		virtual const Gaffer::BoolPlug *enabledPlug() const;
 
-		/// \todo Change return type to FilterPlug.
-		Gaffer::IntPlug *outPlug();
-		const Gaffer::IntPlug *outPlug() const;
+		FilterPlug *outPlug();
+		const FilterPlug *outPlug() const;
 
 		virtual void affects( const Gaffer::Plug *input, AffectedPlugsContainer &outputs ) const;
 		virtual bool sceneAffectsMatch( const ScenePlug *scene, const Gaffer::ValuePlug *child ) const;

@@ -69,14 +69,14 @@ const Gaffer::BoolPlug *Filter::enabledPlug() const
 	return getChild<Gaffer::BoolPlug>( g_firstPlugIndex );
 }
 
-Gaffer::IntPlug *Filter::outPlug()
+FilterPlug *Filter::outPlug()
 {
-	return getChild<Gaffer::IntPlug>( g_firstPlugIndex + 1 );
+	return getChild<FilterPlug>( g_firstPlugIndex + 1 );
 }
 
-const Gaffer::IntPlug *Filter::outPlug() const
+const FilterPlug *Filter::outPlug() const
 {
-	return getChild<Gaffer::IntPlug>( g_firstPlugIndex + 1 );
+	return getChild<FilterPlug>( g_firstPlugIndex + 1 );
 }
 
 void Filter::affects( const Gaffer::Plug *input, AffectedPlugsContainer &outputs ) const

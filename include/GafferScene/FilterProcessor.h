@@ -73,9 +73,8 @@ class FilterProcessor : public Filter
 		/// with a single input, it will be a plug parented directly to the
 		/// node. If the node is disabled via enabledPlug(), then the inPlug()
 		/// is automatically passed through directly to the outPlug().
-		/// \todo Change return type to FilterPlug.
-		Gaffer::IntPlug *inPlug();
-		const Gaffer::IntPlug *inPlug() const;
+		FilterPlug *inPlug();
+		const FilterPlug *inPlug() const;
 
 		/// For nodes with multiple inputs, returns the ArrayPlug which
 		/// hosts them. For single input nodes, returns NULL;

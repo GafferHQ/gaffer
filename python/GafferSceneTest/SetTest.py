@@ -255,6 +255,7 @@ class SetTest( GafferSceneTest.SceneTestCase ) :
 			s["filter"],
 			s["out"]["set"],
 			s["out"],
+			s["__filterResults"],
 			s["__pathMatcher"],
 		}
 
@@ -269,6 +270,24 @@ class SetTest( GafferSceneTest.SceneTestCase ) :
 
 		f["paths"].setValue( IECore.StringVectorData( [ "/group/plane*2" ] ) )
 		self.assertEqual( set( s["out"].set( "n" ).value.paths() ), set( [ "/group/plane2", "/group/plane12", "/group/plane22" ] ) )
+
+	def testFilterWithChangingInputScene( self ) :
+
+		p = GafferScene.Plane()
+		g = GafferScene.Group()
+		g["in"].setInput( p["out"] )
+
+		f = GafferScene.PathFilter()
+		f["paths"].setValue( IECore.StringVectorData( [ "/group/plain" ] ) )
+
+		s = GafferScene.Set()
+		s["in"].setInput( g["out"] )
+		s["filter"].setInput( f["out"] )
+
+		self.assertEqual( s["out"].set( "set" ).value, GafferScene.PathMatcher() )
+
+		p["name"].setValue( "plain" )
+		self.assertEqual( s["out"].set( "set" ).value, GafferScene.PathMatcher( [ "/group/plain" ] ) )
 
 if __name__ == "__main__":
 	unittest.main()
