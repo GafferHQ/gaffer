@@ -323,5 +323,27 @@ class ShadingEngineTest( GafferOSLTest.OSLTestCase ) :
 		for i in range( 0, len( p["Ci"] ) ) :
 			self.assertEqual( p["translate"][i], IECore.V3f( 1, 2, 3 ) )
 
+	def testParameters( self ) :
+
+		shader = self.compileShader( os.path.dirname( __file__ ) + "/shaders/parameterTypes.osl" )
+		e = GafferOSL.ShadingEngine( IECore.ObjectVector( [
+			IECore.Shader( shader, "surface", {
+				"f" : 1.0,
+				"i" : 2,
+				"s" : "three",
+				"c" : IECore.Color3f( 4, 5, 6 ),
+				"vec" : IECore.V3fData( IECore.V3f( 7, 8, 9 ), IECore.GeometricData.Interpretation.Vector ),
+				"p" : IECore.V3fData( IECore.V3f( 10, 11, 12 ), IECore.GeometricData.Interpretation.Point ),
+				"n" : IECore.V3fData( IECore.V3f( 13, 14, 15 ), IECore.GeometricData.Interpretation.Normal ),
+				"noInterp" : IECore.V3f( 16, 17, 18 ),
+
+			 } )
+		] ) )
+
+		rp = self.rectanglePoints()
+		p = e.shade( rp )
+		for i in range( 0, len( p["Ci"] ) ) :
+			self.assertEqual( p["Ci"][i], IECore.Color3f( 0, 1, 0 ) )
+
 if __name__ == "__main__":
 	unittest.main()
