@@ -42,6 +42,9 @@ Improvements
 - Improved loading times for scripts with many ArnoldShaders.
 - Added support for alternate shiboken install location (#1891).
 - Isolate : Added `keepLights` and `keepCameras` plugs (#1893).
+- Light Visualisers :
+  - Added basic area light visualisations to StandardLightVisualiser.
+  - Added visualisation metadata for Arnold quad, disk, cylinder, and skydome lights.
 
 Fixes
 -----
