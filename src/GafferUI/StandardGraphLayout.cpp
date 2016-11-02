@@ -43,6 +43,7 @@
 
 #include "IECore/BoundedKDTree.h"
 #include "IECore/BoxAlgo.h"
+#include "IECore/MessageHandler.h"
 
 #include "Gaffer/Plug.h"
 #include "Gaffer/DependencyNode.h"
@@ -526,9 +527,17 @@ class LayoutEngine
 			for( VertexIterator it = v.first; it != v.second; ++it )
 			{
 				const Vertex &v = m_graph[*it];
-				if( v.node )
+				if( !v.pinned && v.node )
 				{
-					m_graphGadget->setNodePosition( v.node, v.position );
+					if( !isnan( v.position.x ) && !isnan( v.position.y ) && !isinf( v.position.x ) && !isinf( v.position.y ) )
+					{
+						m_graphGadget->setNodePosition( v.node, v.position );
+					}
+					else
+					{
+						IECore::msg( IECore::Msg::Warning, "LayoutEngine::applyPositions", "Layout algorithm failed to produce valid position for " + v.node->getName().string() );
+
+					}
 				}
 			}
 		}
