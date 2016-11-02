@@ -1,3 +1,87 @@
+0.30.0.0
+========
+
+Breaking Changes
+----------------
+
+- Resample : Replaced `dataWindow` plug with `matrix` plug (#1896).
+- OpenImageIOReader : Changed units of cache memory limit methods to bytes (#1895).
+- Serialiser : Added `serialisation` argument to all methods (#1882).
+- Metadata : Removed `inherit` argument from the `plugsWithMetadata()` and `nodesWithMetadata()`
+  methods (#1882).
+- ExecutableRender : Removed `command()` method (#1885).
+- Changed return type of `Filter::outPlug()`, `FilteredSceneProcessor::filterPlug() and
+  `FilterProcessor::inPlug()`. Source code compatibility is maintained.
+
+Features
+--------
+
+- Added Mirror node for flipping and flopping images (#1896).
+- Added FilterResults node for searching an input scene for
+  all locations matched by a filter (#1908).
+
+Improvements
+------------
+
+- Reference : Added "Duplicate as Box" menu item in NodeGraph (#1898, #1899).
+- Box : Added "Import Reference" menu item in NodeEditor (#1898, #1899).
+- OSLObject/OSLImage : Added support for vector shader parameters (#1901).
+- OSLShader : Added support for array parameters (#1892).
+- Render nodes : Added cache clearing after scene generation (#1900).
+- Stats app : Added OIIO memory usage reporting (#1895).
+- GUI app : Increased default cache size to 1 gigabyte (#1895).
+- Image view : Added solo channel plug and button (#1881).
+- Node Graph :
+  - The internal network of Reference nodes may now
+     be viewed by pressing the cursor down key (#1882).
+- ArnoldShader : Added support for "gaffer.plugType" "" metadata.
+  This can be used to disable the loading of a plug (#1884).
+- Documentation
+  - Added release notes section (#1886).
+  - Fixed broken links (#1894).
+- Improved loading times for scripts with many ArnoldShaders.
+- Added support for alternate shiboken install location (#1891).
+- Isolate : Added `keepLights` and `keepCameras` plugs (#1893).
+
+Fixes
+-----
+
+- ImageTransform : Fixed negative scaling (#1896, #1613).
+- Set : Fixed filter update bug (#1878, #1908).
+- Cache preferences : Stopped serialising metadata unnecessarily (#1895).
+- OSX (#1879, #1566, #1880, #1885)
+  - Fixed numerous build errors
+  - Fixed problems caused by System Integrity Protection
+- Reference (#561, #1882)
+  - Fixed copy/paste of nodes from inside a Reference
+  - Prevented editing of internal nodes. They may now be viewed
+    but in a read-only state.
+- Arnold
+  - Fixed ai:shape:step_size attribute (#1883).
+- Fixed crashes when using as_color_texture shader (#1905).
+
+API
+---
+
+- OpenImageIOReader (#1895)
+  - Added `cacheMemoryUsage()` static method
+  - Changed units of cache memory limit methods to bytes.
+- Serialiser : Added `serialisation` argument to all methods (#1882)
+- Metadata (#1882)
+  - Added simplified API and deprecated previous API
+  - Added MetadataAlgo.h with methods for controlling read-onliness and
+    querying if a metadata change affects a particular plug.
+  - Removed `inherit` argument from the `plugsWithMetadata()` and `nodesWithMetadata()`
+    methods.
+- Plug : Deprecated ReadOnly flag - use MetadataAlgo instead (#1882).
+- ExecutableRender : Removed `command()` method (#OSX).
+- StandardNodule : Added support for "label" metadata (#1889).
+- Added M44fVectorDataPlug (#1892).
+- ValuePlug : Added `clearCache()` method (#1900).
+- ErrorDialogue
+  - Added ErrorHandler context manager.
+  - Added `messages` constructor parameter.
+
 0.29.0.0
 ========
 
