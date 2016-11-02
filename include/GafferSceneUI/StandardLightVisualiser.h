@@ -63,23 +63,24 @@ class StandardLightVisualiser : public LightVisualiser
 		virtual IECoreGL::ConstRenderablePtr visualise( const IECore::InternedString &attributeName, const IECore::ObjectVector *shaderVector, IECoreGL::ConstStatePtr &state ) const;
 
 	protected :
+
 		static const char *faceCameraVertexSource();
 
 		static IECoreGL::ConstRenderablePtr ray();
 		static IECoreGL::ConstRenderablePtr pointRays();
+		static IECoreGL::ConstRenderablePtr distantRays();
 		static IECoreGL::ConstRenderablePtr spotlightCone( float innerAngle, float outerAngle, float lensRadius );
-		static IECoreGL::ConstRenderablePtr colorIndicator( const Imath::Color3f &color, bool indicatorFaceCamera = true );
+		static IECoreGL::ConstRenderablePtr environmentSphere( const Imath::Color3f &color, const std::string &textureFileName );
+		static IECoreGL::ConstRenderablePtr colorIndicator( const Imath::Color3f &color, bool cameraFacing = true );
 
-	private:
-		/// These methods are private because we haven't yet completely nailed down the API for this stuff
-		static const char *environmentLightDrawFragSource();
-		static const char *areaLightDrawVertexSource();
-		static const char *areaLightDrawFragSource();
+	private :
 
-		static void addEnvLightVisualiser( IECoreGL::GroupPtr &output, Imath::Color3f multiplier, const std::string &textureName );
-		static void addAreaLightVisualiser( IECoreGL::ConstStatePtr &state, Imath::Color3f multiplier, const std::string &textureName, bool flipNormal, bool doubleSided, bool sphericalProjection, const Imath::M44f &projectionTransform );
-		static void addBasicLightVisualiser( IECore::ConstStringDataPtr type, IECoreGL::GroupPtr &output, Imath::Color3f multiplier, float coneAngle, float penumbraAngle, const std::string *penumbraType, float lensRadius );
-
+		/// \todo Expose publicly once we have enough uses to dictate
+		/// the most general set of parameters.
+		static IECoreGL::ConstRenderablePtr quadShape();
+		static IECoreGL::ConstRenderablePtr diskShape( float radius );
+		static IECoreGL::ConstRenderablePtr cylinderShape( float radius );
+		static IECoreGL::ConstRenderablePtr cylinderRays( float radius );
 
 };
 
