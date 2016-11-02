@@ -35,6 +35,7 @@
 ##########################################################################
 
 import os
+import functools
 
 import IECore
 
@@ -158,20 +159,47 @@ def _waitForFileName( initialFileName="", parentWindow=None ) :
 
 def _load( node, fileName, parentWindow ) :
 
-	messageWidget = GafferUI.MessageWidget()
-	with messageWidget.messageHandler() as mh :
-		try :
-			node.load( fileName )
-		except Exception as e :
-			mh.handle( mh.Level.Error, "Loading Reference", str( e ) )
+	with GafferUI.ErrorDialogue.ErrorHandler( title = "Errors Occurred During Loading", closeLabel = "Oy vey", parentWindow = parentWindow ) :
+		node.load( fileName )
 
-	if sum( [ messageWidget.messageCount( level ) for level in ( IECore.Msg.Level.Error, IECore.Msg.Level.Warning ) ] ) :
-		dialogue = GafferUI.Dialogue( "Errors Occurred During Loading" )
-		## \todo These dialogue methods should be available publicly.
-		# Alternatively, we could make the ErrorDialogue class handle
-		# messages as well as exceptions and use that here. Bear in mind
-		# that we're doing the same thing in FileMenu.__open(), so we
-		# definitely have a need for something like this.
-		dialogue._setWidget( messageWidget )
-		dialogue._addButton( "Oy vey" )
-		dialogue.waitForButton( parentWindow=parentWindow )
+##########################################################################
+# NodeGraph node context menu
+##########################################################################
+
+def __duplicateAsBox( nodeGraph, node ) :
+
+	script = node.scriptNode()
+	with Gaffer.UndoContext( script ) :
+
+		box = Gaffer.Box( node.getName() + "Copy" )
+		script.addChild( box )
+
+		graphGadget = nodeGraph.graphGadget()
+		graphGadget.getLayout().positionNode(
+			graphGadget, box, fallbackPosition = graphGadget.getNodePosition( node )
+		)
+
+		script.selection().clear()
+		script.selection().add( box )
+
+		with GafferUI.ErrorDialogue.ErrorHandler(
+			title = "Errors Occurred During Loading",
+			closeLabel = "Oy vey",
+			parentWindow = nodeGraph.ancestor( GafferUI.Window ),
+		) :
+			script.executeFile( node.fileName(), parent = box, continueOnError = True )
+
+def __nodeGraphNodeContextMenu( nodeGraph, node, menuDefinition ) :
+
+	if not isinstance( node, Gaffer.Reference ) :
+		return
+
+	menuDefinition.append(
+		"/Duplicate as Box",
+		{
+			"command" : functools.partial( __duplicateAsBox, nodeGraph, node ),
+			"active" : bool( node.fileName() ),
+		}
+	)
+
+__nodeGraphNodeContextMenuConnection = GafferUI.NodeGraph.nodeContextMenuSignal().connect( __nodeGraphNodeContextMenu )

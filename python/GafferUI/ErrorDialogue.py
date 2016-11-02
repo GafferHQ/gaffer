@@ -43,44 +43,108 @@ import GafferUI
 
 class ErrorDialogue( GafferUI.Dialogue ) :
 
-	def __init__( self, title, message, details=None, **kw ) :
+	# Constructs a dialogue to display errors specified by any combination of the
+	# following arguments :
+	#
+	#  - message : A simple (string) message to display.
+	#  - messages : A list of messages in the format stored by `IECore.CapturingMessageHandler.messages`
+	#  - details : A string containing additional details to be shown in a collapsed section.
+	def __init__( self, title, message = None, details = None, messages = None, closeLabel = "Close", **kw ) :
 
 		GafferUI.Dialogue.__init__( self, title, sizeMode=GafferUI.Window.SizeMode.Manual, **kw )
 
-		with GafferUI.Frame() as frame :
+		with GafferUI.ListContainer( GafferUI.ListContainer.Orientation.Vertical, spacing = 8 ) as column :
 
-			with GafferUI.ListContainer( GafferUI.ListContainer.Orientation.Vertical, spacing = 8 ) as column :
+			GafferUI.Image(
+				"failure.png",
+				parenting = {
+					"horizontalAlignment" : GafferUI.HorizontalAlignment.Center,
+					"expand" : True,
+				}
+			)
 
-				GafferUI.Spacer( IECore.V2i( 1 ), parenting = { "expand" : True } )
+			GafferUI.Spacer( IECore.V2i( 250, 1 ) )
 
-				GafferUI.Image(
-					"failure.png",
-					parenting = {
-						"horizontalAlignment" : GafferUI.HorizontalAlignment.Center,
-						"expand" : True,
-					}
-				)
-
-				GafferUI.Spacer( IECore.V2i( 250, 1 ), parenting = { "expand"  : True } )
-
+			if message is not None :
 				GafferUI.Label(
 					"<b>" + IECore.StringUtil.wrap( message, 60 ).replace( "\n", "<br>" ) + "</b>",
 					parenting = {
 						"horizontalAlignment" : GafferUI.HorizontalAlignment.Center
 					}
-
 				)
 
-				if details is not None :
-					with GafferUI.Collapsible( label = "Details", collapsed = True ) :
-						GafferUI.MultiLineTextWidget(
-							text = details,
-							editable = False,
-						)
+			if messages is not None :
+				messageWidget = GafferUI.MessageWidget()
+				for m in messages :
+					messageWidget.messageHandler().handle( m.level, m.context, m.message )
 
-		self._setWidget( frame )
+			if details is not None :
+				with GafferUI.Collapsible( label = "Details", collapsed = True ) :
+					GafferUI.MultiLineTextWidget(
+						text = details,
+						editable = False,
+					)
 
-		self.__closeButton = self._addButton( "Close" )
+		self._setWidget( column )
+
+		self.__closeButton = self._addButton( closeLabel )
+
+	## A context manager which displays a modal ErrorDialogue if an exception is
+	# caught or any warning or error messages are emitted via IECore.MessageHandler.
+	class ErrorHandler( IECore.MessageHandler ) :
+
+		def __init__(
+			self,
+			handleExceptions = True,
+			handleErrorMessages = True,
+			handleWarningMessages = True,
+			parentWindow = None, # Passed to waitForButton()
+			**kw # Passed to the ErrorDialogue constructor
+		) :
+
+			IECore.MessageHandler.__init__( self )
+
+			self.__handleExceptions = handleExceptions
+			self.__handleErrorMessages = handleErrorMessages
+			self.__handleWarningMessages = handleWarningMessages
+			self.__parentWindow = parentWindow
+			self.__kw = kw
+
+			self.__originalMessageHandler = None
+			self.__capturingMessageHandler = IECore.CapturingMessageHandler()
+
+		def handle( self, level, context, message ) :
+
+			handler = self.__originalMessageHandler
+
+			if (
+				( level == self.Level.Error and self.__handleErrorMessages ) or
+				( level == self.Level.Warning and self.__handleWarningMessages )
+			) :
+				handler = self.__capturingMessageHandler
+
+			handler.handle( level, context, message )
+
+		def __enter__( self ) :
+
+			self.__originalMessageHandler = IECore.MessageHandler.currentHandler()
+			IECore.MessageHandler.__enter__( self )
+
+		def __exit__( self, type, value, traceback ) :
+
+			IECore.MessageHandler.__exit__( self, type, value, traceback )
+			self.__originalMessageHandler = None
+
+			result = False
+			if type is not None and self.__handleExceptions :
+				self.__capturingMessageHandler.handle( self.Level.Error, self.__kw.get( "title", "Error" ), str( value ) )
+				result = True
+
+			if len( self.__capturingMessageHandler.messages ) :
+				self.__kw["messages"] = self.__capturingMessageHandler.messages
+				ErrorDialogue( **self.__kw ).waitForButton( parentWindow = self.__parentWindow )
+
+			return result
 
 	## Displays an exception in a modal dialogue. By default the currently handled exception is displayed
 	# but another exception can be displayed by specifying excInfo in the same format as returned by sys.exc_info()

@@ -125,7 +125,8 @@ def appendNodeEditorToolMenuDefinitions( nodeEditor, node, menuDefinition ) :
 		return
 
 	menuDefinition.append( "/BoxDivider", { "divider" : True } )
-	menuDefinition.append( "/Export for referencing...", { "command" : functools.partial( __exportForReferencing, node = node ) } )
+	menuDefinition.append( "/Export reference...", { "command" : functools.partial( __exportForReferencing, node = node ) } )
+	menuDefinition.append( "/Import reference...", { "command" : functools.partial( __importReference, node = node ) } )
 
 def __showContents( nodeGraph, box ) :
 
@@ -138,7 +139,7 @@ def __exportForReferencing( menu, node ) :
 	path = Gaffer.FileSystemPath( bookmarks.getDefault( menu ) )
 	path.setFilter( Gaffer.FileSystemPath.createStandardFilter( [ "grf" ] ) )
 
-	dialogue = GafferUI.PathChooserDialogue( path, title="Export for referencing", confirmLabel="Export", leaf=True, bookmarks=bookmarks )
+	dialogue = GafferUI.PathChooserDialogue( path, title="Export reference", confirmLabel="Export", leaf=True, bookmarks=bookmarks )
 	path = dialogue.waitForPath( parentWindow = menu.ancestor( GafferUI.Window ) )
 
 	if not path :
@@ -149,6 +150,29 @@ def __exportForReferencing( menu, node ) :
 		path += ".grf"
 
 	node.exportForReference( path )
+
+def __importReference( menu, node ) :
+
+	bookmarks = GafferUI.Bookmarks.acquire( node, category="reference" )
+
+	path = Gaffer.FileSystemPath( bookmarks.getDefault( menu ) )
+	path.setFilter( Gaffer.FileSystemPath.createStandardFilter( [ "grf" ] ) )
+
+	window = menu.ancestor( GafferUI.Window )
+	dialogue = GafferUI.PathChooserDialogue( path, title="Import reference", confirmLabel="Import", leaf=True, valid=True, bookmarks=bookmarks )
+	path = dialogue.waitForPath( parentWindow = window )
+
+	if not path :
+		return
+
+	scriptNode = node.ancestor( Gaffer.ScriptNode )
+	with GafferUI.ErrorDialogue.ErrorHandler(
+		title = "Error Importing Reference",
+		closeLabel = "Oy vey",
+		parentWindow = window
+	) :
+		with Gaffer.UndoContext( scriptNode ) :
+			scriptNode.executeFile( str( path ), parent = node, continueOnError = True )
 
 # PlugValueWidget registrations
 ##########################################################################

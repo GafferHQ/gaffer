@@ -92,8 +92,11 @@ def __open( currentScript, fileName ) :
 	script = Gaffer.ScriptNode()
 	script["fileName"].setValue( fileName )
 
-	messageWidget = GafferUI.MessageWidget()
-	with messageWidget.messageHandler() :
+	with GafferUI.ErrorDialogue.ErrorHandler(
+		title = "Errors Occurred During Loading",
+		closeLabel = "Oy vey",
+		parentWindow = GafferUI.ScriptWindow.acquire( currentScript )
+	) :
 		script.load( continueOnError = True )
 
 	application["scripts"].addChild( script )
@@ -111,13 +114,6 @@ def __open( currentScript, fileName ) :
 		newWindow._qtWidget().restoreGeometry( currentWindow._qtWidget().saveGeometry() )
 		currentWindow.setVisible( False )
 		removeCurrentScript = True
-
-	if sum( [ messageWidget.messageCount( level ) for level in ( IECore.Msg.Level.Error, IECore.Msg.Level.Warning ) ] ) :
-		dialogue = GafferUI.Dialogue( "Errors Occurred During Loading" )
-		## \todo These dialogue methods should be available publicly.
-		dialogue._setWidget( messageWidget )
-		dialogue._addButton( "Oy vey" )
-		dialogue.waitForButton( parentWindow=GafferUI.ScriptWindow.acquire( currentScript ) )
 
 	# We must defer the removal of the old script because otherwise we trigger a crash bug
 	# in PySide - I think this is because the menu item that invokes us is a child of
@@ -194,7 +190,7 @@ def save( menu ) :
 	scriptWindow = menu.ancestor( GafferUI.ScriptWindow )
 	script = scriptWindow.scriptNode()
 	if script["fileName"].getValue() :
-		with GafferUI.ErrorDialogue.ExceptionHandler( title = "Error Saving File", parentWindow = scriptWindow ) :
+		with GafferUI.ErrorDialogue.ErrorHandler( title = "Error Saving File", parentWindow = scriptWindow ) :
 			script.save()
 	else :
 		saveAs( menu )
@@ -218,7 +214,7 @@ def saveAs( menu ) :
 		path += ".gfr"
 
 	script["fileName"].setValue( path )
-	with GafferUI.ErrorDialogue.ExceptionHandler( title = "Error Saving File", parentWindow = scriptWindow ) :
+	with GafferUI.ErrorDialogue.ErrorHandler( title = "Error Saving File", parentWindow = scriptWindow ) :
 		script.save()
 
 	application = script.ancestor( Gaffer.ApplicationRoot )
