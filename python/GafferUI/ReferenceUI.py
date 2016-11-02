@@ -171,7 +171,7 @@ def __duplicateAsBox( nodeGraph, node ) :
 	script = node.scriptNode()
 	with Gaffer.UndoContext( script ) :
 
-		box = Gaffer.Box()
+		box = Gaffer.Box( node.getName() + "Copy" )
 		script.addChild( box )
 
 		graphGadget = nodeGraph.graphGadget()
