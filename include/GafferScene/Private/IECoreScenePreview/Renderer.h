@@ -102,6 +102,7 @@ class Renderer : public IECore::RefCounted
 		/// ----------------
 		///
 		/// "camera", StringData, "", The name of the primary render camera.
+		/// "frame", IntData, 1, The frame being rendered.
 		virtual void option( const IECore::InternedString &name, const IECore::Data *value ) = 0;
 		/// Adds an output image to be rendered, In interactive renders an output may be
 		/// removed by passing NULL as the value.

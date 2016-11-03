@@ -1455,6 +1455,35 @@ class RendererTest( GafferTest.TestCase ) :
 
 			self.assertEqual( arnold.AiNodeGetStr( options, "myCustomOption" ), "myCustomOptionValue" )
 
+	def testFrameAndAASeed( self ) :
+
+		for frame in ( None, 1, 2 ) :
+			for seed in ( None, 3, 4 ) :
+
+				r = GafferScene.Private.IECoreScenePreview.Renderer.create(
+					"IECoreArnold::Renderer",
+					GafferScene.Private.IECoreScenePreview.Renderer.RenderType.SceneDescription,
+					self.temporaryDirectory() + "/test.ass"
+				)
+
+				if frame is not None :
+					r.option( "frame", IECore.IntData( frame ) )
+				if seed is not None :
+					r.option( "ai:AA_seed", IECore.IntData( seed ) )
+
+				r.render()
+				del r
+
+				with IECoreArnold.UniverseBlock( writable = True ) :
+
+					arnold.AiASSLoad( self.temporaryDirectory() + "/test.ass" )
+
+					options = arnold.AiUniverseGetOptions()
+					self.assertEqual(
+						arnold.AiNodeGetInt( options, "AA_seed" ),
+						seed or frame or 1
+					)
+
 	@staticmethod
 	def __m44f( m ) :
 

@@ -684,6 +684,35 @@ class ArnoldRenderTest( GafferTest.TestCase ) :
 				context["lightName"] = "light%d" % i
 				script["render"]["task"].execute()
 
+	def testFrameAndAASeed( self ) :
+
+		options = GafferArnold.ArnoldOptions()
+
+		render = GafferArnold.ArnoldRender()
+		render["in"].setInput( options["out"] )
+		render["mode"].setValue( render.Mode.SceneDescriptionMode )
+		render["fileName"].setValue( self.temporaryDirectory() + "/test.ass" )
+
+		for frame in ( 1, 2, 2.8, 3.2 ) :
+			for seed in ( None, 3, 4 ) :
+				with Gaffer.Context() as c :
+
+					c.setFrame( frame )
+
+					options["options"]["aaSeed"]["enabled"].setValue( seed is not None )
+					options["options"]["aaSeed"]["value"].setValue( seed or 1 )
+
+					render["task"].execute()
+
+					with IECoreArnold.UniverseBlock( writable = True ) :
+
+						arnold.AiASSLoad( self.temporaryDirectory() + "/test.ass" )
+
+						self.assertEqual(
+							arnold.AiNodeGetInt( arnold.AiUniverseGetOptions(), "AA_seed" ),
+							seed or round( frame )
+						)
+
 	def __arrayToSet( self, a ) :
 
 		result = set()

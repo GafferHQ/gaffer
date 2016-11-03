@@ -1332,10 +1332,12 @@ namespace
 
 /// \todo Should these be defined in the Renderer base class?
 /// Or maybe be in a utility header somewhere?
+IECore::InternedString g_frameOptionName( "frame" );
 IECore::InternedString g_cameraOptionName( "camera" );
 IECore::InternedString g_logFileNameOptionName( "ai:log:filename" );
 IECore::InternedString g_logMaxWarningsOptionName( "ai:log:max_warnings" );
 IECore::InternedString g_shaderSearchPathOptionName( "ai:shader_searchpath" );
+IECore::InternedString g_aaSeedOptionName( "ai:AA_seed" );
 
 std::string g_logFlagsOptionPrefix( "ai:log:" );
 std::string g_consoleFlagsOptionPrefix( "ai:console:" );
@@ -1371,7 +1373,19 @@ class ArnoldRenderer : public IECoreScenePreview::Renderer
 		virtual void option( const IECore::InternedString &name, const IECore::Data *value )
 		{
 			AtNode *options = AiUniverseGetOptions();
-			if( name == g_cameraOptionName )
+			if( name == g_frameOptionName )
+			{
+				if( value == NULL )
+				{
+					m_frame = boost::none;
+				}
+				else if( const IECore::IntData *d = reportedCast<const IECore::IntData>( value, "option", name ) )
+				{
+					m_frame = d->readable();
+				}
+				return;
+			}
+			else if( name == g_cameraOptionName )
 			{
 				if( value == NULL )
 				{
@@ -1422,6 +1436,18 @@ class ArnoldRenderer : public IECoreScenePreview::Renderer
 				{
 					return;
 				}
+			}
+			else if( name == g_aaSeedOptionName )
+			{
+				if( value == NULL )
+				{
+					m_aaSeed = boost::none;
+				}
+				else if( const IECore::IntData *d = reportedCast<const IECore::IntData>( value, "option", name ) )
+				{
+					m_aaSeed = d->readable();
+				}
+				return;
 			}
 			else if( name == g_shaderSearchPathOptionName )
 			{
@@ -1585,6 +1611,11 @@ class ArnoldRenderer : public IECoreScenePreview::Renderer
 		virtual void render()
 		{
 			updateCamera();
+			AiNodeSetInt(
+				AiUniverseGetOptions(), "AA_seed",
+				m_aaSeed.get_value_or( m_frame.get_value_or( 1 ) )
+			);
+
 			m_shaderCache->clearUnused();
 			m_instanceCache->clearUnused();
 
@@ -1847,6 +1878,8 @@ class ArnoldRenderer : public IECoreScenePreview::Renderer
 
 		int m_logFileFlags;
 		int m_consoleFlags;
+		boost::optional<int> m_frame;
+		boost::optional<int> m_aaSeed;
 
 		// Members used by batch renders
 
