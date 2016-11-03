@@ -176,6 +176,15 @@ class NodeGraph( GafferUI.EditorWidget ) :
 				}
 			)
 
+	@classmethod
+	def appendContentsMenuDefinitions( cls, nodeGraph, node, menuDefinition ) :
+
+		if not Gaffer.Metadata.value( node, "nodeGraph:childrenViewable" ) :
+			return
+
+		menuDefinition.append( "/ContentsDivider", { "divider" : True } )
+		menuDefinition.append( "/Show Contents...", { "command" : functools.partial( cls.acquire, node ) } )
+
 	__nodeDoubleClickSignal = Gaffer.Signal2()
 	## Returns a signal which is emitted whenever a node is double clicked.
 	# Slots should have the signature ( nodeGraph, node ).
@@ -285,9 +294,11 @@ class NodeGraph( GafferUI.EditorWidget ) :
 		elif event.key == "Down" :
 			selection = self.scriptNode().selection()
 			if selection.size() :
-				needsModifiers = not isinstance( selection[0], ( Gaffer.Reference, Gaffer.Box ) )
-				haveModifiers = bool( event.modifiers & ( event.modifiers.Shift | event.modifiers.Control ) )
-				if needsModifiers == haveModifiers :
+				needsModifiers = not Gaffer.Metadata.value( selection[0], "nodeGraph:childrenViewable" )
+				if (
+					( needsModifiers and event.modifiers == event.modifiers.Shift | event.modifiers.Control ) or
+					( not needsModifiers and event.modifiers == event.modifiers.None )
+				) :
 					self.graphGadget().setRoot( selection[0] )
 					return True
 		elif event.key == "Up" :

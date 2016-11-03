@@ -56,6 +56,8 @@ Gaffer.Metadata.registerNode(
 	node and then export it for referencing.
 	""",
 
+	"nodeGraph:childrenViewable", True,
+
 	"layout:customWidget:fileName:widgetType", "GafferUI.ReferenceUI._FileNameWidget"
 
 )

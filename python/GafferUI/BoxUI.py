@@ -59,6 +59,8 @@ Gaffer.Metadata.registerNode(
 	node.
 	""",
 
+	"nodeGraph:childrenViewable", True,
+
 	# Add a + button for creating new plugs in the Settings tab.
 	"layout:customWidget:addButton:widgetType", "GafferUI.UserPlugs.plugCreationWidget",
 	"layout:customWidget:addButton:section", "Settings",
@@ -103,10 +105,7 @@ def nodeMenuCreateCommand( menu ) :
 
 	return Gaffer.Box.create( graphGadget.getRoot(), script.selection() )
 
-## A callback suitable for use with NodeGraph.nodeContextMenuSignal - it provides
-# menu options specific to Boxes. We don't actually register it automatically,
-# but instead let the startup files for particular applications register
-# it if it suits their purposes.
+## \deprecated Use NodeGraph.appendSubGraphMenuDefinitions()
 def appendNodeContextMenuDefinitions( nodeGraph, node, menuDefinition ) :
 
 	if not isinstance( node, Gaffer.Box ) :

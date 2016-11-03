@@ -105,7 +105,7 @@ def __nodeContextMenu( nodeGraph, node, menuDefinition ) :
 	GafferUI.NodeGraph.appendEnabledPlugMenuDefinitions( nodeGraph, node, menuDefinition )
 	GafferUI.NodeGraph.appendConnectionVisibilityMenuDefinitions( nodeGraph, node, menuDefinition )
 	GafferDispatchUI.DispatcherUI.appendNodeContextMenuDefinitions( nodeGraph, node, menuDefinition )
-	GafferUI.BoxUI.appendNodeContextMenuDefinitions( nodeGraph, node, menuDefinition )
+	GafferUI.NodeGraph.appendContentsMenuDefinitions( nodeGraph, node, menuDefinition )
 	GafferUI.UIEditor.appendNodeContextMenuDefinitions( nodeGraph, node, menuDefinition )
 	GafferSceneUI.FilteredSceneProcessorUI.appendNodeContextMenuDefinitions( nodeGraph, node, menuDefinition )
 	GafferUI.GraphBookmarksUI.appendNodeContextMenuDefinitions( nodeGraph, node, menuDefinition )
