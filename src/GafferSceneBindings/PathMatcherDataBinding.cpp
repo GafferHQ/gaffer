@@ -43,6 +43,17 @@
 using namespace boost::python;
 using namespace GafferScene;
 
+namespace
+{
+
+std::string pathMatcherDataRepr( object d )
+{
+	std::string p = extract<std::string>( d.attr( "value" ).attr( "__repr__" )() );
+	return "GafferScene.PathMatcherData( " + p + " )";
+}
+
+} // namespace
+
 namespace GafferSceneBindings
 {
 
@@ -54,6 +65,7 @@ void bindPathMatcherData()
 		.def( init<const PathMatcher &>() )
 		.add_property( "value", make_function( &PathMatcherData::writable, return_internal_reference<1>() ) )
 		.def( "hasBase", &PathMatcherData::hasBase ).staticmethod( "hasBase" )
+		.def( "__repr__", &pathMatcherDataRepr )
 	;
 
 }
