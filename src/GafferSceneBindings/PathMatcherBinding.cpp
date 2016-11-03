@@ -105,6 +105,12 @@ list paths( const PathMatcher &p )
 	return result;
 }
 
+std::string pathMatcherRepr( object p )
+{
+	std::string paths = extract<std::string>( p.attr( "paths" )().attr( "__repr__" )() );
+	return "GafferScene.PathMatcher( " + paths + " )";
+}
+
 } // namespace
 
 void GafferSceneBindings::bindPathMatcher()
@@ -130,6 +136,7 @@ void GafferSceneBindings::bindPathMatcher()
 		.def( "paths", &paths )
 		.def( "match", (unsigned (PathMatcher ::*)( const std::vector<IECore::InternedString> & ) const)&PathMatcher::match )
 		.def( "match", (unsigned (PathMatcher ::*)( const std::string & ) const)&PathMatcher::match )
+		.def( "__repr__", &pathMatcherRepr )
 		.def( self == self )
 		.def( self != self )
 	;
