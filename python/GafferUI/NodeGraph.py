@@ -35,6 +35,8 @@
 #
 ##########################################################################
 
+import functools
+
 import IECore
 
 import Gaffer
@@ -145,15 +147,15 @@ class NodeGraph( GafferUI.EditorWidget ) :
 		menuDefinition.append(
 			"/Show Input Connections",
 			{
-				"checkBox" : IECore.curry( cls.__getNodeInputConnectionsVisible, nodeGraph.graphGadget(), node ),
-				"command" : IECore.curry( cls.__setNodeInputConnectionsVisible, nodeGraph.graphGadget(), node )
+				"checkBox" : functools.partial( cls.__getNodeInputConnectionsVisible, nodeGraph.graphGadget(), node ),
+				"command" : functools.partial( cls.__setNodeInputConnectionsVisible, nodeGraph.graphGadget(), node )
 			}
 		)
 		menuDefinition.append(
 			"/Show Output Connections",
 			{
-				"checkBox" : IECore.curry( cls.__getNodeOutputConnectionsVisible, nodeGraph.graphGadget(), node ),
-				"command" : IECore.curry( cls.__setNodeOutputConnectionsVisible, nodeGraph.graphGadget(), node )
+				"checkBox" : functools.partial( cls.__getNodeOutputConnectionsVisible, nodeGraph.graphGadget(), node ),
+				"command" : functools.partial( cls.__setNodeOutputConnectionsVisible, nodeGraph.graphGadget(), node )
 			}
 		)
 
@@ -168,7 +170,7 @@ class NodeGraph( GafferUI.EditorWidget ) :
 			menuDefinition.append(
 				"/Enabled",
 				{
-					"command" : IECore.curry( cls.__setEnabled, node ),
+					"command" : functools.partial( cls.__setEnabled, node ),
 					"checkBox" : enabledPlug.getValue(),
 					"active" : enabledPlug.settable() and not Gaffer.readOnly( enabledPlug )
 				}
