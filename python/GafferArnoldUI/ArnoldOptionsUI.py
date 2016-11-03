@@ -67,6 +67,8 @@ def __samplingSummary( plug ) :
 		info.append( "SSS %d" % plug["giSSSSamples"]["value"].getValue() )
 	if plug["giVolumeSamples"]["enabled"].getValue() :
 		info.append( "Volume %d" % plug["giVolumeSamples"]["value"].getValue() )
+	if plug["aaSeed"]["enabled"].getValue() :
+		info.append( "Seed {0}".format( plug["aaSeed"]["value"].getValue() ) )
 	return ", ".join( info )
 
 def __rayDepthSummary( plug ) :
@@ -324,6 +326,23 @@ Gaffer.Metadata.registerNode(
 
 			"layout:section", "Sampling",
 			"label", "Volume Samples",
+
+		],
+
+		"options.aaSeed" : [
+
+			"description",
+			"""
+			Seeds the randomness used when generating samples.
+			By default this is set to the current frame number
+			so that the pattern of sampling noise changes every
+			frame. It can be locked to a particular value so
+			that sampling noise does not change from frame to
+			frame.
+			""",
+
+			"layout:section", "Sampling",
+			"label", "AA Seed",
 
 		],
 

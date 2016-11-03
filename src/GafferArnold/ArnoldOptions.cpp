@@ -59,6 +59,7 @@ ArnoldOptions::ArnoldOptions( const std::string &name )
 	options->addOptionalMember( "ai:GI_refraction_samples", new IECore::IntData( 2 ), "giRefractionSamples", Gaffer::Plug::Default, false );
 	options->addOptionalMember( "ai:GI_sss_samples", new IECore::IntData( 2 ), "giSSSSamples", Gaffer::Plug::Default, false );
 	options->addOptionalMember( "ai:GI_volume_samples", new IECore::IntData( 2 ), "giVolumeSamples", Gaffer::Plug::Default, false );
+	options->addOptionalMember( "ai:AA_seed", new IECore::IntData( 1 ), "aaSeed", Gaffer::Plug::Default, false );
 
 	// Ray depth parameters
 
