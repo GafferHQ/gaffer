@@ -360,6 +360,7 @@ namespace
 
 const std::string g_optionPrefix( "option:" );
 
+const IECore::InternedString g_frameOptionName( "frame" );
 const IECore::InternedString g_cameraOptionLegacyName( "option:render:camera" );
 const InternedString g_transformBlurOptionName( "option:render:transformBlur" );
 const InternedString g_deformationBlurOptionName( "option:render:deformationBlur" );
@@ -752,6 +753,10 @@ void outputOptions( const IECore::CompoundObject *globals, IECoreScenePreview::R
 
 void outputOptions( const IECore::CompoundObject *globals, const IECore::CompoundObject *previousGlobals, IECoreScenePreview::Renderer *renderer )
 {
+	// Output the current frame.
+
+	renderer->option( g_frameOptionName, new IntData( (int)round( Context::current()->getFrame() ) ) );
+
 	// Output anything that has changed or was added since last time.
 
 	CompoundObject::ObjectMap::const_iterator it, eIt;

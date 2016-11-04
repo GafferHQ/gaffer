@@ -1497,6 +1497,7 @@ namespace
 {
 
 InternedString g_cameraOptionName( "camera" );
+InternedString g_frameOptionName( "frame" );
 InternedString g_environmentEDFName( "as:environment_edf" );
 InternedString g_environmentEDFBackground( "as:environment_edf_background" );
 InternedString g_logLevelOptionName( "as:log:level" );
@@ -1576,6 +1577,12 @@ class AppleseedRenderer : public IECoreScenePreview::Renderer
 				return;
 			}
 
+			if( name == g_frameOptionName )
+			{
+				/// \todo Does this have a meaning in Appleseed?
+				return;
+			}
+
 			// appleseed render settings.
 			if( boost::starts_with( name.c_str(), "as:cfg:" ) )
 			{
@@ -1600,7 +1607,7 @@ class AppleseedRenderer : public IECoreScenePreview::Renderer
 						// if the number of passes is greater than one, we need to
 						// switch the shading result framebuffer in the final rendering config.
 						m_project->configurations().get_by_name( "final" )->get_parameters().insert( "shading_result_framebuffer", numPasses > 1 ? "permanent" : "ephemeral" );
-	
+
 						// enable decorrelate pixels if the number of render passes is greater than one.
 						m_project->configurations().get_by_name( "final" )->get_parameters().insert_path( "uniform_pixel_renderer.decorrelate_pixels", numPasses > 1 ? "true" : "false" );
 						m_project->configurations().get_by_name( "final" )->get_parameters().insert_path( optName.c_str(), numPasses );
@@ -1843,7 +1850,7 @@ class AppleseedRenderer : public IECoreScenePreview::Renderer
 				// Output render directly to a file.
 				m_project->get_frame()->get_parameters().insert( "output_filename", output->getName().c_str() );
 				m_project->get_frame()->get_parameters().insert( "output_aovs", false );
-		
+
 				if( output->getType() == "png" )
 				{
 					m_project->get_frame()->get_parameters().insert( "color_space", "srgb" );
@@ -2097,9 +2104,9 @@ class AppleseedRenderer : public IECoreScenePreview::Renderer
 				{
 					msg( MessageHandler::Error, "AppleseedRenderer", "Empty project filename" );
 				}
-	
+
 				m_projectPath = boost::filesystem::path( m_appleseedFileName ).parent_path();
-	
+
 				// Create a dir to store the mesh files if it does not exist yet.
 				boost::filesystem::path geomPath = m_projectPath / "_geometry";
 				if( !boost::filesystem::exists( geomPath ) )
