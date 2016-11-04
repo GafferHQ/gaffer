@@ -241,6 +241,7 @@ void dispatch( Dispatcher &dispatcher, object pythonNodes )
 {
 	std::vector<NodePtr> nodes;
 	boost::python::container_utils::extend_container( nodes, pythonNodes );
+	IECorePython::ScopedGILRelease gilRelease;
 	dispatcher.dispatch( nodes );
 }
 
