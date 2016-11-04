@@ -35,6 +35,8 @@
 #
 ##########################################################################
 
+import functools
+
 import IECore
 
 import Gaffer
@@ -145,15 +147,15 @@ class NodeGraph( GafferUI.EditorWidget ) :
 		menuDefinition.append(
 			"/Show Input Connections",
 			{
-				"checkBox" : IECore.curry( cls.__getNodeInputConnectionsVisible, nodeGraph.graphGadget(), node ),
-				"command" : IECore.curry( cls.__setNodeInputConnectionsVisible, nodeGraph.graphGadget(), node )
+				"checkBox" : functools.partial( cls.__getNodeInputConnectionsVisible, nodeGraph.graphGadget(), node ),
+				"command" : functools.partial( cls.__setNodeInputConnectionsVisible, nodeGraph.graphGadget(), node )
 			}
 		)
 		menuDefinition.append(
 			"/Show Output Connections",
 			{
-				"checkBox" : IECore.curry( cls.__getNodeOutputConnectionsVisible, nodeGraph.graphGadget(), node ),
-				"command" : IECore.curry( cls.__setNodeOutputConnectionsVisible, nodeGraph.graphGadget(), node )
+				"checkBox" : functools.partial( cls.__getNodeOutputConnectionsVisible, nodeGraph.graphGadget(), node ),
+				"command" : functools.partial( cls.__setNodeOutputConnectionsVisible, nodeGraph.graphGadget(), node )
 			}
 		)
 
@@ -168,11 +170,20 @@ class NodeGraph( GafferUI.EditorWidget ) :
 			menuDefinition.append(
 				"/Enabled",
 				{
-					"command" : IECore.curry( cls.__setEnabled, node ),
+					"command" : functools.partial( cls.__setEnabled, node ),
 					"checkBox" : enabledPlug.getValue(),
 					"active" : enabledPlug.settable() and not Gaffer.readOnly( enabledPlug )
 				}
 			)
+
+	@classmethod
+	def appendContentsMenuDefinitions( cls, nodeGraph, node, menuDefinition ) :
+
+		if not Gaffer.Metadata.value( node, "nodeGraph:childrenViewable" ) :
+			return
+
+		menuDefinition.append( "/ContentsDivider", { "divider" : True } )
+		menuDefinition.append( "/Show Contents...", { "command" : functools.partial( cls.acquire, node ) } )
 
 	__nodeDoubleClickSignal = Gaffer.Signal2()
 	## Returns a signal which is emitted whenever a node is double clicked.
@@ -283,9 +294,11 @@ class NodeGraph( GafferUI.EditorWidget ) :
 		elif event.key == "Down" :
 			selection = self.scriptNode().selection()
 			if selection.size() :
-				needsModifiers = not isinstance( selection[0], ( Gaffer.Reference, Gaffer.Box ) )
-				haveModifiers = bool( event.modifiers & ( event.modifiers.Shift | event.modifiers.Control ) )
-				if needsModifiers == haveModifiers :
+				needsModifiers = not Gaffer.Metadata.value( selection[0], "nodeGraph:childrenViewable" )
+				if (
+					( needsModifiers and event.modifiers == event.modifiers.Shift | event.modifiers.Control ) or
+					( not needsModifiers and event.modifiers == event.modifiers.None )
+				) :
 					self.graphGadget().setRoot( selection[0] )
 					return True
 		elif event.key == "Up" :
