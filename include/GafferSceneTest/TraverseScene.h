@@ -61,6 +61,9 @@ boost::signals::connection connectTraverseSceneToPlugDirtiedSignal( const Gaffer
 /// traversals will be triggered automatically from Context::changedSignal().
 boost::signals::connection connectTraverseSceneToContextChangedSignal( const GafferScene::ConstScenePlugPtr &scene, const Gaffer::ContextPtr &context );
 
+/// Arranges for traverseScene() to be called when Dispatcher::preDispatchSignal() is emitted.
+boost::signals::connection connectTraverseSceneToPreDispatchSignal( const GafferScene::ConstScenePlugPtr &scene );
+
 } // namespace GafferSceneTest
 
 #endif // GAFFERSCENETEST_TRAVERSESCENE_H

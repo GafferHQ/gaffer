@@ -36,6 +36,7 @@
 
 #include "boost/bind.hpp"
 
+#include "GafferDispatch/Dispatcher.h"
 #include "GafferScene/SceneAlgo.h"
 #include "GafferSceneTest/TraverseScene.h"
 
@@ -74,6 +75,12 @@ void traverseOnChanged( ConstScenePlugPtr scene, ConstContextPtr context )
 	traverseScene( scene.get() );
 }
 
+bool traverseOnPreDispatch( ConstScenePlugPtr scene )
+{
+	traverseScene( scene.get() );
+	return false;
+}
+
 } // namespace
 
 void GafferSceneTest::traverseScene( const GafferScene::ScenePlug *scenePlug )
@@ -102,3 +109,9 @@ boost::signals::connection GafferSceneTest::connectTraverseSceneToContextChanged
 {
 	return context->changedSignal().connect( boost::bind( &traverseOnChanged, scene, context ) );
 }
+
+boost::signals::connection GafferSceneTest::connectTraverseSceneToPreDispatchSignal( const GafferScene::ConstScenePlugPtr &scene )
+{
+	return GafferDispatch::Dispatcher::preDispatchSignal().connect( boost::bind( traverseOnPreDispatch, scene ) );
+}
+

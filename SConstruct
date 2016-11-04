@@ -600,10 +600,10 @@ libraries = {
 
 	"GafferSceneTest" : {
 		"envAppends" : {
-			"LIBS" : [ "Gaffer", "GafferScene" ],
+			"LIBS" : [ "Gaffer", "GafferDispatch", "GafferScene" ],
 		},
 		"pythonEnvAppends" : {
-			"LIBS" : [ "Gaffer", "GafferBindings", "GafferScene", "GafferSceneTest" ],
+			"LIBS" : [ "Gaffer", "GafferDispatch", "GafferBindings", "GafferScene", "GafferSceneTest" ],
 		},
 		"additionalFiles" : glob.glob( "python/GafferSceneTest/*/*" ),
 	},

@@ -39,6 +39,7 @@ import IECore
 
 import Gaffer
 import GafferTest
+import GafferDispatch
 import GafferScene
 import GafferSceneTest
 
@@ -514,6 +515,36 @@ class InstancerTest( GafferSceneTest.SceneTestCase ) :
 				context["minRadius"] = 0.3
 
 			del context["minRadius"]
+
+	def testDispatchAndGIL( self ) :
+
+		script = Gaffer.ScriptNode()
+
+		script["plane"] = GafferScene.Plane()
+		script["plane"]["divisions"].setValue( IECore.V2i( 20 ) )
+
+		script["sphere"] = GafferScene.Sphere()
+
+		script["expression"] = Gaffer.Expression()
+		script["expression"].setExpression( "parent['sphere']['radius'] = context.get( 'minRadius', 0.1 ) + context.getFrame() + float( context['instancer:id'] )" )
+
+		script["instancer"] = GafferScene.Instancer()
+		script["instancer"]["in"].setInput( script["plane"]["out"] )
+		script["instancer"]["instance"].setInput( script["sphere"]["out"] )
+		script["instancer"]["parent"].setValue( "/plane" )
+
+		script["pythonCommand"] = GafferDispatch.PythonCommand()
+		script["pythonCommand"]["command"].setValue( "pass" )
+
+		traverseConnection = Gaffer.ScopedConnection( GafferSceneTest.connectTraverseSceneToPreDispatchSignal( script["instancer"]["out"] ) )
+
+		dispatcher = GafferDispatch.LocalDispatcher()
+		dispatcher["jobsDirectory"].setValue( self.temporaryDirectory() )
+
+		with Gaffer.Context() as c :
+			for i in range( 1, 10 ) :
+				c.setFrame( i )
+				dispatcher.dispatch( [ script["pythonCommand"] ] )
 
 if __name__ == "__main__":
 	unittest.main()
