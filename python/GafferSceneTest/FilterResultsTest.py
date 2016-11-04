@@ -40,6 +40,7 @@ import IECore
 
 import Gaffer
 import GafferTest
+import GafferDispatch
 import GafferScene
 import GafferSceneTest
 
@@ -121,6 +122,41 @@ class FilterResultsTest( GafferSceneTest.SceneTestCase ) :
 
 		p["name"].setValue( "thing" )
 		self.assertTrue( n["out"] in { x[0] for x in cs } )
+
+	def testOutputIntoExpression( self ) :
+
+		script = Gaffer.ScriptNode()
+
+		script["plane"] = GafferScene.Plane()
+
+		script["sphere"] = GafferScene.Sphere()
+
+		script["instancer"] = GafferScene.Instancer()
+		script["instancer"]["in"].setInput( script["plane"]["out"] )
+		script["instancer"]["instance"].setInput( script["sphere"]["out"] )
+		script["instancer"]["parent"].setValue( "/plane" )
+
+		script["filter"] = GafferScene.PathFilter()
+		script["filter"]["paths"].setValue( IECore.StringVectorData( [ "/plane/instances/*/sphere" ] ) )
+
+		script["filterResults"] = GafferScene.FilterResults()
+		script["filterResults"]["scene"].setInput( script["instancer"]["out"] )
+		script["filterResults"]["filter"].setInput( script["filter"]["out"] )
+
+		script["filterResults"]["user"]["strings"] = Gaffer.StringVectorDataPlug( defaultValue = IECore.StringVectorData() )
+
+		script["expression"] = Gaffer.Expression()
+		script["expression"].setExpression( "parent['filterResults']['user']['strings'] = IECore.StringVectorData( sorted( parent['filterResults']['out'].value.paths() ) )" )
+
+		self.assertEqual(
+			script["filterResults"]["user"]["strings"].getValue(),
+			IECore.StringVectorData( [
+				"/plane/instances/0/sphere",
+				"/plane/instances/1/sphere",
+				"/plane/instances/2/sphere",
+				"/plane/instances/3/sphere",
+			] )
+		)
 
 if __name__ == "__main__":
 	unittest.main()
