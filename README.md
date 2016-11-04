@@ -15,7 +15,7 @@ Compiled binary releases are available for download from the [releases page](htt
 Building
 ========
 
-[![Build Status](https://travis-ci.org/GafferHQ/gaffer.svg?branch=master)]("https://travis-ci.org/GafferHQ/gaffer")
+[![Build Status](https://travis-ci.org/GafferHQ/gaffer.svg?branch=master)](https://travis-ci.org/GafferHQ/gaffer)
 
 Gaffer is a fairly large project, and as such has a fairly complex build process. Before you start, you'll want to make sure you have the following prerequisites installed on your system - these will be used to perform the build itself :
 
