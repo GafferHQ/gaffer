@@ -1,6 +1,6 @@
 ##########################################################################
 #
-#  Copyright (c) 2013, Image Engine Design Inc. All rights reserved.
+#  Copyright (c) 2013-2016, Image Engine Design Inc. All rights reserved.
 #
 #  Redistribution and use in source and binary forms, with or without
 #  modification, are permitted provided that the following conditions are
@@ -142,11 +142,13 @@ class MetadataTest( GafferTest.TestCase ) :
 		self.assertEqual( Gaffer.Metadata.value( derivedAdd, "iKey" ), "Base class value" )
 
 		Gaffer.Metadata.registerValue( self.DerivedAddNode, "iKey", "Derived class value" )
+		self.assertEqual( Gaffer.Metadata.value( derivedAdd, "iKey" ), "Derived class value" )
 
 		Gaffer.Metadata.registerValue( GafferTest.AddNode, "op1", "iKey", "Base class plug value" )
 		self.assertEqual( Gaffer.Metadata.value( derivedAdd["op1"], "iKey" ), "Base class plug value" )
 
 		Gaffer.Metadata.registerValue( self.DerivedAddNode, "op1", "iKey", "Derived class plug value" )
+		self.assertEqual( Gaffer.Metadata.value( derivedAdd["op1"], "iKey" ), "Derived class plug value" )
 
 	def testNodeSignals( self ) :
 
