@@ -440,7 +440,7 @@ class _FramesModePlugValueWidget( GafferUI.PlugValueWidget ) :
 			self.__updateFrameRangeConnection = playback.frameRangeChangedSignal().connect( Gaffer.WeakMethod( self.__playbackFrameRangeChanged ) )
 			self.__playbackFrameRangeChanged( playback )
 		else :
-			frameRange = Gaffer.Metadata.value( self.getPlug(), "dispatcherWindow:frameRange", inherit=False )
+			frameRange = Gaffer.Metadata.value( self.getPlug(), "dispatcherWindow:frameRange" )
 			if frameRange is not None :
 				self.getPlug().node()["frameRange"].setValue( frameRange )
 			self.__updateFrameRangeConnection = self.getPlug().node().plugDirtiedSignal().connect( Gaffer.WeakMethod( self.__customFrameRangeChanged ) )
