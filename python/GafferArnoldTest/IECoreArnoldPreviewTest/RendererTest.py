@@ -1435,6 +1435,26 @@ class RendererTest( GafferTest.TestCase ) :
 			self.assertTrue( arnold.AiNodeIs( shape, "volume" ) )
 			self.assertEqual( arnold.AiNodeGetFlt( shape, "step_size" ), 0.25 )
 
+	def testDeclaringCustomOptions( self ) :
+
+		r = GafferScene.Private.IECoreScenePreview.Renderer.create(
+			"IECoreArnold::Renderer",
+			GafferScene.Private.IECoreScenePreview.Renderer.RenderType.SceneDescription,
+			self.temporaryDirectory() + "/test.ass"
+		)
+
+		r.option( "ai:declare:myCustomOption", IECore.StringData( "myCustomOptionValue" ) )
+
+		r.render()
+		del r
+
+		with IECoreArnold.UniverseBlock( writable = True ) :
+
+			arnold.AiASSLoad( self.temporaryDirectory() + "/test.ass" )
+			options = arnold.AiUniverseGetOptions()
+
+			self.assertEqual( arnold.AiNodeGetStr( options, "myCustomOption" ), "myCustomOptionValue" )
+
 	@staticmethod
 	def __m44f( m ) :
 

@@ -1439,6 +1439,27 @@ class ArnoldRenderer : public IECoreScenePreview::Renderer
 				AiNodeSetStr( options, "shader_searchpath", s.c_str() );
 				return;
 			}
+			else if( boost::starts_with( name.c_str(), "ai:declare:" ) )
+			{
+				const AtParamEntry *parameter = AiNodeEntryLookUpParameter( AiNodeGetNodeEntry( options ), name.c_str() + 11 );
+				if( parameter )
+				{
+					IECore::msg( IECore::Msg::Warning, "IECoreArnold::Renderer::option", boost::format( "Unable to declare existing option \"%s\"." ) % (name.c_str() + 11) );
+				}
+				else
+				{
+					const AtUserParamEntry *userParameter = AiNodeLookUpUserParameter( options, name.c_str() + 11);
+					if( userParameter )
+					{
+						AiNodeResetParameter( options, name.c_str() + 11 );
+					}
+					if( value )
+					{
+						ParameterAlgo::setParameter( options, name.c_str() + 11, value );
+					}
+				}
+				return;
+			}
 			else if( boost::starts_with( name.c_str(), "ai:" ) )
 			{
 				const AtParamEntry *parameter = AiNodeEntryLookUpParameter( AiNodeGetNodeEntry( options ), name.c_str() + 3 );
