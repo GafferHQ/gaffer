@@ -48,13 +48,13 @@ using namespace boost::python;
 using namespace GafferSceneBindings;
 using namespace GafferScene;
 
-namespace GafferSceneBindings
+namespace
 {
 
 // we don't actually wrap the existing init, but rather reimplement it
 // here using clear() and addPath(), so that we can support a mixture
 // of strings and InternedStringVectorData.
-static void initWrapper( PathMatcher &m, boost::python::object paths )
+void initWrapper( PathMatcher &m, boost::python::object paths )
 {
 	m.clear();
 	for( size_t i = 0, e = len( paths ); i < e; ++i )
@@ -73,7 +73,7 @@ static void initWrapper( PathMatcher &m, boost::python::object paths )
 	}
 }
 
-static PathMatcher *constructFromObject( boost::python::object oPaths )
+PathMatcher *constructFromObject( boost::python::object oPaths )
 {
 	PathMatcher *result = new PathMatcher;
 	try
@@ -88,12 +88,12 @@ static PathMatcher *constructFromObject( boost::python::object oPaths )
 	return result;
 }
 
-static PathMatcher *constructFromVectorData( IECore::ConstStringVectorDataPtr paths )
+PathMatcher *constructFromVectorData( IECore::ConstStringVectorDataPtr paths )
 {
 	return new PathMatcher( paths->readable().begin(), paths->readable().end() );
 }
 
-static list paths( const PathMatcher &p )
+list paths( const PathMatcher &p )
 {
 	std::vector<std::string> paths;
 	p.paths( paths );
@@ -105,7 +105,15 @@ static list paths( const PathMatcher &p )
 	return result;
 }
 
-void bindPathMatcher()
+std::string pathMatcherRepr( object p )
+{
+	std::string paths = extract<std::string>( p.attr( "paths" )().attr( "__repr__" )() );
+	return "GafferScene.PathMatcher( " + paths + " )";
+}
+
+} // namespace
+
+void GafferSceneBindings::bindPathMatcher()
 {
 	class_<PathMatcher>( "PathMatcher" )
 		.def( "__init__", make_constructor( constructFromObject ) )
@@ -128,9 +136,8 @@ void bindPathMatcher()
 		.def( "paths", &paths )
 		.def( "match", (unsigned (PathMatcher ::*)( const std::vector<IECore::InternedString> & ) const)&PathMatcher::match )
 		.def( "match", (unsigned (PathMatcher ::*)( const std::string & ) const)&PathMatcher::match )
+		.def( "__repr__", &pathMatcherRepr )
 		.def( self == self )
 		.def( self != self )
 	;
 }
-
-} // namespace GafferSceneBindings

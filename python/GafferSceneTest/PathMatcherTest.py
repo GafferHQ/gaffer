@@ -987,5 +987,19 @@ class PathMatcherTest( GafferSceneTest.SceneTestCase ) :
 		s = m.subTree( "" )
 		self.assertTrue( s.isEmpty() )
 
+	def testRepr( self ) :
+
+		m1 = GafferScene.PathMatcher()
+		m2 = GafferScene.PathMatcher( [
+			"/a/b",
+			"/a/*"
+		] )
+
+		m1c = eval( repr( m1 ) )
+		m2c = eval( repr( m2 ) )
+
+		self.assertEqual( m1, m1c )
+		self.assertEqual( m2, m2c )
+
 if __name__ == "__main__":
 	unittest.main()
