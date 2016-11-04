@@ -107,7 +107,10 @@ void taskPlugExecuteSequence( const TaskNode::TaskPlug &t, const boost::python::
 boost::python::list taskPlugPreTasks( const TaskNode::TaskPlug &t )
 {
 	GafferDispatch::TaskNode::Tasks tasks;
-	t.preTasks( tasks );
+	{
+		IECorePython::ScopedGILRelease gilRelease;
+		t.preTasks( tasks );
+	}
 	boost::python::list result;
 	for( GafferDispatch::TaskNode::Tasks::const_iterator tIt = tasks.begin(); tIt != tasks.end(); ++tIt )
 	{
@@ -119,7 +122,10 @@ boost::python::list taskPlugPreTasks( const TaskNode::TaskPlug &t )
 boost::python::list taskPlugPostTasks( const TaskNode::TaskPlug &t )
 {
 	GafferDispatch::TaskNode::Tasks tasks;
-	t.postTasks( tasks );
+	{
+		IECorePython::ScopedGILRelease gilRelease;
+		t.postTasks( tasks );
+	}
 	boost::python::list result;
 	for( GafferDispatch::TaskNode::Tasks::const_iterator tIt = tasks.begin(); tIt != tasks.end(); ++tIt )
 	{
