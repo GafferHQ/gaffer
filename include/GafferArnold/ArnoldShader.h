@@ -55,11 +55,29 @@ class ArnoldShader : public GafferScene::Shader
 
 		IE_CORE_DECLARERUNTIMETYPEDEXTENSION( GafferArnold::ArnoldShader, ArnoldShaderTypeId, GafferScene::Shader );
 
+		/// Implemented for outPlug(), returning the parameter named in the "primaryInput"
+		/// shader annotation if it has been specified.
+		virtual Gaffer::Plug *correspondingInput( const Gaffer::Plug *output );
+		virtual const Gaffer::Plug *correspondingInput( const Gaffer::Plug *output ) const;
+
 		/// \todo Remove this version, and add `keepExistingValues = false` default
 		/// to version below.
 		void loadShader( const std::string &shaderName );
 		void loadShader( const std::string &shaderName, bool keepExistingValues );
 
+		/// Returns an Arnold metadata item from the shader.
+		const IECore::Data *shaderMetadata( const IECore::InternedString &name ) const;
+		/// Returns an Arnold metadata item from the specified shader parameter.
+		const IECore::Data *parameterMetadata( const Gaffer::Plug *plug, const IECore::InternedString &name ) const;
+
+	private :
+
+		// Shader metadata is stored in a "shader" member of the result and
+		// parameter metadata is stored indexed by name inside a
+		// "parameter" member of the result.
+		const IECore::CompoundData *metadata() const;
+
+		mutable IECore::ConstCompoundDataPtr m_metadata;
 };
 
 IE_CORE_DECLAREPTR( ArnoldShader )
