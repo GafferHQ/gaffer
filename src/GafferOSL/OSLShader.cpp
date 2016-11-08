@@ -150,6 +150,38 @@ OSLShader::~OSLShader()
 {
 }
 
+Gaffer::Plug *OSLShader::correspondingInput( const Gaffer::Plug *output )
+{
+	// better to do a few harmless casts than manage a duplicate implementation
+	return const_cast<Gaffer::Plug *>(
+		const_cast<const OSLShader *>( this )->correspondingInput( output )
+	);
+}
+
+const Gaffer::Plug *OSLShader::correspondingInput( const Gaffer::Plug *output ) const
+{
+	ConstCompoundDataPtr metadata = OSLShader::metadata();
+	if( !metadata )
+	{
+		return 0;
+	}
+
+	const StringData *input = static_cast<const StringData*>( OSLShader::parameterMetadata( output, "correspondingInput" ) );
+	if( !input )
+	{
+		return 0;
+	}
+
+	const Plug *result = parametersPlug()->getChild<Plug>( input->readable() );
+	if( !result )
+	{
+		IECore::msg( IECore::Msg::Error, "OSLShader::correspondingInput", boost::format( "Parameter \"%s\" does not exist" ) % input->readable() );
+		return 0;
+	}
+
+	return result;
+}
+
 ConstShadingEnginePtr OSLShader::shadingEngine() const
 {
 	return g_shadingEngineCache.get( ShadingEngineCacheKey( this ) );
@@ -1152,6 +1184,7 @@ static IECore::ConstCompoundDataPtr metadataGetter( const std::string &key, size
 			else
 			{
 				parameterMetadata->writable()[parameter->name.c_str()] = convertMetadata( parameter->metadata );
+
 			}
 		}
 	}
@@ -1191,7 +1224,7 @@ const IECore::Data *OSLShader::parameterMetadata( const Gaffer::Plug *plug, cons
 		return NULL;
 	}
 
-	if( plug->parent<Plug>() != parametersPlug() )
+	if( plug->parent<Plug>() != parametersPlug() && plug->parent<Plug>() != outPlug() )
 	{
 		return NULL;
 	}
@@ -1201,5 +1234,6 @@ const IECore::Data *OSLShader::parameterMetadata( const Gaffer::Plug *plug, cons
 	{
 		return NULL;
 	}
+
 	return p->member<IECore::Data>( key );
 }
