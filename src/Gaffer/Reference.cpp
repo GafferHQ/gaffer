@@ -229,14 +229,11 @@ void Reference::loadInternal( const std::string &fileName )
 						}
 					}
 				}
-				else if( newPlug->direction() == Plug::Out && oldPlug->direction() == Plug::Out )
+				for( Plug::OutputContainer::const_iterator oIt = oldPlug->outputs().begin(), oeIt = oldPlug->outputs().end(); oIt != oeIt;  )
 				{
-					for( Plug::OutputContainer::const_iterator oIt = oldPlug->outputs().begin(), oeIt = oldPlug->outputs().end(); oIt != oeIt;  )
-					{
-						Plug *outputPlug = *oIt;
-						++oIt; // increment now because the setInput() call invalidates our iterator.
-						outputPlug->setInput( newPlug );
-					}
+					Plug *outputPlug = *oIt;
+					++oIt; // increment now because the setInput() call invalidates our iterator.
+					outputPlug->setInput( newPlug );
 				}
 				transferPersistentMetadata( oldPlug, newPlug );
 			}
