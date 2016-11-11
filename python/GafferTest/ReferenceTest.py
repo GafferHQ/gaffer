@@ -130,12 +130,14 @@ class ReferenceTest( GafferTest.TestCase ) :
 		s2 = Gaffer.ScriptNode()
 		s2["n1"] = GafferTest.AddNode()
 		s2["n3"] = GafferTest.AddNode()
+		s2["n4"] = GafferTest.AddNode()
 		s2["r"] = Gaffer.Reference()
 		s2["r"].load( self.temporaryDirectory() + "/test.grf" )
 
 		s2["r"]["op1"].setInput( s2["n1"]["sum"] )
 		s2["r"]["op2"].setValue( 1001 )
 		s2["n3"]["op1"].setInput( s2["r"]["sum"] )
+		s2["n4"]["op1"].setInput( s2["r"]["op2"] )
 
 		self.assertTrue( "n2" in s2["r"] )
 		self.assertTrue( s2["r"]["n2"]["op1"].getInput().isSame( s2["r"]["op1"] ) )
@@ -144,6 +146,7 @@ class ReferenceTest( GafferTest.TestCase ) :
 		self.assertTrue( s2["r"]["sum"].getInput().isSame( s2["r"]["n2"]["sum"] ) )
 		self.assertTrue( s2["r"]["op1"].getInput().isSame( s2["n1"]["sum"] ) )
 		self.assertTrue( s2["n3"]["op1"].getInput().isSame( s2["r"]["sum"] ) )
+		self.assertTrue( s2["n4"]["op1"].getInput() and s2["n4"]["op1"].getInput().isSame( s2["r"]["op2"] ) )
 		originalReferencedNames = s2["r"].keys()
 
 		b["anotherNode"] = GafferTest.AddNode()
@@ -161,6 +164,7 @@ class ReferenceTest( GafferTest.TestCase ) :
 		self.assertTrue( s2["r"]["sum"].getInput().isSame( s2["r"]["n2"]["sum"] ) )
 		self.assertTrue( s2["r"]["op1"].getInput().isSame( s2["n1"]["sum"] ) )
 		self.assertTrue( s2["n3"]["op1"].getInput().isSame( s2["r"]["sum"] ) )
+		self.assertTrue( s2["n4"]["op1"].getInput() and s2["n4"]["op1"].getInput().isSame( s2["r"]["op2"] ) )
 
 	def testReloadDoesntRemoveCustomPlugs( self ) :
 
