@@ -91,6 +91,13 @@ if targetApp :
 	if "compilerFlags" in targetAppReg :
 		CXXFLAGS = CXXFLAGS + targetAppReg["compilerFlags"]
 	
+	if "linkerFlags" in targetAppReg :
+		targetAppLinkFlags = " ".join( targetAppReg["linkerFlags"] )
+		if LINKFLAGS :
+			LINKFLAGS = LINKFLAGS + " " + targetAppLinkFlags
+		else :
+			LINKFLAGS = targetAppLinkFlags
+
 else :
 
 	targetApp = "gaffer"
