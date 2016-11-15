@@ -60,7 +60,7 @@ class test( Gaffer.Application ) :
 			Repeat a specific test 10 times :
 
 			```
-			gaffer test -repeat 10 GafferImageTest.ImageNodeTest.testCacheThreadSafet
+			gaffer test -repeat 10 GafferImageTest.ImageNodeTest.testCacheThreadSafety
 
 			```
 			"""
