@@ -1298,5 +1298,54 @@ a = A()"""
 			self.assertEqual( mh.messages[0].context, "Line 2 of " + fileName )
 			self.assertTrue( "NameError: name 'iDontExist' is not defined" in mh.messages[0].message )
 
+	def testReconnectionOfChildPlug( self ) :
+		class NestedPlugsNode( Gaffer.DependencyNode ) :
+			def __init__( self, name = "NestedOutputNode" ) :
+				Gaffer.DependencyNode.__init__( self, name )
+
+				self["in"] = Gaffer.Plug()
+				self["in"]["a"] = Gaffer.IntPlug()
+				self["in"]["b"] = Gaffer.IntPlug()
+
+				self["out"] = Gaffer.Plug( direction = Gaffer.Plug.Direction.Out )
+				self["out"]["a"] = Gaffer.IntPlug( direction = Gaffer.Plug.Direction.Out )
+				self["out"]["b"] = Gaffer.IntPlug( direction = Gaffer.Plug.Direction.Out )
+
+			def correspondingInput( self, output ) :
+
+				if output.isSame( self["out"] ) :
+					return self["in"]
+
+				if output.isSame( self["out"]["a"] ) :
+					return self["in"]["a"]
+
+				if output.isSame( self["out"]["b"] ) :
+					return self["in"]["b"]
+
+				return Gaffer.DependencyNode.correspondingInput( self, output )
+
+		s = Gaffer.ScriptNode()
+
+		s["n1"] = NestedPlugsNode()
+		s["n2"] = NestedPlugsNode()
+		s["n3"] = NestedPlugsNode()
+
+		# check top level connection
+		s["n2"]["in"].setInput( s["n1"]["out"] )
+		s["n3"]["in"].setInput( s["n2"]["out"] )
+
+		s.deleteNodes( filter = Gaffer.StandardSet( [ s["n2"] ] ) )
+		self.assertTrue( s["n3"]["in"].getInput().isSame( s["n1"]["out"] ) )
+
+		# check connection for nested plug
+		s["n4"] = NestedPlugsNode()
+		s["n3"]["in"].setInput( None )
+		s["n3"]["in"]["a"].setInput( s["n1"]["out"]["a"] )
+		s["n4"]["in"]["a"].setInput( s["n3"]["out"]["a"] )
+
+		s.deleteNodes( filter = Gaffer.StandardSet( [ s["n3"] ] ) )
+		self.assertTrue( s["n4"]["in"]["a"].getInput().isSame( s["n1"]["out"]["a"] ) )
+
+
 if __name__ == "__main__":
 	unittest.main()
