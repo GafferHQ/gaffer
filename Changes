@@ -1,3 +1,26 @@
+Improvements
+------------
+
+- Arnold backend : Added support for adding arbitrary parameters to the Arnold options by using
+a CustomOptions node to create options prefixed with "ai:declare:" (#1911).
+- ArnoldOptions : Added AA_seed. If not specified, this defaults to the current frame (#1913).
+- Expression : Added support for PathMatcherDataPlugs in python expressions. In particular this allows the FilterResults node to be used as an input to an expression (#1915).
+- Documentation : Added Expression reference (#1918).
+
+Fixes
+-----
+
+- Dispatcher
+  - Fixed GIL management bug which could cause deadlock if pre/post dispatch slots launched threads that attempt to use Python (#1916).
+  - Fixed UI bug in frame range field (#1917).
+
+API
+---
+
+- Menu : Added support for `functools.partial` in "active" and "checkBox" fields (#1914).
+- NodeGraph : Added support for "nodeGraph:childrenViewable" metadata. This controls whether the subgraph of a node is accessible via the "Show Contents..." menu item and the cursor down keypress (#1914).
+- PathMatcher/PathMatcherData : Added Python __repr__ support (#1915).
+
 0.30.0.0
 ========
 
