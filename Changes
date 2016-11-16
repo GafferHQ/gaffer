@@ -1,3 +1,6 @@
+0.30.1.0
+========
+
 Improvements
 ------------
 
@@ -13,6 +16,7 @@ Fixes
 - Dispatcher
   - Fixed GIL management bug which could cause deadlock if pre/post dispatch slots launched threads that attempt to use Python (#1916).
   - Fixed UI bug in frame range field (#1917).
+- Reference : Reconnect outputs from any plugs.
 
 API
 ---
