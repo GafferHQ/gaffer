@@ -56,7 +56,7 @@ IE_CORE_DEFINERUNTIMETYPED( OSLImage );
 size_t OSLImage::g_firstPlugIndex = 0;
 
 OSLImage::OSLImage( const std::string &name )
-	:	ImageProcessor( name )
+	:	FlatImageProcessor( name )
 {
 	storeIndexOfNextChild( g_firstPlugIndex );
 
@@ -101,7 +101,7 @@ const Gaffer::ObjectPlug *OSLImage::shadingPlug() const
 
 void OSLImage::affects( const Gaffer::Plug *input, AffectedPlugsContainer &outputs ) const
 {
-	ImageProcessor::affects( input, outputs );
+	FlatImageProcessor::affects( input, outputs );
 
 	if( input == shaderPlug() )
 	{
@@ -116,7 +116,7 @@ void OSLImage::affects( const Gaffer::Plug *input, AffectedPlugsContainer &outpu
 
 bool OSLImage::acceptsInput( const Gaffer::Plug *plug, const Gaffer::Plug *inputPlug ) const
 {
-	if( !ImageProcessor::acceptsInput( plug, inputPlug ) )
+	if( !FlatImageProcessor::acceptsInput( plug, inputPlug ) )
 	{
 		return false;
 	}
@@ -140,7 +140,7 @@ bool OSLImage::acceptsInput( const Gaffer::Plug *plug, const Gaffer::Plug *input
 
 bool OSLImage::enabled() const
 {
-	if( !ImageProcessor::enabled() )
+	if( !FlatImageProcessor::enabled() )
 	{
 		return false;
 	}
@@ -152,7 +152,7 @@ bool OSLImage::enabled() const
 
 void OSLImage::hash( const Gaffer::ValuePlug *output, const Gaffer::Context *context, IECore::MurmurHash &h ) const
 {
-	ImageProcessor::hash( output, context, h );
+	FlatImageProcessor::hash( output, context, h );
 
 	if( output == shadingPlug() )
 	{
@@ -168,32 +168,32 @@ void OSLImage::compute( Gaffer::ValuePlug *output, const Gaffer::Context *contex
 		return;
 	}
 
-	ImageProcessor::compute( output, context );
+	FlatImageProcessor::compute( output, context );
 }
 
-void OSLImage::hashDataWindow( const GafferImage::ImagePlug *output, const Gaffer::Context *context, IECore::MurmurHash &h ) const
+void OSLImage::hashFlatDataWindow( const GafferImage::ImagePlug *output, const Gaffer::Context *context, IECore::MurmurHash &h ) const
 {
-	throw Exception( "Unexpected call to OSLImage::hashDataWindow" );
+	throw Exception( "Unexpected call to OSLImage::hashFlatDataWindow" );
 }
 
-Imath::Box2i OSLImage::computeDataWindow( const Gaffer::Context *context, const GafferImage::ImagePlug *parent ) const
+Imath::Box2i OSLImage::computeFlatDataWindow( const Gaffer::Context *context, const GafferImage::ImagePlug *parent ) const
 {
-	throw Exception( "Unexpected call to OSLImage::computeDataWindow" );
+	throw Exception( "Unexpected call to OSLImage::computeFlatDataWindow" );
 }
 
-void OSLImage::hashMetadata( const GafferImage::ImagePlug *output, const Gaffer::Context *context, IECore::MurmurHash &h ) const
+void OSLImage::hashFlatMetadata( const GafferImage::ImagePlug *output, const Gaffer::Context *context, IECore::MurmurHash &h ) const
 {
-	throw Exception( "Unexpected call to OSLImage::hashMetadata" );
+	throw Exception( "Unexpected call to OSLImage::hashFlatMetadata" );
 }
 
-IECore::ConstCompoundObjectPtr OSLImage::computeMetadata( const Gaffer::Context *context, const ImagePlug *parent ) const
+IECore::ConstCompoundObjectPtr OSLImage::computeFlatMetadata( const Gaffer::Context *context, const ImagePlug *parent ) const
 {
-	throw Exception( "Unexpected call to OSLImage::computeMetadata" );
+	throw Exception( "Unexpected call to OSLImage::computeFlatMetadata" );
 }
 
-void OSLImage::hashChannelNames( const GafferImage::ImagePlug *output, const Gaffer::Context *context, IECore::MurmurHash &h ) const
+void OSLImage::hashFlatChannelNames( const GafferImage::ImagePlug *output, const Gaffer::Context *context, IECore::MurmurHash &h ) const
 {
-	ImageProcessor::hashChannelNames( output, context, h );
+	FlatImageProcessor::hashFlatChannelNames( output, context, h );
 	inPlug()->channelNamesPlug()->hash( h );
 
 	const Box2i dataWindow = inPlug()->dataWindowPlug()->getValue();
@@ -206,7 +206,7 @@ void OSLImage::hashChannelNames( const GafferImage::ImagePlug *output, const Gaf
 	}
 }
 
-IECore::ConstStringVectorDataPtr OSLImage::computeChannelNames( const Gaffer::Context *context, const GafferImage::ImagePlug *parent ) const
+IECore::ConstStringVectorDataPtr OSLImage::computeFlatChannelNames( const Gaffer::Context *context, const GafferImage::ImagePlug *parent ) const
 {
 	ConstStringVectorDataPtr channelNamesData = inPlug()->channelNamesPlug()->getValue();
 
@@ -229,14 +229,14 @@ IECore::ConstStringVectorDataPtr OSLImage::computeChannelNames( const Gaffer::Co
 	return new StringVectorData( vector<string>( result.begin(), result.end() ) );
 }
 
-void OSLImage::hashChannelData( const GafferImage::ImagePlug *output, const Gaffer::Context *context, IECore::MurmurHash &h ) const
+void OSLImage::hashFlatChannelData( const GafferImage::ImagePlug *output, const Gaffer::Context *context, IECore::MurmurHash &h ) const
 {
-	ImageProcessor::hashChannelData( output, context, h );
+	FlatImageProcessor::hashFlatChannelData( output, context, h );
 	h.append( context->get<std::string>( ImagePlug::channelNameContextName ) );
 	shadingPlug()->hash( h );
 }
 
-IECore::ConstFloatVectorDataPtr OSLImage::computeChannelData( const std::string &channelName, const Imath::V2i &tileOrigin, const Gaffer::Context *context, const GafferImage::ImagePlug *parent ) const
+IECore::ConstFloatVectorDataPtr OSLImage::computeFlatChannelData( const std::string &channelName, const Imath::V2i &tileOrigin, const Gaffer::Context *context, const GafferImage::ImagePlug *parent ) const
 {
 	ConstCompoundDataPtr shadedPoints = runTimeCast<const CompoundData>( shadingPlug()->getValue() );
 	ConstFloatVectorDataPtr result = shadedPoints->member<FloatVectorData>( channelName );

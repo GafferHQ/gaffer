@@ -69,6 +69,7 @@
 #include "GafferImage/ImageStats.h"
 #include "GafferImage/Clamp.h"
 #include "GafferImage/ImageSampler.h"
+#include "GafferImage/ImageState.h"
 
 #include "GafferImageUI/ImageGadget.h"
 #include "GafferImageUI/ImageView.h"
@@ -273,9 +274,14 @@ ImageView::ImageView( const std::string &name )
 	ImagePlugPtr preprocessorInput = new ImagePlug( "in" );
 	preprocessor->addChild( preprocessorInput );
 
+	ImageStatePtr imageStateNode = new ImageState();
+	preprocessor->setChild( "__imageState", imageStateNode );
+	imageStateNode->inPlug()->setInput( preprocessorInput );
+	imageStateNode->deepStatePlug()->setValue( ImagePlug::Flat );
+
 	ClampPtr clampNode = new Clamp();
 	preprocessor->setChild(  "__clamp", clampNode );
-	clampNode->inPlug()->setInput( preprocessorInput );
+	clampNode->inPlug()->setInput( imageStateNode->outPlug() );
 	clampNode->enabledPlug()->setValue( false );
 	clampNode->minClampToEnabledPlug()->setValue( true );
 	clampNode->maxClampToEnabledPlug()->setValue( true );
@@ -403,6 +409,16 @@ Gaffer::StringPlug *ImageView::displayTransformPlug()
 const Gaffer::StringPlug *ImageView::displayTransformPlug() const
 {
 	return getChild<StringPlug>( "displayTransform" );
+}
+
+GafferImage::ImageState *ImageView::imageStateNode()
+{
+	return getPreprocessor<Node>()->getChild<ImageState>( "__imageState" );
+}
+
+const GafferImage::ImageState *ImageView::imageStateNode() const
+{
+	return getPreprocessor<Node>()->getChild<ImageState>( "__imageState" );
 }
 
 GafferImage::Clamp *ImageView::clampNode()

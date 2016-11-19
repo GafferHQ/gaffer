@@ -460,6 +460,26 @@ IECore::ConstCompoundObjectPtr Display::computeMetadata( const Gaffer::Context *
 	return outPlug()->metadataPlug()->defaultValue();
 }
 
+void Display::hashDeepState( const GafferImage::ImagePlug *parent, const Gaffer::Context *context, IECore::MurmurHash &h ) const
+{
+	h.append( ImagePlug::Flat );
+}
+
+int Display::computeDeepState( const Gaffer::Context *context, const ImagePlug *parent ) const
+{
+	return ImagePlug::Flat;
+}
+
+void Display::hashSampleOffsets( const GafferImage::ImagePlug *parent, const Gaffer::Context *context, IECore::MurmurHash &h ) const
+{
+	ImagePlug::flatTileSampleOffsets()->hash( h );
+}
+
+IECore::ConstIntVectorDataPtr Display::computeSampleOffsets( const Imath::V2i &tileOrigin, const Gaffer::Context *context, const ImagePlug *parent ) const
+{
+	return ImagePlug::flatTileSampleOffsets();
+}
+
 void Display::hashChannelData( const GafferImage::ImagePlug *output, const Gaffer::Context *context, IECore::MurmurHash &h ) const
 {
 	ConstFloatVectorDataPtr channelData = ImagePlug::blackTile();

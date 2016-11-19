@@ -84,6 +84,9 @@ from TextTest import TextTest
 from OpenColorIOTransformTest import OpenColorIOTransformTest
 from UVWarpTest import UVWarpTest
 from MirrorTest import MirrorTest
+from DeepMergeTest import DeepMergeTest
+from ImageStateTest import ImageStateTest
+from EmptyTest import EmptyTest
 
 if __name__ == "__main__":
 	import unittest

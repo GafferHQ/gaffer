@@ -42,6 +42,23 @@ import GafferImage
 
 class ImageTestCase( GafferTest.TestCase ) :
 
+	class DeepImage( GafferImage.ImageNode ) :
+		def __init__( self, name = "DeepImage" ) :
+			GafferImage.ImageNode.__init__( self, name )
+			self.addChild( Gaffer.IntPlug( "deepState", Gaffer.Plug.Direction.In, GafferImage.ImagePlug.DeepState.Messy ) )
+			self.addChild( GafferImage.FormatPlug( "format", Gaffer.Plug.Direction.In ) )
+
+			self["__empty"] = GafferImage.Empty()
+			self["__empty"]["format"].setInput( self["format"] )
+
+			self["__imageState"] = GafferImage.ImageState()
+			self["__imageState"]["in"].setInput( self["__empty"]["out"] )
+			self["__imageState"]["deepState"].setInput( self["deepState"] )
+
+			self["out"].setInput( self["__imageState"]["out"] )
+
+	IECore.registerRunTimeTyped( DeepImage )
+
 	def assertImageHashesEqual( self, imageA, imageB ) :
 
 		self.assertEqual( imageA["format"].hash(), imageB["format"].hash() )
@@ -118,3 +135,21 @@ class ImageTestCase( GafferTest.TestCase ) :
 		self.assertEqual( result["out"]["dataWindow"].getValue(), IECore.Box2i() )
 
 		return result
+
+	def deepImage( self, fmt=None ) :
+
+		deep = self.DeepImage()
+		if fmt :
+			deep["format"].setValue( fmt )
+
+		return deep
+
+	def _testNonFlatHashPassThrough( self, node ) :
+
+		deep = self.deepImage()
+
+		node["in"].setInput( deep["out"] )
+
+		self.assertEqual( deep["out"].imageHash(), node["out"].imageHash() )
+		deep["deepState"].setValue( GafferImage.ImagePlug.DeepState.Flat )
+		self.assertNotEqual( deep["out"].imageHash(), node["out"].imageHash() )

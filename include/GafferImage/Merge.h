@@ -39,7 +39,7 @@
 
 #include "Gaffer/NumericPlug.h"
 
-#include "GafferImage/ImageProcessor.h"
+#include "GafferImage/FlatImageProcessor.h"
 
 namespace GafferImage
 {
@@ -56,7 +56,7 @@ namespace GafferImage
 /// - For some operations we do not need to track the intermediate alpha values at all.
 /// - We could improve our masking of invalid pixels with special cases for wholly valid tiles,
 ///   wholly invalid tiles, and by chunking the work on the valid sections.
-class Merge : public ImageProcessor
+class Merge : public FlatImageProcessor
 {
 
 	public :
@@ -64,7 +64,7 @@ class Merge : public ImageProcessor
 		Merge( const std::string &name=defaultName<Merge>() );
 		virtual ~Merge();
 
-		IE_CORE_DECLARERUNTIMETYPEDEXTENSION( GafferImage::Merge, MergeTypeId, ImageProcessor );
+		IE_CORE_DECLARERUNTIMETYPEDEXTENSION( GafferImage::Merge, MergeTypeId, FlatImageProcessor );
 
 		enum Operation
 		{
@@ -90,16 +90,16 @@ class Merge : public ImageProcessor
 	protected :
 
 		/// Reimplemented to hash the connected input plugs
-		virtual void hashDataWindow( const GafferImage::ImagePlug *output, const Gaffer::Context *context, IECore::MurmurHash &h ) const;
-		virtual void hashChannelNames( const GafferImage::ImagePlug *output, const Gaffer::Context *context, IECore::MurmurHash &h ) const;
-		virtual void hashChannelData( const GafferImage::ImagePlug *output, const Gaffer::Context *context, IECore::MurmurHash &h ) const;
+		virtual void hashFlatDataWindow( const GafferImage::ImagePlug *output, const Gaffer::Context *context, IECore::MurmurHash &h ) const;
+		virtual void hashFlatChannelNames( const GafferImage::ImagePlug *output, const Gaffer::Context *context, IECore::MurmurHash &h ) const;
+		virtual void hashFlatChannelData( const GafferImage::ImagePlug *output, const Gaffer::Context *context, IECore::MurmurHash &h ) const;
 
 		/// Sets the data window to the union of all of the data windows.
-		virtual Imath::Box2i computeDataWindow( const Gaffer::Context *context, const ImagePlug *parent ) const;
+		virtual Imath::Box2i computeFlatDataWindow( const Gaffer::Context *context, const ImagePlug *parent ) const;
 		/// Creates a union of all of the connected inputs channelNames.
-		virtual IECore::ConstStringVectorDataPtr computeChannelNames( const Gaffer::Context *context, const ImagePlug *parent ) const;
+		virtual IECore::ConstStringVectorDataPtr computeFlatChannelNames( const Gaffer::Context *context, const ImagePlug *parent ) const;
 		/// Implemented to call doMergeOperation according to operationPlug()
-		virtual IECore::ConstFloatVectorDataPtr computeChannelData( const std::string &channelName, const Imath::V2i &tileOrigin, const Gaffer::Context *context, const ImagePlug *parent ) const;
+		virtual IECore::ConstFloatVectorDataPtr computeFlatChannelData( const std::string &channelName, const Imath::V2i &tileOrigin, const Gaffer::Context *context, const ImagePlug *parent ) const;
 
 	private :
 

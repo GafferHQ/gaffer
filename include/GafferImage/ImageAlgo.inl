@@ -262,6 +262,35 @@ class TileChannelInputIterator
 
 };
 
+class ChannelInputIterator
+{
+	public:
+		typedef boost::tuple<size_t> Result;
+
+		ChannelInputIterator(
+				const std::vector<std::string> &channelNames
+			) :
+				m_channelNames( channelNames ),
+				nextChannelIndex( 0 )
+		{}
+
+		bool finished()
+		{
+			return nextChannelIndex <= m_channelNames.size();
+		}
+
+		Result next()
+		{
+			size_t returnChannelIndex( nextChannelIndex++ );
+
+			return Result( returnChannelIndex );
+		}
+
+	private:
+		const std::vector<std::string> &m_channelNames;
+		size_t nextChannelIndex;
+};
+
 template <class InputIterator>
 class TileInputFilter
 {
@@ -284,12 +313,12 @@ class TileInputFilter
 		InputIterator &m_it;
 };
 
-template<class TileFunctor>
-class TileFunctorFilter
+template<class ProcessTileFunctor>
+class ProcessTileFunctorFilter
 {
 	public:
-		TileFunctorFilter(
-				TileFunctor &functor,
+		ProcessTileFunctorFilter(
+				ProcessTileFunctor &functor,
 				const ImagePlug *imagePlug,
 				const Imath::V2i &tilesOrigin,
 				const Gaffer::Context *context
@@ -300,8 +329,8 @@ class TileFunctorFilter
 				m_parentContext( context )
 		{}
 
-		TileFunctorFilter(
-				TileFunctor &functor,
+		ProcessTileFunctorFilter(
+				ProcessTileFunctor &functor,
 				const ImagePlug *imagePlug,
 				const std::vector<std::string> &channelNames,
 				const Imath::V2i &tilesOrigin,
@@ -314,7 +343,7 @@ class TileFunctorFilter
 				m_parentContext( context )
 		{}
 
-		boost::tuple<size_t, Imath::V2i, typename TileFunctor::Result> operator()( boost::tuple<size_t, Imath::V2i> &it ) const
+		boost::tuple<size_t, Imath::V2i, typename ProcessTileFunctor::Result> operator()( boost::tuple<size_t, Imath::V2i> &it ) const
 		{
 			Gaffer::ContextPtr context = new Gaffer::Context( *m_parentContext, Gaffer::Context::Borrowed );
 			Gaffer::Context::Scope scope( context.get() );
@@ -323,12 +352,12 @@ class TileFunctorFilter
 			context->set( ImagePlug::tileOriginContextName, tileOrigin );
 			context->set( ImagePlug::channelNameContextName, m_channelNames[boost::get<0>( it )] );
 
-			typename TileFunctor::Result result = m_functor( m_imagePlug, m_channelNames[boost::get<0>( it )], tileOrigin );
+			typename ProcessTileFunctor::Result result = m_functor( m_imagePlug, m_channelNames[boost::get<0>( it )], tileOrigin );
 
-			return boost::tuple<size_t, Imath::V2i, typename TileFunctor::Result>( boost::get<0>( it ), boost::get<1>( it ), result );
+			return boost::tuple<size_t, Imath::V2i, typename ProcessTileFunctor::Result>( boost::get<0>( it ), boost::get<1>( it ), result );
 		}
 
-		boost::tuple<Imath::V2i, typename TileFunctor::Result> operator()( boost::tuple<Imath::V2i> &it ) const
+		boost::tuple<Imath::V2i, typename ProcessTileFunctor::Result> operator()( boost::tuple<Imath::V2i> &it ) const
 		{
 			Gaffer::ContextPtr context = new Gaffer::Context( *m_parentContext, Gaffer::Context::Borrowed );
 			Gaffer::Context::Scope scope( context.get() );
@@ -336,25 +365,115 @@ class TileFunctorFilter
 			const Imath::V2i tileOrigin = m_tilesOrigin + ( boost::get<0>( it ) * ImagePlug::tileSize() );
 			context->set( ImagePlug::tileOriginContextName, tileOrigin );
 
-			typename TileFunctor::Result result = m_functor( m_imagePlug, tileOrigin );
+			typename ProcessTileFunctor::Result result = m_functor( m_imagePlug, tileOrigin );
 
-			return boost::tuple<Imath::V2i, typename TileFunctor::Result>( boost::get<0>( it ), result );
+			return boost::tuple<Imath::V2i, typename ProcessTileFunctor::Result>( boost::get<0>( it ), result );
 		}
 
 	private:
-		TileFunctor &m_functor;
+		ProcessTileFunctor &m_functor;
 		const ImagePlug *m_imagePlug;
 		const std::vector<std::string> m_channelNames; // Don't declare as a reference, as it may not be set in the constructor
 		const Imath::V2i &m_tilesOrigin;
 		const Gaffer::Context *m_parentContext;
 };
 
-template<class GatherFunctor, class TileFunctor>
-class GatherFunctorFilter
+template<class ProcessTileChannelFunctor>
+class ProcessTileChannels
 {
 	public:
-		GatherFunctorFilter(
-				GatherFunctor &functor,
+		ProcessTileChannels(
+				ProcessTileChannelFunctor &tileChannelFunctor,
+				const ImagePlug *imagePlug,
+				const std::vector<std::string> &channelNames,
+				const Imath::V2i &tileOrigin,
+				const Gaffer::Context *context,
+				std::vector<typename ProcessTileChannelFunctor::Result> &result
+			) :
+				m_tileChannelFunctor( tileChannelFunctor ),
+				m_imagePlug( imagePlug ),
+				m_channelNames( channelNames ),
+				m_tileOrigin( tileOrigin ),
+				m_parentContext( context ),
+				m_result( result )
+		{}
+
+		void operator()( const tbb::blocked_range<size_t>& r ) const
+		{
+			Gaffer::ContextPtr context = new Gaffer::Context( *m_parentContext, Gaffer::Context::Borrowed );
+			Gaffer::Context::Scope scope( context.get() );
+
+			for( size_t channelIndex = r.begin(); channelIndex < r.end(); ++channelIndex )
+			{
+				const std::string channelName( m_channelNames[channelIndex] );
+				context->set( ImagePlug::channelNameContextName, m_channelNames[channelIndex] );
+
+				m_result[channelIndex] = m_tileChannelFunctor( m_imagePlug, m_channelNames[channelIndex], m_tileOrigin );
+			}
+		}
+
+	private:
+		ProcessTileChannelFunctor &m_tileChannelFunctor;
+		const ImagePlug *m_imagePlug;
+		const std::vector<std::string> &m_channelNames;
+		const Imath::V2i &m_tileOrigin;
+		const Gaffer::Context *m_parentContext;
+		std::vector<typename ProcessTileChannelFunctor::Result> &m_result;
+};
+
+template<class ProcessTileFunctor, class ProcessTileChannelFunctor>
+class ProcessTileChannelFunctorFilter
+{
+	public:
+		ProcessTileChannelFunctorFilter(
+				ProcessTileFunctor &tileFunctor,
+				ProcessTileChannelFunctor &tileChannelFunctor,
+				const ImagePlug *imagePlug,
+				const std::vector<std::string> &channelNames,
+				const Imath::V2i &tilesOrigin,
+				const Gaffer::Context *context
+			) :
+				m_tileFunctor( tileFunctor ),
+				m_tileChannelFunctor( tileChannelFunctor ),
+				m_imagePlug( imagePlug ),
+				m_channelNames( channelNames ),
+				m_tilesOrigin( tilesOrigin ),
+				m_parentContext( context )
+		{}
+
+		boost::tuple<Imath::V2i, typename ProcessTileFunctor::Result, std::vector<typename ProcessTileChannelFunctor::Result> > operator()( boost::tuple<Imath::V2i> &it ) const
+		{
+			Gaffer::ContextPtr context = new Gaffer::Context( *m_parentContext, Gaffer::Context::Borrowed );
+			Gaffer::Context::Scope scope( context.get() );
+
+			const Imath::V2i tileOrigin = m_tilesOrigin + ( boost::get<0>( it ) * ImagePlug::tileSize() );
+			context->set( ImagePlug::tileOriginContextName, tileOrigin );
+
+			typename ProcessTileFunctor::Result tileResult = m_tileFunctor( m_imagePlug, tileOrigin );
+			std::vector<typename ProcessTileChannelFunctor::Result> tileChannelResult;
+			tileChannelResult.resize( m_channelNames.size() );
+
+			parallel_for( tbb::blocked_range<size_t>( 0, m_channelNames.size(), 1 ),
+					  GafferImage::Detail::ProcessTileChannels<ProcessTileChannelFunctor>( m_tileChannelFunctor, m_imagePlug, m_channelNames, tileOrigin, Gaffer::Context::current(), tileChannelResult ) );
+
+			return boost::tuple<Imath::V2i, typename ProcessTileFunctor::Result, std::vector<typename ProcessTileChannelFunctor::Result> >( boost::get<0>( it ), tileResult, tileChannelResult );
+		}
+
+	private:
+		ProcessTileFunctor &m_tileFunctor;
+		ProcessTileChannelFunctor &m_tileChannelFunctor;
+		const ImagePlug *m_imagePlug;
+		const std::vector<std::string> &m_channelNames;
+		const Imath::V2i &m_tilesOrigin;
+		const Gaffer::Context *m_parentContext;
+};
+
+template<class GatherTileFunctor, class ProcessTileFunctor>
+class GatherTileFunctorFilter
+{
+	public:
+		GatherTileFunctorFilter(
+				GatherTileFunctor &functor,
 				const ImagePlug *imagePlug,
 				const Imath::V2i &tilesOrigin,
 				const Gaffer::Context *context
@@ -365,8 +484,8 @@ class GatherFunctorFilter
 				m_parentContext( context )
 		{}
 
-		GatherFunctorFilter(
-				GatherFunctor &functor,
+		GatherTileFunctorFilter(
+				GatherTileFunctor &functor,
 				const ImagePlug *imagePlug,
 				const std::vector<std::string> &channelNames,
 				const Imath::V2i &tilesOrigin,
@@ -379,7 +498,7 @@ class GatherFunctorFilter
 				m_parentContext( context )
 		{}
 
-		void operator()( boost::tuple<size_t, Imath::V2i, typename TileFunctor::Result> &it ) const
+		void operator()( boost::tuple<size_t, Imath::V2i, typename ProcessTileFunctor::Result> &it ) const
 		{
 			Gaffer::ContextPtr context = new Gaffer::Context( *m_parentContext, Gaffer::Context::Borrowed );
 			Gaffer::Context::Scope scope( context.get() );
@@ -391,7 +510,7 @@ class GatherFunctorFilter
 			m_functor( m_imagePlug, m_channelNames[boost::get<0>( it )], tileOrigin, boost::get<2>( it ) );
 		}
 
-		void operator()( boost::tuple<Imath::V2i, typename TileFunctor::Result> &it ) const
+		void operator()( boost::tuple<Imath::V2i, typename ProcessTileFunctor::Result> &it ) const
 		{
 			Gaffer::ContextPtr context = new Gaffer::Context( *m_parentContext, Gaffer::Context::Borrowed );
 			Gaffer::Context::Scope scope( context.get() );
@@ -403,10 +522,48 @@ class GatherFunctorFilter
 		}
 
 	private:
-		GatherFunctor &m_functor;
+		GatherTileFunctor &m_functor;
 		const ImagePlug *m_imagePlug;
 		const std::vector<std::string> m_channelNames; // Don't declare as a reference, as it may not be set in the constructor
 		const Imath::V2i m_tilesOrigin;
+		const Gaffer::Context *m_parentContext;
+};
+
+template<class GatherTileChannelFunctor, class ProcessTileFunctor, class ProcessTileChannelFunctor>
+class GatherTileChannelFunctorFilter
+{
+	public:
+		GatherTileChannelFunctorFilter(
+				GatherTileChannelFunctor &gatherTileChannelFunctor,
+				const ImagePlug *imagePlug,
+				const std::vector<std::string> &channelNames,
+				const Imath::V2i &tilesOrigin,
+				const Gaffer::Context *context
+			) :
+				m_gatherTileChannelFunctor( gatherTileChannelFunctor ),
+				m_imagePlug( imagePlug ),
+				m_channelNames( channelNames ),
+				m_tilesOrigin( tilesOrigin ),
+				m_parentContext( context )
+		{}
+
+		void operator()( boost::tuple<Imath::V2i, typename ProcessTileFunctor::Result, std::vector<typename ProcessTileChannelFunctor::Result> > &it) const
+		{
+			Gaffer::ContextPtr context = new Gaffer::Context( *m_parentContext, Gaffer::Context::Borrowed );
+			Gaffer::Context::Scope scope( context.get() );
+
+			const Imath::V2i tileOrigin = m_tilesOrigin + ( boost::get<0>( it ) * ImagePlug::tileSize() );
+			context->set( ImagePlug::tileOriginContextName, tileOrigin );
+
+			m_gatherTileChannelFunctor( m_imagePlug, tileOrigin, boost::get<1>( it ), boost::get<2>( it ) );
+		}
+
+
+	private:
+		GatherTileChannelFunctor &m_gatherTileChannelFunctor;
+		const ImagePlug *m_imagePlug;
+		const std::vector<std::string> &m_channelNames;
+		const Imath::V2i &m_tilesOrigin;
 		const Gaffer::Context *m_parentContext;
 };
 
@@ -492,8 +649,8 @@ inline bool channelExists( const std::vector<std::string> &channelNames, const s
 	return std::find( channelNames.begin(), channelNames.end(), channelName ) != channelNames.end();
 }
 
-template <class ThreadableFunctor>
-void parallelProcessTiles( const ImagePlug *imagePlug, ThreadableFunctor &functor, const Imath::Box2i &window )
+template <class ProcessTileFunctor>
+void parallelProcessTiles( const ImagePlug *imagePlug, ProcessTileFunctor &processTileFunctor, const Imath::Box2i &window )
 {
 	Imath::Box2i processWindow = window;
 	if( empty( processWindow ) )
@@ -509,11 +666,11 @@ void parallelProcessTiles( const ImagePlug *imagePlug, ThreadableFunctor &functo
 	const Imath::V2i numTiles = ( ImagePlug::tileOrigin( processWindow.max - Imath::V2i( 1 ) ) - tilesOrigin ) / ImagePlug::tileSize();
 
 	parallel_for( tbb::blocked_range2d<size_t>( 0, numTiles.x, 1, 0, numTiles.y, 1 ),
-			  GafferImage::Detail::ProcessTiles<ThreadableFunctor>( functor, imagePlug, tilesOrigin, Gaffer::Context::current() ) );
+			  GafferImage::Detail::ProcessTiles<ProcessTileFunctor>( processTileFunctor, imagePlug, tilesOrigin, Gaffer::Context::current() ) );
 }
 
-template <class ThreadableFunctor>
-void parallelProcessTiles( const ImagePlug *imagePlug, const std::vector<std::string> &channelNames, ThreadableFunctor &functor, const Imath::Box2i &window )
+template <class ProcessTileFunctor>
+void parallelProcessTiles( const ImagePlug *imagePlug, const std::vector<std::string> &channelNames, ProcessTileFunctor &processTileFunctor, const Imath::Box2i &window )
 {
 	Imath::Box2i processWindow = window;
 	if( empty( processWindow ) )
@@ -529,11 +686,11 @@ void parallelProcessTiles( const ImagePlug *imagePlug, const std::vector<std::st
 	Imath::V2i numTiles = ( ( ImagePlug::tileOrigin( processWindow.max - Imath::V2i( 1 ) ) - tilesOrigin ) / ImagePlug::tileSize() ) + Imath::V2i( 1 );
 
 	parallel_for( tbb::blocked_range3d<size_t>( 0, channelNames.size(), 1, 0, numTiles.x, 1, 0, numTiles.y, 1 ),
-			  GafferImage::Detail::ProcessTiles<ThreadableFunctor>( functor, imagePlug, channelNames, tilesOrigin, Gaffer::Context::current() ) );
+			  GafferImage::Detail::ProcessTiles<ProcessTileFunctor>( processTileFunctor, imagePlug, channelNames, tilesOrigin, Gaffer::Context::current() ) );
 }
 
-template <class TileFunctor, class GatherFunctor>
-void parallelGatherTiles( const ImagePlug *imagePlug, TileFunctor &tileFunctor, GatherFunctor &gatherFunctor, const Imath::Box2i &window, TileOrder tileOrder )
+template <class ProcessTileFunctor, class GatherTileFunctor>
+void parallelProcessTilesGather( const ImagePlug *imagePlug, ProcessTileFunctor &processTileFunctor, GatherTileFunctor &gatherTileFunctor, const Imath::Box2i &window, TileOrder tileOrder )
 {
 	Imath::Box2i processWindow = window;
 	if( empty( processWindow ) )
@@ -555,19 +712,19 @@ void parallelGatherTiles( const ImagePlug *imagePlug, TileFunctor &tileFunctor, 
 			tbb::filter::serial,
 			GafferImage::Detail::TileInputFilter<GafferImage::Detail::TileInputIterator>( inputIterator )
 		) &
-		tbb::make_filter<boost::tuple<Imath::V2i>, boost::tuple<Imath::V2i, typename TileFunctor::Result> >(
+		tbb::make_filter<boost::tuple<Imath::V2i>, boost::tuple<Imath::V2i, typename ProcessTileFunctor::Result> >(
 			tbb::filter::parallel,
-			GafferImage::Detail::TileFunctorFilter<TileFunctor>( tileFunctor, imagePlug, tilesOrigin, Gaffer::Context::current() )
+			GafferImage::Detail::ProcessTileFunctorFilter<ProcessTileFunctor>( processTileFunctor, imagePlug, tilesOrigin, Gaffer::Context::current() )
 		) &
-		tbb::make_filter<boost::tuple<Imath::V2i, typename TileFunctor::Result>, void>(
+		tbb::make_filter<boost::tuple<Imath::V2i, typename ProcessTileFunctor::Result>, void>(
 			tileOrder == Unordered ? tbb::filter::serial_out_of_order : tbb::filter::serial_in_order,
-			GafferImage::Detail::GatherFunctorFilter<GatherFunctor, TileFunctor>( gatherFunctor, imagePlug, tilesOrigin, Gaffer::Context::current() )
+			GafferImage::Detail::GatherTileFunctorFilter<GatherTileFunctor, ProcessTileFunctor>( gatherTileFunctor, imagePlug, tilesOrigin, Gaffer::Context::current() )
 		)
 	);
 }
 
-template <class TileFunctor, class GatherFunctor>
-void parallelGatherTiles( const ImagePlug *imagePlug, const std::vector<std::string> &channelNames, TileFunctor &tileFunctor, GatherFunctor &gatherFunctor, const Imath::Box2i &window, TileOrder tileOrder )
+template <class ProcessTileFunctor, class GatherTileFunctor>
+void parallelProcessTilesGather( const ImagePlug *imagePlug, const std::vector<std::string> &channelNames, ProcessTileFunctor &processTileFunctor, GatherTileFunctor &gatherTileFunctor, const Imath::Box2i &window, TileOrder tileOrder )
 {
 	Imath::Box2i processWindow = window;
 	if( empty( processWindow ) )
@@ -589,15 +746,192 @@ void parallelGatherTiles( const ImagePlug *imagePlug, const std::vector<std::str
 			tbb::filter::serial_in_order,
 			GafferImage::Detail::TileInputFilter<GafferImage::Detail::TileChannelInputIterator>( inputIterator )
 		) &
-		tbb::make_filter<boost::tuple<size_t, Imath::V2i>, boost::tuple<size_t, Imath::V2i, typename TileFunctor::Result> >(
+		tbb::make_filter<boost::tuple<size_t, Imath::V2i>, boost::tuple<size_t, Imath::V2i, typename ProcessTileFunctor::Result> >(
 			tbb::filter::parallel,
-			GafferImage::Detail::TileFunctorFilter<TileFunctor>( tileFunctor, imagePlug, channelNames, tilesOrigin, Gaffer::Context::current() )
+			GafferImage::Detail::ProcessTileFunctorFilter<ProcessTileFunctor>( processTileFunctor, imagePlug, channelNames, tilesOrigin, Gaffer::Context::current() )
 		) &
-		tbb::make_filter<boost::tuple<size_t, Imath::V2i, typename TileFunctor::Result>, void>(
+		tbb::make_filter<boost::tuple<size_t, Imath::V2i, typename ProcessTileFunctor::Result>, void>(
 			tileOrder == Unordered ? tbb::filter::serial_out_of_order : tbb::filter::serial_in_order,
-			GafferImage::Detail::GatherFunctorFilter<GatherFunctor, TileFunctor>( gatherFunctor, imagePlug, channelNames, tilesOrigin, Gaffer::Context::current() )
+			GafferImage::Detail::GatherTileFunctorFilter<GatherTileFunctor, ProcessTileFunctor>( gatherTileFunctor, imagePlug, channelNames, tilesOrigin, Gaffer::Context::current() )
 		)
 	);
+}
+
+template <class ProcessTileFunctor, class ProcessTileChannelFunctor, class GatherTileChannelFunctor>
+void parallelProcessTilesChannelsGather( const ImagePlug *imagePlug, const std::vector<std::string> &channelNames, ProcessTileFunctor &processTileFunctor, ProcessTileChannelFunctor &processTileChannelFunctor, GatherTileChannelFunctor &gatherTileChannelFunctor, const Imath::Box2i &window, TileOrder tileOrder )
+{
+	Imath::Box2i processWindow = window;
+	if( empty( processWindow ) )
+	{
+		processWindow = imagePlug->dataWindowPlug()->getValue();
+		if( empty( processWindow ) )
+		{
+			return;
+		}
+	}
+
+	const Imath::V2i tilesOrigin = ImagePlug::tileOrigin( processWindow.min );
+	const Imath::V2i numTiles = ( ImagePlug::tileOrigin( processWindow.max - Imath::V2i( 1 ) ) - tilesOrigin ) / ImagePlug::tileSize() + Imath::V2i( 1 );
+
+	GafferImage::Detail::TileInputIterator inputIterator( numTiles, tileOrder );
+
+	parallel_pipeline( tbb::task_scheduler_init::default_num_threads(),
+		tbb::make_filter<void, boost::tuple<Imath::V2i> >(
+			tbb::filter::serial_in_order,
+			GafferImage::Detail::TileInputFilter<GafferImage::Detail::TileInputIterator>( inputIterator )
+		) &
+		tbb::make_filter<boost::tuple<Imath::V2i>, boost::tuple<Imath::V2i, typename ProcessTileFunctor::Result, std::vector<typename ProcessTileChannelFunctor::Result> > >(
+			tbb::filter::parallel,
+			GafferImage::Detail::ProcessTileChannelFunctorFilter<ProcessTileFunctor, ProcessTileChannelFunctor>( processTileFunctor, processTileChannelFunctor, imagePlug, channelNames, tilesOrigin, Gaffer::Context::current() )
+		) &
+		tbb::make_filter<boost::tuple<Imath::V2i, typename ProcessTileFunctor::Result, std::vector<typename ProcessTileChannelFunctor::Result> >, void>(
+			tbb::filter::serial_in_order,
+			GafferImage::Detail::GatherTileChannelFunctorFilter<GatherTileChannelFunctor, ProcessTileFunctor, ProcessTileChannelFunctor>( gatherTileChannelFunctor, imagePlug, channelNames, tilesOrigin, Gaffer::Context::current() )
+		)
+	);
+}
+
+inline int sampleCount( const std::vector<int>::const_iterator &sampleOffset, const std::vector<int>::const_iterator &sampleOffsetBegin )
+{
+	if( sampleOffset == sampleOffsetBegin )
+	{
+		return (*sampleOffset);
+	}
+	else
+	{
+		return (*sampleOffset) - (*(sampleOffset-1));
+	}
+}
+
+inline int sampleCount( const std::vector<int> &sampleOffsets, const Imath::V2i &tilePos )
+{
+	return sampleCount( sampleOffsets.begin() + tileIndex( tilePos ), sampleOffsets.begin() );
+}
+
+template<class T>
+inline typename SampleRange<T>::Type sampleRange( std::vector<T> &channelData, const std::vector<int>::const_iterator &sampleOffset, const std::vector<int>::const_iterator &sampleOffsetBegin )
+{
+	if( sampleOffset == sampleOffsetBegin )
+	{
+		return boost::make_iterator_range(channelData.begin(), channelData.begin() + (*sampleOffset));
+	}
+	else
+	{
+		return boost::make_iterator_range(channelData.begin() + (*(sampleOffset-1)), channelData.begin() + (*sampleOffset));
+	}
+}
+
+template<class T>
+inline typename SampleRange<T>::Type sampleRange( std::vector<T> &channelData, const std::vector<int> &sampleOffsets, const Imath::V2i &tilePos )
+{
+	return sampleRange( channelData, sampleOffsets.begin() + tileIndex( tilePos ), sampleOffsets.begin() );
+}
+
+template<class T>
+inline typename ConstSampleRange<T>::Type sampleRange( const std::vector<T> &channelData, const std::vector<int>::const_iterator &sampleOffset, const std::vector<int>::const_iterator &sampleOffsetBegin )
+{
+	if( sampleOffset == sampleOffsetBegin )
+	{
+		return boost::make_iterator_range(channelData.begin(), channelData.begin() + (*sampleOffset));
+	}
+	else
+	{
+		return boost::make_iterator_range(channelData.begin() + (*(sampleOffset-1)), channelData.begin() + (*sampleOffset));
+	}
+}
+
+template<class T>
+inline typename ConstSampleRange<T>::Type sampleRange( const std::vector<T> &channelData, const std::vector<int> &sampleOffsets, const Imath::V2i &tilePos )
+{
+	return sampleRange( channelData, sampleOffsets.begin() + tileIndex( tilePos ), sampleOffsets.begin() );
+}
+
+inline std::string channelAlpha( const std::string &channelName, const std::vector<std::string> &channelNames )
+{
+	std::vector<std::string> layers;
+	std::string layerName, baseName, alphaName;
+
+	std::size_t layerSplit = channelName.find_last_of( "." );
+
+	std::string chan;
+
+	if( layerSplit == std::string::npos )
+	{
+		baseName = channelName;
+	}
+	else
+	{
+		baseName = channelName.substr( layerSplit+1 );
+
+		while( layerSplit != std::string::npos )
+		{
+			layers.push_back( channelName.substr( 0, layerSplit ) );
+			layerSplit = channelName.find_last_of( ".", layerSplit );
+		}
+	}
+
+	// These base channels do not have associated alpha channels.
+	if( baseName == "A" ||
+		baseName == "AR" ||
+		baseName == "AG" ||
+		baseName == "AB" ||
+		baseName == "Z" ||
+		baseName == "ZBack" )
+	{
+		return "";
+	}
+	else if( baseName == "R" )
+	{
+		alphaName = "AR";
+	}
+	else if( baseName == "G" )
+	{
+		alphaName = "AG";
+	}
+	else if( baseName == "B" )
+	{
+		alphaName = "AB";
+	}
+
+	for( std::vector<std::string>::iterator layerIt = layers.begin(); layerIt != layers.end(); ++layerIt )
+	{
+		if( ! alphaName.empty() )
+		{
+			chan = (*layerIt) + "." + alphaName;
+			if( std::find( channelNames.begin(), channelNames.end(), chan ) != channelNames.end() )
+			{
+				return chan;
+			}
+		}
+
+		chan = (*layerIt) + ".A";
+		if( std::find( channelNames.begin(), channelNames.end(), chan ) != channelNames.end() )
+		{
+			return chan;
+		}
+	}
+
+	if( ! alphaName.empty() )
+	{
+		chan = alphaName;
+		if( std::find( channelNames.begin(), channelNames.end(), chan ) != channelNames.end() )
+		{
+			return chan;
+		}
+	}
+
+	chan = "A";
+	if( std::find( channelNames.begin(), channelNames.end(), chan ) != channelNames.end() )
+	{
+		return chan;
+	}
+
+	return "";
+}
+
+inline int tileIndex( const Imath::V2i &tilePos )
+{
+	return tilePos.x + ( tilePos.y * ImagePlug::tileSize() );
 }
 
 } // namespace GafferImage

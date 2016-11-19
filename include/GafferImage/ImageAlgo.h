@@ -38,6 +38,7 @@
 #define GAFFERIMAGE_IMAGEALGO_H
 
 #include <vector>
+#include "boost/range.hpp"
 #include "OpenEXR/ImathBox.h"
 
 namespace GafferImage
@@ -92,44 +93,98 @@ enum TileOrder
 };
 
 // Call the functor in parallel, once per tile
-template <class ThreadableFunctor>
+template <class ProcessTileFunctor>
 void parallelProcessTiles(
 	const ImagePlug *imagePlug,
-	ThreadableFunctor &functor, // Signature : void functor( const ImagePlug *imagePlug, const V2i &tileOrigin )
+	ProcessTileFunctor &functor, // Signature : void functor( const ImagePlug *imagePlug, const V2i &tileOrigin )
 	const Imath::Box2i &window = Imath::Box2i() // Uses dataWindow if not specified.
 );
 
 // Call the functor in parallel, once per tile per channel
-template <class ThreadableFunctor>
+template <class ProcessTileFunctor>
 void parallelProcessTiles(
 	const ImagePlug *imagePlug,
 	const std::vector<std::string> &channelNames,
-	ThreadableFunctor &functor, // Signature : void functor( const ImagePlug *imagePlug, const string &channelName, const V2i &tileOrigin )
+	ProcessTileFunctor &functor, // Signature : void functor( const ImagePlug *imagePlug, const string &channelName, const V2i &tileOrigin )
 	const Imath::Box2i &window = Imath::Box2i() // Uses dataWindow if not specified.
 );
 
-// Process all tiles in parallel using TileFunctor, passing the
-// results in series to GatherFunctor.
-template <class TileFunctor, class GatherFunctor>
-void parallelGatherTiles(
+// Process all tiles in parallel using processTileFunctor, passing the
+// results in series to gatherTileFunctor.
+template <class ProcessTileFunctor, class GatherTileFunctor>
+void parallelProcessTilesGather(
 	const ImagePlug *image,
-	TileFunctor &tileFunctor, // Signature : TileFunctor::Result tileFunctor( const ImagePlug *imagePlug, const V2i &tileOrigin )
-	GatherFunctor &gatherFunctor, // Signature : void gatherFunctor( const ImagePlug *imagePlug, const V2i &tileOrigin, TileFunctor::Result )
+	ProcessTileFunctor &processTileFunctor, // Signature : ProcessTileFunctor::Result processTileFunctor( const ImagePlug *imagePlug, const V2i &tileOrigin )
+	GatherTileFunctor &gatherTileFunctor, // Signature : void gatherTileFunctor( const ImagePlug *imagePlug, const V2i &tileOrigin, ProcessTileFunctor::Result )
 	const Imath::Box2i &window = Imath::Box2i(), // Uses dataWindow if not specified.
 	TileOrder tileOrder = Unordered
 );
 
-// Process all tiles in parallel using TileFunctor, passing the
-// results in series to GatherFunctor.
-template <class TileFunctor, class GatherFunctor>
-void parallelGatherTiles(
+// Process all channels per tile in parallel using processTileFunctor,
+// passing the results in series to gatherTileFunctor.
+template <class ProcessTileFunctor, class GatherTileFunctor>
+void parallelProcessTilesGather(
 	const ImagePlug *image,
 	const std::vector<std::string> &channelNames,
-	TileFunctor &tileFunctor, // Signature : TileFunctor::Result tileFunctor( const ImagePlug *imagePlug, const string &channelName, const V2i &tileOrigin )
-	GatherFunctor &gatherFunctor, // Signature : void gatherFunctor( const ImagePlug *imagePlug, const string &channelName, const V2i &tileOrigin, TileFunctor::Result )
+	ProcessTileFunctor &processTileFunctor, // Signature : ProcessTileFunctor::Result processTileFunctor( const ImagePlug *imagePlug, const string &channelName, const V2i &tileOrigin )
+	GatherTileFunctor &gatherTileFunctor, // Signature : void gatherTileFunctor( const ImagePlug *imagePlug, const string &channelName, const V2i &tileOrigin, ProcessTileFunctor::Result )
 	const Imath::Box2i &window = Imath::Box2i(), // Uses dataWindow if not specified.
 	TileOrder tileOrder = Unordered
 );
+
+// Process all tiles in parallel using tileFunctor, followed by all
+// channels per tile in parallel using tileChannelFunctor, then
+// pass all the results in series to gatherFunctor.
+template <class ProcessTileFunctor, class ProcessTileChannelFunctor, class GatherTileChannelFunctor>
+void parallelProcessTilesChannelsGather(
+	const ImagePlug *image,
+	const std::vector<std::string> &channelNames,
+	ProcessTileFunctor &processTileFunctor, // Signature: ProcessTileFunctor::Result tileFunctor( const ImagePlug *imagePlug, const V2i &tileOrigin )
+	ProcessTileChannelFunctor &processTileChannelFunctor, // Signature: ProcessTileChannelFunctor::Result tileChannelFunctor( const ImagePlug *imagePlug, const string &channelName, const V2i &tileOrigin )
+	GatherTileChannelFunctor &gatherTileChannelFunctor, // Signature : void gatherTileChannelFunctor( const ImagePlug *imagePlug, const V2i &tileOrigin, ProcessTileFunctor::Result, vector<ProcessTileChannelFunctor::Result> )
+	const Imath::Box2i &window = Imath::Box2i(), // Uses dataWindow if not specified
+	TileOrder tileOrder = Unordered
+);
+
+template <typename T>
+struct SampleRange
+{
+    typedef boost::iterator_range<typename std::vector<T>::iterator> Type;
+};
+
+template <typename T>
+struct ConstSampleRange
+{
+    typedef boost::iterator_range<typename std::vector<T>::const_iterator> Type;
+};
+
+typedef SampleRange<float>::Type FloatSampleRange;
+typedef SampleRange<int>::Type IntSampleRange;
+
+typedef ConstSampleRange<float>::Type ConstFloatSampleRange;
+typedef ConstSampleRange<int>::Type ConstIntSampleRange;
+
+/// Get the number of samples that are in a specific pixel
+inline int sampleCount( const std::vector<int>::const_iterator &sampleOffset, const std::vector<int>::const_iterator &sampleOffsetBegin );
+inline int sampleCount( const std::vector<int> &sampleOffsets, const Imath::V2i &tilePos );
+
+/// Get an iterator range for the samples defined by the pixel ID.
+template<typename T>
+inline typename SampleRange<T>::Type sampleRange( std::vector<T> &channelData, const std::vector<int>::const_iterator &sampleOffset, const std::vector<int>::const_iterator &sampleOffsetBegin );
+template<typename T>
+inline typename SampleRange<T>::Type sampleRange( std::vector<T> &channelData, const std::vector<int> &sampleOffsets, const Imath::V2i &tilePos );
+
+template<typename T>
+inline typename ConstSampleRange<T>::Type sampleRange( const std::vector<T> &channelData, const std::vector<int>::const_iterator &sampleOffset, const std::vector<int>::const_iterator &sampleOffsetBegin );
+template<typename T>
+inline typename ConstSampleRange<T>::Type sampleRange( const std::vector<T> &channelData, const std::vector<int> &sampleOffsets, const Imath::V2i &tilePos );
+
+/// Get the existing channel from channelNames that should be used as the associated
+/// alpha channel for channelName. If this returns an empty string, then there is either
+/// no alpha channel in channelNames or channelName is an alpha or depth channel.
+inline std::string channelAlpha( const std::string &channelName, const std::vector<std::string> &channelNames );
+
+inline int tileIndex( const Imath::V2i &tilePos );
 
 } // namespace GafferImage
 

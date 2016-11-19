@@ -68,6 +68,15 @@ ImageStats::ImageStats( const std::string &name )
 	addChild( new Color4fPlug( "average", Gaffer::Plug::Out ) );
 	addChild( new Color4fPlug( "min", Gaffer::Plug::Out ) );
 	addChild( new Color4fPlug( "max", Gaffer::Plug::Out ) );
+
+	addChild( new ImagePlug( "__flattenedIn", Plug::In, Plug::Default & ~Plug::Serialisable ) );
+
+	ImageStatePtr imageStateNode = new ImageState( "__imageState" );
+	addChild( imageStateNode );
+
+	imageStateNode->inPlug()->setInput( inPlug() );
+	imageStateNode->deepStatePlug()->setValue( ImagePlug::Flat );
+	flattenedInPlug()->setInput( imageStateNode->outPlug() );
 }
 
 ImageStats::~ImageStats()
@@ -134,6 +143,26 @@ const Color4fPlug *ImageStats::maxPlug() const
 	return getChild<Color4fPlug>( g_firstPlugIndex + 5 );
 }
 
+ImagePlug *ImageStats::flattenedInPlug()
+{
+	return getChild<ImagePlug>( g_firstPlugIndex + 6 );
+}
+
+const ImagePlug *ImageStats::flattenedInPlug() const
+{
+	return getChild<ImagePlug>( g_firstPlugIndex + 6 );
+}
+
+ImageState *ImageStats::imageState()
+{
+	return getChild<ImageState>( g_firstPlugIndex + 4 );
+}
+
+const ImageState *ImageStats::imageState() const
+{
+	return getChild<ImageState>( g_firstPlugIndex + 4 );
+}
+
 void ImageStats::parentChanging( Gaffer::GraphComponent *newParent )
 {
 	ComputeNode::parentChanging( newParent );
@@ -157,7 +186,7 @@ void ImageStats::affects( const Gaffer::Plug *input, AffectedPlugsContainer &out
 	ComputeNode::affects( input, outputs );
 	if (
 			input == channelsPlug() ||
-			input->parent<ImagePlug>() == inPlug() ||
+			input->parent<ImagePlug>() == flattenedInPlug() ||
 			regionOfInterestPlug()->isAncestorOf( input )
 	   )
 	{
@@ -195,10 +224,10 @@ void ImageStats::hash( const ValuePlug *output, const Context *context, IECore::
 
 	const Imath::Box2i regionOfInterest( regionOfInterestPlug()->getValue() );
 	regionOfInterestPlug()->hash( h );
-	inPlug()->channelNamesPlug()->hash( h );
-	inPlug()->dataWindowPlug()->hash( h );
+	flattenedInPlug()->channelNamesPlug()->hash( h );
+	flattenedInPlug()->dataWindowPlug()->hash( h );
 
-	IECore::ConstStringVectorDataPtr channelNamesData = inPlug()->channelNamesPlug()->getValue();
+	IECore::ConstStringVectorDataPtr channelNamesData = flattenedInPlug()->channelNamesPlug()->getValue();
 	std::vector<std::string> maskChannels = channelNamesData->readable();
 	channelsPlug()->maskChannels( maskChannels );
 	const int nChannels( maskChannels.size() );
@@ -213,7 +242,7 @@ void ImageStats::hash( const ValuePlug *output, const Context *context, IECore::
 		if ( !channel.empty() )
 		{
 			h.append( channel );
-			Sampler s( inPlug(), channel, regionOfInterest );
+			Sampler s( flattenedInPlug(), channel, regionOfInterest );
 			s.hash( h );
 			return;
 		}
@@ -236,7 +265,7 @@ void ImageStats::hash( const ValuePlug *output, const Context *context, IECore::
 
 void ImageStats::channelNameFromOutput( const ValuePlug *output, std::string &channelName ) const
 {
-	IECore::ConstStringVectorDataPtr channelNamesData = inPlug()->channelNamesPlug()->getValue();
+	IECore::ConstStringVectorDataPtr channelNamesData = flattenedInPlug()->channelNamesPlug()->getValue();
 	std::vector<std::string> maskChannels = channelNamesData->readable();
 	channelsPlug()->maskChannels( maskChannels );
 
@@ -302,7 +331,7 @@ void ImageStats::compute( ValuePlug *output, const Context *context ) const
 	const int channelIndex = colorIndex( channelName );
 
 	// Loop over the ROI and compute the min, max and average channel values and then set our outputs.
-	Sampler s( inPlug(), channelName, regionOfInterest );
+	Sampler s( flattenedInPlug(), channelName, regionOfInterest );
 
 	float min = Imath::limits<float>::max();
 	float max = Imath::limits<float>::min();

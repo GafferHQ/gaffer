@@ -46,6 +46,11 @@ Sampler::Sampler( const GafferImage::ImagePlug *plug, const std::string &channel
 	m_channelName( channelName ),
 	m_boundingMode( boundingMode )
 {
+	if( m_plug->deepStatePlug()->getValue() != ImagePlug::Flat )
+	{
+		throw IECore::Exception( "Sampler does not support non-Flat image data" );
+	}
+
 	m_dataWindow = m_plug->dataWindowPlug()->getValue();
 
 	// We only store the sample window to be able to perform

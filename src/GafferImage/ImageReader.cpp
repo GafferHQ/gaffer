@@ -318,7 +318,9 @@ void ImageReader::compute( ValuePlug *output, const Context *context ) const
 	else if(
 		output == outPlug()->metadataPlug() ||
 		output == outPlug()->channelNamesPlug() ||
-		output == outPlug()->channelDataPlug()
+		output == outPlug()->channelDataPlug() ||
+		output == outPlug()->sampleOffsetsPlug() ||
+		output == outPlug()->deepStatePlug()
 	)
 	{
 		computeMaskedOutput( output, context );

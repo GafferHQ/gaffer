@@ -35,13 +35,14 @@
 //
 //////////////////////////////////////////////////////////////////////////
 
-#ifndef GAFFER_IMAGEPLUG_H
-#define GAFFER_IMAGEPLUG_H
+#ifndef GAFFERIMAGE_IMAGEPLUG_H
+#define GAFFERIMAGE_IMAGEPLUG_H
 
 #include "IECore/ImagePrimitive.h"
 
 #include "Gaffer/TypedObjectPlug.h"
 #include "Gaffer/TypedPlug.h"
+#include "Gaffer/NumericPlug.h"
 
 #include "GafferImage/TypeIds.h"
 #include "GafferImage/AtomicFormatPlug.h"
@@ -80,6 +81,16 @@ class ImagePlug : public Gaffer::ValuePlug
 
 	public :
 
+		enum DeepState
+		{
+			Messy = 0,
+			Sorted = 1 << 0,
+			NonOverlapping = 1 << 1,
+			SingleSample = 1 << 2,
+			Tidy = Sorted | NonOverlapping,
+			Flat = Tidy | SingleSample
+		};
+
 		ImagePlug( const std::string &name=defaultName<ImagePlug>(), Direction direction=In, unsigned flags=Default );
 		virtual ~ImagePlug();
 
@@ -101,6 +112,10 @@ class ImagePlug : public Gaffer::ValuePlug
 		const Gaffer::AtomicBox2iPlug *dataWindowPlug() const;
 		Gaffer::CompoundObjectPlug *metadataPlug();
 		const Gaffer::CompoundObjectPlug *metadataPlug() const;
+		Gaffer::IntPlug *deepStatePlug();
+		const Gaffer::IntPlug *deepStatePlug() const;
+		Gaffer::IntVectorDataPlug *sampleOffsetsPlug();
+		const Gaffer::IntVectorDataPlug *sampleOffsetsPlug() const;
 		Gaffer::StringVectorDataPlug *channelNamesPlug();
 		const Gaffer::StringVectorDataPlug *channelNamesPlug() const;
 		Gaffer::FloatVectorDataPlug *channelDataPlug();
@@ -125,6 +140,8 @@ class ImagePlug : public Gaffer::ValuePlug
 		//@{
 		IECore::ConstFloatVectorDataPtr channelData( const std::string &channelName, const Imath::V2i &tileOrigin ) const;
 		IECore::MurmurHash channelDataHash( const std::string &channelName, const Imath::V2i &tileOrigin ) const;
+		IECore::ConstIntVectorDataPtr sampleOffsets( const Imath::V2i &tileOrigin ) const;
+		IECore::MurmurHash sampleOffsetsHash( const Imath::V2i &tileOrigin ) const;
 		/// Returns a pointer to an IECore::ImagePrimitive. Note that the image's
 		/// coordinate system will be converted to the OpenEXR and Cortex specification
 		/// and have it's origin in the top left of it's display window with the positive
@@ -136,6 +153,9 @@ class ImagePlug : public Gaffer::ValuePlug
 		//@}
 
 		static int tileSize() { return 64; };
+		static const IECore::IntVectorData *emptyTileSampleOffsets();
+		static const IECore::IntVectorData *flatTileSampleOffsets();
+		static const IECore::FloatVectorData *emptyTile();
 		static const IECore::FloatVectorData *blackTile();
 		static const IECore::FloatVectorData *whiteTile();
 
@@ -167,4 +187,4 @@ typedef Gaffer::FilteredRecursiveChildIterator<Gaffer::PlugPredicate<Gaffer::Plu
 
 } // namespace GafferImage
 
-#endif // GAFFER_IMAGEPLUG_H
+#endif // GAFFERIMAGE_IMAGEPLUG_H

@@ -38,7 +38,7 @@
 #ifndef GAFFEROSL_OSLIMAGE_H
 #define GAFFEROSL_OSLIMAGE_H
 
-#include "GafferImage/ImageProcessor.h"
+#include "GafferImage/FlatImageProcessor.h"
 
 #include "GafferScene/ShaderPlug.h"
 
@@ -47,7 +47,7 @@
 namespace GafferOSL
 {
 
-class OSLImage : public GafferImage::ImageProcessor
+class OSLImage : public GafferImage::FlatImageProcessor
 {
 
 	public :
@@ -55,7 +55,7 @@ class OSLImage : public GafferImage::ImageProcessor
 		OSLImage( const std::string &name=defaultName<OSLImage>() );
 		virtual ~OSLImage();
 
-		IE_CORE_DECLARERUNTIMETYPEDEXTENSION( GafferOSL::OSLImage, OSLImageTypeId, GafferImage::ImageProcessor );
+		IE_CORE_DECLARERUNTIMETYPEDEXTENSION( GafferOSL::OSLImage, OSLImageTypeId, GafferImage::FlatImageProcessor );
 
 		GafferScene::ShaderPlug *shaderPlug();
 		const GafferScene::ShaderPlug *shaderPlug() const;
@@ -69,18 +69,18 @@ class OSLImage : public GafferImage::ImageProcessor
 		virtual bool enabled() const;
 
 		// Reimplemented to throw. Because they are connected as direct pass-throughs these methods should never be called.
-		virtual void hashDataWindow( const GafferImage::ImagePlug *output, const Gaffer::Context *context, IECore::MurmurHash &h ) const;
-		virtual void hashMetadata( const GafferImage::ImagePlug *parent, const Gaffer::Context *context, IECore::MurmurHash &h ) const;
-		virtual Imath::Box2i computeDataWindow( const Gaffer::Context *context, const GafferImage::ImagePlug *parent ) const;
-		virtual IECore::ConstCompoundObjectPtr computeMetadata( const Gaffer::Context *context, const GafferImage::ImagePlug *parent ) const;
+		virtual void hashFlatDataWindow( const GafferImage::ImagePlug *output, const Gaffer::Context *context, IECore::MurmurHash &h ) const;
+		virtual void hashFlatMetadata( const GafferImage::ImagePlug *parent, const Gaffer::Context *context, IECore::MurmurHash &h ) const;
+		virtual Imath::Box2i computeFlatDataWindow( const Gaffer::Context *context, const GafferImage::ImagePlug *parent ) const;
+		virtual IECore::ConstCompoundObjectPtr computeFlatMetadata( const Gaffer::Context *context, const GafferImage::ImagePlug *parent ) const;
 
 		virtual void hash( const Gaffer::ValuePlug *output, const Gaffer::Context *context, IECore::MurmurHash &h ) const;
-		virtual void hashChannelNames( const GafferImage::ImagePlug *output, const Gaffer::Context *context, IECore::MurmurHash &h ) const;
-		virtual void hashChannelData( const GafferImage::ImagePlug *output, const Gaffer::Context *context, IECore::MurmurHash &h ) const;
+		virtual void hashFlatChannelNames( const GafferImage::ImagePlug *output, const Gaffer::Context *context, IECore::MurmurHash &h ) const;
+		virtual void hashFlatChannelData( const GafferImage::ImagePlug *output, const Gaffer::Context *context, IECore::MurmurHash &h ) const;
 
 		virtual void compute( Gaffer::ValuePlug *output, const Gaffer::Context *context ) const;
-		virtual IECore::ConstStringVectorDataPtr computeChannelNames( const Gaffer::Context *context, const GafferImage::ImagePlug *parent ) const;
-		virtual IECore::ConstFloatVectorDataPtr computeChannelData( const std::string &channelName, const Imath::V2i &tileOrigin, const Gaffer::Context *context, const GafferImage::ImagePlug *parent ) const;
+		virtual IECore::ConstStringVectorDataPtr computeFlatChannelNames( const Gaffer::Context *context, const GafferImage::ImagePlug *parent ) const;
+		virtual IECore::ConstFloatVectorDataPtr computeFlatChannelData( const std::string &channelName, const Imath::V2i &tileOrigin, const Gaffer::Context *context, const GafferImage::ImagePlug *parent ) const;
 
 	private :
 

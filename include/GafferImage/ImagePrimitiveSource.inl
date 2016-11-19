@@ -176,6 +176,30 @@ IECore::ConstCompoundObjectPtr ImagePrimitiveSource<BaseType>::computeMetadata( 
 }
 
 template<typename BaseType>
+void ImagePrimitiveSource<BaseType>::hashDeepState( const GafferImage::ImagePlug *parent, const Gaffer::Context *context, IECore::MurmurHash &h ) const
+{
+	h.append( ImagePlug::Flat );
+}
+
+template<typename BaseType>
+int ImagePrimitiveSource<BaseType>::computeDeepState( const Gaffer::Context *context, const ImagePlug *parent ) const
+{
+	return ImagePlug::Flat;
+}
+
+template<typename BaseType>
+void ImagePrimitiveSource<BaseType>::hashSampleOffsets( const GafferImage::ImagePlug *parent, const Gaffer::Context *context, IECore::MurmurHash &h ) const
+{
+	ImagePlug::flatTileSampleOffsets()->hash( h );
+}
+
+template<typename BaseType>
+IECore::ConstIntVectorDataPtr ImagePrimitiveSource<BaseType>::computeSampleOffsets( const Imath::V2i &tileOrigin, const Gaffer::Context *context, const ImagePlug *parent ) const
+{
+	return ImagePlug::flatTileSampleOffsets();
+}
+
+template<typename BaseType>
 void ImagePrimitiveSource<BaseType>::hashChannelNames( const GafferImage::ImagePlug *output, const Gaffer::Context *context, IECore::MurmurHash &h ) const
 {
 	BaseType::hashChannelNames( output, context, h );

@@ -1,6 +1,7 @@
 //////////////////////////////////////////////////////////////////////////
 //
 //  Copyright (c) 2013-2015, Image Engine Design Inc. All rights reserved.
+//  Copyright (c) 2015, Nvizible Ltd. All rights reserved.
 //
 //  Redistribution and use in source and binary forms, with or without
 //  modification, are permitted provided that the following conditions are
@@ -107,12 +108,25 @@ void copyBufferArea( const float *inData, const Imath::Box2i &inArea, float *out
 
 typedef boost::shared_ptr<ImageOutput> ImageOutputPtr;
 
-class TileProcessor
+class TileSampleOffsetsProcessor
+{
+	public:
+		typedef ConstIntVectorDataPtr Result;
+
+		TileSampleOffsetsProcessor() {}
+
+		Result operator()( const ImagePlug *imagePlug, const V2i &tileOrigin )
+		{
+			return imagePlug->sampleOffsetsPlug()->getValue();
+		}
+};
+
+class TileChannelDataProcessor
 {
 	public:
 		typedef ConstFloatVectorDataPtr Result;
 
-		TileProcessor() {}
+		TileChannelDataProcessor() {}
 
 		Result operator()( const ImagePlug *imagePlug, const string &channelName, const V2i &tileOrigin )
 		{
@@ -120,10 +134,91 @@ class TileProcessor
 		}
 };
 
+class DeepTileWriter
+{
+	public:
+		DeepTileWriter(
+				ImageOutputPtr out,
+				const std::string &fileName,
+				const Imath::Box2i &processWindow,
+				const GafferImage::Format &format
+			) :
+				m_out( out ),
+				m_fileName( fileName ),
+				m_format( format ),
+				m_spec( m_out->spec() ),
+				m_processWindow( processWindow )
+		{}
+
+		void finish()
+		{
+		}
+
+		void operator()( const ImagePlug *imagePlug, const V2i &tileOrigin, ConstIntVectorDataPtr sampleOffsets, const std::vector<ConstFloatVectorDataPtr> channelData )
+		{
+		}
+
+	private:
+		ImageOutputPtr m_out;
+		const std::string &m_fileName;
+		const GafferImage::Format &m_format;
+		const ImageSpec m_spec;
+		const Imath::Box2i m_processWindow;
+};
+
+class DeepScanlineWriter
+{
+	public:
+		DeepScanlineWriter(
+				ImageOutputPtr out,
+				const std::string &fileName,
+				const Imath::Box2i &processWindow,
+				const GafferImage::Format &format
+			) :
+				m_out( out ),
+				m_fileName( fileName ),
+				m_format( format ),
+				m_spec( m_out->spec() ),
+				m_processWindow( processWindow ),
+				m_tilesBounds( Imath::Box2i( ImagePlug::tileOrigin( processWindow.min ), ImagePlug::tileOrigin( processWindow.max - Imath::V2i( 1 ) ) + Imath::V2i( ImagePlug::tileSize() ) ) )
+
+		{
+			// m_deepData.init( m_spec.width * ImagePlug::tileSize(), m_spec.channelnames.size() )
+		}
+
+
+		void finish()
+		{
+		}
+
+		void operator()( const ImagePlug *imagePlug, const V2i &tileOrigin, ConstIntVectorDataPtr sampleOffsets, const std::vector<ConstFloatVectorDataPtr> channelData )
+		{
+		}
+
+	private:
+		inline bool firstTileOfRow( const Imath::V2i &tileOrigin ) const
+		{
+			return tileOrigin.x == m_tilesBounds.min.x;
+		}
+
+		inline bool lastTileOfRow( const Imath::V2i &tileOrigin ) const
+		{
+			return tileOrigin.x == ( m_tilesBounds.max.x - ImagePlug::tileSize() ) ;
+		}
+
+		ImageOutputPtr m_out;
+		const std::string &m_fileName;
+		const GafferImage::Format &m_format;
+		const ImageSpec m_spec;
+		const Imath::Box2i m_processWindow;
+		const Imath::Box2i m_tilesBounds;
+		DeepData m_deepData;
+};
+
 class FlatTileWriter
 {
-	// This class is created to be used by parallelGatherTiles, and called in
-	// series for each Gaffer tile/channel from the top down.
+	// This class is created to be used by parallelProcessTilesGather, and called
+	// in series for each Gaffer tile/channel from the top down.
 	//
 	// This class has been designed to support any size of output tile. Because
 	// only rare cases of output image will involve the output tiles lining up
@@ -369,7 +464,7 @@ class FlatTileWriter
 
 class FlatScanlineWriter
 {
-	// This class is created to be used by parallelGatherTiles, and called in
+	// This class is created to be used by parallelProcessTilesGather, and called in
 	// series for each Gaffer tile/channel from the top down.
 	//
 	// When it is first created, it writes to the ImageOutput object any blank
@@ -973,7 +1068,7 @@ const Gaffer::ValuePlug *ImageWriter::fileFormatSettingsPlug( const std::string 
 
 const std::string ImageWriter::currentFileFormat() const
 {
-	const std::string fileName = fileNamePlug()->getValue();
+	const std::string fileName = Context::current()->substitute( fileNamePlug()->getValue() );
 	ImageOutputPtr out( ImageOutput::create( fileName.c_str() ) );
 	if( out != NULL )
 	{
@@ -1027,6 +1122,11 @@ void ImageWriter::execute() const
 		throw IECore::Exception( OpenImageIO::geterror() );
 	}
 
+	if( inPlug()->deepStatePlug()->getValue() != ImagePlug::Flat && !out->supports( "deepdata" ) )
+	{
+		throw IECore::Exception( boost::str( boost::format( "Deep data is not supported by %s files." ) % out->format_name() ) );
+	}
+
 	// Grab the intersection of the channels from the "channels" plug and the image input to see which channels we are to write out.
 	IECore::ConstStringVectorDataPtr channelNamesData = inPlug()->channelNamesPlug()->getValue();
 	std::vector<std::string> maskChannels = channelNamesData->readable();
@@ -1057,7 +1157,14 @@ void ImageWriter::execute() const
 		}
 	}
 
-	const Format imageFormat = inPlug()->formatPlug()->getValue();
+	Format imageFormat = inPlug()->formatPlug()->getValue();
+
+	/// \todo Remove when Issue #887 is done
+	if( imageFormat.getDisplayWindow().isEmpty() )
+	{
+		imageFormat = FormatPlug::getDefaultFormat( Context::current() );
+	}
+
 	Imath::Box2i dataWindow = inPlug()->dataWindowPlug()->getValue();
 	Imath::Box2i exrDataWindow( Imath::V2i( 0 ) );
 
@@ -1113,19 +1220,40 @@ void ImageWriter::execute() const
 	const Imath::Box2i imageDataWindow( imageFormat.fromEXRSpace( extImageDataWindow ) );
 	const Imath::Box2i processDataWindow( intersection( imageDataWindow, dataWindow ) );
 
-	TileProcessor processor = TileProcessor();
-
-	if ( spec.tile_width == 0 )
+	if( inPlug()->deepStatePlug()->getValue() == ImagePlug::Flat )
 	{
-		FlatScanlineWriter flatScanlineWriter( out, fileName, processDataWindow, imageFormat );
-		parallelGatherTiles( inPlug(), spec.channelnames, processor, flatScanlineWriter, processDataWindow, TopToBottom );
-		flatScanlineWriter.finish();
+		TileChannelDataProcessor processor = TileChannelDataProcessor();
+
+		if ( spec.tile_width == 0 )
+		{
+			FlatScanlineWriter flatScanlineWriter( out, fileName, processDataWindow, imageFormat );
+			parallelProcessTilesGather( inPlug(), spec.channelnames, processor, flatScanlineWriter, processDataWindow, TopToBottom );
+			flatScanlineWriter.finish();
+		}
+		else
+		{
+			FlatTileWriter flatTileWriter( out, fileName, processDataWindow, imageFormat );
+			parallelProcessTilesGather( inPlug(), spec.channelnames, processor, flatTileWriter, processDataWindow, TopToBottom );
+			flatTileWriter.finish();
+		}
 	}
 	else
 	{
-		FlatTileWriter flatTileWriter( out, fileName, processDataWindow, imageFormat );
-		parallelGatherTiles( inPlug(), spec.channelnames, processor, flatTileWriter, processDataWindow, TopToBottom );
-		flatTileWriter.finish();
+		TileSampleOffsetsProcessor sampleOffsetsProcessor = TileSampleOffsetsProcessor();
+		TileChannelDataProcessor channelDataProcessor = TileChannelDataProcessor();
+
+		if( spec.tile_width == 0 )
+		{
+			DeepScanlineWriter deepScanlineWriter( out, fileName, processDataWindow, imageFormat );
+			parallelProcessTilesChannelsGather( inPlug(), spec.channelnames, sampleOffsetsProcessor, channelDataProcessor, deepScanlineWriter, processDataWindow, TopToBottom );
+			deepScanlineWriter.finish();
+		}
+		else
+		{
+			DeepTileWriter deepTileWriter( out, fileName, processDataWindow, imageFormat );
+			parallelProcessTilesChannelsGather( inPlug(), spec.channelnames, sampleOffsetsProcessor, channelDataProcessor, deepTileWriter, processDataWindow, TopToBottom );
+			deepTileWriter.finish();
+		}
 	}
 
 	out->close();

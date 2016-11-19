@@ -41,6 +41,7 @@
 #include "Gaffer/CompoundNumericPlug.h"
 
 #include "GafferImage/TypeIds.h"
+#include "GafferImage/ImageState.h"
 
 namespace GafferImage
 {
@@ -82,6 +83,15 @@ class ImageSampler : public Gaffer::ComputeNode
 		// Returns the channel to be read for the specified child of colorPlug(),
 		// returning the empty string if the channel doesn't exist.
 		std::string channelName( const Gaffer::ValuePlug *output ) const;
+
+		// Input plug to receive the flattened image from the internal
+		// ImageState plug.
+		ImagePlug *flattenedInPlug();
+		const ImagePlug *flattenedInPlug() const;
+
+		// The internal ImageState node.
+		GafferImage::ImageState *imageState();
+		const GafferImage::ImageState *imageState() const;
 
 		static size_t g_firstPlugIndex;
 

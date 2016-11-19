@@ -50,6 +50,8 @@ MetadataProcessor::MetadataProcessor( const std::string &name )
 	// Direct pass-through for the things we don't ever change.
 	outPlug()->formatPlug()->setInput( inPlug()->formatPlug() );
 	outPlug()->dataWindowPlug()->setInput( inPlug()->dataWindowPlug() );
+	outPlug()->deepStatePlug()->setInput( inPlug()->deepStatePlug() );
+	outPlug()->sampleOffsetsPlug()->setInput( inPlug()->sampleOffsetsPlug() );
 	outPlug()->channelNamesPlug()->setInput( inPlug()->channelNamesPlug() );
 	outPlug()->channelDataPlug()->setInput( inPlug()->channelDataPlug() );
 }

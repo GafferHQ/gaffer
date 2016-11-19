@@ -65,10 +65,10 @@ enum TypeId
 	UVWarpTypeId = 110769,
 	ImageWriterTypeId = 110770,
 	ImageTransformTypeId = 110771,
-	FilterTypeId = 110772, // Obsolete - available for reuse
-	BoxFilterTypeId = 110773, // Obsolete - available for reuse
-	BilinearFilterTypeId = 110774, // Obsolete - available for reuse
-	SplineFilterTypeId = 110775, // Obsolete - available for reuse
+	FlatImageProcessorTypeId = 110772,
+	DeepMergeTypeId = 110773,
+	ImageStateTypeId = 110774,
+	EmptyTypeId = 110775,
 	BSplineFilterTypeId = 110776, // Obsolete - available for reuse
 	HermiteFilterTypeId = 110777, // Obsolete - available for reuse
 	CubicFilterTypeId = 110778, // Obsolete - available for reuse

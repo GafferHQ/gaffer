@@ -71,7 +71,7 @@ IE_CORE_DEFINERUNTIMETYPED( Merge );
 size_t Merge::g_firstPlugIndex = 0;
 
 Merge::Merge( const std::string &name )
-	:	ImageProcessor( name, 2 )
+	:	FlatImageProcessor( name, 2 )
 {
 	storeIndexOfNextChild( g_firstPlugIndex );
 	addChild(
@@ -87,6 +87,8 @@ Merge::Merge( const std::string &name )
 	// We don't ever want to change these, so we make pass-through connections.
 	outPlug()->formatPlug()->setInput( inPlug()->formatPlug() );
 	outPlug()->metadataPlug()->setInput( inPlug()->metadataPlug() );
+	outPlug()->deepStatePlug()->setInput( inPlug()->deepStatePlug() );
+	outPlug()->sampleOffsetsPlug()->setInput( inPlug()->sampleOffsetsPlug() );
 }
 
 Merge::~Merge()
@@ -105,7 +107,7 @@ const Gaffer::IntPlug *Merge::operationPlug() const
 
 void Merge::affects( const Gaffer::Plug *input, AffectedPlugsContainer &outputs ) const
 {
-	ImageProcessor::affects( input, outputs );
+	FlatImageProcessor::affects( input, outputs );
 
 	if( input == operationPlug() )
 	{
@@ -116,53 +118,65 @@ void Merge::affects( const Gaffer::Plug *input, AffectedPlugsContainer &outputs 
 		if( inputImage->parent<ArrayPlug>() == inPlugs() )
 		{
 			outputs.push_back( outPlug()->getChild<ValuePlug>( input->getName() ) );
+			if( input == inputImage->deepStatePlug() )
+			{
+				outputs.push_back( outPlug()->dataWindowPlug() );
+				outputs.push_back( outPlug()->channelNamesPlug() );
+				outputs.push_back( outPlug()->channelDataPlug() );
+			}
 		}
 	}
 }
 
-void Merge::hashDataWindow( const GafferImage::ImagePlug *output, const Gaffer::Context *context, IECore::MurmurHash &h ) const
+void Merge::hashFlatDataWindow( const GafferImage::ImagePlug *output, const Gaffer::Context *context, IECore::MurmurHash &h ) const
 {
-	ImageProcessor::hashDataWindow( output, context, h );
+	FlatImageProcessor::hashFlatDataWindow( output, context, h );
 
 	for( ImagePlugIterator it( inPlugs() ); !it.done(); ++it )
 	{
-		(*it)->dataWindowPlug()->hash( h );
+		if( (*it)->deepStatePlug()->getValue() == ImagePlug::Flat )
+		{
+			(*it)->dataWindowPlug()->hash( h );
+		}
 	}
 }
 
-Imath::Box2i Merge::computeDataWindow( const Gaffer::Context *context, const ImagePlug *parent ) const
+Imath::Box2i Merge::computeFlatDataWindow( const Gaffer::Context *context, const ImagePlug *parent ) const
 {
 	Imath::Box2i dataWindow;
 	for( ImagePlugIterator it( inPlugs() ); !it.done(); ++it )
 	{
-		// We don't need to check that the plug is connected here as unconnected plugs don't have data windows.
-		dataWindow.extendBy( (*it)->dataWindowPlug()->getValue() );
+		if( (*it)->deepStatePlug()->getValue() == ImagePlug::Flat )
+		{
+			// We don't need to check that the plug is connected here as unconnected plugs don't have data windows.
+			dataWindow.extendBy( (*it)->dataWindowPlug()->getValue() );
+		}
 	}
 
 	return dataWindow;
 }
 
-void Merge::hashChannelNames( const GafferImage::ImagePlug *output, const Gaffer::Context *context, IECore::MurmurHash &h ) const
+void Merge::hashFlatChannelNames( const GafferImage::ImagePlug *output, const Gaffer::Context *context, IECore::MurmurHash &h ) const
 {
-	ImageProcessor::hashChannelNames( output, context, h );
+	FlatImageProcessor::hashFlatChannelNames( output, context, h );
 
 	for( ImagePlugIterator it( inPlugs() ); !it.done(); ++it )
 	{
-		if( (*it)->getInput<ValuePlug>() )
+		if( (*it)->getInput<ValuePlug>() && (*it)->deepStatePlug()->getValue() == ImagePlug::Flat )
 		{
 			(*it)->channelNamesPlug()->hash( h );
 		}
 	}
 }
 
-IECore::ConstStringVectorDataPtr Merge::computeChannelNames( const Gaffer::Context *context, const ImagePlug *parent ) const
+IECore::ConstStringVectorDataPtr Merge::computeFlatChannelNames( const Gaffer::Context *context, const ImagePlug *parent ) const
 {
 	IECore::StringVectorDataPtr outChannelStrVectorData( new IECore::StringVectorData() );
 	std::vector<std::string> &outChannels( outChannelStrVectorData->writable() );
 
 	for( ImagePlugIterator it( inPlugs() ); !it.done(); ++it )
 	{
-		if( (*it)->getInput<ValuePlug>() )
+		if( (*it)->getInput<ValuePlug>() && (*it)->deepStatePlug()->getValue() == ImagePlug::Flat )
 		{
 			IECore::ConstStringVectorDataPtr inChannelStrVectorData((*it)->channelNamesPlug()->getValue() );
 			const std::vector<std::string> &inChannels( inChannelStrVectorData->readable() );
@@ -184,9 +198,9 @@ IECore::ConstStringVectorDataPtr Merge::computeChannelNames( const Gaffer::Conte
 	return inPlug()->channelNamesPlug()->defaultValue();
 }
 
-void Merge::hashChannelData( const GafferImage::ImagePlug *output, const Gaffer::Context *context, IECore::MurmurHash &h ) const
+void Merge::hashFlatChannelData( const GafferImage::ImagePlug *output, const Gaffer::Context *context, IECore::MurmurHash &h ) const
 {
-	ImageProcessor::hashChannelData( output, context, h );
+	FlatImageProcessor::hashFlatChannelData( output, context, h );
 
 	const std::string channelName = context->get<std::string>( ImagePlug::channelNameContextName );
 	const V2i tileOrigin = context->get<V2i>( ImagePlug::tileOriginContextName );
@@ -194,7 +208,7 @@ void Merge::hashChannelData( const GafferImage::ImagePlug *output, const Gaffer:
 
 	for( ImagePlugIterator it( inPlugs() ); !it.done(); ++it )
 	{
-		if( !(*it)->getInput<ValuePlug>() )
+		if( !(*it)->getInput<ValuePlug>() || (*it)->deepStatePlug()->getValue() != ImagePlug::Flat )
 		{
 			continue;
 		}
@@ -229,7 +243,7 @@ void Merge::hashChannelData( const GafferImage::ImagePlug *output, const Gaffer:
 	operationPlug()->hash( h );
 }
 
-IECore::ConstFloatVectorDataPtr Merge::computeChannelData( const std::string &channelName, const Imath::V2i &tileOrigin, const Gaffer::Context *context, const ImagePlug *parent ) const
+IECore::ConstFloatVectorDataPtr Merge::computeFlatChannelData( const std::string &channelName, const Imath::V2i &tileOrigin, const Gaffer::Context *context, const ImagePlug *parent ) const
 {
 	switch( operationPlug()->getValue() )
 	{
@@ -259,7 +273,7 @@ IECore::ConstFloatVectorDataPtr Merge::computeChannelData( const std::string &ch
 			return merge( opUnder, channelName, tileOrigin);
 	}
 
-	throw Exception( "Merge::computeChannelData : Invalid operation mode." );
+	throw Exception( "Merge::computeFlatChannelData : Invalid operation mode." );
 }
 
 template<typename F>
@@ -273,7 +287,7 @@ IECore::ConstFloatVectorDataPtr Merge::merge( F f, const std::string &channelNam
 
 	for( ImagePlugIterator it( inPlugs() ); !it.done(); ++it )
 	{
-		if( !(*it)->getInput<ValuePlug>() )
+		if( !(*it)->getInput<ValuePlug>() || (*it)->deepStatePlug()->getValue() != ImagePlug::Flat )
 		{
 			continue;
 		}

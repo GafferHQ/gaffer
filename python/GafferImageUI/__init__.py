@@ -61,6 +61,7 @@ import MergeUI
 import ImageNodeUI
 import ChannelDataProcessorUI
 import ImageProcessorUI
+import FlatImageProcessorUI
 import ImageMetadataUI
 import DeleteImageMetadataUI
 import CopyImageMetadataUI
@@ -81,5 +82,8 @@ import TextUI
 import WarpUI
 import UVWarpUI
 import MirrorUI
+import DeepMergeUI
+import ImageStateUI
+import EmptyUI
 
 __import__( "IECore" ).loadConfig( "GAFFER_STARTUP_PATHS", {}, subdirectory = "GafferImageUI" )
