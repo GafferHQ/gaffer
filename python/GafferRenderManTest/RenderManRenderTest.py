@@ -48,6 +48,7 @@ import GafferScene
 import GafferSceneTest
 import GafferRenderMan
 import GafferRenderManTest
+import GafferTest
 
 class RenderManRenderTest( GafferRenderManTest.RenderManTestCase ) :
 
@@ -842,6 +843,33 @@ class RenderManRenderTest( GafferRenderManTest.RenderManTestCase ) :
 
 		r = self.__expandedRIB( s["options"]["out"] )
 		self.assertEqual( r.count( "MotionBegin" ), 1 )
+
+	@unittest.skipIf( IECore.versionString() == "9.14.1", "Cortex-9.14.1 which is current in Gaffer dependencies doesn't support sampleMotion yet" )
+	def testSampleMotion( self ) :
+
+		s = Gaffer.ScriptNode()
+		s["fileName"].setValue( self.temporaryDirectory() + "/test.gfr" )
+
+		s["p"] = GafferScene.Plane()
+
+		s["o"] = GafferScene.StandardOptions()
+		s["o"]["in"].setInput( s["p"]["out"] )
+
+		s["r"] = GafferRenderMan.RenderManRender()
+		s["r"]["mode"].setValue( "generate" )
+		s["r"]["ribFileName"].setValue( self.temporaryDirectory() + "/test.rib" )
+		s["r"]["in"].setInput( s["o"]["out"] )
+
+		s["r"]["task"].execute()
+		rib = file( self.temporaryDirectory() + "/test.rib" ).read()
+		self.assertFalse( "sampleMotion" in rib )
+
+		s["o"]["options"]["sampleMotion"]["enabled"].setValue( True )
+		s["o"]["options"]["sampleMotion"]["value"].setValue( False )
+
+		s["r"]["task"].execute()
+		rib = file( self.temporaryDirectory() + "/test.rib" ).read()
+		self.assertTrue( '"int samplemotion" [ 0 ]' in rib )
 
 if __name__ == "__main__":
 	unittest.main()

@@ -315,6 +315,20 @@ Gaffer.Metadata.registerNode(
 
 		],
 
+		"options.sampleMotion" : [
+
+			"description",
+			"""
+			Whether to actually render motion blur.  Disabling this
+			setting while motion blur is set up produces a render where
+			there is no blur, but there is accurate motion information.
+			Useful for rendering motion vector passes.
+			""",
+
+			"layout:section", "Motion Blur",
+
+		],
+
 		# Statistics plugs
 
 		"options.performanceMonitor" : [

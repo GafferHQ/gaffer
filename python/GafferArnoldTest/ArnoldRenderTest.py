@@ -325,6 +325,7 @@ class ArnoldRenderTest( GafferTest.TestCase ) :
 
 		s["options"] = GafferScene.StandardOptions()
 		s["options"]["in"].setInput( s["attributes"]["out"] )
+		s["options"]["options"]["shutter"]["enabled"].setValue( True )
 		s["options"]["options"]["transformBlur"]["enabled"].setValue( True )
 
 		s["render"] = GafferArnold.ArnoldRender()
@@ -341,6 +342,7 @@ class ArnoldRenderTest( GafferTest.TestCase ) :
 
 			arnold.AiASSLoad( self.temporaryDirectory() + "/test.ass" )
 
+			camera = arnold.AiNodeLookUpByName( "gaffer:defaultCamera" )
 			sphere = arnold.AiNodeLookUpByName( "/group/sphere" )
 			sphereTimes = arnold.AiNodeGetArray( sphere, "transform_time_samples" )
 			sphereMatrix = arnold.AtMatrix()
@@ -360,6 +362,9 @@ class ArnoldRenderTest( GafferTest.TestCase ) :
 			self.__assertStructsEqual( sphereMatrix, expectedSphereMatrix )
 			self.__assertStructsEqual( planeMatrix, expectedPlaneMatrix )
 
+			self.assertEqual( arnold.AiNodeGetFlt( camera, "shutter_start" ), 1 )
+			self.assertEqual( arnold.AiNodeGetFlt( camera, "shutter_end" ), 1 )
+
 		# Motion blur
 
 		s["options"]["options"]["transformBlur"]["value"].setValue( True )
@@ -369,6 +374,7 @@ class ArnoldRenderTest( GafferTest.TestCase ) :
 
 			arnold.AiASSLoad( self.temporaryDirectory() + "/test.ass" )
 
+			camera = arnold.AiNodeLookUpByName( "gaffer:defaultCamera" )
 			sphere = arnold.AiNodeLookUpByName( "/group/sphere" )
 			sphereTimes = arnold.AiNodeGetArray( sphere, "transform_time_samples" )
 			sphereMatrices = arnold.AiNodeGetArray( sphere, "matrix" )
@@ -407,6 +413,62 @@ class ArnoldRenderTest( GafferTest.TestCase ) :
 
 				self.__assertStructsEqual( sphereMatrix, expectedSphereMatrix )
 				self.__assertStructsEqual( planeMatrix, expectedPlaneMatrix )
+
+			self.assertEqual( arnold.AiNodeGetFlt( camera, "shutter_start" ), 0.75 )
+			self.assertEqual( arnold.AiNodeGetFlt( camera, "shutter_end" ), 1.25 )
+
+		# Motion blur on, but sampleMotion off
+
+		s["options"]["options"]["sampleMotion"]["enabled"].setValue( True )
+		s["options"]["options"]["sampleMotion"]["value"].setValue( False )
+		s["render"]["task"].execute()
+
+		with IECoreArnold.UniverseBlock( writable = True ) :
+
+			arnold.AiASSLoad( self.temporaryDirectory() + "/test.ass" )
+
+			camera = arnold.AiNodeLookUpByName( "gaffer:defaultCamera" )
+			sphere = arnold.AiNodeLookUpByName( "/group/sphere" )
+			sphereTimes = arnold.AiNodeGetArray( sphere, "transform_time_samples" )
+			sphereMatrices = arnold.AiNodeGetArray( sphere, "matrix" )
+
+			plane = arnold.AiNodeLookUpByName( "/group/plane" )
+			planeTimes = arnold.AiNodeGetArray( plane, "transform_time_samples" )
+			planeMatrices = arnold.AiNodeGetArray( plane, "matrix" )
+
+			self.assertEqual( sphereTimes.contents.nelements, 2 )
+			self.assertEqual( sphereTimes.contents.nkeys, 1 )
+			self.assertEqual( sphereMatrices.contents.nelements, 1 )
+			self.assertEqual( sphereMatrices.contents.nkeys, 2 )
+
+			self.assertEqual( planeTimes.contents.nelements, 2 )
+			self.assertEqual( planeTimes.contents.nkeys, 1 )
+			self.assertEqual( planeMatrices.contents.nelements, 1 )
+			self.assertEqual( planeMatrices.contents.nkeys, 2 )
+
+			for i in range( 0, 2 ) :
+
+				frame = 0.75 + 0.5 * i
+				self.assertEqual( arnold.AiArrayGetFlt( sphereTimes, i ), frame )
+				self.assertEqual( arnold.AiArrayGetFlt( planeTimes, i ), frame )
+
+				sphereMatrix = arnold.AtMatrix()
+				arnold.AiArrayGetMtx( sphereMatrices, i, sphereMatrix )
+
+				expectedSphereMatrix = arnold.AtMatrix()
+				arnold.AiM4Translation( expectedSphereMatrix, arnold.AtVector( 0, frame * 2, frame - 1 ) )
+
+				planeMatrix = arnold.AtMatrix()
+				arnold.AiArrayGetMtx( planeMatrices, i, planeMatrix )
+
+				expectedPlaneMatrix = arnold.AtMatrix()
+				arnold.AiM4Translation( expectedPlaneMatrix, arnold.AtVector( 1, 0, frame - 1 ) )
+
+				self.__assertStructsEqual( sphereMatrix, expectedSphereMatrix )
+				self.__assertStructsEqual( planeMatrix, expectedPlaneMatrix )
+
+			self.assertEqual( arnold.AiNodeGetFlt( camera, "shutter_start" ), 0.75 )
+			self.assertEqual( arnold.AiNodeGetFlt( camera, "shutter_end" ), 0.75 )
 
 	def testResolution( self ) :
 

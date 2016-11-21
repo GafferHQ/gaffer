@@ -67,6 +67,7 @@ StandardOptions::StandardOptions( const std::string &name )
 	options->addOptionalMember( "render:transformBlur", new IECore::BoolData( false ), "transformBlur", Gaffer::Plug::Default, false );
 	options->addOptionalMember( "render:deformationBlur", new IECore::BoolData( false ), "deformationBlur", Gaffer::Plug::Default, false );
 	options->addOptionalMember( "render:shutter", new IECore::V2fData( Imath::V2f( -0.25, 0.25 ) ), "shutter", Gaffer::Plug::Default, false );
+	options->addOptionalMember( "sampleMotion", new IECore::BoolData( true ), "sampleMotion", Gaffer::Plug::Default, false );
 
 	// Statistics
 
