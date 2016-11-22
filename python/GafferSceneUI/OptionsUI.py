@@ -62,6 +62,19 @@ Gaffer.Metadata.registerNode(
 
 		],
 
+		"prefix" : [
+
+			"description",
+			"""
+			Prefix for options. Default is '', but it can be changed to
+			'myCategory:', for example, to specify a particular type of
+			option.
+			""",
+
+			"plugValueWidget:type", "",
+
+		]
+
 	}
 
 )
