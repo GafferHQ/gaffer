@@ -527,6 +527,91 @@ class RendererTest( GafferTest.TestCase ) :
 			self.assertEqual( arnold.AiNodeEntryGetName( arnold.AiNodeGetNodeEntry( f ) ), "gaussian_filter" )
 			self.assertEqual( arnold.AiNodeGetFlt( f, "width" ), 3.5 )
 
+	def testExrMetadata( self ) :
+
+		r = GafferScene.Private.IECoreScenePreview.Renderer.create(
+			"IECoreArnold::Renderer",
+			GafferScene.Private.IECoreScenePreview.Renderer.RenderType.SceneDescription,
+			self.temporaryDirectory() + "/test.ass"
+		)
+
+		r.output(
+			"exrTest",
+			IECore.Display(
+				"beauty.exr",
+				"exr",
+				"rgba",
+				{
+					"filter" : "gaussian",
+					"filterwidth" : IECore.V2f( 3.5 ),
+					"header:foo" : IECore.StringData( "bar" ),
+					"header:bar" : IECore.BoolData( True ),
+					"header:nobar" : IECore.BoolData( False ),
+					"header:floatbar" : IECore.FloatData( 1.618034 ),
+					"header:intbar" : IECore.IntData( 42 ),
+					"header:vec2i" : IECore.V2iData( IECore.V2i( 100 ) ),
+					"header:vec3i" : IECore.V3iData( IECore.V3i( 100 ) ),
+					"header:vec2f" : IECore.V2fData( IECore.V2f( 100 ) ),
+					"header:vec3f" : IECore.V3fData( IECore.V3f( 100 ) ),
+					"header:color3f" : IECore.Color3fData( IECore.Color3f( 100 ) ),
+					"header:color4f" : IECore.Color4fData( IECore.Color4f( 100 ) ),
+				}
+			)
+		)
+
+		msg = IECore.CapturingMessageHandler()
+		with msg:
+			r.output(
+				"tiffTest",
+				IECore.Display(
+					"beauty.tiff",
+					"tiff",
+					"rgba",
+					{
+						"filter" : "gaussian",
+						"filterwidth" : IECore.V2f( 3.5 ),
+						"header:foo" : IECore.StringData( "bar" ),
+						"header:bar" : IECore.StringVectorData([ 'one', 'two', 'three' ])  # not supported and should print a warning
+					}
+				)
+			)
+
+		r.render()
+		del r
+
+		expectedMessage = 'Cannot convert data "bar" of type "StringVectorData".'
+
+		self.assertEqual( len(msg.messages), 1 )
+		self.assertEqual( msg.messages[-1].message, expectedMessage )
+		self.assertEqual( msg.messages[-1].level, IECore.Msg.Level.Warning)
+
+		with IECoreArnold.UniverseBlock( writable = True ) :
+
+			arnold.AiASSLoad( self.temporaryDirectory() + "/test.ass" )
+
+			exrDriver = arnold.AiNodeLookUpByName( "ieCoreArnold:display:exrTest" )
+			customAttributes = arnold.AiNodeGetArray( exrDriver, "custom_attributes" )
+			customAttributesValues = set([ arnold.AiArrayGetStr( customAttributes, i ) for i in range( 11 ) ])
+
+			customAttributesExpected = set([
+				"string 'foo' bar",
+				"int 'bar' 1",
+				"int 'nobar' 0",
+				"float 'floatbar' 1.618034",
+				"int 'intbar' 42",
+				"string 'vec2i' (100 100)",
+				"string 'vec3i' (100 100 100)",
+				"string 'vec2f' (100 100)",
+				"string 'vec3f' (100 100 100)",
+				"string 'color3f' (100 100 100)",
+				"string 'color4f' (100 100 100 100)"])
+
+			self.assertEqual( customAttributesValues, customAttributesExpected )
+
+			tiffDriver = arnold.AiNodeLookUpByName( "ieCoreArnold:display:tiffTest" )
+			customAttributes = arnold.AiNodeGetArray( tiffDriver, "custom_attributes" )
+			self.assertEqual(customAttributes, None)
+
 	def testInstancing( self ) :
 
 		r = GafferScene.Private.IECoreScenePreview.Renderer.create(

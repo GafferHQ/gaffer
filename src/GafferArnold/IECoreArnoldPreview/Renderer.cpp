@@ -132,6 +132,55 @@ AtNode *convertToBox( const std::vector<const IECore::Object *> &samples, const 
 	return convertToBox( samples.front() );
 }
 
+std::string formatHeaderParameter( const std::string name, const IECore::Data *data )
+{
+		if( const IECore::BoolData *boolData = IECore::runTimeCast<const IECore::BoolData>( data ) )
+		{
+			return boost::str( boost::format( "int '%s' %i" ) % name % int(boolData->readable()) );
+		}
+		else if( const IECore::FloatData *floatData = IECore::runTimeCast<const IECore::FloatData>( data ) )
+		{
+			return boost::str( boost::format( "float '%s' %f" ) % name % floatData->readable() );
+		}
+		else if( const IECore::IntData *intData = IECore::runTimeCast<const IECore::IntData>( data ) )
+		{
+			return boost::str( boost::format( "int '%s' %i" ) % name % intData->readable() );
+		}
+		else if( const IECore::StringData *stringData = IECore::runTimeCast<const IECore::StringData>( data ) )
+		{
+			return boost::str( boost::format( "string '%s' %s" ) % name % stringData->readable() );
+		}
+		else if( const IECore::V2iData *v2iData = IECore::runTimeCast<const IECore::V2iData>( data ) )
+		{
+			return boost::str( boost::format( "string '%s' %s" ) % name % v2iData->readable() );
+		}
+		else if( const IECore::V3iData *v3iData = IECore::runTimeCast<const IECore::V3iData>( data ) )
+		{
+			return boost::str( boost::format( "string '%s' %s" ) % name % v3iData->readable() );
+		}
+		else if( const IECore::V2fData *v2fData = IECore::runTimeCast<const IECore::V2fData>( data ) )
+		{
+			return boost::str( boost::format( "string '%s' %s" ) % name % v2fData->readable() );
+		}
+		else if( const IECore::V3fData *v3fData = IECore::runTimeCast<const IECore::V3fData>( data ) )
+		{
+			return boost::str( boost::format( "string '%s' %s" ) % name % v3fData->readable() );
+		}
+		else if( const IECore::Color3fData *c3fData = IECore::runTimeCast<const IECore::Color3fData>( data ) )
+		{
+			return boost::str( boost::format( "string '%s' %s" ) % name % c3fData->readable() );
+		}
+		else if( const IECore::Color4fData *c4fData = IECore::runTimeCast<const IECore::Color4fData>( data ) )
+		{
+			return boost::str( boost::format( "string '%s' %s" ) % name % c4fData->readable() );
+		}
+		else
+		{
+			IECore::msg( IECore::Msg::Warning, "IECoreArnold::Renderer", boost::format( "Cannot convert data \"%s\" of type \"%s\"." ) % name % data->typeName() );
+			return "";
+		}
+}
+
 } // namespace
 
 //////////////////////////////////////////////////////////////////////////
@@ -176,13 +225,31 @@ class ArnoldOutput : public IECore::RefCounted
 				AiNodeSetStr( m_driver.get(), AiParamGetName( fileNameParameter ), output->getName().c_str() );
 			}
 
+			IECore::StringVectorDataPtr customAttributesData = new IECore::StringVectorData();
+			std::vector<std::string> &customAttributes = customAttributesData->writable();
 			for( IECore::CompoundDataMap::const_iterator it = output->parameters().begin(), eIt = output->parameters().end(); it != eIt; ++it )
 			{
 				if( boost::starts_with( it->first.string(), "filter" ) )
 				{
 					continue;
 				}
+
+				if( boost::starts_with( it->first.string(), "header:" ) )
+				{
+					std::string formattedString = formatHeaderParameter( it->first.string().substr( 7 ), it->second.get() );
+					if( !formattedString.empty())
+					{
+						customAttributes.push_back( formattedString );
+					}
+					continue;
+				}
+
 				ParameterAlgo::setParameter( m_driver.get(), it->first.c_str(), it->second.get() );
+			}
+
+			if( AiNodeEntryLookUpParameter( AiNodeGetNodeEntry( m_driver.get() ), "custom_attributes" ) )
+			{
+				ParameterAlgo::setParameter( m_driver.get(), "custom_attributes", customAttributesData.get() );
 			}
 
 			// Create a filter.
