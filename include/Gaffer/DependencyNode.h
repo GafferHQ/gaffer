@@ -67,6 +67,9 @@ class DependencyNode : public Node
 		/// for input or to place one in outputs as computations are always performed on the
 		/// leaf level plugs only. Implementations of this method should call the base class
 		/// implementation first.
+		/// \todo Make this protected, and add an accessor on the Plug class instead.
+		/// The general principle in effect elsewhere in Gaffer is that plugs provide
+		/// the public interface to the work done by nodes.
 		virtual void affects( const Plug *input, AffectedPlugsContainer &outputs ) const = 0;
 
 		/// @name Enable/Disable Behaviour
