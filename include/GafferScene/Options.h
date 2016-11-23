@@ -39,6 +39,7 @@
 #define GAFFERSCENE_OPTIONS_H
 
 #include "Gaffer/CompoundDataPlug.h"
+#include "Gaffer/StringPlug.h"
 
 #include "GafferScene/GlobalsProcessor.h"
 
@@ -57,6 +58,9 @@ class Options : public GlobalsProcessor
 
 		Gaffer::CompoundDataPlug *optionsPlug();
 		const Gaffer::CompoundDataPlug *optionsPlug() const;
+
+		Gaffer::StringPlug *prefixPlug();
+		const Gaffer::StringPlug *prefixPlug() const;
 
 		virtual void affects( const Gaffer::Plug *input, AffectedPlugsContainer &outputs ) const;
 

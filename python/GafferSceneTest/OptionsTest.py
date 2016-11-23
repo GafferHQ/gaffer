@@ -1,6 +1,7 @@
 ##########################################################################
 #
 #  Copyright (c) 2012, John Haddon. All rights reserved.
+#  Copyright (c) 2013, Image Engine Design Inc. All rights reserved.
 #
 #  Redistribution and use in source and binary forms, with or without
 #  modification, are permitted provided that the following conditions are
@@ -34,47 +35,22 @@
 #
 ##########################################################################
 
-import Gaffer
-import GafferUI
+import unittest
+
+import IECore
+
 import GafferScene
+import GafferSceneTest
 
-Gaffer.Metadata.registerNode(
+class OptionsTest( GafferSceneTest.SceneTestCase ) :
 
-	GafferScene.Options,
+	def test( self ) :
 
-	"description",
-	"""
-	The base type for nodes that apply options to the scene.
-	""",
+		options = GafferScene.Options()
 
-	plugs = {
+		options["options"].addMember( "test", IECore.IntData( 10 ) )
+		options["prefix"].setValue( "myCategory:" )
 
-		"options" : [
+		g = options["out"]["globals"].getValue()
 
-			"description",
-			"""
-			The options to be applied - arbitrary numbers of user defined options may be added
-			as children of this plug via the user interface, or using the CompoundDataPlug API via
-			python.
-			""",
-
-			"compoundDataPlugValueWidget:editable", False,
-
-		],
-
-		"prefix" : [
-
-			"description",
-			"""
-			Prefix for options. Default is '', but it can be changed to
-			'myCategory:', for example, to specify a particular type of
-			option.
-			""",
-
-			"plugValueWidget:type", "",
-
-		]
-
-	}
-
-)
+		self.assertEqual( g["option:myCategory:test"], IECore.IntData( 10 ) )

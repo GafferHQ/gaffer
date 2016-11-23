@@ -50,6 +50,7 @@ Options::Options( const std::string &name )
 {
 	storeIndexOfNextChild( g_firstPlugIndex );
 	addChild( new CompoundDataPlug( "options" ) );
+	addChild( new StringPlug( "prefix", Plug::In, "" ) );
 }
 
 Options::~Options()
@@ -66,11 +67,21 @@ const Gaffer::CompoundDataPlug *Options::optionsPlug() const
 	return getChild<CompoundDataPlug>( g_firstPlugIndex );
 }
 
+Gaffer::StringPlug *Options::prefixPlug()
+{
+	return getChild<StringPlug>( g_firstPlugIndex + 1 );
+}
+
+const Gaffer::StringPlug *Options::prefixPlug() const
+{
+	return getChild<StringPlug>( g_firstPlugIndex + 1 );
+}
+
 void Options::affects( const Plug *input, AffectedPlugsContainer &outputs ) const
 {
 	GlobalsProcessor::affects( input, outputs );
 
-	if( optionsPlug()->isAncestorOf( input ) )
+	if( optionsPlug()->isAncestorOf( input ) || input == prefixPlug() )
 	{
 		outputs.push_back( outPlug()->globalsPlug() );
 	}
@@ -79,6 +90,7 @@ void Options::affects( const Plug *input, AffectedPlugsContainer &outputs ) cons
 void Options::hashProcessedGlobals( const Gaffer::Context *context, IECore::MurmurHash &h ) const
 {
 	optionsPlug()->hash( h );
+	prefixPlug()->hash( h );
 }
 
 IECore::ConstCompoundObjectPtr Options::computeProcessedGlobals( const Gaffer::Context *context, IECore::ConstCompoundObjectPtr inputGlobals ) const
@@ -96,13 +108,15 @@ IECore::ConstCompoundObjectPtr Options::computeProcessedGlobals( const Gaffer::C
 	// them though!
 	result->members() = inputGlobals->members();
 
+	const std::string prefix = "option:" + prefixPlug()->getValue();
+
 	std::string name;
 	for( CompoundDataPlug::MemberPlugIterator it( p ); !it.done(); ++it )
 	{
 		IECore::DataPtr d = p->memberDataAndName( it->get(), name );
 		if( d )
 		{
-			result->members()["option:" + name] = d;
+			result->members()[prefix + name] = d;
 		}
 	}
 
