@@ -41,11 +41,45 @@ using namespace GafferScene;
 
 IE_CORE_DEFINERUNTIMETYPED( CustomOptions );
 
+size_t CustomOptions::g_firstPlugIndex = 0;
+
 CustomOptions::CustomOptions( const std::string &name )
 	:	Options( name )
 {
+	storeIndexOfNextChild( g_firstPlugIndex );
+	addChild( new StringPlug( "prefix" ) );
 }
 
 CustomOptions::~CustomOptions()
 {
+}
+
+Gaffer::StringPlug *CustomOptions::prefixPlug()
+{
+	return getChild<StringPlug>( g_firstPlugIndex );
+}
+
+const Gaffer::StringPlug *CustomOptions::prefixPlug() const
+{
+	return getChild<StringPlug>( g_firstPlugIndex );
+}
+
+void CustomOptions::affects( const Plug *input, AffectedPlugsContainer &outputs ) const
+{
+	Options::affects( input, outputs );
+
+	if( input == prefixPlug() )
+	{
+		outputs.push_back( outPlug()->globalsPlug() );
+	}
+}
+
+void CustomOptions::hashPrefix( const Gaffer::Context *context, IECore::MurmurHash &h ) const
+{
+	prefixPlug()->hash( h );
+}
+
+std::string CustomOptions::computePrefix( const Gaffer::Context *context ) const
+{
+	return "option:" + prefixPlug()->getValue();
 }
