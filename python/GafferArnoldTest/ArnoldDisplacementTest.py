@@ -40,6 +40,7 @@ import IECore
 
 import GafferTest
 import GafferSceneTest
+import GafferOSL
 import GafferArnold
 
 class ArnoldDisplacementTest( GafferSceneTest.SceneTestCase ) :
@@ -87,6 +88,30 @@ class ArnoldDisplacementTest( GafferSceneTest.SceneTestCase ) :
 		del cs[:]
 		d["map"].setInput( n["out"] )
 		self.assertTrue( d["out"] in [ x[0] for x in cs ] )
+
+	def testOSLShaderInput( self ) :
+
+		n = GafferOSL.OSLShader()
+		n.loadShader( "Pattern/Noise" )
+
+		d = GafferArnold.ArnoldDisplacement()
+
+		d["map"].setInput( n["out"] )
+		self.assertTrue( d["map"].getInput().isSame( n["out"] ) )
+
+		na = n.attributes()
+		da = d.attributes()
+
+		self.assertEqual(
+			da,
+			IECore.CompoundObject( {
+				"ai:disp_map" : na["osl:shader"],
+				"ai:disp_height" : IECore.FloatData( 1 ),
+				"ai:disp_padding" : IECore.FloatData( 0 ),
+				"ai:disp_zero_value" : IECore.FloatData( 0 ),
+				"ai:disp_autobump" : IECore.BoolData( False ),
+			} )
+		)
 
 	def testNoInput( self ) :
 
