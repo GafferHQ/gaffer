@@ -544,6 +544,21 @@ class RendererTest( GafferTest.TestCase ) :
 				{
 					"filter" : "gaussian",
 					"filterwidth" : IECore.V2f( 3.5 ),
+					"custom_attributes" : IECore.StringVectorData([ "string 'original data' test" ]),
+					"header:bar" : IECore.BoolData( True ),
+				}
+			)
+		)
+
+		r.output(
+			"exrDataTest",
+			IECore.Display(
+				"beauty.exr",
+				"exr",
+				"rgba",
+				{
+					"filter" : "gaussian",
+					"filterwidth" : IECore.V2f( 3.5 ),
 					"header:foo" : IECore.StringData( "bar" ),
 					"header:bar" : IECore.BoolData( True ),
 					"header:nobar" : IECore.BoolData( False ),
@@ -589,9 +604,20 @@ class RendererTest( GafferTest.TestCase ) :
 
 			arnold.AiASSLoad( self.temporaryDirectory() + "/test.ass" )
 
+			# test if data was added correctly to existing data
 			exrDriver = arnold.AiNodeLookUpByName( "ieCoreArnold:display:exrTest" )
 			customAttributes = arnold.AiNodeGetArray( exrDriver, "custom_attributes" )
-			customAttributesValues = set([ arnold.AiArrayGetStr( customAttributes, i ) for i in range( 11 ) ])
+			customAttributesValues = set([ arnold.AiArrayGetStr( customAttributes, i ) for i in range( customAttributes.contents.nelements ) ])
+			customAttributesExpected = set([
+				"int 'bar' 1",
+				"string 'original data' test"])
+
+			self.assertEqual( customAttributesValues, customAttributesExpected )
+
+			# test if all data types work correctly
+			exrDriver = arnold.AiNodeLookUpByName( "ieCoreArnold:display:exrDataTest" )
+			customAttributes = arnold.AiNodeGetArray( exrDriver, "custom_attributes" )
+			customAttributesValues = set([ arnold.AiArrayGetStr( customAttributes, i ) for i in range( customAttributes.contents.nelements ) ])
 
 			customAttributesExpected = set([
 				"string 'foo' bar",
@@ -608,6 +634,7 @@ class RendererTest( GafferTest.TestCase ) :
 
 			self.assertEqual( customAttributesValues, customAttributesExpected )
 
+			# make sure that attribute isn't added to drivers that don't support it
 			tiffDriver = arnold.AiNodeLookUpByName( "ieCoreArnold:display:tiffTest" )
 			customAttributes = arnold.AiNodeGetArray( tiffDriver, "custom_attributes" )
 			self.assertEqual(customAttributes, None)
