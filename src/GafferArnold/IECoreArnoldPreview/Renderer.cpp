@@ -604,6 +604,16 @@ class ArnoldAttributes : public IECoreScenePreview::Renderer::AttributesInterfac
 					return m_polyMesh.subdivAdaptiveError == 0.0f || m_polyMesh.subdivAdaptiveSpace == g_objectSpace;
 				}
 			}
+			else if( const IECore::ExternalProcedural *procedural = IECore::runTimeCast<const IECore::ExternalProcedural>( object ) )
+			{
+				// We don't instance "ass archive" procedurals, because Arnold
+				// does automatic instancing of those itself, using its procedural
+				// cache.
+				return (
+					!boost::ends_with( procedural->getFileName(), ".ass" ) &&
+					!boost::ends_with( procedural->getFileName(), ".ass.gz" )
+				);
+			}
 
 			return true;
 		}
