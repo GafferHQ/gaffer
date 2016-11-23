@@ -128,6 +128,22 @@ const Gaffer::Plug *ArnoldDisplacement::outPlug() const
 	return getChild<Plug>( g_firstPlugIndex + 5 );
 }
 
+void ArnoldDisplacement::affects( const Gaffer::Plug *input, AffectedPlugsContainer &outputs ) const
+{
+	Shader::affects( input, outputs );
+
+	if(
+		input == mapPlug() ||
+		input == heightPlug() ||
+		input == paddingPlug() ||
+		input == zeroValuePlug() ||
+		input == autoBumpPlug()
+	)
+	{
+		outputs.push_back( outPlug() );
+	}
+}
+
 void ArnoldDisplacement::attributesHash( IECore::MurmurHash &h ) const
 {
 	h.append( typeId() );
