@@ -1,3 +1,20 @@
+0.30.2.0
+========
+
+Improvements
+------------
+
+- `GafferUI::StandardGraphLayout` : Don't apply positions if the layout algorithm fails.
+- `GafferScene::Options` : Exposed plug allowing prefixing of options.
+- Arnold backend : Options prefixed with "header:" are written into the header of image outputs.
+
+Fixes
+-----
+
+- Build :
+  - Fixed failing Travis tests by removing `ImageWriterTest.testMultipleWrite()`.
+  - IE options supply DCC specific LINKFLAGS if specified.
+
 0.30.1.0
 ========
 
