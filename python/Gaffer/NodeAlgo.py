@@ -101,6 +101,10 @@ def applyPreset( plug, presetName ) :
 # User defaults
 ##########################################################################
 
+def setCurrentValueAsUserDefault( plug ) :
+
+	Gaffer.Metadata.registerValue( plug, "userDefault", plug.getValue() )
+
 def applyUserDefaults( nodeOrNodes ) :
 
 	if isinstance( nodeOrNodes, list ) :

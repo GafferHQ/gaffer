@@ -314,6 +314,13 @@ class PlugValueWidget( GafferUI.Widget ) :
 				}
 			)
 
+		menuDefinition.append(
+			"/Set User Default", {
+				"command" : Gaffer.WeakMethod( self.__setCurrentValueAsUserDefault ),
+				"active" : self._editable()
+			}
+		)
+
 		if len( menuDefinition.items() ) :
 			menuDefinition.append( "/LockDivider", { "divider" : True } )
 
@@ -578,6 +585,11 @@ class PlugValueWidget( GafferUI.Widget ) :
 
 		with Gaffer.UndoContext( self.getPlug().ancestor( Gaffer.ScriptNode.staticTypeId() ) ) :
 			Gaffer.NodeAlgo.applyUserDefault( self.getPlug() )
+
+	def __setCurrentValueAsUserDefault( self ) :
+
+		with Gaffer.UndoContext( self.getPlug().ancestor( Gaffer.ScriptNode.staticTypeId() ) ) :
+			Gaffer.NodeAlgo.setCurrentValueAsUserDefault( self.getPlug() )
 
 	def __presetsSubMenu( self ) :
 
