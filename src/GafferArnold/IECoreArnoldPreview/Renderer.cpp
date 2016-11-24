@@ -1415,6 +1415,7 @@ IECore::InternedString g_logFileNameOptionName( "ai:log:filename" );
 IECore::InternedString g_logMaxWarningsOptionName( "ai:log:max_warnings" );
 IECore::InternedString g_shaderSearchPathOptionName( "ai:shader_searchpath" );
 IECore::InternedString g_aaSeedOptionName( "ai:AA_seed" );
+IECore::InternedString g_sampleMotionOptionName( "sampleMotion" );
 
 std::string g_logFlagsOptionPrefix( "ai:log:" );
 std::string g_consoleFlagsOptionPrefix( "ai:console:" );
@@ -1523,6 +1524,18 @@ class ArnoldRenderer : public IECoreScenePreview::Renderer
 				else if( const IECore::IntData *d = reportedCast<const IECore::IntData>( value, "option", name ) )
 				{
 					m_aaSeed = d->readable();
+				}
+				return;
+			}
+			else if( name == g_sampleMotionOptionName )
+			{
+				if( value == NULL )
+				{
+					m_sampleMotion = boost::none;
+				}
+				else if( const IECore::BoolData *d = reportedCast<const IECore::BoolData>( value, "option", name ) )
+				{
+					m_sampleMotion = d->readable();
 				}
 				return;
 			}
@@ -1848,9 +1861,10 @@ class ArnoldRenderer : public IECoreScenePreview::Renderer
 			AtNode *options = AiUniverseGetOptions();
 
 			const IECore::Camera *cortexCamera = m_cameras[m_cameraName].get();
+			AtNode *arnoldCamera;
 			if( cortexCamera )
 			{
-				AiNodeSetPtr( options, "camera", AiNodeLookUpByName( m_cameraName.c_str() ) );
+				arnoldCamera = AiNodeLookUpByName( m_cameraName.c_str() );
 				m_defaultCamera = NULL;
 			}
 			else
@@ -1864,8 +1878,9 @@ class ArnoldRenderer : public IECoreScenePreview::Renderer
 					m_defaultCamera = camera( "ieCoreArnold:defaultCamera", defaultCortexCamera.get(), defaultAttributes.get() );
 				}
 				cortexCamera = m_cameras["ieCoreArnold:defaultCamera"].get();
-				AiNodeSetPtr( options, "camera", AiNodeLookUpByName( "ieCoreArnold:defaultCamera" ) );
+				arnoldCamera = AiNodeLookUpByName( "ieCoreArnold:defaultCamera" );
 			}
+			AiNodeSetPtr( options, "camera", arnoldCamera );
 
 			const IECore::V2iData *resolution = cortexCamera->parametersData()->member<IECore::V2iData>( "resolution" );
 			AiNodeSetInt( options, "xres", resolution->readable().x );
@@ -1904,6 +1919,18 @@ class ArnoldRenderer : public IECoreScenePreview::Renderer
 				AiNodeResetParameter( options, "region_min_y" );
 				AiNodeResetParameter( options, "region_max_x" );
 				AiNodeResetParameter( options, "region_max_y" );
+			}
+
+			Imath::V2f shutter = cortexCamera->parametersData()->member<IECore::V2fData>( "shutter", true )->readable();
+			if( m_sampleMotion.get_value_or( true ) )
+			{
+				AiNodeSetFlt( arnoldCamera, "shutter_start", shutter[0] );
+				AiNodeSetFlt( arnoldCamera, "shutter_end", shutter[1] );
+			}
+			else
+			{
+				AiNodeSetFlt( arnoldCamera, "shutter_start", shutter[0] );
+				AiNodeSetFlt( arnoldCamera, "shutter_end", shutter[0] );
 			}
 		}
 
@@ -1957,6 +1984,7 @@ class ArnoldRenderer : public IECoreScenePreview::Renderer
 		int m_consoleFlags;
 		boost::optional<int> m_frame;
 		boost::optional<int> m_aaSeed;
+		boost::optional<bool> m_sampleMotion;
 
 		// Members used by batch renders
 
