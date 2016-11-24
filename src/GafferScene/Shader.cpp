@@ -233,24 +233,6 @@ void Shader::affects( const Gaffer::Plug *input, AffectedPlugsContainer &outputs
 
 void Shader::parameterHash( const Gaffer::Plug *parameterPlug, NetworkBuilder &network, IECore::MurmurHash &h ) const
 {
-	const Plug *inputPlug = parameterPlug->source<Plug>();
-	if( inputPlug != parameterPlug )
-	{
-		const Shader *n = IECore::runTimeCast<const Shader>( inputPlug->node() );
-		if( n && ( inputPlug == n->outPlug() || n->outPlug()->isAncestorOf( inputPlug ) ) )
-		{
-			h.append( network.shaderHash( n ) );
-			if( inputPlug != n->outPlug() )
-			{
-				// shader has multiple outputs - we need to make sure the particular
-				// output in question is taken into account by the hash.
-				h.append( inputPlug->relativeName( n->outPlug() ) );
-			}
-			return;
-		}
-		// fall through to hash plug value
-	}
-
 	const ValuePlug *vplug = IECore::runTimeCast<const ValuePlug>( parameterPlug );
 	if( vplug )
 	{
@@ -264,27 +246,6 @@ void Shader::parameterHash( const Gaffer::Plug *parameterPlug, NetworkBuilder &n
 
 IECore::DataPtr Shader::parameterValue( const Gaffer::Plug *parameterPlug, NetworkBuilder &network ) const
 {
-	const Plug *inputPlug = parameterPlug->source<Plug>();
-	if( inputPlug != parameterPlug )
-	{
-		const Shader *n = IECore::runTimeCast<const Shader>( inputPlug->node() );
-		if( n && ( inputPlug == n->outPlug() || n->outPlug()->isAncestorOf( inputPlug ) ) )
-		{
-			const std::string &shaderHandle = network.shaderHandle( n );
-			if( !shaderHandle.size() )
-			{
-				return NULL;
-			}
-			std::string result = "link:" + shaderHandle;
-			if( n->outPlug()->isAncestorOf( inputPlug ) )
-			{
-				result += "." + inputPlug->relativeName( n->outPlug() );
-			}
-			return new IECore::StringData( result );
-		}
-		// fall through to use plug value
-	}
-
 	if( const Gaffer::ValuePlug *valuePlug = IECore::runTimeCast<const Gaffer::ValuePlug>( parameterPlug ) )
 	{
 		return Gaffer::CompoundDataPlug::extractDataFromPlug( valuePlug );
@@ -311,6 +272,48 @@ void Shader::nodeMetadataChanged( IECore::TypeId nodeTypeId, IECore::InternedStr
 		nodeColorPlug()->setValue( d ? d->readable() : Color3f( 0.0f ) );
 	}
 }
+
+//////////////////////////////////////////////////////////////////////////
+// Internal utilities
+//////////////////////////////////////////////////////////////////////////
+
+namespace
+{
+
+bool isOutputParameter( const Gaffer::Plug *parameterPlug )
+{
+	const Shader *shaderNode = IECore::runTimeCast<const Shader>( parameterPlug->node() );
+	if( !shaderNode )
+	{
+		return NULL;
+	}
+
+	const Plug *shaderNodeOutPlug = shaderNode->outPlug();
+	if( !shaderNodeOutPlug )
+	{
+		return NULL;
+	}
+
+	return parameterPlug == shaderNodeOutPlug || shaderNodeOutPlug->isAncestorOf( parameterPlug );
+}
+
+bool isInputParameter( const Gaffer::Plug *parameterPlug )
+{
+	const Shader *shaderNode = IECore::runTimeCast<const Shader>( parameterPlug->node() );
+	if( !shaderNode )
+	{
+		return NULL;
+	}
+
+	return shaderNode->parametersPlug()->isAncestorOf( parameterPlug );
+}
+
+bool isParameter( const Gaffer::Plug *parameterPlug )
+{
+	return isInputParameter( parameterPlug ) || isOutputParameter( parameterPlug );
+}
+
+} // namespace
 
 //////////////////////////////////////////////////////////////////////////
 // NetworkBuilder implementation
@@ -352,7 +355,15 @@ Shader::NetworkBuilder::NetworkBuilder( const Shader *rootNode )
 
 IECore::MurmurHash Shader::NetworkBuilder::stateHash()
 {
-	return shaderHash( m_rootNode );
+	if( const Gaffer::Plug *p = effectiveParameter( m_rootNode->outPlug() ) )
+	{
+		if( isOutputParameter( p ) )
+		{
+			return shaderHash( static_cast<const Shader *>( p->node() ) );
+		}
+	}
+
+	return IECore::MurmurHash();
 }
 
 IECore::ConstObjectVectorPtr Shader::NetworkBuilder::state()
@@ -360,20 +371,21 @@ IECore::ConstObjectVectorPtr Shader::NetworkBuilder::state()
 	if( !m_state )
 	{
 		m_state = new IECore::ObjectVector;
-		shader( m_rootNode );
+		if( const Gaffer::Plug *p = effectiveParameter( m_rootNode->outPlug() ) )
+		{
+			if( isOutputParameter( p ) )
+			{
+				shader( static_cast<const Shader *>( p->node() ) );
+			}
+		}
 	}
 	return m_state;
 }
 
 IECore::MurmurHash Shader::NetworkBuilder::shaderHash( const Shader *shaderNode )
 {
-	shaderNode = effectiveNode( shaderNode );
-	if( !shaderNode )
-	{
-		IECore::MurmurHash h;
-		h.append( Shader::staticTypeId() );
-		return h;
-	}
+	assert( shaderNode );
+	assert( shaderNode->enabledPlug()->getValue() );
 
 	CycleDetector cycleDetector( m_downstreamShaders, shaderNode );
 
@@ -387,7 +399,7 @@ IECore::MurmurHash Shader::NetworkBuilder::shaderHash( const Shader *shaderNode 
 	shaderNode->namePlug()->hash( shaderAndHash.hash );
 	shaderNode->typePlug()->hash( shaderAndHash.hash );
 
-	parameterHashWalk( shaderNode, shaderNode->parametersPlug(), shaderAndHash.hash );
+	parameterHashWalk( shaderNode->parametersPlug(), shaderAndHash.hash );
 
 	shaderNode->nodeNamePlug()->hash( shaderAndHash.hash );
 	shaderNode->nodeColorPlug()->hash( shaderAndHash.hash );
@@ -395,28 +407,10 @@ IECore::MurmurHash Shader::NetworkBuilder::shaderHash( const Shader *shaderNode 
 	return shaderAndHash.hash;
 }
 
-void Shader::NetworkBuilder::parameterHashWalk( const Shader *shaderNode, const Gaffer::Plug *parameterPlug, IECore::MurmurHash &h )
-{
-	for( InputPlugIterator it( parameterPlug ); !it.done(); ++it )
-	{
-		if( !isLeafParameter( it->get() ) )
-		{
-			parameterHashWalk( shaderNode, it->get(), h );
-		}
-		else
-		{
-			shaderNode->parameterHash( it->get(), *this, h );
-		}
-	}
-}
-
 IECore::Shader *Shader::NetworkBuilder::shader( const Shader *shaderNode )
 {
-	shaderNode = effectiveNode( shaderNode );
-	if( !shaderNode )
-	{
-		return NULL;
-	}
+	assert( shaderNode );
+	assert( shaderNode->enabledPlug()->getValue() );
 
 	CycleDetector cycleDetector( m_downstreamShaders, shaderNode );
 
@@ -427,7 +421,7 @@ IECore::Shader *Shader::NetworkBuilder::shader( const Shader *shaderNode )
 	}
 
 	shaderAndHash.shader = new IECore::Shader( shaderNode->namePlug()->getValue(), shaderNode->typePlug()->getValue() );
-	parameterValueWalk( shaderNode, shaderNode->parametersPlug(), IECore::InternedString(), shaderAndHash.shader->parameters() );
+	parameterValueWalk( shaderNode->parametersPlug(), IECore::InternedString(), shaderAndHash.shader->parameters() );
 
 	shaderAndHash.shader->blindData()->writable()["gaffer:nodeName"] = new IECore::StringData( shaderNode->nodeNamePlug()->getValue() );
 	shaderAndHash.shader->blindData()->writable()["gaffer:nodeColor"] = new IECore::Color3fData( shaderNode->nodeColorPlug()->getValue() );
@@ -437,31 +431,139 @@ IECore::Shader *Shader::NetworkBuilder::shader( const Shader *shaderNode )
 	return shaderAndHash.shader.get();
 }
 
-void Shader::NetworkBuilder::parameterValueWalk( const Shader *shaderNode, const Gaffer::Plug *parameterPlug, const IECore::InternedString &parameterName, IECore::CompoundDataMap &values )
+const Gaffer::Plug *Shader::NetworkBuilder::effectiveParameter( const Gaffer::Plug *parameterPlug ) const
 {
-	for( InputPlugIterator it( parameterPlug ); !it.done(); ++it )
+	while( true )
 	{
-		IECore::InternedString childParameterName;
-		if( parameterName.string().size() )
+		if( !parameterPlug )
 		{
-			childParameterName = parameterName.string() + "." + (*it)->getName().string();
-		}
-		else
-		{
-			childParameterName = (*it)->getName();
+			return NULL;
 		}
 
-		if( !isLeafParameter( it->get() ) )
+		if( isOutputParameter( parameterPlug ) )
 		{
-			parameterValueWalk( shaderNode, it->get(), childParameterName, values );
+			const Shader *shaderNode = static_cast<const Shader *>( parameterPlug->node() );
+			if( shaderNode->enabledPlug()->getValue() )
+			{
+				return parameterPlug;
+			}
+			else
+			{
+				// Follow pass-through, ready for next iteration.
+				parameterPlug = shaderNode->correspondingInput( parameterPlug );
+			}
 		}
 		else
 		{
-			if( IECore::DataPtr value = shaderNode->parameterValue( it->get(), *this ) )
+			assert( isInputParameter( parameterPlug ) );
+			const Gaffer::Plug *source = parameterPlug->source<Gaffer::Plug>();
+			if( source == parameterPlug || !isParameter( source ) )
 			{
-				values[childParameterName] = value;
+				return parameterPlug;
+			}
+			else
+			{
+				// Follow connection, ready for next iteration.
+				parameterPlug = source;
 			}
 		}
+	}
+}
+
+void Shader::NetworkBuilder::parameterHashWalk( const Gaffer::Plug *parameter, IECore::MurmurHash &h )
+{
+	// Recursion to child parameters
+
+	if( !isLeafParameter( parameter ) || parameter->parent<Node>() )
+	{
+		for( InputPlugIterator it( parameter ); !it.done(); ++it )
+		{
+			parameterHashWalk( it->get(), h );
+		}
+		return;
+	}
+
+	// Leaf parameters
+
+	const Gaffer::Plug *effectiveParameter = this->effectiveParameter( parameter );
+	if( !effectiveParameter )
+	{
+		return;
+	}
+
+	const Shader *effectiveShader = static_cast<const Shader *>( effectiveParameter->node() );
+	if( isInputParameter( effectiveParameter ) )
+	{
+		effectiveShader->parameterHash( effectiveParameter, *this, h );
+	}
+	else
+	{
+		assert( isOutputParameter( effectiveParameter ) );
+		h.append( shaderHash( effectiveShader ) );
+		if( effectiveShader->outPlug()->isAncestorOf( effectiveParameter ) )
+		{
+			h.append( effectiveParameter->relativeName( effectiveShader->outPlug() ) );
+		}
+		return;
+	}
+}
+
+void Shader::NetworkBuilder::parameterValueWalk( const Gaffer::Plug *parameter, const IECore::InternedString &parameterName, IECore::CompoundDataMap &values )
+{
+	// Recursion to child parameters
+
+	if( !isLeafParameter( parameter ) || parameter->parent<Node>() )
+	{
+		for( InputPlugIterator it( parameter ); !it.done(); ++it )
+		{
+			IECore::InternedString childParameterName;
+			if( parameterName.string().size() )
+			{
+				childParameterName = parameterName.string() + "." + (*it)->getName().string();
+			}
+			else
+			{
+				childParameterName = (*it)->getName();
+			}
+
+			parameterValueWalk( it->get(), childParameterName, values );
+		}
+		return;
+	}
+
+	// Leaf parameters
+
+	const Gaffer::Plug *effectiveParameter = this->effectiveParameter( parameter );
+	if( !effectiveParameter )
+	{
+		return;
+	}
+
+	const Shader *effectiveShader = static_cast<const Shader *>( effectiveParameter->node() );
+	IECore::DataPtr value;
+
+	if( isInputParameter( effectiveParameter ) )
+	{
+		value = effectiveShader->parameterValue( effectiveParameter, *this );
+	}
+	else
+	{
+		assert( isOutputParameter( effectiveParameter ) );
+		const std::string &shaderHandle = this->shaderHandle( effectiveShader );
+		if( shaderHandle.size() )
+		{
+			std::string handle = "link:" + shaderHandle;
+			if( effectiveShader->outPlug()->isAncestorOf( effectiveParameter ) )
+			{
+				handle += "." + effectiveParameter->relativeName( effectiveShader->outPlug() );
+			}
+			value = new IECore::StringData( handle );
+		}
+	}
+
+	if( value )
+	{
+		values[parameterName] = value;
 	}
 }
 
@@ -518,30 +620,4 @@ const std::string &Shader::NetworkBuilder::shaderHandle( const Shader *shaderNod
 		s->parameters()["__handle"] = handleData;
 	}
 	return handleData->readable();
-}
-
-const Shader *Shader::NetworkBuilder::effectiveNode( const Shader *shaderNode ) const
-{
-	while( shaderNode )
-	{
-		if( shaderNode->enabledPlug()->getValue() )
-		{
-			return shaderNode;
-		}
-
-		const Plug *correspondingInput = shaderNode->correspondingInput( shaderNode->outPlug() );
-		if( !correspondingInput )
-		{
-			return NULL;
-		}
-
-		const Plug *source = correspondingInput->source<Plug>();
-		if( source == correspondingInput )
-		{
-			return NULL;
-		}
-
-		shaderNode = source->ancestor<Shader>();
-	}
-	return NULL;
 }

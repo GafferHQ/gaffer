@@ -791,5 +791,65 @@ class OSLShaderTest( GafferOSLTest.OSLTestCase ) :
 		n.loadShader( self.compileShader( os.path.dirname( __file__ ) + "/shaders/constant.osl" ) )
 		self.assertEqual( len( n["out"] ), 0 )
 
+	def testReconnectionOfChildPlugShader( self ) :
+
+		s = Gaffer.ScriptNode()
+
+		s["n1"] = GafferOSL.OSLShader()
+		s["n1"].loadShader( "Maths/VectorAdd" )
+
+		s["n2"] = GafferOSL.OSLShader()
+		s["n2"].loadShader( "Maths/VectorAdd" )
+
+		s["n3"] = GafferOSL.OSLShader()
+		s["n3"].loadShader( "Maths/VectorAdd" )
+
+		s["n2"]["parameters"]["a"].setInput( s["n1"]["out"]["out"] )
+		s["n3"]["parameters"]["a"].setInput( s["n2"]["out"]["out"] )
+
+		s.deleteNodes( filter = Gaffer.StandardSet( [ s["n2"] ] ) )
+		self.assertTrue( s["n3"]["parameters"]["a"].getInput().isSame( s["n1"]["out"]["out"] ) )
+
+	def testDisablingShader( self ) :
+
+		n1 = GafferOSL.OSLShader()
+		n1.loadShader( "Maths/VectorAdd" )
+		n1["parameters"]["a"].setValue( IECore.V3f( 5, 7, 6 ) )
+
+		n2 = GafferOSL.OSLShader()
+		n2.loadShader( "Maths/VectorAdd" )
+
+		n3 = GafferOSL.OSLShader()
+		n3.loadShader( "Maths/VectorAdd" )
+
+		n2["parameters"]["a"].setInput( n1["out"]["out"] )
+		n3["parameters"]["a"].setInput( n2["out"]["out"] )
+
+		n2["enabled"].setValue( False )
+		network = n3.attributes()["osl:shader"]
+		self.assertEqual( len( network ), 2 )
+		self.assertEqual( network[1].parameters["a"].value, "link:" + network[0].parameters["__handle"].value + ".out" )
+		self.assertEqual( network[0].parameters["a"].value, IECore.V3f( 5, 7, 6 ) )
+
+	def testDisabledShaderPassesThroughExternalValue( self ) :
+
+		n1 = Gaffer.Node()
+		n1["user"]["v"] = Gaffer.V3fPlug( flags = Gaffer.Plug.Flags.Default | Gaffer.Plug.Flags.Dynamic )
+		n1["user"]["v"].setValue( IECore.V3f( 12, 11, 10 ) )
+
+		n2 = GafferOSL.OSLShader()
+		n2.loadShader( "Maths/VectorAdd" )
+		n2["parameters"]["a"].setInput( n1["user"]["v"] )
+
+		n3 = GafferOSL.OSLShader()
+		n3.loadShader( "Maths/VectorAdd" )
+		n3["parameters"]["a"].setInput( n2["parameters"]["a"] )
+
+		n2["enabled"].setValue( False )
+
+		network = n3.attributes()["osl:shader"]
+		self.assertEqual( len( network ), 1 )
+		self.assertEqual( network[0].parameters["a"].value, IECore.V3f( 12, 11, 10 ) )
+
 if __name__ == "__main__":
 	unittest.main()

@@ -133,20 +133,21 @@ class Shader : public Gaffer::DependencyNode
 				IECore::ConstObjectVectorPtr state();
 
 				IECore::MurmurHash shaderHash( const Shader *shaderNode );
-				/// May return an empty string if a shader has been disabled.
-				const std::string &shaderHandle( const Shader *shaderNode );
+				IECore::Shader *shader( const Shader *shaderNode );
 
 			private :
 
 				NetworkBuilder();
 
-				// Returns the node that should be used taking into account
-				// enabledPlug() and correspondingInput().
-				const Shader *effectiveNode( const Shader *shaderNode ) const;
-				IECore::Shader *shader( const Shader *shaderNode );
+				// Returns the effective shader parameter that should be used taking into account
+				// enabledPlug() and correspondingInput(). Accepts either output or input parameters
+				// and may return either an output or input parameter.
+				const Gaffer::Plug *effectiveParameter( const Gaffer::Plug *parameterPlug ) const;
 
-				void parameterHashWalk( const Shader *shaderNode, const Gaffer::Plug *parameterPlug, IECore::MurmurHash &h );
-				void parameterValueWalk( const Shader *shaderNode, const Gaffer::Plug *parameterPlug, const IECore::InternedString &parameterName, IECore::CompoundDataMap &values );
+				const std::string &shaderHandle( const Shader *shaderNode );
+
+				void parameterHashWalk( const Gaffer::Plug *parameter, IECore::MurmurHash &h );
+				void parameterValueWalk( const Gaffer::Plug *parameter, const IECore::InternedString &parameterName, IECore::CompoundDataMap &values );
 				bool isLeafParameter( const Gaffer::Plug *parameterPlug ) const;
 
 				const Shader *m_rootNode;
@@ -173,8 +174,7 @@ class Shader : public Gaffer::DependencyNode
 		/// to deal with special cases, in which case parameterValue() should be reimplemented too.
 		virtual void parameterHash( const Gaffer::Plug *parameterPlug, NetworkBuilder &network, IECore::MurmurHash &h ) const;
 		/// Called for each parameter plug when constructing an IECore::Shader from this node.
-		/// May be reimplemented in derived classes to deal with special cases, and must currently
-		/// be reimplemented to deal with shader connections.
+		/// May be reimplemented in derived classes to deal with special cases.
 		virtual IECore::DataPtr parameterValue( const Gaffer::Plug *parameterPlug, NetworkBuilder &network ) const;
 
 	private :
