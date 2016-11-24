@@ -252,64 +252,6 @@ bool RenderManShader::acceptsInput( const Plug *plug, const Plug *inputPlug ) co
 	return true;
 }
 
-void RenderManShader::parameterHash( const Gaffer::Plug *parameterPlug, NetworkBuilder &network, IECore::MurmurHash &h ) const
-{
-	if( parameterPlug->isInstanceOf( ArrayPlug::staticTypeId() ) )
-	{
-		// coshader array parameter
-		for( InputPlugIterator cIt( parameterPlug ); !cIt.done(); ++cIt )
-		{
-			Shader::parameterHash( cIt->get(), network, h );
-		}
-	}
-	else
-	{
-		Shader::parameterHash( parameterPlug, network, h );
-	}
-}
-
-IECore::DataPtr RenderManShader::parameterValue( const Gaffer::Plug *parameterPlug, NetworkBuilder &network ) const
-{
-	if( parameterPlug->typeId() == Plug::staticTypeId() )
-	{
-		// coshader parameter
-		const Plug *inputPlug = parameterPlug->source<Plug>();
-		if( inputPlug && inputPlug != parameterPlug )
-		{
-			const RenderManShader *inputShader = inputPlug->parent<RenderManShader>();
-			if( inputShader )
-			{
-				const std::string &handle = network.shaderHandle( inputShader );
-				if( handle.size() )
-				{
-					return new StringData( handle );
-				}
-			}
-		}
-	}
-	else if( parameterPlug->isInstanceOf( ArrayPlug::staticTypeId() ) )
-	{
-		// coshader array parameter
-		StringVectorDataPtr value = new StringVectorData();
-		for( InputPlugIterator cIt( parameterPlug ); !cIt.done(); ++cIt )
-		{
-			const Plug *inputPlug = (*cIt)->source<Plug>();
-			const RenderManShader *inputShader = inputPlug && inputPlug != *cIt ? inputPlug->parent<RenderManShader>() : 0;
-			if( inputShader )
-			{
-				value->writable().push_back( network.shaderHandle( inputShader ) );
-			}
-			else
-			{
-				value->writable().push_back( "" );
-			}
-		}
-		return value;
-	}
-
-	return Shader::parameterValue( parameterPlug, network );
-}
-
 const IECore::ConstCompoundDataPtr RenderManShader::annotations() const
 {
 	std::string shaderName = namePlug()->getValue();

@@ -39,6 +39,8 @@
 #include "boost/lexical_cast.hpp"
 #include "boost/bind.hpp"
 
+#include "IECore/VectorTypedData.h"
+
 #include "Gaffer/TypedPlug.h"
 #include "Gaffer/NumericPlug.h"
 #include "Gaffer/CompoundDataPlug.h"
@@ -472,19 +474,66 @@ const Gaffer::Plug *Shader::NetworkBuilder::effectiveParameter( const Gaffer::Pl
 
 void Shader::NetworkBuilder::parameterHashWalk( const Gaffer::Plug *parameter, IECore::MurmurHash &h )
 {
-	// Recursion to child parameters
-
 	if( !isLeafParameter( parameter ) || parameter->parent<Node>() )
 	{
+		// Compound parameter - recurse
 		for( InputPlugIterator it( parameter ); !it.done(); ++it )
 		{
 			parameterHashWalk( it->get(), h );
 		}
-		return;
 	}
+	else if( const Gaffer::ArrayPlug *arrayParameter = IECore::runTimeCast<const Gaffer::ArrayPlug>( parameter ) )
+	{
+		// Array parameter
+		arrayParameterHash( arrayParameter, h );
+	}
+	else
+	{
+		// Leaf parameter
+		parameterHash( parameter, h );
+	}
+}
 
-	// Leaf parameters
+void Shader::NetworkBuilder::parameterValueWalk( const Gaffer::Plug *parameter, const IECore::InternedString &parameterName, IECore::CompoundDataMap &values )
+{
+	if( !isLeafParameter( parameter ) || parameter->parent<Node>() )
+	{
+		// Compound parameter - recurse
+		for( InputPlugIterator it( parameter ); !it.done(); ++it )
+		{
+			IECore::InternedString childParameterName;
+			if( parameterName.string().size() )
+			{
+				childParameterName = parameterName.string() + "." + (*it)->getName().string();
+			}
+			else
+			{
+				childParameterName = (*it)->getName();
+			}
 
+			parameterValueWalk( it->get(), childParameterName, values );
+		}
+	}
+	else if( const Gaffer::ArrayPlug *arrayParameter = IECore::runTimeCast<const Gaffer::ArrayPlug>( parameter ) )
+	{
+		// Array parameter
+		if( IECore::DataPtr value = arrayParameterValue( arrayParameter ) )
+		{
+			values[parameterName] = value;
+		}
+	}
+	else
+	{
+		// Leaf parameter
+		if( IECore::DataPtr value = parameterValue( parameter ) )
+		{
+			values[parameterName] = value;
+		}
+	}
+}
+
+void Shader::NetworkBuilder::parameterHash( const Gaffer::Plug *parameter, IECore::MurmurHash &h )
+{
 	const Gaffer::Plug *effectiveParameter = this->effectiveParameter( parameter );
 	if( !effectiveParameter )
 	{
@@ -508,63 +557,54 @@ void Shader::NetworkBuilder::parameterHashWalk( const Gaffer::Plug *parameter, I
 	}
 }
 
-void Shader::NetworkBuilder::parameterValueWalk( const Gaffer::Plug *parameter, const IECore::InternedString &parameterName, IECore::CompoundDataMap &values )
+IECore::DataPtr Shader::NetworkBuilder::parameterValue( const Gaffer::Plug *parameter )
 {
-	// Recursion to child parameters
-
-	if( !isLeafParameter( parameter ) || parameter->parent<Node>() )
-	{
-		for( InputPlugIterator it( parameter ); !it.done(); ++it )
-		{
-			IECore::InternedString childParameterName;
-			if( parameterName.string().size() )
-			{
-				childParameterName = parameterName.string() + "." + (*it)->getName().string();
-			}
-			else
-			{
-				childParameterName = (*it)->getName();
-			}
-
-			parameterValueWalk( it->get(), childParameterName, values );
-		}
-		return;
-	}
-
-	// Leaf parameters
-
 	const Gaffer::Plug *effectiveParameter = this->effectiveParameter( parameter );
 	if( !effectiveParameter )
 	{
-		return;
+		return NULL;
 	}
 
 	const Shader *effectiveShader = static_cast<const Shader *>( effectiveParameter->node() );
-	IECore::DataPtr value;
-
 	if( isInputParameter( effectiveParameter ) )
 	{
-		value = effectiveShader->parameterValue( effectiveParameter, *this );
+		return effectiveShader->parameterValue( effectiveParameter, *this );
 	}
 	else
 	{
 		assert( isOutputParameter( effectiveParameter ) );
-		const std::string &shaderHandle = this->shaderHandle( effectiveShader );
-		if( shaderHandle.size() )
+		return new IECore::StringData( link( effectiveShader, effectiveParameter ) );
+	}
+}
+
+void Shader::NetworkBuilder::arrayParameterHash( const Gaffer::ArrayPlug *parameter, IECore::MurmurHash &h )
+{
+	for( InputPlugIterator it( parameter ); !it.done(); ++it )
+	{
+		parameterHash( it->get(), h );
+	}
+}
+
+IECore::DataPtr Shader::NetworkBuilder::arrayParameterValue( const Gaffer::ArrayPlug *parameter )
+{
+	/// \todo We're just supporting arrays of connections - support arrays of values too.
+	IECore::StringVectorDataPtr resultData = new IECore::StringVectorData;
+	std::vector<std::string> &result = resultData->writable();
+	for( InputPlugIterator it( parameter ); !it.done(); ++it )
+	{
+		const Gaffer::Plug *effectiveParameter = this->effectiveParameter( it->get() );
+		if( effectiveParameter && isOutputParameter( effectiveParameter ) )
 		{
-			std::string handle = "link:" + shaderHandle;
-			if( effectiveShader->outPlug()->isAncestorOf( effectiveParameter ) )
-			{
-				handle += "." + effectiveParameter->relativeName( effectiveShader->outPlug() );
-			}
-			value = new IECore::StringData( handle );
+			const Shader *effectiveShader = static_cast<const Shader *>( effectiveParameter->node() );
+			result.push_back( link( effectiveShader, effectiveParameter ) );
+		}
+		else
+		{
+			result.push_back( "" );
 		}
 	}
 
-	if( value )
-	{
-		values[parameterName] = value;
-	}
+	return resultData;
 }
 
 bool Shader::NetworkBuilder::isLeafParameter( const Gaffer::Plug *parameterPlug ) const
@@ -620,4 +660,26 @@ const std::string &Shader::NetworkBuilder::shaderHandle( const Shader *shaderNod
 		s->parameters()["__handle"] = handleData;
 	}
 	return handleData->readable();
+}
+
+std::string Shader::NetworkBuilder::link( const Shader *shaderNode, const Gaffer::Plug *outputParameter )
+{
+	std::string result = this->shaderHandle( shaderNode );
+	if( shaderNode->outPlug()->isAncestorOf( outputParameter ) )
+	{
+		result += "." + outputParameter->relativeName( shaderNode->outPlug() );
+	}
+
+	if( !shaderNode->isInstanceOf( "GafferRenderMan::RenderManShader" ) )
+	{
+		// All our other renderer backends use a "link:" prefix to specify
+		// shader connections, but the legacy RenderMan backend doesn't. In
+		// return for the special case hack here, we get to remove complexity
+		// from the entire shader generation mechanism.
+		/// \todo Write a new RenderMan backend following the usual conventio
+		/// and remove this hack.
+		result = "link:" + result;
+	}
+
+	return result;
 }
