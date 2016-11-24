@@ -144,7 +144,7 @@ void OpenGLShader::loadShader( const std::string &shaderName )
 	typePlug()->setValue( "gl:surface" );
 }
 
-void OpenGLShader::parameterHash( const Gaffer::Plug *parameterPlug, NetworkBuilder &network, IECore::MurmurHash &h ) const
+void OpenGLShader::parameterHash( const Gaffer::Plug *parameterPlug, IECore::MurmurHash &h ) const
 {
 	if( const GafferImage::ImagePlug *imagePlug = runTimeCast<const GafferImage::ImagePlug>( parameterPlug ) )
 	{
@@ -152,11 +152,11 @@ void OpenGLShader::parameterHash( const Gaffer::Plug *parameterPlug, NetworkBuil
 	}
 	else
 	{
-		Shader::parameterHash( parameterPlug, network, h );
+		Shader::parameterHash( parameterPlug, h );
 	}
 }
 
-IECore::DataPtr OpenGLShader::parameterValue( const Gaffer::Plug *parameterPlug, NetworkBuilder &network ) const
+IECore::DataPtr OpenGLShader::parameterValue( const Gaffer::Plug *parameterPlug ) const
 {
 	if( const GafferImage::ImagePlug *imagePlug = runTimeCast<const GafferImage::ImagePlug>( parameterPlug ) )
 	{
@@ -176,10 +176,10 @@ IECore::DataPtr OpenGLShader::parameterValue( const Gaffer::Plug *parameterPlug,
 			value->writable()["channels"] = channelData;
 			return value;
 		}
-		return 0;
+		return NULL;
 	}
 	else
 	{
-		return Shader::parameterValue( parameterPlug, network );
+		return Shader::parameterValue( parameterPlug );
 	}
 }
