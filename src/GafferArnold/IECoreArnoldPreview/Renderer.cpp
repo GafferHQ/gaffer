@@ -225,7 +225,17 @@ class ArnoldOutput : public IECore::RefCounted
 				AiNodeSetStr( m_driver.get(), AiParamGetName( fileNameParameter ), output->getName().c_str() );
 			}
 
-			IECore::StringVectorDataPtr customAttributesData = new IECore::StringVectorData();
+			IECore::StringVectorDataPtr customAttributesData;
+			// we need to do the const_cast here because there's not const parametersData() in cortex.
+			if( const IECore::StringVectorData *d = const_cast<IECoreScenePreview::Renderer::Output*>( output )->parametersData()->member<IECore::StringVectorData>( "custom_attributes") )
+			{
+				customAttributesData = d->copy();
+			}
+			else
+			{
+				customAttributesData = new IECore::StringVectorData();
+			}
+
 			std::vector<std::string> &customAttributes = customAttributesData->writable();
 			for( IECore::CompoundDataMap::const_iterator it = output->parameters().begin(), eIt = output->parameters().end(); it != eIt; ++it )
 			{
