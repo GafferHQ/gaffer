@@ -123,70 +123,16 @@ class Shader : public Gaffer::DependencyNode
 
 	protected :
 
-		class NetworkBuilder
-		{
-
-			public :
-
-				NetworkBuilder( const Shader *rootNode );
-
-				IECore::MurmurHash stateHash();
-				IECore::ConstObjectVectorPtr state();
-
-				IECore::MurmurHash shaderHash( const Shader *shaderNode );
-				IECore::Shader *shader( const Shader *shaderNode );
-
-			private :
-
-				NetworkBuilder();
-
-				// Returns the effective shader parameter that should be used taking into account
-				// enabledPlug() and correspondingInput(). Accepts either output or input parameters
-				// and may return either an output or input parameter.
-				const Gaffer::Plug *effectiveParameter( const Gaffer::Plug *parameterPlug ) const;
-
-				const std::string &shaderHandle( const Shader *shaderNode );
-				std::string link( const Shader *shaderNode, const Gaffer::Plug *outputParameter );
-
-				void parameterHashWalk( const Gaffer::Plug *parameter, IECore::MurmurHash &h );
-				void parameterValueWalk( const Gaffer::Plug *parameter, const IECore::InternedString &parameterName, IECore::CompoundDataMap &values );
-
-				void parameterHash( const Gaffer::Plug *parameter, IECore::MurmurHash &h );
-				IECore::DataPtr parameterValue( const Gaffer::Plug *parameter );
-
-				void arrayParameterHash( const Gaffer::ArrayPlug *parameter, IECore::MurmurHash &h );
-				IECore::DataPtr arrayParameterValue( const Gaffer::ArrayPlug *parameter );
-
-				bool isLeafParameter( const Gaffer::Plug *parameterPlug ) const;
-
-				const Shader *m_rootNode;
-				IECore::ObjectVectorPtr m_state;
-
-				struct ShaderAndHash
-				{
-				 	IECore::ShaderPtr shader;
-				 	IECore::MurmurHash hash;
-				};
-
-				typedef std::map<const Shader *, ShaderAndHash> ShaderMap;
-				ShaderMap m_shaders;
-
-				typedef boost::unordered_set<const Shader *> ShaderSet;
-				ShaderSet m_downstreamShaders; // Used for detecting cycles
-				struct CycleDetector;
-
-				unsigned int m_handleCount;
-
-		};
-
 		/// Called when computing the hash for this node. May be reimplemented in derived classes
 		/// to deal with special cases, in which case parameterValue() should be reimplemented too.
-		virtual void parameterHash( const Gaffer::Plug *parameterPlug, NetworkBuilder &network, IECore::MurmurHash &h ) const;
+		virtual void parameterHash( const Gaffer::Plug *parameterPlug, IECore::MurmurHash &h ) const;
 		/// Called for each parameter plug when constructing an IECore::Shader from this node.
 		/// May be reimplemented in derived classes to deal with special cases.
-		virtual IECore::DataPtr parameterValue( const Gaffer::Plug *parameterPlug, NetworkBuilder &network ) const;
+		virtual IECore::DataPtr parameterValue( const Gaffer::Plug *parameterPlug ) const;
 
 	private :
+
+		class NetworkBuilder;
 
 		void nameChanged();
 		void nodeMetadataChanged( IECore::TypeId nodeTypeId, IECore::InternedString key, const Node *node );
