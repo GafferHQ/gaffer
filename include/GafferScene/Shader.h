@@ -47,6 +47,7 @@
 #include "Gaffer/DependencyNode.h"
 #include "Gaffer/TypedPlug.h"
 #include "Gaffer/CompoundNumericPlug.h"
+#include "Gaffer/ArrayPlug.h"
 
 #include "GafferScene/TypeIds.h"
 
@@ -145,9 +146,17 @@ class Shader : public Gaffer::DependencyNode
 				const Gaffer::Plug *effectiveParameter( const Gaffer::Plug *parameterPlug ) const;
 
 				const std::string &shaderHandle( const Shader *shaderNode );
+				std::string link( const Shader *shaderNode, const Gaffer::Plug *outputParameter );
 
 				void parameterHashWalk( const Gaffer::Plug *parameter, IECore::MurmurHash &h );
 				void parameterValueWalk( const Gaffer::Plug *parameter, const IECore::InternedString &parameterName, IECore::CompoundDataMap &values );
+
+				void parameterHash( const Gaffer::Plug *parameter, IECore::MurmurHash &h );
+				IECore::DataPtr parameterValue( const Gaffer::Plug *parameter );
+
+				void arrayParameterHash( const Gaffer::ArrayPlug *parameter, IECore::MurmurHash &h );
+				IECore::DataPtr arrayParameterValue( const Gaffer::ArrayPlug *parameter );
+
 				bool isLeafParameter( const Gaffer::Plug *parameterPlug ) const;
 
 				const Shader *m_rootNode;
