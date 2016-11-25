@@ -40,6 +40,8 @@
 #include "GafferBindings/DependencyNodeBinding.h"
 #include "GafferBindings/SwitchBinding.h"
 
+using namespace boost::python;
+using namespace IECorePython;
 using namespace Gaffer;
 using namespace GafferBindings;
 
@@ -51,6 +53,7 @@ void bind()
 {
 	DependencyNodeClass<T>()
 		.def( "setup", &T::setup )
+		.def( "activeInPlug", (Plug *(T::*)())&T::activeInPlug, return_value_policy<CastToIntrusivePtr>() )
 	;
 }
 

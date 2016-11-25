@@ -80,6 +80,11 @@ class Switch : public BaseType
 		/// \undoable
 		void setup( const Plug *plug );
 
+		/// Returns the input plug which will be passed through
+		/// by the switch in the current context.
+		Plug *activeInPlug();
+		const Plug *activeInPlug() const;
+
 		IntPlug *indexPlug();
 		const IntPlug *indexPlug() const;
 

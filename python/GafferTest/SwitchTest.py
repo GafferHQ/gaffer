@@ -378,6 +378,42 @@ class SwitchTest( GafferTest.TestCase ) :
 		s2 = GafferTest.AddNode()
 		self.assertTrue( switches[0]["in"][0].acceptsInput( s2["sum"] ) )
 
+	def testActiveInPlug( self ) :
+
+		s = Gaffer.ScriptNode()
+
+		s["a1"] = GafferTest.AddNode()
+		s["a2"] = GafferTest.AddNode()
+
+		s["switch"] = self.intSwitch()
+		s["switch"]["in"][0].setInput( s["a1"]["sum"] )
+		s["switch"]["in"][1].setInput( s["a2"]["sum"] )
+
+		self.assertTrue( s["switch"].activeInPlug().isSame( s["switch"]["in"][0] ) )
+
+		s["switch"]["index"].setValue( 1 )
+		self.assertTrue( s["switch"].activeInPlug().isSame( s["switch"]["in"][1] ) )
+
+		s["switch"]["enabled"].setValue( False )
+		self.assertTrue( s["switch"].activeInPlug().isSame( s["switch"]["in"][0] ) )
+
+		s["switch"]["enabled"].setValue( True )
+		self.assertTrue( s["switch"].activeInPlug().isSame( s["switch"]["in"][1] ) )
+
+		s["expression"] = Gaffer.Expression()
+		s["expression"].setExpression( 'parent["switch"]["index"] = context.getFrame()' )
+
+		with Gaffer.Context() as c :
+
+			c.setFrame( 0 )
+			self.assertTrue( s["switch"].activeInPlug().isSame( s["switch"]["in"][0] ) )
+
+			c.setFrame( 1 )
+			self.assertTrue( s["switch"].activeInPlug().isSame( s["switch"]["in"][1] ) )
+
+			c.setFrame( 2 )
+			self.assertTrue( s["switch"].activeInPlug().isSame( s["switch"]["in"][0] ) )
+
 	def setUp( self ) :
 
 		GafferTest.TestCase.setUp( self )

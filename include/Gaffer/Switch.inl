@@ -40,6 +40,7 @@
 
 #include "Gaffer/Switch.h"
 #include "Gaffer/ArrayPlug.h"
+#include "Gaffer/Context.h"
 
 namespace Gaffer
 {
@@ -130,6 +131,23 @@ void Switch<BaseType>::setup( const Plug *plug )
 	PlugPtr out = plug->createCounterpart( "out", Plug::Out );
 	out->setFlags( Plug::Dynamic, true );
 	BaseType::addChild( out );
+}
+
+template<typename BaseType>
+Plug *Switch<BaseType>::activeInPlug()
+{
+	ArrayPlug *inputs = BaseType::template getChild<ArrayPlug>( "in" );
+	if( !inputs )
+	{
+		return NULL;
+	}
+	return inputs->getChild<Plug>( inputIndex( Context::current() ) );
+}
+
+template<typename BaseType>
+const Plug *Switch<BaseType>::activeInPlug() const
+{
+	return const_cast<Switch *>( this )->activeInPlug();
 }
 
 template<typename BaseType>
