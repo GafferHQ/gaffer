@@ -66,13 +66,13 @@ bool isOutputParameter( const Gaffer::Plug *parameterPlug )
 	const Shader *shaderNode = IECore::runTimeCast<const Shader>( parameterPlug->node() );
 	if( !shaderNode )
 	{
-		return NULL;
+		return false;
 	}
 
 	const Plug *shaderNodeOutPlug = shaderNode->outPlug();
 	if( !shaderNodeOutPlug )
 	{
-		return NULL;
+		return false;
 	}
 
 	return parameterPlug == shaderNodeOutPlug || shaderNodeOutPlug->isAncestorOf( parameterPlug );
@@ -83,7 +83,7 @@ bool isInputParameter( const Gaffer::Plug *parameterPlug )
 	const Shader *shaderNode = IECore::runTimeCast<const Shader>( parameterPlug->node() );
 	if( !shaderNode )
 	{
-		return NULL;
+		return false;
 	}
 
 	return shaderNode->parametersPlug()->isAncestorOf( parameterPlug );
