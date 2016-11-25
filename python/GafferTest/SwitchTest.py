@@ -45,16 +45,14 @@ class SwitchTest( GafferTest.TestCase ) :
 	def intSwitch( self ) :
 
 		result = Gaffer.SwitchComputeNode()
-		result["in"] = Gaffer.ArrayPlug( element = Gaffer.IntPlug(), flags = Gaffer.Plug.Flags.Default | Gaffer.Plug.Flags.Dynamic )
-		result["out"] = Gaffer.IntPlug( direction = Gaffer.Plug.Direction.Out, flags = Gaffer.Plug.Flags.Default | Gaffer.Plug.Flags.Dynamic  )
+		result.setup( Gaffer.IntPlug() )
 
 		return result
 
 	def colorSwitch( self ) :
 
 		result = Gaffer.SwitchComputeNode()
-		result["in"] = Gaffer.ArrayPlug( element = Gaffer.Color3fPlug(), flags = Gaffer.Plug.Flags.Default | Gaffer.Plug.Flags.Dynamic )
-		result["out"] = Gaffer.Color3fPlug( direction = Gaffer.Plug.Direction.Out, flags = Gaffer.Plug.Flags.Default | Gaffer.Plug.Flags.Dynamic )
+		result.setup( Gaffer.Color3fPlug() )
 
 		return result
 

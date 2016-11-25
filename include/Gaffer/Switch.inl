@@ -106,6 +106,33 @@ Switch<BaseType>::~Switch()
 }
 
 template<typename BaseType>
+void Switch<BaseType>::setup( const Plug *plug )
+{
+	if( BaseType::template getChild<Plug>( "in") )
+	{
+		throw IECore::Exception( "Switch already has an \"in\" plug." );
+	}
+	if( BaseType::template getChild<Plug>( "out" ) )
+	{
+		throw IECore::Exception( "Switch already has an \"out\" plug." );
+	}
+
+	ArrayPlugPtr in = new ArrayPlug(
+		"in",
+		Plug::In,
+		plug->createCounterpart( "in0", Plug::In ),
+		0,
+		Imath::limits<size_t>::max(),
+		Plug::Default | Plug::Dynamic
+	);
+	BaseType::addChild( in );
+
+	PlugPtr out = plug->createCounterpart( "out", Plug::Out );
+	out->setFlags( Plug::Dynamic, true );
+	BaseType::addChild( out );
+}
+
+template<typename BaseType>
 IntPlug *Switch<BaseType>::indexPlug()
 {
 	return BaseType::template getChild<IntPlug>( g_firstPlugIndex );
