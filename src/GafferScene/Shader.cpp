@@ -47,6 +47,7 @@
 #include "Gaffer/StringPlug.h"
 #include "Gaffer/Metadata.h"
 #include "Gaffer/ScriptNode.h"
+#include "Gaffer/Switch.h"
 
 #include "GafferScene/Shader.h"
 
@@ -214,6 +215,18 @@ class Shader::NetworkBuilder
 				{
 					assert( isInputParameter( parameterPlug ) );
 					const Gaffer::Plug *source = parameterPlug->source<Gaffer::Plug>();
+
+					if( const SwitchComputeNode *switchNode = source->parent<SwitchComputeNode>() )
+					{
+						// Special case for switches with context-varying index values.
+						// Query the active input for this context, and manually traverse
+						// out the other side.
+						if( const Plug *activeInPlug = switchNode->activeInPlug() )
+						{
+							source = activeInPlug->source<Plug>();
+						}
+					}
+
 					if( source == parameterPlug || !isParameter( source ) )
 					{
 						return parameterPlug;
