@@ -111,18 +111,6 @@ class ScriptNodeWrapper : public NodeWrapper<ScriptNode>
 			return NodeWrapper<ScriptNode>::isInstanceOf( typeId );
 		}
 
-		virtual bool execute( const std::string &pythonScript, Node *parent = 0, bool continueOnError = false )
-		{
-			const bool result = executeInternal( pythonScript, parent, continueOnError );
-			return result;
-		}
-
-		virtual bool executeFile( const std::string &pythonFile, Node *parent = 0, bool continueOnError = false )
-		{
-			const std::string pythonScript = readFile( pythonFile );
-			return executeInternal( pythonScript, parent, continueOnError, pythonFile );
-		}
-
 		virtual std::string serialise( const Node *parent = 0, const Set *filter = 0 ) const
 		{
 			Serialisation serialisation( parent ? parent : this, "parent", filter );
@@ -149,6 +137,18 @@ class ScriptNodeWrapper : public NodeWrapper<ScriptNode>
 			{
 				throw IECore::IOException( "Failed to write to \"" + fileName + "\"" );
 			}
+		}
+
+		virtual bool execute( const std::string &serialisation, Node *parent = 0, bool continueOnError = false )
+		{
+			const bool result = executeInternal( serialisation, parent, continueOnError );
+			return result;
+		}
+
+		virtual bool executeFile( const std::string &fileName, Node *parent = 0, bool continueOnError = false )
+		{
+			const std::string serialisation = readFile( fileName );
+			return executeInternal( serialisation, parent, continueOnError, fileName );
 		}
 
 		virtual bool load( bool continueOnError = false )

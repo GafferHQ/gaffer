@@ -588,16 +588,6 @@ void ScriptNode::deleteNodes( Node *parent, const Set *filter, bool reconnect )
 	}
 }
 
-bool ScriptNode::execute( const std::string &pythonScript, Node *parent, bool continueOnError )
-{
-	throw IECore::Exception( "Cannot execute scripts on a ScriptNode not created in Python." );
-}
-
-bool ScriptNode::executeFile( const std::string &pythonFile, Node *parent, bool continueOnError )
-{
-	throw IECore::Exception( "Cannot execute files on a ScriptNode not created in Python." );
-}
-
 ScriptNode::ScriptExecutedSignal &ScriptNode::scriptExecutedSignal()
 {
 	return m_scriptExecutedSignal;
@@ -611,6 +601,16 @@ std::string ScriptNode::serialise( const Node *parent, const Set *filter ) const
 void ScriptNode::serialiseToFile( const std::string &fileName, const Node *parent, const Set *filter ) const
 {
 	throw IECore::Exception( "Cannot serialise scripts on a ScriptNode not created in Python." );
+}
+
+bool ScriptNode::execute( const std::string &serialisation, Node *parent, bool continueOnError )
+{
+	throw IECore::Exception( "Cannot execute scripts on a ScriptNode not created in Python." );
+}
+
+bool ScriptNode::executeFile( const std::string &fileName, Node *parent, bool continueOnError )
+{
+	throw IECore::Exception( "Cannot execute files on a ScriptNode not created in Python." );
 }
 
 bool ScriptNode::load( bool continueOnError)

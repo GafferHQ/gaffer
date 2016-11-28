@@ -150,44 +150,40 @@ class ScriptNode : public Node
 		void deleteNodes( Node *parent = 0, const Set *filter = 0, bool reconnect = true );
 		//@}
 
-		//! @name Script execution.
-		/// These methods allow the execution of python scripts in the
-		/// context of the ScriptNode. The methods are only available on
-		/// ScriptNode objects created from Python - they will throw Exceptions
-		/// on nodes created from C++. This allows the ScriptNode class to be
-		/// used in the C++ library without introducing dependencies on Python.
+		//! @name Serialisation and execution
+		///
+		/// Scripts may be serialised into a string form, which will rebuild
+		/// the node network when executed. This process is used for both the
+		/// saving and loading of scripts and for the cut and paste mechanism.
+		///
+		/// > Note : Since serialisation currently depends on Python, these
+		/// > methods will throw Exceptions if called on ScriptNodes created
+		/// > from C++.
 		////////////////////////////////////////////////////////////////////
 		//@{
-		typedef boost::signal<void ( ScriptNodePtr, const std::string )> ScriptExecutedSignal;
-		/// Runs the specified python script. If continueOnError is true, then
+		/// Returns a string which when executed will recreate the children
+		/// of the parent and the connections between them. If unspecified, parent
+		/// defaults to the ScriptNode itself. The filter may be specified to limit
+		/// serialised nodes to those contained in the set.
+		virtual std::string serialise( const Node *parent = 0, const Set *filter = 0 ) const;
+		/// Calls serialise() and saves the result into the specified file.
+		virtual void serialiseToFile( const std::string &fileName, const Node *parent = 0, const Set *filter = 0 ) const;
+		/// Executes the previously generated serialisation. If continueOnError is true, then
 		/// errors are reported via IECore::MessageHandler rather than as exceptions, and
 		/// execution continues at the point after the error. This allows scripts to be loaded as
 		/// best as possible even when certain nodes/plugs/shaders may be missing or
 		/// may have been renamed. A true return value indicates that one or more errors
 		/// were ignored.
-		virtual bool execute( const std::string &pythonScript, Node *parent = 0, bool continueOnError = false );
-		/// As above, but loads the python script from the specified file.
-		virtual bool executeFile( const std::string &pythonFile, Node *parent = 0, bool continueOnError = false );
+		virtual bool execute( const std::string &serialisation, Node *parent = 0, bool continueOnError = false );
+		/// As above, but loads the serialisation from the specified file.
+		virtual bool executeFile( const std::string &fileName, Node *parent = 0, bool continueOnError = false );
 		/// This signal is emitted following successful execution of a script.
+		typedef boost::signal<void ( ScriptNodePtr, const std::string )> ScriptExecutedSignal;
 		ScriptExecutedSignal &scriptExecutedSignal();
 		//@}
 
-		//! @name Serialisation
-		/// Scripts may be serialised into a string form, which when executed
-		/// in python will rebuild the node network.
-		/// This process is used for both the saving and loading of scripts and
-		/// for the cut and paste mechanism. As serialisation depends on
-		/// python, these methods will throw Exceptions if called on ScriptNodes
-		/// created from C++.
+		//! @name Saving and loading
 		////////////////////////////////////////////////////////////////////
-		//@{
-		/// Returns a string which when executed will recreate the children
-		/// of the parent and the connections between them. If unspecified, parent
-		/// default to the ScriptNode itself. The filter may be specified to limit
-		/// serialised nodes to those contained in the set.
-		virtual std::string serialise( const Node *parent = 0, const Set *filter = 0 ) const;
-		/// Calls serialise() and saves the result into the specified file.
-		virtual void serialiseToFile( const std::string &fileName, const Node *parent = 0, const Set *filter = 0 ) const;
 		/// Returns the plug which specifies the file used in all load and save
 		/// operations.
 		StringPlug *fileNamePlug();
