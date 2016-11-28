@@ -46,6 +46,8 @@
 namespace GafferUI
 {
 
+class PlugAdder;
+
 /// The standard means of representing a Node in a GraphGadget.
 /// Nodes are represented as rectangular boxes with the name displayed
 /// centrally and the nodules arranged at the sides. Supports the following
@@ -143,8 +145,9 @@ class StandardNodeGadget : public NodeGadget
 		bool dragLeave( GadgetPtr gadget, const DragDropEvent &event );
 		bool drop( GadgetPtr gadget, const DragDropEvent &event );
 
-		Nodule *closestCompatibleNodule( const DragDropEvent &event );
-		bool noduleIsCompatible( const Nodule *nodule, const DragDropEvent &event );
+		Gadget *closestDragDestinationProxy( const DragDropEvent &event ) const;
+		bool noduleIsCompatible( const Nodule *nodule, const DragDropEvent &event ) const;
+		bool plugAdderIsCompatible( const PlugAdder *plugAdder, const DragDropEvent &event ) const;
 
 		void plugMetadataChanged( IECore::TypeId nodeTypeId, const Gaffer::MatchPattern &plugPath, IECore::InternedString key, const Gaffer::Plug *plug );
 		void nodeMetadataChanged( IECore::TypeId nodeTypeId, IECore::InternedString key, const Gaffer::Node *node );
@@ -162,9 +165,12 @@ class StandardNodeGadget : public NodeGadget
 
 		bool m_nodeEnabled;
 		bool m_labelsVisibleOnHover;
-		// we accept drags from nodules and forward them to the
-		// closest compatible child nodule - m_dragDestinationProxy.
-		Nodule *m_dragDestinationProxy;
+		// We accept drags onto the node itself and
+		// forward them to the nearest compatible
+		// Nodule or PlugAdder. This provides the user
+		// with a bigger drag target that is easier
+		// to hit.
+		Gadget *m_dragDestinationProxy;
 		boost::optional<Imath::Color3f> m_userColor;
 
 };
