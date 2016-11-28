@@ -123,19 +123,6 @@ class ScriptNodeWrapper : public NodeWrapper<ScriptNode>
 			return executeInternal( pythonScript, parent, continueOnError, pythonFile );
 		}
 
-		virtual PyObject *evaluate( const std::string &pythonExpression, Node *parent = 0 )
-		{
-			IECorePython::ScopedGILLock gilLock;
-			boost::python::object e = executionDict( parent );
-			boost::python::object result = eval( pythonExpression.c_str(), e, e );
-			scriptEvaluatedSignal()( this, pythonExpression, result.ptr() );
-
-			// make a reference to keep the result alive - the caller then
-			// assumes responsibility for dealing with this
-			Py_XINCREF( result.ptr() );
-			return result.ptr();
-		}
-
 		virtual std::string serialise( const Node *parent = 0, const Set *filter = 0 ) const
 		{
 			Serialisation serialisation( parent ? parent : this, "parent", filter );
@@ -244,9 +231,9 @@ class ScriptNodeWrapper : public NodeWrapper<ScriptNode>
 			return result;
 		}
 
-		// the dict returned will form both the locals and the globals for the execute()
-		// and evaluate() methods. it's not possible to have a separate locals
-		// and globals dictionary and have things work as intended. see
+		// The dict returned will form both the locals and the globals for
+		// the execute() methods. It's not possible to have a separate locals
+		// and globals dictionary and have things work as intended. See
 		// ScriptNodeTest.testClassScope() for an example, and
 		// http://bugs.python.org/issue991196 for an explanation.
 		boost::python::object executionDict( Node *parent )
@@ -338,23 +325,6 @@ class ScriptNodeWrapper : public NodeWrapper<ScriptNode>
 
 };
 
-struct ScriptEvaluatedSlotCaller
-{
-	boost::signals::detail::unusable operator()( boost::python::object slot, ScriptNodePtr node, const std::string script, PyObject *result )
-	{
-		try
-		{
-			boost::python::object o( boost::python::handle<>( boost::python::borrowed( result ) ) );
-			slot( node, script, o );
-		}
-		catch( const boost::python::error_already_set &e )
-		{
-			PyErr_PrintEx( 0 ); // clears error status
-		}
-		return boost::signals::detail::unusable();
-	}
-};
-
 ContextPtr context( ScriptNode &s )
 {
 	return s.context();
@@ -444,9 +414,7 @@ void GafferBindings::bindScriptNode()
 		.def( "deleteNodes", &deleteNodes, ( boost::python::arg( "parent" ) = boost::python::object(), boost::python::arg( "filter" ) = boost::python::object(), boost::python::arg( "reconnect" ) = true ) )
 		.def( "execute", &ScriptNode::execute, ( boost::python::arg( "parent" ) = boost::python::object(), boost::python::arg( "continueOnError" ) = false ) )
 		.def( "executeFile", &ScriptNode::executeFile, ( boost::python::arg( "fileName" ), boost::python::arg( "parent" ) = boost::python::object(), boost::python::arg( "continueOnError" ) = false ) )
-		.def( "evaluate", &ScriptNode::evaluate, ( boost::python::arg( "parent" ) = boost::python::object() ) )
 		.def( "scriptExecutedSignal", &ScriptNode::scriptExecutedSignal, boost::python::return_internal_reference<1>() )
-		.def( "scriptEvaluatedSignal", &ScriptNode::scriptEvaluatedSignal, boost::python::return_internal_reference<1>() )
 		.def( "serialise", &ScriptNode::serialise, ( boost::python::arg( "parent" ) = boost::python::object(), boost::python::arg( "filter" ) = boost::python::object() ) )
 		.def( "serialiseToFile", &ScriptNode::serialiseToFile, ( boost::python::arg( "fileName" ), boost::python::arg( "parent" ) = boost::python::object(), boost::python::arg( "filter" ) = boost::python::object() ) )
 		.def( "save", &ScriptNode::save )
@@ -458,6 +426,5 @@ void GafferBindings::bindScriptNode()
 	SignalClass<ScriptNode::UndoAddedSignal, DefaultSignalCaller<ScriptNode::UndoAddedSignal>, UndoAddedSlotCaller>( "UndoAddedSignal" );
 
 	SignalClass<ScriptNode::ScriptExecutedSignal>( "ScriptExecutedSignal" );
-	SignalClass<ScriptNode::ScriptEvaluatedSignal, DefaultSignalCaller<ScriptNode::ScriptEvaluatedSignal>, ScriptEvaluatedSlotCaller>( "ScriptEvaluatedSignal" );
 
 }

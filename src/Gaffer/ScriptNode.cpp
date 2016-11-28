@@ -603,16 +603,6 @@ ScriptNode::ScriptExecutedSignal &ScriptNode::scriptExecutedSignal()
 	return m_scriptExecutedSignal;
 }
 
-PyObject *ScriptNode::evaluate( const std::string &pythonExpression, Node *parent )
-{
-	throw IECore::Exception( "Cannot execute scripts on a ScriptNode not created in Python." );
-}
-
-ScriptNode::ScriptEvaluatedSignal &ScriptNode::scriptEvaluatedSignal()
-{
-	return m_scriptEvaluatedSignal;
-}
-
 std::string ScriptNode::serialise( const Node *parent, const Set *filter ) const
 {
 	throw IECore::Exception( "Cannot serialise scripts on a ScriptNode not created in Python." );

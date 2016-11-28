@@ -49,8 +49,6 @@
 #include "Gaffer/Action.h"
 #include "Gaffer/Behaviours/OrphanRemover.h"
 
-typedef struct _object PyObject;
-
 namespace Gaffer
 {
 
@@ -152,7 +150,7 @@ class ScriptNode : public Node
 		void deleteNodes( Node *parent = 0, const Set *filter = 0, bool reconnect = true );
 		//@}
 
-		//! @name Script evaluation and execution.
+		//! @name Script execution.
 		/// These methods allow the execution of python scripts in the
 		/// context of the ScriptNode. The methods are only available on
 		/// ScriptNode objects created from Python - they will throw Exceptions
@@ -161,7 +159,6 @@ class ScriptNode : public Node
 		////////////////////////////////////////////////////////////////////
 		//@{
 		typedef boost::signal<void ( ScriptNodePtr, const std::string )> ScriptExecutedSignal;
-		typedef boost::signal<void ( ScriptNodePtr, const std::string, PyObject * )> ScriptEvaluatedSignal;
 		/// Runs the specified python script. If continueOnError is true, then
 		/// errors are reported via IECore::MessageHandler rather than as exceptions, and
 		/// execution continues at the point after the error. This allows scripts to be loaded as
@@ -173,14 +170,6 @@ class ScriptNode : public Node
 		virtual bool executeFile( const std::string &pythonFile, Node *parent = 0, bool continueOnError = false );
 		/// This signal is emitted following successful execution of a script.
 		ScriptExecutedSignal &scriptExecutedSignal();
-		/// Evaluates the specified python expression. The caller owns a reference to
-		/// the result, and must therefore decrement the reference count when
-		/// appropriate.
-		virtual PyObject *evaluate( const std::string &pythonExpression, Node *parent = 0 );
-		/// This signal is emitted following sucessful evaluation of an expression. The PyObject *
-		/// is the result of the script evaluation - slots must increment the reference count on
-		/// this if they intend to keep the result.
-		ScriptEvaluatedSignal &scriptEvaluatedSignal();
 		//@}
 
 		//! @name Serialisation
@@ -275,7 +264,6 @@ class ScriptNode : public Node
 		Action::Stage m_currentActionStage;
 
 		ScriptExecutedSignal m_scriptExecutedSignal;
-		ScriptEvaluatedSignal m_scriptEvaluatedSignal;
 
 		ContextPtr m_context;
 
