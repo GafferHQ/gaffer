@@ -20,8 +20,8 @@ Building
 Gaffer is a fairly large project, and as such has a fairly complex build process. Before you start, you'll want to make sure you have the following prerequisites installed on your system - these will be used to perform the build itself :
 
 - [SCons](http://www.scons.org)
-- [Doxygen](http://www.stack.nl/~dimitri/doxygen)
 - [Inkscape](http://inkscape.org)
+- [Sphinx](http://www.sphinx-doc.org/) (optional, minimum version 1.3)
 
 Gaffer also depends on a number of 3rd party libraries and python modules, many of which are not entirely straightforward to build. We therefore recommend using the latest prebuilt dependencies from the [gaffer dependencies project](https://github.com/GafferHQ/dependencies/releases). These are used in our automated test builds and so are guaranteed to be up to date with Gaffer's requirements.
 
