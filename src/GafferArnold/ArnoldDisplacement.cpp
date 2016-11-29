@@ -45,12 +45,12 @@ using namespace GafferArnold;
 IE_CORE_DEFINERUNTIMETYPED( ArnoldDisplacement );
 
 size_t ArnoldDisplacement::g_firstPlugIndex = 0;
-static IECore::InternedString g_surfaceAttributeName = "ai:surface";
 static IECore::InternedString g_mapAttributeName = "ai:disp_map";
 static IECore::InternedString g_paddingAttributeName = "ai:disp_padding";
 static IECore::InternedString g_heightAttributeName = "ai:disp_height";
 static IECore::InternedString g_zeroValueAttributeName = "ai:disp_zero_value";
 static IECore::InternedString g_autoBumpAttributeName = "ai:disp_autobump";
+static IECore::InternedString g_mapInputAttributeNames[] = { "ai:surface", "osl:shader", "" } ;
 
 ArnoldDisplacement::ArnoldDisplacement( const std::string &name )
 	:	Shader( name )
@@ -128,6 +128,22 @@ const Gaffer::Plug *ArnoldDisplacement::outPlug() const
 	return getChild<Plug>( g_firstPlugIndex + 5 );
 }
 
+void ArnoldDisplacement::affects( const Gaffer::Plug *input, AffectedPlugsContainer &outputs ) const
+{
+	Shader::affects( input, outputs );
+
+	if(
+		input == mapPlug() ||
+		input == heightPlug() ||
+		input == paddingPlug() ||
+		input == zeroValuePlug() ||
+		input == autoBumpPlug()
+	)
+	{
+		outputs.push_back( outPlug() );
+	}
+}
+
 void ArnoldDisplacement::attributesHash( IECore::MurmurHash &h ) const
 {
 	h.append( typeId() );
@@ -153,11 +169,16 @@ IECore::ConstCompoundObjectPtr ArnoldDisplacement::attributes() const
 
 	CompoundObject::ObjectMap &m = result->members();
 	m = mapPlug()->attributes()->members();
-	CompoundObject::ObjectMap::iterator it = m.find( g_surfaceAttributeName );
-	if( it != m.end() )
+
+	for( InternedString *n = g_mapInputAttributeNames; *n != InternedString(); ++n )
 	{
-		m[g_mapAttributeName] = it->second;
-		m.erase( it );
+		CompoundObject::ObjectMap::iterator it = m.find( *n );
+		if( it != m.end() )
+		{
+			m[g_mapAttributeName] = it->second;
+			m.erase( it );
+			break;
+		}
 	}
 
 	m[g_heightAttributeName] = new FloatData( heightPlug()->getValue() );
@@ -184,7 +205,7 @@ bool ArnoldDisplacement::acceptsInput( const Gaffer::Plug *plug, const Gaffer::P
 	{
 		if( const GafferScene::Shader *shader = runTimeCast<const GafferScene::Shader>( inputPlug->source<Plug>()->node() ) )
 		{
-			return runTimeCast<const ArnoldShader>( shader );
+			return runTimeCast<const ArnoldShader>( shader ) || shader->isInstanceOf( "GafferOSL::OSLShader" );
 		}
 	}
 

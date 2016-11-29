@@ -79,6 +79,8 @@ class ArnoldDisplacement : public GafferScene::Shader
 		Gaffer::Plug *outPlug();
 		const Gaffer::Plug *outPlug() const;
 
+		virtual void affects( const Gaffer::Plug *input, AffectedPlugsContainer &outputs ) const;
+
 		virtual void attributesHash( IECore::MurmurHash &h ) const;
 		virtual IECore::ConstCompoundObjectPtr attributes() const;
 
