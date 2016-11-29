@@ -37,8 +37,6 @@
 
 #include "boost/python.hpp" // must be the first include
 
-#include <fstream>
-
 #include "IECore/MessageHandler.h"
 
 #include "IECorePython/ScopedGILLock.h"
@@ -55,6 +53,13 @@
 #include "GafferBindings/SignalBinding.h"
 #include "GafferBindings/NodeBinding.h"
 #include "GafferBindings/ExceptionAlgo.h"
+
+using namespace Gaffer;
+using namespace GafferBindings;
+
+//////////////////////////////////////////////////////////////////////////
+// Access to Python AST
+//////////////////////////////////////////////////////////////////////////
 
 extern "C"
 {
@@ -76,16 +81,187 @@ struct base_type_traits<PyCodeObject>
 } // namespace python
 } // namespace boost
 
-using namespace Gaffer;
-using namespace GafferBindings;
+//////////////////////////////////////////////////////////////////////////
+// Serialisation
+//////////////////////////////////////////////////////////////////////////
 
 namespace
 {
 
-/// The ScriptNodeWrapper class implements the scripting
-/// components of the ScriptNode base class. In this way
-/// scripting is available provided that the ScriptNode was
-/// created from python.
+const std::string formattedErrorContext( int lineNumber, const std::string &context )
+{
+	return boost::str(
+		boost::format( "Line %d%s%s" ) %
+			lineNumber %
+			(!context.empty() ? " of " : "") %
+			context
+	);
+}
+
+// Execute the script one top level statement at a time,
+// reporting errors that occur, but otherwise continuing
+// with execution.
+bool tolerantExec( const char *pythonScript, boost::python::object globals, boost::python::object locals, const std::string &context )
+{
+	// The python parsing framework uses an arena to simplify memory allocation,
+	// which is handy for us, since we're going to manipulate the AST a little.
+	boost::shared_ptr<PyArena> arena( PyArena_New(), PyArena_Free );
+
+	// Parse the whole script, getting an abstract syntax tree for a
+	// module which would execute everything.
+	mod_ty mod = PyParser_ASTFromString(
+		pythonScript,
+		"<string>",
+		Py_file_input,
+		NULL,
+		arena.get()
+	);
+
+	assert( mod->kind == Module_kind );
+
+	// Loop over the top-level statements in the module body,
+	// executing one at a time.
+	bool result = false;
+	int numStatements = asdl_seq_LEN( mod->v.Module.body );
+	for( int i=0; i<numStatements; ++i )
+	{
+		// Make a new module containing just this one statement.
+		asdl_seq *newBody = asdl_seq_new( 1, arena.get() );
+		asdl_seq_SET( newBody, 0, asdl_seq_GET( mod->v.Module.body, i ) );
+		mod_ty newModule = Module(
+			newBody,
+			arena.get()
+		);
+
+		// Compile it.
+		boost::python::handle<PyCodeObject> code( PyAST_Compile( newModule, "<string>", NULL, arena.get() ) );
+
+		// And execute it.
+		boost::python::handle<> v( boost::python::allow_null(
+			PyEval_EvalCode(
+				code.get(),
+				globals.ptr(),
+				locals.ptr()
+			)
+		) );
+
+		// Report any errors.
+		if( v == NULL)
+		{
+			int lineNumber = 0;
+			std::string message = formatPythonException( /* withTraceback = */ false, &lineNumber );
+			IECore::msg( IECore::Msg::Error, formattedErrorContext( lineNumber, context ), message );
+			result = true;
+		}
+	}
+
+	return result;
+}
+
+// The dict returned will form both the locals and the globals for
+// the execute() methods. It's not possible to have a separate locals
+// and globals dictionary and have things work as intended. See
+// ScriptNodeTest.testClassScope() for an example, and
+// http://bugs.python.org/issue991196 for an explanation.
+boost::python::object executionDict( ScriptNodePtr script, NodePtr parent )
+{
+	boost::python::dict result;
+
+	boost::python::object builtIn = boost::python::import( "__builtin__" );
+	result["__builtins__"] = builtIn;
+
+	boost::python::object gafferModule = boost::python::import( "Gaffer" );
+	result["Gaffer"] = gafferModule;
+
+	result["script"] = boost::python::object( script );
+	result["parent"] = boost::python::object( parent );
+
+	return result;
+}
+
+std::string serialise( const Node *parent, const Set *filter )
+{
+	if( !Py_IsInitialized() )
+	{
+		Py_Initialize();
+	}
+
+	std::string result;
+	try
+	{
+		Serialisation serialisation( parent, "parent", filter );
+		result = serialisation.result();
+	}
+	catch( boost::python::error_already_set &e )
+	{
+		translatePythonException();
+	}
+
+	return result;
+}
+
+bool execute( ScriptNode *script, const std::string &serialisation, Node *parent, bool continueOnError, const std::string &context = "" )
+{
+	if( !Py_IsInitialized() )
+	{
+		Py_Initialize();
+	}
+
+	IECorePython::ScopedGILLock gilLock;
+	bool result = false;
+	try
+	{
+		boost::python::object e = executionDict( script, parent );
+
+		if( !continueOnError )
+		{
+			try
+			{
+				exec( serialisation.c_str(), e, e );
+			}
+			catch( boost::python::error_already_set &e )
+			{
+				int lineNumber = 0;
+				std::string message = formatPythonException( /* withTraceback = */ false, &lineNumber );
+				throw IECore::Exception( formattedErrorContext( lineNumber, context ) + " : " + message );
+			}
+		}
+		else
+		{
+			result = tolerantExec( serialisation.c_str(), e, e, context );
+		}
+	}
+	catch( boost::python::error_already_set &e )
+	{
+		translatePythonException();
+	}
+
+	return result;
+}
+
+} // namespace
+
+namespace GafferBindings
+{
+
+bool registerSerialiser()
+{
+	ScriptNode::g_serialiseFunction = serialise;
+	ScriptNode::g_executeFunction = execute;
+	return true;
+};
+
+static bool g_registered = registerSerialiser();
+
+} // namespace
+
+//////////////////////////////////////////////////////////////////////////
+//  Bindings
+//////////////////////////////////////////////////////////////////////////
+
+namespace
+{
+
 class ScriptNodeWrapper : public NodeWrapper<ScriptNode>
 {
 
@@ -109,214 +285,6 @@ class ScriptNodeWrapper : public NodeWrapper<ScriptNode>
 				return true;
 			}
 			return NodeWrapper<ScriptNode>::isInstanceOf( typeId );
-		}
-
-		virtual std::string serialise( const Node *parent = 0, const Set *filter = 0 ) const
-		{
-			Serialisation serialisation( parent ? parent : this, "parent", filter );
-			return serialisation.result();
-		}
-
-		virtual void serialiseToFile( const std::string &fileName, const Node *parent, const Set *filter ) const
-		{
-			std::string s = serialise( parent, filter );
-
-			std::ofstream f( fileName.c_str() );
-			if( !f.good() )
-			{
-				throw IECore::IOException( "Unable to open file \"" + fileName + "\"" );
-			}
-
-			f << s;
-
-			if( !f.good() )
-			{
-				throw IECore::IOException( "Failed to write to \"" + fileName + "\"" );
-			}
-		}
-
-		virtual bool execute( const std::string &serialisation, Node *parent = 0, bool continueOnError = false )
-		{
-			const bool result = executeInternal( serialisation, parent, continueOnError );
-			return result;
-		}
-
-		virtual bool executeFile( const std::string &fileName, Node *parent = 0, bool continueOnError = false )
-		{
-			const std::string serialisation = readFile( fileName );
-			return executeInternal( serialisation, parent, continueOnError, fileName );
-		}
-
-		virtual bool load( bool continueOnError = false )
-		{
-			DirtyPropagationScope dirtyScope;
-
-			const std::string fileName = fileNamePlug()->getValue();
-			const std::string s = readFile( fileName );
-
-			deleteNodes();
-			variablesPlug()->clearChildren();
-
-			const bool result = executeInternal( s, NULL, continueOnError, fileName );
-
-			UndoContext undoDisabled( this, UndoContext::Disabled );
-			unsavedChangesPlug()->setValue( false );
-
-			return result;
-		}
-
-		virtual void save() const
-		{
-			serialiseToFile( fileNamePlug()->getValue(), 0, 0 );
-			UndoContext undoDisabled( const_cast<ScriptNodeWrapper *>( this ), UndoContext::Disabled );
-			const_cast<BoolPlug *>( unsavedChangesPlug() )->setValue( false );
-		}
-
-	private :
-
-		std::string readFile( const std::string &fileName )
-		{
-			std::ifstream f( fileName.c_str() );
-			if( !f.good() )
-			{
-				throw IECore::IOException( "Unable to open file \"" + fileName + "\"" );
-			}
-
-			std::string s;
-			while( !f.eof() )
-			{
-				if( !f.good() )
-				{
-					throw IECore::IOException( "Failed to read from \"" + fileName + "\"" );
-				}
-
-				std::string line;
-				std::getline( f, line );
-				s += line + "\n";
-			}
-
-			return s;
-		}
-
-		bool executeInternal( const std::string &pythonScript, Node *parent, bool continueOnError, const std::string &context = "" )
-		{
-			DirtyPropagationScope dirtyScope;
-			IECorePython::ScopedGILLock gilLock;
-			boost::python::object e = executionDict( parent );
-
-			bool result = false;
-			if( !continueOnError )
-			{
-				try
-				{
-					exec( pythonScript.c_str(), e, e );
-				}
-				catch( boost::python::error_already_set &e )
-				{
-					int lineNumber = 0;
-					std::string message = formatPythonException( /* withTraceback = */ false, &lineNumber );
-					throw IECore::Exception( formattedErrorContext( lineNumber, context ) + " : " + message );
-				}
-			}
-			else
-			{
-				result = tolerantExec( pythonScript.c_str(), e, e, context );
-			}
-
-			scriptExecutedSignal()( this, pythonScript );
-			return result;
-		}
-
-		// The dict returned will form both the locals and the globals for
-		// the execute() methods. It's not possible to have a separate locals
-		// and globals dictionary and have things work as intended. See
-		// ScriptNodeTest.testClassScope() for an example, and
-		// http://bugs.python.org/issue991196 for an explanation.
-		boost::python::object executionDict( Node *parent )
-		{
-			boost::python::dict result;
-
-			boost::python::object builtIn = boost::python::import( "__builtin__" );
-			result["__builtins__"] = builtIn;
-
-			boost::python::object gafferModule = boost::python::import( "Gaffer" );
-			result["Gaffer"] = gafferModule;
-
-			result["script"] = boost::python::object( ScriptNodePtr( this ) );
-			result["parent"] = boost::python::object( NodePtr( parent ? parent : this ) );
-
-			return result;
-		}
-
-		// Execute the script one top level statement at a time,
-		// reporting errors that occur, but otherwise continuing
-		// with execution.
-		/////////////////////////////////////////////////////////
-		bool tolerantExec( const char *pythonScript, boost::python::object globals, boost::python::object locals, const std::string &context )
-		{
-			// The python parsing framework uses an arena to simplify memory allocation,
-			// which is handy for us, since we're going to manipulate the AST a little.
-			boost::shared_ptr<PyArena> arena( PyArena_New(), PyArena_Free );
-
-			// Parse the whole script, getting an abstract syntax tree for a
-			// module which would execute everything.
-			mod_ty mod = PyParser_ASTFromString(
-				pythonScript,
-				"<string>",
-				Py_file_input,
-				NULL,
-				arena.get()
-			);
-
-			assert( mod->kind == Module_kind );
-
-			// Loop over the top-level statements in the module body,
-			// executing one at a time.
-			bool result = false;
-			int numStatements = asdl_seq_LEN( mod->v.Module.body );
-			for( int i=0; i<numStatements; ++i )
-			{
-				// Make a new module containing just this one statement.
-				asdl_seq *newBody = asdl_seq_new( 1, arena.get() );
-				asdl_seq_SET( newBody, 0, asdl_seq_GET( mod->v.Module.body, i ) );
-				mod_ty newModule = Module(
-					newBody,
-					arena.get()
-				);
-
-				// Compile it.
-				boost::python::handle<PyCodeObject> code( PyAST_Compile( newModule, "<string>", NULL, arena.get() ) );
-
-				// And execute it.
-				boost::python::handle<> v( boost::python::allow_null(
-					PyEval_EvalCode(
-						code.get(),
-						globals.ptr(),
-						locals.ptr()
-					)
-				) );
-
-				// Report any errors.
-				if( v == NULL)
-				{
-					int lineNumber = 0;
-					std::string message = formatPythonException( /* withTraceback = */ false, &lineNumber );
-					IECore::msg( IECore::Msg::Error, formattedErrorContext( lineNumber, context ), message );
-					result = true;
-				}
-			}
-
-			return result;
-		}
-
-		const std::string formattedErrorContext( int lineNumber, const std::string &context )
-		{
-			return boost::str(
-				boost::format( "Line %d%s%s" ) %
-					lineNumber %
-					(!context.empty() ? " of " : "") %
-					context
-			);
 		}
 
 };

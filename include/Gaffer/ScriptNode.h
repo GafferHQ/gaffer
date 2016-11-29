@@ -49,6 +49,8 @@
 #include "Gaffer/Action.h"
 #include "Gaffer/Behaviours/OrphanRemover.h"
 
+#include "GafferBindings/ScriptNodeBinding.h" // to enable friend declaration for registerSerialiser().
+
 namespace Gaffer
 {
 
@@ -155,28 +157,24 @@ class ScriptNode : public Node
 		/// Scripts may be serialised into a string form, which will rebuild
 		/// the node network when executed. This process is used for both the
 		/// saving and loading of scripts and for the cut and paste mechanism.
-		///
-		/// > Note : Since serialisation currently depends on Python, these
-		/// > methods will throw Exceptions if called on ScriptNodes created
-		/// > from C++.
 		////////////////////////////////////////////////////////////////////
 		//@{
 		/// Returns a string which when executed will recreate the children
 		/// of the parent and the connections between them. If unspecified, parent
 		/// defaults to the ScriptNode itself. The filter may be specified to limit
 		/// serialised nodes to those contained in the set.
-		virtual std::string serialise( const Node *parent = 0, const Set *filter = 0 ) const;
+		std::string serialise( const Node *parent = 0, const Set *filter = 0 ) const;
 		/// Calls serialise() and saves the result into the specified file.
-		virtual void serialiseToFile( const std::string &fileName, const Node *parent = 0, const Set *filter = 0 ) const;
+		void serialiseToFile( const std::string &fileName, const Node *parent = 0, const Set *filter = 0 ) const;
 		/// Executes the previously generated serialisation. If continueOnError is true, then
 		/// errors are reported via IECore::MessageHandler rather than as exceptions, and
 		/// execution continues at the point after the error. This allows scripts to be loaded as
 		/// best as possible even when certain nodes/plugs/shaders may be missing or
 		/// may have been renamed. A true return value indicates that one or more errors
 		/// were ignored.
-		virtual bool execute( const std::string &serialisation, Node *parent = 0, bool continueOnError = false );
+		bool execute( const std::string &serialisation, Node *parent = 0, bool continueOnError = false );
 		/// As above, but loads the serialisation from the specified file.
-		virtual bool executeFile( const std::string &fileName, Node *parent = 0, bool continueOnError = false );
+		bool executeFile( const std::string &fileName, Node *parent = 0, bool continueOnError = false );
 		/// This signal is emitted following successful execution of a script.
 		typedef boost::signal<void ( ScriptNodePtr, const std::string )> ScriptExecutedSignal;
 		ScriptExecutedSignal &scriptExecutedSignal();
@@ -195,9 +193,9 @@ class ScriptNode : public Node
 		/// Loads the script specified in the filename plug.
 		/// See execute() for a description of the continueOnError argument
 		/// and the return value.
-		virtual bool load( bool continueOnError = false );
+		bool load( bool continueOnError = false );
 		/// Saves the script to the file specified by the filename plug.
-		virtual void save() const;
+		void save() const;
 		//@}
 
 		//! @name Computation context
@@ -232,9 +230,15 @@ class ScriptNode : public Node
 
 	private :
 
+		// Selection
+		// =========
+
 		bool selectionSetAcceptor( const Set *s, const Set::Member *m );
 		StandardSetPtr m_selection;
 		Behaviours::OrphanRemover m_selectionOrphanRemover;
+
+		// Actions and undo
+		// ================
 
 		IE_CORE_FORWARDDECLARE( CompoundAction );
 
@@ -259,7 +263,25 @@ class ScriptNode : public Node
 		UndoIterator m_undoIterator; // points to the next thing to redo
 		Action::Stage m_currentActionStage;
 
+		// Serialisation and execution
+		// ===========================
+
+		std::string serialiseInternal( const Node *parent, const Set *filter ) const;
+		bool executeInternal( const std::string &serialisation, Node *parent, bool continueOnError, const std::string &context = "" );
+
+		typedef boost::function<std::string ( const Node *, const Set * )> SerialiseFunction;
+		typedef boost::function<bool ( ScriptNode *, const std::string &, Node *, bool, const std::string &context )> ExecuteFunction;
+
+		// Actual implementations reside in libGafferBindings (due to Python
+		// dependency), and are injected into these functions.
+		static SerialiseFunction g_serialiseFunction;
+		static ExecuteFunction g_executeFunction;
+		friend bool GafferBindings::registerSerialiser();
+
 		ScriptExecutedSignal m_scriptExecutedSignal;
+
+		// Context and plugs
+		// =================
 
 		ContextPtr m_context;
 

@@ -41,6 +41,7 @@ namespace GafferBindings
 {
 
 void bindScriptNode();
+bool registerSerialiser();
 
 } // namespace GafferBindings
 
