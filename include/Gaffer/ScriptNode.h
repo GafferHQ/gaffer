@@ -131,15 +131,15 @@ class ScriptNode : public Node
 		/// the filter will be copied. If unspecified, parent defaults to
 		/// the ScriptNode and if no filter is specified all children will
 		/// be copied.
-		void copy( const Node *parent = 0, const Set *filter = 0 );
+		void copy( const Node *parent = NULL, const Set *filter = NULL );
 		/// Performs a copy() and then deletes the copied nodes.
 		/// \undoable
-		void cut( Node *parent = 0, const Set *filter = 0 );
+		void cut( Node *parent = NULL, const Set *filter = NULL );
 		/// Pastes the contents of the global clipboard into the script below
 		/// the specified parent. If parent is unspecified then it defaults
 		/// to the script itself.
 		/// \undoable
-		void paste( Node *parent = 0 );
+		void paste( Node *parent = NULL );
 		/// Removes Nodes from the parent node, making sure they are
 		/// disconnected from the remaining Nodes and removed from the current
 		/// selection. If unspecified then the parent defaults to the script
@@ -149,7 +149,7 @@ class ScriptNode : public Node
 		/// and unselected - this function is just a convenience method
 		/// for efficiently deleting many nodes at once.
 		/// \undoable
-		void deleteNodes( Node *parent = 0, const Set *filter = 0, bool reconnect = true );
+		void deleteNodes( Node *parent = NULL, const Set *filter = NULL, bool reconnect = true );
 		//@}
 
 		//! @name Serialisation and execution
@@ -163,18 +163,18 @@ class ScriptNode : public Node
 		/// of the parent and the connections between them. If unspecified, parent
 		/// defaults to the ScriptNode itself. The filter may be specified to limit
 		/// serialised nodes to those contained in the set.
-		std::string serialise( const Node *parent = 0, const Set *filter = 0 ) const;
+		std::string serialise( const Node *parent = NULL, const Set *filter = NULL ) const;
 		/// Calls serialise() and saves the result into the specified file.
-		void serialiseToFile( const std::string &fileName, const Node *parent = 0, const Set *filter = 0 ) const;
+		void serialiseToFile( const std::string &fileName, const Node *parent = NULL, const Set *filter = NULL ) const;
 		/// Executes a previously generated serialisation. If continueOnError is true, then
 		/// errors are reported via IECore::MessageHandler rather than as exceptions, and
 		/// execution continues at the point after the error. This allows scripts to be loaded as
 		/// best as possible even when certain nodes/plugs/shaders may be missing or
 		/// may have been renamed. A true return value indicates that one or more errors
 		/// were ignored.
-		bool execute( const std::string &serialisation, Node *parent = 0, bool continueOnError = false );
+		bool execute( const std::string &serialisation, Node *parent = NULL, bool continueOnError = false );
 		/// As above, but loads the serialisation from the specified file.
-		bool executeFile( const std::string &fileName, Node *parent = 0, bool continueOnError = false );
+		bool executeFile( const std::string &fileName, Node *parent = NULL, bool continueOnError = false );
 		/// Returns true if a script is currently being executed. Note that
 		/// `execute()`, `executeFile()`, `load()` and `paste()` are all
 		/// sources of execution, and there is intentionally no way of
