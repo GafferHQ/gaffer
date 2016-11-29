@@ -119,10 +119,6 @@ class ScriptNodeWrapper : public NodeWrapper<ScriptNode>
 
 		virtual void serialiseToFile( const std::string &fileName, const Node *parent, const Set *filter ) const
 		{
-			ContextPtr context = new Context( *Context::current(), Context::Borrowed );
-			context->set( "serialiser:includeVersionMetadata", true );
-			Context::Scope scopedContext( context.get() );
-
 			std::string s = serialise( parent, filter );
 
 			std::ofstream f( fileName.c_str() );

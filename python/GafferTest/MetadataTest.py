@@ -725,15 +725,15 @@ class MetadataTest( GafferTest.TestCase ) :
 		s = Gaffer.ScriptNode()
 		s["n"] = Gaffer.Node()
 
-		self.assertFalse( "Metadata" in s.serialise() )
+		self.assertFalse( "test" in s.serialise() )
 
 		with Gaffer.UndoContext( s ) :
 			Gaffer.Metadata.registerValue( s["n"], "test", 1 )
 
-		self.assertTrue( "Metadata" in s.serialise() )
+		self.assertTrue( "test" in s.serialise() )
 
 		s.undo()
-		self.assertFalse( "Metadata" in s.serialise() )
+		self.assertFalse( "test" in s.serialise() )
 
 	def testNoneMasksOthers( self ) :
 
@@ -788,21 +788,21 @@ class MetadataTest( GafferTest.TestCase ) :
 
 		with Gaffer.UndoContext( s ) :
 			Gaffer.Metadata.deregisterValue( s["n"], "deleteMe" )
-			self.assertTrue( "Metadata" not in s.serialise() )
+			self.assertTrue( "deleteMe" not in s.serialise() )
 			self.assertEqual( Gaffer.Metadata.value( s["n"], "deleteMe" ), 10 )
 
 		s.undo()
 		self.assertEqual( Gaffer.Metadata.value( s["n"], "deleteMe" ), 20 )
-		self.assertTrue( "Metadata" in s.serialise() )
+		self.assertTrue( "deleteMe" in s.serialise() )
 
 		s.redo()
 		self.assertEqual( Gaffer.Metadata.value( s["n"], "deleteMe" ), 10 )
-		self.assertTrue( "Metadata" not in s.serialise() )
+		self.assertTrue( "deleteMe" not in s.serialise() )
 
 		Gaffer.Metadata.deregisterValue( GafferTest.AddNode, "deleteMe" )
 		self.assertEqual( Gaffer.Metadata.value( s["n"], "deleteMe" ), None )
 
-		self.assertTrue( "Metadata" not in s.serialise() )
+		self.assertTrue( "deleteMe" not in s.serialise() )
 
 	def testDeregisterPlugValue( self ) :
 
@@ -824,29 +824,29 @@ class MetadataTest( GafferTest.TestCase ) :
 
 		Gaffer.Metadata.registerValue( GafferTest.AddNode, "op1", "deleteMe", 10 )
 		self.assertEqual( Gaffer.Metadata.value( s["n"]["op1"], "deleteMe" ), 10 )
-		self.assertTrue( "Metadata" not in s.serialise() )
+		self.assertTrue( "deleteMe" not in s.serialise() )
 
 		Gaffer.Metadata.registerValue( s["n"]["op1"], "deleteMe", 20 )
 		self.assertEqual( Gaffer.Metadata.value( s["n"]["op1"], "deleteMe" ), 20 )
-		self.assertTrue( "Metadata" in s.serialise() )
+		self.assertTrue( "deleteMe" in s.serialise() )
 
 		with Gaffer.UndoContext( s ) :
 			Gaffer.Metadata.deregisterValue( s["n"]["op1"], "deleteMe" )
-			self.assertTrue( "Metadata" not in s.serialise() )
+			self.assertTrue( "deleteMe" not in s.serialise() )
 			self.assertEqual( Gaffer.Metadata.value( s["n"]["op1"], "deleteMe" ), 10 )
 
 		s.undo()
 		self.assertEqual( Gaffer.Metadata.value( s["n"]["op1"], "deleteMe" ), 20 )
-		self.assertTrue( "Metadata" in s.serialise() )
+		self.assertTrue( "deleteMe" in s.serialise() )
 
 		s.redo()
 		self.assertEqual( Gaffer.Metadata.value( s["n"]["op1"], "deleteMe" ), 10 )
-		self.assertTrue( "Metadata" not in s.serialise() )
+		self.assertTrue( "deleteMe" not in s.serialise() )
 
 		Gaffer.Metadata.deregisterValue( GafferTest.AddNode, "op1", "deleteMe" )
 		self.assertEqual( Gaffer.Metadata.value( s["n"]["op1"], "deleteMe" ), None )
 
-		self.assertTrue( "Metadata" not in s.serialise() )
+		self.assertTrue( "deleteMe" not in s.serialise() )
 
 	def testComponentsWithMetaData( self ) :
 

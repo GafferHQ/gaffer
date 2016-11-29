@@ -843,7 +843,6 @@ class BoxTest( GafferTest.TestCase ) :
 		Gaffer.Metadata.registerValue( s["b"], "nodeGadget:color", IECore.Color3f( 1, 0, 0 ) )
 
 		ss = s.serialise( parent = s["b"] )
-		self.assertFalse( "Metadata" in ss )
 
 		s["b2"] = Gaffer.Box()
 		s.execute( ss, parent = s["b2"] )
