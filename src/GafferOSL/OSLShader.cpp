@@ -1178,7 +1178,6 @@ static IECore::ConstCompoundDataPtr metadataGetter( const std::string &key, size
 			else
 			{
 				parameterMetadata->writable()[parameter->name.c_str()] = convertMetadata( parameter->metadata );
-
 			}
 		}
 	}
