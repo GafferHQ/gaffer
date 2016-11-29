@@ -125,7 +125,7 @@ def __searchPathsSummary( plug ) :
 def __errorColorsSummary( plug ) :
 
 	info = []
-	for suffix in ( "Texture", "Mesh", "Pixel", "Shader" ) :
+	for suffix in ( "Texture", "Pixel", "Shader" ) :
 		if plug["errorColorBad"+suffix]["enabled"].getValue() :
 			info.append( suffix )
 
@@ -622,19 +622,6 @@ Gaffer.Metadata.registerNode(
 
 			"layout:section", "Error Colors",
 			"label", "Bad Texture",
-
-		],
-
-		"options.errorColorBadMesh" : [
-
-			"description",
-			"""
-			The colour to display if bad geometry
-			is encountered.
-			""",
-
-			"layout:section", "Error Colors",
-			"label", "Bad Mesh",
 
 		],
 

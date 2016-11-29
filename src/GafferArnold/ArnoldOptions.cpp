@@ -98,7 +98,6 @@ ArnoldOptions::ArnoldOptions( const std::string &name )
 	// Error colours
 
 	options->addOptionalMember( "ai:error_color_bad_texture", new IECore::Color3fData( Color3f( 1, 0, 0 ) ), "errorColorBadTexture", Gaffer::Plug::Default, false );
-	options->addOptionalMember( "ai:error_color_bad_mesh", new IECore::Color3fData( Color3f( 0, 1, 0 ) ), "errorColorBadMesh", Gaffer::Plug::Default, false );
 	options->addOptionalMember( "ai:error_color_bad_pixel", new IECore::Color3fData( Color3f( 0, 0, 1 ) ), "errorColorBadPixel", Gaffer::Plug::Default, false );
 	options->addOptionalMember( "ai:error_color_bad_shader", new IECore::Color3fData( Color3f( 1, 0, 1 ) ), "errorColorBadShader", Gaffer::Plug::Default, false );
 
