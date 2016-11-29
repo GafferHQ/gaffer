@@ -39,61 +39,32 @@ import IECore
 import Gaffer
 import GafferImage
 
-__currentlyLoadingScript = None
+def __convertFormat( graphComponent, format ):
 
-def __getSerialisedGafferVersion( scriptNode ) :
+	scriptNode = graphComponent.ancestor( Gaffer.ScriptNode )
+	if scriptNode is None or not scriptNode.isExecuting() :
+		return format
 
-	return (
+	gafferVersion = (
 		Gaffer.Metadata.nodeValue( scriptNode, "serialiser:milestoneVersion" ),
 		Gaffer.Metadata.nodeValue( scriptNode, "serialiser:majorVersion" ),
 		Gaffer.Metadata.nodeValue( scriptNode, "serialiser:minorVersion" ),
 		Gaffer.Metadata.nodeValue( scriptNode, "serialiser:patchVersion" )
 	)
 
-def __convertFormat( fmt ):
-
-	if not __currentlyLoadingScript :
-		return fmt
-
-	gafferVersion = __getSerialisedGafferVersion( __currentlyLoadingScript )
-
-	if ( gafferVersion < ( 0, 17, 0, 0 ) ) :
-		displayWindow = fmt.getDisplayWindow()
+	if gafferVersion < ( 0, 17, 0, 0 ) :
+		displayWindow = format.getDisplayWindow()
 		displayWindow.max += IECore.V2i( 1 )
+		return GafferImage.Format( displayWindow, format.getPixelAspect() )
 
-		return GafferImage.Format( displayWindow, fmt.getPixelAspect() )
-
-	return fmt
+	return format
 
 def __formatPlugSetValue( self, *args, **kwargs ) :
 
 	if args and isinstance( args[0], GafferImage.Format ) :
-		args = ( __convertFormat( args[0] ), ) + args[1:]
+		args = ( __convertFormat( self, args[0] ), ) + args[1:]
 
 	return self.__originalSetValue( *args, **kwargs )
-
-@staticmethod
-def __formatRegisterFormat( arg1, arg2 ) :
-
-	if isinstance( arg1, GafferImage.Format ) :
-		# Old ordering of arguments.
-		format = arg1
-		name = arg2
-	else :
-		name = arg1
-		format = arg2
-
-	return GafferImage.Format.__originalRegisterFormat( name, __convertFormat( format ) )
-
-def __scriptNodeLoad( self, *args, **kwargs ) :
-
-	global __currentlyLoadingScript
-	__currentlyLoadingScript = self
-
-	try:
-		self.__originalLoad( *args, **kwargs )
-	finally:
-		__currentlyLoadingScript = None
 
 # We shouldn't need this conditional, but IECore.loadConfig() will happily load
 # the same file twice if the same path has been included twice. That would cause
@@ -101,14 +72,8 @@ def __scriptNodeLoad( self, *args, **kwargs ) :
 # calling the "original" methods.
 if not hasattr( GafferImage.Format, "__originalRegisterFormat" ) :
 
-	Gaffer.ScriptNode.__originalLoad = Gaffer.ScriptNode.load
-	Gaffer.ScriptNode.load = __scriptNodeLoad
-
 	GafferImage.AtomicFormatPlug.__originalSetValue = GafferImage.AtomicFormatPlug.setValue
 	GafferImage.AtomicFormatPlug.setValue = __formatPlugSetValue
 
 	GafferImage.FormatPlug.__originalSetValue = GafferImage.FormatPlug.setValue
 	GafferImage.FormatPlug.setValue = __formatPlugSetValue
-
-	GafferImage.Format.__originalRegisterFormat = staticmethod( GafferImage.Format.registerFormat )
-	GafferImage.Format.registerFormat = __formatRegisterFormat
