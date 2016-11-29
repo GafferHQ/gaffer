@@ -166,7 +166,7 @@ class ScriptNode : public Node
 		std::string serialise( const Node *parent = 0, const Set *filter = 0 ) const;
 		/// Calls serialise() and saves the result into the specified file.
 		void serialiseToFile( const std::string &fileName, const Node *parent = 0, const Set *filter = 0 ) const;
-		/// Executes the previously generated serialisation. If continueOnError is true, then
+		/// Executes a previously generated serialisation. If continueOnError is true, then
 		/// errors are reported via IECore::MessageHandler rather than as exceptions, and
 		/// execution continues at the point after the error. This allows scripts to be loaded as
 		/// best as possible even when certain nodes/plugs/shaders may be missing or
@@ -175,6 +175,11 @@ class ScriptNode : public Node
 		bool execute( const std::string &serialisation, Node *parent = 0, bool continueOnError = false );
 		/// As above, but loads the serialisation from the specified file.
 		bool executeFile( const std::string &fileName, Node *parent = 0, bool continueOnError = false );
+		/// Returns true if a script is currently being executed. Note that
+		/// `execute()`, `executeFile()`, `load()` and `paste()` are all
+		/// sources of execution, and there is intentionally no way of
+		/// distinguishing between them.
+		bool isExecuting() const;
 		/// This signal is emitted following successful execution of a script.
 		typedef boost::signal<void ( ScriptNodePtr, const std::string )> ScriptExecutedSignal;
 		ScriptExecutedSignal &scriptExecutedSignal();
@@ -278,6 +283,7 @@ class ScriptNode : public Node
 		static ExecuteFunction g_executeFunction;
 		friend bool GafferBindings::registerSerialiser();
 
+		bool m_executing;
 		ScriptExecutedSignal m_scriptExecutedSignal;
 
 		// Context and plugs

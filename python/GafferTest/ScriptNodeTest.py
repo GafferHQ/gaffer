@@ -1239,5 +1239,28 @@ class ScriptNodeTest( GafferTest.TestCase ) :
 			self.assertEqual( mh.messages[0].context, "Line 2 of " + fileName )
 			self.assertTrue( "NameError: name 'iDontExist' is not defined" in mh.messages[0].message )
 
+	def testIsExecuting( self ) :
+
+		s = Gaffer.ScriptNode()
+
+		self.assertFalse( s.isExecuting() )
+
+		self.__wasExecuting = None
+		def f( script, child ) :
+			self.__wasExecuting = script.isExecuting()
+
+		c = s.childAddedSignal().connect( f )
+
+		s["n"] = GafferTest.AddNode()
+		self.assertEqual( self.__wasExecuting, False )
+
+		ss = s.serialise( filter = Gaffer.StandardSet( [ s["n"] ] ) )
+		s.execute( ss )
+		self.assertEqual( self.__wasExecuting, True )
+
+		self.__wasExecuting = None
+		self.assertRaises( RuntimeError, s.execute, ss + "\nsyntaxError" )
+		self.assertFalse( s.isExecuting() )
+
 if __name__ == "__main__":
 	unittest.main()

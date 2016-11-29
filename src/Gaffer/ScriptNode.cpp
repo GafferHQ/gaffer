@@ -242,6 +242,7 @@ ScriptNode::ScriptNode( const std::string &name )
 	m_selectionOrphanRemover( m_selection ),
 	m_undoIterator( m_undoList.end() ),
 	m_currentActionStage( Action::Invalid ),
+	m_executing( false ),
 	m_context( new Context )
 {
 	storeIndexOfNextChild( g_firstPlugIndex );
@@ -625,6 +626,11 @@ void ScriptNode::deleteNodes( Node *parent, const Set *filter, bool reconnect )
 	}
 }
 
+bool ScriptNode::isExecuting() const
+{
+	return m_executing;
+}
+
 ScriptNode::ScriptExecutedSignal &ScriptNode::scriptExecutedSignal()
 {
 	return m_scriptExecutedSignal;
@@ -705,8 +711,19 @@ bool ScriptNode::executeInternal( const std::string &serialisation, Node *parent
 		throw IECore::Exception( "Execution not available - please link to libGafferBindings." );
 	}
 	DirtyPropagationScope dirtyScope;
-	const bool result = g_executeFunction( this, serialisation, parent ? parent : this, continueOnError, context );
-	scriptExecutedSignal()( this, serialisation );
+	bool result = false;
+	m_executing = true;
+	try
+	{
+		result = g_executeFunction( this, serialisation, parent ? parent : this, continueOnError, context );
+		scriptExecutedSignal()( this, serialisation );
+	}
+	catch( ... )
+	{
+		m_executing = false;
+		throw;
+	}
+	m_executing = false;
 	return result;
 }
 
