@@ -4,13 +4,20 @@
 Improvements
 ------------
 
-- `GafferUI::StandardGraphLayout` : Don't apply positions if the layout algorithm fails.
-- `GafferScene::Options` : Exposed plug allowing prefixing of options.
+- Graph Layout : Don't apply positions if the layout algorithm fails.
+- StandardOptions : Added "render:sampleMotion" parameter.
+  - Currently with Arnold support ( RenderMan support requires Cortex update ).
 - Arnold backend : Options prefixed with "header:" are written into the header of image outputs.
 
 Fixes
 -----
 
+- ArnoldDisplacement :
+  - Accepts OSLShader inputs to map plug.
+  - Fixed dirty propagation.
+- ArnoldOptions : Removed errorColorBadMesh option.
+- Arnold backend : Leave instancing of ASS archives to Arnold itself.
+  - Fixed a crash bug when Arnold's procedural cache is in use (tested in Arnold 4.2.15.1)
 - Build :
   - Fixed failing Travis tests by removing `ImageWriterTest.testMultipleWrite()`.
   - IE options supply DCC specific LINKFLAGS if specified.
