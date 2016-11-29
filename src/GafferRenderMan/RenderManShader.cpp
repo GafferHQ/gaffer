@@ -98,26 +98,26 @@ const Gaffer::Plug *RenderManShader::correspondingInput( const Gaffer::Plug *out
 	ConstCompoundDataPtr ann = annotations();
 	if( !ann )
 	{
-		return 0;
+		return NULL;
 	}
 
 	const StringData *primaryInput = ann->member<StringData>( "primaryInput" );
 	if( !primaryInput )
 	{
-		return 0;
+		return NULL;
 	}
 
 	const Plug *result = parametersPlug()->getChild<Plug>( primaryInput->readable() );
 	if( !result )
 	{
 		IECore::msg( IECore::Msg::Error, "RenderManShader::correspondingInput", boost::format( "Parameter \"%s\" does not exist" ) % primaryInput->readable() );
-		return 0;
+		return NULL;
 	}
 
 	if( result->typeId() != Gaffer::Plug::staticTypeId() )
 	{
 		IECore::msg( IECore::Msg::Error, "RenderManShader::correspondingInput", boost::format( "Parameter \"%s\" is not of type shader" ) % primaryInput->readable() );
-		return 0;
+		return NULL;
 	}
 
 	return result;
@@ -662,7 +662,7 @@ static IECore::FloatVectorDataPtr parseFloats( const std::string &value )
 
 	if( !r || first != value.end() )
 	{
-		return 0;
+		return NULL;
 	}
 
 	return result;
@@ -726,7 +726,7 @@ static IECore::Color3fVectorDataPtr parseColors( const std::string &value )
 
 	if( !r || first != value.end() )
 	{
-		return 0;
+		return NULL;
 	}
 	return result;
 }

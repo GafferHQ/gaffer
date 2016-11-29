@@ -349,5 +349,6 @@ class NodeTest( GafferTest.TestCase ) :
 		s.addChild( n )
 		assertConnections()
 
+
 if __name__ == "__main__" :
 	unittest.main()
