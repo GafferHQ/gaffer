@@ -618,6 +618,45 @@ class ArnoldShaderTest( GafferSceneTest.SceneTestCase ) :
 		self.assertTrue( s2["n2"]["parameters"]["color"].getInput().isSame( s2["n1"]["out"] ) )
 		self.assertTrue( s2["a"]["shader"].getInput().isSame( s2["n2"]["out"] ) )
 
+	def testDisabledShaderPassesThroughExternalValue( self ) :
+
+		s = GafferArnold.ArnoldShader()
+		s.loadShader( "standard" )
+
+		f = GafferArnold.ArnoldShader()
+		f.loadShader( "flat" )
+
+		f["parameters"]["color"].setValue( IECore.Color3f( 1, 2, 3 ) )
+		s["parameters"]["Ks_color"].setInput( f["out"] )
+
+		attributesHash = s.attributesHash()
+		attributes = s.attributes()
+		self.assertEqual( len( attributes ), 1 )
+		self.assertEqual( attributes["ai:surface"][1].name, "standard" )
+		self.assertEqual( attributes["ai:surface"][0].name, "flat" )
+
+		self.assertTrue( s["enabled"].isSame( s.enabledPlug() ) )
+
+		f["enabled"].setValue( False )
+
+		attributesHash2 = s.attributesHash()
+		self.assertNotEqual( attributesHash2, attributesHash )
+
+		attributes2 = s.attributes()
+		self.assertEqual( len( attributes2 ), 1 )
+
+		for key in attributes["ai:surface"][1].parameters.keys() :
+			if key != "Ks_color" :
+				self.assertEqual(
+					attributes["ai:surface"][1].parameters[key],
+					attributes2["ai:surface"][0].parameters[key]
+				)
+			else :
+				self.assertEqual(
+					attributes["ai:surface"][0].parameters["color"],
+					attributes2["ai:surface"][0].parameters[key]
+				)
+
 	def __forceArnoldRestart( self ) :
 
 		with IECoreArnold.UniverseBlock( writable = True ) :

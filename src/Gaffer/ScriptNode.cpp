@@ -53,6 +53,7 @@
 #include "Gaffer/DependencyNode.h"
 #include "Gaffer/CompoundDataPlug.h"
 #include "Gaffer/StringPlug.h"
+#include "Gaffer/GraphComponent.h"
 
 using namespace Gaffer;
 
@@ -533,6 +534,48 @@ void ScriptNode::paste( Node *parent )
 	}
 }
 
+void handleReconnectionOfOutputPlug( const ScriptNode *script, const DependencyNode *dependencyNode, const Plug *outputPlug )
+{
+	// for plugs that hold output plugs we need to recurse
+	if(outputPlug->typeId() == Plug::staticTypeId())
+	{
+		for( OutputPlugIterator it( outputPlug ); !it.done(); ++it )
+		{
+			handleReconnectionOfOutputPlug( script, dependencyNode, it->get() );
+		}
+		return;
+	}
+
+	const Plug *inPlug = dependencyNode->correspondingInput( outputPlug );
+	if ( !inPlug )
+	{
+		return;
+	}
+
+	const Plug *srcPlug = inPlug->getInput<Plug>();
+	if ( !srcPlug )
+	{
+		return;
+	}
+
+	// record this plug's current outputs, and reconnect them. This is a copy of outputPlug->outputs() rather
+	// than a reference, as reconnection can modify outputPlug->outputs()...
+	Plug::OutputContainer outputs = outputPlug->outputs();
+	for ( Plug::OutputContainer::const_iterator oIt = outputs.begin(); oIt != outputs.end(); )
+	{
+		Plug *dstPlug = *oIt;
+		if ( dstPlug && dstPlug->acceptsInput( srcPlug ) && script->isAncestorOf( dstPlug ) )
+		{
+			oIt++;
+			dstPlug->setInput( const_cast<Gaffer::Plug*>(srcPlug) );
+		}
+		else
+		{
+			oIt++;
+		}
+	}
+}
+
 void ScriptNode::deleteNodes( Node *parent, const Set *filter, bool reconnect )
 {
 	parent = parent ? parent : this;
@@ -551,34 +594,7 @@ void ScriptNode::deleteNodes( Node *parent, const Set *filter, bool reconnect )
 			{
 				for( OutputPlugIterator it( node ); !it.done(); ++it )
 				{
-					Plug *inPlug = dependencyNode->correspondingInput( it->get() );
-					if ( !inPlug )
-					{
-						continue;
-					}
-
-					Plug *srcPlug = inPlug->getInput<Plug>();
-					if ( !srcPlug )
-					{
-						continue;
-					}
-
-					// record this plug's current outputs, and reconnect them. This is a copy of (*it)->outputs() rather
-					// than a reference, as reconnection can modify (*it)->outputs()...
-					Plug::OutputContainer outputs = (*it)->outputs();
-					for ( Plug::OutputContainer::const_iterator oIt = outputs.begin(); oIt != outputs.end(); )
-					{
-						Plug *dstPlug = *oIt;
-						if ( dstPlug && dstPlug->acceptsInput( srcPlug ) && this->isAncestorOf( dstPlug ) )
-						{
-							oIt++;
-							dstPlug->setInput( srcPlug );
-						}
-						else
-						{
-							oIt++;
-						}
-					}
+					handleReconnectionOfOutputPlug( this, dependencyNode, it->get() );
 				}
 			}
 

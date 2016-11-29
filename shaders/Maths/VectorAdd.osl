@@ -38,7 +38,7 @@ shader VectorAdd
 (
 	vector a = 0,
 	vector b = 0,
-	output vector out = 0
+	output vector out = 0 [[ string correspondingInput = "a" ]]
 )
 {
 	out = a + b;

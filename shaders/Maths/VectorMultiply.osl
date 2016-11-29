@@ -38,7 +38,7 @@ shader VectorMultiply
 (
 	vector a = 0,
 	float b = 0,
-	output vector out = 0
+	output vector out = 0 [[ string correspondingInput = "a" ]]
 )
 {
 	out = a * b;

@@ -64,6 +64,7 @@
 
 [node flat]
 
+	primaryInput STRING "color"
 	gaffer.nodeMenu.category STRING "Surface"
 
 
@@ -323,6 +324,7 @@
 
 [node MayaBlendColors]
 
+	primaryInput STRING "color1"
 	gaffer.nodeMenu.category STRING "Maya/Color Utilities"
 
 
@@ -363,6 +365,7 @@
 
 [node MayaCondition]
 
+	primaryInput STRING "colorIfTrue"
 	gaffer.nodeMenu.category STRING "Maya/General Utilities"
 
 
@@ -418,6 +421,7 @@
 
 [node MayaHsvToRgb]
 
+  primaryInput STRING "inHsv"
 	gaffer.nodeMenu.category STRING "Maya/Color Utilities"
 
 
@@ -428,11 +432,13 @@
 
 [node MayaLayeredShader]
 
+	primaryInput STRING "color0"
 	gaffer.nodeMenu.category STRING "Maya/Surface"
 
 
 [node MayaLayeredTexture]
 
+	primaryInput STRING "color0"
 	gaffer.nodeMenu.category STRING "Maya/2D Textures"
 
 
@@ -443,6 +449,7 @@
 
 [node MayaMultiplyDivide]
 
+	primaryInput STRING "input1"
 	gaffer.nodeMenu.category STRING "Maya/General Utilities"
 
 
@@ -498,11 +505,13 @@
 
 [node MayaRemapColor]
 
+	primaryInput STRING "input"
 	gaffer.nodeMenu.category STRING "Maya/Color Utilities"
 
 
 [node MayaRemapHsv]
 
+	primaryInput STRING "input"
 	gaffer.nodeMenu.category STRING "Maya/Color Utilities"
 
 
@@ -518,11 +527,13 @@
 
 [node MayaReverse]
 
+	primaryInput STRING "input"
 	gaffer.nodeMenu.category STRING "Maya/General Utilities"
 
 
 [node MayaRgbToHsv]
 
+	primaryInput STRING "inRgb"
 	gaffer.nodeMenu.category STRING "Maya/Color Utilities"
 
 
@@ -771,11 +782,13 @@
 
 [node htoa__abs]
 
+	primaryInput STRING "input"
 	gaffer.nodeMenu.category STRING "Houdini/Maths"
 
 
 [node htoa__add]
 
+	primaryInput STRING "input1"
 	gaffer.nodeMenu.category STRING "Houdini/Maths"
 
 
@@ -811,6 +824,7 @@
 
 [node htoa__atan]
 
+	primaryInput STRING "y"
 	gaffer.nodeMenu.category STRING "Houdini/Maths"
 
 
@@ -821,6 +835,7 @@
 
 [node htoa__cache]
 
+	primaryInput STRING "input"
 	gaffer.nodeMenu.category STRING "Houdini/Texture"
 
 
@@ -836,16 +851,19 @@
 
 [node htoa__clamp]
 
+	primaryInput STRING "input"
 	gaffer.nodeMenu.category STRING "Houdini/Maths"
 
 
 [node htoa__color_convert]
 
+	primaryInput STRING "input"
 	gaffer.nodeMenu.category STRING "Houdini/Color Utilities"
 
 
 [node htoa__color_correct]
 
+	primaryInput STRING "input"
 	gaffer.nodeMenu.category STRING "Houdini/Color Utilities"
 
 
@@ -856,21 +874,25 @@
 
 [node htoa__complement]
 
+	primaryInput STRING "input"
 	gaffer.nodeMenu.category STRING "Houdini/Maths"
 
 
 [node htoa__composite]
 
+	primaryInput STRING "A"
 	gaffer.nodeMenu.category STRING "Houdini/Maths"
 
 
 [node htoa__cross]
 
+	primaryInput STRING "input1"
 	gaffer.nodeMenu.category STRING "Houdini/Maths"
 
 
 [node htoa__curvature]
 
+	primaryInput STRING "color1"
 	gaffer.nodeMenu.category STRING "Houdini/General Utilities"
 
 
@@ -881,6 +903,7 @@
 
 [node htoa__divide]
 
+	primaryInput STRING "input1"
 	gaffer.nodeMenu.category STRING "Houdini/Maths"
 
 
@@ -891,6 +914,7 @@
 
 [node htoa__exp]
 
+	primaryInput STRING "input"
 	gaffer.nodeMenu.category STRING "Houdini/Maths"
 
 
@@ -921,6 +945,7 @@
 
 [node htoa__fraction]
 
+	primaryInput STRING "input"
 	gaffer.nodeMenu.category STRING "Houdini/Maths"
 
 
@@ -941,16 +966,19 @@
 
 [node htoa__linearize]
 
+	primaryInput STRING "input"
 	gaffer.nodeMenu.category STRING "Houdini/Maths"
 
 
 [node htoa__ln]
 
+	primaryInput STRING "input"
 	gaffer.nodeMenu.category STRING "Houdini/Maths"
 
 
 [node htoa__log]
 
+	primaryInput STRING "input"
 	gaffer.nodeMenu.category STRING "Houdini/Maths"
 
 
@@ -976,6 +1004,7 @@
 
 [node htoa__matrix_multiply]
 
+	primaryInput STRING "m1"
 	gaffer.nodeMenu.category STRING "Houdini/Maths"
 
 
@@ -996,56 +1025,66 @@
 
 [node htoa__matte]
 
+	primaryInput STRING "passthrough"
 	gaffer.nodeMenu.category STRING "Houdini/General Utilities"
 
 
 [node htoa__max]
-
+      
+	primaryInput STRING "input1"
 	gaffer.nodeMenu.category STRING "Houdini/Maths"
 
 
 [node htoa__min]
 
+	primaryInput STRING "input1"
 	gaffer.nodeMenu.category STRING "Houdini/Maths"
 
 
 [node htoa__mix]
 
+	primaryInput STRING "input1"
 	gaffer.nodeMenu.category STRING "Houdini/Maths"
 
 
 [node htoa__modulo]
 
+	primaryInput STRING "input"
 	gaffer.nodeMenu.category STRING "Houdini/Maths"
 
 
 [node htoa__multiply]
-
+	primaryInput STRING "input1"
 	gaffer.nodeMenu.category STRING "Houdini/Maths"
 
 
 [node htoa__negate]
 
+	primaryInput STRING "input"
 	gaffer.nodeMenu.category STRING "Houdini/Maths"
 
 
 [node htoa__normalize]
 
+	primaryInput STRING "input"
 	gaffer.nodeMenu.category STRING "Houdini/Maths"
 
 
 [node htoa__passthrough]
 
+	primaryInput STRING "passthrough"
 	gaffer.nodeMenu.category STRING "Houdini/General Utilities"
 
 
 [node htoa__pow]
 
+	primaryInput STRING "base"
 	gaffer.nodeMenu.category STRING "Houdini/Maths"
 
 
 [node htoa__print]
 
+	primaryInput STRING "passthrough"
 	gaffer.nodeMenu.category STRING "Houdini/General Utilities"
 
 
@@ -1061,16 +1100,19 @@
 
 [node htoa__random]
 
+	primaryInput STRING "input_color"
 	gaffer.nodeMenu.category STRING "Houdini/Maths"
 
 
 [node htoa__range]
 
+	primaryInput STRING "input"
 	gaffer.nodeMenu.category STRING "Houdini/Maths"
 
 
 [node htoa__reciprocal]
 
+	primaryInput STRING "input"
 	gaffer.nodeMenu.category STRING "Houdini/Maths"
 
 
@@ -1101,6 +1143,7 @@
 
 [node htoa__sign]
 
+	primaryInput STRING "input"
 	gaffer.nodeMenu.category STRING "Houdini/Maths"
 
 
@@ -1116,6 +1159,7 @@
 
 [node htoa__sqrt]
 
+	primaryInput STRING "input"
 	gaffer.nodeMenu.category STRING "Houdini/Maths"
 
 
@@ -1151,6 +1195,7 @@
 
 [node htoa__switch]
 
+	primaryInput STRING "input0"
 	gaffer.nodeMenu.category STRING "Houdini/General Utilities"
 
 
@@ -1166,6 +1211,7 @@
 
 [node htoa__trigo]
 
+	primaryInput STRING "input"
 	gaffer.nodeMenu.category STRING "Houdini/Maths"
 
 
@@ -1254,21 +1300,25 @@
 
 [node alColorSpace]
 
+	primaryInput STRING "input"
 	gaffer.nodeMenu.category STRING "Utility"
 
 
 [node alCombineColor]
 
+	primaryInput STRING "a"
 	gaffer.nodeMenu.category STRING "Utility"
 
 
 [node alCombineFloat]
 
+	primaryInput STRING "input1"
 	gaffer.nodeMenu.category STRING "Utility"
 
 
 [node alCurvature]
 
+	primaryInput STRING "color1"
 	gaffer.nodeMenu.category STRING "Utility"
 
 
@@ -1314,31 +1364,37 @@
 
 [node alLayer]
 
+	primaryInput STRING "layer1"
 	gaffer.nodeMenu.category STRING "Surface"
 
 
 [node alLayerColor]
 
+	primaryInput STRING "layer1"
 	gaffer.nodeMenu.category STRING "Utility"
 
 
 [node alLayerFloat]
 
+	primaryInput STRING "layer1"
 	gaffer.nodeMenu.category STRING "Utility"
 
 
 [node alPattern]
 
+	primaryInput STRING "color1"
 	gaffer.nodeMenu.category STRING "Texture"
 
 
 [node alRemapColor]
 
+	primaryInput STRING "input"
 	gaffer.nodeMenu.category STRING "Utility"
 
 
 [node alRemapFloat]
 
+	primaryInput STRING "input"
 	gaffer.nodeMenu.category STRING "Utility"
 
 
@@ -1349,14 +1405,16 @@
 
 [node alSwitchColor]
 
+	primaryInput STRING "inputA"
 	gaffer.nodeMenu.category STRING "Utility"
 
 
 [node alSwitchFloat]
 
+	primaryInput STRING "inputA"
 	gaffer.nodeMenu.category STRING "Utility"
 
 
-	[node alTriplanar]
+[node alTriplanar]
 
 	gaffer.nodeMenu.category STRING "Texture"
