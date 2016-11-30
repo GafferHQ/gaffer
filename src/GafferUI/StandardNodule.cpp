@@ -53,6 +53,7 @@
 #include "GafferUI/ConnectionGadget.h"
 #include "GafferUI/NodeGadget.h"
 #include "GafferUI/Pointer.h"
+#include "GafferUI/PlugAdder.h"
 
 using namespace std;
 using namespace Imath;
@@ -262,9 +263,21 @@ bool StandardNodule::dragEnter( GadgetPtr gadget, const DragDropEvent &event )
 		return true;
 	}
 
-	Gaffer::PlugPtr input, output;
-	connection( event, input, output );
-	if( input )
+	bool accept = false;
+	if( IECore::runTimeCast<Plug>( event.data ) )
+	{
+		Gaffer::PlugPtr input, output;
+		connection( event, input, output );
+		accept = input;
+	}
+	else if( IECore::runTimeCast<PlugAdder>( event.sourceGadget.get() ) )
+	{
+		// We must accept the drag so that the PlugAdder gets
+		// a chance to do its thing.
+		accept = true;
+	}
+
+	if( accept )
 	{
 		setHighlighted( true );
 
@@ -287,6 +300,10 @@ bool StandardNodule::dragEnter( GadgetPtr gadget, const DragDropEvent &event )
 		{
 			sourceConnection->updateDragEndPoint( centre, tangent );
 		}
+		else if( PlugAdder *plugAdder = IECore::runTimeCast<PlugAdder>( event.sourceGadget.get() ) )
+		{
+			plugAdder->updateDragEndPoint( centre, tangent );
+		}
 
 		// show the labels of all compatible nodules on this node, if it doesn't
 		// look like the previous drag destination would have done so.
@@ -297,10 +314,9 @@ bool StandardNodule::dragEnter( GadgetPtr gadget, const DragDropEvent &event )
 		}
 
  		requestRender();
-		return true;
 	}
 
-	return false;
+	return accept;
 }
 
 bool StandardNodule::dragMove( GadgetPtr gadget, const DragDropEvent &event )
@@ -357,6 +373,12 @@ bool StandardNodule::drop( GadgetPtr gadget, const DragDropEvent &event )
 {
 	setHighlighted( false );
 	setCompatibleLabelsVisible( event, false );
+
+	if( PlugAdder *plugAdder = IECore::runTimeCast<PlugAdder>( event.sourceGadget.get() ) )
+	{
+		plugAdder->addPlug( plug() );
+		return true;
+	}
 
 	Gaffer::PlugPtr input, output;
 	connection( event, input, output );
@@ -427,9 +449,18 @@ void StandardNodule::setCompatibleLabelsVisible( const DragDropEvent &event, boo
 
 	for( RecursiveStandardNoduleIterator it( nodeGadget ); !it.done(); ++it )
 	{
-		Gaffer::PlugPtr input, output;
-		(*it)->connection( event, input, output );
-		if( input && output )
+		bool compatible = false;
+		if( IECore::runTimeCast<PlugAdder>( event.sourceGadget.get() ) )
+		{
+			compatible = true;
+		}
+		else
+		{
+			Gaffer::PlugPtr input, output;
+			(*it)->connection( event, input, output );
+			compatible = input && output;
+		}
+		if( compatible )
 		{
 			(*it)->setLabelVisible( visible );
 		}
