@@ -92,10 +92,8 @@ class StandardNodeGadget : public NodeGadget
 		void setContents( GadgetPtr contents );
 		Gadget *getContents();
 		const Gadget *getContents() const;
-		/// Additional Gadgets can be placed alongside the
+		/// Places an additional Gadgets alongside the
 		/// Nodules at the end of each outside edge.
-		/// Initially these are SpacerGadgets, but they can
-		/// be replaced with anything.
 		void setEdgeGadget( Edge edge, GadgetPtr gadget );
 		Gadget *getEdgeGadget( Edge edge );
 		const Gadget *getEdgeGadget( Edge edge ) const;

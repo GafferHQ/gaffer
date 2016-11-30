@@ -534,15 +534,48 @@ const Gadget *StandardNodeGadget::getContents() const
 
 void StandardNodeGadget::setEdgeGadget( Edge edge, GadgetPtr gadget )
 {
+	GadgetPtr previous = getEdgeGadget( edge );
+	if( previous == gadget )
+	{
+		return;
+	}
+
+	if( IECore::runTimeCast<Nodule>( gadget ) )
+	{
+		throw IECore::Exception( "End Gadget can not be a Nodule." );
+	}
+
 	LinearContainer *c = noduleContainer( edge );
-	c->removeChild( c->getChild<Gadget>( c->children().size() - 1 ) );
-	c->addChild( gadget );
+
+	GadgetPtr spacer = boost::static_pointer_cast<Gadget>( c->children().back() );
+	c->removeChild( spacer );
+	if( previous )
+	{
+		c->removeChild( previous );
+	}
+	if( gadget )
+	{
+		c->addChild( gadget );
+	}
+	c->addChild( spacer );
 }
 
 Gadget *StandardNodeGadget::getEdgeGadget( Edge edge )
 {
 	LinearContainer *c = noduleContainer( edge );
-	return c->getChild<Gadget>( c->children().size() - 1 );
+	const size_t s = c->children().size();
+	if( s < 3 )
+	{
+		return NULL;
+	}
+
+	Gadget *potentialEdgeGadget = c->getChild<Gadget>( s - 2 );
+	if( !IECore::runTimeCast<Nodule>( potentialEdgeGadget ) )
+	{
+		return potentialEdgeGadget;
+	}
+
+	return NULL;
 }
 
 const Gadget *StandardNodeGadget::getEdgeGadget( Edge edge ) const
@@ -864,10 +897,12 @@ void StandardNodeGadget::updateNoduleLayout()
 	// and remember the end gadget for each.
 	LinearContainer *edgeContainers[NumEdges];
 	GadgetPtr endGadgets[NumEdges];
+	GadgetPtr endSpacers[NumEdges];
 	for( int edge = FirstEdge; edge < NumEdges; ++edge )
 	{
+		endGadgets[edge] = getEdgeGadget( (Edge)edge );
 		edgeContainers[edge] = noduleContainer( (Edge)edge );
-		endGadgets[edge] = boost::static_pointer_cast<Gadget>( edgeContainers[edge]->children().back() );
+		endSpacers[edge] = boost::static_pointer_cast<Gadget>( edgeContainers[edge]->children().back() );
 		while( edgeContainers[edge]->children().size() > 1 )
 		{
 			edgeContainers[edge]->removeChild( edgeContainers[edge]->children().back() );
@@ -882,10 +917,14 @@ void StandardNodeGadget::updateNoduleLayout()
 		edgeContainers[plugEdge( (*it)->plug() )]->addChild( *it );
 	}
 
-	// Put back the end gadgets
+	// Put back the end gadgets and spacers
 	for( int edge = FirstEdge; edge < NumEdges; ++edge )
 	{
-		edgeContainers[edge]->addChild( endGadgets[edge] );
+		if( endGadgets[edge] )
+		{
+			edgeContainers[edge]->addChild( endGadgets[edge] );
+		}
+		edgeContainers[edge]->addChild( endSpacers[edge] );
 	}
 
 	// Let everyone know what we've done.

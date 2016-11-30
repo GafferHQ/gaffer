@@ -148,9 +148,13 @@ class StandardNodeGadgetTest( GafferUITest.TestCase ) :
 		g = GafferUI.StandardNodeGadget( n )
 
 		for name, edge in g.Edge.names.items() :
+			self.assertTrue( g.getEdgeGadget( edge ) is None )
 			eg = GafferUI.TextGadget( name )
 			g.setEdgeGadget( edge, eg )
 			self.assertTrue( g.getEdgeGadget( edge ).isSame( eg ) )
+			g.setEdgeGadget( edge, None )
+			self.assertTrue( g.getEdgeGadget( edge ) is None )
+			self.assertTrue( eg.parent() is None )
 
 	def testEdgeGadgetsAndNoduleAddition( self ) :
 
