@@ -283,7 +283,7 @@ class ReferenceTest( GafferTest.TestCase ) :
 		s2["r"] = Gaffer.Reference()
 		s2["r"].load( self.temporaryDirectory() + "/test.grf" )
 
-		self.assertTrue( "Metadata" not in s2.serialise() )
+		self.assertTrue( "description" not in s2.serialise() )
 
 	def testSinglePlugWithMetadata( self ) :
 

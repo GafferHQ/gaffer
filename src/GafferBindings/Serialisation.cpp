@@ -96,7 +96,6 @@ std::string Serialisation::result() const
 	}
 
 	if(
-		Context::current()->get<bool>( "serialiser:includeVersionMetadata", false ) &&
 		runTimeCast<const Node>( m_parent )
 	)
 	{

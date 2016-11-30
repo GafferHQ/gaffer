@@ -216,7 +216,7 @@ class ImageTransformTest( GafferImageTest.ImageTestCase ) :
 
 		ss = s.serialise()
 		for name in s["t"].keys() :
-			self.assertFalse( name in ss )
+			self.assertFalse( '\"{}\"'.format( name ) in ss )
 
 	def testRotate360( self ) :
 

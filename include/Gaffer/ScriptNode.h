@@ -49,7 +49,7 @@
 #include "Gaffer/Action.h"
 #include "Gaffer/Behaviours/OrphanRemover.h"
 
-typedef struct _object PyObject;
+#include "GafferBindings/ScriptNodeBinding.h" // to enable friend declaration for SerialiserRegistration
 
 namespace Gaffer
 {
@@ -131,15 +131,15 @@ class ScriptNode : public Node
 		/// the filter will be copied. If unspecified, parent defaults to
 		/// the ScriptNode and if no filter is specified all children will
 		/// be copied.
-		void copy( const Node *parent = 0, const Set *filter = 0 );
+		void copy( const Node *parent = NULL, const Set *filter = NULL );
 		/// Performs a copy() and then deletes the copied nodes.
 		/// \undoable
-		void cut( Node *parent = 0, const Set *filter = 0 );
+		void cut( Node *parent = NULL, const Set *filter = NULL );
 		/// Pastes the contents of the global clipboard into the script below
 		/// the specified parent. If parent is unspecified then it defaults
 		/// to the script itself.
 		/// \undoable
-		void paste( Node *parent = 0 );
+		void paste( Node *parent = NULL );
 		/// Removes Nodes from the parent node, making sure they are
 		/// disconnected from the remaining Nodes and removed from the current
 		/// selection. If unspecified then the parent defaults to the script
@@ -149,56 +149,44 @@ class ScriptNode : public Node
 		/// and unselected - this function is just a convenience method
 		/// for efficiently deleting many nodes at once.
 		/// \undoable
-		void deleteNodes( Node *parent = 0, const Set *filter = 0, bool reconnect = true );
+		void deleteNodes( Node *parent = NULL, const Set *filter = NULL, bool reconnect = true );
 		//@}
 
-		//! @name Script evaluation and execution.
-		/// These methods allow the execution of python scripts in the
-		/// context of the ScriptNode. The methods are only available on
-		/// ScriptNode objects created from Python - they will throw Exceptions
-		/// on nodes created from C++. This allows the ScriptNode class to be
-		/// used in the C++ library without introducing dependencies on Python.
+		//! @name Serialisation and execution
+		///
+		/// Scripts may be serialised into a string form, which will rebuild
+		/// the node network when executed. This process is used for both the
+		/// saving and loading of scripts and for the cut and paste mechanism.
 		////////////////////////////////////////////////////////////////////
 		//@{
-		typedef boost::signal<void ( ScriptNodePtr, const std::string )> ScriptExecutedSignal;
-		typedef boost::signal<void ( ScriptNodePtr, const std::string, PyObject * )> ScriptEvaluatedSignal;
-		/// Runs the specified python script. If continueOnError is true, then
+		/// Returns a string which when executed will recreate the children
+		/// of the parent and the connections between them. If unspecified, parent
+		/// defaults to the ScriptNode itself. The filter may be specified to limit
+		/// serialised nodes to those contained in the set.
+		std::string serialise( const Node *parent = NULL, const Set *filter = NULL ) const;
+		/// Calls serialise() and saves the result into the specified file.
+		void serialiseToFile( const std::string &fileName, const Node *parent = NULL, const Set *filter = NULL ) const;
+		/// Executes a previously generated serialisation. If continueOnError is true, then
 		/// errors are reported via IECore::MessageHandler rather than as exceptions, and
 		/// execution continues at the point after the error. This allows scripts to be loaded as
 		/// best as possible even when certain nodes/plugs/shaders may be missing or
 		/// may have been renamed. A true return value indicates that one or more errors
 		/// were ignored.
-		virtual bool execute( const std::string &pythonScript, Node *parent = 0, bool continueOnError = false );
-		/// As above, but loads the python script from the specified file.
-		virtual bool executeFile( const std::string &pythonFile, Node *parent = 0, bool continueOnError = false );
+		bool execute( const std::string &serialisation, Node *parent = NULL, bool continueOnError = false );
+		/// As above, but loads the serialisation from the specified file.
+		bool executeFile( const std::string &fileName, Node *parent = NULL, bool continueOnError = false );
+		/// Returns true if a script is currently being executed. Note that
+		/// `execute()`, `executeFile()`, `load()` and `paste()` are all
+		/// sources of execution, and there is intentionally no way of
+		/// distinguishing between them.
+		bool isExecuting() const;
 		/// This signal is emitted following successful execution of a script.
+		typedef boost::signal<void ( ScriptNodePtr, const std::string )> ScriptExecutedSignal;
 		ScriptExecutedSignal &scriptExecutedSignal();
-		/// Evaluates the specified python expression. The caller owns a reference to
-		/// the result, and must therefore decrement the reference count when
-		/// appropriate.
-		virtual PyObject *evaluate( const std::string &pythonExpression, Node *parent = 0 );
-		/// This signal is emitted following sucessful evaluation of an expression. The PyObject *
-		/// is the result of the script evaluation - slots must increment the reference count on
-		/// this if they intend to keep the result.
-		ScriptEvaluatedSignal &scriptEvaluatedSignal();
 		//@}
 
-		//! @name Serialisation
-		/// Scripts may be serialised into a string form, which when executed
-		/// in python will rebuild the node network.
-		/// This process is used for both the saving and loading of scripts and
-		/// for the cut and paste mechanism. As serialisation depends on
-		/// python, these methods will throw Exceptions if called on ScriptNodes
-		/// created from C++.
+		//! @name Saving and loading
 		////////////////////////////////////////////////////////////////////
-		//@{
-		/// Returns a string which when executed will recreate the children
-		/// of the parent and the connections between them. If unspecified, parent
-		/// default to the ScriptNode itself. The filter may be specified to limit
-		/// serialised nodes to those contained in the set.
-		virtual std::string serialise( const Node *parent = 0, const Set *filter = 0 ) const;
-		/// Calls serialise() and saves the result into the specified file.
-		virtual void serialiseToFile( const std::string &fileName, const Node *parent = 0, const Set *filter = 0 ) const;
 		/// Returns the plug which specifies the file used in all load and save
 		/// operations.
 		StringPlug *fileNamePlug();
@@ -210,9 +198,9 @@ class ScriptNode : public Node
 		/// Loads the script specified in the filename plug.
 		/// See execute() for a description of the continueOnError argument
 		/// and the return value.
-		virtual bool load( bool continueOnError = false );
+		bool load( bool continueOnError = false );
 		/// Saves the script to the file specified by the filename plug.
-		virtual void save() const;
+		void save() const;
 		//@}
 
 		//! @name Computation context
@@ -247,9 +235,15 @@ class ScriptNode : public Node
 
 	private :
 
+		// Selection
+		// =========
+
 		bool selectionSetAcceptor( const Set *s, const Set::Member *m );
 		StandardSetPtr m_selection;
 		Behaviours::OrphanRemover m_selectionOrphanRemover;
+
+		// Actions and undo
+		// ================
 
 		IE_CORE_FORWARDDECLARE( CompoundAction );
 
@@ -274,8 +268,26 @@ class ScriptNode : public Node
 		UndoIterator m_undoIterator; // points to the next thing to redo
 		Action::Stage m_currentActionStage;
 
+		// Serialisation and execution
+		// ===========================
+
+		std::string serialiseInternal( const Node *parent, const Set *filter ) const;
+		bool executeInternal( const std::string &serialisation, Node *parent, bool continueOnError, const std::string &context = "" );
+
+		typedef boost::function<std::string ( const Node *, const Set * )> SerialiseFunction;
+		typedef boost::function<bool ( ScriptNode *, const std::string &, Node *, bool, const std::string &context )> ExecuteFunction;
+
+		// Actual implementations reside in libGafferBindings (due to Python
+		// dependency), and are injected into these functions.
+		static SerialiseFunction g_serialiseFunction;
+		static ExecuteFunction g_executeFunction;
+		friend struct GafferBindings::SerialiserRegistration;
+
+		bool m_executing;
 		ScriptExecutedSignal m_scriptExecutedSignal;
-		ScriptEvaluatedSignal m_scriptEvaluatedSignal;
+
+		// Context and plugs
+		// =================
 
 		ContextPtr m_context;
 

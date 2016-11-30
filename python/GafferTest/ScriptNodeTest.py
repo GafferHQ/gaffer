@@ -82,31 +82,6 @@ class ScriptNodeTest( GafferTest.TestCase ) :
 
 		self.assert_( s["child"].typeName(), "Node" )
 
-	def testEvaluation( self ) :
-
-		s = Gaffer.ScriptNode()
-
-		def f( n, s, r ) :
-			ScriptNodeTest.lastNode = n
-			ScriptNodeTest.lastScript = s
-			ScriptNodeTest.lastResult = r
-
-		c = s.scriptEvaluatedSignal().connect( f )
-
-		n = s.evaluate( "10 * 10" )
-		self.assertEqual( n, 100 )
-		self.assertEqual( ScriptNodeTest.lastNode, s )
-		self.assertEqual( ScriptNodeTest.lastScript, "10 * 10" )
-		self.assertEqual( ScriptNodeTest.lastResult, 100 )
-
-		p = s.evaluate( "Gaffer.IntPlug()" )
-		self.assertEqual( p.typeName(), "Gaffer::IntPlug" )
-		self.assertEqual( ScriptNodeTest.lastNode, s )
-		self.assertEqual( ScriptNodeTest.lastScript, "Gaffer.IntPlug()" )
-		self.assert_( p.isSame( ScriptNodeTest.lastResult ) )
-		del p
-		del ScriptNodeTest.lastResult
-
 	def testSelection( self ) :
 
 		s = Gaffer.ScriptNode()
@@ -268,27 +243,6 @@ class ScriptNodeTest( GafferTest.TestCase ) :
 
 		self.assertEqual( s2["in"].typeName(), "Gaffer::Node" )
 
-	# Executing the result of serialise() shouldn't leave behind any residue.
-	def testSerialisationPollution( self ) :
-
-		s = Gaffer.ScriptNode()
-		s["n"] = GafferTest.AddNode()
-		s["n2"] = GafferTest.AddNode()
-		s["n"]["op1"].setInput( s["n2"]["sum"] )
-
-		s.execute( "import Gaffer" ) # we don't want to complain that this would be added by the serialisation and execution
-		s.execute( "import GafferTest" ) # same here as our test module contains the AddNode
-
-		se = s.serialise()
-
-		l = s.evaluate( "set( locals().keys() )" )
-		g = s.evaluate( "set( globals().keys() )" )
-
-		s.execute( se )
-
-		self.failUnless( s.evaluate( "set( locals().keys() )" )==l )
-		self.failUnless( s.evaluate( "set( globals().keys() )" )==g )
-
 	def testDeriveAndOverrideAcceptsChild( self ) :
 
 		class MyScriptNode( Gaffer.ScriptNode ) :
@@ -321,8 +275,6 @@ class ScriptNodeTest( GafferTest.TestCase ) :
 
 		self.assertRaises( RuntimeError, n.execute, "raise ValueError" )
 
-		self.assertRaises( KeyError, n.evaluate, "{}['a']" )
-
 	def testVariableScope( self ) :
 
 		# if a variable gets made in one execution, it shouldn't persist in the next.
@@ -330,22 +282,24 @@ class ScriptNodeTest( GafferTest.TestCase ) :
 		n = Gaffer.ScriptNode()
 
 		n.execute( "a = 10" )
-
-		self.assertRaises( NameError, n.evaluate, "a" )
+		self.assertRaisesRegexp( Exception, "NameError: name 'a' is not defined", n.execute, "a * 10" )
 
 	def testClassScope( self ) :
 
 		# this works in a normal python console, so it damn well better work
 		# in a script editor.
 
-		s = """
-class A() :
+		s = inspect.cleandoc(
+			"""
+			class A() :
 
-	def __init__( self ) :
+				def __init__( self ) :
 
-		print A
+					print A
 
-a = A()"""
+			a = A()
+			"""
+		)
 
 		n = Gaffer.ScriptNode()
 		n.execute( s )
@@ -605,19 +559,6 @@ a = A()"""
 		# the inputs to n3 shouldn't have been reconnected, as it's not a descendant of the script:
 		self.assertEqual( n3["op1"].getInput(), None )
 		self.assertEqual( n3["op2"].getInput(), None )
-
-	def testScriptAccessor( self ) :
-
-		s = Gaffer.ScriptNode()
-		self.failUnless( s.evaluate( "script" ).isSame( s ) )
-
-	def testParentAccessor( self ) :
-
-		s = Gaffer.ScriptNode()
-		self.failUnless( s.evaluate( "parent" ).isSame( s ) )
-
-		s["b"] = Gaffer.Box()
-		self.failUnless( s.evaluate( "parent", parent = s["b"] ).isSame( s["b"] ) )
 
 	def testDynamicPlugSaveAndLoad( self ) :
 
@@ -1297,6 +1238,29 @@ a = A()"""
 			self.assertEqual( len( mh.messages ), 1 )
 			self.assertEqual( mh.messages[0].context, "Line 2 of " + fileName )
 			self.assertTrue( "NameError: name 'iDontExist' is not defined" in mh.messages[0].message )
+
+	def testIsExecuting( self ) :
+
+		s = Gaffer.ScriptNode()
+
+		self.assertFalse( s.isExecuting() )
+
+		self.__wasExecuting = None
+		def f( script, child ) :
+			self.__wasExecuting = script.isExecuting()
+
+		c = s.childAddedSignal().connect( f )
+
+		s["n"] = GafferTest.AddNode()
+		self.assertEqual( self.__wasExecuting, False )
+
+		ss = s.serialise( filter = Gaffer.StandardSet( [ s["n"] ] ) )
+		s.execute( ss )
+		self.assertEqual( self.__wasExecuting, True )
+
+		self.__wasExecuting = None
+		self.assertRaises( RuntimeError, s.execute, ss + "\nsyntaxError" )
+		self.assertFalse( s.isExecuting() )
 
 if __name__ == "__main__":
 	unittest.main()

@@ -42,6 +42,8 @@ namespace GafferBindings
 
 void bindScriptNode();
 
+struct SerialiserRegistration;
+
 } // namespace GafferBindings
 
 #endif // GAFFERBINDINGS_SCRIPTNODEBINDING_H

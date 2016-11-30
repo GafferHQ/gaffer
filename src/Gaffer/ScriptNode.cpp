@@ -35,6 +35,8 @@
 //
 //////////////////////////////////////////////////////////////////////////
 
+#include <fstream>
+
 #include "boost/bind.hpp"
 #include "boost/bind/placeholders.hpp"
 #include "boost/filesystem/path.hpp"
@@ -191,12 +193,47 @@ class ScriptNode::CompoundAction : public Gaffer::Action
 IE_CORE_DEFINERUNTIMETYPED( ScriptNode::CompoundAction );
 
 //////////////////////////////////////////////////////////////////////////
+// Internal utilities
+//////////////////////////////////////////////////////////////////////////
+
+namespace
+{
+
+std::string readFile( const std::string &fileName )
+{
+	std::ifstream f( fileName.c_str() );
+	if( !f.good() )
+	{
+		throw IECore::IOException( "Unable to open file \"" + fileName + "\"" );
+	}
+
+	std::string s;
+	while( !f.eof() )
+	{
+		if( !f.good() )
+		{
+			throw IECore::IOException( "Failed to read from \"" + fileName + "\"" );
+		}
+
+		std::string line;
+		std::getline( f, line );
+		s += line + "\n";
+	}
+
+	return s;
+}
+
+} // namespace
+
+//////////////////////////////////////////////////////////////////////////
 // ScriptNode implementation
 //////////////////////////////////////////////////////////////////////////
 
 IE_CORE_DEFINERUNTIMETYPED( ScriptNode );
 
 size_t ScriptNode::g_firstPlugIndex = 0;
+ScriptNode::SerialiseFunction ScriptNode::g_serialiseFunction;
+ScriptNode::ExecuteFunction ScriptNode::g_executeFunction;
 
 ScriptNode::ScriptNode( const std::string &name )
 	:
@@ -205,6 +242,7 @@ ScriptNode::ScriptNode( const std::string &name )
 	m_selectionOrphanRemover( m_selection ),
 	m_undoIterator( m_undoList.end() ),
 	m_currentActionStage( Action::Invalid ),
+	m_executing( false ),
 	m_context( new Context )
 {
 	storeIndexOfNextChild( g_firstPlugIndex );
@@ -588,14 +626,9 @@ void ScriptNode::deleteNodes( Node *parent, const Set *filter, bool reconnect )
 	}
 }
 
-bool ScriptNode::execute( const std::string &pythonScript, Node *parent, bool continueOnError )
+bool ScriptNode::isExecuting() const
 {
-	throw IECore::Exception( "Cannot execute scripts on a ScriptNode not created in Python." );
-}
-
-bool ScriptNode::executeFile( const std::string &pythonFile, Node *parent, bool continueOnError )
-{
-	throw IECore::Exception( "Cannot execute files on a ScriptNode not created in Python." );
+	return m_executing;
 }
 
 ScriptNode::ScriptExecutedSignal &ScriptNode::scriptExecutedSignal()
@@ -603,34 +636,95 @@ ScriptNode::ScriptExecutedSignal &ScriptNode::scriptExecutedSignal()
 	return m_scriptExecutedSignal;
 }
 
-PyObject *ScriptNode::evaluate( const std::string &pythonExpression, Node *parent )
-{
-	throw IECore::Exception( "Cannot execute scripts on a ScriptNode not created in Python." );
-}
-
-ScriptNode::ScriptEvaluatedSignal &ScriptNode::scriptEvaluatedSignal()
-{
-	return m_scriptEvaluatedSignal;
-}
-
 std::string ScriptNode::serialise( const Node *parent, const Set *filter ) const
 {
-	throw IECore::Exception( "Cannot serialise scripts on a ScriptNode not created in Python." );
+	return serialiseInternal( parent, filter );
 }
 
 void ScriptNode::serialiseToFile( const std::string &fileName, const Node *parent, const Set *filter ) const
 {
-	throw IECore::Exception( "Cannot serialise scripts on a ScriptNode not created in Python." );
+	std::string s = serialiseInternal( parent, filter );
+
+	std::ofstream f( fileName.c_str() );
+	if( !f.good() )
+	{
+		throw IECore::IOException( "Unable to open file \"" + fileName + "\"" );
+	}
+
+	f << s;
+
+	if( !f.good() )
+	{
+		throw IECore::IOException( "Failed to write to \"" + fileName + "\"" );
+	}
+}
+
+bool ScriptNode::execute( const std::string &serialisation, Node *parent, bool continueOnError )
+{
+	return executeInternal( serialisation, parent, continueOnError, "" );
+}
+
+bool ScriptNode::executeFile( const std::string &fileName, Node *parent, bool continueOnError )
+{
+	const std::string serialisation = readFile( fileName );
+	return executeInternal( serialisation, parent, continueOnError, fileName );
 }
 
 bool ScriptNode::load( bool continueOnError)
 {
-	throw IECore::Exception( "Cannot load scripts on a ScriptNode not created in Python." );
+	DirtyPropagationScope dirtyScope;
+
+	const std::string fileName = fileNamePlug()->getValue();
+	const std::string s = readFile( fileName );
+
+	deleteNodes();
+	variablesPlug()->clearChildren();
+
+	const bool result = executeInternal( s, NULL, continueOnError, fileName );
+
+	UndoContext undoDisabled( this, UndoContext::Disabled );
+	unsavedChangesPlug()->setValue( false );
+
+	return result;
 }
 
 void ScriptNode::save() const
 {
-	throw IECore::Exception( "Cannot save scripts on a ScriptNode not created in Python." );
+	serialiseToFile( fileNamePlug()->getValue() );
+	UndoContext undoDisabled( const_cast<ScriptNode *>( this ), UndoContext::Disabled );
+	const_cast<BoolPlug *>( unsavedChangesPlug() )->setValue( false );
+}
+
+std::string ScriptNode::serialiseInternal( const Node *parent, const Set *filter ) const
+{
+	if( g_serialiseFunction.empty() )
+	{
+		throw IECore::Exception( "Serialisation not available - please link to libGafferBindings." );
+	}
+	return g_serialiseFunction( parent ? parent : this, filter );
+}
+
+bool ScriptNode::executeInternal( const std::string &serialisation, Node *parent, bool continueOnError, const std::string &context )
+{
+	if( g_executeFunction.empty() )
+	{
+		throw IECore::Exception( "Execution not available - please link to libGafferBindings." );
+	}
+	DirtyPropagationScope dirtyScope;
+	bool result = false;
+	m_executing = true;
+	try
+	{
+		result = g_executeFunction( this, serialisation, parent ? parent : this, continueOnError, context );
+		scriptExecutedSignal()( this, serialisation );
+	}
+	catch( ... )
+	{
+		m_executing = false;
+		throw;
+	}
+	m_executing = false;
+	return result;
 }
 
 Context *ScriptNode::context()

@@ -35,6 +35,7 @@
 ##########################################################################
 
 __import__( "Gaffer" )
+__import__( "GafferDispatch" )
 
 def __setupEnvironment() :
 
