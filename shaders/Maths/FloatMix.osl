@@ -39,7 +39,7 @@ shader FloatMix
 	float a = 0,
 	float b = 0,
 	float m = 0,
-	output float out = 0
+	output float out = 0 [[ string correspondingInput = "a" ]]
 )
 {
 	out = mix( a, b, m );

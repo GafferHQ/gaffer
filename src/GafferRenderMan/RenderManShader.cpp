@@ -98,26 +98,26 @@ const Gaffer::Plug *RenderManShader::correspondingInput( const Gaffer::Plug *out
 	ConstCompoundDataPtr ann = annotations();
 	if( !ann )
 	{
-		return 0;
+		return NULL;
 	}
 
 	const StringData *primaryInput = ann->member<StringData>( "primaryInput" );
 	if( !primaryInput )
 	{
-		return 0;
+		return NULL;
 	}
 
 	const Plug *result = parametersPlug()->getChild<Plug>( primaryInput->readable() );
 	if( !result )
 	{
 		IECore::msg( IECore::Msg::Error, "RenderManShader::correspondingInput", boost::format( "Parameter \"%s\" does not exist" ) % primaryInput->readable() );
-		return 0;
+		return NULL;
 	}
 
 	if( result->typeId() != Gaffer::Plug::staticTypeId() )
 	{
 		IECore::msg( IECore::Msg::Error, "RenderManShader::correspondingInput", boost::format( "Parameter \"%s\" is not of type shader" ) % primaryInput->readable() );
-		return 0;
+		return NULL;
 	}
 
 	return result;
@@ -250,64 +250,6 @@ bool RenderManShader::acceptsInput( const Plug *plug, const Plug *inputPlug ) co
 	}
 
 	return true;
-}
-
-void RenderManShader::parameterHash( const Gaffer::Plug *parameterPlug, NetworkBuilder &network, IECore::MurmurHash &h ) const
-{
-	if( parameterPlug->isInstanceOf( ArrayPlug::staticTypeId() ) )
-	{
-		// coshader array parameter
-		for( InputPlugIterator cIt( parameterPlug ); !cIt.done(); ++cIt )
-		{
-			Shader::parameterHash( cIt->get(), network, h );
-		}
-	}
-	else
-	{
-		Shader::parameterHash( parameterPlug, network, h );
-	}
-}
-
-IECore::DataPtr RenderManShader::parameterValue( const Gaffer::Plug *parameterPlug, NetworkBuilder &network ) const
-{
-	if( parameterPlug->typeId() == Plug::staticTypeId() )
-	{
-		// coshader parameter
-		const Plug *inputPlug = parameterPlug->source<Plug>();
-		if( inputPlug && inputPlug != parameterPlug )
-		{
-			const RenderManShader *inputShader = inputPlug->parent<RenderManShader>();
-			if( inputShader )
-			{
-				const std::string &handle = network.shaderHandle( inputShader );
-				if( handle.size() )
-				{
-					return new StringData( handle );
-				}
-			}
-		}
-	}
-	else if( parameterPlug->isInstanceOf( ArrayPlug::staticTypeId() ) )
-	{
-		// coshader array parameter
-		StringVectorDataPtr value = new StringVectorData();
-		for( InputPlugIterator cIt( parameterPlug ); !cIt.done(); ++cIt )
-		{
-			const Plug *inputPlug = (*cIt)->source<Plug>();
-			const RenderManShader *inputShader = inputPlug && inputPlug != *cIt ? inputPlug->parent<RenderManShader>() : 0;
-			if( inputShader )
-			{
-				value->writable().push_back( network.shaderHandle( inputShader ) );
-			}
-			else
-			{
-				value->writable().push_back( "" );
-			}
-		}
-		return value;
-	}
-
-	return Shader::parameterValue( parameterPlug, network );
 }
 
 const IECore::ConstCompoundDataPtr RenderManShader::annotations() const
@@ -662,7 +604,7 @@ static IECore::FloatVectorDataPtr parseFloats( const std::string &value )
 
 	if( !r || first != value.end() )
 	{
-		return 0;
+		return NULL;
 	}
 
 	return result;
@@ -726,7 +668,7 @@ static IECore::Color3fVectorDataPtr parseColors( const std::string &value )
 
 	if( !r || first != value.end() )
 	{
-		return 0;
+		return NULL;
 	}
 	return result;
 }

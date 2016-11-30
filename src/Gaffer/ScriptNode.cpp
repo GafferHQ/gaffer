@@ -587,7 +587,7 @@ void ScriptNode::deleteNodes( Node *parent, const Set *filter, bool reconnect )
 			DependencyNode *dependencyNode = IECore::runTimeCast<DependencyNode>( node );
 			if( reconnect && dependencyNode )
 			{
-				for( OutputPlugIterator it( node ); !it.done(); ++it )
+				for( RecursiveOutputPlugIterator it( node ); !it.done(); ++it )
 				{
 					Plug *inPlug = dependencyNode->correspondingInput( it->get() );
 					if ( !inPlug )
@@ -604,17 +604,12 @@ void ScriptNode::deleteNodes( Node *parent, const Set *filter, bool reconnect )
 					// record this plug's current outputs, and reconnect them. This is a copy of (*it)->outputs() rather
 					// than a reference, as reconnection can modify (*it)->outputs()...
 					Plug::OutputContainer outputs = (*it)->outputs();
-					for ( Plug::OutputContainer::const_iterator oIt = outputs.begin(); oIt != outputs.end(); )
+					for ( Plug::OutputContainer::const_iterator oIt = outputs.begin(); oIt != outputs.end(); ++oIt )
 					{
 						Plug *dstPlug = *oIt;
 						if ( dstPlug && dstPlug->acceptsInput( srcPlug ) && this->isAncestorOf( dstPlug ) )
 						{
-							oIt++;
 							dstPlug->setInput( srcPlug );
-						}
-						else
-						{
-							oIt++;
 						}
 					}
 				}

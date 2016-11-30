@@ -57,8 +57,8 @@ class OpenGLShader : public GafferScene::Shader
 	protected :
 
 		/// Reimplemented to allow ImageNodes to be plugged in to texture parameters.
-		virtual void parameterHash( const Gaffer::Plug *parameterPlug, NetworkBuilder &network, IECore::MurmurHash &h ) const;
-		virtual IECore::DataPtr parameterValue( const Gaffer::Plug *parameterPlug, NetworkBuilder &network ) const;
+		virtual void parameterHash( const Gaffer::Plug *parameterPlug, IECore::MurmurHash &h ) const;
+		virtual IECore::DataPtr parameterValue( const Gaffer::Plug *parameterPlug ) const;
 
 };
 
