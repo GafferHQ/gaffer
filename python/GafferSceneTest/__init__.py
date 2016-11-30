@@ -51,7 +51,6 @@ from InstancerTest import InstancerTest
 from ObjectToSceneTest import ObjectToSceneTest
 from CameraTest import CameraTest
 from OutputsTest import OutputsTest
-from OptionsTest import OptionsTest
 from CustomOptionsTest import CustomOptionsTest
 from DeleteOptionsTest import DeleteOptionsTest
 from CopyOptionsTest import CopyOptionsTest

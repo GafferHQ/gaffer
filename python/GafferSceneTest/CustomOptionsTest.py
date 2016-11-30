@@ -181,5 +181,16 @@ class CustomOptionsTest( GafferSceneTest.SceneTestCase ) :
 		self.assertEqual( p["out"].setHash( "a" ), o["out"].setHash( "b" ) )
 		self.assertTrue( p["out"].set( "a", _copy = False ).isSame( o["out"].set( "b", _copy = False ) ) )
 
+	def testPrefix( self ) :
+
+		options = GafferScene.CustomOptions()
+
+		options["options"].addMember( "test", IECore.IntData( 10 ) )
+		options["prefix"].setValue( "myCategory:" )
+
+		g = options["out"]["globals"].getValue()
+
+		self.assertEqual( g["option:myCategory:test"], IECore.IntData( 10 ) )
+
 if __name__ == "__main__":
 	unittest.main()

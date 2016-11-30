@@ -67,6 +67,19 @@ Gaffer.Metadata.registerNode(
 
 		],
 
+		"prefix" : [
+
+			"description",
+			"""
+			A prefix applied to the name of each option. For example, a prefix
+			of "myCategory:" and a name of "test" will create an option named
+			"myCategory:test".
+			""",
+
+			"layout:section", "Advanced",
+
+		]
+
 	}
 
 )
