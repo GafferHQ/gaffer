@@ -670,6 +670,12 @@ void StandardNodeGadget::plugMetadataChanged( IECore::TypeId nodeTypeId, const G
 
 Gadget *StandardNodeGadget::closestDragDestinationProxy( const DragDropEvent &event ) const
 {
+	if( event.buttons != DragDropEvent::Left )
+	{
+		// See comments in StandardNodule::dragEnter()
+		return NULL;
+	}
+
 	Gadget *result = 0;
 	float maxDist = Imath::limits<float>::max();
 	for( RecursiveGadgetIterator it( this ); !it.done(); it++ )
