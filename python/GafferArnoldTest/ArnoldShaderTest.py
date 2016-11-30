@@ -657,6 +657,44 @@ class ArnoldShaderTest( GafferSceneTest.SceneTestCase ) :
 					attributes2["ai:surface"][0].parameters[key]
 				)
 
+	def testShaderSwitch( self ) :
+
+		l = GafferArnold.ArnoldShader()
+		l.loadShader( "lambert" )
+
+		f1 = GafferArnold.ArnoldShader( "f1" )
+		f1.loadShader( "flat" )
+		f1["parameters"]["color"].setValue( IECore.Color3f( 0 ) )
+
+		f2 = GafferArnold.ArnoldShader( "f2" )
+		f2.loadShader( "flat" )
+		f2["parameters"]["color"].setValue( IECore.Color3f( 1 ) )
+
+		f3 = GafferArnold.ArnoldShader( "f3" )
+		f3.loadShader( "flat" )
+		f3["parameters"]["color"].setValue( IECore.Color3f( 2 ) )
+
+		for switchType in ( Gaffer.SwitchComputeNode, GafferScene.ShaderSwitch ) :
+
+			s = switchType()
+			s.setup( f1["out"] )
+
+			s["in"][0].setInput( f1["out"] )
+			s["in"][1].setInput( f2["out"] )
+			s["in"][2].setInput( f3["out"] )
+
+			l["parameters"]["Kd_color"].setInput( s["out"] )
+
+			def assertIndex( index ) :
+
+				network = l.attributes()["ai:surface"]
+				self.assertEqual( len( network ), 2 )
+				self.assertEqual( network[0].parameters["color"].value, IECore.Color3f( index ) )
+
+			for i in range( 0, 3 ) :
+				s["index"].setValue( i )
+				assertIndex( i )
+
 	def __forceArnoldRestart( self ) :
 
 		with IECoreArnold.UniverseBlock( writable = True ) :
