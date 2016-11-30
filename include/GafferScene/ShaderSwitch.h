@@ -44,7 +44,7 @@
 namespace GafferScene
 {
 
-class ShaderSwitch : public Gaffer::SwitchDependencyNode
+class ShaderSwitch : public Gaffer::SwitchComputeNode
 {
 
 	public :
@@ -52,7 +52,7 @@ class ShaderSwitch : public Gaffer::SwitchDependencyNode
 		ShaderSwitch( const std::string &name=defaultName<ShaderSwitch>() );
 		virtual ~ShaderSwitch();
 
-		IE_CORE_DECLARERUNTIMETYPEDEXTENSION( GafferScene::ShaderSwitch, ShaderSwitchTypeId, Gaffer::SwitchDependencyNode );
+		IE_CORE_DECLARERUNTIMETYPEDEXTENSION( GafferScene::ShaderSwitch, ShaderSwitchTypeId, Gaffer::SwitchComputeNode );
 
 };
 
