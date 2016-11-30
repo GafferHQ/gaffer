@@ -244,14 +244,16 @@ bool execute( ScriptNode *script, const std::string &serialisation, Node *parent
 namespace GafferBindings
 {
 
-bool registerSerialiser()
+struct SerialiserRegistration
 {
-	ScriptNode::g_serialiseFunction = serialise;
-	ScriptNode::g_executeFunction = execute;
-	return true;
+	SerialiserRegistration()
+	{
+		ScriptNode::g_serialiseFunction = serialise;
+		ScriptNode::g_executeFunction = execute;
+	}
 };
 
-static bool g_registered = registerSerialiser();
+static SerialiserRegistration g_registrar;
 
 } // namespace
 

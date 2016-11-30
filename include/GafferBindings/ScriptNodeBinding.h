@@ -41,7 +41,8 @@ namespace GafferBindings
 {
 
 void bindScriptNode();
-bool registerSerialiser();
+
+struct SerialiserRegistration;
 
 } // namespace GafferBindings
 

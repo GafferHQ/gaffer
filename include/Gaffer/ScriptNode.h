@@ -49,7 +49,7 @@
 #include "Gaffer/Action.h"
 #include "Gaffer/Behaviours/OrphanRemover.h"
 
-#include "GafferBindings/ScriptNodeBinding.h" // to enable friend declaration for registerSerialiser().
+#include "GafferBindings/ScriptNodeBinding.h" // to enable friend declaration for SerialiserRegistration
 
 namespace Gaffer
 {
@@ -281,7 +281,7 @@ class ScriptNode : public Node
 		// dependency), and are injected into these functions.
 		static SerialiseFunction g_serialiseFunction;
 		static ExecuteFunction g_executeFunction;
-		friend bool GafferBindings::registerSerialiser();
+		friend struct GafferBindings::SerialiserRegistration;
 
 		bool m_executing;
 		ScriptExecutedSignal m_scriptExecutedSignal;
