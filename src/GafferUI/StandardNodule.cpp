@@ -268,7 +268,7 @@ bool StandardNodule::dragEnter( GadgetPtr gadget, const DragDropEvent &event )
 	{
 		Gaffer::PlugPtr input, output;
 		connection( event, input, output );
-		accept = input;
+		accept = static_cast<bool>( input );
 	}
 	else if( IECore::runTimeCast<PlugAdder>( event.sourceGadget.get() ) )
 	{
