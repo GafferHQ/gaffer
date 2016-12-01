@@ -107,6 +107,7 @@ from CompoundDataPlugValueWidgetTest import CompoundDataPlugValueWidgetTest
 from GraphGadgetTest import GraphGadgetTest
 from MenuBarTest import MenuBarTest
 from GadgetWidgetTest import GadgetWidgetTest
+from CompoundNoduleTest import CompoundNoduleTest
 
 if __name__ == "__main__":
 	unittest.main()
