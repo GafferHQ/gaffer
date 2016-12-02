@@ -135,5 +135,27 @@ class ImageAlgoTest( GafferImageTest.ImageTestCase ) :
 		d["out"].image()
 		d["out"].imageHash()
 
+	def testLayerNames( self ) :
+
+		self.assertEqual(
+			GafferImage.ImageAlgo.layerNames( [ "R", "G", "B" ] ),
+			[ "" ]
+		)
+
+		self.assertEqual(
+			GafferImage.ImageAlgo.layerNames( [ "Z", "A" ] ),
+			[ "" ]
+		)
+
+		self.assertEqual(
+			GafferImage.ImageAlgo.layerNames( [ "R", "G", "B", "diffuse.R", "diffuse.G", "diffuse.B" ] ),
+			[ "", "diffuse" ]
+		)
+
+		self.assertEqual(
+			GafferImage.ImageAlgo.layerNames( [ "R", "G", "B", "foreground.diffuse.R", "foreground.diffuse.G", "foreground.diffuse.B" ] ),
+			[ "", "foreground.diffuse" ]
+		)
+
 if __name__ == "__main__":
 	unittest.main()
