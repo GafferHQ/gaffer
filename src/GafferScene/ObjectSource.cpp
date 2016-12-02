@@ -118,6 +118,7 @@ void ObjectSource::affects( const Gaffer::Plug *input, Gaffer::DependencyNode::A
 	else if( input == setsPlug() )
 	{
 		outputs.push_back( outPlug()->setNamesPlug() );
+		outputs.push_back( outPlug()->setPlug() );
 	}
 
 }
