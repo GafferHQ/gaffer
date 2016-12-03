@@ -82,6 +82,11 @@ class AppleseedRenderTest( GafferTest.TestCase ) :
 
 		s["plane"] = GafferScene.Plane()
 
+		s["options"] = GafferAppleseed.AppleseedOptions()
+		s["options"]["in"].setInput( s["plane"]["out"] )
+		s["options"]["options"]["aaSamples"]["value"].setValue( 1 )
+		s["options"]["options"]["aaSamples"]["enabled"].setValue( True )
+
 		s["outputs"] = GafferScene.Outputs()
 		s["outputs"].addOutput(
 			"beauty",
@@ -92,7 +97,7 @@ class AppleseedRenderTest( GafferTest.TestCase ) :
 				{}
 			)
 		)
-		s["outputs"]["in"].setInput( s["plane"]["out"] )
+		s["outputs"]["in"].setInput( s["options"]["out"] )
 
 		s["render"] = GafferAppleseed.AppleseedRender()
 		s["render"]["in"].setInput( s["outputs"]["out"] )
@@ -132,6 +137,11 @@ class AppleseedRenderTest( GafferTest.TestCase ) :
 
 		s["plane"] = GafferScene.Plane()
 
+		s["options"] = GafferAppleseed.AppleseedOptions()
+		s["options"]["in"].setInput( s["plane"]["out"] )
+		s["options"]["options"]["aaSamples"]["value"].setValue( 1 )
+		s["options"]["options"]["aaSamples"]["enabled"].setValue( True )
+
 		s["outputs"] = GafferScene.Outputs()
 		s["outputs"].addOutput(
 			"beauty",
@@ -142,7 +152,7 @@ class AppleseedRenderTest( GafferTest.TestCase ) :
 				{}
 			)
 		)
-		s["outputs"]["in"].setInput( s["plane"]["out"] )
+		s["outputs"]["in"].setInput( s["options"]["out"] )
 
 		s["render"] = GafferAppleseed.AppleseedRender()
 		s["render"]["in"].setInput( s["outputs"]["out"] )
