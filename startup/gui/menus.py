@@ -181,7 +181,7 @@ if "APPLESEED" in os.environ :
 			__shaderNodeCreator,
 			# Show only the OSL shaders from the Appleseed shader
 			# library.
-			matchExpression = re.compile( "^.*/as_[^/]*$")
+			matchExpression = re.compile( "(^|.*/)as_[^/]*$")
 		)
 
 		GafferAppleseedUI.LightMenu.appendLights( nodeMenu.definition() )

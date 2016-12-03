@@ -203,7 +203,7 @@ if [[ $APPLESEED ]] ; then
 		prependToPath $appleseedPython PYTHONPATH
 	done
 
-	prependToPath $APPLESEED/shaders OSL_SHADER_PATHS
+	prependToPath $APPLESEED/shaders/gaffer OSL_SHADER_PATHS
 	prependToPath $GAFFER_ROOT/appleseedDisplays APPLESEED_SEARCHPATH
 	prependToPath $OSL_SHADER_PATHS APPLESEED_SEARCHPATH
 
