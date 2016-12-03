@@ -148,6 +148,7 @@ MutexType g_lightsMutex;
 MutexType g_texturesMutex;
 MutexType g_textureInstancesMutex;
 MutexType g_colorsMutex;
+MutexType g_camerasMutex;
 
 /// Base class for all appleseed object handles.
 class AppleseedEntity : public IECoreScenePreview::Renderer::ObjectInterface
@@ -191,16 +192,16 @@ class AppleseedEntity : public IECoreScenePreview::Renderer::ObjectInterface
 			m_mainAssembly->bump_version_id();
 		}
 
-		void setCamera( asf::auto_release_ptr<asr::Camera> camera, const CompoundData *cameraParams )
+		void insertCamera( asf::auto_release_ptr<asr::Camera> camera )
 		{
-			m_project.get_scene()->set_camera( camera );
-			resetFrame( cameraParams );
+			LockGuardType lock( g_camerasMutex );
+			m_project.get_scene()->cameras().insert( camera );
 		}
 
-		void removeCamera()
+		void removeCamera( asr::Camera *camera )
 		{
-			m_project.get_scene()->set_camera( asf::auto_release_ptr<asr::Camera>() );
-			resetFrame( NULL );
+			LockGuardType lock( g_camerasMutex );
+			m_project.get_scene()->cameras().remove( camera );
 		}
 
 		void insertEnvironmentEDF( asf::auto_release_ptr<asr::EnvironmentEDF> environment )
@@ -372,49 +373,53 @@ class AppleseedEntity : public IECoreScenePreview::Renderer::ObjectInterface
 			doRemoveEntities( m_colors, m_mainAssembly->colors() );
 		}
 
-	private :
-
-		void resetFrame( const CompoundData *cameraParams )
+		void resetFrame( const string &cameraName, const CompoundData *cameraParams )
 		{
+			assert( cameraParams );
 			asr::ParamArray &params = m_project.get_frame()->get_parameters();
 
-			if( cameraParams )
+			// Resolution
+			const V2iData *resolution = cameraParams->member<V2iData>( "resolution" );
+			asf::Vector2i res( resolution->readable().x, resolution->readable().y );
+			params.insert( "resolution", res );
+
+			// Render region.
+			if( const Box2iData *renderRegion = cameraParams->member<Box2iData>( "renderRegion" ) )
 			{
-				// Resolution
-				const V2iData *resolution = cameraParams->member<V2iData>( "resolution" );
-				asf::Vector2i res( resolution->readable().x, resolution->readable().y );
-				params.insert( "resolution", res );
-
-				// Render region.
-				if( const Box2iData *renderRegion = cameraParams->member<Box2iData>( "renderRegion" ) )
-				{
-					// For now, we don't do overscan.
-					// We keep only the crop part of the render region.
-					asf::AABB2u crop;
-					crop.min[0] = asf::clamp( (int) renderRegion->readable().min.x, 0, res[0] - 1 );
-					crop.min[1] = asf::clamp( (int) renderRegion->readable().min.y, 0, res[1] - 1 );
-					crop.max[0] = asf::clamp( (int) renderRegion->readable().max.x, 0, res[0] - 1 );
-					crop.max[1] = asf::clamp( (int) renderRegion->readable().max.y, 0, res[1] - 1 );
-					params.insert( "crop_window", crop );
-				}
-				else
-				{
-					params.remove_path( "crop_window" );
-				}
-
-				const asr::Camera *camera = scene().get_camera();
-				params.insert( "camera", camera->get_name() );
+				// For now, we don't do overscan.
+				// We keep only the crop part of the render region.
+				asf::AABB2u crop;
+				crop.min[0] = asf::clamp( (int) renderRegion->readable().min.x, 0, res[0] - 1 );
+				crop.min[1] = asf::clamp( (int) renderRegion->readable().min.y, 0, res[1] - 1 );
+				crop.max[0] = asf::clamp( (int) renderRegion->readable().max.x, 0, res[0] - 1 );
+				crop.max[1] = asf::clamp( (int) renderRegion->readable().max.y, 0, res[1] - 1 );
+				params.insert( "crop_window", crop );
 			}
 			else
 			{
-				params.remove_path( "camera" );
-				params.insert( "resolution", "640 480" );
 				params.remove_path( "crop_window" );
 			}
+
+			// Choose the active camera.
+			params.insert( "camera", cameraName.c_str() );
 
 			// Replace the frame.
 			m_project.set_frame( asr::FrameFactory().create( "beauty", params ) );
 		}
+
+		void resetFrame()
+		{
+			// Reset the frame to default values.
+			asr::ParamArray &params = m_project.get_frame()->get_parameters();
+			params.remove_path( "camera" );
+			params.insert( "resolution", "640 480" );
+			params.remove_path( "crop_window" );
+
+			// Replace the frame.
+			m_project.set_frame( asr::FrameFactory().create( "beauty", params ) );
+		}
+
+	private :
 
 		template <typename EntityType, typename EntityContainer>
 		void doRemoveEntities( vector<EntityType*> &entities, EntityContainer &container )
@@ -763,20 +768,30 @@ class AppleseedCamera : public AppleseedEntity
 
 	public :
 
-		AppleseedCamera( asr::Project &project, const string &name, Camera *camera, const IECoreScenePreview::Renderer::AttributesInterface *attributes, bool interactive )
-			:	AppleseedEntity( project, name, interactive )
+		AppleseedCamera( asr::Project &project, const string &name, Camera *camera, const IECoreScenePreview::Renderer::AttributesInterface *attributes, bool activeCamera, bool interactive )
+			:	AppleseedEntity( project, name, interactive ), m_activeCamera( activeCamera )
 		{
 			asf::auto_release_ptr<asr::Camera> appleseedCamera( CameraAlgo::convert( camera ) );
 			appleseedCamera->set_name( name.c_str() );
 			m_camera = appleseedCamera.get();
-			setCamera( appleseedCamera, camera->parametersData() );
+			insertCamera( appleseedCamera );
+
+			if( m_activeCamera )
+			{
+				resetFrame( name, camera->parametersData() );
+			}
 		}
 
 		virtual ~AppleseedCamera()
 		{
 			if( isInteractiveRender() )
 			{
-				removeCamera();
+				removeCamera( m_camera );
+
+				if( m_activeCamera )
+				{
+					resetFrame();
+				}
 			}
 		}
 
@@ -799,6 +814,7 @@ class AppleseedCamera : public AppleseedEntity
 	private :
 
 		asr::Camera *m_camera;
+		bool m_activeCamera;
 };
 
 } // namespace
@@ -1880,21 +1896,22 @@ class AppleseedRenderer : public IECoreScenePreview::Renderer
 
 		virtual ObjectInterfacePtr camera( const string &name, const Camera *camera, const AttributesInterface *attributes )
 		{
+			CameraPtr cameraCopy = camera->copy();
+			cameraCopy->addStandardParameters();
+			bool activeCamera = false;
+
+			// Check if this is the active camera.
 			if( name == m_cameraName )
 			{
-				CameraPtr cameraCopy = camera->copy();
-				cameraCopy->addStandardParameters();
-
 				// Save the shutter times for later use.
 				const V2f &shutter = cameraCopy->parametersData()->member<V2fData>( "shutter", true )->readable();
 				m_shutterOpenTime = shutter.x;
 				m_shutterCloseTime = shutter.y;
 
-				return new AppleseedCamera( *m_project, name, cameraCopy.get(), attributes, isInteractiveRender() );
+				activeCamera = true;
 			}
 
-			// appleseed supports only one camera. Ignore any extra cameras.
-			return new AppleseedNullObject( *m_project, name, isInteractiveRender() );
+			return new AppleseedCamera( *m_project, name, cameraCopy.get(), attributes, activeCamera, isInteractiveRender() );
 		}
 
 		virtual ObjectInterfacePtr light( const string &name, const Object *object, const AttributesInterface *attributes )
@@ -1957,11 +1974,11 @@ class AppleseedRenderer : public IECoreScenePreview::Renderer
 		virtual void render()
 		{
 			// Create a default camera if needed.
-			if( m_project->get_scene()->get_camera() == NULL )
+			if( m_project->get_uncached_active_camera() == NULL )
 			{
-				asf::auto_release_ptr<asr::Camera> camera = asr::PinholeCameraFactory().create( "camera", asr::ParamArray() );
-				m_project->get_scene()->set_camera( camera );
-				m_project->get_frame()->get_parameters().insert( "camera", "camera" );
+				asf::auto_release_ptr<asr::Camera> camera = asr::PinholeCameraFactory().create( "__default_camera", asr::ParamArray() );
+				m_project->get_scene()->cameras().insert( camera );
+				m_project->get_frame()->get_parameters().insert( "camera", "__default_camera" );
 			}
 
 			// Setup the environment.
