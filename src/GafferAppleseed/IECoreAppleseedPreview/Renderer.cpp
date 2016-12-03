@@ -34,6 +34,7 @@
 //
 //////////////////////////////////////////////////////////////////////////
 
+#include "tbb/atomic.h"
 #include "tbb/concurrent_unordered_map.h"
 
 #include "boost/algorithm/string.hpp"
@@ -154,6 +155,13 @@ MutexType g_camerasMutex;
 class AppleseedEntity : public IECoreScenePreview::Renderer::ObjectInterface
 {
 
+	public :
+
+		const string &name() const
+		{
+			return m_name;
+		}
+
 	protected :
 
 		AppleseedEntity( asr::Project &project, const string &name, bool interactiveRender )
@@ -165,11 +173,6 @@ class AppleseedEntity : public IECoreScenePreview::Renderer::ObjectInterface
 		bool isInteractiveRender() const
 		{
 			return m_interactiveRender;
-		}
-
-		const string &name() const
-		{
-			return m_name;
 		}
 
 		const asr::Project &project() const
@@ -717,6 +720,29 @@ class AppleseedAttributes : public IECoreScenePreview::Renderer::AttributesInter
 			}
 		}
 
+		void appendToHash( MurmurHash &hash ) const
+		{
+			hash.append( m_shadingSamples );
+			hash.append( m_mediumPriority );
+			hash.append( m_alphaMap );
+
+			asf::StringDictionary::const_iterator it( m_visibilityDictionary.strings().begin() );
+			asf::StringDictionary::const_iterator e( m_visibilityDictionary.strings().end() );
+			for( ; it != e; ++it )
+			{
+				hash.append( it.key() );
+				hash.append( it.value() );
+			}
+
+			hash.append( m_meshSmoothNormals );
+			hash.append( m_meshSmoothTangents );
+
+			if( m_shaderGroup )
+			{
+				hash.append( m_shaderGroup->name() );
+			}
+		}
+
 		int m_shadingSamples;
 		int m_mediumPriority;
 		string m_alphaMap;
@@ -820,6 +846,155 @@ class AppleseedCamera : public AppleseedEntity
 } // namespace
 
 //////////////////////////////////////////////////////////////////////////
+// InstanceCache
+//////////////////////////////////////////////////////////////////////////
+
+namespace
+{
+
+/// A primitive that can be instanced.
+class InstanceMaster : public IECore::RefCounted
+{
+	public :
+
+		InstanceMaster(const string &name, asr::Assembly *mainAssembly ) : m_name( name ), m_mainAssembly( mainAssembly )
+		{
+			assert( m_mainAssembly );
+			m_numInstances = 0;
+		}
+
+		void movePrimitiveToAssembly()
+		{
+			assert( m_numInstances > 0 );
+
+			// Move the object into its own assembly if needed, so that it can be instanced.
+			const string assemblyName = m_name + "_assembly";
+			if( m_mainAssembly->assemblies().get_by_name( assemblyName.c_str() ) == 0 )
+			{
+				// Create an assembly for the object.
+				asf::auto_release_ptr<asr::Assembly> ass( asr::AssemblyFactory().create( assemblyName.c_str() ) );
+
+				// Move the object to the assembly.
+				asr::Object *obj = m_mainAssembly->objects().get_by_name( m_name.c_str() );
+				asf::auto_release_ptr<asr::Object> o = m_mainAssembly->objects().remove( obj );
+				ass->objects().insert( o );
+
+				// Move the object instance, minus the transform, to the object assembly.
+				string objectInstanceName = m_name + "_instance";
+				asr::ObjectInstance *objI = m_mainAssembly->object_instances().get_by_name( objectInstanceName.c_str() );
+				asf::auto_release_ptr<asr::ObjectInstance> oi = m_mainAssembly->object_instances().remove( objI );
+				const asf::Transformd transform = oi->get_transform();
+
+				// To remove the transform, we have to create a new object instance.
+				oi = asr::ObjectInstanceFactory::create( oi->get_name(), oi->get_parameters(), oi->get_object_name(), asf::Transformd::identity(), oi->get_front_material_mappings(), oi->get_back_material_mappings() );
+				ass->object_instances().insert( oi );
+
+				// Create an instance of the object assembly, with the transform from the object instance.
+				string assemblyInstanceName = assemblyName + "_instance";
+				asf::auto_release_ptr<asr::AssemblyInstance> assInstance( asr::AssemblyInstanceFactory::create( assemblyInstanceName.c_str(), asr::ParamArray(), assemblyName.c_str() ) );
+				assInstance->transform_sequence().set_transform( 0.0f, transform );
+
+				// Add the assembly and assembly instance to the main assembly.
+				m_mainAssembly->assemblies().insert( ass );
+				m_mainAssembly->assembly_instances().insert( assInstance );
+			}
+		}
+
+		const string m_name;
+		asr::Assembly *m_mainAssembly;
+		tbb::atomic<int> m_numInstances;
+
+};
+
+IE_CORE_DECLAREPTR( InstanceMaster )
+
+/// Appleseed primitive instance handle.
+class AppleseedInstance : public AppleseedEntity
+{
+
+	public :
+
+		AppleseedInstance( asr::Project &project, const string &name, const string &masterName )
+			:	AppleseedEntity( project, name, false ), m_masterName( masterName )
+		{
+		}
+
+		virtual ~AppleseedInstance()
+		{
+			// Create an instance of the master primitive assembly and add it to the main assembly.
+			string assemblyName = m_masterName + "_assembly";
+			string assemblyInstanceName = name() + "_assembly_instance";
+			asf::auto_release_ptr<asr::AssemblyInstance> assInstance( asr::AssemblyInstanceFactory::create( assemblyInstanceName.c_str(), asr::ParamArray(), assemblyName.c_str() ) );
+			assInstance->transform_sequence() = m_transformSequence;
+			insertAssemblyInstance( assInstance );
+		}
+
+		virtual void transform( const M44f &transform )
+		{
+			TransformAlgo::makeTransformSequence( transform, m_transformSequence );
+		}
+
+		virtual void transform( const vector<M44f> &samples, const vector<float> &times )
+		{
+			TransformAlgo::makeTransformSequence( times, samples, m_transformSequence );
+		}
+
+		virtual bool attributes( const IECoreScenePreview::Renderer::AttributesInterface *attributes )
+		{
+			// We reuse the attributes of the master primitive.
+			return true;
+		}
+
+	private :
+
+		const string m_masterName;
+		asr::TransformSequence m_transformSequence;
+
+};
+
+class InstanceMasterCache : public IECore::RefCounted
+{
+
+	public :
+
+		void movePrimitivesToAssemblies()
+		{
+			for( Cache::iterator it = m_cache.begin(), eIt = m_cache.end(); it != eIt; ++it )
+			{
+				if( it->second->m_numInstances > 0 )
+				{
+					it->second->movePrimitiveToAssembly();
+				}
+			}
+		}
+
+		InstanceMasterPtr get( const MurmurHash &hash, const string &name, asr::Assembly *mainAssembly )
+		{
+			Cache::accessor a;
+			m_cache.insert( a, hash );
+			if( !a->second )
+			{
+				a->second = new InstanceMaster( name, mainAssembly );
+			}
+			else
+			{
+				a->second->m_numInstances++;
+			}
+
+			return a->second;
+		}
+
+	private :
+
+		typedef tbb::concurrent_hash_map<IECore::MurmurHash, InstanceMasterPtr> Cache;
+		Cache m_cache;
+};
+
+IE_CORE_DECLAREPTR( InstanceMasterCache )
+
+} // namespace
+
+//////////////////////////////////////////////////////////////////////////
 // AppleseedPrimitive
 //////////////////////////////////////////////////////////////////////////
 
@@ -919,46 +1094,45 @@ class AppleseedPrimitive : public AppleseedEntity
 				removeAssemblyInstance( m_objectAssemblyInstance );
 				removeAssembly( m_objectAssembly );
 				clearMaterial();
+				return;
+			}
+
+			// Check if the object has transformation motion blur.
+			m_transformSequence.optimize();
+			if( m_transformSequence.size() > 1 )
+			{
+				// The object has transformation motion blur.
+				// We have to create an assembly for it.
+				string assemblyName = name() + "_assembly";
+				asf::auto_release_ptr<asr::Assembly> ass( asr::AssemblyFactory().create( assemblyName.c_str() ) );
+
+				// Add the object to the object assembly.
+				ass->objects().insert( asf::auto_release_ptr<asr::Object>( m_object ) );
+
+				// Add the object instance to the object assembly.
+				ass->object_instances().insert( asf::auto_release_ptr<asr::ObjectInstance>( m_objectInstance ) );
+
+				// Add the object assembly to the main assembly.
+				insertAssembly( ass );
+
+				// Create an instance of the object assembly and add it to the main assembly.
+				string assemblyInstanceName = assemblyName + "_instance";
+				asf::auto_release_ptr<asr::AssemblyInstance> assInstance( asr::AssemblyInstanceFactory::create( assemblyInstanceName.c_str(), asr::ParamArray(), assemblyName.c_str() ) );
+				assInstance->transform_sequence() = m_transformSequence;
+				insertAssemblyInstance( assInstance );
 			}
 			else
 			{
-				// Check if the object has transformation motion blur.
-				m_transformSequence.optimize();
-				if( m_transformSequence.size() > 1 )
-				{
-					// The object has transformation motion blur.
-					// We have to create an assembly for it.
-					string assemblyName = name() + "_assembly";
-					asf::auto_release_ptr<asr::Assembly> ass( asr::AssemblyFactory().create( assemblyName.c_str() ) );
+				// The object does not have transformation motion blur.
+				// In this case, it's more efficient to put it in the main assembly.
+				insertObject( asf::auto_release_ptr<asr::Object>( m_object ) );
 
-					// Add the object to the object assembly.
-					ass->objects().insert( asf::auto_release_ptr<asr::Object>( m_object ) );
-
-					// Add the object instance to the object assembly.
-					ass->object_instances().insert( asf::auto_release_ptr<asr::ObjectInstance>( m_objectInstance ) );
-
-					// Add the object assembly to the main assembly.
-					insertAssembly( ass );
-
-					// Create an instance of the object assembly and add it to the main assembly.
-					string assemblyInstanceName = assemblyName + "_instance";
-					asf::auto_release_ptr<asr::AssemblyInstance> assInstance( asr::AssemblyInstanceFactory::create( assemblyInstanceName.c_str(), asr::ParamArray(), assemblyName.c_str() ) );
-					assInstance->transform_sequence() = m_transformSequence;
-					insertAssemblyInstance( assInstance );
-				}
-				else
-				{
-					// The object does not have transformation motion blur.
-					// In this case, it's more efficient to put it in the main assembly.
-					insertObject( asf::auto_release_ptr<asr::Object>( m_object ) );
-
-					// To update the transform, we have to create a new object instance.
-					asf::auto_release_ptr<asr::ObjectInstance> newObjInstance;
-					newObjInstance = asr::ObjectInstanceFactory::create( m_objectInstance->get_name(), m_objectInstance->get_parameters(), m_objectInstance->get_object_name(), m_transformSequence.get_earliest_transform(), m_objectInstance->get_front_material_mappings(), m_objectInstance->get_back_material_mappings() );
-					m_objectInstance->release();
-					m_objectInstance = newObjInstance.get();
-					insertObjectInstance( newObjInstance );
-				}
+				// To update the transform, we have to create a new object instance.
+				asf::auto_release_ptr<asr::ObjectInstance> newObjInstance;
+				newObjInstance = asr::ObjectInstanceFactory::create( m_objectInstance->get_name(), m_objectInstance->get_parameters(), m_objectInstance->get_object_name(), m_transformSequence.get_earliest_transform(), m_objectInstance->get_front_material_mappings(), m_objectInstance->get_back_material_mappings() );
+				m_objectInstance->release();
+				m_objectInstance = newObjInstance.get();
+				insertObjectInstance( newObjInstance );
 			}
 		}
 
@@ -1225,6 +1399,7 @@ class AppleseedPrimitive : public AppleseedEntity
 		AppleseedShaderPtr m_shaderGroup;
 		asr::SurfaceShader *m_surfaceShader;
 		asr::Material *m_material;
+
 };
 
 boost::mutex AppleseedPrimitive::g_geomFilesMutex;
@@ -1570,6 +1745,12 @@ class AppleseedRenderer : public IECoreScenePreview::Renderer
 
 			// Create the shader cache.
 			m_shaderCache.reset( new ShaderCache( *m_project, isInteractiveRender() ) );
+
+			// Create the instance master cache for non-interactive renders.
+			if( !isInteractiveRender() )
+			{
+				m_instanceMasterCache.reset( new InstanceMasterCache() );
+			}
 		}
 
 		virtual ~AppleseedRenderer()
@@ -1944,6 +2125,21 @@ class AppleseedRenderer : public IECoreScenePreview::Renderer
 				return new AppleseedNullObject( *m_project, name, m_renderType == Interactive );
 			}
 
+			if( m_instanceMasterCache )
+			{
+				MurmurHash primitiveHash;
+				object->hash( primitiveHash );
+
+				const AppleseedAttributes *appleseedAttributes = static_cast<const AppleseedAttributes*>( attributes );
+				appleseedAttributes->appendToHash( primitiveHash );
+
+				InstanceMasterPtr master = m_instanceMasterCache->get( primitiveHash, name, m_mainAssembly );
+				if( master->m_numInstances > 0 )
+				{
+					return new AppleseedInstance( *m_project, name, master->m_name );
+				}
+			}
+
 			if( m_renderType == SceneDescription )
 			{
 				return new AppleseedPrimitive( *m_project, name, object, attributes, m_projectPath );
@@ -1959,6 +2155,25 @@ class AppleseedRenderer : public IECoreScenePreview::Renderer
 			if( !ObjectAlgo::isPrimitiveSupported( samples[0] ) )
 			{
 				return new AppleseedNullObject( *m_project, name, m_renderType == Interactive );
+			}
+
+			if( m_instanceMasterCache )
+			{
+				MurmurHash primitiveHash;
+				for( int i = 0, e = samples.size(); i < e; ++i)
+				{
+					primitiveHash.append( times[i] );
+					samples[i]->hash( primitiveHash );
+				}
+
+				const AppleseedAttributes *appleseedAttributes = static_cast<const AppleseedAttributes*>( attributes );
+				appleseedAttributes->appendToHash( primitiveHash );
+
+				InstanceMasterPtr master = m_instanceMasterCache->get( primitiveHash, name, m_mainAssembly );
+				if( master->m_numInstances > 0 )
+				{
+					return new AppleseedInstance( *m_project, name, master->m_name );
+				}
 			}
 
 			if( m_renderType == SceneDescription )
@@ -2016,6 +2231,12 @@ class AppleseedRenderer : public IECoreScenePreview::Renderer
 
 			// Clear unused shaders.
 			m_shaderCache->clearUnused();
+
+			// Convert instanced primitives into assemblies.
+			if( m_instanceMasterCache )
+			{
+				m_instanceMasterCache->movePrimitivesToAssemblies();
+			}
 
 			// Launch render.
 			if( m_renderType == SceneDescription )
@@ -2095,7 +2316,7 @@ class AppleseedRenderer : public IECoreScenePreview::Renderer
 
 			// Create the main assembly
 			asf::auto_release_ptr<asr::Assembly> assembly = asr::AssemblyFactory().create( "assembly", asr::ParamArray() );
-			asr::Assembly *mainAssembly = assembly.get();
+			m_mainAssembly = assembly.get();
 			m_project->get_scene()->assemblies().insert( assembly );
 
 			// Create the default facing ratio diagnostic surface shader.
@@ -2103,13 +2324,13 @@ class AppleseedRenderer : public IECoreScenePreview::Renderer
 			asr::ParamArray params;
 			params.insert( "mode", "facing_ratio" );
 			asf::auto_release_ptr<asr::SurfaceShader> surfaceShader = asr::DiagnosticSurfaceShaderFactory().create( surfaceShaderName, params );
-			mainAssembly->surface_shaders().insert( surfaceShader );
+			m_mainAssembly->surface_shaders().insert( surfaceShader );
 
 			// Create the default facing ratio material.
 			params.clear();
 			params.insert( "surface_shader", surfaceShaderName );
 			asf::auto_release_ptr<asr::Material> material = asr::GenericMaterialFactory().create( g_defaultMaterialName, params );
-			mainAssembly->materials().insert( material );
+			m_mainAssembly->materials().insert( material );
 
 			// Instance the main assembly
 			asf::auto_release_ptr<asr::AssemblyInstance> assemblyInstance = asr::AssemblyInstanceFactory::create( "assembly_inst", asr::ParamArray(), "assembly" );
@@ -2259,6 +2480,7 @@ class AppleseedRenderer : public IECoreScenePreview::Renderer
 		RenderType m_renderType;
 
 		asf::auto_release_ptr<asr::Project> m_project;
+		asr::Assembly *m_mainAssembly;
 
 		string m_cameraName;
 		float m_shutterOpenTime;
@@ -2268,6 +2490,10 @@ class AppleseedRenderer : public IECoreScenePreview::Renderer
 		bool m_environmentEDFVisible;
 
 		ShaderCachePtr m_shaderCache;
+
+		// Members used by batch and project generation renders
+
+		InstanceMasterCachePtr m_instanceMasterCache;
 
 		// Members used by interactive and batch renders
 
