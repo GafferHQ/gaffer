@@ -58,12 +58,6 @@ AppleseedOptions::AppleseedOptions( const std::string &name )
 	options->addOptionalMember( "as:environment_edf", new IECore::StringData(), "environmentEDF", Gaffer::Plug::Default, false );
 	options->addOptionalMember( "as:environment_edf_background", new IECore::BoolData( false ), "environmentEDFBackground", Gaffer::Plug::Default, false );
 
-	// drt
-	options->addOptionalMember( "as:cfg:drt:enable_ibl", new IECore::BoolData( true ), "drtIBL", Gaffer::Plug::Default, false );
-	options->addOptionalMember( "as:cfg:drt:max_path_length", new IECore::IntData( 0 ), "drtMaxBounces", Gaffer::Plug::Default, false );
-	options->addOptionalMember( "as:cfg:drt:dl_light_samples", new IECore::FloatData( 1.0f ), "drtLightingSamples", Gaffer::Plug::Default, false );
-	options->addOptionalMember( "as:cfg:drt:ibl_env_samples", new IECore::FloatData( 1.0f ), "drtIBLSamples", Gaffer::Plug::Default, false );
-
 	// path tracing
 	options->addOptionalMember( "as:cfg:pt:enable_dl", new IECore::BoolData( true ), "ptDirectLighting", Gaffer::Plug::Default, false );
 	options->addOptionalMember( "as:cfg:pt:enable_ibl", new IECore::BoolData( true ), "ptIBL", Gaffer::Plug::Default, false );
