@@ -48,6 +48,7 @@ ArnoldOptions::ArnoldOptions( const std::string &name )
 	Gaffer::CompoundDataPlug *options = optionsPlug();
 
 	// Rendering parameters
+
 	options->addOptionalMember( "ai:bucket_size", new IECore::IntData( 64 ), "bucketSize", Gaffer::Plug::Default, false );
 	options->addOptionalMember( "ai:bucket_scanning", new IECore::StringData( "spiral" ), "bucketScanning", Gaffer::Plug::Default, false );
 
@@ -60,6 +61,8 @@ ArnoldOptions::ArnoldOptions( const std::string &name )
 	options->addOptionalMember( "ai:GI_sss_samples", new IECore::IntData( 2 ), "giSSSSamples", Gaffer::Plug::Default, false );
 	options->addOptionalMember( "ai:GI_volume_samples", new IECore::IntData( 2 ), "giVolumeSamples", Gaffer::Plug::Default, false );
 	options->addOptionalMember( "ai:AA_seed", new IECore::IntData( 1 ), "aaSeed", Gaffer::Plug::Default, false );
+	options->addOptionalMember( "ai:AA_sample_clamp", new IECore::FloatData( 10 ), "aaSampleClamp", Gaffer::Plug::Default, false );
+	options->addOptionalMember( "ai:AA_sample_clamp_affects_aovs", new IECore::BoolData( false ), "aaSampleClampAffectsAOVs", Gaffer::Plug::Default, false );
 
 	// Ray depth parameters
 

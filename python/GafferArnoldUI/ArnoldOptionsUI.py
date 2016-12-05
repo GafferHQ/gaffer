@@ -69,6 +69,10 @@ def __samplingSummary( plug ) :
 		info.append( "Volume %d" % plug["giVolumeSamples"]["value"].getValue() )
 	if plug["aaSeed"]["enabled"].getValue() :
 		info.append( "Seed {0}".format( plug["aaSeed"]["value"].getValue() ) )
+	if plug["aaSampleClamp"]["enabled"].getValue() :
+		info.append( "Clamp {0}".format( GafferUI.NumericWidget.valueToString( plug["aaSampleClamp"]["value"].getValue() ) ) )
+	if plug["aaSampleClampAffectsAOVs"]["enabled"].getValue() :
+		info.append( "Clamp AOVs {0}".format( "On" if plug["aaSampleClampAffectsAOVs"]["value"].getValue() else "Off" ) )
 	return ", ".join( info )
 
 def __rayDepthSummary( plug ) :
@@ -343,6 +347,32 @@ Gaffer.Metadata.registerNode(
 
 			"layout:section", "Sampling",
 			"label", "AA Seed",
+
+		],
+
+		"options.aaSampleClamp" : [
+
+			"description",
+			"""
+			Sets a maximum for the values of individual pixel samples. This
+			can help reduce fireflies.
+			""",
+
+			"layout:section", "Sampling",
+			"label", "Sample Clamp",
+
+		],
+
+		"options.aaSampleClampAffectsAOVs" : [
+
+			"description",
+			"""
+			Applies the sample clamping settings to all RGB and RGBA
+			AOVs, in addition to the beauty image.
+			""",
+
+			"layout:section", "Sampling",
+			"label", "Clamp AOVs",
 
 		],
 
