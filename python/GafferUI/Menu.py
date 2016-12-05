@@ -80,7 +80,7 @@ class Menu( GafferUI.Widget ) :
 	# doing so means some of it will be off screen. If grabFocus is False, then
 	# the menu will not take keyboard events unless the first such event is a
 	# press of the up or down arrows.
-	def popup( self, parent=None, position=None, forcePosition=False, grabFocus=True ) :
+	def popup( self, parent=None, position=None, forcePosition=False, grabFocus=True, modal=False ) :
 
 		if parent is not None :
 			self.__popupParent = weakref.ref( parent )
@@ -96,7 +96,10 @@ class Menu( GafferUI.Widget ) :
 
 		self._qtWidget().keyboardMode = _Menu.KeyboardMode.Grab if grabFocus else _Menu.KeyboardMode.Close
 
-		self._qtWidget().popup( position )
+		if modal :
+			self._qtWidget().exec_( position )
+		else :
+			self._qtWidget().popup( position )
 
 		# qt is helpful and tries to keep you menu on screen, but this isn't always
 		# what you want, so we override the helpfulness if requested.
