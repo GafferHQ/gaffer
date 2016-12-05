@@ -1021,6 +1021,52 @@ class ReferenceTest( GafferTest.TestCase ) :
 		self.assertFalse( Gaffer.readOnly( s["a1"] ) )
 		self.assertFalse( Gaffer.readOnly( s["a2"] ) )
 
+	def testReloadWithNestedInputConnections( self ) :
+
+		s = Gaffer.ScriptNode()
+
+		s["b"] = Gaffer.Box()
+		s["b"]["array"] = Gaffer.ArrayPlug( element = Gaffer.IntPlug(), flags = Gaffer.Plug.Flags.Default | Gaffer.Plug.Flags.Dynamic )
+		s["b"]["color"] = Gaffer.Color3fPlug( flags = Gaffer.Plug.Flags.Default | Gaffer.Plug.Flags.Dynamic )
+		s["b"].exportForReference( self.temporaryDirectory() + "/test.grf" )
+
+		s["a"] = GafferTest.AddNode()
+
+		s["r"] = Gaffer.Reference()
+		s["r"].load( self.temporaryDirectory() + "/test.grf" )
+
+		s["r"]["array"][0].setInput( s["a"]["sum"] )
+		s["r"]["array"][1].setInput( s["a"]["sum"] )
+		s["r"]["color"]["g"].setInput( s["a"]["sum"] )
+
+		s["r"].load( self.temporaryDirectory() + "/test.grf" )
+
+		self.assertTrue( s["r"]["array"][0].getInput().isSame( s["a"]["sum"] ) )
+		self.assertTrue( s["r"]["array"][1].getInput().isSame( s["a"]["sum"] ) )
+		self.assertTrue( s["r"]["color"]["g"].getInput().isSame( s["a"]["sum"] ) )
+
+	def testReloadWithNestedOutputConnections( self ) :
+
+		s = Gaffer.ScriptNode()
+
+		s["b"] = Gaffer.Box()
+		s["b"]["color"] = Gaffer.Color3fPlug(
+			direction = Gaffer.Plug.Direction.Out,
+			flags = Gaffer.Plug.Flags.Default | Gaffer.Plug.Flags.Dynamic
+		)
+		s["b"].exportForReference( self.temporaryDirectory() + "/test.grf" )
+
+		s["a"] = GafferTest.AddNode()
+
+		s["r"] = Gaffer.Reference()
+		s["r"].load( self.temporaryDirectory() + "/test.grf" )
+
+		s["a"]["op1"].setInput( s["r"]["color"]["g"] )
+
+		s["r"].load( self.temporaryDirectory() + "/test.grf" )
+
+		self.assertTrue( s["a"]["op1"].getInput().isSame( s["r"]["color"]["g"] ) )
+
 	def tearDown( self ) :
 
 		GafferTest.TestCase.tearDown( self )

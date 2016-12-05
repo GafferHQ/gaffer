@@ -51,6 +51,94 @@ using namespace std;
 using namespace IECore;
 using namespace Gaffer;
 
+//////////////////////////////////////////////////////////////////////////
+// Internal utilities
+//////////////////////////////////////////////////////////////////////////
+
+namespace
+{
+
+/// \todo Consider moving to PlugAlgo.h
+void copyInputsAndValues( Gaffer::Plug *srcPlug, Gaffer::Plug *dstPlug, bool ignoreDefaultValues )
+{
+
+	// If we have an input to copy, we can leave the
+	// recursion to the `setInput()` call, which will
+	// also set all descendant inputs.
+
+	if( Plug *input = srcPlug->getInput<Plug>() )
+	{
+		dstPlug->setInput( input );
+		return;
+	}
+
+	// We have no input.
+	// =================
+
+	// If we're at a leaf plug, remove the destination
+	// input and copy the value.
+
+	if( !dstPlug->children().size() )
+	{
+		dstPlug->setInput( NULL );
+		if( ValuePlug *srcValuePlug = runTimeCast<ValuePlug>( srcPlug ) )
+		{
+			if( !ignoreDefaultValues || !srcValuePlug->isSetToDefault() )
+			{
+				if( ValuePlug *dstValuePlug = runTimeCast<ValuePlug>( dstPlug ) )
+				{
+					dstValuePlug->setFrom( srcValuePlug );
+				}
+			}
+		}
+		return;
+	}
+
+	// Otherwise, recurse to children. We recurse awkwardly
+	// using indices rather than PlugIterator for compatibility
+	// with ArrayPlug, which will add new children as inputs are
+	// added.
+
+	const Plug::ChildContainer &children = dstPlug->children();
+	for( size_t i = 0; i < children.size(); ++i )
+	{
+		if( Plug *srcChildPlug = srcPlug->getChild<Plug>( children[i]->getName() ) )
+		{
+			copyInputsAndValues( srcChildPlug, static_cast<Plug *>( children[i].get() ), ignoreDefaultValues );
+		}
+	}
+
+}
+
+/// \todo Consider moving to PlugAlgo.h
+void transferOutputs( Gaffer::Plug *srcPlug, Gaffer::Plug *dstPlug )
+{
+	// Transfer outputs
+
+	for( Plug::OutputContainer::const_iterator oIt = srcPlug->outputs().begin(), oeIt = srcPlug->outputs().end(); oIt != oeIt;  )
+	{
+		Plug *outputPlug = *oIt;
+		++oIt; // increment now because the setInput() call invalidates our iterator.
+		outputPlug->setInput( dstPlug );
+	}
+
+	// Recurse
+
+	for( PlugIterator it( srcPlug ); !it.done(); ++it )
+	{
+		if( Plug *dstChildPlug = dstPlug->getChild<Plug>( (*it)->getName() ) )
+		{
+			transferOutputs( it->get(), dstChildPlug );
+		}
+	}
+}
+
+} // namespace
+
+//////////////////////////////////////////////////////////////////////////
+// Reference
+//////////////////////////////////////////////////////////////////////////
+
 IE_CORE_DEFINERUNTIMETYPED( Reference );
 
 Reference::Reference( const std::string &name )
@@ -212,29 +300,9 @@ void Reference::loadInternal( const std::string &fileName )
 			{
 				if( newPlug->direction() == Plug::In && oldPlug->direction() == Plug::In )
 				{
-					if( Plug *oldInput = oldPlug->getInput<Plug>() )
-					{
-						newPlug->setInput( oldInput );
-					}
-					else
-					{
-						ValuePlug *oldValuePlug = runTimeCast<ValuePlug>( oldPlug );
-						ValuePlug *newValuePlug = runTimeCast<ValuePlug>( newPlug );
-						if( oldValuePlug && newValuePlug )
-						{
-							if( versionPriorTo09 || !oldValuePlug->isSetToDefault() )
-							{
-								newValuePlug->setFrom( oldValuePlug );
-							}
-						}
-					}
+					copyInputsAndValues( oldPlug, newPlug, /* ignoreDefaultValues = */ !versionPriorTo09 );
 				}
-				for( Plug::OutputContainer::const_iterator oIt = oldPlug->outputs().begin(), oeIt = oldPlug->outputs().end(); oIt != oeIt;  )
-				{
-					Plug *outputPlug = *oIt;
-					++oIt; // increment now because the setInput() call invalidates our iterator.
-					outputPlug->setInput( newPlug );
-				}
+				transferOutputs( oldPlug, newPlug );
 				transferPersistentMetadata( oldPlug, newPlug );
 			}
 			catch( const std::exception &e )
