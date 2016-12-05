@@ -1,6 +1,6 @@
 //////////////////////////////////////////////////////////////////////////
 //
-//  Copyright (c) 2012, John Haddon. All rights reserved.
+//  Copyright (c) 2016, Image Engine Design Inc. All rights reserved.
 //
 //  Redistribution and use in source and binary forms, with or without
 //  modification, are permitted provided that the following conditions are
@@ -34,24 +34,33 @@
 //
 //////////////////////////////////////////////////////////////////////////
 
-#ifndef GAFFERSCENEUI_TYPEIDS_H
-#define GAFFERSCENEUI_TYPEIDS_H
+#ifndef GAFFERSCENEUI_PRIVATE_SHADERNODEGADGET_H
+#define GAFFERSCENEUI_PRIVATE_SHADERNODEGADGET_H
+
+#include "GafferUI/StandardNodeGadget.h"
 
 namespace GafferSceneUI
 {
 
-enum TypeId
+namespace Private
 {
-	SceneViewTypeId = 110651,
-	SceneGadgetTypeId = 110652,
-	SelectionToolTypeId = 110653,
-	CropWindowToolTypeId = 110654,
-	ShaderViewTypeId = 110655,
-	ShaderNodeGadgetTypeId = 110656,
 
-	LastTypeId = 110700
+class ShaderNodeGadget : public GafferUI::StandardNodeGadget
+{
+
+	public :
+
+		ShaderNodeGadget( Gaffer::NodePtr node );
+		virtual ~ShaderNodeGadget();
+
+	private :
+
+		static NodeGadgetTypeDescription<ShaderNodeGadget> g_nodeGadgetTypeDescription;
+
 };
+
+} // namespace Private
 
 } // namespace GafferSceneUI
 
-#endif // GAFFERSCENEUI_TYPEIDS_H
+#endif // GAFFERSCENEUI_PRIVATE_SHADERNODEGADGET_H

@@ -1,6 +1,6 @@
 //////////////////////////////////////////////////////////////////////////
 //
-//  Copyright (c) 2012, John Haddon. All rights reserved.
+//  Copyright (c) 2016, Image Engine Design Inc. All rights reserved.
 //
 //  Redistribution and use in source and binary forms, with or without
 //  modification, are permitted provided that the following conditions are
@@ -34,24 +34,14 @@
 //
 //////////////////////////////////////////////////////////////////////////
 
-#ifndef GAFFERSCENEUI_TYPEIDS_H
-#define GAFFERSCENEUI_TYPEIDS_H
+#ifndef GAFFERSCENEUIBINDINGS_SHADERNODEGADGETBINDING_H
+#define GAFFERSCENEUIBINDINGS_SHADERNODEGADGETBINDING_H
 
-namespace GafferSceneUI
+namespace GafferSceneUIBindings
 {
 
-enum TypeId
-{
-	SceneViewTypeId = 110651,
-	SceneGadgetTypeId = 110652,
-	SelectionToolTypeId = 110653,
-	CropWindowToolTypeId = 110654,
-	ShaderViewTypeId = 110655,
-	ShaderNodeGadgetTypeId = 110656,
+void bindShaderNodeGadget();
 
-	LastTypeId = 110700
-};
+} // namespace GafferSceneUIBindings
 
-} // namespace GafferSceneUI
-
-#endif // GAFFERSCENEUI_TYPEIDS_H
+#endif // GAFFERSCENEUIBINDINGS_SHADERNODEGADGETBINDING_H

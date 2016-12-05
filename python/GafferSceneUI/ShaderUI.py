@@ -38,12 +38,14 @@ import os
 import re
 import string
 import fnmatch
+import functools
 
 import IECore
 
 import Gaffer
 import GafferUI
 import GafferScene
+import GafferSceneUI
 
 ##########################################################################
 # Metadata
@@ -273,3 +275,35 @@ def __shaderSubMenu( searchPaths, extensions, nodeCreator, matchExpression, sear
 	result.append( "/Load...", { "command" : GafferUI.NodeMenu.nodeCreatorWrapper( lambda menu : __loadFromFile( menu, extensions, nodeCreator ) ) } )
 
 	return result
+
+##########################################################################
+# Interaction with ShaderNodeGadget
+##########################################################################
+
+def __setPlugMetadata( plug, key, value ) :
+
+	with Gaffer.UndoContext( plug.ancestor( Gaffer.ScriptNode ) ) :
+		Gaffer.Metadata.registerValue( plug, key, value )
+
+def __nodeGraphPlugContextMenu( nodeGraph, plug, menuDefinition ) :
+
+	if not isinstance( plug.node(), GafferScene.Shader ) :
+		return
+
+	if not plug.node()["parameters"].isAncestorOf( plug ) :
+		return
+
+	if len( menuDefinition.items() ) :
+		menuDefinition.append( "/HideDivider", { "divider" : True } )
+
+	menuDefinition.append(
+
+		"/Hide",
+		{
+			"command" : functools.partial( __setPlugMetadata, plug, "nodeGraphLayout:visible", False ),
+			"active" : plug.getInput() is None and not Gaffer.readOnly( plug ),
+		}
+
+	)
+
+__nodeGraphPlugContextMenuConnection = GafferUI.NodeGraph.plugContextMenuSignal().connect( __nodeGraphPlugContextMenu )

@@ -1,6 +1,6 @@
 //////////////////////////////////////////////////////////////////////////
 //
-//  Copyright (c) 2012, John Haddon. All rights reserved.
+//  Copyright (c) 2016, Image Engine Design Inc. All rights reserved.
 //
 //  Redistribution and use in source and binary forms, with or without
 //  modification, are permitted provided that the following conditions are
@@ -34,24 +34,17 @@
 //
 //////////////////////////////////////////////////////////////////////////
 
-#ifndef GAFFERSCENEUI_TYPEIDS_H
-#define GAFFERSCENEUI_TYPEIDS_H
+#include "boost/python.hpp"
 
-namespace GafferSceneUI
+#include "GafferSceneUI/Private/ShaderNodeGadget.h"
+#include "GafferSceneUIBindings/ShaderNodeGadgetBinding.h"
+
+using namespace boost::python;
+using namespace GafferUI;
+using namespace GafferSceneUI::Private;
+
+void GafferSceneUIBindings::bindShaderNodeGadget()
 {
-
-enum TypeId
-{
-	SceneViewTypeId = 110651,
-	SceneGadgetTypeId = 110652,
-	SelectionToolTypeId = 110653,
-	CropWindowToolTypeId = 110654,
-	ShaderViewTypeId = 110655,
-	ShaderNodeGadgetTypeId = 110656,
-
-	LastTypeId = 110700
-};
-
-} // namespace GafferSceneUI
-
-#endif // GAFFERSCENEUI_TYPEIDS_H
+	// See comments in StandardNodeGadgetBinding.
+	objects::copy_class_object( type_id<StandardNodeGadget>(), type_id<ShaderNodeGadget>() );
+}
