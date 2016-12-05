@@ -785,7 +785,12 @@ bool StandardNodeGadget::noduleIsCompatible( const Nodule *nodule, const DragDro
 
 bool StandardNodeGadget::plugAdderIsCompatible( const PlugAdder *plugAdder, const DragDropEvent &event ) const
 {
-	return IECore::runTimeCast<Gaffer::Plug>( event.data.get() );
+	Gaffer::Plug *plug = IECore::runTimeCast<Gaffer::Plug>( event.data.get() );
+	if( !plug )
+	{
+		return false;
+	}
+	return plugAdder->acceptsPlug( plug );
 }
 
 void StandardNodeGadget::nodeMetadataChanged( IECore::TypeId nodeTypeId, IECore::InternedString key, const Gaffer::Node *node )
