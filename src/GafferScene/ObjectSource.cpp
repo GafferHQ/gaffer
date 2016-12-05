@@ -118,6 +118,7 @@ void ObjectSource::affects( const Gaffer::Plug *input, Gaffer::DependencyNode::A
 	else if( input == setsPlug() )
 	{
 		outputs.push_back( outPlug()->setNamesPlug() );
+		outputs.push_back( outPlug()->setPlug() );
 	}
 
 }
@@ -324,8 +325,10 @@ IECore::ConstInternedStringVectorDataPtr ObjectSource::computeStandardSetNames()
 bool ObjectSource::setNameValid( const IECore::InternedString &setName ) const
 {
 	IECore::ConstInternedStringVectorDataPtr standardSets = computeStandardSetNames();
-	if(std::find(standardSets->readable().begin(), standardSets->readable().end(), setName) != standardSets->readable().end())
+	if( std::find( standardSets->readable().begin(), standardSets->readable().end(), setName ) != standardSets->readable().end() )
+	{
 		return true;
+	}
 
 	std::vector<IECore::InternedString> setNames;
 	Gaffer::tokenize( setsPlug()->getValue(), ' ', setNames );

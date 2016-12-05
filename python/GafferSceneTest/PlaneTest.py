@@ -161,5 +161,17 @@ class PlaneTest( GafferSceneTest.SceneTestCase ) :
 		self.assertEqual( p["out"].setHash( "nonexistent1" ), p["out"].setHash( "nonexistent2" ) )
 		self.assertTrue( p["out"].set( "nonexistent1", _copy = False ).isSame( p["out"].set( "nonexistent2", _copy = False ) ) )
 
+	def testSetNameAffectsSet( self ) :
+
+		p = GafferScene.Plane()
+		a = p.affects( p["sets"] )
+		self.assertTrue( p["out"]["set"] in a )
+
+	def testEnabledAffectsSet( self ) :
+
+		p = GafferScene.Plane()
+		a = p.affects( p["enabled"] )
+		self.assertTrue( p["out"]["set"] in a )
+
 if __name__ == "__main__":
 	unittest.main()

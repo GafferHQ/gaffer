@@ -289,5 +289,74 @@ class SetTest( GafferSceneTest.SceneTestCase ) :
 		p["name"].setValue( "plain" )
 		self.assertEqual( s["out"].set( "set" ).value, GafferScene.PathMatcher( [ "/group/plain" ] ) )
 
+	def testSetNamesDirtyPropagation( self ) :
+
+		p = GafferScene.Plane()
+		s = GafferScene.Set()
+		s["in"].setInput( p["out"] )
+
+		cs = GafferTest.CapturingSlot( s.plugDirtiedSignal() )
+
+		p["sets"].setValue( "test" )
+		self.assertTrue( s["out"]["setNames"] in { x[0] for x in cs } )
+
+		del cs[:]
+
+		s["mode"].setValue( s.Mode.Remove )
+		self.assertTrue( s["out"]["setNames"] in { x[0] for x in cs } )
+
+		del cs[:]
+
+		s["name"].setValue( "test" )
+		self.assertTrue( s["out"]["setNames"] in { x[0] for x in cs } )
+
+		del cs[:]
+
+		s["paths"].setValue( IECore.StringVectorData( [ "/plane" ] ) )
+		self.assertFalse( s["out"]["setNames"] in { x[0] for x in cs } )
+
+	def testSetDirtyPropagation( self ) :
+
+		p = GafferScene.Plane()
+		s = GafferScene.Set()
+		s["in"].setInput( p["out"] )
+
+		cs = GafferTest.CapturingSlot( s.plugDirtiedSignal() )
+
+		p["sets"].setValue( "test" )
+		self.assertTrue( s["out"]["set"] in { x[0] for x in cs } )
+
+		del cs[:]
+
+		s["mode"].setValue( s.Mode.Remove )
+		self.assertTrue( s["out"]["set"] in { x[0] for x in cs } )
+
+		del cs[:]
+
+		s["name"].setValue( "test" )
+		self.assertTrue( s["out"]["set"] in { x[0] for x in cs } )
+
+		del cs[:]
+
+		s["paths"].setValue( IECore.StringVectorData( [ "/plane" ] ) )
+		self.assertTrue( s["out"]["set"] in { x[0] for x in cs } )
+
+		del cs[:]
+
+		s["enabled"].setValue( False )
+		self.assertTrue( s["out"]["set"] in { x[0] for x in cs } )
+		s["enabled"].setValue( True )
+
+		del cs[:]
+
+		f = GafferScene.PathFilter()
+		s["filter"].setInput( f["out"] )
+		self.assertTrue( s["out"]["set"] in { x[0] for x in cs } )
+
+		del cs[:]
+
+		f["paths"].setValue( IECore.StringVectorData( [ "/plane" ] ) )
+		self.assertTrue( s["out"]["set"] in { x[0] for x in cs } )
+
 if __name__ == "__main__":
 	unittest.main()

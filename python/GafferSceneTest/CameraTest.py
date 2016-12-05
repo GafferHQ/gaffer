@@ -83,16 +83,15 @@ class CameraTest( GafferSceneTest.SceneTestCase ) :
 
 			c["scene:setName"] = IECore.InternedStringData( "__cameras" )
 			c["scene:path"] = IECore.InternedStringVectorData()
-			# we ignore the enabled plug because it isn't hashed (instead its value
-			# is used to decide how the hash should be computed). we ignore the transform
-			# plug because it isn't affected by any inputs when the path is "/".
-			self.assertHashesValid( p, inputsToIgnore = [ p["enabled"] ], outputsToIgnore = [ p["out"]["transform"] ] )
+			# We ignore the enabled and sets plugs because they aren't hashed (instead
+			# their values are used to decide how the hash should be computed). We ignore
+			# the transform plug because it isn't affected by any inputs when the path is "/".
+			self.assertHashesValid( p, inputsToIgnore = [ p["enabled"], p["sets"] ], outputsToIgnore = [ p["out"]["transform"] ] )
 
 			c["scene:path"] = IECore.InternedStringVectorData( [ "camera" ] )
-			# we ignore the childNames because it doesn't use any inputs to compute when
+			# We ignore the childNames because it doesn't use any inputs to compute when
 			# the path is not "/".
-			self.assertHashesValid( p, inputsToIgnore = [ p["enabled"] ], outputsToIgnore = [ p["out"]["childNames"] ] )
-
+			self.assertHashesValid( p, inputsToIgnore = [ p["enabled"], p["sets"] ], outputsToIgnore = [ p["out"]["childNames"] ] )
 
 	def testBound( self ) :
 
