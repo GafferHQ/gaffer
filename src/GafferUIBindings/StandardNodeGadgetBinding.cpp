@@ -49,6 +49,9 @@ using namespace boost::python;
 using namespace GafferUIBindings;
 using namespace GafferUI;
 
+namespace
+{
+
 class StandardNodeGadgetWrapper : public NodeGadgetWrapper<StandardNodeGadget>
 {
 
@@ -61,15 +64,17 @@ class StandardNodeGadgetWrapper : public NodeGadgetWrapper<StandardNodeGadget>
 
 };
 
-static GadgetPtr getContents( StandardNodeGadget &g )
+GadgetPtr getContents( StandardNodeGadget &g )
 {
 	return g.getContents();
 }
 
-static GadgetPtr getEdgeGadget( StandardNodeGadget &g, StandardNodeGadget::Edge edge )
+GadgetPtr getEdgeGadget( StandardNodeGadget &g, StandardNodeGadget::Edge edge )
 {
 	return g.getEdgeGadget( edge );
 }
+
+} // namespace
 
 void GafferUIBindings::bindStandardNodeGadget()
 {
