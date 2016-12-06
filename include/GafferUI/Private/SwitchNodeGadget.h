@@ -34,33 +34,32 @@
 //
 //////////////////////////////////////////////////////////////////////////
 
-#include "Gaffer/Switch.h"
+#ifndef GAFFERUI_PRIVATE_SWITCHNODEGADGET_H
+#define GAFFERUI_PRIVATE_SWITCHNODEGADGET_H
 
-#include "GafferUI/Nodule.h"
-#include "GafferUI/PlugAdder.h"
-#include "GafferUI/Private/SwitchNodeGadget.h"
+#include "GafferUI/StandardNodeGadget.h"
 
-using namespace Gaffer;
-using namespace GafferUI;
-using namespace GafferUI::Private;
-
-StandardNodeGadget::NodeGadgetTypeDescription<SwitchNodeGadget> SwitchNodeGadget::g_nodeGadgetTypeDescription( SwitchComputeNode::staticTypeId() );
-
-SwitchNodeGadget::SwitchNodeGadget( Gaffer::NodePtr node )
-	:	StandardNodeGadget( node )
+namespace GafferUI
 {
-	setEdgeGadget( LeftEdge, new PlugAdder( node, LeftEdge ) );
-	setEdgeGadget( RightEdge, new PlugAdder( node, RightEdge ) );
-	if( !node->isInstanceOf( "GafferScene::ShaderSwitch" ) )
-	{
-		/// \todo Either remove ShaderSwitch on the grounds that it
-		/// doesn't really do anything above and beyond a regular
-		/// SwitchComputeNode, or come up with a metadata convention
-		/// to control this behaviour. What would be really nice is
-		/// to control the whole of the NodeGadget layout using the
-		/// same metadata conventions as the PlugLayout on the widget
-		/// side of things.
-		setEdgeGadget( TopEdge, new PlugAdder( node, TopEdge ) );
-		setEdgeGadget( BottomEdge, new PlugAdder( node, BottomEdge ) );
-	}
-}
+
+namespace Private
+{
+
+class SwitchNodeGadget : public StandardNodeGadget
+{
+
+	public :
+
+		SwitchNodeGadget( Gaffer::NodePtr node );
+
+	private :
+
+		static NodeGadgetTypeDescription<SwitchNodeGadget> g_nodeGadgetTypeDescription;
+
+};
+
+} // namespace Private
+
+} // namespace GafferUI
+
+#endif // GAFFERUI_PRIVATE_SWITCHNODEGADGET_H
