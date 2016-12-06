@@ -64,7 +64,7 @@ IE_CORE_DEFINERUNTIMETYPED( StandardNodule );
 Nodule::NoduleTypeDescription<StandardNodule> StandardNodule::g_noduleTypeDescription( Gaffer::Plug::staticTypeId() );
 
 static IECore::InternedString g_colorKey( "nodule:color" );
-static IECore::InternedString g_labelKey( "label" );
+static IECore::InternedString g_labelKey( "nodeGraphLayout:label" );
 
 StandardNodule::StandardNodule( Gaffer::PlugPtr plug )
 	:	Nodule( plug ), m_labelVisible( false ), m_draggingConnection( false )
