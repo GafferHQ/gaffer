@@ -73,6 +73,18 @@ for nodeType in ( Gaffer.SwitchDependencyNode, Gaffer.SwitchComputeNode ) :
 				""",
 
 				"nodule:type", "GafferUI::CompoundNodule",
+				"plugValueWidget:type", "",
+
+			],
+
+			"out" : [
+
+				"description",
+				"""
+				Outputs the input specified by the index.
+				""",
+
+				"plugValueWidget:type", "",
 
 			],
 
