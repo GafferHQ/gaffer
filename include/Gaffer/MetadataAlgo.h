@@ -46,6 +46,7 @@ namespace Gaffer
 
 class GraphComponent;
 class Plug;
+class Node;
 
 namespace MetadataAlgo
 {
@@ -86,9 +87,10 @@ bool readOnly( const GraphComponent *graphComponent );
 /// Utilities
 /// =========
 
-/// Utility to determine if a metadata value change (as signalled by `Metadata::plugValueChangedSignal()`)
-/// affects a given plug.
+/// Determines if a metadata value change (as signalled by `Metadata::plugValueChangedSignal()`
+/// or `Metadata:nodeValueChangedSignal()`) affects a given plug or node.
 bool affectedByChange( const Plug *plug, IECore::TypeId changedNodeTypeId, const StringAlgo::MatchPattern &changedPlugPath, const Gaffer::Plug *changedPlug );
+bool affectedByChange( const Node *node, IECore::TypeId changedNodeTypeId, const Gaffer::Node *changedNode );
 /// As above, but determines if any child plug will be affected.
 bool childAffectedByChange( const GraphComponent *parent, IECore::TypeId changedNodeTypeId, const StringAlgo::MatchPattern &changedPlugPath, const Gaffer::Plug *changedPlug );
 /// As above, but determines if any ancestor plug will be affected. This is particularly useful in conjunction with

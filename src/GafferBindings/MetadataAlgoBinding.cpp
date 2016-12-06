@@ -39,8 +39,10 @@
 #include "Gaffer/MetadataAlgo.h"
 #include "Gaffer/GraphComponent.h"
 #include "Gaffer/Plug.h"
+#include "Gaffer/Node.h"
 
 using namespace boost::python;
+using namespace Gaffer;
 using namespace Gaffer::MetadataAlgo;
 
 namespace GafferBindings
@@ -55,7 +57,16 @@ void bindMetadataAlgo()
 	def( "setReadOnly", &setReadOnly, ( arg( "graphComponent" ), arg( "readOnly"), arg( "persistent" ) = true ) );
 	def( "getReadOnly", &getReadOnly );
 	def( "readOnly", &readOnly );
-	def( "affectedByChange", &affectedByChange, ( arg( "plug" ), arg( "changedNodeTypeId"), arg( "changedPlugPath" ), arg( "changedPlug" ) ) );
+	def(
+		"affectedByChange",
+		(bool (*)( const Plug *, IECore::TypeId, const MatchPattern &, const Plug * ))&affectedByChange,
+		( arg( "plug" ), arg( "changedNodeTypeId"), arg( "changedPlugPath" ), arg( "changedPlug" ) )
+	);
+	def(
+		"affectedByChange",
+		(bool (*)( const Node *node, IECore::TypeId changedNodeTypeId, const Node *changedNode ))&affectedByChange,
+		( arg( "node" ), arg( "changedNodeTypeId"), arg( "changedNode" ) )
+	);
 	def( "childAffectedByChange", &childAffectedByChange, ( arg( "parent" ), arg( "changedNodeTypeId"), arg( "changedPlugPath" ), arg( "changedPlug" ) ) );
 	def( "ancestorAffectedByChange", &ancestorAffectedByChange, ( arg( "plug" ), arg( "changedNodeTypeId"), arg( "changedPlugPath" ), arg( "changedPlug" ) ) );
 

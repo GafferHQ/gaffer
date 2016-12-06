@@ -124,5 +124,33 @@ class MetadataAlgoTest( GafferTest.TestCase ) :
 		self.assertEqual( ancestorAffected, [ False, False, True ] )
 		self.assertEqual( childAffected, [ False, True, False ] )
 
+	def testNodeAffected( self ) :
+
+		n = GafferTest.CompoundPlugNode()
+
+		affected = []
+		def nodeValueChanged( nodeTypeId, key, node ) :
+			affected.append( Gaffer.MetadataAlgo.affectedByChange( n, nodeTypeId, node ) )
+
+		c = Gaffer.Metadata.nodeValueChangedSignal().connect( nodeValueChanged )
+
+		Gaffer.Metadata.registerValue( Gaffer.Node, "metadataAlgoTest", 1 )
+		self.assertEqual( affected, [ True ] )
+
+		Gaffer.Metadata.registerValue( GafferTest.AddNode, "metadataAlgoTest", 2 )
+		self.assertEqual( affected, [ True, False ] )
+
+		Gaffer.Metadata.registerValue( n, "metadataAlgoTest", 3 )
+		self.assertEqual( affected, [ True, False, True ] )
+
+		a = GafferTest.AddNode()
+		Gaffer.Metadata.registerValue( a, "metadataAlgoTest", 4 )
+		self.assertEqual( affected, [ True, False, True, False ] )
+
+	def tearDown( self ) :
+
+		for n in ( Gaffer.Node, GafferTest.AddNode ) :
+			Gaffer.Metadata.deregisterValue( n, "metadataAlgoTest" )
+
 if __name__ == "__main__":
 	unittest.main()
