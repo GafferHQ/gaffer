@@ -41,13 +41,18 @@
 
 #include "GafferUI/StandardNodeGadget.h"
 #include "GafferUI/Nodule.h"
+#include "GafferUI/Private/SwitchNodeGadget.h"
 
 #include "GafferUIBindings/StandardNodeGadgetBinding.h"
 #include "GafferUIBindings/NodeGadgetBinding.h"
 
 using namespace boost::python;
-using namespace GafferUIBindings;
 using namespace GafferUI;
+using namespace GafferUI::Private;
+using namespace GafferUIBindings;
+
+namespace
+{
 
 class StandardNodeGadgetWrapper : public NodeGadgetWrapper<StandardNodeGadget>
 {
@@ -61,15 +66,17 @@ class StandardNodeGadgetWrapper : public NodeGadgetWrapper<StandardNodeGadget>
 
 };
 
-static GadgetPtr getContents( StandardNodeGadget &g )
+GadgetPtr getContents( StandardNodeGadget &g )
 {
 	return g.getContents();
 }
 
-static GadgetPtr getEdgeGadget( StandardNodeGadget &g, StandardNodeGadget::Edge edge )
+GadgetPtr getEdgeGadget( StandardNodeGadget &g, StandardNodeGadget::Edge edge )
 {
 	return g.getEdgeGadget( edge );
 }
+
+} // namespace
 
 void GafferUIBindings::bindStandardNodeGadget()
 {
@@ -87,4 +94,16 @@ void GafferUIBindings::bindStandardNodeGadget()
 		.value( "LeftEdge", StandardNodeGadget::LeftEdge )
 		.value( "RightEdge", StandardNodeGadget::RightEdge )
 	;
+
+	// Expose private derived classes of StandardNodeGadget as copies of
+	// StandardNodeGadget. We don't want to bind them fully because then
+	// we'd be exposing a private class, but we need to register them so
+	// that they can be returned to Python successfully.
+	//
+	// See "Boost.Python and slightly more tricky inheritance" at
+	// http://lists.boost.org/Archives/boost/2005/09/93017.php for
+	// more details.
+
+	objects::copy_class_object( type_id<StandardNodeGadget>(), type_id<SwitchNodeGadget>() );
+
 }

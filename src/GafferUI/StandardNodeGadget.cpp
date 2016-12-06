@@ -58,6 +58,7 @@
 #include "GafferUI/StandardNodule.h"
 #include "GafferUI/SpacerGadget.h"
 #include "GafferUI/ImageGadget.h"
+#include "GafferUI/PlugAdder.h"
 
 using namespace std;
 using namespace Imath;
@@ -533,15 +534,48 @@ const Gadget *StandardNodeGadget::getContents() const
 
 void StandardNodeGadget::setEdgeGadget( Edge edge, GadgetPtr gadget )
 {
+	GadgetPtr previous = getEdgeGadget( edge );
+	if( previous == gadget )
+	{
+		return;
+	}
+
+	if( IECore::runTimeCast<Nodule>( gadget ) )
+	{
+		throw IECore::Exception( "End Gadget can not be a Nodule." );
+	}
+
 	LinearContainer *c = noduleContainer( edge );
-	c->removeChild( c->getChild<Gadget>( c->children().size() - 1 ) );
-	c->addChild( gadget );
+
+	GadgetPtr spacer = boost::static_pointer_cast<Gadget>( c->children().back() );
+	c->removeChild( spacer );
+	if( previous )
+	{
+		c->removeChild( previous );
+	}
+	if( gadget )
+	{
+		c->addChild( gadget );
+	}
+	c->addChild( spacer );
 }
 
 Gadget *StandardNodeGadget::getEdgeGadget( Edge edge )
 {
 	LinearContainer *c = noduleContainer( edge );
-	return c->getChild<Gadget>( c->children().size() - 1 );
+	const size_t s = c->children().size();
+	if( s < 3 )
+	{
+		return NULL;
+	}
+
+	Gadget *potentialEdgeGadget = c->getChild<Gadget>( s - 2 );
+	if( !IECore::runTimeCast<Nodule>( potentialEdgeGadget ) )
+	{
+		return potentialEdgeGadget;
+	}
+
+	return NULL;
 }
 
 const Gadget *StandardNodeGadget::getEdgeGadget( Edge edge ) const
@@ -596,7 +630,7 @@ bool StandardNodeGadget::dragEnter( GadgetPtr gadget, const DragDropEvent &event
 	// we'll accept the drag if we know we can forward it on to a nodule
 	// we own. we don't actually start the forwarding until dragMove, here we
 	// just check there is something to forward to.
-	if( closestCompatibleNodule( event ) )
+	if( closestDragDestinationProxy( event ) )
 	{
 		return true;
 	}
@@ -606,7 +640,7 @@ bool StandardNodeGadget::dragEnter( GadgetPtr gadget, const DragDropEvent &event
 
 bool StandardNodeGadget::dragMove( GadgetPtr gadget, const DragDropEvent &event )
 {
-	Nodule *closest = closestCompatibleNodule( event );
+	Gadget *closest = closestDragDestinationProxy( event );
 	if( closest != m_dragDestinationProxy )
 	{
 		if( closest->dragEnterSignal()( closest, event ) )
@@ -667,30 +701,66 @@ void StandardNodeGadget::plugMetadataChanged( IECore::TypeId nodeTypeId, const G
 	}
 }
 
-Nodule *StandardNodeGadget::closestCompatibleNodule( const DragDropEvent &event )
+Gadget *StandardNodeGadget::closestDragDestinationProxy( const DragDropEvent &event ) const
 {
-	Nodule *result = 0;
-	float maxDist = Imath::limits<float>::max();
-	for( RecursiveNoduleIterator it( this ); !it.done(); it++ )
+	if( event.buttons != DragDropEvent::Left )
 	{
-		if( noduleIsCompatible( it->get(), event ) )
+		// See comments in StandardNodule::dragEnter()
+		return NULL;
+	}
+
+	Gadget *result = 0;
+	float maxDist = Imath::limits<float>::max();
+	for( RecursiveGadgetIterator it( this ); !it.done(); it++ )
+	{
+		if( !(*it)->getVisible() )
 		{
-			Box3f noduleBound = (*it)->transformedBound( this );
-			const V3f closestPoint = closestPointOnBox( event.line.p0, noduleBound );
-			const float dist = ( closestPoint - event.line.p0 ).length2();
-			if( dist < maxDist )
+			it.prune();
+			continue;
+		}
+
+		/// \todo It's a bit ugly that we have to have these
+		/// `*IsCompatible()` methods - can we just use dragEnterSignal
+		/// to find out if the potential proxy accepts the drag?
+		if( const Nodule *nodule = IECore::runTimeCast<const Nodule>( it->get() ) )
+		{
+			if( !noduleIsCompatible( nodule, event ) )
 			{
-				result = it->get();
-				maxDist = dist;
+				continue;
 			}
+		}
+		else if( const PlugAdder *plugAdder = IECore::runTimeCast<const PlugAdder>( it->get() ) )
+		{
+			if( !plugAdderIsCompatible( plugAdder, event ) )
+			{
+				continue;
+			}
+		}
+		else
+		{
+			continue;
+		}
+
+		const Box3f bound = (*it)->transformedBound( this );
+		const V3f closestPoint = closestPointOnBox( event.line.p0, bound );
+		const float dist = ( closestPoint - event.line.p0 ).length2();
+		if( dist < maxDist )
+		{
+			result = it->get();
+			maxDist = dist;
 		}
 	}
 
 	return result;
 }
 
-bool StandardNodeGadget::noduleIsCompatible( const Nodule *nodule, const DragDropEvent &event )
+bool StandardNodeGadget::noduleIsCompatible( const Nodule *nodule, const DragDropEvent &event ) const
 {
+	if( IECore::runTimeCast<PlugAdder>( event.sourceGadget.get() ) )
+	{
+		return !IECore::runTimeCast<const CompoundNodule>( nodule );
+	}
+
 	const Plug *dropPlug = IECore::runTimeCast<Gaffer::Plug>( event.data.get() );
 	if( !dropPlug || dropPlug->node() == node() )
 	{
@@ -711,6 +781,11 @@ bool StandardNodeGadget::noduleIsCompatible( const Nodule *nodule, const DragDro
 	{
 		return nodulePlug->direction() == Plug::Out && dropPlug->acceptsInput( nodulePlug );
 	}
+}
+
+bool StandardNodeGadget::plugAdderIsCompatible( const PlugAdder *plugAdder, const DragDropEvent &event ) const
+{
+	return IECore::runTimeCast<Gaffer::Plug>( event.data.get() );
 }
 
 void StandardNodeGadget::nodeMetadataChanged( IECore::TypeId nodeTypeId, IECore::InternedString key, const Gaffer::Node *node )
@@ -822,10 +897,12 @@ void StandardNodeGadget::updateNoduleLayout()
 	// and remember the end gadget for each.
 	LinearContainer *edgeContainers[NumEdges];
 	GadgetPtr endGadgets[NumEdges];
+	GadgetPtr endSpacers[NumEdges];
 	for( int edge = FirstEdge; edge < NumEdges; ++edge )
 	{
+		endGadgets[edge] = getEdgeGadget( (Edge)edge );
 		edgeContainers[edge] = noduleContainer( (Edge)edge );
-		endGadgets[edge] = boost::static_pointer_cast<Gadget>( edgeContainers[edge]->children().back() );
+		endSpacers[edge] = boost::static_pointer_cast<Gadget>( edgeContainers[edge]->children().back() );
 		while( edgeContainers[edge]->children().size() > 1 )
 		{
 			edgeContainers[edge]->removeChild( edgeContainers[edge]->children().back() );
@@ -840,10 +917,14 @@ void StandardNodeGadget::updateNoduleLayout()
 		edgeContainers[plugEdge( (*it)->plug() )]->addChild( *it );
 	}
 
-	// Put back the end gadgets
+	// Put back the end gadgets and spacers
 	for( int edge = FirstEdge; edge < NumEdges; ++edge )
 	{
-		edgeContainers[edge]->addChild( endGadgets[edge] );
+		if( endGadgets[edge] )
+		{
+			edgeContainers[edge]->addChild( endGadgets[edge] );
+		}
+		edgeContainers[edge]->addChild( endSpacers[edge] );
 	}
 
 	// Let everyone know what we've done.

@@ -1,7 +1,6 @@
 //////////////////////////////////////////////////////////////////////////
 //
-//  Copyright (c) 2011-2012, John Haddon. All rights reserved.
-//  Copyright (c) 2011-2014, Image Engine Design Inc. All rights reserved.
+//  Copyright (c) 2016, Image Engine Design Inc. All rights reserved.
 //
 //  Redistribution and use in source and binary forms, with or without
 //  modification, are permitted provided that the following conditions are
@@ -35,51 +34,33 @@
 //
 //////////////////////////////////////////////////////////////////////////
 
-#ifndef GAFFERUI_TYPEIDS_H
-#define GAFFERUI_TYPEIDS_H
+#include "Gaffer/Switch.h"
 
-namespace GafferUI
+#include "GafferUI/Nodule.h"
+#include "GafferUI/PlugAdder.h"
+#include "GafferUI/Private/SwitchNodeGadget.h"
+
+using namespace Gaffer;
+using namespace GafferUI;
+using namespace GafferUI::Private;
+
+StandardNodeGadget::NodeGadgetTypeDescription<SwitchNodeGadget> SwitchNodeGadget::g_nodeGadgetTypeDescription( SwitchComputeNode::staticTypeId() );
+
+SwitchNodeGadget::SwitchNodeGadget( Gaffer::NodePtr node )
+	:	StandardNodeGadget( node )
 {
-
-enum TypeId
-{
-	GadgetTypeId = 110251,
-	NodeGadgetTypeId = 110252,
-	GraphGadgetTypeId = 110253,
-	ContainerGadgetTypeId = 110254,
-	RenderableGadgetTypeId = 110255,
-	TextGadgetTypeId = 110256,
-	NameGadgetTypeId = 110257,
-	IndividualContainerTypeId = 110258,
-	FrameTypeId = 110259,
-	StyleTypeId = 110260,
-	StandardStyleTypeId = 110261,
-	NoduleTypeId = 110262,
-	LinearContainerTypeId = 110263,
-	ConnectionGadgetTypeId = 110264,
-	StandardNodeGadgetTypeId = 110265,
-	SplinePlugGadgetTypeId = 110266,
-	StandardNoduleTypeId = 110267,
-	CompoundNoduleTypeId = 110268,
-	ImageGadgetTypeId = 110269,
-	ViewportGadgetTypeId = 110270,
-	ViewTypeId = 110271,
-	View3DTypeId = 110272, // Obsolete - available for reuse
-	ObjectViewTypeId = 110273, // Obsolete - available for reuse
-	PlugGadgetTypeId = 110274,
-	GraphLayoutTypeId = 110275,
-	StandardGraphLayoutTypeId = 110276,
-	BackdropNodeGadgetTypeId = 110277,
-	SpacerGadgetTypeId = 110278,
-	StandardConnectionGadgetTypeId = 110279,
-	HandleTypeId = 110280,
-	ToolTypeId = 110281,
-	DotNodeGadgetTypeId = 110282,
-	PlugAdderTypeId = 110283,
-
-	LastTypeId = 110450
-};
-
-} // namespace GafferUI
-
-#endif // GAFFERUI_TYPEIDS_H
+	setEdgeGadget( LeftEdge, new PlugAdder( node, LeftEdge ) );
+	setEdgeGadget( RightEdge, new PlugAdder( node, RightEdge ) );
+	if( !node->isInstanceOf( "GafferScene::ShaderSwitch" ) )
+	{
+		/// \todo Either remove ShaderSwitch on the grounds that it
+		/// doesn't really do anything above and beyond a regular
+		/// SwitchComputeNode, or come up with a metadata convention
+		/// to control this behaviour. What would be really nice is
+		/// to control the whole of the NodeGadget layout using the
+		/// same metadata conventions as the PlugLayout on the widget
+		/// side of things.
+		setEdgeGadget( TopEdge, new PlugAdder( node, TopEdge ) );
+		setEdgeGadget( BottomEdge, new PlugAdder( node, BottomEdge ) );
+	}
+}

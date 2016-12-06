@@ -40,8 +40,8 @@
 
 #include "IECore/SimpleTypedData.h"
 
-#include "Gaffer/Metadata.h"
 #include "Gaffer/Plug.h"
+#include "Gaffer/MetadataAlgo.h"
 
 #include "GafferUI/CompoundNodule.h"
 #include "GafferUI/LinearContainer.h"
@@ -52,43 +52,73 @@ using namespace IECore;
 using namespace Gaffer;
 using namespace GafferUI;
 
+//////////////////////////////////////////////////////////////////////////
+// Internal utilities
+//////////////////////////////////////////////////////////////////////////
+
+namespace
+{
+
+IECore::InternedString g_orientationKey( "compoundNodule:orientation"  );
+IECore::InternedString g_spacingKey( "compoundNodule:spacing"  );
+IECore::InternedString g_directionKey( "compoundNodule:direction"  );
+
+LinearContainer::Orientation orientationMetadata( const Plug *plug, LinearContainer::Orientation defaultValue )
+{
+	ConstStringDataPtr orientationData = Metadata::value<StringData>( plug, g_orientationKey );
+	if( !orientationData )
+	{
+		return defaultValue;
+	}
+
+	if( orientationData->readable() == "x" )
+	{
+		return LinearContainer::X;
+	}
+	else if( orientationData->readable() == "y" )
+	{
+		return LinearContainer::Y;
+	}
+	else
+	{
+		return LinearContainer::Z;
+	}
+}
+
+float spacingMetadata( const Plug *plug, float defaultValue )
+{
+	ConstFloatDataPtr spacingData = Metadata::value<FloatData>( plug, g_spacingKey );
+	return spacingData ? spacingData->readable() : defaultValue;
+}
+
+LinearContainer::Direction directionMetadata( const Plug *plug, LinearContainer::Direction defaultValue )
+{
+	ConstStringDataPtr directionData = Metadata::value<StringData>( plug, g_directionKey );
+	if( !directionData )
+	{
+		return defaultValue;
+	}
+
+	return directionData->readable() == "increasing" ? LinearContainer::Increasing : LinearContainer::Decreasing;
+}
+
+} // namespace
+
+//////////////////////////////////////////////////////////////////////////
+// CompoundNodule
+//////////////////////////////////////////////////////////////////////////
+
 IE_CORE_DEFINERUNTIMETYPED( CompoundNodule );
 
 Nodule::NoduleTypeDescription<CompoundNodule> CompoundNodule::g_noduleTypeDescription;
-
-static IECore::InternedString g_orientationKey( "compoundNodule:orientation"  );
-static IECore::InternedString g_spacingKey( "compoundNodule:spacing"  );
-static IECore::InternedString g_directionKey( "compoundNodule:direction"  );
 
 CompoundNodule::CompoundNodule( Gaffer::PlugPtr plug, LinearContainer::Orientation orientation,
 	float spacing, LinearContainer::Direction direction )
 	:	Nodule( plug )
 {
-	if( ConstStringDataPtr orientationData = Metadata::value<StringData>( plug.get(), g_orientationKey ) )
-	{
-		if( orientationData->readable() == "x" )
-		{
-			orientation = LinearContainer::X;
-		}
-		else if( orientationData->readable() == "y" )
-		{
-			orientation = LinearContainer::Y;
-		}
-		else
-		{
-			orientation = LinearContainer::Z;
-		}
-	}
-
-	if( ConstFloatDataPtr spacingData = Metadata::value<FloatData>( plug.get(), g_spacingKey ) )
-	{
-		spacing = spacingData->readable();
-	}
-
-	if( ConstStringDataPtr directionData = Metadata::value<StringData>( plug.get(), g_directionKey ) )
-	{
-		direction = directionData->readable() == "increasing" ? LinearContainer::Increasing : LinearContainer::Decreasing;
-	}
+	orientation = orientationMetadata( plug.get(), orientation );
+	spacing = spacingMetadata( plug.get(), spacing );
+	direction = directionMetadata( plug.get(), direction );
 
 	if( direction == LinearContainer::InvalidDirection )
 	{
@@ -109,6 +139,8 @@ CompoundNodule::CompoundNodule( Gaffer::PlugPtr plug, LinearContainer::Orientati
 
 	plug->childAddedSignal().connect( boost::bind( &CompoundNodule::childAdded, this, ::_1,  ::_2 ) );
 	plug->childRemovedSignal().connect( boost::bind( &CompoundNodule::childRemoved, this, ::_1,  ::_2 ) );
+
+	Metadata::plugValueChangedSignal().connect( boost::bind( &CompoundNodule::plugMetadataChanged, this, ::_1, ::_2, ::_3, ::_4 ) );
 }
 
 CompoundNodule::~CompoundNodule()
@@ -183,5 +215,32 @@ void CompoundNodule::childRemoved( Gaffer::GraphComponent *parent, Gaffer::Graph
 			m_row->removeChild( *it );
 			break;
 		}
+	}
+}
+
+void CompoundNodule::plugMetadataChanged( IECore::TypeId nodeTypeId, const Gaffer::MatchPattern &plugPath, IECore::InternedString key, const Gaffer::Plug *plug )
+{
+	if( !affectedByChange( this->plug(), nodeTypeId, plugPath, plug ) )
+	{
+		return;
+	}
+
+	if( key == g_orientationKey )
+	{
+		m_row->setOrientation( orientationMetadata( this->plug(), LinearContainer::X ) );
+	}
+	else if( key == g_spacingKey )
+	{
+		m_row->setSpacing( spacingMetadata( this->plug(), 0 ) );
+	}
+
+	if( key == g_directionKey || key == g_orientationKey )
+	{
+		m_row->setDirection(
+			directionMetadata(
+				this->plug(),
+				m_row->getOrientation() == LinearContainer::X ? LinearContainer::Increasing : LinearContainer::Decreasing
+			)
+		);
 	}
 }

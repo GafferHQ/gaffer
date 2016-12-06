@@ -1,6 +1,6 @@
 ##########################################################################
 #
-#  Copyright (c) 2011-2012, Image Engine Design Inc. All rights reserved.
+#  Copyright (c) 2016, Image Engine Design Inc. All rights reserved.
 #
 #  Redistribution and use in source and binary forms, with or without
 #  modification, are permitted provided that the following conditions are
@@ -34,44 +34,25 @@
 #
 ##########################################################################
 
-import os
 import unittest
 
 import IECore
 
+import Gaffer
+import GafferTest
 import GafferUI
 import GafferUITest
 
-class ImageGadgetTest( GafferUITest.TestCase ) :
+class SwitchNodeGadgetTest( GafferUITest.TestCase ) :
 
-	def testConstructFromImagePrimitive( self ) :
+	def testPythonBinding( self ) :
 
-		window = IECore.Box2i( IECore.V2i( 0 ), IECore.V2i( 255 ) )
-		imagePrimitive = IECore.ImagePrimitive.createRGBFloat( IECore.Color3f( 0.25, .5, .75 ), window, window )
+		s = Gaffer.ScriptNode()
+		s["n"] = Gaffer.SwitchComputeNode()
 
-		i = GafferUI.ImageGadget( imagePrimitive )
-		self.assertEqual( i.bound(), IECore.Box3f( IECore.V3f( -128, -128, 0 ), IECore.V3f( 128, 128, 0 ) ) )
-
-	def testConstructFromFile( self ) :
-
-		i = GafferUI.ImageGadget( "arrowRight10.png" )
-
-		self.assertEqual( i.bound(), IECore.Box3f( IECore.V3f( -5, -5, 0 ), IECore.V3f( 5, 5, 0 ) ) )
-
-	def testMissingFiles( self ) :
-
-		self.assertRaises( Exception, GafferUI.ImageGadget, "iDonNotExist" )
-
-	def testTextureLoader( self ) :
-
-		# must access an attribute from IECoreGL to force import
-		# before calling textureLoader(), because it is imported
-		# lazily by GafferUI.
-		import IECoreGL
-		IECoreGL.TextureLoader
-
-		l = GafferUI.ImageGadget.textureLoader()
-		self.assertTrue( isinstance( l, IECoreGL.TextureLoader ) )
+		g = GafferUI.NodeGadget.create( s["n"] )
+		self.assertTrue( isinstance( g, GafferUI.StandardNodeGadget ) )
+		self.assertTrue( type( g ) is GafferUI.StandardNodeGadget )
 
 if __name__ == "__main__":
 	unittest.main()

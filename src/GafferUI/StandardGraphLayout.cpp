@@ -49,6 +49,7 @@
 #include "Gaffer/DependencyNode.h"
 #include "Gaffer/StandardSet.h"
 #include "Gaffer/Dot.h"
+#include "Gaffer/Switch.h"
 
 #include "GafferUI/StandardGraphLayout.h"
 #include "GafferUI/GraphGadget.h"
@@ -1045,12 +1046,19 @@ bool StandardGraphLayout::connectNodeInternal( GraphGadget *graph, Gaffer::Node 
 		return false;
 	}
 
-	// if we're trying to connect a dot, then we may need to give it plugs first
+	// if we're trying to connect a dot or switch, then we may need to give it plugs first
 	if( Dot *dot = runTimeCast<Dot>( node ) )
 	{
 		if( !dot->inPlug<Plug>() )
 		{
 			dot->setup( outputPlugs.front() );
+		}
+	}
+	else if( SwitchComputeNode *switchNode = runTimeCast<SwitchComputeNode>( node ) )
+	{
+		if( !switchNode->getChild<Plug>( "in" ) )
+		{
+			switchNode->setup( outputPlugs.front() );
 		}
 	}
 

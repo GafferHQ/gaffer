@@ -40,6 +40,8 @@
 
 #include "IECore/ImagePrimitive.h"
 
+#include "IECoreGL/TextureLoader.h"
+
 #include "GafferUI/Gadget.h"
 
 namespace IECoreGL
@@ -68,6 +70,12 @@ class ImageGadget : public Gadget
 		IE_CORE_DECLARERUNTIMETYPEDEXTENSION( GafferUI::ImageGadget, ImageGadgetTypeId, Gadget );
 
 		virtual Imath::Box3f bound() const;
+
+		/// Returns the texture loader used for converting images
+		/// on disk into textures for rendering. This is exposed
+		/// publicly so that other code can share the same texture
+		/// cache.
+		static IECoreGL::TextureLoader *textureLoader();
 
 	protected :
 

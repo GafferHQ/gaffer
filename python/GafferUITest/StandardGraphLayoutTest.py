@@ -729,5 +729,17 @@ class StandardGraphLayoutTest( GafferUITest.TestCase ) :
 		self.assertTrue( s["d"]["out"].source().isSame( s["n1"]["sum"] ) )
 		self.assertTrue( s["n2"]["op1"].getInput().isSame( s["d"]["out"] ) )
 
+	def testConnectSwitch( self ) :
+
+		s = Gaffer.ScriptNode()
+		s["n"] = GafferTest.AddNode()
+		s["s"] = Gaffer.SwitchComputeNode()
+
+		g = GafferUI.GraphGadget( s )
+		g.getLayout().connectNode( g, s["s"], Gaffer.StandardSet( [ s["n"] ] ) )
+
+		self.assertTrue( isinstance( s["s"]["in"][0], Gaffer.IntPlug ) )
+		self.assertTrue( s["s"]["in"][0].getInput().isSame( s["n"]["sum"] ) )
+
 if __name__ == "__main__":
 	unittest.main()

@@ -51,9 +51,14 @@ using namespace IECore;
 using namespace IECoreGL;
 using namespace GafferUI;
 
-IE_CORE_DEFINERUNTIMETYPED( ImageGadget );
+//////////////////////////////////////////////////////////////////////////
+// Internal utilities
+//////////////////////////////////////////////////////////////////////////
 
-static Box3f boundGetter( const std::string &fileName, size_t &cost )
+namespace
+{
+
+Box3f boundGetter( const std::string &fileName, size_t &cost )
 {
 	const char *s = getenv( "GAFFERUI_IMAGE_PATHS" );
 	IECore::SearchPath sp( s ? s : "", ":" );
@@ -82,6 +87,49 @@ static Box3f boundGetter( const std::string &fileName, size_t &cost )
 	return Box3f( -size/2.0f, size/2.0f );
 }
 
+const IECoreGL::Texture *loadTexture( IECore::ConstRunTimeTypedPtr &imageOrTextureOrFileName )
+{
+	if( const Texture *texture = runTimeCast<const Texture>( imageOrTextureOrFileName.get() ) )
+	{
+		return texture;
+	}
+
+	TexturePtr texture;
+	if( const StringData *filename = runTimeCast<const StringData>( imageOrTextureOrFileName.get() ) )
+	{
+		// Load texture from file
+		texture = ImageGadget::textureLoader()->load( filename->readable() );
+	}
+	else if( const ImagePrimitive *image = runTimeCast<const ImagePrimitive>( imageOrTextureOrFileName.get() ) )
+	{
+		// Convert image to texture
+		ToGLTextureConverterPtr converter = new ToGLTextureConverter( image );
+		texture =  boost::static_pointer_cast<Texture>( converter->convert() );
+	}
+
+	if( texture )
+	{
+		IECoreGL::Texture::ScopedBinding binding( *texture );
+		glTexParameteri( GL_TEXTURE_2D, GL_TEXTURE_MIN_FILTER, GL_LINEAR_MIPMAP_LINEAR );
+		glTexParameteri( GL_TEXTURE_2D, GL_TEXTURE_MAG_FILTER, GL_LINEAR );
+		glTexParameterf( GL_TEXTURE_2D, GL_TEXTURE_LOD_BIAS, -1.0 );
+		glTexParameteri( GL_TEXTURE_2D, GL_TEXTURE_WRAP_S, GL_CLAMP_TO_BORDER );
+		glTexParameteri( GL_TEXTURE_2D, GL_TEXTURE_WRAP_T, GL_CLAMP_TO_BORDER );
+	}
+
+	imageOrTextureOrFileName = texture;
+
+	return texture.get();
+}
+
+} // namespace
+
+//////////////////////////////////////////////////////////////////////////
+// ImageGadget
+//////////////////////////////////////////////////////////////////////////
+
+IE_CORE_DEFINERUNTIMETYPED( ImageGadget );
+
 ImageGadget::ImageGadget( const std::string &fileName )
 	:	Gadget( defaultName<ImageGadget>() )
 {
@@ -105,31 +153,21 @@ ImageGadget::~ImageGadget()
 {
 }
 
+IECoreGL::TextureLoader *ImageGadget::textureLoader()
+{
+	static TextureLoaderPtr loader = NULL;
+	if( !loader )
+	{
+		const char *s = getenv( "GAFFERUI_IMAGE_PATHS" );
+		IECore::SearchPath sp( s ? s : "", ":" );
+		loader = new TextureLoader( sp );
+	}
+	return loader.get();
+}
+
 void ImageGadget::doRender( const Style *style ) const
 {
-
-	if( const StringData *filename = runTimeCast<const StringData>( m_imageOrTextureOrFileName.get() ) )
-	{
-		// load texture from file
-		static TextureLoaderPtr g_textureLoader = 0;
-		if( !g_textureLoader )
-		{
-			const char *s = getenv( "GAFFERUI_IMAGE_PATHS" );
-			IECore::SearchPath sp( s ? s : "", ":" );
-			g_textureLoader = new TextureLoader( sp );
-		}
-
-		m_imageOrTextureOrFileName = g_textureLoader->load( filename->readable() );
-	}
-	else if( const ImagePrimitive *image = runTimeCast<const ImagePrimitive>( m_imageOrTextureOrFileName.get() ) )
-	{
-		// convert image to texture
-		ToGLTextureConverterPtr converter = new ToGLTextureConverter( image );
-		m_imageOrTextureOrFileName = converter->convert();
-	}
-
-	// render texture
-	if( const Texture *texture = runTimeCast<const Texture>( m_imageOrTextureOrFileName.get() ) )
+	if( const Texture *texture = loadTexture( m_imageOrTextureOrFileName ) )
 	{
 		Box2f b( V2f( m_bound.min.x, m_bound.min.y ), V2f( m_bound.max.x, m_bound.max.y ) );
 		style->renderImage( b, texture );

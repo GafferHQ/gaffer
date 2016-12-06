@@ -1,6 +1,6 @@
 ##########################################################################
 #
-#  Copyright (c) 2011-2012, Image Engine Design Inc. All rights reserved.
+#  Copyright (c) 2016, Image Engine Design Inc. All rights reserved.
 #
 #  Redistribution and use in source and binary forms, with or without
 #  modification, are permitted provided that the following conditions are
@@ -34,44 +34,20 @@
 #
 ##########################################################################
 
-import os
-import unittest
+import functools
 
-import IECore
+import Gaffer
+import GafferScene
 
-import GafferUI
-import GafferUITest
+def __shaderSwitchGetItem( originalGetItem ) :
 
-class ImageGadgetTest( GafferUITest.TestCase ) :
+	def getItem( self, key ) :
 
-	def testConstructFromImagePrimitive( self ) :
+		if key in ( "in", "out" ) and key not in self :
+			self.setup( Gaffer.Plug() )
 
-		window = IECore.Box2i( IECore.V2i( 0 ), IECore.V2i( 255 ) )
-		imagePrimitive = IECore.ImagePrimitive.createRGBFloat( IECore.Color3f( 0.25, .5, .75 ), window, window )
+		return originalGetItem( self, key )
 
-		i = GafferUI.ImageGadget( imagePrimitive )
-		self.assertEqual( i.bound(), IECore.Box3f( IECore.V3f( -128, -128, 0 ), IECore.V3f( 128, 128, 0 ) ) )
+	return getItem
 
-	def testConstructFromFile( self ) :
-
-		i = GafferUI.ImageGadget( "arrowRight10.png" )
-
-		self.assertEqual( i.bound(), IECore.Box3f( IECore.V3f( -5, -5, 0 ), IECore.V3f( 5, 5, 0 ) ) )
-
-	def testMissingFiles( self ) :
-
-		self.assertRaises( Exception, GafferUI.ImageGadget, "iDonNotExist" )
-
-	def testTextureLoader( self ) :
-
-		# must access an attribute from IECoreGL to force import
-		# before calling textureLoader(), because it is imported
-		# lazily by GafferUI.
-		import IECoreGL
-		IECoreGL.TextureLoader
-
-		l = GafferUI.ImageGadget.textureLoader()
-		self.assertTrue( isinstance( l, IECoreGL.TextureLoader ) )
-
-if __name__ == "__main__":
-	unittest.main()
+GafferScene.ShaderSwitch.__getitem__ = __shaderSwitchGetItem( GafferScene.ShaderSwitch.__getitem__ )

@@ -53,12 +53,13 @@ namespace Gaffer
 /// Switches can be instantiated in either of two ways :
 ///
 /// - By instantiating Switch<BaseType> where BaseType creates an "in" and
-/// and "out" plug during construction. This is the method used to create
-/// the SceneSwitch and ImageSwitch.
+///   and "out" plug during construction. This is the method used to create
+///   the SceneSwitch and ImageSwitch.
 ///
-/// - By adding dynamic "in" and "out" plugs to a generic Switch node after
-/// construction. This method can be seen in the GafferTest.SwitchTest
-/// test cases.
+/// - By adding "in" and "out" plugs to a generic Switch node after
+///   construction, using the `Switch::setup()`. This method can be seen
+///   in the GafferTest.SwitchTest
+///   test cases.
 template<typename BaseType>
 class Switch : public BaseType
 {
@@ -69,6 +70,20 @@ class Switch : public BaseType
 
 		Switch( const std::string &name=GraphComponent::defaultName<Switch>() );
 		virtual ~Switch();
+
+		/// Sets up a SwitchComputeNode or SwitchDependencyNode
+		/// to work with the specified plug type. The passed plug
+		/// is used as a template, but will not be referenced by the
+		/// Switch itself - typically you will pass a plug
+		/// which you will connect to the Switch after calling
+		/// setup().
+		/// \undoable
+		void setup( const Plug *plug );
+
+		/// Returns the input plug which will be passed through
+		/// by the switch in the current context.
+		Plug *activeInPlug();
+		const Plug *activeInPlug() const;
 
 		IntPlug *indexPlug();
 		const IntPlug *indexPlug() const;

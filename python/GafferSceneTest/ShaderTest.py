@@ -180,5 +180,75 @@ class ShaderTest( GafferSceneTest.SceneTestCase ) :
 			self.assertRaisesRegexp( RuntimeError, "cycle", node.attributesHash )
 			self.assertRaisesRegexp( RuntimeError, "cycle", node.attributes )
 
+	def testSwitch( self ) :
+
+		n1 = GafferSceneTest.TestShader()
+		n1["parameters"]["i"].setValue( 1 )
+
+		n2 = GafferSceneTest.TestShader()
+		n2["parameters"]["i"].setValue( 2 )
+
+		n3 = GafferSceneTest.TestShader()
+		n3["type"].setValue( "test:surface" )
+
+		switch = Gaffer.SwitchComputeNode()
+		switch.setup( n3["parameters"]["c"] )
+
+		switch["in"][0].setInput( n1["out"] )
+		switch["in"][1].setInput( n2["out"] )
+
+		n3["parameters"]["c"].setInput( switch["out"] )
+
+		for i in range( 0, 3 ) :
+
+			switch["index"].setValue( i )
+			effectiveIndex = i % 2
+
+			network = n3.attributes()["test:surface"]
+			self.assertEqual( len( network ), 2 )
+			self.assertEqual( network[0].parameters["i"].value, effectiveIndex + 1 )
+			self.assertEqual( network[1].parameters["c"].value, "link:" + network[0].parameters["__handle"].value )
+
+	def testSwitchWithContextSensitiveIndex( self ) :
+
+		s = Gaffer.ScriptNode()
+
+		s["n1"] = GafferSceneTest.TestShader()
+		s["n1"]["parameters"]["i"].setValue( 1 )
+
+		s["n2"] = GafferSceneTest.TestShader()
+		s["n2"]["parameters"]["i"].setValue( 2 )
+
+		s["n3"] = GafferSceneTest.TestShader()
+		s["n3"]["parameters"]["i"].setValue( 3 )
+		s["n3"]["type"].setValue( "test:surface" )
+
+		s["switch"] = Gaffer.SwitchComputeNode()
+		s["switch"].setup( s["n3"]["parameters"]["c"] )
+
+		s["switch"]["in"][0].setInput( s["n1"]["out"] )
+		s["switch"]["in"][1].setInput( s["n2"]["out"] )
+
+		s["n3"]["parameters"]["c"].setInput( s["switch"]["out"] )
+
+		network = s["n3"].attributes()["test:surface"]
+		self.assertEqual( network[0].parameters["i"].value, 1 )
+		self.assertEqual( network[1].parameters["c"].value, "link:" + network[0].parameters["__handle"].value )
+
+		s["expression"] = Gaffer.Expression()
+		s["expression"].setExpression( 'parent["switch"]["index"] = context["index"]' )
+
+		with Gaffer.Context() as context :
+
+			for i in range( 0, 3 ) :
+
+				context["index"] = i
+				effectiveIndex = i % 2
+
+				network = s["n3"].attributes()["test:surface"]
+				self.assertEqual( len( network ), 2 )
+				self.assertEqual( network[0].parameters["i"].value, effectiveIndex + 1 )
+				self.assertEqual( network[1].parameters["c"].value, "link:" + network[0].parameters["__handle"].value )
+
 if __name__ == "__main__":
 	unittest.main()

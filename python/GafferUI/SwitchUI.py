@@ -58,9 +58,35 @@ for nodeType in ( Gaffer.SwitchDependencyNode, Gaffer.SwitchComputeNode ) :
 				of 0 chooses the first input, 1 the second and so on. Values
 				larger than the number of available inputs wrap back around to
 				the beginning.
-				"""
+				""",
 
-			]
+				"nodule:type", "",
+
+			],
+
+			"in" : [
+
+				"description",
+				"""
+				The array of inputs to choose from. One of these is chosen
+				by the index plug to be passed through to the output.
+				""",
+
+				"nodule:type", "GafferUI::CompoundNodule",
+				"plugValueWidget:type", "",
+
+			],
+
+			"out" : [
+
+				"description",
+				"""
+				Outputs the input specified by the index.
+				""",
+
+				"plugValueWidget:type", "",
+
+			],
 
 		}
 

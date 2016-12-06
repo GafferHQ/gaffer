@@ -40,7 +40,6 @@
 #include "Gaffer/TimeWarp.h"
 #include "Gaffer/ContextVariables.h"
 #include "Gaffer/Backdrop.h"
-#include "Gaffer/Switch.h"
 #include "Gaffer/Loop.h"
 
 #include "GafferBindings/ConnectionBinding.h"
@@ -92,6 +91,7 @@
 #include "GafferBindings/AnimationBinding.h"
 #include "GafferBindings/MonitorBinding.h"
 #include "GafferBindings/MetadataAlgoBinding.h"
+#include "GafferBindings/SwitchBinding.h"
 
 using namespace boost::python;
 using namespace Gaffer;
@@ -187,14 +187,13 @@ BOOST_PYTHON_MODULE( _Gaffer )
 	bindAnimation();
 	bindMonitor();
 	bindMetadataAlgo();
+	bindSwitch();
 
 	NodeClass<Backdrop>();
 
 	DependencyNodeClass<ContextProcessorComputeNode>();
 	DependencyNodeClass<TimeWarpComputeNode>();
 	DependencyNodeClass<ContextVariablesComputeNode>();
-	DependencyNodeClass<SwitchDependencyNode>();
-	DependencyNodeClass<SwitchComputeNode>();
 	DependencyNodeClass<LoopComputeNode>();
 
 	object tsi = class_<TaskSchedulerInitWrapper, boost::noncopyable>( "_tbb_task_scheduler_init", no_init )

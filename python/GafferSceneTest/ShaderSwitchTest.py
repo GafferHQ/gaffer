@@ -36,6 +36,8 @@
 
 import unittest
 
+import IECore
+
 import Gaffer
 import GafferScene
 import GafferSceneTest
@@ -99,6 +101,69 @@ class ShaderSwitchTest( GafferSceneTest.SceneTestCase ) :
 
 		s = GafferScene.ShaderSwitch()
 		self.assertTrue( s.correspondingInput( s["out"] ).isSame( s["in"][0] ) )
+
+	def testSetup( self ) :
+
+		shader1 = GafferSceneTest.TestShader()
+		shader2 = GafferSceneTest.TestShader()
+
+		shader1["parameters"]["c"].setValue( IECore.Color3f( 0 ) )
+		shader2["parameters"]["c"].setValue( IECore.Color3f( 1 ) )
+
+		switch = GafferScene.ShaderSwitch()
+		switch.setup( shader1["parameters"]["c"] )
+
+		switch["in"][0].setInput( shader1["out"] )
+		switch["in"][1].setInput( shader2["out"] )
+
+		shader3 = GafferSceneTest.TestShader()
+		shader3["type"].setValue( "test:surface" )
+		shader3["parameters"]["c"].setInput( switch["out"] )
+
+		for i in range( 0, 2 ) :
+
+			switch["index"].setValue( i )
+			network = shader3.attributes()["test:surface"]
+
+			self.assertEqual( len( network ), 2 )
+			self.assertEqual( network[0].parameters["c"].value, IECore.Color3f( i ) )
+
+	def testContextSensitiveIndex( self ) :
+
+		s = Gaffer.ScriptNode()
+
+		s["n1"] = GafferSceneTest.TestShader()
+		s["n1"]["parameters"]["i"].setValue( 1 )
+
+		s["n2"] = GafferSceneTest.TestShader()
+		s["n2"]["parameters"]["i"].setValue( 2 )
+
+		s["n3"] = GafferSceneTest.TestShader()
+		s["n3"]["parameters"]["i"].setValue( 3 )
+		s["n3"]["type"].setValue( "test:surface" )
+
+		s["switch"] = GafferScene.ShaderSwitch()
+		s["switch"].setup( s["n3"]["parameters"]["c"] )
+
+		s["switch"]["in"][0].setInput( s["n1"]["out"] )
+		s["switch"]["in"][1].setInput( s["n2"]["out"] )
+
+		s["n3"]["parameters"]["c"].setInput( s["switch"]["out"] )
+
+		s["expression"] = Gaffer.Expression()
+		s["expression"].setExpression( 'parent["switch"]["index"] = context.getFrame()' )
+
+		with Gaffer.Context() as context :
+
+			for i in range( 0, 3 ) :
+
+				context.setFrame( i )
+				effectiveIndex = i % 2
+
+				network = s["n3"].attributes()["test:surface"]
+				self.assertEqual( len( network ), 2 )
+				self.assertEqual( network[0].parameters["i"].value, effectiveIndex + 1 )
+				self.assertEqual( network[1].parameters["c"].value, "link:" + network[0].parameters["__handle"].value )
 
 if __name__ == "__main__":
 	unittest.main()

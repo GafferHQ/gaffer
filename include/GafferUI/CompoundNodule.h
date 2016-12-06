@@ -38,6 +38,8 @@
 #ifndef GAFFERUI_COMPOUNDNODULE_H
 #define GAFFERUI_COMPOUNDNODULE_H
 
+#include "Gaffer/Metadata.h"
+
 #include "GafferUI/Nodule.h"
 #include "GafferUI/LinearContainer.h"
 
@@ -83,6 +85,8 @@ class CompoundNodule : public Nodule
 
 		void childAdded( Gaffer::GraphComponent *parent, Gaffer::GraphComponent *child );
 		void childRemoved( Gaffer::GraphComponent *parent, Gaffer::GraphComponent *child );
+
+		void plugMetadataChanged( IECore::TypeId nodeTypeId, const Gaffer::MatchPattern &plugPath, IECore::InternedString key, const Gaffer::Plug *plug );
 
 		typedef std::map<const Gaffer::Plug *, Nodule *> NoduleMap;
 		NoduleMap m_nodules;

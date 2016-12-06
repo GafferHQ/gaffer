@@ -40,6 +40,7 @@
 
 #include "Gaffer/Switch.h"
 #include "Gaffer/ArrayPlug.h"
+#include "Gaffer/Context.h"
 
 namespace Gaffer
 {
@@ -103,6 +104,50 @@ void Switch<BaseType>::init( bool expectBaseClassPlugs )
 template<typename BaseType>
 Switch<BaseType>::~Switch()
 {
+}
+
+template<typename BaseType>
+void Switch<BaseType>::setup( const Plug *plug )
+{
+	if( BaseType::template getChild<Plug>( "in") )
+	{
+		throw IECore::Exception( "Switch already has an \"in\" plug." );
+	}
+	if( BaseType::template getChild<Plug>( "out" ) )
+	{
+		throw IECore::Exception( "Switch already has an \"out\" plug." );
+	}
+
+	ArrayPlugPtr in = new ArrayPlug(
+		"in",
+		Plug::In,
+		plug->createCounterpart( "in0", Plug::In ),
+		0,
+		Imath::limits<size_t>::max(),
+		Plug::Default | Plug::Dynamic
+	);
+	BaseType::addChild( in );
+
+	PlugPtr out = plug->createCounterpart( "out", Plug::Out );
+	out->setFlags( Plug::Dynamic, true );
+	BaseType::addChild( out );
+}
+
+template<typename BaseType>
+Plug *Switch<BaseType>::activeInPlug()
+{
+	ArrayPlug *inputs = BaseType::template getChild<ArrayPlug>( "in" );
+	if( !inputs )
+	{
+		return NULL;
+	}
+	return inputs->getChild<Plug>( inputIndex( Context::current() ) );
+}
+
+template<typename BaseType>
+const Plug *Switch<BaseType>::activeInPlug() const
+{
+	return const_cast<Switch *>( this )->activeInPlug();
 }
 
 template<typename BaseType>
