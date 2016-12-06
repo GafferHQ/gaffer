@@ -39,6 +39,7 @@
 #include "IECore/ObjectVector.h"
 
 #include "GafferOSL/TypeIds.h"
+#include "OpenImageIO/ustring.h"
 
 namespace GafferOSL
 {
@@ -53,7 +54,15 @@ class ShadingEngine : public IECore::RefCounted
 		ShadingEngine( const IECore::ObjectVector *shaderNetwork );
 		~ShadingEngine();
 
-		IECore::CompoundDataPtr shade( const IECore::CompoundData *points ) const;
+		struct Transform
+		{
+			Imath::M44f fromObjectSpace;
+			Imath::M44f toObjectSpace;
+		};
+
+		typedef std::map<OIIO::ustring, Transform> Transforms;
+
+		IECore::CompoundDataPtr shade( const IECore::CompoundData *points, const Transforms &transforms ) const;
 
 	private :
 
