@@ -1,6 +1,6 @@
 ##########################################################################
 #
-#  Copyright (c) 2013, Image Engine Design Inc. All rights reserved.
+#  Copyright (c) 2016, Image Engine Design Inc. All rights reserved.
 #
 #  Redistribution and use in source and binary forms, with or without
 #  modification, are permitted provided that the following conditions are
@@ -34,15 +34,28 @@
 #
 ##########################################################################
 
-from SceneViewTest import SceneViewTest
-from ShaderAssignmentUITest import ShaderAssignmentUITest
-from StandardGraphLayoutTest import StandardGraphLayoutTest
-from SceneGadgetTest import SceneGadgetTest
-from SceneInspectorTest import SceneInspectorTest
-from SceneHierarchyTest import SceneHierarchyTest
-from DocumentationTest import DocumentationTest
-from ShaderViewTest import ShaderViewTest
-from ShaderUITest import ShaderUITest
+import IECore
+
+import GafferUI
+import GafferUITest
+import GafferSceneTest
+import GafferSceneUI
+
+class ShaderUITest( GafferUITest.TestCase ) :
+
+	def testNoduleOrdering( self ) :
+
+		s = GafferSceneTest.TestShader()
+
+		g = GafferUI.NodeGadget.create( s )
+		n1 = g.nodule( s["parameters"]["i"] )
+		n2 = g.nodule( s["parameters"]["c"] )
+		g.bound()
+
+		self.assertGreater(
+			n1.transformedBound( None ).center().y,
+			n2.transformedBound( None ).center().y
+		)
 
 if __name__ == "__main__":
 	unittest.main()
