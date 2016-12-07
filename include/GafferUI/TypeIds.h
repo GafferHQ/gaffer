@@ -76,6 +76,7 @@ enum TypeId
 	ToolTypeId = 110281,
 	DotNodeGadgetTypeId = 110282,
 	PlugAdderTypeId = 110283,
+	NoduleLayoutTypeId = 110284,
 
 	LastTypeId = 110450
 };
