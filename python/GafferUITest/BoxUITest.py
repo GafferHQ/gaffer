@@ -51,8 +51,8 @@ class BoxUITest( GafferUITest.TestCase ) :
 
 	IECore.registerRunTimeTyped( NodulePositionNode )
 
-	Gaffer.Metadata.registerValue( NodulePositionNode, "op1", "nodeGadget:nodulePosition", "left" )
-	Gaffer.Metadata.registerValue( NodulePositionNode, "sum", "nodeGadget:nodulePosition", "right" )
+	Gaffer.Metadata.registerValue( NodulePositionNode, "op1", "nodeGraphLayout:section", "left" )
+	Gaffer.Metadata.registerValue( NodulePositionNode, "sum", "nodeGraphLayout:section", "right" )
 
 	Gaffer.Metadata.registerValue( NodulePositionNode, "op2", "nodule:type", "" )
 
