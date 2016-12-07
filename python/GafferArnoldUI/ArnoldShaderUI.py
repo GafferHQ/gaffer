@@ -193,6 +193,13 @@ def __translateNodeMetadata( nodeEntry ) :
 		if label is not None :
 			__metadata[paramPath]["label"] = label
 
+		# NodeGraph visibility from Gaffer-specific metadata
+
+		visible = __aiMetadataGetBool( nodeEntry, None, "gaffer.nodeGraphLayout.defaultVisibility" )
+		visible = __aiMetadataGetBool( nodeEntry, paramName, "gaffer.nodeGraphLayout.visible", visible )
+		if visible is not None :
+			__metadata[paramPath]["nodeGraphLayout:visible"] = visible
+
 	# If we haven't seen any nice sane OSL "page" metadata, then have
 	# a go at translating the houdini layout metadata. Surely one of the
 	# most tortured ways of defining a UI ever.
