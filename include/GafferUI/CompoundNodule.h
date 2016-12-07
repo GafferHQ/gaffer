@@ -38,30 +38,22 @@
 #ifndef GAFFERUI_COMPOUNDNODULE_H
 #define GAFFERUI_COMPOUNDNODULE_H
 
-#include "Gaffer/Metadata.h"
-
 #include "GafferUI/Nodule.h"
 #include "GafferUI/LinearContainer.h"
 
 namespace GafferUI
 {
 
-IE_CORE_FORWARDDECLARE( LinearContainer );
+IE_CORE_FORWARDDECLARE( NoduleLayout );
 
 /// A Nodule subclass to represent each of the children of a
 /// Plug with their own nodule.
-///
-/// Supported plug metadata :
-///
-/// - "compoundNodule:orientation", with a value of "x", "y" or "z"
-/// - "compoundNodule:spacing", with a float value
-/// - "compoundNodule:direction", with a value of "increasing" or "decreasing"
 class CompoundNodule : public Nodule
 {
 
 	public :
 
-		/// \deprecated All arguments except the plug are deprecated -
+		/// \deprecated All arguments except the plug are ignored -
 		/// use plug metadata instead.
 		CompoundNodule( Gaffer::PlugPtr plug, LinearContainer::Orientation orientation=LinearContainer::X,
 			float spacing = 0.0f, LinearContainer::Direction direction=LinearContainer::InvalidDirection );
@@ -69,29 +61,16 @@ class CompoundNodule : public Nodule
 
 		IE_CORE_DECLARERUNTIMETYPEDEXTENSION( GafferUI::CompoundNodule, CompoundNoduleTypeId, Nodule );
 
-		virtual Imath::Box3f bound() const;
-
 		virtual bool acceptsChild( const Gaffer::GraphComponent *potentialChild ) const;
 
 		/// Returns a Nodule for a child of the plug being represented.
 		Nodule *nodule( const Gaffer::Plug *plug );
 		const Nodule *nodule( const Gaffer::Plug *plug ) const;
 
-	protected :
-
-		void doRender( const Style *style ) const;
-
 	private :
 
-		void childAdded( Gaffer::GraphComponent *parent, Gaffer::GraphComponent *child );
-		void childRemoved( Gaffer::GraphComponent *parent, Gaffer::GraphComponent *child );
-
-		void plugMetadataChanged( IECore::TypeId nodeTypeId, const Gaffer::StringAlgo::MatchPattern &plugPath, IECore::InternedString key, const Gaffer::Plug *plug );
-
-		typedef std::map<const Gaffer::Plug *, Nodule *> NoduleMap;
-		NoduleMap m_nodules;
-
-		LinearContainerPtr m_row;
+		NoduleLayout *noduleLayout();
+		const NoduleLayout *noduleLayout() const;
 
 		static NoduleTypeDescription<CompoundNodule> g_noduleTypeDescription;
 
