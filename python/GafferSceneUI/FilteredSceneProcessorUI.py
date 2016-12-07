@@ -67,7 +67,7 @@ Gaffer.Metadata.registerNode(
 			""",
 
 			"layout:section", "Filter",
-			"nodeGadget:nodulePosition", "right",
+			"nodeGraphLayout:section", "right",
 			"layout:index", -3, # Just before the enabled plug,
 			"nodule:type", "GafferUI::StandardNodule",
 			"plugValueWidget:type", "GafferSceneUI.FilterPlugValueWidget",

@@ -102,10 +102,9 @@ Gaffer.Metadata.registerNode(
 			Where the parameters for the shader are represented.
 			""",
 
-			"nodeGadget:nodulePosition", "left",
 			"nodule:type", "GafferUI::CompoundNodule",
-			"compoundNodule:orientation", "y",
-			"compoundNodule:spacing", 0.2,
+			"nodeGraphLayout:section", "left",
+			"nodeGraphLayout:spacing", 0.2,
 			"plugValueWidget:type", "GafferUI.LayoutPlugValueWidget",
 
 		],
@@ -117,7 +116,7 @@ Gaffer.Metadata.registerNode(
 			# appropriate values for each individual parameter,
 			# for the case where they get promoted to a box
 			# individually.
-			"nodeGadget:nodulePosition", "left",
+			"nodeGraphLayout:section", "left",
 
 		],
 
@@ -128,8 +127,14 @@ Gaffer.Metadata.registerNode(
 			The output from the shader.
 			""",
 
-			"nodeGadget:nodulePosition", "right",
+			"nodeGraphLayout:section", "right",
 			"plugValueWidget:type", "",
+
+		],
+
+		"out.*" : [
+
+			"nodeGraphLayout:section", "right",
 
 		],
 

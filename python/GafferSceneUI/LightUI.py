@@ -58,10 +58,9 @@ Gaffer.Metadata.registerNode(
 			""",
 
 			"plugValueWidget:type", "GafferUI.LayoutPlugValueWidget",
-			"nodeGadget:nodulePosition", "left",
 			"nodule:type", "GafferUI::CompoundNodule",
-			"compoundNodule:orientation", "y",
-			"compoundNodule:spacing", 0.2,
+			"nodeGraphLayout:section", "left",
+			"nodeGraphLayout:spacing", 0.2,
 
 
 		],
@@ -73,7 +72,7 @@ Gaffer.Metadata.registerNode(
 			# appropriate values for each individual parameter,
 			# for the case where they get promoted to a box
 			# individually.
-			"nodeGadget:nodulePosition", "left",
+			"nodeGraphLayout:section", "left",
 			"nodule:type", "",
 
 		],
