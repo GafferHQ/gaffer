@@ -76,10 +76,9 @@ Gaffer.Metadata.registerNode(
 
 			## \todo Extend the Metadata API so we can register a provider for "*",
 			# which can automatically transfer all internal metadata.
-			"nodeGadget:nodulePosition", functools.partial( __shaderMetadata, name = "nodeGadget:nodulePosition" ),
+			"nodeGraphLayout:section", functools.partial( __shaderMetadata, name = "nodeGraphLayout:section" ),
 			"nodule:type", functools.partial( __shaderMetadata, name = "nodule:type" ),
-			"compoundNodule:orientation", functools.partial( __shaderMetadata, name = "compoundNodule:orientation" ),
-			"compoundNodule:spacing", functools.partial( __shaderMetadata, name = "compoundNodule:spacing" ),
+			"nodeGraphLayout:spacing", functools.partial( __shaderMetadata, name = "nodeGraphLayout:spacing" ),
 			"plugValueWidget:type", functools.partial( __shaderMetadata, name = "plugValueWidget:type" ),
 
 		],
@@ -93,7 +92,7 @@ Gaffer.Metadata.registerNode(
 			""",
 
 			"nodule:type", functools.partial( __shaderMetadata, name = "nodule:type" ),
-			"nodeGadget:nodulePosition", functools.partial( __shaderMetadata, name = "nodeGadget:nodulePosition" ),
+			"nodeGraphLayout:section", functools.partial( __shaderMetadata, name = "nodeGraphLayout:section" ),
 			"nodule:color", functools.partial( __shaderMetadata, name = "nodule:color" ),
 			"plugValueWidget:type", functools.partial( __shaderMetadata, name = "plugValueWidget:type" ),
 			"presetNames", functools.partial( __shaderMetadata, name = "presetNames" ),

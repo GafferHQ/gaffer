@@ -68,7 +68,7 @@ Gaffer.Metadata.registerNode(
 			""",
 
 			"nodule:type", "GafferUI::StandardNodule",
-			"nodeGadget:nodulePosition", "left",
+			"nodeGraphLayout:section", "left",
 
 		],
 
