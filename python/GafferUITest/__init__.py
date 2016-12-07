@@ -109,6 +109,7 @@ from MenuBarTest import MenuBarTest
 from GadgetWidgetTest import GadgetWidgetTest
 from CompoundNoduleTest import CompoundNoduleTest
 from SwitchNodeGadgetTest import SwitchNodeGadgetTest
+from NoduleLayoutTest import NoduleLayoutTest
 
 if __name__ == "__main__":
 	unittest.main()
