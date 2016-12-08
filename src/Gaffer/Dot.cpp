@@ -73,8 +73,8 @@ void Dot::setup( const Plug *plug )
 	Gaffer::PlugPtr in = plug->createCounterpart( g_inPlugName, Plug::In );
 	Gaffer::PlugPtr out = plug->createCounterpart( g_outPlugName, Plug::Out );
 
-	in->setFlags( Plug::Dynamic, true );
-	out->setFlags( Plug::Dynamic, true );
+	in->setFlags( Plug::Dynamic | Plug::Serialisable, true );
+	out->setFlags( Plug::Dynamic | Plug::Serialisable, true );
 
 	// Set up Metadata so our plugs appear in the right place. We must do this now rather
 	// than later because the NodeGraph will add a Nodule for the plug as soon as the plug
