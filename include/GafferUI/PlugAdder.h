@@ -63,6 +63,12 @@ class PlugAdder : public Gadget
 		/// Should be implemented by derived classes.
 		virtual void addPlug( Gaffer::Plug *connectionEndPoint ) = 0;
 
+		/// When emitted, shows a menu containing the specified plugs, and returns
+		/// the chosen plug. Implemented as a signal so the menu can be implemented
+		/// externally in Python code.
+		typedef boost::signal<Gaffer::Plug *( const std::string &title, const std::vector<Gaffer::Plug *> & )> PlugMenuSignal;
+		static PlugMenuSignal &plugMenuSignal();
+
 	protected :
 
 		virtual void doRender( const Style *style ) const;

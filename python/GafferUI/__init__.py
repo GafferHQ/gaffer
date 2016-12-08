@@ -271,6 +271,7 @@ from Playback import Playback
 from UIEditor import UIEditor
 import GraphBookmarksUI
 import DocumentationAlgo
+import _PlugAdder
 
 # and then specific node uis
 

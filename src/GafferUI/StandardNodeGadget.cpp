@@ -756,9 +756,9 @@ Gadget *StandardNodeGadget::closestDragDestinationProxy( const DragDropEvent &ev
 
 bool StandardNodeGadget::noduleIsCompatible( const Nodule *nodule, const DragDropEvent &event ) const
 {
-	if( IECore::runTimeCast<PlugAdder>( event.sourceGadget.get() ) )
+	if( const PlugAdder *plugAdder = IECore::runTimeCast<PlugAdder>( event.sourceGadget.get() ) )
 	{
-		return !IECore::runTimeCast<const CompoundNodule>( nodule );
+		return plugAdder->acceptsPlug( nodule->plug() );
 	}
 
 	const Plug *dropPlug = IECore::runTimeCast<Gaffer::Plug>( event.data.get() );

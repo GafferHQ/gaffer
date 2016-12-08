@@ -189,6 +189,12 @@ void PlugAdder::updateDragEndPoint( const Imath::V3f position, const Imath::V3f 
 	requestRender();
 }
 
+PlugAdder::PlugMenuSignal &PlugAdder::plugMenuSignal()
+{
+	static PlugMenuSignal s;
+	return s;
+}
+
 void PlugAdder::doRender( const Style *style ) const
 {
 	if( m_dragging )
