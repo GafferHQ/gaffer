@@ -118,10 +118,12 @@ void Switch<BaseType>::setup( const Plug *plug )
 		throw IECore::Exception( "Switch already has an \"out\" plug." );
 	}
 
+	PlugPtr inElement = plug->createCounterpart( "in0", Plug::In );
+	inElement->setFlags( Plug::Dynamic | Plug::Serialisable, true );
 	ArrayPlugPtr in = new ArrayPlug(
 		"in",
 		Plug::In,
-		plug->createCounterpart( "in0", Plug::In ),
+		inElement,
 		0,
 		Imath::limits<size_t>::max(),
 		Plug::Default | Plug::Dynamic
@@ -129,7 +131,7 @@ void Switch<BaseType>::setup( const Plug *plug )
 	BaseType::addChild( in );
 
 	PlugPtr out = plug->createCounterpart( "out", Plug::Out );
-	out->setFlags( Plug::Dynamic, true );
+	out->setFlags( Plug::Dynamic | Plug::Serialisable, true );
 	BaseType::addChild( out );
 }
 
