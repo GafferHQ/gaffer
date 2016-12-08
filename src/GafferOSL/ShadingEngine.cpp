@@ -263,8 +263,8 @@ class RenderState
 					{
 						// we unarray the TypeDesc so we can use it directly with
 						// convert_value() in get_userdata().
+						userData.arraylen = userData.typeDesc.arraylen;
 						userData.typeDesc.unarray();
-						userData.array = true;
 					}
 					m_userData.push_back( userData );
 				}
@@ -287,9 +287,16 @@ class RenderState
 			}
 
 			const char *src = static_cast<const char *>( it->basePointer );
-			if( it->array )
+			if( it->arraylen )
 			{
-				src += m_pointIndex * it->typeDesc.elementsize();
+				if( m_pointIndex < it->arraylen )
+				{
+					src += m_pointIndex * it->typeDesc.elementsize();
+				}
+				else
+				{
+					msg( Msg::Warning, "ShadingEngine", boost::format( "Error reading element %i of array of length %i - perhaps %s is not a vertex primvar." ) % m_pointIndex % it->arraylen % name );
+				}
 			}
 
 			return ShadingSystem::convert_value( value, type, src, it->typeDesc );
@@ -330,14 +337,14 @@ class RenderState
 		struct UserData
 		{
 			UserData()
-				:	basePointer( NULL ), array( false )
+				:	basePointer( NULL ), arraylen( 0 )
 			{
 			}
 
 			ustring name;
 			const void *basePointer;
 			TypeDesc typeDesc;
-			bool array;
+			size_t arraylen;
 
 			bool operator < ( const UserData &rhs ) const
 			{
