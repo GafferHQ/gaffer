@@ -363,6 +363,14 @@ def __nodeMetadata( node, name ) :
 
 def __plugMetadata( plug, name ) :
 
+	if name == "nodeGraphLayout:visible" and plug.getInput() is not None :
+		# Before the introduction of nodule visibility controls,
+		# users may have made connections to plugs which are now
+		# hidden by default. Make sure we continue to show them
+		# by default - they can still be hidden explicitly by
+		# adding an instance metadata value.
+		return True
+
 	node = plug.node()
 	if isinstance( node, GafferArnold.ArnoldShader ) :
 		key = plug.node()["name"].getValue() + "." + plug.relativeName( node )
