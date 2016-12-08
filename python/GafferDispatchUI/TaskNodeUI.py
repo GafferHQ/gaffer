@@ -67,7 +67,7 @@ Gaffer.Metadata.registerNode(
 			""",
 
 			"nodule:type", "GafferUI::CompoundNodule",
-			"compoundNodule:spacing", 0.4,
+			"nodeGraphLayout:spacing", 0.4,
 
 			"plugValueWidget:type", "",
 
