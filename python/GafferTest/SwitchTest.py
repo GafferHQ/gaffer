@@ -414,6 +414,27 @@ class SwitchTest( GafferTest.TestCase ) :
 			c.setFrame( 2 )
 			self.assertTrue( s["switch"].activeInPlug().isSame( s["switch"]["in"][0] ) )
 
+	def testSetupFromNonSerialisablePlug( self ) :
+
+		s = Gaffer.ScriptNode()
+
+		s["n1"] = GafferTest.AddNode()
+		s["n2"] = GafferTest.AddNode()
+
+		s["n1"]["sum"].setFlags( Gaffer.Plug.Flags.Serialisable, False )
+
+		s["switch"] = Gaffer.SwitchComputeNode()
+		s["switch"].setup( s["n1"]["sum"] )
+
+		s["switch"]["in"][0].setInput( s["n1"]["sum"] )
+		s["n2"]["op1"].setInput( s["switch"]["out"] )
+
+		s2 = Gaffer.ScriptNode()
+		s2.execute( s.serialise() )
+
+		self.assertTrue( s2["n2"]["op1"].getInput().isSame( s2["switch"]["out"] ) )
+		self.assertTrue( s2["switch"]["in"][0].getInput().isSame( s2["n1"]["sum"] ) )
+
 	def setUp( self ) :
 
 		GafferTest.TestCase.setUp( self )
