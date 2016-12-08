@@ -1256,5 +1256,45 @@ class GraphGadgetTest( GafferUITest.TestCase ) :
 		g.setNodePosition( s["n"], IECore.V2f( 0 ) )
 		self.assertEqual( g.unpositionedNodeGadgets(), [] )
 
+	def testInputConnectionMaintainedOnNoduleMove( self ) :
+
+		s = Gaffer.ScriptNode()
+		g = GafferUI.GraphGadget( s )
+
+		s["n1"] = GafferTest.AddNode()
+		s["n2"] = GafferTest.AddNode()
+
+		s["n2"]["op1"].setInput( s["n1"]["sum"] )
+
+		self.assertTrue( g.connectionGadget( s["n2"]["op1"] ) is not None )
+
+		for section in ( "top", "bottom", "top", "left", "right", "left", "bottom", "right" ) :
+			Gaffer.Metadata.registerValue( s["n2"]["op1"], "nodeGraphLayout:section", section )
+			connection = g.connectionGadget( s["n2"]["op1"] )
+			self.assertTrue( connection is not None )
+			self.assertTrue( connection.srcNodule() is not None )
+			self.assertTrue( connection.srcNodule().isSame( g.nodeGadget( s["n1"] ).nodule( s["n1"]["sum"] ) ) )
+			self.assertTrue( connection.dstNodule().isSame( g.nodeGadget( s["n2"] ).nodule( s["n2"]["op1"] ) ) )
+
+	def testOutputConnectionMaintainedOnNoduleMove( self ) :
+
+		s = Gaffer.ScriptNode()
+		g = GafferUI.GraphGadget( s )
+
+		s["n1"] = GafferTest.AddNode()
+		s["n2"] = GafferTest.AddNode()
+
+		s["n2"]["op1"].setInput( s["n1"]["sum"] )
+
+		self.assertTrue( g.connectionGadget( s["n2"]["op1"] ) is not None )
+
+		for section in ( "top", "bottom", "top", "left", "right", "left", "bottom", "right" ) :
+			Gaffer.Metadata.registerValue( s["n1"]["sum"], "nodeGraphLayout:section", section )
+			connection = g.connectionGadget( s["n2"]["op1"] )
+			self.assertTrue( connection is not None )
+			self.assertTrue( connection.srcNodule() is not None )
+			self.assertTrue( connection.srcNodule().isSame( g.nodeGadget( s["n1"] ).nodule( s["n1"]["sum"] ) ) )
+			self.assertTrue( connection.dstNodule().isSame( g.nodeGadget( s["n2"] ).nodule( s["n2"]["op1"] ) ) )
+
 if __name__ == "__main__":
 	unittest.main()

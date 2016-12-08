@@ -212,10 +212,15 @@ class GraphGadget : public ContainerGadget
 		NodeGadget *findNodeGadget( const Gaffer::Node *node ) const;
 		void updateNodeGadgetTransform( NodeGadget *nodeGadget );
 
-		void addConnectionGadgets( Gaffer::GraphComponent *nodeOrPlug );
-		void addConnectionGadget( Gaffer::Plug *dstPlug );
-		void removeConnectionGadgets( const Gaffer::GraphComponent *nodeOrPlug );
-		void removeConnectionGadget( const Gaffer::Plug *dstPlug );
+		Nodule *findNodule( const Gaffer::Plug *plug ) const;
+
+		void addConnectionGadgets( NodeGadget *nodeGadget );
+		void addConnectionGadgets( Nodule *nodule );
+		void addConnectionGadget( Nodule *dstNodule );
+		void removeConnectionGadgets( const NodeGadget *nodeGadget );
+		void removeConnectionGadgets( const Nodule *nodule );
+		void removeConnectionGadget( const Nodule *dstNodule );
+		ConnectionGadget *findConnectionGadget( const Nodule *dstNodule ) const;
 		ConnectionGadget *findConnectionGadget( const Gaffer::Plug *dstPlug ) const;
 		void updateConnectionGadgetMinimisation( ConnectionGadget *gadget );
 		ConnectionGadget *reconnectionGadgetAt( const NodeGadget *gadget, const IECore::LineSegment3f &lineInGadgetSpace ) const;
@@ -246,7 +251,7 @@ class GraphGadget : public ContainerGadget
 		typedef std::map<const Gaffer::Node *, NodeGadgetEntry> NodeGadgetMap;
 		NodeGadgetMap m_nodeGadgets;
 
-		typedef std::map<const Gaffer::Plug *, ConnectionGadget *> ConnectionGadgetMap;
+		typedef std::map<const Nodule *, ConnectionGadget *> ConnectionGadgetMap;
 		ConnectionGadgetMap m_connectionGadgets;
 
 		enum DragMode
