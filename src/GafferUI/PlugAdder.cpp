@@ -219,12 +219,7 @@ void PlugAdder::doRender( const Style *style ) const
 void PlugAdder::applyEdgeMetadata( Gaffer::Plug *plug, bool opposite ) const
 {
 	StandardNodeGadget::Edge edge = opposite ? oppositeEdge( m_edge ) : m_edge;
-
-	updateMetadata( plug, "nodeGadget:nodulePosition", edgeName( edge ) );
-	if( runTimeCast<ArrayPlug>( plug ) )
-	{
-		updateMetadata( plug, "compoundNodule:orientation", edgeOrientation( edge ) );
-	}
+	updateMetadata( plug, "nodeGraphLayout:section", edgeName( edge ) );
 }
 
 void PlugAdder::enter( GadgetPtr gadget, const ButtonEvent &event )

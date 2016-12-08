@@ -361,7 +361,7 @@ def __reorderPlugs( plugs, plug, newIndex ) :
 	plugs.insert( newIndex, plug )
 	with Gaffer.UndoContext( plug.ancestor( Gaffer.ScriptNode ) ) :
 		for index, plug in enumerate( plugs ) :
-			Gaffer.Metadata.registerValue( plug, "nodeGadget:noduleIndex", index )
+			Gaffer.Metadata.registerValue( plug, "nodeGraphLayout:index", index )
 
 def __nodeGraphPlugContextMenu( nodeGraph, plug, menuDefinition ) :
 
@@ -378,7 +378,7 @@ def __nodeGraphPlugContextMenu( nodeGraph, plug, menuDefinition ) :
 
 		menuDefinition.append( "/MoveDivider", { "divider" : True } )
 
-		currentEdge = Gaffer.Metadata.value( plug, "nodeGadget:nodulePosition" )
+		currentEdge = Gaffer.Metadata.value( plug, "nodeGraphLayout:section" )
 		if not currentEdge :
 			currentEdge = "top" if plug.direction() == plug.Direction.In else "bottom"
 
@@ -386,7 +386,7 @@ def __nodeGraphPlugContextMenu( nodeGraph, plug, menuDefinition ) :
 			menuDefinition.append(
 				"/Move To/" + edge.capitalize(),
 				{
-					"command" : functools.partial( __setPlugMetadata, plug, "nodeGadget:nodulePosition", edge ),
+					"command" : functools.partial( __setPlugMetadata, plug, "nodeGraphLayout:section", edge ),
 					"active" : edge != currentEdge and not readOnly,
 				}
 			)
