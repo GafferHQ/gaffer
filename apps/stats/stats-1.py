@@ -161,6 +161,10 @@ class stats( Gaffer.Application ) :
 
 			print ""
 
+			self.__printArgs( args )
+
+			print ""
+
 			self.__printSettings( script )
 
 			print ""
@@ -207,6 +211,11 @@ class stats( Gaffer.Application ) :
 		width = max( [ len( x[0] ) for x in items ] ) + 4
 		for name, value in items :
 			print "  {name:<{width}}{value}".format( name = name, width = width, value = value )
+
+	def __printArgs( self, args ) :
+
+		print "Args :\n"
+		self.__printItems( args.items() )
 
 	def __printSettings( self, script ) :
 
