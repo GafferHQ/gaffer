@@ -100,6 +100,52 @@ class OSLObjectTest( GafferOSLTest.OSLTestCase ) :
 		self.assertEqual( boundIn.min.y, boundOut.min.x )
 		self.assertEqual( boundIn.max.y, boundOut.max.x )
 
+	def testTransform( self ) :
+
+		p = GafferScene.Plane()
+		p["transform"]["translate"].setValue( IECore.V3f( 2, 0, 0 ) )
+
+		o = GafferOSL.OSLObject()
+		o["in"].setInput( p["out"] )
+
+		# shading network to swap x and y
+
+		inPoint = GafferOSL.OSLShader()
+		inPoint.loadShader( "ObjectProcessing/InPoint" )
+
+		code = GafferOSL.OSLCode()
+		code["parameters"].addChild( Gaffer.V3fPlug( "in" ) )
+		code["out"].addChild( Gaffer.Color3fPlug( "transformed", direction = Gaffer.Plug.Direction.Out ) )
+		code["out"].addChild( Gaffer.Color3fPlug( "transformedBack", direction = Gaffer.Plug.Direction.Out ) )
+		code["code"].setValue( 'transformed = transform( "world", point( in ) );\ntransformedBack = transform( "world", "object", point( transformed ) );' )
+
+		code["parameters"]["in"].setInput( inPoint["out"]["value"] )
+
+		outTransformed = GafferOSL.OSLShader()
+		outTransformed.loadShader( "ObjectProcessing/OutColor" )
+		outTransformed["parameters"]["name"].setValue( 'transformed' )
+		outTransformed["parameters"]["value"].setInput( code["out"]["transformed"] )
+
+		outTransformedBack = GafferOSL.OSLShader()
+		outTransformedBack.loadShader( "ObjectProcessing/OutColor" )
+		outTransformedBack["parameters"]["name"].setValue( 'transformedBack' )
+		outTransformedBack["parameters"]["value"].setInput( code["out"]["transformedBack"] )
+
+		primVarShader = GafferOSL.OSLShader()
+		primVarShader.loadShader( "ObjectProcessing/OutObject" )
+		primVarShader["parameters"]["in0"].setInput( outTransformed["out"]["primitiveVariable"] )
+		primVarShader["parameters"]["in1"].setInput( outTransformedBack["out"]["primitiveVariable"] )
+
+		o["shader"].setInput( primVarShader["out"] )
+
+		filter = GafferScene.PathFilter()
+		filter["paths"].setValue( IECore.StringVectorData( [ "/plane" ] ) )
+
+		o["filter"].setInput( filter["out"] )
+
+		self.assertEqual( o["out"].object( "/plane" )["transformed"].data, IECore.Color3fVectorData( [ IECore.Color3f( 1.5, -0.5, 0 ), IECore.Color3f( 2.5, -0.5, 0 ), IECore.Color3f( 1.5, 0.5, 0 ), IECore.Color3f( 2.5, 0.5, 0 ) ] ) )
+		self.assertEqual( o["out"].object( "/plane" )["transformedBack"].data, IECore.Color3fVectorData( [ IECore.Color3f( -0.5, -0.5, 0 ), IECore.Color3f( 0.5, -0.5, 0 ), IECore.Color3f( -0.5, 0.5, 0 ), IECore.Color3f( 0.5, 0.5, 0 ) ] ) )
+
 	def testOnlyAcceptsSurfaceShaders( self ) :
 
 		object = GafferOSL.OSLObject()
