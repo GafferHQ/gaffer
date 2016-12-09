@@ -117,6 +117,8 @@ std::string oslCodeSource( const OSLCode &oslCode, const std::string &shaderName
 	return oslCode.source( shaderName );
 }
 
+BOOST_PYTHON_MEMBER_FUNCTION_OVERLOADS( shadeOverloads, shade, 1, 2 );
+
 } // namespace
 
 BOOST_PYTHON_MODULE( _GafferOSL )
@@ -140,7 +142,7 @@ BOOST_PYTHON_MODULE( _GafferOSL )
 
 	IECorePython::RefCountedClass<ShadingEngine, IECore::RefCounted>( "ShadingEngine" )
 		.def( init<const IECore::ObjectVector *>() )
-		.def( "shade", &ShadingEngine::shade )
+		.def( "shade", &ShadingEngine::shade, shadeOverloads() )
 	;
 
 	scope s = GafferBindings::DependencyNodeClass<OSLCode>()

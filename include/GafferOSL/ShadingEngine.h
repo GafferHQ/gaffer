@@ -53,7 +53,31 @@ class ShadingEngine : public IECore::RefCounted
 		ShadingEngine( const IECore::ObjectVector *shaderNetwork );
 		~ShadingEngine();
 
-		IECore::CompoundDataPtr shade( const IECore::CompoundData *points ) const;
+		struct Transform
+		{
+
+			Transform()
+			{
+			}
+
+			Transform( Imath::M44f fromObjectSpace )
+				: fromObjectSpace( fromObjectSpace ), toObjectSpace( fromObjectSpace.inverse() )
+			{
+			}
+
+			Transform( Imath::M44f fromObjectSpace, Imath::M44f toObjectSpace )
+				: fromObjectSpace( fromObjectSpace ), toObjectSpace( toObjectSpace )
+			{
+			}
+
+			Imath::M44f fromObjectSpace;
+			Imath::M44f toObjectSpace;
+
+		};
+
+		typedef std::map<IECore::InternedString, Transform> Transforms;
+
+		IECore::CompoundDataPtr shade( const IECore::CompoundData *points, const Transforms &transforms = Transforms() ) const;
 
 	private :
 
