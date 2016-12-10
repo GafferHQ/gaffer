@@ -39,6 +39,7 @@
 #include "OSL/oslversion.h"
 
 #include "IECorePython/ScopedGILRelease.h"
+#include "IECorePython/IECoreBinding.h"
 
 #include "Gaffer/StringPlug.h"
 
@@ -117,7 +118,46 @@ std::string oslCodeSource( const OSLCode &oslCode, const std::string &shaderName
 	return oslCode.source( shaderName );
 }
 
-BOOST_PYTHON_MEMBER_FUNCTION_OVERLOADS( shadeOverloads, shade, 1, 2 );
+std::string repr( ShadingEngine::Transform &s )
+{
+	return boost::str(
+		boost::format( "GafferOSL.ShadingEngine.Transform( fromObjectSpace = %s, toObjectSpace = %s )" )
+			% IECorePython::repr<Imath::M44f>( s.fromObjectSpace )
+			% IECorePython::repr<Imath::M44f>( s.toObjectSpace )
+	);
+}
+
+IECore::CompoundDataPtr shadeWrapper( ShadingEngine &shadingEngine, const IECore::CompoundData *points, boost::python::dict pythonTransforms )
+{
+	ShadingEngine::Transforms transforms;
+
+	list values = pythonTransforms.values();
+	list keys = pythonTransforms.keys();
+
+	for (int i = 0; i < boost::python::len( keys ); i++)
+	{
+		object key( keys[i] );
+		object value( values[i] );
+
+		extract<const char *> keyElem( key );
+		if( !keyElem.check() )
+		{
+			PyErr_SetString( PyExc_TypeError, "Incompatible key type. Only strings accepted." );
+			throw_error_already_set();
+		}
+
+		extract<ShadingEngine::Transform> valueElem( value );
+		if( !valueElem.check() )
+		{
+			PyErr_SetString( PyExc_TypeError, "Incompatible value type. Only GafferOSL.ShadingEngine.Transform accepted." );
+			throw_error_already_set();
+		}
+
+		transforms[ keyElem() ] = valueElem();
+	}
+	
+	return shadingEngine.shade( points, transforms );
+}
 
 } // namespace
 
@@ -140,10 +180,26 @@ BOOST_PYTHON_MODULE( _GafferOSL )
 	def( "oslLibraryVersionPatch", &oslLibraryVersionPatch );
 	def( "oslLibraryVersionCode", &oslLibraryVersionCode );
 
-	IECorePython::RefCountedClass<ShadingEngine, IECore::RefCounted>( "ShadingEngine" )
-		.def( init<const IECore::ObjectVector *>() )
-		.def( "shade", &ShadingEngine::shade, shadeOverloads() )
-	;
+
+	{
+		scope s = IECorePython::RefCountedClass<ShadingEngine, IECore::RefCounted>( "ShadingEngine" )
+			.def( init<const IECore::ObjectVector *>() )
+			.def( "shade", &shadeWrapper, 
+				(
+					boost::python::arg( "points" ),
+					boost::python::arg( "transforms" ) = boost::python::dict()
+				)
+			)
+		;
+
+		class_<ShadingEngine::Transform>( "Transform" )
+			.def( init<const Imath::M44f &>() )
+			.def( init<const Imath::M44f &, const Imath::M44f&>() )
+			.def_readwrite( "fromObjectSpace", &ShadingEngine::Transform::fromObjectSpace )
+			.def_readwrite( "toObjectSpace", &ShadingEngine::Transform::toObjectSpace )
+			.def( "__repr__", &repr )
+		;
+	}
 
 	scope s = GafferBindings::DependencyNodeClass<OSLCode>()
 		.def( "source", &oslCodeSource, ( arg_( "shaderName" ) = "" ) )

@@ -345,5 +345,35 @@ class ShadingEngineTest( GafferOSLTest.OSLTestCase ) :
 		for i in range( 0, len( p["Ci"] ) ) :
 			self.assertEqual( p["Ci"][i], IECore.Color3f( 0, 1, 0 ) )
 
+	def testTransform( self ) :
+
+		s = self.compileShader( os.path.dirname( __file__ ) +  "/shaders/transform.osl" )
+
+		e = GafferOSL.ShadingEngine( IECore.ObjectVector( [
+			IECore.Shader( s, "surface" )
+		] ) )
+
+		p = e.shade( self.rectanglePoints() )
+
+		# Transform has no effect if world matrix not set
+		self.assertEqual( p["Ci"], IECore.Color3fVectorData( [ IECore.Color3f( i ) for i in self.rectanglePoints()["P"] ] ) )
+
+		worldMatrix = IECore.M44f()
+		worldMatrix.translate( IECore.V3f( 2, 0, 0 ) )
+		p = e.shade( self.rectanglePoints(), { "world" : GafferOSL.ShadingEngine.Transform( worldMatrix ) } )
+
+		# Transform from object to world
+		self.assertEqual( p["Ci"], IECore.Color3fVectorData( [ IECore.Color3f( i + IECore.V3f( 2, 0, 0 ) ) for i in self.rectanglePoints()["P"] ] ) )
+
+		e = GafferOSL.ShadingEngine( IECore.ObjectVector( [
+			IECore.Shader( s, "surface", { "backwards" : IECore.IntData( 1 ) } )
+		] ) )
+
+		p = e.shade( self.rectanglePoints(), { "world" : GafferOSL.ShadingEngine.Transform( worldMatrix ) } )
+
+		# Transform from world to object
+		self.assertEqual( p["Ci"], IECore.Color3fVectorData( [ IECore.Color3f( i + IECore.V3f( -2, 0, 0 ) ) for i in self.rectanglePoints()["P"] ] ) )
+
+
 if __name__ == "__main__":
 	unittest.main()
