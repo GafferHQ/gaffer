@@ -39,11 +39,14 @@
 #include "boost/algorithm/string/split.hpp"
 #include "boost/algorithm/string/predicate.hpp"
 #include "boost/algorithm/string/classification.hpp"
+#include "boost/unordered_map.hpp"
 
 #include "OSL/oslclosure.h"
 #include "OSL/genclosure.h"
 #include "OSL/oslversion.h"
 #include "OSL/oslexec.h"
+#include "OpenImageIO/ustring.h"
+
 
 #include "IECore/MessageHandler.h"
 #include "IECore/SimpleTypedData.h"
@@ -248,7 +251,7 @@ class RenderState
 
 	public :
 
-		RenderState( const IECore::CompoundData *shadingPoints )
+		RenderState( const IECore::CompoundData *shadingPoints, const ShadingEngine::Transforms &transforms )
 			:	m_pointIndex( 0 )
 		{
 			for( CompoundDataMap::const_iterator it = shadingPoints->readable().begin(),
@@ -271,6 +274,11 @@ class RenderState
 			}
 
 			sort( m_userData.begin(), m_userData.end() );
+
+			for( ShadingEngine::Transforms::const_iterator it = transforms.begin(); it != transforms.end(); it++ )
+			{
+				m_transforms[ OIIO::ustring( it->first.string() ) ] = it->second;
+			}
 		}
 
 		bool userData( ustring name, TypeDesc type, void *value ) const
@@ -299,10 +307,36 @@ class RenderState
 		{
 			m_pointIndex++;
 		}
+	
+		bool matrixToObject( OIIO::ustring name, Imath::M44f &result ) const
+		{
+			RenderStateTransforms::const_iterator i = m_transforms.find( name );
+			if( i != m_transforms.end() )
+			{
+				result = i->second.toObjectSpace;
+				return true;
+			}
+			return false;
+		}
+
+		bool matrixFromObject( OIIO::ustring name, Imath::M44f &result ) const
+		{
+			RenderStateTransforms::const_iterator i = m_transforms.find( name );
+			if( i != m_transforms.end() )
+			{
+				result = i->second.fromObjectSpace;
+				return true;
+			}
+			return false;
+		}
 
 	private :
 
 		size_t m_pointIndex;
+
+			
+		typedef boost::unordered_map< OIIO::ustring, ShadingEngine::Transform, OIIO::ustringHash > RenderStateTransforms;
+		RenderStateTransforms m_transforms;
 
 		struct UserData
 		{
@@ -361,6 +395,23 @@ class RendererServices : public OSL::RendererServices
 
 		virtual bool get_matrix( OSL::ShaderGlobals *sg, OSL::Matrix44 &result, ustring from, float time )
 		{
+			const RenderState *renderState = sg ? static_cast<RenderState *>( sg->renderstate ) : NULL;
+			if( renderState )
+			{
+				return renderState->matrixToObject( from, result  );
+			}
+
+			return false;
+		}
+
+		virtual bool get_inverse_matrix( OSL::ShaderGlobals *sg, OSL::Matrix44 &result, ustring to, float time )
+		{
+			const RenderState *renderState = sg ? static_cast<RenderState *>( sg->renderstate ) : NULL;
+			if( renderState )
+			{
+				return renderState->matrixFromObject( to, result  );
+			}
+
 			return false;
 		}
 
@@ -507,6 +558,8 @@ OSL::ShadingSystem *shadingSystem()
 		s->attribute( "searchpath:shader", searchPath );
 	}
 	s->attribute( "lockgeom", 1 );
+
+	s->attribute( "commonspace", "object" );
 
 	return s;
 }
@@ -836,7 +889,7 @@ ShadingEngine::~ShadingEngine()
 	delete static_cast<ShaderGroupRef *>( m_shaderGroupRef );
 }
 
-IECore::CompoundDataPtr ShadingEngine::shade( const IECore::CompoundData *points ) const
+IECore::CompoundDataPtr ShadingEngine::shade( const IECore::CompoundData *points, const Transforms &transforms ) const
 {
 	// Get the data for "P" - this determines the number of points to be shaded.
 
@@ -857,7 +910,7 @@ IECore::CompoundDataPtr ShadingEngine::shade( const IECore::CompoundData *points
 	// been provided.
 
 	ShaderGlobals shaderGlobals;
-    memset( &shaderGlobals, 0, sizeof( ShaderGlobals ) );
+	memset( &shaderGlobals, 0, sizeof( ShaderGlobals ) );
 
 	shaderGlobals.dPdx = uniformValue<V3f>( points, "dPdx" );
 	shaderGlobals.dPdy = uniformValue<V3f>( points, "dPdy" );
@@ -884,7 +937,7 @@ IECore::CompoundDataPtr ShadingEngine::shade( const IECore::CompoundData *points
 	// Add a RenderState to the ShaderGlobals. This will
 	// get passed to our RendererServices queries.
 
-	RenderState renderState( points );
+	RenderState renderState( points, transforms );
 	shaderGlobals.renderstate = &renderState;
 
 	// Get pointers to varying data, we'll use these to
