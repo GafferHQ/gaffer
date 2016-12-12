@@ -34,9 +34,13 @@
 #
 ##########################################################################
 
+import math
+import functools
+
 import Gaffer
 import GafferUI
 import GafferScene
+import GafferSceneUI
 
 ##########################################################################
 # Metadata
@@ -91,3 +95,43 @@ Gaffer.Metadata.registerNode(
 	}
 
 )
+
+##########################################################################
+# NodeEditor tool menu
+##########################################################################
+
+def __copyCamera( node, camera ) :
+
+	with Gaffer.UndoContext( node.scriptNode() ) :
+
+		s, h, r, t = camera.getTransform().transform().extractSHRT()
+		node["transform"]["translate"].setValue( t )
+		node["transform"]["rotate"].setValue( r * 180.0 / math.pi )
+		node["transform"]["scale"].setValue( s )
+
+def __nodeEditorToolMenu( nodeEditor, node, menuDefinition ) :
+
+	if not isinstance( node, GafferScene.Camera ) :
+		return
+
+	layout = nodeEditor.ancestor( GafferUI.CompoundEditor )
+	if layout is None :
+		return
+
+	viewers = [ v for v in layout.editors( GafferUI.Viewer ) if isinstance( v.view(), GafferSceneUI.SceneView ) ]
+	if not viewers :
+		return
+
+	for viewer in viewers :
+
+		menuDefinition.append(
+
+			"/Copy From Viewer" + ( "/" + viewer.getTitle() if len( viewers ) > 1 else "" ),
+			{
+				"command" : functools.partial( __copyCamera, node, viewer.view().viewportGadget().getCamera() ),
+				"active" : not Gaffer.readOnly( node["transform"] ),
+			}
+
+		)
+
+__nodeEditorToolMenuConnection = GafferUI.NodeEditor.toolMenuSignal().connect( __nodeEditorToolMenu )
