@@ -331,7 +331,8 @@ IECore::ConstCompoundDataPtr OSLImage::computeShading( const Gaffer::Context *co
 		shadingPoints->writable()[*it] = boost::const_pointer_cast<FloatVectorData>( inPlug()->channelData( *it, tileOrigin ) );
 	}
 
-	CompoundDataPtr result = shadingEngine->shade( shadingPoints.get() );
+	ShadingEngine::Transforms transforms;
+	CompoundDataPtr result = shadingEngine->shade( shadingPoints.get(), transforms );
 
 	// remove results that aren't suitable to become channels
 	for( CompoundDataMap::iterator it = result->writable().begin(); it != result->writable().end();  )
