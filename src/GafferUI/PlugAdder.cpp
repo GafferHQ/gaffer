@@ -125,18 +125,6 @@ const char *edgeName( StandardNodeGadget::Edge edge )
 	}
 }
 
-const char *edgeOrientation( StandardNodeGadget::Edge edge )
-{
-	switch( edge )
-	{
-		case StandardNodeGadget::TopEdge :
-		case StandardNodeGadget::BottomEdge :
-			return "x";
-		default :
-			return "y";
-	}
-}
-
 void updateMetadata( Plug *plug, InternedString key, const char *value )
 {
 	ConstStringDataPtr s = Metadata::value<StringData>( plug, key );
