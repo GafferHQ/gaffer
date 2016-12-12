@@ -201,7 +201,13 @@ class stats( Gaffer.Application ) :
 		else :
 			version = "unknown"
 
-		print "Gaffer Version : {version}".format( version = version )
+		versions = (
+			( "Script", version ),
+			( "Current", Gaffer.About.versionString() ),
+		)
+
+		print "Gaffer Version :\n"
+		self.__printItems( versions )
 
 	def __printItems( self, items ) :
 
