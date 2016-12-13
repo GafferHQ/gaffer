@@ -147,7 +147,23 @@ float spacing( const Gaffer::GraphComponent *parent, IECore::InternedString sect
 			f = Metadata::value<FloatData>( parent, g_compoundNoduleSpacingKey );
 		}
 	}
-	return f ? f->readable() : 0.0f;
+
+	if( f )
+	{
+		return f->readable();
+	}
+	else if( section == g_left || section == g_right )
+	{
+		return 0.2f;
+	}
+	else if( section == g_top || section == g_bottom )
+	{
+		return 2.0f;
+	}
+	else
+	{
+		return 0.0f;
+	}
 }
 
 bool affectsSpacing( IECore::InternedString key, IECore::InternedString section )
