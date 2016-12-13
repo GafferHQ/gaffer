@@ -54,7 +54,7 @@ namespace Gaffer
 IE_CORE_FORWARDDECLARE( Plug )
 
 /// A monitor which collects statistics about the frequency
-/// of hash and compute processes per plug.
+/// and duration of hash and compute processes per plug.
 class PerformanceMonitor : public Monitor
 {
 
@@ -98,7 +98,7 @@ class PerformanceMonitor : public Monitor
 	private :
 
 		// For performance reasons we accumulate our statistics into
-		// thread local storage while computations are running.		
+		// thread local storage while computations are running.
 		struct ThreadData
 		{
 			// Stores the per-plug statistics captured by this thread.
@@ -111,7 +111,7 @@ class PerformanceMonitor : public Monitor
 			// The last time measurement we made.
 			boost::chrono::high_resolution_clock::time_point then;
 		};
-		
+
 		tbb::enumerable_thread_specific<ThreadData, tbb::cache_aligned_allocator<ThreadData>, tbb::ets_key_per_instance> m_threadData;
 
 		// Then when we want to query it, we collate it into m_statistics.
