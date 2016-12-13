@@ -193,6 +193,8 @@ class stats( Gaffer.Application ) :
 
 		print
 
+		return 0
+
 	def __printVersion( self, script ) :
 
 		numbers = [ Gaffer.Metadata.nodeValue( script, "serialiser:" + x + "Version" ) for x in ( "milestone", "major", "minor", "patch" ) ]
