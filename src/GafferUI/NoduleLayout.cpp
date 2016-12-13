@@ -100,6 +100,8 @@ IECore::InternedString g_top( "top" );
 IECore::InternedString g_indexKey( "nodeGraphLayout:index" );
 IECore::InternedString g_sectionKey( "nodeGraphLayout:section" );
 IECore::InternedString g_visibleKey( "nodeGraphLayout:visible" );
+IECore::InternedString g_spacingKey( "nodeGraphLayout:spacing" );
+IECore::InternedString g_directionKey( "nodeGraphLayout:direction" );
 IECore::InternedString g_noduleTypeKey( "nodule:type" );
 
 // Deprecated metadata keys
@@ -125,7 +127,7 @@ float spacing( const Gaffer::GraphComponent *parent, IECore::InternedString sect
 	}
 	else
 	{
-		f = Metadata::value<FloatData>( parent, "nodeGraphLayout:spacing" );
+		f = Metadata::value<FloatData>( parent, g_spacingKey );
 	}
 
 	if( !f )
@@ -159,7 +161,7 @@ bool affectsSpacing( IECore::InternedString key, IECore::InternedString section 
 	}
 	else
 	{
-		if( key == "nodeGraphLayout:spacing" )
+		if( key == g_spacingKey )
 		{
 			return true;
 		}
@@ -244,7 +246,7 @@ LinearContainer::Direction direction( const Gaffer::GraphComponent *parent, IECo
 	}
 	else
 	{
-		d = Metadata::value<StringData>( parent, "nodeGraphLayout:direction" );
+		d = Metadata::value<StringData>( parent, g_directionKey );
 	}
 
 	if( !d && section == "" )
