@@ -120,13 +120,13 @@ void GafferBindings::bindMonitor()
 
 	enum_<PerformanceMetric>( "PerformanceMetric" )
 		.value( "Invalid", Invalid )
-		.value( "HashCount", HashCount )
-		.value( "ComputeCount", ComputeCount )
+		.value( "TotalDuration", TotalDuration )
 		.value( "HashDuration", HashDuration )
 		.value( "ComputeDuration", ComputeDuration )
-		.value( "TotalDuration", TotalDuration )
 		.value( "PerHashDuration", PerHashDuration )
 		.value( "PerComputeDuration", PerComputeDuration )
+		.value( "HashCount", HashCount )
+		.value( "ComputeCount", ComputeCount )
 		.value( "HashesPerCompute", HashesPerCompute )
 	;
 

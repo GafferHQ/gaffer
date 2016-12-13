@@ -161,6 +161,10 @@ class stats( Gaffer.Application ) :
 
 			print ""
 
+			self.__printArgs( args )
+
+			print ""
+
 			self.__printSettings( script )
 
 			print ""
@@ -189,6 +193,8 @@ class stats( Gaffer.Application ) :
 
 		print
 
+		return 0
+
 	def __printVersion( self, script ) :
 
 		numbers = [ Gaffer.Metadata.nodeValue( script, "serialiser:" + x + "Version" ) for x in ( "milestone", "major", "minor", "patch" ) ]
@@ -197,7 +203,13 @@ class stats( Gaffer.Application ) :
 		else :
 			version = "unknown"
 
-		print "Gaffer Version : {version}".format( version = version )
+		versions = (
+			( "Script", version ),
+			( "Current", Gaffer.About.versionString() ),
+		)
+
+		print "Gaffer Version :\n"
+		self.__printItems( versions )
 
 	def __printItems( self, items ) :
 
@@ -207,6 +219,11 @@ class stats( Gaffer.Application ) :
 		width = max( [ len( x[0] ) for x in items ] ) + 4
 		for name, value in items :
 			print "  {name:<{width}}{value}".format( name = name, width = width, value = value )
+
+	def __printArgs( self, args ) :
+
+		print "Args :\n"
+		self.__printItems( args.items() )
 
 	def __printSettings( self, script ) :
 

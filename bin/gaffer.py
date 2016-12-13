@@ -145,16 +145,8 @@ args = sys.argv[1:]
 if args and args[0] in ( "-help", "-h", "--help", "-H" ) :
 	if len( args ) > 1 :
 		app = loadApp( args[1] )
-		formatter = IECore.WrappedTextFormatter( sys.stdout )
-		formatter.paragraph( "Name : " + app.path )
-		if app.description :
-			formatter.paragraph( app.description + "\n" )
-		if len( app.parameters().values() ):
-			formatter.heading( "Parameters" )
-			formatter.indent()
-			for p in app.parameters().values() :
-				IECore.formatParameterHelp( p, formatter )
-			formatter.unindent()
+		app["help"].setTypedValue( True )
+		app.run()
 		sys.exit( 0 )
 	else :
 		sys.stdout.write( helpText )

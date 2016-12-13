@@ -36,6 +36,7 @@
 ##########################################################################
 
 import os
+import sys
 import inspect
 import cProfile
 
@@ -52,6 +53,13 @@ class Application( IECore.Parameterised ) :
 		self.parameters().addParameters(
 
 			[
+
+				IECore.BoolParameter(
+					name = "help",
+					description = "Prints names and descriptions of each parameter "
+						"rather than running the application.",
+					defaultValue = False,
+				),
 
 				IECore.IntParameter(
 					name = "threads",
@@ -85,6 +93,10 @@ class Application( IECore.Parameterised ) :
 
 	## Called to run the application and return a status value.
 	def run( self ) :
+
+		if self.parameters()["help"].getTypedValue() :
+			self.__formatHelp()
+			return 0
 
 		args = self.parameters().getValidatedValue()
 
@@ -128,6 +140,19 @@ class Application( IECore.Parameterised ) :
 
 			self._executeStartupFiles( self.root().getName() )
 			return self._run( args )
+
+	def __formatHelp( self ) :
+
+		formatter = IECore.WrappedTextFormatter( sys.stdout )
+		formatter.paragraph( "Name : " + self.typeName() )
+		if self.description :
+			formatter.paragraph( self.description + "\n" )
+		if len( self.parameters().values() ):
+			formatter.heading( "Parameters" )
+			formatter.indent()
+			for p in self.parameters().values() :
+				IECore.formatParameterHelp( p, formatter )
+			formatter.unindent()
 
 IECore.registerRunTimeTyped( Application, typeName = "Gaffer::Application" )
 

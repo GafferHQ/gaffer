@@ -47,16 +47,16 @@ class PerformanceMonitor;
 enum PerformanceMetric
 {
 	Invalid,
-	HashCount,
-	ComputeCount,
+	TotalDuration,
 	HashDuration,
 	ComputeDuration,
-	TotalDuration,
 	PerHashDuration,
 	PerComputeDuration,
+	HashCount,
+	ComputeCount,
 	HashesPerCompute,
 
-	First = HashCount,
+	First = TotalDuration,
 	Last = HashesPerCompute
 };
 

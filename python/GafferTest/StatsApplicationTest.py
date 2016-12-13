@@ -60,7 +60,7 @@ class StatsApplicationTest( GafferTest.TestCase ) :
 
 		o = subprocess.check_output( [ "gaffer", "stats", script["fileName"].getValue() ] )
 
-		self.assertTrue( "Gaffer Version : " + Gaffer.About.versionString() in o )
+		self.assertTrue( Gaffer.About.versionString() in o )
 		self.assertTrue( re.search( r"frameRange\.start\s*10", o ) )
 		self.assertTrue( re.search( r"frameRange\.end\s*50", o ) )
 		self.assertTrue( re.search( r"framesPerSecond\s*24.0", o ) )
