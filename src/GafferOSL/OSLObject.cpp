@@ -85,6 +85,10 @@ void OSLObject::affects( const Gaffer::Plug *input, AffectedPlugsContainer &outp
 	{
 		outputs.push_back( outPlug()->objectPlug() );
 	}
+	else if( input == inPlug()->transformPlug() )
+	{
+		outputs.push_back( outPlug()->objectPlug() );
+	}
 	else if( input == outPlug()->objectPlug() )
 	{
 		outputs.push_back( outPlug()->boundPlug() );
@@ -147,7 +151,10 @@ void OSLObject::hashProcessedObject( const ScenePath &path, const Gaffer::Contex
 	{
 		shader->attributesHash( h );
 	}
+	h.append( inPlug()->fullTransformHash( path ) );
 }
+
+static const IECore::InternedString g_world("world");
 
 IECore::ConstObjectPtr OSLObject::computeProcessedObject( const ScenePath &path, const Gaffer::Context *context, IECore::ConstObjectPtr inputObject ) const
 {
@@ -183,7 +190,11 @@ IECore::ConstObjectPtr OSLObject::computeProcessedObject( const ScenePath &path,
 
 	PrimitivePtr outputPrimitive = inputPrimitive->copy();
 
-	CompoundDataPtr shadedPoints = shadingEngine->shade( shadingPoints.get() );
+	ShadingEngine::Transforms transforms;
+
+	transforms[ g_world ] = ShadingEngine::Transform( inPlug()->fullTransform( path ));
+
+	CompoundDataPtr shadedPoints = shadingEngine->shade( shadingPoints.get(), transforms );
 	for( CompoundDataMap::const_iterator it = shadedPoints->readable().begin(), eIt = shadedPoints->readable().end(); it != eIt; ++it )
 	{
 		if( it->first != "Ci" )
