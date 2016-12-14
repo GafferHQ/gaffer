@@ -52,7 +52,7 @@ def appendNodeContextMenuDefinitions( nodeGraph, node, menuDefinition ) :
 		{
 			"checkBox" : __getBookmarked( node ),
 			"command" : functools.partial( __setBookmarked, node ),
-			"active" : not Gaffer.readOnly( node ),
+			"active" : not Gaffer.MetadataAlgo.readOnly( node ),
 		}
 	)
 
@@ -89,7 +89,7 @@ def appendPlugContextMenuDefinitions( nodeGraph, plug, menuDefinition ) :
 				"/Connect Bookmark/" + label,
 				{
 					"command" : functools.partial( __connect, inPlug, outPlug ),
-					"active" : not outPlug.isSame( inPlug.getInput() ) and not Gaffer.readOnly( inPlug )
+					"active" : not outPlug.isSame( inPlug.getInput() ) and not Gaffer.MetadataAlgo.readOnly( inPlug )
 				}
 			)
 

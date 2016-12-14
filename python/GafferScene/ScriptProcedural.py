@@ -217,6 +217,6 @@ class ScriptProcedural( IECore.ParameterisedProcedural ) :
 
 		sys.stderr.write( "\nPerformance Monitor\n===================\n\n" )
 
-		sys.stderr.write( Gaffer.formatStatistics( cls.__performanceMonitor ) )
+		sys.stderr.write( Gaffer.MonitorAlgo.formatStatistics( cls.__performanceMonitor ) )
 
 IECore.registerRunTimeTyped( ScriptProcedural, typeName = "GafferScene::ScriptProcedural" )

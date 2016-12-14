@@ -370,7 +370,7 @@ class stats( Gaffer.Application ) :
 			self.__printItems( self.__timers.items() )
 
 			if self.__performanceMonitor is not None :
-				print "\n" + Gaffer.formatStatistics(
+				print "\n" + Gaffer.MonitorAlgo.formatStatistics(
 					self.__performanceMonitor,
 					maxLinesPerMetric = args["maxLinesPerMetric"].value
 				)

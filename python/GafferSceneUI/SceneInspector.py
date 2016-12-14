@@ -277,7 +277,7 @@ class SceneInspector( GafferUI.NodeSetEditor ) :
 			targets = []
 			for scene in self.__scenePlugs :
 				for path in paths :
-					if not GafferScene.exists( scene, path ) :
+					if not GafferScene.SceneAlgo.exists( scene, path ) :
 						# selection may not be valid for both scenes,
 						# and we can't inspect invalid paths.
 						path = None
@@ -932,7 +932,7 @@ class DiffColumn( GafferUI.Widget ) :
 			visible = False
 			if row.__valid :
 				numValidRows += 1
-				if Gaffer.matchMultiple( row.inspector().name().lower(), patterns ) :
+				if Gaffer.StringAlgo.matchMultiple( row.inspector().name().lower(), patterns ) :
 					visible = True
 
 			row.setVisible( visible )
@@ -1225,7 +1225,7 @@ class _HistorySection( Section ) :
 			if sourceScene.node() == target.scene.node() :
 				return None
 
-			if not GafferScene.exists( sourceScene, target.path ) :
+			if not GafferScene.SceneAlgo.exists( sourceScene, target.path ) :
 				return None
 
 			return SceneInspector.Target( sourceScene, target.path )

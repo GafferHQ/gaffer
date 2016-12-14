@@ -94,7 +94,7 @@ class FormatPlugTest( GafferImageTest.ImageTestCase ) :
 			# Even if we haven't specified a default context, we should still
 			# be given something.
 			self.assertFalse(
-				GafferImage.empty(
+				GafferImage.BufferAlgo.empty(
 					constant["out"]["format"].getValue().getDisplayWindow()
 				)
 			)
@@ -139,7 +139,7 @@ class FormatPlugTest( GafferImageTest.ImageTestCase ) :
 		with s.context() :
 
 			self.assertFalse(
-				GafferImage.empty(
+				GafferImage.BufferAlgo.empty(
 					s["c"]["out"]["format"].getValue().getDisplayWindow()
 				)
 			)

@@ -55,9 +55,9 @@ class StringAlgoTest( GafferTest.TestCase ) :
 			( "dog collar", "dog*", True ),
 		] :
 
-			self.assertEqual( Gaffer.match( s, p ), r )
+			self.assertEqual( Gaffer.StringAlgo.match( s, p ), r )
 			if " " not in s :
-				self.assertEqual( Gaffer.matchMultiple( s, p ), r )
+				self.assertEqual( Gaffer.StringAlgo.matchMultiple( s, p ), r )
 
 	def testMatchMultiple( self ) :
 
@@ -77,7 +77,7 @@ class StringAlgoTest( GafferTest.TestCase ) :
 			( "a1", "*1 b2", True ),
 		] :
 
-			self.assertEqual( Gaffer.matchMultiple( s, p ), r )
+			self.assertEqual( Gaffer.StringAlgo.matchMultiple( s, p ), r )
 
 	def testHasWildcards( self ) :
 
@@ -91,7 +91,7 @@ class StringAlgoTest( GafferTest.TestCase ) :
 			( "*a", True ),
 		] :
 
-			self.assertEqual( Gaffer.hasWildcards( p ), r )
+			self.assertEqual( Gaffer.StringAlgo.hasWildcards( p ), r )
 
 if __name__ == "__main__":
 	unittest.main()

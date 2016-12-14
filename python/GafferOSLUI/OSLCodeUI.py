@@ -176,7 +176,7 @@ class _ParametersFooter( GafferUI.PlugValueWidget ) :
 					),
 					toolTip = "Add " + ( "Input" if plug.direction() == plug.Direction.In else "Output" ),
 				)
-				menuButton.setEnabled( not Gaffer.readOnly( plug ) )
+				menuButton.setEnabled( not Gaffer.MetadataAlgo.readOnly( plug ) )
 
 				GafferUI.Spacer( IECore.V2i( 1 ), IECore.V2i( 999999, 1 ), parenting = { "expand" : True } )
 
@@ -327,7 +327,7 @@ def __plugPopupMenu( menuDefinition, plugValueWidget ) :
 			"/Delete",
 			{
 				"command" : IECore.curry( __deletePlug, plug ),
-				"active" : not plugValueWidget.getReadOnly() and not Gaffer.readOnly( plug )
+				"active" : not plugValueWidget.getReadOnly() and not Gaffer.MetadataAlgo.readOnly( plug )
 			}
 		)
 
@@ -409,7 +409,7 @@ def __plugPopupMenu( menuDefinition, plugValueWidget ) :
 				"/Insert" + label,
 				{
 					"command" : functools.partial( plugValueWidget.textWidget().insertText, text ),
-					"active" : not plugValueWidget.getReadOnly() and not Gaffer.readOnly( plug ),
+					"active" : not plugValueWidget.getReadOnly() and not Gaffer.MetadataAlgo.readOnly( plug ),
 				},
 			)
 

@@ -122,7 +122,7 @@ def __popupMenu( menuDefinition, plugValueWidget ) :
 		return
 
 	input = plug.getInput()
-	if input is not None or not plugValueWidget._editable() or Gaffer.readOnly( plug ) :
+	if input is not None or not plugValueWidget._editable() or Gaffer.MetadataAlgo.readOnly( plug ) :
 		return
 
 	languages = [ l for l in Gaffer.Expression.languages() if Gaffer.Expression.defaultExpression( plug, l ) ]
@@ -158,10 +158,10 @@ class _ExpressionWidget( GafferUI.Widget ) :
 
 				GafferUI.Label( "Language" )
 				self.__languageMenu = GafferUI.MenuButton( "", menu = GafferUI.Menu( Gaffer.WeakMethod( self.__languageMenuDefinition ) ) )
-				self.__languageMenu.setEnabled( not Gaffer.readOnly( node ) )
+				self.__languageMenu.setEnabled( not Gaffer.MetadataAlgo.readOnly( node ) )
 
 			self.__textWidget = GafferUI.MultiLineTextWidget( role = GafferUI.MultiLineTextWidget.Role.Code )
-			self.__textWidget.setEditable( not Gaffer.readOnly( node ) )
+			self.__textWidget.setEditable( not Gaffer.MetadataAlgo.readOnly( node ) )
 
 			self.__activatedConnection = self.__textWidget.activatedSignal().connect( Gaffer.WeakMethod( self.__activated ) )
 			self.__editingFinishedConnection = self.__textWidget.editingFinishedSignal().connect( Gaffer.WeakMethod( self.__editingFinished ) )

@@ -337,7 +337,7 @@ class screengrab( Gaffer.Application ) :
 		)
 		for node in script.selection() :
 			for scenePlug in [ p for p in node.children( GafferScene.ScenePlug ) if p.direction() == Gaffer.Plug.Direction.Out ] :
-				GafferScene.matchingPaths( fullyExpandedPathsFilter, scenePlug, pathsToExpand )
+				GafferScene.SceneAlgo.matchingPaths( fullyExpandedPathsFilter, scenePlug, pathsToExpand )
 
 		script.context()["ui:scene:expandedPaths"] = GafferScene.PathMatcherData( pathsToExpand )
 		script.context()["ui:scene:selectedPaths"] = args["scene"]["selectedPaths"]

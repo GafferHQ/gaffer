@@ -115,7 +115,7 @@ class NodeEditor( GafferUI.NodeSetEditor ) :
 				# our Widget readonlyness. Really our Widget readonlyness mechanism is a
 				# bit lacking, and it should really be inherited automatically so we don't
 				# have to propagate it like this.
-				self.__nameWidget.setEditable( not self.getReadOnly() and not Gaffer.readOnly( node ) )
+				self.__nameWidget.setEditable( not self.getReadOnly() and not Gaffer.MetadataAlgo.readOnly( node ) )
 
 				with GafferUI.ListContainer( GafferUI.ListContainer.Orientation.Horizontal, spacing=4 ) as infoSection :
 
@@ -170,7 +170,7 @@ class NodeEditor( GafferUI.NodeSetEditor ) :
 			"/Revert to Defaults",
 			{
 				"command" : Gaffer.WeakMethod( self.__revertToDefaults ),
-				"active" : not Gaffer.readOnly( self.nodeUI().node() ),
+				"active" : not Gaffer.MetadataAlgo.readOnly( self.nodeUI().node() ),
 			}
 		)
 
@@ -195,7 +195,7 @@ class NodeEditor( GafferUI.NodeSetEditor ) :
 				elif plug.getName().startswith( "__" ) :
 					# Private plugs are none of our business.
 					return
-				elif Gaffer.readOnly( plug ) :
+				elif Gaffer.MetadataAlgo.readOnly( plug ) :
 					return
 
 				if isinstance( plug, Gaffer.ValuePlug ) :

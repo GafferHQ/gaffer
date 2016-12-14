@@ -390,15 +390,15 @@ class IsolateTest( GafferSceneTest.SceneTestCase ) :
 
 		self.assertSceneValid( isolate["out"] )
 
-		self.assertTrue( GafferScene.exists( isolate["out"], "/group/model1/sphere" ) )
-		self.assertTrue( GafferScene.exists( isolate["out"], "/group/model1/light" ) )
-		self.assertTrue( GafferScene.exists( isolate["out"], "/group/model1" ) )
+		self.assertTrue( GafferScene.SceneAlgo.exists( isolate["out"], "/group/model1/sphere" ) )
+		self.assertTrue( GafferScene.SceneAlgo.exists( isolate["out"], "/group/model1/light" ) )
+		self.assertTrue( GafferScene.SceneAlgo.exists( isolate["out"], "/group/model1" ) )
 
-		self.assertFalse( GafferScene.exists( isolate["out"], "/group/model2/sphere" ) )
-		self.assertFalse( GafferScene.exists( isolate["out"], "/group/model2" ) )
+		self.assertFalse( GafferScene.SceneAlgo.exists( isolate["out"], "/group/model2/sphere" ) )
+		self.assertFalse( GafferScene.SceneAlgo.exists( isolate["out"], "/group/model2" ) )
 
-		self.assertFalse( GafferScene.exists( isolate["out"], "/group/light" ) )
-		self.assertFalse( GafferScene.exists( isolate["out"], "/group/camera" ) )
+		self.assertFalse( GafferScene.SceneAlgo.exists( isolate["out"], "/group/light" ) )
+		self.assertFalse( GafferScene.SceneAlgo.exists( isolate["out"], "/group/camera" ) )
 
 		self.assertEqual( isolate["out"].set( "__lights" ).value.paths(), [ "/group/model1/light" ] )
 		self.assertEqual( isolate["out"].set( "__cameras" ).value.paths(), [] )
@@ -413,7 +413,7 @@ class IsolateTest( GafferSceneTest.SceneTestCase ) :
 
 		self.assertSceneValid( isolate["out"] )
 
-		self.assertFalse( GafferScene.exists( isolate["out"], "/group/camera" ) )
+		self.assertFalse( GafferScene.SceneAlgo.exists( isolate["out"], "/group/camera" ) )
 
 		self.assertEqual( isolate["out"].set( "__lights" ), group["out"].set( "__lights" ) )
 		self.assertEqual( isolate["out"].set( "__cameras" ).value.paths(), [] )
@@ -431,7 +431,7 @@ class IsolateTest( GafferSceneTest.SceneTestCase ) :
 
 		self.assertSceneValid( isolate["out"] )
 
-		self.assertTrue( GafferScene.exists( isolate["out"], "/group/camera" ) )
+		self.assertTrue( GafferScene.SceneAlgo.exists( isolate["out"], "/group/camera" ) )
 
 		self.assertEqual( isolate["out"].set( "__lights" ), group["out"].set( "__lights" ) )
 		self.assertEqual( isolate["out"].set( "__cameras" ), group["out"].set( "__cameras" ) )
@@ -456,7 +456,7 @@ class IsolateTest( GafferSceneTest.SceneTestCase ) :
 		isolate["filter"].setInput( filter["out"] )
 
 		self.assertSceneValid( isolate["out"] )
-		self.assertTrue( GafferScene.exists( isolate["out"], "/sphere" ) )
+		self.assertTrue( GafferScene.SceneAlgo.exists( isolate["out"], "/sphere" ) )
 
 if __name__ == "__main__":
 	unittest.main()

@@ -46,34 +46,34 @@ class BufferAlgoTest( GafferImageTest.ImageTestCase ) :
 
 	def testEmpty( self ) :
 
-		self.assertTrue( GafferImage.empty( IECore.Box2i() ) )
-		self.assertTrue( GafferImage.empty( IECore.Box2i( IECore.V2i( 0 ), IECore.V2i( 0 ) ) ) )
-		self.assertFalse( GafferImage.empty( IECore.Box2i( IECore.V2i( 0 ), IECore.V2i( 1 ) ) ) )
-		self.assertTrue( GafferImage.empty( IECore.Box2i( IECore.V2i( 2147483646 ), IECore.V2i( -2147483646 ) ) ) )
-		self.assertTrue( GafferImage.empty( IECore.Box2i( IECore.V2i( 0 ), IECore.V2i( -2147483647 ) ) ) )
-		self.assertTrue( GafferImage.empty( IECore.Box2i( IECore.V2i( 2147483647 ), IECore.V2i( 0 ) ) ) )
-		self.assertTrue( GafferImage.empty( IECore.Box2i( IECore.V2i( -1 ), IECore.V2i( -2147483647 ) ) ) )
-		self.assertTrue( GafferImage.empty( IECore.Box2i( IECore.V2i( 2147483647 ), IECore.V2i( 1 ) ) ) )
-		self.assertTrue( GafferImage.empty( IECore.Box2i( IECore.V2i( 1 ), IECore.V2i( -2147483647 ) ) ) )
-		self.assertTrue( GafferImage.empty( IECore.Box2i( IECore.V2i( 2147483647 ), IECore.V2i( -1 ) ) ) )
+		self.assertTrue( GafferImage.BufferAlgo.empty( IECore.Box2i() ) )
+		self.assertTrue( GafferImage.BufferAlgo.empty( IECore.Box2i( IECore.V2i( 0 ), IECore.V2i( 0 ) ) ) )
+		self.assertFalse( GafferImage.BufferAlgo.empty( IECore.Box2i( IECore.V2i( 0 ), IECore.V2i( 1 ) ) ) )
+		self.assertTrue( GafferImage.BufferAlgo.empty( IECore.Box2i( IECore.V2i( 2147483646 ), IECore.V2i( -2147483646 ) ) ) )
+		self.assertTrue( GafferImage.BufferAlgo.empty( IECore.Box2i( IECore.V2i( 0 ), IECore.V2i( -2147483647 ) ) ) )
+		self.assertTrue( GafferImage.BufferAlgo.empty( IECore.Box2i( IECore.V2i( 2147483647 ), IECore.V2i( 0 ) ) ) )
+		self.assertTrue( GafferImage.BufferAlgo.empty( IECore.Box2i( IECore.V2i( -1 ), IECore.V2i( -2147483647 ) ) ) )
+		self.assertTrue( GafferImage.BufferAlgo.empty( IECore.Box2i( IECore.V2i( 2147483647 ), IECore.V2i( 1 ) ) ) )
+		self.assertTrue( GafferImage.BufferAlgo.empty( IECore.Box2i( IECore.V2i( 1 ), IECore.V2i( -2147483647 ) ) ) )
+		self.assertTrue( GafferImage.BufferAlgo.empty( IECore.Box2i( IECore.V2i( 2147483647 ), IECore.V2i( -1 ) ) ) )
 
 	def testIntersects( self ) :
 
 		self.assertFalse(
-			GafferImage.intersects(
+			GafferImage.BufferAlgo.intersects(
 				IECore.Box2i(), IECore.Box2i()
 			)
 		)
 
 		self.assertFalse(
-			GafferImage.intersects(
+			GafferImage.BufferAlgo.intersects(
 				IECore.Box2i( IECore.V2i( 0 ), IECore.V2i( 10 ) ),
 				IECore.Box2i( IECore.V2i( 10 ), IECore.V2i( 20 ) ),
 			)
 		)
 
 		self.assertTrue(
-			GafferImage.intersects(
+			GafferImage.BufferAlgo.intersects(
 				IECore.Box2i( IECore.V2i( 0 ), IECore.V2i( 10 ) ),
 				IECore.Box2i( IECore.V2i( 9 ), IECore.V2i( 20 ) ),
 			)
@@ -82,7 +82,7 @@ class BufferAlgoTest( GafferImageTest.ImageTestCase ) :
 	def testIntersection( self ) :
 
 		self.assertEqual(
-			GafferImage.intersection(
+			GafferImage.BufferAlgo.intersection(
 				IECore.Box2i( IECore.V2i( 1, 2 ), IECore.V2i( 9, 10 ) ),
 				IECore.Box2i( IECore.V2i( 2, 0 ), IECore.V2i( 8, 29 ) ),
 			),
@@ -95,28 +95,28 @@ class BufferAlgoTest( GafferImageTest.ImageTestCase ) :
 	def testContains( self ) :
 
 		self.assertFalse(
-			GafferImage.contains(
+			GafferImage.BufferAlgo.contains(
 				IECore.Box2i(),
 				IECore.V2i( 0 )
 			)
 		)
 
 		self.assertFalse(
-			GafferImage.contains(
+			GafferImage.BufferAlgo.contains(
 				IECore.Box2i( IECore.V2i( 0 ), IECore.V2i( 0 ) ),
 				IECore.V2i( 0 )
 			)
 		)
 
 		self.assertFalse(
-			GafferImage.contains(
+			GafferImage.BufferAlgo.contains(
 				IECore.Box2i( IECore.V2i( 0 ), IECore.V2i( 1 ) ),
 				IECore.V2i( 1 )
 			)
 		)
 
 		self.assertTrue(
-			GafferImage.contains(
+			GafferImage.BufferAlgo.contains(
 				IECore.Box2i( IECore.V2i( 0 ), IECore.V2i( 1 ) ),
 				IECore.V2i( 0 )
 			)
@@ -125,7 +125,7 @@ class BufferAlgoTest( GafferImageTest.ImageTestCase ) :
 	def testClamp( self ) :
 
 		self.assertEqual(
-			GafferImage.clamp(
+			GafferImage.BufferAlgo.clamp(
 				IECore.V2i( 5, 6 ),
 				IECore.Box2i( IECore.V2i( 0 ), IECore.V2i( 10 ) )
 			),
@@ -133,7 +133,7 @@ class BufferAlgoTest( GafferImageTest.ImageTestCase ) :
 		)
 
 		self.assertEqual(
-			GafferImage.clamp(
+			GafferImage.BufferAlgo.clamp(
 				IECore.V2i( 10, 6 ),
 				IECore.Box2i( IECore.V2i( 0 ), IECore.V2i( 10 ) )
 			),
@@ -141,7 +141,7 @@ class BufferAlgoTest( GafferImageTest.ImageTestCase ) :
 		)
 
 		self.assertEqual(
-			GafferImage.clamp(
+			GafferImage.BufferAlgo.clamp(
 				IECore.V2i( 0, 6 ),
 				IECore.Box2i( IECore.V2i( 0 ), IECore.V2i( 10 ) )
 			),
@@ -149,7 +149,7 @@ class BufferAlgoTest( GafferImageTest.ImageTestCase ) :
 		)
 
 		self.assertEqual(
-			GafferImage.clamp(
+			GafferImage.BufferAlgo.clamp(
 				IECore.V2i( 5, -1 ),
 				IECore.Box2i( IECore.V2i( 0 ), IECore.V2i( 10 ) )
 			),
@@ -157,7 +157,7 @@ class BufferAlgoTest( GafferImageTest.ImageTestCase ) :
 		)
 
 		self.assertEqual(
-			GafferImage.clamp(
+			GafferImage.BufferAlgo.clamp(
 				IECore.V2i( 5, 10 ),
 				IECore.Box2i( IECore.V2i( 0 ), IECore.V2i( 10 ) )
 			),
