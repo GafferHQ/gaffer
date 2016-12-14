@@ -119,36 +119,42 @@ dict allStatistics( PerformanceMonitor &m )
 void GafferBindings::bindMonitor()
 {
 
-	enum_<PerformanceMetric>( "PerformanceMetric" )
-		.value( "Invalid", Invalid )
-		.value( "TotalDuration", TotalDuration )
-		.value( "HashDuration", HashDuration )
-		.value( "ComputeDuration", ComputeDuration )
-		.value( "PerHashDuration", PerHashDuration )
-		.value( "PerComputeDuration", PerComputeDuration )
-		.value( "HashCount", HashCount )
-		.value( "ComputeCount", ComputeCount )
-		.value( "HashesPerCompute", HashesPerCompute )
-	;
+	{
+		object module( borrowed( PyImport_AddModule( "Gaffer.MonitorAlgo" ) ) );
+		scope().attr( "MonitorAlgo" ) = module;
+		scope moduleScope( module );
 
-	def(
-		"formatStatistics",
-		( std::string (*)( const PerformanceMonitor &, size_t ) )&formatStatistics,
-		(
-			arg( "monitor" ),
-			arg( "maxLinesPerMetric" ) = 50
-		)
-	);
+		enum_<PerformanceMetric>( "PerformanceMetric" )
+			.value( "Invalid", Invalid )
+			.value( "TotalDuration", TotalDuration )
+			.value( "HashDuration", HashDuration )
+			.value( "ComputeDuration", ComputeDuration )
+			.value( "PerHashDuration", PerHashDuration )
+			.value( "PerComputeDuration", PerComputeDuration )
+			.value( "HashCount", HashCount )
+			.value( "ComputeCount", ComputeCount )
+			.value( "HashesPerCompute", HashesPerCompute )
+		;
 
-	def(
-		"formatStatistics",
-		( std::string (*)( const PerformanceMonitor &, PerformanceMetric, size_t ) )&formatStatistics,
-		(
-			arg( "monitor" ),
-			arg( "metric" ),
-			arg( "maxLines" ) = 50
-		)
-	);
+		def(
+			"formatStatistics",
+			( std::string (*)( const PerformanceMonitor &, size_t ) )&formatStatistics,
+			(
+				arg( "monitor" ),
+				arg( "maxLinesPerMetric" ) = 50
+			)
+		);
+
+		def(
+			"formatStatistics",
+			( std::string (*)( const PerformanceMonitor &, PerformanceMetric, size_t ) )&formatStatistics,
+			(
+				arg( "monitor" ),
+				arg( "metric" ),
+				arg( "maxLines" ) = 50
+			)
+		);
+	}
 
 	class_<Monitor, boost::noncopyable>( "Monitor", no_init )
 		.def( "setActive", &Monitor::setActive )

@@ -136,6 +136,10 @@ namespace GafferSceneBindings
 
 void bindSceneAlgo()
 {
+	object module( borrowed( PyImport_AddModule( "GafferScene.SceneAlgo" ) ) );
+	scope().attr( "SceneAlgo" ) = module;
+	scope moduleScope( module );
+
 	def( "exists", &existsWrapper );
 	def( "visible", visibleWrapper );
 	def( "matchingPaths", &matchingPathsWrapper1 );

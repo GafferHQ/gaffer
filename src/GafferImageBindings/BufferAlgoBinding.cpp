@@ -44,6 +44,9 @@ namespace GafferImageBindings
 
 void bindBufferAlgo()
 {
+	object module( borrowed( PyImport_AddModule( "GafferImage.BufferAlgo" ) ) );
+	scope().attr( "BufferAlgo" ) = module;
+	scope moduleScope( module );
 
 	def( "empty", &GafferImage::BufferAlgo::empty );
 	def( "intersects", &GafferImage::BufferAlgo::intersects );

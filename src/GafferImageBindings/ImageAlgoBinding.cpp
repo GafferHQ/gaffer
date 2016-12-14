@@ -88,6 +88,9 @@ namespace GafferImageBindings
 
 void bindImageAlgo()
 {
+	object module( borrowed( PyImport_AddModule( "GafferImage.ImageAlgo" ) ) );
+	scope().attr( "ImageAlgo" ) = module;
+	scope moduleScope( module );
 
 	def( "layerName", &GafferImage::ImageAlgo::layerName );
 	def( "baseName", &GafferImage::ImageAlgo::baseName );
