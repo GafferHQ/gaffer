@@ -122,6 +122,21 @@ class stats( Gaffer.Application ) :
 					defaultValue = 50,
 				),
 
+				IECore.BoolParameter(
+					name = "contextMonitor",
+					description = "Turns on a context monitor to provide additional "
+						"statistics about the operation of the node graph.",
+					defaultValue = False,
+				),
+
+				IECore.StringParameter(
+					name = "contextMonitorRoot",
+					description = "The name of a node or plug to provide a root for the "
+						"context monitor. Statistics will only be captured for this root "
+						"downwards.",
+					defaultValue = "",
+				)
+
 			]
 
 		)
@@ -133,11 +148,6 @@ class stats( Gaffer.Application ) :
 		)
 
 	def _run( self, args ) :
-
-		if args["performanceMonitor"].value :
-			self.__performanceMonitor = Gaffer.PerformanceMonitor()
-		else :
-			self.__performanceMonitor = None
 
 		self.__timers = collections.OrderedDict()
 		self.__memory = collections.OrderedDict()
@@ -152,6 +162,22 @@ class stats( Gaffer.Application ) :
 		self.__timers["Loading"] = loadingTimer
 
 		self.__memory["Script"] = _Memory.maxRSS() - self.__memory["Application"]
+
+		if args["performanceMonitor"].value :
+			self.__performanceMonitor = Gaffer.PerformanceMonitor()
+		else :
+			self.__performanceMonitor = None
+
+		if args["contextMonitor"].value :
+			contextMonitorRoot = None
+			if args["contextMonitorRoot"].value :
+				contextMonitorRoot = script.descendant( args["contextMonitorRoot"].value )
+				if contextMonitorRoot is None :
+					IECore.msg( IECore.Msg.Level.Error, "stats", "Context monitor root \"%s\" does not exist" % args["contextMonitorRoot"].value )
+					return 1
+			self.__contextMonitor = Gaffer.ContextMonitor( contextMonitorRoot )
+		else :
+			self.__contextMonitor = None
 
 		with Gaffer.Context( script.context() ) as context :
 
@@ -190,6 +216,10 @@ class stats( Gaffer.Application ) :
 		print ""
 
 		self.__printPerformance( script, args )
+
+		print ""
+
+		self.__printContext( script, args )
 
 		print
 
@@ -298,7 +328,7 @@ class stats( Gaffer.Application ) :
 
 		memory = _Memory.maxRSS()
 		with _Timer() as sceneTimer :
-			with self.__performanceMonitor or _NullContextManager() :
+			with self.__performanceMonitor or _NullContextManager(), self.__contextMonitor or _NullContextManager() :
 				GafferSceneTest.traverseScene( scene )
 		self.__timers["Scene generation"] = sceneTimer
 		self.__memory["Scene generation"] = _Memory.maxRSS() - memory
@@ -321,10 +351,10 @@ class stats( Gaffer.Application ) :
 			return
 
 		memory = _Memory.maxRSS()
-		with _Timer() as sceneTimer :
-			with self.__performanceMonitor or _NullContextManager() :
+		with _Timer() as imageTimer :
+			with self.__performanceMonitor or _NullContextManager(), self.__contextMonitor or _NullContextManager() :
 				GafferImageTest.processTiles( image )
-		self.__timers["Image generation"] = sceneTimer
+		self.__timers["Image generation"] = imageTimer
 		self.__memory["Image generation"] = _Memory.maxRSS() - memory
 		self.__memory["OIIO cache limit"] = _Memory( GafferImage.OpenImageIOReader.getCacheMemoryLimit() )
 		self.__memory["OIIO cache usage"] = _Memory( GafferImage.OpenImageIOReader.cacheMemoryUsage() )
@@ -374,6 +404,23 @@ class stats( Gaffer.Application ) :
 					self.__performanceMonitor,
 					maxLinesPerMetric = args["maxLinesPerMetric"].value
 				)
+
+	def __printContext( self, script, args ) :
+
+			if self.__contextMonitor is None :
+				return
+
+			print "Contexts :\n"
+
+			stats = self.__contextMonitor.combinedStatistics()
+
+			items = [ ( n, stats.numUniqueValues( n ) ) for n in stats.variableNames() ]
+			items += [
+				( "", "" ),
+				( "Unique contexts", stats.numUniqueContexts() ),
+			]
+
+			self.__printItems( items )
 
 class _Timer( object ) :
 
