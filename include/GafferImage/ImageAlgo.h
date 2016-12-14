@@ -45,6 +45,9 @@ namespace GafferImage
 
 class ImagePlug;
 
+namespace ImageAlgo
+{
+
 /// Channel name utility functions.
 ///
 /// Gaffer follows the OpenEXR convention for channel names, as documented at
@@ -130,6 +133,11 @@ void parallelGatherTiles(
 	const Imath::Box2i &window = Imath::Box2i(), // Uses dataWindow if not specified.
 	TileOrder tileOrder = Unordered
 );
+
+} // namespace ImageAlgo
+
+/// \todo Remove this temporary backwards compatibility.
+using namespace ImageAlgo;
 
 } // namespace GafferImage
 

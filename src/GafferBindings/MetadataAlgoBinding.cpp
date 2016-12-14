@@ -41,7 +41,7 @@
 #include "Gaffer/Plug.h"
 
 using namespace boost::python;
-using namespace Gaffer;
+using namespace Gaffer::MetadataAlgo;
 
 namespace GafferBindings
 {

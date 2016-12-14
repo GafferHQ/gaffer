@@ -209,7 +209,7 @@ void DotNodeGadget::updateLabel()
 
 bool DotNodeGadget::dragEnter( const DragDropEvent &event )
 {
-	if( readOnly( dotNode() ) )
+	if( MetadataAlgo::readOnly( dotNode() ) )
 	{
 		return false;
 	}

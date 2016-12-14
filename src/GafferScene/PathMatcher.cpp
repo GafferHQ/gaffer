@@ -50,7 +50,7 @@ static IECore::InternedString g_ellipsis( "..." );
 //////////////////////////////////////////////////////////////////////////
 
 inline PathMatcher::Name::Name( IECore::InternedString name )
-	: name( name ), type( name == g_ellipsis || Gaffer::hasWildcards( name.c_str() ) ? Wildcarded : Plain )
+	: name( name ), type( name == g_ellipsis || Gaffer::StringAlgo::hasWildcards( name.c_str() ) ? Wildcarded : Plain )
 {
 }
 
@@ -217,7 +217,7 @@ unsigned PathMatcher::match( const std::string &path ) const
 		return Filter::NoMatch;
 	}
 	std::vector<IECore::InternedString> tokenizedPath;
-	Gaffer::tokenize( path, '/', tokenizedPath );
+	Gaffer::StringAlgo::tokenize( path, '/', tokenizedPath );
 	return match( tokenizedPath );
 }
 
@@ -304,7 +304,7 @@ void PathMatcher::matchWalk( const Node *node, const NameIterator &start, const 
 		}
 
 		NameIterator newStart = start + 1;
-		if( Gaffer::match( start->c_str(), childIt->first.name.c_str() ) )
+		if( Gaffer::StringAlgo::match( start->c_str(), childIt->first.name.c_str() ) )
 		{
 			matchWalk( childIt->second.get(), newStart, end, result );
 			if( result == Filter::EveryMatch )
@@ -345,7 +345,7 @@ bool PathMatcher::addPath( const std::string &path )
 		return false;
 	}
 	std::vector<IECore::InternedString> tokenizedPath;
-	Gaffer::tokenize( path, '/', tokenizedPath );
+	Gaffer::StringAlgo::tokenize( path, '/', tokenizedPath );
 	return addPath( tokenizedPath );
 }
 
@@ -367,7 +367,7 @@ bool PathMatcher::removePath( const std::string &path )
 		return false;
 	}
 	std::vector<IECore::InternedString> tokenizedPath;
-	Gaffer::tokenize( path, '/', tokenizedPath );
+	Gaffer::StringAlgo::tokenize( path, '/', tokenizedPath );
 	return removePath( tokenizedPath );
 }
 
@@ -427,7 +427,7 @@ bool PathMatcher::prune( const std::string &path )
 		return false;
 	}
 	std::vector<IECore::InternedString> tokenizedPath;
-	Gaffer::tokenize( path, '/', tokenizedPath );
+	Gaffer::StringAlgo::tokenize( path, '/', tokenizedPath );
 	return prune( tokenizedPath );;
 }
 
@@ -449,7 +449,7 @@ PathMatcher PathMatcher::subTree( const std::string &root ) const
 		return PathMatcher();
 	}
 	std::vector<IECore::InternedString> tokenizedRoot;
-	Gaffer::tokenize( root, '/', tokenizedRoot );
+	Gaffer::StringAlgo::tokenize( root, '/', tokenizedRoot );
 	return subTree( tokenizedRoot );
 }
 

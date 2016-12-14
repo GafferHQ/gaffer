@@ -599,7 +599,7 @@ IECore::ConstCompoundDataPtr BranchCreator::computeMapping( const Gaffer::Contex
 		{
 			// uniqueify the name
 			string prefix;
-			int suffix = numericSuffix( name, 1, &prefix );
+			int suffix = StringAlgo::numericSuffix( name, 1, &prefix );
 
 			do
 			{

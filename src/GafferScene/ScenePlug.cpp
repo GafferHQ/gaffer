@@ -482,7 +482,7 @@ IECore::MurmurHash ScenePlug::setHash( const IECore::InternedString &setName ) c
 void ScenePlug::stringToPath( const std::string &s, ScenePlug::ScenePath &path )
 {
 	path.clear();
-	tokenize( s, '/', path );
+	StringAlgo::tokenize( s, '/', path );
 }
 
 void ScenePlug::pathToString( const ScenePlug::ScenePath &path, std::string &s )

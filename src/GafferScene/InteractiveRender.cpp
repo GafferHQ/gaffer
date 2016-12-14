@@ -775,7 +775,7 @@ class InteractiveRender::SceneGraphOutputFilter : public tbb::thread_bound_filte
 						m_renderer->editBegin( "attribute", parameters );
 					}
 
-					outputAttributes( s->m_attributes.get(), m_renderer );
+					RendererAlgo::outputAttributes( s->m_attributes.get(), m_renderer );
 					s->m_attributes = NULL;
 
 					if( m_editMode )
@@ -887,15 +887,15 @@ void InteractiveRender::update()
 		m_renderer->setOption( "editable", new BoolData( true ) );
 
 		ConstCompoundObjectPtr globals = inPlug()->globalsPlug()->getValue();
-		outputOptions( globals.get(), m_renderer.get() );
-		outputOutputs( globals.get(), m_renderer.get() );
-		outputCameras( inPlug(), globals.get(), m_renderer.get() );
-		outputClippingPlanes( inPlug(), globals.get(), m_renderer.get() );
+		RendererAlgo::outputOptions( globals.get(), m_renderer.get() );
+		RendererAlgo::outputOutputs( globals.get(), m_renderer.get() );
+		RendererAlgo::outputCameras( inPlug(), globals.get(), m_renderer.get() );
+		RendererAlgo::outputClippingPlanes( inPlug(), globals.get(), m_renderer.get() );
 		{
 			WorldBlock world( m_renderer );
 
-			outputGlobalAttributes( globals.get(), m_renderer.get() );
-			outputCoordinateSystems( inPlug(), globals.get(), m_renderer.get() );
+			RendererAlgo::outputGlobalAttributes( globals.get(), m_renderer.get() );
+			RendererAlgo::outputCoordinateSystems( inPlug(), globals.get(), m_renderer.get() );
 			outputLightsInternal( globals.get(), /* editing = */ false );
 
 			// build the scene graph structure in parallel:
@@ -968,7 +968,7 @@ void InteractiveRender::outputLightsInternal( const IECore::CompoundObject *glob
 		if( !editing )
 		{
 			// defining the scene for the first time
-			if( outputLight( inPlug(), path, m_renderer.get() ) )
+			if( RendererAlgo::outputLight( inPlug(), path, m_renderer.get() ) )
 			{
 				m_lightHandles.insert( *it );
 			}
@@ -981,7 +981,7 @@ void InteractiveRender::outputLightsInternal( const IECore::CompoundObject *glob
 				bool visible = false;
 				{
 					EditBlock edit( m_renderer.get(), "light", CompoundDataMap() );
-					visible = outputLight( inPlug(), path, m_renderer.get() );
+					visible = RendererAlgo::outputLight( inPlug(), path, m_renderer.get() );
 				}
 				// we may have turned it off before, and need to turn
 				// it back on, or it may have been hidden and we need
@@ -995,7 +995,7 @@ void InteractiveRender::outputLightsInternal( const IECore::CompoundObject *glob
 			{
 				// we've not seen this light before - create a new one
 				EditBlock edit( m_renderer.get(), "attribute", CompoundDataMap() );
-				if( outputLight( inPlug(), path, m_renderer.get() ) )
+				if( RendererAlgo::outputLight( inPlug(), path, m_renderer.get() ) )
 				{
 					m_lightHandles.insert( *it );
 				}
@@ -1038,7 +1038,7 @@ void InteractiveRender::updateCameras()
 	IECore::ConstCompoundObjectPtr globals = inPlug()->globalsPlug()->getValue();
 	{
 		EditBlock edit( m_renderer.get(), "option", CompoundDataMap() );
-		outputCameras( inPlug(), globals.get(), m_renderer.get() );
+		RendererAlgo::outputCameras( inPlug(), globals.get(), m_renderer.get() );
 	}
 	m_camerasDirty = false;
 }
@@ -1053,7 +1053,7 @@ void InteractiveRender::updateCoordinateSystems()
 	IECore::ConstCompoundObjectPtr globals = inPlug()->globalsPlug()->getValue();
 	{
 		EditBlock edit( m_renderer.get(), "attribute", CompoundDataMap() );
-		outputCoordinateSystems( inPlug(), globals.get(), m_renderer.get() );
+		RendererAlgo::outputCoordinateSystems( inPlug(), globals.get(), m_renderer.get() );
 	}
 	m_coordinateSystemsDirty = false;
 }

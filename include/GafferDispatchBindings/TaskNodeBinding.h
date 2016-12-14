@@ -95,7 +95,7 @@ class TaskNodeWrapper : public GafferBindings::NodeWrapper<WrappedType>
 				}
 				catch( const boost::python::error_already_set &e )
 				{
-					GafferBindings::translatePythonException();
+					GafferBindings::ExceptionAlgo::translatePythonException();
 				}
 			}
 			WrappedType::preTasks( context, tasks );
@@ -120,7 +120,7 @@ class TaskNodeWrapper : public GafferBindings::NodeWrapper<WrappedType>
 				}
 				catch( const boost::python::error_already_set &e )
 				{
-					GafferBindings::translatePythonException();
+					GafferBindings::ExceptionAlgo::translatePythonException();
 				}
 			}
 			WrappedType::postTasks( context, tasks );
@@ -143,7 +143,7 @@ class TaskNodeWrapper : public GafferBindings::NodeWrapper<WrappedType>
 				}
 				catch( const boost::python::error_already_set &e )
 				{
-					GafferBindings::translatePythonException();
+					GafferBindings::ExceptionAlgo::translatePythonException();
 				}
 			}
 			return WrappedType::hash( context );
@@ -165,7 +165,7 @@ class TaskNodeWrapper : public GafferBindings::NodeWrapper<WrappedType>
 				}
 				catch( const boost::python::error_already_set &e )
 				{
-					GafferBindings::translatePythonException();
+					GafferBindings::ExceptionAlgo::translatePythonException();
 				}
 			}
 			WrappedType::execute();
@@ -192,7 +192,7 @@ class TaskNodeWrapper : public GafferBindings::NodeWrapper<WrappedType>
 				}
 				catch( const boost::python::error_already_set &e )
 				{
-					GafferBindings::translatePythonException();
+					GafferBindings::ExceptionAlgo::translatePythonException();
 				}
 			}
 			WrappedType::executeSequence( frames );
@@ -213,7 +213,7 @@ class TaskNodeWrapper : public GafferBindings::NodeWrapper<WrappedType>
 				}
 				catch( const boost::python::error_already_set &e )
 				{
-					GafferBindings::translatePythonException();
+					GafferBindings::ExceptionAlgo::translatePythonException();
 				}
 			}
 			return WrappedType::requiresSequenceExecution();

@@ -177,7 +177,7 @@ void ObjectSource::hashBound( const SceneNode::ScenePath &path, const Gaffer::Co
 Imath::Box3f ObjectSource::computeBound( const SceneNode::ScenePath &path, const Gaffer::Context *context, const ScenePlug *parent ) const
 {
 	IECore::ConstObjectPtr object = sourcePlug()->getValue();
-	Imath::Box3f result = bound( object.get() );
+	Imath::Box3f result = SceneAlgo::bound( object.get() );
 
 	if( path.size() == 0 )
 	{
@@ -280,7 +280,7 @@ void ObjectSource::hashSetNames( const Gaffer::Context *context, const ScenePlug
 IECore::ConstInternedStringVectorDataPtr ObjectSource::computeSetNames( const Gaffer::Context *context, const ScenePlug *parent ) const
 {
 	IECore::InternedStringVectorDataPtr result = new IECore::InternedStringVectorData;
-	Gaffer::tokenize( setsPlug()->getValue(), ' ', result->writable() );
+	Gaffer::StringAlgo::tokenize( setsPlug()->getValue(), ' ', result->writable() );
 	IECore::ConstInternedStringVectorDataPtr setNames = computeStandardSetNames();
 	for(unsigned int i = 0; i < setNames->readable().size(); ++i)
 	{
@@ -331,6 +331,6 @@ bool ObjectSource::setNameValid( const IECore::InternedString &setName ) const
 	}
 
 	std::vector<IECore::InternedString> setNames;
-	Gaffer::tokenize( setsPlug()->getValue(), ' ', setNames );
+	Gaffer::StringAlgo::tokenize( setsPlug()->getValue(), ' ', setNames );
 	return std::find( setNames.begin(), setNames.end(), setName ) != setNames.end();
 }

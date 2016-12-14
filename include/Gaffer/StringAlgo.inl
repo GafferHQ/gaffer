@@ -117,6 +117,9 @@ inline bool matchInternal( const char * const ss, const char *pattern, bool mult
 
 } // namespace Detail
 
+namespace StringAlgo
+{
+
 inline bool match( const std::string &string, const std::string &pattern )
 {
 	return match( string.c_str(), pattern.c_str() );
@@ -169,6 +172,8 @@ void tokenize( const std::string &s, const char separator, OutputContainer &outp
 {
 	tokenize<typename OutputContainer::value_type>( s, separator, std::back_inserter( outputContainer ) );
 }
+
+} // namespace StringAlgo
 
 } // namespace Gaffer
 

@@ -46,6 +46,7 @@
 
 using namespace boost::python;
 using namespace Gaffer;
+using namespace Gaffer::MonitorAlgo;
 using namespace GafferBindings;
 
 namespace

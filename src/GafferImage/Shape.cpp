@@ -303,7 +303,7 @@ IECore::ConstFloatVectorDataPtr Shape::computeChannelData( const std::string &ch
 float Shape::channelValue( const GafferImage::ImagePlug *parent, const std::string &channelName ) const
 {
 	const Color4fPlug *p = parent == shadowShapePlug() ? shadowColorPlug() : colorPlug();
-	const int i = colorIndex( channelName );
+	const int i = ImageAlgo::colorIndex( channelName );
 	float c = p->getChild( i )->getValue();
 	if( i != 3 )
 	{

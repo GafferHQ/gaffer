@@ -410,7 +410,7 @@ IECore::ConstCompoundObjectPtr LightTweaks::computeProcessedAttributes( const Sc
 	CompoundObject::ObjectMap &out = result->members();
 	for( CompoundObject::ObjectMap::const_iterator it = in.begin(), eIt = in.end(); it != eIt; ++it )
 	{
-		if( !matchMultiple( it->first, type ) )
+		if( !StringAlgo::matchMultiple( it->first, type ) )
 		{
 			out.insert( *it );
 			continue;

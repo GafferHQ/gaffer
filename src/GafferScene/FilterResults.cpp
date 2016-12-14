@@ -134,7 +134,7 @@ void FilterResults::hash( const Gaffer::ValuePlug *output, const Gaffer::Context
 		/// - Coming up with a way of cheaply computing a hierarchy hash,
 		///   that mythical beast that solves all our problems.
 		PathMatcherDataPtr data = new PathMatcherData;
-		matchingPaths( filterPlug(), scenePlug(), data->writable() );
+		SceneAlgo::matchingPaths( filterPlug(), scenePlug(), data->writable() );
 		data->hash( h );
 	}
 }
@@ -144,7 +144,7 @@ void FilterResults::compute( Gaffer::ValuePlug *output, const Gaffer::Context *c
 	if( output == outPlug() )
 	{
 		PathMatcherDataPtr data = new PathMatcherData;
-		matchingPaths( filterPlug(), scenePlug(), data->writable() );
+		SceneAlgo::matchingPaths( filterPlug(), scenePlug(), data->writable() );
 		static_cast<PathMatcherDataPlug *>( output )->setValue( data );
 		return;
 	}

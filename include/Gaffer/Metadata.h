@@ -71,7 +71,7 @@ class Metadata
 		/// Type for a signal emitted when new plug metadata is registered. The
 		/// plug argument will be NULL when generic (rather than per-instance)
 		/// metadata is registered.
-		typedef boost::signal<void ( IECore::TypeId nodeTypeId, const MatchPattern &plugPath, IECore::InternedString key, Gaffer::Plug *plug ), CatchingSignalCombiner<void> > PlugValueChangedSignal;
+		typedef boost::signal<void ( IECore::TypeId nodeTypeId, const StringAlgo::MatchPattern &plugPath, IECore::InternedString key, Gaffer::Plug *plug ), CatchingSignalCombiner<void> > PlugValueChangedSignal;
 
 		typedef boost::function<IECore::ConstDataPtr ()> ValueFunction;
 		typedef boost::function<IECore::ConstDataPtr ( const Node *node )> NodeValueFunction;
@@ -93,10 +93,10 @@ class Metadata
 		static void registerValue( IECore::TypeId nodeTypeId, IECore::InternedString key, NodeValueFunction value );
 
 		/// Registers a static metadata value for plugs with the specified path on the specified node type.
-		static void registerValue( IECore::TypeId nodeTypeId, const MatchPattern &plugPath, IECore::InternedString key, IECore::ConstDataPtr value );
+		static void registerValue( IECore::TypeId nodeTypeId, const StringAlgo::MatchPattern &plugPath, IECore::InternedString key, IECore::ConstDataPtr value );
 		/// Registers a dynamic metadata value for the specified plug. Each time the data is retrieved, the
 		/// PlugValueFunction will be called to compute it.
-		static void registerValue( IECore::TypeId nodeTypeId, const MatchPattern &plugPath, IECore::InternedString key, PlugValueFunction value );
+		static void registerValue( IECore::TypeId nodeTypeId, const StringAlgo::MatchPattern &plugPath, IECore::InternedString key, PlugValueFunction value );
 
 		/// Registers a metadata value specific to a single instance - this will take precedence over any
 		/// values registered above. If persistent is true, the value will be preserved across script save/load and cut/paste.
@@ -126,7 +126,7 @@ class Metadata
 		/// ====================
 
 		static void deregisterValue( IECore::TypeId nodeTypeId, IECore::InternedString key );
-		static void deregisterValue( IECore::TypeId nodeTypeId, const MatchPattern &plugPath, IECore::InternedString key );
+		static void deregisterValue( IECore::TypeId nodeTypeId, const StringAlgo::MatchPattern &plugPath, IECore::InternedString key );
 		static void deregisterValue( GraphComponent *target, IECore::InternedString key );
 
 		/// Utilities
@@ -172,9 +172,9 @@ class Metadata
 		static void deregisterNodeValue( Node *node, IECore::InternedString key );
 
 		/// \deprecated
-		static void registerPlugValue( IECore::TypeId nodeTypeId, const MatchPattern &plugPath, IECore::InternedString key, IECore::ConstDataPtr value );
+		static void registerPlugValue( IECore::TypeId nodeTypeId, const StringAlgo::MatchPattern &plugPath, IECore::InternedString key, IECore::ConstDataPtr value );
 		/// \deprecated
-		static void registerPlugValue( IECore::TypeId nodeTypeId, const MatchPattern &plugPath, IECore::InternedString key, PlugValueFunction value );
+		static void registerPlugValue( IECore::TypeId nodeTypeId, const StringAlgo::MatchPattern &plugPath, IECore::InternedString key, PlugValueFunction value );
 		/// \deprecated
 		static void registerPlugValue( Plug *plug, IECore::InternedString key, IECore::ConstDataPtr value, bool persistent = true );
 		/// \deprecated
@@ -183,7 +183,7 @@ class Metadata
 		template<typename T>
 		static typename T::ConstPtr plugValue( const Plug *plug, IECore::InternedString key, bool inherit = true, bool instanceOnly = false );
 		/// \deprecated
-		static void deregisterPlugValue( IECore::TypeId nodeTypeId, const MatchPattern &plugPath, IECore::InternedString key );
+		static void deregisterPlugValue( IECore::TypeId nodeTypeId, const StringAlgo::MatchPattern &plugPath, IECore::InternedString key );
 		/// \deprecated
 		static void deregisterPlugValue( Plug *plug, IECore::InternedString key );
 
@@ -195,9 +195,9 @@ class Metadata
 		static std::string nodeDescription( const Node *node, bool inherit = true );
 
 		/// \deprecated
-		static void registerPlugDescription( IECore::TypeId nodeTypeId, const MatchPattern &plugPath, const std::string &description );
+		static void registerPlugDescription( IECore::TypeId nodeTypeId, const StringAlgo::MatchPattern &plugPath, const std::string &description );
 		/// \deprecated
-		static void registerPlugDescription( IECore::TypeId nodeTypeId, const MatchPattern &plugPath, PlugValueFunction description );
+		static void registerPlugDescription( IECore::TypeId nodeTypeId, const StringAlgo::MatchPattern &plugPath, PlugValueFunction description );
 		/// \deprecated
 		static std::string plugDescription( const Plug *plug, bool inherit = true );
 

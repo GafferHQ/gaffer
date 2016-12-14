@@ -43,6 +43,9 @@
 namespace Gaffer
 {
 
+namespace StringAlgo
+{
+
 /// A type which can be used to store a pattern to be matched against.
 /// Note that the match() function can actually operate on other string
 /// types as well so the use of this type is purely optional. The main
@@ -80,6 +83,11 @@ template<typename TokenType, typename OutputIterator>
 void tokenize( const std::string &s, const char separator, OutputIterator outputIterator );
 template<typename OutputContainer>
 void tokenize( const std::string &s, const char separator, OutputContainer &outputContainer );
+
+} // namespace StringAlgo
+
+/// \todo Remove this temporary backwards compatibility.
+using namespace StringAlgo;
 
 } // namespace Gaffer
 

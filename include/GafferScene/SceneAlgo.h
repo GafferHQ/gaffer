@@ -57,6 +57,9 @@ namespace GafferScene
 class Filter;
 class PathMatcher;
 
+namespace SceneAlgo
+{
+
 /// Returns true if the specified location exists within the scene, and false otherwise.
 /// This operates by traversing the path from the root, ensuring that each location includes
 /// the next path element within its child names.
@@ -125,6 +128,11 @@ IECore::ConstCompoundDataPtr sets( const ScenePlug *scene, const std::vector<IEC
 /// this is provided by the VisibleRenderable::bound() method, but
 /// for other object types we must return a synthetic bound.
 Imath::Box3f bound( const IECore::Object *object );
+
+} // namespace SceneAlgo
+
+/// \todo Remove this temporary backwards compatibility.
+using namespace SceneAlgo;
 
 } // namespace GafferScene
 

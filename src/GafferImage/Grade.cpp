@@ -163,7 +163,7 @@ bool Grade::channelEnabled( const std::string &channel ) const
 		return false;
 	}
 
-	const int channelIndex = std::max( 0, colorIndex( channel ) );
+	const int channelIndex = std::max( 0, ImageAlgo::colorIndex( channel ) );
 
 	// Never bother to process the alpha channel.
 	if ( channelIndex == 3 ) return false;
@@ -222,7 +222,7 @@ void Grade::hashChannelData( const GafferImage::ImagePlug *output, const Gaffer:
 	inPlug()->channelDataPlug()->hash( h );
 
 	const std::string &channelName = context->get<std::string>( ImagePlug::channelNameContextName );
-	const int channelIndex = colorIndex( channelName );
+	const int channelIndex = ImageAlgo::colorIndex( channelName );
 	if( channelIndex >= 0 and channelIndex < 3 )
 	{
 		/// \todo The channelIndex tests above might be guaranteed true by
@@ -247,7 +247,7 @@ void Grade::processChannelData( const Gaffer::Context *context, const ImagePlug 
 
 	// Do some pre-processing.
 	float A, B, gamma;
-	parameters( std::max( 0, colorIndex( channel ) ), A, B, gamma );
+	parameters( std::max( 0, ImageAlgo::colorIndex( channel ) ), A, B, gamma );
 	const float invGamma = 1. / gamma;
 	const bool whiteClamp = whiteClampPlug()->getValue();
 	const bool blackClamp = blackClampPlug()->getValue();

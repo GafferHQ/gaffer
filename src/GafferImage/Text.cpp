@@ -372,7 +372,7 @@ IECore::ConstCompoundObjectPtr Text::computeLayout( const Gaffer::Context *conte
 	// in a vector of Lines made up of Words.
 
 	Box2i area = areaPlug()->getValue();
-	if( empty( area ) )
+	if( BufferAlgo::empty( area ) )
 	{
 		area = inPlug()->formatPlug()->getValue().getDisplayWindow();
 	}
@@ -578,8 +578,8 @@ IECore::ConstFloatVectorDataPtr Text::computeShapeChannelData(  const Imath::V2i
 	for( int i = 0, e = characters.size(); i < e; ++i )
 	{
 		const Box2i &bitmapBound = bounds[i];
-		const Box2i validBound = GafferImage::intersection( tileBound, bitmapBound );
-		if( empty( validBound ) )
+		const Box2i validBound = BufferAlgo::intersection( tileBound, bitmapBound );
+		if( BufferAlgo::empty( validBound ) )
 		{
 			continue;
 		}

@@ -104,7 +104,7 @@ const IECore::InternedString &GraphComponent::setName( const IECore::InternedStr
 			// split name into a prefix and a numeric suffix. if no suffix
 			// exists then it defaults to 1.
 			std::string prefix;
-			int suffix = numericSuffix( newName.value(), 1, &prefix );
+			int suffix = StringAlgo::numericSuffix( newName.value(), 1, &prefix );
 
 			// iterate over all the siblings to find the minimum value for the suffix which
 			// will be greater than any existing suffix.

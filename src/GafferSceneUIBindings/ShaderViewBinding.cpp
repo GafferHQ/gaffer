@@ -155,7 +155,7 @@ struct SceneChangedSlotCaller
 		}
 		catch( const boost::python::error_already_set &e )
 		{
-			translatePythonException();
+			ExceptionAlgo::translatePythonException();
 		}
 		return boost::signals::detail::unusable();
 	}

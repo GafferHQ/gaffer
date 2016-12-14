@@ -115,7 +115,7 @@ class DependencyNodeWrapper : public NodeWrapper<WrappedType>
 				}
 				catch( const boost::python::error_already_set &e )
 				{
-					translatePythonException();
+					ExceptionAlgo::translatePythonException();
 				}
 			}
 			WrappedType::affects( input, outputs );
@@ -136,7 +136,7 @@ class DependencyNodeWrapper : public NodeWrapper<WrappedType>
 				}
 				catch( const boost::python::error_already_set &e )
 				{
-					translatePythonException();
+					ExceptionAlgo::translatePythonException();
 				}
 			}
 			return WrappedType::enabledPlug();
@@ -166,7 +166,7 @@ class DependencyNodeWrapper : public NodeWrapper<WrappedType>
 				}
 				catch( const boost::python::error_already_set &e )
 				{
-					translatePythonException();
+					ExceptionAlgo::translatePythonException();
 				}
 			}
 			return WrappedType::correspondingInput( output );

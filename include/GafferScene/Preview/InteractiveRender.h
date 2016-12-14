@@ -121,7 +121,7 @@ class InteractiveRender : public Gaffer::Node
 		State m_state;
 		unsigned m_dirtyComponents;
 		IECore::ConstCompoundObjectPtr m_globals;
-		GafferScene::Preview::RenderSets m_renderSets;
+		GafferScene::Preview::RendererAlgo::RenderSets m_renderSets;
 		IECoreScenePreview::Renderer::ObjectInterfacePtr m_defaultCamera;
 
 		Gaffer::ContextPtr m_context; // Accessed with setContext()/getContext()

@@ -61,17 +61,17 @@ Sampler::Sampler( const GafferImage::ImagePlug *plug, const std::string &channel
 	// be able to service calls within m_sampleWindow
 	// when taking into account m_boundingMode and m_dataWindow.
 
-	m_cacheWindow = intersection( m_sampleWindow, m_dataWindow );
-	if( empty( m_cacheWindow ) && m_boundingMode == Clamp )
+	m_cacheWindow = BufferAlgo::intersection( m_sampleWindow, m_dataWindow );
+	if( BufferAlgo::empty( m_cacheWindow ) && m_boundingMode == Clamp )
 	{
 		// The area being sampled is entirely outside the
 		// data window, but we still need to cache the region
 		// into which we will clamp the queries.
 		m_cacheWindow = Box2i();
-		m_cacheWindow.extendBy( clamp( m_sampleWindow.min, m_dataWindow ) );
-		m_cacheWindow.extendBy( clamp( m_sampleWindow.max, m_dataWindow ) );
-		m_cacheWindow.extendBy( clamp( V2i( m_sampleWindow.min.x, m_sampleWindow.max.y ), m_dataWindow ) );
-		m_cacheWindow.extendBy( clamp( V2i( m_sampleWindow.max.x, m_sampleWindow.min.y ), m_dataWindow ) );
+		m_cacheWindow.extendBy( BufferAlgo::clamp( m_sampleWindow.min, m_dataWindow ) );
+		m_cacheWindow.extendBy( BufferAlgo::clamp( m_sampleWindow.max, m_dataWindow ) );
+		m_cacheWindow.extendBy( BufferAlgo::clamp( V2i( m_sampleWindow.min.x, m_sampleWindow.max.y ), m_dataWindow ) );
+		m_cacheWindow.extendBy( BufferAlgo::clamp( V2i( m_sampleWindow.max.x, m_sampleWindow.min.y ), m_dataWindow ) );
 		m_cacheWindow.max += V2i( 1 ); // max is exclusive.
 	}
 

@@ -45,6 +45,9 @@ using namespace boost::python;
 namespace GafferBindings
 {
 
+namespace ExceptionAlgo
+{
+
 std::string formatPythonException( bool withStacktrace, int *lineNumber )
 {
 	PyObject *exceptionPyObject, *valuePyObject, *tracebackPyObject;
@@ -106,5 +109,7 @@ void translatePythonException( bool withStacktrace )
 {
 	throw IECore::Exception( formatPythonException( withStacktrace ) );
 }
+
+} // namespace ExceptionAlgo
 
 } // namespace GafferBindings

@@ -258,7 +258,7 @@ IECore::ConstFloatVectorDataPtr Warp::computeChannelData( const std::string &cha
 		for( oP.x = tileBound.min.x; oP.x < tileBound.max.x; ++oP.x )
 		{
 			float v = 0.0f;
-			if( contains( dataWindow, oP ) )
+			if( BufferAlgo::contains( dataWindow, oP ) )
 			{
 				const V2f iP = e->inputPixel( V2f( oP.x + 0.5, oP.y + 0.5 ) );
 				if( iP != Engine::black )

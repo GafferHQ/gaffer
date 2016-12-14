@@ -77,13 +77,13 @@ namespace
 
 void copyBufferArea( const float *inData, const Imath::Box2i &inArea, float *outData, const Imath::Box2i &outArea, const size_t outOffset = 0, const size_t outInc = 1, const bool outYDown = false, Imath::Box2i copyArea = Imath::Box2i() )
 {
-	if( empty( copyArea ) )
+	if( BufferAlgo::empty( copyArea ) )
 	{
-		copyArea = intersection( inArea, outArea );
+		copyArea = BufferAlgo::intersection( inArea, outArea );
 	}
 
-	assert( contains( inArea, copyArea ) );
-	assert( contains( outArea, copyArea ) );
+	assert( BufferAlgo::contains( inArea, copyArea ) );
+	assert( BufferAlgo::contains( outArea, copyArea ) );
 
 	for( int y = copyArea.min.y; y < copyArea.max.y; ++y )
 	{
@@ -215,7 +215,7 @@ class FlatTileWriter
 
 			const Imath::Box2i inTileBounds( tileOrigin, tileOrigin + Imath::V2i( ImagePlug::tileSize() ) );
 
-			Box2i tilesWrite = intersection( outTilesBounds(), Imath::Box2i( outTileOrigin( inTileBounds.min ), outTileOrigin( inTileBounds.max - Imath::V2i( 1 ) ) + Imath::V2i( m_spec.tile_width, m_spec.tile_height ) ) );
+			Box2i tilesWrite = BufferAlgo::intersection( outTilesBounds(), Imath::Box2i( outTileOrigin( inTileBounds.min ), outTileOrigin( inTileBounds.max - Imath::V2i( 1 ) ) + Imath::V2i( m_spec.tile_width, m_spec.tile_height ) ) );
 
 			Imath::V2i outTileOrig( tilesWrite.min.x, tilesWrite.max.y - m_spec.tile_height );
 
@@ -232,7 +232,7 @@ class FlatTileWriter
 						tile.resize( m_spec.tile_width * m_spec.tile_height * m_spec.channelnames.size(), 0. );
 					}
 
-					Imath::Box2i copyArea( intersection( m_processWindow, intersection( inTileBounds, outTileBnds ) ) );
+					Imath::Box2i copyArea( BufferAlgo::intersection( m_processWindow, BufferAlgo::intersection( inTileBounds, outTileBnds ) ) );
 
 					copyBufferArea( &data->readable()[0], inTileBounds, &tile[0], outTileBnds, channelIndex, m_spec.channelnames.size(), true, copyArea );
 				}
@@ -329,7 +329,7 @@ class FlatTileWriter
 					writeTile( tileOrigin, m_tilesData[tileIndex] );
 					m_tilesData[tileIndex].reset();
 				}
-				else if( !intersects( m_inputTilesBounds, outTileBounds( tileOrigin ) ) )
+				else if( !BufferAlgo::intersects( m_inputTilesBounds, outTileBounds( tileOrigin ) ) )
 				{
 					writeTile( tileOrigin, blackTile() );
 				}
@@ -424,7 +424,7 @@ class FlatScanlineWriter
 				std::fill( m_scanlinesData.begin(), m_scanlinesData.end(), 0.0 );
 			}
 
-			Imath::Box2i copyArea( intersection( m_processWindow, intersection( inTileBounds, scanlinesBounds ) ) );
+			Imath::Box2i copyArea( BufferAlgo::intersection( m_processWindow, BufferAlgo::intersection( inTileBounds, scanlinesBounds ) ) );
 
 			copyBufferArea( &data->readable()[0], inTileBounds, &m_scanlinesData[0], scanlinesBounds, channelIndex, m_spec.channelnames.size(), true, copyArea );
 
@@ -1061,7 +1061,7 @@ void ImageWriter::execute() const
 	Imath::Box2i dataWindow = inPlug()->dataWindowPlug()->getValue();
 	Imath::Box2i exrDataWindow( Imath::V2i( 0 ) );
 
-	if( !empty( dataWindow ) )
+	if( !BufferAlgo::empty( dataWindow ) )
 	{
 		exrDataWindow = imageFormat.toEXRSpace( dataWindow );
 	}
@@ -1111,20 +1111,20 @@ void ImageWriter::execute() const
 
 	const Imath::Box2i extImageDataWindow( Imath::V2i( spec.x, spec.y ), Imath::V2i( spec.x + spec.width - 1, spec.y + spec.height - 1 ) );
 	const Imath::Box2i imageDataWindow( imageFormat.fromEXRSpace( extImageDataWindow ) );
-	const Imath::Box2i processDataWindow( intersection( imageDataWindow, dataWindow ) );
+	const Imath::Box2i processDataWindow( BufferAlgo::intersection( imageDataWindow, dataWindow ) );
 
 	TileProcessor processor = TileProcessor();
 
 	if ( spec.tile_width == 0 )
 	{
 		FlatScanlineWriter flatScanlineWriter( out, fileName, processDataWindow, imageFormat );
-		parallelGatherTiles( inPlug(), spec.channelnames, processor, flatScanlineWriter, processDataWindow, TopToBottom );
+		ImageAlgo::parallelGatherTiles( inPlug(), spec.channelnames, processor, flatScanlineWriter, processDataWindow, ImageAlgo::TopToBottom );
 		flatScanlineWriter.finish();
 	}
 	else
 	{
 		FlatTileWriter flatTileWriter( out, fileName, processDataWindow, imageFormat );
-		parallelGatherTiles( inPlug(), spec.channelnames, processor, flatTileWriter, processDataWindow, TopToBottom );
+		ImageAlgo::parallelGatherTiles( inPlug(), spec.channelnames, processor, flatTileWriter, processDataWindow, ImageAlgo::TopToBottom );
 		flatTileWriter.finish();
 	}
 

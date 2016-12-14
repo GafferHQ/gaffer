@@ -98,7 +98,7 @@ struct ExpressionChangedSlotCaller
 		}
 		catch( const error_already_set &e )
 		{
-			translatePythonException();
+			ExceptionAlgo::translatePythonException();
 		}
 		return boost::signals::detail::unusable();
 	}
@@ -134,7 +134,7 @@ class EngineWrapper : public IECorePython::RefCountedWrapper<Expression::Engine>
 				}
 				catch( const error_already_set &e )
 				{
-					translatePythonException();
+					ExceptionAlgo::translatePythonException();
 				}
 			}
 
@@ -163,7 +163,7 @@ class EngineWrapper : public IECorePython::RefCountedWrapper<Expression::Engine>
 				}
 				catch( const error_already_set &e )
 				{
-					translatePythonException();
+					ExceptionAlgo::translatePythonException();
 				}
 			}
 
@@ -186,7 +186,7 @@ class EngineWrapper : public IECorePython::RefCountedWrapper<Expression::Engine>
 				}
 				catch( const error_already_set &e )
 				{
-					translatePythonException();
+					ExceptionAlgo::translatePythonException();
 				}
 			}
 
@@ -209,7 +209,7 @@ class EngineWrapper : public IECorePython::RefCountedWrapper<Expression::Engine>
 				}
 				catch( const error_already_set &e )
 				{
-					translatePythonException();
+					ExceptionAlgo::translatePythonException();
 				}
 			}
 
@@ -242,7 +242,7 @@ class EngineWrapper : public IECorePython::RefCountedWrapper<Expression::Engine>
 				}
 				catch( const error_already_set &e )
 				{
-					translatePythonException();
+					ExceptionAlgo::translatePythonException();
 				}
 			}
 
@@ -265,7 +265,7 @@ class EngineWrapper : public IECorePython::RefCountedWrapper<Expression::Engine>
 				}
 				catch( const error_already_set &e )
 				{
-					translatePythonException();
+					ExceptionAlgo::translatePythonException();
 				}
 			}
 

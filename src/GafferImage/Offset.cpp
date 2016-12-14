@@ -186,7 +186,7 @@ IECore::ConstFloatVectorDataPtr Offset::computeChannelData( const std::string &c
 				const float *in = &inData->readable().front();
 
 				const Box2i inTileBound( inTileOrigin, inTileOrigin + V2i( ImagePlug::tileSize() ) );
-				const Box2i inRegion = intersection(
+				const Box2i inRegion = BufferAlgo::intersection(
 					inBound,
 					inTileBound
 				);
@@ -197,9 +197,9 @@ IECore::ConstFloatVectorDataPtr Offset::computeChannelData( const std::string &c
 				{
 					memcpy(
 						// to
-						out + index( inScanlineOrigin + offset, outTileBound ),
+						out + BufferAlgo::index( inScanlineOrigin + offset, outTileBound ),
 						// from
-						in + index( inScanlineOrigin, inTileBound ),
+						in + BufferAlgo::index( inScanlineOrigin, inTileBound ),
 						sizeof( float ) * scanlineLength
 					);
 					++inScanlineOrigin.y;

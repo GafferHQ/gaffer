@@ -78,7 +78,7 @@ struct StringVectorFromStringVectorData
 inline bool channelExistsWrapper( const GafferImage::ImagePlug *image, const std::string &channelName )
 {
 	IECorePython::ScopedGILRelease r;
-	return GafferImage::channelExists( image, channelName );
+	return GafferImage::ImageAlgo::channelExists( image, channelName );
 }
 
 } // namespace
@@ -89,11 +89,11 @@ namespace GafferImageBindings
 void bindImageAlgo()
 {
 
-	def( "layerName", &GafferImage::layerName );
-	def( "baseName", &GafferImage::baseName );
-	def( "colorIndex", &GafferImage::colorIndex );
+	def( "layerName", &GafferImage::ImageAlgo::layerName );
+	def( "baseName", &GafferImage::ImageAlgo::baseName );
+	def( "colorIndex", &GafferImage::ImageAlgo::colorIndex );
 	def( "channelExists", &channelExistsWrapper );
-	def( "channelExists", ( bool (*)( const std::vector<std::string> &channelNames, const std::string &channelName ) )&GafferImage::channelExists );
+	def( "channelExists", ( bool (*)( const std::vector<std::string> &channelNames, const std::string &channelName ) )&GafferImage::ImageAlgo::channelExists );
 
 	StringVectorFromStringVectorData();
 

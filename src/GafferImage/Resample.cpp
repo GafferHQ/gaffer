@@ -476,7 +476,7 @@ void Resample::hashDataWindow( const GafferImage::ImagePlug *parent, const Gaffe
 Imath::Box2i Resample::computeDataWindow( const Gaffer::Context *context, const ImagePlug *parent ) const
 {
 	const Box2i srcDataWindow = inPlug()->dataWindowPlug()->getValue();
-	if( empty( srcDataWindow ) )
+	if( BufferAlgo::empty( srcDataWindow ) )
 	{
 		return srcDataWindow;
 	}

@@ -188,6 +188,9 @@ namespace GafferScene
 namespace Preview
 {
 
+namespace RendererAlgo
+{
+
 struct RenderSets::Updater
 {
 
@@ -347,6 +350,8 @@ ConstInternedStringVectorDataPtr RenderSets::setsAttribute( const std::vector<IE
 	return resultData ? resultData : g_emptySetsAttribute;
 }
 
+} // namespace RendererAlgo
+
 } // namespace Preview
 
 } // namespace GafferScene
@@ -388,8 +393,8 @@ IECore::InternedString optionName( const IECore::InternedString &globalsName )
 struct LocationOutput
 {
 
-	LocationOutput( IECoreScenePreview::Renderer *renderer, const IECore::CompoundObject *globals, const GafferScene::Preview::RenderSets &renderSets )
-		:	m_renderer( renderer ), m_attributes( globalAttributes( globals ) ), m_renderSets( renderSets )
+	LocationOutput( IECoreScenePreview::Renderer *renderer, const IECore::CompoundObject *globals, const GafferScene::Preview::RendererAlgo::RenderSets &renderSets )
+		:	m_renderer( renderer ), m_attributes( SceneAlgo::globalAttributes( globals ) ), m_renderSets( renderSets )
 	{
 		const BoolData *transformBlurData = globals->member<BoolData>( g_transformBlurOptionName );
 		m_options.transformBlur = transformBlurData ? transformBlurData->readable() : false;
@@ -397,7 +402,7 @@ struct LocationOutput
 		const BoolData *deformationBlurData = globals->member<BoolData>( g_deformationBlurOptionName );
 		m_options.deformationBlur = deformationBlurData ? deformationBlurData->readable() : false;
 
-		m_options.shutter = GafferScene::shutter( globals );
+		m_options.shutter = SceneAlgo::shutter( globals );
 
 		m_transformSamples.push_back( M44f() );
 	}
@@ -514,7 +519,7 @@ struct LocationOutput
 		{
 			const size_t segments = motionSegments( m_options.transformBlur, g_transformBlurAttributeName, g_transformBlurSegmentsAttributeName );
 			vector<M44f> samples; set<float> sampleTimes;
-			transformSamples( scene, segments, m_options.shutter, samples, sampleTimes );
+			RendererAlgo::transformSamples( scene, segments, m_options.shutter, samples, sampleTimes );
 
 			if( sampleTimes.empty() )
 			{
@@ -582,7 +587,7 @@ struct LocationOutput
 
 		Options m_options;
 		IECore::ConstCompoundObjectPtr m_attributes;
-		const GafferScene::Preview::RenderSets &m_renderSets;
+		const GafferScene::Preview::RendererAlgo::RenderSets &m_renderSets;
 
 		std::vector<M44f> m_transformSamples;
 		std::vector<float> m_transformTimes;
@@ -592,7 +597,7 @@ struct LocationOutput
 struct CameraOutput : public LocationOutput
 {
 
-	CameraOutput( IECoreScenePreview::Renderer *renderer, const IECore::CompoundObject *globals, const GafferScene::Preview::RenderSets &renderSets )
+	CameraOutput( IECoreScenePreview::Renderer *renderer, const IECore::CompoundObject *globals, const GafferScene::Preview::RendererAlgo::RenderSets &renderSets )
 		:	LocationOutput( renderer, globals, renderSets ), m_globals( globals ), m_cameraSet( renderSets.camerasSet() )
 	{
 	}
@@ -614,7 +619,7 @@ struct CameraOutput : public LocationOutput
 
 				// Explicit namespace can be removed once deprecated applyCameraGlobals
 				// is removed from GafferScene::SceneAlgo
-				GafferScene::Preview::applyCameraGlobals( cameraCopy.get(), m_globals );
+				GafferScene::Preview::RendererAlgo::applyCameraGlobals( cameraCopy.get(), m_globals );
 
 				std::string name;
 				ScenePlug::pathToString( path, name );
@@ -642,7 +647,7 @@ struct CameraOutput : public LocationOutput
 struct LightOutput : public LocationOutput
 {
 
-	LightOutput( IECoreScenePreview::Renderer *renderer, const IECore::CompoundObject *globals, const GafferScene::Preview::RenderSets &renderSets )
+	LightOutput( IECoreScenePreview::Renderer *renderer, const IECore::CompoundObject *globals, const GafferScene::Preview::RendererAlgo::RenderSets &renderSets )
 		:	LocationOutput( renderer, globals, renderSets ), m_lightSet( renderSets.lightsSet() )
 	{
 	}
@@ -680,7 +685,7 @@ struct LightOutput : public LocationOutput
 struct ObjectOutput : public LocationOutput
 {
 
-	ObjectOutput( IECoreScenePreview::Renderer *renderer, const IECore::CompoundObject *globals, const GafferScene::Preview::RenderSets &renderSets )
+	ObjectOutput( IECoreScenePreview::Renderer *renderer, const IECore::CompoundObject *globals, const GafferScene::Preview::RendererAlgo::RenderSets &renderSets )
 		:	LocationOutput( renderer, globals, renderSets ), m_cameraSet( renderSets.camerasSet() ), m_lightSet( renderSets.lightsSet() )
 	{
 	}
@@ -698,7 +703,7 @@ struct ObjectOutput : public LocationOutput
 		}
 
 		vector<ConstVisibleRenderablePtr> samples; set<float> sampleTimes;
-		objectSamples( scene, deformationSegments(), shutter(), samples, sampleTimes );
+		RendererAlgo::objectSamples( scene, deformationSegments(), shutter(), samples, sampleTimes );
 		if( !samples.size() )
 		{
 			return true;
@@ -744,6 +749,9 @@ namespace GafferScene
 {
 
 namespace Preview
+{
+
+namespace RendererAlgo
 {
 
 void outputOptions( const IECore::CompoundObject *globals, IECoreScenePreview::Renderer *renderer )
@@ -878,7 +886,7 @@ void outputCameras( const ScenePlug *scene, const IECore::CompoundObject *global
 	if( cameraOption && !cameraOption->readable().empty() )
 	{
 		ScenePlug::ScenePath cameraPath; ScenePlug::stringToPath( cameraOption->readable(), cameraPath );
-		if( !exists( scene, cameraPath ) )
+		if( !SceneAlgo::exists( scene, cameraPath ) )
 		{
 			throw IECore::Exception( "Camera \"" + cameraOption->readable() + "\" does not exist" );
 		}
@@ -893,7 +901,7 @@ void outputCameras( const ScenePlug *scene, const IECore::CompoundObject *global
 
 	if( !cameraOption || cameraOption->readable().empty() )
 	{
-		CameraPtr defaultCamera = camera( scene, globals );
+		CameraPtr defaultCamera = SceneAlgo::camera( scene, globals );
 		StringDataPtr name = new StringData( "gaffer:defaultCamera" );
 		IECoreScenePreview::Renderer::AttributesInterfacePtr defaultAttributes = renderer->attributes( scene->attributesPlug()->defaultValue() ).get();
 		renderer->camera(
@@ -1020,9 +1028,11 @@ void applyCameraGlobals( IECore::Camera *camera, const IECore::CompoundObject *g
 
 	// apply the shutter
 
-	camera->parameters()["shutter"] = new V2fData( shutter( globals ) );
+	camera->parameters()["shutter"] = new V2fData( SceneAlgo::shutter( globals ) );
 
 }
+
+} // namespace RendererAlgo
 
 } // namespace Preview
 

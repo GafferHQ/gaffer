@@ -42,6 +42,9 @@
 namespace GafferImage
 {
 
+namespace BufferAlgo
+{
+
 //////////////////////////////////////////////////////////////////////////
 // Window/Box utilities
 //////////////////////////////////////////////////////////////////////////
@@ -125,6 +128,8 @@ inline size_t index( const Imath::V2i &p, const Imath::Box2i &b )
 		( p.y - b.min.y ) * b.size().x +
 		( p.x - b.min.x );
 }
+
+} // namespace BufferAlgo
 
 } // namespace GafferImage
 

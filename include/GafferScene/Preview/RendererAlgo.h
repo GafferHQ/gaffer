@@ -52,6 +52,9 @@ IE_CORE_FORWARDDECLARE( ScenePlug )
 namespace Preview
 {
 
+namespace RendererAlgo
+{
+
 void outputOptions( const IECore::CompoundObject *globals, IECoreScenePreview::Renderer *renderer );
 void outputOptions( const IECore::CompoundObject *globals, const IECore::CompoundObject *previousGlobals, IECoreScenePreview::Renderer *renderer );
 
@@ -111,6 +114,11 @@ void outputObjects( const ScenePlug *scene, const IECore::CompoundObject *global
 
 /// Applies the resolution, aspect ratio etc from the globals to the camera.
 void applyCameraGlobals( IECore::Camera *camera, const IECore::CompoundObject *globals );
+
+} // namespace RendererAlgo
+
+/// \todo Remove this temporary backwards compatibility.
+using namespace RendererAlgo;
 
 } // namespace Preview
 

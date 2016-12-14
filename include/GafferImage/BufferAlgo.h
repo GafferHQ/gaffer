@@ -42,6 +42,9 @@
 namespace GafferImage
 {
 
+namespace BufferAlgo
+{
+
 /// Image window utility functions. The GafferImage convention is that
 /// the minimum coordinate is included within the window and the
 /// maximum coordinate is outside it - these functions take that into
@@ -68,6 +71,11 @@ inline Imath::V2i clamp( const Imath::V2i &point, const Imath::Box2i &window );
 
 /// Returns the index of point p within a buffer with bounds b.
 inline size_t index( const Imath::V2i &p, const Imath::Box2i &b );
+
+} // namespace BufferAlgo
+
+/// \todo Remove this temporary backwards compatibility.
+using namespace BufferAlgo;
 
 } // namespace GafferImage
 

@@ -320,7 +320,7 @@ class ArnoldOutput : public IECore::RefCounted
 			else
 			{
 				vector<std::string> tokens;
-				Gaffer::tokenize( m_data, ' ', tokens );
+				Gaffer::StringAlgo::tokenize( m_data, ' ', tokens );
 				if( tokens.size() == 2 && tokens[0] == "color" )
 				{
 					m_data = tokens[1] + " RGBA";

@@ -47,6 +47,9 @@
 namespace GafferScene
 {
 
+namespace RendererAlgo
+{
+
 /// Outputs an entire scene, using a SceneProcedural for the main body of the world.
 /// Individual parts of a scene may be output more specifically using the methods below.
 void outputScene( const ScenePlug *scene, IECore::Renderer *renderer );
@@ -114,6 +117,11 @@ void objectSamples( const ScenePlug *scene, size_t segments, const Imath::V2f &s
 
 /// Outputs the object for the current location, using objectSamples() to generate the samples.
 void outputObject( const ScenePlug *scene, IECore::Renderer *renderer, size_t segments = 0, const Imath::V2f &shutter = Imath::V2i( 0 ) );
+
+} // namespace RendererAlgo
+
+/// \todo Remove this temporary backwards compatibility.
+using namespace RendererAlgo;
 
 } // namespace GafferScene
 

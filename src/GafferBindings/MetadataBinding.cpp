@@ -213,7 +213,7 @@ object registerNodeDescription( tuple args, dict kw )
 
 	for( size_t i = 2, e = len( args ); i < e; i += 2 )
 	{
-		MatchPattern plugPath = extract<MatchPattern>( args[i] )();
+		StringAlgo::MatchPattern plugPath = extract<StringAlgo::MatchPattern>( args[i] )();
 		extract<dict> dictExtractor( args[i+1] );
 		if( dictExtractor.check() )
 		{
@@ -254,7 +254,7 @@ object registerNode( tuple args, dict kw )
 		list plugsItems = plugs.items();
 		for( size_t i = 0, e = len( plugsItems ); i < e; ++i )
 		{
-			MatchPattern plugPath = extract<MatchPattern>( plugsItems[i][0] )();
+			StringAlgo::MatchPattern plugPath = extract<StringAlgo::MatchPattern>( plugsItems[i][0] )();
 			object plugValues = plugsItems[i][1];
 			for( size_t vi = 0, ve = len( plugValues ); vi < ve; vi += 2 )
 			{
@@ -303,7 +303,7 @@ struct ValueChangedSlotCaller
 		return boost::signals::detail::unusable();
 	}
 
-	boost::signals::detail::unusable operator()( boost::python::object slot, IECore::TypeId nodeTypeId, const MatchPattern &plugPath, IECore::InternedString key, Plug *plug )
+	boost::signals::detail::unusable operator()( boost::python::object slot, IECore::TypeId nodeTypeId, const StringAlgo::MatchPattern &plugPath, IECore::InternedString key, Plug *plug )
 	{
 		slot( nodeTypeId, plugPath.c_str(), key.c_str(), PlugPtr( plug ) );
 		return boost::signals::detail::unusable();
@@ -424,7 +424,7 @@ void bindMetadata()
 		.staticmethod( "value" )
 
 		.def( "deregisterValue", (void (*)( IECore::TypeId, IECore::InternedString ) )&Metadata::deregisterValue )
-		.def( "deregisterValue", (void (*)( IECore::TypeId, const MatchPattern &, IECore::InternedString ) )&Metadata::deregisterValue )
+		.def( "deregisterValue", (void (*)( IECore::TypeId, const StringAlgo::MatchPattern &, IECore::InternedString ) )&Metadata::deregisterValue )
 		.def( "deregisterValue", (void (*)( GraphComponent *, IECore::InternedString ) )&Metadata::deregisterValue )
 		.staticmethod( "deregisterValue" )
 
@@ -508,7 +508,7 @@ void bindMetadata()
 		)
 		.staticmethod( "plugValue" )
 
-		.def( "deregisterPlugValue", (void (*)( IECore::TypeId, const MatchPattern &, InternedString ))&Metadata::deregisterPlugValue )
+		.def( "deregisterPlugValue", (void (*)( IECore::TypeId, const StringAlgo::MatchPattern &, InternedString ))&Metadata::deregisterPlugValue )
 		.def( "deregisterPlugValue", (void (*)( Plug *, InternedString ))&Metadata::deregisterPlugValue )
 		.staticmethod( "deregisterPlugValue" )
 

@@ -86,7 +86,7 @@ bool traverseOnPreDispatch( ConstScenePlugPtr scene )
 void GafferSceneTest::traverseScene( const GafferScene::ScenePlug *scenePlug )
 {
 	SceneEvaluateFunctor f;
-	parallelTraverse( scenePlug, f );
+	SceneAlgo::parallelTraverse( scenePlug, f );
 }
 
 void GafferSceneTest::traverseScene( GafferScene::ScenePlug *scenePlug )

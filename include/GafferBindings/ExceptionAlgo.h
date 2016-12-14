@@ -40,6 +40,9 @@
 namespace GafferBindings
 {
 
+namespace ExceptionAlgo
+{
+
 /// Formats the current python exception using the traceback module,
 /// and returns it in the form of a string. If lineNumber is provided, it
 /// will be filled with the number of the line where the error occurred.
@@ -50,6 +53,11 @@ std::string formatPythonException( bool withStacktrace = true, int *lineNumber =
 /// boost::python::error_already_set.
 /// \todo Maybe this should be moved to IECorePython?
 void translatePythonException( bool withStacktrace = true );
+
+} // namespace ExceptionAlgo
+
+/// \todo Remove this temporary backwards compatibility.
+using namespace ExceptionAlgo;
 
 } // namespace GafferBindings
 

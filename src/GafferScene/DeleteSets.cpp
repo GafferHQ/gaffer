@@ -123,7 +123,7 @@ IECore::ConstInternedStringVectorDataPtr DeleteSets::computeSetNames( const Gaff
 
 	for( std::vector<InternedString>::const_iterator it = inputSetNames.begin(); it != inputSetNames.end(); ++it )
 	{
-		if( matchMultiple( *it, names ) != (!invert) )
+		if( StringAlgo::matchMultiple( *it, names ) != (!invert) )
 		{
 			outputSetNames.push_back( *it );
 		}
@@ -136,7 +136,7 @@ void DeleteSets::hashSet( const IECore::InternedString &setName, const Gaffer::C
 {
 	const std::string names = namesPlug()->getValue();
 	const bool invert = invertNamesPlug()->getValue();
-	if( matchMultiple( setName, names ) != (!invert) )
+	if( StringAlgo::matchMultiple( setName, names ) != (!invert) )
 	{
 		h = inPlug()->setPlug()->getValue()->Object::hash();
 	}
@@ -150,7 +150,7 @@ GafferScene::ConstPathMatcherDataPtr DeleteSets::computeSet( const IECore::Inter
 {
 	const std::string names = namesPlug()->getValue();
 	const bool invert = invertNamesPlug()->getValue();
-	if( matchMultiple( setName, names ) != (!invert) )
+	if( StringAlgo::matchMultiple( setName, names ) != (!invert) )
 	{
 		return inPlug()->setPlug()->getValue();
 	}

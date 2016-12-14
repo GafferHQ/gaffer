@@ -289,7 +289,7 @@ SceneNode::ScenePath SubTree::sourcePath( const ScenePath &outputPath, bool &cre
 		// because clients of the SubTree have the same obligation to make
 		// only valid queries, and this will necessarily involve them computing
 		// the child names for the root first.
-		if( !exists( inPlug(), result ) )
+		if( !SceneAlgo::exists( inPlug(), result ) )
 		{
 			throw IECore::Exception( boost::str( boost::format( "Root \"%s\" does not exist" ) % rootAsString ) );
 		}

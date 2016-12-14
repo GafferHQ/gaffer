@@ -48,7 +48,7 @@ static IECore::InternedString g_namePropertyName( "name" );
 
 IE_CORE_DEFINERUNTIMETYPED( MatchPatternPathFilter );
 
-MatchPatternPathFilter::MatchPatternPathFilter( const std::vector<MatchPattern> &patterns, IECore::InternedString propertyName, bool leafOnly, IECore::CompoundDataPtr userData )
+MatchPatternPathFilter::MatchPatternPathFilter( const std::vector<StringAlgo::MatchPattern> &patterns, IECore::InternedString propertyName, bool leafOnly, IECore::CompoundDataPtr userData )
 	:	PathFilter( userData ), m_patterns( patterns ), m_propertyName( propertyName ), m_leafOnly( leafOnly ), m_inverted( false )
 {
 }
@@ -57,7 +57,7 @@ MatchPatternPathFilter::~MatchPatternPathFilter()
 {
 }
 
-void MatchPatternPathFilter::setMatchPatterns( const std::vector<MatchPattern> &patterns )
+void MatchPatternPathFilter::setMatchPatterns( const std::vector<StringAlgo::MatchPattern> &patterns )
 {
 	if( patterns == m_patterns )
 	{
@@ -67,7 +67,7 @@ void MatchPatternPathFilter::setMatchPatterns( const std::vector<MatchPattern> &
 	changedSignal()( this );
 }
 
-const std::vector<MatchPattern> &MatchPatternPathFilter::getMatchPatterns() const
+const std::vector<StringAlgo::MatchPattern> &MatchPatternPathFilter::getMatchPatterns() const
 {
 	return m_patterns;
 }
@@ -147,9 +147,9 @@ bool MatchPatternPathFilter::remove( PathPtr path ) const
 		propertyValue = &propertyData->readable();
 	}
 
-	for( std::vector<MatchPattern>::const_iterator it = m_patterns.begin(), eIt = m_patterns.end(); it != eIt; ++it )
+	for( std::vector<StringAlgo::MatchPattern>::const_iterator it = m_patterns.begin(), eIt = m_patterns.end(); it != eIt; ++it )
 	{
-		if( match( propertyValue->c_str(), *it ) )
+		if( StringAlgo::match( propertyValue->c_str(), *it ) )
 		{
 			return invert( false );
 		}

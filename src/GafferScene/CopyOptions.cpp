@@ -87,7 +87,7 @@ IECore::ConstCompoundObjectPtr CopyOptions::computeProcessedGlobals( const Gaffe
 	{
 		if( boost::starts_with( it->first.c_str(), prefix ) )
 		{
-			if( matchMultiple( it->first.c_str() + prefix.size(), names.c_str() ) )
+			if( StringAlgo::matchMultiple( it->first.c_str() + prefix.size(), names.c_str() ) )
 			{
 				result->members()[it->first] = it->second;
 			}

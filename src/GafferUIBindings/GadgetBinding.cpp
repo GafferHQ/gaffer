@@ -153,7 +153,7 @@ struct ExecuteOnUIThreadSlotCaller
 		}
 		catch( const error_already_set &e )
 		{
-			translatePythonException();
+			ExceptionAlgo::translatePythonException();
 		}
 		return boost::signals::detail::unusable();
 	}

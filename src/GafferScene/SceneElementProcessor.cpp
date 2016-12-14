@@ -138,7 +138,7 @@ Imath::Box3f SceneElementProcessor::computeBound( const ScenePath &path, const G
 				// We do have to resort to computing the object here, but its exceedingly
 				// rare to have an object at a location which also has children, so typically
 				// we should be receiving a NullObject cheaply.
-				result.extendBy( bound( inPlug()->objectPlug()->getValue().get() ) );
+				result.extendBy( SceneAlgo::bound( inPlug()->objectPlug()->getValue().get() ) );
 			}
 			else
 			{

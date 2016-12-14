@@ -148,7 +148,7 @@ class InteractiveRender::SceneGraph
 
 		// Called by SceneGraphUpdateTask to update this location. Returns a bitmask
 		// of the components which were changed.
-		unsigned update( const ScenePlug *scene, const ScenePlug::ScenePath &path, unsigned dirtyComponents, unsigned changedParentComponents, Type type, IECoreScenePreview::Renderer *renderer, const IECore::CompoundObject *globals, const RenderSets &renderSets )
+		unsigned update( const ScenePlug *scene, const ScenePlug::ScenePath &path, unsigned dirtyComponents, unsigned changedParentComponents, Type type, IECoreScenePreview::Renderer *renderer, const IECore::CompoundObject *globals, const RendererAlgo::RenderSets &renderSets )
 		{
 			unsigned changedComponents = 0;
 
@@ -318,7 +318,7 @@ class InteractiveRender::SceneGraph
 		{
 			assert( !m_parent );
 
-			ConstCompoundObjectPtr globalAttributes = GafferScene::globalAttributes( globals );
+			ConstCompoundObjectPtr globalAttributes = GafferScene::SceneAlgo::globalAttributes( globals );
 			if( m_fullAttributes && *m_fullAttributes == *globalAttributes )
 			{
 				return false;
@@ -330,7 +330,7 @@ class InteractiveRender::SceneGraph
 			return true;
 		}
 
-		bool updateRenderSets( const ScenePlug::ScenePath &path, const RenderSets &renderSets )
+		bool updateRenderSets( const ScenePlug::ScenePath &path, const RendererAlgo::RenderSets &renderSets )
 		{
 			m_fullAttributes->members()[g_setsAttributeName] = boost::const_pointer_cast<InternedStringVectorData>(
 				renderSets.setsAttribute( path )
@@ -408,7 +408,7 @@ class InteractiveRender::SceneGraph
 
 					// Explicit namespace can be removed once deprecated applyCameraGlobals
 					// is removed from GafferScene::SceneAlgo
-					GafferScene::Preview::applyCameraGlobals( cameraCopy.get(), globals );
+					GafferScene::Preview::RendererAlgo::applyCameraGlobals( cameraCopy.get(), globals );
 					m_objectInterface = renderer->camera( name, cameraCopy.get(), attributesInterface( renderer ) );
 				}
 			}
@@ -838,14 +838,14 @@ void InteractiveRender::update()
 	if( m_dirtyComponents & SceneGraph::GlobalsComponent )
 	{
 		ConstCompoundObjectPtr globals = inPlug()->globalsPlug()->getValue();
-		outputOptions( globals.get(), m_globals.get(), m_renderer.get() );
-		outputOutputs( globals.get(), m_globals.get(), m_renderer.get() );
+		RendererAlgo::outputOptions( globals.get(), m_globals.get(), m_renderer.get() );
+		RendererAlgo::outputOutputs( globals.get(), m_globals.get(), m_renderer.get() );
 		m_globals = globals;
 	}
 
 	if( m_dirtyComponents & SceneGraph::SetsComponent )
 	{
-		if( m_renderSets.update( inPlug() ) & RenderSets::RenderSetsChanged )
+		if( m_renderSets.update( inPlug() ) & RendererAlgo::RenderSets::RenderSetsChanged )
 		{
 			m_dirtyComponents |= SceneGraph::RenderSetsComponent;
 		}
@@ -915,7 +915,7 @@ void InteractiveRender::updateDefaultCamera()
 		return;
 	}
 
-	CameraPtr defaultCamera = camera( inPlug(), m_globals.get() );
+	CameraPtr defaultCamera = SceneAlgo::camera( inPlug(), m_globals.get() );
 	StringDataPtr name = new StringData( "gaffer:defaultCamera" );
 	IECoreScenePreview::Renderer::AttributesInterfacePtr defaultAttributes = m_renderer->attributes( inPlug()->attributesPlug()->defaultValue() );
 	m_defaultCamera = m_renderer->camera( name->readable(), defaultCamera.get(), defaultAttributes.get() );
