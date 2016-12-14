@@ -53,7 +53,7 @@ class NoduleLayoutTest( GafferUITest.TestCase ) :
 		self.assertTrue( top.nodule( n["op1"] ) is not None )
 		self.assertTrue( left.nodule( n["op1"] ) is None )
 
-		Gaffer.Metadata.registerValue( n["op1"], "nodeGraphLayout:section", "left" )
+		Gaffer.Metadata.registerValue( n["op1"], "noduleLayout:section", "left" )
 
 		self.assertTrue( top.nodule( n["op1"] ) is None )
 		self.assertTrue( left.nodule( n["op1"] ) is not None )
@@ -70,8 +70,8 @@ class NoduleLayoutTest( GafferUITest.TestCase ) :
 			top.nodule( n["op1"] ).transformedBound( None ).center().x
 		)
 
-		Gaffer.Metadata.registerValue( n["op1"], "nodeGraphLayout:section", "left" )
-		Gaffer.Metadata.registerValue( n["op2"], "nodeGraphLayout:section", "left" )
+		Gaffer.Metadata.registerValue( n["op1"], "noduleLayout:section", "left" )
+		Gaffer.Metadata.registerValue( n["op2"], "noduleLayout:section", "left" )
 
 		left = GafferUI.NoduleLayout( n, "left" )
 		self.assertGreater( left.bound().size().y, left.bound().size().x )
@@ -93,7 +93,7 @@ class NoduleLayoutTest( GafferUITest.TestCase ) :
 			top.nodule( n["op1"] ).transformedBound( None ).center().x
 		)
 
-		Gaffer.Metadata.registerValue( n, "nodeGraphLayout:section:top:direction", "decreasing" )
+		Gaffer.Metadata.registerValue( n, "noduleLayout:section:top:direction", "decreasing" )
 
 		self.assertGreater( top.bound().size().x, top.bound().size().y )
 
@@ -110,11 +110,11 @@ class NoduleLayoutTest( GafferUITest.TestCase ) :
 		self.assertTrue( top.nodule( n["op1"] ) is not None )
 		self.assertTrue( top.nodule( n["op2"] ) is not None )
 
-		Gaffer.Metadata.registerValue( n["op1"], "nodeGraphLayout:visible", False )
+		Gaffer.Metadata.registerValue( n["op1"], "noduleLayout:visible", False )
 		self.assertTrue( top.nodule( n["op1"] ) is None )
 		self.assertTrue( top.nodule( n["op2"] ) is not None )
 
-		Gaffer.Metadata.registerValue( n["op1"], "nodeGraphLayout:visible", True )
+		Gaffer.Metadata.registerValue( n["op1"], "noduleLayout:visible", True )
 		self.assertTrue( top.nodule( n["op1"] ) is not None )
 		self.assertTrue( top.nodule( n["op2"] ) is not None )
 

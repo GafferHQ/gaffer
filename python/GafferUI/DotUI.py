@@ -186,7 +186,7 @@ def __nodeGraphPlugContextMenu( nodeGraph, plug, menuDefinition ) :
 
 		## \todo This duplicates functionality from BoxUI. Is there some way
 		# we could share it?
-		currentEdge = Gaffer.Metadata.value( plug, "nodeGraphLayout:section" )
+		currentEdge = Gaffer.Metadata.value( plug, "noduleLayout:section" )
 		if not currentEdge :
 			currentEdge = "top" if plug.direction() == plug.Direction.In else "bottom"
 
@@ -195,7 +195,7 @@ def __nodeGraphPlugContextMenu( nodeGraph, plug, menuDefinition ) :
 			menuDefinition.append(
 				"/Move To/" + edge.capitalize(),
 				{
-					"command" : functools.partial( __setPlugMetadata, plug, "nodeGraphLayout:section", edge ),
+					"command" : functools.partial( __setPlugMetadata, plug, "noduleLayout:section", edge ),
 					"active" : edge != currentEdge and not readOnly,
 				}
 			)

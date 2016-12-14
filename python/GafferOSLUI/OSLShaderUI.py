@@ -158,7 +158,7 @@ Gaffer.Metadata.registerNode(
 		"out" : [
 
 			"nodule:type", __outPlugNoduleType,
-			"nodeGraphLayout:spacing", 0.2,
+			"noduleLayout:spacing", 0.2,
 
 		],
 

@@ -45,7 +45,7 @@ IE_CORE_DEFINERUNTIMETYPED( Dot );
 
 static InternedString g_inPlugName( "in" );
 static InternedString g_outPlugName( "out" );
-static InternedString g_sectionName( "nodeGraphLayout:section" );
+static InternedString g_sectionName( "noduleLayout:section" );
 
 size_t Dot::g_firstPlugIndex = 0;
 

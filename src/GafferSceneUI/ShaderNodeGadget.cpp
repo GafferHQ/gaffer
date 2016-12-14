@@ -61,7 +61,7 @@ using namespace GafferSceneUI::Private;
 namespace
 {
 
-IECore::InternedString g_visibleKey( "nodeGraphLayout:visible" );
+IECore::InternedString g_visibleKey( "noduleLayout:visible" );
 IECore::InternedString g_noduleTypeKey( "nodule:type" );
 
 class ShaderPlugAdder : public PlugAdder

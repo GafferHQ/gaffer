@@ -103,8 +103,8 @@ Gaffer.Metadata.registerNode(
 			""",
 
 			"nodule:type", "GafferUI::CompoundNodule",
-			"nodeGraphLayout:section", "left",
-			"nodeGraphLayout:spacing", 0.2,
+			"noduleLayout:section", "left",
+			"noduleLayout:spacing", 0.2,
 			"plugValueWidget:type", "GafferUI.LayoutPlugValueWidget",
 
 		],
@@ -116,7 +116,7 @@ Gaffer.Metadata.registerNode(
 			# appropriate values for each individual parameter,
 			# for the case where they get promoted to a box
 			# individually.
-			"nodeGraphLayout:section", "left",
+			"noduleLayout:section", "left",
 
 		],
 
@@ -127,14 +127,14 @@ Gaffer.Metadata.registerNode(
 			The output from the shader.
 			""",
 
-			"nodeGraphLayout:section", "right",
+			"noduleLayout:section", "right",
 			"plugValueWidget:type", "",
 
 		],
 
 		"out.*" : [
 
-			"nodeGraphLayout:section", "right",
+			"noduleLayout:section", "right",
 
 		],
 
@@ -305,7 +305,7 @@ def __nodeGraphPlugContextMenu( nodeGraph, plug, menuDefinition ) :
 
 		"/Hide",
 		{
-			"command" : functools.partial( __setPlugMetadata, plug, "nodeGraphLayout:visible", False ),
+			"command" : functools.partial( __setPlugMetadata, plug, "noduleLayout:visible", False ),
 			"active" : plug.getInput() is None and not Gaffer.readOnly( plug ),
 		}
 

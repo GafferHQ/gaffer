@@ -198,7 +198,7 @@ def __translateNodeMetadata( nodeEntry ) :
 		visible = __aiMetadataGetBool( nodeEntry, None, "gaffer.nodeGraphLayout.defaultVisibility" )
 		visible = __aiMetadataGetBool( nodeEntry, paramName, "gaffer.nodeGraphLayout.visible", visible )
 		if visible is not None :
-			__metadata[paramPath]["nodeGraphLayout:visible"] = visible
+			__metadata[paramPath]["noduleLayout:visible"] = visible
 
 	# If we haven't seen any nice sane OSL "page" metadata, then have
 	# a go at translating the houdini layout metadata. Surely one of the
@@ -363,7 +363,7 @@ def __nodeMetadata( node, name ) :
 
 def __plugMetadata( plug, name ) :
 
-	if name == "nodeGraphLayout:visible" and plug.getInput() is not None :
+	if name == "noduleLayout:visible" and plug.getInput() is not None :
 		# Before the introduction of nodule visibility controls,
 		# users may have made connections to plugs which are now
 		# hidden by default. Make sure we continue to show them

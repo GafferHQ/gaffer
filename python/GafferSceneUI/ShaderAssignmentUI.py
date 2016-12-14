@@ -58,7 +58,7 @@ Gaffer.Metadata.registerNode(
 			The shader to be assigned.
 			""",
 
-			"nodeGraphLayout:section", "left",
+			"noduleLayout:section", "left",
 			"nodule:type", "GafferUI::StandardNodule",
 
 		]

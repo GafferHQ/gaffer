@@ -68,7 +68,7 @@ class DotNodeGadgetTest( GafferUITest.TestCase ) :
 		s = Gaffer.ScriptNode()
 
 		s["n"] = GafferTest.AddNode()
-		Gaffer.Metadata.registerValue( s["n"]["sum"], "nodeGraphLayout:section", "right" )
+		Gaffer.Metadata.registerValue( s["n"]["sum"], "noduleLayout:section", "right" )
 
 		s["d"] = Gaffer.Dot()
 
@@ -87,7 +87,7 @@ class DotNodeGadgetTest( GafferUITest.TestCase ) :
 		s = Gaffer.ScriptNode()
 
 		s["n"] = GafferTest.AddNode()
-		Gaffer.Metadata.registerValue( s["n"]["op1"], "nodeGraphLayout:section", "left" )
+		Gaffer.Metadata.registerValue( s["n"]["op1"], "noduleLayout:section", "left" )
 
 		s["d"] = Gaffer.Dot()
 
@@ -109,7 +109,7 @@ class DotNodeGadgetTest( GafferUITest.TestCase ) :
 		s["n2"] = GafferTest.AddNode()
 		s["n2"]["op1"].setInput( s["n1"]["sum"] )
 
-		Gaffer.Metadata.registerValue( s["n1"]["sum"], "nodeGraphLayout:section", "right" )
+		Gaffer.Metadata.registerValue( s["n1"]["sum"], "noduleLayout:section", "right" )
 
 		s["d"] = Gaffer.Dot()
 
@@ -128,7 +128,7 @@ class DotNodeGadgetTest( GafferUITest.TestCase ) :
 		s = Gaffer.ScriptNode()
 
 		s["n"] = GafferTest.AddNode()
-		Gaffer.Metadata.registerValue( s["n"]["sum"], "nodeGraphLayout:section", "right" )
+		Gaffer.Metadata.registerValue( s["n"]["sum"], "noduleLayout:section", "right" )
 
 		graphGadget = GafferUI.GraphGadget( s )
 

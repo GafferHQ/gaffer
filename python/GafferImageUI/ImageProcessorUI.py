@@ -56,7 +56,7 @@ Gaffer.Metadata.registerNode(
 
 			"plugValueWidget:type", "",
 			"nodule:type", lambda plug : "GafferUI::CompoundNodule" if isinstance( plug, Gaffer.ArrayPlug ) else "GafferUI::StandardNodule",
-			"nodeGraphLayout:spacing", 2.0,
+			"noduleLayout:spacing", 2.0,
 
 		],
 

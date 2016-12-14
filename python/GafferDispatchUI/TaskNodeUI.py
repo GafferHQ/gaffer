@@ -67,7 +67,7 @@ Gaffer.Metadata.registerNode(
 			""",
 
 			"nodule:type", "GafferUI::CompoundNodule",
-			"nodeGraphLayout:spacing", 0.4,
+			"noduleLayout:spacing", 0.4,
 
 			"plugValueWidget:type", "",
 
@@ -89,8 +89,8 @@ Gaffer.Metadata.registerNode(
 			""",
 
 			"nodule:type", "GafferUI::CompoundNodule",
-			"nodeGraphLayout:section", "right",
-			"nodeGraphLayout:spacing", 0.2,
+			"noduleLayout:section", "right",
+			"noduleLayout:spacing", 0.2,
 
 			"plugValueWidget:type", "",
 
@@ -99,7 +99,7 @@ Gaffer.Metadata.registerNode(
 		"postTasks.*" : (
 
 			"plugValueWidget:type", "",
-			"nodeGraphLayout:section", "right",
+			"noduleLayout:section", "right",
 
 		),
 

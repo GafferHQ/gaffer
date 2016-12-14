@@ -97,11 +97,11 @@ IECore::InternedString g_top( "top" );
 
 // Metadata keys
 
-IECore::InternedString g_indexKey( "nodeGraphLayout:index" );
-IECore::InternedString g_sectionKey( "nodeGraphLayout:section" );
-IECore::InternedString g_visibleKey( "nodeGraphLayout:visible" );
-IECore::InternedString g_spacingKey( "nodeGraphLayout:spacing" );
-IECore::InternedString g_directionKey( "nodeGraphLayout:direction" );
+IECore::InternedString g_indexKey( "noduleLayout:index" );
+IECore::InternedString g_sectionKey( "noduleLayout:section" );
+IECore::InternedString g_visibleKey( "noduleLayout:visible" );
+IECore::InternedString g_spacingKey( "noduleLayout:spacing" );
+IECore::InternedString g_directionKey( "noduleLayout:direction" );
 IECore::InternedString g_noduleTypeKey( "nodule:type" );
 
 // Deprecated metadata keys
@@ -123,7 +123,7 @@ float spacing( const Gaffer::GraphComponent *parent, IECore::InternedString sect
 	ConstFloatDataPtr f;
 	if( section != "" )
 	{
-		f = Metadata::value<FloatData>( parent, "nodeGraphLayout:section:" + section.string() + ":spacing" );
+		f = Metadata::value<FloatData>( parent, "noduleLayout:section:" + section.string() + ":spacing" );
 	}
 	else
 	{
@@ -170,7 +170,7 @@ bool affectsSpacing( IECore::InternedString key, IECore::InternedString section 
 {
 	if( section != "" )
 	{
-		if( key == "nodeGraphLayout:section:" + section.string() + ":spacing" )
+		if( key == "noduleLayout:section:" + section.string() + ":spacing" )
 		{
 			return true;
 		}
@@ -258,7 +258,7 @@ LinearContainer::Direction direction( const Gaffer::GraphComponent *parent, IECo
 	ConstStringDataPtr d;
 	if( section != "" )
 	{
-		d = Metadata::value<StringData>( parent, "nodeGraphLayout:section:" + section.string() + ":direction" );
+		d = Metadata::value<StringData>( parent, "noduleLayout:section:" + section.string() + ":direction" );
 	}
 	else
 	{
@@ -297,7 +297,7 @@ LinearContainer::Direction direction( const Gaffer::GraphComponent *parent, IECo
 
 bool affectsDirection( IECore::InternedString key, IECore::InternedString section )
 {
-	if( key == "nodeGraphLayout:section:" + section.string() + ":direction" )
+	if( key == "noduleLayout:section:" + section.string() + ":direction" )
 	{
 		return true;
 	}

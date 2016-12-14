@@ -59,15 +59,15 @@ IE_CORE_FORWARDDECLARE( Nodule )
 /// Child plug metadata
 /// ===================
 ///
-/// nodeGraphLayout:index, int, controls relative order of nodules
-/// nodeGraphLayout:section, string, "left"/"right"/"top"/"bottom"
-/// nodeGraphLayout:visible, bool
+/// noduleLayout:index, int, controls relative order of nodules
+/// noduleLayout:section, string, "left"/"right"/"top"/"bottom"
+/// noduleLayout:visible, bool
 ///
 /// Parent metadata
 /// ===============
 ///
-/// - nodeGraphLayout:section:<sectionName>:spacing, float
-/// - nodeGraphLayout:section:<sectionName>:direction, string, "increasing" or "decreasing"
+/// - noduleLayout:section:<sectionName>:spacing, float
+/// - noduleLayout:section:<sectionName>:direction, string, "increasing" or "decreasing"
 class NoduleLayout : public Gadget
 {
 
