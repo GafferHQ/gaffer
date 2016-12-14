@@ -130,6 +130,7 @@ from StatsApplicationTest import StatsApplicationTest
 from DownstreamIteratorTest import DownstreamIteratorTest
 from PerformanceMonitorTest import PerformanceMonitorTest
 from MetadataAlgoTest import MetadataAlgoTest
+from ContextMonitorTest import ContextMonitorTest
 
 if __name__ == "__main__":
 	import unittest
