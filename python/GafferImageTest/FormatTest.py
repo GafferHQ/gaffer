@@ -149,7 +149,7 @@ class FormatTest( GafferImageTest.ImageTestCase ) :
 			b.extendBy( IECore.V2i( int( random.uniform( -500, 500 ) ), int( random.uniform( -500, 500 ) ) ) )
 
 			bDown = f.toEXRSpace( b )
-			if not GafferImage.empty( b ) :
+			if not GafferImage.BufferAlgo.empty( b ) :
 				self.assertEqual( f.fromEXRSpace( bDown ), b )
 			else :
 				self.assertEqual( f.fromEXRSpace( bDown ), IECore.Box2i() )

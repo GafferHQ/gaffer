@@ -86,11 +86,11 @@ void ChannelMaskPlug::removeDuplicateIndices( std::vector<std::string> &inChanne
 		std::vector<std::string>::iterator cIt( inChannels.begin() );
 		while ( cIt != inChannels.end() )
 		{
-			int idx = colorIndex( *cIt );
+			int idx = ImageAlgo::colorIndex( *cIt );
 			std::vector<std::string>::iterator duplicateIt( cIt + 1 );
 			while ( duplicateIt != inChannels.end() )
 			{
-				if ( colorIndex( *duplicateIt ) == idx )
+				if( ImageAlgo::colorIndex( *duplicateIt ) == idx )
 				{
 					inChannels.erase( duplicateIt );
 					duplicateIt = cIt + 1;

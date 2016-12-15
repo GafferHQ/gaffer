@@ -60,7 +60,7 @@ using namespace IECore;
 using namespace Gaffer;
 using namespace GafferScene;
 
-bool GafferScene::exists( const ScenePlug *scene, const ScenePlug::ScenePath &path )
+bool GafferScene::SceneAlgo::exists( const ScenePlug *scene, const ScenePlug::ScenePath &path )
 {
 	ContextPtr context = new Context( *Context::current(), Context::Borrowed );
 	Context::Scope scopedContext( context.get() );
@@ -81,7 +81,7 @@ bool GafferScene::exists( const ScenePlug *scene, const ScenePlug::ScenePath &pa
 	return true;
 }
 
-bool GafferScene::visible( const ScenePlug *scene, const ScenePlug::ScenePath &path )
+bool GafferScene::SceneAlgo::visible( const ScenePlug *scene, const ScenePlug::ScenePath &path )
 {
 	ContextPtr context = new Context( *Context::current(), Context::Borrowed );
 	Context::Scope scopedContext( context.get() );
@@ -124,24 +124,24 @@ struct ThreadablePathAccumulator
 
 } // namespace
 
-void GafferScene::matchingPaths( const Filter *filter, const ScenePlug *scene, PathMatcher &paths )
+void GafferScene::SceneAlgo::matchingPaths( const Filter *filter, const ScenePlug *scene, PathMatcher &paths )
 {
 	matchingPaths( filter->outPlug(), scene, paths );
 }
 
-void GafferScene::matchingPaths( const Gaffer::IntPlug *filterPlug, const ScenePlug *scene, PathMatcher &paths )
+void GafferScene::SceneAlgo::matchingPaths( const Gaffer::IntPlug *filterPlug, const ScenePlug *scene, PathMatcher &paths )
 {
 	ThreadablePathAccumulator f( paths );
-	GafferScene::filteredParallelTraverse( scene, filterPlug, f );
+	GafferScene::SceneAlgo::filteredParallelTraverse( scene, filterPlug, f );
 }
 
-void GafferScene::matchingPaths( const PathMatcher &filter, const ScenePlug *scene, PathMatcher &paths )
+void GafferScene::SceneAlgo::matchingPaths( const PathMatcher &filter, const ScenePlug *scene, PathMatcher &paths )
 {
 	ThreadablePathAccumulator f( paths );
-	GafferScene::filteredParallelTraverse( scene, filter, f );
+	GafferScene::SceneAlgo::filteredParallelTraverse( scene, filter, f );
 }
 
-IECore::ConstCompoundObjectPtr GafferScene::globalAttributes( const IECore::CompoundObject *globals )
+IECore::ConstCompoundObjectPtr GafferScene::SceneAlgo::globalAttributes( const IECore::CompoundObject *globals )
 {
 	static const std::string prefix( "attribute:" );
 
@@ -164,7 +164,7 @@ IECore::ConstCompoundObjectPtr GafferScene::globalAttributes( const IECore::Comp
 	return result;
 }
 
-Imath::V2f GafferScene::shutter( const IECore::CompoundObject *globals )
+Imath::V2f GafferScene::SceneAlgo::shutter( const IECore::CompoundObject *globals )
 {
 	const BoolData *cameraBlurData = globals->member<BoolData>( "option:render:cameraBlur" );
 	const bool cameraBlur = cameraBlurData ? cameraBlurData->readable() : false;
@@ -186,7 +186,7 @@ Imath::V2f GafferScene::shutter( const IECore::CompoundObject *globals )
 	return shutter;
 }
 
-IECore::TransformPtr GafferScene::transform( const ScenePlug *scene, const ScenePlug::ScenePath &path, const Imath::V2f &shutter, bool motionBlur )
+IECore::TransformPtr GafferScene::SceneAlgo::transform( const ScenePlug *scene, const ScenePlug::ScenePath &path, const Imath::V2f &shutter, bool motionBlur )
 {
 	int numSamples = 1;
 	if( motionBlur )
@@ -221,7 +221,7 @@ IECore::TransformPtr GafferScene::transform( const ScenePlug *scene, const Scene
 // as we switch to new renderer backends, which will support the new renderRegion parameter
 //////////////////////////////////////////////////////////////////////////
 
-void GafferScene::applyCameraGlobals( IECore::Camera *camera, const IECore::CompoundObject *globals )
+void GafferScene::SceneAlgo::applyCameraGlobals( IECore::Camera *camera, const IECore::CompoundObject *globals )
 {
 
 	// apply the resolution, aspect ratio and crop window
@@ -368,7 +368,7 @@ void GafferScene::applyCameraGlobals( IECore::Camera *camera, const IECore::Comp
 
 }
 
-IECore::CameraPtr GafferScene::camera( const ScenePlug *scene, const IECore::CompoundObject *globals )
+IECore::CameraPtr GafferScene::SceneAlgo::camera( const ScenePlug *scene, const IECore::CompoundObject *globals )
 {
 	ConstCompoundObjectPtr computedGlobals;
 	if( !globals )
@@ -392,7 +392,7 @@ IECore::CameraPtr GafferScene::camera( const ScenePlug *scene, const IECore::Com
 	}
 }
 
-IECore::CameraPtr GafferScene::camera( const ScenePlug *scene, const ScenePlug::ScenePath &cameraPath, const IECore::CompoundObject *globals )
+IECore::CameraPtr GafferScene::SceneAlgo::camera( const ScenePlug *scene, const ScenePlug::ScenePath &cameraPath, const IECore::CompoundObject *globals )
 {
 	ConstCompoundObjectPtr computedGlobals;
 	if( !globals )
@@ -431,7 +431,7 @@ IECore::CameraPtr GafferScene::camera( const ScenePlug *scene, const ScenePlug::
 // Sets Algo
 //////////////////////////////////////////////////////////////////////////
 
-bool GafferScene::setExists( const ScenePlug *scene, const IECore::InternedString &setName )
+bool GafferScene::SceneAlgo::setExists( const ScenePlug *scene, const IECore::InternedString &setName )
 {
 	IECore::ConstInternedStringVectorDataPtr setNamesData = scene->setNamesPlug()->getValue();
 	const std::vector<IECore::InternedString> &setNames = setNamesData->readable();
@@ -469,13 +469,13 @@ struct Sets
 
 } // namespace
 
-IECore::ConstCompoundDataPtr GafferScene::sets( const ScenePlug *scene )
+IECore::ConstCompoundDataPtr GafferScene::SceneAlgo::sets( const ScenePlug *scene )
 {
 	ConstInternedStringVectorDataPtr setNamesData = scene->setNamesPlug()->getValue();
 	return sets( scene, setNamesData->readable() );
 }
 
-IECore::ConstCompoundDataPtr GafferScene::sets( const ScenePlug *scene, const std::vector<IECore::InternedString> &setNames )
+IECore::ConstCompoundDataPtr GafferScene::SceneAlgo::sets( const ScenePlug *scene, const std::vector<IECore::InternedString> &setNames )
 {
 	std::vector<GafferScene::ConstPathMatcherDataPtr> setsVector;
 	setsVector.resize( setNames.size(), NULL );
@@ -493,7 +493,7 @@ IECore::ConstCompoundDataPtr GafferScene::sets( const ScenePlug *scene, const st
 	return result;
 }
 
-Imath::Box3f GafferScene::bound( const IECore::Object *object )
+Imath::Box3f GafferScene::SceneAlgo::bound( const IECore::Object *object )
 {
 	if( const IECore::VisibleRenderable *renderable = IECore::runTimeCast<const IECore::VisibleRenderable>( object ) )
 	{

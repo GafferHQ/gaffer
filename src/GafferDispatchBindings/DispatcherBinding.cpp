@@ -85,7 +85,7 @@ class DispatcherWrapper : public NodeWrapper<Dispatcher>
 				}
 				catch( const boost::python::error_already_set &e )
 				{
-					translatePythonException();
+					ExceptionAlgo::translatePythonException();
 				}
 			}
 			else
@@ -112,7 +112,7 @@ class DispatcherWrapper : public NodeWrapper<Dispatcher>
 				}
 				catch( const boost::python::error_already_set &e )
 				{
-					translatePythonException();
+					ExceptionAlgo::translatePythonException();
 				}
 			}
 
@@ -208,7 +208,7 @@ struct DispatcherHelper
 		}
 		catch( const boost::python::error_already_set &e )
 		{
-			translatePythonException();
+			ExceptionAlgo::translatePythonException();
 		}
 
 		return 0;
@@ -225,7 +225,7 @@ struct DispatcherHelper
 			}
 			catch( const boost::python::error_already_set &e )
 			{
-				translatePythonException();
+				ExceptionAlgo::translatePythonException();
 			}
 		}
 	}

@@ -44,6 +44,9 @@ namespace Gaffer
 
 class PerformanceMonitor;
 
+namespace MonitorAlgo
+{
+
 enum PerformanceMetric
 {
 	Invalid,
@@ -62,6 +65,11 @@ enum PerformanceMetric
 
 std::string formatStatistics( const PerformanceMonitor &monitor, size_t maxLinesPerMetric = 50 );
 std::string formatStatistics( const PerformanceMonitor &monitor, PerformanceMetric metric, size_t maxLines = 50 );
+
+} // namespace MonitorAlgo
+
+/// \todo Remove this temporary backwards compatibility.
+using namespace MonitorAlgo;
 
 } // namespace Gaffer
 

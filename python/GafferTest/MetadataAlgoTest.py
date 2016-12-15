@@ -45,31 +45,31 @@ class MetadataAlgoTest( GafferTest.TestCase ) :
 
 		n = GafferTest.AddNode()
 
-		self.assertEqual( Gaffer.getReadOnly( n ), False )
-		self.assertEqual( Gaffer.getReadOnly( n["op1"] ), False )
-		self.assertEqual( Gaffer.readOnly( n ), False )
-		self.assertEqual( Gaffer.readOnly( n["op1"] ), False )
+		self.assertEqual( Gaffer.MetadataAlgo.getReadOnly( n ), False )
+		self.assertEqual( Gaffer.MetadataAlgo.getReadOnly( n["op1"] ), False )
+		self.assertEqual( Gaffer.MetadataAlgo.readOnly( n ), False )
+		self.assertEqual( Gaffer.MetadataAlgo.readOnly( n["op1"] ), False )
 
-		Gaffer.setReadOnly( n["op1"], True )
+		Gaffer.MetadataAlgo.setReadOnly( n["op1"], True )
 
-		self.assertEqual( Gaffer.getReadOnly( n ), False )
-		self.assertEqual( Gaffer.getReadOnly( n["op1"] ), True )
-		self.assertEqual( Gaffer.readOnly( n ), False )
-		self.assertEqual( Gaffer.readOnly( n["op1"] ), True )
+		self.assertEqual( Gaffer.MetadataAlgo.getReadOnly( n ), False )
+		self.assertEqual( Gaffer.MetadataAlgo.getReadOnly( n["op1"] ), True )
+		self.assertEqual( Gaffer.MetadataAlgo.readOnly( n ), False )
+		self.assertEqual( Gaffer.MetadataAlgo.readOnly( n["op1"] ), True )
 
-		Gaffer.setReadOnly( n, True )
+		Gaffer.MetadataAlgo.setReadOnly( n, True )
 
-		self.assertEqual( Gaffer.getReadOnly( n ), True )
-		self.assertEqual( Gaffer.getReadOnly( n["op1"] ), True )
-		self.assertEqual( Gaffer.readOnly( n ), True )
-		self.assertEqual( Gaffer.readOnly( n["op1"] ), True )
+		self.assertEqual( Gaffer.MetadataAlgo.getReadOnly( n ), True )
+		self.assertEqual( Gaffer.MetadataAlgo.getReadOnly( n["op1"] ), True )
+		self.assertEqual( Gaffer.MetadataAlgo.readOnly( n ), True )
+		self.assertEqual( Gaffer.MetadataAlgo.readOnly( n["op1"] ), True )
 
-		Gaffer.setReadOnly( n["op1"], False )
+		Gaffer.MetadataAlgo.setReadOnly( n["op1"], False )
 
-		self.assertEqual( Gaffer.getReadOnly( n ), True )
-		self.assertEqual( Gaffer.getReadOnly( n["op1"] ), False )
-		self.assertEqual( Gaffer.readOnly( n ), True )
-		self.assertEqual( Gaffer.readOnly( n["op1"] ), True )
+		self.assertEqual( Gaffer.MetadataAlgo.getReadOnly( n ), True )
+		self.assertEqual( Gaffer.MetadataAlgo.getReadOnly( n["op1"] ), False )
+		self.assertEqual( Gaffer.MetadataAlgo.readOnly( n ), True )
+		self.assertEqual( Gaffer.MetadataAlgo.readOnly( n["op1"] ), True )
 
 	def testAffected( self ) :
 
@@ -79,9 +79,9 @@ class MetadataAlgoTest( GafferTest.TestCase ) :
 		ancestorAffected = []
 		childAffected = []
 		def plugValueChanged( nodeTypeId, plugPath, key, plug ) :
-			affected.append( Gaffer.affectedByChange( n["p"]["s"], nodeTypeId, plugPath, plug ) )
-			ancestorAffected.append( Gaffer.ancestorAffectedByChange( n["p"]["s"], nodeTypeId, plugPath, plug ) )
-			childAffected.append( Gaffer.childAffectedByChange( n["p"], nodeTypeId, plugPath, plug ) )
+			affected.append( Gaffer.MetadataAlgo.affectedByChange( n["p"]["s"], nodeTypeId, plugPath, plug ) )
+			ancestorAffected.append( Gaffer.MetadataAlgo.ancestorAffectedByChange( n["p"]["s"], nodeTypeId, plugPath, plug ) )
+			childAffected.append( Gaffer.MetadataAlgo.childAffectedByChange( n["p"], nodeTypeId, plugPath, plug ) )
 
 		c = Gaffer.Metadata.plugValueChangedSignal().connect( plugValueChanged )
 

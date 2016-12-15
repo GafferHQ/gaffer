@@ -159,13 +159,13 @@ void Constant::hashChannelData( const GafferImage::ImagePlug *output, const Gaff
 	ImageNode::hashChannelData( output, context, h );
 	// Don't bother hashing the format or tile origin here as we couldn't care less about the
 	// position on the canvas, only the colour!
-	const int channelIndex = colorIndex( context->get<std::string>( ImagePlug::channelNameContextName ) );
+	const int channelIndex = ImageAlgo::colorIndex( context->get<std::string>( ImagePlug::channelNameContextName ) );
 	colorPlug()->getChild( channelIndex )->hash( h );
 }
 
 IECore::ConstFloatVectorDataPtr Constant::computeChannelData( const std::string &channelName, const Imath::V2i &tileOrigin, const Gaffer::Context *context, const ImagePlug *parent ) const
 {
-	const int channelIndex = colorIndex( context->get<std::string>( ImagePlug::channelNameContextName ) );
+	const int channelIndex = ImageAlgo::colorIndex( context->get<std::string>( ImagePlug::channelNameContextName ) );
 	const float value = colorPlug()->getChild( channelIndex )->getValue();
 
 	FloatVectorDataPtr result = new FloatVectorData;

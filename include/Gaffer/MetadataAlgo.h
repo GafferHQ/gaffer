@@ -47,6 +47,9 @@ namespace Gaffer
 class GraphComponent;
 class Plug;
 
+namespace MetadataAlgo
+{
+
 /// Read-only-ness
 /// ==============
 ///
@@ -85,12 +88,17 @@ bool readOnly( const GraphComponent *graphComponent );
 
 /// Utility to determine if a metadata value change (as signalled by `Metadata::plugValueChangedSignal()`)
 /// affects a given plug.
-bool affectedByChange( const Plug *plug, IECore::TypeId changedNodeTypeId, const MatchPattern &changedPlugPath, const Gaffer::Plug *changedPlug );
+bool affectedByChange( const Plug *plug, IECore::TypeId changedNodeTypeId, const StringAlgo::MatchPattern &changedPlugPath, const Gaffer::Plug *changedPlug );
 /// As above, but determines if any child plug will be affected.
-bool childAffectedByChange( const GraphComponent *parent, IECore::TypeId changedNodeTypeId, const MatchPattern &changedPlugPath, const Gaffer::Plug *changedPlug );
+bool childAffectedByChange( const GraphComponent *parent, IECore::TypeId changedNodeTypeId, const StringAlgo::MatchPattern &changedPlugPath, const Gaffer::Plug *changedPlug );
 /// As above, but determines if any ancestor plug will be affected. This is particularly useful in conjunction with
 /// the `readOnly()` method.
-bool ancestorAffectedByChange( const Plug *plug, IECore::TypeId changedNodeTypeId, const MatchPattern &changedPlugPath, const Gaffer::Plug *changedPlug );
+bool ancestorAffectedByChange( const Plug *plug, IECore::TypeId changedNodeTypeId, const StringAlgo::MatchPattern &changedPlugPath, const Gaffer::Plug *changedPlug );
+
+} // namespace MetadataAlgo
+
+/// \todo Remove this temporary backwards compatibility.
+using namespace MetadataAlgo;
 
 } // namespace Gaffer
 

@@ -135,7 +135,7 @@ IECore::ConstObjectPtr PrimitiveVariableProcessor::computeProcessedObject( const
 	{
 		next = it;
 		next++;
-		if( matchMultiple( it->first, names ) != invert )
+		if( StringAlgo::matchMultiple( it->first, names ) != invert )
 		{
 			processPrimitiveVariable( path, context, inputGeometry, it->second );
 			if( it->second.interpolation == IECore::PrimitiveVariable::Invalid || !it->second.data )

@@ -131,7 +131,7 @@ IECore::ConstCompoundObjectPtr AttributeProcessor::computeProcessedAttributes( c
 	for( CompoundObject::ObjectMap::const_iterator it = inputAttributes->members().begin(), eIt = inputAttributes->members().end(); it != eIt; ++it )
 	{
 		ConstObjectPtr attribute = it->second;
-		if( matchMultiple( it->first, names ) != invert )
+		if( StringAlgo::matchMultiple( it->first, names ) != invert )
 		{
 			attribute = processAttribute( path, context, it->first, attribute.get() );
 		}

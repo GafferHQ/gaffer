@@ -145,7 +145,7 @@ class UIEditor( GafferUI.NodeSetEditor ) :
 			"/Set Color...",
 			{
 				"command" : functools.partial( cls.__setColor, node = node ),
-				"active" : not Gaffer.readOnly( node ),
+				"active" : not Gaffer.MetadataAlgo.readOnly( node ),
 			}
 		)
 
@@ -158,7 +158,7 @@ class UIEditor( GafferUI.NodeSetEditor ) :
 				"command" : functools.partial( GafferUI.UIEditor.acquire, node ),
 				"active" : (
 					( isinstance( node, Gaffer.Box ) or nodeEditor.nodeUI().plugValueWidget( node["user"] ) is not None ) and
-					not Gaffer.readOnly( node )
+					not Gaffer.MetadataAlgo.readOnly( node )
 				)
 			}
 		)
@@ -261,7 +261,7 @@ def __plugPopupMenu( menuDefinition, plugValueWidget ) :
 	menuDefinition.append( "/Edit UI...",
 		{
 			"command" : IECore.curry( __editPlugUI, node, plug ),
-			"active" : not plugValueWidget.getReadOnly() and not Gaffer.readOnly( plug )
+			"active" : not plugValueWidget.getReadOnly() and not Gaffer.MetadataAlgo.readOnly( plug )
 		}
 	)
 
@@ -390,7 +390,7 @@ class _MetadataWidget( GafferUI.Widget ) :
 		if self.__key != key :
 			return
 
-		if Gaffer.affectedByChange( self.__target, nodeTypeId, plugPath, plug ) :
+		if Gaffer.MetadataAlgo.affectedByChange( self.__target, nodeTypeId, plugPath, plug ) :
 			self.__update()
 
 class _BoolMetadataWidget( _MetadataWidget ) :
@@ -1058,8 +1058,8 @@ class _PlugListing( GafferUI.Widget ) :
 		if self.__parent is None :
 			return
 
-		parentAffected = isinstance( self.__parent, Gaffer.Plug ) and Gaffer.affectedByChange( self.__parent, nodeTypeId, plugPath, plug )
-		childAffected = Gaffer.childAffectedByChange( self.__parent, nodeTypeId, plugPath, plug )
+		parentAffected = isinstance( self.__parent, Gaffer.Plug ) and Gaffer.MetadataAlgo.affectedByChange( self.__parent, nodeTypeId, plugPath, plug )
+		childAffected = Gaffer.MetadataAlgo.childAffectedByChange( self.__parent, nodeTypeId, plugPath, plug )
 		if not parentAffected and not childAffected :
 			return
 
@@ -1273,7 +1273,7 @@ class _PresetsEditor( GafferUI.Widget ) :
 
 	def __plugMetadataChanged( self, nodeTypeId, plugPath, key, plug ) :
 
-		if self.__plug is None or not Gaffer.affectedByChange( self.__plug, nodeTypeId, plugPath, plug ) :
+		if self.__plug is None or not Gaffer.MetadataAlgo.affectedByChange( self.__plug, nodeTypeId, plugPath, plug ) :
 			return
 
 		if key.startswith( "preset:" ) :
@@ -1546,7 +1546,7 @@ class _PlugEditor( GafferUI.Widget ) :
 		if self.getPlug() is None :
 			return
 
-		if not Gaffer.affectedByChange( self.getPlug(), nodeTypeId, plugPath, plug ) :
+		if not Gaffer.MetadataAlgo.affectedByChange( self.getPlug(), nodeTypeId, plugPath, plug ) :
 			return
 
 		if key == "plugValueWidget:type" :

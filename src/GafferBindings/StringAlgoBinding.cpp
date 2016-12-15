@@ -47,9 +47,13 @@ namespace GafferBindings
 
 void bindStringAlgo()
 {
-	def( "match", (bool (*)( const char *, const char * ))&Gaffer::match );
-	def( "matchMultiple", (bool (*)( const char *, const char * ))&Gaffer::matchMultiple );
-	def( "hasWildcards", (bool (*)( const char * ))&Gaffer::hasWildcards );
+	object module( borrowed( PyImport_AddModule( "Gaffer.StringAlgo" ) ) );
+	scope().attr( "StringAlgo" ) = module;
+	scope moduleScope( module );
+
+	def( "match", (bool (*)( const char *, const char * ))&Gaffer::StringAlgo::match );
+	def( "matchMultiple", (bool (*)( const char *, const char * ))&Gaffer::StringAlgo::matchMultiple );
+	def( "hasWildcards", (bool (*)( const char * ))&Gaffer::StringAlgo::hasWildcards );
 }
 
 } // namespace GafferBindings

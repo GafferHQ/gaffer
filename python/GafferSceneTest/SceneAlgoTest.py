@@ -64,7 +64,7 @@ class SceneAlgoTest( GafferSceneTest.SceneTestCase ) :
 		filter["paths"].setValue( IECore.StringVectorData( [ "/plane/instances/*1/group/plane" ] ) )
 
 		matchingPaths = GafferScene.PathMatcher()
-		GafferScene.matchingPaths( filter, instancer["out"], matchingPaths )
+		GafferScene.SceneAlgo.matchingPaths( filter, instancer["out"], matchingPaths )
 
 		self.assertEqual( len( matchingPaths.paths() ), 1000 )
 		self.assertEqual( matchingPaths.match( "/plane/instances/1/group/plane" ), GafferScene.Filter.Result.ExactMatch )
@@ -79,15 +79,15 @@ class SceneAlgoTest( GafferSceneTest.SceneTestCase ) :
 		group["in"][0].setInput( sphere["out"] )
 		group["in"][1].setInput( plane["out"] )
 
-		self.assertTrue( GafferScene.exists( group["out"], "/" ) )
-		self.assertTrue( GafferScene.exists( group["out"], "/group" ) )
-		self.assertTrue( GafferScene.exists( group["out"], "/group/sphere" ) )
-		self.assertTrue( GafferScene.exists( group["out"], "/group/plane" ) )
+		self.assertTrue( GafferScene.SceneAlgo.exists( group["out"], "/" ) )
+		self.assertTrue( GafferScene.SceneAlgo.exists( group["out"], "/group" ) )
+		self.assertTrue( GafferScene.SceneAlgo.exists( group["out"], "/group/sphere" ) )
+		self.assertTrue( GafferScene.SceneAlgo.exists( group["out"], "/group/plane" ) )
 
-		self.assertFalse( GafferScene.exists( group["out"], "/a" ) )
-		self.assertFalse( GafferScene.exists( group["out"], "/group2" ) )
-		self.assertFalse( GafferScene.exists( group["out"], "/group/sphere2" ) )
-		self.assertFalse( GafferScene.exists( group["out"], "/group/plane/child" ) )
+		self.assertFalse( GafferScene.SceneAlgo.exists( group["out"], "/a" ) )
+		self.assertFalse( GafferScene.SceneAlgo.exists( group["out"], "/group2" ) )
+		self.assertFalse( GafferScene.SceneAlgo.exists( group["out"], "/group/sphere2" ) )
+		self.assertFalse( GafferScene.SceneAlgo.exists( group["out"], "/group/plane/child" ) )
 
 	def testVisible( self ) :
 
@@ -113,60 +113,60 @@ class SceneAlgoTest( GafferSceneTest.SceneTestCase ) :
 		attributes2["in"].setInput( attributes1["out"] )
 		attributes2["filter"].setInput( invisibleFilter["out"] )
 
-		self.assertTrue( GafferScene.visible( attributes2["out"], "/group/group/sphere" ) )
-		self.assertTrue( GafferScene.visible( attributes2["out"], "/group/group" ) )
-		self.assertTrue( GafferScene.visible( attributes2["out"], "/group" ) )
-		self.assertTrue( GafferScene.visible( attributes2["out"], "/" ) )
+		self.assertTrue( GafferScene.SceneAlgo.visible( attributes2["out"], "/group/group/sphere" ) )
+		self.assertTrue( GafferScene.SceneAlgo.visible( attributes2["out"], "/group/group" ) )
+		self.assertTrue( GafferScene.SceneAlgo.visible( attributes2["out"], "/group" ) )
+		self.assertTrue( GafferScene.SceneAlgo.visible( attributes2["out"], "/" ) )
 
 		visibleFilter["paths"].setValue( IECore.StringVectorData( [ "/group" ] ) )
 
-		self.assertTrue( GafferScene.visible( attributes2["out"], "/group/group/sphere" ) )
-		self.assertTrue( GafferScene.visible( attributes2["out"], "/group/group" ) )
-		self.assertTrue( GafferScene.visible( attributes2["out"], "/group" ) )
-		self.assertTrue( GafferScene.visible( attributes2["out"], "/" ) )
+		self.assertTrue( GafferScene.SceneAlgo.visible( attributes2["out"], "/group/group/sphere" ) )
+		self.assertTrue( GafferScene.SceneAlgo.visible( attributes2["out"], "/group/group" ) )
+		self.assertTrue( GafferScene.SceneAlgo.visible( attributes2["out"], "/group" ) )
+		self.assertTrue( GafferScene.SceneAlgo.visible( attributes2["out"], "/" ) )
 
 		invisibleFilter["paths"].setValue( IECore.StringVectorData( [ "/group/group" ] ) )
 
-		self.assertFalse( GafferScene.visible( attributes2["out"], "/group/group/sphere" ) )
-		self.assertFalse( GafferScene.visible( attributes2["out"], "/group/group" ) )
-		self.assertTrue( GafferScene.visible( attributes2["out"], "/group" ) )
-		self.assertTrue( GafferScene.visible( attributes2["out"], "/" ) )
+		self.assertFalse( GafferScene.SceneAlgo.visible( attributes2["out"], "/group/group/sphere" ) )
+		self.assertFalse( GafferScene.SceneAlgo.visible( attributes2["out"], "/group/group" ) )
+		self.assertTrue( GafferScene.SceneAlgo.visible( attributes2["out"], "/group" ) )
+		self.assertTrue( GafferScene.SceneAlgo.visible( attributes2["out"], "/" ) )
 
 		visibleFilter["paths"].setValue( IECore.StringVectorData( [ "/group/group/sphere" ] ) )
 
-		self.assertFalse( GafferScene.visible( attributes2["out"], "/group/group/sphere" ) )
-		self.assertFalse( GafferScene.visible( attributes2["out"], "/group/group" ) )
-		self.assertTrue( GafferScene.visible( attributes2["out"], "/group" ) )
-		self.assertTrue( GafferScene.visible( attributes2["out"], "/" ) )
+		self.assertFalse( GafferScene.SceneAlgo.visible( attributes2["out"], "/group/group/sphere" ) )
+		self.assertFalse( GafferScene.SceneAlgo.visible( attributes2["out"], "/group/group" ) )
+		self.assertTrue( GafferScene.SceneAlgo.visible( attributes2["out"], "/group" ) )
+		self.assertTrue( GafferScene.SceneAlgo.visible( attributes2["out"], "/" ) )
 
 	def testSetExists( self ) :
 
 		plane = GafferScene.Plane()
 		plane["sets"].setValue( "A B" )
 
-		self.assertTrue( GafferScene.setExists( plane["out"], "A" ) )
-		self.assertTrue( GafferScene.setExists( plane["out"], "B" ) )
-		self.assertFalse( GafferScene.setExists( plane["out"], " " ) )
-		self.assertFalse( GafferScene.setExists( plane["out"], "" ) )
-		self.assertFalse( GafferScene.setExists( plane["out"], "C" ) )
+		self.assertTrue( GafferScene.SceneAlgo.setExists( plane["out"], "A" ) )
+		self.assertTrue( GafferScene.SceneAlgo.setExists( plane["out"], "B" ) )
+		self.assertFalse( GafferScene.SceneAlgo.setExists( plane["out"], " " ) )
+		self.assertFalse( GafferScene.SceneAlgo.setExists( plane["out"], "" ) )
+		self.assertFalse( GafferScene.SceneAlgo.setExists( plane["out"], "C" ) )
 
 	def testSets( self ) :
 
 		light = GafferSceneTest.TestLight()
 		light["sets"].setValue( "A B C" )
 
-		sets = GafferScene.sets( light["out"] )
+		sets = GafferScene.SceneAlgo.sets( light["out"] )
 		self.assertEqual( set( sets.keys() ), { "__lights", "A", "B", "C" } )
 		for n in sets.keys() :
 			self.assertEqual( sets[n], light["out"].set( n ) )
 			self.assertFalse( sets[n].isSame( light["out"].set( n, _copy = False ) ) )
 
-		sets = GafferScene.sets( light["out"], _copy = False )
+		sets = GafferScene.SceneAlgo.sets( light["out"], _copy = False )
 		self.assertEqual( set( sets.keys() ), { "__lights", "A", "B", "C" } )
 		for n in sets.keys() :
 			self.assertTrue( sets[n].isSame( light["out"].set( n, _copy = False ) ) )
 
-		someSets = GafferScene.sets( light["out"], ( "A", "B" ), _copy = False )
+		someSets = GafferScene.SceneAlgo.sets( light["out"], ( "A", "B" ), _copy = False )
 		self.assertEqual( set( someSets.keys() ), { "A", "B" } )
 		for n in someSets.keys() :
 			self.assertTrue( someSets[n].isSame( light["out"].set( n, _copy = False ) ) )
@@ -181,18 +181,18 @@ class SceneAlgoTest( GafferSceneTest.SceneTestCase ) :
 
 		f = GafferScene.PathMatcher( [ "/group/s*" ] )
 		m = GafferScene.PathMatcher()
-		GafferScene.matchingPaths( f, g["out"], m )
+		GafferScene.SceneAlgo.matchingPaths( f, g["out"], m )
 
 		self.assertEqual( set( m.paths() ), { "/group/sphere", "/group/sphere1", "/group/sphere2" } )
 
 	def testDefaultCamera( self ) :
 
 		o = GafferScene.StandardOptions()
-		c1 = GafferScene.camera( o["out"] )
+		c1 = GafferScene.SceneAlgo.camera( o["out"] )
 		self.assertTrue( isinstance( c1, IECore.Camera ) )
 
 		o["options"]["renderCamera"]["enabled"].setValue( True )
-		c2 = GafferScene.camera( o["out"] )
+		c2 = GafferScene.SceneAlgo.camera( o["out"] )
 		self.assertEqual( c1, c2 )
 
 	def testSetsNeedContextEntry( self ) :
@@ -209,7 +209,7 @@ class SceneAlgoTest( GafferSceneTest.SceneTestCase ) :
 		for i in range( 0, 100 ) :
 			with Gaffer.Context() as context :
 				context["lightName"] = "light%d" % i
-				GafferScene.sets( script["light"]["out"] )
+				GafferScene.SceneAlgo.sets( script["light"]["out"] )
 
 if __name__ == "__main__":
 	unittest.main()

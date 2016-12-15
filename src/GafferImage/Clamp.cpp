@@ -191,7 +191,7 @@ void Clamp::hashChannelData( const GafferImage::ImagePlug *output, const Gaffer:
 	inPlug()->channelDataPlug()->hash( h );
 
 	const std::string &channelName = context->get<std::string>( ImagePlug::channelNameContextName );
-	const int channelIndex = std::max( 0, colorIndex( channelName ) );
+	const int channelIndex = std::max( 0, ImageAlgo::colorIndex( channelName ) );
 
 	minPlug()->getChild( channelIndex )->hash( h );
 	maxPlug()->getChild( channelIndex )->hash( h );
@@ -206,7 +206,7 @@ void Clamp::hashChannelData( const GafferImage::ImagePlug *output, const Gaffer:
 
 void Clamp::processChannelData( const Gaffer::Context *context, const ImagePlug *parent, const std::string &channelName, FloatVectorDataPtr outData ) const
 {
-	const int channelIndex = std::max( 0, colorIndex( channelName ) );
+	const int channelIndex = std::max( 0, ImageAlgo::colorIndex( channelName ) );
 
 	const float minimum = minPlug()->getChild( channelIndex )->getValue();
 	const float maximum = maxPlug()->getChild( channelIndex )->getValue();

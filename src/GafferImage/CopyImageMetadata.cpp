@@ -128,7 +128,7 @@ IECore::ConstCompoundObjectPtr CopyImageMetadata::computeProcessedMetadata( cons
 	for ( IECore::CompoundObject::ObjectMap::const_iterator it = copyFrom->members().begin(), eIt = copyFrom->members().end(); it != eIt; ++it )
 	{
 		bool copy = false;
-		if ( matchMultiple( it->first.c_str(), names.c_str() ) != invert )
+		if( StringAlgo::matchMultiple( it->first.c_str(), names.c_str() ) != invert )
 		{
 			copy = true;
 		}

@@ -76,7 +76,7 @@ class CopyTile
 		void operator()( const ImagePlug *imagePlug, const string &channelName, const V2i &tileOrigin )
 		{
 			const Box2i tileBound( tileOrigin, tileOrigin + V2i( ImagePlug::tileSize() ) );
-			const Box2i b = intersection( tileBound, m_dataWindow );
+			const Box2i b = BufferAlgo::intersection( tileBound, m_dataWindow );
 
 			const size_t imageStride = m_dataWindow.size().x;
 			const size_t tileStrideSize = sizeof(float) * b.size().x;
@@ -332,7 +332,7 @@ IECore::ImagePrimitivePtr ImagePlug::image() const
 	Box2i dataWindow = dataWindowPlug()->getValue();
 	Box2i newDataWindow( Imath::V2i( 0 ) );
 
-	if( !empty( dataWindow ) )
+	if( !BufferAlgo::empty( dataWindow ) )
 	{
 		newDataWindow = format.toEXRSpace( dataWindow );
 	}
@@ -362,7 +362,7 @@ IECore::ImagePrimitivePtr ImagePlug::image() const
 	}
 
 	CopyTile copyTile( imageChannelData, channelNames, dataWindow );
-	parallelProcessTiles( this, channelNames, copyTile, dataWindow );
+	ImageAlgo::parallelProcessTiles( this, channelNames, copyTile, dataWindow );
 
 	return result;
 }
@@ -380,7 +380,7 @@ IECore::MurmurHash ImagePlug::imageHash() const
 
 	HashTile hashTile;
 	AppendHash appendHash( result );
-	parallelGatherTiles( this, channelNames, hashTile, appendHash, dataWindow, BottomToTop );
+	ImageAlgo::parallelGatherTiles( this, channelNames, hashTile, appendHash, dataWindow, ImageAlgo::BottomToTop );
 
 	return result;
 }

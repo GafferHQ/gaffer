@@ -60,8 +60,8 @@ class MirrorTest( GafferImageTest.ImageTestCase ) :
 	def testEmptyInputDataWindow( self ) :
 
 		m = GafferImage.Mirror()
-		self.assertTrue( GafferImage.empty( m["in"]["dataWindow"].getValue() ) )
-		self.assertTrue( GafferImage.empty( m["out"]["dataWindow"].getValue() ) )
+		self.assertTrue( GafferImage.BufferAlgo.empty( m["in"]["dataWindow"].getValue() ) )
+		self.assertTrue( GafferImage.BufferAlgo.empty( m["out"]["dataWindow"].getValue() ) )
 
 	def testFormatAndDataWindow( self ) :
 

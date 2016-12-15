@@ -218,9 +218,9 @@ void CompoundNodule::childRemoved( Gaffer::GraphComponent *parent, Gaffer::Graph
 	}
 }
 
-void CompoundNodule::plugMetadataChanged( IECore::TypeId nodeTypeId, const Gaffer::MatchPattern &plugPath, IECore::InternedString key, const Gaffer::Plug *plug )
+void CompoundNodule::plugMetadataChanged( IECore::TypeId nodeTypeId, const Gaffer::StringAlgo::MatchPattern &plugPath, IECore::InternedString key, const Gaffer::Plug *plug )
 {
-	if( !affectedByChange( this->plug(), nodeTypeId, plugPath, plug ) )
+	if( !MetadataAlgo::affectedByChange( this->plug(), nodeTypeId, plugPath, plug ) )
 	{
 		return;
 	}

@@ -194,10 +194,10 @@ void Set::compute( Gaffer::ValuePlug *output, const Gaffer::Context *context ) c
 				continue;
 			}
 			tokenizedPath.clear();
-			Gaffer::tokenize( *it, '/', tokenizedPath );
+			StringAlgo::tokenize( *it, '/', tokenizedPath );
 			for( vector<InternedString>::const_iterator nIt = tokenizedPath.begin(), neIt = tokenizedPath.end(); nIt != neIt; ++nIt )
 			{
-				if( Gaffer::hasWildcards( nIt->c_str() ) || *nIt == g_ellipsis )
+				if( StringAlgo::hasWildcards( nIt->c_str() ) || *nIt == g_ellipsis )
 				{
 					throw IECore::Exception( "Path \"" + *it + "\" contains wildcards." );
 				}
@@ -238,7 +238,7 @@ IECore::ConstInternedStringVectorDataPtr Set::computeSetNames( const Gaffer::Con
 	}
 
 	vector<InternedString> tokenizedNames;
-	Gaffer::tokenize( names, ' ', tokenizedNames );
+	StringAlgo::tokenize( names, ' ', tokenizedNames );
 
 	// specific logic if we have only one item, to avoid the more complex logic of adding two lists together
 	if( tokenizedNames.size() == 1 ) {

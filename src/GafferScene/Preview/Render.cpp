@@ -216,7 +216,7 @@ void Render::execute() const
 	}
 
 	ConstCompoundObjectPtr globals = inPlug()->globalsPlug()->getValue();
-	createDisplayDirectories( globals.get() );
+	GafferScene::RendererAlgo::createDisplayDirectories( globals.get() );
 
 	boost::shared_ptr<PerformanceMonitor> performanceMonitor;
 	if( const BoolData *d = globals->member<const BoolData>( g_performanceMonitorOptionName ) )
@@ -228,14 +228,14 @@ void Render::execute() const
 	}
 	Monitor::Scope performanceMonitorScope( performanceMonitor.get() );
 
-	outputOptions( globals.get(), renderer.get() );
-	outputOutputs( globals.get(), renderer.get() );
+	RendererAlgo::outputOptions( globals.get(), renderer.get() );
+	RendererAlgo::outputOutputs( globals.get(), renderer.get() );
 
-	RenderSets renderSets( inPlug() );
+	RendererAlgo::RenderSets renderSets( inPlug() );
 
-	outputCameras( inPlug(), globals.get(), renderSets, renderer.get() );
-	outputLights( inPlug(), globals.get(), renderSets, renderer.get() );
-	outputObjects( inPlug(), globals.get(), renderSets, renderer.get() );
+	RendererAlgo::outputCameras( inPlug(), globals.get(), renderSets, renderer.get() );
+	RendererAlgo::outputLights( inPlug(), globals.get(), renderSets, renderer.get() );
+	RendererAlgo::outputObjects( inPlug(), globals.get(), renderSets, renderer.get() );
 
 	// Now we have generated the scene, flush Cortex and Gaffer caches to
 	// provide more memory to the renderer.
@@ -255,6 +255,6 @@ void Render::execute() const
 	if( performanceMonitor )
 	{
 		std::cerr << "\nPerformance Monitor\n===================\n\n";
-		std::cerr << formatStatistics( *performanceMonitor );
+		std::cerr << MonitorAlgo::formatStatistics( *performanceMonitor );
 	}
 }

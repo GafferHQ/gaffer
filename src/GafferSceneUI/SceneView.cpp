@@ -788,14 +788,14 @@ class SceneView::LookThrough : public boost::signals::trackable
 			// look through lights
 			SetFilterPtr lightFilter = new SetFilter;
 			lightFilter->setPlug()->setValue( "__lights" );
-			
+
 			LightToCameraPtr lightConverter = new LightToCamera;
 			lightConverter->inPlug()->setInput( view->inPlug<ScenePlug>() );
 			lightConverter->filterPlug()->setInput( lightFilter->outPlug() );
 
 			m_internalNodes.push_back( lightFilter );
 			m_internalNodes.push_back( lightConverter );
-			
+
 			// We use a standard options node to disable camera motion blur
 			// and overscan because we don't want them applied to the cameras we retrieve with SceneAlgo.
 			// We also must disable transform blur and deformation blur, because if either of those is
@@ -953,13 +953,13 @@ class SceneView::LookThrough : public boost::signals::trackable
 				const string cameraPathString = cameraPlug()->getValue();
 				if( cameraPathString.empty() )
 				{
-					m_lookThroughCamera = GafferScene::camera( scenePlug() ); // primary render camera
+					m_lookThroughCamera = GafferScene::SceneAlgo::camera( scenePlug() ); // primary render camera
 				}
 				else
 				{
 					ScenePlug::ScenePath cameraPath;
 					ScenePlug::stringToPath( cameraPathString, cameraPath );
-					m_lookThroughCamera = GafferScene::camera( scenePlug(), cameraPath );
+					m_lookThroughCamera = GafferScene::SceneAlgo::camera( scenePlug(), cameraPath );
 				}
 			}
 			catch( ... )

@@ -102,7 +102,7 @@ class ComputeNodeWrapper : public DependencyNodeWrapper<WrappedType>
 				}
 				catch( const boost::python::error_already_set &e )
 				{
-					translatePythonException();
+					ExceptionAlgo::translatePythonException();
 				}
 			}
 		}
@@ -123,7 +123,7 @@ class ComputeNodeWrapper : public DependencyNodeWrapper<WrappedType>
 				}
 				catch( const boost::python::error_already_set &e )
 				{
-					translatePythonException();
+					ExceptionAlgo::translatePythonException();
 				}
 			}
 			WrappedType::compute( output, context );

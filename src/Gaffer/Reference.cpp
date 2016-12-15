@@ -269,7 +269,7 @@ void Reference::loadInternal( const std::string &fileName )
 			// would be lost on save/reload. We use non-persistent
 			// metadata for this so that they can copy/paste nodes
 			// out of the reference and have the copies be editable.
-			setReadOnly( node, true, /* persistent = */ false );
+			MetadataAlgo::setReadOnly( node, true, /* persistent = */ false );
 		}
 	}
 

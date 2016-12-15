@@ -476,8 +476,8 @@ class PlugLayout( GafferUI.Widget ) :
 
 	def __plugMetadataChanged( self, nodeTypeId, plugPath, key, plug ) :
 
-		parentAffected = isinstance( self.__parent, Gaffer.Plug ) and Gaffer.affectedByChange( self.__parent, nodeTypeId, plugPath, plug )
-		childAffected = Gaffer.childAffectedByChange( self.__parent, nodeTypeId, plugPath, plug )
+		parentAffected = isinstance( self.__parent, Gaffer.Plug ) and Gaffer.MetadataAlgo.affectedByChange( self.__parent, nodeTypeId, plugPath, plug )
+		childAffected = Gaffer.MetadataAlgo.childAffectedByChange( self.__parent, nodeTypeId, plugPath, plug )
 		if not parentAffected and not childAffected :
 			return
 

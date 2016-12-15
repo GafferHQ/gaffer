@@ -356,7 +356,7 @@ PathFilterPtr FileSystemPath::createStandardFilter( const std::vector<std::strin
 	if( extensions.size() )
 	{
 		std::string defaultLabel = "Show only ";
-		vector<MatchPattern> patterns;
+		vector<StringAlgo::MatchPattern> patterns;
 		for( std::vector<std::string>::const_iterator it = extensions.begin(), eIt = extensions.end(); it != eIt; ++it )
 		{
 			patterns.push_back( "*." + to_lower_copy( *it ) );

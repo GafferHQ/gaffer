@@ -138,7 +138,7 @@ class PathWrapper : public IECorePython::RunTimeTypedWrapper<WrappedType>
 				}
 				catch( const error_already_set &e )
 				{
-					translatePythonException();
+					ExceptionAlgo::translatePythonException();
 				}
 			}
 			return WrappedType::isValid();
@@ -159,7 +159,7 @@ class PathWrapper : public IECorePython::RunTimeTypedWrapper<WrappedType>
 				}
 				catch( const error_already_set &e )
 				{
-					translatePythonException();
+					ExceptionAlgo::translatePythonException();
 				}
 			}
 			return WrappedType::isLeaf();
@@ -192,7 +192,7 @@ class PathWrapper : public IECorePython::RunTimeTypedWrapper<WrappedType>
 				}
 				catch( const error_already_set &e )
 				{
-					translatePythonException();
+					ExceptionAlgo::translatePythonException();
 				}
 			}
 			WrappedType::propertyNames( names );
@@ -225,7 +225,7 @@ class PathWrapper : public IECorePython::RunTimeTypedWrapper<WrappedType>
 				}
 				catch( const error_already_set &e )
 				{
-					translatePythonException();
+					ExceptionAlgo::translatePythonException();
 				}
 			}
 			return WrappedType::property( name );
@@ -250,7 +250,7 @@ class PathWrapper : public IECorePython::RunTimeTypedWrapper<WrappedType>
 				}
 				catch( const error_already_set &e )
 				{
-					translatePythonException();
+					ExceptionAlgo::translatePythonException();
 				}
 			}
 			return WrappedType::copy();
@@ -273,7 +273,7 @@ class PathWrapper : public IECorePython::RunTimeTypedWrapper<WrappedType>
 				}
 				catch( const error_already_set &e )
 				{
-					translatePythonException();
+					ExceptionAlgo::translatePythonException();
 				}
 			}
 			WrappedType::doChildren( children );

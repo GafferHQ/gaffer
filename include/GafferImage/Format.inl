@@ -150,7 +150,7 @@ inline Imath::V2i Format::toEXRSpace( const Imath::V2i &internalSpace ) const
 
 inline Imath::Box2i Format::toEXRSpace( const Imath::Box2i &internalSpace ) const
 {
-	if( empty( internalSpace ) )
+	if( BufferAlgo::empty( internalSpace ) )
 	{
 		return Imath::Box2i();
 	}

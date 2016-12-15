@@ -112,7 +112,7 @@ void ExecutableRender::execute() const
 
 	ConstCompoundObjectPtr globals = scene->globalsPlug()->getValue();
 
-	createDisplayDirectories( globals.get() );
+	RendererAlgo::createDisplayDirectories( globals.get() );
 
 	// Scoping the lifetime of the renderer so that
 	// the destructor is run before we run the system
@@ -121,16 +121,16 @@ void ExecutableRender::execute() const
 	// to disk before RiEnd is called.
 	{
 		IECore::RendererPtr renderer = createRenderer();
-		outputOptions( globals.get(), renderer.get() );
-		outputOutputs( globals.get(), renderer.get() );
-		outputCameras( scene, globals.get(), renderer.get() );
-		outputClippingPlanes( scene, globals.get(), renderer.get() );
+		RendererAlgo::outputOptions( globals.get(), renderer.get() );
+		RendererAlgo::outputOutputs( globals.get(), renderer.get() );
+		RendererAlgo::outputCameras( scene, globals.get(), renderer.get() );
+		RendererAlgo::outputClippingPlanes( scene, globals.get(), renderer.get() );
 		{
 			WorldBlock world( renderer );
 
-			outputGlobalAttributes( globals.get(), renderer.get() );
-			outputCoordinateSystems( scene, globals.get(), renderer.get() );
-			outputLights( scene, globals.get(), renderer.get() );
+			RendererAlgo::outputGlobalAttributes( globals.get(), renderer.get() );
+			RendererAlgo::outputCoordinateSystems( scene, globals.get(), renderer.get() );
+			RendererAlgo::outputLights( scene, globals.get(), renderer.get() );
 			outputWorldProcedural( scene, renderer.get() );
 		}
 	}

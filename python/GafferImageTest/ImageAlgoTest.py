@@ -55,7 +55,7 @@ class ImageAlgoTest( GafferImageTest.ImageTestCase ) :
 			( "right.myFunkyChannel", "right" ),
 			( "diffuse.left.R", "diffuse.left" ),
 		] :
-			self.assertEqual( GafferImage.layerName( channelName ), layerName )
+			self.assertEqual( GafferImage.ImageAlgo.layerName( channelName ), layerName )
 
 	def testBaseName( self ) :
 
@@ -68,7 +68,7 @@ class ImageAlgoTest( GafferImageTest.ImageTestCase ) :
 			( "right.myFunkyChannel", "myFunkyChannel" ),
 			( "diffuse.left.R", "R" ),
 		] :
-			self.assertEqual( GafferImage.baseName( channelName ), baseName )
+			self.assertEqual( GafferImage.ImageAlgo.baseName( channelName ), baseName )
 
 	def testColorIndex( self ) :
 
@@ -91,7 +91,7 @@ class ImageAlgoTest( GafferImageTest.ImageTestCase ) :
 			( "diffuse.left.A", 3 ),
 			( "diffuse.left.Z", -1 ),
 		] :
-			self.assertEqual( GafferImage.colorIndex( channelName ), index )
+			self.assertEqual( GafferImage.ImageAlgo.colorIndex( channelName ), index )
 
 	def testChannelExists( self ) :
 
@@ -102,14 +102,14 @@ class ImageAlgoTest( GafferImageTest.ImageTestCase ) :
 		d["mode"].setValue( GafferImage.DeleteChannels.Mode.Delete )
 		d["channels"].setValue( IECore.StringVectorData( [] ) )
 
-		self.assertTrue( GafferImage.channelExists( d["out"], "R" ) )
-		self.assertTrue( GafferImage.channelExists( d["out"], "G" ) )
-		self.assertTrue( GafferImage.channelExists( d["out"], "B" ) )
-		self.assertTrue( GafferImage.channelExists( d["out"], "A" ) )
+		self.assertTrue( GafferImage.ImageAlgo.channelExists( d["out"], "R" ) )
+		self.assertTrue( GafferImage.ImageAlgo.channelExists( d["out"], "G" ) )
+		self.assertTrue( GafferImage.ImageAlgo.channelExists( d["out"], "B" ) )
+		self.assertTrue( GafferImage.ImageAlgo.channelExists( d["out"], "A" ) )
 
 		for chan in [ "R", "G", "B", "A" ] :
 			d["channels"].setValue( IECore.StringVectorData( [ chan ] ) )
-			self.assertFalse( GafferImage.channelExists( d["out"], chan ) )
+			self.assertFalse( GafferImage.ImageAlgo.channelExists( d["out"], chan ) )
 
 	def testChannelExistsBindings( self ) :
 
@@ -124,7 +124,7 @@ class ImageAlgoTest( GafferImageTest.ImageTestCase ) :
 		d["channels"].setValue( IECore.StringVectorData( [ "R", "A" ] ) )
 
 		for chan in [ "R", "G", "B", "A" ] :
-			self.assertEqual( GafferImage.channelExists( d["out"], chan ), GafferImage.channelExists( d["out"]["channelNames"].getValue(), chan ) )
+			self.assertEqual( GafferImage.ImageAlgo.channelExists( d["out"], chan ), GafferImage.ImageAlgo.channelExists( d["out"]["channelNames"].getValue(), chan ) )
 
 	def testParallelProcessEmptyDataWindow( self ) :
 

@@ -66,6 +66,9 @@ size_t findNth( const std::string &s, char c, int n )
 namespace Gaffer
 {
 
+namespace MetadataAlgo
+{
+
 void setReadOnly( GraphComponent *graphComponent, bool readOnly, bool persistent )
 {
 	Metadata::registerValue( graphComponent, g_readOnlyName, new BoolData( readOnly ), persistent );
@@ -90,7 +93,7 @@ bool readOnly( const GraphComponent *graphComponent )
 	return false;
 }
 
-bool affectedByChange( const Plug *plug, IECore::TypeId changedNodeTypeId, const MatchPattern &changedPlugPath, const Gaffer::Plug *changedPlug )
+bool affectedByChange( const Plug *plug, IECore::TypeId changedNodeTypeId, const StringAlgo::MatchPattern &changedPlugPath, const Gaffer::Plug *changedPlug )
 {
 	if( changedPlug )
 	{
@@ -103,7 +106,7 @@ bool affectedByChange( const Plug *plug, IECore::TypeId changedNodeTypeId, const
 		return false;
 	}
 
-	if( match( plug->relativeName( node ), changedPlugPath ) )
+	if( StringAlgo::match( plug->relativeName( node ), changedPlugPath ) )
 	{
 		return true;
 	}
@@ -111,7 +114,7 @@ bool affectedByChange( const Plug *plug, IECore::TypeId changedNodeTypeId, const
 	return false;
 }
 
-bool childAffectedByChange( const GraphComponent *parent, IECore::TypeId changedNodeTypeId, const MatchPattern &changedPlugPath, const Gaffer::Plug *changedPlug )
+bool childAffectedByChange( const GraphComponent *parent, IECore::TypeId changedNodeTypeId, const StringAlgo::MatchPattern &changedPlugPath, const Gaffer::Plug *changedPlug )
 {
 	if( changedPlug )
 	{
@@ -143,10 +146,10 @@ bool childAffectedByChange( const GraphComponent *parent, IECore::TypeId changed
 		return false;
 	}
 
-	return match( parentName, changedPlugPath.substr( 0, parentMatchPatternEnd ) );
+	return StringAlgo::match( parentName, changedPlugPath.substr( 0, parentMatchPatternEnd ) );
 }
 
-bool ancestorAffectedByChange( const Plug *plug, IECore::TypeId changedNodeTypeId, const MatchPattern &changedPlugPath, const Gaffer::Plug *changedPlug )
+bool ancestorAffectedByChange( const Plug *plug, IECore::TypeId changedNodeTypeId, const StringAlgo::MatchPattern &changedPlugPath, const Gaffer::Plug *changedPlug )
 {
 	if( changedPlug )
 	{
@@ -163,5 +166,7 @@ bool ancestorAffectedByChange( const Plug *plug, IECore::TypeId changedNodeTypeI
 
 	return false;
 }
+
+} // namespace MetadataAlgo
 
 } // namespace Gaffer

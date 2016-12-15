@@ -129,7 +129,7 @@ def __nodeEditorToolMenu( nodeEditor, node, menuDefinition ) :
 			"/Copy From Viewer" + ( "/" + viewer.getTitle() if len( viewers ) > 1 else "" ),
 			{
 				"command" : functools.partial( __copyCamera, node, viewer.view().viewportGadget().getCamera() ),
-				"active" : not Gaffer.readOnly( node["transform"] ),
+				"active" : not Gaffer.MetadataAlgo.readOnly( node["transform"] ),
 			}
 
 		)

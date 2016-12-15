@@ -41,13 +41,16 @@
 #include "Gaffer/Plug.h"
 
 using namespace boost::python;
-using namespace Gaffer;
+using namespace Gaffer::MetadataAlgo;
 
 namespace GafferBindings
 {
 
 void bindMetadataAlgo()
 {
+	object module( borrowed( PyImport_AddModule( "Gaffer.MetadataAlgo" ) ) );
+	scope().attr( "MetadataAlgo" ) = module;
+	scope moduleScope( module );
 
 	def( "setReadOnly", &setReadOnly, ( arg( "graphComponent" ), arg( "readOnly"), arg( "persistent" ) = true ) );
 	def( "getReadOnly", &getReadOnly );

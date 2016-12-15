@@ -42,6 +42,9 @@
 namespace Gaffer
 {
 
+namespace StringAlgo
+{
+
 int numericSuffix( const std::string &s, std::string *stem )
 {
 	static boost::regex g_regex( "^(.*[^0-9]+)([0-9]+)$" );
@@ -66,5 +69,7 @@ int numericSuffix( const std::string &s, int defaultSuffix, std::string *stem )
 	int n = numericSuffix( s, stem );
 	return n < 0 ? defaultSuffix : n;
 }
+
+} // namespace StringAlgo
 
 } // namespace Gaffer

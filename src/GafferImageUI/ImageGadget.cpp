@@ -195,7 +195,7 @@ Imath::Box3f ImageGadget::bound() const
 	}
 
 	const Box2i &w = f.getDisplayWindow();
-	if( empty( w ) )
+	if( BufferAlgo::empty( w ) )
 	{
 		return Box3f();
 	}
@@ -372,7 +372,7 @@ void ImageGadget::updateTiles() const
 	TileFunctor tileFunctor( m_tiles );
 	{
 		Context::Scope scopedContext( m_context.get() );
-		parallelProcessTiles( m_image.get(), channelsToCompute, tileFunctor, dataWindow() );
+		ImageAlgo::parallelProcessTiles( m_image.get(), channelsToCompute, tileFunctor, dataWindow() );
 	}
 
 	// Now take the new channelData and convert it into textures for display.
@@ -415,7 +415,7 @@ void ImageGadget::removeOutOfBoundsTiles() const
 	for( Tiles::iterator it = m_tiles.begin(); it != m_tiles.end(); )
 	{
 		const Box2i tileBound( it->first.tileOrigin, it->first.tileOrigin + V2i( ImagePlug::tileSize() ) );
-		if( !intersects( dw, tileBound ) || find( ch.begin(), ch.end(), it->first.channelName.string() ) == ch.end() )
+		if( !BufferAlgo::intersects( dw, tileBound ) || find( ch.begin(), ch.end(), it->first.channelName.string() ) == ch.end() )
 		{
 			it = m_tiles.unsafe_erase( it );
 		}
@@ -568,7 +568,7 @@ void ImageGadget::renderTiles() const
 			}
 
 			const Box2i tileBound( tileOrigin, tileOrigin + V2i( ImagePlug::tileSize() ) );
-			const Box2i validBound = intersection( tileBound, dataWindow );
+			const Box2i validBound = BufferAlgo::intersection( tileBound, dataWindow );
 			const Box2f uvBound(
 				V2f(
 					lerpfactor<float>( validBound.min.x, tileBound.min.x, tileBound.max.x ),
@@ -645,7 +645,7 @@ void ImageGadget::doRender( const GafferUI::Style *style ) const
 	// Early out if the image has no size.
 
 	const Box2i &displayWindow = format.getDisplayWindow();
-	if( empty( displayWindow ) )
+	if( BufferAlgo::empty( displayWindow ) )
 	{
 		return;
 	}
@@ -667,7 +667,7 @@ void ImageGadget::doRender( const GafferUI::Style *style ) const
 
 	glColor3f( 0.0f, 0.0f, 0.0f );
 	style->renderSolidRectangle( displayWindowF );
-	if( !empty( dataWindow ) )
+	if( !BufferAlgo::empty( dataWindow ) )
 	{
 		style->renderSolidRectangle( dataWindowF );
 	}
@@ -700,7 +700,7 @@ void ImageGadget::doRender( const GafferUI::Style *style ) const
 		renderText( lexical_cast<string>( displayWindow.max ), displayWindowF.max, V2f( 0, -0.5 ), style );
 	}
 
-	if( !empty( dataWindow ) && dataWindow != displayWindow )
+	if( !BufferAlgo::empty( dataWindow ) && dataWindow != displayWindow )
 	{
 		glColor3f( 0.5f, 0.5f, 0.5f );
 		style->renderRectangle( dataWindowF );

@@ -266,8 +266,8 @@ bool StandardConnectionGadget::buttonPress( const ButtonEvent &event )
 IECore::RunTimeTypedPtr StandardConnectionGadget::dragBegin( const DragDropEvent &event )
 {
 	if(
-		readOnly( dstNodule()->plug() ) ||
-		( srcNodule() && readOnly( srcNodule()->plug() ) )
+		MetadataAlgo::readOnly( dstNodule()->plug() ) ||
+		( srcNodule() && MetadataAlgo::readOnly( srcNodule()->plug() ) )
 	)
 	{
 		return NULL;
@@ -415,9 +415,9 @@ bool StandardConnectionGadget::nodeSelected( const Nodule *nodule ) const
 	return script && script->selection()->contains( node );
 }
 
-void StandardConnectionGadget::plugMetadataChanged( IECore::TypeId nodeTypeId, const Gaffer::MatchPattern &plugPath, IECore::InternedString key, const Gaffer::Plug *plug )
+void StandardConnectionGadget::plugMetadataChanged( IECore::TypeId nodeTypeId, const Gaffer::StringAlgo::MatchPattern &plugPath, IECore::InternedString key, const Gaffer::Plug *plug )
 {
-	if( key != g_colorKey || !affectedByChange( dstNodule()->plug(), nodeTypeId, plugPath, plug ) )
+	if( key != g_colorKey || !MetadataAlgo::affectedByChange( dstNodule()->plug(), nodeTypeId, plugPath, plug ) )
 	{
 		return;
 	}

@@ -49,22 +49,22 @@ float Sampler::sample( int x, int y )
 
 	// It is the caller's responsibility to ensure that sampling
 	// is only performed within the sample window.
-	assert( contains( m_sampleWindow, p ) );
+	assert( BufferAlgo::contains( m_sampleWindow, p ) );
 
 #endif
 
 	// Deal with lookups outside of the data window.
-	if( m_boundingMode == Black && !contains( m_dataWindow, p ) )
+	if( m_boundingMode == Black && !BufferAlgo::contains( m_dataWindow, p ) )
 	{
 		return 0.0f;
 	}
 	else
 	{
-		if( empty( m_dataWindow ) )
+		if( BufferAlgo::empty( m_dataWindow ) )
 		{
 			return 0.0f;
 		}
-		p = clamp( p, m_dataWindow );
+		p = BufferAlgo::clamp( p, m_dataWindow );
 	}
 
 	const float *tileData;

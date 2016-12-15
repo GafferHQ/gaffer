@@ -177,7 +177,7 @@ void Mirror::hashDataWindow( const GafferImage::ImagePlug *parent, const Gaffer:
 Imath::Box2i Mirror::computeDataWindow( const Gaffer::Context *context, const ImagePlug *parent ) const
 {
 	const Box2i inDataWindow = inPlug()->dataWindowPlug()->getValue();
-	if( empty( inDataWindow ) )
+	if( BufferAlgo::empty( inDataWindow ) )
 	{
 		return inDataWindow;
 	}

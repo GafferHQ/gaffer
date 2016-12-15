@@ -192,7 +192,7 @@ class PlugValueWidget( GafferUI.Widget ) :
 			if not canEditAnimation or not Gaffer.Animation.isAnimated( plug ) :
 				return False
 
-		if Gaffer.readOnly( plug ) :
+		if Gaffer.MetadataAlgo.readOnly( plug ) :
 			return False
 
 		return True
@@ -287,7 +287,7 @@ class PlugValueWidget( GafferUI.Widget ) :
 			menuDefinition.append(
 				"/Remove input", {
 					"command" : Gaffer.WeakMethod( self.__removeInput ),
-					"active" : self.getPlug().acceptsInput( None ) and not self.getReadOnly() and not Gaffer.readOnly( self.getPlug() ),
+					"active" : self.getPlug().acceptsInput( None ) and not self.getReadOnly() and not Gaffer.MetadataAlgo.readOnly( self.getPlug() ),
 				}
 			)
 		if hasattr( self.getPlug(), "defaultValue" ) and self.getPlug().direction() == Gaffer.Plug.Direction.In :
@@ -317,12 +317,12 @@ class PlugValueWidget( GafferUI.Widget ) :
 		if len( menuDefinition.items() ) :
 			menuDefinition.append( "/LockDivider", { "divider" : True } )
 
-		readOnly = Gaffer.getReadOnly( self.getPlug() ) or self.getPlug().getFlags( Gaffer.Plug.Flags.ReadOnly )
+		readOnly = Gaffer.MetadataAlgo.getReadOnly( self.getPlug() ) or self.getPlug().getFlags( Gaffer.Plug.Flags.ReadOnly )
 		menuDefinition.append(
 			"/Unlock" if readOnly else "/Lock",
 			{
 				"command" : functools.partial( Gaffer.WeakMethod( self.__applyReadOnly ), not readOnly ),
-				"active" : not self.getReadOnly() and not Gaffer.readOnly( self.getPlug().parent() ),
+				"active" : not self.getReadOnly() and not Gaffer.MetadataAlgo.readOnly( self.getPlug().parent() ),
 			}
 		)
 
@@ -460,8 +460,8 @@ class PlugValueWidget( GafferUI.Widget ) :
 			return
 
 		if (
-			Gaffer.affectedByChange( self.__plug, nodeTypeId, plugPath, plug ) or
-			( key == "readOnly" and Gaffer.ancestorAffectedByChange( self.__plug, nodeTypeId, plugPath, plug ) )
+			Gaffer.MetadataAlgo.affectedByChange( self.__plug, nodeTypeId, plugPath, plug ) or
+			( key == "readOnly" and Gaffer.MetadataAlgo.ancestorAffectedByChange( self.__plug, nodeTypeId, plugPath, plug ) )
 		) :
 			self._updateFromPlug()
 
@@ -613,7 +613,7 @@ class PlugValueWidget( GafferUI.Widget ) :
 			# instead. Clear the old flags so that metadata is in
 			# control.
 			clearFlags( self.getPlug() )
-			Gaffer.setReadOnly( self.getPlug(), readOnly )
+			Gaffer.MetadataAlgo.setReadOnly( self.getPlug(), readOnly )
 
 	# drag and drop stuff
 

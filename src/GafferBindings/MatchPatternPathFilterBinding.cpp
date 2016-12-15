@@ -52,14 +52,14 @@ namespace
 
 MatchPatternPathFilterPtr construct( object pythonPatterns, const char *propertyName, bool leafOnly )
 {
-	std::vector<MatchPattern> patterns;
+	std::vector<StringAlgo::MatchPattern> patterns;
 	boost::python::container_utils::extend_container( patterns, pythonPatterns );
 	return new MatchPatternPathFilter( patterns, propertyName, leafOnly );
 }
 
 void setMatchPatterns( MatchPatternPathFilter &f, object pythonPatterns )
 {
-	std::vector<MatchPattern> patterns;
+	std::vector<StringAlgo::MatchPattern> patterns;
 	boost::python::container_utils::extend_container( patterns, pythonPatterns );
 	f.setMatchPatterns( patterns );
 }
@@ -67,8 +67,8 @@ void setMatchPatterns( MatchPatternPathFilter &f, object pythonPatterns )
 list getMatchPatterns( const MatchPatternPathFilter &f )
 {
 	list result;
-	const std::vector<MatchPattern> &patterns = f.getMatchPatterns();
-	for( std::vector<MatchPattern>::const_iterator it = patterns.begin(), eIt = patterns.end(); it != eIt; ++it )
+	const std::vector<StringAlgo::MatchPattern> &patterns = f.getMatchPatterns();
+	for( std::vector<StringAlgo::MatchPattern>::const_iterator it = patterns.begin(), eIt = patterns.end(); it != eIt; ++it )
 	{
 		result.append( *it );
 	}

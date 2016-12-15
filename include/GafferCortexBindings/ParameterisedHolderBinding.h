@@ -92,7 +92,7 @@ class ParameterisedHolderWrapper : public BaseType
 				}
 				catch( boost::python::error_already_set &e )
 				{
-					GafferBindings::translatePythonException();
+					GafferBindings::ExceptionAlgo::translatePythonException();
 				}
 			}
 		}

@@ -220,7 +220,7 @@ void Path::setFromPath( const Path *path )
 void Path::setFromString( const std::string &string )
 {
 	Names newNames;
-	tokenize<InternedString>( string, '/', back_inserter( newNames ) );
+	StringAlgo::tokenize<InternedString>( string, '/', back_inserter( newNames ) );
 
 	InternedString newRoot;
 	if( string.size() && string[0] == '/' )

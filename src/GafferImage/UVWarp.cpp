@@ -66,7 +66,7 @@ struct UVWarp::Engine : public Warp::Engine
 		V2i oP;
 		for( oP.y = validTileBound.min.y; oP.y < validTileBound.max.y; ++oP.y )
 		{
-			size_t i = index( V2i( validTileBound.min.x, oP.y ), tileBound );
+			size_t i = BufferAlgo::index( V2i( validTileBound.min.x, oP.y ), tileBound );
 			for( oP.x = validTileBound.min.x; oP.x < validTileBound.max.x; ++oP.x, ++i )
 			{
 				if( m_a[i] == 0.0f )
@@ -91,7 +91,7 @@ struct UVWarp::Engine : public Warp::Engine
 	virtual Imath::V2f inputPixel( const Imath::V2f &outputPixel ) const
 	{
 		const V2i outputPixelI( (int)floorf( outputPixel.x ), (int)floorf( outputPixel.y ) );
-		const size_t i = index( outputPixelI, m_tileBound );
+		const size_t i = BufferAlgo::index( outputPixelI, m_tileBound );
 		if( m_a[i] == 0.0f )
 		{
 			return black;
@@ -179,19 +179,19 @@ void UVWarp::hashEngine( const std::string &channelName, const Imath::V2i &tileO
 	ContextPtr tmpContext = new Context( *context, Context::Borrowed );
 	Context::Scope scopedContext( tmpContext.get() );
 
-	if( channelExists( channelNames->readable(), "R" ) )
+	if( ImageAlgo::channelExists( channelNames->readable(), "R" ) )
 	{
 		tmpContext->set<std::string>( ImagePlug::channelNameContextName, "R" );
 		uvPlug()->channelDataPlug()->hash( h );
 	}
 
-	if( channelExists( channelNames->readable(), "G" ) )
+	if( ImageAlgo::channelExists( channelNames->readable(), "G" ) )
 	{
 		tmpContext->set<std::string>( ImagePlug::channelNameContextName, "G" );
 		uvPlug()->channelDataPlug()->hash( h );
 	}
 
-	if( channelExists( channelNames->readable(), "A" ) )
+	if( ImageAlgo::channelExists( channelNames->readable(), "A" ) )
 	{
 		tmpContext->set<std::string>( ImagePlug::channelNameContextName, "A" );
 		uvPlug()->channelDataPlug()->hash( h );
@@ -203,7 +203,7 @@ void UVWarp::hashEngine( const std::string &channelName, const Imath::V2i &tileO
 const Warp::Engine *UVWarp::computeEngine( const std::string &channelName, const Imath::V2i &tileOrigin, const Gaffer::Context *context ) const
 {
 	const Box2i tileBound( tileOrigin, tileOrigin + V2i( ImagePlug::tileSize() ) );
-	const Box2i validTileBound = intersection( tileBound, uvPlug()->dataWindowPlug()->getValue() );
+	const Box2i validTileBound = BufferAlgo::intersection( tileBound, uvPlug()->dataWindowPlug()->getValue() );
 
 	ConstStringVectorDataPtr channelNames = uvPlug()->channelNamesPlug()->getValue();
 
@@ -211,21 +211,21 @@ const Warp::Engine *UVWarp::computeEngine( const std::string &channelName, const
 	Context::Scope scopedContext( tmpContext.get() );
 
 	ConstFloatVectorDataPtr uData = ImagePlug::blackTile();
-	if( channelExists( channelNames->readable(), "R" ) )
+	if( ImageAlgo::channelExists( channelNames->readable(), "R" ) )
 	{
 		tmpContext->set<std::string>( ImagePlug::channelNameContextName, "R" );
 		uData = uvPlug()->channelDataPlug()->getValue();
 	}
 
 	ConstFloatVectorDataPtr vData = ImagePlug::blackTile();
-	if( channelExists( channelNames->readable(), "G" ) )
+	if( ImageAlgo::channelExists( channelNames->readable(), "G" ) )
 	{
 		tmpContext->set<std::string>( ImagePlug::channelNameContextName, "G" );
 		vData = uvPlug()->channelDataPlug()->getValue();
 	}
 
 	ConstFloatVectorDataPtr aData = ImagePlug::whiteTile();
-	if( channelExists( channelNames->readable(), "A" ) )
+	if( ImageAlgo::channelExists( channelNames->readable(), "A" ) )
 	{
 		tmpContext->set<std::string>( ImagePlug::channelNameContextName, "A" );
 		aData = uvPlug()->channelDataPlug()->getValue();

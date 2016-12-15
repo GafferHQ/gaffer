@@ -63,7 +63,7 @@ namespace GafferImageTest
 void processTiles( const GafferImage::ImagePlug *imagePlug )
 {
 	TilesEvaluateFunctor f;
-	parallelProcessTiles( imagePlug, imagePlug->channelNamesPlug()->getValue()->readable(), f );
+	ImageAlgo::parallelProcessTiles( imagePlug, imagePlug->channelNamesPlug()->getValue()->readable(), f );
 }
 
 } // namespace GafferImageTest

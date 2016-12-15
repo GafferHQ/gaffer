@@ -248,7 +248,7 @@ def __plugPopupMenu( menuDefinition, plugValueWidget ) :
 		"/Delete",
 		{
 			"command" : IECore.curry( __deletePlug, memberPlug ),
-			"active" : not plugValueWidget.getReadOnly() and not Gaffer.readOnly( memberPlug ),
+			"active" : not plugValueWidget.getReadOnly() and not Gaffer.MetadataAlgo.readOnly( memberPlug ),
 		}
 	)
 

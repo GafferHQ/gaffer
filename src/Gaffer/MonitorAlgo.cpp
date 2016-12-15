@@ -205,25 +205,25 @@ struct HashesPerComputeMetric
 
 // Utility for invoking a templated functor with a particular metric.
 template<typename F>
-typename F::ResultType dispatchMetric( const F &f, PerformanceMetric performanceMetric )
+typename F::ResultType dispatchMetric( const F &f, MonitorAlgo::PerformanceMetric performanceMetric )
 {
 	switch( performanceMetric )
 	{
-		case HashCount :
+		case MonitorAlgo::HashCount :
 			return f( HashCountMetric() );
-		case ComputeCount :
+		case MonitorAlgo::ComputeCount :
 			return f( ComputeCountMetric() );
-		case HashDuration :
+		case MonitorAlgo::HashDuration :
 			return f( HashDurationMetric() );
-		case ComputeDuration :
+		case MonitorAlgo::ComputeDuration :
 			return f( ComputeDurationMetric() );
-		case TotalDuration :
+		case MonitorAlgo::TotalDuration :
 			return f( TotalDurationMetric() );
-		case PerHashDuration :
+		case MonitorAlgo::PerHashDuration :
 			return f( PerHashDurationMetric() );
-		case PerComputeDuration :
+		case MonitorAlgo::PerComputeDuration :
 			return f( PerComputeDurationMetric() );
-		case HashesPerCompute :
+		case MonitorAlgo::HashesPerCompute :
 			return f( HashesPerComputeMetric() );
 		default :
 			return f( InvalidMetric() );
@@ -339,6 +339,9 @@ struct FormatStatistics
 namespace Gaffer
 {
 
+namespace MonitorAlgo
+{
+
 std::string formatStatistics( const PerformanceMonitor &monitor, size_t maxLinesPerMetric )
 {
 	std::string s;
@@ -357,5 +360,7 @@ std::string formatStatistics( const PerformanceMonitor &monitor, PerformanceMetr
 {
 	return dispatchMetric<FormatStatistics>( FormatStatistics( monitor.allStatistics(), maxLines ), metric );
 }
+
+} // namespace MonitorAlgo
 
 } // namespace Gaffer

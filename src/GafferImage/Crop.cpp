@@ -275,7 +275,7 @@ Imath::Box2i Crop::computeDataWindow( const Gaffer::Context *context, const Imag
 	const V2i offset = offsetPlug()->getValue();
 	if( affectDataWindowPlug()->getValue() )
 	{
-		result = intersection( result, cropWindow );
+		result = BufferAlgo::intersection( result, cropWindow );
 	}
 
 	result.min += offset;

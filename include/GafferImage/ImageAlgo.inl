@@ -140,13 +140,13 @@ class TileInputIterator
 
 		TileInputIterator(
 				const Imath::V2i &numTiles,
-				const TileOrder tileOrder
+				const ImageAlgo::TileOrder tileOrder
 			) :
 				m_numTiles( numTiles ),
 				m_tileOrder( tileOrder ),
 				nextTileId( Imath::V2i( 0 ) )
 		{
-			if( m_tileOrder == TopToBottom )
+			if( m_tileOrder == ImageAlgo::TopToBottom )
 			{
 				nextTileId.y = m_numTiles.y - 1;
 			}
@@ -154,7 +154,7 @@ class TileInputIterator
 
 		bool finished()
 		{
-			if( m_tileOrder == TopToBottom )
+			if( m_tileOrder == ImageAlgo::TopToBottom )
 			{
 				return nextTileId.y < 0;
 			}
@@ -172,7 +172,7 @@ class TileInputIterator
 			if( nextTileId.x >= m_numTiles.x )
 			{
 				nextTileId.x = 0;
-				if( m_tileOrder == TopToBottom )
+				if( m_tileOrder == ImageAlgo::TopToBottom )
 				{
 					--nextTileId.y;
 				}
@@ -187,7 +187,7 @@ class TileInputIterator
 
 	private:
 		const Imath::V2i &m_numTiles;
-		const TileOrder m_tileOrder;
+		const ImageAlgo::TileOrder m_tileOrder;
 		Imath::V2i nextTileId;
 };
 
@@ -199,7 +199,7 @@ class TileChannelInputIterator
 		TileChannelInputIterator(
 				const std::vector<std::string> &channelNames,
 				const Imath::V2i &numTiles,
-				const TileOrder tileOrder
+				const ImageAlgo::TileOrder tileOrder
 			) :
 				m_channelNames( channelNames ),
 				m_numTiles( numTiles ),
@@ -207,7 +207,7 @@ class TileChannelInputIterator
 				nextTileId( Imath::V2i( 0 ) ),
 				nextChannelIndex( 0 )
 		{
-			if( m_tileOrder == TopToBottom )
+			if( m_tileOrder == ImageAlgo::TopToBottom )
 			{
 				nextTileId.y = m_numTiles.y - 1;
 			}
@@ -215,7 +215,7 @@ class TileChannelInputIterator
 
 		bool finished()
 		{
-			if( m_tileOrder == TopToBottom )
+			if( m_tileOrder == ImageAlgo::TopToBottom )
 			{
 				return nextTileId.y < 0;
 			}
@@ -239,7 +239,7 @@ class TileChannelInputIterator
 				if( nextTileId.x >= m_numTiles.x )
 				{
 					nextTileId.x = 0;
-					if( m_tileOrder == TopToBottom )
+					if( m_tileOrder == ImageAlgo::TopToBottom )
 					{
 						--nextTileId.y;
 					}
@@ -256,7 +256,7 @@ class TileChannelInputIterator
 	private:
 		const std::vector<std::string> &m_channelNames;
 		const Imath::V2i &m_numTiles;
-		const TileOrder m_tileOrder;
+		const ImageAlgo::TileOrder m_tileOrder;
 		Imath::V2i nextTileId;
 		size_t nextChannelIndex;
 
@@ -416,6 +416,9 @@ class GatherFunctorFilter
 // Channel name utilities
 //////////////////////////////////////////////////////////////////////////
 
+namespace ImageAlgo
+{
+
 inline std::string layerName( const std::string &channelName )
 {
 	const size_t p = channelName.find_last_of( '.' );
@@ -496,10 +499,10 @@ template <class ThreadableFunctor>
 void parallelProcessTiles( const ImagePlug *imagePlug, ThreadableFunctor &functor, const Imath::Box2i &window )
 {
 	Imath::Box2i processWindow = window;
-	if( empty( processWindow ) )
+	if( BufferAlgo::empty( processWindow ) )
 	{
 		processWindow = imagePlug->dataWindowPlug()->getValue();
-		if( empty( processWindow ) )
+		if( BufferAlgo::empty( processWindow ) )
 		{
 			return;
 		}
@@ -516,10 +519,10 @@ template <class ThreadableFunctor>
 void parallelProcessTiles( const ImagePlug *imagePlug, const std::vector<std::string> &channelNames, ThreadableFunctor &functor, const Imath::Box2i &window )
 {
 	Imath::Box2i processWindow = window;
-	if( empty( processWindow ) )
+	if( BufferAlgo::empty( processWindow ) )
 	{
 		processWindow = imagePlug->dataWindowPlug()->getValue();
-		if( empty( processWindow ) )
+		if( BufferAlgo::empty( processWindow ) )
 		{
 			return;
 		}
@@ -536,10 +539,10 @@ template <class TileFunctor, class GatherFunctor>
 void parallelGatherTiles( const ImagePlug *imagePlug, TileFunctor &tileFunctor, GatherFunctor &gatherFunctor, const Imath::Box2i &window, TileOrder tileOrder )
 {
 	Imath::Box2i processWindow = window;
-	if( empty( processWindow ) )
+	if( BufferAlgo::empty( processWindow ) )
 	{
 		processWindow = imagePlug->dataWindowPlug()->getValue();
-		if( empty( processWindow ) )
+		if( BufferAlgo::empty( processWindow ) )
 		{
 			return;
 		}
@@ -570,10 +573,10 @@ template <class TileFunctor, class GatherFunctor>
 void parallelGatherTiles( const ImagePlug *imagePlug, const std::vector<std::string> &channelNames, TileFunctor &tileFunctor, GatherFunctor &gatherFunctor, const Imath::Box2i &window, TileOrder tileOrder )
 {
 	Imath::Box2i processWindow = window;
-	if( empty( processWindow ) )
+	if( BufferAlgo::empty( processWindow ) )
 	{
 		processWindow = imagePlug->dataWindowPlug()->getValue();
-		if( empty( processWindow ) )
+		if( BufferAlgo::empty( processWindow ) )
 		{
 			return;
 		}
@@ -599,6 +602,8 @@ void parallelGatherTiles( const ImagePlug *imagePlug, const std::vector<std::str
 		)
 	);
 }
+
+} // namespace ImageAlgo
 
 } // namespace GafferImage
 

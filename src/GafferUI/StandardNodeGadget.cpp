@@ -683,7 +683,7 @@ bool StandardNodeGadget::drop( GadgetPtr gadget, const DragDropEvent &event )
 	return result;
 }
 
-void StandardNodeGadget::plugMetadataChanged( IECore::TypeId nodeTypeId, const Gaffer::MatchPattern &plugPath, IECore::InternedString key, const Gaffer::Plug *plug )
+void StandardNodeGadget::plugMetadataChanged( IECore::TypeId nodeTypeId, const Gaffer::StringAlgo::MatchPattern &plugPath, IECore::InternedString key, const Gaffer::Plug *plug )
 {
 	if( plug && plug->parent<Node>() != node() )
 	{
@@ -768,7 +768,7 @@ bool StandardNodeGadget::noduleIsCompatible( const Nodule *nodule, const DragDro
 	}
 
 	const Plug *nodulePlug = nodule->plug();
-	if( readOnly( nodulePlug ) )
+	if( MetadataAlgo::readOnly( nodulePlug ) )
 	{
 		return false;
 	}

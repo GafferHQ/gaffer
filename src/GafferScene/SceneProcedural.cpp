@@ -381,15 +381,15 @@ void SceneProcedural::render( Renderer *renderer ) const
 
 		// transform
 
-		outputTransform( m_scenePlug.get(), renderer, ( m_options.transformBlur && m_attributes.transformBlur ) ? m_attributes.transformBlurSegments : 0, m_options.shutter );
+		RendererAlgo::outputTransform( m_scenePlug.get(), renderer, ( m_options.transformBlur && m_attributes.transformBlur ) ? m_attributes.transformBlurSegments : 0, m_options.shutter );
 
 		// attributes
 
-		outputAttributes( m_attributesObject.get(), renderer );
+		RendererAlgo::outputAttributes( m_attributesObject.get(), renderer );
 
 		// object
 
-		outputObject( m_scenePlug.get(), renderer, ( m_options.deformationBlur && m_attributes.deformationBlur ) ? m_attributes.deformationBlurSegments : 0, m_options.shutter );
+		RendererAlgo::outputObject( m_scenePlug.get(), renderer, ( m_options.deformationBlur && m_attributes.deformationBlur ) ? m_attributes.deformationBlurSegments : 0, m_options.shutter );
 
 		// children
 

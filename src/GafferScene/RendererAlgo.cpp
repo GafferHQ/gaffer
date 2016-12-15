@@ -88,6 +88,9 @@ void motionTimes( size_t segments, const V2f &shutter, std::set<float> &times )
 namespace GafferScene
 {
 
+namespace RendererAlgo
+{
+
 void outputScene( const ScenePlug *scene, IECore::Renderer *renderer )
 {
 	ConstCompoundObjectPtr globals = scene->globalsPlug()->getValue();
@@ -179,13 +182,13 @@ void outputCameras( const ScenePlug *scene, const IECore::CompoundObject *global
 
 void outputCamera( const ScenePlug *scene, const IECore::CompoundObject *globals, IECore::Renderer *renderer )
 {
-	IECore::CameraPtr camera = GafferScene::camera( scene, globals );
+	IECore::CameraPtr camera = SceneAlgo::camera( scene, globals );
 	camera->render( renderer );
 }
 
 void outputCamera( const ScenePlug *scene, const ScenePlug::ScenePath &cameraPath, const IECore::CompoundObject *globals, IECore::Renderer *renderer )
 {
-	IECore::CameraPtr camera = GafferScene::camera( scene, cameraPath, globals );
+	IECore::CameraPtr camera = SceneAlgo::camera( scene, cameraPath, globals );
 	camera->render( renderer );
 }
 
@@ -222,7 +225,7 @@ void outputLights( const ScenePlug *scene, const IECore::CompoundObject *globals
 
 bool outputLight( const ScenePlug *scene, const ScenePlug::ScenePath &path, IECore::Renderer *renderer )
 {
-	if( !visible( scene, path ) )
+	if( !SceneAlgo::visible( scene, path ) )
 	{
 		/// \todo Since both visible() and fullAttributes() perform similar work,
 		/// we may want to combine them into one query if we see this function
@@ -361,7 +364,7 @@ bool outputCoordinateSystem( const ScenePlug *scene, const ScenePlug::ScenePath 
 		return false;
 	}
 
-	if( !visible( scene, path ) )
+	if( !SceneAlgo::visible( scene, path ) )
 	{
 		return false;
 	}
@@ -402,7 +405,7 @@ bool outputClippingPlane( const ScenePlug *scene, const ScenePlug::ScenePath &pa
 		return false;
 	}
 
-	if( !visible( scene, path ) )
+	if( !SceneAlgo::visible( scene, path ) )
 	{
 		return false;
 	}
@@ -599,5 +602,7 @@ void outputObject( const ScenePlug *scene, IECore::Renderer *renderer, size_t se
 		(*it)->render( renderer );
 	}
 }
+
+} // namespace RendererAlgo
 
 } // namespace GafferScene

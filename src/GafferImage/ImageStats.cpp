@@ -255,7 +255,7 @@ void ImageStats::channelNameFromOutput( const ValuePlug *output, std::string &ch
 		{
 			for( std::vector<std::string>::iterator it( uniqueChannels.begin() ); it != uniqueChannels.end(); ++it )
 			{
-				if ( colorIndex( *it ) == channelIndex )
+				if( ImageAlgo::colorIndex( *it ) == channelIndex )
 				{
 					channelName = *it;
 					return;
@@ -299,7 +299,7 @@ void ImageStats::compute( ValuePlug *output, const Context *context ) const
 		return;
 	}
 
-	const int channelIndex = colorIndex( channelName );
+	const int channelIndex = ImageAlgo::colorIndex( channelName );
 
 	// Loop over the ROI and compute the min, max and average channel values and then set our outputs.
 	Sampler s( inPlug(), channelName, regionOfInterest );

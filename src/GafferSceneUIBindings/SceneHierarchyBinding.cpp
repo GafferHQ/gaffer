@@ -451,7 +451,7 @@ class SceneHierarchySearchFilter : public SceneHierarchyFilter
 				// The user has entered a full match path.
 				toMatch.addPath( m_matchPattern );
 			}
-			else if( hasWildcards( m_matchPattern ) )
+			else if( StringAlgo::hasWildcards( m_matchPattern ) )
 			{
 				// The user has used some wildcards, we
 				// just need to make sure the pattern is
@@ -472,7 +472,7 @@ class SceneHierarchySearchFilter : public SceneHierarchyFilter
 			m_pathMatcher.clear();
 			try
 			{
-				matchingPaths( toMatch, getScene(), m_pathMatcher );
+				SceneAlgo::matchingPaths( toMatch, getScene(), m_pathMatcher );
 			}
 			catch( ... )
 			{

@@ -303,7 +303,7 @@ void BackdropNodeGadget::plugDirtied( const Gaffer::Plug *plug )
 
 bool BackdropNodeGadget::mouseMove( Gadget *gadget, const ButtonEvent &event )
 {
-	if( readOnly( node() ) )
+	if( MetadataAlgo::readOnly( node() ) )
 	{
 		return false;
 	}
@@ -339,7 +339,7 @@ bool BackdropNodeGadget::mouseMove( Gadget *gadget, const ButtonEvent &event )
 
 bool BackdropNodeGadget::buttonPress( Gadget *gadget, const ButtonEvent &event )
 {
-	if( readOnly( node() ) )
+	if( MetadataAlgo::readOnly( node() ) )
 	{
 		return false;
 	}

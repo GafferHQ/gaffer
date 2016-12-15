@@ -365,7 +365,7 @@ def __reorderPlugs( plugs, plug, newIndex ) :
 
 def __nodeGraphPlugContextMenu( nodeGraph, plug, menuDefinition ) :
 
-	readOnly = Gaffer.readOnly( plug )
+	readOnly = Gaffer.MetadataAlgo.readOnly( plug )
 	if isinstance( plug.node(), Gaffer.Box ) :
 
 		menuDefinition.append(

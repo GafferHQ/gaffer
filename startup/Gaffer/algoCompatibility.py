@@ -1,6 +1,6 @@
 ##########################################################################
 #
-#  Copyright (c) 2014, Image Engine Design Inc. All rights reserved.
+#  Copyright (c) 2016, Image Engine Design Inc. All rights reserved.
 #
 #  Redistribution and use in source and binary forms, with or without
 #  modification, are permitted provided that the following conditions are
@@ -35,63 +35,8 @@
 ##########################################################################
 
 import Gaffer
-import GafferTest
 
-class StringAlgoTest( GafferTest.TestCase ) :
-
-	def testMatch( self ) :
-
-		for s, p, r in [
-			( "", "", True ),
-			( "a", "a", True ),
-			( "a", "*", True ),
-			( "ab", "a*", True ),
-			( "cat", "dog", False ),
-			( "dogfish", "*fish", True ),
-			( "dogcollar", "*fish", False ),
-			( "dog collar", "dog collar", True ),
-			( "dog collar", "dog co*", True ),
-			( "dog collar", "dog *", True ),
-			( "dog collar", "dog*", True ),
-		] :
-
-			self.assertEqual( Gaffer.StringAlgo.match( s, p ), r )
-			if " " not in s :
-				self.assertEqual( Gaffer.StringAlgo.matchMultiple( s, p ), r )
-
-	def testMatchMultiple( self ) :
-
-		for s, p, r in [
-			( "", "", True ),
-			( "a", "b a", True ),
-			( "a", "c *", True ),
-			( "ab", "c a*", True ),
-			( "cat", "dog fish", False ),
-			( "cat", "cad cat", True ),
-			( "cat", "cad ", False ),
-			( "cat", "cat ", True ),
-			( "cat", "cadcat", False ),
-			( "dogfish", "cat *fish", True ),
-			( "dogcollar", "dog *fish", False ),
-			( "dogcollar", "dog collar", False ),
-			( "a1", "*1 b2", True ),
-		] :
-
-			self.assertEqual( Gaffer.StringAlgo.matchMultiple( s, p ), r )
-
-	def testHasWildcards( self ) :
-
-		for p, r in [
-			( "", False ),
-			( "a", False ),
-			( "*", True ),
-			( "a*", True ),
-			( "a**", True ),
-			( "a*b", True ),
-			( "*a", True ),
-		] :
-
-			self.assertEqual( Gaffer.StringAlgo.hasWildcards( p ), r )
-
-if __name__ == "__main__":
-	unittest.main()
+for module in ( Gaffer.StringAlgo, Gaffer.MetadataAlgo, Gaffer.MonitorAlgo ) :
+	for name in dir( module ) :
+		if not name.startswith( "__" ) :
+			setattr( Gaffer, name, getattr( module, name ) )

@@ -115,7 +115,7 @@ def __selectAffected( node, context ) :
 	pathMatcher = GafferScene.PathMatcher()
 	with context :
 		for scene in scenes :
-			GafferScene.matchingPaths( filter, scene, pathMatcher )
+			GafferScene.SceneAlgo.matchingPaths( filter, scene, pathMatcher )
 
 	context["ui:scene:selectedPaths"] = IECore.StringVectorData( pathMatcher.paths() )
 

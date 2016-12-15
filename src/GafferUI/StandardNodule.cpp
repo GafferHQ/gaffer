@@ -242,7 +242,7 @@ IECore::RunTimeTypedPtr StandardNodule::dragBegin( GadgetPtr gadget, const Butto
 
 bool StandardNodule::dragEnter( GadgetPtr gadget, const DragDropEvent &event )
 {
-	if( readOnly( plug() ) )
+	if( MetadataAlgo::readOnly( plug() ) )
 	{
 		return false;
 	}
@@ -467,9 +467,9 @@ void StandardNodule::setCompatibleLabelsVisible( const DragDropEvent &event, boo
 	}
 }
 
-void StandardNodule::plugMetadataChanged( IECore::TypeId nodeTypeId, const Gaffer::MatchPattern &plugPath, IECore::InternedString key, const Gaffer::Plug *plug )
+void StandardNodule::plugMetadataChanged( IECore::TypeId nodeTypeId, const Gaffer::StringAlgo::MatchPattern &plugPath, IECore::InternedString key, const Gaffer::Plug *plug )
 {
-	if( !affectedByChange( this->plug(), nodeTypeId, plugPath, plug ) )
+	if( !MetadataAlgo::affectedByChange( this->plug(), nodeTypeId, plugPath, plug ) )
 	{
 		return;
 	}

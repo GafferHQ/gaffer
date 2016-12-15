@@ -81,7 +81,7 @@ bool readOnly( const Gaffer::StandardSet *set )
 	{
 		if( const Gaffer::GraphComponent *g = runTimeCast<const Gaffer::GraphComponent>( set->member( i ) ) )
 		{
-			if( readOnly( g ) )
+			if( Gaffer::MetadataAlgo::readOnly( g ) )
 			{
 				return true;
 			}
@@ -706,7 +706,7 @@ bool GraphGadget::keyPressed( GadgetPtr gadget, const KeyEvent &event )
 		for( size_t i = 0, s = selection->size(); i != s; i++ )
 		{
 			Gaffer::DependencyNode *node = IECore::runTimeCast<Gaffer::DependencyNode>( selection->member( i ) );
-			if( node && findNodeGadget( node ) && !readOnly( node ) )
+			if( node && findNodeGadget( node ) && !Gaffer::MetadataAlgo::readOnly( node ) )
 			{
 				Gaffer::BoolPlug *enabledPlug = node->enabledPlug();
 				if( enabledPlug && enabledPlug->settable() )

@@ -172,7 +172,7 @@ class NodeGraph( GafferUI.EditorWidget ) :
 				{
 					"command" : functools.partial( cls.__setEnabled, node ),
 					"checkBox" : enabledPlug.getValue(),
-					"active" : enabledPlug.settable() and not Gaffer.readOnly( enabledPlug )
+					"active" : enabledPlug.settable() and not Gaffer.MetadataAlgo.readOnly( enabledPlug )
 				}
 			)
 

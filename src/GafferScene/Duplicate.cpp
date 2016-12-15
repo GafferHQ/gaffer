@@ -219,7 +219,7 @@ void Duplicate::compute( ValuePlug *output, const Context *context ) const
 		// these from the name of the target.
 
 		std::string stem;
-		int suffix = numericSuffix( target.back(), 0, &stem );
+		int suffix = StringAlgo::numericSuffix( target.back(), 0, &stem );
 		suffix++;
 
 		const int copies = copiesPlug()->getValue();
@@ -231,7 +231,7 @@ void Duplicate::compute( ValuePlug *output, const Context *context ) const
 		if( name.size() )
 		{
 			std::string nameStem;
-			const int nameSuffix = numericSuffix( name, &nameStem );
+			const int nameSuffix = StringAlgo::numericSuffix( name, &nameStem );
 			stem = nameStem;
 			suffix = copies == 1 ? nameSuffix : max( nameSuffix, 1 );
 		}

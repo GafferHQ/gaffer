@@ -44,12 +44,15 @@ namespace GafferImageBindings
 
 void bindBufferAlgo()
 {
+	object module( borrowed( PyImport_AddModule( "GafferImage.BufferAlgo" ) ) );
+	scope().attr( "BufferAlgo" ) = module;
+	scope moduleScope( module );
 
-	def( "empty", &GafferImage::empty );
-	def( "intersects", &GafferImage::intersects );
-	def( "intersection", &GafferImage::intersection );
-	def( "clamp", &GafferImage::clamp );
-	def( "contains", ( bool (*)( const Imath::Box2i&, const Imath::V2i & ) )&GafferImage::contains );
+	def( "empty", &GafferImage::BufferAlgo::empty );
+	def( "intersects", &GafferImage::BufferAlgo::intersects );
+	def( "intersection", &GafferImage::BufferAlgo::intersection );
+	def( "clamp", &GafferImage::BufferAlgo::clamp );
+	def( "contains", ( bool (*)( const Imath::Box2i&, const Imath::V2i & ) )&GafferImage::BufferAlgo::contains );
 
 }
 

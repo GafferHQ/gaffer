@@ -108,7 +108,7 @@ struct NodeMetadata
 		>
 	> PlugValues;
 
-	typedef map<MatchPattern, PlugValues> PlugPathsToValues;
+	typedef map<StringAlgo::MatchPattern, PlugValues> PlugPathsToValues;
 
 	NodeValues nodeValues;
 	PlugPathsToValues plugPathsToValues;
@@ -423,7 +423,7 @@ void Metadata::deregisterValue( IECore::TypeId nodeTypeId, IECore::InternedStrin
 	deregisterNodeValue( nodeTypeId, key );
 }
 
-void Metadata::deregisterValue( IECore::TypeId nodeTypeId, const MatchPattern &plugPath, IECore::InternedString key )
+void Metadata::deregisterValue( IECore::TypeId nodeTypeId, const StringAlgo::MatchPattern &plugPath, IECore::InternedString key )
 {
 	deregisterPlugValue( nodeTypeId, plugPath, key );
 }
@@ -507,12 +507,12 @@ std::vector<Node*> Metadata::nodesWithMetadata( GraphComponent *root, IECore::In
 	return nodes;
 }
 
-void Metadata::registerPlugValue( IECore::TypeId nodeTypeId, const MatchPattern &plugPath, IECore::InternedString key, IECore::ConstDataPtr value )
+void Metadata::registerPlugValue( IECore::TypeId nodeTypeId, const StringAlgo::MatchPattern &plugPath, IECore::InternedString key, IECore::ConstDataPtr value )
 {
 	registerPlugValue( nodeTypeId, plugPath, key, boost::lambda::constant( value ) );
 }
 
-void Metadata::registerPlugValue( IECore::TypeId nodeTypeId, const MatchPattern &plugPath, IECore::InternedString key, PlugValueFunction value )
+void Metadata::registerPlugValue( IECore::TypeId nodeTypeId, const StringAlgo::MatchPattern &plugPath, IECore::InternedString key, PlugValueFunction value )
 {
 	NodeMetadata &nodeMetadata = nodeMetadataMap()[nodeTypeId];
 	NodeMetadata::PlugValues &plugValues = nodeMetadata.plugPathsToValues[plugPath];
@@ -553,7 +553,7 @@ void Metadata::registeredPlugValues( const Plug *plug, std::vector<IECore::Inter
 				NodeMetadata::PlugPathsToValues::const_iterator it, eIt;
 				for( it = nIt->second.plugPathsToValues.begin(), eIt = nIt->second.plugPathsToValues.end(); it != eIt; ++it )
 				{
-					if( match( plugPath, it->first ) )
+					if( StringAlgo::match( plugPath, it->first ) )
 					{
 						const NodeMetadata::PlugValues::nth_index<1>::type &index = it->second.get<1>();
 						for( NodeMetadata::PlugValues::nth_index<1>::type::const_reverse_iterator vIt = index.rbegin(), veIt = index.rend(); vIt != veIt; ++vIt )
@@ -612,7 +612,7 @@ IECore::ConstDataPtr Metadata::plugValueInternal( const Plug *plug, IECore::Inte
 			// wildcard matches.
 			for( it = nIt->second.plugPathsToValues.begin(); it != eIt; ++it )
 			{
-				if( match( plugPath, it->first ) )
+				if( StringAlgo::match( plugPath, it->first ) )
 				{
 					NodeMetadata::PlugValues::const_iterator vIt = it->second.find( key );
 					if( vIt != it->second.end() )
@@ -627,7 +627,7 @@ IECore::ConstDataPtr Metadata::plugValueInternal( const Plug *plug, IECore::Inte
 	return NULL;
 }
 
-void Metadata::deregisterPlugValue( IECore::TypeId nodeTypeId, const MatchPattern &plugPath, IECore::InternedString key )
+void Metadata::deregisterPlugValue( IECore::TypeId nodeTypeId, const StringAlgo::MatchPattern &plugPath, IECore::InternedString key )
 {
 	NodeMetadata &nodeMetadata = nodeMetadataMap()[nodeTypeId];
 	NodeMetadata::PlugValues &plugValues = nodeMetadata.plugPathsToValues[plugPath];
@@ -647,12 +647,12 @@ void Metadata::deregisterPlugValue( Plug *plug, IECore::InternedString key )
 	registerInstanceValue( plug, key, OptionalData(), /* persistent = */ false );
 }
 
-void Metadata::registerPlugDescription( IECore::TypeId nodeTypeId, const MatchPattern &plugPath, const std::string &description )
+void Metadata::registerPlugDescription( IECore::TypeId nodeTypeId, const StringAlgo::MatchPattern &plugPath, const std::string &description )
 {
 	registerPlugValue( nodeTypeId, plugPath, "description", ConstDataPtr( new StringData( description ) ) );
 }
 
-void Metadata::registerPlugDescription( IECore::TypeId nodeTypeId, const MatchPattern &plugPath, PlugValueFunction description )
+void Metadata::registerPlugDescription( IECore::TypeId nodeTypeId, const StringAlgo::MatchPattern &plugPath, PlugValueFunction description )
 {
 	registerPlugValue( nodeTypeId, plugPath, "description", description );
 }

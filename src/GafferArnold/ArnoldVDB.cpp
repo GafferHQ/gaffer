@@ -234,11 +234,11 @@ IECore::ConstObjectPtr ArnoldVDB::computeSource( const Context *context ) const
 	parameters["filename"] = new StringData( fileNamePlug()->getValue() );
 
 	StringVectorDataPtr grids = new StringVectorData();
-	tokenize( gridsString, ' ', grids->writable() );
+	StringAlgo::tokenize( gridsString, ' ', grids->writable() );
 	parameters["grids"] = grids;
 
 	StringVectorDataPtr velocityGrids = new StringVectorData();
-	tokenize( velocityGridsPlug()->getValue(), ' ', velocityGrids->writable() );
+	StringAlgo::tokenize( velocityGridsPlug()->getValue(), ' ', velocityGrids->writable() );
 	parameters["velocity_grids"] = velocityGrids;
 
 	parameters["velocity_scale"] = new FloatData( velocityScalePlug()->getValue() );

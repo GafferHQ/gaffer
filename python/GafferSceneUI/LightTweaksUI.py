@@ -258,7 +258,7 @@ class _TweaksFooter( GafferUI.PlugValueWidget ) :
 		if node is not None :
 			pathMatcher = GafferScene.PathMatcher()
 			with self.getContext() :
-				GafferScene.matchingPaths( node["filter"], node["in"], pathMatcher )
+				GafferScene.SceneAlgo.matchingPaths( node["filter"], node["in"], pathMatcher )
 				paths = pathMatcher.paths()
 
 		return self.__addFromPathsMenuDefinition( paths )
@@ -269,7 +269,7 @@ class _TweaksFooter( GafferUI.PlugValueWidget ) :
 		node = self.__lightTweaksNode()
 		if node is not None :
 			paths = self.getContext().get( "ui:scene:selectedPaths", [] )
-			paths = [ p for p in paths if GafferScene.exists( node["in"], p ) ]
+			paths = [ p for p in paths if GafferScene.SceneAlgo.exists( node["in"], p ) ]
 
 		return self.__addFromPathsMenuDefinition( paths )
 
@@ -290,7 +290,7 @@ class _TweaksFooter( GafferUI.PlugValueWidget ) :
 			for path in paths :
 				attributes = node["in"].attributes( path )
 				for name, network in attributes.items() :
-					if not Gaffer.matchMultiple( name, attributeNamePatterns ) :
+					if not Gaffer.StringAlgo.matchMultiple( name, attributeNamePatterns ) :
 						continue
 					if not isinstance( network, IECore.ObjectVector ) or not len( network ):
 						continue

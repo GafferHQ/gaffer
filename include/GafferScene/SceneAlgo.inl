@@ -165,6 +165,9 @@ struct PathMatcherFunctor
 
 } // namespace Detail
 
+namespace SceneAlgo
+{
+
 template <class ThreadableFunctor>
 void parallelTraverse( const GafferScene::ScenePlug *scene, ThreadableFunctor &f )
 {
@@ -193,5 +196,7 @@ void filteredParallelTraverse( const ScenePlug *scene, const PathMatcher &filter
 	Detail::PathMatcherFunctor<ThreadableFunctor> ff( f, filter );
 	parallelTraverse( scene, ff );
 }
+
+} // namespace SceneAlgo
 
 } // namespace GafferScene

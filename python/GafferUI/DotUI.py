@@ -169,7 +169,7 @@ def __connectionContextMenu( nodeGraph, destinationPlug, menuDefinition ) :
 		"/Insert Dot",
 		{
 			"command" : functools.partial( __insertDot, destinationPlug = destinationPlug ),
-			"active" : not destinationPlug.getFlags( Gaffer.Plug.Flags.ReadOnly ) and not Gaffer.readOnly( destinationPlug ),
+			"active" : not destinationPlug.getFlags( Gaffer.Plug.Flags.ReadOnly ) and not Gaffer.MetadataAlgo.readOnly( destinationPlug ),
 		}
 	)
 
@@ -190,7 +190,7 @@ def __nodeGraphPlugContextMenu( nodeGraph, plug, menuDefinition ) :
 		if not currentEdge :
 			currentEdge = "top" if plug.direction() == plug.Direction.In else "bottom"
 
-		readOnly = Gaffer.readOnly( plug )
+		readOnly = Gaffer.MetadataAlgo.readOnly( plug )
 		for edge in ( "top", "bottom", "left", "right" ) :
 			menuDefinition.append(
 				"/Move To/" + edge.capitalize(),
