@@ -39,6 +39,7 @@
 
 #include "Gaffer/Monitor.h"
 #include "Gaffer/PerformanceMonitor.h"
+#include "Gaffer/ContextMonitor.h"
 #include "Gaffer/MonitorAlgo.h"
 #include "Gaffer/Plug.h"
 
@@ -103,13 +104,25 @@ void setComputeDuration( PerformanceMonitor::Statistics &s, boost::chrono::nanos
 	s.computeDuration = boost::chrono::nanoseconds( v );
 }
 
-dict allStatistics( PerformanceMonitor &m )
+template<typename T>
+dict allStatistics( T &m )
 {
 	dict result;
-	const PerformanceMonitor::StatisticsMap &s = m.allStatistics();
-	for( PerformanceMonitor::StatisticsMap::const_iterator it = s.begin(), eIt = s.end(); it != eIt; ++it )
+	const typename T::StatisticsMap &s = m.allStatistics();
+	for( typename T::StatisticsMap::const_iterator it = s.begin(), eIt = s.end(); it != eIt; ++it )
 	{
 		result[boost::const_pointer_cast<Plug>( it->first)] = it->second;
+	}
+	return result;
+}
+
+list contextMonitorVariableNames( const ContextMonitor::Statistics &s )
+{
+	std::vector<IECore::InternedString> names = s.variableNames();
+	list result;
+	for( std::vector<IECore::InternedString>::const_iterator it = names.begin(), eIt = names.end(); it != eIt; ++it )
+	{
+		result.append( it->c_str() );
 	}
 	return result;
 }
@@ -163,28 +176,47 @@ void GafferBindings::bindMonitor()
 		.def( "__exit__", &exitScope )
 	;
 
-	scope s = class_<PerformanceMonitor, bases<Monitor>, boost::noncopyable >( "PerformanceMonitor" )
-		.def( "allStatistics", &allStatistics )
-		.def( "plugStatistics", &PerformanceMonitor::plugStatistics, return_value_policy<copy_const_reference>() )
-	;
+	{
+		scope s = class_<PerformanceMonitor, bases<Monitor>, boost::noncopyable >( "PerformanceMonitor" )
+			.def( "allStatistics", &allStatistics<PerformanceMonitor> )
+			.def( "plugStatistics", &PerformanceMonitor::plugStatistics, return_value_policy<copy_const_reference>() )
+		;
 
-	class_<PerformanceMonitor::Statistics>( "Statistics" )
-		.def( "__init__", make_constructor( statisticsConstructor, default_call_policies(),
-				(
-					arg( "hashCount" ) = 0,
-					arg( "computeCount" ) = 0,
-					arg( "hashDuration" ) = 0,
-					arg( "computeDuration" ) = 0
+		class_<PerformanceMonitor::Statistics>( "Statistics" )
+			.def( "__init__", make_constructor( statisticsConstructor, default_call_policies(),
+					(
+						arg( "hashCount" ) = 0,
+						arg( "computeCount" ) = 0,
+						arg( "hashDuration" ) = 0,
+						arg( "computeDuration" ) = 0
+					)
 				)
 			)
-		)
-		.def_readwrite( "hashCount", &PerformanceMonitor::Statistics::hashCount )
-		.def_readwrite( "computeCount", &PerformanceMonitor::Statistics::computeCount )
-		.add_property( "hashDuration", &getHashDuration, &setHashDuration )
-		.add_property( "computeDuration", &getComputeDuration, &setComputeDuration )
-		.def( self == self )
-		.def( self != self )
-		.def( "__repr__", &repr )
-	;
+			.def_readwrite( "hashCount", &PerformanceMonitor::Statistics::hashCount )
+			.def_readwrite( "computeCount", &PerformanceMonitor::Statistics::computeCount )
+			.add_property( "hashDuration", &getHashDuration, &setHashDuration )
+			.add_property( "computeDuration", &getComputeDuration, &setComputeDuration )
+			.def( self == self )
+			.def( self != self )
+			.def( "__repr__", &repr )
+		;
+	}
+
+	{
+		scope s = class_<ContextMonitor, bases<Monitor>, boost::noncopyable>( "ContextMonitor", no_init )
+			.def( init<const GraphComponent *>( arg( "root" ) = object() ) )
+			.def( "allStatistics", &allStatistics<ContextMonitor> )
+			.def( "plugStatistics", &ContextMonitor::plugStatistics, return_value_policy<copy_const_reference>() )
+			.def( "combinedStatistics", &ContextMonitor::combinedStatistics, return_value_policy<copy_const_reference>() )
+		;
+
+		class_<ContextMonitor::Statistics>( "Statistics" )
+			.def( "numUniqueContexts", &ContextMonitor::Statistics::numUniqueContexts )
+			.def( "variableNames", &contextMonitorVariableNames )
+			.def( "numUniqueValues", &ContextMonitor::Statistics::numUniqueValues )
+			.def( self == self )
+			.def( self != self )
+		;
+	}
 
 }

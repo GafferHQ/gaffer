@@ -34,54 +34,61 @@
 //
 //////////////////////////////////////////////////////////////////////////
 
-#ifndef GAFFER_PERFORMANCEMONITOR_H
-#define GAFFER_PERFORMANCEMONITOR_H
+#ifndef GAFFER_CONTEXTMONITOR_H
+#define GAFFER_CONTEXTMONITOR_H
 
-#include <stack>
+#include <vector>
 
 #include "tbb/enumerable_thread_specific.h"
 
 #include "boost/unordered_map.hpp"
-#include "boost/chrono.hpp"
+#include "boost/unordered_set.hpp"
 
 #include "IECore/RefCounted.h"
+#include "IECore/MurmurHash.h"
 
 #include "Gaffer/Monitor.h"
 
 namespace Gaffer
 {
 
+IE_CORE_FORWARDDECLARE( GraphComponent )
 IE_CORE_FORWARDDECLARE( Plug )
+IE_CORE_FORWARDDECLARE( Context )
 
-/// A monitor which collects statistics about the frequency
-/// and duration of hash and compute processes per plug.
-class PerformanceMonitor : public Monitor
+/// A monitor which collects statistics about
+/// what contexts plugs are evaluated in.
+class ContextMonitor : public Monitor
 {
 
 	public :
 
-		PerformanceMonitor();
-		virtual ~PerformanceMonitor();
+		/// Statistics are only collected for the root and its
+		/// descendants.
+		ContextMonitor( const GraphComponent *root = NULL );
+		virtual ~ContextMonitor();
 
 		struct Statistics
 		{
 
-			Statistics(
-				size_t hashCount = 0,
-				size_t computeCount = 0,
-				boost::chrono::nanoseconds hashDuration = boost::chrono::nanoseconds( 0 ),
-				boost::chrono::nanoseconds computeDuration = boost::chrono::nanoseconds( 0 )
-			);
+			size_t numUniqueContexts() const;
+			std::vector<IECore::InternedString> variableNames() const;
+			size_t numUniqueValues( IECore::InternedString variableName ) const;
 
-			size_t hashCount;
-			size_t computeCount;
-			boost::chrono::nanoseconds hashDuration;
-			boost::chrono::nanoseconds computeDuration;
-
+			Statistics & operator += ( const Context *rhs );
 			Statistics & operator += ( const Statistics &rhs );
 
 			bool operator == ( const Statistics &rhs );
 			bool operator != ( const Statistics &rhs );
+
+			private :
+
+				typedef boost::unordered_set<IECore::MurmurHash> ContextSet;
+				typedef boost::unordered_map<IECore::MurmurHash, size_t> CountingMap;
+				typedef std::map<IECore::InternedString, CountingMap> VariableMap;
+
+				ContextSet m_contexts;
+				VariableMap m_variables;
 
 		};
 
@@ -89,6 +96,7 @@ class PerformanceMonitor : public Monitor
 
 		const StatisticsMap &allStatistics() const;
 		const Statistics &plugStatistics( const Plug *plug ) const;
+		const Statistics &combinedStatistics() const;
 
 	protected :
 
@@ -97,19 +105,14 @@ class PerformanceMonitor : public Monitor
 
 	private :
 
+		const GraphComponent *m_root;
+
 		// For performance reasons we accumulate our statistics into
 		// thread local storage while computations are running.
 		struct ThreadData
 		{
 			// Stores the per-plug statistics captured by this thread.
 			StatisticsMap statistics;
-			// Stack of durations pointing into the statistics map.
-			// The top of the stack is the duration we're billing the
-			// current chunk of time to.
-			typedef std::stack<boost::chrono::nanoseconds *> DurationStack;
-			DurationStack durationStack;
-			// The last time measurement we made.
-			boost::chrono::high_resolution_clock::time_point then;
 		};
 
 		tbb::enumerable_thread_specific<ThreadData, tbb::cache_aligned_allocator<ThreadData>, tbb::ets_key_per_instance> m_threadData;
@@ -117,9 +120,10 @@ class PerformanceMonitor : public Monitor
 		// Then when we want to query it, we collate it into m_statistics.
 		void collate() const;
 		mutable StatisticsMap m_statistics;
+		mutable Statistics m_combinedStatistics;
 
 };
 
 } // namespace Gaffer
 
-#endif // GAFFER_PERFORMANCEMONITOR_H
+#endif // GAFFER_CONTEXTMONITOR_H
