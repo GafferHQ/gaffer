@@ -128,7 +128,7 @@ class StandardNodeGadgetTest( GafferUITest.TestCase ) :
 		g = GafferUI.StandardNodeGadget( n )
 		self.assertEqual( g.noduleTangent( g.nodule( n["op1"] ) ), IECore.V3f( 0, 1, 0 ) )
 
-		Gaffer.Metadata.registerValue( n.typeId(), "op1", "nodeGadget:nodulePosition", "left" )
+		Gaffer.Metadata.registerValue( n.typeId(), "op1", "noduleLayout:section", "left" )
 
 		g = GafferUI.StandardNodeGadget( n )
 		self.assertEqual( g.noduleTangent( g.nodule( n["op1"] ) ), IECore.V3f( -1, 0, 0 ) )
@@ -176,7 +176,7 @@ class StandardNodeGadgetTest( GafferUITest.TestCase ) :
 		g = GafferUI.StandardNodeGadget( n )
 		self.assertEqual( g.noduleTangent( g.nodule( n["op2"] ) ), IECore.V3f( 0, 1, 0 ) )
 
-		Gaffer.Metadata.registerValue( n["op2"], "nodeGadget:nodulePosition", "left" )
+		Gaffer.Metadata.registerValue( n["op2"], "noduleLayout:section", "left" )
 		self.assertEqual( g.noduleTangent( g.nodule( n["op2"] ) ), IECore.V3f( -1, 0, 0 ) )
 
 	def testRemoveNoduleAfterCreation( self ) :
@@ -279,8 +279,8 @@ class StandardNodeGadgetTest( GafferUITest.TestCase ) :
 			g.nodule( n["b"] ).transformedBound().center().x
 		)
 
-		Gaffer.Metadata.registerValue( n["a"], "nodeGadget:noduleIndex", 1 )
-		Gaffer.Metadata.registerValue( n["b"], "nodeGadget:noduleIndex", 0 )
+		Gaffer.Metadata.registerValue( n["a"], "noduleLayout:index", 1 )
+		Gaffer.Metadata.registerValue( n["b"], "noduleLayout:index", 0 )
 
 		g.bound()
 		self.assertGreater(

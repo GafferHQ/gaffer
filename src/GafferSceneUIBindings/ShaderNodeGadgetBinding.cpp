@@ -36,40 +36,15 @@
 
 #include "boost/python.hpp"
 
-#include "Gaffer/MetadataAlgo.h"
-#include "Gaffer/GraphComponent.h"
-#include "Gaffer/Plug.h"
-#include "Gaffer/Node.h"
+#include "GafferSceneUI/Private/ShaderNodeGadget.h"
+#include "GafferSceneUIBindings/ShaderNodeGadgetBinding.h"
 
 using namespace boost::python;
-using namespace Gaffer;
-using namespace Gaffer::MetadataAlgo;
+using namespace GafferUI;
+using namespace GafferSceneUI::Private;
 
-namespace GafferBindings
+void GafferSceneUIBindings::bindShaderNodeGadget()
 {
-
-void bindMetadataAlgo()
-{
-	object module( borrowed( PyImport_AddModule( "Gaffer.MetadataAlgo" ) ) );
-	scope().attr( "MetadataAlgo" ) = module;
-	scope moduleScope( module );
-
-	def( "setReadOnly", &setReadOnly, ( arg( "graphComponent" ), arg( "readOnly"), arg( "persistent" ) = true ) );
-	def( "getReadOnly", &getReadOnly );
-	def( "readOnly", &readOnly );
-	def(
-		"affectedByChange",
-		(bool (*)( const Plug *, IECore::TypeId, const MatchPattern &, const Plug * ))&affectedByChange,
-		( arg( "plug" ), arg( "changedNodeTypeId"), arg( "changedPlugPath" ), arg( "changedPlug" ) )
-	);
-	def(
-		"affectedByChange",
-		(bool (*)( const Node *node, IECore::TypeId changedNodeTypeId, const Node *changedNode ))&affectedByChange,
-		( arg( "node" ), arg( "changedNodeTypeId"), arg( "changedNode" ) )
-	);
-	def( "childAffectedByChange", &childAffectedByChange, ( arg( "parent" ), arg( "changedNodeTypeId"), arg( "changedPlugPath" ), arg( "changedPlug" ) ) );
-	def( "ancestorAffectedByChange", &ancestorAffectedByChange, ( arg( "plug" ), arg( "changedNodeTypeId"), arg( "changedPlugPath" ), arg( "changedPlug" ) ) );
-
+	// See comments in StandardNodeGadgetBinding.
+	objects::copy_class_object( type_id<StandardNodeGadget>(), type_id<ShaderNodeGadget>() );
 }
-
-} // namespace GafferBindings

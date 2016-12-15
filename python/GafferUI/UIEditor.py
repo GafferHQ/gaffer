@@ -1494,8 +1494,8 @@ class _PlugEditor( GafferUI.Widget ) :
 					with _Row() :
 
 						_Label( "Position" )
-						self.__metadataWidgets["nodeGadget:nodulePosition"] = _MenuMetadataWidget(
-							key = "nodeGadget:nodulePosition",
+						self.__metadataWidgets["noduleLayout:section"] = _MenuMetadataWidget(
+							key = "noduleLayout:section",
 							labelsAndValues = [
 								( "Default", None ),
 								( "Top", "top" ),

@@ -134,6 +134,23 @@
 [node standard]
 
 	gaffer.nodeMenu.category STRING "Surface"
+	gaffer.nodeGraphLayout.defaultVisibility BOOL false
+
+	[attr Kd_color]
+
+		gaffer.nodeGraphLayout.visible BOOL true
+
+	[attr Kd]
+
+		gaffer.nodeGraphLayout.visible BOOL true
+
+	[attr Ks_color]
+
+		gaffer.nodeGraphLayout.visible BOOL true
+
+	[attr Ks]
+
+		gaffer.nodeGraphLayout.visible BOOL true
 
 
 [node utility]
@@ -1030,7 +1047,7 @@
 
 
 [node htoa__max]
-      
+
 	primaryInput STRING "input1"
 	gaffer.nodeMenu.category STRING "Houdini/Maths"
 
@@ -1401,7 +1418,23 @@
 [node alSurface]
 
 	gaffer.nodeMenu.category STRING "Surface"
+	gaffer.nodeGraphLayout.defaultVisibility BOOL false
 
+	[attr diffuseStrength]
+
+		gaffer.nodeGraphLayout.visible BOOL true
+
+	[attr diffuseColor]
+
+		gaffer.nodeGraphLayout.visible BOOL true
+
+	[attr specular1Strength]
+
+		gaffer.nodeGraphLayout.visible BOOL true
+
+	[attr specular1Color]
+
+		gaffer.nodeGraphLayout.visible BOOL true
 
 [node alSwitchColor]
 

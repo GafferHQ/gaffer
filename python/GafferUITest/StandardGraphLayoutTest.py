@@ -70,10 +70,10 @@ class LayoutNode( Gaffer.Node ) :
 
 IECore.registerRunTimeTyped( LayoutNode )
 
-Gaffer.Metadata.registerValue( LayoutNode, "left*", "nodeGadget:nodulePosition", "left" )
-Gaffer.Metadata.registerValue( LayoutNode, "right*", "nodeGadget:nodulePosition", "right" )
-Gaffer.Metadata.registerValue( LayoutNode, "top*", "nodeGadget:nodulePosition", "top" )
-Gaffer.Metadata.registerValue( LayoutNode, "bottom*", "nodeGadget:nodulePosition", "bottom" )
+Gaffer.Metadata.registerValue( LayoutNode, "left*", "noduleLayout:section", "left" )
+Gaffer.Metadata.registerValue( LayoutNode, "right*", "noduleLayout:section", "right" )
+Gaffer.Metadata.registerValue( LayoutNode, "top*", "noduleLayout:section", "top" )
+Gaffer.Metadata.registerValue( LayoutNode, "bottom*", "noduleLayout:section", "bottom" )
 
 class StandardGraphLayoutTest( GafferUITest.TestCase ) :
 

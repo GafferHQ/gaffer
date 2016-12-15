@@ -397,10 +397,9 @@ Gaffer.Metadata.registerNode(
 		"parameters.*" : [
 
 			"nodule:type", __plugNoduleType,
-			"compoundNodule:orientation", "y",
 			# Coshader arrays tend to be used for layering, so we prefer to
 			# present the last entry at the top, hence the increasing direction.
-			"compoundNodule:direction", "increasing",
+			"noduleLayout:direction", "increasing",
 
 		],
 

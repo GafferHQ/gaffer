@@ -64,9 +64,8 @@ Gaffer.Metadata.registerNode(
 
 			"plugValueWidget:type", "",
 			"nodule:type", "GafferUI::CompoundNodule",
-			"nodeGadget:nodulePosition", "left",
-			"compoundNodule:orientation", "y",
-			"compoundNodule:spacing", 0.2,
+			"noduleLayout:section", "left",
+			"noduleLayout:spacing", 0.2,
 
 		],
 
@@ -77,7 +76,7 @@ Gaffer.Metadata.registerNode(
 			The output shader.
 			""",
 
-			"nodeGadget:nodulePosition", "right",
+			"noduleLayout:section", "right",
 			"plugValueWidget:type", "",
 
 		],

@@ -66,7 +66,7 @@ Gaffer.Metadata.registerNode(
 
 			"description", lambda plug : "The input filter" + ( "s" if isinstance( plug, Gaffer.ArrayPlug ) else "" ),
 			"nodule:type", lambda plug : "GafferUI::CompoundNodule" if isinstance( plug, Gaffer.ArrayPlug ) else "GafferUI::StandardNodule",
-			"compoundNodule:spacing", 2.0,
+			"noduleLayout:spacing", 2.0,
 
 		],
 

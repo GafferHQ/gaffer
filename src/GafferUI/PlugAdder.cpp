@@ -40,10 +40,8 @@
 #include "IECoreGL/Selector.h"
 
 #include "Gaffer/UndoContext.h"
-#include "Gaffer/ScriptNode.h"
-#include "Gaffer/Switch.h"
-#include "Gaffer/ArrayPlug.h"
 #include "Gaffer/Metadata.h"
+#include "Gaffer/ArrayPlug.h"
 
 #include "GafferUI/Nodule.h"
 #include "GafferUI/ImageGadget.h"
@@ -127,18 +125,6 @@ const char *edgeName( StandardNodeGadget::Edge edge )
 	}
 }
 
-const char *edgeOrientation( StandardNodeGadget::Edge edge )
-{
-	switch( edge )
-	{
-		case StandardNodeGadget::TopEdge :
-		case StandardNodeGadget::BottomEdge :
-			return "x";
-		default :
-			return "y";
-	}
-}
-
 void updateMetadata( Plug *plug, InternedString key, const char *value )
 {
 	ConstStringDataPtr s = Metadata::value<StringData>( plug, key );
@@ -160,12 +146,9 @@ void updateMetadata( Plug *plug, InternedString key, const char *value )
 
 IE_CORE_DEFINERUNTIMETYPED( PlugAdder );
 
-PlugAdder::PlugAdder( Gaffer::NodePtr node, StandardNodeGadget::Edge edge )
-	:	m_node( node ), m_edge( edge ), m_dragging( false )
+PlugAdder::PlugAdder( StandardNodeGadget::Edge edge )
+	:	m_edge( edge ), m_dragging( false )
 {
-	node->childAddedSignal().connect( boost::bind( &PlugAdder::childAdded, this ) );
-	node->childRemovedSignal().connect( boost::bind( &PlugAdder::childRemoved, this ) );
-
 	enterSignal().connect( boost::bind( &PlugAdder::enter, this, ::_1, ::_2 ) );
 	leaveSignal().connect( boost::bind( &PlugAdder::leave, this, ::_1, ::_2 ) );
 	buttonPressSignal().connect( boost::bind( &PlugAdder::buttonPress, this, ::_1,  ::_2 ) );
@@ -175,8 +158,6 @@ PlugAdder::PlugAdder( Gaffer::NodePtr node, StandardNodeGadget::Edge edge )
 	dragLeaveSignal().connect( boost::bind( &PlugAdder::dragLeave, this, ::_2 ) );
 	dropSignal().connect( boost::bind( &PlugAdder::drop, this, ::_2 ) );
 	dragEndSignal().connect( boost::bind( &PlugAdder::dragEnd, this, ::_2 ) );
-
-	updateVisibility();
 }
 
 PlugAdder::~PlugAdder()
@@ -194,6 +175,12 @@ void PlugAdder::updateDragEndPoint( const Imath::V3f position, const Imath::V3f 
 	m_dragTangent = tangent;
 	m_dragging = true;
 	requestRender();
+}
+
+PlugAdder::PlugMenuSignal &PlugAdder::plugMenuSignal()
+{
+	static PlugMenuSignal s;
+	return s;
 }
 
 void PlugAdder::doRender( const Style *style ) const
@@ -217,50 +204,10 @@ void PlugAdder::doRender( const Style *style ) const
 	style->renderImage( Box2f( V2f( -radius ), V2f( radius ) ), texture( state ) );
 }
 
-void PlugAdder::addPlug( Gaffer::Plug *connectionEndPoint )
+void PlugAdder::applyEdgeMetadata( Gaffer::Plug *plug, bool opposite ) const
 {
-	UndoContext undoContext( m_node->ancestor<ScriptNode>() );
-
-	if( SwitchComputeNode *switchNode = runTimeCast<SwitchComputeNode>( m_node.get() ) )
-	{
-		switchNode->setup( connectionEndPoint );
-		ArrayPlug *inPlug = switchNode->getChild<ArrayPlug>( "in" );
-		Plug *outPlug = switchNode->getChild<Plug>( "out" );
-
-		StandardNodeGadget::Edge inEdge = StandardNodeGadget::InvalidEdge;
-		if( connectionEndPoint->direction() == Plug::Out )
-		{
-			inPlug->getChild<Plug>( 0 )->setInput( connectionEndPoint );
-			inEdge = m_edge;
-		}
-		else
-		{
-			connectionEndPoint->setInput( switchNode->getChild<Plug>( "out" ) );
-			inEdge = oppositeEdge( m_edge );
-		}
-
-		updateMetadata( inPlug, "nodeGadget:nodulePosition", edgeName( inEdge ) );
-		updateMetadata( inPlug, "compoundNodule:orientation", edgeOrientation( inEdge ) );
-		updateMetadata( outPlug, "nodeGadget:nodulePosition", edgeName( oppositeEdge( inEdge ) ) );
-	}
-}
-
-void PlugAdder::childAdded()
-{
-	updateVisibility();
-}
-
-void PlugAdder::childRemoved()
-{
-	updateVisibility();
-}
-
-void PlugAdder::updateVisibility()
-{
-	if( SwitchComputeNode *switchNode = runTimeCast<SwitchComputeNode>( m_node.get() ) )
-	{
-		setVisible( switchNode->getChild<ArrayPlug>( "in" ) == NULL );
-	}
+	StandardNodeGadget::Edge edge = opposite ? oppositeEdge( m_edge ) : m_edge;
+	updateMetadata( plug, "noduleLayout:section", edgeName( edge ) );
 }
 
 void PlugAdder::enter( GadgetPtr gadget, const ButtonEvent &event )
@@ -297,7 +244,7 @@ bool PlugAdder::dragEnter( const DragDropEvent &event )
 	}
 
 	const Plug *plug = runTimeCast<Plug>( event.data.get() );
-	if( !plug )
+	if( !plug || !acceptsPlug( plug ) )
 	{
 		return false;
 	}

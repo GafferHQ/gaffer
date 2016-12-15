@@ -34,42 +34,33 @@
 //
 //////////////////////////////////////////////////////////////////////////
 
-#include "boost/python.hpp"
+#ifndef GAFFERSCENEUI_PRIVATE_SHADERNODEGADGET_H
+#define GAFFERSCENEUI_PRIVATE_SHADERNODEGADGET_H
 
-#include "Gaffer/MetadataAlgo.h"
-#include "Gaffer/GraphComponent.h"
-#include "Gaffer/Plug.h"
-#include "Gaffer/Node.h"
+#include "GafferUI/StandardNodeGadget.h"
 
-using namespace boost::python;
-using namespace Gaffer;
-using namespace Gaffer::MetadataAlgo;
-
-namespace GafferBindings
+namespace GafferSceneUI
 {
 
-void bindMetadataAlgo()
+namespace Private
 {
-	object module( borrowed( PyImport_AddModule( "Gaffer.MetadataAlgo" ) ) );
-	scope().attr( "MetadataAlgo" ) = module;
-	scope moduleScope( module );
 
-	def( "setReadOnly", &setReadOnly, ( arg( "graphComponent" ), arg( "readOnly"), arg( "persistent" ) = true ) );
-	def( "getReadOnly", &getReadOnly );
-	def( "readOnly", &readOnly );
-	def(
-		"affectedByChange",
-		(bool (*)( const Plug *, IECore::TypeId, const MatchPattern &, const Plug * ))&affectedByChange,
-		( arg( "plug" ), arg( "changedNodeTypeId"), arg( "changedPlugPath" ), arg( "changedPlug" ) )
-	);
-	def(
-		"affectedByChange",
-		(bool (*)( const Node *node, IECore::TypeId changedNodeTypeId, const Node *changedNode ))&affectedByChange,
-		( arg( "node" ), arg( "changedNodeTypeId"), arg( "changedNode" ) )
-	);
-	def( "childAffectedByChange", &childAffectedByChange, ( arg( "parent" ), arg( "changedNodeTypeId"), arg( "changedPlugPath" ), arg( "changedPlug" ) ) );
-	def( "ancestorAffectedByChange", &ancestorAffectedByChange, ( arg( "plug" ), arg( "changedNodeTypeId"), arg( "changedPlugPath" ), arg( "changedPlug" ) ) );
+class ShaderNodeGadget : public GafferUI::StandardNodeGadget
+{
 
-}
+	public :
 
-} // namespace GafferBindings
+		ShaderNodeGadget( Gaffer::NodePtr node );
+		virtual ~ShaderNodeGadget();
+
+	private :
+
+		static NodeGadgetTypeDescription<ShaderNodeGadget> g_nodeGadgetTypeDescription;
+
+};
+
+} // namespace Private
+
+} // namespace GafferSceneUI
+
+#endif // GAFFERSCENEUI_PRIVATE_SHADERNODEGADGET_H

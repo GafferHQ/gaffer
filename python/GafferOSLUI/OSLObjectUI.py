@@ -66,8 +66,8 @@ Gaffer.Metadata.registerNode(
 				InPoint->ProcessingNodes->OutPoint->OutObject
 			""",
 
-			"nodeGadget:nodulePosition", "left",
 			"nodule:type", "GafferUI::StandardNodule",
+			"noduleLayout:section", "left",
 
 		],
 

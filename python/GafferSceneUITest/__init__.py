@@ -42,6 +42,7 @@ from SceneInspectorTest import SceneInspectorTest
 from SceneHierarchyTest import SceneHierarchyTest
 from DocumentationTest import DocumentationTest
 from ShaderViewTest import ShaderViewTest
+from ShaderUITest import ShaderUITest
 
 if __name__ == "__main__":
 	unittest.main()

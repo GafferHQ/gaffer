@@ -42,7 +42,6 @@
 namespace GafferUI
 {
 
-/// \todo Support Box and Dot in addition to Switch.
 class PlugAdder : public Gadget
 {
 
@@ -50,26 +49,33 @@ class PlugAdder : public Gadget
 
 		IE_CORE_DECLARERUNTIMETYPEDEXTENSION( GafferUI::PlugAdder, PlugAdderTypeId, Gadget );
 
-		PlugAdder( Gaffer::NodePtr node, StandardNodeGadget::Edge edge );
+		PlugAdder( StandardNodeGadget::Edge edge );
 		virtual ~PlugAdder();
 
 		virtual Imath::Box3f bound() const;
 
 		void updateDragEndPoint( const Imath::V3f position, const Imath::V3f &tangent );
 
+		/// Returns `true` if a call to `addPlug( connectionEndPoint )` is possible.
+		/// Should be implemented by derived classes.
+		virtual bool acceptsPlug( const Gaffer::Plug *connectionEndPoint ) const = 0;
+		/// Adds a plug compatible with `connectionEndPoint` and connects them together.
+		/// Should be implemented by derived classes.
+		virtual void addPlug( Gaffer::Plug *connectionEndPoint ) = 0;
+
+		/// When emitted, shows a menu containing the specified plugs, and returns
+		/// the chosen plug. Implemented as a signal so the menu can be implemented
+		/// externally in Python code.
+		typedef boost::signal<Gaffer::Plug *( const std::string &title, const std::vector<Gaffer::Plug *> & )> PlugMenuSignal;
+		static PlugMenuSignal &plugMenuSignal();
+
 	protected :
 
 		virtual void doRender( const Style *style ) const;
 
+		void applyEdgeMetadata( Gaffer::Plug *plug, bool opposite = false ) const;
+
 	private :
-
-		friend class StandardNodule;
-		void addPlug( Gaffer::Plug *connectionEndPoint );
-
-		void childAdded();
-		void childRemoved();
-
-		void updateVisibility();
 
 		void enter( GadgetPtr gadget, const ButtonEvent &event );
 		void leave( GadgetPtr gadget, const ButtonEvent &event );
@@ -81,7 +87,6 @@ class PlugAdder : public Gadget
 		bool drop( const DragDropEvent &event );
 		bool dragEnd( const DragDropEvent &event );
 
-		Gaffer::NodePtr m_node;
 		StandardNodeGadget::Edge m_edge;
 
 		bool m_dragging;

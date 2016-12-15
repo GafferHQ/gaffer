@@ -34,23 +34,106 @@
 //
 //////////////////////////////////////////////////////////////////////////
 
+#include "boost/bind.hpp"
+
 #include "Gaffer/Switch.h"
+#include "Gaffer/ArrayPlug.h"
+#include "Gaffer/UndoContext.h"
+#include "Gaffer/ScriptNode.h"
 
 #include "GafferUI/Nodule.h"
 #include "GafferUI/PlugAdder.h"
 #include "GafferUI/Private/SwitchNodeGadget.h"
 
+using namespace IECore;
 using namespace Gaffer;
 using namespace GafferUI;
 using namespace GafferUI::Private;
+
+namespace
+{
+
+class SwitchPlugAdder : public PlugAdder
+{
+
+	public :
+
+		SwitchPlugAdder( SwitchComputeNodePtr node, StandardNodeGadget::Edge edge )
+			:	PlugAdder( edge ), m_switch( node )
+		{
+			node->childAddedSignal().connect( boost::bind( &SwitchPlugAdder::childAdded, this ) );
+			node->childRemovedSignal().connect( boost::bind( &SwitchPlugAdder::childRemoved, this ) );
+
+			updateVisibility();
+		}
+
+	protected :
+
+		virtual bool acceptsPlug( const Plug *connectionEndPoint ) const
+		{
+			return true;
+		}
+
+		virtual void addPlug( Plug *connectionEndPoint )
+		{
+			UndoContext undoContext( m_switch->ancestor<ScriptNode>() );
+
+			m_switch->setup( connectionEndPoint );
+			ArrayPlug *inPlug = m_switch->getChild<ArrayPlug>( "in" );
+			Plug *outPlug = m_switch->getChild<Plug>( "out" );
+
+			bool inOpposite = false;
+			if( connectionEndPoint->direction() == Plug::Out )
+			{
+				inPlug->getChild<Plug>( 0 )->setInput( connectionEndPoint );
+				inOpposite = false;
+			}
+			else
+			{
+				connectionEndPoint->setInput( outPlug );
+				inOpposite = true;
+			}
+
+			applyEdgeMetadata( inPlug, inOpposite );
+			applyEdgeMetadata( outPlug, !inOpposite );
+		}
+
+	private :
+
+		void childAdded()
+		{
+			updateVisibility();
+		}
+
+		void childRemoved()
+		{
+			updateVisibility();
+		}
+
+		void updateVisibility()
+		{
+			setVisible( m_switch->getChild<ArrayPlug>( "in" ) == NULL );
+		}
+
+		SwitchComputeNodePtr m_switch;
+
+};
+
+} // namespace
 
 StandardNodeGadget::NodeGadgetTypeDescription<SwitchNodeGadget> SwitchNodeGadget::g_nodeGadgetTypeDescription( SwitchComputeNode::staticTypeId() );
 
 SwitchNodeGadget::SwitchNodeGadget( Gaffer::NodePtr node )
 	:	StandardNodeGadget( node )
 {
-	setEdgeGadget( LeftEdge, new PlugAdder( node, LeftEdge ) );
-	setEdgeGadget( RightEdge, new PlugAdder( node, RightEdge ) );
+	SwitchComputeNodePtr switchNode = runTimeCast<SwitchComputeNode>( node );
+	if( !switchNode )
+	{
+		throw Exception( "SwitchNodeGadget requires a SwitchComputeNode" );
+	}
+
+	setEdgeGadget( LeftEdge, new SwitchPlugAdder( switchNode, LeftEdge ) );
+	setEdgeGadget( RightEdge, new SwitchPlugAdder( switchNode, RightEdge ) );
 	if( !node->isInstanceOf( "GafferScene::ShaderSwitch" ) )
 	{
 		/// \todo Either remove ShaderSwitch on the grounds that it
@@ -60,7 +143,7 @@ SwitchNodeGadget::SwitchNodeGadget( Gaffer::NodePtr node )
 		/// to control the whole of the NodeGadget layout using the
 		/// same metadata conventions as the PlugLayout on the widget
 		/// side of things.
-		setEdgeGadget( TopEdge, new PlugAdder( node, TopEdge ) );
-		setEdgeGadget( BottomEdge, new PlugAdder( node, BottomEdge ) );
+		setEdgeGadget( TopEdge, new SwitchPlugAdder( switchNode, TopEdge ) );
+		setEdgeGadget( BottomEdge, new SwitchPlugAdder( switchNode, BottomEdge ) );
 	}
 }

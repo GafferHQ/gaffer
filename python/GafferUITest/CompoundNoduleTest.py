@@ -56,9 +56,11 @@ class CompoundNoduleTest( GafferUITest.TestCase ) :
 		size = nodule.bound().size()
 		self.assertTrue( size.x > size.y )
 
-		Gaffer.Metadata.registerValue( arrayNode["in"], "compoundNodule:spacing", 100.0 )
+		Gaffer.Metadata.registerValue( arrayNode["in"], "noduleLayout:spacing", 100.0 )
 		self.assertTrue( nodule.bound().size().x > size.x )
 
+		# For backwards compatibility only. We no longer have a non-deprecated orientation
+		# key, and always infer orientation automatically by section.
 		Gaffer.Metadata.registerValue( arrayNode["in"], "compoundNodule:orientation", "y" )
 		size = nodule.bound().size()
 		self.assertTrue( size.y > size.x )

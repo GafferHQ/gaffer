@@ -67,7 +67,7 @@ Gaffer.Metadata.registerNode(
 			""",
 
 			"nodule:type", "GafferUI::CompoundNodule",
-			"compoundNodule:spacing", 0.4,
+			"noduleLayout:spacing", 0.4,
 
 			"plugValueWidget:type", "",
 
@@ -88,10 +88,9 @@ Gaffer.Metadata.registerNode(
 			need to be executed before downstream nodes.
 			""",
 
-			"nodeGadget:nodulePosition", "right",
 			"nodule:type", "GafferUI::CompoundNodule",
-			"compoundNodule:spacing", 0.2,
-			"compoundNodule:orientation", "y",
+			"noduleLayout:section", "right",
+			"noduleLayout:spacing", 0.2,
 
 			"plugValueWidget:type", "",
 
@@ -100,7 +99,7 @@ Gaffer.Metadata.registerNode(
 		"postTasks.*" : (
 
 			"plugValueWidget:type", "",
-			"nodeGadget:nodulePosition", "right",
+			"noduleLayout:section", "right",
 
 		),
 

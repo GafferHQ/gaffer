@@ -38,12 +38,14 @@ import os
 import re
 import string
 import fnmatch
+import functools
 
 import IECore
 
 import Gaffer
 import GafferUI
 import GafferScene
+import GafferSceneUI
 
 ##########################################################################
 # Metadata
@@ -100,10 +102,9 @@ Gaffer.Metadata.registerNode(
 			Where the parameters for the shader are represented.
 			""",
 
-			"nodeGadget:nodulePosition", "left",
 			"nodule:type", "GafferUI::CompoundNodule",
-			"compoundNodule:orientation", "y",
-			"compoundNodule:spacing", 0.2,
+			"noduleLayout:section", "left",
+			"noduleLayout:spacing", 0.2,
 			"plugValueWidget:type", "GafferUI.LayoutPlugValueWidget",
 
 		],
@@ -115,7 +116,7 @@ Gaffer.Metadata.registerNode(
 			# appropriate values for each individual parameter,
 			# for the case where they get promoted to a box
 			# individually.
-			"nodeGadget:nodulePosition", "left",
+			"noduleLayout:section", "left",
 
 		],
 
@@ -126,8 +127,14 @@ Gaffer.Metadata.registerNode(
 			The output from the shader.
 			""",
 
-			"nodeGadget:nodulePosition", "right",
+			"noduleLayout:section", "right",
 			"plugValueWidget:type", "",
+
+		],
+
+		"out.*" : [
+
+			"noduleLayout:section", "right",
 
 		],
 
@@ -273,3 +280,35 @@ def __shaderSubMenu( searchPaths, extensions, nodeCreator, matchExpression, sear
 	result.append( "/Load...", { "command" : GafferUI.NodeMenu.nodeCreatorWrapper( lambda menu : __loadFromFile( menu, extensions, nodeCreator ) ) } )
 
 	return result
+
+##########################################################################
+# Interaction with ShaderNodeGadget
+##########################################################################
+
+def __setPlugMetadata( plug, key, value ) :
+
+	with Gaffer.UndoContext( plug.ancestor( Gaffer.ScriptNode ) ) :
+		Gaffer.Metadata.registerValue( plug, key, value )
+
+def __nodeGraphPlugContextMenu( nodeGraph, plug, menuDefinition ) :
+
+	if not isinstance( plug.node(), GafferScene.Shader ) :
+		return
+
+	if not plug.node()["parameters"].isAncestorOf( plug ) :
+		return
+
+	if len( menuDefinition.items() ) :
+		menuDefinition.append( "/HideDivider", { "divider" : True } )
+
+	menuDefinition.append(
+
+		"/Hide",
+		{
+			"command" : functools.partial( __setPlugMetadata, plug, "noduleLayout:visible", False ),
+			"active" : plug.getInput() is None and not Gaffer.readOnly( plug ),
+		}
+
+	)
+
+__nodeGraphPlugContextMenuConnection = GafferUI.NodeGraph.plugContextMenuSignal().connect( __nodeGraphPlugContextMenu )

@@ -167,6 +167,16 @@ bool ancestorAffectedByChange( const Plug *plug, IECore::TypeId changedNodeTypeI
 	return false;
 }
 
+bool affectedByChange( const Node *node, IECore::TypeId changedNodeTypeId, const Gaffer::Node *changedNode )
+{
+	if( changedNode )
+	{
+		return node == changedNode;
+	}
+
+	return node->isInstanceOf( changedNodeTypeId );
+}
+
 } // namespace MetadataAlgo
 
 } // namespace Gaffer

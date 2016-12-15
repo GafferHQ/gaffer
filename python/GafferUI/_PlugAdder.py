@@ -1,6 +1,6 @@
 ##########################################################################
 #
-#  Copyright (c) 2013, Image Engine Design Inc. All rights reserved.
+#  Copyright (c) 2016, Image Engine Design Inc. All rights reserved.
 #
 #  Redistribution and use in source and binary forms, with or without
 #  modification, are permitted provided that the following conditions are
@@ -34,49 +34,30 @@
 #
 ##########################################################################
 
-import Gaffer
+import functools
+
+import IECore
+
 import GafferUI
 
-import GafferScene
+def __plugMenu( title, plugs ) :
 
-Gaffer.Metadata.registerNode(
+	chosenPlugs = []
+	def choosePlug( plug ) :
+		chosenPlugs.append( plug )
 
-	GafferScene.Light,
+	menuDefinition = IECore.MenuDefinition()
+	for plug in plugs :
+		menuDefinition.append(
+			"/" + plug.getName(),
+			{
+				"command" : functools.partial( choosePlug, plug )
+			}
+		)
 
-	"description",
-	"""
-	Creates a scene with a single light in it.
-	""",
+	menu = GafferUI.Menu( menuDefinition, title = title )
+	menu.popup( modal = True )
 
-	plugs = {
+	return chosenPlugs[0] if chosenPlugs else None
 
-		"parameters" : [
-
-			"description",
-			"""
-			The parameters of the light shader - these will vary based on the light type.
-			""",
-
-			"plugValueWidget:type", "GafferUI.LayoutPlugValueWidget",
-			"nodule:type", "GafferUI::CompoundNodule",
-			"noduleLayout:section", "left",
-			"noduleLayout:spacing", 0.2,
-
-
-		],
-
-		"parameters.*" : [
-
-			# Although the parameters plug is positioned
-			# as we want above, we must also register
-			# appropriate values for each individual parameter,
-			# for the case where they get promoted to a box
-			# individually.
-			"noduleLayout:section", "left",
-			"nodule:type", "",
-
-		],
-
-	}
-
-)
+__plugMenuConnection = GafferUI.PlugAdder.plugMenuSignal().connect( __plugMenu )

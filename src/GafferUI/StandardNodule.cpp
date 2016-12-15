@@ -65,7 +65,7 @@ IE_CORE_DEFINERUNTIMETYPED( StandardNodule );
 Nodule::NoduleTypeDescription<StandardNodule> StandardNodule::g_noduleTypeDescription( Gaffer::Plug::staticTypeId() );
 
 static IECore::InternedString g_colorKey( "nodule:color" );
-static IECore::InternedString g_labelKey( "nodeGraphLayout:label" );
+static IECore::InternedString g_labelKey( "noduleLayout:label" );
 
 StandardNodule::StandardNodule( Gaffer::PlugPtr plug )
 	:	Nodule( plug ), m_labelVisible( false ), m_draggingConnection( false )
@@ -270,11 +270,11 @@ bool StandardNodule::dragEnter( GadgetPtr gadget, const DragDropEvent &event )
 		connection( event, input, output );
 		accept = static_cast<bool>( input );
 	}
-	else if( IECore::runTimeCast<PlugAdder>( event.sourceGadget.get() ) )
+	else if( const PlugAdder *plugAdder = IECore::runTimeCast<PlugAdder>( event.sourceGadget.get() ) )
 	{
 		// We must accept the drag so that the PlugAdder gets
 		// a chance to do its thing.
-		accept = true;
+		accept = plugAdder->acceptsPlug( plug() );
 	}
 
 	if( accept )

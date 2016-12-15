@@ -47,19 +47,16 @@ namespace GafferUI
 {
 
 class PlugAdder;
+class NoduleLayout;
 
 /// The standard means of representing a Node in a GraphGadget.
 /// Nodes are represented as rectangular boxes with the name displayed
 /// centrally and the nodules arranged at the sides. Supports the following
 /// Metadata entries :
 ///
-/// - "nodeGadget:nodulePosition" : a plug entry with a value of
-/// "left", "right", "top" or "bottom"
-/// - "nodeGadget:noduleIndex" : a plug entry with an int value
 /// - "nodeGadget:minimumWidth" : a node entry with a float value
-/// - "nodeGadget:horizontalNoduleSpacing" : a node entry with a float value
-/// - "nodeGadget:verticalNoduleSpacing" : a node entry with a float value
 /// - "nodeGadget:padding" : a node entry with a float value
+/// - "nodeGadget:color" : Color3f
 class StandardNodeGadget : public NodeGadget
 {
 
@@ -111,28 +108,16 @@ class StandardNodeGadget : public NodeGadget
 
 	private :
 
-		Edge plugEdge( const Gaffer::Plug *plug );
-
 		LinearContainer *noduleContainer( Edge edge );
 		const LinearContainer *noduleContainer( Edge edge ) const;
+
+		NoduleLayout *noduleLayout( Edge edge );
+		const NoduleLayout *noduleLayout( Edge edge ) const;
 
 		IndividualContainer *contentsContainer();
 		const IndividualContainer *contentsContainer() const;
 
 		static NodeGadgetTypeDescription<StandardNodeGadget> g_nodeGadgetTypeDescription;
-
-		struct TypeAndNodule
-		{
-			TypeAndNodule() {}
-			TypeAndNodule( IECore::InternedString type, NodulePtr nodule ) : type( type ), nodule( nodule ) {}
-			IECore::InternedString type;
-			NodulePtr nodule;
-		};
-		typedef std::map<const Gaffer::Plug *, TypeAndNodule> NoduleMap;
-		NoduleMap m_nodules;
-
-		void childAdded( Gaffer::GraphComponent *parent, Gaffer::GraphComponent *child );
-		void childRemoved( Gaffer::GraphComponent *parent, Gaffer::GraphComponent *child );
 
 		void plugDirtied( const Gaffer::Plug *plug );
 
@@ -147,11 +132,8 @@ class StandardNodeGadget : public NodeGadget
 		bool noduleIsCompatible( const Nodule *nodule, const DragDropEvent &event ) const;
 		bool plugAdderIsCompatible( const PlugAdder *plugAdder, const DragDropEvent &event ) const;
 
-		void plugMetadataChanged( IECore::TypeId nodeTypeId, const Gaffer::StringAlgo::MatchPattern &plugPath, IECore::InternedString key, const Gaffer::Plug *plug );
 		void nodeMetadataChanged( IECore::TypeId nodeTypeId, IECore::InternedString key, const Gaffer::Node *node );
 
-		void updateNodules( std::vector<Nodule *> &nodules, std::vector<Nodule *> &added, std::vector<NodulePtr> &removed );
-		void updateNoduleLayout();
 		bool updateUserColor();
 		void updatePadding();
 		void updateNodeEnabled( const Gaffer::Plug *dirtiedPlug = NULL );

@@ -47,6 +47,8 @@ enum TypeId
 	SelectionToolTypeId = 110653,
 	CropWindowToolTypeId = 110654,
 	ShaderViewTypeId = 110655,
+	ShaderNodeGadgetTypeId = 110656,
+
 	LastTypeId = 110700
 };
 

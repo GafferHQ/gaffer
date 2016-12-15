@@ -45,7 +45,7 @@ IE_CORE_DEFINERUNTIMETYPED( Dot );
 
 static InternedString g_inPlugName( "in" );
 static InternedString g_outPlugName( "out" );
-static InternedString g_nodulePositionName( "nodeGadget:nodulePosition" );
+static InternedString g_sectionName( "noduleLayout:section" );
 
 size_t Dot::g_firstPlugIndex = 0;
 
@@ -80,43 +80,43 @@ void Dot::setup( const Plug *plug )
 	// than later because the NodeGraph will add a Nodule for the plug as soon as the plug
 	// is added as a child.
 
-	ConstStringDataPtr nodulePosition;
+	ConstStringDataPtr sectionData;
 	for( const Plug *metadataPlug = plug; metadataPlug; metadataPlug = metadataPlug->parent<Plug>() )
 	{
-		if( ( nodulePosition = Metadata::value<StringData>( metadataPlug, g_nodulePositionName ) ) )
+		if( ( sectionData = Metadata::value<StringData>( metadataPlug, g_sectionName ) ) )
 		{
 			break;
 		}
 	}
 
-	if( nodulePosition )
+	if( sectionData )
 	{
-		const std::string &position = nodulePosition->readable();
-		std::string oppositePosition;
-		if( position == "left" )
+		const std::string &section = sectionData->readable();
+		std::string oppositeSection;
+		if( section == "left" )
 		{
-			oppositePosition = "right";
+			oppositeSection = "right";
 		}
-		else if( position == "right" )
+		else if( section == "right" )
 		{
-			oppositePosition = "left";
+			oppositeSection = "left";
 		}
-		else if( position == "bottom" )
+		else if( section == "bottom" )
 		{
-			oppositePosition = "top";
+			oppositeSection = "top";
 		}
 		else
 		{
-			oppositePosition = "bottom";
+			oppositeSection = "bottom";
 		}
 
 		Metadata::registerValue(
 			plug->direction() == Plug::In ? in.get() : out.get(),
-			g_nodulePositionName, nodulePosition
+			g_sectionName, sectionData
 		);
 		Metadata::registerValue(
 			plug->direction() == Plug::In ? out.get() : in.get(),
-			g_nodulePositionName, new StringData( oppositePosition )
+			g_sectionName, new StringData( oppositeSection )
 		);
 	}
 

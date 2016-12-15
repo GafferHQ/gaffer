@@ -1,6 +1,6 @@
 ##########################################################################
 #
-#  Copyright (c) 2013, Image Engine Design Inc. All rights reserved.
+#  Copyright (c) 2016, Image Engine Design Inc. All rights reserved.
 #
 #  Redistribution and use in source and binary forms, with or without
 #  modification, are permitted provided that the following conditions are
@@ -34,49 +34,28 @@
 #
 ##########################################################################
 
-import Gaffer
+import IECore
+
 import GafferUI
+import GafferUITest
+import GafferSceneTest
+import GafferSceneUI
 
-import GafferScene
+class ShaderUITest( GafferUITest.TestCase ) :
 
-Gaffer.Metadata.registerNode(
+	def testNoduleOrdering( self ) :
 
-	GafferScene.Light,
+		s = GafferSceneTest.TestShader()
 
-	"description",
-	"""
-	Creates a scene with a single light in it.
-	""",
+		g = GafferUI.NodeGadget.create( s )
+		n1 = g.nodule( s["parameters"]["i"] )
+		n2 = g.nodule( s["parameters"]["c"] )
+		g.bound()
 
-	plugs = {
+		self.assertGreater(
+			n1.transformedBound( None ).center().y,
+			n2.transformedBound( None ).center().y
+		)
 
-		"parameters" : [
-
-			"description",
-			"""
-			The parameters of the light shader - these will vary based on the light type.
-			""",
-
-			"plugValueWidget:type", "GafferUI.LayoutPlugValueWidget",
-			"nodule:type", "GafferUI::CompoundNodule",
-			"noduleLayout:section", "left",
-			"noduleLayout:spacing", 0.2,
-
-
-		],
-
-		"parameters.*" : [
-
-			# Although the parameters plug is positioned
-			# as we want above, we must also register
-			# appropriate values for each individual parameter,
-			# for the case where they get promoted to a box
-			# individually.
-			"noduleLayout:section", "left",
-			"nodule:type", "",
-
-		],
-
-	}
-
-)
+if __name__ == "__main__":
+	unittest.main()
