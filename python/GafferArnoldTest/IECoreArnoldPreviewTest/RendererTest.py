@@ -1596,6 +1596,48 @@ class RendererTest( GafferTest.TestCase ) :
 						seed or frame or 1
 					)
 
+	def testLogDirectoryCreation( self ) :
+
+		# Directory for log file should be made automatically if
+		# it doesn't exist.
+
+		r = GafferScene.Private.IECoreScenePreview.Renderer.create(
+			"IECoreArnold::Renderer",
+			GafferScene.Private.IECoreScenePreview.Renderer.RenderType.SceneDescription,
+			self.temporaryDirectory() + "/test.ass"
+		)
+
+		r.option( "ai:log:filename", IECore.StringData( self.temporaryDirectory() + "/test/log.txt" ) )
+		r.render()
+
+		self.assertTrue( os.path.isdir( self.temporaryDirectory() + "/test" ) )
+
+		# And it should still be OK to pass a filename where the directory already exists
+
+		r.option( "ai:log:filename", IECore.StringData( self.temporaryDirectory() + "/log.txt" ) )
+		r.render()
+
+		self.assertTrue( os.path.isdir( self.temporaryDirectory() ) )
+
+		# Passing an empty filename should be fine too.
+
+		r.option( "ai:log:filename", IECore.StringData( "" ) )
+		r.render()
+
+		# Trying to write to a read-only location should result in an
+		# error message.
+
+		os.makedirs( self.temporaryDirectory() + "/readOnly" )
+		os.chmod( self.temporaryDirectory() + "/readOnly", 444 )
+
+		with IECore.CapturingMessageHandler() as mh :
+			r.option( "ai:log:filename", IECore.StringData( self.temporaryDirectory() + "/readOnly/nested/log.txt" ) )
+			r.render()
+
+		self.assertEqual( len( mh.messages ), 1 )
+		self.assertEqual( mh.messages[0].level, IECore.Msg.Level.Error )
+		self.assertTrue( "Permission denied" in mh.messages[0].message )
+
 	@staticmethod
 	def __m44f( m ) :
 

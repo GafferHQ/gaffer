@@ -1494,10 +1494,19 @@ class ArnoldRenderer : public IECoreScenePreview::Renderer
 				}
 				else if( const IECore::StringData *d = reportedCast<const IECore::StringData>( value, "option", name ) )
 				{
-					boost::filesystem::path path( d->readable() );
-					path.remove_filename();
-					boost::filesystem::create_directories( path );
-
+					if( !d->readable().empty() )
+					{
+						try
+						{
+							boost::filesystem::path path( d->readable() );
+							path.remove_filename();
+							boost::filesystem::create_directories( path );
+						}
+						catch( const std::exception &e )
+						{
+							IECore::msg( IECore::Msg::Error, "ArnoldRenderer::option()", e.what() );
+						}
+					}
 					AiMsgSetLogFileName( d->readable().c_str() );
 
 				}
