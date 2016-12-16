@@ -239,5 +239,16 @@ class OSLImageTest( GafferOSLTest.OSLTestCase ) :
 
 		s["r"]["p"].setInput( s["s"]["out"] )
 
+	def testDirtyPropagation( self ) :
+
+		c = GafferImage.Constant()
+		o = GafferOSL.OSLImage()
+		o["in"].setInput( c["out"] )
+
+		cs = GafferTest.CapturingSlot( o.plugDirtiedSignal() )
+
+		c["color"]["r"].setValue( 1 )
+		self.assertTrue( o["out"]["channelData"] in set( x[0] for x in cs ) )
+
 if __name__ == "__main__":
 	unittest.main()
