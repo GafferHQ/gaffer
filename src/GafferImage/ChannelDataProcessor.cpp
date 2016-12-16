@@ -83,12 +83,10 @@ void ChannelDataProcessor::affects( const Gaffer::Plug *input, AffectedPlugsCont
 {
 	ImageProcessor::affects( input, outputs );
 
-	const ImagePlug *in = inPlug();
-	if ( input->parent<ImagePlug>() == in && input != in->channelDataPlug() )
-	{
-		outputs.push_back( outPlug()->getChild<ValuePlug>( input->getName() ) );
-	}
-	else if ( input == channelMaskPlug() )
+	if(
+		input == inPlug()->channelDataPlug() ||
+		input == channelMaskPlug()
+	)
 	{
 		outputs.push_back( outPlug()->channelDataPlug() );
 	}
