@@ -1494,6 +1494,10 @@ class ArnoldRenderer : public IECoreScenePreview::Renderer
 				}
 				else if( const IECore::StringData *d = reportedCast<const IECore::StringData>( value, "option", name ) )
 				{
+					boost::filesystem::path path( d->readable() );
+					path.remove_filename();
+					boost::filesystem::create_directories( path );
+
 					AiMsgSetLogFileName( d->readable().c_str() );
 
 				}
