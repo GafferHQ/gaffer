@@ -103,7 +103,12 @@ void OSLImage::affects( const Gaffer::Plug *input, AffectedPlugsContainer &outpu
 {
 	ImageProcessor::affects( input, outputs );
 
-	if( input == shaderPlug() )
+	if(
+		input == shaderPlug() ||
+		input == inPlug()->formatPlug() ||
+		input == inPlug()->channelNamesPlug() ||
+		input == inPlug()->channelDataPlug()
+	)
 	{
 		outputs.push_back( shadingPlug() );
 	}
