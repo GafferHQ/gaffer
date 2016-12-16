@@ -1,3 +1,73 @@
+0.31.0.0
+========
+
+Breaking Changes
+----------------
+
+- ScriptNode (#1935)
+  - Removed evaluate() method.
+  - Removed scriptEvaluatedSignal() method.
+  - Reordered virtual methods.
+- Options (#1929)
+  - Moved "prefix" plug to CustomOptions node.
+  - Added virtual method.
+- Shader : Removed NetworkBuilder from the API (#1936).
+- OSL ShadingEngine : Added argument to `shade()` method (#1944).
+- Moved all Algo to nested namespaces (#1953).
+
+Improvements
+------------
+
+- ShaderSwitch (#1938)
+  - Added support for all parameter types.
+  - Added support for expressions and other inputs to the index plug.
+- Added a generic Switch node to the NodeGraph menu (#1938).
+- ArnoldShader
+  - Added support for pass-through of an input parameter when disabled (#1936).
+  - Added simplified NodeGraph view for shaders like AlSurface and Standard. They
+    are now shown with most parameters hidden by default, and additional parameters
+    can be added on demand (#1951).
+- OSLShader : Added support for pass-through of input parameters (#1936).
+- ArnoldOptions : Added sample clamp options (#1943).
+- Camera : Added "Copy From Viewer" item to NodeEditor tool menu (#1950).
+- Stats app (#1949)
+  - Added command line arguments to output
+  - Added current version to output
+  - Added -contextMonitor argument (#1952)
+- OSLObject : Added support for "world" and "object" coordinate systems (#1944).
+- Arnold renderer : Added automatic creation of directories for log files (#1954).
+- Rewrote NodeGraph nodule layout code for improved consistency between plugs on nodes
+  and nested plugs. StandardNodeGadget and CompoundNodule now support the same set of
+  metadata (#1952).
+
+Fixes
+-----
+
+- Fixed error when importing GafferScene or GafferImage before GafferDispatch.
+- ScriptNode : Fixed node deletion code to automatically reconnect nested child plugs (#1936).
+- Set : Fixed update bug (#1941).
+- ObjectSource : Fixed update bug (#1941).
+- Reference : Fix reload bug where connections to nested plugs were lost (#1940).
+- Dot : Fixed bug where output plug was lost during save (#1946).
+
+API
+---
+
+- ScriptNode (#1935)
+  - Made serialisation and execution useable from C++.
+  - Added `isExecuting()` method.
+- Switch
+  - Added `setup()` method to simplify creation of custom switches.
+  - Added `activeInPlug()` method.
+- ImageGadget
+  - Added `textureLoader()` method.
+- Added PlugAdder gadget to simplify the process of adding dynamic
+  plugs within the NodeGraph.
+- OSL Shading Engine : Added support for named transform spaces (#1944).
+- Added ContextMonitor class.
+- Menu : Added `modal` argument to `popup()` method.
+- MetadataAlgo : Added `affectedByChange()` overload for nodes.
+
 0.30.2.0
 ========
 
