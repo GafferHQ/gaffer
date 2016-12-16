@@ -38,6 +38,7 @@
 #define GAFFER_CONTEXTMONITOR_H
 
 #include <vector>
+#include <map>
 
 #include "tbb/enumerable_thread_specific.h"
 
