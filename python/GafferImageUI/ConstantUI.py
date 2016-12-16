@@ -66,6 +66,16 @@ Gaffer.Metadata.registerNode(
 
 		],
 
+		"layer" : [
+
+			"description",
+			"""
+			The layer to generate. The output channels will
+			be named ( layer.R, layer.G, layer.B and layer.A ).
+			"""
+
+		]
+
 	}
 
 )

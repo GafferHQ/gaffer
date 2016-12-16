@@ -38,6 +38,7 @@
 #define GAFFERIMAGE_CONSTANT_H
 
 #include "Gaffer/CompoundNumericPlug.h"
+#include "Gaffer/StringPlug.h"
 
 #include "GafferImage/ImageNode.h"
 #include "GafferImage/FormatPlug.h"
@@ -57,8 +58,12 @@ class Constant : public ImageNode
 
 		GafferImage::FormatPlug *formatPlug();
 		const GafferImage::FormatPlug *formatPlug() const;
+
 		Gaffer::Color4fPlug *colorPlug();
 		const Gaffer::Color4fPlug *colorPlug() const;
+
+		Gaffer::StringPlug *layerPlug();
+		const Gaffer::StringPlug *layerPlug() const;
 
 		virtual void affects( const Gaffer::Plug *input, AffectedPlugsContainer &outputs ) const;
 

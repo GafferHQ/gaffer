@@ -164,5 +164,36 @@ class ConstantTest( GafferImageTest.ImageTestCase ) :
 			[ c["out"]["format"] ],
 		)
 
+	def testLayer( self ) :
+
+		c1 = GafferImage.Constant()
+		c2 = GafferImage.Constant()
+
+		c1["color"].setValue( IECore.Color4f( 1, 0.5, 0.25, 1 ) )
+		c2["color"].setValue( IECore.Color4f( 1, 0.5, 0.25, 1 ) )
+		c2["layer"].setValue( "diffuse" )
+
+		self.assertEqual(
+			c1["out"]["channelNames"].getValue(),
+			IECore.StringVectorData( [ "R", "G", "B", "A" ] )
+		)
+
+		self.assertEqual(
+			c2["out"]["channelNames"].getValue(),
+			IECore.StringVectorData( [ "diffuse.R", "diffuse.G", "diffuse.B", "diffuse.A" ] )
+		)
+
+		for channelName in ( "R", "G", "B", "A" ) :
+
+			self.assertEqual(
+				c1["out"].channelDataHash( channelName, IECore.V2i( 0 ) ),
+				c2["out"].channelDataHash( "diffuse." + channelName, IECore.V2i( 0 ) )
+			)
+
+			self.assertEqual(
+				c1["out"].channelData( channelName, IECore.V2i( 0 ) ),
+				c2["out"].channelData( "diffuse." + channelName, IECore.V2i( 0 ) )
+			)
+
 if __name__ == "__main__":
 	unittest.main()

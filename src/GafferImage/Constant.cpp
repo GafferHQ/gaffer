@@ -60,6 +60,7 @@ Constant::Constant( const std::string &name )
 	storeIndexOfNextChild( g_firstPlugIndex );
 	addChild( new FormatPlug( "format" ) );
 	addChild( new Color4fPlug( "color", Plug::In, Color4f( 0, 0, 0, 1 ) ) );
+	addChild( new StringPlug( "layer" ) );
 }
 
 Constant::~Constant()
@@ -86,18 +87,23 @@ const Gaffer::Color4fPlug *Constant::colorPlug() const
 	return getChild<Color4fPlug>( g_firstPlugIndex+1 );
 }
 
+Gaffer::StringPlug *Constant::layerPlug()
+{
+	return getChild<StringPlug>( g_firstPlugIndex + 2 );
+}
+
+const Gaffer::StringPlug *Constant::layerPlug() const
+{
+	return getChild<StringPlug>( g_firstPlugIndex + 2 );
+}
+
 void Constant::affects( const Gaffer::Plug *input, AffectedPlugsContainer &outputs ) const
 {
 	ImageNode::affects( input, outputs );
 
-	// Process the children of the compound plugs.
-	for( unsigned int i = 0; i < 4; ++i )
+	if( input->parent<Plug>() == colorPlug() )
 	{
-		if( input == colorPlug()->getChild(i) )
-		{
-			outputs.push_back( outPlug()->channelDataPlug() );
-			return;
-		}
+		outputs.push_back( outPlug()->channelDataPlug() );
 	}
 
 	if( formatPlug()->displayWindowPlug()->isAncestorOf( input ) )
@@ -105,7 +111,8 @@ void Constant::affects( const Gaffer::Plug *input, AffectedPlugsContainer &outpu
 		outputs.push_back( outPlug()->formatPlug() );
 		outputs.push_back( outPlug()->dataWindowPlug() );
 	}
-	else if( input == formatPlug()->pixelAspectPlug() )
+
+	if( input == formatPlug()->pixelAspectPlug() )
 	{
 		outputs.push_back( outPlug()->formatPlug() );
 	}
@@ -141,17 +148,26 @@ IECore::ConstCompoundObjectPtr Constant::computeMetadata( const Gaffer::Context 
 void Constant::hashChannelNames( const GafferImage::ImagePlug *output, const Gaffer::Context *context, IECore::MurmurHash &h ) const
 {
 	ImageNode::hashChannelNames( output, context, h );
+	layerPlug()->hash( h );
 }
 
 IECore::ConstStringVectorDataPtr Constant::computeChannelNames( const Gaffer::Context *context, const ImagePlug *parent ) const
 {
-	IECore::StringVectorDataPtr channelStrVectorData( new IECore::StringVectorData() );
-	std::vector<std::string> &channelStrVector( channelStrVectorData->writable() );
-	channelStrVector.push_back("R");
-	channelStrVector.push_back("G");
-	channelStrVector.push_back("B");
-	channelStrVector.push_back("A");
-	return channelStrVectorData;
+	std::string channelNamePrefix = layerPlug()->getValue();
+	if( !channelNamePrefix.empty() )
+	{
+		channelNamePrefix += ".";
+	}
+
+	StringVectorDataPtr resultData = new StringVectorData();
+	vector<string> &result = resultData->writable();
+
+	result.push_back( channelNamePrefix + "R" );
+	result.push_back( channelNamePrefix + "G" );
+	result.push_back( channelNamePrefix + "B" );
+	result.push_back( channelNamePrefix + "A" );
+
+	return resultData;
 }
 
 void Constant::hashChannelData( const GafferImage::ImagePlug *output, const Gaffer::Context *context, IECore::MurmurHash &h ) const
