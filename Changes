@@ -49,6 +49,8 @@ Fixes
 - ObjectSource : Fixed update bug (#1941).
 - Reference : Fix reload bug where connections to nested plugs were lost (#1940).
 - Dot : Fixed bug where output plug was lost during save (#1946).
+- OSLImage : Fix `affects()` so input image affects shading.
+- ChannelDataProcess : Fix `affects()`.
 
 API
 ---
