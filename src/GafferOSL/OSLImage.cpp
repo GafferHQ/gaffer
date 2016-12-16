@@ -171,26 +171,6 @@ void OSLImage::compute( Gaffer::ValuePlug *output, const Gaffer::Context *contex
 	ImageProcessor::compute( output, context );
 }
 
-void OSLImage::hashDataWindow( const GafferImage::ImagePlug *output, const Gaffer::Context *context, IECore::MurmurHash &h ) const
-{
-	throw Exception( "Unexpected call to OSLImage::hashDataWindow" );
-}
-
-Imath::Box2i OSLImage::computeDataWindow( const Gaffer::Context *context, const GafferImage::ImagePlug *parent ) const
-{
-	throw Exception( "Unexpected call to OSLImage::computeDataWindow" );
-}
-
-void OSLImage::hashMetadata( const GafferImage::ImagePlug *output, const Gaffer::Context *context, IECore::MurmurHash &h ) const
-{
-	throw Exception( "Unexpected call to OSLImage::hashMetadata" );
-}
-
-IECore::ConstCompoundObjectPtr OSLImage::computeMetadata( const Gaffer::Context *context, const ImagePlug *parent ) const
-{
-	throw Exception( "Unexpected call to OSLImage::computeMetadata" );
-}
-
 void OSLImage::hashChannelNames( const GafferImage::ImagePlug *output, const Gaffer::Context *context, IECore::MurmurHash &h ) const
 {
 	ImageProcessor::hashChannelNames( output, context, h );
