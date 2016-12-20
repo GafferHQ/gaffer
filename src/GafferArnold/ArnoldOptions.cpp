@@ -51,6 +51,7 @@ ArnoldOptions::ArnoldOptions( const std::string &name )
 
 	options->addOptionalMember( "ai:bucket_size", new IECore::IntData( 64 ), "bucketSize", Gaffer::Plug::Default, false );
 	options->addOptionalMember( "ai:bucket_scanning", new IECore::StringData( "spiral" ), "bucketScanning", Gaffer::Plug::Default, false );
+	options->addOptionalMember( "ai:threads", new IECore::IntData( 0 ), "threads", Gaffer::Plug::Default, false );
 
 	// Sampling parameters
 
@@ -87,10 +88,6 @@ ArnoldOptions::ArnoldOptions( const std::string &name )
 	options->addOptionalMember( "ai:ignore_bump", new IECore::BoolData( false ), "ignoreBump", Gaffer::Plug::Default, false );
 	options->addOptionalMember( "ai:ignore_motion_blur", new IECore::BoolData( false ), "ignoreMotionBlur", Gaffer::Plug::Default, false );
 	options->addOptionalMember( "ai:ignore_sss", new IECore::BoolData( false ), "ignoreSSS", Gaffer::Plug::Default, false );
-
-	// Performance parameters
-
-	options->addOptionalMember( "ai:threads", new IECore::IntData( 0 ), "threads", Gaffer::Plug::Default, false );
 
 	// Searchpath parameters
 
