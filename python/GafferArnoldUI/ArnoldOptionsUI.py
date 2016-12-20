@@ -96,6 +96,16 @@ def __rayDepthSummary( plug ) :
 		info.append( "Threshold %s" % GafferUI.NumericWidget.valueToString( plug["autoTransparencyThreshold"]["value"].getValue() ) )
 	return ", ".join( info )
 
+def __texturingSummary( plug ) :
+
+	info = []
+	if plug["textureMaxMemoryMB"]["enabled"].getValue() :
+		info.append( "Memory {0}".format( GafferUI.NumericWidget.valueToString( plug["textureMaxMemoryMB"]["value"].getValue() ) ) )
+	if plug["texturePerFileStats"]["enabled"].getValue() :
+		info.append( "Per File Stats {0}".format( "On" if plug["texturePerFileStats"]["value"].getValue() else "Off" ) )
+	if plug["textureMaxSharpen"]["enabled"].getValue() :
+		info.append( "Sharpen {0}".format( GafferUI.NumericWidget.valueToString( plug["textureMaxSharpen"]["value"].getValue() ) ) )
+	return ", ".join( info )
 
 def __featuresSummary( plug ) :
 
@@ -177,6 +187,7 @@ Gaffer.Metadata.registerNode(
 			"layout:section:Rendering:summary", __renderingSummary,
 			"layout:section:Sampling:summary", __samplingSummary,
 			"layout:section:Ray Depth:summary", __rayDepthSummary,
+			"layout:section:Texturing:summary", __texturingSummary,
 			"layout:section:Features:summary", __featuresSummary,
 			"layout:section:Search Paths:summary", __searchPathsSummary,
 			"layout:section:Error Colors:summary", __errorColorsSummary,
@@ -480,6 +491,57 @@ Gaffer.Metadata.registerNode(
 
 			"layout:section", "Ray Depth",
 			"label", "Opacity Threshold",
+		],
+
+		# Texturing
+
+		"options.textureMaxMemoryMB" : [
+
+			"description",
+			"""
+			The maximum amount of memory to use for caching
+			textures. Tiles are loaded on demand and cached,
+			and when the memory limit is reached the least
+			recently used tiles are discarded to make room
+			for more. Measured in megabytes.
+			""",
+
+			"layout:section", "Texturing",
+			"label", "Max Memory MB",
+		],
+
+		"options.texturePerFileStats" : [
+
+			"description",
+			"""
+			Turns on detailed statistics output for
+			each individual texture file used.
+			""",
+
+			"layout:section", "Texturing",
+			"label", "Per File Stats",
+
+		],
+
+		"options.textureMaxSharpen" : [
+
+			"description",
+			"""
+			Controls the sharpness of texture lookups,
+			providing a tradeoff between sharpness and
+			the amount of texture data loaded. If
+			textures appear too blurry, then the value
+			should be increased to add sharpness.
+
+			The theoretical optimum value is to match the
+			number of AA samples, but in practice the
+			improvement in sharpness this brings often
+			doesn't justify the increased render time and
+			memory usage.
+			""",
+
+			"layout:section", "Texturing",
+			"label", "Max Sharpen",
 		],
 
 		# Features

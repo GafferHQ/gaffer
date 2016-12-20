@@ -76,6 +76,12 @@ ArnoldOptions::ArnoldOptions( const std::string &name )
 	options->addOptionalMember( "ai:auto_transparency_depth", new IECore::IntData( 10 ), "autoTransparencyDepth", Gaffer::Plug::Default, false );
 	options->addOptionalMember( "ai:auto_transparency_threshold", new IECore::FloatData( 0.99 ), "autoTransparencyThreshold", Gaffer::Plug::Default, false );
 
+	// Texturing parameters
+
+	options->addOptionalMember( "ai:texture_max_memory_MB", new IECore::FloatData( 2048 ), "textureMaxMemoryMB", Gaffer::Plug::Default, false );
+	options->addOptionalMember( "ai:texture_per_file_stats", new IECore::BoolData( false ), "texturePerFileStats", Gaffer::Plug::Default, false );
+	options->addOptionalMember( "ai:texture_max_sharpen", new IECore::FloatData( 1.5 ), "textureMaxSharpen", Gaffer::Plug::Default, false );
+
 	// Ignore parameters
 
 	options->addOptionalMember( "ai:ignore_textures", new IECore::BoolData( false ), "ignoreTextures", Gaffer::Plug::Default, false );
