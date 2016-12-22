@@ -43,4 +43,4 @@ def __toolMenu( nodeEditor, node, menuDefinition ) :
 	GafferUI.BoxUI.appendNodeEditorToolMenuDefinitions( nodeEditor, node, menuDefinition )
 	GafferSceneUI.FilteredSceneProcessorUI.appendNodeEditorToolMenuDefinitions( nodeEditor, node, menuDefinition )
 
-__nodeEditorToolMenuConnection = GafferUI.NodeEditor.toolMenuSignal().connect( __toolMenu )
+GafferUI.NodeEditor.toolMenuSignal().connect( __toolMenu, scoped = False )

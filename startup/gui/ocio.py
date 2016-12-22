@@ -93,7 +93,7 @@ def __plugSet( plug ) :
 	__setDisplayTransform()
 	__updateDefaultDisplayTransforms()
 
-application.__ocioPlugSetConnection = preferences.plugSetSignal().connect( __plugSet )
+preferences.plugSetSignal().connect( __plugSet, scoped = False )
 
 # register display transforms with the image viewer
 

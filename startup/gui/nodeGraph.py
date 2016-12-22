@@ -96,7 +96,7 @@ def __nodeDoubleClick( nodeGraph, node ) :
 
 	GafferUI.NodeEditor.acquire( node )
 
-__nodeDoubleClickConnection = GafferUI.NodeGraph.nodeDoubleClickSignal().connect( __nodeDoubleClick )
+GafferUI.NodeGraph.nodeDoubleClickSignal().connect( __nodeDoubleClick, scoped = False )
 
 def __nodeContextMenu( nodeGraph, node, menuDefinition ) :
 
@@ -110,10 +110,10 @@ def __nodeContextMenu( nodeGraph, node, menuDefinition ) :
 	GafferSceneUI.FilteredSceneProcessorUI.appendNodeContextMenuDefinitions( nodeGraph, node, menuDefinition )
 	GafferUI.GraphBookmarksUI.appendNodeContextMenuDefinitions( nodeGraph, node, menuDefinition )
 
-__nodeContextMenuConnection = GafferUI.NodeGraph.nodeContextMenuSignal().connect( __nodeContextMenu )
+GafferUI.NodeGraph.nodeContextMenuSignal().connect( __nodeContextMenu, scoped = False )
 
 def __plugContextMenu( nodeGraph, node, menuDefinition ) :
 
 	GafferUI.GraphBookmarksUI.appendPlugContextMenuDefinitions( nodeGraph, node, menuDefinition )
 
-__plugContextMenuConnection = GafferUI.NodeGraph.plugContextMenuSignal().connect( __plugContextMenu )
+GafferUI.NodeGraph.plugContextMenuSignal().connect( __plugContextMenu, scoped = False )
