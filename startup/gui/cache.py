@@ -47,21 +47,21 @@ preferences["cache"]["memoryLimit"] = Gaffer.IntPlug( defaultValue = Gaffer.Valu
 preferences["cache"]["imageReaderMemoryLimit"] = Gaffer.IntPlug( defaultValue = GafferImage.OpenImageIOReader.getCacheMemoryLimit() / ( 1024 * 1024 ) )
 
 Gaffer.Metadata.registerPlugValue(
-    preferences["cache"]["memoryLimit"],
-    "description",
-    """
-    Controls the memory limit for Gaffer's ValuePlug cache.
-    """,
-    persistent = False
+	preferences["cache"]["memoryLimit"],
+	"description",
+	"""
+	Controls the memory limit for Gaffer's ValuePlug cache.
+	""",
+	persistent = False
 )
 
 Gaffer.Metadata.registerPlugValue(
-    preferences["cache"]["imageReaderMemoryLimit"],
-    "description",
-    """
-    Controls the memory limit for the OpenImageIO cache that the OpenImageIOReader node uses.
-    """,
-    persistent = False
+	preferences["cache"]["imageReaderMemoryLimit"],
+	"description",
+	"""
+	Controls the memory limit for the OpenImageIO cache that the OpenImageIOReader node uses.
+	""",
+	persistent = False
 )
 
 # update cache settings when they change
@@ -80,4 +80,4 @@ def __plugSet( plug ) :
 	Gaffer.ValuePlug.setCacheMemoryLimit( memoryLimit )
 	GafferImage.OpenImageIOReader.setCacheMemoryLimit( imageReaderMemoryLimit )
 
-application.__cachePlugSetConnection = preferences.plugSetSignal().connect( __plugSet )
+preferences.plugSetSignal().connect( __plugSet, scoped = False )

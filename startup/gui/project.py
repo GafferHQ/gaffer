@@ -56,7 +56,7 @@ def __scriptAdded( container, script ) :
 		projectRoot = variables.addMember( "project:rootDirectory", IECore.StringData( "$HOME/gaffer/projects/${project:name}" ), "projectRootDirectory" )
 		projectRoot["name"].setFlags( Gaffer.Plug.Flags.ReadOnly, True )
 
-__scriptAddedConnection = application.root()["scripts"].childAddedSignal().connect( __scriptAdded )
+application.root()["scripts"].childAddedSignal().connect( __scriptAdded, scoped = False )
 
 ##########################################################################
 # Bookmarks
