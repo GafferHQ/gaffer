@@ -68,6 +68,7 @@ def new( menu ) :
 	application = scriptWindow.scriptNode().ancestor( Gaffer.ApplicationRoot )
 
 	newScript = Gaffer.ScriptNode()
+	Gaffer.NodeAlgo.applyUserDefaults( newScript )
 	application["scripts"].addChild( newScript )
 
 ## A function suitable as the command for a File/Open menu item. It must be invoked from a menu which

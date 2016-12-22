@@ -93,9 +93,10 @@ class gui( Gaffer.Application ) :
 				scriptNode.load( continueOnError = True )
 				self.root()["scripts"].addChild( scriptNode )
 				GafferUI.FileMenu.addRecentFile( self, fileName )
-				del scriptNode
 		else :
-			self.root()["scripts"].addChild( Gaffer.ScriptNode() )
+			scriptNode = Gaffer.ScriptNode()
+			Gaffer.NodeAlgo.applyUserDefaults( scriptNode )
+			self.root()["scripts"].addChild( scriptNode )
 
 		if args["fullScreen"].value :
 			primaryScript = self.root()["scripts"][-1]
