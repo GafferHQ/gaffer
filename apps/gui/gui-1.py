@@ -93,7 +93,6 @@ class gui( Gaffer.Application ) :
 				scriptNode.load( continueOnError = True )
 				self.root()["scripts"].addChild( scriptNode )
 				GafferUI.FileMenu.addRecentFile( self, fileName )
-				del scriptNode
 		else :
 			scriptNode = Gaffer.ScriptNode()
 			Gaffer.NodeAlgo.applyUserDefaults( scriptNode )
