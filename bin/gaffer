@@ -41,6 +41,8 @@
 # correct python interpreter.
 ##########################################################################
 
+set -e
+
 # Remove -psn_0 argument that the OS X launcher adds on annoyingly.
 ##########################################################################
 
@@ -56,17 +58,17 @@ pushd . &> /dev/null
 
 # resolve symlinks
 thisScript=$0
-while [ -L "$thisScript" ]
+while [[ -L $thisScript ]]
 do
-	cd `dirname "$thisScript"`
-	thisScript=`basename $thisScript`
-	thisScript=`readlink $thisScript`
+	cd "`dirname "$thisScript"`"
+	thisScript=`basename "$thisScript"`
+	thisScript=`readlink "$thisScript"`
 done
 
 # find the bin directory we're in
-cd `dirname $thisScript`
+cd "`dirname "$thisScript"`"
 binDir=`pwd -P`
-export GAFFER_ROOT=`dirname $binDir`
+export GAFFER_ROOT="`dirname "$binDir"`"
 
 popd &> /dev/null
 
@@ -85,9 +87,9 @@ function prependToPath {
 	if [[ ":${!2}:" != *":$1:"* ]] ; then
 
 		if [[ ${!2} ]] ; then
-			eval "export $2=$1:${!2}"
+			eval "export $2=\"$1:${!2}\""
 		else
-			eval "export $2=$1"
+			eval "export $2=\"$1\""
 		fi
 
 	fi
@@ -99,45 +101,45 @@ function appendToPath {
 	if [[ ":${!2}:" != *":$1:"* ]] ; then
 
 		if [[ ${!2} ]] ; then
-			eval "export $2=${!2}:$1"
+			eval "export $2=\"${!2}:$1\""
 		else
-			eval "export $2=$1"
+			eval "export $2=\"$1\""
 		fi
 
 	fi
 
 }
 
-prependToPath $GAFFER_ROOT/glsl IECOREGL_SHADER_PATHS
-prependToPath $GAFFER_ROOT/glsl IECOREGL_SHADER_INCLUDE_PATHS
+prependToPath "$GAFFER_ROOT/glsl" IECOREGL_SHADER_PATHS
+prependToPath "$GAFFER_ROOT/glsl" IECOREGL_SHADER_INCLUDE_PATHS
 
-prependToPath $GAFFER_ROOT/fonts IECORE_FONT_PATHS
-prependToPath ~/gaffer/ops:$GAFFER_ROOT/ops IECORE_OP_PATHS
+prependToPath "$GAFFER_ROOT/fonts" IECORE_FONT_PATHS
+prependToPath "~/gaffer/ops:$GAFFER_ROOT/ops" IECORE_OP_PATHS
 
-prependToPath ~/gaffer/opPresets:$GAFFER_ROOT/opPresets IECORE_OP_PRESET_PATHS
-prependToPath ~/gaffer/procedurals:$GAFFER_ROOT/procedurals IECORE_PROCEDURAL_PATHS
-prependToPath ~/gaffer/proceduralPresets:$GAFFER_ROOT/proceduralPresets IECORE_PROCEDURAL_PRESET_PATHS
+prependToPath "~/gaffer/opPresets:$GAFFER_ROOT/opPresets" IECORE_OP_PRESET_PATHS
+prependToPath "~/gaffer/procedurals:$GAFFER_ROOT/procedurals" IECORE_PROCEDURAL_PATHS
+prependToPath "~/gaffer/proceduralPresets:$GAFFER_ROOT/proceduralPresets" IECORE_PROCEDURAL_PRESET_PATHS
 
 if [[ -z $CORTEX_POINTDISTRIBUTION_TILESET ]] ; then
-	export CORTEX_POINTDISTRIBUTION_TILESET=$GAFFER_ROOT/resources/cortex/tileset_2048.dat
+	export CORTEX_POINTDISTRIBUTION_TILESET="$GAFFER_ROOT/resources/cortex/tileset_2048.dat"
 fi
 
-prependToPath ~/gaffer/apps:$GAFFER_ROOT/apps GAFFER_APP_PATHS
+prependToPath "~/gaffer/apps:$GAFFER_ROOT/apps" GAFFER_APP_PATHS
 
-prependToPath ~/gaffer/startup GAFFER_STARTUP_PATHS
-appendToPath $GAFFER_ROOT/startup GAFFER_STARTUP_PATHS
+prependToPath "~/gaffer/startup" GAFFER_STARTUP_PATHS
+appendToPath "$GAFFER_ROOT/startup" GAFFER_STARTUP_PATHS
 
-prependToPath $GAFFER_ROOT/graphics GAFFERUI_IMAGE_PATHS
+prependToPath "$GAFFER_ROOT/graphics" GAFFERUI_IMAGE_PATHS
 
 if [[ -e $GAFFER_ROOT/bin/oslc ]] ; then
 	export OSLHOME=$GAFFER_ROOT
 fi
 
-prependToPath $HOME/gaffer/shaders:$GAFFER_ROOT/shaders OSL_SHADER_PATHS
+prependToPath "$HOME/gaffer/shaders:$GAFFER_ROOT/shaders" OSL_SHADER_PATHS
 
 if [[ -z $GAFFEROSL_CODE_DIRECTORY ]] ; then
-	export GAFFEROSL_CODE_DIRECTORY=$HOME/gaffer/oslCode
-	appendToPath $GAFFEROSL_CODE_DIRECTORY OSL_SHADER_PATHS
+	export GAFFEROSL_CODE_DIRECTORY="$HOME/gaffer/oslCode"
+	appendToPath "$GAFFEROSL_CODE_DIRECTORY" OSL_SHADER_PATHS
 fi
 
 # Get python set up properly
@@ -148,73 +150,73 @@ fi
 # of python - otherwise we assume the existing environment is providing
 # the right value.
 
-if [ -e $GAFFER_ROOT/bin/python ] ; then
+if [[ -e $GAFFER_ROOT/bin/python ]] ; then
 
 	if [[ `uname` = "Linux" ]] ; then
-		export PYTHONHOME=$GAFFER_ROOT
+		export PYTHONHOME="$GAFFER_ROOT"
 	else
-		export PYTHONHOME=$GAFFER_ROOT/lib/Python.framework/Versions/Current
+		export PYTHONHOME="$GAFFER_ROOT/lib/Python.framework/Versions/Current"
 	fi
 
 fi
 
 # Get python module path set up
 
-export PYTHONPATH=$GAFFER_ROOT/python${PYTHONPATH:+:}${PYTHONPATH:-}
+prependToPath "$GAFFER_ROOT/python" PYTHONPATH
 
 # Get library paths set up
 ##########################################################################
 
 if [[ `uname` = "Linux" ]] ; then
-	prependToPath $GAFFER_ROOT/lib LD_LIBRARY_PATH
+	prependToPath "$GAFFER_ROOT/lib" LD_LIBRARY_PATH
 else
-	prependToPath $GAFFER_ROOT/lib DYLD_FRAMEWORK_PATH
-	prependToPath $GAFFER_ROOT/lib DYLD_LIBRARY_PATH
+	prependToPath "$GAFFER_ROOT/lib" DYLD_FRAMEWORK_PATH
+	prependToPath "$GAFFER_ROOT/lib" DYLD_LIBRARY_PATH
 	prependToPath /System/Library/Frameworks/ApplicationServices.framework/Versions/A/Frameworks/ImageIO.framework/Resources/ DYLD_LIBRARY_PATH
 	if [[ -n $DELIGHT ]] ; then
-		appendToPath $DELIGHT/lib DYLD_LIBRARY_PATH
+		appendToPath "$DELIGHT/lib" DYLD_LIBRARY_PATH
 	fi
 fi
 
 # Get the executable path set up, for running child processes from Gaffer
 ##########################################################################
 
-prependToPath $GAFFER_ROOT/bin PATH
+prependToPath "$GAFFER_ROOT/bin" PATH
 
 # Set up Appleseed
 ##########################################################################
 
 if [[ -z $APPLESEED && -d $GAFFER_ROOT/appleseed ]] ; then
 
-	export APPLESEED=$GAFFER_ROOT/appleseed
+	export APPLESEED="$GAFFER_ROOT/appleseed"
 
 fi
 
 if [[ $APPLESEED ]] ; then
 
 	if [[ `uname` = "Linux" ]] ; then
-		prependToPath $APPLESEED/lib LD_LIBRARY_PATH
+		prependToPath "$APPLESEED/lib" LD_LIBRARY_PATH
 	else
-		prependToPath $APPLESEED/lib DYLD_LIBRARY_PATH
+		prependToPath "$APPLESEED/lib" DYLD_LIBRARY_PATH
 	fi
 
 	# Using a glob to keep the wrapper agnostic of python version.
-	for appleseedPython in $APPLESEED/lib/python* ; do
-		prependToPath $appleseedPython PYTHONPATH
+	for appleseedPython in "$APPLESEED"/lib/python* ; do
+		prependToPath "$appleseedPython" PYTHONPATH
 	done
 
-	prependToPath $APPLESEED/shaders OSL_SHADER_PATHS
-	prependToPath $GAFFER_ROOT/appleseedDisplays APPLESEED_SEARCHPATH
-	prependToPath $OSL_SHADER_PATHS APPLESEED_SEARCHPATH
+	prependToPath "$APPLESEED/shaders" OSL_SHADER_PATHS
+	prependToPath "$GAFFER_ROOT/appleseedDisplays" APPLESEED_SEARCHPATH
+	prependToPath "$OSL_SHADER_PATHS" APPLESEED_SEARCHPATH
 
-	prependToPath $APPLESEED/bin PATH
+	prependToPath "$APPLESEED/bin" PATH
 
 fi
 
 # Set up Arnold
 ##########################################################################
 
-prependToPath $GAFFER_ROOT/arnold/plugins ARNOLD_PLUGIN_PATH
+prependToPath "$GAFFER_ROOT/arnold/plugins" ARNOLD_PLUGIN_PATH
 
 # Run gaffer itself
 ##########################################################################
@@ -224,7 +226,7 @@ if [[ -n $GAFFER_DEBUG ]] ; then
 		export GAFFER_DEBUGGER="gdb --args"
 	fi
 
-	exec $GAFFER_DEBUGGER python $GAFFER_ROOT/bin/gaffer.py "$@"
+	exec $GAFFER_DEBUGGER python "$GAFFER_ROOT/bin/gaffer.py" "$@"
 else
-	exec python $GAFFER_ROOT/bin/gaffer.py "$@"
+	exec python "$GAFFER_ROOT/bin/gaffer.py" "$@"
 fi
