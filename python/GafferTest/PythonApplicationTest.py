@@ -44,14 +44,12 @@ class PythonApplicationTest( GafferTest.TestCase ) :
 
 	def testVariableScope( self ) :
 
-		s = os.system( "gaffer python " + os.path.dirname( __file__ ) + "/pythonScripts/variableScope.py" )
-		self.assertEqual( s, 0 )
+		subprocess.check_call( [ "gaffer", "python", os.path.dirname( __file__ ) + "/pythonScripts/variableScope.py" ] )
 
 	def testErrorReturnStatus( self ) :
 
 		p = subprocess.Popen(
-			"gaffer python " + os.path.dirname( __file__ ) + "/pythonScripts/exception.py",
-			shell=True,
+			[ "gaffer", "python", os.path.dirname( __file__ ) + "/pythonScripts/exception.py" ],
 			stderr = subprocess.PIPE,
 		)
 		p.wait()
@@ -61,11 +59,11 @@ class PythonApplicationTest( GafferTest.TestCase ) :
 
 	def testFlagArguments( self ) :
 
-		subprocess.check_call( "gaffer python " + os.path.dirname( __file__ ) + "/pythonScripts/flagArguments.py -arguments -flag1 -flag2", shell = True )
+		subprocess.check_call( [ "gaffer", "python", os.path.dirname( __file__ ) + "/pythonScripts/flagArguments.py", "-arguments", "-flag1", "-flag2" ] )
 
 	def testName( self ) :
 
-		subprocess.check_call( "gaffer python " + os.path.dirname( __file__ ) + "/pythonScripts/name.py", shell = True )
+		subprocess.check_call( [ "gaffer", "python", os.path.dirname( __file__ ) + "/pythonScripts/name.py" ] )
 
 if __name__ == "__main__":
 	unittest.main()
