@@ -841,11 +841,19 @@ void GraphGadget::plugSet( Gaffer::Plug *plug )
 void GraphGadget::noduleAdded( Nodule *nodule )
 {
 	addConnectionGadgets( nodule );
+	for( RecursiveNoduleIterator it( nodule ); !it.done(); ++it )
+	{
+		addConnectionGadgets( it->get() );
+	}
 }
 
 void GraphGadget::noduleRemoved( Nodule *nodule )
 {
 	removeConnectionGadgets( nodule );
+	for( RecursiveNoduleIterator it( nodule ); !it.done(); ++it )
+	{
+		removeConnectionGadgets( it->get() );
+	}
 }
 
 bool GraphGadget::buttonRelease( GadgetPtr gadget, const ButtonEvent &event )

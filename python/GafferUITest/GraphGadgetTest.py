@@ -1296,5 +1296,27 @@ class GraphGadgetTest( GafferUITest.TestCase ) :
 			self.assertTrue( connection.srcNodule().isSame( g.nodeGadget( s["n1"] ).nodule( s["n1"]["sum"] ) ) )
 			self.assertTrue( connection.dstNodule().isSame( g.nodeGadget( s["n2"] ).nodule( s["n2"]["op1"] ) ) )
 
+	def testInputConnectionMaintainedOnNestedNoduleMove( self ) :
+
+		s = Gaffer.ScriptNode()
+		g = GafferUI.GraphGadget( s )
+
+		s["n1"] = GafferTest.AddNode()
+		s["n2"] = GafferTest.ArrayPlugNode()
+
+		Gaffer.Metadata.registerValue( s["n2"]["in"], "nodule:type", "GafferUI::CompoundNodule" )
+
+		s["n2"]["in"][0].setInput( s["n1"]["sum"] )
+
+		self.assertTrue( g.connectionGadget( s["n2"]["in"][0] ) is not None )
+
+		for section in ( "top", "bottom", "top", "left", "right", "left", "bottom", "right" ) :
+			Gaffer.Metadata.registerValue( s["n2"]["in"], "noduleLayout:section", section )
+			connection = g.connectionGadget( s["n2"]["in"][0] )
+			self.assertTrue( connection is not None )
+			self.assertTrue( connection.srcNodule() is not None )
+			self.assertTrue( connection.srcNodule().isSame( g.nodeGadget( s["n1"] ).nodule( s["n1"]["sum"] ) ) )
+			self.assertTrue( connection.dstNodule().isSame( g.nodeGadget( s["n2"] ).nodule( s["n2"]["in"][0] ) ) )
+
 if __name__ == "__main__":
 	unittest.main()
