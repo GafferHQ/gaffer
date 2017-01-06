@@ -204,7 +204,7 @@ void oiioParameterListToMetadata( const ImageIOParameterList &paramList, Compoun
 			{
 				if ( type.aggregate == TypeDesc::SCALAR )
 				{
-					value = new StringData( *static_cast<const std::string *>( it->data() ) );
+					value = new StringData( static_cast<const ustring *>( it->data() )->c_str() );
 				}
 				break;
 			}
