@@ -58,6 +58,8 @@ OIIO_NAMESPACE_USING
 #include "GafferImage/ImageWriter.h"
 #include "GafferImage/ImagePlug.h"
 #include "GafferImage/ChannelMaskPlug.h"
+#include "GafferImage/OpenImageIOAlgo.h"
+
 
 using namespace std;
 using namespace Imath;
@@ -494,154 +496,16 @@ class FlatScanlineWriter
 // Utility for converting IECore::Data types to OIIO::TypeDesc types.
 //////////////////////////////////////////////////////////////////////////
 
-TypeDesc typeDescFromData( const Data *data, const void *&basePointer )
-{
-	switch( data->typeId() )
-	{
-		// simple data
-
-		case CharDataTypeId :
-		{
-			basePointer = static_cast<const CharData *>( data )->baseReadable();
-			return TypeDesc( TypeDesc::CHAR );
-		}
-		case UCharDataTypeId :
-		{
-			basePointer = static_cast<const UCharData *>( data )->baseReadable();
-			return TypeDesc( TypeDesc::UCHAR );
-		}
-		case StringDataTypeId :
-		{
-			basePointer = static_cast<const StringData *>( data )->baseReadable();
-			return TypeDesc::TypeString;
-		}
-		case UShortDataTypeId :
-		{
-			basePointer = static_cast<const UShortData *>( data )->baseReadable();
-			return TypeDesc( TypeDesc::USHORT );
-		}
-		case ShortDataTypeId :
-		{
-			basePointer = static_cast<const ShortData *>( data )->baseReadable();
-			return TypeDesc( TypeDesc::SHORT );
-		}
-		case UIntDataTypeId :
-		{
-			basePointer = static_cast<const UIntData *>( data )->baseReadable();
-			return TypeDesc( TypeDesc::UINT );
-		}
-		case HalfDataTypeId :
-		{
-			basePointer = static_cast<const HalfData *>( data )->baseReadable();
-			return TypeDesc( TypeDesc::HALF );
-		}
-		case IntDataTypeId :
-		{
-			basePointer = static_cast<const IntData *>( data )->baseReadable();
-			return TypeDesc::TypeInt;
-		}
-		case V2iDataTypeId :
-		{
-			basePointer = static_cast<const V2iData *>( data )->baseReadable();
-			return TypeDesc(
-				TypeDesc::INT,
-				TypeDesc::VEC2
-			);
-		}
-		case V3iDataTypeId :
-		{
-			basePointer = static_cast<const V3iData *>( data )->baseReadable();
-			return TypeDesc(
-				TypeDesc::INT,
-				TypeDesc::VEC3
-			);
-		}
-		case FloatDataTypeId :
-		{
-			basePointer = static_cast<const FloatData *>( data )->baseReadable();
-			return TypeDesc::TypeFloat;
-		}
-		case V2fDataTypeId :
-		{
-			basePointer = static_cast<const V2fData *>( data )->baseReadable();
-			return TypeDesc(
-				TypeDesc::FLOAT,
-				TypeDesc::VEC2
-			);
-		}
-		case V3fDataTypeId :
-		{
-			basePointer = static_cast<const V3fData *>( data )->baseReadable();
-			return TypeDesc(
-				TypeDesc::FLOAT,
-				TypeDesc::VEC3
-			);
-		}
-		case M44fDataTypeId :
-		{
-			basePointer = static_cast<const M44fData *>( data )->baseReadable();
-			return TypeDesc(
-				TypeDesc::FLOAT,
-				TypeDesc::MATRIX44
-			);
-		}
-		case DoubleDataTypeId :
-		{
-			basePointer = static_cast<const DoubleData *>( data )->baseReadable();
-			return TypeDesc( TypeDesc::DOUBLE );
-		}
-		case V2dDataTypeId :
-		{
-			basePointer = static_cast<const V2dData *>( data )->baseReadable();
-			return TypeDesc(
-				TypeDesc::DOUBLE,
-				TypeDesc::VEC2
-			);
-		}
-		case V3dDataTypeId :
-		{
-			basePointer = static_cast<const V3dData *>( data )->baseReadable();
-			return TypeDesc(
-				TypeDesc::DOUBLE,
-				TypeDesc::VEC3
-			);
-		}
-		case M44dDataTypeId :
-		{
-			basePointer = static_cast<const M44dData *>( data )->baseReadable();
-			return TypeDesc(
-				TypeDesc::DOUBLE,
-				TypeDesc::MATRIX44
-			);
-		}
-		case Color3fDataTypeId :
-		{
-			basePointer = static_cast<const Color3fData *>( data )->baseReadable();
-			return TypeDesc::TypeColor;
-		}
-		default :
-		{
-			return TypeDesc();
-		}
-	}
-};
-
-void setImageSpecAttribute( const std::string &name, const Data *data, ImageSpec &spec )
-{
-	const void *value = NULL;
-	TypeDesc type = typeDescFromData( data, value );
-	if ( value )
-	{
-		spec.attribute( name, type, value );
-	}
-}
-
 void metadataToImageSpecAttributes( const CompoundObject *metadata, ImageSpec &spec )
 {
 	const CompoundObject::ObjectMap &members = metadata->members();
 	for ( CompoundObject::ObjectMap::const_iterator it = members.begin(); it != members.end(); ++it )
 	{
-		setImageSpecAttribute( it->first, IECore::runTimeCast<const Data>( it->second.get() ), spec );
+		const OpenImageIOAlgo::DataView dataView( runTimeCast<const IECore::Data>( it->second.get() ) );
+		if( dataView.data )
+		{
+			spec.attribute( it->first.c_str(), dataView.type, dataView.data );
+		}
 	}
 }
 
