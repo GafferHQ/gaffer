@@ -390,8 +390,8 @@ namespace Gaffer
 IECORE_RUNTIMETYPED_DEFINETEMPLATESPECIALISATION( Gaffer::SplineffPlug, SplineffPlugTypeId )
 IECORE_RUNTIMETYPED_DEFINETEMPLATESPECIALISATION( Gaffer::SplinefColor3fPlug, SplinefColor3fPlugTypeId )
 
-}
-
 // explicit instantiation
 template class SplinePlug<IECore::Splineff>;
 template class SplinePlug<IECore::SplinefColor3f>;
+
+}

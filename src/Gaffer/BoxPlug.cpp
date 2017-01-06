@@ -201,11 +201,12 @@ IECORE_RUNTIMETYPED_DEFINETEMPLATESPECIALISATION( Gaffer::Box3iPlug, Box3iPlugTy
 IECORE_RUNTIMETYPED_DEFINETEMPLATESPECIALISATION( Gaffer::Box2fPlug, Box2fPlugTypeId )
 IECORE_RUNTIMETYPED_DEFINETEMPLATESPECIALISATION( Gaffer::Box3fPlug, Box3fPlugTypeId )
 
-}
-
 // explicit instantiations
 
 template class BoxPlug<Imath::Box2i>;
 template class BoxPlug<Imath::Box3i>;
 template class BoxPlug<Imath::Box2f>;
 template class BoxPlug<Imath::Box3f>;
+
+}
+
