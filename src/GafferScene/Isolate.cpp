@@ -261,7 +261,10 @@ void Isolate::hashChildNames( const ScenePath &path, const Gaffer::Context *cont
 		// we might be computing new childnames for this level.
 		FilteredSceneProcessor::hashChildNames( path, context, parent, h );
 
-		ConstInternedStringVectorDataPtr inputChildNamesData = inPlug()->childNamesPlug()->getValue();
+		const IECore::MurmurHash inputChildNamesHash = inPlug()->childNamesPlug()->hash();
+		h.append( inputChildNamesHash );
+
+		ConstInternedStringVectorDataPtr inputChildNamesData = inPlug()->childNamesPlug()->getValue( &inputChildNamesHash );
 		const vector<InternedString> &inputChildNames = inputChildNamesData->readable();
 
 		ScenePath childPath = path;
