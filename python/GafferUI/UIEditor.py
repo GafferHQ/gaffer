@@ -1391,6 +1391,14 @@ class _PresetsEditor( GafferUI.Widget ) :
 		oldName = selectedPaths[0][0]
 		newName = nameWidget.getText()
 
+		if oldName == newName :
+			return True
+
+		if newName == "" :
+			# Empty names are not allowed, so revert to previous
+			nameWidget.setText( oldName )
+			return True
+
 		items = self.__pathListing.getPath().dict().items()
 		with Gaffer.BlockedConnection( self.__plugMetadataChangedConnection ) :
 			with Gaffer.UndoContext( self.getPlug().ancestor( Gaffer.ScriptNode ) ) :
