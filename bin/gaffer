@@ -81,7 +81,7 @@ popd &> /dev/null
 # $1 is the value to include in the path
 # $2 is the name of the path to edit
 #
-# e.g. includeInPath ~/bin PATH
+# e.g. prependToPath "$HOME/bin" PATH
 function prependToPath {
 
 	if [[ ":${!2}:" != *":$1:"* ]] ; then
@@ -114,19 +114,19 @@ prependToPath "$GAFFER_ROOT/glsl" IECOREGL_SHADER_PATHS
 prependToPath "$GAFFER_ROOT/glsl" IECOREGL_SHADER_INCLUDE_PATHS
 
 prependToPath "$GAFFER_ROOT/fonts" IECORE_FONT_PATHS
-prependToPath "~/gaffer/ops:$GAFFER_ROOT/ops" IECORE_OP_PATHS
+prependToPath "$HOME/gaffer/ops:$GAFFER_ROOT/ops" IECORE_OP_PATHS
 
-prependToPath "~/gaffer/opPresets:$GAFFER_ROOT/opPresets" IECORE_OP_PRESET_PATHS
-prependToPath "~/gaffer/procedurals:$GAFFER_ROOT/procedurals" IECORE_PROCEDURAL_PATHS
-prependToPath "~/gaffer/proceduralPresets:$GAFFER_ROOT/proceduralPresets" IECORE_PROCEDURAL_PRESET_PATHS
+prependToPath "$HOME/gaffer/opPresets:$GAFFER_ROOT/opPresets" IECORE_OP_PRESET_PATHS
+prependToPath "$HOME/gaffer/procedurals:$GAFFER_ROOT/procedurals" IECORE_PROCEDURAL_PATHS
+prependToPath "$HOME/gaffer/proceduralPresets:$GAFFER_ROOT/proceduralPresets" IECORE_PROCEDURAL_PRESET_PATHS
 
 if [[ -z $CORTEX_POINTDISTRIBUTION_TILESET ]] ; then
 	export CORTEX_POINTDISTRIBUTION_TILESET="$GAFFER_ROOT/resources/cortex/tileset_2048.dat"
 fi
 
-prependToPath "~/gaffer/apps:$GAFFER_ROOT/apps" GAFFER_APP_PATHS
+prependToPath "$HOME/gaffer/apps:$GAFFER_ROOT/apps" GAFFER_APP_PATHS
 
-prependToPath "~/gaffer/startup" GAFFER_STARTUP_PATHS
+prependToPath "$HOME/gaffer/startup" GAFFER_STARTUP_PATHS
 appendToPath "$GAFFER_ROOT/startup" GAFFER_STARTUP_PATHS
 
 prependToPath "$GAFFER_ROOT/graphics" GAFFERUI_IMAGE_PATHS
