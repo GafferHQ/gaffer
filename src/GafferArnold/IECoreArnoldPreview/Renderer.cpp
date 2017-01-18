@@ -251,7 +251,6 @@ class ArnoldOutput : public IECore::RefCounted
 					{
 						customAttributes.push_back( formattedString );
 					}
-					continue;
 				}
 
 				ParameterAlgo::setParameter( m_driver.get(), it->first.c_str(), it->second.get() );
