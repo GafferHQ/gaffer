@@ -49,6 +49,7 @@ namespace IECoreGL
 
 IE_CORE_FORWARDDECLARE( Font )
 IE_CORE_FORWARDDECLARE( Shader )
+IE_CORE_FORWARDDECLARE( State )
 
 } // namespace IECoreGL
 
@@ -87,6 +88,7 @@ class StandardStyle : public Style
 		virtual void renderBackdrop( const Imath::Box2f &box, State state = NormalState, const Imath::Color3f *userColor = NULL ) const;
 
 		virtual void renderTranslateHandle( int axis, State state = NormalState ) const;
+		virtual void renderScaleHandle( int axis, State state = NormalState ) const;
 
 		enum Color
 		{
@@ -133,6 +135,8 @@ class StandardStyle : public Style
 
 		IECoreGL::FontPtr m_fonts[LastText];
 		float m_fontScales[LastText];
+
+		IECoreGL::StatePtr m_highlightState;
 
 };
 

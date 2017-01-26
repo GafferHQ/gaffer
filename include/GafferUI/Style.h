@@ -132,6 +132,7 @@ class Style : public IECore::RunTimeTyped
 		//////////////////////////////////////////////////////////////////////////
 		//@{
 		virtual void renderTranslateHandle( int axis, State state = NormalState ) const = 0;
+		virtual void renderScaleHandle( int axis, State state = NormalState ) const = 0;
 		//@}
 
 		typedef boost::signal<void (Style *)> UnarySignal;
