@@ -443,6 +443,31 @@ class IsolateTest( GafferSceneTest.SceneTestCase ) :
 		self.assertEqual( isolate["out"].setHash( "__lights" ), group["out"].setHash( "__lights" ) )
 		self.assertEqual( isolate["out"].setHash( "__cameras" ), group["out"].setHash( "__cameras" ) )
 
+	def testKeepLightsAndCamerasHashing( self ):
+
+		# - group
+		#    - cameraGroup
+		#       - camera
+
+		camera = GafferScene.Camera()
+
+		cameraGroup = GafferScene.Group()
+		cameraGroup["name"].setValue( "cameraGroup" )
+		cameraGroup["in"][0].setInput( camera["out"] )
+
+		group = GafferScene.Group()
+		group["in"][0].setInput( cameraGroup["out"] )
+
+		filter = GafferScene.PathFilter()
+
+		isolate = GafferScene.Isolate()
+		isolate["in"].setInput( group["out"] )
+		isolate["filter"].setInput( filter["out"] )
+
+		isolate["keepCameras"].setValue( True )
+
+		self.assertTrue( GafferScene.SceneAlgo.exists( isolate["out"], "/group/cameraGroup/camera" ) )
+
 	def testSetFilter( self ) :
 
 		sphere = GafferScene.Sphere()
