@@ -132,6 +132,7 @@ struct PlugAdderWrapper : public GadgetWrapper<PlugAdder>
 				try
 				{
 					f( Gaffer::PlugPtr( const_cast<Gaffer::Plug *>( connectionEndPoint ) ) );
+					return;
 				}
 				catch( const error_already_set &e )
 				{
@@ -139,10 +140,7 @@ struct PlugAdderWrapper : public GadgetWrapper<PlugAdder>
 				}
 			}
 		}
-		else
-		{
-			throw IECore::Exception( "No addPlug method defined in Python." );
-		}
+		throw IECore::Exception( "No addPlug method defined in Python." );
 	}
 };
 
