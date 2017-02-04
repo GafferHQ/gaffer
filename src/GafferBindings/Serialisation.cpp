@@ -538,7 +538,7 @@ void GafferBindings::bindSerialisation()
 		.def( "postConstructor", &Serialisation::Serialiser::postConstructor )
 		.def( "postHierarchy", &Serialisation::Serialiser::postHierarchy )
 		.def( "postScript", &Serialisation::Serialiser::postScript )
-		.def( "childNeedsSerialisation", &Serialisation::Serialiser::postScript )
+		.def( "childNeedsSerialisation", &Serialisation::Serialiser::childNeedsSerialisation )
 		.def( "childNeedsConstruction", &Serialisation::Serialiser::childNeedsConstruction )
 	;
 
