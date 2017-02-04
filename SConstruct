@@ -79,7 +79,7 @@ options = Variables( optionsFile, ARGUMENTS )
 options.Add(
 	"CXX",
 	"The C++ compiler.",
-	"g++",
+	"clang++" if sys.platform == "darwin" else "g++",
 )
 
 options.Add(
