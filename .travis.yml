@@ -25,7 +25,7 @@ before_install:
 install:
     - if [ "$TRAVIS_OS_NAME" == "osx" ]; then brew install scons; fi
     - if [ "$TRAVIS_OS_NAME" == "osx" ]; then brew install doxygen; fi
-    - if [ "$TRAVIS_OS_NAME" == "osx" ]; then brew tap homebrew/gui && brew install inkscape; fi
+    - if [ "$TRAVIS_OS_NAME" == "osx" ]; then brew cask install inkscape; fi
     - python ./config/travis/installDependencies.py
     - ./config/travis/installDelight.sh
     - export DELIGHT=`pwd`/3delight
