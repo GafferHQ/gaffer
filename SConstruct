@@ -997,11 +997,13 @@ for libraryName, libraryDef in libraries.items() :
 
 def buildGraphics( target, source, env ) :
 
-	dir = os.path.dirname( str( target[0] ) )
+	svgFileName = os.path.abspath( str( source[0] ) )
+
+	dir = os.path.dirname( os.path.abspath( str( target[0] ) ) )
 	if not os.path.isdir( dir ) :
 		os.makedirs( dir )
 
-	queryCommand = env["INKSCAPE"] + " --query-all " + str( source[0] )
+	queryCommand = env["INKSCAPE"] + " --query-all \"" + svgFileName + "\""
 	inkscape = subprocess.Popen( queryCommand, stdout=subprocess.PIPE, shell=True )
 	objects, stderr = inkscape.communicate()
 	if inkscape.returncode :
@@ -1016,7 +1018,7 @@ def buildGraphics( target, source, env ) :
 					tokens[0].split( ":" )[-1],
 					tokens[0],
 					int( round( float( tokens[3] ) ) ), int( round( float( tokens[4] ) ) ),
-					str( source[0] ),
+					svgFileName,
 				),
 				shell = True,
 			)
