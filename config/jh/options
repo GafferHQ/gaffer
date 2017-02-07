@@ -35,6 +35,7 @@
 ##########################################################################
 
 import os
+import sys
 
 BUILD_DIR = os.path.expanduser( "~/dev/build/gaffer" )
 BUILD_CACHEDIR = os.path.expanduser( "~/dev/buildCache" )
@@ -44,3 +45,6 @@ RMAN_ROOT = os.environ["DELIGHT"]
 ARNOLD_ROOT = os.environ["ARNOLD_ROOT"]
 DOXYGEN = "/usr/local/bin/doxygen"
 PYTHON_LINK_FLAGS = [ "-lpython$PYTHON_VERSION" ]
+
+if sys.platform.startswith( "linux" ) :
+	CXX="/opt/rh/devtoolset-2/root/usr/bin/g++"
