@@ -54,6 +54,7 @@ def __nodeDescription( node ) :
 	return description or __defaultDescription
 
 def __nodeUrl( node ) :
+
 	return node.shaderMetadata( "URL" )
 
 def __plugDescription( plug ) :
@@ -133,6 +134,15 @@ def __outPlugNoduleType( plug ) :
 
 	return "GafferUI::CompoundNodule" if len( plug ) else "GafferUI::StandardNodule"
 
+def __plugNoduleVisibility( plug ) :
+
+	node = plug.node()
+	visible = node.parameterMetadata( plug, "gafferNoduleLayoutVisible" )
+	if visible is None :
+		visible = node.shaderMetadata( "gafferNoduleLayoutDefaultVisibility" )
+
+	return bool( visible ) if visible is not None else True
+
 Gaffer.Metadata.registerNode(
 
 	GafferOSL.OSLShader,
@@ -152,6 +162,7 @@ Gaffer.Metadata.registerNode(
 			"presetValues", __plugPresetValues,
 			"plugValueWidget:type", __plugWidgetType,
 			"nodule:type", __plugNoduleType,
+			"noduleLayout:visible", __plugNoduleVisibility,
 
 		],
 
