@@ -140,6 +140,9 @@ class CompoundDataPlug : public Gaffer::ValuePlug
 		static ValuePlugPtr compoundNumericValuePlug( const std::string &name, Plug::Direction direction, unsigned flags, const T *value );
 
 		template<typename T>
+		static ValuePlugPtr geometricCompoundNumericValuePlug( const std::string &name, Plug::Direction direction, unsigned flags, const T *value );
+
+		template<typename T>
 		static ValuePlugPtr typedObjectValuePlug( const std::string &name, Plug::Direction direction, unsigned flags, const T *value );
 
 };

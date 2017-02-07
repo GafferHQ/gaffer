@@ -339,19 +339,19 @@ ValuePlugPtr CompoundDataPlug::createPlugFromData( const std::string &name, Plug
 		}
 		case V2iDataTypeId :
 		{
-			return compoundNumericValuePlug( name, direction, flags, static_cast<const V2iData *>( value ) );
+			return geometricCompoundNumericValuePlug( name, direction, flags, static_cast<const V2iData *>( value ) );
 		}
 		case V3iDataTypeId :
 		{
-			return compoundNumericValuePlug( name, direction, flags, static_cast<const V3iData *>( value ) );
+			return geometricCompoundNumericValuePlug( name, direction, flags, static_cast<const V3iData *>( value ) );
 		}
 		case V2fDataTypeId :
 		{
-			return compoundNumericValuePlug( name, direction, flags, static_cast<const V2fData *>( value ) );
+			return geometricCompoundNumericValuePlug( name, direction, flags, static_cast<const V2fData *>( value ) );
 		}
 		case V3fDataTypeId :
 		{
-			return compoundNumericValuePlug( name, direction, flags, static_cast<const V3fData *>( value ) );
+			return geometricCompoundNumericValuePlug( name, direction, flags, static_cast<const V3fData *>( value ) );
 		}
 		case Color3fDataTypeId :
 		{
@@ -452,6 +452,26 @@ ValuePlugPtr CompoundDataPlug::compoundNumericValuePlug( const std::string &name
 }
 
 template<typename T>
+ValuePlugPtr CompoundDataPlug::geometricCompoundNumericValuePlug( const std::string &name, Plug::Direction direction, unsigned flags, const T *value )
+{
+	typedef typename T::ValueType ValueType;
+	typedef typename ValueType::BaseType BaseType;
+	typedef CompoundNumericPlug<ValueType> PlugType;
+
+	typename PlugType::Ptr result = new PlugType(
+		name,
+		direction,
+		value->readable(),
+		ValueType( Imath::limits<BaseType>::min() ),
+		ValueType( Imath::limits<BaseType>::max() ),
+		flags,
+		value->getInterpretation()
+	);
+
+	return result;
+}
+
+template<typename T>
 ValuePlugPtr CompoundDataPlug::typedObjectValuePlug( const std::string &name, Plug::Direction direction, unsigned flags, const T *value )
 {
 	typename TypedObjectPlug<T>::Ptr result = new TypedObjectPlug<T>(
@@ -477,13 +497,33 @@ IECore::DataPtr CompoundDataPlug::extractDataFromPlug( const ValuePlug *plug )
 		case BoolPlugTypeId :
 			return new BoolData( static_cast<const BoolPlug *>( plug )->getValue() );
 		case V2iPlugTypeId :
-			return new V2iData( static_cast<const V2iPlug *>( plug )->getValue() );
+		{
+			const V2iPlug *v2iPlug = static_cast<const V2iPlug *>( plug );
+			V2iDataPtr data = new V2iData( v2iPlug->getValue() );
+			data->setInterpretation( v2iPlug->interpretation() );
+			return data;
+		}
 		case V3iPlugTypeId :
-			return new V3iData( static_cast<const V3iPlug *>( plug )->getValue() );
+		{
+			const V3iPlug *v3iPlug = static_cast<const V3iPlug *>( plug );
+			V3iDataPtr data = new V3iData( v3iPlug->getValue() );
+			data->setInterpretation( v3iPlug->interpretation() );
+			return data;
+		}
 		case V2fPlugTypeId :
-			return new V2fData( static_cast<const V2fPlug *>( plug )->getValue() );
+		{
+			const V2fPlug *v2fPlug = static_cast<const V2fPlug *>( plug );
+			V2fDataPtr data = new V2fData( v2fPlug->getValue() );
+			data->setInterpretation( v2fPlug->interpretation() );
+			return data;
+		}
 		case V3fPlugTypeId :
-			return new V3fData( static_cast<const V3fPlug *>( plug )->getValue() );
+		{
+			const V3fPlug *v3fPlug = static_cast<const V3fPlug *>( plug );
+			V3fDataPtr data = new V3fData( v3fPlug->getValue() );
+			data->setInterpretation( v3fPlug->interpretation() );
+			return data;
+		}
 		case Color3fPlugTypeId :
 			return new Color3fData( static_cast<const Color3fPlug *>( plug )->getValue() );
 		case Color4fPlugTypeId :
