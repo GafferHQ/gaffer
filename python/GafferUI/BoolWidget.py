@@ -34,6 +34,8 @@
 #
 ##########################################################################
 
+import types
+
 import IECore
 
 import Gaffer
@@ -44,14 +46,15 @@ QtGui = GafferUI._qtImport( "QtGui" )
 
 class BoolWidget( GafferUI.Widget ) :
 
-	DisplayMode = IECore.Enum.create( "CheckBox", "Switch" )
+	DisplayMode = IECore.Enum.create( "CheckBox", "Switch", "Tool" )
 
-	def __init__( self, text="", checked=False, displayMode=DisplayMode.CheckBox, **kw ) :
+	def __init__( self, text="", checked=False, displayMode=DisplayMode.CheckBox, image = None, **kw ) :
 
-		GafferUI.Widget.__init__( self, QtGui.QCheckBox( text ), **kw )
+		GafferUI.Widget.__init__( self, _CheckBox( text ), **kw )
 
 		self.setState( checked )
 		self.setDisplayMode( displayMode )
+		self.setImage( image )
 
 		self.__stateChangedSignal = GafferUI.WidgetSignal()
 
@@ -65,6 +68,24 @@ class BoolWidget( GafferUI.Widget ) :
 
 		return str( self._qtWidget().text() )
 
+	def setImage( self, image ) :
+
+		if isinstance( image, basestring ) :
+			self.__image = GafferUI.Image( image )
+		else :
+			assert( isinstance( image, ( GafferUI.Image, types.NoneType ) ) )
+			self.__image = image
+
+		if self.__image is None :
+			self._qtWidget().setIcon( QtGui.QIcon() )
+		else :
+			self._qtWidget().setIcon( QtGui.QIcon( self.__image._qtPixmap() ) )
+			self._qtWidget().setIconSize( self.__image._qtPixmap().size() )
+
+	def getImage( self ) :
+
+		return self.__image
+
 	def setState( self, checked ) :
 
 		self._qtWidget().setCheckState( QtCore.Qt.Checked if checked else QtCore.Qt.Unchecked )
@@ -75,11 +96,19 @@ class BoolWidget( GafferUI.Widget ) :
 
 	def setDisplayMode( self, displayMode ) :
 
-		self._qtWidget().setObjectName( "gafferBoolWidgetSwitch" if displayMode == self.DisplayMode.Switch else "" )
+		self._qtWidget().setProperty( "gafferDisplayMode", str( displayMode ) )
+		self._qtWidget().setHitMode(
+			_CheckBox.HitMode.Button if displayMode == self.DisplayMode.Tool else _CheckBox.HitMode.CheckBox
+		)
 
 	def getDisplayMode( self ) :
 
-		return self.DisplayMode.Switch if self._qtWidget().objectName() == "gafferBoolWidgetSwitch" else self.DisplayMode.CheckBox
+		return getattr(
+			self.DisplayMode,
+			GafferUI._Variant.fromVariant(
+				self._qtWidget().property( "gafferDisplayMode" )
+			)
+		)
 
 	def stateChangedSignal( self ) :
 
@@ -88,6 +117,31 @@ class BoolWidget( GafferUI.Widget ) :
 	def __stateChanged( self, state ) :
 
 		self.__stateChangedSignal( self )
+
+class _CheckBox( QtGui.QCheckBox ) :
+
+	HitMode = IECore.Enum.create( "Button", "CheckBox" )
+
+	def __init__( self, text, parent = None ) :
+
+		QtGui.QCheckBox.__init__( self, text, parent )
+
+		self.__hitMode = self.HitMode.CheckBox
+
+	def setHitMode( self, hitMode ) :
+
+		self.__hitMode = hitMode
+
+	def getHidMode( self ) :
+
+		return self.__hitMode
+
+	def hitButton( self, pos ) :
+
+		if self.__hitMode == self.HitMode.Button :
+			return QtGui.QAbstractButton.hitButton( self, pos )
+		else :
+			return QtGui.QCheckBox.hitButton( self, pos )
 
 ## \todo Backwards compatibility - remove for version 1.0
 CheckBox = BoolWidget
