@@ -36,6 +36,8 @@
 //////////////////////////////////////////////////////////////////////////
 
 #include "boost/python.hpp"
+#include "boost/algorithm/string/replace.hpp"
+#include "boost//format.hpp"
 
 #include "IECorePython/IECoreBinding.h"
 #include "IECorePython/RunTimeTypedBinding.h"
@@ -54,6 +56,24 @@ namespace
 {
 
 template<typename T>
+std::string maskedCompoundNumericPlugRepr( const T *plug, unsigned flagsMask )
+{
+	std::string extraArgs = "";
+
+	const IECore::GeometricData::Interpretation interpretation = plug->interpretation();
+
+	if( interpretation != IECore::GeometricData::None )
+	{
+		boost::python::object interpretationAsPythonObject( interpretation );
+		boost::python::object interpretationRepr = interpretationAsPythonObject.attr( "__repr__" )();
+		extraArgs = "interpretation = " + std::string( boost::python::extract<std::string>( interpretationRepr ) );
+		boost::replace_first( extraArgs, "_IECore", "GeometricData" );
+	}
+
+	return ValuePlugSerialiser::repr( plug, flagsMask, extraArgs );
+}
+
+template<typename T>
 std::string compoundNumericPlugRepr( const T *plug )
 {
 	return maskedCompoundNumericPlugRepr( plug, Plug::All );
@@ -62,6 +82,12 @@ std::string compoundNumericPlugRepr( const T *plug )
 template<typename T>
 class CompoundNumericPlugSerialiser : public ValuePlugSerialiser
 {
+  public:
+
+	virtual std::string constructor( const Gaffer::GraphComponent *graphComponent, const Serialisation &serialisation ) const
+	{
+		return maskedCompoundNumericPlugRepr( static_cast<const T *>( graphComponent ), Plug::All & ~Plug::ReadOnly );
+	}
 
 	protected :
 
@@ -128,14 +154,15 @@ void bind()
 	typedef typename T::ValueType V;
 
 	PlugClass<T>()
-		.def( init<const char *, Plug::Direction, V, V, V, unsigned>(
+		.def( init<const char *, Plug::Direction, V, V, V, unsigned, IECore::GeometricData::Interpretation>(
 				(
 					boost::python::arg_( "name" )=GraphComponent::defaultName<T>(),
 					boost::python::arg_( "direction" )=Plug::In,
 					boost::python::arg_( "defaultValue" )=V( 0 ),
 					boost::python::arg_( "minValue" )=V(Imath::limits<typename V::BaseType>::min()),
 					boost::python::arg_( "maxValue" )=V(Imath::limits<typename V::BaseType>::max()),
-					boost::python::arg_( "flags" )=Plug::Default
+					boost::python::arg_( "flags" )=Plug::Default,
+					boost::python::arg_( "interpretation" )=IECore::GeometricData::None
 				)
 			)
 		)
@@ -146,10 +173,12 @@ void bind()
 		.def( "maxValue", &T::maxValue )
 		.def( "setValue", &setValue<T> )
 		.def( "getValue", &getValue<T> )
+		.def( "interpretation", &T::interpretation )
 		.def( "canGang", &T::canGang )
 		.def( "gang", &gang<T> )
 		.def( "isGanged", &T::isGanged )
 		.def( "ungang", &ungang<T> )
+		.def( "__repr__", &compoundNumericPlugRepr<T> )
 	;
 
 	Serialisation::registerSerialiser( T::staticTypeId(), new CompoundNumericPlugSerialiser<T>() );
