@@ -1940,7 +1940,7 @@ class _SetDiff( Diff ) :
 			self.__updateField( 1, paths[0] & paths[1], "" )
 			self.__updateField( 2, paths[1] - paths[0], " +" )
 
-		self.__updateCorners()
+		GafferUI.WidgetAlgo.joinEdges( self.__row )
 
 	def __updateField( self, i, paths, prefix = "" ) :
 
@@ -1952,22 +1952,6 @@ class _SetDiff( Diff ) :
 
 		self.__row[i].getChild().setText( prefix + str( len( paths ) ) )
 		self.__row[i].setVisible( True )
-
-	def __updateCorners( self ) :
-
-		## \todo It feels like it might be nice to have a Container that
-		# did this automatically. Perhaps a ButtonRow or something like that?
-		flatLeft = False
-		flatRight = False
-		for i in range( 0, len( self.__row ) ) :
-			widgetLeft = self.__row[i]
-			widgetRight = self.__row[-1-i]
-			if widgetLeft.getVisible() :
-				widgetLeft._qtWidget().setProperty( "gafferFlatLeft", flatLeft )
-				flatLeft = True
-			if widgetRight.getVisible() :
-				widgetRight._qtWidget().setProperty( "gafferFlatRight", flatRight )
-				flatRight = True
 
 	def __buttonPress( self, widget, event ) :
 
