@@ -41,6 +41,8 @@
 #include "OpenEXR/ImathVec.h"
 #include "OpenEXR/ImathColor.h"
 
+#include "IECore/GeometricTypedData.h"
+
 #include "Gaffer/NumericPlug.h"
 
 namespace Gaffer
@@ -63,10 +65,10 @@ class CompoundNumericPlug : public ValuePlug
 			T defaultValue = T( 0 ),
 			T minValue = T( Imath::limits<typename T::BaseType>::min() ),
 			T maxValue = T( Imath::limits<typename T::BaseType>::max() ),
-			unsigned flags = Default
+			unsigned flags = Default,
+			IECore::GeometricData::Interpretation interpretation = IECore::GeometricData::None
 		);
 		virtual ~CompoundNumericPlug();
-
 		/// Accepts no children following construction.
 		virtual bool acceptsChild( const GraphComponent *potentialChild ) const;
 		virtual PlugPtr createCounterpart( const std::string &name, Direction direction ) const;
@@ -91,6 +93,15 @@ class CompoundNumericPlug : public ValuePlug
 		/// of the result.
 		T getValue() const;
 
+		/// Returns a hash to represent the value of this plug
+		/// in the current context.
+		virtual IECore::MurmurHash hash() const;
+		/// Convenience function to append the hash to h.
+		void hash( IECore::MurmurHash &h ) const;
+
+		/// Returns the interpretation of the vector
+		IECore::GeometricData::Interpretation interpretation() const;
+
 		/// @name Ganging
 		/// CompoundNumericPlugs may be ganged by connecting the child plugs
 		/// together so their values are driven by the first child. These
@@ -111,6 +122,7 @@ class CompoundNumericPlug : public ValuePlug
 		IE_CORE_DECLARERUNTIMETYPEDDESCRIPTION( CompoundNumericPlug<T> );
 
 		static const char **childNames();
+		const IECore::GeometricData::Interpretation m_interpretation;
 
 };
 
