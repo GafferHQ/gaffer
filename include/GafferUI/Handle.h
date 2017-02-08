@@ -51,7 +51,10 @@ class Handle : public Gadget
 		{
 			TranslateX = 0,
 			TranslateY,
-			TranslateZ
+			TranslateZ,
+			ScaleX,
+			ScaleY,
+			ScaleZ
 		};
 
 		Handle( Type type );
@@ -74,6 +77,8 @@ class Handle : public Gadget
 		virtual void doRender( const Style *style ) const;
 
 	private :
+
+		int axis() const;
 
 		void enter();
 		void leave();

@@ -102,7 +102,26 @@ float Handle::getRasterScale() const
 
 float Handle::dragOffset( const DragDropEvent &event ) const
 {
-	return absoluteDragOffset( event ) - m_dragBeginOffset;
+	switch( m_type )
+	{
+		case TranslateX :
+		case TranslateY :
+		case TranslateZ :
+			return absoluteDragOffset( event ) - m_dragBeginOffset;
+		case ScaleX :
+		case ScaleY :
+		case ScaleZ :
+		{
+			float result = absoluteDragOffset( event );
+			if( m_dragBeginOffset != 0 )
+			{
+				result /= m_dragBeginOffset;
+			}
+			return result;
+		}
+		default :
+			return 0;
+	}
 }
 
 Imath::Box3f Handle::bound() const
@@ -110,10 +129,13 @@ Imath::Box3f Handle::bound() const
 	switch( m_type )
 	{
 		case TranslateX :
+		case ScaleX :
 			return Box3f( V3f( 0 ), V3f( 1, 0, 0 ) );
 		case TranslateY :
+		case ScaleY :
 			return Box3f( V3f( 0 ), V3f( 0, 1, 0 ) );
 		case TranslateZ :
+		case ScaleZ :
 			return Box3f( V3f( 0 ), V3f( 0, 0, 1 ) );
 	};
 
@@ -153,19 +175,39 @@ void Handle::doRender( const Style *style ) const
 	switch( m_type )
 	{
 		case TranslateX :
-			style->renderTranslateHandle( 0, state );
-			break;
 		case TranslateY :
-			style->renderTranslateHandle( 1, state );
-			break;
 		case TranslateZ :
-			style->renderTranslateHandle( 2, state );
+			style->renderTranslateHandle( axis(), state );
+			break;
+		case ScaleX :
+		case ScaleY :
+		case ScaleZ :
+		default :
+			style->renderScaleHandle( axis(), state );
 			break;
 	}
 
 	if( m_rasterScale > 0.0f )
 	{
 		glPopMatrix();
+	}
+}
+
+int Handle::axis() const
+{
+	switch( m_type )
+	{
+		case TranslateX :
+		case ScaleX :
+			return 0;
+		case TranslateY :
+		case ScaleY :
+			return 1;
+		case TranslateZ :
+		case ScaleZ :
+			return 2;
+		default :
+			return 0;
 	}
 }
 
@@ -190,7 +232,7 @@ IECore::RunTimeTypedPtr Handle::dragBegin( const DragDropEvent &event )
 {
 	// store the line of our handle in world space.
 	V3f handle( 0.0f );
-	handle[m_type] = 1.0f;
+	handle[axis()] = 1.0f;
 
 	m_dragHandleWorld = LineSegment3f(
 		V3f( 0 ) * fullTransform(),
