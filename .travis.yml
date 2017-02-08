@@ -87,3 +87,5 @@ matrix:
         - os: linux
           compiler: clang
           env: COMPILER_VERSION= CXXSTD=c++98 DEBUG=1
+        - os: osx
+          osx_image: xcode8.2
