@@ -203,7 +203,7 @@ OptionalData instanceValue( const GraphComponent *instance, InternedString key, 
 
 void registerInstanceValueAction( GraphComponent *instance, InternedString key, OptionalData value, bool persistent )
 {
-	InstanceValues *m = instanceMetadata( instance, /* createIfMissing = */ value );
+	InstanceValues *m = instanceMetadata( instance, /* createIfMissing = */ static_cast<bool>( value ) );
 	if( !m )
 	{
 		return;

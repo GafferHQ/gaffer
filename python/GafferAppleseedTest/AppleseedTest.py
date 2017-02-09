@@ -34,14 +34,8 @@
 #
 ##########################################################################
 
-from AppleseedLightTest import AppleseedLightTest
-from AppleseedRenderTest import AppleseedRenderTest
-from AppleseedOptionsTest import AppleseedOptionsTest
-from AppleseedAttributesTest import AppleseedAttributesTest
-from AppleseedShaderAdaptorTest import AppleseedShaderAdaptorTest
-from AppleseedAutoInstancingTest import AppleseedAutoInstancingTest
-from AppleseedCameraTest import AppleseedCameraTest
+import os
 
-if __name__ == "__main__":
-	import unittest
-	unittest.main()
+def appleseedProjectSchemaPath():
+
+	return os.path.join( os.environ["APPLESEED"], "schemas", "project.xsd" )

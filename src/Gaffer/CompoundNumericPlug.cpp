@@ -259,8 +259,6 @@ IECORE_RUNTIMETYPED_DEFINETEMPLATESPECIALISATION( Gaffer::V3iPlug, V3iPlugTypeId
 IECORE_RUNTIMETYPED_DEFINETEMPLATESPECIALISATION( Gaffer::Color3fPlug, Color3fPlugTypeId )
 IECORE_RUNTIMETYPED_DEFINETEMPLATESPECIALISATION( Gaffer::Color4fPlug, Color4fPlugTypeId )
 
-}
-
 // explicit instantiations
 
 template class CompoundNumericPlug<Imath::V2f>;
@@ -269,3 +267,6 @@ template class CompoundNumericPlug<Imath::V2i>;
 template class CompoundNumericPlug<Imath::V3i>;
 template class CompoundNumericPlug<Imath::Color3f>;
 template class CompoundNumericPlug<Imath::Color4f>;
+
+}
+

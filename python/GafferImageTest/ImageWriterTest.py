@@ -969,6 +969,24 @@ class ImageWriterTest( GafferImageTest.ImageTestCase ) :
 		self.assertTrue( os.path.isfile( w["fileName"].getValue() ) )
 		self.assertTrue( os.path.isfile( w["copyFileName"].getValue() ) )
 
+	def testStringMetadata( self ) :
+
+		c = GafferImage.Constant()
+
+		m = GafferImage.ImageMetadata()
+		m["in"].setInput( c["out"] )
+		m["metadata"].addMember( "test", IECore.StringData( "popplewell" ) )
+
+		w = GafferImage.ImageWriter()
+		w["in"].setInput( m["out"] )
+		w["fileName"].setValue( os.path.join( self.temporaryDirectory(), "test.exr" ) )
+		w["task"].execute()
+
+		r = GafferImage.ImageReader()
+		r["fileName"].setValue( w["fileName"].getValue() )
+
+		self.assertEqual( r["out"]["metadata"].getValue()["test"], m["out"]["metadata"].getValue()["test"] )
+
 	def __testFile( self, mode, channels, ext ) :
 
 		return self.temporaryDirectory() + "/test." + channels + "." + str( mode ) + "." + str( ext )

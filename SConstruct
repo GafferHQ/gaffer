@@ -79,7 +79,7 @@ options = Variables( optionsFile, ARGUMENTS )
 options.Add(
 	"CXX",
 	"The C++ compiler.",
-	"g++",
+	"clang++" if sys.platform == "darwin" else "g++",
 )
 
 options.Add(
@@ -311,7 +311,6 @@ for e in env["ENV_VARS_TO_IMPORT"].split() + [ "DISPLAY", "HOME" ] :
 
 if env["PLATFORM"] == "darwin" :
 
-	env["ENV"]["MACOSX_DEPLOYMENT_TARGET"] = "10.4"
 	env.Append( CXXFLAGS = [ "-D__USE_ISOC99" ] )
 	env["GAFFER_PLATFORM"] = "osx"
 

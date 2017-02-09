@@ -54,6 +54,8 @@
 #include "IECore/Shader.h"
 #include "IECore/SplineData.h"
 
+#include "GafferImage/OpenImageIOAlgo.h"
+
 #include "GafferOSL/ShadingEngine.h"
 
 using namespace std;
@@ -61,6 +63,7 @@ using namespace boost;
 using namespace Imath;
 using namespace IECore;
 using namespace OSL;
+using namespace GafferImage;
 using namespace GafferOSL;
 
 //////////////////////////////////////////////////////////////////////////
@@ -92,25 +95,6 @@ struct TypeDescFromType<Color3f>
 	}
 };
 
-TypeDesc::VECSEMANTICS vecSemanticsFromGeometricInterpretation( GeometricData::Interpretation interpretation )
-{
-	switch( interpretation )
-	{
-		case GeometricData::Point :
-			return TypeDesc::POINT;
-		case GeometricData::Normal :
-			return TypeDesc::NORMAL;
-		case GeometricData::Vector :
-			return TypeDesc::VECTOR;
-		case GeometricData::Color :
-			return TypeDesc::COLOR;
-		default :
-			// Strictly speaking, having no interpretation set could correspond to NOXFORM.  But there
-			// is no vector type in OSL which uses this description, so VECTOR is a more useful default
-			return TypeDesc::VECTOR;
-	}
-}
-
 GeometricData::Interpretation geometricInterpretationFromVecSemantics( TypeDesc::VECSEMANTICS semantics )
 {
 	switch( semantics )
@@ -129,63 +113,6 @@ GeometricData::Interpretation geometricInterpretationFromVecSemantics( TypeDesc:
 			return GeometricData::Numeric;
 	}
 }
-
-TypeDesc typeDescFromData( const Data *data, const void *&basePointer )
-{
-	switch( data->typeId() )
-	{
-		// simple data
-
-		case FloatDataTypeId :
-			basePointer = static_cast<const FloatData *>( data )->baseReadable();
-			return TypeDesc::TypeFloat;
-		case IntDataTypeId :
-			basePointer = static_cast<const IntData *>( data )->baseReadable();
-			return TypeDesc::TypeInt;
-		case V3fDataTypeId :
-			basePointer = static_cast<const V3fData *>( data )->baseReadable();
-			return TypeDesc(
-				TypeDesc::FLOAT,
-				TypeDesc::VEC3,
-				vecSemanticsFromGeometricInterpretation( static_cast<const V3fData *>( data )->getInterpretation() )
-			);
-		case Color3fDataTypeId :
-			basePointer = static_cast<const Color3fData *>( data )->baseReadable();
-			return TypeDesc::TypeColor;
-		case StringDataTypeId :
-			basePointer = &(static_cast<const StringData *>( data )->readable() );
-			return TypeDesc::TypeString;
-		case M44fDataTypeId :
-			basePointer = static_cast<const M44fData *>( data )->baseReadable();
-			return TypeDesc::TypeMatrix;
-
-		// vector data
-
-		case FloatVectorDataTypeId :
-			basePointer = static_cast<const FloatVectorData *>( data )->baseReadable();
-			return TypeDesc( TypeDesc::FLOAT, static_cast<const FloatVectorData *>( data )->readable().size() );
-		case IntVectorDataTypeId :
-			basePointer = static_cast<const IntVectorData *>( data )->baseReadable();
-			return TypeDesc( TypeDesc::INT, static_cast<const IntVectorData *>( data )->readable().size() );
-		case V3fVectorDataTypeId :
-			basePointer = static_cast<const V3fVectorData *>( data )->baseReadable();
-			return TypeDesc(
-				TypeDesc::FLOAT,
-				TypeDesc::VEC3,
-				vecSemanticsFromGeometricInterpretation( static_cast<const V3fVectorData *>( data )->getInterpretation() ),
-				static_cast<const V3fVectorData *>( data )->readable().size()
-			);
-		case Color3fVectorDataTypeId :
-			basePointer = static_cast<const Color3fVectorData *>( data )->baseReadable();
-			return TypeDesc( TypeDesc::FLOAT, TypeDesc::VEC3, TypeDesc::COLOR, static_cast<const IntVectorData *>( data )->readable().size() );
-		case M44fVectorDataTypeId :
-			basePointer = static_cast<const M44fVectorData *>( data )->baseReadable();
-			return TypeDesc( TypeDesc::FLOAT, TypeDesc::MATRIX44, static_cast<const M44fVectorData *>( data )->readable().size() );
-
-		default :
-			return TypeDesc();
-	}
-};
 
 template<typename T>
 typename T::Ptr vectorDataFromTypeDesc( TypeDesc type, void *&basePointer )
@@ -258,15 +185,15 @@ class RenderState
 				 eIt = shadingPoints->readable().end(); it != eIt; ++it )
 			{
 				UserData userData;
-				userData.typeDesc = typeDescFromData( it->second.get(), userData.basePointer );
-				if( userData.basePointer )
+				userData.dataView = OpenImageIOAlgo::DataView( it->second.get() );
+				if( userData.dataView.data )
 				{
 					userData.name = it->first;
-					if( userData.typeDesc.arraylen )
+					if( userData.dataView.type.arraylen )
 					{
 						// we unarray the TypeDesc so we can use it directly with
 						// convert_value() in get_userdata().
-						userData.typeDesc.unarray();
+						userData.dataView.type.unarray();
 						userData.array = true;
 					}
 					m_userData.push_back( userData );
@@ -294,13 +221,13 @@ class RenderState
 				return false;
 			}
 
-			const char *src = static_cast<const char *>( it->basePointer );
+			const char *src = static_cast<const char *>( it->dataView.data );
 			if( it->array )
 			{
-				src += m_pointIndex * it->typeDesc.elementsize();
+				src += m_pointIndex * it->dataView.type.elementsize();
 			}
 
-			return ShadingSystem::convert_value( value, type, src, it->typeDesc );
+			return ShadingSystem::convert_value( value, type, src, it->dataView.type );
 		}
 
 		void incrementPointIndex()
@@ -341,13 +268,12 @@ class RenderState
 		struct UserData
 		{
 			UserData()
-				:	basePointer( NULL ), array( false )
+				:	array( false )
 			{
 			}
 
 			ustring name;
-			const void *basePointer;
-			TypeDesc typeDesc;
+			OpenImageIOAlgo::DataView dataView;
 			bool array;
 
 			bool operator < ( const UserData &rhs ) const
@@ -776,11 +702,19 @@ void declareParameters( const CompoundDataMap &parameters, ShadingSystem *shadin
 			continue;
 		}
 
-		const void *basePointer = 0;
-		const TypeDesc typeDesc = typeDescFromData( it->second.get(), basePointer );
-		if( basePointer )
+		OpenImageIOAlgo::DataView dataView( it->second.get() );
+		if( dataView.data )
 		{
-			shadingSystem->Parameter( it->first.c_str(), typeDesc, basePointer );
+			if(
+				dataView.type.vecsemantics == TypeDesc::NOXFORM &&
+				( runTimeCast<V3fData>( it->second.get() ) || runTimeCast<V3fVectorData>( it->second.get() ) )
+			)
+			{
+				// There is no vector type in OSL which has NOXFORM semantics,
+				// so VECTOR is a more useful default.
+				dataView.type.vecsemantics = TypeDesc::VECTOR;
+			}
+			shadingSystem->Parameter( it->first.c_str(), dataView.type, dataView.data );
 		}
 		else
 		{

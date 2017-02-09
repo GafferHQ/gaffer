@@ -668,6 +668,7 @@ class RenderManRenderTest( GafferRenderManTest.RenderManTestCase ) :
 		s = Gaffer.ScriptNode()
 
 		s["sphere"] = GafferScene.Sphere()
+		s["sphere"]["type"].setValue( GafferScene.Sphere.Type.Primitive )
 		s["sphere"]["sets"].setValue( "${wedge:value}" )
 
 		s["filter"] = GafferScene.SetFilter()

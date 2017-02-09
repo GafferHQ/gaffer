@@ -97,20 +97,6 @@ def __environmentSummary( plug ) :
 
 	return ", ".join( info )
 
-def __drtSummary( plug ) :
-
-	info = []
-	if plug["drtIBL"]["enabled"].getValue() and plug["drtIBL"]["value"].getValue() :
-		info.append( "IBL" )
-	if plug["drtMaxBounces"]["enabled"].getValue() :
-		info.append( "Max Bounces %d" % plug["drtMaxBounces"]["value"].getValue() )
-	if plug["drtLightingSamples"]["enabled"].getValue() :
-		info.append( "Lighting samples %f" % plug["drtLightingSamples"]["value"].getValue() )
-	if plug["drtIBLSamples"]["enabled"].getValue() :
-		info.append( "IBL samples %f" % plug["drtIBLSamples"]["value"].getValue() )
-
-	return ", ".join( info )
-
 def __ptSummary( plug ) :
 
 	info = []
@@ -204,7 +190,6 @@ Gaffer.Metadata.registerNode(
 
 			"layout:section:Main:summary", __mainSummary,
 			"layout:section:Environment:summary", __environmentSummary,
-			"layout:section:Distribution Ray Tracer:summary", __drtSummary,
 			"layout:section:Unidirectional Path Tracer:summary", __ptSummary,
 			"layout:section:SPPM:summary", __sppmSummary,
 			"layout:section:System:summary", __systemSummary,
@@ -269,7 +254,6 @@ Gaffer.Metadata.registerNode(
 
 		"options.lightingEngine.value" : [
 
-			"preset:Distribution Ray Tracer", "drt",
 			"preset:Unidirectional Path Tracer", "pt",
 			"preset:SPPM", "sppm",
 
@@ -345,51 +329,6 @@ Gaffer.Metadata.registerNode(
 
 			"layout:section", "Environment",
 			"label", "Visible in Background",
-
-		],
-
-		# Distribution Ray Tracer
-
-		"options.drtIBL" : [
-
-			"description",
-			__getDescriptionString( "drt:enable_ibl" ),
-
-			"layout:section", "Distribution Ray Tracer",
-			"label", "Image Based Lighting",
-
-		],
-
-		"options.drtMaxBounces" : [
-
-			"description",
-			__getDescriptionString(
-				"drt:max_path_length",
-				"If set to zero, use an unlimited number of bounces"
-			),
-
-			"layout:section", "Distribution Ray Tracer",
-			"label", "Max Bounces",
-
-		],
-
-		"options.drtLightingSamples" : [
-
-			"description",
-			__getDescriptionString( "drt:dl_light_samples" ),
-
-			"layout:section", "Distribution Ray Tracer",
-			"label", "Direct Lighting Samples",
-
-		],
-
-		"options.drtIBLSamples" : [
-
-			"description",
-			__getDescriptionString( "drt:ibl_env_samples" ),
-
-			"layout:section", "Distribution Ray Tracer",
-			"label", "IBL Samples",
 
 		],
 
@@ -720,7 +659,7 @@ Gaffer.Metadata.registerNode(
 		""",
 
 		"layout:section", "Logging",
-		"label", "File Name",
+		"label", "Log File",
 
 		],
 

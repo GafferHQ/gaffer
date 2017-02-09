@@ -50,6 +50,8 @@
 #include "Gaffer/CompoundNumericPlug.h"
 #include "Gaffer/StringPlug.h"
 
+#include "GafferImage/OpenImageIOAlgo.h"
+
 #include "GafferOSL/Private/CapturingErrorHandler.h"
 
 using namespace std;
@@ -85,77 +87,6 @@ struct RenderState
 //////////////////////////////////////////////////////////////////////////
 
 /// \todo Share with OSLRenderer
-
-TypeDesc::VECSEMANTICS vecSemanticsFromGeometricInterpretation( GeometricData::Interpretation interpretation )
-{
-	switch( interpretation )
-	{
-		case GeometricData::Point :
-			return TypeDesc::POINT;
-		case GeometricData::Normal :
-			return TypeDesc::NORMAL;
-		case GeometricData::Vector :
-			return TypeDesc::VECTOR;
-		case GeometricData::Color :
-			return TypeDesc::COLOR;
-		default :
-			return TypeDesc::NOXFORM;
-	}
-}
-
-/// \todo Share with OSLRenderer and GafferImage. Perhaps this and the above
-/// should actually be provided by GafferImage?
-
-TypeDesc typeDescFromData( const Data *data, const void *&basePointer )
-{
-	switch( data->typeId() )
-	{
-		// simple data
-
-		case FloatDataTypeId :
-			basePointer = static_cast<const FloatData *>( data )->baseReadable();
-			return TypeDesc::TypeFloat;
-		case IntDataTypeId :
-			basePointer = static_cast<const IntData *>( data )->baseReadable();
-			return TypeDesc::TypeInt;
-		case V3fDataTypeId :
-			basePointer = static_cast<const V3fData *>( data )->baseReadable();
-			return TypeDesc(
-				TypeDesc::FLOAT,
-				TypeDesc::VEC3,
-				vecSemanticsFromGeometricInterpretation( static_cast<const V3fData *>( data )->getInterpretation() )
-			);
-		case Color3fDataTypeId :
-			basePointer = static_cast<const Color3fData *>( data )->baseReadable();
-			return TypeDesc::TypeColor;
-		case StringDataTypeId :
-			basePointer = &(static_cast<const StringData *>( data )->readable() );
-			return TypeDesc::TypeString;
-
-		// vector data
-
-		case FloatVectorDataTypeId :
-			basePointer = static_cast<const FloatVectorData *>( data )->baseReadable();
-			return TypeDesc( TypeDesc::FLOAT, static_cast<const FloatVectorData *>( data )->readable().size() );
-		case IntVectorDataTypeId :
-			basePointer = static_cast<const IntVectorData *>( data )->baseReadable();
-			return TypeDesc( TypeDesc::INT, static_cast<const IntVectorData *>( data )->readable().size() );
-		case V3fVectorDataTypeId :
-			basePointer = static_cast<const V3fVectorData *>( data )->baseReadable();
-			return TypeDesc(
-				TypeDesc::FLOAT,
-				TypeDesc::VEC3,
-				vecSemanticsFromGeometricInterpretation( static_cast<const V3fVectorData *>( data )->getInterpretation() ),
-				static_cast<const V3fVectorData *>( data )->readable().size()
-			);
-		case Color3fVectorDataTypeId :
-			basePointer = static_cast<const Color3fVectorData *>( data )->baseReadable();
-			return TypeDesc( TypeDesc::FLOAT, TypeDesc::VEC3, TypeDesc::COLOR, static_cast<const IntVectorData *>( data )->readable().size() );
-
-		default :
-			return TypeDesc();
-	}
-};
 
 class RendererServices : public OSL::RendererServices
 {
@@ -200,13 +131,12 @@ class RendererServices : public OSL::RendererServices
 				return false;
 			}
 
-			const void *contextValuePointer = NULL;
-			TypeDesc contextType = typeDescFromData( data, contextValuePointer );
-			if( !contextValuePointer )
+			GafferImage::OpenImageIOAlgo::DataView dataView( data );
+			if( !dataView.data )
 			{
 				return false;
 			}
-			return ShadingSystem::convert_value( value, type, contextValuePointer, contextType );
+			return ShadingSystem::convert_value( value, type, dataView.data, dataView.type );
 		}
 
 		virtual bool get_array_attribute( OSL::ShaderGlobals *sg, bool derivatives, ustring object, TypeDesc type, ustring name, int index, void *value )

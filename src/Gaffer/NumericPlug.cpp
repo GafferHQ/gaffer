@@ -168,5 +168,5 @@ void NumericPlug<T>::setFrom( const ValuePlug *other )
 }
 
 // explicit instantiation
-template class NumericPlug<float>;
-template class NumericPlug<int>;
+template class Gaffer::NumericPlug<float>;
+template class Gaffer::NumericPlug<int>;
