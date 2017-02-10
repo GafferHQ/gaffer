@@ -53,6 +53,8 @@
 
 #include "GafferScene/RendererAlgo.h"
 
+#include "GafferImage/OpenImageIOAlgo.h"
+
 #include "GafferOSL/OSLShader.h"
 #include "GafferOSL/ShadingEngine.h"
 
@@ -62,6 +64,7 @@ using namespace IECore;
 using namespace OSL;
 using namespace Gaffer;
 using namespace GafferScene;
+using namespace GafferImage;
 using namespace GafferOSL;
 
 //////////////////////////////////////////////////////////////////////////
@@ -70,23 +73,6 @@ using namespace GafferOSL;
 
 namespace
 {
-
-IECore::GeometricData::Interpretation vecSemanticsToGeometricInterpretation( TypeDesc::VECSEMANTICS vecsemantics )
-{
-	switch( vecsemantics )
-	{
-	case TypeDesc::POINT :
-		return IECore::GeometricData::Point;
-	case TypeDesc::NORMAL :
-		return IECore::GeometricData::Normal;
-	case TypeDesc::VECTOR :
-		return IECore::GeometricData::Vector;
-	case TypeDesc::COLOR :
-		return IECore::GeometricData::Color;
-	default:
-		return IECore::GeometricData::None;
-	}
-}
 
 struct ShadingEngineCacheKey
 {
@@ -460,7 +446,7 @@ Plug *loadCompoundNumericParameter( const OSLQuery::Parameter *parameter, const 
 		}
 	}
 
-	IECore::GeometricData::Interpretation interpretation = vecSemanticsToGeometricInterpretation( (TypeDesc::VECSEMANTICS)parameter->type.vecsemantics );
+	IECore::GeometricData::Interpretation interpretation = OpenImageIOAlgo::geometricInterpretation( (TypeDesc::VECSEMANTICS)parameter->type.vecsemantics );
 
 	// we don't set color because we have a dedicated plug type for that.
 	if( interpretation == GeometricData::Color )

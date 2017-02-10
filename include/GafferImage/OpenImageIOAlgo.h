@@ -48,6 +48,7 @@ namespace OpenImageIOAlgo
 {
 
 OIIO::TypeDesc::VECSEMANTICS vecSemantics( IECore::GeometricData::Interpretation interpretation );
+IECore::GeometricData::Interpretation geometricInterpretation( OIIO::TypeDesc::VECSEMANTICS );
 
 struct DataView
 {
