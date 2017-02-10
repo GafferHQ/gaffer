@@ -191,7 +191,9 @@ class _ParametersFooter( GafferUI.PlugValueWidget ) :
 		labelsAndConstructors = [
 			( "Int", Gaffer.IntPlug ),
 			( "Float", Gaffer.FloatPlug ),
-			( "Vector", Gaffer.V3fPlug ),
+			( "Vector", functools.partial( Gaffer.V3fPlug, interpretation = IECore.GeometricData.Interpretation.Vector ) ),
+			( "Normal", functools.partial( Gaffer.V3fPlug, interpretation = IECore.GeometricData.Interpretation.Normal ) ),
+			( "Point", functools.partial( Gaffer.V3fPlug, interpretation = IECore.GeometricData.Interpretation.Point ) ),
 			( "Color", Gaffer.Color3fPlug ),
 			( "Matrix", Gaffer.M44fPlug ),
 			( "String", Gaffer.StringPlug ),
