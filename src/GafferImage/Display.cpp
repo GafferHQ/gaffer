@@ -520,6 +520,7 @@ void Display::setupServer()
 	catch( const std::exception &e )
 	{
 		m_server = 0;
+		g_serverCache.erase( portPlug()->getValue() );
 		msg( Msg::Error, "Display::setupServer", e.what() );
 	}
 }
