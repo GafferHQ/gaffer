@@ -49,8 +49,11 @@
 #include "Gaffer/StringPlug.h"
 #include "Gaffer/SplinePlug.h"
 #include "Gaffer/Metadata.h"
+#include "Gaffer/PlugAlgo.h"
 
 #include "GafferScene/RendererAlgo.h"
+
+#include "GafferImage/OpenImageIOAlgo.h"
 
 #include "GafferOSL/OSLShader.h"
 #include "GafferOSL/ShadingEngine.h"
@@ -61,6 +64,7 @@ using namespace IECore;
 using namespace OSL;
 using namespace Gaffer;
 using namespace GafferScene;
+using namespace GafferImage;
 using namespace GafferOSL;
 
 //////////////////////////////////////////////////////////////////////////
@@ -237,28 +241,6 @@ bool OSLShader::acceptsInput( const Plug *plug, const Plug *inputPlug ) const
 namespace
 {
 
-void transferConnectionOrValue( Plug *sourcePlug, Plug *destinationPlug )
-{
-	if( !sourcePlug )
-	{
-		return;
-	}
-
-	if( Plug *input = sourcePlug->getInput<Plug>() )
-	{
-		destinationPlug->setInput( input );
-	}
-	else
-	{
-		ValuePlug *sourceValuePlug = runTimeCast<ValuePlug>( sourcePlug );
-		ValuePlug *destinationValuePlug = runTimeCast<ValuePlug>( destinationPlug );
-		if( destinationValuePlug && sourceValuePlug )
-		{
-			destinationValuePlug->setFrom( sourceValuePlug );
-		}
-	}
-}
-
 Plug *loadStringParameter( const OSLQuery::Parameter *parameter, const InternedString &name, Gaffer::Plug *parent )
 {
 	string defaultValue;
@@ -275,9 +257,14 @@ Plug *loadStringParameter( const OSLQuery::Parameter *parameter, const InternedS
 
 	StringPlugPtr plug = new StringPlug( name, parent->direction(), defaultValue, Plug::Default | Plug::Dynamic );
 
-	transferConnectionOrValue( existingPlug, plug.get() );
-
-	parent->setChild( name, plug );
+	if( existingPlug )
+	{
+		PlugAlgo::replacePlug( parent, plug );
+	}
+	else
+	{
+		parent->setChild( name, plug );
+	}
 
 	return plug.get();
 }
@@ -303,9 +290,14 @@ Plug *loadStringArrayParameter( const OSLQuery::Parameter *parameter, const Inte
 
 	StringVectorDataPlugPtr plug = new StringVectorDataPlug( name, parent->direction(), defaultValueData, Plug::Default | Plug::Dynamic );
 
-	transferConnectionOrValue( existingPlug, plug.get() );
-
-	parent->setChild( name, plug );
+	if( existingPlug )
+	{
+		PlugAlgo::replacePlug( parent, plug );
+	}
+	else
+	{
+		parent->setChild( name, plug );
+	}
 
 	return plug.get();
 }
@@ -354,9 +346,14 @@ Plug *loadNumericParameter( const OSLQuery::Parameter *parameter, const Interned
 
 	typename PlugType::Ptr plug = new PlugType( name, parent->direction(), defaultValue, minValue, maxValue, Plug::Default | Plug::Dynamic );
 
-	transferConnectionOrValue( existingPlug, plug.get() );
-
-	parent->setChild( name, plug );
+	if( existingPlug )
+	{
+		PlugAlgo::replacePlug( parent, plug );
+	}
+	else
+	{
+		parent->setChild( name, plug );
+	}
 
 	return plug.get();
 }
@@ -398,9 +395,14 @@ Plug *loadNumericArrayParameter( const OSLQuery::Parameter *parameter, const Int
 
 	typename PlugType::Ptr plug = new PlugType( name, parent->direction(), defaultValueData, Plug::Default | Plug::Dynamic );
 
-	transferConnectionOrValue( existingPlug, plug.get() );
-
-	parent->setChild( name, plug );
+	if( existingPlug )
+	{
+		PlugAlgo::replacePlug( parent, plug );
+	}
+	else
+	{
+		parent->setChild( name, plug );
+	}
 
 	return plug.get();
 }
@@ -444,31 +446,37 @@ Plug *loadCompoundNumericParameter( const OSLQuery::Parameter *parameter, const 
 		}
 	}
 
+	IECore::GeometricData::Interpretation interpretation = OpenImageIOAlgo::geometricInterpretation( (TypeDesc::VECSEMANTICS)parameter->type.vecsemantics );
+
+	// we don't set color because we have a dedicated plug type for that.
+	if( interpretation == GeometricData::Color )
+	{
+		interpretation = GeometricData::None;
+	}
+
 	PlugType *existingPlug = parent->getChild<PlugType>( name );
 	if(
 		existingPlug &&
 		existingPlug->defaultValue() == defaultValue &&
 		existingPlug->minValue() == minValue &&
-		existingPlug->maxValue() == maxValue
+		existingPlug->maxValue() == maxValue &&
+		existingPlug->interpretation() == interpretation
 	)
 	{
 		return existingPlug;
 	}
 
-	typename PlugType::Ptr plug = new PlugType( name, parent->direction(), defaultValue, minValue, maxValue, Plug::Default | Plug::Dynamic );
+	typename PlugType::Ptr plug = new PlugType( name, parent->direction(), defaultValue, minValue, maxValue, Plug::Default | Plug::Dynamic, interpretation );
 
 	if( existingPlug )
 	{
-		for( size_t i = 0, e = existingPlug->children().size(); i < e; ++i )
-		{
-			transferConnectionOrValue(
-				existingPlug->getChild( i ),
-				plug->getChild( i )
-			);
-		}
+		PlugAlgo::replacePlug( parent, plug );
+	}
+	else
+	{
+		parent->setChild( name, plug );
 	}
 
-	parent->setChild( name, plug );
 	return plug.get();
 }
 
@@ -520,10 +528,13 @@ Plug *loadCompoundNumericArrayParameter( const OSLQuery::Parameter *parameter, c
 
 	if( existingPlug )
 	{
-		transferConnectionOrValue( existingPlug, plug.get() );
+		PlugAlgo::replacePlug( parent, plug );
+	}
+	else
+	{
+		parent->setChild( name, plug );
 	}
 
-	parent->setChild( name, plug );
 	return plug.get();
 }
 
@@ -545,9 +556,14 @@ Plug *loadMatrixParameter( const OSLQuery::Parameter *parameter, const InternedS
 
 	M44fPlugPtr plug = new M44fPlug( name, parent->direction(), defaultValue, Plug::Default | Plug::Dynamic );
 
-	transferConnectionOrValue( existingPlug, plug.get() );
-
-	parent->setChild( name, plug );
+	if( existingPlug )
+	{
+		PlugAlgo::replacePlug( parent, plug );
+	}
+	else
+	{
+		parent->setChild( name, plug );
+	}
 
 	return plug.get();
 }
@@ -579,9 +595,14 @@ Plug *loadMatrixArrayParameter( const OSLQuery::Parameter *parameter, const Inte
 
 	M44fVectorDataPlugPtr plug = new M44fVectorDataPlug( name, parent->direction(), defaultValueData, Plug::Default | Plug::Dynamic );
 
-	transferConnectionOrValue( existingPlug, plug.get() );
-
-	parent->setChild( name, plug );
+	if( existingPlug )
+	{
+		PlugAlgo::replacePlug( parent, plug );
+	}
+	else
+	{
+		parent->setChild( name, plug );
+	}
 
 	return plug.get();
 }
@@ -596,9 +617,14 @@ Plug *loadClosureParameter( const OSLQuery::Parameter *parameter, const Interned
 
 	PlugPtr plug = new Plug( name, parent->direction(), Plug::Default | Plug::Dynamic );
 
-	transferConnectionOrValue( existingPlug, plug.get() );
-
-	parent->setChild( name, plug );
+	if( existingPlug )
+	{
+		PlugAlgo::replacePlug( parent, plug );
+	}
+	else
+	{
+		parent->setChild( name, plug );
+	}
 
 	return plug.get();
 }

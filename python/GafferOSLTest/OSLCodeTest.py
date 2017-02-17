@@ -38,6 +38,7 @@ import os
 import subprocess
 import shutil
 import unittest
+import functools
 
 import IECore
 
@@ -56,7 +57,7 @@ class OSLCodeTest( GafferOSLTest.OSLTestCase ) :
 		for i, plugType in enumerate( [
 			Gaffer.IntPlug,
 			Gaffer.FloatPlug,
-			Gaffer.V3fPlug,
+			functools.partial( Gaffer.V3fPlug, interpretation = IECore.GeometricData.Interpretation.Vector ),
 			Gaffer.Color3fPlug,
 			Gaffer.M44fPlug,
 			Gaffer.StringPlug,

@@ -65,6 +65,25 @@ OIIO::TypeDesc::VECSEMANTICS vecSemantics( IECore::GeometricData::Interpretation
 	}
 }
 
+IECore::GeometricData::Interpretation geometricInterpretation( OIIO::TypeDesc::VECSEMANTICS semantics )
+{
+	switch( semantics )
+	{
+		case TypeDesc::NOXFORM :
+			return GeometricData::Numeric;
+		case TypeDesc::COLOR :
+			return GeometricData::Color;
+		case TypeDesc::POINT :
+			return GeometricData::Point;
+		case TypeDesc::VECTOR :
+			return GeometricData::Vector;
+		case TypeDesc::NORMAL :
+			return GeometricData::Normal;
+		default :
+			return GeometricData::Numeric;
+	}
+}
+
 DataView::DataView()
 	:	data( NULL ), m_charPointer( NULL )
 {

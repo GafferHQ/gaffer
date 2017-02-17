@@ -74,6 +74,7 @@ shader version2
 	color typeChanged2 = 2,
 	float typeChanged3 = 3,
 	int typeChanged4 = 4,
+	normal typeChanged5 = normal(0, 0, 0),
 
 	// Parameters added in version 2
 

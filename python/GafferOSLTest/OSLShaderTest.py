@@ -556,6 +556,7 @@ class OSLShaderTest( GafferOSLTest.OSLTestCase ) :
 				"typeChanged2",
 				"typeChanged3",
 				"typeChanged4",
+				"typeChanged5",
 				"defaultChangedArray",
 			]
 		)
@@ -600,6 +601,8 @@ class OSLShaderTest( GafferOSLTest.OSLTestCase ) :
 		self.assertTrue( isinstance( n["parameters"]["typeChanged2"], Gaffer.FloatPlug ) )
 		self.assertTrue( isinstance( n["parameters"]["typeChanged3"], Gaffer.Color3fPlug ) )
 		self.assertTrue( isinstance( n["parameters"]["typeChanged4"], Gaffer.StringPlug ) )
+		self.assertTrue( isinstance( n["parameters"]["typeChanged5"], Gaffer.V3fPlug ) )
+		self.assertTrue( n["parameters"]["typeChanged5"].interpretation(), IECore.GeometricData.Interpretation.Vector)
 
 		n.loadShader( s2, keepExistingValues = True )
 
@@ -616,6 +619,7 @@ class OSLShaderTest( GafferOSLTest.OSLTestCase ) :
 				"typeChanged2",
 				"typeChanged3",
 				"typeChanged4",
+				"typeChanged5",
 				"addedI",
 				"addedF",
 				"addedColor",
@@ -653,6 +657,8 @@ class OSLShaderTest( GafferOSLTest.OSLTestCase ) :
 		self.assertTrue( isinstance( n["parameters"]["typeChanged2"], Gaffer.Color3fPlug ) )
 		self.assertTrue( isinstance( n["parameters"]["typeChanged3"], Gaffer.FloatPlug ) )
 		self.assertTrue( isinstance( n["parameters"]["typeChanged4"], Gaffer.IntPlug ) )
+		self.assertTrue( isinstance( n["parameters"]["typeChanged5"], Gaffer.V3fPlug ) )
+		self.assertEqual( n["parameters"]["typeChanged5"].interpretation(), IECore.GeometricData.Interpretation.Normal)
 
 		n.loadShader( s2, keepExistingValues = False )
 		for plug in n["parameters"] :

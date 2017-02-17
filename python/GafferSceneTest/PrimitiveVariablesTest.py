@@ -68,5 +68,42 @@ class PrimitiveVariablesTest( GafferSceneTest.SceneTestCase ) :
 		del o2["a"]
 		self.assertEqual( o1, o2 )
 
+	def testGeometricInterpretation( self ) :
+
+		s = GafferScene.Sphere()
+		p = GafferScene.PrimitiveVariables()
+		p["in"].setInput( s["out"] )
+
+		p["primitiveVariables"].addMember( "myFirstData", IECore.V3fData( IECore.V3f( 0 ), IECore.GeometricData.Interpretation.Vector ) )
+		p["primitiveVariables"].addMember( "mySecondData", IECore.V3fData( IECore.V3f( 0 ), IECore.GeometricData.Interpretation.Normal ) )
+		p["primitiveVariables"].addMember( "myThirdData", IECore.V3fData( IECore.V3f( 0 ), IECore.GeometricData.Interpretation.Point ) )
+
+		o = p["out"].object( "/sphere" )
+
+		# test if the geometric interpretation makes it into the primitive variable
+		self.assertEqual( o["myFirstData"].data.getInterpretation(), IECore.GeometricData.Interpretation.Vector )
+		self.assertEqual( o["mySecondData"].data.getInterpretation(), IECore.GeometricData.Interpretation.Normal )
+		self.assertEqual( o["myThirdData"].data.getInterpretation(), IECore.GeometricData.Interpretation.Point )
+
+		del o["myFirstData"]
+		del o["mySecondData"]
+		del o["myThirdData"]
+
+		self.assertFalse( 'myFirstData' in o )
+		self.assertFalse( 'mySecondData' in o )
+		self.assertFalse( 'myThirdData' in o )
+
+		p["primitiveVariables"].addMember( "myFirstData", IECore.V3fData( IECore.V3f( 0 ), IECore.GeometricData.Interpretation.Point ) )
+		p["primitiveVariables"].addMember( "mySecondData", IECore.V3fData( IECore.V3f( 0 ), IECore.GeometricData.Interpretation.Vector ) )
+		p["primitiveVariables"].addMember( "myThirdData", IECore.V3fData( IECore.V3f( 0 ), IECore.GeometricData.Interpretation.Normal ) )
+
+		o = p["out"].object( "/sphere" )
+
+		# test if the new geometric interpretation makes it into the primitive variable
+		# this tests the hashing on the respective plugs
+		self.assertEqual( o["myFirstData"].data.getInterpretation(), IECore.GeometricData.Interpretation.Point )
+		self.assertEqual( o["mySecondData"].data.getInterpretation(), IECore.GeometricData.Interpretation.Vector )
+		self.assertEqual( o["myThirdData"].data.getInterpretation(), IECore.GeometricData.Interpretation.Normal )
+
 if __name__ == "__main__":
 	unittest.main()

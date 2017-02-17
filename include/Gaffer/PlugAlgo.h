@@ -1,6 +1,7 @@
 //////////////////////////////////////////////////////////////////////////
 //
-//  Copyright (c) 2017, John Haddon. All rights reserved.
+//  Copyright (c) 2012, John Haddon. All rights reserved.
+//  Copyright (c) 2014, Image Engine Design Inc. All rights reserved.
 //
 //  Redistribution and use in source and binary forms, with or without
 //  modification, are permitted provided that the following conditions are
@@ -34,39 +35,21 @@
 //
 //////////////////////////////////////////////////////////////////////////
 
-#ifndef GAFFERIMAGE_OIIOALGO_H
-#define GAFFERIMAGE_OIIOALGO_H
+#ifndef GAFFER_PLUGALGO_H
+#define GAFFER_PLUGALGO_H
 
-#include "OpenImageIO/typedesc.h"
+#include "Gaffer/Plug.h"
 
-#include "IECore/GeometricTypedData.h"
-
-namespace GafferImage
+namespace Gaffer
 {
 
-namespace OpenImageIOAlgo
+namespace PlugAlgo
 {
 
-OIIO::TypeDesc::VECSEMANTICS vecSemantics( IECore::GeometricData::Interpretation interpretation );
-IECore::GeometricData::Interpretation geometricInterpretation( OIIO::TypeDesc::VECSEMANTICS );
+void replacePlug( GraphComponent *parent, PlugPtr plug );
 
-struct DataView
-{
+} // namespace PlugAlgo
 
-	DataView();
-	DataView( const IECore::Data *data );
+} // namespace Gaffer
 
-	OIIO::TypeDesc type;
-	const void *data;
-
-	private :
-
-		const char *m_charPointer;
-
-};
-
-} // namespace OIIOAlgo
-
-} // namespace GafferImage
-
-#endif // GAFFERIMAGE_OIIOALGO_H
+#endif // GAFFER_PLUGALGO_H

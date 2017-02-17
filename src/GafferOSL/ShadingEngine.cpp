@@ -95,25 +95,6 @@ struct TypeDescFromType<Color3f>
 	}
 };
 
-GeometricData::Interpretation geometricInterpretationFromVecSemantics( TypeDesc::VECSEMANTICS semantics )
-{
-	switch( semantics )
-	{
-		case TypeDesc::NOXFORM :
-			return GeometricData::Numeric;
-		case TypeDesc::COLOR :
-			return GeometricData::Color;
-		case TypeDesc::POINT :
-			return GeometricData::Point;
-		case TypeDesc::VECTOR :
-			return GeometricData::Vector;
-		case TypeDesc::NORMAL :
-			return GeometricData::Normal;
-		default :
-			return GeometricData::Numeric;
-	}
-}
-
 template<typename T>
 typename T::Ptr vectorDataFromTypeDesc( TypeDesc type, void *&basePointer )
 {
@@ -127,7 +108,7 @@ template<typename T>
 typename T::Ptr geometricVectorDataFromTypeDesc( TypeDesc type, void *&basePointer )
 {
 	typename T::Ptr result = vectorDataFromTypeDesc<T>( type, basePointer );
-	result->setInterpretation( geometricInterpretationFromVecSemantics( (TypeDesc::VECSEMANTICS)type.vecsemantics ) );
+	result->setInterpretation( OpenImageIOAlgo::geometricInterpretation( ( (TypeDesc::VECSEMANTICS)type.vecsemantics ) ) );
 	return result;
 }
 

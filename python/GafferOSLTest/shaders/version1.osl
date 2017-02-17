@@ -83,6 +83,7 @@ shader version1
 	float typeChanged2 = 2,
 	color typeChanged3 = 3,
 	string typeChanged4 = "four",
+	vector typeChanged5 = vector(0, 0, 0),
 
 	// Parameters which change defaults in version 2
 	float defaultChangedArray[3] = { 0, 1, 2 },

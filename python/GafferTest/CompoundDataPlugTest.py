@@ -92,6 +92,11 @@ class CompoundDataPlugTest( GafferTest.TestCase ) :
 		self.assertEqual( d, None )
 		self.assertEqual( n, "" )
 
+		# test if creating a plug from data that has a geometric
+		# interpretation specified transfers that interpretation to the plug
+		m4 = p.addOptionalMember( "vector", IECore.V3fData( IECore.V3f( 0 ), IECore.GeometricData.Interpretation.Vector ), plugName = "vector", enabled = True )
+		self.assertEqual( m4["value"].interpretation(), IECore.GeometricData.Interpretation.Vector )
+
 	def testVectorData( self ) :
 
 		p = Gaffer.CompoundDataPlug()
