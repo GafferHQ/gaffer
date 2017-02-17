@@ -72,7 +72,7 @@ struct UVWarp::Engine : public Warp::Engine
 		const size_t i = BufferAlgo::index( outputPixelI, m_tileBound );
 		if( m_a[i] == 0.0f )
 		{
-			return FilterAlgo::black;
+			return black;
 		}
 		else
 		{

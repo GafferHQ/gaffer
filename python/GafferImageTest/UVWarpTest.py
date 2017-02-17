@@ -36,6 +36,7 @@
 
 import os
 import unittest
+import math
 
 import IECore
 
@@ -45,7 +46,6 @@ import GafferImage
 import GafferImageTest
 
 class UVWarpTest( GafferImageTest.ImageTestCase ) :
-
 	def testConstructor( self ) :
 
 		w = GafferImage.UVWarp()
@@ -78,6 +78,7 @@ class UVWarpTest( GafferImageTest.ImageTestCase ) :
 		uvWarp = GafferImage.UVWarp()
 		uvWarp["in"].setInput( reader["out"] )
 		uvWarp["uv"].setInput( constant["out"] )
+		uvWarp["filter"].setValue( "box" )
 
 		# We can then sample the input image at the
 		# same UV position.
@@ -113,6 +114,93 @@ class UVWarpTest( GafferImageTest.ImageTestCase ) :
 		uvWarp["uv"].setInput( offset["out"] )
 
 		GafferImageTest.processTiles( uvWarp["out"] )
+
+	def testWarpImage( self ):
+		def __warpImage( size, distortion ):
+			w = IECore.Box2i( IECore.V2i( 0 ), size - IECore.V2i( 1 ) )
+			image = IECore.ImagePrimitive( w, w )
+
+			R = IECore.FloatVectorData( size.x * size.y )
+			G = IECore.FloatVectorData( size.x * size.y )
+
+			for iy in range( size.y ):
+				for ix in range( size.x ):
+					x = (ix + 0.5) / size.x 
+					y = 1 - (iy + 0.5) / size.y
+					R[ iy * size.x + ix ] = x + distortion * math.sin( y * 8 )
+					G[ iy * size.x + ix ] = y + distortion * math.sin( x * 8 )
+
+			image["R"] = IECore.PrimitiveVariable( IECore.PrimitiveVariable.Interpolation.Vertex, R )
+			image["G"] = IECore.PrimitiveVariable( IECore.PrimitiveVariable.Interpolation.Vertex, G )
+
+			return image
+
+		def __dotGrid( size ):
+			w = IECore.Box2i( IECore.V2i( 0 ), size - IECore.V2i( 1 ) )
+			image = IECore.ImagePrimitive( w, w )
+
+			R = IECore.FloatVectorData( size.x * size.y )
+			G = IECore.FloatVectorData( size.x * size.y )
+			B = IECore.FloatVectorData( size.x * size.y )
+
+			for iy in range( 0, size.y ):
+				for ix in range( 0, size.x ):
+					q = max( ix % 16, iy % 16 )
+					
+					R[ iy * size.x + ix ] = q < 1
+					G[ iy * size.x + ix ] = q < 4
+					B[ iy * size.x + ix ] = q < 8
+
+			image["R"] = IECore.PrimitiveVariable( IECore.PrimitiveVariable.Interpolation.Vertex, R )
+			image["G"] = IECore.PrimitiveVariable( IECore.PrimitiveVariable.Interpolation.Vertex, G )
+			image["B"] = IECore.PrimitiveVariable( IECore.PrimitiveVariable.Interpolation.Vertex, B )
+
+			return image
+
+
+		objectToImageSource = GafferImage.ObjectToImage()
+		objectToImageSource["object"].setValue( __dotGrid( IECore.V2i( 300 ) ) )
+
+		# TODO - reorder channels of our source image because ObjectToImage outputs in opposite order to
+		# the rest of Gaffer.  This probably should be fixed in ObjectToImage,
+		# or we shouldn't depend on channel order to check if images are equal?
+		sourceReorderConstant = GafferImage.Constant()
+		sourceReorderConstant["format"].setValue( GafferImage.Format( 300, 300, 1.000 ) )
+		sourceReorderDelete = GafferImage.DeleteChannels()
+		sourceReorderDelete["channels"].setValue( IECore.StringVectorData( [ "A" ] ) )
+		sourceReorderDelete["in"].setInput( sourceReorderConstant["out"] )
+		sourceReorder = GafferImage.CopyChannels()
+		sourceReorder["channels"].setValue( "R G B" )
+		sourceReorder["in"]["in0"].setInput( sourceReorderDelete["out"] )
+		sourceReorder["in"]["in1"].setInput( objectToImageSource["out"] )
+
+		objectToImageVector = GafferImage.ObjectToImage()
+
+		uvWarp = GafferImage.UVWarp()
+		uvWarp["in"].setInput( sourceReorder["out"] )
+		uvWarp["uv"].setInput( objectToImageVector["out"] )
+
+		# Test that a warp with no distortion and a box filter reproduces the input
+		objectToImageVector["object"].setValue( __warpImage( IECore.V2i( 300 ), 0 ) )
+		uvWarp["filter"].setValue( "box" )
+		self.assertImagesEqual( uvWarp["out"], sourceReorder["out"], maxDifference = 0.00001 )
+
+		# Test that a warp with distortion produces an expected output
+		objectToImageVector["object"].setValue( __warpImage( IECore.V2i( 300 ), 0.2 ) )
+		uvWarp["filter"].setValue( "blackman-harris" )
+
+		# Enable to write out images for visual comparison
+		if False:
+			testWriter = GafferImage.ImageWriter()
+			testWriter["in"].setInput( uvWarp["out"] )
+			testWriter["fileName"].setValue( "/tmp/dotGrid.warped.exr" )
+			testWriter["task"].execute()
+
+		expectedReader = GafferImage.ImageReader()
+		expectedReader["fileName"].setValue( os.path.dirname( __file__ ) + "/images/dotGrid.warped.exr" )
+
+		self.assertImagesEqual( uvWarp["out"], expectedReader["out"], maxDifference = 0.0005, ignoreMetadata = True )
+		
 
 if __name__ == "__main__":
 	unittest.main()
