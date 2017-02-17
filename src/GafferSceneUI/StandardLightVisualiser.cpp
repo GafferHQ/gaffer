@@ -197,7 +197,7 @@ void addCircle( const V3f &center, float radius, vector<int> &vertsPerCurve, vec
 void addSolidArc( int axis, const V3f &center, float majorRadius, float minorRadius, float startFraction, float stopFraction, vector<int> &vertsPerPoly, vector<int> &vertIds, vector<V3f> &p )
 {
 	const int numSegmentsForCircle = 100;
-	int numSegments = (int)ceil( (stopFraction - startFraction) * numSegmentsForCircle );
+	int numSegments = max( 1, (int)ceil( (stopFraction - startFraction) * numSegmentsForCircle ) );
 
 	int start = p.size();
 	for( int i = 0; i < numSegments + 1; ++i )
