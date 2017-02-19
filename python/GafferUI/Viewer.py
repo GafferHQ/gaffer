@@ -290,9 +290,9 @@ class _ToolChooser( GafferUI.Frame ) :
 	def setTool( self, tool ) :
 
 		if self.__view is None :
-			raise ValueError
+			assert( tool is None )
 
-		if tool not in self.__viewEntries[self.__view].tools :
+		if tool is not None and tool not in self.__viewEntries[self.__view].tools :
 			raise ValueError
 
 		for i, t in enumerate( self.__viewEntries[self.__view].tools ) :
@@ -356,6 +356,8 @@ class _ToolChooser( GafferUI.Frame ) :
 			self.toolChangedSignal()( self )
 		elif len( self.tools() ) :
 			self.setTool( self.tools()[0] )
+		else :
+			self.setTool( None )
 
 	def getView( self ) :
 
