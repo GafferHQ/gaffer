@@ -171,10 +171,13 @@ TranslateTool::Translation TranslateTool::createTranslation( const Imath::V3f &d
 		upstreamMatrix = selection.upstreamScene->fullTransform( selection.upstreamPath );
 	}
 
-	const V3f downstreamDirection = worldSpaceDirection * downstreamMatrix.inverse();
-	const V3f upstreamWorldDirection = downstreamDirection * upstreamMatrix;
+	V3f downstreamDirection;
+	downstreamMatrix.inverse().multDirMatrix( worldSpaceDirection, downstreamDirection );
 
-	result.direction = upstreamWorldDirection * selection.transformSpace.inverse();
+	V3f upstreamWorldDirection;
+	upstreamMatrix.multDirMatrix( downstreamDirection, upstreamWorldDirection );
+
+	selection.transformSpace.inverse().multDirMatrix( upstreamWorldDirection, result.direction );
 
 	return result;
 }

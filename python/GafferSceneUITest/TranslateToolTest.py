@@ -181,6 +181,31 @@ class TranslateToolTest( GafferUITest.TestCase ) :
 			)
 		)
 
+	def testInteractionWithGroupTranslation( self ) :
+
+		script = Gaffer.ScriptNode()
+
+		script["plane"] = GafferScene.Plane()
+		script["group"] = GafferScene.Group()
+		script["group"]["in"][0].setInput( script["plane"]["out"] )
+		script["group"]["transform"]["translate"].setValue( IECore.V3f( 1, 2, 3 ) )
+
+		view = GafferSceneUI.SceneView()
+		view["in"].setInput( script["group"]["out"] )
+		view.getContext()["ui:scene:selectedPaths"] = IECore.StringVectorData( [ "/group/plane" ] )
+
+		tool = GafferSceneUI.TranslateTool( view )
+		tool["active"].setValue( True )
+
+		tool.translate( IECore.V3f( -1, 0, 0 ) )
+
+		self.assertTrue(
+			IECore.V3f( 0, 2, 3 ).equalWithAbsError(
+				script["group"]["out"].fullTransform( "/group/plane" ).translation(),
+				0.0000001
+			)
+		)
+
 	def testOrientation( self ) :
 
 		script = Gaffer.ScriptNode()
