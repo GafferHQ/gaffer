@@ -340,6 +340,10 @@ class _ToolChooser( GafferUI.Frame ) :
 					if description :
 						toolTip += "\n\n" + IECore.StringUtil.wrap( description, 80 )
 
+					shortCut = Gaffer.Metadata.value( tool, "viewer:shortCut" )
+					if shortCut is not None :
+						toolTip += "\n\nShortcut : " + shortCut
+
 					widget = GafferUI.BoolWidget( image = image, toolTip = toolTip, displayMode = GafferUI.BoolWidget.DisplayMode.Tool )
 					widget.__stateChangedConnection = widget.stateChangedSignal().connect(
 						functools.partial( Gaffer.WeakMethod( self.__stateChanged ), tool = tool )
