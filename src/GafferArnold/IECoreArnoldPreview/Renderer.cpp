@@ -51,6 +51,7 @@
 #include "boost/algorithm/string/join.hpp"
 #include "boost/container/flat_map.hpp"
 #include "boost/filesystem/operations.hpp"
+#include "boost/bind.hpp"
 
 #include "IECore/MessageHandler.h"
 #include "IECore/Camera.h"
@@ -1423,6 +1424,90 @@ class ArnoldLight : public ArnoldObject
 namespace
 {
 
+class InteractiveRenderController
+{
+
+	public :
+
+		InteractiveRenderController()
+		{
+			m_rendering = false;
+		}
+
+		void setRendering( bool rendering )
+		{
+			if( rendering == m_rendering )
+			{
+				return;
+			}
+
+			m_rendering = rendering;
+
+			if( rendering )
+			{
+				std::thread thread( boost::bind( &InteractiveRenderController::performInteractiveRender, this ) );
+				m_thread.swap( thread );
+			}
+			else
+			{
+				if( AiRendering() )
+				{
+					AiRenderInterrupt();
+				}
+				m_thread.join();
+			}
+		}
+
+		bool getRendering() const
+		{
+			return m_rendering;
+		}
+
+	private :
+
+		// Called in a background thread to control a
+		// progressive interactive render.
+		void performInteractiveRender()
+		{
+			AtNode *options = AiUniverseGetOptions();
+			const int finalAASamples = AiNodeGetInt( options, "AA_samples" );
+			const int startAASamples = min( -5, finalAASamples );
+
+			for( int aaSamples = startAASamples; aaSamples <= finalAASamples; ++aaSamples )
+			{
+				if( aaSamples == 0 || ( aaSamples > 1 && aaSamples != finalAASamples ) )
+				{
+					// 0 AA_samples is meaningless, and we want to jump straight
+					// from 1 AA_sample to the final sampling quality.
+					continue;
+				}
+
+				AiNodeSetInt( options, "AA_samples", aaSamples );
+				if( !m_rendering || AiRender( AI_RENDER_MODE_CAMERA ) != AI_SUCCESS )
+				{
+					// Render cancelled on main thread.
+					break;
+				}
+			}
+
+			// Restore the setting we've been monkeying with.
+			AiNodeSetInt( options, "AA_samples", finalAASamples );
+		}
+
+		std::thread m_thread;
+		tbb::atomic<bool> m_rendering;
+
+};
+
+} // namespace
+
+//////////////////////////////////////////////////////////////////////////
+// ArnoldRenderer
+//////////////////////////////////////////////////////////////////////////
+
+namespace
+{
+
 /// \todo Should these be defined in the Renderer base class?
 /// Or maybe be in a utility header somewhere?
 IECore::InternedString g_frameOptionName( "frame" );
@@ -1749,22 +1834,14 @@ class ArnoldRenderer : public IECoreScenePreview::Renderer
 					AiASSWrite( m_assFileName.c_str(), AI_NODE_ALL );
 					break;
 				case Interactive :
-					std::thread thread( performInteractiveRender );
-					m_interactiveRenderThread.swap( thread );
+					m_interactiveRenderController.setRendering( true );
 					break;
 			}
 		}
 
 		virtual void pause()
 		{
-			if( AiRendering() )
-			{
-				AiRenderInterrupt();
-			}
-			if( m_interactiveRenderThread.joinable() )
-			{
-				m_interactiveRenderThread.join();
-			}
+			m_interactiveRenderController.setRendering( false );
 		}
 
 	private :
@@ -1963,35 +2040,6 @@ class ArnoldRenderer : public IECoreScenePreview::Renderer
 			}
 		}
 
-		// Called in a background thread to control a
-		// progressive interactive render.
-		static void performInteractiveRender()
-		{
-			AtNode *options = AiUniverseGetOptions();
-			const int finalAASamples = AiNodeGetInt( options, "AA_samples" );
-			const int startAASamples = min( -5, finalAASamples );
-
-			for( int aaSamples = startAASamples; aaSamples <= finalAASamples; ++aaSamples )
-			{
-				if( aaSamples == 0 || ( aaSamples > 1 && aaSamples != finalAASamples ) )
-				{
-					// 0 AA_samples is meaningless, and we want to jump straight
-					// from 1 AA_sample to the final sampling quality.
-					continue;
-				}
-
-				AiNodeSetInt( options, "AA_samples", aaSamples );
-				if( AiRender( AI_RENDER_MODE_CAMERA ) != AI_SUCCESS )
-				{
-					// Render cancelled on main thread.
-					break;
-				}
-			}
-
-			// Restore the setting we've been monkeying with.
-			AiNodeSetInt( options, "AA_samples", finalAASamples );
-		}
-
 		// Members used by all render types.
 
 		RenderType m_renderType;
@@ -2021,7 +2069,7 @@ class ArnoldRenderer : public IECoreScenePreview::Renderer
 
 		// Members used by interactive renders
 
-		std::thread m_interactiveRenderThread;
+		InteractiveRenderController m_interactiveRenderController;
 
 		// Members used by ass generation "renders"
 
