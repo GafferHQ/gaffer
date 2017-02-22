@@ -61,7 +61,7 @@ class WeakMethod( object ) :
 			if "fallbackResult" in self.__kw :
 				return self.__kw["fallbackResult"]
 			else :
-				raise ReferenceError( "Instance referenced by WeakMethod %s() no longer exists" % self.__method.__name__ )
+				raise ReferenceError( "Instance referenced by WeakMethod %s.%s() no longer exists" % ( self.__method.__module__, self.__method.__name__ ) )
 
 		m = new.instancemethod( self.__method, s, s.__class__ )
 		return m( *args, **kwArgs )
