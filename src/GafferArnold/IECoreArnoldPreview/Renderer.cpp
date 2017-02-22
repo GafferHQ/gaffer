@@ -51,6 +51,7 @@
 #include "boost/algorithm/string/join.hpp"
 #include "boost/container/flat_map.hpp"
 #include "boost/filesystem/operations.hpp"
+#include "boost/bind.hpp"
 
 #include "IECore/MessageHandler.h"
 #include "IECore/Camera.h"
@@ -141,51 +142,51 @@ AtNode *convertToBox( const std::vector<const IECore::Object *> &samples, const 
 
 std::string formatHeaderParameter( const std::string name, const IECore::Data *data )
 {
-		if( const IECore::BoolData *boolData = IECore::runTimeCast<const IECore::BoolData>( data ) )
-		{
-			return boost::str( boost::format( "int '%s' %i" ) % name % int(boolData->readable()) );
-		}
-		else if( const IECore::FloatData *floatData = IECore::runTimeCast<const IECore::FloatData>( data ) )
-		{
-			return boost::str( boost::format( "float '%s' %f" ) % name % floatData->readable() );
-		}
-		else if( const IECore::IntData *intData = IECore::runTimeCast<const IECore::IntData>( data ) )
-		{
-			return boost::str( boost::format( "int '%s' %i" ) % name % intData->readable() );
-		}
-		else if( const IECore::StringData *stringData = IECore::runTimeCast<const IECore::StringData>( data ) )
-		{
-			return boost::str( boost::format( "string '%s' %s" ) % name % stringData->readable() );
-		}
-		else if( const IECore::V2iData *v2iData = IECore::runTimeCast<const IECore::V2iData>( data ) )
-		{
-			return boost::str( boost::format( "string '%s' %s" ) % name % v2iData->readable() );
-		}
-		else if( const IECore::V3iData *v3iData = IECore::runTimeCast<const IECore::V3iData>( data ) )
-		{
-			return boost::str( boost::format( "string '%s' %s" ) % name % v3iData->readable() );
-		}
-		else if( const IECore::V2fData *v2fData = IECore::runTimeCast<const IECore::V2fData>( data ) )
-		{
-			return boost::str( boost::format( "string '%s' %s" ) % name % v2fData->readable() );
-		}
-		else if( const IECore::V3fData *v3fData = IECore::runTimeCast<const IECore::V3fData>( data ) )
-		{
-			return boost::str( boost::format( "string '%s' %s" ) % name % v3fData->readable() );
-		}
-		else if( const IECore::Color3fData *c3fData = IECore::runTimeCast<const IECore::Color3fData>( data ) )
-		{
-			return boost::str( boost::format( "string '%s' %s" ) % name % c3fData->readable() );
-		}
-		else if( const IECore::Color4fData *c4fData = IECore::runTimeCast<const IECore::Color4fData>( data ) )
-		{
-			return boost::str( boost::format( "string '%s' %s" ) % name % c4fData->readable() );
-		}
-		else
-		{
-			IECore::msg( IECore::Msg::Warning, "IECoreArnold::Renderer", boost::format( "Cannot convert data \"%s\" of type \"%s\"." ) % name % data->typeName() );
-			return "";
-		}
+	if( const IECore::BoolData *boolData = IECore::runTimeCast<const IECore::BoolData>( data ) )
+	{
+		return boost::str( boost::format( "int '%s' %i" ) % name % int(boolData->readable()) );
+	}
+	else if( const IECore::FloatData *floatData = IECore::runTimeCast<const IECore::FloatData>( data ) )
+	{
+		return boost::str( boost::format( "float '%s' %f" ) % name % floatData->readable() );
+	}
+	else if( const IECore::IntData *intData = IECore::runTimeCast<const IECore::IntData>( data ) )
+	{
+		return boost::str( boost::format( "int '%s' %i" ) % name % intData->readable() );
+	}
+	else if( const IECore::StringData *stringData = IECore::runTimeCast<const IECore::StringData>( data ) )
+	{
+		return boost::str( boost::format( "string '%s' %s" ) % name % stringData->readable() );
+	}
+	else if( const IECore::V2iData *v2iData = IECore::runTimeCast<const IECore::V2iData>( data ) )
+	{
+		return boost::str( boost::format( "string '%s' %s" ) % name % v2iData->readable() );
+	}
+	else if( const IECore::V3iData *v3iData = IECore::runTimeCast<const IECore::V3iData>( data ) )
+	{
+		return boost::str( boost::format( "string '%s' %s" ) % name % v3iData->readable() );
+	}
+	else if( const IECore::V2fData *v2fData = IECore::runTimeCast<const IECore::V2fData>( data ) )
+	{
+		return boost::str( boost::format( "string '%s' %s" ) % name % v2fData->readable() );
+	}
+	else if( const IECore::V3fData *v3fData = IECore::runTimeCast<const IECore::V3fData>( data ) )
+	{
+		return boost::str( boost::format( "string '%s' %s" ) % name % v3fData->readable() );
+	}
+	else if( const IECore::Color3fData *c3fData = IECore::runTimeCast<const IECore::Color3fData>( data ) )
+	{
+		return boost::str( boost::format( "string '%s' %s" ) % name % c3fData->readable() );
+	}
+	else if( const IECore::Color4fData *c4fData = IECore::runTimeCast<const IECore::Color4fData>( data ) )
+	{
+		return boost::str( boost::format( "string '%s' %s" ) % name % c4fData->readable() );
+	}
+	else
+	{
+		IECore::msg( IECore::Msg::Warning, "IECoreArnold::Renderer", boost::format( "Cannot convert data \"%s\" of type \"%s\"." ) % name % data->typeName() );
+		return "";
+	}
 }
 
 } // namespace
@@ -1423,6 +1424,90 @@ class ArnoldLight : public ArnoldObject
 namespace
 {
 
+class InteractiveRenderController
+{
+
+	public :
+
+		InteractiveRenderController()
+		{
+			m_rendering = false;
+		}
+
+		void setRendering( bool rendering )
+		{
+			if( rendering == m_rendering )
+			{
+				return;
+			}
+
+			m_rendering = rendering;
+
+			if( rendering )
+			{
+				std::thread thread( boost::bind( &InteractiveRenderController::performInteractiveRender, this ) );
+				m_thread.swap( thread );
+			}
+			else
+			{
+				if( AiRendering() )
+				{
+					AiRenderInterrupt();
+				}
+				m_thread.join();
+			}
+		}
+
+		bool getRendering() const
+		{
+			return m_rendering;
+		}
+
+	private :
+
+		// Called in a background thread to control a
+		// progressive interactive render.
+		void performInteractiveRender()
+		{
+			AtNode *options = AiUniverseGetOptions();
+			const int finalAASamples = AiNodeGetInt( options, "AA_samples" );
+			const int startAASamples = min( -5, finalAASamples );
+
+			for( int aaSamples = startAASamples; aaSamples <= finalAASamples; ++aaSamples )
+			{
+				if( aaSamples == 0 || ( aaSamples > 1 && aaSamples != finalAASamples ) )
+				{
+					// 0 AA_samples is meaningless, and we want to jump straight
+					// from 1 AA_sample to the final sampling quality.
+					continue;
+				}
+
+				AiNodeSetInt( options, "AA_samples", aaSamples );
+				if( !m_rendering || AiRender( AI_RENDER_MODE_CAMERA ) != AI_SUCCESS )
+				{
+					// Render cancelled on main thread.
+					break;
+				}
+			}
+
+			// Restore the setting we've been monkeying with.
+			AiNodeSetInt( options, "AA_samples", finalAASamples );
+		}
+
+		std::thread m_thread;
+		tbb::atomic<bool> m_rendering;
+
+};
+
+} // namespace
+
+//////////////////////////////////////////////////////////////////////////
+// ArnoldRenderer
+//////////////////////////////////////////////////////////////////////////
+
+namespace
+{
+
 /// \todo Should these be defined in the Renderer base class?
 /// Or maybe be in a utility header somewhere?
 IECore::InternedString g_frameOptionName( "frame" );
@@ -1749,22 +1834,14 @@ class ArnoldRenderer : public IECoreScenePreview::Renderer
 					AiASSWrite( m_assFileName.c_str(), AI_NODE_ALL );
 					break;
 				case Interactive :
-					std::thread thread( performInteractiveRender );
-					m_interactiveRenderThread.swap( thread );
+					m_interactiveRenderController.setRendering( true );
 					break;
 			}
 		}
 
 		virtual void pause()
 		{
-			if( AiRendering() )
-			{
-				AiRenderInterrupt();
-			}
-			if( m_interactiveRenderThread.joinable() )
-			{
-				m_interactiveRenderThread.join();
-			}
+			m_interactiveRenderController.setRendering( false );
 		}
 
 	private :
@@ -1963,35 +2040,6 @@ class ArnoldRenderer : public IECoreScenePreview::Renderer
 			}
 		}
 
-		// Called in a background thread to control a
-		// progressive interactive render.
-		static void performInteractiveRender()
-		{
-			AtNode *options = AiUniverseGetOptions();
-			const int finalAASamples = AiNodeGetInt( options, "AA_samples" );
-			const int startAASamples = min( -5, finalAASamples );
-
-			for( int aaSamples = startAASamples; aaSamples <= finalAASamples; ++aaSamples )
-			{
-				if( aaSamples == 0 || ( aaSamples > 1 && aaSamples != finalAASamples ) )
-				{
-					// 0 AA_samples is meaningless, and we want to jump straight
-					// from 1 AA_sample to the final sampling quality.
-					continue;
-				}
-
-				AiNodeSetInt( options, "AA_samples", aaSamples );
-				if( AiRender( AI_RENDER_MODE_CAMERA ) != AI_SUCCESS )
-				{
-					// Render cancelled on main thread.
-					break;
-				}
-			}
-
-			// Restore the setting we've been monkeying with.
-			AiNodeSetInt( options, "AA_samples", finalAASamples );
-		}
-
 		// Members used by all render types.
 
 		RenderType m_renderType;
@@ -2021,7 +2069,7 @@ class ArnoldRenderer : public IECoreScenePreview::Renderer
 
 		// Members used by interactive renders
 
-		std::thread m_interactiveRenderThread;
+		InteractiveRenderController m_interactiveRenderController;
 
 		// Members used by ass generation "renders"
 
