@@ -90,6 +90,8 @@ class OpenColorIOTransform : public ColorProcessor
 		/// Transform which can be used by an OpenColorIO Processor or a null
 		/// pointer if no processing should take place.
 		virtual OpenColorIO::ConstTransformRcPtr transform() const = 0;
+		/// Context which can be used by an OpenColorIO Processor
+ 		virtual OpenColorIO::ConstContextRcPtr getLocalContext(OpenColorIO::ConstConfigRcPtr config) const;
 
 };
 

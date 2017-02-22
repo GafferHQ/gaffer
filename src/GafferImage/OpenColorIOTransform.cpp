@@ -108,6 +108,13 @@ void OpenColorIOTransform::hashColorData( const Gaffer::Context *context, IECore
 	hashTransform( context, h );
 }
 
+OpenColorIO::ConstContextRcPtr OpenColorIOTransform::getLocalContext(OpenColorIO::ConstConfigRcPtr config) const
+{
+
+	OpenColorIO::ConstContextRcPtr context = config->getCurrentContext();
+	return context;
+}
+
 void OpenColorIOTransform::processColorData( const Gaffer::Context *context, IECore::FloatVectorData *r, IECore::FloatVectorData *g, IECore::FloatVectorData *b ) const
 {
 	OpenColorIO::ConstTransformRcPtr colorTransform = transform();
@@ -120,7 +127,8 @@ void OpenColorIOTransform::processColorData( const Gaffer::Context *context, IEC
 	{
 		OCIOMutex::scoped_lock lock( g_ocioMutex );
 		OpenColorIO::ConstConfigRcPtr config = OpenColorIO::GetCurrentConfig();
-		processor = config->getProcessor( colorTransform );
+		OpenColorIO::ConstContextRcPtr context = getLocalContext(config);
+		processor = config->getProcessor( context, colorTransform, OpenColorIO::TRANSFORM_DIR_FORWARD );
 	}
 
 	OpenColorIO::PlanarImageDesc image(

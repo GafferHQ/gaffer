@@ -54,6 +54,8 @@ DisplayTransform::DisplayTransform( const std::string &name )
 	addChild( new StringPlug( "inputColorSpace" ) );
 	addChild( new StringPlug( "display" ) );
 	addChild( new StringPlug( "view" ) );
+	addChild( new StringPlug( "contextName" ) );
+	addChild( new StringPlug( "contextValue" ) );
 }
 
 DisplayTransform::~DisplayTransform()
@@ -89,10 +91,28 @@ const Gaffer::StringPlug *DisplayTransform::viewPlug() const
 {
 	return getChild<StringPlug>( g_firstPlugIndex + 2 );
 }
+Gaffer::StringPlug *DisplayTransform::contextNamePlug()
+{
+	return getChild<StringPlug>( g_firstPlugIndex + 3 );
+}
+
+const Gaffer::StringPlug *DisplayTransform::contextNamePlug() const
+{
+	return getChild<StringPlug>( g_firstPlugIndex + 3 );
+}
+Gaffer::StringPlug *DisplayTransform::contextValuePlug()
+{
+	return getChild<StringPlug>( g_firstPlugIndex + 4 );
+}
+
+const Gaffer::StringPlug *DisplayTransform::contextValuePlug() const
+{
+	return getChild<StringPlug>( g_firstPlugIndex + 4 );
+}
 
 bool DisplayTransform::affectsTransform( const Gaffer::Plug *input ) const
 {
-	return ( input == inputColorSpacePlug() || input == displayPlug() || input == viewPlug() );
+	return ( input == inputColorSpacePlug() || input == displayPlug() || input == viewPlug()  || input == contextNamePlug() || input == contextValuePlug() );
 }
 
 void DisplayTransform::hashTransform( const Gaffer::Context *context, IECore::MurmurHash &h ) const
@@ -100,6 +120,8 @@ void DisplayTransform::hashTransform( const Gaffer::Context *context, IECore::Mu
 	std::string colorSpace = inputColorSpacePlug()->getValue();
 	std::string display = displayPlug()->getValue();
 	std::string view = viewPlug()->getValue();
+	std::string contextName = contextNamePlug()->getValue();
+	std::string contextValue = contextValuePlug()->getValue();
 
 	if( colorSpace.empty() || display.empty() || view.empty() )
 	{
@@ -110,7 +132,27 @@ void DisplayTransform::hashTransform( const Gaffer::Context *context, IECore::Mu
 	h.append( colorSpace );
 	h.append( display );
 	h.append( view );
+	h.append( contextName );
+	h.append( contextValue );
 }
+
+OpenColorIO::ConstContextRcPtr DisplayTransform::getLocalContext(OpenColorIO::ConstConfigRcPtr config) const
+{
+
+	OpenColorIO::ConstContextRcPtr context = config->getCurrentContext();
+	OpenColorIO::ContextRcPtr mutableContext;
+	std::string contextName = contextNamePlug()->getValue();
+	std::string contextValue = contextValuePlug()->getValue();
+
+	if(!contextName.empty() && !contextValue.empty())
+	{
+		if(!mutableContext) mutableContext = context->createEditableCopy();
+		mutableContext->setStringVar(contextName.c_str(), contextValue.c_str());
+	}
+	if(mutableContext) context = mutableContext;
+	return context;
+}
+
 
 OpenColorIO::ConstTransformRcPtr DisplayTransform::transform() const
 {
