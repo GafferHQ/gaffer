@@ -75,8 +75,6 @@ class SceneReaderPathPreview( GafferUI.PathPreviewWidget ) :
 		column.append( self.__viewer )
 		column.append( GafferUI.Timeline( self.__script ) )
 
-		self.__script.selection().add( self.__script["camera"] )
-
 		self._updateFromPath()
 
 	def isValid( self ) :
@@ -111,6 +109,7 @@ class SceneReaderPathPreview( GafferUI.PathPreviewWidget ) :
 		self.__script["ObjectPreview"]["fileName"].setValue( "" )
 
 		if not self.isValid() :
+			self.__script.selection().clear()
 			return
 
 		path = self.getPath()
@@ -173,6 +172,7 @@ class SceneReaderPathPreview( GafferUI.PathPreviewWidget ) :
 			GafferUI.Playback.acquire( self.__script.context() ).setFrameRange( startFrame, endFrame )
 
 		# focus the viewer
+		self.__script.selection().add( self.__script["camera"] )
 		with self.__script.context() :
 			self.__viewer.viewGadgetWidget().getViewportGadget().frame( self.__script["OpenGLAttributes"]["out"].bound( "/" ) )
 
