@@ -123,7 +123,7 @@ class Gadget : public Gaffer::GraphComponent
 		bool getVisible() const;
 		/// Returns true if this Gadget and all its parents up to the specified
 		/// ancestor are visible.
-		bool visible( Gadget *relativeTo = NULL );
+		bool visible( Gadget *relativeTo = NULL ) const;
 		typedef boost::signal<void ( Gadget * )> VisibilityChangedSignal;
 		/// Emitted when the result of `Gadget::visible()` changes.
 		VisibilityChangedSignal &visibilityChangedSignal();

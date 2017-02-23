@@ -163,9 +163,9 @@ bool Gadget::getVisible() const
 	return m_visible;
 }
 
-bool Gadget::visible( Gadget *relativeTo )
+bool Gadget::visible( Gadget *relativeTo ) const
 {
-	Gadget *g = this;
+	const Gadget *g = this;
 	while( g && g != relativeTo )
 	{
 		if( !g->getVisible() )
