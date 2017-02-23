@@ -116,6 +116,12 @@ void TranslateTool::updateHandles()
 {
 	handles()->setTransform( handlesTransform() );
 
+	// Because we provide multiple orientations, the handles
+	// may well not be aligned with the axes of the transform
+	// space. So any given handle might affect several components
+	// of the target translation. For each handle, check to see
+	// if each of the plugs it effects are settable, and if not,
+	// disable the handle.
 	for( int i = 0; i < 3; ++i )
 	{
 		V3f handleDirection( 0 );
