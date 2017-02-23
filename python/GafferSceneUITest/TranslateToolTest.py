@@ -199,11 +199,9 @@ class TranslateToolTest( GafferUITest.TestCase ) :
 
 		tool.translate( IECore.V3f( -1, 0, 0 ) )
 
-		self.assertTrue(
-			IECore.V3f( 0, 2, 3 ).equalWithAbsError(
-				script["group"]["out"].fullTransform( "/group/plane" ).translation(),
-				0.0000001
-			)
+		self.assertEqual(
+			script["group"]["out"].fullTransform( "/group/plane" ).translation(),
+			IECore.V3f( 0, 2, 3 ),
 		)
 
 	def testOrientation( self ) :
