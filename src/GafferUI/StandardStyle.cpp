@@ -231,6 +231,20 @@ IECoreGL::GroupPtr scaleHandle( int axis )
 	return group;
 }
 
+IECoreGL::StatePtr disabledState()
+{
+	static IECoreGL::StatePtr s;
+	if( s )
+	{
+		return s;
+	}
+
+	s = new IECoreGL::State( /* complete = */ false );
+	s->add( new IECoreGL::Color( Color4f( 0.4, 0.4, 0.4, 1.0 ) ), /* override = */ true );
+
+	return s;
+}
+
 } // namespace
 
 //////////////////////////////////////////////////////////////////////////
@@ -582,6 +596,7 @@ void StandardStyle::renderTranslateHandle( int axis, State state ) const
 	IECoreGL::State::bindBaseState();
 	IECoreGL::State *glState = const_cast<IECoreGL::State *>( IECoreGL::State::defaultState() );
 	IECoreGL::State::ScopedBinding highlight( *m_highlightState, *glState, state == HighlightedState );
+	IECoreGL::State::ScopedBinding disabled( *disabledState(), *glState, state == DisabledState );
 	translateHandle( axis )->render( glState );
 }
 
@@ -595,6 +610,7 @@ void StandardStyle::renderScaleHandle( int axis, State state ) const
 	IECoreGL::State::bindBaseState();
 	IECoreGL::State *glState = const_cast<IECoreGL::State *>( IECoreGL::State::defaultState() );
 	IECoreGL::State::ScopedBinding highlight( *m_highlightState, *glState, state == HighlightedState );
+	IECoreGL::State::ScopedBinding disabled( *disabledState(), *glState, state == DisabledState );
 	scaleHandle( axis )->render( glState );
 }
 
