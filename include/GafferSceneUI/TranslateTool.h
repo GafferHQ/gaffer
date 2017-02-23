@@ -75,10 +75,12 @@ class TranslateTool : public TransformTool
 
 	protected :
 
-		virtual bool affectsHandlesTransform( const Gaffer::Plug *input ) const;
-		virtual Imath::M44f handlesTransform() const;
+		virtual bool affectsHandles( const Gaffer::Plug *input ) const;
+		virtual void updateHandles();
 
 	private :
+
+		Imath::M44f handlesTransform() const;
 
 		// The guts of the translation logic. This is factored out of the
 		// drag handling so it can be shared with the `translate()` public

@@ -40,6 +40,7 @@
 
 #include "Gaffer/UndoContext.h"
 #include "Gaffer/ScriptNode.h"
+#include "Gaffer/MetadataAlgo.h"
 
 #include "GafferUI/Handle.h"
 
@@ -99,9 +100,9 @@ const Gaffer::IntPlug *TranslateTool::orientationPlug() const
 	return getChild<IntPlug>( g_firstPlugIndex );
 }
 
-bool TranslateTool::affectsHandlesTransform( const Gaffer::Plug *input ) const
+bool TranslateTool::affectsHandles( const Gaffer::Plug *input ) const
 {
-	if( TransformTool::affectsHandlesTransform( input ) )
+	if( TransformTool::affectsHandles( input ) )
 	{
 		return true;
 	}
@@ -109,6 +110,32 @@ bool TranslateTool::affectsHandlesTransform( const Gaffer::Plug *input ) const
 	return
 		input == orientationPlug() ||
 		input == scenePlug()->transformPlug();
+}
+
+void TranslateTool::updateHandles()
+{
+	handles()->setTransform( handlesTransform() );
+
+	for( int i = 0; i < 3; ++i )
+	{
+		V3f handleDirection( 0 );
+		handleDirection[i] = 1.0f;
+		Translation translation = createTranslation( handleDirection );
+		bool editable = true;
+		for( int j = 0; j < 3; ++j )
+		{
+			if( translation.direction[j] != 0.0f )
+			{
+				const ValuePlug *plug = selection().transformPlug->translatePlug()->getChild( j );
+				if( !plug->settable() || MetadataAlgo::readOnly( plug ) )
+				{
+					editable = false;
+					break;
+				}
+			}
+		}
+		handles()->getChild<Gadget>( i )->setEnabled( editable );
+	}
 }
 
 Imath::M44f TranslateTool::handlesTransform() const
@@ -185,7 +212,15 @@ TranslateTool::Translation TranslateTool::createTranslation( const Imath::V3f &d
 void TranslateTool::applyTranslation( const Translation &translation, float offset )
 {
 	const Selection &selection = this->selection();
-	selection.transformPlug->translatePlug()->setValue( translation.origin + translation.direction * offset );
+	for( int i = 0; i < 3; ++i )
+	{
+		if( translation.direction[i] != 0.0f )
+		{
+			selection.transformPlug->translatePlug()->getChild( i )->setValue(
+				translation.origin[i] + translation.direction[i] * offset
+			);
+		}
+	}
 }
 
 IECore::RunTimeTypedPtr TranslateTool::dragBegin( int axis )
