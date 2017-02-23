@@ -171,6 +171,7 @@ void Handle::doRender( const Style *style ) const
 	}
 
 	Style::State state = getHighlighted() || m_hovering ? Style::HighlightedState : Style::NormalState;
+	state = !enabled() ? Style::DisabledState : state;
 
 	switch( m_type )
 	{
