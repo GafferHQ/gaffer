@@ -74,16 +74,18 @@ using namespace std;
 namespace
 {
 
-Imath::Color4f colorForAxis( int axis )
+Imath::Color4f colorForAxes( Style::Axes axes )
 {
-	switch( axis )
+	switch( axes )
 	{
-		case 0 :
+		case Style::X :
 			return Color4f( 0.73, 0.17, 0.17, 1.0f );
-		case 1 :
+		case Style::Y :
 			return Color4f( 0.2, 0.57, 0.2, 1.0f );
-		default :
+		case Style::Z :
 			return Color4f( 0.2, 0.36, 0.74, 1.0f );
+		default :
+			return Color4f( 0.8, 0.8, 0.8, 0.0f );
 	}
 }
 
@@ -165,8 +167,14 @@ IECoreGL::MeshPrimitivePtr cube()
 	return result;
 }
 
-IECoreGL::GroupPtr translateHandle( int axis )
+IECoreGL::GroupPtr translateHandle( Style::Axes axes )
 {
+	if( axes < Style::X || axes > Style::Z )
+	{
+		throw Exception( "Unsupported axes" );
+	}
+	const int axis = (int)axes;
+
 	static IECoreGL::GroupPtr handles[3];
 	if( handles[axis] )
 	{
@@ -183,7 +191,7 @@ IECoreGL::GroupPtr translateHandle( int axis )
 	group->addChild( coneGroup );
 
 	group->getState()->add( new IECoreGL::DepthTestStateComponent( false ) );
-	group->getState()->add( new IECoreGL::Color( colorForAxis( axis ) ) );
+	group->getState()->add( new IECoreGL::Color( colorForAxes( axes ) ) );
 	group->getState()->add(
 		new IECoreGL::ShaderStateComponent( ShaderLoader::defaultShaderLoader(), TextureLoader::defaultTextureLoader(), "", "", IECoreGL::Shader::constantFragmentSource(), new CompoundObject )
 	);
@@ -201,16 +209,24 @@ IECoreGL::GroupPtr translateHandle( int axis )
 	return group;
 }
 
-IECoreGL::GroupPtr scaleHandle( int axis )
+IECoreGL::GroupPtr scaleHandle( Style::Axes axes )
 {
-	static IECoreGL::GroupPtr handles[3];
-	if( handles[axis] )
+	if( axes < Style::X || axes > Style::XYZ )
 	{
-		return handles[axis];
+		throw Exception( "Unsupported axes" );
+	}
+
+	static IECoreGL::GroupPtr handles[4];
+	if( handles[axes] )
+	{
+		return handles[axes];
 	}
 
 	V3f offset( 0.0f );
-	offset[axis] = 1.0f;
+	if( axes <= Style::Z )
+	{
+		offset[axes] = 1.0f;
+	}
 
 	IECoreGL::GroupPtr cubeGroup = new IECoreGL::Group;
 	cubeGroup->addChild( cube() );
@@ -218,16 +234,19 @@ IECoreGL::GroupPtr scaleHandle( int axis )
 
 	IECoreGL::GroupPtr group = new IECoreGL::Group;;
 
-	group->addChild( line( V3f( 0 ), offset ) );
+	if( axes <= Style::Z )
+	{
+		group->addChild( line( V3f( 0 ), offset ) );
+	}
 	group->addChild( cubeGroup );
 
 	group->getState()->add( new IECoreGL::DepthTestStateComponent( false ) );
-	group->getState()->add( new IECoreGL::Color( colorForAxis( axis ) ) );
+	group->getState()->add( new IECoreGL::Color( colorForAxes( axes ) ) );
 	group->getState()->add(
 		new IECoreGL::ShaderStateComponent( ShaderLoader::defaultShaderLoader(), TextureLoader::defaultTextureLoader(), "", "", IECoreGL::Shader::constantFragmentSource(), new CompoundObject )
 	);
 
-	handles[axis] = group;
+	handles[axes] = group;
 	return group;
 }
 
@@ -586,32 +605,22 @@ void StandardStyle::renderHorizontalRule( const Imath::V2f &center, float length
 
 }
 
-void StandardStyle::renderTranslateHandle( int axis, State state ) const
+void StandardStyle::renderTranslateHandle( Axes axes, State state ) const
 {
-	if( axis < 0 || axis > 2 )
-	{
-		throw Exception( "Invalid axis" );
-	}
-
 	IECoreGL::State::bindBaseState();
 	IECoreGL::State *glState = const_cast<IECoreGL::State *>( IECoreGL::State::defaultState() );
 	IECoreGL::State::ScopedBinding highlight( *m_highlightState, *glState, state == HighlightedState );
 	IECoreGL::State::ScopedBinding disabled( *disabledState(), *glState, state == DisabledState );
-	translateHandle( axis )->render( glState );
+	translateHandle( axes )->render( glState );
 }
 
-void StandardStyle::renderScaleHandle( int axis, State state ) const
+void StandardStyle::renderScaleHandle( Axes axes, State state ) const
 {
-	if( axis < 0 || axis > 2 )
-	{
-		throw Exception( "Invalid axis" );
-	}
-
 	IECoreGL::State::bindBaseState();
 	IECoreGL::State *glState = const_cast<IECoreGL::State *>( IECoreGL::State::defaultState() );
 	IECoreGL::State::ScopedBinding highlight( *m_highlightState, *glState, state == HighlightedState );
 	IECoreGL::State::ScopedBinding disabled( *disabledState(), *glState, state == DisabledState );
-	scaleHandle( axis )->render( glState );
+	scaleHandle( axes )->render( glState );
 }
 
 void StandardStyle::renderImage( const Imath::Box2f &box, const IECoreGL::Texture *texture ) const

@@ -87,8 +87,8 @@ class StandardStyle : public Style
 		virtual void renderConnection( const Imath::V3f &srcPosition, const Imath::V3f &srcTangent, const Imath::V3f &dstPosition, const Imath::V3f &dstTangent, State state = NormalState, const Imath::Color3f *userColor = NULL ) const;
 		virtual void renderBackdrop( const Imath::Box2f &box, State state = NormalState, const Imath::Color3f *userColor = NULL ) const;
 
-		virtual void renderTranslateHandle( int axis, State state = NormalState ) const;
-		virtual void renderScaleHandle( int axis, State state = NormalState ) const;
+		virtual void renderTranslateHandle( Axes axes, State state = NormalState ) const;
+		virtual void renderScaleHandle( Axes axes, State state = NormalState ) const;
 
 		enum Color
 		{
