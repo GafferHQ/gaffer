@@ -38,6 +38,7 @@
 #define GAFFERSCENEUI_TRANSFORMTOOL_H
 
 #include "Gaffer/TransformPlug.h"
+#include "Gaffer/StringAlgo.h"
 
 #include "GafferScene/ScenePlug.h"
 
@@ -119,13 +120,15 @@ class TransformTool : public GafferSceneUI::SelectionTool
 		const GafferUI::Gadget *handles() const;
 
 		/// Must be implemented by derived classes to return true if
-		/// the input plug is used in handlesTransform(). Implementation
+		/// the input plug is used in updateHandles(). Implementation
 		/// must call the base class implementation first, returning true
 		/// if it does.
-		virtual bool affectsHandlesTransform( const Gaffer::Plug *input ) const = 0;
-		/// Must be implemented by derived classes to return
-		/// an appropriate transform matrix for the handles.
-		virtual Imath::M44f handlesTransform() const = 0;
+		virtual bool affectsHandles( const Gaffer::Plug *input ) const = 0;
+		/// Must be implemented by derived classes to update the
+		/// handles appropriately. Typically this means setting their
+		/// transform and matching their enabled state to the editability
+		/// of the selection.
+		virtual void updateHandles() = 0;
 
 		/// Must be called by derived classes when they begin
 		/// a drag.
@@ -142,6 +145,7 @@ class TransformTool : public GafferSceneUI::SelectionTool
 		void connectToViewContext();
 		void contextChanged( const IECore::InternedString &name );
 		void plugDirtied( const Gaffer::Plug *plug );
+		void plugMetadataChanged( IECore::TypeId nodeTypeId, const Gaffer::StringAlgo::MatchPattern &plugPath, IECore::InternedString key, const Gaffer::Plug *plug );
 		void updateSelection() const;
 		void preRender();
 
@@ -150,7 +154,7 @@ class TransformTool : public GafferSceneUI::SelectionTool
 		GafferUI::GadgetPtr m_handles;
 		mutable Selection m_selection;
 		mutable bool m_selectionDirty;
-		bool m_handlesTransformDirty;
+		bool m_handlesDirty;
 
 		bool m_dragging;
 		int m_mergeGroupId;

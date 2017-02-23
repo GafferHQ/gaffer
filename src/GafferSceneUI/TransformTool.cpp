@@ -45,6 +45,8 @@
 #include "Gaffer/ScriptNode.h"
 #include "Gaffer/Monitor.h"
 #include "Gaffer/Process.h"
+#include "Gaffer/Metadata.h"
+#include "Gaffer/MetadataAlgo.h"
 
 #include "GafferScene/SceneAlgo.h"
 #include "GafferScene/ObjectSource.h"
@@ -250,7 +252,7 @@ TransformTool::TransformTool( SceneView *view, const std::string &name )
 	:	SelectionTool( view, name ),
 		m_handles( new Gadget() ),
 		m_selectionDirty( true ),
-		m_handlesTransformDirty( true ),
+		m_handlesDirty( true ),
 		m_dragging( false ),
 		m_mergeGroupId( 0 )
 {
@@ -266,6 +268,8 @@ TransformTool::TransformTool( SceneView *view, const std::string &name )
 
 	connectToViewContext();
 	view->contextChangedSignal().connect( boost::bind( &TransformTool::connectToViewContext, this ) );
+
+	Metadata::plugValueChangedSignal().connect( boost::bind( &TransformTool::plugMetadataChanged, this, ::_1, ::_2, ::_3, ::_4 ) );
 }
 
 TransformTool::~TransformTool()
@@ -298,7 +302,7 @@ const GafferUI::Gadget *TransformTool::handles() const
 	return m_handles.get();
 }
 
-bool TransformTool::affectsHandlesTransform( const Gaffer::Plug *input ) const
+bool TransformTool::affectsHandles( const Gaffer::Plug *input ) const
 {
 	return false;
 }
@@ -316,7 +320,7 @@ void TransformTool::contextChanged( const IECore::InternedString &name )
 	)
 	{
 		m_selectionDirty = true;
-		m_handlesTransformDirty = true;
+		m_handlesDirty = true;
 	}
 }
 
@@ -329,12 +333,54 @@ void TransformTool::plugDirtied( const Gaffer::Plug *plug )
 	)
 	{
 		m_selectionDirty = true;
-		m_handlesTransformDirty = true;
+		m_handlesDirty = true;
 	}
 
-	if( affectsHandlesTransform( plug ) )
+	if( affectsHandles( plug ) )
 	{
-		m_handlesTransformDirty = true;
+		m_handlesDirty = true;
+	}
+}
+
+void TransformTool::plugMetadataChanged( IECore::TypeId nodeTypeId, const Gaffer::StringAlgo::MatchPattern &plugPath, IECore::InternedString key, const Gaffer::Plug *plug )
+{
+	if( key != "readOnly" || m_handlesDirty )
+	{
+		return;
+	}
+
+	const Selection &s = selection();
+	if( !s.transformPlug )
+	{
+		return;
+	}
+
+	if( MetadataAlgo::affectedByChange( s.transformPlug.get(), nodeTypeId, plugPath, plug ) )
+	{
+		m_handlesDirty = true;
+	}
+	else
+	{
+		/// \todo Maybe a new MetadataAlgo::descendantAffectedByChange() could make
+		/// this simpler?
+		for( PlugIterator it( s.transformPlug.get() ); !it.done(); ++it )
+		{
+			if(
+				MetadataAlgo::affectedByChange( it->get(), nodeTypeId, plugPath, plug ) ||
+				MetadataAlgo::childAffectedByChange( it->get(), nodeTypeId, plugPath, plug )
+			)
+			{
+				m_handlesDirty = true;
+				break;
+			}
+		}
+	}
+
+	if( m_handlesDirty )
+	{
+		view()->viewportGadget()->renderRequestSignal()(
+			view()->viewportGadget()
+		);
 	}
 }
 
@@ -415,10 +461,10 @@ void TransformTool::preRender()
 
 	m_handles->setVisible( true );
 
-	if( m_handlesTransformDirty )
+	if( m_handlesDirty )
 	{
-		m_handles->setTransform( handlesTransform() );
-		m_handlesTransformDirty = false;
+		updateHandles();
+		m_handlesDirty = false;
 	}
 }
 
