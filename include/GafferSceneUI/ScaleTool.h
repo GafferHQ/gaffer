@@ -61,8 +61,8 @@ class ScaleTool : public TransformTool
 
 	protected :
 
-		virtual bool affectsHandlesTransform( const Gaffer::Plug *input ) const;
-		virtual Imath::M44f handlesTransform() const;
+		virtual bool affectsHandles( const Gaffer::Plug *input ) const;
+		virtual void updateHandles();
 
 	private :
 

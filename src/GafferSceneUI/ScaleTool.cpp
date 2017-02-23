@@ -38,6 +38,7 @@
 
 #include "Gaffer/UndoContext.h"
 #include "Gaffer/ScriptNode.h"
+#include "Gaffer/MetadataAlgo.h"
 
 #include "GafferUI/Handle.h"
 
@@ -78,9 +79,9 @@ ScaleTool::~ScaleTool()
 {
 }
 
-bool ScaleTool::affectsHandlesTransform( const Gaffer::Plug *input ) const
+bool ScaleTool::affectsHandles( const Gaffer::Plug *input ) const
 {
-	if( TransformTool::affectsHandlesTransform( input ) )
+	if( TransformTool::affectsHandles( input ) )
 	{
 		return true;
 	}
@@ -88,10 +89,18 @@ bool ScaleTool::affectsHandlesTransform( const Gaffer::Plug *input ) const
 	return input == scenePlug()->transformPlug();
 }
 
-Imath::M44f ScaleTool::handlesTransform() const
+void ScaleTool::updateHandles()
 {
 	Context::Scope scopedContext( view()->getContext() );
-	return scenePlug()->fullTransform( selection().path );
+	handles()->setTransform( scenePlug()->fullTransform( selection().path ) );
+
+	for( int i = 0; i < 3; ++i )
+	{
+		ValuePlug *plug = selection().transformPlug->scalePlug()->getChild( i );
+		handles()->getChild<Gadget>( i )->setEnabled(
+			plug->settable() && !MetadataAlgo::readOnly( plug )
+		);
+	}
 }
 
 void ScaleTool::scale( const Imath::V3f &scale )
