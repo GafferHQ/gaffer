@@ -887,6 +887,10 @@ typename Signal::result_type ViewportGadget::dispatchEvent( std::vector<GadgetPt
 	for( std::vector<GadgetPtr>::const_iterator it = gadgets.begin(), eIt = gadgets.end(); it != eIt; it++ )
 	{
 		GadgetPtr gadget = *it;
+		if( !gadget->enabled() )
+		{
+			continue;
+		}
 		while( gadget && gadget != this )
 		{
 			typename Signal::result_type result = dispatchEvent( gadget, signalGetter, event );
