@@ -113,8 +113,6 @@ class Gadget : public Gaffer::GraphComponent
 		//@}
 
 		/// @name State
-		/// \todo Add setEnabled()/getEnabled() methods matching those we
-		/// have on the Widget class.
 		////////////////////////////////////////////////////////////////////
 		//@{
 		/// Sets the visibility status for this Gadget. Note that even if this
@@ -129,6 +127,17 @@ class Gadget : public Gaffer::GraphComponent
 		typedef boost::signal<void ( Gadget * )> VisibilityChangedSignal;
 		/// Emitted when the result of `Gadget::visible()` changes.
 		VisibilityChangedSignal &visibilityChangedSignal();
+		/// Sets whether or not this Gadget is enabled. Disabled gadgets
+		/// do not receive events and are should be rendered greyed out.
+		/// \todo Implement disabled drawing for all Gadget subclasses.
+		void setEnabled( bool enabled );
+		/// Returns the enabled status for this gadget. Note that even if
+		/// `getEnabled() == true`, the gadget may still be disabled due
+		/// to having a disabled ancestor.
+		bool getEnabled() const;
+		/// Returns true if this gadget and all its parents up to the
+		/// specified ancestor are visible.
+		bool enabled( Gadget *relativeTo = NULL ) const;
 		/// Sets whether or not this Gadget should be rendered in a highlighted
 		/// state. This status is not inherited by child Gadgets. Note that highlighted
 		/// drawing has not yet been implemented for all Gadget types. Derived
@@ -281,6 +290,7 @@ class Gadget : public Gaffer::GraphComponent
 		ConstStylePtr m_style;
 
 		bool m_visible;
+		bool m_enabled;
 		bool m_highlighted;
 
 		Imath::M44f m_transform;

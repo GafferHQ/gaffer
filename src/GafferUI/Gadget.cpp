@@ -56,7 +56,7 @@ using namespace std;
 IE_CORE_DEFINERUNTIMETYPED( Gadget );
 
 Gadget::Gadget( const std::string &name )
-	:	GraphComponent( name ), m_style( 0 ), m_visible( true ), m_highlighted( false ), m_toolTip( "" )
+	:	GraphComponent( name ), m_style( 0 ), m_visible( true ), m_enabled( true ), m_highlighted( false ), m_toolTip( "" )
 {
 	std::string n = "__Gaffer::Gadget::" + boost::lexical_cast<std::string>( (size_t)this );
 	m_glName = IECoreGL::NameStateComponent::glNameFromName( n, true );
@@ -180,6 +180,35 @@ bool Gadget::visible( Gadget *relativeTo )
 Gadget::VisibilityChangedSignal &Gadget::visibilityChangedSignal()
 {
 	return m_visibilityChangedSignal;
+}
+
+void Gadget::setEnabled( bool enabled )
+{
+	if( enabled == m_enabled )
+	{
+		return;
+	}
+	m_enabled = enabled;
+	requestRender();
+}
+
+bool Gadget::getEnabled() const
+{
+	return m_enabled;
+}
+
+bool Gadget::enabled( Gadget *relativeTo ) const
+{
+	const Gadget *g = this;
+	while( g && g != relativeTo )
+	{
+		if( !g->getEnabled() )
+		{
+			return false;
+		}
+		g = g->parent<Gadget>();
+	}
+	return true;
 }
 
 void Gadget::setHighlighted( bool highlighted )
