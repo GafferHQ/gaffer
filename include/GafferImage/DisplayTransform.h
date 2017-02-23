@@ -54,7 +54,7 @@ class DisplayTransform : public OpenColorIOTransform
 
 	public :
 
-		DisplayTransform( const std::string &name=defaultName<DisplayTransform>() );
+		DisplayTransform( const std::string &name=defaultName<DisplayTransform>() , const bool &withContextPlug=true);
 		virtual ~DisplayTransform();
 
 		IE_CORE_DECLARERUNTIMETYPEDEXTENSION( GafferImage::DisplayTransform, DisplayTransformTypeId, OpenColorIOTransform );
@@ -68,18 +68,11 @@ class DisplayTransform : public OpenColorIOTransform
 		Gaffer::StringPlug *viewPlug();
 		const Gaffer::StringPlug *viewPlug() const;
 
-		Gaffer::StringPlug *contextNamePlug();
-		const Gaffer::StringPlug *contextNamePlug() const;
-
-		Gaffer::StringPlug *contextValuePlug();
-		const Gaffer::StringPlug *contextValuePlug() const;
-
 	protected :
 
 		virtual bool affectsTransform( const Gaffer::Plug *input ) const;
 		virtual void hashTransform( const Gaffer::Context *context, IECore::MurmurHash &h ) const;
 		virtual OpenColorIO::ConstTransformRcPtr transform() const;
- 		virtual OpenColorIO::ConstContextRcPtr getLocalContext(OpenColorIO::ConstConfigRcPtr config) const;
 
 	private :
 
