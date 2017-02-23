@@ -51,6 +51,8 @@ Gaffer.Metadata.registerNode(
 	that there is something to adjust - typically this will be a StandardOptions
 	node. The name of the plug being manipulated is displayed underneath the
 	cropped area - it can be used to verify that the expected node is being adjusted.
-	"""
+	""",
+
+	"viewer:shortCut", "C",
 
 )
