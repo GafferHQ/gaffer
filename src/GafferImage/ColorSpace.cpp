@@ -52,8 +52,8 @@ IE_CORE_DEFINERUNTIMETYPED( ColorSpace );
 
 size_t ColorSpace::g_firstPlugIndex = 0;
 
-ColorSpace::ColorSpace( const std::string &name )
-	:	OpenColorIOTransform( name )
+ColorSpace::ColorSpace( const std::string &name, const bool &withContextPlug )
+	:	OpenColorIOTransform( name, withContextPlug)
 {
 	storeIndexOfNextChild( g_firstPlugIndex );
 	addChild( new StringPlug( "inputSpace" ) );
@@ -86,6 +86,11 @@ const Gaffer::StringPlug *ColorSpace::outputSpacePlug() const
 
 bool ColorSpace::affectsTransform( const Gaffer::Plug *input ) const
 {
+	if(contextPlug()->isAncestorOf(input))
+	{
+		return true;
+	}
+
 	return ( input == inputSpacePlug() || input == outputSpacePlug() );
 }
 
@@ -93,6 +98,7 @@ void ColorSpace::hashTransform( const Gaffer::Context *context, IECore::MurmurHa
 {
 	std::string inSpace = inputSpacePlug()->getValue();
 	std::string outSpace = outputSpacePlug()->getValue();
+	const CompoundDataPlug *p = contextPlug();
 
 	if( inSpace == outSpace || inSpace.empty() || outSpace.empty() )
 	{
@@ -102,7 +108,19 @@ void ColorSpace::hashTransform( const Gaffer::Context *context, IECore::MurmurHa
 
 	inputSpacePlug()->hash( h );
 	outputSpacePlug()->hash( h );
+
+	std::string name;
+
+	for( CompoundDataPlug::MemberPlugIterator it( p ); !it.done(); ++it )
+	{
+		IECore::DataPtr d = p->memberDataAndName( it->get(), name );
+		if( d )
+		{
+			h.append(runTimeCast<StringData>(d)->readable());
+		}
+	}
 }
+
 
 OpenColorIO::ConstTransformRcPtr ColorSpace::transform() const
 {
