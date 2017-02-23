@@ -136,7 +136,7 @@ class Gadget : public Gaffer::GraphComponent
 		/// to having a disabled ancestor.
 		bool getEnabled() const;
 		/// Returns true if this gadget and all its parents up to the
-		/// specified ancestor are visible.
+		/// specified ancestor are enabled.
 		bool enabled( Gadget *relativeTo = NULL ) const;
 		/// Sets whether or not this Gadget should be rendered in a highlighted
 		/// state. This status is not inherited by child Gadgets. Note that highlighted
