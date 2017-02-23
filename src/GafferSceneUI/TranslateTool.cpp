@@ -42,7 +42,7 @@
 #include "Gaffer/ScriptNode.h"
 #include "Gaffer/MetadataAlgo.h"
 
-#include "GafferUI/Handle.h"
+#include "GafferUI/TranslateHandle.h"
 
 #include "GafferScene/SceneAlgo.h"
 
@@ -67,12 +67,12 @@ TranslateTool::TranslateTool( SceneView *view, const std::string &name )
 	:	TransformTool( view, name )
 {
 
-	static Handle::Type handleTypes[] = { Handle::TranslateX, Handle::TranslateY, Handle::TranslateZ };
+	static Style::Axes axes[] = { Style::X, Style::Y, Style::Z };
 	static const char *handleNames[] = { "x", "y", "z" };
 
 	for( int i = 0; i < 3; ++i )
 	{
-		HandlePtr handle = new Handle( handleTypes[i] );
+		HandlePtr handle = new TranslateHandle( axes[i] );
 		handle->setRasterScale( 75 );
 		handles()->setChild( handleNames[i], handle );
 		// connect with group 0, so we get called before the Handle's slot does.
@@ -242,7 +242,7 @@ IECore::RunTimeTypedPtr TranslateTool::dragBegin( int axis )
 bool TranslateTool::dragMove( const GafferUI::Gadget *gadget, const GafferUI::DragDropEvent &event )
 {
 	UndoContext undoContext( selection().transformPlug->ancestor<ScriptNode>(), UndoContext::Enabled, undoMergeGroup() );
-	const float offset = static_cast<const Handle *>( gadget )->dragOffset( event );
+	const float offset = static_cast<const TranslateHandle *>( gadget )->dragOffset( event );
 	applyTranslation( m_drag, offset );
 	return true;
 }

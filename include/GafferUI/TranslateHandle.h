@@ -1,6 +1,7 @@
 //////////////////////////////////////////////////////////////////////////
 //
 //  Copyright (c) 2014, John Haddon. All rights reserved.
+//  Copyright (c) 2017, Image Engine Design Inc. All rights reserved.
 //
 //  Redistribution and use in source and binary forms, with or without
 //  modification, are permitted provided that the following conditions are
@@ -34,37 +35,50 @@
 //
 //////////////////////////////////////////////////////////////////////////
 
-#include "boost/python.hpp"
+#ifndef GAFFERUI_TRANSLATEHANDLE_H
+#define GAFFERUI_TRANSLATEHANDLE_H
 
-#include "GafferUI/TranslateHandle.h"
-#include "GafferUI/ScaleHandle.h"
+#include "GafferUI/Handle.h"
 
-#include "GafferUIBindings/HandleBinding.h"
-#include "GafferUIBindings/GadgetBinding.h"
-
-using namespace boost::python;
-using namespace GafferUI;
-
-void GafferUIBindings::bindHandle()
+namespace GafferUI
 {
 
-	GadgetClass<Handle>()
-		.def( "setRasterScale", &Handle::setRasterScale )
-		.def( "getRasterScale", &Handle::getRasterScale )
-	;
+class TranslateHandle : public Handle
+{
 
-	GadgetClass<TranslateHandle>()
-		.def( init<Style::Axes>() )
-		.def( "setAxes", &TranslateHandle::setAxes )
-		.def( "getAxes", &TranslateHandle::getAxes )
-		.def( "translation", &TranslateHandle::translation )
-	;
+	public :
 
-	GadgetClass<ScaleHandle>()
-		.def( init<Style::Axes>() )
-		.def( "setAxes", &ScaleHandle::setAxes )
-		.def( "getAxes", &ScaleHandle::getAxes )
-		.def( "scaling", &ScaleHandle::scaling )
-	;
+		TranslateHandle( Style::Axes axes );
+		virtual ~TranslateHandle();
 
-}
+		IE_CORE_DECLARERUNTIMETYPEDEXTENSION( GafferUI::TranslateHandle, TranslateHandleTypeId, Handle );
+
+		void setAxes( Style::Axes axes );
+		Style::Axes getAxes() const;
+
+		float translation( const DragDropEvent &event ) const;
+
+	protected :
+
+		virtual void renderHandle( const Style *style, Style::State state ) const;
+		virtual void dragBegin( const DragDropEvent &event );
+
+	private :
+
+		int axis() const;
+
+		float absoluteDragOffset( const DragDropEvent &event ) const;
+
+		Style::Axes m_axes;
+		LinearDrag m_drag;
+
+};
+
+IE_CORE_DECLAREPTR( TranslateHandle )
+
+typedef Gaffer::FilteredChildIterator<Gaffer::TypePredicate<TranslateHandle> > TranslateHandleIterator;
+typedef Gaffer::FilteredRecursiveChildIterator<Gaffer::TypePredicate<TranslateHandle> > RecursiveTranslateHandleIterator;
+
+} // namespace GafferUI
+
+#endif // GAFFERUI_TRANSLATEHANDLE_H

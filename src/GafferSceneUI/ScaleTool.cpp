@@ -40,7 +40,7 @@
 #include "Gaffer/ScriptNode.h"
 #include "Gaffer/MetadataAlgo.h"
 
-#include "GafferUI/Handle.h"
+#include "GafferUI/ScaleHandle.h"
 
 #include "GafferSceneUI/ScaleTool.h"
 #include "GafferSceneUI/SceneView.h"
@@ -60,12 +60,12 @@ ScaleTool::ToolDescription<ScaleTool, SceneView> ScaleTool::g_toolDescription;
 ScaleTool::ScaleTool( SceneView *view, const std::string &name )
 	:	TransformTool( view, name )
 {
-	static Handle::Type handleTypes[] = { Handle::ScaleX, Handle::ScaleY, Handle::ScaleZ };
+	static Style::Axes axes[] = { Style::X, Style::Y, Style::Z };
 	static const char *handleNames[] = { "x", "y", "z" };
 
 	for( int i = 0; i < 3; ++i )
 	{
-		HandlePtr handle = new Handle( handleTypes[i] );
+		ScaleHandlePtr handle = new ScaleHandle( axes[i] );
 		handle->setRasterScale( 75 );
 		handles()->setChild( handleNames[i], handle );
 		// connect with group 0, so we get called before the Handle's slot does.
@@ -142,7 +142,7 @@ IECore::RunTimeTypedPtr ScaleTool::dragBegin( int axis )
 
 bool ScaleTool::dragMove( const GafferUI::Gadget *gadget, const GafferUI::DragDropEvent &event )
 {
-	const float scale = static_cast<const Handle *>( gadget )->dragOffset( event );
+	const float scale = static_cast<const ScaleHandle *>( gadget )->dragOffset( event );
 	applyScale( m_drag, V3f( scale ) );
 	return true;
 }

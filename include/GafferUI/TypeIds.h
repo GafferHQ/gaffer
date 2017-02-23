@@ -77,6 +77,8 @@ enum TypeId
 	DotNodeGadgetTypeId = 110282,
 	PlugAdderTypeId = 110283,
 	NoduleLayoutTypeId = 110284,
+	TranslateHandleTypeId = 110285,
+	ScaleHandleTypeId = 110286,
 
 	LastTypeId = 110450
 };

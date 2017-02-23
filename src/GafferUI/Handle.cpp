@@ -1,6 +1,7 @@
 //////////////////////////////////////////////////////////////////////////
 //
 //  Copyright (c) 2014, John Haddon. All rights reserved.
+//  Copyright (c) 2017, Image Engine Design Inc. All rights reserved.
 //
 //  Redistribution and use in source and binary forms, with or without
 //  modification, are permitted provided that the following conditions are
@@ -53,35 +54,19 @@ using namespace GafferUI;
 
 IE_CORE_DEFINERUNTIMETYPED( Handle );
 
-Handle::Handle( Type type )
-	:	Gadget( defaultName<Handle>() ), m_type( type ), m_hovering( false ), m_rasterScale( 0.0f )
+Handle::Handle( const std::string &name )
+	:	Gadget( name ), m_hovering( false ), m_rasterScale( 0.0f )
 {
 	enterSignal().connect( boost::bind( &Handle::enter, this ) );
 	leaveSignal().connect( boost::bind( &Handle::leave, this ) );
 
 	buttonPressSignal().connect( boost::bind( &Handle::buttonPress, this, ::_2 ) );
-	dragBeginSignal().connect( boost::bind( &Handle::dragBegin, this, ::_2 ) );
+	dragBeginSignal().connect( boost::bind( &Handle::dragBeginInternal, this, ::_2 ) );
 	dragEnterSignal().connect( boost::bind( &Handle::dragEnter, this, ::_2 ) );
 }
 
 Handle::~Handle()
 {
-}
-
-void Handle::setType( Type type )
-{
-	if( type == m_type )
-	{
-		return;
-	}
-
-	m_type = type;
- 	requestRender();
-}
-
-Handle::Type Handle::getType() const
-{
-	return m_type;
 }
 
 void Handle::setRasterScale( float rasterScale )
@@ -100,46 +85,12 @@ float Handle::getRasterScale() const
 	return m_rasterScale;
 }
 
-float Handle::dragOffset( const DragDropEvent &event ) const
-{
-	switch( m_type )
-	{
-		case TranslateX :
-		case TranslateY :
-		case TranslateZ :
-			return absoluteDragOffset( event ) - m_dragBeginOffset;
-		case ScaleX :
-		case ScaleY :
-		case ScaleZ :
-		{
-			float result = absoluteDragOffset( event );
-			if( m_dragBeginOffset != 0 )
-			{
-				result /= m_dragBeginOffset;
-			}
-			return result;
-		}
-		default :
-			return 0;
-	}
-}
-
 Imath::Box3f Handle::bound() const
 {
-	switch( m_type )
-	{
-		case TranslateX :
-		case ScaleX :
-			return Box3f( V3f( 0 ), V3f( 1, 0, 0 ) );
-		case TranslateY :
-		case ScaleY :
-			return Box3f( V3f( 0 ), V3f( 0, 1, 0 ) );
-		case TranslateZ :
-		case ScaleZ :
-			return Box3f( V3f( 0 ), V3f( 0, 0, 1 ) );
-	};
-
-	return Box3f();
+	// Having a raster scale makes our bound somewhat meaningless
+	// anyway, so save the derived classes some trouble and return
+	// something fairly arbitrary.
+	return Box3f( V3f( -1 ), V3f( 1 ) );
 }
 
 void Handle::doRender( const Style *style ) const
@@ -173,42 +124,11 @@ void Handle::doRender( const Style *style ) const
 	Style::State state = getHighlighted() || m_hovering ? Style::HighlightedState : Style::NormalState;
 	state = !enabled() ? Style::DisabledState : state;
 
-	switch( m_type )
-	{
-		case TranslateX :
-		case TranslateY :
-		case TranslateZ :
-			style->renderTranslateHandle( axis(), state );
-			break;
-		case ScaleX :
-		case ScaleY :
-		case ScaleZ :
-		default :
-			style->renderScaleHandle( axis(), state );
-			break;
-	}
+	renderHandle( style, state );
 
 	if( m_rasterScale > 0.0f )
 	{
 		glPopMatrix();
-	}
-}
-
-int Handle::axis() const
-{
-	switch( m_type )
-	{
-		case TranslateX :
-		case ScaleX :
-			return 0;
-		case TranslateY :
-		case ScaleY :
-			return 1;
-		case TranslateZ :
-		case ScaleZ :
-			return 2;
-		default :
-			return 0;
 	}
 }
 
@@ -229,19 +149,9 @@ bool Handle::buttonPress( const ButtonEvent &event )
 	return event.buttons == ButtonEvent::Left;
 }
 
-IECore::RunTimeTypedPtr Handle::dragBegin( const DragDropEvent &event )
+IECore::RunTimeTypedPtr Handle::dragBeginInternal( const DragDropEvent &event )
 {
-	// store the line of our handle in world space.
-	V3f handle( 0.0f );
-	handle[axis()] = 1.0f;
-
-	m_dragHandleWorld = LineSegment3f(
-		V3f( 0 ) * fullTransform(),
-		handle * fullTransform()
-	);
-
-	m_dragBeginOffset = absoluteDragOffset( event );
-
+	dragBegin( event );
 	return IECore::NullObject::defaultNullObject();
 }
 
@@ -250,17 +160,39 @@ bool Handle::dragEnter( const DragDropEvent &event )
 	return event.sourceGadget == this;
 }
 
-float Handle::absoluteDragOffset( const DragDropEvent &event ) const
+Handle::LinearDrag::LinearDrag()
+	:	m_gadget( NULL ),
+		m_worldLine( V3f( 0 ), V3f( 1, 0, 0 ) ),
+		m_dragBeginPosition( 0 )
 {
-	const ViewportGadget *viewport = ancestor<ViewportGadget>();
+}
+
+Handle::LinearDrag::LinearDrag( const Gadget *gadget, const IECore::LineSegment3f &line, const DragDropEvent &dragBeginEvent )
+	:	m_gadget( gadget ),
+		m_worldLine(
+			line.p0 * m_gadget->fullTransform(),
+			line.p1 * m_gadget->fullTransform()
+		),
+		m_dragBeginPosition( position( dragBeginEvent ) )
+{
+}
+
+float Handle::LinearDrag::startPosition() const
+{
+	return m_dragBeginPosition;
+}
+
+float Handle::LinearDrag::position( const DragDropEvent &event ) const
+{
+	const ViewportGadget *viewport = m_gadget->ancestor<ViewportGadget>();
 
 	// Project the mouse position back into raster space.
-	const V2f rasterP = viewport->gadgetToRasterSpace( event.line.p0, this );
+	const V2f rasterP = viewport->gadgetToRasterSpace( event.line.p1, m_gadget );
 
 	// Project our stored world space handle into raster space too.
 	const LineSegment2f rasterHandle(
-		viewport->worldToRasterSpace( m_dragHandleWorld.p0 ),
-		viewport->worldToRasterSpace( m_dragHandleWorld.p1 )
+		viewport->worldToRasterSpace( m_worldLine.p0 ),
+		viewport->worldToRasterSpace( m_worldLine.p1 )
 	);
 
 	// Find the closest point to the mouse on the handle in raster space.
@@ -282,9 +214,9 @@ float Handle::absoluteDragOffset( const DragDropEvent &event ) const
 	const LineSegment3f worldClosestLine = viewport->rasterToWorldSpace( V2f( rasterClosestPoint.x, rasterClosestPoint.y ) );
 
 	const V3f worldClosestPoint =
-		Line3f( m_dragHandleWorld.p0, m_dragHandleWorld.p1 ).closestPointTo(
+		Line3f( m_worldLine.p0, m_worldLine.p1 ).closestPointTo(
 			Line3f( worldClosestLine.p0, worldClosestLine.p1 )
 		);
 
-	return m_dragHandleWorld.normalizedDirection().dot( worldClosestPoint - m_dragHandleWorld.p0 );
+	return m_worldLine.normalizedDirection().dot( worldClosestPoint - m_worldLine.p0 );
 }
