@@ -70,13 +70,31 @@ static OCIOMutex g_ocioMutex;
 
 IE_CORE_DEFINERUNTIMETYPED( OpenColorIOTransform );
 
-OpenColorIOTransform::OpenColorIOTransform( const std::string &name )
+size_t OpenColorIOTransform::g_firstPlugIndex = 0;
+
+OpenColorIOTransform::OpenColorIOTransform( const std::string &name , const bool &withContextPlug)
 	:	ColorProcessor( name )
 {
+	if(withContextPlug)
+	{
+		storeIndexOfNextChild( g_firstPlugIndex );
+		addChild( new CompoundDataPlug("context"));
+		
+	}
 }
 
 OpenColorIOTransform::~OpenColorIOTransform()
 {
+}
+
+Gaffer::CompoundDataPlug *OpenColorIOTransform::contextPlug()
+{
+	return getChild<CompoundDataPlug>( g_firstPlugIndex );
+}
+
+const Gaffer::CompoundDataPlug *OpenColorIOTransform::contextPlug() const
+{
+	return getChild<CompoundDataPlug>( g_firstPlugIndex );
 }
 
 bool OpenColorIOTransform::enabled() const
@@ -112,6 +130,36 @@ OpenColorIO::ConstContextRcPtr OpenColorIOTransform::getLocalContext(OpenColorIO
 {
 
 	OpenColorIO::ConstContextRcPtr context = config->getCurrentContext();
+	const CompoundDataPlug *p = contextPlug();
+	if(!p)
+	{
+		return context;
+	}
+
+	if( !p->children().size() )
+	{
+		return context;
+	}
+
+	OpenColorIO::ContextRcPtr mutableContext;
+	std::string name;
+	std::string value;
+
+	for( CompoundDataPlug::MemberPlugIterator it( p ); !it.done(); ++it )
+	{
+		IECore::DataPtr d = p->memberDataAndName( it->get(), name );
+		if( d )
+		{
+			value = runTimeCast<StringData>(d)->readable();
+			if(!name.empty() && !value.empty())
+			{
+				if(!mutableContext) mutableContext = context->createEditableCopy();
+				mutableContext->setStringVar(name.c_str(), value.c_str());
+			}
+		}
+	}
+
+	if(mutableContext) context = mutableContext;
 	return context;
 }
 
