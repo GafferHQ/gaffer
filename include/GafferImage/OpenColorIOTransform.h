@@ -52,14 +52,13 @@ class OpenColorIOTransform : public ColorProcessor
 
 	public :
 
-		OpenColorIOTransform( const std::string &name=defaultName<OpenColorIOTransform>(), const bool &withContextPlug=false );
 		virtual ~OpenColorIOTransform();
 
 		/// Fills the vector will the available color spaces,
 		/// as defined by the current OpenColorIO config.
 		static void availableColorSpaces( std::vector<std::string> &colorSpaces );
 
-
+		/// Return a pointer to the CompoundDataPlug, if the derived class doesn't have context plug, it will return a NULL.
 		Gaffer::CompoundDataPlug *contextPlug();
 		const Gaffer::CompoundDataPlug *contextPlug() const;
 
@@ -67,6 +66,7 @@ class OpenColorIOTransform : public ColorProcessor
 
 	protected :
 
+		OpenColorIOTransform( const std::string &name=defaultName<OpenColorIOTransform>(), bool withContextPlug=false );
 		/// Implemented to return true if hashTransform() has
 		/// an affect. Derived classed should implement
 		/// hashTransform() to return a default hash if the
@@ -97,9 +97,10 @@ class OpenColorIOTransform : public ColorProcessor
 		/// pointer if no processing should take place.
 		virtual OpenColorIO::ConstTransformRcPtr transform() const = 0;
 		/// Context which can be used by an OpenColorIO Processor
- 		virtual OpenColorIO::ConstContextRcPtr getLocalContext(OpenColorIO::ConstConfigRcPtr config) const;
+ 		virtual OpenColorIO::ConstContextRcPtr ocioContext(OpenColorIO::ConstConfigRcPtr config) const;
 
 		static size_t g_firstPlugIndex;
+		bool m_hasContextPlug;
 
 };
 
