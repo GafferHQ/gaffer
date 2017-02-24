@@ -104,7 +104,6 @@ void DisplayTransform::hashTransform( const Gaffer::Context *context, IECore::Mu
 	h.append( colorSpace );
 	h.append( display );
 	h.append( view );
-
 }
 
 OpenColorIO::ConstTransformRcPtr DisplayTransform::transform() const

@@ -57,6 +57,7 @@ Gaffer.Metadata.registerNode(
 			Context override for OCIO config.
 			""",
 			"layout:section", "Context",
+			"layout:index", -3,
 
 		],
 

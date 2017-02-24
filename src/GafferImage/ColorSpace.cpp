@@ -102,9 +102,7 @@ void ColorSpace::hashTransform( const Gaffer::Context *context, IECore::MurmurHa
 
 	inputSpacePlug()->hash( h );
 	outputSpacePlug()->hash( h );
-
 }
-
 
 OpenColorIO::ConstTransformRcPtr ColorSpace::transform() const
 {
