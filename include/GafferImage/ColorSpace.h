@@ -55,7 +55,7 @@ class ColorSpace : public OpenColorIOTransform
 
 	public :
 
-		ColorSpace( const std::string &name=defaultName<ColorSpace>() , const bool &withContextPlug=true);
+		ColorSpace( const std::string &name=defaultName<ColorSpace>() );
 		virtual ~ColorSpace();
 
 		IE_CORE_DECLARERUNTIMETYPEDEXTENSION( GafferImage::ColorSpace, ColorSpaceTypeId, OpenColorIOTransform );
