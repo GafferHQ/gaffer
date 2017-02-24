@@ -97,7 +97,7 @@ class OpenColorIOTransform : public ColorProcessor
 		/// pointer if no processing should take place.
 		virtual OpenColorIO::ConstTransformRcPtr transform() const = 0;
 		/// Context which can be used by an OpenColorIO Processor
- 		virtual OpenColorIO::ConstContextRcPtr ocioContext(OpenColorIO::ConstConfigRcPtr config) const;
+ 		virtual OpenColorIO::ConstContextRcPtr ocioContext( OpenColorIO::ConstConfigRcPtr config ) const;
 
 		static size_t g_firstPlugIndex;
 		bool m_hasContextPlug;

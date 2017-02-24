@@ -101,6 +101,12 @@ void DisplayTransform::hashTransform( const Gaffer::Context *context, IECore::Mu
 	std::string display = displayPlug()->getValue();
 	std::string view = viewPlug()->getValue();
 
+	if( colorSpace.empty() || display.empty() || view.empty() )
+	{
+		h = MurmurHash();
+		return;
+	}
+
 	h.append( colorSpace );
 	h.append( display );
 	h.append( view );

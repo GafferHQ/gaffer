@@ -121,9 +121,9 @@ const Gaffer::IntPlug *CDL::directionPlug() const
 bool CDL::affectsTransform( const Gaffer::Plug *input ) const
 {
 	return(
-		slopePlug()->isAncestorOf(input) ||
-		offsetPlug()->isAncestorOf(input) ||
-		powerPlug()->isAncestorOf(input) ||
+		slopePlug()->isAncestorOf( input ) ||
+		offsetPlug()->isAncestorOf( input ) ||
+		powerPlug()->isAncestorOf( input ) ||
 		input == saturationPlug() ||
 		input == directionPlug()
 	);

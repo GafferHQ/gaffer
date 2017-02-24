@@ -72,14 +72,14 @@ IE_CORE_DEFINERUNTIMETYPED( OpenColorIOTransform );
 
 size_t OpenColorIOTransform::g_firstPlugIndex = 0;
 
-OpenColorIOTransform::OpenColorIOTransform( const std::string &name , bool withContextPlug)
+OpenColorIOTransform::OpenColorIOTransform( const std::string &name , bool withContextPlug )
 	:	ColorProcessor( name )
 {
-	if(withContextPlug)
+	if( withContextPlug )
 	{
 		m_hasContextPlug = withContextPlug;
 		storeIndexOfNextChild( g_firstPlugIndex );
-		addChild( new CompoundDataPlug("context"));
+		addChild( new CompoundDataPlug( "context" ) );
 		
 	}
 }
@@ -90,7 +90,7 @@ OpenColorIOTransform::~OpenColorIOTransform()
 
 Gaffer::CompoundDataPlug *OpenColorIOTransform::contextPlug()
 {
-	if(!m_hasContextPlug)
+	if( !m_hasContextPlug )
 	{
 		return NULL;
 	}
@@ -99,7 +99,7 @@ Gaffer::CompoundDataPlug *OpenColorIOTransform::contextPlug()
 
 const Gaffer::CompoundDataPlug *OpenColorIOTransform::contextPlug() const
 {
-	if(!m_hasContextPlug)
+	if( !m_hasContextPlug )
 	{
 		return NULL;
 	}
@@ -124,7 +124,7 @@ bool OpenColorIOTransform::affectsColorData( const Gaffer::Plug *input ) const
 	{
 		return true;
 	}
-	if(contextPlug() && contextPlug()->isAncestorOf(input))
+	if( contextPlug() && contextPlug()->isAncestorOf( input ) )
 	{
 		return true;
 	}
@@ -134,9 +134,9 @@ bool OpenColorIOTransform::affectsColorData( const Gaffer::Plug *input ) const
 void OpenColorIOTransform::hashColorData( const Gaffer::Context *context, IECore::MurmurHash &h ) const
 {
 	ColorProcessor::hashColorData( context, h );
-	if(contextPlug())
+	if( contextPlug() )
 	{
-		contextPlug()->hash(h);
+		contextPlug()->hash( h );
 	}
 	hashTransform( context, h );
 }
@@ -146,7 +146,7 @@ OpenColorIO::ConstContextRcPtr OpenColorIOTransform::ocioContext(OpenColorIO::Co
 
 	OpenColorIO::ConstContextRcPtr context = config->getCurrentContext();
 	const CompoundDataPlug *p = contextPlug();
-	if(!p)
+	if( !p )
 	{
 		return context;
 	}
@@ -165,21 +165,27 @@ OpenColorIO::ConstContextRcPtr OpenColorIOTransform::ocioContext(OpenColorIO::Co
 		IECore::DataPtr d = p->memberDataAndName( it->get(), name );
 		if( d )
 		{
-			StringDataPtr data = runTimeCast<StringData>(d);
-			if(!data)
+			StringDataPtr data = runTimeCast<StringData>( d );
+			if( !data )
 			{
 				throw( Exception(  "OpenColorIOTransform: Failed to convert context value to string." ) );	
 			}
 			value = data->readable();
-			if(!name.empty() && !value.empty())
+			if( !name.empty() && !value.empty() )
 			{
-				if(!mutableContext) mutableContext = context->createEditableCopy();
-				mutableContext->setStringVar(name.c_str(), value.c_str());
+				if( !mutableContext )
+				{
+					mutableContext = context->createEditableCopy();
+				}
+				mutableContext->setStringVar(name.c_str(), value.c_str() );
 			}
 		}
 	}
 
-	if(mutableContext) context = mutableContext;
+	if( mutableContext )
+	{
+		context = mutableContext;
+	}
 	return context;
 }
 
@@ -195,7 +201,7 @@ void OpenColorIOTransform::processColorData( const Gaffer::Context *context, IEC
 	{
 		OCIOMutex::scoped_lock lock( g_ocioMutex );
 		OpenColorIO::ConstConfigRcPtr config = OpenColorIO::GetCurrentConfig();
-		OpenColorIO::ConstContextRcPtr context = ocioContext(config);
+		OpenColorIO::ConstContextRcPtr context = ocioContext( config );
 		processor = config->getProcessor( context, colorTransform, OpenColorIO::TRANSFORM_DIR_FORWARD );
 	}
 
