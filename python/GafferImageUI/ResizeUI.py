@@ -128,7 +128,7 @@ Gaffer.Metadata.registerNode(
 
 			# Disk doesn't make much sense as a resizing filter, and also causes artifacts because
 			# its default width is small enough to fall into the gaps between pixels.
-			*[ ( "preset:" + x.title(), x ) for x in GafferImage.Resample.filters() if x != "disk" ]
+			*[ ( "preset:" + x.title(), x ) for x in GafferImage.FilterAlgo.filterNames() if x != "disk" ]
 
 		) ),
 
