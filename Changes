@@ -1,3 +1,48 @@
+Improvements
+------------
+
+- ArnoldOptions : Added texture system settings (#1958).
+- CustomOptions, CustomAttributes, PrimitiveVariables, OSLCode : Added option to add point and normal values in addition to vectors (#1977).
+- OSLShader : Added support for specifying nodule visibility via metadata (#1975).
+- Appleseed :
+  - Added automatic instancing support (#1978).
+  - Added support for multiple cameras (#1978).
+- GUI : User defaults are now applied to new ScriptNodes (#1960).
+
+Fixes
+-----
+
+- Isolate : Fixed bug when using keepLights or keepCameras (#1965).
+- InteractiveArnoldRender : Fixed occasional hangs (#1983).
+- Browser app : Fixed shutdown errors (#1981).
+- Light visualisers : Fixed errors triggered by specific intensity values (#1982).
+- OSLShader : Fixed ambiguities between point, vector and normal types (#1977).
+- Display : Fixed to support retries after failing to launch the server (#1972).
+- UIEditor : Fixed preset naming bugs (#1966).
+- Wrapper : Fixed bugs when Gaffer was installed in a location with spaces in the file path (#1961, #1962).
+
+API
+---
+
+- GafferUI::PlugAdder : Added support for subclassing in Python ()
+- CompoundNumericPlug : Added `IECore::GeometricData::Interpretation` setting (#1977).
+- Added `GafferImage::OpenImageIOAlgo` namespace with various utility functions (#1977).
+- Added `Gaffer::PlugAlgo` namespace with a `replacePlug()` utility function (#1977).
+- Fixed binding of `Serialiser::childNeedsSerialisation` (#1973).
+
+Build
+-----
+
+- Fixed build on macOS Sierra (#1978).
+- Updated standard dependency versions :
+  - Appleseed 1.6.0-beta
+  - Boost 1.61
+  - OSL 1.7.5
+  - Alembic 1.6.1
+  - FreeType 2.7.1
+  - Qt 4.8.7
+  - Cortex 9.16.2
+
 0.31.0.0
 ========
 
