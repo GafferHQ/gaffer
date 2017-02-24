@@ -54,7 +54,7 @@ class DisplayTransform : public OpenColorIOTransform
 
 	public :
 
-		DisplayTransform( const std::string &name=defaultName<DisplayTransform>() , const bool &withContextPlug=true);
+		DisplayTransform( const std::string &name=defaultName<DisplayTransform>());
 		virtual ~DisplayTransform();
 
 		IE_CORE_DECLARERUNTIMETYPEDEXTENSION( GafferImage::DisplayTransform, DisplayTransformTypeId, OpenColorIOTransform );

@@ -47,8 +47,8 @@ IE_CORE_DEFINERUNTIMETYPED( DisplayTransform );
 
 size_t DisplayTransform::g_firstPlugIndex = 0;
 
-DisplayTransform::DisplayTransform( const std::string &name , const bool &withContextPlug)
-	:	OpenColorIOTransform( name, withContextPlug )
+DisplayTransform::DisplayTransform( const std::string &name )
+	:	OpenColorIOTransform( name, true )
 {
 	storeIndexOfNextChild( g_firstPlugIndex );
 	addChild( new StringPlug( "inputColorSpace" ) );
@@ -92,11 +92,6 @@ const Gaffer::StringPlug *DisplayTransform::viewPlug() const
 
 bool DisplayTransform::affectsTransform( const Gaffer::Plug *input ) const
 {
-	if(contextPlug()->isAncestorOf(input))
-	{
-		return true;
-	}
-
 	return ( input == inputColorSpacePlug() || input == displayPlug() || input == viewPlug() );
 }
 
@@ -105,31 +100,10 @@ void DisplayTransform::hashTransform( const Gaffer::Context *context, IECore::Mu
 	std::string colorSpace = inputColorSpacePlug()->getValue();
 	std::string display = displayPlug()->getValue();
 	std::string view = viewPlug()->getValue();
-	const CompoundDataPlug *p = contextPlug();
-
-	if( colorSpace.empty() || display.empty() || view.empty() )
-	{
-		h = MurmurHash();
-		return;
-	}
 
 	h.append( colorSpace );
 	h.append( display );
 	h.append( view );
-
-	std::string name;
-	std::string value;
-
-	for( CompoundDataPlug::MemberPlugIterator it( p ); !it.done(); ++it )
-	{
-		IECore::DataPtr d = p->memberDataAndName( it->get(), name );
-		if( d )
-		{	
-			value = runTimeCast<StringData>(d)->readable();
-			h.append(name);
-			h.append(value);
-		}
-	}
 
 }
 
