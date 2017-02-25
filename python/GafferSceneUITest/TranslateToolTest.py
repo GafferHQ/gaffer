@@ -131,6 +131,7 @@ class TranslateToolTest( GafferUITest.TestCase ) :
 
 		tool = GafferSceneUI.TranslateTool( view )
 		tool["active"].setValue( True )
+		tool["orientation"].setValue( tool.Orientation.Local )
 
 		with Gaffer.UndoContext( script ) :
 			tool.translate( IECore.V3f( 1, 0, 0 ) )
@@ -329,6 +330,7 @@ class TranslateToolTest( GafferUITest.TestCase ) :
 
 		tool = GafferSceneUI.TranslateTool( view )
 		tool["active"].setValue( True )
+		tool["orientation"].setValue( tool.Orientation.Local )
 
 		tool.translate( IECore.V3f( 1, 0, 0 ) )
 

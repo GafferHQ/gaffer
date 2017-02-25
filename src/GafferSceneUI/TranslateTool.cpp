@@ -83,7 +83,7 @@ TranslateTool::TranslateTool( SceneView *view, const std::string &name )
 
 	storeIndexOfNextChild( g_firstPlugIndex );
 
-	addChild( new IntPlug( "orientation", Plug::In, Local, Local, World ) );
+	addChild( new IntPlug( "orientation", Plug::In, Parent, Local, World ) );
 }
 
 TranslateTool::~TranslateTool()
