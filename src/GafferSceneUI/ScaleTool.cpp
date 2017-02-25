@@ -142,7 +142,7 @@ IECore::RunTimeTypedPtr ScaleTool::dragBegin( int axis )
 
 bool ScaleTool::dragMove( const GafferUI::Gadget *gadget, const GafferUI::DragDropEvent &event )
 {
-	const float scale = static_cast<const ScaleHandle *>( gadget )->dragOffset( event );
+	const float scale = static_cast<const ScaleHandle *>( gadget )->scaling( event );
 	applyScale( m_drag, V3f( scale ) );
 	return true;
 }

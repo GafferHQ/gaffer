@@ -242,7 +242,7 @@ IECore::RunTimeTypedPtr TranslateTool::dragBegin( int axis )
 bool TranslateTool::dragMove( const GafferUI::Gadget *gadget, const GafferUI::DragDropEvent &event )
 {
 	UndoContext undoContext( selection().transformPlug->ancestor<ScriptNode>(), UndoContext::Enabled, undoMergeGroup() );
-	const float offset = static_cast<const TranslateHandle *>( gadget )->dragOffset( event );
+	const float offset = static_cast<const TranslateHandle *>( gadget )->translation( event );
 	applyTranslation( m_drag, offset );
 	return true;
 }
