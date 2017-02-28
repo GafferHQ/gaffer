@@ -110,6 +110,7 @@ from GadgetWidgetTest import GadgetWidgetTest
 from CompoundNoduleTest import CompoundNoduleTest
 from SwitchNodeGadgetTest import SwitchNodeGadgetTest
 from NoduleLayoutTest import NoduleLayoutTest
+from ErrorDialogueTest import ErrorDialogueTest
 
 if __name__ == "__main__":
 	unittest.main()
