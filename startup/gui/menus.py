@@ -117,6 +117,8 @@ if moduleSearchPath.find( "arnold" ) :
 		nodeMenu.append( "/Arnold/Interactive Render", GafferArnold.InteractiveArnoldRender, searchText = "InteractiveArnoldRender" )
 		nodeMenu.append( "/Arnold/Shader Ball", GafferArnold.ArnoldShaderBall, searchText = "ArnoldShaderBall" )
 
+		GafferArnoldUI.CacheMenu.appendDefinitions( scriptWindowMenu, "/Tools/Arnold" )
+
 	except Exception, m :
 
 		stacktrace = traceback.format_exc()

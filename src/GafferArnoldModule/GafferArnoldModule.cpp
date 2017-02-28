@@ -74,6 +74,12 @@ class ArnoldShaderSerialiser : public GafferBindings::NodeSerialiser
 
 };
 
+void flushCaches( int flags )
+{
+	IECorePython::ScopedGILRelease gilRelease;
+	InteractiveArnoldRender::flushCaches( flags );
+}
+
 } // namespace
 
 BOOST_PYTHON_MODULE( _GafferArnold )
@@ -100,7 +106,10 @@ BOOST_PYTHON_MODULE( _GafferArnold )
 	GafferBindings::DependencyNodeClass<ArnoldVDB>();
 	GafferBindings::DependencyNodeClass<ArnoldDisplacement>();
 	GafferBindings::DependencyNodeClass<ArnoldMeshLight>();
-	GafferBindings::NodeClass<InteractiveArnoldRender>();
+	GafferBindings::NodeClass<InteractiveArnoldRender>()
+		.def( "flushCaches", &flushCaches )
+		.staticmethod( "flushCaches" )
+	;
 	GafferDispatchBindings::TaskNodeClass<ArnoldRender>();
 
 }

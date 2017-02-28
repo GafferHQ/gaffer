@@ -1,6 +1,6 @@
 ##########################################################################
 #
-#  Copyright (c) 2012, John Haddon. All rights reserved.
+#  Copyright (c) 2017, Image Engine Design Inc. All rights reserved.
 #
 #  Redistribution and use in source and binary forms, with or without
 #  modification, are permitted provided that the following conditions are
@@ -34,17 +34,26 @@
 #
 ##########################################################################
 
-import ArnoldShaderUI
-import ArnoldRenderUI
-import ShaderMenu
-import ArnoldOptionsUI
-import ArnoldAttributesUI
-import ArnoldLightUI
-import ArnoldVDBUI
-import InteractiveArnoldRenderUI
-import ArnoldDisplacementUI
-import ArnoldMeshLightUI
-import ArnoldShaderBallUI
-import CacheMenu
+import functools
 
-__import__( "IECore" ).loadConfig( "GAFFER_STARTUP_PATHS", {}, subdirectory = "GafferArnoldUI" )
+import arnold
+
+import GafferArnold
+
+def appendDefinitions( menuDefinition, prefix="" ) :
+
+	for label, flags in (
+		( "All", arnold.AI_CACHE_ALL ),
+		( "Divider", None ),
+		( "Texture", arnold.AI_CACHE_TEXTURE ),
+		( "Skydome Lights", arnold.AI_CACHE_BACKGROUND ),
+		( "Quad Lights", arnold.AI_CACHE_QUAD ),
+	) :
+		menuDefinition.append(
+			prefix + "/Flush Cache/" + label,
+			{
+				"divider" : flags is None,
+				"command" : functools.partial( GafferArnold.InteractiveArnoldRender.flushCaches, flags ),
+			}
+		)
+
