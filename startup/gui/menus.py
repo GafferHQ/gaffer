@@ -67,7 +67,8 @@ for menuItem, url in [
 		( "Node Reference", "$GAFFER_ROOT/doc/gaffer/html/NodeReference/index.html" ),
 		( "License", "$GAFFER_ROOT/doc/gaffer/html/Appendices/License/index.html" ),
 		( "LocalDocsDivider", None ),
-		( "Mailing List", "https://groups.google.com/forum/#!forum/gaffer-dev" ),
+		( "Forum", "https://groups.google.com/forum/#!forum/gaffer-dev" ),
+		( "Issue Tracker", "https://github.com/GafferHQ/gaffer/issues" ),
 		( "CoreDocsDivider", None ),
 	] :
 
