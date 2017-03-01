@@ -1097,6 +1097,26 @@ class _PlugListing( GafferUI.Widget ) :
 
 		m.append( "/Add Plug/Color3f", { "command" : functools.partial( Gaffer.WeakMethod( self.__addPlug ), Gaffer.Color3fPlug ) } )
 		m.append( "/Add Plug/Color4f", { "command" : functools.partial( Gaffer.WeakMethod( self.__addPlug ), Gaffer.Color4fPlug ) } )
+		m.append( "/Add Plug/ColorDivider", { "divider" : True } )
+
+		for label, plugType in [
+			( "Float", Gaffer.FloatVectorDataPlug ),
+			( "Int", Gaffer.IntVectorDataPlug ),
+			( "NumericDivider", None ),
+			( "String", Gaffer.StringVectorDataPlug ),
+		] :
+			if plugType is not None :
+				m.append(
+					"/Add Plug/Array/" + label,
+					{
+						"command" : functools.partial(
+							Gaffer.WeakMethod( self.__addPlug ),
+							plugCreator = functools.partial( plugType, defaultValue = plugType.ValueType() )
+						)
+					}
+				)
+			else :
+				m.append( "/Add Plug/Array/" + label, { "divider" : True } )
 
 		m.append( "/Add Plug Divider", { "divider" : True } )
 
@@ -1104,9 +1124,9 @@ class _PlugListing( GafferUI.Widget ) :
 
 		return m
 
-	def __addPlug( self, plugType ) :
+	def __addPlug( self, plugCreator ) :
 
-		plug = plugType( flags = Gaffer.Plug.Flags.Default | Gaffer.Plug.Flags.Dynamic )
+		plug = plugCreator( flags = Gaffer.Plug.Flags.Default | Gaffer.Plug.Flags.Dynamic )
 		Gaffer.Metadata.registerValue( plug, "nodule:type", "" )
 
 		parentItem = self.__selectedItem()

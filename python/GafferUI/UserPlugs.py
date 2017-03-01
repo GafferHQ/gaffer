@@ -60,6 +60,28 @@ def appendPlugCreationMenuDefinitions( plugParent, menuDefinition, prefix = "" )
 
 	menuDefinition.append( prefix + "/Color3f", { "command" : functools.partial( __addPlug, plugParent, Gaffer.Color3fPlug ) } )
 	menuDefinition.append( prefix + "/Color4f", { "command" : functools.partial( __addPlug, plugParent, Gaffer.Color4fPlug ) } )
+	menuDefinition.append( prefix + "/ColorDivider", { "divider" : True } )
+
+	# Arrays
+
+	for label, plugType in [
+		( "Float", Gaffer.FloatVectorDataPlug ),
+		( "Int", Gaffer.IntVectorDataPlug ),
+		( "NumericDivider", None ),
+		( "String", Gaffer.StringVectorDataPlug ),
+	] :
+		if plugType is not None :
+			menuDefinition.append(
+				prefix + "/Array/" + label,
+				{
+					"command" : functools.partial(
+						__addPlug, plugParent,
+						plugCreator = functools.partial( plugType, defaultValue = plugType.ValueType() )
+					)
+				}
+			)
+		else :
+			menuDefinition.append( prefix + "/Array/" + label, { "divider" : True } )
 
 ## Returns a widget that allows the user to add plugs to a particular parent.
 # Intended for use within a PlugLayout.
@@ -74,10 +96,10 @@ def plugCreationWidget( plugParent ) :
 
 	return row
 
-def __addPlug( plugParent, plugType ) :
+def __addPlug( plugParent, plugCreator, **kw ) :
 
 	with Gaffer.UndoContext( plugParent.ancestor( Gaffer.ScriptNode ) ) :
-		plug = plugType( flags = Gaffer.Plug.Flags.Default | Gaffer.Plug.Flags.Dynamic )
+		plug = plugCreator( flags = Gaffer.Plug.Flags.Default | Gaffer.Plug.Flags.Dynamic )
 		Gaffer.Metadata.registerValue( plug, "nodule:type", "" )
 		plugParent.addChild( plug )
 
