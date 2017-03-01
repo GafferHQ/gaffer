@@ -261,5 +261,12 @@ class CropTest( GafferImageTest.ImageTestCase ) :
 		self.assertEqual( crop["out"]["format"].getValue().getDisplayWindow(), IECore.Box2i( IECore.V2i( 0 ), area.size() ) )
 		self.assertEqual( crop["out"]["dataWindow"].getValue(), IECore.Box2i( IECore.V2i( -50 ), IECore.V2i( 50, 150 ) ) )
 
+	def testEmptyInput( self ) :
+
+		crop = GafferImage.Crop()
+
+		crop["area"]["min"].setValue( IECore.V2i( 20 ) )
+		self.assertTrue( GafferImage.BufferAlgo.empty( crop["out"]["dataWindow"].getValue() ) )
+
 if __name__ == "__main__":
 	unittest.main()
