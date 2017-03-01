@@ -34,9 +34,11 @@
 #
 ##########################################################################
 
-import Gaffer
-import GafferImage
+import IECore
 
+import Gaffer
+import GafferUI
+import GafferImage
 
 Gaffer.Metadata.registerNode(
 
@@ -48,6 +50,11 @@ Gaffer.Metadata.registerNode(
 	OpenColorIO.
 	""",
 
+	# Add a + button for creating new plugs in the Context tab.
+	"layout:customWidget:addButton:widgetType", "GafferImageUI.OpenColorIOTransformUI._ContextFooter",
+	"layout:customWidget:addButton:section", "Context",
+	"layout:customWidget:addButton:index", -2,
+
 	plugs = {
 
 		"context" : [
@@ -56,6 +63,14 @@ Gaffer.Metadata.registerNode(
 			"""
 			Context override for OCIO config.
 			""",
+
+			# We don't use the default CompoundDataPlugValueWidget because
+			# it allows the addition of all sorts of member plugs, and we
+			# only want to add strings. Instead we use the _ContextFooter
+			# to provide a button for only adding strings.
+			## \todo Perhaps we should invent some metadata scheme to give
+			# this behaviour to the CompoundDataPlugValueWidget?
+			"plugValueWidget:type", "GafferUI.LayoutPlugValueWidget",
 			"layout:section", "Context",
 			"layout:index", -3,
 
@@ -64,3 +79,36 @@ Gaffer.Metadata.registerNode(
 	}
 
 )
+
+class _ContextFooter( GafferUI.Widget ) :
+
+	def __init__( self, node, **kw ) :
+
+		row = GafferUI.ListContainer( GafferUI.ListContainer.Orientation.Horizontal )
+		GafferUI.Widget.__init__( self, row, **kw )
+
+		with row :
+
+			GafferUI.Spacer( IECore.V2i( GafferUI.PlugWidget.labelWidth(), 1 ) )
+
+			button = GafferUI.Button(
+				image = "plus.png",
+				hasFrame = False,
+				toolTip = "Click to add variables",
+			)
+
+			self.__buttonClickedConnection = button.clickedSignal().connect(
+				Gaffer.WeakMethod( self.__clicked )
+			)
+
+			GafferUI.Spacer( IECore.V2i( 1 ), IECore.V2i( 999999, 1 ), parenting = { "expand" : True } )
+
+		self.__node = node
+
+	def __clicked( self, button ) :
+
+		if Gaffer.readOnly( self.__node["context"] ) :
+			return
+
+		with Gaffer.UndoContext( self.__node.ancestor( Gaffer.ScriptNode ) ) :
+			self.__node["context"].addOptionalMember( "", "", enabled = True )
