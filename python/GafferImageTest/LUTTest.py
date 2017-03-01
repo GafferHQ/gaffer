@@ -47,7 +47,7 @@ import GafferImageTest
 class LUTTest( GafferImageTest.ImageTestCase ) :
 
 	imageFile = os.path.expandvars( "$GAFFER_ROOT/python/GafferImageTest/images/checker.exr" )
-	lut = os.path.expandvars( "$GAFFER_ROOT/python/GafferImageTest/luts/slog10.spi1d" )
+	lut = os.path.expandvars( "$GAFFER_ROOT/python/GafferImageTest/openColorIO/luts/slog10.spi1d" )
 
 	def test( self ) :
 

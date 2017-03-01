@@ -1,0 +1,86 @@
+ocio_profile_version: 1
+
+search_path: luts
+strictparsing: true
+luma: [0.2126, 0.7152, 0.0722]
+
+roles:
+  color_picking: sRGB
+  color_timing: Cineon
+  compositing_log: Cineon
+  data: raw
+  default: raw
+  matte_paint: sRGB
+  reference: linear
+  scene_linear: linear
+  texture_paint: sRGB
+
+displays:
+  default:
+    - !<View> {name: context, colorspace: context}
+
+active_displays: [default]
+active_views: [sRGB]
+
+colorspaces:
+  - !<ColorSpace>
+    name: linear
+    family: ""
+    equalitygroup: ""
+    bitdepth: 32f
+    description: |
+      Scene-linear, high dynamic range. Used for rendering and compositing.
+    isdata: false
+    allocation: lg2
+    allocationvars: [-15, 6]
+
+  - !<ColorSpace>
+    name: context
+    family: ""
+    equalitygroup: ""
+    bitdepth: 32f
+    description: |
+      Standard RGB Display Space
+    isdata: false
+    allocation: uniform
+    allocationvars: [-0.125, 1.125]
+    from_reference: !<GroupTransform>
+     children:
+       - !<FileTransform> {src: "$CDL", interpolation: linear, direction: inverse}
+       - !<FileTransform> {src: "$LUT", interpolation: linear}
+
+  - !<ColorSpace>
+    name: sRGB
+    family: ""
+    equalitygroup: ""
+    bitdepth: 32f
+    description: |
+      Standard RGB Display Space
+    isdata: false
+    allocation: uniform
+    allocationvars: [-0.125, 1.125]
+    to_reference: !<FileTransform> {src: srgb.spi1d, interpolation: linear}
+
+  - !<ColorSpace>
+    name: rec709
+    family: ""
+    equalitygroup: ""
+    bitdepth: 32f
+    description: |
+      Rec. 709 (Full Range) Display Space
+    isdata: false
+    allocation: uniform
+    allocationvars: [-0.125, 1.125]
+    to_reference: !<FileTransform> {src: rec709.spi1d, interpolation: linear}
+
+  - !<ColorSpace>
+    name: Cineon
+    family: ""
+    equalitygroup: ""
+    bitdepth: 32f
+    description: |
+      Cineon (Log Film Scan)
+    isdata: false
+    allocation: uniform
+    allocationvars: [-0.125, 1.125]
+    to_reference: !<FileTransform> {src: cineon.spi1d, interpolation: linear}
