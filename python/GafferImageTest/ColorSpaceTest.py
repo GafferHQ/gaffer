@@ -177,18 +177,17 @@ class ColorSpaceTest( GafferImageTest.ImageTestCase ) :
 		s["fileName"].setValue( scriptFileName )
 		s.save()
 
-		ocioEnv = os.environ.get("OCIO")
-		os.environ["OCIO"] = os.path.expandvars( "$GAFFER_ROOT/python/GafferImageTest/openColorIO/context.ocio" )
-		os.environ["LUT"] = "srgb.spi1d"
-		os.environ["CDL"] = "cineon.spi1d"
+		env = os.environ.copy()
+		env["OCIO"] = os.path.expandvars( "$GAFFER_ROOT/python/GafferImageTest/openColorIO/context.ocio" )
+		env["LUT"] = "srgb.spi1d"
+		env["CDL"] = "cineon.spi1d"
 
-		p = subprocess.Popen(
-			" ".join(["gaffer", "execute", scriptFileName,"-frames", "1-1"]),
+		subprocess.check_call(
+			" ".join(["gaffer", "execute", scriptFileName,"-frames", "1"]),
 			shell = True,
 			stderr = subprocess.PIPE,
+			env = env,
 		)
-
-		p.wait()
 
 		i = GafferImage.ImageReader()
 		i["fileName"].setValue( os.path.expandvars( "$GAFFER_ROOT/python/GafferImageTest/images/checker_ocio_context.exr" ) )
@@ -196,17 +195,11 @@ class ColorSpaceTest( GafferImageTest.ImageTestCase ) :
 		o = GafferImage.ImageReader()
 		o["fileName"].setValue( contextImageFile )
 
-		expected = i["out"].image()
-		context = o["out"].image()
+		expected = i["out"]
+		context = o["out"]
 
 		# check against expected output
-		op = IECore.ImageDiffOp()
-		res = op(
-			imageA = expected,
-			imageB = context
-		)
-
-		self.assertFalse( res.value )
+		self.assertImagesEqual( expected, context, ignoreMetadata = True )
 		
 		# override context
 		s["writer"]["fileName"].setValue( contextOverrideImageFile )
@@ -214,13 +207,12 @@ class ColorSpaceTest( GafferImageTest.ImageTestCase ) :
 		s["cs"]["context"].addOptionalMember("CDL", "rec709.spi1d", "CDL", enabled=True)
 		s.save()
 
-		p = subprocess.Popen(
-			" ".join(["gaffer", "execute", scriptFileName,"-frames", "1-1"]),
+		subprocess.check_call(
+			" ".join(["gaffer", "execute", scriptFileName,"-frames", "1"]),
 			shell = True,
 			stderr = subprocess.PIPE,
+			env = env
 		)
-
-		p.wait()
 
 		i = GafferImage.ImageReader()
 		i["fileName"].setValue( os.path.expandvars( "$GAFFER_ROOT/python/GafferImageTest/images/checker_ocio_context_override.exr" ) )
@@ -228,21 +220,11 @@ class ColorSpaceTest( GafferImageTest.ImageTestCase ) :
 		o = GafferImage.ImageReader()
 		o["fileName"].setValue( contextOverrideImageFile )
 
-		expected = i["out"].image()
-		context = o["out"].image()
+		expected = i["out"]
+		context = o["out"]
 
 		# check override produce expected output
-		op = IECore.ImageDiffOp()
-		res = op(
-			imageA = expected,
-			imageB = context
-		)
-
-		self.assertFalse( res.value )
-
-		os.environ["OCIO"] = ocioEnv
-		del os.environ["LUT"]
-		del os.environ["CDL"]
+		self.assertImagesEqual( expected, context, ignoreMetadata = True )
 
 
 if __name__ == "__main__":
