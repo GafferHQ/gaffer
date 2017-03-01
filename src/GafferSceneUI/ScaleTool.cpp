@@ -60,16 +60,16 @@ ScaleTool::ToolDescription<ScaleTool, SceneView> ScaleTool::g_toolDescription;
 ScaleTool::ScaleTool( SceneView *view, const std::string &name )
 	:	TransformTool( view, name )
 {
-	static Style::Axes axes[] = { Style::X, Style::Y, Style::Z };
-	static const char *handleNames[] = { "x", "y", "z" };
+	static Style::Axes axes[] = { Style::X, Style::Y, Style::Z, Style::XYZ };
+	static const char *handleNames[] = { "x", "y", "z", "xyz" };
 
-	for( int i = 0; i < 3; ++i )
+	for( int i = 0; i < 4; ++i )
 	{
 		ScaleHandlePtr handle = new ScaleHandle( axes[i] );
 		handle->setRasterScale( 75 );
 		handles()->setChild( handleNames[i], handle );
 		// connect with group 0, so we get called before the Handle's slot does.
-		handle->dragBeginSignal().connect( 0, boost::bind( &ScaleTool::dragBegin, this, i ) );
+		handle->dragBeginSignal().connect( 0, boost::bind( &ScaleTool::dragBegin, this, axes[i] ) );
 		handle->dragMoveSignal().connect( boost::bind( &ScaleTool::dragMove, this, ::_1, ::_2 ) );
 		handle->dragEndSignal().connect( boost::bind( &ScaleTool::dragEnd, this ) );
 	}
@@ -94,56 +94,64 @@ void ScaleTool::updateHandles()
 	Context::Scope scopedContext( view()->getContext() );
 	handles()->setTransform( scenePlug()->fullTransform( selection().path ) );
 
+	bool allSettable = true;
 	for( int i = 0; i < 3; ++i )
 	{
 		ValuePlug *plug = selection().transformPlug->scalePlug()->getChild( i );
-		handles()->getChild<Gadget>( i )->setEnabled(
-			plug->settable() && !MetadataAlgo::readOnly( plug )
-		);
+		const bool settable = plug->settable() && !MetadataAlgo::readOnly( plug );
+		handles()->getChild<Gadget>( i )->setEnabled( settable );
+		allSettable &= settable;
 	}
+
+	handles()->getChild<Gadget>( 3 )->setEnabled( allSettable );
 }
 
 void ScaleTool::scale( const Imath::V3f &scale )
 {
-	Scale s = createScale( V3i( 1 ) );
-	applyScale( s, scale );
+	for( int i = 0; i < 3; ++i )
+	{
+		Scale s = createScale( (Style::Axes)i );
+		applyScale( s, scale[i] );
+	}
 }
 
-ScaleTool::Scale ScaleTool::createScale( const Imath::V3i axisMask )
+ScaleTool::Scale ScaleTool::createScale( Style::Axes axes )
 {
 	Context::Scope scopedContext( view()->getContext() );
 	Scale result;
 	result.originalScale = selection().transformPlug->scalePlug()->getValue();
-	result.axisMask = axisMask;
+	result.axes = axes;
 	return result;
 }
 
-void ScaleTool::applyScale( const Scale &scale, const Imath::V3f &offset )
+void ScaleTool::applyScale( const Scale &scale, float s )
 {
-	UndoContext undoContext( selection().transformPlug->ancestor<ScriptNode>(), UndoContext::Enabled, undoMergeGroup() );
-	for( int i = 0; i < 3; ++i )
+	if( scale.axes == Style::XYZ )
 	{
-		if( !scale.axisMask[i] )
-		{
-			continue;
-		}
-		selection().transformPlug->scalePlug()->getChild( i )->setValue( scale.originalScale[i] * offset[i] );
+		selection().transformPlug->scalePlug()->setValue(
+			scale.originalScale * V3f( s )
+		);
+	}
+	else
+	{
+		selection().transformPlug->scalePlug()->getChild( scale.axes )->setValue(
+			scale.originalScale[scale.axes] * s
+		);
 	}
 }
 
-IECore::RunTimeTypedPtr ScaleTool::dragBegin( int axis )
+IECore::RunTimeTypedPtr ScaleTool::dragBegin( GafferUI::Style::Axes axes )
 {
-	V3i axisMask( 0 );
-	axisMask[axis] = 1;
-	m_drag = createScale( axisMask );
+	m_drag = createScale( axes );
 	TransformTool::dragBegin();
 	return NULL; // Let the handle start the drag.
 }
 
 bool ScaleTool::dragMove( const GafferUI::Gadget *gadget, const GafferUI::DragDropEvent &event )
 {
+	UndoContext undoContext( selection().transformPlug->ancestor<ScriptNode>(), UndoContext::Enabled, undoMergeGroup() );
 	const float scale = static_cast<const ScaleHandle *>( gadget )->scaling( event );
-	applyScale( m_drag, V3f( scale ) );
+	applyScale( m_drag, scale );
 	return true;
 }
 

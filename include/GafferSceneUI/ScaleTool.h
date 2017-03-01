@@ -37,6 +37,8 @@
 #ifndef GAFFERSCENEUI_SCALETOOL_H
 #define GAFFERSCENEUI_SCALETOOL_H
 
+#include "GafferUI/Style.h"
+
 #include "GafferSceneUI/TransformTool.h"
 
 namespace GafferSceneUI
@@ -72,15 +74,15 @@ class ScaleTool : public TransformTool
 		struct Scale
 		{
 			Imath::V3f originalScale;
-			Imath::V3i axisMask;
+			GafferUI::Style::Axes axes;
 		};
 
-		Scale createScale( const Imath::V3i axisMask );
-		void applyScale( const Scale &scale, const Imath::V3f &offset );
+		Scale createScale( GafferUI::Style::Axes axes );
+		void applyScale( const Scale &scale, float s );
 
 		// Drag handling.
 
-		IECore::RunTimeTypedPtr dragBegin( int axis );
+		IECore::RunTimeTypedPtr dragBegin( GafferUI::Style::Axes axes );
 		bool dragMove( const GafferUI::Gadget *gadget, const GafferUI::DragDropEvent &event );
 		bool dragEnd();
 
