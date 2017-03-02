@@ -74,6 +74,7 @@ import ResampleUI
 import LUTUI
 import CDLUI
 import DisplayTransformUI
+import OpenColorIOTransformUI
 import OffsetUI
 import BlurUI
 import ShapeUI
