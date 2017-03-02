@@ -41,6 +41,7 @@
 #include "OpenEXR/ImathMatrixAlgo.h"
 #include "OpenEXR/ImathLine.h"
 #include "OpenEXR/ImathPlane.h"
+#include "OpenEXR/ImathVecAlgo.h"
 
 #include "IECore/NullObject.h"
 #include "IECore/Transform.h"
@@ -229,7 +230,7 @@ float Handle::LinearDrag::position( const DragDropEvent &event ) const
 			Line3f( worldClosestLine.p0, worldClosestLine.p1 )
 		);
 
-	return m_worldLine.normalizedDirection().dot( worldClosestPoint - m_worldLine.p0 );
+	return m_worldLine.direction().dot( worldClosestPoint - m_worldLine.p0 ) / m_worldLine.length2();
 }
 
 //////////////////////////////////////////////////////////////////////////
@@ -254,6 +255,8 @@ Handle::PlanarDrag::PlanarDrag( const Gadget *gadget, const DragDropEvent &dragB
 	V3f gadgetAxis1;
 	cameraToGadget.multDirMatrix( V3f( 1, 0, 0 ), gadgetAxis0 );
 	cameraToGadget.multDirMatrix( V3f( 0, 1, 0 ), gadgetAxis1 );
+	gadgetAxis0.normalize();
+	gadgetAxis1.normalize();
 
 	init(
 		gadget,
@@ -287,9 +290,14 @@ Imath::V2f Handle::PlanarDrag::position( const DragDropEvent &event ) const
 	);
 	V3f worldIntersection( 0 );
 	worldPlane.intersect( worldLine, worldIntersection );
+
+	// Form coordinates in the plane by projecting onto each axis
+	// and returning the length of the projection as a proportion
+	// of the axis length.
+
 	return V2f(
-		(worldIntersection - m_worldOrigin).dot( m_worldAxis0 ),
-		(worldIntersection - m_worldOrigin).dot( m_worldAxis1 )
+		m_worldAxis0.dot( worldIntersection - m_worldOrigin ) / m_worldAxis0.length2(),
+		m_worldAxis1.dot( worldIntersection - m_worldOrigin ) / m_worldAxis1.length2()
 	);
 }
 
@@ -300,8 +308,6 @@ void Handle::PlanarDrag::init( const Gadget *gadget, const Imath::V3f &origin, c
 	m_worldOrigin = origin * transform;
 	transform.multDirMatrix( axis0, m_worldAxis0 );
 	transform.multDirMatrix( axis1, m_worldAxis1 );
-	m_worldAxis0.normalize();
-	m_worldAxis1.normalize();
 	m_dragBeginPosition = position( dragBeginEvent );
 }
 

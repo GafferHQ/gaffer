@@ -56,6 +56,12 @@ class TranslateHandle : public Handle
 		void setAxes( Style::Axes axes );
 		Style::Axes getAxes() const;
 
+		// Translation is measured in the local space of the handle.
+		//
+		// > Note :
+		// > The use of a non-zero raster scale may make it appear
+		// > that a handle has no scaling applied, but that scaling
+		// > will still affect the results of `translation()`.
 		float translation( const DragDropEvent &event ) const;
 
 	protected :

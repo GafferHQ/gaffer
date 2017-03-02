@@ -90,7 +90,6 @@ void TranslateHandle::renderHandle( const Style *style, Style::State state ) con
 
 void TranslateHandle::dragBegin( const DragDropEvent &event )
 {
-	// store the line of our handle in world space.
 	V3f handle( 0.0f );
 	handle[m_axes] = 1.0f;
 	m_drag = LinearDrag( this, LineSegment3f( V3f( 0 ), handle ), event );

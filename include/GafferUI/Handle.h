@@ -53,6 +53,8 @@ class Handle : public Gadget
 
 		IE_CORE_DECLARERUNTIMETYPEDEXTENSION( GafferUI::Handle, HandleTypeId, Gadget );
 
+		// A non-zero raster scale causes the handles to be
+		// drawn at a constant size in raster space.
 		void setRasterScale( float rasterScale );
 		float getRasterScale() const;
 
@@ -85,6 +87,7 @@ class Handle : public Gadget
 			// Line is specified in Gadget space.
 			LinearDrag( const Gadget *gadget, const IECore::LineSegment3f &line, const DragDropEvent &dragBeginEvent );
 
+			// Positions are measured from 0 at line.p0 to 1 at line.p1.
 			float startPosition() const;
 			float position( const DragDropEvent &event ) const;
 
@@ -104,11 +107,15 @@ class Handle : public Gadget
 		{
 
 			PlanarDrag();
-			// Plane is centered on gadget and parallel to the camera plane.
+			// Plane is parallel to the camera plane, centered on gadget, and with unit
+			// length axes in gadget space.
 			PlanarDrag( const Gadget *gadget, const DragDropEvent &dragBeginEvent );
-			// Position and axes are in gadget space.
+			// Position and axes are in gadget space. Axes are assumed to be orthogonal
+			// but may have any length.
 			PlanarDrag( const Gadget *gadget, const Imath::V3f &origin, const Imath::V3f &axis0, const Imath::V3f &axis1, const DragDropEvent &dragBeginEvent );
 
+			// X coordinate are measured from 0 at origin to 1 at `origin + axis0`
+			// Y coordinates are measured from 0 at origin to 1 at `origin + axis1`
 			Imath::V2f startPosition() const;
 			Imath::V2f position( const DragDropEvent &event ) const;
 
