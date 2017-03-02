@@ -278,8 +278,11 @@ Imath::Box2i Crop::computeDataWindow( const Gaffer::Context *context, const Imag
 		result = BufferAlgo::intersection( result, cropWindow );
 	}
 
-	result.min += offset;
-	result.max += offset;
+	if( !BufferAlgo::empty( result ) )
+	{
+		result.min += offset;
+		result.max += offset;
+	}
 
 	return result;
 }
