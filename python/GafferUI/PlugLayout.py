@@ -393,7 +393,10 @@ class PlugLayout( GafferUI.Widget ) :
 		widgetType = self.__itemMetadataValue( name, "widgetType" )
 		widgetClass = self.__import( widgetType )
 
-		return widgetClass( self.__parent )
+		result = widgetClass( self.__parent )
+		self.__applyContext( result, self.getContext() )
+
+		return result
 
 	def __node( self ) :
 
