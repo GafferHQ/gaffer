@@ -6,6 +6,10 @@ os:
     - linux
     - osx
 
+compiler:
+    - gcc
+    - clang
+
 addons:
   apt:
     sources:
@@ -64,7 +68,7 @@ env:
     - COMPILER_VERSION= CXXSTD=c++98 DEBUG=0
 
 matrix:
-    # Explicit list of all permutations of environment
+    # Explicit list of additional permutations of environment
     # and compiler we want to test. These are on top
     # of the defaults provided by the compiler and
     # env setup above.
@@ -83,9 +87,7 @@ matrix:
           env: COMPILER_VERSION=5 CXXSTD=c++11 DEBUG=0
         - os: linux
           compiler: clang
-          env: COMPILER_VERSION= CXXSTD=c++98 DEBUG=0
-        - os: linux
-          compiler: clang
           env: COMPILER_VERSION= CXXSTD=c++98 DEBUG=1
+    exclude:
         - os: osx
-          osx_image: xcode8.2
+          compiler: gcc
