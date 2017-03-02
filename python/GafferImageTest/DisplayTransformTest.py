@@ -36,6 +36,7 @@
 
 import os
 import unittest
+import subprocess32 as subprocess
 
 import IECore
 
@@ -166,6 +167,81 @@ class DisplayTransformTest( GafferImageTest.ImageTestCase ) :
 		self.assertEqual( i["out"]["dataWindow"].getValue(), o["out"]["dataWindow"].getValue() )
 		self.assertEqual( i["out"]["metadata"].getValue(), o["out"]["metadata"].getValue() )
 		self.assertEqual( i["out"]["channelNames"].getValue(), o["out"]["channelNames"].getValue() )
+
+	def testContext( self ) :
+		
+		scriptFileName = self.temporaryDirectory() + "/script.gfr"
+		contextImageFile = self.temporaryDirectory() + "/context.#.exr"
+		contextOverrideImageFile = self.temporaryDirectory() + "/context_override.#.exr"
+
+		s = Gaffer.ScriptNode()
+
+		s["reader"] =  GafferImage.ImageReader()
+		s["reader"]["fileName"].setValue( self.imageFile )
+
+		s["dt"] = GafferImage.DisplayTransform()
+		s["dt"]["in"].setInput( s["reader"]["out"] )
+		s["dt"]["inputColorSpace"].setValue( "linear" )
+		s["dt"]["display"].setValue( "default" )
+		s["dt"]["view"].setValue( "context" )
+		
+
+		s["writer"] = GafferImage.ImageWriter()
+		s["writer"]["fileName"].setValue( contextImageFile )
+		s["writer"]["in"].setInput( s["dt"]["out"] )
+		s["writer"]['channels'].setValue(IECore.StringVectorData(["R", "G", "B", "A"]))
+	
+		s["fileName"].setValue( scriptFileName )
+		s.save()
+
+		env = os.environ.copy()
+		env["OCIO"] = os.path.expandvars( "$GAFFER_ROOT/python/GafferImageTest/openColorIO/context.ocio" )
+		env["LUT"] = "srgb.spi1d"
+		env["CDL"] = "cineon.spi1d"
+
+		subprocess.check_call(
+			" ".join(["gaffer", "execute", scriptFileName,"-frames", "1"]),
+			shell = True,
+			stderr = subprocess.PIPE,
+			env = env,
+		)
+
+		i = GafferImage.ImageReader()
+		i["fileName"].setValue( os.path.expandvars( "$GAFFER_ROOT/python/GafferImageTest/images/checker_ocio_context.exr" ) )
+
+		o = GafferImage.ImageReader()
+		o["fileName"].setValue( contextImageFile )
+
+		expected = i["out"]
+		context = o["out"]
+
+		# check against expected output
+		self.assertImagesEqual( expected, context, ignoreMetadata = True )
+		
+		# override context
+		s["writer"]["fileName"].setValue( contextOverrideImageFile )
+		s["dt"]["context"].addOptionalMember("LUT", "cineon.spi1d", "LUT", enabled=True)
+		s["dt"]["context"].addOptionalMember("CDL", "rec709.spi1d", "CDL", enabled=True)
+		s.save()
+
+		subprocess.check_call(
+			" ".join(["gaffer", "execute", scriptFileName,"-frames", "1"]),
+			shell = True,
+			stderr = subprocess.PIPE,
+			env = env
+		)
+
+		i = GafferImage.ImageReader()
+		i["fileName"].setValue( os.path.expandvars( "$GAFFER_ROOT/python/GafferImageTest/images/checker_ocio_context_override.exr" ) )
+
+		o = GafferImage.ImageReader()
+		o["fileName"].setValue( contextOverrideImageFile )
+
+		expected = i["out"]
+		context = o["out"]
+
+		# check override produce expected output
+		self.assertImagesEqual( expected, context, ignoreMetadata = True )
 
 if __name__ == "__main__":
 	unittest.main()

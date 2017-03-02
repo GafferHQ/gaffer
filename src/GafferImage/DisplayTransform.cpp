@@ -48,7 +48,7 @@ IE_CORE_DEFINERUNTIMETYPED( DisplayTransform );
 size_t DisplayTransform::g_firstPlugIndex = 0;
 
 DisplayTransform::DisplayTransform( const std::string &name )
-	:	OpenColorIOTransform( name )
+	:	OpenColorIOTransform( name, true )
 {
 	storeIndexOfNextChild( g_firstPlugIndex );
 	addChild( new StringPlug( "inputColorSpace" ) );
