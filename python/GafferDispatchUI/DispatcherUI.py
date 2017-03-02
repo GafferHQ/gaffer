@@ -376,6 +376,9 @@ class _FramesModePlugValueWidget( GafferUI.PlugValueWidget ) :
 		# save the metadata in case the frameRange plug is set prior to enabling CustomRange mode
 		self.__customFrameRangeChanged( self.getPlug().node()["frameRange"] )
 
+		# set the current mode so that _updatePlug can set __selectionMenu accordingly
+		Gaffer.Metadata.registerValue( self.getPlug(), "dispatcherWindow:framesMode", "CurrentFrame" )
+
 		self._updateFromPlug()
 
 	def selectionMenu( self ) :
@@ -389,14 +392,9 @@ class _FramesModePlugValueWidget( GafferUI.PlugValueWidget ) :
 		if self.getPlug() is None :
 			return
 
-		with self.getContext() :
-			plugValue = self.getPlug().getValue()
-
-		for labelAndValue in self.__labelsAndValues :
-			if labelAndValue[1] == plugValue :
-				with Gaffer.BlockedConnection( self.__selectionChangedConnection ) :
-					self.__selectionMenu.setSelection( labelAndValue[0] )
-				break
+		mode = Gaffer.Metadata.value( self.getPlug(), "dispatcherWindow:framesMode" )
+		with Gaffer.BlockedConnection( self.__selectionChangedConnection ) :
+			self.__selectionMenu.setSelection( mode )
 
 	def __frameRangeWidget( self ) :
 
@@ -428,6 +426,8 @@ class _FramesModePlugValueWidget( GafferUI.PlugValueWidget ) :
 
 		script = window.scriptNode()
 		context = script.context()
+
+		Gaffer.Metadata.registerValue( self.getPlug(), "dispatcherWindow:framesMode", label )
 
 		if label == "CurrentFrame" :
 			self.__updateFrameRangeConnection = context.changedSignal().connect( Gaffer.WeakMethod( self.__contextChanged ) )
