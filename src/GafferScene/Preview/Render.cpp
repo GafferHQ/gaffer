@@ -64,6 +64,8 @@ InternedString g_performanceMonitorOptionName( "option:render:performanceMonitor
 
 size_t Render::g_firstPlugIndex = 0;
 
+static IECore::InternedString g_rendererContextName( "scene:renderer" );
+
 IE_CORE_DEFINERUNTIMETYPED( Render );
 
 Render::Render( const std::string &name )
@@ -185,6 +187,10 @@ void Render::execute() const
 	{
 		return;
 	}
+
+	ContextPtr rendererContext = new Context( *Context::current(), Context::Borrowed );
+	rendererContext->set( g_rendererContextName, rendererType );
+	Context::Scope rendererContextScope( rendererContext.get() );
 
 	const Mode mode = static_cast<Mode>( modePlug()->getValue() );
 	const std::string fileName = fileNamePlug()->getValue();
