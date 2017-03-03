@@ -775,6 +775,23 @@ class ArnoldRenderTest( GafferTest.TestCase ) :
 							seed or round( frame )
 						)
 
+	def testRendererContextVariable( self ) :
+
+		sphere = GafferScene.Sphere()
+		sphere["name"].setValue( "sphere${scene:renderer}" )
+
+		render = GafferArnold.ArnoldRender()
+		render["in"].setInput( sphere["out"] )
+		render["mode"].setValue( render.Mode.SceneDescriptionMode )
+		render["fileName"].setValue( self.temporaryDirectory() + "/test.ass" )
+
+		render["task"].execute()
+
+		with IECoreArnold.UniverseBlock() :
+
+			arnold.AiASSLoad( self.temporaryDirectory() + "/test.ass" )
+			self.assertTrue( arnold.AiNodeLookUpByName( "/sphereArnold" ) is not None )
+
 	def __arrayToSet( self, a ) :
 
 		result = set()

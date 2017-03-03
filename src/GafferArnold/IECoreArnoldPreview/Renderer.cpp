@@ -2081,6 +2081,6 @@ class ArnoldRenderer : public IECoreScenePreview::Renderer
 
 };
 
-IECoreScenePreview::Renderer::TypeDescription<ArnoldRenderer> ArnoldRenderer::g_typeDescription( "IECoreArnold::Renderer" );
+IECoreScenePreview::Renderer::TypeDescription<ArnoldRenderer> ArnoldRenderer::g_typeDescription( "Arnold" );
 
 } // namespace

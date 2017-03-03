@@ -50,15 +50,15 @@ class RendererTest( GafferTest.TestCase ) :
 
 	def testFactory( self ) :
 
-		self.assertTrue( "IECoreArnold::Renderer" in GafferScene.Private.IECoreScenePreview.Renderer.types() )
+		self.assertTrue( "Arnold" in GafferScene.Private.IECoreScenePreview.Renderer.types() )
 
-		r = GafferScene.Private.IECoreScenePreview.Renderer.create( "IECoreArnold::Renderer" )
+		r = GafferScene.Private.IECoreScenePreview.Renderer.create( "Arnold" )
 		self.assertTrue( isinstance( r, GafferScene.Private.IECoreScenePreview.Renderer ) )
 
 	def testSceneDescription( self ) :
 
 		r = GafferScene.Private.IECoreScenePreview.Renderer.create(
-			"IECoreArnold::Renderer",
+			"Arnold",
 			GafferScene.Private.IECoreScenePreview.Renderer.RenderType.SceneDescription,
 			self.temporaryDirectory() + "/test.ass"
 		)
@@ -84,7 +84,7 @@ class RendererTest( GafferTest.TestCase ) :
 	def testRenderRegion( self ) :
 
 		r = GafferScene.Private.IECoreScenePreview.Renderer.create(
-			"IECoreArnold::Renderer",
+			"Arnold",
 			GafferScene.Private.IECoreScenePreview.Renderer.RenderType.SceneDescription,
 			self.temporaryDirectory() + "/test.ass"
 		)
@@ -121,7 +121,7 @@ class RendererTest( GafferTest.TestCase ) :
 	def testShaderReuse( self ) :
 
 		r = GafferScene.Private.IECoreScenePreview.Renderer.create(
-			"IECoreArnold::Renderer",
+			"Arnold",
 			GafferScene.Private.IECoreScenePreview.Renderer.RenderType.SceneDescription,
 			self.temporaryDirectory() + "/test.ass"
 		)
@@ -151,7 +151,7 @@ class RendererTest( GafferTest.TestCase ) :
 	def testShaderGarbageCollection( self ) :
 
 		r = GafferScene.Private.IECoreScenePreview.Renderer.create(
-			"IECoreArnold::Renderer",
+			"Arnold",
 			GafferScene.Private.IECoreScenePreview.Renderer.RenderType.SceneDescription,
 			self.temporaryDirectory() + "/test.ass"
 		)
@@ -182,7 +182,7 @@ class RendererTest( GafferTest.TestCase ) :
 	def testShaderNames( self ) :
 
 		r = GafferScene.Private.IECoreScenePreview.Renderer.create(
-			"IECoreArnold::Renderer",
+			"Arnold",
 			GafferScene.Private.IECoreScenePreview.Renderer.RenderType.SceneDescription,
 			self.temporaryDirectory() + "/test.ass"
 		)
@@ -231,7 +231,7 @@ class RendererTest( GafferTest.TestCase ) :
 	def testShaderNodeConnectionType( self ) :
 
 		r = GafferScene.Private.IECoreScenePreview.Renderer.create(
-			"IECoreArnold::Renderer",
+			"Arnold",
 			GafferScene.Private.IECoreScenePreview.Renderer.RenderType.SceneDescription,
 			self.temporaryDirectory() + "/test.ass"
 		)
@@ -298,7 +298,7 @@ class RendererTest( GafferTest.TestCase ) :
 	def testLightNames( self ) :
 
 		r = GafferScene.Private.IECoreScenePreview.Renderer.create(
-			"IECoreArnold::Renderer",
+			"Arnold",
 			GafferScene.Private.IECoreScenePreview.Renderer.RenderType.SceneDescription,
 			self.temporaryDirectory() + "/test.ass"
 		)
@@ -328,7 +328,7 @@ class RendererTest( GafferTest.TestCase ) :
 	def testLightTransforms( self ) :
 
 		r = GafferScene.Private.IECoreScenePreview.Renderer.create(
-			"IECoreArnold::Renderer",
+			"Arnold",
 			GafferScene.Private.IECoreScenePreview.Renderer.RenderType.SceneDescription,
 			self.temporaryDirectory() + "/test.ass"
 		)
@@ -383,7 +383,7 @@ class RendererTest( GafferTest.TestCase ) :
 	def testSharedLightAttributes( self ) :
 
 		r = GafferScene.Private.IECoreScenePreview.Renderer.create(
-			"IECoreArnold::Renderer",
+			"Arnold",
 			GafferScene.Private.IECoreScenePreview.Renderer.RenderType.SceneDescription,
 			self.temporaryDirectory() + "/test.ass"
 		)
@@ -413,7 +413,7 @@ class RendererTest( GafferTest.TestCase ) :
 	def testAttributes( self ) :
 
 		r = GafferScene.Private.IECoreScenePreview.Renderer.create(
-			"IECoreArnold::Renderer",
+			"Arnold",
 			GafferScene.Private.IECoreScenePreview.Renderer.RenderType.SceneDescription,
 			self.temporaryDirectory() + "/test.ass"
 		)
@@ -496,7 +496,7 @@ class RendererTest( GafferTest.TestCase ) :
 	def testOutputFilters( self ) :
 
 		r = GafferScene.Private.IECoreScenePreview.Renderer.create(
-			"IECoreArnold::Renderer",
+			"Arnold",
 			GafferScene.Private.IECoreScenePreview.Renderer.RenderType.SceneDescription,
 			self.temporaryDirectory() + "/test.ass"
 		)
@@ -530,7 +530,7 @@ class RendererTest( GafferTest.TestCase ) :
 	def testExrMetadata( self ) :
 
 		r = GafferScene.Private.IECoreScenePreview.Renderer.create(
-			"IECoreArnold::Renderer",
+			"Arnold",
 			GafferScene.Private.IECoreScenePreview.Renderer.RenderType.SceneDescription,
 			self.temporaryDirectory() + "/test.ass"
 		)
@@ -642,7 +642,7 @@ class RendererTest( GafferTest.TestCase ) :
 	def testInstancing( self ) :
 
 		r = GafferScene.Private.IECoreScenePreview.Renderer.create(
-			"IECoreArnold::Renderer",
+			"Arnold",
 			GafferScene.Private.IECoreScenePreview.Renderer.RenderType.SceneDescription,
 			self.temporaryDirectory() + "/test.ass"
 		)
@@ -741,7 +741,7 @@ class RendererTest( GafferTest.TestCase ) :
 	def testSubdivisionAttributes( self ) :
 
 		r = GafferScene.Private.IECoreScenePreview.Renderer.create(
-			"IECoreArnold::Renderer",
+			"Arnold",
 			GafferScene.Private.IECoreScenePreview.Renderer.RenderType.SceneDescription,
 			self.temporaryDirectory() + "/test.ass"
 		)
@@ -778,7 +778,7 @@ class RendererTest( GafferTest.TestCase ) :
 	def testUserAttributes( self ) :
 
 		r = GafferScene.Private.IECoreScenePreview.Renderer.create(
-			"IECoreArnold::Renderer",
+			"Arnold",
 			GafferScene.Private.IECoreScenePreview.Renderer.RenderType.SceneDescription,
 			self.temporaryDirectory() + "/test.ass"
 		)
@@ -835,7 +835,7 @@ class RendererTest( GafferTest.TestCase ) :
 	def testDisplacementAttributes( self ) :
 
 		r = GafferScene.Private.IECoreScenePreview.Renderer.create(
-			"IECoreArnold::Renderer",
+			"Arnold",
 			GafferScene.Private.IECoreScenePreview.Renderer.RenderType.SceneDescription,
 			self.temporaryDirectory() + "/test.ass"
 		)
@@ -911,7 +911,7 @@ class RendererTest( GafferTest.TestCase ) :
 	def testSubdividePolygonsAttribute( self ) :
 
 		r = GafferScene.Private.IECoreScenePreview.Renderer.create(
-			"IECoreArnold::Renderer",
+			"Arnold",
 			GafferScene.Private.IECoreScenePreview.Renderer.RenderType.SceneDescription,
 			self.temporaryDirectory() + "/test.ass"
 		)
@@ -958,7 +958,7 @@ class RendererTest( GafferTest.TestCase ) :
 	def testMeshLight( self ) :
 
 		r = GafferScene.Private.IECoreScenePreview.Renderer.create(
-			"IECoreArnold::Renderer",
+			"Arnold",
 			GafferScene.Private.IECoreScenePreview.Renderer.RenderType.SceneDescription,
 			self.temporaryDirectory() + "/test.ass"
 		)
@@ -998,7 +998,7 @@ class RendererTest( GafferTest.TestCase ) :
 	def testMeshLightsWithSharedShaders( self ) :
 
 		r = GafferScene.Private.IECoreScenePreview.Renderer.create(
-			"IECoreArnold::Renderer",
+			"Arnold",
 			GafferScene.Private.IECoreScenePreview.Renderer.RenderType.SceneDescription,
 			self.temporaryDirectory() + "/test.ass"
 		)
@@ -1061,7 +1061,7 @@ class RendererTest( GafferTest.TestCase ) :
 	def testOSLShaders( self ) :
 
 		r = GafferScene.Private.IECoreScenePreview.Renderer.create(
-			"IECoreArnold::Renderer",
+			"Arnold",
 			GafferScene.Private.IECoreScenePreview.Renderer.RenderType.SceneDescription,
 			self.temporaryDirectory() + "/test.ass"
 		)
@@ -1148,7 +1148,7 @@ class RendererTest( GafferTest.TestCase ) :
 	def testPureOSLShaders( self ) :
 
 		r = GafferScene.Private.IECoreScenePreview.Renderer.create(
-			"IECoreArnold::Renderer",
+			"Arnold",
 			GafferScene.Private.IECoreScenePreview.Renderer.RenderType.SceneDescription,
 			self.temporaryDirectory() + "/test.ass"
 		)
@@ -1180,7 +1180,7 @@ class RendererTest( GafferTest.TestCase ) :
 	def testTraceSets( self ) :
 
 		r = GafferScene.Private.IECoreScenePreview.Renderer.create(
-			"IECoreArnold::Renderer",
+			"Arnold",
 			GafferScene.Private.IECoreScenePreview.Renderer.RenderType.SceneDescription,
 			self.temporaryDirectory() + "/test.ass"
 		)
@@ -1228,7 +1228,7 @@ class RendererTest( GafferTest.TestCase ) :
 	def testCurvesAttributes( self ) :
 
 		r = GafferScene.Private.IECoreScenePreview.Renderer.create(
-			"IECoreArnold::Renderer",
+			"Arnold",
 			GafferScene.Private.IECoreScenePreview.Renderer.RenderType.SceneDescription,
 			self.temporaryDirectory() + "/test.ass"
 		)
@@ -1326,7 +1326,7 @@ class RendererTest( GafferTest.TestCase ) :
 	def testAttributeEditFailures( self ) :
 
 		r = GafferScene.Private.IECoreScenePreview.Renderer.create(
-			"IECoreArnold::Renderer",
+			"Arnold",
 			GafferScene.Private.IECoreScenePreview.Renderer.RenderType.Interactive
 		)
 
@@ -1400,7 +1400,7 @@ class RendererTest( GafferTest.TestCase ) :
 	def testStepSizeAttribute( self ) :
 
 		r = GafferScene.Private.IECoreScenePreview.Renderer.create(
-			"IECoreArnold::Renderer",
+			"Arnold",
 			GafferScene.Private.IECoreScenePreview.Renderer.RenderType.SceneDescription,
 			self.temporaryDirectory() + "/test.ass"
 		)
@@ -1509,7 +1509,7 @@ class RendererTest( GafferTest.TestCase ) :
 	def testStepSizeAttributeDefersToProceduralParameter( self ) :
 
 		r = GafferScene.Private.IECoreScenePreview.Renderer.create(
-			"IECoreArnold::Renderer",
+			"Arnold",
 			GafferScene.Private.IECoreScenePreview.Renderer.RenderType.SceneDescription,
 			self.temporaryDirectory() + "/test.ass"
 		)
@@ -1550,7 +1550,7 @@ class RendererTest( GafferTest.TestCase ) :
 	def testDeclaringCustomOptions( self ) :
 
 		r = GafferScene.Private.IECoreScenePreview.Renderer.create(
-			"IECoreArnold::Renderer",
+			"Arnold",
 			GafferScene.Private.IECoreScenePreview.Renderer.RenderType.SceneDescription,
 			self.temporaryDirectory() + "/test.ass"
 		)
@@ -1573,7 +1573,7 @@ class RendererTest( GafferTest.TestCase ) :
 			for seed in ( None, 3, 4 ) :
 
 				r = GafferScene.Private.IECoreScenePreview.Renderer.create(
-					"IECoreArnold::Renderer",
+					"Arnold",
 					GafferScene.Private.IECoreScenePreview.Renderer.RenderType.SceneDescription,
 					self.temporaryDirectory() + "/test.ass"
 				)
@@ -1602,7 +1602,7 @@ class RendererTest( GafferTest.TestCase ) :
 		# it doesn't exist.
 
 		r = GafferScene.Private.IECoreScenePreview.Renderer.create(
-			"IECoreArnold::Renderer",
+			"Arnold",
 			GafferScene.Private.IECoreScenePreview.Renderer.RenderType.SceneDescription,
 			self.temporaryDirectory() + "/test.ass"
 		)

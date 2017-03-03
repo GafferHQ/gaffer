@@ -42,7 +42,7 @@ using namespace GafferArnold;
 IE_CORE_DEFINERUNTIMETYPED( ArnoldRender );
 
 ArnoldRender::ArnoldRender( const std::string &name )
-	:	Render( "IECoreArnold::Renderer", name )
+	:	Render( "Arnold", name )
 {
 }
 
