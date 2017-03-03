@@ -54,6 +54,10 @@ class InteractiveArnoldRender : public GafferScene::Preview::InteractiveRender
 
 		IE_CORE_DECLARERUNTIMETYPEDEXTENSION( GafferArnold::InteractiveArnoldRender, InteractiveArnoldRenderTypeId, GafferScene::Preview::InteractiveRender );
 
+		/// Utility to call AiUniverseCacheFlush() and
+		/// restart any running sessions.
+		static void flushCaches( int flags );
+
 };
 
 IE_CORE_DECLAREPTR( InteractiveArnoldRender );
