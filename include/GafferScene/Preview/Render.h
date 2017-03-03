@@ -97,6 +97,9 @@ class Render : public GafferDispatch::TaskNode
 
 		void construct( const IECore::InternedString &rendererType = IECore::InternedString() );
 
+		ScenePlug *adaptedInPlug();
+		const ScenePlug *adaptedInPlug() const;
+
 		static size_t g_firstPlugIndex;
 
 };
