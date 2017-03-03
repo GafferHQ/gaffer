@@ -175,6 +175,12 @@ void setVisible( Gadget &g, bool visible )
 	g.setVisible( visible );
 }
 
+void setEnabled( Gadget &g, bool enabled )
+{
+	IECorePython::ScopedGILRelease gilRelease;
+	g.setEnabled( enabled );
+}
+
 void render( const Gadget &g, const Style *currentStyle )
 {
 	IECorePython::ScopedGILRelease gilRelease;
@@ -199,6 +205,9 @@ void GafferUIBindings::bindGadget()
 		.def( "getVisible", &Gadget::getVisible )
 		.def( "visible", &Gadget::visible, ( arg_( "relativeTo" ) = object() ) )
 		.def( "visibilityChangedSignal", &Gadget::visibilityChangedSignal, return_internal_reference<1>() )
+		.def( "setEnabled", &setEnabled )
+		.def( "getEnabled", &Gadget::getEnabled )
+		.def( "enabled", &Gadget::enabled, ( arg_( "relativeTo" ) = object() ) )
 		.def( "getHighlighted", &Gadget::getHighlighted )
 		.def( "getTransform", &Gadget::getTransform, return_value_policy<copy_const_reference>() )
 		.def( "setTransform", &Gadget::setTransform )

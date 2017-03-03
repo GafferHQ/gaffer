@@ -1,6 +1,6 @@
 ##########################################################################
 #
-#  Copyright (c) 2013, Image Engine Design Inc. All rights reserved.
+#  Copyright (c) 2016, John Haddon. All rights reserved.
 #
 #  Redistribution and use in source and binary forms, with or without
 #  modification, are permitted provided that the following conditions are
@@ -34,17 +34,19 @@
 #
 ##########################################################################
 
-from SceneViewTest import SceneViewTest
-from ShaderAssignmentUITest import ShaderAssignmentUITest
-from StandardGraphLayoutTest import StandardGraphLayoutTest
-from SceneGadgetTest import SceneGadgetTest
-from SceneInspectorTest import SceneInspectorTest
-from SceneHierarchyTest import SceneHierarchyTest
-from DocumentationTest import DocumentationTest
-from ShaderViewTest import ShaderViewTest
-from ShaderUITest import ShaderUITest
-from TranslateToolTest import TranslateToolTest
-from ScaleToolTest import ScaleToolTest
+import Gaffer
+import GafferSceneUI
 
-if __name__ == "__main__":
-	unittest.main()
+Gaffer.Metadata.registerNode(
+
+	GafferSceneUI.ScaleTool,
+
+	"description",
+	"""
+	Tool for editing object scale.
+	""",
+
+	"viewer:shortCut", "R",
+	"order", 3,
+
+)

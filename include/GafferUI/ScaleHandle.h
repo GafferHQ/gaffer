@@ -1,6 +1,7 @@
 //////////////////////////////////////////////////////////////////////////
 //
 //  Copyright (c) 2014, John Haddon. All rights reserved.
+//  Copyright (c) 2017, Image Engine Design Inc. All rights reserved.
 //
 //  Redistribution and use in source and binary forms, with or without
 //  modification, are permitted provided that the following conditions are
@@ -34,37 +35,47 @@
 //
 //////////////////////////////////////////////////////////////////////////
 
-#include "boost/python.hpp"
+#ifndef GAFFERUI_SCALEHANDLE_H
+#define GAFFERUI_SCALEHANDLE_H
 
-#include "GafferUI/TranslateHandle.h"
-#include "GafferUI/ScaleHandle.h"
+#include "GafferUI/Handle.h"
 
-#include "GafferUIBindings/HandleBinding.h"
-#include "GafferUIBindings/GadgetBinding.h"
-
-using namespace boost::python;
-using namespace GafferUI;
-
-void GafferUIBindings::bindHandle()
+namespace GafferUI
 {
 
-	GadgetClass<Handle>()
-		.def( "setRasterScale", &Handle::setRasterScale )
-		.def( "getRasterScale", &Handle::getRasterScale )
-	;
+class ScaleHandle : public Handle
+{
 
-	GadgetClass<TranslateHandle>()
-		.def( init<Style::Axes>() )
-		.def( "setAxes", &TranslateHandle::setAxes )
-		.def( "getAxes", &TranslateHandle::getAxes )
-		.def( "translation", &TranslateHandle::translation )
-	;
+	public :
 
-	GadgetClass<ScaleHandle>()
-		.def( init<Style::Axes>() )
-		.def( "setAxes", &ScaleHandle::setAxes )
-		.def( "getAxes", &ScaleHandle::getAxes )
-		.def( "scaling", &ScaleHandle::scaling )
-	;
+		ScaleHandle( Style::Axes axes );
+		virtual ~ScaleHandle();
 
-}
+		IE_CORE_DECLARERUNTIMETYPEDEXTENSION( GafferUI::ScaleHandle, ScaleHandleTypeId, Handle );
+
+		void setAxes( Style::Axes axes );
+		Style::Axes getAxes() const;
+
+		float scaling( const DragDropEvent &event ) const;
+
+	protected :
+
+		virtual void renderHandle( const Style *style, Style::State state ) const;
+		virtual void dragBegin( const DragDropEvent &event );
+
+	private :
+
+		Style::Axes m_axes;
+		LinearDrag m_drag;
+		Imath::V2f m_uniformDragStartPosition;
+
+};
+
+IE_CORE_DECLAREPTR( ScaleHandle )
+
+typedef Gaffer::FilteredChildIterator<Gaffer::TypePredicate<ScaleHandle> > ScaleHandleIterator;
+typedef Gaffer::FilteredRecursiveChildIterator<Gaffer::TypePredicate<ScaleHandle> > RecursiveScaleHandleIterator;
+
+} // namespace GafferUI
+
+#endif // GAFFERUI_SCALEHANDLE_H

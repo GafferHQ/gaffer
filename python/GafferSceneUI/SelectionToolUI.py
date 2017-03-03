@@ -52,6 +52,7 @@ Gaffer.Metadata.registerNode(
 		- Drag to PathFilter or Sets node to add/remove their paths
 	""",
 
+	"viewer:shortCut", "Q",
 	"order", 0,
 
 )

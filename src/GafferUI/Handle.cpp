@@ -1,6 +1,7 @@
 //////////////////////////////////////////////////////////////////////////
 //
 //  Copyright (c) 2014, John Haddon. All rights reserved.
+//  Copyright (c) 2017, Image Engine Design Inc. All rights reserved.
 //
 //  Redistribution and use in source and binary forms, with or without
 //  modification, are permitted provided that the following conditions are
@@ -37,7 +38,15 @@
 #include "boost/bind.hpp"
 #include "boost/bind/placeholders.hpp"
 
+#include "OpenEXR/ImathMatrixAlgo.h"
+#include "OpenEXR/ImathLine.h"
+#include "OpenEXR/ImathPlane.h"
+#include "OpenEXR/ImathVecAlgo.h"
+
 #include "IECore/NullObject.h"
+#include "IECore/Transform.h"
+
+#include "IECoreGL/Camera.h"
 
 #include "GafferUI/Handle.h"
 #include "GafferUI/Style.h"
@@ -47,16 +56,20 @@ using namespace Imath;
 using namespace IECore;
 using namespace GafferUI;
 
+//////////////////////////////////////////////////////////////////////////
+// Handle
+//////////////////////////////////////////////////////////////////////////
+
 IE_CORE_DEFINERUNTIMETYPED( Handle );
 
-Handle::Handle( Type type )
-	:	Gadget( defaultName<Handle>() ), m_type( type ), m_hovering( false )
+Handle::Handle( const std::string &name )
+	:	Gadget( name ), m_hovering( false ), m_rasterScale( 0.0f )
 {
 	enterSignal().connect( boost::bind( &Handle::enter, this ) );
 	leaveSignal().connect( boost::bind( &Handle::leave, this ) );
 
 	buttonPressSignal().connect( boost::bind( &Handle::buttonPress, this, ::_2 ) );
-	dragBeginSignal().connect( boost::bind( &Handle::dragBegin, this, ::_2 ) );
+	dragBeginSignal().connect( boost::bind( &Handle::dragBeginInternal, this, ::_2 ) );
 	dragEnterSignal().connect( boost::bind( &Handle::dragEnter, this, ::_2 ) );
 }
 
@@ -64,57 +77,66 @@ Handle::~Handle()
 {
 }
 
-void Handle::setType( Type type )
+void Handle::setRasterScale( float rasterScale )
 {
-	if( type == m_type )
+	if( rasterScale == m_rasterScale )
 	{
 		return;
 	}
 
-	m_type = type;
- 	requestRender();
+	m_rasterScale = rasterScale;
+	renderRequestSignal()( this );
 }
 
-Handle::Type Handle::getType() const
+float Handle::getRasterScale() const
 {
-	return m_type;
-}
-
-float Handle::dragOffset( const DragDropEvent &event ) const
-{
-	return absoluteDragOffset( event ) - m_dragBeginOffset;
+	return m_rasterScale;
 }
 
 Imath::Box3f Handle::bound() const
 {
-	switch( m_type )
-	{
-		case TranslateX :
-			return Box3f( V3f( 0 ), V3f( 1, 0, 0 ) );
-		case TranslateY :
-			return Box3f( V3f( 0 ), V3f( 0, 1, 0 ) );
-		case TranslateZ :
-			return Box3f( V3f( 0 ), V3f( 0, 0, 1 ) );
-	};
-
-	return Box3f();
+	// Having a raster scale makes our bound somewhat meaningless
+	// anyway, so save the derived classes some trouble and return
+	// something fairly arbitrary.
+	return Box3f( V3f( -1 ), V3f( 1 ) );
 }
 
 void Handle::doRender( const Style *style ) const
 {
-	Style::State state = getHighlighted() || m_hovering ? Style::HighlightedState : Style::NormalState;
-
-	switch( m_type )
+	if( m_rasterScale > 0.0f )
 	{
-		case TranslateX :
-			style->renderTranslateHandle( 0, state );
-			break;
-		case TranslateY :
-			style->renderTranslateHandle( 1, state );
-			break;
-		case TranslateZ :
-			style->renderTranslateHandle( 2, state );
-			break;
+		// We want our handles to be a constant length in
+		// raster space. Two things get in our way :
+		//
+		//  1. The distance from camera.
+		//  2. Scaling applied to our transform.
+
+		const ViewportGadget *viewport = ancestor<ViewportGadget>();
+
+		// Scale factor to address 1.
+		const V2f p1 = viewport->gadgetToRasterSpace( V3f( 0.0f ), this );
+		const V2f p2 = viewport->gadgetToRasterSpace( IECoreGL::Camera::upInObjectSpace(), this );
+		const float s1 = m_rasterScale / ( p1 - p2 ).length();
+
+		// Scale factor to address 2. We use fabs because we don't
+		// want to lose the change of orientation brought about by
+		// negative scaling.
+		V3f s2;
+		extractScaling( fullTransform(), s2 );
+		s2 = V3f( 1.0f / fabs( s2.x ), 1.0f / fabs( s2.y ), 1.0f / fabs( s2.z ) );
+
+		glPushMatrix();
+		glScalef( s1 * s2.x, s1 * s2.y, s1 * s2.z );
+	}
+
+	Style::State state = getHighlighted() || m_hovering ? Style::HighlightedState : Style::NormalState;
+	state = !enabled() ? Style::DisabledState : state;
+
+	renderHandle( style, state );
+
+	if( m_rasterScale > 0.0f )
+	{
+		glPopMatrix();
 	}
 }
 
@@ -135,19 +157,9 @@ bool Handle::buttonPress( const ButtonEvent &event )
 	return event.buttons == ButtonEvent::Left;
 }
 
-IECore::RunTimeTypedPtr Handle::dragBegin( const DragDropEvent &event )
+IECore::RunTimeTypedPtr Handle::dragBeginInternal( const DragDropEvent &event )
 {
-	// store the line of our handle in world space.
-	V3f handle( 0.0f );
-	handle[m_type] = 1.0f;
-
-	m_dragHandleWorld = LineSegment3f(
-		V3f( 0 ) * fullTransform(),
-		handle * fullTransform()
-	);
-
-	m_dragBeginOffset = absoluteDragOffset( event );
-
+	dragBegin( event );
 	return IECore::NullObject::defaultNullObject();
 }
 
@@ -156,17 +168,43 @@ bool Handle::dragEnter( const DragDropEvent &event )
 	return event.sourceGadget == this;
 }
 
-float Handle::absoluteDragOffset( const DragDropEvent &event ) const
+//////////////////////////////////////////////////////////////////////////
+// LinearDrag
+//////////////////////////////////////////////////////////////////////////
+
+Handle::LinearDrag::LinearDrag()
+	:	m_gadget( NULL ),
+		m_worldLine( V3f( 0 ), V3f( 1, 0, 0 ) ),
+		m_dragBeginPosition( 0 )
 {
-	const ViewportGadget *viewport = ancestor<ViewportGadget>();
+}
+
+Handle::LinearDrag::LinearDrag( const Gadget *gadget, const IECore::LineSegment3f &line, const DragDropEvent &dragBeginEvent )
+	:	m_gadget( gadget ),
+		m_worldLine(
+			line.p0 * m_gadget->fullTransform(),
+			line.p1 * m_gadget->fullTransform()
+		),
+		m_dragBeginPosition( position( dragBeginEvent ) )
+{
+}
+
+float Handle::LinearDrag::startPosition() const
+{
+	return m_dragBeginPosition;
+}
+
+float Handle::LinearDrag::position( const DragDropEvent &event ) const
+{
+	const ViewportGadget *viewport = m_gadget->ancestor<ViewportGadget>();
 
 	// Project the mouse position back into raster space.
-	const V2f rasterP = viewport->gadgetToRasterSpace( event.line.p0, this );
+	const V2f rasterP = viewport->gadgetToRasterSpace( event.line.p1, m_gadget );
 
 	// Project our stored world space handle into raster space too.
 	const LineSegment2f rasterHandle(
-		viewport->worldToRasterSpace( m_dragHandleWorld.p0 ),
-		viewport->worldToRasterSpace( m_dragHandleWorld.p1 )
+		viewport->worldToRasterSpace( m_worldLine.p0 ),
+		viewport->worldToRasterSpace( m_worldLine.p1 )
 	);
 
 	// Find the closest point to the mouse on the handle in raster space.
@@ -188,9 +226,88 @@ float Handle::absoluteDragOffset( const DragDropEvent &event ) const
 	const LineSegment3f worldClosestLine = viewport->rasterToWorldSpace( V2f( rasterClosestPoint.x, rasterClosestPoint.y ) );
 
 	const V3f worldClosestPoint =
-		Line3f( m_dragHandleWorld.p0, m_dragHandleWorld.p1 ).closestPointTo(
+		Line3f( m_worldLine.p0, m_worldLine.p1 ).closestPointTo(
 			Line3f( worldClosestLine.p0, worldClosestLine.p1 )
 		);
 
-	return worldClosestPoint[m_type];
+	return m_worldLine.direction().dot( worldClosestPoint - m_worldLine.p0 ) / m_worldLine.length2();
 }
+
+//////////////////////////////////////////////////////////////////////////
+// PlanarDrag
+//////////////////////////////////////////////////////////////////////////
+
+Handle::PlanarDrag::PlanarDrag()
+	:	m_gadget( NULL )
+{
+}
+
+Handle::PlanarDrag::PlanarDrag( const Gadget *gadget, const DragDropEvent &dragBeginEvent )
+{
+	const ViewportGadget *viewport = gadget->ancestor<ViewportGadget>();
+	const Camera *camera = viewport->getCamera();
+
+	const M44f cameraTransform = camera->getTransform()->transform();
+	const M44f gadgetInverseTransform = gadget->fullTransform().inverse();
+	const M44f cameraToGadget = cameraTransform * gadgetInverseTransform;
+
+	V3f gadgetAxis0;
+	V3f gadgetAxis1;
+	cameraToGadget.multDirMatrix( V3f( 1, 0, 0 ), gadgetAxis0 );
+	cameraToGadget.multDirMatrix( V3f( 0, 1, 0 ), gadgetAxis1 );
+	gadgetAxis0.normalize();
+	gadgetAxis1.normalize();
+
+	init(
+		gadget,
+		V3f( 0 ),
+		gadgetAxis0,
+		gadgetAxis1,
+		dragBeginEvent
+	);
+}
+
+Handle::PlanarDrag::PlanarDrag( const Gadget *gadget, const Imath::V3f &origin, const Imath::V3f &axis0, const Imath::V3f &axis1, const DragDropEvent &dragBeginEvent )
+{
+	init( gadget, origin, axis0, axis1, dragBeginEvent );
+}
+
+Imath::V2f Handle::PlanarDrag::startPosition() const
+{
+	return m_dragBeginPosition;
+}
+
+Imath::V2f Handle::PlanarDrag::position( const DragDropEvent &event ) const
+{
+	Line3f worldLine(
+		event.line.p0 * m_gadget->fullTransform(),
+		event.line.p1 * m_gadget->fullTransform()
+	);
+	Plane3f worldPlane(
+		m_worldOrigin,
+		m_worldOrigin + m_worldAxis0,
+		m_worldOrigin + m_worldAxis1
+	);
+	V3f worldIntersection( 0 );
+	worldPlane.intersect( worldLine, worldIntersection );
+
+	// Form coordinates in the plane by projecting onto each axis
+	// and returning the length of the projection as a proportion
+	// of the axis length.
+
+	return V2f(
+		m_worldAxis0.dot( worldIntersection - m_worldOrigin ) / m_worldAxis0.length2(),
+		m_worldAxis1.dot( worldIntersection - m_worldOrigin ) / m_worldAxis1.length2()
+	);
+}
+
+void Handle::PlanarDrag::init( const Gadget *gadget, const Imath::V3f &origin, const Imath::V3f &axis0, const Imath::V3f &axis1, const DragDropEvent &dragBeginEvent )
+{
+	m_gadget = gadget;
+	const M44f transform = gadget->fullTransform();
+	m_worldOrigin = origin * transform;
+	transform.multDirMatrix( axis0, m_worldAxis0 );
+	transform.multDirMatrix( axis1, m_worldAxis1 );
+	m_dragBeginPosition = position( dragBeginEvent );
+}
+

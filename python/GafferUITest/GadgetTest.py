@@ -291,5 +291,36 @@ class GadgetTest( GafferUITest.TestCase ) :
 		g["a"]["c"].setVisible( True )
 		self.assertEqual( len( events ), 10 )
 
+	def testEnabled( self ) :
+
+		g1 = GafferUI.Gadget()
+		self.assertEqual( g1.getEnabled(), True )
+		self.assertEqual( g1.enabled(), True )
+
+		g1.setEnabled( False )
+		self.assertEqual( g1.getEnabled(), False )
+		self.assertEqual( g1.enabled(), False )
+
+		g2 = GafferUI.Gadget()
+		g1.addChild( g2 )
+
+		self.assertEqual( g2.getEnabled(), True )
+		self.assertEqual( g2.enabled(), False )
+
+		g1.setEnabled( True )
+		self.assertEqual( g2.enabled(), True )
+
+		g3 = GafferUI.Gadget()
+		g2.addChild( g3 )
+
+		self.assertEqual( g3.getEnabled(), True )
+		self.assertEqual( g3.enabled(), True )
+
+		g1.setEnabled( False )
+		self.assertEqual( g3.getEnabled(), True )
+		self.assertEqual( g3.enabled(), False )
+		self.assertEqual( g3.enabled( relativeTo = g2 ), True )
+		self.assertEqual( g3.enabled( relativeTo = g1 ), True )
+
 if __name__ == "__main__":
 	unittest.main()

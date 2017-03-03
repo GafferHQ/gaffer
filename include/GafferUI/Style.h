@@ -131,7 +131,15 @@ class Style : public IECore::RunTimeTyped
 		/// @name 3D UI elements
 		//////////////////////////////////////////////////////////////////////////
 		//@{
-		virtual void renderTranslateHandle( int axis, State state = NormalState ) const = 0;
+		enum Axes
+		{
+			X,
+			Y,
+			Z,
+			XYZ
+		};
+		virtual void renderTranslateHandle( Axes axes, State state = NormalState ) const = 0;
+		virtual void renderScaleHandle( Axes axes, State state = NormalState ) const = 0;
 		//@}
 
 		typedef boost::signal<void (Style *)> UnarySignal;

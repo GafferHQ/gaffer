@@ -1,6 +1,6 @@
 //////////////////////////////////////////////////////////////////////////
 //
-//  Copyright (c) 2014, Image Engine Design Inc. All rights reserved.
+//  Copyright (c) 2014-2016, John Haddon. All rights reserved.
 //
 //  Redistribution and use in source and binary forms, with or without
 //  modification, are permitted provided that the following conditions are
@@ -34,49 +34,79 @@
 //
 //////////////////////////////////////////////////////////////////////////
 
-#ifndef GAFFERSCENEUI_SELECTIONTOOL_H
-#define GAFFERSCENEUI_SELECTIONTOOL_H
+#ifndef GAFFERSCENEUI_TRANSLATETOOL_H
+#define GAFFERSCENEUI_TRANSLATETOOL_H
 
-#include "GafferUI/Tool.h"
-#include "GafferUI/DragDropEvent.h"
+#include "Gaffer/NumericPlug.h"
 
 #include "GafferSceneUI/TypeIds.h"
+#include "GafferSceneUI/TransformTool.h"
 
 namespace GafferSceneUI
 {
 
 IE_CORE_FORWARDDECLARE( SceneView )
-IE_CORE_FORWARDDECLARE( SceneGadget )
 
-class SelectionTool : public GafferUI::Tool
+class TranslateTool : public TransformTool
 {
 
 	public :
 
-		SelectionTool( SceneView *view, const std::string &name = defaultName<SelectionTool>() );
+		TranslateTool( SceneView *view, const std::string &name = defaultName<TranslateTool>() );
+		virtual ~TranslateTool();
 
-		virtual ~SelectionTool();
+		IE_CORE_DECLARERUNTIMETYPEDEXTENSION( GafferSceneUI::TranslateTool, TranslateToolTypeId, TransformTool );
 
-		IE_CORE_DECLARERUNTIMETYPEDEXTENSION( GafferSceneUI::SelectionTool, SelectionToolTypeId, GafferUI::Tool );
+		enum Orientation
+		{
+			Local,
+			Parent,
+			World
+		};
+
+		Gaffer::IntPlug *orientationPlug();
+		const Gaffer::IntPlug *orientationPlug() const;
+
+		/// Translates by the world space offset in the directions
+		/// specified by the current orientation,
+		/// as if the user had dragged the handles interactively.
+		/// This is primarily of use in the unit tests.
+		void translate( const Imath::V3f &offset );
+
+	protected :
+
+		virtual bool affectsHandles( const Gaffer::Plug *input ) const;
+		virtual void updateHandles();
 
 	private :
 
-		static ToolDescription<SelectionTool, SceneView> g_toolDescription;
+		Imath::M44f handlesTransform() const;
 
-		SceneGadget *sceneGadget();
+		// The guts of the translation logic. This is factored out of the
+		// drag handling so it can be shared with the `translate()` public
+		// method.
+		struct Translation
+		{
+			Imath::V3f origin;
+			Imath::V3f direction;
+		};
 
-		class DragOverlay;
-		DragOverlay *dragOverlay();
+		Translation createTranslation( const Imath::V3f &directionInHandleSpace );
+		void applyTranslation( const Translation &translation, float offset );
 
-		bool buttonPress( const GafferUI::ButtonEvent &event );
-		IECore::RunTimeTypedPtr dragBegin( GafferUI::Gadget *gadget, const GafferUI::DragDropEvent &event );
-		bool dragEnter( const GafferUI::Gadget *gadget, const GafferUI::DragDropEvent &event );
-		bool dragMove( const GafferUI::DragDropEvent &event );
-		bool dragEnd( const GafferUI::DragDropEvent &event );
-		void transferSelectionToContext();
+		// Drag handling.
+
+		IECore::RunTimeTypedPtr dragBegin( int axis );
+		bool dragMove( const GafferUI::Gadget *gadget, const GafferUI::DragDropEvent &event );
+		bool dragEnd();
+
+		Translation m_drag;
+
+		static ToolDescription<TranslateTool, SceneView> g_toolDescription;
+		static size_t g_firstPlugIndex;
 
 };
 
 } // namespace GafferSceneUI
 
-#endif // GAFFERSCENEUI_SELECTIONTOOL_H
+#endif // GAFFERSCENEUI_TRANSLATETOOL_H

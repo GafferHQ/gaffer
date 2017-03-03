@@ -1,6 +1,7 @@
 //////////////////////////////////////////////////////////////////////////
 //
 //  Copyright (c) 2014, John Haddon. All rights reserved.
+//  Copyright (c) 2017, Image Engine Design Inc. All rights reserved.
 //
 //  Redistribution and use in source and binary forms, with or without
 //  modification, are permitted provided that the following conditions are
@@ -38,6 +39,7 @@
 #define GAFFERUI_HANDLE_H
 
 #include "GafferUI/Gadget.h"
+#include "GafferUI/Style.h"
 
 namespace GafferUI
 {
@@ -47,28 +49,87 @@ class Handle : public Gadget
 
 	public :
 
-		enum Type
-		{
-			TranslateX = 0,
-			TranslateY,
-			TranslateZ
-		};
-
-		Handle( Type type );
 		virtual ~Handle();
 
 		IE_CORE_DECLARERUNTIMETYPEDEXTENSION( GafferUI::Handle, HandleTypeId, Gadget );
 
-		void setType( Type type );
-		Type getType() const;
-
-		float dragOffset( const DragDropEvent &event ) const;
+		// A non-zero raster scale causes the handles to be
+		// drawn at a constant size in raster space.
+		void setRasterScale( float rasterScale );
+		float getRasterScale() const;
 
 		virtual Imath::Box3f bound() const;
 
 	protected :
 
+		Handle( const std::string &name=defaultName<Handle>() );
+
+		// Implemented to call renderHandle() after applying
+		// the raster scale.
 		virtual void doRender( const Style *style ) const;
+
+		// Must be implemented by derived classes to draw their
+		// handle.
+		virtual void renderHandle( const Style *style, Style::State state ) const = 0;
+
+		// Called whenever a drag on the handle is initiated.
+		// Should be implemented by derived classes to initialise
+		// any state they need to track the drag.
+		virtual void dragBegin( const DragDropEvent &event ) = 0;
+
+		// Helper for performing linear drags. Should be constructed
+		// in `dragBegin()` and then `position()` should be used
+		// to measure the progress of the drag.
+		struct LinearDrag
+		{
+
+			LinearDrag();
+			// Line is specified in Gadget space.
+			LinearDrag( const Gadget *gadget, const IECore::LineSegment3f &line, const DragDropEvent &dragBeginEvent );
+
+			// Positions are measured from 0 at line.p0 to 1 at line.p1.
+			float startPosition() const;
+			float position( const DragDropEvent &event ) const;
+
+			private :
+
+				const Gadget *m_gadget;
+				// We store the line of the drag in world space so that
+				// `position()` returns consistent results even if
+				// the gadget transform or the camera changes during the drag.
+				IECore::LineSegment3f m_worldLine;
+				float m_dragBeginPosition;
+
+		};
+
+		// Helper for performing drags in a plane.
+		struct PlanarDrag
+		{
+
+			PlanarDrag();
+			// Plane is parallel to the camera plane, centered on gadget, and with unit
+			// length axes in gadget space.
+			PlanarDrag( const Gadget *gadget, const DragDropEvent &dragBeginEvent );
+			// Position and axes are in gadget space. Axes are assumed to be orthogonal
+			// but may have any length.
+			PlanarDrag( const Gadget *gadget, const Imath::V3f &origin, const Imath::V3f &axis0, const Imath::V3f &axis1, const DragDropEvent &dragBeginEvent );
+
+			// X coordinate are measured from 0 at origin to 1 at `origin + axis0`
+			// Y coordinates are measured from 0 at origin to 1 at `origin + axis1`
+			Imath::V2f startPosition() const;
+			Imath::V2f position( const DragDropEvent &event ) const;
+
+			private :
+
+				void init( const Gadget *gadget, const Imath::V3f &origin, const Imath::V3f &axis0, const Imath::V3f &axis1, const DragDropEvent &dragBeginEvent );
+
+				const Gadget *m_gadget;
+				Imath::V3f m_worldOrigin;
+				Imath::V3f m_worldAxis0;
+				Imath::V3f m_worldAxis1;
+				Imath::V2f m_dragBeginPosition;
+
+		};
 
 	private :
 
@@ -76,23 +137,11 @@ class Handle : public Gadget
 		void leave();
 
 		bool buttonPress( const ButtonEvent &event );
-		IECore::RunTimeTypedPtr dragBegin( const DragDropEvent &event );
+		IECore::RunTimeTypedPtr dragBeginInternal( const DragDropEvent &event );
 		bool dragEnter( const DragDropEvent &event );
 
-		float absoluteDragOffset( const DragDropEvent &event ) const;
-
-		Type m_type;
 		bool m_hovering;
-
-		// When a drag starts, we store the line of our
-		// handle here. We store it in world space so that
-		// dragOffset() returns consistent results even if
-		// our transform or the camera changes during the drag.
-		IECore::LineSegment3f m_dragHandleWorld;
-		// The initial offset at drag begin. We store this so
-		// that dragOffset() can return relative rather than
-		// absolute offsets.
-		float m_dragBeginOffset;
+		float m_rasterScale;
 
 };
 

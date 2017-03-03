@@ -1,6 +1,6 @@
 //////////////////////////////////////////////////////////////////////////
 //
-//  Copyright (c) 2014, John Haddon. All rights reserved.
+//  Copyright (c) 2016, John Haddon. All rights reserved.
 //
 //  Redistribution and use in source and binary forms, with or without
 //  modification, are permitted provided that the following conditions are
@@ -34,37 +34,24 @@
 //
 //////////////////////////////////////////////////////////////////////////
 
-#include "boost/python.hpp"
+#include "GafferBindings/NodeBinding.h"
 
-#include "GafferUI/TranslateHandle.h"
-#include "GafferUI/ScaleHandle.h"
+#include "GafferUI/Gadget.h"
 
-#include "GafferUIBindings/HandleBinding.h"
-#include "GafferUIBindings/GadgetBinding.h"
+#include "GafferSceneUI/SceneView.h"
+#include "GafferSceneUI/ScaleTool.h"
+#include "GafferSceneUIBindings/ScaleToolBinding.h"
 
 using namespace boost::python;
-using namespace GafferUI;
+using namespace GafferSceneUI;
 
-void GafferUIBindings::bindHandle()
+void GafferSceneUIBindings::bindScaleTool()
 {
 
-	GadgetClass<Handle>()
-		.def( "setRasterScale", &Handle::setRasterScale )
-		.def( "getRasterScale", &Handle::getRasterScale )
-	;
-
-	GadgetClass<TranslateHandle>()
-		.def( init<Style::Axes>() )
-		.def( "setAxes", &TranslateHandle::setAxes )
-		.def( "getAxes", &TranslateHandle::getAxes )
-		.def( "translation", &TranslateHandle::translation )
-	;
-
-	GadgetClass<ScaleHandle>()
-		.def( init<Style::Axes>() )
-		.def( "setAxes", &ScaleHandle::setAxes )
-		.def( "getAxes", &ScaleHandle::getAxes )
-		.def( "scaling", &ScaleHandle::scaling )
+	scope s = GafferBindings::NodeClass<ScaleTool>( NULL, no_init )
+		.def( init<SceneView *>() )
+		.def( "scale", &ScaleTool::scale )
 	;
 
 }
+

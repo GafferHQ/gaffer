@@ -196,6 +196,7 @@ from Divider import Divider
 import _Pointer
 from SplineWidget import SplineWidget
 from Bookmarks import Bookmarks
+import WidgetAlgo
 
 # then all the PathPreviewWidgets. note that the order
 # of import controls the order of display.

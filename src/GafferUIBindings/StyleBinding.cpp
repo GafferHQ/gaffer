@@ -103,6 +103,13 @@ void GafferUIBindings::bindStyle()
 		.value( "BodyText", Style::BodyText )
 	;
 
+	enum_<Style::Axes>( "Axes" )
+		.value( "X", Style::X )
+		.value( "Y", Style::Y )
+		.value( "Z", Style::Z )
+		.value( "XYZ", Style::XYZ )
+	;
+
 	SignalClass<Style::UnarySignal, DefaultSignalCaller<Style::UnarySignal>, UnarySlotCaller>( "UnarySignal" );
 
 }

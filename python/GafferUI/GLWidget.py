@@ -36,6 +36,7 @@
 ##########################################################################
 
 import logging
+import collections
 
 # the OpenGL module loves spewing things into logs, and for some reason
 # when running in maya 2012 the default log level allows info messages through.
@@ -89,39 +90,33 @@ class GLWidget( GafferUI.Widget ) :
 
 		GafferUI.Widget.__init__( self, graphicsView, **kw )
 
-		self.__overlay = None
+		self.__overlays = set()
 
-	## Specifies a widget to be overlaid on top of the GL rendering,
-	# stretched to fill the frame. To add multiple widgets and/or gain
-	# more control over the layout, use a Container as the overlay and
-	# use it to layout multiple child widgets.
-	def setOverlay( self, overlay ) :
+	## Adds a widget to be overlaid on top of the GL rendering,
+	# stretched to fill the frame.
+	def addOverlay( self, overlay ) :
 
-		if overlay is self.__overlay :
+		if overlay in self.__overlays :
 			return
 
-		if self.__overlay is not None :
-			self.removeChild( self.__overlay )
+		oldParent = overlay.parent()
+		if oldParent is not None :
+			oldParent.removeChild( child )
 
-		if overlay is not None :
-			oldParent = overlay.parent()
-			if oldParent is not None :
-				oldParent.removeChild( child )
+		self.__overlays.add( overlay )
+		overlay._setStyleSheet()
 
-		self.__overlay = overlay
-		self.__overlay._setStyleSheet()
+		self.__graphicsScene.addOverlay( overlay )
 
-		self.__graphicsScene.setOverlay( self.__overlay )
+	def removeOverlay( self, overlay ) :
 
-	def getOverlay( self ) :
-
-		return self.__overlay
+		self.removeChild( overlay )
 
 	def removeChild( self, child ) :
 
-		assert( child is self.__overlay )
-		self.__overlay = None
-		self.__graphicsScene.setOverlay( None )
+		assert( child in self.__overlays )
+		self.__graphicsScene.removeOverlay( child )
+		self.__overlays.remove( child )
 
 	## Called whenever the widget is resized. May be reimplemented by derived
 	# classes if necessary. The appropriate OpenGL context will already be current
@@ -352,6 +347,8 @@ class _GLGraphicsView( QtGui.QGraphicsView ) :
 
 class _GLGraphicsScene( QtGui.QGraphicsScene ) :
 
+	__Overlay = collections.namedtuple( "__Overlay", [ "widget", "proxy" ] )
+
 	def __init__( self, parent, backgroundDrawFunction ) :
 
 		QtGui.QGraphicsScene.__init__( self, parent )
@@ -359,49 +356,50 @@ class _GLGraphicsScene( QtGui.QGraphicsScene ) :
 		self.__backgroundDrawFunction = backgroundDrawFunction
 		self.sceneRectChanged.connect( self.__sceneRectChanged )
 
-		self.__overlay = None # Stores the GafferUI.Widget
-		self.__overlayProxy = None # Stores the _OverlayProxyWidget
+		self.__overlays = {} # Mapping from GafferUI.Widget to _OverlayProxyWidget
 
-	def setOverlay( self, widget ) :
+	def addOverlay( self, widget ) :
 
-		if self.__overlay is not None :
-			self.__overlayProxy.setWidget( None )
-			self.removeItem( self.__overlayProxy )
-			self.__overlay = None
-			self.__overlayProxy = None
-
-		if widget is None :
-			return
-
-		self.__overlay = widget
 		if widget._qtWidget().layout() is not None :
 			# removing the size constraint is necessary to keep the widget the
 			# size we tell it to be in __updateItemGeometry.
 			widget._qtWidget().layout().setSizeConstraint( QtGui.QLayout.SetNoConstraint )
 
-		self.__overlayProxy = _OverlayProxyWidget()
-		self.__overlayProxy.setWidget( self.__overlay._qtWidget() )
+		proxy = _OverlayProxyWidget()
+		proxy.setWidget( widget._qtWidget() )
+		self.__overlays[widget] = proxy
 
-		self.addItem( self.__overlayProxy )
-		self.__updateItemGeometry( self.__overlayProxy, self.sceneRect() )
+		self.addItem( proxy )
+		self.__updateItemGeometry( proxy, self.sceneRect() )
+
+	def removeOverlay( self, widget ) :
+
+		item = self.__overlays[widget]
+		item.setWidget( None )
+		self.removeItem( item )
+		del self.__overlays[widget]
 
 	def drawBackground( self, painter, rect ) :
 
+		painter.beginNativePainting()
+
+		GL.glPushAttrib( GL.GL_ALL_ATTRIB_BITS )
+		GL.glPushClientAttrib( GL.GL_CLIENT_ALL_ATTRIB_BITS )
+
 		self.__backgroundDrawFunction()
 
-		# Reset pixel store setting back to the default. IECoreGL
-		# (and the ImageGadget) meddle with this, and it throws off
-		# the QGraphicsEffects.
-		GL.glPixelStorei( GL.GL_UNPACK_ALIGNMENT, 4 );
+		GL.glPopClientAttrib()
+		GL.glPopAttrib()
+
+		painter.endNativePainting()
 
 	def __sceneRectChanged( self, sceneRect ) :
 
-		if self.__overlayProxy is not None :
-			self.__updateItemGeometry( self.__overlayProxy, sceneRect )
+		for proxy in self.__overlays.values() :
+			self.__updateItemGeometry( proxy, sceneRect )
 
 	def __updateItemGeometry( self, item, sceneRect ) :
 
-		geometry = item.widget().geometry()
 		item.widget().setGeometry( QtCore.QRect( 0, 0, sceneRect.width(), sceneRect.height() ) )
 
 ## A QGraphicsProxyWidget whose shape is composed from the

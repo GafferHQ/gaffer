@@ -1,6 +1,6 @@
 ##########################################################################
 #
-#  Copyright (c) 2013, Image Engine Design Inc. All rights reserved.
+#  Copyright (c) 2017, Image Engine Design Inc. All rights reserved.
 #
 #  Redistribution and use in source and binary forms, with or without
 #  modification, are permitted provided that the following conditions are
@@ -34,17 +34,17 @@
 #
 ##########################################################################
 
-from SceneViewTest import SceneViewTest
-from ShaderAssignmentUITest import ShaderAssignmentUITest
-from StandardGraphLayoutTest import StandardGraphLayoutTest
-from SceneGadgetTest import SceneGadgetTest
-from SceneInspectorTest import SceneInspectorTest
-from SceneHierarchyTest import SceneHierarchyTest
-from DocumentationTest import DocumentationTest
-from ShaderViewTest import ShaderViewTest
-from ShaderUITest import ShaderUITest
-from TranslateToolTest import TranslateToolTest
-from ScaleToolTest import ScaleToolTest
+def joinEdges( listContainer ) :
 
-if __name__ == "__main__":
-	unittest.main()
+	if listContainer.orientation() == listContainer.Orientation.Horizontal :
+		lowProperty = "gafferFlatLeft"
+		highProperty = "gafferFlatRight"
+	else :
+		lowProperty = "gafferFlatTop"
+		highProperty = "gafferFlatBottom"
+
+	visibleWidgets = [ w for w in listContainer if w.getVisible() ]
+	l = len( visibleWidgets )
+	for i in range( 0, l ) :
+		visibleWidgets[i]._qtWidget().setProperty( lowProperty, i > 0 )
+		visibleWidgets[i]._qtWidget().setProperty( highProperty, i < l - 1 )

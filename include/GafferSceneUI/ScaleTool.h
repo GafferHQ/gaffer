@@ -1,6 +1,6 @@
 //////////////////////////////////////////////////////////////////////////
 //
-//  Copyright (c) 2014, John Haddon. All rights reserved.
+//  Copyright (c) 2016, John Haddon. All rights reserved.
 //
 //  Redistribution and use in source and binary forms, with or without
 //  modification, are permitted provided that the following conditions are
@@ -34,37 +34,64 @@
 //
 //////////////////////////////////////////////////////////////////////////
 
-#include "boost/python.hpp"
+#ifndef GAFFERSCENEUI_SCALETOOL_H
+#define GAFFERSCENEUI_SCALETOOL_H
 
-#include "GafferUI/TranslateHandle.h"
-#include "GafferUI/ScaleHandle.h"
+#include "GafferUI/Style.h"
 
-#include "GafferUIBindings/HandleBinding.h"
-#include "GafferUIBindings/GadgetBinding.h"
+#include "GafferSceneUI/TransformTool.h"
 
-using namespace boost::python;
-using namespace GafferUI;
-
-void GafferUIBindings::bindHandle()
+namespace GafferSceneUI
 {
 
-	GadgetClass<Handle>()
-		.def( "setRasterScale", &Handle::setRasterScale )
-		.def( "getRasterScale", &Handle::getRasterScale )
-	;
+IE_CORE_FORWARDDECLARE( SceneView )
 
-	GadgetClass<TranslateHandle>()
-		.def( init<Style::Axes>() )
-		.def( "setAxes", &TranslateHandle::setAxes )
-		.def( "getAxes", &TranslateHandle::getAxes )
-		.def( "translation", &TranslateHandle::translation )
-	;
+class ScaleTool : public TransformTool
+{
 
-	GadgetClass<ScaleHandle>()
-		.def( init<Style::Axes>() )
-		.def( "setAxes", &ScaleHandle::setAxes )
-		.def( "getAxes", &ScaleHandle::getAxes )
-		.def( "scaling", &ScaleHandle::scaling )
-	;
+	public :
 
-}
+		ScaleTool( SceneView *view, const std::string &name = defaultName<ScaleTool>() );
+		virtual ~ScaleTool();
+
+		IE_CORE_DECLARERUNTIMETYPEDEXTENSION( GafferSceneUI::ScaleTool, ScaleToolTypeId, TransformTool );
+
+		/// Scales the current selection as if the handles
+		/// had been dragged interactively. Exists mainly for
+		/// use in the unit tests.
+		void scale( const Imath::V3f &scale );
+
+	protected :
+
+		virtual bool affectsHandles( const Gaffer::Plug *input ) const;
+		virtual void updateHandles();
+
+	private :
+
+		// The guts of the scaling logic. This is factored out of the
+		// drag handling so it can be shared with the `scale()` public
+		// method.
+		struct Scale
+		{
+			Imath::V3f originalScale;
+			GafferUI::Style::Axes axes;
+		};
+
+		Scale createScale( GafferUI::Style::Axes axes );
+		void applyScale( const Scale &scale, float s );
+
+		// Drag handling.
+
+		IECore::RunTimeTypedPtr dragBegin( GafferUI::Style::Axes axes );
+		bool dragMove( const GafferUI::Gadget *gadget, const GafferUI::DragDropEvent &event );
+		bool dragEnd();
+
+		Scale m_drag;
+
+		static ToolDescription<ScaleTool, SceneView> g_toolDescription;
+
+};
+
+} // namespace GafferSceneUI
+
+#endif // GAFFERSCENEUI_SCALETOOL_H

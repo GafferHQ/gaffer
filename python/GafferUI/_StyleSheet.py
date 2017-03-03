@@ -780,31 +780,61 @@ _styleSheet = string.Template(
 
 	/* boolwidget drawn as switch */
 
-	QCheckBox#gafferBoolWidgetSwitch::indicator:unchecked {
+	QCheckBox[gafferDisplayMode=\"Switch\"]::indicator:unchecked {
 		image: url($GAFFER_ROOT/graphics/toggleOff.png);
 	}
 
-	QCheckBox#gafferBoolWidgetSwitch::indicator:unchecked:hover,
-	QCheckBox#gafferBoolWidgetSwitch::indicator:unchecked:focus,
-	QCheckBox#gafferBoolWidgetSwitch[gafferHighlighted=\"true\"]::indicator:unchecked {
+	QCheckBox[gafferDisplayMode=\"Switch\"]::indicator:unchecked:hover,
+	QCheckBox[gafferDisplayMode=\"Switch\"]::indicator:unchecked:focus,
+	QCheckBox[gafferDisplayMode=\"Switch\"][gafferHighlighted=\"true\"]::indicator:unchecked {
 		image: url($GAFFER_ROOT/graphics/toggleOffHover.png);
 	}
-	QCheckBox#gafferBoolWidgetSwitch::indicator:checked:hover,
-	QCheckBox#gafferBoolWidgetSwitch::indicator:checked:focus,
-	QCheckBox#gafferBoolWidgetSwitch[gafferHighlighted=\"true\"]::indicator:checked {
+	QCheckBox[gafferDisplayMode=\"Switch\"]::indicator:checked:hover,
+	QCheckBox[gafferDisplayMode=\"Switch\"]::indicator:checked:focus,
+	QCheckBox[gafferDisplayMode=\"Switch\"][gafferHighlighted=\"true\"]::indicator:checked {
 		image: url($GAFFER_ROOT/graphics/toggleOnHover.png);
 	}
 
-	QCheckBox#gafferBoolWidgetSwitch::indicator:checked {
+	QCheckBox[gafferDisplayMode=\"Switch\"]::indicator:checked {
 		image: url($GAFFER_ROOT/graphics/toggleOn.png);
 	}
 
-	QCheckBox#gafferBoolWidgetSwitch::indicator:checked:disabled {
+	QCheckBox[gafferDisplayMode=\"Switch\"]::indicator:checked:disabled {
 		image: url($GAFFER_ROOT/graphics/toggleOnDisabled.png);
 	}
 
-	QCheckBox#gafferBoolWidgetSwitch::indicator:unchecked:disabled {
+	QCheckBox[gafferDisplayMode=\"Switch\"]::indicator:unchecked:disabled {
 		image: url($GAFFER_ROOT/graphics/toggleOffDisabled.png);
+	}
+
+	/* boolwidget drawn as tool */
+
+	QCheckBox {
+		border-radius: 5px;
+	}
+
+	QCheckBox[gafferDisplayMode=\"Tool\"]::indicator {
+		width: 0px;
+		height: 0px;
+	}
+
+	QCheckBox[gafferDisplayMode=\"Tool\"] {
+		background-color: $backgroundDarkTransparent;
+		spacing: 0px;
+		width: 30px;
+		height: 30px;
+		border: 1px solid $backgroundDark;
+		padding-left: 4px;
+	}
+
+	QCheckBox[gafferDisplayMode=\"Tool\"]:checked {
+		background-color: $brightColorTransparent;
+	}
+
+	QCheckBox[gafferDisplayMode=\"Tool\"]:hover {
+		border-color: $brightColor;
+		border-width: 2px;
+		padding-left: 3px;
 	}
 
 	/* frame */
@@ -1030,16 +1060,18 @@ _styleSheet = string.Template(
 ).substitute( {
 
 	"GAFFER_ROOT" : os.environ["GAFFER_ROOT"],
-	"backgroundDarkest" : "#000000",
-	"backgroundDark" : "#3c3c3c",
-	"backgroundMid" : "#4c4c4c",
-	"backgroundLighter" : "#6c6c6c",
-	"backgroundLight" : "#7d7d7d",
-	"brightColor" : "#779cbd",
-	"foreground" : "#e0e0e0",
-	"foregroundFaded" : "#999999",
-	"alternateColor" : "#454545",
-	"errorColor" : "#ff5555",
-	"animatedColor" : "#80985e",
+	"backgroundDarkest" : "rgb( 0, 0, 0 )",
+	"backgroundDark" : "rgb( 60, 60, 60 )",
+	"backgroundDarkTransparent" : "rgba( 60, 60, 60, 100 )",
+	"backgroundMid" : "rgb( 76, 76, 76 )",
+	"backgroundLighter" : "rgb( 108, 108, 108 )",
+	"backgroundLight" : "rgb( 125, 125, 125 )",
+	"brightColor" : "rgb( 119, 156, 189 )",
+	"brightColorTransparent" : "rgba( 119, 156, 189, 100 )",
+	"foreground" : "rgb( 224, 224, 224 )",
+	"foregroundFaded" : "rgb( 153, 153, 153 )",
+	"alternateColor" : "rgb( 69, 69, 69 )",
+	"errorColor" : "rgb( 255, 85, 85 )",
+	"animatedColor" : "rgb( 128, 152, 94 )",
 
 } )

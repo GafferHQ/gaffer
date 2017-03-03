@@ -1,6 +1,6 @@
 ##########################################################################
 #
-#  Copyright (c) 2013, Image Engine Design Inc. All rights reserved.
+#  Copyright (c) 2016, John Haddon. All rights reserved.
 #
 #  Redistribution and use in source and binary forms, with or without
 #  modification, are permitted provided that the following conditions are
@@ -34,17 +34,44 @@
 #
 ##########################################################################
 
-from SceneViewTest import SceneViewTest
-from ShaderAssignmentUITest import ShaderAssignmentUITest
-from StandardGraphLayoutTest import StandardGraphLayoutTest
-from SceneGadgetTest import SceneGadgetTest
-from SceneInspectorTest import SceneInspectorTest
-from SceneHierarchyTest import SceneHierarchyTest
-from DocumentationTest import DocumentationTest
-from ShaderViewTest import ShaderViewTest
-from ShaderUITest import ShaderUITest
-from TranslateToolTest import TranslateToolTest
-from ScaleToolTest import ScaleToolTest
+import Gaffer
+import GafferSceneUI
 
-if __name__ == "__main__":
-	unittest.main()
+Gaffer.Metadata.registerNode(
+
+	GafferSceneUI.TranslateTool,
+
+	"description",
+	"""
+	Tool for editing object translation.
+	""",
+
+	"nodeToolbar:bottom:type", "GafferUI.StandardNodeToolbar.bottom",
+
+	"viewer:shortCut", "W",
+	"order", 1,
+
+	plugs = {
+
+		"orientation" : [
+
+			"description",
+			"""
+			The space used to define the orientation of the XYZ
+			translation handles. Note that this is independent
+			of the space setting on a Transform node - each
+			setting can be mixed and matched freely.
+			""",
+
+			"toolbarLayout:section", "Bottom",
+			"plugValueWidget:type", "GafferUI.PresetsPlugValueWidget",
+
+			"preset:Local", GafferSceneUI.TranslateTool.Orientation.Local,
+			"preset:Parent", GafferSceneUI.TranslateTool.Orientation.Parent,
+			"preset:World", GafferSceneUI.TranslateTool.Orientation.World,
+
+		],
+
+	}
+
+)

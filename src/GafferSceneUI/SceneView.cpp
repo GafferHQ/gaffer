@@ -507,9 +507,9 @@ class GnomonGadget : public GafferUI::Gadget
 
 			// now we can render our axes and our children
 
-			style->renderTranslateHandle( 0 );
-			style->renderTranslateHandle( 1 );
-			style->renderTranslateHandle( 2 );
+			style->renderTranslateHandle( Style::X );
+			style->renderTranslateHandle( Style::Y );
+			style->renderTranslateHandle( Style::Z );
 
 			Gadget::doRender( style );
 

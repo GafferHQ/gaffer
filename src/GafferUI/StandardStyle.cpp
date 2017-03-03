@@ -41,6 +41,7 @@
 
 #include "IECore/SearchPath.h"
 #include "IECore/Font.h"
+#include "IECore/MeshPrimitive.h"
 
 #include "IECoreGL/GL.h"
 #include "IECoreGL/Font.h"
@@ -50,6 +51,13 @@
 #include "IECoreGL/Camera.h"
 #include "IECoreGL/Selector.h"
 #include "IECoreGL/IECoreGL.h"
+#include "IECoreGL/MeshPrimitive.h"
+#include "IECoreGL/ToGLMeshConverter.h"
+#include "IECoreGL/Group.h"
+#include "IECoreGL/TypedStateComponent.h"
+#include "IECoreGL/CurvesPrimitive.h"
+#include "IECoreGL/ShaderStateComponent.h"
+#include "IECoreGL/TextureLoader.h"
 
 #include "GafferUI/StandardStyle.h"
 
@@ -59,9 +67,213 @@ using namespace IECoreGL;
 using namespace Imath;
 using namespace std;
 
+//////////////////////////////////////////////////////////////////////////
+// Internal utilities
+//////////////////////////////////////////////////////////////////////////
+
+namespace
+{
+
+Imath::Color4f colorForAxes( Style::Axes axes )
+{
+	switch( axes )
+	{
+		case Style::X :
+			return Color4f( 0.73, 0.17, 0.17, 1.0f );
+		case Style::Y :
+			return Color4f( 0.2, 0.57, 0.2, 1.0f );
+		case Style::Z :
+			return Color4f( 0.2, 0.36, 0.74, 1.0f );
+		default :
+			return Color4f( 0.8, 0.8, 0.8, 0.0f );
+	}
+}
+
+IECoreGL::GroupPtr line( const V3f &p0, const V3f &p1 )
+{
+	IntVectorDataPtr vertsPerCurve = new IntVectorData();
+	vertsPerCurve->writable().push_back( 2 );
+	IECoreGL::CurvesPrimitivePtr curves = new IECoreGL::CurvesPrimitive( CubicBasisf::linear(), false, vertsPerCurve );
+	V3fVectorDataPtr verts = new V3fVectorData();
+	verts->writable().push_back( p0 );
+	verts->writable().push_back( p1 );
+	curves->addPrimitiveVariable( "P", IECore::PrimitiveVariable( IECore::PrimitiveVariable::Vertex, verts ) );
+
+	IECoreGL::GroupPtr result = new IECoreGL::Group();
+	result->addChild( curves );
+	result->getState()->add( new IECoreGL::CurvesPrimitive::UseGLLines( true ) );
+	result->getState()->add( new IECoreGL::CurvesPrimitive::GLLineWidth( 2.0f ) );
+	result->getState()->add( new IECoreGL::LineSmoothingStateComponent( true ) );
+
+	return result;
+}
+
+IECoreGL::MeshPrimitivePtr cone()
+{
+	static IECoreGL::MeshPrimitivePtr result;
+	if( result )
+	{
+		return result;
+	}
+
+	/// \todo Move this bit to IECore::MeshPrimitive::createCone().
+	IECore::IntVectorDataPtr verticesPerFaceData = new IECore::IntVectorData;
+	vector<int> &verticesPerFace = verticesPerFaceData->writable();
+
+	IECore::IntVectorDataPtr vertexIdsData = new IECore::IntVectorData;
+	vector<int> &vertexIds = vertexIdsData->writable();
+
+	IECore::V3fVectorDataPtr pData = new IECore::V3fVectorData;
+	vector<V3f> &p = pData->writable();
+
+	const float height = 1.5f;
+	const float radius = 0.5f;
+
+	p.push_back( V3f( 0, height, 0 ) );
+
+	const int numDivisions = 30;
+	for( int i = 0; i < numDivisions; ++i )
+	{
+		const float angle = 2 * M_PI * (float)i/(float)(numDivisions-1);
+		p.push_back( radius * V3f( cos( angle ), 0, sin( angle ) ) );
+		verticesPerFace.push_back( 3 );
+		vertexIds.push_back( 0 );
+		vertexIds.push_back( i + 1 );
+		vertexIds.push_back( i == numDivisions - 1 ? 1 : i + 2 );
+	}
+
+	IECore::MeshPrimitivePtr mesh = new IECore::MeshPrimitive( verticesPerFaceData, vertexIdsData, "linear", pData );
+	IECoreGL::ToGLMeshConverterPtr converter = new ToGLMeshConverter( mesh );
+	result = runTimeCast<IECoreGL::MeshPrimitive>( converter->convert() );
+
+	return result;
+}
+
+IECoreGL::MeshPrimitivePtr cube()
+{
+	static IECoreGL::MeshPrimitivePtr result;
+	if( result )
+	{
+		return result;
+	}
+
+	IECore::MeshPrimitivePtr mesh = IECore::MeshPrimitive::createBox(
+		Box3f( V3f( -1 ), V3f( 1 ) )
+	);
+
+	IECoreGL::ToGLMeshConverterPtr converter = new ToGLMeshConverter( mesh );
+	result = runTimeCast<IECoreGL::MeshPrimitive>( converter->convert() );
+
+	return result;
+}
+
+IECoreGL::GroupPtr translateHandle( Style::Axes axes )
+{
+	if( axes < Style::X || axes > Style::Z )
+	{
+		throw Exception( "Unsupported axes" );
+	}
+	const int axis = (int)axes;
+
+	static IECoreGL::GroupPtr handles[3];
+	if( handles[axis] )
+	{
+		return handles[axis];
+	}
+
+	IECoreGL::GroupPtr coneGroup = new IECoreGL::Group;
+	coneGroup->addChild( cone() );
+	coneGroup->setTransform( M44f().scale( V3f( 0.15 ) ) * M44f().translate( V3f( 0, 1, 0 ) ) );
+
+	IECoreGL::GroupPtr group = new IECoreGL::Group;;
+
+	group->addChild( line( V3f( 0 ), V3f( 0, 1, 0 ) ) );
+	group->addChild( coneGroup );
+
+	group->getState()->add( new IECoreGL::DepthTestStateComponent( false ) );
+	group->getState()->add( new IECoreGL::Color( colorForAxes( axes ) ) );
+	group->getState()->add(
+		new IECoreGL::ShaderStateComponent( ShaderLoader::defaultShaderLoader(), TextureLoader::defaultTextureLoader(), "", "", IECoreGL::Shader::constantFragmentSource(), new CompoundObject )
+	);
+
+	if( axis == 0 )
+	{
+		group->setTransform( M44f().rotate( V3f( 0, 0, -M_PI / 2.0f ) ) );
+	}
+	else if( axis == 2 )
+	{
+		group->setTransform( M44f().rotate( V3f( M_PI / 2.0f, 0, 0 ) ) );
+	}
+
+	handles[axis] = group;
+	return group;
+}
+
+IECoreGL::GroupPtr scaleHandle( Style::Axes axes )
+{
+	if( axes < Style::X || axes > Style::XYZ )
+	{
+		throw Exception( "Unsupported axes" );
+	}
+
+	static IECoreGL::GroupPtr handles[4];
+	if( handles[axes] )
+	{
+		return handles[axes];
+	}
+
+	V3f offset( 0.0f );
+	if( axes <= Style::Z )
+	{
+		offset[axes] = 1.0f;
+	}
+
+	IECoreGL::GroupPtr cubeGroup = new IECoreGL::Group;
+	cubeGroup->addChild( cube() );
+	cubeGroup->setTransform( M44f().scale( V3f( 0.075 ) ) * M44f().translate( offset ) );
+
+	IECoreGL::GroupPtr group = new IECoreGL::Group;;
+
+	if( axes <= Style::Z )
+	{
+		group->addChild( line( V3f( 0 ), offset ) );
+	}
+	group->addChild( cubeGroup );
+
+	group->getState()->add( new IECoreGL::DepthTestStateComponent( false ) );
+	group->getState()->add( new IECoreGL::Color( colorForAxes( axes ) ) );
+	group->getState()->add(
+		new IECoreGL::ShaderStateComponent( ShaderLoader::defaultShaderLoader(), TextureLoader::defaultTextureLoader(), "", "", IECoreGL::Shader::constantFragmentSource(), new CompoundObject )
+	);
+
+	handles[axes] = group;
+	return group;
+}
+
+IECoreGL::StatePtr disabledState()
+{
+	static IECoreGL::StatePtr s;
+	if( s )
+	{
+		return s;
+	}
+
+	s = new IECoreGL::State( /* complete = */ false );
+	s->add( new IECoreGL::Color( Color4f( 0.4, 0.4, 0.4, 1.0 ) ), /* override = */ true );
+
+	return s;
+}
+
+} // namespace
+
+//////////////////////////////////////////////////////////////////////////
+// StandardStyle
+//////////////////////////////////////////////////////////////////////////
+
 IE_CORE_DEFINERUNTIMETYPED( StandardStyle );
 
 StandardStyle::StandardStyle()
+	:	m_highlightState( new IECoreGL::State( /* complete = */ false ) )
 {
 	setFont( LabelText, FontLoader::defaultFontLoader()->load( "VeraBd.ttf" ) );
 	setFontScale( LabelText, 1.0f );
@@ -393,54 +605,22 @@ void StandardStyle::renderHorizontalRule( const Imath::V2f &center, float length
 
 }
 
-void StandardStyle::renderTranslateHandle( int axis, State state ) const
+void StandardStyle::renderTranslateHandle( Axes axes, State state ) const
 {
-	if( axis < 0 || axis > 2 )
-	{
-		throw Exception( "Invalid axis" );
-	}
+	IECoreGL::State::bindBaseState();
+	IECoreGL::State *glState = const_cast<IECoreGL::State *>( IECoreGL::State::defaultState() );
+	IECoreGL::State::ScopedBinding highlight( *m_highlightState, *glState, state == HighlightedState );
+	IECoreGL::State::ScopedBinding disabled( *disabledState(), *glState, state == DisabledState );
+	translateHandle( axes )->render( glState );
+}
 
-	V3f v( 0.0f );
-	v[axis] = 1.0f;
-
-	Color3f c( 0.0f );
-	if( state == HighlightedState )
-	{
-		c = getColor( HighlightColor );
-	}
-	else
-	{
-		switch( axis )
-		{
-			case 0 :
-				c = Color3f( 0.73, 0.17, 0.17 );
-				break;
-			case 1 :
-				c = Color3f( 0.2, 0.57, 0.2 );
-				break;
-			default :
-				c = Color3f( 0.2, 0.36, 0.74 );
-		}
-	}
-
-	glUniform1i( g_bezierParameter, 0 );
-	glUniform1i( g_borderParameter, 0 );
-	glUniform1i( g_edgeAntiAliasingParameter, 0 );
-	glUniform1i( g_textureTypeParameter, 0 );
-
-	PushAttrib pushAttrib( GL_ENABLE_BIT | GL_CURRENT_BIT | GL_LINE_BIT );
-
-	glEnable( GL_LINE_SMOOTH );
-	glLineWidth( 2 );
-	glColor( c );
-
-	glBegin( GL_LINES );
-
-		glVertex( V3f( 0 ) );
-		glVertex( v );
-
-	glEnd();
-
+void StandardStyle::renderScaleHandle( Axes axes, State state ) const
+{
+	IECoreGL::State::bindBaseState();
+	IECoreGL::State *glState = const_cast<IECoreGL::State *>( IECoreGL::State::defaultState() );
+	IECoreGL::State::ScopedBinding highlight( *m_highlightState, *glState, state == HighlightedState );
+	IECoreGL::State::ScopedBinding disabled( *disabledState(), *glState, state == DisabledState );
+	scaleHandle( axes )->render( glState );
 }
 
 void StandardStyle::renderImage( const Imath::Box2f &box, const IECoreGL::Texture *texture ) const
@@ -506,6 +686,11 @@ void StandardStyle::setColor( Color c, Imath::Color3f v )
 	}
 
 	m_colors[c] = v;
+	if( c == HighlightColor )
+	{
+		m_highlightState->add( new IECoreGL::Color( Color4f( v[0], v[1], v[2], 1.0f ) ), /* override = */ true );
+	}
+
 	changedSignal()( this );
 }
 
