@@ -42,7 +42,7 @@ using namespace GafferAppleseed;
 IE_CORE_DEFINERUNTIMETYPED( AppleseedRender );
 
 AppleseedRender::AppleseedRender( const std::string &name )
-	:	Render( "IECoreAppleseed::Renderer", name )
+	:	Render( "Appleseed", name )
 {
 }
 
