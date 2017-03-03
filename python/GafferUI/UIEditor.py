@@ -85,6 +85,14 @@ class UIEditor( GafferUI.NodeSetEditor ) :
 
 				with _Row() :
 
+					_Label( "Documentation URL" )
+
+					self.__nodeMetadataWidgets.append(
+						_StringMetadataWidget( key = "documentation:url" )
+					)
+
+				with _Row() :
+
 					_Label( "Color" )
 
 					self.__nodeMetadataWidgets.append(
