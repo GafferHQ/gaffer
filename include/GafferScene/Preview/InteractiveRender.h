@@ -105,6 +105,9 @@ class InteractiveRender : public Gaffer::Node
 
 		void construct( const IECore::InternedString &rendererType = IECore::InternedString() );
 
+		ScenePlug *adaptedInPlug();
+		const ScenePlug *adaptedInPlug() const;
+
 		void plugDirtied( const Gaffer::Plug *plug );
 		void contextChanged( const IECore::InternedString &name );
 
