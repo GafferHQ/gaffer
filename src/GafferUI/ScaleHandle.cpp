@@ -38,6 +38,7 @@
 #include "IECore/Exception.h"
 
 #include "GafferUI/ScaleHandle.h"
+#include "GafferUI/ViewportGadget.h"
 
 using namespace Imath;
 using namespace IECore;
@@ -62,9 +63,8 @@ void ScaleHandle::setAxes( Style::Axes axes )
 		return;
 	}
 
-	if( axes > Style::Z )
+	if( axes > Style::Z && axes != Style::XYZ )
 	{
-		/// \todo Support XYZ as uniform scaling.
 		throw IECore::Exception( "Unsupported axes" );
 	}
 
@@ -79,7 +79,17 @@ Style::Axes ScaleHandle::getAxes() const
 
 float ScaleHandle::scaling( const DragDropEvent &event ) const
 {
-	return m_drag.position( event ) / m_drag.startPosition();
+	if( m_axes == Style::XYZ )
+	{
+		const ViewportGadget *viewport = ancestor<ViewportGadget>();
+		const V2f p = viewport->gadgetToRasterSpace( event.line.p1, this );
+		const float d = (p.x - m_uniformDragStartPosition.x) / (float)viewport->getViewport().x;
+		return 1.0f + d * 3.0f;
+	}
+	else
+	{
+		return m_drag.position( event ) / m_drag.startPosition();
+	}
 }
 
 void ScaleHandle::renderHandle( const Style *style, Style::State state ) const
@@ -89,7 +99,15 @@ void ScaleHandle::renderHandle( const Style *style, Style::State state ) const
 
 void ScaleHandle::dragBegin( const DragDropEvent &event )
 {
-	V3f handle( 0.0f );
-	handle[m_axes] = 1.0f;
-	m_drag = LinearDrag( this, LineSegment3f( V3f( 0 ), handle ), event );
+	if( m_axes == Style::XYZ )
+	{
+		const ViewportGadget *viewport = ancestor<ViewportGadget>();
+		m_uniformDragStartPosition = viewport->gadgetToRasterSpace( event.line.p1, this );
+	}
+	else
+	{
+		V3f handle( 0.0f );
+		handle[m_axes] = 1.0f;
+		m_drag = LinearDrag( this, LineSegment3f( V3f( 0 ), handle ), event );
+	}
 }

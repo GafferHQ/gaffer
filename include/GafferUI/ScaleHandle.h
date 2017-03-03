@@ -67,6 +67,7 @@ class ScaleHandle : public Handle
 
 		Style::Axes m_axes;
 		LinearDrag m_drag;
+		Imath::V2f m_uniformDragStartPosition;
 
 };
 
