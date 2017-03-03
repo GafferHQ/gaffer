@@ -668,6 +668,11 @@ class RendererTest( GafferTest.TestCase ) :
 				"ai:polymesh:subdiv_adaptive_space" : IECore.StringData( "object" ),
 			} )
 		)
+		smoothDerivsTrueAttributes = r.attributes(
+			IECore.CompoundObject( {
+				"ai:polymesh:subdiv_smooth_derivs" : IECore.BoolData( True )
+			} )
+		)
 
 		# We should be able to automatically instance polygon meshes
 		# regardless of the subdivision settings, because they're
@@ -699,6 +704,10 @@ class RendererTest( GafferTest.TestCase ) :
 		r.object( "subdivAdaptiveObjectSpaceAttributes1", subdivPlane.copy(), adaptiveObjectSpaceAttributes )
 		r.object( "subdivAdaptiveObjectSpaceAttributes2", subdivPlane.copy(), adaptiveObjectSpaceAttributes )
 
+		# If smooth derivatives are required, that'll require creating a separate polymesh and an instance of it
+
+		r.object( "subdivSmoothDerivsAttributes1", subdivPlane.copy(), smoothDerivsTrueAttributes )
+
 		r.render()
 		del defaultAttributes, adaptiveAttributes, nonAdaptiveAttributes, adaptiveObjectSpaceAttributes
 		del r
@@ -711,8 +720,8 @@ class RendererTest( GafferTest.TestCase ) :
 			numInstances = len( [ s for s in shapes if arnold.AiNodeEntryGetName( arnold.AiNodeGetNodeEntry( s ) ) == "ginstance" ] )
 			numPolyMeshes = len( [ s for s in shapes if arnold.AiNodeEntryGetName( arnold.AiNodeGetNodeEntry( s ) ) == "polymesh" ] )
 
-			self.assertEqual( numPolyMeshes, 5 )
-			self.assertEqual( numInstances, 10 )
+			self.assertEqual( numPolyMeshes, 6 )
+			self.assertEqual( numInstances, 11 )
 
 			self.__assertInstanced(
 				"polyDefaultAttributes1",
