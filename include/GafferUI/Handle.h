@@ -99,6 +99,31 @@ class Handle : public Gadget
 
 		};
 
+		// Helper for performing drags in a plane.
+		struct PlanarDrag
+		{
+
+			PlanarDrag();
+			// Plane is centered on gadget and parallel to the camera plane.
+			PlanarDrag( const Gadget *gadget, const DragDropEvent &dragBeginEvent );
+			// Position and axes are in gadget space.
+			PlanarDrag( const Gadget *gadget, const Imath::V3f &origin, const Imath::V3f &axis0, const Imath::V3f &axis1, const DragDropEvent &dragBeginEvent );
+
+			Imath::V2f startPosition() const;
+			Imath::V2f position( const DragDropEvent &event ) const;
+
+			private :
+
+				void init( const Gadget *gadget, const Imath::V3f &origin, const Imath::V3f &axis0, const Imath::V3f &axis1, const DragDropEvent &dragBeginEvent );
+
+				const Gadget *m_gadget;
+				Imath::V3f m_worldOrigin;
+				Imath::V3f m_worldAxis0;
+				Imath::V3f m_worldAxis1;
+				Imath::V2f m_dragBeginPosition;
+
+		};
+
 	private :
 
 		void enter();

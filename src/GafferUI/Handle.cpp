@@ -39,8 +39,11 @@
 #include "boost/bind/placeholders.hpp"
 
 #include "OpenEXR/ImathMatrixAlgo.h"
+#include "OpenEXR/ImathLine.h"
+#include "OpenEXR/ImathPlane.h"
 
 #include "IECore/NullObject.h"
+#include "IECore/Transform.h"
 
 #include "IECoreGL/Camera.h"
 
@@ -51,6 +54,10 @@
 using namespace Imath;
 using namespace IECore;
 using namespace GafferUI;
+
+//////////////////////////////////////////////////////////////////////////
+// Handle
+//////////////////////////////////////////////////////////////////////////
 
 IE_CORE_DEFINERUNTIMETYPED( Handle );
 
@@ -160,6 +167,10 @@ bool Handle::dragEnter( const DragDropEvent &event )
 	return event.sourceGadget == this;
 }
 
+//////////////////////////////////////////////////////////////////////////
+// LinearDrag
+//////////////////////////////////////////////////////////////////////////
+
 Handle::LinearDrag::LinearDrag()
 	:	m_gadget( NULL ),
 		m_worldLine( V3f( 0 ), V3f( 1, 0, 0 ) ),
@@ -220,3 +231,77 @@ float Handle::LinearDrag::position( const DragDropEvent &event ) const
 
 	return m_worldLine.normalizedDirection().dot( worldClosestPoint - m_worldLine.p0 );
 }
+
+//////////////////////////////////////////////////////////////////////////
+// PlanarDrag
+//////////////////////////////////////////////////////////////////////////
+
+Handle::PlanarDrag::PlanarDrag()
+	:	m_gadget( NULL )
+{
+}
+
+Handle::PlanarDrag::PlanarDrag( const Gadget *gadget, const DragDropEvent &dragBeginEvent )
+{
+	const ViewportGadget *viewport = gadget->ancestor<ViewportGadget>();
+	const Camera *camera = viewport->getCamera();
+
+	const M44f cameraTransform = camera->getTransform()->transform();
+	const M44f gadgetInverseTransform = gadget->fullTransform().inverse();
+	const M44f cameraToGadget = cameraTransform * gadgetInverseTransform;
+
+	V3f gadgetAxis0;
+	V3f gadgetAxis1;
+	cameraToGadget.multDirMatrix( V3f( 1, 0, 0 ), gadgetAxis0 );
+	cameraToGadget.multDirMatrix( V3f( 0, 1, 0 ), gadgetAxis1 );
+
+	init(
+		gadget,
+		V3f( 0 ),
+		gadgetAxis0,
+		gadgetAxis1,
+		dragBeginEvent
+	);
+}
+
+Handle::PlanarDrag::PlanarDrag( const Gadget *gadget, const Imath::V3f &origin, const Imath::V3f &axis0, const Imath::V3f &axis1, const DragDropEvent &dragBeginEvent )
+{
+	init( gadget, origin, axis0, axis1, dragBeginEvent );
+}
+
+Imath::V2f Handle::PlanarDrag::startPosition() const
+{
+	return m_dragBeginPosition;
+}
+
+Imath::V2f Handle::PlanarDrag::position( const DragDropEvent &event ) const
+{
+	Line3f worldLine(
+		event.line.p0 * m_gadget->fullTransform(),
+		event.line.p1 * m_gadget->fullTransform()
+	);
+	Plane3f worldPlane(
+		m_worldOrigin,
+		m_worldOrigin + m_worldAxis0,
+		m_worldOrigin + m_worldAxis1
+	);
+	V3f worldIntersection( 0 );
+	worldPlane.intersect( worldLine, worldIntersection );
+	return V2f(
+		(worldIntersection - m_worldOrigin).dot( m_worldAxis0 ),
+		(worldIntersection - m_worldOrigin).dot( m_worldAxis1 )
+	);
+}
+
+void Handle::PlanarDrag::init( const Gadget *gadget, const Imath::V3f &origin, const Imath::V3f &axis0, const Imath::V3f &axis1, const DragDropEvent &dragBeginEvent )
+{
+	m_gadget = gadget;
+	const M44f transform = gadget->fullTransform();
+	m_worldOrigin = origin * transform;
+	transform.multDirMatrix( axis0, m_worldAxis0 );
+	transform.multDirMatrix( axis1, m_worldAxis1 );
+	m_worldAxis0.normalize();
+	m_worldAxis1.normalize();
+	m_dragBeginPosition = position( dragBeginEvent );
+}
+
