@@ -67,7 +67,7 @@ class TranslateTool : public TransformTool
 		Gaffer::IntPlug *orientationPlug();
 		const Gaffer::IntPlug *orientationPlug() const;
 
-		/// Translates by the offset in the directions
+		/// Translates by the world space offset in the directions
 		/// specified by the current orientation,
 		/// as if the user had dragged the handles interactively.
 		/// This is primarily of use in the unit tests.

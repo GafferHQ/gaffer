@@ -171,7 +171,7 @@ Imath::M44f TranslateTool::handlesTransform() const
 			break;
 	}
 
-	return result;
+	return sansScaling( result );
 }
 
 void TranslateTool::translate( const Imath::V3f &offset )
@@ -195,7 +195,6 @@ TranslateTool::Translation TranslateTool::createTranslation( const Imath::V3f &d
 
 	V3f worldSpaceDirection;
 	handlesTransform().multDirMatrix( directionInHandleSpace, worldSpaceDirection );
-	worldSpaceDirection.normalize();
 
 	const M44f downstreamMatrix = scenePlug()->fullTransform( selection.path );
 	M44f upstreamMatrix;

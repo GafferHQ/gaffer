@@ -233,7 +233,7 @@ class TranslateToolTest( GafferUITest.TestCase ) :
 		self.assertTrue(
 			IECore.V3f( -1, 0, 0 ).equalWithAbsError(
 				script["group"]["out"].fullTransform( "/group/plane" ).translation(),
-				0.0000001
+				0.000001
 			)
 		)
 		script.undo()
@@ -281,7 +281,22 @@ class TranslateToolTest( GafferUITest.TestCase ) :
 		tool = GafferSceneUI.TranslateTool( view )
 		tool["active"].setValue( True )
 
-		tool.translate( IECore.V3f( 1, 0, 0 ) )
+		with Gaffer.UndoContext( script ) :
+			tool.translate( IECore.V3f( 1, 0, 0 ) )
+
+		self.assertTrue(
+			IECore.V3f( 1, 0, 0 ).equalWithAbsError(
+				script["plane"]["out"].fullTransform( "/plane" ).translation(),
+				0.0000001
+			)
+		)
+
+		script.undo()
+
+		tool["orientation"].setValue( tool.Orientation.Local )
+
+		with Gaffer.UndoContext( script ) :
+			tool.translate( IECore.V3f( 1, 0, 0 ) )
 
 		self.assertTrue(
 			IECore.V3f( 1, 0, 0 ).equalWithAbsError(
