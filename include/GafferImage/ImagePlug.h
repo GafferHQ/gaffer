@@ -135,20 +135,25 @@ class ImagePlug : public Gaffer::ValuePlug
 		IECore::MurmurHash imageHash() const;
 		//@}
 
-		static int tileSize() { return 64; };
+		static int tileSize() { return 1 << tileSizeLog2(); };
 		static const IECore::FloatVectorData *blackTile();
 		static const IECore::FloatVectorData *whiteTile();
+
+		/// Returns the index of the tile containing a point
+		/// This just means dividing by tile size ( always rounding down )
+		inline static const Imath::V2i tileIndex( const Imath::V2i &point )
+		{
+			return Imath::V2i( point.x >> tileSizeLog2(), point.y >> tileSizeLog2() );
+		};
 
 		/// Returns the origin of the tile that contains the point.
 		inline static Imath::V2i tileOrigin( const Imath::V2i &point )
 		{
-			Imath::V2i tileOrigin;
-			tileOrigin.x = point.x < 0 && point.x % tileSize() != 0 ? ( point.x / tileSize() - 1 ) * tileSize() : ( point.x / tileSize() ) * tileSize();
-			tileOrigin.y = point.y < 0 && point.y % tileSize() != 0 ? ( point.y / tileSize() - 1 ) * tileSize() : ( point.y / tileSize() ) * tileSize();
-			return tileOrigin;
+			return tileIndex( point ) * tileSize();
 		}
 
 	private :
+		static int tileSizeLog2() { return 6; };
 
 		static void compoundObjectToCompoundData( const IECore::CompoundObject *object, IECore::CompoundData *data );
 

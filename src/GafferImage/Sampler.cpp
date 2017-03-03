@@ -57,6 +57,14 @@ Sampler::Sampler( const GafferImage::ImagePlug *plug, const std::string &channel
 	m_sampleWindow.min -= V2i( 1 );
 	m_sampleWindow.max += V2i( 1 );
 
+	if( BufferAlgo::contains( m_dataWindow, m_sampleWindow ) )
+	{
+		// If the sample window is fully contained in the data window, then
+		// we don't need to worry about bounds.  Bounding mode -1 disables
+		// all bounds checking.
+		m_boundingMode = -1;
+	}
+
 	// Compute the area we need to cache in order to
 	// be able to service calls within m_sampleWindow
 	// when taking into account m_boundingMode and m_dataWindow.
@@ -87,6 +95,7 @@ Sampler::Sampler( const GafferImage::ImagePlug *plug, const std::string &channel
 	m_cacheWidth = int( ceil( float( m_cacheWindow.size().x ) / ImagePlug::tileSize() ) );
 	int cacheHeight = int( ceil( float( m_cacheWindow.size().y ) / ImagePlug::tileSize() ) );
 	m_dataCache.resize( m_cacheWidth * cacheHeight, NULL );
+	m_dataCacheRaw.resize( m_cacheWidth * cacheHeight, NULL );
 }
 
 void Sampler::hash( IECore::MurmurHash &h ) const
