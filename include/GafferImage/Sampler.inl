@@ -94,13 +94,13 @@ float Sampler::sample( float x, float y )
 	return OIIO::bilerp( x0y0, x1y0, x0y1, x1y1, xf, yf );
 }
 
-void Sampler::cachedData( Imath::V2i p, const float *& tileData, Imath::V2i &tileIndex )
+void Sampler::cachedData( Imath::V2i p, const float *& tileData, Imath::V2i &tilePixelIndex )
 {
 	// Get the smart pointer to the tile we want.
 	Imath::V2i relP = p - m_cacheWindow.min;
 	Imath::V2i cacheIndex = ImagePlug::tileIndex( relP );
 
-	tileIndex = relP - cacheIndex * ImagePlug::tileSize();
+	tilePixelIndex = relP - cacheIndex * ImagePlug::tileSize();
 
 	int cacheI = cacheIndex.x + cacheIndex.y * m_cacheWidth;
 	const float *(&cacheTileRawPtr) = m_dataCacheRaw[ cacheI ];
