@@ -1,3 +1,14 @@
+0.32.0.0
+========
+
+Breaking Changes
+----------------
+
+- GLWidget : Replaced setOverlay/getOverlay with addOverlay/removeOverlay (#1979).
+- Gadget (#1979) :
+  - Added member variable.
+  - Made `Gadget::visible()` method const.
+
 Improvements
 ------------
 
@@ -8,6 +19,23 @@ Improvements
   - Added automatic instancing support (#1978).
   - Added support for multiple cameras (#1978).
 - GUI : User defaults are now applied to new ScriptNodes (#1960).
+- OpenColorIO : Added support for specifying OCIO context variables per node (#1988).
+- UIEditor / UserPlugs :
+  - Added menu items for adding array plugs (#1989).
+  - Added control for setting the documentation:url metadata (#1995).
+- Main menu (#1987) :
+  - Added options for flushing Arnold render caches.
+  - Added issue tracker link
+  - Renamed "mailing list" to "forum"
+- GLWidget (#1979) :
+  - Added support for multiple overlays.
+  - Fixed overlay drawing problems.
+- Viewer (#1979) :
+  - Added support for tool toolbars.
+  - Added support for tool shortcuts.
+  - Added sidebar showing all available tools.
+  - Added translate and scale manipulators.
+- Arnold : Added support for subdiv_smooth_derivs attribute on polymeshes (#1996).
 
 Fixes
 -----
@@ -20,6 +48,11 @@ Fixes
 - Display : Fixed to support retries after failing to launch the server (#1972).
 - UIEditor : Fixed preset naming bugs (#1966).
 - Wrapper : Fixed bugs when Gaffer was installed in a location with spaces in the file path (#1961, #1962).
+- ErrorDialogue : Fixed parentWindow lifetime issues (#1986).
+- CDL : Fixed dirty propagation (#1988).
+- Crop : Fixed hang when using a crop with no input image (#1993).
+- DispatcherUI : Removed emulated "PlaybackRange" option which was clashing with CustomRange (#1991).
+- NodeUI : Fixed documentation:url metadata (#1995).
 
 API
 ---
@@ -29,11 +62,17 @@ API
 - Added `GafferImage::OpenImageIOAlgo` namespace with various utility functions (#1977).
 - Added `Gaffer::PlugAlgo` namespace with a `replacePlug()` utility function (#1977).
 - Fixed binding of `Serialiser::childNeedsSerialisation` (#1973).
+- Added `WidgetAlgo.joinEdges()` (#1979).
+- Gadget : Added setEnabled/getEnabled/enabled methods (#1979).
+- Style : Using enum to define axes for translate/scale handles (#1979).
+- StandardStyle : Added `disabledState()` (#1979).
 
 Build
 -----
 
-- Fixed build on macOS Sierra (#1978).
+- Fixed build on macOS Sierra (#1978, #1992).
+  - Using clang on OSX.
+  - Removed troublesome XCode 8.2 build for now.
 - Updated standard dependency versions :
   - Appleseed 1.6.0-beta
   - Boost 1.61
