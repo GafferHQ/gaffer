@@ -1,7 +1,6 @@
 //////////////////////////////////////////////////////////////////////////
 //
-//  Copyright (c) 2011-2012, John Haddon. All rights reserved.
-//  Copyright (c) 2011-2014, Image Engine Design Inc. All rights reserved.
+//  Copyright (c) 2017, John Haddon. All rights reserved.
 //
 //  Redistribution and use in source and binary forms, with or without
 //  modification, are permitted provided that the following conditions are
@@ -35,55 +34,50 @@
 //
 //////////////////////////////////////////////////////////////////////////
 
-#ifndef GAFFERUI_TYPEIDS_H
-#define GAFFERUI_TYPEIDS_H
+#ifndef GAFFERUI_ROTATEHANDLE_H
+#define GAFFERUI_ROTATEHANDLE_H
+
+#include "GafferUI/Handle.h"
 
 namespace GafferUI
 {
 
-enum TypeId
+class RotateHandle : public Handle
 {
-	GadgetTypeId = 110251,
-	NodeGadgetTypeId = 110252,
-	GraphGadgetTypeId = 110253,
-	ContainerGadgetTypeId = 110254,
-	RenderableGadgetTypeId = 110255,
-	TextGadgetTypeId = 110256,
-	NameGadgetTypeId = 110257,
-	IndividualContainerTypeId = 110258,
-	FrameTypeId = 110259,
-	StyleTypeId = 110260,
-	StandardStyleTypeId = 110261,
-	NoduleTypeId = 110262,
-	LinearContainerTypeId = 110263,
-	ConnectionGadgetTypeId = 110264,
-	StandardNodeGadgetTypeId = 110265,
-	SplinePlugGadgetTypeId = 110266,
-	StandardNoduleTypeId = 110267,
-	CompoundNoduleTypeId = 110268,
-	ImageGadgetTypeId = 110269,
-	ViewportGadgetTypeId = 110270,
-	ViewTypeId = 110271,
-	View3DTypeId = 110272, // Obsolete - available for reuse
-	ObjectViewTypeId = 110273, // Obsolete - available for reuse
-	PlugGadgetTypeId = 110274,
-	GraphLayoutTypeId = 110275,
-	StandardGraphLayoutTypeId = 110276,
-	BackdropNodeGadgetTypeId = 110277,
-	SpacerGadgetTypeId = 110278,
-	StandardConnectionGadgetTypeId = 110279,
-	HandleTypeId = 110280,
-	ToolTypeId = 110281,
-	DotNodeGadgetTypeId = 110282,
-	PlugAdderTypeId = 110283,
-	NoduleLayoutTypeId = 110284,
-	TranslateHandleTypeId = 110285,
-	ScaleHandleTypeId = 110286,
-	RotateHandleTypeId = 110287,
 
-	LastTypeId = 110450
+	public :
+
+		RotateHandle( Style::Axes axes );
+		virtual ~RotateHandle();
+
+		IE_CORE_DECLARERUNTIMETYPEDEXTENSION( GafferUI::RotateHandle, RotateHandleTypeId, Handle );
+
+		void setAxes( Style::Axes axes );
+		Style::Axes getAxes() const;
+
+		// Measured in radians
+		float rotation( const DragDropEvent &event ) const;
+
+	protected :
+
+		virtual void renderHandle( const Style *style, Style::State state ) const;
+		virtual void dragBegin( const DragDropEvent &event );
+
+	private :
+
+		bool dragMove( const DragDropEvent &event );
+
+		Style::Axes m_axes;
+		PlanarDrag m_drag;
+		float m_rotation;
+
 };
+
+IE_CORE_DECLAREPTR( RotateHandle )
+
+typedef Gaffer::FilteredChildIterator<Gaffer::TypePredicate<RotateHandle> > RotateHandleIterator;
+typedef Gaffer::FilteredRecursiveChildIterator<Gaffer::TypePredicate<RotateHandle> > RecursiveRotateHandleIterator;
 
 } // namespace GafferUI
 
-#endif // GAFFERUI_TYPEIDS_H
+#endif // GAFFERUI_ROTATEHANDLE_H
