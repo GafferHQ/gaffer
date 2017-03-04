@@ -474,6 +474,7 @@ IECore::InternedString g_polyMeshSubdivIterationsAttributeName( "ai:polymesh:sub
 IECore::InternedString g_polyMeshSubdivAdaptiveErrorAttributeName( "ai:polymesh:subdiv_adaptive_error" );
 IECore::InternedString g_polyMeshSubdivAdaptiveMetricAttributeName( "ai:polymesh:subdiv_adaptive_metric" );
 IECore::InternedString g_polyMeshSubdivAdaptiveSpaceAttributeName( "ai:polymesh:subdiv_adaptive_space" );
+IECore::InternedString g_polyMeshSubdivSmoothDerivsAttributeName( "ai:polymesh:subdiv_smooth_derivs" );
 IECore::InternedString g_polyMeshSubdividePolygonsAttributeName( "ai:polymesh:subdividePolygons" );
 IECore::InternedString g_objectSpace( "object" );
 
@@ -792,6 +793,7 @@ class ArnoldAttributes : public IECoreScenePreview::Renderer::AttributesInterfac
 				subdivAdaptiveMetric = attributeValue<string>( g_polyMeshSubdivAdaptiveMetricAttributeName, attributes, "auto" );
 				subdivAdaptiveSpace = attributeValue<string>( g_polyMeshSubdivAdaptiveSpaceAttributeName, attributes, "raster" );
 				subdividePolygons = attributeValue<bool>( g_polyMeshSubdividePolygonsAttributeName, attributes, false );
+				subdivSmoothDerivs = attributeValue<bool>( g_polyMeshSubdivSmoothDerivsAttributeName, attributes, false );
 			}
 
 			int subdivIterations;
@@ -799,6 +801,7 @@ class ArnoldAttributes : public IECoreScenePreview::Renderer::AttributesInterfac
 			IECore::InternedString subdivAdaptiveMetric;
 			IECore::InternedString subdivAdaptiveSpace;
 			bool subdividePolygons;
+			bool subdivSmoothDerivs;
 
 			void hash( bool meshInterpolationIsLinear, IECore::MurmurHash &h ) const
 			{
@@ -808,6 +811,7 @@ class ArnoldAttributes : public IECoreScenePreview::Renderer::AttributesInterfac
 					h.append( subdivAdaptiveError );
 					h.append( subdivAdaptiveMetric );
 					h.append( subdivAdaptiveSpace );
+					h.append( subdivSmoothDerivs );
 				}
 			}
 
@@ -819,6 +823,7 @@ class ArnoldAttributes : public IECoreScenePreview::Renderer::AttributesInterfac
 					AiNodeSetFlt( node, "subdiv_adaptive_error", subdivAdaptiveError );
 					AiNodeSetStr( node, "subdiv_adaptive_metric", subdivAdaptiveMetric.c_str() );
 					AiNodeSetStr( node, "subdiv_adaptive_space", subdivAdaptiveSpace.c_str() );
+					AiNodeSetBool( node, "subdiv_smooth_derivs", subdivSmoothDerivs );
 					if( mesh->interpolation() == "linear" )
 					{
 						AiNodeSetStr( node, "subdiv_type", "linear" );
