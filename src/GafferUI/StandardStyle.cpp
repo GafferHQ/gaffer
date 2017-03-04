@@ -155,6 +155,62 @@ IECoreGL::MeshPrimitivePtr cylinder()
 	return result;
 }
 
+IECoreGL::MeshPrimitivePtr torus()
+{
+	static IECoreGL::MeshPrimitivePtr result;
+	if( result )
+	{
+		return result;
+	}
+
+	/// \todo Move this bit to IECore::MeshPrimitive::createTorus().
+	IECore::IntVectorDataPtr verticesPerFaceData = new IECore::IntVectorData;
+	vector<int> &verticesPerFace = verticesPerFaceData->writable();
+
+	IECore::IntVectorDataPtr vertexIdsData = new IECore::IntVectorData;
+	vector<int> &vertexIds = vertexIdsData->writable();
+
+	IECore::V3fVectorDataPtr pData = new IECore::V3fVectorData;
+	vector<V3f> &p = pData->writable();
+
+	const float radiusI = 1;
+	const float radiusJ = 0.03;
+
+	const int numDivisionsI = 30;
+	const int numDivisionsJ = 15;
+	for( int i = 0; i < numDivisionsI; ++i )
+	{
+		const float iAngle = 2 * M_PI * (float)i/(float)(numDivisionsI-1);
+		const V3f v( cos( iAngle ), 0, sin( iAngle ) );
+		const V3f circleCenter = v * radiusI;
+
+		const int ii = i == numDivisionsI - 1 ? 0 : i + 1;
+
+		for( int j = 0; j < numDivisionsJ; ++j )
+		{
+			const float jAngle = 2 * M_PI * (float)j/(float)(numDivisionsJ-1);
+			p.push_back(
+				circleCenter + radiusJ * ( cos( jAngle ) * v + V3f( 0, sin( jAngle ), 0 ) )
+			);
+
+			const int jj = j == numDivisionsJ - 1 ? 0 : j + 1;
+
+			verticesPerFace.push_back( 4 );
+
+			vertexIds.push_back( i * numDivisionsJ + j );
+			vertexIds.push_back( i * numDivisionsJ + jj );
+			vertexIds.push_back( ii * numDivisionsJ + jj );
+			vertexIds.push_back( ii * numDivisionsJ + j );
+		}
+	}
+
+	IECore::MeshPrimitivePtr mesh = new IECore::MeshPrimitive( verticesPerFaceData, vertexIdsData, "linear", pData );
+	IECoreGL::ToGLMeshConverterPtr converter = new ToGLMeshConverter( mesh );
+	result = runTimeCast<IECoreGL::MeshPrimitive>( converter->convert() );
+
+	return result;
+}
+
 IECoreGL::MeshPrimitivePtr cone()
 {
 	static IECoreGL::MeshPrimitivePtr result;
@@ -241,6 +297,42 @@ IECoreGL::GroupPtr translateHandle( Style::Axes axes )
 	// bigger on screen, like the TranslateHandle.
 	group->addChild( cylinder() );
 	group->addChild( coneGroup );
+
+	group->getState()->add( new IECoreGL::DepthTestStateComponent( false ) );
+	group->getState()->add( new IECoreGL::Color( colorForAxes( axes ) ) );
+	group->getState()->add(
+		new IECoreGL::ShaderStateComponent( ShaderLoader::defaultShaderLoader(), TextureLoader::defaultTextureLoader(), "", "", IECoreGL::Shader::constantFragmentSource(), new CompoundObject )
+	);
+
+	if( axis == 0 )
+	{
+		group->setTransform( M44f().rotate( V3f( 0, 0, -M_PI / 2.0f ) ) );
+	}
+	else if( axis == 2 )
+	{
+		group->setTransform( M44f().rotate( V3f( M_PI / 2.0f, 0, 0 ) ) );
+	}
+
+	handles[axis] = group;
+	return group;
+}
+
+IECoreGL::GroupPtr rotateHandle( Style::Axes axes )
+{
+	if( axes < Style::X || axes > Style::Z )
+	{
+		throw Exception( "Unsupported axes" );
+	}
+	const int axis = (int)axes;
+
+	static IECoreGL::GroupPtr handles[3];
+	if( handles[axis] )
+	{
+		return handles[axis];
+	}
+
+	IECoreGL::GroupPtr group = new IECoreGL::Group;
+	group->addChild( torus() );
 
 	group->getState()->add( new IECoreGL::DepthTestStateComponent( false ) );
 	group->getState()->add( new IECoreGL::Color( colorForAxes( axes ) ) );
@@ -667,6 +759,15 @@ void StandardStyle::renderTranslateHandle( Axes axes, State state ) const
 	IECoreGL::State::ScopedBinding highlight( *m_highlightState, *glState, state == HighlightedState );
 	IECoreGL::State::ScopedBinding disabled( *disabledState(), *glState, state == DisabledState );
 	translateHandle( axes )->render( glState );
+}
+
+void StandardStyle::renderRotateHandle( Axes axes, State state ) const
+{
+	IECoreGL::State::bindBaseState();
+	IECoreGL::State *glState = const_cast<IECoreGL::State *>( IECoreGL::State::defaultState() );
+	IECoreGL::State::ScopedBinding highlight( *m_highlightState, *glState, state == HighlightedState );
+	IECoreGL::State::ScopedBinding disabled( *disabledState(), *glState, state == DisabledState );
+	rotateHandle( axes )->render( glState );
 }
 
 void StandardStyle::renderScaleHandle( Axes axes, State state ) const
