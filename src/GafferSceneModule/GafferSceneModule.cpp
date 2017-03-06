@@ -108,6 +108,7 @@
 #include "GafferSceneBindings/LightToCameraBinding.h"
 #include "GafferSceneBindings/FilterResultsBinding.h"
 #include "GafferSceneBindings/RendererAlgoBinding.h"
+#include "GafferSceneBindings/SetAlgoBinding.h"
 
 using namespace boost::python;
 using namespace GafferBindings;
@@ -197,5 +198,6 @@ BOOST_PYTHON_MODULE( _GafferScene )
 	bindLightToCamera();
 	bindFilterResults();
 	bindRendererAlgo();
+	bindSetAlgo();
 
 }
