@@ -487,6 +487,8 @@ IECore::InternedString g_dispAutoBumpAttributeName( "ai:disp_autobump" );
 IECore::InternedString g_curvesMinPixelWidthAttributeName( "ai:curves:min_pixel_width" );
 IECore::InternedString g_curvesModeAttributeName( "ai:curves:mode" );
 
+IECore::InternedString g_linkedLights( "linkedLights" );
+
 class ArnoldAttributes : public IECoreScenePreview::Renderer::AttributesInterface
 {
 
@@ -526,6 +528,8 @@ class ArnoldAttributes : public IECoreScenePreview::Renderer::AttributesInterfac
 
 			m_traceSets = attribute<IECore::InternedStringVectorData>( g_setsAttributeName, attributes );
 			m_stepSize = attributeValue<float>( g_stepSizeAttributeName, attributes, 0.0f );
+
+			m_linkedLights = attribute<IECore::StringVectorData>( g_linkedLights, attributes );
 
 			for( IECore::CompoundObject::ObjectMap::const_iterator it = attributes->members().begin(), eIt = attributes->members().end(); it != eIt; ++it )
 			{
@@ -770,6 +774,31 @@ class ArnoldAttributes : public IECoreScenePreview::Renderer::AttributesInterfac
 					// is in every trace set. So we instead make `trace_sets == [ "__none__" ]`
 					// to get the behaviour people expect.
 					AiNodeSetArray( node, "trace_sets", AiArray( 1, 1, AI_TYPE_STRING, "__none__" ) );
+				}
+
+				if( m_linkedLights )
+				{
+					const std::vector<std::string> &lightNames = m_linkedLights->readable();
+
+					std::vector<AtNode*> lightNodesVector;
+					for ( IECore::StringVectorData::ValueType::const_iterator it = lightNames.begin(); it != lightNames.end(); ++it )
+					{
+						std::string lightName = "light:" + *(it);
+						AtNode *lightNode = AiNodeLookUpByName( lightName.c_str() );
+						if( lightNode )
+						{
+							lightNodesVector.push_back( lightNode );
+						}
+					}
+
+					AtArray *linkedLightNodes = AiArrayConvert( lightNodesVector.size(), 1, AI_TYPE_NODE, lightNodesVector.data() );
+					AiNodeSetArray( node, "light_group", linkedLightNodes );
+					AiNodeSetBool( node, "use_light_group", true );
+				}
+				else
+				{
+					AiNodeResetParameter( node, "light_group" );
+					AiNodeResetParameter( node, "use_light_group" );
 				}
 			}
 
@@ -1023,6 +1052,7 @@ class ArnoldAttributes : public IECoreScenePreview::Renderer::AttributesInterfac
 		PolyMesh m_polyMesh;
 		Displacement m_displacement;
 		Curves m_curves;
+		IECore::ConstStringVectorDataPtr m_linkedLights;
 
 		typedef boost::container::flat_map<IECore::InternedString, IECore::ConstDataPtr> UserAttributes;
 		UserAttributes m_user;

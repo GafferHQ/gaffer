@@ -139,6 +139,7 @@ class Renderer : public IECore::RefCounted
 		/// "surface", ObjectVector of IECore::Shaders
 		/// "light", ObjectVector of IECore::Shaders
 		/// "sets", InternedStringVectorData of set names
+		/// "linkedLights", StringVectorData of light names
 		///
 		/// Renderer Specific Attributes
 		/// ----------------------------
