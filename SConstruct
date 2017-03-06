@@ -1088,8 +1088,8 @@ def buildDocs( target, source, env ) :
 		env["ENV"]["PATH"] += ":" + env.subst( "$APPLESEED_ROOT/bin" )
 		env["ENV"][libraryPathEnvVar] += ":" + env.subst( "$APPLESEED_ROOT/lib" )
 		env["ENV"]["OSLHOME"] = env.subst( "$OSLHOME" )
-		env["ENV"]["OSL_SHADER_PATHS"] = env.subst( "$APPLESEED_ROOT/shaders" )
-		env["ENV"]["APPLESEED_SEARCHPATH"] = env.subst( "$APPLESEED_ROOT/shaders:$LOCATE_DEPENDENCY_APPLESEED_SEARCHPATH" )
+		env["ENV"]["OSL_SHADER_PATHS"] = env.subst( "$APPLESEED_ROOT/shaders/gaffer" )
+		env["ENV"]["APPLESEED_SEARCHPATH"] = env.subst( "$APPLESEED_ROOT/shaders/gaffer:$LOCATE_DEPENDENCY_APPLESEED_SEARCHPATH" )
 
 	# Run any python scripts we find in the document source tree. These are
 	# used to autogenerate source files for processing by sphinx.
