@@ -118,6 +118,7 @@ from ShaderBallTest import ShaderBallTest
 from LightTweaksTest import LightTweaksTest
 from FilterResultsTest import FilterResultsTest
 from RendererAlgoTest import RendererAlgoTest
+from SetAlgoTest import SetAlgoTest
 
 if __name__ == "__main__":
 	import unittest
