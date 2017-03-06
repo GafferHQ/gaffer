@@ -130,7 +130,7 @@ except :
 appleseedVersion = getOption( "APPLESEED_VERSION", os.environ.get( "APPLESEED_VERSION" ) )
 try :
 	appleseedReg = IEEnv.registry["apps"]["appleseed"][appleseedVersion][IEEnv.platform()]
-	APPLESEED_ROOT = appleseedReg["location"]
+	APPLESEED_ROOT = appleseedReg["location"] if compilerVersion != "4.1.2" else ""
 	LOCATE_DEPENDENCY_APPLESEED_SEARCHPATH = os.path.join( IEEnv.Environment.rootPath(), "apps", "cortex", cortexVersion, IEEnv.platform(), "base", "appleseed", appleseedVersion, "plugins", compiler, compilerVersion )
 except :
 	APPLESEED_ROOT = ""
