@@ -53,24 +53,29 @@ float Sampler::sample( int x, int y )
 
 #endif
 
-	// Deal with lookups outside of the data window.
-	if( m_boundingMode == Black && !BufferAlgo::contains( m_dataWindow, p ) )
+	if( m_boundingMode != -1 )
 	{
-		return 0.0f;
-	}
-	else
-	{
-		if( BufferAlgo::empty( m_dataWindow ) )
+		// Deal with lookups outside of the data window.
+		if( m_boundingMode == Black )
 		{
-			return 0.0f;
+			if( !BufferAlgo::contains( m_dataWindow, p ) )
+			{
+				return 0.0f;
+			}
 		}
-		p = BufferAlgo::clamp( p, m_dataWindow );
+		else
+		{
+			if( BufferAlgo::empty( m_dataWindow ) )
+			{
+				return 0.0f;
+			}
+			p = BufferAlgo::clamp( p, m_dataWindow );
+		}
 	}
 
 	const float *tileData;
-	Imath::V2i tileOrigin;
 	Imath::V2i tileIndex;
-	cachedData( p, tileData, tileOrigin, tileIndex );
+	cachedData( p, tileData, tileIndex );
 	return *(tileData + tileIndex.y * ImagePlug::tileSize() + tileIndex.x);
 }
 
@@ -89,19 +94,28 @@ float Sampler::sample( float x, float y )
 	return OIIO::bilerp( x0y0, x1y0, x0y1, x1y1, xf, yf );
 }
 
-void Sampler::cachedData( Imath::V2i p, const float *& tileData, Imath::V2i &tileOrigin, Imath::V2i &tileIndex )
+void Sampler::cachedData( Imath::V2i p, const float *& tileData, Imath::V2i &tilePixelIndex )
 {
 	// Get the smart pointer to the tile we want.
-	p -= m_cacheWindow.min;
-	Imath::V2i cacheIndex( p / Imath::V2i( ImagePlug::tileSize() ) );
-	tileIndex = Imath::V2i( p - cacheIndex * Imath::V2i( ImagePlug::tileSize() ) );
-	IECore::ConstFloatVectorDataPtr &cacheTilePtr = m_dataCache[ cacheIndex.x + cacheIndex.y * m_cacheWidth ];
+	Imath::V2i relP = p - m_cacheWindow.min;
+	Imath::V2i cacheIndex = ImagePlug::tileIndex( relP );
 
-	// Get the origin of the tile we want.
-	tileOrigin = Imath::V2i( (( m_cacheWindow.min / ImagePlug::tileSize()) + cacheIndex ) * ImagePlug::tileSize() );
-	if ( cacheTilePtr == NULL ) cacheTilePtr = m_plug->channelData( m_channelName, tileOrigin );
+	tilePixelIndex = relP - cacheIndex * ImagePlug::tileSize();
 
-	tileData = &cacheTilePtr->readable()[0];
+	int cacheI = cacheIndex.x + cacheIndex.y * m_cacheWidth;
+	const float *(&cacheTileRawPtr) = m_dataCacheRaw[ cacheI ];
+
+	if ( cacheTileRawPtr == NULL )
+	{
+		// Get the origin of the tile we want.
+		Imath::V2i tileOrigin = ( ImagePlug::tileIndex( m_cacheWindow.min ) + cacheIndex ) * ImagePlug::tileSize();
+
+		IECore::ConstFloatVectorDataPtr &cacheTilePtr = m_dataCache[ cacheI ];
+		cacheTilePtr = m_plug->channelData( m_channelName, tileOrigin );
+		cacheTileRawPtr = &cacheTilePtr->readable()[0];
+	}
+
+	tileData = cacheTileRawPtr;
 }
 
 }; // namespace GafferImage
