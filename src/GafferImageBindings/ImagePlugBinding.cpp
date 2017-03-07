@@ -83,6 +83,7 @@ void GafferImageBindings::bindImagePlug()
 		.def( "image", &image )
 		.def( "imageHash", &ImagePlug::imageHash )
 		.def( "tileSize", &ImagePlug::tileSize ).staticmethod( "tileSize" )
+		.def( "tileIndex", &ImagePlug::tileIndex ).staticmethod( "tileIndex" )
 		.def( "tileOrigin", &ImagePlug::tileOrigin ).staticmethod( "tileOrigin" )
 	;
 

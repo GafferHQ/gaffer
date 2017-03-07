@@ -67,6 +67,22 @@ class ImagePlugTest( GafferImageTest.ImageTestCase ) :
 				expectedResult
 			)
 
+	def testTileIndex( self ) :
+
+		ts = GafferImage.ImagePlug.tileSize()
+
+		for position, tileIndex in [
+			( IECore.V2i( -ts ), IECore.V2i( -1 ) ),
+			( IECore.V2i( -ts -1 ), IECore.V2i( -2 ) ),
+			( IECore.V2i( 0 ), IECore.V2i( 0 ) ),
+			( IECore.V2i( ts ), IECore.V2i( 1 ) ),
+			( IECore.V2i( ts - 1 ), IECore.V2i( 0 ) ),
+		] :
+			self.assertEqual(
+				GafferImage.ImagePlug.tileIndex( position ),
+				tileIndex
+			)
+
 	def testDefaultChannelNamesMethod( self ) :
 
 		channelNames = GafferImage.ImagePlug()['channelNames'].defaultValue()
