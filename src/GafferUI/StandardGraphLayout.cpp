@@ -50,6 +50,7 @@
 #include "Gaffer/StandardSet.h"
 #include "Gaffer/Dot.h"
 #include "Gaffer/Switch.h"
+#include "Gaffer/BoxOut.h"
 
 #include "GafferUI/StandardGraphLayout.h"
 #include "GafferUI/GraphGadget.h"
@@ -1046,7 +1047,8 @@ bool StandardGraphLayout::connectNodeInternal( GraphGadget *graph, Gaffer::Node 
 		return false;
 	}
 
-	// if we're trying to connect a dot or switch, then we may need to give it plugs first
+	// If we're trying to connect a Dot, Switch or BoxOut, then we may need
+	// to give it plugs first.
 	if( Dot *dot = runTimeCast<Dot>( node ) )
 	{
 		if( !dot->inPlug<Plug>() )
@@ -1059,6 +1061,13 @@ bool StandardGraphLayout::connectNodeInternal( GraphGadget *graph, Gaffer::Node 
 		if( !switchNode->getChild<Plug>( "in" ) )
 		{
 			switchNode->setup( outputPlugs.front() );
+		}
+	}
+	else if( BoxOut *boxOut = runTimeCast<BoxOut>( node ) )
+	{
+		if( !boxOut->plug<Plug>() )
+		{
+			boxOut->setup( outputPlugs.front() );
 		}
 	}
 
