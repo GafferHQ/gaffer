@@ -132,6 +132,8 @@ from PerformanceMonitorTest import PerformanceMonitorTest
 from MetadataAlgoTest import MetadataAlgoTest
 from ContextMonitorTest import ContextMonitorTest
 from PlugAlgoTest import PlugAlgoTest
+from BoxInTest import BoxInTest
+from BoxOutTest import BoxOutTest
 
 if __name__ == "__main__":
 	import unittest
