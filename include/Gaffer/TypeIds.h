@@ -129,6 +129,9 @@ enum TypeId
 	FileSequencePathFilterTypeId = 110082,
 	M44fVectorDataPlugTypeId = 110083,
 	V2iVectorDataPlugTypeId = 110084,
+	BoxIOTypeId = 110085,
+	BoxInTypeId = 110086,
+	BoxOutTypeId = 110087,
 
 	LastTypeId = 110159,
 
