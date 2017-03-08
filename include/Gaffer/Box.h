@@ -39,13 +39,6 @@
 
 #include "Gaffer/SubGraph.h"
 
-namespace GafferBindings
-{
-
-class BoxSerialiser;
-
-} // namespace GafferBindings
-
 namespace Gaffer
 {
 

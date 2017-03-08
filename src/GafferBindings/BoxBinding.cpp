@@ -45,8 +45,9 @@
 using namespace boost::python;
 using namespace IECorePython;
 using namespace Gaffer;
+using namespace GafferBindings;
 
-namespace GafferBindings
+namespace
 {
 
 class BoxSerialiser : public NodeSerialiser
@@ -72,7 +73,9 @@ class BoxSerialiser : public NodeSerialiser
 
 };
 
-void bindBox()
+} // namespace
+
+void GafferBindings::bindBox()
 {
 	typedef DependencyNodeWrapper<Box> BoxWrapper;
 
@@ -89,5 +92,3 @@ void bindBox()
 	Serialisation::registerSerialiser( Box::staticTypeId(), new BoxSerialiser );
 
 }
-
-} // namespace GafferBindings
