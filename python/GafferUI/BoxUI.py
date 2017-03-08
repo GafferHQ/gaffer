@@ -66,6 +66,16 @@ Gaffer.Metadata.registerNode(
 	"layout:customWidget:addButton:section", "Settings",
 	"layout:customWidget:addButton:index", -2,
 
+	# Add + buttons for creating new plugs in the NodeGraph
+	"noduleLayout:customGadget:addButtonTop:gadgetType", "GafferUI.BoxUI.PlugAdder.Top",
+	"noduleLayout:customGadget:addButtonTop:section", "top",
+	"noduleLayout:customGadget:addButtonBottom:gadgetType", "GafferUI.BoxUI.PlugAdder.Bottom",
+	"noduleLayout:customGadget:addButtonBottom:section", "bottom",
+	"noduleLayout:customGadget:addButtonLeft:gadgetType", "GafferUI.BoxUI.PlugAdder.Left",
+	"noduleLayout:customGadget:addButtonLeft:section", "left",
+	"noduleLayout:customGadget:addButtonRight:gadgetType", "GafferUI.BoxUI.PlugAdder.Right",
+	"noduleLayout:customGadget:addButtonRight:section", "right",
+
 	plugs = {
 
 		"*" : [
