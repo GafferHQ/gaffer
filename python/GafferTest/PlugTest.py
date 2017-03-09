@@ -794,5 +794,49 @@ class PlugTest( GafferTest.TestCase ) :
 		self.assertEqual( cs[1], ( n["p3"], ) )
 		self.assertEqual( cs[2], ( n["p4"], ) )
 
+	def testChildPropagationToOutputPlugs( self ) :
+
+		s = Gaffer.ScriptNode()
+
+		s["n"] = Gaffer.Node()
+		s["n"]["in"] = Gaffer.Plug()
+		s["n"]["out"] = Gaffer.Plug( direction = Gaffer.Plug.Direction.Out )
+		s["n"]["out"].setInput( s["n"]["in"] )
+
+		def assertPreconditions() :
+
+			self.assertEqual( s["n"]["in"].keys(), [] )
+			self.assertEqual( s["n"]["out"].keys(), [] )
+			self.assertTrue( s["n"]["out"].getInput().isSame( s["n"]["in"] ) )
+
+		def assertPostconditions() :
+
+			self.assertEqual( s["n"]["in"].keys(), [ "i", "f" ] )
+			self.assertEqual( s["n"]["out"].keys(), [ "i", "f" ] )
+
+			self.assertTrue( isinstance( s["n"]["out"]["i"], Gaffer.IntPlug ) )
+			self.assertTrue( s["n"]["out"]["i"].direction(), Gaffer.Plug.Direction.Out )
+			self.assertTrue( s["n"]["out"]["i"].getInput().isSame( s["n"]["in"]["i"] ) )
+			self.assertTrue( s["n"]["out"].getInput().isSame( s["n"]["in"] ) )
+
+			self.assertTrue( isinstance( s["n"]["out"]["f"], Gaffer.FloatPlug ) )
+			self.assertTrue( s["n"]["out"]["f"].direction(), Gaffer.Plug.Direction.Out )
+			self.assertTrue( s["n"]["out"]["f"].getInput().isSame( s["n"]["in"]["f"] ) )
+
+		assertPreconditions()
+
+		with Gaffer.UndoContext( s ) :
+
+			s["n"]["in"].addChild( Gaffer.IntPlug( "i" ) )
+			s["n"]["in"].addChild( Gaffer.FloatPlug( "f" ) )
+
+		assertPostconditions()
+
+		s.undo()
+		assertPreconditions()
+
+		s.redo()
+		assertPostconditions()
+
 if __name__ == "__main__":
 	unittest.main()
