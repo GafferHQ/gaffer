@@ -395,6 +395,21 @@ Gaffer.Metadata.registerNode(
 
 		],
 
+		"attributes.subdivSmoothDerivs" : [
+
+			"layout:section", "Subdivision",
+			"label", "Smooth Derivatives",
+
+			"description",
+			"""
+			Computes smooth UV derivatives (dPdu and dPdv) per
+			vertex. This can be needed to remove faceting
+			from anisotropic specular and other shading effects
+			that use the derivatives.
+			""",
+
+		],
+
 		# Curves
 
 		"attributes.curvesMode" : [
