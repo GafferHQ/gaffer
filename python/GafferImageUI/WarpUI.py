@@ -63,6 +63,37 @@ Gaffer.Metadata.registerNode(
 
 		],
 
+		"filter" : [
+
+			"description",
+			"""
+			The filter used to perform the resampling. The name
+			of any OIIO filter may be specified, but this UI
+			only exposes a limited range of 4 options which perform
+			well for warping, ordered from softest to sharpest.
+			""",
+
+			"plugValueWidget:type", "GafferUI.PresetsPlugValueWidget",
+
+			"preset:Blackman-Harris", "blackman-harris",
+			"preset:Cubic", "cubic",
+			"preset:Keys", "keys",
+			"preset:Simon", "simon",
+			"preset:Rifman", "rifman",
+
+		],
+
+		"useDerivatives" : [
+
+			"description",
+			"""
+			Whether accurate filter sizes should be computed that take into account the amount
+			of distortion in the size and shape of pixels.  Should have minimal impact on warps
+			that mostly preserve the size of pixels, but could have a large impact if there is
+			heavy distortion.  Fixes problems with aliasing, at the cost of some extra calculations.
+			""",
+		],
+
 	}
 
 )
