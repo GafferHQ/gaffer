@@ -387,7 +387,7 @@ BoxPtr Box::create( Node *parent, const Set *childNodes )
 	BoxPtr result = new Box;
 	parent->addChild( result );
 
-	// it's pretty natural to call this function passing childNodes == ScriptNode::selection().
+	// It's pretty natural to call this function passing childNodes == ScriptNode::selection().
 	// unfortunately nodes will be removed from the selection as we reparent
 	// them, so we have to make a copy of childNodes so our iteration isn't befuddled by
 	// the changing contents. we can use this opportunity to weed out anything in childNodes
@@ -401,18 +401,20 @@ BoxPtr Box::create( Node *parent, const Set *childNodes )
 		}
 	}
 
-	// when a node we're putting in the box has connections to
+	// When a node we're putting in the box has connections to
 	// a node remaining outside, we need to reroute the connection
-	// via an intermediate plug on the box. this mapping maps input
-	// plugs (be they internal or external) to intermediate input plugs.
+	// via a promoted plug. This mapping maps source plugs (be they
+	// internal or external) to promoted plugs.
 	typedef std::pair<const Plug *, Plug *> PlugPair;
 	typedef std::map<const Plug *, Plug *> PlugMap;
 	PlugMap plugMap;
 
 	for( size_t i = 0, e = verifiedChildNodes->size(); i < e; i++ )
 	{
+		// Reparent the node inside the box
 		Node *childNode = static_cast<Node *>( verifiedChildNodes->member( i ) );
-		// reroute any connections to external nodes
+		result->addChild( childNode );
+		// Reroute any connections to external nodes
 		for( RecursivePlugIterator plugIt( childNode ); !plugIt.done(); ++plugIt )
 		{
 			Plug *plug = plugIt->get();
@@ -424,22 +426,21 @@ BoxPtr Box::create( Node *parent, const Set *childNodes )
 					PlugMap::const_iterator mapIt = plugMap.find( input );
 					if( mapIt == plugMap.end() )
 					{
-						PlugPtr intermediateInput = plug->createCounterpart( result->promotedCounterpartName( plug ), Plug::In );
-						// we want intermediate inputs to appear on the same side of the node as the
-						// equivalent internal plug, so we copy the relevant metadata over.
-						copyMetadata( plug, intermediateInput.get() );
-						intermediateInput->setFlags( Plug::Dynamic, true );
-						result->addChild( intermediateInput );
-						intermediateInput->setInput( input );
-						mapIt = plugMap.insert( PlugPair( input, intermediateInput.get() ) ).first;
+						plug->setInput( NULL ); // To allow promotion
+						PlugPtr promoted = result->promotePlug( plug );
+						promoted->setInput( input );
+						plugMap.insert( PlugPair( input, promoted.get() ) );
 					}
-					plug->setInput( mapIt->second );
+					else
+					{
+						plug->setInput( mapIt->second );
+					}
 					plugIt.prune();
 				}
 			}
 			else
 			{
-				// take a copy of the outputs, because we might be modifying the
+				// Take a copy of the outputs, because we might be modifying the
 				// original as we iterate.
 				Plug::OutputContainer outputs = plug->outputs();
 				if( !outputs.empty() )
@@ -454,12 +455,8 @@ BoxPtr Box::create( Node *parent, const Set *childNodes )
 							PlugMap::const_iterator mapIt = plugMap.find( plug );
 							if( mapIt == plugMap.end() )
 							{
-								PlugPtr intermediateOutput = plug->createCounterpart( result->promotedCounterpartName( plug ), Plug::Out );
-								copyMetadata( plug, intermediateOutput.get() );
-								intermediateOutput->setFlags( Plug::Dynamic, true );
-								result->addChild( intermediateOutput );
-								intermediateOutput->setInput( plug );
-								mapIt = plugMap.insert( PlugPair( plug, intermediateOutput.get() ) ).first;
+								PlugPtr promoted = result->promotePlug( plug );
+								mapIt = plugMap.insert( PlugPair( plug, promoted.get() ) ).first;
 							}
 							output->setInput( mapIt->second );
 						}
@@ -468,11 +465,6 @@ BoxPtr Box::create( Node *parent, const Set *childNodes )
 				}
 			}
 		}
-		// reparent the child under the Box. it's important that we do this after adding the intermediate
-		// input plugs, so that when they are serialised and reloaded, the inputs to the box are set before
-		// the inputs to the nodes inside the box - see GafferSceneTest.ShaderAssignmentTest.testAssignShaderFromOutsideBox
-		// for a test case highlighting this necessity.
-		result->addChild( childNode );
 	}
 
 	return result;
