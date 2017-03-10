@@ -147,6 +147,37 @@ class MetadataAlgoTest( GafferTest.TestCase ) :
 		Gaffer.Metadata.registerValue( a, "metadataAlgoTest", 4 )
 		self.assertEqual( affected, [ True, False, True, False ] )
 
+	def testCopy( self ) :
+
+		Gaffer.Metadata.registerValue( GafferTest.AddNode, "metadataAlgoTest", "test" )
+
+		s = GafferTest.AddNode()
+		Gaffer.Metadata.registerValue( s, "a", "a" )
+		Gaffer.Metadata.registerValue( s, "a2", "a2" )
+		Gaffer.Metadata.registerValue( s, "b", "b" )
+		Gaffer.Metadata.registerValue( s, "c", "c", persistent = False )
+
+		t = Gaffer.Node()
+		Gaffer.MetadataAlgo.copy( s, t )
+		self.assertEqual( set( Gaffer.Metadata.registeredValues( t ) ), { "metadataAlgoTest", "a", "a2", "b" } )
+
+		t = Gaffer.Node()
+		Gaffer.MetadataAlgo.copy( s, t, persistentOnly = False )
+		self.assertEqual( set( Gaffer.Metadata.registeredValues( t ) ), { "metadataAlgoTest", "a", "a2", "b", "c" } )
+
+		t = Gaffer.Node()
+		Gaffer.MetadataAlgo.copy( s, t, exclude = "a*" )
+		self.assertEqual( set( Gaffer.Metadata.registeredValues( t ) ), { "metadataAlgoTest", "b" } )
+
+		t = Gaffer.Node()
+		Gaffer.MetadataAlgo.copy( s, t, exclude = "a b" )
+		self.assertEqual( set( Gaffer.Metadata.registeredValues( t ) ), { "metadataAlgoTest", "a2" } )
+
+		t = Gaffer.Node()
+		Gaffer.MetadataAlgo.copy( s, t )
+		for k in Gaffer.Metadata.registeredValues( t ) :
+			self.assertEqual( Gaffer.Metadata.value( t, k ), Gaffer.Metadata.value( s, k ) )
+
 	def tearDown( self ) :
 
 		for n in ( Gaffer.Node, GafferTest.AddNode ) :

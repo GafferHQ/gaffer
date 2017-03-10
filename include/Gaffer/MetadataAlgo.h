@@ -97,6 +97,9 @@ bool childAffectedByChange( const GraphComponent *parent, IECore::TypeId changed
 /// the `readOnly()` method.
 bool ancestorAffectedByChange( const Plug *plug, IECore::TypeId changedNodeTypeId, const StringAlgo::MatchPattern &changedPlugPath, const Gaffer::Plug *changedPlug );
 
+/// Copies metadata from one target to another. The exclude pattern is used with StringAlgo::matchMultiple().
+void copy( const GraphComponent *from, GraphComponent *to, const StringAlgo::MatchPattern &exclude = "", bool persistentOnly = true, bool persistent = true );
+
 } // namespace MetadataAlgo
 
 /// \todo Remove this temporary backwards compatibility.

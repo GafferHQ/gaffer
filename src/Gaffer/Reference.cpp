@@ -303,7 +303,7 @@ void Reference::loadInternal( const std::string &fileName )
 					copyInputsAndValues( oldPlug, newPlug, /* ignoreDefaultValues = */ !versionPriorTo09 );
 				}
 				transferOutputs( oldPlug, newPlug );
-				transferPersistentMetadata( oldPlug, newPlug );
+				MetadataAlgo::copy( oldPlug, newPlug );
 			}
 			catch( const std::exception &e )
 			{
@@ -389,24 +389,5 @@ void Reference::convertPersistentMetadata( Plug *plug ) const
 	{
 		ConstDataPtr value = Metadata::value<Data>( plug, *it );
 		Metadata::registerValue( plug, *it, value, /* persistent = */ false );
-	}
-}
-
-void Reference::transferPersistentMetadata( const Plug *srcPlug, Plug *dstPlug ) const
-{
-	vector<InternedString> keys;
-	Metadata::registeredValues( srcPlug, keys, /* instanceOnly = */ true, /* persistentOnly = */ true );
-	for( vector<InternedString>::const_iterator it = keys.begin(), eIt = keys.end(); it != eIt; ++it )
-	{
-		ConstDataPtr value = Metadata::value<Data>( srcPlug, *it );
-		Metadata::registerValue( dstPlug, *it, value );
-	}
-
-	for( PlugIterator it( srcPlug ); !it.done(); ++it )
-	{
-		if( Plug *dstChildPlug = dstPlug->getChild<Plug>( (*it)->getName() ) )
-		{
-			transferPersistentMetadata( it->get(), dstChildPlug );
-		}
 	}
 }

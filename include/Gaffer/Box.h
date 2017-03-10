@@ -93,7 +93,6 @@ class Box : public SubGraph
 
 		bool validatePromotability( const Plug *descendantPlug, bool throwExceptions, bool childPlug = false ) const;
 		std::string promotedCounterpartName( const Plug *plug ) const;
-		static void copyMetadata( const Plug *from, Plug *to );
 
 };
 

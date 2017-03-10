@@ -43,11 +43,31 @@
 #include "Gaffer/StandardSet.h"
 #include "Gaffer/NumericPlug.h"
 #include "Gaffer/ScriptNode.h"
-#include "Gaffer/Metadata.h"
+#include "Gaffer/MetadataAlgo.h"
 #include "Gaffer/Context.h"
 
 using namespace std;
 using namespace Gaffer;
+
+//////////////////////////////////////////////////////////////////////////
+// Internal Utilities
+//////////////////////////////////////////////////////////////////////////
+
+namespace
+{
+
+void copyMetadata( const Plug *from, Plug *to )
+{
+	// When promoting a plug we don't want to copy layout metadata
+	// because the user will be making their own layout.
+	MetadataAlgo::copy( from, to, /* exclude = */ "layout:*" );
+}
+
+} // namespace
+
+//////////////////////////////////////////////////////////////////////////
+// Box
+//////////////////////////////////////////////////////////////////////////
 
 IE_CORE_DEFINERUNTIMETYPED( Box );
 
@@ -477,31 +497,3 @@ std::string Box::promotedCounterpartName( const Plug *plug ) const
 	return result;
 }
 
-void Box::copyMetadata( const Plug *from, Plug *to )
-{
-	/// \todo Perhaps we should have a more dynamic mechanism for mirroring all metadata?
-	/// If we could register a dynamic metadata value for "*", then we could just answer
-	/// all metadata queries on the fly - would that be a good idea? We'd need to figure
-	/// out how to make it compatible with Metadata::registeredPlugValues(), which needs to
-	/// know all valid names. We'd also need to put a lot of thought into how we allowed the
-	/// user to delete values which were being mirrored dynamically.
-	vector<IECore::InternedString> keys;
-	Metadata::registeredValues( from, keys, /* instanceOnly = */ false, /* persistentOnly = */ true );
-	for( vector<IECore::InternedString>::const_iterator it = keys.begin(), eIt = keys.end(); it != eIt; ++it )
-	{
-		if( boost::starts_with( it->string(), "layout:" ) )
-		{
-			// Don't want to copy layout metadata because the user will be making their own layout.
-			continue;
-		}
-		Metadata::registerValue( to, *it, Metadata::value<IECore::Data>( from, *it ) );
-	}
-
-	for( PlugIterator it( from ); !it.done(); ++it )
-	{
-		if( Plug *childTo = to->getChild<Plug>( (*it)->getName() ) )
-		{
-			copyMetadata( it->get(), childTo );
-		}
-	}
-}

@@ -70,6 +70,8 @@ void bindMetadataAlgo()
 	def( "childAffectedByChange", &childAffectedByChange, ( arg( "parent" ), arg( "changedNodeTypeId"), arg( "changedPlugPath" ), arg( "changedPlug" ) ) );
 	def( "ancestorAffectedByChange", &ancestorAffectedByChange, ( arg( "plug" ), arg( "changedNodeTypeId"), arg( "changedPlugPath" ), arg( "changedPlug" ) ) );
 
+	def( "copy", &copy, ( arg( "from" ), arg( "to" ), arg( "exclude" ) = "", arg( "persistentOnly" ) = true, arg( "persistent" ) = true ) );
+
 }
 
 } // namespace GafferBindings

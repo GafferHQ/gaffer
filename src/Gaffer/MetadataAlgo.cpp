@@ -41,6 +41,7 @@
 #include "Gaffer/Node.h"
 #include "Gaffer/Metadata.h"
 #include "Gaffer/MetadataAlgo.h"
+#include "Gaffer/StringAlgo.h"
 
 using namespace std;
 using namespace IECore;
@@ -175,6 +176,28 @@ bool affectedByChange( const Node *node, IECore::TypeId changedNodeTypeId, const
 	}
 
 	return node->isInstanceOf( changedNodeTypeId );
+}
+
+void copy( const GraphComponent *from, GraphComponent *to, const StringAlgo::MatchPattern &exclude, bool persistentOnly, bool persistent )
+{
+	vector<IECore::InternedString> keys;
+	Metadata::registeredValues( from, keys, /* instanceOnly = */ false, /* persistentOnly = */ persistentOnly );
+	for( vector<IECore::InternedString>::const_iterator it = keys.begin(), eIt = keys.end(); it != eIt; ++it )
+	{
+		if( StringAlgo::matchMultiple( it->string(), exclude ) )
+		{
+			continue;
+		}
+		Metadata::registerValue( to, *it, Metadata::value<IECore::Data>( from, *it ), persistent );
+	}
+
+	for( GraphComponent::ChildIterator it = from->children().begin(), eIt = from->children().end(); it != eIt; ++it )
+	{
+		if( GraphComponent *childTo = to->getChild<GraphComponent>( (*it)->getName() ) )
+		{
+			copy( it->get(), childTo, exclude, persistentOnly, persistent );
+		}
+	}
 }
 
 } // namespace MetadataAlgo
