@@ -85,6 +85,7 @@ from OpenColorIOTransformTest import OpenColorIOTransformTest
 from UVWarpTest import UVWarpTest
 from MirrorTest import MirrorTest
 from CopyChannelsTest import CopyChannelsTest
+from FilterAlgoTest import FilterAlgoTest
 
 if __name__ == "__main__":
 	import unittest
