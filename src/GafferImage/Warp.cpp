@@ -41,6 +41,7 @@
 
 #include "GafferImage/Warp.h"
 #include "GafferImage/Sampler.h"
+#include "GafferImage/FilterAlgo.h"
 
 using namespace std;
 using namespace boost;
@@ -48,6 +49,46 @@ using namespace Imath;
 using namespace IECore;
 using namespace Gaffer;
 using namespace GafferImage;
+
+namespace
+{
+	static IECore::InternedString g_tileInputBoundName( "tileInputBound"  );
+	static IECore::InternedString g_pixelInputPositionsName( "pixelInputPositions"  );
+	static IECore::InternedString g_pixelInputDerivativesName( "pixelInputDerivatives"  );
+}
+
+float Warp::approximateDerivative( float upper, float center, float lower )
+{
+	if( center == Engine::black.x )
+	{
+		return 0.0f;						// Sample is totally invalid
+	}
+	else if( upper != Engine::black.x && lower != Engine::black.x )
+	{
+		float high = upper - center;
+		float low = center - lower;
+		
+		// We have valid derivatives on both sides
+		// The accurate thing to do would be to average them, but here we take the minimum
+		// instead.  This may underfilter sometimes, but there are two arguments for it:
+		// * A large jump on one side could represent a discontinuity that we shouldn't filter across
+		// * Keeping the filter size lower is good for performance ( in the case of a large discontinuity,
+		//   filtering across it could be disasterous for performance )
+		return fabs( high ) < fabs( low ) ? high : low;
+	}
+	else if( upper != Engine::black.x )
+	{
+		return upper - center;				// One sided derivative
+	}
+	else if( lower != Engine::black.x )
+	{
+		return center - lower;				// One sided derivative
+	}
+	else
+	{
+		return 1.0f;						// Sample is valid, but no derivative information
+	}
+}
 
 //////////////////////////////////////////////////////////////////////////
 // Engine
@@ -119,13 +160,16 @@ Warp::Warp( const std::string &name )
 	storeIndexOfNextChild( g_firstPlugIndex );
 
 	addChild( new IntPlug( "boundingMode", Plug::In, Sampler::Black, Sampler::Black, Sampler::Clamp ) );
+	addChild( new StringPlug( "filter", Plug::In, "cubic" ) );
+	addChild( new BoolPlug( "useDerivatives", Plug::In, true ) );
+
 	addChild( new ObjectPlug( "__engine", Plug::Out, NullObject::defaultNullObject() ) );
+	addChild( new CompoundObjectPlug( "__sampleRegions", Plug::Out, new CompoundObject, Plug::Default ) );
 
 	// Pass through the things we don't change at all.
 	outPlug()->formatPlug()->setInput( inPlug()->formatPlug() );
 	outPlug()->metadataPlug()->setInput( inPlug()->metadataPlug() );
 	outPlug()->channelNamesPlug()->setInput( inPlug()->channelNamesPlug() );
-
 }
 
 Warp::~Warp()
@@ -142,14 +186,44 @@ const Gaffer::IntPlug *Warp::boundingModePlug() const
 	return getChild<IntPlug>( g_firstPlugIndex );
 }
 
+Gaffer::StringPlug *Warp::filterPlug()
+{
+	return getChild<StringPlug>( g_firstPlugIndex + 1 );
+}
+
+const Gaffer::StringPlug *Warp::filterPlug() const
+{
+	return getChild<StringPlug>( g_firstPlugIndex + 1 );
+}
+
+Gaffer::BoolPlug *Warp::useDerivativesPlug()
+{
+	return getChild<BoolPlug>( g_firstPlugIndex + 2 );
+}
+
+const Gaffer::BoolPlug *Warp::useDerivativesPlug() const
+{
+	return getChild<BoolPlug>( g_firstPlugIndex + 2 );
+}
+
 Gaffer::ObjectPlug *Warp::enginePlug()
 {
-	return getChild<ObjectPlug>( g_firstPlugIndex + 1 );
+	return getChild<ObjectPlug>( g_firstPlugIndex + 3 );
 }
 
 const Gaffer::ObjectPlug *Warp::enginePlug() const
 {
-	return getChild<ObjectPlug>( g_firstPlugIndex + 1 );
+	return getChild<ObjectPlug>( g_firstPlugIndex + 3 );
+}
+
+CompoundObjectPlug *Warp::sampleRegionsPlug()
+{
+	return getChild<CompoundObjectPlug>( g_firstPlugIndex + 4 );
+}
+
+const CompoundObjectPlug *Warp::sampleRegionsPlug() const
+{
+	return getChild<CompoundObjectPlug>( g_firstPlugIndex + 4 );
 }
 
 void Warp::affects( const Gaffer::Plug *input, AffectedPlugsContainer &outputs ) const
@@ -168,13 +242,43 @@ void Warp::affects( const Gaffer::Plug *input, AffectedPlugsContainer &outputs )
 		outputs.push_back( enginePlug() );
 	}
 
+	if( input == enginePlug() ||
+		input == filterPlug() ||
+		input == useDerivativesPlug() )
+	{
+		outputs.push_back( sampleRegionsPlug() );
+	}
+
 	if(
 		input == inPlug()->channelDataPlug() ||
 		input == boundingModePlug() ||
-		input == enginePlug()
+		input == filterPlug() ||
+		input == sampleRegionsPlug()
 	)
 	{
 		outputs.push_back( outPlug()->channelDataPlug() );
+	}
+}
+
+void Warp::hashEngineIfTileValid( Context &context, const ObjectPlug *plug, const Box2i &dataWindow, const V2i &tileOrigin, IECore::MurmurHash &h )
+{
+	if( BufferAlgo::intersects( dataWindow, Box2i( tileOrigin, tileOrigin + V2i( ImagePlug::tileSize() ) ) ) )
+	{
+		context.set( ImagePlug::tileOriginContextName, tileOrigin );
+		plug->hash( h );
+	}
+}
+
+Warp::ConstEngineDataPtr Warp::computeEngineIfTileValid( Context &context, const ObjectPlug *plug, const Box2i &dataWindow, const V2i &tileOrigin )
+{
+	if( BufferAlgo::intersects( dataWindow, Box2i( tileOrigin, tileOrigin + V2i( ImagePlug::tileSize() ) ) ) )
+	{
+		context.set( ImagePlug::tileOriginContextName, tileOrigin );
+		return static_pointer_cast<const EngineData>( plug->getValue() );
+	}
+	else
+	{
+		return NULL;
 	}
 }
 
@@ -189,6 +293,34 @@ void Warp::hash( const Gaffer::ValuePlug *output, const Gaffer::Context *context
 			h
 		);
 		return;
+	}
+	else if( output == sampleRegionsPlug() )
+	{
+		ContextPtr tmpContext = new Context( *context, Context::Borrowed );
+		Context::Scope scopedContext( tmpContext.get() );
+
+		V2i tileOrigin = context->get<V2i>( ImagePlug::tileOriginContextName );
+		enginePlug()->hash( h );
+
+		bool useDerivatives = useDerivativesPlug()->getValue();
+		h.append( useDerivatives );
+		if( useDerivatives )
+		{
+			const Box2i dataWindow = outPlug()->dataWindowPlug()->getValue();
+			
+			hashEngineIfTileValid( *tmpContext, enginePlug(), dataWindow,
+				tileOrigin + V2i( ImagePlug::tileSize(), 0 ), h );
+			hashEngineIfTileValid( *tmpContext, enginePlug(), dataWindow,
+				tileOrigin - V2i( ImagePlug::tileSize(), 0 ), h );
+			hashEngineIfTileValid( *tmpContext, enginePlug(), dataWindow,
+				tileOrigin + V2i( 0, ImagePlug::tileSize() ), h );
+			hashEngineIfTileValid( *tmpContext, enginePlug(), dataWindow,
+				tileOrigin - V2i( 0, ImagePlug::tileSize() ), h );
+		}
+
+		// The sampleRegionsPlug() includes an overall bound for the tile which depends on the filter
+		// support width
+		filterPlug()->hash( h );
 	}
 
 	ImageProcessor::hash( output, context, h );
@@ -209,6 +341,185 @@ void Warp::compute( Gaffer::ValuePlug *output, const Gaffer::Context *context ) 
 		);
 		return;
 	}
+	else if( output == sampleRegionsPlug() )
+	{
+		const Box2i dataWindow = outPlug()->dataWindowPlug()->getValue();
+		const OIIO::Filter2D *filter = FilterAlgo::acquireFilter( filterPlug()->getValue() );
+		const float filterWidth = filter->width();
+
+		const V2i tileOrigin = context->get<V2i>( ImagePlug::tileOriginContextName );
+
+		const Box2i tileBound( tileOrigin, tileOrigin + V2i( ImagePlug::tileSize() ) );
+
+		ConstEngineDataPtr engineData = static_pointer_cast<const EngineData>( enginePlug()->getValue() );
+		const Engine *engine = engineData->engine;
+
+
+		Box2f inputBound;
+
+		V2fVectorDataPtr pixelInputPositionsData = new V2fVectorData();
+		std::vector< V2f > &pixelInputPositions = pixelInputPositionsData->writable();
+		pixelInputPositions.reserve( ImagePlug::tileSize() * ImagePlug::tileSize() );
+		V2fVectorDataPtr pixelInputDerivativesData = new V2fVectorData();
+		std::vector< V2f > &pixelInputDerivatives = pixelInputDerivativesData->writable();
+		pixelInputDerivatives.reserve( ImagePlug::tileSize() * ImagePlug::tileSize() );
+
+		bool useDerivatives = useDerivativesPlug()->getValue();
+
+		if( useDerivatives )
+		{
+			// Get engines for the 4 surrounding images tiles ( or leave them null if they're outside the
+			// dataWindow )
+			ContextPtr tmpContext = new Context( *context, Context::Borrowed );
+			Context::Scope scopedContext( tmpContext.get() );
+			ConstEngineDataPtr engineDataPlusX = computeEngineIfTileValid( *tmpContext, enginePlug(), dataWindow,
+				tileOrigin + V2i( ImagePlug::tileSize(), 0 ) );
+			ConstEngineDataPtr engineDataMinusX = computeEngineIfTileValid( *tmpContext, enginePlug(), dataWindow,
+				tileOrigin - V2i( ImagePlug::tileSize(), 0 ) );
+			ConstEngineDataPtr engineDataPlusY = computeEngineIfTileValid( *tmpContext, enginePlug(), dataWindow,
+				tileOrigin + V2i( 0, ImagePlug::tileSize() ) );
+			ConstEngineDataPtr engineDataMinusY = computeEngineIfTileValid( *tmpContext, enginePlug(), dataWindow,
+				tileOrigin - V2i( 0, ImagePlug::tileSize() ) );
+
+			const Engine *enginePlusX = NULL, *engineMinusX = NULL, *enginePlusY = NULL, *engineMinusY = NULL;
+			if( engineDataPlusX ) enginePlusX = engineDataPlusX->engine;
+			if( engineDataMinusX ) engineMinusX = engineDataMinusX->engine;
+			if( engineDataPlusY ) enginePlusY = engineDataPlusY->engine;
+			if( engineDataMinusY ) engineMinusY = engineDataMinusY->engine;
+
+			std::vector<V2f> threeRowsCache( ImagePlug::tileSize() * 3 );
+
+			// Loop through all the rows of data we need to compute derivatives for this tile
+			// ( This includes one row before and after the tile ).  In order to compute forward
+			// and backward derivatives, we need to cache three rows, and we only start outputting
+			// to pixelInputPositons/Derivatives once the cache is filled
+			for( int cacheY = -1; cacheY < ImagePlug::tileSize() + 1; cacheY++ )
+			{
+				int cacheRow = ( cacheY + 1 ) % 3;
+
+				// Determine which engine we need to use to set up this cache row
+				// ( The first and last are outside this tile, and use a different engine )
+				const Engine *curEngine = engine;
+				if( cacheY == -1 ) curEngine = engineMinusY;
+				if( cacheY == ImagePlug::tileSize() ) curEngine = enginePlusY;
+
+				for( int x = 0; x < ImagePlug::tileSize(); x++ )
+				{
+					if( BufferAlgo::contains( dataWindow, V2i( tileOrigin.x + x, tileOrigin.y + cacheY ) ) )
+					{
+						threeRowsCache[ cacheRow * ImagePlug::tileSize() + x ] = curEngine->inputPixel( V2f(
+							( tileOrigin.x + x ) + 0.5,
+							( tileOrigin.y + cacheY ) + 0.5 ) );
+					}
+					else
+					{
+						threeRowsCache[ cacheRow * ImagePlug::tileSize() + x ] = Engine::black;
+					}
+				}
+
+
+				if( cacheY > 0 )
+				{
+					// We now have 3 rows of data cached, and can compute one row of derivatives
+					int cacheRowPlus = cacheRow;
+					int cacheRowMiddle = ( cacheY + 3 ) % 3;
+					int cacheRowMinus = ( cacheY + 2 ) % 3;
+
+					int outputY = cacheY - 1;
+
+					for( int x = 0; x < ImagePlug::tileSize(); x++ )
+					{
+						V2f inputPosition( Engine::black );
+						V2f inputDerivatives( 0.0f );
+						if( BufferAlgo::contains( dataWindow, V2i( tileOrigin.x + x, tileOrigin.y + outputY ) ) )
+						{
+							inputPosition = threeRowsCache[ cacheRowMiddle * ImagePlug::tileSize() + x ];
+
+							if( inputPosition != Engine::black )
+							{
+								V2f xPlus = Engine::black;
+								if( x != ImagePlug::tileSize() - 1 )
+								{
+									// We're not on the border, this offset is cached
+									xPlus = threeRowsCache[ cacheRowMiddle * ImagePlug::tileSize() + x + 1 ];
+								}
+								else if( enginePlusX )
+								{
+									// This offset goes over the border, fetch it from the other engine
+									xPlus = enginePlusX->inputPixel( V2f(
+										( tileOrigin.x + x + 1 ) + 0.5,
+										( tileOrigin.y + outputY ) + 0.5 ) );
+								}
+								V2f xMinus = Engine::black;
+								if( x != 0 )
+								{
+									// We're not on the border, this offset is cached
+									xMinus = threeRowsCache[ cacheRowMiddle * ImagePlug::tileSize() + x - 1 ];
+								}
+								else if( engineMinusX )
+								{
+									// This offset goes over the border, fetch it from the other engine
+									xMinus = engineMinusX->inputPixel( V2f(
+										( tileOrigin.x + x - 1 ) + 0.5,
+										( tileOrigin.y + outputY ) + 0.5 ) );
+								}
+
+								V2f yMinus = threeRowsCache[ cacheRowMinus * ImagePlug::tileSize() + x ];
+								V2f yPlus = threeRowsCache[ cacheRowPlus * ImagePlug::tileSize() + x ];
+
+								V2f dPdx(
+									approximateDerivative(  xPlus.x, inputPosition.x, xMinus.x ),
+									approximateDerivative(  xPlus.y, inputPosition.y, xMinus.y ) );
+
+								V2f dPdy(
+									approximateDerivative(  yPlus.x, inputPosition.x, yMinus.x ),
+									approximateDerivative(  yPlus.y, inputPosition.y, yMinus.y ) );
+
+								inputDerivatives = FilterAlgo::derivativesToAxisAligned( inputPosition, dPdx, dPdy );
+
+								inputBound.extendBy( FilterAlgo::filterSupport( inputPosition, inputDerivatives.x, inputDerivatives.y, filterWidth ) );
+							}
+						}
+						pixelInputPositions.push_back( inputPosition );
+						pixelInputDerivatives.push_back( inputDerivatives );
+					}
+
+				}
+			}
+		}
+		else
+		{
+			for( int y = 0; y < ImagePlug::tileSize(); y++ )
+			{
+				for( int x = 0; x < ImagePlug::tileSize(); x++ )
+				{
+					V2f inputPosition( Engine::black );
+					if( BufferAlgo::contains( dataWindow, V2i( tileOrigin.x + x, tileOrigin.y + y ) ) )
+					{
+						inputPosition = engine->inputPixel( V2f(
+							( tileOrigin.x + x ) + 0.5,
+							( tileOrigin.y + y ) + 0.5 ) );
+
+						inputBound.extendBy( FilterAlgo::filterSupport( inputPosition, 1.0f, 1.0f,  filterWidth ) );
+					}
+					pixelInputPositions.push_back( inputPosition );
+					pixelInputDerivatives.push_back( V2f( 1.0f ) );
+				}
+			}
+		}
+
+		// Include any pixels where the corner max bound is above the pixel center, and
+		// the corner min bound is below the pixel center
+		Box2i inputPixelBound(
+			V2i( ceilf( inputBound.min.x - 0.5 ), ceilf( inputBound.min.y - 0.5 ) ),
+			V2i( floorf( inputBound.max.x - 0.5 ) + 1, floorf( inputBound.max.y - 0.5 ) + 1 ) );
+
+		CompoundObjectPtr sampleRegions = new CompoundObject();
+		sampleRegions->members()[ g_tileInputBoundName ] = new Box2iData( inputPixelBound );
+		sampleRegions->members()[ g_pixelInputPositionsName ] = pixelInputPositionsData;
+		sampleRegions->members()[ g_pixelInputDerivativesName ] = pixelInputDerivativesData;
+		static_cast<CompoundObjectPlug *>( output )->setValue( sampleRegions );
+	}
 
 	ImageProcessor::compute( output, context );
 }
@@ -217,15 +528,16 @@ void Warp::hashChannelData( const GafferImage::ImagePlug *parent, const Gaffer::
 {
 	ImageProcessor::hashChannelData( parent, context, h );
 
-	const IECore::MurmurHash engineHash = enginePlug()->hash();
-	h.append( engineHash );
+	IECore::MurmurHash sampleRegionsHash = sampleRegionsPlug()->hash();
+	ConstCompoundObjectPtr sampleRegions = sampleRegionsPlug()->getValue( &sampleRegionsHash );
+	h.append( sampleRegionsHash );
 
-	ConstEngineDataPtr engineData = static_pointer_cast<const EngineData>( enginePlug()->getValue( &engineHash ) );
+	const Box2i &tileInputBound = sampleRegions->member< Box2iData >( g_tileInputBoundName, true )->readable();
 
 	Sampler sampler(
 		inPlug(),
 		context->get<string>( ImagePlug::channelNameContextName ),
-		engineData->engine->inputWindow( context->get<V2i>( ImagePlug::tileOriginContextName ) ),
+		tileInputBound,
 		(Sampler::BoundingMode)boundingModePlug()->getValue()
 	);
 	sampler.hash( h );
@@ -233,42 +545,51 @@ void Warp::hashChannelData( const GafferImage::ImagePlug *parent, const Gaffer::
 	outPlug()->dataWindowPlug()->hash( h );
 }
 
+
 IECore::ConstFloatVectorDataPtr Warp::computeChannelData( const std::string &channelName, const Imath::V2i &tileOrigin, const Gaffer::Context *context, const ImagePlug *parent ) const
 {
-	ConstEngineDataPtr engineData = static_pointer_cast<const EngineData>( enginePlug()->getValue() );
-	const Engine *e = engineData->engine;
-
-	Sampler sampler(
-		inPlug(),
-		channelName,
-		e->inputWindow( tileOrigin ),
-		(Sampler::BoundingMode)boundingModePlug()->getValue()
-	);
-
-	const Box2i dataWindow = outPlug()->dataWindowPlug()->getValue();
-
 	FloatVectorDataPtr resultData = new FloatVectorData;
 	vector<float> &result = resultData->writable();
 	result.reserve( ImagePlug::tileSize() * ImagePlug::tileSize() );
 
-	const Box2i tileBound( tileOrigin, tileOrigin + V2i( ImagePlug::tileSize() ) );
+	const OIIO::Filter2D *filter = FilterAlgo::acquireFilter( filterPlug()->getValue() );
+
+	ConstCompoundObjectPtr sampleRegions = sampleRegionsPlug()->getValue();
+
+	const Box2i &tileInputBound = sampleRegions->member< Box2iData >( g_tileInputBoundName, true )->readable();
+	const std::vector<V2f> &pixelInputPositions = sampleRegions->member< V2fVectorData >( g_pixelInputPositionsName, true )->readable();
+	const std::vector<V2f> &pixelInputDerivatives = sampleRegions->member< V2fVectorData >( g_pixelInputDerivativesName, true )->readable();
+
+	const Box2i dataWindow = outPlug()->dataWindowPlug()->getValue();
+	const Box2i validPixelsRelativeToTile( dataWindow.min - tileOrigin, dataWindow.max - tileOrigin );
+
+	Sampler sampler(
+		inPlug(),
+		channelName,
+		tileInputBound,
+		(Sampler::BoundingMode)boundingModePlug()->getValue()
+	);
+
+	std::vector<float> scratchMemory;
+	int i = 0;
 	V2i oP;
-	for( oP.y = tileBound.min.y; oP.y < tileBound.max.y; ++oP.y )
+	for( oP.y = 0; oP.y < ImagePlug::tileSize(); ++oP.y )
 	{
-		for( oP.x = tileBound.min.x; oP.x < tileBound.max.x; ++oP.x )
+		for( oP.x = 0; oP.x < ImagePlug::tileSize(); ++oP.x, ++i )
 		{
-			float v = 0.0f;
-			if( BufferAlgo::contains( dataWindow, oP ) )
+			float v = 0;
+			if( BufferAlgo::contains( validPixelsRelativeToTile , oP ) )
 			{
-				const V2f iP = e->inputPixel( V2f( oP.x + 0.5, oP.y + 0.5 ) );
-				if( iP != Engine::black )
+				const V2f &input = pixelInputPositions[i];
+				if( input != Engine::black )
 				{
-					v = sampler.sample( iP.x, iP.y );
+					v = FilterAlgo::sampleBox( sampler, input, pixelInputDerivatives[i].x, pixelInputDerivatives[i].y, filter, scratchMemory );
 				}
 			}
 			result.push_back( v );
 		}
 	}
+
 
 	return resultData;
 }
