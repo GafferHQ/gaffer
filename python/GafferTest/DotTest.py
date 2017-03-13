@@ -109,7 +109,7 @@ class DotTest( GafferTest.TestCase ) :
 		s["n2"] = GafferTest.AddNode()
 
 		s["n1"]["sum"].setFlags( Gaffer.Plug.Flags.Serialisable, False )
-		
+
 		s["d"] = Gaffer.Dot()
 		s["d"].setup( s["n1"]["sum"] )
 
@@ -137,6 +137,33 @@ class DotTest( GafferTest.TestCase ) :
 		s.deleteNodes( filter = Gaffer.StandardSet( [ s["d"] ] ) )
 
 		self.assertTrue( s["n2"]["op1"].getInput().isSame( s["n1"]["sum"] ) )
+
+	def testArrayPlug( self ) :
+
+		n1 = Gaffer.Node()
+		n1["a"] = Gaffer.ArrayPlug( element = Gaffer.IntPlug() )
+
+		n2 = Gaffer.Node()
+		n2["a"] = Gaffer.ArrayPlug( element = Gaffer.IntPlug() )
+
+		d = Gaffer.Dot()
+		d.setup( n1["a"] )
+		d["in"].setInput( n1["a"] )
+		n2["a"].setInput( d["out"] )
+
+		self.assertEqual( len( d["out"] ), 1 )
+		self.assertTrue( d["out"].source().isSame( n1["a"] ) )
+		self.assertTrue( d["out"][0].source().isSame( n1["a"][0] ) )
+
+		i = Gaffer.IntPlug()
+		n1["a"][0].setInput( i )
+
+		self.assertEqual( len( n1["a"] ), 2 )
+		self.assertEqual( len( d["in"] ), 2 )
+		self.assertEqual( len( d["out"] ), 2 )
+		self.assertTrue( d["out"].source().isSame( n1["a"] ) )
+		self.assertTrue( d["out"][0].source().isSame( i ) )
+		self.assertTrue( d["out"][1].source().isSame( n1["a"][1] ) )
 
 if __name__ == "__main__":
 	unittest.main()

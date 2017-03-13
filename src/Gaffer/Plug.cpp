@@ -641,9 +641,9 @@ void Plug::parentChanging( Gaffer::GraphComponent *newParent )
 		for( OutputContainer::const_iterator it = outputs.begin(), eIt = outputs.end(); it != eIt; ++it )
 		{
 			Plug *output = *it;
-			if( output->acceptsChild( this ) )
+			PlugPtr outputChildPlug = createCounterpart( getName(), output->direction() );
+			if( output->acceptsChild( outputChildPlug.get() ) )
 			{
-				PlugPtr outputChildPlug = createCounterpart( getName(), direction() );
 				{
 					// We're adding the child so that the parent connection remains valid,
 					// but the parent connection wouldn't be considered valid until the

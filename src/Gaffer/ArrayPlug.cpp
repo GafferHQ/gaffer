@@ -49,11 +49,6 @@ IE_CORE_DEFINERUNTIMETYPED( ArrayPlug )
 ArrayPlug::ArrayPlug( const std::string &name, Direction direction, PlugPtr element, size_t minSize, size_t maxSize, unsigned flags )
 	:	Plug( name, direction, flags ), m_minSize( std::max( minSize, size_t( 1 ) ) ), m_maxSize( std::max( maxSize, m_minSize ) )
 {
-	if( direction == Plug::Out )
-	{
-		throw IECore::Exception( "Output ArrayPlugs are currently unsupported." );
-	}
-
 	if( element )
 	{
 		// If we're dynamic ourselves, then serialisations will include a constructor
