@@ -143,7 +143,7 @@ class PathFilterTest( GafferSceneTest.SceneTestCase ) :
 		s["f"] = GafferScene.PathFilter()
 		b = Gaffer.Box.create( s, Gaffer.StandardSet( [ s["f"] ] ) )
 
-		p = b.promotePlug( b["f"]["paths"] )
+		p = Gaffer.PlugAlgo.promote( b["f"]["paths"] )
 		p.setValue( IECore.StringVectorData( [ "/a", "/red", "/b/c/d" ] ) )
 
 		for path, result in [

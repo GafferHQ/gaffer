@@ -182,8 +182,8 @@ class FilterSwitchTest( GafferSceneTest.SceneTestCase ) :
 		fs["in"]["in0"].setInput( f1["out"] )
 		fs["in"]["in1"].setInput( f2["out"] )
 
-		promoted = b2.promotePlug( fs["index"] )
-		promoted = b1.promotePlug( promoted )
+		promoted = Gaffer.PlugAlgo.promote( fs["index"] )
+		promoted = Gaffer.PlugAlgo.promote( promoted )
 		promoted.setValue(1)
 
 		# correctly connected internally:

@@ -281,9 +281,9 @@ class PruneTest( GafferSceneTest.SceneTestCase ) :
 		b = Gaffer.Box()
 		b["n"] = GafferScene.Prune()
 
-		self.assertTrue( b.canPromotePlug( b["n"]["filter"] ) )
-		b.promotePlug( b["n"]["filter"] )
-		self.assertTrue( b.plugIsPromoted( b["n"]["filter"] ) )
+		self.assertTrue( Gaffer.PlugAlgo.canPromote( b["n"]["filter"] ) )
+		Gaffer.PlugAlgo.promote( b["n"]["filter"] )
+		self.assertTrue( Gaffer.PlugAlgo.isPromoted( b["n"]["filter"] ) )
 
 	def testGlobalsDoNotDependOnScenePath( self ) :
 

@@ -41,13 +41,6 @@
 
 #include "GafferSceneUI/TypeIds.h"
 
-namespace Gaffer
-{
-
-IE_CORE_FORWARDDECLARE( Box )
-
-} // namespace Gaffer
-
 namespace GafferSceneUI
 {
 
@@ -103,7 +96,7 @@ class ShaderView : public GafferImageUI::ImageView
 		void preRender();
 
 		bool m_framed;
-		Gaffer::BoxPtr m_imageConverter;
+		Gaffer::NodePtr m_imageConverter;
 
 		boost::signals::scoped_connection m_idleConnection;
 
