@@ -630,10 +630,10 @@ class DispatcherTest( GafferTest.TestCase ) :
 		s["n4"]["mode"].setValue( "a" )
 		s["n4"]["fileName"].setValue( fileName )
 		s["n4"]["text"].setValue( "n4 on ${frame};" )
-		promotedPreTaskPlug = s["b"].promotePlug( s["b"]["n3"]["preTasks"][0] )
+		promotedPreTaskPlug = Gaffer.PlugAlgo.promote( s["b"]["n3"]["preTasks"][0] )
 		promotedPreTaskPlug.setInput( s["n1"]["task"] )
 		s["b"]["n3"]["preTasks"][1].setInput( s["b"]["n2"]["task"] )
-		promotedTaskPlug = s["b"].promotePlug( s["b"]["n3"]["task"] )
+		promotedTaskPlug = Gaffer.PlugAlgo.promote( s["b"]["n3"]["task"] )
 		s["n4"]["preTasks"][0].setInput( promotedTaskPlug )
 		# export a reference too
 		s["b"].exportForReference( self.temporaryDirectory() + "/test.grf" )
