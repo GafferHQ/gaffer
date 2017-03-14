@@ -137,8 +137,8 @@ class ImageMetadataTest( GafferImageTest.ImageTestCase ) :
 		memberDataAndName2 = s["m"]["metadata"].memberDataAndName( s["m"]["metadata"]["member2"] )
 
 		Gaffer.Box.create( s, Gaffer.StandardSet( [ s["m"] ] ) )
-		s["Box"].promotePlug( s["Box"]["m"]["metadata"]["member1"] )
-		s["Box"].promotePlug( s["Box"]["m"]["metadata"]["member2"] )
+		Gaffer.PlugAlgo.promote( s["Box"]["m"]["metadata"]["member1"] )
+		Gaffer.PlugAlgo.promote( s["Box"]["m"]["metadata"]["member2"] )
 
 		self.assertEqual(
 			s["Box"]["m"]["metadata"].memberDataAndName( s["Box"]["m"]["metadata"]["member1"] ),
