@@ -92,6 +92,7 @@
 #include "GafferBindings/MonitorBinding.h"
 #include "GafferBindings/MetadataAlgoBinding.h"
 #include "GafferBindings/SwitchBinding.h"
+#include "GafferBindings/PlugAlgoBinding.h"
 
 using namespace boost::python;
 using namespace Gaffer;
@@ -188,6 +189,7 @@ BOOST_PYTHON_MODULE( _Gaffer )
 	bindMonitor();
 	bindMetadataAlgo();
 	bindSwitch();
+	bindPlugAlgo();
 
 	NodeClass<Backdrop>();
 
