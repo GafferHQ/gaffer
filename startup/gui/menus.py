@@ -64,7 +64,7 @@ GafferUI.LocalDispatcherUI.appendMenuDefinitions( scriptWindowMenu, prefix="/Exe
 
 for menuItem, url in [
 		( "User Guide", "$GAFFER_ROOT/doc/gaffer/html/index.html" ),
-		( "Node Reference", "$GAFFER_ROOT/doc/gaffer/html/NodeReference/index.html" ),
+		( "Node Reference", "$GAFFER_ROOT/doc/gaffer/html/Reference/NodeReference/index.html" ),
 		( "License", "$GAFFER_ROOT/doc/gaffer/html/Appendices/License/index.html" ),
 		( "LocalDocsDivider", None ),
 		( "Forum", "https://groups.google.com/forum/#!forum/gaffer-dev" ),
