@@ -203,7 +203,7 @@ def __plugValueWidgetCreator( plug ) :
 	# But If the types don't match, we can't expect the
 	# UI for the internal plug to work with the external
 	# plug. Typically the types will match, because the
-	# external plug was created by Box::promotePlug(), but
+	# external plug was created by PlugAlgo.promote(), but
 	# it's possible to use scripting to connect different
 	# types, for instance to drive an internal IntPlug with
 	# an external BoolPlug. In this case we make no attempt
@@ -248,15 +248,15 @@ def __appendPlugDeletionMenuItems( menuDefinition, plug, readOnly = False ) :
 		"active" : not readOnly,
 	} )
 
-def __promoteToBox( box, plug ) :
+def __promote( plug ) :
 
-	with Gaffer.UndoContext( box.ancestor( Gaffer.ScriptNode ) ) :
-		box.promotePlug( plug )
+	with Gaffer.UndoContext( plug.ancestor( Gaffer.ScriptNode ) ) :
+		Gaffer.PlugAlgo.promote( plug )
 
-def __unpromoteFromBox( box, plug ) :
+def __unpromote( plug ) :
 
-	with Gaffer.UndoContext( box.ancestor( Gaffer.ScriptNode ) ) :
-		box.unpromotePlug( plug )
+	with Gaffer.UndoContext( plug.ancestor( Gaffer.ScriptNode ) ) :
+		Gaffer.PlugAlgo.unpromote( plug )
 
 def __promoteToBoxEnabledPlug( box, plug ) :
 
@@ -277,46 +277,46 @@ def __appendPlugPromotionMenuItems( menuDefinition, plug, readOnly = False ) :
 	if box is None :
 		return
 
-	if box.canPromotePlug( plug ) :
+	if Gaffer.PlugAlgo.canPromote( plug ) :
 
 		if len( menuDefinition.items() ) :
 			menuDefinition.append( "/BoxDivider", { "divider" : True } )
 
 		menuDefinition.append( "/Promote to %s" % box.getName(), {
-			"command" : IECore.curry( __promoteToBox, box, plug ),
+			"command" : functools.partial( __promote, plug ),
 			"active" : not readOnly,
 		} )
 
-		if isinstance( plug.parent(), Gaffer.ArrayPlug ) and box.canPromotePlug( plug.parent() ) :
+		if isinstance( plug.parent(), Gaffer.ArrayPlug ) and Gaffer.PlugAlgo.canPromote( plug.parent() ) :
 			menuDefinition.append( "/Promote %s array to %s" % ( plug.parent().getName(), box.getName() ), {
-				"command" : IECore.curry( __promoteToBox, box, plug.parent() ),
+				"command" : functools.partial( __promote, plug.parent() ),
 				"active" : not readOnly,
 			} )
 
 		if isinstance( node, Gaffer.DependencyNode ) :
 			if plug.isSame( node.enabledPlug() ) :
 				menuDefinition.append( "/Promote to %s.enabled" % box.getName(), {
-					"command" : IECore.curry( __promoteToBoxEnabledPlug, box, plug ),
+					"command" : functools.partial( __promoteToBoxEnabledPlug, box, plug ),
 					"active" : not readOnly,
 				} )
 
-	elif box.plugIsPromoted( plug ) :
+	elif Gaffer.PlugAlgo.isPromoted( plug ) :
 
 		# Add a menu item to unpromote the plug
 
 		if len( menuDefinition.items() ) :
 			menuDefinition.append( "/BoxDivider", { "divider" : True } )
 
-		if isinstance( plug.parent(), Gaffer.ArrayPlug ) and box.plugIsPromoted( plug.parent() ) :
+		if isinstance( plug.parent(), Gaffer.ArrayPlug ) and Gaffer.PlugAlgo.isPromoted( plug.parent() ) :
 			menuDefinition.append( "/Unpromote %s array from %s" % ( plug.parent().getName(), box.getName() ), {
-				"command" : IECore.curry( __unpromoteFromBox, box, plug.parent() ),
+				"command" : functools.partial( __unpromote, plug.parent() ),
 				"active" : not readOnly,
 			} )
 		else :
 			# we dont want to allow unpromoting for children of promoted arrays as it
 			# causes unpredicted behaviour, and it doesn't seem useful in general.
 			menuDefinition.append( "/Unpromote from %s" % box.getName(), {
-				"command" : IECore.curry( __unpromoteFromBox, box, plug ),
+				"command" : functools.partial( __unpromote, plug ),
 				"active" : not readOnly,
 			} )
 
