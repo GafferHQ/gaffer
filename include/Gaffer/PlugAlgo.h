@@ -38,15 +38,47 @@
 #ifndef GAFFER_PLUGALGO_H
 #define GAFFER_PLUGALGO_H
 
-#include "Gaffer/Plug.h"
+#include "IECore/RefCounted.h"
+
+#include "Gaffer/StringAlgo.h"
 
 namespace Gaffer
 {
+
+IE_CORE_FORWARDDECLARE( Plug )
 
 namespace PlugAlgo
 {
 
 void replacePlug( GraphComponent *parent, PlugPtr plug );
+
+/// Promotion
+/// =========
+///
+/// When a node has an internal node graph of its own, it
+/// is often useful to expose some internal settings by
+/// promoting internal plugs so that they are driven by
+/// external plugs. These functions assist in this process.
+
+/// Returns true if a call to `promote( plug, parent )` would
+/// succeed, false otherwise.
+bool canPromote( const Plug *plug, const Plug *parent = NULL );
+/// Promotes an internal plug, returning the newly created
+/// external plug. By default the external plug is parented
+/// directly to the node, but the `parent` argument
+/// may specify a plug on that node to be used as parent
+/// instead. By default, all metadata values except those
+/// related to plug layouts are copied to the external
+/// plug - this can be controlled with the `excludeMetadata`
+/// argument.
+/// \undoable
+Plug *promote( Plug *plug, Plug *parent = NULL, const StringAlgo::MatchPattern &excludeMetadata = "layout:*" );
+/// Returns true if the plug appears to have been promoted.
+bool isPromoted( const Plug *plug );
+/// Unpromotes a previously promoted plug, removing the
+/// external plug where possible.
+/// \undoable
+void unpromote( Plug *plug );
 
 } // namespace PlugAlgo
 

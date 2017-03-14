@@ -34,40 +34,17 @@
 //
 //////////////////////////////////////////////////////////////////////////
 
-#include "boost/format.hpp"
-#include "boost/algorithm/string/replace.hpp"
-#include "boost/algorithm/string/predicate.hpp"
 #include "boost/regex.hpp"
 
 #include "Gaffer/Box.h"
 #include "Gaffer/StandardSet.h"
 #include "Gaffer/NumericPlug.h"
 #include "Gaffer/ScriptNode.h"
-#include "Gaffer/MetadataAlgo.h"
 #include "Gaffer/Context.h"
+#include "Gaffer/PlugAlgo.h"
 
 using namespace std;
 using namespace Gaffer;
-
-//////////////////////////////////////////////////////////////////////////
-// Internal Utilities
-//////////////////////////////////////////////////////////////////////////
-
-namespace
-{
-
-void copyMetadata( const Plug *from, Plug *to )
-{
-	// When promoting a plug we don't want to copy layout metadata
-	// because the user will be making their own layout.
-	MetadataAlgo::copy( from, to, /* exclude = */ "layout:*" );
-}
-
-} // namespace
-
-//////////////////////////////////////////////////////////////////////////
-// Box
-//////////////////////////////////////////////////////////////////////////
 
 IE_CORE_DEFINERUNTIMETYPED( Box );
 
@@ -82,285 +59,38 @@ Box::~Box()
 
 bool Box::canPromotePlug( const Plug *descendantPlug ) const
 {
-	return validatePromotability( descendantPlug, /* throwExceptions = */ false );
+	const Node *descendantNode = descendantPlug->node();
+	if( !descendantNode || descendantNode->parent<Node>() != this )
+	{
+		return false;
+	}
+
+	return PlugAlgo::canPromote( descendantPlug );
 }
 
 Plug *Box::promotePlug( Plug *descendantPlug )
 {
-	validatePromotability( descendantPlug, /* throwExceptions = */ true );
-
-	PlugPtr externalPlug = descendantPlug->createCounterpart( promotedCounterpartName( descendantPlug ), descendantPlug->direction() );
-	externalPlug->setFlags( Plug::Dynamic, true );
-	// Flags are not automatically propagated to the children of compound plugs,
-	// so we need to do that ourselves. We don't want to propagate them to the
-	// children of plug types which create the children themselves during
-	// construction though, hence the typeId checks for the base classes
-	// which add no children during construction. I'm not sure this approach is
-	// necessarily the best - the alternative would be to set everything dynamic
-	// unconditionally and then implement Serialiser::childNeedsConstruction()
-	// for types like CompoundNumericPlug that create children in their constructors.
-	const Gaffer::TypeId compoundTypes[] = { PlugTypeId, ValuePlugTypeId, CompoundPlugTypeId, ArrayPlugTypeId };
-	const Gaffer::TypeId *compoundTypesEnd = compoundTypes + 4;
-	if( find( compoundTypes, compoundTypesEnd, (Gaffer::TypeId)externalPlug->typeId() ) != compoundTypesEnd )
+	const Node *descendantNode = descendantPlug->node();
+	if( !descendantNode || descendantNode->parent<Node>() != this )
 	{
-		for( RecursivePlugIterator it( externalPlug.get() ); !it.done(); ++it )
-		{
-			(*it)->setFlags( Plug::Dynamic, true );
-			if( find( compoundTypes, compoundTypesEnd, (Gaffer::TypeId)(*it)->typeId() ) != compoundTypesEnd )
-			{
-				it.prune();
-			}
-		}
+		throw IECore::Exception(
+			boost::str(
+				boost::format( "Cannot promote plug \"%s\" as its node is not a child of \"%s\"." ) % descendantPlug->fullName() % fullName()
+			)
+		);
 	}
 
-	if( externalPlug->direction() == Plug::In )
-	{
-		if( ValuePlug *externalValuePlug = IECore::runTimeCast<ValuePlug>( externalPlug.get() ) )
-		{
-			externalValuePlug->setFrom( static_cast<ValuePlug *>( descendantPlug ) );
-		}
-	}
-
-	// Copy over the metadata for nodule position, so the nodule appears in the expected spot.
-	// This must be done before parenting the new plug, as the nodule is created from childAddedSignal().
-	copyMetadata( descendantPlug, externalPlug.get() );
-
-	addChild( externalPlug );
-
-	if( externalPlug->direction() == Plug::In )
-	{
-		descendantPlug->setInput( externalPlug );
-	}
-	else
-	{
-		externalPlug->setInput( descendantPlug );
-	}
-
-	return externalPlug.get();
+	return PlugAlgo::promote( descendantPlug );
 }
 
 bool Box::plugIsPromoted( const Plug *descendantPlug ) const
 {
-	if( !descendantPlug )
-	{
-		return false;
-	}
-
-	if( descendantPlug->direction() == Plug::In )
-	{
-		const Plug *input = descendantPlug->getInput<Plug>();
-		return input && input->node() == this;
-	}
-	else
-	{
-		for( Plug::OutputContainer::const_iterator it = descendantPlug->outputs().begin(), eIt = descendantPlug->outputs().end(); it != eIt; ++it )
-		{
-			if( (*it)->node() == this )
-			{
-				return true;
-			}
-		}
-		return false;
-	}
+	return PlugAlgo::isPromoted( descendantPlug );
 }
 
 void Box::unpromotePlug( Plug *promotedDescendantPlug )
 {
-	if( !plugIsPromoted( promotedDescendantPlug ) )
-	{
-		if( promotedDescendantPlug )
-		{
-			throw IECore::Exception(
-				boost::str(
-					boost::format( "Cannot unpromote plug \"%s\" as it has not been promoted." ) % promotedDescendantPlug->fullName()
-				)
-			);
-		}
-		else
-		{
-			throw IECore::Exception( "Cannot unpromote null plug" );
-		}
-	}
-
-	Plug *externalPlug = NULL;
-	if( promotedDescendantPlug->direction() == Plug::In )
-	{
-		externalPlug = promotedDescendantPlug->getInput<Plug>();
-		promotedDescendantPlug->setInput( NULL );
-	}
-	else
-	{
-		for( Plug::OutputContainer::const_iterator it = promotedDescendantPlug->outputs().begin(), eIt = promotedDescendantPlug->outputs().end(); it != eIt; ++it )
-		{
-			if( (*it)->node() == this )
-			{
-				externalPlug = *it;
-				break;
-			}
-		}
-		assert( externalPlug ); // should be true because we checked plugIsPromoted()
-		externalPlug->setInput( NULL );
-	}
-
-	// remove the top level external plug , but only if
-	// all the children are unused too in the case of a compound plug.
-	bool remove = true;
-	Plug *plugToRemove = externalPlug;
-	while( plugToRemove->parent<Plug>() && plugToRemove->parent<Plug>() != userPlug() )
-	{
-		plugToRemove = plugToRemove->parent<Plug>();
-		for( PlugIterator it( plugToRemove ); !it.done(); ++it )
-		{
-			if(
-				( (*it)->direction() == Plug::In && (*it)->outputs().size() ) ||
-				( (*it)->direction() == Plug::Out && (*it)->getInput<Plug>() )
-			)
-			{
-				remove = false;
-				break;
-			}
-		}
-	}
-	if( remove )
-	{
-		plugToRemove->parent<GraphComponent>()->removeChild( plugToRemove );
-	}
-}
-
-bool Box::validatePromotability( const Plug *descendantPlug, bool throwExceptions, bool childPlug ) const
-{
-	if( !descendantPlug )
-	{
-		if( !throwExceptions )
-		{
-			return false;
-		}
-		else
-		{
-			throw IECore::Exception(  "Cannot promote null plug" );
-		}
-	}
-
-	if( plugIsPromoted( descendantPlug ) )
-	{
-		if( !throwExceptions )
-		{
-			return false;
-		}
-		else
-		{
-			throw IECore::Exception(
-				boost::str(
-					boost::format( "Cannot promote plug \"%s\" as it is already promoted." ) % descendantPlug->fullName()
-				)
-			);
-		}
-	}
-
-	if( descendantPlug->direction() == Plug::In )
-	{
-		if( descendantPlug->getFlags( Plug::ReadOnly ) )
-		{
-			if( !throwExceptions )
-			{
-				return false;
-			}
-			else
-			{
-				throw IECore::Exception(
-					boost::str(
-						boost::format( "Cannot promote plug \"%s\" as it is read only." ) % descendantPlug->fullName()
-					)
-				);
-			}
-		}
-
-		// The plug must be serialisable, as we need its input to be saved,
-		// but we only need to check this for the topmost plug and not for
-		// children, because a setInput() call for a parent plug will also
-		// restore child inputs.
-		if( !childPlug && !descendantPlug->getFlags( Plug::Serialisable ) )
-		{
-			if( !throwExceptions )
-			{
-				return false;
-			}
-			else
-			{
-				throw IECore::Exception(
-					boost::str(
-						boost::format( "Cannot promote plug \"%s\" as it is not serialisable." ) % descendantPlug->fullName()
-					)
-				);
-			}
-		}
-
-		if( !descendantPlug->getFlags( Plug::AcceptsInputs ) )
-		{
-			if( !throwExceptions )
-			{
-				return false;
-			}
-			else
-			{
-				throw IECore::Exception(
-					boost::str(
-						boost::format( "Cannot promote plug \"%s\" as it does not accept inputs." ) % descendantPlug->fullName()
-					)
-				);
-			}
-		}
-
-		if( descendantPlug->getInput<Plug>() )
-		{
-			if( !throwExceptions )
-			{
-				return false;
-			}
-			else
-			{
-				throw IECore::Exception(
-					boost::str(
-						boost::format( "Cannot promote plug \"%s\" as it already has an input." ) % descendantPlug->fullName()
-					)
-				);
-			}
-		}
-	}
-
-	if( !childPlug )
-	{
-		// check that the node holding the plug is actually in the box!
-		// we only do this when childPlug==false, because when it is true,
-		// we'll have already checked in an earlier call.
-		const Node *descendantNode = descendantPlug->node();
-		if( !descendantNode || descendantNode->parent<Node>() != this )
-		{
-			if( !throwExceptions )
-			{
-				return false;
-			}
-			else
-			{
-				throw IECore::Exception(
-					boost::str(
-						boost::format( "Cannot promote plug \"%s\" as its node is not a child of \"%s\"." ) % descendantPlug->fullName() % fullName()
-					)
-				);
-			}
-		}
-	}
-
-	// check all the children of this plug too
-	for( RecursivePlugIterator it( descendantPlug ); !it.done(); ++it )
-	{
-		if( !validatePromotability( it->get(), throwExceptions, /* childPlug = */ true ) )
-		{
-			return false;
-		}
-	}
-
-	return true;
+	return PlugAlgo::unpromote( promotedDescendantPlug );
 }
 
 void Box::exportForReference( const std::string &fileName ) const
@@ -447,7 +177,7 @@ BoxPtr Box::create( Node *parent, const Set *childNodes )
 					if( mapIt == plugMap.end() )
 					{
 						plug->setInput( NULL ); // To allow promotion
-						PlugPtr promoted = result->promotePlug( plug );
+						PlugPtr promoted = PlugAlgo::promote( plug );
 						promoted->setInput( input );
 						plugMap.insert( PlugPair( input, promoted.get() ) );
 					}
@@ -475,7 +205,7 @@ BoxPtr Box::create( Node *parent, const Set *childNodes )
 							PlugMap::const_iterator mapIt = plugMap.find( plug );
 							if( mapIt == plugMap.end() )
 							{
-								PlugPtr promoted = result->promotePlug( plug );
+								PlugPtr promoted = PlugAlgo::promote( plug );
 								mapIt = plugMap.insert( PlugPair( plug, promoted.get() ) ).first;
 							}
 							output->setInput( mapIt->second );
@@ -489,11 +219,3 @@ BoxPtr Box::create( Node *parent, const Set *childNodes )
 
 	return result;
 }
-
-std::string Box::promotedCounterpartName( const Plug *plug ) const
-{
-	std::string result = plug->relativeName( plug->node() );
-	boost::replace_all( result, ".", "_" );
-	return result;
-}
-
