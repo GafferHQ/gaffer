@@ -82,7 +82,7 @@ class ReferenceTest( GafferTest.TestCase ) :
 		s["n2"] = GafferTest.AddNode()
 		s["n2"]["op1"].setInput( s["n1"]["sum"] )
 		b = Gaffer.Box.create( s, Gaffer.StandardSet( [ s["n1"] ] ) )
-		b.promotePlug( b["n1"]["op1"] )
+		Gaffer.PlugAlgo.promote( b["n1"]["op1"] )
 
 		b.exportForReference( self.temporaryDirectory() + "/test.grf" )
 
@@ -123,7 +123,7 @@ class ReferenceTest( GafferTest.TestCase ) :
 		s["n2"]["op1"].setInput( s["n1"]["sum"] )
 		s["n3"]["op1"].setInput( s["n2"]["sum"] )
 		b = Gaffer.Box.create( s, Gaffer.StandardSet( [ s["n2"] ] ) )
-		b.promotePlug( b["n2"]["op2"] )
+		Gaffer.PlugAlgo.promote( b["n2"]["op2"] )
 
 		b.exportForReference( self.temporaryDirectory() + "/test.grf" )
 
@@ -150,7 +150,7 @@ class ReferenceTest( GafferTest.TestCase ) :
 		originalReferencedNames = s2["r"].keys()
 
 		b["anotherNode"] = GafferTest.AddNode()
-		b.promotePlug( b["anotherNode"]["op2"] )
+		Gaffer.PlugAlgo.promote( b["anotherNode"]["op2"] )
 		s.serialiseToFile( self.temporaryDirectory() + "/test.grf", b )
 
 		s2["r"].load( self.temporaryDirectory() + "/test.grf" )
@@ -200,7 +200,7 @@ class ReferenceTest( GafferTest.TestCase ) :
 		s["n3"]["op1"].setInput( s["n2"]["sum"] )
 
 		b = Gaffer.Box.create( s, Gaffer.StandardSet( [ s["n2"] ] ) )
-		b.promotePlug( b["n2"]["op2"] )
+		Gaffer.PlugAlgo.promote( b["n2"]["op2"] )
 		b.exportForReference( self.temporaryDirectory() + "/test.grf" )
 
 		s2 = Gaffer.ScriptNode()
@@ -251,7 +251,7 @@ class ReferenceTest( GafferTest.TestCase ) :
 		s["n1"] = GafferTest.AddNode()
 
 		b = Gaffer.Box.create( s, Gaffer.StandardSet( [ s["n1"] ] ) )
-		p = b.promotePlug( b["n1"]["op1"] )
+		p = Gaffer.PlugAlgo.promote( b["n1"]["op1"] )
 
 		Gaffer.Metadata.registerValue( p, "description", "ppp" )
 
@@ -273,7 +273,7 @@ class ReferenceTest( GafferTest.TestCase ) :
 		s["n1"] = GafferTest.AddNode()
 
 		b = Gaffer.Box.create( s, Gaffer.StandardSet( [ s["n1"] ] ) )
-		p = b.promotePlug( b["n1"]["op1"] )
+		p = Gaffer.PlugAlgo.promote( b["n1"]["op1"] )
 
 		Gaffer.Metadata.registerValue( p, "description", "ppp" )
 
@@ -308,7 +308,7 @@ class ReferenceTest( GafferTest.TestCase ) :
 		s["n1"] = GafferTest.AddNode()
 
 		b = Gaffer.Box.create( s, Gaffer.StandardSet( [ s["n1"] ] ) )
-		p = b.promotePlug( b["n1"]["op1"] )
+		p = Gaffer.PlugAlgo.promote( b["n1"]["op1"] )
 		p.setName( "p" )
 
 		Gaffer.Metadata.registerValue( p, "test", "referenced" )
@@ -347,7 +347,7 @@ class ReferenceTest( GafferTest.TestCase ) :
 		s["n1"] = GafferTest.AddNode()
 
 		b = Gaffer.Box.create( s, Gaffer.StandardSet( [ s["n1"] ] ) )
-		p = b.promotePlug( b["n1"]["op1"] )
+		p = Gaffer.PlugAlgo.promote( b["n1"]["op1"] )
 		p.setName( "p" )
 
 		b.exportForReference( self.temporaryDirectory() + "/test.grf" )
@@ -418,7 +418,7 @@ class ReferenceTest( GafferTest.TestCase ) :
 		s = Gaffer.ScriptNode()
 		s["b"] = Gaffer.Box()
 		s["b"]["n"] = GafferTest.AddNode()
-		p = s["b"].promotePlug( s["b"]["n"]["op1"] )
+		p = Gaffer.PlugAlgo.promote( s["b"]["n"]["op1"] )
 		p.setValue( 10 )
 
 		s["b"].exportForReference( self.temporaryDirectory() + "/test.grf" )
@@ -523,7 +523,7 @@ class ReferenceTest( GafferTest.TestCase ) :
 		# create a box with a promoted output:
 		s["b"] = Gaffer.Box()
 		s["b"]["n"] = GafferTest.AddNode()
-		s["b"].promotePlug( s["b"]["n"]["sum"] )
+		Gaffer.PlugAlgo.promote( s["b"]["n"]["sum"] )
 		s["b"].exportForReference( self.temporaryDirectory() + "/test.grf" )
 
 		# load onto reference:
@@ -532,7 +532,7 @@ class ReferenceTest( GafferTest.TestCase ) :
 		self.assertEqual( s["r"].enabledPlug(), None )
 
 		# Wire it up to support enabledPlug() and correspondingInput()
-		s["b"].promotePlug( s["b"]["n"]["op1"] )
+		Gaffer.PlugAlgo.promote( s["b"]["n"]["op1"] )
 		s["b"]["n"]["op2"].setValue( 10 )
 		s["b"].exportForReference( self.temporaryDirectory() + "/test.grf" )
 
@@ -558,7 +558,6 @@ class ReferenceTest( GafferTest.TestCase ) :
 		s["r"].load( self.temporaryDirectory() + "/test.grf" )
 		self.assertTrue( s["r"].enabledPlug().isSame( s["r"]["enabled"] ) )
 		self.assertTrue( s["r"].correspondingInput( s["r"]["sum"] ).isSame( s["r"]["op1"] ) )
-
 
 		# Connect it into a network, delete it, and check that we get nice auto-reconnect behaviour
 		s["a"] = GafferTest.AddNode()
@@ -1003,7 +1002,7 @@ class ReferenceTest( GafferTest.TestCase ) :
 		s["b"]["a1"] = GafferTest.AddNode()
 		s["b"]["a2"] = GafferTest.AddNode()
 		s["b"]["a2"]["op1"].setInput( s["b"]["a1"]["sum"] )
-		s["b"].promotePlug( s["b"]["a1"]["op1"] )
+		Gaffer.PlugAlgo.promote( s["b"]["a1"]["op1"] )
 		s["b"].exportForReference( self.temporaryDirectory() + "/test.grf" )
 
 		s["r"] = Gaffer.Reference()

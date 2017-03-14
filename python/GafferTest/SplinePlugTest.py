@@ -393,7 +393,7 @@ class SplinePlugTest( GafferTest.TestCase ) :
 		s["n"]["p"] = Gaffer.SplineffPlug( defaultValue=spline )
 
 		b = Gaffer.Box.create( s, Gaffer.StandardSet( [ s["n"] ] ) )
-		p = b.promotePlug( b["n"]["p"] )
+		p = Gaffer.PlugAlgo.promote( b["n"]["p"] )
 
 		self.assertEqual( p.defaultValue(), b["n"]["p"].defaultValue() )
 		self.assertEqual( p.numPoints(), b["n"]["p"].numPoints() )

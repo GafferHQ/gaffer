@@ -494,7 +494,7 @@ class PlugAlgoTest( GafferTest.TestCase ) :
 		self.assertEqual( Gaffer.Metadata.value( s2["b"]["p"], "testInt" ), 10 )
 		self.assertEqual( Gaffer.Metadata.value( s2["b"]["p"]["i"], "testString" ), "test" )
 
-	def testNonBoxParent( self ) :
+	def testPromoteToNonBoxParent( self ) :
 
 		n = Gaffer.Node()
 		n["n"] = GafferTest.AddNode()
@@ -511,7 +511,7 @@ class PlugAlgoTest( GafferTest.TestCase ) :
 		self.assertTrue( "op1" not in "n" )
 		self.assertTrue( n["n"]["op1"].getInput() is None )
 
-	def testParent( self ) :
+	def testPromotionParent( self ) :
 
 		n1 = Gaffer.Node()
 		n1["n"] = GafferTest.AddNode()
@@ -526,7 +526,7 @@ class PlugAlgoTest( GafferTest.TestCase ) :
 		self.assertTrue( p.parent().isSame( n1["user"] ) )
 		self.assertTrue( Gaffer.PlugAlgo.isPromoted( n1["n"]["op1"] ) )
 
-	def testExcludeMetadata( self ) :
+	def testPromotionExcludingMetadata( self ) :
 
 		n = Gaffer.Node()
 		n["a"] = GafferTest.AddNode()
