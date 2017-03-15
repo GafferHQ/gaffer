@@ -222,15 +222,15 @@ void ViewportGadget::frame( const Imath::Box3f &box )
 {
 	m_cameraController.frame( box );
 	m_cameraChangedSignal( this );
- 	requestRender();
+	requestRender();
 }
 
 void ViewportGadget::frame( const Imath::Box3f &box, const Imath::V3f &viewDirection,
 	const Imath::V3f &upVector )
 {
- 	m_cameraController.frame( box, viewDirection, upVector );
+	m_cameraController.frame( box, viewDirection, upVector );
 	m_cameraChangedSignal( this );
- 	requestRender();
+	requestRender();
 }
 
 void ViewportGadget::setDragTracking( bool dragTracking )
@@ -316,9 +316,9 @@ void ViewportGadget::doRender( const Style *style ) const
 	glClearDepth( 1.0f );
 	glClear( GL_COLOR_BUFFER_BIT | GL_DEPTH_BUFFER_BIT );
 
- 	IECoreGL::ToGLConverterPtr converter = new IECoreGL::ToGLCameraConverter(
- 		const_cast<CameraController &>( m_cameraController ).getCamera()
- 	);
+	IECoreGL::ToGLConverterPtr converter = new IECoreGL::ToGLCameraConverter(
+		const_cast<CameraController &>( m_cameraController ).getCamera()
+	);
 	IECoreGL::CameraPtr camera = boost::static_pointer_cast<IECoreGL::Camera>( converter->convert() );
 	camera->render( NULL );
 
@@ -582,7 +582,7 @@ bool ViewportGadget::dragMove( GadgetPtr gadget, const DragDropEvent &event )
 		{
 			m_cameraController.motionUpdate( V2i( (int)event.line.p1.x, (int)event.line.p1.y ) );
 			m_cameraChangedSignal( this );
- 			requestRender();
+			requestRender();
 		}
 		return true;
 	}
@@ -719,7 +719,7 @@ void ViewportGadget::trackDragIdle()
 	dragMove( this, m_dragTrackingEvent );
 
 	m_cameraChangedSignal( this );
- 	requestRender();
+	requestRender();
 }
 
 GadgetPtr ViewportGadget::updatedDragDestination( std::vector<GadgetPtr> &gadgets, const DragDropEvent &event )
@@ -812,7 +812,7 @@ bool ViewportGadget::dragEnd( GadgetPtr gadget, const DragDropEvent &event )
 		{
 			m_cameraController.motionEnd( V2i( (int)event.line.p1.x, (int)event.line.p1.y ) );
 			m_cameraChangedSignal( this );
- 			requestRender();
+			requestRender();
 		}
 		return true;
 	}
@@ -850,7 +850,7 @@ bool ViewportGadget::wheel( GadgetPtr gadget, const ButtonEvent &event )
 	m_cameraController.motionEnd( position );
 
 	m_cameraChangedSignal( this );
- 	requestRender();
+	requestRender();
 
 	return true;
 }
@@ -975,12 +975,12 @@ void ViewportGadget::SelectionScope::begin( const ViewportGadget *viewportGadget
 	Box2f ndcRegion( rasterRegion.min / viewport, rasterRegion.max / viewport );
 
 	IECoreGL::ToGLConverterPtr converter = new IECoreGL::ToGLCameraConverter(
- 		const_cast<CameraController &>( viewportGadget->m_cameraController ).getCamera()
- 	);
+		const_cast<CameraController &>( viewportGadget->m_cameraController ).getCamera()
+	);
 	IECoreGL::CameraPtr camera = boost::static_pointer_cast<IECoreGL::Camera>( converter->convert() );
- 	/// \todo It would be better to base this on whether we have a depth buffer or not, but
- 	/// we don't have access to that information right now.
- 	m_depthSort = camera->isInstanceOf( IECoreGL::PerspectiveCamera::staticTypeId() );
+	/// \todo It would be better to base this on whether we have a depth buffer or not, but
+	/// we don't have access to that information right now.
+	m_depthSort = camera->isInstanceOf( IECoreGL::PerspectiveCamera::staticTypeId() );
 	camera->render( NULL );
 
 	glClearColor( 0.3f, 0.3f, 0.3f, 0.0f );
