@@ -57,6 +57,7 @@ class NoduleLayout;
 /// - "nodeGadget:minimumWidth" : a node entry with a float value
 /// - "nodeGadget:padding" : a node entry with a float value
 /// - "nodeGadget:color" : Color3f
+/// - "icon" : string naming an image to be used with ImageGadget
 class StandardNodeGadget : public NodeGadget
 {
 
@@ -114,6 +115,12 @@ class StandardNodeGadget : public NodeGadget
 		NoduleLayout *noduleLayout( Edge edge );
 		const NoduleLayout *noduleLayout( Edge edge ) const;
 
+		LinearContainer *paddingRow();
+		const LinearContainer *paddingRow() const;
+
+		IndividualContainer *iconContainer();
+		const IndividualContainer *iconContainer() const;
+
 		IndividualContainer *contentsContainer();
 		const IndividualContainer *contentsContainer() const;
 
@@ -137,6 +144,7 @@ class StandardNodeGadget : public NodeGadget
 		bool updateUserColor();
 		void updatePadding();
 		void updateNodeEnabled( const Gaffer::Plug *dirtiedPlug = NULL );
+		void updateIcon();
 
 		IE_CORE_FORWARDDECLARE( ErrorGadget );
 		ErrorGadget *errorGadget( bool createIfMissing = true );

@@ -40,6 +40,8 @@
 
 #include "OpenEXR/ImathBoxAlgo.h"
 
+#include "IECore/MessageHandler.h"
+
 #include "IECoreGL/Selector.h"
 
 #include "Gaffer/TypedObjectPlug.h"
@@ -163,6 +165,7 @@ static const float g_borderWidth = 0.5f;
 static IECore::InternedString g_minWidthKey( "nodeGadget:minWidth"  );
 static IECore::InternedString g_paddingKey( "nodeGadget:padding"  );
 static IECore::InternedString g_colorKey( "nodeGadget:color" );
+static IECore::InternedString g_iconKey( "icon" );
 static IECore::InternedString g_errorGadgetName( "__error" );
 
 StandardNodeGadget::StandardNodeGadget( Gaffer::NodePtr node )
@@ -242,11 +245,23 @@ StandardNodeGadget::StandardNodeGadget( Gaffer::NodePtr node )
 	);
 	row->addChild( contentsColumn );
 
+	LinearContainerPtr contentsRow = new LinearContainer(
+		"paddingRow",
+		LinearContainer::X,
+		LinearContainer::Centre,
+		0.5f
+	);
+
+	IndividualContainerPtr iconContainer = new IndividualContainer();
+	iconContainer->setName( "iconContainer" );
+	contentsRow->addChild( iconContainer );
+
 	IndividualContainerPtr contentsContainer = new IndividualContainer();
 	contentsContainer->setName( "contentsContainer" );
+	contentsRow->addChild( contentsContainer );
 
 	contentsColumn->addChild( new SpacerGadget( Box3f( V3f( 0 ), V3f( minWidth, 0, 0 ) ) ) );
-	contentsColumn->addChild( contentsContainer );
+	contentsColumn->addChild( contentsRow );
 	contentsColumn->addChild( new SpacerGadget( Box3f( V3f( 0 ), V3f( minWidth, 0, 0 ) ) ) );
 
 	row->addChild( rightNoduleContainer );
@@ -281,6 +296,7 @@ StandardNodeGadget::StandardNodeGadget( Gaffer::NodePtr node )
 	updateUserColor();
 	updatePadding();
 	updateNodeEnabled();
+	updateIcon();
 }
 
 StandardNodeGadget::~StandardNodeGadget()
@@ -409,17 +425,38 @@ const NoduleLayout *StandardNodeGadget::noduleLayout( Edge edge ) const
 	return noduleContainer( edge )->getChild<NoduleLayout>( 1 );
 }
 
-IndividualContainer *StandardNodeGadget::contentsContainer()
+LinearContainer *StandardNodeGadget::paddingRow()
 {
 	return getChild<Gadget>( 0 ) // column
 		->getChild<Gadget>( 1 ) // row
 		->getChild<Gadget>( 1 ) // contentsColumn
-		->getChild<IndividualContainer>( 1 );
+		->getChild<LinearContainer>( 1 )
+	;
+}
+
+const LinearContainer *StandardNodeGadget::paddingRow() const
+{
+	return const_cast<StandardNodeGadget *>( this )->paddingRow();
+}
+
+IndividualContainer *StandardNodeGadget::iconContainer()
+{
+	return paddingRow()->getChild<IndividualContainer>( 0 );
+}
+
+const IndividualContainer *StandardNodeGadget::iconContainer() const
+{
+	return paddingRow()->getChild<IndividualContainer>( 0 );
+}
+
+IndividualContainer *StandardNodeGadget::contentsContainer()
+{
+	return paddingRow()->getChild<IndividualContainer>( 1 );
 }
 
 const IndividualContainer *StandardNodeGadget::contentsContainer() const
 {
-	return const_cast<StandardNodeGadget *>( this )->contentsContainer();
+	return paddingRow()->getChild<IndividualContainer>( 1 );
 }
 
 void StandardNodeGadget::setContents( GadgetPtr contents )
@@ -697,6 +734,10 @@ void StandardNodeGadget::nodeMetadataChanged( IECore::TypeId nodeTypeId, IECore:
 	{
 		updatePadding();
 	}
+	else if( key == g_iconKey )
+	{
+		updateIcon();
+	}
 }
 
 bool StandardNodeGadget::updateUserColor()
@@ -724,7 +765,7 @@ void StandardNodeGadget::updatePadding()
 		padding = d->readable();
 	}
 
-	contentsContainer()->setPadding( Box3f( V3f( -padding ), V3f( padding ) ) );
+	paddingRow()->setPadding( Box3f( V3f( -padding ), V3f( padding ) ) );
 }
 
 void StandardNodeGadget::updateNodeEnabled( const Gaffer::Plug *dirtiedPlug )
@@ -765,6 +806,29 @@ void StandardNodeGadget::updateNodeEnabled( const Gaffer::Plug *dirtiedPlug )
 
 	m_nodeEnabled = enabled;
 	requestRender();
+}
+
+void StandardNodeGadget::updateIcon()
+{
+	ImageGadgetPtr image;
+	if( IECore::ConstStringDataPtr d = Metadata::value<IECore::StringData>( node(), g_iconKey ) )
+	{
+		try
+		{
+			image = new ImageGadget( d->readable() );
+		}
+		catch( const std::exception &e )
+		{
+			IECore::msg( IECore::Msg::Error, "StandardNodeGadget::updateIcon", e.what() );
+		}
+	}
+
+	if( image )
+	{
+		image->setTransform( M44f().scale( V3f( 1.5 ) / image->bound().size().y ) );
+	}
+
+	iconContainer()->setChild( image );
 }
 
 StandardNodeGadget::ErrorGadget *StandardNodeGadget::errorGadget( bool createIfMissing )
