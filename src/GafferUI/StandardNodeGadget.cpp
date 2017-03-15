@@ -165,6 +165,7 @@ static const float g_borderWidth = 0.5f;
 static IECore::InternedString g_minWidthKey( "nodeGadget:minWidth"  );
 static IECore::InternedString g_paddingKey( "nodeGadget:padding"  );
 static IECore::InternedString g_colorKey( "nodeGadget:color" );
+static IECore::InternedString g_shapeKey( "nodeGadget:shape" );
 static IECore::InternedString g_iconKey( "icon" );
 static IECore::InternedString g_errorGadgetName( "__error" );
 
@@ -173,7 +174,8 @@ StandardNodeGadget::StandardNodeGadget( Gaffer::NodePtr node )
 		m_nodeEnabled( true ),
 		m_labelsVisibleOnHover( true ),
 		m_dragDestinationProxy( 0 ),
-		m_userColor( 0 )
+		m_userColor( 0 ),
+		m_oval( false )
 {
 
 	// build our ui structure
@@ -297,6 +299,7 @@ StandardNodeGadget::StandardNodeGadget( Gaffer::NodePtr node )
 	updatePadding();
 	updateNodeEnabled();
 	updateIcon();
+	updateShape();
 }
 
 StandardNodeGadget::~StandardNodeGadget()
@@ -322,10 +325,17 @@ void StandardNodeGadget::doRender( const Style *style ) const
 	Style::State state = getHighlighted() ? Style::HighlightedState : Style::NormalState;
 
 	// draw our background frame
-	Box3f b = bound();
+	const Box3f b = bound();
+	float borderWidth = g_borderWidth;
+	if( m_oval )
+	{
+		const V3f s = b.size();
+		borderWidth = std::min( s.x, s.y ) / 2.0f;
+	}
+
 	style->renderNodeFrame(
-		Box2f( V2f( b.min.x, b.min.y ) + V2f( g_borderWidth ), V2f( b.max.x, b.max.y ) - V2f( g_borderWidth ) ),
-		g_borderWidth,
+		Box2f( V2f( b.min.x, b.min.y ) + V2f( borderWidth ), V2f( b.max.x, b.max.y ) - V2f( borderWidth ) ),
+		borderWidth,
 		state,
 		m_userColor.get_ptr()
 	);
@@ -738,6 +748,13 @@ void StandardNodeGadget::nodeMetadataChanged( IECore::TypeId nodeTypeId, IECore:
 	{
 		updateIcon();
 	}
+	else if( key == g_shapeKey )
+	{
+		if( updateShape() )
+		{
+			requestRender();
+		}
+	}
 }
 
 bool StandardNodeGadget::updateUserColor()
@@ -829,6 +846,21 @@ void StandardNodeGadget::updateIcon()
 	}
 
 	iconContainer()->setChild( image );
+}
+
+bool StandardNodeGadget::updateShape()
+{
+	bool oval = false;
+	if( IECore::ConstStringDataPtr s = Metadata::value<IECore::StringData>( node(), g_shapeKey ) )
+	{
+		oval = s->readable() == "oval";
+	}
+	if( oval == m_oval )
+	{
+		return false;
+	}
+	m_oval = oval;
+	return true;
 }
 
 StandardNodeGadget::ErrorGadget *StandardNodeGadget::errorGadget( bool createIfMissing )
