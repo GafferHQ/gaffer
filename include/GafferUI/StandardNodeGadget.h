@@ -54,7 +54,7 @@ class NoduleLayout;
 /// centrally and the nodules arranged at the sides. Supports the following
 /// Metadata entries :
 ///
-/// - "nodeGadget:minimumWidth" : a node entry with a float value
+/// - "nodeGadget:minWidth" : a node entry with a float value
 /// - "nodeGadget:padding" : a node entry with a float value
 /// - "nodeGadget:color" : Color3f
 /// - "icon" : string naming an image to be used with ImageGadget
