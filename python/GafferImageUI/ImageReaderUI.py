@@ -40,6 +40,14 @@ import Gaffer
 import GafferUI
 import GafferImage
 
+def __colorSpacePresetNames( plug ) :
+
+	return IECore.StringVectorData( [ "Default" ] + GafferImage.OpenColorIOTransform.availableColorSpaces() )
+
+def __colorSpacePresetValues( plug ) :
+
+	return IECore.StringVectorData( [ "" ] + GafferImage.OpenColorIOTransform.availableColorSpaces() )
+
 Gaffer.Metadata.registerNode(
 
 	GafferImage.ImageReader,
@@ -190,6 +198,21 @@ Gaffer.Metadata.registerNode(
 			"presetValues", lambda plug : plug.node()["__oiioReader"]["availableFrames"].getValue(),
 
 		],
+
+		"colorSpace" : [
+
+			"description",
+			"""
+			The colour space of the input image, used to convert the input image to the scene linear colorspace defined by the OpenColorIO config.
+			""",
+
+			"presetNames", __colorSpacePresetNames,
+			"presetValues", __colorSpacePresetValues,
+
+			"plugValueWidget:type", "GafferUI.PresetsPlugValueWidget",
+
+		],
+
 
 	}
 
