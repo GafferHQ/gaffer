@@ -222,15 +222,15 @@ void ViewportGadget::frame( const Imath::Box3f &box )
 {
 	m_cameraController.frame( box );
 	m_cameraChangedSignal( this );
- 	requestRender();
+	requestRender();
 }
 
 void ViewportGadget::frame( const Imath::Box3f &box, const Imath::V3f &viewDirection,
 	const Imath::V3f &upVector )
 {
- 	m_cameraController.frame( box, viewDirection, upVector );
+	m_cameraController.frame( box, viewDirection, upVector );
 	m_cameraChangedSignal( this );
- 	requestRender();
+	requestRender();
 }
 
 void ViewportGadget::setDragTracking( bool dragTracking )
@@ -316,11 +316,11 @@ void ViewportGadget::doRender( const Style *style ) const
 	glClearDepth( 1.0f );
 	glClear( GL_COLOR_BUFFER_BIT | GL_DEPTH_BUFFER_BIT );
 
- 	IECoreGL::ToGLConverterPtr converter = new IECoreGL::ToGLCameraConverter(
- 		const_cast<CameraController &>( m_cameraController ).getCamera()
- 	);
+	IECoreGL::ToGLConverterPtr converter = new IECoreGL::ToGLCameraConverter(
+		const_cast<CameraController &>( m_cameraController ).getCamera()
+	);
 	IECoreGL::CameraPtr camera = boost::static_pointer_cast<IECoreGL::Camera>( converter->convert() );
- 	camera->render( 0 );
+	camera->render( NULL );
 
 	// Set up the camera to world matrix in gl_TextureMatrix[0] so that we can
 	// reference world space positions in shaders
@@ -362,8 +362,8 @@ bool ViewportGadget::buttonPress( GadgetPtr gadget, const ButtonEvent &event )
 	std::vector<GadgetPtr> gadgets;
 	gadgetsAt( V2f( event.line.p0.x, event.line.p0.y ), gadgets );
 
-	GadgetPtr handler = 0;
-	m_lastButtonPressGadget = 0;
+	GadgetPtr handler;
+	m_lastButtonPressGadget = NULL;
 	bool result = dispatchEvent( gadgets, &Gadget::buttonPressSignal, event, handler );
 	if( result )
 	{
@@ -388,7 +388,7 @@ bool ViewportGadget::buttonRelease( GadgetPtr gadget, const ButtonEvent &event )
 		result = dispatchEvent( m_lastButtonPressGadget, &Gadget::buttonReleaseSignal, event );
 	}
 
-	m_lastButtonPressGadget = 0;
+	m_lastButtonPressGadget = NULL;
 	return result;
 }
 
@@ -453,7 +453,7 @@ bool ViewportGadget::mouseMove( GadgetPtr gadget, const ButtonEvent &event )
 	std::vector<GadgetPtr> gadgets;
 	gadgetsAt( V2f( event.line.p0.x, event.line.p0.y ), gadgets );
 
-	GadgetPtr newGadgetUnderMouse = 0;
+	GadgetPtr newGadgetUnderMouse;
 	if( gadgets.size() )
 	{
 		newGadgetUnderMouse = gadgets[0];
@@ -466,9 +466,14 @@ bool ViewportGadget::mouseMove( GadgetPtr gadget, const ButtonEvent &event )
 	}
 
 	// pass the signal through
-	std::vector<GadgetPtr> gadgetUnderMouse(1, m_gadgetUnderMouse);
-	GadgetPtr handler(0);
-	return dispatchEvent( gadgetUnderMouse, &Gadget::mouseMoveSignal, event, handler );
+	if( m_gadgetUnderMouse )
+	{
+		std::vector<GadgetPtr> gadgetUnderMouse( 1, m_gadgetUnderMouse );
+		GadgetPtr handler;
+		return dispatchEvent( gadgetUnderMouse, &Gadget::mouseMoveSignal, event, handler );
+	}
+
+	return false;
 }
 
 IECore::RunTimeTypedPtr ViewportGadget::dragBegin( GadgetPtr gadget, const DragDropEvent &event )
@@ -540,11 +545,11 @@ IECore::RunTimeTypedPtr ViewportGadget::dragBegin( GadgetPtr gadget, const DragD
 		}
 		else
 		{
-			return 0;
+			return NULL;
 		}
 	}
 
-	return 0;
+	return NULL;
 }
 
 bool ViewportGadget::dragEnter( GadgetPtr gadget, const DragDropEvent &event )
@@ -577,7 +582,7 @@ bool ViewportGadget::dragMove( GadgetPtr gadget, const DragDropEvent &event )
 		{
 			m_cameraController.motionUpdate( V2i( (int)event.line.p1.x, (int)event.line.p1.y ) );
 			m_cameraChangedSignal( this );
- 			requestRender();
+			requestRender();
 		}
 		return true;
 	}
@@ -714,7 +719,7 @@ void ViewportGadget::trackDragIdle()
 	dragMove( this, m_dragTrackingEvent );
 
 	m_cameraChangedSignal( this );
- 	requestRender();
+	requestRender();
 }
 
 GadgetPtr ViewportGadget::updatedDragDestination( std::vector<GadgetPtr> &gadgets, const DragDropEvent &event )
@@ -745,7 +750,7 @@ GadgetPtr ViewportGadget::updatedDragDestination( std::vector<GadgetPtr> &gadget
 	// things to try, but otherwise we should get out now.
 	if( !event.sourceGadget || !this->isAncestorOf( event.sourceGadget.get() ) )
 	{
-		return 0;
+		return NULL;
 	}
 
 	// keep the existing destination if it's also the source.
@@ -765,7 +770,7 @@ GadgetPtr ViewportGadget::updatedDragDestination( std::vector<GadgetPtr> &gadget
 	}
 
 	// and if that failed, we have no current destination
-	return 0;
+	return NULL;
 }
 
 bool ViewportGadget::dragLeave( GadgetPtr gadget, const DragDropEvent &event )
@@ -773,7 +778,7 @@ bool ViewportGadget::dragLeave( GadgetPtr gadget, const DragDropEvent &event )
 	if( event.destinationGadget )
 	{
 		GadgetPtr previousDestination = event.destinationGadget;
-		const_cast<DragDropEvent &>( event ).destinationGadget = 0;
+		const_cast<DragDropEvent &>( event ).destinationGadget = NULL;
 		dispatchEvent( previousDestination, &Gadget::dragLeaveSignal, event );
 	}
 	return true;
@@ -807,7 +812,7 @@ bool ViewportGadget::dragEnd( GadgetPtr gadget, const DragDropEvent &event )
 		{
 			m_cameraController.motionEnd( V2i( (int)event.line.p1.x, (int)event.line.p1.y ) );
 			m_cameraChangedSignal( this );
- 			requestRender();
+			requestRender();
 		}
 		return true;
 	}
@@ -845,7 +850,7 @@ bool ViewportGadget::wheel( GadgetPtr gadget, const ButtonEvent &event )
 	m_cameraController.motionEnd( position );
 
 	m_cameraChangedSignal( this );
- 	requestRender();
+	requestRender();
 
 	return true;
 }
@@ -970,13 +975,13 @@ void ViewportGadget::SelectionScope::begin( const ViewportGadget *viewportGadget
 	Box2f ndcRegion( rasterRegion.min / viewport, rasterRegion.max / viewport );
 
 	IECoreGL::ToGLConverterPtr converter = new IECoreGL::ToGLCameraConverter(
- 		const_cast<CameraController &>( viewportGadget->m_cameraController ).getCamera()
- 	);
+		const_cast<CameraController &>( viewportGadget->m_cameraController ).getCamera()
+	);
 	IECoreGL::CameraPtr camera = boost::static_pointer_cast<IECoreGL::Camera>( converter->convert() );
- 	/// \todo It would be better to base this on whether we have a depth buffer or not, but
- 	/// we don't have access to that information right now.
- 	m_depthSort = camera->isInstanceOf( IECoreGL::PerspectiveCamera::staticTypeId() );
- 	camera->render( 0 );
+	/// \todo It would be better to base this on whether we have a depth buffer or not, but
+	/// we don't have access to that information right now.
+	m_depthSort = camera->isInstanceOf( IECoreGL::PerspectiveCamera::staticTypeId() );
+	camera->render( NULL );
 
 	glClearColor( 0.3f, 0.3f, 0.3f, 0.0f );
 	glClearDepth( 1.0f );
