@@ -57,6 +57,7 @@ Gaffer.Metadata.registerPlugValue( GafferDispatch.TaskNode, "preTasks.*", "conne
 Gaffer.Metadata.registerPlugValue( GafferDispatch.TaskNode, "postTasks.*", "connectionGadget:color", IECore.Color3f( 0.315, 0.0787, 0.0787 ) )
 
 Gaffer.Metadata.registerNodeValue( Gaffer.SubGraph, "nodeGadget:color", IECore.Color3f( 0.225 ) )
+Gaffer.Metadata.registerNodeValue( Gaffer.BoxIO, "nodeGadget:color", IECore.Color3f( 0.225 ) )
 
 Gaffer.Metadata.registerPlugValue( GafferScene.SceneNode, "in*", "nodule:color", IECore.Color3f( 0.2401, 0.3394, 0.485 ) )
 Gaffer.Metadata.registerPlugValue( GafferScene.SceneNode, "out", "nodule:color", IECore.Color3f( 0.2401, 0.3394, 0.485 ) )
