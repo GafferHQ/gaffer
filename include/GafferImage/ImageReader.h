@@ -107,6 +107,9 @@ class ImageReader : public ImageNode
 		Gaffer::IntPlug *endFramePlug();
 		const Gaffer::IntPlug *endFramePlug() const;
 
+		Gaffer::StringPlug *colorSpacePlug();
+		const Gaffer::StringPlug *colorSpacePlug() const;
+
 		virtual void affects( const Gaffer::Plug *input, AffectedPlugsContainer &outputs ) const;
 
 		static size_t supportedExtensions( std::vector<std::string> &extensions );
