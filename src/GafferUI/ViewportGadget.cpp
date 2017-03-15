@@ -320,7 +320,7 @@ void ViewportGadget::doRender( const Style *style ) const
  		const_cast<CameraController &>( m_cameraController ).getCamera()
  	);
 	IECoreGL::CameraPtr camera = boost::static_pointer_cast<IECoreGL::Camera>( converter->convert() );
- 	camera->render( 0 );
+	camera->render( NULL );
 
 	// Set up the camera to world matrix in gl_TextureMatrix[0] so that we can
 	// reference world space positions in shaders
@@ -362,8 +362,8 @@ bool ViewportGadget::buttonPress( GadgetPtr gadget, const ButtonEvent &event )
 	std::vector<GadgetPtr> gadgets;
 	gadgetsAt( V2f( event.line.p0.x, event.line.p0.y ), gadgets );
 
-	GadgetPtr handler = 0;
-	m_lastButtonPressGadget = 0;
+	GadgetPtr handler;
+	m_lastButtonPressGadget = NULL;
 	bool result = dispatchEvent( gadgets, &Gadget::buttonPressSignal, event, handler );
 	if( result )
 	{
@@ -388,7 +388,7 @@ bool ViewportGadget::buttonRelease( GadgetPtr gadget, const ButtonEvent &event )
 		result = dispatchEvent( m_lastButtonPressGadget, &Gadget::buttonReleaseSignal, event );
 	}
 
-	m_lastButtonPressGadget = 0;
+	m_lastButtonPressGadget = NULL;
 	return result;
 }
 
@@ -453,7 +453,7 @@ bool ViewportGadget::mouseMove( GadgetPtr gadget, const ButtonEvent &event )
 	std::vector<GadgetPtr> gadgets;
 	gadgetsAt( V2f( event.line.p0.x, event.line.p0.y ), gadgets );
 
-	GadgetPtr newGadgetUnderMouse = 0;
+	GadgetPtr newGadgetUnderMouse;
 	if( gadgets.size() )
 	{
 		newGadgetUnderMouse = gadgets[0];
@@ -545,11 +545,11 @@ IECore::RunTimeTypedPtr ViewportGadget::dragBegin( GadgetPtr gadget, const DragD
 		}
 		else
 		{
-			return 0;
+			return NULL;
 		}
 	}
 
-	return 0;
+	return NULL;
 }
 
 bool ViewportGadget::dragEnter( GadgetPtr gadget, const DragDropEvent &event )
@@ -750,7 +750,7 @@ GadgetPtr ViewportGadget::updatedDragDestination( std::vector<GadgetPtr> &gadget
 	// things to try, but otherwise we should get out now.
 	if( !event.sourceGadget || !this->isAncestorOf( event.sourceGadget.get() ) )
 	{
-		return 0;
+		return NULL;
 	}
 
 	// keep the existing destination if it's also the source.
@@ -770,7 +770,7 @@ GadgetPtr ViewportGadget::updatedDragDestination( std::vector<GadgetPtr> &gadget
 	}
 
 	// and if that failed, we have no current destination
-	return 0;
+	return NULL;
 }
 
 bool ViewportGadget::dragLeave( GadgetPtr gadget, const DragDropEvent &event )
@@ -778,7 +778,7 @@ bool ViewportGadget::dragLeave( GadgetPtr gadget, const DragDropEvent &event )
 	if( event.destinationGadget )
 	{
 		GadgetPtr previousDestination = event.destinationGadget;
-		const_cast<DragDropEvent &>( event ).destinationGadget = 0;
+		const_cast<DragDropEvent &>( event ).destinationGadget = NULL;
 		dispatchEvent( previousDestination, &Gadget::dragLeaveSignal, event );
 	}
 	return true;
@@ -981,7 +981,7 @@ void ViewportGadget::SelectionScope::begin( const ViewportGadget *viewportGadget
  	/// \todo It would be better to base this on whether we have a depth buffer or not, but
  	/// we don't have access to that information right now.
  	m_depthSort = camera->isInstanceOf( IECoreGL::PerspectiveCamera::staticTypeId() );
- 	camera->render( 0 );
+	camera->render( NULL );
 
 	glClearColor( 0.3f, 0.3f, 0.3f, 0.0f );
 	glClearDepth( 1.0f );
