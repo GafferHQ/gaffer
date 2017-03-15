@@ -152,39 +152,6 @@ class StandardNodeGadget::ErrorGadget : public Gadget
 };
 
 //////////////////////////////////////////////////////////////////////////
-// Utilities
-//////////////////////////////////////////////////////////////////////////
-
-namespace
-{
-
-/// Used for sorting nodules for layout
-struct IndexAndNodule
-{
-
-	IndexAndNodule()
-		:	index( 0 ), nodule( NULL )
-	{
-	}
-
-	IndexAndNodule( int index, Nodule *nodule )
-		:	index( index ), nodule( nodule )
-	{
-	}
-
-	bool operator < ( const IndexAndNodule &rhs ) const
-	{
-		return index < rhs.index;
-	}
-
-	int index;
-	Nodule *nodule;
-
-};
-
-} // namespace
-
-//////////////////////////////////////////////////////////////////////////
 // StandardNodeGadget implementation
 //////////////////////////////////////////////////////////////////////////
 
