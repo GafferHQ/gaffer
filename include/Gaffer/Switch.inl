@@ -41,6 +41,7 @@
 #include "Gaffer/Switch.h"
 #include "Gaffer/ArrayPlug.h"
 #include "Gaffer/Context.h"
+#include "Gaffer/MetadataAlgo.h"
 
 namespace Gaffer
 {
@@ -119,6 +120,7 @@ void Switch<BaseType>::setup( const Plug *plug )
 	}
 
 	PlugPtr inElement = plug->createCounterpart( "in0", Plug::In );
+	MetadataAlgo::copyColors( plug , inElement.get() , MetadataAlgo::KeepExisting );
 	inElement->setFlags( Plug::Dynamic | Plug::Serialisable, true );
 	ArrayPlugPtr in = new ArrayPlug(
 		"in",
@@ -132,6 +134,7 @@ void Switch<BaseType>::setup( const Plug *plug )
 
 	PlugPtr out = plug->createCounterpart( "out", Plug::Out );
 	out->setFlags( Plug::Dynamic | Plug::Serialisable, true );
+	MetadataAlgo::copyColors( plug , out.get() , MetadataAlgo::KeepExisting );
 	BaseType::addChild( out );
 }
 

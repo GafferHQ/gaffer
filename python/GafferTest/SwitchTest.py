@@ -39,6 +39,7 @@ import unittest
 import IECore
 import Gaffer
 import GafferTest
+import IECore
 
 class SwitchTest( GafferTest.TestCase ) :
 
@@ -434,6 +435,29 @@ class SwitchTest( GafferTest.TestCase ) :
 
 		self.assertTrue( s2["n2"]["op1"].getInput().isSame( s2["switch"]["out"] ) )
 		self.assertTrue( s2["switch"]["in"][0].getInput().isSame( s2["n1"]["sum"] ) )
+
+	def testSetupCopiesPlugColorMetadata( self ):
+
+		s = Gaffer.ScriptNode()
+
+		s["n1"] = GafferTest.AddNode()
+		s["s"] = Gaffer.SwitchComputeNode()
+
+		plug = s["n1"]["op1"]
+
+		connectionColor = IECore.Color3fData( IECore.Color3f( 0.1 , 0.2 , 0.3 ) )
+		noodleColor = IECore.Color3fData( IECore.Color3f( 0.4, 0.5 , 0.6 ) )
+
+		Gaffer.Metadata.registerValue( plug, "connectionGadget:color", connectionColor )
+		Gaffer.Metadata.registerValue( plug, "nodule:color", noodleColor )
+
+		s["s"].setup( s["n1"]["op1"] )
+
+		self.assertEqual( Gaffer.Metadata.value( s["s"]["in"][0], "connectionGadget:color" ), connectionColor.value )
+		self.assertEqual( Gaffer.Metadata.value( s["s"]["in"][0], "nodule:color" ), noodleColor.value )
+
+		self.assertEqual( Gaffer.Metadata.value( s["s"]["out"], "connectionGadget:color" ), connectionColor.value )
+		self.assertEqual( Gaffer.Metadata.value( s["s"]["out"], "nodule:color" ), noodleColor.value )
 
 	def setUp( self ) :
 

@@ -40,6 +40,7 @@
 #include "Gaffer/ArrayPlug.h"
 #include "Gaffer/BlockedConnection.h"
 #include "Gaffer/ScriptNode.h"
+#include "Gaffer/MetadataAlgo.h"
 
 using namespace boost;
 using namespace Gaffer;
@@ -63,6 +64,8 @@ ArrayPlug::ArrayPlug( const std::string &name, Direction direction, PlugPtr elem
 		for( size_t i = 1; i < m_minSize; ++i )
 		{
 			PlugPtr p = element->createCounterpart( element->getName(), Plug::In );
+			MetadataAlgo::copyColors( element.get() , p.get() , MetadataAlgo::KeepExisting );
+
 			addChild( p );
 		}
 	}
@@ -178,6 +181,7 @@ void ArrayPlug::inputChanged( Gaffer::Plug *plug )
 		if( plug == children().back() && children().size() < m_maxSize )
 		{
 			PlugPtr p = getChild<Plug>( 0 )->createCounterpart( getChild<Plug>( 0 )->getName(), Plug::In );
+			MetadataAlgo::copyColors( getChild<Plug>( 0 ) , p.get() , MetadataAlgo::KeepExisting );
 			p->setFlags( Gaffer::Plug::Dynamic, true );
 			addChild( p );
 		}
