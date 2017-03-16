@@ -62,6 +62,20 @@ size_t findNth( const std::string &s, char c, int n )
 	return result;
 }
 
+IECore::InternedString g_connectionColorKey( "connectionGadget:color" );
+IECore::InternedString g_noduleColorKey( "nodule:color" );
+
+void copy( const Gaffer::GraphComponent *src , Gaffer::GraphComponent *dst , IECore::InternedString key , Gaffer::MetadataAlgo::Overwrite overwrite )
+{
+	if (Gaffer::MetadataAlgo::KeepExisting == overwrite && Gaffer::Metadata::value<IECore::Data>(dst, key))
+		return;
+
+	if( IECore::ConstDataPtr data = Gaffer::Metadata::value<IECore::Data>( src, key ) )
+	{
+		Gaffer::Metadata::registerValue(dst, key, data, /* persistent =*/ true);
+	}
+}
+
 } // namespace
 
 namespace Gaffer
@@ -198,6 +212,12 @@ void copy( const GraphComponent *from, GraphComponent *to, const StringAlgo::Mat
 			copy( it->get(), childTo, exclude, persistentOnly, persistent );
 		}
 	}
+}
+
+void copyColors( const Gaffer::Plug *srcPlug , Gaffer::Plug *dstPlug, Overwrite overwrite )
+{
+	::copy(srcPlug, dstPlug, g_connectionColorKey, overwrite);
+	::copy(srcPlug, dstPlug, g_noduleColorKey, overwrite);
 }
 
 } // namespace MetadataAlgo

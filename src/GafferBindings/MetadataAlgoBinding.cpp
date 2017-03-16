@@ -72,6 +72,12 @@ void bindMetadataAlgo()
 
 	def( "copy", &copy, ( arg( "from" ), arg( "to" ), arg( "exclude" ) = "", arg( "persistentOnly" ) = true, arg( "persistent" ) = true ) );
 
+	enum_<Gaffer::MetadataAlgo::Overwrite>("Overwrite")
+			.value("KeepExisting", KeepExisting)
+			.value("OverwriteExisting", OverwriteExisting);
+
+	def( "copyColors", &copyColors,  (arg( "srcPlug" ), arg( "dstPlug" ), arg( "overwrite") ));
+
 }
 
 } // namespace GafferBindings
