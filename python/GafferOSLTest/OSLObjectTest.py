@@ -223,7 +223,7 @@ class OSLObjectTest( GafferOSLTest.OSLTestCase ) :
 
 		s["b"] = Gaffer.Box()
 		s["b"]["o"] = GafferOSL.OSLObject()
-		p = s["b"].promotePlug( s["b"]["o"]["shader"] )
+		p = Gaffer.PlugAlgo.promote( s["b"]["o"]["shader"] )
 		p.setName( "p" )
 
 		s["b"].exportForReference( self.temporaryDirectory() + "/test.grf" )

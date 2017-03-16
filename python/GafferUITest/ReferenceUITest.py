@@ -53,7 +53,7 @@ class ReferenceUITest( GafferUITest.TestCase ) :
 
 		Gaffer.Metadata.registerValue( s["b"]["n"]["p"], "nodule:type", "" )
 
-		p = s["b"].promotePlug( s["b"]["n"]["p"] )
+		p = Gaffer.PlugAlgo.promote( s["b"]["n"]["p"] )
 		p.setName( "p" )
 
 		g = GafferUI.GraphGadget( s )

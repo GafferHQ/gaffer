@@ -169,17 +169,17 @@ class ScenePlugTest( GafferSceneTest.SceneTestCase ) :
 		b = Gaffer.Box()
 		b["n"] = GafferScene.StandardAttributes()
 
-		self.assertTrue( b.canPromotePlug( b["n"]["in"] ) )
-		self.assertTrue( b.canPromotePlug( b["n"]["out"] ) )
+		self.assertTrue( Gaffer.PlugAlgo.canPromote( b["n"]["in"] ) )
+		self.assertTrue( Gaffer.PlugAlgo.canPromote( b["n"]["out"] ) )
 
-		i = b.promotePlug( b["n"]["in"] )
-		o = b.promotePlug( b["n"]["out"] )
+		i = Gaffer.PlugAlgo.promote( b["n"]["in"] )
+		o = Gaffer.PlugAlgo.promote( b["n"]["out"] )
 
 		self.assertEqual( b["n"]["in"].getInput(), i )
 		self.assertEqual( o.getInput(), b["n"]["out"] )
 
-		self.assertTrue( b.plugIsPromoted( b["n"]["in"] ) )
-		self.assertTrue( b.plugIsPromoted( b["n"]["out"] ) )
+		self.assertTrue( Gaffer.PlugAlgo.isPromoted( b["n"]["in"] ) )
+		self.assertTrue( Gaffer.PlugAlgo.isPromoted( b["n"]["out"] ) )
 
 	def testNoneAsPath( self ) :
 

@@ -199,7 +199,7 @@ class UnionFilterTest( GafferSceneTest.SceneTestCase ) :
 
 		s["b"] = Gaffer.Box()
 		s["b"]["f"] = GafferScene.UnionFilter()
-		p = s["b"].promotePlug( s["b"]["f"]["in"][0] )
+		p = Gaffer.PlugAlgo.promote( s["b"]["f"]["in"][0] )
 		p.setName( "p" )
 
 		s["b"].exportForReference( self.temporaryDirectory() + "/test.grf" )

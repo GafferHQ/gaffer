@@ -226,7 +226,7 @@ class OSLImageTest( GafferOSLTest.OSLTestCase ) :
 
 		s["b"] = Gaffer.Box()
 		s["b"]["i"] = GafferOSL.OSLImage()
-		p = s["b"].promotePlug( s["b"]["i"]["shader"] )
+		p = Gaffer.PlugAlgo.promote( s["b"]["i"]["shader"] )
 		p.setName( "p" )
 
 		s["b"].exportForReference( self.temporaryDirectory() + "/test.grf" )

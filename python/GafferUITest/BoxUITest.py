@@ -98,8 +98,8 @@ class BoxUITest( GafferUITest.TestCase ) :
 
 		boxGadget = g.nodeGadget( s["b"] )
 
-		p1 = s["b"].promotePlug( s["b"]["n"]["op1"] )
-		p2 = s["b"].promotePlug( s["b"]["n"]["sum"] )
+		p1 = Gaffer.PlugAlgo.promote( s["b"]["n"]["op1"] )
+		p2 = Gaffer.PlugAlgo.promote( s["b"]["n"]["sum"] )
 
 		self.assertEqual( boxGadget.noduleTangent( boxGadget.nodule( p1 ) ), IECore.V3f( -1, 0, 0 ) )
 		self.assertEqual( boxGadget.noduleTangent( boxGadget.nodule( p2 ) ), IECore.V3f( 1, 0, 0 ) )
@@ -114,7 +114,7 @@ class BoxUITest( GafferUITest.TestCase ) :
 
 		boxGadget = g.nodeGadget( s["b"] )
 
-		p = s["b"].promotePlug( s["b"]["n"]["op2"] )
+		p = Gaffer.PlugAlgo.promote( s["b"]["n"]["op2"] )
 		self.assertEqual( boxGadget.nodule( p ), None )
 
 	def testRenamingPlugs( self ) :
@@ -150,7 +150,7 @@ class BoxUITest( GafferUITest.TestCase ) :
 
 		box = Gaffer.Box()
 		box["node"] = Gaffer.Random()
-		p = box.promotePlug( box["node"]["outColor"] )
+		p = Gaffer.PlugAlgo.promote( box["node"]["outColor"] )
 
 		nodeUI = GafferUI.NodeUI.create( box["node"] )
 		boxUI = GafferUI.NodeUI.create( box )
@@ -170,8 +170,8 @@ class BoxUITest( GafferUITest.TestCase ) :
 
 		g = GafferUI.GraphGadget( s )
 
-		s["b"].promotePlug( s["b"]["n"]["op1"] )
-		p = s["b"].promotePlug( s["b"]["n"]["op2"] )
+		Gaffer.PlugAlgo.promote( s["b"]["n"]["op1"] )
+		p = Gaffer.PlugAlgo.promote( s["b"]["n"]["op2"] )
 		p.setName( "p" )
 
 		self.assertEqual( g.nodeGadget( s["b"] ).nodule( s["b"]["p"] ), None )
@@ -190,7 +190,7 @@ class BoxUITest( GafferUITest.TestCase ) :
 		s["b"]["n"]["user"]["p"] = Gaffer.IntPlug( flags = Gaffer.Plug.Flags.Default | Gaffer.Plug.Flags.Dynamic )
 		Gaffer.Metadata.registerValue( s["b"]["n"]["user"]["p"], "layout:section", "SomeWeirdSection" )
 
-		p = s["b"].promotePlug( s["b"]["n"]["user"]["p"] )
+		p = Gaffer.PlugAlgo.promote( s["b"]["n"]["user"]["p"] )
 		self.assertNotEqual( Gaffer.Metadata.value( p, "layout:section" ), "SomeWeirdSection" )
 
 if __name__ == "__main__":

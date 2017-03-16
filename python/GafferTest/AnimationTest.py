@@ -406,15 +406,15 @@ class AnimationTest( GafferTest.TestCase ) :
 		s["b"]["n"] = Gaffer.Node()
 		s["b"]["n"] = GafferTest.AddNode()
 
-		s["b"].promotePlug( s["b"]["n"]["op1"] )
-		s["b"].promotePlug( s["b"]["n"]["sum"] )
+		Gaffer.PlugAlgo.promote( s["b"]["n"]["op1"] )
+		Gaffer.PlugAlgo.promote( s["b"]["n"]["sum"] )
 
-		self.assertTrue( s["b"].canPromotePlug( s["b"]["n"]["op2"] ) )
+		self.assertTrue( Gaffer.PlugAlgo.canPromote( s["b"]["n"]["op2"] ) )
 
 		op2Curve = Gaffer.Animation.acquire( s["b"]["n"]["op2"] )
 
 		# Cannot promote an animated plug, because it has an input.
-		self.assertFalse( s["b"].canPromotePlug( s["b"]["n"]["op2"] ) )
+		self.assertFalse( Gaffer.PlugAlgo.canPromote( s["b"]["n"]["op2"] ) )
 
 		op2Curve.addKey( Gaffer.Animation.Key( 0, 0, Gaffer.Animation.Type.Step ) )
 		op2Curve.addKey( Gaffer.Animation.Key( 1, 1, Gaffer.Animation.Type.Step ) )

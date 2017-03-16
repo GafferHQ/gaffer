@@ -1371,7 +1371,7 @@ class InteractiveRenderTest( GafferSceneTest.SceneTestCase ) :
 		self.assertEqual( box["r"].getContext(), None )
 		s["b"] = box
 		self.assertEqual( box["r"].getContext(), None )
-		p = box.promotePlug( box["r"]["in"] )
+		p = Gaffer.PlugAlgo.promote( box["r"]["in"] )
 		p.setInput( s["o"]["out"] )
 
 		errors = GafferTest.CapturingSlot( box["r"].errorSignal() )

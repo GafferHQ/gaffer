@@ -249,12 +249,12 @@ class CustomAttributesTest( GafferSceneTest.SceneTestCase ) :
 
 		b = Gaffer.Box.create( s, Gaffer.StandardSet( [ s["a"] ] ) )
 
-		self.assertTrue( b.canPromotePlug( b["a"]["attributes"]["deformationBlur"] ) )
-		self.assertFalse( b.plugIsPromoted( b["a"]["attributes"]["deformationBlur"] ) )
+		self.assertTrue( Gaffer.PlugAlgo.canPromote( b["a"]["attributes"]["deformationBlur"] ) )
+		self.assertFalse( Gaffer.PlugAlgo.isPromoted( b["a"]["attributes"]["deformationBlur"] ) )
 
-		p = b.promotePlug( b["a"]["attributes"]["deformationBlur"] )
+		p = Gaffer.PlugAlgo.promote( b["a"]["attributes"]["deformationBlur"] )
 
-		self.assertTrue( b.plugIsPromoted( b["a"]["attributes"]["deformationBlur"] ) )
+		self.assertTrue( Gaffer.PlugAlgo.isPromoted( b["a"]["attributes"]["deformationBlur"] ) )
 
 		self.assertTrue( b["a"]["attributes"]["deformationBlur"].getInput().isSame( p ) )
 		self.assertTrue( b["a"]["attributes"]["deformationBlur"]["name"].getInput().isSame( p["name"] ) )

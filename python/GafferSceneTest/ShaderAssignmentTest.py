@@ -242,7 +242,7 @@ class ShaderAssignmentTest( GafferSceneTest.SceneTestCase ) :
 
 		s["b"] = Gaffer.Box()
 		s["b"]["a"] = GafferScene.ShaderAssignment()
-		p = s["b"].promotePlug( s["b"]["a"]["shader"] )
+		p = Gaffer.PlugAlgo.promote( s["b"]["a"]["shader"] )
 
 		self.assertFalse( p.acceptsInput( s["n"]["out"] ) )
 		self.assertTrue( p.acceptsInput( s["s"]["out"] ) )
@@ -274,7 +274,7 @@ class ShaderAssignmentTest( GafferSceneTest.SceneTestCase ) :
 		s = Gaffer.ScriptNode()
 		s["b"] = Gaffer.Box()
 		s["b"]["a"] = GafferScene.ShaderAssignment()
-		p = s["b"].promotePlug( s["b"]["a"]["filter"] )
+		p = Gaffer.PlugAlgo.promote( s["b"]["a"]["filter"] )
 		s["b"].exportForReference( self.temporaryDirectory() + "/test.grf" )
 
 		s["r"] = Gaffer.Reference()
@@ -294,7 +294,7 @@ class ShaderAssignmentTest( GafferSceneTest.SceneTestCase ) :
 		s["b"]["d"].setup( s["b"]["a"]["filter"] )
 		s["b"]["a"]["filter"].setInput( s["b"]["d"]["out"] )
 
-		p = s["b"].promotePlug( s["b"]["d"]["in"] )
+		p = Gaffer.PlugAlgo.promote( s["b"]["d"]["in"] )
 		s["b"].exportForReference( self.temporaryDirectory() + "/test.grf" )
 
 		s["r"] = Gaffer.Reference()
@@ -311,7 +311,7 @@ class ShaderAssignmentTest( GafferSceneTest.SceneTestCase ) :
 
 		s["b"] = Gaffer.Box()
 		s["b"]["a"] = GafferScene.ShaderAssignment()
-		p = s["b"].promotePlug( s["b"]["a"]["shader"] )
+		p = Gaffer.PlugAlgo.promote( s["b"]["a"]["shader"] )
 
 		s["b"].exportForReference( self.temporaryDirectory() + "/test.grf" )
 

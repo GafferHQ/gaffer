@@ -64,20 +64,13 @@ class Box : public SubGraph
 
 		IE_CORE_DECLARERUNTIMETYPEDEXTENSION( Gaffer::Box, BoxTypeId, SubGraph );
 
-		/// Returns true if it would be valid to call promotePlug( descendantPlug ),
-		/// and false otherwise.
+		/// \deprecated Use MetadataAlgo::canPromote() instead.
 		bool canPromotePlug( const Plug *descendantPlug ) const;
-		/// Promotes the internal descendantPlug so that it is represented
-		/// as an external plug on the Box. The descendantPlug must belong
-		/// to one of the nodes contained in the box.
-		/// Returns the newly created plug.
-		/// \undoable
+		/// \deprecated Use MetadataAlgo::promote() instead.
 		Plug *promotePlug( Plug *descendantPlug );
-		/// Returns true if the descendantPlug has been promoted.
+		/// \deprecated Use MetadataAlgo::isPromoted() instead.
 		bool plugIsPromoted( const Plug *descendantPlug ) const;
-		/// Unpromotes a previously promoted plug, removing the
-		/// plug on the Box where possible.
-		/// \undoable
+		/// \deprecated Use MetadataAlgo::unpromote() instead.
 		void unpromotePlug( Plug *promotedDescendantPlug );
 
 		/// Exports the contents of the Box so that it can be referenced
@@ -88,12 +81,6 @@ class Box : public SubGraph
 		/// were previously held by a different parent.
 		/// \undoable
 		static BoxPtr create( Node *parent, const Set *childNodes );
-
-	private :
-
-		bool validatePromotability( const Plug *descendantPlug, bool throwExceptions, bool childPlug = false ) const;
-		std::string promotedCounterpartName( const Plug *plug ) const;
-		static void copyMetadata( const Plug *from, Plug *to );
 
 };
 

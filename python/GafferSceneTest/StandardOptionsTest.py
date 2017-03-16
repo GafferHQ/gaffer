@@ -90,7 +90,7 @@ class StandardOptionsTest( GafferSceneTest.SceneTestCase ) :
 		memberDataAndName = s["n"]["options"].memberDataAndName( s["n"]["options"]["renderCamera"] )
 
 		Gaffer.Box.create( s, Gaffer.StandardSet( [ s["n"] ] ) )
-		s["Box"].promotePlug( s["Box"]["n"]["options"]["renderCamera"] )
+		Gaffer.PlugAlgo.promote( s["Box"]["n"]["options"]["renderCamera"] )
 
 		self.assertEqual(
 			s["Box"]["n"]["options"].memberDataAndName( s["Box"]["n"]["options"]["renderCamera"] ),

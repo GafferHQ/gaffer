@@ -41,9 +41,9 @@
 #include "boost/lexical_cast.hpp"
 
 #include "Gaffer/Context.h"
-#include "Gaffer/Box.h"
 #include "Gaffer/Reference.h"
 #include "Gaffer/StringPlug.h"
+#include "Gaffer/PlugAlgo.h"
 
 #include "GafferImage/Display.h"
 
@@ -129,7 +129,7 @@ ShaderView::ShaderView( const std::string &name )
 	// Create a converter to generate an image
 	// from the input shader.
 
-	m_imageConverter = new Box;
+	m_imageConverter = new Node;
 
 	PlugPtr in = new ShaderPlug( "in" );
 	m_imageConverter->addChild( in );
@@ -154,7 +154,7 @@ ShaderView::ShaderView( const std::string &name )
 	DisplayPtr display = new Display;
 	display->portPlug()->setValue( port );
 	m_imageConverter->addChild( display );
-	m_imageConverter->promotePlug( display->outPlug() );
+	PlugAlgo::promote( display->outPlug() );
 
 	insertConverter( m_imageConverter );
 
