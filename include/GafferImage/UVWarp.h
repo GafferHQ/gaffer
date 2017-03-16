@@ -54,6 +54,24 @@ class UVWarp : public Warp
 		ImagePlug *uvPlug();
 		const ImagePlug *uvPlug() const;
 
+		enum VectorMode
+		{
+			Relative,   // Relative offset
+			Absolute,   // Absolute position
+		};
+
+		Gaffer::IntPlug *vectorModePlug();
+		const Gaffer::IntPlug *vectorModePlug() const;
+
+		enum VectorUnits
+		{
+			Pixels,  // Vector specified in pixels
+			Screen,  // Vector specified as fraction of display window
+		};
+
+		Gaffer::IntPlug *vectorUnitsPlug();
+		const Gaffer::IntPlug *vectorUnitsPlug() const;
+
 	protected :
 
 		virtual bool affectsEngine( const Gaffer::Plug *input ) const;

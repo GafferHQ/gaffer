@@ -44,7 +44,15 @@ namespace GafferImageBindings
 
 void bindUVWarp()
 {
-	GafferBindings::DependencyNodeClass<UVWarp>();
+	boost::python::scope s = GafferBindings::DependencyNodeClass<UVWarp>();
+
+	boost::python::enum_<UVWarp::VectorMode>( "VectorMode" )
+		.value( "Relative", UVWarp::Relative )
+		.value( "Absolute", UVWarp::Absolute );
+
+	boost::python::enum_<UVWarp::VectorUnits>( "VectorUnits" )
+		.value( "Pixels", UVWarp::Pixels )
+		.value( "Screen", UVWarp::Screen ); 
 }
 
 } // namespace GafferImageBindings

@@ -61,7 +61,34 @@ Gaffer.Metadata.registerNode(
 			corresponds to the top right corner.
 			"""
 
-		]
+		],
+		"vectorMode" : [
+
+			"description",
+			"""
+			Do vectors specify absolute positions in the source image, or relative
+			offsets from the current pixel to the pixel in the source image.
+			""",
+			"preset:Absolute", GafferImage.UVWarp.VectorMode.Absolute,
+			"preset:Relative", GafferImage.UVWarp.VectorMode.Relative,
+
+			"plugValueWidget:type", "GafferUI.PresetsPlugValueWidget",
+
+		],
+		"vectorUnits" : [
+
+			"description",
+			"""
+			Are vectors measured in pixels, or as fractions of the input image display
+			window ranging from 0 to 1.
+			""",
+			"preset:Pixels", GafferImage.UVWarp.VectorUnits.Pixels,
+			"preset:Screen", GafferImage.UVWarp.VectorUnits.Screen,
+
+			"plugValueWidget:type", "GafferUI.PresetsPlugValueWidget",
+
+		],
+
 
 	}
 

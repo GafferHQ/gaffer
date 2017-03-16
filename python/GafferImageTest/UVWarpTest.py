@@ -116,7 +116,7 @@ class UVWarpTest( GafferImageTest.ImageTestCase ) :
 		GafferImageTest.processTiles( uvWarp["out"] )
 
 	def testWarpImage( self ):
-		def __warpImage( size, distortion ):
+		def __warpImage( size, distortion, idistortStyle ):
 			w = IECore.Box2i( IECore.V2i( 0 ), size - IECore.V2i( 1 ) )
 			image = IECore.ImagePrimitive( w, w )
 
@@ -127,8 +127,13 @@ class UVWarpTest( GafferImageTest.ImageTestCase ) :
 				for ix in range( size.x ):
 					x = (ix + 0.5) / size.x 
 					y = 1 - (iy + 0.5) / size.y
-					R[ iy * size.x + ix ] = x + distortion * math.sin( y * 8 )
-					G[ iy * size.x + ix ] = y + distortion * math.sin( x * 8 )
+					if idistortStyle:
+						R[ iy * size.x + ix ] = distortion * math.sin( y * 8 ) * size.x
+						G[ iy * size.x + ix ] = distortion * math.sin( x * 8 ) * size.y
+					else:
+						R[ iy * size.x + ix ] = x + distortion * math.sin( y * 8 )
+						G[ iy * size.x + ix ] = y + distortion * math.sin( x * 8 )
+						
 
 			image["R"] = IECore.PrimitiveVariable( IECore.PrimitiveVariable.Interpolation.Vertex, R )
 			image["G"] = IECore.PrimitiveVariable( IECore.PrimitiveVariable.Interpolation.Vertex, G )
@@ -181,12 +186,12 @@ class UVWarpTest( GafferImageTest.ImageTestCase ) :
 		uvWarp["uv"].setInput( objectToImageVector["out"] )
 
 		# Test that a warp with no distortion and a box filter reproduces the input
-		objectToImageVector["object"].setValue( __warpImage( IECore.V2i( 300 ), 0 ) )
+		objectToImageVector["object"].setValue( __warpImage( IECore.V2i( 300 ), 0, False ) )
 		uvWarp["filter"].setValue( "box" )
 		self.assertImagesEqual( uvWarp["out"], sourceReorder["out"], maxDifference = 0.00001 )
 
 		# Test that a warp with distortion produces an expected output
-		objectToImageVector["object"].setValue( __warpImage( IECore.V2i( 300 ), 0.2 ) )
+		objectToImageVector["object"].setValue( __warpImage( IECore.V2i( 300 ), 0.2, False ) )
 		uvWarp["filter"].setValue( "blackman-harris" )
 
 		# Enable to write out images for visual comparison
@@ -198,6 +203,11 @@ class UVWarpTest( GafferImageTest.ImageTestCase ) :
 
 		expectedReader = GafferImage.ImageReader()
 		expectedReader["fileName"].setValue( os.path.dirname( __file__ ) + "/images/dotGrid.warped.exr" )
+
+		# Test that we can get the same result using pixel offsets instead of normalized coordinates
+		objectToImageVector["object"].setValue( __warpImage( IECore.V2i( 300 ), 0.2, True ) )
+		uvWarp["vectorMode"].setValue( GafferImage.UVWarp.VectorMode.Relative )
+		uvWarp["vectorUnits"].setValue( GafferImage.UVWarp.VectorUnits.Pixels )
 
 		self.assertImagesEqual( uvWarp["out"], expectedReader["out"], maxDifference = 0.0005, ignoreMetadata = True )
 		

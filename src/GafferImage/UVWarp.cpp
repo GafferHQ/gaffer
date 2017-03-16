@@ -54,7 +54,7 @@ using namespace GafferImage;
 struct UVWarp::Engine : public Warp::Engine
 {
 
-	Engine( const Box2i &displayWindow, const Box2i &tileBound, const Box2i &validTileBound, ConstFloatVectorDataPtr uData, ConstFloatVectorDataPtr vData, ConstFloatVectorDataPtr aData )
+	Engine( const Box2i &displayWindow, const Box2i &tileBound, const Box2i &validTileBound, ConstFloatVectorDataPtr uData, ConstFloatVectorDataPtr vData, ConstFloatVectorDataPtr aData, VectorMode vectorMode, VectorUnits vectorUnits )
 		:	m_displayWindow( displayWindow ),
 			m_tileBound( tileBound ),
 			m_uData( uData ),
@@ -62,7 +62,9 @@ struct UVWarp::Engine : public Warp::Engine
 			m_aData( aData ),
 			m_u( uData->readable() ),
 			m_v( vData->readable() ),
-			m_a( aData->readable() )
+			m_a( aData->readable() ),
+			m_vectorMode( vectorMode ),
+			m_vectorUnits( vectorUnits )
 	{
 	}
 
@@ -76,7 +78,13 @@ struct UVWarp::Engine : public Warp::Engine
 		}
 		else
 		{
-			return uvToPixel( V2f( m_u[i], m_v[i] ) );
+			V2f result = m_vectorMode == Relative ? outputPixel : V2f( 0.0f );
+			
+			result += m_vectorUnits == Screen ?
+				uvToPixel( V2f( m_u[i], m_v[i] ) ) :
+				V2f( m_u[i], m_v[i] );
+				
+			return result;
 		}
 	}
 
@@ -101,6 +109,9 @@ struct UVWarp::Engine : public Warp::Engine
 		const std::vector<float> &m_v;
 		const std::vector<float> &m_a;
 
+		const VectorMode m_vectorMode;
+		const VectorUnits m_vectorUnits;
+
 };
 
 //////////////////////////////////////////////////////////////////////////
@@ -116,6 +127,8 @@ UVWarp::UVWarp( const std::string &name )
 {
 	storeIndexOfNextChild( g_firstPlugIndex );
 	addChild( new ImagePlug( "uv" ) );
+	addChild( new IntPlug( "vectorMode", Gaffer::Plug::In, (int)Absolute, (int)Relative, (int)Absolute ) );
+	addChild( new IntPlug( "vectorUnits", Gaffer::Plug::In, (int)Screen, (int)Pixels, (int)Screen ) );
 
 	outPlug()->formatPlug()->setInput( uvPlug()->formatPlug() );
 	outPlug()->dataWindowPlug()->setInput( uvPlug()->dataWindowPlug() );
@@ -135,13 +148,35 @@ const ImagePlug *UVWarp::uvPlug() const
 	return getChild<ImagePlug>( g_firstPlugIndex );
 }
 
+IntPlug *UVWarp::vectorModePlug()
+{
+	return getChild<IntPlug>( g_firstPlugIndex + 1 );
+}
+
+const IntPlug *UVWarp::vectorModePlug() const
+{
+	return getChild<IntPlug>( g_firstPlugIndex + 1 );
+}
+
+IntPlug *UVWarp::vectorUnitsPlug()
+{
+	return getChild<IntPlug>( g_firstPlugIndex + 2 );
+}
+
+const IntPlug *UVWarp::vectorUnitsPlug() const
+{
+	return getChild<IntPlug>( g_firstPlugIndex + 2 );
+}
+
 bool UVWarp::affectsEngine( const Gaffer::Plug *input ) const
 {
 	return
 		Warp::affectsEngine( input ) ||
 		input == inPlug()->formatPlug() ||
 		input == uvPlug()->channelNamesPlug() ||
-		input == uvPlug()->channelDataPlug();
+		input == uvPlug()->channelDataPlug() ||
+		input == vectorModePlug() ||
+		input == vectorUnitsPlug();
 }
 
 void UVWarp::hashEngine( const std::string &channelName, const Imath::V2i &tileOrigin, const Gaffer::Context *context, IECore::MurmurHash &h ) const
@@ -175,6 +210,9 @@ void UVWarp::hashEngine( const std::string &channelName, const Imath::V2i &tileO
 	}
 
 	inPlug()->formatPlug()->hash( h );
+
+	vectorModePlug()->hash( h );
+	vectorUnitsPlug()->hash( h );
 }
 
 const Warp::Engine *UVWarp::computeEngine( const std::string &channelName, const Imath::V2i &tileOrigin, const Gaffer::Context *context ) const
@@ -214,6 +252,8 @@ const Warp::Engine *UVWarp::computeEngine( const std::string &channelName, const
 		validTileBound,
 		uData,
 		vData,
-		aData
+		aData,
+		(VectorMode)vectorModePlug()->getValue(),
+		(VectorUnits)vectorUnitsPlug()->getValue()
 	);
 }
