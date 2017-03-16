@@ -258,10 +258,7 @@ IECore::ConstFloatVectorDataPtr Resize::computeChannelData( const std::string &c
 
 const ImagePlug *Resize::source() const
 {
-	if(
-		  outPlug()->formatPlug()->getValue().width() == inPlug()->formatPlug()->getValue().width() &&
-		  outPlug()->formatPlug()->getValue().height() == inPlug()->formatPlug()->getValue().height()
-	)
+	if( formatPlug()->getValue().getDisplayWindow() == inPlug()->formatPlug()->getValue().getDisplayWindow() )
 	{
 		return inPlug();
 	}
