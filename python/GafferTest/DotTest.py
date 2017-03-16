@@ -38,6 +38,7 @@ import unittest
 
 import Gaffer
 import GafferTest
+import IECore
 
 class DotTest( GafferTest.TestCase ) :
 
@@ -164,6 +165,29 @@ class DotTest( GafferTest.TestCase ) :
 		self.assertTrue( d["out"].source().isSame( n1["a"] ) )
 		self.assertTrue( d["out"][0].source().isSame( i ) )
 		self.assertTrue( d["out"][1].source().isSame( n1["a"][1] ) )
+
+	def testSetupCopiesPlugColorMetadata( self ):
+
+		s = Gaffer.ScriptNode()
+
+		s["n1"] = GafferTest.AddNode()
+		s["d"] = Gaffer.Dot()
+
+		plug = s["n1"]["op1"]
+
+		connectionColor = IECore.Color3fData( IECore.Color3f( 0.1 , 0.2 , 0.3 ) )
+		noodleColor = IECore.Color3fData( IECore.Color3f( 0.4, 0.5 , 0.6 ) )
+
+		Gaffer.Metadata.registerValue( plug, "connectionGadget:color", connectionColor )
+		Gaffer.Metadata.registerValue( plug, "nodule:color", noodleColor )
+
+		s["d"].setup( s["n1"]["op1"] )
+
+		self.assertEqual( Gaffer.Metadata.value( s["d"]["in"], "connectionGadget:color" ), connectionColor.value )
+		self.assertEqual( Gaffer.Metadata.value( s["d"]["in"], "nodule:color" ), noodleColor.value )
+
+		self.assertEqual( Gaffer.Metadata.value( s["d"]["out"], "connectionGadget:color" ), connectionColor.value )
+		self.assertEqual( Gaffer.Metadata.value( s["d"]["out"], "nodule:color" ), noodleColor.value )
 
 if __name__ == "__main__":
 	unittest.main()
