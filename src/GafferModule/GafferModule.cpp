@@ -135,6 +135,16 @@ class TaskSchedulerInitWrapper : public tbb::task_scheduler_init
 
 };
 
+
+bool isDebug()
+{
+#ifdef NDEBUG
+	return false;
+#else
+	return true;
+#endif
+}
+
 } // namespace
 
 BOOST_PYTHON_MODULE( _Gaffer )
@@ -197,6 +207,8 @@ BOOST_PYTHON_MODULE( _Gaffer )
 	DependencyNodeClass<TimeWarpComputeNode>();
 	DependencyNodeClass<ContextVariablesComputeNode>();
 	DependencyNodeClass<LoopComputeNode>();
+
+	def( "isDebug", &isDebug );
 
 	object tsi = class_<TaskSchedulerInitWrapper, boost::noncopyable>( "_tbb_task_scheduler_init", no_init )
 		.def( init<int>( arg( "max_threads" ) = int( tbb::task_scheduler_init::automatic ) ) )

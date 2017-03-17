@@ -774,7 +774,10 @@ class LocalDispatcherTest( GafferTest.TestCase ) :
 
 		t = time.clock()
 		d.dispatch( [ lastTask ] )
-		self.assertLess( time.clock() - t, 6 )
+		timeLimit = 6
+		if Gaffer.isDebug():
+			timeLimit *= 2
+		self.assertLess( time.clock() - t, timeLimit )
 
 		d["executeInBackground"].setValue( True )
 
