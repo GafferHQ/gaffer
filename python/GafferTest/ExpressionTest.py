@@ -1247,5 +1247,24 @@ class ExpressionTest( GafferTest.TestCase ) :
 		for language in ( "", "latin" ) :
 			self.assertRaisesRegexp( RuntimeError, "Failed to create engine", s["e"].setExpression, "parent.n.user.p = 10", language )
 
+	def testContextIsReadOnly( self ) :
+
+		s = Gaffer.ScriptNode()
+		s["n"] = Gaffer.Node()
+		s["n"]["user"]["p"] = Gaffer.IntPlug( flags = Gaffer.Plug.Flags.Default | Gaffer.Plug.Flags.Dynamic )
+
+		s["e"] = Gaffer.Expression()
+		for mutationAttempt, expectedError in [
+			( "context['x'] = 10", "does not support item assignment" ),
+			( "context.set( 'x', 10 )", "AttributeError" ),
+			( "context.remove( 'x' )", "AttributeError" ),
+			( "context.changed( 'x' )", "AttributeError" ),
+			( "context.setFrame( 10 )", "AttributeError" ),
+			( "context.setFramesPerSecond( 25 )", "AttributeError" ),
+			( "context.setTime( 10 )", "AttributeError" ),
+		] :
+			s["e"].setExpression( mutationAttempt + """\nparent["n"]["user"]["p"] = 100""" )
+			self.assertRaisesRegexp( RuntimeError, expectedError, s["n"]["user"]["p"].getValue )
+
 if __name__ == "__main__":
 	unittest.main()
