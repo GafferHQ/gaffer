@@ -40,6 +40,7 @@ import unittest
 import IECore
 
 import Gaffer
+import GafferTest
 import GafferImage
 import GafferImageTest
 
@@ -194,6 +195,14 @@ class ConstantTest( GafferImageTest.ImageTestCase ) :
 				c1["out"].channelData( channelName, IECore.V2i( 0 ) ),
 				c2["out"].channelData( "diffuse." + channelName, IECore.V2i( 0 ) )
 			)
+
+	def testLayerAffectsChannelNames( self ) :
+
+		c = GafferImage.Constant()
+		cs = GafferTest.CapturingSlot( c.plugDirtiedSignal() )
+		c["layer"].setValue( "diffuse" )
+
+		self.assertTrue( c["out"]["channelNames"] in set( [ x[0] for x in cs ] ) )
 
 if __name__ == "__main__":
 	unittest.main()

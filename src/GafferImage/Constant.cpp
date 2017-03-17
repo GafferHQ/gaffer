@@ -116,6 +116,11 @@ void Constant::affects( const Gaffer::Plug *input, AffectedPlugsContainer &outpu
 	{
 		outputs.push_back( outPlug()->formatPlug() );
 	}
+
+	if( input == layerPlug() )
+	{
+		outputs.push_back( outPlug()->channelNamesPlug() );
+	}
 }
 
 void Constant::hashFormat( const GafferImage::ImagePlug *output, const Gaffer::Context *context, IECore::MurmurHash &h ) const
