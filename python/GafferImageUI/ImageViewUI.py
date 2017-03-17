@@ -40,6 +40,7 @@ import IECore
 
 import Gaffer
 import GafferUI
+import GafferImage
 import GafferImageUI
 
 ##########################################################################
@@ -115,6 +116,19 @@ Gaffer.Metadata.registerNode(
 			"plugValueWidget:type", "GafferImageUI.ImageViewUI._ColorInspectorPlugValueWidget",
 			"label", "",
 			"toolbarLayout:section", "Bottom",
+
+		],
+
+		"channels" : [
+
+			"description",
+			"""
+			Chooses an RGBA layer or an auxiliary channel to display.
+			""",
+
+			"plugValueWidget:type", "GafferImageUI.RGBAChannelsPlugValueWidget",
+			"toolbarLayout:index", 0,
+			"label", "",
 
 		],
 
