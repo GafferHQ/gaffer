@@ -76,7 +76,7 @@ class PythonExpressionEngine( Gaffer.Expression.Engine ) :
 			for p in plugPath.split( "." )[:-1] :
 				parentDict = parentDict.setdefault( p, {} )
 
-		executionDict = { "IECore" : IECore, "parent" : plugDict, "context" : context }
+		executionDict = { "IECore" : IECore, "parent" : plugDict, "context" : _ContextProxy( context ) }
 
 		exec( self.__expression, executionDict, executionDict )
 
@@ -370,3 +370,27 @@ _valueExtractors = {
 def _extractPlugValue( plug, topLevelPlug, value ) :
 
 	return _valueExtractors.get( type( topLevelPlug ), __defaultValueExtractor )( plug, topLevelPlug, value )
+
+##########################################################################
+# _ContextProxy
+##########################################################################
+
+class _ContextProxy( object ) :
+
+	__whitelist = { "get", "getFrame", "getFramesPerSecond", "getTime" }
+
+	def __init__( self, context ) :
+
+		self.__context = context
+
+	def __getitem__( self, key ) :
+
+		return self.__context[key]
+
+	def __getattr__( self, name ) :
+
+		if name in self.__whitelist :
+			return getattr( self.__context, name )
+		else :
+			raise AttributeError( name )
+
