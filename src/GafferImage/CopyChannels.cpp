@@ -141,6 +141,11 @@ void CopyChannels::affects( const Gaffer::Plug *input, AffectedPlugsContainer &o
 		outputs.push_back( mappingPlug() );
 	}
 
+	if( input == mappingPlug() )
+	{
+		outputs.push_back( outPlug()->channelNamesPlug() );
+	}
+
 	if(
 		( imagePlug && input == imagePlug->channelDataPlug() ) ||
 		input == mappingPlug()

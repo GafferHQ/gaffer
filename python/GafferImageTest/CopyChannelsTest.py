@@ -39,6 +39,7 @@ import unittest
 import IECore
 
 import Gaffer
+import GafferTest
 import GafferImage
 import GafferImageTest
 
@@ -156,6 +157,24 @@ class CopyChannelsTest( GafferImageTest.ImageTestCase ) :
 			copy["out"]["channelNames"].getValue(),
 			IECore.StringVectorData( [ "R", "G", "B", "A", "diffuse.R", "diffuse.G", "diffuse.B", "diffuse.A" ] ),
 		)
+
+	def testAffectsChannelNames( self ) :
+
+		c1 = GafferImage.Constant()
+		c2 = GafferImage.Constant()
+
+		copy = GafferImage.CopyChannels()
+		copy["in"][0].setInput( c1["out"] )
+		copy["in"][1].setInput( c2["out"] )
+
+		cs = GafferTest.CapturingSlot( copy.plugDirtiedSignal() )
+
+		c2["layer"].setValue( "diffuse" )
+		self.assertTrue( copy["out"]["channelNames"] in [ x[0] for x in cs ] )
+
+		del cs[:]
+		copy["channels"].setValue( "diffuse.R" )
+		self.assertTrue( copy["out"]["channelNames"] in [ x[0] for x in cs ] )
 
 if __name__ == "__main__":
 	unittest.main()
