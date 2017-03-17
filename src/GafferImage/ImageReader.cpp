@@ -83,6 +83,8 @@ ImageReader::ImageReader( const std::string &name )
 	endPlug->addChild( new IntPlug( "frame", Plug::In, 0 ) );
 	addChild( endPlug );
 
+	addChild( new StringPlug( "colorSpace" ) );
+
 	addChild( new CompoundObjectPlug( "__intermediateMetadata", Plug::In, new CompoundObject, Plug::Default & ~Plug::Serialisable ) );
 	addChild( new StringPlug( "__intermediateColorSpace", Plug::Out, "", Plug::Default & ~Plug::Serialisable ) );
 	addChild( new ImagePlug( "__intermediateImage", Plug::In, Plug::Default & ~Plug::Serialisable ) );
@@ -101,7 +103,8 @@ ImageReader::ImageReader( const std::string &name )
 	addChild( colorSpace );
 	colorSpace->inPlug()->setInput( oiioReader->outPlug() );
 	colorSpace->inputSpacePlug()->setInput( intermediateColorSpacePlug() );
-	colorSpace->outputSpacePlug()->setValue( OpenColorIO::ROLE_SCENE_LINEAR );
+	OpenColorIO::ConstConfigRcPtr config = OpenColorIO::GetCurrentConfig();
+	colorSpace->outputSpacePlug()->setValue( config->getColorSpace( OpenColorIO::ROLE_SCENE_LINEAR )->getName() );
 	intermediateImagePlug()->setInput( colorSpace->outPlug() );
 }
 
@@ -179,54 +182,64 @@ const IntPlug *ImageReader::endFramePlug() const
 	return getChild<ValuePlug>( g_firstChildIndex + 4 )->getChild<IntPlug>( 1 );
 }
 
+StringPlug *ImageReader::colorSpacePlug()
+{
+	return getChild<StringPlug>( g_firstChildIndex + 5 );
+}
+
+const StringPlug *ImageReader::colorSpacePlug() const
+{
+	return getChild<StringPlug>( g_firstChildIndex + 5 );
+}
+
 CompoundObjectPlug *ImageReader::intermediateMetadataPlug()
 {
-	return getChild<CompoundObjectPlug>( g_firstChildIndex + 5 );
+	return getChild<CompoundObjectPlug>( g_firstChildIndex + 6 );
 }
 
 const CompoundObjectPlug *ImageReader::intermediateMetadataPlug() const
 {
-	return getChild<CompoundObjectPlug>( g_firstChildIndex + 5 );
+	return getChild<CompoundObjectPlug>( g_firstChildIndex + 6 );
 }
 
 StringPlug *ImageReader::intermediateColorSpacePlug()
 {
-	return getChild<StringPlug>( g_firstChildIndex + 6 );
+	return getChild<StringPlug>( g_firstChildIndex + 7 );
 }
 
 const StringPlug *ImageReader::intermediateColorSpacePlug() const
 {
-	return getChild<StringPlug>( g_firstChildIndex + 6 );
+	return getChild<StringPlug>( g_firstChildIndex + 7 );
 }
 
 ImagePlug *ImageReader::intermediateImagePlug()
 {
-	return getChild<ImagePlug>( g_firstChildIndex + 7 );
+	return getChild<ImagePlug>( g_firstChildIndex + 8 );
 }
 
 const ImagePlug *ImageReader::intermediateImagePlug() const
 {
-	return getChild<ImagePlug>( g_firstChildIndex + 7 );
+	return getChild<ImagePlug>( g_firstChildIndex + 8 );
 }
 
 OpenImageIOReader *ImageReader::oiioReader()
 {
-	return getChild<OpenImageIOReader>( g_firstChildIndex + 8 );
+	return getChild<OpenImageIOReader>( g_firstChildIndex + 9 );
 }
 
 const OpenImageIOReader *ImageReader::oiioReader() const
 {
-	return getChild<OpenImageIOReader>( g_firstChildIndex + 8 );
+	return getChild<OpenImageIOReader>( g_firstChildIndex + 9 );
 }
 
 ColorSpace *ImageReader::colorSpace()
 {
-	return getChild<ColorSpace>( g_firstChildIndex + 9 );
+	return getChild<ColorSpace>( g_firstChildIndex + 10 );
 }
 
 const ColorSpace *ImageReader::colorSpace() const
 {
-	return getChild<ColorSpace>( g_firstChildIndex + 9 );
+	return getChild<ColorSpace>( g_firstChildIndex + 10 );
 }
 
 size_t ImageReader::supportedExtensions( std::vector<std::string> &extensions )
@@ -239,7 +252,7 @@ void ImageReader::affects( const Plug *input, AffectedPlugsContainer &outputs ) 
 {
 	ImageNode::affects( input, outputs );
 
-	if( input == intermediateMetadataPlug() )
+	if( input == intermediateMetadataPlug() || input == colorSpacePlug() )
 	{
 		outputs.push_back( intermediateColorSpacePlug() );
 	}
@@ -268,6 +281,7 @@ void ImageReader::hash( const ValuePlug *output, const Context *context, IECore:
 	if( output == intermediateColorSpacePlug() )
 	{
 		intermediateMetadataPlug()->hash( h );
+		colorSpacePlug()->hash( h );
 	}
 	else if(
 		output == outPlug()->formatPlug() ||
@@ -292,15 +306,23 @@ void ImageReader::compute( ValuePlug *output, const Context *context ) const
 {
 	if( output == intermediateColorSpacePlug() )
 	{
+		std::string userColorSpace = colorSpacePlug()->getValue();
 		std::string intermediateSpace = "";
-		ConstCompoundObjectPtr metadata = intermediateMetadataPlug()->getValue();
-		if( const StringData *intermediateSpaceData = metadata->member<const StringData>( "oiio:ColorSpace" ) )
+		if( userColorSpace != "" )
 		{
-			std::vector<std::string> colorSpaces;
-			OpenColorIOTransform::availableColorSpaces( colorSpaces );
-			if( std::find( colorSpaces.begin(), colorSpaces.end(), intermediateSpaceData->readable() ) != colorSpaces.end() )
+			intermediateSpace = userColorSpace;
+		}
+		else
+		{
+			ConstCompoundObjectPtr metadata = intermediateMetadataPlug()->getValue();
+			if( const StringData *intermediateSpaceData = metadata->member<const StringData>( "oiio:ColorSpace" ) )
 			{
-				intermediateSpace = intermediateSpaceData->readable();
+				std::vector<std::string> colorSpaces;
+				OpenColorIOTransform::availableColorSpaces( colorSpaces );
+				if( std::find( colorSpaces.begin(), colorSpaces.end(), intermediateSpaceData->readable() ) != colorSpaces.end() )
+				{
+					intermediateSpace = intermediateSpaceData->readable();
+				}
 			}
 		}
 

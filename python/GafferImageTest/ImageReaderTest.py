@@ -48,6 +48,7 @@ import GafferImageTest
 class ImageReaderTest( GafferImageTest.ImageTestCase ) :
 
 	fileName = os.path.expandvars( "$GAFFER_ROOT/python/GafferImageTest/images/circles.exr" )
+	colorSpaceFileName = os.path.expandvars( "$GAFFER_ROOT/python/GafferImageTest/images/circles_as_cineon.exr" )
 	offsetDataWindowFileName = os.path.expandvars( "$GAFFER_ROOT/python/GafferImageTest/images/rgb.100x100.exr" )
 	jpgFileName = os.path.expandvars( "$GAFFER_ROOT/python/GafferImageTest/images/circles.jpg" )
 
@@ -80,6 +81,20 @@ class ImageReaderTest( GafferImageTest.ImageTestCase ) :
 		h2 = n["out"].channelData( "R", IECore.V2i( GafferImage.ImagePlug().tileSize() ) ).hash()
 
 		self.assertNotEqual( h1, h2 )
+
+	def testColorSpaceOverride( self ) :
+
+		exrReader = GafferImage.ImageReader()
+		exrReader["fileName"].setValue( self.fileName )
+		exrReader["colorSpace"].setValue( "Cineon" )
+
+		colorSpaceOverrideReader = GafferImage.ImageReader()
+		colorSpaceOverrideReader["fileName"].setValue( self.colorSpaceFileName )
+
+		exrImage = exrReader["out"]
+		colorSpaceOverrideImage = colorSpaceOverrideReader["out"]
+
+		self.assertImagesEqual( colorSpaceOverrideImage, exrImage, ignoreMetadata = True, maxDifference = 0.005 )
 
 	def testJpgRead( self ) :
 
