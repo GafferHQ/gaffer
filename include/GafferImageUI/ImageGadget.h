@@ -92,6 +92,13 @@ class ImageGadget : public GafferUI::Gadget
 		Gaffer::Context *getContext();
 		const Gaffer::Context *getContext() const;
 
+		typedef boost::array<IECore::InternedString, 4> Channels;
+		/// Chooses which 4 channels to display as RGBA.
+		/// For instance, to display Z as a greyscale image
+		/// with black alpha you would pass { "Z", "Z", "Z", "" }.
+		void setChannels( const Channels &channels );
+		const Channels &getChannels() const;
+
 		/// Chooses a channel to show in isolation.
 		/// Indices are in the range 0-3 to choose
 		/// which of the RGBA channels is soloed, or
@@ -122,7 +129,7 @@ class ImageGadget : public GafferUI::Gadget
 
 		// Settings to control how the image is displayed.
 
-		boost::array<IECore::InternedString, 4> m_rgbaChannels;
+		Channels m_rgbaChannels;
 		int m_soloChannel;
 
 		// Image access.

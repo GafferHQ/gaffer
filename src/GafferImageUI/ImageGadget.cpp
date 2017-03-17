@@ -76,11 +76,6 @@ ImageGadget::ImageGadget()
 		m_soloChannel( -1 ),
 		m_dirtyFlags( AllDirty )
 {
-	/// \todo Expose accessors to allow the user
-	/// to choose which channels are displayed.
-	/// What form should this take though? Should they
-	/// choose a layer name, or should they choose any
-	/// set of 4 channels?
 	m_rgbaChannels[0] = "R";
 	m_rgbaChannels[1] = "G";
 	m_rgbaChannels[2] = "B";
@@ -141,6 +136,23 @@ Gaffer::Context *ImageGadget::getContext()
 const Gaffer::Context *ImageGadget::getContext() const
 {
 	return m_context.get();
+}
+
+void ImageGadget::setChannels( const Channels &channels )
+{
+	if( channels == m_rgbaChannels )
+	{
+		return;
+	}
+
+	m_rgbaChannels = channels;
+	m_dirtyFlags |= TilesDirty;
+	requestRender();
+}
+
+const ImageGadget::Channels &ImageGadget::getChannels() const
+{
+	return m_rgbaChannels;
 }
 
 void ImageGadget::setSoloChannel( int index )
