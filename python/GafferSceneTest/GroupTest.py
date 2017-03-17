@@ -768,6 +768,18 @@ class GroupTest( GafferSceneTest.SceneTestCase ) :
 
 		self.assertEqual( s["g"]["out"].childNames( "/group" ), IECore.InternedStringVectorData( [ "plane", "sphere" ] ) )
 
+	def testConnectingGroupDoesNotCopyColorMetadata( self ):
+		p = GafferScene.Plane()
+		g = GafferScene.Group()
+
+		g["in"].setInput( p["out"] )
+
+		noduleColor = Gaffer.Metadata.value( p, "nodule:color", instanceOnly = True )
+		connectionColor = Gaffer.Metadata.value( p, "connectionGadget:color", instanceOnly = True )
+
+		self.assertEqual( noduleColor, None )
+		self.assertEqual( noduleColor, connectionColor )
+
 	def setUp( self ) :
 
 		GafferSceneTest.SceneTestCase.setUp( self )

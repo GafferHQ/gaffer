@@ -367,6 +367,15 @@ class ArrayPlugTest( GafferTest.TestCase ) :
 		self.assertEqual( len( n["a"] ), 3 )
 		assertInput( n["b"], n["a"] )
 
+	def testArrayPlugCopiesColors( self ) :
+		n = Gaffer.Node()
+
+		element = Gaffer.IntPlug()
+		Gaffer.Metadata.registerValue(element, "foo", "baz")
+
+		n["a"] = Gaffer.ArrayPlug( element = element )
+		Gaffer.Metadata.registerValue(n["a"], "foo", "bar")
+
 	def testOnlyOneChildType( self ) :
 
 		p = Gaffer.ArrayPlug( element = Gaffer.IntPlug() )

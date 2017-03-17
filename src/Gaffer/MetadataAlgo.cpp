@@ -67,8 +67,10 @@ IECore::InternedString g_noduleColorKey( "nodule:color" );
 
 void copy( const Gaffer::GraphComponent *src , Gaffer::GraphComponent *dst , IECore::InternedString key , Gaffer::MetadataAlgo::Overwrite overwrite )
 {
-	if (Gaffer::MetadataAlgo::KeepExisting == overwrite && Gaffer::Metadata::value<IECore::Data>(dst, key))
+	if ( overwrite == Gaffer::MetadataAlgo::KeepExisting && Gaffer::Metadata::value<IECore::Data>( dst, key ) )
+	{
 		return;
+	}
 
 	if( IECore::ConstDataPtr data = Gaffer::Metadata::value<IECore::Data>( src, key ) )
 	{
