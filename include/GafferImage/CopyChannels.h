@@ -1,6 +1,6 @@
 //////////////////////////////////////////////////////////////////////////
 //
-//  Copyright (c) 2013-2015, Image Engine Design Inc. All rights reserved.
+//  Copyright (c) 2016, Image Engine Design Inc. All rights reserved.
 //
 //  Redistribution and use in source and binary forms, with or without
 //  modification, are permitted provided that the following conditions are
@@ -34,60 +34,56 @@
 //
 //////////////////////////////////////////////////////////////////////////
 
-#ifndef GAFFERIMAGE_CONSTANT_H
-#define GAFFERIMAGE_CONSTANT_H
+#ifndef GAFFERIMAGE_COPYCHANNELS_H
+#define GAFFERIMAGE_COPYCHANNELS_H
 
-#include "Gaffer/CompoundNumericPlug.h"
 #include "Gaffer/StringPlug.h"
 
-#include "GafferImage/ImageNode.h"
-#include "GafferImage/FormatPlug.h"
+#include "GafferImage/ImageProcessor.h"
 
 namespace GafferImage
 {
 
-class Constant : public ImageNode
+class CopyChannels : public ImageProcessor
 {
 
 	public :
 
-		Constant( const std::string &name=defaultName<Constant>() );
-		virtual ~Constant();
+		CopyChannels( const std::string &name=defaultName<CopyChannels>() );
+		virtual ~CopyChannels();
 
-		IE_CORE_DECLARERUNTIMETYPEDEXTENSION( GafferImage::Constant, ConstantTypeId, ImageNode );
+		IE_CORE_DECLARERUNTIMETYPEDEXTENSION( GafferImage::CopyChannels, CopyChannelsTypeId, ImageProcessor );
 
-		GafferImage::FormatPlug *formatPlug();
-		const GafferImage::FormatPlug *formatPlug() const;
-
-		Gaffer::Color4fPlug *colorPlug();
-		const Gaffer::Color4fPlug *colorPlug() const;
-
-		Gaffer::StringPlug *layerPlug();
-		const Gaffer::StringPlug *layerPlug() const;
+		Gaffer::StringPlug *channelsPlug();
+		const Gaffer::StringPlug *channelsPlug() const;
 
 		virtual void affects( const Gaffer::Plug *input, AffectedPlugsContainer &outputs ) const;
 
 	protected :
 
-		virtual void hashFormat( const GafferImage::ImagePlug *output, const Gaffer::Context *context, IECore::MurmurHash &h ) const;
-		virtual void hashDataWindow( const GafferImage::ImagePlug *output, const Gaffer::Context *context, IECore::MurmurHash &h ) const;
-		virtual void hashChannelNames( const GafferImage::ImagePlug *output, const Gaffer::Context *context, IECore::MurmurHash &h ) const;
-		virtual void hashChannelData( const GafferImage::ImagePlug *output, const Gaffer::Context *context, IECore::MurmurHash &h ) const;
+		virtual void hash( const Gaffer::ValuePlug *output, const Gaffer::Context *context, IECore::MurmurHash &h ) const;
+		virtual void compute( Gaffer::ValuePlug *output, const Gaffer::Context *context ) const;
 
-		virtual GafferImage::Format computeFormat( const Gaffer::Context *context, const ImagePlug *parent ) const;
+		virtual void hashDataWindow( const GafferImage::ImagePlug *output, const Gaffer::Context *context, IECore::MurmurHash &h ) const;
 		virtual Imath::Box2i computeDataWindow( const Gaffer::Context *context, const ImagePlug *parent ) const;
-		virtual IECore::ConstCompoundObjectPtr computeMetadata( const Gaffer::Context *context, const ImagePlug *parent ) const;
+
+		virtual void hashChannelNames( const GafferImage::ImagePlug *parent, const Gaffer::Context *context, IECore::MurmurHash &h ) const;
+		virtual void hashChannelData( const GafferImage::ImagePlug *parent, const Gaffer::Context *context, IECore::MurmurHash &h ) const;
+
 		virtual IECore::ConstStringVectorDataPtr computeChannelNames( const Gaffer::Context *context, const ImagePlug *parent ) const;
 		virtual IECore::ConstFloatVectorDataPtr computeChannelData( const std::string &channelName, const Imath::V2i &tileOrigin, const Gaffer::Context *context, const ImagePlug *parent ) const;
 
 	private :
 
+		Gaffer::CompoundObjectPlug *mappingPlug();
+		const Gaffer::CompoundObjectPlug *mappingPlug() const;
+
 		static size_t g_firstPlugIndex;
 
 };
 
-IE_CORE_DECLAREPTR( Constant )
+IE_CORE_DECLAREPTR( CopyChannels )
 
 } // namespace GafferImage
 
-#endif // GAFFERIMAGE_CONSTANT_H
+#endif // GAFFERIMAGE_COPYCHANNELS_H

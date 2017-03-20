@@ -40,6 +40,7 @@ import unittest
 import IECore
 
 import Gaffer
+import GafferTest
 import GafferImage
 import GafferImageTest
 
@@ -163,6 +164,45 @@ class ConstantTest( GafferImageTest.ImageTestCase ) :
 			c.affects( c["format"]["pixelAspect"] ),
 			[ c["out"]["format"] ],
 		)
+
+	def testLayer( self ) :
+
+		c1 = GafferImage.Constant()
+		c2 = GafferImage.Constant()
+
+		c1["color"].setValue( IECore.Color4f( 1, 0.5, 0.25, 1 ) )
+		c2["color"].setValue( IECore.Color4f( 1, 0.5, 0.25, 1 ) )
+		c2["layer"].setValue( "diffuse" )
+
+		self.assertEqual(
+			c1["out"]["channelNames"].getValue(),
+			IECore.StringVectorData( [ "R", "G", "B", "A" ] )
+		)
+
+		self.assertEqual(
+			c2["out"]["channelNames"].getValue(),
+			IECore.StringVectorData( [ "diffuse.R", "diffuse.G", "diffuse.B", "diffuse.A" ] )
+		)
+
+		for channelName in ( "R", "G", "B", "A" ) :
+
+			self.assertEqual(
+				c1["out"].channelDataHash( channelName, IECore.V2i( 0 ) ),
+				c2["out"].channelDataHash( "diffuse." + channelName, IECore.V2i( 0 ) )
+			)
+
+			self.assertEqual(
+				c1["out"].channelData( channelName, IECore.V2i( 0 ) ),
+				c2["out"].channelData( "diffuse." + channelName, IECore.V2i( 0 ) )
+			)
+
+	def testLayerAffectsChannelNames( self ) :
+
+		c = GafferImage.Constant()
+		cs = GafferTest.CapturingSlot( c.plugDirtiedSignal() )
+		c["layer"].setValue( "diffuse" )
+
+		self.assertTrue( c["out"]["channelNames"] in set( [ x[0] for x in cs ] ) )
 
 if __name__ == "__main__":
 	unittest.main()

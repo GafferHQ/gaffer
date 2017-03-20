@@ -1,6 +1,6 @@
 ##########################################################################
 #
-#  Copyright (c) 2015, Image Engine Design Inc. All rights reserved.
+#  Copyright (c) 2017, Image Engine Design Inc. All rights reserved.
 #
 #  Redistribution and use in source and binary forms, with or without
 #  modification, are permitted provided that the following conditions are
@@ -39,42 +39,26 @@ import GafferImage
 
 Gaffer.Metadata.registerNode(
 
-	GafferImage.Constant,
+	GafferImage.CopyChannels,
 
 	"description",
 	"""
-	Outputs an image of a constant flat colour.
+	Copies channels from the secondary input images
+	onto the primary input image and outputs the result.
 	""",
 
 	plugs = {
 
-		"format" : [
+		"channels" : [
 
 			"description",
 			"""
-			The resolution and aspect ratio of the image.
+			The names of the channels to copy. Names should be
+			separated by spaces and can use Gaffer's standard
+			wildcards.
 			""",
 
 		],
-
-		"color" : [
-
-			"description",
-			"""
-			The colour of the image.
-			""",
-
-		],
-
-		"layer" : [
-
-			"description",
-			"""
-			The layer to generate. The output channels will
-			be named ( layer.R, layer.G, layer.B and layer.A ).
-			"""
-
-		]
 
 	}
 

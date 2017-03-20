@@ -82,5 +82,6 @@ import TextUI
 import WarpUI
 import UVWarpUI
 import MirrorUI
+import CopyChannelsUI
 
 __import__( "IECore" ).loadConfig( "GAFFER_STARTUP_PATHS", {}, subdirectory = "GafferImageUI" )
