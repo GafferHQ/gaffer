@@ -49,7 +49,6 @@ from MergeTest import MergeTest
 from GradeTest import GradeTest
 from ConstantTest import ConstantTest
 from ImageWriterTest import ImageWriterTest
-from ChannelMaskPlugTest import ChannelMaskPlugTest
 from SamplerTest import SamplerTest
 from DisplayTest import DisplayTest
 from ImageStatsTest import ImageStatsTest

@@ -122,4 +122,3 @@ class ChannelMaskPlugValueWidget( GafferUI.PlugValueWidget ) :
 		with Gaffer.UndoContext( self.getPlug().ancestor( Gaffer.ScriptNode ) ) :
 			self.getPlug().setValue( value )
 
-GafferUI.PlugValueWidget.registerType( GafferImage.ChannelMaskPlug, ChannelMaskPlugValueWidget )
