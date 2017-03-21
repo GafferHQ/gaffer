@@ -874,8 +874,6 @@ IECore::MurmurHash ImageWriter::hash( const Context *context ) const
 	return h;
 }
 
-///\todo: We are currently computing all of the channels regardless of whether or not we are outputting them.
-/// Change the execute() method to only compute the channels that are masked by the channelsPlug().
 void ImageWriter::execute() const
 {
 	if( !inPlug()->getInput<ImagePlug>() )
