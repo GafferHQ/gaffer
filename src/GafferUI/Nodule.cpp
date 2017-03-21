@@ -84,12 +84,6 @@ Nodule::PlugCreatorMap &Nodule::plugCreators()
 	return m;
 }
 
-Nodule::NamedCreatorMap &Nodule::namedCreators()
-{
-	static NamedCreatorMap m;
-	return m;
-}
-
 NodulePtr Nodule::create( Gaffer::PlugPtr plug )
 {
 	IECore::ConstStringDataPtr noduleType = Gaffer::Metadata::value<IECore::StringData>( plug.get(), "nodule:type" );
@@ -108,29 +102,6 @@ NodulePtr Nodule::create( Gaffer::PlugPtr plug )
 		else
 		{
 			IECore::msg( IECore::Msg::Warning, "Nodule::create", boost::format( "Nonexistent nodule type \"%s\" requested for plug \"%s\"" ) % noduleType->readable() % plug->fullName() );
-		}
-	}
-
-	const Gaffer::Node *node = plug->node();
-	if( node )
-	{
-		std::string plugPath = plug->relativeName( node );
-		const NamedCreatorMap &m = namedCreators();
-		IECore::TypeId t = node->typeId();
-		while( t!=IECore::InvalidTypeId )
-		{
-			NamedCreatorMap::const_iterator it = m.find( t );
-			if( it!=m.end() )
-			{
-				for( RegexAndCreatorVector::const_reverse_iterator nIt = it->second.rbegin(); nIt!=it->second.rend(); nIt++ )
-				{
-					if( boost::regex_match( plugPath, nIt->first ) )
-					{
-						return nIt->second( plug );
-					}
-				}
-			}
-			t = IECore::RunTimeTyped::baseTypeId( t );
 		}
 	}
 
@@ -156,11 +127,6 @@ void Nodule::registerNodule( const std::string &noduleTypeName, NoduleCreator cr
 	{
 		plugCreators()[plugType] = creator;
 	}
-}
-
-void Nodule::registerNodule( const IECore::TypeId nodeType, const std::string &plugPath, NoduleCreator creator )
-{
-	namedCreators()[nodeType].push_back( RegexAndCreator( boost::regex( plugPath ), creator ) );
 }
 
 std::string Nodule::getToolTip( const IECore::LineSegment3f &line ) const
