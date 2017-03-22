@@ -51,16 +51,23 @@ import GafferTest
 import GafferDispatch
 import GafferImage
 import GafferScene
+import GafferSceneTest
 import GafferArnold
 import GafferArnoldTest
 
-class ArnoldRenderTest( GafferTest.TestCase ) :
+class ArnoldRenderTest( GafferSceneTest.SceneTestCase ) :
 
 	def setUp( self ) :
 
-		GafferTest.TestCase.setUp( self )
+		GafferSceneTest.SceneTestCase.setUp( self )
 
 		self.__scriptFileName = self.temporaryDirectory() + "/test.gfr"
+
+	def tearDown( self ) :
+
+		GafferSceneTest.SceneTestCase.tearDown( self )
+
+		GafferScene.deregisterAdaptor( "Test" )
 
 	def testExecute( self ) :
 
@@ -774,6 +781,53 @@ class ArnoldRenderTest( GafferTest.TestCase ) :
 							arnold.AiNodeGetInt( arnold.AiUniverseGetOptions(), "AA_seed" ),
 							seed or round( frame )
 						)
+
+	def testRendererContextVariable( self ) :
+
+		sphere = GafferScene.Sphere()
+		sphere["name"].setValue( "sphere${scene:renderer}" )
+
+		render = GafferArnold.ArnoldRender()
+		render["in"].setInput( sphere["out"] )
+		render["mode"].setValue( render.Mode.SceneDescriptionMode )
+		render["fileName"].setValue( self.temporaryDirectory() + "/test.ass" )
+
+		render["task"].execute()
+
+		with IECoreArnold.UniverseBlock() :
+
+			arnold.AiASSLoad( self.temporaryDirectory() + "/test.ass" )
+			self.assertTrue( arnold.AiNodeLookUpByName( "/sphereArnold" ) is not None )
+
+	def testAdaptors( self ) :
+
+		sphere = GafferScene.Sphere()
+
+		def a() :
+
+			result = GafferArnold.ArnoldAttributes()
+			result["attributes"]["matte"]["enabled"].setValue( True )
+			result["attributes"]["matte"]["value"].setValue( True )
+
+			return result
+
+		GafferScene.registerAdaptor( "Test", a )
+
+		sphere = GafferScene.Sphere()
+
+		render = GafferArnold.ArnoldRender()
+		render["in"].setInput( sphere["out"] )
+		render["mode"].setValue( render.Mode.SceneDescriptionMode )
+		render["fileName"].setValue( self.temporaryDirectory() + "/test.ass" )
+
+		render["task"].execute()
+
+		with IECoreArnold.UniverseBlock() :
+
+			arnold.AiASSLoad( self.temporaryDirectory() + "/test.ass" )
+			node = arnold.AiNodeLookUpByName( "/sphere" )
+
+			self.assertEqual( arnold.AiNodeGetBool( node, "matte" ), True )
 
 	def __arrayToSet( self, a ) :
 

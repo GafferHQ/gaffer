@@ -2519,6 +2519,6 @@ class AppleseedRenderer : public IECoreScenePreview::Renderer
 
 };
 
-IECoreScenePreview::Renderer::TypeDescription<AppleseedRenderer> AppleseedRenderer::g_typeDescription( "IECoreAppleseed::Renderer" );
+IECoreScenePreview::Renderer::TypeDescription<AppleseedRenderer> AppleseedRenderer::g_typeDescription( "Appleseed" );
 
 } // namespace

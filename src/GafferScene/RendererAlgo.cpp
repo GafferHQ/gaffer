@@ -58,6 +58,7 @@
 #include "GafferScene/SceneProcedural.h"
 #include "GafferScene/PathMatcherData.h"
 #include "GafferScene/SceneAlgo.h"
+#include "GafferScene/SceneProcessor.h"
 
 using namespace std;
 using namespace Imath;
@@ -601,6 +602,62 @@ void outputObject( const ScenePlug *scene, IECore::Renderer *renderer, size_t se
 	{
 		(*it)->render( renderer );
 	}
+}
+
+} // namespace RendererAlgo
+
+} // namespace GafferScene
+
+//////////////////////////////////////////////////////////////////////////
+// Adaptor registry
+//////////////////////////////////////////////////////////////////////////
+
+namespace
+{
+
+typedef boost::container::flat_map<string, GafferScene::Adaptor> Adaptors;
+
+Adaptors &adaptors()
+{
+	static Adaptors a;
+	return a;
+}
+
+} // namespace
+
+namespace GafferScene
+{
+
+namespace RendererAlgo
+{
+
+void registerAdaptor( const std::string &name, Adaptor adaptor )
+{
+	adaptors()[name] = adaptor;
+}
+
+void deregisterAdaptor( const std::string &name )
+{
+	adaptors().erase( name );
+}
+
+SceneProcessorPtr createAdaptors()
+{
+	SceneProcessorPtr result = new SceneProcessor;
+
+	ScenePlug *in = result->inPlug();
+
+	const Adaptors &a = adaptors();
+	for( Adaptors::const_iterator it = a.begin(), eIt = a.end(); it != eIt; ++it )
+	{
+		SceneProcessorPtr adaptor = it->second();
+		result->addChild( adaptor );
+		adaptor->inPlug()->setInput( in );
+		in = adaptor->outPlug();
+	}
+
+	result->outPlug()->setInput( in );
+	return result;
 }
 
 } // namespace RendererAlgo

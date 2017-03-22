@@ -172,7 +172,7 @@ class ArnoldShaderTest( GafferSceneTest.SceneTestCase ) :
 		s["parameters"]["color"].setInput( f["parameters"]["color"] )
 
 		r = GafferScene.Private.IECoreScenePreview.Renderer.create(
-			"IECoreArnold::Renderer",
+			"Arnold",
 			GafferScene.Private.IECoreScenePreview.Renderer.RenderType.Batch
 		)
 

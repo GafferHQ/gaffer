@@ -48,6 +48,7 @@
 #include "GafferScene/ScenePlug.h"
 #include "GafferScene/SceneNode.h"
 #include "GafferScene/RendererAlgo.h"
+#include "GafferScene/SceneProcessor.h"
 
 using namespace IECore;
 using namespace Gaffer;
@@ -63,6 +64,8 @@ InternedString g_performanceMonitorOptionName( "option:render:performanceMonitor
 } // namespace
 
 size_t Render::g_firstPlugIndex = 0;
+
+static IECore::InternedString g_rendererContextName( "scene:renderer" );
 
 IE_CORE_DEFINERUNTIMETYPED( Render );
 
@@ -86,6 +89,13 @@ void Render::construct( const IECore::InternedString &rendererType )
 	addChild( new IntPlug( "mode", Plug::In, RenderMode, RenderMode, SceneDescriptionMode ) );
 	addChild( new StringPlug( "fileName" ) );
 	addChild( new ScenePlug( "out", Plug::Out, Plug::Default & ~Plug::Serialisable ) );
+	addChild( new ScenePlug( "__adaptedIn" ) );
+
+	SceneProcessorPtr adaptors = createAdaptors();
+	setChild( "__adaptors", adaptors );
+	adaptors->inPlug()->setInput( inPlug() );
+	adaptedInPlug()->setInput( adaptors->outPlug() );
+
 	outPlug()->setInput( inPlug() );
 }
 
@@ -143,6 +153,16 @@ const ScenePlug *Render::outPlug() const
 	return getChild<ScenePlug>( g_firstPlugIndex + 4 );
 }
 
+ScenePlug *Render::adaptedInPlug()
+{
+	return getChild<ScenePlug>( g_firstPlugIndex + 5 );
+}
+
+const ScenePlug *Render::adaptedInPlug() const
+{
+	return getChild<ScenePlug>( g_firstPlugIndex + 5 );
+}
+
 IECore::MurmurHash Render::hash( const Gaffer::Context *context ) const
 {
 	if( !IECore::runTimeCast<const SceneNode>( inPlug()->source<Plug>()->node() ) )
@@ -186,6 +206,10 @@ void Render::execute() const
 		return;
 	}
 
+	ContextPtr rendererContext = new Context( *Context::current(), Context::Borrowed );
+	rendererContext->set( g_rendererContextName, rendererType );
+	Context::Scope rendererContextScope( rendererContext.get() );
+
 	const Mode mode = static_cast<Mode>( modePlug()->getValue() );
 	const std::string fileName = fileNamePlug()->getValue();
 	if( mode == SceneDescriptionMode  )
@@ -215,7 +239,7 @@ void Render::execute() const
 		return;
 	}
 
-	ConstCompoundObjectPtr globals = inPlug()->globalsPlug()->getValue();
+	ConstCompoundObjectPtr globals = adaptedInPlug()->globalsPlug()->getValue();
 	GafferScene::RendererAlgo::createDisplayDirectories( globals.get() );
 
 	boost::shared_ptr<PerformanceMonitor> performanceMonitor;
@@ -231,11 +255,11 @@ void Render::execute() const
 	RendererAlgo::outputOptions( globals.get(), renderer.get() );
 	RendererAlgo::outputOutputs( globals.get(), renderer.get() );
 
-	RendererAlgo::RenderSets renderSets( inPlug() );
+	RendererAlgo::RenderSets renderSets( adaptedInPlug() );
 
-	RendererAlgo::outputCameras( inPlug(), globals.get(), renderSets, renderer.get() );
-	RendererAlgo::outputLights( inPlug(), globals.get(), renderSets, renderer.get() );
-	RendererAlgo::outputObjects( inPlug(), globals.get(), renderSets, renderer.get() );
+	RendererAlgo::outputCameras( adaptedInPlug(), globals.get(), renderSets, renderer.get() );
+	RendererAlgo::outputLights( adaptedInPlug(), globals.get(), renderSets, renderer.get() );
+	RendererAlgo::outputObjects( adaptedInPlug(), globals.get(), renderSets, renderer.get() );
 
 	// Now we have generated the scene, flush Cortex and Gaffer caches to
 	// provide more memory to the renderer.

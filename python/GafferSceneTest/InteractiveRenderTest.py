@@ -1509,6 +1509,92 @@ class InteractiveRenderTest( GafferSceneTest.SceneTestCase ) :
 		time.sleep( 0.5 )
 		assertReflected( True )
 
+	def testRendererContextVariable( self ):
+
+		s = Gaffer.ScriptNode()
+		s["s"] = GafferScene.Sphere()
+
+		s["o"] = GafferScene.Outputs()
+		s["o"].addOutput(
+			"beauty",
+			IECore.Display(
+				"test",
+				"ieDisplay",
+				"rgba",
+				{
+					"driverType" : "ImageDisplayDriver",
+					"handle" : "myLovelySphereRenderedIn${scene:renderer}",
+				}
+			)
+		)
+		s["o"]["in"].setInput( s["s"]["out"] )
+
+		s["r"] = self._createInteractiveRender()
+		s["r"]["in"].setInput( s["o"]["out"] )
+
+		s["r"]["state"].setValue( s["r"].State.Running )
+
+		time.sleep( 0.5 )
+
+		renderer = s["r"]["renderer"].getValue() if "renderer" in s["r"] else s["r"]["__renderer"].getValue()
+		image = IECore.ImageDisplayDriver.storedImage( "myLovelySphereRenderedIn" + renderer )
+		self.assertTrue( isinstance( image, IECore.ImagePrimitive ) )
+
+	def testAdaptors( self ) :
+
+		s = Gaffer.ScriptNode()
+		s["s"] = GafferScene.Sphere()
+
+		def a() :
+
+			result = GafferScene.SceneProcessor()
+
+			result["__shader"], colorPlug = self._createConstantShader()
+			colorPlug.setValue( IECore.Color3f( 1, 0, 0 ) )
+
+			result["__assignment"] = GafferScene.ShaderAssignment()
+			result["__assignment"]["in"].setInput( result["in"] )
+			result["__assignment"]["shader"].setInput( result["__shader"]["out"] )
+
+			result["out"].setInput( result["__assignment"]["out"] )
+
+			return result
+
+		GafferScene.registerAdaptor( "Test", a )
+
+		s["o"] = GafferScene.Outputs()
+		s["o"].addOutput(
+			"beauty",
+			IECore.Display(
+				"test",
+				"ieDisplay",
+				"rgba",
+				{
+					"driverType" : "ImageDisplayDriver",
+					"handle" : "myLovelySphere",
+				}
+			)
+		)
+		s["o"]["in"].setInput( s["s"]["out"] )
+
+		s["r"] = self._createInteractiveRender()
+		s["r"]["in"].setInput( s["o"]["out"] )
+
+		s["r"]["state"].setValue( s["r"].State.Running )
+
+		time.sleep( 0.5 )
+
+		# Render red sphere
+
+		image = IECore.ImageDisplayDriver.storedImage( "myLovelySphere" )
+		self.__assertColorsAlmostEqual( self.__color4fAtUV( image, IECore.V2f( 0.5 ) ), IECore.Color4f( 1, 0, 0, 1 ), delta = 0.01 )
+
+	def tearDown( self ) :
+
+		GafferSceneTest.SceneTestCase.tearDown( self )
+
+		GafferScene.deregisterAdaptor( "Test" )
+
 	## Should be implemented by derived classes to return an
 	# appropriate InteractiveRender node.
 	def _createInteractiveRender( self ) :

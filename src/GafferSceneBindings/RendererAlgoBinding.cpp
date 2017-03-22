@@ -34,80 +34,59 @@
 //
 //////////////////////////////////////////////////////////////////////////
 
-#ifndef GAFFERSCENE_PREVIEW_RENDER_H
-#define GAFFERSCENE_PREVIEW_RENDER_H
+#include "boost/python.hpp"
 
-#include "Gaffer/StringPlug.h"
-#include "Gaffer/NumericPlug.h"
+#include "IECorePython/ScopedGILLock.h"
 
-#include "GafferDispatch/TaskNode.h"
-#include "GafferScene/TypeIds.h"
+#include "GafferScene/RendererAlgo.h"
+#include "GafferScene/SceneProcessor.h"
 
-namespace GafferScene
+#include "GafferSceneBindings/RendererAlgoBinding.h"
+
+using namespace boost::python;
+using namespace GafferScene;
+
+namespace
 {
 
-IE_CORE_FORWARDDECLARE( ScenePlug )
-
-namespace Preview
+struct AdaptorWrapper
 {
 
-class Render : public GafferDispatch::TaskNode
-{
+	AdaptorWrapper( object pythonAdaptor )
+		:	m_pythonAdaptor( pythonAdaptor )
+	{
+	}
 
-	public :
-
-		Render( const std::string &name=defaultName<Render>() );
-		virtual ~Render();
-
-		IE_CORE_DECLARERUNTIMETYPEDEXTENSION( GafferScene::Preview::Render, GafferScene::RenderTypeId, GafferDispatch::TaskNode );
-
-		enum Mode
-		{
-			RenderMode = 0,
-			SceneDescriptionMode = 1
-		};
-
-		ScenePlug *inPlug();
-		const ScenePlug *inPlug() const;
-
-		Gaffer::StringPlug *rendererPlug();
-		const Gaffer::StringPlug *rendererPlug() const;
-
-		Gaffer::IntPlug *modePlug();
-		const Gaffer::IntPlug *modePlug() const;
-
-		Gaffer::StringPlug *fileNamePlug();
-		const Gaffer::StringPlug *fileNamePlug() const;
-
-		ScenePlug *outPlug();
-		const ScenePlug *outPlug() const;
-
-		virtual IECore::MurmurHash hash( const Gaffer::Context *context ) const;
-		virtual void execute() const;
-
-	protected :
-
-		// Constructor for derived classes which wish to hardcode the renderer type. Perhaps
-		// at some point we won't even have derived classes, but instead will always use the
-		// base class? At the moment the main purpose of the derived classes is to force the
-		// loading of the module which registers the required renderer type.
-		Render( const IECore::InternedString &rendererType, const std::string &name );
+	SceneProcessorPtr operator()()
+	{
+		IECorePython::ScopedGILLock gilLock;
+		SceneProcessorPtr result = extract<SceneProcessorPtr>( m_pythonAdaptor() );
+		return result;
+	}
 
 	private :
 
-		void construct( const IECore::InternedString &rendererType = IECore::InternedString() );
-
-		ScenePlug *adaptedInPlug();
-		const ScenePlug *adaptedInPlug() const;
-
-		static size_t g_firstPlugIndex;
+		object m_pythonAdaptor;
 
 };
 
-IE_CORE_DECLAREPTR( Render );
+void registerAdaptorWrapper( const std::string &name, object adaptor )
+{
+	registerAdaptor( name, AdaptorWrapper( adaptor ) );
+}
 
-} // namespace Preview
+} // namespace
 
-} // namespace GafferScene
+namespace GafferSceneBindings
+{
 
-#endif // GAFFERSCENE_PREVIEW_RENDER_H
+void bindRendererAlgo()
+{
+
+	def( "registerAdaptor", &registerAdaptorWrapper );
+	def( "deregisterAdaptor", &deregisterAdaptor );
+	def( "createAdaptors", &createAdaptors );
+
+}
+
+} // namespace GafferSceneBindings

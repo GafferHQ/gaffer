@@ -52,6 +52,8 @@
 #include "GafferScene/SceneAlgo.h"
 #include "GafferScene/PathMatcherData.h"
 #include "GafferScene/SceneNode.h"
+#include "GafferScene/SceneProcessor.h"
+#include "GafferScene/RendererAlgo.h"
 
 using namespace std;
 using namespace Imath;
@@ -71,6 +73,7 @@ InternedString g_cameraGlobalName( "option:render:camera" );
 
 InternedString g_visibleAttributeName( "scene:visible" );
 InternedString g_setsAttributeName( "sets" );
+InternedString g_rendererContextName( "scene:renderer" );
 
 bool visible( const CompoundObject *attributes )
 {
@@ -513,6 +516,7 @@ class InteractiveRender::SceneGraphUpdateTask : public tbb::task
 			SceneGraph::Type sceneGraphType,
 			unsigned dirtyComponents,
 			unsigned changedParentComponents,
+			const Context *context,
 			const ScenePlug::ScenePath &scenePath
 		)
 			:	m_interactiveRender( interactiveRender ),
@@ -520,6 +524,7 @@ class InteractiveRender::SceneGraphUpdateTask : public tbb::task
 				m_sceneGraphType( sceneGraphType ),
 				m_dirtyComponents( dirtyComponents ),
 				m_changedParentComponents( changedParentComponents ),
+				m_context( context ),
 				m_scenePath( scenePath )
 		{
 		}
@@ -550,7 +555,7 @@ class InteractiveRender::SceneGraphUpdateTask : public tbb::task
 			// Set up a context to compute the scene at the right
 			// location.
 
-			ContextPtr context = new Context( *m_interactiveRender->m_effectiveContext, Context::Borrowed );
+			ContextPtr context = new Context( *m_context, Context::Borrowed );
 			context->set( ScenePlug::scenePathContextName, m_scenePath );
 			Context::Scope scopedContext( context.get() );
 
@@ -579,7 +584,7 @@ class InteractiveRender::SceneGraphUpdateTask : public tbb::task
 				for( std::vector<SceneGraph *>::const_iterator it = children.begin(), eIt = children.end(); it != eIt; ++it )
 				{
 					childPath.back() = (*it)->name();
-					SceneGraphUpdateTask *t = new( allocate_child() ) SceneGraphUpdateTask( m_interactiveRender, *it, m_sceneGraphType, m_dirtyComponents, changedComponents, childPath );
+					SceneGraphUpdateTask *t = new( allocate_child() ) SceneGraphUpdateTask( m_interactiveRender, *it, m_sceneGraphType, m_dirtyComponents, changedComponents, m_context, childPath );
 					spawn( *t );
 				}
 
@@ -593,7 +598,7 @@ class InteractiveRender::SceneGraphUpdateTask : public tbb::task
 
 		const ScenePlug *scene()
 		{
-			return m_interactiveRender->inPlug();
+			return m_interactiveRender->adaptedInPlug();
 		}
 
 		/// \todo Fast path for when sets were not dirtied.
@@ -628,6 +633,7 @@ class InteractiveRender::SceneGraphUpdateTask : public tbb::task
 		SceneGraph::Type m_sceneGraphType;
 		unsigned m_dirtyComponents;
 		unsigned m_changedParentComponents;
+		const Context *m_context;
 		ScenePlug::ScenePath m_scenePath;
 
 };
@@ -659,6 +665,13 @@ void InteractiveRender::construct( const IECore::InternedString &rendererType )
 	addChild( new StringPlug( rendererType.string().empty() ? "renderer" : "__renderer", Plug::In, rendererType.string() ) );
 	addChild( new IntPlug( "state", Plug::In, Stopped, Stopped, Paused, Plug::Default & ~Plug::Serialisable ) );
 	addChild( new ScenePlug( "out", Plug::Out, Plug::Default & ~Plug::Serialisable ) );
+	addChild( new ScenePlug( "__adaptedIn" ) );
+
+	SceneProcessorPtr adaptors = createAdaptors();
+	setChild( "__adaptors", adaptors );
+	adaptors->inPlug()->setInput( inPlug() );
+	adaptedInPlug()->setInput( adaptors->outPlug() );
+
 	outPlug()->setInput( inPlug() );
 
 	plugDirtiedSignal().connect( boost::bind( &InteractiveRender::plugDirtied, this, ::_1 ) );
@@ -711,6 +724,16 @@ const ScenePlug *InteractiveRender::outPlug() const
 	return getChild<ScenePlug>( g_firstPlugIndex + 3 );
 }
 
+ScenePlug *InteractiveRender::adaptedInPlug()
+{
+	return getChild<ScenePlug>( g_firstPlugIndex + 4 );
+}
+
+const ScenePlug *InteractiveRender::adaptedInPlug() const
+{
+	return getChild<ScenePlug>( g_firstPlugIndex + 4 );
+}
+
 Gaffer::Context *InteractiveRender::getContext()
 {
 	return m_context.get();
@@ -736,31 +759,31 @@ void InteractiveRender::setContext( Gaffer::ContextPtr context )
 void InteractiveRender::plugDirtied( const Gaffer::Plug *plug )
 {
 
-	if( plug == inPlug()->boundPlug() )
+	if( plug == adaptedInPlug()->boundPlug() )
 	{
 		m_dirtyComponents |= SceneGraph::BoundComponent;
 	}
-	else if( plug == inPlug()->transformPlug() )
+	else if( plug == adaptedInPlug()->transformPlug() )
 	{
 		m_dirtyComponents |= SceneGraph::TransformComponent;
 	}
-	else if( plug == inPlug()->attributesPlug() )
+	else if( plug == adaptedInPlug()->attributesPlug() )
 	{
 		m_dirtyComponents |= SceneGraph::AttributesComponent;
 	}
-	else if( plug == inPlug()->objectPlug() )
+	else if( plug == adaptedInPlug()->objectPlug() )
 	{
 		m_dirtyComponents |= SceneGraph::ObjectComponent;
 	}
-	else if( plug == inPlug()->childNamesPlug() )
+	else if( plug == adaptedInPlug()->childNamesPlug() )
 	{
 		m_dirtyComponents |= SceneGraph::ChildNamesComponent;
 	}
-	else if( plug == inPlug()->globalsPlug() )
+	else if( plug == adaptedInPlug()->globalsPlug() )
 	{
 		m_dirtyComponents |= SceneGraph::GlobalsComponent;
 	}
-	else if( plug == inPlug()->setPlug() )
+	else if( plug == adaptedInPlug()->setPlug() )
 	{
 		m_dirtyComponents |= SceneGraph::SetsComponent;
 	}
@@ -770,7 +793,7 @@ void InteractiveRender::plugDirtied( const Gaffer::Plug *plug )
 		m_dirtyComponents = SceneGraph::AllComponents;
 	}
 
-	if( plug == inPlug() ||
+	if( plug == adaptedInPlug() ||
 	    plug == statePlug()
 	)
 	{
@@ -797,8 +820,12 @@ void InteractiveRender::contextChanged( const IECore::InternedString &name )
 
 void InteractiveRender::update()
 {
+	const std::string rendererName = rendererPlug()->getValue();
+
 	updateEffectiveContext();
-	Context::Scope scopedContext( m_effectiveContext.get() );
+	ContextPtr context = new Context( *m_effectiveContext, Context::Borrowed );
+	context->set( g_rendererContextName, rendererName );
+	Context::Scope scopedContext( context.get() );
 
 	const State requiredState = (State)statePlug()->getValue();
 
@@ -817,7 +844,7 @@ void InteractiveRender::update()
 	if( !m_renderer )
 	{
 		m_renderer = IECoreScenePreview::Renderer::create(
-			rendererPlug()->getValue(),
+			rendererName,
 			IECoreScenePreview::Renderer::Interactive
 		);
 	}
@@ -837,7 +864,7 @@ void InteractiveRender::update()
 
 	if( m_dirtyComponents & SceneGraph::GlobalsComponent )
 	{
-		ConstCompoundObjectPtr globals = inPlug()->globalsPlug()->getValue();
+		ConstCompoundObjectPtr globals = adaptedInPlug()->globalsPlug()->getValue();
 		RendererAlgo::outputOptions( globals.get(), m_globals.get(), m_renderer.get() );
 		RendererAlgo::outputOutputs( globals.get(), m_globals.get(), m_renderer.get() );
 		m_globals = globals;
@@ -845,7 +872,7 @@ void InteractiveRender::update()
 
 	if( m_dirtyComponents & SceneGraph::SetsComponent )
 	{
-		if( m_renderSets.update( inPlug() ) & RendererAlgo::RenderSets::RenderSetsChanged )
+		if( m_renderSets.update( adaptedInPlug() ) & RendererAlgo::RenderSets::RenderSetsChanged )
 		{
 			m_dirtyComponents |= SceneGraph::RenderSetsComponent;
 		}
@@ -863,7 +890,7 @@ void InteractiveRender::update()
 			// if we know they won't affect the camera.
 			sceneGraph->clear();
 		}
-		SceneGraphUpdateTask *task = new( tbb::task::allocate_root() ) SceneGraphUpdateTask( this, sceneGraph, (SceneGraph::Type)i, m_dirtyComponents, SceneGraph::NoComponent, ScenePlug::ScenePath() );
+		SceneGraphUpdateTask *task = new( tbb::task::allocate_root() ) SceneGraphUpdateTask( this, sceneGraph, (SceneGraph::Type)i, m_dirtyComponents, SceneGraph::NoComponent, context.get(), ScenePlug::ScenePath() );
 		tbb::task::spawn_root_and_wait( *task );
 	}
 
@@ -915,9 +942,9 @@ void InteractiveRender::updateDefaultCamera()
 		return;
 	}
 
-	CameraPtr defaultCamera = SceneAlgo::camera( inPlug(), m_globals.get() );
+	CameraPtr defaultCamera = SceneAlgo::camera( adaptedInPlug(), m_globals.get() );
 	StringDataPtr name = new StringData( "gaffer:defaultCamera" );
-	IECoreScenePreview::Renderer::AttributesInterfacePtr defaultAttributes = m_renderer->attributes( inPlug()->attributesPlug()->defaultValue() );
+	IECoreScenePreview::Renderer::AttributesInterfacePtr defaultAttributes = m_renderer->attributes( adaptedInPlug()->attributesPlug()->defaultValue() );
 	m_defaultCamera = m_renderer->camera( name->readable(), defaultCamera.get(), defaultAttributes.get() );
 	m_renderer->option( "camera", name.get() );
 }
@@ -937,7 +964,7 @@ void InteractiveRender::stop()
 	m_defaultCamera = NULL;
 	m_renderer = NULL;
 
-	m_globals = inPlug()->globalsPlug()->defaultValue();
+	m_globals = adaptedInPlug()->globalsPlug()->defaultValue();
 	m_renderSets.clear();
 
 	m_dirtyComponents = SceneGraph::AllComponents;
