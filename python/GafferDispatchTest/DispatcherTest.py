@@ -1379,7 +1379,12 @@ class DispatcherTest( GafferTest.TestCase ) :
 
 		t = time.clock()
 		d.dispatch( [ lastTask ] )
-		self.assertLess( time.clock() - t, 4 )
+
+		timeLimit = 4
+		if Gaffer.isDebug():
+			timeLimit *= 2
+
+ 		self.assertLess( time.clock() - t, timeLimit )
 
 if __name__ == "__main__":
 	unittest.main()

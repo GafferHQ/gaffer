@@ -85,7 +85,7 @@ options.Add(
 options.Add(
 	"CXXFLAGS",
 	"The extra flags to pass to the C++ compiler during compilation.",
-	[ "-pipe", "-Wall", "-Werror", "-O3" ]
+	[ "-pipe", "-Wall", "-Werror" ]
 )
 
 options.Add(
@@ -344,9 +344,9 @@ elif env["PLATFORM"] == "posix" :
 env.Append( CXXFLAGS = [ "-std=$CXXSTD" ] )
 
 if env["DEBUG"] :
-	env.Append( CXXFLAGS = [ "-g" ] )
+	env.Append( CXXFLAGS = [ "-g", "-O0" ] )
 else :
-	env.Append( CXXFLAGS = [ "-DNDEBUG", "-DBOOST_DISABLE_ASSERTS" ] )
+	env.Append( CXXFLAGS = [ "-DNDEBUG", "-DBOOST_DISABLE_ASSERTS" , "-O3" ] )
 
 if env["BUILD_CACHEDIR"] != "" :
 	CacheDir( env["BUILD_CACHEDIR"] )
