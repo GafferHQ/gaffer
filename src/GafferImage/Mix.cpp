@@ -261,7 +261,14 @@ void Mix::hashChannelData( const GafferImage::ImagePlug *output, const Gaffer::C
 			continue;
 		}
 
-		IECore::ConstStringVectorDataPtr channelNamesData = (*it)->channelNamesPlug()->getValue();
+		IECore::ConstStringVectorDataPtr channelNamesData;
+		Box2i dataWindow;
+		{
+			ImagePlug::GlobalScope c( Context::current() );
+			channelNamesData = (*it)->channelNamesPlug()->getValue();
+			dataWindow = (*it)->dataWindowPlug()->getValue();
+		}
+
 		const std::vector<std::string> &channelNames = channelNamesData->readable();
 
 		if( ImageAlgo::channelExists( channelNames, channelName ) )
@@ -280,18 +287,26 @@ void Mix::hashChannelData( const GafferImage::ImagePlug *output, const Gaffer::C
 		// input data windows, we may be using/revealing the invalid parts of a tile. We
 		// deal with this in computeChannelData() by treating the invalid parts as black,
 		// and must therefore hash in the valid bound here to take that into account.
-		const Box2i validBound = boxIntersection( tileBound, (*it)->dataWindowPlug()->getValue() );
+		const Box2i validBound = boxIntersection( tileBound, dataWindow );
 		h.append( validBound );
+	}
+
+	IECore::ConstStringVectorDataPtr maskChannelNamesData;
+	Box2i maskDataWindow;
+	{
+		ImagePlug::GlobalScope c( Context::current() );
+		maskChannelNamesData = maskPlug()->channelNamesPlug()->getValue();
+		maskDataWindow = maskPlug()->dataWindowPlug()->getValue();
 	}
 
 
 	const std::string &maskChannel = maskChannelPlug()->getValue();
-	if( maskPlug()->getInput<ValuePlug>() && ImageAlgo::channelExists( maskPlug(), maskChannel ) )
+	if( maskPlug()->getInput<ValuePlug>() && ImageAlgo::channelExists( maskChannelNamesData->readable(), maskChannel ) )
 	{
 		h.append( maskPlug()->channelDataHash( maskChannel, tileOrigin ) );
 	}
 
-	const Box2i maskValidBound = boxIntersection( tileBound, maskPlug()->dataWindowPlug()->getValue() );
+	const Box2i maskValidBound = boxIntersection( tileBound, maskDataWindow );
 	h.append( maskValidBound );
 }
 
@@ -311,13 +326,21 @@ IECore::ConstFloatVectorDataPtr Mix::computeChannelData( const std::string &chan
 
 	const Box2i tileBound( tileOrigin, tileOrigin + V2i( ImagePlug::tileSize() ) );
 
+	IECore::ConstStringVectorDataPtr maskChannelNamesData;
+	Box2i maskDataWindow;
+	{
+		ImagePlug::GlobalScope c( Context::current() );
+		maskChannelNamesData = maskPlug()->channelNamesPlug()->getValue();
+		maskDataWindow = maskPlug()->dataWindowPlug()->getValue();
+	}
+
 	const std::string &maskChannel = maskChannelPlug()->getValue();
 	ConstFloatVectorDataPtr maskData = NULL;
 	Box2i maskValidBound;
-	if( maskPlug()->getInput<ValuePlug>() && ImageAlgo::channelExists( maskPlug(), maskChannel ) )
+	if( maskPlug()->getInput<ValuePlug>() && ImageAlgo::channelExists( maskChannelNamesData->readable(), maskChannel ) )
 	{
 		maskData = maskPlug()->channelData( maskChannel, tileOrigin );
-		maskValidBound = boxIntersection( tileBound, maskPlug()->dataWindowPlug()->getValue() );
+		maskValidBound = boxIntersection( tileBound, maskDataWindow );
 	}
 
 	ConstFloatVectorDataPtr channelData[2];
@@ -326,14 +349,21 @@ IECore::ConstFloatVectorDataPtr Mix::computeChannelData( const std::string &chan
 	int i = 0;
 	for( ImagePlugIterator it( inPlugs() ); !it.done(); ++it,++i )
 	{
-		IECore::ConstStringVectorDataPtr channelNamesData = (*it)->channelNamesPlug()->getValue();
+		IECore::ConstStringVectorDataPtr channelNamesData;
+		Box2i dataWindow;
+		{
+			ImagePlug::GlobalScope c( Context::current() );
+			channelNamesData = (*it)->channelNamesPlug()->getValue();
+			dataWindow = (*it)->dataWindowPlug()->getValue();
+		}
+
 		const std::vector<std::string> &channelNames = channelNamesData->readable();
 
 
 		if( ImageAlgo::channelExists( channelNames, channelName ) )
 		{
 			channelData[i] = (*it)->channelDataPlug()->getValue();
-			validBound[i] = boxIntersection( tileBound, (*it)->dataWindowPlug()->getValue() );
+			validBound[i] = boxIntersection( tileBound, dataWindow );
 		}
 		else
 		{

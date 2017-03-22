@@ -134,15 +134,19 @@ void ImageProcessor::hash( const Gaffer::ValuePlug *output, const Gaffer::Contex
 
 	// we're computing a component of the output image. if we're disabled,
 	// then we wish to pass through the hash from the input.
-	bool passThrough = !enabled();
-	if( !passThrough )
+	bool passThrough;
 	{
-		// even if we're enabled at the image level, the channel might be disabled
-		// at the channelData level.
-		if( output == imagePlug->channelDataPlug() )
+		ImagePlug::GlobalScope c( context );
+		passThrough = !enabled();
+		if( !passThrough )
 		{
-			const std::string &channel = context->get<std::string>( ImagePlug::channelNameContextName );
-			passThrough = !channelEnabled( channel );
+			// even if we're enabled at the image level, the channel might be disabled
+			// at the channelData level.
+			if( output == imagePlug->channelDataPlug() )
+			{
+				const std::string &channel = context->get<std::string>( ImagePlug::channelNameContextName );
+				passThrough = !channelEnabled( channel );
+			}
 		}
 	}
 
@@ -166,15 +170,19 @@ void ImageProcessor::compute( ValuePlug *output, const Context *context ) const
 		return;
 	}
 
-	bool passThrough = !enabled();
-	if( !passThrough )
+	bool passThrough;
 	{
-		// even if we're enabled at the image level, the channel might be disabled
-		// at the channelData level.
-		if( output == imagePlug->channelDataPlug() )
+		ImagePlug::GlobalScope c( context );
+		passThrough = !enabled();
+		if( !passThrough )
 		{
-			const std::string &channel = context->get<std::string>( ImagePlug::channelNameContextName );
-			passThrough = !channelEnabled( channel );
+			// even if we're enabled at the image level, the channel might be disabled
+			// at the channelData level.
+			if( output == imagePlug->channelDataPlug() )
+			{
+				const std::string &channel = context->get<std::string>( ImagePlug::channelNameContextName );
+				passThrough = !channelEnabled( channel );
+			}
 		}
 	}
 

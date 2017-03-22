@@ -311,7 +311,11 @@ void Warp::hash( const Gaffer::ValuePlug *output, const Gaffer::Context *context
 		h.append( useDerivatives );
 		if( useDerivatives )
 		{
-			const Box2i dataWindow = outPlug()->dataWindowPlug()->getValue();
+			Box2i dataWindow;
+			{
+				ImagePlug::GlobalScope c( context );
+				dataWindow = outPlug()->dataWindowPlug()->getValue();
+			}
 			
 			hashEngineIfTileValid( *tmpContext, enginePlug(), dataWindow,
 				tileOrigin + V2i( ImagePlug::tileSize(), 0 ), h );
@@ -347,7 +351,12 @@ void Warp::compute( Gaffer::ValuePlug *output, const Gaffer::Context *context ) 
 	}
 	else if( output == sampleRegionsPlug() )
 	{
-		const Box2i dataWindow = outPlug()->dataWindowPlug()->getValue();
+		Box2i dataWindow;
+		{
+			ImagePlug::GlobalScope c( context );
+			dataWindow = outPlug()->dataWindowPlug()->getValue();
+		}
+
 		const OIIO::Filter2D *filter = FilterAlgo::acquireFilter( filterPlug()->getValue() );
 		const float filterWidth = filter->width();
 
@@ -603,7 +612,10 @@ void Warp::hashChannelData( const GafferImage::ImagePlug *parent, const Gaffer::
 	);
 	sampler.hash( h );
 
-	outPlug()->dataWindowPlug()->hash( h );
+	{
+		ImagePlug::GlobalScope c( context );
+		outPlug()->dataWindowPlug()->hash( h );
+	}
 }
 
 
@@ -634,7 +646,12 @@ IECore::ConstFloatVectorDataPtr Warp::computeChannelData( const std::string &cha
 	const std::vector<V2f> &pixelInputPositions = sampleRegions->member< V2fVectorData >( g_pixelInputPositionsName, true )->readable();
 	const std::vector<V2f> &pixelInputDerivatives = sampleRegions->member< V2fVectorData >( g_pixelInputDerivativesName, true )->readable();
 
-	const Box2i dataWindow = outPlug()->dataWindowPlug()->getValue();
+	Box2i dataWindow;
+	{
+		ImagePlug::GlobalScope c( context );
+		dataWindow = outPlug()->dataWindowPlug()->getValue();
+	}
+
 	const Box2i validPixelsRelativeToTile( dataWindow.min - tileOrigin, dataWindow.max - tileOrigin );
 
 	Sampler sampler(

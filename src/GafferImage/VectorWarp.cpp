@@ -184,9 +184,16 @@ void VectorWarp::hashEngine( const Imath::V2i &tileOrigin, const Gaffer::Context
 	Warp::hashEngine( tileOrigin, context, h );
 
 	h.append( tileOrigin );
-	vectorPlug()->dataWindowPlug()->hash( h );
 
-	ConstStringVectorDataPtr channelNames = vectorPlug()->channelNamesPlug()->getValue();
+	ConstStringVectorDataPtr channelNames;
+
+	{
+		ImagePlug::GlobalScope c( context );
+		channelNames = vectorPlug()->channelNamesPlug()->getValue();
+		vectorPlug()->dataWindowPlug()->hash( h );
+		inPlug()->formatPlug()->hash( h );
+	}
+
 
 	ContextPtr tmpContext = new Context( *context, Context::Borrowed );
 	Context::Scope scopedContext( tmpContext.get() );
@@ -209,8 +216,6 @@ void VectorWarp::hashEngine( const Imath::V2i &tileOrigin, const Gaffer::Context
 		vectorPlug()->channelDataPlug()->hash( h );
 	}
 
-	inPlug()->formatPlug()->hash( h );
-
 	vectorModePlug()->hash( h );
 	vectorUnitsPlug()->hash( h );
 }
@@ -218,9 +223,18 @@ void VectorWarp::hashEngine( const Imath::V2i &tileOrigin, const Gaffer::Context
 const Warp::Engine *VectorWarp::computeEngine( const Imath::V2i &tileOrigin, const Gaffer::Context *context ) const
 {
 	const Box2i tileBound( tileOrigin, tileOrigin + V2i( ImagePlug::tileSize() ) );
-	const Box2i validTileBound = BufferAlgo::intersection( tileBound, vectorPlug()->dataWindowPlug()->getValue() );
 
-	ConstStringVectorDataPtr channelNames = vectorPlug()->channelNamesPlug()->getValue();
+	
+	Box2i validTileBound;
+	ConstStringVectorDataPtr channelNames;
+	Box2i displayWindow;
+
+	{
+		ImagePlug::GlobalScope c( context );
+		validTileBound = BufferAlgo::intersection( tileBound, vectorPlug()->dataWindowPlug()->getValue() );
+		channelNames = vectorPlug()->channelNamesPlug()->getValue();
+		displayWindow = inPlug()->formatPlug()->getValue().getDisplayWindow();
+	}
 
 	ContextPtr tmpContext = new Context( *context, Context::Borrowed );
 	Context::Scope scopedContext( tmpContext.get() );
@@ -247,7 +261,7 @@ const Warp::Engine *VectorWarp::computeEngine( const Imath::V2i &tileOrigin, con
 	}
 
 	return new Engine(
-		inPlug()->formatPlug()->getValue().getDisplayWindow(),
+		displayWindow,
 		tileBound,
 		validTileBound,
 		xData,

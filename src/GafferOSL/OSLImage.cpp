@@ -238,9 +238,15 @@ void OSLImage::hashShading( const Gaffer::Context *context, IECore::MurmurHash &
 {
 	const V2i tileOrigin = context->get<V2i>( ImagePlug::tileOriginContextName );
 	h.append( tileOrigin );
-	inPlug()->formatPlug()->hash( h );
 
-	ConstStringVectorDataPtr channelNamesData = inPlug()->channelNamesPlug()->getValue();
+	ConstStringVectorDataPtr channelNamesData;
+
+	{
+		ImagePlug::GlobalScope c( context );
+		inPlug()->formatPlug()->hash( h );
+		channelNamesData = inPlug()->channelNamesPlug()->getValue();
+	}
+
 	const vector<string> &channelNames = channelNamesData->readable();
 	for( vector<string>::const_iterator it = channelNames.begin(), eIt = channelNames.end(); it != eIt; ++it )
 	{
@@ -268,7 +274,13 @@ IECore::ConstCompoundDataPtr OSLImage::computeShading( const Gaffer::Context *co
 	}
 
 	const V2i tileOrigin = context->get<V2i>( ImagePlug::tileOriginContextName );
-	const Format format = inPlug()->formatPlug()->getValue();
+	Format format;
+	ConstStringVectorDataPtr channelNamesData;
+	{
+		ImagePlug::GlobalScope c( context );
+		format = inPlug()->formatPlug()->getValue();
+		channelNamesData = inPlug()->channelNamesPlug()->getValue();
+	}
 
 	CompoundDataPtr shadingPoints = new CompoundData();
 
@@ -309,7 +321,6 @@ IECore::ConstCompoundDataPtr OSLImage::computeShading( const Gaffer::Context *co
 	shadingPoints->writable()["u"] = uData;
 	shadingPoints->writable()["v"] = vData;
 
-	ConstStringVectorDataPtr channelNamesData = inPlug()->channelNamesPlug()->getValue();
 	const vector<string> &channelNames = channelNamesData->readable();
 	for( vector<string>::const_iterator it = channelNames.begin(), eIt = channelNames.end(); it != eIt; ++it )
 	{

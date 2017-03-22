@@ -454,7 +454,10 @@ void Resample::hashChannelData( const GafferImage::ImagePlug *parent, const Gaff
 	ImageProcessor::hashChannelData( parent, context, h );
 
 	V2f ratio, offset;
-	ratioAndOffset( matrixPlug()->getValue(), ratio, offset );
+	{
+		ImagePlug::GlobalScope c( context );
+		ratioAndOffset( matrixPlug()->getValue(), ratio, offset );
+	}
 
 	V2f inputFilterScale;
 	const OIIO::Filter2D *filter = filterAndScale( filterPlug()->getValue(), ratio, inputFilterScale );
@@ -494,7 +497,10 @@ void Resample::hashChannelData( const GafferImage::ImagePlug *parent, const Gaff
 IECore::ConstFloatVectorDataPtr Resample::computeChannelData( const std::string &channelName, const Imath::V2i &tileOrigin, const Gaffer::Context *context, const ImagePlug *parent ) const
 {
 	V2f ratio, offset;
-	ratioAndOffset( matrixPlug()->getValue(), ratio, offset );
+	{
+		ImagePlug::GlobalScope c( context );
+		ratioAndOffset( matrixPlug()->getValue(), ratio, offset );
+	}
 
 	V2f inputFilterScale;
 	const OIIO::Filter2D *filter = filterAndScale( filterPlug()->getValue(), ratio, inputFilterScale );

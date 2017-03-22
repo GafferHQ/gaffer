@@ -554,13 +554,20 @@ bool Text::affectsShapeChannelData( const Gaffer::Plug *input ) const
 void Text::hashShapeChannelData( const Imath::V2i &tileOrigin, const Gaffer::Context *context, IECore::MurmurHash &h ) const
 {
 	Shape::hashShapeChannelData( tileOrigin, context, h );
-	layoutPlug()->hash( h );
+	{
+		ImagePlug::GlobalScope c( context );
+		layoutPlug()->hash( h );
+	}
 	h.append( tileOrigin );
 }
 
 IECore::ConstFloatVectorDataPtr Text::computeShapeChannelData(  const Imath::V2i &tileOrigin, const Gaffer::Context *context ) const
 {
-	ConstCompoundObjectPtr layout = layoutPlug()->getValue();
+	ConstCompoundObjectPtr layout;
+	{
+		ImagePlug::GlobalScope c( context );
+		layout = layoutPlug()->getValue();
+	}
 
 	const vector<char> &characters = layout->member<CharVectorData>( "characters" )->readable();
 	const vector<M33f> &transforms = layout->member<M33fVectorData>( "transforms" )->readable();

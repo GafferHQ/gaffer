@@ -204,7 +204,15 @@ void Merge::hashChannelData( const GafferImage::ImagePlug *output, const Gaffer:
 			continue;
 		}
 
-		IECore::ConstStringVectorDataPtr channelNamesData = (*it)->channelNamesPlug()->getValue();
+		IECore::ConstStringVectorDataPtr channelNamesData;
+		Box2i dataWindow;
+
+		{
+			ImagePlug::GlobalScope c( context );
+			channelNamesData = (*it)->channelNamesPlug()->getValue();
+			dataWindow = (*it)->dataWindowPlug()->getValue();
+		}
+		
 		const std::vector<std::string> &channelNames = channelNamesData->readable();
 
 		if( ImageAlgo::channelExists( channelNames, channelName ) )
@@ -227,7 +235,7 @@ void Merge::hashChannelData( const GafferImage::ImagePlug *output, const Gaffer:
 		// input data windows, we may be using/revealing the invalid parts of a tile. We
 		// deal with this in computeChannelData() by treating the invalid parts as black,
 		// and must therefore hash in the valid bound here to take that into account.
-		const Box2i validBound = boxIntersection( tileBound, (*it)->dataWindowPlug()->getValue() );
+		const Box2i validBound = boxIntersection( tileBound, dataWindow );
 		h.append( validBound );
 	}
 
@@ -287,7 +295,14 @@ IECore::ConstFloatVectorDataPtr Merge::merge( F f, const std::string &channelNam
 			continue;
 		}
 
-		IECore::ConstStringVectorDataPtr channelNamesData = (*it)->channelNamesPlug()->getValue();
+		IECore::ConstStringVectorDataPtr channelNamesData;
+		Box2i dataWindow;
+		{
+			ImagePlug::GlobalScope c( Context::current() );
+			channelNamesData = (*it)->channelNamesPlug()->getValue();
+			dataWindow = (*it)->dataWindowPlug()->getValue();
+		}
+
 		const std::vector<std::string> &channelNames = channelNamesData->readable();
 
 		ConstFloatVectorDataPtr channelData;
@@ -311,7 +326,7 @@ IECore::ConstFloatVectorDataPtr Merge::merge( F f, const std::string &channelNam
 			alphaData = ImagePlug::blackTile();
 		}
 
-		const Box2i validBound = boxIntersection( tileBound, (*it)->dataWindowPlug()->getValue() );
+		const Box2i validBound = boxIntersection( tileBound, dataWindow );
 
 		if( !resultData )
 		{
