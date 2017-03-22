@@ -303,6 +303,28 @@ const Gaffer::FloatVectorDataPlug *ImagePlug::channelDataPlug() const
 	return getChild<FloatVectorDataPlug>( g_firstPlugIndex+4 );
 }
 
+ImagePlug::GlobalScope::GlobalScope( const Gaffer::Context *context )
+	:   EditableScope( context )
+{
+	remove( channelNameContextName );
+	remove( tileOriginContextName );
+}
+
+ImagePlug::ChannelDataScope::ChannelDataScope( const Gaffer::Context *context )
+	:   EditableScope( context )
+{
+}
+
+void ImagePlug::ChannelDataScope::setTileOrigin( const V2i &tileOrigin )
+{
+	set( tileOriginContextName, tileOrigin );
+}
+
+void ImagePlug::ChannelDataScope::setChannelName( const std::string &channelName )
+{
+	set( channelNameContextName, channelName );
+}
+
 IECore::ConstFloatVectorDataPtr ImagePlug::channelData( const std::string &channelName, const Imath::V2i &tile ) const
 {
 	if( direction()==In && !getInput<Plug>() )
