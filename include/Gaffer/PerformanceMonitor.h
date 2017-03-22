@@ -89,6 +89,8 @@ class PerformanceMonitor : public Monitor
 
 		const StatisticsMap &allStatistics() const;
 		const Statistics &plugStatistics( const Plug *plug ) const;
+		const Statistics &combinedStatistics() const;
+
 
 	protected :
 
@@ -117,6 +119,7 @@ class PerformanceMonitor : public Monitor
 		// Then when we want to query it, we collate it into m_statistics.
 		void collate() const;
 		mutable StatisticsMap m_statistics;
+		mutable Statistics m_combinedStatistics;
 
 };
 

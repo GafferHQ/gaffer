@@ -180,6 +180,7 @@ void GafferBindings::bindMonitor()
 		scope s = class_<PerformanceMonitor, bases<Monitor>, boost::noncopyable >( "PerformanceMonitor" )
 			.def( "allStatistics", &allStatistics<PerformanceMonitor> )
 			.def( "plugStatistics", &PerformanceMonitor::plugStatistics, return_value_policy<copy_const_reference>() )
+			.def( "combinedStatistics", &PerformanceMonitor::combinedStatistics, return_value_policy<copy_const_reference>() )
 		;
 
 		class_<PerformanceMonitor::Statistics>( "Statistics" )
