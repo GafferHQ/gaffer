@@ -120,7 +120,7 @@ void Switch<BaseType>::setup( const Plug *plug )
 	}
 
 	PlugPtr inElement = plug->createCounterpart( "in0", Plug::In );
-	MetadataAlgo::copyColors( plug , inElement.get() , MetadataAlgo::KeepExisting );
+	MetadataAlgo::copyColors( plug , inElement.get() , /* overwrite = */ false  );
 	inElement->setFlags( Plug::Dynamic | Plug::Serialisable, true );
 	ArrayPlugPtr in = new ArrayPlug(
 		"in",
@@ -134,7 +134,7 @@ void Switch<BaseType>::setup( const Plug *plug )
 
 	PlugPtr out = plug->createCounterpart( "out", Plug::Out );
 	out->setFlags( Plug::Dynamic | Plug::Serialisable, true );
-	MetadataAlgo::copyColors( plug , out.get() , MetadataAlgo::KeepExisting );
+	MetadataAlgo::copyColors( plug , out.get() , /* overwrite = */ false  );
 	BaseType::addChild( out );
 }
 

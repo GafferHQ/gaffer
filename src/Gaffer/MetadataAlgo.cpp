@@ -65,9 +65,9 @@ size_t findNth( const std::string &s, char c, int n )
 IECore::InternedString g_connectionColorKey( "connectionGadget:color" );
 IECore::InternedString g_noduleColorKey( "nodule:color" );
 
-void copy( const Gaffer::GraphComponent *src , Gaffer::GraphComponent *dst , IECore::InternedString key , Gaffer::MetadataAlgo::Overwrite overwrite )
+void copy( const Gaffer::GraphComponent *src , Gaffer::GraphComponent *dst , IECore::InternedString key , bool overwrite )
 {
-	if ( overwrite == Gaffer::MetadataAlgo::KeepExisting && Gaffer::Metadata::value<IECore::Data>( dst, key ) )
+	if ( !overwrite && Gaffer::Metadata::value<IECore::Data>( dst, key ) )
 	{
 		return;
 	}
@@ -216,7 +216,7 @@ void copy( const GraphComponent *from, GraphComponent *to, const StringAlgo::Mat
 	}
 }
 
-void copyColors( const Gaffer::Plug *srcPlug , Gaffer::Plug *dstPlug, Overwrite overwrite )
+void copyColors( const Gaffer::Plug *srcPlug , Gaffer::Plug *dstPlug, bool overwrite )
 {
 	::copy(srcPlug, dstPlug, g_connectionColorKey, overwrite);
 	::copy(srcPlug, dstPlug, g_noduleColorKey, overwrite);

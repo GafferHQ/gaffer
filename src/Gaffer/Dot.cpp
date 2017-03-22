@@ -77,8 +77,8 @@ void Dot::setup( const Plug *plug )
 	Gaffer::PlugPtr in = plug->createCounterpart( g_inPlugName, Plug::In );
 	Gaffer::PlugPtr out = plug->createCounterpart( g_outPlugName, Plug::Out );
 
-	MetadataAlgo::copyColors( originalPlug , in.get() , MetadataAlgo::KeepExisting );
-	MetadataAlgo::copyColors( originalPlug , out.get() , MetadataAlgo::KeepExisting );
+	MetadataAlgo::copyColors( originalPlug , in.get() , /* overwrite = */ false );
+	MetadataAlgo::copyColors( originalPlug , out.get() , /* overwrite = */ false );
 
 	in->setFlags( Plug::Dynamic | Plug::Serialisable, true );
 	out->setFlags( Plug::Dynamic | Plug::Serialisable, true );

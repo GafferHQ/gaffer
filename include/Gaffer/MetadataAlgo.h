@@ -100,15 +100,8 @@ bool ancestorAffectedByChange( const Plug *plug, IECore::TypeId changedNodeTypeI
 /// Copies metadata from one target to another. The exclude pattern is used with StringAlgo::matchMultiple().
 void copy( const GraphComponent *from, GraphComponent *to, const StringAlgo::MatchPattern &exclude = "", bool persistentOnly = true, bool persistent = true );
 
-///
-enum Overwrite
-{
-	KeepExisting,
-	OverwriteExisting
-};
-
 /// Copy nodule and noodle color meta data from srcPlug to dstPlug
-void copyColors( const Gaffer::Plug *srcPlug , Gaffer::Plug *dstPlug, Overwrite overwrite );
+void copyColors( const Gaffer::Plug *srcPlug , Gaffer::Plug *dstPlug, bool overwrite );
 
 } // namespace MetadataAlgo
 
