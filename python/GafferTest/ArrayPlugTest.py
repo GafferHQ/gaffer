@@ -370,11 +370,22 @@ class ArrayPlugTest( GafferTest.TestCase ) :
 	def testArrayPlugCopiesColors( self ) :
 		n = Gaffer.Node()
 
+		n2 = Gaffer.Node()
+
+		n2.addChild(Gaffer.IntPlug("test"))
+
+		connectionColor = IECore.Color3f( 0.1 , 0.2 , 0.3 )
+		noodleColor = IECore.Color3f( 0.4, 0.5 , 0.6 )
+
 		element = Gaffer.IntPlug()
-		Gaffer.Metadata.registerValue(element, "foo", "baz")
+		Gaffer.Metadata.registerValue( element, "connectionGadget:color", connectionColor )
+		Gaffer.Metadata.registerValue( element, "nodule:color", noodleColor )
 
 		n["a"] = Gaffer.ArrayPlug( element = element )
-		Gaffer.Metadata.registerValue(n["a"], "foo", "bar")
+		n["a"][0].setInput(n2["test"])
+
+		self.assertEqual( Gaffer.Metadata.value( n["a"][1], "connectionGadget:color" ), connectionColor )
+		self.assertEqual( Gaffer.Metadata.value( n["a"][1], "nodule:color" ), noodleColor )
 
 	def testOnlyOneChildType( self ) :
 
