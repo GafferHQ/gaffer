@@ -65,9 +65,9 @@ ImageStats::ImageStats( const std::string &name )
 		)
 	);
 	addChild( new Box2iPlug( "regionOfInterest", Gaffer::Plug::In ) );
-	addChild( new Color4fPlug( "average", Gaffer::Plug::Out ) );
-	addChild( new Color4fPlug( "min", Gaffer::Plug::Out ) );
-	addChild( new Color4fPlug( "max", Gaffer::Plug::Out ) );
+	addChild( new Color4fPlug( "average", Gaffer::Plug::Out, Imath::Color4f( 0, 0, 0, 1 ) ) );
+	addChild( new Color4fPlug( "min", Gaffer::Plug::Out, Imath::Color4f( 0, 0, 0, 1 ) ) );
+	addChild( new Color4fPlug( "max", Gaffer::Plug::Out, Imath::Color4f( 0, 0, 0, 1 ) ) );
 }
 
 ImageStats::~ImageStats()
@@ -220,18 +220,7 @@ void ImageStats::hash( const ValuePlug *output, const Context *context, IECore::
 	}
 
 	// If our node is not enabled then we just append the default value that we will give the plug.
-	if(
-			output == maxPlug()->getChild(3) ||
-			output == minPlug()->getChild(3) ||
-			output == averagePlug()->getChild(3)
-	  )
-	{
-		h.append( 0 );
-	}
-	else
-	{
-		h.append( 1 );
-	}
+	h.append( static_cast<const FloatPlug *>( output )->defaultValue() );
 }
 
 void ImageStats::channelNameFromOutput( const ValuePlug *output, std::string &channelName ) const
@@ -266,28 +255,12 @@ void ImageStats::channelNameFromOutput( const ValuePlug *output, std::string &ch
 	return;
 }
 
-void ImageStats::setOutputToDefault( FloatPlug *output ) const
-{
-	if (
-			output == minPlug()->getChild(3) ||
-			output == maxPlug()->getChild(3) ||
-			output == averagePlug()->getChild(3)
-	   )
-	{
-		output->setValue( 1. );
-	}
-	else
-	{
-		output->setValue( 0. );
-	}
-}
-
 void ImageStats::compute( ValuePlug *output, const Context *context ) const
 {
 	const Imath::Box2i &regionOfInterest( regionOfInterestPlug()->getValue() );
 	if( regionOfInterest.isEmpty() )
 	{
-		setOutputToDefault( static_cast<FloatPlug*>( output ) );
+		output->setToDefault();
 		return;
 	}
 
@@ -295,7 +268,7 @@ void ImageStats::compute( ValuePlug *output, const Context *context ) const
 	channelNameFromOutput( output, channelName );
 	if ( channelName.empty() )
 	{
-		setOutputToDefault( static_cast<FloatPlug*>( output ) );
+		output->setToDefault();
 		return;
 	}
 

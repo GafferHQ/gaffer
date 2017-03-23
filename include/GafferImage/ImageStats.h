@@ -90,9 +90,6 @@ class ImageStats : public Gaffer::ComputeNode
 		/// For more information on this, please see ChannelMaskPlug::removeDuplicateIndices().
 		void channelNameFromOutput( const Gaffer::ValuePlug *output, std::string &channelName ) const;
 
-		/// A convenience function to just set the plug to 0 or 1 depending on what it's index is.
-		void setOutputToDefault( Gaffer::FloatPlug *output ) const;
-
 		/// Implemented to initialize the default format settings if they don't exist already.
 		void parentChanging( Gaffer::GraphComponent *newParent );
 
