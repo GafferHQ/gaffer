@@ -93,6 +93,7 @@ ImageStats::ImageStats( const std::string &name )
 	defaultChannels.push_back( "R" );
 	defaultChannels.push_back( "G" );
 	defaultChannels.push_back( "B" );
+	defaultChannels.push_back( "A" );
 	addChild( new StringVectorDataPlug( "channels", Plug::In, defaultChannelsData ) );
 
 	addChild( new Box2iPlug( "regionOfInterest", Gaffer::Plug::In ) );
