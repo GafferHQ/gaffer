@@ -665,7 +665,7 @@ void InteractiveRender::construct( const IECore::InternedString &rendererType )
 	addChild( new StringPlug( rendererType.string().empty() ? "renderer" : "__renderer", Plug::In, rendererType.string() ) );
 	addChild( new IntPlug( "state", Plug::In, Stopped, Stopped, Paused, Plug::Default & ~Plug::Serialisable ) );
 	addChild( new ScenePlug( "out", Plug::Out, Plug::Default & ~Plug::Serialisable ) );
-	addChild( new ScenePlug( "__adaptedIn" ) );
+	addChild( new ScenePlug( "__adaptedIn", Plug::In, Plug::Default & ~Plug::Serialisable ) );
 
 	SceneProcessorPtr adaptors = createAdaptors();
 	setChild( "__adaptors", adaptors );

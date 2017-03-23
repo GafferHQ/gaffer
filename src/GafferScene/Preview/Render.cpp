@@ -89,7 +89,7 @@ void Render::construct( const IECore::InternedString &rendererType )
 	addChild( new IntPlug( "mode", Plug::In, RenderMode, RenderMode, SceneDescriptionMode ) );
 	addChild( new StringPlug( "fileName" ) );
 	addChild( new ScenePlug( "out", Plug::Out, Plug::Default & ~Plug::Serialisable ) );
-	addChild( new ScenePlug( "__adaptedIn" ) );
+	addChild( new ScenePlug( "__adaptedIn", Plug::In, Plug::Default & ~Plug::Serialisable ) );
 
 	SceneProcessorPtr adaptors = createAdaptors();
 	setChild( "__adaptors", adaptors );
