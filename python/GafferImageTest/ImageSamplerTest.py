@@ -76,5 +76,19 @@ class ImageSamplerTest( GafferImageTest.ImageTestCase ) :
 
 		self.assertEqual( len( hashes ), 75 * 75 )
 
+	def testChannelsPlug( self ) :
+
+		constant = GafferImage.Constant()
+		constant["layer"].setValue( "diffuse" )
+		constant["color"].setValue( IECore.Color4f( 1, 0.5, 0.25, 1 ) )
+
+		sampler = GafferImage.ImageSampler()
+		sampler["image"].setInput( constant["out"] )
+		sampler["pixel"].setValue( IECore.V2f( 10.5 ) )
+		self.assertEqual( sampler["color"].getValue(), IECore.Color4f( 0, 0, 0, 0 ) )
+
+		sampler["channels"].setValue( IECore.StringVectorData( [ "diffuse.R", "diffuse.G", "diffuse.B", "diffuse.A" ] ) )
+		self.assertEqual( sampler["color"].getValue(), IECore.Color4f( 1, 0.5, 0.25, 1 ) )
+
 if __name__ == "__main__":
 	unittest.main()
