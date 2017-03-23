@@ -42,7 +42,6 @@
 #include "Gaffer/BoxPlug.h"
 
 #include "GafferImage/ImagePlug.h"
-#include "GafferImage/ChannelMaskPlug.h"
 
 namespace GafferImage
 {
@@ -63,8 +62,8 @@ class ImageStats : public Gaffer::ComputeNode
 
 		GafferImage::ImagePlug *inPlug();
 		const GafferImage::ImagePlug *inPlug() const;
-		ChannelMaskPlug *channelsPlug();
-		const ChannelMaskPlug *channelsPlug() const;
+		Gaffer::StringVectorDataPlug *channelsPlug();
+		const Gaffer::StringVectorDataPlug *channelsPlug() const;
 		Gaffer::Box2iPlug *regionOfInterestPlug();
 		const Gaffer::Box2iPlug *regionOfInterestPlug() const;
 		Gaffer::Color4fPlug *averagePlug();

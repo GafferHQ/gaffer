@@ -57,12 +57,12 @@ class ImageStatsTest( GafferImageTest.ImageTestCase ) :
 		s["in"].setInput( r["out"] )
 		s["regionOfInterest"].setValue( r["out"]["format"].getValue().getDisplayWindow() )
 
-		s["channels"].setValue( IECore.StringVectorData( [ "G", "B" ] ) )
+		s["channels"].setValue( IECore.StringVectorData( [ "", "G", "B" ] ) )
 		self.__assertColour( s["average"].getValue(), IECore.Color4f( 0., 0.0744, 0.1250, 1. ) )
 		self.__assertColour( s["min"].getValue(), IECore.Color4f( 0, 0, 0, 1. ) )
 		self.__assertColour( s["max"].getValue(), IECore.Color4f( 0, 0.5, 0.5, 1. ) )
 
-		s["channels"].setValue( IECore.StringVectorData( [ "R", "B" ] ) )
+		s["channels"].setValue( IECore.StringVectorData( [ "R", "", "B" ] ) )
 		self.__assertColour( s["average"].getValue(), IECore.Color4f( 0.0544, 0, 0.1250, 1. ) )
 		self.__assertColour( s["min"].getValue(), IECore.Color4f( 0, 0, 0, 1. ) )
 		self.__assertColour( s["max"].getValue(), IECore.Color4f( 0.5, 0, 0.5, 1. ) )
@@ -174,6 +174,17 @@ class ImageStatsTest( GafferImageTest.ImageTestCase ) :
 
 		self.assertEqual( s.affects( s["in"]["format"] ), [] )
 		self.assertEqual( s.affects( s["in"]["metadata"] ), [] )
+
+	def testRepeatedChannels( self ) :
+
+		c = GafferImage.Constant()
+		s = GafferImage.ImageStats()
+		s["in"].setInput( c["out"] )
+		s["regionOfInterest"].setValue( c["out"]["format"].getValue().getDisplayWindow() )
+		s["channels"].setValue( IECore.StringVectorData( [ "A", "A", "A", "A" ] ) )
+
+		self.assertEqual( s["min"].getValue(), IECore.Color4f( 1 ) )
+		self.assertEqual( s["max"].getValue(), IECore.Color4f( 1 ) )
 
 	def __assertColour( self, colour1, colour2 ) :
 		for i in range( 0, 4 ):

@@ -44,8 +44,9 @@
 #include "GafferImage/FormatPlug.h"
 #include "GafferImage/ImageAlgo.h"
 
-using namespace GafferImage;
+using namespace std;
 using namespace Gaffer;
+using namespace GafferImage;
 
 //////////////////////////////////////////////////////////////////////////
 // Internal utilities
@@ -86,14 +87,14 @@ ImageStats::ImageStats( const std::string &name )
 {
 	storeIndexOfNextChild( g_firstPlugIndex );
 	addChild( new ImagePlug( "in", Gaffer::Plug::In ) );
-	addChild(
-		new ChannelMaskPlug(
-			"channels",
-			Gaffer::Plug::In,
-			inPlug()->channelNamesPlug()->defaultValue(),
-			Gaffer::Plug::Default
-		)
-	);
+
+	IECore::StringVectorDataPtr defaultChannelsData = new IECore::StringVectorData;
+	vector<string> &defaultChannels = defaultChannelsData->writable();
+	defaultChannels.push_back( "R" );
+	defaultChannels.push_back( "G" );
+	defaultChannels.push_back( "B" );
+	addChild( new StringVectorDataPlug( "channels", Plug::In, defaultChannelsData ) );
+
 	addChild( new Box2iPlug( "regionOfInterest", Gaffer::Plug::In ) );
 	addChild( new Color4fPlug( "average", Gaffer::Plug::Out, Imath::Color4f( 0, 0, 0, 1 ) ) );
 	addChild( new Color4fPlug( "min", Gaffer::Plug::Out, Imath::Color4f( 0, 0, 0, 1 ) ) );
@@ -114,14 +115,14 @@ const ImagePlug *ImageStats::inPlug() const
 	return getChild<ImagePlug>( g_firstPlugIndex );
 }
 
-ChannelMaskPlug *ImageStats::channelsPlug()
+Gaffer::StringVectorDataPlug *ImageStats::channelsPlug()
 {
-	return getChild<ChannelMaskPlug>( g_firstPlugIndex + 1 );
+	return getChild<StringVectorDataPlug>( g_firstPlugIndex + 1 );
 }
 
-const ChannelMaskPlug *ImageStats::channelsPlug() const
+const Gaffer::StringVectorDataPlug *ImageStats::channelsPlug() const
 {
-	return getChild<ChannelMaskPlug>( g_firstPlugIndex + 1 );
+	return getChild<StringVectorDataPlug>( g_firstPlugIndex + 1 );
 }
 
 Box2iPlug *ImageStats::regionOfInterestPlug()
@@ -282,22 +283,19 @@ void ImageStats::compute( ValuePlug *output, const Context *context ) const
 
 std::string ImageStats::channelName( int colorIndex ) const
 {
-	IECore::ConstStringVectorDataPtr channelNamesData = inPlug()->channelNamesPlug()->getValue();
-	std::vector<std::string> maskChannels = channelNamesData->readable();
-	channelsPlug()->maskChannels( maskChannels );
-
-	/// As the channelMaskPlug allows any combination of channels to be input we need to make sure that
-	/// the channels that it masks each have a distinct channelIndex. Otherwise multiple channels would be
-	/// outputting to the same plug.
-	std::vector<std::string> uniqueChannels = maskChannels;
-	GafferImage::ChannelMaskPlug::removeDuplicateIndices( uniqueChannels );
-
-	for( std::vector<std::string>::iterator it( uniqueChannels.begin() ); it != uniqueChannels.end(); ++it )
+	IECore::ConstStringVectorDataPtr channelsData = channelsPlug()->getValue();
+	const vector<string> &channels = channelsData->readable();
+	if( channels.size() <= (size_t)colorIndex )
 	{
-		if( ImageAlgo::colorIndex( *it ) == colorIndex )
-		{
-			return *it;
-		}
+		return "";
 	}
+
+	IECore::ConstStringVectorDataPtr channelNamesData = inPlug()->channelNamesPlug()->getValue();
+	const vector<string> &channelNames = channelNamesData->readable();
+	if( find( channelNames.begin(), channelNames.end(), channels[colorIndex] ) != channelNames.end() )
+	{
+		return channels[colorIndex];
+	}
+
 	return "";
 }

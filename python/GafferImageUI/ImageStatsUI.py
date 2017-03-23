@@ -77,7 +77,7 @@ Gaffer.Metadata.registerNode(
 
 			"description",
 			"""
-			The names of the channels to be analysed.
+			The names of the four channels to be analysed.
 			""",
 
 			"nodule:type", "",
