@@ -66,7 +66,6 @@
 #include "GafferImage/Format.h"
 #include "GafferImage/Grade.h"
 #include "GafferImage/ImagePlug.h"
-#include "GafferImage/ImageStats.h"
 #include "GafferImage/Clamp.h"
 #include "GafferImage/ImageSampler.h"
 
