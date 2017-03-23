@@ -608,6 +608,8 @@ class ReferenceTest( GafferTest.TestCase ) :
 		s["b"] = Gaffer.Box()
 		s["b"]["p"] = Gaffer.IntPlug( defaultValue = 1, flags = Gaffer.Plug.Flags.Default | Gaffer.Plug.Flags.Dynamic )
 		s["b"]["p"].setValue( 2 )
+		s["b"]["c"] = Gaffer.Color3fPlug( defaultValue = IECore.Color3f( 1 ), flags = Gaffer.Plug.Flags.Default | Gaffer.Plug.Flags.Dynamic )
+		s["b"]["c"].setValue( IECore.Color3f( 0.5 ) )
 		s["b"].exportForReference( self.temporaryDirectory() + "/test.grf" )
 
 		s["r"] = Gaffer.Reference()
@@ -622,6 +624,10 @@ class ReferenceTest( GafferTest.TestCase ) :
 		self.assertEqual( s["r"]["p"].defaultValue(), 2 )
 		self.assertEqual( s["b"]["p"].defaultValue(), 1 )
 
+		self.assertEqual( s["r"]["c"].getValue(), IECore.Color3f( 0.5 ) )
+		self.assertEqual( s["r"]["c"].defaultValue(), IECore.Color3f( 0.5 ) )
+		self.assertEqual( s["b"]["c"].defaultValue(), IECore.Color3f( 1 ) )
+
 		# And we should be able to save and reload the script
 		# and have that still be the case.
 
@@ -634,11 +640,17 @@ class ReferenceTest( GafferTest.TestCase ) :
 		self.assertEqual( s["b"]["p"].getValue(), 2 )
 		self.assertEqual( s["b"]["p"].defaultValue(), 1 )
 
+		self.assertEqual( s["r"]["c"].getValue(), IECore.Color3f( 0.5 ) )
+		self.assertEqual( s["r"]["c"].defaultValue(), IECore.Color3f( 0.5 ) )
+		self.assertEqual( s["b"]["c"].getValue(), IECore.Color3f( 0.5 ) )
+		self.assertEqual( s["b"]["c"].defaultValue(), IECore.Color3f( 1 ) )
+
 		# If we change the value on the box and reexport,
 		# then the reference should pick up both the new value
 		# and the new default.
 
 		s["b"]["p"].setValue( 3 )
+		s["b"]["c"].setValue( IECore.Color3f( 0.25 ) )
 		s["b"].exportForReference( self.temporaryDirectory() + "/test.grf" )
 		s["r"].load( self.temporaryDirectory() + "/test.grf" )
 
@@ -646,6 +658,11 @@ class ReferenceTest( GafferTest.TestCase ) :
 		self.assertEqual( s["r"]["p"].defaultValue(), 3 )
 		self.assertEqual( s["b"]["p"].getValue(), 3 )
 		self.assertEqual( s["b"]["p"].defaultValue(), 1 )
+
+		self.assertEqual( s["r"]["c"].getValue(), IECore.Color3f( 0.25 ) )
+		self.assertEqual( s["r"]["c"].defaultValue(), IECore.Color3f( 0.25 ) )
+		self.assertEqual( s["b"]["c"].getValue(), IECore.Color3f( 0.25 ) )
+		self.assertEqual( s["b"]["c"].defaultValue(), IECore.Color3f( 1 ) )
 
 		# And that should still hold after saving and reloading the script.
 
@@ -656,15 +673,26 @@ class ReferenceTest( GafferTest.TestCase ) :
 		self.assertEqual( s["b"]["p"].getValue(), 3 )
 		self.assertEqual( s["b"]["p"].defaultValue(), 1 )
 
+		self.assertEqual( s["r"]["c"].getValue(), IECore.Color3f( 0.25 ) )
+		self.assertEqual( s["r"]["c"].defaultValue(), IECore.Color3f( 0.25 ) )
+		self.assertEqual( s["b"]["c"].getValue(), IECore.Color3f( 0.25 ) )
+		self.assertEqual( s["b"]["c"].defaultValue(), IECore.Color3f( 1 ) )
+
 		# But if the user changes the value on the reference node,
 		# it should be kept.
 
 		s["r"]["p"].setValue( 100 )
+		s["r"]["c"].setValue( IECore.Color3f( 100 ) )
 
 		self.assertEqual( s["r"]["p"].getValue(), 100 )
 		self.assertEqual( s["r"]["p"].defaultValue(), 3 )
 		self.assertEqual( s["b"]["p"].getValue(), 3 )
 		self.assertEqual( s["b"]["p"].defaultValue(), 1 )
+
+		self.assertEqual( s["r"]["c"].getValue(), IECore.Color3f( 100 ) )
+		self.assertEqual( s["r"]["c"].defaultValue(), IECore.Color3f( 0.25 ) )
+		self.assertEqual( s["b"]["c"].getValue(), IECore.Color3f( 0.25 ) )
+		self.assertEqual( s["b"]["c"].defaultValue(), IECore.Color3f( 1 ) )
 
 		# And a save and load shouldn't change that.
 
@@ -676,11 +704,17 @@ class ReferenceTest( GafferTest.TestCase ) :
 		self.assertEqual( s["b"]["p"].getValue(), 3 )
 		self.assertEqual( s["b"]["p"].defaultValue(), 1 )
 
+		self.assertEqual( s["r"]["c"].getValue(), IECore.Color3f( 100 ) )
+		self.assertEqual( s["r"]["c"].defaultValue(), IECore.Color3f( 0.25 ) )
+		self.assertEqual( s["b"]["c"].getValue(), IECore.Color3f( 0.25 ) )
+		self.assertEqual( s["b"]["c"].defaultValue(), IECore.Color3f( 1 ) )
+
 		# And now the user has changed a value, only the
 		# default value should be updated if we load a new
 		# reference.
 
 		s["b"]["p"].setValue( 4 )
+		s["b"]["c"].setValue( IECore.Color3f( 4 ) )
 		s["b"].exportForReference( self.temporaryDirectory() + "/test.grf" )
 		s["r"].load( self.temporaryDirectory() + "/test.grf" )
 
@@ -688,6 +722,11 @@ class ReferenceTest( GafferTest.TestCase ) :
 		self.assertEqual( s["r"]["p"].defaultValue(), 4 )
 		self.assertEqual( s["b"]["p"].getValue(), 4 )
 		self.assertEqual( s["b"]["p"].defaultValue(), 1 )
+
+		self.assertEqual( s["r"]["c"].getValue(), IECore.Color3f( 100 ) )
+		self.assertEqual( s["r"]["c"].defaultValue(), IECore.Color3f( 4 ) )
+		self.assertEqual( s["b"]["c"].getValue(), IECore.Color3f( 4 ) )
+		self.assertEqual( s["b"]["c"].defaultValue(), IECore.Color3f( 1 ) )
 
 		# And a save and load shouldn't change anything.
 
@@ -698,6 +737,11 @@ class ReferenceTest( GafferTest.TestCase ) :
 		self.assertEqual( s["r"]["p"].defaultValue(), 4 )
 		self.assertEqual( s["b"]["p"].getValue(), 4 )
 		self.assertEqual( s["b"]["p"].defaultValue(), 1 )
+
+		self.assertEqual( s["r"]["c"].getValue(), IECore.Color3f( 100 ) )
+		self.assertEqual( s["r"]["c"].defaultValue(), IECore.Color3f( 4 ) )
+		self.assertEqual( s["b"]["c"].getValue(), IECore.Color3f( 4 ) )
+		self.assertEqual( s["b"]["c"].defaultValue(), IECore.Color3f( 1 ) )
 
 		# And since we know that all plugs in box exports
 		# have had their default values set to the current

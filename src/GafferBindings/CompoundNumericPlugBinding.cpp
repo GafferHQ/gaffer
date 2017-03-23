@@ -56,7 +56,7 @@ namespace
 {
 
 template<typename T>
-std::string maskedCompoundNumericPlugRepr( const T *plug, unsigned flagsMask )
+std::string maskedCompoundNumericPlugRepr( const T *plug, unsigned flagsMask, const Serialisation *serialisation = NULL )
 {
 	std::string extraArgs = "";
 
@@ -70,7 +70,7 @@ std::string maskedCompoundNumericPlugRepr( const T *plug, unsigned flagsMask )
 		boost::replace_first( extraArgs, "_IECore", "GeometricData" );
 	}
 
-	return ValuePlugSerialiser::repr( plug, flagsMask, extraArgs );
+	return ValuePlugSerialiser::repr( plug, flagsMask, extraArgs, serialisation );
 }
 
 template<typename T>
@@ -86,7 +86,7 @@ class CompoundNumericPlugSerialiser : public ValuePlugSerialiser
 
 	virtual std::string constructor( const Gaffer::GraphComponent *graphComponent, const Serialisation &serialisation ) const
 	{
-		return maskedCompoundNumericPlugRepr( static_cast<const T *>( graphComponent ), Plug::All & ~Plug::ReadOnly );
+		return maskedCompoundNumericPlugRepr( static_cast<const T *>( graphComponent ), Plug::All & ~Plug::ReadOnly, &serialisation );
 	}
 
 	protected :
