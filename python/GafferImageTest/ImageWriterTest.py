@@ -67,7 +67,7 @@ class ImageWriterTest( GafferImageTest.ImageTestCase ) :
 		w = GafferImage.ImageWriter()
 		w["in"].setInput( r["out"] )
 		w["fileName"].setValue( testFile )
-		w["channels"].setValue( IECore.StringVectorData( ["R","B"] ) )
+		w["channels"].setValue( "R B" )
 		with Gaffer.Context() :
 			w["task"].execute()
 
@@ -254,12 +254,12 @@ class ImageWriterTest( GafferImageTest.ImageTestCase ) :
 
 		w1["in"].setInput( g["out"] )
 		w1["fileName"].setValue( testScanlineFile )
-		w1["channels"].setValue( IECore.StringVectorData( g["out"]["channelNames"].getValue() ) )
+		w1["channels"].setValue( "*" )
 		w1["openexr"]["mode"].setValue( GafferImage.ImageWriter.Mode.Scanline )
 
 		w2["in"].setInput( g["out"] )
 		w2["fileName"].setValue( testTileFile )
-		w2["channels"].setValue( IECore.StringVectorData( g["out"]["channelNames"].getValue() ) )
+		w2["channels"].setValue( "*" )
 		w2["openexr"]["mode"].setValue( GafferImage.ImageWriter.Mode.Tile )
 
 		# Try to execute. In older versions of the ImageWriter this would throw an exception.
@@ -355,7 +355,7 @@ class ImageWriterTest( GafferImageTest.ImageTestCase ) :
 			w = GafferImage.ImageWriter()
 			w["in"].setInput( r["out"] )
 			w["fileName"].setValue( testFile )
-			w["channels"].setValue( IECore.StringVectorData( r["out"]["channelNames"].getValue() ) )
+			w["channels"].setValue( "*" )
 
 			for opt in test['plugs']:
 				w[formatName][opt].setValue( test['plugs'][opt] )
@@ -473,7 +473,7 @@ class ImageWriterTest( GafferImageTest.ImageTestCase ) :
 		# Setup the writer.
 		w["in"].setInput( r["out"] )
 		w["fileName"].setValue( testFile )
-		w["channels"].setValue( IECore.StringVectorData( r["out"]["channelNames"].getValue() ) )
+		w["channels"].setValue( "*" )
 
 		# Execute
 		with Gaffer.Context() :
@@ -554,7 +554,7 @@ class ImageWriterTest( GafferImageTest.ImageTestCase ) :
 		writer["openexr"]["mode"].setValue( GafferImage.ImageWriter.Mode.Tile )
 		self.assertNotEqual( writer.hash( c ), current )
 		current = writer.hash( c )
-		writer["channels"].setValue( IECore.StringVectorData( [ "R" ] ) )
+		writer["channels"].setValue( "R" )
 		self.assertNotEqual( writer.hash( c ), current )
 
 	def testPassThrough( self ) :
@@ -645,7 +645,7 @@ class ImageWriterTest( GafferImageTest.ImageTestCase ) :
 		w = GafferImage.ImageWriter()
 		w["in"].setInput( m["out"] )
 		w["fileName"].setValue( testFile )
-		w["channels"].setValue( IECore.StringVectorData( m["out"]["channelNames"].getValue() ) )
+		w["channels"].setValue( " ".join( m["out"]["channelNames"].getValue() ) )
 
 		testFile2 = self.__testFile( "noNewMetadata", "RGBA", ext )
 		self.failIf( os.path.exists( testFile2 ) )
@@ -653,7 +653,7 @@ class ImageWriterTest( GafferImageTest.ImageTestCase ) :
 		w2 = GafferImage.ImageWriter()
 		w2["in"].setInput( d["out"] )
 		w2["fileName"].setValue( testFile2 )
-		w2["channels"].setValue( IECore.StringVectorData( r["out"]["channelNames"].getValue() ) )
+		w2["channels"].setValue( " ".join( r["out"]["channelNames"].getValue() ) )
 
 		inMetadata = w["in"]["metadata"].getValue()
 		self.assertEqual( inMetadata["PixelAspectRatio"], IECore.FloatData( 2 ) )
@@ -794,7 +794,7 @@ class ImageWriterTest( GafferImageTest.ImageTestCase ) :
 		w = GafferImage.ImageWriter()
 		w["in"].setInput( f["out"] )
 		w["fileName"].setValue( testFile )
-		w["channels"].setValue( IECore.StringVectorData( f["out"]["channelNames"].getValue() ) )
+		w["channels"].setValue( "*" )
 
 		with Gaffer.Context() :
 			w["task"].execute()

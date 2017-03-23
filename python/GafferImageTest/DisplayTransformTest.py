@@ -189,7 +189,7 @@ class DisplayTransformTest( GafferImageTest.ImageTestCase ) :
 		s["writer"] = GafferImage.ImageWriter()
 		s["writer"]["fileName"].setValue( contextImageFile )
 		s["writer"]["in"].setInput( s["dt"]["out"] )
-		s["writer"]['channels'].setValue(IECore.StringVectorData(["R", "G", "B", "A"]))
+		s["writer"]["channels"].setValue( "R G B A" )
 
 		s["fileName"].setValue( scriptFileName )
 		s.save()

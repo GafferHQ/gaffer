@@ -400,7 +400,7 @@ class MergeTest( GafferImageTest.ImageTestCase ) :
 		ad = GafferImage.DeleteChannels()
 		ad["in"].setInput( a["out"] )
 		ad["mode"].setValue( GafferImage.DeleteChannels.Mode.Delete )
-		ad["channels"].setValue( IECore.StringVectorData( [ "R" ] ) )
+		ad["channels"].setValue( "R" )
 
 		b = GafferImage.Constant()
 		b["color"].setValue( IECore.Color4f( 1.0, 0.3, 0.1, 0.2 ) )
@@ -408,7 +408,7 @@ class MergeTest( GafferImageTest.ImageTestCase ) :
 		bd = GafferImage.DeleteChannels()
 		bd["in"].setInput( b["out"] )
 		bd["mode"].setValue( GafferImage.DeleteChannels.Mode.Delete )
-		bd["channels"].setValue( IECore.StringVectorData( [ "G" ] ) )
+		bd["channels"].setValue( "G" )
 
 		merge = GafferImage.Merge()
 		merge["in"][0].setInput( ad["out"] )

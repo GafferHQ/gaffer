@@ -99,7 +99,7 @@ class UnpremultiplyTest( GafferImageTest.ImageTestCase ) :
 		s["c"]["color"].setValue( IECore.Color4f( color["R"], color["G"], color["B"], color["A"] ) )
 		s["u"] = GafferImage.Unpremultiply()
 		s["u"]["in"].setInput( s["c"]["out"] )
-		s["u"]["channels"].setValue( IECore.StringVectorData( [ 'R', 'G', 'B', 'A' ] ) )
+		s["u"]["channels"].setValue( "R G B A" )
 
 		for alphaChannelName in color.keys() :
 			s["u"]["alphaChannel"].setValue(alphaChannelName)
