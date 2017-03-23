@@ -55,7 +55,7 @@ class ImageStatsTest( GafferImageTest.ImageTestCase ) :
 
 		s = GafferImage.ImageStats()
 		s["in"].setInput( r["out"] )
-		s["regionOfInterest"].setValue( r["out"]["format"].getValue().getDisplayWindow() )
+		s["area"].setValue( r["out"]["format"].getValue().getDisplayWindow() )
 
 		s["channels"].setValue( IECore.StringVectorData( [ "", "G", "B" ] ) )
 		self.__assertColour( s["average"].getValue(), IECore.Color4f( 0., 0.0744, 0.1250, 1. ) )
@@ -112,7 +112,7 @@ class ImageStatsTest( GafferImageTest.ImageTestCase ) :
 		r["fileName"].setValue( self.__rgbFilePath )
 
 		s = GafferImage.ImageStats()
-		s["regionOfInterest"].setValue( r["out"]["format"].getValue().getDisplayWindow() )
+		s["area"].setValue( r["out"]["format"].getValue().getDisplayWindow() )
 
 		# Get the hashes of the outputs when there is no input.
 		minHash = s["min"].hash()
@@ -134,7 +134,7 @@ class ImageStatsTest( GafferImageTest.ImageTestCase ) :
 		s["in"].setInput( r["out"] )
 		s["channels"].setValue( IECore.StringVectorData( [ "R", "G", "B", "A" ] ) )
 
-		s["regionOfInterest"].setValue( r["out"]["format"].getValue().getDisplayWindow() )
+		s["area"].setValue( r["out"]["format"].getValue().getDisplayWindow() )
 		self.__assertColour( s["average"].getValue(), IECore.Color4f( 0.0544, 0.0744, 0.1250, 0.2537 ) )
 		self.__assertColour( s["min"].getValue(), IECore.Color4f( 0, 0, 0, 0 ) )
 		self.__assertColour( s["max"].getValue(), IECore.Color4f( 0.5, 0.5, 0.5, 0.875 ) )
@@ -149,12 +149,12 @@ class ImageStatsTest( GafferImageTest.ImageTestCase ) :
 		s["in"].setInput( r["out"] )
 		s["channels"].setValue( IECore.StringVectorData( [ "R", "G", "B", "A" ] ) )
 
-		s["regionOfInterest"].setValue( IECore.Box2i( IECore.V2i( 20, 20 ), IECore.V2i( 25, 25 ) ) )
+		s["area"].setValue( IECore.Box2i( IECore.V2i( 20, 20 ), IECore.V2i( 25, 25 ) ) )
 		self.__assertColour( s["average"].getValue(), IECore.Color4f( 0.5, 0, 0, 0.5 ) )
 		self.__assertColour( s["max"].getValue(), IECore.Color4f( 0.5, 0, 0, 0.5 ) )
 		self.__assertColour( s["min"].getValue(), IECore.Color4f( 0.5, 0, 0, 0.5 ) )
 
-		s["regionOfInterest"].setValue( IECore.Box2i( IECore.V2i( 20, 20 ), IECore.V2i( 41, 30 ) ) )
+		s["area"].setValue( IECore.Box2i( IECore.V2i( 20, 20 ), IECore.V2i( 41, 30 ) ) )
 		self.__assertColour( s["average"].getValue(), IECore.Color4f( 0.4048, 0.1905, 0, 0.5952 ) )
 		self.__assertColour( s["min"].getValue(), IECore.Color4f( 0.25, 0, 0, 0.5 ) )
 		self.__assertColour( s["max"].getValue(), IECore.Color4f( 0.5, 0.5, 0, 0.75 ) )
@@ -164,7 +164,7 @@ class ImageStatsTest( GafferImageTest.ImageTestCase ) :
 		c = GafferImage.Constant()
 		s = GafferImage.ImageStats()
 		s["in"].setInput( c["out"] )
-		s["regionOfInterest"].setValue( c["out"]["format"].getValue().getDisplayWindow() )
+		s["area"].setValue( c["out"]["format"].getValue().getDisplayWindow() )
 
 		self.assertEqual( s["max"]["r"].getValue(), 0 )
 
@@ -180,7 +180,7 @@ class ImageStatsTest( GafferImageTest.ImageTestCase ) :
 		c = GafferImage.Constant()
 		s = GafferImage.ImageStats()
 		s["in"].setInput( c["out"] )
-		s["regionOfInterest"].setValue( c["out"]["format"].getValue().getDisplayWindow() )
+		s["area"].setValue( c["out"]["format"].getValue().getDisplayWindow() )
 		s["channels"].setValue( IECore.StringVectorData( [ "A", "A", "A", "A" ] ) )
 
 		self.assertEqual( s["min"].getValue(), IECore.Color4f( 1 ) )

@@ -136,7 +136,7 @@ class InteractiveArnoldRenderTest( GafferSceneTest.InteractiveRenderTest ) :
 		script["imageStats"] = GafferImage.ImageStats()
 		script["imageStats"]["in"].setInput( script["display"]["out"] )
 		script["imageStats"]["channels"].setValue( IECore.StringVectorData( [ "R", "G", "B", "A" ] ) )
-		script["imageStats"]["regionOfInterest"].setValue( IECore.Box2i( IECore.V2i( 0 ), IECore.V2i( 640, 480 ) ) )
+		script["imageStats"]["area"].setValue( IECore.Box2i( IECore.V2i( 0 ), IECore.V2i( 640, 480 ) ) )
 
 		script["render"] = self._createInteractiveRender()
 		script["render"]["in"].setInput( script["outputs"]["out"] )

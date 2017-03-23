@@ -63,7 +63,7 @@ class TextTest( GafferImageTest.ImageTestCase ) :
 
 		stats = GafferImage.ImageStats()
 		stats["in"].setInput( text["out"] )
-		stats["regionOfInterest"].setValue( text["out"]["dataWindow"].getValue() )
+		stats["area"].setValue( text["out"]["dataWindow"].getValue() )
 
 		self.assertEqual( stats["max"].getValue(), IECore.Color4f( 1, 1, 1, 1 ) )
 

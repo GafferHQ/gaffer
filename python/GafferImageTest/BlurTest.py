@@ -121,7 +121,7 @@ class BlurTest( GafferImageTest.ImageTestCase ) :
 
 		stats = GafferImage.ImageStats()
 		stats["in"].setInput( blur["out"] )
-		stats["regionOfInterest"].setValue( IECore.Box2i( IECore.V2i( 5 ), IECore.V2i( 15 ) ) )
+		stats["area"].setValue( IECore.Box2i( IECore.V2i( 5 ), IECore.V2i( 15 ) ) )
 
 		for i in range( 0, 10 ) :
 
