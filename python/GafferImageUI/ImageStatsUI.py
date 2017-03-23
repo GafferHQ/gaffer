@@ -81,6 +81,7 @@ Gaffer.Metadata.registerNode(
 			""",
 
 			"nodule:type", "",
+			"plugValueWidget:type", "GafferImageUI.RGBAChannelsPlugValueWidget",
 
 		],
 

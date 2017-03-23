@@ -40,6 +40,7 @@ from _GafferImageUI import *
 import DisplayUI
 from FormatPlugValueWidget import FormatPlugValueWidget
 from ChannelMaskPlugValueWidget import ChannelMaskPlugValueWidget
+from RGBAChannelsPlugValueWidget import RGBAChannelsPlugValueWidget
 
 import OpenImageIOReaderUI
 import ImageReaderUI
