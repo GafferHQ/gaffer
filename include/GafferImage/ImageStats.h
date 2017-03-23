@@ -84,11 +84,7 @@ class ImageStats : public Gaffer::ComputeNode
 
 	private :
 
-		/// Sets channelName to the channel which corresponds to the output plug. The channel name is
-		/// computed from the intersection of the "in" plug's channels and the "channels" plug's channels.
-		/// If multiple channels are found to have the same channel index, the first is used.
-		/// For more information on this, please see ChannelMaskPlug::removeDuplicateIndices().
-		void channelNameFromOutput( const Gaffer::ValuePlug *output, std::string &channelName ) const;
+		std::string channelName( int colorIndex ) const;
 
 		/// Implemented to initialize the default format settings if they don't exist already.
 		void parentChanging( Gaffer::GraphComponent *newParent );

@@ -47,6 +47,36 @@
 using namespace GafferImage;
 using namespace Gaffer;
 
+//////////////////////////////////////////////////////////////////////////
+// Internal utilities
+//////////////////////////////////////////////////////////////////////////
+
+namespace
+{
+
+int colorIndex( const ValuePlug *plug )
+{
+	const Color4fPlug *colorPlug = plug->parent<Color4fPlug>();
+	if( !colorPlug )
+	{
+		return -1;
+	}
+	for( size_t i = 0; i < 4; ++i )
+	{
+		if( plug == colorPlug->getChild( i ) )
+		{
+			return i;
+		}
+	}
+	return -1;
+}
+
+} // namespace
+
+//////////////////////////////////////////////////////////////////////////
+// ImageStats
+//////////////////////////////////////////////////////////////////////////
+
 IE_CORE_DEFINERUNTIMETYPED( ImageStats );
 
 size_t ImageStats::g_firstPlugIndex = 0;
@@ -177,55 +207,80 @@ void ImageStats::hash( const ValuePlug *output, const Context *context, IECore::
 {
 	ComputeNode::hash( output, context, h);
 
-	bool earlyOut = true;
-	for( int i = 0; i < 4; ++i )
+	const int colorIndex = ::colorIndex( output );
+	if( colorIndex == -1 )
 	{
-		if (
-				output == minPlug()->getChild(i) ||
-				output == maxPlug()->getChild(i) ||
-				output == averagePlug()->getChild(i)
-		   )
-		{
-			earlyOut = false;
-			break;
-		}
-	}
-	if( earlyOut )
-	{
+		// Not a plug we know about
 		return;
 	}
 
-	const Imath::Box2i regionOfInterest( regionOfInterestPlug()->getValue() );
-	regionOfInterestPlug()->hash( h );
-	inPlug()->channelNamesPlug()->hash( h );
-	inPlug()->dataWindowPlug()->hash( h );
+	const std::string channelName = this->channelName( colorIndex );
+	const Imath::Box2i regionOfInterest = regionOfInterestPlug()->getValue();
 
-	IECore::ConstStringVectorDataPtr channelNamesData = inPlug()->channelNamesPlug()->getValue();
-	std::vector<std::string> maskChannels = channelNamesData->readable();
-	channelsPlug()->maskChannels( maskChannels );
-	const int nChannels( maskChannels.size() );
-
-	if ( nChannels > 0 )
+	if( channelName.empty() || BufferAlgo::empty( regionOfInterest ) )
 	{
-		std::vector<std::string> uniqueChannels = maskChannels;
-		GafferImage::ChannelMaskPlug::removeDuplicateIndices( uniqueChannels );
-		std::string channel;
-		channelNameFromOutput( output, channel );
+		h.append( static_cast<const FloatPlug *>( output )->defaultValue() );
+		return;
+	}
 
-		if ( !channel.empty() )
+	Sampler s( inPlug(), channelName, regionOfInterest );
+	s.hash( h );
+}
+
+void ImageStats::compute( ValuePlug *output, const Context *context ) const
+{
+	const int colorIndex = ::colorIndex( output );
+	if( colorIndex == -1 )
+	{
+		// Not a plug we know about
+		ComputeNode::compute( output, context );
+		return;
+	}
+
+	const std::string channelName = this->channelName( colorIndex );
+	const Imath::Box2i regionOfInterest = regionOfInterestPlug()->getValue();
+
+	if( channelName.empty() || BufferAlgo::empty( regionOfInterest ) )
+	{
+		output->setToDefault();
+		return;
+	}
+
+	// Loop over the ROI and compute the min, max and average channel values and then set our outputs.
+	Sampler s( inPlug(), channelName, regionOfInterest );
+
+	float min = Imath::limits<float>::max();
+	float max = Imath::limits<float>::min();
+	double sum = 0.;
+
+	for( int y = regionOfInterest.min.y; y < regionOfInterest.max.y; ++y )
+	{
+		for( int x = regionOfInterest.min.x; x < regionOfInterest.max.x; ++x )
 		{
-			h.append( channel );
-			Sampler s( inPlug(), channel, regionOfInterest );
-			s.hash( h );
-			return;
+			float v = s.sample( x, y );
+			min = std::min( v, min );
+			max = std::max( v, max );
+			sum += v;
 		}
 	}
 
-	// If our node is not enabled then we just append the default value that we will give the plug.
-	h.append( static_cast<const FloatPlug *>( output )->defaultValue() );
+	if( output->parent<Plug>() == minPlug() )
+	{
+		static_cast<FloatPlug *>( output )->setValue( min );
+	}
+	else if( output->parent<Plug>() == maxPlug() )
+	{
+		static_cast<FloatPlug *>( output )->setValue( max );
+	}
+	else if( output->parent<Plug>() == averagePlug() )
+	{
+		static_cast<FloatPlug *>( output )->setValue(
+			sum / double( (regionOfInterest.size().x) * (regionOfInterest.size().y) )
+		);
+	}
 }
 
-void ImageStats::channelNameFromOutput( const ValuePlug *output, std::string &channelName ) const
+std::string ImageStats::channelName( int colorIndex ) const
 {
 	IECore::ConstStringVectorDataPtr channelNamesData = inPlug()->channelNamesPlug()->getValue();
 	std::vector<std::string> maskChannels = channelNamesData->readable();
@@ -237,80 +292,12 @@ void ImageStats::channelNameFromOutput( const ValuePlug *output, std::string &ch
 	std::vector<std::string> uniqueChannels = maskChannels;
 	GafferImage::ChannelMaskPlug::removeDuplicateIndices( uniqueChannels );
 
-	for( int channelIndex = 0; channelIndex < 4; ++channelIndex )
+	for( std::vector<std::string>::iterator it( uniqueChannels.begin() ); it != uniqueChannels.end(); ++it )
 	{
-		if ( output == minPlug()->getChild( channelIndex ) ||
-			 output == maxPlug()->getChild( channelIndex ) ||
-			 output == averagePlug()->getChild( channelIndex )
-		   )
+		if( ImageAlgo::colorIndex( *it ) == colorIndex )
 		{
-			for( std::vector<std::string>::iterator it( uniqueChannels.begin() ); it != uniqueChannels.end(); ++it )
-			{
-				if( ImageAlgo::colorIndex( *it ) == channelIndex )
-				{
-					channelName = *it;
-					return;
-				}
-			}
+			return *it;
 		}
 	}
-	return;
-}
-
-void ImageStats::compute( ValuePlug *output, const Context *context ) const
-{
-	const Imath::Box2i &regionOfInterest( regionOfInterestPlug()->getValue() );
-	if( regionOfInterest.isEmpty() )
-	{
-		output->setToDefault();
-		return;
-	}
-
-	std::string channelName;
-	channelNameFromOutput( output, channelName );
-	if ( channelName.empty() )
-	{
-		output->setToDefault();
-		return;
-	}
-
-	const int channelIndex = ImageAlgo::colorIndex( channelName );
-
-	// Loop over the ROI and compute the min, max and average channel values and then set our outputs.
-	Sampler s( inPlug(), channelName, regionOfInterest );
-
-	float min = Imath::limits<float>::max();
-	float max = Imath::limits<float>::min();
-
-	float average = 0.f;
-
-	double sum = 0.;
-	for( int y = regionOfInterest.min.y; y < regionOfInterest.max.y; ++y )
-	{
-		for( int x = regionOfInterest.min.x; x < regionOfInterest.max.x; ++x )
-		{
-			float v = s.sample( x, y );
-			min = std::min( v, min );
-			max = std::max( v, max );
-			sum += v;
-		}
-	}
-	average = sum / double( (regionOfInterest.size().x) * (regionOfInterest.size().y) );
-
-	if ( minPlug()->getChild( channelIndex ) == output )
-	{
-		static_cast<FloatPlug *>( output )->setValue( min );
-	}
-	else if ( maxPlug()->getChild( channelIndex ) == output )
-	{
-		static_cast<FloatPlug *>( output )->setValue( max );
-	}
-	else if ( averagePlug()->getChild( channelIndex ) == output )
-	{
-		static_cast<FloatPlug *>( output )->setValue( average );
-	}
-	else
-	{
-		static_cast<FloatPlug *>( output )->setValue( 0 );
-	}
+	return "";
 }

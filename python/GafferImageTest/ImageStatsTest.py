@@ -110,11 +110,11 @@ class ImageStatsTest( GafferImageTest.ImageTestCase ) :
 
 		r = GafferImage.ImageReader()
 		r["fileName"].setValue( self.__rgbFilePath )
+
 		s = GafferImage.ImageStats()
-		s["in"].setInput( r["out"] )
+		s["regionOfInterest"].setValue( r["out"]["format"].getValue().getDisplayWindow() )
 
 		# Get the hashes of the outputs when there is no input.
-		s["in"].setInput( None )
 		minHash = s["min"].hash()
 		maxHash = s["max"].hash()
 		averageHash = s["average"].hash()
