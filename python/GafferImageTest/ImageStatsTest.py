@@ -168,6 +168,13 @@ class ImageStatsTest( GafferImageTest.ImageTestCase ) :
 
 		self.assertEqual( s["max"]["r"].getValue(), 0 )
 
+	def testFormatAndMetadataAffectNothing( self ) :
+
+		s = GafferImage.ImageStats()
+
+		self.assertEqual( s.affects( s["in"]["format"] ), [] )
+		self.assertEqual( s.affects( s["in"]["metadata"] ), [] )
+
 	def __assertColour( self, colour1, colour2 ) :
 		for i in range( 0, 4 ):
 			self.assertEqual( "%.4f" % colour2[i], "%.4f" % colour1[i] )

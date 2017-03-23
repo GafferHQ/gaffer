@@ -155,11 +155,13 @@ void ImageStats::parentChanging( Gaffer::GraphComponent *newParent )
 void ImageStats::affects( const Gaffer::Plug *input, AffectedPlugsContainer &outputs ) const
 {
 	ComputeNode::affects( input, outputs );
-	if (
-			input == channelsPlug() ||
-			input->parent<ImagePlug>() == inPlug() ||
-			regionOfInterestPlug()->isAncestorOf( input )
-	   )
+	if(
+		input == inPlug()->dataWindowPlug() ||
+		input == inPlug()->channelNamesPlug() ||
+		input == inPlug()->channelDataPlug() ||
+		input == channelsPlug() ||
+		regionOfInterestPlug()->isAncestorOf( input )
+	)
 	{
 		for( unsigned int i = 0; i < 4; ++i )
 		{
