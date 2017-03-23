@@ -45,50 +45,50 @@ import GafferTest
 import GafferImage
 import GafferImageTest
 
-class UVWarpTest( GafferImageTest.ImageTestCase ) :
+class VectorWarpTest( GafferImageTest.ImageTestCase ) :
 	def testConstructor( self ) :
 
-		w = GafferImage.UVWarp()
-		self.assertTrue( isinstance( w, GafferImage.UVWarp ) )
+		w = GafferImage.VectorWarp()
+		self.assertTrue( isinstance( w, GafferImage.VectorWarp ) )
 
 	def testFormatAndDataWindow( self ) :
 
 		texture = GafferImage.Constant()
 		texture["format"].setValue( GafferImage.Format( 100, 100 ) )
 
-		uv = GafferImage.Constant()
-		uv["format"].setValue( GafferImage.Format( 200, 200 ) )
+		vector = GafferImage.Constant()
+		vector["format"].setValue( GafferImage.Format( 200, 200 ) )
 
-		warp = GafferImage.UVWarp()
+		warp = GafferImage.VectorWarp()
 		warp["in"].setInput( texture["out"] )
-		warp["uv"].setInput( uv["out"] )
+		warp["vector"].setInput( vector["out"] )
 
-		self.assertEqual( warp["out"]["format"].getValue(), uv["out"]["format"].getValue() )
-		self.assertEqual( warp["out"]["dataWindow"].getValue(), uv["out"]["dataWindow"].getValue() )
+		self.assertEqual( warp["out"]["format"].getValue(), vector["out"]["format"].getValue() )
+		self.assertEqual( warp["out"]["dataWindow"].getValue(), vector["out"]["dataWindow"].getValue() )
 
-	def testUVWarp( self ) :
+	def testVectorWarp( self ) :
 
 		reader = GafferImage.ImageReader()
 		reader["fileName"].setValue( os.path.dirname( __file__ ) + "/images/checker2x2.exr" )
 
-		# Constant provides the same UV across the board
-		# for the UVWarp uv input.
+		# Constant provides the same Vector across the board
+		# for the VectorWarp vector input.
 		constant = GafferImage.Constant()
 
-		uvWarp = GafferImage.UVWarp()
-		uvWarp["in"].setInput( reader["out"] )
-		uvWarp["uv"].setInput( constant["out"] )
-		uvWarp["filter"].setValue( "box" )
+		vectorWarp = GafferImage.VectorWarp()
+		vectorWarp["in"].setInput( reader["out"] )
+		vectorWarp["vector"].setInput( constant["out"] )
+		vectorWarp["filter"].setValue( "box" )
 
 		# We can then sample the input image at the
-		# same UV position.
+		# same Vector position.
 		sampler1 = GafferImage.ImageSampler()
 		sampler1["image"].setInput( reader["out"] )
 
 		# And compare it to an arbitrary pixel in the
 		# (constant) warped output.
 		sampler2 = GafferImage.ImageSampler()
-		sampler2["image"].setInput( uvWarp["out"] )
+		sampler2["image"].setInput( vectorWarp["out"] )
 		sampler2["pixel"].setValue( IECore.V2f( 5.5 ) )
 
 		for u in ( 0.0, 0.25, 0.5, 0.75, 1.0 ) :
@@ -109,11 +109,11 @@ class UVWarpTest( GafferImageTest.ImageTestCase ) :
 		offset["in"].setInput( constant["out"] )
 		offset["offset"].setValue( IECore.V2i( -200, -250 ) )
 
-		uvWarp = GafferImage.UVWarp()
-		uvWarp["in"].setInput( reader["out"] )
-		uvWarp["uv"].setInput( offset["out"] )
+		vectorWarp = GafferImage.VectorWarp()
+		vectorWarp["in"].setInput( reader["out"] )
+		vectorWarp["vector"].setInput( offset["out"] )
 
-		GafferImageTest.processTiles( uvWarp["out"] )
+		GafferImageTest.processTiles( vectorWarp["out"] )
 
 	def testWarpImage( self ):
 		def __warpImage( size, distortion, idistortStyle ):
@@ -181,23 +181,23 @@ class UVWarpTest( GafferImageTest.ImageTestCase ) :
 
 		objectToImageVector = GafferImage.ObjectToImage()
 
-		uvWarp = GafferImage.UVWarp()
-		uvWarp["in"].setInput( sourceReorder["out"] )
-		uvWarp["uv"].setInput( objectToImageVector["out"] )
+		vectorWarp = GafferImage.VectorWarp()
+		vectorWarp["in"].setInput( sourceReorder["out"] )
+		vectorWarp["vector"].setInput( objectToImageVector["out"] )
 
 		# Test that a warp with no distortion and a box filter reproduces the input
 		objectToImageVector["object"].setValue( __warpImage( IECore.V2i( 300 ), 0, False ) )
-		uvWarp["filter"].setValue( "box" )
-		self.assertImagesEqual( uvWarp["out"], sourceReorder["out"], maxDifference = 0.00001 )
+		vectorWarp["filter"].setValue( "box" )
+		self.assertImagesEqual( vectorWarp["out"], sourceReorder["out"], maxDifference = 0.00001 )
 
 		# Test that a warp with distortion produces an expected output
 		objectToImageVector["object"].setValue( __warpImage( IECore.V2i( 300 ), 0.2, False ) )
-		uvWarp["filter"].setValue( "blackman-harris" )
+		vectorWarp["filter"].setValue( "blackman-harris" )
 
 		# Enable to write out images for visual comparison
 		if False:
 			testWriter = GafferImage.ImageWriter()
-			testWriter["in"].setInput( uvWarp["out"] )
+			testWriter["in"].setInput( vectorWarp["out"] )
 			testWriter["fileName"].setValue( "/tmp/dotGrid.warped.exr" )
 			testWriter["task"].execute()
 
@@ -206,10 +206,10 @@ class UVWarpTest( GafferImageTest.ImageTestCase ) :
 
 		# Test that we can get the same result using pixel offsets instead of normalized coordinates
 		objectToImageVector["object"].setValue( __warpImage( IECore.V2i( 300 ), 0.2, True ) )
-		uvWarp["vectorMode"].setValue( GafferImage.UVWarp.VectorMode.Relative )
-		uvWarp["vectorUnits"].setValue( GafferImage.UVWarp.VectorUnits.Pixels )
+		vectorWarp["vectorMode"].setValue( GafferImage.VectorWarp.VectorMode.Relative )
+		vectorWarp["vectorUnits"].setValue( GafferImage.VectorWarp.VectorUnits.Pixels )
 
-		self.assertImagesEqual( uvWarp["out"], expectedReader["out"], maxDifference = 0.0005, ignoreMetadata = True )
+		self.assertImagesEqual( vectorWarp["out"], expectedReader["out"], maxDifference = 0.0005, ignoreMetadata = True )
 		
 
 if __name__ == "__main__":
