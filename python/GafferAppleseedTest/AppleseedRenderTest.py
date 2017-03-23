@@ -236,5 +236,11 @@ class AppleseedRenderTest( GafferTest.TestCase ) :
 		self.assertTrue( os.path.exists( self.temporaryDirectory() + "/appleseedTests" ) )
 		self.assertTrue( os.path.exists( self.temporaryDirectory() + "/appleseedTests/test.0001.appleseed" ) )
 
+	def testInternalConnectionsNotSerialised( self ) :
+
+		s = Gaffer.ScriptNode()
+		s["render"] = GafferAppleseed.AppleseedRender()
+		self.assertFalse( "__adaptedIn" in s.serialise() )
+
 if __name__ == "__main__":
 	unittest.main()
