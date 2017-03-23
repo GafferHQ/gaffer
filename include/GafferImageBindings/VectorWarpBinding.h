@@ -40,7 +40,7 @@
 namespace GafferImageBindings
 {
 
-void bindUVWarp();
+void bindVectorWarp();
 
 }; // namespace GafferImageBindings
 

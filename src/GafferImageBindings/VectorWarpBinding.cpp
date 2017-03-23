@@ -34,25 +34,25 @@
 
 #include "GafferBindings/DependencyNodeBinding.h"
 
-#include "GafferImage/UVWarp.h"
-#include "GafferImageBindings/UVWarpBinding.h"
+#include "GafferImage/VectorWarp.h"
+#include "GafferImageBindings/VectorWarpBinding.h"
 
 using namespace GafferImage;
 
 namespace GafferImageBindings
 {
 
-void bindUVWarp()
+void bindVectorWarp()
 {
-	boost::python::scope s = GafferBindings::DependencyNodeClass<UVWarp>();
+	boost::python::scope s = GafferBindings::DependencyNodeClass<VectorWarp>();
 
-	boost::python::enum_<UVWarp::VectorMode>( "VectorMode" )
-		.value( "Relative", UVWarp::Relative )
-		.value( "Absolute", UVWarp::Absolute );
+	boost::python::enum_<VectorWarp::VectorMode>( "VectorMode" )
+		.value( "Relative", VectorWarp::Relative )
+		.value( "Absolute", VectorWarp::Absolute );
 
-	boost::python::enum_<UVWarp::VectorUnits>( "VectorUnits" )
-		.value( "Pixels", UVWarp::Pixels )
-		.value( "Screen", UVWarp::Screen ); 
+	boost::python::enum_<VectorWarp::VectorUnits>( "VectorUnits" )
+		.value( "Pixels", VectorWarp::Pixels )
+		.value( "Screen", VectorWarp::Screen ); 
 }
 
 } // namespace GafferImageBindings
