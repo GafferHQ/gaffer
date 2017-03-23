@@ -96,7 +96,7 @@ ImageStats::ImageStats( const std::string &name )
 	defaultChannels.push_back( "A" );
 	addChild( new StringVectorDataPlug( "channels", Plug::In, defaultChannelsData ) );
 
-	addChild( new Box2iPlug( "regionOfInterest", Gaffer::Plug::In ) );
+	addChild( new Box2iPlug( "area", Gaffer::Plug::In ) );
 	addChild( new Color4fPlug( "average", Gaffer::Plug::Out, Imath::Color4f( 0, 0, 0, 1 ) ) );
 	addChild( new Color4fPlug( "min", Gaffer::Plug::Out, Imath::Color4f( 0, 0, 0, 1 ) ) );
 	addChild( new Color4fPlug( "max", Gaffer::Plug::Out, Imath::Color4f( 0, 0, 0, 1 ) ) );
@@ -126,12 +126,12 @@ const Gaffer::StringVectorDataPlug *ImageStats::channelsPlug() const
 	return getChild<StringVectorDataPlug>( g_firstPlugIndex + 1 );
 }
 
-Box2iPlug *ImageStats::regionOfInterestPlug()
+Box2iPlug *ImageStats::areaPlug()
 {
 	return getChild<Box2iPlug>( g_firstPlugIndex + 2 );
 }
 
-const Box2iPlug *ImageStats::regionOfInterestPlug() const
+const Box2iPlug *ImageStats::areaPlug() const
 {
 	return getChild<Box2iPlug>( g_firstPlugIndex + 2 );
 }
@@ -192,7 +192,7 @@ void ImageStats::affects( const Gaffer::Plug *input, AffectedPlugsContainer &out
 		input == inPlug()->channelNamesPlug() ||
 		input == inPlug()->channelDataPlug() ||
 		input == channelsPlug() ||
-		regionOfInterestPlug()->isAncestorOf( input )
+		areaPlug()->isAncestorOf( input )
 	)
 	{
 		for( unsigned int i = 0; i < 4; ++i )
@@ -217,15 +217,15 @@ void ImageStats::hash( const ValuePlug *output, const Context *context, IECore::
 	}
 
 	const std::string channelName = this->channelName( colorIndex );
-	const Imath::Box2i regionOfInterest = regionOfInterestPlug()->getValue();
+	const Imath::Box2i area = areaPlug()->getValue();
 
-	if( channelName.empty() || BufferAlgo::empty( regionOfInterest ) )
+	if( channelName.empty() || BufferAlgo::empty( area ) )
 	{
 		h.append( static_cast<const FloatPlug *>( output )->defaultValue() );
 		return;
 	}
 
-	Sampler s( inPlug(), channelName, regionOfInterest );
+	Sampler s( inPlug(), channelName, area );
 	s.hash( h );
 }
 
@@ -240,24 +240,24 @@ void ImageStats::compute( ValuePlug *output, const Context *context ) const
 	}
 
 	const std::string channelName = this->channelName( colorIndex );
-	const Imath::Box2i regionOfInterest = regionOfInterestPlug()->getValue();
+	const Imath::Box2i area = areaPlug()->getValue();
 
-	if( channelName.empty() || BufferAlgo::empty( regionOfInterest ) )
+	if( channelName.empty() || BufferAlgo::empty( area ) )
 	{
 		output->setToDefault();
 		return;
 	}
 
 	// Loop over the ROI and compute the min, max and average channel values and then set our outputs.
-	Sampler s( inPlug(), channelName, regionOfInterest );
+	Sampler s( inPlug(), channelName, area );
 
 	float min = Imath::limits<float>::max();
 	float max = Imath::limits<float>::min();
 	double sum = 0.;
 
-	for( int y = regionOfInterest.min.y; y < regionOfInterest.max.y; ++y )
+	for( int y = area.min.y; y < area.max.y; ++y )
 	{
-		for( int x = regionOfInterest.min.x; x < regionOfInterest.max.x; ++x )
+		for( int x = area.min.x; x < area.max.x; ++x )
 		{
 			float v = s.sample( x, y );
 			min = std::min( v, min );
@@ -277,7 +277,7 @@ void ImageStats::compute( ValuePlug *output, const Context *context ) const
 	else if( output->parent<Plug>() == averagePlug() )
 	{
 		static_cast<FloatPlug *>( output )->setValue(
-			sum / double( (regionOfInterest.size().x) * (regionOfInterest.size().y) )
+			sum / double( (area.size().x) * (area.size().y) )
 		);
 	}
 }

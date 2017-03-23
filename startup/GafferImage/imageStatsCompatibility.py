@@ -1,6 +1,6 @@
 ##########################################################################
 #
-#  Copyright (c) 2015, Image Engine Design Inc. All rights reserved.
+#  Copyright (c) 2017, Image Engine Design Inc. All rights reserved.
 #
 #  Redistribution and use in source and binary forms, with or without
 #  modification, are permitted provided that the following conditions are
@@ -34,94 +34,17 @@
 #
 ##########################################################################
 
-import Gaffer
-import GafferUI
 import GafferImage
-import GafferImageUI
 
-## A function suitable as the postCreator in a NodeMenu.append() call. It
-# sets the region of interest for the node to cover the entire format.
-def postCreate( node, menu ) :
+def __imageStatsGetItem( originalGetItem ) :
 
-	with node.scriptNode().context() :
-		if node["in"].getInput() :
-			format = node["in"]["format"].getValue()
-		else:
-			format = GafferImage.FormatPlug.getDefaultFormat( node.scriptNode().context() )
+	def getItem( self, key ) :
 
-	node["area"].setValue( format.getDisplayWindow() )
+		if key == "regionOfInterest" :
+			key = "area"
 
-Gaffer.Metadata.registerNode(
+		return originalGetItem( self, key )
 
-	GafferImage.ImageStats,
+	return getItem
 
-	"description",
-	"""
-	Calculates minimum, maximum and average colours for a region of
-	an image. These outputs can then be used to drive other plugs
-	within the node graph.
-	""",
-
-	plugs = {
-
-		"in" : [
-
-			"description",
-			"""
-			The input image to be analysed.
-			""",
-
-		],
-
-		"channels" : [
-
-			"description",
-			"""
-			The names of the four channels to be analysed.
-			""",
-
-			"nodule:type", "",
-
-		],
-
-		"area" : [
-
-			"description",
-			"""
-			The area of the image to be analysed.
-			""",
-
-			"nodule:type", "",
-
-		],
-
-		"average" : [
-
-			"description",
-			"""
-			The per-channel mean values computed from the input image region.
-			""",
-
-		],
-
-		"min" : [
-
-			"description",
-			"""
-			The per-channel minimum values computed from the input image region.
-			""",
-
-		],
-
-		"max" : [
-
-			"description",
-			"""
-			The per-channel maximum values computed from the input image region.
-			""",
-
-		],
-
-	}
-
-)
+GafferImage.ImageStats.__getitem__ = __imageStatsGetItem( GafferImage.ImageStats.__getitem__ )

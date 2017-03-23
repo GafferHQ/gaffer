@@ -46,8 +46,8 @@
 namespace GafferImage
 {
 
-/// Provides statistics on an image's colour profile.
-/// The ImageStats node outputs the minimum, maximum and average values of the pixel values within a region of interest in the image.
+/// \todo Add an areaSource plug with the same semantics
+/// that the Crop node has.
 class ImageStats : public Gaffer::ComputeNode
 {
 
@@ -62,14 +62,19 @@ class ImageStats : public Gaffer::ComputeNode
 
 		GafferImage::ImagePlug *inPlug();
 		const GafferImage::ImagePlug *inPlug() const;
+
 		Gaffer::StringVectorDataPlug *channelsPlug();
 		const Gaffer::StringVectorDataPlug *channelsPlug() const;
-		Gaffer::Box2iPlug *regionOfInterestPlug();
-		const Gaffer::Box2iPlug *regionOfInterestPlug() const;
+
+		Gaffer::Box2iPlug *areaPlug();
+		const Gaffer::Box2iPlug *areaPlug() const;
+
 		Gaffer::Color4fPlug *averagePlug();
 		const Gaffer::Color4fPlug *averagePlug() const;
+
 		Gaffer::Color4fPlug *minPlug();
 		const Gaffer::Color4fPlug *minPlug() const;
+
 		Gaffer::Color4fPlug *maxPlug();
 		const Gaffer::Color4fPlug *maxPlug() const;
 
