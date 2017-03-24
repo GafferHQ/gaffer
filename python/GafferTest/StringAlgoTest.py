@@ -53,6 +53,19 @@ class StringAlgoTest( GafferTest.TestCase ) :
 			( "dog collar", "dog co*", True ),
 			( "dog collar", "dog *", True ),
 			( "dog collar", "dog*", True ),
+			( "cat", "ca?", True ),
+			( "", "?", False ),
+			( "?", "?", True ),
+			# The following are mildly confusing, because we
+			# must type two backslashes to end up with a single
+			# backslash in the string literals we're constructing.
+			( "\\", "\\\\", True ),   # \ matches \\
+			( "d\\", "d\\\\", True ), # d\ matches d\\
+			( "*", "\\*", True ),     # * matches \*
+			( "a*", "a\\*", True ),   # a* matches a\*
+			( "a", "\\a", True ),     # a matches \a
+			( "\\", "\\x", False ),   # \ doesn't match \x
+			( "?", "\\?", True ),     # ? matches \?
 		] :
 
 			if r :
@@ -80,6 +93,10 @@ class StringAlgoTest( GafferTest.TestCase ) :
 			( "dogcollar", "dog collar", False ),
 			( "a1", "*1 b2", True ),
 			( "abc", "a*d abc", True ),
+			( "a", "a? a", True ),
+			( "ab", "x? ab", True ),
+			( "ab", "?x ab", True ),
+			( "a1", "\\x a1", True ),
 		] :
 
 			if r :
@@ -97,6 +114,10 @@ class StringAlgoTest( GafferTest.TestCase ) :
 			( "a**", True ),
 			( "a*b", True ),
 			( "*a", True ),
+			( "\\", True ),
+			( "?", True ),
+			( "\\?", True ),
+
 		] :
 
 			if r :

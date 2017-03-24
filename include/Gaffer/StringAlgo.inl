@@ -80,6 +80,22 @@ inline bool matchInternal( const char * const ss, const char *pattern, bool mult
 				}
 				break;
 
+			case '?' :
+
+				if( *s++ != '\0' )
+				{
+					continue;
+				}
+				break;
+
+			case '\\' :
+
+				if( *pattern++ == *s++ )
+				{
+					continue;
+				}
+				break;
+
 			case ' ' :
 
 				if( multiple && *s == '\0' )
@@ -153,7 +169,7 @@ inline bool hasWildcards( const std::string &pattern )
 
 inline bool hasWildcards( const char *pattern )
 {
-	return strchr( pattern, '*' );
+	return pattern[strcspn( pattern, "*?\\" )];
 }
 
 template<typename Token, typename OutputIterator>
