@@ -38,6 +38,7 @@ import unittest
 
 import Gaffer
 import GafferTest
+import IECore
 
 class MetadataAlgoTest( GafferTest.TestCase ) :
 
@@ -177,6 +178,42 @@ class MetadataAlgoTest( GafferTest.TestCase ) :
 		Gaffer.MetadataAlgo.copy( s, t )
 		for k in Gaffer.Metadata.registeredValues( t ) :
 			self.assertEqual( Gaffer.Metadata.value( t, k ), Gaffer.Metadata.value( s, k ) )
+
+	def testCopyColorKeepExisting( self ):
+		plug1 = Gaffer.IntPlug()
+		plug2 = Gaffer.IntPlug()
+
+		connectionColor = IECore.Color3f( 0.1 , 0.2 , 0.3 )
+		noodleColor = IECore.Color3f( 0.4, 0.5 , 0.6 )
+		noodleColorExisting = IECore.Color3f( 0.7, 0.8 , 0.9 )
+
+		Gaffer.Metadata.registerValue( plug1, "connectionGadget:color", connectionColor )
+		Gaffer.Metadata.registerValue( plug1, "nodule:color", noodleColor )
+
+		Gaffer.Metadata.registerValue( plug2, "nodule:color", noodleColorExisting )
+
+		Gaffer.MetadataAlgo.copyColors(plug1, plug2, overwrite = False )
+
+		self.assertEqual( Gaffer.Metadata.value( plug2, "connectionGadget:color" ), connectionColor )
+		self.assertEqual( Gaffer.Metadata.value( plug2, "nodule:color" ), noodleColorExisting )
+
+	def testCopyColorForceOverWrite( self ):
+		plug1 = Gaffer.IntPlug()
+		plug2 = Gaffer.IntPlug()
+
+		connectionColor = IECore.Color3f( 0.1 , 0.2 , 0.3 )
+		noodleColor =  IECore.Color3f( 0.4, 0.5 , 0.6 )
+		noodleColorExisting = IECore.Color3f( 0.7, 0.8 , 0.9 )
+
+		Gaffer.Metadata.registerValue( plug1, "connectionGadget:color", connectionColor )
+		Gaffer.Metadata.registerValue( plug1, "nodule:color", noodleColor )
+
+		Gaffer.Metadata.registerValue( plug2, "nodule:color", noodleColorExisting )
+
+		Gaffer.MetadataAlgo.copyColors(plug1, plug2, overwrite = True )
+
+		self.assertEqual( Gaffer.Metadata.value( plug2, "connectionGadget:color" ), connectionColor )
+		self.assertEqual( Gaffer.Metadata.value( plug2, "nodule:color" ), noodleColor )
 
 	def tearDown( self ) :
 

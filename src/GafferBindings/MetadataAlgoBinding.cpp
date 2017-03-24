@@ -72,6 +72,8 @@ void bindMetadataAlgo()
 
 	def( "copy", &copy, ( arg( "from" ), arg( "to" ), arg( "exclude" ) = "", arg( "persistentOnly" ) = true, arg( "persistent" ) = true ) );
 
+	def( "copyColors", &copyColors,  (arg( "srcPlug" ), arg( "dstPlug" ), arg( "overwrite") ));
+
 }
 
 } // namespace GafferBindings
