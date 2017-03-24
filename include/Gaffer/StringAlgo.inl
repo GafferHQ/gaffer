@@ -52,6 +52,9 @@ inline bool matchInternal( const char * const ss, const char *pattern, bool mult
 	const char *s = ss;
 	while( true )
 	{
+		// Each case either returns a result if it can determine one,
+		// continues if the match is ok so far, or breaks if the match
+		// has failed.
 		switch( c = *pattern++ )
 		{
 			case '\0' :
@@ -68,49 +71,52 @@ inline bool matchInternal( const char * const ss, const char *pattern, bool mult
 				}
 
 				// general case - recurse.
-				while( *s != '\0' )
+				for( const char *rs = s; *rs != '\0'; ++rs )
 				{
-					if( matchInternal( s, pattern, multiple ) )
+					if( matchInternal( rs, pattern, multiple ) )
 					{
 						return true;
 					}
-					s++;
 				}
-				return false;
+				break;
+
+			case ' ' :
+
+				if( multiple && *s == '\0' )
+				{
+					// Space terminates sub-patterns, so we've
+					// found a match.
+					return true;
+				}
+				// Fall through to default
 
 			default :
 
-				if( c == *s )
+				if( c == *s++ )
 				{
-					s++;
+					continue;
 				}
-				else if( !multiple )
+
+		}
+
+		// Match failed
+
+		if( !multiple )
+		{
+			return false;
+		}
+		else
+		{
+			// Reset to start of string, and advance to next pattern.
+			s = ss;
+			while( c != ' ' )
+			{
+				if( c == '\0' )
 				{
 					return false;
 				}
-				else
-				{
-					if( c == ' ' && *s == '\0' )
-					{
-						// space terminates sub-patterns, so we've
-						// found a match.
-						return true;
-					}
-					else
-					{
-						// no match in this pattern. reset to start
-						// of string, and advance to next pattern.
-						s = ss;
-						while( c != ' ' )
-						{
-							if( c == '\0' )
-							{
-								return false;
-							}
-							c = *pattern++;
-						}
-					}
-				}
+				c = *pattern++;
+			}
 		}
 	}
 }

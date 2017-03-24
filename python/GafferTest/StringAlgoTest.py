@@ -79,6 +79,7 @@ class StringAlgoTest( GafferTest.TestCase ) :
 			( "dogcollar", "dog *fish", False ),
 			( "dogcollar", "dog collar", False ),
 			( "a1", "*1 b2", True ),
+			( "abc", "a*d abc", True ),
 		] :
 
 			if r :
