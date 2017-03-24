@@ -61,6 +61,10 @@ StandardAttributes::StandardAttributes( const std::string &name )
 	attributes->addOptionalMember( "gaffer:deformationBlur", new IECore::BoolData( true ), "deformationBlur", Gaffer::Plug::Default, false );
 	attributes->addOptionalMember( "gaffer:deformationBlurSegments", new Gaffer::IntPlug( "value", Gaffer::Plug::In, 1, 1 ), "deformationBlurSegments", false );
 
+	// light linking
+
+	attributes->addOptionalMember( "linkedLights", new IECore::StringData( "" ), "linkedLights", Gaffer::Plug::Default, false );
+
 	plugSetSignal().connect( boost::bind( &StandardAttributes::plugSet, this, ::_1 ) );
 
 }

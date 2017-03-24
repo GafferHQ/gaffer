@@ -54,6 +54,7 @@ class StandardAttributesTest( GafferSceneTest.SceneTestCase ) :
 		self.assertEqual( s["attributes"]["transformBlurSegments"]["value"].getValue(), 1 )
 		self.assertEqual( s["attributes"]["deformationBlur"]["value"].getValue(), True )
 		self.assertEqual( s["attributes"]["deformationBlurSegments"]["value"].getValue(), 1 )
+		self.assertEqual( s["attributes"]["linkedLights"]["value"].getValue(), "" )
 
 		self.assertEqual( s["attributes"]["visibility"]["value"].defaultValue(), True )
 		self.assertEqual( s["attributes"]["doubleSided"]["value"].defaultValue(), True )
@@ -61,6 +62,7 @@ class StandardAttributesTest( GafferSceneTest.SceneTestCase ) :
 		self.assertEqual( s["attributes"]["transformBlurSegments"]["value"].defaultValue(), 1 )
 		self.assertEqual( s["attributes"]["deformationBlur"]["value"].defaultValue(), True )
 		self.assertEqual( s["attributes"]["deformationBlurSegments"]["value"].defaultValue(), 1 )
+		self.assertEqual( s["attributes"]["linkedLights"]["value"].defaultValue(), "" )
 
 	def testSerialisationWithInvisibility( self ) :
 
