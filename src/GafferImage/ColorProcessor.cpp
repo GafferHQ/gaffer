@@ -92,7 +92,6 @@ void ColorProcessor::affects( const Gaffer::Plug *input, AffectedPlugsContainer 
 {
 	ImageProcessor::affects( input, outputs );
 
-	const ImagePlug *in = inPlug();
 	if( affectsColorData( input ) )
 	{
 		outputs.push_back( colorDataPlug() );
@@ -100,10 +99,6 @@ void ColorProcessor::affects( const Gaffer::Plug *input, AffectedPlugsContainer 
 	else if( input == colorDataPlug()  )
 	{
 		outputs.push_back( outPlug()->channelDataPlug() );
-	}
-	else if ( input->parent<ImagePlug>() == in && input != in->channelDataPlug() )
-	{
-		outputs.push_back( outPlug()->getChild<ValuePlug>( input->getName() ) );
 	}
 }
 
