@@ -89,6 +89,7 @@
 #include "GafferImageBindings/UVWarpBinding.h"
 #include "GafferImageBindings/MirrorBinding.h"
 #include "GafferImageBindings/CopyChannelsBinding.h"
+#include "GafferImageBindings/FilterAlgoBinding.h"
 
 using namespace boost::python;
 using namespace GafferImage;
@@ -149,5 +150,6 @@ BOOST_PYTHON_MODULE( _GafferImage )
 	GafferImageBindings::bindUVWarp();
 	GafferImageBindings::bindMirror();
 	GafferImageBindings::bindCopyChannels();
+	GafferImageBindings::bindFilterAlgo();
 
 }

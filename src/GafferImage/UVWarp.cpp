@@ -40,6 +40,7 @@
 
 #include "GafferImage/ImageAlgo.h"
 #include "GafferImage/UVWarp.h"
+#include "GafferImage/FilterAlgo.h"
 
 using namespace Imath;
 using namespace IECore;
@@ -63,29 +64,6 @@ struct UVWarp::Engine : public Warp::Engine
 			m_v( vData->readable() ),
 			m_a( aData->readable() )
 	{
-		V2i oP;
-		for( oP.y = validTileBound.min.y; oP.y < validTileBound.max.y; ++oP.y )
-		{
-			size_t i = BufferAlgo::index( V2i( validTileBound.min.x, oP.y ), tileBound );
-			for( oP.x = validTileBound.min.x; oP.x < validTileBound.max.x; ++oP.x, ++i )
-			{
-				if( m_a[i] == 0.0f )
-				{
-					continue;
-				}
-				const V2f iP = uvToPixel( V2f( m_u[i], m_v[i] ) );
-				m_inputWindow.extendBy( iP );
-			}
-		}
-
-		m_inputWindow.min -= V2i( 1 );
-		m_inputWindow.max += V2i( 1 );
-	}
-
-	virtual Imath::Box2i inputWindow( const Imath::V2i &tileOrigin ) const
-	{
-		assert( tileOrigin == m_tileBound.min );
-		return m_inputWindow;
 	}
 
 	virtual Imath::V2f inputPixel( const Imath::V2f &outputPixel ) const
@@ -114,7 +92,6 @@ struct UVWarp::Engine : public Warp::Engine
 
 		const Box2i m_displayWindow;
 		const Box2i m_tileBound;
-		Box2i m_inputWindow;
 
 		ConstFloatVectorDataPtr m_uData;
 		ConstFloatVectorDataPtr m_vData;

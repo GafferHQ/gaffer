@@ -41,8 +41,10 @@ import IECore
 import Gaffer
 import GafferTest
 import GafferImage
+import GafferImageTest
+import os
 
-class BlurTest( GafferTest.TestCase ) :
+class BlurTest( GafferImageTest.ImageTestCase ) :
 
 	def testPassThrough( self ) :
 
@@ -125,6 +127,67 @@ class BlurTest( GafferTest.TestCase ) :
 
 			blur["radius"].setValue( IECore.V2f( i * 0.5 ) )
 			self.assertAlmostEqual( stats["average"]["r"].getValue(), 1 / 100., delta = 0.0001 )
+
+	def testBlurRange( self ):
+
+		constant = GafferImage.Constant()
+		constant["format"].setValue( GafferImage.Format( 5, 5, 1.000 ) )
+		constant["color"].setValue( IECore.Color4f( 1, 1, 1, 1 ) )
+
+		
+
+		cropDot = GafferImage.Crop()
+		cropDot["area"].setValue( IECore.Box2i( IECore.V2i( 2, 2 ), IECore.V2i( 3, 3 ) ) )
+		cropDot["affectDisplayWindow"].setValue( False )
+		cropDot["in"].setInput( constant["out"] )
+
+		blur = GafferImage.Blur()
+		blur["expandDataWindow"].setValue( True )
+		blur["in"].setInput( cropDot["out"] )
+		blur["radius"]["y"].setInput( blur["radius"]["x"] )
+
+		expression = Gaffer.Expression()
+		blur.addChild( expression )
+		expression.setExpression( 'parent["radius"]["x"] = context[ "loop:index" ] * 0.2', "python" )
+
+		loopInit = GafferImage.Constant()
+		loopInit["format"].setValue( GafferImage.Format( 5, 5, 1.000 ) )
+
+		imageLoop = GafferImage.ImageLoop()
+		imageLoop["in"].setInput( loopInit["out"] )
+
+		merge = GafferImage.Merge()
+		merge["in"].addChild( GafferImage.ImagePlug( "in2", flags = Gaffer.Plug.Flags.Default | Gaffer.Plug.Flags.Dynamic, ) )
+		merge["in"]["in0"].setInput( blur["out"] )
+		merge["in"]["in1"].setInput( imageLoop["previous"] )
+
+		offset = GafferImage.Offset()
+		offset["offset"].setValue( IECore.V2i( -5, 0 ) )
+		offset["in"].setInput( merge["out"] )
+
+		imageLoop["next"].setInput( offset["out"] )
+
+		deleteChannels = GafferImage.DeleteChannels()
+		deleteChannels["mode"].setValue( GafferImage.DeleteChannels.Mode.Keep )
+		deleteChannels["channels"].setValue( IECore.StringVectorData( [ 'R' ] ) )
+		deleteChannels["in"].setInput( imageLoop["out"] )
+
+		finalCrop = GafferImage.Crop()
+		finalCrop["areaSource"].setValue( 1 )
+		finalCrop["in"].setInput( deleteChannels["out"] )
+
+		# Enable to write out images for visual comparison
+		if False:
+			testWriter = GafferImage.ImageWriter()
+			testWriter["in"].setInput( finalCrop["out"] )
+			testWriter["fileName"].setValue( "/tmp/blurRange.exr" )
+			testWriter["openexr"]["dataType"].setValue( 'float' )
+			testWriter["task"].execute()
+
+		expectedReader = GafferImage.ImageReader()
+		expectedReader["fileName"].setValue( os.path.dirname( __file__ ) + "/images/blurRange.exr" )
+
+		self.assertImagesEqual( finalCrop["out"], expectedReader["out"], maxDifference = 0.00001, ignoreMetadata = True )
 
 if __name__ == "__main__":
 	unittest.main()

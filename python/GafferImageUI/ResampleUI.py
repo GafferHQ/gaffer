@@ -77,18 +77,18 @@ Gaffer.Metadata.registerNode(
 
 		] + list( itertools.chain(
 
-			*[ ( "preset:" + x.title(), x ) for x in GafferImage.Resample.filters() ]
+			*[ ( "preset:" + x.title(), x ) for x in GafferImage.FilterAlgo.filterNames() ]
 
 		) ),
 
-		"filterWidth" : [
+		"filterScale" : [
 
 			"description",
 			"""
-			An override for the width of the filter used. This is
-			specified as a number of pixels in the output image. The
-			default value of 0 causes a good default width to be
-			picked based on the filter type.
+			A multiplier for the scale of the filter used.  Scaling up gives a softer
+			result, scaling down gives a sharper result ( likely to alias or even create black
+			patches where no pixels can be found ).  Less than 1 is not recommended unless
+			you have a special technical reason.
 			""",
 
 		],

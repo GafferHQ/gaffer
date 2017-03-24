@@ -38,8 +38,12 @@
 #define GAFFERIMAGE_WARP_H
 
 #include "Gaffer/NumericPlug.h"
+#include "Gaffer/TypedObjectPlug.h"
+#include "Gaffer/StringPlug.h"
 
 #include "GafferImage/ImageProcessor.h"
+
+#include "GafferImage/Sampler.h"
 
 namespace GafferImage
 {
@@ -67,6 +71,12 @@ class Warp : public ImageProcessor
 		Gaffer::IntPlug *boundingModePlug();
 		const Gaffer::IntPlug *boundingModePlug() const;
 
+		Gaffer::StringPlug *filterPlug();
+		const Gaffer::StringPlug *filterPlug() const;
+
+		Gaffer::BoolPlug *useDerivativesPlug();
+		const Gaffer::BoolPlug *useDerivativesPlug() const;
+
 		virtual void affects( const Gaffer::Plug *input, AffectedPlugsContainer &outputs ) const;
 
 	protected :
@@ -83,9 +93,6 @@ class Warp : public ImageProcessor
 
 			virtual ~Engine();
 
-			/// Must be implemented to return a window bounding all input pixels
-			/// for the specified tile.
-			virtual Imath::Box2i inputWindow( const Imath::V2i &tileOrigin ) const = 0;
 			/// Must be implemented to return the source pixel for the specified
 			/// output pixel.
 			virtual Imath::V2f inputPixel( const Imath::V2f &outputPixel ) const = 0;
@@ -115,8 +122,19 @@ class Warp : public ImageProcessor
 		Gaffer::ObjectPlug *enginePlug();
 		const Gaffer::ObjectPlug *enginePlug() const;
 
-		static size_t g_firstPlugIndex;
+		Gaffer::CompoundObjectPlug *sampleRegionsPlug();
+		const Gaffer::CompoundObjectPlug *sampleRegionsPlug() const;
 
+		// This shouldn't even be exposed in the header, but it requires access to Warp::Engine
+		static void hashEngineIfTileValid( Gaffer::Context &context, const Gaffer::ObjectPlug *plug, const Imath::Box2i &dataWindow, const Imath::V2i &tileOrigin, IECore::MurmurHash &h );
+		static ConstEngineDataPtr computeEngineIfTileValid( Gaffer::Context &context, const Gaffer::ObjectPlug *plug, const Imath::Box2i &dataWindow, const Imath::V2i &tileOrigin );
+		
+
+
+		static float approximateDerivative( float upperPos, float center, float lower );
+
+
+		static size_t g_firstPlugIndex;
 };
 
 IE_CORE_DECLAREPTR( Warp )

@@ -83,8 +83,8 @@ class Resample : public ImageProcessor
 		Gaffer::StringPlug *filterPlug();
 		const Gaffer::StringPlug *filterPlug() const;
 
-		Gaffer::V2fPlug *filterWidthPlug();
-		const Gaffer::V2fPlug *filterWidthPlug() const;
+		Gaffer::V2fPlug *filterScalePlug();
+		const Gaffer::V2fPlug *filterScalePlug() const;
 
 		Gaffer::IntPlug *boundingModePlug();
 		const Gaffer::IntPlug *boundingModePlug() const;
@@ -96,8 +96,6 @@ class Resample : public ImageProcessor
 		const Gaffer::IntPlug *debugPlug() const;
 
 		virtual void affects( const Gaffer::Plug *input, AffectedPlugsContainer &outputs ) const;
-
-		static const std::vector<std::string> &filters();
 
 	protected :
 

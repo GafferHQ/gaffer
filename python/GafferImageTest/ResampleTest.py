@@ -176,7 +176,7 @@ class ResampleTest( GafferImageTest.ImageTestCase ) :
 		r["expandDataWindow"].setValue( True )
 		self.assertEqual( r["out"]["dataWindow"].getValue(), IECore.Box2i( d.min - IECore.V2i( 1 ), d.max + IECore.V2i( 1 ) ) )
 
-		r["filterWidth"].setValue( IECore.V2f( 10 ) )
+		r["filterScale"].setValue( IECore.V2f( 10 ) )
 		self.assertEqual( r["out"]["dataWindow"].getValue(), IECore.Box2i( d.min - IECore.V2i( 5 ), d.max + IECore.V2i( 5 ) ) )
 
 	def __matrix( self, inputDataWindow, outputDataWindow ) :

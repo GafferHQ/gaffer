@@ -1,6 +1,6 @@
 //////////////////////////////////////////////////////////////////////////
 //
-//  Copyright (c) 2015, Image Engine Design Inc. All rights reserved.
+//  Copyright (c) 2017, Image Engine Design Inc. All rights reserved.
 //
 //  Redistribution and use in source and binary forms, with or without
 //  modification, are permitted provided that the following conditions are
@@ -34,28 +34,52 @@
 
 #include "boost/python.hpp"
 
-#include "GafferBindings/DependencyNodeBinding.h"
-
-#include "GafferImage/Resample.h"
-#include "GafferImageBindings/ResampleBinding.h"
+#include "GafferImage/FilterAlgo.h"
+#include "GafferImageBindings/FilterAlgoBinding.h"
 
 using namespace boost::python;
-using namespace GafferImage;
-using namespace GafferBindings;
+
+namespace
+{
+	float sampleBoxWrapper( GafferImage::Sampler &sampler, const Imath::V2f &p, float dx, float dy, const std::string &filter )
+	{
+		const OIIO::Filter2D *f = GafferImage::FilterAlgo::acquireFilter( filter );
+		std::vector<float> scratchMemory;
+		return GafferImage::FilterAlgo::sampleBox( sampler, p, dx, dy, f, scratchMemory );
+	}
+
+	float sampleParallelogramWrapper( GafferImage::Sampler &sampler, const Imath::V2f &p, const Imath::V2f &dpdx, const Imath::V2f &dpdy, const std::string &filter )
+	{
+		const OIIO::Filter2D *f = GafferImage::FilterAlgo::acquireFilter( filter );
+		return GafferImage::FilterAlgo::sampleParallelogram( sampler, p, dpdx, dpdy, f );
+	}
+
+	list filterNamesWrapper()
+	{
+		list result;
+		const std::vector<std::string> &filters = GafferImage::FilterAlgo::filterNames();
+		for ( unsigned i=0; i < filters.size(); i++ )
+		{
+			result.append( filters[i] );
+		}
+		return result;
+	}
+}
 
 namespace GafferImageBindings
 {
 
-void bindResample()
+void bindFilterAlgo()
 {
-	scope s = GafferBindings::DependencyNodeClass<Resample>()
-	;
+	object module( borrowed( PyImport_AddModule( "GafferImage.FilterAlgo" ) ) );
+	scope().attr( "FilterAlgo" ) = module;
+	scope moduleScope( module );
 
-	enum_<Resample::Debug>( "Debug")
-		.value( "Off", Resample::Off )
-		.value( "HorizontalPass", Resample::HorizontalPass )
-		.value( "SinglePass", Resample::SinglePass )
-	;
+	def( "filterNames", &filterNamesWrapper );
+	def( "derivativesToAxisAligned", &GafferImage::FilterAlgo::derivativesToAxisAligned );
+	def( "sampleBox", &sampleBoxWrapper );
+	def( "sampleParallelogram", &sampleParallelogramWrapper );
+
 }
 
 } // namespace GafferImageBindings
