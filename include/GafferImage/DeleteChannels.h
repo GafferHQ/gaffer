@@ -38,9 +38,9 @@
 #define GAFFERIMAGE_DELETECHANNELS_H
 
 #include "Gaffer/NumericPlug.h"
+#include "Gaffer/StringPlug.h"
 
 #include "GafferImage/ImageProcessor.h"
-#include "GafferImage/ChannelMaskPlug.h"
 
 namespace GafferImage
 {
@@ -67,8 +67,8 @@ class DeleteChannels : public ImageProcessor
 		Gaffer::IntPlug *modePlug();
 		const Gaffer::IntPlug *modePlug() const;
 
-		GafferImage::ChannelMaskPlug *channelsPlug();
-		const GafferImage::ChannelMaskPlug *channelsPlug() const;
+		Gaffer::StringPlug *channelsPlug();
+		const Gaffer::StringPlug *channelsPlug() const;
 		//@}
 
 		virtual void affects( const Gaffer::Plug *input, AffectedPlugsContainer &outputs ) const;

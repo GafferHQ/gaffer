@@ -34,8 +34,11 @@
 //
 //////////////////////////////////////////////////////////////////////////
 
+#include "Gaffer/StringAlgo.h"
+
 #include "GafferImage/DeleteChannels.h"
 
+using namespace std;
 using namespace IECore;
 using namespace Gaffer;
 
@@ -52,14 +55,7 @@ DeleteChannels::DeleteChannels( const std::string &name )
 	storeIndexOfNextChild( g_firstPlugIndex );
 
 	addChild( new IntPlug( "mode", Plug::In, Delete, Delete, Keep ) );
-
-	addChild(
-		new ChannelMaskPlug(
-			"channels",
-			Gaffer::Plug::In,
-			inPlug()->channelNamesPlug()->defaultValue()
-		)
-	);
+	addChild( new StringPlug( "channels", Gaffer::Plug::In, "[RGB]" ) );
 
 	// Direct pass-through for the things we don't ever change.
 	// This not only simplifies our implementation, but it is also
@@ -85,14 +81,14 @@ const Gaffer::IntPlug *DeleteChannels::modePlug() const
 	return getChild<IntPlug>( g_firstPlugIndex );
 }
 
-GafferImage::ChannelMaskPlug *DeleteChannels::channelsPlug()
+Gaffer::StringPlug *DeleteChannels::channelsPlug()
 {
-	return getChild<ChannelMaskPlug>( g_firstPlugIndex + 1 );
+	return getChild<StringPlug>( g_firstPlugIndex + 1 );
 }
 
-const GafferImage::ChannelMaskPlug *DeleteChannels::channelsPlug() const
+const Gaffer::StringPlug *DeleteChannels::channelsPlug() const
 {
-	return getChild<ChannelMaskPlug>( g_firstPlugIndex + 1 );
+	return getChild<StringPlug>( g_firstPlugIndex + 1 );
 }
 
 void DeleteChannels::affects( const Gaffer::Plug *input, AffectedPlugsContainer &outputs ) const
@@ -120,39 +116,25 @@ void DeleteChannels::hashChannelNames( const GafferImage::ImagePlug *output, con
 
 IECore::ConstStringVectorDataPtr DeleteChannels::computeChannelNames( const Gaffer::Context *context, const ImagePlug *parent ) const
 {
-	StringVectorDataPtr result = new StringVectorData();
+	const Mode mode = static_cast<Mode>( modePlug()->getValue() );
+	const string channels = channelsPlug()->getValue();
 
-	int mode( modePlug()->getValue() );
-	if( mode == Delete ) // Delete the selected channels
+	ConstStringVectorDataPtr inChannelNamesData = inPlug()->channelNamesPlug()->getValue();
+	const vector<string> inChannelNames = inChannelNamesData->readable();
+
+	StringVectorDataPtr resultData = new StringVectorData();
+	vector<string> &result = resultData->writable();
+
+	for( vector<string>::const_iterator it = inChannelNames.begin(), eIt = inChannelNames.end(); it != eIt; ++it )
 	{
-		IECore::ConstStringVectorDataPtr inChannelsData = inPlug()->channelNamesPlug()->getValue();
-		std::vector<std::string> inChannels( inChannelsData->readable() );
-		IECore::ConstStringVectorDataPtr inSelectionData = channelsPlug()->getValue();
-		const std::vector<std::string> &channelSelection( inSelectionData->readable() );
-
-		std::vector<std::string>::iterator it( inChannels.begin() );
-		while ( it != inChannels.end() )
+		const bool match = StringAlgo::matchMultiple( *it, channels );
+		if( match == ( mode == Keep ) )
 		{
-			if ( std::find( channelSelection.begin(), channelSelection.end(), (*it) ) != channelSelection.end() )
-			{
-				it = inChannels.erase( it );
-			}
-			else
-			{
-				++it;
-			}
+			result.push_back( *it );
 		}
+	}
 
-		result->writable() = inChannels;
-	}
-	else // Keep the selected channels
-	{
-		IECore::ConstStringVectorDataPtr channelNamesData = inPlug()->channelNamesPlug()->getValue();
-		std::vector<std::string> maskChannels( channelNamesData->readable() );
-		channelsPlug()->maskChannels( maskChannels );
-		result->writable() = maskChannels;
-	}
-	return result;
+	return resultData;
 }
 
 } // namespace GafferImage
