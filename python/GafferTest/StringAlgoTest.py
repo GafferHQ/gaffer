@@ -55,7 +55,11 @@ class StringAlgoTest( GafferTest.TestCase ) :
 			( "dog collar", "dog*", True ),
 		] :
 
-			self.assertEqual( Gaffer.StringAlgo.match( s, p ), r )
+			if r :
+				self.assertTrue( Gaffer.StringAlgo.match( s, p ), '"{0}" should match "{1}"'.format( s, p ) )
+			else :
+				self.assertFalse( Gaffer.StringAlgo.match( s, p ), '"{0}" shouldn\'t match "{1}"'.format( s, p ) )
+
 			if " " not in s :
 				self.assertEqual( Gaffer.StringAlgo.matchMultiple( s, p ), r )
 
@@ -77,7 +81,10 @@ class StringAlgoTest( GafferTest.TestCase ) :
 			( "a1", "*1 b2", True ),
 		] :
 
-			self.assertEqual( Gaffer.StringAlgo.matchMultiple( s, p ), r )
+			if r :
+				self.assertTrue( Gaffer.StringAlgo.matchMultiple( s, p ), '"{0}" should match "{1}"'.format( s, p ) )
+			else :
+				self.assertFalse( Gaffer.StringAlgo.matchMultiple( s, p ), '"{0}" shouldn\'t match "{1}"'.format( s, p ) )
 
 	def testHasWildcards( self ) :
 
@@ -91,7 +98,10 @@ class StringAlgoTest( GafferTest.TestCase ) :
 			( "*a", True ),
 		] :
 
-			self.assertEqual( Gaffer.StringAlgo.hasWildcards( p ), r )
+			if r :
+				self.assertTrue( Gaffer.StringAlgo.hasWildcards( p ), "{0} has wildcards".format( p ) )
+			else :
+				self.assertFalse( Gaffer.StringAlgo.hasWildcards( p ), "{0} doesn't have wildcards".format( p ) )
 
 if __name__ == "__main__":
 	unittest.main()
