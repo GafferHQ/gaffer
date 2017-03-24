@@ -705,7 +705,7 @@ ImageWriter::ImageWriter( const std::string &name )
 	storeIndexOfNextChild( g_firstPlugIndex );
 	addChild( new ImagePlug( "in" ) );
 	addChild( new StringPlug( "fileName" ) );
-	addChild( new StringPlug( "channels", Gaffer::Plug::In, "[RGB]" ) );
+	addChild( new StringPlug( "channels", Gaffer::Plug::In, "*" ) );
 	addChild( new ImagePlug( "out", Plug::Out, Plug::Default & ~Plug::Serialisable ) );
 	outPlug()->setInput( inPlug() );
 
