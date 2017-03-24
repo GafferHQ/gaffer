@@ -38,8 +38,9 @@
 #ifndef GAFFERIMAGE_CHANNELDATAPROCESSOR_H
 #define GAFFERIMAGE_CHANNELDATAPROCESSOR_H
 
+#include "Gaffer/StringPlug.h"
+
 #include "GafferImage/ImageProcessor.h"
-#include "GafferImage/ChannelMaskPlug.h"
 
 namespace GafferImage
 {
@@ -58,12 +59,8 @@ class ChannelDataProcessor : public ImageProcessor
 
 		virtual void affects( const Gaffer::Plug *input, AffectedPlugsContainer &outputs ) const;
 
-		//! @name Plug Accessors
-		//////////////////////////////////////////////////////////////
-		//@{
-		GafferImage::ChannelMaskPlug *channelMaskPlug();
-		const GafferImage::ChannelMaskPlug *channelMaskPlug() const;
-		//@}
+		Gaffer::StringPlug *channelsPlug();
+		const Gaffer::StringPlug *channelsPlug() const;
 
 	protected :
 
