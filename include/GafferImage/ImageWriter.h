@@ -50,7 +50,6 @@ namespace Gaffer
 namespace GafferImage
 {
 
-IE_CORE_FORWARDDECLARE( ChannelMaskPlug )
 IE_CORE_FORWARDDECLARE( ImagePlug )
 
 class ImageWriter : public GafferDispatch::TaskNode
@@ -75,8 +74,8 @@ class ImageWriter : public GafferDispatch::TaskNode
 		GafferImage::ImagePlug *inPlug();
 		const GafferImage::ImagePlug *inPlug() const;
 
-		const GafferImage::ChannelMaskPlug *channelsPlug() const;
-		GafferImage::ChannelMaskPlug *channelsPlug();
+		Gaffer::StringPlug *channelsPlug();
+		const Gaffer::StringPlug *channelsPlug() const;
 
 		GafferImage::ImagePlug *outPlug();
 		const GafferImage::ImagePlug *outPlug() const;
