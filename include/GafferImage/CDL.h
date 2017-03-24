@@ -42,13 +42,6 @@
 
 #include "GafferImage/OpenColorIOTransform.h"
 
-namespace Gaffer
-{
-
-IE_CORE_FORWARDDECLARE( StringPlug )
-
-} // namespace Gaffer
-
 namespace GafferImage
 {
 
