@@ -55,7 +55,7 @@ DeleteChannels::DeleteChannels( const std::string &name )
 	storeIndexOfNextChild( g_firstPlugIndex );
 
 	addChild( new IntPlug( "mode", Plug::In, Delete, Delete, Keep ) );
-	addChild( new StringPlug( "channels", Gaffer::Plug::In, "[RGB]" ) );
+	addChild( new StringPlug( "channels" ) );
 
 	// Direct pass-through for the things we don't ever change.
 	// This not only simplifies our implementation, but it is also
