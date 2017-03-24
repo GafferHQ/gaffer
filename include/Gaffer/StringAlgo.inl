@@ -46,6 +46,55 @@ namespace Gaffer
 namespace Detail
 {
 
+// Performs matching of character classes within [], returning
+// true for a match and false for no match. In either case, updates
+// pattern to point to the first character after the closing ']', or
+// to the terminating null in the case of a missing ']'.
+inline bool matchCharacterClass( char c, const char *&pattern )
+{
+	const bool invert = *pattern == '!';
+	if( invert )
+	{
+		pattern++;
+	}
+
+	bool matched = false;
+	for( const char *start = pattern; true; pattern++ )
+	{
+		switch( char d = *pattern )
+		{
+			case '\0' :
+				return false;
+			case ']' :
+				pattern++;
+				return matched == !invert;
+			case '-' :
+				if( pattern > start && pattern[1] != ']' )
+				{
+					const char l = pattern[-1];
+					const char r = *++pattern;
+					if( c >= l && c <= r )
+					{
+						matched = true;
+					}
+					continue;
+				}
+				else
+				{
+					// The '-' was at the start or end of the
+					// pattern, fall through to treat it
+					// as a regular character below.
+				}
+			default :
+				if( d == c )
+				{
+					matched = true;
+				}
+				continue;
+		}
+	}
+}
+
 inline bool matchInternal( const char * const ss, const char *pattern, bool multiple = false )
 {
 	char c;
@@ -91,6 +140,14 @@ inline bool matchInternal( const char * const ss, const char *pattern, bool mult
 			case '\\' :
 
 				if( *pattern++ == *s++ )
+				{
+					continue;
+				}
+				break;
+
+			case '[' :
+
+				if( matchCharacterClass( *s++, pattern ) )
 				{
 					continue;
 				}
@@ -169,7 +226,7 @@ inline bool hasWildcards( const std::string &pattern )
 
 inline bool hasWildcards( const char *pattern )
 {
-	return pattern[strcspn( pattern, "*?\\" )];
+	return pattern[strcspn( pattern, "*?\\[" )];
 }
 
 template<typename Token, typename OutputIterator>

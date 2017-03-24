@@ -56,6 +56,28 @@ class StringAlgoTest( GafferTest.TestCase ) :
 			( "cat", "ca?", True ),
 			( "", "?", False ),
 			( "?", "?", True ),
+			( "a", "[abc]", True ),
+			( "catA", "cat[ABC]", True ),
+			( "catD", "cat[A-Z]", True ),
+			( "cars", "ca[rb]s", True ),
+			( "cabs", "ca[rb]s", True ),
+			( "cats", "ca[rb]s", False ),
+			( "catD", "cat[CEF]", False ),
+			( "catD", "cat[!CEF]", True ),
+			( "cars", "ca[!r]s", False ),
+			( "cabs", "ca[!r]s", True ),
+			( "catch22", "c*[0-9]2", True ),
+			( "x", "[0-9]", False ),
+			( "x", "[!0-9]", True ),
+			( "x", "[A-Za-z]", True ),
+			# We should treat a leading or trailing
+			# '-' as a regular character and not
+			# a range specifier.
+			( "_", "[-|]", False ),
+			( "_", "[!-|]", True ),
+			( "-", "[!-]", False ),
+			( "x-", "x[d-]", True ),
+			( "hyphen-ated", "*[-]ated", True ),
 			# The following are mildly confusing, because we
 			# must type two backslashes to end up with a single
 			# backslash in the string literals we're constructing.
@@ -97,6 +119,9 @@ class StringAlgoTest( GafferTest.TestCase ) :
 			( "ab", "x? ab", True ),
 			( "ab", "?x ab", True ),
 			( "a1", "\\x a1", True ),
+			( "R", "[RGB] *.[RGB]", True ),
+			( "diffuse.R", "[RGB] *.[RGB]", True ),
+			( "diffuse.A", "[RGB] *.[RGB]", False ),
 		] :
 
 			if r :
@@ -117,7 +142,7 @@ class StringAlgoTest( GafferTest.TestCase ) :
 			( "\\", True ),
 			( "?", True ),
 			( "\\?", True ),
-
+			( "[abc]", True ),
 		] :
 
 			if r :

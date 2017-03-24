@@ -58,6 +58,10 @@ namespace StringAlgo
 /// - "*", which matches any sequence of characters
 /// - "?", which matches any single character
 /// - "\", which escapes a subsequent wildcard
+/// - [ABC], which matches any single character from the specified set
+/// - [A-Z], which matches any single character from the specified range
+/// - [!ABC], which matches any character not in the specified set
+/// - [!A-Z], which matches any character not in the specified range
 typedef std::string MatchPattern;
 
 /// Returns true if the string matches the pattern and false otherwise.
