@@ -39,7 +39,7 @@
 #include "Gaffer/Context.h"
 
 #include "GafferImage/ImageAlgo.h"
-#include "GafferImage/UVWarp.h"
+#include "GafferImage/VectorWarp.h"
 #include "GafferImage/FilterAlgo.h"
 
 using namespace Imath;
@@ -51,18 +51,20 @@ using namespace GafferImage;
 // Engine implementation
 //////////////////////////////////////////////////////////////////////////
 
-struct UVWarp::Engine : public Warp::Engine
+struct VectorWarp::Engine : public Warp::Engine
 {
 
-	Engine( const Box2i &displayWindow, const Box2i &tileBound, const Box2i &validTileBound, ConstFloatVectorDataPtr uData, ConstFloatVectorDataPtr vData, ConstFloatVectorDataPtr aData )
+	Engine( const Box2i &displayWindow, const Box2i &tileBound, const Box2i &validTileBound, ConstFloatVectorDataPtr xData, ConstFloatVectorDataPtr yData, ConstFloatVectorDataPtr aData, VectorMode vectorMode, VectorUnits vectorUnits )
 		:	m_displayWindow( displayWindow ),
 			m_tileBound( tileBound ),
-			m_uData( uData ),
-			m_vData( vData ),
+			m_xData( xData ),
+			m_yData( yData ),
 			m_aData( aData ),
-			m_u( uData->readable() ),
-			m_v( vData->readable() ),
-			m_a( aData->readable() )
+			m_x( xData->readable() ),
+			m_y( yData->readable() ),
+			m_a( aData->readable() ),
+			m_vectorMode( vectorMode ),
+			m_vectorUnits( vectorUnits )
 	{
 	}
 
@@ -76,82 +78,115 @@ struct UVWarp::Engine : public Warp::Engine
 		}
 		else
 		{
-			return uvToPixel( V2f( m_u[i], m_v[i] ) );
+			V2f result = m_vectorMode == Relative ? outputPixel : V2f( 0.0f );
+			
+			result += m_vectorUnits == Screen ?
+				screenToPixel( V2f( m_x[i], m_y[i] ) ) :
+				V2f( m_x[i], m_y[i] );
+				
+			return result;
 		}
 	}
 
 	private :
 
-		inline V2f uvToPixel( const V2f &uv ) const
+		inline V2f screenToPixel( const V2f &vector ) const
 		{
 			return V2f(
-				lerp<float>( m_displayWindow.min.x, m_displayWindow.max.x, uv.x ),
-				lerp<float>( m_displayWindow.min.y, m_displayWindow.max.y, uv.y )
+				lerp<float>( m_displayWindow.min.x, m_displayWindow.max.x, vector.x ),
+				lerp<float>( m_displayWindow.min.y, m_displayWindow.max.y, vector.y )
 			);
 		}
 
 		const Box2i m_displayWindow;
 		const Box2i m_tileBound;
 
-		ConstFloatVectorDataPtr m_uData;
-		ConstFloatVectorDataPtr m_vData;
+		ConstFloatVectorDataPtr m_xData;
+		ConstFloatVectorDataPtr m_yData;
 		ConstFloatVectorDataPtr m_aData;
 
-		const std::vector<float> &m_u;
-		const std::vector<float> &m_v;
+		const std::vector<float> &m_x;
+		const std::vector<float> &m_y;
 		const std::vector<float> &m_a;
+
+		const VectorMode m_vectorMode;
+		const VectorUnits m_vectorUnits;
 
 };
 
 //////////////////////////////////////////////////////////////////////////
-// UVWarp implementation
+// VectorWarp implementation
 //////////////////////////////////////////////////////////////////////////
 
-IE_CORE_DEFINERUNTIMETYPED( UVWarp );
+IE_CORE_DEFINERUNTIMETYPED( VectorWarp );
 
-size_t UVWarp::g_firstPlugIndex = 0;
+size_t VectorWarp::g_firstPlugIndex = 0;
 
-UVWarp::UVWarp( const std::string &name )
+VectorWarp::VectorWarp( const std::string &name )
 	:	Warp( name )
 {
 	storeIndexOfNextChild( g_firstPlugIndex );
-	addChild( new ImagePlug( "uv" ) );
+	addChild( new ImagePlug( "vector" ) );
+	addChild( new IntPlug( "vectorMode", Gaffer::Plug::In, (int)Absolute, (int)Relative, (int)Absolute ) );
+	addChild( new IntPlug( "vectorUnits", Gaffer::Plug::In, (int)Screen, (int)Pixels, (int)Screen ) );
 
-	outPlug()->formatPlug()->setInput( uvPlug()->formatPlug() );
-	outPlug()->dataWindowPlug()->setInput( uvPlug()->dataWindowPlug() );
+	outPlug()->formatPlug()->setInput( vectorPlug()->formatPlug() );
+	outPlug()->dataWindowPlug()->setInput( vectorPlug()->dataWindowPlug() );
 }
 
-UVWarp::~UVWarp()
+VectorWarp::~VectorWarp()
 {
 }
 
-ImagePlug *UVWarp::uvPlug()
-{
-	return getChild<ImagePlug>( g_firstPlugIndex );
-}
-
-const ImagePlug *UVWarp::uvPlug() const
+ImagePlug *VectorWarp::vectorPlug()
 {
 	return getChild<ImagePlug>( g_firstPlugIndex );
 }
 
-bool UVWarp::affectsEngine( const Gaffer::Plug *input ) const
+const ImagePlug *VectorWarp::vectorPlug() const
+{
+	return getChild<ImagePlug>( g_firstPlugIndex );
+}
+
+IntPlug *VectorWarp::vectorModePlug()
+{
+	return getChild<IntPlug>( g_firstPlugIndex + 1 );
+}
+
+const IntPlug *VectorWarp::vectorModePlug() const
+{
+	return getChild<IntPlug>( g_firstPlugIndex + 1 );
+}
+
+IntPlug *VectorWarp::vectorUnitsPlug()
+{
+	return getChild<IntPlug>( g_firstPlugIndex + 2 );
+}
+
+const IntPlug *VectorWarp::vectorUnitsPlug() const
+{
+	return getChild<IntPlug>( g_firstPlugIndex + 2 );
+}
+
+bool VectorWarp::affectsEngine( const Gaffer::Plug *input ) const
 {
 	return
 		Warp::affectsEngine( input ) ||
 		input == inPlug()->formatPlug() ||
-		input == uvPlug()->channelNamesPlug() ||
-		input == uvPlug()->channelDataPlug();
+		input == vectorPlug()->channelNamesPlug() ||
+		input == vectorPlug()->channelDataPlug() ||
+		input == vectorModePlug() ||
+		input == vectorUnitsPlug();
 }
 
-void UVWarp::hashEngine( const std::string &channelName, const Imath::V2i &tileOrigin, const Gaffer::Context *context, IECore::MurmurHash &h ) const
+void VectorWarp::hashEngine( const std::string &channelName, const Imath::V2i &tileOrigin, const Gaffer::Context *context, IECore::MurmurHash &h ) const
 {
 	Warp::hashEngine( channelName, tileOrigin, context, h );
 
 	h.append( tileOrigin );
-	uvPlug()->dataWindowPlug()->hash( h );
+	vectorPlug()->dataWindowPlug()->hash( h );
 
-	ConstStringVectorDataPtr channelNames = uvPlug()->channelNamesPlug()->getValue();
+	ConstStringVectorDataPtr channelNames = vectorPlug()->channelNamesPlug()->getValue();
 
 	ContextPtr tmpContext = new Context( *context, Context::Borrowed );
 	Context::Scope scopedContext( tmpContext.get() );
@@ -159,61 +194,66 @@ void UVWarp::hashEngine( const std::string &channelName, const Imath::V2i &tileO
 	if( ImageAlgo::channelExists( channelNames->readable(), "R" ) )
 	{
 		tmpContext->set<std::string>( ImagePlug::channelNameContextName, "R" );
-		uvPlug()->channelDataPlug()->hash( h );
+		vectorPlug()->channelDataPlug()->hash( h );
 	}
 
 	if( ImageAlgo::channelExists( channelNames->readable(), "G" ) )
 	{
 		tmpContext->set<std::string>( ImagePlug::channelNameContextName, "G" );
-		uvPlug()->channelDataPlug()->hash( h );
+		vectorPlug()->channelDataPlug()->hash( h );
 	}
 
 	if( ImageAlgo::channelExists( channelNames->readable(), "A" ) )
 	{
 		tmpContext->set<std::string>( ImagePlug::channelNameContextName, "A" );
-		uvPlug()->channelDataPlug()->hash( h );
+		vectorPlug()->channelDataPlug()->hash( h );
 	}
 
 	inPlug()->formatPlug()->hash( h );
+
+	vectorModePlug()->hash( h );
+	vectorUnitsPlug()->hash( h );
 }
 
-const Warp::Engine *UVWarp::computeEngine( const std::string &channelName, const Imath::V2i &tileOrigin, const Gaffer::Context *context ) const
+const Warp::Engine *VectorWarp::computeEngine( const std::string &channelName, const Imath::V2i &tileOrigin, const Gaffer::Context *context ) const
 {
 	const Box2i tileBound( tileOrigin, tileOrigin + V2i( ImagePlug::tileSize() ) );
-	const Box2i validTileBound = BufferAlgo::intersection( tileBound, uvPlug()->dataWindowPlug()->getValue() );
+	const Box2i validTileBound = BufferAlgo::intersection( tileBound, vectorPlug()->dataWindowPlug()->getValue() );
 
-	ConstStringVectorDataPtr channelNames = uvPlug()->channelNamesPlug()->getValue();
+	ConstStringVectorDataPtr channelNames = vectorPlug()->channelNamesPlug()->getValue();
 
 	ContextPtr tmpContext = new Context( *context, Context::Borrowed );
 	Context::Scope scopedContext( tmpContext.get() );
 
-	ConstFloatVectorDataPtr uData = ImagePlug::blackTile();
+	ConstFloatVectorDataPtr xData = ImagePlug::blackTile();
 	if( ImageAlgo::channelExists( channelNames->readable(), "R" ) )
 	{
 		tmpContext->set<std::string>( ImagePlug::channelNameContextName, "R" );
-		uData = uvPlug()->channelDataPlug()->getValue();
+		xData = vectorPlug()->channelDataPlug()->getValue();
 	}
 
-	ConstFloatVectorDataPtr vData = ImagePlug::blackTile();
+	ConstFloatVectorDataPtr yData = ImagePlug::blackTile();
 	if( ImageAlgo::channelExists( channelNames->readable(), "G" ) )
 	{
 		tmpContext->set<std::string>( ImagePlug::channelNameContextName, "G" );
-		vData = uvPlug()->channelDataPlug()->getValue();
+		yData = vectorPlug()->channelDataPlug()->getValue();
 	}
 
 	ConstFloatVectorDataPtr aData = ImagePlug::whiteTile();
 	if( ImageAlgo::channelExists( channelNames->readable(), "A" ) )
 	{
 		tmpContext->set<std::string>( ImagePlug::channelNameContextName, "A" );
-		aData = uvPlug()->channelDataPlug()->getValue();
+		aData = vectorPlug()->channelDataPlug()->getValue();
 	}
 
 	return new Engine(
 		inPlug()->formatPlug()->getValue().getDisplayWindow(),
 		tileBound,
 		validTileBound,
-		uData,
-		vData,
-		aData
+		xData,
+		yData,
+		aData,
+		(VectorMode)vectorModePlug()->getValue(),
+		(VectorUnits)vectorUnitsPlug()->getValue()
 	);
 }

@@ -62,7 +62,7 @@ enum TypeId
 	ShuffleChannelPlugTypeId = 110766,
 	ChannelMaskPlugTypeId = 110767,
 	WarpTypeId = 110768,
-	UVWarpTypeId = 110769,
+	VectorWarpTypeId = 110769,
 	ImageWriterTypeId = 110770,
 	ImageTransformTypeId = 110771,
 	FilterTypeId = 110772, // Obsolete - available for reuse

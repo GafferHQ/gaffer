@@ -42,17 +42,35 @@
 namespace GafferImage
 {
 
-class UVWarp : public Warp
+class VectorWarp : public Warp
 {
 	public :
 
-		UVWarp( const std::string &name=defaultName<Warp>() );
-		virtual ~UVWarp();
+		VectorWarp( const std::string &name=defaultName<Warp>() );
+		virtual ~VectorWarp();
 
-		IE_CORE_DECLARERUNTIMETYPEDEXTENSION( GafferImage::UVWarp, UVWarpTypeId, Warp );
+		IE_CORE_DECLARERUNTIMETYPEDEXTENSION( GafferImage::VectorWarp, VectorWarpTypeId, Warp );
 
-		ImagePlug *uvPlug();
-		const ImagePlug *uvPlug() const;
+		ImagePlug *vectorPlug();
+		const ImagePlug *vectorPlug() const;
+
+		enum VectorMode
+		{
+			Relative,   // Relative offset
+			Absolute,   // Absolute position
+		};
+
+		Gaffer::IntPlug *vectorModePlug();
+		const Gaffer::IntPlug *vectorModePlug() const;
+
+		enum VectorUnits
+		{
+			Pixels,  // Vector specified in pixels
+			Screen,  // Vector specified as fraction of display window
+		};
+
+		Gaffer::IntPlug *vectorUnitsPlug();
+		const Gaffer::IntPlug *vectorUnitsPlug() const;
 
 	protected :
 
@@ -68,7 +86,7 @@ class UVWarp : public Warp
 
 };
 
-IE_CORE_DECLAREPTR( UVWarp )
+IE_CORE_DECLAREPTR( VectorWarp )
 
 } // namespace GafferImage
 

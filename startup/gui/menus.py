@@ -303,7 +303,7 @@ nodeMenu.append( "/Image/Transform/Transform", GafferImage.ImageTransform, searc
 nodeMenu.append( "/Image/Transform/Crop", GafferImage.Crop, postCreator = GafferImageUI.CropUI.postCreate )
 nodeMenu.append( "/Image/Transform/Offset", GafferImage.Offset )
 nodeMenu.append( "/Image/Transform/Mirror", GafferImage.Mirror )
-nodeMenu.append( "/Image/Warp/UVWarp", GafferImage.UVWarp )
+nodeMenu.append( "/Image/Warp/VectorWarp", GafferImage.VectorWarp )
 nodeMenu.append( "/Image/Channels/Shuffle", GafferImageUI.ShuffleUI.nodeMenuCreateCommand, searchText = "Shuffle" )
 nodeMenu.append( "/Image/Channels/Copy", GafferImage.CopyChannels, searchText = "CopyChannels" )
 nodeMenu.append( "/Image/Channels/Delete", GafferImage.DeleteChannels, searchText = "DeleteChannels" )

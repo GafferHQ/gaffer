@@ -86,7 +86,7 @@
 #include "GafferImageBindings/TextBinding.h"
 #include "GafferImageBindings/OpenColorIOTransformBinding.h"
 #include "GafferImageBindings/WarpBinding.h"
-#include "GafferImageBindings/UVWarpBinding.h"
+#include "GafferImageBindings/VectorWarpBinding.h"
 #include "GafferImageBindings/MirrorBinding.h"
 #include "GafferImageBindings/CopyChannelsBinding.h"
 #include "GafferImageBindings/FilterAlgoBinding.h"
@@ -147,7 +147,7 @@ BOOST_PYTHON_MODULE( _GafferImage )
 	GafferImageBindings::bindText();
 	GafferImageBindings::bindOpenColorIOTransform();
 	GafferImageBindings::bindWarp();
-	GafferImageBindings::bindUVWarp();
+	GafferImageBindings::bindVectorWarp();
 	GafferImageBindings::bindMirror();
 	GafferImageBindings::bindCopyChannels();
 	GafferImageBindings::bindFilterAlgo();

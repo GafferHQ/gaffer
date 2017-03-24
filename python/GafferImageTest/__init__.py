@@ -82,7 +82,7 @@ from OffsetTest import OffsetTest
 from BlurTest import BlurTest
 from TextTest import TextTest
 from OpenColorIOTransformTest import OpenColorIOTransformTest
-from UVWarpTest import UVWarpTest
+from VectorWarpTest import VectorWarpTest
 from MirrorTest import MirrorTest
 from CopyChannelsTest import CopyChannelsTest
 from FilterAlgoTest import FilterAlgoTest
