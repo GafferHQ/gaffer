@@ -76,10 +76,6 @@ class ImageTestCase( GafferTest.TestCase ) :
 			self.assertEqual( imageA["metadata"].getValue(), imageB["metadata"].getValue() )
 		self.assertEqual( imageA["channelNames"].getValue(), imageB["channelNames"].getValue() )
 
-		for channelName in imageA["channelNames"].getValue() :
-			## \todo Lift this restriction
-			self.assertTrue( channelName in "RGBA" )
-
 		difference = GafferImage.Merge()
 		difference["in"][0].setInput( imageA )
 		difference["in"][1].setInput( imageB )
@@ -88,19 +84,11 @@ class ImageTestCase( GafferTest.TestCase ) :
 		stats = GafferImage.ImageStats()
 		stats["in"].setInput( difference["out"] )
 		stats["area"].setValue( imageA["format"].getValue().getDisplayWindow() )
-		stats["channels"].setValue( IECore.StringVectorData( [ "R", "G", "B", "A" ] ) )
 
-		if "R" in imageA["channelNames"].getValue() :
+		for channelName in imageA["channelNames"].getValue() :
+
+			stats["channels"].setValue( IECore.StringVectorData( [ channelName ] * 4 ) )
 			self.assertLessEqual( stats["max"]["r"].getValue(), maxDifference )
-
-		if "G" in imageA["channelNames"].getValue() :
-			self.assertLessEqual( stats["max"]["g"].getValue(), maxDifference )
-
-		if "B" in imageA["channelNames"].getValue() :
-			self.assertLessEqual( stats["max"]["b"].getValue(), maxDifference )
-
-		if "A" in imageA["channelNames"].getValue() :
-			self.assertLessEqual( stats["max"]["a"].getValue(), maxDifference )
 
 	## Returns an image node with an empty data window. This is useful in
 	# verifying that nodes deal correctly with such inputs.
