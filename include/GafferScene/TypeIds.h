@@ -134,6 +134,7 @@ enum TypeId
 	CopyOptionsTypeId = 110589,
 	LightToCameraTypeId = 110590,
 	FilterResultsTypeId = 110591,
+	EvaluateLightLinksTypeId = 110592,
 
 	PreviewInteractiveRenderTypeId = 110649,
 

@@ -82,6 +82,9 @@ class PathMatcher
 		/// were removed, and false if none existed anyway.
 		bool removePaths( const PathMatcher &paths );
 
+		/// Returns a PathMatcher for objects matching both this and the given PathMatcher
+		PathMatcher intersection( const PathMatcher &paths );
+
 		/// Removes the specified path and all descendant paths.
 		/// Returns true if something was removed, false otherwise.
 		bool prune( const std::string &path );

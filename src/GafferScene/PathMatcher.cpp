@@ -420,6 +420,24 @@ bool PathMatcher::removePaths( const PathMatcher &paths )
 	return result;
 }
 
+PathMatcher PathMatcher::intersection( const PathMatcher &paths )
+{
+	PathMatcher result = PathMatcher();
+	for( Iterator it = (*this).begin(); it != (*this).end(); ++it )
+	{
+		RawIterator rit = paths.find( *it );
+		if( rit == paths.end() )
+		{
+			it.prune();
+		}
+		else if( rit.exactMatch() )
+		{
+			result.addPath( *it );
+		}
+	}
+	return result;
+}
+
 bool PathMatcher::prune( const std::string &path )
 {
 	if( path.empty() )

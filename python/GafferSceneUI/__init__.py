@@ -131,6 +131,7 @@ import LightToCameraUI
 import FilterResultsUI
 import TranslateToolUI
 import ScaleToolUI
+import EvaluateLightLinksUI
 
 # then all the PathPreviewWidgets. note that the order
 # of import controls the order of display.

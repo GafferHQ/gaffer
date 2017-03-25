@@ -1001,5 +1001,14 @@ class PathMatcherTest( GafferSceneTest.SceneTestCase ) :
 		self.assertEqual( m1, m1c )
 		self.assertEqual( m2, m2c )
 
+	def testIntersection( self ) :
+
+		m1 = GafferScene.PathMatcher( [ "/a/b/c/d/myTest", "/a/b/c/myTest", "/a/b/c"] )
+		m2 = GafferScene.PathMatcher( [ "/a/b/c/d/myTest" ] )
+
+		m3 = m1.intersection( m2 )
+
+		self.assertEqual( m3.paths(), [ "/a/b/c/d/myTest" ] )
+
 if __name__ == "__main__":
 	unittest.main()

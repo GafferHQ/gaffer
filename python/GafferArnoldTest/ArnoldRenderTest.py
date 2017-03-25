@@ -829,6 +829,79 @@ class ArnoldRenderTest( GafferSceneTest.SceneTestCase ) :
 
 			self.assertEqual( arnold.AiNodeGetBool( node, "matte" ), True )
 
+	def testLightLinking( self ) :
+
+		sphere1 = GafferScene.Sphere()
+		sphere2 = GafferScene.Sphere()
+
+		attributes = GafferScene.StandardAttributes()
+
+		light1 = GafferArnold.ArnoldLight()
+		light1.loadShader( "point_light" )
+
+		light2 = GafferArnold.ArnoldLight()
+		light2.loadShader( "point_light" )
+
+		group = GafferScene.Group()
+		group["in"].addChild( GafferScene.ScenePlug( "in1" ) )
+		group["in"].addChild( GafferScene.ScenePlug( "in2" ) )
+		group["in"].addChild( GafferScene.ScenePlug( "in3" ) )
+		group["in"].addChild( GafferScene.ScenePlug( "in4" ) )
+
+		evaluate = GafferScene.EvaluateLightLinks()
+
+		render = GafferArnold.ArnoldRender()
+
+		attributes["in"].setInput( sphere1["out"] )
+		group["in"]["in1"].setInput( attributes["out"] )
+		group["in"]["in2"].setInput( light1["out"] )
+		group["in"]["in3"].setInput( light2["out"] )
+		group["in"]["in3"].setInput( sphere2["out"] )
+		evaluate["in"].setInput( group["out"] )
+		render["in"].setInput( evaluate["out"] )
+
+		attributes["attributes"]["linkedLights"]["enabled"].setValue( True )
+		attributes["attributes"]["linkedLights"]["value"].setValue( "/group/light /group/light1" )
+
+		# make sure we pass correct data into the renderer
+		self.assertEqual(
+			render["in"].attributes( "/group/sphere" )["linkedLights"],
+			IECore.StringVectorData( ["/group/light", "/group/light1"] ) )
+
+		render["mode"].setValue( render.Mode.SceneDescriptionMode )
+		render["fileName"].setValue( self.temporaryDirectory() + "/test.ass" )
+		render["task"].execute()
+
+		with IECoreArnold.UniverseBlock( writable = True ) :
+
+			arnold.AiASSLoad( self.temporaryDirectory() + "/test.ass" )
+
+			# the first sphere had linked lights
+			sphere1 = arnold.AiNodeLookUpByName( "/group/sphere" )
+			lights = arnold.AiNodeGetArray( sphere1, "light_group" )
+			lightNames = []
+			for i in range(lights.contents.nelements):
+				light = arnold.cast(arnold.AiArrayGetPtr(lights, i), arnold.POINTER(arnold.AtNode))
+				lightNames.append( arnold.AiNodeGetName(light.contents)  )
+
+			doLinking = arnold.AiNodeGetBool( sphere1, "use_light_group" )
+
+			self.assertEqual( lightNames, ["light:/group/light", "light:/group/light1"] )
+			self.assertEqual( doLinking, True )
+
+			# the second sphere does not have any light linking enabled
+			sphere2 = arnold.AiNodeLookUpByName( "/group/sphere2" )
+			lights = arnold.AiNodeGetArray( sphere1, "light_group" )
+			lightNames = []
+			for i in range(lights.contents.nelements):
+				light = arnold.cast(arnold.AiArrayGetPtr(lights, i), arnold.POINTER(arnold.AtNode))
+				lightNames.append( arnold.AiNodeGetName(light.contents)  )
+
+			doLinking = arnold.AiNodeGetBool( sphere2, "use_light_group" )
+
+			self.assertEqual( lightNames, [] )
+			self.assertEqual( doLinking, False )
+
 	def __arrayToSet( self, a ) :
 
 		result = set()

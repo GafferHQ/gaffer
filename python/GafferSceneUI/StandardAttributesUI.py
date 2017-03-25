@@ -175,6 +175,19 @@ Gaffer.Metadata.registerNode(
 
 		],
 
+		"attributes.linkedLights" : [
+
+			"description",
+			"""
+			The lights to be linked to this object. Accepts a
+			set expression or a space separated list of lights.
+			""",
+
+			"layout:section", "Light Linking",
+			"label", "Linked Lights",
+
+		],
+
 	}
 
 )
