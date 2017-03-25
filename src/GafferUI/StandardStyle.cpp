@@ -298,7 +298,6 @@ IECoreGL::GroupPtr translateHandle( Style::Axes axes )
 	group->addChild( cylinder() );
 	group->addChild( coneGroup );
 
-	group->getState()->add( new IECoreGL::DepthTestStateComponent( false ) );
 	group->getState()->add( new IECoreGL::Color( colorForAxes( axes ) ) );
 	group->getState()->add(
 		new IECoreGL::ShaderStateComponent( ShaderLoader::defaultShaderLoader(), TextureLoader::defaultTextureLoader(), "", "", IECoreGL::Shader::constantFragmentSource(), new CompoundObject )
@@ -334,7 +333,6 @@ IECoreGL::GroupPtr rotateHandle( Style::Axes axes )
 	IECoreGL::GroupPtr group = new IECoreGL::Group;
 	group->addChild( torus() );
 
-	group->getState()->add( new IECoreGL::DepthTestStateComponent( false ) );
 	group->getState()->add( new IECoreGL::Color( colorForAxes( axes ) ) );
 	group->getState()->add(
 		new IECoreGL::ShaderStateComponent( ShaderLoader::defaultShaderLoader(), TextureLoader::defaultTextureLoader(), "", "", IECoreGL::Shader::constantFragmentSource(), new CompoundObject )
@@ -378,7 +376,6 @@ IECoreGL::GroupPtr scaleHandle( Style::Axes axes )
 	}
 	group->addChild( cubeGroup );
 
-	group->getState()->add( new IECoreGL::DepthTestStateComponent( false ) );
 	group->getState()->add( new IECoreGL::Color( colorForAxes( axes ) ) );
 	group->getState()->add(
 		new IECoreGL::ShaderStateComponent( ShaderLoader::defaultShaderLoader(), TextureLoader::defaultTextureLoader(), "", "", IECoreGL::Shader::constantFragmentSource(), new CompoundObject )

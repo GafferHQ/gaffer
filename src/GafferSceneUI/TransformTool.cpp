@@ -238,6 +238,35 @@ bool updateSelectionWalk( const CapturedProcess::PtrVector &processes, Transform
 	return false;
 }
 
+class HandlesGadget : public Gadget
+{
+
+	public :
+
+		HandlesGadget( const std::string &name="HandlesGadget" )
+			:	Gadget( name )
+		{
+		}
+
+	protected :
+
+		virtual void doRender( const Style *style ) const
+		{
+			glEnable( GL_DEPTH_TEST );
+			// Render with reversed depth test so
+			// the handles are visible even when
+			// behind an object.
+			glDepthFunc( GL_GREATER );
+			Gadget::doRender( style );
+			// The render with the regular depth
+			// test so that the handles occlude
+			// themselves appropriately.
+			glDepthFunc( GL_LESS );
+			Gadget::doRender( style );
+		}
+
+};
+
 } // namespace
 
 //////////////////////////////////////////////////////////////////////////
@@ -250,7 +279,7 @@ size_t TransformTool::g_firstPlugIndex = 0;
 
 TransformTool::TransformTool( SceneView *view, const std::string &name )
 	:	SelectionTool( view, name ),
-		m_handles( new Gadget() ),
+		m_handles( new HandlesGadget() ),
 		m_selectionDirty( true ),
 		m_handlesDirty( true ),
 		m_dragging( false ),
