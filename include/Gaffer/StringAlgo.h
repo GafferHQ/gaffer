@@ -52,8 +52,16 @@ namespace StringAlgo
 /// reason to use a MatchPattern is documentation - by including it in a function
 /// signature, the use of an argument can be made more obvious.
 ///
-/// Patterns currently support only the "*" wildcard, which matches any
-/// sequence of characters.
+/// Patterns support the following syntax, which is
+/// based on shell glob expressions :
+///
+/// - "*", which matches any sequence of characters
+/// - "?", which matches any single character
+/// - "\", which escapes a subsequent wildcard
+/// - [ABC], which matches any single character from the specified set
+/// - [A-Z], which matches any single character from the specified range
+/// - [!ABC], which matches any character not in the specified set
+/// - [!A-Z], which matches any character not in the specified range
 typedef std::string MatchPattern;
 
 /// Returns true if the string matches the pattern and false otherwise.

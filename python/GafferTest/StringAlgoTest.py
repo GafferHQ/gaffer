@@ -53,9 +53,48 @@ class StringAlgoTest( GafferTest.TestCase ) :
 			( "dog collar", "dog co*", True ),
 			( "dog collar", "dog *", True ),
 			( "dog collar", "dog*", True ),
+			( "cat", "ca?", True ),
+			( "", "?", False ),
+			( "?", "?", True ),
+			( "a", "[abc]", True ),
+			( "catA", "cat[ABC]", True ),
+			( "catD", "cat[A-Z]", True ),
+			( "cars", "ca[rb]s", True ),
+			( "cabs", "ca[rb]s", True ),
+			( "cats", "ca[rb]s", False ),
+			( "catD", "cat[CEF]", False ),
+			( "catD", "cat[!CEF]", True ),
+			( "cars", "ca[!r]s", False ),
+			( "cabs", "ca[!r]s", True ),
+			( "catch22", "c*[0-9]2", True ),
+			( "x", "[0-9]", False ),
+			( "x", "[!0-9]", True ),
+			( "x", "[A-Za-z]", True ),
+			# We should treat a leading or trailing
+			# '-' as a regular character and not
+			# a range specifier.
+			( "_", "[-|]", False ),
+			( "_", "[!-|]", True ),
+			( "-", "[!-]", False ),
+			( "x-", "x[d-]", True ),
+			( "hyphen-ated", "*[-]ated", True ),
+			# The following are mildly confusing, because we
+			# must type two backslashes to end up with a single
+			# backslash in the string literals we're constructing.
+			( "\\", "\\\\", True ),   # \ matches \\
+			( "d\\", "d\\\\", True ), # d\ matches d\\
+			( "*", "\\*", True ),     # * matches \*
+			( "a*", "a\\*", True ),   # a* matches a\*
+			( "a", "\\a", True ),     # a matches \a
+			( "\\", "\\x", False ),   # \ doesn't match \x
+			( "?", "\\?", True ),     # ? matches \?
 		] :
 
-			self.assertEqual( Gaffer.StringAlgo.match( s, p ), r )
+			if r :
+				self.assertTrue( Gaffer.StringAlgo.match( s, p ), '"{0}" should match "{1}"'.format( s, p ) )
+			else :
+				self.assertFalse( Gaffer.StringAlgo.match( s, p ), '"{0}" shouldn\'t match "{1}"'.format( s, p ) )
+
 			if " " not in s :
 				self.assertEqual( Gaffer.StringAlgo.matchMultiple( s, p ), r )
 
@@ -75,9 +114,20 @@ class StringAlgoTest( GafferTest.TestCase ) :
 			( "dogcollar", "dog *fish", False ),
 			( "dogcollar", "dog collar", False ),
 			( "a1", "*1 b2", True ),
+			( "abc", "a*d abc", True ),
+			( "a", "a? a", True ),
+			( "ab", "x? ab", True ),
+			( "ab", "?x ab", True ),
+			( "a1", "\\x a1", True ),
+			( "R", "[RGB] *.[RGB]", True ),
+			( "diffuse.R", "[RGB] *.[RGB]", True ),
+			( "diffuse.A", "[RGB] *.[RGB]", False ),
 		] :
 
-			self.assertEqual( Gaffer.StringAlgo.matchMultiple( s, p ), r )
+			if r :
+				self.assertTrue( Gaffer.StringAlgo.matchMultiple( s, p ), '"{0}" should match "{1}"'.format( s, p ) )
+			else :
+				self.assertFalse( Gaffer.StringAlgo.matchMultiple( s, p ), '"{0}" shouldn\'t match "{1}"'.format( s, p ) )
 
 	def testHasWildcards( self ) :
 
@@ -89,9 +139,16 @@ class StringAlgoTest( GafferTest.TestCase ) :
 			( "a**", True ),
 			( "a*b", True ),
 			( "*a", True ),
+			( "\\", True ),
+			( "?", True ),
+			( "\\?", True ),
+			( "[abc]", True ),
 		] :
 
-			self.assertEqual( Gaffer.StringAlgo.hasWildcards( p ), r )
+			if r :
+				self.assertTrue( Gaffer.StringAlgo.hasWildcards( p ), "{0} has wildcards".format( p ) )
+			else :
+				self.assertFalse( Gaffer.StringAlgo.hasWildcards( p ), "{0} doesn't have wildcards".format( p ) )
 
 if __name__ == "__main__":
 	unittest.main()
