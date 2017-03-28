@@ -34,7 +34,10 @@
 #
 ##########################################################################
 
+import re
+import copy
 import functools
+import collections
 
 import IECore
 
@@ -44,21 +47,17 @@ import GafferUI
 
 class ChannelMaskPlugValueWidget( GafferUI.PlugValueWidget ) :
 
-	# The imagePlug provides the available channel names which are
-	# presented in the UI. The default value causes the "in" plug
-	# from the same node as the main plug to be used.
-	def __init__( self, plug, imagePlug = None, **kw ) :
+	__customMetadataName = "channelMaskPlugValueWidget:custom"
 
-		self.__menuButton = GafferUI.MenuButton( menu = GafferUI.Menu( Gaffer.WeakMethod( self.__menuDefinition ) ) )
+	def __init__( self, plug, **kw ) :
 
-		GafferUI.PlugValueWidget.__init__( self, self.__menuButton, plug, **kw )
+		column = GafferUI.ListContainer( GafferUI.ListContainer.Orientation.Vertical, spacing = 4 )
 
-		if imagePlug is not None :
-			self.__imagePlug = imagePlug
-		else :
-			self.__imagePlug = plug.node()["in"]
+		GafferUI.PlugValueWidget.__init__( self, column, plug, **kw )
 
-		assert( isinstance( self.__imagePlug, GafferImage.ImagePlug ) )
+		with column :
+			self.__menuButton = GafferUI.MenuButton( menu = GafferUI.Menu( Gaffer.WeakMethod( self.__menuDefinition ) ) )
+			self.__stringPlugValueWidget = GafferUI.StringPlugValueWidget( plug )
 
 		self._updateFromPlug()
 
@@ -67,53 +66,130 @@ class ChannelMaskPlugValueWidget( GafferUI.PlugValueWidget ) :
 		value = None
 		if self.getPlug() is not None :
 			with self.getContext() :
-				try :
+				# Leave it to other parts of the UI
+				# to display the error.
+				with IECore.IgnoredExceptions() :
 					value = self.getPlug().getValue()
-				except :
-					# Leave it to other parts of the UI
-					# to display the error.
-					pass
 
-		text = ""
-		if value is not None :
-			if not len( value ) :
-				text = "None"
+		custom = Gaffer.Metadata.value( self.getPlug(), self.__customMetadataName )
+		if custom :
+			self.__menuButton.setText( "Custom" )
+		else :
+			labels = _CanonicalValue( value ).matchPatterns()
+			# Replace match expressions the menu can create
+			# with friendlier descriptions.
+			for i, label in enumerate( labels ) :
+
+				label = "All" if label == "*" else label
+				# Replace preceeding .* with "All "
+				label = re.sub( r"^\*\.", "All ", label )
+				# Replace trailing .* with " All"
+				label = re.sub( r"\.\*$", " All", label )
+				# Remove brackets from [RGBAZ] channel lists
+				label = re.sub( "(\\[)([RGBAZ]+)(\\])$", lambda m : m.group( 2 ), label )
+
+				labels[i] = label
+
+			if labels :
+				self.__menuButton.setText( ", ".join( labels ) )
 			else :
-				## \todo Improve display for when we have long
-				# channel names.
-				text = "".join( value )
+				self.__menuButton.setText( "None" )
 
-		self.__menuButton.setText( text )
+		self.__stringPlugValueWidget.setVisible( custom )
 		self.__menuButton.setEnabled( self._editable() )
+
+	def __imagePlugs( self ) :
+
+		if self.getPlug() is None :
+			return []
+
+		node = self.getPlug().node()
+		p = node["in"]
+		if isinstance( p, GafferImage.ImagePlug ) :
+			return [ p ]
+		else :
+			# Array plug
+			return p.children( GafferImage.ImagePlug )
 
 	def __menuDefinition( self ) :
 
+		value = ""
+		availableChannels = []
 		with self.getContext() :
-			try :
-				selectedChannels = self.getPlug().getValue()
-			except :
-				selectedChannels = IECore.StringVectorData()
-			try :
-				availableChannels = self.__imagePlug["channelNames"].getValue()
-			except :
-				availableChannels = IECore.StringVectorData()
+			with IECore.IgnoredExceptions() :
+				value = self.getPlug().getValue()
+			with IECore.IgnoredExceptions() :
+				for imagePlug in self.__imagePlugs() :
+					availableChannels.extend( imagePlug["channelNames"].getValue() )
+
+		value = _CanonicalValue( value )
+		matchPatterns = value.matchPatterns()
+		availableChannels = _CanonicalValue( availableChannels )
+
+		def menuItem( matchPattern ) :
+
+			if matchPattern is not None :
+				newValue = copy.deepcopy( value )
+				if matchPattern in newValue :
+					newValue.remove( matchPattern )
+					checkBox = True
+				else :
+					newValue.add( matchPattern )
+					checkBox = False
+			else :
+				newValue = _CanonicalValue()
+				checkBox = not matchPatterns
+
+			newMatchPatterns = newValue.matchPatterns()
+
+			return {
+				"command" : functools.partial( Gaffer.WeakMethod( self.__setValue ), value = " ".join( newMatchPatterns ) ),
+				"active" : newMatchPatterns != matchPatterns,
+				"checkBox" : checkBox,
+			}
 
 		result = IECore.MenuDefinition()
-		for channel in availableChannels :
 
-			channelSelected = channel in selectedChannels
-			if channelSelected :
-				newValue = IECore.StringVectorData( [ c for c in selectedChannels if c != channel ] )
-			else :
-				newValue = IECore.StringVectorData( [ c for c in availableChannels if c in selectedChannels or c == channel ] )
+		result.append( "/All", menuItem( "*" ) )
+		result.append( "/None", menuItem( None ) )
 
-			result.append(
-				"/" + channel.replace( ".", "/" ),
-				{
-					"command" : functools.partial( Gaffer.WeakMethod( self.__setValue ), value = newValue ),
-					"checkBox" : channelSelected,
-				}
-			)
+		for i, layerName in enumerate( sorted( availableChannels.layers.keys() ) ) :
+
+			result.append( "/LayerDivider{0}".format( i ), { "divider" : True } )
+
+			layer = availableChannels.layers[layerName]
+			if set( "RGBA" ) & layer.baseNames :
+
+				prefix = "/" + layerName if layerName else "/RGBA"
+
+				result.append( prefix + "/RGB", menuItem( GafferImage.ImageAlgo.channelName( layerName, "[RGB]" ) ) )
+				result.append( prefix + "/RGBA", menuItem( GafferImage.ImageAlgo.channelName( layerName, "[RGBA]" ) ) )
+				result.append( prefix + "/Divider", { "divider" : True } )
+				result.append( prefix + "/R", menuItem( GafferImage.ImageAlgo.channelName( layerName, "R" ) ) )
+				result.append( prefix + "/G", menuItem( GafferImage.ImageAlgo.channelName( layerName, "G" ) ) )
+				result.append( prefix + "/B", menuItem( GafferImage.ImageAlgo.channelName( layerName, "B" ) ) )
+				result.append( prefix + "/A", menuItem( GafferImage.ImageAlgo.channelName( layerName, "A" ) ) )
+
+				layerHasRGBA = True
+
+			auxiliaryBaseNames = sorted( layer.baseNames - set( "RGBA" ) )
+			if auxiliaryBaseNames :
+
+				prefix = "/" + layerName if layerName else ""
+				if layerName and ( set( "RGBA" ) & layer.baseNames ) :
+					result.append( prefix + "/AuxiliaryDivider", { "divider" : True } )
+
+				for baseName in auxiliaryBaseNames :
+					result.append( prefix + "/" + baseName, menuItem( GafferImage.ImageAlgo.channelName( layerName, baseName ) ) )
+
+		result.append( "/CustomDivider", { "divider" : True } )
+		result.append(
+			"/Custom",
+			{
+				"command" : Gaffer.WeakMethod( self.__toggleCustom ),
+				"checkBox" : bool( Gaffer.Metadata.value( self.getPlug(), self.__customMetadataName ) ),
+			}
+		)
 
 		return result
 
@@ -122,3 +198,121 @@ class ChannelMaskPlugValueWidget( GafferUI.PlugValueWidget ) :
 		with Gaffer.UndoContext( self.getPlug().ancestor( Gaffer.ScriptNode ) ) :
 			self.getPlug().setValue( value )
 
+	def __toggleCustom( self, checked ) :
+
+		with Gaffer.UndoContext( self.getPlug().ancestor( Gaffer.ScriptNode ) ) :
+			if not checked :
+				Gaffer.Metadata.deregisterValue( self.getPlug(), self.__customMetadataName )
+			else :
+				Gaffer.Metadata.registerValue( self.getPlug(), self.__customMetadataName, True )
+
+# Because channel masks can contain arbitary match patterns,
+# there are multiple ways of expressing the same thing - for
+# instance, "R G B" is equivalent to "[RGB]". The _CanonicalValue
+# class normalises such patterns for ease of editing.
+class _CanonicalValue( object ) :
+
+	class Layer( object ) :
+
+		def __init__( self ) :
+
+			self.baseNames = set()
+
+		def add( self, baseNameMatchPattern ) :
+
+			for n in self.__canonicalBaseNames( baseNameMatchPattern ) :
+				self.baseNames.add( n )
+
+		def remove( self, baseNameMatchPattern ) :
+
+			for n in self.__canonicalBaseNames( baseNameMatchPattern ) :
+				self.baseNames.remove( n )
+
+		@staticmethod
+		def __canonicalBaseNames( baseNameMatchPattern ) :
+
+			m = re.match( "\\[([RGBAZ]+)\\]", baseNameMatchPattern )
+			if m :
+				return list( m.group( 1 ) )
+			else :
+				return [ baseNameMatchPattern ]
+
+		def __contains__( self, baseNameMatchPattern ) :
+
+			for baseName in self.__canonicalBaseNames( baseNameMatchPattern ) :
+				if baseName not in self.baseNames :
+					return False
+
+			return True
+
+		def __deepcopy__( self, memo ) :
+
+			c = _CanonicalValue.Layer()
+			c.baseNames = copy.deepcopy( self.baseNames, memo )
+			return c
+
+	def __init__( self, value = None ) :
+
+		self.layers = collections.defaultdict( self.Layer )
+
+		if value is not None :
+			if isinstance( value, basestring ) :
+				value = value.split()
+			for v in value :
+				self.add( v )
+
+	def add( self, channelNameMatchPattern ) :
+
+		layerName = GafferImage.ImageAlgo.layerName( channelNameMatchPattern )
+		self.layers[layerName].add( GafferImage.ImageAlgo.baseName( channelNameMatchPattern ) )
+
+	def remove( self, channelNameMatchPattern ) :
+
+		layerName = GafferImage.ImageAlgo.layerName( channelNameMatchPattern )
+		self.layers[layerName].remove( GafferImage.ImageAlgo.baseName( channelNameMatchPattern ) )
+
+	# Returns a minimal set of match patterns needed
+	# for this value. For instance, if it contains "*",
+	# then no other pattern will be returned.
+	def matchPatterns( self ) :
+
+		if "*" in self :
+			return [ "*" ]
+
+		result = []
+		for layerName in sorted( self.layers.keys() ) :
+
+			layer = self.layers[layerName]
+
+			if "*" in layer.baseNames :
+				# Matches everything, so no need to consider anything else
+				result.append( GafferImage.ImageAlgo.channelName( layerName, "*" ) )
+				continue
+
+			# Format RGBAZ into a single character class
+			rgbaz = [ c for c in "RGBAZ" if c in layer.baseNames ]
+			if rgbaz :
+				result.append(
+					GafferImage.ImageAlgo.channelName(
+						layerName,
+						"[{0}]".format( "".join( rgbaz ) ),
+					)
+				)
+
+			# Format the rest as additional strings
+			for baseName in layer.baseNames.difference( set( "RGBAZ" ) ) :
+				result.append(  GafferImage.ImageAlgo.channelName( layerName, baseName ) )
+
+		return result
+
+	def __contains__( self, channelNameMatchPattern ) :
+
+		layerName = GafferImage.ImageAlgo.layerName( channelNameMatchPattern )
+		baseName = GafferImage.ImageAlgo.baseName( channelNameMatchPattern )
+		return baseName in self.layers[layerName]
+
+	def __deepcopy__( self, memo ) :
+
+			c = _CanonicalValue()
+			c.layers = copy.deepcopy( self.layers, memo )
+			return c
