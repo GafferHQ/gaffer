@@ -59,6 +59,13 @@ class TransformTool : public GafferSceneUI::SelectionTool
 
 		IE_CORE_DECLARERUNTIMETYPEDEXTENSION( GafferSceneUI::TransformTool, TransformToolTypeId, SelectionTool );
 
+		enum Orientation
+		{
+			Local,
+			Parent,
+			World
+		};
+
 		struct Selection
 		{
 			/// Viewed scene
@@ -129,6 +136,9 @@ class TransformTool : public GafferSceneUI::SelectionTool
 		/// transform and matching their enabled state to the editability
 		/// of the selection.
 		virtual void updateHandles() = 0;
+
+		/// Utility that may be used from updateHandles().
+		Imath::M44f orientedTransform( Orientation orientation );
 
 		/// Must be called by derived classes when they begin
 		/// a drag.

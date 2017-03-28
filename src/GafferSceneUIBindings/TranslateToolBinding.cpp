@@ -48,15 +48,9 @@ using namespace GafferSceneUI;
 void GafferSceneUIBindings::bindTranslateTool()
 {
 
-	scope s = GafferBindings::NodeClass<TranslateTool>( NULL, no_init )
+	GafferBindings::NodeClass<TranslateTool>( NULL, no_init )
 		.def( init<SceneView *>() )
 		.def( "translate", &TranslateTool::translate )
-	;
-
-	enum_<TranslateTool::Orientation>( "Orientation" )
-		.value( "Local", TranslateTool::Local )
-		.value( "Parent", TranslateTool::Parent )
-		.value( "World", TranslateTool::World )
 	;
 
 }

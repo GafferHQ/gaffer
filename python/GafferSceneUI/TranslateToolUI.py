@@ -66,9 +66,9 @@ Gaffer.Metadata.registerNode(
 			"toolbarLayout:section", "Bottom",
 			"plugValueWidget:type", "GafferUI.PresetsPlugValueWidget",
 
-			"preset:Local", GafferSceneUI.TranslateTool.Orientation.Local,
-			"preset:Parent", GafferSceneUI.TranslateTool.Orientation.Parent,
-			"preset:World", GafferSceneUI.TranslateTool.Orientation.World,
+			"preset:Local", GafferSceneUI.TransformTool.Orientation.Local,
+			"preset:Parent", GafferSceneUI.TransformTool.Orientation.Parent,
+			"preset:World", GafferSceneUI.TransformTool.Orientation.World,
 
 		],
 

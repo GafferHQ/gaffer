@@ -495,6 +495,36 @@ void TransformTool::preRender()
 	}
 }
 
+Imath::M44f TransformTool::orientedTransform( Orientation orientation )
+{
+	Context::Scope scopedContext( view()->getContext() );
+
+	const Selection &selection = this->selection();
+	const M44f localMatrix = scenePlug()->transform( selection.path );
+	M44f parentMatrix;
+	if( selection.path.size() )
+	{
+		const ScenePlug::ScenePath parentPath( selection.path.begin(), selection.path.end() - 1 );
+		parentMatrix = scenePlug()->fullTransform( parentPath );
+	}
+
+	M44f result;
+	switch( orientation )
+	{
+		case Local :
+			result = localMatrix * parentMatrix;
+			break;
+		case Parent :
+			result = M44f().setTranslation( localMatrix.translation() ) * parentMatrix;
+			break;
+		case World :
+			result.setTranslation( ( localMatrix * parentMatrix ).translation() );
+			break;
+	}
+
+	return sansScaling( result );
+}
+
 void TransformTool::dragBegin()
 {
 	m_dragging = true;

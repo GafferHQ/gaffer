@@ -57,13 +57,6 @@ class TranslateTool : public TransformTool
 
 		IE_CORE_DECLARERUNTIMETYPEDEXTENSION( GafferSceneUI::TranslateTool, TranslateToolTypeId, TransformTool );
 
-		enum Orientation
-		{
-			Local,
-			Parent,
-			World
-		};
-
 		Gaffer::IntPlug *orientationPlug();
 		const Gaffer::IntPlug *orientationPlug() const;
 

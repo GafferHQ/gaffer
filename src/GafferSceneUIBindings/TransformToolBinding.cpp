@@ -115,4 +115,10 @@ void GafferSceneUIBindings::bindTransformTool()
 
 	;
 
+	enum_<TransformTool::Orientation>( "Orientation" )
+		.value( "Local", TransformTool::Local )
+		.value( "Parent", TransformTool::Parent )
+		.value( "World", TransformTool::World )
+	;
+
 }

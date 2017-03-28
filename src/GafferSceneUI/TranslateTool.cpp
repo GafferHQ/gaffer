@@ -114,7 +114,9 @@ bool TranslateTool::affectsHandles( const Gaffer::Plug *input ) const
 
 void TranslateTool::updateHandles()
 {
-	handles()->setTransform( handlesTransform() );
+	handles()->setTransform(
+		orientedTransform( static_cast<Orientation>( orientationPlug()->getValue() ) )
+	);
 
 	// Because we provide multiple orientations, the handles
 	// may well not be aligned with the axes of the transform
@@ -144,36 +146,6 @@ void TranslateTool::updateHandles()
 	}
 }
 
-Imath::M44f TranslateTool::handlesTransform() const
-{
-	Context::Scope scopedContext( view()->getContext() );
-
-	const Selection &selection = this->selection();
-	const M44f localMatrix = scenePlug()->transform( selection.path );
-	M44f parentMatrix;
-	if( selection.path.size() )
-	{
-		const ScenePlug::ScenePath parentPath( selection.path.begin(), selection.path.end() - 1 );
-		parentMatrix = scenePlug()->fullTransform( parentPath );
-	}
-
-	M44f result;
-	switch( (Orientation)orientationPlug()->getValue() )
-	{
-		case Local :
-			result = localMatrix * parentMatrix;
-			break;
-		case Parent :
-			result = M44f().setTranslation( localMatrix.translation() ) * parentMatrix;
-			break;
-		case World :
-			result.setTranslation( ( localMatrix * parentMatrix ).translation() );
-			break;
-	}
-
-	return sansScaling( result );
-}
-
 void TranslateTool::translate( const Imath::V3f &offset )
 {
 	if( !selection().transformPlug )
@@ -193,8 +165,9 @@ TranslateTool::Translation TranslateTool::createTranslation( const Imath::V3f &d
 	const Selection &selection = this->selection();
 	result.origin = selection.transformPlug->translatePlug()->getValue();
 
+	const M44f handlesTransform = orientedTransform( static_cast<Orientation>( orientationPlug()->getValue() ) );
 	V3f worldSpaceDirection;
-	handlesTransform().multDirMatrix( directionInHandleSpace, worldSpaceDirection );
+	handlesTransform.multDirMatrix( directionInHandleSpace, worldSpaceDirection );
 
 	const M44f downstreamMatrix = scenePlug()->fullTransform( selection.path );
 	M44f upstreamMatrix;
