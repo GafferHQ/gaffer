@@ -110,6 +110,7 @@ void bindImageAlgo()
 	def( "layerNames", &layerNamesWrapper );
 	def( "layerName", &GafferImage::ImageAlgo::layerName );
 	def( "baseName", &GafferImage::ImageAlgo::baseName );
+	def( "channelName", &GafferImage::ImageAlgo::channelName );
 	def( "colorIndex", &GafferImage::ImageAlgo::colorIndex );
 	def( "channelExists", &channelExistsWrapper );
 	def( "channelExists", ( bool (*)( const std::vector<std::string> &channelNames, const std::string &channelName ) )&GafferImage::ImageAlgo::channelExists );

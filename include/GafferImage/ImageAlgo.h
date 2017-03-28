@@ -79,6 +79,9 @@ inline std::string layerName( const std::string &channelName );
 /// if no separator exists.
 inline std::string baseName( const std::string &channelName );
 
+/// Joins a layer name and base name to form a channel name.
+inline std::string channelName( const std::string &layerName, const std::string &baseName );
+
 /// Returns 0, 1, 2 and 3 for base names "R", "G", "B"
 /// and "A" respectively. Returns -1 for all other base names.
 inline int colorIndex( const std::string &channelName );

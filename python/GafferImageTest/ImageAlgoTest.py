@@ -70,6 +70,18 @@ class ImageAlgoTest( GafferImageTest.ImageTestCase ) :
 		] :
 			self.assertEqual( GafferImage.ImageAlgo.baseName( channelName ), baseName )
 
+	def testChannelName( self ) :
+
+		for layerName, baseName, channelName in [
+			( "", "R", "R" ),
+			( "", "G", "G" ),
+			( "", "myFunkyChannel", "myFunkyChannel" ),
+			( "left", "R", "left.R" ),
+			( "right", "myFunkyChannel", "right.myFunkyChannel" ),
+			( "diffuse.left", "R", "diffuse.left.R" ),
+		] :
+			self.assertEqual( GafferImage.ImageAlgo.channelName( layerName, baseName ), channelName )
+
 	def testColorIndex( self ) :
 
 		for channelName, index in [
