@@ -100,6 +100,7 @@ preferences.plugSetSignal().connect( __plugSet, scoped = False )
 def __displayTransformCreator( name ) :
 
 	result = GafferImage.DisplayTransform()
+	result["channels"].setValue( "*[RGB]" )
 	result["inputColorSpace"].setValue( config.getColorSpace( OCIO.Constants.ROLE_SCENE_LINEAR ).getName() )
 	result["display"].setValue( defaultDisplay )
 	result["view"].setValue( name )
@@ -123,6 +124,7 @@ def __updateDefaultDisplayTransforms() :
 def __defaultDisplayTransformCreator() :
 
 	result = GafferImage.DisplayTransform()
+	result["channels"].setValue( "[RGB] *.[RGB]" )
 	result["inputColorSpace"].setValue( config.getColorSpace( OCIO.Constants.ROLE_SCENE_LINEAR ).getName() )
 	result["display"].setValue( defaultDisplay )
 	result["view"].setValue( config.getDefaultView( defaultDisplay ) )
