@@ -64,20 +64,20 @@ class Grade : public ChannelDataProcessor
         /// Returns a pointer to the node's plugs.
         //////////////////////////////////////////////////////////////
         //@{
-		Gaffer::Color3fPlug *blackPointPlug();
-		const Gaffer::Color3fPlug *blackPointPlug() const;
-		Gaffer::Color3fPlug *whitePointPlug();
-		const Gaffer::Color3fPlug *whitePointPlug() const;
-		Gaffer::Color3fPlug *liftPlug();
-		const Gaffer::Color3fPlug *liftPlug() const;
-		Gaffer::Color3fPlug *gainPlug();
-		const Gaffer::Color3fPlug *gainPlug() const;
-		Gaffer::Color3fPlug *multiplyPlug();
-		const Gaffer::Color3fPlug *multiplyPlug() const;
-		Gaffer::Color3fPlug *offsetPlug();
-		const Gaffer::Color3fPlug *offsetPlug() const;
-		Gaffer::Color3fPlug *gammaPlug();
-		const Gaffer::Color3fPlug *gammaPlug() const;
+		Gaffer::Color4fPlug *blackPointPlug();
+		const Gaffer::Color4fPlug *blackPointPlug() const;
+		Gaffer::Color4fPlug *whitePointPlug();
+		const Gaffer::Color4fPlug *whitePointPlug() const;
+		Gaffer::Color4fPlug *liftPlug();
+		const Gaffer::Color4fPlug *liftPlug() const;
+		Gaffer::Color4fPlug *gainPlug();
+		const Gaffer::Color4fPlug *gainPlug() const;
+		Gaffer::Color4fPlug *multiplyPlug();
+		const Gaffer::Color4fPlug *multiplyPlug() const;
+		Gaffer::Color4fPlug *offsetPlug();
+		const Gaffer::Color4fPlug *offsetPlug() const;
+		Gaffer::Color4fPlug *gammaPlug();
+		const Gaffer::Color4fPlug *gammaPlug() const;
 		Gaffer::BoolPlug *blackClampPlug();
 		const Gaffer::BoolPlug *blackClampPlug() const;
 		Gaffer::BoolPlug *whiteClampPlug();

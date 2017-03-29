@@ -150,7 +150,7 @@ class GradeTest( GafferImageTest.ImageTestCase ) :
 		s["g"] = GafferImage.Grade()
 		s["g"]["in"].setInput( s["c"]["out"] )
 
-		for channelName in ( "R", "G", "B" ) :
+		for channelName in ( "R", "G", "B", "A" ) :
 			self.assertEqual(
 				s["g"]["out"].channelDataHash( channelName, IECore.V2i( 0 ) ),
 				s["c"]["out"].channelDataHash( channelName, IECore.V2i( 0 ) ),
@@ -165,3 +165,45 @@ class GradeTest( GafferImageTest.ImageTestCase ) :
 						s["c"]["out"]["channelData"].getValue( _copy=False )
 					)
 				)
+
+	def testAllChannels( self ):
+		c = GafferImage.Constant()
+		c["format"].setValue( GafferImage.Format( 50, 50, 1.0 ) )
+		c["color"].setValue( IECore.Color4f( 0.125, 0.25, 0.5, 0.75 ) )
+	
+		s = GafferImage.Shuffle()
+		s["channels"].addChild( GafferImage.Shuffle.ChannelPlug( 'customChannel', '__white' ) )
+		s["in"].setInput( c["out"] )
+
+		g = GafferImage.Grade()
+		g["in"].setInput( s["out"] )
+
+		def sample( x, y ) :
+			redSampler = GafferImage.Sampler( g["out"], "R", g["out"]["format"].getValue().getDisplayWindow() )
+			greenSampler = GafferImage.Sampler( g["out"], "G", g["out"]["format"].getValue().getDisplayWindow() )
+			blueSampler = GafferImage.Sampler( g["out"], "B", g["out"]["format"].getValue().getDisplayWindow() )
+			alphaSampler = GafferImage.Sampler( g["out"], "A", g["out"]["format"].getValue().getDisplayWindow() )
+			customSampler = GafferImage.Sampler( g["out"], "customChannel", g["out"]["format"].getValue().getDisplayWindow() )
+
+			return [
+				redSampler.sample( x, y ),
+				greenSampler.sample( x, y ),
+				blueSampler.sample( x, y ),
+				alphaSampler.sample( x, y ),
+				customSampler.sample( x, y )
+			]
+
+		self.assertEqual( sample( 25, 25 ), [ 0.125, 0.25, 0.5, 0.75, 1.0 ] )
+
+		g["offset"].setValue( IECore.Color4f( 3, 3, 3, 3 ) )
+		self.assertEqual( sample( 25, 25 ), [ 3.125, 3.25, 3.5, 0.75, 1.0 ] )
+
+		g["channels"].setValue( IECore.StringVectorData( [ "A" ] ) )
+		self.assertEqual( sample( 25, 25 ), [ 0.125, 0.25, 0.5, 3.75, 1.0 ] )
+
+		g["channels"].setValue( IECore.StringVectorData( [ "customChannel" ] ) )
+		self.assertEqual( sample( 25, 25 ), [ 0.125, 0.25, 0.5, 0.75, 4.0 ] )
+
+		g["channels"].setValue( IECore.StringVectorData( [ "R", "G", "B", "A", "customChannel" ] ) )
+		self.assertEqual( sample( 25, 25 ), [ 3.125, 3.25, 3.5, 3.75, 4.0 ] )
+		
