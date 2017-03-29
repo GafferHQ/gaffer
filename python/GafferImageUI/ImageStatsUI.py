@@ -49,7 +49,7 @@ def postCreate( node, menu ) :
 		else:
 			format = GafferImage.FormatPlug.getDefaultFormat( node.scriptNode().context() )
 
-	node['regionOfInterest'].setValue( format.getDisplayWindow() )
+	node["area"].setValue( format.getDisplayWindow() )
 
 Gaffer.Metadata.registerNode(
 
@@ -77,18 +77,19 @@ Gaffer.Metadata.registerNode(
 
 			"description",
 			"""
-			The names of the channels to be analysed.
+			The names of the four channels to be analysed.
 			""",
 
 			"nodule:type", "",
+			"plugValueWidget:type", "GafferImageUI.RGBAChannelsPlugValueWidget",
 
 		],
 
-		"regionOfInterest" : [
+		"area" : [
 
 			"description",
 			"""
-			The region of the image to be analysed.
+			The area of the image to be analysed.
 			""",
 
 			"nodule:type", "",

@@ -63,15 +63,15 @@ class TextTest( GafferImageTest.ImageTestCase ) :
 
 		stats = GafferImage.ImageStats()
 		stats["in"].setInput( text["out"] )
-		stats["regionOfInterest"].setValue( text["out"]["dataWindow"].getValue() )
+		stats["area"].setValue( text["out"]["dataWindow"].getValue() )
 
 		self.assertEqual( stats["max"].getValue(), IECore.Color4f( 1, 1, 1, 1 ) )
 
 		text["color"]["a"].setValue( 0.5 )
-		self.assertEqual( stats["max"].getValue(), IECore.Color4f( 0.5, 0.5, 0.5, 1 ) )
+		self.assertEqual( stats["max"].getValue(), IECore.Color4f( 0.5, 0.5, 0.5, 0.5 ) )
 
 		text["color"].setValue( IECore.Color4f( 0.5, 0.25, 1, 0.5 ) )
-		self.assertEqual( stats["max"].getValue(), IECore.Color4f( 0.25, 0.125, 0.5, 1 ) )
+		self.assertEqual( stats["max"].getValue(), IECore.Color4f( 0.25, 0.125, 0.5, 0.5 ) )
 
 	def testDataWindow( self ) :
 

@@ -87,7 +87,7 @@ class ImageTestCase( GafferTest.TestCase ) :
 
 		stats = GafferImage.ImageStats()
 		stats["in"].setInput( difference["out"] )
-		stats["regionOfInterest"].setValue( imageA["format"].getValue().getDisplayWindow() )
+		stats["area"].setValue( imageA["format"].getValue().getDisplayWindow() )
 		stats["channels"].setValue( IECore.StringVectorData( [ "R", "G", "B", "A" ] ) )
 
 		if "R" in imageA["channelNames"].getValue() :

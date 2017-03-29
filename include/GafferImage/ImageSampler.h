@@ -39,6 +39,7 @@
 
 #include "Gaffer/ComputeNode.h"
 #include "Gaffer/CompoundNumericPlug.h"
+#include "Gaffer/TypedObjectPlug.h"
 
 #include "GafferImage/TypeIds.h"
 
@@ -48,9 +49,6 @@ namespace GafferImage
 IE_CORE_FORWARDDECLARE( ImagePlug )
 IE_CORE_FORWARDDECLARE( FilterPlug )
 
-/// Samples colours at image locations.
-/// \todo Support for choosing which channels to sample - ideally
-/// we need ChannelMaskPlug to properly support layers to do that.
 class ImageSampler : public Gaffer::ComputeNode
 {
 
@@ -63,6 +61,9 @@ class ImageSampler : public Gaffer::ComputeNode
 
 		ImagePlug *imagePlug();
 		const ImagePlug *imagePlug() const;
+
+		Gaffer::StringVectorDataPlug *channelsPlug();
+		const Gaffer::StringVectorDataPlug *channelsPlug() const;
 
 		Gaffer::V2fPlug *pixelPlug();
 		const Gaffer::V2fPlug *pixelPlug() const;

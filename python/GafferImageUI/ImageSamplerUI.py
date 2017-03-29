@@ -57,6 +57,17 @@ Gaffer.Metadata.registerNode(
 
 		],
 
+		"channels" : [
+
+			"description",
+			"""
+			The names of the four channels to be sampled.
+			""",
+
+			"plugValueWidget:type", "GafferImageUI.RGBAChannelsPlugValueWidget",
+
+		],
+
 		"pixel" : [
 
 			"description",

@@ -42,13 +42,12 @@
 #include "Gaffer/BoxPlug.h"
 
 #include "GafferImage/ImagePlug.h"
-#include "GafferImage/ChannelMaskPlug.h"
 
 namespace GafferImage
 {
 
-/// Provides statistics on an image's colour profile.
-/// The ImageStats node outputs the minimum, maximum and average values of the pixel values within a region of interest in the image.
+/// \todo Add an areaSource plug with the same semantics
+/// that the Crop node has.
 class ImageStats : public Gaffer::ComputeNode
 {
 
@@ -63,14 +62,19 @@ class ImageStats : public Gaffer::ComputeNode
 
 		GafferImage::ImagePlug *inPlug();
 		const GafferImage::ImagePlug *inPlug() const;
-		ChannelMaskPlug *channelsPlug();
-		const ChannelMaskPlug *channelsPlug() const;
-		Gaffer::Box2iPlug *regionOfInterestPlug();
-		const Gaffer::Box2iPlug *regionOfInterestPlug() const;
+
+		Gaffer::StringVectorDataPlug *channelsPlug();
+		const Gaffer::StringVectorDataPlug *channelsPlug() const;
+
+		Gaffer::Box2iPlug *areaPlug();
+		const Gaffer::Box2iPlug *areaPlug() const;
+
 		Gaffer::Color4fPlug *averagePlug();
 		const Gaffer::Color4fPlug *averagePlug() const;
+
 		Gaffer::Color4fPlug *minPlug();
 		const Gaffer::Color4fPlug *minPlug() const;
+
 		Gaffer::Color4fPlug *maxPlug();
 		const Gaffer::Color4fPlug *maxPlug() const;
 
@@ -84,14 +88,7 @@ class ImageStats : public Gaffer::ComputeNode
 
 	private :
 
-		/// Sets channelName to the channel which corresponds to the output plug. The channel name is
-		/// computed from the intersection of the "in" plug's channels and the "channels" plug's channels.
-		/// If multiple channels are found to have the same channel index, the first is used.
-		/// For more information on this, please see ChannelMaskPlug::removeDuplicateIndices().
-		void channelNameFromOutput( const Gaffer::ValuePlug *output, std::string &channelName ) const;
-
-		/// A convenience function to just set the plug to 0 or 1 depending on what it's index is.
-		void setOutputToDefault( Gaffer::FloatPlug *output ) const;
+		std::string channelName( int colorIndex ) const;
 
 		/// Implemented to initialize the default format settings if they don't exist already.
 		void parentChanging( Gaffer::GraphComponent *newParent );

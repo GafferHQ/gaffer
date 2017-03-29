@@ -720,11 +720,11 @@ class RenderManRenderTest( GafferRenderManTest.RenderManTestCase ) :
 
 		hiddenStats = GafferImage.ImageStats()
 		hiddenStats["in"].setInput( hidden["out"] )
-		hiddenStats["regionOfInterest"].setValue( hidden["out"]["format"].getValue().getDisplayWindow() )
+		hiddenStats["area"].setValue( hidden["out"]["format"].getValue().getDisplayWindow() )
 
 		visibleStats = GafferImage.ImageStats()
 		visibleStats["in"].setInput( visible["out"] )
-		visibleStats["regionOfInterest"].setValue( visible["out"]["format"].getValue().getDisplayWindow() )
+		visibleStats["area"].setValue( visible["out"]["format"].getValue().getDisplayWindow() )
 
 		self.assertLess( hiddenStats["average"].getValue()[0], 0.05 )
 		self.assertGreater( visibleStats["average"].getValue()[0], .35 )
