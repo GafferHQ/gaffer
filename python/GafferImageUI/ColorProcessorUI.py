@@ -1,6 +1,6 @@
 ##########################################################################
 #
-#  Copyright (c) 2015, Image Engine Design Inc. All rights reserved.
+#  Copyright (c) 2017, Image Engine Design Inc. All rights reserved.
 #
 #  Redistribution and use in source and binary forms, with or without
 #  modification, are permitted provided that the following conditions are
@@ -35,45 +35,26 @@
 ##########################################################################
 
 import Gaffer
-import GafferUI
 import GafferImage
-import GafferImageUI
 
 Gaffer.Metadata.registerNode(
 
-	GafferImage.DeleteChannels,
+	GafferImage.ColorProcessor,
 
 	"description",
 	"""
-	Deletes channels from an image.
+	Base class for nodes which process RGB layers with cross
+	talk between channels.
 	""",
 
 	plugs = {
-
-		"mode" : [
-
-			"description",
-			"""
-			Defines how the channels listed in the channels
-			plug are treated. Delete mode deletes the listed
-			channels. Keep mode keeps the listed channels,
-			deleting all others.
-			""",
-
-			"preset:Delete", GafferImage.DeleteChannels.Mode.Delete,
-			"preset:Keep", GafferImage.DeleteChannels.Mode.Keep,
-
-			"plugValueWidget:type", "GafferUI.PresetsPlugValueWidget",
-
-		],
 
 		"channels" : [
 
 			"description",
 			"""
-			The names of the channels to be deleted (or kept
-			if the mode is set to Keep). Names should be separated
-			by spaces and may contain any of Gaffer's standard
+			The names of the channels to process. Names should be
+			separated by spaces and can use Gaffer's standard
 			wildcards.
 			""",
 

@@ -88,8 +88,13 @@ Gaffer.Metadata.registerNode(
 
 			"description",
 			"""
-			The channels to be written to the file.
+			The names of the channels to be written to the file.
+			Names should be separated by spaces and may contain any
+			of Gaffer's standard wildcards.
 			""",
+
+			"plugValueWidget:type", "GafferImageUI.ChannelMaskPlugValueWidget",
+
 
 		],
 

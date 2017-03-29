@@ -85,5 +85,6 @@ import VectorWarpUI
 import MirrorUI
 import CopyChannelsUI
 import MedianUI
+import ColorProcessorUI
 
 __import__( "IECore" ).loadConfig( "GAFFER_STARTUP_PATHS", {}, subdirectory = "GafferImageUI" )
