@@ -107,6 +107,16 @@ Gaffer.Metadata.registerNode(
 
 		],
 
+		 "maskChannelName" : [
+
+			"description",
+			"""
+			For compositing operations which use a mask channel, which channel to use.
+			( By default, the alpha channel ).
+			""",
+		]
+
+
 	}
 
 )

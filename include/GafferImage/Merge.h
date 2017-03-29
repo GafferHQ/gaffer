@@ -38,6 +38,7 @@
 #define GAFFERIMAGE_MERGE_H
 
 #include "Gaffer/NumericPlug.h"
+#include "Gaffer/StringPlug.h"
 
 #include "GafferImage/ImageProcessor.h"
 
@@ -85,6 +86,9 @@ class Merge : public ImageProcessor
 		Gaffer::IntPlug *operationPlug();
 		const Gaffer::IntPlug *operationPlug() const;
 
+		Gaffer::StringPlug *maskChannelNamePlug();
+		const Gaffer::StringPlug *maskChannelNamePlug() const;
+
 		virtual void affects( const Gaffer::Plug *input, AffectedPlugsContainer &outputs ) const;
 
 	protected :
@@ -105,7 +109,8 @@ class Merge : public ImageProcessor
 
 		// Performs the merge operation using the functor 'F'.
 		template<typename F>
-		IECore::ConstFloatVectorDataPtr merge( F f, const std::string &channelName, const Imath::V2i &tileOrigin ) const;
+		IECore::ConstFloatVectorDataPtr merge( F f, const std::string &channelName, const Imath::V2i &tileOrigin,
+			const std::string &maskChannelName ) const;
 
 		static size_t g_firstPlugIndex;
 
