@@ -86,6 +86,7 @@ from VectorWarpTest import VectorWarpTest
 from MirrorTest import MirrorTest
 from CopyChannelsTest import CopyChannelsTest
 from FilterAlgoTest import FilterAlgoTest
+from MedianTest import MedianTest
 
 if __name__ == "__main__":
 	import unittest

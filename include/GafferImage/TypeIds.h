@@ -109,6 +109,7 @@ enum TypeId
 	OpenImageIOReaderTypeId = 110813,
 	MirrorTypeId = 110814,
 	CopyChannelsTypeId = 110815,
+	MedianTypeId = 110816,
 
 	LastTypeId = 110849
 };
