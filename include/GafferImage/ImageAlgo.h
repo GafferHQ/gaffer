@@ -48,7 +48,8 @@ class ImagePlug;
 namespace ImageAlgo
 {
 
-/// Channel name utility functions.
+/// Channel name utility functions
+/// ==============================
 ///
 /// Gaffer follows the OpenEXR convention for channel names, as documented at
 /// http://openexr.com/InterpretingDeepPixels.pdf. Briefly :
@@ -64,8 +65,9 @@ namespace ImageAlgo
 ///	    - "B" is the blue component of the colour
 ///     - "A" is the alpha channel
 ///     - "Z" is the depth channel
-///
-////////////////////////////////////////////////////////////////////////////
+
+/// Returns the names of all layers present in the specified channels.
+std::vector<std::string> layerNames( const std::vector<std::string> &channelNames );
 
 /// Returns the name of the layer the channel belongs to.
 /// This is simply the portion of the channelName up to the
@@ -76,6 +78,9 @@ inline std::string layerName( const std::string &channelName );
 /// the name following the last '.', or the whole name
 /// if no separator exists.
 inline std::string baseName( const std::string &channelName );
+
+/// Joins a layer name and base name to form a channel name.
+inline std::string channelName( const std::string &layerName, const std::string &baseName );
 
 /// Returns 0, 1, 2 and 3 for base names "R", "G", "B"
 /// and "A" respectively. Returns -1 for all other base names.

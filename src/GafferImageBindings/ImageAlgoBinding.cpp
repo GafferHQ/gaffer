@@ -33,12 +33,14 @@
 //////////////////////////////////////////////////////////////////////////
 
 #include "boost/python.hpp"
+#include "boost/python/suite/indexing/container_utils.hpp"
 
 #include "IECorePython/ScopedGILRelease.h"
 
 #include "GafferImage/ImageAlgo.h"
 #include "GafferImageBindings/ImageAlgoBinding.h"
 
+using namespace std;
 using namespace boost::python;
 
 namespace
@@ -75,6 +77,19 @@ struct StringVectorFromStringVectorData
 
 };
 
+boost::python::list layerNamesWrapper( object pythonChannelNames )
+{
+	vector<string> channelNames;
+	container_utils::extend_container( channelNames, pythonChannelNames );
+	const vector<string> layerNames = GafferImage::ImageAlgo::layerNames( channelNames );
+	boost::python::list result;
+	for( vector<string>::const_iterator it = layerNames.begin(), eIt = layerNames.end(); it != eIt; ++it )
+	{
+		result.append( *it );
+	}
+	return result;
+}
+
 inline bool channelExistsWrapper( const GafferImage::ImagePlug *image, const std::string &channelName )
 {
 	IECorePython::ScopedGILRelease r;
@@ -92,8 +107,10 @@ void bindImageAlgo()
 	scope().attr( "ImageAlgo" ) = module;
 	scope moduleScope( module );
 
+	def( "layerNames", &layerNamesWrapper );
 	def( "layerName", &GafferImage::ImageAlgo::layerName );
 	def( "baseName", &GafferImage::ImageAlgo::baseName );
+	def( "channelName", &GafferImage::ImageAlgo::channelName );
 	def( "colorIndex", &GafferImage::ImageAlgo::colorIndex );
 	def( "channelExists", &channelExistsWrapper );
 	def( "channelExists", ( bool (*)( const std::vector<std::string> &channelNames, const std::string &channelName ) )&GafferImage::ImageAlgo::channelExists );

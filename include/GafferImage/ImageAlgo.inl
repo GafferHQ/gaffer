@@ -445,6 +445,16 @@ inline std::string baseName( const std::string &channelName )
 	}
 }
 
+inline std::string channelName( const std::string &layerName, const std::string &baseName )
+{
+	if( layerName.empty() )
+	{
+		return baseName;
+	}
+
+	return layerName + "." + baseName;
+}
+
 inline int colorIndex( const std::string &channelName )
 {
 	const size_t p = channelName.find_last_of( '.' );

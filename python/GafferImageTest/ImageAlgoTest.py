@@ -70,6 +70,18 @@ class ImageAlgoTest( GafferImageTest.ImageTestCase ) :
 		] :
 			self.assertEqual( GafferImage.ImageAlgo.baseName( channelName ), baseName )
 
+	def testChannelName( self ) :
+
+		for layerName, baseName, channelName in [
+			( "", "R", "R" ),
+			( "", "G", "G" ),
+			( "", "myFunkyChannel", "myFunkyChannel" ),
+			( "left", "R", "left.R" ),
+			( "right", "myFunkyChannel", "right.myFunkyChannel" ),
+			( "diffuse.left", "R", "diffuse.left.R" ),
+		] :
+			self.assertEqual( GafferImage.ImageAlgo.channelName( layerName, baseName ), channelName )
+
 	def testColorIndex( self ) :
 
 		for channelName, index in [
@@ -134,6 +146,28 @@ class ImageAlgoTest( GafferImageTest.ImageTestCase ) :
 		GafferImageTest.processTiles( d["out"] )
 		d["out"].image()
 		d["out"].imageHash()
+
+	def testLayerNames( self ) :
+
+		self.assertEqual(
+			GafferImage.ImageAlgo.layerNames( [ "R", "G", "B" ] ),
+			[ "" ]
+		)
+
+		self.assertEqual(
+			GafferImage.ImageAlgo.layerNames( [ "Z", "A" ] ),
+			[ "" ]
+		)
+
+		self.assertEqual(
+			GafferImage.ImageAlgo.layerNames( [ "R", "G", "B", "diffuse.R", "diffuse.G", "diffuse.B" ] ),
+			[ "", "diffuse" ]
+		)
+
+		self.assertEqual(
+			GafferImage.ImageAlgo.layerNames( [ "R", "G", "B", "foreground.diffuse.R", "foreground.diffuse.G", "foreground.diffuse.B" ] ),
+			[ "", "foreground.diffuse" ]
+		)
 
 if __name__ == "__main__":
 	unittest.main()
