@@ -72,5 +72,24 @@ Gaffer.Metadata.registerNode(
 
 		],
 
+		"mode" : [
+			"description",
+			"""
+			Entity to create points for. It's currently possible to create a point per polygon or vertex.
+			""",
+
+			"preset:vertex", "vertex",
+			"preset:polygon", "polygon",
+
+			"plugValueWidget:type", "GafferUI.PresetsPlugValueWidget",
+		],
+
+		"rotation" : [
+			"description",
+			"""
+			When creating points from polygons rotation in degrees about the normal of the polygon.
+			"""
+		]
+
 	}
 )

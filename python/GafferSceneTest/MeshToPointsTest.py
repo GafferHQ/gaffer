@@ -83,5 +83,37 @@ class MeshToPointsTest( GafferSceneTest.SceneTestCase ) :
 			p["out"].object( "/camera", _copy = False ).isSame( c["out"].object( "/camera", _copy = False ) )
 		)
 
+	def testCanInstanceOnPolygonWithOrientation( self ) :
+		plane = GafferScene.Plane()
+		meshToPoints = GafferScene.MeshToPoints()
+
+		meshToPoints["in"].setInput(plane["out"])
+		meshToPoints["mode"].setValue("polygon")
+
+		points = meshToPoints['out'].object("/plane")
+
+		self.assertEqual(points.numPoints, 1)
+		self.assertTrue('id' in points.keys())
+		self.assertTrue('orient' in points.keys())
+
+		self.assertEqual( len( points["orient"].data ), 1 )
+		self.assertEqual( len( points["id"].data ), 1 )
+
+		self.assertEqual( points["orient"].data[0], IECore.Quatf( 0, 1, 0, 0 ) )
+		self.assertEqual( points["id"].data[0], 0 )
+
+		meshToPoints["rotation"].setValue(45.0)
+
+		rotatedPoints = meshToPoints['out'].object("/plane")
+
+		self.assertEqual( len( rotatedPoints["orient"].data ),1 )
+		self.assertAlmostEqual( rotatedPoints["orient"].data[0][0] ,0.0, places = 4 )
+		self.assertAlmostEqual( rotatedPoints["orient"].data[0][1] ,0.92388, places = 4 )
+		self.assertAlmostEqual( rotatedPoints["orient"].data[0][2] ,-0.382683, places = 4 )
+		self.assertAlmostEqual( rotatedPoints["orient"].data[0][3] ,0.0, places = 4 )
+
+
+
+
 if __name__ == "__main__":
 	unittest.main()
