@@ -90,6 +90,7 @@
 #include "GafferImageBindings/MirrorBinding.h"
 #include "GafferImageBindings/CopyChannelsBinding.h"
 #include "GafferImageBindings/FilterAlgoBinding.h"
+#include "GafferImageBindings/MedianBinding.h"
 
 using namespace boost::python;
 using namespace GafferImage;
@@ -151,5 +152,6 @@ BOOST_PYTHON_MODULE( _GafferImage )
 	GafferImageBindings::bindMirror();
 	GafferImageBindings::bindCopyChannels();
 	GafferImageBindings::bindFilterAlgo();
+	GafferImageBindings::bindMedian();
 
 }
