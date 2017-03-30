@@ -110,6 +110,7 @@ enum TypeId
 	MirrorTypeId = 110814,
 	CopyChannelsTypeId = 110815,
 	MedianTypeId = 110816,
+	MixTypeId = 110817,
 
 	LastTypeId = 110849
 };
