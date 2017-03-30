@@ -147,12 +147,18 @@ void ImageGadget::setChannels( const Channels &channels )
 
 	m_rgbaChannels = channels;
 	m_dirtyFlags |= TilesDirty;
+	channelsChangedSignal()( this );
 	requestRender();
 }
 
 const ImageGadget::Channels &ImageGadget::getChannels() const
 {
 	return m_rgbaChannels;
+}
+
+ImageGadget::ChannelsChangedSignal &ImageGadget::channelsChangedSignal()
+{
+	return m_channelsChangedSignal;
 }
 
 void ImageGadget::setSoloChannel( int index )

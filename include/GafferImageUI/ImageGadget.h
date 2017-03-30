@@ -99,6 +99,9 @@ class ImageGadget : public GafferUI::Gadget
 		void setChannels( const Channels &channels );
 		const Channels &getChannels() const;
 
+		typedef boost::signal<void (ImageGadget *)> ChannelsChangedSignal;
+		ChannelsChangedSignal &channelsChangedSignal();
+
 		/// Chooses a channel to show in isolation.
 		/// Indices are in the range 0-3 to choose
 		/// which of the RGBA channels is soloed, or
@@ -131,6 +134,7 @@ class ImageGadget : public GafferUI::Gadget
 
 		Channels m_rgbaChannels;
 		int m_soloChannel;
+		ChannelsChangedSignal m_channelsChangedSignal;
 
 		// Image access.
 		//
