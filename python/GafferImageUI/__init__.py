@@ -41,6 +41,7 @@ import DisplayUI
 from FormatPlugValueWidget import FormatPlugValueWidget
 from ChannelMaskPlugValueWidget import ChannelMaskPlugValueWidget
 from RGBAChannelsPlugValueWidget import RGBAChannelsPlugValueWidget
+from ChannelPlugValueWidget import ChannelPlugValueWidget
 
 import OpenImageIOReaderUI
 import ImageReaderUI
