@@ -68,7 +68,7 @@ class ChannelMaskPlugValueWidget( GafferUI.PlugValueWidget ) :
 			with self.getContext() :
 				# Leave it to other parts of the UI
 				# to display the error.
-				with IECore.IgnoredExceptions() :
+				with IECore.IgnoredExceptions( Exception ) :
 					value = self.getPlug().getValue()
 
 		custom = Gaffer.Metadata.value( self.getPlug(), self.__customMetadataName )
@@ -116,9 +116,9 @@ class ChannelMaskPlugValueWidget( GafferUI.PlugValueWidget ) :
 		value = ""
 		availableChannels = []
 		with self.getContext() :
-			with IECore.IgnoredExceptions() :
+			with IECore.IgnoredExceptions( Exception ) :
 				value = self.getPlug().getValue()
-			with IECore.IgnoredExceptions() :
+			with IECore.IgnoredExceptions( Exception ) :
 				for imagePlug in self.__imagePlugs() :
 					availableChannels.extend( imagePlug["channelNames"].getValue() )
 

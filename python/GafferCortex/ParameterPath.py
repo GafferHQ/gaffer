@@ -73,7 +73,7 @@ class ParameterPath( Gaffer.Path ) :
 	def property( self, name ) :
 
 		if name == "parameter:parameter" :
-			with IECore.IgnoredExceptions() :
+			with IECore.IgnoredExceptions( Exception ) :
 				return self.__parameter()
 			return None
 
