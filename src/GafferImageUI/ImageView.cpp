@@ -210,9 +210,12 @@ class ImageView::ColorInspector : public boost::signals::trackable
 			plug->getChild<Color4fPlug>( "color" )->setInput( m_sampler->colorPlug() );
 
 			m_view->viewportGadget()->mouseMoveSignal().connect( boost::bind( &ColorInspector::mouseMove, this, ::_2 ) );
-			m_view->viewportGadget()->getPrimaryChild()->buttonPressSignal().connect( boost::bind( &ColorInspector::buttonPress, this,  ::_2 ) );
-			m_view->viewportGadget()->getPrimaryChild()->dragBeginSignal().connect( boost::bind( &ColorInspector::dragBegin, this, ::_2 ) );
-			m_view->viewportGadget()->getPrimaryChild()->dragEndSignal().connect( boost::bind( &ColorInspector::dragEnd, this, ::_2 ) );
+
+			ImageGadget *imageGadget = static_cast<ImageGadget *>( m_view->viewportGadget()->getPrimaryChild() );
+			imageGadget->buttonPressSignal().connect( boost::bind( &ColorInspector::buttonPress, this,  ::_2 ) );
+			imageGadget->dragBeginSignal().connect( boost::bind( &ColorInspector::dragBegin, this, ::_2 ) );
+			imageGadget->dragEndSignal().connect( boost::bind( &ColorInspector::dragEnd, this, ::_2 ) );
+			imageGadget->channelsChangedSignal().connect( boost::bind( &ColorInspector::channelsChanged, this ) );
 		}
 
 	private :
@@ -272,6 +275,17 @@ class ImageView::ColorInspector : public boost::signals::trackable
 		{
 			Pointer::setCurrent( "" );
 			return true;
+		}
+
+		void channelsChanged()
+		{
+			ImageGadget *imageGadget = static_cast<ImageGadget *>( m_view->viewportGadget()->getPrimaryChild() );
+			m_sampler->channelsPlug()->setValue(
+				new StringVectorData( std::vector<std::string>(
+					imageGadget->getChannels().begin(),
+					imageGadget->getChannels().end()
+				) )
+			);
 		}
 
 		ImageView *m_view;
