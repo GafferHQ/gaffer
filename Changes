@@ -1,3 +1,12 @@
+0.32.0.1
+========
+
+Fixes
+-----
+
+- Resize : Don't resample for pixel aspect ratio change (#2007).
+- Fixed export of references from Box for CompoundNumericPlugs (e.g. colors) (#2012).
+
 0.32.0.0
 ========
 
