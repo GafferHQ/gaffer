@@ -172,5 +172,54 @@ class CDLTest( GafferImageTest.ImageTestCase ) :
 		self.assertEqual( i["out"]["metadata"].getValue(), o["out"]["metadata"].getValue() )
 		self.assertEqual( i["out"]["channelNames"].getValue(), o["out"]["channelNames"].getValue() )
 
+	def testMultipleLayers( self ) :
+
+		main = GafferImage.Constant()
+		main["color"].setValue( IECore.Color4f( 1, 0.5, 0.25, 1 ) )
+
+		diffuse = GafferImage.Constant()
+		diffuse["color"].setValue( IECore.Color4f( 0.25, 0.5, 0.75, 1 ) )
+		diffuse["layer"].setValue( "diffuse" )
+
+		m = GafferImage.CopyChannels()
+		m["in"][0].setInput( main["out"] )
+		m["in"][1].setInput( diffuse["out"] )
+		m["channels"].setValue( "*" )
+
+		cdl = GafferImage.CDL()
+		cdl["in"].setInput( m["out"] )
+
+		self.assertImagesEqual( cdl["out"], m["out"] )
+
+		mainCDLSampler = GafferImage.ImageSampler()
+		mainCDLSampler["image"].setInput( cdl["out"] )
+		mainCDLSampler["pixel"].setValue( IECore.V2f( 0.5 ) )
+		mainCDLSampler["channels"].setValue( IECore.StringVectorData( [ "R", "G", "B", "A" ] ) )
+
+		diffuseCDLSampler = GafferImage.ImageSampler()
+		diffuseCDLSampler["image"].setInput( cdl["out"] )
+		diffuseCDLSampler["pixel"].setValue( IECore.V2f( 0.5 ) )
+		diffuseCDLSampler["channels"].setValue( IECore.StringVectorData( [ "diffuse." + x for x in "RGBA" ] ) )
+
+		self.assertEqual( mainCDLSampler["color"].getValue(), main["color"].getValue() )
+		self.assertEqual( diffuseCDLSampler["color"].getValue(), diffuse["color"].getValue() )
+
+		cdl["saturation"].setValue( 0.5 )
+
+		self.assertNotEqual( mainCDLSampler["color"].getValue(), main["color"].getValue() )
+		self.assertEqual( diffuseCDLSampler["color"].getValue(), diffuse["color"].getValue() )
+
+		cdl["channels"].setValue( "*[RGB]" )
+
+		self.assertNotEqual( mainCDLSampler["color"].getValue(), main["color"].getValue() )
+		self.assertNotEqual( diffuseCDLSampler["color"].getValue(), diffuse["color"].getValue() )
+		self.assertNotEqual( mainCDLSampler["color"].hash(), diffuseCDLSampler["color"].hash() )
+		self.assertNotEqual( mainCDLSampler["color"].getValue(), diffuseCDLSampler["color"].getValue() )
+
+		cdl["channels"].setValue( "diffuse.[RGB]" )
+
+		self.assertEqual( mainCDLSampler["color"].getValue(), main["color"].getValue() )
+		self.assertNotEqual( diffuseCDLSampler["color"].getValue(), diffuse["color"].getValue() )
+
 if __name__ == "__main__":
 	unittest.main()

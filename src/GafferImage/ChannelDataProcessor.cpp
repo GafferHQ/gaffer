@@ -35,6 +35,8 @@
 //
 //////////////////////////////////////////////////////////////////////////
 
+#include "Gaffer/StringAlgo.h"
+
 #include "GafferImage/ChannelDataProcessor.h"
 
 using namespace Gaffer;
@@ -49,14 +51,7 @@ ChannelDataProcessor::ChannelDataProcessor( const std::string &name )
 {
 	storeIndexOfNextChild( g_firstPlugIndex );
 
-	addChild(
-		new ChannelMaskPlug(
-			"channels",
-			Gaffer::Plug::In,
-			inPlug()->channelNamesPlug()->defaultValue(),
-			~(Gaffer::Plug::Dynamic | Gaffer::Plug::ReadOnly)
-		)
-	);
+	addChild( new StringPlug( "channels", Gaffer::Plug::In, "[RGB]" ) );
 
 	// We don't ever want to change these, so we make pass-through connections.
 	outPlug()->formatPlug()->setInput( inPlug()->formatPlug() );
@@ -69,14 +64,14 @@ ChannelDataProcessor::~ChannelDataProcessor()
 {
 }
 
-GafferImage::ChannelMaskPlug *ChannelDataProcessor::channelMaskPlug()
+Gaffer::StringPlug *ChannelDataProcessor::channelsPlug()
 {
-	return getChild<ChannelMaskPlug>( g_firstPlugIndex );
+	return getChild<StringPlug>( g_firstPlugIndex );
 }
 
-const GafferImage::ChannelMaskPlug *ChannelDataProcessor::channelMaskPlug() const
+const Gaffer::StringPlug *ChannelDataProcessor::channelsPlug() const
 {
-	return getChild<ChannelMaskPlug>( g_firstPlugIndex );
+	return getChild<StringPlug>( g_firstPlugIndex );
 }
 
 void ChannelDataProcessor::affects( const Gaffer::Plug *input, AffectedPlugsContainer &outputs ) const
@@ -85,7 +80,7 @@ void ChannelDataProcessor::affects( const Gaffer::Plug *input, AffectedPlugsCont
 
 	if(
 		input == inPlug()->channelDataPlug() ||
-		input == channelMaskPlug()
+		input == channelsPlug()
 	)
 	{
 		outputs.push_back( outPlug()->channelDataPlug() );
@@ -99,9 +94,7 @@ bool ChannelDataProcessor::channelEnabled( const std::string &channel ) const
 		return false;
 	}
 
-	IECore::ConstStringVectorDataPtr channelMaskData = channelMaskPlug()->getValue();
-	const std::vector<std::string> &channelMask = channelMaskData->readable();
-	return std::find( channelMask.begin(), channelMask.end(), channel ) != channelMask.end();
+	return StringAlgo::matchMultiple( channel, channelsPlug()->getValue() );
 }
 
 IECore::ConstFloatVectorDataPtr ChannelDataProcessor::computeChannelData( const std::string &channelName, const Imath::V2i &tileOrigin, const Gaffer::Context *context, const ImagePlug *parent ) const

@@ -40,6 +40,7 @@ import IECore
 
 import Gaffer
 import GafferUI
+import GafferImage
 import GafferImageUI
 
 ##########################################################################
@@ -115,6 +116,19 @@ Gaffer.Metadata.registerNode(
 			"plugValueWidget:type", "GafferImageUI.ImageViewUI._ColorInspectorPlugValueWidget",
 			"label", "",
 			"toolbarLayout:section", "Bottom",
+
+		],
+
+		"channels" : [
+
+			"description",
+			"""
+			Chooses an RGBA layer or an auxiliary channel to display.
+			""",
+
+			"plugValueWidget:type", "GafferImageUI.RGBAChannelsPlugValueWidget",
+			"toolbarLayout:index", 0,
+			"label", "",
 
 		],
 
@@ -253,6 +267,7 @@ class _ColorInspectorPlugValueWidget( GafferUI.PlugValueWidget ) :
 		# base class which inherits contexts from parents.
 		with view.getContext() :
 			pixel = self.getPlug()["pixel"].getValue()
+			samplerChannels = self.getPlug()["color"].getInput().node()["channels"].getValue()
 			try :
 				channelNames = view.viewportGadget().getPrimaryChild().getImage()["channelNames"].getValue()
 				color = self.getPlug()["color"].getValue()
@@ -260,7 +275,7 @@ class _ColorInspectorPlugValueWidget( GafferUI.PlugValueWidget ) :
 				channelNames = view.viewportGadget().getPrimaryChild().getImage()["channelNames"].defaultValue()
 				color = self.getPlug()["color"].defaultValue()
 
-		if "A" not in channelNames :
+		if samplerChannels[3] not in channelNames :
 			color = IECore.Color3f( color[0], color[1], color[2] )
 
 		self.__positionLabel.setText( "<b>XY : %d %d</b>" % ( pixel.x, pixel.y ) )

@@ -1,6 +1,6 @@
 ##########################################################################
 #
-#  Copyright (c) 2012-2013, Image Engine Design Inc. All rights reserved.
+#  Copyright (c) 2017, Image Engine Design Inc. All rights reserved.
 #
 #  Redistribution and use in source and binary forms, with or without
 #  modification, are permitted provided that the following conditions are
@@ -34,73 +34,34 @@
 #
 ##########################################################################
 
-import IECore
-
 import Gaffer
+import GafferImage
 
-class ParameterPath( Gaffer.Path ) :
+Gaffer.Metadata.registerNode(
 
-	def __init__( self, rootParameter, path, root="/", filter=None, forcedLeafTypes = () ) :
+	GafferImage.ColorProcessor,
 
-		Gaffer.Path.__init__( self, path, root, filter=filter )
+	"description",
+	"""
+	Base class for nodes which process RGB layers with cross
+	talk between channels.
+	""",
 
-		assert( isinstance( rootParameter, IECore.Parameter ) )
+	plugs = {
 
-		self.__forcedLeafTypes = forcedLeafTypes
-		self.__rootParameter = rootParameter
+		"channels" : [
 
-	def isValid( self ) :
+			"description",
+			"""
+			The names of the channels to process. Names should be
+			separated by spaces and can use Gaffer's standard
+			wildcards.
+			""",
 
-		try :
-			self.__parameter()
-			return True
-		except :
-			return False
+			"plugValueWidget:type", "GafferImageUI.ChannelMaskPlugValueWidget",
 
-	def isLeaf( self ) :
+		],
 
-		try :
-			p = self.__parameter()
-		except :
-			return False
+	}
 
-		return isinstance( p, self.__forcedLeafTypes ) or not isinstance( p, IECore.CompoundParameter )
-
-	def propertyNames( self ) :
-
-		return Gaffer.Path.propertyNames( self ) + [ "parameter:parameter" ]
-
-	def property( self, name ) :
-
-		if name == "parameter:parameter" :
-			with IECore.IgnoredExceptions( Exception ) :
-				return self.__parameter()
-			return None
-
-		return Gaffer.Path.property( self, name )
-
-	def copy( self ) :
-
-		return ParameterPath( self.__rootParameter, self[:], self.root(), self.getFilter(), self.__forcedLeafTypes )
-
-	def _children( self ) :
-
-		try :
-			p = self.__parameter()
-		except :
-			return []
-
-		if isinstance( p, IECore.CompoundParameter ) and not isinstance( p, self.__forcedLeafTypes ) :
-			return [ ParameterPath( self.__rootParameter, self[:] + [ x ], self.root(), self.getFilter(), forcedLeafTypes=self.__forcedLeafTypes ) for x in p.keys() ]
-
-		return []
-
-	def __parameter( self ) :
-
-		result = self.__rootParameter
-		for p in self :
-			result = result[p]
-
-		return result
-
-IECore.registerRunTimeTyped( ParameterPath, typeName = "GafferCortex::ParameterPath" )
+)

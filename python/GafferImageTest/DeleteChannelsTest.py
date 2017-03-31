@@ -70,7 +70,7 @@ class DeleteChannelsTest( GafferImageTest.ImageTestCase ) :
 
 		cs = GafferTest.CapturingSlot( c.plugDirtiedSignal() )
 
-		c["channels"].setValue( IECore.StringVectorData( ["R"] ) )
+		c["channels"].setValue( "R" )
 
 		dirtiedPlugs = set( [ x[0].relativeName( x[0].node() ) for x in cs ] )
 		self.assertEqual( len(dirtiedPlugs), 3 )
@@ -86,7 +86,7 @@ class DeleteChannelsTest( GafferImageTest.ImageTestCase ) :
 		c = GafferImage.DeleteChannels()
 		c["in"].setInput( r["out"] )
 		c["mode"].setValue( GafferImage.DeleteChannels.Mode.Delete ) # Remove selected channels
-		c["channels"].setValue( IECore.StringVectorData( [ "G", "A" ] ) )
+		c["channels"].setValue( "G A" )
 
 		self.assertEqual( c["out"]["channelNames"].getValue(), IECore.StringVectorData( [ "R", "B" ] ) )
 
@@ -98,7 +98,7 @@ class DeleteChannelsTest( GafferImageTest.ImageTestCase ) :
 		c = GafferImage.DeleteChannels()
 		c["in"].setInput( r["out"] )
 		c["mode"].setValue( GafferImage.DeleteChannels.Mode.Keep ) # Keep selected channels
-		c["channels"].setValue( IECore.StringVectorData( [ "G", "A" ] ) )
+		c["channels"].setValue( "G A" )
 
 		self.assertEqual( c["out"]["channelNames"].getValue(), IECore.StringVectorData( [ "G", "A" ] ) )
 
@@ -110,7 +110,7 @@ class DeleteChannelsTest( GafferImageTest.ImageTestCase ) :
 		d = GafferImage.DeleteChannels()
 		d["in"].setInput( r["out"] )
 		d["mode"].setValue( GafferImage.DeleteChannels.Mode.Delete )
-		d["channels"].setValue( IECore.StringVectorData( [ "R" ] ) )
+		d["channels"].setValue( "R" )
 
 		# the channels that are passed through should have identical hashes to the input,
 		# so they can share cache entries.
@@ -126,10 +126,10 @@ class DeleteChannelsTest( GafferImageTest.ImageTestCase ) :
 		c = GafferImage.DeleteChannels()
 		c["in"].setInput( r["out"] )
 		c["mode"].setValue( GafferImage.DeleteChannels.Mode.Keep ) # Keep selected channels
-		c["channels"].setValue( r["out"]["channelNames"].getValue() )
+		c["channels"].setValue( " ".join( r["out"]["channelNames"].getValue() ) )
 		h = c["out"]["channelNames"].hash()
 
-		c["channels"].setValue( IECore.StringVectorData( [ "R", "B" ] ) )
+		c["channels"].setValue( "R B" )
 		h2 = c["out"]["channelNames"].hash()
 		self.assertNotEqual( h, h2 )
 
@@ -153,7 +153,7 @@ class DeleteChannelsTest( GafferImageTest.ImageTestCase ) :
 		d = GafferImage.DeleteChannels()
 		d["in"].setInput( r["out"] )
 		d["mode"].setValue( d.Mode.Keep )
-		d["channels"].setValue( IECore.StringVectorData( [ "R" ] ) )
+		d["channels"].setValue( "R" )
 
 		ri = r["out"].image()
 		di = d["out"].image()
@@ -170,7 +170,7 @@ class DeleteChannelsTest( GafferImageTest.ImageTestCase ) :
 		d = GafferImage.DeleteChannels()
 		d["in"].setInput( i["out"] )
 		d["mode"].setValue( d.Mode.Keep )
-		d["channels"].setValue( IECore.StringVectorData( [ "R" ] ) )
+		d["channels"].setValue( "R" )
 
 		self.assertEqual( i["out"]["format"].hash(), d["out"]["format"].hash() )
 		self.assertEqual( i["out"]["dataWindow"].hash(), d["out"]["dataWindow"].hash() )

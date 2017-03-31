@@ -45,16 +45,29 @@ import GafferUI
 # implementation suitable for most purposes.
 class NodeToolbar( GafferUI.Widget ) :
 
+	__fallbackContext = Gaffer.Context()
+
 	def __init__( self, node, topLevelWidget, **kw ) :
 
 		GafferUI.Widget.__init__( self, topLevelWidget, **kw )
 
 		self.__node = node
 
+		scriptNode = self.__node.scriptNode()
+		self.__context = scriptNode.context() if scriptNode is not None else self.__fallbackContext
+
 	## Returns the node the toolbar represents.
 	def node( self ) :
 
 		return self.__node
+
+	def getContext( self ) :
+
+		return self.__context
+
+	def setContext( self, context ) :
+
+		self.__context = context
 
 	## Creates a NodeToolbar instance for the specified node and edge.
 	# Note that not all nodes have toolbars, so None may be returned.

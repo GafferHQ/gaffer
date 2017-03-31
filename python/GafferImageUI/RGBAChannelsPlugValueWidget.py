@@ -81,11 +81,17 @@ class RGBAChannelsPlugValueWidget( GafferUI.PlugValueWidget ) :
 	def __menuDefinition( self ) :
 
 		image = next( iter( self.getPlug().node().children( GafferImage.ImagePlug ) ) )
+		channelNames = []
 		with self.getContext() :
-			channelNames = image["channelNames"].getValue()
+			with IECore.IgnoredExceptions( Exception ) :
+				channelNames = image["channelNames"].getValue()
+
+		result = IECore.MenuDefinition()
+		if not channelNames :
+			result.append( "/No channels available", { "active" : False } )
+			return result
 
 		added = set()
-		result = IECore.MenuDefinition()
 		for channelName in channelNames :
 
 			if GafferImage.ImageAlgo.baseName( channelName ) in [ "R", "G", "B", "A" ] :

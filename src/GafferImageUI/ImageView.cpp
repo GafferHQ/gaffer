@@ -66,7 +66,6 @@
 #include "GafferImage/Format.h"
 #include "GafferImage/Grade.h"
 #include "GafferImage/ImagePlug.h"
-#include "GafferImage/ImageStats.h"
 #include "GafferImage/Clamp.h"
 #include "GafferImage/ImageSampler.h"
 
@@ -86,7 +85,6 @@ using namespace GafferImageUI;
 /// Implementation of ImageView::ChannelChooser
 //////////////////////////////////////////////////////////////////////////
 
-/// \todo Allow the user to choose which layer to view (beauty, spec etc)
 class ImageView::ChannelChooser : public boost::signals::trackable
 {
 
@@ -95,6 +93,15 @@ class ImageView::ChannelChooser : public boost::signals::trackable
 		ChannelChooser( ImageView *view )
 			:	m_view( view )
 		{
+			StringVectorDataPtr channelsDefaultData = new StringVectorData;
+			std::vector<std::string> &channelsDefault = channelsDefaultData->writable();
+			channelsDefault.push_back( "R" );
+			channelsDefault.push_back( "G" );
+			channelsDefault.push_back( "B" );
+			channelsDefault.push_back( "A" );
+
+			view->addChild( new StringVectorDataPlug( "channels", Plug::In, channelsDefaultData ) );
+
 			view->addChild(
 				new IntPlug(
 					"soloChannel",
@@ -112,6 +119,11 @@ class ImageView::ChannelChooser : public boost::signals::trackable
 
 	private :
 
+		StringVectorDataPlug *channelsPlug()
+		{
+			return m_view->getChild<StringVectorDataPlug>( "channels" );
+		}
+
 		IntPlug *soloChannelPlug()
 		{
 			return m_view->getChild<IntPlug>( "soloChannel" );
@@ -125,6 +137,21 @@ class ImageView::ChannelChooser : public boost::signals::trackable
 					m_view->viewportGadget()->getPrimaryChild()
 				);
 				imageGadget->setSoloChannel( soloChannelPlug()->getValue() );
+			}
+			else if( plug == channelsPlug() )
+			{
+				ConstStringVectorDataPtr channelsData = channelsPlug()->getValue();
+				const std::vector<std::string> &channels = channelsData->readable();
+				ImageGadget::Channels c;
+				for( size_t i = 0; i < std::min( channels.size(), (size_t)4 ); ++i )
+				{
+					c[i] = channels[i];
+				}
+
+				ImageGadget *imageGadget = static_cast<ImageGadget *>(
+					m_view->viewportGadget()->getPrimaryChild()
+				);
+				imageGadget->setChannels( c );
 			}
 		}
 
@@ -183,9 +210,12 @@ class ImageView::ColorInspector : public boost::signals::trackable
 			plug->getChild<Color4fPlug>( "color" )->setInput( m_sampler->colorPlug() );
 
 			m_view->viewportGadget()->mouseMoveSignal().connect( boost::bind( &ColorInspector::mouseMove, this, ::_2 ) );
-			m_view->viewportGadget()->getPrimaryChild()->buttonPressSignal().connect( boost::bind( &ColorInspector::buttonPress, this,  ::_2 ) );
-			m_view->viewportGadget()->getPrimaryChild()->dragBeginSignal().connect( boost::bind( &ColorInspector::dragBegin, this, ::_2 ) );
-			m_view->viewportGadget()->getPrimaryChild()->dragEndSignal().connect( boost::bind( &ColorInspector::dragEnd, this, ::_2 ) );
+
+			ImageGadget *imageGadget = static_cast<ImageGadget *>( m_view->viewportGadget()->getPrimaryChild() );
+			imageGadget->buttonPressSignal().connect( boost::bind( &ColorInspector::buttonPress, this,  ::_2 ) );
+			imageGadget->dragBeginSignal().connect( boost::bind( &ColorInspector::dragBegin, this, ::_2 ) );
+			imageGadget->dragEndSignal().connect( boost::bind( &ColorInspector::dragEnd, this, ::_2 ) );
+			imageGadget->channelsChangedSignal().connect( boost::bind( &ColorInspector::channelsChanged, this ) );
 		}
 
 	private :
@@ -247,6 +277,17 @@ class ImageView::ColorInspector : public boost::signals::trackable
 			return true;
 		}
 
+		void channelsChanged()
+		{
+			ImageGadget *imageGadget = static_cast<ImageGadget *>( m_view->viewportGadget()->getPrimaryChild() );
+			m_sampler->channelsPlug()->setValue(
+				new StringVectorData( std::vector<std::string>(
+					imageGadget->getChannels().begin(),
+					imageGadget->getChannels().end()
+				) )
+			);
+		}
+
 		ImageView *m_view;
 		ImageSamplerPtr m_sampler;
 
@@ -277,6 +318,7 @@ ImageView::ImageView( const std::string &name )
 	preprocessor->setChild(  "__clamp", clampNode );
 	clampNode->inPlug()->setInput( preprocessorInput );
 	clampNode->enabledPlug()->setValue( false );
+	clampNode->channelsPlug()->setValue( "*" );
 	clampNode->minClampToEnabledPlug()->setValue( true );
 	clampNode->maxClampToEnabledPlug()->setValue( true );
 	clampNode->minClampToPlug()->setValue( Color4f( 1.0f, 1.0f, 1.0f, 0.0f ) );
@@ -289,6 +331,7 @@ ImageView::ImageView( const std::string &name )
 	GradePtr gradeNode = new Grade;
 	preprocessor->setChild( "__grade", gradeNode );
 	gradeNode->inPlug()->setInput( clampNode->outPlug() );
+	gradeNode->channelsPlug()->setValue( "*" );
 
 	FloatPlugPtr exposurePlug = new FloatPlug( "exposure" );
 	exposurePlug->setFlags( Plug::AcceptsInputs, false );

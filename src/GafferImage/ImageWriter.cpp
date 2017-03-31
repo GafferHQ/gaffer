@@ -51,15 +51,14 @@ OIIO_NAMESPACE_USING
 #include "Gaffer/Context.h"
 #include "Gaffer/ScriptNode.h"
 #include "Gaffer/StringPlug.h"
+#include "Gaffer/StringAlgo.h"
 
 #include "GafferImage/FormatPlug.h"
 #include "GafferImage/ImageAlgo.h"
 #include "GafferImage/BufferAlgo.h"
 #include "GafferImage/ImageWriter.h"
 #include "GafferImage/ImagePlug.h"
-#include "GafferImage/ChannelMaskPlug.h"
 #include "GafferImage/OpenImageIOAlgo.h"
-
 
 using namespace std;
 using namespace Imath;
@@ -706,14 +705,7 @@ ImageWriter::ImageWriter( const std::string &name )
 	storeIndexOfNextChild( g_firstPlugIndex );
 	addChild( new ImagePlug( "in" ) );
 	addChild( new StringPlug( "fileName" ) );
-	addChild(
-		new ChannelMaskPlug(
-			"channels",
-			Gaffer::Plug::In,
-			inPlug()->channelNamesPlug()->defaultValue(),
-			Gaffer::Plug::Default & ~(Gaffer::Plug::Dynamic | Gaffer::Plug::ReadOnly)
-		)
-	);
+	addChild( new StringPlug( "channels", Gaffer::Plug::In, "*" ) );
 	addChild( new ImagePlug( "out", Plug::Out, Plug::Default & ~Plug::Serialisable ) );
 	outPlug()->setInput( inPlug() );
 
@@ -805,14 +797,14 @@ const Gaffer::StringPlug *ImageWriter::fileNamePlug() const
 	return getChild<StringPlug>( g_firstPlugIndex+1 );
 }
 
-GafferImage::ChannelMaskPlug *ImageWriter::channelsPlug()
+Gaffer::StringPlug *ImageWriter::channelsPlug()
 {
-	return getChild<ChannelMaskPlug>( g_firstPlugIndex+2 );
+	return getChild<StringPlug>( g_firstPlugIndex+2 );
 }
 
-const GafferImage::ChannelMaskPlug *ImageWriter::channelsPlug() const
+const Gaffer::StringPlug *ImageWriter::channelsPlug() const
 {
-	return getChild<ChannelMaskPlug>( g_firstPlugIndex+2 );
+	return getChild<StringPlug>( g_firstPlugIndex+2 );
 }
 
 GafferImage::ImagePlug *ImageWriter::outPlug()
@@ -874,10 +866,10 @@ IECore::MurmurHash ImageWriter::hash( const Context *context ) const
 	return h;
 }
 
-///\todo: We are currently computing all of the channels regardless of whether or not we are outputting them.
-/// Change the execute() method to only compute the channels that are masked by the channelsPlug().
 void ImageWriter::execute() const
 {
+	// Create an OIIO::ImageOutput
+
 	if( !inPlug()->getInput<ImagePlug>() )
 	{
 		throw IECore::Exception( "No input image." );
@@ -891,35 +883,7 @@ void ImageWriter::execute() const
 		throw IECore::Exception( OpenImageIO::geterror() );
 	}
 
-	// Grab the intersection of the channels from the "channels" plug and the image input to see which channels we are to write out.
-	IECore::ConstStringVectorDataPtr channelNamesData = inPlug()->channelNamesPlug()->getValue();
-	std::vector<std::string> maskChannels = channelNamesData->readable();
-	channelsPlug()->maskChannels( maskChannels );
-
-	if ( !out->supports( "nchannels" ) )
-	{
-		std::vector<std::string>::iterator cIt( maskChannels.begin() );
-		while ( cIt != maskChannels.end() )
-		{
-			if ( (*cIt) != "R" && (*cIt) != "G" && (*cIt) != "B" && (*cIt) != "A" )
-			{
-				cIt = maskChannels.erase( cIt );
-			}
-			else
-			{
-				++cIt;
-			}
-		}
-	}
-
-	if ( !out->supports( "alpha" ) )
-	{
-		std::vector<std::string>::iterator alphaChannel( std::find( maskChannels.begin(), maskChannels.end(), "A" ) );
-		if ( alphaChannel != maskChannels.end() )
-		{
-			maskChannels.erase( alphaChannel );
-		}
-	}
+	// Create an OIIO::ImageSpec describing what we'll write
 
 	const Format imageFormat = inPlug()->formatPlug()->getValue();
 	Imath::Box2i dataWindow = inPlug()->dataWindowPlug()->getValue();
@@ -938,26 +902,51 @@ void ImageWriter::execute() const
 
 	ImageSpec spec = createImageSpec( this, out.get(), exrDataWindow, exrDisplayWindow );
 
-	const int nChannels = maskChannels.size();
-	spec.nchannels = nChannels;
-	spec.default_channel_names();
+	// Decide what channels to write and update the spec with them
 
-	spec.channelnames.clear();
-	for ( std::vector<std::string>::iterator channelIt( maskChannels.begin() ); channelIt != maskChannels.end(); channelIt++ )
+	IECore::ConstStringVectorDataPtr channelNamesData = inPlug()->channelNamesPlug()->getValue();
+	const vector<string> &channelNames = channelNamesData->readable();
+	const string channels = channelsPlug()->getValue();
+
+	const bool supportsNChannels = out->supports( "nchannels" );
+	const bool supportsAlpha = out->supports( "alpha" );
+
+	vector<string> channelsToWrite;
+	for( vector<string>::const_iterator it = channelNames.begin(), eIt = channelNames.end(); it != eIt; ++it )
 	{
-		spec.channelnames.push_back( *channelIt );
+		if( !StringAlgo::matchMultiple( *it, channels ) )
+		{
+			continue;
+		}
+		if( !supportsNChannels && *it != "R" && *it != "G" && *it != "B" && *it != "A" )
+		{
+			continue;
+		}
+		if( !supportsAlpha && *it == "A" )
+		{
+			continue;
+		}
+		channelsToWrite.push_back( *it );
+	}
 
+	spec.nchannels = channelsToWrite.size();
+	spec.channelnames.clear();
+	for( vector<string>::const_iterator it = channelsToWrite.begin(), eIt = channelsToWrite.end(); it != eIt; ++it )
+	{
+		spec.channelnames.push_back( *it );
 		// OIIO has a special attribute for the Alpha and Z channels. If we find some, we should tag them...
-		if ( *channelIt == "A" )
+		if( *it == "A" )
 		{
-			spec.alpha_channel = channelIt-maskChannels.begin();
-		} else if ( *channelIt == "Z" )
+			spec.alpha_channel = it - channelsToWrite.begin();
+		}
+		else if( *it == "Z" )
 		{
-			spec.z_channel = channelIt-maskChannels.begin();
+			spec.z_channel = it - channelsToWrite.begin();
 		}
 	}
 
-	// create the directories before opening the file
+	// Create the directory we need and open the file
+
 	boost::filesystem::path directory = boost::filesystem::path( fileName ).parent_path();
 	if( !directory.empty() )
 	{
@@ -972,6 +961,8 @@ void ImageWriter::execute() const
 	{
 		throw IECore::Exception( boost::str( boost::format( "Could not open \"%s\", error = %s" ) % fileName % out->geterror() ) );
 	}
+
+	// Write out the channel data
 
 	const Imath::Box2i extImageDataWindow( Imath::V2i( spec.x, spec.y ), Imath::V2i( spec.x + spec.width - 1, spec.y + spec.height - 1 ) );
 	const Imath::Box2i imageDataWindow( imageFormat.fromEXRSpace( extImageDataWindow ) );

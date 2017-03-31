@@ -58,6 +58,8 @@ Gaffer.Metadata.registerNode(
 			wildcards.
 			""",
 
+			"plugValueWidget:type", "GafferImageUI.ChannelMaskPlugValueWidget",
+
 		],
 
 	}

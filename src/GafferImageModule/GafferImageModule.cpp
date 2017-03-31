@@ -67,7 +67,6 @@
 #include "GafferImageBindings/AtomicFormatPlugBinding.h"
 #include "GafferImageBindings/SamplerBinding.h"
 #include "GafferImageBindings/DeleteChannelsBinding.h"
-#include "GafferImageBindings/ChannelMaskPlugBindings.h"
 #include "GafferImageBindings/MergeBinding.h"
 #include "GafferImageBindings/MixinBinding.h"
 #include "GafferImageBindings/FormatDataBinding.h"
@@ -128,7 +127,6 @@ BOOST_PYTHON_MODULE( _GafferImage )
 	GafferImageBindings::bindFormat();
 	GafferImageBindings::bindFormatPlug();
 	GafferImageBindings::bindAtomicFormatPlug();
-	GafferImageBindings::bindChannelMaskPlug();
 	GafferImageBindings::bindSampler();
 	GafferImageBindings::bindMixin();
 	GafferImageBindings::bindFormatData();

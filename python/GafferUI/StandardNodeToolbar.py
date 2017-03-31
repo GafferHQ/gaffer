@@ -40,14 +40,24 @@ class StandardNodeToolbar( GafferUI.NodeToolbar ) :
 
 	def __init__( self, node, edge = GafferUI.Edge.Top, **kw ) :
 
-		layout = GafferUI.PlugLayout(
+		self.__layout = GafferUI.PlugLayout(
 			node,
 			orientation = GafferUI.ListContainer.Orientation.Horizontal if edge in ( GafferUI.Edge.Top, GafferUI.Edge.Bottom ) else GafferUI.ListContainer.Orientation.Vertical,
 			layoutName = "toolbarLayout",
 			rootSection = str( edge )
 		)
 
-		GafferUI.NodeToolbar.__init__( self, node, layout, **kw )
+		GafferUI.NodeToolbar.__init__( self, node, self.__layout, **kw )
+
+		self.__layout.setContext( self.getContext() )
+
+	def setContext( self, context ) :
+
+		if context.isSame( self.getContext() ) :
+			return
+
+		GafferUI.NodeToolbar.setContext( self, context )
+		self.__layout.setContext( context )
 
 	@staticmethod
 	def top( node ) :

@@ -72,8 +72,12 @@ Gaffer.Metadata.registerNode(
 			"description",
 			"""
 			The names of the channels to be deleted (or kept
-			if the mode is set to Keep).
+			if the mode is set to Keep). Names should be separated
+			by spaces and may contain any of Gaffer's standard
+			wildcards.
 			""",
+
+			"plugValueWidget:type", "GafferImageUI.ChannelMaskPlugValueWidget",
 
 		],
 

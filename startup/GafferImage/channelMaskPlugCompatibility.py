@@ -1,6 +1,6 @@
 ##########################################################################
 #
-#  Copyright (c) 2012-2013, Image Engine Design Inc. All rights reserved.
+#  Copyright (c) 2017, Image Engine Design Inc. All rights reserved.
 #
 #  Redistribution and use in source and binary forms, with or without
 #  modification, are permitted provided that the following conditions are
@@ -34,73 +34,32 @@
 #
 ##########################################################################
 
+import types
+
 import IECore
 
-import Gaffer
+import GafferImage
 
-class ParameterPath( Gaffer.Path ) :
+def __channelMaskPlugSetValue( self, value ) :
 
-	def __init__( self, rootParameter, path, root="/", filter=None, forcedLeafTypes = () ) :
+	if isinstance( value, IECore.StringVectorData ) :
+		value = " ".join( value )
 
-		Gaffer.Path.__init__( self, path, root, filter=filter )
+	self.__class__.setValue( self, value )
 
-		assert( isinstance( rootParameter, IECore.Parameter ) )
+def __channelMaskPlugGetItem( originalGetItem ) :
 
-		self.__forcedLeafTypes = forcedLeafTypes
-		self.__rootParameter = rootParameter
+	def getItem( self, key ) :
 
-	def isValid( self ) :
-
-		try :
-			self.__parameter()
-			return True
-		except :
-			return False
-
-	def isLeaf( self ) :
-
-		try :
-			p = self.__parameter()
-		except :
-			return False
-
-		return isinstance( p, self.__forcedLeafTypes ) or not isinstance( p, IECore.CompoundParameter )
-
-	def propertyNames( self ) :
-
-		return Gaffer.Path.propertyNames( self ) + [ "parameter:parameter" ]
-
-	def property( self, name ) :
-
-		if name == "parameter:parameter" :
-			with IECore.IgnoredExceptions( Exception ) :
-				return self.__parameter()
-			return None
-
-		return Gaffer.Path.property( self, name )
-
-	def copy( self ) :
-
-		return ParameterPath( self.__rootParameter, self[:], self.root(), self.getFilter(), self.__forcedLeafTypes )
-
-	def _children( self ) :
-
-		try :
-			p = self.__parameter()
-		except :
-			return []
-
-		if isinstance( p, IECore.CompoundParameter ) and not isinstance( p, self.__forcedLeafTypes ) :
-			return [ ParameterPath( self.__rootParameter, self[:] + [ x ], self.root(), self.getFilter(), forcedLeafTypes=self.__forcedLeafTypes ) for x in p.keys() ]
-
-		return []
-
-	def __parameter( self ) :
-
-		result = self.__rootParameter
-		for p in self :
-			result = result[p]
+		result = originalGetItem( self, key )
+		if key == "channels" :
+			result.setValue = types.MethodType( __channelMaskPlugSetValue, result )
 
 		return result
 
-IECore.registerRunTimeTyped( ParameterPath, typeName = "GafferCortex::ParameterPath" )
+	return getItem
+
+GafferImage.ImageWriter.__getitem__ = __channelMaskPlugGetItem( GafferImage.ImageWriter.__getitem__ )
+GafferImage.DeleteChannels.__getitem__ = __channelMaskPlugGetItem( GafferImage.DeleteChannels.__getitem__ )
+GafferImage.ChannelDataProcessor.__getitem__ = __channelMaskPlugGetItem( GafferImage.ChannelDataProcessor.__getitem__ )
+

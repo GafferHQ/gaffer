@@ -55,8 +55,12 @@ Gaffer.Metadata.registerNode(
 
 			"description",
 			"""
-			The subset of channels to operate on.
+			The names of the channels to operate on. Names should be
+			separated by spaces and can use Gaffer's standard
+			wildcards.
 			""",
+
+			"plugValueWidget:type", "GafferImageUI.ChannelMaskPlugValueWidget",
 
 		],
 

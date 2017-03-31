@@ -37,6 +37,8 @@
 #ifndef GAFFERIMAGE_COLORPROCESSOR_H
 #define GAFFERIMAGE_COLORPROCESSOR_H
 
+#include "Gaffer/StringPlug.h"
+
 #include "GafferImage/ImageProcessor.h"
 
 namespace GafferImage
@@ -44,9 +46,6 @@ namespace GafferImage
 
 /// Forms a useful base class for nodes which must process R,G and B channels at the same time
 /// to perform some sort of channel mixing.
-/// \todo This is currently hardcoded to operate on the "R", "G" and "B" channels - make it able
-/// to work on alternative sets of channels. To do this well I think we need to introduce the
-/// concept of layers which group channels together (e.g. beauty.R, beauty.G, beauty.B etc).
 class ColorProcessor : public ImageProcessor
 {
 
@@ -56,6 +55,9 @@ class ColorProcessor : public ImageProcessor
 		virtual ~ColorProcessor();
 
 		IE_CORE_DECLARERUNTIMETYPEDEXTENSION( GafferImage::ColorProcessor, ColorProcessorTypeId, ImageProcessor );
+
+		Gaffer::StringPlug *channelsPlug();
+		const Gaffer::StringPlug *channelsPlug() const;
 
 		virtual void affects( const Gaffer::Plug *input, AffectedPlugsContainer &outputs ) const;
 
@@ -82,6 +84,8 @@ class ColorProcessor : public ImageProcessor
 	private :
 
 		// Used to store the result of processColorData(), so that it can be reused in computeChannelData().
+		// Evaluated in a context with an "image:colorProcessor:__layerName" variable, so we can cache
+		// different results per layer.
 		Gaffer::ObjectPlug *colorDataPlug();
 		const Gaffer::ObjectPlug *colorDataPlug() const;
 

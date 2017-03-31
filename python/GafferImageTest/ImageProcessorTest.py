@@ -61,7 +61,7 @@ class ImageProcessorTest( GafferImageTest.ImageTestCase ) :
 				self["__deleteChannels"] = GafferImage.DeleteChannels()
 				self["__deleteChannels"]["in"].setInput( self["in"] )
 				self["__deleteChannels"]["enabled"].setInput( self["enabled"] )
-				self["__deleteChannels"]["channels"].setValue( IECore.StringVectorData( [ "A" ] ) )
+				self["__deleteChannels"]["channels"].setValue( "A" )
 
 				self["out"].setInput( self["__deleteChannels"]["out"] )
 
