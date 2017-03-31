@@ -42,6 +42,7 @@
 #include "Gaffer/Metadata.h"
 #include "Gaffer/MetadataAlgo.h"
 #include "Gaffer/PlugAlgo.h"
+#include "Gaffer/ScriptNode.h"
 
 using namespace IECore;
 using namespace Gaffer;
@@ -226,6 +227,8 @@ void BoxIO::parentChanging( Gaffer::GraphComponent *newParent )
 
 	if( parent<Box>() )
 	{
+		m_promotedPlugNameChangedConnection.disconnect();
+		m_promotedPlugParentChangedConnection.disconnect();
 		if( Plug *i = inPlugInternal() )
 		{
 			if( PlugAlgo::isPromoted( i ) )
@@ -291,29 +294,63 @@ void BoxIO::parentChanged( GraphComponent *oldParent )
 
 void BoxIO::plugInputChanged( Plug *plug )
 {
+	// An input has changed either on this node or on
+	// the parent box node. This gives us the opportunity
+	// to discover our promoted plug and connect to its
+	// signals.
+	Plug *promoted = NULL;
 	if( m_direction == Plug::In && plug == inPlugInternal() )
 	{
-		m_nameChangedConnection.disconnect();
-		if( Plug *p = promotedPlug<Plug>() )
-		{
-			m_nameChangedConnection = p->nameChangedSignal().connect(
-				boost::bind( &BoxIO::nameChanged, this, ::_1 )
-			);
-		}
+		promoted = promotedPlug<Plug>();
 	}
 	else if( m_direction == Plug::Out && plug == promotedPlug<Plug>() )
 	{
-		m_nameChangedConnection.disconnect();
-		m_nameChangedConnection = plug->nameChangedSignal().connect(
-			boost::bind( &BoxIO::nameChanged, this, ::_1 )
+		promoted = plug;
+	}
+
+	if( promoted )
+	{
+		m_promotedPlugNameChangedConnection = promoted->nameChangedSignal().connect(
+			boost::bind( &BoxIO::promotedPlugNameChanged, this, ::_1 )
+		);
+		m_promotedPlugParentChangedConnection = promoted->parentChangedSignal().connect(
+			boost::bind( &BoxIO::promotedPlugParentChanged, this, ::_1 )
 		);
 	}
 }
 
-void BoxIO::nameChanged( GraphComponent *graphComponent )
+void BoxIO::promotedPlugNameChanged( GraphComponent *graphComponent )
 {
 	if( graphComponent == promotedPlug<Plug>() )
 	{
 		namePlug()->setValue( graphComponent->getName() );
 	}
 }
+
+void BoxIO::promotedPlugParentChanged( GraphComponent *graphComponent )
+{
+	// Promoted plug is being deleted. Since we exist only
+	// to represent it as a node inside the box, delete
+	// ourselves too.
+	if( const ScriptNode *script = scriptNode() )
+	{
+		if( script->currentActionStage() == Action::Undo ||
+		    script->currentActionStage() == Action::Redo
+		)
+		{
+			// We don't need to do anything during undo/redo
+			// since in those cases our previous actions are
+			// already recorded.
+			return;
+		}
+	}
+
+	if( !graphComponent->parent<GraphComponent>() )
+	{
+		if( GraphComponent *p = parent<GraphComponent>() )
+		{
+			p->removeChild( this );
+		}
+	}
+}
+

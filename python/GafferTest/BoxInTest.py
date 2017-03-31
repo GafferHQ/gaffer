@@ -219,5 +219,87 @@ class BoxInTest( GafferTest.TestCase ) :
 		self.assertEqual( Gaffer.Metadata.value( s["b"]["i"].promotedPlug(), "noduleLayout:section" ), "left" )
 		self.assertEqual( Gaffer.Metadata.value( s["b"]["i"].plug(), "noduleLayout:section" ), "right" )
 
+	def testPromotedPlugRemovalDeletesBoxIn( self ) :
+
+		s = Gaffer.ScriptNode()
+
+		s["b"] = Gaffer.Box()
+		s["b"]["n"] = GafferTest.AddNode()
+
+		s["b"]["i"] = Gaffer.BoxIn()
+		s["b"]["i"]["name"].setValue( "op1" )
+		s["b"]["i"].setup( s["b"]["n"]["op1"] )
+		s["b"]["n"]["op1"].setInput( s["b"]["i"]["out"] )
+
+		def assertPreconditions() :
+
+			self.assertTrue( "op1" in s["b"] )
+			self.assertTrue( "i" in s["b"] )
+			self.assertTrue( len( s["b"]["i"]["out"].outputs() ), 1 )
+			self.assertTrue( s["b"]["n"]["op1"].source().isSame( s["b"]["op1"] ) )
+
+		assertPreconditions()
+
+		with Gaffer.UndoContext( s ) :
+			del s["b"]["op1"]
+
+		def assertPostconditions() :
+
+			self.assertFalse( "op1" in s["b"] )
+			self.assertFalse( "i" in s["b"] )
+			self.assertTrue( s["b"]["n"]["op1"].getInput() is None )
+
+		assertPostconditions()
+
+		s.undo()
+
+		assertPreconditions()
+
+		s.redo()
+
+		assertPostconditions()
+
+	def testUndoCreation( self ) :
+
+		s = Gaffer.ScriptNode()
+
+		s["b"] = Gaffer.Box()
+		s["a"] = GafferTest.AddNode()
+
+		def assertPreconditions() :
+
+			self.assertEqual( len( s["b"].children( Gaffer.Node ) ), 0 )
+			self.assertEqual( len( s["b"].children( Gaffer.Plug ) ), 1 )
+			self.assertEqual( len( s["a"]["sum"].outputs() ), 0 )
+
+		assertPreconditions()
+
+		with Gaffer.UndoContext( s ) :
+
+			s["b"]["i"] = Gaffer.BoxIn()
+			s["b"]["i"].setup( s["a"]["sum"] )
+			s["b"]["i"].promotedPlug().setInput( s["a"]["sum"] )
+
+		def assertPostconditions() :
+
+			self.assertEqual( len( s["b"].children( Gaffer.Node ) ), 1 )
+			self.assertEqual( len( s["b"].children( Gaffer.Plug ) ), 2 )
+			self.assertTrue( isinstance( s["b"]["i"], Gaffer.BoxIn ) )
+			self.assertTrue( s["b"]["i"]["out"].source().isSame( s["a"]["sum"] ) )
+
+		assertPostconditions()
+
+		s.undo()
+		assertPreconditions()
+
+		s.redo()
+		assertPostconditions()
+
+		s.undo()
+		assertPreconditions()
+
+		s.redo()
+		assertPostconditions()
+
 if __name__ == "__main__":
 	unittest.main()

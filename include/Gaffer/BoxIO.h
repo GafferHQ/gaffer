@@ -120,12 +120,14 @@ class BoxIO : public Node
 
 		Plug::Direction m_direction;
 
-		boost::signals::scoped_connection m_nameChangedConnection;
+		boost::signals::scoped_connection m_promotedPlugNameChangedConnection;
+		boost::signals::scoped_connection m_promotedPlugParentChangedConnection;
 
 		void plugSet( Plug *plug );
 		void parentChanged( GraphComponent *oldParent );
 		void plugInputChanged( Plug *plug );
-		void nameChanged( GraphComponent *graphComponent );
+		void promotedPlugNameChanged( GraphComponent *graphComponent );
+		void promotedPlugParentChanged( GraphComponent *graphComponent );
 
 		static size_t g_firstPlugIndex;
 

@@ -178,5 +178,45 @@ class BoxOutTest( GafferTest.TestCase ) :
 		self.assertEqual( Gaffer.Metadata.value( s["b"]["o"].promotedPlug(), "noduleLayout:section" ), "right" )
 		self.assertEqual( Gaffer.Metadata.value( s["b"]["o"].plug(), "noduleLayout:section" ), "left" )
 
+	def testPromotedPlugRemovalDeletesBoxOut( self ) :
+
+		s = Gaffer.ScriptNode()
+
+		s["b"] = Gaffer.Box()
+		s["b"]["n"] = GafferTest.AddNode()
+
+		s["b"]["o"] = Gaffer.BoxOut()
+		s["b"]["o"]["name"].setValue( "sum" )
+		s["b"]["o"].setup( s["b"]["n"]["sum"] )
+		s["b"]["o"]["in"].setInput( s["b"]["n"]["sum"] )
+
+		def assertPreconditions() :
+
+			self.assertTrue( "sum" in s["b"] )
+			self.assertTrue( "o" in s["b"] )
+			self.assertTrue( s["b"]["o"]["in"].getInput().isSame( s["b"]["n"]["sum"] ) )
+			self.assertTrue( s["b"]["sum"].source().isSame( s["b"]["n"]["sum"] ) )
+
+		assertPreconditions()
+
+		with Gaffer.UndoContext( s ) :
+			del s["b"]["sum"]
+
+		def assertPostconditions() :
+
+			self.assertFalse( "sum" in s["b"] )
+			self.assertFalse( "o" in s["b"] )
+			self.assertEqual( len( s["b"]["n"]["sum"].outputs() ), 0 )
+
+		assertPostconditions()
+
+		s.undo()
+
+		assertPreconditions()
+
+		s.redo()
+
+		assertPostconditions()
+
 if __name__ == "__main__":
 	unittest.main()
