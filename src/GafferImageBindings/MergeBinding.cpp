@@ -65,6 +65,8 @@ void bindMerge()
 		.value( "Subtract", Merge::Subtract )
 		.value( "Difference", Merge::Difference )
 		.value( "Under", Merge::Under )
+		.value( "Min", Merge::Min )
+		.value( "Max", Merge::Max )
 	;
 
 }

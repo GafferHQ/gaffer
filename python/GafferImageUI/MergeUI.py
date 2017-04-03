@@ -59,6 +59,8 @@ Gaffer.Metadata.registerNode(
 	  - Subtract : A - B
 	  - Difference : fabs( A - B )
 	  - Under : A(1-b) + B
+	  - Min : min( A, B )
+	  - Max : max( A, B )
 	""",
 
 	plugs = {
@@ -102,6 +104,8 @@ Gaffer.Metadata.registerNode(
 			"preset:Subtract", GafferImage.Merge.Operation.Subtract,
 			"preset:Difference", GafferImage.Merge.Operation.Difference,
 			"preset:Under", GafferImage.Merge.Operation.Under,
+			"preset:Min", GafferImage.Merge.Operation.Min,
+			"preset:Max", GafferImage.Merge.Operation.Max,
 
 			"plugValueWidget:type", "GafferUI.PresetsPlugValueWidget",
 

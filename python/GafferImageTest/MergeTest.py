@@ -370,27 +370,45 @@ class MergeTest( GafferImageTest.ImageTestCase ) :
 
 		merge["out"].image()
 
-	def testDifference( self ) :
-
-		a = GafferImage.Constant()
-		a["color"].setValue( IECore.Color4f( 0.1, 0.2, 0.3, 0.4 ) )
+	def testModes( self ) :
 
 		b = GafferImage.Constant()
-		b["color"].setValue( IECore.Color4f( 1, 0.3, 0.1, 0.2 ) )
+		b["color"].setValue( IECore.Color4f( 0.1, 0.2, 0.3, 0.4 ) )
+
+		a = GafferImage.Constant()
+		a["color"].setValue( IECore.Color4f( 1, 0.3, 0.1, 0.2 ) )
 
 		merge = GafferImage.Merge()
-		merge["in"][0].setInput( a["out"] )
-		merge["in"][1].setInput( b["out"] )
-		merge["operation"].setValue( GafferImage.Merge.Operation.Difference )
+		merge["in"][0].setInput( b["out"] )
+		merge["in"][1].setInput( a["out"] )
 
 		sampler = GafferImage.ImageSampler()
 		sampler["image"].setInput( merge["out"] )
 		sampler["pixel"].setValue( IECore.V2f( 10 ) )
 
-		self.assertAlmostEqual( sampler["color"]["r"].getValue(), 0.9 )
-		self.assertAlmostEqual( sampler["color"]["g"].getValue(), 0.1 )
-		self.assertAlmostEqual( sampler["color"]["b"].getValue(), 0.2 )
-		self.assertAlmostEqual( sampler["color"]["a"].getValue(), 0.2 )
+		self.longMessage = True
+		for operation, expected in [
+			( GafferImage.Merge.Operation.Add, ( 1.1, 0.5, 0.4, 0.6 ) ),
+			( GafferImage.Merge.Operation.Atop, ( 0.48, 0.28, 0.28, 0.4 ) ),
+			( GafferImage.Merge.Operation.Divide, ( 10, 1.5, 1/3.0, 0.5 ) ),
+			( GafferImage.Merge.Operation.In, ( 0.4, 0.12, 0.04, 0.08 ) ),
+			( GafferImage.Merge.Operation.Out, ( 0.6, 0.18, 0.06, 0.12 ) ),
+			( GafferImage.Merge.Operation.Mask, ( 0.02, 0.04, 0.06, 0.08 ) ),
+			( GafferImage.Merge.Operation.Matte, ( 0.28, 0.22, 0.26, 0.36 ) ),
+			( GafferImage.Merge.Operation.Multiply, ( 0.1, 0.06, 0.03, 0.08 ) ),
+			( GafferImage.Merge.Operation.Over, ( 1.08, 0.46, 0.34, 0.52 ) ),
+			( GafferImage.Merge.Operation.Subtract, ( 0.9, 0.1, -0.2, -0.2 ) ),
+			( GafferImage.Merge.Operation.Difference, ( 0.9, 0.1, 0.2, 0.2 ) ),
+			( GafferImage.Merge.Operation.Under, ( 0.7, 0.38, 0.36, 0.52 ) ),
+			( GafferImage.Merge.Operation.Min, ( 0.1, 0.2, 0.1, 0.2 ) ),
+			( GafferImage.Merge.Operation.Max, ( 1, 0.3, 0.3, 0.4 ) )
+		] :
+
+			merge["operation"].setValue( operation )
+			self.assertAlmostEqual( sampler["color"]["r"].getValue(), expected[0], msg=operation )
+			self.assertAlmostEqual( sampler["color"]["g"].getValue(), expected[1], msg=operation )
+			self.assertAlmostEqual( sampler["color"]["b"].getValue(), expected[2], msg=operation )
+			self.assertAlmostEqual( sampler["color"]["a"].getValue(), expected[3], msg=operation )
 
 	def testChannelRequest( self ) :
 
