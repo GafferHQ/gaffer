@@ -239,6 +239,7 @@ nodeMenu.append( "/Scene/Object/Light To Camera", GafferScene.LightToCamera, sea
 nodeMenu.append( "/Scene/Object/Map Projection", GafferScene.MapProjection, searchText = "MapProjection" )
 nodeMenu.append( "/Scene/Object/Map Offset", GafferScene.MapOffset, searchText = "MapOffset"  )
 nodeMenu.append( "/Scene/Object/Parameters", GafferScene.Parameters )
+nodeMenu.append( "/Scene/Object/Mesh Tangents", GafferScene.MeshTangents, searchText = "MeshTangents" )
 nodeMenu.append( "/Scene/Attributes/Shader Assignment", GafferScene.ShaderAssignment, searchText = "ShaderAssignment" )
 nodeMenu.append( "/Scene/Attributes/Shader Switch", GafferScene.ShaderSwitch, searchText = "ShaderSwitch" )
 nodeMenu.append( "/Scene/Attributes/Standard Attributes", GafferScene.StandardAttributes, searchText = "StandardAttributes" )
@@ -276,6 +277,7 @@ nodeMenu.append( "/Scene/Globals/Set", GafferScene.Set )
 nodeMenu.append( "/Scene/OpenGL/Attributes", GafferScene.OpenGLAttributes, searchText = "OpenGLAttributes" )
 nodeMenu.definition().append( "/Scene/OpenGL/Shader", { "subMenu" : GafferSceneUI.OpenGLShaderUI.shaderSubMenu } )
 nodeMenu.append( "/Scene/OpenGL/Render", GafferScene.OpenGLRender, searchText = "OpenGLRender" )
+
 
 # Image nodes
 

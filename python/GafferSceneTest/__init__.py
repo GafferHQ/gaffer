@@ -120,6 +120,7 @@ from FilterResultsTest import FilterResultsTest
 from RendererAlgoTest import RendererAlgoTest
 from SetAlgoTest import SetAlgoTest
 from EvaluateLightLinksTest import EvaluateLightLinksTest
+from MeshTangentsTest import MeshTangentsTest
 
 if __name__ == "__main__":
 	import unittest

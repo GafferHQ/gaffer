@@ -135,6 +135,7 @@ enum TypeId
 	LightToCameraTypeId = 110590,
 	FilterResultsTypeId = 110591,
 	EvaluateLightLinksTypeId = 110592,
+	MeshTangentsTypeId = 110593,
 
 	PreviewInteractiveRenderTypeId = 110649,
 

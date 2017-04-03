@@ -110,6 +110,7 @@
 #include "GafferSceneBindings/RendererAlgoBinding.h"
 #include "GafferSceneBindings/SetAlgoBinding.h"
 #include "GafferSceneBindings/EvaluateLightLinksBinding.h"
+#include "GafferSceneBindings/MeshTangentsBinding.h"
 
 using namespace boost::python;
 using namespace GafferBindings;
@@ -201,5 +202,5 @@ BOOST_PYTHON_MODULE( _GafferScene )
 	bindRendererAlgo();
 	bindSetAlgo();
 	bindEvaluateLightLinks();
-
+	bindMeshTangents();
 }
