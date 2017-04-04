@@ -86,6 +86,7 @@ from MirrorTest import MirrorTest
 from CopyChannelsTest import CopyChannelsTest
 from FilterAlgoTest import FilterAlgoTest
 from MedianTest import MedianTest
+from MixTest import MixTest
 
 if __name__ == "__main__":
 	import unittest

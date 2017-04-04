@@ -1,6 +1,6 @@
 ##########################################################################
 #
-#  Copyright (c) 2013-2015, Image Engine Design Inc. All rights reserved.
+#  Copyright (c) 2017, Image Engine Design Inc. All rights reserved.
 #
 #  Redistribution and use in source and binary forms, with or without
 #  modification, are permitted provided that the following conditions are
@@ -44,14 +44,12 @@ import GafferTest
 import GafferImage
 import GafferImageTest
 
-class MergeTest( GafferImageTest.ImageTestCase ) :
+class MixTest( GafferImageTest.ImageTestCase ) :
 
 	rPath = os.path.expandvars( "$GAFFER_ROOT/python/GafferImageTest/images/redWithDataWindow.100x100.exr" )
 	gPath = os.path.expandvars( "$GAFFER_ROOT/python/GafferImageTest/images/greenWithDataWindow.100x100.exr" )
-	bPath = os.path.expandvars( "$GAFFER_ROOT/python/GafferImageTest/images/blueWithDataWindow.100x100.exr" )
 	checkerPath = os.path.expandvars( "$GAFFER_ROOT/python/GafferImageTest/images/checkerboard.100x100.exr" )
-	checkerRGBPath = os.path.expandvars( "$GAFFER_ROOT/python/GafferImageTest/images/rgbOverChecker.100x100.exr" )
-	rgbPath = os.path.expandvars( "$GAFFER_ROOT/python/GafferImageTest/images/rgb.100x100.exr" )
+	checkerMixPath = os.path.expandvars( "$GAFFER_ROOT/python/GafferImageTest/images/checkerMix.100x100.exr" )
 
 	# Do several tests to check the cache is working correctly:
 	def testHashes( self ) :
@@ -66,77 +64,84 @@ class MergeTest( GafferImageTest.ImageTestCase ) :
 		# Test to see if the hash changes.
 		##########################################
 
-		merge = GafferImage.Merge()
-		merge["operation"].setValue( GafferImage.Merge.Operation.Over )
+		mix = GafferImage.Mix()
 
-		merge["in"][0].setInput( r1["out"] )
-		merge["in"][1].setInput( r2["out"] )
-		h1 = merge["out"].imageHash()
+		mix["in"][0].setInput( r1["out"] )
+		mix["in"][1].setInput( r2["out"] )
+		h1 = mix["out"].imageHash()
 
 		# Switch the inputs.
-		merge["in"][1].setInput( r1["out"] )
-		merge["in"][0].setInput( r2["out"] )
-		h2 = merge["out"].imageHash()
+		mix["in"][1].setInput( r1["out"] )
+		mix["in"][0].setInput( r2["out"] )
+		h2 = mix["out"].imageHash()
 
 		self.assertNotEqual( h1, h2 )
 
-		##########################################
-		# Test to see if the hash remains the same
-		# when the output should be the same but the
-		# input plugs used are not.
-		##########################################
+	def testPassThroughs( self ) :
 
-		merge = GafferImage.Merge()
-		merge["operation"].setValue( GafferImage.Merge.Operation.Over )
+		r = GafferImage.ImageReader()
+		r["fileName"].setValue( self.rPath )
 
-		expectedHash = h1
+		g = GafferImage.ImageReader()
+		g["fileName"].setValue( self.gPath )
 
-		# Connect up a load of inputs ...
-		merge["in"][0].setInput( r1["out"] )
-		merge["in"][1].setInput( r1["out"] )
-		merge["in"][2].setInput( r1["out"] )
-		merge["in"][3].setInput( r2["out"] )
+		mix = GafferImage.Mix()
 
-		# but then disconnect two so that the result should still be the same...
-		merge["in"][1].setInput( None )
-		merge["in"][2].setInput( None )
-		h1 = merge["out"].imageHash()
-
-		self.assertEqual( h1, expectedHash )
-
-	# The pass through for disabled is working, but I don't see any sign that a pass through
-	# for a single input was ever implemented.  ( For a long time this test was broken )
-	@unittest.expectedFailure
-	def testHashPassThrough( self ) :
-
-		r1 = GafferImage.ImageReader()
-		r1["fileName"].setValue( self.checkerPath )
+		input1Hash = r["out"].imageHash()
+		mix["in"][0].setInput( r["out"] )
+		mix["in"][1].setInput( g["out"] )
+		mix["mix"].setValue( 0.5 )
 
 		##########################################
-		# Test to see if the input hash is always passed
-		# through if only the first input is connected.
+		# With a mix applied, the hashes don't match either input,
+		# and the data window is merged
 		##########################################
 
-		merge = GafferImage.Merge()
-		merge["operation"].setValue( GafferImage.Merge.Operation.Over )
-
-		expectedHash = r1["out"].imageHash()
-		merge["in"][0].setInput( r1["out"] )
-		h1 = merge["out"].imageHash()
-
-		self.assertEqual( h1, expectedHash )
+		self.assertNotEqual( mix["out"].imageHash(), input1Hash )
+		self.assertEqual( mix["out"]["dataWindow"].getValue(), IECore.Box2i( IECore.V2i( 20 ), IECore.V2i( 75 ) ) )
 
 		##########################################
 		# Test that if we disable the node the hash gets passed through.
 		##########################################
 
-		merge["enabled"].setValue(False)
-		h1 = merge["out"].imageHash()
+		mix["enabled"].setValue(False)
+		self.assertEqual( mix["out"].imageHash(), input1Hash )
+		self.assertEqual( mix["out"]["dataWindow"].getValue(), IECore.Box2i( IECore.V2i( 20 ), IECore.V2i( 70 ) ) )
+		self.assertImagesEqual( mix["out"], r["out"] )
 
-		self.assertEqual( h1, expectedHash )
 
-	# Overlay a red, green and blue tile of different data window sizes and check the data window is expanded on the result and looks as we expect.
-	def testOverRGBA( self ) :
+		##########################################
+		# Or if we enable but set mix to 0
+		##########################################
+
+		mix["enabled"].setValue( True )
+		mix["mix"].setValue( 0 )
+		self.assertEqual( mix["out"].imageHash(), input1Hash )
+		self.assertEqual( mix["out"]["dataWindow"].getValue(), IECore.Box2i( IECore.V2i( 20 ), IECore.V2i( 70 ) ) )
+		self.assertImagesEqual( mix["out"], r["out"] )
+
+		##########################################
+		# Set mix to 1 to get pass through of other input
+		# In this case, the overall image hash won't match because it still takes metadata from the first input
+		# But we can check the other components
+		##########################################
+
+		mix["mix"].setValue( 1 )
+
+		self.assertEqual( mix["out"]["dataWindow"].hash(), g["out"]["dataWindow"].hash() )
+		self.assertEqual( mix["out"]["channelNames"].hash(), g["out"]["channelNames"].hash() )
+
+		# Just check the first tile of the data to make sure hashes are passing through
+		with Gaffer.Context() as c :
+			c[ "image:channelName" ] = IECore.StringData( "G" )
+			c[ "image:tileOrigin" ] = IECore.V2iData( IECore.V2i( 0, 0 ) )
+			self.assertEqual( mix["out"]["channelData"].hash(), g["out"]["channelData"].hash() )
+
+		self.assertEqual( mix["out"]["dataWindow"].getValue(), IECore.Box2i( IECore.V2i( 25 ), IECore.V2i( 75 ) ) )
+		self.assertImagesEqual( mix["out"], g["out"], ignoreMetadata = True )
+
+	# Overlay a red and green tile of different data window sizes with a checkered mask and check the data window is expanded on the result and looks as we expect.
+	def testMaskedMix( self ) :
 
 		r = GafferImage.ImageReader()
 		r["fileName"].setValue( self.rPath )
@@ -144,53 +149,26 @@ class MergeTest( GafferImageTest.ImageTestCase ) :
 		g = GafferImage.ImageReader()
 		g["fileName"].setValue( self.gPath )
 
-		b = GafferImage.ImageReader()
-		b["fileName"].setValue( self.bPath )
+		mask = GafferImage.ImageReader()
+		mask["fileName"].setValue( self.checkerPath )
 
-		merge = GafferImage.Merge()
-		merge["operation"].setValue( GafferImage.Merge.Operation.Over )
-		merge["in"][0].setInput( r["out"] )
-		merge["in"][1].setInput( g["out"] )
-		merge["in"][2].setInput( b["out"] )
-
-		expected = GafferImage.ImageReader()
-		expected["fileName"].setValue( self.rgbPath )
-
-		self.assertImagesEqual( merge["out"], expected["out"], maxDifference = 0.001, ignoreMetadata = True )
-
-	# Overlay a red, green and blue tile of different data window sizes and check the data window is expanded on the result and looks as we expect.
-	def testOverRGBAonRGB( self ) :
-
-		c = GafferImage.ImageReader()
-		c["fileName"].setValue( self.checkerPath )
-
-		r = GafferImage.ImageReader()
-		r["fileName"].setValue( self.rPath )
-
-		g = GafferImage.ImageReader()
-		g["fileName"].setValue( self.gPath )
-
-		b = GafferImage.ImageReader()
-		b["fileName"].setValue( self.bPath )
-
-		merge = GafferImage.Merge()
-		merge["operation"].setValue( GafferImage.Merge.Operation.Over )
-		merge["in"][0].setInput( c["out"] )
-		merge["in"][1].setInput( r["out"] )
-		merge["in"][2].setInput( g["out"] )
-		merge["in"][3].setInput( b["out"] )
+		mix = GafferImage.Mix()
+		mix["in"][0].setInput( r["out"] )
+		mix["in"][1].setInput( g["out"] )
+		mix["maskChannel"].setValue( "R" )
+		mix["mask"].setInput( mask["out"] )
 
 		expected = GafferImage.ImageReader()
-		expected["fileName"].setValue( self.checkerRGBPath )
+		expected["fileName"].setValue( self.checkerMixPath )
 
-		self.assertImagesEqual( merge["out"], expected["out"], maxDifference = 0.001, ignoreMetadata = True )
+		self.assertImagesEqual( mix["out"], expected["out"], maxDifference = 0.001, ignoreMetadata = True )
 
 	def testAffects( self ) :
 
 		c1 = GafferImage.Constant()
 		c2 = GafferImage.Constant()
 
-		m = GafferImage.Merge()
+		m = GafferImage.Mix()
 		m["in"][0].setInput( c1["out"] )
 		m["in"][1].setInput( c2["out"] )
 
@@ -218,7 +196,7 @@ class MergeTest( GafferImageTest.ImageTestCase ) :
 
 	def testEnabledAffects( self ) :
 
-		m = GafferImage.Merge()
+		m = GafferImage.Mix()
 
 		affected = m.affects( m["enabled"] )
 		self.assertTrue( m["out"]["channelData"] in affected )
@@ -233,7 +211,7 @@ class MergeTest( GafferImageTest.ImageTestCase ) :
 		d["metadata"].addMember( "comment", IECore.StringData( "reformated and metadata updated" ) )
 		d["in"].setInput( f["out"] )
 
-		m = GafferImage.Merge()
+		m = GafferImage.Mix()
 		m["in"][0].setInput( c["out"] )
 		m["in"][1].setInput( d["out"] )
 
@@ -252,24 +230,6 @@ class MergeTest( GafferImageTest.ImageTestCase ) :
 		self.assertEqual( m["out"]["format"].getValue(), d["out"]["format"].getValue() )
 		self.assertEqual( m["out"]["metadata"].getValue(), d["out"]["metadata"].getValue() )
 
-	def testFileCompatibilityWithVersion0_15( self ) :
-
-		s = Gaffer.ScriptNode()
-		s["fileName"].setValue( os.path.dirname( __file__ ) + "/scripts/mergeVersion-0.15.0.0.gfr" )
-		with IECore.CapturingMessageHandler() as mh :
-			s.load( continueOnError = True )
-		self.assertEqual( len( mh.messages ), 1 )
-		self.assertTrue( "registerFormat" in mh.messages[0].message )
-
-		self.assertTrue( s["m"]["in"][0].getInput().isSame( s["c1"]["out"] ) )
-		self.assertTrue( s["m"]["in"][1].getInput().isSame( s["c2"]["out"] ) )
-
-		self.assertTrue( "in1" not in s["m"] )
-		self.assertTrue( "in2" not in s["m"] )
-
-		with s.context() :
-			self.assertEqual( s["m"]["out"].channelData( "R", IECore.V2i( 0 ) )[0], 0.75 )
-
 	def testSmallDataWindowOverLarge( self ) :
 
 		b = GafferImage.Constant()
@@ -280,16 +240,20 @@ class MergeTest( GafferImageTest.ImageTestCase ) :
 		a["format"].setValue( GafferImage.Format( 500, 500, 1.0 ) )
 		a["color"].setValue( IECore.Color4f( 0, 1, 0, 1 ) )
 
+		mask = GafferImage.Constant()
+		mask["format"].setValue( GafferImage.Format( 500, 500, 1.0 ) )
+		mask["color"].setValue( IECore.Color4f( 0.75 ) )
+
 		aCrop = GafferImage.Crop()
 		aCrop["in"].setInput( a["out"] )
 		aCrop["areaSource"].setValue( aCrop.AreaSource.Area )
 		aCrop["area"].setValue( IECore.Box2i( IECore.V2i( 50 ), IECore.V2i( 162 ) ) )
 		aCrop["affectDisplayWindow"].setValue( False )
 
-		m = GafferImage.Merge()
-		m["operation"].setValue( m.Operation.Over )
+		m = GafferImage.Mix()
 		m["in"][0].setInput( b["out"] )
 		m["in"][1].setInput( aCrop["out"] )
+		m["mask"].setInput( mask["out"] )
 
 		redSampler = GafferImage.Sampler( m["out"], "R", m["out"]["format"].getValue().getDisplayWindow() )
 		greenSampler = GafferImage.Sampler( m["out"], "G", m["out"]["format"].getValue().getDisplayWindow() )
@@ -303,14 +267,14 @@ class MergeTest( GafferImageTest.ImageTestCase ) :
 				blueSampler.sample( x, y ),
 			)
 
-		# We should only have overed green in areas which are inside
-		# the data window of aCrop. Everywhere else we should have
-		# red still.
+		# We should only have green in areas which are inside
+		# the data window of aCrop. But we still only take 25%
+		# of the red everywhere
 
-		self.assertEqual( sample( 49, 49 ), IECore.Color3f( 1, 0, 0 ) )
-		self.assertEqual( sample( 50, 50 ), IECore.Color3f( 0, 1, 0 ) )
-		self.assertEqual( sample( 161, 161 ), IECore.Color3f( 0, 1, 0 ) )
-		self.assertEqual( sample( 162, 162 ), IECore.Color3f( 1, 0, 0 ) )
+		self.assertEqual( sample( 49, 49 ), IECore.Color3f( 0.25, 0, 0 ) )
+		self.assertEqual( sample( 50, 50 ), IECore.Color3f( 0.25, 0.75, 0 ) )
+		self.assertEqual( sample( 161, 161 ), IECore.Color3f( 0.25, 0.75, 0 ) )
+		self.assertEqual( sample( 162, 162 ), IECore.Color3f( 0.25, 0, 0 ) )
 
 	def testLargeDataWindowAddedToSmall( self ) :
 
@@ -322,16 +286,20 @@ class MergeTest( GafferImageTest.ImageTestCase ) :
 		a["format"].setValue( GafferImage.Format( 500, 500, 1.0 ) )
 		a["color"].setValue( IECore.Color4f( 0, 1, 0, 1 ) )
 
+		mask = GafferImage.Constant()
+		mask["format"].setValue( GafferImage.Format( 500, 500, 1.0 ) )
+		mask["color"].setValue( IECore.Color4f( 0.5 ) )
+
 		bCrop = GafferImage.Crop()
 		bCrop["in"].setInput( b["out"] )
 		bCrop["areaSource"].setValue( bCrop.AreaSource.Area )
 		bCrop["area"].setValue( IECore.Box2i( IECore.V2i( 50 ), IECore.V2i( 162 ) ) )
 		bCrop["affectDisplayWindow"].setValue( False )
 
-		m = GafferImage.Merge()
-		m["operation"].setValue( m.Operation.Add )
+		m = GafferImage.Mix()
 		m["in"][0].setInput( bCrop["out"] )
 		m["in"][1].setInput( a["out"] )
+		m["mask"].setInput( mask["out"] )
 
 		redSampler = GafferImage.Sampler( m["out"], "R", m["out"]["format"].getValue().getDisplayWindow() )
 		greenSampler = GafferImage.Sampler( m["out"], "G", m["out"]["format"].getValue().getDisplayWindow() )
@@ -348,70 +316,10 @@ class MergeTest( GafferImageTest.ImageTestCase ) :
 		# We should only have yellow in areas where the background exists,
 		# and should have just green everywhere else.
 
-		self.assertEqual( sample( 49, 49 ), IECore.Color3f( 0, 1, 0 ) )
-		self.assertEqual( sample( 50, 50 ), IECore.Color3f( 1, 1, 0 ) )
-		self.assertEqual( sample( 161, 161 ), IECore.Color3f( 1, 1, 0 ) )
-		self.assertEqual( sample( 162, 162 ), IECore.Color3f( 0, 1, 0 ) )
-
-	def testCrashWithResizedInput( self ) :
-
-		b = GafferImage.Constant()
-		b["format"].setValue( GafferImage.Format( 2048, 1556 ) )
-
-		bResized = GafferImage.Resize()
-		bResized["in"].setInput( b["out"] )
-		bResized["format"].setValue( GafferImage.Format( 1920, 1080 ) )
-		bResized["fitMode"].setValue( bResized.FitMode.Fit )
-
-		a = GafferImage.Constant()
-		a["format"].setValue( GafferImage.Format( 1920, 1080 ) )
-
-		merge = GafferImage.Merge()
-		merge["operation"].setValue( merge.Operation.Over )
-		merge["in"][0].setInput( bResized["out"] )
-		merge["in"][1].setInput( a["out"] )
-
-		merge["out"].image()
-
-	def testModes( self ) :
-
-		b = GafferImage.Constant()
-		b["color"].setValue( IECore.Color4f( 0.1, 0.2, 0.3, 0.4 ) )
-
-		a = GafferImage.Constant()
-		a["color"].setValue( IECore.Color4f( 1, 0.3, 0.1, 0.2 ) )
-
-		merge = GafferImage.Merge()
-		merge["in"][0].setInput( b["out"] )
-		merge["in"][1].setInput( a["out"] )
-
-		sampler = GafferImage.ImageSampler()
-		sampler["image"].setInput( merge["out"] )
-		sampler["pixel"].setValue( IECore.V2f( 10 ) )
-
-		self.longMessage = True
-		for operation, expected in [
-			( GafferImage.Merge.Operation.Add, ( 1.1, 0.5, 0.4, 0.6 ) ),
-			( GafferImage.Merge.Operation.Atop, ( 0.48, 0.28, 0.28, 0.4 ) ),
-			( GafferImage.Merge.Operation.Divide, ( 10, 1.5, 1/3.0, 0.5 ) ),
-			( GafferImage.Merge.Operation.In, ( 0.4, 0.12, 0.04, 0.08 ) ),
-			( GafferImage.Merge.Operation.Out, ( 0.6, 0.18, 0.06, 0.12 ) ),
-			( GafferImage.Merge.Operation.Mask, ( 0.02, 0.04, 0.06, 0.08 ) ),
-			( GafferImage.Merge.Operation.Matte, ( 0.28, 0.22, 0.26, 0.36 ) ),
-			( GafferImage.Merge.Operation.Multiply, ( 0.1, 0.06, 0.03, 0.08 ) ),
-			( GafferImage.Merge.Operation.Over, ( 1.08, 0.46, 0.34, 0.52 ) ),
-			( GafferImage.Merge.Operation.Subtract, ( 0.9, 0.1, -0.2, -0.2 ) ),
-			( GafferImage.Merge.Operation.Difference, ( 0.9, 0.1, 0.2, 0.2 ) ),
-			( GafferImage.Merge.Operation.Under, ( 0.7, 0.38, 0.36, 0.52 ) ),
-			( GafferImage.Merge.Operation.Min, ( 0.1, 0.2, 0.1, 0.2 ) ),
-			( GafferImage.Merge.Operation.Max, ( 1, 0.3, 0.3, 0.4 ) )
-		] :
-
-			merge["operation"].setValue( operation )
-			self.assertAlmostEqual( sampler["color"]["r"].getValue(), expected[0], msg=operation )
-			self.assertAlmostEqual( sampler["color"]["g"].getValue(), expected[1], msg=operation )
-			self.assertAlmostEqual( sampler["color"]["b"].getValue(), expected[2], msg=operation )
-			self.assertAlmostEqual( sampler["color"]["a"].getValue(), expected[3], msg=operation )
+		self.assertEqual( sample( 49, 49 ), IECore.Color3f( 0, 0.5, 0 ) )
+		self.assertEqual( sample( 50, 50 ), IECore.Color3f( 0.5, 0.5, 0 ) )
+		self.assertEqual( sample( 161, 161 ), IECore.Color3f( 0.5, 0.5, 0 ) )
+		self.assertEqual( sample( 162, 162 ), IECore.Color3f( 0, 0.5, 0 ) )
 
 	def testChannelRequest( self ) :
 
@@ -421,7 +329,7 @@ class MergeTest( GafferImageTest.ImageTestCase ) :
 		ad = GafferImage.DeleteChannels()
 		ad["in"].setInput( a["out"] )
 		ad["mode"].setValue( GafferImage.DeleteChannels.Mode.Delete )
-		ad["channels"].setValue( "R" )
+		ad["channels"].setValue( IECore.StringVectorData( [ "R" ] ) )
 
 		b = GafferImage.Constant()
 		b["color"].setValue( IECore.Color4f( 1.0, 0.3, 0.1, 0.2 ) )
@@ -429,28 +337,31 @@ class MergeTest( GafferImageTest.ImageTestCase ) :
 		bd = GafferImage.DeleteChannels()
 		bd["in"].setInput( b["out"] )
 		bd["mode"].setValue( GafferImage.DeleteChannels.Mode.Delete )
-		bd["channels"].setValue( "G" )
+		bd["channels"].setValue( IECore.StringVectorData( [ "G" ] ) )
 
-		merge = GafferImage.Merge()
-		merge["in"][0].setInput( ad["out"] )
-		merge["in"][1].setInput( bd["out"] )
-		merge["operation"].setValue( GafferImage.Merge.Operation.Add )
+		m = GafferImage.Constant()
+		m["color"].setValue( IECore.Color4f( 0.5 ) )
+
+		mix = GafferImage.Mix()
+		mix["in"][0].setInput( ad["out"] )
+		mix["in"][1].setInput( bd["out"] )
+		mix["mask"].setInput( m["out"] )
 
 		sampler = GafferImage.ImageSampler()
-		sampler["image"].setInput( merge["out"] )
+		sampler["image"].setInput( mix["out"] )
 		sampler["pixel"].setValue( IECore.V2f( 10 ) )
 
-		self.assertAlmostEqual( sampler["color"]["r"].getValue(), 0.0 + 1.0 )
-		self.assertAlmostEqual( sampler["color"]["g"].getValue(), 0.2 + 0.0 )
-		self.assertAlmostEqual( sampler["color"]["b"].getValue(), 0.3 + 0.1 )
-		self.assertAlmostEqual( sampler["color"]["a"].getValue(), 0.4 + 0.2 )
+		self.assertAlmostEqual( sampler["color"]["r"].getValue(), ( 0.0 + 1.0 ) * 0.5 )
+		self.assertAlmostEqual( sampler["color"]["g"].getValue(), ( 0.2 + 0.0 ) * 0.5 )
+		self.assertAlmostEqual( sampler["color"]["b"].getValue(), ( 0.3 + 0.1 ) * 0.5 )
+		self.assertAlmostEqual( sampler["color"]["a"].getValue(), ( 0.4 + 0.2 ) * 0.5 )
 
 	def testDefaultFormat( self ) :
 
 		a = GafferImage.Constant()
 		a["format"].setValue( GafferImage.Format( 100, 200 ) )
 
-		m = GafferImage.Merge()
+		m = GafferImage.Mix()
 		m["in"][1].setInput( a["out"] )
 
 		with Gaffer.Context() as c :
@@ -462,10 +373,54 @@ class MergeTest( GafferImageTest.ImageTestCase ) :
 		a = GafferImage.Constant()
 		a["format"].setValue( GafferImage.Format( 100, 200 ) )
 
-		m = GafferImage.Merge()
+		m = GafferImage.Mix()
 		m["in"][1].setInput( a["out"] )
 
 		self.assertEqual( m["out"]["dataWindow"].getValue(), a["out"]["dataWindow"].getValue() )
+
+	def testMixParm( self ) :
+
+		b = GafferImage.Constant()
+		b["format"].setValue( GafferImage.Format( 50, 50, 1.0 ) )
+		b["color"].setValue( IECore.Color4f( 1, 0, 0, 1 ) )
+
+		a = GafferImage.Constant()
+		a["format"].setValue( GafferImage.Format( 50, 50, 1.0 ) )
+		a["color"].setValue( IECore.Color4f( 0, 1, 0, 1 ) )
+
+		mask = GafferImage.Constant()
+		mask["format"].setValue( GafferImage.Format( 50, 50, 1.0 ) )
+		mask["color"].setValue( IECore.Color4f( 0.5 ) )
+
+		m = GafferImage.Mix()
+		m["in"][0].setInput( b["out"] )
+		m["in"][1].setInput( a["out"] )
+
+
+		def sample( x, y ) :
+			redSampler = GafferImage.Sampler( m["out"], "R", m["out"]["format"].getValue().getDisplayWindow() )
+			greenSampler = GafferImage.Sampler( m["out"], "G", m["out"]["format"].getValue().getDisplayWindow() )
+			blueSampler = GafferImage.Sampler( m["out"], "B", m["out"]["format"].getValue().getDisplayWindow() )
+
+			return IECore.Color3f(
+				redSampler.sample( x, y ),
+				greenSampler.sample( x, y ),
+				blueSampler.sample( x, y ),
+			)
+
+		# Using just mix
+		m["mix"].setValue( 0.75 )
+		self.assertEqual( sample( 49, 49 ), IECore.Color3f( 0.25, 0.75, 0 ) )
+		m["mix"].setValue( 0.25 )
+		self.assertEqual( sample( 49, 49 ), IECore.Color3f( 0.75, 0.25, 0 ) )
+
+		# Using mask multiplied with mix
+		m["mask"].setInput( mask["out"] )
+		self.assertEqual( sample( 49, 49 ), IECore.Color3f( 0.875, 0.125, 0 ) )
+
+		# Using invalid channel of mask defaults to just mix
+		m["maskChannel"].setValue( "DOES_NOT_EXIST" )
+		self.assertEqual( sample( 49, 49 ), IECore.Color3f( 0.75, 0.25, 0 ) )
 
 if __name__ == "__main__":
 	unittest.main()

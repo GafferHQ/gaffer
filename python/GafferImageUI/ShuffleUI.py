@@ -76,13 +76,17 @@ Gaffer.Metadata.registerNode(
 
 		"channels.*.out" : [
 
-			"plugValueWidget:type", "GafferImageUI.ShuffleUI._ChannelPlugValueWidget"
+
+			"plugValueWidget:type", "GafferImageUI.ChannelPlugValueWidget",
+			"channelPlugValueWidget:allowNewChannels", True,
 
 		],
 
 		"channels.*.in" : [
 
-			"plugValueWidget:type", "GafferImageUI.ShuffleUI._ChannelPlugValueWidget"
+			"plugValueWidget:type", "GafferImageUI.ChannelPlugValueWidget",
+			"channelPlugValueWidget:extraChannels", IECore.StringVectorData( [ "__white", "__black" ] ), 
+			"channelPlugValueWidget:extraChannelLabels", IECore.StringVectorData( [ "White", "Black" ] ), 
 
 		],
 
@@ -137,90 +141,3 @@ class _ShuffleChannelPlugValueWidget( GafferUI.PlugValueWidget ) :
 		pass
 
 GafferUI.PlugValueWidget.registerType( GafferImage.Shuffle.ChannelPlug, _ShuffleChannelPlugValueWidget )
-
-## \todo This probably makes sense as a public part of GafferImageUI
-# so it can be used by other nodes which want to select individual channels.
-# When doing this we'll need to drive the extra White/Black fields and
-# whether or not new channels can be created using metadata.
-class _ChannelPlugValueWidget( GafferUI.PlugValueWidget ) :
-
-	def __init__( self, plug, imagePlug = None, **kw ) :
-
-		self.__menuButton = GafferUI.MenuButton( menu = GafferUI.Menu( Gaffer.WeakMethod( self.__menuDefinition ) ) )
-
-		GafferUI.PlugValueWidget.__init__( self, self.__menuButton, plug, **kw )
-
-		if imagePlug is not None :
-			self.__imagePlug = imagePlug
-		else :
-			self.__imagePlug = plug.node()["in"]
-
-		assert( isinstance( self.__imagePlug, GafferImage.ImagePlug ) )
-
-		self._updateFromPlug()
-
-	def _updateFromPlug( self ) :
-
-		value = None
-		if self.getPlug() is not None :
-			with self.getContext() :
-				try :
-					value = self.getPlug().getValue()
-				except :
-					# Leave it to other parts of the UI
-					# to display the error.
-					pass
-
-		self.__menuButton.setText( self.__channelLabel( value ) )
-		self.__menuButton.setEnabled( self._editable() )
-
-	def __menuDefinition( self ) :
-
-		with self.getContext() :
-			try :
-				selectedChannel = self.getPlug().getValue()
-			except :
-				selectedChannels = ""
-			try :
-				availableChannels = self.__imagePlug["channelNames"].getValue()
-			except :
-				availableChannels = []
-
-		if self.getPlug().getName() == "in" :
-			availableChannels.extend( [ "__white", "__black" ] )
-		else :
-			for channel in ( "R", "G", "B", "A" ) :
-				if channel not in availableChannels :
-					availableChannels.append( channel )
-
-		result = IECore.MenuDefinition()
-		for channel in availableChannels :
-
-			if channel == "__white" :
-				result.append( "/__Divider", { "divider" : True } )
-
-			result.append(
-				"/" + self.__channelLabel( channel ).replace( ".", "/" ),
-				{
-					"command" : functools.partial( Gaffer.WeakMethod( self.__setValue ), value = channel ),
-					"checkBox" : selectedChannel == channel,
-				}
-			)
-
-		return result
-
-	def __setValue( self, unused, value ) :
-
-		with Gaffer.UndoContext( self.getPlug().ancestor( Gaffer.ScriptNode ) ) :
-			self.getPlug().setValue( value )
-
-	def __channelLabel( self, channelName ) :
-
-		if not channelName :
-			return "None"
-		elif channelName == "__white" :
-			return "White"
-		elif channelName == "__black" :
-			return "Black"
-		else :
-			return channelName

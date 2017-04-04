@@ -128,7 +128,10 @@ void Merge::hashDataWindow( const GafferImage::ImagePlug *output, const Gaffer::
 
 	for( ImagePlugIterator it( inPlugs() ); !it.done(); ++it )
 	{
-		(*it)->dataWindowPlug()->hash( h );
+		if( (*it)->getInput<ValuePlug>() )
+		{
+			(*it)->dataWindowPlug()->hash( h );
+		}
 	}
 }
 
