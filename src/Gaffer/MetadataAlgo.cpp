@@ -166,6 +166,24 @@ bool childAffectedByChange( const GraphComponent *parent, IECore::TypeId changed
 	return StringAlgo::match( parentName, changedPlugPath.substr( 0, parentMatchPatternEnd ) );
 }
 
+bool childAffectedByChange( const GraphComponent *parent, IECore::TypeId changedNodeTypeId, const Gaffer::Node *changedNode )
+{
+	if( changedNode )
+	{
+		return parent == changedNode->parent<GraphComponent>();
+	}
+
+	for( NodeIterator it( parent ); !it.done(); ++it )
+	{
+		if( (*it)->isInstanceOf( changedNodeTypeId ) )
+		{
+			return true;
+		}
+	}
+
+	return false;
+}
+
 bool ancestorAffectedByChange( const Plug *plug, IECore::TypeId changedNodeTypeId, const StringAlgo::MatchPattern &changedPlugPath, const Gaffer::Plug *changedPlug )
 {
 	if( changedPlug )

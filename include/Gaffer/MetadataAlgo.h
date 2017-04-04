@@ -91,8 +91,9 @@ bool readOnly( const GraphComponent *graphComponent );
 /// or `Metadata:nodeValueChangedSignal()`) affects a given plug or node.
 bool affectedByChange( const Plug *plug, IECore::TypeId changedNodeTypeId, const StringAlgo::MatchPattern &changedPlugPath, const Gaffer::Plug *changedPlug );
 bool affectedByChange( const Node *node, IECore::TypeId changedNodeTypeId, const Gaffer::Node *changedNode );
-/// As above, but determines if any child plug will be affected.
+/// As above, but determines if any child will be affected.
 bool childAffectedByChange( const GraphComponent *parent, IECore::TypeId changedNodeTypeId, const StringAlgo::MatchPattern &changedPlugPath, const Gaffer::Plug *changedPlug );
+bool childAffectedByChange( const GraphComponent *parent, IECore::TypeId changedNodeTypeId, const Gaffer::Node *changedNode );
 /// As above, but determines if any ancestor plug will be affected. This is particularly useful in conjunction with
 /// the `readOnly()` method.
 bool ancestorAffectedByChange( const Plug *plug, IECore::TypeId changedNodeTypeId, const StringAlgo::MatchPattern &changedPlugPath, const Gaffer::Plug *changedPlug );

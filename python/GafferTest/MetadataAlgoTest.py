@@ -127,26 +127,33 @@ class MetadataAlgoTest( GafferTest.TestCase ) :
 
 	def testNodeAffected( self ) :
 
-		n = GafferTest.CompoundPlugNode()
+		n = Gaffer.Box()
+		n["c"] = Gaffer.Node()
 
 		affected = []
+		childAffected = []
 		def nodeValueChanged( nodeTypeId, key, node ) :
 			affected.append( Gaffer.MetadataAlgo.affectedByChange( n, nodeTypeId, node ) )
+			childAffected.append( Gaffer.MetadataAlgo.childAffectedByChange( n, nodeTypeId, node ) )
 
 		c = Gaffer.Metadata.nodeValueChangedSignal().connect( nodeValueChanged )
 
 		Gaffer.Metadata.registerValue( Gaffer.Node, "metadataAlgoTest", 1 )
 		self.assertEqual( affected, [ True ] )
+		self.assertEqual( childAffected, [ True ] )
 
 		Gaffer.Metadata.registerValue( GafferTest.AddNode, "metadataAlgoTest", 2 )
 		self.assertEqual( affected, [ True, False ] )
+		self.assertEqual( childAffected, [ True, False ] )
 
 		Gaffer.Metadata.registerValue( n, "metadataAlgoTest", 3 )
 		self.assertEqual( affected, [ True, False, True ] )
+		self.assertEqual( childAffected, [ True, False, False ] )
 
-		a = GafferTest.AddNode()
-		Gaffer.Metadata.registerValue( a, "metadataAlgoTest", 4 )
+		n["a"] = GafferTest.AddNode()
+		Gaffer.Metadata.registerValue( n["a"], "metadataAlgoTest", 4 )
 		self.assertEqual( affected, [ True, False, True, False ] )
+		self.assertEqual( childAffected, [ True, False, False, True ] )
 
 	def testCopy( self ) :
 
