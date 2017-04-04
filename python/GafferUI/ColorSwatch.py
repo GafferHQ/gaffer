@@ -54,10 +54,23 @@ class ColorSwatch( GafferUI.Widget ) :
 
 	def __init__( self, color=IECore.Color4f( 1 ), useDisplayTransform = True, **kw ) :
 
-		GafferUI.Widget.__init__( self, _Checker(), **kw )
+		GafferUI.Widget.__init__( self, QtGui.QWidget(), **kw )
+
+		self.opaqueChecker = _Checker()
+		self.transparentChecker = _Checker()
+
+		self.__qtLayout = QtGui.QVBoxLayout()
+		self.__qtLayout.setSpacing( 0 )
+		self.__qtLayout.setContentsMargins( 0, 0, 0, 0 )
+		self.__qtLayout.addWidget( self.opaqueChecker )
+		self.__qtLayout.addWidget( self.transparentChecker )
+
+		self._qtWidget().setLayout( self.__qtLayout )
+
 
 		## \todo Should this be an option? Should it be an option for all Widgets?
-		self._qtWidget().setMinimumSize( 12, 12 )
+		self.opaqueChecker.setMinimumSize( 12, 6 )
+		self.transparentChecker.setMinimumSize( 12, 6 )
 
 		self.__useDisplayTransform = useDisplayTransform
 		self.__color = color
@@ -92,9 +105,10 @@ class ColorSwatch( GafferUI.Widget ) :
 		displayTransform = GafferUI.DisplayTransform.get()
 		effectiveDisplayTransform = displayTransform if self.__useDisplayTransform else lambda x : x
 
+		opaqueDisplayColor = self._qtColor( effectiveDisplayTransform( self.__color ) )
+		self.opaqueChecker.color0 = self.opaqueChecker.color1 = opaqueDisplayColor
 		if self.__color.dimensions()==3 :
-			displayColor = self._qtColor( effectiveDisplayTransform( self.__color ) )
-			self._qtWidget().color0 = self._qtWidget().color1 = displayColor
+			self.transparentChecker.color0 = self.transparentChecker.color1 = opaqueDisplayColor
 		else :
 			c = self.__color
 			# We want the background colour to be the same whether or not we're using the display transform for
@@ -107,11 +121,12 @@ class ColorSwatch( GafferUI.Widget ) :
 			color0 = bg0 * ( 1.0 - c.a ) + IECore.Color3f( c.r, c.g, c.b ) * c.a
 			color1 = bg1 * ( 1.0 - c.a ) + IECore.Color3f( c.r, c.g, c.b ) * c.a
 
-			self._qtWidget().color0 = self._qtColor( effectiveDisplayTransform( color0 ) )
-			self._qtWidget().color1 = self._qtColor( effectiveDisplayTransform( color1 ) )
+			self.transparentChecker.color0 = self._qtColor( effectiveDisplayTransform( color0 ) )
+			self.transparentChecker.color1 = self._qtColor( effectiveDisplayTransform( color1 ) )
 
 		## \todo Colour should come from the style when we have styles applying to Widgets as well as Gadgets
-		self._qtWidget().borderColor = QtGui.QColor( 119, 156, 255 ) if self.getHighlighted() else None
+		self.opaqueChecker.borderColor = QtGui.QColor( 119, 156, 255 ) if self.getHighlighted() else None
+		self.transparentChecker.borderColor = QtGui.QColor( 119, 156, 255 ) if self.getHighlighted() else None
 
 		self._qtWidget().update()
 
