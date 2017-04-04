@@ -50,6 +50,8 @@ Gaffer.Metadata.registerNode(
 	on other nodes.
 	""",
 
+	"nodeGadget:type", "",
+
 	plugs = {
 
 		"curves" : [
@@ -66,8 +68,6 @@ Gaffer.Metadata.registerNode(
 	},
 
 )
-
-GafferUI.NodeGadget.registerNodeGadget( Gaffer.Animation, lambda node : None )
 
 # PlugValueWidget popup menu for setting keys
 ##########################################################################
