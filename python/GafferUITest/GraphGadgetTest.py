@@ -1318,5 +1318,60 @@ class GraphGadgetTest( GafferUITest.TestCase ) :
 			self.assertTrue( connection.srcNodule().isSame( g.nodeGadget( s["n1"] ).nodule( s["n1"]["sum"] ) ) )
 			self.assertTrue( connection.dstNodule().isSame( g.nodeGadget( s["n2"] ).nodule( s["n2"]["in"][0] ) ) )
 
+	def testNodeGadgetMetadataChanges( self ) :
+
+		s = Gaffer.ScriptNode()
+		g = GafferUI.GraphGadget( s )
+
+		s["n1"] = GafferTest.AddNode()
+		s["n2"] = GafferTest.AddNode()
+		s["n2"]["op1"].setInput( s["n1"]["sum"] )
+
+		def assertBothVisible() :
+
+			ng1 = g.nodeGadget( s["n1"] )
+			ng2 = g.nodeGadget( s["n2"] )
+			c = g.connectionGadget( s["n2"]["op1"] )
+			self.assertTrue( isinstance( ng1, GafferUI.StandardNodeGadget ) )
+			self.assertTrue( isinstance( ng2, GafferUI.StandardNodeGadget ) )
+			self.assertTrue( isinstance( c, GafferUI.StandardConnectionGadget ) )
+			self.assertTrue( c.srcNodule().isSame( ng1.nodule( s["n1"]["sum"] ) ) )
+			self.assertTrue( c.dstNodule().isSame( ng2.nodule( s["n2"]["op1"] ) ) )
+
+		assertBothVisible()
+
+		Gaffer.Metadata.registerValue( s["n1"], "nodeGadget:type", "" )
+
+		def assertN1Hidden() :
+
+			ng1 = g.nodeGadget( s["n1"] )
+			ng2 = g.nodeGadget( s["n2"] )
+			c = g.connectionGadget( s["n2"]["op1"] )
+			self.assertTrue( ng1 is None )
+			self.assertTrue( isinstance( ng2, GafferUI.StandardNodeGadget ) )
+			self.assertTrue( isinstance( c, GafferUI.StandardConnectionGadget ) )
+			self.assertTrue( c.srcNodule() is None )
+			self.assertTrue( c.dstNodule().isSame( ng2.nodule( s["n2"]["op1"] ) ) )
+
+		assertN1Hidden()
+
+		Gaffer.Metadata.registerValue( s["n2"], "nodeGadget:type", "" )
+
+		def assertBothHidden() :
+
+			self.assertTrue( g.nodeGadget( s["n1"] ) is None )
+			self.assertTrue( g.nodeGadget( s["n2"] ) is None )
+			self.assertTrue( g.connectionGadget( s["n2"]["op1"] ) is None )
+
+		assertBothHidden()
+
+		Gaffer.Metadata.registerValue( s["n2"], "nodeGadget:type", "GafferUI::StandardNodeGadget" )
+
+		assertN1Hidden()
+
+		Gaffer.Metadata.registerValue( s["n1"], "nodeGadget:type", "GafferUI::StandardNodeGadget" )
+
+		assertBothVisible()
+
 if __name__ == "__main__":
 	unittest.main()

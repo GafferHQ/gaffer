@@ -50,6 +50,7 @@
 #include "Gaffer/CompoundNumericPlug.h"
 #include "Gaffer/RecursiveChildIterator.h"
 #include "Gaffer/DependencyNode.h"
+#include "Gaffer/Metadata.h"
 #include "Gaffer/MetadataAlgo.h"
 
 #include "GafferUI/GraphGadget.h"
@@ -90,15 +91,16 @@ bool readOnly( const Gaffer::StandardSet *set )
 	return false;
 }
 
+const InternedString g_positionPlugName( "__uiPosition" );
+const InternedString g_inputConnectionsMinimisedPlugName( "__uiInputConnectionsMinimised" );
+const InternedString g_outputConnectionsMinimisedPlugName( "__uiOutputConnectionsMinimised" );
+const InternedString g_nodeGadgetTypeName( "nodeGadget:type" );
+
 } // namespace
 
 //////////////////////////////////////////////////////////////////////////
 // GraphGadget implementation
 //////////////////////////////////////////////////////////////////////////
-
-static const InternedString g_positionPlugName( "__uiPosition" );
-static const InternedString g_inputConnectionsMinimisedPlugName( "__uiInputConnectionsMinimised" );
-static const InternedString g_outputConnectionsMinimisedPlugName( "__uiOutputConnectionsMinimised" );
 
 IE_CORE_DEFINERUNTIMETYPED( GraphGadget );
 
@@ -112,6 +114,10 @@ GraphGadget::GraphGadget( Gaffer::NodePtr root, Gaffer::SetPtr filter )
 	dragEnterSignal().connect( boost::bind( &GraphGadget::dragEnter, this, ::_1, ::_2 ) );
 	dragMoveSignal().connect( boost::bind( &GraphGadget::dragMove, this, ::_1, ::_2 ) );
 	dragEndSignal().connect( boost::bind( &GraphGadget::dragEnd, this, ::_1, ::_2 ) );
+
+	Gaffer::Metadata::nodeValueChangedSignal().connect(
+		boost::bind( &GraphGadget::nodeMetadataChanged, this, ::_1, ::_2, ::_3 )
+	);
 
 	m_layout = new StandardGraphLayout;
 
@@ -853,6 +859,31 @@ void GraphGadget::noduleRemoved( Nodule *nodule )
 	for( RecursiveNoduleIterator it( nodule ); !it.done(); ++it )
 	{
 		removeConnectionGadgets( it->get() );
+	}
+}
+
+void GraphGadget::nodeMetadataChanged( IECore::TypeId nodeTypeId, IECore::InternedString key, Gaffer::Node *node )
+{
+	if( key != g_nodeGadgetTypeName )
+	{
+		return;
+	}
+
+	if( node )
+	{
+		// Metadata change for one instance
+		removeNodeGadget( node );
+		if( NodeGadget *g = addNodeGadget( node ) )
+		{
+			addConnectionGadgets( g );
+		}
+		return;
+	}
+	else
+	{
+		// In theory we should test all children of the root
+		// here, but in practice it's only ever per-instance
+		// metadata that changes at runtime.
 	}
 }
 
