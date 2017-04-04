@@ -186,7 +186,8 @@ class MetadataAlgoTest( GafferTest.TestCase ) :
 		for k in Gaffer.Metadata.registeredValues( t ) :
 			self.assertEqual( Gaffer.Metadata.value( t, k ), Gaffer.Metadata.value( s, k ) )
 
-	def testCopyColorKeepExisting( self ):
+	def testCopyColorKeepExisting( self ) :
+
 		plug1 = Gaffer.IntPlug()
 		plug2 = Gaffer.IntPlug()
 
@@ -204,7 +205,8 @@ class MetadataAlgoTest( GafferTest.TestCase ) :
 		self.assertEqual( Gaffer.Metadata.value( plug2, "connectionGadget:color" ), connectionColor )
 		self.assertEqual( Gaffer.Metadata.value( plug2, "nodule:color" ), noodleColorExisting )
 
-	def testCopyColorForceOverWrite( self ):
+	def testCopyColorForceOverWrite( self ) :
+
 		plug1 = Gaffer.IntPlug()
 		plug2 = Gaffer.IntPlug()
 
