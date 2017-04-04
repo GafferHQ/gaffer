@@ -483,11 +483,12 @@ void ImageView::plugSet( Gaffer::Plug *plug )
 	else if( plug == exposurePlug() )
 	{
 		const float m = pow( 2.0f, exposurePlug()->getValue() );
-		gradeNode()->multiplyPlug()->setValue( Color3f( m ) );
+		gradeNode()->multiplyPlug()->setValue( Color4f( m, m, m, 1.0f ) );
 	}
 	else if( plug == gammaPlug() )
 	{
-		gradeNode()->gammaPlug()->setValue( Color3f( gammaPlug()->getValue() ) );
+		const float g = gammaPlug()->getValue();
+		gradeNode()->gammaPlug()->setValue( Color4f( g, g, g, 1.0f ) );
 	}
 	else if( plug == displayTransformPlug() )
 	{
