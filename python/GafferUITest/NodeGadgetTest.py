@@ -105,5 +105,16 @@ class NodeGadgetTest( GafferUITest.TestCase ) :
 		self.failUnless( g.node() is n )
 		self.assertEqual( g.getContents().getText(), "lovinglyHandCraftedInCreator" )
 
+	def testFactoryMetadata( self ) :
+
+		n = Gaffer.Node()
+		self.assertTrue( isinstance( GafferUI.NodeGadget.create( n ), GafferUI.StandardNodeGadget ) )
+
+		Gaffer.Metadata.registerValue( n, "nodeGadget:type", "" )
+		self.assertEqual( GafferUI.NodeGadget.create( n ), None )
+
+		Gaffer.Metadata.registerValue( n, "nodeGadget:type", "GafferUI::StandardNodeGadget" )
+		self.assertTrue( isinstance( GafferUI.NodeGadget.create( n ), GafferUI.StandardNodeGadget ) )
+
 if __name__ == "__main__":
 	unittest.main()
