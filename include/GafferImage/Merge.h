@@ -79,7 +79,9 @@ class Merge : public ImageProcessor
 			Over,      // A + B(1-a)
 			Subtract,  // A - B
 			Difference,// fabs( A - B )
-			Under      // A(1-b) + B
+			Under,     // A(1-b) + B
+			Min,       // min( A, B )
+			Max        // max( A, B )
 		};
 
 		Gaffer::IntPlug *operationPlug();

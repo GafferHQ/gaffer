@@ -63,6 +63,8 @@ float opOver( float A, float B, float a, float b){ return A + B*(1.-a); }
 float opSubtract( float A, float B, float a, float b){ return A - B; }
 float opDifference( float A, float B, float a, float b){ return fabs( A - B ); }
 float opUnder( float A, float B, float a, float b){ return A*(1.-b) + B; }
+float opMin( float A, float B, float a, float b){ return std::min( A, B ); }
+float opMax( float A, float B, float a, float b){ return std::max( A, B ); }
 
 } // namespace
 
@@ -76,11 +78,11 @@ Merge::Merge( const std::string &name )
 	storeIndexOfNextChild( g_firstPlugIndex );
 	addChild(
 		new IntPlug(
-			"operation",	// name
-			Plug::In,	// direction
-			Add,		// default
-			Add,		// min
-			Under		// max
+			"operation", // name
+			Plug::In,    // direction
+			Add,         // default
+			Add,         // min
+			Max          // the maximum value in the enum, which just happens to currently be named "Max"
 		)
 	);
 
@@ -257,6 +259,10 @@ IECore::ConstFloatVectorDataPtr Merge::computeChannelData( const std::string &ch
 			return merge( opDifference, channelName, tileOrigin);
 		case Under :
 			return merge( opUnder, channelName, tileOrigin);
+		case Min :
+			return merge( opMin, channelName, tileOrigin);
+		case Max :
+			return merge( opMax, channelName, tileOrigin);
 	}
 
 	throw Exception( "Merge::computeChannelData : Invalid operation mode." );
