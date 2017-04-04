@@ -309,6 +309,48 @@ class MergeTest( GafferImageTest.ImageTestCase ) :
 		self.assertEqual( sample( 161, 161 ), IECore.Color3f( 0, 1, 0 ) )
 		self.assertEqual( sample( 162, 162 ), IECore.Color3f( 1, 0, 0 ) )
 
+	def testMaskChannelName( self ) :
+
+		b = GafferImage.Constant()
+		b["format"].setValue( GafferImage.Format( 50, 50, 1.0 ) )
+		b["color"].setValue( IECore.Color4f( 1, 0, 0, 1 ) )
+
+		a = GafferImage.Constant()
+		a["format"].setValue( GafferImage.Format( 50, 50, 1.0 ) )
+		a["color"].setValue( IECore.Color4f( 0, 1, 0, 0.5 ) )
+
+		aShuffle = GafferImage.Shuffle()
+		aShuffle["in"].setInput( a["out"] )
+
+		m = GafferImage.Merge()
+		m["operation"].setValue( m.Operation.Over )
+		m["in"][0].setInput( b["out"] )
+		m["in"][1].setInput( aShuffle["out"] )
+
+
+		def sample( x, y ) :
+			redSampler = GafferImage.Sampler( m["out"], "R", m["out"]["format"].getValue().getDisplayWindow() )
+			greenSampler = GafferImage.Sampler( m["out"], "G", m["out"]["format"].getValue().getDisplayWindow() )
+			blueSampler = GafferImage.Sampler( m["out"], "B", m["out"]["format"].getValue().getDisplayWindow() )
+
+			return IECore.Color3f(
+				redSampler.sample( x, y ),
+				greenSampler.sample( x, y ),
+				blueSampler.sample( x, y ),
+			)
+
+		# Default to using alpha	
+		self.assertEqual( sample( 25, 25 ), IECore.Color3f( 0.5, 1, 0 ) )
+
+		# The new channel isn't set yet, so it defaults to 0
+		m["maskChannelName"].setValue( "customMask" )
+		self.assertEqual( sample( 25, 25 ), IECore.Color3f( 1, 1, 0 ) )
+
+		aShuffle["channels"].addChild( GafferImage.Shuffle.ChannelPlug( 'customMask', '__white' ) )
+		self.assertEqual( sample( 25, 25 ), IECore.Color3f( 0, 1, 0 ) )
+		aShuffle["channels"][0]["in"].setValue( '__black' )
+		self.assertEqual( sample( 25, 25 ), IECore.Color3f( 1, 1, 0 ) )
+
 	def testLargeDataWindowAddedToSmall( self ) :
 
 		b = GafferImage.Constant()

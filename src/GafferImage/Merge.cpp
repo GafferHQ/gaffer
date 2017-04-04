@@ -83,6 +83,9 @@ Merge::Merge( const std::string &name )
 			Under		// max
 		)
 	);
+	addChild(
+		new StringPlug( "maskChannelName", Plug::In, "A" )
+	);
 
 	// We don't ever want to change these, so we make pass-through connections.
 	outPlug()->formatPlug()->setInput( inPlug()->formatPlug() );
@@ -103,11 +106,21 @@ const Gaffer::IntPlug *Merge::operationPlug() const
 	return getChild<IntPlug>( g_firstPlugIndex );
 }
 
+Gaffer::StringPlug *Merge::maskChannelNamePlug()
+{
+	return getChild<StringPlug>( g_firstPlugIndex + 1 );
+}
+
+const Gaffer::StringPlug *Merge::maskChannelNamePlug() const
+{
+	return getChild<StringPlug>( g_firstPlugIndex + 1 );
+}
+
 void Merge::affects( const Gaffer::Plug *input, AffectedPlugsContainer &outputs ) const
 {
 	ImageProcessor::affects( input, outputs );
 
-	if( input == operationPlug() )
+	if( input == operationPlug() || input == maskChannelNamePlug() )
 	{
 		outputs.push_back( outPlug()->channelDataPlug() );
 	}
@@ -192,6 +205,8 @@ void Merge::hashChannelData( const GafferImage::ImagePlug *output, const Gaffer:
 	const V2i tileOrigin = context->get<V2i>( ImagePlug::tileOriginContextName );
 	const Box2i tileBound( tileOrigin, tileOrigin + V2i( ImagePlug::tileSize() ) );
 
+	const std::string &maskChannelName = maskChannelNamePlug()->getValue();
+
 	for( ImagePlugIterator it( inPlugs() ); !it.done(); ++it )
 	{
 		if( !(*it)->getInput<ValuePlug>() )
@@ -207,9 +222,9 @@ void Merge::hashChannelData( const GafferImage::ImagePlug *output, const Gaffer:
 			(*it)->channelDataPlug()->hash( h );
 		}
 
-		if( ImageAlgo::channelExists( channelNames, "A" ) )
+		if( ImageAlgo::channelExists( channelNames, maskChannelName ) )
 		{
-			h.append( (*it)->channelDataHash( "A", tileOrigin ) );
+			h.append( (*it)->channelDataHash( maskChannelName, tileOrigin ) );
 		}
 
 		// The hash of the channel data we include above represents just the data in
@@ -231,39 +246,41 @@ void Merge::hashChannelData( const GafferImage::ImagePlug *output, const Gaffer:
 
 IECore::ConstFloatVectorDataPtr Merge::computeChannelData( const std::string &channelName, const Imath::V2i &tileOrigin, const Gaffer::Context *context, const ImagePlug *parent ) const
 {
+	const std::string &maskChannelName = maskChannelNamePlug()->getValue();
+
 	switch( operationPlug()->getValue() )
 	{
 		case Add :
-			return merge( opAdd, channelName, tileOrigin);
+			return merge( opAdd, channelName, tileOrigin, maskChannelName );
 		case Atop :
-			return merge( opAtop, channelName, tileOrigin);
+			return merge( opAtop, channelName, tileOrigin, maskChannelName );
 		case Divide :
-			return merge( opDivide, channelName, tileOrigin);
+			return merge( opDivide, channelName, tileOrigin, maskChannelName );
 		case In :
-			return merge( opIn, channelName, tileOrigin);
+			return merge( opIn, channelName, tileOrigin, maskChannelName );
 		case Out :
-			return merge( opOut, channelName, tileOrigin);
+			return merge( opOut, channelName, tileOrigin, maskChannelName );
 		case Mask :
-			return merge( opMask, channelName, tileOrigin);
+			return merge( opMask, channelName, tileOrigin, maskChannelName );
 		case Matte :
-			return merge( opMatte, channelName, tileOrigin);
+			return merge( opMatte, channelName, tileOrigin, maskChannelName );
 		case Multiply :
-			return merge( opMultiply, channelName, tileOrigin);
+			return merge( opMultiply, channelName, tileOrigin, maskChannelName );
 		case Over :
-			return merge( opOver, channelName, tileOrigin);
+			return merge( opOver, channelName, tileOrigin, maskChannelName );
 		case Subtract :
-			return merge( opSubtract, channelName, tileOrigin);
+			return merge( opSubtract, channelName, tileOrigin, maskChannelName );
 		case Difference :
-			return merge( opDifference, channelName, tileOrigin);
+			return merge( opDifference, channelName, tileOrigin, maskChannelName );
 		case Under :
-			return merge( opUnder, channelName, tileOrigin);
+			return merge( opUnder, channelName, tileOrigin, maskChannelName );
 	}
 
 	throw Exception( "Merge::computeChannelData : Invalid operation mode." );
 }
 
 template<typename F>
-IECore::ConstFloatVectorDataPtr Merge::merge( F f, const std::string &channelName, const Imath::V2i &tileOrigin ) const
+IECore::ConstFloatVectorDataPtr Merge::merge( F f, const std::string &channelName, const Imath::V2i &tileOrigin, const std::string &maskChannelName ) const
 {
 	FloatVectorDataPtr resultData = NULL;
 	// Temporary buffer for computing the alpha of intermediate composited layers.
@@ -293,9 +310,9 @@ IECore::ConstFloatVectorDataPtr Merge::merge( F f, const std::string &channelNam
 			channelData = ImagePlug::blackTile();
 		}
 
-		if( ImageAlgo::channelExists( channelNames, "A" ) )
+		if( ImageAlgo::channelExists( channelNames, maskChannelName ) )
 		{
-			alphaData = (*it)->channelData( "A", tileOrigin );
+			alphaData = (*it)->channelData( maskChannelName, tileOrigin );
 		}
 		else
 		{
