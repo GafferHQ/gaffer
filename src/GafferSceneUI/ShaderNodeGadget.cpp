@@ -46,17 +46,10 @@
 
 #include "GafferScene/Shader.h"
 
-#include "GafferSceneUI/Private/ShaderNodeGadget.h"
-
 using namespace std;
 using namespace Gaffer;
 using namespace GafferUI;
 using namespace GafferScene;
-using namespace GafferSceneUI::Private;
-
-//////////////////////////////////////////////////////////////////////////
-// ShaderPlugAdder
-//////////////////////////////////////////////////////////////////////////
 
 namespace
 {
@@ -187,27 +180,29 @@ class ShaderPlugAdder : public PlugAdder
 
 };
 
+struct ShaderNodeGadgetCreator
+{
+
+	ShaderNodeGadgetCreator()
+	{
+		NodeGadget::registerNodeGadget( Shader::staticTypeId(), *this );
+	}
+
+	NodeGadgetPtr operator()( NodePtr node )
+	{
+		ShaderPtr shader = IECore::runTimeCast<Shader>( node );
+		if( !shader )
+		{
+			throw IECore::Exception( "ShaderNodeGadget requires a Shader" );
+		}
+		StandardNodeGadgetPtr result = new StandardNodeGadget( shader );
+		result->setEdgeGadget( StandardNodeGadget::LeftEdge, new ShaderPlugAdder( shader, StandardNodeGadget::LeftEdge ) );
+		return result;
+	}
+
+};
+
+ShaderNodeGadgetCreator g_shaderNodeGadgetCreator;
 
 } // namespace
 
-//////////////////////////////////////////////////////////////////////////
-// ShaderNodeGadget
-//////////////////////////////////////////////////////////////////////////
-
-StandardNodeGadget::NodeGadgetTypeDescription<ShaderNodeGadget> ShaderNodeGadget::g_nodeGadgetTypeDescription( Shader::staticTypeId() );
-
-ShaderNodeGadget::ShaderNodeGadget( Gaffer::NodePtr node )
-	:	StandardNodeGadget( node )
-{
-	ShaderPtr shader = IECore::runTimeCast<Shader>( node );
-	if( !shader )
-	{
-		throw IECore::Exception( "ShaderNodeGadget requires a Shader" );
-	}
-
-	setEdgeGadget( LeftEdge, new ShaderPlugAdder( shader, LeftEdge ) );
-}
-
-ShaderNodeGadget::~ShaderNodeGadget()
-{
-}

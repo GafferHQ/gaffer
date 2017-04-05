@@ -57,6 +57,7 @@ void bindMetadataAlgo()
 	def( "setReadOnly", &setReadOnly, ( arg( "graphComponent" ), arg( "readOnly"), arg( "persistent" ) = true ) );
 	def( "getReadOnly", &getReadOnly );
 	def( "readOnly", &readOnly );
+
 	def(
 		"affectedByChange",
 		(bool (*)( const Plug *, IECore::TypeId, const MatchPattern &, const Plug * ))&affectedByChange,
@@ -67,7 +68,18 @@ void bindMetadataAlgo()
 		(bool (*)( const Node *node, IECore::TypeId changedNodeTypeId, const Node *changedNode ))&affectedByChange,
 		( arg( "node" ), arg( "changedNodeTypeId"), arg( "changedNode" ) )
 	);
-	def( "childAffectedByChange", &childAffectedByChange, ( arg( "parent" ), arg( "changedNodeTypeId"), arg( "changedPlugPath" ), arg( "changedPlug" ) ) );
+
+	def(
+		"childAffectedByChange",
+		(bool (*)( const GraphComponent *, IECore::TypeId, const StringAlgo::MatchPattern &, const Gaffer::Plug * ))&childAffectedByChange,
+		( arg( "parent" ), arg( "changedNodeTypeId"), arg( "changedPlugPath" ), arg( "changedPlug" ) )
+	);
+	def(
+		"childAffectedByChange",
+		(bool (*)( const GraphComponent *, IECore::TypeId, const Gaffer::Node * ))&childAffectedByChange,
+		( arg( "parent" ), arg( "changedNodeTypeId"), arg( "changedNode" ) )
+	);
+
 	def( "ancestorAffectedByChange", &ancestorAffectedByChange, ( arg( "plug" ), arg( "changedNodeTypeId"), arg( "changedPlugPath" ), arg( "changedPlug" ) ) );
 
 	def( "copy", &copy, ( arg( "from" ), arg( "to" ), arg( "exclude" ) = "", arg( "persistentOnly" ) = true, arg( "persistent" ) = true ) );

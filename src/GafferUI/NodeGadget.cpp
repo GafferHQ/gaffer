@@ -54,6 +54,33 @@ using namespace IECore;
 using namespace std;
 using namespace boost;
 
+//////////////////////////////////////////////////////////////////////////
+// Factory internals
+//////////////////////////////////////////////////////////////////////////
+
+namespace
+{
+
+typedef std::map<std::string, NodeGadget::NodeGadgetCreator> TypeCreatorMap;
+TypeCreatorMap &typeCreators()
+{
+	static TypeCreatorMap c;
+	return c;
+}
+
+typedef std::map<IECore::TypeId, NodeGadget::NodeGadgetCreator> NodeCreatorMap;
+NodeCreatorMap &nodeCreators()
+{
+	static NodeCreatorMap c;
+	return c;
+}
+
+} // namespace
+
+//////////////////////////////////////////////////////////////////////////
+// NodeGadget
+//////////////////////////////////////////////////////////////////////////
+
 IE_CORE_DEFINERUNTIMETYPED( NodeGadget );
 
 NodeGadget::NodeGadget( Gaffer::NodePtr node )
@@ -67,12 +94,31 @@ NodeGadget::~NodeGadget()
 
 NodeGadgetPtr NodeGadget::create( Gaffer::NodePtr node )
 {
-	const CreatorMap &cr = creators();
+	IECore::ConstStringDataPtr nodeGadgetType = Gaffer::Metadata::value<IECore::StringData>( node.get(), "nodeGadget:type" );
+	if( nodeGadgetType )
+	{
+		if( nodeGadgetType->readable() == "" )
+		{
+			return NULL;
+		}
+		const TypeCreatorMap &m = typeCreators();
+		TypeCreatorMap::const_iterator it = m.find( nodeGadgetType->readable() );
+		if( it != m.end() )
+		{
+			return it->second( node );
+		}
+		else
+		{
+			IECore::msg( IECore::Msg::Warning, "NodeGadget::create", boost::format( "Nonexistent type \"%s\" requested for node \"%s\"" ) % nodeGadgetType->readable() % node->fullName() );
+		}
+	}
+
+	const NodeCreatorMap &cr = nodeCreators();
 
 	IECore::TypeId typeId = node->typeId();
 	while( typeId != IECore::InvalidTypeId )
 	{
-		const CreatorMap::const_iterator it = cr.find( typeId );
+		const NodeCreatorMap::const_iterator it = cr.find( typeId );
 		if( it != cr.end() )
 		{
 			return it->second( node );
@@ -83,9 +129,18 @@ NodeGadgetPtr NodeGadget::create( Gaffer::NodePtr node )
 	return NULL;
 }
 
+void NodeGadget::registerNodeGadget( const std::string &nodeGadgetType, NodeGadgetCreator creator, IECore::TypeId nodeType )
+{
+	typeCreators()[nodeGadgetType] = creator;
+	if( nodeType != IECore::InvalidTypeId )
+	{
+		nodeCreators()[nodeType] = creator;
+	}
+}
+
 void NodeGadget::registerNodeGadget( IECore::TypeId nodeType, NodeGadgetCreator creator )
 {
-	creators()[nodeType] = creator;
+	nodeCreators()[nodeType] = creator;
 }
 
 Gaffer::Node *NodeGadget::node()
@@ -121,12 +176,6 @@ NodeGadget::NoduleSignal &NodeGadget::noduleAddedSignal()
 NodeGadget::NoduleSignal &NodeGadget::noduleRemovedSignal()
 {
 	return m_noduleRemovedSignal;
-}
-
-NodeGadget::CreatorMap &NodeGadget::creators()
-{
-	static CreatorMap c;
-	return c;
 }
 
 std::string NodeGadget::getToolTip( const IECore::LineSegment3f &line ) const

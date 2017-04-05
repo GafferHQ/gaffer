@@ -127,26 +127,33 @@ class MetadataAlgoTest( GafferTest.TestCase ) :
 
 	def testNodeAffected( self ) :
 
-		n = GafferTest.CompoundPlugNode()
+		n = Gaffer.Box()
+		n["c"] = Gaffer.Node()
 
 		affected = []
+		childAffected = []
 		def nodeValueChanged( nodeTypeId, key, node ) :
 			affected.append( Gaffer.MetadataAlgo.affectedByChange( n, nodeTypeId, node ) )
+			childAffected.append( Gaffer.MetadataAlgo.childAffectedByChange( n, nodeTypeId, node ) )
 
 		c = Gaffer.Metadata.nodeValueChangedSignal().connect( nodeValueChanged )
 
 		Gaffer.Metadata.registerValue( Gaffer.Node, "metadataAlgoTest", 1 )
 		self.assertEqual( affected, [ True ] )
+		self.assertEqual( childAffected, [ True ] )
 
 		Gaffer.Metadata.registerValue( GafferTest.AddNode, "metadataAlgoTest", 2 )
 		self.assertEqual( affected, [ True, False ] )
+		self.assertEqual( childAffected, [ True, False ] )
 
 		Gaffer.Metadata.registerValue( n, "metadataAlgoTest", 3 )
 		self.assertEqual( affected, [ True, False, True ] )
+		self.assertEqual( childAffected, [ True, False, False ] )
 
-		a = GafferTest.AddNode()
-		Gaffer.Metadata.registerValue( a, "metadataAlgoTest", 4 )
+		n["a"] = GafferTest.AddNode()
+		Gaffer.Metadata.registerValue( n["a"], "metadataAlgoTest", 4 )
 		self.assertEqual( affected, [ True, False, True, False ] )
+		self.assertEqual( childAffected, [ True, False, False, True ] )
 
 	def testCopy( self ) :
 
@@ -179,7 +186,8 @@ class MetadataAlgoTest( GafferTest.TestCase ) :
 		for k in Gaffer.Metadata.registeredValues( t ) :
 			self.assertEqual( Gaffer.Metadata.value( t, k ), Gaffer.Metadata.value( s, k ) )
 
-	def testCopyColorKeepExisting( self ):
+	def testCopyColorKeepExisting( self ) :
+
 		plug1 = Gaffer.IntPlug()
 		plug2 = Gaffer.IntPlug()
 
@@ -197,7 +205,8 @@ class MetadataAlgoTest( GafferTest.TestCase ) :
 		self.assertEqual( Gaffer.Metadata.value( plug2, "connectionGadget:color" ), connectionColor )
 		self.assertEqual( Gaffer.Metadata.value( plug2, "nodule:color" ), noodleColorExisting )
 
-	def testCopyColorForceOverWrite( self ):
+	def testCopyColorForceOverWrite( self ) :
+
 		plug1 = Gaffer.IntPlug()
 		plug2 = Gaffer.IntPlug()
 

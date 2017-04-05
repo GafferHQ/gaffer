@@ -190,6 +190,7 @@ class GraphGadget : public ContainerGadget
 		void plugSet( Gaffer::Plug *plug );
 		void noduleAdded( Nodule *nodule );
 		void noduleRemoved( Nodule *nodule );
+		void nodeMetadataChanged( IECore::TypeId nodeTypeId, IECore::InternedString key, Gaffer::Node *node );
 
 		bool keyPressed( GadgetPtr gadget, const KeyEvent &event );
 
