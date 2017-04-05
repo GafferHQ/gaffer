@@ -124,7 +124,7 @@ class ErrorDialogue( GafferUI.Dialogue ) :
 
 			result = False
 			if type is not None and self.__handleExceptions :
-				self.__capturingMessageHandler.handle( self.Level.Error, self.__kw.get( "title", "Error" ), str( value ) )
+				self.__capturingMessageHandler.handle( IECore.Msg.Level.Error, self.__kw.get( "title", "Error" ), str( value ) )
 				result = True
 
 			if len( self.__capturingMessageHandler.messages ) :
