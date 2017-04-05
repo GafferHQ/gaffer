@@ -500,7 +500,10 @@ void Warp::compute( Gaffer::ValuePlug *output, const Gaffer::Context *context ) 
 							( tileOrigin.x + x ) + 0.5,
 							( tileOrigin.y + y ) + 0.5 ) );
 
-						inputBound.extendBy( FilterAlgo::filterSupport( inputPosition, 1.0f, 1.0f,  filterWidth ) );
+						if( inputPosition != Engine::black )
+						{
+							inputBound.extendBy( FilterAlgo::filterSupport( inputPosition, 1.0f, 1.0f,  filterWidth ) );
+						}
 					}
 					pixelInputPositions.push_back( inputPosition );
 					pixelInputDerivatives.push_back( V2f( 1.0f ) );
