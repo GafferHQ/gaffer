@@ -58,6 +58,12 @@ class MeshTangents : public SceneElementProcessor
 		Gaffer::StringPlug *positionPlug();
 		const Gaffer::StringPlug *positionPlug() const;
 
+		Gaffer::StringPlug *uTangentPlug();
+		const Gaffer::StringPlug *uTangentPlug() const;
+
+		Gaffer::StringPlug *vTangentPlug();
+		const Gaffer::StringPlug *vTangentPlug() const;
+
 		Gaffer::BoolPlug *orthogonalPlug();
 		const Gaffer::BoolPlug *orthogonalPlug() const;
 

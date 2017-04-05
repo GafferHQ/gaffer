@@ -52,6 +52,8 @@ MeshTangents::MeshTangents( const std::string &name ) : SceneElementProcessor( n
 	storeIndexOfNextChild( g_firstPlugIndex );
 	addChild( new StringPlug( "uvSet", Plug::In, "st" ) );
 	addChild( new StringPlug( "position", Plug::In, "P" ) );
+	addChild( new StringPlug( "uTangent", Plug::In, "uTangent" ) );
+	addChild( new StringPlug( "vTangent", Plug::In, "vTangent" ) );
 	addChild( new BoolPlug( "orthogonal", Plug::In, true ) );
 
 	// Fast pass-throughs for things we don't modify
@@ -84,21 +86,41 @@ const Gaffer::StringPlug *MeshTangents::positionPlug() const
 	return getChild<StringPlug>( g_firstPlugIndex + 1 );
 }
 
+Gaffer::StringPlug *MeshTangents::uTangentPlug()
+{
+	return getChild<StringPlug>( g_firstPlugIndex + 2 );
+}
+
+const Gaffer::StringPlug *MeshTangents::uTangentPlug() const
+{
+	return getChild<StringPlug>( g_firstPlugIndex + 2 );
+}
+
+Gaffer::StringPlug *MeshTangents::vTangentPlug()
+{
+	return getChild<StringPlug>( g_firstPlugIndex + 3 );
+}
+
+const Gaffer::StringPlug *MeshTangents::vTangentPlug() const
+{
+	return getChild<StringPlug>( g_firstPlugIndex + 3 );
+}
+
 Gaffer::BoolPlug *MeshTangents::orthogonalPlug()
 {
-	return getChild<BoolPlug>( g_firstPlugIndex + 2 );
+	return getChild<BoolPlug>( g_firstPlugIndex + 4 );
 }
 
 const Gaffer::BoolPlug *MeshTangents::orthogonalPlug() const
 {
-	return getChild<BoolPlug>( g_firstPlugIndex + 2 );
+	return getChild<BoolPlug>( g_firstPlugIndex + 4 );
 }
 
 void MeshTangents::affects( const Gaffer::Plug *input, AffectedPlugsContainer &outputs ) const
 {
 	SceneElementProcessor::affects( input, outputs );
 
-	if( input == uvSetPlug() || input == positionPlug() || input == orthogonalPlug() )
+	if( input == uvSetPlug() || input == positionPlug() || input == orthogonalPlug() || input == uTangentPlug() || input == vTangentPlug() )
 	{
 		outputs.push_back( outPlug()->objectPlug() );
 	}
@@ -114,6 +136,8 @@ void MeshTangents::hashProcessedObject( const ScenePath &path, const Gaffer::Con
 	uvSetPlug()->hash( h );
 	positionPlug()->hash( h );
 	orthogonalPlug()->hash( h );
+	uTangentPlug()->hash( h );
+	vTangentPlug()->hash( h );
 }
 
 IECore::ConstObjectPtr MeshTangents::computeProcessedObject( const ScenePath &path, const Gaffer::Context *context, IECore::ConstObjectPtr inputObject ) const
@@ -128,12 +152,14 @@ IECore::ConstObjectPtr MeshTangents::computeProcessedObject( const ScenePath &pa
 	std::string position = positionPlug()->getValue();
 	bool ortho = orthogonalPlug()->getValue();
 
-	MeshAlgo::TexturePrimVarNames primVarNames (position, uvSet);
+	std::string uTangent = uTangentPlug()->getValue();
+	std::string vTangent = vTangentPlug()->getValue();
 
 	std::pair<PrimitiveVariable, PrimitiveVariable> tangentPrimvars = MeshAlgo::calculateTangents( mesh, uvSet, ortho, position);
 	MeshPrimitivePtr meshWithTangents = runTimeCast<MeshPrimitive>( mesh->copy() );
 
-	meshWithTangents->variables[primVarNames.tangentName()] = tangentPrimvars.first;
-	meshWithTangents->variables[primVarNames.binormalName()] = tangentPrimvars.second;
+	meshWithTangents->variables[uTangent] = tangentPrimvars.first;
+	meshWithTangents->variables[vTangent] = tangentPrimvars.second;
+
 	return meshWithTangents;
 }

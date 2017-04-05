@@ -49,12 +49,18 @@ class MeshTangentsTest( GafferSceneTest.SceneTestCase ) :
 		verticesPerFace = IECore.IntVectorData( [3] )
 		vertexIds = IECore.IntVectorData( [0, 1, 2] )
 		p = IECore.V3fVectorData( [IECore.V3f( 0, 0, 0 ), IECore.V3f( 1, 0, 0 ), IECore.V3f( 0, 1, 0 )] )
+		prefData = IECore.V3fVectorData( [IECore.V3f( 0, 0, 0 ), IECore.V3f( 0, -1, 0 ), IECore.V3f( 1, 0, 0 )] )
 		s = IECore.FloatVectorData( [0, 1, 0] )
 		t = IECore.FloatVectorData( [0, 0, 1] )
 
 		mesh = IECore.MeshPrimitive( verticesPerFace, vertexIds, "linear", p )
 		mesh["s"] = IECore.PrimitiveVariable( IECore.PrimitiveVariable.Interpolation.FaceVarying, s )
 		mesh["t"] = IECore.PrimitiveVariable( IECore.PrimitiveVariable.Interpolation.FaceVarying, t )
+
+		mesh["foo_s"] = IECore.PrimitiveVariable( IECore.PrimitiveVariable.Interpolation.FaceVarying, IECore.FloatVectorData( [0, 0, 1] ) )
+		mesh["foo_t"] = IECore.PrimitiveVariable( IECore.PrimitiveVariable.Interpolation.FaceVarying, IECore.FloatVectorData( [0, 1, 0] ) )
+
+		mesh["Pref"] = IECore.PrimitiveVariable( IECore.PrimitiveVariable.Interpolation.Vertex, prefData )
 
 		objectToScene = GafferScene.ObjectToScene()
 		objectToScene["object"].setValue( mesh )
@@ -75,14 +81,100 @@ class MeshTangentsTest( GafferSceneTest.SceneTestCase ) :
 
 		object = meshTangents['out'].object( "/object" )
 
-		tangentPrimVar = object["dPds"]
-		binormalPrimVar = object["dPdt"]
+		uTangent = object["uTangent"]
+		vTangent = object["vTangent"]
 
-		self.assertEqual( len( tangentPrimVar.data ), 3 )
-		self.assertEqual( len( binormalPrimVar.data ), 3 )
+		self.assertEqual( len( uTangent.data ), 3 )
+		self.assertEqual( len( vTangent.data ), 3 )
 
-		for v in tangentPrimVar.data :
+		for v in uTangent.data :
 			self.failUnless( v.equalWithAbsError( IECore.V3f( 1, 0, 0 ), 0.000001 ) )
 
-		for v in binormalPrimVar.data :
+		for v in vTangent.data :
 			self.failUnless( v.equalWithAbsError( IECore.V3f( 0, 1, 0 ), 0.000001 ) )
+
+	def testCanRenameOutputTangents( self ) :
+
+		meshTangents = GafferScene.MeshTangents()
+
+		triangleScene = self.makeTriangleScene()
+		meshTangents["in"].setInput( triangleScene["out"] )
+
+		pathFilter = GafferScene.PathFilter( "PathFilter" )
+		pathFilter["paths"].setValue( IECore.StringVectorData( ['/object'] ) )
+
+		meshTangents["filter"].setInput( pathFilter["out"] )
+		meshTangents["uTangent"].setValue( "foo" )
+		meshTangents["vTangent"].setValue( "bar" )
+
+		object = meshTangents['out'].object( "/object" )
+
+		uTangent = object["foo"]
+		vTangent = object["bar"]
+
+		self.assertEqual( len( uTangent.data ), 3 )
+		self.assertEqual( len( vTangent.data ), 3 )
+
+		for v in uTangent.data :
+			self.failUnless( v.equalWithAbsError( IECore.V3f( 1, 0, 0 ), 0.000001 ) )
+
+		for v in vTangent.data :
+			self.failUnless( v.equalWithAbsError( IECore.V3f( 0, 1, 0 ), 0.000001 ) )
+
+	def testCanUseSecondUVSet( self ) :
+
+		meshTangents = GafferScene.MeshTangents()
+
+		meshTangents["uvSet"].setValue( "foo" )
+
+		triangleScene = self.makeTriangleScene()
+		meshTangents["in"].setInput( triangleScene["out"] )
+
+		pathFilter = GafferScene.PathFilter( "PathFilter" )
+		pathFilter["paths"].setValue( IECore.StringVectorData( ['/object'] ) )
+
+		meshTangents["filter"].setInput( pathFilter["out"] )
+
+		object = meshTangents['out'].object( "/object" )
+
+		uTangent = object["uTangent"]
+		vTangent = object["vTangent"]
+
+		self.assertEqual( len( uTangent.data ), 3 )
+		self.assertEqual( len( vTangent.data ), 3 )
+
+		for v in uTangent.data :
+			self.failUnless( v.equalWithAbsError( IECore.V3f( 0, 1, 0 ), 0.000001 ) )
+
+		# really I'd expect the naive answer to the vTangent to be IECore.V3f( 1, 0, 0 )
+		# but the code forces the triple of n, uT, vT to flip the direction of vT if we don't have a correctly handed set of basis vectors
+		for v in vTangent.data :
+			self.failUnless( v.equalWithAbsError( IECore.V3f( -1, 0, 0 ), 0.000001 ) )
+
+	def testCanUsePref( self ) :
+
+		meshTangents = GafferScene.MeshTangents()
+
+		meshTangents["position"].setValue( "Pref" )
+
+		triangleScene = self.makeTriangleScene()
+		meshTangents["in"].setInput( triangleScene["out"] )
+
+		pathFilter = GafferScene.PathFilter( "PathFilter" )
+		pathFilter["paths"].setValue( IECore.StringVectorData( ['/object'] ) )
+
+		meshTangents["filter"].setInput( pathFilter["out"] )
+
+		object = meshTangents['out'].object( "/object" )
+
+		uTangent = object["uTangent"]
+		vTangent = object["vTangent"]
+
+		self.assertEqual( len( uTangent.data ), 3 )
+		self.assertEqual( len( vTangent.data ), 3 )
+
+		for v in uTangent.data :
+			self.failUnless( v.equalWithAbsError( IECore.V3f( 0, -1, 0 ), 0.000001 ) )
+
+		for v in vTangent.data :
+			self.failUnless( v.equalWithAbsError( IECore.V3f( 1, 0, 0 ), 0.000001 ) )

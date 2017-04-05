@@ -43,11 +43,7 @@ Gaffer.Metadata.registerNode(
 
 	"description",
 	"""
-	Adds tangent and binormal primitive variables to the mesh using the specified positions and UVSet.
-	The primitive variables are named d[position]d[u|v].
-	For example if the default 'st' UV set is specifed then two new primitive variables are added called dPds & dPdt. Where dPds is the tangent & dPdt is the binormal.
-	If a non default UV set is specifed, for example 'test' then dPdtest_s & dPdtest_t primitive variables are created.
-	If the position is set to 'Pref' then dPrefds & dPrefdt primitive variables are created.   
+	Adds surface tangent primitive variables to the mesh using the specified positions and UVSet. 
 	""",
 
 	plugs = {
@@ -55,7 +51,7 @@ Gaffer.Metadata.registerNode(
 		"uvSet" : [
 			"description",
 			"""
-			Name of the UV set primitive variable used to calculate the tangents & binormals. 
+			Name of the UV set primitive variable used to calculate uTangent & vTangent.
 			""",
 		],
 
@@ -63,18 +59,29 @@ Gaffer.Metadata.registerNode(
 			"description",
 			"""
 			Name of the primitive variable which contains the position data used calculate tangents & binormals. 
-			For example Pref would compute tangents using the reference positions (if defined)
+			For example 'Pref' would compute tangents using the reference positions (if defined)
 			""",
 		],
 
 		"orthogonal" : [
 			"description",
 			"""
-			Adjusts binormals (dPds) to be orthogonal to the tangents (dPdt). 
+			Adjusts vTangent to be orthogonal to the uTangent. 
 			""",
 		],
 
-
+		"uTangent" : [
+			"description",
+			"""
+			Name of the primitive variable which will contain the uTangent data. 
+			""",
+		],
+		"vTangent" : [
+			"description",
+			"""
+			Name of the primitive variable which will contain the vTangent data. 
+			""",
+		]
 	}
 
 )
