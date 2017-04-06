@@ -36,6 +36,13 @@
 
 #include "tbb/tbb.h"
 #include "tbb/tbb_thread.h"
+#include "tbb/tbb_config.h"
+
+#if TBB_IMPLEMENT_CPP0X
+#include "tbb/compat/thread"
+#else
+#include <thread>
+#endif
 
 #include "IECore/Timer.h"
 
@@ -49,15 +56,15 @@ using namespace Gaffer;
 namespace
 {
 
-struct Edit : public tbb::task
+struct Edit
 {
 
-	Edit( const bool &stop )
+	Edit( const tbb::atomic<bool> &stop )
 		:	m_stop( stop )
 	{
 	}
 
-	virtual tbb::task *execute()
+	void operator()()
 	{
 		while( !m_stop )
 		{
@@ -66,13 +73,11 @@ struct Edit : public tbb::task
 			m->op1Plug()->setValue( 20 );
 			tbb::this_tbb_thread::yield();
 		}
-
-		return NULL;
 	}
 
 	private :
 
-		const bool &m_stop;
+		const tbb::atomic<bool> &m_stop;
 
 };
 
@@ -107,15 +112,15 @@ struct Compute
 
 void GafferTest::testComputeNodeThreading()
 {
-	// Set up an asynchronous task to be creating and
-	// deleting node graphs on a background thread.
-	bool stop = false;
-	Edit *e = new (tbb::task::allocate_root()) Edit( stop );
-	tbb::task::enqueue( *e );
+	// Set up a background thread that creates and
+	// deletes node graphs.
+	tbb::atomic<bool> stop;
+	Edit edit( stop );
+	std::thread thread( edit );
 
 	// And then do some threaded computation on some
 	// other threads. This should be OK, because the
-	// graphs being edited is not the same as the one
+	// graphs being edited are not the same as the one
 	// being computed.
 	Compute c;
 	IECore::Timer t;
@@ -126,4 +131,5 @@ void GafferTest::testComputeNodeThreading()
 	// ComputeNode/ValuePlug machinery itself.
 	//std::cerr << t.stop() << std::endl;
 	stop = true;
+	thread.join();
 }
