@@ -104,11 +104,7 @@ class EvaluateLightLinksTest( GafferSceneTest.SceneTestCase ) :
 			set( map( str, evalNode["out"].attributes( "/group/sphere" )[ "linkedLights" ] ) ),
 			set( [ "/group/group/light", "/group/group/light1" ] ) )
 
-		print 'changing set contents'
-
 		lightSet["paths"].setValue( IECore.StringVectorData( [ '/group/group/light' ] ) )
-
-		print evalNode['out'].set(  'lightSet' )
 
 		self.assertEqual(
 			set( map( str, evalNode["out"].attributes( "/group/sphere" )[ "linkedLights" ] ) ),
