@@ -76,6 +76,10 @@ ArnoldOptions::ArnoldOptions( const std::string &name )
 	options->addOptionalMember( "ai:GI_volume_depth", new IECore::IntData( 0 ), "giVolumeDepth", Gaffer::Plug::Default, false );
 	options->addOptionalMember( "ai:auto_transparency_depth", new IECore::IntData( 10 ), "autoTransparencyDepth", Gaffer::Plug::Default, false );
 
+	// Subdivision
+
+	options->addOptionalMember( "ai:max_subdivisions", new IECore::IntData(999), "maxSubdivisions", Gaffer::Plug::Default, false );
+
 	// Texturing parameters
 
 	options->addOptionalMember( "ai:texture_max_memory_MB", new IECore::FloatData( 2048 ), "textureMaxMemoryMB", Gaffer::Plug::Default, false );
@@ -101,8 +105,9 @@ ArnoldOptions::ArnoldOptions( const std::string &name )
 	options->addOptionalMember( "ai:procedural_searchpath", new IECore::StringData( "" ), "proceduralSearchPath", Gaffer::Plug::Default, false );
 	options->addOptionalMember( "ai:plugin_searchpath", new IECore::StringData( "" ), "pluginSearchPath", Gaffer::Plug::Default, false );
 
-	// Error colours
+	// Error handling
 
+	options->addOptionalMember( "ai:abort_on_error", new IECore::BoolData( true ), "abortOnError", Gaffer::Plug::Default,  false);
 	options->addOptionalMember( "ai:error_color_bad_texture", new IECore::Color3fData( Color3f( 1, 0, 0 ) ), "errorColorBadTexture", Gaffer::Plug::Default, false );
 	options->addOptionalMember( "ai:error_color_bad_pixel", new IECore::Color3fData( Color3f( 0, 0, 1 ) ), "errorColorBadPixel", Gaffer::Plug::Default, false );
 	options->addOptionalMember( "ai:error_color_bad_shader", new IECore::Color3fData( Color3f( 1, 0, 1 ) ), "errorColorBadShader", Gaffer::Plug::Default, false );
