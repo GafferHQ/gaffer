@@ -75,8 +75,8 @@ class VectorWarp : public Warp
 	protected :
 
 		virtual bool affectsEngine( const Gaffer::Plug *input ) const;
-		virtual void hashEngine( const std::string &channelName, const Imath::V2i &tileOrigin, const Gaffer::Context *context, IECore::MurmurHash &h ) const;
-		virtual const Engine *computeEngine( const std::string &channelName, const Imath::V2i &tileOrigin, const Gaffer::Context *context ) const;
+		virtual void hashEngine( const Imath::V2i &tileOrigin, const Gaffer::Context *context, IECore::MurmurHash &h ) const;
+		virtual const Engine *computeEngine( const Imath::V2i &tileOrigin, const Gaffer::Context *context ) const;
 
 	private :
 

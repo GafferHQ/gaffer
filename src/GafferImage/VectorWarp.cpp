@@ -179,9 +179,9 @@ bool VectorWarp::affectsEngine( const Gaffer::Plug *input ) const
 		input == vectorUnitsPlug();
 }
 
-void VectorWarp::hashEngine( const std::string &channelName, const Imath::V2i &tileOrigin, const Gaffer::Context *context, IECore::MurmurHash &h ) const
+void VectorWarp::hashEngine( const Imath::V2i &tileOrigin, const Gaffer::Context *context, IECore::MurmurHash &h ) const
 {
-	Warp::hashEngine( channelName, tileOrigin, context, h );
+	Warp::hashEngine( tileOrigin, context, h );
 
 	h.append( tileOrigin );
 	vectorPlug()->dataWindowPlug()->hash( h );
@@ -215,7 +215,7 @@ void VectorWarp::hashEngine( const std::string &channelName, const Imath::V2i &t
 	vectorUnitsPlug()->hash( h );
 }
 
-const Warp::Engine *VectorWarp::computeEngine( const std::string &channelName, const Imath::V2i &tileOrigin, const Gaffer::Context *context ) const
+const Warp::Engine *VectorWarp::computeEngine( const Imath::V2i &tileOrigin, const Gaffer::Context *context ) const
 {
 	const Box2i tileBound( tileOrigin, tileOrigin + V2i( ImagePlug::tileSize() ) );
 	const Box2i validTileBound = BufferAlgo::intersection( tileBound, vectorPlug()->dataWindowPlug()->getValue() );

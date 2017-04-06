@@ -293,7 +293,6 @@ void Warp::hash( const Gaffer::ValuePlug *output, const Gaffer::Context *context
 	if( output == enginePlug() )
 	{
 		hashEngine(
-			context->get<string>( ImagePlug::channelNameContextName ),
 			context->get<V2i>( ImagePlug::tileOriginContextName ),
 			context,
 			h
@@ -339,7 +338,6 @@ void Warp::compute( Gaffer::ValuePlug *output, const Gaffer::Context *context ) 
 		static_cast<ObjectPlug *>( output )->setValue(
 			new EngineData(
 				computeEngine(
-					context->get<string>( ImagePlug::channelNameContextName ),
 					context->get<V2i>( ImagePlug::tileOriginContextName ),
 					context
 				)
@@ -574,8 +572,17 @@ void Warp::compute( Gaffer::ValuePlug *output, const Gaffer::Context *context ) 
 
 void Warp::hashChannelData( const GafferImage::ImagePlug *parent, const Gaffer::Context *context, IECore::MurmurHash &h ) const
 {
-	IECore::MurmurHash sampleRegionsHash = sampleRegionsPlug()->hash();
-	ConstCompoundObjectPtr sampleRegions = sampleRegionsPlug()->getValue( &sampleRegionsHash );
+	IECore::MurmurHash sampleRegionsHash;
+	ConstCompoundObjectPtr sampleRegions;
+
+	{
+		Gaffer::ContextPtr sampleRegionsContext = new Gaffer::Context( *context, Gaffer::Context::Borrowed );
+		sampleRegionsContext->remove( ImagePlug::channelNameContextName );
+		Gaffer::Context::Scope sampleRegionsScope( sampleRegionsContext.get() );
+		sampleRegionsHash = sampleRegionsPlug()->hash();
+		sampleRegions = sampleRegionsPlug()->getValue( &sampleRegionsHash );
+	}
+
 	if( sampleRegions.get() == sampleRegionsEmptyTile())
 	{
 		h = ImagePlug::blackTile()->Object::hash();
@@ -602,7 +609,15 @@ void Warp::hashChannelData( const GafferImage::ImagePlug *parent, const Gaffer::
 
 IECore::ConstFloatVectorDataPtr Warp::computeChannelData( const std::string &channelName, const Imath::V2i &tileOrigin, const Gaffer::Context *context, const ImagePlug *parent ) const
 {
-	ConstCompoundObjectPtr sampleRegions = sampleRegionsPlug()->getValue();
+	ConstCompoundObjectPtr sampleRegions;
+
+	{
+		Gaffer::ContextPtr sampleRegionsContext = new Gaffer::Context( *context, Gaffer::Context::Borrowed );
+		sampleRegionsContext->remove( ImagePlug::channelNameContextName );
+		Gaffer::Context::Scope sampleRegionsScope( sampleRegionsContext.get() );
+		sampleRegions = sampleRegionsPlug()->getValue();
+	}
+
 	if( sampleRegions.get() == sampleRegionsEmptyTile())
 	{
 		return ImagePlug::blackTile();
@@ -658,7 +673,7 @@ bool  Warp::affectsEngine( const Gaffer::Plug *input ) const
 	return false;
 }
 
-void Warp::hashEngine( const std::string &channelName, const Imath::V2i &tileOrigin, const Gaffer::Context *context, IECore::MurmurHash &h ) const
+void Warp::hashEngine( const Imath::V2i &tileOrigin, const Gaffer::Context *context, IECore::MurmurHash &h ) const
 {
 	ImageProcessor::hash( enginePlug(), context, h );
 }
