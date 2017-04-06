@@ -144,7 +144,7 @@ void ArnoldDisplacement::affects( const Gaffer::Plug *input, AffectedPlugsContai
 	}
 }
 
-void ArnoldDisplacement::attributesHash( IECore::MurmurHash &h ) const
+void ArnoldDisplacement::attributesHash( IECore::MurmurHash &h, const Gaffer::Plug *output ) const
 {
 	h.append( typeId() );
 	if( !enabledPlug()->getValue() )
@@ -159,7 +159,7 @@ void ArnoldDisplacement::attributesHash( IECore::MurmurHash &h ) const
 	autoBumpPlug()->hash( h );
 }
 
-IECore::ConstCompoundObjectPtr ArnoldDisplacement::attributes() const
+IECore::ConstCompoundObjectPtr ArnoldDisplacement::attributes( const Gaffer::Plug *output ) const
 {
 	CompoundObjectPtr result = new CompoundObject;
 	if( !enabledPlug()->getValue() )

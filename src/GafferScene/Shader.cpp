@@ -150,14 +150,14 @@ class Shader::NetworkBuilder
 
 	public :
 
-		NetworkBuilder( const Shader *rootNode )
-			:	m_rootNode( rootNode ), m_handleCount( 0 )
+		NetworkBuilder( const Gaffer::Plug *output )
+			:	m_output( output ), m_handleCount( 0 )
 		{
 		}
 
 		IECore::MurmurHash stateHash()
 		{
-			if( const Gaffer::Plug *p = effectiveParameter( m_rootNode->outPlug() ) )
+			if( const Gaffer::Plug *p = effectiveParameter( m_output ) )
 			{
 				if( isOutputParameter( p ) )
 				{
@@ -173,7 +173,7 @@ class Shader::NetworkBuilder
 			if( !m_state )
 			{
 				m_state = new IECore::ObjectVector;
-				if( const Gaffer::Plug *p = effectiveParameter( m_rootNode->outPlug() ) )
+				if( const Gaffer::Plug *p = effectiveParameter( m_output ) )
 				{
 					if( isOutputParameter( p ) )
 					{
@@ -488,7 +488,7 @@ class Shader::NetworkBuilder
 			return resultData;
 		}
 
-		const Shader *m_rootNode;
+		const Plug *m_output;
 		IECore::ObjectVectorPtr m_state;
 
 		struct ShaderAndHash
@@ -617,14 +617,24 @@ IECore::MurmurHash Shader::attributesHash() const
 
 void Shader::attributesHash( IECore::MurmurHash &h ) const
 {
-	NetworkBuilder networkBuilder( this );
-	h.append( networkBuilder.stateHash() );
+	attributesHash( outPlug(), h );
 }
 
 IECore::ConstCompoundObjectPtr Shader::attributes() const
 {
+	return attributes( outPlug() );
+}
+
+void Shader::attributesHash( const Gaffer::Plug *output, IECore::MurmurHash &h ) const
+{
+	NetworkBuilder networkBuilder( output );
+	h.append( networkBuilder.stateHash() );
+}
+
+IECore::ConstCompoundObjectPtr Shader::attributes( const Gaffer::Plug *output ) const
+{
 	IECore::CompoundObjectPtr result = new IECore::CompoundObject;
-	NetworkBuilder networkBuilder( this );
+	NetworkBuilder networkBuilder( output );
 	if( !networkBuilder.state()->members().empty() )
 	{
 		result->members()[typePlug()->getValue()] = boost::const_pointer_cast<IECore::ObjectVector>(
@@ -636,7 +646,7 @@ IECore::ConstCompoundObjectPtr Shader::attributes() const
 
 IECore::MurmurHash Shader::stateHash() const
 {
-	NetworkBuilder networkBuilder( this );
+	NetworkBuilder networkBuilder( outPlug() );
 	return networkBuilder.stateHash();
 }
 
@@ -647,7 +657,7 @@ void Shader::stateHash( IECore::MurmurHash &h ) const
 
 IECore::ConstObjectVectorPtr Shader::state() const
 {
-	NetworkBuilder networkBuilder( this );
+	NetworkBuilder networkBuilder( outPlug() );
 	return networkBuilder.state();
 }
 

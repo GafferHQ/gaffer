@@ -857,5 +857,52 @@ class OSLShaderTest( GafferOSLTest.OSLTestCase ) :
 		self.assertEqual( len( network ), 1 )
 		self.assertEqual( network[0].parameters["a"].value, IECore.V3f( 12, 11, 10 ) )
 
+	def testDisabledShaderEvaluatesStateCorrectly( self ) :
+
+		redShader = self.compileShader( os.path.dirname( __file__ ) + "/shaders/red.osl" )
+		greenShader = self.compileShader( os.path.dirname( __file__ ) + "/shaders/green.osl" )
+
+		n2 = GafferOSL.OSLShader( "red1" )
+		n2.loadShader( redShader )
+
+		n3 = GafferOSL.OSLShader( "green1" )
+		n3.loadShader( greenShader )
+
+		n1 = GafferOSL.OSLShader( "add" )
+		n1.loadShader( self.compileShader( os.path.dirname( __file__ ) + "/shaders/add.osl" ) )
+
+		n1['parameters']['a'].setInput(n2["out"]["out"])
+		n1['parameters']['b'].setInput(n3["out"]["out"])
+
+		sphere = GafferScene.Sphere()
+
+		shaderAssignment  = GafferScene.ShaderAssignment()
+		shaderAssignment["in"].setInput(sphere["out"])
+
+		pathFilter = GafferScene.PathFilter()
+		pathFilter["paths"].setValue( IECore.StringVectorData( [ "/sphere" ] ) )
+
+		shaderAssignment["filter"].setInput(pathFilter["out"])
+		shaderAssignment["shader"].setInput(n1["out"]["out"])
+
+		attributes = shaderAssignment['out'].attributes("/sphere")
+		shader = attributes["osl:shader"]
+
+		self.assertEqual( len( shader ), 3 )
+
+		self.assertEqual( shader[0].name.split('/')[-1], "red")
+		self.assertEqual( shader[1].name.split('/')[-1], "green")
+		self.assertEqual( shader[2].name.split('/')[-1], "add")
+
+		# when we disable the add shader we should get the pass through parameter's ('a') shader (n2)
+		n1["enabled"].setValue(False)
+
+		attributes = shaderAssignment['out'].attributes("/sphere")
+		shader = attributes["osl:shader"]
+
+		self.assertEqual( len ( shader ), 1 )
+
+		self.assertEqual( shader[0].name.split('/')[-1], "red")
+
 if __name__ == "__main__":
 	unittest.main()
