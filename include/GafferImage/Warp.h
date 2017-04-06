@@ -43,8 +43,6 @@
 
 #include "GafferImage/ImageProcessor.h"
 
-#include "GafferImage/Sampler.h"
-
 namespace GafferImage
 {
 
