@@ -55,6 +55,12 @@ namespace
 	static IECore::InternedString g_tileInputBoundName( "tileInputBound"  );
 	static IECore::InternedString g_pixelInputPositionsName( "pixelInputPositions"  );
 	static IECore::InternedString g_pixelInputDerivativesName( "pixelInputDerivatives"  );
+
+	const CompoundObject *sampleRegionsEmptyTile()
+	{
+		static ConstCompoundObjectPtr g_sampleRegionsEmptyTile( new CompoundObject() );
+		return g_sampleRegionsEmptyTile.get();
+	}
 }
 
 float Warp::approximateDerivative( float upper, float center, float lower )
@@ -355,6 +361,44 @@ void Warp::compute( Gaffer::ValuePlug *output, const Gaffer::Context *context ) 
 		const Engine *engine = engineData->engine;
 
 
+		// Start by testing if the tile is completely empty
+		// We abort this test on the first valid position returned from the engine, but
+		// worst case, we could traverse the whole tile, only to find one valid pixel in
+		// the last corner we check, and then we will have to revisit the whole tile below.
+		// It's still a definite performance win, because in the common cases we usually
+		// either abort this test quickly, or we are actually in an invalid tile, and noticing
+		// this as soon as possible is a big win.
+		bool emptyTile = true;
+		for( int y = 0; y < ImagePlug::tileSize(); ++y )
+		{
+			for( int x = 0; x < ImagePlug::tileSize(); ++x )
+			{
+				if( BufferAlgo::contains( dataWindow, V2i( tileOrigin.x + x, tileOrigin.y + y ) ) )
+				{
+					V2f inputPosition = engine->inputPixel( V2f(
+						( tileOrigin.x + x ) + 0.5,
+						( tileOrigin.y + y ) + 0.5 )
+					);
+
+					if( inputPosition != Engine::black )
+					{
+						emptyTile = false;
+						break;
+					}
+				}
+			}
+			if( !emptyTile )
+			{
+				break;
+			}
+		}
+
+		if( emptyTile )
+		{
+			static_cast<CompoundObjectPlug *>( output )->setValue( sampleRegionsEmptyTile() );
+			return;
+		}
+
 		Box2f inputBound;
 
 		V2fVectorDataPtr pixelInputPositionsData = new V2fVectorData();
@@ -522,6 +566,7 @@ void Warp::compute( Gaffer::ValuePlug *output, const Gaffer::Context *context ) 
 		sampleRegions->members()[ g_pixelInputPositionsName ] = pixelInputPositionsData;
 		sampleRegions->members()[ g_pixelInputDerivativesName ] = pixelInputDerivativesData;
 		static_cast<CompoundObjectPlug *>( output )->setValue( sampleRegions );
+		return;
 	}
 
 	ImageProcessor::compute( output, context );
@@ -529,10 +574,16 @@ void Warp::compute( Gaffer::ValuePlug *output, const Gaffer::Context *context ) 
 
 void Warp::hashChannelData( const GafferImage::ImagePlug *parent, const Gaffer::Context *context, IECore::MurmurHash &h ) const
 {
-	ImageProcessor::hashChannelData( parent, context, h );
-
 	IECore::MurmurHash sampleRegionsHash = sampleRegionsPlug()->hash();
 	ConstCompoundObjectPtr sampleRegions = sampleRegionsPlug()->getValue( &sampleRegionsHash );
+	if( sampleRegions.get() == sampleRegionsEmptyTile())
+	{
+		h = ImagePlug::blackTile()->Object::hash();
+		return;
+	}
+
+	ImageProcessor::hashChannelData( parent, context, h );
+
 	h.append( sampleRegionsHash );
 
 	const Box2i &tileInputBound = sampleRegions->member< Box2iData >( g_tileInputBoundName, true )->readable();
@@ -551,13 +602,18 @@ void Warp::hashChannelData( const GafferImage::ImagePlug *parent, const Gaffer::
 
 IECore::ConstFloatVectorDataPtr Warp::computeChannelData( const std::string &channelName, const Imath::V2i &tileOrigin, const Gaffer::Context *context, const ImagePlug *parent ) const
 {
+	ConstCompoundObjectPtr sampleRegions = sampleRegionsPlug()->getValue();
+	if( sampleRegions.get() == sampleRegionsEmptyTile())
+	{
+		return ImagePlug::blackTile();
+	}
+
 	FloatVectorDataPtr resultData = new FloatVectorData;
 	vector<float> &result = resultData->writable();
 	result.reserve( ImagePlug::tileSize() * ImagePlug::tileSize() );
 
 	const OIIO::Filter2D *filter = FilterAlgo::acquireFilter( filterPlug()->getValue() );
 
-	ConstCompoundObjectPtr sampleRegions = sampleRegionsPlug()->getValue();
 
 	const Box2i &tileInputBound = sampleRegions->member< Box2iData >( g_tileInputBoundName, true )->readable();
 	const std::vector<V2f> &pixelInputPositions = sampleRegions->member< V2fVectorData >( g_pixelInputPositionsName, true )->readable();
