@@ -49,6 +49,7 @@ void GafferBindings::bindTypedObjectPlug()
 	GafferBindings::TypedObjectPlugClass<Gaffer::FloatVectorDataPlug>();
 	GafferBindings::TypedObjectPlugClass<Gaffer::StringVectorDataPlug>();
 	GafferBindings::TypedObjectPlugClass<Gaffer::InternedStringVectorDataPlug>();
+	GafferBindings::TypedObjectPlugClass<Gaffer::V2iVectorDataPlug>();
 	GafferBindings::TypedObjectPlugClass<Gaffer::V3fVectorDataPlug>();
 	GafferBindings::TypedObjectPlugClass<Gaffer::Color3fVectorDataPlug>();
 	GafferBindings::TypedObjectPlugClass<Gaffer::M44fVectorDataPlug>();

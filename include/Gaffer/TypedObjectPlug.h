@@ -123,6 +123,7 @@ typedef TypedObjectPlug<IECore::IntVectorData> IntVectorDataPlug;
 typedef TypedObjectPlug<IECore::FloatVectorData> FloatVectorDataPlug;
 typedef TypedObjectPlug<IECore::StringVectorData> StringVectorDataPlug;
 typedef TypedObjectPlug<IECore::InternedStringVectorData> InternedStringVectorDataPlug;
+typedef TypedObjectPlug<IECore::V2iVectorData> V2iVectorDataPlug;
 typedef TypedObjectPlug<IECore::V3fVectorData> V3fVectorDataPlug;
 typedef TypedObjectPlug<IECore::Color3fVectorData> Color3fVectorDataPlug;
 typedef TypedObjectPlug<IECore::M44fVectorData> M44fVectorDataPlug;
@@ -135,6 +136,7 @@ IE_CORE_DECLAREPTR( IntVectorDataPlug );
 IE_CORE_DECLAREPTR( FloatVectorDataPlug );
 IE_CORE_DECLAREPTR( StringVectorDataPlug );
 IE_CORE_DECLAREPTR( InternedStringVectorDataPlug );
+IE_CORE_DECLAREPTR( V2iVectorDataPlug );
 IE_CORE_DECLAREPTR( V3fVectorDataPlug );
 IE_CORE_DECLAREPTR( Color3fVectorDataPlug );
 IE_CORE_DECLAREPTR( M44fVectorDataPlug );
@@ -164,6 +166,10 @@ typedef FilteredChildIterator<PlugPredicate<Plug::Out, StringVectorDataPlug> > O
 typedef FilteredChildIterator<PlugPredicate<Plug::Invalid, InternedStringVectorDataPlug> > InternedStringVectorDataPlugIterator;
 typedef FilteredChildIterator<PlugPredicate<Plug::In, InternedStringVectorDataPlug> > InputInternedStringVectorDataPlugIterator;
 typedef FilteredChildIterator<PlugPredicate<Plug::Out, InternedStringVectorDataPlug> > OutputInternedStringVectorDataPlugIterator;
+
+typedef FilteredChildIterator<PlugPredicate<Plug::Invalid, V2iVectorDataPlug> > V2iVectorDataPlugIterator;
+typedef FilteredChildIterator<PlugPredicate<Plug::In, V2iVectorDataPlug> > InputV2iVectorDataPlugIterator;
+typedef FilteredChildIterator<PlugPredicate<Plug::Out, V2iVectorDataPlug> > OutputV2iVectorDataPlugIterator;
 
 typedef FilteredChildIterator<PlugPredicate<Plug::Invalid, V3fVectorDataPlug> > V3fVectorDataPlugIterator;
 typedef FilteredChildIterator<PlugPredicate<Plug::In, V3fVectorDataPlug> > InputV3fVectorDataPlugIterator;
@@ -208,6 +214,10 @@ typedef FilteredRecursiveChildIterator<PlugPredicate<Plug::Out, StringVectorData
 typedef FilteredRecursiveChildIterator<PlugPredicate<Plug::Invalid, InternedStringVectorDataPlug>, PlugPredicate<> > RecursiveInternedStringVectorDataPlugIterator;
 typedef FilteredRecursiveChildIterator<PlugPredicate<Plug::In, InternedStringVectorDataPlug>, PlugPredicate<> > RecursiveInputInternedStringVectorDataPlugIterator;
 typedef FilteredRecursiveChildIterator<PlugPredicate<Plug::Out, InternedStringVectorDataPlug>, PlugPredicate<> > RecursiveOutputInternedStringVectorDataPlugIterator;
+
+typedef FilteredRecursiveChildIterator<PlugPredicate<Plug::Invalid, V2iVectorDataPlug>, PlugPredicate<> > RecursiveV2iVectorDataPlugIterator;
+typedef FilteredRecursiveChildIterator<PlugPredicate<Plug::In, V2iVectorDataPlug>, PlugPredicate<> > RecursiveInputV2iVectorDataPlugIterator;
+typedef FilteredRecursiveChildIterator<PlugPredicate<Plug::Out, V2iVectorDataPlug>, PlugPredicate<> > RecursiveOutputV2iVectorDataPlugIterator;
 
 typedef FilteredRecursiveChildIterator<PlugPredicate<Plug::Invalid, V3fVectorDataPlug>, PlugPredicate<> > RecursiveV3fVectorDataPlugIterator;
 typedef FilteredRecursiveChildIterator<PlugPredicate<Plug::In, V3fVectorDataPlug>, PlugPredicate<> > RecursiveInputV3fVectorDataPlugIterator;
