@@ -528,6 +528,39 @@ Context::Scope::~Scope()
 	}
 }
 
+Context::EditableScope::EditableScope( const Context *context )
+	:	m_context( new Context( *context, Borrowed ) )
+{
+	ContextStack &stack = g_threadContexts.local();
+	stack.push( m_context.get() );
+}
+
+Context::EditableScope::~EditableScope()
+{
+	ContextStack &stack = g_threadContexts.local();
+	stack.pop();
+}
+
+void Context::EditableScope::setFrame( float frame )
+{
+	m_context->setFrame( frame );
+}
+
+void Context::EditableScope::setFramesPerSecond( float framesPerSecond )
+{
+	m_context->setFramesPerSecond( framesPerSecond );
+}
+
+void Context::EditableScope::setTime( float timeInSeconds )
+{
+	m_context->setTime( timeInSeconds );
+}
+
+void Context::EditableScope::remove( const IECore::InternedString &name )
+{
+	m_context->remove( name );
+}
+
 const Context *Context::current()
 {
 	ContextStack &stack = g_threadContexts.local();
