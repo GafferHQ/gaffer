@@ -168,9 +168,8 @@ namespace SceneAlgo
 template <class ThreadableFunctor>
 void parallelTraverse( const GafferScene::ScenePlug *scene, ThreadableFunctor &f )
 {
-	Gaffer::ContextPtr c = new Gaffer::Context( *Gaffer::Context::current(), Gaffer::Context::Borrowed );
-	GafferScene::Filter::setInputScene( c.get(), scene );
-	Detail::TraverseTask<ThreadableFunctor> *task = new( tbb::task::allocate_root() ) Detail::TraverseTask<ThreadableFunctor>( scene, c.get(), f );
+	FilterPlug::SceneScope sceneScope( Gaffer::Context::current(), scene );
+	Detail::TraverseTask<ThreadableFunctor> *task = new( tbb::task::allocate_root() ) Detail::TraverseTask<ThreadableFunctor>( scene, Gaffer::Context::current(), f );
 	tbb::task::spawn_root_and_wait( *task );
 }
 

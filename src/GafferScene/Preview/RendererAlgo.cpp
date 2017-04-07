@@ -157,9 +157,8 @@ class LocationTask : public tbb::task
 template <class Functor>
 void parallelProcessLocations( const GafferScene::ScenePlug *scene, Functor &f )
 {
-	Gaffer::ContextPtr c = new Gaffer::Context( *Gaffer::Context::current(), Gaffer::Context::Borrowed );
-	GafferScene::Filter::setInputScene( c.get(), scene );
-	LocationTask<Functor> *task = new( tbb::task::allocate_root() ) LocationTask<Functor>( scene, c.get(), ScenePlug::ScenePath(), f );
+	FilterPlug::SceneScope sceneScope( Gaffer::Context::current(), scene );
+	LocationTask<Functor> *task = new( tbb::task::allocate_root() ) LocationTask<Functor>( scene, Gaffer::Context::current(), ScenePlug::ScenePath(), f );
 	tbb::task::spawn_root_and_wait( *task );
 }
 
