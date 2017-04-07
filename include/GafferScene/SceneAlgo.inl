@@ -64,10 +64,7 @@ class TraverseTask : public tbb::task
 
 		virtual task *execute()
 		{
-
-			Gaffer::ContextPtr context = new Gaffer::Context( *m_context, Gaffer::Context::Borrowed );
-			context->set( ScenePlug::scenePathContextName, m_path );
-			Gaffer::Context::Scope scopedContext( context.get() );
+			ScenePlug::PathScope pathScope( m_context, m_path );
 
 			if( m_f( m_scene, m_path ) )
 			{

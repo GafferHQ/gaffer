@@ -555,9 +555,7 @@ class InteractiveRender::SceneGraphUpdateTask : public tbb::task
 			// Set up a context to compute the scene at the right
 			// location.
 
-			ContextPtr context = new Context( *m_context, Context::Borrowed );
-			context->set( ScenePlug::scenePathContextName, m_scenePath );
-			Context::Scope scopedContext( context.get() );
+			ScenePlug::PathScope pathScope( m_context, m_scenePath );
 
 			// Update the scene graph at this location.
 

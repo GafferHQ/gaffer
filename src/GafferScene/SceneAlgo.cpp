@@ -62,13 +62,12 @@ using namespace GafferScene;
 
 bool GafferScene::SceneAlgo::exists( const ScenePlug *scene, const ScenePlug::ScenePath &path )
 {
-	ContextPtr context = new Context( *Context::current(), Context::Borrowed );
-	Context::Scope scopedContext( context.get() );
+	ScenePlug::PathScope pathScope( Context::current() );
 
 	ScenePlug::ScenePath p; p.reserve( path.size() );
 	for( ScenePlug::ScenePath::const_iterator it = path.begin(), eIt = path.end(); it != eIt; ++it )
 	{
-		context->set( ScenePlug::scenePathContextName, p );
+		pathScope.setPath( p );
 		ConstInternedStringVectorDataPtr childNamesData = scene->childNamesPlug()->getValue();
 		const vector<InternedString> &childNames = childNamesData->readable();
 		if( find( childNames.begin(), childNames.end(), *it ) == childNames.end() )
@@ -83,14 +82,13 @@ bool GafferScene::SceneAlgo::exists( const ScenePlug *scene, const ScenePlug::Sc
 
 bool GafferScene::SceneAlgo::visible( const ScenePlug *scene, const ScenePlug::ScenePath &path )
 {
-	ContextPtr context = new Context( *Context::current(), Context::Borrowed );
-	Context::Scope scopedContext( context.get() );
+	ScenePlug::PathScope pathScope( Context::current() );
 
 	ScenePlug::ScenePath p; p.reserve( path.size() );
 	for( ScenePlug::ScenePath::const_iterator it = path.begin(), eIt = path.end(); it != eIt; ++it )
 	{
 		p.push_back( *it );
-		context->set( ScenePlug::scenePathContextName, p );
+		pathScope.setPath( p );
 
 		ConstCompoundObjectPtr attributes = scene->attributesPlug()->getValue();
 		const BoolData *visibilityData = attributes->member<BoolData>( "scene:visible" );
@@ -203,12 +201,11 @@ IECore::TransformPtr GafferScene::SceneAlgo::transform( const ScenePlug *scene, 
 	}
 
 	MatrixMotionTransformPtr result = new MatrixMotionTransform();
-	ContextPtr transformContext = new Context( *Context::current(), Context::Borrowed );
-	Context::Scope scopedContext( transformContext.get() );
+	Context::EditableScope timeScope( Context::current() );
 	for( int i = 0; i < numSamples; i++ )
 	{
 		float frame = lerp( shutter[0], shutter[1], (float)i / std::max( 1, numSamples - 1 ) );
-		transformContext->setFrame( frame );
+		timeScope.setFrame( frame );
 		result->snapshots()[frame] = scene->fullTransform( path );
 	}
 

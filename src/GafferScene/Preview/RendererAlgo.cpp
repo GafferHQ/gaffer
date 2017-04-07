@@ -90,9 +90,7 @@ class LocationTask : public tbb::task
 
 		virtual task *execute()
 		{
-			Gaffer::ContextPtr context = new Gaffer::Context( *m_context, Gaffer::Context::Borrowed );
-			context->set( ScenePlug::scenePathContextName, m_path );
-			Gaffer::Context::Scope scopedContext( context.get() );
+			ScenePlug::PathScope pathScope( m_context, m_path );
 
 			if( !m_f( m_scene, m_path ) )
 			{
@@ -206,8 +204,7 @@ struct RenderSets::Updater
 
 	void operator()( const tbb::blocked_range<size_t> &r )
 	{
-		ContextPtr context = new Context( *m_context, Context::Borrowed );
-		Context::Scope scopedContext( context.get() );
+		ScenePlug::SetScope setScope( m_context );
 
 		for( size_t i=r.begin(); i!=r.end(); ++i )
 		{
@@ -235,7 +232,7 @@ struct RenderSets::Updater
 				potentialChange = LightsSetChanged;
 			}
 
-			context->set( ScenePlug::setNameContextName, n );
+			setScope.setSetName( n );
 			const IECore::MurmurHash &hash = m_scene->setPlug()->hash();
 			if( s->hash != hash )
 			{
