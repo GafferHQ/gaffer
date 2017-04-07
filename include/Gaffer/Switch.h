@@ -162,6 +162,7 @@ struct SwitchTraits
 	/// A class which will be instantiated as
 	/// `IndexContext indexContext( Context::current() )`
 	/// to modify the context when evaluating the switch index.
+	/// \todo Rename to IndexScope.
 	typedef Detail::IdentityContext IndexContext;
 
 };
