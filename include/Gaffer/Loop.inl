@@ -189,9 +189,8 @@ void Loop<BaseType>::hash( const ValuePlug *output, const Context *context, IECo
 	{
 		if( index >= 0 )
 		{
-			ContextPtr tmpContext = new Context( *context, Context::Borrowed );
-			tmpContext->set<int>( indexVariable, index );
-			Context::Scope scopedContext( tmpContext.get() );
+			Context::EditableScope tmpContext( context );
+			tmpContext.set<int>( indexVariable, index );
 			h = plug->hash();
 		}
 		else
@@ -213,9 +212,8 @@ void Loop<BaseType>::compute( ValuePlug *output, const Context *context ) const
 	{
 		if( index >= 0 )
 		{
-			ContextPtr tmpContext = new Context( *context, Context::Borrowed );
-			tmpContext->set<int>( indexVariable, index );
-			Context::Scope scopedContext( tmpContext.get() );
+			Context::EditableScope tmpContext( context );
+			tmpContext.set<int>( indexVariable, index );
 			output->setFrom( plug );
 		}
 		else
