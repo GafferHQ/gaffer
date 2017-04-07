@@ -79,6 +79,7 @@ class ContextProcessor : public BaseType
 		void appendAffectedPlugs( DependencyNode::AffectedPlugsContainer &outputs ) const;
 
 		/// Must be implemented to modify context in place.
+		/// \todo Pass `EditableScope` here in place of `Context`.
 		virtual void processContext( Context *context ) const = 0;
 
 	private :
