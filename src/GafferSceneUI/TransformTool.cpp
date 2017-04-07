@@ -421,11 +421,9 @@ void TransformTool::updateSelection() const
 	CapturingMonitor monitor;
 	{
 		Monitor::Scope scopedMonitor( &monitor );
-		ContextPtr tmpContext = new Context( *(view()->getContext()), Context::Borrowed );
-		Context::Scope scopedContext( tmpContext.get() );
-		tmpContext->set( ScenePlug::scenePathContextName, newSelection.path );
+		ScenePlug::PathScope pathScope( view()->getContext(), newSelection.path );
 		// Trick to bypass the hash cache and get a full upstream evaluation.
-		tmpContext->set( g_contextUniquefierName, g_contextUniquefierValue++ );
+		pathScope.set( g_contextUniquefierName, g_contextUniquefierValue++ );
 		scenePlug()->transformPlug()->hash();
 	}
 
