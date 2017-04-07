@@ -856,7 +856,7 @@ class ArnoldRenderTest( GafferSceneTest.SceneTestCase ) :
 		group["in"]["in1"].setInput( attributes["out"] )
 		group["in"]["in2"].setInput( light1["out"] )
 		group["in"]["in3"].setInput( light2["out"] )
-		group["in"]["in3"].setInput( sphere2["out"] )
+		group["in"]["in4"].setInput( sphere2["out"] )
 		evaluate["in"].setInput( group["out"] )
 		render["in"].setInput( evaluate["out"] )
 
@@ -865,8 +865,8 @@ class ArnoldRenderTest( GafferSceneTest.SceneTestCase ) :
 
 		# make sure we pass correct data into the renderer
 		self.assertEqual(
-			render["in"].attributes( "/group/sphere" )["linkedLights"],
-			IECore.StringVectorData( ["/group/light", "/group/light1"] ) )
+			set( render["in"].attributes( "/group/sphere" )["linkedLights"] ),
+			set( IECore.StringVectorData( ["/group/light", "/group/light1"] ) ) )
 
 		render["mode"].setValue( render.Mode.SceneDescriptionMode )
 		render["fileName"].setValue( self.temporaryDirectory() + "/test.ass" )
@@ -877,7 +877,20 @@ class ArnoldRenderTest( GafferSceneTest.SceneTestCase ) :
 			arnold.AiASSLoad( self.temporaryDirectory() + "/test.ass" )
 
 			# the first sphere had linked lights
-			sphere1 = arnold.AiNodeLookUpByName( "/group/sphere" )
+			sphere = arnold.AiNodeLookUpByName( "/group/sphere" )
+			lights = arnold.AiNodeGetArray( sphere, "light_group" )
+			lightNames = []
+			for i in range(lights.contents.nelements):
+				light = arnold.cast(arnold.AiArrayGetPtr(lights, i), arnold.POINTER(arnold.AtNode))
+				lightNames.append( arnold.AiNodeGetName(light.contents)  )
+
+			doLinking = arnold.AiNodeGetBool( sphere, "use_light_group" )
+
+			self.assertEqual( lightNames, ["light:/group/light", "light:/group/light1"] )
+			self.assertEqual( doLinking, True )
+
+			# the second sphere does not have any light linking enabled
+			sphere1 = arnold.AiNodeLookUpByName( "/group/sphere1" )
 			lights = arnold.AiNodeGetArray( sphere1, "light_group" )
 			lightNames = []
 			for i in range(lights.contents.nelements):
@@ -885,19 +898,6 @@ class ArnoldRenderTest( GafferSceneTest.SceneTestCase ) :
 				lightNames.append( arnold.AiNodeGetName(light.contents)  )
 
 			doLinking = arnold.AiNodeGetBool( sphere1, "use_light_group" )
-
-			self.assertEqual( lightNames, ["light:/group/light", "light:/group/light1"] )
-			self.assertEqual( doLinking, True )
-
-			# the second sphere does not have any light linking enabled
-			sphere2 = arnold.AiNodeLookUpByName( "/group/sphere2" )
-			lights = arnold.AiNodeGetArray( sphere1, "light_group" )
-			lightNames = []
-			for i in range(lights.contents.nelements):
-				light = arnold.cast(arnold.AiArrayGetPtr(lights, i), arnold.POINTER(arnold.AtNode))
-				lightNames.append( arnold.AiNodeGetName(light.contents)  )
-
-			doLinking = arnold.AiNodeGetBool( sphere2, "use_light_group" )
 
 			self.assertEqual( lightNames, [] )
 			self.assertEqual( doLinking, False )
