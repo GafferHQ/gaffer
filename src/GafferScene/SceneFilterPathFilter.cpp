@@ -82,7 +82,7 @@ struct SceneFilterPathFilter::Remove
 		if( m_baseContext != pathContext )
 		{
 			m_baseContext = pathContext;
-			m_context = new Gaffer::Context( *pathContext, Gaffer::Context::Borrowed );
+			m_context = new Gaffer::Context( *pathContext );
 		}
 
 		// Set context up so we can evaluate the scene filter, and return

@@ -821,7 +821,7 @@ void InteractiveRender::update()
 	const std::string rendererName = rendererPlug()->getValue();
 
 	updateEffectiveContext();
-	ContextPtr context = new Context( *m_effectiveContext, Context::Borrowed );
+	ContextPtr context = new Context( *m_effectiveContext );
 	context->set( g_rendererContextName, rendererName );
 	Context::Scope scopedContext( context.get() );
 

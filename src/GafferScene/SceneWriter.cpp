@@ -130,7 +130,7 @@ void SceneWriter::executeSequence( const std::vector<float> &frames ) const
 		throw IECore::Exception( "No input scene" );
 	}
 
-	ContextPtr context = new Context( *Context::current(), Context::Borrowed );
+	ContextPtr context = new Context( *Context::current() );
 	Context::Scope scopedContext( context.get() );
 
 	const std::string fileName = fileNamePlug()->getValue();
