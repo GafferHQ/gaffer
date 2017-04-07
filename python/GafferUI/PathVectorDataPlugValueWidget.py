@@ -40,20 +40,34 @@ from __future__ import with_statement
 import Gaffer
 import GafferUI
 
+## Supported plug metadata - used to provide arguments to a
+# PathChooserDialogue :
+#
+# - "path:leaf"
+# - "path:valid"
+# - "path:bookmarks"
 class PathVectorDataPlugValueWidget( GafferUI.PlugValueWidget ) :
 
 	## path should be an instance of Gaffer.Path, optionally with
 	# filters applied. It will be used to convert string values to
 	# paths for the path uis to edit.
+	#
+	# \deprecated The pathChooserDialogueKeywords argument will be removed
+	# in a future version - use metadata instead.
 	def __init__( self, plug, path, pathChooserDialogueKeywords={}, **kw ) :
 
-		self.__dataWidget = GafferUI.PathVectorDataWidget( path=path, pathChooserDialogueKeywords=pathChooserDialogueKeywords )
+		self.__dataWidget = GafferUI.PathVectorDataWidget( path=path, pathChooserDialogueKeywords=Gaffer.WeakMethod( self.__pathChooserDialogueKeywords ) )
 
 		GafferUI.PlugValueWidget.__init__( self, self.__dataWidget, plug, **kw )
 
 		self.__dataChangedConnection = self.__dataWidget.dataChangedSignal().connect( Gaffer.WeakMethod( self.__dataChanged ) )
+		self.__deprecatedPathChooserDialogueKeywords = pathChooserDialogueKeywords
 
 		self._updateFromPlug()
+
+	def path( self ) :
+
+		return self.__dataWidget.path()
 
 	def _updateFromPlug( self ) :
 
@@ -69,3 +83,20 @@ class PathVectorDataPlugValueWidget( GafferUI.PlugValueWidget ) :
 		with Gaffer.UndoScope( self.getPlug().ancestor( Gaffer.ScriptNode ) ) :
 			with Gaffer.BlockedConnection( self._plugConnections() ) :
 				self.getPlug().setValue( self.__dataWidget.getData()[0] )
+
+	def __pathChooserDialogueKeywords( self ) :
+
+		result = {}
+		result["leaf"] = Gaffer.Metadata.value( self.getPlug(), "path:leaf" )
+		result["valid"] = Gaffer.Metadata.value( self.getPlug(), "path:valid" )
+
+		bookmarks = Gaffer.Metadata.value( self.getPlug(), "path:bookmarks" )
+		if bookmarks is not None :
+			result["bookmarks"] = GafferUI.Bookmarks.acquire( self.getPlug(), type( self.path() ), bookmarks )
+
+		if callable( self.__deprecatedPathChooserDialogueKeywords ) :
+			result.update( self.__deprecatedPathChooserDialogueKeywords() )
+		else :
+			result.update( self.__deprecatedPathChooserDialogueKeywords )
+
+		return result
