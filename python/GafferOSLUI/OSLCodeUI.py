@@ -387,7 +387,7 @@ def __plugPopupMenu( menuDefinition, plugValueWidget ) :
 			( "/Pattern/Periodic Noise", "noise( \"perlin\", p, period )" ),
 			( "/Pattern/Cell Noise", "cellnoise( p )" ),
 
-			( "/String/Length", "length( str )" ),
+			( "/String/Length", "strlen( str )" ),
 			( "/String/Format", "format( \"\", ... )" ),
 			( "/String/Join", "concat( str0, str1 )" ),
 			( "/String/Split", "split( str, results )" ),
