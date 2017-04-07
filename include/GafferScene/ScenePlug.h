@@ -177,7 +177,7 @@ class ScenePlug : public Gaffer::ValuePlug
 		IECore::ConstInternedStringVectorDataPtr childNames( const ScenePath &scenePath ) const;
 		/// Prefer this to bare `globalsPlug()->getValue()` calls when
 		/// accessing globals from within a per-location computation. It
-		/// uses GlobalScope to removes unnecessary context variables which
+		/// uses GlobalScope to remove unnecessary context variables which
 		/// could otherwise lead to poor cache performance.
 		IECore::ConstCompoundObjectPtr globals() const;
 		/// Prefer this to bare `setNamesPlug()->getValue()` calls when
