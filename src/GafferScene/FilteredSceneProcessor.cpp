@@ -95,14 +95,12 @@ Gaffer::ContextPtr FilteredSceneProcessor::filterContext( const Gaffer::Context 
 
 void FilteredSceneProcessor::filterHash( const Gaffer::Context *context, IECore::MurmurHash &h ) const
 {
-	ContextPtr c = filterContext( context );
-	Context::Scope s( c.get() );
+	FilterPlug::SceneScope sceneScope( context, inPlug() );
 	filterPlug()->hash( h );
 }
 
 Filter::Result FilteredSceneProcessor::filterValue( const Gaffer::Context *context ) const
 {
-	ContextPtr c = filterContext( context );
-	Context::Scope s( c.get() );
+	FilterPlug::SceneScope sceneScope( context, inPlug() );
 	return (Filter::Result)filterPlug()->getValue();
 }

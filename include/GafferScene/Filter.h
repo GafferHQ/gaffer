@@ -79,15 +79,11 @@ class Filter : public Gaffer::ComputeNode
 		virtual void affects( const Gaffer::Plug *input, AffectedPlugsContainer &outputs ) const;
 		virtual bool sceneAffectsMatch( const ScenePlug *scene, const Gaffer::ValuePlug *child ) const;
 
-		/// Because a single filter may be used with many different input scenes,
-		/// Filters require the input scene to be specified by a variable in the
-		/// Context. This method should be used to set the input scene before
-		/// querying the filter. It is the responsibility of the caller to ensure
-		/// that the scene plug remains alive for as long as the context is in use.
+		/// \deprecated Use FilterPlug::SceneScope instead.
 		static void setInputScene( Gaffer::Context *context, const ScenePlug *scenePlug );
-		/// Returns an input scene previously stored with setInputScene().
+		/// \deprecated
 		static const ScenePlug *getInputScene( const Gaffer::Context *context );
-		/// The name of the variable used to specify the input scene.
+		/// \deprecated Use FilterPlug::inputSceneContextName instead
 		static const IECore::InternedString inputSceneContextName;
 
 	protected :
