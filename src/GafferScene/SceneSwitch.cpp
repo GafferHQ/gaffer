@@ -38,36 +38,6 @@
 
 #include "GafferScene/SceneSwitch.h"
 
-using namespace GafferScene;
-
-namespace
-{
-
-/// \todo If we introduce a TemporaryContext base class in Context.h
-/// then this should derive from that. In fact, we might even define
-/// this publicly as GafferScene::GlobalContext and then we could also
-/// use it in ScenePlug::set() and other places we want to suppress the
-/// scene path.
-struct SceneSwitchIndexContext
-{
-
-	SceneSwitchIndexContext( const Gaffer::Context *context )
-		:	m_context( new Gaffer::Context( *context, Gaffer::Context::Borrowed ) ),
-			m_scopedContext( m_context.get() )
-	{
-		m_context->remove( ScenePlug::scenePathContextName );
-		m_context->remove( Filter::inputSceneContextName );
-	}
-
-	private :
-
-		Gaffer::ContextPtr m_context;
-		Gaffer::Context::Scope m_scopedContext;
-
-};
-
-} // namespace
-
 namespace Gaffer
 {
 
@@ -77,7 +47,7 @@ template<>
 struct SwitchTraits<GafferScene::SceneProcessor>
 {
 
-	typedef SceneSwitchIndexContext IndexContext;
+	typedef GafferScene::ScenePlug::GlobalScope IndexContext;
 
 };
 

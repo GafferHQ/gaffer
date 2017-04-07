@@ -206,9 +206,8 @@ void Render::execute() const
 		return;
 	}
 
-	ContextPtr rendererContext = new Context( *Context::current(), Context::Borrowed );
-	rendererContext->set( g_rendererContextName, rendererType );
-	Context::Scope rendererContextScope( rendererContext.get() );
+	Context::EditableScope rendererContext( Context::current() );
+	rendererContext.set( g_rendererContextName, rendererType );
 
 	const Mode mode = static_cast<Mode>( modePlug()->getValue() );
 	const std::string fileName = fileNamePlug()->getValue();
