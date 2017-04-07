@@ -211,6 +211,12 @@ typename Context::Accessor<T>::ResultType Context::get( const IECore::InternedSt
 	return Accessor<T>().get( it->second.data );
 }
 
+template<typename T>
+void Context::EditableScope::set( const IECore::InternedString &name, const T &value )
+{
+	m_context->set( name, value );
+}
+
 } // namespace Gaffer
 
 #endif // GAFFER_CONTEXT_INL

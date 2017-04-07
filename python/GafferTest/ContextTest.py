@@ -627,5 +627,9 @@ class ContextTest( GafferTest.TestCase ) :
 		self.assertEqual( c.getFramesPerSecond(), 48.0 )
 		self.assertAlmostEqual( c.getTime(), 12.0 / 48.0 )
 
+	def testEditableScope( self ) :
+
+		GafferTest.testEditableScope()
+
 if __name__ == "__main__":
 	unittest.main()
