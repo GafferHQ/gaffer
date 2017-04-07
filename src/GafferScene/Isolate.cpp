@@ -253,8 +253,7 @@ void Isolate::hashChildNames( const ScenePath &path, const Gaffer::Context *cont
 {
 	const SetsToKeep setsToKeep( this );
 
-	ContextPtr tmpContext = filterContext( context );
-	Context::Scope scopedContext( tmpContext.get() );
+	FilterPlug::SceneScope tmpContext( context, inPlug() );
 
 	if( mayPruneChildren( path, filterPlug()->getValue(), setsToKeep ) )
 	{
@@ -275,7 +274,7 @@ void Isolate::hashChildNames( const ScenePath &path, const Gaffer::Context *cont
 			const unsigned m = setsToKeep.match( childPath );
 			if( m == Filter::NoMatch )
 			{
-				tmpContext->set( ScenePlug::scenePathContextName, childPath );
+				tmpContext.set( ScenePlug::scenePathContextName, childPath );
 				filterPlug()->hash( h );
 			}
 			else
@@ -295,8 +294,7 @@ IECore::ConstInternedStringVectorDataPtr Isolate::computeChildNames( const Scene
 {
 	const SetsToKeep setsToKeep( this );
 
-	ContextPtr tmpContext = filterContext( context );
-	Context::Scope scopedContext( tmpContext.get() );
+	FilterPlug::SceneScope tmpContext( context, inPlug() );
 
 	if( mayPruneChildren( path, filterPlug()->getValue(), setsToKeep ) )
 	{
@@ -315,7 +313,7 @@ IECore::ConstInternedStringVectorDataPtr Isolate::computeChildNames( const Scene
 			unsigned m = setsToKeep.match( childPath );
 			if( m == Filter::NoMatch )
 			{
-				tmpContext->set( ScenePlug::scenePathContextName, childPath );
+				tmpContext.set( ScenePlug::scenePathContextName, childPath );
 				m |= filterPlug()->getValue();
 			}
 			if( m != Filter::NoMatch )
@@ -370,9 +368,8 @@ void Isolate::hashSet( const IECore::InternedString &setName, const Gaffer::Cont
 	// the same sets repeatedly.
 	//
 	// See further comments in acceptsInput()
-	ContextPtr c = filterContext( context );
-	c->remove( ScenePlug::scenePathContextName );
-	Context::Scope s( c.get() );
+	FilterPlug::SceneScope c( context, inPlug() );
+	c.remove( ScenePlug::scenePathContextName );
 	filterPlug()->hash( h );
 }
 
@@ -396,8 +393,7 @@ GafferScene::ConstPathMatcherDataPtr Isolate::computeSet( const IECore::Interned
 	PathMatcherDataPtr outputSetData = inputSetData->copy();
 	PathMatcher &outputSet = outputSetData->writable();
 
-	ContextPtr tmpContext = filterContext( context );
-	Context::Scope scopedContext( tmpContext.get() );
+	FilterPlug::SceneScope tmpContext( context, inPlug() );
 
 	const std::string fromString = fromPlug()->getValue();
 	ScenePlug::ScenePath fromPath; ScenePlug::stringToPath( fromString, fromPath );
@@ -406,7 +402,7 @@ GafferScene::ConstPathMatcherDataPtr Isolate::computeSet( const IECore::Interned
 
 	for( PathMatcher::RawIterator pIt = inputSet.begin(), peIt = inputSet.end(); pIt != peIt; )
 	{
-		tmpContext->set( ScenePlug::scenePathContextName, *pIt );
+		tmpContext.set( ScenePlug::scenePathContextName, *pIt );
 		const int m = filterPlug()->getValue() || setsToKeep.match( *pIt );
 		if( m & ( Filter::ExactMatch | Filter::AncestorMatch ) )
 		{
