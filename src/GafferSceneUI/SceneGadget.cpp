@@ -401,9 +401,7 @@ class SceneGadget::UpdateTask : public tbb::task
 
 		virtual task *execute()
 		{
-			ContextPtr context = new Context( *m_sceneGadget->m_context, Context::Borrowed );
-			context->set( ScenePlug::scenePathContextName, m_scenePath );
-			Context::Scope scopedContext( context.get() );
+			ScenePlug::PathScope pathScope( m_sceneGadget->m_context.get(), m_scenePath );
 
 			// Update attributes, and compute visibility.
 
