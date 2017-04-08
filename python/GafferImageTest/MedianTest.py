@@ -93,5 +93,53 @@ class MedianTest( GafferImageTest.ImageTestCase ) :
 			for x in range( dataWindow.min.x, dataWindow.max.x ) :
 				self.assertAlmostEqual( s.sample( x, y ), uMin + x * uStep, delta = 0.011 )
 
+	def testDriverChannel( self ) :
+
+		rRaw = GafferImage.ImageReader()
+		rRaw["fileName"].setValue( os.path.dirname( __file__ ) + "/images/circles.exr" )
+
+		r = GafferImage.Grade()
+		r["in"].setInput( rRaw["out"] )
+		# Trim off the noise in the blacks so that areas with no visible color are actually flat
+		r["blackPoint"].setValue( IECore.Color4f( 0.03 ) )
+
+
+		masterMedian = GafferImage.Median()
+		masterMedian["in"].setInput( r["out"] )
+		masterMedian["radius"].setValue( IECore.V2i( 2 ) )
+
+		masterMedian["masterChannel"].setValue( "G" )
+		
+		expected = GafferImage.ImageReader()
+		expected["fileName"].setValue( os.path.dirname( __file__ ) + "/images/circlesGreenMedian.exr" )
+
+		# Note that in this expected image, the green channel is nicely medianed, and red and blue are completely
+		# unchanged in areas where there is no green.  In areas where red and blue overlap with a noisy green,
+		# they get a bit scrambled.  This is why in practice, you would use something like luminance, rather
+		# than just the green channel
+		self.assertImagesEqual( masterMedian["out"], expected["out"], ignoreMetadata = True )
+
+		
+		defaultMedian = GafferImage.Median()
+		defaultMedian["in"].setInput( r["out"] )
+		defaultMedian["radius"].setValue( IECore.V2i( 2 ) )
+
+		masterMedianSingleChannel = GafferImage.DeleteChannels()
+		masterMedianSingleChannel["in"].setInput( masterMedian["out"] )
+		masterMedianSingleChannel["mode"].setValue( GafferImage.DeleteChannels.Mode.Keep )
+
+		defaultMedianSingleChannel = GafferImage.DeleteChannels()
+		defaultMedianSingleChannel["in"].setInput( defaultMedian["out"] )
+		defaultMedianSingleChannel["mode"].setValue( GafferImage.DeleteChannels.Mode.Keep )
+
+		for c in [ "R", "G", "B" ]:
+			masterMedian["masterChannel"].setValue( c )
+			masterMedianSingleChannel["channels"].setValue( c )
+			defaultMedianSingleChannel["channels"].setValue( c )
+
+			# When we look at just the channel being used as the master, it matches a default median not using
+			# a master
+			self.assertImagesEqual( masterMedianSingleChannel["out"], defaultMedianSingleChannel["out"] )
+
 if __name__ == "__main__":
 	unittest.main()

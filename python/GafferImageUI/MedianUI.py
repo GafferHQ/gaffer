@@ -34,6 +34,7 @@
 #
 ##########################################################################
 
+import IECore
 import Gaffer
 import GafferImage
 
@@ -89,6 +90,21 @@ Gaffer.Metadata.registerNode(
 			Expands the data window to include the external pixels
 			which the filter radius covers.
 			"""
+
+		],
+
+		"masterChannel" : [
+
+			"description",
+			"""
+			If specified, this channel will be used to compute the pixel index to select for all
+			channels.  You would probably want to use this with a channel that represents the overall
+			luminance of the image.  It will produce a median filter which is lower quality, but preserves
+			additivity between channels, and is a bit faster.
+			""",
+			"plugValueWidget:type", "GafferImageUI.ChannelPlugValueWidget",
+			"channelPlugValueWidget:extraChannels", IECore.StringVectorData( [ "" ] ),
+			"channelPlugValueWidget:extraChannelLabels", IECore.StringVectorData( [ "None" ] ),
 
 		]
 
