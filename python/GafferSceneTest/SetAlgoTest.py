@@ -96,6 +96,8 @@ class SetAlgoTest( GafferSceneTest.SceneTestCase ) :
 
 		expressionCheck = functools.partial( self.assertCorrectEvaluation, group2["out"] )
 
+		expressionCheck( '', [] )
+
 		expressionCheck( 'setA', [ '/group/group/sphere1', '/group/group/sphere2' ] )
 		expressionCheck( '/group/sphere3', [ '/group/sphere3' ] )
 

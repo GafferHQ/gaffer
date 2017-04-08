@@ -185,6 +185,10 @@ struct AstPrinter
 		boost::apply_visitor( *this, ast.expr );
 	}
 
+	void operator()( const Nil &nil ) const
+	{
+	}
+
 	void operator()( const BinaryOp &expr ) const
 	{
 		stream << "op:" << expr.op << "(";
@@ -242,6 +246,12 @@ struct AstEvaluator
 	result_type operator()( const ExpressionAst &ast ) const
 	{
 		return boost::apply_visitor( *this, ast.expr );
+	}
+
+	result_type operator()( const Nil &nil ) const
+	{
+		PathMatcher result;
+		return result;
 	}
 
 	result_type operator()( const BinaryOp &expr ) const
@@ -306,6 +316,10 @@ struct AstHasher
 		m_hash.append( expr.op );
 		boost::apply_visitor( *this, expr.left.expr );
 		boost::apply_visitor( *this, expr.right.expr );
+	}
+
+	void operator()( const Nil &nil )
+	{
 	}
 
 	const ScenePlug* m_scene;
@@ -386,6 +400,11 @@ struct ExpressionGrammar : qi::grammar<Iterator, ExpressionAst(), ascii::space_t
 
 void expressionToAST( const std::string &setExpression, ExpressionAst &ast)
 {
+	if( setExpression == "" )
+	{
+		return;
+	}
+
 	typedef std::string::const_iterator iterator_type;
 	typedef ExpressionGrammar<iterator_type> ExpressionGrammar;
 
