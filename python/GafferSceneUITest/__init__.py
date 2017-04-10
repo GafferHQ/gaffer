@@ -45,6 +45,7 @@ from ShaderViewTest import ShaderViewTest
 from ShaderUITest import ShaderUITest
 from TranslateToolTest import TranslateToolTest
 from ScaleToolTest import ScaleToolTest
+from RotateToolTest import RotateToolTest
 
 if __name__ == "__main__":
 	unittest.main()
