@@ -43,8 +43,6 @@
 
 #include "GafferImage/ImageProcessor.h"
 
-#include "GafferImage/Sampler.h"
-
 namespace GafferImage
 {
 
@@ -110,10 +108,10 @@ class Warp : public ImageProcessor
 		/// hash all the inputs used in creating an engine for the specified
 		/// tile. If the tileOrigin is not included in the hash, then the
 		/// same engine may be reused for all tiles.
-		virtual void hashEngine( const std::string &channelName, const Imath::V2i &tileOrigin, const Gaffer::Context *context, IECore::MurmurHash &h ) const = 0;
+		virtual void hashEngine( const Imath::V2i &tileOrigin, const Gaffer::Context *context, IECore::MurmurHash &h ) const = 0;
 		/// Must be implemented to return an Engine instance capable
 		/// of answering all queries for the specified tile.
-		virtual const Engine *computeEngine( const std::string &channelName, const Imath::V2i &tileOrigin, const Gaffer::Context *context ) const = 0;
+		virtual const Engine *computeEngine( const Imath::V2i &tileOrigin, const Gaffer::Context *context ) const = 0;
 
 	private :
 
