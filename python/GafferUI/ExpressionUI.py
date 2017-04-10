@@ -199,6 +199,48 @@ class ExpressionWidget( GafferUI.Widget ) :
 
 		menuDefinition = IECore.MenuDefinition()
 
+		bookmarks = Gaffer.MetadataAlgo.bookmarks( self.__node.parent() )
+
+		def __bookmarkMenu( bookmarks ) :
+
+			bookmarkMenuDefinition = IECore.MenuDefinition()
+
+			def __walk( graphComponent, result ) :
+
+				if (
+					isinstance( graphComponent, Gaffer.ValuePlug ) and
+					self.__node.identifier( graphComponent ) and
+					not graphComponent.relativeName( graphComponent.node() ).startswith( "__" )
+				) :
+					result.append( graphComponent )
+
+				for c in graphComponent.children( Gaffer.Plug ) :
+					__walk( c, result )
+
+			for bookmark in bookmarks :
+
+				compatiblePlugs = []
+				__walk( bookmark, compatiblePlugs )
+
+				if not compatiblePlugs :
+					continue
+
+				for plug in compatiblePlugs :
+					label = "/" + bookmark.getName()
+					if len( compatiblePlugs ) > 1 :
+						label += "/"  + plug.relativeName( bookmark )
+					bookmarkMenuDefinition.append(
+						label,
+						{
+							"command" : functools.partial( self.__textWidget.insertText, self.__node.identifier( plug ) ),
+							"active" : self.__textWidget.getEditable() and not Gaffer.MetadataAlgo.readOnly( self.__node['__expression'] ),
+						}
+					)
+
+			return bookmarkMenuDefinition
+
+		menuDefinition.append( "/Insert Bookmark", { "subMenu" : functools.partial( __bookmarkMenu, bookmarks ) } )
+
 		self.expressionContextMenuSignal()( menuDefinition, self )
 
 		return menuDefinition
