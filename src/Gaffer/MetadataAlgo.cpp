@@ -50,6 +50,9 @@ namespace
 {
 
 InternedString g_readOnlyName( "readOnly" );
+InternedString g_bookmarkedName( "bookmarked" );
+/// \todo: remove when we're no longer concerned with compatibility
+InternedString g_oldBookmarkedName( "graphBookmarks:bookmarked" );
 
 size_t findNth( const std::string &s, char c, int n )
 {
@@ -108,6 +111,36 @@ bool readOnly( const GraphComponent *graphComponent )
 		graphComponent = graphComponent->parent<GraphComponent>();
 	}
 	return false;
+}
+
+void setBookmarked( Node *node, bool bookmarked, bool persistent /* = true */ )
+{
+	Metadata::registerValue( node, g_bookmarkedName, new BoolData( bookmarked ), persistent );
+}
+
+bool getBookmarked( const Node *node )
+{
+	ConstBoolDataPtr d = Metadata::value<BoolData>( node, g_bookmarkedName );
+	if( !d )
+	{
+		/// \todo: remove when we're no longer concerned with compatibility
+		d = Metadata::value<BoolData>( node, g_oldBookmarkedName );
+	}
+
+	return d ? d->readable() : false;
+}
+
+void bookmarks( const Node *node, std::vector<NodePtr> &bookmarks )
+{
+	bookmarks.clear();
+
+	for( NodeIterator it( node ); !it.done(); ++it )
+	{
+		if( getBookmarked( it->get() ) )
+		{
+			bookmarks.push_back( *it );
+		}
+	}
 }
 
 bool affectedByChange( const Plug *plug, IECore::TypeId changedNodeTypeId, const StringAlgo::MatchPattern &changedPlugPath, const Gaffer::Plug *changedPlug )
