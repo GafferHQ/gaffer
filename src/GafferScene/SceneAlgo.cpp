@@ -201,11 +201,11 @@ IECore::TransformPtr GafferScene::SceneAlgo::transform( const ScenePlug *scene, 
 	}
 
 	MatrixMotionTransformPtr result = new MatrixMotionTransform();
-	Context::EditableScope transformContext( Context::current() );
+	Context::EditableScope timeScope( Context::current() );
 	for( int i = 0; i < numSamples; i++ )
 	{
 		float frame = lerp( shutter[0], shutter[1], (float)i / std::max( 1, numSamples - 1 ) );
-		transformContext.setFrame( frame );
+		timeScope.setFrame( frame );
 		result->snapshots()[frame] = scene->fullTransform( path );
 	}
 
