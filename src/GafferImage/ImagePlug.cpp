@@ -332,20 +332,18 @@ IECore::ConstFloatVectorDataPtr ImagePlug::channelData( const std::string &chann
 		return channelDataPlug()->defaultValue();
 	}
 
-	ContextPtr tmpContext = new Context( *Context::current(), Context::Borrowed );
-	tmpContext->set( ImagePlug::channelNameContextName, channelName );
-	tmpContext->set( ImagePlug::tileOriginContextName, tile );
-	Context::Scope scopedContext( tmpContext.get() );
+	ChannelDataScope channelDataScope( Context::current() );
+	channelDataScope.setChannelName( channelName );
+	channelDataScope.setTileOrigin( tile );
 
 	return channelDataPlug()->getValue();
 }
 
 IECore::MurmurHash ImagePlug::channelDataHash( const std::string &channelName, const Imath::V2i &tile ) const
 {
-	ContextPtr tmpContext = new Context( *Context::current(), Context::Borrowed );
-	tmpContext->set( ImagePlug::channelNameContextName, channelName );
-	tmpContext->set( ImagePlug::tileOriginContextName, tile );
-	Context::Scope scopedContext( tmpContext.get() );
+	ChannelDataScope channelDataScope( Context::current() );
+	channelDataScope.setChannelName( channelName );
+	channelDataScope.setTileOrigin( tile );
 	return channelDataPlug()->hash();
 }
 

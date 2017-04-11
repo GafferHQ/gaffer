@@ -195,24 +195,23 @@ void VectorWarp::hashEngine( const Imath::V2i &tileOrigin, const Gaffer::Context
 	}
 
 
-	ContextPtr tmpContext = new Context( *context, Context::Borrowed );
-	Context::Scope scopedContext( tmpContext.get() );
+	ImagePlug::ChannelDataScope channelDataScope( context );
 
 	if( ImageAlgo::channelExists( channelNames->readable(), "R" ) )
 	{
-		tmpContext->set<std::string>( ImagePlug::channelNameContextName, "R" );
+		channelDataScope.setChannelName( "R" );
 		vectorPlug()->channelDataPlug()->hash( h );
 	}
 
 	if( ImageAlgo::channelExists( channelNames->readable(), "G" ) )
 	{
-		tmpContext->set<std::string>( ImagePlug::channelNameContextName, "G" );
+		channelDataScope.setChannelName( "G" );
 		vectorPlug()->channelDataPlug()->hash( h );
 	}
 
 	if( ImageAlgo::channelExists( channelNames->readable(), "A" ) )
 	{
-		tmpContext->set<std::string>( ImagePlug::channelNameContextName, "A" );
+		channelDataScope.setChannelName( "A" );
 		vectorPlug()->channelDataPlug()->hash( h );
 	}
 
@@ -236,27 +235,26 @@ const Warp::Engine *VectorWarp::computeEngine( const Imath::V2i &tileOrigin, con
 		displayWindow = inPlug()->formatPlug()->getValue().getDisplayWindow();
 	}
 
-	ContextPtr tmpContext = new Context( *context, Context::Borrowed );
-	Context::Scope scopedContext( tmpContext.get() );
+	ImagePlug::ChannelDataScope channelDataScope( context );
 
 	ConstFloatVectorDataPtr xData = ImagePlug::blackTile();
 	if( ImageAlgo::channelExists( channelNames->readable(), "R" ) )
 	{
-		tmpContext->set<std::string>( ImagePlug::channelNameContextName, "R" );
+		channelDataScope.setChannelName( "R" );
 		xData = vectorPlug()->channelDataPlug()->getValue();
 	}
 
 	ConstFloatVectorDataPtr yData = ImagePlug::blackTile();
 	if( ImageAlgo::channelExists( channelNames->readable(), "G" ) )
 	{
-		tmpContext->set<std::string>( ImagePlug::channelNameContextName, "G" );
+		channelDataScope.setChannelName( "G" );
 		yData = vectorPlug()->channelDataPlug()->getValue();
 	}
 
 	ConstFloatVectorDataPtr aData = ImagePlug::whiteTile();
 	if( ImageAlgo::channelExists( channelNames->readable(), "A" ) )
 	{
-		tmpContext->set<std::string>( ImagePlug::channelNameContextName, "A" );
+		channelDataScope.setChannelName( "A" );
 		aData = vectorPlug()->channelDataPlug()->getValue();
 	}
 

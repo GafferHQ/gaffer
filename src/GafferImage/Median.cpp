@@ -327,9 +327,8 @@ void Median::hashChannelData( const GafferImage::ImagePlug *parent, const Gaffer
 	const std::string &masterChannel = masterChannelPlug()->getValue();
 	if( masterChannel != "" )
 	{
-		Gaffer::ContextPtr pixelOffsetsContext = new Gaffer::Context( *context, Gaffer::Context::Borrowed );
-		pixelOffsetsContext->set( ImagePlug::channelNameContextName, masterChannel );
-		Gaffer::Context::Scope pixelOffsetsScope( pixelOffsetsContext.get() );
+		ImagePlug::ChannelDataScope pixelOffsetsScope( context );
+		pixelOffsetsScope.setChannelName( masterChannel );
 	
 		pixelOffsetsPlug()->hash( h );
 	}
@@ -363,9 +362,8 @@ IECore::ConstFloatVectorDataPtr Median::computeChannelData( const std::string &c
 	{
 		ConstV2iVectorDataPtr pixelOffsets;
 		{
-			Gaffer::ContextPtr pixelOffsetsContext = new Gaffer::Context( *context, Gaffer::Context::Borrowed );
-			pixelOffsetsContext->set( ImagePlug::channelNameContextName, masterChannel );
-			Gaffer::Context::Scope pixelOffsetsScope( pixelOffsetsContext.get() );
+			ImagePlug::ChannelDataScope pixelOffsetsScope( context );
+			pixelOffsetsScope.setChannelName( masterChannel );
 
 			pixelOffsets = pixelOffsetsPlug()->getValue();
 		}

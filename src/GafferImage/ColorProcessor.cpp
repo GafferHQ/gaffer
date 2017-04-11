@@ -142,13 +142,12 @@ void ColorProcessor::compute( Gaffer::ValuePlug *output, const Gaffer::Context *
 
 		FloatVectorDataPtr r, g, b;
 		{
-			ContextPtr tmpContext = new Context( *context, Context::Borrowed );
-			Context::Scope scopedContext( tmpContext.get() );
-			tmpContext->set( ImagePlug::channelNameContextName, ImageAlgo::channelName( layerName, "R" ) );
+			ImagePlug::ChannelDataScope channelDataScope( context );
+			channelDataScope.setChannelName( ImageAlgo::channelName( layerName, "R" ) );
 			r = inPlug()->channelDataPlug()->getValue()->copy();
-			tmpContext->set( ImagePlug::channelNameContextName, ImageAlgo::channelName( layerName, "G" ) );
+			channelDataScope.setChannelName( ImageAlgo::channelName( layerName, "G" ) );
 			g = inPlug()->channelDataPlug()->getValue()->copy();
-			tmpContext->set( ImagePlug::channelNameContextName, ImageAlgo::channelName( layerName, "B" ) );
+			channelDataScope.setChannelName( ImageAlgo::channelName( layerName, "B" ) );
 			b = inPlug()->channelDataPlug()->getValue()->copy();
 		}
 
@@ -185,9 +184,8 @@ void ColorProcessor::hashChannelData( const GafferImage::ImagePlug *output, cons
 	ImageProcessor::hashChannelData( output, context, h );
 	h.append( baseName );
 	{
-		ContextPtr tmpContext = new Context( *context, Context::Borrowed );
-		Context::Scope scopedContext( tmpContext.get() );
-		tmpContext->set( g_layerNameKey, ImageAlgo::layerName( channel ) );
+		Context::EditableScope layerScope( context );
+		layerScope.set( g_layerNameKey, ImageAlgo::layerName( channel ) );
 		colorDataPlug()->hash( h );
 	}
 }
@@ -209,9 +207,8 @@ IECore::ConstFloatVectorDataPtr ColorProcessor::computeChannelData( const std::s
 
 	ConstObjectVectorPtr colorData;
 	{
-		ContextPtr tmpContext = new Context( *context, Context::Borrowed );
-		Context::Scope scopedContext( tmpContext.get() );
-		tmpContext->set( g_layerNameKey, ImageAlgo::layerName( channel ) );
+		Context::EditableScope layerScope( context );
+		layerScope.set( g_layerNameKey, ImageAlgo::layerName( channel ) );
 		colorData = boost::static_pointer_cast<const ObjectVector>( colorDataPlug()->getValue() );
 	}
 	return boost::static_pointer_cast<const FloatVectorData>( colorData->members()[ImageAlgo::colorIndex( baseName)] );
@@ -226,12 +223,11 @@ void ColorProcessor::hashColorData( const Gaffer::Context *context, IECore::Murm
 {
 	const string &layerName = context->get<string>( g_layerNameKey );
 
-	ContextPtr tmpContext = new Context( *context, Context::Borrowed );
-	Context::Scope scopedContext( tmpContext.get() );
-	tmpContext->set( ImagePlug::channelNameContextName, ImageAlgo::channelName( layerName, "R" ) );
+	ImagePlug::ChannelDataScope channelDataScope( context );
+	channelDataScope.setChannelName( ImageAlgo::channelName( layerName, "R" ) );
 	inPlug()->channelDataPlug()->hash( h );
-	tmpContext->set( ImagePlug::channelNameContextName, ImageAlgo::channelName( layerName, "G" ) );
+	channelDataScope.setChannelName( ImageAlgo::channelName( layerName, "G" ) );
 	inPlug()->channelDataPlug()->hash( h );
-	tmpContext->set( ImagePlug::channelNameContextName, ImageAlgo::channelName( layerName, "B" ) );
+	channelDataScope.setChannelName( ImageAlgo::channelName( layerName, "B" ) );
 	inPlug()->channelDataPlug()->hash( h );
 }
