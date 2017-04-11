@@ -41,6 +41,7 @@
 
 #include "GafferScene/Filter.h"
 #include "GafferScene/PathMatcher.h"
+#include "GafferScene/PathMatcherDataPlug.h"
 
 namespace Gaffer
 {
@@ -72,10 +73,16 @@ class SetFilter : public Filter
 
 	protected :
 
+		virtual void hash( const Gaffer::ValuePlug *output, const Gaffer::Context *context, IECore::MurmurHash &h ) const;
+		virtual void compute( Gaffer::ValuePlug *output, const Gaffer::Context *context ) const;
+
 		virtual void hashMatch( const ScenePlug *scene, const Gaffer::Context *context, IECore::MurmurHash &h ) const;
 		virtual unsigned computeMatch( const ScenePlug *scene, const Gaffer::Context *context ) const;
 
 	private :
+
+		GafferScene::PathMatcherDataPlug *expressionResultPlug();
+		const GafferScene::PathMatcherDataPlug *expressionResultPlug() const;
 
 		static size_t g_firstPlugIndex;
 
