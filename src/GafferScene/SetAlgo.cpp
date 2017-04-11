@@ -224,16 +224,7 @@ struct AstEvaluator
 
 	result_type operator()( const SetName &set ) const
 	{
-		IECore::ConstInternedStringVectorDataPtr setNames = m_scene->setNames();
-		const std::vector<IECore::InternedString> &setNamesReadable = setNames->readable();
-		if( std::find( setNamesReadable.begin(), setNamesReadable.end(), IECore::InternedString( set.name ) ) != setNamesReadable.end() )
-		{
-			return m_scene->set( set.name )->readable();
-		}
-		else
-		{
-			throw IECore::Exception( boost::str( boost::format( "Set %s is not available in SetExpression." ) % set.name ) );
-		}
+		return m_scene->set( set.name )->readable();
 	}
 
 	result_type operator()( const ObjectName &object ) const
