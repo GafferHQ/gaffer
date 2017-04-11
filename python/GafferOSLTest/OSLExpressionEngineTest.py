@@ -568,5 +568,30 @@ class OSLExpressionEngineTest( GafferOSLTest.OSLTestCase ) :
 		s["n"]["user"]["i"].setValue( 2 )
 		self.assertTrue( s["n"]["user"]["o"].getValue() )
 
+	def testStringContextVariableComparison( self ) :
+
+		s = Gaffer.ScriptNode()
+
+		s["n"] = Gaffer.Node()
+		s["n"]["user"]["i"] = Gaffer.IntPlug( flags = Gaffer.Plug.Flags.Default | Gaffer.Plug.Flags.Dynamic )
+
+		expression = inspect.cleandoc(
+			"""
+			string var = context( "str" );
+			parent.n.user.i = var == "abc";
+			"""
+		)
+
+		s["e"] = Gaffer.Expression()
+		s["e"].setExpression( expression, "OSL" )
+
+		with Gaffer.Context() as c :
+
+			c["str"] = "xyz"
+			self.assertEqual( s["n"]["user"]["i"].getValue(), 0 )
+
+			c["str"] = "abc"
+			self.assertEqual( s["n"]["user"]["i"].getValue(), 1 )
+
 if __name__ == "__main__":
 	unittest.main()

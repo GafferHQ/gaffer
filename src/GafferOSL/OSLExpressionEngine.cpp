@@ -131,7 +131,7 @@ class RendererServices : public OSL::RendererServices
 				return false;
 			}
 
-			GafferImage::OpenImageIOAlgo::DataView dataView( data );
+			GafferImage::OpenImageIOAlgo::DataView dataView( data, /* createUStrings = */ true );
 			if( !dataView.data )
 			{
 				return false;
