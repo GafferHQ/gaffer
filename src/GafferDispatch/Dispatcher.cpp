@@ -634,9 +634,9 @@ void Dispatcher::dispatch( const std::vector<NodePtr> &nodes ) const
 	}
 
 	// create the job directory now, so it's available in preDispatchSignal().
-	Context::EditableScope context( Context::current() );
+	Context::EditableScope jobScope( Context::current() );
 	m_jobDirectory = createJobDirectory( Context::current() );
-	context.set( g_jobDirectoryContextEntry, m_jobDirectory );
+	jobScope.set( g_jobDirectoryContextEntry, m_jobDirectory );
 
 	// this object calls this->preDispatchSignal() in its constructor and this->postDispatchSignal()
 	// in its destructor, thereby guaranteeing that we always call this->postDispatchSignal().
@@ -656,7 +656,7 @@ void Dispatcher::dispatch( const std::vector<NodePtr> &nodes ) const
 	{
 		for( std::vector<TaskNodePtr>::const_iterator nIt = taskNodes.begin(); nIt != taskNodes.end(); ++nIt )
 		{
-			context.setFrame( *fIt );
+			jobScope.setFrame( *fIt );
 			batcher.addTask( TaskNode::Task( *nIt, Context::current() ) );
 		}
 	}

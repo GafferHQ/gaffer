@@ -342,11 +342,11 @@ void TaskNode::execute() const
 
 void TaskNode::executeSequence( const std::vector<float> &frames ) const
 {
-	Context::EditableScope context( Context::current() );
+	Context::EditableScope timeScope( Context::current() );
 
 	for ( std::vector<float>::const_iterator it = frames.begin(); it != frames.end(); ++it )
 	{
-		context.setFrame( *it );
+		timeScope.setFrame( *it );
 		execute();
 	}
 }
