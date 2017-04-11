@@ -62,12 +62,12 @@ using namespace GafferScene;
 
 bool GafferScene::SceneAlgo::exists( const ScenePlug *scene, const ScenePlug::ScenePath &path )
 {
-	Context::EditableScope context( Context::current() );
+	ScenePlug::PathScope pathScope( Context::current() );
 
 	ScenePlug::ScenePath p; p.reserve( path.size() );
 	for( ScenePlug::ScenePath::const_iterator it = path.begin(), eIt = path.end(); it != eIt; ++it )
 	{
-		context.set( ScenePlug::scenePathContextName, p );
+		pathScope.setPath( p );
 		ConstInternedStringVectorDataPtr childNamesData = scene->childNamesPlug()->getValue();
 		const vector<InternedString> &childNames = childNamesData->readable();
 		if( find( childNames.begin(), childNames.end(), *it ) == childNames.end() )
@@ -82,13 +82,13 @@ bool GafferScene::SceneAlgo::exists( const ScenePlug *scene, const ScenePlug::Sc
 
 bool GafferScene::SceneAlgo::visible( const ScenePlug *scene, const ScenePlug::ScenePath &path )
 {
-	Context::EditableScope context( Context::current() );
+	ScenePlug::PathScope pathScope( Context::current() );
 
 	ScenePlug::ScenePath p; p.reserve( path.size() );
 	for( ScenePlug::ScenePath::const_iterator it = path.begin(), eIt = path.end(); it != eIt; ++it )
 	{
 		p.push_back( *it );
-		context.set( ScenePlug::scenePathContextName, p );
+		pathScope.setPath( p );
 
 		ConstCompoundObjectPtr attributes = scene->attributesPlug()->getValue();
 		const BoolData *visibilityData = attributes->member<BoolData>( "scene:visible" );

@@ -203,7 +203,7 @@ struct RenderSets::Updater
 
 	void operator()( const tbb::blocked_range<size_t> &r )
 	{
-		Context::EditableScope context( m_context );
+		ScenePlug::SetScope setScope( m_context );
 
 		for( size_t i=r.begin(); i!=r.end(); ++i )
 		{
@@ -231,7 +231,7 @@ struct RenderSets::Updater
 				potentialChange = LightsSetChanged;
 			}
 
-			context.set( ScenePlug::setNameContextName, n );
+			setScope.setSetName( n );
 			const IECore::MurmurHash &hash = m_scene->setPlug()->hash();
 			if( s->hash != hash )
 			{
