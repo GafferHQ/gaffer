@@ -134,14 +134,20 @@ class ScenePlug : public Gaffer::ValuePlug
 		/// specifying the scene path.
 		struct PathScope : public Gaffer::Context::EditableScope
 		{
+			PathScope( const Gaffer::Context *context );
 			PathScope( const Gaffer::Context *context, const ScenePath &scenePath );
+
+			void setPath( const ScenePath &scenePath );
 		};
 
 		/// Utility class to scope a temporary copy of a context,
 		/// specifying the set name.
 		struct SetScope : public Gaffer::Context::EditableScope
 		{
+			SetScope( const Gaffer::Context *context );
 			SetScope( const Gaffer::Context *context, const IECore::InternedString &setName );
+
+			void setSetName( const IECore::InternedString &setName );
 		};
 
 		/// Utility class to scope a temporary copy of a context,
