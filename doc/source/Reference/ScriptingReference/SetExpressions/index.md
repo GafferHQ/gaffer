@@ -13,7 +13,7 @@ Set memberships in this imaginary scene are as follows.
 
 ```eval_rst
 ===== ===== ===== ====
-set1  set2  set3  set2
+set1  set2  set3  set4
 ===== ===== ===== ====
 A B C B C D C D E E
 ===== ===== ===== ====
