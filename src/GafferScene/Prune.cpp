@@ -160,7 +160,7 @@ Imath::Box3f Prune::computeBound( const ScenePath &path, const Gaffer::Context *
 
 void Prune::hashChildNames( const ScenePath &path, const Gaffer::Context *context, const ScenePlug *parent, IECore::MurmurHash &h ) const
 {
-	FilterPlug::SceneScope tmpContext( context, inPlug() );
+	FilterPlug::SceneScope sceneScope( context, inPlug() );
 	const Filter::Result m = (Filter::Result)filterPlug()->getValue();
 
 	if( m & Filter::ExactMatch )
@@ -180,7 +180,7 @@ void Prune::hashChildNames( const ScenePath &path, const Gaffer::Context *contex
 		for( vector<InternedString>::const_iterator it = inputChildNames.begin(), eIt = inputChildNames.end(); it != eIt; ++it )
 		{
 			childPath[path.size()] = *it;
-			tmpContext.set( ScenePlug::scenePathContextName, childPath );
+			sceneScope.set( ScenePlug::scenePathContextName, childPath );
 			filterPlug()->hash( h );
 		}
 	}
@@ -193,7 +193,7 @@ void Prune::hashChildNames( const ScenePath &path, const Gaffer::Context *contex
 
 IECore::ConstInternedStringVectorDataPtr Prune::computeChildNames( const ScenePath &path, const Gaffer::Context *context, const ScenePlug *parent ) const
 {
-	FilterPlug::SceneScope tmpContext( context, inPlug() );
+	FilterPlug::SceneScope sceneScope( context, inPlug() );
 	const Filter::Result m = (Filter::Result)filterPlug()->getValue();
 
 	if( m & Filter::ExactMatch  )
@@ -214,7 +214,7 @@ IECore::ConstInternedStringVectorDataPtr Prune::computeChildNames( const ScenePa
 		for( vector<InternedString>::const_iterator it = inputChildNames.begin(), eIt = inputChildNames.end(); it != eIt; ++it )
 		{
 			childPath[path.size()] = *it;
-			tmpContext.set( ScenePlug::scenePathContextName, childPath );
+			sceneScope.set( ScenePlug::scenePathContextName, childPath );
 			if( !(filterPlug()->getValue() & Filter::ExactMatch) )
 			{
 				outputChildNames.push_back( *it );
@@ -246,8 +246,8 @@ void Prune::hashSet( const IECore::InternedString &setName, const Gaffer::Contex
 	// the same sets repeatedly.
 	//
 	// See further comments in acceptsInput()
-	FilterPlug::SceneScope c( context, inPlug() );
-	c.remove( ScenePlug::scenePathContextName );
+	FilterPlug::SceneScope sceneScope( context, inPlug() );
+	sceneScope.remove( ScenePlug::scenePathContextName );
 	filterPlug()->hash( h );
 }
 
@@ -263,11 +263,11 @@ GafferScene::ConstPathMatcherDataPtr Prune::computeSet( const IECore::InternedSt
 	PathMatcherDataPtr outputSetData = inputSetData->copy();
 	PathMatcher &outputSet = outputSetData->writable();
 
-	FilterPlug::SceneScope tmpContext( context, inPlug() );
+	FilterPlug::SceneScope sceneScope( context, inPlug() );
 
 	for( PathMatcher::RawIterator pIt = inputSet.begin(), peIt = inputSet.end(); pIt != peIt; )
 	{
-		tmpContext.set( ScenePlug::scenePathContextName, *pIt );
+		sceneScope.set( ScenePlug::scenePathContextName, *pIt );
 		const int m = filterPlug()->getValue();
 		if( m & ( Filter::ExactMatch | Filter::AncestorMatch ) )
 		{

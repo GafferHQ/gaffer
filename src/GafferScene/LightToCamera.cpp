@@ -445,8 +445,8 @@ void LightToCamera::hashSet( const IECore::InternedString &setName, const Gaffer
 	// the same sets repeatedly.
 	//
 	// See further comments in acceptsInput
-	FilterPlug::SceneScope c( context, inPlug() );
-	c.remove( ScenePlug::scenePathContextName );
+	FilterPlug::SceneScope sceneScope( context, inPlug() );
+	sceneScope.remove( ScenePlug::scenePathContextName );
 	filterPlug()->hash( h );
 }
 
@@ -476,7 +476,7 @@ GafferScene::ConstPathMatcherDataPtr LightToCamera::computeSet( const IECore::In
 	PathMatcherDataPtr outputSetData = inputSetData->copy();
 	PathMatcher &outputSet = outputSetData->writable();
 
-	FilterPlug::SceneScope tmpContext( context, inPlug() );
+	FilterPlug::SceneScope sceneScope( context, inPlug() );
 
 	/// \todo We're assuming here that the filter won't match
 	/// anything outside the light set, but we're not doing anything
@@ -485,7 +485,7 @@ GafferScene::ConstPathMatcherDataPtr LightToCamera::computeSet( const IECore::In
 	/// work for us.
 	for( PathMatcher::Iterator pIt = lightSet.begin(), peIt = lightSet.end(); pIt != peIt; ++pIt )
 	{
-		tmpContext.set( ScenePlug::scenePathContextName, *pIt );
+		sceneScope.set( ScenePlug::scenePathContextName, *pIt );
 		const int m = filterPlug()->getValue();
 		if( m & Filter::ExactMatch )
 		{
