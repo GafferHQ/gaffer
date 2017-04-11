@@ -54,7 +54,9 @@ struct DataView
 {
 
 	DataView();
-	DataView( const IECore::Data *data );
+	/// If the data is StringData, `createUStrings` creates an
+	/// `OIIO::ustring` and refers to the storage from that instead.
+	DataView( const IECore::Data *data, bool createUStrings = false );
 
 	OIIO::TypeDesc type;
 	const void *data;

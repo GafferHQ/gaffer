@@ -34,6 +34,8 @@
 //
 //////////////////////////////////////////////////////////////////////////
 
+#include "OpenImageIO/ustring.h"
+
 #include "IECore/SimpleTypedData.h"
 #include "IECore/VectorTypedData.h"
 
@@ -89,7 +91,7 @@ DataView::DataView()
 {
 }
 
-DataView::DataView( const IECore::Data *d )
+DataView::DataView( const IECore::Data *d, bool createUStrings )
 	:	data( NULL ), m_charPointer( NULL )
 {
 	switch( d ? d->typeId() : IECore::InvalidTypeId )
@@ -108,6 +110,10 @@ DataView::DataView( const IECore::Data *d )
 		case StringDataTypeId :
 			type = TypeDesc::TypeString;
 			m_charPointer = static_cast<const StringData *>( d )->readable().c_str();
+			if( createUStrings )
+			{
+				m_charPointer = ustring( m_charPointer ).c_str();
+			}
 			data = &m_charPointer;
 			break;
 		case UShortDataTypeId :
