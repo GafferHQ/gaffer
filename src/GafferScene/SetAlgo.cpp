@@ -294,6 +294,11 @@ struct AstHasher
 
 	void operator()( const SetName &n )
 	{
+		if( !m_scene )
+		{
+			throw IECore::Exception( "SetAlgo: Invalid scene given. Can not hash set expression." );
+		}
+
 		m_hash.append( m_scene->setHash( n.name ) );
 	}
 
