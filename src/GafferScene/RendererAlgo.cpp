@@ -490,14 +490,13 @@ void transformSamples( const ScenePlug *scene, size_t segments, const Imath::V2f
 
 	motionTimes( segments, shutter, sampleTimes );
 
-	ContextPtr timeContext = new Context( *Context::current(), Context::Borrowed );
-	Context::Scope scopedTimeContext( timeContext.get() );
+	Context::EditableScope timeContext( Context::current() );
 
 	bool moving = false;
 	samples.reserve( sampleTimes.size() );
 	for( std::set<float>::const_iterator it = sampleTimes.begin(), eIt = sampleTimes.end(); it != eIt; ++it )
 	{
-		timeContext->setFrame( *it );
+		timeContext.setFrame( *it );
 		const M44f m = scene->transformPlug()->getValue();
 		if( !moving && !samples.empty() && m != samples.front() )
 		{
@@ -545,15 +544,14 @@ void objectSamples( const ScenePlug *scene, size_t segments, const Imath::V2f &s
 
 	motionTimes( segments, shutter, sampleTimes );
 
-	ContextPtr timeContext = new Context( *Context::current(), Context::Borrowed );
-	Context::Scope scopedTimeContext( timeContext.get() );
+	Context::EditableScope timeContext( Context::current() );
 
 	bool moving = false;
 	MurmurHash lastHash;
 	samples.reserve( sampleTimes.size() );
 	for( std::set<float>::const_iterator it = sampleTimes.begin(), eIt = sampleTimes.end(); it != eIt; ++it )
 	{
-		timeContext->setFrame( *it );
+		timeContext.setFrame( *it );
 
 		const MurmurHash objectHash = scene->objectPlug()->hash();
 		ConstObjectPtr object = scene->objectPlug()->getValue( &objectHash );

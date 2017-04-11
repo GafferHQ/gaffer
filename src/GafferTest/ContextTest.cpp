@@ -145,3 +145,70 @@ void GafferTest::testScopingNullContext()
 		}
 	}
 }
+
+void GafferTest::testEditableScope()
+{
+	ContextPtr baseContext = new Context();
+	baseContext->set( "a", 10 );
+	baseContext->set( "b", 20 );
+
+	const IntData *aData = baseContext->get<IntData>( "a" );
+	size_t aRefCount = aData->refCount();
+
+	const IntData *bData = baseContext->get<IntData>( "b" );
+	size_t bRefCount = bData->refCount();
+
+	{
+		// Scope an editable copy of the context
+		Context::EditableScope scope( baseContext.get() );
+
+		const Context *currentContext = Context::current();
+		GAFFERTEST_ASSERT( currentContext != baseContext );
+
+		// The editable copy should be identical to the original,
+		// and the original should be unchanged.
+		GAFFERTEST_ASSERT( baseContext->get<int>( "a" ) == 10 );
+		GAFFERTEST_ASSERT( baseContext->get<int>( "b" ) == 20 );
+		GAFFERTEST_ASSERT( currentContext->get<int>( "a" ) == 10 );
+		GAFFERTEST_ASSERT( currentContext->get<int>( "b" ) == 20 );
+		GAFFERTEST_ASSERT( currentContext->hash() == baseContext->hash() );
+
+		// The copy should even be referencing the exact same data
+		// as the original.
+		GAFFERTEST_ASSERT( baseContext->get<Data>( "a" ) == aData );
+		GAFFERTEST_ASSERT( baseContext->get<Data>( "b" ) == bData );
+		GAFFERTEST_ASSERT( currentContext->get<Data>( "a" ) == aData );
+		GAFFERTEST_ASSERT( currentContext->get<Data>( "b" ) == bData );
+
+		// But it shouldn't have affected the reference counts, because
+		// we rely on the base context to maintain the lifetime for us
+		// as an optimisation.
+		GAFFERTEST_ASSERT( aData->refCount() == aRefCount );
+		GAFFERTEST_ASSERT( bData->refCount() == bRefCount );
+
+		// Editing the copy shouldn't affect the original
+		scope.set( "c", 30 );
+		GAFFERTEST_ASSERT( baseContext->get<int>( "c", -1 ) == -1 );
+		GAFFERTEST_ASSERT( currentContext->get<int>( "c" ) == 30 );
+
+		// Even if we're editing a variable that exists in
+		// the original.
+		scope.set( "a", 40 );
+		GAFFERTEST_ASSERT( baseContext->get<int>( "a" ) == 10 );
+		GAFFERTEST_ASSERT( currentContext->get<int>( "a" ) == 40 );
+
+		// And we should be able to remove a variable from the
+		// copy without affecting the original too.
+		scope.remove( "b" );
+		GAFFERTEST_ASSERT( baseContext->get<int>( "b" ) == 20 );
+		GAFFERTEST_ASSERT( currentContext->get<int>( "b", -1 ) == -1 );
+
+		// And none of the edits should have affected the original
+		// data at all.
+		GAFFERTEST_ASSERT( baseContext->get<Data>( "a" ) == aData );
+		GAFFERTEST_ASSERT( baseContext->get<Data>( "b" ) == bData );
+		GAFFERTEST_ASSERT( aData->refCount() == aRefCount );
+		GAFFERTEST_ASSERT( bData->refCount() == bRefCount );
+	}
+
+}

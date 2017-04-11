@@ -57,6 +57,10 @@ namespace Gaffer
 /// maintains a stack of contexts, allowing computations in different contexts to be performed
 /// in parallel, and allowing contexts to be changed temporarily for a specific computation.
 ///
+/// It is common for Nodes to need to evaluate their upstream inputs in a modified context.
+/// The EditableScope class should be used for this purpose since it is more efficient than
+/// copy constructing a new Context.
+///
 /// \note The various UI components currently use "ui:" prefixed context variables for their
 /// own purposes. These variables are expected to never affect computation, and are therefore
 /// excluded from hash(). Other code may find that it too needs to ignore them in order to
@@ -98,12 +102,8 @@ class Context : public IECore::RefCounted
 		};
 
 		Context();
-		/// Copy constructor. The ownership argument determines whether the
-		/// new context copies, shares or borrows the values from the original.
-		/// When constructing a temporary context within a compute() method,
-		/// using Borrowed provides the best performance, and because the original
-		/// context is const and outlives the temporary context, the constraints
-		/// required of client code are met with little effort.
+		/// Copy constructor. The ownership argument is deprecated - use
+		/// an EditableScope instead of Borrowed ownership.
 		Context( const Context &other, Ownership ownership = Copied );
 		~Context();
 
@@ -228,6 +228,40 @@ class Context : public IECore::RefCounted
 			private :
 
 				const Context *m_context;
+
+		};
+
+		/// Creates a lightweight editable copy of a context,
+		/// scoping it as the current context on the calling
+		/// thread. Typically used in Node internals to
+		/// evaluate upstream inputs in a modified context.
+		/// Note that there are no Python bindings for this class,
+		/// because it is harder to provide the necessary lifetime
+		/// guarantees there, and performance critical code should
+		/// not be implemented in Python in any case.
+		class EditableScope : boost::noncopyable
+		{
+
+			public :
+
+				/// It is the caller's responsibility to
+				/// guarantee that `context` outlives the
+				/// the EditableScope.
+				EditableScope( const Context *context );
+				~EditableScope();
+
+				template<typename T>
+				void set( const IECore::InternedString &name, const T &value );
+
+				void setFrame( float frame );
+				void setFramesPerSecond( float framesPerSecond );
+				void setTime( float timeInSeconds );
+
+				void remove( const IECore::InternedString &name );
+
+			private :
+
+				Ptr m_context;
 
 		};
 

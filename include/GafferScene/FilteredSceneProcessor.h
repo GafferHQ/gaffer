@@ -64,19 +64,17 @@ class FilteredSceneProcessor : public SceneProcessor
 
 	protected :
 
-		/// Convenience method which creates a temporary context for use in
-		/// passing the input scene to the filter. Such a context must be current
-		/// before calling filterPlug()->hash() or filterPlug()->getValue().
+		/// \deprecated Use FilterPlug::FilterScope instead
 		Gaffer::ContextPtr filterContext( const Gaffer::Context *context ) const;
 		/// Convenience method for appending filterPlug() to a hash. This simply
-		/// calls filterPlug()->hash() after making filterContext() current. Note that
-		/// if you need to make multiple queries, it is more efficient to call filterContext()
-		/// yourself once and then query the filter directly multiple times.
+		/// calls filterPlug()->hash() using a FilterPlug::SceneScope. Note that
+		/// if you need to make multiple queries, it is more efficient to make your
+		/// own SceneScope and then query the filter directly multiple times.
 		void filterHash( const Gaffer::Context *context, IECore::MurmurHash &h ) const;
 		/// Convenience method for returning the result of filterPlug()->getValue()
-		/// cast to the appropriate result type, using a context created with filterContext().
-		/// Note that if you need to make multiple queries, it is more efficient to call
-		/// filterContext() yourself once and then query the filter directly multiple times.
+		/// cast to the appropriate result type, using a using a FilterPlug::SceneScope.
+		/// Note that if you need to make multiple queries, it is more efficient to
+		/// make your own SceneScope and then query the filter directly multiple times.
 		Filter::Result filterValue( const Gaffer::Context *context ) const;
 
 		static size_t g_firstPlugIndex;

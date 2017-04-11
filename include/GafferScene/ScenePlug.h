@@ -41,6 +41,7 @@
 #include "Gaffer/TypedObjectPlug.h"
 #include "Gaffer/TypedPlug.h"
 #include "Gaffer/BoxPlug.h"
+#include "Gaffer/Context.h"
 
 #include "GafferScene/TypeIds.h"
 #include "GafferScene/PathMatcherDataPlug.h"
@@ -67,12 +68,7 @@ class ScenePlug : public Gaffer::ValuePlug
 
 		/// @name Child plugs
 		/// Different aspects of the scene are passed through different
-		/// child plugs. Plugs are expected to be evaluated in the context
-		/// of a particular parent in the scenegraph, so that the
-		/// scenegraph can be evaluated piecemeal, rather than all needing
-		/// to exist at once. This parent should be specified as a string
-		/// context entry named "scene:path" - see below for utility functions
-		/// which construct such a context automatically.
+		/// child plugs.
 		////////////////////////////////////////////////////////////////////
 		//@{
 		/// The plug used to pass the bounding box of the current node in
@@ -113,6 +109,14 @@ class ScenePlug : public Gaffer::ValuePlug
 		const PathMatcherDataPlug *setPlug() const;
 		//@}
 
+		/// @name Context management
+		/// The child Plugs are expected to be evaluated in the context
+		/// of a particular location in the scenegraph, so that the
+		/// scenegraph can be evaluated piecemeal, rather than all needing
+		/// to exist at once. These members provide utilities for
+		/// constructing relevant contexts.
+		////////////////////////////////////////////////////////////////////
+		//@{
 		/// The type used to specify the current scene path in
 		/// a Context object.
 		typedef std::vector<IECore::InternedString> ScenePath;
@@ -126,11 +130,44 @@ class ScenePlug : public Gaffer::ValuePlug
 		/// computed in a Context.
 		static const IECore::InternedString setNameContextName;
 
+		/// Utility class to scope a temporary copy of a context,
+		/// specifying the scene path.
+		struct PathScope : public Gaffer::Context::EditableScope
+		{
+			PathScope( const Gaffer::Context *context );
+			PathScope( const Gaffer::Context *context, const ScenePath &scenePath );
+
+			void setPath( const ScenePath &scenePath );
+		};
+
+		/// Utility class to scope a temporary copy of a context,
+		/// specifying the set name.
+		struct SetScope : public Gaffer::Context::EditableScope
+		{
+			SetScope( const Gaffer::Context *context );
+			SetScope( const Gaffer::Context *context, const IECore::InternedString &setName );
+
+			void setSetName( const IECore::InternedString &setName );
+		};
+
+		/// Utility class to scope a temporary copy of a context,
+		/// with scene specific variables removed. This can be used
+		/// when evaluating plugs which must not be sensitive
+		/// to such variables, and can improve performance by
+		/// reducing pressure on the hash cache.
+		struct GlobalScope : public Gaffer::Context::EditableScope
+		{
+			GlobalScope( const Gaffer::Context *context );
+		};
+		//@}
+
 		/// @name Convenience accessors
 		/// These functions create temporary Contexts specifying the necessary
 		/// variables and then return the result of calling getValue() or hash()
-		/// on the appropriate child plug.
-		/// \todo Move to SceneAlgo.h
+		/// on the appropriate child plug. Note that if you wish to evaluate
+		/// multiple plugs in the same context, better performance can be
+		/// achieved using the appropriate scope class and calling hash() or
+		/// getValue() directly.
 		////////////////////////////////////////////////////////////////////
 		//@{
 		Imath::Box3f bound( const ScenePath &scenePath ) const;
@@ -146,13 +183,13 @@ class ScenePlug : public Gaffer::ValuePlug
 		IECore::ConstInternedStringVectorDataPtr childNames( const ScenePath &scenePath ) const;
 		/// Prefer this to bare `globalsPlug()->getValue()` calls when
 		/// accessing globals from within a per-location computation. It
-		/// removes unnecessary context variables which could otherwise
-		/// lead to poor cache performance.
+		/// uses GlobalScope to remove unnecessary context variables which
+		/// could otherwise lead to poor cache performance.
 		IECore::ConstCompoundObjectPtr globals() const;
 		/// Prefer this to bare `setNamesPlug()->getValue()` calls when
 		/// accessing set names from within a per-location computation. It
-		/// removes unnecessary context variables which could otherwise
-		/// lead to poor cache performance.
+		/// uses GlobalScope to remove unnecessary context variables which
+		/// could otherwise lead to poor cache performance.
 		IECore::ConstInternedStringVectorDataPtr setNames() const;
 		ConstPathMatcherDataPtr set( const IECore::InternedString &setName ) const;
 

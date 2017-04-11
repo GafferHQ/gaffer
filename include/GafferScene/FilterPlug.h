@@ -38,11 +38,14 @@
 #define GAFFERSCENE_FILTERPLUG_H
 
 #include "Gaffer/NumericPlug.h"
+#include "Gaffer/Context.h"
 
 #include "GafferScene/TypeIds.h"
 
 namespace GafferScene
 {
+
+class ScenePlug;
 
 /// Plug type to provide the output from Filter nodes, and
 /// an input for nodes which wish to use Filters.
@@ -76,6 +79,16 @@ class FilterPlug : public Gaffer::IntPlug
 
 		virtual bool acceptsInput( const Gaffer::Plug *input ) const;
 		virtual Gaffer::PlugPtr createCounterpart( const std::string &name, Direction direction ) const;
+
+		/// Name of a context variable used to provide the input
+		/// scene to the filter
+		static const IECore::InternedString inputSceneContextName;
+
+		/// Provides the input scene for a filter evaluation
+		struct SceneScope : public Gaffer::Context::EditableScope
+		{
+			SceneScope( const Gaffer::Context *context, const ScenePlug *scenePlug );
+		};
 
 };
 

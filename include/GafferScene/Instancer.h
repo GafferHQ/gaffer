@@ -84,12 +84,16 @@ class Instancer : public BranchCreator
 		struct BoundUnion;
 
 		IECore::ConstV3fVectorDataPtr sourcePoints( const ScenePath &parentPath ) const;
-		int instanceIndex( const ScenePath &branchPath ) const;
-		// Makes a new context suitable for use when evaluating instancePlug()
-		Gaffer::ContextPtr instanceContext( const Gaffer::Context *parentContext, const ScenePath &branchPath ) const;
-		// Fills an existing context with the fields needed for evaluating instancePlug()
-		void fillInstanceContext( Gaffer::Context *instanceContext, const ScenePath &branchPath ) const;
-		void fillInstanceContext( Gaffer::Context *instanceContext, const ScenePath &branchPath, int instanceId ) const;
+		static int instanceIndex( const ScenePath &branchPath );
+
+		struct InstanceScope : public Gaffer::Context::EditableScope
+		{
+			InstanceScope( const Gaffer::Context *context );
+			InstanceScope( const Gaffer::Context *context, const ScenePath &branchPath );
+			void update( const ScenePath &branchPath );
+			void update( const ScenePath &branchPath, int instanceId );
+		};
+
 		Imath::M44f instanceTransform( const IECore::V3fVectorData *p, int instanceId ) const;
 
 		static size_t g_firstPlugIndex;

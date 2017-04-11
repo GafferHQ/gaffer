@@ -64,10 +64,7 @@ class TraverseTask : public tbb::task
 
 		virtual task *execute()
 		{
-
-			Gaffer::ContextPtr context = new Gaffer::Context( *m_context, Gaffer::Context::Borrowed );
-			context->set( ScenePlug::scenePathContextName, m_path );
-			Gaffer::Context::Scope scopedContext( context.get() );
+			ScenePlug::PathScope pathScope( m_context, m_path );
 
 			if( m_f( m_scene, m_path ) )
 			{
@@ -171,9 +168,8 @@ namespace SceneAlgo
 template <class ThreadableFunctor>
 void parallelTraverse( const GafferScene::ScenePlug *scene, ThreadableFunctor &f )
 {
-	Gaffer::ContextPtr c = new Gaffer::Context( *Gaffer::Context::current(), Gaffer::Context::Borrowed );
-	GafferScene::Filter::setInputScene( c.get(), scene );
-	Detail::TraverseTask<ThreadableFunctor> *task = new( tbb::task::allocate_root() ) Detail::TraverseTask<ThreadableFunctor>( scene, c.get(), f );
+	FilterPlug::SceneScope sceneScope( Gaffer::Context::current(), scene );
+	Detail::TraverseTask<ThreadableFunctor> *task = new( tbb::task::allocate_root() ) Detail::TraverseTask<ThreadableFunctor>( scene, Gaffer::Context::current(), f );
 	tbb::task::spawn_root_and_wait( *task );
 }
 

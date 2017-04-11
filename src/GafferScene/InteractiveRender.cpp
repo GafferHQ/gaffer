@@ -257,9 +257,7 @@ class InteractiveRender::ChildNamesUpdateTask : public tbb::task
 
 		virtual task *execute()
 		{
-			ContextPtr context = new Context( *m_context, Context::Borrowed );
-			context->set( ScenePlug::scenePathContextName, m_scenePath );
-			Context::Scope scopedContext( context.get() );
+			ScenePlug::PathScope pathScope( m_context, m_scenePath );
 
 			IECore::MurmurHash childNamesHash = m_scene->childNamesPlug()->hash();
 
@@ -462,9 +460,7 @@ class InteractiveRender::SceneGraphBuildTask : public tbb::task
 
 		virtual task *execute()
 		{
-			ContextPtr context = new Context( *m_context, Context::Borrowed );
-			context->set( ScenePlug::scenePathContextName, m_scenePath );
-			Context::Scope scopedContext( context.get() );
+			ScenePlug::PathScope pathScope( m_context, m_scenePath );
 
 			// we need the attributes so we can terminate recursion at invisible locations, so
 			// we might as well store them in the scene graph, along with the hash:
@@ -650,9 +646,7 @@ class InteractiveRender::SceneGraphEvaluatorFilter : public tbb::filter
 
 			try
 			{
-				ContextPtr context = new Context( *m_context, Context::Borrowed );
-				context->set( ScenePlug::scenePathContextName, path );
-				Context::Scope scopedContext( context.get() );
+				ScenePlug::PathScope pathScope( m_context, path );
 
 				if( m_update )
 				{

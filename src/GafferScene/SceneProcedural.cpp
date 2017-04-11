@@ -240,8 +240,7 @@ void SceneProcedural::initBound( bool compute )
 	/// is fixed.
 	try
 	{
-		ContextPtr timeContext = new Context( *m_context, Context::Borrowed );
-		Context::Scope scopedTimeContext( timeContext.get() );
+		Context::EditableScope timeScope( m_context.get() );
 
 		/// \todo This doesn't take account of the unfortunate fact that our children may have differing
 		/// numbers of segments than ourselves. To get an accurate bound we would need to know the different sample
@@ -277,7 +276,7 @@ void SceneProcedural::initBound( bool compute )
 		m_bound = Imath::Box3f();
 		for( std::set<float>::const_iterator it = times.begin(), eIt = times.end(); it != eIt; it++ )
 		{
-			timeContext->setFrame( *it );
+			timeScope.setFrame( *it );
 			Box3f b = m_scenePlug->boundPlug()->getValue();
 			M44f t = m_scenePlug->transformPlug()->getValue();
 			m_bound.extendBy( transform( b, t ) );

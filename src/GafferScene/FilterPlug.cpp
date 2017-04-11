@@ -47,6 +47,8 @@ using namespace GafferScene;
 
 IE_CORE_DEFINERUNTIMETYPED( FilterPlug );
 
+const IECore::InternedString FilterPlug::inputSceneContextName( "scene:filter:inputScene" );
+
 FilterPlug::FilterPlug( const std::string &name, Direction direction, unsigned flags )
 	:	IntPlug( name, direction, Filter::NoMatch, Filter::NoMatch, Filter::EveryMatch, flags )
 {
@@ -108,4 +110,10 @@ bool FilterPlug::acceptsInput( const Gaffer::Plug *input ) const
 Gaffer::PlugPtr FilterPlug::createCounterpart( const std::string &name, Direction direction ) const
 {
 	return new FilterPlug( name, direction, defaultValue(), minValue(), maxValue(), getFlags() );
+}
+
+FilterPlug::SceneScope::SceneScope( const Gaffer::Context *context, const ScenePlug *scenePlug )
+	:	EditableScope( context )
+{
+	set( inputSceneContextName, (uint64_t)scenePlug );
 }

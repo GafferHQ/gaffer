@@ -44,6 +44,7 @@ void testManyContexts();
 void testManySubstitutions();
 void testManyEnvironmentSubstitutions();
 void testScopingNullContext();
+void testEditableScope();
 
 } // namespace GafferTest
 
