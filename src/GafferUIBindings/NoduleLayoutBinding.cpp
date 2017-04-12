@@ -37,6 +37,7 @@
 #include "boost/python.hpp"
 
 #include "Gaffer/Plug.h"
+#include "GafferBindings/ExceptionAlgo.h"
 
 #include "GafferUI/NoduleLayout.h"
 #include "GafferUI/Nodule.h"
@@ -50,12 +51,53 @@ using namespace Gaffer;
 using namespace GafferUI;
 using namespace GafferUIBindings;
 
+namespace
+{
+
+struct CustomGadgetCreator
+{
+
+	CustomGadgetCreator( object fn )
+		:	m_fn( fn )
+	{
+	}
+
+	GadgetPtr operator()( Gaffer::GraphComponentPtr parent )
+	{
+		IECorePython::ScopedGILLock gilLock;
+		try
+		{
+			return extract<GadgetPtr>( m_fn( parent ) );
+		}
+		catch( const error_already_set & )
+		{
+			GafferBindings::translatePythonException();
+		}
+		return NULL;
+	}
+
+	private :
+
+		object m_fn;
+
+};
+
+void registerCustomGadget( const std::string &gadgetName, object creator )
+{
+	NoduleLayout::registerCustomGadget( gadgetName, CustomGadgetCreator( creator ) );
+}
+
+} // namespace
+
 void GafferUIBindings::bindNoduleLayout()
 {
 
 	GadgetClass<NoduleLayout>()
 		.def( init<GraphComponentPtr, IECore::InternedString>() )
 		.def( "nodule", (Nodule * (NoduleLayout::*)( const Plug *))&NoduleLayout::nodule, return_value_policy<CastToIntrusivePtr>() )
+		.def( "customGadget", (Gadget * (NoduleLayout::*)( const std::string & ))&NoduleLayout::customGadget, return_value_policy<CastToIntrusivePtr>() )
+		.def( "registerCustomGadget", &registerCustomGadget )
+		.staticmethod( "registerCustomGadget" )
 	;
 
 }
