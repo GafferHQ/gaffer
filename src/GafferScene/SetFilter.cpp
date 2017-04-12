@@ -158,7 +158,10 @@ void SetFilter::hashMatch( const ScenePlug *scene, const Gaffer::Context *contex
 		h.append( &(path[0]), path.size() );
 	}
 
-	h.append( scene->setHash( setPlug()->getValue() ) );
+	Gaffer::Context::EditableScope expressionResultScope( context );
+	expressionResultScope.remove( "scene:path" );
+
+	expressionResultPlug()->hash( h );
 }
 
 unsigned SetFilter::computeMatch( const ScenePlug *scene, const Gaffer::Context *context ) const
@@ -170,9 +173,8 @@ unsigned SetFilter::computeMatch( const ScenePlug *scene, const Gaffer::Context 
 
 	const ScenePlug::ScenePath &path = context->get<ScenePlug::ScenePath>( ScenePlug::scenePathContextName );
 
-	Gaffer::ContextPtr pathMatcherContext = new Gaffer::Context( *context, Gaffer::Context::Borrowed );
-	pathMatcherContext->remove( "scene:path" );
-	Gaffer::Context::Scope pathMatcherScope( pathMatcherContext.get() );
+	Gaffer::Context::EditableScope expressionResultScope( context );
+	expressionResultScope.remove( "scene:path" );
 
 	ConstPathMatcherDataPtr set = expressionResultPlug()->getValue();
 
