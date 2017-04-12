@@ -218,11 +218,6 @@ bool OSLShader::acceptsInput( const Plug *plug, const Plug *inputPlug ) const
 			{
 				return false;
 			}
-			// osl disallows the connection of vectors to colours
-			if( plug->isInstanceOf( Color3fPlug::staticTypeId() ) && inputPlug->isInstanceOf( V3fPlug::staticTypeId() ) )
-			{
-				return false;
-			}
 			// and we can only connect closures into closures
 			if( plug->typeId() == Plug::staticTypeId() && inputPlug->typeId() != Plug::staticTypeId() )
 			{

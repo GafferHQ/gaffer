@@ -245,7 +245,7 @@ class OSLShaderTest( GafferOSLTest.OSLTestCase ) :
 
 		self.assertNotEqual( h1, h2 )
 
-	def testCantConnectVectorToColor( self ) :
+	def testCanConnectVectorToColor( self ) :
 
 		globals = GafferOSL.OSLShader()
 		globals.loadShader( "Utility/Globals" )
@@ -253,7 +253,9 @@ class OSLShaderTest( GafferOSLTest.OSLTestCase ) :
 		constant = GafferOSL.OSLShader()
 		constant.loadShader( "Surface/Constant" )
 
-		self.assertFalse( constant["parameters"]["Cs"].acceptsInput( globals["out"]["globalP"] ) )
+		self.assertTrue( constant["parameters"]["Cs"].acceptsInput( globals["out"]["globalP"] ) )
+		constant["parameters"]["Cs"].setInput( globals["out"]["globalP"] )
+		self.assertTrue( constant["parameters"]["Cs"].getInput().isSame( globals["out"]["globalP"] ) )
 
 	def testClosureParameters( self ) :
 

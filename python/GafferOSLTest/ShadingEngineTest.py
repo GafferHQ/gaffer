@@ -374,6 +374,18 @@ class ShadingEngineTest( GafferOSLTest.OSLTestCase ) :
 		# Transform from world to object
 		self.assertEqual( p["Ci"], IECore.Color3fVectorData( [ IECore.Color3f( i + IECore.V3f( -2, 0, 0 ) ) for i in self.rectanglePoints()["P"] ] ) )
 
+	def testVectorToColorConnections( self ) :
+
+		e = GafferOSL.ShadingEngine( IECore.ObjectVector( [
+			IECore.Shader( "Utility/Globals", "shader", { "__handle" : "h" } ),
+			IECore.Shader( "Surface/Constant", "surface", { "Cs" : "link:h.globalP" } ),
+		] ) )
+
+		p = self.rectanglePoints()
+		r = e.shade( p )
+
+		for i, c in enumerate( r["Ci"] ) :
+			self.assertEqual( IECore.V3f( *c ), p["P"][i] )
 
 if __name__ == "__main__":
 	unittest.main()
