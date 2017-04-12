@@ -37,8 +37,11 @@
 #ifndef GAFFER_METADATAALGO_H
 #define GAFFER_METADATAALGO_H
 
+#include <vector>
+
 #include "IECore/TypeIds.h"
 
+#include "Gaffer/Node.h"
 #include "Gaffer/StringAlgo.h"
 
 namespace Gaffer
@@ -46,7 +49,6 @@ namespace Gaffer
 
 class GraphComponent;
 class Plug;
-class Node;
 
 namespace MetadataAlgo
 {
@@ -83,6 +85,17 @@ bool getReadOnly( const GraphComponent *graphComponent );
 /// is inherited. This is the method that should be used to determine if a graphComponent
 /// should be editable by the user or not.
 bool readOnly( const GraphComponent *graphComponent );
+
+/// Bookmarks
+/// =========
+///
+/// Node bookmarks can be used to mark a subset of a complex graph as important to the user.
+/// This metadata may be fetched by client code in order to provide convenient mechanisms for
+/// accessing the node and/or its plugs.
+
+void setBookmarked( Node *node, bool bookmarked, bool persistent = true );
+bool getBookmarked( const Node *node );
+void bookmarks( const Node *node, std::vector<NodePtr> &bookmarks );
 
 /// Utilities
 /// =========

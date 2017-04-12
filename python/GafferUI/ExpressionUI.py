@@ -51,7 +51,7 @@ Gaffer.Metadata.registerNode(
 	scripted expressions.
 	""",
 
-	"layout:customWidget:Expression:widgetType", "GafferUI.ExpressionUI._ExpressionWidget",
+	"layout:customWidget:Expression:widgetType", "GafferUI.ExpressionUI.ExpressionWidget",
 
 	plugs = {
 
@@ -140,10 +140,10 @@ def __popupMenu( menuDefinition, plugValueWidget ) :
 
 __popupMenuConnection = GafferUI.PlugValueWidget.popupMenuSignal().connect( __popupMenu )
 
-# _ExpressionPlugValueWidget
+# ExpressionWidget
 ##########################################################################
 
-class _ExpressionWidget( GafferUI.Widget ) :
+class ExpressionWidget( GafferUI.Widget ) :
 
 	def __init__( self, node, **kw ) :
 
@@ -166,6 +166,7 @@ class _ExpressionWidget( GafferUI.Widget ) :
 			self.__activatedConnection = self.__textWidget.activatedSignal().connect( Gaffer.WeakMethod( self.__activated ) )
 			self.__editingFinishedConnection = self.__textWidget.editingFinishedSignal().connect( Gaffer.WeakMethod( self.__editingFinished ) )
 			self.__dropTextConnection = self.__textWidget.dropTextSignal().connect( Gaffer.WeakMethod( self.__dropText ) )
+			self.__contextMenuConnection = self.__textWidget.contextMenuSignal().connect( Gaffer.WeakMethod( self.__expressionContextMenu ) )
 
 			self.__messageWidget = GafferUI.MessageWidget()
 
@@ -173,6 +174,90 @@ class _ExpressionWidget( GafferUI.Widget ) :
 		self.__errorConnection = self.__node.errorSignal().connect( Gaffer.WeakMethod( self.__error ) )
 
 		self.__update()
+
+	def node( self ) :
+
+		return self.__node
+
+	def textWidget( self ) :
+
+		return self.__textWidget
+
+	__expressionContextMenuSignal = Gaffer.Signal2()
+	## This signal is emitted whenever a popup menu
+	# for an ExpressionWidget is about to be shown.
+	# This provides an opportunity to customise the
+	# menu from external code. The signature for
+	# slots is ( menuDefinition, widget ), and slots
+	# should just modify the menu definition in place.
+	@classmethod
+	def expressionContextMenuSignal( cls ) :
+
+		return cls.__expressionContextMenuSignal
+
+	def __expressionContextMenuDefinition( self ) :
+
+		menuDefinition = IECore.MenuDefinition()
+
+		bookmarks = Gaffer.MetadataAlgo.bookmarks( self.__node.parent() )
+
+		def __bookmarkMenu( bookmarks ) :
+
+			bookmarkMenuDefinition = IECore.MenuDefinition()
+
+			def __walk( graphComponent, result ) :
+
+				if (
+					isinstance( graphComponent, Gaffer.ValuePlug ) and
+					self.__node.identifier( graphComponent ) and
+					not graphComponent.relativeName( graphComponent.node() ).startswith( "__" )
+				) :
+					result.append( graphComponent )
+
+				for c in graphComponent.children( Gaffer.Plug ) :
+					__walk( c, result )
+
+			for bookmark in bookmarks :
+
+				compatiblePlugs = []
+				__walk( bookmark, compatiblePlugs )
+
+				if not compatiblePlugs :
+					continue
+
+				for plug in compatiblePlugs :
+					label = "/" + bookmark.getName()
+					if len( compatiblePlugs ) > 1 :
+						label += "/"  + plug.relativeName( bookmark )
+					bookmarkMenuDefinition.append(
+						label,
+						{
+							"command" : functools.partial( self.__textWidget.insertText, self.__node.identifier( plug ) ),
+							"active" : self.__textWidget.getEditable() and not Gaffer.MetadataAlgo.readOnly( self.__node['__expression'] ),
+						}
+					)
+
+			return bookmarkMenuDefinition
+
+		menuDefinition.append( "/Insert Bookmark", { "subMenu" : functools.partial( __bookmarkMenu, bookmarks ) } )
+
+		self.expressionContextMenuSignal()( menuDefinition, self )
+
+		return menuDefinition
+
+	def __expressionContextMenu( self, *unused ) :
+
+		menuDefinition = self.__expressionContextMenuDefinition()
+		if not len( menuDefinition.items() ) :
+			return False
+
+		title = self.__node.relativeName( self.__node.scriptNode() )
+		title = ".".join( [ IECore.CamelCase.join( IECore.CamelCase.split( x ) ) for x in title.split( "." ) ] )
+
+		self.____expressionContextMenu = GafferUI.Menu( menuDefinition, title = title )
+		self.____expressionContextMenu.popup()
+
+		return True
 
 	def __update( self ) :
 

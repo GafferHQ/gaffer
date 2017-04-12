@@ -1,6 +1,6 @@
 ##########################################################################
 #
-#  Copyright (c) 2013, John Haddon. All rights reserved.
+#  Copyright (c) 2017, Image Engine Design Inc. All rights reserved.
 #
 #  Redistribution and use in source and binary forms, with or without
 #  modification, are permitted provided that the following conditions are
@@ -34,10 +34,31 @@
 #
 ##########################################################################
 
-import OSLShaderUI
-import OSLImageUI
-import OSLObjectUI
-import OSLCodeUI
-import OSLExpressionEngineUI
+import functools
 
-__import__( "IECore" ).loadConfig( "GAFFER_STARTUP_PATHS", {}, subdirectory = "GafferOSLUI" )
+import Gaffer
+import GafferUI
+
+import _CodeMenu
+
+def __oslPopupMenu( menuDefinition, widget ) :
+
+	node = widget.node()
+	if not isinstance( node, Gaffer.Expression ) or node.getExpression()[-1] != "OSL" :
+		return
+
+	if len( menuDefinition.items() ) :
+		menuDefinition.append( "/InsertOSLDivider", { "divider" : True } )
+
+	menuDefinition.append(
+		"/Insert OSL",
+		{
+			"subMenu" : functools.partial(
+				_CodeMenu.commonFunctionMenu,
+				command = widget.textWidget().insertText,
+				activator = lambda : widget.textWidget().getEditable() and not Gaffer.MetadataAlgo.readOnly( node["__expression"] ),
+			),
+		},
+	)
+
+GafferUI.ExpressionUI.ExpressionWidget.expressionContextMenuSignal().connect( __oslPopupMenu, scoped = False )

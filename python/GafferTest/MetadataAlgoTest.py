@@ -72,6 +72,49 @@ class MetadataAlgoTest( GafferTest.TestCase ) :
 		self.assertEqual( Gaffer.MetadataAlgo.readOnly( n ), True )
 		self.assertEqual( Gaffer.MetadataAlgo.readOnly( n["op1"] ), True )
 
+	def testBookmarks( self ) :
+
+		b = Gaffer.Box()
+		b["n0"] = GafferTest.AddNode()
+		b["n1"] = GafferTest.AddNode()
+
+		self.assertEqual( Gaffer.MetadataAlgo.getBookmarked( b ), False )
+		self.assertEqual( Gaffer.MetadataAlgo.getBookmarked( b["n0"] ), False )
+		self.assertEqual( Gaffer.MetadataAlgo.getBookmarked( b["n1"] ), False )
+		self.assertEqual( Gaffer.MetadataAlgo.bookmarks( b ), [] )
+
+		Gaffer.MetadataAlgo.setBookmarked( b["n0"], True )
+
+		self.assertEqual( Gaffer.MetadataAlgo.getBookmarked( b ), False )
+		self.assertEqual( Gaffer.MetadataAlgo.getBookmarked( b["n0"] ), True )
+		self.assertEqual( Gaffer.MetadataAlgo.getBookmarked( b["n1"] ), False )
+		self.assertEqual( Gaffer.MetadataAlgo.bookmarks( b ), [ b["n0"] ] )
+
+		Gaffer.MetadataAlgo.setBookmarked( b["n1"], True )
+
+		self.assertEqual( Gaffer.MetadataAlgo.getBookmarked( b ), False )
+		self.assertEqual( Gaffer.MetadataAlgo.getBookmarked( b["n0"] ), True )
+		self.assertEqual( Gaffer.MetadataAlgo.getBookmarked( b["n1"] ), True )
+		self.assertEqual( Gaffer.MetadataAlgo.bookmarks( b ), [ b["n0"], b["n1"] ] )
+
+		Gaffer.MetadataAlgo.setBookmarked( b["n0"], False )
+
+		self.assertEqual( Gaffer.MetadataAlgo.getBookmarked( b ), False )
+		self.assertEqual( Gaffer.MetadataAlgo.getBookmarked( b["n0"] ), False )
+		self.assertEqual( Gaffer.MetadataAlgo.getBookmarked( b["n1"] ), True )
+		self.assertEqual( Gaffer.MetadataAlgo.bookmarks( b ), [ b["n1"] ] )
+
+		Gaffer.MetadataAlgo.setBookmarked( b, True )
+
+		self.assertEqual( Gaffer.MetadataAlgo.getBookmarked( b ), True )
+		self.assertTrue( b not in Gaffer.MetadataAlgo.bookmarks( b ) )
+
+		s = Gaffer.ScriptNode()
+		s.addChild( b )
+
+		self.assertEqual( Gaffer.MetadataAlgo.getBookmarked( b ), True )
+		self.assertEqual( Gaffer.MetadataAlgo.bookmarks( s ), [ b ] )
+
 	def testAffected( self ) :
 
 		n = GafferTest.CompoundPlugNode()

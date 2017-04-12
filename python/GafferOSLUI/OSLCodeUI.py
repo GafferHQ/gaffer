@@ -43,6 +43,8 @@ import Gaffer
 import GafferUI
 import GafferOSL
 
+import _CodeMenu
+
 Gaffer.Metadata.registerNode(
 
 	GafferOSL.OSLCode,
@@ -335,85 +337,19 @@ def __plugPopupMenu( menuDefinition, plugValueWidget ) :
 
 	elif plug.isSame( node["code"] ) :
 
-		for label, text in reversed( [
-
-			( "/Math/Constants/Pi", "M_PI" ),
-			( "/Math/Angles/Radians", "radians( angleInDegrees )" ),
-			( "/Math/Angles/Degrees", "degrees( angleInRadians )" ),
-			( "/Math/Trigonometry/Sin", "sin( angleInRadians )" ),
-			( "/Math/Trigonometry/Cosine", "cos( angleInRadians )" ),
-			( "/Math/Trigonometry/Tangent", "tan( angleInRadians )" ),
-			( "/Math/Trigonometry/Arc Sin", "asin( y )" ),
-			( "/Math/Trigonometry/Arc Cosine", "acos( x )" ),
-			( "/Math/Trigonometry/Arc Tangent", "atan( yOverX )" ),
-			( "/Math/Trigonometry/Arc Tangent 2", "atan2( y, x )" ),
-			( "/Math/Exponents/Pow", "pow( x, y )" ),
-			( "/Math/Exponents/Exp", "exp( x )" ),
-			( "/Math/Exponents/Log", "log( x )" ),
-			( "/Math/Exponents/Square Root", "sqrt( x )" ),
-			( "/Math/Utility/Abs", "abs( x )" ),
-			( "/Math/Utility/Sign", "sign( x )" ),
-			( "/Math/Utility/Floor", "floor( x )" ),
-			( "/Math/Utility/Ceil", "ceil( x )" ),
-			( "/Math/Utility/Round", "round( x )" ),
-			( "/Math/Utility/Trunc", "trunc( x )" ),
-			( "/Math/Utility/Mod", "mod( x )" ),
-			( "/Math/Utility/Min", "min( a, b )" ),
-			( "/Math/Utility/Max", "max( a, b )" ),
-			( "/Math/Utility/Clamp", "clamp( x, minValue, maxValue )" ),
-			( "/Math/Utility/Mix", "mix( a, b, alpha )" ),
-			( "/Math/Geometry/Dot", "dot( a, b )" ),
-
-			( "/Geometry/Cross", "cross( a, b )" ),
-			( "/Geometry/Length", "length( V )" ),
-			( "/Geometry/Length", "distance( p0, p1 )" ),
-			( "/Geometry/Normalize", "normalize( V )" ),
-			( "/Geometry/Face Forward", "faceforward( N, I )" ),
-			( "/Geometry/Reflect", "reflect( I, N )" ),
-			( "/Geometry/Refract", "refract( I, N, eta )" ),
-			( "/Geometry/Rotate", "rotate( p, angle, p0, p1 )" ),
-			( "/Geometry/Transform", "transform( toSpace, p )" ),
-			( "/Geometry/Transform", "transform( fromSpace, toSpace, p )" ),
-
-			( "/Color/Luminance", "luminance( c )" ),
-			( "/Color/BlackBody", "blackbody( degreesKelvin )" ),
-			( "/Color/Wavelength Color", "wavelength_color( wavelengthNm )" ),
-			( "/Color/Transform", "transformc( fromSpace, toSpace, c )" ),
-
-			( "/Pattern/Step", "step( edge, x )" ),
-			( "/Pattern/Linear Step", "linearstep( edge0, edge1, x )" ),
-			( "/Pattern/Smooth Step", "smoothstep( edge0, edge1, x )" ),
-			( "/Pattern/Noise", "noise( \"perlin\", p )" ),
-			( "/Pattern/Periodic Noise", "noise( \"perlin\", p, period )" ),
-			( "/Pattern/Cell Noise", "cellnoise( p )" ),
-
-			( "/String/Length", "length( str )" ),
-			( "/String/Format", "format( \"\", ... )" ),
-			( "/String/Join", "concat( str0, str1 )" ),
-			( "/String/Split", "split( str, results )" ),
-			( "/String/Starts With", "startswith( str, prefix )" ),
-			( "/String/Ends With", "endswith( str, suffix )" ),
-			( "/String/Substring", "substr( str, start, length )" ),
-			( "/String/Get Char", "getchar( str, n )" ),
-			( "/String/Hash", "hash( str )" ),
-
-			( "/Texture/Texture", "texture( filename, s, t )" ),
-			( "/Texture/Environment", "environment( filename, R )" ),
-
-			( "/Parameter/Is Connected", "isconnected( parameter )" ),
-			( "/Parameter/Is Constant", "isconstant( parameter )" ),
-
-		] ) :
-
+		if len( menuDefinition.items() ) :
 			menuDefinition.prepend( "/InsertDivider", { "divider" : True } )
 
-			menuDefinition.prepend(
-				"/Insert" + label,
-				{
-					"command" : functools.partial( plugValueWidget.textWidget().insertText, text ),
-					"active" : not plugValueWidget.getReadOnly() and not Gaffer.MetadataAlgo.readOnly( plug ),
-				},
-			)
+		menuDefinition.prepend(
+			"/Insert",
+			{
+				"subMenu" : functools.partial(
+					_CodeMenu.commonFunctionMenu,
+					command = plugValueWidget.textWidget().insertText,
+					activator = lambda : not plugValueWidget.getReadOnly() and not Gaffer.MetadataAlgo.readOnly( plug ),
+				),
+			},
+		)
 
 __plugPopupMenuConnection = GafferUI.PlugValueWidget.popupMenuSignal().connect( __plugPopupMenu )
 

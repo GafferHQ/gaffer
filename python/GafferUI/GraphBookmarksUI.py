@@ -50,7 +50,7 @@ def appendNodeContextMenuDefinitions( nodeGraph, node, menuDefinition ) :
 	menuDefinition.append(
 		"/Bookmarked",
 		{
-			"checkBox" : __getBookmarked( node ),
+			"checkBox" : Gaffer.MetadataAlgo.getBookmarked( node ),
 			"command" : functools.partial( __setBookmarked, node ),
 			"active" : not Gaffer.MetadataAlgo.readOnly( node ),
 		}
@@ -60,7 +60,7 @@ def appendPlugContextMenuDefinitions( nodeGraph, plug, menuDefinition ) :
 
 	parent = nodeGraph.graphGadget().getRoot()
 	dividerAdded = False
-	for bookmark in __bookmarks( parent ) :
+	for bookmark in Gaffer.MetadataAlgo.bookmarks( parent ) :
 
 		nodeGadget = nodeGraph.graphGadget().nodeGadget( bookmark )
 		if nodeGadget is None :
@@ -97,18 +97,10 @@ def appendPlugContextMenuDefinitions( nodeGraph, plug, menuDefinition ) :
 # Internal implementation
 ##########################################################################
 
-def __getBookmarked( node ) :
-
-	return Gaffer.Metadata.value( node, "graphBookmarks:bookmarked" ) or False
-
 def __setBookmarked( node, bookmarked ) :
 
 	with Gaffer.UndoContext( node.scriptNode() ) :
-		Gaffer.Metadata.registerValue( node, "graphBookmarks:bookmarked", bookmarked )
-
-def __bookmarks( parent ) :
-
-	return [ n for n in parent.children( Gaffer.Node ) if __getBookmarked( n ) ]
+		Gaffer.MetadataAlgo.setBookmarked( node, bookmarked )
 
 ## \todo Perhaps this functionality should be provided by the
 # GraphGadget or NodeGadget class?

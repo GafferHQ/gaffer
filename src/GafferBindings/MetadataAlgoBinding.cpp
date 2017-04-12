@@ -41,9 +41,30 @@
 #include "Gaffer/Plug.h"
 #include "Gaffer/Node.h"
 
+#include "GafferBindings/MetadataAlgoBinding.h"
+
 using namespace boost::python;
 using namespace Gaffer;
 using namespace Gaffer::MetadataAlgo;
+
+namespace
+{
+
+static boost::python::list bookmarksWrapper( const Node *node )
+{
+	std::vector<NodePtr> bookmarks;
+	MetadataAlgo::bookmarks( node, bookmarks );
+
+	boost::python::list result;
+	for( std::vector<NodePtr>::const_iterator it = bookmarks.begin(), endIt = bookmarks.end(); it != endIt; ++it )
+	{
+		result.append( *it );
+	}
+
+	return result;
+}
+
+}
 
 namespace GafferBindings
 {
@@ -57,7 +78,9 @@ void bindMetadataAlgo()
 	def( "setReadOnly", &setReadOnly, ( arg( "graphComponent" ), arg( "readOnly"), arg( "persistent" ) = true ) );
 	def( "getReadOnly", &getReadOnly );
 	def( "readOnly", &readOnly );
-
+	def( "setBookmarked", &setBookmarked, ( arg( "graphComponent" ), arg( "bookmarked"), arg( "persistent" ) = true ) );
+	def( "getBookmarked", &getBookmarked );
+	def( "bookmarks", &bookmarksWrapper );
 	def(
 		"affectedByChange",
 		(bool (*)( const Plug *, IECore::TypeId, const MatchPattern &, const Plug * ))&affectedByChange,
