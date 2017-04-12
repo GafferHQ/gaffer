@@ -112,7 +112,7 @@ class NoduleLayout : public Gadget
 		void plugMetadataChanged( IECore::TypeId nodeTypeId, const Gaffer::MatchPattern &plugPath, IECore::InternedString key, const Gaffer::Plug *plug );
 		void nodeMetadataChanged( IECore::TypeId nodeTypeId, IECore::InternedString key, const Gaffer::Node *node );
 
-		void updateGadgets( std::vector<Gadget *> &gadgets, std::vector<Nodule *> &added, std::vector<NodulePtr> &removed );
+		std::vector<GadgetKey> layoutOrder();
 		void updateLayout();
 		void updateSpacing();
 		void updateDirection();
