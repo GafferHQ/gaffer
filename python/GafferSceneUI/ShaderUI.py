@@ -63,6 +63,10 @@ Gaffer.Metadata.registerNode(
 
 	"nodeGadget:minWidth", 0.0,
 
+	# Add + button for showing and hiding parameters in the NodeGraph
+	"noduleLayout:customGadget:addButton:gadgetType", "GafferSceneUI.ShaderUI.PlugAdder",
+	"noduleLayout:customGadget:addButton:section", "left",
+
 	plugs = {
 
 		"name" : [

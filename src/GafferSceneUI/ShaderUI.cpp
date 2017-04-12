@@ -43,6 +43,7 @@
 
 #include "GafferUI/Nodule.h"
 #include "GafferUI/PlugAdder.h"
+#include "GafferUI/NoduleLayout.h"
 
 #include "GafferScene/Shader.h"
 
@@ -180,29 +181,30 @@ class ShaderPlugAdder : public PlugAdder
 
 };
 
-struct ShaderNodeGadgetCreator
+struct Registration
 {
 
-	ShaderNodeGadgetCreator()
+	Registration()
 	{
-		NodeGadget::registerNodeGadget( Shader::staticTypeId(), *this );
+		NoduleLayout::registerCustomGadget( "GafferSceneUI.ShaderUI.PlugAdder", boost::bind( &create, ::_1 ) );
 	}
 
-	NodeGadgetPtr operator()( NodePtr node )
-	{
-		ShaderPtr shader = IECore::runTimeCast<Shader>( node );
-		if( !shader )
+	private :
+
+		static GadgetPtr create( GraphComponentPtr parent )
 		{
-			throw IECore::Exception( "ShaderNodeGadget requires a Shader" );
+			ShaderPtr shader = IECore::runTimeCast<Shader>( parent );
+			if( !shader )
+			{
+				throw IECore::Exception( "ShaderPlugAdder requires a Shader" );
+			}
+
+			return new ShaderPlugAdder( shader, StandardNodeGadget::TopEdge );
 		}
-		StandardNodeGadgetPtr result = new StandardNodeGadget( shader );
-		result->setEdgeGadget( StandardNodeGadget::LeftEdge, new ShaderPlugAdder( shader, StandardNodeGadget::LeftEdge ) );
-		return result;
-	}
 
 };
 
-ShaderNodeGadgetCreator g_shaderNodeGadgetCreator;
+Registration g_registration;
 
 } // namespace
 

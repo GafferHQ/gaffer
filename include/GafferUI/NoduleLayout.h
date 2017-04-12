@@ -38,6 +38,8 @@
 #ifndef GAFFERUI_NODULELAYOUT_H
 #define GAFFERUI_NODULELAYOUT_H
 
+#include "boost/variant.hpp"
+
 #include "Gaffer/StringAlgo.h"
 
 #include "GafferUI/Gadget.h"
@@ -68,6 +70,8 @@ IE_CORE_FORWARDDECLARE( Nodule )
 ///
 /// - noduleLayout:section:<sectionName>:spacing, float
 /// - noduleLayout:section:<sectionName>:direction, string, "increasing" or "decreasing"
+/// - noduleLayout:customGadget:<name>:gadgetType, string
+/// - noduleLayout:customGadget:<name>:*, as for child plug metadata above
 class NoduleLayout : public Gadget
 {
 
@@ -78,23 +82,39 @@ class NoduleLayout : public Gadget
 		NoduleLayout( Gaffer::GraphComponentPtr parent, IECore::InternedString section = IECore::InternedString() );
 		virtual ~NoduleLayout();
 
+		/// \todo These do not need to be virtual, since this is
+		/// not intended to be used as a base class.
 		virtual Nodule *nodule( const Gaffer::Plug *plug );
 		virtual const Nodule *nodule( const Gaffer::Plug *plug ) const;
+
+		Gadget *customGadget( const std::string &name );
+		const Gadget *customGadget( const std::string &name ) const;
+
+		typedef boost::function<GadgetPtr ( Gaffer::GraphComponentPtr )> CustomGadgetCreator;
+		/// Registers a custom gadget type that can be added to the layout using
+		/// "noduleLayout:customGadget:*"" metadata entries.
+		static void registerCustomGadget( const std::string &gadgetType, CustomGadgetCreator creator );
 
 	private :
 
 		LinearContainer *noduleContainer();
 		const LinearContainer *noduleContainer() const;
 
-		struct TypeAndNodule
+		struct TypeAndGadget
 		{
-			TypeAndNodule() {}
-			TypeAndNodule( IECore::InternedString type, NodulePtr nodule ) : type( type ), nodule( nodule ) {}
+			TypeAndGadget() {}
+			TypeAndGadget( IECore::InternedString type, GadgetPtr gadget ) : type( type ), gadget( gadget ) {}
+			// Nodule type or custom gadget type
 			IECore::InternedString type;
-			NodulePtr nodule;
+			// Nodule or custom gadget
+			GadgetPtr gadget;
 		};
-		typedef std::map<const Gaffer::Plug *, TypeAndNodule> NoduleMap;
-		NoduleMap m_nodules;
+		// Either a plug or the name of a custom widget
+		typedef boost::variant<const Gaffer::Plug *, IECore::InternedString> GadgetKey;
+		// Map from plugs and custom gadget names to the gadgets
+		// that represent them.
+		typedef std::map<GadgetKey, TypeAndGadget> GadgetMap;
+		GadgetMap m_gadgets;
 
 		void childAdded( Gaffer::GraphComponent *child );
 		void childRemoved( Gaffer::GraphComponent *child );
@@ -102,8 +122,8 @@ class NoduleLayout : public Gadget
 		void plugMetadataChanged( IECore::TypeId nodeTypeId, const Gaffer::MatchPattern &plugPath, IECore::InternedString key, const Gaffer::Plug *plug );
 		void nodeMetadataChanged( IECore::TypeId nodeTypeId, IECore::InternedString key, const Gaffer::Node *node );
 
-		void updateNodules( std::vector<Nodule *> &nodules, std::vector<Nodule *> &added, std::vector<NodulePtr> &removed );
-		void updateNoduleLayout();
+		std::vector<GadgetKey> layoutOrder();
+		void updateLayout();
 		void updateSpacing();
 		void updateDirection();
 		void updateOrientation();

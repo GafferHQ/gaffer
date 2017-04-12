@@ -43,6 +43,7 @@
 
 #include "GafferUI/Nodule.h"
 #include "GafferUI/PlugAdder.h"
+#include "GafferUI/NoduleLayout.h"
 
 using namespace IECore;
 using namespace Gaffer;
@@ -117,42 +118,32 @@ class SwitchPlugAdder : public PlugAdder
 
 };
 
-struct SwitchNodeGadgetCreator
+struct Registration
 {
 
-	SwitchNodeGadgetCreator()
+	Registration()
 	{
-		NodeGadget::registerNodeGadget( SwitchComputeNode::staticTypeId(), *this );
+		NoduleLayout::registerCustomGadget( "GafferUI.SwitchUI.PlugAdder.Top", boost::bind( &create, ::_1, StandardNodeGadget::TopEdge ) );
+		NoduleLayout::registerCustomGadget( "GafferUI.SwitchUI.PlugAdder.Bottom", boost::bind( &create, ::_1, StandardNodeGadget::BottomEdge ) );
+		NoduleLayout::registerCustomGadget( "GafferUI.SwitchUI.PlugAdder.Left", boost::bind( &create, ::_1, StandardNodeGadget::LeftEdge ) );
+		NoduleLayout::registerCustomGadget( "GafferUI.SwitchUI.PlugAdder.Right", boost::bind( &create, ::_1, StandardNodeGadget::RightEdge ) );
 	}
 
-	NodeGadgetPtr operator()( NodePtr node )
-	{
-		SwitchComputeNodePtr switchNode = runTimeCast<SwitchComputeNode>( node );
-		if( !switchNode )
-		{
-			throw Exception( "SwitchNodeGadget requires a SwitchComputeNode" );
-		}
+	private :
 
-		StandardNodeGadgetPtr result = new StandardNodeGadget( node );
-		result->setEdgeGadget( StandardNodeGadget::LeftEdge, new SwitchPlugAdder( switchNode, StandardNodeGadget::LeftEdge ) );
-		result->setEdgeGadget( StandardNodeGadget::RightEdge, new SwitchPlugAdder( switchNode, StandardNodeGadget::RightEdge ) );
-		if( !node->isInstanceOf( "GafferScene::ShaderSwitch" ) )
+		static GadgetPtr create( GraphComponentPtr parent, StandardNodeGadget::Edge edge )
 		{
-			/// \todo Either remove ShaderSwitch on the grounds that it
-			/// doesn't really do anything above and beyond a regular
-			/// SwitchComputeNode, or come up with a metadata convention
-			/// to control this behaviour. What would be really nice is
-			/// to control the whole of the NodeGadget layout using the
-			/// same metadata conventions as the PlugLayout on the widget
-			/// side of things.
-			result->setEdgeGadget( StandardNodeGadget::TopEdge, new SwitchPlugAdder( switchNode, StandardNodeGadget::TopEdge ) );
-			result->setEdgeGadget( StandardNodeGadget::BottomEdge, new SwitchPlugAdder( switchNode, StandardNodeGadget::BottomEdge ) );
+			SwitchComputeNodePtr switchNode = runTimeCast<SwitchComputeNode>( parent );
+			if( !switchNode )
+			{
+				throw Exception( "SwitchPlugAdder requires a SwitchComputeNode" );
+			}
+
+			return new SwitchPlugAdder( switchNode, edge );
 		}
-		return result;
-	}
 
 };
 
-SwitchNodeGadgetCreator g_switchNodeGadgetCreator;
+Registration g_registration;
 
 } // namespace
