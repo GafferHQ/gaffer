@@ -125,14 +125,13 @@ Imath::Box2i Offset::computeDataWindow( const Gaffer::Context *context, const Im
 
 void Offset::hashChannelData( const GafferImage::ImagePlug *parent, const Gaffer::Context *context, IECore::MurmurHash &h ) const
 {
-	ContextPtr offsetContext = new Context( *context, Context::Borrowed );
-	Context::Scope scope( offsetContext.get() );
+	ImagePlug::ChannelDataScope offsetScope( context );
 
 	const V2i offset = offsetPlug()->getValue();
 	const V2i tileOrigin = context->get<V2i>( ImagePlug::tileOriginContextName );
 	if( offset.x % ImagePlug::tileSize() == 0 && offset.y % ImagePlug::tileSize() == 0 )
 	{
-		offsetContext->set( ImagePlug::tileOriginContextName, tileOrigin - offset );
+		offsetScope.setTileOrigin( tileOrigin - offset );
 		h = inPlug()->channelDataPlug()->hash();
 	}
 	else
@@ -147,7 +146,7 @@ void Offset::hashChannelData( const GafferImage::ImagePlug *parent, const Gaffer
 		{
 			for( inTileOrigin.x = ImagePlug::tileOrigin( inBound.min ).x; inTileOrigin.x < inBound.max.x; inTileOrigin.x += ImagePlug::tileSize() )
 			{
-				offsetContext->set( ImagePlug::tileOriginContextName, inTileOrigin );
+				offsetScope.setTileOrigin( inTileOrigin );
 				inPlug()->channelDataPlug()->hash( h );
 			}
 		}
@@ -158,13 +157,12 @@ void Offset::hashChannelData( const GafferImage::ImagePlug *parent, const Gaffer
 
 IECore::ConstFloatVectorDataPtr Offset::computeChannelData( const std::string &channelName, const Imath::V2i &tileOrigin, const Gaffer::Context *context, const ImagePlug *parent ) const
 {
-	ContextPtr offsetContext = new Context( *context, Context::Borrowed );
-	Context::Scope scope( offsetContext.get() );
+	ImagePlug::ChannelDataScope offsetScope( context );
 
 	const V2i offset = offsetPlug()->getValue();
 	if( offset.x % ImagePlug::tileSize() == 0 && offset.y % ImagePlug::tileSize() == 0 )
 	{
-		offsetContext->set( ImagePlug::tileOriginContextName, tileOrigin - offset );
+		offsetScope.setTileOrigin( tileOrigin - offset );
 		return inPlug()->channelDataPlug()->getValue();
 	}
 	else
@@ -181,7 +179,7 @@ IECore::ConstFloatVectorDataPtr Offset::computeChannelData( const std::string &c
 		{
 			for( inTileOrigin.x = ImagePlug::tileOrigin( inBound.min ).x; inTileOrigin.x < inBound.max.x; inTileOrigin.x += ImagePlug::tileSize() )
 			{
-				offsetContext->set( ImagePlug::tileOriginContextName, inTileOrigin );
+				offsetScope.setTileOrigin( inTileOrigin );
 				ConstFloatVectorDataPtr inData = inPlug()->channelDataPlug()->getValue();
 				const float *in = &inData->readable().front();
 

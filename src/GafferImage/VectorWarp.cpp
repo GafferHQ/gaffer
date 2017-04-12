@@ -184,32 +184,36 @@ void VectorWarp::hashEngine( const Imath::V2i &tileOrigin, const Gaffer::Context
 	Warp::hashEngine( tileOrigin, context, h );
 
 	h.append( tileOrigin );
-	vectorPlug()->dataWindowPlug()->hash( h );
 
-	ConstStringVectorDataPtr channelNames = vectorPlug()->channelNamesPlug()->getValue();
+	ConstStringVectorDataPtr channelNames;
 
-	ContextPtr tmpContext = new Context( *context, Context::Borrowed );
-	Context::Scope scopedContext( tmpContext.get() );
+	{
+		ImagePlug::GlobalScope c( context );
+		channelNames = vectorPlug()->channelNamesPlug()->getValue();
+		vectorPlug()->dataWindowPlug()->hash( h );
+		inPlug()->formatPlug()->hash( h );
+	}
+
+
+	ImagePlug::ChannelDataScope channelDataScope( context );
 
 	if( ImageAlgo::channelExists( channelNames->readable(), "R" ) )
 	{
-		tmpContext->set<std::string>( ImagePlug::channelNameContextName, "R" );
+		channelDataScope.setChannelName( "R" );
 		vectorPlug()->channelDataPlug()->hash( h );
 	}
 
 	if( ImageAlgo::channelExists( channelNames->readable(), "G" ) )
 	{
-		tmpContext->set<std::string>( ImagePlug::channelNameContextName, "G" );
+		channelDataScope.setChannelName( "G" );
 		vectorPlug()->channelDataPlug()->hash( h );
 	}
 
 	if( ImageAlgo::channelExists( channelNames->readable(), "A" ) )
 	{
-		tmpContext->set<std::string>( ImagePlug::channelNameContextName, "A" );
+		channelDataScope.setChannelName( "A" );
 		vectorPlug()->channelDataPlug()->hash( h );
 	}
-
-	inPlug()->formatPlug()->hash( h );
 
 	vectorModePlug()->hash( h );
 	vectorUnitsPlug()->hash( h );
@@ -218,36 +222,44 @@ void VectorWarp::hashEngine( const Imath::V2i &tileOrigin, const Gaffer::Context
 const Warp::Engine *VectorWarp::computeEngine( const Imath::V2i &tileOrigin, const Gaffer::Context *context ) const
 {
 	const Box2i tileBound( tileOrigin, tileOrigin + V2i( ImagePlug::tileSize() ) );
-	const Box2i validTileBound = BufferAlgo::intersection( tileBound, vectorPlug()->dataWindowPlug()->getValue() );
 
-	ConstStringVectorDataPtr channelNames = vectorPlug()->channelNamesPlug()->getValue();
+	
+	Box2i validTileBound;
+	ConstStringVectorDataPtr channelNames;
+	Box2i displayWindow;
 
-	ContextPtr tmpContext = new Context( *context, Context::Borrowed );
-	Context::Scope scopedContext( tmpContext.get() );
+	{
+		ImagePlug::GlobalScope c( context );
+		validTileBound = BufferAlgo::intersection( tileBound, vectorPlug()->dataWindowPlug()->getValue() );
+		channelNames = vectorPlug()->channelNamesPlug()->getValue();
+		displayWindow = inPlug()->formatPlug()->getValue().getDisplayWindow();
+	}
+
+	ImagePlug::ChannelDataScope channelDataScope( context );
 
 	ConstFloatVectorDataPtr xData = ImagePlug::blackTile();
 	if( ImageAlgo::channelExists( channelNames->readable(), "R" ) )
 	{
-		tmpContext->set<std::string>( ImagePlug::channelNameContextName, "R" );
+		channelDataScope.setChannelName( "R" );
 		xData = vectorPlug()->channelDataPlug()->getValue();
 	}
 
 	ConstFloatVectorDataPtr yData = ImagePlug::blackTile();
 	if( ImageAlgo::channelExists( channelNames->readable(), "G" ) )
 	{
-		tmpContext->set<std::string>( ImagePlug::channelNameContextName, "G" );
+		channelDataScope.setChannelName( "G" );
 		yData = vectorPlug()->channelDataPlug()->getValue();
 	}
 
 	ConstFloatVectorDataPtr aData = ImagePlug::whiteTile();
 	if( ImageAlgo::channelExists( channelNames->readable(), "A" ) )
 	{
-		tmpContext->set<std::string>( ImagePlug::channelNameContextName, "A" );
+		channelDataScope.setChannelName( "A" );
 		aData = vectorPlug()->channelDataPlug()->getValue();
 	}
 
 	return new Engine(
-		inPlug()->formatPlug()->getValue().getDisplayWindow(),
+		displayWindow,
 		tileBound,
 		validTileBound,
 		xData,

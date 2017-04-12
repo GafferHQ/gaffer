@@ -112,7 +112,10 @@ bool OpenColorIOTransform::enabled() const
 	}
 
 	MurmurHash h;
-	hashTransform( Context::current(), h );
+	{
+		ImagePlug::GlobalScope c( Context::current() );
+		hashTransform( Context::current(), h );
+	}
 	return ( h != MurmurHash() );
 }
 
@@ -136,7 +139,11 @@ void OpenColorIOTransform::hashColorData( const Gaffer::Context *context, IECore
 	{
 		contextPlug()->hash( h );
 	}
-	hashTransform( context, h );
+
+	{
+		ImagePlug::GlobalScope c( Context::current() );
+		hashTransform( context, h );
+	}
 }
 
 OpenColorIO::ConstContextRcPtr OpenColorIOTransform::ocioContext(OpenColorIO::ConstConfigRcPtr config) const
@@ -189,7 +196,12 @@ OpenColorIO::ConstContextRcPtr OpenColorIOTransform::ocioContext(OpenColorIO::Co
 
 void OpenColorIOTransform::processColorData( const Gaffer::Context *context, IECore::FloatVectorData *r, IECore::FloatVectorData *g, IECore::FloatVectorData *b ) const
 {
-	OpenColorIO::ConstTransformRcPtr colorTransform = transform();
+	OpenColorIO::ConstTransformRcPtr colorTransform;
+	{
+		ImagePlug::GlobalScope c( context );
+		colorTransform = transform();
+	}
+
 	if( !colorTransform )
 	{
 		return;

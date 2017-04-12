@@ -42,6 +42,7 @@
 
 #include "Gaffer/TypedObjectPlug.h"
 #include "Gaffer/TypedPlug.h"
+#include "Gaffer/Context.h"
 
 #include "GafferImage/TypeIds.h"
 #include "GafferImage/AtomicFormatPlug.h"
@@ -135,6 +136,25 @@ class ImagePlug : public Gaffer::ValuePlug
 		IECore::MurmurHash imageHash() const;
 		//@}
 
+		/// Utility class to scope a temporary copy of a context,
+		/// with tile/channel specific variables removed. This can be used
+		/// when evaluating plugs which must be global to the whole image,
+		/// and can improve performance by reducing pressure on the hash cache
+		struct GlobalScope : public Gaffer::Context::EditableScope
+		{
+			GlobalScope( const Gaffer::Context *context );
+		};
+
+		/// Utility class to scope a temporary copy of a context,
+		/// with convenient accessors to set tileOrigin and channelName,
+		/// which you often need to do while accessing channelData
+		struct ChannelDataScope : public Gaffer::Context::EditableScope
+		{
+			ChannelDataScope( const Gaffer::Context *context );
+			void setTileOrigin( const Imath::V2i &tileOrigin );
+			void setChannelName( const std::string &channelName );
+		};
+
 		static int tileSize() { return 1 << tileSizeLog2(); };
 		static const IECore::FloatVectorData *blackTile();
 		static const IECore::FloatVectorData *whiteTile();
@@ -151,6 +171,8 @@ class ImagePlug : public Gaffer::ValuePlug
 		{
 			return tileIndex( point ) * tileSize();
 		}
+
+		
 
 	private :
 		static int tileSizeLog2() { return 6; };

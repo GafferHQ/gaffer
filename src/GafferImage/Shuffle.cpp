@@ -188,9 +188,8 @@ void Shuffle::hashChannelData( const GafferImage::ImagePlug *parent, const Gaffe
 	}
 	else
 	{
-		ContextPtr tmpContext = new Context( *context, Context::Borrowed );
-		Context::Scope scopedContext( tmpContext.get() );
-		tmpContext->set( ImagePlug::channelNameContextName, c );
+		ImagePlug::ChannelDataScope channelDataScope( context );
+		channelDataScope.setChannelName( c );
 		h = inPlug()->channelDataPlug()->hash();
 	}
 }
@@ -209,9 +208,8 @@ IECore::ConstFloatVectorDataPtr Shuffle::computeChannelData( const std::string &
 	}
 	else
 	{
-		ContextPtr tmpContext = new Context( *context, Context::Borrowed );
-		Context::Scope scopedContext( tmpContext.get() );
-		tmpContext->set( ImagePlug::channelNameContextName, c );
+		ImagePlug::ChannelDataScope channelDataScope( context );
+		channelDataScope.setChannelName( c );
 		return inPlug()->channelDataPlug()->getValue();
 	}
 }

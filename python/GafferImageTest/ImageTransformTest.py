@@ -163,18 +163,13 @@ class ImageTransformTest( GafferImageTest.ImageTestCase ) :
 		t = GafferImage.ImageTransform()
 		t["in"].setInput( r["out"] )
 
-		c = Gaffer.Context()
-		c["image:channelName"] = "R"
-		c["image:tileOrigin"] = IECore.V2i( 0 )
-		with c:
-			cs = GafferTest.CapturingSlot( t.plugDirtiedSignal() )
-			t["transform"]["translate"].setValue( IECore.V2f( 2., 2. ) )
-			t["transform"]["rotate"].setValue( 90 )
-			t["enabled"].setValue( True )
-			self.assertNotEqual( r["out"].hash(), t["out"].hash() )
+		t["transform"]["translate"].setValue( IECore.V2f( 2., 2. ) )
+		t["transform"]["rotate"].setValue( 90 )
+		t["enabled"].setValue( True )
+		self.assertNotEqual( r["out"].imageHash(), t["out"].imageHash() )
 
-			t["enabled"].setValue( False )
-			self.assertEqual( r["out"].hash(), t["out"].hash() )
+		t["enabled"].setValue( False )
+		self.assertEqual( r["out"].imageHash(), t["out"].imageHash() )
 
 	def testPassThrough( self ) :
 

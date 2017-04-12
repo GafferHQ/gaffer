@@ -147,7 +147,7 @@ struct TotalDurationMetric
 
 	const char *description() const
 	{
-		return "total time spent in hash and compute processes";
+		return "sum of time spent in hash and compute processes";
 	}
 
 };
@@ -330,6 +330,29 @@ struct FormatStatistics
 
 };
 
+struct FormatTotalStatistics
+{
+
+	FormatTotalStatistics( const PerformanceMonitor::Statistics &combinedStatistics )
+		:	combinedStatistics( combinedStatistics )
+	{
+	}
+
+	typedef std::pair< std::string, std::string > ResultType;
+
+	template<typename Metric>
+	ResultType operator() ( const Metric &metric ) const
+	{
+		std::stringstream s;
+
+		s << std::fixed << ": " <<  metric( combinedStatistics );
+
+		return ResultType( std::string( "Total " ) + metric.description(), s.str() );
+	}
+
+	const PerformanceMonitor::Statistics &combinedStatistics;
+};
+
 } // namespace
 
 //////////////////////////////////////////////////////////////////////////
@@ -344,7 +367,26 @@ namespace MonitorAlgo
 
 std::string formatStatistics( const PerformanceMonitor &monitor, size_t maxLinesPerMetric )
 {
-	std::string s;
+	// First show totals
+	std::vector<std::string> names;
+	std::vector<std::string> values;
+	for( int m = First; m <= Last; ++m )
+	{
+		PerformanceMetric metric = static_cast<PerformanceMetric>( m );
+		FormatTotalStatistics::ResultType p =
+			dispatchMetric<FormatTotalStatistics>( FormatTotalStatistics( monitor.combinedStatistics() ), metric );
+		names.push_back( p.first );
+		values.push_back( p.second );
+	}
+
+	std::stringstream ss;
+
+	ss << "PerformanceMonitor Summary :\n\n";
+	outputItems( names, values, ss );
+	ss << "\n";
+
+	// Now show breakdowns by plugs in each category
+	std::string s = ss.str();
 	for( int m = First; m <= Last; ++m )
 	{
 		s += formatStatistics( monitor, static_cast<PerformanceMetric>( m ), maxLinesPerMetric );

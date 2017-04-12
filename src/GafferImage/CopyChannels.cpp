@@ -253,13 +253,23 @@ IECore::ConstStringVectorDataPtr CopyChannels::computeChannelNames( const Gaffer
 
 void CopyChannels::hashChannelData( const GafferImage::ImagePlug *parent, const Gaffer::Context *context, IECore::MurmurHash &h ) const
 {
-	ConstCompoundObjectPtr mapping = mappingPlug()->getValue();
+	ConstCompoundObjectPtr mapping;
+	{
+		ImagePlug::GlobalScope c( context );
+		mapping = mappingPlug()->getValue();
+	}
 	if( const IntData *i = mapping->member<const IntData>( context->get<string>( ImagePlug::channelNameContextName ) ) )
 	{
 		const ImagePlug *inputImage = inPlugs()->getChild<ImagePlug>( i->readable() );
 		const V2i tileOrigin = context->get<V2i>( ImagePlug::tileOriginContextName );
 		const Box2i tileBound( tileOrigin, tileOrigin + V2i( ImagePlug::tileSize() ) );
-		const Box2i inputDataWindow = inputImage->dataWindowPlug()->getValue();
+
+		Box2i inputDataWindow;
+		{
+			ImagePlug::GlobalScope c( context );
+			inputDataWindow = inputImage->dataWindowPlug()->getValue();
+		}
+
 		const Box2i validBound = BufferAlgo::intersection( tileBound, inputDataWindow );
 		if( validBound == tileBound )
 		{
@@ -283,13 +293,21 @@ void CopyChannels::hashChannelData( const GafferImage::ImagePlug *parent, const 
 
 IECore::ConstFloatVectorDataPtr CopyChannels::computeChannelData( const std::string &channelName, const Imath::V2i &tileOrigin, const Gaffer::Context *context, const ImagePlug *parent ) const
 {
-	ConstCompoundObjectPtr mapping = mappingPlug()->getValue();
+	ConstCompoundObjectPtr mapping;
+	{
+		ImagePlug::GlobalScope c( context );
+		mapping = mappingPlug()->getValue();
+	}
 	if( const IntData *i = mapping->member<const IntData>( channelName ) )
 	{
 		const ImagePlug *inputImage = inPlugs()->getChild<ImagePlug>( i->readable() );
 		const V2i tileOrigin = context->get<V2i>( ImagePlug::tileOriginContextName );
 		const Box2i tileBound( tileOrigin, tileOrigin + V2i( ImagePlug::tileSize() ) );
-		const Box2i inputDataWindow = inputImage->dataWindowPlug()->getValue();
+		Box2i inputDataWindow;
+		{
+			ImagePlug::GlobalScope c( context );
+			inputDataWindow = inputImage->dataWindowPlug()->getValue();
+		}
 		const Box2i validBound = BufferAlgo::intersection( tileBound, inputDataWindow );
 		if( validBound == tileBound )
 		{

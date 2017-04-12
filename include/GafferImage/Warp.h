@@ -123,14 +123,7 @@ class Warp : public ImageProcessor
 		Gaffer::CompoundObjectPlug *sampleRegionsPlug();
 		const Gaffer::CompoundObjectPlug *sampleRegionsPlug() const;
 
-		// This shouldn't even be exposed in the header, but it requires access to Warp::Engine
-		static void hashEngineIfTileValid( Gaffer::Context &context, const Gaffer::ObjectPlug *plug, const Imath::Box2i &dataWindow, const Imath::V2i &tileOrigin, IECore::MurmurHash &h );
-		static ConstEngineDataPtr computeEngineIfTileValid( Gaffer::Context &context, const Gaffer::ObjectPlug *plug, const Imath::Box2i &dataWindow, const Imath::V2i &tileOrigin );
-		
-
-
 		static float approximateDerivative( float upperPos, float center, float lower );
-
 
 		static size_t g_firstPlugIndex;
 };

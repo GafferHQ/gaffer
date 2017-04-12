@@ -89,9 +89,8 @@ void Premultiply::hashChannelData( const GafferImage::ImagePlug *output, const G
 
 	inPlug()->channelDataPlug()->hash( h );
 
-	ContextPtr tmpContext = new Context( *context, Context::Borrowed );
-	tmpContext->set( ImagePlug::channelNameContextName, alphaChannel );
-	Context::Scope scopedContext( tmpContext.get() );
+	ImagePlug::ChannelDataScope channelDataScope( context );
+	channelDataScope.setChannelName( alphaChannel );
 
 	inPlug()->channelDataPlug()->hash( h );
 }
@@ -105,7 +104,12 @@ void Premultiply::processChannelData( const Gaffer::Context *context, const Imag
 		return;
 	}
 
-	ConstStringVectorDataPtr inChannelNamesPtr = inPlug()->channelNamesPlug()->getValue();
+	ConstStringVectorDataPtr inChannelNamesPtr;
+	{
+		ImagePlug::GlobalScope c( context );
+		inChannelNamesPtr = inPlug()->channelNamesPlug()->getValue();
+	}
+
 	const std::vector<std::string> &inChannelNames = inChannelNamesPtr->readable();
 	if ( std::find( inChannelNames.begin(), inChannelNames.end(), alphaChannel ) == inChannelNames.end() )
 	{
@@ -114,9 +118,8 @@ void Premultiply::processChannelData( const Gaffer::Context *context, const Imag
 		throw( IECore::Exception( channelError.str() ) );
 	}
 
-	ContextPtr tmpContext = new Context( *context, Context::Borrowed );
-	tmpContext->set( ImagePlug::channelNameContextName, alphaChannel );
-	Context::Scope scopedContext( tmpContext.get() );
+	ImagePlug::ChannelDataScope channelDataScope( context );
+	channelDataScope.setChannelName( alphaChannel );
 
 	ConstFloatVectorDataPtr aData = inPlug()->channelDataPlug()->getValue();
 	const std::vector<float> &a = aData->readable();

@@ -213,12 +213,17 @@ void Mirror::hashChannelData( const GafferImage::ImagePlug *parent, const Gaffer
 	const std::string &channelName = context->get<string>( ImagePlug::channelNameContextName );
 	const V2i tileOrigin = context->get<V2i>( ImagePlug::tileOriginContextName );
 	const Box2i tileBound( tileOrigin, tileOrigin + V2i( ImagePlug::tileSize() ) );
+	Box2i displayWindow;
+	{
+		ImagePlug::GlobalScope c( context );
+		displayWindow = inPlug()->formatPlug()->getValue().getDisplayWindow();
+	}
 
 	const Box2i sampleWindow = mirror(
 		tileBound,
 		horizontal,
 		vertical,
-		inPlug()->formatPlug()->getValue().getDisplayWindow()
+		displayWindow
 	);
 
 	Sampler sampler( inPlug(), channelName, sampleWindow );
@@ -238,7 +243,11 @@ IECore::ConstFloatVectorDataPtr Mirror::computeChannelData( const std::string &c
 		return inPlug()->channelDataPlug()->getValue();
 	}
 
-	const Box2i displayWindow = inPlug()->formatPlug()->getValue().getDisplayWindow();
+	Box2i displayWindow;
+	{
+		ImagePlug::GlobalScope c( context );
+		displayWindow = inPlug()->formatPlug()->getValue().getDisplayWindow();
+	}
 	const Box2i tileBound( tileOrigin, tileOrigin + V2i( ImagePlug::tileSize() ) );
 	const Box2i sampleWindow = mirror(
 		tileBound,

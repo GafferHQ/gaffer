@@ -325,6 +325,7 @@ void Crop::hash( const Gaffer::ValuePlug *output, const Gaffer::Context *context
 	}
 	else if( output->parent<Plug>() == offsetPlug() )
 	{
+		ImagePlug::GlobalScope c( context );
 		affectDisplayWindowPlug()->hash( h );
 		resetOriginPlug()->hash( h );
 		cropWindowPlug()->hash( h );
@@ -378,6 +379,7 @@ void Crop::compute( Gaffer::ValuePlug *output, const Gaffer::Context *context ) 
 	}
 	else if( output->parent<Plug>() == offsetPlug() )
 	{
+		ImagePlug::GlobalScope c( context );
 		V2i offset( 0 );
 		if( affectDisplayWindowPlug()->getValue() )
 		{

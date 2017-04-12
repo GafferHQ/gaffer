@@ -61,6 +61,28 @@ namespace
 		static ConstCompoundObjectPtr g_sampleRegionsEmptyTile( new CompoundObject() );
 		return g_sampleRegionsEmptyTile.get();
 	}
+
+	void hashEngineIfTileValid( ImagePlug::ChannelDataScope &tileScope, const ObjectPlug *plug, const Box2i &dataWindow, const V2i &tileOrigin, IECore::MurmurHash &h )
+	{
+		if( BufferAlgo::intersects( dataWindow, Box2i( tileOrigin, tileOrigin + V2i( ImagePlug::tileSize() ) ) ) )
+		{
+			tileScope.setTileOrigin( tileOrigin );
+			plug->hash( h );
+		}
+	}
+
+	ConstObjectPtr computeEngineIfTileValid( ImagePlug::ChannelDataScope &tileScope, const ObjectPlug *plug, const Box2i &dataWindow, const V2i &tileOrigin )
+	{
+		if( BufferAlgo::intersects( dataWindow, Box2i( tileOrigin, tileOrigin + V2i( ImagePlug::tileSize() ) ) ) )
+		{
+			tileScope.setTileOrigin( tileOrigin );
+			return plug->getValue();
+		}
+		else
+		{
+			return NULL;
+		}
+	}
 }
 
 float Warp::approximateDerivative( float upper, float center, float lower )
@@ -266,28 +288,6 @@ void Warp::affects( const Gaffer::Plug *input, AffectedPlugsContainer &outputs )
 	}
 }
 
-void Warp::hashEngineIfTileValid( Context &context, const ObjectPlug *plug, const Box2i &dataWindow, const V2i &tileOrigin, IECore::MurmurHash &h )
-{
-	if( BufferAlgo::intersects( dataWindow, Box2i( tileOrigin, tileOrigin + V2i( ImagePlug::tileSize() ) ) ) )
-	{
-		context.set( ImagePlug::tileOriginContextName, tileOrigin );
-		plug->hash( h );
-	}
-}
-
-Warp::ConstEngineDataPtr Warp::computeEngineIfTileValid( Context &context, const ObjectPlug *plug, const Box2i &dataWindow, const V2i &tileOrigin )
-{
-	if( BufferAlgo::intersects( dataWindow, Box2i( tileOrigin, tileOrigin + V2i( ImagePlug::tileSize() ) ) ) )
-	{
-		context.set( ImagePlug::tileOriginContextName, tileOrigin );
-		return static_pointer_cast<const EngineData>( plug->getValue() );
-	}
-	else
-	{
-		return NULL;
-	}
-}
-
 void Warp::hash( const Gaffer::ValuePlug *output, const Gaffer::Context *context, IECore::MurmurHash &h ) const
 {
 	if( output == enginePlug() )
@@ -301,8 +301,7 @@ void Warp::hash( const Gaffer::ValuePlug *output, const Gaffer::Context *context
 	}
 	else if( output == sampleRegionsPlug() )
 	{
-		ContextPtr tmpContext = new Context( *context, Context::Borrowed );
-		Context::Scope scopedContext( tmpContext.get() );
+		ImagePlug::ChannelDataScope tileScope( context );
 
 		V2i tileOrigin = context->get<V2i>( ImagePlug::tileOriginContextName );
 		enginePlug()->hash( h );
@@ -311,15 +310,19 @@ void Warp::hash( const Gaffer::ValuePlug *output, const Gaffer::Context *context
 		h.append( useDerivatives );
 		if( useDerivatives )
 		{
-			const Box2i dataWindow = outPlug()->dataWindowPlug()->getValue();
+			Box2i dataWindow;
+			{
+				ImagePlug::GlobalScope c( context );
+				dataWindow = outPlug()->dataWindowPlug()->getValue();
+			}
 			
-			hashEngineIfTileValid( *tmpContext, enginePlug(), dataWindow,
+			hashEngineIfTileValid( tileScope, enginePlug(), dataWindow,
 				tileOrigin + V2i( ImagePlug::tileSize(), 0 ), h );
-			hashEngineIfTileValid( *tmpContext, enginePlug(), dataWindow,
+			hashEngineIfTileValid( tileScope, enginePlug(), dataWindow,
 				tileOrigin - V2i( ImagePlug::tileSize(), 0 ), h );
-			hashEngineIfTileValid( *tmpContext, enginePlug(), dataWindow,
+			hashEngineIfTileValid( tileScope, enginePlug(), dataWindow,
 				tileOrigin + V2i( 0, ImagePlug::tileSize() ), h );
-			hashEngineIfTileValid( *tmpContext, enginePlug(), dataWindow,
+			hashEngineIfTileValid( tileScope, enginePlug(), dataWindow,
 				tileOrigin - V2i( 0, ImagePlug::tileSize() ), h );
 		}
 
@@ -347,7 +350,12 @@ void Warp::compute( Gaffer::ValuePlug *output, const Gaffer::Context *context ) 
 	}
 	else if( output == sampleRegionsPlug() )
 	{
-		const Box2i dataWindow = outPlug()->dataWindowPlug()->getValue();
+		Box2i dataWindow;
+		{
+			ImagePlug::GlobalScope c( context );
+			dataWindow = outPlug()->dataWindowPlug()->getValue();
+		}
+
 		const OIIO::Filter2D *filter = FilterAlgo::acquireFilter( filterPlug()->getValue() );
 		const float filterWidth = filter->width();
 
@@ -412,16 +420,28 @@ void Warp::compute( Gaffer::ValuePlug *output, const Gaffer::Context *context ) 
 		{
 			// Get engines for the 4 surrounding images tiles ( or leave them null if they're outside the
 			// dataWindow )
-			ContextPtr tmpContext = new Context( *context, Context::Borrowed );
-			Context::Scope scopedContext( tmpContext.get() );
-			ConstEngineDataPtr engineDataPlusX = computeEngineIfTileValid( *tmpContext, enginePlug(), dataWindow,
-				tileOrigin + V2i( ImagePlug::tileSize(), 0 ) );
-			ConstEngineDataPtr engineDataMinusX = computeEngineIfTileValid( *tmpContext, enginePlug(), dataWindow,
-				tileOrigin - V2i( ImagePlug::tileSize(), 0 ) );
-			ConstEngineDataPtr engineDataPlusY = computeEngineIfTileValid( *tmpContext, enginePlug(), dataWindow,
-				tileOrigin + V2i( 0, ImagePlug::tileSize() ) );
-			ConstEngineDataPtr engineDataMinusY = computeEngineIfTileValid( *tmpContext, enginePlug(), dataWindow,
-				tileOrigin - V2i( 0, ImagePlug::tileSize() ) );
+			ImagePlug::ChannelDataScope tileScope( context );
+
+			ConstEngineDataPtr engineDataPlusX = static_pointer_cast<const EngineData>( 
+				computeEngineIfTileValid( tileScope, enginePlug(), dataWindow,
+					tileOrigin + V2i( ImagePlug::tileSize(), 0 )
+				)
+			);
+			ConstEngineDataPtr engineDataMinusX = static_pointer_cast<const EngineData>(
+				computeEngineIfTileValid( tileScope, enginePlug(), dataWindow,
+					tileOrigin - V2i( ImagePlug::tileSize(), 0 )
+				)
+			);
+			ConstEngineDataPtr engineDataPlusY = static_pointer_cast<const EngineData>(
+				computeEngineIfTileValid( tileScope, enginePlug(), dataWindow,
+					tileOrigin + V2i( 0, ImagePlug::tileSize() )
+				)
+			);
+			ConstEngineDataPtr engineDataMinusY = static_pointer_cast<const EngineData>(
+				computeEngineIfTileValid( tileScope, enginePlug(), dataWindow,
+					tileOrigin - V2i( 0, ImagePlug::tileSize() )
+				)
+			);
 
 			const Engine *enginePlusX = NULL, *engineMinusX = NULL, *enginePlusY = NULL, *engineMinusY = NULL;
 			if( engineDataPlusX ) enginePlusX = engineDataPlusX->engine;
@@ -576,9 +596,8 @@ void Warp::hashChannelData( const GafferImage::ImagePlug *parent, const Gaffer::
 	ConstCompoundObjectPtr sampleRegions;
 
 	{
-		Gaffer::ContextPtr sampleRegionsContext = new Gaffer::Context( *context, Gaffer::Context::Borrowed );
-		sampleRegionsContext->remove( ImagePlug::channelNameContextName );
-		Gaffer::Context::Scope sampleRegionsScope( sampleRegionsContext.get() );
+		Context::EditableScope sampleRegionsScope( context );
+		sampleRegionsScope.remove( ImagePlug::channelNameContextName );
 		sampleRegionsHash = sampleRegionsPlug()->hash();
 		sampleRegions = sampleRegionsPlug()->getValue( &sampleRegionsHash );
 	}
@@ -603,7 +622,10 @@ void Warp::hashChannelData( const GafferImage::ImagePlug *parent, const Gaffer::
 	);
 	sampler.hash( h );
 
-	outPlug()->dataWindowPlug()->hash( h );
+	{
+		ImagePlug::GlobalScope c( context );
+		outPlug()->dataWindowPlug()->hash( h );
+	}
 }
 
 
@@ -612,9 +634,8 @@ IECore::ConstFloatVectorDataPtr Warp::computeChannelData( const std::string &cha
 	ConstCompoundObjectPtr sampleRegions;
 
 	{
-		Gaffer::ContextPtr sampleRegionsContext = new Gaffer::Context( *context, Gaffer::Context::Borrowed );
-		sampleRegionsContext->remove( ImagePlug::channelNameContextName );
-		Gaffer::Context::Scope sampleRegionsScope( sampleRegionsContext.get() );
+		Context::EditableScope sampleRegionsScope( context );
+		sampleRegionsScope.remove( ImagePlug::channelNameContextName );
 		sampleRegions = sampleRegionsPlug()->getValue();
 	}
 
@@ -634,7 +655,12 @@ IECore::ConstFloatVectorDataPtr Warp::computeChannelData( const std::string &cha
 	const std::vector<V2f> &pixelInputPositions = sampleRegions->member< V2fVectorData >( g_pixelInputPositionsName, true )->readable();
 	const std::vector<V2f> &pixelInputDerivatives = sampleRegions->member< V2fVectorData >( g_pixelInputDerivativesName, true )->readable();
 
-	const Box2i dataWindow = outPlug()->dataWindowPlug()->getValue();
+	Box2i dataWindow;
+	{
+		ImagePlug::GlobalScope c( context );
+		dataWindow = outPlug()->dataWindowPlug()->getValue();
+	}
+
 	const Box2i validPixelsRelativeToTile( dataWindow.min - tileOrigin, dataWindow.max - tileOrigin );
 
 	Sampler sampler(

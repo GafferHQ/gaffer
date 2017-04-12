@@ -91,7 +91,12 @@ bool ImageNode::enabled() const
 void ImageNode::hash( const Gaffer::ValuePlug *output, const Gaffer::Context *context, IECore::MurmurHash &h ) const
 {
 	const ImagePlug *imagePlug = output->parent<ImagePlug>();
-	if( imagePlug && enabled() )
+	bool enabledValue;
+	{
+		ImagePlug::GlobalScope c( context );
+		enabledValue = enabled();
+	}
+	if( imagePlug && enabledValue )
 	{
 		// We don't call ComputeNode::hash() immediately here, because for subclasses which
 		// want to pass through a specific hash in the hash*() methods it's a waste of time (the
@@ -112,18 +117,31 @@ void ImageNode::hash( const Gaffer::ValuePlug *output, const Gaffer::Context *co
 		}
 		else if( output == imagePlug->formatPlug() )
 		{
+			// The asserts in these 4 conditionals can be uncommented to catch anywhere that these
+			// global plugs are being hashed with unnecessary tile specific context.  This can be
+			// a performance hazard because it means we can't reuse hashes from the hash cache
+			// nearly as effectively
+
+			//assert( context->get<std::string>( ImagePlug::channelNameContextName, "UNDEF" ) == "UNDEF" );
+			//assert( context->get<Imath::V2i>( ImagePlug::tileOriginContextName, V2i( 42 ) ) == V2i( 42 ) );
 			hashFormat( imagePlug, context, h );
 		}
 		else if( output == imagePlug->dataWindowPlug() )
 		{
+			//assert( context->get<std::string>( ImagePlug::channelNameContextName, "UNDEF" ) == "UNDEF" );
+			//assert( context->get<Imath::V2i>( ImagePlug::tileOriginContextName, V2i( 42 ) ) == V2i( 42 ) );
 			hashDataWindow( imagePlug, context, h );
 		}
 		else if( output == imagePlug->metadataPlug() )
 		{
+			//assert( context->get<std::string>( ImagePlug::channelNameContextName, "UNDEF" ) == "UNDEF" );
+			//assert( context->get<Imath::V2i>( ImagePlug::tileOriginContextName, V2i( 42 ) ) == V2i( 42 ) );
 			hashMetadata( imagePlug, context, h );
 		}
 		else if( output == imagePlug->channelNamesPlug() )
 		{
+			//assert( context->get<std::string>( ImagePlug::channelNameContextName, "UNDEF" ) == "UNDEF" );
+			//assert( context->get<Imath::V2i>( ImagePlug::tileOriginContextName, V2i( 42 ) ) == V2i( 42 ) );
 			hashChannelNames( imagePlug, context, h );
 		}
 	}
@@ -187,7 +205,13 @@ void ImageNode::compute( ValuePlug *output, const Context *context ) const
 
 	// we're computing part of an ImagePlug
 
-	if( !enabled() )
+	bool enabledValue;
+	{
+		ImagePlug::GlobalScope c( context );
+		enabledValue = enabled();
+	}
+
+	if( !enabledValue )
 	{
 		// disabled nodes just output a default black image.
 		output->setToDefault();
