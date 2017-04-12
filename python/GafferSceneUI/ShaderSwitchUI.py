@@ -52,6 +52,12 @@ Gaffer.Metadata.registerNode(
 
 	"nodeGadget:minWidth", 0.0,
 
+	# Disable the + buttons on the top and bottom, because
+	# shaders always flow horizontally.
+
+	"noduleLayout:customGadget:addButtonTop:visible", False,
+	"noduleLayout:customGadget:addButtonBottom:visible", False,
+
 	plugs = {
 
 		"in" : [
