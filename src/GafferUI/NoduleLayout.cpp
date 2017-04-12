@@ -63,28 +63,28 @@ using namespace GafferUI;
 namespace
 {
 
-// Used for sorting nodules for layout
+// Used for sorting gadgets for layout
 
-struct IndexAndNodule
+struct IndexAndGadget
 {
 
-	IndexAndNodule()
-		:	index( 0 ), nodule( NULL )
+	IndexAndGadget()
+		:	index( 0 ), gadget( NULL )
 	{
 	}
 
-	IndexAndNodule( int index, Nodule *nodule )
-		:	index( index ), nodule( nodule )
+	IndexAndGadget( int index, Gadget *gadget )
+		:	index( index ), gadget( gadget )
 	{
 	}
 
-	bool operator < ( const IndexAndNodule &rhs ) const
+	bool operator < ( const IndexAndGadget &rhs ) const
 	{
 		return index < rhs.index;
 	}
 
 	int index;
-	Nodule *nodule;
+	Gadget *gadget;
 
 };
 
@@ -352,7 +352,7 @@ NoduleLayout::NoduleLayout( Gaffer::GraphComponentPtr parent, IECore::InternedSt
 	Metadata::plugValueChangedSignal().connect( boost::bind( &NoduleLayout::plugMetadataChanged, this, ::_1, ::_2, ::_3, ::_4 ) );
 	Metadata::nodeValueChangedSignal().connect( boost::bind( &NoduleLayout::nodeMetadataChanged, this, ::_1, ::_2, ::_3 ) );
 
-	updateNoduleLayout();
+	updateLayout();
 }
 
 NoduleLayout::~NoduleLayout()
@@ -369,10 +369,12 @@ Nodule *NoduleLayout::nodule( const Gaffer::Plug *plug )
 
 	if( plugParent == m_parent.get() )
 	{
-		NoduleMap::iterator it = m_nodules.find( plug );
-		if( it != m_nodules.end() )
+		GadgetMap::iterator it = m_gadgets.find( plug );
+		if( it != m_gadgets.end() )
 		{
-			return it->second.nodule.get();
+			// Cast is safe because we only ever store nodules
+			// for plug keys.
+			return static_cast<Nodule *>( it->second.gadget.get() );
 		}
 		return NULL;
 	}
@@ -407,7 +409,7 @@ void NoduleLayout::childAdded( Gaffer::GraphComponent *child )
 {
 	if( IECore::runTimeCast<Gaffer::Plug>( child ) )
 	{
-		updateNoduleLayout();
+		updateLayout();
 	}
 }
 
@@ -415,7 +417,7 @@ void NoduleLayout::childRemoved( Gaffer::GraphComponent *child )
 {
 	if( IECore::runTimeCast<Gaffer::Plug>( child ) )
 	{
-		updateNoduleLayout();
+		updateLayout();
 	}
 }
 
@@ -429,7 +431,7 @@ void NoduleLayout::plugMetadataChanged( IECore::TypeId nodeTypeId, const Gaffer:
 			key == g_nodulePositionKey || key == g_noduleIndexKey
 		)
 		{
-			updateNoduleLayout();
+			updateLayout();
 		}
 	}
 
@@ -475,11 +477,11 @@ void NoduleLayout::nodeMetadataChanged( IECore::TypeId nodeTypeId, IECore::Inter
 	}
 }
 
-void NoduleLayout::updateNodules( std::vector<Nodule *> &nodules, std::vector<Nodule *> &added, std::vector<NodulePtr> &removed )
+void NoduleLayout::updateGadgets( std::vector<Gadget *> &gadgets, std::vector<Nodule *> &added, std::vector<NodulePtr> &removed )
 {
 	// Update the nodules for all our plugs, and build a vector
-	// of IndexAndNodule to sort ready for layout.
-	vector<IndexAndNodule> sortedNodules;
+	// of IndexAndGadget to sort ready for layout.
+	vector<IndexAndGadget> sortedGadgets;
 	for( PlugIterator plugIt( m_parent.get() ); !plugIt.done(); ++plugIt )
 	{
 		Plug *plug = plugIt->get();
@@ -489,7 +491,7 @@ void NoduleLayout::updateNodules( std::vector<Nodule *> &nodules, std::vector<No
 		}
 
 		Nodule *nodule = NULL;
-		NoduleMap::iterator it = m_nodules.find( plug );
+		GadgetMap::iterator it = m_gadgets.find( plug );
 
 		if( ::visible( plug, m_section ) )
 		{
@@ -497,21 +499,22 @@ void NoduleLayout::updateNodules( std::vector<Nodule *> &nodules, std::vector<No
 			IECore::ConstStringDataPtr typeData = Metadata::value<IECore::StringData>( plug, g_noduleTypeKey );
 			type = typeData ? typeData->readable() : "GafferUI::StandardNodule";
 
-			if( it != m_nodules.end() && it->second.type == type )
+			if( it != m_gadgets.end() && it->second.type == type )
 			{
-				// Reuse existing nodule
-				nodule = it->second.nodule.get();
+				// Reuse existing nodule. Cast is safe because `Plug *` keys
+				// in m_gadgets always correspond to nodules.
+				nodule = static_cast<Nodule *>( it->second.gadget.get() );
 			}
 			else
 			{
 				// Remove old nodule.
-				if( it != m_nodules.end() && it->second.nodule )
+				if( it != m_gadgets.end() && it->second.gadget )
 				{
-					removed.push_back( it->second.nodule );
+					removed.push_back( boost::static_pointer_cast<Nodule>( it->second.gadget ) );
 				}
 				// Add new one
 				NodulePtr n = Nodule::create( plug );
-				m_nodules[plug] = TypeAndNodule( type, n );
+				m_gadgets[plug] = TypeAndGadget( type, n );
 				if( n )
 				{
 					added.push_back( n.get() );
@@ -519,61 +522,65 @@ void NoduleLayout::updateNodules( std::vector<Nodule *> &nodules, std::vector<No
 				}
 			}
 		}
-		else if( it != m_nodules.end() )
+		else if( it != m_gadgets.end() )
 		{
 			// Not visible, but we have an old
 			// record for it.
-			if( it->second.nodule )
+			if( it->second.gadget )
 			{
-				removed.push_back( it->second.nodule );
+				removed.push_back( boost::static_pointer_cast<Nodule>( it->second.gadget ) );
 			}
-			m_nodules.erase( it );
+			m_gadgets.erase( it );
 		}
 
 		if( nodule )
 		{
-			sortedNodules.push_back( IndexAndNodule( index( plug, sortedNodules.size() ), nodule ) );
+			sortedGadgets.push_back( IndexAndGadget( index( plug, sortedGadgets.size() ), nodule ) );
 		}
 	}
 
 	// Remove any nodules for which a plug no longer exists.
-	for( NoduleMap::iterator it = m_nodules.begin(); it != m_nodules.end(); )
+	for( GadgetMap::iterator it = m_gadgets.begin(); it != m_gadgets.end(); )
 	{
-		NoduleMap::iterator next = it; next++;
-		if( it->first->parent<GraphComponent>() != m_parent.get() )
+		GadgetMap::iterator next = it; next++;
+		if( it->first.which() == 0 )
 		{
-			if( it->second.nodule )
+			const Plug *plug = boost::get<const Plug *>( it->first );
+			if( plug->parent<GraphComponent>() != m_parent.get() )
 			{
-				removed.push_back( it->second.nodule );
+				if( it->second.gadget )
+				{
+					removed.push_back( boost::static_pointer_cast<Nodule>( it->second.gadget ) );
+				}
+				m_gadgets.erase( it );
 			}
-			m_nodules.erase( it );
 		}
 		it = next;
 	}
 
 	// Sort ready for layout.
-	sort( sortedNodules.begin(), sortedNodules.end() );
-	for( vector<IndexAndNodule>::const_iterator it = sortedNodules.begin(), eIt = sortedNodules.end(); it != eIt; ++it )
+	sort( sortedGadgets.begin(), sortedGadgets.end() );
+	for( vector<IndexAndGadget>::const_iterator it = sortedGadgets.begin(), eIt = sortedGadgets.end(); it != eIt; ++it )
 	{
-		nodules.push_back( it->nodule );
+		gadgets.push_back( it->gadget );
 	}
 }
 
-void NoduleLayout::updateNoduleLayout()
+void NoduleLayout::updateLayout()
 {
 	// Get an updated array of all our nodules,
 	// remembering what was added and removed.
-	vector<Nodule *> nodules;
+	vector<Gadget *> gadgets;
 	vector<Nodule *> added;
 	vector<NodulePtr> removed;
-	updateNodules( nodules, added, removed );
+	updateGadgets( gadgets, added, removed );
 
 	// Clear the nodule container and refill it
 	// in the right order.
 
 	LinearContainer *c = noduleContainer();
 	c->clearChildren();
-	for( vector<Nodule *>::const_iterator it = nodules.begin(), eIt = nodules.end(); it != eIt; ++it )
+	for( vector<Gadget *>::const_iterator it = gadgets.begin(), eIt = gadgets.end(); it != eIt; ++it )
 	{
 		c->addChild( *it );
 	}

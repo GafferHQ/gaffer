@@ -38,6 +38,8 @@
 #ifndef GAFFERUI_NODULELAYOUT_H
 #define GAFFERUI_NODULELAYOUT_H
 
+#include "boost/variant.hpp"
+
 #include "Gaffer/StringAlgo.h"
 
 #include "GafferUI/Gadget.h"
@@ -88,15 +90,21 @@ class NoduleLayout : public Gadget
 		LinearContainer *noduleContainer();
 		const LinearContainer *noduleContainer() const;
 
-		struct TypeAndNodule
+		struct TypeAndGadget
 		{
-			TypeAndNodule() {}
-			TypeAndNodule( IECore::InternedString type, NodulePtr nodule ) : type( type ), nodule( nodule ) {}
+			TypeAndGadget() {}
+			TypeAndGadget( IECore::InternedString type, GadgetPtr gadget ) : type( type ), gadget( gadget ) {}
+			// Nodule type or custom gadget type
 			IECore::InternedString type;
-			NodulePtr nodule;
+			// Nodule or custom gadget
+			GadgetPtr gadget;
 		};
-		typedef std::map<const Gaffer::Plug *, TypeAndNodule> NoduleMap;
-		NoduleMap m_nodules;
+		// Either a plug or the name of a custom widget
+		typedef boost::variant<const Gaffer::Plug *, IECore::InternedString> GadgetKey;
+		// Map from plugs and custom gadget names to the gadgets
+		// that represent them.
+		typedef std::map<GadgetKey, TypeAndGadget> GadgetMap;
+		GadgetMap m_gadgets;
 
 		void childAdded( Gaffer::GraphComponent *child );
 		void childRemoved( Gaffer::GraphComponent *child );
@@ -104,8 +112,8 @@ class NoduleLayout : public Gadget
 		void plugMetadataChanged( IECore::TypeId nodeTypeId, const Gaffer::MatchPattern &plugPath, IECore::InternedString key, const Gaffer::Plug *plug );
 		void nodeMetadataChanged( IECore::TypeId nodeTypeId, IECore::InternedString key, const Gaffer::Node *node );
 
-		void updateNodules( std::vector<Nodule *> &nodules, std::vector<Nodule *> &added, std::vector<NodulePtr> &removed );
-		void updateNoduleLayout();
+		void updateGadgets( std::vector<Gadget *> &gadgets, std::vector<Nodule *> &added, std::vector<NodulePtr> &removed );
+		void updateLayout();
 		void updateSpacing();
 		void updateDirection();
 		void updateOrientation();
