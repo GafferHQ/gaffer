@@ -78,6 +78,8 @@ class NoduleLayout : public Gadget
 		NoduleLayout( Gaffer::GraphComponentPtr parent, IECore::InternedString section = IECore::InternedString() );
 		virtual ~NoduleLayout();
 
+		/// \todo These do not need to be virtual, since this is
+		/// not intended to be used as a base class.
 		virtual Nodule *nodule( const Gaffer::Plug *plug );
 		virtual const Nodule *nodule( const Gaffer::Plug *plug ) const;
 
