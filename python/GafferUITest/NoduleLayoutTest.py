@@ -118,5 +118,68 @@ class NoduleLayoutTest( GafferUITest.TestCase ) :
 		self.assertTrue( top.nodule( n["op1"] ) is not None )
 		self.assertTrue( top.nodule( n["op2"] ) is not None )
 
+	def testCustomGadget( self ) :
+
+		# Define a custom gadget
+
+		class CustomGadget( GafferUI.Gadget ) :
+
+			def __init__( self, node ) :
+
+				GafferUI.Gadget.__init__( self )
+
+				self.addChild( GafferUI.ImageGadget( "minus.png" ) )
+
+				self.node = node
+
+		GafferUI.NoduleLayout.registerCustomGadget( "CustomGadget", CustomGadget )
+
+		# Create a node and make a top and bottom
+		# nodule layout for it.
+
+		n = GafferTest.AddNode()
+		topLayout = GafferUI.NoduleLayout( n, "top" )
+		bottomLayout = GafferUI.NoduleLayout( n, "bottom" )
+		topLayoutBound = topLayout.bound()
+		bottomLayoutBound = bottomLayout.bound()
+
+		# These shouldn't contain any custom gadgets.
+
+		self.assertEqual( topLayout.customGadget( "test" ), None )
+		self.assertEqual( bottomLayout.customGadget( "test" ), None )
+
+		# Register our custom gadget into the top layout
+
+		Gaffer.Metadata.registerValue( n, "noduleLayout:customGadget:test:gadgetType", "CustomGadget" )
+		Gaffer.Metadata.registerValue( n, "noduleLayout:customGadget:test:section", "top" )
+
+		# Check that it appears
+
+		gadget = topLayout.customGadget( "test" )
+		self.assertTrue( isinstance( gadget, CustomGadget ) )
+		self.assertTrue( gadget.node.isSame( n ) )
+		self.assertGreater( topLayout.bound().size().x, topLayoutBound.size().x )
+
+		# And is to the right of the nodules
+
+		nodule = topLayout.nodule( n["op2"] )
+		self.assertGreater( gadget.transformedBound().center().x, nodule.transformedBound().center().x )
+
+		# Check that nothing has appeared in the bottom layout
+
+		self.assertEqual( bottomLayout.customGadget( "test" ), None )
+		self.assertEqual( bottomLayout.bound(), bottomLayout.bound() )
+
+		# Change the index for our gadget, and check that
+		# the same one is reused, but now appears to the left
+		# of the nodules.
+
+		topLayoutBound = topLayout.bound()
+		Gaffer.Metadata.registerValue( n, "noduleLayout:customGadget:test:index", 0 )
+
+		self.assertTrue( topLayout.customGadget( "test" ).isSame( gadget ) )
+		self.assertEqual( topLayout.bound(), topLayoutBound )
+		self.assertLess( gadget.transformedBound().center().x, nodule.transformedBound().center().x )
+
 if __name__ == "__main__":
 	unittest.main()
