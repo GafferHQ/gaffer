@@ -116,7 +116,50 @@ IECore::InternedString g_compoundNoduleSpacingKey( "compoundNodule:spacing"  );
 IECore::InternedString g_compoundNoduleOrientationKey( "compoundNodule:orientation"  );
 IECore::InternedString g_compoundNoduleDirectionKey( "compoundNodule:direction"  );
 
-// Metadata accessors
+// Plug metadata accessors. These affect the layout of individual nodules.
+
+int index( const Plug *plug, int defaultValue )
+{
+	ConstIntDataPtr i = Metadata::value<IntData>( plug, g_indexKey );
+	if( !i )
+	{
+		i = Metadata::value<IntData>( plug, g_noduleIndexKey );
+	}
+	return i ? i->readable() : defaultValue;
+}
+
+std::string section( const Plug *plug )
+{
+	ConstStringDataPtr s = Metadata::value<StringData>( plug, g_sectionKey );
+	if( !s )
+	{
+		s = Metadata::value<StringData>( plug, g_nodulePositionKey );
+	}
+
+	if( s )
+	{
+		return s->readable();
+	}
+
+	return plug->direction() == Plug::In ? "top" : "bottom";
+}
+
+bool visible( const Plug *plug, IECore::InternedString section )
+{
+	if( section != InternedString() && ::section( plug ) != section.string() )
+	{
+		return false;
+	}
+
+	if( ConstBoolDataPtr b = Metadata::value<BoolData>( plug, g_visibleKey ) )
+	{
+		return b->readable();
+	}
+
+	return true;
+}
+
+// Parent metadata accessors. These affect the properties of the layout itself.
 
 float spacing( const Gaffer::GraphComponent *parent, IECore::InternedString section )
 {
@@ -195,32 +238,6 @@ bool affectsSpacing( IECore::InternedString key, IECore::InternedString section 
 	{
 		return key == g_compoundNoduleSpacingKey;
 	}
-}
-
-int index( const Plug *plug, int defaultValue )
-{
-	ConstIntDataPtr i = Metadata::value<IntData>( plug, g_indexKey );
-	if( !i )
-	{
-		i = Metadata::value<IntData>( plug, g_noduleIndexKey );
-	}
-	return i ? i->readable() : defaultValue;
-}
-
-std::string section( const Plug *plug )
-{
-	ConstStringDataPtr s = Metadata::value<StringData>( plug, g_sectionKey );
-	if( !s )
-	{
-		s = Metadata::value<StringData>( plug, g_nodulePositionKey );
-	}
-
-	if( s )
-	{
-		return s->readable();
-	}
-
-	return plug->direction() == Plug::In ? "top" : "bottom";
 }
 
 LinearContainer::Orientation orientation( const Gaffer::GraphComponent *parent, IECore::InternedString section )
@@ -306,21 +323,6 @@ bool affectsDirection( IECore::InternedString key, IECore::InternedString sectio
 		return true;
 	}
 	return false;
-}
-
-bool visible( const Plug *plug, IECore::InternedString section )
-{
-	if( section != InternedString() && ::section( plug ) != section.string() )
-	{
-		return false;
-	}
-
-	if( ConstBoolDataPtr b = Metadata::value<BoolData>( plug, g_visibleKey ) )
-	{
-		return b->readable();
-	}
-
-	return true;
 }
 
 } // namespace
