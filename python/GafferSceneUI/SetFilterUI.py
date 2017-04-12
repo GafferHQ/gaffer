@@ -57,8 +57,21 @@ Gaffer.Metadata.registerNode(
 
 			"description",
 			"""
-			The name of a set that defines the locations to
-			be matched.
+			A set expression that computes a set that defines
+			the locations to be matched.
+
+			For example, the expression "mySpheresSet | myCubesSet"
+			will create a set that contains all objects in
+			mySpheresSet and myCubesSet.
+
+			Gaffer supports the OR operator (|) as shown in the
+			example and also provides AND (&) and ANDNOT (-)
+			operations for set expressions. Names of locations
+			can be used to represent a set that contains only
+			that one location.
+
+			For more examples please consult the Scripting Reference
+			section in Gaffer's documentation.
 			""",
 
 			"ui:scene:acceptsSetName", True,
