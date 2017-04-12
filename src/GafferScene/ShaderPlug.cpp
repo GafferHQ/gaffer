@@ -48,26 +48,6 @@ using namespace Gaffer;
 using namespace GafferScene;
 
 //////////////////////////////////////////////////////////////////////////
-// Internal utilities
-//////////////////////////////////////////////////////////////////////////
-
-namespace
-{
-
-const GafferScene::Shader *shader( const ShaderPlug *plug )
-{
-	const Plug *source = plug->source<Plug>();
-	if( source == plug )
-	{
-		// No input
-		return NULL;
-	}
-	return runTimeCast<const GafferScene::Shader>( source->node() );
-}
-
-} // namespace
-
-//////////////////////////////////////////////////////////////////////////
 // ShaderPlug
 //////////////////////////////////////////////////////////////////////////
 
@@ -139,12 +119,42 @@ bool ShaderPlug::acceptsInput( const Gaffer::Plug *input ) const
 
 IECore::MurmurHash ShaderPlug::attributesHash() const
 {
-	const Shader *s = shader( this );
-	return s ? s->attributesHash() : MurmurHash();
+	const Gaffer::Plug *p = shaderOutPlug();
+
+	IECore::MurmurHash h;
+	if (p)
+	{
+		const GafferScene::Shader *s = runTimeCast<const GafferScene::Shader>( p->node() );
+		if( s )
+		{
+			s->attributesHash( p, h );
+		}
+	}
+
+	return h;
 }
 
 IECore::ConstCompoundObjectPtr ShaderPlug::attributes() const
 {
-	const Shader *s = shader( this );
-	return s ? s->attributes() : new CompoundObject;
+	const Gaffer::Plug *p = shaderOutPlug();
+	if (p)
+	{
+		const GafferScene::Shader* s = runTimeCast<const GafferScene::Shader>(p->node());
+		if (s)
+		{
+			return s->attributes( p );
+		}
+	}
+	return new CompoundObject;
+}
+
+const Gaffer::Plug *ShaderPlug::shaderOutPlug() const
+{
+	const Plug *source = this->source<Gaffer::Plug>();
+	if( source == this )
+	{
+		// No input
+		return NULL;
+	}
+	return source;
 }

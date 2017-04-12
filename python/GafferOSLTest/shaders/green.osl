@@ -1,0 +1,7 @@
+shader Green
+(
+	output color out = 0
+)
+{
+	out = color(0,1,0);
+}

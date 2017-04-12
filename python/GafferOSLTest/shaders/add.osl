@@ -1,0 +1,9 @@
+shader add
+(
+color a = 1,
+color b = 1,
+output color out = 0 [[ string correspondingInput = "a" ]]
+)
+{
+	out = a + b;
+}

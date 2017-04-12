@@ -110,9 +110,9 @@ class Shader : public Gaffer::DependencyNode
 		/// other APIs where nodes provide the engine, but plugs
 		/// provide the interface.
 		IECore::MurmurHash attributesHash() const;
-		virtual void attributesHash( IECore::MurmurHash &h ) const;
+		void attributesHash( IECore::MurmurHash &h ) const;
 		/// \deprecated See above.
-		virtual IECore::ConstCompoundObjectPtr attributes() const;
+		IECore::ConstCompoundObjectPtr attributes() const;
 
 		/// \deprecated
 		IECore::MurmurHash stateHash() const;
@@ -129,6 +129,9 @@ class Shader : public Gaffer::DependencyNode
 		/// Called for each parameter plug when constructing an IECore::Shader from this node.
 		/// May be reimplemented in derived classes to deal with special cases.
 		virtual IECore::DataPtr parameterValue( const Gaffer::Plug *parameterPlug ) const;
+
+		virtual void attributesHash( const Gaffer::Plug *output, IECore::MurmurHash &h) const;
+		virtual IECore::ConstCompoundObjectPtr attributes( const Gaffer::Plug *output ) const;
 
 	private :
 
@@ -152,6 +155,8 @@ class Shader : public Gaffer::DependencyNode
 		const Gaffer::Color3fPlug *nodeColorPlug() const;
 
 		static size_t g_firstPlugIndex;
+
+		friend class ShaderPlug;
 
 };
 
