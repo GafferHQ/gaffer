@@ -36,6 +36,7 @@
 //////////////////////////////////////////////////////////////////////////
 
 #include "boost/bind.hpp"
+#include "boost/regex.hpp"
 #include "boost/algorithm/string/predicate.hpp"
 #include "boost/container/flat_set.hpp"
 
@@ -92,6 +93,55 @@ IECore::InternedString g_compoundNoduleSpacingKey( "compoundNodule:spacing"  );
 IECore::InternedString g_compoundNoduleOrientationKey( "compoundNodule:orientation"  );
 IECore::InternedString g_compoundNoduleDirectionKey( "compoundNodule:direction"  );
 
+// Custom gadget factory
+
+typedef map<string, NoduleLayout::CustomGadgetCreator> CustomGadgetCreatorMap;
+CustomGadgetCreatorMap &customGadgetCreators()
+{
+	static CustomGadgetCreatorMap m;
+	return m;
+}
+
+GadgetPtr createCustomGadget( const InternedString &gadgetType, GraphComponentPtr parent )
+{
+	const CustomGadgetCreatorMap &m = customGadgetCreators();
+	const CustomGadgetCreatorMap::const_iterator it = m.find( gadgetType );
+	if( it == m.end() )
+	{
+		return NULL;
+	}
+	return it->second( parent );
+}
+
+// Custom gadget metadata accessors. These affect the layout of custom gadgets
+
+int index( const GraphComponent *parent, const InternedString &gadgetName, int defaultValue )
+{
+	ConstIntDataPtr i = Metadata::value<IntData>( parent, "noduleLayout:customGadget:" + gadgetName.string() + ":index" );
+	return i ? i->readable() : defaultValue;
+}
+
+std::string section( const GraphComponent *parent, const InternedString &gadgetName )
+{
+	ConstStringDataPtr s = Metadata::value<StringData>( parent, "noduleLayout:customGadget:" + gadgetName.string() + ":section" );
+	return s ? s->readable() : "top";
+}
+
+bool visible( const GraphComponent *parent, const InternedString &gadgetName, IECore::InternedString section )
+{
+	if( section != InternedString() && ::section( parent, gadgetName ) != section.string() )
+	{
+		return false;
+	}
+
+	if( ConstBoolDataPtr b = Metadata::value<BoolData>( parent, "noduleLayout:customGadget:" + gadgetName.string() + ":visible" ) )
+	{
+		return b->readable();
+	}
+
+	return true;
+}
+
 // Plug metadata accessors. These affect the layout of individual nodules.
 
 typedef boost::variant<const Gaffer::Plug *, IECore::InternedString> GadgetKey;
@@ -118,7 +168,6 @@ std::string section( const Plug *plug )
 	{
 		return s->readable();
 	}
-
 	return plug->direction() == Plug::In ? "top" : "bottom";
 }
 
@@ -137,11 +186,22 @@ bool visible( const Plug *plug, IECore::InternedString section )
 	return true;
 }
 
-InternedString gadgetType( const GadgetKey &gadgetKey )
+// Metadata accessors common to custom gadgets and nodules
+
+InternedString gadgetType( const GraphComponent *parent, const GadgetKey &gadgetKey )
 {
-	const Plug *plug = boost::get<const Plug *>( gadgetKey );
-	ConstStringDataPtr d = Metadata::value<IECore::StringData>( plug, g_noduleTypeKey );
-	return d ? d->readable() : "GafferUI::StandardNodule";
+	if( gadgetKey.which() == 0 )
+	{
+		const Plug *plug = boost::get<const Plug *>( gadgetKey );
+		ConstStringDataPtr d = Metadata::value<IECore::StringData>( plug, g_noduleTypeKey );
+		return d ? d->readable() : "GafferUI::StandardNodule";
+	}
+	else
+	{
+		const InternedString &name = boost::get<InternedString>( gadgetKey );
+		ConstStringDataPtr d = Metadata::value<StringData>( parent, "noduleLayout:customGadget:" + name.string() + ":gadgetType" );
+		return d ? d->readable() : "";
+	}
 }
 
 // Parent metadata accessors. These affect the properties of the layout itself.
@@ -380,6 +440,27 @@ const Nodule *NoduleLayout::nodule( const Gaffer::Plug *plug ) const
 	return const_cast<NoduleLayout *>( this )->nodule( plug );
 }
 
+Gadget *NoduleLayout::customGadget( const std::string &name )
+{
+	GadgetMap::iterator it = m_gadgets.find( name );
+	if( it != m_gadgets.end() )
+	{
+		return it->second.gadget.get();
+	}
+	return NULL;
+}
+
+const Gadget *NoduleLayout::customGadget( const std::string &name ) const
+{
+	// naughty cast is better than repeating the above logic.
+	return const_cast<NoduleLayout *>( this )->customGadget( name );
+}
+
+void NoduleLayout::registerCustomGadget( const std::string &gadgetType, CustomGadgetCreator creator )
+{
+	customGadgetCreators()[gadgetType] = creator;
+}
+
 LinearContainer *NoduleLayout::noduleContainer()
 {
 	return getChild<LinearContainer>( 0 );
@@ -436,6 +517,10 @@ void NoduleLayout::plugMetadataChanged( IECore::TypeId nodeTypeId, const Gaffer:
 			{
 				updateOrientation();
 			}
+			if( boost::starts_with( key.string(), "noduleLayout:customGadget" ) )
+			{
+				updateLayout();
+			}
 		}
 	}
 }
@@ -460,12 +545,18 @@ void NoduleLayout::nodeMetadataChanged( IECore::TypeId nodeTypeId, IECore::Inter
 	{
 		updateOrientation();
 	}
+	if( boost::starts_with( key.string(), "noduleLayout:customGadget" ) )
+	{
+		updateLayout();
+	}
 }
 
 std::vector<NoduleLayout::GadgetKey> NoduleLayout::layoutOrder()
 {
 	typedef pair<int, GadgetKey> SortItem;
 	vector<SortItem> toSort;
+
+	// Add any plugs which should be visible
 
 	for( PlugIterator plugIt( m_parent.get() ); !plugIt.done(); ++plugIt )
 	{
@@ -481,6 +572,29 @@ std::vector<NoduleLayout::GadgetKey> NoduleLayout::layoutOrder()
 
 		toSort.push_back( SortItem( index( plug, toSort.size() ), plug ) );
 	}
+
+	// Then any custom gadgets specified by the metadata
+
+	vector<InternedString> metadata;
+	Metadata::registeredValues( m_parent.get(), metadata );
+	boost::regex customGadgetRegex( "noduleLayout:customGadget:(.+):gadgetType" );
+	for( vector<InternedString>::const_iterator it = metadata.begin(), eIt = metadata.end(); it != eIt; ++it )
+	{
+		boost::cmatch match;
+		if( !boost::regex_match( it->c_str(), match, customGadgetRegex ) )
+		{
+			continue;
+		}
+		const InternedString name = match[1].str();
+		if( !::visible( m_parent.get(), name, m_section ) )
+		{
+			continue;
+		}
+
+		toSort.push_back( SortItem( index( m_parent.get(), name, toSort.size() ), name ) );
+	}
+
+	// Sort and return the result
 
 	sort( toSort.begin(), toSort.end() );
 
@@ -512,7 +626,7 @@ void NoduleLayout::updateLayout()
 	for( vector<GadgetKey>::const_iterator it = items.begin(), eIt = items.end(); it != eIt; ++it )
 	{
 		const GadgetKey &item = *it;
-		const IECore::InternedString gadgetType = ::gadgetType( *it );
+		const IECore::InternedString gadgetType = ::gadgetType( m_parent.get(), *it );
 
 		GadgetPtr gadget;
 		GadgetMap::iterator gadgetIt = m_gadgets.find( item );
@@ -523,7 +637,15 @@ void NoduleLayout::updateLayout()
 		else
 		{
 			// No gadget created yet, or it's the wrong type
-			gadget = Nodule::create( const_cast<Plug *>( boost::get<const Plug *>( item ) ) ); /// \todo Fix cast
+			if( item.which() == 0 )
+			{
+				gadget = Nodule::create( const_cast<Plug *>( boost::get<const Plug *>( item ) ) ); /// \todo Fix cast
+			}
+			else
+			{
+				gadget = createCustomGadget( gadgetType, m_parent.get() );
+			}
+
 			added.push_back( gadget.get() );
 			if( gadgetIt != m_gadgets.end() )
 			{

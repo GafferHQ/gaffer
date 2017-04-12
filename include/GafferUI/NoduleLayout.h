@@ -70,6 +70,8 @@ IE_CORE_FORWARDDECLARE( Nodule )
 ///
 /// - noduleLayout:section:<sectionName>:spacing, float
 /// - noduleLayout:section:<sectionName>:direction, string, "increasing" or "decreasing"
+/// - noduleLayout:customGadget:<name>:gadgetType, string
+/// - noduleLayout:customGadget:<name>:*, as for child plug metadata above
 class NoduleLayout : public Gadget
 {
 
@@ -84,6 +86,14 @@ class NoduleLayout : public Gadget
 		/// not intended to be used as a base class.
 		virtual Nodule *nodule( const Gaffer::Plug *plug );
 		virtual const Nodule *nodule( const Gaffer::Plug *plug ) const;
+
+		Gadget *customGadget( const std::string &name );
+		const Gadget *customGadget( const std::string &name ) const;
+
+		typedef boost::function<GadgetPtr ( Gaffer::GraphComponentPtr )> CustomGadgetCreator;
+		/// Registers a custom gadget type that can be added to the layout using
+		/// "noduleLayout:customGadget:*"" metadata entries.
+		static void registerCustomGadget( const std::string &gadgetType, CustomGadgetCreator creator );
 
 	private :
 
