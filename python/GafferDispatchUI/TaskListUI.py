@@ -46,4 +46,16 @@ Gaffer.Metadata.registerNode(
 	Used to collect tasks for dispatching all at once.
 	""",
 
+	plugs = {
+
+		"sequence" : (
+
+			"description",
+			"""
+			Don't allow any tasks which depend on this list to run until all frames
+			of the tasks in this list have run.
+			""",
+		),
+	}
+
 )
