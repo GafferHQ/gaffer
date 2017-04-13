@@ -52,8 +52,6 @@ class TaskList( GafferDispatch.TaskNode ) :
 		return self["sequence"].getValue()
 
 	def hash( self, context ) :
-		if self.requiresSequenceExecution() :
-			return IECore.MurmurHash().append( context.getFrame() )
 
 		return IECore.MurmurHash()
 
