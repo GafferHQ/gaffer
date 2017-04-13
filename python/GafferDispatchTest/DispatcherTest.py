@@ -1386,5 +1386,36 @@ class DispatcherTest( GafferTest.TestCase ) :
 
  		self.assertLess( time.clock() - t, timeLimit )
 
+	def testTaskListWaitForSequence( self ) :
+
+		s = Gaffer.ScriptNode()
+
+		log = []
+		s["a"] = GafferDispatchTest.LoggingTaskNode( log = log )
+		s["a"]["f"] = Gaffer.StringPlug( defaultValue = "####" )
+
+		s["t"] = GafferDispatch.TaskList()
+		s["t"]["preTasks"][0].setInput( s["a"]["task"] )
+
+		s["b"] = GafferDispatchTest.LoggingTaskNode( log = log )
+		s["b"]["preTasks"][0].setInput( s["t"]["task"] )
+		s["b"]["f"] = Gaffer.StringPlug( defaultValue = "####" )
+
+		dispatcher = GafferDispatch.Dispatcher.create( "testDispatcher" )
+		dispatcher["framesMode"].setValue( GafferDispatch.Dispatcher.FramesMode.CustomRange )
+		dispatcher["frameRange"].setValue( "1-4" )
+
+		dispatcher.dispatch( [ s["b"] ] )
+
+		self.assertEqual( [ l.node.getName() for l in log ], [ "a", "b" ] * 4 )
+		self.assertEqual( [ l.context.getFrame() for l in log ], [ 1, 1, 2, 2, 3, 3, 4, 4 ] )
+
+		del log[:]	
+		s["t"]["sequence"].setValue( True )
+		dispatcher.dispatch( [ s["b"] ] )
+
+		self.assertEqual( [ l.node.getName() for l in log ], [ "a" ] * 4 + [ "b" ] * 4 )
+		self.assertEqual( [ l.context.getFrame() for l in log ], [ 1, 2, 3, 4 ] * 2 )
+
 if __name__ == "__main__":
 	unittest.main()
