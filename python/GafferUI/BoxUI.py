@@ -386,38 +386,47 @@ def __reorderPlugs( plugs, plug, newIndex ) :
 
 def __nodeGraphPlugContextMenu( nodeGraph, plug, menuDefinition ) :
 
+	# The context menu might be showing for the child nodule
+	# of a CompoundNodule, but most of our operations only
+	# make sense on the top level parent plug, so find that
+	# and use it.
+	parentPlug = plug
+	while isinstance( parentPlug.parent(), Gaffer.Plug ) :
+		parentPlug = parentPlug.parent()
+
 	readOnly = Gaffer.MetadataAlgo.readOnly( plug )
+
 	if isinstance( plug.node(), Gaffer.Box ) :
 
 		menuDefinition.append(
 			"/Rename...",
 			{
-				"command" : functools.partial( __renamePlug, plug = plug ),
+				"command" : functools.partial( __renamePlug, plug = parentPlug ),
 				"active" : not readOnly,
 			}
 		)
 
 		menuDefinition.append( "/MoveDivider", { "divider" : True } )
 
-		currentEdge = Gaffer.Metadata.value( plug, "noduleLayout:section" )
+		currentEdge = Gaffer.Metadata.value( parentPlug, "noduleLayout:section" )
 		if not currentEdge :
-			currentEdge = "top" if plug.direction() == plug.Direction.In else "bottom"
+			currentEdge = "top" if parentPlug.direction() == parentPlug.Direction.In else "bottom"
 
 		for edge in ( "top", "bottom", "left", "right" ) :
 			menuDefinition.append(
 				"/Move To/" + edge.capitalize(),
 				{
-					"command" : functools.partial( __setPlugMetadata, plug, "noduleLayout:section", edge ),
+					"command" : functools.partial( __setPlugMetadata, parentPlug, "noduleLayout:section", edge ),
 					"active" : edge != currentEdge and not readOnly,
 				}
 			)
 
-		edgePlugs = __edgePlugs( nodeGraph, plug )
-		edgeIndex = edgePlugs.index( plug )
+		edgePlugs = __edgePlugs( nodeGraph, parentPlug )
+		edgeIndex = edgePlugs.index( parentPlug )
 		menuDefinition.append(
 			"/Move " + ( "Up" if currentEdge in ( "left", "right" ) else "Left" ),
 			{
-				"command" : functools.partial( __reorderPlugs, edgePlugs, plug, edgeIndex - 1 ),
+				"command" : functools.partial( __reorderPlugs, edgePlugs, parentPlug, edgeIndex - 1 ),
 				"active" : edgeIndex > 0 and not readOnly,
 			}
 		)
@@ -425,12 +434,12 @@ def __nodeGraphPlugContextMenu( nodeGraph, plug, menuDefinition ) :
 		menuDefinition.append(
 			"/Move " + ( "Down" if currentEdge in ( "left", "right" ) else "Right" ),
 			{
-				"command" : functools.partial( __reorderPlugs, edgePlugs, plug, edgeIndex + 1 ),
+				"command" : functools.partial( __reorderPlugs, edgePlugs, parentPlug, edgeIndex + 1 ),
 				"active" : edgeIndex < len( edgePlugs ) - 1 and not readOnly,
 			}
 		)
 
-	__appendPlugDeletionMenuItems( menuDefinition, plug, readOnly )
+	__appendPlugDeletionMenuItems( menuDefinition, parentPlug, readOnly )
 	__appendPlugPromotionMenuItems( menuDefinition, plug, readOnly )
 
 __nodeGraphPlugContextMenuConnection = GafferUI.NodeGraph.plugContextMenuSignal().connect( __nodeGraphPlugContextMenu )
