@@ -72,6 +72,54 @@ class MetadataAlgoTest( GafferTest.TestCase ) :
 		self.assertEqual( Gaffer.MetadataAlgo.readOnly( n ), True )
 		self.assertEqual( Gaffer.MetadataAlgo.readOnly( n["op1"] ), True )
 
+	def testChildNodesAreReadOnly( self ) :
+
+		b = Gaffer.Box()
+
+		self.assertEqual( Gaffer.MetadataAlgo.getReadOnly( b ), False )
+		self.assertEqual( Gaffer.MetadataAlgo.getChildNodesAreReadOnly( b ), False )
+		self.assertEqual( Gaffer.MetadataAlgo.readOnly( b ), False )
+
+		p1 = Gaffer.IntPlug( "boxPlug", Gaffer.Plug.Direction.In )
+		b.addChild( p1 )
+
+		self.assertEqual( Gaffer.MetadataAlgo.getReadOnly( p1 ), False )
+		self.assertEqual( Gaffer.MetadataAlgo.readOnly( p1 ), False )
+
+		n = GafferTest.AddNode()
+
+		self.assertEqual( Gaffer.MetadataAlgo.getReadOnly( n ), False )
+		self.assertEqual( Gaffer.MetadataAlgo.getReadOnly( n["op1"] ), False )
+		self.assertEqual( Gaffer.MetadataAlgo.readOnly( n ), False )
+		self.assertEqual( Gaffer.MetadataAlgo.readOnly( n["op1"] ), False )
+
+		b.addChild( n )
+
+		self.assertEqual( Gaffer.MetadataAlgo.getReadOnly( n ), False )
+		self.assertEqual( Gaffer.MetadataAlgo.getReadOnly( n["op1"] ), False )
+		self.assertEqual( Gaffer.MetadataAlgo.readOnly( n ), False )
+		self.assertEqual( Gaffer.MetadataAlgo.readOnly( n["op1"] ), False )
+
+		Gaffer.MetadataAlgo.setChildNodesAreReadOnly( b, True )
+
+		self.assertEqual( Gaffer.MetadataAlgo.getChildNodesAreReadOnly( b ), True )
+		self.assertEqual( Gaffer.MetadataAlgo.readOnly( b ), False )
+		self.assertEqual( Gaffer.MetadataAlgo.readOnly( p1 ), False )
+		self.assertEqual( Gaffer.MetadataAlgo.getReadOnly( n ), False )
+		self.assertEqual( Gaffer.MetadataAlgo.getReadOnly( n["op1"] ), False )
+		self.assertEqual( Gaffer.MetadataAlgo.readOnly( n ), True )
+		self.assertEqual( Gaffer.MetadataAlgo.readOnly( n["op1"] ), True )
+
+		Gaffer.MetadataAlgo.setChildNodesAreReadOnly( b, False )
+
+		self.assertEqual( Gaffer.MetadataAlgo.getChildNodesAreReadOnly( b ), False )
+		self.assertEqual( Gaffer.MetadataAlgo.readOnly( b ), False )
+		self.assertEqual( Gaffer.MetadataAlgo.readOnly( p1 ), False )
+		self.assertEqual( Gaffer.MetadataAlgo.getReadOnly( n ), False )
+		self.assertEqual( Gaffer.MetadataAlgo.getReadOnly( n["op1"] ), False )
+		self.assertEqual( Gaffer.MetadataAlgo.readOnly( n ), False )
+		self.assertEqual( Gaffer.MetadataAlgo.readOnly( n["op1"] ), False )
+
 	def testBookmarks( self ) :
 
 		b = Gaffer.Box()

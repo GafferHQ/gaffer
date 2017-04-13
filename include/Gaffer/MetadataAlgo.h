@@ -81,9 +81,17 @@ namespace MetadataAlgo
 
 void setReadOnly( GraphComponent *graphComponent, bool readOnly, bool persistent = true );
 bool getReadOnly( const GraphComponent *graphComponent );
-/// Takes into account the result of `getReadOnly()` for ancestors, so that read-only-ness
-/// is inherited. This is the method that should be used to determine if a graphComponent
-/// should be editable by the user or not.
+
+/// The "childNodesAreReadOnly" metadata is similar to the "readOnly" metadata
+/// but only indicates the read-only-ness to the internal nodes of a node, and not its own plugs.
+
+void setChildNodesAreReadOnly( Node *node, bool readOnly, bool persistent = true );
+bool getChildNodesAreReadOnly( const Node *node );
+
+/// Takes into account the result of `getReadOnly()` and `getChildNodesAreReadOnly()` for ancestors,
+/// so that read-only-ness is inherited.
+/// This is the method that should be used to determine if a graphComponent should be editable
+/// by the user or not.
 bool readOnly( const GraphComponent *graphComponent );
 
 /// Bookmarks

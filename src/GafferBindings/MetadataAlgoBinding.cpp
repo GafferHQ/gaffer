@@ -77,6 +77,8 @@ void bindMetadataAlgo()
 
 	def( "setReadOnly", &setReadOnly, ( arg( "graphComponent" ), arg( "readOnly"), arg( "persistent" ) = true ) );
 	def( "getReadOnly", &getReadOnly );
+	def( "setChildNodesAreReadOnly", &setChildNodesAreReadOnly, ( arg( "node" ), arg( "readOnly"), arg( "persistent" ) = true ) );
+	def( "getChildNodesAreReadOnly", &getChildNodesAreReadOnly );
 	def( "readOnly", &readOnly );
 	def( "setBookmarked", &setBookmarked, ( arg( "graphComponent" ), arg( "bookmarked"), arg( "persistent" ) = true ) );
 	def( "getBookmarked", &getBookmarked );
