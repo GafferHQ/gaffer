@@ -260,7 +260,7 @@ def __deletePlug( plug ) :
 
 def __appendPlugDeletionMenuItems( menuDefinition, plug, readOnly = False ) :
 
-	if not isinstance( plug.node(), Gaffer.Box ) :
+	if not isinstance( plug.parent(), Gaffer.Box ) :
 		return
 
 	menuDefinition.append( "/DeleteDivider", { "divider" : True } )
