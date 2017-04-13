@@ -113,7 +113,9 @@ def nodeMenuCreateCommand( menu ) :
 	script = nodeGraph.scriptNode()
 	graphGadget = nodeGraph.graphGadget()
 
-	return Gaffer.Box.create( graphGadget.getRoot(), script.selection() )
+	box = Gaffer.Box.create( graphGadget.getRoot(), script.selection() )
+	Gaffer.BoxIO.insert( box )
+	return box
 
 ## \deprecated Use NodeGraph.appendSubGraphMenuDefinitions()
 def appendNodeContextMenuDefinitions( nodeGraph, node, menuDefinition ) :
@@ -136,6 +138,10 @@ def appendNodeEditorToolMenuDefinitions( nodeEditor, node, menuDefinition ) :
 	menuDefinition.append( "/BoxDivider", { "divider" : True } )
 	menuDefinition.append( "/Export reference...", { "command" : functools.partial( __exportForReferencing, node = node ) } )
 	menuDefinition.append( "/Import reference...", { "command" : functools.partial( __importReference, node = node ) } )
+
+	if Gaffer.BoxIO.canInsert( node ) :
+		menuDefinition.append( "/UpgradeDivider", { "divider" : True } )
+		menuDefinition.append( "/Upgrade to use BoxIO", { "command" : functools.partial( __upgradeToUseBoxIO, node = node ) } )
 
 def __showContents( nodeGraph, box ) :
 
@@ -182,6 +188,11 @@ def __importReference( menu, node ) :
 	) :
 		with Gaffer.UndoScope( scriptNode ) :
 			scriptNode.executeFile( str( path ), parent = node, continueOnError = True )
+
+def __upgradeToUseBoxIO( node ) :
+
+	with Gaffer.UndoScope( node.scriptNode() ) :
+		Gaffer.BoxIO.insert( node )
 
 # PlugValueWidget registrations
 ##########################################################################
@@ -261,7 +272,7 @@ def __appendPlugDeletionMenuItems( menuDefinition, plug, readOnly = False ) :
 def __promote( plug ) :
 
 	with Gaffer.UndoScope( plug.ancestor( Gaffer.ScriptNode ) ) :
-		Gaffer.PlugAlgo.promote( plug )
+		Gaffer.BoxIO.promote( plug )
 
 def __unpromote( plug ) :
 
