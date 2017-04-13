@@ -52,7 +52,7 @@ class NestedPlugTestNode( Gaffer.Node ) :
 		Gaffer.Node.__init__( self )
 
 IECore.registerRunTimeTyped( NestedPlugTestNode )
-GafferUI.Nodule.registerNodule( NestedPlugTestNode, "c", GafferUI.CompoundNodule )
+Gaffer.Metadata.registerValue( NestedPlugTestNode, "c", "nodule:type", "GafferUI::CompoundNodule" )
 
 class GraphGadgetTest( GafferUITest.TestCase ) :
 

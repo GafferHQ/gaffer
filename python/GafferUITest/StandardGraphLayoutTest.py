@@ -77,12 +77,6 @@ Gaffer.Metadata.registerValue( LayoutNode, "bottom*", "noduleLayout:section", "b
 
 class StandardGraphLayoutTest( GafferUITest.TestCase ) :
 
-	def setUp( self ) :
-
-		GafferUITest.TestCase.setUp( self )
-
-		GafferUI.Nodule.registerNodule( GafferTest.AddNode, "enabled", lambda plug : None )
-
 	def testConnectNode( self ) :
 
 		s = Gaffer.ScriptNode()
@@ -104,7 +98,7 @@ class StandardGraphLayoutTest( GafferUITest.TestCase ) :
 		g.getLayout().connectNode( g, s["compound"], Gaffer.StandardSet( [ s["add2"] ] ) )
 		self.assertEqual( s["compound"]["p"]["f"].getInput(), None )
 
-		GafferUI.Nodule.registerNodule( GafferTest.CompoundPlugNode, "p", GafferUI.CompoundNodule )
+		Gaffer.Metadata.registerValue( GafferTest.CompoundPlugNode, "p", "nodule:type", "GafferUI::CompoundNodule" )
 
 		s["compound2"] = GafferTest.CompoundPlugNode()
 		g.getLayout().connectNode( g, s["compound2"], Gaffer.StandardSet( [ s["add2"] ] ) )
@@ -118,7 +112,7 @@ class StandardGraphLayoutTest( GafferUITest.TestCase ) :
 		g.getLayout().connectNode( g, s["add3"], Gaffer.StandardSet( [ s["compound2"] ] ) )
 		self.assertEqual( s["add3"]["op1"].getInput(), None )
 
-		GafferUI.Nodule.registerNodule( GafferTest.CompoundPlugNode, "o", GafferUI.CompoundNodule )
+		Gaffer.Metadata.registerValue( GafferTest.CompoundPlugNode, "o", "nodule:type", "GafferUI::CompoundNodule" )
 
 		s["compound3"] = GafferTest.CompoundPlugNode()
 

@@ -80,13 +80,6 @@ class Nodule : public Gadget
 		/// nodule type for a particular type of plug.
 		static void registerNodule( const std::string &noduleTypeName, NoduleCreator creator, IECore::TypeId plugType = IECore::InvalidTypeId );
 
-		/// Registers a function which will return a Nodule instance for plugs with specific names on
-		/// a specific type of node. Nodules registered in this way will take precedence over those registered above.
-		/// Note that a creator may return 0 to suppress the creation of a Nodule.
-		/// \deprecated Register a "nodule:type" Metadata value instead.
-		/// \todo Remove.
-		static void registerNodule( const IECore::TypeId nodeType, const std::string &plugPathRegex, NoduleCreator creator );
-
 		virtual std::string getToolTip( const IECore::LineSegment3f &line ) const;
 
 	protected :
@@ -110,12 +103,6 @@ class Nodule : public Gadget
 
 		typedef std::map<IECore::TypeId, NoduleCreator> PlugCreatorMap;
 		static PlugCreatorMap &plugCreators();
-
-		typedef std::pair<boost::regex, NoduleCreator> RegexAndCreator;
-		typedef std::vector<RegexAndCreator> RegexAndCreatorVector;
-		typedef std::map<IECore::TypeId, RegexAndCreatorVector> NamedCreatorMap;
-		static NamedCreatorMap &namedCreators();
-
 
 };
 

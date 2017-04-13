@@ -79,13 +79,13 @@ class StandardNodeGadgetTest( GafferUITest.TestCase ) :
 
 		n = DeeplyNestedNode()
 
-		def noduleCreator( plug ) :
+		def noduleType( plug ) :
 			if isinstance( plug, Gaffer.CompoundPlug ) :
-				return GafferUI.CompoundNodule( plug )
+				return "GafferUI::CompoundNodule"
 			else :
-				return GafferUI.StandardNodule( plug )
+				return "GafferUI::StandardNodule"
 
-		GafferUI.Nodule.registerNodule( DeeplyNestedNode, ".*", noduleCreator )
+		Gaffer.Metadata.registerValue( DeeplyNestedNode, "*", "nodule:type", noduleType )
 
 		g = GafferUI.StandardNodeGadget( n )
 

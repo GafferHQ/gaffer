@@ -47,6 +47,9 @@ using namespace boost::python;
 using namespace GafferUIBindings;
 using namespace GafferUI;
 
+namespace
+{
+
 struct NoduleCreator
 {
 	NoduleCreator( object fn )
@@ -67,15 +70,12 @@ struct NoduleCreator
 
 };
 
-static void registerNodule1( const std::string &noduleTypeName, object creator, IECore::TypeId plugType )
+static void registerNodule( const std::string &noduleTypeName, object creator, IECore::TypeId plugType )
 {
 	Nodule::registerNodule( noduleTypeName, NoduleCreator( creator ), plugType );
 }
 
-static void registerNodule2( IECore::TypeId nodeType, const std::string &plugPath, object creator )
-{
-	Nodule::registerNodule( nodeType, plugPath, NoduleCreator( creator ) );
-}
+} // namespace
 
 void GafferUIBindings::bindNodule()
 {
@@ -86,7 +86,7 @@ void GafferUIBindings::bindNodule()
 			return_value_policy<IECorePython::CastToIntrusivePtr>()
 		)
 		.def( "create", &Nodule::create ).staticmethod( "create" )
-		.def( "registerNodule", &registerNodule1, ( arg( "noduleTypeName" ), arg( "creator" ), arg( "plugType" ) = IECore::InvalidTypeId ) )
-		.def( "registerNodule", &registerNodule2 ).staticmethod( "registerNodule" )
+		.def( "registerNodule", &registerNodule, ( arg( "noduleTypeName" ), arg( "creator" ), arg( "plugType" ) = IECore::InvalidTypeId ) )
+		.staticmethod( "registerNodule" )
 	;
 }
