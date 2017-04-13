@@ -318,12 +318,12 @@ def __mutableSelectionAvailable( menu ) :
 	if not selectionAvailable( menu ) :
 		return False
 
-	return not isinstance( scope( menu ).parent, Gaffer.Reference )
+	return not (Gaffer.MetadataAlgo.getChildNodesAreReadOnly( scope( menu ).parent ) or	Gaffer.MetadataAlgo.readOnly( scope( menu ).parent ) )
 
 def __pasteAvailable( menu ) :
 
 	s = scope( menu )
-	if isinstance( s.parent, Gaffer.Reference ) :
+	if Gaffer.MetadataAlgo.getChildNodesAreReadOnly( scope( menu ).parent ) or Gaffer.MetadataAlgo.readOnly( scope( menu ).parent ):
 		return False
 
 	root = s.script.ancestor( Gaffer.ApplicationRoot )
@@ -331,7 +331,7 @@ def __pasteAvailable( menu ) :
 
 def __arrangeAvailable( menu ) :
 
-	return not isinstance( scope( menu ).parent, Gaffer.Reference )
+	return not (Gaffer.MetadataAlgo.getChildNodesAreReadOnly( scope( menu ).parent ) or	Gaffer.MetadataAlgo.readOnly( scope( menu ).parent ) )
 
 def __undoAvailable( menu ) :
 

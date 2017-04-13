@@ -274,7 +274,10 @@ class NodeGraph( GafferUI.EditorWidget ) :
 					self._m.popup( self )
 					return True
 
-			if not isinstance( self.graphGadget().getRoot(), Gaffer.Reference ) :
+			if not (
+				Gaffer.MetadataAlgo.getChildNodesAreReadOnly( self.graphGadget().getRoot() ) or
+				Gaffer.MetadataAlgo.readOnly( self.graphGadget().getRoot() )
+			):
 				self._nodeMenu().popup( self )
 				return True
 
@@ -307,7 +310,10 @@ class NodeGraph( GafferUI.EditorWidget ) :
 				self.graphGadget().setRoot( root.parent() )
 				return True
 		elif event.key == "Tab" :
-			if not isinstance( self.graphGadget().getRoot(), Gaffer.Reference ) :
+			if not (
+				Gaffer.MetadataAlgo.getChildNodesAreReadOnly( self.graphGadget().getRoot() ) or
+				Gaffer.MetadataAlgo.readOnly( self.graphGadget().getRoot() )
+			):
 				self._nodeMenu().popup( self )
 				return True
 
