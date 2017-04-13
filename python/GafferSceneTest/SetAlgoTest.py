@@ -139,11 +139,8 @@ class SetAlgoTest( GafferSceneTest.SceneTestCase ) :
 
 		self.assertEqual( str( e.exception ), 'Exception : Syntax error in indicated part of SetExpression.\nsetA - (/group/group/sphere2\n     |---------------------|\n.' )
 
-		# Test exception for invalid set names
-		with self.assertRaises( RuntimeError ) as e :
-			GafferScene.SetAlgo.evaluateSetExpression( 'A', group2["out"] )
-
-		self.assertEqual( str( e.exception ), 'Exception : Set A is not available in SetExpression.' )
+		# Sets that don't exist should be replaced with an empty PathMatcher
+		expressionCheck( 'A', [] )
 
 		# Test that changing set contents will result in an updated hash
 		h = GafferScene.SetAlgo.setExpressionHash( "setA", group2["out"] )
