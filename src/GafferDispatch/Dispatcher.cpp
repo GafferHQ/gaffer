@@ -318,6 +318,12 @@ class Dispatcher::Batcher
 
 	private :
 
+		bool requiresBatchPerFrame( const TaskNode::Task &task )
+		{
+			return task.hash() == IECore::MurmurHash() &&
+			       !task.plug()->requiresSequenceExecution();
+		}
+
 		TaskBatchPtr batchTasksWalk( const TaskNode::Task &task, const std::set<const TaskBatch *> &ancestors = std::set<const TaskBatch *>() )
 		{
 			// Acquire a batch with this task placed in it,
@@ -384,7 +390,7 @@ class Dispatcher::Batcher
 			// unchanged.
 			MurmurHash taskToBatchMapHash = task.hash();
 			taskToBatchMapHash.append( (uint64_t)task.node() );
-			if( task.hash() == MurmurHash() )
+			if( requiresBatchPerFrame( task ) )
 			{
 				// Make sure we don't coalesce all no-ops into a single
 				// batch. See comments in batchHash().
@@ -486,7 +492,7 @@ class Dispatcher::Batcher
 				// every single frame of the no-op would be placed in the
 				// same batch, and all downstream frames would then be forced
 				// to depend unnecessarily on all upstream frames.
-				if( *it == g_frame && task.hash() != MurmurHash() )
+				if( *it == g_frame && !requiresBatchPerFrame( task ) )
 				{
 					continue;
 				}
