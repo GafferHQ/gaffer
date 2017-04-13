@@ -39,6 +39,7 @@
 #include "Gaffer/BoxIn.h"
 #include "Gaffer/BoxOut.h"
 #include "Gaffer/Plug.h"
+#include "Gaffer/Box.h"
 
 #include "GafferBindings/DependencyNodeBinding.h"
 #include "GafferBindings/BoxIOBinding.h"
@@ -107,6 +108,12 @@ void GafferBindings::bindBoxIO()
 		.def( "setup", &BoxIO::setup, ( arg( "plug" ) = object() ) )
 		.def( "plug", &plug )
 		.def( "promotedPlug", &promotedPlug )
+		.def( "promote", &BoxIO::promote, return_value_policy<CastToIntrusivePtr>() )
+		.staticmethod( "promote" )
+		.def( "insert", &BoxIO::insert )
+		.staticmethod( "insert" )
+		.def( "canInsert", &BoxIO::canInsert )
+		.staticmethod( "canInsert" )
 	;
 
 	Serialisation::registerSerialiser( BoxIO::staticTypeId(), new BoxIOSerialiser );

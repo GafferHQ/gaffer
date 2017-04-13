@@ -35,6 +35,7 @@
 //////////////////////////////////////////////////////////////////////////
 
 #include "boost/bind.hpp"
+#include "boost/algorithm/string/replace.hpp"
 
 #include "Gaffer/StringPlug.h"
 #include "Gaffer/BoxIO.h"
@@ -43,6 +44,9 @@
 #include "Gaffer/MetadataAlgo.h"
 #include "Gaffer/PlugAlgo.h"
 #include "Gaffer/ScriptNode.h"
+#include "Gaffer/BoxIn.h"
+#include "Gaffer/BoxOut.h"
+#include "Gaffer/Box.h"
 
 using namespace IECore;
 using namespace Gaffer;
@@ -354,3 +358,183 @@ void BoxIO::promotedPlugParentChanged( GraphComponent *graphComponent )
 	}
 }
 
+//////////////////////////////////////////////////////////////////////////
+// Static utilities
+//////////////////////////////////////////////////////////////////////////
+
+namespace
+{
+
+/// \todo Perhaps this could be moved to PlugAlgo and
+/// (along with a matching canConnect()) be used to
+/// address the todo in GraphBookmarksUI.__connection?
+void connect( Plug *plug1, Plug *plug2 )
+{
+	if( plug1->direction() == plug2->direction() )
+	{
+		throw IECore::Exception( "Ambiguous connection" );
+	}
+
+	if( plug1->direction() == Plug::In )
+	{
+		plug1->setInput( plug2 );
+	}
+	else
+	{
+		plug2->setInput( plug1 );
+	}
+}
+
+InternedString g_noduleTypeName( "nodule:type" );
+
+bool hasNodule( const Plug *plug )
+{
+	for( const Plug *p = plug; p; p = p->parent<Plug>() )
+	{
+		ConstStringDataPtr d = Metadata::plugValue<StringData>( p, g_noduleTypeName );
+		if( d && d->readable() == "" )
+		{
+			return false;
+		}
+		if( p != plug )
+		{
+			if( !d || d->readable() == "GafferUI::StandardNodule" )
+			{
+				return false;
+			}
+		}
+	}
+
+	return true;
+}
+
+Box *enclosingBox( Plug *plug )
+{
+	Node *node = plug->node();
+	if( !node )
+	{
+		return NULL;
+	}
+	return node->parent<Box>();
+}
+
+std::string promotedName( const Plug *plug )
+{
+	std::string result = plug->relativeName( plug->node() );
+	boost::replace_all( result, ".", "_" );
+	return result;
+}
+
+} // namespace
+
+Plug *BoxIO::promote( Plug *plug )
+{
+	Box *box = enclosingBox( plug );
+	if( !box || !hasNodule( plug ) )
+	{
+		return PlugAlgo::promote( plug );
+	}
+
+	BoxIOPtr boxIO;
+	if( plug->direction() == Plug::In )
+	{
+		boxIO = new BoxIn;
+	}
+	else
+	{
+		boxIO = new BoxOut;
+	}
+
+	box->addChild( boxIO );
+	boxIO->namePlug()->setValue( promotedName( plug ) );
+	boxIO->setup( plug );
+
+	connect( plug, boxIO->plug<Plug>() );
+	return boxIO->promotedPlug<Plug>();
+}
+
+bool BoxIO::canInsert( const Box *box )
+{
+	for( PlugIterator it( box ); !it.done(); ++it )
+	{
+		const Plug *plug = it->get();
+		if( plug->direction() == Plug::In )
+		{
+			const Plug::OutputContainer &outputs = plug->outputs();
+			for( Plug::OutputContainer::const_iterator oIt = outputs.begin(), oeIt = outputs.end(); oIt != oeIt; ++oIt )
+			{
+				if( hasNodule( *oIt ) && !runTimeCast<BoxIn>( (*oIt)->node() ) )
+				{
+					return true;
+				}
+			}
+		}
+		else
+		{
+			const Plug *input = plug->getInput<Plug>();
+			if( input && hasNodule( input ) && !runTimeCast<const BoxOut>( input->node() ) )
+			{
+				return true;
+			}
+		}
+	}
+
+	return false;
+}
+
+void BoxIO::insert( Box *box )
+{
+	// Must take a copy of children because adding a child
+	// would invalidate our PlugIterator.
+	GraphComponent::ChildContainer children = box->children();
+	for( PlugIterator it( children ); !it.done(); ++it )
+	{
+		Plug *plug = it->get();
+		if( plug->direction() == Plug::In )
+		{
+			std::vector<Plug *> outputsNeedingBoxIn;
+			const Plug::OutputContainer &outputs = plug->outputs();
+			for( Plug::OutputContainer::const_iterator oIt = outputs.begin(), oeIt = outputs.end(); oIt != oeIt; ++oIt )
+			{
+				if( hasNodule( *oIt ) && !runTimeCast<BoxIn>( (*oIt)->node() ) )
+				{
+					outputsNeedingBoxIn.push_back( *oIt );
+				}
+			}
+
+			if( outputsNeedingBoxIn.empty() )
+			{
+				continue;
+			}
+
+			BoxInPtr boxIn = new BoxIn;
+			boxIn->namePlug()->setValue( plug->getName() );
+			boxIn->setup( plug );
+			boxIn->inPlugInternal()->setInput( plug );
+			for( std::vector<Plug *>::const_iterator oIt = outputsNeedingBoxIn.begin(), oeIt = outputsNeedingBoxIn.end(); oIt != oeIt; ++oIt )
+			{
+				(*oIt)->setInput( boxIn->plug<Plug>() );
+			}
+
+			box->addChild( boxIn );
+		}
+		else
+		{
+			// Output plug
+
+			Plug *input = plug->getInput<Plug>();
+			if( !input || !hasNodule( input ) || runTimeCast<BoxOut>( input->node() ) )
+			{
+				continue;
+			}
+
+			BoxOutPtr boxOut = new BoxOut;
+			boxOut->namePlug()->setValue( plug->getName() );
+			boxOut->setup( plug );
+			boxOut->plug<Plug>()->setInput( input );
+			plug->setInput( boxOut->outPlugInternal() );
+			box->addChild( boxOut );
+		}
+	}
+
+}

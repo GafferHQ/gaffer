@@ -301,5 +301,51 @@ class BoxInTest( GafferTest.TestCase ) :
 		s.redo()
 		assertPostconditions()
 
+	def testPromote( self ) :
+
+		s = Gaffer.ScriptNode()
+		s["b"] = Gaffer.Box()
+		s["b"]["n"] = GafferTest.AddNode()
+
+		Gaffer.Metadata.registerValue( s["b"]["n"]["op2"], "nodule:type", "" )
+
+		Gaffer.BoxIO.promote( s["b"]["n"]["op1"] )
+		Gaffer.BoxIO.promote( s["b"]["n"]["op2"] )
+		Gaffer.BoxIO.promote( s["b"]["n"]["sum"] )
+
+		self.assertTrue( isinstance( s["b"]["n"]["op1"].getInput().node(), Gaffer.BoxIn ) )
+		self.assertTrue( s["b"]["n"]["op1"].source().node().isSame( s["b"] ) )
+		self.assertTrue( s["b"]["n"]["op2"].getInput().node().isSame( s["b"] ) )
+		self.assertEqual( len( s["b"]["n"]["sum"].outputs() ), 1 )
+		self.assertTrue( isinstance( s["b"]["n"]["sum"].outputs()[0].parent(), Gaffer.BoxOut ) )
+
+	def testInsert( self ) :
+
+		s = Gaffer.ScriptNode()
+		s["b"] = Gaffer.Box()
+		s["b"]["n"] = GafferTest.AddNode()
+
+		op1Promoted = Gaffer.PlugAlgo.promote( s["b"]["n"]["op1"] )
+		sumPromoted = Gaffer.PlugAlgo.promote( s["b"]["n"]["sum"] )
+		s["b"]["n"]["op2"].setInput( s["b"]["n"]["op1"].getInput() )
+		self.assertEqual( len( s["b"].children( Gaffer.BoxIO ) ), 0 )
+
+		self.assertEqual( Gaffer.BoxIO.canInsert( s["b"] ), True )
+		Gaffer.BoxIO.insert( s["b"] )
+
+		self.assertEqual( len( s["b"].children( Gaffer.BoxIn ) ), 1 )
+		self.assertEqual( len( s["b"].children( Gaffer.BoxOut ) ), 1 )
+
+		self.assertTrue( isinstance( s["b"]["n"]["op1"].getInput().node(), Gaffer.BoxIn ) )
+		self.assertTrue( isinstance( s["b"]["n"]["op2"].getInput().node(), Gaffer.BoxIn ) )
+		self.assertTrue( s["b"]["n"]["op1"].source().isSame( op1Promoted ) )
+		self.assertTrue( s["b"]["n"]["op2"].source().isSame( op1Promoted ) )
+
+		self.assertEqual( len( s["b"]["n"]["sum"].outputs() ), 1 )
+		self.assertTrue( isinstance( s["b"]["n"]["sum"].outputs()[0].parent(), Gaffer.BoxOut ) )
+		self.assertTrue( sumPromoted.source().isSame( s["b"]["n"]["sum"] ) )
+
+		self.assertEqual( Gaffer.BoxIO.canInsert( s["b"] ), False )
+
 if __name__ == "__main__":
 	unittest.main()

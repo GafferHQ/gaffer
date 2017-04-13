@@ -44,6 +44,7 @@ namespace Gaffer
 {
 
 IE_CORE_FORWARDDECLARE( StringPlug )
+IE_CORE_FORWARDDECLARE( Box )
 
 /// Utility node for representing plug promotion
 /// graphically in the NodeGraph. Note that this has
@@ -100,6 +101,29 @@ class BoxIO : public Node
 		const T *promotedPlug() const;
 
 		Plug::Direction direction() const;
+
+		/// Static utility methods
+		/// ======================
+		///
+		/// Equivalent to `PlugAlgo::promote()`, but
+		/// inserting an intermediate BoxIO node where
+		/// relevant (based on querying nodule layout
+		/// metadata).
+		/// \undoable
+		static Plug *promote( Plug *plug );
+		/// Inserts intermediate BoxIO nodes for any
+		/// promoted plugs that require them (based
+		/// on querying nodule layout metadata). This
+		/// can be used to upgrade boxes that were
+		/// either authored in the pre-BoxIO era, or
+		/// were created by automated scripts that
+		/// are not BoxIO savvy.
+		/// \undoable
+		static void insert( Box *box );
+		/// Returns true if `insert( box )` would
+		/// do anything.
+		/// \undoable
+		static bool canInsert( const Box *box );
 
 	protected :
 
