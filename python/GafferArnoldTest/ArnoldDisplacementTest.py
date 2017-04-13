@@ -39,6 +39,7 @@ import unittest
 import IECore
 
 import GafferTest
+import GafferScene
 import GafferSceneTest
 import GafferOSL
 import GafferArnold
@@ -117,6 +118,37 @@ class ArnoldDisplacementTest( GafferSceneTest.SceneTestCase ) :
 
 		d = GafferArnold.ArnoldDisplacement()
 		self.assertTrue( "ai:disp_map" not in d.attributes() )
+
+	def testAssignment( self ) :
+
+		s = GafferScene.Sphere()
+
+		n = GafferArnold.ArnoldShader()
+		n.loadShader( "noise" )
+
+		d = GafferArnold.ArnoldDisplacement()
+		d["map"].setInput( n["out"] )
+		d["height"].setValue( 2.5 )
+
+		f = GafferScene.PathFilter()
+		f["paths"].setValue( IECore.StringVectorData( [ "/sphere" ] ) )
+
+		a = GafferScene.ShaderAssignment()
+		a["in"].setInput( s["out"] )
+		a["shader"].setInput( d["out"] )
+		a["filter"].setInput( f["out"] )
+
+		self.assertEqual(
+			a["out"].attributes( "/sphere" )["ai:disp_height"],
+			IECore.FloatData( 2.5 )
+		)
+
+		d["height"].setValue( 5 )
+
+		self.assertEqual(
+			a["out"].attributes( "/sphere" )["ai:disp_height"],
+			IECore.FloatData( 5 )
+		)
 
 if __name__ == "__main__":
 	unittest.main()

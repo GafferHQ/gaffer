@@ -144,7 +144,7 @@ void ArnoldDisplacement::affects( const Gaffer::Plug *input, AffectedPlugsContai
 	}
 }
 
-void ArnoldDisplacement::attributesHash( IECore::MurmurHash &h, const Gaffer::Plug *output ) const
+void ArnoldDisplacement::attributesHash( const Gaffer::Plug *output, IECore::MurmurHash &h ) const
 {
 	h.append( typeId() );
 	if( !enabledPlug()->getValue() )
