@@ -259,6 +259,46 @@ class BoxInTest( GafferTest.TestCase ) :
 
 		assertPostconditions()
 
+	def testPromotedArrayPlugRemovalDeletesBoxIn( self ) :
+
+		s = Gaffer.ScriptNode()
+
+		s["b"] = Gaffer.Box()
+		s["b"]["n"] = GafferTest.ArrayPlugNode()
+
+		s["b"]["i"] = Gaffer.BoxIn()
+		s["b"]["i"]["name"].setValue( "in" )
+		s["b"]["i"].setup( s["b"]["n"]["in"] )
+		s["b"]["n"]["in"].setInput( s["b"]["i"]["out"] )
+
+		def assertPreconditions() :
+
+			self.assertTrue( "in" in s["b"] )
+			self.assertTrue( "i" in s["b"] )
+			self.assertTrue( len( s["b"]["i"]["out"].outputs() ), 1 )
+			self.assertTrue( s["b"]["n"]["in"].source().isSame( s["b"]["in"] ) )
+
+		assertPreconditions()
+
+		with Gaffer.UndoContext( s ) :
+			del s["b"]["in"]
+
+		def assertPostconditions() :
+
+			self.assertFalse( "in" in s["b"] )
+			self.assertFalse( "i" in s["b"] )
+			self.assertTrue( s["b"]["n"]["in"].getInput() is None )
+
+		assertPostconditions()
+
+		s.undo()
+
+		assertPreconditions()
+
+		s.redo()
+
+		assertPostconditions()
+
 	def testUndoCreation( self ) :
 
 		s = Gaffer.ScriptNode()
