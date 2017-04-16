@@ -426,6 +426,7 @@ class ParameterisedHolderTest( GafferTest.TestCase ) :
 
 		self.assertEqual( parameterised[1:], classSpec )
 		self.assertEqual( parameterised[0].typeName(), "SequenceRenumberOp" )
+		self.assertEqual( parameterised[0].parameters()["offset"].getTypedValue(), 21 )
 		self.assertEqual( s["n"]["parameters"]["offset"].getValue(), 21 )
 
 	def testKeepExistingValues( self ) :
@@ -441,6 +442,7 @@ class ParameterisedHolderTest( GafferTest.TestCase ) :
 		ph["parameters"]["lift"].setValue( IECore.Color3f( 1, 0, 0 ) )
 		ph.setParameterised( IECore.Grade(), keepExistingValues=True )
 		self.assertEqual( ph["parameters"]["lift"].getValue(), IECore.Color3f( 1, 0, 0 ) )
+		self.assertEqual( ph.getParameterised()[0].parameters()["lift"].getTypedValue(), IECore.Color3f( 1, 0, 0 ) )
 
 	def testDateTimeParameter( self ) :
 
