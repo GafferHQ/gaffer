@@ -119,6 +119,13 @@ options.Add(
 )
 
 options.Add(
+	"BUILD_VARIANTDIR",
+	"Specify a directory for SCons to generate intermediate files in. This allows for multiple builds to be"
+	"run at the same time without having conflicts between different compiled objects.",
+	""
+)
+
+options.Add(
 	"INSTALL_DIR",
 	"The destination directory for the installation.",
 	"./install/gaffer-${GAFFER_MILESTONE_VERSION}.${GAFFER_MAJOR_VERSION}.${GAFFER_MINOR_VERSION}.${GAFFER_PATCH_VERSION}-${GAFFER_PLATFORM}",
@@ -350,6 +357,9 @@ else :
 
 if env["BUILD_CACHEDIR"] != "" :
 	CacheDir( env["BUILD_CACHEDIR"] )
+
+if env["BUILD_VARIANTDIR"] != "" :
+	VariantDir( env["BUILD_VARIANTDIR"], ".", duplicate=0 )
 
 ###############################################################################################
 # Check for inkscape and sphinx
@@ -837,6 +847,17 @@ for library in ( "GafferUI", ) :
 # The stuff that actually builds the libraries and python modules
 ###############################################################################################
 
+def buildVariant( f ) :
+
+	if env["BUILD_VARIANTDIR"] != "" :
+		return os.path.join( env["BUILD_VARIANTDIR"], f )
+
+	return f
+
+def buildVariantList( sourceFiles ) :
+
+	return [ buildVariant( f ) for f in sourceFiles ]
+
 for libraryName, libraryDef in libraries.items() :
 
 	# skip this library if we don't have the config we need
@@ -856,10 +877,10 @@ for libraryName, libraryDef in libraries.items() :
 
 	# library
 
-	librarySource = sorted( glob.glob( "src/" + libraryName + "/*.cpp" ) + glob.glob( "src/" + libraryName + "/*/*.cpp" ) )
+	librarySource = sorted( buildVariantList( glob.glob( "src/" + libraryName + "/*.cpp" ) + glob.glob( "src/" + libraryName + "/*/*.cpp" ) ) )
 	if librarySource :
 
-		library = libEnv.SharedLibrary( "lib/" + libraryName, librarySource )
+		library = libEnv.SharedLibrary( buildVariant( "lib/" + libraryName ), librarySource )
 		libEnv.Default( library )
 
 		libraryInstall = libEnv.Install( "$BUILD_DIR/lib", library )
@@ -888,10 +909,10 @@ for libraryName, libraryDef in libraries.items() :
 	pythonEnv = basePythonEnv.Clone()
 	pythonEnv.Append( **(libraryDef.get( "pythonEnvAppends", {} ))  )
 
-	bindingsSource = sorted( glob.glob( "src/" + libraryName + "Bindings/*.cpp" ) )
+	bindingsSource = sorted( buildVariantList( glob.glob( "src/" + libraryName + "Bindings/*.cpp" ) ) )
 	if bindingsSource :
 
-		bindingsLibrary = pythonEnv.SharedLibrary( "lib/" + libraryName + "Bindings", bindingsSource )
+		bindingsLibrary = pythonEnv.SharedLibrary( buildVariant( "lib/" + libraryName + "Bindings" ), bindingsSource )
 		pythonEnv.Default( bindingsLibrary )
 
 		bindingsLibraryInstall = pythonEnv.Install( "$BUILD_DIR/lib", bindingsLibrary )
@@ -906,7 +927,7 @@ for libraryName, libraryDef in libraries.items() :
 		pythonEnv.Alias( "build", bindingsHeaderInstall )
 
 
-	pythonModuleSource = sorted( glob.glob( "src/" + libraryName + "Module/*.cpp" ) )
+	pythonModuleSource = sorted( buildVariantList( glob.glob( "src/" + libraryName + "Module/*.cpp" ) ) )
 	if pythonModuleSource :
 
 		pythonModuleEnv = pythonEnv.Clone()
@@ -927,7 +948,7 @@ for libraryName, libraryDef in libraries.items() :
 			pythonModuleEnv["LIBSUFFIXES"].append( pythonModuleEnv.subst( "$SHLIBSUFFIX" ) )
 			pythonModuleEnv["SHLIBSUFFIX"] = ".so"
 
-		pythonModule = pythonModuleEnv.SharedLibrary( "python/" + libraryName + "/_" + libraryName, pythonModuleSource )
+		pythonModule = pythonModuleEnv.SharedLibrary( buildVariant( "python/" + libraryName + "/_" + libraryName ), pythonModuleSource )
 		pythonModuleEnv.Default( pythonModule )
 
 		moduleInstall = pythonModuleEnv.Install( "$BUILD_DIR/python/" + libraryName, pythonModule )
