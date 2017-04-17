@@ -34,6 +34,9 @@
 #
 ##########################################################################
 
+import IECore
+
+import Gaffer
 import GafferUITest
 import GafferCortex
 import GafferCortexUI
@@ -44,6 +47,29 @@ class DocumentationTest( GafferUITest.TestCase ) :
 
 		self.maxDiff = None
 		self.assertNodesAreDocumented( GafferCortex )
+
+	def testMetadata( self ) :
+
+		n = Gaffer.Node()
+		p = IECore.CompoundParameter(
+			"c",
+			"a compound",
+			members = [
+				IECore.StringParameter( "s", "a string", "" ),
+				IECore.BoolParameter( "b", "a bool", True ),
+				IECore.IntParameter( "i", "an int", 0 ),
+				IECore.FloatParameter( "f", "a float", 0 ),
+				IECore.V3fParameter( "v3f", "a vector", IECore.V3f( 1 ) ),
+				IECore.StringVectorParameter( "sv", "a list of strings", IECore.StringVectorData() ),
+			]
+		)
+
+		h = GafferCortex.ParameterHandler.create( p )
+		h.setupPlug( n )
+
+		self.assertEqual( Gaffer.Metadata.plugValue( h.plug(), "description" ), p.description )
+		for child in p.values() :
+			self.assertEqual( Gaffer.Metadata.plugValue( h.childParameterHandler( child ).plug(), "description" ), child.description )
 
 if __name__ == "__main__":
 	unittest.main()

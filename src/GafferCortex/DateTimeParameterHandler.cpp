@@ -1,6 +1,6 @@
 //////////////////////////////////////////////////////////////////////////
 //
-//  Copyright (c) 2012-2014, Image Engine Design Inc. All rights reserved.
+//  Copyright (c) 2012-2015, Image Engine Design Inc. All rights reserved.
 //
 //  Redistribution and use in source and binary forms, with or without
 //  modification, are permitted provided that the following conditions are
@@ -77,6 +77,7 @@ Gaffer::Plug *DateTimeParameterHandler::setupPlug( Gaffer::GraphComponent *plugP
 	}
 
 	setupPlugFlags( m_plug.get(), flags );
+	setupPlugMetadata( m_plug.get(), m_parameter.get() );
 
 	return m_plug.get();
 }

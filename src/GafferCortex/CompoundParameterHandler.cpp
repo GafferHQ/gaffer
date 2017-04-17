@@ -106,6 +106,7 @@ Gaffer::Plug *CompoundParameterHandler::setupPlug( Gaffer::GraphComponent *plugP
 	}
 
 	setupPlugFlags( m_plug.get(), flags );
+	setupPlugMetadata( m_plug.get(), m_parameter.get() );
 
 	// loop through the handlers and remove any that are not linked to a new parameter
 	const CompoundParameter::ParameterVector &children = m_parameter->orderedParameters();

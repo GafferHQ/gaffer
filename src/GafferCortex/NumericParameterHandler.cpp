@@ -1,6 +1,6 @@
 //////////////////////////////////////////////////////////////////////////
 //
-//  Copyright (c) 2011-2014, Image Engine Design Inc. All rights reserved.
+//  Copyright (c) 2011-2015, Image Engine Design Inc. All rights reserved.
 //  Copyright (c) 2011, John Haddon. All rights reserved.
 //
 //  Redistribution and use in source and binary forms, with or without
@@ -85,6 +85,7 @@ Gaffer::Plug *NumericParameterHandler<T>::setupPlug( Gaffer::GraphComponent *plu
 	}
 
 	setupPlugFlags( m_plug.get(), flags );
+	setupPlugMetadata( m_plug.get(), m_parameter.get() );
 
 	return m_plug.get();
 }
