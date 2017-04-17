@@ -1,6 +1,6 @@
 //////////////////////////////////////////////////////////////////////////
 //
-//  Copyright (c) 2012, John Haddon. All rights reserved.
+//  Copyright (c) 2017, John Haddon. All rights reserved.
 //
 //  Redistribution and use in source and binary forms, with or without
 //  modification, are permitted provided that the following conditions are
@@ -34,27 +34,69 @@
 //
 //////////////////////////////////////////////////////////////////////////
 
-#ifndef GAFFERSCENEUI_TYPEIDS_H
-#define GAFFERSCENEUI_TYPEIDS_H
+#ifndef GAFFERSCENEUI_ROTATETOOL_H
+#define GAFFERSCENEUI_ROTATETOOL_H
+
+#include "GafferUI/Style.h"
+
+#include "GafferSceneUI/TransformTool.h"
 
 namespace GafferSceneUI
 {
 
-enum TypeId
+IE_CORE_FORWARDDECLARE( SceneView )
+
+class RotateTool : public TransformTool
 {
-	SceneViewTypeId = 110651,
-	SceneGadgetTypeId = 110652,
-	SelectionToolTypeId = 110653,
-	CropWindowToolTypeId = 110654,
-	ShaderViewTypeId = 110655,
-	ShaderNodeGadgetTypeId = 110656,
-	TransformToolTypeId = 110657,
-	TranslateToolTypeId = 110658,
-	ScaleToolTypeId = 110659,
-	RotateToolTypeId = 110660,
-	LastTypeId = 110700
+
+	public :
+
+		RotateTool( SceneView *view, const std::string &name = defaultName<RotateTool>() );
+		virtual ~RotateTool();
+
+		IE_CORE_DECLARERUNTIMETYPEDEXTENSION( GafferSceneUI::RotateTool, RotateToolTypeId, TransformTool );
+
+		Gaffer::IntPlug *orientationPlug();
+		const Gaffer::IntPlug *orientationPlug() const;
+
+		/// Rotates the current selection as if the specified
+		/// handle had been dragged interactively. Exists mainly
+		/// for use in the unit tests.
+		void rotate( int axis, float degrees );
+
+	protected :
+
+		virtual bool affectsHandles( const Gaffer::Plug *input ) const;
+		virtual void updateHandles();
+
+	private :
+
+		// The guts of the rotation logic. This is factored out of the
+		// drag handling so it can be shared with the `rotate()` public
+		// method.
+		struct Rotation
+		{
+			Imath::V3f originalRotation;
+			Imath::V3f axis;
+		};
+
+		Rotation createRotation( int axis );
+		Imath::V3f rotation( const Rotation &rotation, float radians ) const;
+		void applyRotation( const Rotation &rotation, float radians );
+
+		// Drag handling.
+
+		IECore::RunTimeTypedPtr dragBegin( int axis );
+		bool dragMove( const GafferUI::Gadget *gadget, const GafferUI::DragDropEvent &event );
+		bool dragEnd();
+
+		Rotation m_drag;
+
+		static ToolDescription<RotateTool, SceneView> g_toolDescription;
+		static size_t g_firstPlugIndex;
+
 };
 
 } // namespace GafferSceneUI
 
-#endif // GAFFERSCENEUI_TYPEIDS_H
+#endif // GAFFERSCENEUI_ROTATETOOL_H
