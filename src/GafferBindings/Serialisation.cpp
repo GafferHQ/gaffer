@@ -288,16 +288,20 @@ void Serialisation::registerSerialiser( IECore::TypeId targetType, SerialiserPtr
 
 const Serialisation::Serialiser *Serialisation::acquireSerialiser( const GraphComponent *graphComponent )
 {
+	return registeredSerialiser( graphComponent->typeId() );
+}
+
+const Serialisation::Serialiser *Serialisation::registeredSerialiser( IECore::TypeId targetType )
+{
 	const SerialiserMap &m = serialiserMap();
-	IECore::TypeId t = graphComponent->typeId();
-	while( t != IECore::InvalidTypeId )
+	while( targetType != IECore::InvalidTypeId )
 	{
-		SerialiserMap::const_iterator it = m.find( t );
+		SerialiserMap::const_iterator it = m.find( targetType );
 		if( it != m.end() )
 		{
 			return it->second.get();
 		}
-		t = IECore::RunTimeTyped::baseTypeId( t );
+		targetType = IECore::RunTimeTyped::baseTypeId( targetType );
 	}
 
 	assert( false );
@@ -529,6 +533,8 @@ void GafferBindings::bindSerialisation()
 		.staticmethod( "registerSerialiser" )
 		.def( "acquireSerialiser", &Serialisation::acquireSerialiser, return_value_policy<reference_existing_object>() )
 		.staticmethod( "acquireSerialiser" )
+		.def( "registeredSerialiser", &Serialisation::registeredSerialiser, return_value_policy<reference_existing_object>() )
+		.staticmethod( "registeredSerialiser" )
 	;
 
 	IECorePython::RefCountedClass<Serialisation::Serialiser, IECore::RefCounted, SerialiserWrapper>( "Serialiser" )

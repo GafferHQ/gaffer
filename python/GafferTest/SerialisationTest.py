@@ -56,7 +56,7 @@ class SerialisationTest( GafferTest.TestCase ) :
 
 	def testCustomSerialiser( self ) :
 
-		class CustomSerialiser( Gaffer.Serialisation.Serialiser ) :
+		class CustomSerialiser( type(Gaffer.Serialisation.registeredSerialiser( Gaffer.Node )) ) :
 
 			def moduleDependencies( self, node, serialisation ) :
 
@@ -85,7 +85,7 @@ class SerialisationTest( GafferTest.TestCase ) :
 				elif isinstance( child, Gaffer.Plug ) :
 					return child.getFlags( Gaffer.Plug.Flags.Serialisable )
 
-				return False
+				return super( CustomSerialiser, self ).childNeedsSerialisation( child )
 
 			def childNeedsConstruction( self, child, serialisation ) :
 
@@ -94,7 +94,7 @@ class SerialisationTest( GafferTest.TestCase ) :
 				elif isinstance( child, Gaffer.Plug ) :
 					return child.getFlags( Gaffer.Plug.Flags.Dynamic )
 
-				return False
+				return super( CustomSerialiser, self ).childNeedsConstruction( child )
 
 		customSerialiser = CustomSerialiser()
 		Gaffer.Serialisation.registerSerialiser( self.SerialisationTestNode, customSerialiser )

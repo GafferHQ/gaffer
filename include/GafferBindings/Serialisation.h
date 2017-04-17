@@ -119,6 +119,8 @@ class Serialisation
 		/// Serialisers do not have state, so this method may return the same Serialiser from
 		/// different calls even when the objects are different.
 		static const Serialiser *acquireSerialiser( const Gaffer::GraphComponent *graphComponent );
+		/// Returns a Serialiser suitable for serialisation of the specified type of object.
+		static const Serialiser *registeredSerialiser( IECore::TypeId targetType );
 
 	private :
 
