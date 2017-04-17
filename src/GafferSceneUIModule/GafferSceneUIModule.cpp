@@ -52,6 +52,7 @@
 #include "GafferSceneUIBindings/ShaderViewBinding.h"
 #include "GafferSceneUIBindings/TransformToolBinding.h"
 #include "GafferSceneUIBindings/TranslateToolBinding.h"
+#include "GafferSceneUIBindings/RotateToolBinding.h"
 #include "GafferSceneUIBindings/ScaleToolBinding.h"
 
 using namespace boost::python;
@@ -103,6 +104,7 @@ BOOST_PYTHON_MODULE( _GafferSceneUI )
 
 	bindTransformTool();
 	bindTranslateTool();
+	bindRotateTool();
 	bindScaleTool();
 	bindObjectVisualiser();
 	bindLightVisualiser();
