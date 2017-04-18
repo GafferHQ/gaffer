@@ -35,6 +35,7 @@
 ##########################################################################
 
 import os
+import inspect
 import unittest
 
 import IECore
@@ -491,6 +492,37 @@ class SceneReaderTest( GafferSceneTest.SceneTestCase ) :
 		# this used to cause a crash:
 		r1 = GafferScene.SceneReader()
 		self.assertEqual( r1["out"].set( "blahblah" ).value.paths(), [] )
+
+	def testScenePathNotAvailableInContextExpressions( self ) :
+
+		s = IECore.SceneCache( self.__testFile, IECore.IndexedIO.OpenMode.Write )
+
+		sphereGroup = s.createChild( "sphereGroup" )
+		sphere = sphereGroup.createChild( "sphere" )
+		sphere.writeObject( IECore.SpherePrimitive(), 0 )
+
+		planeGroup = s.createChild( "planeGroup" )
+		plane = planeGroup.createChild( "plane" )
+		plane.writeObject( IECore.MeshPrimitive.createPlane( IECore.Box2f( IECore.V2f( -1 ), IECore.V2f( 1 ) ) ), 0 )
+
+		del s, sphereGroup, sphere, planeGroup, plane
+
+		script = Gaffer.ScriptNode()
+
+		script["reader"] = GafferScene.SceneReader()
+
+		script["expression"] = Gaffer.Expression()
+		script["expression"].setExpression( inspect.cleandoc(
+			"""
+			assert( context.get( "scene:path", None ) is None )
+			parent["reader"]["fileName"] = "{testFilePath}"
+			""".format(testFilePath=self.__testFile)
+		) )
+
+		self.assertEqual( set( [ str( x ) for x in script["reader"]["out"].childNames( "/" ) ] ), set( [ "sphereGroup", "planeGroup" ] ) )
+		self.assertEqual( set( [ str( x ) for x in script["reader"]["out"].childNames( "/sphereGroup" ) ] ), set( [ "sphere" ] ) )
+		self.assertEqual( set( [ str( x ) for x in script["reader"]["out"].childNames( "/planeGroup" ) ] ), set( [ "plane" ] ) )
+		self.assertSceneValid( script["reader"]["out"] )
 
 if __name__ == "__main__":
 	unittest.main()
