@@ -56,7 +56,7 @@ SetFilter::SetFilter( const std::string &name )
 {
 	storeIndexOfNextChild( g_firstPlugIndex );
 
-	addChild( new StringPlug( "set" ) );
+	addChild( new StringPlug( "setExpression" ) );
 	addChild( new PathMatcherDataPlug( "__expressionResult", Gaffer::Plug::Out, new PathMatcherData ) );
 }
 
@@ -64,12 +64,12 @@ SetFilter::~SetFilter()
 {
 }
 
-Gaffer::StringPlug *SetFilter::setPlug()
+Gaffer::StringPlug *SetFilter::setExpressionPlug()
 {
 	return getChild<StringPlug>( g_firstPlugIndex );
 }
 
-const Gaffer::StringPlug *SetFilter::setPlug() const
+const Gaffer::StringPlug *SetFilter::setExpressionPlug() const
 {
 	return getChild<StringPlug>( g_firstPlugIndex );
 }
@@ -88,7 +88,7 @@ void SetFilter::affects( const Gaffer::Plug *input, AffectedPlugsContainer &outp
 {
 	Filter::affects( input, outputs );
 
-	if( input == setPlug() )
+	if( input == setExpressionPlug() )
 	{
 		outputs.push_back( expressionResultPlug() );
 	}
@@ -116,7 +116,7 @@ void SetFilter::hash( const Gaffer::ValuePlug *output, const Gaffer::Context *co
 
 	if( output == expressionResultPlug() )
 	{
-		SetAlgo::setExpressionHash( setPlug()->getValue(), getInputScene( context ), h );
+		SetAlgo::setExpressionHash( setExpressionPlug()->getValue(), getInputScene( context ), h );
 	}
 
 }
@@ -127,7 +127,7 @@ void SetFilter::compute( Gaffer::ValuePlug *output, const Gaffer::Context *conte
 
 	if( output == expressionResultPlug() )
 	{
-		PathMatcherDataPtr data = new PathMatcherData( SetAlgo::evaluateSetExpression( setPlug()->getValue(), getInputScene( context ) ) );
+		PathMatcherDataPtr data = new PathMatcherData( SetAlgo::evaluateSetExpression( setExpressionPlug()->getValue(), getInputScene( context ) ) );
 		static_cast<PathMatcherDataPlug *>( output )->setValue( data );
 	}
 }

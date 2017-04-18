@@ -53,7 +53,7 @@ Gaffer.Metadata.registerNode(
 
 	plugs = {
 
-		"set" : [
+		"setExpression" : [
 
 			"description",
 			"""

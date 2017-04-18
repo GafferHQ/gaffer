@@ -64,8 +64,8 @@ class SetFilter : public Filter
 		SetFilter( const std::string &name=defaultName<SetFilter>() );
 		virtual ~SetFilter();
 
-		Gaffer::StringPlug *setPlug();
-		const Gaffer::StringPlug *setPlug() const;
+		Gaffer::StringPlug *setExpressionPlug();
+		const Gaffer::StringPlug *setExpressionPlug() const;
 
 		virtual void affects( const Gaffer::Plug *input, AffectedPlugsContainer &outputs ) const;
 
