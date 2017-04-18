@@ -50,6 +50,7 @@ namespace
 {
 
 InternedString g_readOnlyName( "readOnly" );
+InternedString g_childNodesAreReadOnlyName( "childNodesAreReadOnly" );
 InternedString g_bookmarkedName( "bookmarked" );
 /// \todo: remove when we're no longer concerned with compatibility
 InternedString g_oldBookmarkedName( "graphBookmarks:bookmarked" );
@@ -100,14 +101,35 @@ bool getReadOnly( const GraphComponent *graphComponent )
 	return d ? d->readable() : false;
 }
 
+void setChildNodesAreReadOnly( Node *node, bool readOnly, bool persistent )
+{
+	Metadata::registerValue( node, g_childNodesAreReadOnlyName, new BoolData( readOnly ), persistent );
+}
+
+bool getChildNodesAreReadOnly( const Node *node )
+{
+	ConstBoolDataPtr d = Metadata::value<BoolData>( node, g_childNodesAreReadOnlyName );
+	return d ? d->readable() : false;
+}
+
 bool readOnly( const GraphComponent *graphComponent )
 {
+	bool haveNodeDescendants = false;
+
 	while( graphComponent )
 	{
-		if( getReadOnly( graphComponent ) )
+		const Node *node = runTimeCast<const Node>( graphComponent );
+
+		if( getReadOnly( graphComponent ) || ( node && haveNodeDescendants && getChildNodesAreReadOnly( node ) ) )
 		{
 			return true;
 		}
+
+		if( !haveNodeDescendants && node )
+		{
+			haveNodeDescendants = true;
+		}
+
 		graphComponent = graphComponent->parent<GraphComponent>();
 	}
 	return false;

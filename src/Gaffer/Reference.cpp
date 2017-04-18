@@ -262,15 +262,6 @@ void Reference::loadInternal( const std::string &fileName )
 				convertPersistentMetadata( it->get() );
 			}
 		}
-		else if( Node *node = runTimeCast<Node>( newChildren->member( i ) ) )
-		{
-			// Make the loaded nodes read-only as far as the UI is
-			// concerned, because any changes the user did make
-			// would be lost on save/reload. We use non-persistent
-			// metadata for this so that they can copy/paste nodes
-			// out of the reference and have the copies be editable.
-			MetadataAlgo::setReadOnly( node, true, /* persistent = */ false );
-		}
 	}
 
 	// figure out what version of gaffer was used to save the reference. prior to
