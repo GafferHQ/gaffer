@@ -74,7 +74,7 @@ Gaffer.Metadata.registerNode(
 			section in Gaffer's documentation.
 			""",
 
-			"ui:scene:acceptsSetName", True,
+			"ui:scene:acceptsSetExpression", True,
 			"nodule:type", "",
 
 		],
