@@ -22,13 +22,13 @@ A B C B C D C D E E
 The following operators are currently supported
 
 ```eval_rst
-=================== ====================================
-Operator            Behavior
-=================== ====================================
-\|                  OR, unites two sets
-&                   AND, intersects two sets
-\-                  ANDNOT, removes elements from sets
-=================== ====================================
+=================== ======================================
+Operator            Behaviour
+=================== ======================================
+\|                  Union, unites two sets
+&                   Intersection, intersects two sets
+\-                  Difference, removes elements from sets
+=================== ======================================
 ```
 
 Simple Examples
@@ -72,7 +72,7 @@ set1 \- (B C)        A
 Operator Precedence
 -------------------
 
-Operations in the expression are executed in the following order: ANDNOT before AND before OR. The following examples demonstrate this in action.
+Operations in the expression are executed in the following order: difference before intersection before union. The following examples demonstrate this in action.
 
 ```eval_rst
 ==================== ==============================
