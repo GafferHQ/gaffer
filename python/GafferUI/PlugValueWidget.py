@@ -554,7 +554,7 @@ class PlugValueWidget( GafferUI.Widget ) :
 
 	def __setValue( self, value ) :
 
-		with Gaffer.UndoContext( self.getPlug().ancestor( Gaffer.ScriptNode.staticTypeId() ) ) :
+		with Gaffer.UndoScope( self.getPlug().ancestor( Gaffer.ScriptNode.staticTypeId() ) ) :
 			self.getPlug().setValue( value )
 
 	def __editInput( self ) :
@@ -571,12 +571,12 @@ class PlugValueWidget( GafferUI.Widget ) :
 
 	def __removeInput( self ) :
 
-		with Gaffer.UndoContext( self.getPlug().ancestor( Gaffer.ScriptNode.staticTypeId() ) ) :
+		with Gaffer.UndoScope( self.getPlug().ancestor( Gaffer.ScriptNode.staticTypeId() ) ) :
 			self.getPlug().setInput( None )
 
 	def __applyUserDefault( self ) :
 
-		with Gaffer.UndoContext( self.getPlug().ancestor( Gaffer.ScriptNode.staticTypeId() ) ) :
+		with Gaffer.UndoScope( self.getPlug().ancestor( Gaffer.ScriptNode.staticTypeId() ) ) :
 			Gaffer.NodeAlgo.applyUserDefault( self.getPlug() )
 
 	def __presetsSubMenu( self ) :
@@ -598,7 +598,7 @@ class PlugValueWidget( GafferUI.Widget ) :
 
 	def __applyPreset( self, presetName, *unused ) :
 
-		with Gaffer.UndoContext( self.getPlug().ancestor( Gaffer.ScriptNode.staticTypeId() ) ) :
+		with Gaffer.UndoScope( self.getPlug().ancestor( Gaffer.ScriptNode.staticTypeId() ) ) :
 			Gaffer.NodeAlgo.applyPreset( self.getPlug(), presetName )
 
 	def __applyReadOnly( self, readOnly ) :
@@ -608,7 +608,7 @@ class PlugValueWidget( GafferUI.Widget ) :
 			for child in plug.children() :
 				clearFlags( child )
 
-		with Gaffer.UndoContext( self.getPlug().ancestor( Gaffer.ScriptNode.staticTypeId() ) ) :
+		with Gaffer.UndoScope( self.getPlug().ancestor( Gaffer.ScriptNode.staticTypeId() ) ) :
 			# We used to use a plug flag, but we use metadata now
 			# instead. Clear the old flags so that metadata is in
 			# control.
@@ -649,7 +649,7 @@ class PlugValueWidget( GafferUI.Widget ) :
 
 		self.setHighlighted( False )
 
-		with Gaffer.UndoContext( self.getPlug().node().scriptNode() ) :
+		with Gaffer.UndoScope( self.getPlug().node().scriptNode() ) :
 			if isinstance( event.data, Gaffer.Plug ) :
 				self.getPlug().setInput( event.data )
 			else :

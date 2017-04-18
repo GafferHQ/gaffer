@@ -157,7 +157,7 @@ class ArrayPlugTest( GafferTest.TestCase ) :
 		s["a"] = GafferTest.AddNode()
 		s["n"] = GafferTest.ArrayPlugNode()
 
-		with Gaffer.UndoContext( s ) :
+		with Gaffer.UndoScope( s ) :
 			s["n"]["in"][0].setInput( s["a"]["sum"] )
 
 		self.assertEqual( len( s["n"]["in"] ), 2 )
@@ -221,7 +221,7 @@ class ArrayPlugTest( GafferTest.TestCase ) :
 		self.assertTrue( s["n"]["in"]["e2"].getInput().isSame( s["a"]["sum"] ) )
 		self.assertTrue( s["n"]["in"]["e3"].getInput().isSame( s["a"]["sum"] ) )
 
-		with Gaffer.UndoContext( s ) :
+		with Gaffer.UndoScope( s ) :
 			s.deleteNodes( s, Gaffer.StandardSet( [ s["n"] ] ) )
 
 		self.assertFalse( "n" in s )
@@ -261,7 +261,7 @@ class ArrayPlugTest( GafferTest.TestCase ) :
 		self.assertTrue( s["n"]["in"][1].getInput().isSame( s["a"]["sum"] ) )
 		self.assertTrue( s["n"]["in"][2].getInput().isSame( s["a"]["sum"] ) )
 
-		with Gaffer.UndoContext( s ) :
+		with Gaffer.UndoScope( s ) :
 			s.deleteNodes( s, Gaffer.StandardSet( [ s["a"] ] ) )
 
 		self.assertFalse( "a" in s )

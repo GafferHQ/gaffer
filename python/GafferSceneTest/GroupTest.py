@@ -646,7 +646,7 @@ class GroupTest( GafferSceneTest.SceneTestCase ) :
 		s["g"] = GafferScene.Group()
 		s["g"]["__customPlug"] = Gaffer.V2fPlug( flags = Gaffer.Plug.Flags.Default | Gaffer.Plug.Flags.Dynamic )
 
-		with Gaffer.UndoContext( s ) :
+		with Gaffer.UndoScope( s ) :
 			s["g"]["in"][0].setInput( s["c"]["out"] )
 
 		self.assertTrue( "__customPlug" in s["g"] )

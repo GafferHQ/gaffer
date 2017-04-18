@@ -115,7 +115,7 @@ class StringPlugValueWidget( GafferUI.PlugValueWidget ) :
 
 		if self._editable() :
 			text = self.__textWidget.getText()
-			with Gaffer.UndoContext( self.getPlug().ancestor( Gaffer.ScriptNode ) ) :
+			with Gaffer.UndoScope( self.getPlug().ancestor( Gaffer.ScriptNode ) ) :
 				self.getPlug().setValue( text )
 
 			# now we've transferred the text changes to the global undo queue, we remove them

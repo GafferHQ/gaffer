@@ -283,7 +283,7 @@ def importFile( menu ) :
 
 	newChildren = []
 	c = script.childAddedSignal().connect( lambda parent, child : newChildren.append( child ) )
-	with Gaffer.UndoContext( script ) :
+	with Gaffer.UndoScope( script ) :
 		## \todo We need to prevent the ScriptNode plugs themselves getting clobbered
 		# when importing an entire script.
 		script.executeFile( str( path ) )

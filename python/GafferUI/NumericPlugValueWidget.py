@@ -147,7 +147,7 @@ class NumericPlugValueWidget( GafferUI.PlugValueWidget ) :
 
 	def __setPlugValue( self, mergeGroup="" ) :
 
-		with Gaffer.UndoContext( self.getPlug().ancestor( Gaffer.ScriptNode ), mergeGroup=mergeGroup ) :
+		with Gaffer.UndoScope( self.getPlug().ancestor( Gaffer.ScriptNode ), mergeGroup=mergeGroup ) :
 
 			with Gaffer.BlockedConnection( self._plugConnections() ) :
 				if Gaffer.Animation.isAnimated( self.getPlug() ) :

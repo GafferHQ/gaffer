@@ -251,7 +251,7 @@ class _ChildPlugWidget( GafferUI.PlugValueWidget ) :
 
 	def __deleteButtonClicked( self, button ) :
 
-		with Gaffer.UndoContext( self.getPlug().ancestor( Gaffer.ScriptNode ) ) :
+		with Gaffer.UndoScope( self.getPlug().ancestor( Gaffer.ScriptNode ) ) :
 			self.getPlug().parent().removeChild( self.getPlug() )
 
 ## \todo This regex is an interesting case to be considered during the string matching unification for #707. Once that

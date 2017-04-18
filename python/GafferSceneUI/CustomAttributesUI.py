@@ -80,7 +80,7 @@ Gaffer.Metadata.registerNode(
 
 def __setValue( plug, value, *unused ) :
 
-	with Gaffer.UndoContext( plug.ancestor( Gaffer.ScriptNode ) ) :
+	with Gaffer.UndoScope( plug.ancestor( Gaffer.ScriptNode ) ) :
 		plug.setValue( value )
 
 def __attributePopupMenu( menuDefinition, plugValueWidget ) :

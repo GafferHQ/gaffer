@@ -170,7 +170,7 @@ def __importReference( menu, node ) :
 		closeLabel = "Oy vey",
 		parentWindow = window
 	) :
-		with Gaffer.UndoContext( scriptNode ) :
+		with Gaffer.UndoScope( scriptNode ) :
 			scriptNode.executeFile( str( path ), parent = node, continueOnError = True )
 
 # PlugValueWidget registrations
@@ -234,7 +234,7 @@ for nodeType in ( Gaffer.Box, Gaffer.Reference ) :
 
 def __deletePlug( plug ) :
 
-	with Gaffer.UndoContext( plug.ancestor( Gaffer.ScriptNode ) ) :
+	with Gaffer.UndoScope( plug.ancestor( Gaffer.ScriptNode ) ) :
 		plug.parent().removeChild( plug )
 
 def __appendPlugDeletionMenuItems( menuDefinition, plug, readOnly = False ) :
@@ -250,17 +250,17 @@ def __appendPlugDeletionMenuItems( menuDefinition, plug, readOnly = False ) :
 
 def __promote( plug ) :
 
-	with Gaffer.UndoContext( plug.ancestor( Gaffer.ScriptNode ) ) :
+	with Gaffer.UndoScope( plug.ancestor( Gaffer.ScriptNode ) ) :
 		Gaffer.PlugAlgo.promote( plug )
 
 def __unpromote( plug ) :
 
-	with Gaffer.UndoContext( plug.ancestor( Gaffer.ScriptNode ) ) :
+	with Gaffer.UndoScope( plug.ancestor( Gaffer.ScriptNode ) ) :
 		Gaffer.PlugAlgo.unpromote( plug )
 
 def __promoteToBoxEnabledPlug( box, plug ) :
 
-	with Gaffer.UndoContext( box.ancestor( Gaffer.ScriptNode ) ) :
+	with Gaffer.UndoScope( box.ancestor( Gaffer.ScriptNode ) ) :
 		enabledPlug = box.getChild( "enabled" )
 		if enabledPlug is None :
 			enabledPlug = Gaffer.BoolPlug( "enabled", defaultValue = True, flags = Gaffer.Plug.Flags.Default | Gaffer.Plug.Flags.Dynamic )
@@ -341,12 +341,12 @@ def __renamePlug( menu, plug ) :
 	if not name :
 		return
 
-	with Gaffer.UndoContext( plug.ancestor( Gaffer.ScriptNode ) ) :
+	with Gaffer.UndoScope( plug.ancestor( Gaffer.ScriptNode ) ) :
 		plug.setName( name )
 
 def __setPlugMetadata( plug, key, value ) :
 
-	with Gaffer.UndoContext( plug.ancestor( Gaffer.ScriptNode ) ) :
+	with Gaffer.UndoScope( plug.ancestor( Gaffer.ScriptNode ) ) :
 		Gaffer.Metadata.registerValue( plug, key, value )
 
 def __edgePlugs( nodeGraph, plug ) :
@@ -359,7 +359,7 @@ def __reorderPlugs( plugs, plug, newIndex ) :
 
 	plugs.remove( plug )
 	plugs.insert( newIndex, plug )
-	with Gaffer.UndoContext( plug.ancestor( Gaffer.ScriptNode ) ) :
+	with Gaffer.UndoScope( plug.ancestor( Gaffer.ScriptNode ) ) :
 		for index, plug in enumerate( plugs ) :
 			Gaffer.Metadata.registerValue( plug, "noduleLayout:index", index )
 

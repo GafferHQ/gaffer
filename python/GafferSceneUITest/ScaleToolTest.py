@@ -57,12 +57,12 @@ class ScaleToolTest( GafferUITest.TestCase ) :
 
 		view.getContext()["ui:scene:selectedPaths"] = IECore.StringVectorData( [ "/plane" ] )
 
-		with Gaffer.UndoContext( script ) :
+		with Gaffer.UndoScope( script ) :
 			tool.scale( IECore.V3f( 2, 1, 1 ) )
 
 		self.assertEqual( script["plane"]["transform"]["scale"].getValue(), IECore.V3f( 2, 1, 1 ) )
 
-		with Gaffer.UndoContext( script ) :
+		with Gaffer.UndoScope( script ) :
 			tool.scale( IECore.V3f( 1, 0.5, 1 ) )
 
 		self.assertEqual( script["plane"]["transform"]["scale"].getValue(), IECore.V3f( 2, 0.5, 1 ) )

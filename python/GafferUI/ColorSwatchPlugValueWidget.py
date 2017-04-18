@@ -180,7 +180,7 @@ class _ColorPlugValueDialogue( GafferUI.ColorChooserDialogue ) :
 			self.__mergeGroupId += 1
 		self.__lastChangedReason = reason
 
-		with Gaffer.UndoContext(
+		with Gaffer.UndoScope(
 			self.__plug.ancestor( Gaffer.ScriptNode ),
 			mergeGroup = "ColorPlugValueDialogue%d%d" % ( id( self, ), self.__mergeGroupId )
 		) :
@@ -191,7 +191,7 @@ class _ColorPlugValueDialogue( GafferUI.ColorChooserDialogue ) :
 	def __buttonClicked( self, button ) :
 
 		if button is self.cancelButton :
-			with Gaffer.UndoContext( self.__plug.ancestor( Gaffer.ScriptNode ) ) :
+			with Gaffer.UndoScope( self.__plug.ancestor( Gaffer.ScriptNode ) ) :
 				self.__plug.setValue( self.colorChooser().getInitialColor() )
 
 		# ideally we'd just remove ourselves from our parent immediately, but that would

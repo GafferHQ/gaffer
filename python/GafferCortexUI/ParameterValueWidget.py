@@ -182,5 +182,5 @@ __parameterPopupMenuConnection = ParameterValueWidget.popupMenuSignal().connect(
 def __setValue( parameterHandler, value ) :
 
 	parameterHandler.parameter().setValue( value )
-	with Gaffer.UndoContext( parameterHandler.plug().ancestor( Gaffer.ScriptNode.staticTypeId() ) ) :
+	with Gaffer.UndoScope( parameterHandler.plug().ancestor( Gaffer.ScriptNode.staticTypeId() ) ) :
 		parameterHandler.setPlugValue()

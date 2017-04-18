@@ -99,7 +99,7 @@ def appendPlugContextMenuDefinitions( nodeGraph, plug, menuDefinition ) :
 
 def __setBookmarked( node, bookmarked ) :
 
-	with Gaffer.UndoContext( node.scriptNode() ) :
+	with Gaffer.UndoScope( node.scriptNode() ) :
 		Gaffer.MetadataAlgo.setBookmarked( node, bookmarked )
 
 ## \todo Perhaps this functionality should be provided by the
@@ -145,5 +145,5 @@ def __connection( plug1, plug2 ) :
 
 def __connect( inPlug, outPlug ) :
 
-	with Gaffer.UndoContext( inPlug.ancestor( Gaffer.ScriptNode ) ) :
+	with Gaffer.UndoScope( inPlug.ancestor( Gaffer.ScriptNode ) ) :
 		inPlug.setInput( outPlug )

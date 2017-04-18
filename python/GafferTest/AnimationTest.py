@@ -302,7 +302,7 @@ class AnimationTest( GafferTest.TestCase ) :
 
 		self.assertEqual( len( s.children( Gaffer.Node ) ), 1 )
 
-		with Gaffer.UndoContext( s ) :
+		with Gaffer.UndoScope( s ) :
 			curve = Gaffer.Animation.acquire( s["n"]["user"]["f"] )
 			self.assertEqual( len( s.children( Gaffer.Node ) ), 2 )
 
@@ -325,11 +325,11 @@ class AnimationTest( GafferTest.TestCase ) :
 		key1 = Gaffer.Animation.Key( 1, 0 )
 		key2 = Gaffer.Animation.Key( 1, 1 )
 
-		with Gaffer.UndoContext( s ) :
+		with Gaffer.UndoScope( s ) :
 			curve.addKey( key1 )
 			self.assertEqual( curve.getKey( 1 ), key1 )
 
-		with Gaffer.UndoContext( s ) :
+		with Gaffer.UndoScope( s ) :
 			curve.addKey( key2 )
 			self.assertEqual( curve.getKey( 1 ), key2 )
 
@@ -357,7 +357,7 @@ class AnimationTest( GafferTest.TestCase ) :
 		curve.addKey( key )
 		self.assertEqual( curve.getKey( key.time ), key )
 
-		with Gaffer.UndoContext( s ) :
+		with Gaffer.UndoScope( s ) :
 			curve.removeKey( key.time )
 			self.assertFalse( curve.hasKey( key.time ) )
 

@@ -122,7 +122,7 @@ class FilterPlugValueWidget( GafferUI.PlugValueWidget ) :
 
 		filterNode = filterType()
 
-		with Gaffer.UndoContext( self.getPlug().node().scriptNode() ) :
+		with Gaffer.UndoScope( self.getPlug().node().scriptNode() ) :
 			self.getPlug().node().parent().addChild( filterNode )
 			self.getPlug().setInput( filterNode["out"] )
 

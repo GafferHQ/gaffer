@@ -212,7 +212,7 @@ class LabelPlugValueWidget( GafferUI.PlugValueWidget ) :
 
 	def __labelEditingFinished( self, nameWidget ) :
 
-		with Gaffer.UndoContext( self.getPlug().ancestor( Gaffer.ScriptNode ) ) :
+		with Gaffer.UndoScope( self.getPlug().ancestor( Gaffer.ScriptNode ) ) :
 			# Do what the NameWidget would have done for us anyway, so we
 			# can group it with the metadata deregistration in the undo queue.
 			self.getPlug().setName( nameWidget.getText() )

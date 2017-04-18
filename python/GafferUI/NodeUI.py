@@ -170,7 +170,7 @@ class NodeUI( GafferUI.Widget ) :
 
 def __deletePlug( plug ) :
 
-	with Gaffer.UndoContext( plug.ancestor( Gaffer.ScriptNode ) ) :
+	with Gaffer.UndoScope( plug.ancestor( Gaffer.ScriptNode ) ) :
 		plug.parent().removeChild( plug )
 
 def __plugPopupMenu( menuDefinition, plugValueWidget ) :

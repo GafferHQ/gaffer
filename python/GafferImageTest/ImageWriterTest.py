@@ -835,7 +835,7 @@ class ImageWriterTest( GafferImageTest.ImageTestCase ) :
 		s = Gaffer.ScriptNode()
 		s["w"] = GafferImage.ImageWriter()
 
-		with Gaffer.UndoContext( s ) :
+		with Gaffer.UndoScope( s ) :
 			s["w"]["fileName"].setValue( "test.tif" )
 
 		self.assertEqual( s["w"]["fileName"].getValue(), "test.tif" )

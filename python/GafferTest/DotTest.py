@@ -68,7 +68,7 @@ class DotTest( GafferTest.TestCase ) :
 		self.assertTrue( "in" not in s["d"] )
 		self.assertTrue( "out" not in s["d"] )
 
-		with Gaffer.UndoContext( s ) :
+		with Gaffer.UndoScope( s ) :
 			s["d"].setup( s["n2"]["op1"] )
 			s["d"]["in"].setInput( s["n1"]["sum"] )
 			s["n2"]["op1"].setInput( s["d"]["out"] )

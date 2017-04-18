@@ -193,7 +193,7 @@ def __drop( nodeGadget, event ) :
 		paths.difference_update( event.data )
 		paths = sorted( paths )
 
-	with Gaffer.UndoContext( nodeGadget.node().ancestor( Gaffer.ScriptNode ) ) :
+	with Gaffer.UndoScope( nodeGadget.node().ancestor( Gaffer.ScriptNode ) ) :
 
 		if pathsPlug is None :
 
