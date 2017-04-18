@@ -56,7 +56,7 @@ SetFilter::SetFilter( const std::string &name )
 {
 	storeIndexOfNextChild( g_firstPlugIndex );
 
-	addChild( new StringPlug( "set" ) );
+	addChild( new StringPlug( "setExpression" ) );
 	addChild( new PathMatcherDataPlug( "__expressionResult", Gaffer::Plug::Out, new PathMatcherData ) );
 }
 
