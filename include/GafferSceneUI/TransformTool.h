@@ -136,7 +136,7 @@ class TransformTool : public GafferSceneUI::SelectionTool
 		/// Must be called by derived classes when they end
 		/// a drag.
 		void dragEnd();
-		/// Should be used in UndoContexts created by
+		/// Should be used in UndoScopes created by
 		/// derived classes.
 		std::string undoMergeGroup() const;
 

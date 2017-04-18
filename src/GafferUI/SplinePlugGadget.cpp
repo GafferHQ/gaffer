@@ -38,7 +38,7 @@
 #include "GafferUI/SplinePlugGadget.h"
 #include "GafferUI/Style.h"
 
-#include "Gaffer/UndoContext.h"
+#include "Gaffer/UndoScope.h"
 #include "Gaffer/ScriptNode.h"
 
 #include "IECore/CurvesPrimitive.h"
@@ -278,7 +278,7 @@ bool SplinePlugGadget::buttonPress( GadgetPtr, const ButtonEvent &event )
 			return false;
 		}
 
-		UndoContext undoEnabler( spline->ancestor<ScriptNode>() );
+		UndoScope undoEnabler( spline->ancestor<ScriptNode>() );
 
 		unsigned pointIndex = spline->addPoint();
 		spline->pointXPlug( pointIndex )->setValue( intersection.x );
@@ -394,7 +394,7 @@ bool SplinePlugGadget::keyPress( GadgetPtr gadget, const KeyEvent &event )
 	if( event.key=="BackSpace" && m_selection->size() )
 	{
 		Plug *firstPlug = static_cast<Plug *>( m_selection->member( 0 ) );
-		UndoContext undoEnabler( firstPlug->ancestor<ScriptNode>() );
+		UndoScope undoEnabler( firstPlug->ancestor<ScriptNode>() );
 
 		for( size_t i = 0, e = m_selection->size(); i < e ; i++ )
 		{

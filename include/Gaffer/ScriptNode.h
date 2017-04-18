@@ -45,7 +45,7 @@
 #include "Gaffer/TypedPlug.h"
 #include "Gaffer/Container.h"
 #include "Gaffer/Set.h"
-#include "Gaffer/UndoContext.h"
+#include "Gaffer/UndoScope.h"
 #include "Gaffer/Action.h"
 #include "Gaffer/Behaviours/OrphanRemover.h"
 
@@ -98,7 +98,7 @@ class ScriptNode : public Node
 		/// These methods are implemented in terms of the Action class -
 		/// when the methods are called an Action instance is stored in an
 		/// undo list on the relevant ScriptNode so it can later be undone.
-		/// To enable undo for a series of operations an UndoContext must
+		/// To enable undo for a series of operations an UndoScope must
 		/// be active while those operations are being performed.
 		////////////////////////////////////////////////////////////////////
 		//@{
@@ -113,7 +113,7 @@ class ScriptNode : public Node
 		Action::Stage currentActionStage() const;
 		/// A signal emitted after an action is performed on the script or
 		/// one of its children. Note that this is only emitted for actions
-		/// performed within an UndoContext.
+		/// performed within an UndoScope.
 		/// \todo Have methods on Actions to provide a textual description
 		/// of what is being done, for use in Undo/Redo menu items, history
 		/// displays etc.
@@ -248,21 +248,21 @@ class ScriptNode : public Node
 		IE_CORE_FORWARDDECLARE( CompoundAction );
 
 		friend class Action;
-		friend class UndoContext;
+		friend class UndoScope;
 
-		// Called by the UndoContext and Action classes to
+		// Called by the UndoScope and Action classes to
 		// implement the undo system.
-		void pushUndoState( UndoContext::State state, const std::string &mergeGroup );
+		void pushUndoState( UndoScope::State state, const std::string &mergeGroup );
 		void addAction( ActionPtr action );
 		void popUndoState();
 
-		typedef std::stack<UndoContext::State> UndoStateStack;
+		typedef std::stack<UndoScope::State> UndoStateStack;
 		typedef std::list<CompoundActionPtr> UndoList;
 		typedef UndoList::iterator UndoIterator;
 
 		ActionSignal m_actionSignal;
 		UndoAddedSignal m_undoAddedSignal;
-		UndoStateStack m_undoStateStack; // pushed and popped by the creation and destruction of UndoContexts
+		UndoStateStack m_undoStateStack; // pushed and popped by the creation and destruction of UndoScopes
 		CompoundActionPtr m_actionAccumulator; // Actions are accumulated here until the state stack hits 0 size
 		UndoList m_undoList; // then the accumulated actions are transferred to this list for storage
 		UndoIterator m_undoIterator; // points to the next thing to redo

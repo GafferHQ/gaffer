@@ -41,7 +41,7 @@
 #include "OpenEXR/ImathFun.h"
 #include "OpenEXR/ImathBoxAlgo.h"
 
-#include "Gaffer/UndoContext.h"
+#include "Gaffer/UndoScope.h"
 #include "Gaffer/ScriptNode.h"
 #include "Gaffer/StandardSet.h"
 #include "Gaffer/Metadata.h"
@@ -306,7 +306,7 @@ bool StandardConnectionGadget::dragEnd( const DragDropEvent &event )
 	if( !event.destinationGadget || event.destinationGadget == this )
 	{
 		// noone wanted the drop so we'll disconnect
-		Gaffer::UndoContext undoEnabler( dstNodule()->plug()->ancestor<Gaffer::ScriptNode>() );
+		Gaffer::UndoScope undoEnabler( dstNodule()->plug()->ancestor<Gaffer::ScriptNode>() );
 		dstNodule()->plug()->setInput( NULL );
 	}
 	else

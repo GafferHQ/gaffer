@@ -182,7 +182,7 @@ void Reference::loadInternal( const std::string &fileName )
 	// Disable undo for the actions we perform, because we ourselves
 	// are undoable anyway and will take care of everything as a whole
 	// when we are undone.
-	UndoContext undoDisabler( script, UndoContext::Disabled );
+	UndoScope undoDisabler( script, UndoScope::Disabled );
 
 	// if we're doing a reload, then we want to maintain any values and
 	// connections that our external plugs might have. but we also need to

@@ -43,7 +43,7 @@
 #include "IECoreGL/Selector.h"
 
 #include "Gaffer/Plug.h"
-#include "Gaffer/UndoContext.h"
+#include "Gaffer/UndoScope.h"
 #include "Gaffer/ScriptNode.h"
 #include "Gaffer/Metadata.h"
 #include "Gaffer/MetadataAlgo.h"
@@ -385,7 +385,7 @@ bool StandardNodule::drop( GadgetPtr gadget, const DragDropEvent &event )
 
 	if( input )
 	{
-		Gaffer::UndoContext undoEnabler( input->ancestor<Gaffer::ScriptNode>() );
+		Gaffer::UndoScope undoEnabler( input->ancestor<Gaffer::ScriptNode>() );
 
 			input->setInput( output );
 

@@ -54,7 +54,7 @@ IE_CORE_FORWARDDECLARE( Action );
 /// The Action class forms the basis of the undo system - all
 /// methods which wish to support undo must be implemented by
 /// calling Action::enact(). Note that client code never creates Actions
-/// explicitly - instead they are created implicitly whenever an UndoContext
+/// explicitly - instead they are created implicitly whenever an UndoScope
 /// is active and an undoable method is called. Because Actions are
 /// essentially an implementation detail of the undo system, subclasses
 /// shouldn't be exposed in the public headers.

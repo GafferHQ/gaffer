@@ -83,7 +83,7 @@ class ParameterisedHolder : public BaseType
 		/// we're consistent with the interface provided in IECoreMaya?
 		void setParameterisedValues();
 
-		/// \todo Is this even needed? Can we just use an UndoContext instead?
+		/// \todo Is this even needed? Can we just use an UndoScope instead?
 		class ParameterModificationContext
 		{
 			public :

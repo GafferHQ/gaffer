@@ -366,7 +366,7 @@ const StandardSet *ScriptNode::selection() const
 	return m_selection.get();
 }
 
-void ScriptNode::pushUndoState( UndoContext::State state, const std::string &mergeGroup )
+void ScriptNode::pushUndoState( UndoScope::State state, const std::string &mergeGroup )
 {
 	if( m_undoStateStack.size() == 0 )
 	{
@@ -380,7 +380,7 @@ void ScriptNode::pushUndoState( UndoContext::State state, const std::string &mer
 void ScriptNode::addAction( ActionPtr action )
 {
 	action->doAction();
-	if( m_actionAccumulator && m_undoStateStack.top() == UndoContext::Enabled )
+	if( m_actionAccumulator && m_undoStateStack.top() == UndoScope::Enabled )
 	{
 		m_actionAccumulator->addAction( action );
 		actionSignal()( this, action.get(), Action::Do );
@@ -435,7 +435,7 @@ void ScriptNode::popUndoState()
 
 	if( haveUnsavedChanges )
 	{
-		UndoContext undoDisabled( this, UndoContext::Disabled );
+		UndoScope undoDisabled( this, UndoScope::Disabled );
 		unsavedChangesPlug()->setValue( true );
 	}
 
@@ -477,7 +477,7 @@ void ScriptNode::undo()
 	/// behaviour to the c++ slots.
 	m_currentActionStage = Action::Invalid;
 
-	UndoContext undoDisabled( this, UndoContext::Disabled );
+	UndoScope undoDisabled( this, UndoScope::Disabled );
 	unsavedChangesPlug()->setValue( true );
 }
 
@@ -502,7 +502,7 @@ void ScriptNode::redo()
 
 	m_currentActionStage = Action::Invalid;
 
-	UndoContext undoDisabled( this, UndoContext::Disabled );
+	UndoScope undoDisabled( this, UndoScope::Disabled );
 	unsavedChangesPlug()->setValue( true );
 }
 
@@ -677,7 +677,7 @@ bool ScriptNode::load( bool continueOnError)
 
 	const bool result = executeInternal( s, NULL, continueOnError, fileName );
 
-	UndoContext undoDisabled( this, UndoContext::Disabled );
+	UndoScope undoDisabled( this, UndoScope::Disabled );
 	unsavedChangesPlug()->setValue( false );
 
 	return result;
@@ -686,7 +686,7 @@ bool ScriptNode::load( bool continueOnError)
 void ScriptNode::save() const
 {
 	serialiseToFile( fileNamePlug()->getValue() );
-	UndoContext undoDisabled( const_cast<ScriptNode *>( this ), UndoContext::Disabled );
+	UndoScope undoDisabled( const_cast<ScriptNode *>( this ), UndoScope::Disabled );
 	const_cast<BoolPlug *>( unsavedChangesPlug() )->setValue( false );
 }
 

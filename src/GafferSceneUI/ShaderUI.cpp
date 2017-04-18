@@ -36,7 +36,7 @@
 
 #include "boost/bind.hpp"
 
-#include "Gaffer/UndoContext.h"
+#include "Gaffer/UndoScope.h"
 #include "Gaffer/ScriptNode.h"
 #include "Gaffer/Metadata.h"
 #include "Gaffer/MetadataAlgo.h"
@@ -92,7 +92,7 @@ class ShaderPlugAdder : public PlugAdder
 				return;
 			}
 
-			UndoContext undoContext( m_shader->scriptNode() );
+			UndoScope undoScope( m_shader->scriptNode() );
 
 			Metadata::registerValue( plug, g_visibleKey, new IECore::BoolData( true ) );
 			plug->setInput( connectionEndPoint );
@@ -109,7 +109,7 @@ class ShaderPlugAdder : public PlugAdder
 				return false;
 			}
 
-			UndoContext undoContext( m_shader->scriptNode() );
+			UndoScope undoScope( m_shader->scriptNode() );
 			Metadata::registerValue( plug, g_visibleKey, new IECore::BoolData( true ) );
 			return true;
 		}

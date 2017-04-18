@@ -40,7 +40,7 @@
 #include "IECoreGL/Selector.h"
 
 #include "Gaffer/Dot.h"
-#include "Gaffer/UndoContext.h"
+#include "Gaffer/UndoScope.h"
 #include "Gaffer/ScriptNode.h"
 #include "Gaffer/StringPlug.h"
 #include "Gaffer/MetadataAlgo.h"
@@ -276,7 +276,7 @@ bool DotNodeGadget::drop( const DragDropEvent &event )
 		return false;
 	}
 
-	Gaffer::UndoContext undoEnabler( node()->ancestor<ScriptNode>() );
+	Gaffer::UndoScope undoEnabler( node()->ancestor<ScriptNode>() );
 
 	dotNode()->setup( plug );
 	if( plug->direction() == Plug::In )
