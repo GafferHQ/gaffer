@@ -47,6 +47,7 @@
 #include "Gaffer/BoxIn.h"
 #include "Gaffer/BoxOut.h"
 #include "Gaffer/Box.h"
+#include "Gaffer/ArrayPlug.h"
 
 using namespace IECore;
 using namespace Gaffer;
@@ -450,6 +451,17 @@ Plug *BoxIO::promote( Plug *plug )
 	boxIO->setup( plug );
 
 	connect( plug, boxIO->plug<Plug>() );
+
+	if( runTimeCast<ArrayPlug>( plug ) )
+	{
+		// If we allowed the user to edit the connections
+		// for individual elements, they could break the
+		// promotion of the parent plug, so hide the
+		// individual elements.
+		Metadata::registerValue( plug, g_noduleTypeName, new StringData( "GafferUI::StandardNodule" ) );
+		Metadata::registerValue( boxIO->plug<Plug>(), g_noduleTypeName, new StringData( "GafferUI::StandardNodule" ) );
+	}
+
 	return boxIO->promotedPlug<Plug>();
 }
 
