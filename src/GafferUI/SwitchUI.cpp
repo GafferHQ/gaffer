@@ -38,7 +38,7 @@
 
 #include "Gaffer/Switch.h"
 #include "Gaffer/ArrayPlug.h"
-#include "Gaffer/UndoContext.h"
+#include "Gaffer/UndoScope.h"
 #include "Gaffer/ScriptNode.h"
 
 #include "GafferUI/Nodule.h"
@@ -75,7 +75,7 @@ class SwitchPlugAdder : public PlugAdder
 
 		virtual void addPlug( Plug *connectionEndPoint )
 		{
-			UndoContext undoContext( m_switch->ancestor<ScriptNode>() );
+			UndoScope undoScope( m_switch->ancestor<ScriptNode>() );
 
 			m_switch->setup( connectionEndPoint );
 			ArrayPlug *inPlug = m_switch->getChild<ArrayPlug>( "in" );

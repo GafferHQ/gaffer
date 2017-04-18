@@ -370,19 +370,19 @@ class CompoundNumericPlugTest( GafferTest.TestCase ) :
 		self.assertEqual( s["n"]["p"].getValue(), IECore.V3f( 0 ) )
 		self.assertFalse( s.undoAvailable() )
 
-		with Gaffer.UndoContext( s, mergeGroup="test" ) :
+		with Gaffer.UndoScope( s, mergeGroup="test" ) :
 			s["n"]["p"].setValue( IECore.V3f( 1, 2, 3 ) )
 
 		self.assertEqual( s["n"]["p"].getValue(), IECore.V3f( 1, 2, 3 ) )
 		self.assertTrue( s.undoAvailable() )
 
-		with Gaffer.UndoContext( s, mergeGroup="test" ) :
+		with Gaffer.UndoScope( s, mergeGroup="test" ) :
 			s["n"]["p"].setValue( IECore.V3f( 4, 5, 6 ) )
 
 		self.assertEqual( s["n"]["p"].getValue(), IECore.V3f( 4, 5, 6 ) )
 		self.assertTrue( s.undoAvailable() )
 
-		with Gaffer.UndoContext( s, mergeGroup="test2" ) :
+		with Gaffer.UndoScope( s, mergeGroup="test2" ) :
 			s["n"]["p"].setValue( IECore.V3f( 7, 8, 9 ) )
 
 		self.assertEqual( s["n"]["p"].getValue(), IECore.V3f( 7, 8, 9 ) )
@@ -407,13 +407,13 @@ class CompoundNumericPlugTest( GafferTest.TestCase ) :
 		self.assertEqual( s["n"]["p"].getValue(), IECore.V3f( 0 ) )
 		self.assertFalse( s.undoAvailable() )
 
-		with Gaffer.UndoContext( s, mergeGroup="test" ) :
+		with Gaffer.UndoScope( s, mergeGroup="test" ) :
 			s["n"]["p"].setValue( IECore.V3f( 1, 2, 0 ) )
 
 		self.assertEqual( s["n"]["p"].getValue(), IECore.V3f( 1, 2, 0 ) )
 		self.assertTrue( s.undoAvailable() )
 
-		with Gaffer.UndoContext( s, mergeGroup="test" ) :
+		with Gaffer.UndoScope( s, mergeGroup="test" ) :
 			s["n"]["p"].setValue( IECore.V3f( 2, 4, 0 ) )
 
 		self.assertEqual( s["n"]["p"].getValue(), IECore.V3f( 2, 4, 0 ) )

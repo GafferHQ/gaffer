@@ -195,12 +195,12 @@ class ChannelMaskPlugValueWidget( GafferUI.PlugValueWidget ) :
 
 	def __setValue( self, unused, value ) :
 
-		with Gaffer.UndoContext( self.getPlug().ancestor( Gaffer.ScriptNode ) ) :
+		with Gaffer.UndoScope( self.getPlug().ancestor( Gaffer.ScriptNode ) ) :
 			self.getPlug().setValue( value )
 
 	def __toggleCustom( self, checked ) :
 
-		with Gaffer.UndoContext( self.getPlug().ancestor( Gaffer.ScriptNode ) ) :
+		with Gaffer.UndoScope( self.getPlug().ancestor( Gaffer.ScriptNode ) ) :
 			if not checked :
 				Gaffer.Metadata.deregisterValue( self.getPlug(), self.__customMetadataName )
 			else :

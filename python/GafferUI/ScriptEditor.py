@@ -111,7 +111,7 @@ class ScriptEditor( GafferUI.EditorWidget ) :
 
 		with Gaffer.OutputRedirection( stdOut = Gaffer.WeakMethod( self.__redirectOutput ), stdErr = Gaffer.WeakMethod( self.__redirectOutput ) ) :
 			with _MessageHandler( self.__outputWidget ) :
-				with Gaffer.UndoContext( self.scriptNode() ) :
+				with Gaffer.UndoScope( self.scriptNode() ) :
 					with self.getContext() :
 						try :
 							if len( parsed.body ) == 1 and isinstance( parsed.body[0], ast.Expr ) :

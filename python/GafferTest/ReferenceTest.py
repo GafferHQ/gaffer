@@ -988,7 +988,7 @@ class ReferenceTest( GafferTest.TestCase ) :
 
 		c = s["r"].referenceLoadedSignal().connect( referenceLoaded )
 
-		with Gaffer.UndoContext( s ) :
+		with Gaffer.UndoScope( s ) :
 			s["r"].load( self.temporaryDirectory() + "/test.grf" )
 
 		self.assertTrue( "p" in s["r"] )

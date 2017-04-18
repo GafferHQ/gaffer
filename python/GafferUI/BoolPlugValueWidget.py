@@ -95,7 +95,7 @@ class BoolPlugValueWidget( GafferUI.PlugValueWidget ) :
 
 	def __setPlugValue( self ) :
 
-		with Gaffer.UndoContext( self.getPlug().ancestor( Gaffer.ScriptNode ) ) :
+		with Gaffer.UndoScope( self.getPlug().ancestor( Gaffer.ScriptNode ) ) :
 
 			if Gaffer.Animation.isAnimated( self.getPlug() ) :
 				curve = Gaffer.Animation.acquire( self.getPlug() )

@@ -109,7 +109,7 @@ class NodeMenu( object ) :
 			with IECore.IgnoredExceptions( TypeError ) :
 				commandArgs = inspect.getargspec( nodeCreator )[0]
 
-			with Gaffer.UndoContext( script ) :
+			with Gaffer.UndoScope( script ) :
 
 				if "menu" in commandArgs :
 					node = nodeCreator( menu = menu )

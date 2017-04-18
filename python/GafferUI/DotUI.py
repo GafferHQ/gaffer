@@ -135,7 +135,7 @@ def __insertDot( menu, destinationPlug ) :
 	gadgetWidget  = nodeGraph.graphGadgetWidget()
 	graphGadget = nodeGraph.graphGadget()
 
-	with Gaffer.UndoContext( destinationPlug.ancestor( Gaffer.ScriptNode ) ) :
+	with Gaffer.UndoScope( destinationPlug.ancestor( Gaffer.ScriptNode ) ) :
 
 		node = Gaffer.Dot()
 		graphGadget.getRoot().addChild( node )
@@ -177,7 +177,7 @@ __connectionContextMenuConnection = GafferUI.NodeGraph.connectionContextMenuSign
 
 def __setPlugMetadata( plug, key, value ) :
 
-	with Gaffer.UndoContext( plug.ancestor( Gaffer.ScriptNode ) ) :
+	with Gaffer.UndoScope( plug.ancestor( Gaffer.ScriptNode ) ) :
 		Gaffer.Metadata.registerValue( plug, key, value )
 
 def __nodeGraphPlugContextMenu( nodeGraph, plug, menuDefinition ) :

@@ -110,5 +110,5 @@ class _ContextFooter( GafferUI.Widget ) :
 		if Gaffer.readOnly( self.__node["context"] ) :
 			return
 
-		with Gaffer.UndoContext( self.__node.ancestor( Gaffer.ScriptNode ) ) :
+		with Gaffer.UndoScope( self.__node.ancestor( Gaffer.ScriptNode ) ) :
 			self.__node["context"].addOptionalMember( "", "", enabled = True )

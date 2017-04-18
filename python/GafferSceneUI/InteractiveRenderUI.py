@@ -78,7 +78,7 @@ class _StatePlugValueWidget( GafferUI.PlugValueWidget ) :
 		with self.getContext() :
 			state = self.getPlug().getValue()
 
-		# When setting the plug value here, we deliberately don't use an UndoContext.
+		# When setting the plug value here, we deliberately don't use an UndoScope.
 		# Not enabling undo here is done so that users won't accidentally restart/stop their renderings.
 		if state != GafferScene.InteractiveRender.State.Running:
 			self.getPlug().setValue( GafferScene.InteractiveRender.State.Running )

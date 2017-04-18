@@ -347,5 +347,5 @@ class _TweaksFooter( GafferUI.PlugValueWidget ) :
 		else :
 			plug = GafferScene.LightTweaks.TweakPlug( name, plugTypeOrValue() )
 
-		with Gaffer.UndoContext( self.getPlug().ancestor( Gaffer.ScriptNode ) ) :
+		with Gaffer.UndoScope( self.getPlug().ancestor( Gaffer.ScriptNode ) ) :
 			self.getPlug().addChild( plug )

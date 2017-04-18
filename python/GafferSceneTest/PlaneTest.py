@@ -140,7 +140,7 @@ class PlaneTest( GafferSceneTest.SceneTestCase ) :
 
 		s = Gaffer.ScriptNode()
 
-		with Gaffer.UndoContext( s ) :
+		with Gaffer.UndoScope( s ) :
 			s["p"] = GafferScene.Plane()
 
 		self.assertTrue( isinstance( s["p"]["out"].object( "/plane" ), IECore.MeshPrimitive ) )

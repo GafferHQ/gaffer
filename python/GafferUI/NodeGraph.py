@@ -489,7 +489,7 @@ class NodeGraph( GafferUI.EditorWidget ) :
 	@classmethod
 	def __setNodeInputConnectionsVisible( cls, graphGadget, node, value ) :
 
-		with Gaffer.UndoContext( node.ancestor( Gaffer.ScriptNode ) ) :
+		with Gaffer.UndoScope( node.ancestor( Gaffer.ScriptNode ) ) :
 			graphGadget.setNodeInputConnectionsMinimised( node, not value )
 
 	@classmethod
@@ -500,13 +500,13 @@ class NodeGraph( GafferUI.EditorWidget ) :
 	@classmethod
 	def __setNodeOutputConnectionsVisible( cls, graphGadget, node, value ) :
 
-		with Gaffer.UndoContext( node.ancestor( Gaffer.ScriptNode ) ) :
+		with Gaffer.UndoScope( node.ancestor( Gaffer.ScriptNode ) ) :
 			graphGadget.setNodeOutputConnectionsMinimised( node, not value )
 
 	@classmethod
 	def __setEnabled( cls, node, value ) :
 
-		with Gaffer.UndoContext( node.ancestor( Gaffer.ScriptNode ) ) :
+		with Gaffer.UndoScope( node.ancestor( Gaffer.ScriptNode ) ) :
 			node.enabledPlug().setValue( value )
 
 GafferUI.EditorWidget.registerType( "NodeGraph", NodeGraph )

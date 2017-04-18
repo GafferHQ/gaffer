@@ -124,7 +124,7 @@ class _PlugValueWidget( GafferCortexUI.CompoundParameterValueWidget._PlugValueWi
 				# columns will have differing lengths until the last plug
 				# has been set. in this case we shortcut ourselves, and wait
 				# for the final plug to be set before updating the VectorDataWidget.
-				# \todo Now dirty propagation is batched via the UndoContext,
+				# \todo Now dirty propagation is batched via the UndoScope,
 				# we should remove this workaround, since _updateFromPlug()
 				# will only be called when the plug is in a valid state.
 				return
@@ -163,7 +163,7 @@ class _PlugValueWidget( GafferCortexUI.CompoundParameterValueWidget._PlugValueWi
 
 		data = vectorDataWidget.getData()
 
-		with Gaffer.UndoContext( self.getPlug().ancestor( Gaffer.ScriptNode ) ) :
+		with Gaffer.UndoScope( self.getPlug().ancestor( Gaffer.ScriptNode ) ) :
 			for d, p in zip( data, self._parameterHandler().plug().children() ) :
 				p.setValue( d )
 
@@ -254,7 +254,7 @@ def __applyPreset( columnParameterHandler, indices, elementValue ) :
 	for index in indices :
 		value[index] = elementValue
 
-	with Gaffer.UndoContext( columnParameterHandler.plug().ancestor( Gaffer.ScriptNode ) ) :
+	with Gaffer.UndoScope( columnParameterHandler.plug().ancestor( Gaffer.ScriptNode ) ) :
 		columnParameterHandler.setPlugValue()
 
 def __parameterPopupMenu( menuDefinition, parameterValueWidget ) :

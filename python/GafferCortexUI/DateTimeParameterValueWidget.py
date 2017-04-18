@@ -108,5 +108,5 @@ class _DateTimePlugValueWidget( GafferUI.PlugValueWidget ) :
 			delimited[17:19],
 		)
 
-		with Gaffer.UndoContext( self.getPlug().ancestor( Gaffer.ScriptNode ) ) :
+		with Gaffer.UndoScope( self.getPlug().ancestor( Gaffer.ScriptNode ) ) :
 			self.getPlug().setValue( undelimited )

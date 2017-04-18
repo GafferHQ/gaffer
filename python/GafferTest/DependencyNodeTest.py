@@ -415,14 +415,14 @@ class DependencyNodeTest( GafferTest.TestCase ) :
 
 		cs = GafferTest.CapturingSlot( s["n"].plugDirtiedSignal() )
 
-		with Gaffer.UndoContext( s ) :
+		with Gaffer.UndoScope( s ) :
 
 			s["n"]["op1"].setValue( 20 )
 			s["n"]["op2"].setValue( 21 )
 
 		# Even though we made two changes, we only want
 		# dirtiness to have been signalled once, because
-		# we grouped them logically in an UndoContext.
+		# we grouped them logically in an UndoScope.
 
 		self.assertEqual( len( cs ), 3 )
 		self.assertTrue( cs[0][0].isSame( s["n"]["op1"] ) )

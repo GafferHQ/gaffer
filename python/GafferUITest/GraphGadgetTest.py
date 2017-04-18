@@ -441,7 +441,7 @@ class GraphGadgetTest( GafferUITest.TestCase ) :
 
 		self.failUnless( g.connectionGadget( script["n2"]["i"] ) is not None )
 
-		with Gaffer.UndoContext( script ) :
+		with Gaffer.UndoScope( script ) :
 
 			removedPlug = script["n2"]["i"]
 			del script["n2"]["i"]
@@ -468,7 +468,7 @@ class GraphGadgetTest( GafferUITest.TestCase ) :
 
 		self.failUnless( g.connectionGadget( script["n2"]["i"] ) is not None )
 
-		with Gaffer.UndoContext( script ) :
+		with Gaffer.UndoScope( script ) :
 
 			del script["n1"]["o"]
 

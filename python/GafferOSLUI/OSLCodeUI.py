@@ -242,7 +242,7 @@ class _ParametersFooter( GafferUI.PlugValueWidget ) :
 			flags = Gaffer.Plug.Flags.Default | Gaffer.Plug.Flags.Dynamic
 		)
 
-		with Gaffer.UndoContext( self.getPlug().ancestor( Gaffer.ScriptNode ) ) :
+		with Gaffer.UndoScope( self.getPlug().ancestor( Gaffer.ScriptNode ) ) :
 			self.getPlug().addChild( plug )
 
 ##########################################################################
@@ -314,7 +314,7 @@ class _ErrorWidget( GafferUI.Widget ) :
 #  '.' unmatchable by '*'.
 def __deletePlug( plug ) :
 
-	with Gaffer.UndoContext( plug.ancestor( Gaffer.ScriptNode ) ) :
+	with Gaffer.UndoScope( plug.ancestor( Gaffer.ScriptNode ) ) :
 		plug.parent().removeChild( plug )
 
 def __plugPopupMenu( menuDefinition, plugValueWidget ) :

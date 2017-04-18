@@ -225,14 +225,14 @@ class MetadataTest( GafferTest.TestCase ) :
 		self.assertEqual( Gaffer.Metadata.value( s["n"], "undoTest" ), None )
 		self.assertEqual( Gaffer.Metadata.value( s["n"]["op1"], "undoTest" ), None )
 
-		with Gaffer.UndoContext( s ) :
+		with Gaffer.UndoScope( s ) :
 			Gaffer.Metadata.registerValue( s["n"], "undoTest", "instanceNodeValue" )
 			Gaffer.Metadata.registerValue( s["n"]["op1"], "undoTest", "instancePlugValue" )
 
 		self.assertEqual( Gaffer.Metadata.value( s["n"], "undoTest" ), "instanceNodeValue" )
 		self.assertEqual( Gaffer.Metadata.value( s["n"]["op1"], "undoTest" ), "instancePlugValue" )
 
-		with Gaffer.UndoContext( s ) :
+		with Gaffer.UndoScope( s ) :
 			Gaffer.Metadata.registerValue( s["n"], "undoTest", "instanceNodeValue2" )
 			Gaffer.Metadata.registerValue( s["n"]["op1"], "undoTest", "instancePlugValue2" )
 
@@ -632,14 +632,14 @@ class MetadataTest( GafferTest.TestCase ) :
 
 		assertNonExistent()
 
-		with Gaffer.UndoContext( s ) :
+		with Gaffer.UndoScope( s ) :
 
 			Gaffer.Metadata.registerValue( s["n"], "a", 1, persistent = True )
 			Gaffer.Metadata.registerValue( s["n"]["op1"], "b", 2, persistent = True )
 
 		assertPersistent()
 
-		with Gaffer.UndoContext( s ) :
+		with Gaffer.UndoScope( s ) :
 
 			Gaffer.Metadata.registerValue( s["n"], "a", 1, persistent = False )
 			Gaffer.Metadata.registerValue( s["n"]["op1"], "b", 2, persistent = False )
@@ -727,7 +727,7 @@ class MetadataTest( GafferTest.TestCase ) :
 
 		self.assertFalse( "test" in s.serialise() )
 
-		with Gaffer.UndoContext( s ) :
+		with Gaffer.UndoScope( s ) :
 			Gaffer.Metadata.registerValue( s["n"], "test", 1 )
 
 		self.assertTrue( "test" in s.serialise() )
@@ -786,7 +786,7 @@ class MetadataTest( GafferTest.TestCase ) :
 		self.assertEqual( Gaffer.Metadata.value( s["n"], "deleteMe" ), 20 )
 		self.assertTrue( "Metadata" in s.serialise() )
 
-		with Gaffer.UndoContext( s ) :
+		with Gaffer.UndoScope( s ) :
 			Gaffer.Metadata.deregisterValue( s["n"], "deleteMe" )
 			self.assertTrue( "deleteMe" not in s.serialise() )
 			self.assertEqual( Gaffer.Metadata.value( s["n"], "deleteMe" ), 10 )
@@ -830,7 +830,7 @@ class MetadataTest( GafferTest.TestCase ) :
 		self.assertEqual( Gaffer.Metadata.value( s["n"]["op1"], "deleteMe" ), 20 )
 		self.assertTrue( "deleteMe" in s.serialise() )
 
-		with Gaffer.UndoContext( s ) :
+		with Gaffer.UndoScope( s ) :
 			Gaffer.Metadata.deregisterValue( s["n"]["op1"], "deleteMe" )
 			self.assertTrue( "deleteMe" not in s.serialise() )
 			self.assertEqual( Gaffer.Metadata.value( s["n"]["op1"], "deleteMe" ), 10 )

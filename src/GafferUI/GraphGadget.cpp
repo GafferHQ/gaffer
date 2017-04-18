@@ -707,7 +707,7 @@ bool GraphGadget::keyPressed( GadgetPtr gadget, const KeyEvent &event )
 		/// rather than being hardcoded in here. For that to be done easily we
 		/// need a static keyPressSignal() in Widget, which needs figuring out
 		/// some more before we commit to it. In the meantime, this will do.
-		Gaffer::UndoContext undoContext( m_scriptNode );
+		Gaffer::UndoScope undoScope( m_scriptNode );
 		Gaffer::Set *selection = m_scriptNode->selection();
 		for( size_t i = 0, s = selection->size(); i != s; i++ )
 		{
@@ -1250,7 +1250,7 @@ bool GraphGadget::dragEnd( GadgetPtr gadget, const DragDropEvent &event )
 
 	if( dragMode == Moving && m_dragReconnectCandidate )
 	{
-		Gaffer::UndoContext undoContext( m_scriptNode );
+		Gaffer::UndoScope undoScope( m_scriptNode );
 
 		m_dragReconnectDstNodule->plug()->setInput( m_dragReconnectCandidate->srcNodule()->plug() );
 		m_dragReconnectCandidate->dstNodule()->plug()->setInput( m_dragReconnectSrcNodule->plug() );

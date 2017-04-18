@@ -167,13 +167,13 @@ class FormatPlugValueWidget( GafferUI.PlugValueWidget ) :
 
 	def __applyFormat( self, unused, fmt ) :
 
-		with Gaffer.UndoContext( self.getPlug().ancestor( Gaffer.ScriptNode ) ) :
+		with Gaffer.UndoScope( self.getPlug().ancestor( Gaffer.ScriptNode ) ) :
 			Gaffer.Metadata.registerValue( self.getPlug(), "formatPlugValueWidget:mode", "standard", persistent = False )
 			self.getPlug().setValue( fmt )
 
 	def __applyCustomFormat( self, unused ) :
 
-		with Gaffer.UndoContext( self.getPlug().ancestor( Gaffer.ScriptNode ) ) :
+		with Gaffer.UndoScope( self.getPlug().ancestor( Gaffer.ScriptNode ) ) :
 
 			with self.getContext() :
 				if self.getPlug().getValue() == GafferImage.Format() :

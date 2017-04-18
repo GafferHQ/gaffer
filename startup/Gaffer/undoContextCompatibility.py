@@ -1,6 +1,6 @@
 ##########################################################################
 #
-#  Copyright (c) 2017, John Haddon. All rights reserved.
+#  Copyright (c) 2017, Image Engine Design Inc. All rights reserved.
 #
 #  Redistribution and use in source and binary forms, with or without
 #  modification, are permitted provided that the following conditions are
@@ -34,44 +34,4 @@
 #
 ##########################################################################
 
-import IECore
-
-import Gaffer
-import GafferUITest
-import GafferScene
-import GafferSceneUI
-
-class ScaleToolTest( GafferUITest.TestCase ) :
-
-	def test( self ) :
-
-		script = Gaffer.ScriptNode()
-
-		script["plane"] = GafferScene.Plane()
-
-		view = GafferSceneUI.SceneView()
-		view["in"].setInput( script["plane"]["out"] )
-
-		tool = GafferSceneUI.ScaleTool( view )
-		tool["active"].setValue( True )
-
-		view.getContext()["ui:scene:selectedPaths"] = IECore.StringVectorData( [ "/plane" ] )
-
-		with Gaffer.UndoScope( script ) :
-			tool.scale( IECore.V3f( 2, 1, 1 ) )
-
-		self.assertEqual( script["plane"]["transform"]["scale"].getValue(), IECore.V3f( 2, 1, 1 ) )
-
-		with Gaffer.UndoScope( script ) :
-			tool.scale( IECore.V3f( 1, 0.5, 1 ) )
-
-		self.assertEqual( script["plane"]["transform"]["scale"].getValue(), IECore.V3f( 2, 0.5, 1 ) )
-
-		script.undo()
-		self.assertEqual( script["plane"]["transform"]["scale"].getValue(), IECore.V3f( 2, 1, 1 ) )
-
-		script.undo()
-		self.assertEqual( script["plane"]["transform"]["scale"].getValue(), IECore.V3f( 1, 1, 1 ) )
-
-if __name__ == "__main__":
-	unittest.main()
+Gaffer.UndoContext = Gaffer.UndoScope

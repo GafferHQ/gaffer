@@ -286,12 +286,12 @@ class NumericPlugTest( GafferTest.TestCase ) :
 
 		self.assertFalse( s.undoAvailable() )
 
-		with Gaffer.UndoContext( s ) :
+		with Gaffer.UndoScope( s ) :
 			s["n"]["p"].setValue( 20 )
 
 		self.assertTrue( s.undoAvailable() )
 
-		with Gaffer.UndoContext( s ) :
+		with Gaffer.UndoScope( s ) :
 			s["n"]["p"].setValue( 30 )
 
 		self.assertTrue( s.undoAvailable() )
@@ -315,21 +315,21 @@ class NumericPlugTest( GafferTest.TestCase ) :
 
 		cs = GafferTest.CapturingSlot( s["n"].plugSetSignal() )
 
-		with Gaffer.UndoContext( s, mergeGroup="test" ) :
+		with Gaffer.UndoScope( s, mergeGroup="test" ) :
 			s["n"]["p"].setValue( 1 )
 
 		self.assertEqual( len( cs ), 1 )
 		self.assertEqual( s["n"]["p"].getValue(), 1 )
 		self.assertTrue( s.undoAvailable() )
 
-		with Gaffer.UndoContext( s, mergeGroup="test" ) :
+		with Gaffer.UndoScope( s, mergeGroup="test" ) :
 			s["n"]["p"].setValue( 2 )
 
 		self.assertEqual( len( cs ), 2 )
 		self.assertEqual( s["n"]["p"].getValue(), 2 )
 		self.assertTrue( s.undoAvailable() )
 
-		with Gaffer.UndoContext( s, mergeGroup="test2" ) :
+		with Gaffer.UndoScope( s, mergeGroup="test2" ) :
 			s["n"]["p"].setValue( 3 )
 
 		self.assertEqual( len( cs ), 3 )
@@ -382,14 +382,14 @@ class NumericPlugTest( GafferTest.TestCase ) :
 
 		self.assertFalse( s.undoAvailable() )
 
-		with Gaffer.UndoContext( s, mergeGroup="test" ) :
+		with Gaffer.UndoScope( s, mergeGroup="test" ) :
 			s["n"]["p1"].setValue( 20 )
 
 		self.assertTrue( s.undoAvailable() )
 		self.assertEqual( s["n"]["p1"].getValue(), 20 )
 		self.assertEqual( s["n"]["p2"].getValue(), 0 )
 
-		with Gaffer.UndoContext( s, mergeGroup="test" ) :
+		with Gaffer.UndoScope( s, mergeGroup="test" ) :
 			s["n"]["p2"].setValue( 30 )
 
 		self.assertTrue( s.undoAvailable() )

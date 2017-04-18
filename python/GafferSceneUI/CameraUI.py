@@ -102,7 +102,7 @@ Gaffer.Metadata.registerNode(
 
 def __copyCamera( node, camera ) :
 
-	with Gaffer.UndoContext( node.scriptNode() ) :
+	with Gaffer.UndoScope( node.scriptNode() ) :
 
 		s, h, r, t = camera.getTransform().transform().extractSHRT()
 		node["transform"]["translate"].setValue( t )

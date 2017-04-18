@@ -39,7 +39,7 @@
 #include "IECore/NullObject.h"
 
 #include "Gaffer/BlockedConnection.h"
-#include "Gaffer/UndoContext.h"
+#include "Gaffer/UndoScope.h"
 #include "Gaffer/ScriptNode.h"
 #include "Gaffer/StringPlug.h"
 
@@ -490,7 +490,7 @@ void CropWindowTool::overlayRectangleChanged( unsigned reason )
 		)
 	);
 
-	UndoContext undoContext( m_cropWindowPlug->ancestor<ScriptNode>() );
+	UndoScope undoScope( m_cropWindowPlug->ancestor<ScriptNode>() );
 
 	if( m_cropWindowEnabledPlug && !m_cropWindowEnabledPlug->getValue() )
 	{

@@ -236,7 +236,7 @@ class UIEditor( GafferUI.NodeSetEditor ) :
 		dialogue = GafferUI.ColorChooserDialogue( color = color, useDisplayTransform = False )
 		color = dialogue.waitForColor( parentWindow = menu.ancestor( GafferUI.Window ) )
 		if color is not None :
-			with Gaffer.UndoContext( node.ancestor( Gaffer.ScriptNode ) ) :
+			with Gaffer.UndoScope( node.ancestor( Gaffer.ScriptNode ) ) :
 				Gaffer.Metadata.registerValue( node, "nodeGadget:color", color )
 
 GafferUI.EditorWidget.registerType( "UIEditor", UIEditor )
@@ -362,7 +362,7 @@ class _MetadataWidget( GafferUI.Widget ) :
 		if self.__target is None :
 			return
 
-		with Gaffer.UndoContext( self.__target.ancestor( Gaffer.ScriptNode ) ) :
+		with Gaffer.UndoScope( self.__target.ancestor( Gaffer.ScriptNode ) ) :
 			Gaffer.Metadata.registerValue( self.__target, self.__key, value )
 
 	## May be called by derived classes to deregister the
@@ -372,7 +372,7 @@ class _MetadataWidget( GafferUI.Widget ) :
 		if self.__target is None :
 			return
 
-		with Gaffer.UndoContext( self.__target.ancestor( Gaffer.ScriptNode ) ) :
+		with Gaffer.UndoScope( self.__target.ancestor( Gaffer.ScriptNode ) ) :
 			Gaffer.Metadata.deregisterValue( self.__target, self.__key )
 
 	def __update( self ) :
@@ -1032,7 +1032,7 @@ class _PlugListing( GafferUI.Widget ) :
 		if self.__dragItem is None :
 			return False
 
-		with Gaffer.UndoContext( self.__parent.ancestor( Gaffer.ScriptNode ) ) :
+		with Gaffer.UndoScope( self.__parent.ancestor( Gaffer.ScriptNode ) ) :
 			self.__updateMetadata()
 		self.__dragItem = None
 
@@ -1150,7 +1150,7 @@ class _PlugListing( GafferUI.Widget ) :
 
 		Gaffer.Metadata.registerValue( plug, "layout:section", parentItem.fullName() )
 
-		with Gaffer.UndoContext( self.__parent.ancestor( Gaffer.ScriptNode ) ) :
+		with Gaffer.UndoScope( self.__parent.ancestor( Gaffer.ScriptNode ) ) :
 			self.getPlugParent().addChild( plug )
 
 		self.__updatePathLazily.flush( self )
@@ -1171,7 +1171,7 @@ class _PlugListing( GafferUI.Widget ) :
 
 		self.__pathListing.getPath().pathChangedSignal()( self.__pathListing.getPath() )
 
-		with Gaffer.UndoContext( self.__parent.ancestor( Gaffer.ScriptNode ) ) :
+		with Gaffer.UndoScope( self.__parent.ancestor( Gaffer.ScriptNode ) ) :
 			self.__updateMetadata()
 
 		self.__pathListing.setSelectedPaths(
@@ -1204,7 +1204,7 @@ class _PlugListing( GafferUI.Widget ) :
 				for childItem in item :
 					deletePlugsWalk( childItem )
 
-		with Gaffer.UndoContext( self.__parent.ancestor( Gaffer.ScriptNode ) ) :
+		with Gaffer.UndoScope( self.__parent.ancestor( Gaffer.ScriptNode ) ) :
 			deletePlugsWalk( selectedItem )
 			self.__updateMetadata()
 
@@ -1362,7 +1362,7 @@ class _PresetsEditor( GafferUI.Widget ) :
 
 		d = self.__pathListing.getPath().dict()
 		with Gaffer.BlockedConnection( self.__plugMetadataChangedConnection ) :
-			with Gaffer.UndoContext( self.getPlug().ancestor( Gaffer.ScriptNode ) ) :
+			with Gaffer.UndoScope( self.getPlug().ancestor( Gaffer.ScriptNode ) ) :
 				# reorder by removing everything and reregistering in the order we want
 				for item in d.items() :
 					Gaffer.Metadata.deregisterValue( self.getPlug(), "preset:" + item[0] )
@@ -1383,7 +1383,7 @@ class _PresetsEditor( GafferUI.Widget ) :
 			name = "New Preset %d" % index
 			index += 1
 
-		with Gaffer.UndoContext( self.__plug.ancestor( Gaffer.ScriptNode ) ) :
+		with Gaffer.UndoScope( self.__plug.ancestor( Gaffer.ScriptNode ) ) :
 			Gaffer.Metadata.registerValue( self.__plug, "preset:" + name, self.__plug.getValue() )
 
 		self.__pathListing.setSelectedPaths(
@@ -1401,7 +1401,7 @@ class _PresetsEditor( GafferUI.Widget ) :
 		selectedPreset = self.__pathListing.getSelectedPaths()[0][0]
 		selectedIndex = [ p[0] for p in paths ].index( selectedPreset )
 
-		with Gaffer.UndoContext( self.__plug.ancestor( Gaffer.ScriptNode ) ) :
+		with Gaffer.UndoScope( self.__plug.ancestor( Gaffer.ScriptNode ) ) :
 			Gaffer.Metadata.deregisterValue( self.__plug, "preset:" + selectedPreset )
 
 		del paths[selectedIndex]
@@ -1429,7 +1429,7 @@ class _PresetsEditor( GafferUI.Widget ) :
 
 		items = self.__pathListing.getPath().dict().items()
 		with Gaffer.BlockedConnection( self.__plugMetadataChangedConnection ) :
-			with Gaffer.UndoContext( self.getPlug().ancestor( Gaffer.ScriptNode ) ) :
+			with Gaffer.UndoScope( self.getPlug().ancestor( Gaffer.ScriptNode ) ) :
 				# retain order by removing and reregistering everything
 				for item in items :
 					Gaffer.Metadata.deregisterValue( self.getPlug(), "preset:" + item[0] )
@@ -1449,7 +1449,7 @@ class _PresetsEditor( GafferUI.Widget ) :
 		selectedPaths = self.__pathListing.getSelectedPaths()
 		preset = selectedPaths[0][0]
 
-		with Gaffer.UndoContext( self.getPlug().ancestor( Gaffer.ScriptNode ) ) :
+		with Gaffer.UndoScope( self.getPlug().ancestor( Gaffer.ScriptNode ) ) :
 			Gaffer.Metadata.registerValue( self.getPlug(), "preset:" + preset, plug.getValue() )
 
 ##########################################################################
@@ -1678,7 +1678,7 @@ class _PlugEditor( GafferUI.Widget ) :
 
 	def __registerOrDeregisterMetadata( self, unused, key, value ) :
 
-		with Gaffer.UndoContext( self.getPlug().ancestor( Gaffer.ScriptNode ) ) :
+		with Gaffer.UndoScope( self.getPlug().ancestor( Gaffer.ScriptNode ) ) :
 			if value is not None :
 				Gaffer.Metadata.registerValue( self.getPlug(), key, value )
 			else :
@@ -1793,7 +1793,7 @@ class _SectionEditor( GafferUI.Widget ) :
 			else :
 				return oldSection
 
-		with Gaffer.UndoContext( self.__plugParent.ancestor( Gaffer.ScriptNode ) ) :
+		with Gaffer.UndoScope( self.__plugParent.ancestor( Gaffer.ScriptNode ) ) :
 
 			for plug in self.__plugParent.children( Gaffer.Plug ) :
 				s = Gaffer.Metadata.value( plug, "layout:section" )

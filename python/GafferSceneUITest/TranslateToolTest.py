@@ -133,7 +133,7 @@ class TranslateToolTest( GafferUITest.TestCase ) :
 		tool["active"].setValue( True )
 		tool["orientation"].setValue( tool.Orientation.Local )
 
-		with Gaffer.UndoContext( script ) :
+		with Gaffer.UndoScope( script ) :
 			tool.translate( IECore.V3f( 1, 0, 0 ) )
 
 		self.assertTrue(
@@ -146,7 +146,7 @@ class TranslateToolTest( GafferUITest.TestCase ) :
 
 		script["plane"]["transform"]["rotate"]["y"].setValue( 90 )
 
-		with Gaffer.UndoContext( script ) :
+		with Gaffer.UndoScope( script ) :
 			tool.translate( IECore.V3f( 1, 0, 0 ) )
 
 		self.assertTrue(
@@ -227,7 +227,7 @@ class TranslateToolTest( GafferUITest.TestCase ) :
 
 		tool["orientation"].setValue( tool.Orientation.Local )
 
-		with Gaffer.UndoContext( script ) :
+		with Gaffer.UndoScope( script ) :
 			tool.translate( IECore.V3f( 1, 0, 0 ) )
 
 		self.assertTrue(
@@ -242,7 +242,7 @@ class TranslateToolTest( GafferUITest.TestCase ) :
 
 		tool["orientation"].setValue( tool.Orientation.Parent )
 
-		with Gaffer.UndoContext( script ) :
+		with Gaffer.UndoScope( script ) :
 			tool.translate( IECore.V3f( 1, 0, 0 ) )
 
 		self.assertTrue(
@@ -257,7 +257,7 @@ class TranslateToolTest( GafferUITest.TestCase ) :
 
 		tool["orientation"].setValue( tool.Orientation.World )
 
-		with Gaffer.UndoContext( script ) :
+		with Gaffer.UndoScope( script ) :
 			tool.translate( IECore.V3f( 1, 0, 0 ) )
 
 		self.assertTrue(
@@ -281,7 +281,7 @@ class TranslateToolTest( GafferUITest.TestCase ) :
 		tool = GafferSceneUI.TranslateTool( view )
 		tool["active"].setValue( True )
 
-		with Gaffer.UndoContext( script ) :
+		with Gaffer.UndoScope( script ) :
 			tool.translate( IECore.V3f( 1, 0, 0 ) )
 
 		self.assertTrue(
@@ -295,7 +295,7 @@ class TranslateToolTest( GafferUITest.TestCase ) :
 
 		tool["orientation"].setValue( tool.Orientation.Local )
 
-		with Gaffer.UndoContext( script ) :
+		with Gaffer.UndoScope( script ) :
 			tool.translate( IECore.V3f( 1, 0, 0 ) )
 
 		self.assertTrue(

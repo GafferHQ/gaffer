@@ -123,12 +123,12 @@ class _FileNameWidget( GafferUI.Widget ) :
 		if not fileName :
 			return
 
-		with Gaffer.UndoContext( self.__node.scriptNode() ) :
+		with Gaffer.UndoScope( self.__node.scriptNode() ) :
 			_load( self.__node, fileName, self.ancestor( GafferUI.Window ) )
 
 	def __reloadClicked( self, button ) :
 
-		with Gaffer.UndoContext( self.__node.scriptNode() ) :
+		with Gaffer.UndoScope( self.__node.scriptNode() ) :
 			_load( self.__node, self.__node.fileName(), self.ancestor( GafferUI.Window ) )
 
 	def __referenceLoaded( self, node ) :
@@ -172,7 +172,7 @@ def _load( node, fileName, parentWindow ) :
 def __duplicateAsBox( nodeGraph, node ) :
 
 	script = node.scriptNode()
-	with Gaffer.UndoContext( script ) :
+	with Gaffer.UndoScope( script ) :
 
 		box = Gaffer.Box( node.getName() + "Copy" )
 		script.addChild( box )

@@ -138,7 +138,7 @@ def redo( menu ) :
 def cut( menu ) :
 
 	s = scope( menu )
-	with Gaffer.UndoContext( s.script ) :
+	with Gaffer.UndoScope( s.script ) :
 		s.script.cut( s.parent, s.script.selection() )
 
 ## A function suitable as the command for an Edit/Copy menu item. It must
@@ -155,7 +155,7 @@ def paste( menu ) :
 	s = scope( menu )
 	originalSelection = Gaffer.StandardSet( iter( s.script.selection() ) )
 
-	with Gaffer.UndoContext( s.script ) :
+	with Gaffer.UndoScope( s.script ) :
 
 		s.script.paste( s.parent )
 
@@ -189,7 +189,7 @@ def paste( menu ) :
 def delete( menu ) :
 
 	s = scope( menu )
-	with Gaffer.UndoContext( s.script ) :
+	with Gaffer.UndoScope( s.script ) :
 		s.script.deleteNodes( s.parent, s.script.selection() )
 
 ## A function suitable as the command for an Edit/Find menu item.  It must
@@ -222,7 +222,7 @@ def arrange( menu ) :
 	if not nodes :
 		nodes = Gaffer.StandardSet( graph.getRoot().children( Gaffer.Node ) )
 
-	with Gaffer.UndoContext( s.script ) :
+	with Gaffer.UndoScope( s.script ) :
 		graph.getLayout().layoutNodes( graph, nodes )
 
 ## A function suitable as the command for an Edit/Select All menu item. It must

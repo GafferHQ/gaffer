@@ -199,7 +199,7 @@ def __createRandom( plug ) :
 	node = plug.node()
 	parentNode = node.ancestor( Gaffer.Node )
 
-	with Gaffer.UndoContext( node.scriptNode() ) :
+	with Gaffer.UndoScope( node.scriptNode() ) :
 
 		randomNode = Gaffer.Random()
 		parentNode.addChild( randomNode )

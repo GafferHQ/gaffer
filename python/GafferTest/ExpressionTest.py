@@ -574,7 +574,7 @@ class ExpressionTest( GafferTest.TestCase ) :
 		self.assertEqual( s["n"]["user"]["b"].getValue(), 2 )
 		self.assertEqual( s["n"]["user"]["c"].getValue(), 3 )
 
-		with Gaffer.UndoContext( s ) :
+		with Gaffer.UndoScope( s ) :
 
 			s["e"].setExpression( 'parent["n"]["user"]["c"] = 1; parent["n"]["user"]["b"] = 2; parent["n"]["user"]["a"] = 3' )
 
@@ -924,7 +924,7 @@ class ExpressionTest( GafferTest.TestCase ) :
 
 		c = s["e"].expressionChangedSignal().connect( f )
 
-		with Gaffer.UndoContext( s ) :
+		with Gaffer.UndoScope( s ) :
 			s["e"].setExpression( 'parent["n"]["user"]["p"] = 10' )
 			self.assertEqual( len( expressions ), 1 )
 			self.assertEqual( expressions[0], ( 'parent["n"]["user"]["p"] = 10', "python" ) )
@@ -1205,7 +1205,7 @@ class ExpressionTest( GafferTest.TestCase ) :
 			c.setFrame( 20 )
 			self.assertEqual( s["n"]["user"]["i"].getValue(), 20 )
 
-		with Gaffer.UndoContext( s ) :
+		with Gaffer.UndoScope( s ) :
 
 			self.assertRaisesRegexp(
 				Exception,

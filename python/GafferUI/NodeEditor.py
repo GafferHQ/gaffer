@@ -207,7 +207,7 @@ class NodeEditor( GafferUI.NodeSetEditor ) :
 				applyDefaults( c )
 
 		node = self.nodeUI().node()
-		with Gaffer.UndoContext( node.ancestor( Gaffer.ScriptNode ) ) :
+		with Gaffer.UndoScope( node.ancestor( Gaffer.ScriptNode ) ) :
 			applyDefaults( node )
 			Gaffer.NodeAlgo.applyUserDefaults( node )
 

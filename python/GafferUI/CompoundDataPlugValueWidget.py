@@ -140,7 +140,7 @@ class CompoundDataPlugValueWidget( GafferUI.PlugValueWidget ) :
 
 	def __addItem( self, name, value ) :
 
-		with Gaffer.UndoContext( self.getPlug().ancestor( Gaffer.ScriptNode.staticTypeId() ) ) :
+		with Gaffer.UndoScope( self.getPlug().ancestor( Gaffer.ScriptNode.staticTypeId() ) ) :
 			self.getPlug().addOptionalMember( name, value, enabled=True )
 
 class _MemberPlugValueWidget( GafferUI.PlugValueWidget ) :
@@ -241,7 +241,7 @@ GafferUI.PlugValueWidget.registerType( Gaffer.CompoundDataPlug.MemberPlug, _Memb
 
 def __deletePlug( plug ) :
 
-	with Gaffer.UndoContext( plug.ancestor( Gaffer.ScriptNode ) ) :
+	with Gaffer.UndoScope( plug.ancestor( Gaffer.ScriptNode ) ) :
 		plug.parent().removeChild( plug )
 
 def __plugPopupMenu( menuDefinition, plugValueWidget ) :

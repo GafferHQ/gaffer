@@ -229,7 +229,7 @@ class PlugTest( GafferTest.TestCase ) :
 		self.failUnless( s["n2"]["c"]["i"].getInput().isSame(  s["n1"]["o"] ) )
 		self.assertEqual( len( s["n1"]["o"].outputs() ), 2 )
 
-		with Gaffer.UndoContext( s ) :
+		with Gaffer.UndoScope( s ) :
 
 			del s["n2"]["i"]
 			del s["n2"]["c"]["i"]
@@ -258,7 +258,7 @@ class PlugTest( GafferTest.TestCase ) :
 		self.failUnless( s["n2"]["i"].getInput().isSame( s["n1"]["o"] ) )
 		self.assertEqual( len( s["n1"]["o"].outputs() ), 1 )
 
-		with Gaffer.UndoContext( s ) :
+		with Gaffer.UndoScope( s ) :
 
 			removedPlug = s["n1"]["o"]
 			del s["n1"]["o"]
@@ -630,7 +630,7 @@ class PlugTest( GafferTest.TestCase ) :
 
 		assertPreconditions()
 
-		with Gaffer.UndoContext( s ) :
+		with Gaffer.UndoScope( s ) :
 
 			s["n1"]["c"].addChild( Gaffer.IntPlug( "i" ) )
 			s["n1"]["c"].addChild( Gaffer.FloatPlug( "f" ) )
@@ -679,7 +679,7 @@ class PlugTest( GafferTest.TestCase ) :
 
 		assertPreconditions()
 
-		with Gaffer.UndoContext( s ) :
+		with Gaffer.UndoScope( s ) :
 
 			del s["n1"]["c"]["i"]
 			del s["n1"]["c"]["f"]
@@ -710,7 +710,7 @@ class PlugTest( GafferTest.TestCase ) :
 		self.assertFalse( s["n"]["user"]["p"].getFlags( Gaffer.Plug.Flags.ReadOnly ) )
 
 		cs = GafferTest.CapturingSlot( s["n"].plugFlagsChangedSignal() )
-		with Gaffer.UndoContext( s["n"]["user"]["p"].ancestor( Gaffer.ScriptNode ) ) :
+		with Gaffer.UndoScope( s["n"]["user"]["p"].ancestor( Gaffer.ScriptNode ) ) :
 			s["n"]["user"]["p"].setFlags( Gaffer.Plug.Flags.ReadOnly, True )
 			self.assertTrue( s["n"]["user"]["p"].getFlags( Gaffer.Plug.Flags.ReadOnly ) )
 			self.assertEqual( len( cs ), 1 )
@@ -825,7 +825,7 @@ class PlugTest( GafferTest.TestCase ) :
 
 		assertPreconditions()
 
-		with Gaffer.UndoContext( s ) :
+		with Gaffer.UndoScope( s ) :
 
 			s["n"]["in"].addChild( Gaffer.IntPlug( "i" ) )
 			s["n"]["in"].addChild( Gaffer.FloatPlug( "f" ) )

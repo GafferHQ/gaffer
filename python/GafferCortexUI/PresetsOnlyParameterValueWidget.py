@@ -105,7 +105,7 @@ class _PlugValueWidget( GafferUI.PlugValueWidget ) :
 
 	def __applyPreset( self, unused, preset ) :
 
-		with Gaffer.UndoContext( self.getPlug().ancestor( Gaffer.ScriptNode ) ) :
+		with Gaffer.UndoScope( self.getPlug().ancestor( Gaffer.ScriptNode ) ) :
 
 			self.__parameterHandler.parameter().setValue( self.__parameterHandler.parameter().presets()[preset] )
 			self.__parameterHandler.setPlugValue()

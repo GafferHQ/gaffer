@@ -80,7 +80,7 @@ class NameWidget( GafferUI.TextWidget ) :
 		if self.__graphComponent is None :
 			return
 
-		with Gaffer.UndoContext( self.__graphComponent.ancestor( Gaffer.ScriptNode ) ) :
+		with Gaffer.UndoScope( self.__graphComponent.ancestor( Gaffer.ScriptNode ) ) :
 			self.setText( self.__graphComponent.setName( self.getText() ) )
 
 	def __setText( self, *unwantedArgs ) :

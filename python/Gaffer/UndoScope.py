@@ -35,13 +35,13 @@
 #
 ##########################################################################
 
-from _Gaffer import _UndoContext
+from _Gaffer import _UndoScope
 
-class UndoContext( object ) :
+class UndoScope( object ) :
 
-	State = _UndoContext.State
+	State = _UndoScope.State
 
-	def __init__( self, script, state=_UndoContext.State.Enabled, mergeGroup="" ) :
+	def __init__( self, script, state=_UndoScope.State.Enabled, mergeGroup="" ) :
 
 		self.__script = script
 		self.__state = state
@@ -49,8 +49,8 @@ class UndoContext( object ) :
 
 	def __enter__( self ) :
 
-		self.__context = _UndoContext( self.__script, self.__state, self.__mergeGroup )
+		self.__scope = _UndoScope( self.__script, self.__state, self.__mergeGroup )
 
 	def __exit__( self, type, value, traceBack ) :
 
-		del self.__context
+		del self.__scope

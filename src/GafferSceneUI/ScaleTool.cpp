@@ -36,7 +36,7 @@
 
 #include "boost/bind.hpp"
 
-#include "Gaffer/UndoContext.h"
+#include "Gaffer/UndoScope.h"
 #include "Gaffer/ScriptNode.h"
 #include "Gaffer/MetadataAlgo.h"
 
@@ -149,7 +149,7 @@ IECore::RunTimeTypedPtr ScaleTool::dragBegin( GafferUI::Style::Axes axes )
 
 bool ScaleTool::dragMove( const GafferUI::Gadget *gadget, const GafferUI::DragDropEvent &event )
 {
-	UndoContext undoContext( selection().transformPlug->ancestor<ScriptNode>(), UndoContext::Enabled, undoMergeGroup() );
+	UndoScope undoScope( selection().transformPlug->ancestor<ScriptNode>(), UndoScope::Enabled, undoMergeGroup() );
 	const float scale = static_cast<const ScaleHandle *>( gadget )->scaling( event );
 	applyScale( m_drag, scale );
 	return true;

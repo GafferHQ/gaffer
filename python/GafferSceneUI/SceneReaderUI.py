@@ -121,7 +121,7 @@ def __toggleTag( plug, tag, checked ) :
 	else :
 		tags.remove( tag )
 
-	with Gaffer.UndoContext( plug.ancestor( Gaffer.ScriptNode ) ) :
+	with Gaffer.UndoScope( plug.ancestor( Gaffer.ScriptNode ) ) :
 		plug.setValue( " ".join( tags ) )
 
 def __tagsPopupMenu( menuDefinition, plugValueWidget ) :

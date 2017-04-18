@@ -118,6 +118,6 @@ class RGBAChannelsPlugValueWidget( GafferUI.PlugValueWidget ) :
 
 	def __setValue( self, unused, value ) :
 
-		with Gaffer.UndoContext( self.getPlug().ancestor( Gaffer.ScriptNode ) ) :
+		with Gaffer.UndoScope( self.getPlug().ancestor( Gaffer.ScriptNode ) ) :
 			self.getPlug().setValue( IECore.StringVectorData( value ) )
 

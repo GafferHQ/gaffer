@@ -1,7 +1,6 @@
 //////////////////////////////////////////////////////////////////////////
 //
 //  Copyright (c) 2011, John Haddon. All rights reserved.
-//  Copyright (c) 2013, Image Engine Design Inc. All rights reserved.
 //
 //  Redistribution and use in source and binary forms, with or without
 //  modification, are permitted provided that the following conditions are
@@ -35,31 +34,14 @@
 //
 //////////////////////////////////////////////////////////////////////////
 
-#include "IECore/MessageHandler.h"
+#ifndef GAFFERBINDINGS_UNDOSCOPEBINDING_H
+#define GAFFERBINDINGS_UNDOSCOPEBINDING_H
 
-#include "Gaffer/UndoContext.h"
-#include "Gaffer/ScriptNode.h"
-#include "Gaffer/Action.h"
-
-using namespace Gaffer;
-
-UndoContext::UndoContext( ScriptNodePtr script, State state, const std::string &mergeGroup )
-	:	m_script( script )
+namespace GafferBindings
 {
-	if( state==Invalid )
-	{
-		throw IECore::Exception( "Cannot construct UndoContext with Invalid state." );
-	}
-	if( m_script )
-	{
-		m_script->pushUndoState( state, mergeGroup );
-	}
-}
 
-UndoContext::~UndoContext()
-{
-	if( m_script )
-	{
-		m_script->popUndoState();
-	}
-}
+void bindUndoScope();
+
+} // namespace GafferBindings
+
+#endif // GAFFERBINDINGS_UNDOSCOPEBINDING_H

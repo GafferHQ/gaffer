@@ -738,12 +738,12 @@ class ScriptNodeTest( GafferTest.TestCase ) :
 
 		cs = GafferTest.CapturingSlot( s.actionSignal() )
 
-		# shouldn't trigger anything, because it's not in an undo context
+		# shouldn't trigger anything, because it's not in an undo scope
 		s.addChild( Gaffer.Node() )
 		self.assertEqual( len( cs ), 0 )
 
-		# should trigger something, because it's in an undo context
-		with Gaffer.UndoContext( s ) :
+		# should trigger something, because it's in an undo scope
+		with Gaffer.UndoScope( s ) :
 			s.addChild( Gaffer.Node( "a" ) )
 
 		self.assertEqual( len( cs ), 1 )
@@ -795,7 +795,7 @@ class ScriptNodeTest( GafferTest.TestCase ) :
 		self.assertEqual( s["unsavedChanges"].getValue(), False )
 
 		# but this should.
-		with Gaffer.UndoContext( s ) :
+		with Gaffer.UndoScope( s ) :
 			s["node"] = GafferTest.AddNode()
 		self.assertEqual( s["unsavedChanges"].getValue(), True )
 
@@ -803,14 +803,14 @@ class ScriptNodeTest( GafferTest.TestCase ) :
 		s.save()
 		self.assertEqual( s["unsavedChanges"].getValue(), False )
 
-		with Gaffer.UndoContext( s ) :
+		with Gaffer.UndoScope( s ) :
 			s["node"]["op1"].setValue( 10 )
 		self.assertEqual( s["unsavedChanges"].getValue(), True )
 
 		s.save()
 		self.assertEqual( s["unsavedChanges"].getValue(), False )
 
-		with Gaffer.UndoContext( s ) :
+		with Gaffer.UndoScope( s ) :
 			s["node"]["op1"].setValue( 20 )
 		self.assertEqual( s["unsavedChanges"].getValue(), True )
 
@@ -829,14 +829,14 @@ class ScriptNodeTest( GafferTest.TestCase ) :
 		s.save()
 		self.assertEqual( s["unsavedChanges"].getValue(), False )
 
-		with Gaffer.UndoContext( s ) :
+		with Gaffer.UndoScope( s ) :
 			s["node2"] = GafferTest.AddNode()
 		self.assertEqual( s["unsavedChanges"].getValue(), True )
 
 		s.save()
 		self.assertEqual( s["unsavedChanges"].getValue(), False )
 
-		with Gaffer.UndoContext( s ) :
+		with Gaffer.UndoScope( s ) :
 			s["node2"]["op1"].setInput( s["node"]["sum"] )
 		self.assertEqual( s["unsavedChanges"].getValue(), True )
 
@@ -903,7 +903,7 @@ class ScriptNodeTest( GafferTest.TestCase ) :
 
 		c = s["n"].plugSetSignal().connect( f )
 
-		with Gaffer.UndoContext( s ) :
+		with Gaffer.UndoScope( s ) :
 			s["n"]["p"].setValue( 10 )
 			s["n"]["p"].setValue( 20 )
 
@@ -924,20 +924,20 @@ class ScriptNodeTest( GafferTest.TestCase ) :
 		s["n"] = Gaffer.Node()
 		self.assertEqual( cs, [] )
 
-		with Gaffer.UndoContext( s ) :
+		with Gaffer.UndoScope( s ) :
 			s["n"]["p"] = Gaffer.IntPlug( flags = Gaffer.Plug.Flags.Default | Gaffer.Plug.Flags.Dynamic )
 			s["n"]["p"].setValue( 100 )
 
 		self.assertEqual( len( cs ), 1 )
 		self.assertTrue( cs[0][0].isSame( s ) )
 
-		with Gaffer.UndoContext( s, mergeGroup = "test" ) :
+		with Gaffer.UndoScope( s, mergeGroup = "test" ) :
 			s["n"]["p"].setValue( 200 )
 
 		self.assertEqual( len( cs ), 2 )
 		self.assertTrue( cs[1][0].isSame( s ) )
 
-		with Gaffer.UndoContext( s, mergeGroup = "test" ) :
+		with Gaffer.UndoScope( s, mergeGroup = "test" ) :
 			s["n"]["p"].setValue( 300 )
 
 		# undo was merged, so a new one wasn't added
@@ -1026,7 +1026,7 @@ class ScriptNodeTest( GafferTest.TestCase ) :
 		self.assertEqual( len( actionStages ), 1 )
 		self.assertEqual( actionStages[-1], Gaffer.Action.Stage.Invalid )
 
-		with Gaffer.UndoContext( s ) :
+		with Gaffer.UndoScope( s ) :
 			s["n"]["op1"].setValue( 11 )
 
 		self.assertEqual( len( actionStages ), 2 )
@@ -1057,41 +1057,41 @@ class ScriptNodeTest( GafferTest.TestCase ) :
 		s["n"] = Gaffer.Node()
 		s["n"]["p"] = Gaffer.IntPlug()
 
-		with Gaffer.UndoContext( s ) :
+		with Gaffer.UndoScope( s ) :
 			s.setName( "somethingElse" )
 			self.assertEqual( s.getName(), "somethingElse" )
 		self.assertEqual( s.refCount(), c )
 
-		with Gaffer.UndoContext( s ) :
+		with Gaffer.UndoScope( s ) :
 			s["n"].setName( "n2" )
 			self.assertEqual( s["n2"].getName(), "n2" )
 		self.assertEqual( s.refCount(), c )
 
-		with Gaffer.UndoContext( s ) :
+		with Gaffer.UndoScope( s ) :
 			Gaffer.Metadata.registerValue( s, "test", 10 )
 			Gaffer.Metadata.registerValue( s["n2"], "test", 10 )
 			Gaffer.Metadata.registerValue( s["n2"]["p"], "test", 10 )
 		self.assertEqual( s.refCount(), c )
 
-		with Gaffer.UndoContext( s ) :
+		with Gaffer.UndoScope( s ) :
 			s["n3"] = Gaffer.Node()
 			n4 = Gaffer.Node( "n4" )
 			s.addChild( n4 )
 		self.assertEqual( s.refCount(), c )
 
-		with Gaffer.UndoContext( s ) :
+		with Gaffer.UndoScope( s ) :
 			s["n3"].addChild( s["n2"]["p"] )
 		self.assertEqual( s.refCount(), c )
 
-		with Gaffer.UndoContext( s ) :
+		with Gaffer.UndoScope( s ) :
 			s.addChild( s["n3"]["p"] )
 		self.assertEqual( s.refCount(), c )
 
-		with Gaffer.UndoContext( s ) :
+		with Gaffer.UndoScope( s ) :
 			s["n3"].addChild( s["p"] )
 		self.assertEqual( s.refCount(), c )
 
-		with Gaffer.UndoContext( s ) :
+		with Gaffer.UndoScope( s ) :
 			s.removeChild( s["n2"] )
 		self.assertEqual( s.refCount(), c )
 

@@ -88,7 +88,7 @@ class BoxTest( GafferTest.TestCase ) :
 
 		assertPreConditions()
 
-		with Gaffer.UndoContext( s ) :
+		with Gaffer.UndoScope( s ) :
 			b = Gaffer.Box.create( s, Gaffer.StandardSet( [ s["n2"], s["n3"] ] ) )
 
 		def assertPostConditions() :
@@ -728,14 +728,14 @@ class BoxTest( GafferTest.TestCase ) :
 		self.assertEqual( Gaffer.Metadata.value( b, "description" ), None )
 		self.assertEqual( Gaffer.Metadata.value( p, "description" ), None )
 
-		with Gaffer.UndoContext( s ) :
+		with Gaffer.UndoScope( s ) :
 			Gaffer.Metadata.registerValue( b, "description", "d" )
 			Gaffer.Metadata.registerValue( p, "description", "dd" )
 
 		self.assertEqual( Gaffer.Metadata.value( b, "description" ), "d" )
 		self.assertEqual( Gaffer.Metadata.value( p, "description" ), "dd" )
 
-		with Gaffer.UndoContext( s ) :
+		with Gaffer.UndoScope( s ) :
 			Gaffer.Metadata.registerValue( b, "description", "t" )
 			Gaffer.Metadata.registerValue( p, "description", "tt" )
 

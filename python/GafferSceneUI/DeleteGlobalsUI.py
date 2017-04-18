@@ -94,7 +94,7 @@ def __toggleName( plug, name, active ) :
 	else :
 		names.remove( name )
 
-	with Gaffer.UndoContext( plug.ancestor( Gaffer.ScriptNode ) ) :
+	with Gaffer.UndoScope( plug.ancestor( Gaffer.ScriptNode ) ) :
 		plug.setValue( " ".join( names ) )
 
 def __namesPopupMenu( menuDefinition, plugValueWidget ) :

@@ -233,13 +233,13 @@ class OSLCodeTest( GafferOSLTest.OSLTestCase ) :
 
 		f1 = self.__osoFileName( s["o"] )
 
-		with Gaffer.UndoContext( s ) :
+		with Gaffer.UndoScope( s ) :
 			s["o"]["parameters"]["i"] = Gaffer.Color3fPlug( flags = Gaffer.Plug.Flags.Default | Gaffer.Plug.Flags.Dynamic )
 			s["o"]["out"]["o"] = Gaffer.Color3fPlug( direction = Gaffer.Plug.Direction.Out, flags = Gaffer.Plug.Flags.Default | Gaffer.Plug.Flags.Dynamic )
 
 		f2 = self.__osoFileName( s["o"] )
 
-		with Gaffer.UndoContext( s ) :
+		with Gaffer.UndoScope( s ) :
 			s["o"]["code"].setValue( "o = i * color( u, v, 0 );")
 
 		f3 = self.__osoFileName( s["o"] )

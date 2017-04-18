@@ -52,7 +52,7 @@ def nodeMenuCreateCommand( menu ) :
 
 	script = nodeGraph.scriptNode()
 
-	with Gaffer.UndoContext( script ) :
+	with Gaffer.UndoScope( script ) :
 
 		backdrop = Gaffer.Backdrop()
 		Gaffer.NodeAlgo.applyUserDefaults( backdrop )

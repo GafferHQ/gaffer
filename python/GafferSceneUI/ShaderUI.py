@@ -187,7 +187,7 @@ class _ShaderNamePlugValueWidget( GafferUI.PlugValueWidget ) :
 		if hasattr( node, "shaderLoader" ) :
 			node.shaderLoader().clear()
 
-		with Gaffer.UndoContext( node.ancestor( Gaffer.ScriptNode ) ) :
+		with Gaffer.UndoScope( node.ancestor( Gaffer.ScriptNode ) ) :
 			node.loadShader( node["name"].getValue(), keepExistingValues = True )
 
 ##########################################################################
@@ -291,7 +291,7 @@ def __shaderSubMenu( searchPaths, extensions, nodeCreator, matchExpression, sear
 
 def __setPlugMetadata( plug, key, value ) :
 
-	with Gaffer.UndoContext( plug.ancestor( Gaffer.ScriptNode ) ) :
+	with Gaffer.UndoScope( plug.ancestor( Gaffer.ScriptNode ) ) :
 		Gaffer.Metadata.registerValue( plug, key, value )
 
 def __nodeGraphPlugContextMenu( nodeGraph, plug, menuDefinition ) :

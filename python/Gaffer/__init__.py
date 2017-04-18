@@ -43,7 +43,7 @@ from Application import Application
 from WeakMethod import WeakMethod
 from BlockedConnection import BlockedConnection
 from FileNamePathFilter import FileNamePathFilter
-from UndoContext import UndoContext
+from UndoScope import UndoScope
 from Context import Context
 from InfoPathFilter import InfoPathFilter
 from LazyModule import lazyImport, LazyModule

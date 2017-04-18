@@ -93,7 +93,7 @@ def __createExpression( plug, language ) :
 	node = plug.node()
 	parentNode = node.ancestor( Gaffer.Node )
 
-	with Gaffer.UndoContext( node.scriptNode() ) :
+	with Gaffer.UndoScope( node.scriptNode() ) :
 
 		expressionNode = Gaffer.Expression()
 		parentNode.addChild( expressionNode )
@@ -294,7 +294,7 @@ class ExpressionWidget( GafferUI.Widget ) :
 	def __setExpression( self ) :
 
 		language = self.__node.getExpression()[1]
-		with Gaffer.UndoContext( self.__node.scriptNode() ) :
+		with Gaffer.UndoScope( self.__node.scriptNode() ) :
 			try :
 				self.__node.setExpression( self.__textWidget.getText(), language )
 				self.__messageWidget.setVisible( False )

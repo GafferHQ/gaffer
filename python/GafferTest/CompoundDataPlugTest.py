@@ -378,7 +378,7 @@ class CompoundDataPlugTest( GafferTest.TestCase ) :
 
 		assertPreconditions( s )
 
-		with Gaffer.UndoContext( s ) :
+		with Gaffer.UndoScope( s ) :
 
 			p.addMember( "test", 10, "test" )
 

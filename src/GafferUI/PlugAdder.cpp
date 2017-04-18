@@ -39,7 +39,6 @@
 #include "IECoreGL/Texture.h"
 #include "IECoreGL/Selector.h"
 
-#include "Gaffer/UndoContext.h"
 #include "Gaffer/Metadata.h"
 #include "Gaffer/ArrayPlug.h"
 

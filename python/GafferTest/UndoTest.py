@@ -63,7 +63,7 @@ class UndoTest( GafferTest.TestCase ) :
 		self.assertEqual( s.redoAvailable(), False )
 		self.assertRaises( Exception, s.undo )
 
-		with Gaffer.UndoContext( s ) :
+		with Gaffer.UndoScope( s ) :
 			n.setName( "c" )
 
 		self.assertEqual( s.undoAvailable(), True )
@@ -89,7 +89,7 @@ class UndoTest( GafferTest.TestCase ) :
 		s["n1"] = n1
 		s["n2"] = n2
 
-		with Gaffer.UndoContext( s ) :
+		with Gaffer.UndoScope( s ) :
 			n1["op1"].setInput( n2["sum"] )
 
 		self.assert_( n1["op1"].getInput().isSame( n2["sum"] ) )
@@ -107,7 +107,7 @@ class UndoTest( GafferTest.TestCase ) :
 
 		self.assertEqual( n.parent(), None )
 
-		with Gaffer.UndoContext( s ) :
+		with Gaffer.UndoScope( s ) :
 			s["n"] = n
 		self.assert_( n.parent().isSame( s ) )
 		s.undo()
@@ -135,7 +135,7 @@ class UndoTest( GafferTest.TestCase ) :
 		self.assert_( n3["op1"].getInput().isSame( n2["sum"] ) )
 		self.assert_( n3["op2"].getInput().isSame( n2["sum"] ) )
 
-		with Gaffer.UndoContext( s ) :
+		with Gaffer.UndoScope( s ) :
 			s.deleteNodes( filter = Gaffer.StandardSet( [ n2 ] ) )
 
 		self.assertEqual( n2["op1"].getInput(), None )
@@ -150,7 +150,7 @@ class UndoTest( GafferTest.TestCase ) :
 		self.assert_( n3["op1"].getInput().isSame( n2["sum"] ) )
 		self.assert_( n3["op2"].getInput().isSame( n2["sum"] ) )
 
-		with Gaffer.UndoContext( s ) :
+		with Gaffer.UndoScope( s ) :
 			s.deleteNodes( filter = Gaffer.StandardSet( [ n2 ] ), reconnect = False )
 
 		self.assertEqual( n2["op1"].getInput(), None )
@@ -170,13 +170,13 @@ class UndoTest( GafferTest.TestCase ) :
 		s = Gaffer.ScriptNode()
 		s["n"] = GafferTest.AddNode()
 
-		with Gaffer.UndoContext( s, Gaffer.UndoContext.State.Disabled ) :
+		with Gaffer.UndoScope( s, Gaffer.UndoScope.State.Disabled ) :
 			s["n"]["op1"].setValue( 10 )
 
 		self.assertFalse( s.undoAvailable() )
 
-		with Gaffer.UndoContext( s, Gaffer.UndoContext.State.Enabled ) :
-			with Gaffer.UndoContext( s, Gaffer.UndoContext.State.Disabled ) :
+		with Gaffer.UndoScope( s, Gaffer.UndoScope.State.Enabled ) :
+			with Gaffer.UndoScope( s, Gaffer.UndoScope.State.Disabled ) :
 				s["n"]["op1"].setValue( 20 )
 
 		self.assertFalse( s.undoAvailable() )

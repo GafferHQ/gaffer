@@ -142,12 +142,12 @@ class CompoundNumericPlugValueWidget( GafferUI.PlugValueWidget ) :
 
 	def __gang( self ) :
 
-		with Gaffer.UndoContext( self.getPlug().ancestor( Gaffer.ScriptNode ) ) :
+		with Gaffer.UndoScope( self.getPlug().ancestor( Gaffer.ScriptNode ) ) :
 			self.getPlug().gang()
 
 	def __ungang( self ) :
 
-		with Gaffer.UndoContext( self.getPlug().ancestor( Gaffer.ScriptNode ) ) :
+		with Gaffer.UndoScope( self.getPlug().ancestor( Gaffer.ScriptNode ) ) :
 			self.getPlug().ungang()
 
 	@staticmethod
