@@ -143,10 +143,29 @@ def __setsPopupMenu( menuDefinition, plugValueWidget ) :
 	if plug is None :
 		return
 
+	# get required data
 	acceptsSetName = Gaffer.Metadata.value( plug, "ui:scene:acceptsSetName" )
 	acceptsSetNames = Gaffer.Metadata.value( plug, "ui:scene:acceptsSetNames" )
-	if not acceptsSetName and not acceptsSetNames :
+	acceptsSetExpression = Gaffer.Metadata.value( plug, "ui:scene:acceptsSetExpression" )
+	if not acceptsSetName and not acceptsSetNames and not acceptsSetExpression :
 		return
+
+	with plugValueWidget.getContext() :
+		if acceptsSetNames :
+			currentNames = set( plug.getValue().split() )
+		elif acceptsSetName :
+			currentNames = set( [ plug.getValue() ] )
+		else :
+			currentExpression = plug.getValue()
+
+	if acceptsSetExpression :
+		textSelection = plugValueWidget.textWidget().getSelection()
+		cursorPosition = plugValueWidget.textWidget().getCursorPosition()
+
+		insertAt = textSelection
+		if insertAt == (0, 0) :  # if there's no selection to be replaced, use position of cursor
+			insertAt = (cursorPosition, cursorPosition)
+
 
 	node = plug.node()
 	if isinstance( node, GafferScene.Filter ) :
@@ -167,31 +186,35 @@ def __setsPopupMenu( menuDefinition, plugValueWidget ) :
 	if not setNames :
 		return
 
+	# build the menus
 	menuDefinition.prepend( "/SetsDivider", { "divider" : True } )
 
-	with plugValueWidget.getContext() :
-		if acceptsSetNames :
-			currentNames = set( plug.getValue().split() )
-		else :
-			currentNames = set( [ plug.getValue() ] )
+	if acceptsSetExpression:
+		for name, operator in zip( ("Union", "Intersection", "Difference"), ("|", "&", "-") ) :
+			newValue = ''.join( [ currentExpression[:insertAt[0]], operator, currentExpression[insertAt[1]:] ] )
+			menuDefinition.prepend( "/Operators/%s" % name, { "command" : functools.partial( __setValue, plug, newValue ) } )
 
 	for setName in reversed( sorted( list( setNames ) ) ) :
 
-		newNames = set( currentNames ) if acceptsSetNames else set()
+		if acceptsSetExpression :
+			newValue = ''.join( [ currentExpression[:insertAt[0]], setName, currentExpression[insertAt[1]:]] )
+			parameters = { "command" : functools.partial( __setValue, plug, newValue ) }
 
-		if setName not in currentNames :
-			newNames.add( setName )
 		else :
-			newNames.discard( setName )
+			newNames = set( currentNames ) if acceptsSetNames else set()
 
-		menuDefinition.prepend(
-			"/Sets/%s" % setName,
-			{
+			if setName not in currentNames :
+				newNames.add( setName )
+			else :
+				newNames.discard( setName )
+
+			parameters = {
 				"command" : functools.partial( __setValue, plug, " ".join( sorted( newNames ) ) ),
 				"checkBox" : setName in currentNames,
 				"active" : plug.settable() and not plugValueWidget.getReadOnly() and not Gaffer.MetadataAlgo.readOnly( plug ),
 			}
-		)
+
+		menuDefinition.prepend( "/Sets/%s" % setName, parameters )
 
 __setsPopupMenuConnection = GafferUI.PlugValueWidget.popupMenuSignal().connect( __setsPopupMenu )
 

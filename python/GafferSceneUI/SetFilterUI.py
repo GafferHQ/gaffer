@@ -77,7 +77,7 @@ Gaffer.Metadata.registerNode(
 			entries that help construct set expressions.
 			""",
 
-			"ui:scene:acceptsSetName", True,
+			"ui:scene:acceptsSetExpression", True,
 			"nodule:type", "",
 
 		],
