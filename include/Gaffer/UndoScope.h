@@ -35,8 +35,8 @@
 //
 //////////////////////////////////////////////////////////////////////////
 
-#ifndef GAFFER_UNDOCONTEXT_H
-#define GAFFER_UNDOCONTEXT_H
+#ifndef GAFFER_UNDOSCOPE_H
+#define GAFFER_UNDOSCOPE_H
 
 #include <string>
 
@@ -49,10 +49,9 @@ namespace Gaffer
 
 IE_CORE_FORWARDDECLARE( ScriptNode );
 
-/// The UndoContext class is used to control the creation of
+/// The UndoScope class is used to control the creation of
 /// items on the undo stack held in a ScriptNode.
-/// \todo Rename to UndoScope to avoid confusion with Context.
-class UndoContext : DirtyPropagationScope
+class UndoScope : DirtyPropagationScope
 {
 
 	public :
@@ -68,13 +67,13 @@ class UndoContext : DirtyPropagationScope
 		/// will not be undoable regardless of the specified state.
 		///
 		/// If mergeGroup is specified and matches the group used by
-		/// the previous UndoContext, then the actions performed will
+		/// the previous UndoScope, then the actions performed will
 		/// be merged with the previous entry on the undo stack. This
 		/// can be used by UI elements to compress a series of individual
 		/// editing events such as an interactively updated drag into
 		/// a single item on the undo stack.
-		UndoContext( ScriptNodePtr script, State state=Enabled, const std::string &mergeGroup=std::string() );
-		~UndoContext();
+		UndoScope( ScriptNodePtr script, State state=Enabled, const std::string &mergeGroup=std::string() );
+		~UndoScope();
 
 	private :
 
@@ -84,4 +83,4 @@ class UndoContext : DirtyPropagationScope
 
 } // namespace Gaffer
 
-#endif // GAFFER_UNDOCONTEXT_H
+#endif // GAFFER_UNDOSCOPE_H

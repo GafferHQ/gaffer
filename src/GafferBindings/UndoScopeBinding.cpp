@@ -39,10 +39,10 @@
 
 #include "IECorePython/ScopedGILRelease.h"
 
-#include "Gaffer/UndoContext.h"
+#include "Gaffer/UndoScope.h"
 #include "Gaffer/ScriptNode.h"
 
-#include "GafferBindings/UndoContextBinding.h"
+#include "GafferBindings/UndoScopeBinding.h"
 
 using namespace boost::python;
 using namespace GafferBindings;
@@ -51,22 +51,22 @@ using namespace Gaffer;
 namespace
 {
 
-typedef boost::shared_ptr<UndoContext> UndoContextPtr;
+typedef boost::shared_ptr<UndoScope> UndoScopePtr;
 
-void deleter( UndoContext *undoContext )
+void deleter( UndoScope *undoScope )
 {
-	// The destructor for the undo context may trigger a dirty
+	// The destructor for the undo scope may trigger a dirty
 	// propagation, and observers of plugDirtiedSignal() may
 	// well invoke a compute. We need to release the GIL so that
 	// if that compute is multithreaded, those threads can acquire
 	// the GIL for python based nodes and expressions.
 	IECorePython::ScopedGILRelease gilRelease;
-	delete undoContext;
+	delete undoScope;
 }
 
-UndoContextPtr construct( ScriptNodePtr script, UndoContext::State state, const char *mergeGroup )
+UndoScopePtr construct( ScriptNodePtr script, UndoScope::State state, const char *mergeGroup )
 {
-	return UndoContextPtr( new UndoContext( script, state, mergeGroup ), deleter );
+	return UndoScopePtr( new UndoScope( script, state, mergeGroup ), deleter );
 }
 
 } // namespace
@@ -74,17 +74,17 @@ UndoContextPtr construct( ScriptNodePtr script, UndoContext::State state, const 
 namespace GafferBindings
 {
 
-void bindUndoContext()
+void bindUndoScope()
 {
-	class_<UndoContext, UndoContextPtr, boost::noncopyable> cls( "_UndoContext", no_init );
+	class_<UndoScope, UndoScopePtr, boost::noncopyable> cls( "_UndoScope", no_init );
 
 	// Must bind enum before constructor, because we need to
 	// use an enum value for a default value.
 	scope s( cls );
-	enum_<UndoContext::State>( "State" )
-		.value( "Invalid", UndoContext::Invalid )
-		.value( "Enabled", UndoContext::Enabled )
-		.value( "Disabled", UndoContext::Disabled )
+	enum_<UndoScope::State>( "State" )
+		.value( "Invalid", UndoScope::Invalid )
+		.value( "Enabled", UndoScope::Enabled )
+		.value( "Disabled", UndoScope::Disabled )
 	;
 
 	cls.def(
@@ -94,7 +94,7 @@ void bindUndoContext()
 			default_call_policies(),
 			(
 				boost::python::arg_( "script" ),
-				boost::python::arg_( "state" ) = UndoContext::Enabled,
+				boost::python::arg_( "state" ) = UndoScope::Enabled,
 				boost::python::arg_( "mergeGroup" ) = ""
 			)
 		)
