@@ -57,7 +57,7 @@ class SceneFilterPathFilterTest( GafferSceneTest.SceneTestCase ) :
 		self.assertEqual( set( [ str( c ) for c in path.children() ] ), { "/group/camera", "/group/plane" } )
 
 		setFilter = GafferScene.SetFilter()
-		setFilter["set"].setValue( "__cameras" )
+		setFilter["setExpression"].setValue( "__cameras" )
 		pathFilter = GafferScene.SceneFilterPathFilter( setFilter )
 
 		path.setFilter( pathFilter )
@@ -65,7 +65,7 @@ class SceneFilterPathFilterTest( GafferSceneTest.SceneTestCase ) :
 
 		cs = GafferTest.CapturingSlot( pathFilter.changedSignal() )
 
-		setFilter["set"].setValue( "" )
+		setFilter["setExpression"].setValue( "" )
 		self.assertEqual( len( cs ), 1 )
 		self.assertEqual( path.children(), [] )
 

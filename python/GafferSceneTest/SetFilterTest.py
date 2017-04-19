@@ -59,7 +59,7 @@ class SetFilterTest( GafferSceneTest.SceneTestCase ) :
 		s["paths"].setValue( IECore.StringVectorData( [ "/group/plane" ] ) )
 
 		f = GafferScene.SetFilter()
-		f["set"].setValue( "set" )
+		f["setExpression"].setValue( "set" )
 
 		a = GafferScene.StandardAttributes()
 		a["in"].setInput( s["out"] )
@@ -134,7 +134,7 @@ class SetFilterTest( GafferSceneTest.SceneTestCase ) :
 		s2["paths"].setValue( IECore.StringVectorData( [ "/group/plane" ] ) )
 
 		f = GafferScene.SetFilter()
-		f["set"].setValue( "set" )
+		f["setExpression"].setValue( "set" )
 
 		a1 = GafferScene.StandardAttributes()
 		a1["in"].setInput( s1["out"] )
@@ -174,7 +174,7 @@ class SetFilterTest( GafferSceneTest.SceneTestCase ) :
 		s2["in"].setInput( s1["out"] )
 
 		f = GafferScene.SetFilter()
-		f["set"].setValue( "set1" )
+		f["setExpression"].setValue( "set1" )
 
 		i = GafferScene.Isolate()
 		i["in"].setInput( s2["out"] )
@@ -202,11 +202,65 @@ class SetFilterTest( GafferSceneTest.SceneTestCase ) :
 
 		self.assertFalse( "doubleSided" in a["out"].attributes( "/plane" ).keys() )
 
-		f["set"].setValue( "nonExistent" )
+		f["setExpression"].setValue( "nonExistent" )
 		self.assertFalse( "doubleSided" in a["out"].attributes( "/plane" ).keys() )
 
-		f["set"].setValue( "flatThings" )
+		f["setExpression"].setValue( "flatThings" )
 		self.assertTrue( "doubleSided" in a["out"].attributes( "/plane" ).keys() )
+
+	def testSetExpressionSupport( self ) :
+
+		p1 = GafferScene.Plane()
+		p2 = GafferScene.Plane()
+		g = GafferScene.Group()
+		g["in"][0].setInput( p1["out"] )
+		g["in"][1].setInput( p2["out"] )
+
+		s1 = GafferScene.Set()
+		s1["name"].setValue( "set1" )
+		s1["paths"].setValue( IECore.StringVectorData( [ "/group/plane" ] ) )
+		s1["in"].setInput( g["out"] )
+
+		s2 = GafferScene.Set()
+		s2["name"].setValue( "set2" )
+		s2["paths"].setValue( IECore.StringVectorData( [ "/group", "/group/plane1" ] ) )
+		s2["in"].setInput( s1["out"] )
+
+		s3 = GafferScene.Set()
+		s3["name"].setValue( "set3" )
+		s3["paths"].setValue( IECore.StringVectorData( [ "/group", "/group/plane" ] ) )
+		s3["in"].setInput( s2["out"] )
+
+		f = GafferScene.SetFilter()
+
+		a1 = GafferScene.StandardAttributes()
+		a1["in"].setInput( s3["out"] )
+		a1["attributes"]["doubleSided"]["enabled"].setValue( True )
+		a1["filter"].setInput( f["out"] )
+
+		f["setExpression"].setValue( "set1 | set2" )  # /group, /group/plane, /group/plane1
+
+		self.assertTrue( "doubleSided" in a1["out"].attributes( "/group" ) )
+		self.assertTrue( "doubleSided" in a1["out"].attributes( "/group/plane" ) )
+		self.assertTrue( "doubleSided" in a1["out"].attributes( "/group/plane1" ) )
+
+		f["setExpression"].setValue( "set1 set2" )  # /group, /group/plane, /group/plane1
+
+		self.assertTrue( "doubleSided" in a1["out"].attributes( "/group" ) )
+		self.assertTrue( "doubleSided" in a1["out"].attributes( "/group/plane" ) )
+		self.assertTrue( "doubleSided" in a1["out"].attributes( "/group/plane1" ) )
+
+		f["setExpression"].setValue( "set1 & set2" )  # sets don't intersect
+
+		self.assertTrue( "doubleSided" not in a1["out"].attributes( "/group" ) )
+		self.assertTrue( "doubleSided" not in a1["out"].attributes( "/group/plane" ) )
+		self.assertTrue( "doubleSided" not in a1["out"].attributes( "/group/plane1" ) )
+
+		f["setExpression"].setValue( "set1 & set3" )  # /group/plane
+
+		self.assertTrue( "doubleSided" not in a1["out"].attributes( "/group" ) )
+		self.assertTrue( "doubleSided" in a1["out"].attributes( "/group/plane" ) )
+		self.assertTrue( "doubleSided" not in a1["out"].attributes( "/group/plane1" ) )
 
 if __name__ == "__main__":
 	unittest.main()
