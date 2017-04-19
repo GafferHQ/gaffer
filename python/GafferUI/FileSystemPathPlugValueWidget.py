@@ -39,10 +39,10 @@ import GafferUI
 
 ## Supported plug metadata :
 #
-# - "fileSystemPathPlugValueWidget:extensions"
-# - "fileSystemPathPlugValueWidget:extensionsLabel"
-# - "fileSystemPathPlugValueWidget:includeSequences"
-# - "fileSystemPathPlugValueWidget:includeSequenceFrameRange"
+# - "fileSystemPath:extensions"
+# - "fileSystemPath:extensionsLabel"
+# - "fileSystemPath:includeSequences"
+# - "fileSystemPath:includeSequenceFrameRange"
 #	Note that includeSequenceFrameRange is primarily used
 #	by GafferCortex. Think twice before using it elsewhere
 #	as it may not exist in the future.
@@ -73,7 +73,7 @@ class FileSystemPathPlugValueWidget( GafferUI.PathPlugValueWidget ) :
 
 		dialogue = GafferUI.PathPlugValueWidget._pathChooserDialogue( self )
 
-		if Gaffer.Metadata.value( self.getPlug(), "fileSystemPathPlugValueWidget:includeSequences" ) :
+		if self.__metadataValue( "includeSequences" ) :
 
 			columns = dialogue.pathChooserWidget().pathListingWidget().getColumns()
 			columns.append( GafferUI.PathListingWidget.StandardColumn( "Frame Range", "fileSystem:frameRange" ) )
@@ -85,12 +85,12 @@ class FileSystemPathPlugValueWidget( GafferUI.PathPlugValueWidget ) :
 
 		GafferUI.PathPlugValueWidget._updateFromPlug( self )
 
-		includeSequences = Gaffer.Metadata.value( self.getPlug(), "fileSystemPathPlugValueWidget:includeSequences" ) or False
+		includeSequences = self.__metadataValue( "includeSequences" ) or False
 
 		self.path().setFilter(
 			Gaffer.FileSystemPath.createStandardFilter(
 				self.__extensions(),
-				Gaffer.Metadata.value( self.getPlug(), "fileSystemPathPlugValueWidget:extensionsLabel" ) or "",
+				self.__metadataValue( "extensionsLabel" ) or "",
 				includeSequenceFilter = includeSequences,
 			)
 		)
@@ -99,7 +99,7 @@ class FileSystemPathPlugValueWidget( GafferUI.PathPlugValueWidget ) :
 
 	def _setPlugFromPath( self, path ) :
 
-		if Gaffer.Metadata.value( self.getPlug(), "fileSystemPathPlugValueWidget:includeSequenceFrameRange" ) :
+		if self.__metadataValue( "includeSequenceFrameRange" ) :
 			sequence = path.fileSequence()
 			if sequence :
 				self.getPlug().setValue( str(sequence) )
@@ -112,10 +112,19 @@ class FileSystemPathPlugValueWidget( GafferUI.PathPlugValueWidget ) :
 		if self.getPlug() is None :
 			return []
 
-		extensions = Gaffer.Metadata.value( self.getPlug(), "fileSystemPathPlugValueWidget:extensions" ) or []
+		extensions = self.__metadataValue( "extensions" ) or []
 		if isinstance( extensions, str ) :
 			extensions = extensions.split()
 		else :
 			extensions = list( extensions )
 
 		return extensions
+
+	def __metadataValue( self, name ) :
+
+		v = Gaffer.Metadata.value( self.getPlug(), "fileSystemPath:" + name )
+		if v is None :
+			# Fall back to old metadata names
+			v = Gaffer.Metadata.value( self.getPlug(), "fileSystemPathPlugValueWidget:" + name )
+
+		return v
