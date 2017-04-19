@@ -59,7 +59,7 @@ class SetFilterTest( GafferSceneTest.SceneTestCase ) :
 		s["paths"].setValue( IECore.StringVectorData( [ "/group/plane" ] ) )
 
 		f = GafferScene.SetFilter()
-		f["set"].setValue( "set" )
+		f["setExpression"].setValue( "set" )
 
 		a = GafferScene.StandardAttributes()
 		a["in"].setInput( s["out"] )
@@ -134,7 +134,7 @@ class SetFilterTest( GafferSceneTest.SceneTestCase ) :
 		s2["paths"].setValue( IECore.StringVectorData( [ "/group/plane" ] ) )
 
 		f = GafferScene.SetFilter()
-		f["set"].setValue( "set" )
+		f["setExpression"].setValue( "set" )
 
 		a1 = GafferScene.StandardAttributes()
 		a1["in"].setInput( s1["out"] )
@@ -174,7 +174,7 @@ class SetFilterTest( GafferSceneTest.SceneTestCase ) :
 		s2["in"].setInput( s1["out"] )
 
 		f = GafferScene.SetFilter()
-		f["set"].setValue( "set1" )
+		f["setExpression"].setValue( "set1" )
 
 		i = GafferScene.Isolate()
 		i["in"].setInput( s2["out"] )
@@ -202,10 +202,10 @@ class SetFilterTest( GafferSceneTest.SceneTestCase ) :
 
 		self.assertFalse( "doubleSided" in a["out"].attributes( "/plane" ).keys() )
 
-		f["set"].setValue( "nonExistent" )
+		f["setExpression"].setValue( "nonExistent" )
 		self.assertFalse( "doubleSided" in a["out"].attributes( "/plane" ).keys() )
 
-		f["set"].setValue( "flatThings" )
+		f["setExpression"].setValue( "flatThings" )
 		self.assertTrue( "doubleSided" in a["out"].attributes( "/plane" ).keys() )
 
 	def testSetExpressionSupport( self ) :
@@ -238,25 +238,25 @@ class SetFilterTest( GafferSceneTest.SceneTestCase ) :
 		a1["attributes"]["doubleSided"]["enabled"].setValue( True )
 		a1["filter"].setInput( f["out"] )
 
-		f["set"].setValue( "set1 | set2" )  # /group, /group/plane, /group/plane1
+		f["setExpression"].setValue( "set1 | set2" )  # /group, /group/plane, /group/plane1
 
 		self.assertTrue( "doubleSided" in a1["out"].attributes( "/group" ) )
 		self.assertTrue( "doubleSided" in a1["out"].attributes( "/group/plane" ) )
 		self.assertTrue( "doubleSided" in a1["out"].attributes( "/group/plane1" ) )
 
-		f["set"].setValue( "set1 set2" )  # /group, /group/plane, /group/plane1
+		f["setExpression"].setValue( "set1 set2" )  # /group, /group/plane, /group/plane1
 
 		self.assertTrue( "doubleSided" in a1["out"].attributes( "/group" ) )
 		self.assertTrue( "doubleSided" in a1["out"].attributes( "/group/plane" ) )
 		self.assertTrue( "doubleSided" in a1["out"].attributes( "/group/plane1" ) )
 
-		f["set"].setValue( "set1 & set2" )  # sets don't intersect
+		f["setExpression"].setValue( "set1 & set2" )  # sets don't intersect
 
 		self.assertTrue( "doubleSided" not in a1["out"].attributes( "/group" ) )
 		self.assertTrue( "doubleSided" not in a1["out"].attributes( "/group/plane" ) )
 		self.assertTrue( "doubleSided" not in a1["out"].attributes( "/group/plane1" ) )
 
-		f["set"].setValue( "set1 & set3" )  # /group/plane
+		f["setExpression"].setValue( "set1 & set3" )  # /group/plane
 
 		self.assertTrue( "doubleSided" not in a1["out"].attributes( "/group" ) )
 		self.assertTrue( "doubleSided" in a1["out"].attributes( "/group/plane" ) )

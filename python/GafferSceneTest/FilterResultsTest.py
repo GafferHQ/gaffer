@@ -108,7 +108,7 @@ class FilterResultsTest( GafferSceneTest.SceneTestCase ) :
 		p["sets"].setValue( "A" )
 
 		f = GafferScene.SetFilter()
-		f["set"].setValue( "A" )
+		f["setExpression"].setValue( "A" )
 
 		n = GafferScene.FilterResults()
 		n["scene"].setInput( p["out"] )
@@ -116,7 +116,7 @@ class FilterResultsTest( GafferSceneTest.SceneTestCase ) :
 
 		cs = GafferTest.CapturingSlot( n.plugDirtiedSignal() )
 
-		f["set"].setValue( "planeSet" )
+		f["setExpression"].setValue( "planeSet" )
 		self.assertTrue( n["out"] in { x[0] for x in cs } )
 		del cs[:]
 

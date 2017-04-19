@@ -474,7 +474,7 @@ class IsolateTest( GafferSceneTest.SceneTestCase ) :
 		sphere["sets"].setValue( "A" )
 
 		filter = GafferScene.SetFilter()
-		filter["set"].setValue( "A" )
+		filter["setExpression"].setValue( "A" )
 
 		isolate = GafferScene.Isolate()
 		isolate["in"].setInput( sphere["out"] )
