@@ -66,6 +66,16 @@ Gaffer.Metadata.registerNode(
 	"layout:customWidget:addButton:section", "Settings",
 	"layout:customWidget:addButton:index", -2,
 
+	# Add + buttons for creating new plugs in the NodeGraph
+	"noduleLayout:customGadget:addButtonTop:gadgetType", "GafferUI.BoxUI.PlugAdder.Top",
+	"noduleLayout:customGadget:addButtonTop:section", "top",
+	"noduleLayout:customGadget:addButtonBottom:gadgetType", "GafferUI.BoxUI.PlugAdder.Bottom",
+	"noduleLayout:customGadget:addButtonBottom:section", "bottom",
+	"noduleLayout:customGadget:addButtonLeft:gadgetType", "GafferUI.BoxUI.PlugAdder.Left",
+	"noduleLayout:customGadget:addButtonLeft:section", "left",
+	"noduleLayout:customGadget:addButtonRight:gadgetType", "GafferUI.BoxUI.PlugAdder.Right",
+	"noduleLayout:customGadget:addButtonRight:section", "right",
+
 	plugs = {
 
 		"*" : [
@@ -103,7 +113,9 @@ def nodeMenuCreateCommand( menu ) :
 	script = nodeGraph.scriptNode()
 	graphGadget = nodeGraph.graphGadget()
 
-	return Gaffer.Box.create( graphGadget.getRoot(), script.selection() )
+	box = Gaffer.Box.create( graphGadget.getRoot(), script.selection() )
+	Gaffer.BoxIO.insert( box )
+	return box
 
 ## \deprecated Use NodeGraph.appendSubGraphMenuDefinitions()
 def appendNodeContextMenuDefinitions( nodeGraph, node, menuDefinition ) :
@@ -126,6 +138,10 @@ def appendNodeEditorToolMenuDefinitions( nodeEditor, node, menuDefinition ) :
 	menuDefinition.append( "/BoxDivider", { "divider" : True } )
 	menuDefinition.append( "/Export reference...", { "command" : functools.partial( __exportForReferencing, node = node ) } )
 	menuDefinition.append( "/Import reference...", { "command" : functools.partial( __importReference, node = node ) } )
+
+	if Gaffer.BoxIO.canInsert( node ) :
+		menuDefinition.append( "/UpgradeDivider", { "divider" : True } )
+		menuDefinition.append( "/Upgrade to use BoxIO", { "command" : functools.partial( __upgradeToUseBoxIO, node = node ) } )
 
 def __showContents( nodeGraph, box ) :
 
@@ -172,6 +188,11 @@ def __importReference( menu, node ) :
 	) :
 		with Gaffer.UndoScope( scriptNode ) :
 			scriptNode.executeFile( str( path ), parent = node, continueOnError = True )
+
+def __upgradeToUseBoxIO( node ) :
+
+	with Gaffer.UndoScope( node.scriptNode() ) :
+		Gaffer.BoxIO.insert( node )
 
 # PlugValueWidget registrations
 ##########################################################################
@@ -239,7 +260,7 @@ def __deletePlug( plug ) :
 
 def __appendPlugDeletionMenuItems( menuDefinition, plug, readOnly = False ) :
 
-	if not isinstance( plug.node(), Gaffer.Box ) :
+	if not isinstance( plug.parent(), Gaffer.Box ) :
 		return
 
 	menuDefinition.append( "/DeleteDivider", { "divider" : True } )
@@ -251,7 +272,7 @@ def __appendPlugDeletionMenuItems( menuDefinition, plug, readOnly = False ) :
 def __promote( plug ) :
 
 	with Gaffer.UndoScope( plug.ancestor( Gaffer.ScriptNode ) ) :
-		Gaffer.PlugAlgo.promote( plug )
+		Gaffer.BoxIO.promote( plug )
 
 def __unpromote( plug ) :
 
@@ -365,38 +386,47 @@ def __reorderPlugs( plugs, plug, newIndex ) :
 
 def __nodeGraphPlugContextMenu( nodeGraph, plug, menuDefinition ) :
 
+	# The context menu might be showing for the child nodule
+	# of a CompoundNodule, but most of our operations only
+	# make sense on the top level parent plug, so find that
+	# and use it.
+	parentPlug = plug
+	while isinstance( parentPlug.parent(), Gaffer.Plug ) :
+		parentPlug = parentPlug.parent()
+
 	readOnly = Gaffer.MetadataAlgo.readOnly( plug )
+
 	if isinstance( plug.node(), Gaffer.Box ) :
 
 		menuDefinition.append(
 			"/Rename...",
 			{
-				"command" : functools.partial( __renamePlug, plug = plug ),
+				"command" : functools.partial( __renamePlug, plug = parentPlug ),
 				"active" : not readOnly,
 			}
 		)
 
 		menuDefinition.append( "/MoveDivider", { "divider" : True } )
 
-		currentEdge = Gaffer.Metadata.value( plug, "noduleLayout:section" )
+		currentEdge = Gaffer.Metadata.value( parentPlug, "noduleLayout:section" )
 		if not currentEdge :
-			currentEdge = "top" if plug.direction() == plug.Direction.In else "bottom"
+			currentEdge = "top" if parentPlug.direction() == parentPlug.Direction.In else "bottom"
 
 		for edge in ( "top", "bottom", "left", "right" ) :
 			menuDefinition.append(
 				"/Move To/" + edge.capitalize(),
 				{
-					"command" : functools.partial( __setPlugMetadata, plug, "noduleLayout:section", edge ),
+					"command" : functools.partial( __setPlugMetadata, parentPlug, "noduleLayout:section", edge ),
 					"active" : edge != currentEdge and not readOnly,
 				}
 			)
 
-		edgePlugs = __edgePlugs( nodeGraph, plug )
-		edgeIndex = edgePlugs.index( plug )
+		edgePlugs = __edgePlugs( nodeGraph, parentPlug )
+		edgeIndex = edgePlugs.index( parentPlug )
 		menuDefinition.append(
 			"/Move " + ( "Up" if currentEdge in ( "left", "right" ) else "Left" ),
 			{
-				"command" : functools.partial( __reorderPlugs, edgePlugs, plug, edgeIndex - 1 ),
+				"command" : functools.partial( __reorderPlugs, edgePlugs, parentPlug, edgeIndex - 1 ),
 				"active" : edgeIndex > 0 and not readOnly,
 			}
 		)
@@ -404,12 +434,12 @@ def __nodeGraphPlugContextMenu( nodeGraph, plug, menuDefinition ) :
 		menuDefinition.append(
 			"/Move " + ( "Down" if currentEdge in ( "left", "right" ) else "Right" ),
 			{
-				"command" : functools.partial( __reorderPlugs, edgePlugs, plug, edgeIndex + 1 ),
+				"command" : functools.partial( __reorderPlugs, edgePlugs, parentPlug, edgeIndex + 1 ),
 				"active" : edgeIndex < len( edgePlugs ) - 1 and not readOnly,
 			}
 		)
 
-	__appendPlugDeletionMenuItems( menuDefinition, plug, readOnly )
+	__appendPlugDeletionMenuItems( menuDefinition, parentPlug, readOnly )
 	__appendPlugPromotionMenuItems( menuDefinition, plug, readOnly )
 
 __nodeGraphPlugContextMenuConnection = GafferUI.NodeGraph.plugContextMenuSignal().connect( __nodeGraphPlugContextMenu )

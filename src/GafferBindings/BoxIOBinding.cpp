@@ -1,6 +1,6 @@
 //////////////////////////////////////////////////////////////////////////
 //
-//  Copyright (c) 2013, Image Engine Design Inc. All rights reserved.
+//  Copyright (c) 2017, Image Engine Design Inc. All rights reserved.
 //
 //  Redistribution and use in source and binary forms, with or without
 //  modification, are permitted provided that the following conditions are
@@ -36,11 +36,13 @@
 
 #include "boost/python.hpp" // must be the first include
 
-#include "Gaffer/Box.h"
+#include "Gaffer/BoxIn.h"
+#include "Gaffer/BoxOut.h"
 #include "Gaffer/Plug.h"
+#include "Gaffer/Box.h"
 
 #include "GafferBindings/DependencyNodeBinding.h"
-#include "GafferBindings/BoxBinding.h"
+#include "GafferBindings/BoxIOBinding.h"
 
 using namespace boost::python;
 using namespace IECorePython;
@@ -50,45 +52,73 @@ using namespace GafferBindings;
 namespace
 {
 
-class BoxSerialiser : public NodeSerialiser
+class BoxIOSerialiser : public NodeSerialiser
 {
 
-	virtual bool childNeedsSerialisation( const Gaffer::GraphComponent *child, const Serialisation &serialisation ) const
+	virtual std::string postScript( const Gaffer::GraphComponent *graphComponent, const std::string &identifier, const Serialisation &serialisation ) const
 	{
-		if( child->isInstanceOf( Node::staticTypeId() ) )
-		{
-			return true;
-		}
-		return NodeSerialiser::childNeedsSerialisation( child, serialisation );
-	}
+		std::string result = NodeSerialiser::postScript( graphComponent, identifier, serialisation );
 
-	virtual bool childNeedsConstruction( const Gaffer::GraphComponent *child, const Serialisation &serialisation ) const
-	{
-		if( child->isInstanceOf( Node::staticTypeId() ) )
+		const BoxIO *boxIO = static_cast<const BoxIO *>( graphComponent );
+		if( !boxIO->plug<Plug>() )
 		{
-			return true;
+			// BoxIO::setup() hasn't been called yet.
+			return result;
 		}
-		return NodeSerialiser::childNeedsConstruction( child, serialisation );
+
+		const Plug *promoted = boxIO->promotedPlug<Plug>();
+		if( promoted && serialisation.identifier( promoted ) != "" )
+		{
+			return result;
+		}
+
+		// The BoxIO node has been set up, but its promoted plug isn't
+		// being serialised (for instance, because someone is copying a
+		// selection from inside a box). Add a setup() call to the
+		// serialisation so that the promoted plug will be created upon
+		// pasting into another box.
+
+		if( !result.empty() )
+		{
+			result += "\n";
+		}
+		result += identifier + ".setup()\n";
+
+		return result;
 	}
 
 };
 
+PlugPtr plug( BoxIO &b )
+{
+	return b.plug<Plug>();
+}
+
+PlugPtr promotedPlug( BoxIO &b )
+{
+	return b.promotedPlug<Plug>();
+}
+
 } // namespace
 
-void GafferBindings::bindBox()
+void GafferBindings::bindBoxIO()
 {
-	typedef DependencyNodeWrapper<Box> BoxWrapper;
 
-	DependencyNodeClass<Box, BoxWrapper>()
-		.def( "canPromotePlug", &Box::canPromotePlug, ( arg( "descendantPlug" ) ) )
-		.def( "promotePlug", &Box::promotePlug, ( arg( "descendantPlug" ) ), return_value_policy<CastToIntrusivePtr>() )
-		.def( "plugIsPromoted", &Box::plugIsPromoted )
-		.def( "unpromotePlug", &Box::unpromotePlug )
-		.def( "exportForReference", &Box::exportForReference )
-		.def( "create", &Box::create )
-		.staticmethod( "create" )
+	NodeClass<BoxIO>( NULL, no_init )
+		.def( "setup", &BoxIO::setup, ( arg( "plug" ) = object() ) )
+		.def( "plug", &plug )
+		.def( "promotedPlug", &promotedPlug )
+		.def( "promote", &BoxIO::promote, return_value_policy<CastToIntrusivePtr>() )
+		.staticmethod( "promote" )
+		.def( "insert", &BoxIO::insert )
+		.staticmethod( "insert" )
+		.def( "canInsert", &BoxIO::canInsert )
+		.staticmethod( "canInsert" )
 	;
 
-	Serialisation::registerSerialiser( Box::staticTypeId(), new BoxSerialiser );
+	Serialisation::registerSerialiser( BoxIO::staticTypeId(), new BoxIOSerialiser );
+
+	NodeClass<BoxIn>();
+	NodeClass<BoxOut>();
 
 }

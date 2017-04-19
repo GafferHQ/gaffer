@@ -37,6 +37,7 @@
 #include "boost/regex.hpp"
 
 #include "Gaffer/Box.h"
+#include "Gaffer/BoxIO.h"
 #include "Gaffer/StandardSet.h"
 #include "Gaffer/NumericPlug.h"
 #include "Gaffer/ScriptNode.h"
@@ -140,15 +141,21 @@ BoxPtr Box::create( Node *parent, const Set *childNodes )
 	// It's pretty natural to call this function passing childNodes == ScriptNode::selection().
 	// unfortunately nodes will be removed from the selection as we reparent
 	// them, so we have to make a copy of childNodes so our iteration isn't befuddled by
-	// the changing contents. we can use this opportunity to weed out anything in childNodes
-	// which isn't a direct child of parent though.
+	// the changing contents. We can use this opportunity to weed out anything in childNodes
+	// which isn't a direct child of parent though, and also to skip over BoxIO nodes
+	// which should remain where they are.
 	StandardSetPtr verifiedChildNodes = new StandardSet();
 	for( NodeIterator nodeIt( parent ); !nodeIt.done(); ++nodeIt )
 	{
-		if( childNodes->contains( nodeIt->get() ) )
+		if( !childNodes->contains( nodeIt->get() ) )
 		{
-			verifiedChildNodes->add( *nodeIt );
+			continue;
 		}
+		if( IECore::runTimeCast<BoxIO>( *nodeIt ) )
+		{
+			continue;
+		}
+		verifiedChildNodes->add( *nodeIt );
 	}
 
 	// When a node we're putting in the box has connections to

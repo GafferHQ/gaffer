@@ -1,6 +1,6 @@
 //////////////////////////////////////////////////////////////////////////
 //
-//  Copyright (c) 2013, Image Engine Design Inc. All rights reserved.
+//  Copyright (c) 2017, Image Engine Design Inc. All rights reserved.
 //
 //  Redistribution and use in source and binary forms, with or without
 //  modification, are permitted provided that the following conditions are
@@ -34,61 +34,31 @@
 //
 //////////////////////////////////////////////////////////////////////////
 
-#include "boost/python.hpp" // must be the first include
+#ifndef GAFFER_BOXIN_H
+#define GAFFER_BOXIN_H
 
-#include "Gaffer/Box.h"
-#include "Gaffer/Plug.h"
+#include "Gaffer/BoxIO.h"
 
-#include "GafferBindings/DependencyNodeBinding.h"
-#include "GafferBindings/BoxBinding.h"
-
-using namespace boost::python;
-using namespace IECorePython;
-using namespace Gaffer;
-using namespace GafferBindings;
-
-namespace
+namespace Gaffer
 {
 
-class BoxSerialiser : public NodeSerialiser
+class BoxIn : public BoxIO
 {
 
-	virtual bool childNeedsSerialisation( const Gaffer::GraphComponent *child, const Serialisation &serialisation ) const
-	{
-		if( child->isInstanceOf( Node::staticTypeId() ) )
-		{
-			return true;
-		}
-		return NodeSerialiser::childNeedsSerialisation( child, serialisation );
-	}
+	public :
 
-	virtual bool childNeedsConstruction( const Gaffer::GraphComponent *child, const Serialisation &serialisation ) const
-	{
-		if( child->isInstanceOf( Node::staticTypeId() ) )
-		{
-			return true;
-		}
-		return NodeSerialiser::childNeedsConstruction( child, serialisation );
-	}
+		BoxIn( const std::string &name=defaultName<BoxIn>() );
+		virtual ~BoxIn();
+
+		IE_CORE_DECLARERUNTIMETYPEDEXTENSION( Gaffer::BoxIn, BoxInTypeId, BoxIO );
 
 };
 
-} // namespace
+IE_CORE_DECLAREPTR( BoxIn )
 
-void GafferBindings::bindBox()
-{
-	typedef DependencyNodeWrapper<Box> BoxWrapper;
+typedef FilteredChildIterator<TypePredicate<BoxIn> > BoxInIterator;
+typedef FilteredRecursiveChildIterator<TypePredicate<BoxIn> > RecursiveBoxInIterator;
 
-	DependencyNodeClass<Box, BoxWrapper>()
-		.def( "canPromotePlug", &Box::canPromotePlug, ( arg( "descendantPlug" ) ) )
-		.def( "promotePlug", &Box::promotePlug, ( arg( "descendantPlug" ) ), return_value_policy<CastToIntrusivePtr>() )
-		.def( "plugIsPromoted", &Box::plugIsPromoted )
-		.def( "unpromotePlug", &Box::unpromotePlug )
-		.def( "exportForReference", &Box::exportForReference )
-		.def( "create", &Box::create )
-		.staticmethod( "create" )
-	;
+} // namespace Gaffer
 
-	Serialisation::registerSerialiser( Box::staticTypeId(), new BoxSerialiser );
-
-}
+#endif // GAFFER_BOXIN_H

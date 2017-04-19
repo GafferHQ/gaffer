@@ -290,6 +290,9 @@ import ContextVariablesUI
 import TimeWarpUI
 import LoopUI
 import AnimationUI
+import BoxIOUI
+import BoxInUI
+import BoxOutUI
 
 # backwards compatibility
 ## \todo Remove me

@@ -1,6 +1,6 @@
 //////////////////////////////////////////////////////////////////////////
 //
-//  Copyright (c) 2013, Image Engine Design Inc. All rights reserved.
+//  Copyright (c) 2017, Image Engine Design Inc. All rights reserved.
 //
 //  Redistribution and use in source and binary forms, with or without
 //  modification, are permitted provided that the following conditions are
@@ -34,61 +34,17 @@
 //
 //////////////////////////////////////////////////////////////////////////
 
-#include "boost/python.hpp" // must be the first include
+#include "Gaffer/BoxIn.h"
 
-#include "Gaffer/Box.h"
-#include "Gaffer/Plug.h"
-
-#include "GafferBindings/DependencyNodeBinding.h"
-#include "GafferBindings/BoxBinding.h"
-
-using namespace boost::python;
-using namespace IECorePython;
 using namespace Gaffer;
-using namespace GafferBindings;
 
-namespace
+IE_CORE_DEFINERUNTIMETYPED( BoxIn )
+
+BoxIn::BoxIn( const std::string &name )
+	:	BoxIO( Plug::In, name )
 {
+}
 
-class BoxSerialiser : public NodeSerialiser
+BoxIn::~BoxIn()
 {
-
-	virtual bool childNeedsSerialisation( const Gaffer::GraphComponent *child, const Serialisation &serialisation ) const
-	{
-		if( child->isInstanceOf( Node::staticTypeId() ) )
-		{
-			return true;
-		}
-		return NodeSerialiser::childNeedsSerialisation( child, serialisation );
-	}
-
-	virtual bool childNeedsConstruction( const Gaffer::GraphComponent *child, const Serialisation &serialisation ) const
-	{
-		if( child->isInstanceOf( Node::staticTypeId() ) )
-		{
-			return true;
-		}
-		return NodeSerialiser::childNeedsConstruction( child, serialisation );
-	}
-
-};
-
-} // namespace
-
-void GafferBindings::bindBox()
-{
-	typedef DependencyNodeWrapper<Box> BoxWrapper;
-
-	DependencyNodeClass<Box, BoxWrapper>()
-		.def( "canPromotePlug", &Box::canPromotePlug, ( arg( "descendantPlug" ) ) )
-		.def( "promotePlug", &Box::promotePlug, ( arg( "descendantPlug" ) ), return_value_policy<CastToIntrusivePtr>() )
-		.def( "plugIsPromoted", &Box::plugIsPromoted )
-		.def( "unpromotePlug", &Box::unpromotePlug )
-		.def( "exportForReference", &Box::exportForReference )
-		.def( "create", &Box::create )
-		.staticmethod( "create" )
-	;
-
-	Serialisation::registerSerialiser( Box::staticTypeId(), new BoxSerialiser );
-
 }

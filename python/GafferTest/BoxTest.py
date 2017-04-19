@@ -1007,5 +1007,40 @@ class BoxTest( GafferTest.TestCase ) :
 		self.assertEqual( Gaffer.Metadata.value( s2["b"]["p"], "testInt" ), 10 )
 		self.assertEqual( Gaffer.Metadata.value( s2["b"]["p"]["i"], "testString" ), "test" )
 
+	def testCreateWithBoxIOInSelection( self ) :
+
+		s = Gaffer.ScriptNode()
+
+		# Make a Box containing BoxIn -> n -> BoxOut
+
+		s["b"] = Gaffer.Box()
+		s["b"]["i"] = Gaffer.BoxIn()
+		s["b"]["n"] = GafferTest.AddNode()
+		s["b"]["o"] = Gaffer.BoxOut()
+
+		s["b"]["i"]["name"].setValue( "op1" )
+		s["b"]["i"].setup( s["b"]["n"]["op1"] )
+		s["b"]["n"]["op1"].setInput( s["b"]["i"]["out"] )
+
+		s["b"]["o"]["name"].setValue( "sum" )
+		s["b"]["o"].setup( s["b"]["n"]["sum"] )
+		s["b"]["o"]["in"].setInput( s["b"]["n"]["sum"] )
+
+		# Ask to move all that (including the BoxIOs) into a
+		# nested Box. This doesn't really make sense, because
+		# the BoxIOs exist purely to build a bridge to the
+		# outer parent. So we expect them to remain where they
+		# were.
+
+		innerBox = Gaffer.Box.create( s["b"], Gaffer.StandardSet( s["b"].children( Gaffer.Node ) ) )
+
+		self.assertEqual( len( innerBox.children( Gaffer.Node ) ), 1 )
+		self.assertTrue( "n" in innerBox )
+		self.assertFalse( "n" in s["b"] )
+		self.assertTrue( "i" in s["b"] )
+		self.assertTrue( "o" in s["b"] )
+		self.assertTrue( s["b"]["sum"].source().isSame( innerBox["n"]["sum"] ) )
+		self.assertTrue( innerBox["n"]["op1"].source().isSame( s["b"]["op1"] ) )
+
 if __name__ == "__main__":
 	unittest.main()
