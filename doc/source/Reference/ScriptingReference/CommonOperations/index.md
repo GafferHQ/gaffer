@@ -96,6 +96,23 @@ end = script['frameRange']['end'].getValue()
 script.context().setFrame( frame )
 ```
 
+Metadata
+--------
+
+### Register a value for a plug/node
+
+```
+Gaffer.Metadata.registerValue( plug, "name", value )
+Gaffer.Metadata.registerValue( node, "name", value )
+```
+
+### Query a value for a plug/node
+
+```
+Gaffer.Metadata.value( plug, "name" )
+Gaffer.Metadata.value( node, "name" )
+```
+
 Scenes
 ------
 
