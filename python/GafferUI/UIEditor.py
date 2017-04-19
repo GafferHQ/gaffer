@@ -439,7 +439,7 @@ class _StringMetadataWidget( _MetadataWidget ) :
 
 	def _updateFromValue( self, value ) :
 
-		self.__textWidget.setText( value if value is not None else "" )
+		self.__textWidget.setText( str( value ) if value is not None else "" )
 
 	def __editingFinished( self, *unused ) :
 
