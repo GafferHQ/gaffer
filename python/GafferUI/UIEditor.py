@@ -1626,13 +1626,13 @@ class _PlugEditor( GafferUI.Widget ) :
 
 	def __updateWidgetSettings( self ) :
 
-		widgetType = None
+		widgetType = ""
 		if self.getPlug() is not None :
-			widgetType = Gaffer.Metadata.value( self.getPlug(), "plugValueWidget:type" )
+			widgetType = Gaffer.Metadata.value( self.getPlug(), "plugValueWidget:type" ) or ""
 
 		for m in self.__metadataDefinitions :
 			widget = self.__metadataWidgets[m.key]
-			widget.parent().setEnabled( m.plugValueWidgetType == widgetType )
+			widget.parent().setEnabled( Gaffer.StringAlgo.match( widgetType, m.plugValueWidgetType ) )
 
 		self.__metadataWidgets["connectionGadget:color"].parent().setEnabled(
 			self.getPlug() is not None and self.getPlug().direction() == Gaffer.Plug.Direction.In
@@ -1709,6 +1709,7 @@ class _PlugEditor( GafferUI.Widget ) :
 		__WidgetDefinition( "Checkbox", Gaffer.IntPlug, "GafferUI.BoolPlugValueWidget" ),
 		__WidgetDefinition( "Text Region", Gaffer.StringPlug, "GafferUI.MultiLineStringPlugValueWidget" ),
 		__WidgetDefinition( "File Chooser", Gaffer.StringPlug, "GafferUI.FileSystemPathPlugValueWidget" ),
+		__WidgetDefinition( "File Chooser", Gaffer.StringVectorDataPlug, "GafferUI.FileSystemPathVectorDataPlugValueWidget" ),
 		__WidgetDefinition( "Presets Menu", Gaffer.ValuePlug, "GafferUI.PresetsPlugValueWidget" ),
 		__WidgetDefinition( "Connection", Gaffer.Plug, "GafferUI.ConnectionPlugValueWidget" ),
 		__WidgetDefinition( "None", Gaffer.Plug, "" ),
@@ -1716,14 +1717,14 @@ class _PlugEditor( GafferUI.Widget ) :
 
 	__MetadataDefinition = collections.namedtuple( "MetadataDefinition", ( "key", "label", "metadataWidgetType", "plugValueWidgetType" ) )
 	__metadataDefinitions = (
-		__MetadataDefinition( "fileSystemPath:extensions", "File Extensions", _StringMetadataWidget, "GafferUI.FileSystemPathPlugValueWidget" ),
-		__MetadataDefinition( "path:bookmarks", "Bookmarks Category", _StringMetadataWidget, "GafferUI.FileSystemPathPlugValueWidget" ),
-		__MetadataDefinition( "path:valid", "File Must Exist", _BoolMetadataWidget, "GafferUI.FileSystemPathPlugValueWidget" ),
-		__MetadataDefinition( "path:leaf", "No Directories", _BoolMetadataWidget, "GafferUI.FileSystemPathPlugValueWidget" ),
-		__MetadataDefinition( "fileSystemPath:includeSequences", "Allow sequences", _BoolMetadataWidget, "GafferUI.FileSystemPathPlugValueWidget" ),
+		__MetadataDefinition( "fileSystemPath:extensions", "File Extensions", _StringMetadataWidget, "GafferUI.FileSystemPath*PlugValueWidget" ),
+		__MetadataDefinition( "path:bookmarks", "Bookmarks Category", _StringMetadataWidget, "GafferUI.FileSystemPath*PlugValueWidget" ),
+		__MetadataDefinition( "path:valid", "File Must Exist", _BoolMetadataWidget, "GafferUI.FileSystemPath*PlugValueWidget" ),
+		__MetadataDefinition( "path:leaf", "No Directories", _BoolMetadataWidget, "GafferUI.FileSystemPath*PlugValueWidget" ),
+		__MetadataDefinition( "fileSystemPath:includeSequences", "Allow sequences", _BoolMetadataWidget, "GafferUI.FileSystemPath*PlugValueWidget" ),
 		# Note that includeSequenceFrameRange is primarily used by GafferCortex.
 		# Think twice before using it elsewhere	as it may not exist in the future.
-		__MetadataDefinition( "fileSystemPath:includeSequenceFrameRange", "Sequences include frame range", _BoolMetadataWidget, "GafferUI.FileSystemPathPlugValueWidget" ),
+		__MetadataDefinition( "fileSystemPath:includeSequenceFrameRange", "Sequences include frame range", _BoolMetadataWidget, "GafferUI.FileSystemPath*PlugValueWidget" ),
 	)
 
 	__GadgetDefinition = collections.namedtuple( "GadgetDefinition", ( "label", "plugType", "metadata" ) )
