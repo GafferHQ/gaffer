@@ -59,11 +59,11 @@ Gaffer.Metadata.registerNode(
 			""",
 
 			"plugValueWidget:type", "GafferUI.FileSystemPathPlugValueWidget",
-			"pathPlugValueWidget:leaf", True,
-			"pathPlugValueWidget:valid", True,
-			"pathPlugValueWidget:bookmarks", "vdb",
-			"fileSystemPathPlugValueWidget:extensions", IECore.StringVectorData( [ "vdb" ] ),
-			"fileSystemPathPlugValueWidget:extensionsLabel", "Show only VDB files",
+			"path:leaf", True,
+			"path:valid", True,
+			"path:bookmarks", "vdb",
+			"fileSystemPath:extensions", "vdb",
+			"fileSystemPath:extensionsLabel", "Show only VDB files",
 
 		],
 
@@ -137,10 +137,10 @@ Gaffer.Metadata.registerNode(
 			""",
 
 			"plugValueWidget:type", "GafferUI.FileSystemPathPlugValueWidget",
-			"pathPlugValueWidget:leaf", True,
-			"pathPlugValueWidget:bookmarks", "arnoldProcedural",
-			"fileSystemPathPlugValueWidget:extensions", IECore.StringVectorData( [ "so", "dylib" ] ),
-			"fileSystemPathPlugValueWidget:extensionsLabel", "Show only DSOs",
+			"path:leaf", True,
+			"path:bookmarks", "arnoldProcedural",
+			"fileSystemPath:extensions", "so dylib",
+			"fileSystemPath:extensionsLabel", "Show only DSOs",
 
 		],
 

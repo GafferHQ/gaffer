@@ -57,9 +57,9 @@ Gaffer.Metadata.registerNode(
 			""",
 
 			"plugValueWidget:type", "GafferUI.FileSystemPathPlugValueWidget",
-			"pathPlugValueWidget:leaf", True,
-			"pathPlugValueWidget:valid", True,
-			"pathPlugValueWidget:bookmarks", "texture",
+			"path:leaf", True,
+			"path:valid", True,
+			"path:bookmarks", "texture",
 
 		],
 

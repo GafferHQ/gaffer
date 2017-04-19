@@ -103,8 +103,8 @@ Gaffer.Metadata.registerNode(
 		"parameters.radiance_map" : [
 
 			"plugValueWidget:type", "GafferUI.FileSystemPathPlugValueWidget",
-			"pathPlugValueWidget:leaf", True,
-			"pathPlugValueWidget:bookmarks", "image",
+			"path:leaf", True,
+			"path:bookmarks", "image",
 
 		],
 

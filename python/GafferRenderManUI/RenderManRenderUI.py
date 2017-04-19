@@ -90,9 +90,9 @@ Gaffer.Metadata.registerNode(
 
 			"nodule:type", "",
 			"plugValueWidget:type", "GafferUI.FileSystemPathPlugValueWidget",
-			"pathPlugValueWidget:leaf", True,
-			"pathPlugValueWidget:bookmarks", "rib",
-			"fileSystemPathPlugValueWidget:extensions", IECore.StringVectorData( [ "rib" ] ),
+			"path:leaf", True,
+			"path:bookmarks", "rib",
+			"fileSystemPath:extensions", "rib",
 
 		],
 

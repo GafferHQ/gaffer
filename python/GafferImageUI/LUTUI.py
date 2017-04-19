@@ -61,10 +61,10 @@ Gaffer.Metadata.registerNode(
 			""",
 
 			"plugValueWidget:type", "GafferUI.FileSystemPathPlugValueWidget",
-			"pathPlugValueWidget:leaf", True,
-			"pathPlugValueWidget:bookmarks", "color",
-			"fileSystemPathPlugValueWidget:extensions", IECore.StringVectorData( GafferImage.LUT.supportedExtensions() ),
-			"fileSystemPathPlugValueWidget:extensionsLabel", "Show only LUT files",
+			"path:leaf", True,
+			"path:bookmarks", "color",
+			"fileSystemPath:extensions", " ".join( GafferImage.LUT.supportedExtensions() ),
+			"fileSystemPath:extensionsLabel", "Show only LUT files",
 
 		],
 

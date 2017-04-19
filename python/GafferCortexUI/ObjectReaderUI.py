@@ -63,11 +63,11 @@ Gaffer.Metadata.registerNode(
 
 			"nodule:type", "",
 			"plugValueWidget:type", "GafferUI.FileSystemPathPlugValueWidget",
-			"pathPlugValueWidget:leaf", True,
-			"pathPlugValueWidget:valid", True,
-			"pathPlugValueWidget:bookmarks", "cortex",
-			"fileSystemPathPlugValueWidget:extensions", IECore.StringVectorData( IECore.Reader.supportedExtensions() ),
-			"fileSystemPathPlugValueWidget:extensionsLabel", "Show only supported files",
+			"path:leaf", True,
+			"path:valid", True,
+			"path:bookmarks", "cortex",
+			"fileSystemPath:extensions", " ".join( IECore.Reader.supportedExtensions() ),
+			"fileSystemPath:extensionsLabel", "Show only supported files",
 
 		],
 

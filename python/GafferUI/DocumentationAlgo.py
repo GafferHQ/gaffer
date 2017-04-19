@@ -202,7 +202,7 @@ def __nodeDocumentation( node ) :
 			result += "\n\n" + __heading( plug.relativeName( node ), 1 )
 			result += description
 
-			extensions = Gaffer.Metadata.value( plug, "fileSystemPathPlugValueWidget:extensions" ) or []
+			extensions = Gaffer.Metadata.value( plug, "fileSystemPath:extensions" ) or []
 			if extensions :
 				result += "\n\n**Supported file extensions** : "+ ", ".join( extensions )
 

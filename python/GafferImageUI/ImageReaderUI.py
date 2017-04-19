@@ -72,11 +72,11 @@ Gaffer.Metadata.registerNode(
 			""",
 
 			"plugValueWidget:type", "GafferUI.FileSystemPathPlugValueWidget",
-			"pathPlugValueWidget:leaf", True,
-			"pathPlugValueWidget:bookmarks", "image",
-			"fileSystemPathPlugValueWidget:extensions", IECore.StringVectorData( GafferImage.ImageReader.supportedExtensions() ),
-			"fileSystemPathPlugValueWidget:extensionsLabel", "Show only image files",
-			"fileSystemPathPlugValueWidget:includeSequences", True,
+			"path:leaf", True,
+			"path:bookmarks", "image",
+			"fileSystemPath:extensions", " ".join( GafferImage.ImageReader.supportedExtensions() ),
+			"fileSystemPath:extensionsLabel", "Show only image files",
+			"fileSystemPath:includeSequences", True,
 
 		],
 

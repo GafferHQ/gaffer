@@ -91,7 +91,7 @@ Gaffer.Metadata.registerNode(
 			""",
 
 			"plugValueWidget:type", "GafferUI.FileSystemPathPlugValueWidget",
-			"pathPlugValueWidget:leaf", True,
+			"path:leaf", True,
 
 			"layout:activator", "modeIsSceneDescription",
 

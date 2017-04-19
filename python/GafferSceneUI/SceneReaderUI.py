@@ -72,11 +72,11 @@ Gaffer.Metadata.registerNode(
 			""",
 
 			"plugValueWidget:type", "GafferUI.FileSystemPathPlugValueWidget",
-			"pathPlugValueWidget:leaf", True,
-			"pathPlugValueWidget:valid", True,
-			"pathPlugValueWidget:bookmarks", "sceneCache",
-			"fileSystemPathPlugValueWidget:extensions", lambda plug : IECore.StringVectorData( IECore.SceneInterface.supportedExtensions() ),
-			"fileSystemPathPlugValueWidget:extensionsLabel", "Show only cache files",
+			"path:leaf", True,
+			"path:valid", True,
+			"path:bookmarks", "sceneCache",
+			"fileSystemPath:extensions", " ".join( IECore.SceneInterface.supportedExtensions() ),
+			"fileSystemPath:extensionsLabel", "Show only cache files",
 
 		],
 

@@ -65,8 +65,8 @@ Gaffer.Metadata.registerNode(
 			""",
 
 			"nodule:type", "",
-			"pathPlugValueWidget:bookmarks", "ass",
-			"fileSystemPathPlugValueWidget:extensions", IECore.StringVectorData( [ "ass", "ass.gz" ] ),
+			"path:bookmarks", "ass",
+			"fileSystemPath:extensions", "ass ass.gz",
 
 		],
 

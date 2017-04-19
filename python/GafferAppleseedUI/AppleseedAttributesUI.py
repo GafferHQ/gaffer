@@ -238,8 +238,8 @@ Gaffer.Metadata.registerNode(
 		"attributes.alphaMap.value" : [
 
 			"plugValueWidget:type", "GafferUI.FileSystemPathPlugValueWidget",
-			"pathPlugValueWidget:leaf", True,
-			"pathPlugValueWidget:bookmarks", "texture",
+			"path:leaf", True,
+			"path:bookmarks", "texture",
 
 		],
 

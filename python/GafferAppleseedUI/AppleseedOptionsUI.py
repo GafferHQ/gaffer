@@ -314,7 +314,7 @@ Gaffer.Metadata.registerNode(
 		"options.environmentEDF.value" : [
 
 			"plugValueWidget:type", "GafferSceneUI.ScenePathPlugValueWidget",
-			"pathPlugValueWidget:valid", True,
+			"path:valid", True,
 			"scenePathPlugValueWidget:setNames", IECore.StringVectorData( [ "__lights" ] ),
 			"scenePathPlugValueWidget:setsLabel", "Show only lights",
 
@@ -667,8 +667,8 @@ Gaffer.Metadata.registerNode(
 
 		"plugValueWidget:type", "GafferUI.FileSystemPathPlugValueWidget",
 		"pathPlugValueWidget:leaf", True,
-		"fileSystemPathPlugValueWidget:extensions", IECore.StringVectorData( [ "txt", "log" ] ),
-		"fileSystemPathPlugValueWidget:extensionsLabel", "Show only log files",
+		"fileSystemPath:extensions", "txt log",
+		"fileSystemPath:extensionsLabel", "Show only log files",
 
 		],
 
