@@ -243,7 +243,7 @@ class ArnoldRenderTest( GafferSceneTest.SceneTestCase ) :
 		s["sphere"]["sets"].setValue( "${wedge:value}" )
 
 		s["filter"] = GafferScene.SetFilter()
-		s["filter"]["set"].setValue( "hidden" )
+		s["filter"]["setExpression"].setValue( "hidden" )
 
 		s["attributes"] = GafferScene.StandardAttributes()
 		s["attributes"]["attributes"]["visibility"]["enabled"].setValue( True )

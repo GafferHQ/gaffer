@@ -140,7 +140,7 @@ class DeleteSetsTest( GafferSceneTest.SceneTestCase ) :
 		d["in"].setInput( p["out"] )
 
 		f = GafferScene.SetFilter()
-		f["set"].setValue( "test" )
+		f["setExpression"].setValue( "test" )
 
 		a = GafferScene.CustomAttributes()
 		a["in"].setInput( d["out"] )
