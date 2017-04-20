@@ -1,6 +1,6 @@
 ##########################################################################
 #
-#  Copyright (c) 2016, John Haddon. All rights reserved.
+#  Copyright (c) 2017, John Haddon. All rights reserved.
 #
 #  Redistribution and use in source and binary forms, with or without
 #  modification, are permitted provided that the following conditions are
@@ -39,17 +39,17 @@ import GafferSceneUI
 
 Gaffer.Metadata.registerNode(
 
-	GafferSceneUI.TranslateTool,
+	GafferSceneUI.RotateTool,
 
 	"description",
 	"""
-	Tool for editing object translation.
+	Tool for editing object rotation.
 	""",
 
 	"nodeToolbar:bottom:type", "GafferUI.StandardNodeToolbar.bottom",
 
-	"viewer:shortCut", "W",
-	"order", 1,
+	"viewer:shortCut", "E",
+	"order", 2,
 
 	plugs = {
 
@@ -58,7 +58,7 @@ Gaffer.Metadata.registerNode(
 			"description",
 			"""
 			The space used to define the orientation of the XYZ
-			translation handles. Note that this is independent
+			rotation handles. Note that this is independent
 			of the space setting on a Transform node - each
 			setting can be mixed and matched freely.
 			""",
@@ -73,5 +73,4 @@ Gaffer.Metadata.registerNode(
 		],
 
 	}
-
 )

@@ -88,6 +88,7 @@ class StandardStyle : public Style
 		virtual void renderBackdrop( const Imath::Box2f &box, State state = NormalState, const Imath::Color3f *userColor = NULL ) const;
 
 		virtual void renderTranslateHandle( Axes axes, State state = NormalState ) const;
+		virtual void renderRotateHandle( Axes axes, State state = NormalState ) const;
 		virtual void renderScaleHandle( Axes axes, State state = NormalState ) const;
 
 		enum Color

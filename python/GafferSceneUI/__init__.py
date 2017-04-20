@@ -132,6 +132,7 @@ import FilterResultsUI
 import TranslateToolUI
 import ScaleToolUI
 import EvaluateLightLinksUI
+import RotateToolUI
 
 # then all the PathPreviewWidgets. note that the order
 # of import controls the order of display.

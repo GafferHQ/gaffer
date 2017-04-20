@@ -1,6 +1,6 @@
 //////////////////////////////////////////////////////////////////////////
 //
-//  Copyright (c) 2014-2016, John Haddon. All rights reserved.
+//  Copyright (c) 2017, John Haddon. All rights reserved.
 //
 //  Redistribution and use in source and binary forms, with or without
 //  modification, are permitted provided that the following conditions are
@@ -36,17 +36,17 @@
 
 #include "boost/bind.hpp"
 
-#include "OpenEXR/ImathMatrixAlgo.h"
+#include "OpenEXR/ImathEuler.h"
+
+#include "IECore/AngleConversion.h"
 
 #include "Gaffer/UndoScope.h"
 #include "Gaffer/ScriptNode.h"
 #include "Gaffer/MetadataAlgo.h"
 
-#include "GafferUI/TranslateHandle.h"
+#include "GafferUI/RotateHandle.h"
 
-#include "GafferScene/SceneAlgo.h"
-
-#include "GafferSceneUI/TranslateTool.h"
+#include "GafferSceneUI/RotateTool.h"
 #include "GafferSceneUI/SceneView.h"
 
 using namespace std;
@@ -57,28 +57,27 @@ using namespace GafferUI;
 using namespace GafferScene;
 using namespace GafferSceneUI;
 
-IE_CORE_DEFINERUNTIMETYPED( TranslateTool );
+IE_CORE_DEFINERUNTIMETYPED( RotateTool );
 
-TranslateTool::ToolDescription<TranslateTool, SceneView> TranslateTool::g_toolDescription;
+RotateTool::ToolDescription<RotateTool, SceneView> RotateTool::g_toolDescription;
 
-size_t TranslateTool::g_firstPlugIndex = 0;
+size_t RotateTool::g_firstPlugIndex = 0;
 
-TranslateTool::TranslateTool( SceneView *view, const std::string &name )
+RotateTool::RotateTool( SceneView *view, const std::string &name )
 	:	TransformTool( view, name )
 {
-
 	static Style::Axes axes[] = { Style::X, Style::Y, Style::Z };
 	static const char *handleNames[] = { "x", "y", "z" };
 
 	for( int i = 0; i < 3; ++i )
 	{
-		HandlePtr handle = new TranslateHandle( axes[i] );
+		RotateHandlePtr handle = new RotateHandle( axes[i] );
 		handle->setRasterScale( 75 );
 		handles()->setChild( handleNames[i], handle );
 		// connect with group 0, so we get called before the Handle's slot does.
-		handle->dragBeginSignal().connect( 0, boost::bind( &TranslateTool::dragBegin, this, i ) );
-		handle->dragMoveSignal().connect( boost::bind( &TranslateTool::dragMove, this, ::_1, ::_2 ) );
-		handle->dragEndSignal().connect( boost::bind( &TranslateTool::dragEnd, this ) );
+		handle->dragBeginSignal().connect( 0, boost::bind( &RotateTool::dragBegin, this, i ) );
+		handle->dragMoveSignal().connect( boost::bind( &RotateTool::dragMove, this, ::_1, ::_2 ) );
+		handle->dragEndSignal().connect( boost::bind( &RotateTool::dragEnd, this ) );
 	}
 
 	storeIndexOfNextChild( g_firstPlugIndex );
@@ -86,21 +85,27 @@ TranslateTool::TranslateTool( SceneView *view, const std::string &name )
 	addChild( new IntPlug( "orientation", Plug::In, Parent, Local, World ) );
 }
 
-TranslateTool::~TranslateTool()
+RotateTool::~RotateTool()
 {
 }
 
-Gaffer::IntPlug *TranslateTool::orientationPlug()
-{
-	return getChild<IntPlug>( g_firstPlugIndex );
-}
-
-const Gaffer::IntPlug *TranslateTool::orientationPlug() const
+Gaffer::IntPlug *RotateTool::orientationPlug()
 {
 	return getChild<IntPlug>( g_firstPlugIndex );
 }
 
-bool TranslateTool::affectsHandles( const Gaffer::Plug *input ) const
+const Gaffer::IntPlug *RotateTool::orientationPlug() const
+{
+	return getChild<IntPlug>( g_firstPlugIndex );
+}
+
+void RotateTool::rotate( int axis, float degrees )
+{
+	Rotation r = createRotation( axis );
+	applyRotation( r, degreesToRadians( degrees ) );
+}
+
+bool RotateTool::affectsHandles( const Gaffer::Plug *input ) const
 {
 	if( TransformTool::affectsHandles( input ) )
 	{
@@ -112,29 +117,21 @@ bool TranslateTool::affectsHandles( const Gaffer::Plug *input ) const
 		input == scenePlug()->transformPlug();
 }
 
-void TranslateTool::updateHandles()
+void RotateTool::updateHandles()
 {
 	handles()->setTransform(
 		orientedTransform( static_cast<Orientation>( orientationPlug()->getValue() ) )
 	);
-
-	// Because we provide multiple orientations, the handles
-	// may well not be aligned with the axes of the transform
-	// space. So any given handle might affect several components
-	// of the target translation. For each handle, check to see
-	// if each of the plugs it effects are settable, and if not,
-	// disable the handle.
 	for( int i = 0; i < 3; ++i )
 	{
-		V3f handleDirection( 0 );
-		handleDirection[i] = 1.0f;
-		Translation translation = createTranslation( handleDirection );
+		const Rotation rotation = createRotation( i );
+		const V3f r = this->rotation( rotation, M_PI / 4.0 );
 		bool editable = true;
 		for( int j = 0; j < 3; ++j )
 		{
-			if( translation.direction[j] != 0.0f )
+			if( r[j] != rotation.originalRotation[j] )
 			{
-				const ValuePlug *plug = selection().transformPlug->translatePlug()->getChild( j );
+				ValuePlug *plug = selection().transformPlug->rotatePlug()->getChild( j );
 				if( !plug->settable() || MetadataAlgo::readOnly( plug ) )
 				{
 					editable = false;
@@ -146,28 +143,21 @@ void TranslateTool::updateHandles()
 	}
 }
 
-void TranslateTool::translate( const Imath::V3f &offset )
-{
-	if( !selection().transformPlug )
-	{
-		return;
-	}
-
-	Translation t = createTranslation( offset );
-	applyTranslation( t, 1.0f );
-}
-
-TranslateTool::Translation TranslateTool::createTranslation( const Imath::V3f &directionInHandleSpace )
+RotateTool::Rotation RotateTool::createRotation( int axis )
 {
 	Context::Scope scopedContext( view()->getContext() );
-	Translation result;
 
 	const Selection &selection = this->selection();
-	result.origin = selection.transformPlug->translatePlug()->getValue();
 
+	Rotation result;
+	result.originalRotation = selection.transformPlug->rotatePlug()->getValue();
+
+	/// \todo Share this with TranslateTool somehow
+	V3f handleSpaceAxis( 0.0f );
+	handleSpaceAxis[axis] = 1.0f;
 	const M44f handlesTransform = orientedTransform( static_cast<Orientation>( orientationPlug()->getValue() ) );
-	V3f worldSpaceDirection;
-	handlesTransform.multDirMatrix( directionInHandleSpace, worldSpaceDirection );
+	V3f worldSpaceAxis;
+	handlesTransform.multDirMatrix( handleSpaceAxis, worldSpaceAxis );
 
 	const M44f downstreamMatrix = scenePlug()->fullTransform( selection.path );
 	M44f upstreamMatrix;
@@ -176,50 +166,63 @@ TranslateTool::Translation TranslateTool::createTranslation( const Imath::V3f &d
 		upstreamMatrix = selection.upstreamScene->fullTransform( selection.upstreamPath );
 	}
 
-	V3f downstreamDirection;
-	downstreamMatrix.inverse().multDirMatrix( worldSpaceDirection, downstreamDirection );
+	V3f downstreamAxis;
+	downstreamMatrix.inverse().multDirMatrix( worldSpaceAxis, downstreamAxis );
 
-	V3f upstreamWorldDirection;
-	upstreamMatrix.multDirMatrix( downstreamDirection, upstreamWorldDirection );
+	V3f upstreamWorldAxis;
+	upstreamMatrix.multDirMatrix( downstreamAxis, upstreamWorldAxis );
 
-	selection.transformSpace.inverse().multDirMatrix( upstreamWorldDirection, result.direction );
-
+	selection.transformSpace.inverse().multDirMatrix( upstreamWorldAxis, result.axis );
 	return result;
 }
 
-void TranslateTool::applyTranslation( const Translation &translation, float offset )
+Imath::V3f RotateTool::rotation( const Rotation &rotation, float radians ) const
 {
 	const Selection &selection = this->selection();
+
+	// Compose our new rotation with the original
+	Quatf q; q.setAxisAngle( rotation.axis, radians );
+	M44f m = q.toMatrix44();
+	m.rotate( degreesToRadians( rotation.originalRotation ) );
+
+	// Convert to the euler angles closest to
+	// those we currently have.
+	Eulerf e; e.extract( m );
+	e.makeNear( degreesToRadians( selection.transformPlug->rotatePlug()->getValue() ) );
+
+	return V3f( e );
+}
+
+void RotateTool::applyRotation( const Rotation &rotation, float radians )
+{
+	const Selection &selection = this->selection();
+	const V3f r = radiansToDegrees( this->rotation( rotation, radians ) );
 	for( int i = 0; i < 3; ++i )
 	{
-		if( translation.direction[i] != 0.0f )
+		FloatPlug *p = selection.transformPlug->rotatePlug()->getChild( i );
+		if( p->settable() && !MetadataAlgo::readOnly( p ) )
 		{
-			selection.transformPlug->translatePlug()->getChild( i )->setValue(
-				translation.origin[i] + translation.direction[i] * offset
-			);
+			p->setValue( r[i] );
 		}
 	}
 }
 
-IECore::RunTimeTypedPtr TranslateTool::dragBegin( int axis )
+IECore::RunTimeTypedPtr RotateTool::dragBegin( int axis )
 {
-	V3f handleVector( 0 );
-	handleVector[axis] = 1;
-	m_drag = createTranslation( handleVector );
-
+	m_drag = createRotation( axis );
 	TransformTool::dragBegin();
-	return NULL; // let the handle start the drag with the event system
+	return NULL; // Let the handle start the drag.
 }
 
-bool TranslateTool::dragMove( const GafferUI::Gadget *gadget, const GafferUI::DragDropEvent &event )
+bool RotateTool::dragMove( const GafferUI::Gadget *gadget, const GafferUI::DragDropEvent &event )
 {
 	UndoScope undoScope( selection().transformPlug->ancestor<ScriptNode>(), UndoScope::Enabled, undoMergeGroup() );
-	const float offset = static_cast<const TranslateHandle *>( gadget )->translation( event );
-	applyTranslation( m_drag, offset );
+	const float r = static_cast<const RotateHandle *>( gadget )->rotation( event );
+	applyRotation( m_drag, r );
 	return true;
 }
 
-bool TranslateTool::dragEnd()
+bool RotateTool::dragEnd()
 {
 	TransformTool::dragEnd();
 	return false;

@@ -71,10 +71,6 @@ class TranslateHandle : public Handle
 
 	private :
 
-		int axis() const;
-
-		float absoluteDragOffset( const DragDropEvent &event ) const;
-
 		Style::Axes m_axes;
 		LinearDrag m_drag;
 

@@ -238,6 +238,35 @@ bool updateSelectionWalk( const CapturedProcess::PtrVector &processes, Transform
 	return false;
 }
 
+class HandlesGadget : public Gadget
+{
+
+	public :
+
+		HandlesGadget( const std::string &name="HandlesGadget" )
+			:	Gadget( name )
+		{
+		}
+
+	protected :
+
+		virtual void doRender( const Style *style ) const
+		{
+			glEnable( GL_DEPTH_TEST );
+			// Render with reversed depth test so
+			// the handles are visible even when
+			// behind an object.
+			glDepthFunc( GL_GREATER );
+			Gadget::doRender( style );
+			// The render with the regular depth
+			// test so that the handles occlude
+			// themselves appropriately.
+			glDepthFunc( GL_LESS );
+			Gadget::doRender( style );
+		}
+
+};
+
 } // namespace
 
 //////////////////////////////////////////////////////////////////////////
@@ -250,7 +279,7 @@ size_t TransformTool::g_firstPlugIndex = 0;
 
 TransformTool::TransformTool( SceneView *view, const std::string &name )
 	:	SelectionTool( view, name ),
-		m_handles( new Gadget() ),
+		m_handles( new HandlesGadget() ),
 		m_selectionDirty( true ),
 		m_handlesDirty( true ),
 		m_dragging( false ),
@@ -464,6 +493,36 @@ void TransformTool::preRender()
 		updateHandles();
 		m_handlesDirty = false;
 	}
+}
+
+Imath::M44f TransformTool::orientedTransform( Orientation orientation )
+{
+	Context::Scope scopedContext( view()->getContext() );
+
+	const Selection &selection = this->selection();
+	const M44f localMatrix = scenePlug()->transform( selection.path );
+	M44f parentMatrix;
+	if( selection.path.size() )
+	{
+		const ScenePlug::ScenePath parentPath( selection.path.begin(), selection.path.end() - 1 );
+		parentMatrix = scenePlug()->fullTransform( parentPath );
+	}
+
+	M44f result;
+	switch( orientation )
+	{
+		case Local :
+			result = localMatrix * parentMatrix;
+			break;
+		case Parent :
+			result = M44f().setTranslation( localMatrix.translation() ) * parentMatrix;
+			break;
+		case World :
+			result.setTranslation( ( localMatrix * parentMatrix ).translation() );
+			break;
+	}
+
+	return sansScaling( result );
 }
 
 void TransformTool::dragBegin()

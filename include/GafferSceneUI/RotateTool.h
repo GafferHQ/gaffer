@@ -1,7 +1,6 @@
 //////////////////////////////////////////////////////////////////////////
 //
-//  Copyright (c) 2011-2012, John Haddon. All rights reserved.
-//  Copyright (c) 2011-2014, Image Engine Design Inc. All rights reserved.
+//  Copyright (c) 2017, John Haddon. All rights reserved.
 //
 //  Redistribution and use in source and binary forms, with or without
 //  modification, are permitted provided that the following conditions are
@@ -35,55 +34,69 @@
 //
 //////////////////////////////////////////////////////////////////////////
 
-#ifndef GAFFERUI_TYPEIDS_H
-#define GAFFERUI_TYPEIDS_H
+#ifndef GAFFERSCENEUI_ROTATETOOL_H
+#define GAFFERSCENEUI_ROTATETOOL_H
 
-namespace GafferUI
+#include "GafferUI/Style.h"
+
+#include "GafferSceneUI/TransformTool.h"
+
+namespace GafferSceneUI
 {
 
-enum TypeId
-{
-	GadgetTypeId = 110251,
-	NodeGadgetTypeId = 110252,
-	GraphGadgetTypeId = 110253,
-	ContainerGadgetTypeId = 110254,
-	RenderableGadgetTypeId = 110255,
-	TextGadgetTypeId = 110256,
-	NameGadgetTypeId = 110257,
-	IndividualContainerTypeId = 110258,
-	FrameTypeId = 110259,
-	StyleTypeId = 110260,
-	StandardStyleTypeId = 110261,
-	NoduleTypeId = 110262,
-	LinearContainerTypeId = 110263,
-	ConnectionGadgetTypeId = 110264,
-	StandardNodeGadgetTypeId = 110265,
-	SplinePlugGadgetTypeId = 110266,
-	StandardNoduleTypeId = 110267,
-	CompoundNoduleTypeId = 110268,
-	ImageGadgetTypeId = 110269,
-	ViewportGadgetTypeId = 110270,
-	ViewTypeId = 110271,
-	View3DTypeId = 110272, // Obsolete - available for reuse
-	ObjectViewTypeId = 110273, // Obsolete - available for reuse
-	PlugGadgetTypeId = 110274,
-	GraphLayoutTypeId = 110275,
-	StandardGraphLayoutTypeId = 110276,
-	BackdropNodeGadgetTypeId = 110277,
-	SpacerGadgetTypeId = 110278,
-	StandardConnectionGadgetTypeId = 110279,
-	HandleTypeId = 110280,
-	ToolTypeId = 110281,
-	DotNodeGadgetTypeId = 110282,
-	PlugAdderTypeId = 110283,
-	NoduleLayoutTypeId = 110284,
-	TranslateHandleTypeId = 110285,
-	ScaleHandleTypeId = 110286,
-	RotateHandleTypeId = 110287,
+IE_CORE_FORWARDDECLARE( SceneView )
 
-	LastTypeId = 110450
+class RotateTool : public TransformTool
+{
+
+	public :
+
+		RotateTool( SceneView *view, const std::string &name = defaultName<RotateTool>() );
+		virtual ~RotateTool();
+
+		IE_CORE_DECLARERUNTIMETYPEDEXTENSION( GafferSceneUI::RotateTool, RotateToolTypeId, TransformTool );
+
+		Gaffer::IntPlug *orientationPlug();
+		const Gaffer::IntPlug *orientationPlug() const;
+
+		/// Rotates the current selection as if the specified
+		/// handle had been dragged interactively. Exists mainly
+		/// for use in the unit tests.
+		void rotate( int axis, float degrees );
+
+	protected :
+
+		virtual bool affectsHandles( const Gaffer::Plug *input ) const;
+		virtual void updateHandles();
+
+	private :
+
+		// The guts of the rotation logic. This is factored out of the
+		// drag handling so it can be shared with the `rotate()` public
+		// method.
+		struct Rotation
+		{
+			Imath::V3f originalRotation;
+			Imath::V3f axis;
+		};
+
+		Rotation createRotation( int axis );
+		Imath::V3f rotation( const Rotation &rotation, float radians ) const;
+		void applyRotation( const Rotation &rotation, float radians );
+
+		// Drag handling.
+
+		IECore::RunTimeTypedPtr dragBegin( int axis );
+		bool dragMove( const GafferUI::Gadget *gadget, const GafferUI::DragDropEvent &event );
+		bool dragEnd();
+
+		Rotation m_drag;
+
+		static ToolDescription<RotateTool, SceneView> g_toolDescription;
+		static size_t g_firstPlugIndex;
+
 };
 
-} // namespace GafferUI
+} // namespace GafferSceneUI
 
-#endif // GAFFERUI_TYPEIDS_H
+#endif // GAFFERSCENEUI_ROTATETOOL_H

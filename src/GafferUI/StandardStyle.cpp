@@ -108,6 +108,109 @@ IECoreGL::GroupPtr line( const V3f &p0, const V3f &p1 )
 	return result;
 }
 
+IECoreGL::MeshPrimitivePtr cylinder()
+{
+	static IECoreGL::MeshPrimitivePtr result;
+	if( result )
+	{
+		return result;
+	}
+
+	/// \todo Move this bit to IECore::MeshPrimitive::createCyclinder().
+	IECore::IntVectorDataPtr verticesPerFaceData = new IECore::IntVectorData;
+	vector<int> &verticesPerFace = verticesPerFaceData->writable();
+
+	IECore::IntVectorDataPtr vertexIdsData = new IECore::IntVectorData;
+	vector<int> &vertexIds = vertexIdsData->writable();
+
+	IECore::V3fVectorDataPtr pData = new IECore::V3fVectorData;
+	vector<V3f> &p = pData->writable();
+
+	const float height = 1.0f;
+	const float radius = 0.03f;
+
+	const int numDivisions = 30;
+	for( int i = 0; i < numDivisions; ++i )
+	{
+		const float angle = 2 * M_PI * (float)i/(float)(numDivisions-1);
+
+		p.push_back( V3f( radius * cos( angle ), 0, radius * sin( angle ) ) );
+		p.push_back( V3f( radius * cos( angle ), height, radius * sin( angle ) ) );
+
+		verticesPerFace.push_back( 4 );
+
+		vertexIds.push_back( i * 2 );
+		vertexIds.push_back( i * 2 + 1 );
+
+		const int ii = i == numDivisions - 1 ? 0 : i + 1;
+
+		vertexIds.push_back( ii * 2 + 1 );
+		vertexIds.push_back( ii * 2 );
+	}
+
+	IECore::MeshPrimitivePtr mesh = new IECore::MeshPrimitive( verticesPerFaceData, vertexIdsData, "linear", pData );
+	IECoreGL::ToGLMeshConverterPtr converter = new ToGLMeshConverter( mesh );
+	result = runTimeCast<IECoreGL::MeshPrimitive>( converter->convert() );
+
+	return result;
+}
+
+IECoreGL::MeshPrimitivePtr torus()
+{
+	static IECoreGL::MeshPrimitivePtr result;
+	if( result )
+	{
+		return result;
+	}
+
+	/// \todo Move this bit to IECore::MeshPrimitive::createTorus().
+	IECore::IntVectorDataPtr verticesPerFaceData = new IECore::IntVectorData;
+	vector<int> &verticesPerFace = verticesPerFaceData->writable();
+
+	IECore::IntVectorDataPtr vertexIdsData = new IECore::IntVectorData;
+	vector<int> &vertexIds = vertexIdsData->writable();
+
+	IECore::V3fVectorDataPtr pData = new IECore::V3fVectorData;
+	vector<V3f> &p = pData->writable();
+
+	const float radiusI = 1;
+	const float radiusJ = 0.03;
+
+	const int numDivisionsI = 30;
+	const int numDivisionsJ = 15;
+	for( int i = 0; i < numDivisionsI; ++i )
+	{
+		const float iAngle = 2 * M_PI * (float)i/(float)(numDivisionsI-1);
+		const V3f v( cos( iAngle ), 0, sin( iAngle ) );
+		const V3f circleCenter = v * radiusI;
+
+		const int ii = i == numDivisionsI - 1 ? 0 : i + 1;
+
+		for( int j = 0; j < numDivisionsJ; ++j )
+		{
+			const float jAngle = 2 * M_PI * (float)j/(float)(numDivisionsJ-1);
+			p.push_back(
+				circleCenter + radiusJ * ( cos( jAngle ) * v + V3f( 0, sin( jAngle ), 0 ) )
+			);
+
+			const int jj = j == numDivisionsJ - 1 ? 0 : j + 1;
+
+			verticesPerFace.push_back( 4 );
+
+			vertexIds.push_back( i * numDivisionsJ + j );
+			vertexIds.push_back( i * numDivisionsJ + jj );
+			vertexIds.push_back( ii * numDivisionsJ + jj );
+			vertexIds.push_back( ii * numDivisionsJ + j );
+		}
+	}
+
+	IECore::MeshPrimitivePtr mesh = new IECore::MeshPrimitive( verticesPerFaceData, vertexIdsData, "linear", pData );
+	IECoreGL::ToGLMeshConverterPtr converter = new ToGLMeshConverter( mesh );
+	result = runTimeCast<IECoreGL::MeshPrimitive>( converter->convert() );
+
+	return result;
+}
+
 IECoreGL::MeshPrimitivePtr cone()
 {
 	static IECoreGL::MeshPrimitivePtr result;
@@ -183,14 +286,53 @@ IECoreGL::GroupPtr translateHandle( Style::Axes axes )
 
 	IECoreGL::GroupPtr coneGroup = new IECoreGL::Group;
 	coneGroup->addChild( cone() );
-	coneGroup->setTransform( M44f().scale( V3f( 0.15 ) ) * M44f().translate( V3f( 0, 1, 0 ) ) );
+	coneGroup->setTransform( M44f().scale( V3f( 0.25 ) ) * M44f().translate( V3f( 0, 1, 0 ) ) );
 
 	IECoreGL::GroupPtr group = new IECoreGL::Group;;
 
+	// Line ensures minimum width when very small on screen,
+	// like the corner gnomon in the SceneView.
 	group->addChild( line( V3f( 0 ), V3f( 0, 1, 0 ) ) );
+	// Cylinder provides a chunkier handle for picking when
+	// bigger on screen, like the TranslateHandle.
+	group->addChild( cylinder() );
 	group->addChild( coneGroup );
 
-	group->getState()->add( new IECoreGL::DepthTestStateComponent( false ) );
+	group->getState()->add( new IECoreGL::Color( colorForAxes( axes ) ) );
+	group->getState()->add(
+		new IECoreGL::ShaderStateComponent( ShaderLoader::defaultShaderLoader(), TextureLoader::defaultTextureLoader(), "", "", IECoreGL::Shader::constantFragmentSource(), new CompoundObject )
+	);
+
+	if( axis == 0 )
+	{
+		group->setTransform( M44f().rotate( V3f( 0, 0, -M_PI / 2.0f ) ) );
+	}
+	else if( axis == 2 )
+	{
+		group->setTransform( M44f().rotate( V3f( M_PI / 2.0f, 0, 0 ) ) );
+	}
+
+	handles[axis] = group;
+	return group;
+}
+
+IECoreGL::GroupPtr rotateHandle( Style::Axes axes )
+{
+	if( axes < Style::X || axes > Style::Z )
+	{
+		throw Exception( "Unsupported axes" );
+	}
+	const int axis = (int)axes;
+
+	static IECoreGL::GroupPtr handles[3];
+	if( handles[axis] )
+	{
+		return handles[axis];
+	}
+
+	IECoreGL::GroupPtr group = new IECoreGL::Group;
+	group->addChild( torus() );
+
 	group->getState()->add( new IECoreGL::Color( colorForAxes( axes ) ) );
 	group->getState()->add(
 		new IECoreGL::ShaderStateComponent( ShaderLoader::defaultShaderLoader(), TextureLoader::defaultTextureLoader(), "", "", IECoreGL::Shader::constantFragmentSource(), new CompoundObject )
@@ -222,29 +364,31 @@ IECoreGL::GroupPtr scaleHandle( Style::Axes axes )
 		return handles[axes];
 	}
 
-	V3f offset( 0.0f );
-	if( axes <= Style::Z )
-	{
-		offset[axes] = 1.0f;
-	}
-
 	IECoreGL::GroupPtr cubeGroup = new IECoreGL::Group;
 	cubeGroup->addChild( cube() );
-	cubeGroup->setTransform( M44f().scale( V3f( 0.075 ) ) * M44f().translate( offset ) );
+	cubeGroup->setTransform( M44f().scale( V3f( 0.1 ) ) * M44f().translate( V3f( 0, axes == Style::XYZ ? 0 : 1, 0 ) ) );
 
 	IECoreGL::GroupPtr group = new IECoreGL::Group;;
 
 	if( axes <= Style::Z )
 	{
-		group->addChild( line( V3f( 0 ), offset ) );
+		group->addChild( cylinder() );
 	}
 	group->addChild( cubeGroup );
 
-	group->getState()->add( new IECoreGL::DepthTestStateComponent( false ) );
 	group->getState()->add( new IECoreGL::Color( colorForAxes( axes ) ) );
 	group->getState()->add(
 		new IECoreGL::ShaderStateComponent( ShaderLoader::defaultShaderLoader(), TextureLoader::defaultTextureLoader(), "", "", IECoreGL::Shader::constantFragmentSource(), new CompoundObject )
 	);
+
+	if( axes == Style::X )
+	{
+		group->setTransform( M44f().rotate( V3f( 0, 0, -M_PI / 2.0f ) ) );
+	}
+	else if( axes == Style::Z )
+	{
+		group->setTransform( M44f().rotate( V3f( M_PI / 2.0f, 0, 0 ) ) );
+	}
 
 	handles[axes] = group;
 	return group;
@@ -612,6 +756,15 @@ void StandardStyle::renderTranslateHandle( Axes axes, State state ) const
 	IECoreGL::State::ScopedBinding highlight( *m_highlightState, *glState, state == HighlightedState );
 	IECoreGL::State::ScopedBinding disabled( *disabledState(), *glState, state == DisabledState );
 	translateHandle( axes )->render( glState );
+}
+
+void StandardStyle::renderRotateHandle( Axes axes, State state ) const
+{
+	IECoreGL::State::bindBaseState();
+	IECoreGL::State *glState = const_cast<IECoreGL::State *>( IECoreGL::State::defaultState() );
+	IECoreGL::State::ScopedBinding highlight( *m_highlightState, *glState, state == HighlightedState );
+	IECoreGL::State::ScopedBinding disabled( *disabledState(), *glState, state == DisabledState );
+	rotateHandle( axes )->render( glState );
 }
 
 void StandardStyle::renderScaleHandle( Axes axes, State state ) const

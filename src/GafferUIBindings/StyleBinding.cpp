@@ -85,6 +85,8 @@ void GafferUIBindings::bindStyle()
 		.def( "renderBackdrop", &Style::renderBackdrop )
 
 		.def( "renderTranslateHandle", &Style::renderTranslateHandle )
+		.def( "renderRotateHandle", &Style::renderRotateHandle )
+		.def( "renderScaleHandle", &Style::renderScaleHandle )
 
 		.def( "changedSignal", &Style::changedSignal, return_internal_reference<1>() )
 		.def( "getDefaultStyle", &Style::getDefaultStyle ).staticmethod( "getDefaultStyle" )
