@@ -68,10 +68,10 @@ Gaffer.Metadata.registerNode(
 			""",
 
 			"plugValueWidget:type", "GafferUI.FileSystemPathPlugValueWidget",
-			"pathPlugValueWidget:leaf", True,
-			"pathPlugValueWidget:valid", True,
-			"pathPlugValueWidget:bookmarks", "sceneCache",
-			"fileSystemPathPlugValueWidget:extensions", IECore.StringVectorData( [ "abc" ] ),
+			"path:leaf", True,
+			"path:valid", True,
+			"path:bookmarks", "sceneCache",
+			"fileSystemPath:extensions", "abc",
 
 		],
 

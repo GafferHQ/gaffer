@@ -293,9 +293,9 @@ Gaffer.Metadata.registerNode(
 		"options.statisticsFileName.value" : [
 
 			"plugValueWidget:type", "GafferUI.FileSystemPathPlugValueWidget",
-			"pathPlugValueWidget:leaf", True,
-			"pathPlugValueWidget:bookmarks", "statistics",
-			"fileSystemPathPlugValueWidget:extensions", IECore.StringVectorData( [ "htm", "html", "txt", "stats" ] ),
+			"path:leaf", True,
+			"path:bookmarks", "statistics",
+			"fileSystemPath:extensions", "htm html txt stats",
 
 		],
 

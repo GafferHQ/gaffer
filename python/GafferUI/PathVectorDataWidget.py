@@ -60,6 +60,10 @@ class PathVectorDataWidget( GafferUI.VectorDataWidget ) :
 
 		self.__editConnection = self.editSignal().connect( Gaffer.WeakMethod( self.__edit ) )
 
+	def path( self ) :
+
+		return self.__path
+
 	def setData( self, data ) :
 
 		if isinstance( data, list ) :

@@ -130,7 +130,7 @@ Gaffer.Metadata.registerNode(
 		"options.renderCamera.value" : [
 
 			"plugValueWidget:type", "GafferSceneUI.ScenePathPlugValueWidget",
-			"pathPlugValueWidget:valid", True,
+			"path:valid", True,
 			"scenePathPlugValueWidget:setNames", IECore.StringVectorData( [ "__cameras" ] ),
 			"scenePathPlugValueWidget:setsLabel", "Show only cameras",
 

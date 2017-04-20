@@ -218,6 +218,7 @@ from PathPlugValueWidget import PathPlugValueWidget
 from FileSystemPathPlugValueWidget import FileSystemPathPlugValueWidget
 from VectorDataPlugValueWidget import VectorDataPlugValueWidget
 from PathVectorDataPlugValueWidget import PathVectorDataPlugValueWidget
+from FileSystemPathVectorDataPlugValueWidget import FileSystemPathVectorDataPlugValueWidget
 from PlugWidget import PlugWidget
 from PlugLayout import PlugLayout
 from EditorWidget import EditorWidget

@@ -1,6 +1,6 @@
 ##########################################################################
 #
-#  Copyright (c) 2011-2012, John Haddon. All rights reserved.
+#  Copyright (c) 2017, Image Engine Design Inc. All rights reserved.
 #
 #  Redistribution and use in source and binary forms, with or without
 #  modification, are permitted provided that the following conditions are
@@ -34,66 +34,39 @@
 #
 ##########################################################################
 
-import IECore
-
 import Gaffer
 import GafferUI
-import GafferCortex
 
-Gaffer.Metadata.registerNode(
+## Supported plug metadata :
+#
+# - "fileSystemPath:extensions"
+# - "fileSystemPath:extensionsLabel"
+class FileSystemPathVectorDataPlugValueWidget( GafferUI.PathVectorDataPlugValueWidget ) :
 
-	GafferCortex.ObjectReader,
+	def __init__( self, plug, **kw ) :
 
-	"description",
-	"""
-	Loads objects from disk using the readers provided by
-	the Cortex project. In most cases it is preferable to
-	use a dedicated SceneReader or ImageReader instead of
-	this node.
-	""",
+		GafferUI.PathVectorDataPlugValueWidget.__init__( self, plug, Gaffer.FileSystemPath(), **kw )
 
-	plugs = {
+	def _updateFromPlug( self ) :
 
-		"fileName" : [
+		GafferUI.PathVectorDataPlugValueWidget._updateFromPlug( self )
 
-			"description",
-			"""
-			The file to load.
-			""",
+		self.path().setFilter(
+			Gaffer.FileSystemPath.createStandardFilter(
+				self.__extensions(),
+				Gaffer.Metadata.value( self.getPlug(), "fileSystemPath:extensionsLabel" ) or "",
+			)
+		)
 
-			"nodule:type", "",
-			"plugValueWidget:type", "GafferUI.FileSystemPathPlugValueWidget",
-			"path:leaf", True,
-			"path:valid", True,
-			"path:bookmarks", "cortex",
-			"fileSystemPath:extensions", " ".join( IECore.Reader.supportedExtensions() ),
-			"fileSystemPath:extensionsLabel", "Show only supported files",
+	def __extensions( self ) :
 
-		],
+		if self.getPlug() is None :
+			return []
 
-		"out" : [
+		extensions = Gaffer.Metadata.value( self.getPlug(), "fileSystemPath:extensions" ) or []
+		if isinstance( extensions, str ) :
+			extensions = extensions.split()
+		else :
+			extensions = list( extensions )
 
-			"description",
-			"""
-			The loaded object. Note that the ObjectToScene node may
-			be used to convert this for use with the GafferScene
-			module.
-			""",
-
-			"plugValueWidget:type", "",
-
-		]
-
-	}
-
-)
-
-##########################################################################
-# PlugValueWidgets
-##########################################################################
-
-def __createParameterWidget( plug ) :
-
-	return GafferCortexUI.CompoundParameterValueWidget( plug.node().parameterHandler(), collapsible=False )
-
-GafferUI.PlugValueWidget.registerCreator( GafferCortex.ObjectReader, "parameters", __createParameterWidget )
+		return extensions

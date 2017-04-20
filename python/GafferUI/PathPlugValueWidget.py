@@ -45,9 +45,9 @@ import GafferUI
 ## Supported plug metadata - used to provide arguments to a
 # PathChooserDialogue :
 #
-# - "pathPlugValueWidget:leaf"
-# - "pathPlugValueWidget:valid"
-# - "pathPlugValueWidget:bookmarks"
+# - "path:leaf"
+# - "path:valid"
+# - "path:bookmarks"
 class PathPlugValueWidget( GafferUI.PlugValueWidget ) :
 
 	## path should be an instance of Gaffer.Path, optionally with
@@ -114,10 +114,10 @@ class PathPlugValueWidget( GafferUI.PlugValueWidget ) :
 		# get the keywords for the dialogue constructor
 		# from the plug metadata.
 		pathChooserDialogueKeywords = {}
-		pathChooserDialogueKeywords["leaf"] = Gaffer.Metadata.value( self.getPlug(), "pathPlugValueWidget:leaf" )
-		pathChooserDialogueKeywords["valid"] = Gaffer.Metadata.value( self.getPlug(), "pathPlugValueWidget:valid" )
+		pathChooserDialogueKeywords["leaf"] = self.__metadataValue( "leaf" )
+		pathChooserDialogueKeywords["valid"] = self.__metadataValue( "valid" )
 
-		bookmarks = Gaffer.Metadata.value( self.getPlug(), "pathPlugValueWidget:bookmarks" )
+		bookmarks = self.__metadataValue( "bookmarks" )
 		if bookmarks is not None :
 			pathChooserDialogueKeywords["bookmarks"] = GafferUI.Bookmarks.acquire( self.getPlug(), type( pathCopy ), bookmarks )
 
@@ -172,3 +172,12 @@ class PathPlugValueWidget( GafferUI.PlugValueWidget ) :
 		if chosenPath is not None :
 			self.__path.setFromString( str( chosenPath ) )
 			self.__setPlugValue()
+
+	def __metadataValue( self, name ) :
+
+		v = Gaffer.Metadata.value( self.getPlug(), "path:" + name )
+		if v is None :
+			# Fall back to old metadata names
+			v = Gaffer.Metadata.value( self.getPlug(), "pathPlugValueWidget:" + name )
+
+		return v

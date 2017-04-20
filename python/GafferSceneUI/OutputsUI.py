@@ -94,8 +94,8 @@ Gaffer.Metadata.registerNode(
 		"outputs.*.fileName" : [
 
 			"plugValueWidget:type", "GafferUI.FileSystemPathPlugValueWidget",
-			"pathPlugValueWidget:bookmarks", "image",
-			"pathPlugValueWidget:leaf", True,
+			"path:bookmarks", "image",
+			"path:leaf", True,
 
 		],
 
