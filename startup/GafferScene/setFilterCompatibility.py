@@ -1,6 +1,6 @@
 ##########################################################################
 #
-#  Copyright (c) 2014, Image Engine Design Inc. All rights reserved.
+#  Copyright (c) 2017, Image Engine Design Inc. All rights reserved.
 #
 #  Redistribution and use in source and binary forms, with or without
 #  modification, are permitted provided that the following conditions are
@@ -35,53 +35,18 @@
 ##########################################################################
 
 import Gaffer
-import GafferUI
 import GafferScene
 
-##########################################################################
-# Metadata
-##########################################################################
+# Provides backwards compatibility by allowing access to "setExpression" plug
+# using its old name of "set".
+def __setFilterGetItem( originalGetItem ) :
 
-Gaffer.Metadata.registerNode(
+	def getItem( self, key ) :
 
-	GafferScene.SetFilter,
+		key = "setExpression" if key == "set" else key
+		return originalGetItem( self, key )
 
-	"description",
-	"""
-	A filter which uses sets to define which locations are matched.
-	""",
+	return getItem
 
-	plugs = {
 
-		"setExpression" : [
-
-			"description",
-			"""
-			A set expression that computes a set that defines
-			the locations to be matched.
-
-			For example, the expression "mySpheresSet | myCubesSet"
-			will create a set that contains all objects in
-			mySpheresSet and myCubesSet.
-
-			Gaffer supports the union operator (|) as shown in the
-			example and also provides intersection (&) and difference (-)
-			operations for set expressions. Names of locations
-			can be used to represent a set that contains only
-			that one location.
-
-			For more examples please consult the Scripting Reference
-			section in Gaffer's documentation.
-
-			The context menu of the set expression text field provides
-			entries that help construct set expressions.
-			""",
-
-			"ui:scene:acceptsSetExpression", True,
-			"nodule:type", "",
-
-		],
-
-	}
-
-)
+GafferScene.SetFilter.__getitem__ = __setFilterGetItem( GafferScene.SetFilter.__getitem__ )

@@ -787,7 +787,7 @@ class SceneView::LookThrough : public boost::signals::trackable
 			// We use a LightToCamera node filtered to all lights to create camera standins so that we can
 			// look through lights
 			SetFilterPtr lightFilter = new SetFilter;
-			lightFilter->setPlug()->setValue( "__lights" );
+			lightFilter->setExpressionPlug()->setValue( "__lights" );
 
 			LightToCameraPtr lightConverter = new LightToCamera;
 			lightConverter->inPlug()->setInput( view->inPlug<ScenePlug>() );

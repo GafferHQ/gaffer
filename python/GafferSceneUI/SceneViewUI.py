@@ -302,10 +302,10 @@ class _LookThroughPlugValueWidget( GafferUI.PlugValueWidget ) :
 		# Must parent this filter to validFilter so it remains alive
 		# after returning from this method.
 		validFilter["__camerasFilter"] = GafferScene.SetFilter()
-		validFilter["__camerasFilter"]["set"].setValue( "__cameras" )
+		validFilter["__camerasFilter"]["setExpression"].setValue( "__cameras" )
 
 		validFilter["__lightsFilter"] = GafferScene.SetFilter()
-		validFilter["__lightsFilter"]["set"].setValue( "__lights" )
+		validFilter["__lightsFilter"]["setExpression"].setValue( "__lights" )
 
 		validFilter["in"][0].setInput( validFilter["__camerasFilter"]["out"] )
 		validFilter["in"][1].setInput( validFilter["__lightsFilter"]["out"] )

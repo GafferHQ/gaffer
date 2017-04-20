@@ -40,6 +40,7 @@
 #include "GafferScene/ScenePlug.h"
 #include "GafferScene/PathMatcherData.h"
 #include "GafferScene/SetFilter.h"
+#include "GafferScene/SetAlgo.h"
 
 using namespace GafferScene;
 using namespace Gaffer;
@@ -55,31 +56,48 @@ SetFilter::SetFilter( const std::string &name )
 {
 	storeIndexOfNextChild( g_firstPlugIndex );
 
-	addChild( new StringPlug( "set" ) );
+	addChild( new StringPlug( "setExpression" ) );
+	addChild( new PathMatcherDataPlug( "__expressionResult", Gaffer::Plug::Out, new PathMatcherData ) );
 }
 
 SetFilter::~SetFilter()
 {
 }
 
-Gaffer::StringPlug *SetFilter::setPlug()
+Gaffer::StringPlug *SetFilter::setExpressionPlug()
 {
 	return getChild<StringPlug>( g_firstPlugIndex );
 }
 
-const Gaffer::StringPlug *SetFilter::setPlug() const
+const Gaffer::StringPlug *SetFilter::setExpressionPlug() const
 {
 	return getChild<StringPlug>( g_firstPlugIndex );
+}
+
+PathMatcherDataPlug *SetFilter::expressionResultPlug()
+{
+	return getChild<PathMatcherDataPlug>( g_firstPlugIndex + 1 );
+}
+
+const PathMatcherDataPlug *SetFilter::expressionResultPlug() const
+{
+	return getChild<PathMatcherDataPlug>( g_firstPlugIndex + 1 );
 }
 
 void SetFilter::affects( const Gaffer::Plug *input, AffectedPlugsContainer &outputs ) const
 {
 	Filter::affects( input, outputs );
 
-	if( input == setPlug() )
+	if( input == setExpressionPlug() )
+	{
+		outputs.push_back( expressionResultPlug() );
+	}
+
+	if( input == expressionResultPlug() )
 	{
 		outputs.push_back( outPlug() );
 	}
+
 }
 
 bool SetFilter::sceneAffectsMatch( const ScenePlug *scene, const Gaffer::ValuePlug *child ) const
@@ -90,6 +108,28 @@ bool SetFilter::sceneAffectsMatch( const ScenePlug *scene, const Gaffer::ValuePl
 	}
 
 	return child == scene->setPlug();
+}
+
+void SetFilter::hash( const Gaffer::ValuePlug *output, const Gaffer::Context *context, IECore::MurmurHash &h ) const
+{
+	Filter::hash( output, context, h );
+
+	if( output == expressionResultPlug() )
+	{
+		SetAlgo::setExpressionHash( setExpressionPlug()->getValue(), getInputScene( context ), h );
+	}
+
+}
+
+void SetFilter::compute( Gaffer::ValuePlug *output, const Gaffer::Context *context ) const
+{
+	Filter::compute( output, context );
+
+	if( output == expressionResultPlug() )
+	{
+		PathMatcherDataPtr data = new PathMatcherData( SetAlgo::evaluateSetExpression( setExpressionPlug()->getValue(), getInputScene( context ) ) );
+		static_cast<PathMatcherDataPlug *>( output )->setValue( data );
+	}
 }
 
 void SetFilter::hashMatch( const ScenePlug *scene, const Gaffer::Context *context, IECore::MurmurHash &h ) const
@@ -118,7 +158,10 @@ void SetFilter::hashMatch( const ScenePlug *scene, const Gaffer::Context *contex
 		h.append( &(path[0]), path.size() );
 	}
 
-	h.append( scene->setHash( setPlug()->getValue() ) );
+	Gaffer::Context::EditableScope expressionResultScope( context );
+	expressionResultScope.remove( ScenePlug::scenePathContextName );
+
+	expressionResultPlug()->hash( h );
 }
 
 unsigned SetFilter::computeMatch( const ScenePlug *scene, const Gaffer::Context *context ) const
@@ -129,7 +172,11 @@ unsigned SetFilter::computeMatch( const ScenePlug *scene, const Gaffer::Context 
 	}
 
 	const ScenePlug::ScenePath &path = context->get<ScenePlug::ScenePath>( ScenePlug::scenePathContextName );
-	ConstPathMatcherDataPtr set = scene->set( setPlug()->getValue() );
+
+	Gaffer::Context::EditableScope expressionResultScope( context );
+	expressionResultScope.remove( ScenePlug::scenePathContextName );
+
+	ConstPathMatcherDataPtr set = expressionResultPlug()->getValue();
 
 	return set->readable().match( path );
 }
