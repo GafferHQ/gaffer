@@ -104,6 +104,12 @@ class stats( Gaffer.Application ) :
 					defaultValue = 1,
 				),
 
+				IECore.BoolParameter(
+					name = "nodeSummary",
+					description = "Turns on a summary of nodes in the script.",
+					defaultValue = True,
+				),
+
 				IECore.StringParameter(
 					name = "scene",
 					description = "The name of a SceneNode or ScenePlug to examine.",
@@ -209,7 +215,9 @@ class stats( Gaffer.Application ) :
 
 			self.__output.write( "\n" )
 
-			self.__writeNodes( script )
+			if args["nodeSummary"].value :
+
+				self.__writeNodes( script )
 
 			if args["scene"].value :
 
