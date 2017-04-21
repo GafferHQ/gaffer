@@ -13,6 +13,9 @@ Breaking Changes
       channels that correspond directly to the output RGBA plugs. Behaviour is
       unchanged apart from situations where an incomplete or ambiguous channel
       mask was in use.
+  - Warp : New API (#1980).
+    - Engine no longer depends on channelName.
+    - Derived classes no longer responsible for computing inputWindow.
 - API :
   - Renamed UndoContext to UndoScope (#2049).
   - Removed `Nodule::registerNodule()` overload which took a plug name regex.
@@ -23,7 +26,6 @@ Breaking Changes
   - Removed ChannelMaskPlug.  Use a StringPlug and `StringAlgo::matchMultiple()`
     instead (#2021).
   - Renamed renderer backends to "Arnold" and "Appleseed" (#1994).
-  - Renamed UndoContext to UndoScope (#2049).
   - Added virtual method to Style class (#2051).
 
 Features
@@ -39,6 +41,7 @@ Features
   - SetFilter : Added support for using arbitrary set expressions instead of
     just a single set (#2052).
   - Added RotateTool for interactively rotating objects in the viewport (#2051).
+  - Added MeshTangents node to compute Tangent & Binormal primitive variables on a mesh (#2028).
 - Image
   - Added Median node (#2022)
   - Added Mix node (#2026)
