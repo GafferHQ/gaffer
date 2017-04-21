@@ -148,6 +148,25 @@ class NodeSetEditor( GafferUI.EditorWidget ) :
 
 		return editor
 
+	## Consistently create a floating window with a new editor of this class type
+	@classmethod
+	def create( cls, node ) :
+
+		if isinstance( node, Gaffer.ScriptNode ) :
+			script = node
+		else :
+			script = node.scriptNode()
+
+		scriptWindow = GafferUI.ScriptWindow.acquire( script )
+
+		editor = cls( script )
+		editor.setNodeSet( Gaffer.StandardSet( [ node ] ) )
+
+		window = _EditorWindow( scriptWindow, editor )
+		window.setVisible( True )
+
+		return editor
+
 	def _lastAddedNode( self ) :
 
 		if len( self.__nodeSet ) :
