@@ -90,6 +90,14 @@ class stats( Gaffer.Application ) :
 					check = IECore.FileNameParameter.CheckType.MustExist,
 				),
 
+				IECore.FileNameParameter(
+					name = "outputFile",
+					description = "Output the results to this file on disk rather than stdout",
+					defaultValue = "",
+					allowEmptyString = True,
+					extensions = "",
+				),
+
 				IECore.FloatParameter(
 					name = "frame",
 					description = "The frame to evaluate statistics at.",
@@ -179,7 +187,7 @@ class stats( Gaffer.Application ) :
 		else :
 			self.__contextMonitor = None
 
-		self.__output = sys.stdout
+		self.__output = file( args["outputFile"].value, "w" ) if args["outputFile"].value else sys.stdout
 		
 		with Gaffer.Context( script.context() ) as context :
 
@@ -225,6 +233,8 @@ class stats( Gaffer.Application ) :
 
 		self.__output.write( "\n" )
 
+		self.__output.close()
+		
 		return 0
 
 	def __writeVersion( self, script ) :
