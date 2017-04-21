@@ -52,13 +52,13 @@ class stats( Gaffer.Application ) :
 		Gaffer.Application.__init__(
 			self,
 			"""
-			Prints statistics about a Gaffer script, including the version of
+			Outputs statistics about a Gaffer script, including the version of
 			Gaffer that created it, the values of all setting and variables and
 			the types of node in use. May also be used to perform performance
 			analysis of image and scene processing nodes within the script, using
 			a performance monitor to generate advanced statistics.
 
-			To print basic information about a script :
+			To output basic information about a script :
 
 			```
 			gaffer stats fileName.gfr
@@ -179,53 +179,55 @@ class stats( Gaffer.Application ) :
 		else :
 			self.__contextMonitor = None
 
+		self.__output = sys.stdout
+		
 		with Gaffer.Context( script.context() ) as context :
 
 			context.setFrame( args["frame"].value )
 
-			self.__printVersion( script )
+			self.__writeVersion( script )
 
-			print ""
+			self.__output.write( "\n" )
 
-			self.__printArgs( args )
+			self.__writeArgs( args )
 
-			print ""
+			self.__output.write( "\n" )
 
-			self.__printSettings( script )
+			self.__writeSettings( script )
 
-			print ""
+			self.__output.write( "\n" )
 
-			self.__printVariables( script )
+			self.__writeVariables( script )
 
-			print ""
+			self.__output.write( "\n" )
 
-			self.__printNodes( script )
+			self.__writeNodes( script )
 
 			if args["scene"].value :
 
-				self.__printScene( script, args )
+				self.__writeScene( script, args )
 
 			if args["image"].value :
 
-				self.__printImage( script, args )
+				self.__writeImage( script, args )
 
-		print ""
+		self.__output.write( "\n" )
 
-		self.__printMemory()
+		self.__writeMemory()
 
-		print ""
+		self.__output.write( "\n" )
 
-		self.__printPerformance( script, args )
+		self.__writePerformance( script, args )
 
-		print ""
+		self.__output.write( "\n" )
 
-		self.__printContext( script, args )
+		self.__writeContext( script, args )
 
-		print
+		self.__output.write( "\n" )
 
 		return 0
 
-	def __printVersion( self, script ) :
+	def __writeVersion( self, script ) :
 
 		numbers = [ Gaffer.Metadata.nodeValue( script, "serialiser:" + x + "Version" ) for x in ( "milestone", "major", "minor", "patch" ) ]
 		if None not in numbers :
@@ -238,24 +240,24 @@ class stats( Gaffer.Application ) :
 			( "Current", Gaffer.About.versionString() ),
 		)
 
-		print "Gaffer Version :\n"
-		self.__printItems( versions )
+		self.__output.write( "Gaffer Version :\n\n" )
+		self.__writeItems( versions )
 
-	def __printItems( self, items ) :
+	def __writeItems( self, items ) :
 
 		if not len( items ) :
 			return
 
 		width = max( [ len( x[0] ) for x in items ] ) + 4
 		for name, value in items :
-			print "  {name:<{width}}{value}".format( name = name, width = width, value = value )
+			self.__output.write( "  {name:<{width}}{value}\n".format( name = name, width = width, value = value ) )
 
-	def __printArgs( self, args ) :
+	def __writeArgs( self, args ) :
 
-		print "Args :\n"
-		self.__printItems( args.items() )
+		self.__output.write( "Args :\n\n" )
+		self.__writeItems( args.items() )
 
-	def __printSettings( self, script ) :
+	def __writeSettings( self, script ) :
 
 		plugsToIgnore = {
 			script["fileName"],
@@ -277,10 +279,10 @@ class stats( Gaffer.Application ) :
 
 		itemsWalk( script )
 
-		print "Settings :\n"
-		self.__printItems( items )
+		self.__output.write( "Settings :\n\n" )
+		self.__writeItems( items )
 
-	def __printVariables( self, script ) :
+	def __writeVariables( self, script ) :
 
 		items = []
 		for p in script["variables"] :
@@ -288,10 +290,10 @@ class stats( Gaffer.Application ) :
 			if data is not None :
 				items.append( ( name, data ) )
 
-		print "Variables :\n"
-		self.__printItems( items )
+		self.__output.write( "Variables :\n\n" )
+		self.__writeItems( items )
 
-	def __printNodes( self, script ) :
+	def __writeNodes( self, script ) :
 
 		def countWalk( node, counter ) :
 
@@ -310,10 +312,10 @@ class stats( Gaffer.Application ) :
 			( "Total", sum( counter.values() ) ),
 		] )
 
-		print "Nodes :\n"
-		self.__printItems( items )
+		self.__output.write( "Nodes :\n\n" )
+		self.__writeItems( items )
 
-	def __printScene( self, script, args ) :
+	def __writeScene( self, script, args ) :
 
 		import GafferScene
 		import GafferSceneTest
@@ -333,11 +335,11 @@ class stats( Gaffer.Application ) :
 		self.__timers["Scene generation"] = sceneTimer
 		self.__memory["Scene generation"] = _Memory.maxRSS() - memory
 
-		## \todo Calculate and print scene stats
+		## \todo Calculate and write scene stats
 		#  - Locations
 		#  - Unique objects, attributes etc
 
-	def __printImage( self, script, args ) :
+	def __writeImage( self, script, args ) :
 
 		import GafferImage
 		import GafferImageTest
@@ -365,10 +367,10 @@ class stats( Gaffer.Application ) :
 			( "Channel names", image["channelNames"].getValue() ),
 		]
 
-		print "\nImage :\n"
-		self.__printItems( items )
+		self.__output.write( "\nImage :\n\n" )
+		self.__writeItems( items )
 
-	def __printMemory( self ) :
+	def __writeMemory( self ) :
 
 		objectPool = IECore.ObjectPool.defaultObjectPool()
 
@@ -385,32 +387,34 @@ class stats( Gaffer.Application ) :
 			( "Max resident size", _Memory.maxRSS() ),
 		] )
 
-		print "Memory :\n"
-		self.__printItems( items )
+		self.__output.write( "Memory :\n\n" )
+		self.__writeItems( items )
 
-	def __printStatisticsItems( self, script, stats, key, n ) :
+	def __writeStatisticsItems( self, script, stats, key, n ) :
 
 		stats.sort( key = key, reverse = True )
 		items = [ ( x[0].relativeName( script ), key( x ) ) for x in stats[:n] ]
-		self.__printItems( items )
+		self.__writeItems( items )
 
-	def __printPerformance( self, script, args ) :
+	def __writePerformance( self, script, args ) :
 
-			print "Performance :\n"
-			self.__printItems( self.__timers.items() )
+			self.__output.write( "Performance :\n\n" )
+			self.__writeItems( self.__timers.items() )
 
 			if self.__performanceMonitor is not None :
-				print "\n" + Gaffer.MonitorAlgo.formatStatistics(
-					self.__performanceMonitor,
-					maxLinesPerMetric = args["maxLinesPerMetric"].value
+				self.__output.write(
+					"\n" + Gaffer.MonitorAlgo.formatStatistics(
+						self.__performanceMonitor,
+						maxLinesPerMetric = args["maxLinesPerMetric"].value
+					)
 				)
 
-	def __printContext( self, script, args ) :
+	def __writeContext( self, script, args ) :
 
 			if self.__contextMonitor is None :
 				return
 
-			print "Contexts :\n"
+			self.__output.write( "Contexts :\n\n" )
 
 			stats = self.__contextMonitor.combinedStatistics()
 
@@ -420,7 +424,7 @@ class stats( Gaffer.Application ) :
 				( "Unique contexts", stats.numUniqueContexts() ),
 			]
 
-			self.__printItems( items )
+			self.__writeItems( items )
 
 class _Timer( object ) :
 
