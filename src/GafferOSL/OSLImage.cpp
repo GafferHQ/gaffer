@@ -117,6 +117,10 @@ void OSLImage::affects( const Gaffer::Plug *input, AffectedPlugsContainer &outpu
 		outputs.push_back( outPlug()->channelNamesPlug() );
 		outputs.push_back( outPlug()->channelDataPlug()	);
 	}
+	else if ( input->parent<ImagePlug>() == inPlug() )
+	{
+		outputs.push_back( outPlug()->getChild<ValuePlug>( input->getName() ) );
+	}
 }
 
 bool OSLImage::acceptsInput( const Gaffer::Plug *plug, const Gaffer::Plug *inputPlug ) const
