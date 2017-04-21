@@ -1,3 +1,147 @@
+0.33.0.0
+========
+
+Breaking Changes
+----------------
+
+- Image :
+  - ImageWriter : Defaults to writing all channels instead of just RGB (#2021).
+  - DeleteChannels : Changed channels plug default to "" (#2021).
+  - ImageStats : (#2018)
+    - Defaulted to sampling A in addition to RGB.
+    - Changed interpretation of ImageStats channels to simply be a list of 4
+      channels that correspond directly to the output RGBA plugs. Behaviour is
+      unchanged apart from situations where an incomplete or ambiguous channel
+      mask was in use.
+- API :
+  - Renamed UndoContext to UndoScope (#2049).
+  - Removed `Nodule::registerNodule()` overload which took a plug name regex.
+    Use "plugValueWidget:type" metadata instead (#2045).
+  - Added private data member to PerformanceMonitor (#2016).
+  - Added `createUStrings` argument to OpenImageIOAlgo::DataView
+    constructor (#2040).
+  - Removed ChannelMaskPlug.  Use a StringPlug and `StringAlgo::matchMultiple()`
+    instead (#2021).
+  - Renamed renderer backends to "Arnold" and "Appleseed" (#1994).
+  - Renamed UndoContext to UndoScope (#2049).
+  - Added virtual method to Style class (#2051).
+
+Features
+--------
+
+- Scene :
+  - Added light linking (#1985)
+    - Light links are specified as set expressions using the StandardAttributes
+      node.
+    - Currently only supported in the Arnold renderer backend.
+  - Added "scene:renderer" context variable which  can be used to query which
+    renderer a scene is being generated for (#1994).
+  - SetFilter : Added support for using arbitrary set expressions instead of
+    just a single set (#2052).
+  - Added RotateTool for interactively rotating objects in the viewport (#2051).
+- Image
+  - Added Median node (#2022)
+  - Added Mix node (#2026)
+  - Added CopyChannels node (#2006)
+  - Improved support for images with multiple layers : (#2018, #2021)
+    - Added layer selector to image viewer
+    - Added improved layer/channel selection to many nodes
+    - Added ability to use wildcards to select channels to process
+  - Added colorSpace plugs to ImageReader and ImageWriter (#2004).
+- Box : Added BoxIn and BoxOut nodes to improve the visualisation of promoted
+  plugs within the NodeGraph (#2011).
+
+Improvements
+------------
+
+- TaskList : Added "sequence plug" (#2044).
+- Improved GafferImage performance (#2016, #2031).
+- OSLShader : Added support for vector->color connections (#2042).
+- Expression : Added context menu for inserting common functions and node
+  bookmarks (#2039).
+- Stats app : Added performance monitor summary (#2016).
+- Merge : Added min and max modes (#2027).
+- Grade : Added support for grading alpha channel (#2023).
+- Warp : Improved filtering (#1980).
+- Added more string matching features #2015 :
+  - `[A-Z]` style character classes
+  - `?` to match any character
+  - '\' to escape a subsequent wildcard
+- Added mode and units settings to the UVWarp node, and renamed it to
+  VectorWarp (#2014).
+- StandardNodeGadget : Added more metadata support (#2011)
+  - "icon" to add an icon.
+  - "nodeGadget:shape" to choose a rectangular or oval shape
+
+Fixes
+-----
+
+- Shader : Fixed bug when assigning a disabled shader
+  with pass-through defined (#2025).
+- OSLCode : Fixed string length menu item (#2039).
+- Expression :
+  - Fixed string context variable comparison bug (#2040).
+  - Protected context from modification (#2010).
+- ErrorDialogue : Fixed bug in message handling code (#2030).
+- StringAlgo : Fixed bug in `matchMultiple()` (#2015).
+- Switch/Dot : Fixed plug colours in NodeGraph (#2008).
+- Transform/Resize : Fixed sinc filter (#1980).
+- Fixed export of color/vector plugs from Boxes (#2012).
+- Resize : Stopped resampling when only pixel aspect
+  ratio is changed (#2007).
+- Fixed crash in viewport mouse handling (#2005).
+- Fixed Node Reference link in help menu (#2002).
+- Fixed framing of lights in the Viewer, by giving them a default bounding
+  box (#2054).
+
+API
+---
+
+- MetadataAlgo :
+  - Added "childNodesAreReadOnly" metadata. This makes it possible to make the
+    internal nodes of a node read-only, while still allowing the external
+    plugs of the node to be edited (#2048).
+  - Added functions for bookmarking nodes (#2039).
+  - Added `childAffectedByChange()` overload for Node changes (#2029).
+  - Added `copy()` function (#2003).
+  - Added `copyColors()` function (#2008).
+- NoduleLayout : Added support for custom Gadgets to be specified via metadata
+  (#2043).
+- ImagePlug :
+- Context management (#2041, #2016) :
+  - Added Context::EditableScope utility class. Use this instead of the
+    now-deprecated Context::Borrowed copy contructor.
+  - Added PathScope/SetScope/GlobalScope utility classes to ScenePlug
+  - Added GlobalScope/ChannelDataScope utility classes to ImagePlug.
+  - Added FilterPlug::SceneScope utility class.
+- Added V2iVectorDataPlug (#2031).
+- NodeGadget :
+  - Added support for "nodeGadget:type" metadata to control the type of gadget
+    created by a node (#2029).
+- GraphGadget : Added support for dynamically changing "nodeGadget:type"
+  metadata (#2029).
+- Added ChannelPlugValueWidget (#2026).
+- Added RGBAPlugValueWidget (#2018).
+- ImageGadget : Added methods for selecting which channels to view (#2021).
+- ImageAlgo : Added `channelNames()` and `layerNames()` functions (#2019).
+- Added SetAlgo namespace with methods for evaluating set expressions (#1985).
+- PathMatcher : Added `intersection()` method (#1985).
+- Added FilterAlgo namespace with methods for doing filtered image sampling
+  (#1980).
+- SceneAlgo : Added render adaptor API. This provides a simple registry
+  of SceneProcessors which will be used internally within Render nodes
+  to perform just-in-time adaptations of the scene for rendering (#1994).
+- PlugAlgo : Added plug promotion methods (#2003).
+- Added RotateHandle class (#2051).
+
+Build
+-----
+
+- DEBUG build option now also disables optimisations (#2009).
+- Enabled coloured compiler output (#2000).
+- Updated to use Cortex 9.18.0
+- Added QtUiTools module to build package.
+
 0.32.0.0
 ========
 
