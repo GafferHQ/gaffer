@@ -273,7 +273,7 @@ class stats( Gaffer.Application ) :
 	def __writeArgs( self, args ) :
 
 		self.__output.write( "Args :\n\n" )
-		self.__writeItems( args.items() )
+		self.__writeItems( sorted( args.items() ) )
 
 	def __writeSettings( self, script ) :
 
