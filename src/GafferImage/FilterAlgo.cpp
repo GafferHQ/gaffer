@@ -333,8 +333,8 @@ float GafferImage::FilterAlgo::sampleParallelogram( Sampler &sampler, const V2f 
 	// Include any pixels where the corner max bound is above the pixel center, and
 	// the corner min bound is below the pixel center
 	Box2i pixelBounds(
-		V2i( ceilf( cornerBounds.min.x - 0.5 ), ceilf( cornerBounds.min.y - 0.5 ) ),
-		V2i( floorf( cornerBounds.max.x - 0.5 ) + 1, floorf( cornerBounds.max.y - 0.5 ) + 1 ) );
+		V2i( (int)ceilf( cornerBounds.min.x - 0.5 ), (int)ceilf( cornerBounds.min.y - 0.5 ) ),
+		V2i( (int)floorf( cornerBounds.max.x - 0.5 ) + 1, (int)floorf( cornerBounds.max.y - 0.5 ) + 1 ) );
 
 	// Invert the 2x2 Matrix formed by the derivative vectors so we can go
 	// from source pixels into the filter's coordinate system
@@ -386,8 +386,8 @@ float GafferImage::FilterAlgo::sampleBox( Sampler &sampler, const V2f &p, float 
 	// Include any pixels where the corner max bound is above the pixel center, and
 	// the corner min bound is below the pixel center
 	Box2i pixelBounds(
-		V2i( ceilf( bounds.min.x - 0.5 ), ceilf( bounds.min.y - 0.5 ) ),
-		V2i( floorf( bounds.max.x - 0.5 ) + 1, floorf( bounds.max.y - 0.5 ) + 1 ) );
+		V2i( (int)ceilf( bounds.min.x - 0.5 ), (int)ceilf( bounds.min.y - 0.5 ) ),
+		V2i( (int)floorf( bounds.max.x - 0.5 ) + 1, (int)floorf( bounds.max.y - 0.5 ) + 1 ) );
 
 	float totalW = 0.0f;
 	float v = 0.0f;

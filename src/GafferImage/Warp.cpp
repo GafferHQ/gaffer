@@ -576,8 +576,8 @@ void Warp::compute( Gaffer::ValuePlug *output, const Gaffer::Context *context ) 
 		// Include any pixels where the corner max bound is above the pixel center, and
 		// the corner min bound is below the pixel center
 		Box2i inputPixelBound(
-			V2i( ceilf( inputBound.min.x - 0.5 ), ceilf( inputBound.min.y - 0.5 ) ),
-			V2i( floorf( inputBound.max.x - 0.5 ) + 1, floorf( inputBound.max.y - 0.5 ) + 1 ) );
+			V2i( (int)ceilf( inputBound.min.x - 0.5 ), (int)ceilf( inputBound.min.y - 0.5 ) ),
+			V2i( (int)floorf( inputBound.max.x - 0.5 ) + 1, (int)floorf( inputBound.max.y - 0.5 ) + 1 ) );
 
 		CompoundObjectPtr sampleRegions = new CompoundObject();
 		sampleRegions->members()[ g_tileInputBoundName ] = new Box2iData( inputPixelBound );
