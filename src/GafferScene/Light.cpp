@@ -43,6 +43,7 @@
 
 #include "GafferScene/Light.h"
 #include "GafferScene/PathMatcherData.h"
+#include "GafferScene/SceneNode.h"
 
 using namespace Gaffer;
 using namespace GafferScene;
@@ -140,4 +141,14 @@ IECore::ConstInternedStringVectorDataPtr Light::computeStandardSetNames() const
 	IECore::InternedStringVectorDataPtr result = new IECore::InternedStringVectorData();
 	result->writable().push_back( g_lightsSetName );
 	return result;
+}
+
+void Light::hashBound( const SceneNode::ScenePath &path, const Gaffer::Context *context, const ScenePlug *parent, IECore::MurmurHash &h ) const
+{
+	SceneNode::hashBound( path, context, parent, h );
+}
+
+Imath::Box3f Light::computeBound( const SceneNode::ScenePath &path, const Gaffer::Context *context, const ScenePlug *parent ) const
+{
+	return Imath::Box3f( Imath::V3f( -.5 ), Imath::V3f( .5 ) );
 }
