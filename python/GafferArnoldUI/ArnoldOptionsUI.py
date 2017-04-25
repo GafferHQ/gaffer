@@ -48,6 +48,8 @@ def __renderingSummary( plug ) :
 		info.append( "Bucket Size %d" % plug["bucketSize"]["value"].getValue() )
 	if plug["bucketScanning"]["enabled"].getValue() :
 		info.append( "Bucket Scanning %s" % plug["bucketScanning"]["value"].getValue().capitalize() )
+	if plug["parallelNodeInit"]["enabled"].getValue() :
+		info.append( "Parallel Init %s" % plug["parallelNodeInit"]["value"].getValue() )
 	if plug["threads"]["enabled"].getValue() :
 		info.append( "Threads %d" % plug["threads"]["value"].getValue() )
 	return ", ".join( info )
@@ -233,6 +235,21 @@ Gaffer.Metadata.registerNode(
 			"plugValueWidget:type", 'GafferUI.PresetsPlugValueWidget',
 			"presetNames", IECore.StringVectorData( ["Top", "Bottom", "Left", "Right", "Random", "Woven", "Spiral", "Spiral"] ),
 			"presetValues", IECore.StringVectorData( ["top", "bottom", "left", "right", "random", "woven", "spiral", "spiral"] ),
+		],
+
+		"options.parallelNodeInit" : [
+
+			"description",
+			"""
+			Enables Arnold's parallel node initialization.
+			Note that some Arnold features may not be
+			thread-safe, in which case enabling this option
+			can cause crashes. One such example is Cryptomatte
+			and its use in the AlSurface shader.
+			""",
+
+			"layout:section", "Rendering",
+
 		],
 
 		"options.threads" : [
