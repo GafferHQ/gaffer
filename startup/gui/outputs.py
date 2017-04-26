@@ -38,6 +38,7 @@
 import IECore
 
 import GafferScene
+import GafferImageUI
 
 GafferScene.Outputs.registerOutput(
 	"Interactive/Beauty",
@@ -48,7 +49,7 @@ GafferScene.Outputs.registerOutput(
 		{
 			"driverType" : "ClientDisplayDriver",
 			"displayHost" : "localhost",
-			"displayPort" : "1559",
+			"displayPort" : "${image:catalogue:port}",
 			"remoteDisplayType" : "GafferImage::GafferDisplayDriver",
 			"quantize" : IECore.IntVectorData( [ 0, 0, 0, 0 ] ),
 		}
@@ -66,3 +67,24 @@ GafferScene.Outputs.registerOutput(
 		}
 	)
 )
+
+# Publish the Catalogue port number as a context variable, so we can refer
+# to it easily in output definitions.
+
+def __scriptAdded( parent, script ) :
+
+	if "imageCataloguePort" not in script["variables"] :
+		portNumberPlug = script["variables"].addMember( "image:catalogue:port", 0, "imageCataloguePort" )
+		Gaffer.MetadataAlgo.setReadOnly( portNumberPlug, True )
+	else :
+		portNumberPlug = script["variables"]["imageCataloguePort"]
+
+	portNumberPlug["value"].setValue( GafferImage.Catalogue.displayDriverServer().portNumber() )
+
+application.root()["scripts"].childAddedSignal().connect( __scriptAdded, scoped = False )
+
+Gaffer.Metadata.registerValue( Gaffer.ScriptNode, "variables.imageCataloguePort", "plugValueWidget:type", "" )
+
+# Store render catalogues in the project.
+
+Gaffer.Metadata.registerValue( GafferImage.Catalogue, "directory", "userDefault", "${project:rootDirectory}/catalogues/${script:name}" )
