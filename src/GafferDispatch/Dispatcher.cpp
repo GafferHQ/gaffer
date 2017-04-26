@@ -35,6 +35,7 @@
 //////////////////////////////////////////////////////////////////////////
 
 #include "boost/filesystem.hpp"
+#include "boost/algorithm/string/predicate.hpp"
 
 #include "IECore/FrameRange.h"
 #include "IECore/MessageHandler.h"
@@ -55,6 +56,7 @@ static InternedString g_batchSize( "batchSize" );
 static InternedString g_immediatePlugName( "immediate" );
 static InternedString g_postTaskIndexBlindDataName( "dispatcher:postTaskIndex" );
 static InternedString g_immediateBlindDataName( "dispatcher:immediate" );
+static InternedString g_sizeBlindDataName( "dispatcher:size" );
 static InternedString g_executedBlindDataName( "dispatcher:executed" );
 static InternedString g_visitedBlindDataName( "dispatcher:visited" );
 static InternedString g_jobDirectoryContextEntry( "dispatcher:jobDirectory" );
@@ -318,12 +320,6 @@ class Dispatcher::Batcher
 
 	private :
 
-		bool requiresBatchPerFrame( const TaskNode::Task &task )
-		{
-			return task.hash() == IECore::MurmurHash() &&
-			       !task.plug()->requiresSequenceExecution();
-		}
-
 		TaskBatchPtr batchTasksWalk( const TaskNode::Task &task, const std::set<const TaskBatch *> &ancestors = std::set<const TaskBatch *>() )
 		{
 			// Acquire a batch with this task placed in it,
@@ -387,14 +383,17 @@ class Dispatcher::Batcher
 		{
 			// See if we've previously visited this task, and therefore
 			// have placed it in a batch already, which we can return
-			// unchanged.
+			// unchanged. The `taskToBatchMapHash` is used as the unique
+			// identity of a task.
 			MurmurHash taskToBatchMapHash = task.hash();
+			// Prevent identical tasks from different nodes from being
+			// coalesced.
 			taskToBatchMapHash.append( (uint64_t)task.node() );
-			if( requiresBatchPerFrame( task ) )
+			if( task.hash() == IECore::MurmurHash() )
 			{
-				// Make sure we don't coalesce all no-ops into a single
-				// batch. See comments in batchHash().
-				taskToBatchMapHash.append( task.context()->getFrame() );
+				// Prevent no-ops from coalescing into a single batch, as this
+				// would break parallelism - see `DispatcherTest.testNoOpDoesntBreakFrameParallelism()`
+				taskToBatchMapHash.append( contextHash( task.context() ) );
 			}
 			const TaskToBatchMap::const_iterator it = m_tasksToBatches.find( taskToBatchMapHash );
 			if( it != m_tasksToBatches.end() )
@@ -405,7 +404,7 @@ class Dispatcher::Batcher
 			// We haven't seen this task before, so we need to find
 			// an appropriate batch to put it in. This may be one of
 			// our current batches, or we may need to make a new one
-			// entirely.
+			// entirely if the current batch is full.
 
 			TaskBatchPtr batch = NULL;
 			const MurmurHash batchMapHash = batchHash( task );
@@ -413,17 +412,22 @@ class Dispatcher::Batcher
 			if( bIt != m_currentBatches.end() )
 			{
 				TaskBatchPtr candidateBatch = bIt->second;
+				// Unfortunately we have to track batch size separately from `batch->frames().size()`,
+				// because no-ops don't update `frames()`, but _do_ count towards batch size.
+				IntDataPtr batchSizeData = candidateBatch->blindData()->member<IntData>( g_sizeBlindDataName );
 				const IntPlug *batchSizePlug = task.node()->dispatcherPlug()->getChild<const IntPlug>( g_batchSize );
-				const size_t batchSize = ( batchSizePlug ) ? batchSizePlug->getValue() : 1;
-				if( task.plug()->requiresSequenceExecution() || ( candidateBatch->frames().size() < batchSize ) )
+				const int batchSizeLimit = ( batchSizePlug ) ? batchSizePlug->getValue() : 1;
+				if( task.plug()->requiresSequenceExecution() || ( batchSizeData->readable() < batchSizeLimit ) )
 				{
 					batch = candidateBatch;
+					batchSizeData->writable()++;
 				}
 			}
 
 			if( !batch )
 			{
 				batch = new TaskBatch( task.plug(), task.context() );
+				batch->blindData()->writable()[g_sizeBlindDataName] = new IntData( 1 );
 				m_currentBatches[batchMapHash] = batch;
 			}
 
@@ -434,16 +438,13 @@ class Dispatcher::Batcher
 			{
 				float frame = task.context()->getFrame();
 				std::vector<float> &frames = batch->frames();
-				if( std::find( frames.begin(), frames.end(), frame ) == frames.end() )
+				if( task.plug()->requiresSequenceExecution() )
 				{
-					if( task.plug()->requiresSequenceExecution() )
-					{
-						frames.insert( std::lower_bound( frames.begin(), frames.end(), frame ), frame );
-					}
-					else
-					{
-						frames.push_back( frame );
-					}
+					frames.insert( std::lower_bound( frames.begin(), frames.end(), frame ), frame );
+				}
+				else
+				{
+					frames.push_back( frame );
 				}
 			}
 
@@ -471,28 +472,27 @@ class Dispatcher::Batcher
 		{
 			MurmurHash result;
 			result.append( (uint64_t)task.node() );
+			// We ignore the frame because the whole point of batching
+			// is to allow multiple frames to be placed in the same
+			// batch if the context is otherwise identical.
+			result.append( contextHash( task.context(), /* ignoreFrame = */ true ) );
+			return result;
+		}
 
-			const Context *context = task.context();
+		IECore::MurmurHash contextHash( const Context *context, bool ignoreFrame = false ) const
+		{
+			IECore::MurmurHash result;
 			std::vector<IECore::InternedString> names;
 			context->names( names );
 			for( std::vector<IECore::InternedString>::const_iterator it = names.begin(); it != names.end(); ++it )
 			{
 				// Ignore the UI values since they should be irrelevant
 				// to execution.
-				if( it->string().compare( 0, 3, "ui:" ) == 0 )
+				if( boost::starts_with( it->string(), "ui:" ) )
 				{
 					continue;
 				}
-				// Ignore the frame, since the whole point of batching
-				// is to allow multiple frames to be placed in the same
-				// batch if the context is otherwise identical.
-				///
-				// There is one exception to this though - if the task is
-				// a no-op, then we don't want to coalesce, because then
-				// every single frame of the no-op would be placed in the
-				// same batch, and all downstream frames would then be forced
-				// to depend unnecessarily on all upstream frames.
-				if( *it == g_frame && !requiresBatchPerFrame( task ) )
+				if( ignoreFrame && *it == g_frame )
 				{
 					continue;
 				}
@@ -500,7 +500,6 @@ class Dispatcher::Batcher
 				result.append( *it );
 				context->get<const IECore::Data>( *it )->hash( result );
 			}
-
 			return result;
 		}
 
