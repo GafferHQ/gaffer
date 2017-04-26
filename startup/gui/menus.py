@@ -284,9 +284,8 @@ nodeMenu.append( "/Scene/OpenGL/Render", GafferScene.OpenGLRender, searchText = 
 import GafferImage
 import GafferImageUI
 
-nodeMenu.append( "/Image/Source/Display", GafferImage.Display )
-nodeMenu.append( "/Image/Source/Reader", GafferImage.ImageReader, searchText = "ImageReader" )
-nodeMenu.append( "/Image/Source/Writer", GafferImage.ImageWriter, searchText = "ImageWriter" )
+nodeMenu.append( "/Image/File/Reader", GafferImage.ImageReader, searchText = "ImageReader" )
+nodeMenu.append( "/Image/File/Writer", GafferImage.ImageWriter, searchText = "ImageWriter" )
 nodeMenu.append( "/Image/Shape/Text", GafferImage.Text, postCreator = GafferImageUI.TextUI.postCreate )
 nodeMenu.append( "/Image/Color/Clamp", GafferImage.Clamp )
 nodeMenu.append( "/Image/Color/Constant", GafferImage.Constant )
@@ -319,6 +318,7 @@ nodeMenu.append( "/Image/Utility/Delete Metadata", GafferImage.DeleteImageMetada
 nodeMenu.append( "/Image/Utility/Copy Metadata", GafferImage.CopyImageMetadata, searchText = "CopyImageMetadata" )
 nodeMenu.append( "/Image/Utility/Stats", GafferImage.ImageStats, searchText = "ImageStats", postCreator = GafferImageUI.ImageStatsUI.postCreate  )
 nodeMenu.append( "/Image/Utility/Sampler", GafferImage.ImageSampler, searchText = "ImageSampler" )
+nodeMenu.append( "/Image/Utility/Catalogue", GafferImage.Catalogue )
 
 # OSL nodes
 
