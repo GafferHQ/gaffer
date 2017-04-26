@@ -39,6 +39,7 @@
 
 #include "GafferScene/SceneElementProcessor.h"
 #include "GafferScene/ShaderPlug.h"
+#include "Gaffer/NumericPlug.h"
 
 #include "GafferOSL/TypeIds.h"
 
@@ -57,6 +58,9 @@ class OSLObject : public GafferScene::SceneElementProcessor
 
 		GafferScene::ShaderPlug *shaderPlug();
 		const GafferScene::ShaderPlug *shaderPlug() const;
+
+		Gaffer::IntPlug *interpolationPlug();
+		const Gaffer::IntPlug *interpolationPlug() const;
 
 		virtual void affects( const Gaffer::Plug *input, AffectedPlugsContainer &outputs ) const;
 

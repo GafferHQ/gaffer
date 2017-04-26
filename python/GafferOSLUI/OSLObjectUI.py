@@ -34,6 +34,7 @@
 #
 ##########################################################################
 
+import IECore
 import Gaffer
 import GafferUI
 
@@ -70,7 +71,23 @@ Gaffer.Metadata.registerNode(
 			"noduleLayout:section", "left",
 
 		],
+		"interpolation" : [
+
+			"description",
+			"""
+			Interpolation mode in which to process the object. 
+			All primitive variables are resampled to match the selected interpolation. 
+			""",
+
+			"preset:Uniform", IECore.PrimitiveVariable.Interpolation.Uniform,
+			"preset:Vertex", IECore.PrimitiveVariable.Interpolation.Vertex,
+			"preset:FaceVarying", IECore.PrimitiveVariable.Interpolation.FaceVarying,
+
+			"plugValueWidget:type", "GafferUI.PresetsPlugValueWidget",
+
+		]
 
 	}
 
 )
+

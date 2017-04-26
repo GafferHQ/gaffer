@@ -57,6 +57,7 @@ OSLObject::OSLObject( const std::string &name )
 {
 	storeIndexOfNextChild( g_firstPlugIndex );
 	addChild( new ShaderPlug( "shader" ) );
+	addChild( new IntPlug( "interpolation", Plug::In, PrimitiveVariable::Invalid, PrimitiveVariable::FaceVarying ) );
 
 	// Pass-throughs for things we don't want to modify
 	outPlug()->attributesPlug()->setInput( inPlug()->attributesPlug() );
@@ -77,6 +78,16 @@ const GafferScene::ShaderPlug *OSLObject::shaderPlug() const
 	return getChild<ShaderPlug>( g_firstPlugIndex );
 }
 
+Gaffer::IntPlug *OSLObject::interpolationPlug()
+{
+	return getChild<IntPlug>( g_firstPlugIndex + 1 );
+}
+
+const Gaffer::IntPlug *OSLObject::interpolationPlug() const
+{
+	return getChild<IntPlug>( g_firstPlugIndex + 1 );
+}
+
 void OSLObject::affects( const Gaffer::Plug *input, AffectedPlugsContainer &outputs ) const
 {
 	SceneElementProcessor::affects( input, outputs );
@@ -86,6 +97,10 @@ void OSLObject::affects( const Gaffer::Plug *input, AffectedPlugsContainer &outp
 		outputs.push_back( outPlug()->objectPlug() );
 	}
 	else if( input == inPlug()->transformPlug() )
+	{
+		outputs.push_back( outPlug()->objectPlug() );
+	}
+	else if ( input == interpolationPlug() )
 	{
 		outputs.push_back( outPlug()->objectPlug() );
 	}
@@ -151,6 +166,8 @@ void OSLObject::hashProcessedObject( const ScenePath &path, const Gaffer::Contex
 	{
 		shader->attributesHash( h );
 	}
+
+	interpolationPlug()->hash( h );
 	h.append( inPlug()->fullTransformHash( path ) );
 }
 
@@ -197,6 +214,8 @@ IECore::ConstObjectPtr OSLObject::computeProcessedObject( const ScenePath &path,
 	CompoundDataPtr shadedPoints = shadingEngine->shade( shadingPoints.get(), transforms );
 	for( CompoundDataMap::const_iterator it = shadedPoints->readable().begin(), eIt = shadedPoints->readable().end(); it != eIt; ++it )
 	{
+
+		// Ignore the output color closure as the debug closures are used to define what is 'exported' from the shader
 		if( it->first != "Ci" )
 		{
 			outputPrimitive->variables[it->first] = PrimitiveVariable( PrimitiveVariable::Vertex, it->second );
