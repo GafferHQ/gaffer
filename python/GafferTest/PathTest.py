@@ -50,6 +50,13 @@ class PathTest( GafferTest.TestCase ) :
 
 			Gaffer.Path.__init__( self, path, root, filter )
 
+			self.pathChangedSignalCreatedCalled = False
+
+		def _pathChangedSignalCreated( self ) :
+
+			Gaffer.Path._pathChangedSignalCreated( self )
+			self.pathChangedSignalCreatedCalled = True
+
 	def test( self ) :
 
 		p = Gaffer.Path( "/" )
@@ -304,6 +311,16 @@ class PathTest( GafferTest.TestCase ) :
 		f.setEnabled( False )
 
 		# we should not crash
+
+	def testChangedSignalCreation( self ) :
+
+		p = self.TestPath( "/" )
+		self.assertFalse( p.pathChangedSignalCreatedCalled )
+		self.assertFalse( p._havePathChangedSignal() )
+
+		p.pathChangedSignal()
+		self.assertTrue( p.pathChangedSignalCreatedCalled )
+		self.assertTrue( p._havePathChangedSignal() )
 
 if __name__ == "__main__":
 	unittest.main()
