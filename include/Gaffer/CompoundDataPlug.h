@@ -123,7 +123,7 @@ class CompoundDataPlug : public Gaffer::ValuePlug
 		void fillCompoundObject( IECore::CompoundObject::ObjectMap &compoundObjectMap ) const;
 
 		/// Creates an appropriate plug to hold the specified data.
-		/// \todo This is exposed so it may be reused elsewhere, but is there a better place for it? What about PlugType.h?
+		/// \todo This is exposed so it may be reused elsewhere, but is there a better place for it? What about PlugAlgo.h?
 		static ValuePlugPtr createPlugFromData( const std::string &name, Plug::Direction direction, unsigned flags, const IECore::Data *value );
 		/// Extracts a Data value from a plug previously created with createPlugFromData().
 		static IECore::DataPtr extractDataFromPlug( const ValuePlug *plug );

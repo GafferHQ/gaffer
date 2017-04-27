@@ -434,5 +434,18 @@ class CompoundDataPlugTest( GafferTest.TestCase ) :
 		m2["name"].setValue( "test4" )
 		self.assertEqual( h5, p.hash() )
 
+	def testInternedStringVectorData( self ) :
+
+		d = IECore.InternedStringVectorData( [ "a", "b" ] )
+		p = Gaffer.CompoundDataPlug()
+		m = p.addMember( "test", d )
+		self.assertTrue( isinstance( m["value"], Gaffer.InternedStringVectorDataPlug ) )
+		self.assertEqual( m["value"].defaultValue(), d )
+		self.assertEqual( m["value"].getValue(), d )
+
+		v, n = p.memberDataAndName( m )
+		self.assertEqual( v, d )
+		self.assertEqual( n, "test" )
+
 if __name__ == "__main__":
 	unittest.main()
