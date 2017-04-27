@@ -1410,12 +1410,86 @@ class DispatcherTest( GafferTest.TestCase ) :
 		self.assertEqual( [ l.node.getName() for l in log ], [ "a", "b" ] * 4 )
 		self.assertEqual( [ l.context.getFrame() for l in log ], [ 1, 1, 2, 2, 3, 3, 4, 4 ] )
 
-		del log[:]	
+		del log[:]
 		s["t"]["sequence"].setValue( True )
 		dispatcher.dispatch( [ s["b"] ] )
 
 		self.assertEqual( [ l.node.getName() for l in log ], [ "a" ] * 4 + [ "b" ] * 4 )
 		self.assertEqual( [ l.context.getFrame() for l in log ], [ 1, 2, 3, 4 ] * 2 )
+
+	def testTaskListBatchSize( self ) :
+
+		# a  per-frame task
+		# |
+		# t  no-op (we'll modify the batch size on this)
+		# |
+		# b  per-frame task
+
+		s = Gaffer.ScriptNode()
+
+		log = []
+		s["a"] = GafferDispatchTest.LoggingTaskNode( log = log )
+		s["a"]["f"] = Gaffer.StringPlug( defaultValue = "####" )
+
+		s["t"] = GafferDispatch.TaskList()
+		s["t"]["preTasks"][0].setInput( s["a"]["task"] )
+
+		s["b"] = GafferDispatchTest.LoggingTaskNode( log = log )
+		s["b"]["preTasks"][0].setInput( s["t"]["task"] )
+		s["b"]["f"] = Gaffer.StringPlug( defaultValue = "####" )
+
+		dispatcher = GafferDispatch.Dispatcher.create( "testDispatcher" )
+		dispatcher["framesMode"].setValue( GafferDispatch.Dispatcher.FramesMode.CustomRange )
+		dispatcher["frameRange"].setValue( "1-4" )
+
+		dispatcher.dispatch( [ s["b"] ] )
+
+		self.assertEqual( [ l.node.getName() for l in log ], [ "a", "b" ] * 4 )
+		self.assertEqual( [ l.context.getFrame() for l in log ], [ 1, 1, 2, 2, 3, 3, 4, 4 ] )
+
+		del log[:]
+		s["t"]["dispatcher"]["batchSize"].setValue( 2 )
+		dispatcher.dispatch( [ s["b"] ] )
+
+		self.assertEqual( [ l.node.getName() for l in log ], [ "a", "a", "b", "b" ] * 2 )
+		self.assertEqual( [ l.context.getFrame() for l in log ], [ 1, 2, 1, 2, 3, 4, 3, 4 ] )
+
+	def testTaskListWedging( self ) :
+
+		s = Gaffer.ScriptNode()
+
+		# a  per-wedge-per-frame task
+		# |
+		# t  no-op
+		# |
+		# b  per-wedge task (not dependent on frame)
+		# |
+		# w  wedge over ( "X", "Y" )
+
+		log = []
+		s["a"] = GafferDispatchTest.LoggingTaskNode( log = log )
+		s["a"]["f"] = Gaffer.StringPlug( defaultValue = "${wedge:value}.####" )
+
+		s["t"] = GafferDispatch.TaskList()
+		s["t"]["preTasks"][0].setInput( s["a"]["task"] )
+
+		s["b"] = GafferDispatchTest.LoggingTaskNode( log = log )
+		s["b"]["preTasks"][0].setInput( s["t"]["task"] )
+		s["b"]["w"] = Gaffer.StringPlug( defaultValue = "${wedge:value}" )
+
+		s["w"] = GafferDispatch.Wedge()
+		s["w"]["preTasks"][0].setInput( s["b"]["task"] )
+		s["w"]["mode"].setValue( int( GafferDispatch.Wedge.Mode.StringList ) )
+		s["w"]["strings"].setValue( IECore.StringVectorData( [ "X", "Y" ] ) )
+
+		dispatcher = GafferDispatch.Dispatcher.create( "testDispatcher" )
+		dispatcher["framesMode"].setValue( GafferDispatch.Dispatcher.FramesMode.CustomRange )
+		dispatcher["frameRange"].setValue( "1-3" )
+
+		dispatcher.dispatch( [ s["w"] ] )
+		self.assertEqual( [ l.node.getName() for l in log ], [ "a", "a", "a", "b" ] * 2 )
+		self.assertEqual( [ l.context.getFrame() for l in log ], [ 1, 2, 3, 1 ] * 2 )
+		self.assertEqual( [ l.context["wedge:value"] for l in log ], [ "X", "X", "X", "X", "Y", "Y", "Y", "Y" ] )
 
 if __name__ == "__main__":
 	unittest.main()

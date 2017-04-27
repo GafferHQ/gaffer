@@ -38,6 +38,7 @@
 
 from TextWriter import TextWriter
 from LoggingTaskNode import LoggingTaskNode
+from DebugDispatcher import DebugDispatcher
 
 # Test cases
 
