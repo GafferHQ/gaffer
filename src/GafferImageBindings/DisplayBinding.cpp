@@ -54,6 +54,11 @@ struct DriverCreatedSlotCaller
 	{
 		try
 		{
+			// This is extremely sketchy! The driverCreatedSignal() is emitted from within the constructor for the driver,
+			// and we're adding a reference to it via the DisplayDriverPtr. If the slot does not retain the reference, the
+			// driver will be deleted before it even finishes construction. This will all be fixed when we move driverCreatedSignal()
+			// to IECore::DisplayDriverServer. In the meantime we're saved by the fact that the only thing we connect to this
+			// slot then holds on to the driver until at least the next UI idle event, after which construction is complete.
 			slot( IECore::DisplayDriverPtr( driver ), IECore::CompoundDataPtr( const_cast<IECore::CompoundData *>( parameters ) ) );
 		}
 		catch( const error_already_set &e )
