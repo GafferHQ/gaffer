@@ -34,6 +34,8 @@
 //
 //////////////////////////////////////////////////////////////////////////
 
+#include <limits>
+
 #include "tbb/spin_mutex.h"
 
 #include "boost/algorithm/string/split.hpp"
@@ -154,6 +156,8 @@ DataPtr dataFromTypeDesc( TypeDesc type, void *&basePointer )
 namespace
 {
 
+OIIO::ustring gIndex( "shading:index" );
+
 class RenderState
 {
 
@@ -191,6 +195,22 @@ class RenderState
 
 		bool userData( ustring name, TypeDesc type, void *value ) const
 		{
+			if( name == gIndex )
+			{
+				// if a 4 byte type has been requested then ensure we fit and cast to narrower type
+				// this way f32 reads of shading:index will succeed.
+				if( type.size() == sizeof( int ) && m_pointIndex <= ( (size_t) std::numeric_limits<int>::max() ) )
+				{
+					int v = ( int ) m_pointIndex;
+					return ShadingSystem::convert_value( value, type, &v, OIIO::TypeDesc( OIIO::TypeDesc::INT32 ) );
+				}
+				else
+				{
+					// OSL language doesn't define UINT64 type so we'll probably never enter this branch.
+					return ShadingSystem::convert_value( value, type, &m_pointIndex, OIIO::TypeDesc( OIIO::TypeDesc::UINT64 ) );
+				}
+			}
+
 			vector<UserData>::const_iterator it = lower_bound(
 				m_userData.begin(),
 				m_userData.end(),

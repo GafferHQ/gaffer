@@ -138,6 +138,15 @@ class ShadingEngineTest( GafferOSLTest.OSLTestCase ) :
 		for i, c in enumerate( p["Ci"] ) :
 			self.assertEqual( c, rp["colorUserData"][i] )
 
+
+		e = GafferOSL.ShadingEngine( IECore.ObjectVector( [
+			IECore.Shader( shader, "surface", { "name" : "shading:index" } ),
+		] ) )
+		p = e.shade( rp )
+
+		for i, c in enumerate( p["Ci"] ) :
+			self.assertEqual( c, IECore.Color3f(i) )
+
 	def testStructs( self ) :
 
 		shader = self.compileShader( os.path.dirname( __file__ ) + "/shaders/structs.osl" )
