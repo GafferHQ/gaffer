@@ -40,6 +40,7 @@
 #include "GafferScene/SceneElementProcessor.h"
 #include "GafferScene/ShaderPlug.h"
 #include "Gaffer/NumericPlug.h"
+#include "Gaffer/StringPlug.h"
 
 #include "GafferOSL/TypeIds.h"
 
@@ -76,7 +77,16 @@ class OSLObject : public GafferScene::SceneElementProcessor
 		virtual void hashProcessedObject( const ScenePath &path, const Gaffer::Context *context, IECore::MurmurHash &h ) const;
 		virtual IECore::ConstObjectPtr computeProcessedObject( const ScenePath &path, const Gaffer::Context *context, IECore::ConstObjectPtr inputObject ) const;
 
+		virtual void hash( const Gaffer::ValuePlug *output, const Gaffer::Context *context, IECore::MurmurHash &h ) const;
+		virtual void compute( Gaffer::ValuePlug *output, const Gaffer::Context *context ) const;
+
 	private :
+
+		GafferScene::ScenePlug *resampledInPlug();
+		const GafferScene::ScenePlug *resampledInPlug() const;
+
+		Gaffer::StringPlug *resampledNamesPlug();
+		const Gaffer::StringPlug *resampledNamesPlug() const;
 
 		static size_t g_firstPlugIndex;
 

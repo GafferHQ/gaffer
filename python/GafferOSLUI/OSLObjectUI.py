@@ -75,8 +75,9 @@ Gaffer.Metadata.registerNode(
 
 			"description",
 			"""
-			Interpolation mode in which to process the object. 
-			All primitive variables are resampled to match the selected interpolation. 
+			The interpolation type of the primitive variables created by this node.
+			For instance, Uniform interpolation means that the shader is run once per face on a mesh, allowing it to output primitive variables with a value per face. 
+			All non-constant input primitive variables are resampled to match the selected interpolation so that they can be accessed from the shader.
 			""",
 
 			"preset:Uniform", IECore.PrimitiveVariable.Interpolation.Uniform,
@@ -84,6 +85,7 @@ Gaffer.Metadata.registerNode(
 			"preset:FaceVarying", IECore.PrimitiveVariable.Interpolation.FaceVarying,
 
 			"plugValueWidget:type", "GafferUI.PresetsPlugValueWidget",
+
 
 		]
 
