@@ -38,6 +38,7 @@ import os
 import unittest
 import random
 import threading
+import functools
 import subprocess32 as subprocess
 
 import IECore
@@ -50,27 +51,77 @@ import GafferImageTest
 
 class DisplayTest( GafferImageTest.ImageTestCase ) :
 
-	def setUp( self ) :
+	@classmethod
+	def sendImage( cls, image, port, extraParameters = {} ) :
 
-		GafferTest.TestCase.setUp( self )
+		semaphore = threading.Semaphore( 0 )
+		imageReceivedConnection = GafferImage.Display.imageReceivedSignal().connect( functools.partial( cls.__incrementUpdateCountAndRelease, semaphore = semaphore ) )
 
-		self.__dataReceivedSemaphore = threading.Semaphore( 0 )
-		self.__dataReceivedConnection = GafferImage.Display.dataReceivedSignal().connect( Gaffer.WeakMethod( self.__dataReceived ) )
+		externalDisplayWindow = gafferDisplayWindow = image["format"].getValue().getDisplayWindow()
+		externalDisplayWindow.max -= IECore.V2i( 1 )
 
-		self.__imageReceivedSemaphore = threading.Semaphore( 0 )
-		self.__imageReceivedConnection = GafferImage.Display.imageReceivedSignal().connect( Gaffer.WeakMethod( self.__imageReceived ) )
+		gafferDataWindow = image["dataWindow"].getValue()
+		externalDataWindow = image["format"].getValue().toEXRSpace( gafferDataWindow )
 
-	def __dataReceived( self, plug ) :
+		parameters = {
+			"displayHost" : "localHost",
+			"displayPort" : str( port ),
+			"remoteDisplayType" : "GafferImage::GafferDisplayDriver",
+		}
+		parameters.update( extraParameters )
+
+		driver = IECore.ClientDisplayDriver(
+			externalDisplayWindow,
+			externalDataWindow,
+			list( image["channelNames"].getValue() ),
+			parameters,
+		)
+
+		tileSize = GafferImage.ImagePlug.tileSize()
+		minTileOrigin = GafferImage.ImagePlug.tileOrigin( gafferDataWindow.min )
+		maxTileOrigin = GafferImage.ImagePlug.tileOrigin( gafferDataWindow.max - IECore.V2i( 1 ) )
+		for y in range( minTileOrigin.y, maxTileOrigin.y + 1, tileSize ) :
+			for x in range( minTileOrigin.x, maxTileOrigin.x + 1, tileSize ) :
+				tileOrigin = IECore.V2i( x, y )
+				channelData = []
+				for channelName in image["channelNames"].getValue() :
+					channelData.append( image.channelData( channelName, tileOrigin ) )
+				bucketData = IECore.FloatVectorData()
+				for by in range( tileSize - 1, -1, -1 ) :
+					for bx in range( 0, tileSize ) :
+						i = by * tileSize + bx
+						for c in channelData :
+							bucketData.append( c[i] )
+
+				bucketBound = IECore.Box2i( tileOrigin, tileOrigin + IECore.V2i( GafferImage.ImagePlug.tileSize() ) )
+				bucketBound = image["format"].getValue().toEXRSpace( bucketBound )
+				cls.__sendBucket( driver, bucketBound, bucketData )
+
+		driver.imageClose()
+		semaphore.acquire()
+
+	@classmethod
+	def __sendBucket( cls, driver, bound, data ) :
+
+		semaphore = threading.Semaphore( 0 )
+		dataReceivedConnection = GafferImage.Display.dataReceivedSignal().connect( functools.partial( cls.__incrementUpdateCountAndRelease, semaphore = semaphore ) )
+		driver.imageData( bound, data )
+		semaphore.acquire()
+
+	@staticmethod
+	def __incrementUpdateCountAndRelease( plug, semaphore ) :
 
 		# Emulate the DisplayUI code which increments a plug when data is received, to
 		# trigger correct recomputation.
 		plug.node()["__updateCount"].setValue( plug.node()["__updateCount"].getValue() + 1 )
-		self.__dataReceivedSemaphore.release()
+		semaphore.release()
 
-	def __imageReceived( self, plug ) :
+	def setUp( self ) :
 
-		plug.node()["__updateCount"].setValue( plug.node()["__updateCount"].getValue() + 1 )
-		self.__imageReceivedSemaphore.release()
+		GafferTest.TestCase.setUp( self )
+
+		# Feign interest so that Display.setupServer() doesn't early out.
+		self.__dataReceivedConnection = GafferImage.Display.dataReceivedSignal().connect( lambda plug : None )
 
 	def testDefaultFormat( self ) :
 
@@ -121,9 +172,8 @@ class DisplayTest( GafferImageTest.ImageTestCase ) :
 			numPixels = ( externalBucketWindow.size().x + 1 ) * ( externalBucketWindow.size().y + 1 )
 			bucketData = IECore.FloatVectorData()
 			bucketData.resize( numPixels, i + 1 )
-			driver.imageData( externalBucketWindow, bucketData )
 
-			self.__dataReceivedSemaphore.acquire()
+			self.__sendBucket( driver, externalBucketWindow, bucketData )
 
 			h2 = self.__tileHashes( node, "Y" )
 			t2 = self.__tiles( node, "Y" )
@@ -183,46 +233,7 @@ class DisplayTest( GafferImageTest.ImageTestCase ) :
 		node = GafferImage.Display()
 		node["port"].setValue( 2500 )
 
-		externalDisplayWindow = gafferDisplayWindow = imageReader["out"]["format"].getValue().getDisplayWindow()
-		externalDisplayWindow.max -= IECore.V2i( 1 )
-
-		gafferDataWindow = imageReader["out"]["dataWindow"].getValue()
-		externalDataWindow = imageReader["out"]["format"].getValue().toEXRSpace( gafferDataWindow )
-
-		driver = IECore.ClientDisplayDriver(
-			externalDisplayWindow,
-			externalDataWindow,
-			list( imageReader["out"]["channelNames"].getValue() ),
-			{
-				"displayHost" : "localHost",
-				"displayPort" : "2500",
-				"remoteDisplayType" : "GafferImage::GafferDisplayDriver",
-			}
-		)
-
-		tileSize = GafferImage.ImagePlug.tileSize()
-		minTileOrigin = GafferImage.ImagePlug.tileOrigin( gafferDataWindow.min )
-		maxTileOrigin = GafferImage.ImagePlug.tileOrigin( gafferDataWindow.max - IECore.V2i( 1 ) )
-		for y in range( minTileOrigin.y, maxTileOrigin.y + 1, tileSize ) :
-			for x in range( minTileOrigin.x, maxTileOrigin.x + 1, tileSize ) :
-				tileOrigin = IECore.V2i( x, y )
-				channelData = []
-				for channelName in imageReader["out"]["channelNames"].getValue() :
-					channelData.append( imageReader["out"].channelData( channelName, tileOrigin ) )
-				bucketData = IECore.FloatVectorData()
-				for by in range( tileSize - 1, -1, -1 ) :
-					for bx in range( 0, tileSize ) :
-						i = by * tileSize + bx
-						for c in channelData :
-							bucketData.append( c[i] )
-
-				bucketBound = IECore.Box2i( tileOrigin, tileOrigin + IECore.V2i( GafferImage.ImagePlug.tileSize() ) )
-				bucketBound = imageReader["out"]["format"].getValue().toEXRSpace( bucketBound )
-				driver.imageData( bucketBound, bucketData )
-
-		driver.imageClose()
-
-		self.__imageReceivedSemaphore.acquire()
+		self.sendImage( imageReader["out"], port = 2500 )
 
 		# Display doesn't handle image metadata, so we must erase it before comparing the images
 		inImage = imageReader["out"].image()
