@@ -147,6 +147,18 @@ class SetAlgoTest( GafferSceneTest.SceneTestCase ) :
 		setA["paths"].setValue( IECore.StringVectorData( [ '/group/sphere1' ] ) )
 		self.assertNotEqual( h, GafferScene.SetAlgo.setExpressionHash( "setA", group2["out"] ) )
 
+	def testColonInSetAndObjectNames( self ):
+
+		sphere1 = GafferScene.Sphere( "Sphere1" )
+		sphere1["name"].setValue( 'MyObject:sphere1' )
+
+		setA = GafferScene.Set( "SetA" )
+		setA["name"].setValue( "MySets:setA" )
+		setA["paths"].setValue( IECore.StringVectorData( [ "/MyObject:sphere1" ] ) )
+
+		self.assertCorrectEvaluation( setA["out"], "MySets:setA", [ "/MyObject:sphere1" ] )
+		self.assertCorrectEvaluation( setA["out"], "/MyObject:sphere1", [ "/MyObject:sphere1" ] )
+
 	def assertCorrectEvaluation( self, scenePlug, expression, expectedContents ) :
 
 		result = set( GafferScene.SetAlgo.evaluateSetExpression( expression, scenePlug ).paths() )
