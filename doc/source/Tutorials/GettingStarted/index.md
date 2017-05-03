@@ -192,7 +192,7 @@ working as expected. To do that we need to lay down some more nodes to define ou
 - Create an Outputs node (_Scene/Globals/Outputs_). This too will be automatically added to the end of
   the chain.
 - Create an InteractiveAppleseedRender node (_/Appleseed/InteractiveRender/_) to complete the chain.
-- Create a Display node (_/Image/Source/Display_) node. This doesn't need any input connections - just
+- Create a Catalogue node (_/Image/Utility/Catalogue_). This doesn't need any input connections - just
   place it to one side of the InteractiveAppleseedRender node.
 
 ![Render settings](images/renderSettings.png)
@@ -217,7 +217,7 @@ Now we can start the renderer :
 
 And finally we can view the result :
 
-- Select the Display node.
+- Select the Catalogue node.
 - Move the mouse into the Viewer and press 'f' to frame the image.
 
 ![First render](images/firstRender.png)
@@ -243,12 +243,12 @@ It'd be useful to pin the same node into the SceneHierarchy, so let's use a shor
   to notify us of the pinning ![Pinning](images/targetNodesLocked.png).
 
 Now we're free to select any node we want to edit it in the NodeEditor, but will always be viewing the results
-downstream, in our final scene. It's a pity that we're no longer viewing our Display node containing the rendered
+downstream, in our final scene. It's a pity that we're no longer viewing our Catalogue node containing the rendered
 image though, so let's rectify that.
 
 - Locate the layout button ![Layout](images/layoutButton.png) in the top right of the Viewer panel, and _Left-Click_ to show the layout menu.
 - Choose the _Viewer_ menu item to add a new Viewer.
-- _Middle-Drag_ the Display node into the new Viewer to pin it there.
+- _Middle-Drag_ the Catalogue node into the new Viewer to pin it there.
 
 This allows us to switch between the 3d scene and the rendered image using the tabs at the top of the viewer panel. Now we've
 got everything arranged to our liking, we're finally ready to go ahead and start shading some pixels.
