@@ -36,6 +36,7 @@
 
 import Gaffer
 import GafferUI
+import IECore
 
 QtCore = GafferUI._qtImport( "QtCore" )
 QtGui = GafferUI._qtImport( "QtGui" )
@@ -49,6 +50,10 @@ class RampPlugValueWidget( GafferUI.PlugValueWidget ) :
 		GafferUI.PlugValueWidget.__init__( self, column, plug, **kw )
 
 		with column :
+			with GafferUI.ListContainer( GafferUI.ListContainer.Orientation.Horizontal, spacing = 4 ) :
+				GafferUI.Spacer( IECore.V2i( 0 ), parenting = { "expand" : True } )
+				GafferUI.LabelPlugValueWidget( plug["basis"], horizontalAlignment=GafferUI.Label.HorizontalAlignment.Right )
+				GafferUI.SplineBasisPlugValueWidget( plug )
 
 			self.__splineWidget = GafferUI.SplineWidget()
 			self.__splineWidget.setDrawMode( self.__splineWidget.DrawMode.Ramp )
