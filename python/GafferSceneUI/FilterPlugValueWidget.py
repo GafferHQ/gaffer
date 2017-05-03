@@ -126,14 +126,6 @@ class FilterPlugValueWidget( GafferUI.PlugValueWidget ) :
 			self.getPlug().node().parent().addChild( filterNode )
 			self.getPlug().setInput( filterNode["out"] )
 
-		# position the node appropriately.
-		scriptWindow = self.ancestor( GafferUI.ScriptWindow )
-		if scriptWindow is not None :
-			nodeGraphs = scriptWindow.getLayout().editors( GafferUI.NodeGraph )
-			if nodeGraphs :
-				graphGadget = nodeGraphs[0].graphGadget()
-				graphGadget.getLayout().positionNode( graphGadget, filterNode )
-
 	def __menuDefinition( self ) :
 
 		filterNode = self.__filterNode()
