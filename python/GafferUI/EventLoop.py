@@ -156,7 +156,7 @@ class EventLoop( object ) :
 		# environment, which could mess with our own style (on gnome for instance,
 		# our icons can come out the wrong size).
 		QtGui.QApplication.setStyle( "plastique" )
-	  	__qtApplication = QtGui.QApplication( [] )
+		__qtApplication = QtGui.QApplication( [ "gaffer" ] )
 
 	__mainEventLoop = None
 	## Returns the main event loop for the application. This should always
