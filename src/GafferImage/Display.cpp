@@ -104,6 +104,14 @@ class GafferDisplayDriver : public IECore::DisplayDriver
 			);
 
 			m_parameters = parameters ? parameters->copy() : CompoundDataPtr( new CompoundData );
+
+			if( const FloatData *pixelAspect = m_parameters->member<FloatData>( "pixelAspect" ) )
+			{
+				/// \todo Give IECore::Display a Format rather than just
+				/// a display window, then we won't need this workaround.
+				m_gafferFormat.setPixelAspect( pixelAspect->readable() );
+			}
+
 			Display::driverCreatedSignal()( this, parameters.get() );
 		}
 
