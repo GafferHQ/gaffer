@@ -122,6 +122,13 @@ std::string PlugSerialiser::postHierarchy( const Gaffer::GraphComponent *graphCo
 	return "";
 }
 
+bool PlugSerialiser::childNeedsSerialisation( const Gaffer::GraphComponent *child, const Serialisation &serialisation ) const
+{
+	// cast is safe because of constraints maintained by Plug::acceptsChild().
+	const Plug *childPlug = static_cast<const Plug *>( child );
+	return childPlug->getFlags( Plug::Serialisable );
+}
+
 bool PlugSerialiser::childNeedsConstruction( const Gaffer::GraphComponent *child, const Serialisation &serialisation ) const
 {
 	// cast is safe because of constraints maintained by Plug::acceptsChild().

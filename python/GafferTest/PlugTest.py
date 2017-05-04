@@ -838,5 +838,21 @@ class PlugTest( GafferTest.TestCase ) :
 		s.redo()
 		assertPostconditions()
 
+	def testSerialisableFlagOnChildren( self ) :
+
+		s = Gaffer.ScriptNode()
+		s["n"] = Gaffer.Node()
+		s["n"]["user"]["a"] = Gaffer.Plug( flags = Gaffer.Plug.Flags.Default | Gaffer.Plug.Flags.Dynamic )
+
+		s2 = Gaffer.ScriptNode()
+		s2.execute( s.serialise() )
+		self.assertTrue( "a" in s2["n"]["user"] )
+
+		s["n"]["user"].setFlags( Gaffer.Plug.Flags.Serialisable, False )
+
+		s3 = Gaffer.ScriptNode()
+		s3.execute( s.serialise() )
+		self.assertFalse( "a" in s3["n"]["user"] )
+
 if __name__ == "__main__":
 	unittest.main()
