@@ -121,7 +121,7 @@ class RotateToolTest( GafferUITest.TestCase ) :
 
 		tool["orientation"].setValue( tool.Orientation.Local )
 
-		with Gaffer.UndoContext( script ) :
+		with Gaffer.UndoScope( script ) :
 			tool.rotate( 2, 90 )
 
 		self.assertTrue(
@@ -136,7 +136,7 @@ class RotateToolTest( GafferUITest.TestCase ) :
 
 		tool["orientation"].setValue( tool.Orientation.Parent )
 
-		with Gaffer.UndoContext( script ) :
+		with Gaffer.UndoScope( script ) :
 			tool.rotate( 0, 90 )
 
 		self.assertTrue(
@@ -151,7 +151,7 @@ class RotateToolTest( GafferUITest.TestCase ) :
 
 		tool["orientation"].setValue( tool.Orientation.World )
 
-		with Gaffer.UndoContext( script ) :
+		with Gaffer.UndoScope( script ) :
 			tool.rotate( 2, 90 )
 
 		self.assertTrue(
