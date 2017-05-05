@@ -34,7 +34,9 @@
 #
 ##########################################################################
 
-import os
+import functools
+
+import IECore
 
 import Gaffer
 import GafferUI
@@ -50,8 +52,17 @@ Gaffer.Metadata.registerNode(
 
 	"description",
 	"""
-	Stores a catalogue of images to be
-	browsed.
+	Stores a catalogue of images to be browsed. Images can either be loaded
+	from files or rendered directly into the catalogue.
+
+	To send a live render to a Catalogue, an "ieDisplay" output definition
+	should be used with the following parameters :
+
+	- driverType : "ClientDisplayDriver"
+	- displayHost : host name ("localhost" is sufficient for local renders)
+	- displayPort : `GafferImage.Catalogue.displayDriverServer().portNumber()`
+	- remoteDisplayType : "GafferImage::GafferDisplayDriver"
+	- catalogue:name : The name of the catalogue to render to (optional)
 	""",
 
 	plugs = {
@@ -85,6 +96,33 @@ Gaffer.Metadata.registerNode(
 			"plugValueWidget:type", "GafferImageUI.CatalogueUI._ImageListing",
 			"label", "",
 			"layout:section", "Images",
+
+		],
+
+		"name" : [
+
+			"description",
+			"""
+			Used to distinguish between catalogues, so that when
+			multiple catalogues exist, it is possible to send a
+			render to just one of them. Renders are matched
+			to catalogues by comparing the "catalogue:name" parameter
+			from the renderer output with the value of this plug.
+			""",
+
+		],
+
+		"directory" : [
+
+			"description",
+			"""
+			The directory where completed renders
+			are saved. This allows them to remain
+			in the catalogue for the next session.
+			""",
+
+			"plugValueWidget:type", "GafferUI.FileSystemPathPlugValueWidget",
+			"path:leaf", False,
 
 		],
 
@@ -183,6 +221,12 @@ class _ImageListing( GafferUI.PlugValueWidget ) :
 					Gaffer.WeakMethod( self.__addClicked )
 				)
 
+				self.__duplicateButton = GafferUI.Button( image = "duplicate.png", hasFrame = False, toolTip = "Duplicate selected image" )
+				self.__duplicateButton.setEnabled( False )
+				self.__duplicateButtonClickedConnection = self.__duplicateButton.clickedSignal().connect(
+					Gaffer.WeakMethod( self.__duplicateClicked )
+				)
+
 				self.__exportButton = GafferUI.Button( image = "export.png", hasFrame = False, toolTip = "Export selected image" )
 				self.__exportButton.setEnabled( False )
 				self.__exportButtonClickedConnection = self.__exportButton.clickedSignal().connect(
@@ -266,6 +310,7 @@ class _ImageListing( GafferUI.PlugValueWidget ) :
 		index = self.__indexFromSelection()
 		self.__removeButton.setEnabled( index is not None )
 		self.__exportButton.setEnabled( index is not None )
+		self.__duplicateButton.setEnabled( index is not None )
 		# Deliberately not using an UndoScope as the user thinks
 		# of this as making a selection, not changing a plug value.
 		if self._editable() :
@@ -328,3 +373,52 @@ class _ImageListing( GafferUI.PlugValueWidget ) :
 		index = self.__indexFromSelection()
 		with GafferUI.ErrorDialogue.ErrorHandler( parentWindow = self.ancestor( GafferUI.Window ) ) :
 			self.__images()[index].save( str( path ) )
+
+	def __duplicateClicked( self, *unused ) :
+
+		index = self.__indexFromSelection()
+		image = self.__images()[index]
+
+		with self.getContext() :
+			fileName = image["fileName"].getValue()
+			directory = self.__catalogue()["directory"].getValue()
+			directory = self.getContext().substitute( directory )
+
+		if not fileName :
+			# It's a render
+			fileName = self.__catalogue().generateFileName( image )
+			image.save( fileName )
+
+		duplicateImage = GafferImage.Catalogue.Image.load( fileName )
+		duplicateImage.setName( image.getName() + "Copy" )
+
+		with Gaffer.UndoScope( self.getPlug().ancestor( Gaffer.ScriptNode ) ) :
+			self.__images().addChild( duplicateImage )
+			self.getPlug().setValue( len( self.__images() ) - 1 )
+
+##########################################################################
+# Display server management. This would all be in Catalogue.cpp if it
+# were not for the need to operate on the UI thread.
+##########################################################################
+
+def __driverCreated( driver, parameters ) :
+
+	# The driverCreatedSignal() is emitted on the server thread,
+	# but we can only make node graph edits from the UI thread,
+	# so we must use `executeOnUIThread()`.
+	GafferUI.EventLoop.executeOnUIThread( functools.partial( __driverCreatedUI, driver, parameters ) )
+
+def __driverCreatedUI( driver, parameters ) :
+
+	GafferImage.Catalogue.driverCreated( driver, parameters )
+
+def __imageReceived( plug ) :
+
+	GafferUI.EventLoop.executeOnUIThread( functools.partial( __imageReceivedUI, plug ) )
+
+def __imageReceivedUI( plug ) :
+
+	GafferImage.Catalogue.imageReceived( plug )
+
+GafferImage.Display.driverCreatedSignal().connect( functools.partial( __driverCreated ), scoped = False )
+GafferImage.Display.imageReceivedSignal().connect( functools.partial( __imageReceived ), scoped = False )
