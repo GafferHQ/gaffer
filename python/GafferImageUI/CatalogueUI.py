@@ -213,6 +213,15 @@ class _ImageListing( GafferUI.PlugValueWidget ) :
 			self.__pathListingSelectionChangedConnection = self.__pathListing.selectionChangedSignal().connect(
 				Gaffer.WeakMethod( self.__pathListingSelectionChanged )
 			)
+			self.__pathListingDragEnterConnection = self.__pathListing.dragEnterSignal().connect(
+				Gaffer.WeakMethod( self.__pathListingDragEnter )
+			)
+			self.__pathListingDragLeaveConnection = self.__pathListing.dragLeaveSignal().connect(
+				Gaffer.WeakMethod( self.__pathListingDragLeave )
+			)
+			self.__pathListingDropConnection = self.__pathListing.dropSignal().connect(
+				Gaffer.WeakMethod( self.__pathListingDrop )
+			)
 
 			with GafferUI.ListContainer( GafferUI.ListContainer.Orientation.Horizontal, spacing = 4 ) :
 
@@ -395,6 +404,62 @@ class _ImageListing( GafferUI.PlugValueWidget ) :
 		with Gaffer.UndoScope( self.getPlug().ancestor( Gaffer.ScriptNode ) ) :
 			self.__images().addChild( duplicateImage )
 			self.getPlug().setValue( len( self.__images() ) - 1 )
+
+	def __dropImage( self, eventData ) :
+
+		if not self.__catalogue()["directory"].getValue() :
+			return None
+
+		if isinstance( eventData, GafferImage.ImagePlug ) :
+			return eventData
+		elif isinstance( eventData, Gaffer.Node ) :
+			return next( iter( eventData.children( GafferImage.ImagePlug ) ), None )
+		elif isinstance( eventData, Gaffer.Set ) and len( eventData ) == 1 :
+			return self.__dropImage( eventData[0] )
+		else :
+			return None
+
+	def __pathListingDragEnter( self, widget, event ) :
+
+		if self.__dropImage( event.data ) is None :
+			return False
+
+		self.__pathListing.setHighlighted( True )
+		GafferUI.Pointer.setCurrent( "plus" )
+
+		return True
+
+	def __pathListingDragLeave( self, widget, event ) :
+
+		self.__pathListing.setHighlighted( False )
+		GafferUI.Pointer.setCurrent( None )
+		return True
+
+	def __pathListingDrop( self, widget, event ) :
+
+		image = self.__dropImage( event.data )
+		if image is None :
+			return False
+
+		with self.getContext() :
+			fileName = self.__catalogue().generateFileName( image )
+			imageWriter = GafferImage.ImageWriter()
+			imageWriter["in"].setInput( image )
+			imageWriter["fileName"].setValue( fileName )
+			imageWriter["task"].execute()
+
+		with Gaffer.UndoScope( self.getPlug().ancestor( Gaffer.ScriptNode ) ) :
+			loadedImage = GafferImage.Catalogue.Image.load( fileName )
+			loadedImage.setName( image.node().getName() )
+			self.__images().addChild( loadedImage )
+			self.getPlug().setValue( len( self.__images() ) - 1 )
+
+		self.__pathListing.setHighlighted( False )
+		GafferUI.Pointer.setCurrent( None )
+
+		return True
+
+GafferUI.Pointer.registerPointer( "plus", GafferUI.Pointer( "plus.png" ) )
 
 ##########################################################################
 # Display server management. This would all be in Catalogue.cpp if it
