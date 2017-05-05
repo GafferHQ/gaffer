@@ -45,6 +45,19 @@ import GafferImageTest
 
 class CatalogueTest( GafferImageTest.ImageTestCase ) :
 
+	def setUp( self ) :
+
+		GafferImageTest.ImageTestCase.setUp( self )
+
+		# Emulate the UI by making the same connections it will
+		self.__driverCreatedConnection = GafferImage.Display.driverCreatedSignal().connect( GafferImage.Catalogue.driverCreated )
+		self.__imageReceivedConnection = GafferImage.Display.imageReceivedSignal().connect( GafferImage.Catalogue.imageReceived )
+
+	def tearDown( self ) :
+
+		self.__driverCreatedConnection = None
+		self.__imageReceivedConnection = None
+
 	def testImages( self ) :
 
 		images = []
@@ -155,6 +168,126 @@ class CatalogueTest( GafferImageTest.ImageTestCase ) :
 		disabledConstant = GafferImage.Constant()
 		disabledConstant["enabled"].setValue( False )
 		self.assertImagesEqual( c2["out"], disabledConstant["out"] )
+
+	def testDisplayDriver( self ) :
+
+		c = GafferImage.Catalogue()
+		self.assertEqual( len( c["images"] ), 0 )
+
+		r = GafferImage.ImageReader()
+		r["fileName"].setValue( "${GAFFER_ROOT}/python/GafferImageTest/images/checker.exr" )
+		GafferImageTest.DisplayTest.sendImage( r["out"], c.displayDriverServer().portNumber() )
+
+		self.assertEqual( len( c["images"] ), 1 )
+		self.assertEqual( c["images"][0]["fileName"].getValue(), "" )
+		self.assertEqual( c["imageIndex"].getValue(), 0 )
+		self.assertImagesEqual( r["out"], c["out"], ignoreMetadata = True )
+
+		r["fileName"].setValue( "${GAFFER_ROOT}/python/GafferImageTest/images/blurRange.exr" )
+		GafferImageTest.DisplayTest.sendImage( r["out"], c.displayDriverServer().portNumber() )
+
+		self.assertEqual( len( c["images"] ), 2 )
+		self.assertEqual( c["images"][1]["fileName"].getValue(), "" )
+		self.assertEqual( c["imageIndex"].getValue(), 1 )
+		self.assertImagesEqual( r["out"], c["out"], ignoreMetadata = True )
+
+	def testDisplayDriverAOVGrouping( self ) :
+
+		c = GafferImage.Catalogue()
+		self.assertEqual( len( c["images"] ), 0 )
+
+		aov1 = GafferImage.Constant()
+		aov1["format"].setValue( GafferImage.Format( 100, 100 ) )
+		aov1["color"].setValue( IECore.Color4f( 1, 0, 0, 1 ) )
+
+		aov2 = GafferImage.Constant()
+		aov2["format"].setValue( GafferImage.Format( 100, 100 ) )
+		aov2["color"].setValue( IECore.Color4f( 0, 1, 0, 1 ) )
+		aov2["layer"].setValue( "diffuse" )
+
+		GafferImageTest.DisplayTest.sendImage( aov1["out"], c.displayDriverServer().portNumber() )
+		GafferImageTest.DisplayTest.sendImage( aov2["out"], c.displayDriverServer().portNumber() )
+
+		self.assertEqual( len( c["images"] ), 1 )
+		self.assertEqual(
+			set( c["out"]["channelNames"].getValue() ),
+			set( aov1["out"]["channelNames"].getValue() ) | set( aov2["out"]["channelNames"].getValue() )
+		)
+
+	def testDisplayDriverSaveToFile( self ) :
+
+		s = Gaffer.ScriptNode()
+		s["c"] = GafferImage.Catalogue()
+		s["c"]["directory"].setValue( os.path.join( self.temporaryDirectory(), "catalogue" ) )
+
+		r = GafferImage.ImageReader()
+		r["fileName"].setValue( "${GAFFER_ROOT}/python/GafferImageTest/images/blurRange.exr" )
+		GafferImageTest.DisplayTest.sendImage( r["out"], GafferImage.Catalogue.displayDriverServer().portNumber() )
+
+		self.assertEqual( len( s["c"]["images"] ), 1 )
+		self.assertEqual( os.path.dirname( s["c"]["images"][0]["fileName"].getValue() ), s["c"]["directory"].getValue() )
+		self.assertImagesEqual( s["c"]["out"], r["out"], ignoreMetadata = True, maxDifference = 0.0003 )
+
+		s2 = Gaffer.ScriptNode()
+		s2.execute( s.serialise() )
+
+		self.assertEqual( len( s2["c"]["images"] ), 1 )
+		self.assertEqual( s2["c"]["images"][0]["fileName"].getValue(), s["c"]["images"][0]["fileName"].getValue() )
+		self.assertImagesEqual( s2["c"]["out"], r["out"], ignoreMetadata = True, maxDifference = 0.0003 )
+
+	def testCatalogueName( self ) :
+
+		c1 = GafferImage.Catalogue()
+		c2 = GafferImage.Catalogue()
+		c2["name"].setValue( "catalogue2" )
+
+		self.assertEqual( len( c1["images"] ), 0 )
+		self.assertEqual( len( c2["images"] ), 0 )
+
+		constant1 = GafferImage.Constant()
+		constant2 = GafferImage.Constant()
+		constant1["format"].setValue( GafferImage.Format( 100, 100 ) )
+		constant2["format"].setValue( GafferImage.Format( 100, 100 ) )
+		constant1["color"].setValue( IECore.Color4f( 1, 0, 0, 1 ) )
+		constant2["color"].setValue( IECore.Color4f( 0, 1, 0, 1 ) )
+
+		GafferImageTest.DisplayTest.sendImage(
+			constant1["out"],
+			GafferImage.Catalogue.displayDriverServer().portNumber(),
+		)
+
+		GafferImageTest.DisplayTest.sendImage(
+			constant2["out"],
+			GafferImage.Catalogue.displayDriverServer().portNumber(),
+			extraParameters = {
+				"catalogue:name" : "catalogue2",
+			}
+		)
+
+		self.assertEqual( len( c1["images"] ), 1 )
+		self.assertEqual( len( c2["images"] ), 1 )
+
+		self.assertImagesEqual( c1["out"], constant1["out"], ignoreMetadata = True )
+		self.assertImagesEqual( c2["out"], constant2["out"], ignoreMetadata = True )
+
+	def testDontSerialiseUnsavedRenders( self ) :
+
+		s = Gaffer.ScriptNode()
+		s["c"] = GafferImage.Catalogue()
+
+		constant = GafferImage.Constant()
+		constant["format"].setValue( GafferImage.Format( 100, 100 ) )
+		GafferImageTest.DisplayTest.sendImage(
+			constant["out"],
+			GafferImage.Catalogue.displayDriverServer().portNumber(),
+		)
+
+		self.assertEqual( len( s["c"]["images"] ), 1 )
+
+		s2 = Gaffer.ScriptNode()
+		s2.execute( s.serialise() )
+
+		self.assertEqual( len( s2["c"]["images"] ), 0 )
 
 if __name__ == "__main__":
 	unittest.main()
