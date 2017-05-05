@@ -37,11 +37,15 @@
 #ifndef GAFFERIMAGE_CATALOGUE_H
 #define GAFFERIMAGE_CATALOGUE_H
 
+#include "IECore/DisplayDriver.h"
+#include "IECore/DisplayDriverServer.h"
+
 #include "Gaffer/StringPlug.h"
 #include "Gaffer/NumericPlug.h"
 
 #include "GafferImage/ImageNode.h"
 #include "GafferImage/ImageSwitch.h"
+#include "GafferImageBindings/CatalogueBinding.h" // To enable friend declaration for bindCatalogue()
 
 namespace GafferImage
 {
@@ -77,18 +81,48 @@ class Catalogue : public ImageNode
 
 		};
 
+		typedef Gaffer::FilteredChildIterator<Gaffer::PlugPredicate<Gaffer::Plug::Invalid, Image> > ImageIterator;
+
 		Gaffer::Plug *imagesPlug();
 		const Gaffer::Plug *imagesPlug() const;
 
 		Gaffer::IntPlug *imageIndexPlug();
 		const Gaffer::IntPlug *imageIndexPlug() const;
 
+		Gaffer::StringPlug *namePlug();
+		const Gaffer::StringPlug *namePlug() const;
+
+		Gaffer::StringPlug *directoryPlug();
+		const Gaffer::StringPlug *directoryPlug() const;
+
+		/// All Catalogues share a single DisplayDriverServer instance
+		/// to receive rendered images. To send an image to the catalogues,
+		/// use an IECore::ClientDisplayDriver with the "displayPort" parameter
+		/// set to match `Catalogue::displayDriverServer()->portNumber()`.
+		static IECore::DisplayDriverServer *displayDriverServer();
+
+		/// Generates a filename that could be used for storing
+		/// a particular image locally in this Catalogue's directory.
+		/// Primarily exists to be used in the UI.
+		std::string generateFileName( const Image *image ) const;
+		std::string generateFileName( const ImagePlug *image ) const;
+
 	private :
+
+		// In an ideal world, the Catalogue would connect these to the relevant
+		// signals directly, but unfortunately the signals are not emitted on the
+		// UI thread where it is permissible to modify the internal graph. We
+		// therefore rely on CatalogueUI.py to connect to the signals and then
+		// call these "slots" from the UI thread.
+		static void driverCreated( IECore::DisplayDriver *driver, const IECore::CompoundData *parameters );
+		static void imageReceived( Gaffer::Plug *plug );
+		friend void GafferImageBindings::bindCatalogue();
 
 		ImageSwitch *imageSwitch();
 		const ImageSwitch *imageSwitch() const;
 
-		ImageNode *imageNode( Image *image ) const;
+		IE_CORE_FORWARDDECLARE( InternalImage );
+		InternalImage *imageNode( const Image *image ) const;
 
 		void imageAdded( GraphComponent *graphComponent );
 		void imageRemoved( GraphComponent *graphComponent );

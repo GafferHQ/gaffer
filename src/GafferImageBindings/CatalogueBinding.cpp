@@ -69,6 +69,18 @@ void save( Catalogue::Image &image, const std::string &fileName )
 	image.save( fileName );
 }
 
+std::string generateFileName1( Catalogue &catalogue, const Catalogue::Image *image )
+{
+	IECorePython::ScopedGILRelease gilRelease;
+	return catalogue.generateFileName( image );
+}
+
+std::string generateFileName2( Catalogue &catalogue, const ImagePlug *image )
+{
+	IECorePython::ScopedGILRelease gilRelease;
+	return catalogue.generateFileName( image );
+}
+
 } // namespace
 
 namespace GafferImageBindings
@@ -77,7 +89,16 @@ namespace GafferImageBindings
 void bindCatalogue()
 {
 
-	scope s = GafferBindings::DependencyNodeClass<Catalogue>();
+	scope s = GafferBindings::DependencyNodeClass<Catalogue>()
+		.def( "generateFileName", &generateFileName1 )
+		.def( "generateFileName", &generateFileName2 )
+		.def( "displayDriverServer", &Catalogue::displayDriverServer, return_value_policy<IECorePython::CastToIntrusivePtr>() )
+		.staticmethod( "displayDriverServer" )
+		.def( "driverCreated", &Catalogue::driverCreated )
+		.staticmethod( "driverCreated" )
+		.def( "imageReceived", &Catalogue::imageReceived )
+		.staticmethod( "imageReceived" )
+	;
 
 	GafferBindings::PlugClass<Catalogue::Image>()
 		.def(

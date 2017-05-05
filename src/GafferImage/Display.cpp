@@ -583,5 +583,10 @@ void Display::dataReceived( GafferDisplayDriver *driver, const Imath::Box2i &bou
 
 void Display::imageReceived( GafferDisplayDriver *driver )
 {
+	// The nefarious Catalogue deletes Display nodes when renders
+	// are completed. We keep a reference to ourselves while emitting
+	// so that any slots connected after the Catalogue's won't be
+	// passed an already-deleted plug.
+	DisplayPtr owner( this );
 	imageReceivedSignal()( outPlug() );
 }
