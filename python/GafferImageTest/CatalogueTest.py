@@ -386,5 +386,42 @@ class CatalogueTest( GafferImageTest.ImageTestCase ) :
 
 		self.assertEqual( len( s2["b"]["images"] ), 0 )
 
+	def testUndoRedo( self ) :
+
+		s = Gaffer.ScriptNode()
+		s["c"] = GafferImage.Catalogue()
+		s["c"]["images"].addChild( s["c"].Image.load( "${GAFFER_ROOT}/python/GafferImageTest/images/checker.exr" ) )
+
+		r = GafferImage.ImageReader()
+		r["fileName"].setValue( "${GAFFER_ROOT}/python/GafferImageTest/images/blurRange.exr" )
+
+		def assertPreconditions() :
+
+			self.assertEqual( len( s["c"]["images"] ), 1 )
+			self.assertEqual( s["c"]["imageIndex"].getValue(), 0 )
+
+		assertPreconditions()
+
+		with Gaffer.UndoScope( s ) :
+			s["c"]["images"].addChild( s["c"].Image.load( r["fileName"].getValue() ) )
+			s["c"]["imageIndex"].setValue( 1 )
+
+		def assertPostConditions() :
+
+			self.assertEqual( len( s["c"]["images"] ), 2 )
+			self.assertEqual( s["c"]["imageIndex"].getValue(), 1 )
+			self.assertImagesEqual( s["c"]["out"], r["out"], ignoreMetadata = True )
+
+		assertPostConditions()
+
+		s.undo()
+		assertPreconditions()
+
+		s.redo()
+		assertPostConditions()
+
+		s.undo()
+		assertPreconditions()
+
 if __name__ == "__main__":
 	unittest.main()

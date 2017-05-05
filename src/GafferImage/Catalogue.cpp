@@ -340,6 +340,20 @@ InstanceSet &instances()
 	return instanceSet;
 };
 
+bool undoingOrRedoing( const Node *node )
+{
+	const ScriptNode *script = node->scriptNode();
+	if( !script )
+	{
+		return false;
+	}
+
+	return (
+		script->currentActionStage() == Action::Undo ||
+		script->currentActionStage() == Action::Redo
+	);
+}
+
 } // namespace
 
 IE_CORE_DEFINERUNTIMETYPED( Catalogue );
@@ -483,6 +497,12 @@ void Catalogue::imageAdded( GraphComponent *graphComponent )
 		throw IECore::Exception( "Expected a Catalogue::Image" );
 	}
 
+	if( undoingOrRedoing( this ) )
+	{
+		// Just let the undo queue replay our previous actions
+		return;
+	}
+
 	InternalImagePtr internalImage = new InternalImage();
 	addChild( internalImage );
 	internalImage->fileNamePlug()->setInput( image->fileNamePlug() );
@@ -494,6 +514,12 @@ void Catalogue::imageAdded( GraphComponent *graphComponent )
 
 void Catalogue::imageRemoved( GraphComponent *graphComponent )
 {
+	if( undoingOrRedoing( this ) )
+	{
+		// Just let the undo queue replay our previous actions
+		return;
+	}
+
 	Image *image = static_cast<Image *>( graphComponent );
 	// This causes the image to disconnect from
  	// the switch automatically.
