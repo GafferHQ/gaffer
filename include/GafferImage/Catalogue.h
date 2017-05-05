@@ -68,7 +68,7 @@ class Catalogue : public ImageNode
 
 				IE_CORE_DECLARERUNTIMETYPEDEXTENSION( GafferImage::Catalogue::Image, CatalogueImageTypeId, Gaffer::Plug );
 
-				Image( const std::string &name = defaultName<Image>() );
+				Image( const std::string &name = defaultName<Image>(), Direction direction = In, unsigned flags = Default );
 
 				Gaffer::StringPlug *fileNamePlug();
 				const Gaffer::StringPlug *fileNamePlug() const;
@@ -78,6 +78,8 @@ class Catalogue : public ImageNode
 
 				static Ptr load( const std::string &fileName );
 				void save( const std::string &fileName ) const;
+
+				virtual Gaffer::PlugPtr createCounterpart( const std::string &name, Direction direction ) const;
 
 		};
 

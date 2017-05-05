@@ -289,5 +289,102 @@ class CatalogueTest( GafferImageTest.ImageTestCase ) :
 
 		self.assertEqual( len( s2["c"]["images"] ), 0 )
 
+	def testPromotion( self ) :
+
+		s = Gaffer.ScriptNode()
+		s["b"] = Gaffer.Box()
+		s["b"]["c"] = GafferImage.Catalogue()
+		promotedImages = Gaffer.PlugAlgo.promote( s["b"]["c"]["images"] )
+		promotedImageIndex = Gaffer.PlugAlgo.promote( s["b"]["c"]["imageIndex"] )
+		promotedOut = Gaffer.PlugAlgo.promote( s["b"]["c"]["out"] )
+
+		images = []
+		readers = []
+		for i, fileName in enumerate( [ "checker.exr", "blurRange.exr", "noisyRamp.exr" ] ) :
+			images.append( GafferImage.Catalogue.Image.load( "${GAFFER_ROOT}/python/GafferImageTest/images/" + fileName ) )
+			readers.append( GafferImage.ImageReader() )
+			readers[-1]["fileName"].setValue( images[-1]["fileName"].getValue() )
+
+		for image in images :
+			promotedImages.addChild( image )
+			self.assertImagesEqual( readers[0]["out"], promotedOut, ignoreMetadata = True )
+
+		for i, reader in enumerate( readers ) :
+			promotedImageIndex.setValue( i )
+			self.assertImagesEqual( readers[i]["out"], promotedOut, ignoreMetadata = True )
+
+		s2 = Gaffer.ScriptNode()
+		s2.execute( s.serialise() )
+
+		for i, reader in enumerate( readers ) :
+			s2["b"]["imageIndex"].setValue( i )
+			self.assertImagesEqual( readers[i]["out"], s2["b"]["out"], ignoreMetadata = True )
+
+		s3 = Gaffer.ScriptNode()
+		s3.execute( s.serialise() )
+
+		for i, reader in enumerate( readers ) :
+			s3["b"]["imageIndex"].setValue( i )
+			self.assertImagesEqual( readers[i]["out"], s3["b"]["out"], ignoreMetadata = True )
+
+	def testDisplayDriverAndPromotion( self ) :
+
+		s = Gaffer.ScriptNode()
+		s["b"] = Gaffer.Box()
+		s["b"]["c"] = GafferImage.Catalogue()
+		s["b"]["c"]["directory"].setValue( os.path.join( self.temporaryDirectory(), "catalogue" ) )
+		promotedImages = Gaffer.PlugAlgo.promote( s["b"]["c"]["images"] )
+		promotedImageIndex = Gaffer.PlugAlgo.promote( s["b"]["c"]["imageIndex"] )
+		promotedOut = Gaffer.PlugAlgo.promote( s["b"]["c"]["out"] )
+
+		r = GafferImage.ImageReader()
+		r["fileName"].setValue( "${GAFFER_ROOT}/python/GafferImageTest/images/checker.exr" )
+		GafferImageTest.DisplayTest.sendImage( r["out"], GafferImage.Catalogue.displayDriverServer().portNumber() )
+
+		self.assertEqual( len( promotedImages ), 1 )
+		self.assertEqual( promotedImageIndex.getValue(), 0 )
+		self.assertImagesEqual( r["out"], promotedOut, ignoreMetadata = True, maxDifference = 0.0003 )
+
+		r["fileName"].setValue( "${GAFFER_ROOT}/python/GafferImageTest/images/blurRange.exr" )
+		GafferImageTest.DisplayTest.sendImage( r["out"], GafferImage.Catalogue.displayDriverServer().portNumber() )
+
+		self.assertEqual( len( promotedImages ), 2 )
+		self.assertEqual( promotedImageIndex.getValue(), 1 )
+		self.assertImagesEqual( r["out"], promotedOut, ignoreMetadata = True, maxDifference = 0.0003 )
+
+		s2 = Gaffer.ScriptNode()
+		s2.execute( s.serialise() )
+
+		self.assertEqual( len( s2["b"]["images"] ), 2 )
+		self.assertEqual( s2["b"]["imageIndex"].getValue(), 1 )
+		self.assertImagesEqual( promotedOut, s2["b"]["c"]["out"], ignoreMetadata = True )
+
+		s3 = Gaffer.ScriptNode()
+		s3.execute( s2.serialise() )
+
+		self.assertEqual( len( s3["b"]["images"] ), 2 )
+		self.assertEqual( s3["b"]["imageIndex"].getValue(), 1 )
+		self.assertImagesEqual( promotedOut, s3["b"]["c"]["out"], ignoreMetadata = True )
+
+	def testDontSavePromotedUnsavedRenders( self ) :
+
+		s = Gaffer.ScriptNode()
+		s["b"] = Gaffer.Box()
+		s["b"]["c"] = GafferImage.Catalogue()
+		promotedImages = Gaffer.PlugAlgo.promote( s["b"]["c"]["images"] )
+		promotedImageIndex = Gaffer.PlugAlgo.promote( s["b"]["c"]["imageIndex"] )
+		promotedOut = Gaffer.PlugAlgo.promote( s["b"]["c"]["out"] )
+
+		r = GafferImage.ImageReader()
+		r["fileName"].setValue( "${GAFFER_ROOT}/python/GafferImageTest/images/checker.exr" )
+		GafferImageTest.DisplayTest.sendImage( r["out"], GafferImage.Catalogue.displayDriverServer().portNumber() )
+
+		self.assertEqual( len( promotedImages ), 1 )
+
+		s2 = Gaffer.ScriptNode()
+		s2.execute( s.serialise() )
+
+		self.assertEqual( len( s2["b"]["images"] ), 0 )
+
 if __name__ == "__main__":
 	unittest.main()

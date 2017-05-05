@@ -48,9 +48,33 @@ using namespace GafferImage;
 namespace
 {
 
-std::string repr( const Catalogue::Image *image )
+std::string maskedRepr( const Catalogue::Image *plug, unsigned flagsMask )
 {
-	return "GafferImage.Catalogue.Image( \"" + image->getName().string() + "\" )";
+	/// \todo We only really need this function because the standard plug serialiser
+	/// can't extract the nested class name. We have this problem in a few places now,
+	/// so maybe we should have a simple mechanism for providing the name, or we should
+	/// use `RunTimeTyped::typeName()` instead.
+	std::string result = "GafferImage.Catalogue.Image( \"" + plug->getName().string() + "\", ";
+
+	if( plug->direction()!=Plug::In )
+	{
+		result += "direction = " + PlugSerialiser::directionRepr( plug->direction() ) + ", ";
+	}
+
+	const unsigned flags = plug->getFlags() & flagsMask;
+	if( flags != Plug::Default )
+	{
+		result += "flags = " + PlugSerialiser::flagsRepr( flags ) + ", ";
+	}
+
+	result += ")";
+
+	return result;
+}
+
+std::string repr( const Catalogue::Image *plug )
+{
+	return maskedRepr( plug, Plug::All );
 }
 
 class ImageSerialiser : public PlugSerialiser
@@ -58,7 +82,31 @@ class ImageSerialiser : public PlugSerialiser
 
 	virtual std::string constructor( const Gaffer::GraphComponent *graphComponent, const Serialisation &serialisation ) const
 	{
-		return repr( static_cast<const Catalogue::Image *>( graphComponent ) );
+		return maskedRepr( static_cast<const Catalogue::Image *>( graphComponent ), Plug::All & ~Plug::ReadOnly );
+	}
+
+};
+
+class CatalogueSerialiser : public NodeSerialiser
+{
+
+	virtual bool childNeedsSerialisation( const Gaffer::GraphComponent *child, const Serialisation &serialisation ) const
+	{
+		if( child == child->parent<Catalogue>()->outPlug() )
+		{
+			/// \todo We don't want to serialise the output plug
+			/// because that means an unnecessary `setInput()`
+			/// call is emitted, revealing some of our internal
+			/// implementation. It feels like we should be able to get this
+			/// right by default on the NodeSerialiser, but this might
+			/// have a few knock on effects that would require a major
+			/// version. Note that we can't do the simple thing and turn off
+			/// the Plug::Serialisable flag in the Catalogue constructor
+			/// because that means that a promoted plug won't be serialised
+			/// either.
+			return false;
+		}
+		return NodeSerialiser::childNeedsSerialisation( child, serialisation );
 	}
 
 };
@@ -102,9 +150,11 @@ void bindCatalogue()
 
 	GafferBindings::PlugClass<Catalogue::Image>()
 		.def(
-			init<const std::string &>(
+			init<const std::string &, Plug::Direction, unsigned>(
 				(
-					boost::python::arg_( "name" ) = GraphComponent::defaultName<Catalogue::Image>()
+					boost::python::arg_( "name" ) = GraphComponent::defaultName<Catalogue::Image>(),
+					boost::python::arg_( "direction" ) = Plug::In,
+					boost::python::arg_( "flags" ) = Plug::Default
 				)
 			)
 		)
@@ -115,6 +165,7 @@ void bindCatalogue()
 	;
 
 	Serialisation::registerSerialiser( Catalogue::Image::staticTypeId(), new ImageSerialiser );
+	Serialisation::registerSerialiser( Catalogue::staticTypeId(), new CatalogueSerialiser );
 
 }
 

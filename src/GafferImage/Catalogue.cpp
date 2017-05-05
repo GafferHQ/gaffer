@@ -43,6 +43,7 @@
 #include "Gaffer/StringPlug.h"
 #include "Gaffer/ArrayPlug.h"
 #include "Gaffer/ScriptNode.h"
+#include "Gaffer/DownstreamIterator.h"
 
 #include "GafferImage/Catalogue.h"
 #include "GafferImage/ImageReader.h"
@@ -172,7 +173,7 @@ class Catalogue::InternalImage : public ImageNode
 				m_clientPID = clientPID->readable();
 			}
 
-			image()->setFlags( Plug::Serialisable, false );	// Don't serialise in-progress renders
+			updateImageFlags( Plug::Serialisable, false ); // Don't serialise in-progress renders
 
 			return true;
 		}
@@ -211,10 +212,18 @@ class Catalogue::InternalImage : public ImageNode
 				removeChild( *it );
 			}
 
-			image()->setFlags( Plug::Serialisable, true );
+			updateImageFlags( Plug::Serialisable, true );
 		}
 
 	private :
+
+		void updateImageFlags( unsigned flags, bool enable )
+		{
+			for( Image *i = fileNamePlug()->getInput<Plug>()->parent<Image>(); i; i = i->getInput<Image>() )
+			{
+				i->setFlags( flags, enable );
+			}
+		}
 
 		ImageReader *imageReader()
 		{
@@ -236,16 +245,6 @@ class Catalogue::InternalImage : public ImageNode
 			return getChild<ImageMetadata>( g_firstChildIndex + 5 );
 		}
 
-		Image *image()
-		{
-			Image *result = fileNamePlug()->source<Plug>()->parent<Image>();
-			if( !result )
-			{
-				throw IECore::Exception( "Catalogue::InternalImage::image : Unable to find image" );
-			}
-			return result;
-		}
-
 		int m_clientPID;
 		size_t m_numDriversClosed;
 
@@ -261,8 +260,8 @@ size_t Catalogue::InternalImage::g_firstChildIndex = 0;
 
 IE_CORE_DEFINERUNTIMETYPED( Catalogue::Image );
 
-Catalogue::Image::Image( const std::string &name )
-	:	Plug( name, Plug::In, Plug::Default | Plug::Dynamic )
+Catalogue::Image::Image( const std::string &name, Direction direction, unsigned flags )
+	:	Plug( name, direction, flags )
 {
 	addChild( new StringPlug( "fileName" ) );
 	addChild( new StringPlug( "description" ) );
@@ -290,7 +289,7 @@ const Gaffer::StringPlug *Catalogue::Image::descriptionPlug() const
 
 Catalogue::Image::Ptr Catalogue::Image::load( const std::string &fileName )
 {
-	Ptr image = new Image( boost::filesystem::path( fileName ).stem().string() );
+	Ptr image = new Image( boost::filesystem::path( fileName ).stem().string(), Plug::In, Plug::Default | Plug::Dynamic );
 	image->fileNamePlug()->setValue( fileName );
 
 	ImageReaderPtr reader = new ImageReader;
@@ -320,6 +319,11 @@ void Catalogue::Image::save( const std::string &fileName ) const
 		throw IECore::Exception( "Catalogue::imageNode : Unable to find image" );
 	}
 	internalImage->save( fileName );
+}
+
+Gaffer::PlugPtr Catalogue::Image::createCounterpart( const std::string &name, Direction direction ) const
+{
+	return new Image( name, direction, getFlags() );
 }
 
 //////////////////////////////////////////////////////////////////////////
@@ -369,7 +373,6 @@ Catalogue::Catalogue( const std::string &name )
 	enabler->indexPlug()->setValue( 1 );
 
 	outPlug()->setInput( enabler->outPlug() );
-	outPlug()->setFlags( Plug::Serialisable, false );
 
 	imagesPlug()->childAddedSignal().connect( boost::bind( &Catalogue::imageAdded, this, ::_2 ) );
 	imagesPlug()->childRemovedSignal().connect( boost::bind( &Catalogue::imageRemoved, this, ::_2 ) );
@@ -434,13 +437,15 @@ const ImageSwitch *Catalogue::imageSwitch() const
 
 Catalogue::InternalImage *Catalogue::imageNode( const Image *image ) const
 {
-	const Plug::OutputContainer &outputs = image->fileNamePlug()->outputs();
-	for( Plug::OutputContainer::const_iterator it = outputs.begin(), eIt = outputs.end(); it != eIt; ++it )
+	for( DownstreamIterator it( image->fileNamePlug() ); !it.done(); ++it )
 	{
-		InternalImage *node = runTimeCast<InternalImage>( (*it)->node() );
+		const InternalImage *node = runTimeCast<const InternalImage>( it->node() );
 		if( node && node->parent<Node>() == this )
 		{
-			return node;
+			/// \todo Make DownstreamIterator reference non-const
+			/// plugs (and add a ConstDownstreamIterator) and then
+			/// we don't need this cast.
+			return const_cast<InternalImage *>( node );
 		}
 	}
 	throw IECore::Exception( "Catalogue::imageNode : Unable to find image" );
@@ -472,7 +477,11 @@ std::string Catalogue::generateFileName( const ImagePlug *image ) const
 
 void Catalogue::imageAdded( GraphComponent *graphComponent )
 {
-	Image *image = static_cast<Image *>( graphComponent );
+	Image *image = runTimeCast<Image>( graphComponent );
+	if( !image )
+	{
+		throw IECore::Exception( "Expected a Catalogue::Image" );
+	}
 
 	InternalImagePtr internalImage = new InternalImage();
 	addChild( internalImage );
@@ -550,7 +559,7 @@ void Catalogue::driverCreated( IECore::DisplayDriver *driver, const IECore::Comp
 		// AOVs into a single image. We iterate backwards
 		// because the last image is most likely to be the
 		// one we want.
-		Plug *images = catalogue->imagesPlug();
+		Plug *images = catalogue->imagesPlug()->source<Plug>();
 		bool addedToExistingImage = false;
 		for( int i = images->children().size() - 1; i >= 0; --i )
 		{
@@ -566,10 +575,10 @@ void Catalogue::driverCreated( IECore::DisplayDriver *driver, const IECore::Comp
 		// render, then create one and use that.
 		if( !addedToExistingImage )
 		{
-			Image::Ptr image = new Image();
-			catalogue->imagesPlug()->addChild( image );
+			Image::Ptr image = new Image( "Image", Plug::In, Plug::Default | Plug::Dynamic );
+			images->addChild( image );
 			catalogue->imageNode( image.get() )->insertDriver( driver, parameters );
-			catalogue->imageIndexPlug()->setValue( catalogue->imagesPlug()->children().size() - 1 );
+			catalogue->imageIndexPlug()->source<IntPlug>()->setValue( catalogue->imagesPlug()->children().size() - 1 );
 		}
 	}
 }
