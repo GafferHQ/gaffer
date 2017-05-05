@@ -74,7 +74,7 @@ class BoxOutTest( GafferTest.TestCase ) :
 		self.assertEqual( s["b"]["o"]["name"].getValue(), "test" )
 		self.assertEqual( promoted.getName(), s["b"]["o"]["name"].getValue() )
 
-		with Gaffer.UndoContext( s ) :
+		with Gaffer.UndoScope( s ) :
 			promoted.setName( "bob" )
 
 		self.assertEqual( promoted.getName(), "bob" )
@@ -85,7 +85,7 @@ class BoxOutTest( GafferTest.TestCase ) :
 		self.assertEqual( s["b"]["o"]["name"].getValue(), "test" )
 		self.assertEqual( promoted.getName(), s["b"]["o"]["name"].getValue() )
 
-		with Gaffer.UndoContext( s ) :
+		with Gaffer.UndoScope( s ) :
 			s["b"]["o"]["name"].setValue( "jim" )
 
 		self.assertEqual( promoted.getName(), "jim" )
@@ -110,7 +110,7 @@ class BoxOutTest( GafferTest.TestCase ) :
 		self.assertTrue( "out" in s["b"] )
 		self.assertTrue( s["b"]["out"].source().isSame( s["b"]["n"]["sum"] ) )
 
-		with Gaffer.UndoContext( s ) :
+		with Gaffer.UndoScope( s ) :
 			del s["b"]["o"]
 
 		self.assertFalse( "out" in s["b"] )
@@ -199,7 +199,7 @@ class BoxOutTest( GafferTest.TestCase ) :
 
 		assertPreconditions()
 
-		with Gaffer.UndoContext( s ) :
+		with Gaffer.UndoScope( s ) :
 			del s["b"]["sum"]
 
 		def assertPostconditions() :

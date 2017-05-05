@@ -74,7 +74,7 @@ class BoxInTest( GafferTest.TestCase ) :
 		self.assertEqual( s["b"]["i"]["name"].getValue(), "test" )
 		self.assertEqual( promoted.getName(), s["b"]["i"]["name"].getValue() )
 
-		with Gaffer.UndoContext( s ) :
+		with Gaffer.UndoScope( s ) :
 			promoted.setName( "bob" )
 
 		self.assertEqual( promoted.getName(), "bob" )
@@ -85,7 +85,7 @@ class BoxInTest( GafferTest.TestCase ) :
 		self.assertEqual( s["b"]["i"]["name"].getValue(), "test" )
 		self.assertEqual( promoted.getName(), s["b"]["i"]["name"].getValue() )
 
-		with Gaffer.UndoContext( s ) :
+		with Gaffer.UndoScope( s ) :
 			s["b"]["i"]["name"].setValue( "jim" )
 
 		self.assertEqual( promoted.getName(), "jim" )
@@ -128,7 +128,7 @@ class BoxInTest( GafferTest.TestCase ) :
 		self.assertTrue( "op1" in s["b"] )
 		self.assertTrue( s["b"]["n"]["op1"].source().isSame( s["b"]["op1"] ) )
 
-		with Gaffer.UndoContext( s ) :
+		with Gaffer.UndoScope( s ) :
 			del s["b"]["i"]
 
 		self.assertFalse( "op1" in s["b"] )
@@ -240,7 +240,7 @@ class BoxInTest( GafferTest.TestCase ) :
 
 		assertPreconditions()
 
-		with Gaffer.UndoContext( s ) :
+		with Gaffer.UndoScope( s ) :
 			del s["b"]["op1"]
 
 		def assertPostconditions() :
@@ -280,7 +280,7 @@ class BoxInTest( GafferTest.TestCase ) :
 
 		assertPreconditions()
 
-		with Gaffer.UndoContext( s ) :
+		with Gaffer.UndoScope( s ) :
 			del s["b"]["in"]
 
 		def assertPostconditions() :
@@ -314,7 +314,7 @@ class BoxInTest( GafferTest.TestCase ) :
 
 		assertPreconditions()
 
-		with Gaffer.UndoContext( s ) :
+		with Gaffer.UndoScope( s ) :
 
 			s["b"]["i"] = Gaffer.BoxIn()
 			s["b"]["i"].setup( s["a"]["sum"] )
