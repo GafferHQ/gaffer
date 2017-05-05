@@ -941,7 +941,7 @@ _styleSheet = string.Template(
 		background-color: $brightColor;
 	}
 
-	/* highlighted state for VectorDataWidget */
+	/* highlighted state for VectorDataWidget and tree views */
 
 	QTableView[gafferHighlighted=\"true\"]#vectorDataWidget,
 	QTableView[gafferHighlighted=\"true\"]#vectorDataWidgetEditable {
@@ -950,6 +950,7 @@ _styleSheet = string.Template(
 
 	}
 
+	QTreeView[gafferHighlighted=\"true\"],
 	QTableView[gafferHighlighted=\"true\"] QHeaderView::section#vectorDataWidgetVerticalHeader {
 
 		border-color: $brightColor;
