@@ -74,6 +74,8 @@ using namespace std;
 namespace
 {
 
+const float g_endPointSize = 2.0f;
+
 Imath::Color4f colorForAxes( Style::Axes axes )
 {
 	switch( axes )
@@ -490,7 +492,7 @@ void StandardStyle::renderText( TextType textType, const std::string &text, Stat
 	glTexParameteri( GL_TEXTURE_2D, GL_TEXTURE_MAG_FILTER, GL_LINEAR );
 	glTexParameterf( GL_TEXTURE_2D, GL_TEXTURE_LOD_BIAS, -1.25 );
 
-	glUniform1i( g_bezierParameter, 0 );
+	glUniform1i( g_isCurveParameter, 0 );
 	glUniform1i( g_borderParameter, 0 );
 	glUniform1i( g_edgeAntiAliasingParameter, 0 );
 	glUniform1i( g_textureParameter, 0 );
@@ -580,7 +582,7 @@ void StandardStyle::renderNodeFrame( const Imath::Box2f &contents, float borderW
 	b.max += bw;
 
 	V2f cornerSizes = bw / b.size();
-	glUniform1i( g_bezierParameter, 0 );
+	glUniform1i( g_isCurveParameter, 0 );
 	glUniform1i( g_borderParameter, 1 );
 	glUniform2f( g_borderRadiusParameter, cornerSizes.x, cornerSizes.y );
 	glUniform1f( g_borderWidthParameter, 0.15f / borderWidth );
@@ -606,7 +608,7 @@ void StandardStyle::renderNodeFrame( const Imath::Box2f &contents, float borderW
 
 void StandardStyle::renderNodule( float radius, State state, const Imath::Color3f *userColor ) const
 {
-	glUniform1i( g_bezierParameter, 0 );
+	glUniform1i( g_isCurveParameter, 0 );
 	glUniform1i( g_borderParameter, 1 );
 	glUniform2f( g_borderRadiusParameter, 0.5f, 0.5f );
 	glUniform1f( g_borderWidthParameter, 0.2f );
@@ -631,27 +633,29 @@ void StandardStyle::renderNodule( float radius, State state, const Imath::Color3
 
 void StandardStyle::renderConnection( const Imath::V3f &srcPosition, const Imath::V3f &srcTangent, const Imath::V3f &dstPosition, const Imath::V3f &dstTangent, State state, const Imath::Color3f *userColor ) const
 {
-	glUniform1i( g_bezierParameter, 1 );
+	glUniform1i( g_isCurveParameter, 1 );
 	glUniform1i( g_borderParameter, 0 );
 	glUniform1i( g_edgeAntiAliasingParameter, 1 );
 	glUniform1i( g_textureTypeParameter, 0 );
 
 	glColor( colorForState( ConnectionColor, state, userColor ) );
 
-	V3f d = dstPosition - srcPosition;
+	V3f dir = ( dstPosition - srcPosition ).normalized();
+
 
 	glUniform3fv( g_v0Parameter, 1, srcPosition.getValue() );
-	glUniform3fv( g_v1Parameter, 1, ( srcPosition + srcTangent * d.dot( srcTangent ) * 0.25f ).getValue() );
-	glUniform3fv( g_v2Parameter, 1, ( dstPosition - dstTangent * d.dot( dstTangent ) * 0.25f ).getValue() );
-	glUniform3fv( g_v3Parameter, 1, dstPosition.getValue() );
+	glUniform3fv( g_v1Parameter, 1, dstPosition.getValue() );
+	glUniform3fv( g_t0Parameter, 1, ( srcTangent != V3f( 0 ) ? srcTangent :  dir ).getValue() );
+	glUniform3fv( g_t1Parameter, 1, ( dstTangent != V3f( 0 ) ? dstTangent : -dir ).getValue() );
 
+	glUniform1f( g_endPointSizeParameter, g_endPointSize );
 
 	glCallList( connectionDisplayList() );
 }
 
 void StandardStyle::renderSolidRectangle( const Imath::Box2f &box ) const
 {
-	glUniform1i( g_bezierParameter, 0 );
+	glUniform1i( g_isCurveParameter, 0 );
 	glUniform1i( g_borderParameter, 0 );
 	glUniform1i( g_edgeAntiAliasingParameter, 0 );
 	glUniform1i( g_textureTypeParameter, 0 );
@@ -668,7 +672,7 @@ void StandardStyle::renderSolidRectangle( const Imath::Box2f &box ) const
 
 void StandardStyle::renderRectangle( const Imath::Box2f &box ) const
 {
-	glUniform1i( g_bezierParameter, 0 );
+	glUniform1i( g_isCurveParameter, 0 );
 	glUniform1i( g_borderParameter, 0 );
 	glUniform1i( g_edgeAntiAliasingParameter, 0 );
 	glUniform1i( g_textureTypeParameter, 0 );
@@ -701,7 +705,7 @@ void StandardStyle::renderSelectionBox( const Imath::Box2f &box ) const
 	float cornerRadius = min( 5.0f, min( boxSize.x, boxSize.y ) / 2.0f );
 
 	V2f cornerSizes = V2f( cornerRadius ) / boxSize;
-	glUniform1i( g_bezierParameter, 0 );
+	glUniform1i( g_isCurveParameter, 0 );
 	glUniform1i( g_borderParameter, 1 );
 	glUniform2f( g_borderRadiusParameter, cornerSizes.x, cornerSizes.y );
 	glUniform1i( g_edgeAntiAliasingParameter, 0 );
@@ -735,7 +739,7 @@ void StandardStyle::renderHorizontalRule( const Imath::V2f &center, float length
 
 	glColor( state == HighlightedState ? m_colors[HighlightColor] : m_colors[ForegroundColor] );
 
-	glUniform1i( g_bezierParameter, 0 );
+	glUniform1i( g_isCurveParameter, 0 );
 	glUniform1i( g_borderParameter, 0 );
 	glUniform1i( g_edgeAntiAliasingParameter, 0 );
 	glUniform1i( g_textureTypeParameter, 0 );
@@ -788,7 +792,7 @@ void StandardStyle::renderImage( const Imath::Box2f &box, const IECoreGL::Textur
 	glActiveTexture( GL_TEXTURE0 );
 	texture->bind();
 
-	glUniform1i( g_bezierParameter, 0 );
+	glUniform1i( g_isCurveParameter, 0 );
 	glUniform1i( g_borderParameter, 0 );
 	glUniform1i( g_edgeAntiAliasingParameter, 0 );
 	glUniform1i( g_textureParameter, 0 );
@@ -814,19 +818,19 @@ void StandardStyle::renderImage( const Imath::Box2f &box, const IECoreGL::Textur
 
 void StandardStyle::renderLine( const IECore::LineSegment3f &line ) const
 {
-	glUniform1i( g_bezierParameter, 1 );
+	glUniform1i( g_isCurveParameter, 1 );
 	glUniform1i( g_borderParameter, 0 );
 	glUniform1i( g_edgeAntiAliasingParameter, 1 );
 	glUniform1i( g_textureTypeParameter, 0 );
 
 	glColor( getColor( BackgroundColor ) );
 
-	V3f d = line.direction() / 3.0f;
+	V3f d = line.normalizedDirection();
 
 	glUniform3fv( g_v0Parameter, 1, line.p0.getValue() );
-	glUniform3fv( g_v1Parameter, 1, ( line.p0 + d ).getValue() );
-	glUniform3fv( g_v2Parameter, 1, ( line.p1 - d ).getValue() );
-	glUniform3fv( g_v3Parameter, 1, line.p1.getValue() );
+	glUniform3fv( g_v1Parameter, 1, line.p1.getValue() );
+	glUniform3fv( g_t0Parameter, 1, ( d ).getValue() );
+	glUniform3fv( g_t1Parameter, 1, ( -d ).getValue() );
 
 	glCallList( connectionDisplayList() );
 }
@@ -930,42 +934,53 @@ Imath::Color3f StandardStyle::colorForState( Color c, State s, const Imath::Colo
 
 static const std::string &vertexSource()
 {
+	// When isCurve is set, this renders a curve defined by start and end points, and start and end tangents.
+	// See contrib/dd/notes/noodleShapes.svg for explanation.
 	static const std::string g_vertexSource =
 
-		"uniform bool bezier;"
+		"uniform bool isCurve;"
 		"uniform vec3 v0;"
 		"uniform vec3 v1;"
-		"uniform vec3 v2;"
-		"uniform vec3 v3;"
+		"uniform vec3 t0;"
+		"uniform vec3 t1;"
+		"uniform float endPointSize;"
 
 		"void main()"
 		"{"
-		"	if( bezier )"
+		"	if( isCurve )"
 		"	{"
-		"		mat4 basis = mat4("
-		"			-1,  3, -3,  1,"
-		"			 3, -6,  3,  0,"
-		"			-3,  3,  0,  0,"
-		"			 1,  0,  0,  0"
-		"		);"
+				// Compute the largest possible end point size that doesn't create overlapping endPointCircles
+		"		float a = dot( t0 - t1, t0 - t1 ) - 4.0;"
+		"		float b = 2.0 *  dot( v0 - v1, t0 - t1 );"
+		"		float c = dot( v0 - v1, v0 - v1 );"
+		"		float maxEndPointSize = abs( a ) < 0.0001 ? abs( c / b ) : ( -b - sqrt( b * b - 4.0 * a * c ) ) / ( 2.0 * a );"
+				// If the end point size would create overlapping circles, clamp it
+		"		float effectiveEndPointSize = min( endPointSize, maxEndPointSize );"
 
-		"		vec4 t = vec4("
-		"			gl_MultiTexCoord0.y * gl_MultiTexCoord0.y * gl_MultiTexCoord0.y,"
-		"			gl_MultiTexCoord0.y * gl_MultiTexCoord0.y,"
-		"			gl_MultiTexCoord0.y,"
-		"			1.0"
-		"		);"
+		"		vec3 offsetCenter0 = v0 + effectiveEndPointSize * t0;"
+		"		vec3 offsetCenter1 = v1 + effectiveEndPointSize * t1;"
+		"		vec3 straight = normalize( offsetCenter0 - offsetCenter1 );"
 
-		"		vec4 tDeriv = vec4( t[1] * 3.0, t[2] * 2.0, 1.0, 0.0 );"
-		"		vec4 w = basis * t;"
-		"		vec4 wDeriv = basis * tDeriv;"
-
-		"		vec3 p = w.x * v0 + w.y * v1 + w.z * v2 + w.w * v3;"
-		"		vec3 vTangent = wDeriv.x * v0 + wDeriv.y * v1 + wDeriv.z * v2 + wDeriv.w * v3;"
+				// The remainder of the math doesn't need to be done for both ends of the curve,
+				// only the end we're on.
+		"		vec3 endPoint = gl_MultiTexCoord0.y > 0.5 ? v1 : v0;"
+		"		vec3 endTangent = gl_MultiTexCoord0.y > 0.5 ? t1 : t0;"
+		"		vec3 straightDir = gl_MultiTexCoord0.y > 0.5 ? straight : -straight;"
+		"		float t = min( gl_MultiTexCoord0.y, 1.0 - gl_MultiTexCoord0.y ) * 2.0;"
 
 		"		vec4 camZ = gl_ModelViewMatrixInverse * vec4( 0.0, 0.0, -1.0, 0.0 );"
 
-		"		vec3 uTangent = normalize( cross( camZ.xyz, vTangent ) );"
+		"		vec3 endTangentPerp = normalize( cross( camZ.xyz, endTangent ) );"
+		"		float cosAngle = dot( endTangent, straightDir );"
+		"		float angle = acos( cosAngle );"
+
+				// Calculate the radius of a circle defined by the endPoint / endTangent and the location
+				// and tangent of the line between the offsetCenters
+		"		float radius = effectiveEndPointSize * ( 1.0 + cosAngle ) / sqrt( 1.0 - cosAngle * cosAngle );"
+		"		float bendDir = sign( dot( endTangentPerp, straightDir ) );"
+
+		"		vec3 p = cosAngle > 0.9999 ? endPoint + 2.0 * t * effectiveEndPointSize * endTangent : endPoint + radius * ( ( 1.0 - cos( angle * t ) ) * bendDir * endTangentPerp + sin( angle * t ) * endTangent );"
+		"		vec3 uTangent = ( gl_MultiTexCoord0.y > 0.5 ? 1.0 : -1.0 ) * ( cosAngle > 0.9999 ? -endTangentPerp : bendDir * normalize( p - ( endPoint + radius * bendDir * endTangentPerp) ) );"
 
 		"		p += 0.5 * uTangent * ( gl_MultiTexCoord0.x - 0.5 );"
 
@@ -1071,11 +1086,12 @@ int StandardStyle::g_borderWidthParameter;
 int StandardStyle::g_edgeAntiAliasingParameter;
 int StandardStyle::g_textureParameter;
 int StandardStyle::g_textureTypeParameter;
-int StandardStyle::g_bezierParameter;
+int StandardStyle::g_isCurveParameter;
+int StandardStyle::g_endPointSizeParameter;
 int StandardStyle::g_v0Parameter;
 int StandardStyle::g_v1Parameter;
-int StandardStyle::g_v2Parameter;
-int StandardStyle::g_v3Parameter;
+int StandardStyle::g_t0Parameter;
+int StandardStyle::g_t1Parameter;
 
 IECoreGL::Shader *StandardStyle::shader()
 {
@@ -1091,11 +1107,12 @@ IECoreGL::Shader *StandardStyle::shader()
 		g_edgeAntiAliasingParameter = g_shader->uniformParameter( "edgeAntiAliasing" )->location;
 		g_textureParameter = g_shader->uniformParameter( "texture" )->location;
 		g_textureTypeParameter = g_shader->uniformParameter( "textureType" )->location;
-		g_bezierParameter = g_shader->uniformParameter( "bezier" )->location;
+		g_isCurveParameter = g_shader->uniformParameter( "isCurve" )->location;
+		g_endPointSizeParameter = g_shader->uniformParameter( "endPointSize" )->location;
 		g_v0Parameter = g_shader->uniformParameter( "v0" )->location;
 		g_v1Parameter = g_shader->uniformParameter( "v1" )->location;
-		g_v2Parameter = g_shader->uniformParameter( "v2" )->location;
-		g_v3Parameter = g_shader->uniformParameter( "v3" )->location;
+		g_t0Parameter = g_shader->uniformParameter( "t0" )->location;
+		g_t1Parameter = g_shader->uniformParameter( "t1" )->location;
 	}
 
 	return g_shader.get();
