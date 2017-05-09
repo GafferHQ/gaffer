@@ -234,7 +234,7 @@ class screengrab( Gaffer.Application ) :
 		# Execute any commands we've been asked to, exposing the application
 		# and script as variables.
 
-		self.__waitForIdle()
+		GafferUI.EventLoop.waitForIdle()
 
 		d = {
 			"application" 	: self,
@@ -275,7 +275,7 @@ class screengrab( Gaffer.Application ) :
 
 		# Set up some default framing for the node graphs.
 
-		self.__waitForIdle()
+		GafferUI.EventLoop.waitForIdle()
 
 		for nodeGraph in scriptWindow.getLayout().editors( GafferUI.NodeGraph ) :
 			if args["nodeGraph"]["frame"] :
@@ -346,7 +346,7 @@ class screengrab( Gaffer.Application ) :
 
 		t = time.time() + args["delay"].value
 		while time.time() < t :
-			self.__waitForIdle( 1 )
+			GafferUI.EventLoop.waitForIdle( 1 )
 
 		# Write the image, creating a directory for it if necessary.
 
@@ -367,21 +367,5 @@ class screengrab( Gaffer.Application ) :
 		self.setGrabWidget( None )
 
 		return 0
-
-	def __waitForIdle( self, count = 1000 ) :
-
-		self.__idleCount = 0
-		def f() :
-
-			self.__idleCount += 1
-
-			if self.__idleCount >= count :
-				GafferUI.EventLoop.mainEventLoop().stop()
-				return False
-
-			return True
-
-		GafferUI.EventLoop.addIdleCallback( f )
-		GafferUI.EventLoop.mainEventLoop().start()
 
 IECore.registerRunTimeTyped( screengrab )
