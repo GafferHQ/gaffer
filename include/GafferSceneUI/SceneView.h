@@ -86,6 +86,7 @@ class SceneView : public GafferUI::View
 		Gaffer::ValuePlug *gnomonPlug();
 		const Gaffer::ValuePlug *gnomonPlug() const;
 
+		void frame( const GafferScene::PathMatcher &filter, const Imath::V3f &direction = Imath::V3f( -0.64, -0.422, -0.64 ) );
 		void expandSelection( size_t depth = 1 );
 		void collapseSelection();
 

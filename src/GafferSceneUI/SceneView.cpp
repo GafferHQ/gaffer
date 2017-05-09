@@ -1313,6 +1313,26 @@ bool SceneView::keyPress( GafferUI::GadgetPtr gadget, const GafferUI::KeyEvent &
 	return false;
 }
 
+void SceneView::frame( const GafferScene::PathMatcher &filter, const Imath::V3f &direction )
+{
+	Imath::Box3f bound;
+
+	Context::Scope scope( getContext() );
+
+	PathMatcher paths;
+	const ScenePlug *scene = inPlug<const ScenePlug>();
+	SceneAlgo::matchingPaths( filter, scene, paths );
+
+	for( PathMatcher::Iterator it = paths.begin(); it != paths.end(); ++it )
+	{
+		Imath::Box3f objectBound = scene->bound( *it );
+		Imath::M44f objectFullTransform = scene->fullTransform( *it );
+		bound.extendBy( transform( objectBound, objectFullTransform ) );
+	}
+
+	viewportGadget()->frame( bound, direction );
+}
+
 void SceneView::expandSelection( size_t depth )
 {
 	Context::Scope scopedContext( getContext() );

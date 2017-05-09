@@ -89,12 +89,19 @@ boost::python::list registeredShadingModes()
 	return result;
 }
 
+void frame( SceneView &view, PathMatcher &filter, Imath::V3f &direction )
+{
+	IECorePython::ScopedGILRelease gilRelease;
+	view.frame( filter, direction );
+}
+
 } // namespace
 
 void GafferSceneUIBindings::bindSceneView()
 {
 
 	GafferBindings::NodeClass<SceneView>()
+		.def( "frame", &frame, ( boost::python::arg_( "filter" ), boost::python::arg_( "direction" ) = Imath::V3f( -0.64, -0.422, -0.64 ) ) )
 		.def( "expandSelection", &SceneView::expandSelection, ( boost::python::arg_( "depth" ) = 1 ) )
 		.def( "collapseSelection", &SceneView::collapseSelection )
 		.def( "registerShadingMode", &registerShadingMode )

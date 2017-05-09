@@ -242,5 +242,64 @@ class SceneViewTest( GafferUITest.TestCase ) :
 		# ideal world we'll fix this, but it's unrelated to what we're testing here.
 		window.removeChild( viewer )
 
+	def testFrame( self ) :
+
+		script = Gaffer.ScriptNode()
+
+		script["Sphere"] = GafferScene.Sphere()
+		script["Sphere1"] = GafferScene.Sphere()
+		script["Sphere"]["transform"]["translate"].setValue( IECore.V3f( -10, 0, 0 ) )
+		script["Sphere1"]["transform"]["translate"].setValue( IECore.V3f( 10, 0, 0 ) )
+
+		script["Group"] = GafferScene.Group()
+		script["Group"]["in"][0].setInput( script["Sphere"]["out"] )
+		script["Group"]["in"][1].setInput( script["Sphere1"]["out"] )
+
+		view = GafferUI.View.create( script["Group"]["out"] )
+		self.assertTrue( isinstance( view, GafferSceneUI.SceneView ) )
+		self.assertTrue( view["in"].getInput().isSame( script["Group"]["out"] ) )
+
+		def cameraContains( scene, objectPath ) :
+
+			camera = view.viewportGadget().getCamera()
+			screen = IECore.Box2f( IECore.V2f( 0 ), IECore.V2f( camera.parameters()["resolution"].value ) )
+
+			worldBound = scene.bound( objectPath ).transform( scene.fullTransform( objectPath ) )
+
+			for p in [
+				IECore.V3f( worldBound.min.x, worldBound.min.y, worldBound.min.z ),
+				IECore.V3f( worldBound.min.x, worldBound.min.y, worldBound.max.z ),
+				IECore.V3f( worldBound.min.x, worldBound.max.y, worldBound.max.z ),
+				IECore.V3f( worldBound.min.x, worldBound.max.y, worldBound.min.z ),
+				IECore.V3f( worldBound.max.x, worldBound.max.y, worldBound.min.z ),
+				IECore.V3f( worldBound.max.x, worldBound.min.y, worldBound.min.z ),
+				IECore.V3f( worldBound.max.x, worldBound.min.y, worldBound.max.z ),
+				IECore.V3f( worldBound.max.x, worldBound.max.y, worldBound.max.z ),
+			] :
+				rp = view.viewportGadget().worldToRasterSpace( p )
+				if not screen.intersects( rp ) :
+					return False
+
+			return True
+
+		self.assertFalse( cameraContains( script["Group"]["out"], "/group" ) )
+		self.assertFalse( cameraContains( script["Group"]["out"], "/group/sphere" ) )
+		self.assertFalse( cameraContains( script["Group"]["out"], "/group/sphere1" ) )
+
+		view.frame( GafferScene.PathMatcher( [ "/group/sphere" ] ), direction = IECore.V3f( 0, 0, 1 ) )
+		self.assertFalse( cameraContains( script["Group"]["out"], "/group" ) )
+		self.assertTrue( cameraContains( script["Group"]["out"], "/group/sphere" ) )
+		self.assertFalse( cameraContains( script["Group"]["out"], "/group/sphere1" ) )
+
+		view.frame( GafferScene.PathMatcher( [ "/group/sphere1" ] ), direction = IECore.V3f( 0, 0, 1 ) )
+		self.assertFalse( cameraContains( script["Group"]["out"], "/group" ) )
+		self.assertFalse( cameraContains( script["Group"]["out"], "/group/sphere" ) )
+		self.assertTrue( cameraContains( script["Group"]["out"], "/group/sphere1" ) )
+
+		view.frame( GafferScene.PathMatcher( [ "/group/sp*" ] ), direction = IECore.V3f( 0, 0, 1 ) )
+		self.assertTrue( cameraContains( script["Group"]["out"], "/group" ) )
+		self.assertTrue( cameraContains( script["Group"]["out"], "/group/sphere" ) )
+		self.assertTrue( cameraContains( script["Group"]["out"], "/group/sphere1" ) )
+
 if __name__ == "__main__":
 	unittest.main()
