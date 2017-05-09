@@ -69,7 +69,7 @@ class screengrab( Gaffer.Application ) :
 					description = "Where to save the resulting image",
 					defaultValue = "",
 					extensions = "png",
-					allowEmptyString = False,
+					allowEmptyString = True,
 				),
 
 				IECore.StringVectorParameter(
@@ -350,16 +350,9 @@ class screengrab( Gaffer.Application ) :
 
 		# Write the image, creating a directory for it if necessary.
 
-		self.__waitForIdle()
-
-		imageDir = os.path.dirname( args["image"].value )
-		if imageDir and not os.path.isdir( imageDir ) :
-			IECore.msg( IECore.Msg.Level.Info, "screengrab", "Creating target directory [ %s ]" % imageDir )
-			os.makedirs( imageDir )
-
-		pixmap = QtGui.QPixmap.grabWindow( self.getGrabWidget()._qtWidget().winId() )
-		IECore.msg( IECore.Msg.Level.Info, "screengrab", "Writing image [ %s ]" % args["image"].value )
-		pixmap.save( args["image"].value )
+		if args["image"].value :
+			IECore.msg( IECore.Msg.Level.Info, "screengrab", "Writing image [ %s ]" % args["image"].value )
+			GafferUI.WidgetAlgo.grab( widget = self.getGrabWidget(), imagePath = args["image"].value )
 
 		# Remove the script and any reference to the grab widget up so
 		# we can shut down cleanly.
