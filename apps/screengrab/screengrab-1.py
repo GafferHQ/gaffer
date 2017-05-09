@@ -318,24 +318,19 @@ class screengrab( Gaffer.Application ) :
 
 		# Set up the scene expansion and selection.
 
-		pathsToExpand = GafferScene.PathMatcher()
+		GafferSceneUI.ContextAlgo.clearExpansion( script.context() )
 
-		for path in list( args["scene"]["fullyExpandedPaths"] ) + list( args["scene"]["expandedPaths"] ) :
-			# Add paths and all their ancestors.
-			while path :
-				pathsToExpand.addPath( path )
-				path = path.rpartition( "/" )[0]
+		pathsToExpand = GafferScene.PathMatcher( list( args["scene"]["fullyExpandedPaths"] ) + list( args["scene"]["expandedPaths"] ) )
+		GafferSceneUI.ContextAlgo.expand( script.context(), pathsToExpand )
 
-		fullyExpandedPathsFilter = GafferScene.PathFilter()
-		fullyExpandedPathsFilter["paths"].setValue(
-			IECore.StringVectorData( [ path + "/..." for path in args["scene"]["fullyExpandedPaths"] ] )
-		)
-		for node in script.selection() :
-			for scenePlug in [ p for p in node.children( GafferScene.ScenePlug ) if p.direction() == Gaffer.Plug.Direction.Out ] :
-				GafferScene.SceneAlgo.matchingPaths( fullyExpandedPathsFilter, scenePlug, pathsToExpand )
+		pathsToFullyExpand = GafferScene.PathMatcher( list( args["scene"]["fullyExpandedPaths"] ) )
 
-		script.context()["ui:scene:expandedPaths"] = GafferScene.PathMatcherData( pathsToExpand )
-		script.context()["ui:scene:selectedPaths"] = args["scene"]["selectedPaths"]
+		with script.context() :
+			for node in script.selection() :
+				for scenePlug in [ p for p in node.children( GafferScene.ScenePlug ) if p.direction() == Gaffer.Plug.Direction.Out ] :
+					GafferSceneUI.ContextAlgo.expandDescendants( script.context(), pathsToFullyExpand, scenePlug )
+
+		GafferSceneUI.ContextAlgo.setSelectedPaths( script.context(), GafferScene.PathMatcher( args["scene"]["selectedPaths"] ) )
 
 		# Add a delay.
 
