@@ -100,5 +100,25 @@ class PlugValueWidgetTest( unittest.TestCase ) :
 		self.assertTrue( isinstance( w, GafferUI.ConnectionPlugValueWidget ) )
 		self.assertTrue( w.getPlug().isSame( n["p"] ) )
 
+	def testAcquire( self ) :
+
+		s = Gaffer.ScriptNode()
+		s["n"] = Gaffer.Node()
+		s["n"]["p"] = Gaffer.IntPlug()
+
+		# hold a reference to the ScriptWindow
+		# to make sure it stays alive
+		sw = GafferUI.ScriptWindow.acquire( s )
+
+		w = GafferUI.PlugValueWidget.acquire( s["n"]["p"] )
+		self.assertTrue( isinstance( w, GafferUI.NumericPlugValueWidget ) )
+		self.assertTrue( w.getPlug().isSame( s["n"]["p"] ) )
+		self.assertTrue( GafferUI.PlugValueWidget.acquire( s["n"]["p"] ) is w )
+
+		pw = GafferUI.PlugWidget.acquire( s["n"]["p"] )
+		self.assertTrue( isinstance( pw, GafferUI.PlugWidget ) )
+		self.assertTrue( pw.plugValueWidget() is w )
+		self.assertTrue( GafferUI.PlugWidget.acquire( s["n"]["p"] ) is pw )
+
 if __name__ == "__main__":
 	unittest.main()

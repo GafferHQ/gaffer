@@ -157,6 +157,21 @@ class PlugValueWidget( GafferUI.Widget ) :
 
 		return None
 
+	## Ensures that the specified plug has a visible PlugValueWidget,
+	# creating one if necessary.
+	@classmethod
+	def acquire( cls, plug ) :
+
+		editor = GafferUI.NodeEditor.acquire( plug.node() )
+
+		plugValueWidget = editor.nodeUI().plugValueWidget( plug, lazy=False )
+		if not plugValueWidget :
+			return None
+
+		plugValueWidget.reveal()
+
+		return plugValueWidget
+
 	## Must be implemented by subclasses so that the widget reflects the current
 	# status of the plug. To temporarily suspend calls to this function, use
 	# Gaffer.BlockedConnection( self._plugConnections() ).
