@@ -34,6 +34,12 @@
 #
 ##########################################################################
 
+import os
+
+import GafferUI
+
+QtGui = GafferUI._qtImport( "QtGui" )
+
 def joinEdges( listContainer ) :
 
 	if listContainer.orientation() == listContainer.Orientation.Horizontal :
@@ -48,3 +54,14 @@ def joinEdges( listContainer ) :
 	for i in range( 0, l ) :
 		visibleWidgets[i]._qtWidget().setProperty( lowProperty, i > 0 )
 		visibleWidgets[i]._qtWidget().setProperty( highProperty, i < l - 1 )
+
+def grab( widget, imagePath ) :
+
+	GafferUI.EventLoop.waitForIdle()
+
+	imageDir = os.path.dirname( imagePath )
+	if imageDir and not os.path.isdir( imageDir ) :
+		os.makedirs( imageDir )
+
+	pixmap = QtGui.QPixmap.grabWindow( widget._qtWidget().winId() )
+	pixmap.save( imagePath )
