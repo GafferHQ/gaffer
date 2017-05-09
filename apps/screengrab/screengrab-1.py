@@ -288,13 +288,12 @@ class screengrab( Gaffer.Application ) :
 		for nodeEditor in scriptWindow.getLayout().editors( GafferUI.NodeEditor ) :
 
 			for name in args["nodeEditor"]["reveal"] :
-				plugValueWidget = nodeEditor.nodeUI().plugValueWidget( script.descendant( name ) )
-				plugValueWidget.reveal()
+				GafferUI.PlugValueWidget.acquire( script.descendant( name ) )
 
 			if args["nodeEditor"]["grab"].value :
-				grabWidget = nodeEditor.nodeUI().plugValueWidget( script.descendant( args["nodeEditor"]["grab"].value ) )
-				grabWidget = grabWidget.ancestor( GafferUI.PlugWidget ) or grabWidget
-				grabWidget.reveal()
+				grabWidget = GafferUI.PlugWidget.acquire( script.descendant( args["nodeEditor"]["grab"].value ) )
+				if not grabWidget :
+					grabWidget = GafferUI.PlugValueWidget.acquire( script.descendant( args["nodeEditor"]["grab"].value ) )
 				self.setGrabWidget( grabWidget )
 
 		# Set up the ScriptEditors as requested.
