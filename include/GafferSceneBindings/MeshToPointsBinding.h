@@ -37,10 +37,12 @@
 #ifndef GAFFERSCENEBINDINGS_MESHTOPOINTSBINDING_H
 #define GAFFERSCENEBINDINGS_MESHTOPOINTSBINDING_H
 
+#include "GafferSceneBindings/Export.h"
+
 namespace GafferSceneBindings
 {
 
-void bindMeshToPoints();
+GAFFERSCENEBINDINGS_API void bindMeshToPoints();
 
 } // namespace GafferSceneBindings
 
