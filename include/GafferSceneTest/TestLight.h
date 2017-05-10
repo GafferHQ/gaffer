@@ -39,12 +39,13 @@
 
 #include "GafferScene/Light.h"
 
+#include "GafferSceneTest/Export.h"
 #include "GafferSceneTest/TypeIds.h"
 
 namespace GafferSceneTest
 {
 
-class TestLight : public GafferScene::Light
+class GAFFERSCENETEST_API TestLight : public GafferScene::Light
 {
 
 	public :
