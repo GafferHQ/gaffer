@@ -42,6 +42,7 @@
 #include "IECore/Transform.h"
 #include "IECore/VisibleRenderable.h"
 
+#include "GafferScene/Export.h"
 #include "GafferScene/ScenePlug.h"
 
 namespace GafferScene
@@ -54,82 +55,82 @@ namespace RendererAlgo
 
 /// Outputs an entire scene, using a SceneProcedural for the main body of the world.
 /// Individual parts of a scene may be output more specifically using the methods below.
-void outputScene( const ScenePlug *scene, IECore::Renderer *renderer );
+GAFFERSCENE_API void outputScene( const ScenePlug *scene, IECore::Renderer *renderer );
 
 /// Outputs the output declarations from the globals.
-void outputOutputs( const IECore::CompoundObject *globals, IECore::Renderer *renderer );
+GAFFERSCENE_API void outputOutputs( const IECore::CompoundObject *globals, IECore::Renderer *renderer );
 
 /// Outputs the renderer options specified by the globals.
-void outputOptions( const IECore::CompoundObject *globals, IECore::Renderer *renderer );
+GAFFERSCENE_API void outputOptions( const IECore::CompoundObject *globals, IECore::Renderer *renderer );
 
 /// Outputs all the cameras from the scene, or a default camera if none exist.
-void outputCameras( const ScenePlug *scene, const IECore::CompoundObject *globals, IECore::Renderer *renderer );
+GAFFERSCENE_API void outputCameras( const ScenePlug *scene, const IECore::CompoundObject *globals, IECore::Renderer *renderer );
 
 /// Outputs the primary camera specified by the globals, or a default camera if none is specified.
-void outputCamera( const ScenePlug *scene, const IECore::CompoundObject *globals, IECore::Renderer *renderer );
+GAFFERSCENE_API void outputCamera( const ScenePlug *scene, const IECore::CompoundObject *globals, IECore::Renderer *renderer );
 
 /// Outputs the camera from the specified location.
-void outputCamera( const ScenePlug *scene, const ScenePlug::ScenePath &cameraPath, const IECore::CompoundObject *globals, IECore::Renderer *renderer );
+GAFFERSCENE_API void outputCamera( const ScenePlug *scene, const ScenePlug::ScenePath &cameraPath, const IECore::CompoundObject *globals, IECore::Renderer *renderer );
 
 /// Outputs all the visible clipping planes from the scene.
-void outputClippingPlanes( const ScenePlug *scene, const IECore::CompoundObject *globals, IECore::Renderer *renderer );
+GAFFERSCENE_API void outputClippingPlanes( const ScenePlug *scene, const IECore::CompoundObject *globals, IECore::Renderer *renderer );
 
 /// Outputs a single clipping plane from the scene. Returns true for success, and false if no clipping plane
 /// was found or if it was invisible.
-bool outputClippingPlane( const ScenePlug *scene, const ScenePlug::ScenePath &path, IECore::Renderer *renderer );
+GAFFERSCENE_API bool outputClippingPlane( const ScenePlug *scene, const ScenePlug::ScenePath &path, IECore::Renderer *renderer );
 
 /// Outputs the attributes stored in the globals.
-void outputGlobalAttributes( const IECore::CompoundObject *globals, IECore::Renderer *renderer );
+GAFFERSCENE_API void outputGlobalAttributes( const IECore::CompoundObject *globals, IECore::Renderer *renderer );
 
 /// Outputs all the visible lights from the scene.
-void outputLights( const ScenePlug *scene, const IECore::CompoundObject *globals, IECore::Renderer *renderer );
+GAFFERSCENE_API void outputLights( const ScenePlug *scene, const IECore::CompoundObject *globals, IECore::Renderer *renderer );
 
 /// Outputs a single light from the scene. Returns true for success, and false if no light was found or if it
 /// was invisible.
-bool outputLight( const ScenePlug *scene, const ScenePlug::ScenePath &path, IECore::Renderer *renderer );
+GAFFERSCENE_API bool outputLight( const ScenePlug *scene, const ScenePlug::ScenePath &path, IECore::Renderer *renderer );
 
 /// Outputs all the visible coordinate systems from the scene.
-void outputCoordinateSystems( const ScenePlug *scene, const IECore::CompoundObject *globals, IECore::Renderer *renderer );
+GAFFERSCENE_API void outputCoordinateSystems( const ScenePlug *scene, const IECore::CompoundObject *globals, IECore::Renderer *renderer );
 
 /// Outputs a single coordinate system from the scene. Returns true for success, and false if no coordinate system
 /// was found or if it was invisible.
-bool outputCoordinateSystem( const ScenePlug *scene, const ScenePlug::ScenePath &path, IECore::Renderer *renderer );
+GAFFERSCENE_API bool outputCoordinateSystem( const ScenePlug *scene, const ScenePlug::ScenePath &path, IECore::Renderer *renderer );
 
 /// Creates the directories necessary to receive the Displays in globals.
-void createDisplayDirectories( const IECore::CompoundObject *globals );
+GAFFERSCENE_API void createDisplayDirectories( const IECore::CompoundObject *globals );
 
 /// Outputs the specified attributes, which are expected to have been
 /// retrieved from ScenePlug:attributesPlug().
-void outputAttributes( const IECore::CompoundObject *attributes, IECore::Renderer *renderer );
+GAFFERSCENE_API void outputAttributes( const IECore::CompoundObject *attributes, IECore::Renderer *renderer );
 
 /// Samples the local transform from the current location in preparation for output to the renderer.
 /// If segments is 0, the transform is sampled at the time from the current context. If it is non-zero then
 /// the sampling is performed evenly across the shutter interval, which should have been obtained via
 /// SceneAlgo::shutter(). If all samples turn out to be identical, they will be collapsed automatically
 /// into a single sample. The sampleTimes container is only filled if there is more than one sample.
-void transformSamples( const ScenePlug *scene, size_t segments, const Imath::V2f &shutter, std::vector<Imath::M44f> &samples, std::set<float> &sampleTimes );
+GAFFERSCENE_API void transformSamples( const ScenePlug *scene, size_t segments, const Imath::V2f &shutter, std::vector<Imath::M44f> &samples, std::set<float> &sampleTimes );
 
 /// Outputs the local transform for the current location, using transformSamples() to generate the samples.
-void outputTransform( const ScenePlug *scene, IECore::Renderer *renderer, size_t segments = 0, const Imath::V2f &shutter = Imath::V2i( 0 ) );
+GAFFERSCENE_API void outputTransform( const ScenePlug *scene, IECore::Renderer *renderer, size_t segments = 0, const Imath::V2f &shutter = Imath::V2i( 0 ) );
 
 /// Samples the object from the current location in preparation for output to the renderer. Sampling parameters
 /// are as for the transformSamples() method. Multiple samples will only be generated for Primitives, since other
 /// object types cannot be interpolated anyway.
-void objectSamples( const ScenePlug *scene, size_t segments, const Imath::V2f &shutter, std::vector<IECore::ConstVisibleRenderablePtr> &samples, std::set<float> &sampleTimes );
+GAFFERSCENE_API void objectSamples( const ScenePlug *scene, size_t segments, const Imath::V2f &shutter, std::vector<IECore::ConstVisibleRenderablePtr> &samples, std::set<float> &sampleTimes );
 
 /// Outputs the object for the current location, using objectSamples() to generate the samples.
-void outputObject( const ScenePlug *scene, IECore::Renderer *renderer, size_t segments = 0, const Imath::V2f &shutter = Imath::V2i( 0 ) );
+GAFFERSCENE_API void outputObject( const ScenePlug *scene, IECore::Renderer *renderer, size_t segments = 0, const Imath::V2f &shutter = Imath::V2i( 0 ) );
 
 /// Function to return a SceneProcessor used to adapt the
 /// scene for rendering.
 typedef boost::function<SceneProcessorPtr ()> Adaptor;
 /// Registers an adaptor.
-void registerAdaptor( const std::string &name, Adaptor adaptor );
+GAFFERSCENE_API void registerAdaptor( const std::string &name, Adaptor adaptor );
 /// Removes a previously registered adaptor.
-void deregisterAdaptor( const std::string &name );
+GAFFERSCENE_API void deregisterAdaptor( const std::string &name );
 /// Returns a SceneProcessor that will apply all the currently
 /// registered adaptors.
-SceneProcessorPtr createAdaptors();
+GAFFERSCENE_API SceneProcessorPtr createAdaptors();
 
 } // namespace RendererAlgo
 

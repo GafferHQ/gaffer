@@ -40,12 +40,13 @@
 
 #include "IECore/Display.h"
 
+#include "GafferScene/Export.h"
 #include "GafferScene/GlobalsProcessor.h"
 
 namespace GafferScene
 {
 
-class Outputs : public GlobalsProcessor
+class GAFFERSCENE_API Outputs : public GlobalsProcessor
 {
 
 	public :

@@ -40,6 +40,7 @@
 
 #include "IECoreAlembic/AlembicInput.h"
 
+#include "GafferScene/Export.h"
 #include "GafferScene/SceneNode.h"
 
 namespace Gaffer
@@ -52,7 +53,7 @@ IE_CORE_FORWARDDECLARE( StringPlug )
 namespace GafferScene
 {
 
-class AlembicSource : public SceneNode
+class GAFFERSCENE_API AlembicSource : public SceneNode
 {
 
 	public :

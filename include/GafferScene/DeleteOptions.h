@@ -37,12 +37,13 @@
 #ifndef GAFFERSCENE_DELETEOPTIONS_H
 #define GAFFERSCENE_DELETEOPTIONS_H
 
+#include "GafferScene/Export.h"
 #include "GafferScene/DeleteGlobals.h"
 
 namespace GafferScene
 {
 
-class DeleteOptions : public DeleteGlobals
+class GAFFERSCENE_API DeleteOptions : public DeleteGlobals
 {
 
 	public :

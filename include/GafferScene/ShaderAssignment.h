@@ -38,13 +38,14 @@
 #ifndef GAFFERSCENE_SHADERASSIGNMENT_H
 #define GAFFERSCENE_SHADERASSIGNMENT_H
 
+#include "GafferScene/Export.h"
 #include "GafferScene/SceneElementProcessor.h"
 #include "GafferScene/ShaderPlug.h"
 
 namespace GafferScene
 {
 
-class ShaderAssignment : public SceneElementProcessor
+class GAFFERSCENE_API ShaderAssignment : public SceneElementProcessor
 {
 
 	public :

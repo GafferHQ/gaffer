@@ -41,6 +41,7 @@
 
 #include "IECore/VectorTypedData.h"
 
+#include "GafferScene/Export.h"
 #include "GafferScene/PathMatcher.h"
 #include "GafferScene/Private/IECoreScenePreview/Renderer.h"
 
@@ -62,7 +63,7 @@ void outputOutputs( const IECore::CompoundObject *globals, IECoreScenePreview::R
 void outputOutputs( const IECore::CompoundObject *globals, const IECore::CompoundObject *previousGlobals, IECoreScenePreview::Renderer *renderer );
 
 /// Utility class to handle all the set computations needed for a render.
-class RenderSets : boost::noncopyable
+class GAFFERSCENE_API RenderSets : boost::noncopyable
 {
 
 	public :
