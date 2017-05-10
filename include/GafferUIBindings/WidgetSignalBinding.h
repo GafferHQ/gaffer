@@ -37,10 +37,12 @@
 #ifndef GAFFERUIBINDINGS_WIDGETSIGNALBINDING_H
 #define GAFFERUIBINDINGS_WIDGETSIGNALBINDING_H
 
+#include "GafferUIBindings/Export.h"
+
 namespace GafferUIBindings
 {
 
-void bindWidgetSignal();
+GAFFERUIBINDINGS_API void bindWidgetSignal();
 
 } // namespace GafferUIBindings
 

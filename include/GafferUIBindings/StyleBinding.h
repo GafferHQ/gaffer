@@ -37,10 +37,12 @@
 #ifndef GAFFERUIBINDINGS_STYLEBINDING_H
 #define GAFFERUIBINDINGS_STYLEBINDING_H
 
+#include "GafferUIBindings/Export.h"
+
 namespace GafferUIBindings
 {
 
-void bindStyle();
+GAFFERUIBINDINGS_API void bindStyle();
 
 } // namespace GafferUIBindings
 

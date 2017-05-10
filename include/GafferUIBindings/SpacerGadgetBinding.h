@@ -37,10 +37,12 @@
 #ifndef GAFFERUIBINDINGS_SPACERGADGETBINDING_H
 #define GAFFERUIBINDINGS_SPACERGADGETBINDING_H
 
+#include "GafferUIBindings/Export.h"
+
 namespace GafferUIBindings
 {
 
-void bindSpacerGadget();
+GAFFERUIBINDINGS_API void bindSpacerGadget();
 
 } // namespace GafferUIBindings
 

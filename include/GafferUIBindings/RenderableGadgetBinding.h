@@ -37,10 +37,12 @@
 #ifndef GAFFERUIBINDINGS_RENDERABLEGADGETBINDING_H
 #define GAFFERUIBINDINGS_RENDERABLEGADGETBINDING_H
 
+#include "GafferUIBindings/Export.h"
+
 namespace GafferUIBindings
 {
 
-void bindRenderableGadget();
+GAFFERUIBINDINGS_API void bindRenderableGadget();
 
 } // namespace GafferUIBindings
 

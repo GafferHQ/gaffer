@@ -37,13 +37,15 @@
 #ifndef GAFFERUIBINDINGS_GLWIDGETBINDING_H
 #define GAFFERUIBINDINGS_GLWIDGETBINDING_H
 
+#include "GafferUIBindings/Export.h"
+
 namespace GafferUIBindings
 {
 
 /// This doesn't actually bind GLWidget, because that is implemented
 /// in Python at present. Instead, it binds C++ support functions that GLWidget
 /// uses internally.
-void bindGLWidget();
+GAFFERUIBINDINGS_API void bindGLWidget();
 
 } // namespace GafferUIBindings
 

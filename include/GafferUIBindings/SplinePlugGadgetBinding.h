@@ -37,10 +37,12 @@
 #ifndef GAFFERUIBINDINGS_SPLINEPLUGGADGETBINDING_H
 #define GAFFERUIBINDINGS_SPLINEPLUGGADGETBINDING_H
 
+#include "GafferUIBindings/Export.h"
+
 namespace GafferUIBindings
 {
 
-void bindSplinePlugGadget();
+GAFFERUIBINDINGS_API void bindSplinePlugGadget();
 
 } // namespace GafferUIBindings
 

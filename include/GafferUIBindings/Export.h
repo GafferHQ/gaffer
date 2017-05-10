@@ -1,6 +1,6 @@
 //////////////////////////////////////////////////////////////////////////
 //
-//  Copyright (c) 2011, Image Engine Design Inc. All rights reserved.
+//  Copyright (c) 2016, Image Engine Design Inc. All rights reserved.
 //
 //  Redistribution and use in source and binary forms, with or without
 //  modification, are permitted provided that the following conditions are
@@ -34,16 +34,18 @@
 //
 //////////////////////////////////////////////////////////////////////////
 
-#ifndef GAFFERUIBINDINGS_STANDARDNODULEBINDING_H
-#define GAFFERUIBINDINGS_STANDARDNODULEBINDING_H
+#ifndef GAFFERUIBINDINGS_EXPORT_H
+#define GAFFERUIBINDINGS_EXPORT_H
 
-#include "GafferUIBindings/Export.h"
+#include "Gaffer/Export.h"
 
-namespace GafferUIBindings
-{
+// define GAFFERUIBINDINGS_API macro based on whether or not we are compiling
+// GafferUIBindings, or including headers for linking to it. the GAFFERUIBINDINGS_API
+// macro is the one that is used in the class definitions.
+#ifdef GafferUIBindings_EXPORTS
+  #define GAFFERUIBINDINGS_API GAFFER_EXPORT
+#else
+  #define GAFFERUIBINDINGS_API GAFFER_IMPORT
+#endif
 
-GAFFERUIBINDINGS_API void bindStandardNodule();
-
-} // namespace GafferUIBindings
-
-#endif // GAFFERUIBINDINGS_STANDARDNODULEBINDING_H
+#endif // #ifndef GAFFERUIBINDINGS_EXPORT_H
