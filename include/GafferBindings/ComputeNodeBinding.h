@@ -46,13 +46,15 @@
 #include "Gaffer/Context.h"
 #include "Gaffer/ValuePlug.h"
 
+
+#include "GafferBindings/Export.h"
 #include "GafferBindings/DependencyNodeBinding.h"
 #include "GafferBindings/ExceptionAlgo.h"
 
 namespace GafferBindings
 {
 
-void bindComputeNode();
+GAFFERBINDINGS_API void bindComputeNode();
 
 template<typename WrappedType>
 class ComputeNodeWrapper : public DependencyNodeWrapper<WrappedType>

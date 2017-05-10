@@ -39,6 +39,8 @@
 
 #include "IECorePython/RunTimeTypedBinding.h"
 
+#include "GafferBindings/Export.h"
+
 namespace GafferBindings
 {
 
@@ -52,7 +54,7 @@ class PathClass : public IECorePython::RunTimeTypedClass<T, TWrapper>
 
 };
 
-void bindPath();
+GAFFERBINDINGS_API void bindPath();
 
 } // namespace GafferBindings
 

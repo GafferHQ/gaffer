@@ -37,10 +37,12 @@
 #ifndef GAFFERBINDINGS_EXPRESSIONBINDING_H
 #define GAFFERBINDINGS_EXPRESSIONBINDING_H
 
+#include "GafferBindings/Export.h"
+
 namespace GafferBindings
 {
 
-void bindExpression();
+GAFFERBINDINGS_API void bindExpression();
 
 } // namespace GafferBindings
 

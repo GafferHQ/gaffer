@@ -44,13 +44,14 @@
 
 #include "Gaffer/Node.h"
 
+#include "GafferBindings/Export.h"
 #include "GafferBindings/GraphComponentBinding.h"
 #include "GafferBindings/Serialisation.h"
 
 namespace GafferBindings
 {
 
-void bindNode();
+GAFFERBINDINGS_API void bindNode();
 
 template<typename T, typename TWrapper=T>
 class NodeClass : public GraphComponentClass<T, TWrapper>
@@ -131,7 +132,7 @@ class NodeWrapper : public GraphComponentWrapper<T>
 
 };
 
-class NodeSerialiser : public Serialisation::Serialiser
+class GAFFERBINDINGS_API NodeSerialiser : public Serialisation::Serialiser
 {
 
 	public :
