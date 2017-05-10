@@ -37,10 +37,12 @@
 #ifndef GAFFERIMAGEBINDINGS_RESIZEEBINDING_H
 #define GAFFERIMAGEBINDINGS_RESIZEEBINDING_H
 
+#include "GafferImageBindings/Export.h"
+
 namespace GafferImageBindings
 {
 
-void bindResize();
+GAFFERIMAGEBINDINGS_API void bindResize();
 
 }; // namespace GafferImageBindings
 

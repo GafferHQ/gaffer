@@ -37,10 +37,12 @@
 #ifndef GAFFERIMAGEBINDINGS_BUFFERALGOBINDING_H
 #define GAFFERIMAGEBINDINGS_BUFFERALGOBINDING_H
 
+#include "GafferImageBindings/Export.h"
+
 namespace GafferImageBindings
 {
 
-void bindBufferAlgo();
+GAFFERIMAGEBINDINGS_API void bindBufferAlgo();
 
 }; // namespace GafferImageBindings
 

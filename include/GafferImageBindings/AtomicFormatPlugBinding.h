@@ -37,10 +37,12 @@
 #ifndef GAFFERIMAGEBINDINGS_ATOMICFORMATPLUGBINDING_H
 #define GAFFERIMAGEBINDINGS_ATOMICFORMATPLUGBINDING_H
 
+#include "GafferImageBindings/Export.h"
+
 namespace GafferImageBindings
 {
 
-void bindAtomicFormatPlug();
+GAFFERIMAGEBINDINGS_API void bindAtomicFormatPlug();
 
 } // namespace GafferImageBindings
 
