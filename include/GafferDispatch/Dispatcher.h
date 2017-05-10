@@ -50,6 +50,7 @@
 
 #include "Gaffer/NumericPlug.h"
 
+#include "GafferDispatch/Export.h"
 #include "GafferDispatch/TaskNode.h"
 #include "GafferDispatchBindings/DispatcherBinding.h" // to enable friend declaration for TaskBatch.
 
@@ -66,7 +67,7 @@ namespace GafferDispatch
 namespace Detail
 {
 
-struct PreDispatchSignalCombiner
+struct GAFFERDISPATCH_API PreDispatchSignalCombiner
 {
 	typedef bool result_type;
 
@@ -95,7 +96,7 @@ IE_CORE_FORWARDDECLARE( Dispatcher )
 /// of Context specific Tasks from TaskNodes which exist within a ScriptNode.
 /// Dispatchers can also modify TaskNodes during construction, adding
 /// plugs which affect Task execution.
-class Dispatcher : public Gaffer::Node
+class GAFFERDISPATCH_API Dispatcher : public Gaffer::Node
 {
 	public :
 
@@ -212,7 +213,7 @@ class Dispatcher : public Gaffer::Node
 		/// All tasks within a batch are from the same plug
 		/// and have identical contexts except for the frame
 		/// number.
-		class TaskBatch : public IECore::RefCounted
+		class GAFFERDISPATCH_API TaskBatch : public IECore::RefCounted
 		{
 			public :
 
