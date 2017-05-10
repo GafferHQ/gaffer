@@ -34,35 +34,18 @@
 //
 //////////////////////////////////////////////////////////////////////////
 
-#ifndef GAFFERARNOLD_INTERACTIVEARNOLDRENDER_H
-#define GAFFERARNOLD_INTERACTIVEARNOLDRENDER_H
+#ifndef GAFFERARNOLD_EXPORT_H
+#define GAFFERARNOLD_EXPORT_H
 
-#include "GafferScene/Preview/InteractiveRender.h"
+#include "Gaffer/Export.h"
 
-#include "GafferArnold/Export.h"
-#include "GafferArnold/TypeIds.h"
+// define GAFFERARNOLD_API macro based on whether or not we are compiling
+// GafferArnold, or including headers for linking to it. the GAFFERARNOLD_API
+// macro is the one that is used in the class definitions.
+#ifdef GafferArnold_EXPORTS
+  #define GAFFERARNOLD_API GAFFER_EXPORT
+#else
+  #define GAFFERARNOLD_API GAFFER_IMPORT
+#endif
 
-namespace GafferArnold
-{
-
-class GAFFERARNOLD_API InteractiveArnoldRender : public GafferScene::Preview::InteractiveRender
-{
-
-	public :
-
-		InteractiveArnoldRender( const std::string &name=defaultName<InteractiveArnoldRender>() );
-		virtual ~InteractiveArnoldRender();
-
-		IE_CORE_DECLARERUNTIMETYPEDEXTENSION( GafferArnold::InteractiveArnoldRender, InteractiveArnoldRenderTypeId, GafferScene::Preview::InteractiveRender );
-
-		/// Utility to call AiUniverseCacheFlush() and
-		/// restart any running sessions.
-		static void flushCaches( int flags );
-
-};
-
-IE_CORE_DECLAREPTR( InteractiveArnoldRender );
-
-} // namespace GafferArnold
-
-#endif // GAFFERARNOLD_INTERACTIVEARNOLDRENDER_H
+#endif // #ifndef GAFFERARNOLD_EXPORT_H

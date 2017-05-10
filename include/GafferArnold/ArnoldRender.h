@@ -39,12 +39,13 @@
 
 #include "GafferScene/Preview/Render.h"
 
+#include "GafferArnold/Export.h"
 #include "GafferArnold/TypeIds.h"
 
 namespace GafferArnold
 {
 
-class ArnoldRender : public GafferScene::Preview::Render
+class GAFFERARNOLD_API ArnoldRender : public GafferScene::Preview::Render
 {
 
 	public :
