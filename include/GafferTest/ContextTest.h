@@ -37,14 +37,16 @@
 #ifndef GAFFERTEST_CONTEXTTEST_H
 #define GAFFERTEST_CONTEXTTEST_H
 
+#include "GafferTest/Export.h"
+
 namespace GafferTest
 {
 
-void testManyContexts();
-void testManySubstitutions();
-void testManyEnvironmentSubstitutions();
-void testScopingNullContext();
-void testEditableScope();
+GAFFERTEST_API void testManyContexts();
+GAFFERTEST_API void testManySubstitutions();
+GAFFERTEST_API void testManyEnvironmentSubstitutions();
+GAFFERTEST_API void testScopingNullContext();
+GAFFERTEST_API void testEditableScope();
 
 } // namespace GafferTest
 
