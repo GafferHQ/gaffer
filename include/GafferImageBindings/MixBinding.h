@@ -37,10 +37,12 @@
 #ifndef GAFFERBINDINGS_MIXBINDING_H
 #define GAFFERBINDINGS_MIXBINDING_H
 
+#include "GafferImageBindings/Export.h"
+
 namespace GafferImageBindings
 {
 
-void bindMix();
+GAFFERIMAGEBINDINGS_API void bindMix();
 
 }; // namespace GafferImageBindings
 

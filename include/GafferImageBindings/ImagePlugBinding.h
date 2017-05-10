@@ -37,10 +37,12 @@
 #ifndef GAFFERIMAGEBINDINGS_IMAGEPLUGBINDING_H
 #define GAFFERIMAGEBINDINGS_IMAGEPLUGBINDING_H
 
+#include "GafferImageBindings/Export.h"
+
 namespace GafferImageBindings
 {
 
-void bindImagePlug();
+GAFFERIMAGEBINDINGS_API void bindImagePlug();
 
 } // namespace GafferImageBindings
 

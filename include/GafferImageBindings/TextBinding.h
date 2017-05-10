@@ -37,10 +37,12 @@
 #ifndef GAFFERIMAGEBINDINGS_TEXTBINDING_H
 #define GAFFERIMAGEBINDINGS_TEXTBINDING_H
 
+#include "GafferImageBindings/Export.h"
+
 namespace GafferImageBindings
 {
 
-void bindText();
+GAFFERIMAGEBINDINGS_API void bindText();
 
 }; // namespace GafferImageBindings
 

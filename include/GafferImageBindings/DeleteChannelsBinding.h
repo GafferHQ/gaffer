@@ -37,10 +37,12 @@
 #ifndef GAFFERBINDINGS_DELETECHANNELSBINDING_H
 #define GAFFERBINDINGS_DELETECHANNELSBINDING_H
 
+#include "GafferImageBindings/Export.h"
+
 namespace GafferImageBindings
 {
 
-void bindDeleteChannels();
+GAFFERIMAGEBINDINGS_API void bindDeleteChannels();
 
 }; // namespace GafferImageBindings
 

@@ -37,10 +37,12 @@
 #ifndef GAFFERIMAGEBINDINGS_IMAGEWRITERBINDING_H
 #define GAFFERIMAGEBINDINGS_IMAGEWRITERBINDING_H
 
+#include "GafferImageBindings/Export.h"
+
 namespace GafferImageBindings
 {
 
-void bindImageWriter();
+GAFFERIMAGEBINDINGS_API void bindImageWriter();
 
 } // namespace GafferImageBindings
 

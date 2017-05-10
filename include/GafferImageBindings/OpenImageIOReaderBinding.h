@@ -37,10 +37,12 @@
 #ifndef GAFFERIMAGEBINDINGS_OPENIMAGEIOREADERBINDING_H
 #define GAFFERIMAGEBINDINGS_OPENIMAGEIOREADERBINDING_H
 
+#include "GafferImageBindings/Export.h"
+
 namespace GafferImageBindings
 {
 
-void bindOpenImageIOReader();
+GAFFERIMAGEBINDINGS_API void bindOpenImageIOReader();
 
 } // namespace GafferImageBindings
 

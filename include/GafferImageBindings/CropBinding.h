@@ -38,10 +38,12 @@
 #ifndef GAFFERIMAGEBINDINGS_CROPBINDING_H
 #define GAFFERIMAGEBINDINGS_CROPBINDING_H
 
+#include "GafferImageBindings/Export.h"
+
 namespace GafferImageBindings
 {
 
-void bindCrop();
+GAFFERIMAGEBINDINGS_API void bindCrop();
 
 }; // namespace GafferImageBindings
 
