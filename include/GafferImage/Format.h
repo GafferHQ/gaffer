@@ -42,12 +42,14 @@
 
 #include "OpenEXR/ImathBox.h"
 
+#include "GafferImage/Export.h"
+
 namespace GafferImage
 {
 
 /// Basic maths class to represent the format of an image -
 /// its display window and pixel aspect ratio.
-class Format
+class GAFFERIMAGE_API Format
 {
 
 	public :
@@ -122,7 +124,7 @@ class Format
 
 /// Outputs a numeric description of the format, omitting default information
 /// where possible. Note that this is unrelated to Format::name().
-std::ostream & operator << ( std::ostream &os, const GafferImage::Format &format );
+GAFFERIMAGE_API std::ostream & operator << ( std::ostream &os, const GafferImage::Format &format );
 
 } // namespace GafferImage
 

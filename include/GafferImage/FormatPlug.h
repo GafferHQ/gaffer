@@ -39,6 +39,7 @@
 
 #include "Gaffer/BoxPlug.h"
 
+#include "GafferImage/Export.h"
 #include "GafferImage/Format.h"
 #include "GafferImage/TypeIds.h"
 
@@ -55,7 +56,7 @@ namespace GafferImage
 /// Compound plug for representing an image format in a way
 /// easily edited by users, with individual child plugs for
 /// each aspect of the format.
-class FormatPlug : public Gaffer::ValuePlug
+class GAFFERIMAGE_API FormatPlug : public Gaffer::ValuePlug
 {
 
 	public :

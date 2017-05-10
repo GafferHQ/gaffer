@@ -38,6 +38,7 @@
 #ifndef GAFFERIMAGE_COLORSPACE_H
 #define GAFFERIMAGE_COLORSPACE_H
 
+#include "GafferImage/Export.h"
 #include "GafferImage/OpenColorIOTransform.h"
 
 namespace Gaffer
@@ -50,7 +51,7 @@ IE_CORE_FORWARDDECLARE( StringPlug )
 namespace GafferImage
 {
 
-class ColorSpace : public OpenColorIOTransform
+class GAFFERIMAGE_API ColorSpace : public OpenColorIOTransform
 {
 
 	public :

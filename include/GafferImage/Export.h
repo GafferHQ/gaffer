@@ -1,6 +1,6 @@
 //////////////////////////////////////////////////////////////////////////
 //
-//  Copyright (c) 2013, Image Engine Design Inc. All rights reserved.
+//  Copyright (c) 2016, Image Engine Design Inc. All rights reserved.
 //
 //  Redistribution and use in source and binary forms, with or without
 //  modification, are permitted provided that the following conditions are
@@ -34,43 +34,18 @@
 //
 //////////////////////////////////////////////////////////////////////////
 
-#ifndef GAFFERIMAGE_OBJECTTOIMAGE_H
-#define GAFFERIMAGE_OBJECTTOIMAGE_H
+#ifndef GAFFERIMAGE_EXPORT_H
+#define GAFFERIMAGE_EXPORT_H
 
-#include "GafferImage/Export.h"
-#include "GafferImage/ImagePrimitiveSource.h"
+#include "Gaffer/Export.h"
 
-namespace GafferImage
-{
+// define GAFFERIMAGE_API macro based on whether or not we are compiling
+// GafferImage, or including headers for linking to it. the GAFFERIMAGE_API
+// macro is the one that is used in the class definitions.
+#ifdef GafferImage_EXPORTS
+  #define GAFFERIMAGE_API GAFFER_EXPORT
+#else
+  #define GAFFERIMAGE_API GAFFER_IMPORT
+#endif
 
-class GAFFERIMAGE_API ObjectToImage : public ImagePrimitiveNode
-{
-
-	public :
-
-		IE_CORE_DECLARERUNTIMETYPEDEXTENSION( GafferImage::ObjectToImage, ObjectToImageTypeId, ImagePrimitiveNode );
-
-		ObjectToImage( const std::string &name = defaultName<ObjectToImage>() );
-		virtual ~ObjectToImage();
-
-		Gaffer::ObjectPlug *objectPlug();
-		const Gaffer::ObjectPlug *objectPlug() const;
-
-		virtual void affects( const Gaffer::Plug *input, AffectedPlugsContainer &outputs ) const;
-
-	protected :
-
-		virtual void hashImagePrimitive( const Gaffer::Context *context, IECore::MurmurHash &h ) const;
-		virtual IECore::ConstImagePrimitivePtr computeImagePrimitive( const Gaffer::Context *context ) const;
-
-	private :
-
-		static size_t g_firstPlugIndex;
-
-};
-
-IE_CORE_DECLAREPTR( ObjectToImage );
-
-} // namespace GafferImage
-
-#endif // GAFFERIMAGE_OBJECTTOIMAGE_H
+#endif // #ifndef GAFFERIMAGE_EXPORT_H
