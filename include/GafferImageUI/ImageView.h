@@ -43,6 +43,7 @@
 
 #include "GafferUI/View.h"
 
+#include "GafferImageUI/Export.h"
 #include "GafferImageUI/TypeIds.h"
 #include "GafferImageUIBindings/ImageViewBinding.h" // to enable friend declaration for bindImageView().
 
@@ -73,7 +74,7 @@ IE_CORE_FORWARDDECLARE( ImageGadget )
 /// \todo Refactor this into smaller components, along the lines of the SceneView class.
 /// Consider redesigning the View/Tool classes so that view functionality can be built up
 /// by adding tools like samplers etc.
-class ImageView : public GafferUI::View
+class GAFFERIMAGEUI_API ImageView : public GafferUI::View
 {
 
 	public :
