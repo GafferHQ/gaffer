@@ -37,10 +37,12 @@
 #ifndef GAFFERBINDINGS_CONTEXTBINDING_H
 #define GAFFERBINDINGS_CONTEXTBINDING_H
 
+#include "GafferBindings/Export.h"
+
 namespace GafferBindings
 {
 
-void bindContext();
+GAFFERBINDINGS_API void bindContext();
 
 } // namespace GafferBindings
 

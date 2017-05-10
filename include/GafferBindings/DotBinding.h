@@ -37,10 +37,12 @@
 #ifndef GAFFERBINDINGS_DOTBINDING_H
 #define GAFFERBINDINGS_DOTBINDING_H
 
+#include "GafferBindings/Export.h"
+
 namespace GafferBindings
 {
 
-void bindDot();
+GAFFERBINDINGS_API void bindDot();
 
 } // namespace GafferBindings
 

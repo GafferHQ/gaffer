@@ -37,10 +37,12 @@
 #ifndef GAFFERBINDINGS_PREFERENCESBINDING_H
 #define GAFFERBINDINGS_PREFERENCESBINDING_H
 
+#include "GafferBindings/Export.h"
+
 namespace GafferBindings
 {
 
-void bindPreferences();
+GAFFERBINDINGS_API void bindPreferences();
 
 } // namespace GafferBindings
 

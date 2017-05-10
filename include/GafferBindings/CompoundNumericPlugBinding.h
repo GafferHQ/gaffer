@@ -37,10 +37,12 @@
 #ifndef GAFFERBINDINGS_COMPOUNDNUMERICPLUGBINDING_H
 #define GAFFERBINDINGS_COMPOUNDNUMERICPLUGBINDING_H
 
+#include "GafferBindings/Export.h"
+
 namespace GafferBindings
 {
 
-void bindCompoundNumericPlug();
+GAFFERBINDINGS_API void bindCompoundNumericPlug();
 
 } // namespace GafferBindings
 

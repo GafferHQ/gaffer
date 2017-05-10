@@ -42,6 +42,8 @@
 
 #include "Gaffer/GraphComponent.h"
 
+#include "GafferBindings/Export.h"
+
 namespace GafferBindings
 {
 
@@ -128,7 +130,7 @@ class GraphComponentWrapper : public IECorePython::RunTimeTypedWrapper<WrappedTy
 
 };
 
-void bindGraphComponent();
+GAFFERBINDINGS_API void bindGraphComponent();
 
 } // namespace GafferBindings
 

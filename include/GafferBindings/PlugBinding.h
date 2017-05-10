@@ -42,13 +42,14 @@
 
 #include "Gaffer/Plug.h"
 
+#include "GafferBindings/Export.h"
 #include "GafferBindings/GraphComponentBinding.h"
 #include "GafferBindings/Serialisation.h"
 
 namespace GafferBindings
 {
 
-void bindPlug();
+GAFFERBINDINGS_API void bindPlug();
 
 template<typename T, typename TWrapper=T>
 class PlugClass : public GraphComponentClass<T, TWrapper>
@@ -136,7 +137,7 @@ class PlugWrapper : public GraphComponentWrapper<WrappedType>
 
 };
 
-class PlugSerialiser : public Serialisation::Serialiser
+class GAFFERBINDINGS_API PlugSerialiser : public Serialisation::Serialiser
 {
 
 	public :

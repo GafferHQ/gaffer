@@ -37,10 +37,12 @@
 #ifndef GAFFERBINDINGS_SUBGRAPHBINDING_H
 #define GAFFERBINDINGS_SUBGRAPHBINDING_H
 
+#include "GafferBindings/Export.h"
+
 namespace GafferBindings
 {
 
-void bindSubGraph();
+GAFFERBINDINGS_API void bindSubGraph();
 
 } // namespace GafferBindings
 
