@@ -1,6 +1,6 @@
 //////////////////////////////////////////////////////////////////////////
 //
-//  Copyright (c) 2013, Image Engine Design Inc. All rights reserved.
+//  Copyright (c) 2016, Image Engine Design Inc. All rights reserved.
 //
 //  Redistribution and use in source and binary forms, with or without
 //  modification, are permitted provided that the following conditions are
@@ -34,16 +34,18 @@
 //
 //////////////////////////////////////////////////////////////////////////
 
-#ifndef GAFFERIMAGEUIBINDINGS_IMAGEVIEWBINDING_H
-#define GAFFERIMAGEUIBINDINGS_IMAGEVIEWBINDING_H
+#ifndef GAFFERIMAGEUIBINDINGS_EXPORT_H
+#define GAFFERIMAGEUIBINDINGS_EXPORT_H
 
-#include "GafferImageUIBindings/Export.h"
+#include "Gaffer/Export.h"
 
-namespace GafferImageUIBindings
-{
+// define GAFFERIMAGEUIBINDINGS_API macro based on whether or not we are compiling
+// GafferImageUIBindings, or including headers for linking to it. the GAFFERIMAGEUIBINDINGS_API
+// macro is the one that is used in the class definitions.
+#ifdef GafferImageUIBindings_EXPORTS
+  #define GAFFERIMAGEUIBINDINGS_API GAFFER_EXPORT
+#else
+  #define GAFFERIMAGEUIBINDINGS_API GAFFER_IMPORT
+#endif
 
-GAFFERIMAGEUIBINDINGS_API void bindImageView();
-
-} // namespace GafferImageUIBindings
-
-#endif // GAFFERIMAGEUIBINDINGS_IMAGEVIEWBINDING_H
+#endif // #ifndef GAFFERIMAGEUIBINDINGS_EXPORT_H
