@@ -68,7 +68,7 @@ class GAFFERIMAGE_API Catalogue : public ImageNode
 		~Catalogue() override;
 
 		/// Plug type used to represent an image in the catalogue.
-		class Image : public Gaffer::Plug
+		class GAFFERIMAGE_API Image : public Gaffer::Plug
 		{
 
 			public :
