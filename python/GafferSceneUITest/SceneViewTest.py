@@ -83,25 +83,19 @@ class SceneViewTest( GafferUITest.TestCase ) :
 		view = GafferUI.View.create( A["out"] )
 
 		def setSelection( paths ) :
-			view.getContext().set(
-				"ui:scene:selectedPaths",
-				IECore.StringVectorData( paths ),
-			)
+			GafferSceneUI.ContextAlgo.setSelectedPaths( view.getContext(), GafferScene.PathMatcher( paths ) )
 
 		def getSelection() :
-			return set( view.getContext().get( "ui:scene:selectedPaths" ) )
+			return set( GafferSceneUI.ContextAlgo.getSelectedPaths( view.getContext() ).paths() )
 
 		setSelection( [ "/A" ] )
 		self.assertEqual( getSelection(), set( [ "/A" ] ) )
 
 		def setExpandedPaths( paths ) :
-			view.getContext().set(
-				"ui:scene:expandedPaths",
-				GafferScene.PathMatcherData( GafferScene.PathMatcher( paths ) ),
-			)
+			GafferSceneUI.ContextAlgo.setExpandedPaths( view.getContext(), GafferScene.PathMatcher( paths ) )
 
 		def getExpandedPaths() :
-			return set( view.getContext().get( "ui:scene:expandedPaths" ).value.paths() )
+			return set( GafferSceneUI.ContextAlgo.getExpandedPaths( view.getContext() ).paths() )
 
 		setExpandedPaths( [ "/" ] )
 		self.assertEqual( getExpandedPaths(), set( [ "/" ] ) )
