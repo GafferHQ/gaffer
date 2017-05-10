@@ -37,10 +37,12 @@
 #ifndef GAFFERBINDINGS_STRINGPLUGBINDING_H
 #define GAFFERBINDINGS_STRINGPLUGBINDING_H
 
+#include "GafferBindings/Export.h"
+
 namespace GafferBindings
 {
 
-void bindStringPlug();
+GAFFERBINDINGS_API void bindStringPlug();
 
 } // namespace GafferBindings
 

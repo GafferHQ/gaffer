@@ -39,10 +39,12 @@
 
 #include "Gaffer/Node.h"
 
+#include "GafferBindings/Export.h"
+
 namespace GafferBindings
 {
 
-void bindMetadataAlgo();
+GAFFERBINDINGS_API void bindMetadataAlgo();
 
 } // namespace GafferBindings
 

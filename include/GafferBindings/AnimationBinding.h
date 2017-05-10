@@ -37,10 +37,12 @@
 #ifndef GAFFERBINDINGS_ANIMATIONBINDING_H
 #define GAFFERBINDINGS_ANIMATIONBINDING_H
 
+#include "GafferBindings/Export.h"
+
 namespace GafferBindings
 {
 
-void bindAnimation();
+GAFFERBINDINGS_API void bindAnimation();
 
 } // namespace GafferBindings
 

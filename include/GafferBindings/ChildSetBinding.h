@@ -37,10 +37,12 @@
 #ifndef GAFFERBINDINGS_CHILDSETBINDING_H
 #define GAFFERBINDINGS_CHILDSETBINDING_H
 
+#include "GafferBindings/Export.h"
+
 namespace GafferBindings
 {
 
-void bindChildSet();
+GAFFERBINDINGS_API void bindChildSet();
 
 } // namespace GafferBindings
 

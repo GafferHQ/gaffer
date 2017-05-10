@@ -37,10 +37,12 @@
 #ifndef GAFFERBINDINGS_PATHFILTERBINDING_H
 #define GAFFERBINDINGS_PATHFILTERBINDING_H
 
+#include "GafferBindings/Export.h"
+
 namespace GafferBindings
 {
 
-void bindPathFilter();
+GAFFERBINDINGS_API void bindPathFilter();
 
 } // namespace GafferBindings
 

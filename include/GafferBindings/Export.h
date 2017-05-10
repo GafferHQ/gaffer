@@ -1,6 +1,6 @@
 //////////////////////////////////////////////////////////////////////////
 //
-//  Copyright (c) 2011, John Haddon. All rights reserved.
+//  Copyright (c) 2016, Image Engine Design Inc. All rights reserved.
 //
 //  Redistribution and use in source and binary forms, with or without
 //  modification, are permitted provided that the following conditions are
@@ -34,18 +34,18 @@
 //
 //////////////////////////////////////////////////////////////////////////
 
-#ifndef GAFFERBINDINGS_SCRIPTNODEBINDING_H
-#define GAFFERBINDINGS_SCRIPTNODEBINDING_H
+#ifndef GAFFERBINDINGS_EXPORT_H
+#define GAFFERBINDINGS_EXPORT_H
 
-#include "GafferBindings/Export.h"
+#include "Gaffer/Export.h"
 
-namespace GafferBindings
-{
+// define GAFFERBINDINGS_API macro based on whether or not we are compiling
+// GafferBindings, or including headers for linking to it. the GAFFERBINDINGS_API
+// macro is the one that is used in the class definitions.
+#ifdef GafferBindings_EXPORTS
+  #define GAFFERBINDINGS_API GAFFER_EXPORT
+#else
+  #define GAFFERBINDINGS_API GAFFER_IMPORT
+#endif
 
-GAFFERBINDINGS_API void bindScriptNode();
-
-struct SerialiserRegistration;
-
-} // namespace GafferBindings
-
-#endif // GAFFERBINDINGS_SCRIPTNODEBINDING_H
+#endif // #ifndef GAFFERBINDINGS_EXPORT_H

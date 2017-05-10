@@ -47,13 +47,14 @@
 #include "Gaffer/Context.h"
 #include "Gaffer/ValuePlug.h"
 
+#include "GafferBindings/Export.h"
 #include "GafferBindings/NodeBinding.h"
 #include "GafferBindings/ExceptionAlgo.h"
 
 namespace GafferBindings
 {
 
-void bindDependencyNode();
+GAFFERBINDINGS_API void bindDependencyNode();
 
 template<typename T, typename TWrapper=T>
 class DependencyNodeClass : public NodeClass<T, TWrapper>

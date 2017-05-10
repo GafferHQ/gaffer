@@ -37,10 +37,12 @@
 #ifndef GAFFERBINDINGS_ACTIONBINDING_H
 #define GAFFERBINDINGS_ACTIONBINDING_H
 
+#include "GafferBindings/Export.h"
+
 namespace GafferBindings
 {
 
-void bindAction();
+GAFFERBINDINGS_API void bindAction();
 
 } // namespace GafferBindings
 
