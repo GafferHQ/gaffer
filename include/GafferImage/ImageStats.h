@@ -41,6 +41,7 @@
 #include "Gaffer/CompoundNumericPlug.h"
 #include "Gaffer/BoxPlug.h"
 
+#include "GafferImage/Export.h"
 #include "GafferImage/ImagePlug.h"
 
 namespace GafferImage
@@ -48,7 +49,7 @@ namespace GafferImage
 
 /// \todo Add an areaSource plug with the same semantics
 /// that the Crop node has.
-class ImageStats : public Gaffer::ComputeNode
+class GAFFERIMAGE_API ImageStats : public Gaffer::ComputeNode
 {
 
 	public :

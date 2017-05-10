@@ -39,13 +39,15 @@
 #define GAFFERIMAGE_CROP_H
 
 #include "Gaffer/BoxPlug.h"
+
+#include "GafferImage/Export.h"
 #include "GafferImage/ImageProcessor.h"
 
 namespace GafferImage
 {
 	IE_CORE_FORWARDDECLARE( FormatPlug );
 
-class Crop : public ImageProcessor
+class GAFFERIMAGE_API Crop : public ImageProcessor
 {
 	public :
 
