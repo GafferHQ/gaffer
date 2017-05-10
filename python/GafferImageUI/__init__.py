@@ -88,5 +88,6 @@ import CopyChannelsUI
 import MedianUI
 import ColorProcessorUI
 import MixUI
+import CatalogueUI
 
 __import__( "IECore" ).loadConfig( "GAFFER_STARTUP_PATHS", {}, subdirectory = "GafferImageUI" )

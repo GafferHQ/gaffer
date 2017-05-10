@@ -62,12 +62,27 @@ class Display : public ImageNode
 		Gaffer::IntPlug *portPlug();
 		const Gaffer::IntPlug *portPlug() const;
 
-		virtual void affects( const Gaffer::Plug *input, AffectedPlugsContainer &outputs ) const;
+		/// Sets the driver used to provide the
+		/// image to this node.
+		void setDriver( IECore::DisplayDriverPtr driver );
+		IECore::DisplayDriver *getDriver();
+		const IECore::DisplayDriver *getDriver() const;
+
+		/// Emitted when a new driver has been created. This can
+		/// then be passed to `Display::setDriver()` to populate
+		/// a Display with an incoming image.
+		/// \todo This should really go on IECore::DisplayDriverServer,
+		/// but we need to move all Gaffer's signal binding logic
+		/// to IECore as well so we can bind it.
+		typedef boost::signal<void ( IECore::DisplayDriver *driver, const IECore::CompoundData *parameters )> DriverCreatedSignal;
+		static DriverCreatedSignal &driverCreatedSignal();
 
 		/// Emitted when a new bucket is received.
 		static UnaryPlugSignal &dataReceivedSignal();
 		/// Emitted when a complete image has been received.
 		static UnaryPlugSignal &imageReceivedSignal();
+
+		virtual void affects( const Gaffer::Plug *input, AffectedPlugsContainer &outputs ) const;
 
 	protected :
 
@@ -96,7 +111,7 @@ class Display : public ImageNode
 
 		void plugSet( Gaffer::Plug *plug );
 		void setupServer();
-		void driverCreated( GafferDisplayDriver *driver );
+		void driverCreated( IECore::DisplayDriver *driver );
 		void setupDriver( GafferDisplayDriverPtr driver );
 		void dataReceived( GafferDisplayDriver *driver, const Imath::Box2i &bound );
 		void imageReceived( GafferDisplayDriver *driver );
@@ -106,6 +121,9 @@ class Display : public ImageNode
 };
 
 IE_CORE_DECLAREPTR( Display );
+
+typedef Gaffer::FilteredChildIterator<Gaffer::TypePredicate<Display> > DisplayIterator;
+typedef Gaffer::FilteredRecursiveChildIterator<Gaffer::TypePredicate<Display> > RecursiveDisplayIterator;
 
 } // namespace GafferImage
 

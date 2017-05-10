@@ -62,19 +62,19 @@ gaffer screengrab \
 
 gaffer screengrab \
 	-script scripts/renderSettings.gfr \
-	-selection Display \
+	-selection Catalogue \
 	-editor NodeGraph \
 	-image images/renderSettings.png
 
 gaffer screengrab \
 	-script scripts/renderSettings.gfr \
 	-command "$renderCommand" \
-	-selection Display \
+	-selection Catalogue \
 	-image images/firstRender.png
 
 gaffer screengrab \
 	-script scripts/renderSettingsWithGap.gfr \
-	-selection StandardOptions AppleseedOptions Outputs InteractiveAppleseedRender Display \
+	-selection StandardOptions AppleseedOptions Outputs InteractiveAppleseedRender Catalogue \
 	-editor NodeGraph \
 	-image images/renderSettingsWithGap.png
 
@@ -101,14 +101,14 @@ gaffer screengrab \
 gaffer screengrab \
 	-script scripts/firstLight.gfr \
 	-command "$renderCommand" \
-	-selection Display \
+	-selection Catalogue \
 	-editor Viewer \
 	-image images/firstLighting.png
 
 gaffer screengrab \
 	-script scripts/textures.gfr \
 	-command "$renderCommand" \
-	-selection Display \
+	-selection Catalogue \
 	-editor Viewer \
 	-image images/textures.png
 
@@ -122,7 +122,7 @@ gaffer screengrab \
 gaffer screengrab \
 	-script scripts/secondShaderAssignment.gfr \
 	-command "$renderCommand" \
-	-selection Display \
+	-selection Catalogue \
 	-image images/secondShaderAssignmentRender.png
 
 gaffer screengrab \
@@ -147,7 +147,7 @@ gaffer screengrab \
 gaffer screengrab \
 	-script scripts/secondShaderAssignmentFiltered.gfr \
 	-command "$renderCommand" \
-	-selection Display \
+	-selection Catalogue \
 	-editor Viewer \
 	-image images/finalRender.png
 

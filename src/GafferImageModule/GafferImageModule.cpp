@@ -91,6 +91,8 @@
 #include "GafferImageBindings/FilterAlgoBinding.h"
 #include "GafferImageBindings/MedianBinding.h"
 #include "GafferImageBindings/MixBinding.h"
+#include "GafferImageBindings/DisplayBinding.h"
+#include "GafferImageBindings/CatalogueBinding.h"
 
 using namespace boost::python;
 using namespace GafferImage;
@@ -104,10 +106,6 @@ BOOST_PYTHON_MODULE( _GafferImage )
 	GafferImageBindings::bindImageProcessor();
 	GafferBindings::DependencyNodeClass<ImagePrimitiveNode>();
 	GafferBindings::DependencyNodeClass<ImagePrimitiveProcessor>();
-	GafferBindings::DependencyNodeClass<Display>()
-		.def( "dataReceivedSignal", &Display::dataReceivedSignal, return_value_policy<reference_existing_object>() ).staticmethod( "dataReceivedSignal" )
-		.def( "imageReceivedSignal", &Display::imageReceivedSignal, return_value_policy<reference_existing_object>() ).staticmethod( "imageReceivedSignal" )
-	;
 	GafferBindings::DependencyNodeClass<ChannelDataProcessor>();
 	GafferBindings::DependencyNodeClass<ColorProcessor>();
 	GafferBindings::DependencyNodeClass<ObjectToImage>();
@@ -153,5 +151,7 @@ BOOST_PYTHON_MODULE( _GafferImage )
 	GafferImageBindings::bindFilterAlgo();
 	GafferImageBindings::bindMedian();
 	GafferImageBindings::bindMix();
+	GafferImageBindings::bindDisplay();
+	GafferImageBindings::bindCatalogue();
 
 }

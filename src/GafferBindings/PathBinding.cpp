@@ -279,6 +279,35 @@ class PathWrapper : public IECorePython::RunTimeTypedWrapper<WrappedType>
 			WrappedType::doChildren( children );
 		}
 
+		virtual void pathChangedSignalCreated()
+		{
+			if( this->isSubclassed() )
+			{
+				IECorePython::ScopedGILLock gilLock;
+				try
+				{
+					boost::python::object f = this->methodOverride( "_pathChangedSignalCreated" );
+					if( f )
+					{
+						f();
+						return;
+					}
+				}
+				catch( const error_already_set &e )
+				{
+					ExceptionAlgo::translatePythonException();
+				}
+			}
+			WrappedType::pathChangedSignalCreated();
+		}
+
+		// Defined here rather than in the containing namespace
+		// because it needs access to the protected method.
+		void pathChangedSignalCreatedWrapper()
+		{
+			WrappedType::pathChangedSignalCreated();
+		}
+
 };
 
 const char *rootWrapper( Path &p )
@@ -447,6 +476,8 @@ void GafferBindings::bindPath()
 		.def( self == self )
 		.def( self != self )
 		.def( "_emitPathChanged", &Path::emitPathChanged )
+		.def( "_pathChangedSignalCreated", &Wrapper::pathChangedSignalCreatedWrapper )
+		.def( "_havePathChangedSignal", &Path::havePathChangedSignal )
 	;
 
 	SignalClass<Path::PathChangedSignal, DefaultSignalCaller<Path::PathChangedSignal>, PathChangedSlotCaller>( "PathChangedSignal" );
