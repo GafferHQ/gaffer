@@ -47,11 +47,13 @@
 
 #include "GafferCortex/ParameterisedHolder.h"
 
+#include "GafferCortexBindings/Export.h"
+
 namespace GafferCortexBindings
 {
 
 template<typename BaseType>
-class ParameterisedHolderWrapper : public BaseType
+class GAFFER_EXPORT ParameterisedHolderWrapper : public BaseType
 {
 
 	public :
@@ -100,7 +102,7 @@ class ParameterisedHolderWrapper : public BaseType
 };
 
 template<typename BaseType>
-class ParameterisedHolderClass : public BaseType
+class GAFFER_EXPORT ParameterisedHolderClass : public BaseType
 {
 
 	public :
@@ -160,7 +162,7 @@ class ParameterisedHolderClass : public BaseType
 			return boost::python::make_tuple( p, className, classVersion, searchPathEnvVar );
 		}
 
-		class ParameterModificationContextWrapper
+		class GAFFER_EXPORT ParameterModificationContextWrapper
 		{
 
 			public :
@@ -196,7 +198,7 @@ class ParameterisedHolderClass : public BaseType
 
 };
 
-void bindParameterisedHolder();
+GAFFERCORTEXBINDINGS_API void bindParameterisedHolder();
 
 } // namespace GafferCortexBindings
 
