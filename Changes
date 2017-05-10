@@ -1,3 +1,38 @@
+0.33.2.0
+========
+
+Features
+--------
+
+- Added Image Catalogue node (#2077)
+  - Key features include:
+      - Loading, exporting, removing, and renaming images on disk.
+      - Receiving renders from an InteractiveRender node, automatically combining
+        multiple AOVs into a single image stream.
+      - Snapshot (copying) images, including in-progress renders.
+      - Adding notes to images.
+      - Drag 'n' drop of any other image node into the image list to snapshot it
+        and add it to the catalogue.
+
+Improvements
+------------
+
+- OSL ShadingEngine : Added 'shading:index' special attr to getattribute (#2067)
+  - This can be used to fetch the index of the current shading point.
+
+Fixes
+-----
+
+- BoxIO : Fixed `setup()` to deal with non-serialisable plugs (#2081)
+- DebugDispatcher : Fixed naming bug when creating nodes inside other nodes (#2073)
+- Plug : Fixed bug whereby non-serialisable children were serialised (#2077)
+
+API
+---
+
+- Display : Added setDriver/getDriver mechanism (#2077)
+- PathBinding : Added bindings for pathChangedSignalCreated and havePathChangedSignal (#2077)
+
 0.33.1.0
 ========
 
