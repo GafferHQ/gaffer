@@ -43,6 +43,7 @@
 
 #include "Gaffer/Node.h"
 
+#include "GafferScene/Export.h"
 #include "GafferScene/ScenePlug.h"
 
 namespace Gaffer
@@ -57,7 +58,7 @@ namespace GafferScene
 
 /// Base class for nodes which perform renders embedded in the main gaffer process,
 /// and which can be updated automatically and rerendered as the user tweaks the scene.
-class InteractiveRender : public Gaffer::Node
+class GAFFERSCENE_API InteractiveRender : public Gaffer::Node
 {
 
 	public :

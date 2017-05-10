@@ -37,12 +37,13 @@
 #ifndef GAFFERSCENE_OPENGLRENDER_H
 #define GAFFERSCENE_OPENGLRENDER_H
 
+#include "GafferScene/Export.h"
 #include "GafferScene/ExecutableRender.h"
 
 namespace GafferScene
 {
 
-class OpenGLRender : public ExecutableRender
+class GAFFERSCENE_API OpenGLRender : public ExecutableRender
 {
 
 	public :

@@ -41,6 +41,7 @@
 
 #include "GafferDispatch/TaskNode.h"
 
+#include "GafferScene/Export.h"
 #include "GafferScene/TypeIds.h"
 
 namespace GafferScene
@@ -52,7 +53,7 @@ IE_CORE_FORWARDDECLARE( ScenePlug )
 /// in the execute() method.
 /// Note that this is in the process of being replaced by the
 /// GafferScene::Preview::Render node.
-class ExecutableRender : public GafferDispatch::TaskNode
+class GAFFERSCENE_API ExecutableRender : public GafferDispatch::TaskNode
 {
 
 	public :

@@ -40,12 +40,13 @@
 
 #include "Gaffer/CompoundDataPlug.h"
 
+#include "GafferScene/Export.h"
 #include "GafferScene/GlobalsProcessor.h"
 
 namespace GafferScene
 {
 
-class Options : public GlobalsProcessor
+class GAFFERSCENE_API Options : public GlobalsProcessor
 {
 
 	public :
