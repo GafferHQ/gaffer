@@ -37,6 +37,7 @@
 #ifndef GAFFERUI_DRAGDROPEVENT_H
 #define GAFFERUI_DRAGDROPEVENT_H
 
+#include "GafferUI/Export.h"
 #include "GafferUI/ButtonEvent.h"
 
 #include "IECore/RunTimeTyped.h"
@@ -46,7 +47,7 @@ namespace GafferUI
 
 IE_CORE_FORWARDDECLARE( Gadget )
 
-struct DragDropEvent : public ButtonEvent
+struct GAFFERUI_API DragDropEvent : public ButtonEvent
 {
 
 	DragDropEvent(

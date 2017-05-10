@@ -42,6 +42,7 @@
 
 #include "Gaffer/StringAlgo.h"
 
+#include "GafferUI/Export.h"
 #include "GafferUI/Gadget.h"
 
 namespace Gaffer
@@ -72,7 +73,7 @@ IE_CORE_FORWARDDECLARE( Nodule )
 /// - noduleLayout:section:<sectionName>:direction, string, "increasing" or "decreasing"
 /// - noduleLayout:customGadget:<name>:gadgetType, string
 /// - noduleLayout:customGadget:<name>:*, as for child plug metadata above
-class NoduleLayout : public Gadget
+class GAFFERUI_API NoduleLayout : public Gadget
 {
 
 	public :

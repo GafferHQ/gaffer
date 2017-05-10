@@ -40,6 +40,7 @@
 
 #include "Gaffer/StringAlgo.h"
 
+#include "GafferUI/Export.h"
 #include "GafferUI/Nodule.h"
 
 namespace Gaffer
@@ -50,7 +51,7 @@ namespace Gaffer
 namespace GafferUI
 {
 
-class StandardNodule : public Nodule
+class GAFFERUI_API StandardNodule : public Nodule
 {
 
 	public :

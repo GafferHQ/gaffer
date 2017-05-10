@@ -38,12 +38,13 @@
 #ifndef GAFFERUI_LINEARCONTAINER_H
 #define GAFFERUI_LINEARCONTAINER_H
 
+#include "GafferUI/Export.h"
 #include "GafferUI/ContainerGadget.h"
 
 namespace GafferUI
 {
 
-class LinearContainer : public ContainerGadget
+class GAFFERUI_API LinearContainer : public ContainerGadget
 {
 
 	public :
