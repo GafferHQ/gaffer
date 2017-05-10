@@ -1,7 +1,6 @@
 //////////////////////////////////////////////////////////////////////////
 //
-//  Copyright (c) 2014, John Haddon. All rights reserved.
-//  Copyright (c) 2017, Image Engine Design Inc. All rights reserved.
+//  Copyright (c) 2016, Image Engine Design Inc. All rights reserved.
 //
 //  Redistribution and use in source and binary forms, with or without
 //  modification, are permitted provided that the following conditions are
@@ -35,48 +34,18 @@
 //
 //////////////////////////////////////////////////////////////////////////
 
-#ifndef GAFFERUI_SCALEHANDLE_H
-#define GAFFERUI_SCALEHANDLE_H
+#ifndef GAFFERUI_EXPORT_H
+#define GAFFERUI_EXPORT_H
 
-#include "GafferUI/Export.h"
-#include "GafferUI/Handle.h"
+#include "Gaffer/Export.h"
 
-namespace GafferUI
-{
+// define GAFFERUI_API macro based on whether or not we are compiling
+// GafferUI, or including headers for linking to it. the GAFFERUI_API
+// macro is the one that is used in the class definitions.
+#ifdef GafferUI_EXPORTS
+  #define GAFFERUI_API GAFFER_EXPORT
+#else
+  #define GAFFERUI_API GAFFER_IMPORT
+#endif
 
-class GAFFERUI_API ScaleHandle : public Handle
-{
-
-	public :
-
-		ScaleHandle( Style::Axes axes );
-		virtual ~ScaleHandle();
-
-		IE_CORE_DECLARERUNTIMETYPEDEXTENSION( GafferUI::ScaleHandle, ScaleHandleTypeId, Handle );
-
-		void setAxes( Style::Axes axes );
-		Style::Axes getAxes() const;
-
-		float scaling( const DragDropEvent &event ) const;
-
-	protected :
-
-		virtual void renderHandle( const Style *style, Style::State state ) const;
-		virtual void dragBegin( const DragDropEvent &event );
-
-	private :
-
-		Style::Axes m_axes;
-		LinearDrag m_drag;
-		Imath::V2f m_uniformDragStartPosition;
-
-};
-
-IE_CORE_DECLAREPTR( ScaleHandle )
-
-typedef Gaffer::FilteredChildIterator<Gaffer::TypePredicate<ScaleHandle> > ScaleHandleIterator;
-typedef Gaffer::FilteredRecursiveChildIterator<Gaffer::TypePredicate<ScaleHandle> > RecursiveScaleHandleIterator;
-
-} // namespace GafferUI
-
-#endif // GAFFERUI_SCALEHANDLE_H
+#endif // #ifndef GAFFERUI_EXPORT_H

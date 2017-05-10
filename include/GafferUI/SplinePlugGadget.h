@@ -38,6 +38,7 @@
 #ifndef GAFFERUI_SPLINEPLUGGADGET_H
 #define GAFFERUI_SPLINEPLUGGADGET_H
 
+#include "GafferUI/Export.h"
 #include "GafferUI/Gadget.h"
 
 #include "Gaffer/SplinePlug.h"
@@ -47,7 +48,7 @@ namespace GafferUI
 {
 
 /// \todo I think this should work with any sort of Set for the splines.
-class SplinePlugGadget : public Gadget
+class GAFFERUI_API SplinePlugGadget : public Gadget
 {
 
 	public :
