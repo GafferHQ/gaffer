@@ -43,13 +43,15 @@
 
 #include "IECore/ObjectVector.h"
 
+#include "GafferArnold/Export.h"
+
 namespace IECoreArnoldPreview
 {
 
 namespace ShaderAlgo
 {
 
-std::vector<AtNode *> convert( const IECore::ObjectVector *shaderNetwork, const std::string &namePrefix = "" );
+GAFFERARNOLD_API std::vector<AtNode *> convert( const IECore::ObjectVector *shaderNetwork, const std::string &namePrefix = "" );
 
 } // namespace ShaderAlgo
 
