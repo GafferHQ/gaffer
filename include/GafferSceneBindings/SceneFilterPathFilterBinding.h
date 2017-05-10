@@ -37,10 +37,12 @@
 #ifndef GAFFERSCENEBINDINGS_SCENEFILTERPATHFILTERBINDING_H
 #define GAFFERSCENEBINDINGS_SCENEFILTERPATHFILTERBINDING_H
 
+#include "GafferSceneBindings/Export.h"
+
 namespace GafferSceneBindings
 {
 
-void bindSceneFilterPathFilter();
+GAFFERSCENEBINDINGS_API void bindSceneFilterPathFilter();
 
 } // namespace GafferSceneBindings
 

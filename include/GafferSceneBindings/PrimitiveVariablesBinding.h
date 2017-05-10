@@ -37,10 +37,12 @@
 #ifndef GAFFERSCENEBINDINGS_PRIMITIVEVARIABLESBINDING_H
 #define GAFFERSCENEBINDINGS_PRIMITIVEVARIABLESBINDING_H
 
+#include "GafferSceneBindings/Export.h"
+
 namespace GafferSceneBindings
 {
 
-void bindPrimitiveVariables();
+GAFFERSCENEBINDINGS_API void bindPrimitiveVariables();
 
 } // namespace GafferSceneBindings
 

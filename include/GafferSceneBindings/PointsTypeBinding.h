@@ -37,10 +37,12 @@
 #ifndef GAFFERSCENEBINDINGS_POINTSTYPEBINDING_H
 #define GAFFERSCENEBINDINGS_POINTSTYPEBINDING_H
 
+#include "GafferSceneBindings/Export.h"
+
 namespace GafferSceneBindings
 {
 
-void bindPointsType();
+GAFFERSCENEBINDINGS_API void bindPointsType();
 
 } // namespace GafferSceneBindings
 

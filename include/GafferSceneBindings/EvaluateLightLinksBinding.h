@@ -37,10 +37,12 @@
 #ifndef GAFFERSCENEBINDINGS_EVALUATELIGHTLINKSBINDING_H
 #define GAFFERSCENEBINDINGS_EVALUATELIGHTLINKSBINDING_H
 
+#include "GafferSceneBindings/Export.h"
+
 namespace GafferSceneBindings
 {
 
-void bindEvaluateLightLinks();
+GAFFERSCENEBINDINGS_API void bindEvaluateLightLinks();
 
 } // namespace GafferSceneBindings
 

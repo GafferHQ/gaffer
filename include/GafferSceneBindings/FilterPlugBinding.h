@@ -37,10 +37,12 @@
 #ifndef GAFFERSCENEBINDINGS_FILTERPLUGBINDING_H
 #define GAFFERSCENEBINDINGS_FILTERPLUGBINDING_H
 
+#include "GafferSceneBindings/Export.h"
+
 namespace GafferSceneBindings
 {
 
-void bindFilterPlug();
+GAFFERSCENEBINDINGS_API void bindFilterPlug();
 
 } // namespace GafferSceneBindings
 

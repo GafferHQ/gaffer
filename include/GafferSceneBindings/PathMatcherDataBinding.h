@@ -37,10 +37,12 @@
 #ifndef GAFFERSCENEBINDINGS_PATHMATCHERDATABINDING_H
 #define GAFFERSCENEBINDINGS_PATHMATCHERDATABINDING_H
 
+#include "GafferSceneBindings/Export.h"
+
 namespace GafferSceneBindings
 {
 
-void bindPathMatcherData();
+GAFFERSCENEBINDINGS_API void bindPathMatcherData();
 
 } // namespace GafferSceneBindings
 

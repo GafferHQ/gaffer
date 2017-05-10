@@ -37,10 +37,12 @@
 #ifndef GAFFERSCENEBINDINGS_CONSTRAINTBINDING_H
 #define GAFFERSCENEBINDINGS_CONSTRAINTBINDING_H
 
+#include "GafferSceneBindings/Export.h"
+
 namespace GafferSceneBindings
 {
 
-void bindConstraint();
+GAFFERSCENEBINDINGS_API void bindConstraint();
 
 } // namespace GafferSceneBindings
 
