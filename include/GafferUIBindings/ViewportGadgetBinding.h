@@ -37,10 +37,12 @@
 #ifndef GAFFERUIBINDINGS_VIEWPORTGADGETBINDING_H
 #define GAFFERUIBINDINGS_VIEWPORTGADGETBINDING_H
 
+#include "GafferUIBindings/Export.h"
+
 namespace GafferUIBindings
 {
 
-void bindViewportGadget();
+GAFFERUIBINDINGS_API void bindViewportGadget();
 
 } // namespace GafferUIBindings
 

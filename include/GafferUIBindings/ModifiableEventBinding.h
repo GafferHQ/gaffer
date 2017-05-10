@@ -37,10 +37,12 @@
 #ifndef GAFFERUIBINDINGS_MODIFIABLEEVENTBINDING_H
 #define GAFFERUIBINDINGS_MODIFIABLEEVENTBINDING_H
 
+#include "GafferUIBindings/Export.h"
+
 namespace GafferUIBindings
 {
 
-void bindModifiableEvent();
+GAFFERUIBINDINGS_API void bindModifiableEvent();
 
 } // namespace GafferUIBindings
 

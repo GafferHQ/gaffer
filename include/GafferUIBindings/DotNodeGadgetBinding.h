@@ -37,10 +37,12 @@
 #ifndef GAFFERUIBINDINGS_DOTNODEGADGETBINDING_H
 #define GAFFERUIBINDINGS_DOTNODEGADGETBINDING_H
 
+#include "GafferUIBindings/Export.h"
+
 namespace GafferUIBindings
 {
 
-void bindDotNodeGadget();
+GAFFERUIBINDINGS_API void bindDotNodeGadget();
 
 } // namespace GafferUIBindings
 

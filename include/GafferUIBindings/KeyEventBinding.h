@@ -37,10 +37,12 @@
 #ifndef GAFFERUIBINDINGS_KEYEVENTBINDING_H
 #define GAFFERUIBINDINGS_KEYEVENTBINDING_H
 
+#include "GafferUIBindings/Export.h"
+
 namespace GafferUIBindings
 {
 
-void bindKeyEvent();
+GAFFERUIBINDINGS_API void bindKeyEvent();
 
 } // namespace GafferUIBindings
 

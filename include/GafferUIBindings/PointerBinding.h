@@ -37,10 +37,12 @@
 #ifndef GAFFERUIBINDINGS_POINTERBINDING_H
 #define GAFFERUIBINDINGS_POINTERBINDING_H
 
+#include "GafferUIBindings/Export.h"
+
 namespace GafferUIBindings
 {
 
-void bindPointer();
+GAFFERUIBINDINGS_API void bindPointer();
 
 } // namespace GafferUIBindings
 

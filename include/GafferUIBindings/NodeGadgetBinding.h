@@ -40,6 +40,7 @@
 
 #include "GafferUI/NodeGadget.h"
 
+#include "GafferUIBindings/Export.h"
 #include "GafferUIBindings/GadgetBinding.h"
 
 namespace GafferUIBindings
@@ -112,7 +113,7 @@ class NodeGadgetWrapper : public GadgetWrapper<WrappedType>
 
 };
 
-void bindNodeGadget();
+GAFFERUIBINDINGS_API void bindNodeGadget();
 
 } // namespace GafferUIBindings
 
