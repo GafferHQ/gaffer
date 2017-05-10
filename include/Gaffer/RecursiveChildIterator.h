@@ -39,6 +39,7 @@
 
 #include "boost/iterator/iterator_facade.hpp"
 
+#include "Gaffer/Export.h"
 #include "Gaffer/GraphComponent.h"
 
 namespace Gaffer
@@ -49,7 +50,7 @@ namespace Gaffer
 ///
 /// for( RecursiveChildIterator it( parent ); !it.done(); ++it )
 /// ...
-class RecursiveChildIterator : public boost::iterator_facade<RecursiveChildIterator, const GraphComponentPtr, boost::forward_traversal_tag>
+class GAFFER_API RecursiveChildIterator : public boost::iterator_facade<RecursiveChildIterator, const GraphComponentPtr, boost::forward_traversal_tag>
 {
 
 	public :

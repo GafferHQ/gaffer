@@ -1,7 +1,6 @@
 //////////////////////////////////////////////////////////////////////////
 //
-//  Copyright (c) 2012, John Haddon. All rights reserved.
-//  Copyright (c) 2014, Image Engine Design Inc. All rights reserved.
+//  Copyright (c) 2016, Image Engine Design Inc. All rights reserved.
 //
 //  Redistribution and use in source and binary forms, with or without
 //  modification, are permitted provided that the following conditions are
@@ -35,54 +34,25 @@
 //
 //////////////////////////////////////////////////////////////////////////
 
-#ifndef GAFFER_PLUGALGO_H
-#define GAFFER_PLUGALGO_H
+#ifndef GAFFER_EXPORT_H
+#define GAFFER_EXPORT_H
 
-#include "IECore/RefCounted.h"
+// define platform-specific macros for importing/exporting symbols
+#ifdef _MSC_VER
+  #define GAFFER_IMPORT __declspec(dllimport)
+  #define GAFFER_EXPORT __declspec(dllexport)
+#else
+  #define GAFFER_IMPORT
+  #define GAFFER_EXPORT
+#endif
 
-#include "Gaffer/Export.h"
-#include "Gaffer/StringAlgo.h"
+// define GAFFER_API macro based on whether or not we are compiling Gaffer,
+// or including headers for linking to it. the GAFFER_API macro is the one that is
+// used in the class definitions.
+#ifdef Gaffer_EXPORTS
+  #define GAFFER_API GAFFER_EXPORT
+#else
+  #define GAFFER_API GAFFER_IMPORT
+#endif
 
-namespace Gaffer
-{
-
-IE_CORE_FORWARDDECLARE( Plug )
-
-namespace PlugAlgo
-{
-
-GAFFER_API void replacePlug( GraphComponent *parent, PlugPtr plug );
-
-/// Promotion
-/// =========
-///
-/// When a node has an internal node graph of its own, it
-/// is often useful to expose some internal settings by
-/// promoting internal plugs so that they are driven by
-/// external plugs. These functions assist in this process.
-
-/// Returns true if a call to `promote( plug, parent )` would
-/// succeed, false otherwise.
-GAFFER_API bool canPromote( const Plug *plug, const Plug *parent = NULL );
-/// Promotes an internal plug, returning the newly created
-/// external plug. By default the external plug is parented
-/// directly to the node, but the `parent` argument
-/// may specify a plug on that node to be used as parent
-/// instead. By default, all metadata values except those
-/// related to plug layouts are copied to the external
-/// plug - this can be controlled with the `excludeMetadata`
-/// argument.
-/// \undoable
-GAFFER_API Plug *promote( Plug *plug, Plug *parent = NULL, const StringAlgo::MatchPattern &excludeMetadata = "layout:*" );
-/// Returns true if the plug appears to have been promoted.
-GAFFER_API bool isPromoted( const Plug *plug );
-/// Unpromotes a previously promoted plug, removing the
-/// external plug where possible.
-/// \undoable
-GAFFER_API void unpromote( Plug *plug );
-
-} // namespace PlugAlgo
-
-} // namespace Gaffer
-
-#endif // GAFFER_PLUGALGO_H
+#endif // #ifndef GAFFER_EXPORT_H

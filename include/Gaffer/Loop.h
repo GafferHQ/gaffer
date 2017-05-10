@@ -38,6 +38,7 @@
 #ifndef GAFFER_LOOP_H
 #define GAFFER_LOOP_H
 
+#include "Gaffer/Export.h"
 #include "Gaffer/ComputeNode.h"
 #include "Gaffer/NumericPlug.h"
 #include "Gaffer/StringPlug.h"
@@ -51,7 +52,7 @@ namespace Gaffer
 /// "in" and "out" already, or that it doesn't and they will be
 /// added dynamically following construction of the node.
 template<typename BaseType>
-class Loop : public BaseType
+class GAFFER_EXPORT Loop : public BaseType
 {
 
 	public :

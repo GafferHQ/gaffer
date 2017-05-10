@@ -39,6 +39,8 @@
 
 #include "boost/signals.hpp"
 
+#include "Gaffer/Export.h"
+
 namespace Gaffer
 {
 
@@ -52,7 +54,7 @@ namespace Behaviours
 /// we get greater flexibility than if we attempted
 /// to do the same by deriving new classes from the
 /// GraphComponents.
-class Behaviour : public boost::signals::trackable
+class GAFFER_API Behaviour : public boost::signals::trackable
 {
 
 	public :

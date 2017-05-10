@@ -43,6 +43,7 @@
 #include "IECore/InternedString.h"
 #include "IECore/Data.h"
 
+#include "Gaffer/Export.h"
 #include "Gaffer/StringAlgo.h"
 #include "Gaffer/CatchingSignalCombiner.h"
 
@@ -57,7 +58,7 @@ IE_CORE_FORWARDDECLARE( Plug )
 /// of Nodes and Plugs. This metadata assists in creating UIs and can be used to
 /// generate documentation. Metadata can consist of either static values represented
 /// as IECore::Data, or can be computed dynamically.
-class Metadata
+class GAFFER_API Metadata
 {
 
 	public :
