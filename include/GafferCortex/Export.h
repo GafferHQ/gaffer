@@ -1,6 +1,6 @@
 //////////////////////////////////////////////////////////////////////////
 //
-//  Copyright (c) 2012-2014, Image Engine Design Inc. All rights reserved.
+//  Copyright (c) 2016, Image Engine Design Inc. All rights reserved.
 //
 //  Redistribution and use in source and binary forms, with or without
 //  modification, are permitted provided that the following conditions are
@@ -34,52 +34,18 @@
 //
 //////////////////////////////////////////////////////////////////////////
 
-#ifndef GAFFERCORTEX_DATETIMEPARAMETERHANDLER_H
-#define GAFFERCORTEX_DATETIMEPARAMETERHANDLER_H
+#ifndef GAFFERCORTEX_EXPORT_H
+#define GAFFERCORTEX_EXPORT_H
 
-#include "IECore/DateTimeParameter.h"
+#include "Gaffer/Export.h"
 
-#include "GafferCortex/Export.h"
-#include "GafferCortex/ParameterHandler.h"
+// define GAFFERCORTEX_API macro based on whether or not we are compiling
+// GafferCortex, or including headers for linking to it. the GAFFERCORTEX_API
+// macro is the one that is used in the class definitions.
+#ifdef GafferCortex_EXPORTS
+  #define GAFFERCORTEX_API GAFFER_EXPORT
+#else
+  #define GAFFERCORTEX_API GAFFER_IMPORT
+#endif
 
-namespace Gaffer
-{
-
-IE_CORE_FORWARDDECLARE( StringPlug )
-
-} // namespace Gaffer
-
-namespace GafferCortex
-{
-
-class GAFFERCORTEX_API DateTimeParameterHandler : public ParameterHandler
-{
-
-	public :
-
-		IE_CORE_DECLAREMEMBERPTR( DateTimeParameterHandler );
-
-		DateTimeParameterHandler( IECore::DateTimeParameterPtr parameter );
-		virtual ~DateTimeParameterHandler();
-
-		virtual IECore::Parameter *parameter();
-		virtual const IECore::Parameter *parameter() const;
-		virtual void restore( Gaffer::GraphComponent *plugParent );
-		virtual Gaffer::Plug *setupPlug( Gaffer::GraphComponent *plugParent, Gaffer::Plug::Direction direction=Gaffer::Plug::In, unsigned flags = Gaffer::Plug::Default | Gaffer::Plug::Dynamic );
-		virtual Gaffer::Plug *plug();
-		virtual const Gaffer::Plug *plug() const;
-		virtual void setParameterValue();
-		virtual void setPlugValue();
-
-	private :
-
-		IECore::DateTimeParameterPtr m_parameter;
-		Gaffer::StringPlugPtr m_plug;
-
-		static ParameterHandlerDescription<DateTimeParameterHandler, IECore::DateTimeParameter> g_description;
-
-};
-
-} // namespace GafferCortex
-
-#endif // GAFFERCORTEX_DATETIMEPARAMETERHANDLER_H
+#endif // #ifndef GAFFERCORTEX_EXPORT_H

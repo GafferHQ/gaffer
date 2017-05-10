@@ -37,6 +37,7 @@
 #ifndef GAFFERCORTEX_PROCEDURALHOLDER_H
 #define GAFFERCORTEX_PROCEDURALHOLDER_H
 
+#include "GafferCortex/Export.h"
 #include "GafferCortex/ParameterisedHolder.h"
 
 namespace IECore
@@ -49,7 +50,7 @@ IE_CORE_FORWARDDECLARE( ParameterisedProcedural )
 namespace GafferCortex
 {
 
-class ProceduralHolder : public ParameterisedHolderComputeNode
+class GAFFERCORTEX_API ProceduralHolder : public ParameterisedHolderComputeNode
 {
 
 	public :
