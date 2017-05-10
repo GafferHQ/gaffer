@@ -1,6 +1,6 @@
 //////////////////////////////////////////////////////////////////////////
 //
-//  Copyright (c) 2013, Image Engine Design Inc. All rights reserved.
+//  Copyright (c) 2016, Image Engine Design Inc. All rights reserved.
 //
 //  Redistribution and use in source and binary forms, with or without
 //  modification, are permitted provided that the following conditions are
@@ -34,36 +34,18 @@
 //
 //////////////////////////////////////////////////////////////////////////
 
-#ifndef GAFFERSCENE_INTERACTIVERENDERMANRENDER_H
-#define GAFFERSCENE_INTERACTIVERENDERMANRENDER_H
+#ifndef GAFFERRENDERMAN_EXPORT_H
+#define GAFFERRENDERMAN_EXPORT_H
 
-#include "GafferScene/InteractiveRender.h"
+#include "Gaffer/Export.h"
 
-#include "GafferRenderMan/Export.h"
-#include "GafferRenderMan/TypeIds.h"
+// define GAFFERRENDERMAN_API macro based on whether or not we are compiling
+// GafferRenderman, or including headers for linking to it. the GAFFERRENDERMAN_API
+// macro is the one that is used in the class definitions.
+#ifdef GafferRenderMan_EXPORTS
+  #define GAFFERRENDERMAN_API GAFFER_EXPORT
+#else
+  #define GAFFERRENDERMAN_API GAFFER_IMPORT
+#endif
 
-namespace GafferRenderMan
-{
-
-class GAFFERRENDERMAN_API InteractiveRenderManRender : public GafferScene::InteractiveRender
-{
-
-	public :
-
-		InteractiveRenderManRender( const std::string &name=defaultName<InteractiveRenderManRender>() );
-		virtual ~InteractiveRenderManRender();
-
-		IE_CORE_DECLARERUNTIMETYPEDEXTENSION( GafferRenderMan::InteractiveRenderManRender, InteractiveRenderManRenderTypeId, GafferScene::InteractiveRender );
-
-	protected :
-
-		/// Must be implemented by derived classes to return the renderer that will be used.
-		virtual IECore::RendererPtr createRenderer() const;
-
-};
-
-IE_CORE_DECLAREPTR( InteractiveRenderManRender );
-
-} // namespace GafferRenderMan
-
-#endif // GAFFERSCENE_INTERACTIVERENDERMANRENDER_H
+#endif // #ifndef GAFFERRENDERMAN_EXPORT_H
