@@ -37,6 +37,7 @@
 #ifndef GAFFERSCENE_MESHTANGENTS_H
 #define GAFFERSCENE_MESHTANGENTS_H
 
+#include "GafferScene/Export.h"
 #include "GafferScene/SceneElementProcessor.h"
 #include "Gaffer/StringPlug.h"
 #include "Gaffer/TypedPlug.h"
@@ -44,7 +45,7 @@
 namespace GafferScene
 {
 
-class MeshTangents : public SceneElementProcessor
+class GAFFERSCENE_API MeshTangents : public SceneElementProcessor
 {
 
 	public :

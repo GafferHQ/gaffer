@@ -49,6 +49,7 @@
 #include "Gaffer/CompoundNumericPlug.h"
 #include "Gaffer/ArrayPlug.h"
 
+#include "GafferScene/Export.h"
 #include "GafferScene/TypeIds.h"
 
 namespace Gaffer
@@ -61,7 +62,7 @@ IE_CORE_FORWARDDECLARE( StringPlug )
 namespace GafferScene
 {
 
-class Shader : public Gaffer::DependencyNode
+class GAFFERSCENE_API Shader : public Gaffer::DependencyNode
 {
 
 	public :

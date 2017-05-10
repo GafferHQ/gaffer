@@ -40,6 +40,7 @@
 #include "Gaffer/NumericPlug.h"
 #include "Gaffer/Context.h"
 
+#include "GafferScene/Export.h"
 #include "GafferScene/TypeIds.h"
 
 namespace GafferScene
@@ -52,7 +53,7 @@ class ScenePlug;
 /// \todo This derives from IntPlug for backwards compatibility
 /// reasons, but it may be preferable to derive straight from
 /// ValuePlug for version 1.0.0.0.
-class FilterPlug : public Gaffer::IntPlug
+class GAFFERSCENE_API FilterPlug : public Gaffer::IntPlug
 {
 
 	public :
@@ -85,7 +86,7 @@ class FilterPlug : public Gaffer::IntPlug
 		static const IECore::InternedString inputSceneContextName;
 
 		/// Provides the input scene for a filter evaluation
-		struct SceneScope : public Gaffer::Context::EditableScope
+		struct GAFFERSCENE_API SceneScope : public Gaffer::Context::EditableScope
 		{
 			SceneScope( const Gaffer::Context *context, const ScenePlug *scenePlug );
 		};

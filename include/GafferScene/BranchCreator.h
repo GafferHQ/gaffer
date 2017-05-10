@@ -40,6 +40,7 @@
 
 #include "IECore/CompoundData.h"
 
+#include "GafferScene/Export.h"
 #include "GafferScene/SceneProcessor.h"
 #include "GafferScene/Filter.h"
 
@@ -53,7 +54,7 @@ IE_CORE_FORWARDDECLARE( StringPlug )
 namespace GafferScene
 {
 
-class BranchCreator : public SceneProcessor
+class GAFFERSCENE_API BranchCreator : public SceneProcessor
 {
 
 	public :

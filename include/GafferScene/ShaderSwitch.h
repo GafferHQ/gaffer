@@ -39,12 +39,13 @@
 
 #include "Gaffer/Switch.h"
 
+#include "GafferScene/Export.h"
 #include "GafferScene/TypeIds.h"
 
 namespace GafferScene
 {
 
-class ShaderSwitch : public Gaffer::SwitchComputeNode
+class GAFFERSCENE_API ShaderSwitch : public Gaffer::SwitchComputeNode
 {
 
 	public :

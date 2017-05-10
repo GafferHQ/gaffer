@@ -1,6 +1,6 @@
 //////////////////////////////////////////////////////////////////////////
 //
-//  Copyright (c) 2015, Image Engine Design Inc. All rights reserved.
+//  Copyright (c) 2016, Image Engine Design Inc. All rights reserved.
 //
 //  Redistribution and use in source and binary forms, with or without
 //  modification, are permitted provided that the following conditions are
@@ -34,46 +34,18 @@
 //
 //////////////////////////////////////////////////////////////////////////
 
-#ifndef GAFFERSCENE_PARAMETERS_H
-#define GAFFERSCENE_PARAMETERS_H
+#ifndef GAFFERSCENE_EXPORT_H
+#define GAFFERSCENE_EXPORT_H
 
-#include "Gaffer/CompoundDataPlug.h"
+#include "Gaffer/Export.h"
 
-#include "GafferScene/Export.h"
-#include "GafferScene/SceneElementProcessor.h"
+// define GAFFERSCENE_API macro based on whether or not we are compiling
+// GafferScene, or including headers for linking to it. the GAFFERSCENE_API
+// macro is the one that is used in the class definitions.
+#ifdef GafferScene_EXPORTS
+  #define GAFFERSCENE_API GAFFER_EXPORT
+#else
+  #define GAFFERSCENE_API GAFFER_IMPORT
+#endif
 
-namespace GafferScene
-{
-
-class GAFFERSCENE_API Parameters : public SceneElementProcessor
-{
-
-	public :
-
-		Parameters( const std::string &name=defaultName<Parameters>() );
-		virtual ~Parameters();
-
-		IE_CORE_DECLARERUNTIMETYPEDEXTENSION( GafferScene::Parameters, ParametersTypeId, SceneElementProcessor );
-
-		Gaffer::CompoundDataPlug *parametersPlug();
-		const Gaffer::CompoundDataPlug *parametersPlug() const;
-
-		virtual void affects( const Gaffer::Plug *input, AffectedPlugsContainer &outputs ) const;
-
-	protected :
-
-		virtual bool processesObject() const;
-		virtual void hashProcessedObject( const ScenePath &path, const Gaffer::Context *context, IECore::MurmurHash &h ) const;
-		virtual IECore::ConstObjectPtr computeProcessedObject( const ScenePath &path, const Gaffer::Context *context, IECore::ConstObjectPtr inputObject ) const;
-
-	private :
-
-		static size_t g_firstPlugIndex;
-
-};
-
-IE_CORE_DECLAREPTR( Parameters )
-
-} // namespace GafferScene
-
-#endif // GAFFERSCENE_PARAMETERS_H
+#endif // #ifndef GAFFERSCENE_EXPORT_H

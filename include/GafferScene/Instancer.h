@@ -38,12 +38,13 @@
 #ifndef GAFFERSCENE_INSTANCER_H
 #define GAFFERSCENE_INSTANCER_H
 
+#include "GafferScene/Export.h"
 #include "GafferScene/BranchCreator.h"
 
 namespace GafferScene
 {
 
-class Instancer : public BranchCreator
+class GAFFERSCENE_API Instancer : public BranchCreator
 {
 
 	public :

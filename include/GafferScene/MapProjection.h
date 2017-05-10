@@ -37,6 +37,7 @@
 #ifndef GAFFERSCENE_MAPPROJECTION_H
 #define GAFFERSCENE_MAPPROJECTION_H
 
+#include "GafferScene/Export.h"
 #include "GafferScene/SceneElementProcessor.h"
 
 namespace Gaffer
@@ -55,7 +56,7 @@ namespace GafferScene
 /// variable. It would be better to replace sNamePlug() and
 /// tNamePlug() with a single plug specifying a prefix (now)
 /// and the name of the primitive variable itself (later).
-class MapProjection : public SceneElementProcessor
+class GAFFERSCENE_API MapProjection : public SceneElementProcessor
 {
 
 	public :
