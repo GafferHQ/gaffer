@@ -41,6 +41,7 @@
 
 #include "GafferScene/Shader.h"
 
+#include "GafferRenderMan/Export.h"
 #include "GafferRenderMan/TypeIds.h"
 
 namespace GafferRenderMan
@@ -48,7 +49,7 @@ namespace GafferRenderMan
 
 class RenderManLight;
 
-class RenderManShader : public GafferScene::Shader
+class GAFFERRENDERMAN_API RenderManShader : public GafferScene::Shader
 {
 
 	public :
