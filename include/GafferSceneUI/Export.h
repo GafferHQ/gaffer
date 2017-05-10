@@ -1,6 +1,6 @@
 //////////////////////////////////////////////////////////////////////////
 //
-//  Copyright (c) 2016, John Haddon. All rights reserved.
+//  Copyright (c) 2016, Image Engine Design Inc. All rights reserved.
 //
 //  Redistribution and use in source and binary forms, with or without
 //  modification, are permitted provided that the following conditions are
@@ -34,65 +34,18 @@
 //
 //////////////////////////////////////////////////////////////////////////
 
-#ifndef GAFFERSCENEUI_SCALETOOL_H
-#define GAFFERSCENEUI_SCALETOOL_H
+#ifndef GAFFERSCENEUI_EXPORT_H
+#define GAFFERSCENEUI_EXPORT_H
 
-#include "GafferUI/Style.h"
+#include "Gaffer/Export.h"
 
-#include "GafferSceneUI/Export.h"
-#include "GafferSceneUI/TransformTool.h"
+// define GAFFERSCENEUI_API macro based on whether or not we are compiling
+// GafferSceneUI, or including headers for linking to it. the GAFFERSCENEUI_API
+// macro is the one that is used in the class definitions.
+#ifdef GafferSceneUI_EXPORTS
+  #define GAFFERSCENEUI_API GAFFER_EXPORT
+#else
+  #define GAFFERSCENEUI_API GAFFER_IMPORT
+#endif
 
-namespace GafferSceneUI
-{
-
-IE_CORE_FORWARDDECLARE( SceneView )
-
-class GAFFERSCENEUI_API ScaleTool : public TransformTool
-{
-
-	public :
-
-		ScaleTool( SceneView *view, const std::string &name = defaultName<ScaleTool>() );
-		virtual ~ScaleTool();
-
-		IE_CORE_DECLARERUNTIMETYPEDEXTENSION( GafferSceneUI::ScaleTool, ScaleToolTypeId, TransformTool );
-
-		/// Scales the current selection as if the handles
-		/// had been dragged interactively. Exists mainly for
-		/// use in the unit tests.
-		void scale( const Imath::V3f &scale );
-
-	protected :
-
-		virtual bool affectsHandles( const Gaffer::Plug *input ) const;
-		virtual void updateHandles();
-
-	private :
-
-		// The guts of the scaling logic. This is factored out of the
-		// drag handling so it can be shared with the `scale()` public
-		// method.
-		struct Scale
-		{
-			Imath::V3f originalScale;
-			GafferUI::Style::Axes axes;
-		};
-
-		Scale createScale( GafferUI::Style::Axes axes );
-		void applyScale( const Scale &scale, float s );
-
-		// Drag handling.
-
-		IECore::RunTimeTypedPtr dragBegin( GafferUI::Style::Axes axes );
-		bool dragMove( const GafferUI::Gadget *gadget, const GafferUI::DragDropEvent &event );
-		bool dragEnd();
-
-		Scale m_drag;
-
-		static ToolDescription<ScaleTool, SceneView> g_toolDescription;
-
-};
-
-} // namespace GafferSceneUI
-
-#endif // GAFFERSCENEUI_SCALETOOL_H
+#endif // #ifndef GAFFERSCENEUI_EXPORT_H

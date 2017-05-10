@@ -39,6 +39,7 @@
 
 #include "GafferUI/Style.h"
 
+#include "GafferSceneUI/Export.h"
 #include "GafferSceneUI/TransformTool.h"
 
 namespace GafferSceneUI
@@ -46,7 +47,7 @@ namespace GafferSceneUI
 
 IE_CORE_FORWARDDECLARE( SceneView )
 
-class RotateTool : public TransformTool
+class GAFFERSCENEUI_API RotateTool : public TransformTool
 {
 
 	public :
