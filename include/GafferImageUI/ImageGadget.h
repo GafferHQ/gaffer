@@ -46,6 +46,7 @@
 
 #include "GafferImage/Format.h"
 
+#include "GafferImageUI/Export.h"
 #include "GafferImageUI/TypeIds.h"
 
 namespace IECoreGL
@@ -73,7 +74,7 @@ IE_CORE_FORWARDDECLARE( ImagePlug )
 namespace GafferImageUI
 {
 
-class ImageGadget : public GafferUI::Gadget
+class GAFFERIMAGEUI_API ImageGadget : public GafferUI::Gadget
 {
 
 	public :
