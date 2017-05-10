@@ -1,6 +1,6 @@
 //////////////////////////////////////////////////////////////////////////
 //
-//  Copyright (c) 2013, Image Engine Design Inc. All rights reserved.
+//  Copyright (c) 2016, Image Engine Design Inc. All rights reserved.
 //
 //  Redistribution and use in source and binary forms, with or without
 //  modification, are permitted provided that the following conditions are
@@ -34,16 +34,18 @@
 //
 //////////////////////////////////////////////////////////////////////////
 
-#ifndef GAFFERCORTEXBINDINGS_EXECUTABLEOPHOLDERBINDING_H
-#define GAFFERCORTEXBINDINGS_EXECUTABLEOPHOLDERBINDING_H
+#ifndef GAFFERCORTEXBINDINGS_EXPORT_H
+#define GAFFERCORTEXBINDINGS_EXPORT_H
 
-#include "GafferCortexBindings/Export.h"
+#include "Gaffer/Export.h"
 
-namespace GafferCortexBindings
-{
+// define GAFFERCORTEXBINDINGS_API macro based on whether or not we are compiling
+// GafferCortexBindings, or including headers for linking to it. the GAFFERCORTEXBINDINGS_API
+// macro is the one that is used in the class definitions.
+#ifdef GafferCortexBindings_EXPORTS
+  #define GAFFERCORTEXBINDINGS_API GAFFER_EXPORT
+#else
+  #define GAFFERCORTEXBINDINGS_API GAFFER_IMPORT
+#endif
 
-GAFFERCORTEXBINDINGS_API void bindExecutableOpHolder();
-
-} // namespace GafferCortexBindings
-
-#endif // GAFFERCORTEXBINDINGS_EXECUTABLEOPHOLDERBINDING_H
+#endif // #ifndef GAFFERCORTEXBINDINGS_EXPORT_H
