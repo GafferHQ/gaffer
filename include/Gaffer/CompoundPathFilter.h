@@ -37,6 +37,7 @@
 #ifndef GAFFER_COMPOUNDPATHFILTER_H
 #define GAFFER_COMPOUNDPATHFILTER_H
 
+#include "Gaffer/Export.h"
 #include "Gaffer/PathFilter.h"
 
 namespace Gaffer
@@ -44,7 +45,7 @@ namespace Gaffer
 
 /// The CompoundPathFilter class simply combines a number of other
 /// PathFilters, applying them in sequence.
-class CompoundPathFilter : public Gaffer::PathFilter
+class GAFFER_API CompoundPathFilter : public Gaffer::PathFilter
 {
 
 	public :

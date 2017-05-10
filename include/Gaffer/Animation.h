@@ -37,6 +37,7 @@
 #ifndef GAFFER_ANIMATION_H
 #define GAFFER_ANIMATION_H
 
+#include "Gaffer/Export.h"
 #include "Gaffer/ComputeNode.h"
 #include "Gaffer/NumericPlug.h"
 
@@ -44,7 +45,7 @@ namespace Gaffer
 {
 
 /// Node for applying keyframed animation to plugs.
-class Animation : public ComputeNode
+class GAFFER_API Animation : public ComputeNode
 {
 
 	public :
@@ -66,7 +67,7 @@ class Animation : public ComputeNode
 		};
 
 		/// Defines a single keyframe.
-		class Key
+		class GAFFER_API Key
 		{
 
 			public :
@@ -96,7 +97,7 @@ class Animation : public ComputeNode
 		/// Defines a curve as a collection of keyframes and methods
 		/// for editing them. Provides methods for evaluating the
 		/// interpolated curve at arbitrary positions.
-		class CurvePlug : public ValuePlug
+		class GAFFER_API CurvePlug : public ValuePlug
 		{
 
 			public :

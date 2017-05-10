@@ -43,6 +43,7 @@
 #include "IECore/ObjectVector.h"
 #include "IECore/CompoundObject.h"
 
+#include "Gaffer/Export.h"
 #include "Gaffer/ValuePlug.h"
 
 namespace Gaffer
@@ -50,7 +51,7 @@ namespace Gaffer
 
 /// A Plug type which can store values derived from IECore::Object.
 template<typename T>
-class TypedObjectPlug : public ValuePlug
+class GAFFER_EXPORT TypedObjectPlug : public ValuePlug
 {
 
 	public :
