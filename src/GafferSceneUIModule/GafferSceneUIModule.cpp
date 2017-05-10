@@ -54,6 +54,7 @@
 #include "GafferSceneUIBindings/TranslateToolBinding.h"
 #include "GafferSceneUIBindings/RotateToolBinding.h"
 #include "GafferSceneUIBindings/ScaleToolBinding.h"
+#include "GafferSceneUIBindings/ContextAlgoBinding.h"
 
 using namespace boost::python;
 using namespace IECorePython;
@@ -110,5 +111,6 @@ BOOST_PYTHON_MODULE( _GafferSceneUI )
 	bindLightVisualiser();
 	bindStandardLightVisualiser();
 	bindSceneHierarchy();
+	bindContextAlgo();
 
 }
