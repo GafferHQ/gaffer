@@ -42,6 +42,7 @@
 
 #include "IECore/RefCounted.h"
 
+#include "Gaffer/Export.h"
 #include "Gaffer/DirtyPropagationScope.h"
 
 namespace Gaffer
@@ -51,7 +52,7 @@ IE_CORE_FORWARDDECLARE( ScriptNode );
 
 /// The UndoScope class is used to control the creation of
 /// items on the undo stack held in a ScriptNode.
-class UndoScope : DirtyPropagationScope
+class GAFFER_API UndoScope : DirtyPropagationScope
 {
 
 	public :

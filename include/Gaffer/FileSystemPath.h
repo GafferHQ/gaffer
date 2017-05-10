@@ -40,12 +40,13 @@
 
 #include "IECore/FileSequence.h"
 
+#include "Gaffer/Export.h"
 #include "Gaffer/Path.h"
 
 namespace Gaffer
 {
 
-class FileSystemPath : public Path
+class GAFFER_API FileSystemPath : public Path
 {
 
 	public :

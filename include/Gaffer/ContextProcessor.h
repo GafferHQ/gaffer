@@ -37,6 +37,7 @@
 #ifndef GAFFER_CONTEXTPROCESSOR_H
 #define GAFFER_CONTEXTPROCESSOR_H
 
+#include "Gaffer/Export.h"
 #include "Gaffer/ComputeNode.h"
 
 namespace Gaffer
@@ -47,7 +48,7 @@ namespace Gaffer
 /// evaluation - time warps being one good example. The ContextProcessor adds no plugs
 /// of it's own, but will automatically map all in* plugs to their out* equivalents.
 template<typename BaseType>
-class ContextProcessor : public BaseType
+class GAFFER_EXPORT ContextProcessor : public BaseType
 {
 
 	public :

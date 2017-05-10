@@ -35,6 +35,7 @@
 //
 //////////////////////////////////////////////////////////////////////////
 
+#include "Gaffer/Export.h"
 #include "Gaffer/ContextProcessor.h"
 #include "Gaffer/Context.h"
 #include "Gaffer/ValuePlug.h"
@@ -42,13 +43,13 @@
 namespace Gaffer
 {
 
-template<typename BaseType>
+template<typename BaseType> GAFFER_EXPORT
 const IECore::RunTimeTyped::TypeDescription<ContextProcessor<BaseType> > ContextProcessor<BaseType>::g_typeDescription;
 
-template<typename BaseType>
+template<typename BaseType> GAFFER_EXPORT
 size_t ContextProcessor<BaseType>::g_firstPlugIndex = 0;
 
-template<typename BaseType>
+template<typename BaseType> GAFFER_EXPORT
 ContextProcessor<BaseType>::ContextProcessor( const std::string &name )
 	:	BaseType( name )
 {
@@ -62,12 +63,12 @@ ContextProcessor<BaseType>::ContextProcessor( const std::string &name )
 	}
 }
 
-template<typename BaseType>
+template<typename BaseType> GAFFER_EXPORT
 ContextProcessor<BaseType>::~ContextProcessor()
 {
 }
 
-template<typename BaseType>
+template<typename BaseType> GAFFER_EXPORT
 BoolPlug *ContextProcessor<BaseType>::enabledPlug()
 {
 	if( BoolPlug *p = BaseType::enabledPlug() )
@@ -77,7 +78,7 @@ BoolPlug *ContextProcessor<BaseType>::enabledPlug()
 	return BaseType::template getChild<BoolPlug>( g_firstPlugIndex );
 }
 
-template<typename BaseType>
+template<typename BaseType> GAFFER_EXPORT
 const BoolPlug *ContextProcessor<BaseType>::enabledPlug() const
 {
 	if( const BoolPlug *p = BaseType::enabledPlug() )
@@ -87,7 +88,7 @@ const BoolPlug *ContextProcessor<BaseType>::enabledPlug() const
 	return BaseType::template getChild<BoolPlug>( g_firstPlugIndex );
 }
 
-template<typename BaseType>
+template<typename BaseType> GAFFER_EXPORT
 Plug *ContextProcessor<BaseType>::correspondingInput( const Plug *output )
 {
 	if( const ValuePlug *v = IECore::runTimeCast<const ValuePlug>( output ) )
@@ -97,7 +98,7 @@ Plug *ContextProcessor<BaseType>::correspondingInput( const Plug *output )
 	return NULL;
 }
 
-template<typename BaseType>
+template<typename BaseType> GAFFER_EXPORT
 const Plug *ContextProcessor<BaseType>::correspondingInput( const Plug *output ) const
 {
 	if( const ValuePlug *v = IECore::runTimeCast<const ValuePlug>( output ) )
@@ -107,7 +108,7 @@ const Plug *ContextProcessor<BaseType>::correspondingInput( const Plug *output )
 	return NULL;
 }
 
-template<typename BaseType>
+template<typename BaseType> GAFFER_EXPORT
 void ContextProcessor<BaseType>::affects( const Plug *input, DependencyNode::AffectedPlugsContainer &outputs ) const
 {
 	BaseType::affects( input, outputs );
@@ -125,7 +126,7 @@ void ContextProcessor<BaseType>::affects( const Plug *input, DependencyNode::Aff
 	}
 }
 
-template<typename BaseType>
+template<typename BaseType> GAFFER_EXPORT
 void ContextProcessor<BaseType>::appendAffectedPlugs( DependencyNode::AffectedPlugsContainer &outputs ) const
 {
 	Node *n = const_cast<Node *>( static_cast<const Node *>( this ) );
@@ -149,7 +150,7 @@ void ContextProcessor<BaseType>::appendAffectedPlugs( DependencyNode::AffectedPl
 	}
 }
 
-template<typename BaseType>
+template<typename BaseType> GAFFER_EXPORT
 void ContextProcessor<BaseType>::hash( const ValuePlug *output, const Context *context, IECore::MurmurHash &h ) const
 {
 	const ValuePlug *input = oppositePlug( output );
@@ -172,7 +173,7 @@ void ContextProcessor<BaseType>::hash( const ValuePlug *output, const Context *c
 	BaseType::hash( output, context, h );
 }
 
-template<typename BaseType>
+template<typename BaseType> GAFFER_EXPORT
 void ContextProcessor<BaseType>::compute( ValuePlug *output, const Context *context ) const
 {
 	const ValuePlug *input = oppositePlug( output );
@@ -195,7 +196,7 @@ void ContextProcessor<BaseType>::compute( ValuePlug *output, const Context *cont
 	return BaseType::compute( output, context );
 }
 
-template<typename BaseType>
+template<typename BaseType> GAFFER_EXPORT
 const ValuePlug *ContextProcessor<BaseType>::correspondingDescendant( const ValuePlug *plug, const ValuePlug *plugAncestor, const ValuePlug *oppositeAncestor )
 {
 	// this method recursively computes oppositeAncestor->descendant( plug->relativeName( plugAncestor ) ).
@@ -232,7 +233,7 @@ const ValuePlug *ContextProcessor<BaseType>::correspondingDescendant( const Valu
 	return oppositeParent->getChild<ValuePlug>( plug->getName() );
 }
 
-template<typename BaseType>
+template<typename BaseType> GAFFER_EXPORT
 const ValuePlug *ContextProcessor<BaseType>::oppositePlug( const ValuePlug *plug ) const
 {
 	const static IECore::InternedString inName( "in" );

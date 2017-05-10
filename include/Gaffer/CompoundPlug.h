@@ -38,6 +38,7 @@
 #ifndef GAFFER_COMPOUNDPLUG_H
 #define GAFFER_COMPOUNDPLUG_H
 
+#include "Gaffer/Export.h"
 #include "Gaffer/ValuePlug.h"
 
 namespace Gaffer
@@ -50,7 +51,7 @@ namespace Gaffer
 /// normal Plugs. It's currently accepting Plugs for backwards
 /// compatibility with CompoundPlug, and having to do a number of
 /// runTimeCast<Value>Plug() operations internally to work around that.
-class CompoundPlug : public ValuePlug
+class GAFFER_API CompoundPlug : public ValuePlug
 {
 
 	public :
