@@ -37,10 +37,12 @@
 #ifndef GAFFERSCENEUIBINDINGS_SCALETOOLBINDING_H
 #define GAFFERSCENEUIBINDINGS_SCALETOOLBINDING_H
 
+#include "GafferSceneUIBindings/Export.h"
+
 namespace GafferSceneUIBindings
 {
 
-void bindScaleTool();
+GAFFERSCENEUIBINDINGS_API void bindScaleTool();
 
 } // namespace GafferSceneUIBindings
 
