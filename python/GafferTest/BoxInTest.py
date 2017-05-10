@@ -387,5 +387,24 @@ class BoxInTest( GafferTest.TestCase ) :
 
 		self.assertEqual( Gaffer.BoxIO.canInsert( s["b"] ), False )
 
+	def testNonSerialisableInput( self ) :
+
+		s = Gaffer.ScriptNode()
+		s["a"] = GafferTest.AddNode()
+		s["a"]["sum"].setFlags( Gaffer.Plug.Flags.Serialisable, False )
+
+		s["b"] = Gaffer.Box()
+		s["b"]["i"] = Gaffer.BoxIn()
+		s["b"]["i"].setup( s["a"]["sum"] )
+
+		s["b"]["i"].promotedPlug().setInput( s["a"]["sum"] )
+
+		self.assertTrue( s["b"]["i"]["out"].source().isSame( s["a"]["sum"] ) )
+
+		s2 = Gaffer.ScriptNode()
+		s2.execute( s.serialise() )
+
+		self.assertTrue( s2["b"]["i"]["out"].source().isSame( s2["a"]["sum"] ) )
+
 if __name__ == "__main__":
 	unittest.main()
