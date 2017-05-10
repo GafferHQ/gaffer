@@ -45,7 +45,7 @@
 namespace GafferArnold
 {
 
-class GAFFERSCENE_API ArnoldBackground : public GafferScene::GlobalShader
+class GAFFERARNOLD_API ArnoldBackground : public GafferScene::GlobalShader
 {
 
 	public :
