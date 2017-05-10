@@ -39,10 +39,12 @@
 
 #include "GafferImage/Format.h"
 
+#include "GafferImageBindings/Export.h"
+
 namespace GafferImageBindings
 {
 
-void bindFormat();
+GAFFERIMAGEBINDINGS_API void bindFormat();
 
 }; // namespace GafferImageBindings
 

@@ -37,10 +37,12 @@
 #ifndef GAFFERIMAGEBINDINGS_MIRRORBINDING_H
 #define GAFFERIMAGEBINDINGS_MIRRORBINDING_H
 
+#include "GafferImageBindings/Export.h"
+
 namespace GafferImageBindings
 {
 
-void bindMirror();
+GAFFERIMAGEBINDINGS_API void bindMirror();
 
 } // namespace GafferImageBindings
 

@@ -37,10 +37,12 @@
 #ifndef GAFFERIMAGEBINDINGS_OPENCOLORIOTRANSFORMBINDING_H
 #define GAFFERIMAGEBINDINGS_OPENCOLORIOTRANSFORMBINDING_H
 
+#include "GafferImageBindings/Export.h"
+
 namespace GafferImageBindings
 {
 
-void bindOpenColorIOTransform();
+GAFFERIMAGEBINDINGS_API void bindOpenColorIOTransform();
 
 } // namespace GafferImageBindings
 
