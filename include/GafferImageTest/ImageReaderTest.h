@@ -37,11 +37,13 @@
 #ifndef GAFFERIMAGETEST_IMAGEREADER_H
 #define GAFFERIMAGETEST_IMAGEREADER_H
 
+#include "GafferImageTest/Export.h"
+
 namespace GafferImageTest
 {
 
-void testOIIOJpgRead();
-void testOIIOExrRead();
+GAFFERIMAGETEST_API void testOIIOJpgRead();
+GAFFERIMAGETEST_API void testOIIOExrRead();
 
 } // namespace GafferImageTest
 
