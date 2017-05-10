@@ -307,16 +307,12 @@ class screengrab( Gaffer.Application ) :
 
 		# Set up the Viewers as requested.
 
+		pathsToFrame = GafferScene.PathMatcher( list( args["viewer"]["framedObjects"] ) )
 		for viewer in scriptWindow.getLayout().editors( GafferUI.Viewer ) :
 			if isinstance( viewer.view(), GafferSceneUI.SceneView ) :
 				viewer.view()["minimumExpansionDepth"].setValue( args["viewer"]["minimumExpansionDepth"].value )
 				if args["viewer"]["framedObjects"] :
-					bound = IECore.Box3f()
-					for path in args["viewer"]["framedObjects"] :
-						objectBound = viewer.view()["in"].bound( path )
-						objectFullTransform = viewer.view()["in"].fullTransform( path )
-						bound.extendBy( objectBound.transform( objectFullTransform ) )
-					viewer.view().viewportGadget().frame( bound, args["viewer"]["viewDirection"].value.normalized() )
+					viewer.view().frame( pathsToFrame, args["viewer"]["viewDirection"].value.normalized() )
 
 		del viewer
 
