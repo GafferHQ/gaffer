@@ -38,6 +38,7 @@
 #ifndef GAFFERSCENE_INSTANCER_H
 #define GAFFERSCENE_INSTANCER_H
 
+#include "GafferScene/Export.h"
 #include "GafferScene/BranchCreator.h"
 
 namespace GafferScene
@@ -52,7 +53,7 @@ class GAFFERSCENE_API Instancer : public BranchCreator
 		/// Compound plug for representing an image format in a way
 		/// easily edited by users, with individual child plugs for
 		/// each aspect of the format.
-		class ContextVariablePlug : public Gaffer::ValuePlug
+		class GAFFERSCENE_API ContextVariablePlug : public Gaffer::ValuePlug
 		{
 
 			public :

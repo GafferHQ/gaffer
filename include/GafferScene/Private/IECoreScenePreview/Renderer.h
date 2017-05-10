@@ -37,6 +37,8 @@
 #ifndef IECORESCENEPREVIEW_RENDERER_H
 #define IECORESCENEPREVIEW_RENDERER_H
 
+#include "GafferScene/Export.h"
+
 #include "IECoreScene/Camera.h"
 #include "IECoreScene/Output.h"
 
@@ -70,12 +72,12 @@ namespace IECoreScenePreview
 /// - Change the python bindings so that the lifetime of the object
 ///   handles and the renderer are tied together, or have the object
 ///   handles keep the renderer alive on the C++ side anyway.
-class IECORESCENE_API Renderer : public IECore::RefCounted
+class GAFFERSCENE_API Renderer : public IECore::RefCounted
 {
 
 	public :
 
-		enum RenderType
+		enum GAFFERSCENE_API RenderType
 		{
 			/// Locations are emitted to the renderer immediately
 			/// and not retained for later editing.
@@ -119,7 +121,7 @@ class IECORESCENE_API Renderer : public IECore::RefCounted
 		/// A handle to a block of attributes. Currently all
 		/// AttributesInterfaces _must_ be destroyed prior
 		/// to destruction of the renderer itself.
-		class AttributesInterface : public IECore::RefCounted
+		class GAFFERSCENE_API AttributesInterface : public IECore::RefCounted
 		{
 
 			public :
@@ -167,7 +169,7 @@ class IECORESCENE_API Renderer : public IECore::RefCounted
 		///
 		/// Currently all ObjectInterfaces _must_ be destroyed prior to destruction
 		/// of the renderer itself.
-		class ObjectInterface : public IECore::RefCounted
+		class GAFFERSCENE_API ObjectInterface : public IECore::RefCounted
 		{
 
 			public :

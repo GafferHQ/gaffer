@@ -35,6 +35,8 @@
 #ifndef IECORE_GEOMETRY_H
 #define IECORE_GEOMETRY_H
 
+#include "GafferScene/Export.h"
+
 #include "GafferScene/TypeIds.h"
 
 #include "IECoreScene/VisibleRenderable.h"
@@ -44,7 +46,7 @@ namespace IECoreScenePreview
 
 /// Class used to represent additional geometry types supported
 /// by specific renderers but not present in Cortex (think RiGeometry).
-class IECORESCENE_API Geometry : public IECoreScene::VisibleRenderable
+class GAFFERSCENE_API Geometry : public IECoreScene::VisibleRenderable
 {
 
 	public:

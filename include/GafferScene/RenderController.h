@@ -37,6 +37,8 @@
 #ifndef GAFFERSCENE_RENDERCONTROLLER_H
 #define GAFFERSCENE_RENDERCONTROLLER_H
 
+#include "GafferScene/Export.h"
+
 #include "Gaffer/Signals.h"
 
 #include "GafferScene/Private/IECoreScenePreview/Renderer.h"
