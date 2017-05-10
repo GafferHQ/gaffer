@@ -167,8 +167,8 @@ void BoxIO::setup( const Plug *plug )
 		addChild( plug->createCounterpart( inPlugName(), Plug::In ) );
 		addChild( plug->createCounterpart( outPlugName(), Plug::Out ) );
 
-		inPlugInternal()->setFlags( Plug::Dynamic, true );
-		outPlugInternal()->setFlags( Plug::Dynamic, true );
+		inPlugInternal()->setFlags( Plug::Dynamic | Plug::Serialisable, true );
+		outPlugInternal()->setFlags( Plug::Dynamic | Plug::Serialisable, true );
 		outPlugInternal()->setInput( inPlugInternal() );
 
 		MetadataAlgo::copy(

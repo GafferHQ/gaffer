@@ -218,5 +218,24 @@ class BoxOutTest( GafferTest.TestCase ) :
 
 		assertPostconditions()
 
+	def testNonSerialisableInput( self ) :
+
+		s = Gaffer.ScriptNode()
+		s["b"] = Gaffer.Box()
+		s["b"]["a"] = GafferTest.AddNode()
+		s["b"]["a"]["sum"].setFlags( Gaffer.Plug.Flags.Serialisable, False )
+
+		s["b"]["o"] = Gaffer.BoxOut()
+		s["b"]["o"].setup( s["b"]["a"]["sum"] )
+		s["b"]["o"]["in"].setInput( s["b"]["a"]["sum"] )
+		promotedPlug = s["b"]["o"].promotedPlug()
+
+		self.assertTrue( promotedPlug.source().isSame( s["b"]["a"]["sum"] ) )
+
+		s2 = Gaffer.ScriptNode()
+		s2.execute( s.serialise() )
+
+		self.assertTrue( s2["b"][promotedPlug.getName()].source().isSame( s2["b"]["a"]["sum"] ) )
+
 if __name__ == "__main__":
 	unittest.main()
