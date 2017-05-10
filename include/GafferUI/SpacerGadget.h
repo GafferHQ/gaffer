@@ -37,12 +37,13 @@
 #ifndef GAFFERUI_SPACERGADGET_H
 #define GAFFERUI_SPACERGADGET_H
 
+#include "GafferUI/Export.h"
 #include "GafferUI/Gadget.h"
 
 namespace GafferUI
 {
 
-class SpacerGadget : public Gadget
+class GAFFERUI_API SpacerGadget : public Gadget
 {
 
 	public :

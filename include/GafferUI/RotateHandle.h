@@ -37,12 +37,13 @@
 #ifndef GAFFERUI_ROTATEHANDLE_H
 #define GAFFERUI_ROTATEHANDLE_H
 
+#include "GafferUI/Export.h"
 #include "GafferUI/Handle.h"
 
 namespace GafferUI
 {
 
-class RotateHandle : public Handle
+class GAFFERUI_API RotateHandle : public Handle
 {
 
 	public :

@@ -42,6 +42,7 @@
 
 #include "OpenEXR/ImathColor.h"
 
+#include "GafferUI/Export.h"
 #include "GafferUI/Style.h"
 
 namespace IECoreGL
@@ -56,7 +57,7 @@ IE_CORE_FORWARDDECLARE( State )
 namespace GafferUI
 {
 
-class StandardStyle : public Style
+class GAFFERUI_API StandardStyle : public Style
 {
 
 	public :

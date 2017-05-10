@@ -40,6 +40,7 @@
 
 #include "IECore/VisibleRenderable.h"
 
+#include "GafferUI/Export.h"
 #include "GafferUI/Gadget.h"
 
 namespace IECoreGL
@@ -58,7 +59,7 @@ namespace GafferUI
 IE_CORE_FORWARDDECLARE( RenderableGadget );
 
 /// \todo Either remove this or move it to GafferCortexUI.
-class RenderableGadget : public Gadget
+class GAFFERUI_API RenderableGadget : public Gadget
 {
 
 	public :

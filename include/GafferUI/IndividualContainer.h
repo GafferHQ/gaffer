@@ -38,6 +38,7 @@
 #ifndef GAFFERUI_INDIVIDUALCONTAINER_H
 #define GAFFERUI_INDIVIDUALCONTAINER_H
 
+#include "GafferUI/Export.h"
 #include "GafferUI/ContainerGadget.h"
 
 namespace GafferUI
@@ -45,7 +46,7 @@ namespace GafferUI
 
 /// The IndividualContainer class allows a single child to be held,
 /// and rejects efforts to add any more.
-class IndividualContainer : public ContainerGadget
+class GAFFERUI_API IndividualContainer : public ContainerGadget
 {
 
 	public :
