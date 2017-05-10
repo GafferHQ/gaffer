@@ -37,10 +37,12 @@
 #ifndef GAFFERSCENEUIBINDINGS_TRANSFORMTOOLBINDING_H
 #define GAFFERSCENEUIBINDINGS_TRANSFORMTOOLBINDING_H
 
+#include "GafferSceneUIBindings/Export.h"
+
 namespace GafferSceneUIBindings
 {
 
-void bindTransformTool();
+GAFFERSCENEUIBINDINGS_API void bindTransformTool();
 
 } // namespace GafferSceneUIBindings
 
