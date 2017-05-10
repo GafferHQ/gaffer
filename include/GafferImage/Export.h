@@ -1,6 +1,6 @@
 //////////////////////////////////////////////////////////////////////////
 //
-//  Copyright (c) 2015, Image Engine Design Inc. All rights reserved.
+//  Copyright (c) 2016, Image Engine Design Inc. All rights reserved.
 //
 //  Redistribution and use in source and binary forms, with or without
 //  modification, are permitted provided that the following conditions are
@@ -34,51 +34,18 @@
 //
 //////////////////////////////////////////////////////////////////////////
 
-#ifndef GAFFERIMAGE_COPYIMAGEMETADATA_H
-#define GAFFERIMAGE_COPYIMAGEMETADATA_H
+#ifndef GAFFERIMAGE_EXPORT_H
+#define GAFFERIMAGE_EXPORT_H
 
-#include "GafferImage/Export.h"
-#include "GafferImage/MetadataProcessor.h"
+#include "Gaffer/Export.h"
 
-namespace GafferImage
-{
+// define GAFFERIMAGE_API macro based on whether or not we are compiling
+// GafferImage, or including headers for linking to it. the GAFFERIMAGE_API
+// macro is the one that is used in the class definitions.
+#ifdef GafferImage_EXPORTS
+  #define GAFFERIMAGE_API GAFFER_EXPORT
+#else
+  #define GAFFERIMAGE_API GAFFER_IMPORT
+#endif
 
-class GAFFERIMAGE_API CopyImageMetadata : public MetadataProcessor
-{
-
-	public :
-
-		CopyImageMetadata( const std::string &name=defaultName<CopyImageMetadata>() );
-		virtual ~CopyImageMetadata();
-
-		IE_CORE_DECLARERUNTIMETYPEDEXTENSION( GafferImage::CopyImageMetadata, CopyImageMetadataTypeId, MetadataProcessor );
-
-		/// \todo: If ImageProcessor provides an ArrayPlug for "in" instead,
-		/// we can remove this secondary image plug.
-		ImagePlug *copyFromPlug();
-		const ImagePlug *copyFromPlug() const;
-
-		Gaffer::StringPlug *namesPlug();
-		const Gaffer::StringPlug *namesPlug() const;
-
-		Gaffer::BoolPlug *invertNamesPlug();
-		const Gaffer::BoolPlug *invertNamesPlug() const;
-
-		virtual void affects( const Gaffer::Plug *input, AffectedPlugsContainer &outputs ) const;
-
-	protected :
-
-		virtual void hashProcessedMetadata( const Gaffer::Context *context, IECore::MurmurHash &h ) const;
-		virtual IECore::ConstCompoundObjectPtr computeProcessedMetadata( const Gaffer::Context *context, const IECore::CompoundObject *inputMetadata ) const;
-
-	private :
-
-		static size_t g_firstPlugIndex;
-
-};
-
-IE_CORE_DECLAREPTR( CopyImageMetadata );
-
-} // namespace GafferImage
-
-#endif // GAFFERIMAGE_COPYIMAGEMETADATA_H
+#endif // #ifndef GAFFERIMAGE_EXPORT_H

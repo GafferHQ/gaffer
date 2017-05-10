@@ -38,6 +38,7 @@
 #ifndef GAFFERIMAGE_IMAGEPROCESSOR_H
 #define GAFFERIMAGE_IMAGEPROCESSOR_H
 
+#include "GafferImage/Export.h"
 #include "GafferImage/ImageNode.h"
 
 namespace Gaffer
@@ -52,7 +53,7 @@ namespace GafferImage
 
 /// A base class for nodes which will take a number of input images and
 /// process them in some way to generate an output image.
-class ImageProcessor : public ImageNode
+class GAFFERIMAGE_API ImageProcessor : public ImageNode
 {
 
 	public :

@@ -40,12 +40,13 @@
 
 #include "Gaffer/StringPlug.h"
 
+#include "GafferImage/Export.h"
 #include "GafferImage/ChannelDataProcessor.h"
 
 namespace GafferImage
 {
 
-class Unpremultiply : public ChannelDataProcessor
+class GAFFERIMAGE_API Unpremultiply : public ChannelDataProcessor
 {
 
 	public :

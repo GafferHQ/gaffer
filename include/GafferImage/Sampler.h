@@ -39,6 +39,7 @@
 
 #include <vector>
 
+#include "GafferImage/Export.h"
 #include "GafferImage/ImagePlug.h"
 
 namespace GafferImage
@@ -52,7 +53,7 @@ namespace GafferImage
 /// The Sampler is sensitive to the Context which is current
 /// during its operation, so a sampler should only be used in
 /// the context in which it is constructed.
-class Sampler
+class GAFFERIMAGE_API Sampler
 {
 
 	public :

@@ -39,12 +39,13 @@
 
 #include "Gaffer/CompoundDataPlug.h"
 
+#include "GafferImage/Export.h"
 #include "GafferImage/MetadataProcessor.h"
 
 namespace GafferImage
 {
 
-class ImageMetadata : public MetadataProcessor
+class GAFFERIMAGE_API ImageMetadata : public MetadataProcessor
 {
 
 	public :

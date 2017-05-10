@@ -41,12 +41,13 @@
 #include "Gaffer/StringPlug.h"
 #include "Gaffer/TypedObjectPlug.h"
 
+#include "GafferImage/Export.h"
 #include "GafferImage/ImageProcessor.h"
 
 namespace GafferImage
 {
 
-class Median : public ImageProcessor
+class GAFFERIMAGE_API Median : public ImageProcessor
 {
 
 	public :
