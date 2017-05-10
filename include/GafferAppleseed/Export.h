@@ -1,6 +1,6 @@
 //////////////////////////////////////////////////////////////////////////
 //
-//  Copyright (c) 2015, Esteban Tovagliari. All rights reserved.
+//  Copyright (c) 2016, Image Engine Design Inc. All rights reserved.
 //
 //  Redistribution and use in source and binary forms, with or without
 //  modification, are permitted provided that the following conditions are
@@ -34,31 +34,18 @@
 //
 //////////////////////////////////////////////////////////////////////////
 
-#ifndef GAFFERSCENE_INTERACTIVEAPPLESEEDRENDER_H
-#define GAFFERSCENE_INTERACTIVEAPPLESEEDRENDER_H
+#ifndef GAFFERAPPLESEED_EXPORT_H
+#define GAFFERAPPLESEED_EXPORT_H
 
-#include "GafferScene/Preview/InteractiveRender.h"
+#include "Gaffer/Export.h"
 
-#include "GafferAppleseed/Export.h"
-#include "GafferAppleseed/TypeIds.h"
+// define GAFFERAPPLESEED_API macro based on whether or not we are compiling
+// GafferAppleseed, or including headers for linking to it. the GAFFERAPPLESEED_API
+// macro is the one that is used in the class definitions.
+#ifdef GafferAppleseed_EXPORTS
+  #define GAFFERAPPLESEED_API GAFFER_EXPORT
+#else
+  #define GAFFERAPPLESEED_API GAFFER_IMPORT
+#endif
 
-namespace GafferAppleseed
-{
-
-class GAFFERAPPLESEED_API InteractiveAppleseedRender : public GafferScene::Preview::InteractiveRender
-{
-
-	public :
-
-		InteractiveAppleseedRender( const std::string &name=defaultName<InteractiveAppleseedRender>() );
-		virtual ~InteractiveAppleseedRender();
-
-		IE_CORE_DECLARERUNTIMETYPEDEXTENSION( GafferAppleseed::InteractiveAppleseedRender, InteractiveAppleseedRenderTypeId, GafferScene::Preview::InteractiveRender );
-
-};
-
-IE_CORE_DECLAREPTR( InteractiveAppleseedRender );
-
-} // namespace GafferAppleseed
-
-#endif // GAFFERSCENE_INTERACTIVEAPPLESEEDRENDER_H
+#endif // #ifndef GAFFERAPPLESEED_EXPORT_H
