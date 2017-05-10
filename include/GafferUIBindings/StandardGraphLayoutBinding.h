@@ -37,10 +37,12 @@
 #ifndef GAFFERUIBINDINGS_STANDARDGRAPHLAYOUTBINDING_H
 #define GAFFERUIBINDINGS_STANDARDGRAPHLAYOUTBINDING_H
 
+#include "GafferUIBindings/Export.h"
+
 namespace GafferUIBindings
 {
 
-void bindStandardGraphLayout();
+GAFFERUIBINDINGS_API void bindStandardGraphLayout();
 
 } // namespace GafferUIBindings
 

@@ -37,10 +37,12 @@
 #ifndef GAFFERUIBINDINGS_DRAGDROPEVENTBINDING_H
 #define GAFFERUIBINDINGS_DRAGDROPEVENTBINDING_H
 
+#include "GafferUIBindings/Export.h"
+
 namespace GafferUIBindings
 {
 
-void bindDragDropEvent();
+GAFFERUIBINDINGS_API void bindDragDropEvent();
 
 } // namespace GafferUIBindings
 

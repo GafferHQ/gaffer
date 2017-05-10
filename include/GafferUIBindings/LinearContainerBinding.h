@@ -37,10 +37,12 @@
 #ifndef GAFFERUIBINDINGS_LINEARCONTAINERBINDING_H
 #define GAFFERUIBINDINGS_LINEARCONTAINERBINDING_H
 
+#include "GafferUIBindings/Export.h"
+
 namespace GafferUIBindings
 {
 
-void bindLinearContainer();
+GAFFERUIBINDINGS_API void bindLinearContainer();
 
 } // namespace GafferUIBindings
 

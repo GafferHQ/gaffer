@@ -37,6 +37,8 @@
 #ifndef GAFFERUIBINDINGS_VIEWBINDING_H
 #define GAFFERUIBINDINGS_VIEWBINDING_H
 
+#include "GafferUIBindings/Export.h"
+
 namespace GafferUI
 {
 class View;
@@ -45,7 +47,7 @@ class View;
 namespace GafferUIBindings
 {
 
-void bindView();
+GAFFERUIBINDINGS_API void bindView();
 Gaffer::NodePtr getPreprocessor( GafferUI::View &v );
 
 } // namespace GafferUIBindings

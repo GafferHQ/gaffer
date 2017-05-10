@@ -37,10 +37,12 @@
 #ifndef GAFFERUIBINDINGS_COMPOUNDNODULEBINDING_H
 #define GAFFERUIBINDINGS_COMPOUNDNODULEBINDING_H
 
+#include "GafferUIBindings/Export.h"
+
 namespace GafferUIBindings
 {
 
-void bindCompoundNodule();
+GAFFERUIBINDINGS_API void bindCompoundNodule();
 
 } // namespace GafferUIBindings
 

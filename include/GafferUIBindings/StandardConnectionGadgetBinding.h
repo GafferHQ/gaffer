@@ -37,10 +37,12 @@
 #ifndef GAFFERUIBINDINGS_STANDARDCONNECTIONGADGETBINDING_H
 #define GAFFERUIBINDINGS_STANDARDCONNECTIONGADGETBINDING_H
 
+#include "GafferUIBindings/Export.h"
+
 namespace GafferUIBindings
 {
 
-void bindStandardConnectionGadget();
+GAFFERUIBINDINGS_API void bindStandardConnectionGadget();
 
 } // namespace GafferUIBindings
 
