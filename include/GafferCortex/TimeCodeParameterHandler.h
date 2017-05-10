@@ -41,12 +41,13 @@
 
 #include "Gaffer/CompoundPlug.h"
 
+#include "GafferCortex/Export.h"
 #include "GafferCortex/ParameterHandler.h"
 
 namespace GafferCortex
 {
 
-class TimeCodeParameterHandler : public ParameterHandler
+class GAFFERCORTEX_API TimeCodeParameterHandler : public ParameterHandler
 {
 
 	public :
