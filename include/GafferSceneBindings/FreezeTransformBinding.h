@@ -37,10 +37,12 @@
 #ifndef GAFFERSCENEBINDINGS_FREEZETRANSFORMBINDING_H
 #define GAFFERSCENEBINDINGS_FREEZETRANSFORMBINDING_H
 
+#include "GafferSceneBindings/Export.h"
+
 namespace GafferSceneBindings
 {
 
-void bindFreezeTransform();
+GAFFERSCENEBINDINGS_API void bindFreezeTransform();
 
 } // namespace GafferSceneBindings
 

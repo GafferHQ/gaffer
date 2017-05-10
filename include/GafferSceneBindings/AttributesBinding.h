@@ -37,10 +37,12 @@
 #ifndef GAFFERSCENEBINDINGS_ATTRIBUTESBINDING_H
 #define GAFFERSCENEBINDINGS_ATTRIBUTESBINDING_H
 
+#include "GafferSceneBindings/Export.h"
+
 namespace GafferSceneBindings
 {
 
-void bindAttributes();
+GAFFERSCENEBINDINGS_API void bindAttributes();
 
 } // namespace GafferSceneBindings
 

@@ -1,6 +1,6 @@
 //////////////////////////////////////////////////////////////////////////
 //
-//  Copyright (c) 2014, Image Engine Design Inc. All rights reserved.
+//  Copyright (c) 2016, Image Engine Design Inc. All rights reserved.
 //
 //  Redistribution and use in source and binary forms, with or without
 //  modification, are permitted provided that the following conditions are
@@ -34,16 +34,18 @@
 //
 //////////////////////////////////////////////////////////////////////////
 
-#ifndef GAFFERSCENEBINDINGS_SCENEALGOBINDING_H
-#define GAFFERSCENEBINDINGS_SCENEALGOBINDING_H
+#ifndef GAFFERSCENEBINDINGS_EXPORT_H
+#define GAFFERSCENEBINDINGS_EXPORT_H
 
-#include "GafferSceneBindings/Export.h"
+#include "Gaffer/Export.h"
 
-namespace GafferSceneBindings
-{
+// define GAFFERSCENEBINDINGS_API macro based on whether or not we are compiling
+// GafferSceneBindings, or including headers for linking to it. the GAFFERSCENEBINDINGS_API
+// macro is the one that is used in the class definitions.
+#ifdef GafferSceneBindings_EXPORTS
+  #define GAFFERSCENEBINDINGS_API GAFFER_EXPORT
+#else
+  #define GAFFERSCENEBINDINGS_API GAFFER_IMPORT
+#endif
 
-GAFFERSCENEBINDINGS_API void bindSceneAlgo();
-
-} // namespace GafferSceneBindings
-
-#endif // GAFFERSCENEBINDINGS_SCENEALGOBINDING_H
+#endif // #ifndef GAFFERSCENEBINDINGS_EXPORT_H

@@ -37,10 +37,12 @@
 #ifndef GAFFERSCENEBINDINGS_DUPLICATEBINDING_H
 #define GAFFERSCENEBINDINGS_DUPLICATEBINDING_H
 
+#include "GafferSceneBindings/Export.h"
+
 namespace GafferSceneBindings
 {
 
-void bindDuplicate();
+GAFFERSCENEBINDINGS_API void bindDuplicate();
 
 } // namespace GafferSceneBindings
 

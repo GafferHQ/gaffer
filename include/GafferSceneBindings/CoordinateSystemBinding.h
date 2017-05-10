@@ -37,10 +37,12 @@
 #ifndef GAFFERSCENEBINDINGS_COORDINATESYSTEMBINDING_H
 #define GAFFERSCENEBINDINGS_COORDINATESYSTEMBINDING_H
 
+#include "GafferSceneBindings/Export.h"
+
 namespace GafferSceneBindings
 {
 
-void bindCoordinateSystem();
+GAFFERSCENEBINDINGS_API void bindCoordinateSystem();
 
 } // namespace GafferSceneBindings
 

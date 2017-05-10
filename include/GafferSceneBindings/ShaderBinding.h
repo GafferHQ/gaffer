@@ -37,10 +37,12 @@
 #ifndef GAFFERSCENEBINDINGS_SHADERBINDING_H
 #define GAFFERSCENEBINDINGS_SHADERBINDING_H
 
+#include "GafferSceneBindings/Export.h"
+
 namespace GafferSceneBindings
 {
 
-void bindShader();
+GAFFERSCENEBINDINGS_API void bindShader();
 
 } // namespace GafferSceneBindings
 

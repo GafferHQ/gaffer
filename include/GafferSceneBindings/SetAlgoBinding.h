@@ -37,10 +37,12 @@
 #ifndef GAFFERSCENEBINDINGS_SETALGOBINDING_H
 #define GAFFERSCENEBINDINGS_SETALGOBINDING_H
 
+#include "GafferSceneBindings/Export.h"
+
 namespace GafferSceneBindings
 {
 
-void bindSetAlgo();
+GAFFERSCENEBINDINGS_API void bindSetAlgo();
 
 } // namespace GafferSceneBindings
 
