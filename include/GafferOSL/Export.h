@@ -1,6 +1,6 @@
 //////////////////////////////////////////////////////////////////////////
 //
-//  Copyright (c) 2013, John Haddon. All rights reserved.
+//  Copyright (c) 2016, Image Engine Design Inc. All rights reserved.
 //
 //  Redistribution and use in source and binary forms, with or without
 //  modification, are permitted provided that the following conditions are
@@ -34,51 +34,18 @@
 //
 //////////////////////////////////////////////////////////////////////////
 
-#ifndef GAFFEROSL_OSLOBJECT_H
-#define GAFFEROSL_OSLOBJECT_H
+#ifndef GAFFEROSL_EXPORT_H
+#define GAFFEROSL_EXPORT_H
 
-#include "GafferScene/SceneElementProcessor.h"
-#include "GafferScene/ShaderPlug.h"
+#include "Gaffer/Export.h"
 
-#include "GafferOSL/Export.h"
-#include "GafferOSL/TypeIds.h"
+// define GAFFEROSL_API macro based on whether or not we are compiling
+// GafferOSL, or including headers for linking to it. the GAFFEROSL_API
+// macro is the one that is used in the class definitions.
+#ifdef GafferOSL_EXPORTS
+  #define GAFFEROSL_API GAFFER_EXPORT
+#else
+  #define GAFFEROSL_API GAFFER_IMPORT
+#endif
 
-namespace GafferOSL
-{
-
-class GAFFEROSL_API OSLObject : public GafferScene::SceneElementProcessor
-{
-
-	public :
-
-		OSLObject( const std::string &name=defaultName<SceneElementProcessor>() );
-		virtual ~OSLObject();
-
-		IE_CORE_DECLARERUNTIMETYPEDEXTENSION( GafferOSL::OSLObject, OSLObjectTypeId, GafferScene::SceneElementProcessor );
-
-		GafferScene::ShaderPlug *shaderPlug();
-		const GafferScene::ShaderPlug *shaderPlug() const;
-
-		virtual void affects( const Gaffer::Plug *input, AffectedPlugsContainer &outputs ) const;
-
-	protected :
-
-		virtual bool acceptsInput( const Gaffer::Plug *plug, const Gaffer::Plug *inputPlug ) const;
-
-		virtual bool processesBound() const;
-		virtual void hashProcessedBound( const ScenePath &path, const Gaffer::Context *context, IECore::MurmurHash &h ) const;
-		virtual Imath::Box3f computeProcessedBound( const ScenePath &path, const Gaffer::Context *context, const Imath::Box3f &inputBound ) const;
-
-		virtual bool processesObject() const;
-		virtual void hashProcessedObject( const ScenePath &path, const Gaffer::Context *context, IECore::MurmurHash &h ) const;
-		virtual IECore::ConstObjectPtr computeProcessedObject( const ScenePath &path, const Gaffer::Context *context, IECore::ConstObjectPtr inputObject ) const;
-
-	private :
-
-		static size_t g_firstPlugIndex;
-
-};
-
-} // namespace GafferOSL
-
-#endif // GAFFEROSL_OSLOBJECT_H
+#endif // #ifndef GAFFEROSL_EXPORT_H
