@@ -124,16 +124,15 @@ class SplineWidget( GafferUI.Widget ) :
 			self.__paintSplines( painter )
 
 	def __paintRamp( self, painter ) :
-
+		numStops = 500
 		if self.__gradientToDraw is None :
-			self.__gradientToDraw = QtGui.QLinearGradient( 0, 0, 1, 0 )
-			self.__gradientToDraw.setCoordinateMode( self.__gradientToDraw.ObjectBoundingMode )
+
+			self.__gradientToDraw = QtGui.QImage( QtCore.QSize( numStops, 1 ), QtGui.QImage.Format.Format_RGB32 )
 
 			displayTransform = GafferUI.DisplayTransform.get()
 
-			numStops = 500
 			for i in range( 0, numStops ) :
-				t = float( i ) / ( numStops - 1 )
+				t = float( i + 0.5 ) / numStops
 				c = self.__spline( t )
 				if isinstance( c, float ) :
 					c = IECore.Color3f( c, c, c )
@@ -141,10 +140,11 @@ class SplineWidget( GafferUI.Widget ) :
 					c = IECore.Color3f( c[0], c[1], c[2] )
 
 				c = displayTransform( c )
-				self.__gradientToDraw.setColorAt( t, self._qtColor( c ) )
+				self.__gradientToDraw.setPixel( i, 0, self._qtColor( c ).rgb() )
 
-		brush = QtGui.QBrush( self.__gradientToDraw )
 		rect = self._qtWidget().contentsRect()
+		brush = QtGui.QBrush( self.__gradientToDraw )
+		brush.setMatrix( QtGui.QMatrix( float( rect.width() ) / numStops, 0, 0, 1, 0, 0 ) )
 		painter.fillRect( rect, brush )
 
 	def __paintSplines( self, painter ) :
