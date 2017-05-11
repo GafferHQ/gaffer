@@ -317,13 +317,23 @@ class _ImageListing( GafferUI.PlugValueWidget ) :
 	def __pathListingSelectionChanged( self, pathListing ) :
 
 		index = self.__indexFromSelection()
+
 		self.__removeButton.setEnabled( index is not None )
 		self.__exportButton.setEnabled( index is not None )
 		self.__duplicateButton.setEnabled( index is not None )
-		# Deliberately not using an UndoScope as the user thinks
-		# of this as making a selection, not changing a plug value.
-		if self._editable() :
-			self.getPlug().setValue( index if index is not None else 0 )
+
+		if index is None :
+			# No selection. This happens when the user renames
+			# an image, because the selection is name based.
+			# Calling _updateFromPlug() causes us to reselect
+			# the correct image based on the value of the index
+			# plug.
+			self._updateFromPlug()
+		else :
+			# Deliberately not using an UndoScope as the user thinks
+			# of this as making a selection, not changing a plug value.
+			if self._editable() :
+				self.getPlug().setValue( index )
 
 	def __addClicked( self, *unused ) :
 
