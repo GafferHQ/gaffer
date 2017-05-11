@@ -34,6 +34,8 @@
 //
 //////////////////////////////////////////////////////////////////////////
 
+#include "IECore/VectorTypedData.h"
+
 #include "Gaffer/Context.h"
 
 #include "GafferScene/PathMatcherData.h"
@@ -46,6 +48,7 @@ namespace
 {
 
 InternedString g_expandedPathsName( "ui:scene:expandedPaths" );
+InternedString g_selectedPathsName( "ui:scene:selectedPaths" );
 
 } // namespace
 
@@ -68,6 +71,29 @@ PathMatcher getExpandedPaths( const Gaffer::Context *context )
 	}
 
 	return PathMatcher();
+}
+
+void setSelectedPaths( Context *context, const PathMatcher &paths )
+{
+	/// \todo: Switch to storing PathMatcherData after some thorough
+	/// testing and a major version break.
+	StringVectorDataPtr s = new StringVectorData;
+	paths.paths( s->writable() );
+
+	context->set( g_selectedPathsName, s.get() );
+}
+
+PathMatcher getSelectedPaths( const Gaffer::Context *context )
+{
+	PathMatcher result;
+
+	if( const StringVectorData *selection = context->get<StringVectorData>( g_selectedPathsName, NULL ) )
+	{
+		const std::vector<std::string> &values = selection->readable();
+		result.init( values.begin(), values.end() );
+	}
+
+	return result;
 }
 
 } // namespace ContextAlgo

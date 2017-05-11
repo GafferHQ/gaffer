@@ -53,5 +53,7 @@ void GafferSceneUIBindings::bindContextAlgo()
 
 	def( "setExpandedPaths", &setExpandedPaths );
 	def( "getExpandedPaths", &getExpandedPaths );
+	def( "setSelectedPaths", &setSelectedPaths );
+	def( "getSelectedPaths", &getSelectedPaths );
 
 }

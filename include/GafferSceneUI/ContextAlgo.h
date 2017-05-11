@@ -81,6 +81,16 @@ namespace ContextAlgo
 void setExpandedPaths( Gaffer::Context *context, const GafferScene::PathMatcher &paths );
 GafferScene::PathMatcher getExpandedPaths( const Gaffer::Context *context );
 
+/// Path Selection
+/// ==============
+
+/// Similarly to Path Expansion, the UI components coordinate with each other
+/// to perform scene selection, again using the Context to store paths to the
+/// currently selected locations within the scene.
+
+void setSelectedPaths( Gaffer::Context *context, const GafferScene::PathMatcher &paths );
+GafferScene::PathMatcher getSelectedPaths( const Gaffer::Context *context );
+
 } // namespace ContextAlgo
 
 } // namespace GafferSceneUI
