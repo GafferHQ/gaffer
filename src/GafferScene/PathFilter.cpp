@@ -181,5 +181,5 @@ unsigned PathFilter::computeMatch( const ScenePlug *scene, const Gaffer::Context
 		ConstPathMatcherDataPtr pathMatcher = m_pathMatcher ? m_pathMatcher : pathMatcherPlug()->getValue();
 		return pathMatcher->readable().match( pathData->readable() );
 	}
-	return NoMatch;
+	return EveryMatch;
 }
