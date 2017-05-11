@@ -36,14 +36,30 @@
 
 #include "boost/python.hpp"
 
+#include "IECorePython/ScopedGILRelease.h"
+
 #include "GafferScene/PathMatcher.h"
+#include "GafferScene/ScenePlug.h"
 
 #include "GafferSceneUI/ContextAlgo.h"
 
 #include "GafferSceneUIBindings/ContextAlgoBinding.h"
 
 using namespace boost::python;
+using namespace Gaffer;
+using namespace GafferScene;
 using namespace GafferSceneUI::ContextAlgo;
+
+namespace
+{
+
+PathMatcher expandDescendantsWrapper( Context &context, PathMatcher &paths, ScenePlug &scene, int depth )
+{
+	IECorePython::ScopedGILRelease gilRelease;
+	return expandDescendants( &context, paths, &scene, depth );
+}
+
+} // namespace
 
 void GafferSceneUIBindings::bindContextAlgo()
 {
@@ -53,6 +69,9 @@ void GafferSceneUIBindings::bindContextAlgo()
 
 	def( "setExpandedPaths", &setExpandedPaths );
 	def( "getExpandedPaths", &getExpandedPaths );
+	def( "expand", &expand, ( arg( "expandAncestors" ) = true ) );
+	def( "expandDescendants", &expandDescendantsWrapper, ( arg( "context" ), arg( "paths" ), arg( "scene" ), arg( "depth" ) = Imath::limits<int>::max() ) );
+	def( "clearExpansion", &clearExpansion );
 	def( "setSelectedPaths", &setSelectedPaths );
 	def( "getSelectedPaths", &getSelectedPaths );
 

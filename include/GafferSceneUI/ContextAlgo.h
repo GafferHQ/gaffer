@@ -81,6 +81,16 @@ namespace ContextAlgo
 void setExpandedPaths( Gaffer::Context *context, const GafferScene::PathMatcher &paths );
 GafferScene::PathMatcher getExpandedPaths( const Gaffer::Context *context );
 
+/// Appends paths to the current expansion, optionally adding all ancestor paths too.
+void expand( Gaffer::Context *context, const GafferScene::PathMatcher &paths, bool expandAncestors = true );
+
+/// Appends descendant paths to the current expansion up to a specified maximum depth.
+/// Returns a new PathMatcher containing the new leafs of this expansion.
+GafferScene::PathMatcher expandDescendants( Gaffer::Context *context, const GafferScene::PathMatcher &paths, const GafferScene::ScenePlug *scene, int depth = Imath::limits<int>::max() );
+
+/// Clears the currently expanded paths
+void clearExpansion( Gaffer::Context *context );
+
 /// Path Selection
 /// ==============
 

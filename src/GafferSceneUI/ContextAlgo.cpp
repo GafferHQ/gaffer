@@ -39,6 +39,7 @@
 #include "Gaffer/Context.h"
 
 #include "GafferScene/PathMatcherData.h"
+#include "GafferScene/ScenePlug.h"
 
 using namespace IECore;
 using namespace Gaffer;
@@ -49,6 +50,43 @@ namespace
 
 InternedString g_expandedPathsName( "ui:scene:expandedPaths" );
 InternedString g_selectedPathsName( "ui:scene:selectedPaths" );
+
+bool expandWalk( const ScenePlug::ScenePath &path, const ScenePlug *scene, size_t depth, PathMatcher &expanded, PathMatcher &leafPaths )
+{
+	bool result = false;
+
+	ConstInternedStringVectorDataPtr childNamesData = scene->childNames( path );
+	const std::vector<InternedString> &childNames = childNamesData->readable();
+
+	if( childNames.size() )
+	{
+		result |= expanded.addPath( path );
+
+		ScenePlug::ScenePath childPath = path;
+		childPath.push_back( InternedString() ); // room for the child name
+		for( std::vector<InternedString>::const_iterator cIt = childNames.begin(), ceIt = childNames.end(); cIt != ceIt; cIt++ )
+		{
+			childPath.back() = *cIt;
+			if( depth == 1 )
+			{
+				// at the bottom of the expansion - consider the child a leaf
+				result |= leafPaths.addPath( childPath );
+			}
+			else
+			{
+				// continue the expansion
+				result |= expandWalk( childPath, scene, depth - 1, expanded, leafPaths );
+			}
+		}
+	}
+	else
+	{
+		// we have no children, just mark the leaf of the expansion.
+		result |= leafPaths.addPath( path );
+	}
+
+	return result;
+}
 
 } // namespace
 
@@ -71,6 +109,78 @@ PathMatcher getExpandedPaths( const Gaffer::Context *context )
 	}
 
 	return PathMatcher();
+}
+
+void expand( Context *context, const PathMatcher &paths, bool expandAncestors )
+{
+	PathMatcherData *expandedPaths = const_cast<PathMatcherData *>( context->get<PathMatcherData>( g_expandedPathsName, NULL ) );
+	if( !expandedPaths )
+	{
+		expandedPaths = new PathMatcherData();
+		context->set( g_expandedPathsName, expandedPaths );
+	}
+
+	PathMatcher &expanded = expandedPaths->writable();
+
+	bool needUpdate = false;
+	if( expandAncestors )
+	{
+		for( PathMatcher::RawIterator it = paths.begin(), eIt = paths.end(); it != eIt; ++it )
+		{
+			needUpdate |= expanded.addPath( *it );
+		}
+	}
+	else
+	{
+		for( PathMatcher::Iterator it = paths.begin(), eIt = paths.end(); it != eIt; ++it )
+		{
+			needUpdate |= expanded.addPath( *it );
+		}
+	}
+
+	if( needUpdate )
+	{
+		// We modified the expanded paths in place to avoid unecessary copying,
+		// so the context doesn't know they've changed. So we emit the changed
+		// signal ourselves
+		context->changedSignal()( context, g_expandedPathsName );
+	}
+}
+
+PathMatcher expandDescendants( Context *context, const PathMatcher &paths, const ScenePlug *scene, int depth )
+{
+	PathMatcherData *expandedPaths = const_cast<PathMatcherData *>( context->get<PathMatcherData>( g_expandedPathsName, NULL ) );
+	if( !expandedPaths )
+	{
+		expandedPaths = new PathMatcherData();
+		context->set( g_expandedPathsName, expandedPaths );
+	}
+
+	PathMatcher &expanded = expandedPaths->writable();
+
+	bool needUpdate = false;
+	PathMatcher leafPaths;
+
+	// \todo: parallelize the walk
+	for( PathMatcher::Iterator it = paths.begin(), eIt = paths.end(); it != eIt; ++it )
+	{
+		needUpdate |= expandWalk( *it, scene, depth + 1, expanded, leafPaths );
+	}
+
+	if( needUpdate )
+	{
+		// We modified the expanded paths in place to avoid unecessary copying,
+		// so the context doesn't know they've changed. So we emit the changed
+		// signal ourselves
+		context->changedSignal()( context, g_expandedPathsName );
+	}
+
+	return leafPaths;
+}
+
+void clearExpansion( Gaffer::Context *context )
+{
+	setExpandedPaths( context, PathMatcher() );
 }
 
 void setSelectedPaths( Context *context, const PathMatcher &paths )
