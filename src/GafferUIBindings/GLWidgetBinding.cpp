@@ -43,6 +43,7 @@
 #endif
 
 #include "IECore/MessageHandler.h"
+#include "IECore/Exception.h"
 
 #include "GafferUIBindings/GLWidgetBinding.h"
 
@@ -65,16 +66,34 @@ class HostedGLContext : public QGLContext
 			GLXContext hostContext = glXGetCurrentContext();
 			m_display = glXGetCurrentDisplay();
 
-			// Get a visual - we let the base class figure this out.
-			XVisualInfo *visual = (XVisualInfo *)chooseVisual();
+			std::vector<int> fbAttribs;
+			fbAttribs.push_back( GLX_DOUBLEBUFFER );
+			fbAttribs.push_back( format.doubleBuffer() ? True : False );
+			fbAttribs.push_back( GLX_RENDER_TYPE );
+			fbAttribs.push_back( format.rgba() ? GLX_RGBA_BIT : GLX_COLOR_INDEX_BIT );
+			fbAttribs.push_back( None );
 
-			// Make our context.
-			m_context = glXCreateContext(
+			int numFBConfigs = 0;
+			GLXFBConfig *fbConfigs = glXChooseFBConfig(
 				m_display,
-				visual,
-				hostContext,
-				true
+				DefaultScreen( m_display ),
+				&fbAttribs.front(),
+				&numFBConfigs
 			);
+
+			if( !numFBConfigs )
+			{
+				throw IECore::Exception( "No suitable GLXFBConfig found" );
+			}
+
+			m_context = glXCreateNewContext(
+				m_display,
+				fbConfigs[0],
+				GLX_RGBA_TYPE,
+				hostContext,
+				True
+			);
+
 		}
 
 		virtual ~HostedGLContext()
@@ -84,6 +103,7 @@ class HostedGLContext : public QGLContext
 
 		virtual void makeCurrent()
 		{
+			QGLContext::makeCurrent();
 			glXMakeCurrent( m_display, static_cast<QWidget *>( device() )->effectiveWinId(), m_context );
 		}
 
