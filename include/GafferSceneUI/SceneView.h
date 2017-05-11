@@ -120,10 +120,6 @@ class SceneView : public GafferUI::View
 		void transferSelectionToContext();
 		void plugSet( Gaffer::Plug *plug );
 
-		GafferScene::PathMatcherData *expandedPaths();
-		// Returns true if the expansion or selection were modified, false otherwise.
-		bool expandWalk( const GafferScene::ScenePlug::ScenePath &path, size_t depth, GafferScene::PathMatcher &expanded, GafferScene::PathMatcher &selected );
-
 		boost::signals::scoped_connection m_selectionChangedConnection;
 
 		SceneGadgetPtr m_sceneGadget;
