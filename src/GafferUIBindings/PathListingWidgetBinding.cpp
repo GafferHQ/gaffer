@@ -44,8 +44,18 @@
 #include "QtCore/QModelIndex"
 #include "QtCore/QVariant"
 #include "QtCore/QDateTime"
-#include "QtGui/QTreeView"
-#include "QtGui/QFileIconProvider"
+
+#if QT_VERSION >= 0x050000
+
+	#include "QtWidgets/QTreeView"
+	#include "QtWidgets/QFileIconProvider"
+
+#else
+
+	#include "QtGui/QTreeView"
+	#include "QtGui/QFileIconProvider"
+
+#endif
 
 #include "IECore/MessageHandler.h"
 #include "IECore/SimpleTypedData.h"
