@@ -73,7 +73,6 @@ class SelectionTool : public GafferUI::Tool
 		bool dragEnter( const GafferUI::Gadget *gadget, const GafferUI::DragDropEvent &event );
 		bool dragMove( const GafferUI::DragDropEvent &event );
 		bool dragEnd( const GafferUI::DragDropEvent &event );
-		void transferSelectionToContext();
 
 };
 
