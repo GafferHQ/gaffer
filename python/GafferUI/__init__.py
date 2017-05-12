@@ -45,45 +45,13 @@
 # namespace.
 __import__( "uuid" )
 
-##########################################################################
-# Function to import a module from the qt bindings. This must be used
-# rather than importing the module directly. This allows us to support
-# the use of both PyQt and PySide.
-##########################################################################
-
-__qtModuleName = None
+## Deprecated - use Qt.py instead. Also note that the lazy
+# argument no longer works, because Qt.py imports all modules
+# at startup.
 def _qtImport( name, lazy=False ) :
 
-	# decide which qt bindings to use, and apply any fix-ups we need
-	# to shield us from PyQt/PySide differences.
-	global __qtModuleName
-	if __qtModuleName is None :
-		import os
-		if "GAFFERUI_QT_BINDINGS" in os.environ :
-			__qtModuleName = os.environ["GAFFERUI_QT_BINDINGS"]
-		else :
-			# no preference stated via environment - see what we shipped with
-			if os.path.exists( os.environ["GAFFER_ROOT"] + "/python/PySide" ) :
-				__qtModuleName = "PySide"
-			else :
-				__qtModuleName = "PyQt4"
-
-		# PyQt unfortunately uses an implementation-specific
-		# naming scheme for its new-style signal and slot classes.
-		# We use this to make it compatible with PySide, according to :
-		#
-		#     http://qt-project.org/wiki/Differences_Between_PySide_and_PyQt
-		if "PyQt" in __qtModuleName :
-			QtCore = __import__( __qtModuleName + ".QtCore" ).QtCore
-			QtCore.Signal = QtCore.pyqtSignal
-
-	# import the submodule from those bindings and return it
-	if lazy :
-		import Gaffer
-		return Gaffer.lazyImport( __qtModuleName + "." + name )
-	else :
-		qtModule = __import__( __qtModuleName + "." + name )
-		return getattr( qtModule, name )
+	import Qt
+	return getattr( Qt, name )
 
 ##########################################################################
 # Function to return the C++ address of a wrapped Qt object. This can
@@ -93,15 +61,21 @@ def _qtImport( name, lazy=False ) :
 
 def _qtAddress( o ) :
 
-	global __qtModuleName
-	if "PyQt" in __qtModuleName :
+	import Qt
+	if "PyQt" in Qt.__binding__ :
 		import sip
 		return sip.unwrapinstance( o )
 	else :
-		try :
-			import PySide.shiboken as shiboken
-		except ImportError :
-			import shiboken
+		if Qt.__binding__ == "PySide2" :
+			try :
+				import PySide2.shiboken2 as shiboken
+			except ImportError :
+				import shiboken2 as shiboken
+		else :
+			try :
+				import PySide.shiboken
+			except ImportError :
+				import shiboken
 
 		return shiboken.getCppPointer( o )[0]
 
@@ -113,15 +87,21 @@ def _qtAddress( o ) :
 
 def _qtObject( address, type ) :
 
-	global __qtModuleName
-	if "PyQt" in __qtModuleName :
+	import Qt
+	if "PyQt" in Qt.__binding__ :
 		import sip
 		return sip.wrapinstance( address, type )
 	else :
-		try :
-			import PySide.shiboken as shiboken
-		except ImportError :
-			import shiboken
+		if Qt.__binding__ == "PySide2" :
+			try :
+				import PySide2.shiboken2 as shiboken
+			except ImportError :
+				import shiboken2 as shiboken
+		else :
+			try :
+				import PySide.shiboken
+			except ImportError :
+				import shiboken
 
 		return shiboken.wrapInstance( address, type )
 
