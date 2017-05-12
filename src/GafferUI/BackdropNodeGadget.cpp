@@ -57,6 +57,26 @@ using namespace IECore;
 using namespace Gaffer;
 using namespace GafferUI;
 
+namespace
+{
+
+void titleAndDescriptionFromPlugs( const StringPlug *titlePlug, const StringPlug *descriptionPlug,
+	std::string &title, std::string &description )
+{
+	title = "ERROR : Getting title";
+	try
+	{
+		title = titlePlug->getValue();
+		description = descriptionPlug->getValue();
+	}
+	catch( const std::exception &e )
+	{
+		description = std::string( "ERROR:\n" ) + e.what();
+	}
+}
+
+} // namespace
+
 IE_CORE_DEFINERUNTIMETYPED( BackdropNodeGadget );
 
 static const float g_margin = 3.0f;
@@ -113,8 +133,8 @@ std::string BackdropNodeGadget::getToolTip( const IECore::LineSegment3f &line ) 
 	}
 
 	const Backdrop *backdrop = static_cast<const Backdrop *>( node() );
-	std::string title = backdrop->titlePlug()->getValue();
-	std::string description = backdrop->descriptionPlug()->getValue();
+	std::string title, description;
+	titleAndDescriptionFromPlugs( backdrop->titlePlug(), backdrop->descriptionPlug(), title, description );
 
 	if( !title.size() && !description.size() )
 	{
@@ -255,7 +275,9 @@ void BackdropNodeGadget::doRender( const Style *style ) const
 
 		style->renderBackdrop( bound, getHighlighted() ? Style::HighlightedState : Style::NormalState, m_userColor.get_ptr() );
 
-		const std::string title = backdrop->titlePlug()->getValue();
+		std::string title, description;
+		titleAndDescriptionFromPlugs( backdrop->titlePlug(), backdrop->descriptionPlug(), title, description );
+
 		if( title.size() )
 		{
 			Box3f titleBound = style->textBound( Style::HeadingText, title );
@@ -279,7 +301,6 @@ void BackdropNodeGadget::doRender( const Style *style ) const
 		textBound.max = V2f( textBound.max.x - g_margin, titleBaseline - g_margin );
 		if( textBound.hasVolume() )
 		{
-			std::string description = backdrop->descriptionPlug()->getValue();
 			style->renderWrappedText( Style::BodyText, description, textBound );
 		}
 	}
