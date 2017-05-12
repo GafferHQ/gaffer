@@ -381,7 +381,7 @@ class _LineEdit( QtWidgets.QLineEdit ) :
 		width = self.fontMetrics().boundingRect( "M" * numChars ).width()
 		width += contentsMargins[0] + contentsMargins[2] + textMargins[0] + textMargins[2]
 
-		options = QtGui.QStyleOptionFrameV2()
+		options = QtWidgets.QStyleOptionFrame()
 		self.initStyleOption( options )
 		size = self.style().sizeFromContents(
 			QtWidgets.QStyle.CT_LineEdit,
