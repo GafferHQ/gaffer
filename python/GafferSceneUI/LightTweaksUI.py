@@ -41,6 +41,7 @@ import IECore
 import Gaffer
 import GafferUI
 import GafferScene
+import GafferSceneUI
 
 Gaffer.Metadata.registerNode(
 
@@ -268,7 +269,8 @@ class _TweaksFooter( GafferUI.PlugValueWidget ) :
 		paths = []
 		node = self.__lightTweaksNode()
 		if node is not None :
-			paths = self.getContext().get( "ui:scene:selectedPaths", [] )
+			paths = GafferSceneUI.ContextAlgo.getSelectedPaths( self.getContext() )
+			paths = paths.paths() if paths else []
 			paths = [ p for p in paths if GafferScene.SceneAlgo.exists( node["in"], p ) ]
 
 		return self.__addFromPathsMenuDefinition( paths )
