@@ -44,6 +44,7 @@ import GafferUI
 
 QtCore = GafferUI._qtImport( "QtCore" )
 QtGui = GafferUI._qtImport( "QtGui" )
+QtWidgets = GafferUI._qtImport( "QtWidgets" )
 
 ## The Slider class allows a user to specify a number of positions on a scale of 0.0 at one end
 # of the Widget and 1.0 at the other. Positions off the ends of the widget are mapped
@@ -427,13 +428,13 @@ class Slider( GafferUI.Widget ) :
 		if signal is not None :
 			signal( self, reason )
 
-class _Widget( QtGui.QWidget ) :
+class _Widget( QtWidgets.QWidget ) :
 
 	def __init__( self, parent=None ) :
 
-		QtGui.QWidget.__init__( self, parent )
+		QtWidgets.QWidget.__init__( self, parent )
 
-		self.setSizePolicy( QtGui.QSizePolicy( QtGui.QSizePolicy.Expanding, QtGui.QSizePolicy.Minimum ) )
+		self.setSizePolicy( QtWidgets.QSizePolicy( QtWidgets.QSizePolicy.Expanding, QtWidgets.QSizePolicy.Minimum ) )
 		self.setFocusPolicy( QtCore.Qt.ClickFocus )
 
 	def sizeHint( self ) :
@@ -477,4 +478,4 @@ class _Widget( QtGui.QWidget ) :
 					event.accept()
 					return True
 
-		return QtGui.QWidget.event( self, event )
+		return QtWidgets.QWidget.event( self, event )

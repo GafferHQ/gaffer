@@ -43,6 +43,7 @@ import GafferUI
 
 QtCore = GafferUI._qtImport( "QtCore" )
 QtGui = GafferUI._qtImport( "QtGui" )
+QtWidgets = GafferUI._qtImport( "QtWidgets" )
 
 ## The MessageWidget class displays a log of messages in the format specified by
 # IECore MessageHandlers.
@@ -153,7 +154,7 @@ class MessageWidget( GafferUI.Widget ) :
 					# there some way we can update the UI without triggering arbitrary
 					# code evaluation?
 					self._pushParent( None )
-					QtGui.QApplication.instance().processEvents( QtCore.QEventLoop.ExcludeUserInputEvents )
+					QtWidgets.QApplication.instance().processEvents( QtCore.QEventLoop.ExcludeUserInputEvents )
 					self._popParent()
 				finally :
 					self.__processingEvents = False

@@ -42,7 +42,7 @@ import IECore
 import Gaffer
 import GafferUI
 
-QtGui = GafferUI._qtImport( "QtGui" )
+QtWidgets = GafferUI._qtImport( "QtWidgets" )
 
 ## \deprecated. CompoundPlug itself will be removed in the future, as will this
 # class. Use LayoutPlugValueWidget instead.
@@ -75,7 +75,7 @@ class CompoundPlugValueWidget( GafferUI.PlugValueWidget ) :
 			self.__collapsible.setCornerWidget( GafferUI.Label(), True )
 			## \todo This is fighting the default sizing applied in the Label constructor. Really we need a standard
 			# way of controlling size behaviours for all widgets in the public API.
-			self.__collapsible.getCornerWidget()._qtWidget().setSizePolicy( QtGui.QSizePolicy.Preferred, QtGui.QSizePolicy.Fixed )
+			self.__collapsible.getCornerWidget()._qtWidget().setSizePolicy( QtWidgets.QSizePolicy.Preferred, QtWidgets.QSizePolicy.Fixed )
 			self.__collapseStateChangedConnection = self.__collapsible.stateChangedSignal().connect( Gaffer.WeakMethod( self.__collapseStateChanged ) )
 
 		GafferUI.PlugValueWidget.__init__(

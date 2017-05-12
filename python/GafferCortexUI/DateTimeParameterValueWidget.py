@@ -45,6 +45,7 @@ import GafferCortexUI
 
 QtCore = GafferUI._qtImport( "QtCore" )
 QtGui = GafferUI._qtImport( "QtGui" )
+QtWidgets = GafferUI._qtImport( "QtWidgets" )
 
 class DateTimeParameterValueWidget( GafferCortexUI.ParameterValueWidget ) :
 
@@ -58,10 +59,10 @@ class _DateTimePlugValueWidget( GafferUI.PlugValueWidget ) :
 
 	def __init__( self, plug, **kw ) :
 
-		GafferUI.PlugValueWidget.__init__( self, QtGui.QDateTimeEdit(), plug, **kw )
+		GafferUI.PlugValueWidget.__init__( self, QtWidgets.QDateTimeEdit(), plug, **kw )
 
 		self._qtWidget().setCalendarPopup( True )
-		self._qtWidget().setSizePolicy( QtGui.QSizePolicy.Fixed, QtGui.QSizePolicy.Fixed )
+		self._qtWidget().setSizePolicy( QtWidgets.QSizePolicy.Fixed, QtWidgets.QSizePolicy.Fixed )
 		self._qtWidget().calendarWidget().setGridVisible( True )
 
 		headerFormat = QtGui.QTextCharFormat()

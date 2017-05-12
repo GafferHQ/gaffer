@@ -37,7 +37,7 @@
 import Gaffer
 import GafferUI
 
-QtGui = GafferUI._qtImport( "QtGui" )
+QtWidgets = GafferUI._qtImport( "QtWidgets" )
 
 ## A simple PlugValueWidget which just displays the name of the plug,
 # with the popup action menu for the plug.
@@ -49,11 +49,11 @@ class LabelPlugValueWidget( GafferUI.PlugValueWidget ) :
 
 	def __init__( self, plug, horizontalAlignment=GafferUI.Label.HorizontalAlignment.Left, verticalAlignment=GafferUI.Label.VerticalAlignment.Center, **kw ) :
 
-		GafferUI.PlugValueWidget.__init__( self, QtGui.QWidget(), plug, **kw )
+		GafferUI.PlugValueWidget.__init__( self, QtWidgets.QWidget(), plug, **kw )
 
-		layout = QtGui.QHBoxLayout()
+		layout = QtWidgets.QHBoxLayout()
 		layout.setContentsMargins( 0, 0, 0, 0 )
-		layout.setSizeConstraint( QtGui.QLayout.SetMinAndMaxSize )
+		layout.setSizeConstraint( QtWidgets.QLayout.SetMinAndMaxSize )
 		self._qtWidget().setLayout( layout )
 
 		self.__label = GafferUI.NameLabel(

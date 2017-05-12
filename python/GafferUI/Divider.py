@@ -38,7 +38,7 @@ import IECore
 
 import GafferUI
 
-QtGui = GafferUI._qtImport( "QtGui" )
+QtWidgets = GafferUI._qtImport( "QtWidgets" )
 
 class Divider( GafferUI.Widget ) :
 
@@ -46,7 +46,7 @@ class Divider( GafferUI.Widget ) :
 
 	def __init__( self, orientation = Orientation.Horizontal, **kw ) :
 
-		GafferUI.Widget.__init__( self, QtGui.QFrame(), **kw )
+		GafferUI.Widget.__init__( self, QtWidgets.QFrame(), **kw )
 
 		self._qtWidget().setObjectName( "gafferDivider" )
 
@@ -55,13 +55,13 @@ class Divider( GafferUI.Widget ) :
 	def setOrientation( self, orientation ) :
 
 		if orientation == self.Orientation.Horizontal :
-			self._qtWidget().setFrameShape( QtGui.QFrame.HLine )
+			self._qtWidget().setFrameShape( QtWidgets.QFrame.HLine )
 		else :
-			self._qtWidget().setFrameShape( QtGui.QFrame.VLine )
+			self._qtWidget().setFrameShape( QtWidgets.QFrame.VLine )
 
 	def getOrientation( self ) :
 
-		if self._qtWidget().frameShape() == QtGui.QFrame.HLine :
+		if self._qtWidget().frameShape() == QtWidgets.QFrame.HLine :
 			return self.Orientation.Horizontal
 		else :
 			return self.Orientation.Vertical

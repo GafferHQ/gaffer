@@ -42,6 +42,7 @@ import GafferUI
 
 QtCore = GafferUI._qtImport( "QtCore" )
 QtGui = GafferUI._qtImport( "QtGui" )
+QtWidgets = GafferUI._qtImport( "QtWidgets" )
 
 ## The VectorDataWidget provides a table view for the contents of
 # one or more IECore VectorData instances.
@@ -90,13 +91,13 @@ class VectorDataWidget( GafferUI.Widget ) :
 		self.__tableView.horizontalHeader().setMinimumSectionSize( 70 )
 
 		self.__tableView.verticalHeader().setVisible( showIndices )
-		self.__tableView.verticalHeader().setResizeMode( QtGui.QHeaderView.Fixed )
+		self.__tableView.verticalHeader().setResizeMode( QtWidgets.QHeaderView.Fixed )
 		self.__tableView.verticalHeader().setObjectName( "vectorDataWidgetVerticalHeader" )
 
 		self.__tableView.setHorizontalScrollBarPolicy( QtCore.Qt.ScrollBarAlwaysOff )
 		self.__tableView.setVerticalScrollBarPolicy( QtCore.Qt.ScrollBarAsNeeded )
 
-		self.__tableView.setSelectionBehavior( QtGui.QAbstractItemView.SelectItems )
+		self.__tableView.setSelectionBehavior( QtWidgets.QAbstractItemView.SelectItems )
 		self.__tableView.setCornerButtonEnabled( False )
 
 		self.__tableView.setContextMenuPolicy( QtCore.Qt.CustomContextMenu )
@@ -223,13 +224,13 @@ class VectorDataWidget( GafferUI.Widget ) :
 					columnIndex += 1
 
 			self.__tableView.horizontalHeader().setResizeMode(
-				QtGui.QHeaderView.ResizeToContents if haveResizeableContents else QtGui.QHeaderView.Fixed
+				QtWidgets.QHeaderView.ResizeToContents if haveResizeableContents else QtWidgets.QHeaderView.Fixed
 			)
 			self.__tableView.horizontalHeader().setStretchLastSection( canStretch )
 			self.__tableView.setSizePolicy(
-				QtGui.QSizePolicy(
-					QtGui.QSizePolicy.Expanding if canStretch else QtGui.QSizePolicy.Fixed,
-					QtGui.QSizePolicy.Maximum
+				QtWidgets.QSizePolicy(
+					QtWidgets.QSizePolicy.Expanding if canStretch else QtWidgets.QSizePolicy.Fixed,
+					QtWidgets.QSizePolicy.Maximum
 				)
 			)
 
@@ -718,11 +719,11 @@ class VectorDataWidget( GafferUI.Widget ) :
 			self.__emittingButtonPress = False
 
 # Private implementation - a QTableView with custom size behaviour.
-class _TableView( QtGui.QTableView ) :
+class _TableView( QtWidgets.QTableView ) :
 
 	def __init__( self, minimumVisibleRows ) :
 
-		QtGui.QTableView.__init__( self )
+		QtWidgets.QTableView.__init__( self )
 
 		self.__minimumVisibleRows = minimumVisibleRows
 
@@ -734,7 +735,7 @@ class _TableView( QtGui.QTableView ) :
 			prevModel.rowsRemoved.disconnect( self.__sizeShouldChange )
 			prevModel.dataChanged.connect( self.__sizeShouldChange )
 
-		QtGui.QTableView.setModel( self, model )
+		QtWidgets.QTableView.setModel( self, model )
 
 		if model :
 			model.rowsInserted.connect( self.__sizeShouldChange )
@@ -1038,15 +1039,15 @@ _DataAccessor.registerType( IECore.InternedStringVectorData.staticTypeId(), _Int
 # The _Delegate classes are used to decide how the different types of data are
 # displayed. They derive from QStyledItemDelegate for drawing and event handling,
 # but also have additional methods to specify sizing.
-class _Delegate( QtGui.QStyledItemDelegate ) :
+class _Delegate( QtWidgets.QStyledItemDelegate ) :
 
 	def __init__( self ) :
 
-		QtGui.QStyledItemDelegate.__init__( self )
+		QtWidgets.QStyledItemDelegate.__init__( self )
 
 		# The closeEditor signal is used to tell the view that editing is complete,
 		# at which point it will destroy the QWidget used for editing.
-		# It is emitted from QtGui.QAbstractItemDelegate.eventFilter() and also from
+		# It is emitted from QtWidgets.QAbstractItemDelegate.eventFilter() and also from
 		# our own eventFilter() to stop editing. We connect to it here so that we can
 		# drop our reference to self.__editor (a GafferUI.Widget) when editing finishes -
 		# otherwise it would live on but with its Qt half already destroyed, which would
@@ -1073,25 +1074,25 @@ class _Delegate( QtGui.QStyledItemDelegate ) :
 			self.__editor._qtWidget().setParent( parent )
 			return self.__editor._qtWidget()
 		else :
-			return QtGui.QStyledItemDelegate.createEditor( self, parent, option, index )
+			return QtWidgets.QStyledItemDelegate.createEditor( self, parent, option, index )
 
 	def setEditorData( self, editor, index ) :
 
 		if self.__editor is not None :
 			self.__editor.setValue( GafferUI._Variant.fromVariant( index.data() ) )
 		else :
-			QtGui.QStyledItemDelegate.setEditorData( self, editor, index )
+			QtWidgets.QStyledItemDelegate.setEditorData( self, editor, index )
 
  	def setModelData( self, editor, model, index ) :
 
  		if self.__editor is not None :
  			model.setData( index, GafferUI._Variant.toVariant( self.__editor.getValue() ), QtCore.Qt.EditRole )
 		else :
-			QtGui.QStyledItemDelegate.setModelData( self, editor, model, index )
+			QtWidgets.QStyledItemDelegate.setModelData( self, editor, model, index )
 
  	def eventFilter( self, object, event ) :
 
- 		if QtGui.QStyledItemDelegate.eventFilter( self, object, event ) :
+ 		if QtWidgets.QStyledItemDelegate.eventFilter( self, object, event ) :
  			return True
 
  		if event.type() == event.Hide and self.__editor is not None :
@@ -1185,21 +1186,21 @@ class _BoolDelegate( _Delegate ) :
 
 		# draw the background
 
-		widget.style().drawControl( QtGui.QStyle.CE_ItemViewItem, option, painter, widget )
+		widget.style().drawControl( QtWidgets.QStyle.CE_ItemViewItem, option, painter, widget )
 
 		# draw the checkbox.
 
-		styleOption = QtGui.QStyleOptionButton()
+		styleOption = QtWidgets.QStyleOptionButton()
 		styleOption.state = option.state
-		styleOption.state |= QtGui.QStyle.State_Enabled
+		styleOption.state |= QtWidgets.QStyle.State_Enabled
 
 		if self.__toBool( index ) :
-			styleOption.state |= QtGui.QStyle.State_On
+			styleOption.state |= QtWidgets.QStyle.State_On
 		else :
-			styleOption.state |= QtGui.QStyle.State_Off
+			styleOption.state |= QtWidgets.QStyle.State_Off
 
 		styleOption.rect = self.__checkBoxRect( widget, option.rect )
-		widget.style().drawControl( QtGui.QStyle.CE_CheckBox, styleOption, painter, widget )
+		widget.style().drawControl( QtWidgets.QStyle.CE_CheckBox, styleOption, painter, widget )
 
 	def createEditor( self, parent, option, index ) :
 
@@ -1231,8 +1232,8 @@ class _BoolDelegate( _Delegate ) :
 
 	def __checkBoxRect( self, widget, viewItemRect ) :
 
-		checkBoxStyleOption = QtGui.QStyleOptionButton()
-		r = widget.style().subElementRect( QtGui.QStyle.SE_CheckBoxIndicator, checkBoxStyleOption )
+		checkBoxStyleOption = QtWidgets.QStyleOptionButton()
+		r = widget.style().subElementRect( QtWidgets.QStyle.SE_CheckBoxIndicator, checkBoxStyleOption )
 
 		return QtCore.QRect(
 			viewItemRect.center() - ( QtCore.QPoint( r.width(), r.height() ) / 2 ),

@@ -42,6 +42,7 @@ import GafferUI
 
 QtCore = GafferUI._qtImport( "QtCore" )
 QtGui = GafferUI._qtImport( "QtGui" )
+QtWidgets = GafferUI._qtImport( "QtWidgets" )
 
 ## The Image widget displays an image. This can be specified
 # as either a filename, in which case the image is loaded using
@@ -50,11 +51,11 @@ class Image( GafferUI.Widget ) :
 
 	def __init__( self, imagePrimitiveOrFileName, **kw ) :
 
-		GafferUI.Widget.__init__( self, QtGui.QLabel(), **kw )
+		GafferUI.Widget.__init__( self, QtWidgets.QLabel(), **kw )
 
 		# by default the widget would accept both shrinking and growing, but we'd rather it just stubbornly stayed
 		# the same size.
-		self._qtWidget().setSizePolicy( QtGui.QSizePolicy( QtGui.QSizePolicy.Fixed, QtGui.QSizePolicy.Fixed ) )
+		self._qtWidget().setSizePolicy( QtWidgets.QSizePolicy( QtWidgets.QSizePolicy.Fixed, QtWidgets.QSizePolicy.Fixed ) )
 
 		if isinstance( imagePrimitiveOrFileName, basestring ) :
 			pixmap = self._qtPixmapFromFile( str( imagePrimitiveOrFileName ) )
@@ -74,17 +75,17 @@ class Image( GafferUI.Widget ) :
 
 		pixmap = self._qtWidget().pixmap()
 
-		graphicsScene = QtGui.QGraphicsScene()
+		graphicsScene = QtWidgets.QGraphicsScene()
 		pixmapItem = graphicsScene.addPixmap( pixmap )
 		pixmapItem.setVisible( True )
 
-		effect = QtGui.QGraphicsColorizeEffect()
+		effect = QtWidgets.QGraphicsColorizeEffect()
 		effect.setColor( QtGui.QColor( 119, 156, 189, 255 ) )
 		effect.setStrength( 0.85 )
 		pixmapItem.setGraphicsEffect( effect )
 		pixmapItem.setShapeMode( pixmapItem.BoundingRectShape )
 
-		graphicsView = QtGui.QGraphicsView()
+		graphicsView = QtWidgets.QGraphicsView()
 		graphicsView.setScene( graphicsScene )
 
 		image = QtGui.QImage(

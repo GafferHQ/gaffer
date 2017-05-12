@@ -42,6 +42,7 @@ import GafferUI
 
 QtCore = GafferUI._qtImport( "QtCore" )
 QtGui = GafferUI._qtImport( "QtGui" )
+QtWidgets = GafferUI._qtImport( "QtWidgets" )
 
 class TabbedContainer( GafferUI.ContainerWidget ) :
 
@@ -51,7 +52,7 @@ class TabbedContainer( GafferUI.ContainerWidget ) :
 
 		GafferUI.ContainerWidget.__init__( self, _TabWidget(), **kw )
 
-		self.__tabBar = GafferUI.Widget( QtGui.QTabBar() )
+		self.__tabBar = GafferUI.Widget( QtWidgets.QTabBar() )
 		self.__tabBar._qtWidget().setDrawBase( False )
 		self.__tabBarDragEnterConnection = self.__tabBar.dragEnterSignal().connect( Gaffer.WeakMethod( self.__tabBarDragEnter ) )
 		self.__tabBarDragMoveConnection = self.__tabBar.dragMoveSignal().connect( Gaffer.WeakMethod( self.__tabBarDragMove ) )
@@ -224,7 +225,7 @@ class TabbedContainer( GafferUI.ContainerWidget ) :
 
 		# we delay the tab switch a little to make sure that the user isn't just passing through
 		self.__tabBarDragState = self.__DragState.Waiting
-		QtCore.QTimer.singleShot( QtGui.QApplication.doubleClickInterval(), self.__tabBarDragActivate )
+		QtCore.QTimer.singleShot( QtWidgets.QApplication.doubleClickInterval(), self.__tabBarDragActivate )
 		return True
 
 	def __tabBarDragMove( self, widget, event ) :
@@ -251,17 +252,17 @@ class TabbedContainer( GafferUI.ContainerWidget ) :
 			self._qtWidget().setCurrentIndex( tab )
 
 # Private implementation - a QTabWidget with custom size behaviour.
-class _TabWidget( QtGui.QTabWidget ) :
+class _TabWidget( QtWidgets.QTabWidget ) :
 
 	def __init__( self, parent = None ) :
 
-		QtGui.QTabWidget.__init__( self, parent )
+		QtWidgets.QTabWidget.__init__( self, parent )
 
 	# Reimplemented so that the tabs aren't taken into
 	# account when they're not visible.
 	def sizeHint( self ) :
 
-		result = QtGui.QTabWidget.sizeHint( self )
+		result = QtWidgets.QTabWidget.sizeHint( self )
 		if self.tabBar().isHidden() :
 			if self.tabPosition() in ( self.North, self.South ) :
 				result.setHeight( result.height() - self.tabBar().sizeHint().height() )
@@ -274,7 +275,7 @@ class _TabWidget( QtGui.QTabWidget ) :
 	# account when they're not visible.
 	def minimumSizeHint( self ) :
 
-		result = QtGui.QTabWidget.minimumSizeHint( self )
+		result = QtWidgets.QTabWidget.minimumSizeHint( self )
 		if self.tabBar().isHidden() :
 			if self.tabPosition() in ( self.North, self.South ) :
 				result.setHeight( result.height() - self.tabBar().minimumSizeHint().height() )

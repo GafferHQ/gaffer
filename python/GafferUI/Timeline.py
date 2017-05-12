@@ -42,6 +42,7 @@ import GafferUI
 
 QtCore = GafferUI._qtImport( "QtCore" )
 QtGui = GafferUI._qtImport( "QtGui" )
+QtWidgets = GafferUI._qtImport( "QtWidgets" )
 
 ## The Timeline presents a time slider which edits the frame
 # entry of a context.
@@ -101,10 +102,10 @@ class Timeline( GafferUI.EditorWidget ) :
 
 		self.__scriptNodePlugSetConnection = scriptNode.plugSetSignal().connect( Gaffer.WeakMethod( self.__scriptNodePlugSet ) )
 
-		frameIncrementShortcut = QtGui.QShortcut( QtGui.QKeySequence( "Right" ), self._qtWidget() )
+		frameIncrementShortcut = QtWidgets.QShortcut( QtGui.QKeySequence( "Right" ), self._qtWidget() )
 		frameIncrementShortcut.activated.connect( Gaffer.WeakMethod( self.__incrementFrame ) )
 
-		frameDecrementShortcut = QtGui.QShortcut( QtGui.QKeySequence( "Left" ), self._qtWidget() )
+		frameDecrementShortcut = QtWidgets.QShortcut( QtGui.QKeySequence( "Left" ), self._qtWidget() )
 		frameDecrementShortcut.activated.connect( IECore.curry( Gaffer.WeakMethod( self.__incrementFrame ), -1 ) )
 
 		self.__playback = None

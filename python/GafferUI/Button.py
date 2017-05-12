@@ -39,6 +39,7 @@ import Gaffer
 import GafferUI
 
 QtGui = GafferUI._qtImport( "QtGui" )
+QtWidgets = GafferUI._qtImport( "QtWidgets" )
 QtCore = GafferUI._qtImport( "QtCore" )
 
 class Button( GafferUI.Widget ) :
@@ -47,7 +48,7 @@ class Button( GafferUI.Widget ) :
 
 	def __init__( self, text="", image=None, hasFrame=True, highlightOnOver=True, **kw ) :
 
-		GafferUI.Widget.__init__( self, QtGui.QPushButton(), **kw )
+		GafferUI.Widget.__init__( self, QtWidgets.QPushButton(), **kw )
 
 		self._qtWidget().setAttribute( QtCore.Qt.WA_LayoutUsesWidgetRect )
 		# allow return and enter keys to click button
@@ -67,7 +68,7 @@ class Button( GafferUI.Widget ) :
 		# and we really don't like the etching. the only effective way of disabling it
 		# seems to be to apply this palette which makes the etched text transparent.
 		if Button.__palette is None :
-			Button.__palette = QtGui.QPalette( QtGui.QApplication.instance().palette() )
+			Button.__palette = QtGui.QPalette( QtWidgets.QApplication.instance().palette() )
 			Button.__palette.setColor( QtGui.QPalette.Disabled, QtGui.QPalette.Light, QtGui.QColor( 0, 0, 0, 0 ) )
 
 		self._qtWidget().setPalette( Button.__palette )
@@ -111,8 +112,8 @@ class Button( GafferUI.Widget ) :
 
 		self._qtWidget().setObjectName( "gafferWithFrame" if hasFrame else "gafferWithoutFrame" )
 		self._qtWidget().setSizePolicy(
-			QtGui.QSizePolicy.Minimum if hasFrame else QtGui.QSizePolicy.Fixed,
-			QtGui.QSizePolicy.Fixed
+			QtWidgets.QSizePolicy.Minimum if hasFrame else QtWidgets.QSizePolicy.Fixed,
+			QtWidgets.QSizePolicy.Fixed
 		)
 		self._repolish()
 
@@ -131,7 +132,7 @@ class Button( GafferUI.Widget ) :
 		# the op to run without the values the user sees in the ui. normally editingFinished is emitted by
 		# the text widget itself on a loss of focus, but unfortunately clicking on a button doesn't cause that
 		# focus loss. so we helpfully emit the signal ourselves here.
-		focusWidget = GafferUI.Widget._owner( QtGui.QApplication.focusWidget() )
+		focusWidget = GafferUI.Widget._owner( QtWidgets.QApplication.focusWidget() )
 		if focusWidget is not None and hasattr( focusWidget, "editingFinishedSignal" ) :
 			focusWidget.editingFinishedSignal()( focusWidget )
 

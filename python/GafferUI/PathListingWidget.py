@@ -47,6 +47,7 @@ import GafferUI
 
 QtCore = GafferUI._qtImport( "QtCore" )
 QtGui = GafferUI._qtImport( "QtGui" )
+QtWidgets = GafferUI._qtImport( "QtWidgets" )
 
 ## The PathListingWidget displays the contents of a Path, updating the Path to represent the
 # current directory as the user navigates around. It supports both a list and a tree view,
@@ -98,7 +99,7 @@ class PathListingWidget( GafferUI.Widget ) :
 
 		self._qtWidget().setAlternatingRowColors( True )
 		self._qtWidget().setUniformRowHeights( True )
-		self._qtWidget().setEditTriggers( QtGui.QTreeView.NoEditTriggers )
+		self._qtWidget().setEditTriggers( QtWidgets.QTreeView.NoEditTriggers )
 		self._qtWidget().activated.connect( Gaffer.WeakMethod( self.__activated ) )
 		self._qtWidget().header().setMovable( False )
 		self._qtWidget().header().setSortIndicator( 0, QtCore.Qt.AscendingOrder )
@@ -116,7 +117,7 @@ class PathListingWidget( GafferUI.Widget ) :
 		self.__selectionChangedSlot = Gaffer.WeakMethod( self.__selectionChanged )
 		self._qtWidget().selectionModel().selectionChanged.connect( self.__selectionChangedSlot )
 		if allowMultipleSelection :
-			self._qtWidget().setSelectionMode( QtGui.QAbstractItemView.ExtendedSelection )
+			self._qtWidget().setSelectionMode( QtWidgets.QAbstractItemView.ExtendedSelection )
 
 		self.__pathSelectedSignal = GafferUI.WidgetSignal()
 		self.__selectionChangedSignal = GafferUI.WidgetSignal()
@@ -296,7 +297,7 @@ class PathListingWidget( GafferUI.Widget ) :
 		if isinstance( pathOrPaths, Gaffer.Path ) :
 			paths = [ pathOrPaths ]
 
-		if self._qtWidget().selectionMode() != QtGui.QAbstractItemView.ExtendedSelection :
+		if self._qtWidget().selectionMode() != QtWidgets.QAbstractItemView.ExtendedSelection :
 			assert( len( paths ) <= 1 )
 
 		selectionModel = self._qtWidget().selectionModel()
@@ -550,7 +551,7 @@ class PathListingWidget( GafferUI.Widget ) :
 
 # Private implementation - a QTreeView with some specific size behaviour, and shift
 # clicking for recursive expand/collapse.
-class _TreeView( QtGui.QTreeView ) :
+class _TreeView( QtWidgets.QTreeView ) :
 
 	# This signal is called when some items are either collapsed or
 	# expanded. It can be preferable to use this over the expanded or
@@ -560,7 +561,7 @@ class _TreeView( QtGui.QTreeView ) :
 
 	def __init__( self ) :
 
-		QtGui.QTreeView.__init__( self )
+		QtWidgets.QTreeView.__init__( self )
 
 		self.setHorizontalScrollBarPolicy( QtCore.Qt.ScrollBarAlwaysOff )
 
@@ -580,7 +581,7 @@ class _TreeView( QtGui.QTreeView ) :
 
 	def setModel( self, model ) :
 
-		QtGui.QTreeView.setModel( self, model )
+		QtWidgets.QTreeView.setModel( self, model )
 
 		model.modelReset.connect( self.__recalculateColumnSizes )
 
@@ -608,7 +609,7 @@ class _TreeView( QtGui.QTreeView ) :
 
 	def sizeHint( self ) :
 
-		result = QtGui.QTreeView.sizeHint( self )
+		result = QtWidgets.QTreeView.sizeHint( self )
 
 		margins = self.contentsMargins()
 		result.setWidth( self.header().length() + margins.left() + margins.right() )
@@ -624,14 +625,14 @@ class _TreeView( QtGui.QTreeView ) :
 				event.accept()
 				return True
 
-		return QtGui.QTreeView.event( self, event )
+		return QtWidgets.QTreeView.event( self, event )
 
 	def mousePressEvent( self, event ) :
 
 		# we store the modifiers so that we can turn single
 		# expands/collapses into recursive ones in __propagateExpanded.
 		self.__currentEventModifiers = event.modifiers()
-		QtGui.QTreeView.mousePressEvent( self, event )
+		QtWidgets.QTreeView.mousePressEvent( self, event )
 		self.__currentEventModifiers = QtCore.Qt.NoModifier
 
 	def mouseReleaseEvent( self, event ) :
@@ -639,13 +640,13 @@ class _TreeView( QtGui.QTreeView ) :
 		# we store the modifiers so that we can turn single
 		# expands/collapses into recursive ones in __propagateExpanded.
 		self.__currentEventModifiers = event.modifiers()
-		QtGui.QTreeView.mouseReleaseEvent( self, event )
+		QtWidgets.QTreeView.mouseReleaseEvent( self, event )
 		self.__currentEventModifiers = QtCore.Qt.NoModifier
 
 	def mouseDoubleClickEvent( self, event ) :
 
 		self.__currentEventModifiers = event.modifiers()
-		QtGui.QTreeView.mouseDoubleClickEvent( self, event )
+		QtWidgets.QTreeView.mouseDoubleClickEvent( self, event )
 		self.__currentEventModifiers = QtCore.Qt.NoModifier
 
 	def __recalculateColumnSizes( self ) :

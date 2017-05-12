@@ -39,7 +39,7 @@ import IECore
 
 import GafferUI
 
-QtGui = GafferUI._qtImport( "QtGui" )
+QtWidgets = GafferUI._qtImport( "QtWidgets" )
 
 class Frame( GafferUI.ContainerWidget ) :
 
@@ -48,11 +48,11 @@ class Frame( GafferUI.ContainerWidget ) :
 
 	def __init__( self, child=None, borderWidth=8, borderStyle=BorderStyle.Flat, **kw ) :
 
-		GafferUI.ContainerWidget.__init__( self, QtGui.QFrame(), **kw )
+		GafferUI.ContainerWidget.__init__( self, QtWidgets.QFrame(), **kw )
 
-		self._qtWidget().setLayout( QtGui.QGridLayout() )
+		self._qtWidget().setLayout( QtWidgets.QGridLayout() )
 		self._qtWidget().layout().setContentsMargins( borderWidth, borderWidth, borderWidth, borderWidth )
-		self._qtWidget().layout().setSizeConstraint( QtGui.QLayout.SetMinAndMaxSize )
+		self._qtWidget().layout().setSizeConstraint( QtWidgets.QLayout.SetMinAndMaxSize )
 
 		self.__child = None
 		self.setChild( child )

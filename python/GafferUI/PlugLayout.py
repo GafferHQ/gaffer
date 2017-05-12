@@ -43,7 +43,7 @@ import collections
 import Gaffer
 import GafferUI
 
-QtGui = GafferUI._qtImport( "QtGui" )
+QtWidgets = GafferUI._qtImport( "QtWidgets" )
 
 ## A class for laying out widgets to represent all the plugs held on a particular parent.
 #
@@ -677,7 +677,7 @@ class _CollapsibleLayout( _Layout ) :
 				collapsible.setCornerWidget( GafferUI.Label(), True )
 				## \todo This is fighting the default sizing applied in the Label constructor. Really we need a standard
 				# way of controlling size behaviours for all widgets in the public API.
-				collapsible.getCornerWidget()._qtWidget().setSizePolicy( QtGui.QSizePolicy.Ignored, QtGui.QSizePolicy.Fixed )
+				collapsible.getCornerWidget()._qtWidget().setSizePolicy( QtWidgets.QSizePolicy.Ignored, QtWidgets.QSizePolicy.Fixed )
 
 				if subsection.restoreState( "collapsed" ) is False :
 					collapsible.setCollapsed( False )

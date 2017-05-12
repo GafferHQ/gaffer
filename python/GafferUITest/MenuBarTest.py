@@ -46,6 +46,7 @@ import GafferUITest
 
 QtCore = GafferUI._qtImport( "QtCore" )
 QtGui = GafferUI._qtImport( "QtGui" )
+QtWidgets = GafferUI._qtImport( "QtWidgets" )
 
 class MenuBarTest( GafferUITest.TestCase ) :
 
@@ -206,12 +207,12 @@ class MenuBarTest( GafferUITest.TestCase ) :
 
 	def __simulateShortcut( self, widget ) :
 
-		QtGui.QApplication.instance().notify(
+		QtWidgets.QApplication.instance().notify(
 			widget._qtWidget(),
 			QtGui.QKeyEvent( QtCore.QEvent.KeyPress, QtCore.Qt.Key_A, QtCore.Qt.ControlModifier )
 		)
 
-		QtGui.QApplication.instance().notify(
+		QtWidgets.QApplication.instance().notify(
 			widget._qtWidget(),
 			QtGui.QKeyEvent( QtCore.QEvent.KeyRelease, QtCore.Qt.Key_A, QtCore.Qt.ControlModifier )
 		)

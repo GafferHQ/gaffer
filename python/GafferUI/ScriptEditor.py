@@ -44,7 +44,7 @@ import IECore
 import Gaffer
 import GafferUI
 
-QtGui = GafferUI._qtImport( "QtGui" )
+QtWidgets = GafferUI._qtImport( "QtWidgets" )
 QtCore = GafferUI._qtImport( "QtCore" )
 
 ## \todo Custom right click menu with script load, save, execute file, undo, redo etc.
@@ -183,7 +183,7 @@ class ScriptEditor( GafferUI.EditorWidget ) :
 			self.__outputWidget.appendText( output )
 			# update the gui so messages are output as they occur, rather than all getting queued
 			# up till the end.
-			QtGui.QApplication.instance().processEvents( QtCore.QEventLoop.ExcludeUserInputEvents )
+			QtWidgets.QApplication.instance().processEvents( QtCore.QEventLoop.ExcludeUserInputEvents )
 
 GafferUI.EditorWidget.registerType( "ScriptEditor", ScriptEditor )
 
@@ -206,4 +206,4 @@ class _MessageHandler( IECore.MessageHandler ) :
 		self.__textWidget.appendHTML( html )
 		# update the gui so messages are output as they occur, rather than all getting queued
 		# up till the end.
-		QtGui.QApplication.instance().processEvents( QtCore.QEventLoop.ExcludeUserInputEvents )
+		QtWidgets.QApplication.instance().processEvents( QtCore.QEventLoop.ExcludeUserInputEvents )

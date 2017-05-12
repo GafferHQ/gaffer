@@ -48,6 +48,7 @@ import GafferUI
 
 QtCore = GafferUI._qtImport( "QtCore" )
 QtGui = GafferUI._qtImport( "QtGui" )
+QtWidgets = GafferUI._qtImport( "QtWidgets" )
 
 class Menu( GafferUI.Widget ) :
 
@@ -195,11 +196,11 @@ class Menu( GafferUI.Widget ) :
 			self.__initSearch( self._qtWidget().__definition )
 
 			# Searchable menus require an extra submenu to display the search results.
-			searchWidget = QtGui.QWidgetAction( self._qtWidget() )
+			searchWidget = QtWidgets.QWidgetAction( self._qtWidget() )
 			searchWidget.setObjectName( "GafferUI.Menu.__searchWidget" )
 			self.__searchMenu = _Menu( self._qtWidget(), "" )
 			self.__searchMenu.aboutToShow.connect( Gaffer.WeakMethod( self.__searchMenuShow ) )
-			self.__searchLine = QtGui.QLineEdit()
+			self.__searchLine = QtWidgets.QLineEdit()
 			self.__searchLine.textEdited.connect( Gaffer.WeakMethod( self.__updateSearchMenu ) )
 			self.__searchLine.returnPressed.connect( Gaffer.WeakMethod( self.__searchReturnPressed ) )
 			self.__searchLine.setObjectName( "search" )
@@ -288,10 +289,10 @@ class Menu( GafferUI.Widget ) :
 		# add a title if required.
 		if self.__title is not None and qtMenu is self._qtWidget() :
 
-			titleWidget = QtGui.QLabel( self.__title )
+			titleWidget = QtWidgets.QLabel( self.__title )
 			titleWidget.setIndent( 0 )
 			titleWidget.setObjectName( "gafferMenuTitle" )
-			titleWidgetAction = QtGui.QWidgetAction( qtMenu )
+			titleWidgetAction = QtWidgets.QWidgetAction( qtMenu )
 			titleWidgetAction.setDefaultWidget( titleWidget )
 			titleWidgetAction.setEnabled( False )
 			qtMenu.insertAction( qtMenu.actions()[0], titleWidgetAction )
@@ -299,9 +300,9 @@ class Menu( GafferUI.Widget ) :
 			# qt stylesheets ignore the padding-bottom for menus and
 			# use padding-top instead. we need padding-top to be 0 when
 			# we have a title, so we have to fake the bottom padding like so.
-			spacerWidget = QtGui.QWidget()
+			spacerWidget = QtWidgets.QWidget()
 			spacerWidget.setFixedSize( 5, 5 )
-			spacerWidgetAction = QtGui.QWidgetAction( qtMenu )
+			spacerWidgetAction = QtWidgets.QWidgetAction( qtMenu )
 			spacerWidgetAction.setDefaultWidget( spacerWidget )
 			spacerWidgetAction.setEnabled( False )
 			qtMenu.addAction( spacerWidgetAction )
@@ -312,7 +313,7 @@ class Menu( GafferUI.Widget ) :
 		with IECore.IgnoredExceptions( AttributeError ) :
 			label = item.label
 
-		qtAction = QtGui.QAction( label, parent )
+		qtAction = QtWidgets.QAction( label, parent )
 		qtAction.__item = item
 
 		if item.checkBox is not None :
@@ -505,13 +506,13 @@ class Menu( GafferUI.Widget ) :
 
 		self._qtWidget().hide()
 
-class _Menu( QtGui.QMenu ) :
+class _Menu( QtWidgets.QMenu ) :
 
 	KeyboardMode = IECore.Enum.create( "Grab", "Close", "Forward" )
 
 	def __init__( self, parent, title=None ) :
 
-		QtGui.QMenu.__init__( self, parent )
+		QtWidgets.QMenu.__init__( self, parent )
 
 		if title is not None :
 			self.setTitle( title )
@@ -523,10 +524,10 @@ class _Menu( QtGui.QMenu ) :
 		if qEvent.type() == QtCore.QEvent.ToolTip :
 			action = self.actionAt( qEvent.pos() )
 			if action and action.statusTip() :
-				QtGui.QToolTip.showText( qEvent.globalPos(), action.statusTip(), self )
+				QtWidgets.QToolTip.showText( qEvent.globalPos(), action.statusTip(), self )
 				return True
 
-		return QtGui.QMenu.event( self, qEvent )
+		return QtWidgets.QMenu.event( self, qEvent )
 
 	def keyPressEvent( self, qEvent ) :
 
@@ -547,9 +548,9 @@ class _Menu( QtGui.QMenu ) :
 					self.hide()
 
 				# pass the event on to the rightful recipient
-				app = QtGui.QApplication.instance()
+				app = QtWidgets.QApplication.instance()
 				if app.focusWidget() != self :
 					app.sendEvent( app.focusWidget(), qEvent )
 					return
 
-		QtGui.QMenu.keyPressEvent( self, qEvent )
+		QtWidgets.QMenu.keyPressEvent( self, qEvent )

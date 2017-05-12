@@ -41,6 +41,7 @@ import GafferUI
 
 QtCore = GafferUI._qtImport( "QtCore" )
 QtGui = GafferUI._qtImport( "QtGui" )
+QtWidgets = GafferUI._qtImport( "QtWidgets" )
 
 class ScrolledContainer( GafferUI.ContainerWidget ) :
 
@@ -129,11 +130,11 @@ class ScrolledContainer( GafferUI.ContainerWidget ) :
 # Private implementation - a QScrollArea derived class which is a bit more
 # forceful aboout claiming size - it always asks for enough to completely show
 # the contained widget.
-class _ScrollArea( QtGui.QScrollArea ) :
+class _ScrollArea( QtWidgets.QScrollArea ) :
 
 	def __init__( self ) :
 
-		QtGui.QScrollArea.__init__( self )
+		QtWidgets.QScrollArea.__init__( self )
 
 		self.__marginLeft = 0
 		self.__marginRight = 0
@@ -142,12 +143,12 @@ class _ScrollArea( QtGui.QScrollArea ) :
 
 	def setWidget( self, widget ) :
 
-		QtGui.QScrollArea.setWidget( self, widget )
+		QtWidgets.QScrollArea.setWidget( self, widget )
 		widget.installEventFilter( self )
 
 	def setViewportMargins( self, left, top, right, bottom ) :
 
-		QtGui.QScrollArea.setViewportMargins( self, left, top, right, bottom )
+		QtWidgets.QScrollArea.setViewportMargins( self, left, top, right, bottom )
 
 		self.__marginLeft = left
 		self.__marginRight = right
@@ -158,7 +159,7 @@ class _ScrollArea( QtGui.QScrollArea ) :
 
 		w = self.widget()
 		if not w :
-			return QtGui.QScrollArea.sizeHint( self )
+			return QtWidgets.QScrollArea.sizeHint( self )
 
 		wSize = w.sizeHint()
 

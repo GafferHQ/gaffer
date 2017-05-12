@@ -42,13 +42,14 @@ import GafferUI
 
 QtCore = GafferUI._qtImport( "QtCore" )
 QtGui = GafferUI._qtImport( "QtGui" )
+QtWidgets = GafferUI._qtImport( "QtWidgets" )
 
 class MenuBar( GafferUI.Widget ) :
 
 	def __init__( self, definition, **kw ) :
 
-		menuBar = QtGui.QMenuBar()
-		menuBar.setSizePolicy( QtGui.QSizePolicy( QtGui.QSizePolicy.Expanding, QtGui.QSizePolicy.Fixed ) )
+		menuBar = QtWidgets.QMenuBar()
+		menuBar.setSizePolicy( QtWidgets.QSizePolicy( QtWidgets.QSizePolicy.Expanding, QtWidgets.QSizePolicy.Fixed ) )
 		menuBar.setNativeMenuBar( False )
 
 		GafferUI.Widget.__init__( self, menuBar, **kw )

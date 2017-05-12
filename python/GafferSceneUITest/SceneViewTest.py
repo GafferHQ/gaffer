@@ -267,7 +267,7 @@ class SceneViewTest( GafferUITest.TestCase ) :
 		self.waitForIdle()
 		self.assertEqual( getViewCameraTransform(), IECore.M44f.createTranslated( IECore.V3f( 200, 0, 0 ) ) )
 
-		# Work around "Internal C++ object (PySide.QtGui.QWidget) already deleted" error. In an
+		# Work around "Internal C++ object (PySide.QtWidgets.QWidget) already deleted" error. In an
 		# ideal world we'll fix this, but it's unrelated to what we're testing here.
 		window.removeChild( viewer )
 

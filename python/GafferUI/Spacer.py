@@ -37,7 +37,7 @@
 
 import GafferUI
 
-QtGui = GafferUI._qtImport( "QtGui" )
+QtWidgets = GafferUI._qtImport( "QtWidgets" )
 
 ## \todo Size accessors
 class Spacer( GafferUI.Widget ) :
@@ -46,7 +46,7 @@ class Spacer( GafferUI.Widget ) :
 	# for backwards compatibility for now.
 	def __init__( self, size, maximumSize=None, **kw ) :
 
-		GafferUI.Widget.__init__( self, QtGui.QWidget(), **kw )
+		GafferUI.Widget.__init__( self, QtWidgets.QWidget(), **kw )
 
 		self._qtWidget().setMinimumWidth( size.x )
 		self._qtWidget().setMinimumHeight( size.y )

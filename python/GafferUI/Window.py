@@ -45,6 +45,7 @@ import Gaffer
 
 QtCore = GafferUI._qtImport( "QtCore" )
 QtGui = GafferUI._qtImport( "QtGui" )
+QtWidgets = GafferUI._qtImport( "QtWidgets" )
 
 class Window( GafferUI.ContainerWidget ) :
 
@@ -54,14 +55,14 @@ class Window( GafferUI.ContainerWidget ) :
 	def __init__( self, title="GafferUI.Window", borderWidth=0, resizeable=None, child=None, sizeMode=SizeMode.Manual, icon="GafferLogoMini.png", **kw ) :
 
 		GafferUI.ContainerWidget.__init__(
-			self, QtGui.QWidget( None, QtCore.Qt.WindowFlags( QtCore.Qt.Window ), **kw )
+			self, QtWidgets.QWidget( None, QtCore.Qt.WindowFlags( QtCore.Qt.Window ), **kw )
 		)
 
 		self.__child = None
 		self.__childWindows = set()
-		self.__qtLayout = QtGui.QGridLayout()
+		self.__qtLayout = QtWidgets.QGridLayout()
 		self.__qtLayout.setContentsMargins( borderWidth, borderWidth, borderWidth, borderWidth )
-		self.__qtLayout.setSizeConstraint( QtGui.QLayout.SetMinAndMaxSize )
+		self.__qtLayout.setSizeConstraint( QtWidgets.QLayout.SetMinAndMaxSize )
 
 		# The initial size of a widget in qt "depends on the user's platform and screen geometry".
 		# In other words, it is useless. We use this flag to determine whether or not our size is
@@ -224,9 +225,9 @@ class Window( GafferUI.ContainerWidget ) :
 
 		self.__sizeMode = sizeMode
 		if sizeMode == self.SizeMode.Manual :
-			self.__qtLayout.setSizeConstraint( QtGui.QLayout.SetDefaultConstraint )
+			self.__qtLayout.setSizeConstraint( QtWidgets.QLayout.SetDefaultConstraint )
 		else :
-			self.__qtLayout.setSizeConstraint( QtGui.QLayout.SetFixedSize )
+			self.__qtLayout.setSizeConstraint( QtWidgets.QLayout.SetFixedSize )
 
 	def getSizeMode( self ) :
 

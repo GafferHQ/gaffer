@@ -41,6 +41,7 @@ import GafferUI
 
 QtCore = GafferUI._qtImport( "QtCore" )
 QtGui = GafferUI._qtImport( "QtGui" )
+QtWidgets = GafferUI._qtImport( "QtWidgets" )
 
 class BusyWidget( GafferUI.Widget ) :
 
@@ -49,11 +50,11 @@ class BusyWidget( GafferUI.Widget ) :
 		GafferUI.Widget.__init__( self, _BusyWidget( None, size ), **kw )
 
 # qt implementation class
-class _BusyWidget( QtGui.QWidget ) :
+class _BusyWidget( QtWidgets.QWidget ) :
 
 	def __init__( self, parent = None , size = 50 ) :
 
-		QtGui.QWidget.__init__( self, parent )
+		QtWidgets.QWidget.__init__( self, parent )
 
 		self.__size = size
 		self.setMinimumSize( size, size )
@@ -61,14 +62,14 @@ class _BusyWidget( QtGui.QWidget ) :
 
 	def showEvent( self, event ) :
 
-		QtGui.QWidget.showEvent( self, event )
+		QtWidgets.QWidget.showEvent( self, event )
 
 		if self.__timer is None :
 			self.__timer = self.startTimer( 1000 / 25 )
 
 	def hideEvent( self, event ) :
 
-		QtGui.QWidget.hideEvent( self, event )
+		QtWidgets.QWidget.hideEvent( self, event )
 
 		if self.__timer is not None :
 			self.killTimer( self.__timer )

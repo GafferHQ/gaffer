@@ -49,12 +49,13 @@ import GafferUITest
 
 QtCore = GafferUI._qtImport( "QtCore" )
 QtGui = GafferUI._qtImport( "QtGui" )
+QtWidgets = GafferUI._qtImport( "QtWidgets" )
 
 class TestWidget( GafferUI.Widget ) :
 
 	def __init__( self, **kw ) :
 
-		GafferUI.Widget.__init__( self, QtGui.QLabel( "hello" ), **kw )
+		GafferUI.Widget.__init__( self, QtWidgets.QLabel( "hello" ), **kw )
 
 class TestWidget2( GafferUI.Widget ) :
 
@@ -172,15 +173,15 @@ class WidgetTest( GafferUITest.TestCase ) :
 
 		event = QtGui.QMouseEvent( QtCore.QEvent.MouseButtonPress, QtCore.QPoint( 0, 0 ), QtCore.Qt.LeftButton, QtCore.Qt.LeftButton, QtCore.Qt.NoModifier )
 
-		QtGui.QApplication.instance().sendEvent( w._qtWidget(), event )
+		QtWidgets.QApplication.instance().sendEvent( w._qtWidget(), event )
 		self.assertEqual( WidgetTest.signalsEmitted, 1 )
 
 		w.setEnabled( False )
-		QtGui.QApplication.instance().sendEvent( w._qtWidget(), event )
+		QtWidgets.QApplication.instance().sendEvent( w._qtWidget(), event )
 		self.assertEqual( WidgetTest.signalsEmitted, 1 )
 
 		w.setEnabled( True )
-		QtGui.QApplication.instance().sendEvent( w._qtWidget(), event )
+		QtWidgets.QApplication.instance().sendEvent( w._qtWidget(), event )
  		self.assertEqual( WidgetTest.signalsEmitted, 2 )
 
 	def testCanDieAfterUsingSignals( self ) :
@@ -431,8 +432,8 @@ class WidgetTest( GafferUITest.TestCase ) :
 		button = GafferUI.Button()
 		address = GafferUI._qtAddress( button._qtWidget() )
 		self.assertTrue( isinstance( address, int ) )
-		widget = GafferUI._qtObject( address, QtGui.QPushButton )
-		self.assertTrue( isinstance( widget, QtGui.QPushButton ) )
+		widget = GafferUI._qtObject( address, QtWidgets.QPushButton )
+		self.assertTrue( isinstance( widget, QtWidgets.QPushButton ) )
 
 	def testSetVisibleWithNonBool( self ) :
 

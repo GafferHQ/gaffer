@@ -47,7 +47,7 @@ GL = Gaffer.lazyImport( "OpenGL.GL" )
 IECoreGL = Gaffer.lazyImport( "IECoreGL" )
 
 QtCore = GafferUI._qtImport( "QtCore" )
-QtGui = GafferUI._qtImport( "QtGui" )
+QtWidgets = GafferUI._qtImport( "QtWidgets" )
 
 ## The GadgetWidget class provides a means of
 # hosting a Gadget within a Widget based interface.
@@ -138,7 +138,7 @@ class GadgetWidget( GafferUI.GLWidget ) :
 
 	def __enter( self, widget ) :
 
-		if not isinstance( QtGui.QApplication.focusWidget(), ( QtGui.QLineEdit, QtGui.QPlainTextEdit ) ) :
+		if not isinstance( QtWidgets.QApplication.focusWidget(), ( QtWidgets.QLineEdit, QtWidgets.QPlainTextEdit ) ) :
 			self._qtWidget().setFocus()
 
 	def __leave( self, widget ) :
@@ -296,7 +296,7 @@ class _EventFilter( QtCore.QObject ) :
 				)
 			 )
 
-			QtGui.QToolTip.showText( qEvent.globalPos(), toolTip, qObject )
+			QtWidgets.QToolTip.showText( qEvent.globalPos(), toolTip, qObject )
 
 			return True
 

@@ -43,6 +43,7 @@ import GafferUI
 
 QtCore = GafferUI._qtImport( "QtCore" )
 QtGui = GafferUI._qtImport( "QtGui" )
+QtWidgets = GafferUI._qtImport( "QtWidgets" )
 
 class BoolWidget( GafferUI.Widget ) :
 
@@ -118,13 +119,13 @@ class BoolWidget( GafferUI.Widget ) :
 
 		self.__stateChangedSignal( self )
 
-class _CheckBox( QtGui.QCheckBox ) :
+class _CheckBox( QtWidgets.QCheckBox ) :
 
 	HitMode = IECore.Enum.create( "Button", "CheckBox" )
 
 	def __init__( self, text, parent = None ) :
 
-		QtGui.QCheckBox.__init__( self, text, parent )
+		QtWidgets.QCheckBox.__init__( self, text, parent )
 
 		self.__hitMode = self.HitMode.CheckBox
 
@@ -139,9 +140,9 @@ class _CheckBox( QtGui.QCheckBox ) :
 	def hitButton( self, pos ) :
 
 		if self.__hitMode == self.HitMode.Button :
-			return QtGui.QAbstractButton.hitButton( self, pos )
+			return QtWidgets.QAbstractButton.hitButton( self, pos )
 		else :
-			return QtGui.QCheckBox.hitButton( self, pos )
+			return QtWidgets.QCheckBox.hitButton( self, pos )
 
 ## \todo Backwards compatibility - remove for version 1.0
 CheckBox = BoolWidget
