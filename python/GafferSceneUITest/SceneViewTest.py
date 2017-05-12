@@ -170,6 +170,41 @@ class SceneViewTest( GafferUITest.TestCase ) :
 		self.assertEqual( getExpandedPaths(), set( [ "/", "/A", "/A/C" ] ) )
 		self.assertEqual( getSelection(), set( [ "/A/C/E" ] ) )
 
+		# try to collapse one level
+
+		view.collapseSelection()
+
+		self.assertEqual( getExpandedPaths(), set( [ "/", "/A" ] ) )
+		self.assertEqual( getSelection(), set( [ "/A/C" ] ) )
+
+		# try to collapse one more
+
+		view.collapseSelection()
+
+		self.assertEqual( getExpandedPaths(), set( [ "/" ] ) )
+		self.assertEqual( getSelection(), set( [ "/A" ] ) )
+
+		# now expand one level again
+
+		view.expandSelection( depth = 1 )
+
+		self.assertEqual( getExpandedPaths(), set( [ "/", "/A" ] ) )
+		self.assertEqual( getSelection(), set( [ "/A/B", "/A/C" ] ) )
+
+		# and expand again
+
+		view.expandSelection( depth = 1 )
+
+		self.assertEqual( getExpandedPaths(), set( [ "/", "/A", "/A/C" ] ) )
+		self.assertEqual( getSelection(), set( [ "/A/B", "/A/C/D", "/A/C/E" ] ) )
+
+		# and collapse
+
+		view.collapseSelection()
+
+		self.assertEqual( getExpandedPaths(), set( [ "/" ] ) )
+		self.assertEqual( getSelection(), set( [ "/A", "/A/C" ] ) )
+
 	def testLookThrough( self ) :
 
 		script = Gaffer.ScriptNode()
