@@ -332,6 +332,11 @@ class ExpressionWidget( GafferUI.Widget ) :
 
 		return None
 
+	# An error in the expression could occur during a compute triggered by a repaint.
+	# ( For example, if a user uses an expression to drive Backdrop text )
+	# If we forced a repaint right away, this would be a recursive repaint which could cause
+	# a Qt crash, so we wait for idle.
+	@GafferUI.LazyMethod()
 	def __error( self, plug, source, error ) :
 
 		self.__messageWidget.setVisible( True )
