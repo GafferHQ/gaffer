@@ -129,6 +129,23 @@ std::string generateFileName2( Catalogue &catalogue, const ImagePlug *image )
 	return catalogue.generateFileName( image );
 }
 
+struct CatalogueWrapper : public Catalogue
+{
+
+	static void driverCreated( IECore::DisplayDriver *driver, const IECore::CompoundData *parameters )
+	{
+		IECorePython::ScopedGILRelease gilRelease;
+		Catalogue::driverCreated( driver, parameters );
+	}
+
+	static void imageReceived( Gaffer::Plug *plug )
+	{
+		IECorePython::ScopedGILRelease gilRelease;
+		Catalogue::imageReceived( plug );
+	}
+
+};
+
 } // namespace
 
 namespace GafferImageBindings
@@ -142,9 +159,9 @@ void bindCatalogue()
 		.def( "generateFileName", &generateFileName2 )
 		.def( "displayDriverServer", &Catalogue::displayDriverServer, return_value_policy<IECorePython::CastToIntrusivePtr>() )
 		.staticmethod( "displayDriverServer" )
-		.def( "driverCreated", &Catalogue::driverCreated )
+		.def( "driverCreated", &CatalogueWrapper::driverCreated )
 		.staticmethod( "driverCreated" )
-		.def( "imageReceived", &Catalogue::imageReceived )
+		.def( "imageReceived", &CatalogueWrapper::imageReceived )
 		.staticmethod( "imageReceived" )
 	;
 

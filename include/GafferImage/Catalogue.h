@@ -45,7 +45,6 @@
 
 #include "GafferImage/ImageNode.h"
 #include "GafferImage/ImageSwitch.h"
-#include "GafferImageBindings/CatalogueBinding.h" // To enable friend declaration for bindCatalogue()
 
 namespace GafferImage
 {
@@ -109,7 +108,7 @@ class Catalogue : public ImageNode
 		std::string generateFileName( const Image *image ) const;
 		std::string generateFileName( const ImagePlug *image ) const;
 
-	private :
+	protected :
 
 		// In an ideal world, the Catalogue would connect these to the relevant
 		// signals directly, but unfortunately the signals are not emitted on the
@@ -118,7 +117,8 @@ class Catalogue : public ImageNode
 		// call these "slots" from the UI thread.
 		static void driverCreated( IECore::DisplayDriver *driver, const IECore::CompoundData *parameters );
 		static void imageReceived( Gaffer::Plug *plug );
-		friend void GafferImageBindings::bindCatalogue();
+
+	private :
 
 		ImageSwitch *imageSwitch();
 		const ImageSwitch *imageSwitch() const;
