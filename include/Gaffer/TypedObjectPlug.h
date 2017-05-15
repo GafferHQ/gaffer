@@ -42,6 +42,7 @@
 #include "IECore/VectorTypedData.h"
 #include "IECore/ObjectVector.h"
 #include "IECore/CompoundObject.h"
+#include "IECore/CompoundData.h"
 
 #include "Gaffer/ValuePlug.h"
 
@@ -129,6 +130,7 @@ typedef TypedObjectPlug<IECore::Color3fVectorData> Color3fVectorDataPlug;
 typedef TypedObjectPlug<IECore::M44fVectorData> M44fVectorDataPlug;
 typedef TypedObjectPlug<IECore::ObjectVector> ObjectVectorPlug;
 typedef TypedObjectPlug<IECore::CompoundObject> CompoundObjectPlug;
+typedef TypedObjectPlug<IECore::CompoundData> AtomicCompoundDataPlug;
 
 IE_CORE_DECLAREPTR( ObjectPlug );
 IE_CORE_DECLAREPTR( BoolVectorDataPlug );
@@ -142,6 +144,7 @@ IE_CORE_DECLAREPTR( Color3fVectorDataPlug );
 IE_CORE_DECLAREPTR( M44fVectorDataPlug );
 IE_CORE_DECLAREPTR( ObjectVectorPlug );
 IE_CORE_DECLAREPTR( CompoundObjectPlug );
+IE_CORE_DECLAREPTR( AtomicCompoundDataPlug );
 
 typedef FilteredChildIterator<PlugPredicate<Plug::Invalid, ObjectPlug> > ObjectPlugIterator;
 typedef FilteredChildIterator<PlugPredicate<Plug::In, ObjectPlug> > InputObjectPlugIterator;
@@ -191,6 +194,10 @@ typedef FilteredChildIterator<PlugPredicate<Plug::Invalid, CompoundObjectPlug> >
 typedef FilteredChildIterator<PlugPredicate<Plug::In, CompoundObjectPlug> > InputCompoundObjectPlugIterator;
 typedef FilteredChildIterator<PlugPredicate<Plug::Out, CompoundObjectPlug> > OutputCompoundObjectPlugIterator;
 
+typedef FilteredChildIterator<PlugPredicate<Plug::Invalid, AtomicCompoundDataPlug> > AtomicCompoundDataPlugIterator;
+typedef FilteredChildIterator<PlugPredicate<Plug::In, AtomicCompoundDataPlug> > InputAtomicCompoundDataPlugIterator;
+typedef FilteredChildIterator<PlugPredicate<Plug::Out, AtomicCompoundDataPlug> > OutputAtomicCompoundDataPlugIterator;
+
 typedef FilteredRecursiveChildIterator<PlugPredicate<Plug::Invalid, ObjectPlug>, PlugPredicate<> > RecursiveObjectPlugIterator;
 typedef FilteredRecursiveChildIterator<PlugPredicate<Plug::In, ObjectPlug>, PlugPredicate<> > RecursiveInputObjectPlugIterator;
 typedef FilteredRecursiveChildIterator<PlugPredicate<Plug::Out, ObjectPlug>, PlugPredicate<> > RecursiveOutputObjectPlugIterator;
@@ -238,6 +245,10 @@ typedef FilteredRecursiveChildIterator<PlugPredicate<Plug::Out, ObjectVectorPlug
 typedef FilteredRecursiveChildIterator<PlugPredicate<Plug::Invalid, CompoundObjectPlug>, PlugPredicate<> > RecursiveCompoundObjectPlugIterator;
 typedef FilteredRecursiveChildIterator<PlugPredicate<Plug::In, CompoundObjectPlug>, PlugPredicate<> > RecursiveInputCompoundObjectPlugIterator;
 typedef FilteredRecursiveChildIterator<PlugPredicate<Plug::Out, CompoundObjectPlug>, PlugPredicate<> > RecursiveOutputCompoundObjectPlugIterator;
+
+typedef FilteredRecursiveChildIterator<PlugPredicate<Plug::Invalid, AtomicCompoundDataPlug>, PlugPredicate<> > RecursiveAtomicCompoundDataPlugIterator;
+typedef FilteredRecursiveChildIterator<PlugPredicate<Plug::In, AtomicCompoundDataPlug>, PlugPredicate<> > RecursiveInputAtomicCompoundDataPlugIterator;
+typedef FilteredRecursiveChildIterator<PlugPredicate<Plug::Out, AtomicCompoundDataPlug>, PlugPredicate<> > RecursiveOutputAtomicCompoundDataPlugIterator;
 
 } // namespace Gaffer
 

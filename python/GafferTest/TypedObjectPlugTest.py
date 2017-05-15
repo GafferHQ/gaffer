@@ -205,6 +205,7 @@ class TypedObjectPlugTest( GafferTest.TestCase ) :
 		self.failUnless( Gaffer.M44fVectorDataPlug.ValueType is IECore.M44fVectorData )
 		self.failUnless( Gaffer.V2iVectorDataPlug.ValueType is IECore.V2iVectorData )
 		self.failUnless( Gaffer.ObjectVectorPlug.ValueType is IECore.ObjectVector )
+		self.failUnless( Gaffer.AtomicCompoundDataPlug.ValueType is IECore.CompoundData )
 
 	def testReadOnlySetValueRaises( self ) :
 
