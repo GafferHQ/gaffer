@@ -932,7 +932,7 @@ bool GraphGadget::buttonPress( GadgetPtr gadget, const ButtonEvent &event )
 		if( nodeGadget )
 		{
 			Gaffer::Node *node = nodeGadget->node();
-			bool shiftHeld = event.modifiers && ButtonEvent::Shift;
+			bool shiftHeld = event.modifiers & ButtonEvent::Shift;
 			bool controlHeld = event.modifiers & ButtonEvent::Control;
 			bool nodeSelected = m_scriptNode->selection()->contains( node );
 
