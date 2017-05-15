@@ -47,11 +47,14 @@ namespace GafferImage
 namespace GafferImageTest
 {
 
-
 /// Traverses the tiles and channels in an image, processing the channel data for each one, using
 /// parallel threads to process different tiles and channels. It's useful to use this in test
 // cases to exercise any thread related crashes, and also in profiling for performance improvement.
 void processTiles( const GafferImage::ImagePlug *imagePlug );
+
+/// Arranges for processTiles() to be called every time the image is dirtied. This is useful
+/// for exposing bugs, particularly with GIL management.
+boost::signals::connection connectProcessTilesToPlugDirtiedSignal( GafferImage::ConstImagePlugPtr image );
 
 } // namespace GafferImageTest
 
