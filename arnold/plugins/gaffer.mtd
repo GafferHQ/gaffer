@@ -1362,7 +1362,23 @@
 [node alHair]
 
 	gaffer.nodeMenu.category STRING "Surface"
+	gaffer.nodeGraphLayout.defaultVisibility BOOL false
 
+	[attr dyeColor]
+
+		gaffer.nodeGraphLayout.visible BOOL true
+
+	[attr diffuseColor]
+
+		gaffer.nodeGraphLayout.visible BOOL true
+
+	[attr specular1Color]
+
+		gaffer.nodeGraphLayout.visible BOOL true
+
+	[attr specular2Color]
+
+		gaffer.nodeGraphLayout.visible BOOL true
 
 [node alInputScalar]
 
