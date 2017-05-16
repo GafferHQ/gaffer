@@ -34,6 +34,10 @@
 //
 //////////////////////////////////////////////////////////////////////////
 
+#include "boost/bind.hpp"
+
+#include "Gaffer/Node.h"
+
 #include "GafferImage/ImagePlug.h"
 #include "GafferImage/ImageAlgo.h"
 #include "GafferImageTest/ProcessTiles.h"
@@ -55,6 +59,14 @@ struct TilesEvaluateFunctor
 	}
 };
 
+void processTilesOnDirty( const Gaffer::Plug *dirtiedPlug, ConstImagePlugPtr image )
+{
+	if( dirtiedPlug == image.get() )
+	{
+		GafferImageTest::processTiles( image.get() );
+	}
+}
+
 } // namespace
 
 namespace GafferImageTest
@@ -64,6 +76,17 @@ void processTiles( const GafferImage::ImagePlug *imagePlug )
 {
 	TilesEvaluateFunctor f;
 	ImageAlgo::parallelProcessTiles( imagePlug, imagePlug->channelNamesPlug()->getValue()->readable(), f );
+}
+
+boost::signals::connection connectProcessTilesToPlugDirtiedSignal( GafferImage::ConstImagePlugPtr image )
+{
+	const Node *node = image->node();
+	if( !node )
+	{
+		throw IECore::Exception( "Plug does not belong to a node." );
+	}
+
+	return const_cast<Node *>( node )->plugDirtiedSignal().connect( boost::bind( &processTilesOnDirty, ::_1, image ) );
 }
 
 } // namespace GafferImageTest

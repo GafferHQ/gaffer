@@ -423,5 +423,36 @@ class CatalogueTest( GafferImageTest.ImageTestCase ) :
 		s.undo()
 		assertPreconditions()
 
+	def testGILManagement( self ) :
+
+		# Make a network where a Catalogue
+		# is merged with an image that depends
+		# on a python expression.
+
+		s = Gaffer.ScriptNode()
+		s["catalogue"] = GafferImage.Catalogue()
+
+		s["constant"] = GafferImage.Constant()
+
+		s["expression"] = Gaffer.Expression()
+		s["expression"].setExpression( 'parent["constant"]["color"]["r"] = context["image:tileOrigin"].x' )
+
+		s["merge"] = GafferImage.Merge()
+		s["merge"]["in"][0].setInput( s["catalogue"]["out"] )
+		s["merge"]["in"][1].setInput( s["constant"]["out"] )
+
+		# Arrange to generate the resulting image from C++
+		# threads whenever it is dirtied.
+
+		processTilesConnection = Gaffer.ScopedConnection( GafferImageTest.connectProcessTilesToPlugDirtiedSignal( s["merge"]["out"] ) )
+
+		# Send an image to the catalogue to demonstrate that
+		# we do not deadlock on the GIL.
+
+		r = GafferImage.ImageReader()
+		r["fileName"].setValue( "${GAFFER_ROOT}/python/GafferImageTest/images/checker.exr" )
+
+		GafferImageTest.DisplayTest.sendImage( r["out"], GafferImage.Catalogue.displayDriverServer().portNumber() )
+
 if __name__ == "__main__":
 	unittest.main()

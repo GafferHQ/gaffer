@@ -55,6 +55,7 @@ static void processTilesWrapper( GafferImage::ImagePlug *imagePlug )
 BOOST_PYTHON_MODULE( _GafferImageTest )
 {
 	def( "processTiles", &processTilesWrapper );
+	def( "connectProcessTilesToPlugDirtiedSignal", &connectProcessTilesToPlugDirtiedSignal );
 	def( "testOIIOJpgRead", &testOIIOJpgRead );
 	def( "testOIIOExrRead", &testOIIOExrRead );
 }
