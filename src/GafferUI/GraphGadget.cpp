@@ -932,16 +932,20 @@ bool GraphGadget::buttonPress( GadgetPtr gadget, const ButtonEvent &event )
 		if( nodeGadget )
 		{
 			Gaffer::Node *node = nodeGadget->node();
-			bool shiftHeld = event.modifiers && ButtonEvent::Shift;
+			bool shiftHeld = event.modifiers & ButtonEvent::Shift;
+			bool controlHeld = event.modifiers & ButtonEvent::Control;
 			bool nodeSelected = m_scriptNode->selection()->contains( node );
 
 			std::vector<Gaffer::Node *> affectedNodes;
 			if( const BackdropNodeGadget *backdrop = runTimeCast<BackdropNodeGadget>( nodeGadget ) )
 			{
-				backdrop->framed( affectedNodes );
+				if( !controlHeld )
+				{
+					backdrop->framed( affectedNodes );
+				}
 			}
 
-			if( ( event.modifiers & ButtonEvent::Alt ) || ( event.modifiers & ButtonEvent::Control ) )
+			if( ( event.modifiers & ButtonEvent::Alt ) || ( controlHeld ) )
 			{
 				std::vector<NodeGadget *> connected;
 				connectedNodeGadgets( node, connected, event.modifiers & ButtonEvent::Alt ? Gaffer::Plug::In : Gaffer::Plug::Out );
