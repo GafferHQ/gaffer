@@ -294,7 +294,7 @@ Catalogue::Image::Ptr Catalogue::Image::load( const std::string &fileName )
 
 	ImageReaderPtr reader = new ImageReader;
 	reader->fileNamePlug()->setValue( fileName );
-	ConstCompoundObjectPtr meta = reader->outPlug()->metadataPlug()->getValue();
+	ConstCompoundDataPtr meta = reader->outPlug()->metadataPlug()->getValue();
 	if( const StringData *description = meta->member<const StringData>( "ImageDescription" ) )
 	{
 		image->descriptionPlug()->setValue( description->readable() );

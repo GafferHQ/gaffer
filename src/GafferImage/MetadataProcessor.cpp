@@ -75,9 +75,9 @@ void MetadataProcessor::hashMetadata( const GafferImage::ImagePlug *parent, cons
 	hashProcessedMetadata( context, h );
 }
 
-IECore::ConstCompoundObjectPtr MetadataProcessor::computeMetadata( const Gaffer::Context *context, const ImagePlug *parent ) const
+IECore::ConstCompoundDataPtr MetadataProcessor::computeMetadata( const Gaffer::Context *context, const ImagePlug *parent ) const
 {
-	IECore::ConstCompoundObjectPtr metadata = inPlug()->metadataPlug()->getValue();
+	IECore::ConstCompoundDataPtr metadata = inPlug()->metadataPlug()->getValue();
 	return computeProcessedMetadata( context, metadata.get() );
 }
 

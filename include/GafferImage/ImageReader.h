@@ -128,8 +128,8 @@ class ImageReader : public ImageNode
 		OpenImageIOReader *oiioReader();
 		const OpenImageIOReader *oiioReader() const;
 
-		Gaffer::CompoundObjectPlug *intermediateMetadataPlug();
-		const Gaffer::CompoundObjectPlug *intermediateMetadataPlug() const;
+		Gaffer::AtomicCompoundDataPlug *intermediateMetadataPlug();
+		const Gaffer::AtomicCompoundDataPlug *intermediateMetadataPlug() const;
 
 		Gaffer::StringPlug *intermediateColorSpacePlug();
 		const Gaffer::StringPlug *intermediateColorSpacePlug() const;

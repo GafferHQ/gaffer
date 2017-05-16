@@ -62,7 +62,7 @@ class ImageMetadata : public MetadataProcessor
 	protected :
 
 		virtual void hashProcessedMetadata( const Gaffer::Context *context, IECore::MurmurHash &h ) const;
-		virtual IECore::ConstCompoundObjectPtr computeProcessedMetadata( const Gaffer::Context *context, const IECore::CompoundObject *inputMetadata ) const;
+		virtual IECore::ConstCompoundDataPtr computeProcessedMetadata( const Gaffer::Context *context, const IECore::CompoundData *inputMetadata ) const;
 
 	private :
 

@@ -145,7 +145,7 @@ Imath::Box2i Constant::computeDataWindow( const Gaffer::Context *context, const 
 	return formatPlug()->getValue().getDisplayWindow();
 }
 
-IECore::ConstCompoundObjectPtr Constant::computeMetadata( const Gaffer::Context *context, const ImagePlug *parent ) const
+IECore::ConstCompoundDataPtr Constant::computeMetadata( const Gaffer::Context *context, const ImagePlug *parent ) const
 {
 	return outPlug()->metadataPlug()->defaultValue();
 }

@@ -97,9 +97,9 @@ void DeleteImageMetadata::hashProcessedMetadata( const Gaffer::Context *context,
 	invertNamesPlug()->hash( h );
 }
 
-IECore::ConstCompoundObjectPtr DeleteImageMetadata::computeProcessedMetadata( const Gaffer::Context *context, const IECore::CompoundObject *inputMetadata ) const
+IECore::ConstCompoundDataPtr DeleteImageMetadata::computeProcessedMetadata( const Gaffer::Context *context, const IECore::CompoundData *inputMetadata ) const
 {
-	if ( inputMetadata->members().empty() )
+	if( inputMetadata->readable().empty() )
 	{
 		return inputMetadata;
 	}
@@ -111,18 +111,12 @@ IECore::ConstCompoundObjectPtr DeleteImageMetadata::computeProcessedMetadata( co
 		return inputMetadata;
 	}
 
-	IECore::CompoundObjectPtr result = new IECore::CompoundObject;
-	for ( IECore::CompoundObject::ObjectMap::const_iterator it = inputMetadata->members().begin(), eIt = inputMetadata->members().end(); it != eIt; ++it )
+	IECore::CompoundDataPtr result = new IECore::CompoundData;
+	for( IECore::CompoundData::ValueType::const_iterator it = inputMetadata->readable().begin(), eIt = inputMetadata->readable().end(); it != eIt; ++it )
 	{
-		bool keep = true;
-		if ( StringAlgo::matchMultiple( it->first.c_str(), names.c_str() ) != invert )
+		if( StringAlgo::matchMultiple( it->first.c_str(), names.c_str() ) == invert )
 		{
-			keep = false;
-		}
-
-		if ( keep )
-		{
-			result->members()[it->first] = it->second;
+			result->writable()[it->first] = it->second;
 		}
 	}
 
