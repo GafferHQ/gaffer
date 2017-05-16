@@ -43,6 +43,7 @@ import GafferUI
 QtCore = GafferUI._qtImport( "QtCore" )
 QtGui = GafferUI._qtImport( "QtGui" )
 QtWidgets = GafferUI._qtImport( "QtWidgets" )
+QtCompat = GafferUI._qtImport( "QtCompat" )
 
 ## The VectorDataWidget provides a table view for the contents of
 # one or more IECore VectorData instances.
@@ -91,7 +92,7 @@ class VectorDataWidget( GafferUI.Widget ) :
 		self.__tableView.horizontalHeader().setMinimumSectionSize( 70 )
 
 		self.__tableView.verticalHeader().setVisible( showIndices )
-		self.__tableView.verticalHeader().setResizeMode( QtWidgets.QHeaderView.Fixed )
+		QtCompat.setSectionResizeMode( self.__tableView.verticalHeader(), QtWidgets.QHeaderView.Fixed )
 		self.__tableView.verticalHeader().setObjectName( "vectorDataWidgetVerticalHeader" )
 
 		self.__tableView.setHorizontalScrollBarPolicy( QtCore.Qt.ScrollBarAlwaysOff )
@@ -223,7 +224,8 @@ class VectorDataWidget( GafferUI.Widget ) :
 					haveResizeableContents = haveResizeableContents or canStretch
 					columnIndex += 1
 
-			self.__tableView.horizontalHeader().setResizeMode(
+			QtCompat.setSectionResizeMode(
+				self.__tableView.horizontalHeader(),
 				QtWidgets.QHeaderView.ResizeToContents if haveResizeableContents else QtWidgets.QHeaderView.Fixed
 			)
 			self.__tableView.horizontalHeader().setStretchLastSection( canStretch )
@@ -435,7 +437,9 @@ class VectorDataWidget( GafferUI.Widget ) :
 
 		return newData
 
-	def __modelDataChanged( self, topLeft, bottomRight ) :
+	# Qt5 added a third argument we don't need, so we gobble it
+	# up with `*unused` to maintain compatibility with Qt4.
+	def __modelDataChanged( self, topLeft, bottomRight, *unused ) :
 
 		if self.__propagatingDataChangesToSelection :
 			return
@@ -542,14 +546,14 @@ class VectorDataWidget( GafferUI.Widget ) :
 			lastIndex
 		)
 
-		selection = QtGui.QItemSelection(
+		selection = QtCore.QItemSelection(
 			self.__model.index( originalLength, 0 ),
 			lastIndex
 		)
 
 		self.__tableView.selectionModel().select(
 			selection,
-			QtGui.QItemSelectionModel.ClearAndSelect | QtGui.QItemSelectionModel.Rows
+			QtCore.QItemSelectionModel.ClearAndSelect | QtCore.QItemSelectionModel.Rows
 		)
 
 		# Scroll so the newly added item is visible, and
@@ -913,7 +917,7 @@ class _Model( QtCore.QAbstractTableModel ) :
 		if role == QtCore.Qt.EditRole :
 			column = self.__columns[index.column()]
 			column.accessor.setElement( index.row(), column.relativeColumnIndex, value )
-			self.dataChanged.emit( index, index )
+			self.dataChanged.emit( index, index, [ QtCore.Qt.DisplayRole, QtCore.Qt.EditRole ] )
 
 		return True
 
