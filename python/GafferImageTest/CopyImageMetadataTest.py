@@ -65,7 +65,7 @@ class CopyImageMetadataTest( GafferImageTest.ImageTestCase ) :
 		# check that the image is passed through
 
 		metadata = m["out"]["metadata"].getValue()
-		self.assertEqual( m["out"]["metadata"].getValue(), IECore.CompoundObject() )
+		self.assertEqual( m["out"]["metadata"].getValue(), IECore.CompoundData() )
 		self.assertEqual( m["out"].image(), d["out"].image() )
 
 		# check that we can copy specific metadata
