@@ -175,10 +175,10 @@ ImagePlug::ImagePlug( const std::string &name, Direction direction, unsigned fla
 	);
 
 	addChild(
-		new CompoundObjectPlug(
+		new AtomicCompoundDataPlug(
 			"metadata",
 			direction,
-			new IECore::CompoundObject,
+			new IECore::CompoundData,
 			childFlags
 		)
 	);
@@ -273,14 +273,14 @@ const Gaffer::AtomicBox2iPlug *ImagePlug::dataWindowPlug() const
 	return getChild<AtomicBox2iPlug>( g_firstPlugIndex+1 );
 }
 
-Gaffer::CompoundObjectPlug *ImagePlug::metadataPlug()
+Gaffer::AtomicCompoundDataPlug *ImagePlug::metadataPlug()
 {
-	return getChild<CompoundObjectPlug>( g_firstPlugIndex+2 );
+	return getChild<AtomicCompoundDataPlug>( g_firstPlugIndex+2 );
 }
 
-const Gaffer::CompoundObjectPlug *ImagePlug::metadataPlug() const
+const Gaffer::AtomicCompoundDataPlug *ImagePlug::metadataPlug() const
 {
-	return getChild<CompoundObjectPlug>( g_firstPlugIndex+2 );
+	return getChild<AtomicCompoundDataPlug>( g_firstPlugIndex+2 );
 }
 
 Gaffer::StringVectorDataPlug *ImagePlug::channelNamesPlug()
@@ -366,8 +366,8 @@ IECore::ImagePrimitivePtr ImagePlug::image() const
 
 	ImagePrimitivePtr result = new ImagePrimitive( newDataWindow, newDisplayWindow );
 
-	ConstCompoundObjectPtr metadata = metadataPlug()->getValue();
-	compoundObjectToCompoundData( metadata.get(), result->blindData() );
+	ConstCompoundDataPtr metadata = metadataPlug()->getValue();
+	result->blindData()->Object::copyFrom( metadata.get() );
 
 	ConstStringVectorDataPtr channelNamesData = channelNamesPlug()->getValue();
 	const vector<string> &channelNames = channelNamesData->readable();
@@ -404,24 +404,4 @@ IECore::MurmurHash ImagePlug::imageHash() const
 	ImageAlgo::parallelGatherTiles( this, channelNames, hashTile, appendHash, dataWindow, ImageAlgo::BottomToTop );
 
 	return result;
-}
-
-// \todo This function may be useful on other situations. Add as Converter?
-void ImagePlug::compoundObjectToCompoundData( const CompoundObject *object, CompoundData *data )
-{
-	CompoundDataMap &dataMap = data->writable();
-	const CompoundObject::ObjectMap &objectMap = object->members();
-	for ( CompoundObject::ObjectMap::const_iterator it = objectMap.begin(); it != objectMap.end(); ++it )
-	{
-		if ( it->second->typeId() == CompoundObjectTypeId )
-		{
-			CompoundDataPtr newData = new CompoundData();
-			dataMap[ it->first ] = newData;
-			compoundObjectToCompoundData( static_cast<const CompoundObject *>( it->second.get() ), newData.get() );
-		}
-		else if ( Data *value = IECore::runTimeCast<Data>( it->second.get() ) )
-		{
-			dataMap[ it->first ] = value;
-		}
-	}
 }

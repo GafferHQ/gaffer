@@ -234,7 +234,7 @@ void ImageNode::compute( ValuePlug *output, const Context *context ) const
 	}
 	else if( output == imagePlug->metadataPlug() )
 	{
-		static_cast<CompoundObjectPlug *>( output )->setValue(
+		static_cast<AtomicCompoundDataPlug *>( output )->setValue(
 			computeMetadata( context, imagePlug )
 		);
 	}
@@ -275,7 +275,7 @@ Imath::Box2i ImageNode::computeDataWindow( const Gaffer::Context *context, const
 	throw IECore::NotImplementedException( string( typeName() ) + "::computeDataWindow" );
 }
 
-IECore::ConstCompoundObjectPtr ImageNode::computeMetadata( const Gaffer::Context *context, const ImagePlug *parent ) const
+IECore::ConstCompoundDataPtr ImageNode::computeMetadata( const Gaffer::Context *context, const ImagePlug *parent ) const
 {
 	throw IECore::NotImplementedException( string( typeName() ) + "::computeMetadata" );
 }
