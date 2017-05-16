@@ -45,6 +45,7 @@ import Gaffer
 import _GafferUI
 import GafferUI
 
+import Qt
 QtCore = GafferUI._qtImport( "QtCore" )
 QtGui = GafferUI._qtImport( "QtGui" )
 QtWidgets = GafferUI._qtImport( "QtWidgets" )
@@ -101,7 +102,12 @@ class PathListingWidget( GafferUI.Widget ) :
 		self._qtWidget().setUniformRowHeights( True )
 		self._qtWidget().setEditTriggers( QtWidgets.QTreeView.NoEditTriggers )
 		self._qtWidget().activated.connect( Gaffer.WeakMethod( self.__activated ) )
-		self._qtWidget().header().setMovable( False )
+
+		if Qt.__binding__ in ( "PySide2", "PyQt5" ) :
+			self._qtWidget().header().setSectionsMovable( False )
+		else :
+			self._qtWidget().header().setMovable( False )
+
 		self._qtWidget().header().setSortIndicator( 0, QtCore.Qt.AscendingOrder )
 		self._qtWidget().setSortingEnabled( True )
 
@@ -112,7 +118,7 @@ class PathListingWidget( GafferUI.Widget ) :
 		_GafferUI._pathListingWidgetUpdateModel( GafferUI._qtAddress( self._qtWidget() ), None )
 		_GafferUI._pathListingWidgetSetColumns( GafferUI._qtAddress( self._qtWidget() ), columns )
 
-		self.__selectionModel = QtGui.QItemSelectionModel( self._qtWidget().model() )
+		self.__selectionModel = QtCore.QItemSelectionModel( self._qtWidget().model() )
 		self._qtWidget().setSelectionModel( self.__selectionModel )
 		self.__selectionChangedSlot = Gaffer.WeakMethod( self.__selectionChanged )
 		self._qtWidget().selectionModel().selectionChanged.connect( self.__selectionChangedSlot )
