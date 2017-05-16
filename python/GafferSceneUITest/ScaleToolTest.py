@@ -55,7 +55,7 @@ class ScaleToolTest( GafferUITest.TestCase ) :
 		tool = GafferSceneUI.ScaleTool( view )
 		tool["active"].setValue( True )
 
-		view.getContext()["ui:scene:selectedPaths"] = IECore.StringVectorData( [ "/plane" ] )
+		GafferSceneUI.ContextAlgo.setSelectedPaths( view.getContext(), GafferScene.PathMatcher( [ "/plane" ] ) )
 
 		with Gaffer.UndoScope( script ) :
 			tool.scale( IECore.V3f( 2, 1, 1 ) )

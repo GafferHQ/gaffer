@@ -121,6 +121,23 @@ class PlugWidget( GafferUI.Widget ) :
 
 		return 150
 
+	## Ensures that the specified plug has a visible PlugWidget,
+	# creating one if necessary.
+	@classmethod
+	def acquire( cls, plug ) :
+
+		plugValueWidget = GafferUI.PlugValueWidget.acquire( plug )
+		if not plugValueWidget :
+			return None
+
+		plugWidget = plugValueWidget.ancestor( GafferUI.PlugWidget )
+		if not plugWidget :
+			return None
+
+		plugWidget.reveal()
+
+		return plugWidget
+
 	def __labelDragEnter( self, label, event ) :
 
 		return self.plugValueWidget().dragEnterSignal()( self.plugValueWidget(), event )

@@ -1,6 +1,6 @@
 //////////////////////////////////////////////////////////////////////////
 //
-//  Copyright (c) 2014, Image Engine Design Inc. All rights reserved.
+//  Copyright (c) 2017, Image Engine Design Inc. All rights reserved.
 //
 //  Redistribution and use in source and binary forms, with or without
 //  modification, are permitted provided that the following conditions are
@@ -34,48 +34,14 @@
 //
 //////////////////////////////////////////////////////////////////////////
 
-#ifndef GAFFERSCENEUI_SELECTIONTOOL_H
-#define GAFFERSCENEUI_SELECTIONTOOL_H
+#ifndef GAFFERSCENEUIBINDINGS_CONTEXTALGOBINDING_H
+#define GAFFERSCENEUIBINDINGS_CONTEXTALGOBINDING_H
 
-#include "GafferUI/Tool.h"
-#include "GafferUI/DragDropEvent.h"
-
-#include "GafferSceneUI/TypeIds.h"
-
-namespace GafferSceneUI
+namespace GafferSceneUIBindings
 {
 
-IE_CORE_FORWARDDECLARE( SceneView )
-IE_CORE_FORWARDDECLARE( SceneGadget )
+void bindContextAlgo();
 
-class SelectionTool : public GafferUI::Tool
-{
+} // namespace GafferSceneUIBindings
 
-	public :
-
-		SelectionTool( SceneView *view, const std::string &name = defaultName<SelectionTool>() );
-
-		virtual ~SelectionTool();
-
-		IE_CORE_DECLARERUNTIMETYPEDEXTENSION( GafferSceneUI::SelectionTool, SelectionToolTypeId, GafferUI::Tool );
-
-	private :
-
-		static ToolDescription<SelectionTool, SceneView> g_toolDescription;
-
-		SceneGadget *sceneGadget();
-
-		class DragOverlay;
-		DragOverlay *dragOverlay();
-
-		bool buttonPress( const GafferUI::ButtonEvent &event );
-		IECore::RunTimeTypedPtr dragBegin( GafferUI::Gadget *gadget, const GafferUI::DragDropEvent &event );
-		bool dragEnter( const GafferUI::Gadget *gadget, const GafferUI::DragDropEvent &event );
-		bool dragMove( const GafferUI::DragDropEvent &event );
-		bool dragEnd( const GafferUI::DragDropEvent &event );
-
-};
-
-} // namespace GafferSceneUI
-
-#endif // GAFFERSCENEUI_SELECTIONTOOL_H
+#endif // GAFFERSCENEUIBINDINGS_CONTEXTALGOBINDING_H

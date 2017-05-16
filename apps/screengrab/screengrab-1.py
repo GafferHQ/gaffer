@@ -69,7 +69,7 @@ class screengrab( Gaffer.Application ) :
 					description = "Where to save the resulting image",
 					defaultValue = "",
 					extensions = "png",
-					allowEmptyString = False,
+					allowEmptyString = True,
 				),
 
 				IECore.StringVectorParameter(
@@ -234,7 +234,7 @@ class screengrab( Gaffer.Application ) :
 		# Execute any commands we've been asked to, exposing the application
 		# and script as variables.
 
-		self.__waitForIdle()
+		GafferUI.EventLoop.waitForIdle()
 
 		d = {
 			"application" 	: self,
@@ -275,7 +275,7 @@ class screengrab( Gaffer.Application ) :
 
 		# Set up some default framing for the node graphs.
 
-		self.__waitForIdle()
+		GafferUI.EventLoop.waitForIdle()
 
 		for nodeGraph in scriptWindow.getLayout().editors( GafferUI.NodeGraph ) :
 			if args["nodeGraph"]["frame"] :
@@ -288,13 +288,12 @@ class screengrab( Gaffer.Application ) :
 		for nodeEditor in scriptWindow.getLayout().editors( GafferUI.NodeEditor ) :
 
 			for name in args["nodeEditor"]["reveal"] :
-				plugValueWidget = nodeEditor.nodeUI().plugValueWidget( script.descendant( name ) )
-				plugValueWidget.reveal()
+				GafferUI.PlugValueWidget.acquire( script.descendant( name ) )
 
 			if args["nodeEditor"]["grab"].value :
-				grabWidget = nodeEditor.nodeUI().plugValueWidget( script.descendant( args["nodeEditor"]["grab"].value ) )
-				grabWidget = grabWidget.ancestor( GafferUI.PlugWidget ) or grabWidget
-				grabWidget.reveal()
+				grabWidget = GafferUI.PlugWidget.acquire( script.descendant( args["nodeEditor"]["grab"].value ) )
+				if not grabWidget :
+					grabWidget = GafferUI.PlugValueWidget.acquire( script.descendant( args["nodeEditor"]["grab"].value ) )
 				self.setGrabWidget( grabWidget )
 
 		# Set up the ScriptEditors as requested.
@@ -308,58 +307,42 @@ class screengrab( Gaffer.Application ) :
 
 		# Set up the Viewers as requested.
 
+		pathsToFrame = GafferScene.PathMatcher( list( args["viewer"]["framedObjects"] ) )
 		for viewer in scriptWindow.getLayout().editors( GafferUI.Viewer ) :
 			if isinstance( viewer.view(), GafferSceneUI.SceneView ) :
 				viewer.view()["minimumExpansionDepth"].setValue( args["viewer"]["minimumExpansionDepth"].value )
 				if args["viewer"]["framedObjects"] :
-					bound = IECore.Box3f()
-					for path in args["viewer"]["framedObjects"] :
-						objectBound = viewer.view()["in"].bound( path )
-						objectFullTransform = viewer.view()["in"].fullTransform( path )
-						bound.extendBy( objectBound.transform( objectFullTransform ) )
-					viewer.view().viewportGadget().frame( bound, args["viewer"]["viewDirection"].value.normalized() )
+					viewer.view().frame( pathsToFrame, args["viewer"]["viewDirection"].value.normalized() )
 
 		del viewer
 
 		# Set up the scene expansion and selection.
 
-		pathsToExpand = GafferScene.PathMatcher()
+		GafferSceneUI.ContextAlgo.clearExpansion( script.context() )
 
-		for path in list( args["scene"]["fullyExpandedPaths"] ) + list( args["scene"]["expandedPaths"] ) :
-			# Add paths and all their ancestors.
-			while path :
-				pathsToExpand.addPath( path )
-				path = path.rpartition( "/" )[0]
+		pathsToExpand = GafferScene.PathMatcher( list( args["scene"]["fullyExpandedPaths"] ) + list( args["scene"]["expandedPaths"] ) )
+		GafferSceneUI.ContextAlgo.expand( script.context(), pathsToExpand )
 
-		fullyExpandedPathsFilter = GafferScene.PathFilter()
-		fullyExpandedPathsFilter["paths"].setValue(
-			IECore.StringVectorData( [ path + "/..." for path in args["scene"]["fullyExpandedPaths"] ] )
-		)
-		for node in script.selection() :
-			for scenePlug in [ p for p in node.children( GafferScene.ScenePlug ) if p.direction() == Gaffer.Plug.Direction.Out ] :
-				GafferScene.SceneAlgo.matchingPaths( fullyExpandedPathsFilter, scenePlug, pathsToExpand )
+		pathsToFullyExpand = GafferScene.PathMatcher( list( args["scene"]["fullyExpandedPaths"] ) )
 
-		script.context()["ui:scene:expandedPaths"] = GafferScene.PathMatcherData( pathsToExpand )
-		script.context()["ui:scene:selectedPaths"] = args["scene"]["selectedPaths"]
+		with script.context() :
+			for node in script.selection() :
+				for scenePlug in [ p for p in node.children( GafferScene.ScenePlug ) if p.direction() == Gaffer.Plug.Direction.Out ] :
+					GafferSceneUI.ContextAlgo.expandDescendants( script.context(), pathsToFullyExpand, scenePlug )
+
+		GafferSceneUI.ContextAlgo.setSelectedPaths( script.context(), GafferScene.PathMatcher( args["scene"]["selectedPaths"] ) )
 
 		# Add a delay.
 
 		t = time.time() + args["delay"].value
 		while time.time() < t :
-			self.__waitForIdle( 1 )
+			GafferUI.EventLoop.waitForIdle( 1 )
 
 		# Write the image, creating a directory for it if necessary.
 
-		self.__waitForIdle()
-
-		imageDir = os.path.dirname( args["image"].value )
-		if imageDir and not os.path.isdir( imageDir ) :
-			IECore.msg( IECore.Msg.Level.Info, "screengrab", "Creating target directory [ %s ]" % imageDir )
-			os.makedirs( imageDir )
-
-		pixmap = QtGui.QPixmap.grabWindow( self.getGrabWidget()._qtWidget().winId() )
-		IECore.msg( IECore.Msg.Level.Info, "screengrab", "Writing image [ %s ]" % args["image"].value )
-		pixmap.save( args["image"].value )
+		if args["image"].value :
+			IECore.msg( IECore.Msg.Level.Info, "screengrab", "Writing image [ %s ]" % args["image"].value )
+			GafferUI.WidgetAlgo.grab( widget = self.getGrabWidget(), imagePath = args["image"].value )
 
 		# Remove the script and any reference to the grab widget up so
 		# we can shut down cleanly.
@@ -367,21 +350,5 @@ class screengrab( Gaffer.Application ) :
 		self.setGrabWidget( None )
 
 		return 0
-
-	def __waitForIdle( self, count = 1000 ) :
-
-		self.__idleCount = 0
-		def f() :
-
-			self.__idleCount += 1
-
-			if self.__idleCount >= count :
-				GafferUI.EventLoop.mainEventLoop().stop()
-				return False
-
-			return True
-
-		GafferUI.EventLoop.addIdleCallback( f )
-		GafferUI.EventLoop.mainEventLoop().start()
 
 IECore.registerRunTimeTyped( screengrab )

@@ -44,6 +44,8 @@ import GafferUI
 import GafferScene
 import _GafferSceneUI
 
+import ContextAlgo
+
 ##########################################################################
 # SceneHierarchy
 ##########################################################################
@@ -161,37 +163,35 @@ class SceneHierarchy( GafferUI.NodeSetEditor ) :
 		assert( pathListing is self.__pathListing )
 
 		paths = pathListing.getExpandedPaths()
-		paths = IECore.StringVectorData( [ "/" ] + [ str( path ) for path in paths ] )
-		pathMatcherData = GafferScene.PathMatcherData()
-		pathMatcherData.value.init( paths )
+		paths = GafferScene.PathMatcher( [ "/" ] + [ str( path ) for path in paths ] )
 		with Gaffer.BlockedConnection( self._contextChangedConnection() ) :
-			self.getContext().set( "ui:scene:expandedPaths", pathMatcherData )
+			ContextAlgo.setExpandedPaths( self.getContext(), paths )
 
 	def __selectionChanged( self, pathListing ) :
 
 		assert( pathListing is self.__pathListing )
 
 		paths = pathListing.getSelectedPaths()
-		paths = IECore.StringVectorData( [ str( path ) for path in paths ] )
+		paths = GafferScene.PathMatcher( [ str(p) for p in paths ] )
 		with Gaffer.BlockedConnection( self._contextChangedConnection() ) :
-			self.getContext().set( "ui:scene:selectedPaths", paths )
+			ContextAlgo.setSelectedPaths( self.getContext(), paths )
 
 	@GafferUI.LazyMethod( deferUntilPlaybackStops = True )
 	def __transferExpansionFromContext( self ) :
 
-		expandedPaths = self.getContext().get( "ui:scene:expandedPaths", None )
+		expandedPaths = ContextAlgo.getExpandedPaths( self.getContext() )
 		if expandedPaths is None :
 			return
 
 		p = self.__pathListing.getPath()
-		expandedPaths = [ p.copy().setFromString( s ) for s in expandedPaths.value.paths() ]
+		expandedPaths = [ p.copy().setFromString( s ) for s in expandedPaths.paths() ]
 		with Gaffer.BlockedConnection( self.__expansionChangedConnection ) :
 			self.__pathListing.setExpandedPaths( expandedPaths )
 
 	@GafferUI.LazyMethod( deferUntilPlaybackStops = True )
 	def __transferSelectionFromContext( self ) :
 
-		selection = self.getContext()["ui:scene:selectedPaths"]
+		selection = ContextAlgo.getSelectedPaths( self.getContext() ).paths()
 		with Gaffer.BlockedConnection( self.__selectionChangedConnection ) :
 			## \todo Qt is dog slow with large non-contiguous selections,
 			# so we're only mirroring single selections currently. Rewrite

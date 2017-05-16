@@ -40,6 +40,7 @@ import Gaffer
 import GafferUI
 
 import GafferScene
+import GafferSceneUI
 
 Gaffer.Metadata.registerNode(
 
@@ -94,7 +95,7 @@ def __attributePopupMenu( menuDefinition, plugValueWidget ) :
 	if not acceptsAttributeName and not acceptsAttributeNames :
 		return
 
-	selectedPaths = plugValueWidget.getContext().get( "ui:scene:selectedPaths" )
+	selectedPaths = GafferSceneUI.ContextAlgo.getSelectedPaths( plugValueWidget.getContext() ).paths()
 	if not selectedPaths :
 		return
 

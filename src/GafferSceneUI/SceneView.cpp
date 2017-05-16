@@ -66,6 +66,7 @@
 #include "GafferScene/StandardOptions.h"
 #include "GafferScene/LightToCamera.h"
 
+#include "GafferSceneUI/ContextAlgo.h"
 #include "GafferSceneUI/SceneView.h"
 
 using namespace std;
@@ -1259,11 +1260,10 @@ void SceneView::contextChanged( const IECore::InternedString &name )
 	{
 		// If only the selection has changed then we can just update the selection
 		// on our existing scene representation.
-		const StringVectorData *sc = getContext()->get<StringVectorData>( "ui:scene:selectedPaths" );
+		PathMatcher selection = ContextAlgo::getSelectedPaths( getContext() );
 		/// \todo Store selection as PathMatcherData within the context, so we don't need
-		/// this conversion.
-		GafferScene::PathMatcherDataPtr sg = new GafferScene::PathMatcherData;
-		sg->writable().init( sc->readable().begin(), sc->readable().end() );
+		/// to contruct a new one.
+		GafferScene::PathMatcherDataPtr sg = new GafferScene::PathMatcherData( selection );
 		m_sceneGadget->setSelection( sg );
 		return;
 	}
@@ -1313,79 +1313,34 @@ bool SceneView::keyPress( GafferUI::GadgetPtr gadget, const GafferUI::KeyEvent &
 	return false;
 }
 
-void SceneView::expandSelection( size_t depth )
+void SceneView::frame( const GafferScene::PathMatcher &filter, const Imath::V3f &direction )
 {
-	Context::Scope scopedContext( getContext() );
+	Imath::Box3f bound;
 
-	PathMatcher &selection = const_cast<GafferScene::PathMatcherData *>( m_sceneGadget->getSelection() )->writable();
-	PathMatcher &expanded = expandedPaths()->writable();
+	Context::Scope scope( getContext() );
 
-	std::vector<string> toExpand;
-	selection.paths( toExpand );
+	PathMatcher paths;
+	const ScenePlug *scene = inPlug<const ScenePlug>();
+	SceneAlgo::matchingPaths( filter, scene, paths );
 
-	bool needUpdate = false;
-	for( std::vector<string>::const_iterator it = toExpand.begin(), eIt = toExpand.end(); it != eIt; ++it )
+	for( PathMatcher::Iterator it = paths.begin(); it != paths.end(); ++it )
 	{
-		/// \todo It would be nice to be able to get ScenePaths out of
-		/// PathMatcher::paths() directly.
-		ScenePlug::ScenePath path;
-		ScenePlug::stringToPath( *it, path );
-		needUpdate |= expandWalk( path, depth, expanded, selection );
+		Imath::Box3f objectBound = scene->bound( *it );
+		Imath::M44f objectFullTransform = scene->fullTransform( *it );
+		bound.extendBy( transform( objectBound, objectFullTransform ) );
 	}
 
-	if( needUpdate )
-	{
-		// We modified the expanded paths in place to avoid unecessary copying,
-		// so the context doesn't know they've changed. So we emit the changed
-		// signal ourselves - this will then update the SceneGadget via contextChanged().
-		getContext()->changedSignal()( getContext(), "ui:scene:expandedPaths" );
-		// Transfer the new selection to the context - we'd like to use the same
-		// trick as above for that, but can't yet because the context selection isn't
-		// stored as PathMatcherData.
-		transferSelectionToContext();
-	}
+	viewportGadget()->frame( bound, direction );
 }
 
-bool SceneView::expandWalk( const GafferScene::ScenePlug::ScenePath &path, size_t depth, PathMatcher &expanded, PathMatcher &selected )
+void SceneView::expandSelection( size_t depth )
 {
-	bool result = false;
+	PathMatcher &selection = const_cast<GafferScene::PathMatcherData *>( m_sceneGadget->getSelection() )->writable();
 
-	ConstInternedStringVectorDataPtr childNamesData = preprocessedInPlug<ScenePlug>()->childNames( path );
-	const vector<InternedString> &childNames = childNamesData->readable();
+	Context::Scope scope( getContext() );
+	selection = ContextAlgo::expandDescendants( getContext(), selection, preprocessedInPlug<ScenePlug>(), depth - 1 );
 
-	if( childNames.size() )
-	{
-		// expand ourselves to show our children, and make sure we're
-		// not selected - we only want selection at the leaf levels of
-		// our expansion.
-		result |= expanded.addPath( path );
-		result |= selected.removePath( path );
-
-		ScenePlug::ScenePath childPath = path;
-		childPath.push_back( InternedString() ); // room for the child name
-		for( vector<InternedString>::const_iterator cIt = childNames.begin(), ceIt = childNames.end(); cIt != ceIt; cIt++ )
-		{
-			childPath.back() = *cIt;
-			if( depth == 1 )
-			{
-				// at the bottom of the expansion - just select the child
-				result |= selected.addPath( childPath );
-			}
-			else
-			{
-				// continue the expansion
-				result |= expandWalk( childPath, depth - 1, expanded, selected );
-			}
-		}
-	}
-	else
-	{
-		// we have no children, just make sure we're selected to mark the
-		// leaf of the expansion.
-		result |= selected.addPath( path );
-	}
-
-	return result;
+	ContextAlgo::setSelectedPaths( getContext(), selection );
 }
 
 void SceneView::collapseSelection()
@@ -1400,8 +1355,7 @@ void SceneView::collapseSelection()
 		return;
 	}
 
-	GafferScene::PathMatcherData *expandedData = expandedPaths();
-	PathMatcher &expanded = expandedData->writable();
+	PathMatcher expanded = ContextAlgo::getExpandedPaths( getContext() );
 
 	for( vector<string>::const_iterator it = toCollapse.begin(), eIt = toCollapse.end(); it != eIt; ++it )
 	{
@@ -1423,34 +1377,9 @@ void SceneView::collapseSelection()
 		}
 	}
 
-	// See comment in expandSelection().
-	getContext()->changedSignal()( getContext(), "ui:scene:expandedPaths" );
-	// See comment in expandSelection().
-	transferSelectionToContext();
-}
-
-void SceneView::transferSelectionToContext()
-{
-	/// \todo Use PathMatcherData for the context variable so we don't need
-	/// to do this copying into StringVectorData. See related comments
-	/// in SceneHierarchy.__transferSelectionFromContext
-	StringVectorDataPtr s = new StringVectorData();
-	m_sceneGadget->getSelection()->readable().paths( s->writable() );
-	getContext()->set( "ui:scene:selectedPaths", s.get() );
-}
-
-GafferScene::PathMatcherData *SceneView::expandedPaths()
-{
-	const GafferScene::PathMatcherData *m = getContext()->get<GafferScene::PathMatcherData>( "ui:scene:expandedPaths", 0 );
-	if( !m )
-	{
-		GafferScene::PathMatcherDataPtr rootOnly = new GafferScene::PathMatcherData;
-		rootOnly->writable().addPath( "/" );
-		BlockedConnection blockedConnection( contextChangedConnection() );
-		getContext()->set( "ui:scene:expandedPaths", rootOnly.get() );
-		m = getContext()->get<GafferScene::PathMatcherData>( "ui:scene:expandedPaths", 0 );
-	}
-	return const_cast<GafferScene::PathMatcherData *>( m );
+	// \todo: add ContextAlgo::collapse() so we can do the collapse in-place
+	ContextAlgo::setExpandedPaths( getContext(), expanded );
+	ContextAlgo::setSelectedPaths( getContext(), m_sceneGadget->getSelection()->readable() );
 }
 
 void SceneView::plugSet( Gaffer::Plug *plug )

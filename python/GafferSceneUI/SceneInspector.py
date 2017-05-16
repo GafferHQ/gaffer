@@ -47,6 +47,7 @@ import IECore
 import Gaffer
 import GafferScene
 import GafferUI
+import GafferSceneUI
 
 class SceneInspector( GafferUI.NodeSetEditor ) :
 
@@ -269,7 +270,7 @@ class SceneInspector( GafferUI.NodeSetEditor ) :
 			if self.__targetPaths is not None :
 				paths = self.__targetPaths
 			else :
-				paths = self.getContext().get( "ui:scene:selectedPaths", [] )
+				paths = GafferSceneUI.ContextAlgo.getSelectedPaths( self.getContext() ).paths()
 			paths = paths[:2] if len( self.__scenePlugs ) < 2 else paths[:1]
 			if not paths :
 				paths = [ "/" ]
@@ -1137,7 +1138,7 @@ class _InheritanceSection( Section ) :
 	def __labelButtonPress( self, label, event ) :
 
 		script = self.__target.scene.ancestor( Gaffer.ScriptNode )
-		script.context()["ui:scene:selectedPaths"] = IECore.StringVectorData( [ label.getText() ] )
+		GafferSceneUI.ContextAlgo.setSelectedPaths( script.context(), GafferScene.PathMatcher( [ label.getText() ] ) )
 
 ##########################################################################
 # History section
@@ -1966,7 +1967,7 @@ class _SetDiff( Diff ) :
 		editor = section.ancestor( SceneInspector )
 
 		context = editor.getContext()
-		context["ui:scene:selectedPaths"] = IECore.StringVectorData( widget.paths )
+		GafferSceneUI.ContextAlgo.setSelectedPaths( context, GafferScene.PathMatcher( widget.paths ) )
 
 		return True
 

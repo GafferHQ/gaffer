@@ -83,25 +83,19 @@ class SceneViewTest( GafferUITest.TestCase ) :
 		view = GafferUI.View.create( A["out"] )
 
 		def setSelection( paths ) :
-			view.getContext().set(
-				"ui:scene:selectedPaths",
-				IECore.StringVectorData( paths ),
-			)
+			GafferSceneUI.ContextAlgo.setSelectedPaths( view.getContext(), GafferScene.PathMatcher( paths ) )
 
 		def getSelection() :
-			return set( view.getContext().get( "ui:scene:selectedPaths" ) )
+			return set( GafferSceneUI.ContextAlgo.getSelectedPaths( view.getContext() ).paths() )
 
 		setSelection( [ "/A" ] )
 		self.assertEqual( getSelection(), set( [ "/A" ] ) )
 
 		def setExpandedPaths( paths ) :
-			view.getContext().set(
-				"ui:scene:expandedPaths",
-				GafferScene.PathMatcherData( GafferScene.PathMatcher( paths ) ),
-			)
+			GafferSceneUI.ContextAlgo.setExpandedPaths( view.getContext(), GafferScene.PathMatcher( paths ) )
 
 		def getExpandedPaths() :
-			return set( view.getContext().get( "ui:scene:expandedPaths" ).value.paths() )
+			return set( GafferSceneUI.ContextAlgo.getExpandedPaths( view.getContext() ).paths() )
 
 		setExpandedPaths( [ "/" ] )
 		self.assertEqual( getExpandedPaths(), set( [ "/" ] ) )
@@ -176,6 +170,41 @@ class SceneViewTest( GafferUITest.TestCase ) :
 		self.assertEqual( getExpandedPaths(), set( [ "/", "/A", "/A/C" ] ) )
 		self.assertEqual( getSelection(), set( [ "/A/C/E" ] ) )
 
+		# try to collapse one level
+
+		view.collapseSelection()
+
+		self.assertEqual( getExpandedPaths(), set( [ "/", "/A" ] ) )
+		self.assertEqual( getSelection(), set( [ "/A/C" ] ) )
+
+		# try to collapse one more
+
+		view.collapseSelection()
+
+		self.assertEqual( getExpandedPaths(), set( [ "/" ] ) )
+		self.assertEqual( getSelection(), set( [ "/A" ] ) )
+
+		# now expand one level again
+
+		view.expandSelection( depth = 1 )
+
+		self.assertEqual( getExpandedPaths(), set( [ "/", "/A" ] ) )
+		self.assertEqual( getSelection(), set( [ "/A/B", "/A/C" ] ) )
+
+		# and expand again
+
+		view.expandSelection( depth = 1 )
+
+		self.assertEqual( getExpandedPaths(), set( [ "/", "/A", "/A/C" ] ) )
+		self.assertEqual( getSelection(), set( [ "/A/B", "/A/C/D", "/A/C/E" ] ) )
+
+		# and collapse
+
+		view.collapseSelection()
+
+		self.assertEqual( getExpandedPaths(), set( [ "/" ] ) )
+		self.assertEqual( getSelection(), set( [ "/A", "/A/C" ] ) )
+
 	def testLookThrough( self ) :
 
 		script = Gaffer.ScriptNode()
@@ -241,6 +270,65 @@ class SceneViewTest( GafferUITest.TestCase ) :
 		# Work around "Internal C++ object (PySide.QtGui.QWidget) already deleted" error. In an
 		# ideal world we'll fix this, but it's unrelated to what we're testing here.
 		window.removeChild( viewer )
+
+	def testFrame( self ) :
+
+		script = Gaffer.ScriptNode()
+
+		script["Sphere"] = GafferScene.Sphere()
+		script["Sphere1"] = GafferScene.Sphere()
+		script["Sphere"]["transform"]["translate"].setValue( IECore.V3f( -10, 0, 0 ) )
+		script["Sphere1"]["transform"]["translate"].setValue( IECore.V3f( 10, 0, 0 ) )
+
+		script["Group"] = GafferScene.Group()
+		script["Group"]["in"][0].setInput( script["Sphere"]["out"] )
+		script["Group"]["in"][1].setInput( script["Sphere1"]["out"] )
+
+		view = GafferUI.View.create( script["Group"]["out"] )
+		self.assertTrue( isinstance( view, GafferSceneUI.SceneView ) )
+		self.assertTrue( view["in"].getInput().isSame( script["Group"]["out"] ) )
+
+		def cameraContains( scene, objectPath ) :
+
+			camera = view.viewportGadget().getCamera()
+			screen = IECore.Box2f( IECore.V2f( 0 ), IECore.V2f( camera.parameters()["resolution"].value ) )
+
+			worldBound = scene.bound( objectPath ).transform( scene.fullTransform( objectPath ) )
+
+			for p in [
+				IECore.V3f( worldBound.min.x, worldBound.min.y, worldBound.min.z ),
+				IECore.V3f( worldBound.min.x, worldBound.min.y, worldBound.max.z ),
+				IECore.V3f( worldBound.min.x, worldBound.max.y, worldBound.max.z ),
+				IECore.V3f( worldBound.min.x, worldBound.max.y, worldBound.min.z ),
+				IECore.V3f( worldBound.max.x, worldBound.max.y, worldBound.min.z ),
+				IECore.V3f( worldBound.max.x, worldBound.min.y, worldBound.min.z ),
+				IECore.V3f( worldBound.max.x, worldBound.min.y, worldBound.max.z ),
+				IECore.V3f( worldBound.max.x, worldBound.max.y, worldBound.max.z ),
+			] :
+				rp = view.viewportGadget().worldToRasterSpace( p )
+				if not screen.intersects( rp ) :
+					return False
+
+			return True
+
+		self.assertFalse( cameraContains( script["Group"]["out"], "/group" ) )
+		self.assertFalse( cameraContains( script["Group"]["out"], "/group/sphere" ) )
+		self.assertFalse( cameraContains( script["Group"]["out"], "/group/sphere1" ) )
+
+		view.frame( GafferScene.PathMatcher( [ "/group/sphere" ] ), direction = IECore.V3f( 0, 0, 1 ) )
+		self.assertFalse( cameraContains( script["Group"]["out"], "/group" ) )
+		self.assertTrue( cameraContains( script["Group"]["out"], "/group/sphere" ) )
+		self.assertFalse( cameraContains( script["Group"]["out"], "/group/sphere1" ) )
+
+		view.frame( GafferScene.PathMatcher( [ "/group/sphere1" ] ), direction = IECore.V3f( 0, 0, 1 ) )
+		self.assertFalse( cameraContains( script["Group"]["out"], "/group" ) )
+		self.assertFalse( cameraContains( script["Group"]["out"], "/group/sphere" ) )
+		self.assertTrue( cameraContains( script["Group"]["out"], "/group/sphere1" ) )
+
+		view.frame( GafferScene.PathMatcher( [ "/group/sp*" ] ), direction = IECore.V3f( 0, 0, 1 ) )
+		self.assertTrue( cameraContains( script["Group"]["out"], "/group" ) )
+		self.assertTrue( cameraContains( script["Group"]["out"], "/group/sphere" ) )
+		self.assertTrue( cameraContains( script["Group"]["out"], "/group/sphere1" ) )
 
 if __name__ == "__main__":
 	unittest.main()

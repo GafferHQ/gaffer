@@ -50,7 +50,7 @@ class RotateToolTest( GafferUITest.TestCase ) :
 
 		view = GafferSceneUI.SceneView()
 		view["in"].setInput( script["cube"]["out"] )
-		view.getContext()["ui:scene:selectedPaths"] = IECore.StringVectorData( [ "/cube" ] )
+		GafferSceneUI.ContextAlgo.setSelectedPaths( view.getContext(), GafferScene.PathMatcher( [ "/cube" ] ) )
 
 		tool = GafferSceneUI.RotateTool( view )
 		tool["active"].setValue( True )
@@ -72,7 +72,7 @@ class RotateToolTest( GafferUITest.TestCase ) :
 
 		view = GafferSceneUI.SceneView()
 		view["in"].setInput( script["group"]["out"] )
-		view.getContext()["ui:scene:selectedPaths"] = IECore.StringVectorData( [ "/group/cube" ] )
+		GafferSceneUI.ContextAlgo.setSelectedPaths( view.getContext(), GafferScene.PathMatcher( [ "/group/cube" ] ) )
 
 		tool = GafferSceneUI.RotateTool( view )
 		tool["active"].setValue( True )
@@ -112,7 +112,7 @@ class RotateToolTest( GafferUITest.TestCase ) :
 
 		view = GafferSceneUI.SceneView()
 		view["in"].setInput( script["group"]["out"] )
-		view.getContext()["ui:scene:selectedPaths"] = IECore.StringVectorData( [ "/group/cube" ] )
+		GafferSceneUI.ContextAlgo.setSelectedPaths( view.getContext(), GafferScene.PathMatcher( [ "/group/cube" ] ) )
 
 		tool = GafferSceneUI.RotateTool( view )
 		tool["active"].setValue( True )

@@ -86,6 +86,7 @@ class SceneView : public GafferUI::View
 		Gaffer::ValuePlug *gnomonPlug();
 		const Gaffer::ValuePlug *gnomonPlug() const;
 
+		void frame( const GafferScene::PathMatcher &filter, const Imath::V3f &direction = Imath::V3f( -0.64, -0.422, -0.64 ) );
 		void expandSelection( size_t depth = 1 );
 		void collapseSelection();
 
@@ -118,10 +119,6 @@ class SceneView : public GafferUI::View
 		bool keyPress( GafferUI::GadgetPtr gadget, const GafferUI::KeyEvent &event );
 		void transferSelectionToContext();
 		void plugSet( Gaffer::Plug *plug );
-
-		GafferScene::PathMatcherData *expandedPaths();
-		// Returns true if the expansion or selection were modified, false otherwise.
-		bool expandWalk( const GafferScene::ScenePlug::ScenePath &path, size_t depth, GafferScene::PathMatcher &expanded, GafferScene::PathMatcher &selected );
 
 		boost::signals::scoped_connection m_selectionChangedConnection;
 

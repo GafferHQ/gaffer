@@ -41,6 +41,7 @@
 
 #include "GafferScene/ScenePlug.h"
 
+#include "GafferSceneUI/ContextAlgo.h"
 #include "GafferSceneUI/SelectionTool.h"
 #include "GafferSceneUI/SceneView.h"
 
@@ -227,7 +228,7 @@ bool SelectionTool::buttonPress( const GafferUI::ButtonEvent &event )
 
 	if( selectionChanged )
 	{
-		transferSelectionToContext();
+		ContextAlgo::setSelectedPaths( view()->getContext(), sceneGadget()->getSelection()->readable() );
 	}
 
 	return true;
@@ -287,15 +288,8 @@ bool SelectionTool::dragEnd( const GafferUI::DragDropEvent &event )
 
 	if( sg->objectsAt( dragOverlay()->getStartPosition(), dragOverlay()->getEndPosition(), selection ) )
 	{
-		transferSelectionToContext();
+		ContextAlgo::setSelectedPaths( view()->getContext(), sceneGadget()->getSelection()->readable() );
 	}
 
 	return true;
-}
-
-void SelectionTool::transferSelectionToContext()
-{
-	StringVectorDataPtr s = new StringVectorData();
-	sceneGadget()->getSelection()->readable().paths( s->writable() );
-	view()->getContext()->set( "ui:scene:selectedPaths", s.get() );
 }

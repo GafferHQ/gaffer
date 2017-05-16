@@ -38,6 +38,7 @@
 import unittest
 import threading
 import time
+import functools
 
 import IECore
 
@@ -72,6 +73,23 @@ class EventLoopTest( GafferUITest.TestCase ) :
 		GafferUI.EventLoop.mainEventLoop().start()
 
 		self.assertEqual( self.__idleCalls, 2 )
+
+	def testWaitForIdle( self ) :
+
+		self.__idleCalls = 0
+
+		def idle( total ) :
+
+			self.__idleCalls += 1
+			return self.__idleCalls < total
+
+		GafferUI.EventLoop.addIdleCallback( functools.partial( idle, 1000 ) )
+		GafferUI.EventLoop.waitForIdle()
+		self.assertEqual( self.__idleCalls, 1000 )
+
+		GafferUI.EventLoop.addIdleCallback( functools.partial( idle, 1005 ) )
+		GafferUI.EventLoop.waitForIdle( 5 )
+		self.assertEqual( self.__idleCalls, 1005 )
 
 	def testExecuteOnUITheadAndWaitForResult( self ) :
 

@@ -198,6 +198,25 @@ class EventLoop( object ) :
 
 		cls.__idleCallbacks.remove( callback )
 
+	## Convenience method to introduce a delay on the mainEventLoop().
+	@classmethod
+	def waitForIdle( cls, count = 1000 ) :
+
+		cls.__idleCount = 0
+
+		def f() :
+
+			cls.__idleCount += 1
+
+			if cls.__idleCount >= count :
+				EventLoop.mainEventLoop().stop()
+				return False
+
+			return True
+
+		EventLoop.addIdleCallback( f )
+		EventLoop.mainEventLoop().start()
+
 	## Widgets may only be manipulated on the thread where mainEventLoop() is running. It
 	# is common to want to perform some background processing on a secondary thread, and
 	# to update the UI during processing or upon completion. This function can be used from

@@ -1,6 +1,6 @@
 //////////////////////////////////////////////////////////////////////////
 //
-//  Copyright (c) 2014, Image Engine Design Inc. All rights reserved.
+//  Copyright (c) 2017, Image Engine Design Inc. All rights reserved.
 //
 //  Redistribution and use in source and binary forms, with or without
 //  modification, are permitted provided that the following conditions are
@@ -34,48 +34,45 @@
 //
 //////////////////////////////////////////////////////////////////////////
 
-#ifndef GAFFERSCENEUI_SELECTIONTOOL_H
-#define GAFFERSCENEUI_SELECTIONTOOL_H
+#include "boost/python.hpp"
 
-#include "GafferUI/Tool.h"
-#include "GafferUI/DragDropEvent.h"
+#include "IECorePython/ScopedGILRelease.h"
 
-#include "GafferSceneUI/TypeIds.h"
+#include "GafferScene/PathMatcher.h"
+#include "GafferScene/ScenePlug.h"
 
-namespace GafferSceneUI
+#include "GafferSceneUI/ContextAlgo.h"
+
+#include "GafferSceneUIBindings/ContextAlgoBinding.h"
+
+using namespace boost::python;
+using namespace Gaffer;
+using namespace GafferScene;
+using namespace GafferSceneUI::ContextAlgo;
+
+namespace
 {
 
-IE_CORE_FORWARDDECLARE( SceneView )
-IE_CORE_FORWARDDECLARE( SceneGadget )
-
-class SelectionTool : public GafferUI::Tool
+PathMatcher expandDescendantsWrapper( Context &context, PathMatcher &paths, ScenePlug &scene, int depth )
 {
+	IECorePython::ScopedGILRelease gilRelease;
+	return expandDescendants( &context, paths, &scene, depth );
+}
 
-	public :
+} // namespace
 
-		SelectionTool( SceneView *view, const std::string &name = defaultName<SelectionTool>() );
+void GafferSceneUIBindings::bindContextAlgo()
+{
+	object module( borrowed( PyImport_AddModule( "GafferSceneUI.ContextAlgo" ) ) );
+	scope().attr( "ContextAlgo" ) = module;
+	scope moduleScope( module );
 
-		virtual ~SelectionTool();
+	def( "setExpandedPaths", &setExpandedPaths );
+	def( "getExpandedPaths", &getExpandedPaths );
+	def( "expand", &expand, ( arg( "expandAncestors" ) = true ) );
+	def( "expandDescendants", &expandDescendantsWrapper, ( arg( "context" ), arg( "paths" ), arg( "scene" ), arg( "depth" ) = Imath::limits<int>::max() ) );
+	def( "clearExpansion", &clearExpansion );
+	def( "setSelectedPaths", &setSelectedPaths );
+	def( "getSelectedPaths", &getSelectedPaths );
 
-		IE_CORE_DECLARERUNTIMETYPEDEXTENSION( GafferSceneUI::SelectionTool, SelectionToolTypeId, GafferUI::Tool );
-
-	private :
-
-		static ToolDescription<SelectionTool, SceneView> g_toolDescription;
-
-		SceneGadget *sceneGadget();
-
-		class DragOverlay;
-		DragOverlay *dragOverlay();
-
-		bool buttonPress( const GafferUI::ButtonEvent &event );
-		IECore::RunTimeTypedPtr dragBegin( GafferUI::Gadget *gadget, const GafferUI::DragDropEvent &event );
-		bool dragEnter( const GafferUI::Gadget *gadget, const GafferUI::DragDropEvent &event );
-		bool dragMove( const GafferUI::DragDropEvent &event );
-		bool dragEnd( const GafferUI::DragDropEvent &event );
-
-};
-
-} // namespace GafferSceneUI
-
-#endif // GAFFERSCENEUI_SELECTIONTOOL_H
+}
