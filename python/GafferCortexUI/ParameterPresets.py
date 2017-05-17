@@ -320,7 +320,7 @@ class LoadPresetDialogue( PresetDialogue ) :
 
 		PresetDialogue.__init__( self, "Load Preset", parameterHandler )
 
-		with GafferUI.SplitContainer( orientation = GafferUI.ListContainer.Orientation.Horizontal, spacing = 4 ) as row :
+		with GafferUI.SplitContainer( orientation = GafferUI.ListContainer.Orientation.Horizontal ) as row :
 
 			with GafferUI.ListContainer( spacing=4 ) :
 
