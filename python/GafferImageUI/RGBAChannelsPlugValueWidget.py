@@ -92,7 +92,7 @@ class RGBAChannelsPlugValueWidget( GafferUI.PlugValueWidget ) :
 			return result
 
 		added = set()
-		for channelName in channelNames :
+		for channelName in sorted( channelNames, key = GafferImage.ImageAlgo.layerName ) :
 
 			if GafferImage.ImageAlgo.baseName( channelName ) in [ "R", "G", "B", "A" ] :
 				layerName = GafferImage.layerName( channelName )
