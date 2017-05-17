@@ -38,8 +38,6 @@
 
 #include "IECorePython/ScopedGILRelease.h"
 
-#include "Gaffer/StringPlug.h"
-
 #include "GafferBindings/DependencyNodeBinding.h"
 #include "GafferBindings/NodeBinding.h"
 
@@ -56,32 +54,6 @@ using namespace GafferRenderMan;
 namespace
 {
 
-/// \todo Move this serialisation to the bindings for GafferScene::Shader, once we've made Shader::loadShader() virtual
-/// and implemented it so reloading works in OpenGLShader. Also consider how we might share loading code
-/// between shaders and lights.
-class RenderManShaderSerialiser : public GafferBindings::NodeSerialiser
-{
-
-	virtual std::string postScript( const Gaffer::GraphComponent *graphComponent, const std::string &identifier, const Serialisation &serialisation ) const
-	{
-		const RenderManShader *shader = static_cast<const RenderManShader *>( graphComponent );
-		std::string shaderName = shader->namePlug()->getValue();
-		if( shaderName.size() )
-		{
-			return boost::str( boost::format( "%s.loadShader( \"%s\", keepExistingValues=True )\n" ) % identifier % shaderName );
-		}
-
-		return "";
-	}
-
-};
-
-void loadShader( RenderManShader &shader, const std::string &shaderName, bool keepExistingValues )
-{
-	IECorePython::ScopedGILRelease gilRelease;
-	shader.loadShader( shaderName, keepExistingValues );
-}
-
 void loadLightShader( RenderManLight &light, const std::string &shaderName )
 {
 	IECorePython::ScopedGILRelease gilRelease;
@@ -94,12 +66,9 @@ BOOST_PYTHON_MODULE( _GafferRenderMan )
 {
 
 	GafferBindings::DependencyNodeClass<RenderManShader>()
-		.def( "loadShader", &loadShader, ( arg_( "shaderName" ), arg_( "keepExistingValues" ) = false ) )
 		.def( "shaderLoader", &RenderManShader::shaderLoader, return_value_policy<reference_existing_object>() )
 		.staticmethod( "shaderLoader" )
 	;
-
-	Serialisation::registerSerialiser( RenderManShader::staticTypeId(), new RenderManShaderSerialiser() );
 
 	GafferBindings::NodeClass<RenderManLight>()
 		.def( "loadShader", &loadLightShader )

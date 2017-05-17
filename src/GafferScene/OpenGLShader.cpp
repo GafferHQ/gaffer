@@ -69,14 +69,13 @@ OpenGLShader::~OpenGLShader()
 {
 }
 
-void OpenGLShader::loadShader( const std::string &shaderName )
+void OpenGLShader::loadShader( const std::string &shaderName, bool keepExistingValues )
 {
 	IECoreGL::init( false );
 
 	IECoreGL::ShaderLoaderPtr loader = IECoreGL::ShaderLoader::defaultShaderLoader();
 	IECoreGL::ShaderPtr shader = loader->load( shaderName );
 
-	bool keepExistingValues = false; // Temporary declaration before we add this parameter in the next commit
 	if( !keepExistingValues )
 	{
 		// If we're not preserving existing values then remove all existing

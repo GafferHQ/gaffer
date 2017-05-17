@@ -61,8 +61,7 @@ class OSLShader : public GafferScene::Shader
 		virtual const Gaffer::Plug *correspondingInput( const Gaffer::Plug *output ) const;
 
 		/// \undoable.
-		/// \todo Make this method virtual and define it on the Shader base class.
-		void loadShader( const std::string &shaderName, bool keepExistingValues=false );
+		virtual void loadShader( const std::string &shaderName, bool keepExistingValues=false );
 
 		ConstShadingEnginePtr shadingEngine() const;
 

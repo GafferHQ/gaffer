@@ -107,11 +107,6 @@ const Gaffer::Plug *ArnoldShader::correspondingInput( const Gaffer::Plug *output
 	return result;
 }
 
-void ArnoldShader::loadShader( const std::string &shaderName )
-{
-	loadShader( shaderName, false );
-}
-
 void ArnoldShader::loadShader( const std::string &shaderName, bool keepExistingValues )
 {
 	IECoreArnold::UniverseBlock arnoldUniverse( /* writable = */ false );

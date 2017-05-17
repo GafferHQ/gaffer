@@ -178,8 +178,7 @@ class _ShaderNamePlugValueWidget( GafferUI.PlugValueWidget ) :
 		with self.getContext() :
 			shaderName = self.getPlug().getValue()
 			self.__label.setText( "<h3>Shader : " + shaderName + "</h3>" )
-			## \todo Disable the type check once we've got OpenGLShader implementing reloading properly.
-			self.__button.setEnabled( not Gaffer.MetadataAlgo.readOnly( self.getPlug() ) and not isinstance( self.getPlug().node(), GafferScene.OpenGLShader ) )
+			self.__button.setEnabled( not Gaffer.MetadataAlgo.readOnly( self.getPlug() ) )
 
 	def __buttonClicked( self, button ) :
 

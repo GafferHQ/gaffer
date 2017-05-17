@@ -398,6 +398,10 @@ std::string OSLCode::source( const std::string shaderName ) const
 	return generate( this, shaderNameCopy );
 }
 
+void OSLCode::loadShader( const std::string &shaderName, bool keepExistingValues )
+{
+}
+
 OSLCode::ShaderCompiledSignal &OSLCode::shaderCompiledSignal()
 {
 	return m_shaderCompiledSignal;

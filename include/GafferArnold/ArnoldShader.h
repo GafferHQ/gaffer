@@ -60,10 +60,7 @@ class ArnoldShader : public GafferScene::Shader
 		virtual Gaffer::Plug *correspondingInput( const Gaffer::Plug *output );
 		virtual const Gaffer::Plug *correspondingInput( const Gaffer::Plug *output ) const;
 
-		/// \todo Remove this version, and add `keepExistingValues = false` default
-		/// to version below.
-		void loadShader( const std::string &shaderName );
-		void loadShader( const std::string &shaderName, bool keepExistingValues );
+		virtual void loadShader( const std::string &shaderName, bool keepExistingValues=false );
 
 	private :
 

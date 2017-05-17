@@ -104,6 +104,11 @@ class Shader : public Gaffer::DependencyNode
 		/// outPlug().
 		virtual void affects( const Gaffer::Plug *input, AffectedPlugsContainer &outputs ) const;
 
+		/// \undoable
+		/// Subclasses of Shader should define how to load a given shader name, and populate the parameters
+		/// plug
+		virtual void loadShader( const std::string &shaderName, bool keepExistingValues=false );
+
 		/// \deprecated Use ShaderPlug::attributesHash() instead.
 		/// \todo Protect these methods, and enforce access via the
 		/// ShaderPlug methods - this would be consistent with our
