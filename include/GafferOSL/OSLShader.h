@@ -63,6 +63,8 @@ class OSLShader : public GafferScene::Shader
 		/// \undoable.
 		virtual void loadShader( const std::string &shaderName, bool keepExistingValues=false );
 
+		virtual void reloadShader();
+
 		ConstShadingEnginePtr shadingEngine() const;
 
 		/// Returns an OSL metadata item from the shader.

@@ -89,6 +89,15 @@ void loadShader( Shader &shader, const std::string &shaderName, bool keepExistin
 	shader.loadShader( shaderName, keepExistingValues );
 }
 
+void reloadShader( Shader &shader )
+{
+	// Reloading a shader modifies the graph, which can trigger dirty propagation,
+	// which can trigger computations, which can launch threads. 
+	// So we need a GIL release here.
+	IECorePython::ScopedGILRelease gilRelease;
+	shader.reloadShader();
+}
+
 
 
 class ShaderSerialiser : public GafferBindings::NodeSerialiser
@@ -121,6 +130,7 @@ void GafferSceneBindings::bindShader()
 		.def( "stateHash", (void (Shader::*)( IECore::MurmurHash &h ) const )&Shader::stateHash )
 		.def( "state", &state, ( boost::python::arg_( "_copy" ) = true ) )
 		.def( "loadShader", &loadShader, ( arg_( "shaderName" ), arg_( "keepExistingValues" ) = false ) )
+		.def( "reloadShader", &reloadShader )
 
 	;
 

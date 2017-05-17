@@ -181,13 +181,9 @@ class _ShaderNamePlugValueWidget( GafferUI.PlugValueWidget ) :
 			self.__button.setEnabled( not Gaffer.MetadataAlgo.readOnly( self.getPlug() ) )
 
 	def __buttonClicked( self, button ) :
-
 		node = self.getPlug().node()
-		if hasattr( node, "shaderLoader" ) :
-			node.shaderLoader().clear()
-
 		with Gaffer.UndoScope( node.ancestor( Gaffer.ScriptNode ) ) :
-			node.loadShader( node["name"].getValue(), keepExistingValues = True )
+			node.reloadShader()
 
 ##########################################################################
 # NodeFinderDialogue mode

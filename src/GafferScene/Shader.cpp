@@ -706,6 +706,13 @@ void Shader::loadShader( const std::string &shaderName, bool keepExistingValues 
 	// doesn't need a loadShader override because it's not really a shader.
 }
 
+void Shader::reloadShader()
+{
+	// Sub-classes should take care of any necessary cache clearing before calling this
+
+	loadShader( namePlug()->getValue(), true );
+}
+
 void Shader::parameterHash( const Gaffer::Plug *parameterPlug, IECore::MurmurHash &h ) const
 {
 	const ValuePlug *vplug = IECore::runTimeCast<const ValuePlug>( parameterPlug );

@@ -66,6 +66,8 @@ class RenderManShader : public GafferScene::Shader
 		/// \undoable.
 		virtual void loadShader( const std::string &shaderName, bool keepExistingValues=false );
 
+		virtual void reloadShader();
+
 		/// The loader used by loadShader() - this is exposed so that the ui
 		/// can use it too.
 		static IECore::CachedReader *shaderLoader();
