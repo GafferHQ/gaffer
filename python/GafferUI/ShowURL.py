@@ -37,6 +37,7 @@
 
 import os
 import sys
+import distutils.spawn
 
 import GafferUI
 
@@ -45,7 +46,13 @@ QtGui = GafferUI._qtImport( "QtGui" )
 
 def showURL( url ) :
 
+	opener = None
 	if sys.platform == "darwin" :
-		os.system( "open \"" + url + "\"" )
+		opener = "open"
+	elif "linux" in sys.platform :
+		opener = distutils.spawn.find_executable( "xdg-open" )
+
+	if opener :
+		os.system( "{0} \"{1}\"".format( opener, url ) )
 	else :
 		QtGui.QDesktopServices.openUrl( QtCore.QUrl( url, QtCore.QUrl.TolerantMode ) )
