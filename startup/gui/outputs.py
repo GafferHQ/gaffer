@@ -40,6 +40,9 @@ import IECore
 import GafferScene
 import GafferImageUI
 
+# Add standard beauty output that should be supported by
+# all renderers.
+
 GafferScene.Outputs.registerOutput(
 	"Interactive/Beauty",
 	IECore.Display(
@@ -67,6 +70,66 @@ GafferScene.Outputs.registerOutput(
 		}
 	)
 )
+
+# Add standard AOVs as they are defined in the aiStandard and alSurface shaders
+
+with IECore.IgnoredExceptions( ImportError ) :
+
+	# If Arnold isn't available for any reason, this will fail
+	# and we won't add any unnecessary output definitions.
+	import GafferArnold
+
+	for aov in [
+		"diffuse_color",
+		"direct_diffuse",
+		"indirect_diffuse",
+		"direct_specular",
+		"indirect_specular",
+		"direct_specular_2",
+		"indirect_specular_2",
+		"reflection",
+		"refraction",
+		"refraction_opacity",
+		"emission",
+		"single_scatter",
+		"sss",
+		"direct_sss",
+		"indirect_sss",
+		"light_group_1",
+		"light_group_2",
+		"light_group_3",
+		"light_group_4",
+		"light_group_5",
+		"light_group_6",
+		"light_group_7",
+		"light_group_8",
+	] :
+
+		label = aov.replace( "_", " " ).title().replace( " ", "_" )
+
+		GafferScene.Outputs.registerOutput(
+			"Interactive/Arnold/" + label,
+			IECore.Display(
+				aov,
+				"ieDisplay",
+				"color " + aov,
+				{
+					"driverType" : "ClientDisplayDriver",
+					"displayHost" : "localhost",
+					"displayPort" : "${image:catalogue:port}",
+					"remoteDisplayType" : "GafferImage::GafferDisplayDriver",
+				}
+			)
+		)
+
+		GafferScene.Outputs.registerOutput(
+			"Batch/Arnold/" + label,
+			IECore.Display(
+				"${project:rootDirectory}/renders/${script:name}/%s/%s.####.exr" % ( aov, aov ),
+				"exr",
+				"color " + aov,
+			)
+		)
 
 # Publish the Catalogue port number as a context variable, so we can refer
 # to it easily in output definitions.
