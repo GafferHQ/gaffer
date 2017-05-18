@@ -135,6 +135,7 @@ import EvaluateLightLinksUI
 import RotateToolUI
 import MeshTangentsUI
 import ResamplePrimitiveVariablesUI
+import DeleteFacesUI
 
 # then all the PathPreviewWidgets. note that the order
 # of import controls the order of display.
