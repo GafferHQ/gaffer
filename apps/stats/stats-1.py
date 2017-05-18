@@ -124,7 +124,7 @@ class stats( Gaffer.Application ) :
 
 				IECore.BoolParameter(
 					name = "performanceMonitor",
-					description = "Turns on a performance monitor to provide additional"
+					description = "Turns on a performance monitor to provide additional "
 						"statistics about the operation of the node graph.",
 					defaultValue = False,
 				),
