@@ -261,11 +261,7 @@ class _ColorInspectorPlugValueWidget( GafferUI.PlugValueWidget ) :
 
 		view = self.getPlug().node()
 
-		## \todo We're getting the context from the view because our
-		# own context hasn't been set properly. We need to fix that
-		# properly, I think by having some sort of ContextSensitiveWidget
-		# base class which inherits contexts from parents.
-		with view.getContext() :
+		with self.getContext() :
 			pixel = self.getPlug()["pixel"].getValue()
 			samplerChannels = self.getPlug()["color"].getInput().node()["channels"].getValue()
 			try :
