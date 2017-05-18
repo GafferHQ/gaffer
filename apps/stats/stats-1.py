@@ -38,6 +38,7 @@ import os
 import gc
 import sys
 import time
+import tempfile
 import resource
 import collections
 
@@ -122,6 +123,12 @@ class stats( Gaffer.Application ) :
 					defaultValue = "",
 				),
 
+				IECore.StringParameter(
+					name = "task",
+					description = "The name of a TaskNode or TaskPlug to dispatch.",
+					defaultValue = "",
+				),
+
 				IECore.BoolParameter(
 					name = "performanceMonitor",
 					description = "Turns on a performance monitor to provide additional"
@@ -194,7 +201,7 @@ class stats( Gaffer.Application ) :
 			self.__contextMonitor = None
 
 		self.__output = file( args["outputFile"].value, "w" ) if args["outputFile"].value else sys.stdout
-		
+
 		with Gaffer.Context( script.context() ) as context :
 
 			context.setFrame( args["frame"].value )
@@ -227,6 +234,10 @@ class stats( Gaffer.Application ) :
 
 				self.__writeImage( script, args )
 
+			if args["task"].value :
+
+				self.__writeTask( script, args )
+
 		self.__output.write( "\n" )
 
 		self.__writeMemory()
@@ -242,7 +253,7 @@ class stats( Gaffer.Application ) :
 		self.__output.write( "\n" )
 
 		self.__output.close()
-		
+
 		return 0
 
 	def __writeVersion( self, script ) :
@@ -387,6 +398,29 @@ class stats( Gaffer.Application ) :
 
 		self.__output.write( "\nImage :\n\n" )
 		self.__writeItems( items )
+
+	def __writeTask( self, script, args ) :
+
+		import GafferDispatch
+
+		task = script.descendant( args["task"].value )
+		if isinstance( task, GafferDispatch.TaskNode.TaskPlug ) :
+			task = task.node()
+
+		if task is None :
+			IECore.msg( IECore.Msg.Level.Error, "stats", "Task \"%s\" does not exist" % args["task"].value )
+			return
+
+		dispatcher = GafferDispatch.LocalDispatcher()
+		dispatcher["jobsDirectory"].setValue( tempfile.mkdtemp( prefix = "gafferStats" ) )
+
+		memory = _Memory.maxRSS()
+		with _Timer() as taskTimer :
+			with self.__performanceMonitor or _NullContextManager(), self.__contextMonitor or _NullContextManager() :
+				dispatcher.dispatch( [ task ] )
+
+		self.__timers["Task execution"] = taskTimer
+		self.__memory["Task execution"] = _Memory.maxRSS() - memory
 
 	def __writeMemory( self ) :
 
