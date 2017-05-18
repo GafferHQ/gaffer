@@ -40,6 +40,7 @@
 
 #include "GafferScene/PrimitiveVariables.h"
 #include "GafferScene/DeletePrimitiveVariables.h"
+#include "GafferScene/ResamplePrimitiveVariables.h"
 
 #include "GafferSceneBindings/PrimitiveVariablesBinding.h"
 
@@ -51,5 +52,6 @@ void GafferSceneBindings::bindPrimitiveVariables()
 	GafferBindings::DependencyNodeClass<PrimitiveVariableProcessor>();
 	GafferBindings::DependencyNodeClass<DeletePrimitiveVariables>();
 	GafferBindings::DependencyNodeClass<PrimitiveVariables>();
+	GafferBindings::DependencyNodeClass<ResamplePrimitiveVariables>();
 
 }
