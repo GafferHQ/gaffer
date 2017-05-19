@@ -123,6 +123,7 @@ from EvaluateLightLinksTest import EvaluateLightLinksTest
 from MeshTangentsTest import MeshTangentsTest
 from ResamplePrimitiveVariablesTest import ResamplePrimitiveVariablesTest
 from DeleteFacesTest import DeleteFacesTest
+from DeleteCurvesTest import DeleteCurvesTest
 
 if __name__ == "__main__":
 	import unittest
