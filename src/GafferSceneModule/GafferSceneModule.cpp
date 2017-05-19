@@ -112,6 +112,7 @@
 #include "GafferSceneBindings/EvaluateLightLinksBinding.h"
 #include "GafferSceneBindings/MeshTangentsBinding.h"
 #include "GafferSceneBindings/DeleteFacesBinding.h"
+#include "GafferSceneBindings/DeleteCurvesBinding.h"
 
 using namespace boost::python;
 using namespace GafferBindings;
@@ -203,4 +204,5 @@ BOOST_PYTHON_MODULE( _GafferScene )
 	bindEvaluateLightLinks();
 	bindMeshTangents();
 	bindDeleteFaces();
+	bindDeleteCurves();
 }
