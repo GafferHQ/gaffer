@@ -59,6 +59,9 @@ class Seeds : public BranchCreator
 		Gaffer::FloatPlug *densityPlug();
 		const Gaffer::FloatPlug *densityPlug() const;
 
+		Gaffer::StringPlug *densityPrimitiveVariablePlug();
+		const Gaffer::StringPlug *densityPrimitiveVariablePlug() const;
+
 		Gaffer::StringPlug *pointTypePlug();
 		const Gaffer::StringPlug *pointTypePlug() const;
 
