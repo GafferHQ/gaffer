@@ -680,17 +680,11 @@ class InteractiveRenderManRenderTest( GafferRenderManTest.RenderManTestCase ) :
 
 		s["d"]["in"].setInput( s["g"]["out"] )
 
+		# Emulate the connection the UI makes, so the Display knows someone is listening and
+		# it needs to actually make servers.
+		executeOnUIThreadConnection = GafferImage.Display.executeOnUIThreadSignal().connect( lambda f : f() )
+
 		s["m"] = GafferImage.Display()
-
-		# connect a python function to the Display node image and data
-		# received signals. this emulates what the UI does.
-		def __displayCallback( plug ) :
-			pass
-
-		c = (
-			s["m"].imageReceivedSignal().connect( __displayCallback ),
-			s["m"].dataReceivedSignal().connect( __displayCallback ),
-		)
 
 		s["o"] = GafferScene.StandardOptions()
 		s["o"]["in"].setInput( s["d"]["out"] )

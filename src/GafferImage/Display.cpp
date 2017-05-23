@@ -47,6 +47,7 @@
 #include "IECore/BoxOps.h"
 
 #include "Gaffer/Context.h"
+#include "Gaffer/DirtyPropagationScope.h"
 
 #include "GafferImage/Display.h"
 #include "GafferImage/FormatPlug.h"
@@ -112,7 +113,10 @@ class GafferDisplayDriver : public IECore::DisplayDriver
 				m_gafferFormat.setPixelAspect( pixelAspect->readable() );
 			}
 
-			Display::driverCreatedSignal()( this, parameters.get() );
+			// This is a bit sketchy. By creating `Ptr( this )` we're adding a reference to ourselves from within
+			// our own constructor - if that reference is dropped before we return, we'll be double deleted. We rely
+			// on the fact that executeOnUIThreadl() will keep us alive long enough for this not to occur.
+			Display::executeOnUIThread( boost::bind( &GafferDisplayDriver::emitDriverCreated, Ptr( this ), m_parameters ) );
 		}
 
 		virtual ~GafferDisplayDriver()
@@ -235,6 +239,11 @@ class GafferDisplayDriver : public IECore::DisplayDriver
 
 		static const DisplayDriverDescription<GafferDisplayDriver> g_description;
 
+		static void emitDriverCreated( Ptr driver, IECore::ConstCompoundDataPtr parameters )
+		{
+			Display::driverCreatedSignal()( driver.get(), parameters.get() );
+		}
+
 		ConstFloatVectorDataPtr getTile( const V2i &tileOrigin, size_t channelIndex )
 		{
 			V2i tileIndex = tileOrigin / ImagePlug::tileSize();
@@ -313,10 +322,8 @@ Display::Display( const std::string &name )
 		)
 	);
 
-	// this plug is incremented when new data is received, triggering dirty signals
-	// and prompting reevaluation in the viewer. see GafferImageUI.DisplayUI for
-	// details of how it is set (we can't set it from dataReceived() because we're
-	// not on the ui thread at that point.
+	// This plug is incremented when new data is received, triggering dirty signals
+	// and prompting reevaluation in the viewer.
 	addChild(
 		new IntPlug(
 			"__updateCount",
@@ -524,9 +531,9 @@ void Display::plugSet( Gaffer::Plug *plug )
 
 void Display::setupServer()
 {
-	if( dataReceivedSignal().empty() )
+	if( executeOnUIThreadSignal().empty() )
 	{
-		// If the dataReceivedSignal is empty,
+		// If the executeOnUIThreadSignal is empty,
 		// it means that GafferImageUI hasn't
 		// been imported (see DisplayUI.py).
 		// If there's no UI then there's no point
@@ -572,29 +579,134 @@ void Display::setupDriver( GafferDisplayDriverPtr driver )
 {
 	if( m_driver )
 	{
-		m_driver->dataReceivedSignal().disconnect( boost::bind( &Display::dataReceived, this, _1, _2 ) );
-		m_driver->imageReceivedSignal().disconnect( boost::bind( &Display::imageReceived, this, _1 ) );
+		m_driver->dataReceivedSignal().disconnect( boost::bind( &Display::dataReceived, this) );
+		m_driver->imageReceivedSignal().disconnect( boost::bind( &Display::imageReceived, this ) );
 	}
 
 	m_driver = driver;
 	if( m_driver )
 	{
-		m_driver->dataReceivedSignal().connect( boost::bind( &Display::dataReceived, this, _1, _2 ) );
-		m_driver->imageReceivedSignal().connect( boost::bind( &Display::imageReceived, this, _1 ) );
+		m_driver->dataReceivedSignal().connect( boost::bind( &Display::dataReceived, this ) );
+		m_driver->imageReceivedSignal().connect( boost::bind( &Display::imageReceived, this ) );
 	}
 }
 
-void Display::dataReceived( GafferDisplayDriver *driver, const Imath::Box2i &bound )
+//////////////////////////////////////////////////////////////////////////
+// Signalling and update mechanism
+//////////////////////////////////////////////////////////////////////////
+
+namespace
 {
-	dataReceivedSignal()( outPlug() );
+
+typedef set<PlugPtr> PlugSet;
+typedef auto_ptr<PlugSet> PlugSetPtr;
+
+struct PendingUpdates
+{
+
+	tbb::spin_mutex mutex;
+	PlugSetPtr plugs;
+
+};
+
+PendingUpdates &pendingUpdates()
+{
+	static PendingUpdates *p = new PendingUpdates;
+	return *p;
 }
 
-void Display::imageReceived( GafferDisplayDriver *driver )
+};
+
+void Display::executeOnUIThread( UIThreadFunction function )
 {
-	// The nefarious Catalogue deletes Display nodes when renders
-	// are completed. We keep a reference to ourselves while emitting
-	// so that any slots connected after the Catalogue's won't be
-	// passed an already-deleted plug.
-	DisplayPtr owner( this );
-	imageReceivedSignal()( outPlug() );
+	executeOnUIThreadSignal()( function );
+}
+
+// Called on a background thread when data is received on the driver.
+// We need to increment `updateCountPlug()`, but all graph edits must
+// be performed on the UI thread, so we can't do it directly.
+void Display::dataReceived()
+{
+	bool scheduleUpdate = false;
+	{
+		// To minimise overhead we perform updates in batches by storing
+		// a set of plugs which are pending update. If we're the creator
+		// of a new batch then we are responsible for scheduling a call
+		// to `dataReceivedUI()` to process the batch. Otherwise we just
+		// add to the current batch.
+		PendingUpdates &pending = pendingUpdates();
+		tbb::spin_mutex::scoped_lock lock( pending.mutex );
+		if( !pending.plugs.get() )
+		{
+			scheduleUpdate = true;
+			pending.plugs.reset( new PlugSet );
+		}
+		pending.plugs->insert( outPlug() );
+	}
+	if( scheduleUpdate )
+	{
+		executeOnUIThread( &Display::dataReceivedUI );
+	}
+}
+
+// Called on the UI thread after being scheduled by `dataReceived()`.
+void Display::dataReceivedUI()
+{
+	// Get the batch of plugs to trigger updates for. We want to hold
+	// g_plugsPendingUpdateMutex for the shortest duration possible,
+	// because it causes contention between the background rendering
+	// thread and the UI thread, and can significantly affect performance.
+	// We do this by "stealing" the current batch, so the background
+	// thread will create a new batch and we are safe to iterate our
+	// batch without holding the lock.
+	PlugSetPtr batch;
+	{
+		PendingUpdates &pending = pendingUpdates();
+		tbb::spin_mutex::scoped_lock lock( pending.mutex );
+		batch = pending.plugs; // Resets pending.plugs to NULL
+	}
+
+	// Now increment the update count for the Display nodes
+	// that have received data. This gives them a new hash
+	// and also propagates dirtiness to the output image.
+	{
+		// Use a DirtyPropgationScope to batch up dirty propagation
+		// for improved performance.
+		DirtyPropagationScope dirtyPropagationScope;
+		for( set<PlugPtr>::const_iterator it = batch->begin(), eIt = batch->end(); it != eIt; ++it )
+		{
+			PlugPtr plug = *it;
+			// Because `dataReceivedUI()` is deferred to the UI thread,
+			// it's possible that the node has actually been deleted by
+			// the time we're called, so we must check.
+			if( Display *display = runTimeCast<Display>( plug->node() ) )
+			{
+				display->updateCountPlug()->setValue( display->updateCountPlug()->getValue() + 1 );
+			}
+		}
+	}
+
+	// Now that dirty propagation is complete, we can emit dataReceivedSignal()
+	// for any observers that wish to update that way.
+	/// \todo Do we even need this now? Could the tests just use plugDirtiedSignal()?
+	for( set<PlugPtr>::const_iterator it = batch->begin(), eIt = batch->end(); it != eIt; ++it )
+	{
+		dataReceivedSignal()( it->get() );
+	}
+}
+
+void Display::imageReceived()
+{
+	executeOnUIThread( boost::bind( &Display::imageReceivedUI, DisplayPtr( this ) ) );
+}
+
+void Display::imageReceivedUI( Ptr display )
+{
+	imageReceivedSignal()( display->outPlug() );
+}
+
+Display::ExecuteOnUIThreadSignal &Display::executeOnUIThreadSignal()
+{
+	static ExecuteOnUIThreadSignal s;
+	return s;
 }

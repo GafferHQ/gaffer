@@ -36,8 +36,6 @@
 
 import threading
 
-import IECore
-
 import Gaffer
 import GafferUI
 
@@ -79,45 +77,6 @@ Gaffer.Metadata.registerNode(
 
 )
 
-##########################################################################
-# Code for triggering updates when data is received on a Display node
-##########################################################################
-
-## Here we're taking signals the Display node emits when it has new data, and using them
-# to trigger a plugDirtiedSignal on the main ui thread. This is necessary because the Display
-# receives data on a background thread, where we can't do ui stuff.
-
-__plugsPendingUpdate = []
-__plugsPendingUpdateLock = threading.Lock()
-
-def __scheduleUpdate( plug, force = False ) :
-
-	if not force :
-		global __plugsPendingUpdate
-		global __plugsPendingUpdateLock
-		with __plugsPendingUpdateLock :
-			for p in __plugsPendingUpdate :
-				if plug.isSame( p ) :
-					return
-
-			__plugsPendingUpdate.append( plug )
-
-	GafferUI.EventLoop.executeOnUIThread( lambda : __update( plug ) )
-
-def __update( plug ) :
-
-	# it's possible that this function can get called on a plug whose node has
-	# been deleted, so we always check if the node exists:
-
-	node = plug.node()
-	if node:
-		updateCountPlug = node["__updateCount"]
-		updateCountPlug.setValue( updateCountPlug.getValue() + 1 )
-
-	global __plugsPendingUpdate
-	global __plugsPendingUpdateLock
-	with __plugsPendingUpdateLock :
-		__plugsPendingUpdate = [ p for p in __plugsPendingUpdate if not p.isSame( plug ) ]
-
-__displayDataReceivedConnection = GafferImage.Display.dataReceivedSignal().connect( __scheduleUpdate )
-__displayImageReceivedConnection = GafferImage.Display.imageReceivedSignal().connect( IECore.curry( __scheduleUpdate, force = True ) )
+# Service the Display's requests to execute things on the UI thread.
+# We must do this here because GafferImage has no direct access to the UI.
+GafferImage.Display.executeOnUIThreadSignal().connect( GafferUI.EventLoop.executeOnUIThread, scoped = False )
