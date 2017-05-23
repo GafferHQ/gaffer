@@ -55,6 +55,7 @@
 #include "GafferBindings/ScriptNodeBinding.h"
 #include "GafferBindings/ApplicationRootBinding.h"
 #include "GafferBindings/SetBinding.h"
+#include "GafferBindings/DirtyPropagationScopeBinding.h"
 #include "GafferBindings/UndoScopeBinding.h"
 #include "GafferBindings/CompoundPlugBinding.h"
 #include "GafferBindings/CompoundNumericPlugBinding.h"
@@ -167,6 +168,7 @@ BOOST_PYTHON_MODULE( _Gaffer )
 	bindScriptNode();
 	bindApplicationRoot();
 	bindSet();
+	bindDirtyPropagationScope();
 	bindUndoScope();
 	bindCompoundPlug();
 	bindCompoundNumericPlug();
