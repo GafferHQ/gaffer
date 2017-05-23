@@ -134,6 +134,9 @@ class DisplayTest( GafferImageTest.ImageTestCase ) :
 
 	def testTileHashes( self ) :
 
+		semaphore = threading.Semaphore( 0 )
+		imageReceivedConnection = GafferImage.Display.imageReceivedSignal().connect( functools.partial( self.__incrementUpdateCountAndRelease, semaphore = semaphore ) )
+
 		node = GafferImage.Display()
 		node["port"].setValue( 2500 )
 
@@ -184,6 +187,7 @@ class DisplayTest( GafferImageTest.ImageTestCase ) :
 			self.__assertTilesChangedInRegion( h1, h2, gafferBucketWindow )
 
 		driver.imageClose()
+		semaphore.acquire()
 
 	def testTransferChecker( self ) :
 
@@ -227,6 +231,9 @@ class DisplayTest( GafferImageTest.ImageTestCase ) :
 
 	def testSetDriver( self ) :
 
+		semaphore = threading.Semaphore( 0 )
+		imageReceivedConnection = GafferImage.Display.imageReceivedSignal().connect( functools.partial( self.__incrementUpdateCountAndRelease, semaphore = semaphore ) )
+
 		driversCreated = GafferTest.CapturingSlot( GafferImage.Display.driverCreatedSignal() )
 
 		server = IECore.DisplayDriverServer()
@@ -253,6 +260,7 @@ class DisplayTest( GafferImageTest.ImageTestCase ) :
 		self.__sendBucket( driver, cortexWindow, IECore.FloatVectorData( [ 0.5 ] * gafferWindow.size().x * gafferWindow.size().y ) )
 
 		driver.imageClose()
+		semaphore.acquire()
 
 		self.assertEqual( display["out"]["format"].getValue().getDisplayWindow(), gafferWindow )
 		self.assertEqual( display["out"]["dataWindow"].getValue(), gafferWindow )
