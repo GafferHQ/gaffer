@@ -35,6 +35,8 @@
 ##########################################################################
 
 import unittest
+import subprocess
+import os
 
 import IECore
 
@@ -1013,6 +1015,12 @@ class MetadataTest( GafferTest.TestCase ) :
 
 		self.assertEqual( Gaffer.Metadata.registeredValues( n, instanceOnly = True ), [] )
 		self.assertEqual( Gaffer.Metadata.registeredValues( n["op1"], instanceOnly = True ), [] )
+
+	@staticmethod
+	def testPythonUnload() :
+
+		subprocess.check_call( [ "gaffer", "python", os.path.dirname( __file__ ) + "/pythonScripts/unloadExceptionScript.py" ] )
+
 
 if __name__ == "__main__":
 	unittest.main()
