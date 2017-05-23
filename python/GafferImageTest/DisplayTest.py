@@ -318,9 +318,9 @@ class DisplayTest( GafferImageTest.ImageTestCase ) :
 			tileRegion = IECore.Box2i( tileOrigin, tileOrigin + IECore.V2i( GafferImage.ImagePlug.tileSize() - 1 ) )
 
 			if tileRegion.intersects( inclusiveRegion ) :
-				self.assertNotEqual( t1[tileOriginTuple], t2[tileOriginTuple], "REMOVE BEFORE RELEASE" )
+				self.assertNotEqual( t1[tileOriginTuple], t2[tileOriginTuple] )
 			else :
-				self.assertEqual( t1[tileOriginTuple], t2[tileOriginTuple], "REMOVE BEFORE RELEASE" )
+				self.assertEqual( t1[tileOriginTuple], t2[tileOriginTuple] )
 
 if __name__ == "__main__":
 	unittest.main()
