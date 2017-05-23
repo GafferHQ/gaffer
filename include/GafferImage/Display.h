@@ -84,6 +84,12 @@ class Display : public ImageNode
 
 		virtual void affects( const Gaffer::Plug *input, AffectedPlugsContainer &outputs ) const;
 
+		/// Used to trigger UI updates when image data is received
+		/// via a driver on a background thread. Exposed publicly
+		/// for the use of the Catalogue node.
+		typedef boost::function<void ()> UIThreadFunction;
+		static void executeOnUIThread( UIThreadFunction function );
+
 	protected :
 
 		virtual void hashFormat( const GafferImage::ImagePlug *output, const Gaffer::Context *context, IECore::MurmurHash &h ) const;
@@ -101,6 +107,11 @@ class Display : public ImageNode
 		virtual void hashChannelData( const GafferImage::ImagePlug *output, const Gaffer::Context *context, IECore::MurmurHash &h ) const;
 		virtual IECore::ConstFloatVectorDataPtr computeChannelData( const std::string &channelName, const Imath::V2i &tileOrigin, const Gaffer::Context *context, const ImagePlug *parent ) const;
 
+		// Signal used to request the execution of a function on the UI thread.
+		// We service these requests in DisplayUI.py.
+		typedef boost::signal<void ( UIThreadFunction )> ExecuteOnUIThreadSignal;
+		static ExecuteOnUIThreadSignal &executeOnUIThreadSignal();
+
 	private :
 
 		IECore::DisplayDriverServerPtr m_server;
@@ -113,8 +124,10 @@ class Display : public ImageNode
 		void setupServer();
 		void driverCreated( IECore::DisplayDriver *driver );
 		void setupDriver( GafferDisplayDriverPtr driver );
-		void dataReceived( GafferDisplayDriver *driver, const Imath::Box2i &bound );
-		void imageReceived( GafferDisplayDriver *driver );
+		void dataReceived();
+		void imageReceived();
+		static void dataReceivedUI();
+		static void imageReceivedUI( Ptr display );
 
 		static size_t g_firstPlugIndex;
 

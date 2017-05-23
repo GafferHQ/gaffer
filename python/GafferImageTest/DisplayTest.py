@@ -38,7 +38,6 @@ import os
 import unittest
 import random
 import threading
-import functools
 import subprocess32 as subprocess
 
 import IECore
@@ -55,7 +54,7 @@ class DisplayTest( GafferImageTest.ImageTestCase ) :
 	def sendImage( cls, image, port, extraParameters = {} ) :
 
 		semaphore = threading.Semaphore( 0 )
-		imageReceivedConnection = GafferImage.Display.imageReceivedSignal().connect( functools.partial( cls.__incrementUpdateCountAndRelease, semaphore = semaphore ) )
+		imageReceivedConnection = GafferImage.Display.imageReceivedSignal().connect( lambda plug : semaphore.release() )
 
 		externalDisplayWindow = gafferDisplayWindow = image["format"].getValue().getDisplayWindow()
 		externalDisplayWindow.max -= IECore.V2i( 1 )
@@ -104,24 +103,20 @@ class DisplayTest( GafferImageTest.ImageTestCase ) :
 	def __sendBucket( cls, driver, bound, data ) :
 
 		semaphore = threading.Semaphore( 0 )
-		dataReceivedConnection = GafferImage.Display.dataReceivedSignal().connect( functools.partial( cls.__incrementUpdateCountAndRelease, semaphore = semaphore ) )
+		dataReceivedConnection = GafferImage.Display.dataReceivedSignal().connect( lambda plug : semaphore.release() )
 		driver.imageData( bound, data )
 		semaphore.acquire()
-
-	@staticmethod
-	def __incrementUpdateCountAndRelease( plug, semaphore ) :
-
-		# Emulate the DisplayUI code which increments a plug when data is received, to
-		# trigger correct recomputation.
-		plug.node()["__updateCount"].setValue( plug.node()["__updateCount"].getValue() + 1 )
-		semaphore.release()
 
 	def setUp( self ) :
 
 		GafferTest.TestCase.setUp( self )
 
-		# Feign interest so that Display.setupServer() doesn't early out.
-		self.__dataReceivedConnection = GafferImage.Display.dataReceivedSignal().connect( lambda plug : None )
+		# Emulate the work the UI will do when it is loaded.
+		self.__executeOnUIThreadConnection = GafferImage.Display.executeOnUIThreadSignal().connect( lambda f : f() )
+
+	def tearDown( self ) :
+
+		self.__executeOnUIThreadConnection.disconnect()
 
 	def testDefaultFormat( self ) :
 
@@ -135,7 +130,7 @@ class DisplayTest( GafferImageTest.ImageTestCase ) :
 	def testTileHashes( self ) :
 
 		semaphore = threading.Semaphore( 0 )
-		imageReceivedConnection = GafferImage.Display.imageReceivedSignal().connect( functools.partial( self.__incrementUpdateCountAndRelease, semaphore = semaphore ) )
+		imageReceivedConnection = GafferImage.Display.imageReceivedSignal().connect( lambda plug : semaphore.release() )
 
 		node = GafferImage.Display()
 		node["port"].setValue( 2500 )
@@ -232,7 +227,7 @@ class DisplayTest( GafferImageTest.ImageTestCase ) :
 	def testSetDriver( self ) :
 
 		semaphore = threading.Semaphore( 0 )
-		imageReceivedConnection = GafferImage.Display.imageReceivedSignal().connect( functools.partial( self.__incrementUpdateCountAndRelease, semaphore = semaphore ) )
+		imageReceivedConnection = GafferImage.Display.imageReceivedSignal().connect( lambda plug : semaphore.release() )
 
 		driversCreated = GafferTest.CapturingSlot( GafferImage.Display.driverCreatedSignal() )
 

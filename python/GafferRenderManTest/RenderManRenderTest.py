@@ -386,16 +386,8 @@ class RenderManRenderTest( GafferRenderManTest.RenderManTestCase ) :
 		)
 		s["outputs"]["in"].setInput( s["sphere"]["out"] )
 
-		s["display"] = GafferImage.Display()
-		def __displayCallback( plug ) :
-			pass
-
-		# connect a python function to the Display node image and data
-		# received signals. this emulates what the UI does.
-		c = (
-			s["display"].imageReceivedSignal().connect( __displayCallback ),
-			s["display"].dataReceivedSignal().connect( __displayCallback ),
-		)
+		# Emulate the connection the UI makes
+		executeOnUIThreadConnection = GafferImage.Display.executeOnUIThreadSignal().connect( lambda f : f() )
 
 		s["render"] = GafferRenderMan.RenderManRender()
 		s["render"]["ribFileName"].setValue( self.temporaryDirectory() + "/test.rib" )
@@ -405,8 +397,8 @@ class RenderManRenderTest( GafferRenderManTest.RenderManTestCase ) :
 		s.save()
 
 		# dispatch the render on the foreground thread. if we don't manage
-		# the GIL appropriately, we'll get a deadlock when the Display signals
-		# above try to enter python on the background thread.
+		# the GIL appropriately, we'll get a deadlock when the Display signal
+		# above tries to enter python on the background thread.
 		dispatcher = GafferDispatch.LocalDispatcher()
 		dispatcher["jobsDirectory"].setValue( self.temporaryDirectory() + "/testJobDirectory" )
 		dispatcher["framesMode"].setValue( GafferDispatch.Dispatcher.FramesMode.CurrentFrame )

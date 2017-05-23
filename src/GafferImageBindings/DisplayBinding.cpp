@@ -34,6 +34,8 @@
 
 #include "boost/python.hpp"
 
+#include "IECorePython/ScopedGILRelease.h"
+
 #include "GafferBindings/DependencyNodeBinding.h"
 #include "GafferBindings/SignalBinding.h"
 
@@ -54,16 +56,61 @@ struct DriverCreatedSlotCaller
 	{
 		try
 		{
-			// This is extremely sketchy! The driverCreatedSignal() is emitted from within the constructor for the driver,
-			// and we're adding a reference to it via the DisplayDriverPtr. If the slot does not retain the reference, the
-			// driver will be deleted before it even finishes construction. This will all be fixed when we move driverCreatedSignal()
-			// to IECore::DisplayDriverServer. In the meantime we're saved by the fact that the only thing we connect to this
-			// slot then holds on to the driver until at least the next UI idle event, after which construction is complete.
 			slot( IECore::DisplayDriverPtr( driver ), IECore::CompoundDataPtr( const_cast<IECore::CompoundData *>( parameters ) ) );
 		}
 		catch( const error_already_set &e )
 		{
 			translatePythonException();
+		}
+		return boost::signals::detail::unusable();
+	}
+};
+
+struct DisplayWrapper : public Display
+{
+
+	typedef Display::UIThreadFunction UIThreadFunction;
+	typedef Display::ExecuteOnUIThreadSignal ExecuteOnUIThreadSignal;
+
+	static Display::ExecuteOnUIThreadSignal &executeOnUIThreadSignal()
+	{
+		return Display::executeOnUIThreadSignal();
+	}
+
+};
+
+struct GILReleaseUIThreadFunction
+{
+
+	GILReleaseUIThreadFunction( DisplayWrapper::UIThreadFunction function )
+		:	m_function( function )
+	{
+	}
+
+	void operator()()
+	{
+		ScopedGILRelease gilRelease;
+		m_function();
+	}
+
+	private :
+
+		DisplayWrapper::UIThreadFunction m_function;
+
+};
+
+struct ExecuteOnUIThreadSlotCaller
+{
+	boost::signals::detail::unusable operator()( boost::python::object slot, DisplayWrapper::UIThreadFunction function )
+	{
+		object pythonFunction = make_function( GILReleaseUIThreadFunction( function ), default_call_policies(), boost::mpl::vector<void>() );
+		try
+		{
+			slot( pythonFunction );
+		}
+		catch( const error_already_set &e )
+		{
+			ExceptionAlgo::translatePythonException();
 		}
 		return boost::signals::detail::unusable();
 	}
@@ -80,8 +127,10 @@ void GafferImageBindings::bindDisplay()
 		.def( "driverCreatedSignal", &Display::driverCreatedSignal, return_value_policy<reference_existing_object>() ).staticmethod( "driverCreatedSignal" )
 		.def( "dataReceivedSignal", &Display::dataReceivedSignal, return_value_policy<reference_existing_object>() ).staticmethod( "dataReceivedSignal" )
 		.def( "imageReceivedSignal", &Display::imageReceivedSignal, return_value_policy<reference_existing_object>() ).staticmethod( "imageReceivedSignal" )
+		.def( "executeOnUIThreadSignal", &DisplayWrapper::executeOnUIThreadSignal, return_value_policy<reference_existing_object>() ).staticmethod( "executeOnUIThreadSignal" )
 	;
 
 	SignalClass<Display::DriverCreatedSignal, DefaultSignalCaller<Display::DriverCreatedSignal>, DriverCreatedSlotCaller>( "DriverCreated" );
+	SignalClass<DisplayWrapper::ExecuteOnUIThreadSignal, DefaultSignalCaller<DisplayWrapper::ExecuteOnUIThreadSignal>, ExecuteOnUIThreadSlotCaller>( "ExecuteOnUIThreadSignal" );
 
 }

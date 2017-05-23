@@ -128,7 +128,7 @@ class InteractiveArnoldRenderTest( GafferSceneTest.InteractiveRenderTest ) :
 
 		# Emulate the connection the UI makes, so the Display knows someone is listening and
 		# it needs to actually make servers.
-		dataReceivedConnection = GafferImage.Display.dataReceivedSignal().connect( lambda plug : None )
+		executeOnUIThreadConnection = GafferImage.Display.executeOnUIThreadSignal().connect( lambda f : f() )
 
 		script["display"] = GafferImage.Display()
 		script["display"]["port"].setValue( 2500 )
