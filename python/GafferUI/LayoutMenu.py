@@ -49,26 +49,26 @@ def appendDefinitions( menuDefinition, name="" ) :
 	menuDefinition.append( name, { "subMenu" : layoutMenuCallable } )
 
 ## A function suitable as the command for a Layout/Name menu item which restores a named layout.
-# It must be invoked from a menu which has a ScriptWindow in its ancestry.
+# It must be invoked from a menu which has a ScriptWidget in its ancestry.
 def restore( menu, name ) :
 
-	scriptWindow, layouts = __scriptWindowAndLayouts( menu )
-	layout = layouts.create( name, scriptWindow.scriptNode() )
+	scriptWidget, layouts = __scriptWidgetAndLayouts( menu )
+	layout = layouts.create( name, scriptWidget.scriptNode() )
 
 	scriptWindow.setLayout( layout )
 
 ## A function suitable as the command for a Layout/Delete/LayoutName menu item.
 def delete( name, menu ) :
 
-	scriptWindow, layouts = __scriptWindowAndLayouts( menu )
+	scriptWindow, layouts = __scriptWidgetAndLayouts( menu )
 	layouts.remove( name )
 	__saveLayouts( scriptWindow.scriptNode().applicationRoot() )
 
 ## A function suitable as the command for a Layout/Save... menu item. It must be invoked from
-# a menu which has a ScriptWindow in its ancestry.
+# a menu which has a ScriptWidget in its ancestry.
 def save( menu ) :
 
-	scriptWindow, layouts = __scriptWindowAndLayouts( menu )
+	scriptWidget, layouts = __scriptWidgetAndLayouts( menu )
 
 	layoutNames = layouts.names()
 	i = 1
@@ -79,17 +79,17 @@ def save( menu ) :
 			break
 
 	d = GafferUI.TextInputDialogue( initialText=layoutName, title="Save Layout", confirmLabel="Save" )
-	t = d.waitForText( parentWindow = scriptWindow )
+	t = d.waitForText( parentWindow = scriptWidget )
 	d.setVisible( False )
 
 	if t is None :
 		return
 
-	layout = scriptWindow.getLayout()
+	layout = scriptWidget.getLayout()
 
 	layouts.add( "user:" + t, layout )
 
-	__saveLayouts( scriptWindow.scriptNode().applicationRoot() )
+	__saveLayouts( scriptWidget.scriptNode().applicationRoot() )
 
 def __saveLayouts( applicationRoot ) :
 
@@ -100,21 +100,21 @@ def __saveLayouts( applicationRoot ) :
 	GafferUI.Layouts.acquire( applicationRoot ).save( f, re.compile( "user:.*" ) )
 
 def fullScreen( menu, checkBox ) :
-
-	scriptWindow = menu.ancestor( GafferUI.ScriptWindow )
-	scriptWindow.setFullScreen( checkBox )
+	scriptWidget = GafferUI.ScriptWidget.acquire( menu )
+	applicationWindow = scriptWidget.ancestor( GafferUI.ApplicationWindow )
+	applicationWindow.setFullScreen( checkBox )
 
 def fullScreenCheckBox( menu ) :
-
-	scriptWindow = menu.ancestor( GafferUI.ScriptWindow )
-	return scriptWindow.getFullScreen()
+	scriptWidget = GafferUI.ScriptWidget.acquire( menu )
+	applicationWindow = scriptWidget.ancestor( GafferUI.ApplicationWindow )
+	return applicationWindow.getFullScreen()
 
 ## The callable used to generate the submenu created by appendDefinitions().
 # This is exposed publicly so it can be called by alternative submenus and
 # the result edited before being given to a Menu.
 def layoutMenuCallable( menu ) :
 
-	scriptWindow, layouts = __scriptWindowAndLayouts( menu )
+	ScriptWidget, layouts = __scriptWidgetAndLayouts( menu )
 
 	menuDefinition = IECore.MenuDefinition()
 
@@ -154,9 +154,9 @@ def layoutMenuCallable( menu ) :
 
 	return menuDefinition
 
-def __scriptWindowAndLayouts( menu ) :
+def __scriptWidgetAndLayouts( menu ) :
 
-	scriptWindow = menu.ancestor( GafferUI.ScriptWindow )
-	layouts = GafferUI.Layouts.acquire( scriptWindow.scriptNode().applicationRoot() )
+	scriptWidget = GafferUI.ScriptWidget.acquire( menu )
+	layouts = GafferUI.Layouts.acquire( scriptWidget.scriptNode().applicationRoot() )
 
-	return scriptWindow, layouts
+	return scriptWidget, layouts

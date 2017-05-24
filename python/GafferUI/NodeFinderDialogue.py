@@ -222,12 +222,12 @@ class NodeFinderDialogue( GafferUI.Dialogue ) :
 
 	def __frameSelection( self ) :
 
-		scriptWindow = self.ancestor( GafferUI.ScriptWindow )
-		nodeGraphs = scriptWindow.getLayout().editors( GafferUI.NodeGraph )
+		scriptWidget = self.ancestor( GafferUI.ScriptWidget )
+		nodeGraphs = scriptWidget.getLayout().editors( GafferUI.NodeGraph )
 
 		for nodeGraph in nodeGraphs :
 			if nodeGraph.graphGadget().getRoot().isSame( self.__scope ) :
-				nodeGraph.frame( scriptWindow.scriptNode().selection() )
+				nodeGraph.frame( scriptWidget.scriptNode().selection() )
 
 def __nodeNameExtractor( node ) :
 

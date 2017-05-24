@@ -102,13 +102,18 @@ class PlugValueWidgetTest( unittest.TestCase ) :
 
 	def testAcquire( self ) :
 
+		a = Gaffer.Application()
+		aw = GafferUI.ApplicationWindow( a.root() )
+
 		s = Gaffer.ScriptNode()
+		a.root()["scripts"].addChild(s)
+
 		s["n"] = Gaffer.Node()
 		s["n"]["p"] = Gaffer.IntPlug()
 
-		# hold a reference to the ScriptWindow
+		# hold a reference to the ScriptWidget
 		# to make sure it stays alive
-		sw = GafferUI.ScriptWindow.acquire( s )
+		sw = GafferUI.ScriptWidget.acquire( s )
 
 		w = GafferUI.PlugValueWidget.acquire( s["n"]["p"] )
 		self.assertTrue( isinstance( w, GafferUI.NumericPlugValueWidget ) )

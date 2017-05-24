@@ -396,8 +396,8 @@ def selectedNodes( script ) :
 
 def selectionAvailable( menu ) :
 
-	scriptWindow = menu.ancestor( GafferUI.ScriptWindow )
-	script = scriptWindow.scriptNode()
+	scriptWidget = GafferUI.ScriptWidget.acquire( menu )
+	script = scriptWidget.scriptNode()
 	return bool( selectedNodes( script ) )
 
 def __previous( script ) :
@@ -408,6 +408,6 @@ def __previous( script ) :
 
 def previousAvailable( menu ) :
 
-	scriptWindow = menu.ancestor( GafferUI.ScriptWindow )
-	script = scriptWindow.scriptNode()
+	scriptWidget = GafferUI.ScriptWidget.acquire( menu )
+	script = scriptWidget.scriptNode()
 	return bool( __previous( script ) )

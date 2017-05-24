@@ -42,66 +42,34 @@ import IECore
 import Gaffer
 import GafferUI
 
-class ScriptWindow( GafferUI.Window ) :
+class ScriptWidget( GafferUI.Frame) :
 
 	def __init__( self, script, **kw ) :
 
-		GafferUI.Window.__init__( self, **kw )
+		GafferUI.Frame.__init__( self, borderWidth=0, borderStyle=GafferUI.Frame.BorderStyle.None, **kw )
 
 		self.__script = script
 
-		self.__listContainer = GafferUI.ListContainer( GafferUI.ListContainer.Orientation.Vertical, spacing = 2 )
-
-		menuDefinition = self.menuDefinition( script.applicationRoot() ) if script.applicationRoot() else IECore.MenuDefinition()
-		self.__listContainer.append( GafferUI.MenuBar( menuDefinition ) )
-
 		applicationRoot = self.__script.ancestor( Gaffer.ApplicationRoot )
+
 		layouts = GafferUI.Layouts.acquire( applicationRoot ) if applicationRoot is not None else None
+
 		if layouts is not None and "Default" in layouts.names() :
-			self.setLayout( layouts.create( "Default", script ) )
+			self.setChild( layouts.create( "Default", script ) )
 		else :
-			self.setLayout( GafferUI.CompoundEditor( script ) )
+			self.setChild( GafferUI.CompoundEditor( script ) )
 
-		self.setChild( self.__listContainer )
-
-		self.__closedConnection = self.closedSignal().connect( Gaffer.WeakMethod( self.__closed ) )
-
-		self.__scriptPlugSetConnection = script.plugSetSignal().connect( Gaffer.WeakMethod( self.__scriptPlugChanged ) )
-
-		self.__updateTitle()
-
-		ScriptWindow.__instances.append( weakref.ref( self ) )
+		ScriptWidget.__instances.append( weakref.ref( self ) )
 
 	def scriptNode( self ) :
-
 		return self.__script
 
 	def setLayout( self, compoundEditor ) :
-
-		if len( self.__listContainer ) > 1 :
-			del self.__listContainer[1]
-
 		assert( compoundEditor.scriptNode().isSame( self.scriptNode() ) )
-		self.__listContainer.append( compoundEditor, expand=True )
+		self.setChild( compoundEditor )
 
 	def getLayout( self ) :
-
-		return self.__listContainer[1]
-
-	def _acceptsClose( self ) :
-
-		if not self.__script["unsavedChanges"].getValue() :
-			return True
-
-		f = self.__script["fileName"].getValue()
-		f = f.rpartition( "/" )[2] if f else "untitled"
-
-		dialogue = GafferUI.ConfirmationDialogue(
-			"Discard Unsaved Changes?",
-			"The file %s has unsaved changes. Do you want to discard them?" % f,
-			confirmLabel = "Discard"
-		)
-		return dialogue.waitForConfirmation( parentWindow=self )
+		return self.getChild()
 
 	def __closed( self, widget ) :
 
@@ -132,14 +100,20 @@ class ScriptWindow( GafferUI.Window ) :
 	## Returns the ScriptWindow for the specified script, creating one
 	# if necessary.
 	@staticmethod
-	def acquire( script, createIfNecessary=True ) :
+	def acquire( menuOrScriptNode, createIfNecessary=True ) :
 
-		for w in ScriptWindow.__instances :
-			scriptWindow = w()
-			if scriptWindow is not None and scriptWindow.scriptNode().isSame( script ) :
-				return scriptWindow
+		if isinstance(menuOrScriptNode, GafferUI.Menu ):
+			applicationWindow = menuOrScriptNode.ancestor( GafferUI.ApplicationWindow )
+			return applicationWindow.activeScriptWidget()
+		elif isinstance(menuOrScriptNode, Gaffer.ScriptNode ):
+			for w in ScriptWidget.__instances :
+				scriptWindow = w()
+				if scriptWindow is not None and scriptWindow.scriptNode().isSame( menuOrScriptNode ) :
+					return scriptWindow
 
-		return ScriptWindow( script ) if createIfNecessary else None
+			return ScriptWidget( menuOrScriptNode ) if createIfNecessary else None
+
+		return None
 
 	## Returns an IECore.MenuDefinition which is used to define the menu bars for all ScriptWindows
 	# created as part of the specified application. This can be edited at any time to modify subsequently
@@ -161,33 +135,3 @@ class ScriptWindow( GafferUI.Window ) :
 		applicationRoot._scriptWindowMenuDefinition = menuDefinition
 
 		return menuDefinition
-
-	## This function provides the top level functionality for instantiating
-	# the UI. Once called, new ScriptWindows will be instantiated for each
-	# script added to the application, and EventLoop.mainEventLoop().stop() will
-	# be called when the last script is removed.
-	__scriptAddedConnections = []
-	__scriptRemovedConnections = []
-	@classmethod
-	def connect( cls, applicationRoot ) :
-
-		cls.__scriptAddedConnections.append( applicationRoot["scripts"].childAddedSignal().connect( ScriptWindow.__scriptAdded ) )
-		cls.__scriptRemovedConnections.append( applicationRoot["scripts"].childRemovedSignal().connect( ScriptWindow.__staticScriptRemoved ) )
-
-	__automaticallyCreatedInstances = [] # strong references to instances made by __scriptAdded()
-	@staticmethod
-	def __scriptAdded( scriptContainer, script ) :
-
-		w = ScriptWindow( script )
-		w.setVisible( True )
-		ScriptWindow.__automaticallyCreatedInstances.append( w )
-
-	@staticmethod
-	def __staticScriptRemoved( scriptContainer, script ) :
-
-		for w in ScriptWindow.__automaticallyCreatedInstances :
-			if w.scriptNode().isSame( script ) :
-				ScriptWindow.__automaticallyCreatedInstances.remove( w )
-
-		if not len( scriptContainer.children() ) and GafferUI.EventLoop.mainEventLoop().running() :
-			GafferUI.EventLoop.mainEventLoop().stop()

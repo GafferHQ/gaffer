@@ -41,12 +41,12 @@ import Gaffer
 import GafferUI
 import GafferUITest
 
-class ScriptWindowTest( GafferUITest.TestCase ) :
+class ScriptWidgetTest( GafferUITest.TestCase ) :
 
 	def testLifetimeOfManuallyAcquiredWindows( self ) :
 
 		s = Gaffer.ScriptNode()
-		sw = GafferUI.ScriptWindow.acquire( s )
+		sw = GafferUI.ScriptWidget.acquire( s )
 
 		wsw = weakref.ref( sw )
 		del sw
@@ -56,7 +56,7 @@ class ScriptWindowTest( GafferUITest.TestCase ) :
 	def testLifetimeOfDirectlyConstructedWindows( self ) :
 
 		s = Gaffer.ScriptNode()
-		sw = GafferUI.ScriptWindow( s )
+		sw = GafferUI.ScriptWidget( s )
 
 		wsw = weakref.ref( sw )
 		del sw
@@ -69,22 +69,22 @@ class ScriptWindowTest( GafferUITest.TestCase ) :
 		s2 = Gaffer.ScriptNode()
 		s3 = Gaffer.ScriptNode()
 
-		w1 = GafferUI.ScriptWindow.acquire( s1 )
+		w1 = GafferUI.ScriptWidget.acquire( s1 )
 		self.failUnless( w1.scriptNode().isSame( s1 ) )
 
-		w2 = GafferUI.ScriptWindow.acquire( s2 )
+		w2 = GafferUI.ScriptWidget.acquire( s2 )
 		self.failUnless( w2.scriptNode().isSame( s2 ) )
 
-		w3 = GafferUI.ScriptWindow.acquire( s1 )
+		w3 = GafferUI.ScriptWidget.acquire( s1 )
 		self.failUnless( w3 is w1 )
 
-		w4 = GafferUI.ScriptWindow.acquire( s1, createIfNecessary = False )
+		w4 = GafferUI.ScriptWidget.acquire( s1, createIfNecessary = False )
 		self.assertTrue( w4 is w1 )
 
-		w5 = GafferUI.ScriptWindow.acquire( s3, createIfNecessary = False )
+		w5 = GafferUI.ScriptWidget.acquire( s3, createIfNecessary = False )
 		self.assertTrue( w5 is None )
 
-		w6 = GafferUI.ScriptWindow.acquire( s3, createIfNecessary = True )
+		w6 = GafferUI.ScriptWidget.acquire( s3, createIfNecessary = True )
 		self.assertTrue( w6.scriptNode().isSame( s3 ) )
 
 if __name__ == "__main__":

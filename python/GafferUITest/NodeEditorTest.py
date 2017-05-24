@@ -44,31 +44,42 @@ import GafferUITest
 
 class NodeEditorTest( GafferUITest.TestCase ) :
 
+
 	def testAcquireReusesEditors( self ) :
+		a = Gaffer.Application()
+		aw = GafferUI.ApplicationWindow( a.root() )
 
 		self.maxDiff = None
 
 		s = Gaffer.ScriptNode()
+		a.root()["scripts"].addChild(s)
 		s["n"] = Gaffer.Node()
 
-		sw = GafferUI.ScriptWindow.acquire( s )
+		sw = GafferUI.ScriptWidget.acquire( s )
 
 		ne = GafferUI.NodeEditor.acquire( s["n"] )
-		self.failUnless( GafferUI.NodeEditor.acquire( s["n"] ) is ne )
+		ne2 = GafferUI.NodeEditor.acquire( s["n"] )
+		self.assertEqual( ne2, ne )
 
 		self.failUnless( isinstance( ne, GafferUI.NodeEditor ) )
 		self.failUnless( s["n"] in ne.getNodeSet() )
 
 	def testAcquireDeletesClosedWindows( self ) :
 
+		a = Gaffer.Application()
+		aw = GafferUI.ApplicationWindow( a.root() )
+
 		s = Gaffer.ScriptNode()
+		a.root()["scripts"].addChild(s)
 		s["n"] = Gaffer.Node()
 
-		sw = GafferUI.ScriptWindow.acquire( s )
+		sw = GafferUI.ScriptWidget.acquire( s )
 
 		ne = GafferUI.NodeEditor.acquire( s["n"] )
-		nw = ne.ancestor( GafferUI.Window )
-		self.failUnless( nw.parent() is sw )
+		applicationWindow = ne.ancestor( GafferUI.ApplicationWindow )
+		nw = applicationWindow.activeScriptWidget()
+
+		self.failUnless( nw is sw )
 
 		nww = weakref.ref( nw )
 		nw.close()
@@ -82,11 +93,14 @@ class NodeEditorTest( GafferUITest.TestCase ) :
 
 	def testAcquiredEditorsClosedOnNodeDelete( self ) :
 
-		s = Gaffer.ScriptNode()
+		a = Gaffer.Application()
+		aw = GafferUI.ApplicationWindow( a.root() )
 
+		s = Gaffer.ScriptNode()
+		a.root()["scripts"].addChild(s)
 		s["n"] = Gaffer.Node()
 
-		sw = GafferUI.ScriptWindow.acquire( s )
+		sw = GafferUI.ScriptWidget.acquire( s )
 
 		ww = weakref.ref( GafferUI.NodeEditor.acquire( s["n"] ).ancestor( GafferUI.Window ) )
 		self.failUnless( isinstance( ww(), GafferUI.Window ) )
@@ -97,7 +111,12 @@ class NodeEditorTest( GafferUITest.TestCase ) :
 
 	def testNodeUIAccessor( self ) :
 
+		a = Gaffer.Application()
+		aw = GafferUI.ApplicationWindow( a.root() )
+
 		s = Gaffer.ScriptNode()
+		a.root()["scripts"].addChild(s)
+
 		s["n1"] = Gaffer.Node()
 		s["n2"] = Gaffer.Node()
 

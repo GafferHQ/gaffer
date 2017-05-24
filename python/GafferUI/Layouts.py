@@ -41,7 +41,7 @@ import Gaffer
 import GafferUI
 
 ## The Layouts class provides a registry of named layouts for use
-# in the ScriptWindow. To allow different gaffer applications to
+# in the ScriptWidget. To allow different gaffer applications to
 # coexist happily in the same process (for instance to run both
 # an asset management app and a shading app inside maya), separate
 # sets of layouts are maintained on a per-application basis. Access

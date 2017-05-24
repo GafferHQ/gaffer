@@ -182,6 +182,7 @@ class BookmarksTest( GafferUITest.TestCase ) :
 	def testAcquireTargetTypes( self ) :
 
 		a = Gaffer.Application()
+		aw = GafferUI.ApplicationWindow( a.root() )
 
 		b = GafferUI.Bookmarks.acquire( a )
 		b.setDefault( "/a/default/path" )
@@ -194,7 +195,7 @@ class BookmarksTest( GafferUITest.TestCase ) :
 		b = GafferUI.Bookmarks.acquire( a.root()["scripts"]["one"] )
 		self.assertEqual( b.getDefault(), "/a/default/path" )
 
-		s = GafferUI.ScriptWindow( a.root()["scripts"]["one"] )
+		s = GafferUI.ScriptWidget( a.root()["scripts"]["one"] )
 
 		b = GafferUI.Bookmarks.acquire( s )
 		self.assertEqual( b.getDefault(), "/a/default/path" )
@@ -206,7 +207,7 @@ class BookmarksTest( GafferUITest.TestCase ) :
 
 		w = GafferUI.Window()
 		w.setChild( GafferUI.Button() )
-		s.addChildWindow( w )
+		aw.addChildWindow( w )
 
 		b = GafferUI.Bookmarks.acquire( w )
 		self.assertEqual( b.getDefault(), "/a/default/path" )
