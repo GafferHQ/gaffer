@@ -44,6 +44,13 @@ float inFloat( string name, float defaultValue )
 	return result;
 }
 
+int inInt( string name, int defaultValue )
+{
+	int result = defaultValue;
+	getattribute( name, result );
+	return result;
+}
+
 color inColor( string name, color defaultValue )
 {
 	color result = defaultValue;
@@ -75,6 +82,11 @@ normal inNormal( string name, normal defaultValue )
 closure color outFloat( string name, float value )
 {
 	return debug( name, "type", "float", "value", color( value ) );
+}
+
+closure color outInt( string name, int value )
+{
+	return debug( name, "type", "int", "value", color( value ) );
 }
 
 closure color outColor( string name, color value )
