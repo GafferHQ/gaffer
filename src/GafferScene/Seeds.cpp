@@ -36,6 +36,7 @@
 //////////////////////////////////////////////////////////////////////////
 
 #include "IECore/PointDistributionOp.h"
+#include "IECore/CompoundParameter.h"
 
 #include "Gaffer/StringPlug.h"
 
@@ -57,6 +58,7 @@ Seeds::Seeds( const std::string &name )
 	storeIndexOfNextChild( g_firstPlugIndex );
 	addChild( new StringPlug( "name", Plug::In, "seeds" ) );
 	addChild( new FloatPlug( "density", Plug::In, 1.0f, 0.0f ) );
+	addChild( new StringPlug( "densityPrimitiveVariable" ) );
 	addChild( new StringPlug( "pointType", Plug::In, "gl:point" ) );
 }
 
@@ -84,21 +86,31 @@ const Gaffer::FloatPlug *Seeds::densityPlug() const
 	return getChild<FloatPlug>( g_firstPlugIndex + 1 );
 }
 
-Gaffer::StringPlug *Seeds::pointTypePlug()
+Gaffer::StringPlug *Seeds::densityPrimitiveVariablePlug()
 {
 	return getChild<StringPlug>( g_firstPlugIndex + 2 );
 }
 
-const Gaffer::StringPlug *Seeds::pointTypePlug() const
+const Gaffer::StringPlug *Seeds::densityPrimitiveVariablePlug() const
 {
 	return getChild<StringPlug>( g_firstPlugIndex + 2 );
+}
+
+Gaffer::StringPlug *Seeds::pointTypePlug()
+{
+	return getChild<StringPlug>( g_firstPlugIndex + 3 );
+}
+
+const Gaffer::StringPlug *Seeds::pointTypePlug() const
+{
+	return getChild<StringPlug>( g_firstPlugIndex + 3 );
 }
 
 void Seeds::affects( const Plug *input, AffectedPlugsContainer &outputs ) const
 {
 	BranchCreator::affects( input, outputs );
 
-	if( input == densityPlug() || input == pointTypePlug() )
+	if( input == densityPlug() || input == densityPrimitiveVariablePlug() || input == pointTypePlug() )
 	{
 		outputs.push_back( outPlug()->objectPlug() );
 	}
@@ -154,6 +166,7 @@ void Seeds::hashBranchObject( const ScenePath &parentPath, const ScenePath &bran
 		BranchCreator::hashBranchObject( parentPath, branchPath, context, h );
 		h.append( inPlug()->objectHash( parentPath ) );
 		densityPlug()->hash( h );
+		densityPrimitiveVariablePlug()->hash( h );
 		pointTypePlug()->hash( h );
 		return;
 	}
@@ -175,6 +188,7 @@ IECore::ConstObjectPtr Seeds::computeBranchObject( const ScenePath &parentPath, 
 		PointDistributionOpPtr op = new PointDistributionOp();
 		op->meshParameter()->setValue( mesh->copy() );
 		op->densityParameter()->setNumericValue( densityPlug()->getValue() );
+		op->parameters()->parameter<StringParameter>( "densityPrimVarName" )->setTypedValue( densityPrimitiveVariablePlug()->getValue() );
 
 		PrimitivePtr result = runTimeCast<Primitive>( op->operate() );
 		result->variables["type"] = PrimitiveVariable( PrimitiveVariable::Constant, new StringData( pointTypePlug()->getValue() ) );

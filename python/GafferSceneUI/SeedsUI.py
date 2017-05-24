@@ -84,6 +84,17 @@ Gaffer.Metadata.registerNode(
 
 		],
 
+		"densityPrimitiveVariable" : [
+
+			"description",
+			"""
+			A float primitive variable used to specify a varying
+			point density across the surface of the mesh. Multiplied
+			with the density setting above.
+			""",
+
+		],
+
 		"pointType" : [
 
 			"description",

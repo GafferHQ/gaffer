@@ -193,5 +193,35 @@ class SeedsTest( GafferSceneTest.SceneTestCase ) :
 		self.assertEqual( s["in"]["globals"].hash(), s["out"]["globals"].hash() )
 		self.assertEqual( s["in"]["globals"].getValue(), s["out"]["globals"].getValue() )
 
+	def testDensityPrimitiveVariable( self ) :
+
+		plane = GafferScene.Plane()
+
+		filter = GafferScene.PathFilter()
+		filter["paths"].setValue( IECore.StringVectorData( [ "/plane" ] ) )
+
+		primitiveVariables = GafferScene.PrimitiveVariables()
+		primitiveVariables["in"].setInput( plane["out"] )
+		primitiveVariables["filter"].setInput( filter["out"] )
+
+		seeds = GafferScene.Seeds()
+		seeds["in"].setInput( primitiveVariables["out"] )
+		seeds["parent"].setValue( "/plane" )
+		seeds["name"].setValue( "seeds" )
+		seeds["density"].setValue( 100 )
+
+		p = seeds["out"].object( "/plane/seeds" )
+
+		# Density variable doesn't exist, result should be
+		# the same.
+
+		seeds["densityPrimitiveVariable"].setValue( "d" )
+		self.assertEqual( seeds["out"].object( "/plane/seeds" ), p )
+
+		# Add the primitive variable, it should take effect.
+
+		primitiveVariables["primitiveVariables"].addMember( "d", IECore.FloatData( 0.5 ) )
+		self.assertLessEqual( seeds["out"].object( "/plane/seeds" ).numPoints, p.numPoints )
+
 if __name__ == "__main__":
 	unittest.main()
