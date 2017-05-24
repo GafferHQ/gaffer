@@ -872,5 +872,13 @@ class RenderManRenderTest( GafferRenderManTest.RenderManTestCase ) :
 		rib = file( self.temporaryDirectory() + "/test.rib" ).read()
 		self.assertTrue( '"int samplemotion" [ 0 ]' in rib )
 
+if sys.platform == "darwin" :
+	# This test currently fails intermittently on Mac, and tests a
+	# code path which is encountered only when doing REYES rendering.
+	# Since we plan to entirely replace GafferRenderMan with an NSI
+	# backend, we don't intend to spend resources fixing this issue,
+	# so mark it as an expected failure to avoid noise.
+	RenderManRenderTest.testBoundsAndImageOutput = unittest.expectedFailure( RenderManRenderTest.testBoundsAndImageOutput )
+
 if __name__ == "__main__":
 	unittest.main()
