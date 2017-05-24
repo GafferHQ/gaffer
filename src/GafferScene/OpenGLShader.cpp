@@ -46,6 +46,7 @@
 #include "Gaffer/TypedPlug.h"
 #include "Gaffer/CompoundNumericPlug.h"
 #include "Gaffer/StringPlug.h"
+#include "Gaffer/PlugAlgo.h"
 
 #include "GafferImage/ImagePlug.h"
 
@@ -75,6 +76,14 @@ void OpenGLShader::loadShader( const std::string &shaderName )
 	IECoreGL::ShaderLoaderPtr loader = IECoreGL::ShaderLoader::defaultShaderLoader();
 	IECoreGL::ShaderPtr shader = loader->load( shaderName );
 
+	bool keepExistingValues = false; // Temporary declaration before we add this parameter in the next commit
+	if( !keepExistingValues )
+	{
+		// If we're not preserving existing values then remove all existing
+		// parameter plugs - below we check if a plug exists and then preserve its values.
+		parametersPlug()->clearChildren();
+	}
+
 	vector<string> parameterNames;
 	shader->uniformParameterNames( parameterNames );
 	for( vector<string>::const_iterator it = parameterNames.begin(), eIt = parameterNames.end(); it != eIt; it++ )
@@ -87,35 +96,38 @@ void OpenGLShader::loadShader( const std::string &shaderName )
 		}
 
 		const IECoreGL::Shader::Parameter *parameter = shader->uniformParameter( *it );
-		PlugPtr plug = 0;
+		PlugPtr plug = NULL;
+
+		const Plug *existingPlug = parametersPlug()->getChild<Plug>( *it );
+		const IECore::TypeId existingType = existingPlug ? (IECore::TypeId)existingPlug->typeId() : IECore::InvalidTypeId;
 		switch( parameter->type )
 		{
 			case GL_BOOL :
-				plug = new BoolPlug( *it );
+				plug = existingType != (IECore::TypeId)BoolPlugTypeId ? new BoolPlug( *it ) : NULL;
 				break;
 			case GL_INT :
-				plug = new IntPlug( *it );
+				plug = existingType != (IECore::TypeId)IntPlugTypeId ? new IntPlug( *it ) : NULL;
 				break;
 			case GL_INT_VEC2 :
-				plug = new V2iPlug( *it );
+				plug = existingType != (IECore::TypeId)V2iPlugTypeId ? new V2iPlug( *it ) : NULL;
 				break;
 			case GL_INT_VEC3 :
-				plug = new V3iPlug( *it );
+				plug = existingType != (IECore::TypeId)V3iPlugTypeId ? new V3iPlug( *it ) : NULL;
 				break;
 			case GL_FLOAT :
-				plug = new FloatPlug( *it );
+				plug = existingType != (IECore::TypeId)FloatPlugTypeId ? new FloatPlug( *it ) : NULL;
 				break;
 			case GL_FLOAT_VEC2 :
-				plug = new V2fPlug( *it );
+				plug = existingType != (IECore::TypeId)V2fPlugTypeId ? new V2fPlug( *it ) : NULL;
 				break;
 			case GL_FLOAT_VEC3 :
 				// we don't know it's a colour any more than it's a point,
 				// but the colour ui is harmless for point types, and the point
 				// ui is useless for colour types.
-				plug = new Color3fPlug( *it );
+				plug = existingType != (IECore::TypeId)Color3fPlugTypeId ? new Color3fPlug( *it ) : NULL;
 				break;
 			case GL_FLOAT_VEC4 :
-				plug = new Color4fPlug( *it );
+				plug = existingType != (IECore::TypeId)Color4fPlugTypeId ? new Color4fPlug( *it ) : NULL;
 				break;
 			case GL_SAMPLER_2D :
 				/// \todo This introduces a GafferImage dependency into GafferScene,
@@ -124,7 +136,7 @@ void OpenGLShader::loadShader( const std::string &shaderName )
 				/// but that might be a bit annoying for users. Keeping the dependency
 				/// might turn out to be useful for other nodes (Seeds perhaps?), so
 				/// revisit this at some point to see how things are working out.
-				plug = new GafferImage::ImagePlug( *it );
+				plug = existingType != (IECore::TypeId)GafferImage::ImagePlugTypeId ? new GafferImage::ImagePlug( *it ) : NULL;
 				break;
 			default :
 				msg(
@@ -136,7 +148,7 @@ void OpenGLShader::loadShader( const std::string &shaderName )
 		if( plug )
 		{
 			plug->setFlags( Plug::Dynamic, true );
-			parametersPlug()->addChild( plug );
+			PlugAlgo::replacePlug( parametersPlug(), plug );
 		}
 	}
 

@@ -114,6 +114,23 @@ class OpenGLShaderTest( GafferSceneTest.SceneTestCase ) :
 		self.assertNotEqual( h3, h2 )
 		self.assertNotEqual( h3, h1 )
 
+	def testLoadShader( self ) :
+
+		s = GafferScene.OpenGLShader()
+		s.loadShader( "Texture" )
+		self.assertEqual( s["parameters"].keys(), ['mult', 'texture', 'tint'] )
+		s["parameters"]["mult"].setValue( 3 )
+
+		s.loadShader( "Texture", keepExistingValues = True )
+		self.assertEqual( s["parameters"].keys(), ['mult', 'texture', 'tint'] )
+		self.assertEqual( s["parameters"]["mult"].getValue(), 3 )
+
+		s.loadShader( "Texture" )
+		self.assertEqual( s["parameters"].keys(), ['mult', 'texture', 'tint'] )
+
+		# By default we don't keep existing values
+		self.assertEqual( s["parameters"]["mult"].getValue(), 0 )
+
 if sys.platform == "darwin" :
 	# The Texture shader used in the test provides only a .frag file, which
 	# means that it gets the default vertex shader. The default vertex shader
