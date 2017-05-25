@@ -49,16 +49,12 @@ class CatalogueTest( GafferImageTest.ImageTestCase ) :
 
 		GafferImageTest.ImageTestCase.setUp( self )
 
-		# Emulate the UI by making the same connections it will
+		# Emulate the UI
 		self.__executeOnUIThreadConnection = GafferImage.Display.executeOnUIThreadSignal().connect( lambda f : f() )
-		self.__driverCreatedConnection = GafferImage.Display.driverCreatedSignal().connect( GafferImage.Catalogue.driverCreated )
-		self.__imageReceivedConnection = GafferImage.Display.imageReceivedSignal().connect( GafferImage.Catalogue.imageReceived )
 
 	def tearDown( self ) :
 
 		self.__executeOnUIThreadConnection.disconnect()
-		self.__driverCreatedConnection.disconnect()
-		self.__imageReceivedConnection.disconnect()
 
 	def testImages( self ) :
 

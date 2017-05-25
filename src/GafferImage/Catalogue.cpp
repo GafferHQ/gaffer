@@ -333,13 +333,6 @@ Gaffer::PlugPtr Catalogue::Image::createCounterpart( const std::string &name, Di
 namespace
 {
 
-typedef std::set<Catalogue *> InstanceSet;
-InstanceSet &instances()
-{
-	static InstanceSet instanceSet;
-	return instanceSet;
-};
-
 bool undoingOrRedoing( const Node *node )
 {
 	const ScriptNode *script = node->scriptNode();
@@ -391,12 +384,12 @@ Catalogue::Catalogue( const std::string &name )
 	imagesPlug()->childAddedSignal().connect( boost::bind( &Catalogue::imageAdded, this, ::_2 ) );
 	imagesPlug()->childRemovedSignal().connect( boost::bind( &Catalogue::imageRemoved, this, ::_2 ) );
 
-	instances().insert( this );
+	Display::driverCreatedSignal().connect( boost::bind( &Catalogue::driverCreated, this, ::_1, ::_2 ) );
+	Display::imageReceivedSignal().connect( boost::bind( &Catalogue::imageReceived, this, ::_1 ) );
 }
 
 Catalogue::~Catalogue()
 {
-	instances().erase( this );
 }
 
 Gaffer::Plug *Catalogue::imagesPlug()
@@ -557,64 +550,55 @@ IECore::DisplayDriverServer *Catalogue::displayDriverServer()
 
 void Catalogue::driverCreated( IECore::DisplayDriver *driver, const IECore::CompoundData *parameters )
 {
-	// Figure out what catalogue the image is destined for.
+	// Check the image is destined for this catalogue
 	string catalogueName = "";
 	if( const StringData *catalogueNameData = parameters->member<StringData>( "catalogue:name" ) )
 	{
 		catalogueName = catalogueNameData->readable();
 	}
 
-	// Iterate over all catalogue instances, adding the driver
-	// to them if they have a matching name.
-	const InstanceSet &i = instances();
-	for( InstanceSet::const_iterator it = i.begin(), eIt = i.end(); it != eIt; ++it )
+	string name = namePlug()->getValue();
+	if( ScriptNode *script = scriptNode() )
 	{
-		// Skip Catalogues with the wrong name.
-		Catalogue *catalogue = *it;
-		string name = catalogue->namePlug()->getValue();
-		if( ScriptNode *script = catalogue->scriptNode() )
-		{
-			name = script->context()->substitute( name );
-		}
-		if( name != catalogueName )
-		{
-			continue;
-		}
-		// Try to find an existing InternalImage from
-		// the same render, so we can just combine all
-		// AOVs into a single image. We iterate backwards
-		// because the last image is most likely to be the
-		// one we want.
-		Plug *images = catalogue->imagesPlug()->source<Plug>();
-		bool addedToExistingImage = false;
-		for( int i = images->children().size() - 1; i >= 0; --i )
-		{
-			InternalImage *candidateImage = catalogue->imageNode( images->getChild<Image>( i ) );
-			if( candidateImage->insertDriver( driver, parameters ) )
-			{
-				addedToExistingImage = true;
-				break;
-			}
-		}
+		name = script->context()->substitute( name );
+	}
+	if( name != catalogueName )
+	{
+		return;
+	}
 
-		// If we don't have an existing image for this
-		// render, then create one and use that.
-		if( !addedToExistingImage )
+
+	// Try to find an existing InternalImage from
+	// the same render, so we can just combine all
+	// AOVs into a single image. We iterate backwards
+	// because the last image is most likely to be the
+	// one we want.
+	Plug *images = imagesPlug()->source<Plug>();
+	for( int i = images->children().size() - 1; i >= 0; --i )
+	{
+		InternalImage *candidateImage = imageNode( images->getChild<Image>( i ) );
+		if( candidateImage->insertDriver( driver, parameters ) )
 		{
-			Image::Ptr image = new Image( "Image", Plug::In, Plug::Default | Plug::Dynamic );
-			images->addChild( image );
-			catalogue->imageNode( image.get() )->insertDriver( driver, parameters );
-			catalogue->imageIndexPlug()->source<IntPlug>()->setValue( catalogue->imagesPlug()->children().size() - 1 );
+			return;
 		}
 	}
+
+	// We don't have an existing image for this
+	// render, so create one and use that.
+	Image::Ptr image = new Image( "Image", Plug::In, Plug::Default | Plug::Dynamic );
+	images->addChild( image );
+	imageNode( image.get() )->insertDriver( driver, parameters );
+	imageIndexPlug()->source<IntPlug>()->setValue( images->children().size() - 1 );
 }
 
 void Catalogue::imageReceived( Gaffer::Plug *plug )
 {
-	if( plug->ancestor<Catalogue>() )
+	if( plug->ancestor<Catalogue>() != this )
 	{
-		InternalImage *internalImage = static_cast<InternalImage *>( plug->node()->parent<Node>() );
-		internalImage->driverClosed();
+		return;
 	}
+
+	InternalImage *internalImage = static_cast<InternalImage *>( plug->node()->parent<Node>() );
+	internalImage->driverClosed();
 }
 

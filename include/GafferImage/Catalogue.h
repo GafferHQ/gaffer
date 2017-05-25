@@ -108,16 +108,6 @@ class Catalogue : public ImageNode
 		std::string generateFileName( const Image *image ) const;
 		std::string generateFileName( const ImagePlug *image ) const;
 
-	protected :
-
-		// In an ideal world, the Catalogue would connect these to the relevant
-		// signals directly, but unfortunately the signals are not emitted on the
-		// UI thread where it is permissible to modify the internal graph. We
-		// therefore rely on CatalogueUI.py to connect to the signals and then
-		// call these "slots" from the UI thread.
-		static void driverCreated( IECore::DisplayDriver *driver, const IECore::CompoundData *parameters );
-		static void imageReceived( Gaffer::Plug *plug );
-
 	private :
 
 		ImageSwitch *imageSwitch();
@@ -128,6 +118,9 @@ class Catalogue : public ImageNode
 
 		void imageAdded( GraphComponent *graphComponent );
 		void imageRemoved( GraphComponent *graphComponent );
+
+		void driverCreated( IECore::DisplayDriver *driver, const IECore::CompoundData *parameters );
+		void imageReceived( Gaffer::Plug *plug );
 
 		static size_t g_firstPlugIndex;
 
