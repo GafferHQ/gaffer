@@ -470,30 +470,3 @@ class _ImageListing( GafferUI.PlugValueWidget ) :
 		return True
 
 GafferUI.Pointer.registerPointer( "plus", GafferUI.Pointer( "plus.png" ) )
-
-##########################################################################
-# Display server management. This would all be in Catalogue.cpp if it
-# were not for the need to operate on the UI thread.
-##########################################################################
-
-def __driverCreated( driver, parameters ) :
-
-	# The driverCreatedSignal() is emitted on the server thread,
-	# but we can only make node graph edits from the UI thread,
-	# so we must use `executeOnUIThread()`.
-	GafferUI.EventLoop.executeOnUIThread( functools.partial( __driverCreatedUI, driver, parameters ) )
-
-def __driverCreatedUI( driver, parameters ) :
-
-	GafferImage.Catalogue.driverCreated( driver, parameters )
-
-def __imageReceived( plug ) :
-
-	GafferUI.EventLoop.executeOnUIThread( functools.partial( __imageReceivedUI, plug ) )
-
-def __imageReceivedUI( plug ) :
-
-	GafferImage.Catalogue.imageReceived( plug )
-
-GafferImage.Display.driverCreatedSignal().connect( functools.partial( __driverCreated ), scoped = False )
-GafferImage.Display.imageReceivedSignal().connect( functools.partial( __imageReceived ), scoped = False )
