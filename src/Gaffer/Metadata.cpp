@@ -748,20 +748,20 @@ IECore::ConstDataPtr Metadata::valueInternal( const GraphComponent *target, IECo
 
 Metadata::ValueChangedSignal &Metadata::valueChangedSignal()
 {
-	static ValueChangedSignal s;
-	return s;
+	static ValueChangedSignal *s = new ValueChangedSignal;
+	return *s;
 }
 
 Metadata::NodeValueChangedSignal &Metadata::nodeValueChangedSignal()
 {
-	static NodeValueChangedSignal s;
-	return s;
+	static NodeValueChangedSignal *s = new NodeValueChangedSignal;
+	return *s;
 }
 
 Metadata::PlugValueChangedSignal &Metadata::plugValueChangedSignal()
 {
-	static PlugValueChangedSignal s;
-	return s;
+	static PlugValueChangedSignal *s = new PlugValueChangedSignal;
+	return *s;
 }
 
 void Metadata::clearInstanceMetadata( const GraphComponent *graphComponent )
