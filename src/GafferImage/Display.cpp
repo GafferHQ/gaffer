@@ -119,6 +119,24 @@ class GafferDisplayDriver : public IECore::DisplayDriver
 			Display::executeOnUIThread( boost::bind( &GafferDisplayDriver::emitDriverCreated, Ptr( this ), m_parameters ) );
 		}
 
+		GafferDisplayDriver( GafferDisplayDriver &other )
+			:	DisplayDriver( other.displayWindow(), other.dataWindow(), other.channelNames(), other.parameters() ),
+				m_gafferFormat( other.m_gafferFormat ), m_gafferDataWindow( other.m_gafferDataWindow ),
+				m_parameters( other.m_parameters )
+		{
+			// boost::multi_array has a joke assignment operator that only works
+			// if you first resize the target of the assignment to match the
+			// destination.
+			m_tiles.resize(
+				TileArray::extent_gen()
+					[TileArray::extent_range( other.m_tiles.index_bases()[0], other.m_tiles.index_bases()[0] + other.m_tiles.shape()[0] )]
+					[TileArray::extent_range( other.m_tiles.index_bases()[1], other.m_tiles.index_bases()[1] + other.m_tiles.shape()[1] )]
+					[other.m_tiles.shape()[2]]
+			);
+			tbb::spin_rw_mutex::scoped_lock tileLock( other.m_tileMutex, /* write = */ false );
+			m_tiles = other.m_tiles;
+		}
+
 		virtual ~GafferDisplayDriver()
 		{
 		}
@@ -397,13 +415,18 @@ Node::UnaryPlugSignal &Display::imageReceivedSignal()
 
 void Display::setDriver( IECore::DisplayDriverPtr driver )
 {
+	setDriver( driver, false );
+}
+
+void Display::setDriver( IECore::DisplayDriverPtr driver, bool copy )
+{
 	GafferDisplayDriver *gafferDisplayDriver = runTimeCast<GafferDisplayDriver>( driver.get() );
 	if( !gafferDisplayDriver )
 	{
 		throw IECore::Exception( "Expected GafferDisplayDriver" );
 	}
 
-	setupDriver( gafferDisplayDriver );
+	setupDriver( copy ? new GafferDisplayDriver( *gafferDisplayDriver ) : gafferDisplayDriver );
 }
 
 IECore::DisplayDriver *Display::getDriver()

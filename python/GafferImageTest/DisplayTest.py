@@ -254,9 +254,6 @@ class DisplayTest( GafferImageTest.ImageTestCase ) :
 
 		self.__sendBucket( driver, cortexWindow, IECore.FloatVectorData( [ 0.5 ] * gafferWindow.size().x * gafferWindow.size().y ) )
 
-		driver.imageClose()
-		semaphore.acquire()
-
 		self.assertEqual( display["out"]["format"].getValue().getDisplayWindow(), gafferWindow )
 		self.assertEqual( display["out"]["dataWindow"].getValue(), gafferWindow )
 		self.assertEqual( display["out"]["channelNames"].getValue(), IECore.StringVectorData( [ "Y" ] ) )
@@ -264,6 +261,26 @@ class DisplayTest( GafferImageTest.ImageTestCase ) :
 			display["out"].channelData( "Y", IECore.V2i( 0 ) ),
 			IECore.FloatVectorData( [ 0.5 ] * GafferImage.ImagePlug.tileSize() * GafferImage.ImagePlug.tileSize() )
 		)
+
+		display2 = GafferImage.Display()
+		display2.setDriver( display.getDriver(), copy = True )
+
+		self.assertImagesEqual( display["out"], display2["out"] )
+
+		self.__sendBucket( driver, cortexWindow, IECore.FloatVectorData( [ 1 ] * gafferWindow.size().x * gafferWindow.size().y ) )
+
+		self.assertEqual(
+			display["out"].channelData( "Y", IECore.V2i( 0 ) ),
+			IECore.FloatVectorData( [ 1 ] * GafferImage.ImagePlug.tileSize() * GafferImage.ImagePlug.tileSize() )
+		)
+
+		self.assertEqual(
+			display2["out"].channelData( "Y", IECore.V2i( 0 ) ),
+			IECore.FloatVectorData( [ 0.5 ] * GafferImage.ImagePlug.tileSize() * GafferImage.ImagePlug.tileSize() )
+		)
+
+		driver.imageClose()
+		semaphore.acquire()
 
 	def __testTransferImage( self, fileName ) :
 
