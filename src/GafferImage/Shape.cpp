@@ -95,12 +95,14 @@ Shape::Shape( const std::string &name )
 	shadowSwitch->inPlugs()->getChild<ImagePlug>( 0 )->setInput( inPlug() );
 	shadowSwitch->inPlugs()->getChild<ImagePlug>( 1 )->setInput( shadowMerge->outPlug() );
 	shadowSwitch->indexPlug()->setInput( shadowPlug() );
+	shadowSwitch->enabledPlug()->setInput( enabledPlug() );
 
 	MergePtr merge = new Merge( "__merge" );
 	addChild( merge );
 
 	merge->inPlugs()->getChild<ImagePlug>( 0 )->setInput( shadowSwitch->outPlug() );
 	merge->inPlugs()->getChild<ImagePlug>( 1 )->setInput( shapePlug() );
+	merge->enabledPlug()->setInput( enabledPlug() );
 	merge->operationPlug()->setValue( Merge::Over );
 
 	outPlug()->setInput( merge->outPlug() );
