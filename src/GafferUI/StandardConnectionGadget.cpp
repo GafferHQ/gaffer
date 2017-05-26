@@ -200,6 +200,30 @@ void StandardConnectionGadget::doRender( const Style *style ) const
 	style->renderConnection( adjustedSrcPos, adjustedSrcTangent, m_dstPos, m_dstTangent, state, m_userColor.get_ptr() );
 }
 
+Imath::V3f StandardConnectionGadget::closestPoint( const Imath::V3f& p ) const
+{
+	const_cast<StandardConnectionGadget *>( this )->setPositionsFromNodules();
+
+	Style::State state = ( m_hovering || m_dragEnd ) ? Style::HighlightedState : Style::NormalState;
+	if( state != Style::HighlightedState )
+	{
+		if( nodeSelected( srcNodule() ) || nodeSelected( dstNodule() ) )
+		{
+			state = Style::HighlightedState;
+		}
+	}
+
+	V3f adjustedSrcPos = m_srcPos;
+	V3f adjustedSrcTangent = m_srcTangent;
+	if( getMinimised() && state != Style::HighlightedState )
+	{
+		adjustedSrcPos = m_dstPos + m_dstTangent * 1.5f;
+		adjustedSrcTangent = -m_dstTangent;
+	}
+
+	return style()->closestPointOnConnection( p, adjustedSrcPos, adjustedSrcTangent, m_dstPos, m_dstTangent );
+}
+
 float StandardConnectionGadget::distanceToNodeGadget( const IECore::LineSegment3f &line, const Nodule *nodule ) const
 {
 	const NodeGadget *nodeGadget = nodule ? nodule->ancestor<NodeGadget>() : NULL;

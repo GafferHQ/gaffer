@@ -95,6 +95,10 @@ class ConnectionGadget : public Gadget
 		/// Throws if this connection is not currently the source of a connection.
 		virtual void updateDragEndPoint( const Imath::V3f position, const Imath::V3f &tangent ) = 0;
 
+		/// Returns the closest point on this connection to the given point.
+		/// Used for snapping new dots onto an existing connection
+		virtual Imath::V3f closestPoint( const Imath::V3f &p ) const = 0;
+
 		/// Creates a ConnectionGadget to represent the connection between the two
 		/// specified Nodules.
 		static ConnectionGadgetPtr create( NodulePtr srcNodule, NodulePtr dstNodule );

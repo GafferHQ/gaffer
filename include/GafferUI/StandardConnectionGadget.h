@@ -63,6 +63,8 @@ class StandardConnectionGadget : public ConnectionGadget
 
 		virtual void updateDragEndPoint( const Imath::V3f position, const Imath::V3f &tangent );
 
+		virtual Imath::V3f closestPoint( const Imath::V3f &p ) const;
+
 		virtual std::string getToolTip( const IECore::LineSegment3f &line ) const;
 
 	protected :

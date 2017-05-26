@@ -653,6 +653,37 @@ void StandardStyle::renderConnection( const Imath::V3f &srcPosition, const Imath
 	glCallList( connectionDisplayList() );
 }
 
+Imath::V3f StandardStyle::closestPointOnConnection( const Imath::V3f &p, const Imath::V3f &srcPosition, const Imath::V3f &srcTangent, const Imath::V3f &dstPosition, const Imath::V3f &dstTangent ) const
+{
+	V3f dir = ( dstPosition - srcPosition ).normalized();
+
+	V3f offsetCenter0 = srcPosition + ( srcTangent != V3f( 0 ) ? srcTangent :  dir ) * g_endPointSize;
+	V3f offsetCenter1 = dstPosition + ( dstTangent != V3f( 0 ) ? dstTangent :  -dir ) * g_endPointSize;
+	
+	float straightSegmentLength = ( offsetCenter0 - offsetCenter1 ).length();
+
+	if( straightSegmentLength < 2.0f * g_endPointSize )
+	{
+		// The curve is short enough that there is no straight segment, and the rendering code will
+		// have to do something a bit fancier to compute the actual curve radius, but inserting dots into
+		// exceedingly short curves isn't that common, lets just do a simple and fairly reasonable thing,
+		// and take the center point.
+		return 0.5f * ( dstPosition + srcPosition );
+	}
+	else
+	{
+		V3f straightSegmentCenter = 0.5f * ( offsetCenter0 + offsetCenter1 );
+		V3f straightSegmentDir = ( offsetCenter0 - offsetCenter1 ).normalized();
+
+		float alongSegment = ( p - straightSegmentCenter ).dot( straightSegmentDir );
+		float clampDist = straightSegmentLength * 0.5f - g_endPointSize; 
+		alongSegment = std::max( -clampDist, std::min( clampDist, alongSegment ) );
+		
+		return straightSegmentCenter + alongSegment * straightSegmentDir;
+	}
+
+}
+
 void StandardStyle::renderSolidRectangle( const Imath::Box2f &box ) const
 {
 	glUniform1i( g_isCurveParameter, 0 );
