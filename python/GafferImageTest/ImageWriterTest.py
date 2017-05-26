@@ -323,8 +323,7 @@ class ImageWriterTest( GafferImageTest.ImageTestCase ) :
 
 		r = GafferImage.ImageReader()
 		r["fileName"].setValue( self.__rgbFilePath+".exr" )
-
-		expectedFile = self.__rgbFilePath+"."+ext
+		expectedFile = "{base}.{ext}".format( base=self.__rgbFilePath, ext=ext )
 
 		tests = [ {
 			'name': "default",
@@ -344,6 +343,7 @@ class ImageWriterTest( GafferImageTest.ImageTestCase ) :
 					'maxError': optPlugVal.get( "maxError", options['maxError'] ) } )
 
 		for test in tests:
+
 			name = test['name']
 			maxError = test['maxError']
 			overrideMetadata = test['metadata']
@@ -990,6 +990,33 @@ class ImageWriterTest( GafferImageTest.ImageTestCase ) :
 	def __testFile( self, mode, channels, ext ) :
 
 		return self.temporaryDirectory() + "/test." + channels + "." + str( mode ) + "." + str( ext )
+
+	def testJpgChroma( self ):
+
+		r = GafferImage.ImageReader()
+		r["fileName"].setValue( self.__rgbFilePath+".exr" )
+
+		w = GafferImage.ImageWriter()
+		w["in"].setInput( r["out"] )
+
+		result = GafferImage.ImageReader()
+
+		chromaSubSamplings = ( "4:4:4", "4:2:2", "4:2:0", "4:1:1", "" )
+		for chromaSubSampling in chromaSubSamplings:
+
+			testFile = os.path.join( self.temporaryDirectory(), "chromaSubSampling.{0}.jpg".format( chromaSubSampling ) )
+
+			w["fileName"].setValue( testFile )
+			w["jpeg"]["chromaSubSampling"].setValue( chromaSubSampling )
+
+			with Gaffer.Context() :
+				w["task"].execute()
+
+			self.failUnless( os.path.exists( testFile ), "Failed to create file : {} : {}".format( chromaSubSampling, testFile ) )
+
+			result["fileName"].setValue( testFile )
+			
+			self.assertEqual( result["out"]["metadata"].getValue()["jpeg:subsampling"].value, chromaSubSampling if chromaSubSampling != "" else "4:2:0" )
 
 if __name__ == "__main__":
 	unittest.main()
