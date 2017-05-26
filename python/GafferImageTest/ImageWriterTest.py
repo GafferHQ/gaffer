@@ -126,7 +126,7 @@ class ImageWriterTest( GafferImageTest.ImageTestCase ) :
 				{ 'value': "float", 'metadata': { 'oiio:BitsPerSample': IECore.IntData( 32 ) } },
 			]
 
-		self.__testExtension( "tif", "tiff", options = options, metadataToIgnore = [ "tiff:RowsPerStrip" ] )
+		self.__testExtension( "tif", "tiff", options = options, metadataToIgnore = [ "tiff:RowsPerStrip", "IPTC:Creator" ] )
 
 	def testJpgWrite( self ) :
 		options = {}
@@ -693,7 +693,7 @@ class ImageWriterTest( GafferImageTest.ImageTestCase ) :
 
 		afterMetadata = after["out"]["metadata"].getValue()
 		beforeMetadata = before["out"]["metadata"].getValue()
-		expectedMetadata = r["out"]["metadata"].getValue()
+		expectedMetadata = d["out"]["metadata"].getValue()
 		# they were written at different times so we can't expect those values to match
 		beforeMetadata["DateTime"] = afterMetadata["DateTime"]
 		expectedMetadata["DateTime"] = afterMetadata["DateTime"]
