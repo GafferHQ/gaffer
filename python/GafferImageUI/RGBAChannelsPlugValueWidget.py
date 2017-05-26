@@ -92,6 +92,9 @@ class RGBAChannelsPlugValueWidget( GafferUI.PlugValueWidget ) :
 			return result
 
 		added = set()
+		nonStandardLayers = set( [ GafferImage.ImageAlgo.layerName( x ) for x in channelNames
+			if GafferImage.ImageAlgo.baseName( x ) not in [ "R", "G", "B", "A" ] ] )
+
 		for channelName in sorted( channelNames, key = GafferImage.ImageAlgo.layerName ) :
 
 			if GafferImage.ImageAlgo.baseName( channelName ) in [ "R", "G", "B", "A" ] :
@@ -105,6 +108,12 @@ class RGBAChannelsPlugValueWidget( GafferUI.PlugValueWidget ) :
 
 			if text in added :
 				continue
+
+			added.add( text )
+
+			if not GafferImage.ImageAlgo.layerName( text ) in nonStandardLayers: 
+				# If there are only the standard channels, we don't need a submenu
+				text = text.replace( ".RGBA", "" )
 
 			result.append(
 				"/" + text.replace( ".", "/" ),
