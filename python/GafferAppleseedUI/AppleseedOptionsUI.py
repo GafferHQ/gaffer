@@ -368,12 +368,51 @@ Gaffer.Metadata.registerNode(
 
 			"description",
 			__getDescriptionString(
-				"pt:max_path_length",
-				"If set to zero, use an unlimited number of bounces"
+				"pt:max_bounces",
+				"If set to a negative number, use an unlimited number of bounces"
 			),
 
 			"layout:section", "Unidirectional Path Tracer",
 			"label", "Max Bounces",
+
+		],
+
+		"options.ptMaxDiffuseBounces" : [
+
+			"description",
+			__getDescriptionString(
+				"pt:max_diffuse_bounces",
+				"If set to a negative number, use an unlimited number of bounces"
+			),
+
+			"layout:section", "Unidirectional Path Tracer",
+			"label", "Max Diffuse Bounces",
+
+		],
+
+		"options.ptMaxGlossyBounces" : [
+
+			"description",
+			__getDescriptionString(
+				"pt:max_glossy_bounces",
+				"If set to a negative number, use an unlimited number of bounces"
+			),
+
+			"layout:section", "Unidirectional Path Tracer",
+			"label", "Max Glossy Bounces",
+
+		],
+
+		"options.ptMaxSpecularBounces" : [
+
+			"description",
+			__getDescriptionString(
+				"pt:max_specular_bounces",
+				"If set to a negative number, use an unlimited number of bounces"
+			),
+
+			"layout:section", "Unidirectional Path Tracer",
+			"label", "Max Specular Bounces",
 
 		],
 
@@ -475,8 +514,8 @@ Gaffer.Metadata.registerNode(
 
 			"description",
 			__getDescriptionString(
-				"sppm:photon_tracing_max_path_length",
-				"If set to zero, use an unlimited number of bounces"
+				"sppm:photon_tracing_max_bounces",
+				"If set to a negative number, use an unlimited number of bounces"
 			),
 
 			"layout:section", "SPPM",
@@ -488,8 +527,8 @@ Gaffer.Metadata.registerNode(
 
 			"description",
 			__getDescriptionString(
-				"sppm:path_tracing_max_path_length",
-				"If set to zero, use an unlimited number of bounces"
+				"sppm:path_tracing_max_bounces",
+				"If set to a negative number, use an unlimited number of bounces"
 			),
 
 			"layout:section", "SPPM",
