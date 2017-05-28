@@ -43,8 +43,10 @@ import GafferAppleseed
 # Get the light and environments metadata dictionaries from appleseed
 __modelMetadata = appleseed.Light.get_model_metadata()
 __modelMetadata.update( appleseed.EnvironmentEDF.get_model_metadata() )
+__modelMetadata.update( appleseed.EDF.get_model_metadata() )
 __inputMetadata = appleseed.Light.get_input_metadata()
 __inputMetadata.update( appleseed.EnvironmentEDF.get_input_metadata() )
+__inputMetadata.update( appleseed.EDF.get_input_metadata() )
 
 def __nodeDescription( node ) :
 
