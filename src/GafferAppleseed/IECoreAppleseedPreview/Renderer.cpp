@@ -2110,30 +2110,31 @@ class AppleseedRenderer : public IECoreScenePreview::Renderer
 					return;
 				}
 
-				if( boost::algorithm::ends_with( optName, "max_path_length" ) )
-				{
-					if( value == nullptr )
-					{
+				// PT and SPPM per ray type bounces.
+				if( boost::algorithm::ends_with( optName, "_bounces" ) )
+ 				{
+ 					if( value == nullptr )
+ 					{
 						m_project->configurations().get_by_name( "final" )->get_parameters().remove_path( optName.c_str() );
 						m_project->configurations().get_by_name( "interactive" )->get_parameters().remove_path( optName.c_str() );
-					}
-					else if( const IntData *d = reportedCast<const IntData>( value, "option", name ) )
-					{
-						int maxPathLength = d->readable();
-						if( maxPathLength == 0 )
+ 					}
+ 					else if( const IntData *d = reportedCast<const IntData>( value, "option", name ) )
+ 					{
+						int maxBounces = d->readable();
+						if( maxBounces < 0 )
 						{
-							// if maxPathLength is 0 disable it.
+							// if max bounces is negative disable it.
 							m_project->configurations().get_by_name( "final" )->get_parameters().remove_path( optName.c_str() );
 							m_project->configurations().get_by_name( "interactive" )->get_parameters().remove_path( optName.c_str() );
 						}
 						else
 						{
-							m_project->configurations().get_by_name( "final" )->get_parameters().insert_path( optName.c_str(), maxPathLength );
-							m_project->configurations().get_by_name( "interactive" )->get_parameters().insert_path( optName.c_str(), maxPathLength );
+							m_project->configurations().get_by_name( "final" )->get_parameters().insert_path( optName.c_str(), maxBounces );
+							m_project->configurations().get_by_name( "interactive" )->get_parameters().insert_path( optName.c_str(), maxBounces );
 						}
-					}
-					return;
-				}
+ 					}
+ 					return;
+				 }
 
 				// general case.
 				if( value == nullptr )
