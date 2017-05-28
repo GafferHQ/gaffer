@@ -108,6 +108,7 @@ namespace
 {
 
 const char *g_defaultMaterialName = "__defaultMaterial";
+const char *g_emptyMaterialName = "__emptyMaterial";
 
 template<typename T>
 T *reportedCast( const RunTimeTyped *v, const char *type, const InternedString &name )
@@ -654,6 +655,7 @@ InternedString g_specularVisibilityAttributeName( "as:visibility:specular" );
 InternedString g_glossyVisibilityAttributeName( "as:visibility:glossy" );
 
 InternedString g_shadingSamplesAttributeName( "as:shading_samples" );
+InternedString g_doubleSidedAttributeName( "as:double_sided" );
 InternedString g_mediumPriorityAttributeName( "as:medium_priority" );
 InternedString g_alphaMapAttributeName( "as:alpha_map" );
 
@@ -673,7 +675,7 @@ class AppleseedAttributes : public IECoreScenePreview::Renderer::AttributesInter
 	public :
 
 		explicit AppleseedAttributes( const CompoundObject *attributes, ShaderCache *shaderCache )
-			:	m_shadingSamples( 1 ), m_mediumPriority( 0 ), m_meshSmoothNormals( false ), m_meshSmoothTangents( false )
+			:	m_shadingSamples( 1 ), m_doubleSided( true ), m_mediumPriority( 0 ), m_meshSmoothNormals( false ), m_meshSmoothTangents( false )
 		{
 			updateVisibilityDictionary( g_cameraVisibilityAttributeName, attributes );
 			updateVisibilityDictionary( g_lightVisibilityAttributeName, attributes );
@@ -682,14 +684,19 @@ class AppleseedAttributes : public IECoreScenePreview::Renderer::AttributesInter
 			updateVisibilityDictionary( g_specularVisibilityAttributeName, attributes );
 			updateVisibilityDictionary( g_glossyVisibilityAttributeName, attributes );
 
-			if( const IntData *d = attribute<IntData>( g_mediumPriorityAttributeName, attributes ) )
-			{
-				m_mediumPriority = d->readable();
-			}
-
 			if( const IntData *d = attribute<IntData>( g_shadingSamplesAttributeName, attributes ) )
 			{
 				m_shadingSamples = d->readable();
+			}
+
+			if( const BoolData *d = attribute<BoolData>( g_doubleSidedAttributeName, attributes ) )
+			{
+				m_doubleSided = d->readable();
+			}
+
+			if( const IntData *d = attribute<IntData>( g_mediumPriorityAttributeName, attributes ) )
+			{
+				m_mediumPriority = d->readable();
 			}
 
 			if( const StringData *d = attribute<StringData>( g_alphaMapAttributeName, attributes ) )
@@ -723,6 +730,7 @@ class AppleseedAttributes : public IECoreScenePreview::Renderer::AttributesInter
 		void appendToHash( MurmurHash &hash ) const
 		{
 			hash.append( m_shadingSamples );
+			hash.append( m_doubleSided );
 			hash.append( m_mediumPriority );
 			hash.append( m_alphaMap );
 
@@ -744,6 +752,7 @@ class AppleseedAttributes : public IECoreScenePreview::Renderer::AttributesInter
 		}
 
 		int m_shadingSamples;
+		bool m_doubleSided;
 		int m_mediumPriority;
 		string m_alphaMap;
 		asf::Dictionary m_visibilityDictionary;
@@ -1180,8 +1189,7 @@ class AppleseedPrimitive : public AppleseedEntity
 				// Create a surface shader.
 				string surfaceShaderName = name() + "_surface_shader";
 				asr::ParamArray params;
-				params.insert( "front_lighting_samples", appleseedAttributes->m_shadingSamples );
-				params.insert( "back_lighting_samples", appleseedAttributes->m_shadingSamples );
+				params.insert( "lighting_samples", appleseedAttributes->m_shadingSamples );
 
 				asf::auto_release_ptr<asr::SurfaceShader> surfaceShader;
 				surfaceShader = asr::PhysicalSurfaceShaderFactory().create( surfaceShaderName.c_str(), params );
@@ -1201,13 +1209,20 @@ class AppleseedPrimitive : public AppleseedEntity
 
 				// Assign the material to the object instance.
 				m_objectInstance->assign_material( "default", asr::ObjectInstance::FrontSide, materialName.c_str() );
-				m_objectInstance->assign_material( "default", asr::ObjectInstance::BackSide, materialName.c_str() );
+
+				if( appleseedAttributes->m_doubleSided )
+				{
+					m_objectInstance->assign_material( "default", asr::ObjectInstance::BackSide, materialName.c_str() );
+				}
+				else
+				{
+					m_objectInstance->assign_material( "default", asr::ObjectInstance::BackSide, g_emptyMaterialName );
+				}
 			}
 			else
 			{
 				// No shader assigned. Assign the default material to the object instance.
 				m_objectInstance->assign_material( "default", asr::ObjectInstance::FrontSide, g_defaultMaterialName );
-				m_objectInstance->assign_material( "default", asr::ObjectInstance::BackSide, g_defaultMaterialName );
 			}
 
 			if( !appleseedAttributes->m_alphaMap.empty() )
@@ -2330,6 +2345,10 @@ class AppleseedRenderer final : public IECoreScenePreview::Renderer
 			params.clear();
 			params.insert( "surface_shader", surfaceShaderName );
 			asf::auto_release_ptr<asr::Material> material = asr::GenericMaterialFactory().create( g_defaultMaterialName, params );
+			m_mainAssembly->materials().insert( material );
+
+			// Create an empty black material for back faces and area lights.
+			material = asr::GenericMaterialFactory().create( g_emptyMaterialName, asr::ParamArray() );
 			m_mainAssembly->materials().insert( material );
 
 			// Instance the main assembly
