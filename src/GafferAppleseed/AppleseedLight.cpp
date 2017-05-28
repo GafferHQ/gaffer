@@ -37,6 +37,7 @@
 #include "boost/format.hpp"
 #include "boost/lexical_cast.hpp"
 
+#include "renderer/api/edf.h"
 #include "renderer/api/environmentedf.h"
 #include "renderer/api/light.h"
 
@@ -87,7 +88,14 @@ void AppleseedLight::loadShader( const std::string &shaderName )
 		const asr::ILightFactory *factory = registrar.lookup( shaderName.c_str() );
 		metadata = factory->get_input_metadata();
 	}
-	else /* unknown model */
+	// finally, area lights
+	else if( asr::EDFFactoryRegistrar().lookup( shaderName.c_str() ) )
+	{
+		asr::EDFFactoryRegistrar registrar;
+		const asr::IEDFFactory *factory = registrar.lookup( shaderName.c_str() );
+		metadata = factory->get_input_metadata();
+	}
+	else // unknown model
 	{
 		throw IECore::Exception( boost::str( boost::format( "Light or Environment model \"%s\" not found" ) % shaderName ) );
 	}

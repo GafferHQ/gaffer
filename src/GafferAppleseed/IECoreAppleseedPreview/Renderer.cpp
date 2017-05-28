@@ -54,6 +54,7 @@
 #include "renderer/api/camera.h"
 #include "renderer/api/color.h"
 #include "renderer/api/display.h"
+#include "renderer/api/edf.h"
 #include "renderer/api/environment.h"
 #include "renderer/api/environmentedf.h"
 #include "renderer/api/environmentshader.h"
@@ -108,7 +109,7 @@ namespace
 {
 
 const char *g_defaultMaterialName = "__defaultMaterial";
-const char *g_emptyMaterialName = "__emptyMaterial";
+const char *g_nullMaterialName = "__nullMaterial";
 
 template<typename T>
 T *reportedCast( const RunTimeTyped *v, const char *type, const InternedString &name )
@@ -147,6 +148,7 @@ MutexType g_surfaceShadersMutex;
 MutexType g_shaderGroupsMutex;
 MutexType g_environmentMutex;
 MutexType g_lightsMutex;
+MutexType g_edfMutex;
 MutexType g_texturesMutex;
 MutexType g_textureInstancesMutex;
 MutexType g_colorsMutex;
@@ -281,6 +283,18 @@ class AppleseedEntity : public IECoreScenePreview::Renderer::ObjectInterface
 		{
 			LockGuardType lock( g_lightsMutex );
 			m_mainAssembly->lights().remove( light );
+		}
+
+		void insertEDF( asf::auto_release_ptr<asr::EDF> edf )
+		{
+			LockGuardType lock( g_edfMutex );
+			m_mainAssembly->edfs().insert( edf );
+		}
+
+		void removeEDF( asr::EDF *edf )
+		{
+			LockGuardType lock( g_edfMutex );
+			m_mainAssembly->edfs().remove( edf );
 		}
 
 		void insertMaterial( asf::auto_release_ptr<asr::Material> material )
@@ -1216,7 +1230,7 @@ class AppleseedPrimitive : public AppleseedEntity
 				}
 				else
 				{
-					m_objectInstance->assign_material( "default", asr::ObjectInstance::BackSide, g_emptyMaterialName );
+					m_objectInstance->assign_material( "default", asr::ObjectInstance::BackSide, g_nullMaterialName );
 				}
 			}
 			else
@@ -1440,6 +1454,12 @@ bool isDeltaLight( const string &lightModel )
 	return lightFactoryRegistrar.lookup( lightModel.c_str() ) != nullptr;
 }
 
+bool isAreaLight( const string &lightModel )
+{
+	asr::EDFFactoryRegistrar edfFactoryRegistrar;
+	return edfFactoryRegistrar.lookup( lightModel.c_str() ) != nullptr;
+}
+
 string getLightModel( const ObjectVector* lightShader )
 {
 	for( ObjectVector::MemberContainer::const_iterator it = lightShader->members().begin(), eIt = lightShader->members().end(); it != eIt; ++it )
@@ -1612,7 +1632,7 @@ class AppleseedEnvironmentLight : public AppleseedLight
 		asr::TransformSequence m_transformSequence;
 };
 
-/// Appleseed light handle.
+/// Appleseed delta light handle.
 class AppleseedDeltaLight : public AppleseedLight
 {
 	public :
@@ -1691,6 +1711,201 @@ class AppleseedDeltaLight : public AppleseedLight
 
 		asr::Light *m_light;
 		asf::Transformd m_transform;
+};
+
+/// Appleseed area light handle.
+class AppleseedAreaLight : public AppleseedLight
+{
+	public :
+
+		AppleseedAreaLight( asr::Project &project, const string &name, const IECoreScenePreview::Renderer::AttributesInterface *attributes, IECoreScenePreview::Renderer::RenderType renderType )
+			:	AppleseedLight( project, name, attributes, renderType == IECoreScenePreview::Renderer::Interactive ) , m_renderType( renderType ), m_transform( asf::Transformd::identity() )
+		{
+			init();
+			AppleseedAreaLight::attributes( attributes );
+		}
+
+		virtual ~AppleseedAreaLight()
+		{
+			if( isInteractiveRender() )
+			{
+				removeAreaLightEntities();
+			}
+			else
+			{
+				// Create the material assignments.
+				asf::StringDictionary frontMaterialMappings;
+				frontMaterialMappings.insert( "default", m_material->get_name() );
+
+				asf::StringDictionary backMaterialMappings;
+				backMaterialMappings.insert( "default", g_nullMaterialName );
+
+				// Create an object instance for the light.
+				string objectInstanceName = name() + "_instance";
+				asf::auto_release_ptr<asr::ObjectInstance> objectInstance;
+				objectInstance = asr::ObjectInstanceFactory::create( objectInstanceName.c_str(), asr::ParamArray(), name().c_str(), m_transform, frontMaterialMappings, backMaterialMappings );
+				insertObjectInstance( objectInstance );
+			}
+		}
+
+		virtual void transform( const M44f &transform )
+		{
+			M44d md( transform );
+			asf::Matrix4d m( md );
+
+			// Rotate 90 degrees around X to match Gaffer's default light orientation.
+			m = m * asf::Matrix4d::make_rotation_x( asf::deg_to_rad( -90.0 ) );
+			m_transform = asf::Transformd( m );
+
+			if( isInteractiveRender() )
+			{
+				m_assemblyInstance->transform_sequence().clear();
+				m_assemblyInstance->transform_sequence().set_transform( 0.0f, m_transform );
+				bumpMainAssemblyVersionId();
+			}
+		}
+
+		virtual void transform( const vector<M44f> &samples, const vector<float> &times )
+		{
+			// appleseed does not support light transform motion blur yet.
+			transform(samples[0]);
+		}
+
+		virtual bool attributes( const IECoreScenePreview::Renderer::AttributesInterface *attributes )
+		{
+			// Remove any previously created area light.
+			removeAreaLightEntities();
+
+			// Create a new light.
+			const AppleseedAttributes *appleseedAttributes = static_cast<const AppleseedAttributes*>( attributes );
+
+			if( appleseedAttributes && appleseedAttributes->m_lightShader )
+			{
+				// Create the EDF.
+				string edfName = name() + "_edf";
+				asr::EDFFactoryRegistrar edfFactoryRegistrar;
+				string lightModel = getLightModel( appleseedAttributes->m_lightShader.get() );
+				const asr::IEDFFactory *factory = edfFactoryRegistrar.lookup( lightModel.c_str() );
+
+				asf::auto_release_ptr<asr::EDF> edf( factory->create( edfName.c_str(), asr::ParamArray() ) );
+				const CompoundDataMap *lightParams = getLightParameters( appleseedAttributes->m_lightShader.get() );
+				convertLightParams( lightParams, edf->get_parameters(), false );
+				m_edf = edf.get();
+				insertEDF( edf );
+
+				// Create a material for each side of the light.
+				string materialName = name() + "_front_material";
+				asr::ParamArray params;
+				params.insert( "edf", m_edf->get_name() );
+				asf::auto_release_ptr<asr::Material> material = asr::GenericMaterialFactory().create( materialName.c_str(), params );
+				m_material = material.get();
+				insertMaterial( material );
+
+				// Create the geometry for the area light.
+				params.clear();
+				params.insert("primitive", "grid");
+				params.insert("resolution_u", 1);
+				params.insert("resolution_v", 1);
+				params.insert("width", 2.0f);
+				params.insert("height", 2.0f);
+
+				asf::auto_release_ptr<asr::Object> object;
+				if( m_renderType == IECoreScenePreview::Renderer::SceneDescription )
+				{
+					object = asr::MeshObjectFactory::create( name().c_str(), params );
+				}
+				else
+				{
+					object = asr::create_primitive_mesh( name().c_str(), params );
+				}
+
+				if( isInteractiveRender() )
+				{
+					// Create an assembly and an assembly instance to allow quick transform updating.
+					string assemblyName = name() + "_assembly";
+					asf::auto_release_ptr<asr::Assembly> assembly = asr::AssemblyFactory().create( assemblyName.c_str() );
+					m_assembly = assembly.get();
+					insertAssembly( assembly );
+
+					string assemblyInstanceName = assemblyName + "_instance";
+					asf::auto_release_ptr<asr::AssemblyInstance> assInstance( asr::AssemblyInstanceFactory::create( assemblyInstanceName.c_str(), asr::ParamArray(), assemblyName.c_str() ) );
+					assInstance->transform_sequence().set_transform( 0.0f, m_transform );
+					m_assemblyInstance = assInstance.get();
+					insertAssemblyInstance( assInstance );
+
+					// Add the geometry to the light assembly.
+					m_assembly->objects().insert( object );
+
+					// Create the material assignments.
+					asf::StringDictionary frontMaterialMappings;
+					frontMaterialMappings.insert( "default", m_material->get_name() );
+
+					asf::StringDictionary backMaterialMappings;
+					backMaterialMappings.insert( "default", g_nullMaterialName );
+
+					// Create an object instance for the light.
+					string objectInstanceName = name() + "_instance";
+					asf::auto_release_ptr<asr::ObjectInstance> objectInstance;
+					objectInstance = asr::ObjectInstanceFactory::create( objectInstanceName.c_str(), asr::ParamArray(), name().c_str(), asf::Transformd::identity(), frontMaterialMappings, backMaterialMappings );
+					m_assembly->object_instances().insert( objectInstance );
+				}
+				else
+				{
+					// Add the object to the main assembly.
+					insertObject( object );
+				}
+			}
+
+			return true;
+		}
+
+	private :
+
+		void init()
+		{
+			m_edf = nullptr;
+			m_material = nullptr;
+			m_assembly = nullptr;
+			m_assemblyInstance = nullptr;
+		}
+
+		void removeAreaLightEntities()
+		{
+			if( m_edf )
+			{
+				removeEDF( m_edf );
+				m_edf = nullptr;
+			}
+
+			if( m_material )
+			{
+				removeMaterial( m_material );
+				m_material = nullptr;
+			}
+
+			if( m_assembly )
+			{
+				removeAssembly( m_assembly );
+				m_assembly = nullptr;
+			}
+
+			if( m_assemblyInstance )
+			{
+				removeAssemblyInstance( m_assemblyInstance );
+				m_assemblyInstance = nullptr;
+			}
+
+			removeSceneColors();
+			removeSceneTextures();
+		}
+
+		IECoreScenePreview::Renderer::RenderType m_renderType;
+		asf::Transformd m_transform;
+
+		asr::EDF *m_edf;
+		asr::Material *m_material;
+		asr::Assembly *m_assembly;
+		asr::AssemblyInstance *m_assemblyInstance;
 };
 
 } // namespace
@@ -2127,6 +2342,10 @@ class AppleseedRenderer final : public IECoreScenePreview::Renderer
 					{
 						return new AppleseedDeltaLight( *m_project, name, attributes, isInteractiveRender() );
 					}
+					else if( isAreaLight( lightModel ) )
+					{
+						return new AppleseedAreaLight( *m_project, name, attributes, m_renderType );
+					}
 				}
 			}
 
@@ -2348,7 +2567,7 @@ class AppleseedRenderer final : public IECoreScenePreview::Renderer
 			m_mainAssembly->materials().insert( material );
 
 			// Create an empty black material for back faces and area lights.
-			material = asr::GenericMaterialFactory().create( g_emptyMaterialName, asr::ParamArray() );
+			material = asr::GenericMaterialFactory().create( g_nullMaterialName, asr::ParamArray() );
 			m_mainAssembly->materials().insert( material );
 
 			// Instance the main assembly
