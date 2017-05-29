@@ -250,6 +250,22 @@ Gaffer.Metadata.registerNode(
 
 		],
 
+		"jpeg.chromaSubSampling" : [
+
+			"description",
+			"""
+			The chroma sub sampling used to write the jpeg file.
+			Note that the file will be stored as YCbCr instead of RGB.
+			""",
+
+			"plugValueWidget:type", "GafferUI.PresetsPlugValueWidget",
+			"preset:Default (4:2:0)", "",
+			"preset:4:4:4", "4:4:4",
+			"preset:4:2:2", "4:2:2",
+			"preset:4:2:0", "4:2:0",
+			"preset:4:1:1", "4:1:1",
+		],
+
 		"jpeg2000" : [
 
 			"description",

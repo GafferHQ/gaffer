@@ -70,6 +70,7 @@ using namespace GafferImage;
 static InternedString g_modePlugName( "mode" );
 static InternedString g_compressionPlugName( "compression" );
 static InternedString g_compressionQualityPlugName( "compressionQuality" );
+static InternedString g_chromaSubSamplingPlugName( "chromaSubSampling" );
 static InternedString g_compressionLevelPlugName( "compressionLevel" );
 static InternedString g_dataTypePlugName( "dataType" );
 
@@ -587,6 +588,10 @@ void setImageSpecFormatOptions( const ImageWriter *node, ImageSpec *spec, const 
 	if( fileFormatName == "jpeg" )
 	{
 		spec->attribute( "CompressionQuality", optionsPlug->getChild<IntPlug>( g_compressionQualityPlugName )->getValue() );
+		std::string subSampling = optionsPlug->getChild<StringPlug>( g_chromaSubSamplingPlugName )->getValue();
+		if( subSampling != "" ){
+			spec->attribute( "jpeg:subsampling", subSampling );
+		}
 	}
 	else if( fileFormatName == "dpx" )
 	{
@@ -750,6 +755,7 @@ void ImageWriter::createFileFormatOptionsPlugs()
 	ValuePlug *jpgOptionsPlug = new ValuePlug( "jpeg" );
 	addChild( jpgOptionsPlug );
 	jpgOptionsPlug->addChild( new IntPlug( g_compressionQualityPlugName, Plug::In, 98, 0, 100 ) );
+	jpgOptionsPlug->addChild( new StringPlug( g_chromaSubSamplingPlugName ) );
 
 	ValuePlug *jpeg2000OptionsPlug = new ValuePlug( "jpeg2000" );
 	addChild( jpeg2000OptionsPlug );
