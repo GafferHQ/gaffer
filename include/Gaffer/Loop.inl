@@ -41,6 +41,19 @@
 namespace Gaffer
 {
 
+namespace Detail
+{
+
+struct IdentityScope
+{
+	IdentityScope( const Context *context )
+	{
+	}
+};
+
+};
+
+
 template<typename BaseType>
 const IECore::RunTimeTyped::TypeDescription<Loop<BaseType> > Loop<BaseType>::g_typeDescription;
 
@@ -358,6 +371,8 @@ template<typename BaseType>
 const ValuePlug *Loop<BaseType>::sourcePlug( const ValuePlug *output, const Context *context, int &sourceLoopIndex, IECore::InternedString &indexVariable ) const
 {
 	sourceLoopIndex = -1;
+
+	typename LoopTraits<BaseType>::IterationsScope iterationsScope( context );
 
 	indexVariable = indexVariablePlug()->getValue();
 
