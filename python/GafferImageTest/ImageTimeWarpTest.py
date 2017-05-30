@@ -35,6 +35,9 @@
 ##########################################################################
 
 import unittest
+import inspect
+
+import IECore
 
 import Gaffer
 import GafferTest
@@ -103,6 +106,36 @@ class ImageTimeWarpTest( GafferImageTest.ImageTestCase ) :
 			self.assertEqual( c1Hash, tHash )
 			self.assertNotEqual( c0, c1 )
 			self.assertNotEqual( c0Hash, c1Hash )
+
+	def testTimeContext( self ) :
+		script = Gaffer.ScriptNode()
+		script["constant"] = GafferImage.Constant()
+		script["constant"]["format"].setValue( GafferImage.Format( 1, 1, 1.0 ) )
+		
+		script["e"] = Gaffer.Expression()
+		script["e"].setExpression( 'parent["constant"]["color"] = IECore.Color4f( context["frame"] )' )
+
+		script["timeWarp"] = GafferImage.ImageTimeWarp()
+		script["timeWarp"]["in"].setInput( script["constant"]["out"] )
+		script["timeWarp"]["speed"].setValue( 0 )
+		script["timeWarp"]["offset"].setValue( 3 )
+
+		script["sampler"] = GafferImage.ImageSampler()
+		script["sampler"]["pixel"].setValue( IECore.V2f( 0.5, 0.5 ) )
+		script["sampler"]["image"].setInput( script["timeWarp"]["out"] )
+
+		self.assertEqual( script["sampler"]["color"].getValue(), IECore.Color4f( 3 ) )
+
+		script["e2"] = Gaffer.Expression()
+		script["e2"].setExpression( inspect.cleandoc(
+			"""
+			assert( context.get( "image:channelName", None ) is None )
+			assert( context.get( "image:tileOrigin", None ) is None )
+			parent["timeWarp"]["offset"] = 5
+			"""
+		) )
+
+		self.assertEqual( script["sampler"]["color"].getValue(), IECore.Color4f( 5 ) )
 
 	def testDisabling( self ) :
 

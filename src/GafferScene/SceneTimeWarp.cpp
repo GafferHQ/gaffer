@@ -44,6 +44,14 @@ namespace Gaffer
 
 IECORE_RUNTIMETYPED_DEFINETEMPLATESPECIALISATION( GafferScene::SceneTimeWarp, SceneTimeWarpTypeId )
 
+template<>
+struct TimeWarpTraits<GafferScene::SceneProcessor>
+{
+
+	typedef GafferScene::ScenePlug::GlobalScope TimeScope;
+
+};
+
 }
 
 // explicit instantiation

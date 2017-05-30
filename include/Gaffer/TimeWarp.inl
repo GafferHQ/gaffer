@@ -41,6 +41,18 @@
 namespace Gaffer
 {
 
+namespace Detail
+{
+
+struct IdentityScope
+{
+	IdentityScope( const Context *context )
+	{
+	}
+};
+
+};
+
 template<typename BaseType>
 const IECore::RunTimeTyped::TypeDescription<TimeWarp<BaseType> > TimeWarp<BaseType>::g_typeDescription;
 
@@ -95,7 +107,12 @@ void TimeWarp<BaseType>::affects( const Plug *input, DependencyNode::AffectedPlu
 template<typename BaseType>
 void TimeWarp<BaseType>::processContext( Context *context ) const
 {
-	context->setFrame( context->getFrame() * speedPlug()->getValue() + offsetPlug()->getValue() );
+	float frame;
+	{
+		typename TimeWarpTraits<BaseType>::TimeScope timeScope( context );
+		frame = context->getFrame() * speedPlug()->getValue() + offsetPlug()->getValue();
+	}
+	context->setFrame( frame );
 }
 
 } // namespace Gaffer

@@ -36,6 +36,7 @@
 ##########################################################################
 
 import unittest
+import inspect
 
 import IECore
 
@@ -98,6 +99,31 @@ class SceneTimeWarpTest( GafferSceneTest.SceneTestCase ) :
 		n["in"].setInput( p["out"] )
 
 		self.assertTrue( "in1" not in n )
+
+	def testTimeContext( self ) :
+		s = Gaffer.ScriptNode()
+
+		s["cube"] = GafferScene.Cube()
+
+		s["e"] = Gaffer.Expression()
+		s["e"].setExpression( 'parent["cube"]["dimensions"] = IECore.V3f( context["frame"] )' )
+		
+		
+		s["n"] = GafferScene.SceneTimeWarp()
+		s["n"]["in"].setInput( s["cube"]["out"] )
+		s["n"]["speed"].setValue( 0 )
+		s["n"]["offset"].setValue( 3 )
+		self.assertEqual( s["n"]["out"].bound( "/cube" ), IECore.Box3f( IECore.V3f( -1.5 ), IECore.V3f( 1.5 ) ) )
+
+		s["e2"] = Gaffer.Expression()
+		s["e2"].setExpression( inspect.cleandoc(
+			"""
+			assert( context.get( "scene:path", None ) is None )
+			parent["n"]["offset"] = 5
+			"""
+		) )
+		
+		self.assertEqual( s["n"]["out"].bound( "/cube" ), IECore.Box3f( IECore.V3f( -2.5 ), IECore.V3f( 2.5 ) ) )
 
 if __name__ == "__main__":
 	unittest.main()
