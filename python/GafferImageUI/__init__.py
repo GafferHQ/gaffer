@@ -35,6 +35,8 @@
 #
 ##########################################################################
 
+__import__( "GafferUI" )
+
 from _GafferImageUI import *
 
 import DisplayUI
