@@ -43,6 +43,15 @@ namespace Gaffer
 
 IECORE_RUNTIMETYPED_DEFINETEMPLATESPECIALISATION( GafferImage::ImageLoop, GafferImage::ImageLoopTypeId )
 
+template<>
+struct LoopTraits<GafferImage::ImageProcessor>
+{
+
+    typedef GafferImage::ImagePlug::GlobalScope IterationsScope;
+
+};
+
+
 }
 
 // explicit instantiation

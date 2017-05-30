@@ -43,6 +43,15 @@ namespace Gaffer
 
 IECORE_RUNTIMETYPED_DEFINETEMPLATESPECIALISATION( GafferScene::SceneLoop, GafferScene::SceneLoopTypeId )
 
+template<>
+struct LoopTraits<GafferScene::SceneProcessor>
+{
+
+	typedef GafferScene::ScenePlug::GlobalScope IterationsScope;
+
+};
+
+
 }
 
 // explicit instantiation
