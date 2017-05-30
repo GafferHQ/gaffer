@@ -1,3 +1,49 @@
+0.33.3.0
+========
+
+Improvements
+------------
+
+- ImageWriter : Added plug for jpeg chroma subsampling (#2101)
+- Layer selector :
+  - Sorted layer names (#2089)
+  - Simplified menu for standard *.RGBA layers (#2100)
+- Seeds : Added densityPrimitiveVariable plug to allow point density to be varied
+  across the surface of a mesh (#2095)
+- Added InInt and OutInt OSL shaders, to support integer primitive variables in
+  the OSLObject node (#2093)
+- Stats app : Added -task argument to allow collection of stats from TaskNodes (#2090)
+- Arnold :
+  - Added standard AOVs to Outputs node config (#2089)
+  - Cleaned up UI for alHair (#2086)
+- GraphGadget : (#2078)
+  - Added Ctrl+click to select a Backdrop without selecting the nodes it contains
+  - Fixed keyboard modifiers for node selection
+- SplineWidget (#2079) :
+  - Added dropdown menu for selecting interpolation (BSpline/Linear/CatmullRom)
+  - Fixed banding when drawing at large sizes
+
+Fixes
+-----
+
+- Metadata : Fixed bug which could cause crashes at shutdown if a python slot
+  was connected to a metadata signal (#2097)
+- Image view : Fixed error handling bug (#2091)
+- Catalogue :
+  - Fixed hangs caused by GIL management bug (#2085)
+  - Fixed bug whereby selection was lost when renaming an image (#2082)
+- Backdrop : Fixed problems caused by driving title/description with an expression
+  which contains an error (#2083)
+
+API
+---
+
+- SceneView : Added `frame()` method for framing objects (#2084)
+- GafferSceneUI : Added ContextAlgo namespace containing functions for managing
+  scene expansion and selection (#2084)
+- PlugWidget/PlugValueWidget : Added `acquire()` methods (#2084)
+- WidgetAlgo : Added `grab()` method for taking screengrabs (#2084)
+
 0.33.2.0
 ========
 
@@ -42,7 +88,7 @@ Improvements
 - ArnoldOptions : Added "ai:parallel_node_init" (#2062).
   - This defaults off to match Arnold's default, but it may be beneficial to turn on
     in many cases. Note that it is not safe to use with Cryptomatte currently.
-- Stats App (#2059) : 
+- Stats App (#2059) :
   - Added parameter to allow storing stats in a file.
   - Added parameter to optionally supress the node summary.
   - Sorted args alphabetically for consistency of output.
