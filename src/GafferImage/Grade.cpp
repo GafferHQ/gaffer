@@ -43,6 +43,19 @@ using namespace IECore;
 using namespace Gaffer;
 using namespace GafferImage;
 
+namespace 
+{
+	struct GradeParametersScope : public Gaffer::Context::EditableScope
+	{
+		GradeParametersScope( const Gaffer::Context *context )
+			:   EditableScope( context )
+		{
+			remove( GafferImage::ImagePlug::tileOriginContextName );
+		}
+	};
+
+}
+
 IE_CORE_DEFINERUNTIMETYPED( Grade );
 
 size_t Grade::g_firstPlugIndex = 0;
@@ -220,7 +233,8 @@ void Grade::hashChannelData( const GafferImage::ImagePlug *output, const Gaffer:
 
 	const std::string &channelName = context->get<std::string>( ImagePlug::channelNameContextName );
 	const int channelIndex = std::max( 0, ImageAlgo::colorIndex( channelName ) );
-	
+
+	GradeParametersScope s( context );	
 	blackPointPlug()->getChild( channelIndex )->hash( h );
 	whitePointPlug()->getChild( channelIndex )->hash( h );
 	liftPlug()->getChild( channelIndex )->hash( h );
@@ -239,10 +253,14 @@ void Grade::processChannelData( const Gaffer::Context *context, const ImagePlug 
 
 	// Do some pre-processing.
 	float A, B, gamma;
-	parameters( std::max( 0, ImageAlgo::colorIndex( channel ) ), A, B, gamma );
+	bool whiteClamp, blackClamp;
+	{
+		GradeParametersScope s( context );	
+		parameters( std::max( 0, ImageAlgo::colorIndex( channel ) ), A, B, gamma );
+		whiteClamp = whiteClampPlug()->getValue();
+		blackClamp = blackClampPlug()->getValue();
+	}
 	const float invGamma = 1. / gamma;
-	const bool whiteClamp = whiteClampPlug()->getValue();
-	const bool blackClamp = blackClampPlug()->getValue();
 
 	// Get some useful pointers.
 	float *outPtr = &(outData->writable()[0]);
