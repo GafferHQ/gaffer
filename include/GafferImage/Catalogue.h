@@ -75,6 +75,12 @@ class Catalogue : public ImageNode
 				Gaffer::StringPlug *descriptionPlug();
 				const Gaffer::StringPlug *descriptionPlug() const;
 
+				/// Primarily used to take a snapshot of a live render.
+				/// This image must have have been added to a Catalogue
+				/// before calling. The snapshot will be saved to disk
+				/// asynchronously.
+				void copyFrom( const Image *other );
+
 				static Ptr load( const std::string &fileName );
 				void save( const std::string &fileName ) const;
 
