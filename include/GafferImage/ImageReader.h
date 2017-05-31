@@ -114,6 +114,13 @@ class ImageReader : public ImageNode
 
 		static size_t supportedExtensions( std::vector<std::string> &extensions );
 
+		/// A function which can take information about a file being read, and return the colorspace
+		/// of the data within the file. This is used whenever the colorSpace plug is at its default
+		/// value.
+		typedef boost::function<const std::string ( const std::string &fileName, const std::string &fileFormat, const std::string &dataType, const IECore::CompoundData *metadata )> DefaultColorSpaceFunction;
+		static void setDefaultColorSpaceFunction( DefaultColorSpaceFunction f );
+		static DefaultColorSpaceFunction getDefaultColorSpaceFunction();
+
 	protected :
 
 		virtual void hash( const Gaffer::ValuePlug *output, const Gaffer::Context *context, IECore::MurmurHash &h ) const;
@@ -144,6 +151,8 @@ class ImageReader : public ImageNode
 		void computeMaskedOutput( Gaffer::ValuePlug *output, const Gaffer::Context *context, bool alwaysClampToFrame = false ) const;
 
 		bool computeFrameMask( const Gaffer::Context *context, Gaffer::ContextPtr &maskedContext ) const;
+
+		static DefaultColorSpaceFunction &defaultColorSpaceFunction();
 
 		static size_t g_firstChildIndex;
 

@@ -248,6 +248,25 @@ size_t ImageReader::supportedExtensions( std::vector<std::string> &extensions )
 	return extensions.size();
 }
 
+void ImageReader::setDefaultColorSpaceFunction( DefaultColorSpaceFunction f )
+{
+	defaultColorSpaceFunction() = f;
+}
+
+ImageReader::DefaultColorSpaceFunction ImageReader::getDefaultColorSpaceFunction()
+{
+	return defaultColorSpaceFunction();
+}
+
+ImageReader::DefaultColorSpaceFunction &ImageReader::defaultColorSpaceFunction()
+{
+	// We deliberately make no attempt to free this, because typically a python
+	// function is registered here, and we can't free that at exit because python
+	// is already shut down by then.
+	static DefaultColorSpaceFunction *g_colorSpaceFunction = new DefaultColorSpaceFunction;
+	return *g_colorSpaceFunction;
+}
+
 void ImageReader::affects( const Plug *input, AffectedPlugsContainer &outputs ) const
 {
 	ImageNode::affects( input, outputs );
@@ -282,6 +301,7 @@ void ImageReader::hash( const ValuePlug *output, const Context *context, IECore:
 	{
 		intermediateMetadataPlug()->hash( h );
 		colorSpacePlug()->hash( h );
+		fileNamePlug()->hash( h );
 	}
 	else if(
 		output == outPlug()->formatPlug() ||
@@ -306,27 +326,22 @@ void ImageReader::compute( ValuePlug *output, const Context *context ) const
 {
 	if( output == intermediateColorSpacePlug() )
 	{
-		std::string userColorSpace = colorSpacePlug()->getValue();
-		std::string intermediateSpace = "";
-		if( userColorSpace != "" )
-		{
-			intermediateSpace = userColorSpace;
-		}
-		else
+		std::string colorSpace = colorSpacePlug()->getValue();
+		if( colorSpace.empty() )
 		{
 			ConstCompoundDataPtr metadata = intermediateMetadataPlug()->getValue();
-			if( const StringData *intermediateSpaceData = metadata->member<const StringData>( "oiio:ColorSpace" ) )
+			if( const StringData *fileFormatData = metadata->member<StringData>( "fileFormat" ) )
 			{
-				std::vector<std::string> colorSpaces;
-				OpenColorIOTransform::availableColorSpaces( colorSpaces );
-				if( std::find( colorSpaces.begin(), colorSpaces.end(), intermediateSpaceData->readable() ) != colorSpaces.end() )
-				{
-					intermediateSpace = intermediateSpaceData->readable();
-				}
+				const StringData *dataTypeData = metadata->member<StringData>( "dataType" );
+				colorSpace = defaultColorSpaceFunction()(
+					fileNamePlug()->getValue(),
+					fileFormatData->readable(),
+					dataTypeData ? dataTypeData->readable() : "",
+					metadata.get()
+				);
 			}
 		}
-
-		static_cast<StringPlug *>( output )->setValue( intermediateSpace );
+		static_cast<StringPlug *>( output )->setValue( colorSpace );
 	}
 	else if(
 		output == outPlug()->formatPlug() ||
