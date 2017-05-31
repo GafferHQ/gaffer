@@ -398,22 +398,11 @@ class _ImageListing( GafferUI.PlugValueWidget ) :
 		index = self.__indexFromSelection()
 		image = self.__images()[index]
 
-		with self.getContext() :
-			fileName = image["fileName"].getValue()
-			directory = self.__catalogue()["directory"].getValue()
-			directory = self.getContext().substitute( directory )
-
-		if not fileName :
-			# It's a render
-			fileName = self.__catalogue().generateFileName( image )
-			image.save( fileName )
-
-		duplicateImage = GafferImage.Catalogue.Image.load( fileName )
-		duplicateImage.setName( image.getName() + "Copy" )
-
+		imageCopy = GafferImage.Catalogue.Image( image.getName() + "Copy",  flags = Gaffer.Plug.Flags.Default | Gaffer.Plug.Flags.Dynamic )
 		with Gaffer.UndoScope( self.getPlug().ancestor( Gaffer.ScriptNode ) ) :
-			self.__images().addChild( duplicateImage )
+			self.__images().addChild( imageCopy )
 			self.getPlug().setValue( len( self.__images() ) - 1 )
+			imageCopy.copyFrom( image )
 
 	def __dropImage( self, eventData ) :
 
