@@ -37,6 +37,8 @@
 #ifndef GAFFERIMAGE_IMAGEWRITER_H
 #define GAFFERIMAGE_IMAGEWRITER_H
 
+#include "IECore/CompoundData.h"
+
 #include "GafferDispatch/TaskNode.h"
 
 #include "GafferImage/TypeIds.h"
@@ -50,6 +52,7 @@ namespace Gaffer
 namespace GafferImage
 {
 
+IE_CORE_FORWARDDECLARE( ColorSpace )
 IE_CORE_FORWARDDECLARE( ImagePlug )
 
 class ImageWriter : public GafferDispatch::TaskNode
@@ -80,6 +83,9 @@ class ImageWriter : public GafferDispatch::TaskNode
 		GafferImage::ImagePlug *outPlug();
 		const GafferImage::ImagePlug *outPlug() const;
 
+		Gaffer::StringPlug *colorSpacePlug();
+		const Gaffer::StringPlug *colorSpacePlug() const;
+
 		Gaffer::ValuePlug *fileFormatSettingsPlug( const std::string &fileFormat );
 		const Gaffer::ValuePlug *fileFormatSettingsPlug( const std::string &fileFormat ) const;
 
@@ -89,11 +95,21 @@ class ImageWriter : public GafferDispatch::TaskNode
 
 		const std::string currentFileFormat() const;
 
+		typedef boost::function<const std::string ( const IECore::CompoundData * )> DefaultColorSpaceFunction;	
+		static void registerDefaultColorSpace( DefaultColorSpaceFunction f );
+
+		const std::string colorSpace() const;
+
 	private :
+
+		ColorSpace *colorSpaceNode();
+		const ColorSpace *colorSpaceNode() const;
 
 		void createFileFormatOptionsPlugs();
 
 		static size_t g_firstPlugIndex;
+
+		static DefaultColorSpaceFunction &defaultColorSpaceFunc();
 };
 
 IE_CORE_DECLAREPTR( ImageWriter )

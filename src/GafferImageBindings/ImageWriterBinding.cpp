@@ -34,6 +34,10 @@
 //
 //////////////////////////////////////////////////////////////////////////
 
+#include "boost/python.hpp"
+
+#include "IECore/CompoundData.h"
+
 #include "Gaffer/Context.h"
 
 #include "GafferDispatchBindings/TaskNodeBinding.h"
@@ -42,8 +46,42 @@
 
 #include "GafferImageBindings/ImageWriterBinding.h"
 
+using namespace std;
+using namespace boost::python;
 using namespace GafferImage;
 using namespace GafferDispatchBindings;
+
+namespace
+{
+
+	struct DefaultColorSpaceFunction
+	{
+		DefaultColorSpaceFunction( object fn )
+			:	m_fn( fn )
+		{
+		}
+
+		string operator()( const IECore::CompoundData *args )
+		{
+		
+			IECorePython::ScopedGILLock gilock;
+			string result = extract<string>( m_fn( IECore::CompoundDataPtr( const_cast<IECore::CompoundData *>( args ) ) ) );
+			return result;
+
+		}
+		
+		private:
+
+			object m_fn;
+	};
+
+	void registerDefaultColorSpace( object f )
+	{
+
+		ImageWriter::registerDefaultColorSpace( DefaultColorSpaceFunction( f ) );	
+
+	}
+}
 
 void GafferImageBindings::bindImageWriter()
 {
@@ -52,6 +90,9 @@ void GafferImageBindings::bindImageWriter()
 
 	boost::python::scope s = TaskNodeClass<ImageWriter, ImageWriterWrapper>()
 		.def( "currentFileFormat", &ImageWriter::currentFileFormat )
+		.def( "colorSpace", &ImageWriter::colorSpace )
+		.def( "registerDefaultColorSpace", &registerDefaultColorSpace )
+		.staticmethod( "registerDefaultColorSpace" )
 	;
 
 	boost::python::enum_<ImageWriter::Mode>( "Mode" )
