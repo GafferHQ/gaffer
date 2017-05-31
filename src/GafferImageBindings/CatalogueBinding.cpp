@@ -111,6 +111,12 @@ class CatalogueSerialiser : public NodeSerialiser
 
 };
 
+void copyFrom( Catalogue::Image &image, const Catalogue::Image *other )
+{
+	IECorePython::ScopedGILRelease gilRelease;
+	image.copyFrom( other );
+}
+
 void save( Catalogue::Image &image, const std::string &fileName )
 {
 	IECorePython::ScopedGILRelease gilRelease;
@@ -155,6 +161,7 @@ void bindCatalogue()
 			)
 		)
 		.def( "__repr__", repr )
+		.def( "copyFrom", &copyFrom )
 		.def( "load", Catalogue::Image::load )
 		.def( "save", &save )
 		.staticmethod( "load" )

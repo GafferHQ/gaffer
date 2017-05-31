@@ -165,6 +165,38 @@ class Catalogue::InternalImage : public ImageNode
 			return getChild<StringPlug>( g_firstChildIndex + 1 );
 		}
 
+		void copyFrom( const InternalImage *other )
+		{
+			descriptionPlug()->source<StringPlug>()->setValue( other->descriptionPlug()->getValue() );
+			fileNamePlug()->source<StringPlug>()->setValue( other->fileNamePlug()->getValue() );
+			imageSwitch()->indexPlug()->setValue( other->imageSwitch()->indexPlug()->getValue() );
+			text()->enabledPlug()->setValue( other->text()->enabledPlug()->getValue() );
+
+			removeDisplays();
+			size_t numDisplays = 0;
+			for( DisplayIterator it( other ); !it.done(); ++it )
+			{
+				Display *display = it->get();
+				DisplayPtr displayCopy = new Display;
+				displayCopy->setDriver( display->getDriver(), /* copy = */ true );
+				addChild( displayCopy );
+				copyChannels()->inPlugs()->getChild<Plug>( numDisplays++ )->setInput( displayCopy->outPlug() );
+			}
+
+			m_saver = NULL;
+			if( other->m_saver )
+			{
+				m_saver = other->m_saver;
+				m_saver->registerClient( this );
+			}
+			else if( numDisplays )
+			{
+				m_saver = new AsynchronousSaver( this );
+			}
+
+			m_clientPID = -2; // Make sure insertDriver() will reject new drivers
+		}
+
 		void save( const std::string &fileName ) const
 		{
 			ImageWriterPtr imageWriter = new ImageWriter;
@@ -355,8 +387,7 @@ class Catalogue::InternalImage : public ImageNode
 
 			IE_CORE_DECLAREMEMBERPTR( AsynchronousSaver )
 
-			AsynchronousSaver( InternalImage *client )
-				:	m_client( client )
+			AsynchronousSaver( InternalImagePtr client )
 			{
 				// We use a copy of the image to do the saving, because the original
 				// might be modified on the main thread while we save in the background.
@@ -364,7 +395,7 @@ class Catalogue::InternalImage : public ImageNode
 				m_imageCopy = new InternalImage;
 
 				size_t i = 0;
-				for( DisplayIterator it( m_client.get() ); !it.done(); ++it )
+				for( DisplayIterator it( client.get() ); !it.done(); ++it )
 				{
 					Display *display = it->get();
 					DisplayPtr displayCopy = new Display;
@@ -378,7 +409,7 @@ class Catalogue::InternalImage : public ImageNode
 				// We do all graph construction here in the main thread
 				// so that the background thread only does execution.
 
-				const string fileName = m_client->parent<Catalogue>()->generateFileName( m_imageCopy->outPlug() );
+				const string fileName = client->parent<Catalogue>()->generateFileName( m_imageCopy->outPlug() );
 				if( fileName.empty() )
 				{
 					return;
@@ -388,12 +419,27 @@ class Catalogue::InternalImage : public ImageNode
 				m_writer->inPlug()->setInput( m_imageCopy->outPlug() );
 				m_writer->fileNamePlug()->setValue( fileName );
 
-				// Let the user know what we're up to.
-				m_client->text()->enabledPlug()->setValue( true );
+				registerClient( client );
 
 				// And fire off a thread to do the actual work.
 				std::thread thread( boost::bind( &AsynchronousSaver::save, Ptr( this ) ) );
 				thread.detach();
+			}
+
+			void registerClient( InternalImagePtr client )
+			{
+				if( m_imageCopy )
+				{
+					// Still in the process of saving
+					m_clients.push_back( client );
+					client->text()->enabledPlug()->setValue( true );
+				}
+				else
+				{
+					// Saving already completed
+					DirtyPropagationScope dirtyPropagationScope;
+					wrapUpClient( client.get() );
+				}
 			}
 
 			typedef std::pair<std::string, Imath::V2i> TileIndex;
@@ -446,30 +492,37 @@ class Catalogue::InternalImage : public ImageNode
 				{
 					DirtyPropagationScope dirtyPropagationScope;
 
+					for( vector<InternalImagePtr>::const_iterator it = m_clients.begin(), eIt = m_clients.end(); it != eIt; ++it )
+					{
+						wrapUpClient( it->get() );
+					}
+
+					// Destroy the image to release the memory used by the copied display drivers.
+					m_imageCopy = NULL;
+					// Break circular references
+					m_clients.clear();
+				}
+
+				void wrapUpClient( InternalImage *client )
+				{
 					// Set up the client to read from the saved image
-					m_client->text()->enabledPlug()->setValue( false );
-					m_client->fileNamePlug()->source<StringPlug>()->setValue( m_writer->fileNamePlug()->getValue() );
-					m_client->imageSwitch()->indexPlug()->setValue( 0 );
+					client->text()->enabledPlug()->setValue( false );
+					client->fileNamePlug()->source<StringPlug>()->setValue( m_writer->fileNamePlug()->getValue() );
+					client->imageSwitch()->indexPlug()->setValue( 0 );
 					// But force hashChannelData and computeChannelData to be called
 					// so that we can reuse the cache entries created by the original
 					// Display nodes, rather than force an immediate load of the image
 					// from disk, which would be slow.
-					m_client->outPlug()->channelDataPlug()->setInput( NULL );
+					client->outPlug()->channelDataPlug()->setInput( NULL );
 
-					m_client->removeDisplays();
-					m_client->updateImageFlags( Plug::Serialisable, true );
-
-					// Destroy the image to release the memory used by the copied display drivers.
-					m_imageCopy = NULL;
-					m_writer = NULL;
-					// Break circular reference
-					m_client = NULL;
+					client->removeDisplays();
+					client->updateImageFlags( Plug::Serialisable, true );
 				}
 
 				InternalImagePtr m_imageCopy;
 				ImageWriterPtr m_writer;
 
-				InternalImagePtr m_client;
+				vector<InternalImagePtr> m_clients;
 
 		};
 
@@ -478,7 +531,6 @@ class Catalogue::InternalImage : public ImageNode
 		AsynchronousSaver::Ptr m_saver;
 
 		static size_t g_firstChildIndex;
-
 
 };
 
@@ -515,6 +567,11 @@ Gaffer::StringPlug *Catalogue::Image::descriptionPlug()
 const Gaffer::StringPlug *Catalogue::Image::descriptionPlug() const
 {
 	return getChild<StringPlug>( 1 );
+}
+
+void Catalogue::Image::copyFrom( const Image *other )
+{
+	imageNode( this )->copyFrom( imageNode( other ) );
 }
 
 Catalogue::Image::Ptr Catalogue::Image::load( const std::string &fileName )

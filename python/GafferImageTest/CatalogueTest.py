@@ -523,5 +523,34 @@ class CatalogueTest( GafferImageTest.ImageTestCase ) :
 			)
 		)
 
+		# This applies to copies too
+
+		c["images"].addChild( GafferImage.Catalogue.Image( flags = Gaffer.Plug.Flags.Default | Gaffer.Plug.Flags.Dynamic ) )
+		self.assertEqual( len( c["images"] ), 2 )
+		c["images"][1].copyFrom( c["images"][0] )
+
+		c["imageIndex"].setValue( 1 )
+		self.assertEqual(
+			display["out"].channelDataHash( "R", IECore.V2i( 0 ) ),
+			c["out"].channelDataHash( "R", IECore.V2i( 0 ) )
+		)
+		self.assertTrue(
+			display["out"].channelData( "R", IECore.V2i( 0 ), _copy = False ).isSame(
+				c["out"].channelData( "R", IECore.V2i( 0 ), _copy = False )
+			)
+		)
+
+	def testCopyFrom( self ) :
+
+		c = GafferImage.Catalogue()
+		c["images"].addChild( c.Image.load( "${GAFFER_ROOT}/python/GafferImageTest/images/checker.exr" ) )
+		c["images"][0]["description"].setValue( "test" )
+
+		c["images"].addChild( c.Image( flags = Gaffer.Plug.Flags.Default | Gaffer.Plug.Flags.Dynamic ) )
+		c["images"][1].copyFrom( c["images"][0] )
+
+		self.assertEqual( c["images"][1]["description"].getValue(), c["images"][0]["description"].getValue() )
+		self.assertEqual( c["images"][1]["fileName"].getValue(), c["images"][0]["fileName"].getValue() )
+
 if __name__ == "__main__":
 	unittest.main()
