@@ -305,20 +305,7 @@ Catalogue::Image::Ptr Catalogue::Image::load( const std::string &fileName )
 
 void Catalogue::Image::save( const std::string &fileName ) const
 {
-	const InternalImage *internalImage = NULL;
-	for( DownstreamIterator it( fileNamePlug() ); !it.done(); ++it )
-	{
-		internalImage = dynamic_cast<const InternalImage *>( it->node() );
-		if( internalImage )
-		{
-			break;
-		}
-	}
-	if( !internalImage )
-	{
-		throw IECore::Exception( "Catalogue::imageNode : Unable to find image" );
-	}
-	internalImage->save( fileName );
+	Catalogue::imageNode( this )->save( fileName );
 }
 
 Gaffer::PlugPtr Catalogue::Image::createCounterpart( const std::string &name, Direction direction ) const
@@ -442,20 +429,41 @@ const ImageSwitch *Catalogue::imageSwitch() const
 	return getChild<ImageSwitch>( g_firstPlugIndex + 4 );
 }
 
-Catalogue::InternalImage *Catalogue::imageNode( const Image *image ) const
+Catalogue::InternalImage *Catalogue::imageNode( Image *image )
 {
+	// Prefer const_cast over maintaining two identical functions
+	return const_cast<InternalImage *>( imageNode( const_cast<const Image *>( image ) ) );
+}
+
+const Catalogue::InternalImage *Catalogue::imageNode( const Image *image )
+{
+	const InternalImage *result = NULL;
 	for( DownstreamIterator it( image->fileNamePlug() ); !it.done(); ++it )
 	{
-		const InternalImage *node = runTimeCast<const InternalImage>( it->node() );
-		if( node && node->parent<Node>() == this )
+		if( const InternalImage *internalImage = dynamic_cast<const InternalImage *>( it->node() ) )
 		{
-			/// \todo Make DownstreamIterator reference non-const
-			/// plugs (and add a ConstDownstreamIterator) and then
-			/// we don't need this cast.
-			return const_cast<InternalImage *>( node );
+			if( result && internalImage != result )
+			{
+				// We expect to find only one InternalImage node for any given Image plug.
+				// But we also allow Image plugs to have input connections so that Catalogues
+				// can be used with Boxes with their imagesPlug() promoted. This means we can't
+				// enforce the one-to-one relationship via plug flags, so we must instead enforce
+				// it here.
+				throw IECore::Exception( "Catalogue::imageNode : Multiple internal images not supported" );
+			}
+			else
+			{
+				result = internalImage;
+			}
 		}
 	}
-	throw IECore::Exception( "Catalogue::imageNode : Unable to find image" );
+
+	if( !result )
+	{
+		throw IECore::Exception( "Catalogue::imageNode : Unable to find image" );
+	}
+
+	return result;
 }
 
 std::string Catalogue::generateFileName( const Image *image ) const

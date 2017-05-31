@@ -114,7 +114,8 @@ class Catalogue : public ImageNode
 		const ImageSwitch *imageSwitch() const;
 
 		IE_CORE_FORWARDDECLARE( InternalImage );
-		InternalImage *imageNode( const Image *image ) const;
+		static InternalImage *imageNode( Image *image );
+		static const InternalImage *imageNode( const Image *image );
 
 		void imageAdded( GraphComponent *graphComponent );
 		void imageRemoved( GraphComponent *graphComponent );
