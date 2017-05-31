@@ -100,8 +100,8 @@ class ImagePlug : public Gaffer::ValuePlug
 		const GafferImage::AtomicFormatPlug *formatPlug() const;
 		Gaffer::AtomicBox2iPlug *dataWindowPlug();
 		const Gaffer::AtomicBox2iPlug *dataWindowPlug() const;
-		Gaffer::CompoundObjectPlug *metadataPlug();
-		const Gaffer::CompoundObjectPlug *metadataPlug() const;
+		Gaffer::AtomicCompoundDataPlug *metadataPlug();
+		const Gaffer::AtomicCompoundDataPlug *metadataPlug() const;
 		Gaffer::StringVectorDataPlug *channelNamesPlug();
 		const Gaffer::StringVectorDataPlug *channelNamesPlug() const;
 		Gaffer::FloatVectorDataPlug *channelDataPlug();
@@ -172,7 +172,7 @@ class ImagePlug : public Gaffer::ValuePlug
 			return tileIndex( point ) * tileSize();
 		}
 
-		
+
 
 	private :
 		static int tileSizeLog2() { return 6; };

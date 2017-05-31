@@ -162,17 +162,17 @@ void ImagePrimitiveSource<BaseType>::hashMetadata( const GafferImage::ImagePlug 
 }
 
 template<typename BaseType>
-IECore::ConstCompoundObjectPtr ImagePrimitiveSource<BaseType>::computeMetadata( const Gaffer::Context *context, const ImagePlug *parent ) const
+IECore::ConstCompoundDataPtr ImagePrimitiveSource<BaseType>::computeMetadata( const Gaffer::Context *context, const ImagePlug *parent ) const
 {
-	IECore::CompoundObjectPtr result = new IECore::CompoundObject;
-
 	IECore::ConstImagePrimitivePtr image = IECore::runTimeCast<const IECore::ImagePrimitive>( inputImagePrimitivePlug()->getValue() );
 	if( image )
 	{
-		compoundDataToCompoundObject( image->blindData(), result.get() );
+		return image->blindData();
 	}
-
-	return result;
+	else
+	{
+		return BaseType::outPlug()->metadataPlug()->defaultValue();
+	}
 }
 
 template<typename BaseType>
@@ -274,27 +274,6 @@ template<typename BaseType>
 const Gaffer::ObjectPlug *ImagePrimitiveSource<BaseType>::inputImagePrimitivePlug() const
 {
 	return BaseType::template getChild<Gaffer::ObjectPlug>( "__inputImagePrimitive" );
-}
-
-// \todo This function may be useful on other situations. Add as Converter?
-template<typename BaseType>
-void ImagePrimitiveSource<BaseType>::compoundDataToCompoundObject( const IECore::CompoundData *data, IECore::CompoundObject *object )
-{
-	IECore::CompoundObject::ObjectMap &objectMap = object->members();
-	const IECore::CompoundDataMap &dataMap = data->readable();
-	for ( IECore::CompoundDataMap::const_iterator it = dataMap.begin(); it != dataMap.end(); ++it )
-	{
-		if ( it->second->typeId() == IECore::CompoundDataTypeId )
-		{
-			IECore::CompoundObjectPtr newObject = new IECore::CompoundObject();
-			objectMap[ it->first ] = newObject;
-			compoundDataToCompoundObject( static_cast<const IECore::CompoundData *>( it->second.get() ), newObject.get() );
-		}
-		else
-		{
-			objectMap[ it->first ] = it->second.get();
-		}
-	}
 }
 
 } // namespace GafferImage

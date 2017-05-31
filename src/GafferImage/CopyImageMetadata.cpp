@@ -109,10 +109,10 @@ void CopyImageMetadata::hashProcessedMetadata( const Gaffer::Context *context, I
 	invertNamesPlug()->hash( h );
 }
 
-IECore::ConstCompoundObjectPtr CopyImageMetadata::computeProcessedMetadata( const Gaffer::Context *context, const IECore::CompoundObject *inputMetadata ) const
+IECore::ConstCompoundDataPtr CopyImageMetadata::computeProcessedMetadata( const Gaffer::Context *context, const IECore::CompoundData *inputMetadata ) const
 {
-	ConstCompoundObjectPtr copyFrom = copyFromPlug()->metadataPlug()->getValue();
-	if ( copyFrom->members().empty() )
+	ConstCompoundDataPtr copyFrom = copyFromPlug()->metadataPlug()->getValue();
+	if( copyFrom->readable().empty() )
 	{
 		return inputMetadata;
 	}
@@ -124,18 +124,12 @@ IECore::ConstCompoundObjectPtr CopyImageMetadata::computeProcessedMetadata( cons
 		return inputMetadata;
 	}
 
-	IECore::CompoundObjectPtr result = inputMetadata->copy();
-	for ( IECore::CompoundObject::ObjectMap::const_iterator it = copyFrom->members().begin(), eIt = copyFrom->members().end(); it != eIt; ++it )
+	IECore::CompoundDataPtr result = inputMetadata->copy();
+	for( IECore::CompoundData::ValueType::const_iterator it = copyFrom->readable().begin(), eIt = copyFrom->readable().end(); it != eIt; ++it )
 	{
-		bool copy = false;
 		if( StringAlgo::matchMultiple( it->first.c_str(), names.c_str() ) != invert )
 		{
-			copy = true;
-		}
-
-		if ( copy )
-		{
-			result->members()[it->first] = it->second;
+			result->writable()[it->first] = it->second;
 		}
 	}
 

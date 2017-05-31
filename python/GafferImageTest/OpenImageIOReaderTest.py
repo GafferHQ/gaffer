@@ -84,7 +84,7 @@ class OpenImageIOReaderTest( GafferImageTest.ImageTestCase ) :
 		self.assertEqual( n["out"]["dataWindow"].getValue(), IECore.Box2i( IECore.V2i( 0 ), IECore.V2i( 200, 150 ) ) )
 		self.assertEqual( n["out"]["format"].getValue().getDisplayWindow(), IECore.Box2i( IECore.V2i( 0 ), IECore.V2i( 200, 150 ) ) )
 
-		expectedMetadata = IECore.CompoundObject( {
+		expectedMetadata = IECore.CompoundData( {
 			"oiio:ColorSpace" : IECore.StringData( 'Linear' ),
 			"compression" : IECore.StringData( 'zips' ),
 			"PixelAspectRatio" : IECore.FloatData( 1 ),

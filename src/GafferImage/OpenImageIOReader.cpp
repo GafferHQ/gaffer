@@ -174,12 +174,12 @@ const ImageSpec *imageSpec( std::string &fileName, OpenImageIOReader::MissingFra
 namespace
 {
 
-void oiioParameterListToMetadata( const ImageIOParameterList &paramList, CompoundObject *metadata )
+void oiioParameterListToMetadata( const ImageIOParameterList &paramList, CompoundData *metadata )
 {
-	CompoundObject::ObjectMap &members = metadata->members();
+	CompoundData::ValueType &members = metadata->writable();
 	for ( ImageIOParameterList::const_iterator it = paramList.begin(); it != paramList.end(); ++it )
 	{
-		ObjectPtr value = NULL;
+		DataPtr value = NULL;
 
 		const TypeDesc &type = it->type();
 		switch ( type.basetype )
@@ -578,7 +578,7 @@ void OpenImageIOReader::hashMetadata( const GafferImage::ImagePlug *output, cons
 	missingFrameModePlug()->hash( h );
 }
 
-IECore::ConstCompoundObjectPtr OpenImageIOReader::computeMetadata( const Gaffer::Context *context, const ImagePlug *parent ) const
+IECore::ConstCompoundDataPtr OpenImageIOReader::computeMetadata( const Gaffer::Context *context, const ImagePlug *parent ) const
 {
 	std::string fileName = fileNamePlug()->getValue();
 	const ImageSpec *spec = imageSpec( fileName, (MissingFrameMode)missingFrameModePlug()->getValue(), this, context );
@@ -587,7 +587,7 @@ IECore::ConstCompoundObjectPtr OpenImageIOReader::computeMetadata( const Gaffer:
 		return parent->metadataPlug()->defaultValue();
 	}
 
-	CompoundObjectPtr result = new CompoundObject;
+	CompoundDataPtr result = new CompoundData;
 	oiioParameterListToMetadata( spec->extra_attribs, result.get() );
 
 	return result;

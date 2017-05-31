@@ -483,7 +483,7 @@ Imath::Box2i Display::computeDataWindow( const Gaffer::Context *context, const I
 	return Box2i();
 }
 
-IECore::ConstCompoundObjectPtr Display::computeMetadata( const Gaffer::Context *context, const ImagePlug *parent ) const
+IECore::ConstCompoundDataPtr Display::computeMetadata( const Gaffer::Context *context, const ImagePlug *parent ) const
 {
 	return outPlug()->metadataPlug()->defaultValue();
 }

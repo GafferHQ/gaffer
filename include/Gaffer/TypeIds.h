@@ -96,7 +96,7 @@ enum TypeId
 	ContextVariablesComputeNodeTypeId = 110049,
 	RandomTypeId = 110050,
 	DependencyNodeTypeId = 110051,
-	ExecutableNodeRequirementPlugTypeId = 110052, // obsolete - available for reuse
+	AtomicCompoundDataPlugTypeId = 110052,
 	BoxTypeId = 110053,
 	InternedStringVectorDataPlugTypeId = 110054,
 	ExecutableNodeTypeId = 110055, // obsolete - available for reuse

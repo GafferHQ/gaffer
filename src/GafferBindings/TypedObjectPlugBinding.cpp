@@ -55,4 +55,5 @@ void GafferBindings::bindTypedObjectPlug()
 	GafferBindings::TypedObjectPlugClass<Gaffer::M44fVectorDataPlug>();
 	GafferBindings::TypedObjectPlugClass<Gaffer::ObjectVectorPlug>();
 	GafferBindings::TypedObjectPlugClass<Gaffer::CompoundObjectPlug>();
+	GafferBindings::TypedObjectPlugClass<Gaffer::AtomicCompoundDataPlug>();
 }

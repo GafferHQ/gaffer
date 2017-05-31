@@ -496,12 +496,12 @@ class FlatScanlineWriter
 // Utility for converting IECore::Data types to OIIO::TypeDesc types.
 //////////////////////////////////////////////////////////////////////////
 
-void metadataToImageSpecAttributes( const CompoundObject *metadata, ImageSpec &spec )
+void metadataToImageSpecAttributes( const CompoundData *metadata, ImageSpec &spec )
 {
-	const CompoundObject::ObjectMap &members = metadata->members();
-	for ( CompoundObject::ObjectMap::const_iterator it = members.begin(); it != members.end(); ++it )
+	const CompoundData::ValueType &members = metadata->readable();
+	for( CompoundData::ValueType::const_iterator it = members.begin(); it != members.end(); ++it )
 	{
-		const OpenImageIOAlgo::DataView dataView( runTimeCast<const IECore::Data>( it->second.get() ) );
+		const OpenImageIOAlgo::DataView dataView( it->second.get() );
 		if( dataView.data )
 		{
 			spec.attribute( it->first.c_str(), dataView.type, dataView.data );
@@ -645,21 +645,11 @@ ImageSpec createImageSpec( const ImageWriter *node, const ImageOutput *out, cons
 	}
 
 	// Add the metadata to the spec, removing metadata that could affect the resulting channel data
-	CompoundObjectPtr metadata = node->inPlug()->metadataPlug()->getValue()->copy();
-	CompoundObject::ObjectMap &members = metadata->members();
+	CompoundDataPtr metadata = node->inPlug()->metadataPlug()->getValue()->copy();
 
-	std::vector<InternedString> oiioSpecifics;
-	oiioSpecifics.push_back( "oiio:ColorSpace" );
-	oiioSpecifics.push_back( "oiio:Gamma" );
-	oiioSpecifics.push_back( "oiio:UnassociatedAlpha" );
-	for ( std::vector<InternedString>::iterator it = oiioSpecifics.begin(); it != oiioSpecifics.end(); ++it )
-	{
-		CompoundObject::ObjectMap::iterator mIt = members.find( *it );
-		if ( mIt != members.end() )
-		{
-			members.erase( mIt );
-		}
-	}
+	metadata->writable().erase( "oiio:ColorSpace" );
+	metadata->writable().erase( "oiio:Gamma" );
+	metadata->writable().erase( "oiio:UnassociatedAlpha" );
 
 	metadataToImageSpecAttributes( metadata.get(), spec );
 

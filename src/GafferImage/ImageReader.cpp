@@ -85,7 +85,7 @@ ImageReader::ImageReader( const std::string &name )
 
 	addChild( new StringPlug( "colorSpace" ) );
 
-	addChild( new CompoundObjectPlug( "__intermediateMetadata", Plug::In, new CompoundObject, Plug::Default & ~Plug::Serialisable ) );
+	addChild( new AtomicCompoundDataPlug( "__intermediateMetadata", Plug::In, new CompoundData, Plug::Default & ~Plug::Serialisable ) );
 	addChild( new StringPlug( "__intermediateColorSpace", Plug::Out, "", Plug::Default & ~Plug::Serialisable ) );
 	addChild( new ImagePlug( "__intermediateImage", Plug::In, Plug::Default & ~Plug::Serialisable ) );
 
@@ -192,14 +192,14 @@ const StringPlug *ImageReader::colorSpacePlug() const
 	return getChild<StringPlug>( g_firstChildIndex + 5 );
 }
 
-CompoundObjectPlug *ImageReader::intermediateMetadataPlug()
+AtomicCompoundDataPlug *ImageReader::intermediateMetadataPlug()
 {
-	return getChild<CompoundObjectPlug>( g_firstChildIndex + 6 );
+	return getChild<AtomicCompoundDataPlug>( g_firstChildIndex + 6 );
 }
 
-const CompoundObjectPlug *ImageReader::intermediateMetadataPlug() const
+const AtomicCompoundDataPlug *ImageReader::intermediateMetadataPlug() const
 {
-	return getChild<CompoundObjectPlug>( g_firstChildIndex + 6 );
+	return getChild<AtomicCompoundDataPlug>( g_firstChildIndex + 6 );
 }
 
 StringPlug *ImageReader::intermediateColorSpacePlug()
@@ -314,7 +314,7 @@ void ImageReader::compute( ValuePlug *output, const Context *context ) const
 		}
 		else
 		{
-			ConstCompoundObjectPtr metadata = intermediateMetadataPlug()->getValue();
+			ConstCompoundDataPtr metadata = intermediateMetadataPlug()->getValue();
 			if( const StringData *intermediateSpaceData = metadata->member<const StringData>( "oiio:ColorSpace" ) )
 			{
 				std::vector<std::string> colorSpaces;
