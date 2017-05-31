@@ -727,7 +727,7 @@ class RenderManRenderTest( GafferRenderManTest.RenderManTestCase ) :
 		visibleStats["area"].setValue( visible["out"]["format"].getValue().getDisplayWindow() )
 
 		self.assertLess( hiddenStats["average"].getValue()[0], 0.05 )
-		self.assertGreater( visibleStats["average"].getValue()[0], .35 )
+		self.assertGreater( visibleStats["average"].getValue()[0], .22 )
 
 	def testPreWorldRenderables( self ):
 

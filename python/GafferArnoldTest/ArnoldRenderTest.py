@@ -298,7 +298,7 @@ class ArnoldRenderTest( GafferSceneTest.SceneTestCase ) :
 		visibleStats["area"].setValue( visibleStats["in"]["dataWindow"].getValue() )
 
 		self.assertLess( hiddenStats["average"].getValue()[0], 0.05 )
-		self.assertGreater( visibleStats["average"].getValue()[0], .35 )
+		self.assertGreater( visibleStats["average"].getValue()[0], .27 )
 
 	def testTransformMotion( self ) :
 
