@@ -82,6 +82,9 @@ class OpenImageIOReader : public ImageNode
 		Gaffer::IntVectorDataPlug *availableFramesPlug();
 		const Gaffer::IntVectorDataPlug *availableFramesPlug() const;
 
+		Gaffer::StringPlug *dataTypePlug();
+		const Gaffer::StringPlug *dataTypePlug() const;
+
 		virtual void affects( const Gaffer::Plug *input, AffectedPlugsContainer &outputs ) const;
 
 		static size_t supportedExtensions( std::vector<std::string> &extensions );
@@ -111,6 +114,7 @@ class OpenImageIOReader : public ImageNode
 		virtual IECore::ConstCompoundDataPtr computeMetadata( const Gaffer::Context *context, const ImagePlug *parent ) const;
 		virtual IECore::ConstStringVectorDataPtr computeChannelNames( const Gaffer::Context *context, const ImagePlug *parent ) const;
 		virtual IECore::ConstFloatVectorDataPtr computeChannelData( const std::string &channelName, const Imath::V2i &tileOrigin, const Gaffer::Context *context, const ImagePlug *parent ) const;
+		std::string computeDataType( const Gaffer::Context *context ) const;
 
 	private :
 
