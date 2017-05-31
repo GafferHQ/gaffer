@@ -47,6 +47,7 @@
 #include "boost/lexical_cast.hpp"
 #include "boost/filesystem/path.hpp"
 #include "boost/filesystem/operations.hpp"
+#include "boost/unordered_map.hpp"
 
 #include "Gaffer/Context.h"
 #include "Gaffer/StringPlug.h"
@@ -62,11 +63,28 @@
 #include "GafferImage/Display.h"
 #include "GafferImage/ImageWriter.h"
 #include "GafferImage/Text.h"
+#include "GafferImage/ImageAlgo.h"
 
 using namespace std;
 using namespace IECore;
 using namespace Gaffer;
 using namespace GafferImage;
+
+//////////////////////////////////////////////////////////////////////////
+// Allow Imath::V2i to be used in boost::unordered_map
+//////////////////////////////////////////////////////////////////////////
+
+IMATH_INTERNAL_NAMESPACE_HEADER_ENTER
+
+size_t hash_value( const Imath::V2i &v )
+{
+	size_t s = 0;
+	boost::hash_combine( s, v.x );
+	boost::hash_combine( s, v.y );
+	return s;
+}
+
+IMATH_INTERNAL_NAMESPACE_HEADER_EXIT
 
 //////////////////////////////////////////////////////////////////////////
 // InternalImage.
@@ -228,6 +246,32 @@ class Catalogue::InternalImage : public ImageNode
 			m_saver = new AsynchronousSaver( this );
 		}
 
+	protected :
+
+		virtual void hashChannelData( const GafferImage::ImagePlug *parent, const Gaffer::Context *context, IECore::MurmurHash &h ) const
+		{
+			assert( m_saver );
+			AsynchronousSaver::ChannelDataHashes::const_iterator it = m_saver->channelDataHashes.find(
+				AsynchronousSaver::TileIndex(
+					context->get<string>( ImagePlug::channelNameContextName ),
+					context->get<Imath::V2i>( ImagePlug::tileOriginContextName )
+				)
+			);
+			if( it != m_saver->channelDataHashes.end() )
+			{
+				h = it->second;
+			}
+			else
+			{
+				h = imageReader()->outPlug()->channelDataPlug()->hash();
+			}
+		}
+
+		virtual IECore::ConstFloatVectorDataPtr computeChannelData( const std::string &channelName, const Imath::V2i &tileOrigin, const Gaffer::Context *context, const ImagePlug *parent ) const
+		{
+			return imageReader()->outPlug()->channelDataPlug()->getValue();
+		}
+
 	private :
 
 		void updateImageFlags( unsigned flags, bool enable )
@@ -352,10 +396,48 @@ class Catalogue::InternalImage : public ImageNode
 				thread.detach();
 			}
 
+			typedef std::pair<std::string, Imath::V2i> TileIndex;
+			typedef boost::unordered_map<TileIndex, IECore::MurmurHash> ChannelDataHashes;
+			ChannelDataHashes channelDataHashes;
+
 			private :
+
+				struct HashGatherer
+				{
+
+					HashGatherer( ChannelDataHashes &hashes )
+						:	m_hashes( hashes )
+					{
+					}
+
+					typedef IECore::MurmurHash Result;
+
+					IECore::MurmurHash operator()( const ImagePlug *imagePlug, const std::string &channelName, const Imath::V2i &tileOrigin )
+					{
+						return imagePlug->channelDataPlug()->hash();
+					}
+
+					void operator()( const ImagePlug *imagePlug, const string &channelName, const Imath::V2i &tileOrigin, const IECore::MurmurHash hash )
+					{
+						m_hashes[TileIndex(channelName, tileOrigin)] = hash;
+					}
+
+					private :
+
+						ChannelDataHashes &m_hashes;
+
+				};
 
 				void save()
 				{
+					HashGatherer hashGatherer( channelDataHashes );
+					parallelGatherTiles(
+						m_imageCopy->copyChannels()->outPlug(),
+						m_imageCopy->copyChannels()->outPlug()->channelNamesPlug()->getValue()->readable(),
+						hashGatherer,
+						hashGatherer
+					);
+
 					m_writer->taskPlug()->execute();
 					Display::executeOnUIThread( boost::bind( &AsynchronousSaver::wrapUp, Ptr( this ) ) );
 				}
@@ -364,9 +446,15 @@ class Catalogue::InternalImage : public ImageNode
 				{
 					DirtyPropagationScope dirtyPropagationScope;
 
+					// Set up the client to read from the saved image
 					m_client->text()->enabledPlug()->setValue( false );
 					m_client->fileNamePlug()->source<StringPlug>()->setValue( m_writer->fileNamePlug()->getValue() );
 					m_client->imageSwitch()->indexPlug()->setValue( 0 );
+					// But force hashChannelData and computeChannelData to be called
+					// so that we can reuse the cache entries created by the original
+					// Display nodes, rather than force an immediate load of the image
+					// from disk, which would be slow.
+					m_client->outPlug()->channelDataPlug()->setInput( NULL );
 
 					m_client->removeDisplays();
 					m_client->updateImageFlags( Plug::Serialisable, true );
@@ -390,6 +478,7 @@ class Catalogue::InternalImage : public ImageNode
 		AsynchronousSaver::Ptr m_saver;
 
 		static size_t g_firstChildIndex;
+
 
 };
 

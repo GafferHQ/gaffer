@@ -367,28 +367,28 @@ class CatalogueTest( GafferImageTest.ImageTestCase ) :
 
 		self.assertEqual( len( promotedImages ), 1 )
 		self.assertEqual( promotedImageIndex.getValue(), 0 )
-		self.assertImagesEqual( r["out"], promotedOut, ignoreMetadata = True, maxDifference = 0.0003 )
+		self.assertImagesEqual( r["out"], promotedOut, ignoreMetadata = True )
 
 		r["fileName"].setValue( "${GAFFER_ROOT}/python/GafferImageTest/images/blurRange.exr" )
 		self.sendImage( r["out"], s["b"]["c"] )
 
 		self.assertEqual( len( promotedImages ), 2 )
 		self.assertEqual( promotedImageIndex.getValue(), 1 )
-		self.assertImagesEqual( r["out"], promotedOut, ignoreMetadata = True, maxDifference = 0.0003 )
+		self.assertImagesEqual( r["out"], promotedOut, ignoreMetadata = True )
 
 		s2 = Gaffer.ScriptNode()
 		s2.execute( s.serialise() )
 
 		self.assertEqual( len( s2["b"]["images"] ), 2 )
 		self.assertEqual( s2["b"]["imageIndex"].getValue(), 1 )
-		self.assertImagesEqual( promotedOut, s2["b"]["c"]["out"], ignoreMetadata = True )
+		self.assertImagesEqual( promotedOut, s2["b"]["c"]["out"], ignoreMetadata = True, maxDifference = 0.0003 )
 
 		s3 = Gaffer.ScriptNode()
 		s3.execute( s2.serialise() )
 
 		self.assertEqual( len( s3["b"]["images"] ), 2 )
 		self.assertEqual( s3["b"]["imageIndex"].getValue(), 1 )
-		self.assertImagesEqual( promotedOut, s3["b"]["c"]["out"], ignoreMetadata = True )
+		self.assertImagesEqual( promotedOut, s3["b"]["c"]["out"], ignoreMetadata = True, maxDifference = 0.0003 )
 
 	def testDontSavePromotedUnsavedRenders( self ) :
 
@@ -477,6 +477,51 @@ class CatalogueTest( GafferImageTest.ImageTestCase ) :
 		r["fileName"].setValue( "${GAFFER_ROOT}/python/GafferImageTest/images/checker.exr" )
 
 		self.sendImage( r["out"], s["catalogue"] )
+
+	def testCacheReuse( self ) :
+
+		# Send an image to the catalogue, and also
+		# capture the display driver that we used to
+		# send it.
+
+		c = GafferImage.Catalogue()
+		c["directory"].setValue( os.path.join( self.temporaryDirectory(), "catalogue" ) )
+
+		drivers = GafferTest.CapturingSlot( GafferImage.Display.driverCreatedSignal() )
+
+		r = GafferImage.ImageReader()
+		r["fileName"].setValue( "${GAFFER_ROOT}/python/GafferImageTest/images/checker.exr" )
+		self.sendImage( r["out"], c )
+
+		self.assertEqual( len( drivers ), 1 )
+
+		# The image will have been saved to disk so it can persist between sessions,
+		# and the Catalogue should have dropped any reference it has to the driver,
+		# in order to save memory.
+
+		self.assertEqual( len( c["images"] ), 1 )
+		self.assertEqual( os.path.dirname( c["images"][0]["fileName"].getValue() ), c["directory"].getValue() )
+
+		self.assertEqual( drivers[0][0].refCount(), 1 )
+
+		# But we don't want the Catalogue to immediately reload the image from
+		# disk, because for large images with many AOVs this is a huge overhead.
+		# We want to temporarily reuse the cache entries that were created from
+		# the data in the display driver. These should be identical to a regular
+		# Display node containing the same driver.
+
+		display = GafferImage.Display()
+		display.setDriver( drivers[0][0] )
+
+		self.assertEqual(
+			display["out"].channelDataHash( "R", IECore.V2i( 0 ) ),
+			c["out"].channelDataHash( "R", IECore.V2i( 0 ) )
+		)
+		self.assertTrue(
+			display["out"].channelData( "R", IECore.V2i( 0 ), _copy = False ).isSame(
+				c["out"].channelData( "R", IECore.V2i( 0 ), _copy = False )
+			)
+		)
 
 if __name__ == "__main__":
 	unittest.main()
