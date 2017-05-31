@@ -36,10 +36,12 @@
 
 #include "IECore/MeshPrimitive.h"
 #include "IECore/PointsPrimitive.h"
-
+#include "IECore/AngleConversion.h"
 #include "Gaffer/StringPlug.h"
 
 #include "GafferScene/MeshToPoints.h"
+
+#include "ImathMatrixAlgo.h"
 
 using namespace IECore;
 using namespace Gaffer;
@@ -54,6 +56,8 @@ MeshToPoints::MeshToPoints( const std::string &name )
 {
 	storeIndexOfNextChild( g_firstPlugIndex );
 	addChild( new StringPlug( "type", Plug::In, "particle" ) );
+	addChild( new StringPlug( "mode", Plug::In, "vertex") );
+	addChild( new FloatPlug( "rotation", Plug::In, 0.0f) );
 
 	// Fast pass-throughs for things we don't modify
 	outPlug()->attributesPlug()->setInput( inPlug()->attributesPlug() );
@@ -74,11 +78,30 @@ const Gaffer::StringPlug *MeshToPoints::typePlug() const
 	return getChild<StringPlug>( g_firstPlugIndex );
 }
 
+Gaffer::StringPlug *MeshToPoints::modePlug()
+{
+	return getChild<StringPlug>( g_firstPlugIndex + 1);
+}
+
+const Gaffer::StringPlug *MeshToPoints::modePlug() const
+{
+	return getChild<StringPlug>( g_firstPlugIndex + 1);
+}
+
+Gaffer::FloatPlug *MeshToPoints::rotationPlug()
+{
+	return getChild<FloatPlug>( g_firstPlugIndex + 2);
+}
+const Gaffer::FloatPlug *MeshToPoints::rotationPlug() const
+{
+	return getChild<FloatPlug>( g_firstPlugIndex + 2);
+}
+
 void MeshToPoints::affects( const Gaffer::Plug *input, AffectedPlugsContainer &outputs ) const
 {
 	SceneElementProcessor::affects( input, outputs );
 
-	if( input == typePlug() )
+	if( input == typePlug() || input == modePlug() || input == rotationPlug()  )
 	{
 		outputs.push_back( outPlug()->objectPlug() );
 	}
@@ -116,6 +139,8 @@ bool MeshToPoints::processesObject() const
 void MeshToPoints::hashProcessedObject( const ScenePath &path, const Gaffer::Context *context, IECore::MurmurHash &h ) const
 {
 	typePlug()->hash( h );
+	modePlug()->hash( h );
+	rotationPlug()->hash( h );
 }
 
 IECore::ConstObjectPtr MeshToPoints::computeProcessedObject( const ScenePath &path, const Gaffer::Context *context, IECore::ConstObjectPtr inputObject ) const
@@ -126,25 +151,94 @@ IECore::ConstObjectPtr MeshToPoints::computeProcessedObject( const ScenePath &pa
 		return inputObject;
 	}
 
-	IECore::PointsPrimitivePtr result = new PointsPrimitive( mesh->variableSize( PrimitiveVariable::Vertex ) );
-	for( PrimitiveVariableMap::const_iterator it = mesh->variables.begin(), eIt = mesh->variables.end(); it != eIt; ++it )
+	IECore::PointsPrimitivePtr result;
+
+	if( modePlug()->getValue() == "polygon" )
 	{
-		PrimitiveVariable::Interpolation interpolation = it->second.interpolation;
-		switch( interpolation )
+
+		float rotation = IECore::degreesToRadians(rotationPlug()->getValue());
+		size_t numFaces = mesh->numFaces();
+		IECore::V3fVectorDataPtr positions = new IECore::V3fVectorData();
+		IECore::V3fVectorData::ValueType &positionVector = positions->writable();
+
+		positionVector.resize( numFaces );
+
+		const IECore::V3fVectorData *meshPositions = mesh->variableData<IECore::V3fVectorData>( "P" );
+
+		QuatfVectorDataPtr orientationData = new QuatfVectorData();
+		orientationData->writable().resize( numFaces );
+
+		IntVectorDataPtr idData = new IntVectorData();
+		idData->writable().resize(numFaces);
+
+		size_t vertex = 0;
+		for( size_t f = 0; f < numFaces; ++f )
 		{
-			case PrimitiveVariable::Uniform :
-			case PrimitiveVariable::FaceVarying :
-				// Skip these, since they make no sense
-				// on points.
-				continue;
-			case PrimitiveVariable::Varying :
-				interpolation = PrimitiveVariable::Vertex;
-				break;
-			default :
-				break;
+			int positionIndex = mesh->vertexIds()->readable()[vertex];
+
+			Imath::V3f p0 = meshPositions->readable()[positionIndex + 0];
+			Imath::V3f p1 = meshPositions->readable()[positionIndex + 1];
+			Imath::V3f p2 = meshPositions->readable()[positionIndex + 2];
+
+			positionVector[f] = p0;
+
+			Imath::V3f d02 = p2 - p0;
+			Imath::V3f d01 = p1 - p0;
+
+			Imath::V3f n = d02.cross( d01 );
+			n.normalize();
+			Imath::V3f t = d01;
+			t.normalize();
+
+			Imath::V3f b = n.cross( t );
+			b.normalize();
+
+			//@formatter:off
+			Imath::M44f matrix(
+				t.x, t.y, t.z, 0.0f,
+				b.x, b.y, b.z, 0.0f,
+				n.x, n.y, n.z, 0.0f,
+				0.0f, 0.0f, 0.0f, 1.0f
+			);
+			//@formatter:on
+
+			Imath::M44f preRotation;
+			preRotation.setAxisAngle(Imath::V3f(0.0f, 0.0f, 1.0f), rotation);
+
+			matrix = preRotation * matrix;
+			Imath::Quatf quat = Imath::extractQuat( matrix );
+
+			orientationData->writable()[f] = quat;
+			idData->writable()[f] = (int) f;
+			vertex += mesh->verticesPerFace()->readable()[f];
 		}
 
-		result->variables[it->first] = PrimitiveVariable( interpolation, it->second.data );
+		result = new PointsPrimitive( positions );
+		result->variables["orient"] = PrimitiveVariable( PrimitiveVariable::Vertex, orientationData );
+		result->variables["id"] = PrimitiveVariable( PrimitiveVariable::Vertex, idData );
+	}
+	else
+	{
+		result = new PointsPrimitive( mesh->variableSize( PrimitiveVariable::Vertex ) );
+		for( PrimitiveVariableMap::const_iterator it = mesh->variables.begin(), eIt = mesh->variables.end(); it != eIt; ++it )
+		{
+			PrimitiveVariable::Interpolation interpolation = it->second.interpolation;
+			switch( interpolation )
+			{
+				case PrimitiveVariable::Uniform :
+				case PrimitiveVariable::FaceVarying :
+					// Skip these, since they make no sense
+					// on points.
+					continue;
+				case PrimitiveVariable::Varying :
+					interpolation = PrimitiveVariable::Vertex;
+					break;
+				default :
+					break;
+			}
+
+			result->variables[it->first] = PrimitiveVariable( interpolation, it->second.data );
+		}
 	}
 
 	result->variables["type"] = PrimitiveVariable( PrimitiveVariable::Constant, new StringData( typePlug()->getValue() ) );

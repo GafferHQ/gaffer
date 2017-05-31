@@ -62,6 +62,12 @@ class MeshToPoints : public SceneElementProcessor
 		Gaffer::StringPlug *typePlug();
 		const Gaffer::StringPlug *typePlug() const;
 
+		Gaffer::StringPlug *modePlug();
+		const Gaffer::StringPlug *modePlug() const;
+
+		Gaffer::FloatPlug *rotationPlug();
+		const Gaffer::FloatPlug *rotationPlug() const;
+
 		virtual void affects( const Gaffer::Plug *input, AffectedPlugsContainer &outputs ) const;
 
 	protected :
