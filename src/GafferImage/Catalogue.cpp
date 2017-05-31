@@ -107,7 +107,17 @@ class Catalogue::InternalImage : public ImageNode
 			return getChild<StringPlug>( g_firstChildIndex );
 		}
 
+		const StringPlug *fileNamePlug() const
+		{
+			return getChild<StringPlug>( g_firstChildIndex );
+		}
+
 		StringPlug *descriptionPlug()
+		{
+			return getChild<StringPlug>( g_firstChildIndex + 1 );
+		}
+
+		const StringPlug *descriptionPlug() const
 		{
 			return getChild<StringPlug>( g_firstChildIndex + 1 );
 		}
@@ -230,7 +240,17 @@ class Catalogue::InternalImage : public ImageNode
 			return getChild<ImageReader>( g_firstChildIndex + 2 );
 		}
 
+		const ImageReader *imageReader() const
+		{
+			return getChild<ImageReader>( g_firstChildIndex + 2 );
+		}
+
 		CopyChannels *copyChannels()
+		{
+			return getChild<CopyChannels>( g_firstChildIndex + 3 );
+		}
+
+		const CopyChannels *copyChannels() const
 		{
 			return getChild<CopyChannels>( g_firstChildIndex + 3 );
 		}
@@ -240,14 +260,23 @@ class Catalogue::InternalImage : public ImageNode
 			return getChild<ImageSwitch>( g_firstChildIndex + 4 );
 		}
 
+		const ImageSwitch *imageSwitch() const
+		{
+			return getChild<ImageSwitch>( g_firstChildIndex + 4 );
+		}
+
 		ImageMetadata *imageMetadata()
+		{
+			return getChild<ImageMetadata>( g_firstChildIndex + 5 );
+		}
+
+		const ImageMetadata *imageMetadata() const
 		{
 			return getChild<ImageMetadata>( g_firstChildIndex + 5 );
 		}
 
 		int m_clientPID;
 		size_t m_numDriversClosed;
-
 		static size_t g_firstChildIndex;
 
 };
