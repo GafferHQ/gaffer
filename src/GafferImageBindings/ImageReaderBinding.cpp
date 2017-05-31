@@ -36,13 +36,50 @@
 
 #include "boost/python.hpp"
 
+#include "IECore/CompoundData.h"
+
 #include "GafferBindings/DependencyNodeBinding.h"
 
 #include "GafferImage/ImageReader.h"
 
 #include "GafferImageBindings/ImageReaderBinding.h"
 
+using namespace std;
+using namespace boost::python;
 using namespace GafferImage;
+
+namespace
+{
+
+	struct DefaultColorSpaceFunction
+	{
+		DefaultColorSpaceFunction( object fn )
+			:	m_fn( fn )
+		{
+		}
+
+		string operator()( const IECore::CompoundData *args )
+		{
+		
+			IECorePython::ScopedGILLock gilock;
+			string result = extract<string>( m_fn( IECore::CompoundDataPtr( const_cast<IECore::CompoundData *>( args ) ) ) );
+			return result;
+
+		}
+		
+		private:
+
+			object m_fn;
+	};
+
+	void registerDefaultColorSpace( object f )
+	{
+
+		ImageReader::registerDefaultColorSpace( DefaultColorSpaceFunction( f ) );	
+
+	}
+}
+
 
 static boost::python::list supportedExtensions()
 {
@@ -64,6 +101,8 @@ void GafferImageBindings::bindImageReader()
 	boost::python::scope s = GafferBindings::DependencyNodeClass<ImageReader>()
 		.def( "supportedExtensions", &supportedExtensions )
 		.staticmethod( "supportedExtensions" )
+		.def( "registerDefaultColorSpace", &registerDefaultColorSpace )
+		.staticmethod( "registerDefaultColorSpace" )
 	;
 
 	boost::python::enum_<ImageReader::MissingFrameMode>( "MissingFrameMode" )
