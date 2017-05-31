@@ -117,8 +117,9 @@ class ImageWriterTest( GafferImageTest.ImageTestCase ) :
 		self.failUnless( w["in"].acceptsInput( p ) )
 
 	def testTiffWrite( self ) :
+
 		options = {}
-		options['maxError'] = 0.1
+		options['maxError'] = 0.003
 		options['metadata'] = { 'compression' : IECore.StringData( "zip" ), 'tiff:Compression' : IECore.IntData( 8 ) }
 		options['plugs'] = {}
 		options['plugs']['mode'] = [
@@ -140,25 +141,45 @@ class ImageWriterTest( GafferImageTest.ImageTestCase ) :
 		self.__testExtension( "tif", "tiff", options = options, metadataToIgnore = [ "tiff:RowsPerStrip", "IPTC:Creator" ] )
 
 	def testJpgWrite( self ) :
+
+		# We can assert that we get a perfect match when using the default
+		# compression (95), because that's what we generated the expected image
+		# with.
+
 		options = {}
-		options['maxError'] = 0.1
+		options['maxError'] = 0.0
 		options['plugs'] = {}
+
+		# But then we have to relax the maxError check when varying
+		# the compression quality, because that puts the results all over
+		# the map.
+
 		options['plugs']['compressionQuality'] = [
-				{ 'value': 10 },
-				{ 'value': 20 },
-				{ 'value': 30 },
-				{ 'value': 40 },
-				{ 'value': 50 },
-				{ 'value': 60 },
-				{ 'value': 70 },
-				{ 'value': 80 },
-				{ 'value': 90 },
-				{ 'value': 100 },
-			]
+			{ 'value': 10, "maxError" : 0.76 },
+			{ 'value': 20, "maxError" : 0.74 },
+			{ 'value': 30, "maxError" : 0.65 },
+			{ 'value': 40, "maxError" : 0.60 },
+			{ 'value': 50, "maxError" : 0.57 },
+			{ 'value': 60, "maxError" : 0.56 },
+			{ 'value': 70, "maxError" : 0.51 },
+			{ 'value': 80, "maxError" : 0.29 },
+			{ 'value': 90, "maxError" : 0.25 },
+			{ 'value': 100, "maxError" : 0.05 },
+		]
 
 		self.__testExtension( "jpg", "jpeg", options = options, metadataToIgnore = [ "DocumentName", "HostComputer" ] )
 
 	def testTgaWrite( self ) :
+
+		## \todo We can currently round-trip targa images correctly
+		# through ImageWriter/ImageReader in terms of colorspace management,
+		# but not in terms of alpha premultiplication. The "expected" image
+		# used by this test is therefore not technically correct - we need
+		# to fix the alpha management and then update the test image. The
+		# OIIO targa output plugin contains some comments that may be relevant
+		# when addressing this - it seems they always premultiply on output
+		# even if asked not to.
+
 		options = {}
 		options['maxError'] = 0.0
 		options['plugs'] = {}
@@ -196,6 +217,12 @@ class ImageWriterTest( GafferImageTest.ImageTestCase ) :
 		self.__testExtension( "exr", "openexr", options = options )
 
 	def testPngWrite( self ) :
+
+		## \todo PNG read/write correctly roundtrips in terms
+		# of colour management, but not in terms of alpha premultiplication.
+		# The "expected" image is adjusted to account for this - fix it
+		# and change the image. See similar comment in testTgaWrite.
+
 		options = {}
 		options['maxError'] = 0.0
 		options['plugs'] = {}
@@ -222,8 +249,9 @@ class ImageWriterTest( GafferImageTest.ImageTestCase ) :
 		self.__testExtension( "png", "png", options = options )
 
 	def testDpxWrite( self ) :
+
 		options = {}
-		options['maxError'] = 0.1
+		options['maxError'] = 0.007
 		options['plugs'] = {}
 		options['plugs']['dataType'] = [
 				{ 'value': "uint8", 'metadata': { 'oiio:BitsPerSample': IECore.IntData( 8 ) } },
@@ -235,8 +263,9 @@ class ImageWriterTest( GafferImageTest.ImageTestCase ) :
 		self.__testExtension( "dpx", "dpx", options = options, metadataToIgnore = [ "Artist", "DocumentName", "HostComputer", "Software" ] )
 
 	def testIffWrite( self ) :
+
 		options = {}
-		options['maxError'] = 0.1
+		options['maxError'] = 0.0
 		options['plugs'] = {}
 		options['mode'] = [
 				{ 'value': GafferImage.ImageWriter.Mode.Tile },
@@ -454,12 +483,12 @@ class ImageWriterTest( GafferImageTest.ImageTestCase ) :
 	def testCropDataWindowToDisplayWindowScanline ( self ) :
 		self.__testAdjustDataWindowToDisplayWindow( "png", self.__negativeDataWindowFilePath )
 
-	# @unittest.expectedFailure
 	def testPadDataWindowToDisplayWindowTile ( self ) :
+
 		self.__testAdjustDataWindowToDisplayWindow( "iff", self.__rgbFilePath )
 
-	# @unittest.expectedFailure
 	def testCropDataWindowToDisplayWindowTile ( self ) :
+
 		self.__testAdjustDataWindowToDisplayWindow( "iff", self.__negativeDataWindowFilePath )
 
 	def __testAdjustDataWindowToDisplayWindow( self, ext, filePath ) :
