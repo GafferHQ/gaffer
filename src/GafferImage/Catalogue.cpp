@@ -34,6 +34,15 @@
 //
 //////////////////////////////////////////////////////////////////////////
 
+#include "tbb/tbb_thread.h"
+#include "tbb/tbb_config.h"
+
+#if TBB_IMPLEMENT_CPP0X
+#include "tbb/compat/thread"
+#else
+#include <thread>
+#endif
+
 #include "boost/bind.hpp"
 #include "boost/lexical_cast.hpp"
 #include "boost/filesystem/path.hpp"
@@ -52,6 +61,7 @@
 #include "GafferImage/CopyChannels.h"
 #include "GafferImage/Display.h"
 #include "GafferImage/ImageWriter.h"
+#include "GafferImage/Text.h"
 
 using namespace std;
 using namespace IECore;
@@ -87,11 +97,26 @@ class Catalogue::InternalImage : public ImageNode
 			addChild( new CopyChannels() );
 			copyChannels()->channelsPlug()->setValue( "*" );
 
+			// Used to overlay a "Saving..." message
+			// while displays are being saved to disk in
+			// the background.
+			addChild( new Text() );
+			text()->inPlug()->setInput( copyChannels()->outPlug() );
+			text()->colorPlug()->setValue( Imath::Color4f( 1, 1, 1, 0.75 ) );
+			text()->textPlug()->setValue( "Saving..." );
+			text()->horizontalAlignmentPlug()->setValue( Text::HorizontalCenter );
+			text()->verticalAlignmentPlug()->setValue( Text::VerticalCenter );
+			text()->shadowPlug()->setValue( true );
+			text()->shadowColorPlug()->setValue( Imath::Color4f( 0, 0, 0, 0.75 ) );
+			text()->shadowOffsetPlug()->setValue( Imath::V2f( 3.5, -3.5 ) );
+			text()->shadowBlurPlug()->setValue( 5 );
+			text()->enabledPlug()->setValue( false );
+
 			// Switches between the loaded image and the
 			// live Displays.
 			addChild( new ImageSwitch() );
 			imageSwitch()->inPlugs()->getChild<ImagePlug>( 0 )->setInput( imageReader()->outPlug() );
-			imageSwitch()->inPlugs()->getChild<ImagePlug>( 1 )->setInput( copyChannels()->outPlug() );
+			imageSwitch()->inPlugs()->getChild<ImagePlug>( 1 )->setInput( text()->outPlug() );
 
 			// Adds on a description to the output
 			addChild( new ImageMetadata() );
@@ -197,21 +222,29 @@ class Catalogue::InternalImage : public ImageNode
 			}
 
 			// All our drivers have been closed, so the render has completed.
-			// Save the image to disk.
+			// Save the image to disk. We do this in the background because
+			// saving large images with many AOVs takes several seconds.
 
-			string fileName = parent<Catalogue>()->generateFileName( outPlug() );
-			if( fileName.empty() )
+			m_saver = new AsynchronousSaver( this );
+		}
+
+	private :
+
+		void updateImageFlags( unsigned flags, bool enable )
+		{
+			Plug *p = fileNamePlug()->getInput<Plug>();
+			if( !p )
 			{
 				return;
 			}
-			save( fileName );
+			for( Image *i = p->parent<Image>(); i; i = i->getInput<Image>() )
+			{
+				i->setFlags( flags, enable );
+			}
+		}
 
-			// Load the image from disk and delete all our Display
-			// nodes to save memory.
-
-			fileNamePlug()->source<StringPlug>()->setValue( fileName );
-			imageSwitch()->indexPlug()->setValue( 0 );
-
+		void removeDisplays()
+		{
 			vector<Display *> toDelete;
 			for( DisplayIterator it( this ); !it.done(); ++it )
 			{
@@ -220,18 +253,6 @@ class Catalogue::InternalImage : public ImageNode
 			for( vector<Display *>::const_iterator it = toDelete.begin(), eIt = toDelete.end(); it != eIt; ++it )
 			{
 				removeChild( *it );
-			}
-
-			updateImageFlags( Plug::Serialisable, true );
-		}
-
-	private :
-
-		void updateImageFlags( unsigned flags, bool enable )
-		{
-			for( Image *i = fileNamePlug()->getInput<Plug>()->parent<Image>(); i; i = i->getInput<Image>() )
-			{
-				i->setFlags( flags, enable );
 			}
 		}
 
@@ -255,28 +276,119 @@ class Catalogue::InternalImage : public ImageNode
 			return getChild<CopyChannels>( g_firstChildIndex + 3 );
 		}
 
+		Text *text()
+		{
+			return getChild<Text>( g_firstChildIndex + 4 );
+		}
+
+		const Text *text() const
+		{
+			return getChild<Text>( g_firstChildIndex + 4 );
+		}
+
 		ImageSwitch *imageSwitch()
 		{
-			return getChild<ImageSwitch>( g_firstChildIndex + 4 );
+			return getChild<ImageSwitch>( g_firstChildIndex + 5 );
 		}
 
 		const ImageSwitch *imageSwitch() const
 		{
-			return getChild<ImageSwitch>( g_firstChildIndex + 4 );
+			return getChild<ImageSwitch>( g_firstChildIndex + 5 );
 		}
 
 		ImageMetadata *imageMetadata()
 		{
-			return getChild<ImageMetadata>( g_firstChildIndex + 5 );
+			return getChild<ImageMetadata>( g_firstChildIndex + 6 );
 		}
 
 		const ImageMetadata *imageMetadata() const
 		{
-			return getChild<ImageMetadata>( g_firstChildIndex + 5 );
+			return getChild<ImageMetadata>( g_firstChildIndex + 6 );
 		}
+
+		struct AsynchronousSaver : public IECore::RefCounted
+		{
+
+			IE_CORE_DECLAREMEMBERPTR( AsynchronousSaver )
+
+			AsynchronousSaver( InternalImage *client )
+				:	m_client( client )
+			{
+				// We use a copy of the image to do the saving, because the original
+				// might be modified on the main thread while we save in the background.
+
+				m_imageCopy = new InternalImage;
+
+				size_t i = 0;
+				for( DisplayIterator it( m_client.get() ); !it.done(); ++it )
+				{
+					Display *display = it->get();
+					DisplayPtr displayCopy = new Display;
+					displayCopy->setDriver( display->getDriver(), /* copy = */ true );
+					m_imageCopy->addChild( displayCopy );
+					m_imageCopy->copyChannels()->inPlugs()->getChild<Plug>( i++ )->setInput( displayCopy->outPlug() );
+				}
+				m_imageCopy->imageSwitch()->indexPlug()->setValue( 1 );
+
+				// Set up an ImageWriter to do the actual saving.
+				// We do all graph construction here in the main thread
+				// so that the background thread only does execution.
+
+				const string fileName = m_client->parent<Catalogue>()->generateFileName( m_imageCopy->outPlug() );
+				if( fileName.empty() )
+				{
+					return;
+				}
+
+				m_writer = new ImageWriter;
+				m_writer->inPlug()->setInput( m_imageCopy->outPlug() );
+				m_writer->fileNamePlug()->setValue( fileName );
+
+				// Let the user know what we're up to.
+				m_client->text()->enabledPlug()->setValue( true );
+
+				// And fire off a thread to do the actual work.
+				std::thread thread( boost::bind( &AsynchronousSaver::save, Ptr( this ) ) );
+				thread.detach();
+			}
+
+			private :
+
+				void save()
+				{
+					m_writer->taskPlug()->execute();
+					Display::executeOnUIThread( boost::bind( &AsynchronousSaver::wrapUp, Ptr( this ) ) );
+				}
+
+				void wrapUp()
+				{
+					DirtyPropagationScope dirtyPropagationScope;
+
+					m_client->text()->enabledPlug()->setValue( false );
+					m_client->fileNamePlug()->source<StringPlug>()->setValue( m_writer->fileNamePlug()->getValue() );
+					m_client->imageSwitch()->indexPlug()->setValue( 0 );
+
+					m_client->removeDisplays();
+					m_client->updateImageFlags( Plug::Serialisable, true );
+
+					// Destroy the image to release the memory used by the copied display drivers.
+					m_imageCopy = NULL;
+					m_writer = NULL;
+					// Break circular reference
+					m_client = NULL;
+				}
+
+				InternalImagePtr m_imageCopy;
+				ImageWriterPtr m_writer;
+
+				InternalImagePtr m_client;
+
+		};
 
 		int m_clientPID;
 		size_t m_numDriversClosed;
+		AsynchronousSaver::Ptr m_saver;
+
 		static size_t g_firstChildIndex;
 
 };
