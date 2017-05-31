@@ -35,6 +35,7 @@
 ##########################################################################
 
 import os
+import threading
 
 import IECore
 
@@ -55,6 +56,30 @@ class CatalogueTest( GafferImageTest.ImageTestCase ) :
 	def tearDown( self ) :
 
 		self.__executeOnUIThreadConnection.disconnect()
+
+	@staticmethod
+	def sendImage( image, catalogue, extraParameters = {} ) :
+
+		if catalogue["directory"].getValue() :
+
+			# When the image has been received, the Catalogue will
+			# save it to disk on a background thread, and we need
+			# to wait for that to complete. The background thread uses
+			# executeOnUIThread to signal completion, so we can hook
+			# into that.
+			semaphore = threading.Semaphore( 0 )
+
+			def f( f ) :
+
+				if catalogue["images"][-1]["fileName"].getValue() :
+					semaphore.release()
+
+			c = GafferImage.Display.executeOnUIThreadSignal().connect( f )
+
+		GafferImageTest.DisplayTest.sendImage( image, GafferImage.Catalogue.displayDriverServer().portNumber(), extraParameters )
+
+		if catalogue["directory"].getValue() :
+			semaphore.acquire()
 
 	def testImages( self ) :
 
@@ -174,15 +199,16 @@ class CatalogueTest( GafferImageTest.ImageTestCase ) :
 
 		r = GafferImage.ImageReader()
 		r["fileName"].setValue( "${GAFFER_ROOT}/python/GafferImageTest/images/checker.exr" )
-		GafferImageTest.DisplayTest.sendImage( r["out"], c.displayDriverServer().portNumber() )
+		self.sendImage( r["out"], c )
 
 		self.assertEqual( len( c["images"] ), 1 )
 		self.assertEqual( c["images"][0]["fileName"].getValue(), "" )
 		self.assertEqual( c["imageIndex"].getValue(), 0 )
+
 		self.assertImagesEqual( r["out"], c["out"], ignoreMetadata = True )
 
 		r["fileName"].setValue( "${GAFFER_ROOT}/python/GafferImageTest/images/blurRange.exr" )
-		GafferImageTest.DisplayTest.sendImage( r["out"], c.displayDriverServer().portNumber() )
+		self.sendImage( r["out"], c )
 
 		self.assertEqual( len( c["images"] ), 2 )
 		self.assertEqual( c["images"][1]["fileName"].getValue(), "" )
@@ -203,8 +229,8 @@ class CatalogueTest( GafferImageTest.ImageTestCase ) :
 		aov2["color"].setValue( IECore.Color4f( 0, 1, 0, 1 ) )
 		aov2["layer"].setValue( "diffuse" )
 
-		GafferImageTest.DisplayTest.sendImage( aov1["out"], c.displayDriverServer().portNumber() )
-		GafferImageTest.DisplayTest.sendImage( aov2["out"], c.displayDriverServer().portNumber() )
+		self.sendImage( aov1["out"], c )
+		self.sendImage( aov2["out"], c )
 
 		self.assertEqual( len( c["images"] ), 1 )
 		self.assertEqual(
@@ -220,7 +246,7 @@ class CatalogueTest( GafferImageTest.ImageTestCase ) :
 
 		r = GafferImage.ImageReader()
 		r["fileName"].setValue( "${GAFFER_ROOT}/python/GafferImageTest/images/blurRange.exr" )
-		GafferImageTest.DisplayTest.sendImage( r["out"], GafferImage.Catalogue.displayDriverServer().portNumber() )
+		self.sendImage( r["out"], s["c"] )
 
 		self.assertEqual( len( s["c"]["images"] ), 1 )
 		self.assertEqual( os.path.dirname( s["c"]["images"][0]["fileName"].getValue() ), s["c"]["directory"].getValue() )
@@ -249,14 +275,14 @@ class CatalogueTest( GafferImageTest.ImageTestCase ) :
 		constant1["color"].setValue( IECore.Color4f( 1, 0, 0, 1 ) )
 		constant2["color"].setValue( IECore.Color4f( 0, 1, 0, 1 ) )
 
-		GafferImageTest.DisplayTest.sendImage(
+		self.sendImage(
 			constant1["out"],
-			GafferImage.Catalogue.displayDriverServer().portNumber(),
+			c1,
 		)
 
-		GafferImageTest.DisplayTest.sendImage(
+		self.sendImage(
 			constant2["out"],
-			GafferImage.Catalogue.displayDriverServer().portNumber(),
+			c2,
 			extraParameters = {
 				"catalogue:name" : "catalogue2",
 			}
@@ -275,9 +301,9 @@ class CatalogueTest( GafferImageTest.ImageTestCase ) :
 
 		constant = GafferImage.Constant()
 		constant["format"].setValue( GafferImage.Format( 100, 100 ) )
-		GafferImageTest.DisplayTest.sendImage(
+		self.sendImage(
 			constant["out"],
-			GafferImage.Catalogue.displayDriverServer().portNumber(),
+			s["c"],
 		)
 
 		self.assertEqual( len( s["c"]["images"] ), 1 )
@@ -337,14 +363,14 @@ class CatalogueTest( GafferImageTest.ImageTestCase ) :
 
 		r = GafferImage.ImageReader()
 		r["fileName"].setValue( "${GAFFER_ROOT}/python/GafferImageTest/images/checker.exr" )
-		GafferImageTest.DisplayTest.sendImage( r["out"], GafferImage.Catalogue.displayDriverServer().portNumber() )
+		self.sendImage( r["out"], s["b"]["c"] )
 
 		self.assertEqual( len( promotedImages ), 1 )
 		self.assertEqual( promotedImageIndex.getValue(), 0 )
 		self.assertImagesEqual( r["out"], promotedOut, ignoreMetadata = True, maxDifference = 0.0003 )
 
 		r["fileName"].setValue( "${GAFFER_ROOT}/python/GafferImageTest/images/blurRange.exr" )
-		GafferImageTest.DisplayTest.sendImage( r["out"], GafferImage.Catalogue.displayDriverServer().portNumber() )
+		self.sendImage( r["out"], s["b"]["c"] )
 
 		self.assertEqual( len( promotedImages ), 2 )
 		self.assertEqual( promotedImageIndex.getValue(), 1 )
@@ -375,7 +401,7 @@ class CatalogueTest( GafferImageTest.ImageTestCase ) :
 
 		r = GafferImage.ImageReader()
 		r["fileName"].setValue( "${GAFFER_ROOT}/python/GafferImageTest/images/checker.exr" )
-		GafferImageTest.DisplayTest.sendImage( r["out"], GafferImage.Catalogue.displayDriverServer().portNumber() )
+		self.sendImage( r["out"], s["b"]["c"] )
 
 		self.assertEqual( len( promotedImages ), 1 )
 
@@ -450,7 +476,7 @@ class CatalogueTest( GafferImageTest.ImageTestCase ) :
 		r = GafferImage.ImageReader()
 		r["fileName"].setValue( "${GAFFER_ROOT}/python/GafferImageTest/images/checker.exr" )
 
-		GafferImageTest.DisplayTest.sendImage( r["out"], GafferImage.Catalogue.displayDriverServer().portNumber() )
+		self.sendImage( r["out"], s["catalogue"] )
 
 if __name__ == "__main__":
 	unittest.main()
