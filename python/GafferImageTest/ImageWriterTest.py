@@ -161,7 +161,7 @@ class ImageWriterTest( GafferImageTest.ImageTestCase ) :
 	def testExrWrite( self ) :
 		options = {}
 		options['maxError'] = 0.0
-		options['metadata'] = { 'compression' : IECore.StringData( "zip" ) }
+		options['metadata'] = { 'compression' : IECore.StringData( "zips" ) }
 		options['plugs'] = {}
 		options['plugs']['mode'] = [
 				{ 'value': GafferImage.ImageWriter.Mode.Scanline },
@@ -300,7 +300,7 @@ class ImageWriterTest( GafferImageTest.ImageTestCase ) :
 		self.assertEqual( w["jpeg2000"]["dataType"].getValue(), "uint8" )
 
 		self.assertEqual( w["openexr"]["mode"].getValue(), GafferImage.ImageWriter.Mode.Scanline )
-		self.assertEqual( w["openexr"]["compression"].getValue(), "zip" )
+		self.assertEqual( w["openexr"]["compression"].getValue(), "zips" )
 		self.assertEqual( w["openexr"]["dataType"].getValue(), "half" )
 
 		self.assertEqual( w["png"]["compression"].getValue(), "filtered" )
@@ -730,7 +730,7 @@ class ImageWriterTest( GafferImageTest.ImageTestCase ) :
 		self.__testMetadataDoesNotAffectPixels(
 			"exr",
 			overrideMetadata = {
-				"compression" : IECore.StringData( "zip" )
+				"compression" : IECore.StringData( "zips" )
 			},
 		)
 

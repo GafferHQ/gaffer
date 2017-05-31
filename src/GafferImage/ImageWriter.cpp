@@ -716,7 +716,7 @@ void ImageWriter::createFileFormatOptionsPlugs()
 	ValuePlug *exrOptionsPlug = new ValuePlug( "openexr" );
 	addChild( exrOptionsPlug );
 	exrOptionsPlug->addChild( new IntPlug( g_modePlugName, Plug::In, Scanline ) );
-	exrOptionsPlug->addChild( new StringPlug( g_compressionPlugName, Plug::In, "zip" ) );
+	exrOptionsPlug->addChild( new StringPlug( g_compressionPlugName, Plug::In, "zips" ) );
 	exrOptionsPlug->addChild( new StringPlug( g_dataTypePlugName, Plug::In, "half" ) );
 
 	ValuePlug *dpxOptionsPlug = new ValuePlug( "dpx" );
