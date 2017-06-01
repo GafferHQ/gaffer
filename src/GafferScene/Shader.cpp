@@ -695,6 +695,17 @@ void Shader::affects( const Gaffer::Plug *input, AffectedPlugsContainer &outputs
 	}
 }
 
+void Shader::loadShader( const std::string &shaderName, bool keepExistingValues )
+{
+	// A base shader doesn't know anything about what sort of parameters you might want to load.
+	//
+	// The only reason why this isn't pure virtual is because it is occasionally useful to
+	// manually create a shader type which doesn't actually correspond to any real shader on disk.
+	// IERendering using this to create a generic mesh light shader which is later translated into
+	// the correct shader type for whichever renderer you are using.  Similarly, ArnoldDisplacement
+	// doesn't need a loadShader override because it's not really a shader.
+}
+
 void Shader::parameterHash( const Gaffer::Plug *parameterPlug, IECore::MurmurHash &h ) const
 {
 	const ValuePlug *vplug = IECore::runTimeCast<const ValuePlug>( parameterPlug );

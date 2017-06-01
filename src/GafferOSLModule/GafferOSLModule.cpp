@@ -41,8 +41,6 @@
 #include "IECorePython/ScopedGILRelease.h"
 #include "IECorePython/IECoreBinding.h"
 
-#include "Gaffer/StringPlug.h"
-
 #include "GafferBindings/DependencyNodeBinding.h"
 #include "GafferBindings/DataBinding.h"
 #include "GafferBindings/SignalBinding.h"
@@ -59,28 +57,6 @@ using namespace GafferOSL;
 
 namespace
 {
-
-/// \todo Move this serialisation to the bindings for GafferScene::Shader, once we've made Shader::loadShader() virtual
-/// and implemented it so reloading works in OpenGLShader.
-class OSLShaderSerialiser : public GafferBindings::NodeSerialiser
-{
-
-	virtual std::string postScript( const Gaffer::GraphComponent *graphComponent, const std::string &identifier, const Serialisation &serialisation ) const
-	{
-		const OSLShader *oslShader = static_cast<const OSLShader *>( graphComponent );
-		const std::string shaderName = oslShader->namePlug()->getValue();
-		// We don't serialise a `loadShader()` call for OSLCode nodes
-		// because the OSLCode node generates the shader from the plugs,
-		// and not the other way around.
-		if( shaderName.size() && !IECore::runTimeCast<const OSLCode>( oslShader ) )
-		{
-			return boost::str( boost::format( "%s.loadShader( \"%s\", keepExistingValues=True )\n" ) % identifier % shaderName );
-		}
-
-		return "";
-	}
-
-};
 
 object shaderMetadata( const OSLShader &s, const char *key, bool copy = true )
 {
@@ -165,12 +141,9 @@ BOOST_PYTHON_MODULE( _GafferOSL )
 {
 
 	GafferBindings::DependencyNodeClass<OSLShader>()
-		.def( "loadShader", &OSLShader::loadShader, ( arg_( "shaderName" ), arg_( "keepExistingValues" ) = false ) )
 		.def( "shaderMetadata", &shaderMetadata, ( boost::python::arg_( "_copy" ) = true ) )
 		.def( "parameterMetadata", &parameterMetadata, ( boost::python::arg_( "plug" ), boost::python::arg_( "_copy" ) = true ) )
 	;
-
-	Serialisation::registerSerialiser( OSLShader::staticTypeId(), new OSLShaderSerialiser() );
 
 	GafferBindings::DependencyNodeClass<OSLImage>();
 	GafferBindings::DependencyNodeClass<OSLObject>();
@@ -205,6 +178,11 @@ BOOST_PYTHON_MODULE( _GafferOSL )
 		.def( "source", &oslCodeSource, ( arg_( "shaderName" ) = "" ) )
 		.def( "shaderCompiledSignal", &OSLCode::shaderCompiledSignal, return_internal_reference<1>() )
 	;
+
+	// Use a default serialiser for OSLCode, so that we don't get a loadShader call like every other
+	// kind of shader
+	GafferBindings::Serialisation::registerSerialiser( OSLCode::staticTypeId(), new GafferBindings::NodeSerialiser() );
+
 
 	SignalClass<OSLCode::ShaderCompiledSignal>( "ShaderCompiledSignal" );
 

@@ -72,6 +72,11 @@ class OSLCode : public OSLShader
 		/// combo we use everywhere else.
 		ShaderCompiledSignal &shaderCompiledSignal();
 
+		// This is implemented to do nothing, because OSLCode node generates the shader from
+		// the plugs, and not the other way around.  We don't want to inherit the loading behaviour
+		// from OSLShader which tries to match the plugs to a shader on disk
+		virtual void loadShader( const std::string &shaderName, bool keepExistingValues=false );
+
 	private :
 
 		void updateShader();

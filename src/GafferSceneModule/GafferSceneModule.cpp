@@ -160,9 +160,7 @@ BOOST_PYTHON_MODULE( _GafferScene )
 	GafferBindings::DependencyNodeClass<MapProjection>();
 	GafferBindings::DependencyNodeClass<MapOffset>();
 
-	GafferBindings::NodeClass<OpenGLShader>()
-		.def( "loadShader", &OpenGLShader::loadShader )
-	;
+	GafferBindings::NodeClass<OpenGLShader>();
 
 	{
 		scope s = GafferBindings::DependencyNodeClass<Sphere>();

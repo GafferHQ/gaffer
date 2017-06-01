@@ -38,6 +38,8 @@
 
 #include "GafferBindings/DependencyNodeBinding.h"
 
+#include "Gaffer/StringPlug.h"
+
 #include "GafferScene/Shader.h"
 #include "GafferScene/ShaderSwitch.h"
 
@@ -78,6 +80,34 @@ IECore::ObjectVectorPtr state( const Shader &s, bool copy=true )
 	}
 }
 
+void loadShader( Shader &shader, const std::string &shaderName, bool keepExistingValues )
+{
+	// Loading a shader modifies the graph, which can trigger dirty propagation,
+	// which can trigger computations, which can launch threads. 
+	// So we need a GIL release here.
+	IECorePython::ScopedGILRelease gilRelease;
+	shader.loadShader( shaderName, keepExistingValues );
+}
+
+
+
+class ShaderSerialiser : public GafferBindings::NodeSerialiser
+{
+
+	virtual std::string postScript( const Gaffer::GraphComponent *graphComponent, const std::string &identifier, const Serialisation &serialisation ) const
+	{
+		const Shader *shader = static_cast<const Shader *>( graphComponent );
+		const std::string shaderName = shader->namePlug()->getValue();
+		if( shaderName.size() )
+		{
+			return boost::str( boost::format( "%s.loadShader( \"%s\", keepExistingValues=True )\n" ) % identifier % shaderName );
+		}
+
+		return "";
+	}
+
+};
+
 } // namespace
 
 void GafferSceneBindings::bindShader()
@@ -90,7 +120,11 @@ void GafferSceneBindings::bindShader()
 		.def( "stateHash", (IECore::MurmurHash (Shader::*)() const )&Shader::stateHash )
 		.def( "stateHash", (void (Shader::*)( IECore::MurmurHash &h ) const )&Shader::stateHash )
 		.def( "state", &state, ( boost::python::arg_( "_copy" ) = true ) )
+		.def( "loadShader", &loadShader, ( arg_( "shaderName" ), arg_( "keepExistingValues" ) = false ) )
+
 	;
+
+	GafferBindings::Serialisation::registerSerialiser( Shader::staticTypeId(), new ShaderSerialiser() );
 
 	GafferBindings::DependencyNodeClass<ShaderSwitch>();
 

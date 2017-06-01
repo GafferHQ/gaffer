@@ -52,7 +52,7 @@ class OpenGLShader : public GafferScene::Shader
 
 		IE_CORE_DECLARERUNTIMETYPEDEXTENSION( GafferScene::OpenGLShader, OpenGLShaderTypeId, GafferScene::Shader );
 
-		void loadShader( const std::string &shaderName );
+		virtual void loadShader( const std::string &shaderName, bool keepExistingValues=false );
 
 	protected :
 
