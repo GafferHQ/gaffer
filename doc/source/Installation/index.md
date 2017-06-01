@@ -41,9 +41,7 @@ Gaffer is shipped with the open source Appleseed renderer, ready to use with no 
 
 ### Arnold
 
-- Ensure `<ARNOLD_INSTALL_PATH>/bin` is in your `$PATH`.
-- Add `<ARNOLD_INSTALL_PATH>/bin` to the `$LD_LIBRARY_PATH` environment variable.
-- Add `<ARNOLD_INSTALL_PATH>/python` to the `$PYTHONPATH` environment variable
+- Ensure that `$ARNOLD_ROOT` points to the location where Arnold is installed.
 
 ### Tractor
 
