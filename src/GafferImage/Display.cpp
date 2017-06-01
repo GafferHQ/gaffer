@@ -39,6 +39,8 @@
 #include "boost/bind/placeholders.hpp"
 #include "boost/lexical_cast.hpp"
 #include "boost/multi_array.hpp"
+#include "boost/move/unique_ptr.hpp"
+#include "boost/move/make_unique.hpp"
 
 #include "IECore/LRUCache.h"
 #include "IECore/DisplayDriverServer.h"
@@ -622,7 +624,7 @@ namespace
 {
 
 typedef set<PlugPtr> PlugSet;
-typedef auto_ptr<PlugSet> PlugSetPtr;
+typedef boost::movelib::unique_ptr<PlugSet> PlugSetPtr;
 
 struct PendingUpdates
 {
@@ -662,7 +664,7 @@ void Display::dataReceived()
 		if( !pending.plugs.get() )
 		{
 			scheduleUpdate = true;
-			pending.plugs.reset( new PlugSet );
+			pending.plugs = boost::movelib::make_unique<PlugSet>();
 		}
 		pending.plugs->insert( outPlug() );
 	}
@@ -686,7 +688,7 @@ void Display::dataReceivedUI()
 	{
 		PendingUpdates &pending = pendingUpdates();
 		tbb::spin_mutex::scoped_lock lock( pending.mutex );
-		batch = pending.plugs; // Resets pending.plugs to NULL
+		batch.reset( pending.plugs.release() ); // Resets pending.plugs to NULL
 	}
 
 	// Now increment the update count for the Display nodes
