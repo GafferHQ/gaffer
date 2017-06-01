@@ -145,6 +145,14 @@ class Catalogue::InternalImage : public ImageNode
 			outPlug()->setInput( imageMetadata()->outPlug() );
 		}
 
+		virtual ~InternalImage()
+		{
+			if( m_saver )
+			{
+				m_saver->deregisterClient( this );
+			}
+		}
+
 		StringPlug *fileNamePlug()
 		{
 			return getChild<StringPlug>( g_firstChildIndex );
@@ -387,7 +395,7 @@ class Catalogue::InternalImage : public ImageNode
 
 			IE_CORE_DECLAREMEMBERPTR( AsynchronousSaver )
 
-			AsynchronousSaver( InternalImagePtr client )
+			AsynchronousSaver( InternalImage *client )
 			{
 				// We use a copy of the image to do the saving, because the original
 				// might be modified on the main thread while we save in the background.
@@ -395,7 +403,7 @@ class Catalogue::InternalImage : public ImageNode
 				m_imageCopy = new InternalImage;
 
 				size_t i = 0;
-				for( DisplayIterator it( client.get() ); !it.done(); ++it )
+				for( DisplayIterator it( client ); !it.done(); ++it )
 				{
 					Display *display = it->get();
 					DisplayPtr displayCopy = new Display;
@@ -422,24 +430,37 @@ class Catalogue::InternalImage : public ImageNode
 				registerClient( client );
 
 				// And fire off a thread to do the actual work.
-				std::thread thread( boost::bind( &AsynchronousSaver::save, Ptr( this ) ) );
-				thread.detach();
+				std::thread thread( boost::bind( &AsynchronousSaver::save, this ) );
+				m_thread.swap( thread );
 			}
 
-			void registerClient( InternalImagePtr client )
+			virtual ~AsynchronousSaver()
+			{
+				if( m_thread.joinable() )
+				{
+					m_thread.join();
+				}
+			}
+
+			void registerClient( InternalImage *client )
 			{
 				if( m_imageCopy )
 				{
 					// Still in the process of saving
-					m_clients.push_back( client );
+					m_clients.insert( client );
 					client->text()->enabledPlug()->setValue( true );
 				}
 				else
 				{
 					// Saving already completed
 					DirtyPropagationScope dirtyPropagationScope;
-					wrapUpClient( client.get() );
+					wrapUpClient( client );
 				}
+			}
+
+			void deregisterClient( InternalImage *client )
+			{
+				m_clients.erase( client );
 			}
 
 			typedef std::pair<std::string, Imath::V2i> TileIndex;
@@ -492,15 +513,13 @@ class Catalogue::InternalImage : public ImageNode
 				{
 					DirtyPropagationScope dirtyPropagationScope;
 
-					for( vector<InternalImagePtr>::const_iterator it = m_clients.begin(), eIt = m_clients.end(); it != eIt; ++it )
+					for( set<InternalImage *>::const_iterator it = m_clients.begin(), eIt = m_clients.end(); it != eIt; ++it )
 					{
-						wrapUpClient( it->get() );
+						wrapUpClient( *it );
 					}
 
 					// Destroy the image to release the memory used by the copied display drivers.
 					m_imageCopy = NULL;
-					// Break circular references
-					m_clients.clear();
 				}
 
 				void wrapUpClient( InternalImage *client )
@@ -522,7 +541,8 @@ class Catalogue::InternalImage : public ImageNode
 				InternalImagePtr m_imageCopy;
 				ImageWriterPtr m_writer;
 
-				vector<InternalImagePtr> m_clients;
+				std::thread m_thread;
+				set<InternalImage *> m_clients;
 
 		};
 
