@@ -39,8 +39,7 @@
 #include "boost/bind/placeholders.hpp"
 #include "boost/lexical_cast.hpp"
 #include "boost/multi_array.hpp"
-#include "boost/move/unique_ptr.hpp"
-#include "boost/move/make_unique.hpp"
+#include "boost/shared_ptr.hpp"
 
 #include "IECore/LRUCache.h"
 #include "IECore/DisplayDriverServer.h"
@@ -624,7 +623,8 @@ namespace
 {
 
 typedef set<PlugPtr> PlugSet;
-typedef boost::movelib::unique_ptr<PlugSet> PlugSetPtr;
+/// \todo Use std::unique_ptr when we can guarantee C++11
+typedef boost::shared_ptr<PlugSet> PlugSetPtr;
 
 struct PendingUpdates
 {
@@ -664,7 +664,7 @@ void Display::dataReceived()
 		if( !pending.plugs.get() )
 		{
 			scheduleUpdate = true;
-			pending.plugs = boost::movelib::make_unique<PlugSet>();
+			pending.plugs = boost::make_shared<PlugSet>();
 		}
 		pending.plugs->insert( outPlug() );
 	}
@@ -688,7 +688,8 @@ void Display::dataReceivedUI()
 	{
 		PendingUpdates &pending = pendingUpdates();
 		tbb::spin_mutex::scoped_lock lock( pending.mutex );
-		batch.reset( pending.plugs.release() ); // Resets pending.plugs to NULL
+		batch = pending.plugs;
+		pending.plugs.reset();
 	}
 
 	// Now increment the update count for the Display nodes
