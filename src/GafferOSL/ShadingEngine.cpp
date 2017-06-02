@@ -784,11 +784,13 @@ static const T *varyingValue( const IECore::CompoundData *points, const char *na
 } // namespace
 
 ShadingEngine::ShadingEngine( const IECore::ObjectVector *shaderNetwork )
+: m_unknownAttributesNeeded(false)
 {
 	ShadingSystem *shadingSystem = ::shadingSystem();
-	ShadingSystemWriteMutex::scoped_lock shadingSystemWriteLock( g_shadingSystemWriteMutex );
+	{
+		ShadingSystemWriteMutex::scoped_lock shadingSystemWriteLock( g_shadingSystemWriteMutex );
 
-	m_shaderGroupRef = new ShaderGroupRef( shadingSystem->ShaderGroupBegin() );
+		m_shaderGroupRef = new ShaderGroupRef( shadingSystem->ShaderGroupBegin() );
 
 		for( ObjectVector::MemberContainer::const_iterator it = shaderNetwork->members().begin(), eIt = shaderNetwork->members().end(); it != eIt; ++it )
 		{
@@ -816,7 +818,36 @@ ShadingEngine::ShadingEngine( const IECore::ObjectVector *shaderNetwork )
 			}
 		}
 
-	shadingSystem->ShaderGroupEnd();
+		shadingSystem->ShaderGroupEnd();
+	}
+
+	queryAttributesNeeded();
+}
+
+void ShadingEngine::queryAttributesNeeded()
+{
+	ShadingSystem *shadingSystem = ::shadingSystem();
+
+	ShaderGroup &shaderGroup = **static_cast<ShaderGroupRef *>( m_shaderGroupRef );
+
+	int unknownAttributesNeeded = 0;
+	shadingSystem->getattribute(  &shaderGroup, "unknown_attributes_needed", unknownAttributesNeeded );
+	m_unknownAttributesNeeded = static_cast<bool> (unknownAttributesNeeded);
+
+	int numAttributes = 0;
+	shadingSystem->getattribute( &shaderGroup, "num_attributes_needed", numAttributes );
+	if( numAttributes )
+	{
+		ustring *attributeNames = NULL;
+		ustring *scopeNames = NULL;
+		shadingSystem->getattribute(  &shaderGroup, "attributes_needed", TypeDesc::PTR, &attributeNames );
+		shadingSystem->getattribute(  &shaderGroup, "attribute_scopes", TypeDesc::PTR, &scopeNames );
+
+		for (int i = 0; i < numAttributes; ++i)
+		{
+			m_attributesNeeded.insert(std::make_pair(scopeNames[i].string(), attributeNames[i].string() ) );
+		}
+	}
 }
 
 ShadingEngine::~ShadingEngine()
@@ -921,3 +952,10 @@ IECore::CompoundDataPtr ShadingEngine::shade( const IECore::CompoundData *points
 	return results.results();
 }
 
+bool ShadingEngine::isAttributeNeeded( const std::string& scope, const std::string& name) const
+{
+	if (m_unknownAttributesNeeded)
+		return true;
+
+	return m_attributesNeeded.find( std::make_pair(scope, name) ) != m_attributesNeeded.end();
+}
