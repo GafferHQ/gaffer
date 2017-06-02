@@ -865,6 +865,15 @@ IECore::DisplayDriverServer *Catalogue::displayDriverServer()
 
 void Catalogue::driverCreated( IECore::DisplayDriver *driver, const IECore::CompoundData *parameters )
 {
+	// Check the image is destined for catalogues in general
+	if( const StringData *portNumberData = parameters->member<StringData>( "displayPort" ) )
+	{
+		if( boost::lexical_cast<int>( portNumberData->readable() ) != displayDriverServer()->portNumber() )
+		{
+			return;
+		}
+	}
+
 	// Check the image is destined for this catalogue
 	string catalogueName = "";
 	if( const StringData *catalogueNameData = parameters->member<StringData>( "catalogue:name" ) )
@@ -881,7 +890,6 @@ void Catalogue::driverCreated( IECore::DisplayDriver *driver, const IECore::Comp
 	{
 		return;
 	}
-
 
 	// Try to find an existing InternalImage from
 	// the same render, so we can just combine all
