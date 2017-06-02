@@ -93,6 +93,13 @@ class LoopTest( GafferTest.TestCase ) :
 		s["n"]["iterations"].setValue( 5 )
 		self.assertEqual( s["n"]["out"].getValue(), 1 + 2 + 3 + 4 )
 
+		# Make sure the loop index is undefined when pulling the input, instead of leaking out upstream
+	
+		s["e2"] = Gaffer.Expression()
+		s["e2"].setExpression( 'parent["n"]["in"] = context.get( "loop:index", -100 )' )
+
+		self.assertEqual( s["n"]["out"].getValue(), 1 + 2 + 3 + 4 - 100 )
+
 	def testChangeLoopNetwork( self ) :
 
 		n = self.intLoop()

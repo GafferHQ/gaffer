@@ -187,16 +187,16 @@ void Loop<BaseType>::hash( const ValuePlug *output, const Context *context, IECo
 	IECore::InternedString indexVariable;
 	if( const ValuePlug *plug = sourcePlug( output, context, index, indexVariable ) )
 	{
+		Context::EditableScope tmpContext( context );
 		if( index >= 0 )
 		{
-			Context::EditableScope tmpContext( context );
 			tmpContext.set<int>( indexVariable, index );
-			h = plug->hash();
 		}
 		else
 		{
-			h = plug->hash();
+			tmpContext.remove( indexVariable );
 		}
+		h = plug->hash();
 		return;
 	}
 
@@ -210,16 +210,16 @@ void Loop<BaseType>::compute( ValuePlug *output, const Context *context ) const
 	IECore::InternedString indexVariable;
 	if( const ValuePlug *plug = sourcePlug( output, context, index, indexVariable ) )
 	{
+		Context::EditableScope tmpContext( context );
 		if( index >= 0 )
 		{
-			Context::EditableScope tmpContext( context );
 			tmpContext.set<int>( indexVariable, index );
-			output->setFrom( plug );
 		}
 		else
 		{
-			output->setFrom( plug );
+			tmpContext.remove( indexVariable );
 		}
+		output->setFrom( plug );
 		return;
 	}
 
