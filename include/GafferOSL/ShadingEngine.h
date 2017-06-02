@@ -35,6 +35,8 @@
 #ifndef GAFFEROSL_SHADINGENGINE_H
 #define GAFFEROSL_SHADINGENGINE_H
 
+#include "boost/container/flat_set.hpp"
+
 #include "IECore/CompoundData.h"
 #include "IECore/ObjectVector.h"
 
@@ -79,7 +81,17 @@ class ShadingEngine : public IECore::RefCounted
 
 		IECore::CompoundDataPtr shade( const IECore::CompoundData *points, const Transforms &transforms = Transforms() ) const;
 
+		bool needsAttribute( const std::string &scope, const std::string &name ) const;
+
 	private :
+
+		void queryAttributesNeeded();
+
+		typedef boost::container::flat_set<std::pair<std::string, std::string> > AttributesNeededContainer;
+		AttributesNeededContainer m_attributesNeeded;
+
+		// Set to true if the shader reads attributes who's name is not know at compile time
+		bool m_unknownAttributesNeeded;
 
 		void *m_shaderGroupRef;
 
