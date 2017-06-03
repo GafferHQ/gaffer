@@ -44,6 +44,8 @@
 #include "IECore/Data.h"
 #include "IECore/MurmurHash.h"
 
+#include "Gaffer/StringAlgo.h"
+
 namespace Gaffer
 {
 
@@ -131,6 +133,9 @@ class Context : public IECore::RefCounted
 
 		/// Removes an entry from the context if it exists
 		void remove( const IECore::InternedString& name );
+
+		/// Removes an entry from the context if it exists
+		void removeMatching( const StringAlgo::MatchPattern& pattern );
 
 		/// When a Shared or Borrowed value is changed behind the scenes, this method
 		/// must be called to notify the Context of the change.

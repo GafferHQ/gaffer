@@ -181,6 +181,31 @@ void Context::remove( const IECore::InternedString &name )
 	}
 }
 
+void Context::removeMatching( const StringAlgo::MatchPattern &pattern )
+{
+	if( pattern == "" )
+	{
+		return;
+	}
+
+	for( Map::iterator it = m_map.begin(); it != m_map.end(); )
+	{
+		if( StringAlgo::matchMultiple( it->first, pattern ) )
+		{
+			it = m_map.erase( it );
+			m_hashValid = false;
+			if( m_changedSignal )
+			{
+				(*m_changedSignal)( this, it->first );
+			}
+		}
+		else
+		{
+			it++;
+		}
+	}
+}
+
 void Context::changed( const IECore::InternedString &name )
 {
 	m_hashValid = false;
