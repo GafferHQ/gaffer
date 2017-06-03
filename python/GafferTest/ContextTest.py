@@ -595,6 +595,26 @@ class ContextTest( GafferTest.TestCase ) :
 
 		self.assertEqual( c["b"], "bear" )
 
+	def testRemoveMatching( self ) :
+
+		c = Gaffer.Context()
+		c["a_1"] = "apple"
+		c["a_2"] = "apple"
+		c["b_1"] = "bear"
+		c["b_2"] = "bear"
+		c["c_1"] = "cat"
+		c["c_2"] = "cat"
+
+		h = c.hash()
+		self.assertEqual( set( c.names() ), set( [ "a_1", "a_2", "b_1", "b_2", "c_1", "c_2", "frame", "framesPerSecond" ] ) )
+
+		# test Context.removeMatching()
+		c.removeMatching( "a* c*" )
+		self.assertNotEqual( c.hash(), h )
+		self.assertEqual( set( c.names() ), set( [ "b_1", "b_2", "frame", "framesPerSecond" ] ) )
+		h = c.hash()
+
+
 	def testContains( self ) :
 
 		c = Gaffer.Context()
