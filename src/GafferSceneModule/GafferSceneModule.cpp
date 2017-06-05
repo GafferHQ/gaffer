@@ -62,6 +62,7 @@
 #include "GafferScene/Isolate.h"
 #include "GafferScene/Cube.h"
 #include "GafferScene/Sphere.h"
+#include "GafferScene/Torus.h"
 #include "GafferScene/Text.h"
 #include "GafferScene/MapProjection.h"
 #include "GafferScene/MapOffset.h"
@@ -170,6 +171,8 @@ BOOST_PYTHON_MODULE( _GafferScene )
 			.value( "Mesh", Sphere::Mesh )
 		;
 	}
+
+  GafferBindings::DependencyNodeClass<Torus>();
 
 	bindRender();
 	bindConstraint();

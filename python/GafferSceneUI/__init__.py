@@ -65,6 +65,7 @@ import AttributesUI
 import LightUI
 import InteractiveRenderUI
 import SphereUI
+import TorusUI
 import MapProjectionUI
 import MapOffsetUI
 import CustomAttributesUI
