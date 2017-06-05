@@ -236,5 +236,204 @@ class OSLObjectTest( GafferOSLTest.OSLTestCase ) :
 
 		s["r"]["p"].setInput( s["s"]["out"] )
 
+	def testCanShadeVertexInterpolatedPrimitiveVariablesAsUniform( self ) :
+
+		s = Gaffer.ScriptNode()
+
+		c = GafferScene.Cube()
+		s.addChild( c )
+
+		o = GafferOSL.OSLObject()
+		s.addChild( o )
+
+		f = GafferScene.PathFilter( "PathFilter" )
+		s.addChild( f )
+		f["paths"].setValue( IECore.StringVectorData( [ '/cube' ] ) )
+		o["filter"].setInput( f["out"] )
+
+		# ensure the source position primitive variable interpolation is set to Vertex
+		self.assertEqual(c["out"].object("/cube")['P'].interpolation, IECore.PrimitiveVariable.Interpolation.Vertex )
+
+		o['in'].setInput( c["out"] )
+		o['interpolation'].setValue( IECore.PrimitiveVariable.Interpolation.Uniform )
+
+		inPoint = GafferOSL.OSLShader( "InPoint" )
+		s.addChild( inPoint )
+		inPoint.loadShader( "ObjectProcessing/InPoint" )
+
+		vectorAdd = GafferOSL.OSLShader( "VectorAdd" )
+		s.addChild( vectorAdd )
+		vectorAdd.loadShader( "Maths/VectorAdd" )
+		vectorAdd["parameters"]["b"].setValue( IECore.V3f( 1, 2, 3 ) )
+
+		vectorAdd["parameters"]["a"].setInput( inPoint["out"]["value"] )
+
+		outPoint = GafferOSL.OSLShader( "OutPoint" )
+		s.addChild( outPoint )
+		outPoint.loadShader( "ObjectProcessing/OutPoint" )
+		outPoint['parameters']['name'].setValue("P_copy")
+
+		outPoint["parameters"]["value"].setInput( vectorAdd["out"]["out"] )
+
+		outObject = GafferOSL.OSLShader( "OutObject" )
+		s.addChild( outObject )
+		outObject.loadShader( "ObjectProcessing/OutObject" )
+		outObject["parameters"]["in0"].setInput( outPoint["out"]["primitiveVariable"] )
+
+		o["shader"].setInput( outObject["out"] )
+
+		cubeObject = s['OSLObject']['out'].object( "/cube" )
+
+		self.assertTrue( "P_copy" in cubeObject.keys() )
+		self.assertEqual( cubeObject["P_copy"].interpolation, IECore.PrimitiveVariable.Interpolation.Uniform)
+
+		self.assertEqual( cubeObject["P_copy"].data[0], IECore.V3f(  0.0,  0.0, -0.5 ) + IECore.V3f( 1, 2, 3 ))
+		self.assertEqual( cubeObject["P_copy"].data[1], IECore.V3f(  0.5,  0.0,  0.0 ) + IECore.V3f( 1, 2, 3 ))
+		self.assertEqual( cubeObject["P_copy"].data[2], IECore.V3f(  0.0,  0.0,  0.5 ) + IECore.V3f( 1, 2, 3 ))
+		self.assertEqual( cubeObject["P_copy"].data[3], IECore.V3f( -0.5,  0.0,  0.0 ) + IECore.V3f( 1, 2, 3 ))
+		self.assertEqual( cubeObject["P_copy"].data[4], IECore.V3f(  0.0,  0.5,  0.0 ) + IECore.V3f( 1, 2, 3 ))
+		self.assertEqual( cubeObject["P_copy"].data[5], IECore.V3f(  0.0, -0.5,  0.0 ) + IECore.V3f( 1, 2, 3 ))
+
+	def testCanShadeFaceVaryingInterpolatedPrimitiveVariablesAsVertex( self ) :
+
+		s = Gaffer.ScriptNode()
+
+		p = GafferScene.Plane()
+		p["divisions"].setValue( IECore.V2i( 2, 2 ) ) #  2x2 plane = 4 quads & 9 vertices
+		s.addChild( p )
+
+		o = GafferOSL.OSLObject()
+		s.addChild( o )
+
+		f = GafferScene.PathFilter( "PathFilter" )
+		s.addChild( f )
+		f["paths"].setValue( IECore.StringVectorData( [ '/plane' ] ) )
+		o["filter"].setInput( f["out"] )
+
+		# ensure the source primvars are face varying
+		self.assertEqual(p["out"].object("/plane")['s'].interpolation, IECore.PrimitiveVariable.Interpolation.FaceVarying )
+		self.assertEqual(p["out"].object("/plane")['t'].interpolation, IECore.PrimitiveVariable.Interpolation.FaceVarying )
+
+		o['in'].setInput( p["out"] )
+		o['interpolation'].setValue( IECore.PrimitiveVariable.Interpolation.Vertex )
+
+		inS = GafferOSL.OSLShader( "InFloat" )
+		s.addChild( inS )
+		inS.loadShader( "ObjectProcessing/InFloat" )
+		inS['parameters']['name'].setValue('s')
+
+		inT = GafferOSL.OSLShader( "InFloat" )
+		s.addChild( inT )
+		inT.loadShader( "ObjectProcessing/InFloat" )
+		inT['parameters']['name'].setValue('t')
+
+		floatAdd = GafferOSL.OSLShader( "FloatAdd" )
+		s.addChild( floatAdd )
+		floatAdd.loadShader( "Maths/FloatAdd" )
+
+		floatAdd["parameters"]["a"].setInput( inT["out"]["value"] )
+		floatAdd["parameters"]["b"].setInput( inS["out"]["value"] )
+
+		outFloat = GafferOSL.OSLShader( "OutFloat" )
+		s.addChild( outFloat )
+		outFloat.loadShader( "ObjectProcessing/OutFloat" )
+		outFloat['parameters']['name'].setValue("st_add")
+
+		outFloat["parameters"]["value"].setInput( floatAdd["out"]["out"] )
+
+		outObject = GafferOSL.OSLShader( "OutObject" )
+		s.addChild( outObject )
+		outObject.loadShader( "ObjectProcessing/OutObject" )
+		outObject["parameters"]["in0"].setInput( outFloat["out"]["primitiveVariable"] )
+
+		o["shader"].setInput( outObject["out"] )
+
+		planeObject = s['OSLObject']['out'].object( "/plane" )
+
+		self.assertTrue( "st_add" in planeObject.keys() )
+		self.assertEqual( planeObject["st_add"].interpolation, IECore.PrimitiveVariable.Interpolation.Vertex)
+
+		# note our plane origin position (0,0,0) has a UV (0,1) because of 1.0 - t convention in cortex.
+		self.assertEqual( planeObject["st_add"].data[0], 0.0 + 1.0)
+		self.assertEqual( planeObject["st_add"].data[1], 0.5 + 1.0)
+		self.assertEqual( planeObject["st_add"].data[2], 1.0 + 1.0)
+		self.assertEqual( planeObject["st_add"].data[3], 0.0 + 0.5)
+		self.assertEqual( planeObject["st_add"].data[4], 0.5 + 0.5)
+		self.assertEqual( planeObject["st_add"].data[5], 1.0 + 0.5)
+		self.assertEqual( planeObject["st_add"].data[6], 0.0 + 0.0)
+		self.assertEqual( planeObject["st_add"].data[7], 0.5 + 0.0)
+		self.assertEqual( planeObject["st_add"].data[8], 1.0 + 0.0)
+
+
+	def testCanReadFromConstantPrimitiveVariables( self ) :
+
+		s = Gaffer.ScriptNode()
+
+		p = GafferScene.Plane()
+		p["divisions"].setValue( IECore.V2i( 2, 2 ) ) #  2x2 plane = 4 quads & 9 vertices
+		s.addChild( p )
+
+		o = GafferOSL.OSLObject()
+		s.addChild( o )
+
+		f = GafferScene.PathFilter( "PathFilter" )
+		s.addChild( f )
+		f["paths"].setValue( IECore.StringVectorData( [ '/plane' ] ) )
+		o["filter"].setInput( f["out"] )
+
+
+		pv = GafferScene.PrimitiveVariables( "PrimitiveVariables" )
+		s.addChild( pv )
+
+		pv["primitiveVariables"].addChild( Gaffer.CompoundDataPlug.MemberPlug( "member1", flags = Gaffer.Plug.Flags.Default | Gaffer.Plug.Flags.Dynamic, ) )
+		pv["primitiveVariables"]["member1"].addChild( Gaffer.StringPlug( "name", defaultValue = '', flags = Gaffer.Plug.Flags.Default | Gaffer.Plug.Flags.Dynamic, ) )
+		pv["primitiveVariables"]["member1"]["name"].setValue( 'const_foo' )
+		pv["primitiveVariables"]["member1"].addChild( Gaffer.FloatPlug( "value", defaultValue = 0.0, flags = Gaffer.Plug.Flags.Default | Gaffer.Plug.Flags.Dynamic, ) )
+		pv["primitiveVariables"]["member1"]["value"].setValue( 1 )
+		pv["primitiveVariables"]["member1"].addChild( Gaffer.BoolPlug( "enabled", defaultValue = True, flags = Gaffer.Plug.Flags.Default | Gaffer.Plug.Flags.Dynamic, ) )
+
+		pv["in"].setInput( p["out"] )
+		pv["filter"].setInput( f["out"] )
+
+		o['in'].setInput( pv["out"] )
+		o['interpolation'].setValue( IECore.PrimitiveVariable.Interpolation.Vertex )
+
+		inConstFoo = GafferOSL.OSLShader( "InFloat" )
+		s.addChild( inConstFoo )
+		inConstFoo.loadShader( "ObjectProcessing/InFloat" )
+		inConstFoo['parameters']['name'].setValue('const_foo')
+
+
+		outFloat = GafferOSL.OSLShader( "OutFloat" )
+		s.addChild( outFloat )
+		outFloat.loadShader( "ObjectProcessing/OutFloat" )
+		outFloat['parameters']['name'].setValue("out_foo")
+
+		outFloat["parameters"]["value"].setInput( inConstFoo["out"]["value"] )
+
+		outObject = GafferOSL.OSLShader( "OutObject" )
+		s.addChild( outObject )
+		outObject.loadShader( "ObjectProcessing/OutObject" )
+		outObject["parameters"]["in0"].setInput( outFloat["out"]["primitiveVariable"] )
+
+		o["shader"].setInput( outObject["out"] )
+
+		planeObject = s['OSLObject']['out'].object( "/plane" )
+
+		self.assertTrue( "out_foo" in planeObject.keys() )
+		self.assertEqual( planeObject["out_foo"].interpolation, IECore.PrimitiveVariable.Interpolation.Vertex)
+
+		self.assertEqual( planeObject["out_foo"].data[0], 1)
+		self.assertEqual( planeObject["out_foo"].data[1], 1)
+		self.assertEqual( planeObject["out_foo"].data[2], 1)
+		self.assertEqual( planeObject["out_foo"].data[3], 1)
+		self.assertEqual( planeObject["out_foo"].data[4], 1)
+		self.assertEqual( planeObject["out_foo"].data[5], 1)
+		self.assertEqual( planeObject["out_foo"].data[6], 1)
+		self.assertEqual( planeObject["out_foo"].data[7], 1)
+		self.assertEqual( planeObject["out_foo"].data[8], 1)
+
 if __name__ == "__main__":
 	unittest.main()
+
+
