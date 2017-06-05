@@ -218,6 +218,19 @@ fi
 
 prependToPath "$GAFFER_ROOT/arnold/plugins" ARNOLD_PLUGIN_PATH
 
+if [[ $ARNOLD_ROOT ]] ; then
+
+	if [[ `uname` = "Linux" ]] ; then
+		appendToPath "$ARNOLD_ROOT/bin" LD_LIBRARY_PATH
+	else
+		appendToPath "$ARNOLD_ROOT/bin" DYLD_LIBRARY_PATH
+	fi
+
+	appendToPath "$ARNOLD_ROOT/bin" PATH
+	appendToPath "$ARNOLD_ROOT/python" PYTHONPATH
+
+fi
+
 # Run gaffer itself
 ##########################################################################
 
