@@ -262,7 +262,7 @@ class ImageTransformTest( GafferImageTest.ImageTestCase ) :
 
 		transform = GafferImage.ImageTransform()
 		transform["in"].setInput( crop["out"] )
-		transform["filter"].setValue( "lanczos3" )
+		transform["filter"].setValue( "rifman" )
 
 		def sample( position ) :
 
