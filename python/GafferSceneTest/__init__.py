@@ -121,6 +121,7 @@ from RendererAlgoTest import RendererAlgoTest
 from SetAlgoTest import SetAlgoTest
 from EvaluateLightLinksTest import EvaluateLightLinksTest
 from MeshTangentsTest import MeshTangentsTest
+from ResamplePrimitiveVariablesTest import ResamplePrimitiveVariablesTest
 
 if __name__ == "__main__":
 	import unittest

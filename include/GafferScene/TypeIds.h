@@ -136,6 +136,7 @@ enum TypeId
 	FilterResultsTypeId = 110591,
 	EvaluateLightLinksTypeId = 110592,
 	MeshTangentsTypeId = 110593,
+	ResamplePrimitiveVariablesTypeId = 110594,
 
 	PreviewInteractiveRenderTypeId = 110649,
 

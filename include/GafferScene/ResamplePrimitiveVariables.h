@@ -1,6 +1,6 @@
 //////////////////////////////////////////////////////////////////////////
 //
-//  Copyright (c) 2014, John Haddon. All rights reserved.
+//  Copyright (c) 2017, Image Engine Design Inc. All rights reserved.
 //
 //  Redistribution and use in source and binary forms, with or without
 //  modification, are permitted provided that the following conditions are
@@ -15,7 +15,7 @@
 //        disclaimer in the documentation and/or other materials provided with
 //        the distribution.
 //
-//      * Neither the name of John Haddon nor the names of
+//      * Neither the name of Image Engine Design Inc nor the names of
 //        any other contributors to this software may be used to endorse or
 //        promote products derived from this software without specific prior
 //        written permission.
@@ -34,24 +34,40 @@
 //
 //////////////////////////////////////////////////////////////////////////
 
-#include "boost/python.hpp"
+#ifndef GAFFERSCENE_RESAMPLEPRIMITIVEVARIABLES_H
+#define GAFFERSCENE_RESAMPLEPRIMITIVEVARIABLES_H
 
-#include "GafferBindings/DependencyNodeBinding.h"
+#include "GafferScene/PrimitiveVariableProcessor.h"
 
-#include "GafferScene/PrimitiveVariables.h"
-#include "GafferScene/DeletePrimitiveVariables.h"
-#include "GafferScene/ResamplePrimitiveVariables.h"
-
-#include "GafferSceneBindings/PrimitiveVariablesBinding.h"
-
-using namespace GafferScene;
-
-void GafferSceneBindings::bindPrimitiveVariables()
+namespace GafferScene
 {
 
-	GafferBindings::DependencyNodeClass<PrimitiveVariableProcessor>();
-	GafferBindings::DependencyNodeClass<DeletePrimitiveVariables>();
-	GafferBindings::DependencyNodeClass<PrimitiveVariables>();
-	GafferBindings::DependencyNodeClass<ResamplePrimitiveVariables>();
+class ResamplePrimitiveVariables : public PrimitiveVariableProcessor
+{
 
-}
+	public :
+
+		ResamplePrimitiveVariables( const std::string &name = defaultName<ResamplePrimitiveVariables>() );
+		virtual ~ResamplePrimitiveVariables();
+
+		IE_CORE_DECLARERUNTIMETYPEDEXTENSION( GafferScene::ResamplePrimitiveVariables, ResamplePrimitiveVariablesTypeId, PrimitiveVariableProcessor );
+
+		Gaffer::IntPlug *interpolationPlug();
+		const Gaffer::IntPlug *interpolationPlug() const;
+
+		virtual void affects( const Gaffer::Plug *input, AffectedPlugsContainer &outputs ) const;
+
+	protected :
+
+		virtual void processPrimitiveVariable( const ScenePath &path, const Gaffer::Context *context, IECore::ConstPrimitivePtr inputGeometry, IECore::PrimitiveVariable &inputVariable ) const;
+		virtual void hashProcessedObject( const ScenePath &path, const Gaffer::Context *context, IECore::MurmurHash &h ) const;
+	private :
+
+		static size_t g_firstPlugIndex;
+};
+
+IE_CORE_DECLAREPTR( ResamplePrimitiveVariables )
+
+} // namespace GafferScene
+
+#endif // GAFFERSCENE_RESAMPLEPRIMITIVEVARIABLES_H
