@@ -1104,6 +1104,51 @@ class ReferenceTest( GafferTest.TestCase ) :
 
 		self.assertTrue( s["a"]["op1"].getInput().isSame( s["r"]["color"]["g"] ) )
 
+	def testReloadWithBoxIO( self ) :
+
+		s = Gaffer.ScriptNode()
+
+		s["b"] = Gaffer.Box()
+		s["b"]["a"] = GafferTest.AddNode()
+
+		s["b"]["i"] = Gaffer.BoxIn()
+		s["b"]["i"]["name"].setValue( "in" )
+		s["b"]["i"].setup( s["b"]["a"]["op1"] )
+		s["b"]["a"]["op1"].setInput( s["b"]["i"]["out"] )
+
+		s["b"]["o"] = Gaffer.BoxOut()
+		s["b"]["o"]["name"].setValue( "out" )
+		s["b"]["o"].setup( s["b"]["a"]["sum"] )
+		s["b"]["o"]["in"].setInput( s["b"]["a"]["sum"] )
+
+		referenceFileName = self.temporaryDirectory() + "/test.grf"
+		s["b"].exportForReference( referenceFileName )
+
+		s["a1"] = GafferTest.AddNode()
+
+		s["r"] = Gaffer.Reference()
+		s["r"].load( referenceFileName )
+		s["r"]["in"].setInput( s["a1"]["sum"] )
+
+		s["a2"] = GafferTest.AddNode()
+		s["a2"]["op1"].setInput( s["r"]["out"] )
+
+		def assertReferenceConnections() :
+
+			self.assertTrue( s["a2"]["op1"].source().isSame( s["r"]["a"]["sum"] ) )
+			self.assertTrue( s["r"]["a"]["op1"].source().isSame( s["a1"]["sum"] ) )
+
+			self.assertEqual(
+				set( s["r"].keys() ),
+				set( [ "in", "out", "user", "a", "i", "o" ] ),
+			)
+
+		assertReferenceConnections()
+
+		s["r"].load( referenceFileName )
+
+		assertReferenceConnections()
+
 	def tearDown( self ) :
 
 		GafferTest.TestCase.tearDown( self )
