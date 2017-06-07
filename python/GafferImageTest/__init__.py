@@ -88,6 +88,7 @@ from FilterAlgoTest import FilterAlgoTest
 from MedianTest import MedianTest
 from MixTest import MixTest
 from CatalogueTest import CatalogueTest
+from CollectImagesTest import CollectImagesTest
 
 if __name__ == "__main__":
 	import unittest
