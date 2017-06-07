@@ -34,6 +34,7 @@
 #
 ##########################################################################
 
+import IECore
 import Gaffer
 import GafferUI
 
@@ -70,7 +71,25 @@ Gaffer.Metadata.registerNode(
 			"noduleLayout:section", "left",
 
 		],
+		"interpolation" : [
+
+			"description",
+			"""
+			The interpolation type of the primitive variables created by this node.
+			For instance, Uniform interpolation means that the shader is run once per face on a mesh, allowing it to output primitive variables with a value per face. 
+			All non-constant input primitive variables are resampled to match the selected interpolation so that they can be accessed from the shader.
+			""",
+
+			"preset:Uniform", IECore.PrimitiveVariable.Interpolation.Uniform,
+			"preset:Vertex", IECore.PrimitiveVariable.Interpolation.Vertex,
+			"preset:FaceVarying", IECore.PrimitiveVariable.Interpolation.FaceVarying,
+
+			"plugValueWidget:type", "GafferUI.PresetsPlugValueWidget",
+
+
+		]
 
 	}
 
 )
+
