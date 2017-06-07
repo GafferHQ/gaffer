@@ -81,7 +81,7 @@ class CopyImageMetadataTest( GafferImageTest.ImageTestCase ) :
 
 		m["invertNames"].setValue( True )
 		metadata = m["out"]["metadata"].getValue()
-		expected = set([ "PixelAspectRatio", "oiio:ColorSpace" ])
+		expected = set( inMetadata.keys() ) - set( [ "screenWindowWidth", "screenWindowCenter", "compression" ] )
 		self.assertEqual( set(metadata.keys()), expected )
 		for key in metadata.keys() :
 			self.assertEqual( metadata[key], inMetadata[key] )

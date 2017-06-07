@@ -410,6 +410,11 @@ class ImageWriterTest( GafferImageTest.ImageTestCase ) :
 			for metaName in expectedMetadata.keys() :
 				if metaName in metadataToIgnore :
 					continue
+				if metaName in ( "fileFormat", "dataType" ) :
+					# These are added on automatically by the ImageReader, and
+					# we can't expect them to be the same when converting between
+					# image formats.
+					continue
 				self.assertTrue( metaName in writerMetadata.keys(), "Writer Metadata missing expected key \"{}\" set to \"{}\" : {} ({})".format(metaName, str(expectedMetadata[metaName]), ext, name) )
 				self.assertEqual( expectedMetadata[metaName], writerMetadata[metaName], "Metadata does not match for key \"{}\" : {} ({})".format(metaName, ext, name) )
 
@@ -672,7 +677,8 @@ class ImageWriterTest( GafferImageTest.ImageTestCase ) :
 
 		# Load the metadata from the files, and figure out what
 		# metadata we expect to have based on what we expect the
-		# writer to add.
+		# writer to add, and what the reader adds automatically
+		# during loading.
 
 		misledReaderMetadata = misledReader["out"]["metadata"].getValue()
 		regularReaderMetadata = regularReader["out"]["metadata"].getValue()
@@ -683,6 +689,8 @@ class ImageWriterTest( GafferImageTest.ImageTestCase ) :
 		expectedMetadata["HostComputer"] = IECore.StringData( platform.node() )
 		expectedMetadata["Artist"] = IECore.StringData( os.environ["USER"] )
 		expectedMetadata["DocumentName"] = IECore.StringData( "untitled" )
+		expectedMetadata["fileFormat"] = regularReaderMetadata["fileFormat"]
+		expectedMetadata["dataType"] = regularReaderMetadata["dataType"]
 
 		self.__addExpectedIPTCMetadata( regularReaderMetadata, expectedMetadata )
 

@@ -644,12 +644,15 @@ ImageSpec createImageSpec( const ImageWriter *node, const ImageOutput *out, cons
 		spec.height = spec.full_height;
 	}
 
-	// Add the metadata to the spec, removing metadata that could affect the resulting channel data
+	// Add the metadata to the spec, removing metadata that could affect the resulting channel data,
+	// and file-format-specific metadata created by the OpenImageIOReader.
 	CompoundDataPtr metadata = node->inPlug()->metadataPlug()->getValue()->copy();
 
 	metadata->writable().erase( "oiio:ColorSpace" );
 	metadata->writable().erase( "oiio:Gamma" );
 	metadata->writable().erase( "oiio:UnassociatedAlpha" );
+	metadata->writable().erase( "fileFormat" );
+	metadata->writable().erase( "dataType" );
 
 	metadataToImageSpecAttributes( metadata.get(), spec );
 

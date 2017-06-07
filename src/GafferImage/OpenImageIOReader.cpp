@@ -588,6 +588,37 @@ IECore::ConstCompoundDataPtr OpenImageIOReader::computeMetadata( const Gaffer::C
 	}
 
 	CompoundDataPtr result = new CompoundData;
+
+	// Add data type
+
+	std::string dataType = spec->format.c_str();
+	if( dataType == "uint16")
+	{
+		// DPX supports uint10/uint12 storage, which is loaded as uint16 by OIIO.
+		// Here we use the "oiio:BitsPerSample" metadata that tells us how many
+		// bits were actually stored in the file.
+		const int bitsPerSample = spec->get_int_attribute( "oiio:BitsPerSample", 0 );
+		if( bitsPerSample )
+		{
+			dataType = boost::str( boost::format( "uint%d"  ) % bitsPerSample );
+		}
+	}
+	else if( dataType == "uint" )
+	{
+		dataType = "uint32";
+	}
+	result->writable()["dataType"] = new StringData( dataType );
+
+	// Add file format
+
+	const char *fileFormat = NULL;
+	if( imageCache()->get_image_info( ustring( fileName ), 0, 0, ustring( "fileformat" ), TypeDesc::TypeString, &fileFormat ) )
+	{
+		result->writable()["fileFormat"] = new StringData( fileFormat );
+	}
+
+	// Add on any custom metadata provided by the file format
+
 	oiioParameterListToMetadata( spec->extra_attribs, result.get() );
 
 	return result;
