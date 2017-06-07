@@ -155,9 +155,15 @@ def paste( menu ) :
 	s = scope( menu )
 	originalSelection = Gaffer.StandardSet( iter( s.script.selection() ) )
 
-	with Gaffer.UndoScope( s.script ) :
+	errorHandler = GafferUI.ErrorDialogue.ErrorHandler(
+		title = "Errors Occurred During Pasting",
+		closeLabel = "Oy vey",
+		parentWindow = s.scriptWindow
+	)
 
-		s.script.paste( s.parent )
+	with Gaffer.UndoScope( s.script ), errorHandler :
+
+		s.script.paste( s.parent, continueOnError = True )
 
 		# try to get the new nodes connected to the original selection
 		if s.nodeGraph is None :
