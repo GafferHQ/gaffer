@@ -1313,5 +1313,32 @@ class ScriptNodeTest( GafferTest.TestCase ) :
 		s.deleteNodes( filter = Gaffer.StandardSet( [ s["n3"] ] ) )
 		self.assertTrue( s["n4"]["in"]["a"].getInput().isSame( s["n1"]["out"]["a"] ) )
 
+	def testPasteWithContinueOnError( self ) :
+
+		app = Gaffer.ApplicationRoot()
+		script = Gaffer.ScriptNode()
+
+		app["scripts"]["s"] = script
+
+		app.setClipboardContents( IECore.StringData(
+			inspect.cleandoc(
+				"""
+				iAmAnError
+				parent.addChild( Gaffer.Node() )
+				"""
+			)
+		) )
+
+		self.assertRaisesRegexp( RuntimeError, "iAmAnError", script.paste )
+		self.assertEqual( len( script.children( Gaffer.Node ) ), 0 )
+
+		with IECore.CapturingMessageHandler() as mh :
+			script.paste( continueOnError = True )
+
+		self.assertEqual( len( mh.messages ), 1 )
+		self.assertEqual( mh.messages[0].level, IECore.Msg.Level.Error )
+		self.assertTrue( "iAmAnError" in mh.messages[0].message )
+		self.assertEqual( len( script.children( Gaffer.Node ) ), 1 )
+
 if __name__ == "__main__":
 	unittest.main()
