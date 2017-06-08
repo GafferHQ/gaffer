@@ -80,6 +80,21 @@ class ResamplePrimitiveVariablesTest( GafferSceneTest.SceneTestCase ) :
 		self.assertEqual( IECore.PrimitiveVariable.Interpolation.Constant, actualObject["a"].interpolation )
 		self.assertEqual( actualObject["a"].data, IECore.FloatData( 1.5 ) )
 
+	def testNoFilterIsNOP( self ) :
+
+		quadScene = self.makeQuad()
+
+		resample = GafferScene.ResamplePrimitiveVariables()
+
+		resample["in"].setInput( quadScene["out"] )
+		resample["interpolation"].setValue( IECore.PrimitiveVariable.Interpolation.Constant ) # constant
+		resample['names'].setValue( "a" )
+
+		actualObject = resample["out"].object( "/object" )
+
+		self.assertEqual( actualObject["a"].interpolation, IECore.PrimitiveVariable.Interpolation.FaceVarying )
+		self.assertEqual( actualObject["a"].data, IECore.FloatVectorData( [0, 1, 2, 3] ) )
+
 	def testConstantToVertex( self ) :
 
 		quadScene = self.makeQuad()
