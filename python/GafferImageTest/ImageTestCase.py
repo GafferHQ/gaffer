@@ -88,7 +88,7 @@ class ImageTestCase( GafferTest.TestCase ) :
 		for channelName in imageA["channelNames"].getValue() :
 
 			stats["channels"].setValue( IECore.StringVectorData( [ channelName ] * 4 ) )
-			self.assertLessEqual( stats["max"]["r"].getValue(), maxDifference )
+			self.assertLessEqual( stats["max"]["r"].getValue(), maxDifference, "Channel {0}".format( channelName ) )
 
 	## Returns an image node with an empty data window. This is useful in
 	# verifying that nodes deal correctly with such inputs.
