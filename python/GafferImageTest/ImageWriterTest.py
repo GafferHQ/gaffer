@@ -1044,6 +1044,24 @@ class ImageWriterTest( GafferImageTest.ImageTestCase ) :
 
 			self.assertEqual( result["out"]["metadata"].getValue()["jpeg:subsampling"].value, chromaSubSampling if chromaSubSampling != "" else "4:2:0" )
 
+	def testDPXDataType( self ) :
+
+		image = GafferImage.Constant()
+
+		writer = GafferImage.ImageWriter()
+		writer["in"].setInput( image["out"] )
+
+		reader = GafferImage.ImageReader()
+		reader["fileName"].setInput( writer["fileName"] )
+
+		for dataType in [ 8, 10, 12, 16 ] :
+
+			writer["fileName"].setValue( "{}/uint{}.dpx".format( self.temporaryDirectory(), dataType ) )
+			writer["dpx"]["dataType"].setValue( "uint{0}".format( dataType ) )
+			writer["task"].execute()
+
+			self.assertEqual( reader["out"]["metadata"].getValue()["oiio:BitsPerSample"].value , dataType  )
+
 	def testDefaultColorSpaceFunctionArguments( self ) :
 
 		# Make a network to write an image
