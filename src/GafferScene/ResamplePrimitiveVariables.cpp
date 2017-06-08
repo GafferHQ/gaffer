@@ -53,7 +53,7 @@ IE_CORE_DEFINERUNTIMETYPED( ResamplePrimitiveVariables );
 
 size_t ResamplePrimitiveVariables::g_firstPlugIndex = 0;
 
-ResamplePrimitiveVariables::ResamplePrimitiveVariables( const std::string &name ) : PrimitiveVariableProcessor( name )
+ResamplePrimitiveVariables::ResamplePrimitiveVariables( const std::string &name ) : PrimitiveVariableProcessor( name, Filter::NoMatch )
 {
 	storeIndexOfNextChild( g_firstPlugIndex );
 

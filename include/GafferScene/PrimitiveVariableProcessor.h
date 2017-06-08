@@ -59,7 +59,7 @@ class PrimitiveVariableProcessor : public SceneElementProcessor
 
 	public :
 
-		PrimitiveVariableProcessor( const std::string &name=defaultName<PrimitiveVariableProcessor>() );
+		PrimitiveVariableProcessor( const std::string &name=defaultName<PrimitiveVariableProcessor>(), Filter::Result filterDefault = Filter::EveryMatch );
 		virtual ~PrimitiveVariableProcessor();
 
 		IE_CORE_DECLARERUNTIMETYPEDEXTENSION( GafferScene::PrimitiveVariableProcessor, PrimitiveVariableProcessorTypeId, SceneElementProcessor );
