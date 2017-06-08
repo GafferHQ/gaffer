@@ -113,6 +113,7 @@
 #include "GafferSceneBindings/MeshTangentsBinding.h"
 #include "GafferSceneBindings/DeleteFacesBinding.h"
 #include "GafferSceneBindings/DeleteCurvesBinding.h"
+#include "GafferSceneBindings/DeletePointsBinding.h"
 
 using namespace boost::python;
 using namespace GafferBindings;
@@ -205,4 +206,5 @@ BOOST_PYTHON_MODULE( _GafferScene )
 	bindMeshTangents();
 	bindDeleteFaces();
 	bindDeleteCurves();
+	bindDeletePoints();
 }
