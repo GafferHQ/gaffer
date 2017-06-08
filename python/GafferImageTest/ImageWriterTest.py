@@ -38,6 +38,7 @@ import os
 import platform
 import unittest
 import shutil
+import functools
 
 import IECore
 
@@ -54,6 +55,16 @@ class ImageWriterTest( GafferImageTest.ImageTestCase ) :
 	__defaultFormatFile = os.path.expandvars( "$GAFFER_ROOT/python/GafferImageTest/images/defaultNegativeDisplayWindow.exr" )
 
 	longMessage = True
+
+	def setUp( self ) :
+
+		GafferImageTest.ImageTestCase.setUp( self )
+		self.__defaultColorSpaceFunction = GafferImage.ImageWriter.getDefaultColorSpaceFunction()
+
+	def tearDown( self ) :
+
+		GafferImageTest.ImageTestCase.tearDown( self )
+		GafferImage.ImageWriter.setDefaultColorSpaceFunction( self.__defaultColorSpaceFunction )
 
 	# Test that we can select which channels to write.
 	def testChannelMask( self ) :
@@ -1003,6 +1014,112 @@ class ImageWriterTest( GafferImageTest.ImageTestCase ) :
 			result["fileName"].setValue( testFile )
 
 			self.assertEqual( result["out"]["metadata"].getValue()["jpeg:subsampling"].value, chromaSubSampling if chromaSubSampling != "" else "4:2:0" )
+
+	def testDefaultColorSpaceFunctionArguments( self ) :
+
+		# Make a network to write an image
+		# in various formats.
+
+		c = GafferImage.Constant()
+		c["format"].setValue( GafferImage.Format( 64, 64 ) )
+
+		m = GafferImage.ImageMetadata()
+		m["in"].setInput( c["out"] )
+		m["metadata"].addMember( "test", IECore.StringData( "test" ) )
+
+		w = GafferImage.ImageWriter()
+		w["in"].setInput( m["out"] )
+
+		# Register a custom colorspace function that
+		# just captures its arguments.
+
+		capturedArguments = {}
+		def f( fileName, fileFormat, dataType, metadata ) :
+
+			capturedArguments.update(
+				{
+					"fileName" : fileName,
+					"fileFormat" : fileFormat,
+					"dataType" : dataType,
+					"metadata" : metadata,
+				}
+			)
+			return "linear"
+
+		GafferImage.ImageWriter.setDefaultColorSpaceFunction( f )
+
+		# Verify that the correct arguments are passed for
+		# a variety of fileNames and dataTypes.
+
+		for ext, fileFormat, dataType in [
+			( "exr", "openexr", "half" ),
+			( "dpx", "dpx", "uint12" ),
+			( "TIFF", "tiff", "float" ),
+			( "tif", "tiff", "uint32" ),
+		] :
+
+			w["fileName"].setValue( "{0}/{1}.{2}".format( self.temporaryDirectory(), dataType, ext ) )
+			w[fileFormat]["dataType"].setValue( dataType )
+
+			capturedArguments.clear()
+			w.execute()
+
+			self.assertEqual( len( capturedArguments ), 4 )
+			self.assertEqual( capturedArguments["fileName"], w["fileName"].getValue() )
+			self.assertEqual( capturedArguments["fileFormat"], fileFormat )
+			self.assertEqual( capturedArguments["dataType"], dataType )
+			self.assertEqual( capturedArguments["metadata"], w["in"]["metadata"].getValue() )
+
+	def testDefaultColorSpace( self ) :
+
+		image = GafferImage.Constant()
+		image["color"].setValue( IECore.Color4f( 0.25, 0.5, 0.75, 1 ) )
+
+		writer = GafferImage.ImageWriter()
+		writer["in"].setInput( image["out"] )
+		writer["openexr"]["dataType"].setValue( "float" )
+
+		reader = GafferImage.ImageReader()
+		reader["fileName"].setInput( writer["fileName"] )
+
+		def hardcodedColorSpaceConfig( colorSpace, *args ) :
+
+			return colorSpace
+
+		for colorSpace in [ "Cineon", "rec709", "AlexaV3LogC", "linear" ] :
+
+			GafferImage.ImageWriter.setDefaultColorSpaceFunction(
+				functools.partial( hardcodedColorSpaceConfig, colorSpace )
+			)
+
+			writer["fileName"].setValue( "{0}/{1}.exr".format( self.temporaryDirectory(), colorSpace ) )
+			writer["task"].execute()
+
+			reader["colorSpace"].setValue( colorSpace )
+			self.assertImagesEqual( reader["out"], image["out"], ignoreMetadata = True, maxDifference = 0.000001 )
+
+	def testNonDefaultColorSpace( self ) :
+
+		reader = GafferImage.ImageReader()
+		reader["fileName"].setValue( self.__rgbFilePath + ".exr" )
+
+		writer = GafferImage.ImageWriter()
+		writer["in"].setInput( reader["out"] )
+
+		resultReader = GafferImage.ImageReader()
+		resultReader["fileName"].setInput( writer["fileName"] )
+
+		for colorSpace in [ "Cineon", "rec709", "AlexaV3LogC" ] :
+
+			writer["fileName"].setValue( "{0}/{1}.exr".format( self.temporaryDirectory(), colorSpace ) )
+			writer["colorSpace"].setValue( colorSpace )
+
+			writer["task"].execute()
+
+			self.failUnless( os.path.exists( writer["fileName"].getValue() ), "Failed to create file : {}".format( writer["fileName"].getValue() ) )
+
+			resultReader["colorSpace"].setValue( colorSpace )
+			self.assertImagesEqual( resultReader["out"], reader["out"], ignoreMetadata=True, maxDifference=0.0007 )
 
 if __name__ == "__main__":
 	unittest.main()

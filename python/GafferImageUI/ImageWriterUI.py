@@ -41,6 +41,14 @@ import GafferUI
 import GafferImageUI
 import GafferImage
 
+def __colorSpacePresetNames( plug ) :
+
+	return IECore.StringVectorData( [ "Default" ] + GafferImage.OpenColorIOTransform.availableColorSpaces() )
+
+def __colorSpacePresetValues( plug ) :
+
+	return IECore.StringVectorData( [ "" ] + GafferImage.OpenColorIOTransform.availableColorSpaces() )
+
 Gaffer.Metadata.registerNode(
 
 	GafferImage.ImageWriter,
@@ -96,6 +104,22 @@ Gaffer.Metadata.registerNode(
 			"plugValueWidget:type", "GafferImageUI.ChannelMaskPlugValueWidget",
 
 
+		],
+
+		"colorSpace" : [
+
+			"description",
+			"""
+			The colour space of the output image, used to convert the input image
+			from the scene linear colorspace defined by the OpenColorIO config.
+			The default behaviour is to automatically determine the colorspace by
+			calling the function registered with `ImageWriter::setDefaultColorSpaceFunction()`.
+			""",
+
+			"presetNames", __colorSpacePresetNames,
+			"presetValues", __colorSpacePresetValues,
+
+			"plugValueWidget:type", "GafferUI.PresetsPlugValueWidget",
 		],
 
 		"out" : [

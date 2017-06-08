@@ -42,6 +42,8 @@
 #include "boost/filesystem.hpp"
 
 #include "OpenImageIO/imageio.h"
+
+#include "OpenColorIO/OpenColorIO.h"
 OIIO_NAMESPACE_USING
 
 #include "OpenEXR/ImfCRgbaFile.h"  // JUST to get symbols to figure out version!
@@ -59,6 +61,7 @@ OIIO_NAMESPACE_USING
 #include "GafferImage/ImageWriter.h"
 #include "GafferImage/ImagePlug.h"
 #include "GafferImage/OpenImageIOAlgo.h"
+#include "GafferImage/ColorSpace.h"
 
 using namespace std;
 using namespace Imath;
@@ -704,8 +707,18 @@ ImageWriter::ImageWriter( const std::string &name )
 	addChild( new ImagePlug( "in" ) );
 	addChild( new StringPlug( "fileName" ) );
 	addChild( new StringPlug( "channels", Gaffer::Plug::In, "*" ) );
+	addChild( new StringPlug( "colorSpace" ) );
 	addChild( new ImagePlug( "out", Plug::Out, Plug::Default & ~Plug::Serialisable ) );
 	outPlug()->setInput( inPlug() );
+
+	ColorSpacePtr colorSpaceChild = new ColorSpace( "__colorSpace" );
+	addChild( colorSpaceChild );
+
+	OpenColorIO::ConstConfigRcPtr config = OpenColorIO::GetCurrentConfig();
+	colorSpaceChild->inputSpacePlug()->setValue( config->getColorSpace( OpenColorIO::ROLE_SCENE_LINEAR )->getName() );
+	colorSpaceChild->inPlug()->setInput( inPlug() );
+
+	colorSpaceChild->outputSpacePlug()->setValue( "${__imageWriter:colorSpace}" );
 
 	createFileFormatOptionsPlugs();
 }
@@ -806,14 +819,34 @@ const Gaffer::StringPlug *ImageWriter::channelsPlug() const
 	return getChild<StringPlug>( g_firstPlugIndex+2 );
 }
 
+Gaffer::StringPlug *ImageWriter::colorSpacePlug()
+{
+	return getChild<StringPlug>( g_firstPlugIndex+3 );
+}
+
+const Gaffer::StringPlug *ImageWriter::colorSpacePlug() const
+{
+	return getChild<StringPlug>( g_firstPlugIndex+3 );
+}
+
 GafferImage::ImagePlug *ImageWriter::outPlug()
 {
-	return getChild<ImagePlug>( g_firstPlugIndex+3 );
+	return getChild<ImagePlug>( g_firstPlugIndex+4 );
 }
 
 const GafferImage::ImagePlug *ImageWriter::outPlug() const
 {
-	return getChild<ImagePlug>( g_firstPlugIndex+3 );
+	return getChild<ImagePlug>( g_firstPlugIndex+4 );
+}
+
+GafferImage::ColorSpace *ImageWriter::colorSpaceNode()
+{
+	return getChild<ColorSpace>( g_firstPlugIndex+5 );
+}
+
+const GafferImage::ColorSpace *ImageWriter::colorSpaceNode() const
+{
+	return getChild<ColorSpace>( g_firstPlugIndex+5 );
 }
 
 Gaffer::ValuePlug *ImageWriter::fileFormatSettingsPlug( const std::string &fileFormat )
@@ -840,6 +873,58 @@ const std::string ImageWriter::currentFileFormat() const
 	}
 }
 
+void ImageWriter::setDefaultColorSpaceFunction( DefaultColorSpaceFunction f )
+{
+	defaultColorSpaceFunction() = f;
+}
+
+ImageWriter::DefaultColorSpaceFunction ImageWriter::getDefaultColorSpaceFunction()
+{
+	return defaultColorSpaceFunction();
+}
+
+ImageWriter::DefaultColorSpaceFunction &ImageWriter::defaultColorSpaceFunction()
+{
+	// We deliberately make no attempt to free this, because typically a python
+	// function is registered here, and we can't free that at exit because python
+	// is already shut down by then.
+	static DefaultColorSpaceFunction *g_colorSpaceFunction = new DefaultColorSpaceFunction;
+	return *g_colorSpaceFunction;
+}
+
+std::string ImageWriter::colorSpace() const
+{
+	std::string colorSpace = colorSpacePlug()->getValue();
+	if( colorSpace != "" )
+	{
+		return colorSpace;
+	}
+
+	const std::string fileFormat = currentFileFormat();
+	if( fileFormat.empty() )
+	{
+		return "";
+	}
+
+	std::string dataType;
+	if( const ValuePlug *optionsPlug = this->getChild<ValuePlug>( fileFormat ) )
+	{
+		if( const StringPlug *dataTypePlug = optionsPlug->getChild<StringPlug>( g_dataTypePlugName ) )
+		{
+			dataType = dataTypePlug->getValue();
+		}
+	}
+
+	ConstCompoundDataPtr metadata = inPlug()->metadataPlug()->getValue();
+
+	return defaultColorSpaceFunction()(
+		fileNamePlug()->getValue(),
+		fileFormat,
+		dataType,
+		metadata.get()
+	);
+}
+
 IECore::MurmurHash ImageWriter::hash( const Context *context ) const
 {
 	Context::Scope scope( context );
@@ -851,6 +936,7 @@ IECore::MurmurHash ImageWriter::hash( const Context *context ) const
 	IECore::MurmurHash h = TaskNode::hash( context );
 	h.append( fileNamePlug()->hash() );
 	h.append( channelsPlug()->hash() );
+	h.append( colorSpacePlug()->hash() );
 	const std::string fileFormat = currentFileFormat();
 
 	if( fileFormat != "" )
@@ -867,6 +953,12 @@ IECore::MurmurHash ImageWriter::hash( const Context *context ) const
 
 void ImageWriter::execute() const
 {
+	// Set up a context to pass the right colorspace to
+	// `colorSpaceNode()`.
+
+	Context::EditableScope colorSpaceScope( Context::current() );
+	colorSpaceScope.set( "__imageWriter:colorSpace", colorSpace() );
+
 	// Create an OIIO::ImageOutput
 
 	if( !inPlug()->getInput<ImagePlug>() )
@@ -972,13 +1064,13 @@ void ImageWriter::execute() const
 	if ( spec.tile_width == 0 )
 	{
 		FlatScanlineWriter flatScanlineWriter( out, fileName, processDataWindow, imageFormat );
-		ImageAlgo::parallelGatherTiles( inPlug(), spec.channelnames, processor, flatScanlineWriter, processDataWindow, ImageAlgo::TopToBottom );
+		ImageAlgo::parallelGatherTiles( colorSpaceNode()->outPlug(), spec.channelnames, processor, flatScanlineWriter, processDataWindow, ImageAlgo::TopToBottom );
 		flatScanlineWriter.finish();
 	}
 	else
 	{
 		FlatTileWriter flatTileWriter( out, fileName, processDataWindow, imageFormat );
-		ImageAlgo::parallelGatherTiles( inPlug(), spec.channelnames, processor, flatTileWriter, processDataWindow, ImageAlgo::TopToBottom );
+		ImageAlgo::parallelGatherTiles( colorSpaceNode()->outPlug(), spec.channelnames, processor, flatTileWriter, processDataWindow, ImageAlgo::TopToBottom );
 		flatTileWriter.finish();
 	}
 
