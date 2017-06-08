@@ -407,44 +407,13 @@ class ImageWriterTest( GafferImageTest.ImageTestCase ) :
 
 			self.__addExpectedIPTCMetadata( writerMetadata, expectedMetadata )
 
-			# some input files don't contain all the metadata that the ImageWriter
-			# will create, and some output files don't support all the metadata
-			# that the ImageWriter attempt to create.
-			for metaName in metadataToIgnore :
-				if metaName in writerMetadata :
-					del writerMetadata[metaName]
-				if metaName in expectedMetadata :
-					del expectedMetadata[metaName]
-
 			for metaName in expectedMetadata.keys() :
+				if metaName in metadataToIgnore :
+					continue
 				self.assertTrue( metaName in writerMetadata.keys(), "Writer Metadata missing expected key \"{}\" set to \"{}\" : {} ({})".format(metaName, str(expectedMetadata[metaName]), ext, name) )
 				self.assertEqual( expectedMetadata[metaName], writerMetadata[metaName], "Metadata does not match for key \"{}\" : {} ({})".format(metaName, ext, name) )
 
-			op = IECore.ImageDiffOp()
-			op["maxError"].setValue( maxError )
-			res = op(
-				imageA = expectedOutput["out"].image(),
-				imageB = writerOutput["out"].image()
-			)
-
-			if res.value :
-				matchingError = 0.0
-				for i in range( 10 ) :
-					maxError += 0.1
-					op["maxError"].setValue( maxError )
-					res = op(
-						imageA = expectedOutput["out"].image(),
-						imageB = writerOutput["out"].image()
-					)
-
-					if not res.value :
-						matchingError = maxError
-						break
-
-				if matchingError > 0.0 :
-					self.assertFalse( True, "Image data does not match : {} ({}). Matches with max error of {}".format( ext, name, matchingError ) )
-				else:
-					self.assertFalse( True, "Image data does not match : {} ({}).".format( ext, name ) )
+			self.assertImagesEqual( expectedOutput["out"], writerOutput["out"], maxDifference = maxError, ignoreMetadata = True )
 
 	def __addExpectedIPTCMetadata( self, metadata, expectedMetadata ) :
 
@@ -478,6 +447,7 @@ class ImageWriterTest( GafferImageTest.ImageTestCase ) :
 		self.__testAdjustDataWindowToDisplayWindow( "iff", self.__negativeDataWindowFilePath )
 
 	def __testAdjustDataWindowToDisplayWindow( self, ext, filePath ) :
+
 		r = GafferImage.ImageReader()
 		r["fileName"].setValue( filePath+".exr" )
 		w = GafferImage.ImageWriter()
@@ -504,13 +474,7 @@ class ImageWriterTest( GafferImageTest.ImageTestCase ) :
 		writerOutput = GafferImage.ImageReader()
 		writerOutput["fileName"].setValue( testFile )
 
-		op = IECore.ImageDiffOp()
-		res = op(
-			imageA = expectedOutput["out"].image(),
-			imageB = writerOutput["out"].image()
-		)
-		self.assertFalse( res.value, "Image data does not match : {}".format(ext) )
-
+		self.assertImagesEqual( expectedOutput["out"], writerOutput["out"], ignoreMetadata = True )
 
 	def testOffsetDisplayWindowWrite( self ) :
 
@@ -639,108 +603,105 @@ class ImageWriterTest( GafferImageTest.ImageTestCase ) :
 
 	def __testMetadataDoesNotAffectPixels( self, ext, overrideMetadata = {}, metadataToIgnore = [] ) :
 
-		r = GafferImage.ImageReader()
-		r["fileName"].setValue( self.__rgbFilePath+"."+ext )
-		d = GafferImage.DeleteImageMetadata()
-		d["in"].setInput( r["out"] )
-		m = GafferImage.ImageMetadata()
-		m["in"].setInput( d["out"] )
-		# lets tell a few lies
+		reader = GafferImage.ImageReader()
+		reader["fileName"].setValue( self.__rgbFilePath+"."+ext )
+
 		# IPTC:Creator will have the current username appended to the end of
-		# the existing one, creating a list of creators. Blank it out for
-		# this test
-		d["names"].setValue( "IPTC:Creator" )
-		m["metadata"].addMember( "PixelAspectRatio", IECore.FloatData( 2 ) )
-		m["metadata"].addMember( "oiio:ColorSpace", IECore.StringData( "Rec709" ) )
-		m["metadata"].addMember( "oiio:BitsPerSample", IECore.IntData( 8 ) )
-		m["metadata"].addMember( "oiio:UnassociatedAlpha", IECore.IntData( 1 ) )
-		m["metadata"].addMember( "oiio:Gamma", IECore.FloatData( 0.25 ) )
+		# the existing one, creating a list of creators. Blank out the initial
+		# value for this test.
+		regularMetadata = GafferImage.DeleteImageMetadata()
+		regularMetadata["in"].setInput( reader["out"] )
+		regularMetadata["names"].setValue( "IPTC:Creator" )
 
-		testFile = self.__testFile( "metadataHasNoAffect", "RGBA", ext )
-		self.failIf( os.path.exists( testFile ) )
+		# Add misleading metadata that if taken at face value could cause
+		# us to write the wrong information to the file. Our governing rule
+		# is that metadata is just "along for the ride", and should never
+		# have any effect on the content of images themselves.
+		misleadingMetadata = GafferImage.ImageMetadata()
+		misleadingMetadata["in"].setInput( regularMetadata["out"] )
+		misleadingMetadata["metadata"].addMember( "PixelAspectRatio", IECore.FloatData( 2 ) )
+		misleadingMetadata["metadata"].addMember( "oiio:ColorSpace", IECore.StringData( "Rec709" ) )
+		misleadingMetadata["metadata"].addMember( "oiio:BitsPerSample", IECore.IntData( 8 ) )
+		misleadingMetadata["metadata"].addMember( "oiio:UnassociatedAlpha", IECore.IntData( 1 ) )
+		misleadingMetadata["metadata"].addMember( "oiio:Gamma", IECore.FloatData( 0.25 ) )
 
-		w = GafferImage.ImageWriter()
-		w["in"].setInput( m["out"] )
-		w["fileName"].setValue( testFile )
-		w["channels"].setValue( " ".join( m["out"]["channelNames"].getValue() ) )
+		# Create ImageWriters to write out the images with regular
+		# and misleading metadata.
 
-		testFile2 = self.__testFile( "noNewMetadata", "RGBA", ext )
-		self.failIf( os.path.exists( testFile2 ) )
+		regularWriter = GafferImage.ImageWriter()
+		regularWriter["in"].setInput( regularMetadata["out"] )
+		regularWriter["fileName"].setValue( self.__testFile( "regularMetadata", "RGBA", ext ) )
+		self.failIf( os.path.exists( regularWriter["fileName"].getValue() ) )
 
-		w2 = GafferImage.ImageWriter()
-		w2["in"].setInput( d["out"] )
-		w2["fileName"].setValue( testFile2 )
-		w2["channels"].setValue( " ".join( r["out"]["channelNames"].getValue() ) )
+		misledWriter = GafferImage.ImageWriter()
+		misledWriter["in"].setInput( misleadingMetadata["out"] )
+		misledWriter["fileName"].setValue( self.__testFile( "misleadingMetadata", "RGBA", ext ) )
+		self.failIf( os.path.exists( misledWriter["fileName"].getValue() ) )
 
-		inMetadata = w["in"]["metadata"].getValue()
-		self.assertEqual( inMetadata["PixelAspectRatio"], IECore.FloatData( 2 ) )
-		self.assertEqual( inMetadata["oiio:ColorSpace"], IECore.StringData( "Rec709" ) )
-		self.assertEqual( inMetadata["oiio:BitsPerSample"], IECore.IntData( 8 ) )
-		self.assertEqual( inMetadata["oiio:UnassociatedAlpha"], IECore.IntData( 1 ) )
-		self.assertEqual( inMetadata["oiio:Gamma"], IECore.FloatData( 0.25 ) )
+		# Check that the writer is indeed being given misleading metadata.
 
-		with Gaffer.Context() :
-			w["task"].execute()
-			w2["task"].execute()
-		self.failUnless( os.path.exists( testFile ) )
-		self.failUnless( os.path.exists( testFile2 ) )
+		m = misledWriter["in"]["metadata"].getValue()
+		self.assertEqual( m["PixelAspectRatio"], IECore.FloatData( 2 ) )
+		self.assertEqual( m["oiio:ColorSpace"], IECore.StringData( "Rec709" ) )
+		self.assertEqual( m["oiio:BitsPerSample"], IECore.IntData( 8 ) )
+		self.assertEqual( m["oiio:UnassociatedAlpha"], IECore.IntData( 1 ) )
+		self.assertEqual( m["oiio:Gamma"], IECore.FloatData( 0.25 ) )
 
-		after = GafferImage.ImageReader()
-		after["fileName"].setValue( testFile )
+		# Execute the writers
 
-		before = GafferImage.ImageReader()
-		before["fileName"].setValue( testFile2 )
+		regularWriter["task"].execute()
+		misledWriter["task"].execute()
 
-		inImage = w["in"].image()
-		afterImage = after["out"].image()
-		beforeImage = before["out"].image()
+		self.failUnless( os.path.exists( regularWriter["fileName"].getValue() ) )
+		self.failUnless( os.path.exists( misledWriter["fileName"].getValue() ) )
 
-		inImage.blindData().clear()
-		afterImage.blindData().clear()
-		beforeImage.blindData().clear()
+		# Make readers to read back what we wrote out
 
-		self.assertEqual( afterImage, inImage )
-		self.assertEqual( afterImage, beforeImage )
+		misledReader = GafferImage.ImageReader()
+		misledReader["fileName"].setInput( misledWriter["fileName"] )
 
-		self.assertEqual( after["out"]["format"].getValue(), r["out"]["format"].getValue() )
-		self.assertEqual( after["out"]["format"].getValue(), before["out"]["format"].getValue() )
+		regularReader = GafferImage.ImageReader()
+		regularReader["fileName"].setInput( regularWriter["fileName"] )
 
-		self.assertEqual( after["out"]["dataWindow"].getValue(), r["out"]["dataWindow"].getValue() )
-		self.assertEqual( after["out"]["dataWindow"].getValue(), before["out"]["dataWindow"].getValue() )
+		# Check that the pixel data, format and data window has not
+		# been changed at all, regardless of which metadata
+		# was provided to the writers.
 
-		afterMetadata = after["out"]["metadata"].getValue()
-		beforeMetadata = before["out"]["metadata"].getValue()
-		expectedMetadata = d["out"]["metadata"].getValue()
-		# they were written at different times so we can't expect those values to match
-		beforeMetadata["DateTime"] = afterMetadata["DateTime"]
-		expectedMetadata["DateTime"] = afterMetadata["DateTime"]
-		# the writer adds several standard attributes that aren't in the original file
+		self.assertImagesEqual( misledWriter["in"], misledReader["out"], ignoreMetadata = True )
+		self.assertImagesEqual( misledReader["out"], regularReader["out"], ignoreMetadata = True )
+
+		# Load the metadata from the files, and figure out what
+		# metadata we expect to have based on what we expect the
+		# writer to add.
+
+		misledReaderMetadata = misledReader["out"]["metadata"].getValue()
+		regularReaderMetadata = regularReader["out"]["metadata"].getValue()
+
+		expectedMetadata = regularMetadata["out"]["metadata"].getValue()
+		expectedMetadata["DateTime"] = regularReaderMetadata["DateTime"]
 		expectedMetadata["Software"] = IECore.StringData( "Gaffer " + Gaffer.About.versionString() )
 		expectedMetadata["HostComputer"] = IECore.StringData( platform.node() )
 		expectedMetadata["Artist"] = IECore.StringData( os.environ["USER"] )
 		expectedMetadata["DocumentName"] = IECore.StringData( "untitled" )
 
-		self.__addExpectedIPTCMetadata( afterMetadata, expectedMetadata )
+		self.__addExpectedIPTCMetadata( regularReaderMetadata, expectedMetadata )
 
-		for key in overrideMetadata :
-			expectedMetadata[key] = overrideMetadata[key]
-			beforeMetadata[key] = overrideMetadata[key]
+		for key, value in overrideMetadata.items() :
+			expectedMetadata[key] = value
+			regularReaderMetadata[key] = value
 
-		for key in metadataToIgnore :
-			if key in expectedMetadata :
-				del expectedMetadata[key]
-			if key in beforeMetadata :
-				del beforeMetadata[key]
-			if key in afterMetadata :
-				del afterMetadata[key]
-
+		# Now check that we have what we expect.
 		for metaName in expectedMetadata.keys() :
-			self.assertTrue( metaName in afterMetadata.keys(), "Writer Metadata missing expected key \"{}\" set to \"{}\" : {}".format(metaName, str(expectedMetadata[metaName]), ext) )
-			self.assertEqual( expectedMetadata[metaName], afterMetadata[metaName], "Metadata does not match for key \"{}\" : {}".format(metaName, ext) )
+			if metaName in metadataToIgnore :
+				continue
+			self.assertTrue( metaName in misledReaderMetadata.keys(), "Writer Metadata missing expected key \"{}\" set to \"{}\" : {}".format(metaName, str(expectedMetadata[metaName]), ext) )
+			self.assertEqual( expectedMetadata[metaName], misledReaderMetadata[metaName], "Metadata does not match for key \"{}\" : {}".format(metaName, ext) )
 
-		for metaName in beforeMetadata.keys() :
-			self.assertTrue( metaName in afterMetadata.keys(), "Writer Metadata missing expected key \"{}\" set to \"{}\" : {}".format(metaName, str(beforeMetadata[metaName]), ext) )
-			self.assertEqual( beforeMetadata[metaName], afterMetadata[metaName], "Metadata does not match for key \"{}\" : {}".format(metaName, ext) )
+		for metaName in regularReaderMetadata.keys() :
+			if metaName in metadataToIgnore :
+				continue
+			self.assertTrue( metaName in misledReaderMetadata.keys(), "Writer Metadata missing expected key \"{}\" set to \"{}\" : {}".format(metaName, str(expectedMetadata[metaName]), ext) )
+			self.assertEqual( regularReaderMetadata[metaName], misledReaderMetadata[metaName], "Metadata does not match for key \"{}\" : {}".format(metaName, ext) )
 
 	def testExrMetadata( self ) :
 
@@ -1032,7 +993,7 @@ class ImageWriterTest( GafferImageTest.ImageTestCase ) :
 			self.failUnless( os.path.exists( testFile ), "Failed to create file : {} : {}".format( chromaSubSampling, testFile ) )
 
 			result["fileName"].setValue( testFile )
-			
+
 			self.assertEqual( result["out"]["metadata"].getValue()["jpeg:subsampling"].value, chromaSubSampling if chromaSubSampling != "" else "4:2:0" )
 
 if __name__ == "__main__":
