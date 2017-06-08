@@ -125,6 +125,11 @@ class ShadingEngineTest( GafferOSLTest.OSLTestCase ) :
 		e = GafferOSL.ShadingEngine( IECore.ObjectVector( [
 			IECore.Shader( shader, "surface", { "name" : "floatUserData" } ),
 		] ) )
+
+		self.assertEqual( e.needsAttribute( "", "floatUserData" ), True )
+		self.assertEqual( e.needsAttribute( "", "colorUserData" ), False )
+		self.assertEqual( e.needsAttribute( "", "shading:index" ), False )
+
 		p = e.shade( rp )
 
 		for i, c in enumerate( p["Ci"] ) :
@@ -133,6 +138,11 @@ class ShadingEngineTest( GafferOSLTest.OSLTestCase ) :
 		e = GafferOSL.ShadingEngine( IECore.ObjectVector( [
 			IECore.Shader( shader, "surface", { "name" : "colorUserData" } ),
 		] ) )
+
+		self.assertEqual( e.needsAttribute( "", "floatUserData" ), False )
+		self.assertEqual( e.needsAttribute( "", "colorUserData" ), True )
+		self.assertEqual( e.needsAttribute( "", "shading:index" ), False )
+
 		p = e.shade( rp )
 
 		for i, c in enumerate( p["Ci"] ) :
@@ -142,10 +152,26 @@ class ShadingEngineTest( GafferOSLTest.OSLTestCase ) :
 		e = GafferOSL.ShadingEngine( IECore.ObjectVector( [
 			IECore.Shader( shader, "surface", { "name" : "shading:index" } ),
 		] ) )
+
+		self.assertEqual( e.needsAttribute( "", "floatUserData" ), False )
+		self.assertEqual( e.needsAttribute( "", "colorUserData" ), False )
+		self.assertEqual( e.needsAttribute( "", "shading:index" ), True )
+
 		p = e.shade( rp )
 
 		for i, c in enumerate( p["Ci"] ) :
 			self.assertEqual( c, IECore.Color3f(i) )
+
+	def testDynamicAttributesAllAttributesAreNeeded( self ) :
+
+		shader = self.compileShader( os.path.dirname( __file__ ) + "/shaders/dynamicAttribute.osl" )
+
+		e = GafferOSL.ShadingEngine( IECore.ObjectVector( [
+			IECore.Shader( shader, "surface" )
+		] ) )
+
+		self.assertEqual( e.needsAttribute( "", "foo" ), True )
+		self.assertEqual( e.needsAttribute( "", "bar" ), True )
 
 	def testStructs( self ) :
 

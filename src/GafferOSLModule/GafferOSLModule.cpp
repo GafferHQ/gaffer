@@ -163,6 +163,7 @@ BOOST_PYTHON_MODULE( _GafferOSL )
 					boost::python::arg( "transforms" ) = boost::python::dict()
 				)
 			)
+			.def( "needsAttribute", &ShadingEngine::needsAttribute )
 		;
 
 		class_<ShadingEngine::Transform>( "Transform" )
