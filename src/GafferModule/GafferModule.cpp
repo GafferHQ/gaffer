@@ -39,6 +39,7 @@
 
 #include "Gaffer/TimeWarp.h"
 #include "Gaffer/ContextVariables.h"
+#include "Gaffer/DeleteContextVariables.h"
 #include "Gaffer/Backdrop.h"
 #include "Gaffer/Loop.h"
 
@@ -210,6 +211,7 @@ BOOST_PYTHON_MODULE( _Gaffer )
 	DependencyNodeClass<ContextProcessorComputeNode>();
 	DependencyNodeClass<TimeWarpComputeNode>();
 	DependencyNodeClass<ContextVariablesComputeNode>();
+	DependencyNodeClass<DeleteContextVariablesComputeNode>();
 	DependencyNodeClass<LoopComputeNode>();
 
 	def( "isDebug", &isDebug );

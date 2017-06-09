@@ -98,6 +98,7 @@ from WeakMethodTest import WeakMethodTest
 from StringInOutNode import StringInOutNode
 from StringPlugTest import StringPlugTest
 from ContextVariablesTest import ContextVariablesTest
+from DeleteContextVariablesTest import DeleteContextVariablesTest
 from ValuePlugTest import ValuePlugTest
 from RandomTest import RandomTest
 from CompoundDataPlugTest import CompoundDataPlugTest

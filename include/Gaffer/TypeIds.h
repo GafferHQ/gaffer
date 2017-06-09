@@ -132,6 +132,7 @@ enum TypeId
 	BoxIOTypeId = 110085,
 	BoxInTypeId = 110086,
 	BoxOutTypeId = 110087,
+	DeleteContextVariablesComputeNodeTypeId = 110088,
 
 	LastTypeId = 110159,
 

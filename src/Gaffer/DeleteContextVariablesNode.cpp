@@ -1,6 +1,6 @@
 //////////////////////////////////////////////////////////////////////////
 //
-//  Copyright (c) 2013, Image Engine Design Inc. All rights reserved.
+//  Copyright (c) 2017, Image Engine Design Inc. All rights reserved.
 //
 //  Redistribution and use in source and binary forms, with or without
 //  modification, are permitted provided that the following conditions are
@@ -34,29 +34,14 @@
 //
 //////////////////////////////////////////////////////////////////////////
 
-#include "boost/python.hpp"
+#include "Gaffer/DeleteContextVariables.inl"
 
-#include "GafferBindings/DependencyNodeBinding.h"
-
-#include "GafferScene/SceneContextProcessor.h"
-#include "GafferScene/SceneContextVariables.h"
-#include "GafferScene/DeleteSceneContextVariables.h"
-#include "GafferScene/SceneSwitch.h"
-#include "GafferScene/SceneTimeWarp.h"
-#include "GafferScene/SceneLoop.h"
-
-#include "GafferSceneBindings/MixinBinding.h"
-
-using namespace GafferScene;
-
-void GafferSceneBindings::bindMixin()
+namespace Gaffer
 {
 
-	GafferBindings::DependencyNodeClass<SceneContextProcessor>();
-	GafferBindings::DependencyNodeClass<SceneTimeWarp>();
-	GafferBindings::DependencyNodeClass<SceneContextVariables>();
-	GafferBindings::DependencyNodeClass<DeleteSceneContextVariables>();
-	GafferBindings::DependencyNodeClass<SceneSwitch>();
-	GafferBindings::DependencyNodeClass<SceneLoop>();
+IECORE_RUNTIMETYPED_DEFINETEMPLATESPECIALISATION( Gaffer::DeleteContextVariablesComputeNode, DeleteContextVariablesComputeNodeTypeId )
 
 }
+
+// explicit instantiation
+template class Gaffer::DeleteContextVariables<Gaffer::ComputeNode>;
