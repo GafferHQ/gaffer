@@ -178,8 +178,9 @@ class Widget( object ) :
 		# hardcoding stuff here.
 		if len( self.__parentStack ) and not isinstance( self, GafferUI.Menu ) :
 			if self.__initNesting() == self.__parentStack[-1][1] + 1 :
-				parenting = parenting or {}
-				self.__parentStack[-1][0].addChild( self, **parenting )
+				if self.__parentStack[-1][0] is not None :
+					parenting = parenting or {}
+					self.__parentStack[-1][0].addChild( self, **parenting )
 
 		self.__eventFilterInstalled = False
 		# if a class has overridden getToolTip, then the tooltips
@@ -675,7 +676,7 @@ class Widget( object ) :
 	@classmethod
 	def _pushParent( cls, container ) :
 
-		assert( isinstance( container, GafferUI.ContainerWidget ) )
+		assert( isinstance( container, ( GafferUI.ContainerWidget, type( None ) ) ) )
 
 		cls.__parentStack.append( ( container, cls.__initNesting() ) )
 

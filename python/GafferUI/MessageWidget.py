@@ -142,7 +142,19 @@ class MessageWidget( GafferUI.Widget ) :
 			if not self.__processingEvents :
 				try :
 					self.__processingEvents = True
+					# Calling processEvents can cause almost anything to be executed,
+					# including idle callbacks that might build UIs. We must push an
+					# empty parent so that any widgets created will not be inadvertently
+					# parented to the wrong thing.
+					## \todo Calling `processEvents()` has also caused problems in the
+					# past where a simple error message has then led to idle callbacks
+					# being triggered which in turn triggered a graph evaluation. Having
+					# a message handler lead to arbitarary code execution is not good! Is
+					# there some way we can update the UI without triggering arbitrary
+					# code evaluation?
+					self._pushParent( None )
 					QtGui.QApplication.instance().processEvents( QtCore.QEventLoop.ExcludeUserInputEvents )
+					self._popParent()
 				finally :
 					self.__processingEvents = False
 

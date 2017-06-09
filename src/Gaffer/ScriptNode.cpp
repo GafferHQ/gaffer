@@ -539,7 +539,7 @@ void ScriptNode::cut( Node *parent, const Set *filter )
 	deleteNodes( parent, filter );
 }
 
-void ScriptNode::paste( Node *parent )
+void ScriptNode::paste( Node *parent, bool continueOnError )
 {
 	ApplicationRoot *app = applicationRoot();
 	if( !app )
@@ -556,7 +556,7 @@ void ScriptNode::paste( Node *parent )
 		parent->childAddedSignal().connect( boost::bind( (bool (StandardSet::*)( IECore::RunTimeTypedPtr ) )&StandardSet::add, newNodes.get(), ::_2 ) );
 
 			// do the paste
-			execute( s->readable(), parent );
+			execute( s->readable(), parent, continueOnError );
 
 		// transfer the newly created nodes into the selection
 		selection()->clear();

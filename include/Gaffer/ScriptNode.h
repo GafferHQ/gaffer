@@ -137,9 +137,10 @@ class ScriptNode : public Node
 		void cut( Node *parent = NULL, const Set *filter = NULL );
 		/// Pastes the contents of the global clipboard into the script below
 		/// the specified parent. If parent is unspecified then it defaults
-		/// to the script itself.
+		/// to the script itself. The continueOnError argument behaves as
+		/// for `execute()`.
 		/// \undoable
-		void paste( Node *parent = NULL );
+		void paste( Node *parent = NULL, bool continueOnError = false );
 		/// Removes Nodes from the parent node, making sure they are
 		/// disconnected from the remaining Nodes and removed from the current
 		/// selection. If unspecified then the parent defaults to the script
