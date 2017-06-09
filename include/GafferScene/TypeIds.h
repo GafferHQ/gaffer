@@ -137,6 +137,7 @@ enum TypeId
 	EvaluateLightLinksTypeId = 110592,
 	MeshTangentsTypeId = 110593,
 	ResamplePrimitiveVariablesTypeId = 110594,
+	DeleteFacesTypeId = 110595,
 
 	PreviewInteractiveRenderTypeId = 110649,
 

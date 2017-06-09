@@ -241,6 +241,7 @@ nodeMenu.append( "/Scene/Object/Map Projection", GafferScene.MapProjection, sear
 nodeMenu.append( "/Scene/Object/Map Offset", GafferScene.MapOffset, searchText = "MapOffset"  )
 nodeMenu.append( "/Scene/Object/Parameters", GafferScene.Parameters )
 nodeMenu.append( "/Scene/Object/Mesh Tangents", GafferScene.MeshTangents, searchText = "MeshTangents" )
+nodeMenu.append( "/Scene/Object/Delete Faces", GafferScene.DeleteFaces, searchText = "DeleteFaces" )
 nodeMenu.append( "/Scene/Attributes/Shader Assignment", GafferScene.ShaderAssignment, searchText = "ShaderAssignment" )
 nodeMenu.append( "/Scene/Attributes/Shader Switch", GafferScene.ShaderSwitch, searchText = "ShaderSwitch" )
 nodeMenu.append( "/Scene/Attributes/Standard Attributes", GafferScene.StandardAttributes, searchText = "StandardAttributes" )
