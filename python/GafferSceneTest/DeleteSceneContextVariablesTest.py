@@ -1,7 +1,6 @@
 ##########################################################################
 #
-#  Copyright (c) 2012, John Haddon. All rights reserved.
-#  Copyright (c) 2012-2015, Image Engine Design Inc. All rights reserved.
+#  Copyright (c) 2017, Image Engine Design Inc. All rights reserved.
 #
 #  Redistribution and use in source and binary forms, with or without
 #  modification, are permitted provided that the following conditions are
@@ -35,61 +34,37 @@
 #
 ##########################################################################
 
-from _GafferImageUI import *
+import unittest
 
-import DisplayUI
-from FormatPlugValueWidget import FormatPlugValueWidget
-from ChannelMaskPlugValueWidget import ChannelMaskPlugValueWidget
-from RGBAChannelsPlugValueWidget import RGBAChannelsPlugValueWidget
-from ChannelPlugValueWidget import ChannelPlugValueWidget
+import IECore
 
-import OpenImageIOReaderUI
-import ImageReaderUI
-import ImageViewUI
-import ImageTransformUI
-import ConstantUI
-import ImageSwitchUI
-import ColorSpaceUI
-import ImageContextVariablesUI
-import DeleteImageContextVariablesUI
-import ImageStatsUI
-import DeleteChannelsUI
-import ObjectToImageUI
-import ClampUI
-import ImageWriterUI
-import GradeUI
-import ImageTimeWarpUI
-import ImageSamplerUI
-import MergeUI
-import ImageNodeUI
-import ChannelDataProcessorUI
-import ImageProcessorUI
-import ImageMetadataUI
-import DeleteImageMetadataUI
-import CopyImageMetadataUI
-import ImageLoopUI
-import ShuffleUI
-import PremultiplyUI
-import UnpremultiplyUI
-import CropUI
-import ResizeUI
-import ResampleUI
-import LUTUI
-import CDLUI
-import DisplayTransformUI
-import OpenColorIOTransformUI
-import OffsetUI
-import BlurUI
-import ShapeUI
-import TextUI
-import WarpUI
-import VectorWarpUI
-import MirrorUI
-import CopyChannelsUI
-import MedianUI
-import ColorProcessorUI
-import MixUI
-import CatalogueUI
-import CollectImagesUI
+import Gaffer
+import GafferTest
+import GafferScene
+import GafferSceneTest
 
-__import__( "IECore" ).loadConfig( "GAFFER_STARTUP_PATHS", {}, subdirectory = "GafferImageUI" )
+class DeleteSceneContextVariablesTest( GafferSceneTest.SceneTestCase ) :
+
+	def test( self ) :
+
+		p = GafferScene.Plane()
+
+		a = GafferScene.Attributes()
+		a["in"].setInput( p["out"] )
+		a["attributes"].addMember( "user:something", IECore.StringData( "$a" ) )
+
+		d = GafferScene.DeleteSceneContextVariables()
+		d["in"].setInput( a["out"] )
+
+		c = GafferScene.SceneContextVariables()
+		c["in"].setInput( d["out"] )
+		c["variables"].addMember( "a", IECore.StringData( "aardvark" ) )
+
+		self.assertEqual( a["out"].attributes( "/plane" )["user:something"], IECore.StringData( "" ) )
+		self.assertEqual( c["out"].attributes( "/plane" )["user:something"], IECore.StringData( "aardvark" ) )
+
+		d["variables"].setValue( "a" )
+		self.assertEqual( c["out"].attributes( "/plane" )["user:something"], IECore.StringData( "" ) )
+
+if __name__ == "__main__":
+	unittest.main()

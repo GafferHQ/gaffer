@@ -1,6 +1,6 @@
 //////////////////////////////////////////////////////////////////////////
 //
-//  Copyright (c) 2013, Image Engine Design Inc. All rights reserved.
+//  Copyright (c) 2017, Image Engine Design Inc. All rights reserved.
 //
 //  Redistribution and use in source and binary forms, with or without
 //  modification, are permitted provided that the following conditions are
@@ -34,29 +34,18 @@
 //
 //////////////////////////////////////////////////////////////////////////
 
-#include "boost/python.hpp"
+#ifndef GAFFERIMAGE_DELETEIMAGECONTEXTVARIABLES_H
+#define GAFFERIMAGE_DELETEIMAGECONTEXTVARIABLES_H
 
-#include "GafferBindings/DependencyNodeBinding.h"
+#include "Gaffer/DeleteContextVariables.h"
+#include "GafferImage/ImageProcessor.h"
 
-#include "GafferScene/SceneContextProcessor.h"
-#include "GafferScene/SceneContextVariables.h"
-#include "GafferScene/DeleteSceneContextVariables.h"
-#include "GafferScene/SceneSwitch.h"
-#include "GafferScene/SceneTimeWarp.h"
-#include "GafferScene/SceneLoop.h"
-
-#include "GafferSceneBindings/MixinBinding.h"
-
-using namespace GafferScene;
-
-void GafferSceneBindings::bindMixin()
+namespace GafferImage
 {
 
-	GafferBindings::DependencyNodeClass<SceneContextProcessor>();
-	GafferBindings::DependencyNodeClass<SceneTimeWarp>();
-	GafferBindings::DependencyNodeClass<SceneContextVariables>();
-	GafferBindings::DependencyNodeClass<DeleteSceneContextVariables>();
-	GafferBindings::DependencyNodeClass<SceneSwitch>();
-	GafferBindings::DependencyNodeClass<SceneLoop>();
+typedef Gaffer::DeleteContextVariables<ImageProcessor> DeleteImageContextVariables;
+IE_CORE_DECLAREPTR( DeleteImageContextVariables )
 
-}
+} // namespace GafferImage
+
+#endif // GAFFERIMAGE_DELETEIMAGECONTEXTVARIABLES_H

@@ -1,6 +1,6 @@
 //////////////////////////////////////////////////////////////////////////
 //
-//  Copyright (c) 2013, Image Engine Design Inc. All rights reserved.
+//  Copyright (c) 2017, Image Engine Design Inc. All rights reserved.
 //
 //  Redistribution and use in source and binary forms, with or without
 //  modification, are permitted provided that the following conditions are
@@ -34,29 +34,46 @@
 //
 //////////////////////////////////////////////////////////////////////////
 
-#include "boost/python.hpp"
+#ifndef GAFFER_DELETECONTEXTVARIABLES_H
+#define GAFFER_DELETECONTEXTVARIABLES_H
 
-#include "GafferBindings/DependencyNodeBinding.h"
+#include "Gaffer/ContextProcessor.h"
+#include "Gaffer/CompoundDataPlug.h"
+#include "Gaffer/StringPlug.h"
 
-#include "GafferScene/SceneContextProcessor.h"
-#include "GafferScene/SceneContextVariables.h"
-#include "GafferScene/DeleteSceneContextVariables.h"
-#include "GafferScene/SceneSwitch.h"
-#include "GafferScene/SceneTimeWarp.h"
-#include "GafferScene/SceneLoop.h"
-
-#include "GafferSceneBindings/MixinBinding.h"
-
-using namespace GafferScene;
-
-void GafferSceneBindings::bindMixin()
+namespace Gaffer
 {
 
-	GafferBindings::DependencyNodeClass<SceneContextProcessor>();
-	GafferBindings::DependencyNodeClass<SceneTimeWarp>();
-	GafferBindings::DependencyNodeClass<SceneContextVariables>();
-	GafferBindings::DependencyNodeClass<DeleteSceneContextVariables>();
-	GafferBindings::DependencyNodeClass<SceneSwitch>();
-	GafferBindings::DependencyNodeClass<SceneLoop>();
+template<typename BaseType>
+class DeleteContextVariables : public ContextProcessor<BaseType>
+{
 
-}
+	public :
+
+		IECORE_RUNTIMETYPED_DECLARETEMPLATE( DeleteContextVariables<BaseType>, ContextProcessor<BaseType> );
+		IE_CORE_DECLARERUNTIMETYPEDDESCRIPTION( DeleteContextVariables<BaseType> );
+
+		DeleteContextVariables( const std::string &name=GraphComponent::defaultName<DeleteContextVariables>() );
+		virtual ~DeleteContextVariables();
+
+		StringPlug *variablesPlug();
+		const StringPlug *variablesPlug() const; 
+
+		void affects( const Plug *input, DependencyNode::AffectedPlugsContainer &outputs ) const;
+
+	protected :
+
+		virtual void processContext( Context *context ) const;
+
+	private :
+
+		static size_t g_firstPlugIndex;
+
+};
+
+typedef DeleteContextVariables<ComputeNode> DeleteContextVariablesComputeNode;
+IE_CORE_DECLAREPTR( DeleteContextVariablesComputeNode );
+
+} // namespace Gaffer
+
+#endif // GAFFER_DELETECONTEXTVARIABLES_H

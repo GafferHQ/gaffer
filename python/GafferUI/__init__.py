@@ -289,6 +289,7 @@ import DotUI
 import SubGraphUI
 import SwitchUI
 import ContextVariablesUI
+import DeleteContextVariablesUI
 import TimeWarpUI
 import LoopUI
 import AnimationUI
