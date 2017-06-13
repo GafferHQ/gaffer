@@ -93,6 +93,7 @@
 #include "GafferImageBindings/MixBinding.h"
 #include "GafferImageBindings/DisplayBinding.h"
 #include "GafferImageBindings/CatalogueBinding.h"
+#include "GafferImageBindings/CollectImagesBinding.h"
 
 using namespace boost::python;
 using namespace GafferImage;
@@ -153,5 +154,6 @@ BOOST_PYTHON_MODULE( _GafferImage )
 	GafferImageBindings::bindMix();
 	GafferImageBindings::bindDisplay();
 	GafferImageBindings::bindCatalogue();
+	GafferImageBindings::bindCollectImages();
 
 }

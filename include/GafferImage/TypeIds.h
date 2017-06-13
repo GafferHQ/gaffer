@@ -111,6 +111,7 @@ enum TypeId
 	CopyChannelsTypeId = 110815,
 	MedianTypeId = 110816,
 	MixTypeId = 110817,
+	CollectImagesTypeId = 110818,
 
 	LastTypeId = 110849
 };
