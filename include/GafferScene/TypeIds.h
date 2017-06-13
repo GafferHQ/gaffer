@@ -138,6 +138,8 @@ enum TypeId
 	MeshTangentsTypeId = 110593,
 	ResamplePrimitiveVariablesTypeId = 110594,
 	DeleteFacesTypeId = 110595,
+	DeleteCurvesTypeId = 110596,
+	DeletePointsTypeId = 110597,
 
 	PreviewInteractiveRenderTypeId = 110649,
 
