@@ -220,7 +220,8 @@ void Grade::hashChannelData( const GafferImage::ImagePlug *output, const Gaffer:
 
 	const std::string &channelName = context->get<std::string>( ImagePlug::channelNameContextName );
 	const int channelIndex = std::max( 0, ImageAlgo::colorIndex( channelName ) );
-	
+
+	ImagePlug::GlobalScope s( context );	
 	blackPointPlug()->getChild( channelIndex )->hash( h );
 	whitePointPlug()->getChild( channelIndex )->hash( h );
 	liftPlug()->getChild( channelIndex )->hash( h );
@@ -239,10 +240,14 @@ void Grade::processChannelData( const Gaffer::Context *context, const ImagePlug 
 
 	// Do some pre-processing.
 	float A, B, gamma;
-	parameters( std::max( 0, ImageAlgo::colorIndex( channel ) ), A, B, gamma );
+	bool whiteClamp, blackClamp;
+	{
+		ImagePlug::GlobalScope s( context );	
+		parameters( std::max( 0, ImageAlgo::colorIndex( channel ) ), A, B, gamma );
+		whiteClamp = whiteClampPlug()->getValue();
+		blackClamp = blackClampPlug()->getValue();
+	}
 	const float invGamma = 1. / gamma;
-	const bool whiteClamp = whiteClampPlug()->getValue();
-	const bool blackClamp = blackClampPlug()->getValue();
 
 	// Get some useful pointers.
 	float *outPtr = &(outData->writable()[0]);
