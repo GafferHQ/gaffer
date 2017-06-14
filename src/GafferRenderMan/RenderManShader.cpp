@@ -161,6 +161,12 @@ void RenderManShader::loadShader( const std::string &shaderName, bool keepExisti
 	}
 }
 
+void RenderManShader::reloadShader()
+{
+	shaderLoader()->clear();
+	Shader::reloadShader();
+}
+
 bool RenderManShader::acceptsInput( const Plug *plug, const Plug *inputPlug ) const
 {
 	if( !Shader::acceptsInput( plug, inputPlug ) )

@@ -109,6 +109,10 @@ class Shader : public Gaffer::DependencyNode
 		/// plug
 		virtual void loadShader( const std::string &shaderName, bool keepExistingValues=false );
 
+		/// Subclasses of Shader should do any extra cache clearing required, and then call the
+		/// base class implementation
+		virtual void reloadShader();
+
 		/// \deprecated Use ShaderPlug::attributesHash() instead.
 		/// \todo Protect these methods, and enforce access via the
 		/// ShaderPlug methods - this would be consistent with our

@@ -1251,3 +1251,12 @@ const IECore::Data *OSLShader::parameterMetadata( const Gaffer::Plug *plug, cons
 
 	return p->member<IECore::Data>( key );
 }
+
+void OSLShader::reloadShader()
+{
+	// Remove any metadata cache entry for the given shader name, allowing
+	// it to be reloaded fresh if it has changed
+	g_metadataCache.erase( namePlug()->getValue() );
+	Shader::reloadShader();
+}
+
