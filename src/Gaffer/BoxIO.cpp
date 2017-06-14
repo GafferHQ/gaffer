@@ -230,7 +230,8 @@ void BoxIO::parentChanging( Gaffer::GraphComponent *newParent )
 	// rather than parentChanged() because we need a current parent
 	// in order for the operations below to be undoable.
 
-	if( parent<Box>() )
+	Box *box = parent<Box>();
+	if( box && !MetadataAlgo::getChildNodesAreReadOnly( box ) )
 	{
 		m_promotedPlugNameChangedConnection.disconnect();
 		m_promotedPlugParentChangedConnection.disconnect();
