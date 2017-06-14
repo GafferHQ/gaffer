@@ -620,15 +620,25 @@ void OpenImageIOReader::hashChannelData( const GafferImage::ImagePlug *output, c
 	ImageNode::hashChannelData( output, context, h );
 	h.append( context->get<V2i>( ImagePlug::tileOriginContextName ) );
 	h.append( context->get<std::string>( ImagePlug::channelNameContextName ) );
-	hashFileName( context, h );
-	refreshCountPlug()->hash( h );
-	missingFrameModePlug()->hash( h );
+
+	{
+		ImagePlug::GlobalScope c( context );
+		hashFileName( context, h );
+		refreshCountPlug()->hash( h );
+		missingFrameModePlug()->hash( h );
+	}
 }
 
 IECore::ConstFloatVectorDataPtr OpenImageIOReader::computeChannelData( const std::string &channelName, const Imath::V2i &tileOrigin, const Gaffer::Context *context, const ImagePlug *parent ) const
 {
-	std::string fileName = fileNamePlug()->getValue();
-	const ImageSpec *spec = imageSpec( fileName, (MissingFrameMode)missingFrameModePlug()->getValue(), this, context );
+	std::string fileName;
+	const ImageSpec *spec;
+	{
+		ImagePlug::GlobalScope c( context );
+		fileName = fileNamePlug()->getValue();
+		spec = imageSpec( fileName, (MissingFrameMode)missingFrameModePlug()->getValue(), this, context );
+	}
+
 	if( !spec )
 	{
 		return parent->channelDataPlug()->defaultValue();

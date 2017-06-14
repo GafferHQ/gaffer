@@ -140,6 +140,7 @@ enum TypeId
 	DeleteFacesTypeId = 110595,
 	DeleteCurvesTypeId = 110596,
 	DeletePointsTypeId = 110597,
+	DeleteSceneContextVariablesTypeId = 110598,
 
 	PreviewInteractiveRenderTypeId = 110649,
 

@@ -1,7 +1,6 @@
 ##########################################################################
 #
-#  Copyright (c) 2012, John Haddon. All rights reserved.
-#  Copyright (c) 2012-2015, Image Engine Design Inc. All rights reserved.
+#  Copyright (c) 2017, Image Engine Design Inc. All rights reserved.
 #
 #  Redistribution and use in source and binary forms, with or without
 #  modification, are permitted provided that the following conditions are
@@ -35,61 +34,30 @@
 #
 ##########################################################################
 
-from _GafferImageUI import *
+import Gaffer
+import GafferUI
+import GafferImage
 
-import DisplayUI
-from FormatPlugValueWidget import FormatPlugValueWidget
-from ChannelMaskPlugValueWidget import ChannelMaskPlugValueWidget
-from RGBAChannelsPlugValueWidget import RGBAChannelsPlugValueWidget
-from ChannelPlugValueWidget import ChannelPlugValueWidget
+Gaffer.Metadata.registerNode(
 
-import OpenImageIOReaderUI
-import ImageReaderUI
-import ImageViewUI
-import ImageTransformUI
-import ConstantUI
-import ImageSwitchUI
-import ColorSpaceUI
-import ImageContextVariablesUI
-import DeleteImageContextVariablesUI
-import ImageStatsUI
-import DeleteChannelsUI
-import ObjectToImageUI
-import ClampUI
-import ImageWriterUI
-import GradeUI
-import ImageTimeWarpUI
-import ImageSamplerUI
-import MergeUI
-import ImageNodeUI
-import ChannelDataProcessorUI
-import ImageProcessorUI
-import ImageMetadataUI
-import DeleteImageMetadataUI
-import CopyImageMetadataUI
-import ImageLoopUI
-import ShuffleUI
-import PremultiplyUI
-import UnpremultiplyUI
-import CropUI
-import ResizeUI
-import ResampleUI
-import LUTUI
-import CDLUI
-import DisplayTransformUI
-import OpenColorIOTransformUI
-import OffsetUI
-import BlurUI
-import ShapeUI
-import TextUI
-import WarpUI
-import VectorWarpUI
-import MirrorUI
-import CopyChannelsUI
-import MedianUI
-import ColorProcessorUI
-import MixUI
-import CatalogueUI
-import CollectImagesUI
+	GafferImage.DeleteImageContextVariables,
 
-__import__( "IECore" ).loadConfig( "GAFFER_STARTUP_PATHS", {}, subdirectory = "GafferImageUI" )
+	"description",
+	"""
+	Removes variables from the context so that they won't be visible to upstream expressions.
+	""",
+
+	plugs = {
+
+		"variables" : [
+
+			"description",
+			"""
+			The variables to be deleted.
+			""",
+
+		],
+
+	}
+
+)

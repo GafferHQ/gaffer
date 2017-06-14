@@ -1,6 +1,6 @@
 //////////////////////////////////////////////////////////////////////////
 //
-//  Copyright (c) 2012, John Haddon. All rights reserved.
+//  Copyright (c) 2017, Image Engine Design Inc. All rights reserved.
 //
 //  Redistribution and use in source and binary forms, with or without
 //  modification, are permitted provided that the following conditions are
@@ -34,25 +34,14 @@
 //
 //////////////////////////////////////////////////////////////////////////
 
-#include "Gaffer/TimeWarp.inl"
-#include "GafferScene/SceneTimeWarp.h"
-
-using namespace GafferScene;
+#include "Gaffer/DeleteContextVariables.inl"
 
 namespace Gaffer
 {
 
-IECORE_RUNTIMETYPED_DEFINETEMPLATESPECIALISATION( GafferScene::SceneTimeWarp, SceneTimeWarpTypeId )
-
-template<>
-struct TimeWarpTraits<GafferScene::SceneProcessor>
-{
-
-	typedef GafferScene::ScenePlug::GlobalScope TimeScope;
-
-};
+IECORE_RUNTIMETYPED_DEFINETEMPLATESPECIALISATION( Gaffer::DeleteContextVariablesComputeNode, DeleteContextVariablesComputeNodeTypeId )
 
 }
 
 // explicit instantiation
-template class Gaffer::TimeWarp<SceneProcessor>;
+template class Gaffer::DeleteContextVariables<Gaffer::ComputeNode>;

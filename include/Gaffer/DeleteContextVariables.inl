@@ -1,6 +1,6 @@
 //////////////////////////////////////////////////////////////////////////
 //
-//  Copyright (c) 2012, John Haddon. All rights reserved.
+//  Copyright (c) 2017, Image Engine Design Inc. All rights reserved.
 //
 //  Redistribution and use in source and binary forms, with or without
 //  modification, are permitted provided that the following conditions are
@@ -34,64 +34,68 @@
 //
 //////////////////////////////////////////////////////////////////////////
 
-#ifndef GAFFER_TIMEWARP_H
-#define GAFFER_TIMEWARP_H
+#ifndef GAFFER_DELETECONTEXTVARIABLES_INL
+#define GAFFER_DELETECONTEXTVARIABLES_INL
 
-#include "Gaffer/ContextProcessor.h"
-#include "Gaffer/NumericPlug.h"
+#include "IECore/SimpleTypedData.h"
+
+#include "Gaffer/DeleteContextVariables.h"
+#include "Gaffer/Context.h"
+#include "Gaffer/ContextProcessor.inl"
 
 namespace Gaffer
 {
 
 template<typename BaseType>
-class TimeWarp : public ContextProcessor<BaseType>
-{
+const IECore::RunTimeTyped::TypeDescription<DeleteContextVariables<BaseType> > DeleteContextVariables<BaseType>::g_typeDescription;
 
-	public :
-
-		IECORE_RUNTIMETYPED_DECLARETEMPLATE( TimeWarp<BaseType>, ContextProcessor<BaseType> );
-		IE_CORE_DECLARERUNTIMETYPEDDESCRIPTION( TimeWarp<BaseType> );
-
-		TimeWarp( const std::string &name=GraphComponent::defaultName<TimeWarp>() );
-		virtual ~TimeWarp();
-
-		FloatPlug *speedPlug();
-		const FloatPlug *speedPlug() const;
-
-		FloatPlug *offsetPlug();
-		const FloatPlug *offsetPlug() const;
-
-		void affects( const Plug *input, DependencyNode::AffectedPlugsContainer &outputs ) const;
-
-	protected :
-
-		virtual void processContext( Context *context ) const;
-
-};
-
-namespace Detail
-{
-
-struct IdentityScope;
-
-} // namespace Detail
-
-/// May be specialised to control the behaviour of
-/// TimeWarp<BaseType>.
 template<typename BaseType>
-struct TimeWarpTraits
+size_t DeleteContextVariables<BaseType>::g_firstPlugIndex;
+
+template<typename BaseType>
+DeleteContextVariables<BaseType>::DeleteContextVariables( const std::string &name )
+	:	ContextProcessor<BaseType>( name )
 {
+	BaseType::storeIndexOfNextChild( g_firstPlugIndex );
+	ContextProcessor<BaseType>::addChild(
+		new StringPlug( "variables" )
+	);
+}
 
-   /// A class which will be instantiated as
-   /// `TimeScope timeScope( Context::current() )`
-   /// to modify the context when evaluating the time
-   typedef Detail::IdentityScope TimeScope;
+template<typename BaseType>
+DeleteContextVariables<BaseType>::~DeleteContextVariables()
+{
+}
 
-};
+template<typename BaseType>
+StringPlug *DeleteContextVariables<BaseType>::variablesPlug()
+{
+	return ContextProcessor<BaseType>::template getChild<StringPlug>( g_firstPlugIndex );
+}
 
-typedef TimeWarp<ComputeNode> TimeWarpComputeNode;
-IE_CORE_DECLAREPTR( TimeWarpComputeNode );
+template<typename BaseType>
+const StringPlug *DeleteContextVariables<BaseType>::variablesPlug() const
+{
+	return ContextProcessor<BaseType>::template getChild<StringPlug>( g_firstPlugIndex );
+}
+
+template<typename BaseType>
+void DeleteContextVariables<BaseType>::affects( const Plug *input, DependencyNode::AffectedPlugsContainer &outputs ) const
+{
+	ContextProcessor<BaseType>::affects( input, outputs );
+
+	if( input == variablesPlug() )
+	{
+		ContextProcessor<BaseType>::appendAffectedPlugs( outputs );
+	}
+}
+
+template<typename BaseType>
+void DeleteContextVariables<BaseType>::processContext( Context *context ) const
+{
+	context->removeMatching( variablesPlug()->getValue() );
+}
 
 } // namespace Gaffer
 
-#endif // GAFFER_TIMEWARP_H
+#endif // GAFFER_DELETECONTEXTVARIABLES_INL

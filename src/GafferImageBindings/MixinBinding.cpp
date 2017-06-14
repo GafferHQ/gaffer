@@ -40,6 +40,7 @@
 
 #include "GafferImage/ImageContextProcessor.h"
 #include "GafferImage/ImageContextVariables.h"
+#include "GafferImage/DeleteImageContextVariables.h"
 #include "GafferImage/ImageSwitch.h"
 #include "GafferImage/ImageTimeWarp.h"
 #include "GafferImage/ImageLoop.h"
@@ -54,6 +55,7 @@ void GafferImageBindings::bindMixin()
 	GafferBindings::DependencyNodeClass<ImageContextProcessor>();
 	GafferBindings::DependencyNodeClass<ImageTimeWarp>();
 	GafferBindings::DependencyNodeClass<ImageContextVariables>();
+	GafferBindings::DependencyNodeClass<DeleteImageContextVariables>();
 	GafferBindings::DependencyNodeClass<ImageSwitch>();
 	GafferBindings::DependencyNodeClass<ImageLoop>();
 

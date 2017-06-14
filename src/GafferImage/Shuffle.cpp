@@ -216,6 +216,7 @@ IECore::ConstFloatVectorDataPtr Shuffle::computeChannelData( const std::string &
 
 std::string Shuffle::inChannelName( const std::string &outChannelName ) const
 {
+	ImagePlug::GlobalScope s( Context::current() );
 	for( ChannelPlugIterator it( channelsPlug() ); !it.done(); ++it )
 	{
 		if( (*it)->outPlug()->getValue() == outChannelName )

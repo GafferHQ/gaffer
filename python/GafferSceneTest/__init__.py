@@ -63,6 +63,7 @@ from AlembicSourceTest import AlembicSourceTest
 from DeletePrimitiveVariablesTest import DeletePrimitiveVariablesTest
 from SeedsTest import SeedsTest
 from SceneContextVariablesTest import SceneContextVariablesTest
+from DeleteSceneContextVariablesTest import DeleteSceneContextVariablesTest
 from SubTreeTest import SubTreeTest
 from OpenGLAttributesTest import OpenGLAttributesTest
 from StandardOptionsTest import StandardOptionsTest

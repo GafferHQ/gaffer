@@ -54,6 +54,7 @@ import OutputsUI
 import OptionsUI
 import OpenGLAttributesUI
 import SceneContextVariablesUI
+import DeleteSceneContextVariablesUI
 import SceneWriterUI
 import StandardOptionsUI
 import StandardAttributesUI

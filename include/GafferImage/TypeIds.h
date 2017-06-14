@@ -112,6 +112,7 @@ enum TypeId
 	MedianTypeId = 110816,
 	MixTypeId = 110817,
 	CollectImagesTypeId = 110818,
+	DeleteImageContextVariablesTypeId = 110819,
 
 	LastTypeId = 110849
 };

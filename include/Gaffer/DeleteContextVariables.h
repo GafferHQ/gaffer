@@ -1,6 +1,6 @@
 //////////////////////////////////////////////////////////////////////////
 //
-//  Copyright (c) 2012, John Haddon. All rights reserved.
+//  Copyright (c) 2017, Image Engine Design Inc. All rights reserved.
 //
 //  Redistribution and use in source and binary forms, with or without
 //  modification, are permitted provided that the following conditions are
@@ -34,25 +34,46 @@
 //
 //////////////////////////////////////////////////////////////////////////
 
-#include "Gaffer/TimeWarp.inl"
-#include "GafferScene/SceneTimeWarp.h"
+#ifndef GAFFER_DELETECONTEXTVARIABLES_H
+#define GAFFER_DELETECONTEXTVARIABLES_H
 
-using namespace GafferScene;
+#include "Gaffer/ContextProcessor.h"
+#include "Gaffer/CompoundDataPlug.h"
+#include "Gaffer/StringPlug.h"
 
 namespace Gaffer
 {
 
-IECORE_RUNTIMETYPED_DEFINETEMPLATESPECIALISATION( GafferScene::SceneTimeWarp, SceneTimeWarpTypeId )
-
-template<>
-struct TimeWarpTraits<GafferScene::SceneProcessor>
+template<typename BaseType>
+class DeleteContextVariables : public ContextProcessor<BaseType>
 {
 
-	typedef GafferScene::ScenePlug::GlobalScope TimeScope;
+	public :
+
+		IECORE_RUNTIMETYPED_DECLARETEMPLATE( DeleteContextVariables<BaseType>, ContextProcessor<BaseType> );
+		IE_CORE_DECLARERUNTIMETYPEDDESCRIPTION( DeleteContextVariables<BaseType> );
+
+		DeleteContextVariables( const std::string &name=GraphComponent::defaultName<DeleteContextVariables>() );
+		virtual ~DeleteContextVariables();
+
+		StringPlug *variablesPlug();
+		const StringPlug *variablesPlug() const; 
+
+		void affects( const Plug *input, DependencyNode::AffectedPlugsContainer &outputs ) const;
+
+	protected :
+
+		virtual void processContext( Context *context ) const;
+
+	private :
+
+		static size_t g_firstPlugIndex;
 
 };
 
-}
+typedef DeleteContextVariables<ComputeNode> DeleteContextVariablesComputeNode;
+IE_CORE_DECLAREPTR( DeleteContextVariablesComputeNode );
 
-// explicit instantiation
-template class Gaffer::TimeWarp<SceneProcessor>;
+} // namespace Gaffer
+
+#endif // GAFFER_DELETECONTEXTVARIABLES_H

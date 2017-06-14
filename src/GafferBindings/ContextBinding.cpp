@@ -112,6 +112,12 @@ void delItem( Context &context, const IECore::InternedString &name )
 	context.remove( name );
 }
 
+void removeMatching( Context &context, const StringAlgo::MatchPattern& pattern )
+{
+	IECorePython::ScopedGILRelease gilRelease;
+	context.removeMatching( pattern );
+}
+
 list names( const Context &context )
 {
 	std::vector<IECore::InternedString> names;
@@ -201,6 +207,7 @@ void GafferBindings::bindContext()
 		.def( "__contains__", &contains )
 		.def( "remove", &delItem )
 		.def( "__delitem__", &delItem )
+		.def( "removeMatching", &removeMatching )
 		.def( "changed", &Context::changed )
 		.def( "names", &names )
 		.def( "keys", &names )

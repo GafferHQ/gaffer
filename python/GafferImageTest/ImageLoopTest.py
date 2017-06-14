@@ -35,6 +35,7 @@
 ##########################################################################
 
 import unittest
+import inspect
 
 import IECore
 
@@ -85,6 +86,36 @@ class ImageLoopTest( GafferImageTest.ImageTestCase ) :
 
 			script2["loop"]["iterations"].setValue( 5 )
 			self.assertAlmostEqual( script2["sampler"]["color"]["r"].getValue(), .5 )
+
+	def testIterationsContext( self ) :
+
+		script = Gaffer.ScriptNode()
+
+		script["c"] = GafferImage.Constant()
+		script["loop"] = GafferImage.ImageLoop()
+		script["loop"]["in"].setInput( script["c"]["out"] )
+
+		script["grade"] = GafferImage.Grade()
+		script["grade"]["offset"].setValue( IECore.Color3f( .1 ) )
+		script["grade"]["in"].setInput( script["loop"]["previous"] )
+		script["loop"]["next"].setInput( script["grade"]["out"] )
+
+		script["sampler"] = GafferImage.ImageSampler()
+		script["sampler"]["pixel"].setValue( IECore.V2f( 10 ) )
+		script["sampler"]["image"].setInput( script["loop"]["out"] )
+
+		script["expression"] = Gaffer.Expression()
+		script["expression"].setExpression( inspect.cleandoc(
+			"""
+			assert( context.get( "image:channelName", None ) is None )
+			assert( context.get( "image:tileOrigin", None ) is None )
+			parent["loop"]["iterations"] = 4
+			"""
+		) )
+
+		with script.context() :
+
+			self.assertAlmostEqual( script["sampler"]["color"]["r"].getValue(), .4 )
 
 if __name__ == "__main__":
 	unittest.main()
