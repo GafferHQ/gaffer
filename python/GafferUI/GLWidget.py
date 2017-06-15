@@ -44,19 +44,18 @@ import collections
 logging.getLogger( "OpenGL" ).setLevel( logging.WARNING )
 
 import IECore
+import IECoreGL
 
 import Gaffer
 import GafferUI
 import _GafferUI
 
-# import lazily to improve startup of apps which don't use GL functionality
-GL = Gaffer.lazyImport( "OpenGL.GL" )
-IECoreGL = Gaffer.lazyImport( "IECoreGL" )
+import OpenGL.GL as GL
 
 from Qt import QtCore
 from Qt import QtGui
 from Qt import QtWidgets
-QtOpenGL = GafferUI._qtImport( "QtOpenGL", lazy=True )
+from Qt import QtOpenGL
 
 ## The GLWidget is a base class for all widgets which wish to draw using OpenGL.
 # Derived classes override the _draw() method to achieve this.
