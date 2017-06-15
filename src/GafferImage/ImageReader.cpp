@@ -248,6 +248,33 @@ size_t ImageReader::supportedExtensions( std::vector<std::string> &extensions )
 	return extensions.size();
 }
 
+void ImageReader::registerDefaultColorSpace( DefaultColorSpaceFunction f )
+{
+	defaultColorSpaceFunc() = f;
+}
+
+ImageReader::DefaultColorSpaceFunction &ImageReader::defaultColorSpaceFunc()
+{
+	static DefaultColorSpaceFunction g_colorSpaceFunction;
+	return g_colorSpaceFunction;
+}
+
+const std::string ImageReader::defaultColorSpace() const
+{
+	const std::string fileName = fileNamePlug()->getValue(); 
+	const std::string fileFormatName = fileName.substr(fileName.find_last_of(".") + 1);
+	IECore::CompoundData *data = new IECore::CompoundData();
+	data->writable()["fileFormat"] = new IECore::StringData( fileFormatName );
+	data->writable()["dataType"] = new IECore::StringData( oiioReader()->dataTypePlug()->getValue() );
+	data->writable()["fileName"] = new IECore::StringData( fileName );
+	ConstCompoundDataPtr metadata = oiioReader()->outPlug()->metadataPlug()->getValue();
+	CompoundDataPtr copyMeta = metadata->copy();
+	data->writable()["metadata"] = copyMeta.get();
+
+	return defaultColorSpaceFunc()( data );
+}
+
+
 void ImageReader::affects( const Plug *input, AffectedPlugsContainer &outputs ) const
 {
 	ImageNode::affects( input, outputs );
@@ -308,20 +335,30 @@ void ImageReader::compute( ValuePlug *output, const Context *context ) const
 	{
 		std::string userColorSpace = colorSpacePlug()->getValue();
 		std::string intermediateSpace = "";
+		// custom user colorSpace
 		if( userColorSpace != "" )
 		{
 			intermediateSpace = userColorSpace;
 		}
 		else
 		{
-			ConstCompoundDataPtr metadata = intermediateMetadataPlug()->getValue();
-			if( const StringData *intermediateSpaceData = metadata->member<const StringData>( "oiio:ColorSpace" ) )
+			// config file
+			if(defaultColorSpaceFunc())
 			{
-				std::vector<std::string> colorSpaces;
-				OpenColorIOTransform::availableColorSpaces( colorSpaces );
-				if( std::find( colorSpaces.begin(), colorSpaces.end(), intermediateSpaceData->readable() ) != colorSpaces.end() )
+				intermediateSpace = defaultColorSpace();
+			}
+			else
+			{
+				// fallback to OIIO default
+				ConstCompoundDataPtr metadata = intermediateMetadataPlug()->getValue();
+				if( const StringData *intermediateSpaceData = metadata->member<const StringData>( "oiio:ColorSpace" ) )
 				{
-					intermediateSpace = intermediateSpaceData->readable();
+					std::vector<std::string> colorSpaces;
+					OpenColorIOTransform::availableColorSpaces( colorSpaces );
+					if( std::find( colorSpaces.begin(), colorSpaces.end(), intermediateSpaceData->readable() ) != colorSpaces.end() )
+					{
+						intermediateSpace = intermediateSpaceData->readable();
+					}
 				}
 			}
 		}

@@ -50,6 +50,7 @@ class ImageWriterTest( GafferImageTest.ImageTestCase ) :
 
 	__largeFilePath = os.path.expandvars( "$GAFFER_ROOT/python/GafferImageTest/images/large.exr" )
 	__rgbFilePath = os.path.expandvars( "$GAFFER_ROOT/python/GafferImageTest/images/rgb.100x100" )
+	__dataTypeFilePath = os.path.expandvars( "$GAFFER_ROOT/python/GafferImageTest/images/uint{0}.dpx" )
 	__negativeDataWindowFilePath = os.path.expandvars( "$GAFFER_ROOT/python/GafferImageTest/images/checkerWithNegativeDataWindow.200x150" )
 	__defaultFormatFile = os.path.expandvars( "$GAFFER_ROOT/python/GafferImageTest/images/defaultNegativeDisplayWindow.exr" )
 
@@ -233,6 +234,83 @@ class ImageWriterTest( GafferImageTest.ImageTestCase ) :
 
 		self.__testExtension( "iff", "iff", options = options, metadataToIgnore = [ "Artist", "DocumentName", "HostComputer", "Software" ] )
 
+	def testCustomColorSpaceWrite( self ) :
+
+		colorSpaces = [ "Cineon", "rec709", "AlexaV3LogC" ]
+		r = GafferImage.ImageReader()
+		r["fileName"].setValue( self.__rgbFilePath + ".exr" )
+		w = GafferImage.ImageWriter()
+
+		for colorSpace in colorSpaces:
+			colorSpaceFile = self.temporaryDirectory() + "/testDataType.{0}.exr".format( colorSpace )
+			w["fileName"].setValue( colorSpaceFile )
+			w["colorSpace"].setValue( colorSpace )
+			w["in"].setInput( r["out"] )
+			# Execute
+			with Gaffer.Context() :
+				w["task"].execute()
+			self.failUnless( os.path.exists( colorSpaceFile ), "Failed to create file : {}".format( colorSpaceFile ) )
+
+			resultReader = GafferImage.ImageReader()
+			resultReader["fileName"].setValue( colorSpaceFile )
+			resultReader["colorSpace"].setValue( colorSpace )
+
+			self.assertImagesEqual( resultReader["out"], r["out"], ignoreMetadata=True, maxDifference=0.005  )
+
+	def testDataType( self ):
+
+		dataTypes = [ 8, 10, 12, 16 ]
+		r = GafferImage.ImageReader()
+		r["fileName"].setValue( self.__rgbFilePath + ".exr" )
+		w = GafferImage.ImageWriter()
+
+		for dataType in dataTypes:
+			testDataTypeFile = self.temporaryDirectory() + "/testDataType.uint{0}.dpx".format( dataType )
+			w["fileName"].setValue( testDataTypeFile )
+			w["dpx"]["dataType"].setValue( "uint{0}".format( dataType ) )
+			w["in"].setInput( r["out"] )
+			# Execute
+			with Gaffer.Context() :
+				w["task"].execute()
+			self.failUnless( os.path.exists( testDataTypeFile ), "Failed to create file : {}".format( testDataTypeFile ) )
+
+			resultReader = GafferImage.ImageReader()
+			resultReader["fileName"].setValue( testDataTypeFile )
+
+			self.assertEqual( resultReader["out"]["metadata"].getValue()["oiio:BitsPerSample"].value , dataType  )
+		
+	def testMetadataColorSpaceWrite( self ) :
+
+		testMetadataColorSpaceFile = self.temporaryDirectory() + "/testMetadataColorSpace.exr"
+
+		r = GafferImage.ImageReader()
+		r["fileName"].setValue( self.__rgbFilePath+".exr" )
+
+		m = GafferImage.ImageMetadata()
+		m["metadata"].addMember( "gaffer:colorSpace", IECore.StringData( "Cineon" ) )
+		m["in"].setInput( r["out"] )
+
+		w = GafferImage.ImageWriter()
+		w["fileName"].setValue( testMetadataColorSpaceFile )
+		w["colorSpace"].setValue( "Cineon" )
+		w["in"].setInput( m["out"] )
+
+		# Execute
+		with Gaffer.Context() :
+			w["task"].execute()
+		self.failUnless( os.path.exists( testMetadataColorSpaceFile ), "Failed to create file : {}".format( testMetadataColorSpaceFile ) )
+
+		outputReader = GafferImage.ImageReader()
+		outputReader["fileName"].setValue( testMetadataColorSpaceFile )
+
+		imageDiffOp = IECore.ImageDiffOp()
+		res = imageDiffOp(
+			imageA = r["out"].image(),
+			imageB = outputReader["out"].image(),
+		)
+		self.assertTrue( res.value < 0.01 )
+
+
 	def testDefaultFormatWrite( self ) :
 
 		s = Gaffer.ScriptNode()
@@ -374,6 +452,9 @@ class ImageWriterTest( GafferImageTest.ImageTestCase ) :
 			w["fileName"].setValue( testFile )
 			w["channels"].setValue( "*" )
 
+			writerOutput = GafferImage.ImageReader()
+			writerOutput["fileName"].setValue( testFile )
+
 			for opt in test['plugs']:
 				w[formatName][opt].setValue( test['plugs'][opt] )
 
@@ -385,9 +466,6 @@ class ImageWriterTest( GafferImageTest.ImageTestCase ) :
 			# Check the output.
 			expectedOutput = GafferImage.ImageReader()
 			expectedOutput["fileName"].setValue( expectedFile )
-
-			writerOutput = GafferImage.ImageReader()
-			writerOutput["fileName"].setValue( testFile )
 
 			expectedMetadata = expectedOutput["out"]["metadata"].getValue()
 			writerMetadata = writerOutput["out"]["metadata"].getValue()

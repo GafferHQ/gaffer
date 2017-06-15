@@ -122,6 +122,16 @@ Gaffer.Metadata.registerNode(
 
 		],
 
+		"dataType" : [
+
+			"description",
+			"""
+			An output of the pixel native data type of the file sequence.
+			""",
+
+			"plugValueWidget:type", "",
+
+		],
 	}
 
 )

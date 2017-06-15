@@ -51,6 +51,8 @@ class ImageReaderTest( GafferImageTest.ImageTestCase ) :
 	colorSpaceFileName = os.path.expandvars( "$GAFFER_ROOT/python/GafferImageTest/images/circles_as_cineon.exr" )
 	offsetDataWindowFileName = os.path.expandvars( "$GAFFER_ROOT/python/GafferImageTest/images/rgb.100x100.exr" )
 	jpgFileName = os.path.expandvars( "$GAFFER_ROOT/python/GafferImageTest/images/circles.jpg" )
+	colorSpaceCineon = os.path.expandvars( "$GAFFER_ROOT/python/GafferImageTest/images/chart_cineon.exr" )
+	colorSpaceMetadata = os.path.expandvars( "$GAFFER_ROOT/python/GafferImageTest/images/chart_colorSpace_metadata.exr" )
 
 	def test( self ) :
 
@@ -95,6 +97,44 @@ class ImageReaderTest( GafferImageTest.ImageTestCase ) :
 		colorSpaceOverrideImage = colorSpaceOverrideReader["out"]
 
 		self.assertImagesEqual( colorSpaceOverrideImage, exrImage, ignoreMetadata = True, maxDifference = 0.005 )
+
+	def testColorSpaceMetadata( self ) :
+
+		colorSpaceMetadataReader = GafferImage.ImageReader()
+		colorSpaceMetadataReader["fileName"].setValue( self.colorSpaceMetadata )
+
+		cineonReader = GafferImage.ImageReader()
+		cineonReader["fileName"].setValue( self.colorSpaceCineon )
+		cineonReader["colorSpace"].setValue( "Cineon" )
+		
+
+		colorSpaceMetadataImage = colorSpaceMetadataReader["out"]
+		cineonImage = cineonReader["out"]
+
+		self.assertImagesEqual( cineonImage, colorSpaceMetadataImage, ignoreMetadata = True, maxDifference = 0.005 )
+
+	def testDataType( self ) :
+
+		dataTypes = [ 8, 10, 12, 16 ]
+		r = GafferImage.ImageReader()
+		r["fileName"].setValue( self.fileName )
+		w = GafferImage.ImageWriter()
+
+		for dataType in dataTypes:
+			testDataTypeFile = self.temporaryDirectory() + "/testDataType_uint{0}.dpx".format( dataType )
+			w["fileName"].setValue( testDataTypeFile )
+			w["dpx"]["dataType"].setValue( "uint{0}".format( dataType ) )
+			w["in"].setInput( r["out"] )
+			# Execute
+			with Gaffer.Context() :
+				w["task"].execute()
+			self.failUnless( os.path.exists( testDataTypeFile ), "Failed to create file : {}".format( testDataTypeFile ) )
+
+			resultReader = GafferImage.ImageReader()
+			resultReader["fileName"].setValue( testDataTypeFile )
+
+			readerDataType = resultReader["__oiioReader"]["dataType"].getValue()
+			self.assertEqual( readerDataType, "uint{0}".format( dataType ) )
 
 	def testJpgRead( self ) :
 

@@ -114,6 +114,10 @@ class ImageReader : public ImageNode
 
 		static size_t supportedExtensions( std::vector<std::string> &extensions );
 
+		typedef boost::function<const std::string ( const IECore::CompoundData * )> DefaultColorSpaceFunction;	
+		static void registerDefaultColorSpace( DefaultColorSpaceFunction f );
+
+
 	protected :
 
 		virtual void hash( const Gaffer::ValuePlug *output, const Gaffer::Context *context, IECore::MurmurHash &h ) const;
@@ -144,6 +148,9 @@ class ImageReader : public ImageNode
 		void computeMaskedOutput( Gaffer::ValuePlug *output, const Gaffer::Context *context, bool alwaysClampToFrame = false ) const;
 
 		bool computeFrameMask( const Gaffer::Context *context, Gaffer::ContextPtr &maskedContext ) const;
+
+		static DefaultColorSpaceFunction &defaultColorSpaceFunc();
+		const std::string defaultColorSpace() const;
 
 		static size_t g_firstChildIndex;
 

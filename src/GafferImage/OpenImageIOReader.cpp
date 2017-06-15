@@ -368,6 +368,7 @@ OpenImageIOReader::OpenImageIOReader( const std::string &name )
 	addChild( new IntPlug( "refreshCount" ) );
 	addChild( new IntPlug( "missingFrameMode", Plug::In, Error, /* min */ Error, /* max */ Hold ) );
 	addChild( new IntVectorDataPlug( "availableFrames", Plug::Out, new IntVectorData ) );
+	addChild( new StringPlug( "dataType", Plug::Out ) );
 
 	// disable caching on our outputs, as OIIO is already doing caching for us.
 	for( OutputPlugIterator it( outPlug() ); !it.done(); ++it )
@@ -422,6 +423,16 @@ const Gaffer::IntVectorDataPlug *OpenImageIOReader::availableFramesPlug() const
 	return getChild<IntVectorDataPlug>( g_firstPlugIndex + 3 );
 }
 
+Gaffer::StringPlug *OpenImageIOReader::dataTypePlug()
+{
+	return getChild<StringPlug>( g_firstPlugIndex + 4 );
+}
+
+const Gaffer::StringPlug *OpenImageIOReader::dataTypePlug() const
+{
+	return getChild<StringPlug>( g_firstPlugIndex + 4 );
+}
+
 size_t OpenImageIOReader::supportedExtensions( std::vector<std::string> &extensions )
 {
 	std::string attr;
@@ -453,6 +464,7 @@ void OpenImageIOReader::affects( const Gaffer::Plug *input, AffectedPlugsContain
 	if( input == fileNamePlug() || input == refreshCountPlug() )
 	{
 		outputs.push_back( availableFramesPlug() );
+		outputs.push_back( dataTypePlug() );
 	}
 
 	if( input == fileNamePlug() || input == refreshCountPlug() || input == missingFrameModePlug() )
@@ -468,7 +480,7 @@ void OpenImageIOReader::hash( const ValuePlug *output, const Context *context, I
 {
 	ImageNode::hash( output, context, h );
 
-	if( output == availableFramesPlug() )
+	if( output == availableFramesPlug() || output == dataTypePlug() )
 	{
 		fileNamePlug()->hash( h );
 		refreshCountPlug()->hash( h );
@@ -497,6 +509,10 @@ void OpenImageIOReader::compute( ValuePlug *output, const Context *context ) con
 			static_cast<IntVectorDataPlug *>( output )->setToDefault();
 		}
 	}
+	else if( output == dataTypePlug() )
+	{
+		static_cast<StringPlug *>( output )->setValue( computeDataType( context ) );
+	}
 	else
 	{
 		ImageNode::compute( output, context );
@@ -515,6 +531,29 @@ void OpenImageIOReader::hashFileName( const Gaffer::Context *context, IECore::Mu
 	{
 		h.append( context->getFrame() );
 	}
+}
+
+std::string OpenImageIOReader::computeDataType( const Gaffer::Context *context ) const
+{
+
+	std::string fileName = fileNamePlug()->getValue();
+	const ImageSpec *spec = imageSpec( fileName, (MissingFrameMode)missingFrameModePlug()->getValue(), this, context );
+	if( !spec )
+	{
+	
+		return "";
+	
+	}
+	std::string format = spec->format.c_str();
+	if( format == "uint16")
+	{
+		const int bitsPerSample = spec->get_int_attribute( "oiio:BitsPerSample", 0 );
+		if( bitsPerSample )
+		{
+			return boost::str( boost::format( "uint%d"  ) % bitsPerSample );
+		}
+	}
+	return format;
 }
 
 void OpenImageIOReader::hashFormat( const GafferImage::ImagePlug *output, const Gaffer::Context *context, IECore::MurmurHash &h ) const
