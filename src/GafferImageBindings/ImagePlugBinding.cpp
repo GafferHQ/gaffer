@@ -56,10 +56,22 @@ IECore::FloatVectorDataPtr channelData( const ImagePlug &plug,  const std::strin
 	return copy ? d->copy() : boost::const_pointer_cast<IECore::FloatVectorData>( d );
 }
 
+IECore::MurmurHash channelDataHash( const ImagePlug &plug, const std::string &channelName, const Imath::V2i &tileOrigin )
+{
+	IECorePython::ScopedGILRelease gilRelease;
+	return plug.channelDataHash( channelName, tileOrigin );
+}
+
 IECore::ImagePrimitivePtr image( const ImagePlug &plug )
 {
 	IECorePython::ScopedGILRelease gilRelease;
 	return plug.image();
+}
+
+IECore::MurmurHash imageHash( const ImagePlug &plug )
+{
+	IECorePython::ScopedGILRelease gilRelease;
+	return plug.imageHash();
 }
 
 } // namespace
@@ -79,9 +91,9 @@ void GafferImageBindings::bindImagePlug()
 			)
 		)
 		.def( "channelData", &channelData, ( arg( "_copy" ) = true ) )
-		.def( "channelDataHash", &ImagePlug::channelDataHash )
+		.def( "channelDataHash", &channelDataHash )
 		.def( "image", &image )
-		.def( "imageHash", &ImagePlug::imageHash )
+		.def( "imageHash", &imageHash )
 		.def( "tileSize", &ImagePlug::tileSize ).staticmethod( "tileSize" )
 		.def( "tileIndex", &ImagePlug::tileIndex ).staticmethod( "tileIndex" )
 		.def( "tileOrigin", &ImagePlug::tileOrigin ).staticmethod( "tileOrigin" )

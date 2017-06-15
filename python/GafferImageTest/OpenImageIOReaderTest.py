@@ -90,6 +90,8 @@ class OpenImageIOReaderTest( GafferImageTest.ImageTestCase ) :
 			"PixelAspectRatio" : IECore.FloatData( 1 ),
 			"screenWindowCenter" : IECore.V2fData( IECore.V2f( 0, 0 ) ),
 			"screenWindowWidth" : IECore.FloatData( 1 ),
+			"fileFormat" : IECore.StringData( "openexr" ),
+			"dataType" : IECore.StringData( "float" ),
 		} )
 		self.assertEqual( n["out"]["metadata"].getValue(), expectedMetadata )
 
@@ -510,6 +512,18 @@ class OpenImageIOReaderTest( GafferImageTest.ImageTestCase ) :
 
 		GafferImage.OpenImageIOReader.setCacheMemoryLimit( 100 * 1024 * 1024 ) # 100 megs
 		self.assertEqual( GafferImage.OpenImageIOReader.getCacheMemoryLimit(), 100 * 1024 * 1024 )
+
+	def testFileFormatMetadata( self ) :
+
+		r = GafferImage.OpenImageIOReader()
+
+		r["fileName"].setValue( self.circlesJpgFileName )
+		self.assertEqual( r["out"]["metadata"].getValue()["dataType"].value, "uint8" )
+		self.assertEqual( r["out"]["metadata"].getValue()["fileFormat"].value, "jpeg" )
+
+		r["fileName"].setValue( "${GAFFER_ROOT}/python/GafferImageTest/images/rgb.100x100.dpx" )
+		self.assertEqual( r["out"]["metadata"].getValue()["dataType"].value, "uint10" )
+		self.assertEqual( r["out"]["metadata"].getValue()["fileFormat"].value, "dpx" )
 
 if __name__ == "__main__":
 	unittest.main()

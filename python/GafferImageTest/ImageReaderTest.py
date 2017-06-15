@@ -52,6 +52,16 @@ class ImageReaderTest( GafferImageTest.ImageTestCase ) :
 	offsetDataWindowFileName = os.path.expandvars( "$GAFFER_ROOT/python/GafferImageTest/images/rgb.100x100.exr" )
 	jpgFileName = os.path.expandvars( "$GAFFER_ROOT/python/GafferImageTest/images/circles.jpg" )
 
+	def setUp( self ) :
+
+		GafferImageTest.ImageTestCase.setUp( self )
+		self.__defaultColorSpaceFunction = GafferImage.ImageReader.getDefaultColorSpaceFunction()
+
+	def tearDown( self ) :
+
+		GafferImageTest.ImageTestCase.tearDown( self )
+		GafferImage.ImageReader.setDefaultColorSpaceFunction( self.__defaultColorSpaceFunction )
+
 	def test( self ) :
 
 		n = GafferImage.ImageReader()
@@ -387,6 +397,61 @@ class ImageReaderTest( GafferImageTest.ImageTestCase ) :
 			for i in range( 8, 11 ) :
 				context.setFrame( i )
 				assertHold( 7 )
+
+	def testDefaultColorSpaceFunctionArguments( self ) :
+
+		# Make a network to write and read an image
+		# in various formats.
+
+		c = GafferImage.Constant()
+		c["format"].setValue( GafferImage.Format( 64, 64 ) )
+
+		w = GafferImage.ImageWriter()
+		w["in"].setInput( c["out"] )
+
+		r = GafferImage.ImageReader()
+		r["fileName"].setInput( w["fileName"] )
+
+		# Register a custom colorspace function that
+		# just captures its arguments.
+
+		capturedArguments = {}
+		def f( fileName, fileFormat, dataType, metadata ) :
+
+			capturedArguments.update(
+				{
+					"fileName" : fileName,
+					"fileFormat" : fileFormat,
+					"dataType" : dataType,
+					"metadata" : metadata,
+				}
+			)
+			return "linear"
+
+		GafferImage.ImageReader.setDefaultColorSpaceFunction( f )
+
+		# Verify that the correct arguments are passed for
+		# a variety of fileNames and dataTypes.
+
+		for ext, fileFormat, dataType in [
+			( "exr", "openexr", "half" ),
+			( "dpx", "dpx", "uint12" ),
+			( "TIFF", "tiff", "float" ),
+			( "tif", "tiff", "uint32" ),
+		] :
+
+			w["fileName"].setValue( "{0}/{1}.{2}".format( self.temporaryDirectory(), dataType, ext ) )
+			w[fileFormat]["dataType"].setValue( dataType )
+			w.execute()
+
+			capturedArguments.clear()
+			r["out"].channelData( "R", IECore.V2i( 0 ) ) # Triggers call to color space function
+
+			self.assertEqual( len( capturedArguments ), 4 )
+			self.assertEqual( capturedArguments["fileName"], w["fileName"].getValue() )
+			self.assertEqual( capturedArguments["fileFormat"], fileFormat )
+			self.assertEqual( capturedArguments["dataType"], dataType )
+			self.assertEqual( capturedArguments["metadata"], r["out"]["metadata"].getValue() )
 
 if __name__ == "__main__":
 	unittest.main()

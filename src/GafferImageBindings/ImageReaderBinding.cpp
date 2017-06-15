@@ -36,13 +36,57 @@
 
 #include "boost/python.hpp"
 
+#include "IECore/CompoundData.h"
+
 #include "GafferBindings/DependencyNodeBinding.h"
 
 #include "GafferImage/ImageReader.h"
 
 #include "GafferImageBindings/ImageReaderBinding.h"
 
+using namespace std;
+using namespace boost::python;
 using namespace GafferImage;
+
+namespace
+{
+
+struct DefaultColorSpaceFunction
+{
+	DefaultColorSpaceFunction( object fn )
+		:	m_fn( fn )
+	{
+	}
+
+	string operator()( const std::string &fileName, const std::string &fileFormat, const std::string &dataType, const IECore::CompoundData *metadata )
+	{
+
+		IECorePython::ScopedGILLock gilock;
+		string result = extract<string>( m_fn( fileName, fileFormat, dataType, IECore::CompoundDataPtr( const_cast<IECore::CompoundData *>( metadata ) ) ) );
+		return result;
+
+	}
+
+	private:
+
+		object m_fn;
+};
+
+void setDefaultColorSpaceFunction( object f )
+{
+	ImageReader::setDefaultColorSpaceFunction( DefaultColorSpaceFunction( f ) );
+}
+
+object getDefaultColorSpaceFunction()
+{
+	return make_function(
+		ImageReader::getDefaultColorSpaceFunction(),
+		default_call_policies(),
+		boost::mpl::vector<string, const string &, const string &, const string &, const IECore::CompoundData *>()
+	);
+}
+
+} // namespace
 
 static boost::python::list supportedExtensions()
 {
@@ -64,6 +108,10 @@ void GafferImageBindings::bindImageReader()
 	boost::python::scope s = GafferBindings::DependencyNodeClass<ImageReader>()
 		.def( "supportedExtensions", &supportedExtensions )
 		.staticmethod( "supportedExtensions" )
+		.def( "setDefaultColorSpaceFunction", &setDefaultColorSpaceFunction )
+		.staticmethod( "setDefaultColorSpaceFunction" )
+		.def( "getDefaultColorSpaceFunction", &getDefaultColorSpaceFunction )
+		.staticmethod( "getDefaultColorSpaceFunction" )
 	;
 
 	boost::python::enum_<ImageReader::MissingFrameMode>( "MissingFrameMode" )
