@@ -1,3 +1,21 @@
+0.33.4.0
+========
+
+Improvements
+------------
+
+- Catalogue :
+  - Improved performance
+  - Moved saving/snapshotting to the background, so the UI
+    remains responsive while they occur
+
+Fixes
+-----
+
+- Catalogue : Fixed bug where shader view images leaked into the catalogue
+- BoxIO : Disabled removal of promoted plugs when a BoxIO is deleted from a parent
+  with childNodesAreReadOnly metadata
+
 0.33.3.0
 ========
 
