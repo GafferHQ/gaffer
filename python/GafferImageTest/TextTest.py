@@ -167,5 +167,19 @@ class TextTest( GafferImageTest.ImageTestCase ) :
 		self.assertImageHashesEqual( t1["out"], t2["out"] )
 		self.assertImagesEqual( t1["out"], t2["out"] )
 
+	def testDisable( self ) :
+
+		c = GafferImage.Constant()
+		c["color"].setValue( IECore.Color4f( 1, 0, 0, 0.5, ) )
+
+		t = GafferImage.Text()
+		t["in"].setInput( c["out"] )
+		t["enabled"].setValue( False )
+
+		self.assertImagesEqual( c["out"], t["out"] )
+
+		t["shadow"].setValue( True )
+		self.assertImagesEqual( c["out"], t["out"] )
+
 if __name__ == "__main__":
 	unittest.main()

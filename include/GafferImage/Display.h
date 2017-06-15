@@ -49,6 +49,9 @@ namespace GafferImage
 
 IE_CORE_FORWARDDECLARE( GafferDisplayDriver )
 
+/// \todo Remove portPlug() and the internal server
+/// \todo Pass GafferDisplayDriver rather than IECore::DisplayDriver
+/// in setDriver/getDriver/driverCreatedSignal.
 class Display : public ImageNode
 {
 
@@ -65,15 +68,14 @@ class Display : public ImageNode
 		/// Sets the driver used to provide the
 		/// image to this node.
 		void setDriver( IECore::DisplayDriverPtr driver );
+		/// \todo Default copy to false and remove method above
+		void setDriver( IECore::DisplayDriverPtr driver, bool copy );
 		IECore::DisplayDriver *getDriver();
 		const IECore::DisplayDriver *getDriver() const;
 
 		/// Emitted when a new driver has been created. This can
 		/// then be passed to `Display::setDriver()` to populate
 		/// a Display with an incoming image.
-		/// \todo This should really go on IECore::DisplayDriverServer,
-		/// but we need to move all Gaffer's signal binding logic
-		/// to IECore as well so we can bind it.
 		typedef boost::signal<void ( IECore::DisplayDriver *driver, const IECore::CompoundData *parameters )> DriverCreatedSignal;
 		static DriverCreatedSignal &driverCreatedSignal();
 
@@ -83,6 +85,12 @@ class Display : public ImageNode
 		static UnaryPlugSignal &imageReceivedSignal();
 
 		virtual void affects( const Gaffer::Plug *input, AffectedPlugsContainer &outputs ) const;
+
+		/// Used to trigger UI updates when image data is received
+		/// via a driver on a background thread. Exposed publicly
+		/// for the use of the Catalogue node.
+		typedef boost::function<void ()> UIThreadFunction;
+		static void executeOnUIThread( UIThreadFunction function );
 
 	protected :
 
@@ -101,6 +109,11 @@ class Display : public ImageNode
 		virtual void hashChannelData( const GafferImage::ImagePlug *output, const Gaffer::Context *context, IECore::MurmurHash &h ) const;
 		virtual IECore::ConstFloatVectorDataPtr computeChannelData( const std::string &channelName, const Imath::V2i &tileOrigin, const Gaffer::Context *context, const ImagePlug *parent ) const;
 
+		// Signal used to request the execution of a function on the UI thread.
+		// We service these requests in DisplayUI.py.
+		typedef boost::signal<void ( UIThreadFunction )> ExecuteOnUIThreadSignal;
+		static ExecuteOnUIThreadSignal &executeOnUIThreadSignal();
+
 	private :
 
 		IECore::DisplayDriverServerPtr m_server;
@@ -113,8 +126,10 @@ class Display : public ImageNode
 		void setupServer();
 		void driverCreated( IECore::DisplayDriver *driver );
 		void setupDriver( GafferDisplayDriverPtr driver );
-		void dataReceived( GafferDisplayDriver *driver, const Imath::Box2i &bound );
-		void imageReceived( GafferDisplayDriver *driver );
+		void dataReceived();
+		void imageReceived();
+		static void dataReceivedUI();
+		static void imageReceivedUI( Ptr display );
 
 		static size_t g_firstPlugIndex;
 

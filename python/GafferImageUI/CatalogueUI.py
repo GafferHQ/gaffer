@@ -398,22 +398,11 @@ class _ImageListing( GafferUI.PlugValueWidget ) :
 		index = self.__indexFromSelection()
 		image = self.__images()[index]
 
-		with self.getContext() :
-			fileName = image["fileName"].getValue()
-			directory = self.__catalogue()["directory"].getValue()
-			directory = self.getContext().substitute( directory )
-
-		if not fileName :
-			# It's a render
-			fileName = self.__catalogue().generateFileName( image )
-			image.save( fileName )
-
-		duplicateImage = GafferImage.Catalogue.Image.load( fileName )
-		duplicateImage.setName( image.getName() + "Copy" )
-
+		imageCopy = GafferImage.Catalogue.Image( image.getName() + "Copy",  flags = Gaffer.Plug.Flags.Default | Gaffer.Plug.Flags.Dynamic )
 		with Gaffer.UndoScope( self.getPlug().ancestor( Gaffer.ScriptNode ) ) :
-			self.__images().addChild( duplicateImage )
+			self.__images().addChild( imageCopy )
 			self.getPlug().setValue( len( self.__images() ) - 1 )
+			imageCopy.copyFrom( image )
 
 	def __dropImage( self, eventData ) :
 
@@ -470,30 +459,3 @@ class _ImageListing( GafferUI.PlugValueWidget ) :
 		return True
 
 GafferUI.Pointer.registerPointer( "plus", GafferUI.Pointer( "plus.png" ) )
-
-##########################################################################
-# Display server management. This would all be in Catalogue.cpp if it
-# were not for the need to operate on the UI thread.
-##########################################################################
-
-def __driverCreated( driver, parameters ) :
-
-	# The driverCreatedSignal() is emitted on the server thread,
-	# but we can only make node graph edits from the UI thread,
-	# so we must use `executeOnUIThread()`.
-	GafferUI.EventLoop.executeOnUIThread( functools.partial( __driverCreatedUI, driver, parameters ) )
-
-def __driverCreatedUI( driver, parameters ) :
-
-	GafferImage.Catalogue.driverCreated( driver, parameters )
-
-def __imageReceived( plug ) :
-
-	GafferUI.EventLoop.executeOnUIThread( functools.partial( __imageReceivedUI, plug ) )
-
-def __imageReceivedUI( plug ) :
-
-	GafferImage.Catalogue.imageReceived( plug )
-
-GafferImage.Display.driverCreatedSignal().connect( functools.partial( __driverCreated ), scoped = False )
-GafferImage.Display.imageReceivedSignal().connect( functools.partial( __imageReceived ), scoped = False )

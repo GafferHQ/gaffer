@@ -34,10 +34,20 @@
 //
 //////////////////////////////////////////////////////////////////////////
 
+#include "tbb/tbb_thread.h"
+#include "tbb/tbb_config.h"
+
+#if TBB_IMPLEMENT_CPP0X
+#include "tbb/compat/thread"
+#else
+#include <thread>
+#endif
+
 #include "boost/bind.hpp"
 #include "boost/lexical_cast.hpp"
 #include "boost/filesystem/path.hpp"
 #include "boost/filesystem/operations.hpp"
+#include "boost/unordered_map.hpp"
 
 #include "Gaffer/Context.h"
 #include "Gaffer/StringPlug.h"
@@ -52,11 +62,29 @@
 #include "GafferImage/CopyChannels.h"
 #include "GafferImage/Display.h"
 #include "GafferImage/ImageWriter.h"
+#include "GafferImage/Text.h"
+#include "GafferImage/ImageAlgo.h"
 
 using namespace std;
 using namespace IECore;
 using namespace Gaffer;
 using namespace GafferImage;
+
+//////////////////////////////////////////////////////////////////////////
+// Allow Imath::V2i to be used in boost::unordered_map
+//////////////////////////////////////////////////////////////////////////
+
+IMATH_INTERNAL_NAMESPACE_HEADER_ENTER
+
+size_t hash_value( const Imath::V2i &v )
+{
+	size_t s = 0;
+	boost::hash_combine( s, v.x );
+	boost::hash_combine( s, v.y );
+	return s;
+}
+
+IMATH_INTERNAL_NAMESPACE_HEADER_EXIT
 
 //////////////////////////////////////////////////////////////////////////
 // InternalImage.
@@ -87,11 +115,26 @@ class Catalogue::InternalImage : public ImageNode
 			addChild( new CopyChannels() );
 			copyChannels()->channelsPlug()->setValue( "*" );
 
+			// Used to overlay a "Saving..." message
+			// while displays are being saved to disk in
+			// the background.
+			addChild( new Text() );
+			text()->inPlug()->setInput( copyChannels()->outPlug() );
+			text()->colorPlug()->setValue( Imath::Color4f( 1, 1, 1, 0.75 ) );
+			text()->textPlug()->setValue( "Saving..." );
+			text()->horizontalAlignmentPlug()->setValue( Text::HorizontalCenter );
+			text()->verticalAlignmentPlug()->setValue( Text::VerticalCenter );
+			text()->shadowPlug()->setValue( true );
+			text()->shadowColorPlug()->setValue( Imath::Color4f( 0, 0, 0, 0.75 ) );
+			text()->shadowOffsetPlug()->setValue( Imath::V2f( 3.5, -3.5 ) );
+			text()->shadowBlurPlug()->setValue( 5 );
+			text()->enabledPlug()->setValue( false );
+
 			// Switches between the loaded image and the
 			// live Displays.
 			addChild( new ImageSwitch() );
 			imageSwitch()->inPlugs()->getChild<ImagePlug>( 0 )->setInput( imageReader()->outPlug() );
-			imageSwitch()->inPlugs()->getChild<ImagePlug>( 1 )->setInput( copyChannels()->outPlug() );
+			imageSwitch()->inPlugs()->getChild<ImagePlug>( 1 )->setInput( text()->outPlug() );
 
 			// Adds on a description to the output
 			addChild( new ImageMetadata() );
@@ -102,7 +145,20 @@ class Catalogue::InternalImage : public ImageNode
 			outPlug()->setInput( imageMetadata()->outPlug() );
 		}
 
+		virtual ~InternalImage()
+		{
+			if( m_saver )
+			{
+				m_saver->deregisterClient( this );
+			}
+		}
+
 		StringPlug *fileNamePlug()
+		{
+			return getChild<StringPlug>( g_firstChildIndex );
+		}
+
+		const StringPlug *fileNamePlug() const
 		{
 			return getChild<StringPlug>( g_firstChildIndex );
 		}
@@ -110,6 +166,43 @@ class Catalogue::InternalImage : public ImageNode
 		StringPlug *descriptionPlug()
 		{
 			return getChild<StringPlug>( g_firstChildIndex + 1 );
+		}
+
+		const StringPlug *descriptionPlug() const
+		{
+			return getChild<StringPlug>( g_firstChildIndex + 1 );
+		}
+
+		void copyFrom( const InternalImage *other )
+		{
+			descriptionPlug()->source<StringPlug>()->setValue( other->descriptionPlug()->getValue() );
+			fileNamePlug()->source<StringPlug>()->setValue( other->fileNamePlug()->getValue() );
+			imageSwitch()->indexPlug()->setValue( other->imageSwitch()->indexPlug()->getValue() );
+			text()->enabledPlug()->setValue( other->text()->enabledPlug()->getValue() );
+
+			removeDisplays();
+			size_t numDisplays = 0;
+			for( DisplayIterator it( other ); !it.done(); ++it )
+			{
+				Display *display = it->get();
+				DisplayPtr displayCopy = new Display;
+				displayCopy->setDriver( display->getDriver(), /* copy = */ true );
+				addChild( displayCopy );
+				copyChannels()->inPlugs()->getChild<Plug>( numDisplays++ )->setInput( displayCopy->outPlug() );
+			}
+
+			m_saver = NULL;
+			if( other->m_saver )
+			{
+				m_saver = other->m_saver;
+				m_saver->registerClient( this );
+			}
+			else if( numDisplays )
+			{
+				m_saver = new AsynchronousSaver( this );
+			}
+
+			m_clientPID = -2; // Make sure insertDriver() will reject new drivers
 		}
 
 		void save( const std::string &fileName ) const
@@ -187,21 +280,55 @@ class Catalogue::InternalImage : public ImageNode
 			}
 
 			// All our drivers have been closed, so the render has completed.
-			// Save the image to disk.
+			// Save the image to disk. We do this in the background because
+			// saving large images with many AOVs takes several seconds.
 
-			string fileName = parent<Catalogue>()->generateFileName( outPlug() );
-			if( fileName.empty() )
+			m_saver = new AsynchronousSaver( this );
+		}
+
+	protected :
+
+		virtual void hashChannelData( const GafferImage::ImagePlug *parent, const Gaffer::Context *context, IECore::MurmurHash &h ) const
+		{
+			assert( m_saver );
+			AsynchronousSaver::ChannelDataHashes::const_iterator it = m_saver->channelDataHashes.find(
+				AsynchronousSaver::TileIndex(
+					context->get<string>( ImagePlug::channelNameContextName ),
+					context->get<Imath::V2i>( ImagePlug::tileOriginContextName )
+				)
+			);
+			if( it != m_saver->channelDataHashes.end() )
+			{
+				h = it->second;
+			}
+			else
+			{
+				h = imageReader()->outPlug()->channelDataPlug()->hash();
+			}
+		}
+
+		virtual IECore::ConstFloatVectorDataPtr computeChannelData( const std::string &channelName, const Imath::V2i &tileOrigin, const Gaffer::Context *context, const ImagePlug *parent ) const
+		{
+			return imageReader()->outPlug()->channelDataPlug()->getValue();
+		}
+
+	private :
+
+		void updateImageFlags( unsigned flags, bool enable )
+		{
+			Plug *p = fileNamePlug()->getInput<Plug>();
+			if( !p )
 			{
 				return;
 			}
-			save( fileName );
+			for( Image *i = p->parent<Image>(); i; i = i->getInput<Image>() )
+			{
+				i->setFlags( flags, enable );
+			}
+		}
 
-			// Load the image from disk and delete all our Display
-			// nodes to save memory.
-
-			fileNamePlug()->source<StringPlug>()->setValue( fileName );
-			imageSwitch()->indexPlug()->setValue( 0 );
-
+		void removeDisplays()
+		{
 			vector<Display *> toDelete;
 			for( DisplayIterator it( this ); !it.done(); ++it )
 			{
@@ -211,21 +338,14 @@ class Catalogue::InternalImage : public ImageNode
 			{
 				removeChild( *it );
 			}
-
-			updateImageFlags( Plug::Serialisable, true );
-		}
-
-	private :
-
-		void updateImageFlags( unsigned flags, bool enable )
-		{
-			for( Image *i = fileNamePlug()->getInput<Plug>()->parent<Image>(); i; i = i->getInput<Image>() )
-			{
-				i->setFlags( flags, enable );
-			}
 		}
 
 		ImageReader *imageReader()
+		{
+			return getChild<ImageReader>( g_firstChildIndex + 2 );
+		}
+
+		const ImageReader *imageReader() const
 		{
 			return getChild<ImageReader>( g_firstChildIndex + 2 );
 		}
@@ -235,18 +355,200 @@ class Catalogue::InternalImage : public ImageNode
 			return getChild<CopyChannels>( g_firstChildIndex + 3 );
 		}
 
+		const CopyChannels *copyChannels() const
+		{
+			return getChild<CopyChannels>( g_firstChildIndex + 3 );
+		}
+
+		Text *text()
+		{
+			return getChild<Text>( g_firstChildIndex + 4 );
+		}
+
+		const Text *text() const
+		{
+			return getChild<Text>( g_firstChildIndex + 4 );
+		}
+
 		ImageSwitch *imageSwitch()
 		{
-			return getChild<ImageSwitch>( g_firstChildIndex + 4 );
+			return getChild<ImageSwitch>( g_firstChildIndex + 5 );
+		}
+
+		const ImageSwitch *imageSwitch() const
+		{
+			return getChild<ImageSwitch>( g_firstChildIndex + 5 );
 		}
 
 		ImageMetadata *imageMetadata()
 		{
-			return getChild<ImageMetadata>( g_firstChildIndex + 5 );
+			return getChild<ImageMetadata>( g_firstChildIndex + 6 );
 		}
+
+		const ImageMetadata *imageMetadata() const
+		{
+			return getChild<ImageMetadata>( g_firstChildIndex + 6 );
+		}
+
+		struct AsynchronousSaver : public IECore::RefCounted
+		{
+
+			IE_CORE_DECLAREMEMBERPTR( AsynchronousSaver )
+
+			AsynchronousSaver( InternalImage *client )
+			{
+				// We use a copy of the image to do the saving, because the original
+				// might be modified on the main thread while we save in the background.
+
+				m_imageCopy = new InternalImage;
+
+				size_t i = 0;
+				for( DisplayIterator it( client ); !it.done(); ++it )
+				{
+					Display *display = it->get();
+					DisplayPtr displayCopy = new Display;
+					displayCopy->setDriver( display->getDriver(), /* copy = */ true );
+					m_imageCopy->addChild( displayCopy );
+					m_imageCopy->copyChannels()->inPlugs()->getChild<Plug>( i++ )->setInput( displayCopy->outPlug() );
+				}
+				m_imageCopy->imageSwitch()->indexPlug()->setValue( 1 );
+
+				// Set up an ImageWriter to do the actual saving.
+				// We do all graph construction here in the main thread
+				// so that the background thread only does execution.
+
+				const string fileName = client->parent<Catalogue>()->generateFileName( m_imageCopy->outPlug() );
+				if( fileName.empty() )
+				{
+					return;
+				}
+
+				m_writer = new ImageWriter;
+				m_writer->inPlug()->setInput( m_imageCopy->outPlug() );
+				m_writer->fileNamePlug()->setValue( fileName );
+
+				registerClient( client );
+
+				// And fire off a thread to do the actual work.
+				std::thread thread( boost::bind( &AsynchronousSaver::save, this ) );
+				m_thread.swap( thread );
+			}
+
+			virtual ~AsynchronousSaver()
+			{
+				if( m_thread.joinable() )
+				{
+					m_thread.join();
+				}
+			}
+
+			void registerClient( InternalImage *client )
+			{
+				if( m_imageCopy )
+				{
+					// Still in the process of saving
+					m_clients.insert( client );
+					client->text()->enabledPlug()->setValue( true );
+				}
+				else
+				{
+					// Saving already completed
+					DirtyPropagationScope dirtyPropagationScope;
+					wrapUpClient( client );
+				}
+			}
+
+			void deregisterClient( InternalImage *client )
+			{
+				m_clients.erase( client );
+			}
+
+			typedef std::pair<std::string, Imath::V2i> TileIndex;
+			typedef boost::unordered_map<TileIndex, IECore::MurmurHash> ChannelDataHashes;
+			ChannelDataHashes channelDataHashes;
+
+			private :
+
+				struct HashGatherer
+				{
+
+					HashGatherer( ChannelDataHashes &hashes )
+						:	m_hashes( hashes )
+					{
+					}
+
+					typedef IECore::MurmurHash Result;
+
+					IECore::MurmurHash operator()( const ImagePlug *imagePlug, const std::string &channelName, const Imath::V2i &tileOrigin )
+					{
+						return imagePlug->channelDataPlug()->hash();
+					}
+
+					void operator()( const ImagePlug *imagePlug, const string &channelName, const Imath::V2i &tileOrigin, const IECore::MurmurHash hash )
+					{
+						m_hashes[TileIndex(channelName, tileOrigin)] = hash;
+					}
+
+					private :
+
+						ChannelDataHashes &m_hashes;
+
+				};
+
+				void save()
+				{
+					HashGatherer hashGatherer( channelDataHashes );
+					parallelGatherTiles(
+						m_imageCopy->copyChannels()->outPlug(),
+						m_imageCopy->copyChannels()->outPlug()->channelNamesPlug()->getValue()->readable(),
+						hashGatherer,
+						hashGatherer
+					);
+
+					m_writer->taskPlug()->execute();
+					Display::executeOnUIThread( boost::bind( &AsynchronousSaver::wrapUp, Ptr( this ) ) );
+				}
+
+				void wrapUp()
+				{
+					DirtyPropagationScope dirtyPropagationScope;
+
+					for( set<InternalImage *>::const_iterator it = m_clients.begin(), eIt = m_clients.end(); it != eIt; ++it )
+					{
+						wrapUpClient( *it );
+					}
+
+					// Destroy the image to release the memory used by the copied display drivers.
+					m_imageCopy = NULL;
+				}
+
+				void wrapUpClient( InternalImage *client )
+				{
+					// Set up the client to read from the saved image
+					client->text()->enabledPlug()->setValue( false );
+					client->fileNamePlug()->source<StringPlug>()->setValue( m_writer->fileNamePlug()->getValue() );
+					client->imageSwitch()->indexPlug()->setValue( 0 );
+					// But force hashChannelData and computeChannelData to be called
+					// so that we can reuse the cache entries created by the original
+					// Display nodes, rather than force an immediate load of the image
+					// from disk, which would be slow.
+					client->outPlug()->channelDataPlug()->setInput( NULL );
+
+					client->removeDisplays();
+					client->updateImageFlags( Plug::Serialisable, true );
+				}
+
+				InternalImagePtr m_imageCopy;
+				ImageWriterPtr m_writer;
+
+				std::thread m_thread;
+				set<InternalImage *> m_clients;
+
+		};
 
 		int m_clientPID;
 		size_t m_numDriversClosed;
+		AsynchronousSaver::Ptr m_saver;
 
 		static size_t g_firstChildIndex;
 
@@ -287,6 +589,11 @@ const Gaffer::StringPlug *Catalogue::Image::descriptionPlug() const
 	return getChild<StringPlug>( 1 );
 }
 
+void Catalogue::Image::copyFrom( const Image *other )
+{
+	imageNode( this )->copyFrom( imageNode( other ) );
+}
+
 Catalogue::Image::Ptr Catalogue::Image::load( const std::string &fileName )
 {
 	Ptr image = new Image( boost::filesystem::path( fileName ).stem().string(), Plug::In, Plug::Default | Plug::Dynamic );
@@ -305,20 +612,7 @@ Catalogue::Image::Ptr Catalogue::Image::load( const std::string &fileName )
 
 void Catalogue::Image::save( const std::string &fileName ) const
 {
-	const InternalImage *internalImage = NULL;
-	for( DownstreamIterator it( fileNamePlug() ); !it.done(); ++it )
-	{
-		internalImage = dynamic_cast<const InternalImage *>( it->node() );
-		if( internalImage )
-		{
-			break;
-		}
-	}
-	if( !internalImage )
-	{
-		throw IECore::Exception( "Catalogue::imageNode : Unable to find image" );
-	}
-	internalImage->save( fileName );
+	Catalogue::imageNode( this )->save( fileName );
 }
 
 Gaffer::PlugPtr Catalogue::Image::createCounterpart( const std::string &name, Direction direction ) const
@@ -332,13 +626,6 @@ Gaffer::PlugPtr Catalogue::Image::createCounterpart( const std::string &name, Di
 
 namespace
 {
-
-typedef std::set<Catalogue *> InstanceSet;
-InstanceSet &instances()
-{
-	static InstanceSet instanceSet;
-	return instanceSet;
-};
 
 bool undoingOrRedoing( const Node *node )
 {
@@ -391,12 +678,12 @@ Catalogue::Catalogue( const std::string &name )
 	imagesPlug()->childAddedSignal().connect( boost::bind( &Catalogue::imageAdded, this, ::_2 ) );
 	imagesPlug()->childRemovedSignal().connect( boost::bind( &Catalogue::imageRemoved, this, ::_2 ) );
 
-	instances().insert( this );
+	Display::driverCreatedSignal().connect( boost::bind( &Catalogue::driverCreated, this, ::_1, ::_2 ) );
+	Display::imageReceivedSignal().connect( boost::bind( &Catalogue::imageReceived, this, ::_1 ) );
 }
 
 Catalogue::~Catalogue()
 {
-	instances().erase( this );
 }
 
 Gaffer::Plug *Catalogue::imagesPlug()
@@ -449,20 +736,41 @@ const ImageSwitch *Catalogue::imageSwitch() const
 	return getChild<ImageSwitch>( g_firstPlugIndex + 4 );
 }
 
-Catalogue::InternalImage *Catalogue::imageNode( const Image *image ) const
+Catalogue::InternalImage *Catalogue::imageNode( Image *image )
 {
+	// Prefer const_cast over maintaining two identical functions
+	return const_cast<InternalImage *>( imageNode( const_cast<const Image *>( image ) ) );
+}
+
+const Catalogue::InternalImage *Catalogue::imageNode( const Image *image )
+{
+	const InternalImage *result = NULL;
 	for( DownstreamIterator it( image->fileNamePlug() ); !it.done(); ++it )
 	{
-		const InternalImage *node = runTimeCast<const InternalImage>( it->node() );
-		if( node && node->parent<Node>() == this )
+		if( const InternalImage *internalImage = dynamic_cast<const InternalImage *>( it->node() ) )
 		{
-			/// \todo Make DownstreamIterator reference non-const
-			/// plugs (and add a ConstDownstreamIterator) and then
-			/// we don't need this cast.
-			return const_cast<InternalImage *>( node );
+			if( result && internalImage != result )
+			{
+				// We expect to find only one InternalImage node for any given Image plug.
+				// But we also allow Image plugs to have input connections so that Catalogues
+				// can be used with Boxes with their imagesPlug() promoted. This means we can't
+				// enforce the one-to-one relationship via plug flags, so we must instead enforce
+				// it here.
+				throw IECore::Exception( "Catalogue::imageNode : Multiple internal images not supported" );
+			}
+			else
+			{
+				result = internalImage;
+			}
 		}
 	}
-	throw IECore::Exception( "Catalogue::imageNode : Unable to find image" );
+
+	if( !result )
+	{
+		throw IECore::Exception( "Catalogue::imageNode : Unable to find image" );
+	}
+
+	return result;
 }
 
 std::string Catalogue::generateFileName( const Image *image ) const
@@ -557,64 +865,63 @@ IECore::DisplayDriverServer *Catalogue::displayDriverServer()
 
 void Catalogue::driverCreated( IECore::DisplayDriver *driver, const IECore::CompoundData *parameters )
 {
-	// Figure out what catalogue the image is destined for.
+	// Check the image is destined for catalogues in general
+	if( const StringData *portNumberData = parameters->member<StringData>( "displayPort" ) )
+	{
+		if( boost::lexical_cast<int>( portNumberData->readable() ) != displayDriverServer()->portNumber() )
+		{
+			return;
+		}
+	}
+
+	// Check the image is destined for this catalogue
 	string catalogueName = "";
 	if( const StringData *catalogueNameData = parameters->member<StringData>( "catalogue:name" ) )
 	{
 		catalogueName = catalogueNameData->readable();
 	}
 
-	// Iterate over all catalogue instances, adding the driver
-	// to them if they have a matching name.
-	const InstanceSet &i = instances();
-	for( InstanceSet::const_iterator it = i.begin(), eIt = i.end(); it != eIt; ++it )
+	string name = namePlug()->getValue();
+	if( ScriptNode *script = scriptNode() )
 	{
-		// Skip Catalogues with the wrong name.
-		Catalogue *catalogue = *it;
-		string name = catalogue->namePlug()->getValue();
-		if( ScriptNode *script = catalogue->scriptNode() )
-		{
-			name = script->context()->substitute( name );
-		}
-		if( name != catalogueName )
-		{
-			continue;
-		}
-		// Try to find an existing InternalImage from
-		// the same render, so we can just combine all
-		// AOVs into a single image. We iterate backwards
-		// because the last image is most likely to be the
-		// one we want.
-		Plug *images = catalogue->imagesPlug()->source<Plug>();
-		bool addedToExistingImage = false;
-		for( int i = images->children().size() - 1; i >= 0; --i )
-		{
-			InternalImage *candidateImage = catalogue->imageNode( images->getChild<Image>( i ) );
-			if( candidateImage->insertDriver( driver, parameters ) )
-			{
-				addedToExistingImage = true;
-				break;
-			}
-		}
+		name = script->context()->substitute( name );
+	}
+	if( name != catalogueName )
+	{
+		return;
+	}
 
-		// If we don't have an existing image for this
-		// render, then create one and use that.
-		if( !addedToExistingImage )
+	// Try to find an existing InternalImage from
+	// the same render, so we can just combine all
+	// AOVs into a single image. We iterate backwards
+	// because the last image is most likely to be the
+	// one we want.
+	Plug *images = imagesPlug()->source<Plug>();
+	for( int i = images->children().size() - 1; i >= 0; --i )
+	{
+		InternalImage *candidateImage = imageNode( images->getChild<Image>( i ) );
+		if( candidateImage->insertDriver( driver, parameters ) )
 		{
-			Image::Ptr image = new Image( "Image", Plug::In, Plug::Default | Plug::Dynamic );
-			images->addChild( image );
-			catalogue->imageNode( image.get() )->insertDriver( driver, parameters );
-			catalogue->imageIndexPlug()->source<IntPlug>()->setValue( catalogue->imagesPlug()->children().size() - 1 );
+			return;
 		}
 	}
+
+	// We don't have an existing image for this
+	// render, so create one and use that.
+	Image::Ptr image = new Image( "Image", Plug::In, Plug::Default | Plug::Dynamic );
+	images->addChild( image );
+	imageNode( image.get() )->insertDriver( driver, parameters );
+	imageIndexPlug()->source<IntPlug>()->setValue( images->children().size() - 1 );
 }
 
 void Catalogue::imageReceived( Gaffer::Plug *plug )
 {
-	if( plug->ancestor<Catalogue>() )
+	if( plug->ancestor<Catalogue>() != this )
 	{
-		InternalImage *internalImage = static_cast<InternalImage *>( plug->node()->parent<Node>() );
-		internalImage->driverClosed();
+		return;
 	}
+
+	InternalImage *internalImage = static_cast<InternalImage *>( plug->node()->parent<Node>() );
+	internalImage->driverClosed();
 }
 
