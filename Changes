@@ -15,6 +15,7 @@ Fixes
 - Catalogue : Fixed bug where shader view images leaked into the catalogue
 - BoxIO : Disabled removal of promoted plugs when a BoxIO is deleted from a parent
   with childNodesAreReadOnly metadata
+- Fixed compilation with GCC 4.1.2
 
 0.33.3.0
 ========
