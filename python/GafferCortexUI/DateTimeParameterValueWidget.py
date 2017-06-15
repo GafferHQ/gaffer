@@ -43,9 +43,9 @@ import Gaffer
 import GafferUI
 import GafferCortexUI
 
-QtCore = GafferUI._qtImport( "QtCore" )
-QtGui = GafferUI._qtImport( "QtGui" )
-QtWidgets = GafferUI._qtImport( "QtWidgets" )
+from Qt import QtCore
+from Qt import QtGui
+from Qt import QtWidgets
 
 class DateTimeParameterValueWidget( GafferCortexUI.ParameterValueWidget ) :
 

@@ -44,8 +44,8 @@ import IECore
 
 import GafferUI
 
-QtCore = GafferUI._qtImport( "QtCore" )
-QtWidgets = GafferUI._qtImport( "QtWidgets" )
+from Qt import QtCore
+from Qt import QtWidgets
 
 ## This class provides the event loops used to run GafferUI based applications.
 class EventLoop( object ) :

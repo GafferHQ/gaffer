@@ -38,8 +38,8 @@
 import Gaffer
 import GafferUI
 
-QtWidgets = GafferUI._qtImport( "QtWidgets" )
-QtCore = GafferUI._qtImport( "QtCore" )
+from Qt import QtWidgets
+from Qt import QtCore
 
 class Label( GafferUI.Widget ) :
 

@@ -46,9 +46,9 @@ import _GafferUI
 import GafferUI
 
 import Qt
-QtCore = GafferUI._qtImport( "QtCore" )
-QtGui = GafferUI._qtImport( "QtGui" )
-QtWidgets = GafferUI._qtImport( "QtWidgets" )
+from Qt import QtCore
+from Qt import QtGui
+from Qt import QtWidgets
 
 ## The PathListingWidget displays the contents of a Path, updating the Path to represent the
 # current directory as the user navigates around. It supports both a list and a tree view,

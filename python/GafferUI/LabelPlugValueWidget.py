@@ -37,7 +37,7 @@
 import Gaffer
 import GafferUI
 
-QtWidgets = GafferUI._qtImport( "QtWidgets" )
+from Qt import QtWidgets
 
 ## A simple PlugValueWidget which just displays the name of the plug,
 # with the popup action menu for the plug.

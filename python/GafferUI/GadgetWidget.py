@@ -46,8 +46,8 @@ import GafferUI
 GL = Gaffer.lazyImport( "OpenGL.GL" )
 IECoreGL = Gaffer.lazyImport( "IECoreGL" )
 
-QtCore = GafferUI._qtImport( "QtCore" )
-QtWidgets = GafferUI._qtImport( "QtWidgets" )
+from Qt import QtCore
+from Qt import QtWidgets
 
 ## The GadgetWidget class provides a means of
 # hosting a Gadget within a Widget based interface.

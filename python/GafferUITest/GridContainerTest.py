@@ -42,7 +42,7 @@ import Gaffer
 import GafferUI
 import GafferUITest
 
-QtGui = GafferUI._qtImport( "QtGui" )
+from Qt import QtGui
 
 class GridContainerTest( GafferUITest.TestCase ) :
 

@@ -40,8 +40,8 @@ import Gaffer
 import GafferUI
 import GafferDispatch
 
-QtCore = GafferUI._qtImport( "QtCore" )
-QtGui = GafferUI._qtImport( "QtGui" )
+from Qt import QtCore
+from Qt import QtGui
 
 Gaffer.Metadata.registerNode(
 

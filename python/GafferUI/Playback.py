@@ -41,7 +41,7 @@ import IECore
 import Gaffer
 import GafferUI
 
-QtCore = GafferUI._qtImport( "QtCore" )
+from Qt import QtCore
 
 ## The Playback class controls a Context to facilitate animation
 # playback. It provides methods for starting and stopping playback,

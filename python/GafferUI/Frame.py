@@ -39,7 +39,7 @@ import IECore
 
 import GafferUI
 
-QtWidgets = GafferUI._qtImport( "QtWidgets" )
+from Qt import QtWidgets
 
 class Frame( GafferUI.ContainerWidget ) :
 

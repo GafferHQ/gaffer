@@ -43,9 +43,9 @@ import IECore
 import GafferUI
 import Gaffer
 
-QtCore = GafferUI._qtImport( "QtCore" )
-QtGui = GafferUI._qtImport( "QtGui" )
-QtWidgets = GafferUI._qtImport( "QtWidgets" )
+from Qt import QtCore
+from Qt import QtGui
+from Qt import QtWidgets
 
 class Window( GafferUI.ContainerWidget ) :
 

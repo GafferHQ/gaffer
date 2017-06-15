@@ -42,7 +42,7 @@ import IECore
 import Gaffer
 import GafferUI
 
-QtGui = GafferUI._qtImport( "QtGui" )
+from Qt import QtGui
 
 # A custom slider for drawing the backgrounds.
 class _ComponentSlider( GafferUI.NumericSlider ) :

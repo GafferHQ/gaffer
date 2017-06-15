@@ -46,8 +46,8 @@ import Gaffer
 import GafferUI
 import GafferUITest
 
-QtCore = GafferUI._qtImport( "QtCore" )
-QtWidgets = GafferUI._qtImport( "QtWidgets" )
+from Qt import QtCore
+from Qt import QtWidgets
 
 class EventLoopTest( GafferUITest.TestCase ) :
 

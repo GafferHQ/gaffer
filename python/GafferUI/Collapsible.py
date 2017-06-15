@@ -38,7 +38,7 @@
 import Gaffer
 import GafferUI
 
-QtWidgets = GafferUI._qtImport( "QtWidgets" )
+from Qt import QtWidgets
 
 ## The Collapsible container provides an easy means of controlling the
 # visibility of a child Widget. A labelled heading is always visible

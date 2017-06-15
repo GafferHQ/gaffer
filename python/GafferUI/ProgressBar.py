@@ -36,7 +36,7 @@
 
 import GafferUI
 
-QtWidgets = GafferUI._qtImport( "QtWidgets" )
+from Qt import QtWidgets
 
 class ProgressBar( GafferUI.Widget ) :
 

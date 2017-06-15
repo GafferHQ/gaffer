@@ -44,7 +44,7 @@ import Gaffer
 import GafferUI
 import GafferUITest
 
-QtWidgets = GafferUI._qtImport( "QtWidgets" )
+from Qt import QtWidgets
 
 class TestWidget( GafferUI.Widget ) :
 

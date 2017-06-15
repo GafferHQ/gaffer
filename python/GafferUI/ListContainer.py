@@ -38,8 +38,8 @@
 import IECore
 import GafferUI
 
-QtWidgets = GafferUI._qtImport( "QtWidgets" )
-QtCore = GafferUI._qtImport( "QtCore" )
+from Qt import QtWidgets
+from Qt import QtCore
 
 ## The ListContainer holds a series of Widgets either in a column or a row.
 # It attempts to provide a list like interface for manipulation of the widgets.

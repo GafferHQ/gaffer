@@ -38,7 +38,7 @@ import os
 
 import GafferUI
 
-QtGui = GafferUI._qtImport( "QtGui" )
+from Qt import QtGui
 
 def joinEdges( listContainer ) :
 

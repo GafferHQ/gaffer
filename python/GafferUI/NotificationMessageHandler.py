@@ -39,7 +39,7 @@ import IECore
 import Gaffer
 import GafferUI
 
-QtGui = GafferUI._qtImport( "QtGui" )
+from Qt import QtGui
 
 class NotificationMessageHandler( IECore.MessageHandler ) :
 

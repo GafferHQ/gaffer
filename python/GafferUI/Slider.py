@@ -42,9 +42,9 @@ import IECore
 import Gaffer
 import GafferUI
 
-QtCore = GafferUI._qtImport( "QtCore" )
-QtGui = GafferUI._qtImport( "QtGui" )
-QtWidgets = GafferUI._qtImport( "QtWidgets" )
+from Qt import QtCore
+from Qt import QtGui
+from Qt import QtWidgets
 
 ## The Slider class allows a user to specify a number of positions on a scale of 0.0 at one end
 # of the Widget and 1.0 at the other. Positions off the ends of the widget are mapped

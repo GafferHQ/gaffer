@@ -42,7 +42,7 @@ import IECore
 import Gaffer
 import GafferUI
 
-QtWidgets = GafferUI._qtImport( "QtWidgets" )
+from Qt import QtWidgets
 
 ## \deprecated. CompoundPlug itself will be removed in the future, as will this
 # class. Use LayoutPlugValueWidget instead.

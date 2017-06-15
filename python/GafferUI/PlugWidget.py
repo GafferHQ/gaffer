@@ -40,7 +40,7 @@ import warnings
 import Gaffer
 import GafferUI
 
-QtWidgets = GafferUI._qtImport( "QtWidgets" )
+from Qt import QtWidgets
 
 ## The PlugWidget combines a LabelPlugValueWidget with a second PlugValueWidget
 ## suitable for editing the plug.

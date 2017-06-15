@@ -39,8 +39,8 @@ import IECore
 
 import GafferUI
 
-QtCore = GafferUI._qtImport( "QtCore" )
-QtWidgets = GafferUI._qtImport( "QtWidgets" )
+from Qt import QtCore
+from Qt import QtWidgets
 
 ## \todo Support other list operations for child access
 class SplitContainer( GafferUI.ContainerWidget ) :

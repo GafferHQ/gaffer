@@ -1035,7 +1035,7 @@ class _SectionWindow( GafferUI.Window ) :
 # Inheritance section
 ##########################################################################
 
-QtWidgets = GafferUI._qtImport( "QtWidgets" )
+from Qt import QtWidgets
 
 class _Rail( GafferUI.ListContainer ) :
 

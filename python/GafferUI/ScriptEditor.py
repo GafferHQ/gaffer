@@ -44,8 +44,8 @@ import IECore
 import Gaffer
 import GafferUI
 
-QtWidgets = GafferUI._qtImport( "QtWidgets" )
-QtCore = GafferUI._qtImport( "QtCore" )
+from Qt import QtWidgets
+from Qt import QtCore
 
 ## \todo Custom right click menu with script load, save, execute file, undo, redo etc.
 ## \todo Standard way for users to customise all menus

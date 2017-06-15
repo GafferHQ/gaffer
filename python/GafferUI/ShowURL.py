@@ -41,8 +41,8 @@ import distutils.spawn
 
 import GafferUI
 
-QtCore = GafferUI._qtImport( "QtCore" )
-QtGui = GafferUI._qtImport( "QtGui" )
+from Qt import QtCore
+from Qt import QtGui
 
 def showURL( url ) :
 

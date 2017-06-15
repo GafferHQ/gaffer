@@ -40,9 +40,9 @@ import IECore
 import Gaffer
 import GafferUI
 
-QtCore = GafferUI._qtImport( "QtCore" )
-QtGui = GafferUI._qtImport( "QtGui" )
-QtWidgets = GafferUI._qtImport( "QtWidgets" )
+from Qt import QtCore
+from Qt import QtGui
+from Qt import QtWidgets
 
 ## The ColorSwatch simply displays a flat patch of colour. By default, the colour
 # is specified in linear space and GafferUI.DisplayTransform is used to ensure it

@@ -38,9 +38,9 @@ import warnings
 import Gaffer
 import GafferUI
 
-QtCore = GafferUI._qtImport( "QtCore" )
-QtGui = GafferUI._qtImport( "QtGui" )
-QtWidgets = GafferUI._qtImport( "QtWidgets" )
+from Qt import QtCore
+from Qt import QtGui
+from Qt import QtWidgets
 
 ## \todo Support cascading menus using "/" in labels. Rework API to
 # better match the rest of GafferUI - ditch index based methods, and

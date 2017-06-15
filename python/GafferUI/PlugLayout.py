@@ -43,7 +43,7 @@ import collections
 import Gaffer
 import GafferUI
 
-QtWidgets = GafferUI._qtImport( "QtWidgets" )
+from Qt import QtWidgets
 
 ## A class for laying out widgets to represent all the plugs held on a particular parent.
 #

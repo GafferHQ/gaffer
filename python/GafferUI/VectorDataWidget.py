@@ -40,10 +40,10 @@ import IECore
 import Gaffer
 import GafferUI
 
-QtCore = GafferUI._qtImport( "QtCore" )
-QtGui = GafferUI._qtImport( "QtGui" )
-QtWidgets = GafferUI._qtImport( "QtWidgets" )
-QtCompat = GafferUI._qtImport( "QtCompat" )
+from Qt import QtCore
+from Qt import QtGui
+from Qt import QtWidgets
+from Qt import QtCompat
 
 ## The VectorDataWidget provides a table view for the contents of
 # one or more IECore VectorData instances.
