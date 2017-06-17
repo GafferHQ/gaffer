@@ -1042,5 +1042,50 @@ class BoxTest( GafferTest.TestCase ) :
 		self.assertTrue( s["b"]["sum"].source().isSame( innerBox["n"]["sum"] ) )
 		self.assertTrue( innerBox["n"]["op1"].source().isSame( s["b"]["op1"] ) )
 
+	def testCanBoxNodesWithInternalNodeNetworkAndHiddenPlug( self ) :
+
+		# if we try to box a node which has an internal node network using a hidden non-serialised
+		# input plug then a spurious exception is raised as the Box::create function
+		# attempts to promote the __i plug.
+
+		scriptNode = Gaffer.ScriptNode()
+
+		externalNode = Gaffer.Node( "external" )
+		scriptNode.addChild( externalNode )
+
+		outPlug = Gaffer.IntPlug( "output", Gaffer.IntPlug.Direction.Out )
+		externalNode.addChild( outPlug )
+
+		nodeToBox = Gaffer.Node( "toBox" )
+		scriptNode.addChild( nodeToBox )
+
+		nodeIn = Gaffer.IntPlug( "i", Gaffer.IntPlug.Direction.In )
+		nodeToBox.addChild( nodeIn )
+
+		nodeIn.setInput( outPlug )
+
+		hiddenIn = Gaffer.IntPlug( "__i", Gaffer.IntPlug.Direction.In, flags = Gaffer.IntPlug.Flags.Default & ~Gaffer.IntPlug.Flags.Serialisable )
+		nodeToBox.addChild( hiddenIn )
+
+		childNode = Gaffer.Node()
+		nodeToBox.addChild( childNode )
+
+		childIn = Gaffer.IntPlug( "i", Gaffer.IntPlug.Direction.In )
+		childNode.addChild( childIn )
+
+		childOut = Gaffer.IntPlug( "o", Gaffer.IntPlug.Direction.Out )
+		childNode.addChild( childOut )
+
+		childIn.setInput( nodeIn )
+		hiddenIn.setInput( childOut )
+
+		setOfNodesToBox = Gaffer.StandardSet()
+		setOfNodesToBox.add( nodeToBox )
+
+		try :
+			box = Gaffer.Box.create( scriptNode, setOfNodesToBox )
+		except RuntimeError, e :
+			self.assertTrue( False, msg = "boxing should not raise an exception here" )
+
 if __name__ == "__main__":
 	unittest.main()
