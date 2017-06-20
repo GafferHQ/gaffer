@@ -178,6 +178,10 @@ else
 	fi
 fi
 
+if [[ -e $GAFFER_ROOT/qt/plugins ]] ; then
+	export QT_QPA_PLATFORM_PLUGIN_PATH="$GAFFER_ROOT/qt/plugins"
+fi
+
 # Get the executable path set up, for running child processes from Gaffer
 ##########################################################################
 
