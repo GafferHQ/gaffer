@@ -126,6 +126,7 @@ from ResamplePrimitiveVariablesTest import ResamplePrimitiveVariablesTest
 from DeleteFacesTest import DeleteFacesTest
 from DeleteCurvesTest import DeleteCurvesTest
 from DeletePointsTest import DeletePointsTest
+from CollectScenesTest import CollectScenesTest
 
 if __name__ == "__main__":
 	import unittest
