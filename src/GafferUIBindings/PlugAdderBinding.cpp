@@ -36,7 +36,6 @@
 
 #include "boost/python.hpp"
 
-#include "IECorePython/Wrapper.h"
 #include "IECorePython/ScopedGILLock.h"
 
 #include "Gaffer/Plug.h"
