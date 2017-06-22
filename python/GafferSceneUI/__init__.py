@@ -139,6 +139,7 @@ import ResamplePrimitiveVariablesUI
 import DeleteFacesUI
 import DeleteCurvesUI
 import DeletePointsUI
+import CollectScenesUI
 
 # then all the PathPreviewWidgets. note that the order
 # of import controls the order of display.
