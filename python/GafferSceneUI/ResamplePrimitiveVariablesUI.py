@@ -33,15 +33,13 @@
 #  SOFTWARE, EVEN IF ADVISED OF THE POSSIBILITY OF SUCH DAMAGE.
 #
 ##########################################################################
+
 import os
-import unittest
 
 import IECore
 
 import Gaffer
 import GafferScene
-import GafferSceneTest
-
 
 Gaffer.Metadata.registerNode(
 
