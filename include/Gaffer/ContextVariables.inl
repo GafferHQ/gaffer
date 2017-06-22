@@ -60,6 +60,9 @@ ContextVariables<BaseType>::ContextVariables( const std::string &name )
 	ContextProcessor<BaseType>::addChild(
 		new CompoundDataPlug( "variables" )
 	);
+	ContextProcessor<BaseType>::addChild(
+		new AtomicCompoundDataPlug( "extraVariables", Plug::In, new IECore::CompoundData )
+	);
 }
 
 template<typename BaseType>
@@ -80,11 +83,26 @@ const CompoundDataPlug *ContextVariables<BaseType>::variablesPlug() const
 }
 
 template<typename BaseType>
+AtomicCompoundDataPlug *ContextVariables<BaseType>::extraVariablesPlug()
+{
+	return ContextProcessor<BaseType>::template getChild<AtomicCompoundDataPlug>( g_firstPlugIndex + 1 );
+}
+
+template<typename BaseType>
+const AtomicCompoundDataPlug *ContextVariables<BaseType>::extraVariablesPlug() const
+{
+	return ContextProcessor<BaseType>::template getChild<AtomicCompoundDataPlug>( g_firstPlugIndex + 1 );
+}
+
+template<typename BaseType>
 void ContextVariables<BaseType>::affects( const Plug *input, DependencyNode::AffectedPlugsContainer &outputs ) const
 {
 	ContextProcessor<BaseType>::affects( input, outputs );
 
-	if( variablesPlug()->isAncestorOf( input ) )
+	if(
+		variablesPlug()->isAncestorOf( input ) ||
+		input == extraVariablesPlug()
+	)
 	{
 		ContextProcessor<BaseType>::appendAffectedPlugs( outputs );
 	}
@@ -101,6 +119,12 @@ void ContextVariables<BaseType>::processContext( Context *context ) const
 		{
 			context->set( name, data.get() );
 		}
+	}
+	IECore::ConstCompoundDataPtr extraVariablesData = extraVariablesPlug()->getValue();
+	const IECore::CompoundDataMap &extraVariables = extraVariablesData->readable();
+	for( IECore::CompoundDataMap::const_iterator it = extraVariables.begin(), eIt = extraVariables.end(); it != eIt; ++it )
+	{
+		context->set( it->first, it->second.get() );
 	}
 }
 
