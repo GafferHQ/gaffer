@@ -35,6 +35,7 @@
 ##########################################################################
 
 import os
+import inspect
 import unittest
 
 import IECore
@@ -170,7 +171,7 @@ class GradeTest( GafferImageTest.ImageTestCase ) :
 		c = GafferImage.Constant()
 		c["format"].setValue( GafferImage.Format( 50, 50, 1.0 ) )
 		c["color"].setValue( IECore.Color4f( 0.125, 0.25, 0.5, 0.75 ) )
-	
+
 		s = GafferImage.Shuffle()
 		s["channels"].addChild( GafferImage.Shuffle.ChannelPlug( 'customChannel', '__white' ) )
 		s["in"].setInput( c["out"] )
@@ -206,4 +207,42 @@ class GradeTest( GafferImageTest.ImageTestCase ) :
 
 		g["channels"].setValue( IECore.StringVectorData( [ "R", "G", "B", "A", "customChannel" ] ) )
 		self.assertEqual( sample( 25, 25 ), [ 3.125, 3.25, 3.5, 3.75, 4.0 ] )
-		
+
+	def testPerLayerExpression( self ) :
+
+		script = Gaffer.ScriptNode()
+
+		script["c1"] = GafferImage.Constant()
+		script["c1"]["color"].setValue( IECore.Color4f( 1 ) )
+
+		script["c2"] = GafferImage.Constant()
+		script["c2"]["color"].setValue( IECore.Color4f( 1 ) )
+		script["c2"]["layer"].setValue( "B" )
+
+		script["copyChannels"] = GafferImage.CopyChannels()
+		script["copyChannels"]["in"][0].setInput( script["c1"]["out"] )
+		script["copyChannels"]["in"][1].setInput( script["c2"]["out"] )
+		script["copyChannels"]["channels"].setValue( "*" )
+
+		script["grade"] = GafferImage.Grade()
+		script["grade"]["in"].setInput( script["copyChannels"]["out"] )
+		script["grade"]["channels"].setValue( "*" )
+
+		script["expression"] = Gaffer.Expression()
+		script["expression"].setExpression( inspect.cleandoc(
+			"""
+			import GafferImage
+			layerName = GafferImage.ImageAlgo.layerName( context["image:channelName" ] )
+			parent["grade"]["gain"] = IECore.Color4f( 1 if layerName == "B" else 0.5 )
+			"""
+		) )
+
+		sampler = GafferImage.ImageSampler()
+		sampler["image"].setInput( script["grade"]["out"] )
+		sampler["pixel"].setValue( IECore.V2f( 10.5 ) )
+
+		sampler["channels"].setValue( IECore.StringVectorData( [ "R", "G", "B", "A" ] ) )
+		self.assertEqual( sampler["color"].getValue(), IECore.Color4f( 0.5 ) )
+
+		sampler["channels"].setValue( IECore.StringVectorData( [ "B.R", "B.G", "B.B", "B.A" ] ) )
+		self.assertEqual( sampler["color"].getValue(), IECore.Color4f( 1 ) )
