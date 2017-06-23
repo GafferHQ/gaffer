@@ -98,6 +98,8 @@ if targetApp :
 		else :
 			LINKFLAGS = targetAppLinkFlags
 
+	qtVersion = targetAppReg.get( "qtVersion", qtVersion )
+
 else :
 
 	targetApp = "gaffer"
