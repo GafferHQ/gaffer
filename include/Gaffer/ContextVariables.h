@@ -39,6 +39,7 @@
 
 #include "Gaffer/ContextProcessor.h"
 #include "Gaffer/CompoundDataPlug.h"
+#include "Gaffer/TypedObjectPlug.h"
 
 namespace Gaffer
 {
@@ -57,6 +58,9 @@ class ContextVariables : public ContextProcessor<BaseType>
 
 		CompoundDataPlug *variablesPlug();
 		const CompoundDataPlug *variablesPlug() const;
+
+		AtomicCompoundDataPlug *extraVariablesPlug();
+		const AtomicCompoundDataPlug *extraVariablesPlug() const;
 
 		void affects( const Plug *input, DependencyNode::AffectedPlugsContainer &outputs ) const;
 

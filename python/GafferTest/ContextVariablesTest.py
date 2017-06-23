@@ -37,6 +37,7 @@
 from __future__ import with_statement
 
 import unittest
+import inspect
 
 import IECore
 
@@ -106,6 +107,75 @@ class ContextVariablesTest( GafferTest.TestCase ) :
 
 		self.assertEqual( s2["c"].keys(), s["c"].keys() )
 		self.assertEqual( s2["c"]["out"].getValue(), "A" )
+
+	def testExtraVariables( self ) :
+
+		s = Gaffer.ScriptNode()
+		s["n"] = GafferTest.StringInOutNode()
+
+		s["c"] = Gaffer.ContextVariablesComputeNode()
+		s["c"]["in"] = Gaffer.StringPlug( flags = Gaffer.Plug.Flags.Default | Gaffer.Plug.Flags.Dynamic )
+		s["c"]["out"] = Gaffer.StringPlug( direction = Gaffer.Plug.Direction.Out, flags = Gaffer.Plug.Flags.Default | Gaffer.Plug.Flags.Dynamic )
+		s["c"]["in"].setInput( s["n"]["out"] )
+
+		s["n"]["in"].setValue( "$a" )
+		self.assertEqual( s["c"]["out"].getValue(), "" )
+
+		dirtied = GafferTest.CapturingSlot( s["c"].plugDirtiedSignal() )
+		s["c"]["extraVariables"].setValue( IECore.CompoundData( { "a" : "A" } ) )
+		self.failUnless( s["c"]["out"] in { p[0] for p in dirtied } )
+		self.assertEqual( s["c"]["out"].getValue(), "A" )
+
+		# Extra variables trump regular variables of the same name
+		s["c"]["variables"].addMember( "a", IECore.StringData( "B" ) )
+		self.assertEqual( s["c"]["out"].getValue(), "A" )
+
+		s2 = Gaffer.ScriptNode()
+		s2.execute( s.serialise() )
+
+		self.assertEqual( s2["c"]["out"].getValue(), "A" )
+
+	def testExtraVariablesExpression( self ) :
+
+		s = Gaffer.ScriptNode()
+		s["n"] = GafferTest.StringInOutNode()
+
+		s["c"] = Gaffer.ContextVariablesComputeNode()
+		s["c"]["in"] = Gaffer.StringPlug( flags = Gaffer.Plug.Flags.Default | Gaffer.Plug.Flags.Dynamic )
+		s["c"]["out"] = Gaffer.StringPlug( direction = Gaffer.Plug.Direction.Out, flags = Gaffer.Plug.Flags.Default | Gaffer.Plug.Flags.Dynamic )
+		s["c"]["in"].setInput( s["n"]["out"] )
+
+		s["n"]["in"].setValue( "$a$b$c" )
+		self.assertEqual( s["c"]["out"].getValue(), "" )
+
+		s["e"] = Gaffer.Expression()
+		s["e"].setExpression( inspect.cleandoc(
+			"""
+			result = IECore.CompoundData()
+
+			if context.getFrame() > 1 :
+				result["a"] = "A"
+			if context.getFrame() > 2 :
+				result["b"] = "B"
+			if context.getFrame() > 3 :
+				result["c"] = "C"
+
+			parent["c"]["extraVariables"] = result
+			"""
+		) )
+
+		with Gaffer.Context() as c :
+
+			self.assertEqual( s["c"]["out"].getValue(), "" )
+
+			c.setFrame( 2 )
+			self.assertEqual( s["c"]["out"].getValue(), "A" )
+
+			c.setFrame( 3 )
+			self.assertEqual( s["c"]["out"].getValue(), "AB" )
+
+			c.setFrame( 4 )
+			self.assertEqual( s["c"]["out"].getValue(), "ABC" )
 
 if __name__ == "__main__":
 	unittest.main()
