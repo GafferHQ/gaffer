@@ -248,6 +248,8 @@ class ImageWriterTest( GafferImageTest.ImageTestCase ) :
 
 		self.__testExtension( "png", "png", options = options )
 
+	# See issue #2125
+	@unittest.expectedFailure
 	def testDpxWrite( self ) :
 
 		options = {}
