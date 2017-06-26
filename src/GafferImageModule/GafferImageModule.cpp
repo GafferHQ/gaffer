@@ -153,8 +153,8 @@ BOOST_PYTHON_MODULE( _GafferImage )
 	GafferImageBindings::bindMirror();
 	GafferImageBindings::bindCopyChannels();
 	GafferImageBindings::bindFilterAlgo();
-	GafferImageBindings::bindMedian();
 	GafferImageBindings::bindRankFilter();
+	GafferImageBindings::bindMedian();
 	GafferImageBindings::bindErode();
 	GafferImageBindings::bindDilate();
 	GafferImageBindings::bindMix();
