@@ -89,6 +89,9 @@ import VectorWarpUI
 import MirrorUI
 import CopyChannelsUI
 import MedianUI
+import RankFilterUI
+import ErodeUI
+import DilateUI 
 import ColorProcessorUI
 import MixUI
 import CatalogueUI

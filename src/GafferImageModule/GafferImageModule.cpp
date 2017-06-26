@@ -90,6 +90,9 @@
 #include "GafferImageBindings/CopyChannelsBinding.h"
 #include "GafferImageBindings/FilterAlgoBinding.h"
 #include "GafferImageBindings/MedianBinding.h"
+#include "GafferImageBindings/RankFilterBinding.h"
+#include "GafferImageBindings/ErodeBinding.h"
+#include "GafferImageBindings/DilateBinding.h"
 #include "GafferImageBindings/MixBinding.h"
 #include "GafferImageBindings/DisplayBinding.h"
 #include "GafferImageBindings/CatalogueBinding.h"
@@ -151,6 +154,9 @@ BOOST_PYTHON_MODULE( _GafferImage )
 	GafferImageBindings::bindCopyChannels();
 	GafferImageBindings::bindFilterAlgo();
 	GafferImageBindings::bindMedian();
+	GafferImageBindings::bindRankFilter();
+	GafferImageBindings::bindErode();
+	GafferImageBindings::bindDilate();
 	GafferImageBindings::bindMix();
 	GafferImageBindings::bindDisplay();
 	GafferImageBindings::bindCatalogue();
