@@ -37,16 +37,12 @@
 #ifndef GAFFERIMAGE_MEDIAN_H
 #define GAFFERIMAGE_MEDIAN_H
 
-#include "Gaffer/CompoundNumericPlug.h"
-#include "Gaffer/StringPlug.h"
-#include "Gaffer/TypedObjectPlug.h"
-
-#include "GafferImage/ImageProcessor.h"
+#include "GafferImage/RankFilter.h"
 
 namespace GafferImage
 {
 
-class Median : public ImageProcessor
+class Median : public RankFilter
 {
 
 	public :
@@ -54,43 +50,7 @@ class Median : public ImageProcessor
 		Median( const std::string &name=defaultName<Median>() );
 		virtual ~Median();
 
-		IE_CORE_DECLARERUNTIMETYPEDEXTENSION( GafferImage::Median, MedianTypeId, ImageProcessor );
-
-		Gaffer::V2iPlug *radiusPlug();
-		const Gaffer::V2iPlug *radiusPlug() const;
-
-		Gaffer::IntPlug *boundingModePlug();
-		const Gaffer::IntPlug *boundingModePlug() const;
-
-		Gaffer::BoolPlug *expandDataWindowPlug();
-		const Gaffer::BoolPlug *expandDataWindowPlug() const;
-
-		Gaffer::StringPlug *masterChannelPlug();
-		const Gaffer::StringPlug *masterChannelPlug() const;
-
-		virtual void affects( const Gaffer::Plug *input, AffectedPlugsContainer &outputs ) const;
-
-	protected :
-
-		virtual void hash( const Gaffer::ValuePlug *output, const Gaffer::Context *context, IECore::MurmurHash &h ) const;
-		virtual void compute( Gaffer::ValuePlug *output, const Gaffer::Context *context ) const;
-
-		virtual void hashDataWindow( const GafferImage::ImagePlug *parent, const Gaffer::Context *context, IECore::MurmurHash &h ) const;
-		virtual Imath::Box2i computeDataWindow( const Gaffer::Context *context, const ImagePlug *parent ) const;
-
-		virtual void hashChannelData( const GafferImage::ImagePlug *parent, const Gaffer::Context *context, IECore::MurmurHash &h ) const;
-		virtual IECore::ConstFloatVectorDataPtr computeChannelData( const std::string &channelName, const Imath::V2i &tileOrigin, const Gaffer::Context *context, const ImagePlug *parent ) const;
-
-		static size_t g_firstPlugIndex;
-
-	private:
-
-		// This private plug stores an offset for each pixel to where the median is located
-		// It should only be evaluated if masterChannelPlug is set, and it should only be evaluated
-		// with the correct driver channel set in the context
-		Gaffer::V2iVectorDataPlug *pixelOffsetsPlug();
-		const Gaffer::V2iVectorDataPlug *pixelOffsetsPlug() const;
-		
+		IE_CORE_DECLARERUNTIMETYPEDEXTENSION( GafferImage::Median, MedianTypeId, RankFilter );
 
 };
 
