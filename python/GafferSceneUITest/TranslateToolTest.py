@@ -356,5 +356,36 @@ class TranslateToolTest( GafferUITest.TestCase ) :
 			)
 		)
 
+	def testTransformWithRotation( self ) :
+
+		script = Gaffer.ScriptNode()
+
+		script["plane"] = GafferScene.Plane()
+
+		script["transformFilter"] = GafferScene.PathFilter()
+		script["transformFilter"]["paths"].setValue( IECore.StringVectorData( [ "/plane" ] ) )
+
+		script["transform"] = GafferScene.Transform()
+		script["transform"]["in"].setInput( script["plane"]["out"] )
+		script["transform"]["filter"].setInput( script["transformFilter"]["out"] )
+		script["transform"]["transform"]["rotate"]["y"].setValue( 90 )
+
+		view = GafferSceneUI.SceneView()
+		view["in"].setInput( script["transform"]["out"] )
+		GafferSceneUI.ContextAlgo.setSelectedPaths( view.getContext(), GafferScene.PathMatcher( [ "/plane" ] ) )
+
+		tool = GafferSceneUI.TranslateTool( view )
+		tool["active"].setValue( True )
+		tool["orientation"].setValue( tool.Orientation.Local )
+
+		tool.translate( IECore.V3f( 1, 0, 0 ) )
+
+		self.assertTrue(
+			IECore.V3f( 0, 0, -1 ).equalWithAbsError(
+				script["transform"]["out"].fullTransform( "/plane" ).translation(),
+				0.0000001
+			)
+		)
+
 if __name__ == "__main__":
 	unittest.main()
