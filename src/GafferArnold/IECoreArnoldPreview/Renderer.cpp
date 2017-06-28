@@ -47,6 +47,7 @@
 
 #include "boost/make_shared.hpp"
 #include "boost/format.hpp"
+#include "boost/algorithm/string.hpp"
 #include "boost/algorithm/string/predicate.hpp"
 #include "boost/algorithm/string/join.hpp"
 #include "boost/container/flat_map.hpp"
@@ -524,6 +525,7 @@ IECore::InternedString g_curvesMinPixelWidthAttributeName( "ai:curves:min_pixel_
 IECore::InternedString g_curvesModeAttributeName( "ai:curves:mode" );
 
 IECore::InternedString g_linkedLights( "linkedLights" );
+IECore::InternedString g_lightFilterPrefix( "ai:lightFilter:" );
 
 class ArnoldAttributes : public IECoreScenePreview::Renderer::AttributesInterface
 {
@@ -569,13 +571,17 @@ class ArnoldAttributes : public IECoreScenePreview::Renderer::AttributesInterfac
 
 			for( IECore::CompoundObject::ObjectMap::const_iterator it = attributes->members().begin(), eIt = attributes->members().end(); it != eIt; ++it )
 			{
-				if( !boost::starts_with( it->first.string(), "user:" ) )
+				if( boost::starts_with( it->first.string(), "user:" ) )
 				{
-					continue;
+					if( const IECore::Data *data = IECore::runTimeCast<const IECore::Data>( it->second.get() ) )
+					{
+						m_user[it->first] = data;
+					}
 				}
-				if( const IECore::Data *data = IECore::runTimeCast<const IECore::Data>( it->second.get() ) )
+				if( boost::starts_with( it->first.string(), g_lightFilterPrefix.string() ) )
 				{
-					m_user[it->first] = data;
+					ArnoldShaderPtr filter = shaderCache->get( IECore::runTimeCast<const IECore::ObjectVector>( it->second.get() ) );
+					m_lightFilterShaders.push_back( filter );
 				}
 			}
 		}
@@ -846,6 +852,11 @@ class ArnoldAttributes : public IECoreScenePreview::Renderer::AttributesInterfac
 			return m_lightShader.get();
 		}
 
+		const std::vector<ArnoldShaderPtr>& lightFilterShaders() const
+		{
+			return m_lightFilterShaders;
+		}
+
 	private :
 
 		struct PolyMesh
@@ -1083,6 +1094,7 @@ class ArnoldAttributes : public IECoreScenePreview::Renderer::AttributesInterfac
 		unsigned char m_shadingFlags;
 		ArnoldShaderPtr m_surfaceShader;
 		IECore::ConstObjectVectorPtr m_lightShader;
+		std::vector<ArnoldShaderPtr> m_lightFilterShaders;
 		IECore::ConstInternedStringVectorDataPtr m_traceSets;
 		float m_stepSize;
 		PolyMesh m_polyMesh;
@@ -1456,6 +1468,17 @@ class ArnoldLight : public ArnoldObject
 					return true;
 				}
 			}
+
+			// Deal with light filters.
+
+			const std::vector<ArnoldShaderPtr> &lightFilterShaders = arnoldAttributes->lightFilterShaders();
+			AtArray *linkedFilterNodes = AiArrayAllocate( lightFilterShaders.size(), 1, AI_TYPE_NODE );
+			for( unsigned i = 0; i < lightFilterShaders.size(); ++i )
+			{
+				AiArraySetPtr( linkedFilterNodes, i, lightFilterShaders[i]->root() );
+			}
+
+			AiNodeSetArray( m_lightShader->root(), "filters", linkedFilterNodes );
 
 			applyLightTransform();
 			return true;
