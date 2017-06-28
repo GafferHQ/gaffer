@@ -400,3 +400,8 @@ for nodeType in ( GafferArnold.ArnoldShader, GafferArnold.ArnoldLight ) :
 		Gaffer.Metadata.registerValue( nodeType, "parameters.*", key, functools.partial( __plugMetadata, name = key ) )
 
 	Gaffer.Metadata.registerValue( nodeType, "description", __nodeDescription )
+
+
+Gaffer.Metadata.registerValue( GafferArnold.ArnoldShader, "attributeSuffix", "plugValueWidget:type", "GafferUI.StringPlugValueWidget" )
+Gaffer.Metadata.registerValue( GafferArnold.ArnoldShader, "layout:activator:suffixActivator", lambda parent : parent["type"].getValue() == "ai:lightFilter" )
+Gaffer.Metadata.registerValue( GafferArnold.ArnoldShader, "attributeSuffix", "layout:visibilityActivator", "suffixActivator" )
