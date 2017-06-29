@@ -301,7 +301,7 @@ bool StandardConnectionGadget::buttonPress( const ButtonEvent &event )
 			dot->setup( srcNodule()->plug() );
 
 			script->addChild( dot );
-			graphGadget->setNodePosition( dot, V2f(  m_dotPreviewLocation.x, m_dotPreviewLocation.y  ) );
+			graphGadget->setNodePosition( dot, V2f(  event.line.p0.x, event.line.p0.y ) );
 
 			dot->inPlug<Plug>()->setInput( srcNodule()->plug() );
 			dstNodule()->plug()->setInput( dot->outPlug<Plug>() );
