@@ -87,12 +87,16 @@ class StandardConnectionGadget : public ConnectionGadget
 		bool dragEnter( const DragDropEvent &event );
 		bool dragMove( const DragDropEvent &event );
 		bool dragEnd(  const DragDropEvent &event );
+		bool keyPressed( const KeyEvent &event );
+		bool keyReleased( const KeyEvent &event );
 
 		bool nodeSelected( const Nodule *nodule ) const;
 
 		void plugMetadataChanged( IECore::TypeId nodeTypeId, const Gaffer::StringAlgo::MatchPattern &plugPath, IECore::InternedString key, const Gaffer::Plug *plug );
 
 		bool updateUserColor();
+
+		void updateDotPreviewLocation( const ButtonEvent &event );
 
 		Imath::V3f m_srcPos;
 		Imath::V3f m_srcTangent;
@@ -108,6 +112,11 @@ class StandardConnectionGadget : public ConnectionGadget
 		bool m_hovering;
 		boost::optional<Imath::Color3f> m_userColor;
 
+		bool m_dotPreview;
+		Imath::V3f m_dotPreviewLocation;
+
+		boost::signals::scoped_connection m_keyPressConnection;
+		boost::signals::scoped_connection m_keyReleaseConnection;
 };
 
 typedef Gaffer::FilteredChildIterator<Gaffer::TypePredicate<StandardConnectionGadget> > StandardConnectionGadgetIterator;

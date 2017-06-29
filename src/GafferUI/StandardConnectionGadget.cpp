@@ -52,6 +52,7 @@
 #include "GafferUI/Style.h"
 #include "GafferUI/Nodule.h"
 #include "GafferUI/NodeGadget.h"
+#include "GafferUI/GraphGadget.h"
 
 using namespace std;
 using namespace Imath;
@@ -65,7 +66,7 @@ ConnectionGadget::ConnectionGadgetTypeDescription<StandardConnectionGadget> Stan
 static IECore::InternedString g_colorKey( "connectionGadget:color" );
 
 StandardConnectionGadget::StandardConnectionGadget( GafferUI::NodulePtr srcNodule, GafferUI::NodulePtr dstNodule )
-	:	ConnectionGadget( srcNodule, dstNodule ), m_dragEnd( Gaffer::Plug::Invalid ), m_hovering( false )
+	:	ConnectionGadget( srcNodule, dstNodule ), m_dragEnd( Gaffer::Plug::Invalid ), m_hovering( false ), m_dotPreview( false ), m_dotPreviewLocation( 0 )
 {
 	enterSignal().connect( boost::bind( &StandardConnectionGadget::enter, this, ::_2 ) );
 	mouseMoveSignal().connect( boost::bind( &StandardConnectionGadget::mouseMove, this, ::_2 ) );
@@ -180,7 +181,7 @@ void StandardConnectionGadget::doRender( const Style *style ) const
 {
 	const_cast<StandardConnectionGadget *>( this )->setPositionsFromNodules();
 
-	Style::State state = ( m_hovering || m_dragEnd ) ? Style::HighlightedState : Style::NormalState;
+	Style::State state = ( m_hovering || m_dragEnd || m_dotPreview ) ? Style::HighlightedState : Style::NormalState;
 	if( state != Style::HighlightedState )
 	{
 		if( nodeSelected( srcNodule() ) || nodeSelected( dstNodule() ) )
@@ -198,6 +199,11 @@ void StandardConnectionGadget::doRender( const Style *style ) const
 	}
 
 	style->renderConnection( adjustedSrcPos, adjustedSrcTangent, m_dstPos, m_dstTangent, state, m_userColor.get_ptr() );
+	if( m_dotPreview )
+	{
+		Imath::Box2f bounds = Imath::Box2f( V2f( m_dotPreviewLocation.x, m_dotPreviewLocation.y ) );
+		style->renderNodeFrame(bounds, 1.0, state, m_userColor.get_ptr()  );
+	}
 }
 
 Imath::V3f StandardConnectionGadget::closestPoint( const Imath::V3f& p ) const
@@ -283,6 +289,32 @@ Gaffer::Plug::Direction StandardConnectionGadget::endAt( const IECore::LineSegme
 
 bool StandardConnectionGadget::buttonPress( const ButtonEvent &event )
 {
+	if( m_dotPreview )
+	{
+		Gaffer::ScriptNode *script = dstNodule()->plug()->ancestor<Gaffer::ScriptNode>();
+		GraphGadget *graphGadget = parent<GafferUI::GraphGadget>();
+		if( script && graphGadget )
+		{
+			Gaffer::UndoScope undoEnabler( script );
+
+			Gaffer::Dot *dot = new Gaffer::Dot();
+			dot->setup( srcNodule()->plug() );
+
+			script->addChild( dot );
+			graphGadget->setNodePosition( dot, V2f(  m_dotPreviewLocation.x, m_dotPreviewLocation.y  ) );
+
+			dot->inPlug<Plug>()->setInput( srcNodule()->plug() );
+			dstNodule()->plug()->setInput( dot->outPlug<Plug>() );
+
+			script->selection()->clear();
+			script->selection()->add( dot );
+		}
+		// If we are showing a preview for a potential Dot to be added, we don't
+		// want the user to move the connection away from under the preview. Users
+		// should leave preview state before dragging the noodle.
+		return false;
+	}
+
 	// We have to accept button presses so we can initiate dragging.
 	return event.buttons==ButtonEvent::Left && m_hovering;
 }
@@ -339,7 +371,7 @@ bool StandardConnectionGadget::dragEnd( const DragDropEvent &event )
 	}
 
 	m_dragEnd = Gaffer::Plug::Invalid;
- 	requestRender();
+	requestRender();
 	return true;
 }
 
@@ -403,14 +435,56 @@ std::string StandardConnectionGadget::getToolTip( const IECore::LineSegment3f &l
 	return result;
 }
 
+void StandardConnectionGadget::updateDotPreviewLocation( const ButtonEvent &event )
+{
+	m_dotPreviewLocation = closestPoint( event.line.p0 );
+}
+
+bool StandardConnectionGadget::keyPressed( const KeyEvent &event )
+{
+	if( event.modifiers & ButtonEvent::Control )
+	{
+		m_dotPreview = true;
+		requestRender();
+		return true;
+	}
+	return false;
+}
+
+bool StandardConnectionGadget::keyReleased( const KeyEvent &event )
+{
+	if( !(event.modifiers & ButtonEvent::Control) )
+	{
+		m_dotPreview = false;
+		requestRender();
+		return true;
+	}
+	return false;
+}
+
+
 void StandardConnectionGadget::enter( const ButtonEvent &event )
 {
+	if( event.modifiers & ButtonEvent::Control )
+	{
+		m_dotPreview = true;
+	}
+
+	// we're connecting to key events to properly react to a user
+	// pressing/releasing modifiers while already hovering over the connection
+	GraphGadget *graphGadget = parent<GafferUI::GraphGadget>();
+	m_keyPressConnection = graphGadget->keyPressSignal().connect( boost::bind( &StandardConnectionGadget::keyPressed, this, ::_2 ) );
+	m_keyReleaseConnection = graphGadget->keyReleaseSignal().connect( boost::bind( &StandardConnectionGadget::keyReleased, this, ::_2 ) );
+	updateDotPreviewLocation( event );
+
 	m_hovering = endAt( event.line ) != Plug::Invalid;
 	requestRender();
 }
 
 bool StandardConnectionGadget::mouseMove( const ButtonEvent &event )
 {
+	updateDotPreviewLocation( event );
+
 	m_hovering = endAt( event.line ) != Plug::Invalid;
  	requestRender();
 	return false;
@@ -418,6 +492,10 @@ bool StandardConnectionGadget::mouseMove( const ButtonEvent &event )
 
 void StandardConnectionGadget::leave( const ButtonEvent &event )
 {
+	m_keyPressConnection.disconnect();
+	m_keyReleaseConnection.disconnect();
+	m_dotPreview = false;
+
 	m_hovering = false;
 	requestRender();
 }
@@ -448,7 +526,7 @@ void StandardConnectionGadget::plugMetadataChanged( IECore::TypeId nodeTypeId, c
 
 	if( updateUserColor() )
 	{
- 		requestRender();
+		requestRender();
 	}
 }
 
