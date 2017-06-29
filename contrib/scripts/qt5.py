@@ -1,14 +1,43 @@
+#! /usr/bin/env python
+
 import os
 import re
+import inspect
+import argparse
 import functools
 
 import Qt
+
+parser = argparse.ArgumentParser(
+	description = inspect.cleandoc(
+	"""
+	Attempts to modify Python source files to assist
+	in the migration from Qt4 to Qt5, via Qt.py :
+
+	 - Replaces QtGui with QtWidgets where
+	   necessary
+	 - Replaces `GafferUI._qtImport( "X" )` calls with
+	   `from Qt import X`
+
+	This is a rough and (hopefully) ready script that does
+	very little validation. It is recommended that you run
+	it in a clean source repository and use `git diff` to
+	manually verify the changes that have been made.
+	""" ),
+	formatter_class = argparse.RawTextHelpFormatter
+)
+
+parser.add_argument(
+	"source-directory",
+	help = "A directory containing python files. This will be searched recursively.",
+	nargs = "?",
+	default = "./",
+)
 
 def convert( fileName ) :
 
 	with open( fileName ) as f :
 		text = "".join( f.readlines() )
-		#print text
 
 	# Substitute QtWidgets for QtGui where needed
 
@@ -54,13 +83,15 @@ def convert( fileName ) :
 	newText = re.sub(
 		r'(Qt\w*)\s*=\s*GafferUI._qtImport\(\s*["\'](Qt.*)["\']\s*\)',
 		r'from Qt import \2',
-		text
+		newText
 	)
 
 	with open( fileName, "w" ) as f :
 		f.write( newText )
 
-for root, dirs, files in os.walk( "./python" ) :
+args = parser.parse_args()
+directory = vars( args )["source-directory"]
+for root, dirs, files in os.walk( directory ) :
 	for file in files :
 		if os.path.splitext( file )[1] == ".py" :
 			convert( os.path.join( root, file ) )
