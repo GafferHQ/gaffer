@@ -207,7 +207,7 @@ bool updateSelection( const CapturedProcess *process, TransformTool::Selection &
 					spacePath.clear();
 					break;
 			}
-			selection.transformSpace = transform->outPlug()->fullTransform( spacePath );
+			selection.transformSpace = transform->inPlug()->fullTransform( spacePath );
 		}
 	}
 
