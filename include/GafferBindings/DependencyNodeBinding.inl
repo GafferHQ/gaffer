@@ -81,6 +81,15 @@ DependencyNodeClass<T, Ptr>::DependencyNodeClass( const char *docString )
 	this->def( "correspondingInput", &Detail::correspondingInput<T> );
 }
 
+template<typename T, typename Ptr>
+DependencyNodeClass<T, Ptr>::DependencyNodeClass( const char *docString, boost::python::no_init_t )
+	:	NodeClass<T, Ptr>( docString, boost::python::no_init )
+{
+	this->def( "affects", &Detail::affects<T> );
+	this->def( "enabledPlug", &Detail::enabledPlug<T> );
+	this->def( "correspondingInput", &Detail::correspondingInput<T> );
+}
+
 } // namespace GafferBindings
 
 #endif // GAFFERBINDINGS_DEPENDENCYNODEBINDING_INL
