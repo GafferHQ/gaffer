@@ -21,8 +21,11 @@ Features
 - Added DeletePoints node (#2120
 - Added DeleteCurves node (#2120)
 - Added CollectImages node (#2116)
+- Added CollectScenes node (#2127)
 - Added DeleteSceneContextVariables node (#2111)
 - Added DeleteImageContextVariables node (#2111)
+- Added Erode and Dilate filters (#2134)
+- Added support for Qt5 (#2132)
 
 Improvements
 ------------
@@ -33,12 +36,16 @@ Improvements
   performed per-face or per-face-vertex in addition to the previous
   vertex shading. (#2113)
 - DirtyPropagationScope : Added python bindings (#2104)
-- NodeGraph : Improved drawing of connections (#2102)
+- NodeGraph :
+  - Improved drawing of connections (#2102)
+  - Added Control+Click to insert Dots into connections (#2072)
 - ImageReader : Added fileFormat and dataType items to metadata (#2121)
 - Catalogue : (#2106)
   - Improved performance
   - Moved saving/snapshotting to the background, so the UI remains responsive while
     they occur
+- ContextVariables : Added extraVariables plug to facilitate use
+  with expressions (#2131).
 
 Fixes
 -----
@@ -53,6 +60,11 @@ Fixes
  with childNodesAreReadOnly metadata (#2122)
 - ImagePlug : Fixed GIL management bugs in `imageHash()` and `channelDataHash()` bindings (#2106)
 - Shape/Text : Fixed bug where disabling the node still modified the image (#2106)
+- ImageProcessor : Fixed bug which prevented some nodes from using expressions based on
+  channel name. The bug was introduced in version 0.30.0.0 (#2124).
+- Box : Fixed bug which could prevent the boxing of nodes containing internal
+  connections (#2126).
+- TransformTool : Fixed interaction with Transform node (#2136).
 
 API
 ---
@@ -66,6 +78,8 @@ API
 - Display : Added `copy` argument to `setDriver()` method (#2106)
 - Catalogue : Added `Image::copyFrom()` method (#2106)
 - Context : Added `removeMatching()` method (#2111)
+- DependencyNodeClass : Added constructor taking no_init, for when a
+  DependencyNode has no public constructor (#2134)
 
 Build
 -----
@@ -74,7 +88,8 @@ Build
 - Updated dependencies : (#2109)
   - OIIO 1.7.15
   - OSL 1.8.9
-  - Cortex 9.21.0
+  - Cortex 9.21.1
+  - Qt 5
 
 0.33.3.0
 ========
