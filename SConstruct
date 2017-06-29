@@ -804,16 +804,6 @@ libraries = {
 
 	},
 
-	"IECoreAlembic" : {
-
-		"classStubs" : [
-
-			( "ABCToMDC", "ops/files/abcToMDC" ),
-
-		],
-
-	},
-
 }
 
 # Add on OpenGL libraries to definitions - these vary from platform to platform
