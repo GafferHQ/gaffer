@@ -121,7 +121,7 @@ class gui( Gaffer.Application ) :
 		# Perhaps we should abolish the ApplicationRoot clipboard and the ScriptNode cut/copy/paste routines, relegating
 		# them all to GafferUI functionality?
 
-		QtWidgets = GafferUI._qtImport( "QtWidgets" )
+		from Qt import QtWidgets
 
 		self.__clipboardContentsChangedConnection = self.root().clipboardContentsChangedSignal().connect( Gaffer.WeakMethod( self.__clipboardContentsChanged ) )
 		QtWidgets.QApplication.clipboard().dataChanged.connect( Gaffer.WeakMethod( self.__qtClipboardContentsChanged ) )
@@ -133,7 +133,7 @@ class gui( Gaffer.Application ) :
 
 		data = applicationRoot.getClipboardContents()
 
-		QtWidgets = GafferUI._qtImport( "QtWidgets" )
+		from Qt import QtWidgets
 		clipboard = QtWidgets.QApplication.clipboard()
 		try :
 			self.__ignoreQtClipboardContentsChanged = True # avoid triggering an unecessary copy back in __qtClipboardContentsChanged
@@ -146,7 +146,7 @@ class gui( Gaffer.Application ) :
 		if self.__ignoreQtClipboardContentsChanged :
 			return
 
-		QtWidgets = GafferUI._qtImport( "QtWidgets" )
+		from Qt import QtWidgets
 
 		text = str( QtWidgets.QApplication.clipboard().text() )
 		if text :

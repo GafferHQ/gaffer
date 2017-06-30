@@ -44,7 +44,7 @@ import GafferUI
 import GafferScene
 import GafferSceneUI
 
-QtGui = GafferUI._qtImport( "QtGui" )
+from Qt import QtGui
 
 class screengrab( Gaffer.Application ) :
 
