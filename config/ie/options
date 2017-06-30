@@ -71,6 +71,7 @@ oiioVersion = gafferReg["OpenImageIO"]
 ocioVersion = gafferReg["OpenColorIO"]
 oslVersion = gafferReg["OpenShadingLanguage"]
 vdbVersion = gafferReg.get( "OpenVDB", "3.0.0" )
+qtPyVersion = gafferReg.get( "qtPyVersion", "1.0.0.b3" )
 
 if targetApp :
 
@@ -236,6 +237,7 @@ LOCATE_DEPENDENCY_PYTHONPATH = [
 	os.path.join( IEEnv.Environment.rootPath(), "tools", "python", pythonVersion, "noarch" ),
 	os.path.join( sphinxRoot, "lib", "python" + pythonVersion, "site-packages" ),
 	os.path.join( sphinxRoot, "lib64", "python" + pythonVersion, "site-packages" ),
+	os.path.join( IEEnv.Environment.rootPath(), "apps", "Qt.py", qtPyVersion ),
 
 ]
 
