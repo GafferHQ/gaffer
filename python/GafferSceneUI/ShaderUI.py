@@ -142,6 +142,19 @@ Gaffer.Metadata.registerNode(
 
 		],
 
+		"attributeSuffix" : [
+
+			"description",
+			"""
+			Suffix for the attribute used for shader assignment.
+			""",
+
+			"nodule:type", "",
+			"plugValueWidget:type", "",
+			"layout:section", "",
+
+		],
+
 	}
 
 )
