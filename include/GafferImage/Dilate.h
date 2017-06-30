@@ -34,28 +34,28 @@
 //
 //////////////////////////////////////////////////////////////////////////
 
-#ifndef GAFFERIMAGE_MEDIAN_H
-#define GAFFERIMAGE_MEDIAN_H
+#ifndef GAFFERIMAGE_DILATE_H
+#define GAFFERIMAGE_DILATE_H
 
 #include "GafferImage/RankFilter.h"
 
 namespace GafferImage
 {
 
-class Median : public RankFilter
+class Dilate : public RankFilter
 {
 
 	public :
 
-		Median( const std::string &name=defaultName<Median>() );
-		virtual ~Median();
+		Dilate( const std::string &name=defaultName<Dilate>() );
+		virtual ~Dilate();
 
-		IE_CORE_DECLARERUNTIMETYPEDEXTENSION( GafferImage::Median, MedianTypeId, RankFilter );
+		IE_CORE_DECLARERUNTIMETYPEDEXTENSION( GafferImage::Dilate, DilateTypeId, RankFilter );
 
 };
 
-IE_CORE_DECLAREPTR( Median );
+IE_CORE_DECLAREPTR( Dilate );
 
 } // namespace GafferImage
 
-#endif // GAFFERIMAGE_MEDIAN_H
+#endif // GAFFERIMAGE_DILATE_H

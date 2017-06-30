@@ -15,7 +15,7 @@
 //        disclaimer in the documentation and/or other materials provided with
 //        the distribution.
 //
-//      * Neither the name of John Haddon nor the names of
+//      * Neither the name of Image Engine Design nor the names of
 //        any other contributors to this software may be used to endorse or
 //        promote products derived from this software without specific prior
 //        written permission.
@@ -33,29 +33,17 @@
 //  SOFTWARE, EVEN IF ADVISED OF THE POSSIBILITY OF SUCH DAMAGE.
 //
 //////////////////////////////////////////////////////////////////////////
+#include "GafferImage/Erode.h"
 
-#ifndef GAFFERIMAGE_MEDIAN_H
-#define GAFFERIMAGE_MEDIAN_H
+using namespace GafferImage;
 
-#include "GafferImage/RankFilter.h"
+IE_CORE_DEFINERUNTIMETYPED( Erode );
 
-namespace GafferImage
+Erode::Erode( const std::string &name )
+	:   RankFilter( name, ErodeRank )
 {
+}
 
-class Median : public RankFilter
+Erode::~Erode()
 {
-
-	public :
-
-		Median( const std::string &name=defaultName<Median>() );
-		virtual ~Median();
-
-		IE_CORE_DECLARERUNTIMETYPEDEXTENSION( GafferImage::Median, MedianTypeId, RankFilter );
-
-};
-
-IE_CORE_DECLAREPTR( Median );
-
-} // namespace GafferImage
-
-#endif // GAFFERIMAGE_MEDIAN_H
+}

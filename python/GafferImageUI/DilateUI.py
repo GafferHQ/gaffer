@@ -1,4 +1,4 @@
-##########################################################################
+1##########################################################################
 #
 #  Copyright (c) 2017, Image Engine Design Inc. All rights reserved.
 #
@@ -39,19 +39,20 @@ import GafferImage
 # Command suitable for use with `NodeMenu.append()`.
 def nodeMenuCreateCommand( menu ) :
 
-	median = GafferImage.Median()
-	median["radius"].gang()
+	erode = GafferImage.Dilate()
+	erode["radius"].gang()
 
-	return median
+	return erode
 
 Gaffer.Metadata.registerNode(
 
-	GafferImage.Median,
+	GafferImage.Dilate,
 
 	"description",
 	"""
-	Applies a median filter to the image. This can be useful for
-	removing noise.
+	Applies a dilate filter to the image. This can be useful for
+	expanding mask.
 	""",
 
 )
+

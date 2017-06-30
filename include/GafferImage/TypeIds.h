@@ -113,6 +113,9 @@ enum TypeId
 	MixTypeId = 110817,
 	CollectImagesTypeId = 110818,
 	DeleteImageContextVariablesTypeId = 110819,
+	RankFilterTypeId = 110820,
+	ErodeTypeId = 110821,
+	DilateTypeId = 110822,
 
 	LastTypeId = 110849
 };

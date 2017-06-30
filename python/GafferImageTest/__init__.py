@@ -86,6 +86,8 @@ from MirrorTest import MirrorTest
 from CopyChannelsTest import CopyChannelsTest
 from FilterAlgoTest import FilterAlgoTest
 from MedianTest import MedianTest
+from ErodeTest import ErodeTest
+from DilateTest import DilateTest
 from MixTest import MixTest
 from CatalogueTest import CatalogueTest
 from CollectImagesTest import CollectImagesTest

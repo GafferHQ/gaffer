@@ -34,28 +34,28 @@
 //
 //////////////////////////////////////////////////////////////////////////
 
-#ifndef GAFFERIMAGE_MEDIAN_H
-#define GAFFERIMAGE_MEDIAN_H
+#ifndef GAFFERIMAGE_ERODE_H
+#define GAFFERIMAGE_ERODE_H
 
 #include "GafferImage/RankFilter.h"
 
 namespace GafferImage
 {
 
-class Median : public RankFilter
+class Erode : public RankFilter
 {
 
 	public :
 
-		Median( const std::string &name=defaultName<Median>() );
-		virtual ~Median();
+		Erode( const std::string &name=defaultName<Erode>() );
+		virtual ~Erode();
 
-		IE_CORE_DECLARERUNTIMETYPEDEXTENSION( GafferImage::Median, MedianTypeId, RankFilter );
+		IE_CORE_DECLARERUNTIMETYPEDEXTENSION( GafferImage::Erode, ErodeTypeId, RankFilter );
 
 };
 
-IE_CORE_DECLAREPTR( Median );
+IE_CORE_DECLAREPTR( Erode );
 
 } // namespace GafferImage
 
-#endif // GAFFERIMAGE_MEDIAN_H
+#endif // GAFFERIMAGE_ERODE_H

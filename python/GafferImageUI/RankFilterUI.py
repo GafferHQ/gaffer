@@ -33,25 +33,80 @@
 #  SOFTWARE, EVEN IF ADVISED OF THE POSSIBILITY OF SUCH DAMAGE.
 #
 ##########################################################################
+
+import IECore
 import Gaffer
 import GafferImage
 
 # Command suitable for use with `NodeMenu.append()`.
 def nodeMenuCreateCommand( menu ) :
 
-	median = GafferImage.Median()
-	median["radius"].gang()
+	rankFilter = GafferImage.RankFilter()
+	rankFilter["radius"].gang()
 
-	return median
+	return rankFilter
 
 Gaffer.Metadata.registerNode(
 
-	GafferImage.Median,
+	GafferImage.RankFilter,
 
 	"description",
 	"""
-	Applies a median filter to the image. This can be useful for
-	removing noise.
+	Applies a rank filter to the image.
 	""",
+
+	plugs = {
+
+		"radius" : [
+
+			"description",
+			"""
+			The size of the filter in pixels. This can be varied independently
+			in the x and y directions.
+			""",
+
+		],
+
+		"boundingMode" : [
+
+			"description",
+			"""
+			The method used when the filter references pixels outside the
+			input data window.
+			""",
+
+			"preset:Black", GafferImage.Sampler.BoundingMode.Black,
+			"preset:Clamp", GafferImage.Sampler.BoundingMode.Clamp,
+
+			"plugValueWidget:type", "GafferUI.PresetsPlugValueWidget",
+
+		],
+
+		"expandDataWindow" : [
+
+			"description",
+			"""
+			Expands the data window to include the external pixels
+			which the filter radius covers.
+			"""
+
+		],
+
+		"masterChannel" : [
+
+			"description",
+			"""
+			If specified, this channel will be used to compute the pixel index to select for all
+			channels.  You would probably want to use this with a channel that represents the overall
+			luminance of the image.  It will produce a rank filter which is lower quality, but preserves
+			additivity between channels, and is a bit faster.
+			""",
+			"plugValueWidget:type", "GafferImageUI.ChannelPlugValueWidget",
+			"channelPlugValueWidget:extraChannels", IECore.StringVectorData( [ "" ] ),
+			"channelPlugValueWidget:extraChannelLabels", IECore.StringVectorData( [ "None" ] ),
+
+		]
+
+	},
 
 )
