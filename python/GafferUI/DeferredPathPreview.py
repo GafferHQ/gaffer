@@ -41,7 +41,7 @@ import IECore
 
 import GafferUI
 
-QtCore = GafferUI._qtImport( "QtCore" )
+from Qt import QtCore
 
 ## This abstract class provides a base for all PathPreviewWidgets which may
 # take some time in generating the preview, and would therefore like to do it

@@ -37,7 +37,7 @@
 import IECore
 import GafferUI
 
-QtCore = GafferUI._qtImport( "QtCore" )
+from Qt import QtCore
 
 ## \todo Move other enums here - ListContainer.Orientation for instance.
 __all__ = [ "HorizontalAlignment", "VerticalAlignment", "Edge" ]

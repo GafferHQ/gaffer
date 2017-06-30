@@ -44,8 +44,10 @@ import Gaffer
 import GafferUI
 import GafferUITest
 
-QtCore = GafferUI._qtImport( "QtCore" )
-QtGui = GafferUI._qtImport( "QtGui" )
+import Qt
+from Qt import QtCore
+from Qt import QtGui
+from Qt import QtWidgets
 
 class MenuBarTest( GafferUITest.TestCase ) :
 
@@ -206,12 +208,32 @@ class MenuBarTest( GafferUITest.TestCase ) :
 
 	def __simulateShortcut( self, widget ) :
 
-		QtGui.QApplication.instance().notify(
+		if Qt.__binding__ in ( "PySide2", "PyQt5" ) :
+
+			# Qt5's handling of key events appears to have
+			# changed, such that we must manually send the
+			# ShortcutOverride event before simulating the
+			# keypress, whereas in Qt4 simulating the keypress
+			# automatically sent the ShortcutOverride event.
+			#
+			# This new approach matches broadly what happens
+			# in Qt5's QTest::sendKeyEvent(), so I think
+			# what we're doing is kosher. Of course, it would
+			# be nice to just use QTest directly instead, but
+			# it appears not to be supported by PySide2 at
+			# present.
+
+			QtWidgets.QApplication.instance().notify(
+				widget._qtWidget(),
+				QtGui.QKeyEvent( QtCore.QEvent.ShortcutOverride, QtCore.Qt.Key_A, QtCore.Qt.ControlModifier )
+			)
+
+		QtWidgets.QApplication.instance().notify(
 			widget._qtWidget(),
 			QtGui.QKeyEvent( QtCore.QEvent.KeyPress, QtCore.Qt.Key_A, QtCore.Qt.ControlModifier )
 		)
 
-		QtGui.QApplication.instance().notify(
+		QtWidgets.QApplication.instance().notify(
 			widget._qtWidget(),
 			QtGui.QKeyEvent( QtCore.QEvent.KeyRelease, QtCore.Qt.Key_A, QtCore.Qt.ControlModifier )
 		)

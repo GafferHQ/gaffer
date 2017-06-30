@@ -40,8 +40,9 @@ import IECore
 import Gaffer
 import GafferUI
 
-QtGui = GafferUI._qtImport( "QtGui" )
-QtCore = GafferUI._qtImport( "QtCore" )
+from Qt import QtGui
+from Qt import QtWidgets
+from Qt import QtCore
 
 class MultiLineTextWidget( GafferUI.Widget ) :
 
@@ -355,10 +356,10 @@ class MultiLineTextWidget( GafferUI.Widget ) :
 
 		self.insertText( self.__dropText( event.data ) )
 
-class _PlainTextEdit( QtGui.QPlainTextEdit ) :
+class _PlainTextEdit( QtWidgets.QPlainTextEdit ) :
 
 	def __init__( self, parent = None ) :
-		QtGui.QPlainTextEdit.__init__( self, parent )
+		QtWidgets.QPlainTextEdit.__init__( self, parent )
 		self.__fixedLineHeight = None
 		self.__widgetFullyBuilt = False
 
@@ -368,7 +369,7 @@ class _PlainTextEdit( QtGui.QPlainTextEdit ) :
 
 		self.setSizePolicy(
 			self.sizePolicy().horizontalPolicy(),
-			QtGui.QSizePolicy.Expanding if self.__fixedLineHeight is None else QtGui.QSizePolicy.Fixed
+			QtWidgets.QSizePolicy.Expanding if self.__fixedLineHeight is None else QtWidgets.QSizePolicy.Fixed
 		)
 
 		self.updateGeometry()
@@ -398,13 +399,13 @@ class _PlainTextEdit( QtGui.QPlainTextEdit ) :
 
 	def sizeHint( self ) :
 
-		size = QtGui.QPlainTextEdit.sizeHint( self )
+		size = QtWidgets.QPlainTextEdit.sizeHint( self )
 
 		return self.__computeHeight( size )
 
 	def minimumSizeHint( self ) :
 
-		size = QtGui.QPlainTextEdit.minimumSizeHint( self )
+		size = QtWidgets.QPlainTextEdit.minimumSizeHint( self )
 
 		return self.__computeHeight( size )
 
@@ -418,7 +419,7 @@ class _PlainTextEdit( QtGui.QPlainTextEdit ) :
 			event.accept()
 			return True
 
-		return QtGui.QPlainTextEdit.event( self, event )
+		return QtWidgets.QPlainTextEdit.event( self, event )
 
 class _FocusOutEventFilter( QtCore.QObject ) :
 

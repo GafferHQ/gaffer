@@ -46,8 +46,8 @@ import Gaffer
 import GafferUI
 import GafferUITest
 
-QtCore = GafferUI._qtImport( "QtCore" )
-QtGui = GafferUI._qtImport( "QtGui" )
+from Qt import QtCore
+from Qt import QtWidgets
 
 class EventLoopTest( GafferUITest.TestCase ) :
 
@@ -97,7 +97,7 @@ class EventLoopTest( GafferUITest.TestCase ) :
 
 			GafferUI.EventLoop.mainEventLoop().stop()
 			self.__uiThreadFunctionCalled = True
-			self.__uiThreadCalledOnCorrectThread = QtCore.QThread.currentThread() == QtGui.QApplication.instance().thread()
+			self.__uiThreadCalledOnCorrectThread = QtCore.QThread.currentThread() == QtWidgets.QApplication.instance().thread()
 			return 101
 
 		def t() :
@@ -121,7 +121,7 @@ class EventLoopTest( GafferUITest.TestCase ) :
 			time.sleep( 2 )
 			GafferUI.EventLoop.mainEventLoop().stop()
 			self.__uiThreadFunctionCalled = True
-			self.__uiThreadCalledOnCorrectThread = QtCore.QThread.currentThread() == QtGui.QApplication.instance().thread()
+			self.__uiThreadCalledOnCorrectThread = QtCore.QThread.currentThread() == QtWidgets.QApplication.instance().thread()
 			return 101
 
 		def t() :

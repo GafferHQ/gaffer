@@ -40,8 +40,9 @@ import IECore
 import Gaffer
 import GafferUI
 
-QtCore = GafferUI._qtImport( "QtCore" )
-QtGui = GafferUI._qtImport( "QtGui" )
+from Qt import QtCore
+from Qt import QtGui
+from Qt import QtWidgets
 
 ## The ColorSwatch simply displays a flat patch of colour. By default, the colour
 # is specified in linear space and GafferUI.DisplayTransform is used to ensure it
@@ -54,12 +55,12 @@ class ColorSwatch( GafferUI.Widget ) :
 
 	def __init__( self, color=IECore.Color4f( 1 ), useDisplayTransform = True, **kw ) :
 
-		GafferUI.Widget.__init__( self, QtGui.QWidget(), **kw )
+		GafferUI.Widget.__init__( self, QtWidgets.QWidget(), **kw )
 
 		self.__opaqueChecker = _Checker()
 		self.__transparentChecker = _Checker()
 
-		layout = QtGui.QVBoxLayout()
+		layout = QtWidgets.QVBoxLayout()
 		layout.setSpacing( 0 )
 		layout.setContentsMargins( 0, 0, 0, 0 )
 		layout.addWidget( self.__opaqueChecker )
@@ -134,11 +135,11 @@ class ColorSwatch( GafferUI.Widget ) :
 
 # Private implementation - a QWidget derived class which just draws a checker with
 # no knowledge of colour spaces or anything.
-class _Checker( QtGui.QWidget ) :
+class _Checker( QtWidgets.QWidget ) :
 
 	def __init__( self ) :
 
-		QtGui.QWidget.__init__( self )
+		QtWidgets.QWidget.__init__( self )
 
 	def paintEvent( self, event ) :
 

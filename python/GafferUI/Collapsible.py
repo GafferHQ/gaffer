@@ -38,7 +38,7 @@
 import Gaffer
 import GafferUI
 
-QtGui = GafferUI._qtImport( "QtGui" )
+from Qt import QtWidgets
 
 ## The Collapsible container provides an easy means of controlling the
 # visibility of a child Widget. A labelled heading is always visible
@@ -48,21 +48,21 @@ class Collapsible( GafferUI.ContainerWidget ) :
 
 	def __init__( self, label="", child=None, collapsed=False, borderWidth=0, cornerWidget=None, cornerWidgetExpanded=False, **kw ) :
 
-		GafferUI.ContainerWidget.__init__( self, QtGui.QWidget(), **kw )
+		GafferUI.ContainerWidget.__init__( self, QtWidgets.QWidget(), **kw )
 
 		self._qtWidget().setObjectName( "gafferCollapsible" )
 
 		layout = _VBoxLayout()
 		self._qtWidget().setLayout( layout )
-		layout.setSizeConstraint( QtGui.QLayout.SetMinAndMaxSize )
+		layout.setSizeConstraint( QtWidgets.QLayout.SetMinAndMaxSize )
 		layout.setContentsMargins( borderWidth, borderWidth, borderWidth, borderWidth )
 
-		self.__headerLayout = QtGui.QHBoxLayout()
-		self.__headerLayout.setSizeConstraint( QtGui.QLayout.SetMinAndMaxSize )
+		self.__headerLayout = QtWidgets.QHBoxLayout()
+		self.__headerLayout.setSizeConstraint( QtWidgets.QLayout.SetMinAndMaxSize )
 		self.__headerLayout.setContentsMargins( 0, 0, 0, 0 )
 		self.__headerLayout.setSpacing(0)
 
-		self.__toggle = QtGui.QCheckBox()
+		self.__toggle = QtWidgets.QCheckBox()
 		self.__toggle.setObjectName( "gafferCollapsibleToggle" )
 		self.__headerLayout.addWidget( self.__toggle)
 
@@ -174,18 +174,18 @@ class Collapsible( GafferUI.ContainerWidget ) :
 
 		self.stateChangedSignal()( self )
 
-class _VBoxLayout( QtGui.QVBoxLayout ) :
+class _VBoxLayout( QtWidgets.QVBoxLayout ) :
 
 	def __init__( self ) :
 
-		QtGui.QVBoxLayout.__init__( self )
+		QtWidgets.QVBoxLayout.__init__( self )
 
 	## Reimplemented so that requested width takes account of the
 	# width of child items even if they are currently hidden. That
 	# way the width doesn't change when the child is shown.
 	def sizeHint( self ) :
 
-		s = QtGui.QVBoxLayout.sizeHint( self )
+		s = QtWidgets.QVBoxLayout.sizeHint( self )
 
 		maxWidth = 0
 		for i in range( 0, self.count() ) :

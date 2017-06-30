@@ -89,6 +89,7 @@ class GLWidgetTest( GafferUITest.TestCase ) :
 		f.setChild( b )
 
 		w.setVisible( True )
+		self.waitForIdle( 1000 )
 
 		w.setPosition( IECore.V2i( 100 ) )
 		self.waitForIdle( 1000 )

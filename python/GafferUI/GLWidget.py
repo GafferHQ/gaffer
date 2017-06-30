@@ -44,18 +44,18 @@ import collections
 logging.getLogger( "OpenGL" ).setLevel( logging.WARNING )
 
 import IECore
+import IECoreGL
 
 import Gaffer
 import GafferUI
 import _GafferUI
 
-# import lazily to improve startup of apps which don't use GL functionality
-GL = Gaffer.lazyImport( "OpenGL.GL" )
-IECoreGL = Gaffer.lazyImport( "IECoreGL" )
+import OpenGL.GL as GL
 
-QtCore = GafferUI._qtImport( "QtCore" )
-QtGui = GafferUI._qtImport( "QtGui" )
-QtOpenGL = GafferUI._qtImport( "QtOpenGL", lazy=True )
+from Qt import QtCore
+from Qt import QtGui
+from Qt import QtWidgets
+from Qt import QtOpenGL
 
 ## The GLWidget is a base class for all widgets which wish to draw using OpenGL.
 # Derived classes override the _draw() method to achieve this.
@@ -184,11 +184,11 @@ class GLWidget( GafferUI.Widget ) :
 
 		self._draw()
 
-class _GLGraphicsView( QtGui.QGraphicsView ) :
+class _GLGraphicsView( QtWidgets.QGraphicsView ) :
 
 	def __init__( self, format ) :
 
-		QtGui.QGraphicsView.__init__( self )
+		QtWidgets.QGraphicsView.__init__( self )
 
 		self.setObjectName( "gafferGLWidget" )
 		self.setHorizontalScrollBarPolicy( QtCore.Qt.ScrollBarAlwaysOff )
@@ -222,7 +222,7 @@ class _GLGraphicsView( QtGui.QGraphicsView ) :
 			# hid in our constructor.
 			self.viewport().show()
 
-		return QtGui.QGraphicsView.event( self, event )
+		return QtWidgets.QGraphicsView.event( self, event )
 
 	def resizeEvent( self, event ) :
 
@@ -262,11 +262,11 @@ class _GLGraphicsView( QtGui.QGraphicsView ) :
 		# passes unused events to QFrame, bypassing QAbstractScrollArea.
 
 		if self.scene() is not None and self.isInteractive() :
-			QtGui.QApplication.sendEvent( self.scene(), event )
+			QtWidgets.QApplication.sendEvent( self.scene(), event )
 			if event.isAccepted() :
 				return
 
-		QtGui.QFrame.keyPressEvent( self, event )
+		QtWidgets.QFrame.keyPressEvent( self, event )
 
 	# We keep a single hidden widget which owns the texture and display lists
 	# and then share those with all the widgets we really want to make.
@@ -345,13 +345,13 @@ class _GLGraphicsView( QtGui.QGraphicsView ) :
 		# Cortex version.
 		return QtOpenGL.QGLWidget( format, shareWidget = GafferUI._qtObject( IECoreHoudini.sharedGLWidget(), QtOpenGL.QGLWidget ) )
 
-class _GLGraphicsScene( QtGui.QGraphicsScene ) :
+class _GLGraphicsScene( QtWidgets.QGraphicsScene ) :
 
 	__Overlay = collections.namedtuple( "__Overlay", [ "widget", "proxy" ] )
 
 	def __init__( self, parent, backgroundDrawFunction ) :
 
-		QtGui.QGraphicsScene.__init__( self, parent )
+		QtWidgets.QGraphicsScene.__init__( self, parent )
 
 		self.__backgroundDrawFunction = backgroundDrawFunction
 		self.sceneRectChanged.connect( self.__sceneRectChanged )
@@ -363,7 +363,7 @@ class _GLGraphicsScene( QtGui.QGraphicsScene ) :
 		if widget._qtWidget().layout() is not None :
 			# removing the size constraint is necessary to keep the widget the
 			# size we tell it to be in __updateItemGeometry.
-			widget._qtWidget().layout().setSizeConstraint( QtGui.QLayout.SetNoConstraint )
+			widget._qtWidget().layout().setSizeConstraint( QtWidgets.QLayout.SetNoConstraint )
 
 		proxy = _OverlayProxyWidget()
 		proxy.setWidget( widget._qtWidget() )
@@ -406,11 +406,11 @@ class _GLGraphicsScene( QtGui.QGraphicsScene ) :
 # bounds of its child widgets. This allows our overlays to
 # pass through events in the regions where there isn't a
 # child widget.
-class _OverlayProxyWidget( QtGui.QGraphicsProxyWidget ) :
+class _OverlayProxyWidget( QtWidgets.QGraphicsProxyWidget ) :
 
 	def __init__( self ) :
 
-		QtGui.QGraphicsProxyWidget.__init__( self )
+		QtWidgets.QGraphicsProxyWidget.__init__( self )
 
 	def shape( self ) :
 

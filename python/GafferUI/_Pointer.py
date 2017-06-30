@@ -36,7 +36,8 @@
 
 import GafferUI
 
-QtGui = GafferUI._qtImport( "QtGui" )
+from Qt import QtGui
+from Qt import QtWidgets
 
 # The pointer is specified via the C++ Pointer class, but to actually change
 # the qt pointer we use this python code which is triggered by Pointer::changedSignal().
@@ -47,7 +48,7 @@ def __pointerChanged() :
 	global __cursorOverridden
 
 	pointer = GafferUI.Pointer.getCurrent()
-	application = QtGui.QApplication.instance()
+	application = QtWidgets.QApplication.instance()
 
 	if pointer is None :
 		if __cursorOverridden :

@@ -40,7 +40,7 @@ import warnings
 import Gaffer
 import GafferUI
 
-QtGui = GafferUI._qtImport( "QtGui" )
+from Qt import QtWidgets
 
 ## The PlugWidget combines a LabelPlugValueWidget with a second PlugValueWidget
 ## suitable for editing the plug.
@@ -52,12 +52,12 @@ class PlugWidget( GafferUI.Widget ) :
 
 	def __init__( self, plugOrWidget, label=None, description=None, **kw ) :
 
-		GafferUI.Widget.__init__( self, QtGui.QWidget(), **kw )
+		GafferUI.Widget.__init__( self, QtWidgets.QWidget(), **kw )
 
-		layout = QtGui.QHBoxLayout()
+		layout = QtWidgets.QHBoxLayout()
 		layout.setContentsMargins( 0, 0, 0, 0 )
 		layout.setSpacing( 4 )
-		layout.setSizeConstraint( QtGui.QLayout.SetMinAndMaxSize )
+		layout.setSizeConstraint( QtWidgets.QLayout.SetMinAndMaxSize )
 		self._qtWidget().setLayout( layout )
 
 		if isinstance( plugOrWidget, Gaffer.Plug ) :

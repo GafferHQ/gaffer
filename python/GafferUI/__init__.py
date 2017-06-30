@@ -45,12 +45,10 @@
 # namespace.
 __import__( "uuid" )
 
-##########################################################################
-# Function to import a module from the qt bindings. This must be used
-# rather than importing the module directly. This allows us to support
-# the use of both PyQt and PySide.
-##########################################################################
-
+## Deprecated. This legacy function only supports use with Qt4. For
+# combined Qt4/Qt5 support use `from Qt import name` instead.
+# Also note that the lazy argument is no longer effective, because Qt.py
+# imports all modules at startup.
 __qtModuleName = None
 def _qtImport( name, lazy=False ) :
 
@@ -93,15 +91,21 @@ def _qtImport( name, lazy=False ) :
 
 def _qtAddress( o ) :
 
-	global __qtModuleName
-	if "PyQt" in __qtModuleName :
+	import Qt
+	if "PyQt" in Qt.__binding__ :
 		import sip
 		return sip.unwrapinstance( o )
 	else :
-		try :
-			import PySide.shiboken as shiboken
-		except ImportError :
-			import shiboken
+		if Qt.__binding__ == "PySide2" :
+			try :
+				import PySide2.shiboken2 as shiboken
+			except ImportError :
+				import shiboken2 as shiboken
+		else :
+			try :
+				import PySide.shiboken
+			except ImportError :
+				import shiboken
 
 		return shiboken.getCppPointer( o )[0]
 
@@ -113,15 +117,21 @@ def _qtAddress( o ) :
 
 def _qtObject( address, type ) :
 
-	global __qtModuleName
-	if "PyQt" in __qtModuleName :
+	import Qt
+	if "PyQt" in Qt.__binding__ :
 		import sip
 		return sip.wrapinstance( address, type )
 	else :
-		try :
-			import PySide.shiboken as shiboken
-		except ImportError :
-			import shiboken
+		if Qt.__binding__ == "PySide2" :
+			try :
+				import PySide2.shiboken2 as shiboken
+			except ImportError :
+				import shiboken2 as shiboken
+		else :
+			try :
+				import PySide.shiboken
+			except ImportError :
+				import shiboken
 
 		return shiboken.wrapInstance( address, type )
 

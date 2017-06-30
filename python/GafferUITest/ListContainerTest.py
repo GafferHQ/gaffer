@@ -43,13 +43,13 @@ import Gaffer
 import GafferUI
 import GafferUITest
 
-QtGui = GafferUI._qtImport( "QtGui" )
+from Qt import QtWidgets
 
 class TestWidget( GafferUI.Widget ) :
 
 	def __init__( self, s, **kw ) :
 
-		GafferUI.Widget.__init__( self, QtGui.QLabel( s ), **kw )
+		GafferUI.Widget.__init__( self, QtWidgets.QLabel( s ), **kw )
 
 		self.s = s
 

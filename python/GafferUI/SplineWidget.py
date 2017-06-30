@@ -40,8 +40,9 @@ import IECore
 import Gaffer
 import GafferUI
 
-QtCore = GafferUI._qtImport( "QtCore" )
-QtGui = GafferUI._qtImport( "QtGui" )
+from Qt import QtCore
+from Qt import QtGui
+from Qt import QtWidgets
 
 ## This Widget simply displays an IECore.Spline object. For representation and editing
 # of SplinePlugs use a SplineEditor instead.
@@ -53,9 +54,9 @@ class SplineWidget( GafferUI.Widget ) :
 
 		# using QFrame rather than QWidget because it supports computing the contentsRect() based on
 		# the stylesheet.
-		GafferUI.Widget.__init__( self, QtGui.QFrame(), **kw )
+		GafferUI.Widget.__init__( self, QtWidgets.QFrame(), **kw )
 
-		self._qtWidget().setSizePolicy( QtGui.QSizePolicy.Expanding, QtGui.QSizePolicy.Expanding )
+		self._qtWidget().setSizePolicy( QtWidgets.QSizePolicy.Expanding, QtWidgets.QSizePolicy.Expanding )
 		self._qtWidget().setObjectName( "gafferSplineWidget" )
 
 		self.setDrawMode( drawMode )
@@ -114,9 +115,9 @@ class SplineWidget( GafferUI.Widget ) :
 		painter = QtGui.QPainter( self._qtWidget() )
 		painter.setRenderHint( QtGui.QPainter.Antialiasing )
 
-		o = QtGui.QStyleOption()
+		o = QtWidgets.QStyleOption()
 		o.initFrom( self._qtWidget() )
-		self._qtWidget().style().drawPrimitive( QtGui.QStyle.PE_Widget, o, painter, self._qtWidget() )
+		self._qtWidget().style().drawPrimitive( QtWidgets.QStyle.PE_Widget, o, painter, self._qtWidget() )
 
 		if self.__drawMode == self.DrawMode.Ramp :
 			self.__paintRamp( painter )
@@ -144,7 +145,7 @@ class SplineWidget( GafferUI.Widget ) :
 
 		rect = self._qtWidget().contentsRect()
 		brush = QtGui.QBrush( self.__gradientToDraw )
-		brush.setMatrix( QtGui.QMatrix( float( rect.width() ) / numStops, 0, 0, 1, 0, 0 ) )
+		brush.setTransform( QtGui.QTransform( float( rect.width() ) / numStops, 0, 0, 1, 0, 0 ) )
 		painter.fillRect( rect, brush )
 
 	def __paintSplines( self, painter ) :

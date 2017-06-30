@@ -297,9 +297,44 @@ env = Environment(
 		( "GAFFER_MAJOR_VERSION", "$GAFFER_MAJOR_VERSION" ),
 		( "GAFFER_MINOR_VERSION", "$GAFFER_MINOR_VERSION" ),
 		( "GAFFER_PATCH_VERSION", "$GAFFER_PATCH_VERSION" ),
-	]
+	],
+
+	CPPPATH = [
+		"include",
+		"$LOCATE_DEPENDENCY_CPPPATH",
+	],
+
+	CPPFLAGS = [
+		"-DBOOST_FILESYSTEM_VERSION=3",
+		"-DBOOST_FILESYSTEM_NO_DEPRECATED",
+		"-DBOOST_SIGNALS_NO_DEPRECATION_WARNING",
+	],
+
+	LIBPATH = [
+		"./lib",
+		"$BUILD_DIR/lib",
+		"$LOCATE_DEPENDENCY_LIBPATH",
+	],
+
+	FRAMEWORKPATH = "$BUILD_DIR/lib",
+
 
 )
+
+# include 3rd party headers with -isystem rather than -I.
+# this should turn off warnings from those headers, allowing us to
+# build with -Werror. there are so many warnings from boost
+# in particular that this would be otherwise impossible.
+for path in [
+		"$BUILD_DIR/include",
+		"$BUILD_DIR/include/python$PYTHON_VERSION",
+		"$BUILD_DIR/include/OpenEXR",
+		"$BUILD_DIR/include/GL",
+	] + env["LOCATE_DEPENDENCY_SYSTEMPATH"] :
+
+	env.Append(
+		CXXFLAGS = [ "-isystem", path ]
+	)
 
 env["BUILD_DIR"] = os.path.abspath( env["BUILD_DIR"] )
 
@@ -385,12 +420,49 @@ def checkSphinx( context ) :
 	context.Result( result )
 	return result
 
-conf = Configure( env, custom_tests = { "checkInkscape" : checkInkscape, "checkSphinx" : checkSphinx } )
+def checkQtVersion( context ) :
+
+	context.Message( "Checking for Qt..." )
+
+	program = """
+	#include <iostream>
+	#include "QtCore/qconfig.h"
+
+	int main()
+	{
+#ifdef QT_VERSION_MAJOR
+		std::cout << QT_VERSION_MAJOR;
+#else
+		std::cout << 4;
+#endif
+		return 0;
+	}
+	"""
+
+	result = context.TryRun( program, ".cpp" )
+	if result[0] :
+		context.sconf.env["QT_VERSION"] = result[1]
+
+	context.Result( result[0] )
+	return result[0]
+
+conf = Configure(
+	env,
+	custom_tests = {
+		"checkInkscape" : checkInkscape,
+		"checkSphinx" : checkSphinx,
+		"checkQtVersion" : checkQtVersion,
+	}
+)
 
 haveInkscape = conf.checkInkscape()
 if not haveInkscape and env["INKSCAPE"] != "disableGraphics" :
 	print 'Inkscape is not installed!'
 	Exit(1)
+
+if not conf.checkQtVersion() :
+	sys.stderr.write( "Qt not found\n" )
+	Exit( 1 )
 
 ###############################################################################################
 # An environment for running commands with access to the applications we've built
@@ -436,22 +508,6 @@ baseLibEnv = env.Clone()
 
 baseLibEnv.Append(
 
-	CPPPATH = [
-		"include",
-	] + env["LOCATE_DEPENDENCY_CPPPATH"],
-
-	CPPFLAGS = [
-		"-DBOOST_FILESYSTEM_VERSION=3",
-		"-DBOOST_FILESYSTEM_NO_DEPRECATED",
-		"-DBOOST_SIGNALS_NO_DEPRECATION_WARNING",
-	],
-
-	LIBPATH = [
-		"./lib",
-		"$BUILD_DIR/lib",
-		"$LOCATE_DEPENDENCY_LIBPATH",
-	],
-
 	LIBS = [
 		"boost_signals$BOOST_LIB_SUFFIX",
 		"boost_iostreams$BOOST_LIB_SUFFIX",
@@ -469,21 +525,6 @@ baseLibEnv.Append(
 	],
 
 )
-
-# include 3rd party headers with -isystem rather than -I.
-# this should turn off warnings from those headers, allowing us to
-# build with -Werror. there are so many warnings from boost
-# in particular that this would be otherwise impossible.
-for path in [
-		"$BUILD_DIR/include",
-		"$BUILD_DIR/include/python$PYTHON_VERSION",
-		"$BUILD_DIR/include/OpenEXR",
-		"$BUILD_DIR/include/GL",
-	] + env["LOCATE_DEPENDENCY_SYSTEMPATH"] :
-
-	baseLibEnv.Append(
-		CXXFLAGS = [ "-isystem", path ]
-	)
 
 ###############################################################################################
 # The basic environment for building python modules
@@ -814,17 +855,21 @@ for library in ( "GafferUI", "GafferSceneUI", "GafferImageUI" ) :
 		libraries[library]["envAppends"]["LIBS"].append( "GL" )
 
 # Add on Qt libraries to definitions - these vary from platform to platform
-for library in ( "GafferUI", ) :
-	if env["PLATFORM"] == "darwin" :
-		libraries[library]["pythonEnvAppends"].setdefault( "FRAMEWORKPATH", [] ).append( "$BUILD_DIR/lib" )
-		libraries[library]["pythonEnvAppends"].setdefault( "FRAMEWORKS", [] ).append( "QtCore" )
-		libraries[library]["pythonEnvAppends"].setdefault( "FRAMEWORKS", [] ).append( "QtGui" )
-		libraries[library]["pythonEnvAppends"].setdefault( "FRAMEWORKS", [] ).append( "QtOpenGL" )
-	else :
-		libraries[library]["pythonEnvAppends"]["LIBS"].append( "QtCore" )
-		libraries[library]["pythonEnvAppends"]["LIBS"].append( "QtGui" )
-		libraries[library]["pythonEnvAppends"]["LIBS"].append( "QtOpenGL" )
 
+def addQtLibrary( library, qtLibrary ) :
+
+	if env["PLATFORM"] == "darwin" :
+		libraries[library]["pythonEnvAppends"].setdefault( "FRAMEWORKS", [] ).append( "Qt" + qtLibrary )
+	else :
+		prefix = "Qt" if int( env["QT_VERSION"] ) < 5 else "Qt${QT_VERSION}"
+		libraries[library]["pythonEnvAppends"]["LIBS"].append( prefix + qtLibrary )
+
+for library in ( "GafferUI", ) :
+	addQtLibrary( library, "Core" )
+	addQtLibrary( library, "Gui" )
+	addQtLibrary( library, "OpenGL" )
+	if int( env["QT_VERSION"] ) > 4 :
+		addQtLibrary( library, "Widgets" )
 
 ###############################################################################################
 # The stuff that actually builds the libraries and python modules

@@ -38,7 +38,7 @@
 import Gaffer
 import GafferUI
 
-QtCore = GafferUI._qtImport( "QtCore" )
+from Qt import QtCore
 
 class Dialogue( GafferUI.Window ) :
 
@@ -91,7 +91,12 @@ class Dialogue( GafferUI.Window ) :
 			self.__closeConnection = None
 			self.__modalEventLoop = None
 
-			self._qtWidget().setWindowModality( QtCore.Qt.NonModal )
+			# Here we want to call `self._qtWidget().setWindowModality( QtCore.Qt.NonModal )`,
+			# but that causes crashes in Qt 5, because it doesn't support changing modality on
+			# the fly. See https://bugreports.qt.io/browse/QTBUG-47599. In practice, everywhere
+			# we use modal dialogues in Gaffer, we close the dialogue immediately after exiting
+			# the modal loop anyway, so at least for now we can get away with not switching the
+			# modality back.
 
 			if parentWindow is not None :
 				parentWindow.removeChild( self )

@@ -42,8 +42,9 @@ import IECore
 import Gaffer
 import GafferUI
 
-QtCore = GafferUI._qtImport( "QtCore" )
-QtGui = GafferUI._qtImport( "QtGui" )
+from Qt import QtCore
+from Qt import QtGui
+from Qt import QtWidgets
 
 ## \todo Implement an option to float in a new window, and an option to anchor back - drag and drop of tabs?
 class CompoundEditor( GafferUI.EditorWidget ) :
@@ -185,7 +186,7 @@ class CompoundEditor( GafferUI.EditorWidget ) :
 			# the target container we want to modify, and the new state we want to put it in.
 			## \todo Decide how and where we provide this widget-under-the-cursor functionality in
 			# the public api.
-			qWidget = QtGui.QApplication.instance().widgetAt( QtGui.QCursor.pos() )
+			qWidget = QtWidgets.QApplication.instance().widgetAt( QtGui.QCursor.pos() )
 			widget = GafferUI.Widget._owner( qWidget )
 
 			State = IECore.Enum.create( "None", "Open", "Closed", "Opening", "Closing" )
@@ -280,7 +281,7 @@ class CompoundEditor( GafferUI.EditorWidget ) :
 				# generic rule for what SplitContainer should do in its __applySizePolicy() method.
 				if len( splitContainer[0] ) == 1 and isinstance( splitContainer[0][0], GafferUI.Timeline ) :
 					splitContainer[0]._qtWidget().setFixedHeight( splitContainer[0][0]._qtWidget().sizeHint().height() )
-					splitContainer._qtWidget().setSizePolicy( QtGui.QSizePolicy.Preferred, QtGui.QSizePolicy.Fixed )
+					splitContainer._qtWidget().setSizePolicy( QtWidgets.QSizePolicy.Preferred, QtWidgets.QSizePolicy.Fixed )
 
 	def __addChild( self, splitContainer, nameOrEditor ) :
 

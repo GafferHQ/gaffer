@@ -45,8 +45,9 @@ import Gaffer
 import GafferUI
 from _StyleSheet import _styleSheet
 
-QtCore = GafferUI._qtImport( "QtCore" )
-QtGui = GafferUI._qtImport( "QtGui" )
+from Qt import QtCore
+from Qt import QtGui
+from Qt import QtWidgets
 
 ## The Widget class provides a base class for all widgets in GafferUI.
 #
@@ -99,10 +100,10 @@ QtGui = GafferUI._qtImport( "QtGui" )
 # for the tool tips.
 class Widget( object ) :
 
-	## All GafferUI.Widget instances must hold a corresponding QtGui.QWidget instance
+	## All GafferUI.Widget instances must hold a corresponding QtWidgets.QWidget instance
 	# which provides the top level implementation for the widget, and to which other
 	# widgets may be parented. This QWidget is created during __init__, and cannot be
-	# replaced later. Derived classes may pass either a QtGui.QWidget directly, or if
+	# replaced later. Derived classes may pass either a QtWidgets.QWidget directly, or if
 	# they prefer may pass a GafferUI.Widget, in which case a top level QWidget will be
 	# created automatically, with the GafferUI.Widget being parented to it. The top level
 	# QWidget can be accessed at any time using the _qtWidget() method. Note that this is
@@ -113,9 +114,9 @@ class Widget( object ) :
 	# automatic `parent.addChild()` call.
 	def __init__( self, topLevelWidget, toolTip="", parenting = None ) :
 
-		assert( isinstance( topLevelWidget, ( QtGui.QWidget, Widget ) ) )
+		assert( isinstance( topLevelWidget, ( QtWidgets.QWidget, Widget ) ) )
 
-		if isinstance( topLevelWidget, QtGui.QWidget ) :
+		if isinstance( topLevelWidget, QtWidgets.QWidget ) :
 			assert( Widget.__qtWidgetOwners.get( topLevelWidget ) is None )
 			self.__qtWidget = topLevelWidget
 
@@ -127,17 +128,17 @@ class Widget( object ) :
 			# behavior from Qt when using PySide.
 			# more details:
 			# http://stackoverflow.com/questions/32313469/stylesheet-in-pyside-not-working
-			if type( topLevelWidget ) == QtGui.QWidget :
+			if type( topLevelWidget ) == QtWidgets.QWidget :
 				self.__qtWidget.setAttribute( QtCore.Qt.WA_StyledBackground, True )
 		else :
 			self.__gafferWidget = topLevelWidget
-			self.__qtWidget = QtGui.QWidget()
-			self.__qtWidget.setLayout( QtGui.QGridLayout() )
+			self.__qtWidget = QtWidgets.QWidget()
+			self.__qtWidget.setLayout( QtWidgets.QGridLayout() )
 			## We need to set the size constraint to prevent widgets expanding in an unwanted
 			# way. However we may want other types to expand in the future. I think what we
 			# really need to do is somehow make __qtWidget without a layout, and just have
 			# it's size etc. dictated directly by self.__gafferWidget._qtWidget() somehow.
-			self.__qtWidget.layout().setSizeConstraint( QtGui.QLayout.SetMinAndMaxSize )
+			self.__qtWidget.layout().setSizeConstraint( QtWidgets.QLayout.SetMinAndMaxSize )
 			self.__qtWidget.layout().setContentsMargins( 0, 0, 0, 0 )
 			self.__qtWidget.layout().addWidget( self.__gafferWidget._qtWidget(), 0, 0 )
 
@@ -605,16 +606,16 @@ class Widget( object ) :
 		if widgetType is None :
 			widgetType = GafferUI.Widget
 
-		qWidget = QtGui.QApplication.instance().widgetAt( position[0], position[1] )
+		qWidget = QtWidgets.QApplication.instance().widgetAt( position[0], position[1] )
 		widget = GafferUI.Widget._owner( qWidget )
 
-		if widget is not None and isinstance( widget._qtWidget(), QtGui.QGraphicsView ) :
+		if widget is not None and isinstance( widget._qtWidget(), QtWidgets.QGraphicsView ) :
 			# if the widget is a QGraphicsView, then we have to dive into it ourselves
 			# to find any widgets embedded within it - qt won't do that for us.
 			graphicsView = widget._qtWidget()
 			localPosition = graphicsView.mapFromGlobal( QtCore.QPoint( position[0], position[1] ) )
 			graphicsItem = graphicsView.itemAt( localPosition )
-			if isinstance( graphicsItem, QtGui.QGraphicsProxyWidget ) :
+			if isinstance( graphicsItem, QtWidgets.QGraphicsProxyWidget ) :
 				localPosition = graphicsView.mapToScene( localPosition )
 				localPosition = graphicsItem.mapFromScene( localPosition )
 				qWidget = graphicsItem.widget().childAt( localPosition.x(), localPosition.y() )
@@ -631,7 +632,7 @@ class Widget( object ) :
 
 		return self.__qtWidget
 
-	## Returns the GafferUI.Widget that owns the specified QtGui.QWidget
+	## Returns the GafferUI.Widget that owns the specified QtWidgets.QWidget
 	@classmethod
 	def _owner( cls, qtWidget ) :
 
@@ -786,13 +787,13 @@ class Widget( object ) :
 
 		if not self.__eventFilterInstalled :
 			self._qtWidget().installEventFilter( _eventFilter )
-			if isinstance( self._qtWidget(), QtGui.QAbstractScrollArea ) :
+			if isinstance( self._qtWidget(), QtWidgets.QAbstractScrollArea ) :
 				self._qtWidget().viewport().installEventFilter( _eventFilter )
 			self.__eventFilterInstalled = True
 
 	def __ensureMouseTracking( self ) :
 
-		if isinstance( self._qtWidget(), QtGui.QAbstractScrollArea ) :
+		if isinstance( self._qtWidget(), QtWidgets.QAbstractScrollArea ) :
 			self._qtWidget().viewport().setMouseTracking( True )
 		else :
 			self._qtWidget().setMouseTracking( True )
@@ -804,7 +805,7 @@ class Widget( object ) :
 	def __ensureFocusChangedConnection( cls ) :
 
 		if not cls.__focusChangedConnected :
-			QtGui.QApplication.instance().focusChanged.connect( cls.__focusChanged )
+			QtWidgets.QApplication.instance().focusChanged.connect( cls.__focusChanged )
 			cls.__focusChangedConnected = True
 
 	@classmethod
@@ -816,7 +817,7 @@ class Widget( object ) :
 			# if nothing's connected to the signal currently, then disconnect, because
 			# we don't want the overhead of dealing with focus changes when no-one is
 			# interested.
-			QtGui.QApplication.instance().focusChanged.disconnect( cls.__focusChanged )
+			QtWidgets.QApplication.instance().focusChanged.disconnect( cls.__focusChanged )
 			cls.__focusChangedConnected = False
 
 	def _repolish( self, qtWidget=None ) :
@@ -827,7 +828,7 @@ class Widget( object ) :
 		style = qtWidget.style()
 		style.unpolish( qtWidget )
 		for child in qtWidget.children() :
-			if isinstance( child, QtGui.QWidget ) :
+			if isinstance( child, QtWidgets.QWidget ) :
 				self._repolish( child )
 		style.polish( qtWidget )
 
@@ -942,7 +943,7 @@ class _EventFilter( QtCore.QObject ) :
 		widget = Widget._owner( qObject )
 		toolTip = widget.getToolTip()
 		if toolTip :
-			QtGui.QToolTip.showText( qEvent.globalPos(), toolTip, qObject )
+			QtWidgets.QToolTip.showText( qEvent.globalPos(), toolTip, qObject )
 			return True
 		else :
 			return False

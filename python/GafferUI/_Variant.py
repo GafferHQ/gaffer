@@ -37,7 +37,7 @@
 
 import GafferUI
 
-QtCore = GafferUI._qtImport( "QtCore" )
+from Qt import QtCore
 
 ## PyQt and PySide differ in their bindings of functions using the
 # QVariant type. PySide doesn't expose QVariant and instead uses

@@ -37,8 +37,9 @@
 import Gaffer
 import GafferUI
 
-QtCore = GafferUI._qtImport( "QtCore" )
-QtGui = GafferUI._qtImport( "QtGui" )
+from Qt import QtCore
+from Qt import QtGui
+from Qt import QtWidgets
 
 class PopupWindow( GafferUI.Window ) :
 
@@ -168,10 +169,10 @@ class PopupWindow( GafferUI.Window ) :
 			return
 
 		if self.__cursor is not None :
-			QtGui.QApplication.restoreOverrideCursor()
+			QtWidgets.QApplication.restoreOverrideCursor()
 
 		if cursor is not None :
-			QtGui.QApplication.setOverrideCursor( QtGui.QCursor( cursor ) )
+			QtWidgets.QApplication.setOverrideCursor( QtGui.QCursor( cursor ) )
 
 		self.__cursor = cursor
 

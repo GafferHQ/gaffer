@@ -981,7 +981,7 @@ class Section( GafferUI.Widget ) :
 
 		if label is None :
 			label = GafferUI.Label()
-			label._qtWidget().setSizePolicy( QtGui.QSizePolicy.Preferred, QtGui.QSizePolicy.Fixed )
+			label._qtWidget().setSizePolicy( QtWidgets.QSizePolicy.Preferred, QtWidgets.QSizePolicy.Fixed )
 			self.__collapsible.setCornerWidget( label, True )
 
 		if summary :
@@ -1035,7 +1035,7 @@ class _SectionWindow( GafferUI.Window ) :
 # Inheritance section
 ##########################################################################
 
-QtGui = GafferUI._qtImport( "QtGui" )
+from Qt import QtWidgets
 
 class _Rail( GafferUI.ListContainer ) :
 
@@ -1052,7 +1052,7 @@ class _Rail( GafferUI.ListContainer ) :
 				## \todo Decide how we do this via the public API.
 				# Perhaps by putting the image in a Sizer? Or by
 				# adding stretch methods to the Image class?
-				image._qtWidget().setSizePolicy( QtGui.QSizePolicy.Fixed, QtGui.QSizePolicy.Preferred )
+				image._qtWidget().setSizePolicy( QtWidgets.QSizePolicy.Fixed, QtWidgets.QSizePolicy.Preferred )
 				image._qtWidget().setScaledContents( True )
 			else :
 				GafferUI.Spacer( IECore.V2i( 1 ) )
@@ -1061,7 +1061,7 @@ class _Rail( GafferUI.ListContainer ) :
 
 			if type != self.Type.Bottom and type != self.Type.Single :
 				image = GafferUI.Image( "railLine.png" )
-				image._qtWidget().setSizePolicy( QtGui.QSizePolicy.Fixed, QtGui.QSizePolicy.Preferred )
+				image._qtWidget().setSizePolicy( QtWidgets.QSizePolicy.Fixed, QtWidgets.QSizePolicy.Preferred )
 				image._qtWidget().setScaledContents( True )
 			else :
 				GafferUI.Spacer( IECore.V2i( 1 ) )

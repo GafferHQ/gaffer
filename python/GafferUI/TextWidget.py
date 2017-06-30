@@ -42,8 +42,9 @@ import IECore
 import Gaffer
 import GafferUI
 
-QtCore = GafferUI._qtImport( "QtCore" )
-QtGui = GafferUI._qtImport( "QtGui" )
+from Qt import QtCore
+from Qt import QtGui
+from Qt import QtWidgets
 
 class TextWidget( GafferUI.Widget ) :
 
@@ -82,16 +83,16 @@ class TextWidget( GafferUI.Widget ) :
 
 		self._qtWidget().setEchoMode(
 			{
-				self.DisplayMode.Normal : QtGui.QLineEdit.Normal,
-				self.DisplayMode.Password : QtGui.QLineEdit.Password,
+				self.DisplayMode.Normal : QtWidgets.QLineEdit.Normal,
+				self.DisplayMode.Password : QtWidgets.QLineEdit.Password,
 			}[displayMode]
 		)
 
 	def getDisplayMode( self ) :
 
 		return {
-			QtGui.QLineEdit.Normal : self.DisplayMode.Normal,
-			QtGui.QLineEdit.Password : self.DisplayMode.Password,
+			QtWidgets.QLineEdit.Normal : self.DisplayMode.Normal,
+			QtWidgets.QLineEdit.Password : self.DisplayMode.Password,
 		}[self._qtWidget().echoMode()]
 
 	def setErrored( self, errored ) :
@@ -309,7 +310,7 @@ class TextWidget( GafferUI.Widget ) :
 	def __startSelectionFinishedTimer( self ) :
 
 		self.__numSelectionPossiblyFinishedEvents += 1
-		QtCore.QTimer.singleShot( QtGui.QApplication.doubleClickInterval(), self.__selectionPossiblyFinished )
+		QtCore.QTimer.singleShot( QtWidgets.QApplication.doubleClickInterval(), self.__selectionPossiblyFinished )
 
 	def __selectionPossiblyFinished( self ) :
 
@@ -326,11 +327,11 @@ class TextWidget( GafferUI.Widget ) :
 # fixed/preferred widths measured in characters. It is necessary to implement
 # these using sizeHint() so that they can adjust automatically to changes in
 # the style.
-class _LineEdit( QtGui.QLineEdit ) :
+class _LineEdit( QtWidgets.QLineEdit ) :
 
 	def __init__( self, parent = None ) :
 
-		QtGui.QLineEdit.__init__( self )
+		QtWidgets.QLineEdit.__init__( self )
 
 		self.__preferredCharacterWidth = 20
 		self.__fixedCharacterWidth = None
@@ -355,8 +356,8 @@ class _LineEdit( QtGui.QLineEdit ) :
 
 		self.__fixedCharacterWidth = numCharacters
 		self.setSizePolicy(
-			QtGui.QSizePolicy.Expanding if self.__fixedCharacterWidth is None else QtGui.QSizePolicy.Fixed,
-			QtGui.QSizePolicy.Fixed
+			QtWidgets.QSizePolicy.Expanding if self.__fixedCharacterWidth is None else QtWidgets.QSizePolicy.Fixed,
+			QtWidgets.QSizePolicy.Fixed
 		)
 
 		# we need to make sure that the geometry is up-to-date with the current character width
@@ -370,7 +371,7 @@ class _LineEdit( QtGui.QLineEdit ) :
 	def sizeHint( self ) :
 
 		# call the base class to get the height
-		result = QtGui.QLineEdit.sizeHint( self )
+		result = QtWidgets.QLineEdit.sizeHint( self )
 
 		# but then calculate our own width
 		numChars = self.__fixedCharacterWidth if self.__fixedCharacterWidth is not None else self.__preferredCharacterWidth
@@ -380,10 +381,10 @@ class _LineEdit( QtGui.QLineEdit ) :
 		width = self.fontMetrics().boundingRect( "M" * numChars ).width()
 		width += contentsMargins[0] + contentsMargins[2] + textMargins[0] + textMargins[2]
 
-		options = QtGui.QStyleOptionFrameV2()
+		options = QtWidgets.QStyleOptionFrame()
 		self.initStyleOption( options )
 		size = self.style().sizeFromContents(
-			QtGui.QStyle.CT_LineEdit,
+			QtWidgets.QStyle.CT_LineEdit,
 			options,
 			QtCore.QSize( width, 20 ),
 			self
@@ -402,4 +403,4 @@ class _LineEdit( QtGui.QLineEdit ) :
 				if not self.isModified() or not self.isRedoAvailable() :
 					return False
 
-		return QtGui.QLineEdit.event( self, event )
+		return QtWidgets.QLineEdit.event( self, event )

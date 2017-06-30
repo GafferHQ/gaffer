@@ -39,8 +39,8 @@ import IECore
 
 import GafferUI
 
-QtCore = GafferUI._qtImport( "QtCore" )
-QtGui = GafferUI._qtImport( "QtGui" )
+from Qt import QtCore
+from Qt import QtWidgets
 
 ## \todo Support other list operations for child access
 class SplitContainer( GafferUI.ContainerWidget ) :
@@ -206,16 +206,16 @@ class SplitContainer( GafferUI.ContainerWidget ) :
 		# stay at a minimum size and then suddenly collapse to nothing when moving the splitter all
 		# the way. we store the original size policy on the widget and reapply it in removeChild().
 		widget.__originalSizePolicy = widget._qtWidget().sizePolicy()
-		widget._qtWidget().setSizePolicy( QtGui.QSizePolicy.Ignored, QtGui.QSizePolicy.Ignored )
+		widget._qtWidget().setSizePolicy( QtWidgets.QSizePolicy.Ignored, QtWidgets.QSizePolicy.Ignored )
 
 # We inherit from QSplitter purely so that the handles can be created
 # in Python rather than C++. This seems to help PyQt and PySide in tracking
 # the lifetimes of the splitter and handles.
-class _Splitter( QtGui.QSplitter ) :
+class _Splitter( QtWidgets.QSplitter ) :
 
 	def __init__( self ) :
 
-		QtGui.QSplitter.__init__( self )
+		QtWidgets.QSplitter.__init__( self )
 
 		# There seems to be an odd interaction between this and the stylesheet, and
 		# setting this to the desired size and then using the stylesheet to divide it into
@@ -226,7 +226,7 @@ class _Splitter( QtGui.QSplitter ) :
 
 	def createHandle( self ) :
 
-		return QtGui.QSplitterHandle( self.orientation(), self )
+		return QtWidgets.QSplitterHandle( self.orientation(), self )
 
 class _SizeAnimation( QtCore.QVariantAnimation ) :
 

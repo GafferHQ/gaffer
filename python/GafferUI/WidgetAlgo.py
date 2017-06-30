@@ -38,7 +38,7 @@ import os
 
 import GafferUI
 
-QtGui = GafferUI._qtImport( "QtGui" )
+from Qt import QtGui
 
 def joinEdges( listContainer ) :
 
@@ -63,5 +63,11 @@ def grab( widget, imagePath ) :
 	if imageDir and not os.path.isdir( imageDir ) :
 		os.makedirs( imageDir )
 
-	pixmap = QtGui.QPixmap.grabWindow( widget._qtWidget().winId() )
+	# This emits a deprecation warning in Qt5, but the recommended
+	# `QScreen.grabWindow()` alternative is not available in PySide2,
+	# and the alternative `QWidget.grab()` method does not capture
+	# OpenGL content. We could in theory silence the deprecation warning
+	# by temporarily installing a Qt message handler, but surprise surprise,
+	# we can't do that in PySide2 either.
+	pixmap = QtGui.QPixmap.grabWindow( long( widget._qtWidget().winId() ) )
 	pixmap.save( imagePath )

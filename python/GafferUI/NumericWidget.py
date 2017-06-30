@@ -42,7 +42,7 @@ import IECore
 import Gaffer
 import GafferUI
 
-QtGui = GafferUI._qtImport( "QtGui" )
+from Qt import QtGui
 
 ## \todo Fix bug when pressing up arrow with cursor to left of minus sign
 class NumericWidget( GafferUI.TextWidget ) :

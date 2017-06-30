@@ -42,7 +42,7 @@ import IECore
 import Gaffer
 import GafferUI
 
-QtGui = GafferUI._qtImport( "QtGui" )
+from Qt import QtGui
 
 ## The NumericSlider extends the slider class to provide a mapping between the positions
 # and a range defined by a minimum and maximum value.

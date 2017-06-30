@@ -36,13 +36,13 @@
 
 import GafferUI
 
-QtGui = GafferUI._qtImport( "QtGui" )
+from Qt import QtWidgets
 
 class ProgressBar( GafferUI.Widget ) :
 
 	def __init__( self, progress = 0, range = ( 0, 100 ), text = "%p%", **kw ) :
 
-		GafferUI.Widget.__init__( self, QtGui.QProgressBar(), **kw )
+		GafferUI.Widget.__init__( self, QtWidgets.QProgressBar(), **kw )
 
 		self._qtWidget().setRange( range[0], range[1] )
 

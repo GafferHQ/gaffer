@@ -38,8 +38,8 @@
 import IECore
 import GafferUI
 
-QtGui = GafferUI._qtImport( "QtGui" )
-QtCore = GafferUI._qtImport( "QtCore" )
+from Qt import QtWidgets
+from Qt import QtCore
 
 ## The ListContainer holds a series of Widgets either in a column or a row.
 # It attempts to provide a list like interface for manipulation of the widgets.
@@ -51,16 +51,16 @@ class ListContainer( GafferUI.ContainerWidget ) :
 
 	def __init__( self, orientation=Orientation.Vertical, spacing=0, borderWidth=0, **kw ) :
 
-		GafferUI.ContainerWidget.__init__( self, QtGui.QWidget(), **kw )
+		GafferUI.ContainerWidget.__init__( self, QtWidgets.QWidget(), **kw )
 
 		if orientation==self.Orientation.Vertical :
-			self.__qtLayout = QtGui.QVBoxLayout()
+			self.__qtLayout = QtWidgets.QVBoxLayout()
 		else :
-			self.__qtLayout = QtGui.QHBoxLayout()
+			self.__qtLayout = QtWidgets.QHBoxLayout()
 
 		self.__qtLayout.setSpacing( spacing )
 		self.__qtLayout.setContentsMargins( borderWidth, borderWidth, borderWidth, borderWidth )
-		self.__qtLayout.setSizeConstraint( QtGui.QLayout.SetMinAndMaxSize )
+		self.__qtLayout.setSizeConstraint( QtWidgets.QLayout.SetMinAndMaxSize )
 
 		self._qtWidget().setLayout( self.__qtLayout )
 

@@ -45,7 +45,7 @@ import IECore
 import Gaffer
 import GafferUI
 
-QtCore = GafferUI._qtImport( "QtCore" )
+from Qt import QtCore
 
 class PathWidget( GafferUI.TextWidget ) :
 

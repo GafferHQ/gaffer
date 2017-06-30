@@ -38,16 +38,15 @@
 from __future__ import with_statement
 
 import IECore
+import IECoreGL
 
 import Gaffer
 import GafferUI
 
-# import lazily to improve startup of apps which don't use GL functionality
-GL = Gaffer.lazyImport( "OpenGL.GL" )
-IECoreGL = Gaffer.lazyImport( "IECoreGL" )
+import OpenGL.GL as GL
 
-QtCore = GafferUI._qtImport( "QtCore" )
-QtGui = GafferUI._qtImport( "QtGui" )
+from Qt import QtCore
+from Qt import QtWidgets
 
 ## The GadgetWidget class provides a means of
 # hosting a Gadget within a Widget based interface.
@@ -61,11 +60,6 @@ class GadgetWidget( GafferUI.GLWidget ) :
 		GafferUI.GLWidget.__init__( self, bufferOptions, **kw )
 
 		self._qtWidget().setFocusPolicy( QtCore.Qt.ClickFocus )
-
-		# Force the IECoreGL lazy loading to kick in /now/. Otherwise we can get IECoreGL objects
-		# being returned from the GafferUIBindings without the appropriate boost::python converters
-		# having been registered first.
-		IECoreGL.Renderer
 
 		self.__requestedDepthBuffer = self.BufferOptions.Depth in bufferOptions
 
@@ -138,7 +132,7 @@ class GadgetWidget( GafferUI.GLWidget ) :
 
 	def __enter( self, widget ) :
 
-		if not isinstance( QtGui.QApplication.focusWidget(), ( QtGui.QLineEdit, QtGui.QPlainTextEdit ) ) :
+		if not isinstance( QtWidgets.QApplication.focusWidget(), ( QtWidgets.QLineEdit, QtWidgets.QPlainTextEdit ) ) :
 			self._qtWidget().setFocus()
 
 	def __leave( self, widget ) :
@@ -296,7 +290,7 @@ class _EventFilter( QtCore.QObject ) :
 				)
 			 )
 
-			QtGui.QToolTip.showText( qEvent.globalPos(), toolTip, qObject )
+			QtWidgets.QToolTip.showText( qEvent.globalPos(), toolTip, qObject )
 
 			return True
 
