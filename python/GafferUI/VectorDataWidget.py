@@ -1181,7 +1181,8 @@ class _BoolDelegate( _Delegate ) :
 
 		# in PyQt, option is passed to us correctly as a QStyleOptionViewItemV4,
 		# but in PySide it is merely a QStyleOptionViewItem and we must "cast" it.
-		option = QtGui.QStyleOptionViewItemV4( option )
+		if hasattr( QtGui, "QStyleOptionViewItemV4" ) :
+			option = QtGui.QStyleOptionViewItemV4( option )
 
 		# in PyQt, we can access the widget with option.widget, but in PySide it
 		# is always None for some reason, so we jump through some hoops to get the
