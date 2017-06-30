@@ -145,7 +145,7 @@ class SplineWidget( GafferUI.Widget ) :
 
 		rect = self._qtWidget().contentsRect()
 		brush = QtGui.QBrush( self.__gradientToDraw )
-		brush.setMatrix( QtGui.QMatrix( float( rect.width() ) / numStops, 0, 0, 1, 0, 0 ) )
+		brush.setTransform( QtGui.QTransform( float( rect.width() ) / numStops, 0, 0, 1, 0, 0 ) )
 		painter.fillRect( rect, brush )
 
 	def __paintSplines( self, painter ) :
