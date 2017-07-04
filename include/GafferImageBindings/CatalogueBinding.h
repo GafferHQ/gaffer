@@ -37,10 +37,12 @@
 #ifndef GAFFERIMAGEBINDINGS_CATALOGUEBINDING_H
 #define GAFFERIMAGEBINDINGS_CATALOGUEBINDING_H
 
+#include "GafferImageBindings/Export.h"
+
 namespace GafferImageBindings
 {
 
-void bindCatalogue();
+GAFFERIMAGEBINDINGS_API void bindCatalogue();
 
 }; // namespace GafferImageBindings
 

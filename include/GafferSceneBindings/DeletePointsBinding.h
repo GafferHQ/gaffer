@@ -37,10 +37,12 @@
 #ifndef GAFFERSCENEBINDINGS_DELETEPOINTSBINDING_H
 #define GAFFERSCENEBINDINGS_DELETEPOINTSBINDING_H
 
+#include "GafferSceneBindings/Export.h"
+
 namespace GafferSceneBindings
 {
 
-void bindDeletePoints();
+GAFFERSCENEBINDINGS_API void bindDeletePoints();
 
 } // namespace GafferSceneBindings
 

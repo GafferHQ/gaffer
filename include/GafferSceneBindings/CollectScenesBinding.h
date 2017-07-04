@@ -37,10 +37,12 @@
 #ifndef GAFFERSCENEBINDINGS_COLLECTSCENESBINDING_H
 #define GAFFERSCENEBINDINGS_COLLECTSCENESBINDING_H
 
+#include "GafferSceneBindings/Export.h"
+
 namespace GafferSceneBindings
 {
 
-void bindCollectScenes();
+GAFFERSCENEBINDINGS_API void bindCollectScenes();
 
 } // namespace GafferSceneBindings
 
