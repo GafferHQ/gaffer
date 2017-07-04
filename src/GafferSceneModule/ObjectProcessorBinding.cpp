@@ -1,7 +1,6 @@
 //////////////////////////////////////////////////////////////////////////
 //
-//  Copyright (c) 2012-2014, Image Engine Design Inc. All rights reserved.
-//  Copyright (c) 2013, John Haddon. All rights reserved.
+//  Copyright (c) 2017, Image Engine Design Inc. All rights reserved.
 //
 //  Redistribution and use in source and binary forms, with or without
 //  modification, are permitted provided that the following conditions are
@@ -37,52 +36,36 @@
 
 #include "boost/python.hpp"
 
-#include "CoreBinding.h"
-#include "FilterBinding.h"
-#include "HierarchyBinding.h"
-#include "TransformBinding.h"
-#include "GlobalsBinding.h"
-#include "OptionsBinding.h"
-#include "AttributesBinding.h"
-#include "SceneAlgoBinding.h"
-#include "RendererAlgoBinding.h"
-#include "SetAlgoBinding.h"
-#include "PrimitivesBinding.h"
-#include "PathMatcherBinding.h"
-#include "ScenePathBinding.h"
-#include "ShaderBinding.h"
-#include "RenderBinding.h"
+#include "GafferBindings/DependencyNodeBinding.h"
+
+#include "GafferScene/DeletePoints.h"
+#include "GafferScene/DeleteFaces.h"
+#include "GafferScene/DeleteCurves.h"
+#include "GafferScene/MeshTangents.h"
+#include "GafferScene/PointsType.h"
+#include "GafferScene/MeshToPoints.h"
+#include "GafferScene/MeshType.h"
+#include "GafferScene/LightToCamera.h"
+#include "GafferScene/Parameters.h"
+
 #include "ObjectProcessorBinding.h"
-#include "PrimitiveVariablesBinding.h"
-#include "LightTweaksBinding.h"
-#include "IOBinding.h"
-#include "MixinBinding.h"
 
 using namespace boost::python;
-using namespace GafferSceneModule;
+using namespace Gaffer;
+using namespace GafferBindings;
+using namespace GafferScene;
 
-BOOST_PYTHON_MODULE( _GafferScene )
+void GafferSceneModule::bindObjectProcessor()
 {
 
-	bindCore();
-	bindFilter();
-	bindTransform();
-	bindGlobals();
-	bindOptions();
-	bindHierarchy();
-	bindAttributes();
-	bindSceneAlgo();
-	bindRendererAlgo();
-	bindSetAlgo();
-	bindPrimitives();
-	bindPathMatcher();
-	bindScenePath();
-	bindShader();
-	bindRender();
-	bindObjectProcessor();
-	bindPrimitiveVariables();
-	bindLightTweaks();
-	bindIO();
-	bindMixin();
+	GafferBindings::DependencyNodeClass<GafferScene::DeletePoints>();
+	GafferBindings::DependencyNodeClass<GafferScene::DeleteFaces>();
+	GafferBindings::DependencyNodeClass<GafferScene::DeleteCurves>();
+	GafferBindings::DependencyNodeClass<GafferScene::MeshTangents>();
+	GafferBindings::DependencyNodeClass<GafferScene::PointsType>();
+	GafferBindings::DependencyNodeClass<GafferScene::MeshToPoints>();
+	GafferBindings::DependencyNodeClass<MeshType>();
+	GafferBindings::DependencyNodeClass<GafferScene::LightToCamera>();
+	GafferBindings::DependencyNodeClass<Parameters>();
 
 }

@@ -1,7 +1,6 @@
 //////////////////////////////////////////////////////////////////////////
 //
-//  Copyright (c) 2012-2014, Image Engine Design Inc. All rights reserved.
-//  Copyright (c) 2013, John Haddon. All rights reserved.
+//  Copyright (c) 2016, Image Engine Design Inc. All rights reserved.
 //
 //  Redistribution and use in source and binary forms, with or without
 //  modification, are permitted provided that the following conditions are
@@ -37,52 +36,57 @@
 
 #include "boost/python.hpp"
 
-#include "CoreBinding.h"
-#include "FilterBinding.h"
-#include "HierarchyBinding.h"
-#include "TransformBinding.h"
-#include "GlobalsBinding.h"
-#include "OptionsBinding.h"
-#include "AttributesBinding.h"
-#include "SceneAlgoBinding.h"
+#include "IECorePython/ScopedGILLock.h"
+
+#include "GafferScene/RendererAlgo.h"
+#include "GafferScene/SceneProcessor.h"
+
 #include "RendererAlgoBinding.h"
-#include "SetAlgoBinding.h"
-#include "PrimitivesBinding.h"
-#include "PathMatcherBinding.h"
-#include "ScenePathBinding.h"
-#include "ShaderBinding.h"
-#include "RenderBinding.h"
-#include "ObjectProcessorBinding.h"
-#include "PrimitiveVariablesBinding.h"
-#include "LightTweaksBinding.h"
-#include "IOBinding.h"
-#include "MixinBinding.h"
 
 using namespace boost::python;
-using namespace GafferSceneModule;
+using namespace GafferScene;
 
-BOOST_PYTHON_MODULE( _GafferScene )
+namespace
 {
 
-	bindCore();
-	bindFilter();
-	bindTransform();
-	bindGlobals();
-	bindOptions();
-	bindHierarchy();
-	bindAttributes();
-	bindSceneAlgo();
-	bindRendererAlgo();
-	bindSetAlgo();
-	bindPrimitives();
-	bindPathMatcher();
-	bindScenePath();
-	bindShader();
-	bindRender();
-	bindObjectProcessor();
-	bindPrimitiveVariables();
-	bindLightTweaks();
-	bindIO();
-	bindMixin();
+struct AdaptorWrapper
+{
+
+	AdaptorWrapper( object pythonAdaptor )
+		:	m_pythonAdaptor( pythonAdaptor )
+	{
+	}
+
+	SceneProcessorPtr operator()()
+	{
+		IECorePython::ScopedGILLock gilLock;
+		SceneProcessorPtr result = extract<SceneProcessorPtr>( m_pythonAdaptor() );
+		return result;
+	}
+
+	private :
+
+		object m_pythonAdaptor;
+
+};
+
+void registerAdaptorWrapper( const std::string &name, object adaptor )
+{
+	registerAdaptor( name, AdaptorWrapper( adaptor ) );
+}
+
+} // namespace
+
+namespace GafferSceneModule
+{
+
+void bindRendererAlgo()
+{
+
+	def( "registerAdaptor", &registerAdaptorWrapper );
+	def( "deregisterAdaptor", &deregisterAdaptor );
+	def( "createAdaptors", &createAdaptors );
 
 }
+
+} // namespace GafferSceneModule

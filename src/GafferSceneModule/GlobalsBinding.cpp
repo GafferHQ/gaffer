@@ -1,7 +1,6 @@
 //////////////////////////////////////////////////////////////////////////
 //
-//  Copyright (c) 2012-2014, Image Engine Design Inc. All rights reserved.
-//  Copyright (c) 2013, John Haddon. All rights reserved.
+//  Copyright (c) 2017, Image Engine Design Inc. All rights reserved.
 //
 //  Redistribution and use in source and binary forms, with or without
 //  modification, are permitted provided that the following conditions are
@@ -37,52 +36,77 @@
 
 #include "boost/python.hpp"
 
-#include "CoreBinding.h"
-#include "FilterBinding.h"
-#include "HierarchyBinding.h"
-#include "TransformBinding.h"
+#include "GafferBindings/DependencyNodeBinding.h"
+
+#include "GafferScene/Outputs.h"
+#include "GafferScene/DeleteOutputs.h"
+#include "GafferScene/DeleteSets.h"
+#include "GafferScene/Set.h"
+
 #include "GlobalsBinding.h"
-#include "OptionsBinding.h"
-#include "AttributesBinding.h"
-#include "SceneAlgoBinding.h"
-#include "RendererAlgoBinding.h"
-#include "SetAlgoBinding.h"
-#include "PrimitivesBinding.h"
-#include "PathMatcherBinding.h"
-#include "ScenePathBinding.h"
-#include "ShaderBinding.h"
-#include "RenderBinding.h"
-#include "ObjectProcessorBinding.h"
-#include "PrimitiveVariablesBinding.h"
-#include "LightTweaksBinding.h"
-#include "IOBinding.h"
-#include "MixinBinding.h"
 
+using namespace std;
 using namespace boost::python;
-using namespace GafferSceneModule;
+using namespace IECorePython;
+using namespace Gaffer;
+using namespace GafferBindings;
+using namespace GafferScene;
 
-BOOST_PYTHON_MODULE( _GafferScene )
+namespace
 {
 
-	bindCore();
-	bindFilter();
-	bindTransform();
-	bindGlobals();
-	bindOptions();
-	bindHierarchy();
-	bindAttributes();
-	bindSceneAlgo();
-	bindRendererAlgo();
-	bindSetAlgo();
-	bindPrimitives();
-	bindPathMatcher();
-	bindScenePath();
-	bindShader();
-	bindRender();
-	bindObjectProcessor();
-	bindPrimitiveVariables();
-	bindLightTweaks();
-	bindIO();
-	bindMixin();
+ValuePlugPtr addOutputWrapper( Outputs &o, const std::string &name )
+{
+	ScopedGILRelease gilRelease;
+	return o.addOutput( name );
+}
+
+ValuePlugPtr addOutputWrapper2( Outputs &o, const std::string &name, const IECore::Display *output )
+{
+	ScopedGILRelease gilRelease;
+	return o.addOutput( name, output );
+}
+
+boost::python::tuple registeredOutputsWrapper()
+{
+	vector<string> names;
+	Outputs::registeredOutputs( names );
+	boost::python::list l;
+	for( vector<string>::const_iterator it = names.begin(); it!=names.end(); it++ )
+	{
+		l.append( *it );
+	}
+	return boost::python::tuple( l );
+}
+
+} // namespace
+
+void GafferSceneModule::bindGlobals()
+{
+
+	DependencyNodeClass<GlobalsProcessor>();
+	DependencyNodeClass<DeleteGlobals>()
+		.def( "_namePrefix", &DeleteGlobals::namePrefix )
+	;
+
+	DependencyNodeClass<DeleteOutputs>();
+	DependencyNodeClass<DeleteSets>();
+
+	DependencyNodeClass<Outputs>()
+		.def( "addOutput", &addOutputWrapper )
+		.def( "addOutput", &addOutputWrapper2 )
+		.def( "registerOutput", &Outputs::registerOutput ).staticmethod( "registerOutput" )
+		.def( "registeredOutputs", &registeredOutputsWrapper ).staticmethod( "registeredOutputs" )
+	;
+
+	{
+		scope s = DependencyNodeClass<GafferScene::Set>();
+
+			enum_<GafferScene::Set::Mode>( "Mode" )
+				.value( "Create", GafferScene::Set::Create )
+				.value( "Add", GafferScene::Set::Add )
+				.value( "Remove", GafferScene::Set::Remove )
+			;
+	}
 
 }
