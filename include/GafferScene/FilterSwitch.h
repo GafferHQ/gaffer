@@ -39,6 +39,7 @@
 
 #include "Gaffer/Switch.h"
 
+#include "GafferScene/Export.h"
 #include "GafferScene/FilterProcessor.h"
 
 namespace GafferScene
