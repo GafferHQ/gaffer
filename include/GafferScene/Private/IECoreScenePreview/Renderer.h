@@ -278,7 +278,7 @@ class GAFFERSCENE_API Renderer : public IECore::RefCounted
 		/// renderer implementation.
 		/// \todo Derive this from RunTimeTyped::TypeDescription.
 		template<class T>
-		struct GAFFERSCENE_API TypeDescription
+		struct GAFFER_EXPORT TypeDescription
 		{
 
 			/// \todo Take the type name from RunTimeTyped::staticTypeId().
