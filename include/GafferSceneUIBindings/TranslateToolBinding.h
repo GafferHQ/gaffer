@@ -37,10 +37,12 @@
 #ifndef GAFFERSCENEUIBINDINGS_TRANSLATETOOLBINDING_H
 #define GAFFERSCENEUIBINDINGS_TRANSLATETOOLBINDING_H
 
+#include "GafferSceneUIBindings/Export.h"
+
 namespace GafferSceneUIBindings
 {
 
-void bindTranslateTool();
+GAFFERSCENEUIBINDINGS_API void bindTranslateTool();
 
 } // namespace GafferSceneUIBindings
 

@@ -39,12 +39,13 @@
 
 #include "GafferScene/Light.h"
 
+#include "GafferRenderMan/Export.h"
 #include "GafferRenderMan/TypeIds.h"
 
 namespace GafferRenderMan
 {
 
-class RenderManLight : public GafferScene::Light
+class GAFFERRENDERMAN_API RenderManLight : public GafferScene::Light
 {
 
 	public :

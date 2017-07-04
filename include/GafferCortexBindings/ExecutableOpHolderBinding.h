@@ -37,10 +37,12 @@
 #ifndef GAFFERCORTEXBINDINGS_EXECUTABLEOPHOLDERBINDING_H
 #define GAFFERCORTEXBINDINGS_EXECUTABLEOPHOLDERBINDING_H
 
+#include "GafferCortexBindings/Export.h"
+
 namespace GafferCortexBindings
 {
 
-void bindExecutableOpHolder();
+GAFFERCORTEXBINDINGS_API void bindExecutableOpHolder();
 
 } // namespace GafferCortexBindings
 

@@ -38,10 +38,12 @@
 #ifndef GAFFERBINDINGS_CONNECTIONBINDING_H
 #define GAFFERBINDINGS_CONNECTIONBINDING_H
 
+#include "GafferBindings/Export.h"
+
 namespace GafferBindings
 {
 
-void bindConnection();
+GAFFERBINDINGS_API void bindConnection();
 
 } // namespace GafferBindings
 

@@ -37,10 +37,12 @@
 #ifndef GAFFERIMAGEBINDINGS_FORMATDATABINDING_H
 #define GAFFERIMAGEBINDINGS_FORMATDATABINDING_H
 
+#include "GafferImageBindings/Export.h"
+
 namespace GafferImageBindings
 {
 
-void bindFormatData();
+GAFFERIMAGEBINDINGS_API void bindFormatData();
 
 } // namespace GafferImageBindings
 

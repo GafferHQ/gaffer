@@ -37,10 +37,12 @@
 #ifndef GAFFERSCENEBINDINGS_CLIPPINGPLANEBINDING_H
 #define GAFFERSCENEBINDINGS_CLIPPINGPLANEBINDING_H
 
+#include "GafferSceneBindings/Export.h"
+
 namespace GafferSceneBindings
 {
 
-void bindClippingPlane();
+GAFFERSCENEBINDINGS_API void bindClippingPlane();
 
 } // namespace GafferSceneBindings
 

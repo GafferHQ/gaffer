@@ -37,6 +37,7 @@
 #ifndef GAFFERSCENE_MESHTYPE_H
 #define GAFFERSCENE_MESHTYPE_H
 
+#include "GafferScene/Export.h"
 #include "GafferScene/SceneElementProcessor.h"
 
 namespace Gaffer
@@ -50,7 +51,7 @@ namespace GafferScene
 {
 
 /// The MeshType node changes the mesh interpolation type.
-class MeshType : public SceneElementProcessor
+class GAFFERSCENE_API MeshType : public SceneElementProcessor
 {
 
 	public :

@@ -37,10 +37,12 @@
 #ifndef GAFFERIMAGEBINDINGS_RANKFILTERBINDING_H
 #define GAFFERIMAGEBINDINGS_RANKFILTERBINDING_H
 
+#include "GafferImageBindings/Export.h"
+
 namespace GafferImageBindings
 {
 
-void bindRankFilter();
+GAFFERIMAGEBINDINGS_API void bindRankFilter();
 
 }; // namespace GafferImageBindings
 

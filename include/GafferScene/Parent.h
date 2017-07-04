@@ -37,12 +37,13 @@
 #ifndef GAFFERSCENE_PARENT_H
 #define GAFFERSCENE_PARENT_H
 
+#include "GafferScene/Export.h"
 #include "GafferScene/BranchCreator.h"
 
 namespace GafferScene
 {
 
-class Parent : public BranchCreator
+class GAFFERSCENE_API Parent : public BranchCreator
 {
 
 	public :

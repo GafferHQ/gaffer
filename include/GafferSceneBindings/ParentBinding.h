@@ -37,10 +37,12 @@
 #ifndef GAFFERSCENEBINDINGS_PARENTBINDING_H
 #define GAFFERSCENEBINDINGS_PARENTBINDING_H
 
+#include "GafferSceneBindings/Export.h"
+
 namespace GafferSceneBindings
 {
 
-void bindParent();
+GAFFERSCENEBINDINGS_API void bindParent();
 
 } // namespace GafferSceneBindings
 

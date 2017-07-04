@@ -39,13 +39,15 @@
 
 #include "IECore/ExternalProcedural.h"
 
+#include "GafferArnold/Export.h"
+
 namespace IECoreArnoldPreview
 {
 
 namespace ProceduralAlgo
 {
 
-AtNode *convert( const IECore::ExternalProcedural *procedural );
+GAFFERARNOLD_API AtNode *convert( const IECore::ExternalProcedural *procedural );
 
 } // namespace ProceduralAlgo
 

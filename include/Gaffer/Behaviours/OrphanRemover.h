@@ -37,6 +37,7 @@
 #ifndef GAFFER_BEHAVIOURS_ORPHANREMOVER_H
 #define GAFFER_BEHAVIOURS_ORPHANREMOVER_H
 
+#include "Gaffer/Export.h"
 #include "Gaffer/Set.h"
 #include "Gaffer/Behaviours/Behaviour.h"
 
@@ -57,7 +58,7 @@ namespace Behaviours
 /// other classes that would belong in such a namespace. Just build
 /// this behaviour into the StandardSet anyway, and remove the whole
 /// behaviours namespace.
-class OrphanRemover : public Behaviour
+class GAFFER_API OrphanRemover : public Behaviour
 {
 
 	public :

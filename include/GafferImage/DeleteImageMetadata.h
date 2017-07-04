@@ -42,7 +42,7 @@
 namespace GafferImage
 {
 
-class DeleteImageMetadata : public MetadataProcessor
+class GAFFERIMAGE_API DeleteImageMetadata : public MetadataProcessor
 {
 
 	public :

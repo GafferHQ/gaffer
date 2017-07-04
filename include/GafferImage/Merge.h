@@ -39,6 +39,7 @@
 
 #include "Gaffer/NumericPlug.h"
 
+#include "GafferImage/Export.h"
 #include "GafferImage/ImageProcessor.h"
 
 namespace GafferImage
@@ -56,7 +57,7 @@ namespace GafferImage
 /// - For some operations we do not need to track the intermediate alpha values at all.
 /// - We could improve our masking of invalid pixels with special cases for wholly valid tiles,
 ///   wholly invalid tiles, and by chunking the work on the valid sections.
-class Merge : public ImageProcessor
+class GAFFERIMAGE_API Merge : public ImageProcessor
 {
 
 	public :

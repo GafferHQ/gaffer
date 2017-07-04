@@ -37,10 +37,12 @@
 #ifndef GAFFERIMAGEBINDINGS_IMAGENODEBINDING_H
 #define GAFFERIMAGEBINDINGS_IMAGENODEBINDING_H
 
+#include "GafferImageBindings/Export.h"
+
 namespace GafferImageBindings
 {
 
-void bindImageNode();
+GAFFERIMAGEBINDINGS_API void bindImageNode();
 
 } // namespace GafferImageBindings
 

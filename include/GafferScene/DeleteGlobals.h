@@ -37,6 +37,7 @@
 #ifndef GAFFERSCENE_DELETEGLOBALS_H
 #define GAFFERSCENE_DELETEGLOBALS_H
 
+#include "GafferScene/Export.h"
 #include "GafferScene/GlobalsProcessor.h"
 
 #include "GafferSceneBindings/DeleteGlobalsBinding.h" // to enable friend declaration for bindDeleteGlobals().
@@ -51,7 +52,7 @@ IE_CORE_FORWARDDECLARE( StringPlug )
 namespace GafferScene
 {
 
-class DeleteGlobals : public GlobalsProcessor
+class GAFFERSCENE_API DeleteGlobals : public GlobalsProcessor
 {
 
 	public :

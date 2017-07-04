@@ -37,13 +37,15 @@
 #ifndef GAFFERSCENEUIBINDINGS_SCENEHIERARCHYBINDING_H
 #define GAFFERSCENEUIBINDINGS_SCENEHIERARCHYBINDING_H
 
+#include "GafferSceneUIBindings/Export.h"
+
 namespace GafferSceneUIBindings
 {
 
 /// This doesn't actually bind SceneHierarchy, because that is implemented
 /// in Python at present. Instead, it binds C++ support classes and functions
 /// that the SceneHierarchy uses internally.
-void bindSceneHierarchy();
+GAFFERSCENEUIBINDINGS_API void bindSceneHierarchy();
 
 } // namespace GafferUIBindings
 

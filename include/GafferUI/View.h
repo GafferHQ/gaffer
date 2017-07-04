@@ -42,6 +42,7 @@
 
 #include "Gaffer/Node.h"
 
+#include "GafferUI/Export.h"
 #include "GafferUI/ViewportGadget.h"
 #include "GafferUIBindings/ViewBinding.h" // to enable friend declaration for bindView().
 
@@ -60,7 +61,7 @@ IE_CORE_FORWARDDECLARE( View )
 /// The View classes provide the content for the Viewer, which is implemented in the
 /// GafferUI python module. The View presents whatever is connected into inPlug(),
 /// and may provide further settings via additional plugs.
-class View : public Gaffer::Node
+class GAFFERUI_API View : public Gaffer::Node
 {
 
 	public :

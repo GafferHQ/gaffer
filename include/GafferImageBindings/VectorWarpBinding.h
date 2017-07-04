@@ -37,10 +37,12 @@
 #ifndef GAFFERIMAGEBINDINGS_UVWARPBINDING_H
 #define GAFFERIMAGEBINDINGS_UVWARPBINDING_H
 
+#include "GafferImageBindings/Export.h"
+
 namespace GafferImageBindings
 {
 
-void bindVectorWarp();
+GAFFERIMAGEBINDINGS_API void bindVectorWarp();
 
 }; // namespace GafferImageBindings
 

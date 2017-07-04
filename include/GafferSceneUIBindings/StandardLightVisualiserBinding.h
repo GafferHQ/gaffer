@@ -37,10 +37,12 @@
 #ifndef GAFFERSCENEUIBINDINGS_STANDARDLIGHTVISUALISERBINDING_H
 #define GAFFERSCENEUIBINDINGS_STANDARDLIGHTVISUALISERBINDING_H
 
+#include "GafferSceneUIBindings/Export.h"
+
 namespace GafferSceneUIBindings
 {
 
-void bindStandardLightVisualiser();
+GAFFERSCENEUIBINDINGS_API void bindStandardLightVisualiser();
 
 } // namespace GafferSceneUIBindings
 

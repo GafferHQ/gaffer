@@ -42,6 +42,7 @@
 #include "GafferUI/Tool.h"
 #include "GafferUI/DragDropEvent.h"
 
+#include "GafferSceneUI/Export.h"
 #include "GafferSceneUI/TypeIds.h"
 
 namespace GafferSceneUI
@@ -49,7 +50,7 @@ namespace GafferSceneUI
 
 IE_CORE_FORWARDDECLARE( SceneView )
 
-class CropWindowTool : public GafferUI::Tool
+class GAFFERSCENEUI_API CropWindowTool : public GafferUI::Tool
 {
 
 	public :

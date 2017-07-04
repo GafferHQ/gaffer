@@ -37,13 +37,15 @@
 #ifndef GAFFERUIBINDINGS_PATHLISTINGWIDGETBINDING_H
 #define GAFFERUIBINDINGS_PATHLISTINGWIDGETBINDING_H
 
+#include "GafferUIBindings/Export.h"
+
 namespace GafferUIBindings
 {
 
 /// This doesn't actually bind PathListingWidget, because that is implemented
 /// in Python at present. Instead, it binds C++ support functions that PathListingWidget
 /// uses internally.
-void bindPathListingWidget();
+GAFFERUIBINDINGS_API void bindPathListingWidget();
 
 } // namespace GafferUIBindings
 

@@ -37,12 +37,13 @@
 #ifndef GAFFERBINDINGS_TYPEDPLUGBINDING_H
 #define GAFFERBINDINGS_TYPEDPLUGBINDING_H
 
+#include "GafferBindings/Export.h"
 #include "GafferBindings/PlugBinding.h"
 
 namespace GafferBindings
 {
 
-void bindTypedPlug();
+GAFFERBINDINGS_API void bindTypedPlug();
 
 template<typename T, typename TWrapper=T>
 class TypedPlugClass : public PlugClass<T, TWrapper>

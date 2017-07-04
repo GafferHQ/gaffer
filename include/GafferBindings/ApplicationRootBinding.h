@@ -37,10 +37,12 @@
 #ifndef GAFFERBINDINGS_APPLICATIONROOTBINDING_H
 #define GAFFERBINDINGS_APPLICATIONROOTBINDING_H
 
+#include "GafferBindings/Export.h"
+
 namespace GafferBindings
 {
 
-void bindApplicationRoot();
+GAFFERBINDINGS_API void bindApplicationRoot();
 
 } // namespace GafferBindings
 

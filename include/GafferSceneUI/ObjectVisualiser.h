@@ -40,6 +40,8 @@
 #include "IECore/Object.h"
 #include "IECoreGL/Renderable.h"
 
+#include "GafferSceneUI/Export.h"
+
 namespace GafferSceneUI
 {
 
@@ -52,7 +54,7 @@ IE_CORE_FORWARDDECLARE( ObjectVisualiser )
 /// and lights, IECoreGL provides no visualisation capabilities.
 /// This class allows custom visualisers to be registered to
 /// perform an appropriate visualisation for any such type.
-class ObjectVisualiser : public IECore::RefCounted
+class GAFFERSCENEUI_API ObjectVisualiser : public IECore::RefCounted
 {
 
 	public :

@@ -37,10 +37,12 @@
 #ifndef GAFFERDISPATCHBINDINGS_DISPATCHERBINDING_H
 #define GAFFERDISPATCHBINDINGS_DISPATCHERBINDING_H
 
+#include "GafferDispatchBindings/Export.h"
+
 namespace GafferDispatchBindings
 {
 
-void bindDispatcher();
+GAFFERDISPATCHBINDINGS_API void bindDispatcher();
 
 } // namespace GafferDispatchBindings
 

@@ -37,11 +37,13 @@
 #ifndef GAFFER_CONTAINER_H
 #define GAFFER_CONTAINER_H
 
+#include "Gaffer/Export.h"
+
 namespace Gaffer
 {
 
 template<typename Base, typename T>
-class Container : public Base
+class GAFFER_EXPORT Container : public Base
 {
 
 	public :
@@ -75,17 +77,17 @@ class Container : public Base
 
 #define GAFFER_DECLARECONTAINERSPECIALISATIONS( TYPENAME, TYPEID  )			\
 																			\
-	template<>																\
+	template<> GAFFER_EXPORT												\
 	IECore::TypeId TYPENAME::staticTypeId()									\
 	{																		\
 		return (IECore::TypeId)TYPEID;										\
 	}																		\
-	template<>																\
+	template<> GAFFER_EXPORT												\
 	const char *TYPENAME::staticTypeName()									\
 	{																		\
 		return #TYPENAME;													\
 	}																		\
-	template<> 																\
+	template<> GAFFER_EXPORT 												\
 	const IECore::RunTimeTyped::TypeDescription<TYPENAME>  TYPENAME::g_typeDescription; \
 
 

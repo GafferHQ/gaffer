@@ -39,10 +39,12 @@
 
 #include "GafferImage/Sampler.h"
 
+#include "GafferImageBindings/Export.h"
+
 namespace GafferImageBindings
 {
 
-void bindSampler();
+GAFFERIMAGEBINDINGS_API void bindSampler();
 
 }; // namespace GafferImageBindings
 

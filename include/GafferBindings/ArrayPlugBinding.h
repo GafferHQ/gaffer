@@ -37,10 +37,12 @@
 #ifndef GAFFERBINDINGS_ARRAYPLUGBINDING_H
 #define GAFFERBINDINGS_ARRAYPLUGBINDING_H
 
+#include "GafferBindings/Export.h"
+
 namespace GafferBindings
 {
 
-void bindArrayPlug();
+GAFFERBINDINGS_API void bindArrayPlug();
 
 } // namespace GafferBindings
 

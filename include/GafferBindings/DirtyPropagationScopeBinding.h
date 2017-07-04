@@ -37,10 +37,12 @@
 #ifndef GAFFERBINDINGS_DIRTYPROPAGATIONSCOPEBINDING_H
 #define GAFFERBINDINGS_DIRTYPROPAGATIONSCOPEBINDING_H
 
+#include "GafferBindings/Export.h"
+
 namespace GafferBindings
 {
 
-void bindDirtyPropagationScope();
+GAFFERBINDINGS_API void bindDirtyPropagationScope();
 
 } // namespace GafferBindings
 

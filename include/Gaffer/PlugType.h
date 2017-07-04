@@ -37,6 +37,7 @@
 #ifndef GAFFER_PLUGTYPE_H
 #define GAFFER_PLUGTYPE_H
 
+#include "Gaffer/Export.h"
 #include "Gaffer/NumericPlug.h"
 #include "Gaffer/CompoundNumericPlug.h"
 #include "Gaffer/TypedPlug.h"
@@ -49,14 +50,14 @@ namespace Gaffer
 /// This structure can be used to determine the appropriate Plug subclass
 /// to use to store a value of type T.
 template<typename T>
-struct PlugType
+struct GAFFER_API PlugType
 {
 	typedef void Type;
 };
 
 #define GAFFER_PLUGTYPE_SPECIALISE( VALUETYPE, PLUGTYPE ) 	\
 	template<>												\
-	struct PlugType<VALUETYPE>								\
+	struct GAFFER_EXPORT PlugType<VALUETYPE>				\
 	{														\
 		typedef PLUGTYPE Type;								\
 	};														\

@@ -37,10 +37,12 @@
 #ifndef GAFFERBINDINGS_RANDOMBINDING_H
 #define GAFFERBINDINGS_RANDOMBINDING_H
 
+#include "GafferBindings/Export.h"
+
 namespace GafferBindings
 {
 
-void bindRandom();
+GAFFERBINDINGS_API void bindRandom();
 
 } // namespace GafferBindings
 

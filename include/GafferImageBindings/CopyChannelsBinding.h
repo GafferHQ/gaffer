@@ -37,10 +37,12 @@
 #ifndef GAFFERIMAGEBINDINGS_COPYCHANNELSBINDING_H
 #define GAFFERIMAGEBINDINGS_COPYCHANNELSBINDING_H
 
+#include "GafferImageBindings/Export.h"
+
 namespace GafferImageBindings
 {
 
-void bindCopyChannels();
+GAFFERIMAGEBINDINGS_API void bindCopyChannels();
 
 }; // namespace GafferImageBindings
 

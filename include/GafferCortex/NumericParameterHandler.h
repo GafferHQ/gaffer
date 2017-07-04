@@ -40,13 +40,14 @@
 
 #include "Gaffer/NumericPlug.h"
 
+#include "GafferCortex/Export.h"
 #include "GafferCortex/ParameterHandler.h"
 
 namespace GafferCortex
 {
 
 template<typename T>
-class NumericParameterHandler : public ParameterHandler
+class GAFFER_EXPORT NumericParameterHandler : public ParameterHandler
 {
 
 	public :

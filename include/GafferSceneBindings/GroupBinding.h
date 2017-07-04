@@ -37,10 +37,12 @@
 #ifndef GAFFERSCENEBINDINGS_GROUPBINDING_H
 #define GAFFERSCENEBINDINGS_GROUPBINDING_H
 
+#include "GafferSceneBindings/Export.h"
+
 namespace GafferSceneBindings
 {
 
-void bindGroup();
+GAFFERSCENEBINDINGS_API void bindGroup();
 
 } // namespace GafferSceneBindings
 

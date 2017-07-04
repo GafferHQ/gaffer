@@ -37,10 +37,12 @@
 #ifndef GAFFERSCENEBINDINGS_RENDERERALGOBINDING_H
 #define GAFFERSCENEBINDINGS_RENDERERALGOBINDING_H
 
+#include "GafferSceneBindings/Export.h"
+
 namespace GafferSceneBindings
 {
 
-void bindRendererAlgo();
+GAFFERSCENEBINDINGS_API void bindRendererAlgo();
 
 } // namespace GafferSceneBindings
 

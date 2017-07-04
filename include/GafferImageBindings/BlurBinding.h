@@ -37,10 +37,12 @@
 #ifndef GAFFERIMAGEBINDINGS_BLURBINDING_H
 #define GAFFERIMAGEBINDINGS_BLURBINDING_H
 
+#include "GafferImageBindings/Export.h"
+
 namespace GafferImageBindings
 {
 
-void bindBlur();
+GAFFERIMAGEBINDINGS_API void bindBlur();
 
 }; // namespace GafferImageBindings
 

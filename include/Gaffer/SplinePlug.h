@@ -40,6 +40,7 @@
 
 #include "IECore/Spline.h"
 
+#include "Gaffer/Export.h"
 #include "Gaffer/NumericPlug.h"
 #include "Gaffer/TypedPlug.h"
 #include "Gaffer/PlugType.h"
@@ -60,7 +61,7 @@ namespace Gaffer
 /// endPointMultiplicity plug. When calling getValue(), the
 /// endPointMultiplicity is then used to restore the duplicate endpoints.
 template<typename T>
-class SplinePlug : public ValuePlug
+class GAFFER_API SplinePlug : public ValuePlug
 {
 
 	public :

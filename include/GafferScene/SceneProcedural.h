@@ -43,6 +43,7 @@
 
 #include "IECore/Renderer.h"
 
+#include "GafferScene/Export.h"
 #include "GafferScene/ScenePlug.h"
 
 namespace Gaffer
@@ -62,7 +63,7 @@ namespace GafferScene
 /// node.
 /// \todo There is useful functionality in here for calculating bounds and outputting things
 /// to Renderers that should probably be moved to RendererAlgo.h and/or SceneAlgo.h.
-class SceneProcedural : public IECore::Renderer::Procedural
+class GAFFERSCENE_API SceneProcedural : public IECore::Renderer::Procedural
 {
 
 	public :

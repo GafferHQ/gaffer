@@ -40,6 +40,7 @@
 
 #include "Gaffer/TypedObjectPlug.h"
 
+#include "GafferImage/Export.h"
 #include "GafferImage/ImageNode.h"
 #include "GafferImage/ImageProcessor.h"
 
@@ -47,7 +48,7 @@ namespace GafferImage
 {
 
 template<typename BaseType>
-class ImagePrimitiveSource : public BaseType
+class GAFFER_EXPORT ImagePrimitiveSource : public BaseType
 {
 
 	public :

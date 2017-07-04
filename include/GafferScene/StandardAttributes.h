@@ -37,12 +37,13 @@
 #ifndef GAFFERSCENE_STANDARDATTRIBUTES_H
 #define GAFFERSCENE_STANDARDATTRIBUTES_H
 
+#include "GafferScene/Export.h"
 #include "GafferScene/Attributes.h"
 
 namespace GafferScene
 {
 
-class StandardAttributes : public Attributes
+class GAFFERSCENE_API StandardAttributes : public Attributes
 {
 
 	public :

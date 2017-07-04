@@ -37,10 +37,12 @@
 #ifndef GAFFERUIBINDINGS_TOOLBINDING_H
 #define GAFFERUIBINDINGS_TOOLBINDING_H
 
+#include "GafferUIBindings/Export.h"
+
 namespace GafferUIBindings
 {
 
-void bindTool();
+GAFFERUIBINDINGS_API void bindTool();
 
 } // namespace GafferUIBindings
 

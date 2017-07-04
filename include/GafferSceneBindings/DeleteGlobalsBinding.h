@@ -37,10 +37,12 @@
 #ifndef GAFFERSCENEBINDINGS_DELETEGLOBALSBINDING_H
 #define GAFFERSCENEBINDINGS_DELETEGLOBALSBINDING_H
 
+#include "GafferSceneBindings/Export.h"
+
 namespace GafferSceneBindings
 {
 
-void bindDeleteGlobals();
+GAFFERSCENEBINDINGS_API void bindDeleteGlobals();
 
 } // namespace GafferSceneBindings
 

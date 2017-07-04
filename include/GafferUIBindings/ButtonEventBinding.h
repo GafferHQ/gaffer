@@ -37,10 +37,12 @@
 #ifndef GAFFERUIBINDINGS_BUTTONEVENTBINDING_H
 #define GAFFERUIBINDINGS_BUTTONEVENTBINDING_H
 
+#include "GafferUIBindings/Export.h"
+
 namespace GafferUIBindings
 {
 
-void bindButtonEvent();
+GAFFERUIBINDINGS_API void bindButtonEvent();
 
 } // namespace GafferUIBindings
 

@@ -41,12 +41,13 @@
 
 #include "GafferScene/Light.h"
 
+#include "GafferAppleseed/Export.h"
 #include "GafferAppleseed/TypeIds.h"
 
 namespace GafferAppleseed
 {
 
-class AppleseedLight : public GafferScene::Light
+class GAFFERAPPLESEED_API AppleseedLight : public GafferScene::Light
 {
 
 	public :

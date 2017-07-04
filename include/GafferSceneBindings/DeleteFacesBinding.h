@@ -37,10 +37,12 @@
 #ifndef GAFFERSCENEBINDINGS_DELETEFACESBINDING_H
 #define GAFFERSCENEBINDINGS_DELETEFACESBINDING_H
 
+#include "GafferSceneBindings/Export.h"
+
 namespace GafferSceneBindings
 {
 
-void bindDeleteFaces();
+GAFFERSCENEBINDINGS_API void bindDeleteFaces();
 
 } // namespace GafferSceneBindings
 

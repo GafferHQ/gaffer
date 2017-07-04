@@ -39,12 +39,13 @@
 
 #include "Gaffer/CompoundDataPlug.h"
 
+#include "GafferScene/Export.h"
 #include "GafferScene/SceneElementProcessor.h"
 
 namespace GafferScene
 {
 
-class Parameters : public SceneElementProcessor
+class GAFFERSCENE_API Parameters : public SceneElementProcessor
 {
 
 	public :

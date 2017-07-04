@@ -37,10 +37,12 @@
 #ifndef GAFFERSCENEBINDINGS_SCENEPROCEDURALBINDING_H
 #define GAFFERSCENEBINDINGS_SCENEPROCEDURALBINDING_H
 
+#include "GafferSceneBindings/Export.h"
+
 namespace GafferSceneBindings
 {
 
-void bindSceneProcedural();
+GAFFERSCENEBINDINGS_API void bindSceneProcedural();
 
 } // namespace GafferSceneBindings
 

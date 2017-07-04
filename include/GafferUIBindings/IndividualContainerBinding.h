@@ -37,10 +37,12 @@
 #ifndef GAFFERUIBINDINGS_INDIVIDUALCONTAINERBINDING_H
 #define GAFFERUIBINDINGS_INDIVIDUALCONTAINERBINDING_H
 
+#include "GafferUIBindings/Export.h"
+
 namespace GafferUIBindings
 {
 
-void bindIndividualContainer();
+GAFFERUIBINDINGS_API void bindIndividualContainer();
 
 } // namespace GafferUIBindings
 

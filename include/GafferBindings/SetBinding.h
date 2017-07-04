@@ -38,10 +38,12 @@
 #ifndef GAFFERBINDINGS_SETBINDING_H
 #define GAFFERBINDINGS_SETBINDING_H
 
+#include "GafferBindings/Export.h"
+
 namespace GafferBindings
 {
 
-void bindSet();
+GAFFERBINDINGS_API void bindSet();
 
 } // namespace GafferBindings
 

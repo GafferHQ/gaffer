@@ -37,10 +37,12 @@
 #ifndef GAFFERIMAGEBINDINGS_RESAMPLEBINDING_H
 #define GAFFERIMAGEBINDINGS_RESAMPLEBINDING_H
 
+#include "GafferImageBindings/Export.h"
+
 namespace GafferImageBindings
 {
 
-void bindResample();
+GAFFERIMAGEBINDINGS_API void bindResample();
 
 }; // namespace GafferImageBindings
 

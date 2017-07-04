@@ -37,10 +37,12 @@
 #ifndef GAFFERSCENEBINDINGS_GRIDBINDING_H
 #define GAFFERSCENEBINDINGS_GRIDBINDING_H
 
+#include "GafferSceneBindings/Export.h"
+
 namespace GafferSceneBindings
 {
 
-void bindGrid();
+GAFFERSCENEBINDINGS_API void bindGrid();
 
 } // namespace GafferSceneBindings
 

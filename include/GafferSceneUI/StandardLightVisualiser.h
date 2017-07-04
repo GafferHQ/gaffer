@@ -37,6 +37,7 @@
 #ifndef GAFFERSCENEUI_STANDARDLIGHTVISUALISER_H
 #define GAFFERSCENEUI_STANDARDLIGHTVISUALISER_H
 
+#include "GafferSceneUI/Export.h"
 #include "GafferSceneUI/LightVisualiser.h"
 #include "IECore/SimpleTypedData.h"
 #include "IECoreGL/Group.h"
@@ -50,7 +51,7 @@ namespace GafferSceneUI
 /// This also provides several protected utility methods for
 /// making standard visualisations, so is suitable for use as
 /// a base class for custom light visualisers.
-class StandardLightVisualiser : public LightVisualiser
+class GAFFERSCENEUI_API StandardLightVisualiser : public LightVisualiser
 {
 
 	public :

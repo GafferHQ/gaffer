@@ -37,13 +37,14 @@
 #ifndef GAFFER_LEAFPATHFILTER_H
 #define GAFFER_LEAFPATHFILTER_H
 
+#include "Gaffer/Export.h"
 #include "Gaffer/PathFilter.h"
 
 namespace Gaffer
 {
 
 /// A PathFilter which removes leaf paths.
-class LeafPathFilter : public Gaffer::PathFilter
+class GAFFER_API LeafPathFilter : public Gaffer::PathFilter
 {
 
 	public :

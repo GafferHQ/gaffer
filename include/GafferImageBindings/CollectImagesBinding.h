@@ -37,10 +37,12 @@
 #ifndef GAFFERIMAGEBINDINGS_COLLECTIMAGESBINDING_H
 #define GAFFERIMAGEBINDINGS_COLLECTIMAGESBINDING_H
 
+#include "GafferImageBindings/Export.h"
+
 namespace GafferImageBindings
 {
 
-void bindCollectImages();
+GAFFERIMAGEBINDINGS_API void bindCollectImages();
 
 }; // namespace GafferImageBindings
 
