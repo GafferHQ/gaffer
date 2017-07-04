@@ -37,10 +37,12 @@
 #ifndef GAFFERIMAGEBINDINGS_DILATEBINDING_H
 #define GAFFERIMAGEBINDINGS_DILATEBINDING_H
 
+#include "GafferImageBindings/Export.h"
+
 namespace GafferImageBindings
 {
 
-void bindDilate();
+GAFFERIMAGEBINDINGS_API void bindDilate();
 
 }; // namespace GafferImageBindings
 

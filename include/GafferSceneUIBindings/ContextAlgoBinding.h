@@ -37,10 +37,12 @@
 #ifndef GAFFERSCENEUIBINDINGS_CONTEXTALGOBINDING_H
 #define GAFFERSCENEUIBINDINGS_CONTEXTALGOBINDING_H
 
+#include "GafferSceneUIBindings/Export.h"
+
 namespace GafferSceneUIBindings
 {
 
-void bindContextAlgo();
+GAFFERSCENEUIBINDINGS_API void bindContextAlgo();
 
 } // namespace GafferSceneUIBindings
 

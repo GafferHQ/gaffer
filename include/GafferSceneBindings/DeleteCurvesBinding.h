@@ -37,10 +37,12 @@
 #ifndef GAFFERSCENEBINDINGS_DELETECURVESBINDING_H
 #define GAFFERSCENEBINDINGS_DELETECURVESBINDING_H
 
+#include "GafferSceneBindings/Export.h"
+
 namespace GafferSceneBindings
 {
 
-void bindDeleteCurves();
+GAFFERSCENEBINDINGS_API void bindDeleteCurves();
 
 } // namespace GafferSceneBindings
 

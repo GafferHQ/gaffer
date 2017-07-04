@@ -35,6 +35,7 @@
 //////////////////////////////////////////////////////////////////////////
 
 #include "Gaffer/DeleteContextVariables.inl"
+#include "GafferImage/Export.h"
 #include "GafferImage/DeleteImageContextVariables.h"
 
 using namespace GafferImage;
@@ -47,4 +48,4 @@ IECORE_RUNTIMETYPED_DEFINETEMPLATESPECIALISATION( GafferImage::DeleteImageContex
 }
 
 // explicit instantiation
-template class Gaffer::DeleteContextVariables<ImageProcessor>;
+template class GAFFERIMAGE_API Gaffer::DeleteContextVariables<ImageProcessor>;
