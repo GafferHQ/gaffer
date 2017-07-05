@@ -37,10 +37,12 @@
 #ifndef GAFFERBINDINGS_SWITCHBINDING_H
 #define GAFFERBINDINGS_SWITCHBINDING_H
 
+#include "GafferBindings/Export.h"
+
 namespace GafferBindings
 {
 
-void bindSwitch();
+GAFFERBINDINGS_API void bindSwitch();
 
 } // namespace GafferBindings
 

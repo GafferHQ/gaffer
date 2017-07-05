@@ -38,14 +38,15 @@
 #ifndef GAFFERBINDINGS_COMPOUNDPLUGBINDING_H
 #define GAFFERBINDINGS_COMPOUNDPLUGBINDING_H
 
+#include "GafferBindings/Export.h"
 #include "GafferBindings/ValuePlugBinding.h"
 
 namespace GafferBindings
 {
 
-void bindCompoundPlug();
+GAFFERBINDINGS_API void bindCompoundPlug();
 
-class CompoundPlugSerialiser : public ValuePlugSerialiser
+class GAFFERBINDINGS_API CompoundPlugSerialiser : public ValuePlugSerialiser
 {
 
 	protected :

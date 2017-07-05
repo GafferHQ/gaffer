@@ -37,10 +37,12 @@
 #ifndef GAFFERBINDINGS_UNDOSCOPEBINDING_H
 #define GAFFERBINDINGS_UNDOSCOPEBINDING_H
 
+#include "GafferBindings/Export.h"
+
 namespace GafferBindings
 {
 
-void bindUndoScope();
+GAFFERBINDINGS_API void bindUndoScope();
 
 } // namespace GafferBindings
 

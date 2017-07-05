@@ -37,10 +37,12 @@
 #ifndef GAFFERIMAGEBINDINGS_SHUFFLEBINDING_H
 #define GAFFERIMAGEBINDINGS_SHUFFLEBINDING_H
 
+#include "GafferImageBindings/Export.h"
+
 namespace GafferImageBindings
 {
 
-void bindShuffle();
+GAFFERIMAGEBINDINGS_API void bindShuffle();
 
 }; // namespace GafferImageBindings
 

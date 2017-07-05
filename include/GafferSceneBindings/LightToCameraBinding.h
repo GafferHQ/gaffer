@@ -37,10 +37,12 @@
 #ifndef GAFFERSCENEBINDINGS_LIGHTTOCAMERABINDING_H
 #define GAFFERSCENEBINDINGS_LIGHTTOCAMERABINDING_H
 
+#include "GafferSceneBindings/Export.h"
+
 namespace GafferSceneBindings
 {
 
-void bindLightToCamera();
+GAFFERSCENEBINDINGS_API void bindLightToCamera();
 
 } // namespace GafferSceneBindings
 

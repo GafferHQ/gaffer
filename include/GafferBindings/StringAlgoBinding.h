@@ -37,10 +37,12 @@
 #ifndef GAFFERBINDINGS_STRINGALGOBINDING_H
 #define GAFFERBINDINGS_STRINGALGOBINDING_H
 
+#include "GafferBindings/Export.h"
+
 namespace GafferBindings
 {
 
-void bindStringAlgo();
+GAFFERBINDINGS_API void bindStringAlgo();
 
 } // namespace GafferBindings
 

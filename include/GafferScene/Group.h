@@ -38,6 +38,7 @@
 #ifndef GAFFERSCENE_GROUP_H
 #define GAFFERSCENE_GROUP_H
 
+#include "GafferScene/Export.h"
 #include "GafferScene/SceneProcessor.h"
 
 namespace Gaffer
@@ -51,7 +52,7 @@ IE_CORE_FORWARDDECLARE( TransformPlug )
 namespace GafferScene
 {
 
-class Group : public SceneProcessor
+class GAFFERSCENE_API Group : public SceneProcessor
 {
 
 	public :

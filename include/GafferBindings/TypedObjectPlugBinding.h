@@ -39,12 +39,13 @@
 
 #include "Gaffer/TypedObjectPlug.h"
 
+#include "GafferBindings/Export.h"
 #include "GafferBindings/PlugBinding.h"
 
 namespace GafferBindings
 {
 
-void bindTypedObjectPlug();
+GAFFERBINDINGS_API void bindTypedObjectPlug();
 
 template<typename T, typename TWrapper=T>
 class TypedObjectPlugClass : public PlugClass<T, TWrapper>

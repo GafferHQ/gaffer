@@ -37,10 +37,12 @@
 #ifndef GAFFERUIBINDINGS_BACKDROPNODEGADGETBINDING_H
 #define GAFFERUIBINDINGS_BACKDROPNODEGADGETBINDING_H
 
+#include "GafferUIBindings/Export.h"
+
 namespace GafferUIBindings
 {
 
-void bindBackdropNodeGadget();
+GAFFERUIBINDINGS_API void bindBackdropNodeGadget();
 
 } // namespace GafferUIBindings
 

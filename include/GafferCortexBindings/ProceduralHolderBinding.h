@@ -37,10 +37,12 @@
 #ifndef GAFFERCORTEXBINDINGS_PROCEDURALHOLDERBINDING_H
 #define GAFFERCORTEXBINDINGS_PROCEDURALHOLDERBINDING_H
 
+#include "GafferCortexBindings/Export.h"
+
 namespace GafferCortexBindings
 {
 
-void bindProceduralHolder();
+GAFFERCORTEXBINDINGS_API void bindProceduralHolder();
 
 } // namespace GafferCortexBindings
 

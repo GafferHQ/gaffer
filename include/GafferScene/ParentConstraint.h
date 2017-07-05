@@ -39,12 +39,13 @@
 
 #include "Gaffer/TransformPlug.h"
 
+#include "GafferScene/Export.h"
 #include "GafferScene/Constraint.h"
 
 namespace GafferScene
 {
 
-class ParentConstraint : public Constraint
+class GAFFERSCENE_API ParentConstraint : public Constraint
 {
 
 	public :

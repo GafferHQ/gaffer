@@ -43,6 +43,8 @@
 
 #include "GafferBindings/GraphComponentBinding.h"
 
+#include "GafferUIBindings/Export.h"
+
 namespace GafferUIBindings
 {
 
@@ -137,7 +139,7 @@ class GadgetWrapper : public GafferBindings::GraphComponentWrapper<WrappedType>
 
 };
 
-void bindGadget();
+GAFFERUIBINDINGS_API void bindGadget();
 
 } // namespace GafferUIBindings
 

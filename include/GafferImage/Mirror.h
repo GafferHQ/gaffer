@@ -39,12 +39,13 @@
 
 #include "Gaffer/CompoundNumericPlug.h"
 
+#include "GafferImage/Export.h"
 #include "GafferImage/ImageProcessor.h"
 
 namespace GafferImage
 {
 
-class Mirror : public ImageProcessor
+class GAFFERIMAGE_API Mirror : public ImageProcessor
 {
 
 	public :

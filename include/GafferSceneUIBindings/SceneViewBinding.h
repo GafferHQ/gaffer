@@ -37,10 +37,12 @@
 #ifndef GAFFERSCENEUIBINDINGS_SCENEVIEWBINDING_H
 #define GAFFERSCENEUIBINDINGS_SCENEVIEWBINDING_H
 
+#include "GafferSceneUIBindings/Export.h"
+
 namespace GafferSceneUIBindings
 {
 
-void bindSceneView();
+GAFFERSCENEUIBINDINGS_API void bindSceneView();
 
 } // namespace GafferSceneUIBindings
 

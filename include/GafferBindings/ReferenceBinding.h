@@ -37,10 +37,12 @@
 #ifndef GAFFERBINDINGS_REFERENCEBINDING_H
 #define GAFFERBINDINGS_REFERENCEBINDING_H
 
+#include "GafferBindings/Export.h"
+
 namespace GafferBindings
 {
 
-void bindReference();
+GAFFERBINDINGS_API void bindReference();
 
 } // namespace GafferBindings
 

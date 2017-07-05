@@ -37,10 +37,12 @@
 #ifndef GAFFERCORTEXBINDINGS_PARAMETERHANDLERBINDING_H
 #define GAFFERCORTEXBINDINGS_PARAMETERHANDLERBINDING_H
 
+#include "GafferCortexBindings/Export.h"
+
 namespace GafferCortexBindings
 {
 
-void bindParameterHandler();
+GAFFERCORTEXBINDINGS_API void bindParameterHandler();
 
 } // namespace GafferCortexBindings
 

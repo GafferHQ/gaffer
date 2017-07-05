@@ -37,12 +37,13 @@
 #ifndef GAFFER_BOXOUT_H
 #define GAFFER_BOXOUT_H
 
+#include "Gaffer/Export.h"
 #include "Gaffer/BoxIO.h"
 
 namespace Gaffer
 {
 
-class BoxOut : public BoxIO
+class GAFFER_API BoxOut : public BoxIO
 {
 
 	public :

@@ -37,10 +37,12 @@
 #ifndef GAFFERSCENEUIBINDINGS_ROTATETOOLBINDING_H
 #define GAFFERSCENEUIBINDINGS_ROTATETOOLBINDING_H
 
+#include "GafferSceneUIBindings/Export.h"
+
 namespace GafferSceneUIBindings
 {
 
-void bindRotateTool();
+GAFFERSCENEUIBINDINGS_API void bindRotateTool();
 
 } // namespace GafferSceneUIBindings
 

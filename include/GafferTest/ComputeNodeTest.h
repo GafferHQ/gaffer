@@ -37,10 +37,12 @@
 #ifndef GAFFERTEST_COMPUTENODETEST_H
 #define GAFFERTEST_COMPUTENODETEST_H
 
+#include "GafferTest/Export.h"
+
 namespace GafferTest
 {
 
-void testComputeNodeThreading();
+GAFFERTEST_API void testComputeNodeThreading();
 
 } // namespace GafferTest
 

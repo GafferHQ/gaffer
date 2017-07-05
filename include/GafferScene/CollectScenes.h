@@ -37,6 +37,7 @@
 #ifndef GAFFERSCENE_COLLECTSCENES_H
 #define GAFFERSCENE_COLLECTSCENES_H
 
+#include "GafferScene/Export.h"
 #include "GafferScene/SceneProcessor.h"
 
 namespace Gaffer
@@ -49,7 +50,7 @@ IE_CORE_FORWARDDECLARE( StringPlug )
 namespace GafferScene
 {
 
-class CollectScenes : public SceneProcessor
+class GAFFERSCENE_API CollectScenes : public SceneProcessor
 {
 
 	public :

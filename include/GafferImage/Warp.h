@@ -41,6 +41,7 @@
 #include "Gaffer/TypedObjectPlug.h"
 #include "Gaffer/StringPlug.h"
 
+#include "GafferImage/Export.h"
 #include "GafferImage/ImageProcessor.h"
 
 namespace GafferImage
@@ -57,7 +58,7 @@ namespace GafferImage
 ///   pixel positions from output pixel positions.
 /// - Implement hashEngine() and computeEngine() to create
 ///   and return the Engine subclass.
-class Warp : public ImageProcessor
+class GAFFERIMAGE_API Warp : public ImageProcessor
 {
 	public :
 

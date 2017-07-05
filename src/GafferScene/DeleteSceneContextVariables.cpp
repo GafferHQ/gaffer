@@ -35,6 +35,7 @@
 //////////////////////////////////////////////////////////////////////////
 
 #include "Gaffer/DeleteContextVariables.inl"
+#include "GafferScene/Export.h"
 #include "GafferScene/DeleteSceneContextVariables.h"
 
 using namespace GafferScene;
@@ -47,4 +48,4 @@ IECORE_RUNTIMETYPED_DEFINETEMPLATESPECIALISATION( GafferScene::DeleteSceneContex
 }
 
 // explicit instantiation
-template class Gaffer::DeleteContextVariables<SceneProcessor>;
+template class GAFFERSCENE_API Gaffer::DeleteContextVariables<SceneProcessor>;

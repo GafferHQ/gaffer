@@ -38,6 +38,7 @@
 #ifndef GAFFER_APPLICATIONROOT_H
 #define GAFFER_APPLICATIONROOT_H
 
+#include "Gaffer/Export.h"
 #include "Gaffer/ScriptNode.h"
 
 namespace Gaffer
@@ -45,7 +46,7 @@ namespace Gaffer
 
 IE_CORE_FORWARDDECLARE( Preferences )
 
-class ApplicationRoot : public GraphComponent
+class GAFFER_API ApplicationRoot : public GraphComponent
 {
 
 	public :

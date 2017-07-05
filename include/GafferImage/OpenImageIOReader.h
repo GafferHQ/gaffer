@@ -40,6 +40,7 @@
 
 #include "Gaffer/NumericPlug.h"
 
+#include "GafferImage/Export.h"
 #include "GafferImage/ImageNode.h"
 
 namespace Gaffer
@@ -52,7 +53,7 @@ IE_CORE_FORWARDDECLARE( StringPlug )
 namespace GafferImage
 {
 
-class OpenImageIOReader : public ImageNode
+class GAFFERIMAGE_API OpenImageIOReader : public ImageNode
 {
 
 	public :

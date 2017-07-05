@@ -37,10 +37,12 @@
 #ifndef GAFFERUIBINDINGS_STANDARDNODULEBINDING_H
 #define GAFFERUIBINDINGS_STANDARDNODULEBINDING_H
 
+#include "GafferUIBindings/Export.h"
+
 namespace GafferUIBindings
 {
 
-void bindStandardNodule();
+GAFFERUIBINDINGS_API void bindStandardNodule();
 
 } // namespace GafferUIBindings
 

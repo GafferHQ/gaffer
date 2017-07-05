@@ -37,10 +37,12 @@
 #ifndef GAFFERBINDINGS_SCRIPTNODEBINDING_H
 #define GAFFERBINDINGS_SCRIPTNODEBINDING_H
 
+#include "GafferBindings/Export.h"
+
 namespace GafferBindings
 {
 
-void bindScriptNode();
+GAFFERBINDINGS_API void bindScriptNode();
 
 struct SerialiserRegistration;
 

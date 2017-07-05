@@ -37,10 +37,12 @@
 #ifndef GAFFERSCENEBINDINGS_LIGHTTWEAKSBINDING_H
 #define GAFFERSCENEBINDINGS_LIGHTTWEAKSBINDING_H
 
+#include "GafferSceneBindings/Export.h"
+
 namespace GafferSceneBindings
 {
 
-void bindLightTweaks();
+GAFFERSCENEBINDINGS_API void bindLightTweaks();
 
 } // namespace GafferSceneBindings
 

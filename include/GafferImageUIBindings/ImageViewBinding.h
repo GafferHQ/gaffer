@@ -37,10 +37,12 @@
 #ifndef GAFFERIMAGEUIBINDINGS_IMAGEVIEWBINDING_H
 #define GAFFERIMAGEUIBINDINGS_IMAGEVIEWBINDING_H
 
+#include "GafferImageUIBindings/Export.h"
+
 namespace GafferImageUIBindings
 {
 
-void bindImageView();
+GAFFERIMAGEUIBINDINGS_API void bindImageView();
 
 } // namespace GafferImageUIBindings
 

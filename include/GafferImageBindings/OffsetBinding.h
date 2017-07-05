@@ -37,10 +37,12 @@
 #ifndef GAFFERIMAGEBINDINGS_OFFSETBINDING_H
 #define GAFFERIMAGEBINDINGS_OFFSETBINDING_H
 
+#include "GafferImageBindings/Export.h"
+
 namespace GafferImageBindings
 {
 
-void bindOffset();
+GAFFERIMAGEBINDINGS_API void bindOffset();
 
 } // namespace GafferImageBindings
 

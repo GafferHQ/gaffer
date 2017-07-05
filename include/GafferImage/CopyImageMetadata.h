@@ -37,12 +37,13 @@
 #ifndef GAFFERIMAGE_COPYIMAGEMETADATA_H
 #define GAFFERIMAGE_COPYIMAGEMETADATA_H
 
+#include "GafferImage/Export.h"
 #include "GafferImage/MetadataProcessor.h"
 
 namespace GafferImage
 {
 
-class CopyImageMetadata : public MetadataProcessor
+class GAFFERIMAGE_API CopyImageMetadata : public MetadataProcessor
 {
 
 	public :

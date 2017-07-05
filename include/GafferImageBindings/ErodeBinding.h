@@ -37,10 +37,12 @@
 #ifndef GAFFERIMAGEBINDINGS_ERODEBINDING_H
 #define GAFFERIMAGEBINDINGS_ERODEBINDING_H
 
+#include "GafferImageBindings/Export.h"
+
 namespace GafferImageBindings
 {
 
-void bindErode();
+GAFFERIMAGEBINDINGS_API void bindErode();
 
 }; // namespace GafferImageBindings
 

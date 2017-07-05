@@ -37,10 +37,12 @@
 #ifndef GAFFERBINDINGS_TRANSFORMPLUGBINDING_H
 #define GAFFERBINDINGS_TRANSFORMPLUGBINDING_H
 
+#include "GafferBindings/Export.h"
+
 namespace GafferBindings
 {
 
-void bindTransformPlug();
+GAFFERBINDINGS_API void bindTransformPlug();
 
 } // namespace GafferBindings
 

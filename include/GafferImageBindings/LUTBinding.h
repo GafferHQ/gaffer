@@ -37,10 +37,12 @@
 #ifndef GAFFERIMAGEBINDINGS_LUTBINDING_H
 #define GAFFERIMAGEBINDINGS_LUTBINDING_H
 
+#include "GafferImageBindings/Export.h"
+
 namespace GafferImageBindings
 {
 
-void bindLUT();
+GAFFERIMAGEBINDINGS_API void bindLUT();
 
 }; // namespace GafferImageBindings
 

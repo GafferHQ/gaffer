@@ -38,6 +38,7 @@
 #ifndef GAFFERUI_CONTAINERGADGET_H
 #define GAFFERUI_CONTAINERGADGET_H
 
+#include "GafferUI/Export.h"
 #include "GafferUI/Gadget.h"
 
 namespace GafferUI
@@ -50,7 +51,7 @@ namespace GafferUI
 /// the transforms for children when they have been dirtied. This would
 /// simplify derived classes and provide greater justification for the
 /// existence of this base class.
-class ContainerGadget : public Gadget
+class GAFFERUI_API ContainerGadget : public Gadget
 {
 
 	public :

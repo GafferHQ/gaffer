@@ -37,10 +37,12 @@
 #ifndef GAFFERSCENEBINDINGS_MESHTANGENTSBINDING_H
 #define GAFFERSCENEBINDINGS_MESHTANGENTSBINDING_H
 
+#include "GafferSceneBindings/Export.h"
+
 namespace GafferSceneBindings
 {
 
-void bindMeshTangents();
+GAFFERSCENEBINDINGS_API void bindMeshTangents();
 
 } // namespace GafferSceneBindings
 

@@ -41,16 +41,18 @@
 
 #include "IECore/GeometricTypedData.h"
 
+#include "GafferImage/Export.h"
+
 namespace GafferImage
 {
 
 namespace OpenImageIOAlgo
 {
 
-OIIO::TypeDesc::VECSEMANTICS vecSemantics( IECore::GeometricData::Interpretation interpretation );
-IECore::GeometricData::Interpretation geometricInterpretation( OIIO::TypeDesc::VECSEMANTICS );
+GAFFERIMAGE_API OIIO::TypeDesc::VECSEMANTICS vecSemantics( IECore::GeometricData::Interpretation interpretation );
+GAFFERIMAGE_API IECore::GeometricData::Interpretation geometricInterpretation( OIIO::TypeDesc::VECSEMANTICS );
 
-struct DataView
+struct GAFFERIMAGE_API DataView
 {
 
 	DataView();

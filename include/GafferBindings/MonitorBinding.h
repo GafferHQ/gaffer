@@ -37,10 +37,12 @@
 #ifndef GAFFERBINDINGS_MONITORBINDING_H
 #define GAFFERBINDINGS_MONITORBINDING_H
 
+#include "GafferBindings/Export.h"
+
 namespace GafferBindings
 {
 
-void bindMonitor();
+GAFFERBINDINGS_API void bindMonitor();
 
 } // namespace GafferBindings
 

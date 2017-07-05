@@ -37,10 +37,12 @@
 #ifndef GAFFERIMAGEBINDINGS_MEDIANBINDING_H
 #define GAFFERIMAGEBINDINGS_MEDIANBINDING_H
 
+#include "GafferImageBindings/Export.h"
+
 namespace GafferImageBindings
 {
 
-void bindMedian();
+GAFFERIMAGEBINDINGS_API void bindMedian();
 
 }; // namespace GafferImageBindings
 

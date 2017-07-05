@@ -39,12 +39,13 @@
 
 #include "GafferScene/Attributes.h"
 
+#include "GafferRenderMan/Export.h"
 #include "GafferRenderMan/TypeIds.h"
 
 namespace GafferRenderMan
 {
 
-class RenderManAttributes : public GafferScene::Attributes
+class GAFFERRENDERMAN_API RenderManAttributes : public GafferScene::Attributes
 {
 
 	public :

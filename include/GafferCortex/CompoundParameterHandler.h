@@ -40,6 +40,7 @@
 
 #include "IECore/CompoundParameter.h"
 
+#include "GafferCortex/Export.h"
 #include "GafferCortex/ParameterHandler.h"
 
 namespace Gaffer
@@ -52,7 +53,7 @@ IE_CORE_FORWARDDECLARE( CompoundPlug )
 namespace GafferCortex
 {
 
-class CompoundParameterHandler : public ParameterHandler
+class GAFFERCORTEX_API CompoundParameterHandler : public ParameterHandler
 {
 
 	public :

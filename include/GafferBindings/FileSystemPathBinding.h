@@ -37,10 +37,12 @@
 #ifndef GAFFERBINDINGS_FILESYSTEMPATHBINDING_H
 #define GAFFERBINDINGS_FILESYSTEMPATHBINDING_H
 
+#include "GafferBindings/Export.h"
+
 namespace GafferBindings
 {
 
-void bindFileSystemPath();
+GAFFERBINDINGS_API void bindFileSystemPath();
 
 } // namespace GafferBindings
 

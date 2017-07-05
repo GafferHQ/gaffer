@@ -40,6 +40,7 @@
 #include "GafferScene/Shader.h"
 #include "GafferScene/ShaderPlug.h"
 
+#include "GafferArnold/Export.h"
 #include "GafferArnold/TypeIds.h"
 
 namespace GafferArnold
@@ -51,7 +52,7 @@ namespace GafferArnold
 /// base class and renaming the current Shader class to StandardShader,
 /// or defining an even more general Assignable base class which both
 /// Shader and ArnoldDisplacement can inherit from.
-class ArnoldDisplacement : public GafferScene::Shader
+class GAFFERARNOLD_API ArnoldDisplacement : public GafferScene::Shader
 {
 
 	public :

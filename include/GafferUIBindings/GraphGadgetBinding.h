@@ -37,10 +37,12 @@
 #ifndef GAFFERUIBINDINGS_GRAPHGADGETBINDING_H
 #define GAFFERUIBINDINGS_GRAPHGADGETBINDING_H
 
+#include "GafferUIBindings/Export.h"
+
 namespace GafferUIBindings
 {
 
-void bindGraphGadget();
+GAFFERUIBINDINGS_API void bindGraphGadget();
 
 } // namespace GafferUIBindings
 

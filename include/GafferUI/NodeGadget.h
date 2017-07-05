@@ -38,6 +38,7 @@
 #ifndef GAFFERUI_NODEGADGET_H
 #define GAFFERUI_NODEGADGET_H
 
+#include "GafferUI/Export.h"
 #include "GafferUI/IndividualContainer.h"
 
 #include "Gaffer/Set.h"
@@ -49,7 +50,7 @@ IE_CORE_FORWARDDECLARE( Nodule )
 IE_CORE_FORWARDDECLARE( NodeGadget )
 
 /// A base class for representing nodes within a GraphGadget.
-class NodeGadget : public Gadget
+class GAFFERUI_API NodeGadget : public Gadget
 {
 
 	public :

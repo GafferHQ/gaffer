@@ -42,6 +42,7 @@
 
 #include "Gaffer/NumericPlug.h"
 
+#include "GafferImage/Export.h"
 #include "GafferImage/ImageNode.h"
 
 namespace GafferImage
@@ -52,7 +53,7 @@ IE_CORE_FORWARDDECLARE( GafferDisplayDriver )
 /// \todo Remove portPlug() and the internal server
 /// \todo Pass GafferDisplayDriver rather than IECore::DisplayDriver
 /// in setDriver/getDriver/driverCreatedSignal.
-class Display : public ImageNode
+class GAFFERIMAGE_API Display : public ImageNode
 {
 
 	public :

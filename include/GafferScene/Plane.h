@@ -40,12 +40,13 @@
 
 #include "Gaffer/CompoundNumericPlug.h"
 
+#include "GafferScene/Export.h"
 #include "GafferScene/ObjectSource.h"
 
 namespace GafferScene
 {
 
-class Plane : public ObjectSource
+class GAFFERSCENE_API Plane : public ObjectSource
 {
 
 	public :
