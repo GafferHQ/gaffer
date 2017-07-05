@@ -291,6 +291,11 @@ bool StandardConnectionGadget::buttonPress( const ButtonEvent &event )
 {
 	if( m_dotPreview )
 	{
+		if( event.buttons!=ButtonEvent::Left )
+		{
+			return false;
+		}
+
 		Gaffer::ScriptNode *script = dstNodule()->plug()->ancestor<Gaffer::ScriptNode>();
 		GraphGadget *graphGadget = parent<GafferUI::GraphGadget>();
 		if( script && graphGadget )
