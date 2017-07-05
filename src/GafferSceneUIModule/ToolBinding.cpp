@@ -40,8 +40,15 @@
 
 #include "GafferUI/Gadget.h"
 
+#include "GafferSceneUI/SceneView.h"
+#include "GafferSceneUI/SelectionTool.h"
+#include "GafferSceneUI/CropWindowTool.h"
 #include "GafferSceneUI/TransformTool.h"
-#include "GafferSceneUIBindings/TransformToolBinding.h"
+#include "GafferSceneUI/TranslateTool.h"
+#include "GafferSceneUI/RotateTool.h"
+#include "GafferSceneUI/ScaleTool.h"
+
+#include "ToolBinding.h"
 
 using namespace std;
 using namespace boost::python;
@@ -93,32 +100,52 @@ TransformPlugPtr transformPlug( const TransformTool::Selection &s )
 
 } // namespace
 
-void GafferSceneUIBindings::bindTransformTool()
+void GafferSceneUIModule::bindTools()
 {
 
-	scope s = GafferBindings::NodeClass<TransformTool>( NULL, no_init )
-		.def( "selection", &TransformTool::selection, return_value_policy<copy_const_reference>() )
+	GafferBindings::NodeClass<SelectionTool>( NULL, no_init );
+	GafferBindings::NodeClass<CropWindowTool>( NULL, no_init );
+
+	{
+		scope s = GafferBindings::NodeClass<TransformTool>( NULL, no_init )
+			.def( "selection", &TransformTool::selection, return_value_policy<copy_const_reference>() )
+		;
+
+		class_<TransformTool::Selection>( "Selection", no_init )
+
+			.add_property( "scene", &scene )
+			.add_property( "path", &path )
+			.add_property( "context", &context )
+
+			.add_property( "upstreamScene", &upstreamScene )
+			.add_property( "upstreamPath", &upstreamPath )
+			.add_property( "upstreamContext", &upstreamContext )
+
+			.add_property( "transformPlug", &transformPlug )
+			.def_readonly( "transformSpace", &TransformTool::Selection::transformSpace )
+
+		;
+
+		enum_<TransformTool::Orientation>( "Orientation" )
+			.value( "Local", TransformTool::Local )
+			.value( "Parent", TransformTool::Parent )
+			.value( "World", TransformTool::World )
+		;
+	}
+
+	GafferBindings::NodeClass<TranslateTool>( NULL, no_init )
+		.def( init<SceneView *>() )
+		.def( "translate", &TranslateTool::translate )
 	;
 
-	class_<TransformTool::Selection>( "Selection", no_init )
-
-		.add_property( "scene", &scene )
-		.add_property( "path", &path )
-		.add_property( "context", &context )
-
-		.add_property( "upstreamScene", &upstreamScene )
-		.add_property( "upstreamPath", &upstreamPath )
-		.add_property( "upstreamContext", &upstreamContext )
-
-		.add_property( "transformPlug", &transformPlug )
-		.def_readonly( "transformSpace", &TransformTool::Selection::transformSpace )
-
+	GafferBindings::NodeClass<ScaleTool>( NULL, no_init )
+		.def( init<SceneView *>() )
+		.def( "scale", &ScaleTool::scale )
 	;
 
-	enum_<TransformTool::Orientation>( "Orientation" )
-		.value( "Local", TransformTool::Local )
-		.value( "Parent", TransformTool::Parent )
-		.value( "World", TransformTool::World )
+	GafferBindings::NodeClass<RotateTool>( NULL, no_init )
+		.def( init<SceneView *>() )
+		.def( "rotate", &RotateTool::rotate )
 	;
 
 }

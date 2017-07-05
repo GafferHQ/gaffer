@@ -34,14 +34,30 @@
 //
 //////////////////////////////////////////////////////////////////////////
 
-#ifndef GAFFERSCENEUIBINDINGS_VISUALISERBINDING_H
-#define GAFFERSCENEUIBINDINGS_VISUALISERBINDING_H
+#include "IECorePython/RefCountedBinding.h"
 
-namespace GafferSceneUIBindings
+#include "GafferSceneUI/ObjectVisualiser.h"
+#include "GafferSceneUI/LightVisualiser.h"
+#include "GafferSceneUI/StandardLightVisualiser.h"
+
+#include "VisualiserBinding.h"
+
+using namespace GafferSceneUI;
+
+void GafferSceneUIModule::bindVisualisers()
 {
 
-void bindObjectVisualiser();
+	IECorePython::RefCountedClass<ObjectVisualiser, IECore::RefCounted>( "ObjectVisualiser" )
+		.def( "registerVisualiser", &ObjectVisualiser::registerVisualiser )
+		.staticmethod( "registerVisualiser" )
+	;
 
-} // namespace GafferSceneUIBindings
+	IECorePython::RefCountedClass<LightVisualiser, IECore::RefCounted>( "LightVisualiser" )
+		.def( "registerLightVisualiser", &LightVisualiser::registerLightVisualiser )
+		.staticmethod( "registerLightVisualiser" )
+	;
 
-#endif // GAFFERSCENEUIBINDINGS_VISUALISERBINDING_H
+	IECorePython::RefCountedClass<StandardLightVisualiser, LightVisualiser>( "StandardLightVisualiser" )
+	;
+
+}

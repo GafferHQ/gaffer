@@ -1,6 +1,7 @@
 //////////////////////////////////////////////////////////////////////////
 //
-//  Copyright (c) 2016, Image Engine Design Inc. All rights reserved.
+//  Copyright (c) 2012-2013, John Haddon. All rights reserved.
+//  Copyright (c) 2015, Image Engine Design Inc. All rights reserved.
 //
 //  Redistribution and use in source and binary forms, with or without
 //  modification, are permitted provided that the following conditions are
@@ -34,8 +35,6 @@
 //
 //////////////////////////////////////////////////////////////////////////
 
-#include "boost/python.hpp"
-
 #include "Gaffer/Reference.h"
 #include "Gaffer/ScriptNode.h"
 
@@ -43,15 +42,77 @@
 #include "GafferBindings/ExceptionAlgo.h"
 #include "GafferBindings/SignalBinding.h"
 
+#include "GafferScene/SceneProcessor.h"
+#include "GafferSceneUI/SceneView.h"
 #include "GafferSceneUI/ShaderView.h"
-#include "GafferSceneUIBindings/ShaderViewBinding.h"
+
+#include "ViewBinding.h"
 
 using namespace std;
 using namespace boost::python;
 using namespace IECorePython;
 using namespace Gaffer;
 using namespace GafferBindings;
+using namespace GafferScene;
 using namespace GafferSceneUI;
+
+//////////////////////////////////////////////////////////////////////////
+// SceneView binding utilities
+//////////////////////////////////////////////////////////////////////////
+
+namespace
+{
+
+struct ShadingModeCreator
+{
+
+	ShadingModeCreator( object fn )
+		:	m_fn( fn )
+	{
+	}
+
+	SceneProcessorPtr operator()()
+	{
+		IECorePython::ScopedGILLock gilLock;
+		SceneProcessorPtr result = extract<SceneProcessorPtr>( m_fn() );
+		return result;
+	}
+
+	private :
+
+		object m_fn;
+
+};
+
+void registerShadingMode( const std::string &name, object creator )
+{
+	SceneView::registerShadingMode( name, ShadingModeCreator( creator ) );
+}
+
+boost::python::list registeredShadingModes()
+{
+	vector<string> n;
+	SceneView::registeredShadingModes( n );
+	boost::python::list result;
+	for( vector<string>::const_iterator it = n.begin(), eIt = n.end(); it != eIt; ++it )
+	{
+		result.append( *it );
+	}
+
+	return result;
+}
+
+void frame( SceneView &view, PathMatcher &filter, Imath::V3f &direction )
+{
+	IECorePython::ScopedGILRelease gilRelease;
+	view.frame( filter, direction );
+}
+
+} // namespace
+
+//////////////////////////////////////////////////////////////////////////
+// ShaderView binding utilities
+//////////////////////////////////////////////////////////////////////////
 
 namespace
 {
@@ -163,8 +224,18 @@ struct SceneChangedSlotCaller
 
 } // namespace
 
-void GafferSceneUIBindings::bindShaderView()
+void GafferSceneUIModule::bindViews()
 {
+
+	GafferBindings::NodeClass<SceneView>()
+		.def( "frame", &frame, ( boost::python::arg_( "filter" ), boost::python::arg_( "direction" ) = Imath::V3f( -0.64, -0.422, -0.64 ) ) )
+		.def( "expandSelection", &SceneView::expandSelection, ( boost::python::arg_( "depth" ) = 1 ) )
+		.def( "collapseSelection", &SceneView::collapseSelection )
+		.def( "registerShadingMode", &registerShadingMode )
+		.staticmethod( "registerShadingMode" )
+		.def( "registeredShadingModes", &registeredShadingModes )
+		.staticmethod( "registeredShadingModes" )
+	;
 
 	GafferBindings::NodeClass<ShaderView>()
 		.def( "shaderPrefix", &ShaderView::shaderPrefix )
@@ -180,5 +251,6 @@ void GafferSceneUIBindings::bindShaderView()
 	;
 
 	SignalClass<ShaderView::SceneChangedSignal, DefaultSignalCaller<ShaderView::SceneChangedSignal>, SceneChangedSlotCaller>( "SceneChangedSignal" );
+
 
 }

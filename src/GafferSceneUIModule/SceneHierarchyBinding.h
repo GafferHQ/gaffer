@@ -1,6 +1,6 @@
 //////////////////////////////////////////////////////////////////////////
 //
-//  Copyright (c) 2015, Image Engine Design Inc. All rights reserved.
+//  Copyright (c) 2016, Image Engine Design Inc. All rights reserved.
 //
 //  Redistribution and use in source and binary forms, with or without
 //  modification, are permitted provided that the following conditions are
@@ -34,14 +34,17 @@
 //
 //////////////////////////////////////////////////////////////////////////
 
-#ifndef GAFFERSCENEUIBINDINGS_SCENEVIEWBINDING_H
-#define GAFFERSCENEUIBINDINGS_SCENEVIEWBINDING_H
+#ifndef GAFFERSCENEUIMODULE_SCENEHIERARCHYBINDING_H
+#define GAFFERSCENEUIMODULE_SCENEHIERARCHYBINDING_H
 
-namespace GafferSceneUIBindings
+namespace GafferSceneUIModule
 {
 
-void bindSceneView();
+/// This doesn't actually bind SceneHierarchy, because that is implemented
+/// in Python at present. Instead, it binds C++ support classes and functions
+/// that the SceneHierarchy uses internally.
+void bindSceneHierarchy();
 
-} // namespace GafferSceneUIBindings
+} // namespace GafferSceneUIModule
 
-#endif // GAFFERSCENEUIBINDINGS_SCENEVIEWBINDING_H
+#endif // GAFFERSCENEUIMODULE_SCENEHIERARCHYBINDING_H

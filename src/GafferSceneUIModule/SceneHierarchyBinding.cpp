@@ -48,7 +48,7 @@
 #include "GafferScene/ScenePlug.h"
 #include "GafferScene/SceneAlgo.h"
 
-#include "GafferSceneUIBindings/SceneHierarchyBinding.h"
+#include "SceneHierarchyBinding.h"
 
 using namespace std;
 using namespace boost::python;
@@ -490,7 +490,7 @@ class SceneHierarchySearchFilter : public SceneHierarchyFilter
 
 } // namespace
 
-void GafferSceneUIBindings::bindSceneHierarchy()
+void GafferSceneUIModule::bindSceneHierarchy()
 {
 
 	// Deliberately using RefCountedClass rather than RunTimeTypedClass

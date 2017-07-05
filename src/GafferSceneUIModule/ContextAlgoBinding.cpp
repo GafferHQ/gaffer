@@ -34,14 +34,45 @@
 //
 //////////////////////////////////////////////////////////////////////////
 
-#ifndef GAFFERSCENEUIBINDINGS_CONTEXTALGOBINDING_H
-#define GAFFERSCENEUIBINDINGS_CONTEXTALGOBINDING_H
+#include "boost/python.hpp"
 
-namespace GafferSceneUIBindings
+#include "IECorePython/ScopedGILRelease.h"
+
+#include "GafferScene/PathMatcher.h"
+#include "GafferScene/ScenePlug.h"
+
+#include "GafferSceneUI/ContextAlgo.h"
+
+#include "ContextAlgoBinding.h"
+
+using namespace boost::python;
+using namespace Gaffer;
+using namespace GafferScene;
+using namespace GafferSceneUI::ContextAlgo;
+
+namespace
 {
 
-void bindContextAlgo();
+PathMatcher expandDescendantsWrapper( Context &context, PathMatcher &paths, ScenePlug &scene, int depth )
+{
+	IECorePython::ScopedGILRelease gilRelease;
+	return expandDescendants( &context, paths, &scene, depth );
+}
 
-} // namespace GafferSceneUIBindings
+} // namespace
 
-#endif // GAFFERSCENEUIBINDINGS_CONTEXTALGOBINDING_H
+void GafferSceneUIModule::bindContextAlgo()
+{
+	object module( borrowed( PyImport_AddModule( "GafferSceneUI.ContextAlgo" ) ) );
+	scope().attr( "ContextAlgo" ) = module;
+	scope moduleScope( module );
+
+	def( "setExpandedPaths", &setExpandedPaths );
+	def( "getExpandedPaths", &getExpandedPaths );
+	def( "expand", &expand, ( arg( "expandAncestors" ) = true ) );
+	def( "expandDescendants", &expandDescendantsWrapper, ( arg( "context" ), arg( "paths" ), arg( "scene" ), arg( "depth" ) = Imath::limits<int>::max() ) );
+	def( "clearExpansion", &clearExpansion );
+	def( "setSelectedPaths", &setSelectedPaths );
+	def( "getSelectedPaths", &getSelectedPaths );
+
+}

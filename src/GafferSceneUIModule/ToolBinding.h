@@ -34,14 +34,14 @@
 //
 //////////////////////////////////////////////////////////////////////////
 
-#ifndef GAFFERSCENEUIBINDINGS_TRANSLATETOOLBINDING_H
-#define GAFFERSCENEUIBINDINGS_TRANSLATETOOLBINDING_H
+#ifndef GAFFERSCENEUIMODULE_TOOLBINDING_H
+#define GAFFERSCENEUIMODULE_TOOLBINDING_H
 
-namespace GafferSceneUIBindings
+namespace GafferSceneUIModule
 {
 
-void bindTranslateTool();
+void bindTools();
 
-} // namespace GafferSceneUIBindings
+} // namespace GafferSceneUIModule
 
-#endif // GAFFERSCENEUIBINDINGS_TRANSLATETOOLBINDING_H
+#endif // GAFFERSCENEUIMODULE_TOOLBINDING_H

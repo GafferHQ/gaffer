@@ -1,6 +1,6 @@
 //////////////////////////////////////////////////////////////////////////
 //
-//  Copyright (c) 2017, John Haddon. All rights reserved.
+//  Copyright (c) 2015, Image Engine Design Inc. All rights reserved.
 //
 //  Redistribution and use in source and binary forms, with or without
 //  modification, are permitted provided that the following conditions are
@@ -34,24 +34,14 @@
 //
 //////////////////////////////////////////////////////////////////////////
 
-#include "GafferBindings/NodeBinding.h"
+#ifndef GAFFERSCENEUIMODULE_SCENEVIEWBINDING_H
+#define GAFFERSCENEUIMODULE_SCENEVIEWBINDING_H
 
-#include "GafferUI/Gadget.h"
-
-#include "GafferSceneUI/SceneView.h"
-#include "GafferSceneUI/RotateTool.h"
-#include "GafferSceneUIBindings/RotateToolBinding.h"
-
-using namespace boost::python;
-using namespace GafferSceneUI;
-
-void GafferSceneUIBindings::bindRotateTool()
+namespace GafferSceneUIModule
 {
 
-	scope s = GafferBindings::NodeClass<RotateTool>( NULL, no_init )
-		.def( init<SceneView *>() )
-		.def( "rotate", &RotateTool::rotate )
-	;
+void bindViews();
 
-}
+} // namespace GafferSceneUIModule
 
+#endif // GAFFERSCENEUIMODULE_SCENEVIEWBINDING_H

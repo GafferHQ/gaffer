@@ -1,6 +1,6 @@
 //////////////////////////////////////////////////////////////////////////
 //
-//  Copyright (c) 2016, John Haddon. All rights reserved.
+//  Copyright (c) 2017, Image Engine Design Inc. All rights reserved.
 //
 //  Redistribution and use in source and binary forms, with or without
 //  modification, are permitted provided that the following conditions are
@@ -34,24 +34,14 @@
 //
 //////////////////////////////////////////////////////////////////////////
 
-#include "GafferBindings/NodeBinding.h"
+#ifndef GAFFERSCENEUIMODULE_CONTEXTALGOBINDING_H
+#define GAFFERSCENEUIMODULE_CONTEXTALGOBINDING_H
 
-#include "GafferUI/Gadget.h"
-
-#include "GafferSceneUI/SceneView.h"
-#include "GafferSceneUI/TranslateTool.h"
-#include "GafferSceneUIBindings/TranslateToolBinding.h"
-
-using namespace boost::python;
-using namespace GafferSceneUI;
-
-void GafferSceneUIBindings::bindTranslateTool()
+namespace GafferSceneUIModule
 {
 
-	GafferBindings::NodeClass<TranslateTool>( NULL, no_init )
-		.def( init<SceneView *>() )
-		.def( "translate", &TranslateTool::translate )
-	;
+void bindContextAlgo();
 
-}
+} // namespace GafferSceneUIModule
 
+#endif // GAFFERSCENEUIMODULE_CONTEXTALGOBINDING_H
