@@ -152,7 +152,7 @@ class TextWidgetTest( GafferUITest.TestCase ) :
 		# changing the initial value
 		textWidget.setFixedCharacterWidth( 2 )
 
-		self.waitForIdle()
+		self.waitForIdle( 1000 )
 
 		newWidth = textWidget.size().x
 
