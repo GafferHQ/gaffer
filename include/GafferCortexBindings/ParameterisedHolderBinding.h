@@ -53,7 +53,7 @@ namespace GafferCortexBindings
 {
 
 template<typename BaseType>
-class GAFFER_EXPORT ParameterisedHolderWrapper : public BaseType
+class ParameterisedHolderWrapper : public BaseType
 {
 
 	public :
@@ -102,7 +102,7 @@ class GAFFER_EXPORT ParameterisedHolderWrapper : public BaseType
 };
 
 template<typename BaseType>
-class GAFFER_EXPORT ParameterisedHolderClass : public BaseType
+class ParameterisedHolderClass : public BaseType
 {
 
 	public :
