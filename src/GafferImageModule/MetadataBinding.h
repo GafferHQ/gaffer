@@ -1,7 +1,6 @@
 //////////////////////////////////////////////////////////////////////////
 //
-//  Copyright (c) 2012, John Haddon. All rights reserved.
-//  Copyright (c) 2013-2015, Image Engine Design Inc. All rights reserved.
+//  Copyright (c) 2015, Image Engine Design Inc. All rights reserved.
 //
 //  Redistribution and use in source and binary forms, with or without
 //  modification, are permitted provided that the following conditions are
@@ -35,46 +34,14 @@
 //
 //////////////////////////////////////////////////////////////////////////
 
-#include "boost/python.hpp"
+#ifndef GAFFERIMAGEMODULE_METADATABINDING_H
+#define GAFFERIMAGEMODULE_METADATABINDING_H
 
-#include "CoreBinding.h"
-#include "ImageProcessorBinding.h"
-#include "TransformBinding.h"
-#include "MetadataBinding.h"
-#include "IOBinding.h"
-#include "WarpBinding.h"
-#include "ShapeBinding.h"
-#include "ImageAlgoBinding.h"
-#include "BufferAlgoBinding.h"
-#include "FilterAlgoBinding.h"
-#include "OpenColorIOTransformBinding.h"
-#include "ChannelDataProcessorBinding.h"
-#include "FilterBinding.h"
-#include "MixinBinding.h"
-#include "UtilityNodeBinding.h"
-#include "CatalogueBinding.h"
-
-using namespace boost::python;
-using namespace GafferImageModule;
-
-BOOST_PYTHON_MODULE( _GafferImage )
+namespace GafferImageModule
 {
 
-	bindCore();
-	bindImageProcessor();
-	bindTransforms();
-	bindMetadata();
-	bindIO();
-	bindWarp();
-	bindShape();
-	bindFilters();
-	bindOpenColorIOTransform();
-	bindChannelDataProcessor();
-	bindMixin();
-	bindUtilityNodes();
-	bindCatalogue();
-	bindImageAlgo();
-	bindBufferAlgo();
-	bindFilterAlgo();
+void bindMetadata();
 
-}
+}; // namespace GafferImageModule
+
+#endif // GAFFERIMAGEMODULE_METADATABINDING_H

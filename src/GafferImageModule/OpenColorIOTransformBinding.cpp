@@ -1,7 +1,6 @@
 //////////////////////////////////////////////////////////////////////////
 //
-//  Copyright (c) 2012, John Haddon. All rights reserved.
-//  Copyright (c) 2013-2015, Image Engine Design Inc. All rights reserved.
+//  Copyright (c) 2015, Image Engine Design Inc. All rights reserved.
 //
 //  Redistribution and use in source and binary forms, with or without
 //  modification, are permitted provided that the following conditions are
@@ -37,44 +36,81 @@
 
 #include "boost/python.hpp"
 
-#include "CoreBinding.h"
-#include "ImageProcessorBinding.h"
-#include "TransformBinding.h"
-#include "MetadataBinding.h"
-#include "IOBinding.h"
-#include "WarpBinding.h"
-#include "ShapeBinding.h"
-#include "ImageAlgoBinding.h"
-#include "BufferAlgoBinding.h"
-#include "FilterAlgoBinding.h"
+#include "GafferImage/OpenColorIOTransform.h"
+#include "GafferImage/ColorSpace.h"
+#include "GafferImage/CDL.h"
+#include "GafferImage/DisplayTransform.h"
+#include "GafferImage/LUT.h"
+
+#include "GafferBindings/DependencyNodeBinding.h"
+
 #include "OpenColorIOTransformBinding.h"
-#include "ChannelDataProcessorBinding.h"
-#include "FilterBinding.h"
-#include "MixinBinding.h"
-#include "UtilityNodeBinding.h"
-#include "CatalogueBinding.h"
 
 using namespace boost::python;
-using namespace GafferImageModule;
+using namespace GafferImage;
 
-BOOST_PYTHON_MODULE( _GafferImage )
+namespace
 {
 
-	bindCore();
-	bindImageProcessor();
-	bindTransforms();
-	bindMetadata();
-	bindIO();
-	bindWarp();
-	bindShape();
-	bindFilters();
-	bindOpenColorIOTransform();
-	bindChannelDataProcessor();
-	bindMixin();
-	bindUtilityNodes();
-	bindCatalogue();
-	bindImageAlgo();
-	bindBufferAlgo();
-	bindFilterAlgo();
+boost::python::list availableColorSpaces()
+{
+	std::vector<std::string> e;
+	OpenColorIOTransform::availableColorSpaces( e );
+
+	boost::python::list result;
+	for( std::vector<std::string>::const_iterator it = e.begin(), eIt = e.end(); it != eIt; ++it )
+	{
+		result.append( *it );
+	}
+
+	return result;
+}
+
+boost::python::list supportedExtensions()
+{
+	std::vector<std::string> e;
+	LUT::supportedExtensions( e );
+
+	boost::python::list result;
+	for( std::vector<std::string>::const_iterator it = e.begin(), eIt = e.end(); it != eIt; ++it )
+	{
+		result.append( *it );
+	}
+
+	return result;
+}
+
+} // namespace
+
+void GafferImageModule::bindOpenColorIOTransform()
+{
+
+	GafferBindings::DependencyNodeClass<ColorProcessor>();
+
+	GafferBindings::DependencyNodeClass<OpenColorIOTransform>()
+		.def( "availableColorSpaces", &availableColorSpaces ).staticmethod( "availableColorSpaces" )
+	;
+
+	GafferBindings::DependencyNodeClass<ColorSpace>();
+	GafferBindings::DependencyNodeClass<CDL>();
+	GafferBindings::DependencyNodeClass<DisplayTransform>();
+
+	{
+		scope s = GafferBindings::DependencyNodeClass<LUT>()
+			.def( "supportedExtensions", &supportedExtensions ).staticmethod( "supportedExtensions" )
+		;
+
+		enum_<LUT::Interpolation>( "Interpolation" )
+			.value( "Best", LUT::Best )
+			.value( "Nearest", LUT::Nearest )
+			.value( "Linear", LUT::Linear )
+			.value( "Tetrahedral", LUT::Tetrahedral )
+		;
+
+		enum_<LUT::Direction>( "Direction" )
+			.value( "Forward", LUT::Forward )
+			.value( "Inverse", LUT::Inverse )
+		;
+	}
 
 }
