@@ -41,8 +41,8 @@ surface splineParameters
 	float floatSplineValues[] = { 0, 0, 1, 1 },
 	string floatSplineBasis = "catmull-rom",
 
-	color colorSplineValues[] = { 0, 0, 1, 1 },
-	float colorSplinePositions[] = { 0, 0, 1, 1 },
+	color colorSplineValues[] = { 0, 0, 0, 1, 1, 1  },
+	float colorSplinePositions[] = { 0, 0, 0, 1, 1, 1  },
 	string colorSplineBasis = "bspline",
 
 )

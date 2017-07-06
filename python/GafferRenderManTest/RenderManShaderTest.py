@@ -737,7 +737,7 @@ class RenderManShaderTest( GafferRenderManTest.RenderManTestCase ) :
 
 		self.assertEqual(
 
-			n["parameters"]["floatSpline"].defaultValue(),
+			n["parameters"]["floatSpline"].defaultValue().spline(),
 
 			IECore.Splineff(
 				IECore.CubicBasisf.catmullRom(),
@@ -753,7 +753,7 @@ class RenderManShaderTest( GafferRenderManTest.RenderManTestCase ) :
 
 		self.assertEqual(
 
-			n["parameters"]["colorSpline"].defaultValue(),
+			n["parameters"]["colorSpline"].defaultValue().spline(),
 
 			IECore.SplinefColor3f(
 				IECore.CubicBasisf.catmullRom(),
@@ -767,24 +767,20 @@ class RenderManShaderTest( GafferRenderManTest.RenderManTestCase ) :
 
 		)
 
-		floatValue = IECore.Splineff(
-			IECore.CubicBasisf.catmullRom(),
+		floatValue = Gaffer.SplineDefinitionff(
 			[
 				( 0, 0 ),
-				( 0, 0 ),
 				( 1, 2 ),
-				( 1, 2 ),
-			]
+			],
+			Gaffer.SplineDefinitionInterpolation.CatmullRom
 		)
 
-		colorValue = IECore.SplinefColor3f(
-			IECore.CubicBasisf.catmullRom(),
+		colorValue = Gaffer.SplineDefinitionfColor3f(
 			[
 				( 0, IECore.Color3f( 0 ) ),
-				( 0, IECore.Color3f( 0 ) ),
 				( 1, IECore.Color3f( .5 ) ),
-				( 1, IECore.Color3f( .5 ) ),
-			]
+			],
+			Gaffer.SplineDefinitionInterpolation.CatmullRom
 		)
 
 		n["parameters"]["floatSpline"].setValue( floatValue )
@@ -792,18 +788,7 @@ class RenderManShaderTest( GafferRenderManTest.RenderManTestCase ) :
 
 		s = n.attributes()["ri:surface"][0]
 
-		self.assertEqual( s.parameters["floatSpline"].value, floatValue )
-		self.assertEqual( s.parameters["colorSpline"].value, colorValue )
-
-	def testSplineParameterSerialisationKeepsExistingValues( self ) :
-
-		shader = self.compileShader( os.path.dirname( __file__ ) + "/shaders/splineParameters.sl" )
-
-		s = Gaffer.ScriptNode()
-		s["n"] = GafferRenderMan.RenderManShader()
-		s["n"].loadShader( shader )
-
-		s["n"]["parameters"]["floatSpline"].setValue(
+		self.assertEqual( s.parameters["floatSpline"].value,
 			IECore.Splineff(
 				IECore.CubicBasisf.catmullRom(),
 				[
@@ -814,18 +799,45 @@ class RenderManShaderTest( GafferRenderManTest.RenderManTestCase ) :
 				]
 			)
 		)
+		self.assertEqual( s.parameters["colorSpline"].value,
+			IECore.SplinefColor3f(
+				IECore.CubicBasisf.catmullRom(),
+				[
+					( 0, IECore.Color3f( 0 ) ),
+					( 0, IECore.Color3f( 0 ) ),
+					( 1, IECore.Color3f( 0.5 ) ),
+					( 1, IECore.Color3f( 0.5 ) ),
+				]
+			)
+		)
+
+	def testSplineParameterSerialisationKeepsExistingValues( self ) :
+
+		shader = self.compileShader( os.path.dirname( __file__ ) + "/shaders/splineParameters.sl" )
+
+		s = Gaffer.ScriptNode()
+		s["n"] = GafferRenderMan.RenderManShader()
+		s["n"].loadShader( shader )
+
+		s["n"]["parameters"]["floatSpline"].setValue(
+			Gaffer.SplineDefinitionff(
+				[
+					( 0, 0 ),
+					( 1, 2 ),
+				],
+				Gaffer.SplineDefinitionInterpolation.CatmullRom
+			)
+		)
 
 		self.assertEqual(
 			s["n"]["parameters"]["floatSpline"].getValue(),
-			IECore.Splineff(
-				IECore.CubicBasisf.catmullRom(),
+			Gaffer.SplineDefinitionff(
 				[
 					( 0, 0 ),
-					( 0, 0 ),
 					( 1, 2 ),
-					( 1, 2 ),
-				]
-			),
+				],
+				Gaffer.SplineDefinitionInterpolation.CatmullRom
+			)
 		)
 
 		ss = s.serialise()
@@ -835,15 +847,13 @@ class RenderManShaderTest( GafferRenderManTest.RenderManTestCase ) :
 
 		self.assertEqual(
 			s2["n"]["parameters"]["floatSpline"].getValue(),
-			IECore.Splineff(
-				IECore.CubicBasisf.catmullRom(),
+			Gaffer.SplineDefinitionff(
 				[
 					( 0, 0 ),
-					( 0, 0 ),
 					( 1, 2 ),
-					( 1, 2 ),
-				]
-			),
+				],
+				Gaffer.SplineDefinitionInterpolation.CatmullRom
+			)
 		)
 
 	def testSplineParameterDefaultValueAnnotation( self ) :
@@ -858,7 +868,7 @@ class RenderManShaderTest( GafferRenderManTest.RenderManTestCase ) :
 		n.loadShader( shader )
 
 		self.assertEqual(
-			n["parameters"]["colorSpline2"].getValue(),
+			n["parameters"]["colorSpline2"].getValue().spline(),
 			IECore.SplinefColor3f(
 				IECore.CubicBasisf.catmullRom(),
 				[
