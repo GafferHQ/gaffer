@@ -22,6 +22,10 @@ addons:
         - gcc-5
         - g++-5
 
+cache:
+    directories:
+        - sconsCache
+
 before_install:
     - export DISPLAY=:99.0
     - if [[ "$TRAVIS_OS_NAME" == "linux" ]]; then sh -e /etc/init.d/xvfb start; fi
@@ -40,7 +44,7 @@ install:
     - if [ -n "$COMPILER_VERSION" ]; then export CXX="${CXX}-${COMPILER_VERSION}"; fi
 
 script:
-    - scons -j 2 install CXX=$CXX CXXSTD=$CXXSTD DEBUG=$DEBUG ENV_VARS_TO_IMPORT=PATH RMAN_ROOT=$DELIGHT
+    - scons -j 2 install CXX=$CXX CXXSTD=$CXXSTD DEBUG=$DEBUG ENV_VARS_TO_IMPORT=PATH RMAN_ROOT=$DELIGHT BUILD_CACHEDIR=sconsCache
     # Preload libSegFault when running tests, so we get stack
     # traces from any crashes.
     - export LD_PRELOAD=/lib/x86_64-linux-gnu/libSegFault.so
@@ -61,6 +65,13 @@ script:
     - source ./config/travis/runGafferTest GafferAppleseedTest
     - source ./config/travis/runGafferTest GafferAppleseedUITest
     - ./config/travis/printTestResults
+
+before_cache:
+    # This is run just before uploading the cache for next time.
+    # SCons caches grow without bound so we want to remove old
+    # files to prevent our caches becoming too big.
+    - python ./config/travis/limitCacheSize.py
+    - du -sh sconsCache
 
 # Default values for environment variables we use to
 # control the build.
