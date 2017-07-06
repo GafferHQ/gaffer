@@ -662,9 +662,9 @@ void NoduleLayout::updateLayout()
 
 	// Remove any gadgets we didn't use
 	boost::container::flat_set<GadgetKey> itemsSet( items.begin(), items.end() );
-	for( GadgetMap::iterator it = m_gadgets.begin(), eIt = m_gadgets.end(); it != eIt; )
+	for( GadgetMap::const_iterator it = m_gadgets.begin(), eIt = m_gadgets.end(); it != eIt; )
 	{
-		GadgetMap::iterator next = it; ++next;
+		GadgetMap::const_iterator next = it; ++next;
 		if( itemsSet.find( it->first ) == itemsSet.end() )
 		{
 			removed.push_back( it->second.gadget );
