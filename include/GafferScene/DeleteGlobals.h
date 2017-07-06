@@ -39,14 +39,19 @@
 
 #include "GafferScene/GlobalsProcessor.h"
 
-#include "GafferSceneBindings/DeleteGlobalsBinding.h" // to enable friend declaration for bindDeleteGlobals().
-
 namespace Gaffer
 {
 
 IE_CORE_FORWARDDECLARE( StringPlug )
 
 } // namespace Gaffer
+
+namespace GafferSceneModule
+{
+
+void bindGlobals(); // to enable friend declaration for bindDeleteGlobals().
+
+} // namespace GafferSceneModule
 
 namespace GafferScene
 {
@@ -80,7 +85,7 @@ class DeleteGlobals : public GlobalsProcessor
 
 		static size_t g_firstPlugIndex;
 
-		friend void GafferSceneBindings::bindDeleteGlobals();
+		friend void GafferSceneModule::bindGlobals();
 
 };
 

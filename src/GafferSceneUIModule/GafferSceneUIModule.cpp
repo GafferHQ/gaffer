@@ -41,25 +41,19 @@
 #include "GafferUIBindings/GadgetBinding.h"
 
 #include "GafferSceneUI/SceneGadget.h"
-#include "GafferSceneUI/SelectionTool.h"
-#include "GafferSceneUI/CropWindowTool.h"
 
-#include "GafferSceneUIBindings/SceneViewBinding.h"
-#include "GafferSceneUIBindings/ObjectVisualiserBinding.h"
-#include "GafferSceneUIBindings/LightVisualiserBinding.h"
-#include "GafferSceneUIBindings/StandardLightVisualiserBinding.h"
-#include "GafferSceneUIBindings/SceneHierarchyBinding.h"
-#include "GafferSceneUIBindings/ShaderViewBinding.h"
-#include "GafferSceneUIBindings/TransformToolBinding.h"
-#include "GafferSceneUIBindings/TranslateToolBinding.h"
-#include "GafferSceneUIBindings/RotateToolBinding.h"
-#include "GafferSceneUIBindings/ScaleToolBinding.h"
-#include "GafferSceneUIBindings/ContextAlgoBinding.h"
+#include "ViewBinding.h"
+#include "ToolBinding.h"
+#include "VisualiserBinding.h"
+#include "SceneHierarchyBinding.h"
+#include "ContextAlgoBinding.h"
+#include "SceneHierarchyBinding.h"
+#include "ContextAlgoBinding.h"
 
 using namespace boost::python;
 using namespace IECorePython;
 using namespace GafferSceneUI;
-using namespace GafferSceneUIBindings;
+using namespace GafferSceneUIModule;
 
 namespace
 {
@@ -79,8 +73,9 @@ IECore::InternedStringVectorDataPtr objectAt( SceneGadget &g, IECore::LineSegmen
 BOOST_PYTHON_MODULE( _GafferSceneUI )
 {
 
-	bindSceneView();
-	bindShaderView();
+	bindViews();
+	bindTools();
+	bindVisualisers();
 
 	GafferUIBindings::GadgetClass<SceneGadget>()
 		.def( init<>() )
@@ -100,16 +95,6 @@ BOOST_PYTHON_MODULE( _GafferSceneUI )
 		.def( "selectionBound", &SceneGadget::selectionBound )
 	;
 
-	GafferBindings::NodeClass<SelectionTool>( NULL, no_init );
-	GafferBindings::NodeClass<CropWindowTool>( NULL, no_init );
-
-	bindTransformTool();
-	bindTranslateTool();
-	bindRotateTool();
-	bindScaleTool();
-	bindObjectVisualiser();
-	bindLightVisualiser();
-	bindStandardLightVisualiser();
 	bindSceneHierarchy();
 	bindContextAlgo();
 

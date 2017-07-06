@@ -1,7 +1,6 @@
 //////////////////////////////////////////////////////////////////////////
 //
-//  Copyright (c) 2012-2014, Image Engine Design Inc. All rights reserved.
-//  Copyright (c) 2013, John Haddon. All rights reserved.
+//  Copyright (c) 2014, Image Engine Design Inc. All rights reserved.
 //
 //  Redistribution and use in source and binary forms, with or without
 //  modification, are permitted provided that the following conditions are
@@ -36,53 +35,69 @@
 //////////////////////////////////////////////////////////////////////////
 
 #include "boost/python.hpp"
+#include "boost/python/suite/indexing/container_utils.hpp"
 
-#include "CoreBinding.h"
-#include "FilterBinding.h"
-#include "HierarchyBinding.h"
-#include "TransformBinding.h"
-#include "GlobalsBinding.h"
-#include "OptionsBinding.h"
-#include "AttributesBinding.h"
-#include "SceneAlgoBinding.h"
-#include "RendererAlgoBinding.h"
-#include "SetAlgoBinding.h"
-#include "PrimitivesBinding.h"
-#include "PathMatcherBinding.h"
+#include "Gaffer/Context.h"
+#include "Gaffer/PathFilter.h"
+#include "GafferBindings/PathBinding.h"
+
+#include "GafferScene/ScenePath.h"
+#include "GafferScene/ScenePlug.h"
+#include "GafferScene/SceneFilterPathFilter.h"
+
 #include "ScenePathBinding.h"
-#include "ShaderBinding.h"
-#include "RenderBinding.h"
-#include "ObjectProcessorBinding.h"
-#include "PrimitiveVariablesBinding.h"
-#include "LightTweaksBinding.h"
-#include "IOBinding.h"
-#include "MixinBinding.h"
 
 using namespace boost::python;
-using namespace GafferSceneModule;
+using namespace IECorePython;
+using namespace Gaffer;
+using namespace GafferBindings;
+using namespace GafferScene;
 
-BOOST_PYTHON_MODULE( _GafferScene )
+namespace
 {
 
-	bindCore();
-	bindFilter();
-	bindTransform();
-	bindGlobals();
-	bindOptions();
-	bindHierarchy();
-	bindAttributes();
-	bindSceneAlgo();
-	bindRendererAlgo();
-	bindSetAlgo();
-	bindPrimitives();
-	bindPathMatcher();
-	bindScenePath();
-	bindShader();
-	bindRender();
-	bindObjectProcessor();
-	bindPrimitiveVariables();
-	bindLightTweaks();
-	bindIO();
-	bindMixin();
+PathFilterPtr createStandardFilter( object pythonSetNames, const std::string &setsLabel )
+{
+	std::vector<std::string> setNames;
+	boost::python::container_utils::extend_container( setNames, pythonSetNames );
+	return ScenePath::createStandardFilter( setNames, setsLabel );
+}
+
+} // namespace
+
+void GafferSceneModule::bindScenePath()
+{
+
+	PathClass<ScenePath>()
+		.def(
+			init<ScenePlugPtr, ContextPtr, PathFilterPtr>( (
+				arg( "scene" ),
+				arg( "context" ),
+				arg( "filter" ) = object()
+			) )
+		)
+		.def(
+			init<ScenePlugPtr, ContextPtr, const std::string &, PathFilterPtr>( (
+				arg( "scene" ),
+				arg( "context" ),
+				arg( "path" ),
+				arg( "filter" ) = object()
+			) )
+		)
+		.def( "setScene", &ScenePath::setScene )
+		.def( "getScene", (ScenePlug *(ScenePath::*)())&ScenePath::getScene, return_value_policy<CastToIntrusivePtr>() )
+		.def( "setContext", &ScenePath::setContext )
+		.def( "getContext", (Context *(ScenePath::*)())&ScenePath::getContext, return_value_policy<CastToIntrusivePtr>() )
+		.def( "createStandardFilter", &createStandardFilter, (
+				arg( "setNames" ) = list(),
+				arg( "setsLabel" ) = ""
+			)
+		)
+		.staticmethod( "createStandardFilter" )
+	;
+
+	RunTimeTypedClass<SceneFilterPathFilter>()
+		.def( init<FilterPtr, IECore::CompoundDataPtr>( ( arg( "filter" ), arg( "userData" ) = object() ) ) )
+	;
 
 }

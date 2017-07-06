@@ -1,7 +1,6 @@
 //////////////////////////////////////////////////////////////////////////
 //
-//  Copyright (c) 2012-2014, Image Engine Design Inc. All rights reserved.
-//  Copyright (c) 2013, John Haddon. All rights reserved.
+//  Copyright (c) 2017, Image Engine Design Inc. All rights reserved.
 //
 //  Redistribution and use in source and binary forms, with or without
 //  modification, are permitted provided that the following conditions are
@@ -37,52 +36,42 @@
 
 #include "boost/python.hpp"
 
-#include "CoreBinding.h"
-#include "FilterBinding.h"
-#include "HierarchyBinding.h"
-#include "TransformBinding.h"
-#include "GlobalsBinding.h"
-#include "OptionsBinding.h"
+#include "GafferBindings/DependencyNodeBinding.h"
+
+#include "GafferScene/ShaderAssignment.h"
+#include "GafferScene/Attributes.h"
+#include "GafferScene/OpenGLAttributes.h"
+#include "GafferScene/StandardAttributes.h"
+#include "GafferScene/CustomAttributes.h"
+#include "GafferScene/AttributeProcessor.h"
+#include "GafferScene/DeleteAttributes.h"
+#include "GafferScene/AttributeVisualiser.h"
+#include "GafferScene/EvaluateLightLinks.h"
+
 #include "AttributesBinding.h"
-#include "SceneAlgoBinding.h"
-#include "RendererAlgoBinding.h"
-#include "SetAlgoBinding.h"
-#include "PrimitivesBinding.h"
-#include "PathMatcherBinding.h"
-#include "ScenePathBinding.h"
-#include "ShaderBinding.h"
-#include "RenderBinding.h"
-#include "ObjectProcessorBinding.h"
-#include "PrimitiveVariablesBinding.h"
-#include "LightTweaksBinding.h"
-#include "IOBinding.h"
-#include "MixinBinding.h"
 
 using namespace boost::python;
-using namespace GafferSceneModule;
+using namespace GafferScene;
 
-BOOST_PYTHON_MODULE( _GafferScene )
+void GafferSceneModule::bindAttributes()
 {
 
-	bindCore();
-	bindFilter();
-	bindTransform();
-	bindGlobals();
-	bindOptions();
-	bindHierarchy();
-	bindAttributes();
-	bindSceneAlgo();
-	bindRendererAlgo();
-	bindSetAlgo();
-	bindPrimitives();
-	bindPathMatcher();
-	bindScenePath();
-	bindShader();
-	bindRender();
-	bindObjectProcessor();
-	bindPrimitiveVariables();
-	bindLightTweaks();
-	bindIO();
-	bindMixin();
+	GafferBindings::DependencyNodeClass<ShaderAssignment>();
+	GafferBindings::DependencyNodeClass<Attributes>();
+	GafferBindings::DependencyNodeClass<OpenGLAttributes>();
+	GafferBindings::DependencyNodeClass<StandardAttributes>();
+	GafferBindings::DependencyNodeClass<CustomAttributes>();
+	GafferBindings::DependencyNodeClass<AttributeProcessor>();
+	GafferBindings::DependencyNodeClass<DeleteAttributes>();
+	GafferBindings::DependencyNodeClass<EvaluateLightLinks>();
+
+	scope s = GafferBindings::DependencyNodeClass<AttributeVisualiser>();
+
+	enum_<AttributeVisualiser::Mode>( "Mode" )
+		.value( "Color", AttributeVisualiser::Color )
+		.value( "FalseColor", AttributeVisualiser::FalseColor )
+		.value( "Random", AttributeVisualiser::Random )
+		.value( "ShaderNodeColor", AttributeVisualiser::ShaderNodeColor )
+	;
 
 }

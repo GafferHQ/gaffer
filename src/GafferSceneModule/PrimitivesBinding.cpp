@@ -1,7 +1,6 @@
 //////////////////////////////////////////////////////////////////////////
 //
-//  Copyright (c) 2012-2014, Image Engine Design Inc. All rights reserved.
-//  Copyright (c) 2013, John Haddon. All rights reserved.
+//  Copyright (c) 2017, Image Engine Design Inc. All rights reserved.
 //
 //  Redistribution and use in source and binary forms, with or without
 //  modification, are permitted provided that the following conditions are
@@ -37,52 +36,51 @@
 
 #include "boost/python.hpp"
 
-#include "CoreBinding.h"
-#include "FilterBinding.h"
-#include "HierarchyBinding.h"
-#include "TransformBinding.h"
-#include "GlobalsBinding.h"
-#include "OptionsBinding.h"
-#include "AttributesBinding.h"
-#include "SceneAlgoBinding.h"
-#include "RendererAlgoBinding.h"
-#include "SetAlgoBinding.h"
+#include "GafferBindings/DependencyNodeBinding.h"
+
+#include "GafferScene/Sphere.h"
+#include "GafferScene/Plane.h"
+#include "GafferScene/Cube.h"
+#include "GafferScene/Text.h"
+#include "GafferScene/Camera.h"
+#include "GafferScene/ObjectToScene.h"
+#include "GafferScene/ClippingPlane.h"
+#include "GafferScene/CoordinateSystem.h"
+#include "GafferScene/ExternalProcedural.h"
+#include "GafferScene/Grid.h"
+#include "GafferScene/Light.h"
+
 #include "PrimitivesBinding.h"
-#include "PathMatcherBinding.h"
-#include "ScenePathBinding.h"
-#include "ShaderBinding.h"
-#include "RenderBinding.h"
-#include "ObjectProcessorBinding.h"
-#include "PrimitiveVariablesBinding.h"
-#include "LightTweaksBinding.h"
-#include "IOBinding.h"
-#include "MixinBinding.h"
 
+using namespace std;
 using namespace boost::python;
-using namespace GafferSceneModule;
+using namespace IECorePython;
+using namespace Gaffer;
+using namespace GafferBindings;
+using namespace GafferScene;
 
-BOOST_PYTHON_MODULE( _GafferScene )
+void GafferSceneModule::bindPrimitives()
 {
 
-	bindCore();
-	bindFilter();
-	bindTransform();
-	bindGlobals();
-	bindOptions();
-	bindHierarchy();
-	bindAttributes();
-	bindSceneAlgo();
-	bindRendererAlgo();
-	bindSetAlgo();
-	bindPrimitives();
-	bindPathMatcher();
-	bindScenePath();
-	bindShader();
-	bindRender();
-	bindObjectProcessor();
-	bindPrimitiveVariables();
-	bindLightTweaks();
-	bindIO();
-	bindMixin();
+	GafferBindings::DependencyNodeClass<ObjectSource>();
+	GafferBindings::DependencyNodeClass<Plane>();
+	GafferBindings::DependencyNodeClass<Cube>();
+	GafferBindings::DependencyNodeClass<Text>();
+	GafferBindings::DependencyNodeClass<ObjectToScene>();
+	GafferBindings::DependencyNodeClass<Camera>();
+	GafferBindings::DependencyNodeClass<ClippingPlane>();
+	GafferBindings::DependencyNodeClass<CoordinateSystem>();
+	GafferBindings::DependencyNodeClass<ExternalProcedural>();
+	GafferBindings::DependencyNodeClass<Grid>();
+	GafferBindings::DependencyNodeClass<Light>();
+
+	{
+		scope s = GafferBindings::DependencyNodeClass<Sphere>();
+
+		enum_<Sphere::Type>( "Type" )
+			.value( "Primitive", Sphere::Primitive )
+			.value( "Mesh", Sphere::Mesh )
+		;
+	}
 
 }

@@ -1,7 +1,6 @@
 //////////////////////////////////////////////////////////////////////////
 //
-//  Copyright (c) 2012-2014, Image Engine Design Inc. All rights reserved.
-//  Copyright (c) 2013, John Haddon. All rights reserved.
+//  Copyright (c) 2017, Image Engine Design Inc. All rights reserved.
 //
 //  Redistribution and use in source and binary forms, with or without
 //  modification, are permitted provided that the following conditions are
@@ -37,52 +36,64 @@
 
 #include "boost/python.hpp"
 
-#include "CoreBinding.h"
-#include "FilterBinding.h"
-#include "HierarchyBinding.h"
+#include "GafferBindings/ComputeNodeBinding.h"
+
+#include "GafferScene/Constraint.h"
+#include "GafferScene/AimConstraint.h"
+#include "GafferScene/PointConstraint.h"
+#include "GafferScene/ParentConstraint.h"
+#include "GafferScene/Transform.h"
+#include "GafferScene/FreezeTransform.h"
+
 #include "TransformBinding.h"
-#include "GlobalsBinding.h"
-#include "OptionsBinding.h"
-#include "AttributesBinding.h"
-#include "SceneAlgoBinding.h"
-#include "RendererAlgoBinding.h"
-#include "SetAlgoBinding.h"
-#include "PrimitivesBinding.h"
-#include "PathMatcherBinding.h"
-#include "ScenePathBinding.h"
-#include "ShaderBinding.h"
-#include "RenderBinding.h"
-#include "ObjectProcessorBinding.h"
-#include "PrimitiveVariablesBinding.h"
-#include "LightTweaksBinding.h"
-#include "IOBinding.h"
-#include "MixinBinding.h"
 
 using namespace boost::python;
-using namespace GafferSceneModule;
+using namespace Gaffer;
+using namespace GafferBindings;
+using namespace GafferScene;
 
-BOOST_PYTHON_MODULE( _GafferScene )
+void GafferSceneModule::bindTransform()
 {
 
-	bindCore();
-	bindFilter();
-	bindTransform();
-	bindGlobals();
-	bindOptions();
-	bindHierarchy();
-	bindAttributes();
-	bindSceneAlgo();
-	bindRendererAlgo();
-	bindSetAlgo();
-	bindPrimitives();
-	bindPathMatcher();
-	bindScenePath();
-	bindShader();
-	bindRender();
-	bindObjectProcessor();
-	bindPrimitiveVariables();
-	bindLightTweaks();
-	bindIO();
-	bindMixin();
+	typedef ComputeNodeWrapper<FilteredSceneProcessor> Wrapper;
+	GafferBindings::DependencyNodeClass<FilteredSceneProcessor, Wrapper>()
+		.def( init<const std::string &, Filter::Result>(
+				(
+					arg( "name" ) = GraphComponent::defaultName<FilteredSceneProcessor>(),
+					arg( "filterDefault" ) = Filter::EveryMatch
+				)
+			)
+		)
+	;
+
+	GafferBindings::DependencyNodeClass<SceneElementProcessor>();
+
+	{
+		scope s =  GafferBindings::DependencyNodeClass<Constraint>();
+
+		enum_<Constraint::TargetMode>( "TargetMode" )
+			.value( "Origin", Constraint::Origin )
+			.value( "BoundMin", Constraint::BoundMin )
+			.value( "BoundMax", Constraint::BoundMax )
+			.value( "BoundCenter", Constraint::BoundCenter )
+		;
+	}
+
+	GafferBindings::DependencyNodeClass<AimConstraint>();
+	GafferBindings::DependencyNodeClass<PointConstraint>();
+	GafferBindings::DependencyNodeClass<ParentConstraint>();
+	GafferBindings::DependencyNodeClass<GafferScene::FreezeTransform>();
+
+	{
+		scope s = GafferBindings::DependencyNodeClass<Transform>();
+
+		enum_<Transform::Space>( "Space" )
+			.value( "Local", Transform::Local )
+			.value( "Parent", Transform::Parent )
+			.value( "World", Transform::World )
+			.value( "ResetLocal", Transform::ResetLocal )
+			.value( "ResetWorld", Transform::ResetWorld )
+		;
+	}
 
 }

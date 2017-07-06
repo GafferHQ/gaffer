@@ -1,7 +1,6 @@
 //////////////////////////////////////////////////////////////////////////
 //
-//  Copyright (c) 2012-2014, Image Engine Design Inc. All rights reserved.
-//  Copyright (c) 2013, John Haddon. All rights reserved.
+//  Copyright (c) 2014, John Haddon. All rights reserved.
 //
 //  Redistribution and use in source and binary forms, with or without
 //  modification, are permitted provided that the following conditions are
@@ -37,52 +36,26 @@
 
 #include "boost/python.hpp"
 
-#include "CoreBinding.h"
-#include "FilterBinding.h"
-#include "HierarchyBinding.h"
-#include "TransformBinding.h"
-#include "GlobalsBinding.h"
-#include "OptionsBinding.h"
-#include "AttributesBinding.h"
-#include "SceneAlgoBinding.h"
-#include "RendererAlgoBinding.h"
-#include "SetAlgoBinding.h"
-#include "PrimitivesBinding.h"
-#include "PathMatcherBinding.h"
-#include "ScenePathBinding.h"
-#include "ShaderBinding.h"
-#include "RenderBinding.h"
-#include "ObjectProcessorBinding.h"
+#include "GafferBindings/DependencyNodeBinding.h"
+
+#include "GafferScene/PrimitiveVariables.h"
+#include "GafferScene/DeletePrimitiveVariables.h"
+#include "GafferScene/ResamplePrimitiveVariables.h"
+#include "GafferScene/MapProjection.h"
+#include "GafferScene/MapOffset.h"
+
 #include "PrimitiveVariablesBinding.h"
-#include "LightTweaksBinding.h"
-#include "IOBinding.h"
-#include "MixinBinding.h"
 
-using namespace boost::python;
-using namespace GafferSceneModule;
+using namespace GafferScene;
 
-BOOST_PYTHON_MODULE( _GafferScene )
+void GafferSceneModule::bindPrimitiveVariables()
 {
 
-	bindCore();
-	bindFilter();
-	bindTransform();
-	bindGlobals();
-	bindOptions();
-	bindHierarchy();
-	bindAttributes();
-	bindSceneAlgo();
-	bindRendererAlgo();
-	bindSetAlgo();
-	bindPrimitives();
-	bindPathMatcher();
-	bindScenePath();
-	bindShader();
-	bindRender();
-	bindObjectProcessor();
-	bindPrimitiveVariables();
-	bindLightTweaks();
-	bindIO();
-	bindMixin();
+	GafferBindings::DependencyNodeClass<PrimitiveVariableProcessor>();
+	GafferBindings::DependencyNodeClass<DeletePrimitiveVariables>();
+	GafferBindings::DependencyNodeClass<PrimitiveVariables>();
+	GafferBindings::DependencyNodeClass<ResamplePrimitiveVariables>();
+	GafferBindings::DependencyNodeClass<MapProjection>();
+	GafferBindings::DependencyNodeClass<MapOffset>();
 
 }
