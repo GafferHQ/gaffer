@@ -181,7 +181,7 @@ void StandardConnectionGadget::doRender( const Style *style ) const
 {
 	const_cast<StandardConnectionGadget *>( this )->setPositionsFromNodules();
 
-	Style::State state = ( m_hovering || m_dragEnd || m_dotPreview ) ? Style::HighlightedState : Style::NormalState;
+	Style::State state = ( m_hovering || m_dragEnd || m_dotPreview || getHighlighted() ) ? Style::HighlightedState : Style::NormalState;
 	if( state != Style::HighlightedState )
 	{
 		if( nodeSelected( srcNodule() ) || nodeSelected( dstNodule() ) )
