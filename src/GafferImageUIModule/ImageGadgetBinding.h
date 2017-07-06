@@ -34,53 +34,14 @@
 //
 //////////////////////////////////////////////////////////////////////////
 
-#include "boost/python.hpp"
+#ifndef GAFFERIMAGEUIMODULE_IMAGEGADGETBINDING_H
+#define GAFFERIMAGEUIMODULE_IMAGEGADGETBINDING_H
 
-#include "IECorePython/ScopedGILRelease.h"
-
-#include "Gaffer/Context.h"
-
-#include "GafferUIBindings/GadgetBinding.h"
-
-#include "GafferImage/ImagePlug.h"
-
-#include "GafferImageUI/ImageGadget.h"
-#include "GafferImageUIBindings/ImageGadgetBinding.h"
-
-using namespace boost::python;
-using namespace IECorePython;
-using namespace Gaffer;
-using namespace GafferUIBindings;
-using namespace GafferImage;
-using namespace GafferImageUI;
-
-namespace
+namespace GafferImageUIModule
 {
 
-ImagePlugPtr getImage( const ImageGadget &v )
-{
-	return ImagePlugPtr( const_cast<ImagePlug *>( v.getImage() ) );
-}
+void bindImageGadget();
 
-Imath::V2f pixelAt( const ImageGadget &g, const IECore::LineSegment3f &lineInGadgetSpace )
-{
-	// Need GIL release because this method may trigger a compute of the format.
-	IECorePython::ScopedGILRelease gilRelease;
-	return g.pixelAt( lineInGadgetSpace );
-}
+} // namespace GafferImageUIModule
 
-} // namespace
-
-void GafferImageUIBindings::bindImageGadget()
-{
-	GadgetClass<ImageGadget>()
-		.def( init<>() )
-		.def( "setImage", &ImageGadget::setImage )
-		.def( "getImage", &getImage )
-		.def( "setContext", &ImageGadget::setContext )
-		.def( "getContext", (Context *(ImageGadget::*)())&ImageGadget::getContext, return_value_policy<CastToIntrusivePtr>() )
-		.def( "setSoloChannel", &ImageGadget::setSoloChannel )
-		.def( "getSoloChannel", &ImageGadget::getSoloChannel )
-		.def( "pixelAt", &pixelAt )
-	;
-}
+#endif // GAFFERIMAGEUIMODULE_IMAGEGADGETBINDING_H

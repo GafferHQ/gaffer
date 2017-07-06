@@ -44,7 +44,6 @@
 #include "GafferUI/View.h"
 
 #include "GafferImageUI/TypeIds.h"
-#include "GafferImageUIBindings/ImageViewBinding.h" // to enable friend declaration for bindImageView().
 
 namespace Gaffer
 {
@@ -147,8 +146,6 @@ class ImageView : public GafferUI::View
 		static DisplayTransformCreatorMap &displayTransformCreators();
 
 		static ViewDescription<ImageView> g_viewDescription;
-
-		friend void GafferImageUIBindings::bindImageView();
 
 };
 
