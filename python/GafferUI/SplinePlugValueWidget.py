@@ -80,7 +80,7 @@ class SplinePlugValueWidget( GafferUI.PlugValueWidget ) :
 		plug = self.getPlug()
 		if plug is not None :
 			with self.getContext() :
-				self.__splineWidget.setSpline( plug.getValue() )
+				self.__splineWidget.setSpline( plug.getValue().spline() )
 
 	def __buttonPress( self, button, event ) :
 

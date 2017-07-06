@@ -677,7 +677,7 @@ class OSLShaderTest( GafferOSLTest.OSLTestCase ) :
 
 		self.assertTrue( isinstance( n["parameters"]["floatSpline"], Gaffer.SplineffPlug ) )
 		self.assertEqual(
-			n["parameters"]["floatSpline"].getValue(),
+			n["parameters"]["floatSpline"].getValue().spline(),
 			IECore.Splineff(
 				IECore.CubicBasisf.catmullRom(),
 				[
@@ -691,12 +691,14 @@ class OSLShaderTest( GafferOSLTest.OSLTestCase ) :
 
 		self.assertTrue( isinstance( n["parameters"]["colorSpline"], Gaffer.SplinefColor3fPlug ) )
 		self.assertEqual(
-			n["parameters"]["colorSpline"].getValue(),
+			n["parameters"]["colorSpline"].getValue().spline(),
 			IECore.SplinefColor3f(
 				IECore.CubicBasisf.bSpline(),
 				[
 					( 0, IECore.Color3f( 0 ) ),
 					( 0, IECore.Color3f( 0 ) ),
+					( 0, IECore.Color3f( 0 ) ),
+					( 1, IECore.Color3f( 1 ) ),
 					( 1, IECore.Color3f( 1 ) ),
 					( 1, IECore.Color3f( 1 ) ),
 				]
@@ -725,6 +727,8 @@ class OSLShaderTest( GafferOSLTest.OSLTestCase ) :
 				[
 					( 0, IECore.Color3f( 0 ) ),
 					( 0, IECore.Color3f( 0 ) ),
+					( 0, IECore.Color3f( 0 ) ),
+					( 1, IECore.Color3f( 1 ) ),
 					( 1, IECore.Color3f( 1 ) ),
 					( 1, IECore.Color3f( 1 ) ),
 				]

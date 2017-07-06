@@ -624,25 +624,25 @@ Plug *loadClosureParameter( const OSLQuery::Parameter *parameter, const Interned
 	return plug.get();
 }
 
-void updatePoints( Splineff &spline, const OSLQuery::Parameter *positionsParameter, const OSLQuery::Parameter *valuesParameter )
+void updatePoints( Splineff::PointContainer &points, const OSLQuery::Parameter *positionsParameter, const OSLQuery::Parameter *valuesParameter )
 {
 	const vector<float> &positions = positionsParameter->fdefault;
 	const vector<float> &values = valuesParameter->fdefault;
 
 	for( size_t i = 0; ( i < positions.size() ) && ( i < values.size() ); ++i )
 	{
-		spline.points.insert( Splineff::Point( positions[i], values[i] ) );
+		points.insert( Splineff::Point( positions[i], values[i] ) );
 	}
 }
 
-void updatePoints( SplinefColor3f &spline, const OSLQuery::Parameter *positionsParameter, const OSLQuery::Parameter *valuesParameter )
+void updatePoints( SplinefColor3f::PointContainer &points, const OSLQuery::Parameter *positionsParameter, const OSLQuery::Parameter *valuesParameter )
 {
 	const vector<float> &positions = positionsParameter->fdefault;
 	const vector<float> &values = valuesParameter->fdefault;
 
 	for( size_t i = 0; i < positions.size() && i*3+2 < values.size(); ++i )
 	{
-		spline.points.insert(
+		points.insert(
 			SplinefColor3f::Point(
 				positions[i],
 				Color3f(
@@ -658,23 +658,30 @@ void updatePoints( SplinefColor3f &spline, const OSLQuery::Parameter *positionsP
 template <typename PlugType>
 Plug *loadSplineParameters( const OSLQuery::Parameter *positionsParameter, const OSLQuery::Parameter *valuesParameter, const OSLQuery::Parameter *basisParameter, const InternedString &name, Gaffer::Plug *parent )
 {
-	typedef typename PlugType::ValueType ValueType;
-	ValueType defaultValue;
-
 	const std::string &basis = basisParameter->sdefault.front().string();
-	if( basis == "bezier" )
+
+	typename PlugType::ValueType defaultValue;
+	
+	defaultValue.interpolation = SplineDefinitionInterpolationCatmullRom;
+	if( basis == "bspline" )
 	{
-		defaultValue.basis = CubicBasisf::bezier();
-	}
-	else if( basis == "bspline" )
-	{
-		defaultValue.basis = CubicBasisf::bSpline();
+		defaultValue.interpolation = SplineDefinitionInterpolationBSpline;
 	}
 	else if( basis == "linear" )
 	{
-		defaultValue.basis = CubicBasisf::linear();
+		defaultValue.interpolation = SplineDefinitionInterpolationLinear;
 	}
-	updatePoints( defaultValue, positionsParameter, valuesParameter );
+
+	updatePoints( defaultValue.points, positionsParameter, valuesParameter );
+
+	// The OSL spline representation includes the need for duplicated end points in order to hit the end.
+	// We need to remove these
+	if( !defaultValue.trimEndPoints() )
+	{
+		// Failed to trim end points - the value of the OSL spline can't be represented,
+		// so just wipe out the control points
+		defaultValue.points.clear();
+	}
 
 	PlugType *existingPlug = parent->getChild<PlugType>( name );
 	if( existingPlug && existingPlug->defaultValue() == defaultValue )
