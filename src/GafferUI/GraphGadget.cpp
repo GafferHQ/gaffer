@@ -52,6 +52,8 @@
 #include "Gaffer/DependencyNode.h"
 #include "Gaffer/Metadata.h"
 #include "Gaffer/MetadataAlgo.h"
+#include "Gaffer/Dot.h"
+#include "Gaffer/Switch.h"
 
 #include "GafferUI/GraphGadget.h"
 #include "GafferUI/NodeGadget.h"
@@ -431,6 +433,80 @@ void GraphGadget::connectedNodeGadgetsWalk( NodeGadget *gadget, std::set<NodeGad
 	}
 }
 
+void GraphGadget::updateConnectionGadgetsHighlighting( const Gaffer::Node *node )
+{
+	if( !node )
+	{
+		return;
+	}
+
+	bool nodeSelected = m_scriptNode->selection()->contains( node );
+
+	for( Gaffer::RecursivePlugIterator it( node ); !it.done(); ++it )
+	{
+		const Gaffer::Plug *plug = it->get();
+
+		if( plug->direction() == Gaffer::Plug::Out )
+		{
+			for( Gaffer::Plug::OutputContainer::const_iterator oIt = plug->outputs().begin(), eOIt = plug->outputs().end(); oIt != eOIt; oIt++ )
+			{
+				if( ConnectionGadget *connection = connectionGadget( *oIt ) )
+				{
+					connection->setHighlighted( nodeSelected );
+				}
+			}
+			continue;
+		}
+
+		if( ConnectionGadget *connection = findConnectionGadget( plug ) )
+		{
+			connection->setHighlighted( nodeSelected );
+			setConnectionGadgetsHighlightingWalk( connection->srcNodule()->plug()->node(), nodeSelected );
+		}
+	}
+}
+
+void GraphGadget::setConnectionGadgetsHighlightingWalk( const Gaffer::Node *node, bool state )
+{
+	if( !node )
+	{
+		return;
+	}
+
+	if( const Gaffer::Dot *dot = IECore::runTimeCast<const Gaffer::Dot>( node ) )
+	{
+		if( ConnectionGadget *connection = connectionGadget( dot->inPlug<Gaffer::Plug>() ) )
+		{
+			connection->setHighlighted( state );
+			setConnectionGadgetsHighlightingWalk( connection->srcNodule()->plug()->node(), state );
+		}
+	}
+	else if( const Gaffer::SwitchComputeNode *switchNode = IECore::runTimeCast<const Gaffer::SwitchComputeNode>( node ) )
+	{
+		if( state )
+		{
+			if( ConnectionGadget *connection = connectionGadget( switchNode->activeInPlug() ) ) // TODO needs context!
+			{
+				connection->setHighlighted( true );
+				setConnectionGadgetsHighlightingWalk( connection->srcNodule()->plug()->node(), true );
+			}
+		}
+		else
+		{
+			// since the activePlug for switches can potentially change between
+			// selection changes, all connections need to be checked here.
+			for( Gaffer::RecursiveInputPlugIterator it( switchNode ); !it.done(); ++it )
+			{
+				if( ConnectionGadget *connection = connectionGadget( it->get() ) )
+				{
+					connection->setHighlighted( false );
+					setConnectionGadgetsHighlightingWalk( connection->srcNodule()->plug()->node(), false );
+				}
+			}
+		}
+	}
+}
+
 size_t GraphGadget::unpositionedNodeGadgets( std::vector<NodeGadget *> &nodeGadgets ) const
 {
 	for( NodeGadgetMap::const_iterator it = m_nodeGadgets.begin(), eIt = m_nodeGadgets.end(); it != eIt; ++it )
@@ -753,6 +829,8 @@ void GraphGadget::selectionMemberAdded( Gaffer::Set *set, IECore::RunTimeTyped *
 {
 	if( Gaffer::Node *node = runTimeCast<Gaffer::Node>( member ) )
 	{
+		updateConnectionGadgetsHighlighting( node );
+
 		if( NodeGadget *nodeGadget = findNodeGadget( node ) )
 		{
 			nodeGadget->setHighlighted( true );
@@ -764,6 +842,8 @@ void GraphGadget::selectionMemberRemoved( Gaffer::Set *set, IECore::RunTimeTyped
 {
 	if( Gaffer::Node *node = runTimeCast<Gaffer::Node>( member ) )
 	{
+		updateConnectionGadgetsHighlighting( node );
+
 		if( NodeGadget *nodeGadget = findNodeGadget( node ) )
 		{
 			nodeGadget->setHighlighted( false );
@@ -1259,6 +1339,7 @@ bool GraphGadget::dragEnd( GadgetPtr gadget, const DragDropEvent &event )
 		m_dragReconnectDstNodule->plug()->setInput( m_dragReconnectCandidate->srcNodule()->plug() );
 		m_dragReconnectCandidate->dstNodule()->plug()->setInput( m_dragReconnectSrcNodule->plug() );
 
+		updateConnectionGadgetsHighlighting( m_dragReconnectDstNodule->plug()->node() );
 		m_dragReconnectCandidate = NULL;
  		requestRender();
 	}
