@@ -107,7 +107,6 @@ template<typename T>
 PlugPtr SplinePlug<T>::createCounterpart( const std::string &name, Direction direction ) const
 {
 	Ptr result = new SplinePlug<T>( name, direction, defaultValue(), getFlags() );
-	result->setValue( getValue() );
 	return result;
 }
 
