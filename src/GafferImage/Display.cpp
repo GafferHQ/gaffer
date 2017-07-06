@@ -454,7 +454,8 @@ void Display::hashFormat( const GafferImage::ImagePlug *output, const Gaffer::Co
 		format = FormatPlug::getDefaultFormat( Context::current() );
 	}
 
-	h.append( format.getDisplayWindow() );
+	h.append( format.getDisplayWindow().min );
+	h.append( format.getDisplayWindow().max );
 	h.append( format.getPixelAspect() );
 }
 
