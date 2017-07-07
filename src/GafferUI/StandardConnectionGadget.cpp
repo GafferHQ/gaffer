@@ -182,13 +182,6 @@ void StandardConnectionGadget::doRender( const Style *style ) const
 	const_cast<StandardConnectionGadget *>( this )->setPositionsFromNodules();
 
 	Style::State state = ( m_hovering || m_dragEnd || m_dotPreview || getHighlighted() ) ? Style::HighlightedState : Style::NormalState;
-	if( state != Style::HighlightedState )
-	{
-		if( nodeSelected( srcNodule() ) || nodeSelected( dstNodule() ) )
-		{
-			state = Style::HighlightedState;
-		}
-	}
 
 	V3f adjustedSrcPos = m_srcPos;
 	V3f adjustedSrcTangent = m_srcTangent;
