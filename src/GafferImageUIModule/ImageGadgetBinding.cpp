@@ -1,7 +1,6 @@
 //////////////////////////////////////////////////////////////////////////
 //
-//  Copyright (c) 2012, John Haddon. All rights reserved.
-//  Copyright (c) 2013-2015, Image Engine Design Inc. All rights reserved.
+//  Copyright (c) 2015, Image Engine Design Inc. All rights reserved.
 //
 //  Redistribution and use in source and binary forms, with or without
 //  modification, are permitted provided that the following conditions are
@@ -37,44 +36,52 @@
 
 #include "boost/python.hpp"
 
-#include "CoreBinding.h"
-#include "ImageProcessorBinding.h"
-#include "TransformBinding.h"
-#include "MetadataBinding.h"
-#include "IOBinding.h"
-#include "WarpBinding.h"
-#include "ShapeBinding.h"
-#include "ImageAlgoBinding.h"
-#include "BufferAlgoBinding.h"
-#include "FilterAlgoBinding.h"
-#include "OpenColorIOTransformBinding.h"
-#include "ChannelDataProcessorBinding.h"
-#include "FilterBinding.h"
-#include "MixinBinding.h"
-#include "UtilityNodeBinding.h"
-#include "CatalogueBinding.h"
+#include "IECorePython/ScopedGILRelease.h"
+
+#include "Gaffer/Context.h"
+
+#include "GafferUIBindings/GadgetBinding.h"
+
+#include "GafferImage/ImagePlug.h"
+
+#include "GafferImageUI/ImageGadget.h"
+
+#include "ImageGadgetBinding.h"
 
 using namespace boost::python;
-using namespace GafferImageModule;
+using namespace IECorePython;
+using namespace Gaffer;
+using namespace GafferUIBindings;
+using namespace GafferImage;
+using namespace GafferImageUI;
 
-BOOST_PYTHON_MODULE( _GafferImage )
+namespace
 {
 
-	bindCore();
-	bindImageProcessor();
-	bindTransforms();
-	bindMetadata();
-	bindIO();
-	bindWarp();
-	bindShape();
-	bindFilters();
-	bindOpenColorIOTransform();
-	bindChannelDataProcessor();
-	bindMixin();
-	bindUtilityNodes();
-	bindCatalogue();
-	bindImageAlgo();
-	bindBufferAlgo();
-	bindFilterAlgo();
+ImagePlugPtr getImage( const ImageGadget &v )
+{
+	return ImagePlugPtr( const_cast<ImagePlug *>( v.getImage() ) );
+}
 
+Imath::V2f pixelAt( const ImageGadget &g, const IECore::LineSegment3f &lineInGadgetSpace )
+{
+	// Need GIL release because this method may trigger a compute of the format.
+	IECorePython::ScopedGILRelease gilRelease;
+	return g.pixelAt( lineInGadgetSpace );
+}
+
+} // namespace
+
+void GafferImageUIModule::bindImageGadget()
+{
+	GadgetClass<ImageGadget>()
+		.def( init<>() )
+		.def( "setImage", &ImageGadget::setImage )
+		.def( "getImage", &getImage )
+		.def( "setContext", &ImageGadget::setContext )
+		.def( "getContext", (Context *(ImageGadget::*)())&ImageGadget::getContext, return_value_policy<CastToIntrusivePtr>() )
+		.def( "setSoloChannel", &ImageGadget::setSoloChannel )
+		.def( "getSoloChannel", &ImageGadget::getSoloChannel )
+		.def( "pixelAt", &pixelAt )
+	;
 }
