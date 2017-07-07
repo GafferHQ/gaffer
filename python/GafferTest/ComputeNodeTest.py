@@ -347,8 +347,6 @@ class ComputeNodeTest( GafferTest.TestCase ) :
 		n = self.PassThrough()
 		n["in"].setValue( IECore.MeshPrimitive.createPlane( IECore.Box2f( IECore.V2f( -1 ), IECore.V2f( 1 ) ) ) )
 
-		# this fails because TypedObjectPlug::setValue() currently does a copy. i think we can
-		# optimise things by allowing a copy-free setValue() function for use during computations.
 		self.failUnless( n["in"].getValue( _copy=False ).isSame( n["out"].getValue( _copy=False ) ) )
 
 	def testInternalConnections( self ) :

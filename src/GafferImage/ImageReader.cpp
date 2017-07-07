@@ -45,7 +45,6 @@
 #include "GafferImage/OpenImageIOReader.h"
 
 using namespace std;
-using namespace tbb;
 using namespace Imath;
 using namespace IECore;
 using namespace Gaffer;
