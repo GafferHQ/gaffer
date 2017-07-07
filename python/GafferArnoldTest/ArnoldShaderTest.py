@@ -445,6 +445,25 @@ class ArnoldShaderTest( GafferSceneTest.SceneTestCase ) :
 		for name in [ "refraction", "diffuse", "glossy" ] :
 			self.assertTrue( isinstance( n["parameters"][name], Gaffer.Color4fPlug ) )
 
+	def testFloatParameterMetadata( self ) :
+
+		self.__forceArnoldRestart()
+
+		n = GafferArnold.ArnoldShader()
+		n.loadShader( "gobo" )
+
+		self.assertTrue( isinstance( n["parameters"]["slidemap"], Gaffer.Color3fPlug ) )
+
+		self.addCleanup( os.environ.__setitem__, "ARNOLD_PLUGIN_PATH", os.environ["ARNOLD_PLUGIN_PATH"] )
+		os.environ["ARNOLD_PLUGIN_PATH"] = os.environ["ARNOLD_PLUGIN_PATH"] + ":" + os.path.join( os.path.dirname( __file__ ), "metadata" )
+
+		self.__forceArnoldRestart()
+
+		n = GafferArnold.ArnoldShader()
+		n.loadShader( "gobo" )
+
+		self.assertTrue( isinstance( n["parameters"]["slidemap"], Gaffer.FloatPlug ) )
+
 	def testEmptyPlugTypeMetadata( self ) :
 
 		self.__forceArnoldRestart()
