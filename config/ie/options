@@ -64,7 +64,7 @@ targetAppVersion = None
 ## \todo: 0.13.0.0 is the first version that we started tracking
 ## Gaffer dependency versions in IEEnv. Should we instead have a
 ## more central "libraries we care about" section in IEEnv?
-gafferReg = IEEnv.registry["apps"]["gaffer"]["0.27.0.0"][IEEnv.platform()]
+gafferReg = IEEnv.registry["apps"]["gaffer"]["0.34.0.0"][IEEnv.platform()]
 qtVersion = gafferReg["qtVersion"]
 pyqtVersion = gafferReg.get( "pyqtVersion", "4.8.6" )
 oiioVersion = gafferReg["OpenImageIO"]
