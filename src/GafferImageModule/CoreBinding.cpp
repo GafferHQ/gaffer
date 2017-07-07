@@ -75,6 +75,13 @@ IECore::MurmurHash channelDataHash( const ImagePlug &plug, const std::string &ch
 	return plug.channelDataHash( channelName, tileOrigin );
 }
 
+IECore::IntVectorDataPtr sampleOffsets( const ImagePlug &plug, const Imath::V2i &tile, bool copy  )
+{
+	IECorePython::ScopedGILRelease gilRelease;
+	IECore::ConstIntVectorDataPtr d = plug.sampleOffsets( tile );
+	return copy ? d->copy() : boost::const_pointer_cast<IECore::IntVectorData>( d );
+}
+
 IECore::ImagePrimitivePtr image( const ImagePlug &plug )
 {
 	IECorePython::ScopedGILRelease gilRelease;
@@ -85,6 +92,36 @@ IECore::MurmurHash imageHash( const ImagePlug &plug )
 {
 	IECorePython::ScopedGILRelease gilRelease;
 	return plug.imageHash();
+}
+
+IECore::IntVectorDataPtr emptyTileSampleOffsets( bool copy )
+{
+	IECore::ConstIntVectorDataPtr d = ImagePlug::emptyTileSampleOffsets();
+	return copy ? d->copy() : boost::const_pointer_cast<IECore::IntVectorData>( d );
+}
+
+IECore::IntVectorDataPtr flatTileSampleOffsets( bool copy )
+{
+	IECore::ConstIntVectorDataPtr d = ImagePlug::flatTileSampleOffsets();
+	return copy ? d->copy() : boost::const_pointer_cast<IECore::IntVectorData>( d );
+}
+
+IECore::FloatVectorDataPtr emptyTile( bool copy )
+{
+	IECore::ConstFloatVectorDataPtr d = ImagePlug::emptyTile();
+	return copy ? d->copy() : boost::const_pointer_cast<IECore::FloatVectorData>( d );
+}
+
+IECore::FloatVectorDataPtr blackTile( bool copy )
+{
+	IECore::ConstFloatVectorDataPtr d = ImagePlug::blackTile();
+	return copy ? d->copy() : boost::const_pointer_cast<IECore::FloatVectorData>( d );
+}
+
+IECore::FloatVectorDataPtr whiteTile( bool copy )
+{
+	IECore::ConstFloatVectorDataPtr d = ImagePlug::whiteTile();
+	return copy ? d->copy() : boost::const_pointer_cast<IECore::FloatVectorData>( d );
 }
 
 boost::python::list registeredFormats()
@@ -188,11 +225,27 @@ void GafferImageModule::bindCore()
 		)
 		.def( "channelData", &channelData, ( arg( "_copy" ) = true ) )
 		.def( "channelDataHash", &channelDataHash )
+		.def( "sampleOffsets", &sampleOffsets, ( arg( "_copy" ) = true ) )
+		.def( "sampleOffsetsHash", &ImagePlug::sampleOffsetsHash )
 		.def( "image", &image )
 		.def( "imageHash", &imageHash )
 		.def( "tileSize", &ImagePlug::tileSize ).staticmethod( "tileSize" )
 		.def( "tileIndex", &ImagePlug::tileIndex ).staticmethod( "tileIndex" )
 		.def( "tileOrigin", &ImagePlug::tileOrigin ).staticmethod( "tileOrigin" )
+		.def( "emptyTileSampleOffsets", &emptyTileSampleOffsets, ( arg( "_copy" ) = true ) ).staticmethod( "emptyTileSampleOffsets" )
+		.def( "flatTileSampleOffsets", &flatTileSampleOffsets, ( arg( "_copy" ) = true ) ).staticmethod( "flatTileSampleOffsets" )
+		.def( "emptyTile", &emptyTile, ( arg( "_copy" ) = true ) ).staticmethod( "emptyTile" )
+		.def( "blackTile", &blackTile, ( arg( "_copy" ) = true ) ).staticmethod( "blackTile" )
+		.def( "whiteTile", &whiteTile, ( arg( "_copy" ) = true ) ).staticmethod( "whiteTile" )
+	;
+
+	enum_<ImagePlug::DeepState>( "DeepState" )
+		.value( "Messy", ImagePlug::Messy )
+		.value( "Sorted", ImagePlug::Sorted )
+		.value( "NonOverlapping", ImagePlug::NonOverlapping )
+		.value( "SingleSample", ImagePlug::SingleSample )
+		.value( "Tidy", ImagePlug::Tidy )
+		.value( "Flat", ImagePlug::Flat )
 	;
 
 	typedef ComputeNodeWrapper<ImageNode> ImageNodeWrapper;
