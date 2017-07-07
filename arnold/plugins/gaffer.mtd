@@ -79,6 +79,9 @@
 	shaderType STRING "lightFilter"
 	gaffer.nodeMenu.category STRING "Light"
 
+	[attr rotate]
+		gaffer.plugType STRING "FloatPlug"
+
 
 [node hair]
 
