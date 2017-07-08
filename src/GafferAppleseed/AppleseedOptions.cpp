@@ -48,8 +48,8 @@ AppleseedOptions::AppleseedOptions( const std::string &name )
 
 	// main
 	options->addOptionalMember( "as:cfg:generic_frame_renderer:passes", new IECore::IntData( 1 ), "renderPasses", Gaffer::Plug::Default, false );
-	options->addOptionalMember( "as:cfg:sampling_mode", new IECore::StringData( "rng" ), "sampler", Gaffer::Plug::Default, false );
-	options->addOptionalMember( "as:cfg:uniform_pixel_renderer:samples", new IECore::IntData( 64 ), "aaSamples", Gaffer::Plug::Default, false );
+	options->addOptionalMember( "as:cfg:sampling_mode", new IECore::StringData( "qmc" ), "sampler", Gaffer::Plug::Default, false );
+	options->addOptionalMember( "as:cfg:uniform_pixel_renderer:samples", new IECore::IntData( 16 ), "aaSamples", Gaffer::Plug::Default, false );
 	options->addOptionalMember( "as:cfg:lighting_engine", new IECore::StringData( "pt" ), "lightingEngine", Gaffer::Plug::Default, false );
 	options->addOptionalMember( "as:mesh_file_format", new IECore::StringData( "binarymesh" ), "meshFileFormat", Gaffer::Plug::Default, false );
 	options->addOptionalMember( "as:cfg:shading_engine:override_shading:mode", new IECore::StringData( "no_override" ), "shadingOverride", Gaffer::Plug::Default, false );
