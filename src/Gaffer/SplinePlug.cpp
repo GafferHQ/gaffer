@@ -41,6 +41,128 @@
 
 using namespace Gaffer;
 
+namespace {
+
+template<typename Y, typename X>
+inline Y monotoneSlopeCompute( const Y& deltaY1, const Y& deltaY2, const X& deltaX1, const X& deltaX2 )
+{
+	// Using this weighted harmonic mean to compute slopes ensures a monotone curve.
+	// This is apparently a result by Fritsch and Carlson, from here:
+	//
+	// F. N. Fritsch and R. E. Carlson
+	// SIAM Journal on Numerical Analysis
+	// Vol. 17, No. 2 (Apr., 1980), pp. 238-246
+	//
+	// Haven't actually gotten ahold of this paper, but stackexchange says that it says this,
+	// and it seems to work quite well.
+	if( deltaY1 * deltaY2 > 0.0f )
+	{
+		return 3.0f * ( deltaX1 + deltaX2 ) / (
+			( 2.0f * deltaX2 + deltaX1 ) / deltaY1 +
+			( deltaX2 + 2.0f * deltaX1 ) / deltaY2 );
+	}
+	else
+	{
+		return 0;
+	}
+}
+
+template<>
+inline Imath::Color3f monotoneSlopeCompute<>(
+	const Imath::Color3f& deltaY1, const Imath::Color3f& deltaY2,
+	const float& deltaX1, const float& deltaX2 )
+{
+	return Imath::Color3f(
+		monotoneSlopeCompute( deltaY1[0], deltaY2[0], deltaX1, deltaX2 ),
+		monotoneSlopeCompute( deltaY1[1], deltaY2[1], deltaX1, deltaX2 ),
+		monotoneSlopeCompute( deltaY1[2], deltaY2[2], deltaX1, deltaX2 )
+	);
+}
+
+// This function translates a set of control points for a MonotoneCubic curve into a set of
+// bezier control points.  The X values are set up to make each segment linear in X, which 
+// makes the control point behaviour a bit more predictable when used as a color ramp.
+// The Y tangents are adjusted to compensate for the discontinuity in the slope of the
+// parameterization across control points, which mean that the X/Y tangent is continuous across
+// control points.  This curve type seems to work quite well in practice for color ramps.
+//
+// Note that the way we are evaluating this type of curve by using a spline solver on the X
+// axis is ridiculously inefficient - the bezier control points are arranged so it's actually
+// always linear, and could be quickly solved analyticly.  But because we need to store these
+// curves in IECore::Spline, we don't have any way to specify different interpolations for
+// X and Y. So we just use bezier curve with appropriately set handles to store our linear X
+// curve.
+template<typename T>
+void monotoneCubicCVsToBezierCurve( const typename T::PointContainer &cvs, typename T::PointContainer &result )
+{
+	// NOTE : It would seem more reasonable to use the slope of the first and last segment for the
+	// endpoints, instead of clamping to 0.  The current argument for clamping to zero is consistency
+	// with the Htoa ramp
+	typename T::YType prevSlope = typename T::YType(0);
+
+	typename T::PointContainer::const_iterator i = cvs.begin();
+	const typename T::Point *p1 = &*i;
+	i++;
+	const typename T::Point *p2 = &*i;
+	i++;
+
+	for(;;)
+	{
+		typename T::YType nextSlope;
+
+		
+		const typename T::Point *pNext;
+		if( i == cvs.end() )
+		{
+			nextSlope = typename T::YType( 0 );
+		}
+		else
+		{
+			pNext = &*i;
+
+			typename T::XType xDelta1 = p2->first - p1->first;
+			typename T::XType xDelta2 = pNext->first - p2->first;
+			typename T::YType yDelta1 = p2->second - p1->second;
+			typename T::YType yDelta2 = pNext->second - p2->second;
+			
+			nextSlope = monotoneSlopeCompute( yDelta1 / xDelta1, yDelta2 / xDelta2, xDelta1, xDelta2);
+
+			// NOTE : If we copied everything else about this function, but instead just used:
+			// 	   0.5 * ( yDelta1 / xDelta1 + yDelta2 / xDelta2 )
+			// for the slope here, this would produce a CatmullRom sort of spline, but with the simpler linear
+			// behaviour of the knot values.  This is what Htoa uses for a CatmullRom ramp, and might be a pretty
+			// useful curve type ( quite possibly more useful than our current CatmullRom, though it would no
+			// longer correspond to a CatmullRom basis in OSL ).
+		}
+
+		typename T::XType xDelta = p2->first - p1->first;
+
+		result.insert( *p1 );
+		result.insert( typename T::Point(
+			p1->first + ( 1.0f/3.0f ) * xDelta,
+			p1->second + (1.0f/3.0f) * prevSlope * xDelta ) );
+		result.insert( typename T::Point(
+			p1->first + ( 2.0f/3.0f ) * xDelta,
+			p2->second - (1.0f/3.0f) * nextSlope * xDelta ) );
+
+		if( i == cvs.end() )
+		{
+			break;
+		}
+		else
+		{
+			p1 = p2;
+			p2 = pNext;
+			prevSlope = nextSlope;
+			i++;
+		}
+	}
+
+	result.insert( *p2 );
+}
+
+}
+
 template<typename T>
 const IECore::RunTimeTyped::TypeDescription<SplinePlug<T> > SplinePlug<T>::g_typeDescription;
 
@@ -48,6 +170,8 @@ template<typename T>
 T SplineDefinition<T>::spline() const
 {
 	T result;
+
+	result.points = points;	
 
 	if( interpolation == SplineDefinitionInterpolationLinear )
 	{
@@ -61,8 +185,16 @@ T SplineDefinition<T>::spline() const
 	{
 		result.basis = T::Basis::bSpline();
 	}
+	else if( interpolation == SplineDefinitionInterpolationMonotoneCubic )
+	{
+		result.basis = T::Basis::bezier();
+		if( points.size() > 1 )
+		{
+			result.points.clear();
+			monotoneCubicCVsToBezierCurve<T>( points, result.points );
+		}
+	}
 
-	result.points = points;	
 	int multiplicity = endPointMultiplicity();
 
 	if( multiplicity && result.points.size() )
@@ -148,7 +280,7 @@ SplinePlug<T>::SplinePlug( const std::string &name, Direction direction, const V
 	:	ValuePlug( name, direction, flags ), m_defaultValue( defaultValue )
 {
 	addChild( new IntPlug( "interpolation", direction, SplineDefinitionInterpolationCatmullRom,
-		SplineDefinitionInterpolationLinear, SplineDefinitionInterpolationBSpline ) );
+		SplineDefinitionInterpolationLinear, SplineDefinitionInterpolationMonotoneCubic ) );
 
 	setValue( defaultValue );
 }
