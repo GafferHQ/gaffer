@@ -35,11 +35,11 @@
 //////////////////////////////////////////////////////////////////////////
 
 #include "boost/format.hpp"
-#include "boost/lexical_cast.hpp"
 
 #include "renderer/api/edf.h"
 #include "renderer/api/environmentedf.h"
 #include "renderer/api/light.h"
+#include "renderer/api/version.h"
 
 #include "IECore/Exception.h"
 #include "IECore/Shader.h"
@@ -136,6 +136,21 @@ const Gaffer::StringPlug *AppleseedLight::modelPlug() const
 	return getChild<StringPlug>( g_firstPlugIndex );
 }
 
+namespace
+{
+
+float get_min_max_value( const asf::Dictionary &inputMetadata, const std::string &key )
+{
+#if APPLESEED_VERSION >= 10800
+	const asf::Dictionary& m = inputMetadata.dictionary( key.c_str() );
+	return m.get<float>( "value" );
+#else
+	return inputMetadata.get<float>( key + "_value" );
+#endif
+}
+
+}
+
 void AppleseedLight::setupPlugs( const std::string &shaderName, const asf::DictionaryArray &metadata )
 {
 	bool needsRadianceTexture = shaderName.find( "map" ) != std::string::npos;
@@ -158,9 +173,9 @@ void AppleseedLight::setupPlugs( const std::string &shaderName, const asf::Dicti
 		{
 			if( inputType == "numeric" )
 			{
-				float defaultValue = boost::lexical_cast<float>( inputMetadata.get( "default" ) );
-				float minValue = boost::lexical_cast<float>( inputMetadata.get( "min_value" ) );
-				float maxValue = boost::lexical_cast<float>( inputMetadata.get( "max_value" ) );
+				float defaultValue = inputMetadata.get<float>( "default" );
+				float minValue = get_min_max_value( inputMetadata, "min" );
+				float maxValue = get_min_max_value( inputMetadata, "max" );
 				plug = new Gaffer::FloatPlug( inputName, Gaffer::Plug::In, defaultValue, minValue, maxValue );
 			}
 			else if( inputType == "colormap" )
@@ -188,7 +203,7 @@ void AppleseedLight::setupPlugs( const std::string &shaderName, const asf::Dicti
 			// text are non-texturable float inputs.
 			else if( inputType == "text" )
 			{
-				float defaultValue = boost::lexical_cast<float>( inputMetadata.get( "default" ) );
+				float defaultValue = inputMetadata.get<float>( "default" );
 				plug = new Gaffer::FloatPlug( inputName, Gaffer::Plug::In, defaultValue );
 			}
 		}
