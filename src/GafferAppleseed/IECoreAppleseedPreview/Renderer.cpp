@@ -2522,7 +2522,7 @@ class AppleseedRenderer : public IECoreScenePreview::Renderer
 			cfg_params->insert( "frame_renderer", "progressive" );
 			cfg_params->insert( "lighting_engine", "pt" );
 			cfg_params->insert( "pixel_renderer", "uniform" );
-			cfg_params->insert( "sampling_mode", "rng" );
+			cfg_params->insert( "sampling_mode", "qmc" );
 			cfg_params->insert_path( "progressive_frame_renderer.max_fps", "5" );
 
 			// Insert some config params needed by the final renderer.
@@ -2534,8 +2534,8 @@ class AppleseedRenderer : public IECoreScenePreview::Renderer
 			cfg_params->insert( "frame_renderer", "generic" );
 			cfg_params->insert( "lighting_engine", "pt" );
 			cfg_params->insert( "pixel_renderer", "uniform" );
-			cfg_params->insert( "sampling_mode", "rng" );
-			cfg_params->insert_path( "uniform_pixel_renderer.samples", "64" );
+			cfg_params->insert( "sampling_mode", "qmc" );
+			cfg_params->insert_path( "uniform_pixel_renderer.samples", "16" );
 
 			// Create some basic project entities.
 			asf::auto_release_ptr<asr::Frame> frame( asr::FrameFactory::create( "beauty", asr::ParamArray().insert( "resolution", "640 480" ) ) );
