@@ -214,6 +214,7 @@ void bindSplinePlug()
 		.value( "Linear", SplineDefinitionInterpolationLinear )
 		.value( "CatmullRom", SplineDefinitionInterpolationCatmullRom )
 		.value( "BSpline", SplineDefinitionInterpolationBSpline )
+		.value( "MonotoneCubic", SplineDefinitionInterpolationMonotoneCubic )
 	;
 
 	bindSplineDefinition<SplineDefinitionff >( "SplineDefinitionff" );
