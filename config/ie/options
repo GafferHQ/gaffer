@@ -53,6 +53,36 @@ def getOption( name, default ) :
 
 	return result
 
+
+##########################################################################
+# parse SConstruct file for the gafferVersion
+##########################################################################
+
+def getGafferVersion() :
+
+	import re
+	sconsFile = "SConstruct"
+	versionVars = ["gafferMilestoneVersion", "gafferMajorVersion", "gafferMinorVersion",  "gafferPatchVersion"]
+	varsToFind = list(versionVars)
+
+	varsFound = {}
+	with open( sconsFile, "r" ) as f :
+		for line in f :
+			for varName in varsToFind :
+				match = re.match( "^\s*%s\s*=\s*(?P<value>\d+).*$" % varName, line )
+				if match :
+					varsFound[varName] = match.groupdict()["value"]
+					varsToFind.remove( varName )
+					break
+			if not varsToFind:
+				break
+
+	if varsToFind:
+		raise Exception( "Could not find the gaffer version in the SConstruct file. Please review the parsing rules." )
+
+	return ".".join( map( lambda x: varsFound[x], versionVars ) )
+
+
 cortexMajorVersion = getOption( "CORTEX_MAJOR_VERSION", os.environ["CORTEX_MAJOR_VERSION"] )
 cortexVersion = getOption( "CORTEX_VERSION", os.environ["CORTEX_VERSION"] )
 cortexReg = IEEnv.registry["libraries"]["cortex"][cortexMajorVersion].get( IEEnv.platform(), IEEnv.registry["libraries"]["cortex"][cortexMajorVersion] )
@@ -64,7 +94,9 @@ targetAppVersion = None
 ## \todo: 0.13.0.0 is the first version that we started tracking
 ## Gaffer dependency versions in IEEnv. Should we instead have a
 ## more central "libraries we care about" section in IEEnv?
-gafferReg = IEEnv.registry["apps"]["gaffer"]["0.27.0.0"][IEEnv.platform()]
+
+gafferVersion = getGafferVersion()
+gafferReg = IEEnv.registry["apps"]["gaffer"][gafferVersion][IEEnv.platform()]
 qtVersion = gafferReg["qtVersion"]
 pyqtVersion = gafferReg.get( "pyqtVersion", "4.8.6" )
 oiioVersion = gafferReg["OpenImageIO"]
