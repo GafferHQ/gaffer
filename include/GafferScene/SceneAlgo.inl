@@ -156,9 +156,6 @@ class LocationTask : public tbb::task
 			}
 			wait_for_all();
 
-
-			m_f.childrenProcessed( m_scene, m_path, childFunctors );
-
 			return nullptr;
 		}
 

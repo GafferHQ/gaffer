@@ -143,6 +143,69 @@ class SceneWriterTest( GafferSceneTest.SceneTestCase ) :
 
 		testCacheFile( self.temporaryDirectory() + "/test.scc" )
 
+
+	def testCanWriteSets( self ):
+
+		script = Gaffer.ScriptNode()
+
+		s = GafferScene.Sphere()
+		script.addChild( s )
+
+		c = GafferScene.Cube()
+		script.addChild( c )
+
+		sphereGroup = GafferScene.Group()
+		script.addChild( sphereGroup )
+		sphereGroup["in"][0].setInput( s["out"] )
+		sphereGroup["name"].setValue( 'sphereGroup' )
+
+
+		sn = GafferScene.Set( "Set" )
+		script.addChild( sn )
+		sn["paths"].setValue( IECore.StringVectorData( [ '/sphereGroup' ] ) )
+		sn["name"].setValue( 'foo' )
+		sn["in"].setInput( sphereGroup["out"] )
+
+
+		sn2 = GafferScene.Set( "Set" )
+		script.addChild( sn2 )
+		sn2["mode"].setValue( 1 ) # add to the existing set
+		sn2["paths"].setValue( IECore.StringVectorData( [ '/sphereGroup/sphere' ] ) )
+		sn2["name"].setValue( 'foo' )
+		sn2["in"].setInput( sn["out"] )
+
+		g = GafferScene.Group()
+		script.addChild( g )
+		g["name"].setValue( 'group' )
+
+		g["in"][0].setInput( sn2["out"] )
+		g["in"][1].setInput( c["out"] )
+
+		writer = GafferScene.SceneWriter()
+		script.addChild( writer )
+
+		script["writer"] = writer
+		writer["in"].setInput( g["out"] )
+		writer["fileName"].setValue( self.temporaryDirectory() + "/setTest.scc" )
+
+		writer.execute()
+
+		sc = IECore.SceneCache( self.temporaryDirectory() + "/setTest.scc", IECore.IndexedIO.OpenMode.Read )
+
+		scGroup = sc.child("group")
+		scSphereGroup = scGroup.child("sphereGroup")
+		scSphere = scSphereGroup.child("sphere")
+
+		self.assertEqual(  scGroup.readTags(), [] )
+
+		self.assertEqual( scSphereGroup.readTags(), [ IECore.InternedString("foo") ] )
+
+		self.assertEqual( set (scSphere.readTags() ), set([IECore.InternedString("foo"), IECore.InternedString("ObjectType:MeshPrimitive")]))
+
+		scCube = scGroup.child("cube")
+		self.assertEqual( scCube.readTags() , [ IECore.InternedString("ObjectType:MeshPrimitive") ] )
+
+
 	def testHash( self ) :
 
 		c = Gaffer.Context()
