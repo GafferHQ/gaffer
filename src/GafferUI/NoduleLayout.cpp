@@ -668,7 +668,12 @@ void NoduleLayout::updateLayout()
 		if( itemsSet.find( it->first ) == itemsSet.end() )
 		{
 			removed.push_back( it->second.gadget );
+// In libc++11 and earlier, Map::erase didn't take an iterator, only a const_iterator
+#if ( defined( _LIBCPP_VERSION ) && _LIBCPP_VERSION <= 1101 )
+			m_gadgets.erase( GadgetMap::const_iterator( it ) );
+#else
 			m_gadgets.erase( it );
+#endif
 		}
 		it = next;
 	}
