@@ -91,9 +91,9 @@ class TraverseTask : public tbb::task
 
 		TraverseTask( const TraverseTask &other, const ScenePlug::ScenePath &path )
 			:	m_scene( other.m_scene ),
-				m_context( other.m_context ),
-				m_f( other.m_f ),
-				m_path( path )
+			m_context( other.m_context ),
+			m_f( other.m_f ),
+			m_path( path )
 		{
 		}
 
@@ -103,6 +103,71 @@ class TraverseTask : public tbb::task
 		const Gaffer::Context *m_context;
 		ThreadableFunctor &m_f;
 		GafferScene::ScenePlug::ScenePath m_path;
+
+};
+
+template<typename ThreadableFunctor>
+class LocationTask : public tbb::task
+{
+
+	public :
+
+		LocationTask(
+			const GafferScene::ScenePlug *scene,
+			const Gaffer::Context *context,
+			const ScenePlug::ScenePath &path,
+			ThreadableFunctor &f
+		)
+			:	m_scene( scene ), m_context( context ), m_path( path ), m_f( f )
+		{
+		}
+
+		virtual ~LocationTask()
+		{
+		}
+
+		virtual task *execute()
+		{
+			ScenePlug::PathScope pathScope( m_context, m_path );
+
+			if( !m_f( m_scene, m_path ) )
+			{
+				return NULL;
+			}
+
+			IECore::ConstInternedStringVectorDataPtr childNamesData = m_scene->childNamesPlug()->getValue();
+			const std::vector<IECore::InternedString> &childNames = childNamesData->readable();
+			if( childNames.empty() )
+			{
+				return NULL;
+			}
+
+			std::vector<ThreadableFunctor> childFunctors( childNames.size(), m_f );
+
+			set_ref_count( 1 + childNames.size() );
+
+			ScenePlug::ScenePath childPath = m_path;
+			childPath.push_back( IECore::InternedString() ); // space for the child name
+			for( size_t i = 0, e = childNames.size(); i < e; ++i )
+			{
+				childPath.back() = childNames[i];
+				LocationTask *t = new( allocate_child() ) LocationTask( m_scene, m_context, childPath, childFunctors[i] );
+				spawn( *t );
+			}
+			wait_for_all();
+
+
+			m_f.childrenProcessed( m_scene, m_path, childFunctors );
+
+			return NULL;
+		}
+
+	private :
+
+		const GafferScene::ScenePlug *m_scene;
+		const Gaffer::Context *m_context;
+		const GafferScene::ScenePlug::ScenePath m_path;
+		ThreadableFunctor &m_f;
 
 };
 
@@ -164,6 +229,14 @@ struct PathMatcherFunctor
 
 namespace SceneAlgo
 {
+
+template <class ThreadableFunctor>
+void parallelProcessLocations( const GafferScene::ScenePlug *scene, ThreadableFunctor &f )
+{
+	FilterPlug::SceneScope sceneScope( Gaffer::Context::current(), scene );
+	Detail::LocationTask<ThreadableFunctor> *task = new( tbb::task::allocate_root() ) Detail::LocationTask<ThreadableFunctor>( scene, Gaffer::Context::current(), ScenePlug::ScenePath(), f );
+	tbb::task::spawn_root_and_wait( *task );
+}
 
 template <class ThreadableFunctor>
 void parallelTraverse( const GafferScene::ScenePlug *scene, ThreadableFunctor &f )

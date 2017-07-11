@@ -58,114 +58,6 @@ using namespace Gaffer;
 using namespace GafferScene;
 
 //////////////////////////////////////////////////////////////////////////
-// Potential replacement for SceneAlgo::parallelTraverse().
-// The original is pretty limited in that the processing at each
-// location is done in isolation, with no access to parent or child
-// results. This version copy constructs the functor for each location
-// from its parent, allowing state to be maintained through the traversal.
-//////////////////////////////////////////////////////////////////////////
-
-namespace
-{
-
-template<typename Functor>
-class LocationTask : public tbb::task
-{
-
-	public :
-
-		LocationTask(
-			const GafferScene::ScenePlug *scene,
-			const Gaffer::Context *context,
-			const ScenePlug::ScenePath &path,
-			Functor &f
-		)
-			:	m_scene( scene ), m_context( context ), m_path( path ), m_f( f )
-		{
-		}
-
-		virtual ~LocationTask()
-		{
-		}
-
-		virtual task *execute()
-		{
-			ScenePlug::PathScope pathScope( m_context, m_path );
-
-			if( !m_f( m_scene, m_path ) )
-			{
-				return NULL;
-			}
-
-			IECore::ConstInternedStringVectorDataPtr childNamesData = m_scene->childNamesPlug()->getValue();
-			const std::vector<IECore::InternedString> &childNames = childNamesData->readable();
-			if( childNames.empty() )
-			{
-				return NULL;
-			}
-
-			std::vector<Functor> childFunctors( childNames.size(), m_f );
-
-			set_ref_count( 1 + childNames.size() );
-
-			ScenePlug::ScenePath childPath = m_path;
-			childPath.push_back( IECore::InternedString() ); // space for the child name
-			for( size_t i = 0, e = childNames.size(); i < e; ++i )
-			{
-				childPath.back() = childNames[i];
-				LocationTask *t = new( allocate_child() ) LocationTask( m_scene, m_context, childPath, childFunctors[i] );
-				spawn( *t );
-			}
-			wait_for_all();
-
-			return NULL;
-		}
-
-	private :
-
-		const GafferScene::ScenePlug *m_scene;
-		const Gaffer::Context *m_context;
-		const GafferScene::ScenePlug::ScenePath m_path;
-		Functor &m_f;
-
-};
-
-/// Invokes the Functor at every location in the scene,
-/// visiting parent locations before their children, but
-/// otherwise processing locations in parallel as much
-/// as possible.
-///
-/// Functor should be of the following form.
-///
-/// ```
-/// struct Functor
-/// {
-///
-///	    /// Called to construct a new functor to be used at
-///     /// each child location. This allows state to be
-///     /// accumulated as the scene is traversed, with each
-///     /// parent passing its state to its children.
-///     Functor( const Functor &parent );
-///
-///     /// Called to process a specific location. May return
-///     /// false to prune the traversal, or true to continue
-///     /// to the children.
-///     bool operator()( const ScenePlug *scene, const ScenePlug::ScenePath &path );
-///
-/// };
-/// ```
-template <class Functor>
-void parallelProcessLocations( const GafferScene::ScenePlug *scene, Functor &f )
-{
-	FilterPlug::SceneScope sceneScope( Gaffer::Context::current(), scene );
-	LocationTask<Functor> *task = new( tbb::task::allocate_root() ) LocationTask<Functor>( scene, Gaffer::Context::current(), ScenePlug::ScenePath(), f );
-	tbb::task::spawn_root_and_wait( *task );
-}
-
-} // namespace
-
-
-//////////////////////////////////////////////////////////////////////////
 // RenderSets class
 //////////////////////////////////////////////////////////////////////////
 
@@ -893,7 +785,7 @@ void outputCameras( const ScenePlug *scene, const IECore::CompoundObject *global
 	}
 
 	CameraOutput output( renderer, globals, renderSets );
-	parallelProcessLocations( scene, output );
+	SceneAlgo::parallelProcessLocations( scene, output );
 
 	if( !cameraOption || cameraOption->readable().empty() )
 	{
@@ -912,13 +804,13 @@ void outputCameras( const ScenePlug *scene, const IECore::CompoundObject *global
 void outputLights( const ScenePlug *scene, const IECore::CompoundObject *globals, const RenderSets &renderSets, IECoreScenePreview::Renderer *renderer )
 {
 	LightOutput output( renderer, globals, renderSets );
-	parallelProcessLocations( scene, output );
+	SceneAlgo::parallelProcessLocations( scene, output );
 }
 
 void outputObjects( const ScenePlug *scene, const IECore::CompoundObject *globals, const RenderSets &renderSets, IECoreScenePreview::Renderer *renderer )
 {
 	ObjectOutput output( renderer, globals, renderSets );
-	parallelProcessLocations( scene, output );
+	SceneAlgo::parallelProcessLocations( scene, output );
 }
 
 void applyCameraGlobals( IECore::Camera *camera, const IECore::CompoundObject *globals )
