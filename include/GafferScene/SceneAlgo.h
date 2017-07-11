@@ -78,6 +78,33 @@ void matchingPaths( const Gaffer::IntPlug *filterPlug, const ScenePlug *scene, P
 /// As above, but specifying the filter as a PathMatcher.
 void matchingPaths( const PathMatcher &filter, const ScenePlug *scene, PathMatcher &paths );
 
+/// Invokes the ThreadableFunctor at every location in the scene,
+/// visiting parent locations before their children, but
+/// otherwise processing locations in parallel as much
+/// as possible.
+///
+/// Functor should be of the following form.
+///
+/// ```
+/// struct ThreadableFunctor
+/// {
+///
+///	    /// Called to construct a new functor to be used at
+///     /// each child location. This allows state to be
+///     /// accumulated as the scene is traversed, with each
+///     /// parent passing its state to its children.
+///     ThreadableFunctor( const ThreadableFunctor &parent );
+///
+///     /// Called to process a specific location. May return
+///     /// false to prune the traversal, or true to continue
+///     /// to the children.
+///     bool operator()( const ScenePlug *scene, const ScenePlug::ScenePath &path );
+///
+/// };
+/// ```
+template <class ThreadableFunctor>
+void parallelProcessLocations( const GafferScene::ScenePlug *scene, ThreadableFunctor &f );
+
 /// Calls a functor on all paths in the scene
 /// The functor must take ( const ScenePlug*, const ScenePlug::ScenePath& ), and can return false to prune traversal
 template <class ThreadableFunctor>
