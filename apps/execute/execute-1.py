@@ -160,6 +160,7 @@ class execute( Gaffer.Application ) :
 
 		with context :
 			for node in nodes :
+				errorConnection = node.errorSignal().connect( Gaffer.WeakMethod( self.__error ) )
 				try :
 					node["task"].executeSequence( frames )
 				except Exception as exception :
@@ -171,10 +172,19 @@ class execute( Gaffer.Application ) :
 					IECore.msg(
 						IECore.Msg.Level.Error,
 						"gaffer execute : executing %s" % node.relativeName( scriptNode ),
-						"".join( traceback.format_exception_only( *sys.exc_info()[:2] ) ),
+						"See previous message for details",
 					)
 					return 1
 
 		return 0
 
+	def __error( self, plug, source, message ) :
+
+		IECore.msg(
+			IECore.Msg.Level.Error,
+			source.relativeName( source.ancestor( Gaffer.ScriptNode ) ),
+			message
+		)
+
 IECore.registerRunTimeTyped( execute )
+

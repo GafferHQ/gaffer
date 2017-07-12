@@ -250,5 +250,44 @@ class ExecuteApplicationTest( GafferTest.TestCase ) :
 		self.assertEqual( p.returncode, 0 )
 		self.assertTrue( os.path.exists( self.__outputTextFile ) )
 
+	def testErrorMessagesIncludeNodeName( self ) :
+
+		s = Gaffer.ScriptNode()
+		s["fileName"].setValue( self.__scriptFileName )
+
+		s["MyTextWriter"] = GafferDispatchTest.TextWriter()
+		s["MyTextWriter"]["fileName"].setValue( self.__outputTextFile )
+
+		s["MyExpression"] = Gaffer.Expression()
+		s["MyExpression"].setExpression(
+			"""parent["MyTextWriter"]["text"] = thisVariableDoesntExist"""
+		)
+
+		s["MyErroringTaskNode"] = GafferDispatchTest.ErroringTaskNode()
+
+		s.save()
+
+		p = subprocess.Popen(
+			"gaffer execute -script " + self.__scriptFileName + " -nodes MyTextWriter",
+			shell=True,
+			stderr = subprocess.PIPE,
+		)
+		p.wait()
+
+		error = "".join( p.stderr.readlines() )
+		self.assertIn( "MyTextWriter", error )
+		self.assertIn( "MyExpression", error )
+
+		p = subprocess.Popen(
+			"gaffer execute -script " + self.__scriptFileName + " -nodes MyErroringTaskNode",
+			shell=True,
+			stderr = subprocess.PIPE,
+		)
+		p.wait()
+
+		error = "".join( p.stderr.readlines() )
+		self.assertIn( "MyErroringTaskNode", error )
+		self.assertNotIn( "MyExpression", error )
+
 if __name__ == "__main__":
 	unittest.main()
