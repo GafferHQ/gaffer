@@ -51,7 +51,10 @@ class PythonExpressionEngine( Gaffer.Expression.Engine ) :
 
 	def parse( self, node, expression, inPlugs, outPlugs, contextNames ) :
 
-		parser = _Parser( expression )
+		try:
+			parser = _Parser( expression )
+		except SyntaxError as e:
+			raise SyntaxError( "Error on node \"{0}\", {1}".format( node.getName(), e ) )
 
 		self.__expression = expression
 		self.__inPlugPaths = list( parser.plugReads )
@@ -100,7 +103,13 @@ class PythonExpressionEngine( Gaffer.Expression.Engine ) :
 
 		value = _extractPlugValue( proxyOutput, topLevelProxyOutput, value )
 		if value is None :
-			raise TypeError( "Unsupported value type \"%s\"" % type( value ).__name__ )
+			raise TypeError( "Error on node \"{0}\", Unsupported value type \"{1}\" while connection input plug \"{2}\" and output plug \"{3}\"".format(
+				topLevelProxyOutput.node().getName(),
+				type( value ).__name__,
+				topLevelProxyOutput.getName(),
+				proxyOutput.getName(),
+				)
+			)
 		else :
 			proxyOutput.setValue( value )
 
@@ -194,9 +203,9 @@ class PythonExpressionEngine( Gaffer.Expression.Engine ) :
 			return plug
 
 		if plug is None :
-			raise RuntimeError( "\"%s\" does not exist" % plugPath )
+			raise RuntimeError( "Error on node \"{0}\", \"{1}\" does not exist".format( node.getName(), plugPath ) )
 		else :
-			raise RuntimeError( "\"%s\" is not a ValuePlug" % plugPath )
+			raise RuntimeError( "Error on node \"{0}\", \"{1}\" is not a ValuePlug".forma( node.getName(), plugPath ) )
 
 	def __plugRegex( self, node, plug ) :
 
