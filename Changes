@@ -1,3 +1,11 @@
+0.34.0.1
+========
+
+Fixes
+-----
+
+- Fixed bug with VectorDataWidget and Qt4 (#2162 backport)
+
 0.34.0.0
 ========
 
