@@ -519,7 +519,7 @@ void parallelProcessTiles( const ImagePlug *imagePlug, ThreadableFunctor &functo
 	}
 
 	const Imath::V2i tilesOrigin = ImagePlug::tileOrigin( processWindow.min );
-	const Imath::V2i numTiles = ( ImagePlug::tileOrigin( processWindow.max - Imath::V2i( 1 ) ) - tilesOrigin ) / ImagePlug::tileSize();
+	const Imath::V2i numTiles = ( ( ImagePlug::tileOrigin( processWindow.max - Imath::V2i( 1 ) ) - tilesOrigin ) / ImagePlug::tileSize() ) + Imath::V2i( 1 );
 
 	parallel_for( tbb::blocked_range2d<size_t>( 0, numTiles.x, 1, 0, numTiles.y, 1 ),
 			  GafferImage::Detail::ProcessTiles<ThreadableFunctor>( functor, imagePlug, tilesOrigin, Gaffer::Context::current() ) );
