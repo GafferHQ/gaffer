@@ -44,6 +44,7 @@ from Qt import QtCore
 from Qt import QtGui
 from Qt import QtWidgets
 from Qt import QtCompat
+import Qt
 
 ## The VectorDataWidget provides a table view for the contents of
 # one or more IECore VectorData instances.
@@ -917,7 +918,11 @@ class _Model( QtCore.QAbstractTableModel ) :
 		if role == QtCore.Qt.EditRole :
 			column = self.__columns[index.column()]
 			column.accessor.setElement( index.row(), column.relativeColumnIndex, value )
-			self.dataChanged.emit( index, index, [ QtCore.Qt.DisplayRole, QtCore.Qt.EditRole ] )
+
+			if Qt.__binding__ in ( "PySide2", "PyQt5" ) :
+				self.dataChanged.emit( index, index, [ QtCore.Qt.DisplayRole, QtCore.Qt.EditRole ] )
+			else:
+				self.dataChanged.emit( index, index )
 
 		return True
 
