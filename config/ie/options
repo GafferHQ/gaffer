@@ -56,15 +56,25 @@ def getOption( name, default ) :
 
 ##########################################################################
 # parse SConstruct file for the gafferVersion
+# then find a best match in the registry
+# you can override this value by using the REGISTRY_GAFFER_VERSION option
 ##########################################################################
 
-def getGafferVersion() :
+def getGafferReg(registryGafferVersion) :
 
 	import re
+	import IEEnv
+
+	# manual override
+	# don't try any smart look up
+	if registryGafferVersion:
+		print "Force registry look up for gaffer %s" % registryGafferVersion
+		return IEEnv.registry["apps"]["gaffer"][registryGafferVersion][IEEnv.platform()]
+
+	# parse the SConstruct file for the gaffer version
 	sconsFile = "SConstruct"
 	versionVars = ["gafferMilestoneVersion", "gafferMajorVersion", "gafferMinorVersion",  "gafferPatchVersion"]
 	varsToFind = list(versionVars)
-
 	varsFound = {}
 	with open( sconsFile, "r" ) as f :
 		for line in f :
@@ -74,13 +84,32 @@ def getGafferVersion() :
 					varsFound[varName] = match.groupdict()["value"]
 					varsToFind.remove( varName )
 					break
+
 			if not varsToFind:
 				break
 
 	if varsToFind:
 		raise Exception( "Could not find the gaffer version in the SConstruct file. Please review the parsing rules." )
 
-	return ".".join( map( lambda x: varsFound[x], versionVars ) )
+	gafferVersionInfo = map( lambda x: varsFound[x], versionVars )
+
+	# try to find a registry entry
+	# will cycle through the gafferPatchVersion, gafferMinorVersion and gafferMajorVersion for a match
+	# it will not consider changing the gafferMilestoneVersion
+	index = 3
+	while index > 0:
+		gafferVersion = ".".join( gafferVersionInfo )
+		if gafferVersion in IEEnv.registry["apps"]["gaffer"]:
+			print "gaffer %s found in the registry" % gafferVersion
+			return IEEnv.registry["apps"]["gaffer"][gafferVersion][IEEnv.platform()]
+
+		print "gaffer %s not found in the registry" % gafferVersion
+		if gafferVersionInfo[index] == "0":
+			index -= 1
+
+		gafferVersionInfo[index] = str( int( gafferVersionInfo[index] ) - 1 )
+
+	raise Exception( "Could not find any compatible gaffer version in the registry" )
 
 
 cortexMajorVersion = getOption( "CORTEX_MAJOR_VERSION", os.environ["CORTEX_MAJOR_VERSION"] )
@@ -95,8 +124,7 @@ targetAppVersion = None
 ## Gaffer dependency versions in IEEnv. Should we instead have a
 ## more central "libraries we care about" section in IEEnv?
 
-gafferVersion = getGafferVersion()
-gafferReg = IEEnv.registry["apps"]["gaffer"][gafferVersion][IEEnv.platform()]
+gafferReg = getGafferReg(getOption( "REGISTRY_GAFFER_VERSION", None ))
 qtVersion = gafferReg["qtVersion"]
 pyqtVersion = gafferReg.get( "pyqtVersion", "4.8.6" )
 oiioVersion = gafferReg["OpenImageIO"]
