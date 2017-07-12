@@ -39,6 +39,7 @@ import platform
 import unittest
 import shutil
 import functools
+import datetime
 
 import IECore
 
@@ -745,13 +746,23 @@ class ImageWriterTest( GafferImageTest.ImageTestCase ) :
 			if metaName in metadataToIgnore :
 				continue
 			self.assertTrue( metaName in misledReaderMetadata.keys(), "Writer Metadata missing expected key \"{}\" set to \"{}\" : {}".format(metaName, str(expectedMetadata[metaName]), ext) )
-			self.assertEqual( expectedMetadata[metaName], misledReaderMetadata[metaName], "Metadata does not match for key \"{}\" : {}".format(metaName, ext) )
+
+			if metaName == "DateTime" :
+				dateTimeDiff = datetime.datetime.strptime( str( expectedMetadata[metaName] ), "%Y:%m:%d %H:%M:%S" ) - datetime.datetime.strptime( str( misledReaderMetadata[metaName] ), "%Y:%m:%d %H:%M:%S" )
+				self.assertLessEqual( abs( dateTimeDiff ), datetime.timedelta( seconds=1 ) )
+			else :
+				self.assertEqual( expectedMetadata[metaName], misledReaderMetadata[metaName], "Metadata does not match for key \"{}\" : {}".format(metaName, ext) )
 
 		for metaName in regularReaderMetadata.keys() :
 			if metaName in metadataToIgnore :
 				continue
 			self.assertTrue( metaName in misledReaderMetadata.keys(), "Writer Metadata missing expected key \"{}\" set to \"{}\" : {}".format(metaName, str(expectedMetadata[metaName]), ext) )
-			self.assertEqual( regularReaderMetadata[metaName], misledReaderMetadata[metaName], "Metadata does not match for key \"{}\" : {}".format(metaName, ext) )
+
+			if metaName == "DateTime" :
+				dateTimeDiff = datetime.datetime.strptime( str( regularReaderMetadata[metaName] ), "%Y:%m:%d %H:%M:%S" ) - datetime.datetime.strptime( str( misledReaderMetadata[metaName] ), "%Y:%m:%d %H:%M:%S" )
+				self.assertLessEqual( abs( dateTimeDiff ), datetime.timedelta( seconds=1 ) )
+			else :
+				self.assertEqual( regularReaderMetadata[metaName], misledReaderMetadata[metaName], "Metadata does not match for key \"{}\" : {}".format(metaName, ext) )
 
 	def testExrMetadata( self ) :
 
