@@ -125,6 +125,11 @@ class TaskNodeProcess : public Gaffer::Process
 			return n;
 		}
 
+		void handleException()
+		{
+			Gaffer::Process::handleException();
+		}
+
 		static InternedString hashProcessType;
 		static InternedString executeProcessType;
 		static InternedString executeSequenceProcessType;
@@ -200,37 +205,85 @@ PlugPtr TaskNode::TaskPlug::createCounterpart( const std::string &name, Directio
 IECore::MurmurHash TaskNode::TaskPlug::hash() const
 {
 	TaskNodeProcess p( TaskNodeProcess::hashProcessType, this );
-	return p.taskNode()->hash( Context::current() );
+	try
+	{
+		return p.taskNode()->hash( Context::current() );
+	}
+	catch( ... )
+	{
+		p.handleException();
+		return MurmurHash();
+	}
 }
 
 void TaskNode::TaskPlug::execute() const
 {
 	TaskNodeProcess p( TaskNodeProcess::executeProcessType, this );
-	return p.taskNode()->execute();
+	try
+	{
+		p.taskNode()->execute();
+	}
+	catch( ... )
+	{
+		p.handleException();
+		return;
+	}
 }
 
 void TaskNode::TaskPlug::executeSequence( const std::vector<float> &frames ) const
 {
 	TaskNodeProcess p( TaskNodeProcess::executeSequenceProcessType, this );
-	return p.taskNode()->executeSequence( frames );
+	try
+	{
+		p.taskNode()->executeSequence( frames );
+	}
+	catch( ... )
+	{
+		p.handleException();
+		return;
+	}
 }
 
 bool TaskNode::TaskPlug::requiresSequenceExecution() const
 {
 	TaskNodeProcess p( TaskNodeProcess::requiresSequenceExecutionProcessType, this );
-	return p.taskNode()->requiresSequenceExecution();
+	try
+	{
+		return p.taskNode()->requiresSequenceExecution();
+	}
+	catch( ... )
+	{
+		p.handleException();
+		return false;
+	}
 }
 
 void TaskNode::TaskPlug::preTasks( Tasks &tasks ) const
 {
 	TaskNodeProcess p( TaskNodeProcess::preTasksProcessType, this );
-	return p.taskNode()->preTasks( Context::current(), tasks );
+	try
+	{
+		p.taskNode()->preTasks( Context::current(), tasks );
+	}
+	catch( ... )
+	{
+		p.handleException();
+		return;
+	}
 }
 
 void TaskNode::TaskPlug::postTasks( Tasks &tasks ) const
 {
 	TaskNodeProcess p( TaskNodeProcess::postTasksProcessType, this );
-	return p.taskNode()->postTasks( Context::current(), tasks );
+	try
+	{
+		p.taskNode()->postTasks( Context::current(), tasks );
+	}
+	catch( ... )
+	{
+		p.handleException();
+		return;
+	}
 }
 
 //////////////////////////////////////////////////////////////////////////

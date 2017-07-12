@@ -452,5 +452,35 @@ class TaskNodeTest( GafferTest.TestCase ) :
 		n["task"].executeSequence( itertools.chain( [ 1, 2, 3 ], [ 4, 5, 6 ] ) )
 		self.assertEqual( len( n.log ), 9 )
 
+	def testErrorSignal( self ) :
+
+		n = GafferDispatchTest.ErroringTaskNode()
+
+		for f, args in [
+			( "execute", [] ),
+			( "executeSequence", [ ( 1, 2, 3 ) ] ),
+			( "hash", [] ),
+			( "requiresSequenceExecution", [] ),
+			( "preTasks", [] ),
+			( "postTasks", [] ),
+		] :
+
+			cs = GafferTest.CapturingSlot( n.errorSignal() )
+
+			self.assertRaisesRegexp(
+				RuntimeError,
+				"Error in {}".format( f ),
+				getattr( n["task"], f ),
+				*args
+			)
+
+			self.assertEqual( len( cs ), 1 )
+			self.assertEqual( cs[0][0], n["task"] )
+			self.assertEqual( cs[0][1], n["task"] )
+			self.assertIn(
+				"Error in {}".format( f ),
+				cs[0][2]
+			)
+
 if __name__ == "__main__":
 	unittest.main()
