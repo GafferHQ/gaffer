@@ -343,7 +343,7 @@ const ValuePlug *Loop<BaseType>::ancestorPlug( const ValuePlug *plug, std::vecto
 {
 	while( plug )
 	{
-		const GraphComponent *plugParent = plug->parent<GraphComponent>();
+		const GraphComponent *plugParent = plug->parent();
 		if( plugParent == this )
 		{
 			return plug;

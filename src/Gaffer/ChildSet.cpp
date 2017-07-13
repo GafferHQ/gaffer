@@ -58,19 +58,19 @@ bool ChildSet::contains( const Member *object ) const
 	const GraphComponent *g = IECore::runTimeCast<const GraphComponent>( object );
 	if( g )
 	{
-		return g->parent<GraphComponent>() == m_parent;
+		return g->parent() == m_parent;
 	}
 	return false;
 }
 
 Set::Member *ChildSet::member( size_t index )
 {
-	return const_cast<GraphComponent *>( m_parent->getChild<GraphComponent>( index ) );
+	return const_cast<GraphComponent *>( m_parent->getChild( index ) );
 }
 
 const Set::Member *ChildSet::member( size_t index ) const
 {
-	return m_parent->getChild<GraphComponent>( index );
+	return m_parent->getChild( index );
 }
 
 size_t ChildSet::size() const

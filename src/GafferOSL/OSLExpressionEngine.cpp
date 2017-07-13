@@ -575,7 +575,7 @@ class OSLExpressionEngine : public Gaffer::Expression::Engine
 		static ValuePlug *plug( Expression *node, const std::string &plugPath )
 		{
 			Node *plugScope = node->parent<Node>();
-			GraphComponent *descendant = plugScope->descendant<GraphComponent>( plugPath );
+			GraphComponent *descendant = plugScope->descendant( plugPath );
 			if( !descendant )
 			{
 				throw IECore::Exception( boost::str( boost::format( "\"%s\" does not exist" ) % plugPath ) );

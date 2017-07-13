@@ -406,7 +406,7 @@ NoduleLayout::~NoduleLayout()
 
 Nodule *NoduleLayout::nodule( const Gaffer::Plug *plug )
 {
-	const GraphComponent *plugParent = plug->parent<GraphComponent>();
+	const GraphComponent *plugParent = plug->parent();
 	if( !plugParent )
 	{
 		return nullptr;

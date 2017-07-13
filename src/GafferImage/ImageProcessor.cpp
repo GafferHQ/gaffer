@@ -69,7 +69,7 @@ ImageProcessor::~ImageProcessor()
 
 ImagePlug *ImageProcessor::inPlug()
 {
-	GraphComponent *p = getChild<GraphComponent>( g_firstPlugIndex );
+	GraphComponent *p = getChild( g_firstPlugIndex );
 	if( ImagePlug *i = IECore::runTimeCast<ImagePlug>( p ) )
 	{
 		return i;
@@ -82,7 +82,7 @@ ImagePlug *ImageProcessor::inPlug()
 
 const ImagePlug *ImageProcessor::inPlug() const
 {
-	const GraphComponent *p = getChild<GraphComponent>( g_firstPlugIndex );
+	const GraphComponent *p = getChild( g_firstPlugIndex );
 	if( const ImagePlug *i = IECore::runTimeCast<const ImagePlug>( p ) )
 	{
 		return i;

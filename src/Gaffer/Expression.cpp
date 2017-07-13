@@ -144,7 +144,7 @@ void Expression::setExpression( const std::string &expression, const std::string
 				throw Exception( boost::str(
 					boost::format(
 						"Cannot both read from and write to plug \"%s\""
-					) % (*it)->relativeName( parent<GraphComponent>() )
+					) % (*it)->relativeName( parent() )
 				) );
 			}
 		}

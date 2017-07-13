@@ -351,9 +351,9 @@ void BoxIO::promotedPlugParentChanged( GraphComponent *graphComponent )
 		}
 	}
 
-	if( !graphComponent->parent<GraphComponent>() )
+	if( !graphComponent->parent() )
 	{
-		if( GraphComponent *p = parent<GraphComponent>() )
+		if( GraphComponent *p = parent() )
 		{
 			p->removeChild( this );
 		}

@@ -413,7 +413,7 @@ const Plug *Switch<BaseType>::oppositePlug( const Plug *plug, size_t inputIndex 
 	std::vector<IECore::InternedString> names;
 	while( plug )
 	{
-		const GraphComponent *plugParent = plug->parent<GraphComponent>();
+		const GraphComponent *plugParent = plug->parent();
 		if( plugParent == inPlugs || plug == outPlug )
 		{
 			ancestorPlug = plug;

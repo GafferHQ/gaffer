@@ -130,7 +130,7 @@ bool readOnly( const GraphComponent *graphComponent )
 			haveNodeDescendants = true;
 		}
 
-		graphComponent = graphComponent->parent<GraphComponent>();
+		graphComponent = graphComponent->parent();
 	}
 	return false;
 }
@@ -190,7 +190,7 @@ bool childAffectedByChange( const GraphComponent *parent, IECore::TypeId changed
 {
 	if( changedPlug )
 	{
-		return parent == changedPlug->parent<GraphComponent>();
+		return parent == changedPlug->parent();
 	}
 
 	const Node *node = runTimeCast<const Node>( parent );
@@ -225,7 +225,7 @@ bool childAffectedByChange( const GraphComponent *parent, IECore::TypeId changed
 {
 	if( changedNode )
 	{
-		return parent == changedNode->parent<GraphComponent>();
+		return parent == changedNode->parent();
 	}
 
 	for( NodeIterator it( parent ); !it.done(); ++it )
@@ -282,7 +282,7 @@ void copy( const GraphComponent *from, GraphComponent *to, const StringAlgo::Mat
 
 	for( GraphComponent::ChildIterator it = from->children().begin(), eIt = from->children().end(); it != eIt; ++it )
 	{
-		if( GraphComponent *childTo = to->getChild<GraphComponent>( (*it)->getName() ) )
+		if( GraphComponent *childTo = to->getChild( (*it)->getName() ) )
 		{
 			copy( it->get(), childTo, exclude, persistentOnly, persistent );
 		}

@@ -134,7 +134,7 @@ class StandardNodeGadget::ErrorGadget : public Gadget
 
 		void parentChanged( GraphComponent *plug )
 		{
-			if( !plug->parent<GraphComponent>() )
+			if( !plug->parent() )
 			{
 				removeError( static_cast<Plug *>( plug ) );
 			}

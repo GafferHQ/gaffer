@@ -257,7 +257,7 @@ std::string Serialisation::identifier( const Gaffer::GraphComponent *graphCompon
 	std::string result;
 	while( graphComponent )
 	{
-		const GraphComponent *parent = graphComponent->parent<GraphComponent>();
+		const GraphComponent *parent = graphComponent->parent();
 		if( parent == m_parent )
 		{
 			if( m_filter && !m_filter->contains( graphComponent ) )

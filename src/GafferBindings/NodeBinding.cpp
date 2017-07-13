@@ -131,7 +131,7 @@ bool NodeSerialiser::childNeedsSerialisation( const Gaffer::GraphComponent *chil
 		// children explicitly. This is most useful to allow nodes to be
 		// cut + pasted out of Reference nodes, but implementing it here
 		// makes it possible to inspect the internals of other nodes too.
-		return serialisation.parent() == child->parent<GraphComponent>();
+		return serialisation.parent() == child->parent();
 	}
 }
 

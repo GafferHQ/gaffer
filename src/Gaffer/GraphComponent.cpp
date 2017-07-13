@@ -247,7 +247,7 @@ void GraphComponent::addChild( GraphComponentPtr child )
 
 void GraphComponent::setChild( const IECore::InternedString &name, GraphComponentPtr child )
 {
-	GraphComponentPtr existingChild = getChild<GraphComponent>( name );
+	GraphComponentPtr existingChild = getChild( name );
 	if( existingChild && existingChild == child )
 	{
 		return;

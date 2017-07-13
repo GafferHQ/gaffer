@@ -510,7 +510,7 @@ void unpromote( Plug *plug )
 	}
 	if( remove )
 	{
-		plugToRemove->parent<GraphComponent>()->removeChild( plugToRemove );
+		plugToRemove->parent()->removeChild( plugToRemove );
 	}
 }
 

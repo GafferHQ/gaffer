@@ -219,10 +219,10 @@ bool RenderManShader::acceptsInput( const Plug *plug, const Plug *inputPlug ) co
 				return true;
 			}
 			InternedString parameterName = plug->getName();
-			if( plug->parent<GraphComponent>() != parametersPlug() )
+			if( plug->parent() != parametersPlug() )
 			{
 				// array parameter
-				parameterName = plug->parent<GraphComponent>()->getName();
+				parameterName = plug->parent()->getName();
 			}
 			const StringData *dstType = dstAnnotations->member<StringData>( parameterName.string() + ".coshaderType" );
 			if( !dstType )
@@ -698,7 +698,7 @@ void RenderManShader::loadShaderParameters( const IECore::Shader *shader, Gaffer
 	{
 		for( int i = parametersPlug->children().size() - 1; i >= 0; --i )
 		{
-			parametersPlug->removeChild( parametersPlug->getChild<GraphComponent>( i ) );
+			parametersPlug->removeChild( parametersPlug->getChild( i ) );
 		}
 	}
 
@@ -855,7 +855,7 @@ void RenderManShader::loadShaderParameters( const IECore::Shader *shader, Gaffer
 	{
 		for( int i = parametersPlug->children().size() - 1; i >= 0; --i )
 		{
-			GraphComponent *child = parametersPlug->getChild<GraphComponent>( i );
+			GraphComponent *child = parametersPlug->getChild( i );
 			if( validPlugNames.find( child->getName().string() ) == validPlugNames.end() )
 			{
 				parametersPlug->removeChild( child );
