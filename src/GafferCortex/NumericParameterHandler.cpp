@@ -115,5 +115,5 @@ void NumericParameterHandler<T>::setPlugValue()
 
 // explicit instantiations
 
-template class NumericParameterHandler<float>;
-template class NumericParameterHandler<int>;
+template class GafferCortex::NumericParameterHandler<float>;
+template class GafferCortex::NumericParameterHandler<int>;
