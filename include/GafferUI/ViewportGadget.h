@@ -160,7 +160,7 @@ class ViewportGadget : public Gadget
 				void end();
 
 				bool m_depthSort;
-				typedef boost::shared_ptr<IECoreGL::Selector> SelectorPtr;
+				typedef std::unique_ptr<IECoreGL::Selector> SelectorPtr;
 				SelectorPtr m_selector;
 				std::vector<IECoreGL::HitRecord> &m_selection;
 

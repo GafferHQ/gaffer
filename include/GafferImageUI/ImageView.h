@@ -38,6 +38,8 @@
 #ifndef GAFFERIMAGEUI_IMAGEVIEW_H
 #define GAFFERIMAGEUI_IMAGEVIEW_H
 
+#include <memory>
+
 #include "Gaffer/NumericPlug.h"
 #include "Gaffer/TypedPlug.h"
 
@@ -138,9 +140,9 @@ class ImageView : public GafferUI::View
 		bool m_framed;
 
 		class ChannelChooser;
-		boost::shared_ptr<ChannelChooser> m_channelChooser;
+		std::unique_ptr<ChannelChooser> m_channelChooser;
 		class ColorInspector;
-		boost::shared_ptr<ColorInspector> m_colorInspector;
+		std::unique_ptr<ColorInspector> m_colorInspector;
 
 		typedef std::map<std::string, DisplayTransformCreator> DisplayTransformCreatorMap;
 		static DisplayTransformCreatorMap &displayTransformCreators();

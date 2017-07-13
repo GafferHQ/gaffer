@@ -34,6 +34,8 @@
 //
 //////////////////////////////////////////////////////////////////////////
 
+#include <memory>
+
 #include "boost/filesystem.hpp"
 
 #include "IECore/ObjectPool.h"
@@ -241,7 +243,7 @@ void Render::execute() const
 	ConstCompoundObjectPtr globals = adaptedInPlug()->globalsPlug()->getValue();
 	GafferScene::RendererAlgo::createDisplayDirectories( globals.get() );
 
-	boost::shared_ptr<PerformanceMonitor> performanceMonitor;
+	std::unique_ptr<PerformanceMonitor> performanceMonitor;
 	if( const BoolData *d = globals->member<const BoolData>( g_performanceMonitorOptionName ) )
 	{
 		if( d->readable() )

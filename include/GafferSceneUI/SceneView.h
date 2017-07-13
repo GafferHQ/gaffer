@@ -125,15 +125,15 @@ class SceneView : public GafferUI::View
 		SceneGadgetPtr m_sceneGadget;
 
 		class DrawingMode;
-		boost::shared_ptr<DrawingMode> m_drawingMode;
+		std::unique_ptr<DrawingMode> m_drawingMode;
 		class ShadingMode;
-		boost::shared_ptr<ShadingMode> m_shadingMode;
+		std::unique_ptr<ShadingMode> m_shadingMode;
 		class LookThrough;
-		boost::shared_ptr<LookThrough> m_lookThrough;
+		std::unique_ptr<LookThrough> m_lookThrough;
 		class Grid;
-		boost::shared_ptr<Grid> m_grid;
+		std::unique_ptr<Grid> m_grid;
 		class Gnomon;
-		boost::shared_ptr<Gnomon> m_gnomon;
+		std::unique_ptr<Gnomon> m_gnomon;
 
 		static size_t g_firstPlugIndex;
 		static ViewDescription<SceneView> g_viewDescription;

@@ -130,7 +130,7 @@ class InteractiveRender : public Gaffer::Node
 
 		// hierarchical structure for tracking scene information:
 		class SceneGraph;
-		boost::shared_ptr<SceneGraph> m_sceneGraph;
+		std::unique_ptr<SceneGraph> m_sceneGraph;
 
 		// tbb classes for performing multithreaded traversals of the scene graph, etc.
 		class SceneGraphBuildTask;

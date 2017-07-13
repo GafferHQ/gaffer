@@ -957,7 +957,7 @@ void InteractiveRender::stop()
 	m_sceneGraphs.clear();
 	for( int i = SceneGraph::FirstType; i <= SceneGraph::LastType; ++i )
 	{
-		m_sceneGraphs.push_back( boost::make_shared<SceneGraph>() );
+		m_sceneGraphs.push_back( unique_ptr<SceneGraph>( new SceneGraph ) );
 	}
 	m_defaultCamera = NULL;
 	m_renderer = NULL;

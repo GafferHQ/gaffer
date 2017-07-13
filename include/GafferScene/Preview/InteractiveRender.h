@@ -119,7 +119,7 @@ class InteractiveRender : public Gaffer::Node
 		class SceneGraph;
 		class SceneGraphUpdateTask;
 
-		std::vector<boost::shared_ptr<SceneGraph> > m_sceneGraphs;
+		std::vector<std::unique_ptr<SceneGraph> > m_sceneGraphs;
 		IECoreScenePreview::RendererPtr m_renderer;
 		State m_state;
 		unsigned m_dirtyComponents;

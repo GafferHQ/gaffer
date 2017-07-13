@@ -1133,11 +1133,11 @@ SceneView::SceneView( const std::string &name )
 
 	m_sceneGadget->setContext( getContext() );
 
-	m_drawingMode = boost::make_shared<DrawingMode>( this );
-	m_shadingMode = boost::make_shared<ShadingMode>( this );
-	m_lookThrough = boost::make_shared<LookThrough>( this );
-	m_grid = boost::make_shared<Grid>( this );
-	m_gnomon = boost::make_shared<Gnomon>( this );
+	m_drawingMode.reset( new DrawingMode( this ) );
+	m_shadingMode.reset( new ShadingMode( this ) );
+	m_lookThrough.reset( new LookThrough( this ) );
+	m_grid.reset( new Grid( this ) );
+	m_gnomon.reset( new Gnomon( this ) );
 
 	//////////////////////////////////////////////////////////////////////////
 	// add a preprocessor which monkeys with the scene before it is displayed.

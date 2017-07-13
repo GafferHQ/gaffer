@@ -35,6 +35,8 @@
 //
 //////////////////////////////////////////////////////////////////////////
 
+#include <memory>
+
 #include "boost/python.hpp" // must be the first include
 
 #include "IECore/MessageHandler.h"
@@ -105,7 +107,7 @@ bool tolerantExec( const char *pythonScript, boost::python::object globals, boos
 {
 	// The python parsing framework uses an arena to simplify memory allocation,
 	// which is handy for us, since we're going to manipulate the AST a little.
-	boost::shared_ptr<PyArena> arena( PyArena_New(), PyArena_Free );
+	std::unique_ptr<PyArena, decltype( &PyArena_Free )> arena( PyArena_New(), PyArena_Free );
 
 	// Parse the whole script, getting an abstract syntax tree for a
 	// module which would execute everything.

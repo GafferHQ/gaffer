@@ -36,6 +36,7 @@
 #define IECOREPREVIEW_LRUCACHE_H
 
 #include <vector>
+#include <memory>
 
 #include "tbb/spin_mutex.h"
 #include "tbb/spin_rw_mutex.h"
@@ -171,7 +172,7 @@ class LRUCache : private boost::noncopyable
 			Mutex mutex;
 		};
 
-		typedef std::vector<boost::shared_ptr<Bin> > Bins;
+		typedef std::vector<std::unique_ptr<Bin> > Bins;
 		Bins m_bins;
 
 		// Handle class to abstract away the binned

@@ -136,7 +136,7 @@ class SceneGadget : public GafferUI::Gadget
 		class UpdateTask;
 
 		IECoreGL::StatePtr m_baseState;
-		boost::shared_ptr<SceneGraph> m_sceneGraph;
+		std::unique_ptr<SceneGraph> m_sceneGraph;
 
 		GafferScene::ConstPathMatcherDataPtr m_selection;
 

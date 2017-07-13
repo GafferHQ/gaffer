@@ -35,11 +35,11 @@
 //////////////////////////////////////////////////////////////////////////
 
 #include <thread>
+#include <memory>
 
 #include "tbb/concurrent_vector.h"
 #include "tbb/concurrent_unordered_map.h"
 
-#include "boost/make_shared.hpp"
 #include "boost/format.hpp"
 #include "boost/algorithm/string.hpp"
 #include "boost/algorithm/string/predicate.hpp"
@@ -337,8 +337,8 @@ class ArnoldOutput : public IECore::RefCounted
 
 	private :
 
-		boost::shared_ptr<AtNode> m_driver;
-		boost::shared_ptr<AtNode> m_filter;
+		std::shared_ptr<AtNode> m_driver;
+		std::shared_ptr<AtNode> m_filter;
 		std::string m_data;
 
 };
@@ -1078,13 +1078,13 @@ class Instance
 
 	public :
 
-		Instance( boost::shared_ptr<AtNode> node, bool instanced )
+		Instance( std::shared_ptr<AtNode> node, bool instanced )
 			:	m_node( node )
 		{
 			if( instanced && node )
 			{
 				AiNodeSetByte( node.get(), "visibility", 0 );
-				m_ginstance = boost::shared_ptr<AtNode>( AiNode( "ginstance" ), AiNodeDestroy );
+				m_ginstance = std::shared_ptr<AtNode>( AiNode( "ginstance" ), AiNodeDestroy );
 				AiNodeSetPtr( m_ginstance.get(), "node", m_node.get() );
 			}
 		}
@@ -1096,8 +1096,8 @@ class Instance
 
 	private :
 
-		boost::shared_ptr<AtNode> m_node;
-		boost::shared_ptr<AtNode> m_ginstance;
+		std::shared_ptr<AtNode> m_node;
+		std::shared_ptr<AtNode> m_ginstance;
 
 };
 
@@ -1191,11 +1191,11 @@ class InstanceCache : public IECore::RefCounted
 
 	private :
 
-		boost::shared_ptr<AtNode> convert( const IECore::Object *object, const ArnoldAttributes *attributes )
+		std::shared_ptr<AtNode> convert( const IECore::Object *object, const ArnoldAttributes *attributes )
 		{
 			if( !object )
 			{
-				return boost::shared_ptr<AtNode>();
+				return std::shared_ptr<AtNode>();
 			}
 
 			AtNode *node = NULL;
@@ -1210,15 +1210,15 @@ class InstanceCache : public IECore::RefCounted
 
 			if( !node )
 			{
-				return boost::shared_ptr<AtNode>();
+				return std::shared_ptr<AtNode>();
 			}
 
 			attributes->applyGeometry( object, node );
 
-			return boost::shared_ptr<AtNode>( node, AiNodeDestroy );
+			return std::shared_ptr<AtNode>( node, AiNodeDestroy );
 		}
 
-		boost::shared_ptr<AtNode> convert( const std::vector<const IECore::Object *> &samples, const std::vector<float> &times, const ArnoldAttributes *attributes )
+		std::shared_ptr<AtNode> convert( const std::vector<const IECore::Object *> &samples, const std::vector<float> &times, const ArnoldAttributes *attributes )
 		{
 			AtNode *node = NULL;
 			if( attributes->requiresBoxGeometry( samples.front() ) )
@@ -1232,16 +1232,16 @@ class InstanceCache : public IECore::RefCounted
 
 			if( !node )
 			{
-				return boost::shared_ptr<AtNode>();
+				return std::shared_ptr<AtNode>();
 			}
 
 			attributes->applyGeometry( samples.front(), node );
 
-			return boost::shared_ptr<AtNode>( node, AiNodeDestroy );
+			return std::shared_ptr<AtNode>( node, AiNodeDestroy );
 
 		}
 
-		typedef tbb::concurrent_hash_map<IECore::MurmurHash, boost::shared_ptr<AtNode> > Cache;
+		typedef tbb::concurrent_hash_map<IECore::MurmurHash, std::shared_ptr<AtNode> > Cache;
 		Cache m_cache;
 
 };
@@ -1583,7 +1583,7 @@ class ArnoldRenderer : public IECoreScenePreview::Renderer
 
 		ArnoldRenderer( RenderType renderType, const std::string &fileName )
 			:	m_renderType( renderType ),
-				m_universeBlock( boost::make_shared<UniverseBlock>(  /* writable = */ true ) ),
+				m_universeBlock( new UniverseBlock(  /* writable = */ true ) ),
 				m_shaderCache( new ShaderCache ),
 				m_instanceCache( new InstanceCache ),
 				m_logFileFlags( g_logFlagsDefault ),
@@ -2096,7 +2096,7 @@ class ArnoldRenderer : public IECoreScenePreview::Renderer
 
 		RenderType m_renderType;
 
-		boost::shared_ptr<IECoreArnold::UniverseBlock> m_universeBlock;
+		std::unique_ptr<IECoreArnold::UniverseBlock> m_universeBlock;
 
 		typedef std::map<IECore::InternedString, ArnoldOutputPtr> OutputMap;
 		OutputMap m_outputs;

@@ -63,7 +63,7 @@ LRUCache<Key, Value>::LRUCache( GetterFunction getter, Cost maxCost )
 	m_currentCost = 0;
 	for( size_t i = 0, e = std::thread::hardware_concurrency(); i < e; ++i )
 	{
-		m_bins.push_back( boost::shared_ptr<Bin>( new Bin ) );
+		m_bins.push_back( std::unique_ptr<Bin>( new Bin ) );
 	}
 }
 
@@ -74,7 +74,7 @@ LRUCache<Key, Value>::LRUCache( GetterFunction getter, RemovalCallback removalCa
 	m_currentCost = 0;
 	for( size_t i = 0, e = std::thread::hardware_concurrency(); i < e; ++i )
 	{
-		m_bins.push_back( boost::shared_ptr<Bin>( new Bin ) );
+		m_bins.push_back( std::unique_ptr<Bin>( new Bin ) );
 	}
 }
 

@@ -34,6 +34,8 @@
 //
 //////////////////////////////////////////////////////////////////////////
 
+#include <memory>
+
 #include "ft2build.h"
 #include FT_FREETYPE_H
 
@@ -84,7 +86,7 @@ FT_Library library()
 // We want to maintain a cache of FT_Faces, because creating them
 // is fairly costly. But since FT_Faces belong to FT_Libraries
 // the cache must be maintained per-thread.
-typedef boost::shared_ptr<FT_FaceRec_> FacePtr;
+typedef std::shared_ptr<FT_FaceRec_> FacePtr;
 FacePtr faceLoader( const std::string &font, size_t &cost )
 {
 	const char *e = getenv( "IECORE_FONT_PATHS" );
@@ -111,10 +113,10 @@ FacePtr faceLoader( const std::string &font, size_t &cost )
 }
 
 typedef LRUCache<string, FacePtr> FaceCache;
-typedef boost::shared_ptr<FaceCache> FaceCachePtr;
+typedef std::unique_ptr<FaceCache> FaceCachePtr;
 FaceCachePtr createFaceCache()
 {
-	return boost::make_shared<FaceCache>( faceLoader );
+	return FaceCachePtr( new FaceCache( faceLoader ) );
 }
 
 FacePtr face( const string &font, const V2i &size )

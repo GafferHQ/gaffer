@@ -34,6 +34,8 @@
 //
 //////////////////////////////////////////////////////////////////////////
 
+#include <memory>
+
 #include <sys/utsname.h>
 #include <zlib.h>
 
@@ -110,7 +112,7 @@ void copyBufferArea( const float *inData, const Imath::Box2i &inArea, float *out
 	}
 }
 
-typedef boost::shared_ptr<ImageOutput> ImageOutputPtr;
+typedef std::shared_ptr<ImageOutput> ImageOutputPtr;
 
 class TileProcessor
 {

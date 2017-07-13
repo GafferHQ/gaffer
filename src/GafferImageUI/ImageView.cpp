@@ -380,8 +380,8 @@ ImageView::ImageView( const std::string &name )
 	m_imageGadget->setContext( getContext() );
 	viewportGadget()->setPrimaryChild( m_imageGadget );
 
-	m_channelChooser = shared_ptr<ChannelChooser>( new ChannelChooser( this ) );
-	m_colorInspector = shared_ptr<ColorInspector>( new ColorInspector( this ) );
+	m_channelChooser.reset( new ChannelChooser( this ) );
+	m_colorInspector.reset( new ColorInspector( this ) );
 }
 
 void ImageView::insertConverter( Gaffer::NodePtr converter )
