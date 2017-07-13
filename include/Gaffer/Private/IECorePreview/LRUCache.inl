@@ -37,8 +37,7 @@
 #define IECOREPREVIEW_LRUCACHE_INL
 
 #include <cassert>
-
-#include "tbb/tbb_thread.h"
+#include <thread>
 
 #include "IECore/Exception.h"
 
@@ -62,7 +61,7 @@ LRUCache<Key, Value>::LRUCache( GetterFunction getter, Cost maxCost )
 	:	m_getter( getter ), m_removalCallback( nullRemovalCallback ), m_maxCost( maxCost )
 {
 	m_currentCost = 0;
-	for( size_t i = 0, e = tbb::tbb_thread::hardware_concurrency(); i < e; ++i )
+	for( size_t i = 0, e = std::thread::hardware_concurrency(); i < e; ++i )
 	{
 		m_bins.push_back( boost::shared_ptr<Bin>( new Bin ) );
 	}
@@ -73,7 +72,7 @@ LRUCache<Key, Value>::LRUCache( GetterFunction getter, RemovalCallback removalCa
 	:	m_getter( getter ), m_removalCallback( removalCallback ), m_maxCost( maxCost )
 {
 	m_currentCost = 0;
-	for( size_t i = 0, e = tbb::tbb_thread::hardware_concurrency(); i < e; ++i )
+	for( size_t i = 0, e = std::thread::hardware_concurrency(); i < e; ++i )
 	{
 		m_bins.push_back( boost::shared_ptr<Bin>( new Bin ) );
 	}

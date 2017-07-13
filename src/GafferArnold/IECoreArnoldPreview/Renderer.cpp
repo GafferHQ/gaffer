@@ -34,13 +34,7 @@
 //
 //////////////////////////////////////////////////////////////////////////
 
-#include "tbb/tbb_config.h"
-
-#if TBB_IMPLEMENT_CPP0X
-#include "tbb/compat/thread"
-#else
 #include <thread>
-#endif
 
 #include "tbb/concurrent_vector.h"
 #include "tbb/concurrent_unordered_map.h"
