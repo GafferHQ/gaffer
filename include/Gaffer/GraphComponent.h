@@ -139,52 +139,52 @@ class GraphComponent : public IECore::RunTimeTyped, public boost::signals::track
 		/// \undoable
 		void clearChildren();
 		/// Get an immediate child by name, performing a runTimeCast to T.
-		template<typename T>
+		template<typename T=GraphComponent>
 		T *getChild( const IECore::InternedString &name );
 		/// Get an immediate child by name, performing a runTimeCast to T.
-		template<typename T>
+		template<typename T=GraphComponent>
 		const T *getChild( const IECore::InternedString &name ) const;
 		/// Get a child by index, performing a runTimeCast to T.
 		/// Note that this function does not perform any bounds checking.
-		template<typename T>
+		template<typename T=GraphComponent>
 		inline T *getChild( size_t index );
 		/// Get a child by index, performing a runTimeCast to T.
 		/// Note that this function does not perform any bounds checking.
-		template<typename T>
+		template<typename T=GraphComponent>
 		inline const T *getChild( size_t index ) const;
 		/// Read only access to the internal container of children. This
 		/// is useful for iteration over children.
 		const ChildContainer &children() const;
 		/// Returns a descendant of this node specified by a "." separated
 		/// relative path, performing a runTimeCast to T.
-		template<typename T>
+		template<typename T=GraphComponent>
 		inline T *descendant( const std::string &relativePath );
 		/// Returns a descendant of this node specified by a "." separated
 		/// relative path, performing a runTimeCast to T.
-		template<typename T>
+		template<typename T=GraphComponent>
 		inline const T *descendant( const std::string &relativePath ) const;
 		/// Returns the parent for this component, performing a runTimeCast to T.
-		template<typename T>
+		template<typename T=GraphComponent>
 		T *parent();
 		/// Returns the parent for this component, performing a runTimeCast to T.
-		template<typename T>
+		template<typename T=GraphComponent>
 		const T *parent() const;
 		/// Returns the first ancestor of type T.
-		template<typename T>
+		template<typename T=GraphComponent>
 		T *ancestor();
 		/// Returns the first ancestor of type T.
-		template<typename T>
+		template<typename T=GraphComponent>
 		const T *ancestor() const;
 		/// As above, but taking a TypeId to specify type - this is mainly provided for the binding.
 		GraphComponent *ancestor( IECore::TypeId ancestorType );
 		const GraphComponent *ancestor( IECore::TypeId ancestorType ) const;
 		/// Returns the first ancestor of type T which
 		/// is also an ancestor of other.
-		template<typename T>
+		template<typename T=GraphComponent>
 		T *commonAncestor( const GraphComponent *other );
 		/// Returns the first ancestor of type T which
 		/// is also an ancestor of other.
-		template<typename T>
+		template<typename T=GraphComponent>
 		const T *commonAncestor( const GraphComponent *other ) const;
 		/// As above, but taking a TypeId to specify type - this is mainly provided for the binding.
 		GraphComponent *commonAncestor( const GraphComponent *other, IECore::TypeId ancestorType );
