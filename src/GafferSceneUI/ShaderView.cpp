@@ -298,7 +298,7 @@ void ShaderView::updateRenderer()
 
 	m_renderer = nullptr;
 	m_rendererShaderPrefix = shaderPrefix;
-	if( !inPlug<Plug>()->getInput<Plug>() )
+	if( !inPlug<Plug>()->getInput() )
 	{
 		return;
 	}

@@ -151,7 +151,7 @@ void ArrayPlug::inputChanged( Gaffer::Plug *plug )
 		return;
 	}
 
-	if( getInput<Plug>() )
+	if( getInput() )
 	{
 		// When we ourselves have an input, we don't do any automatic addition or
 		// removal of children, because the Plug base class itself manages
@@ -173,7 +173,7 @@ void ArrayPlug::inputChanged( Gaffer::Plug *plug )
 		}
 	}
 
-	if( plug->getInput<Plug>() )
+	if( plug->getInput() )
 	{
 		// Connection made. If it's the last plug
 		// then we need to add one more.
@@ -192,7 +192,7 @@ void ArrayPlug::inputChanged( Gaffer::Plug *plug )
 		// only one unconnected plug at the end.
 		for( size_t i = children().size() - 1; i > m_minSize - 1; --i )
 		{
-			if( !getChild<Plug>( i )->getInput<Plug>() && !getChild<Plug>( i - 1 )->getInput<Plug>() )
+			if( !getChild<Plug>( i )->getInput() && !getChild<Plug>( i - 1 )->getInput() )
 			{
 				removeChild( getChild<Plug>( i ) );
 			}

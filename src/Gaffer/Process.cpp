@@ -138,7 +138,7 @@ void Process::emitError( const std::string &error ) const
 				node->errorSignal()( plug, m_threadData->errorSource, error );
 			}
 		}
-		plug = plug != m_plug ? plug->getInput<Plug>() : nullptr;
+		plug = plug != m_plug ? plug->getInput() : nullptr;
 	}
 }
 

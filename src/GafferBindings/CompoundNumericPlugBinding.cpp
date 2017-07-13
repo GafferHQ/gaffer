@@ -102,7 +102,7 @@ class CompoundNumericPlugSerialiser : public ValuePlugSerialiser
 
 			for( PlugIterator it( plug ); !it.done(); ++it )
 			{
-				if( (*it)->getInput<Plug>() )
+				if( (*it)->getInput() )
 				{
 					return false;
 				}

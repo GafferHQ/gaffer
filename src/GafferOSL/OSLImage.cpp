@@ -133,7 +133,7 @@ bool OSLImage::acceptsInput( const Gaffer::Plug *plug, const Gaffer::Plug *input
 
 	if( plug == shaderPlug() )
 	{
-		if( const GafferScene::Shader *shader = runTimeCast<const GafferScene::Shader>( inputPlug->source<Plug>()->node() ) )
+		if( const GafferScene::Shader *shader = runTimeCast<const GafferScene::Shader>( inputPlug->source()->node() ) )
 		{
 			const OSLShader *oslShader = runTimeCast<const OSLShader>( shader );
 			return oslShader && oslShader->typePlug()->getValue() == "osl:surface";
@@ -152,7 +152,7 @@ bool OSLImage::enabled() const
 	// generally the connectedness of plugs should not be queried by compute() or hash() (which
 	// will end up calling this function), because Shaders are not ComputeNodes and must be
 	// accessed directly anyway, it's ok.
-	return shaderPlug()->getInput<Plug>();
+	return shaderPlug()->getInput();
 }
 
 void OSLImage::hash( const Gaffer::ValuePlug *output, const Gaffer::Context *context, IECore::MurmurHash &h ) const
@@ -251,7 +251,7 @@ void OSLImage::hashShading( const Gaffer::Context *context, IECore::MurmurHash &
 		h.append( inPlug()->channelDataHash( *it, tileOrigin ) );
 	}
 
-	const OSLShader *shader = runTimeCast<const OSLShader>( shaderPlug()->source<Plug>()->node() );
+	const OSLShader *shader = runTimeCast<const OSLShader>( shaderPlug()->source()->node() );
 	if( shader )
 	{
 		shader->attributesHash( h );
@@ -261,7 +261,7 @@ void OSLImage::hashShading( const Gaffer::Context *context, IECore::MurmurHash &
 IECore::ConstCompoundDataPtr OSLImage::computeShading( const Gaffer::Context *context ) const
 {
 	ConstShadingEnginePtr shadingEngine;
-	if( const OSLShader *shader = runTimeCast<const OSLShader>( shaderPlug()->source<Plug>()->node() ) )
+	if( const OSLShader *shader = runTimeCast<const OSLShader>( shaderPlug()->source()->node() ) )
 	{
 		shadingEngine = shader->shadingEngine();
 	}

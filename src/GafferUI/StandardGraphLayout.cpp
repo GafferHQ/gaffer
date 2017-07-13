@@ -949,7 +949,7 @@ bool StandardGraphLayout::connectNodes( GraphGadget *graph, Gaffer::Set *nodes, 
 		bool hasInputs = false;
 		for( RecursiveInputPlugIterator it( node ); !it.done(); ++it )
 		{
-			if( (*it)->getInput<Plug>() && nodeGadget->nodule( it->get() ) )
+			if( (*it)->getInput() && nodeGadget->nodule( it->get() ) )
 			{
 				hasInputs = true;
 				break;
@@ -1183,7 +1183,7 @@ size_t StandardGraphLayout::unconnectedInputPlugs( NodeGadget *nodeGadget, std::
 	plugs.clear();
 	for( RecursiveInputPlugIterator it( nodeGadget->node() ); !it.done(); it++ )
 	{
-		if( (*it)->getInput<Plug>() == 0 and nodeGadget->nodule( it->get() ) )
+		if( (*it)->getInput() == 0 and nodeGadget->nodule( it->get() ) )
 		{
 			plugs.push_back( it->get() );
 		}

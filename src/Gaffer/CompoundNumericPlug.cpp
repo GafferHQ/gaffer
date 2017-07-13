@@ -232,7 +232,7 @@ bool CompoundNumericPlug<T>::isGanged() const
 {
 	for( size_t i = 1, e = children().size(); i < e; ++i )
 	{
-		if( const Plug *input = getChild( i )->template getInput<Plug>() )
+		if( const Plug *input = getChild( i )->getInput() )
 		{
 			if( input->parent<Plug>() == this )
 			{
@@ -249,7 +249,7 @@ void CompoundNumericPlug<T>::ungang()
 	for( size_t i = 1, e = children().size(); i < e; ++i )
 	{
 		Plug *child = getChild( i );
-		if( const Plug *input = child->getInput<Plug>() )
+		if( const Plug *input = child->getInput() )
 		{
 			if( input->parent<Plug>() == this )
 			{

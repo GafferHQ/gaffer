@@ -106,7 +106,7 @@ bool FilterProcessor::sceneAffectsMatch( const ScenePlug *scene, const Gaffer::V
 {
 	for( InputIntPlugIterator it( inPlugs() ); !it.done(); ++it )
 	{
-		const Filter *filter = IECore::runTimeCast<const Filter>( (*it)->source<Plug>()->node() );
+		const Filter *filter = IECore::runTimeCast<const Filter>( (*it)->source()->node() );
 		if( filter && filter != this && filter->sceneAffectsMatch( scene, child ) )
 		{
 			return true;

@@ -121,7 +121,7 @@ Gaffer::Node *DotNodeGadget::upstreamNode()
 	Plug *plug = dotNode()->inPlug<Plug>();
 	while( plug && runTimeCast<Dot>( plug->node() ) )
 	{
-		plug = plug->getInput<Plug>();
+		plug = plug->getInput();
 	}
 	return plug ? plug->node() : nullptr;
 }

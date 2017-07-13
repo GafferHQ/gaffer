@@ -223,7 +223,7 @@ class Shader::NetworkBuilder
 						// out the other side.
 						if( const Plug *activeInPlug = switchNode->activeInPlug() )
 						{
-							source = activeInPlug->source<Plug>();
+							source = activeInPlug->source();
 						}
 					}
 

@@ -72,7 +72,7 @@ Plug *SubGraph::correspondingInput( const Plug *output )
 
 const Plug *SubGraph::correspondingInput( const Plug *output ) const
 {
-	const Plug *internalOutput = output->getInput<Plug>();
+	const Plug *internalOutput = output->getInput();
 	if( !internalOutput )
 	{
 		return nullptr;
@@ -96,7 +96,7 @@ const Plug *SubGraph::correspondingInput( const Plug *output ) const
 		return nullptr;
 	}
 
-	if( internalEnabledPlug->getInput<Plug>() != externalEnabledPlug )
+	if( internalEnabledPlug->getInput() != externalEnabledPlug )
 	{
 		return nullptr;
 	}
@@ -107,7 +107,7 @@ const Plug *SubGraph::correspondingInput( const Plug *output ) const
 		return nullptr;
 	}
 
-	const Plug *input = internalInput->getInput<Plug>();
+	const Plug *input = internalInput->getInput();
 	if( !input || input->node() != this )
 	{
 		return nullptr;

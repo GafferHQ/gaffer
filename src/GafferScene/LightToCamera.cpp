@@ -290,7 +290,7 @@ bool LightToCamera::acceptsInput( const Gaffer::Plug *plug, const Gaffer::Plug *
 
 	if( plug == filterPlug() )
 	{
-		if( const Filter *filter = runTimeCast<const Filter>( inputPlug->source<Plug>()->node() ) )
+		if( const Filter *filter = runTimeCast<const Filter>( inputPlug->source()->node() ) )
 		{
 			if(
 				filter->sceneAffectsMatch( inPlug(), inPlug()->boundPlug() ) ||

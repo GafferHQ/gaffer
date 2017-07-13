@@ -87,7 +87,7 @@ void ArnoldLight::hashLight( const Gaffer::Context *context, IECore::MurmurHash 
 {
 	for( ValuePlugIterator it( parametersPlug() ); !it.done(); ++it )
 	{
-		if( const Shader *shader = (*it)->source<Plug>()->ancestor<Shader>() )
+		if( const Shader *shader = (*it)->source()->ancestor<Shader>() )
 		{
 			shader->stateHash( h );
 		}

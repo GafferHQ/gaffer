@@ -244,7 +244,7 @@ class Catalogue::InternalImage : public ImageNode
 			addChild( display );
 			ArrayPlug *a = copyChannels()->inPlugs();
 			size_t nextIndex = a->children().size() - 1;
-			if( nextIndex == 1 && !a->getChild<ImagePlug>( 0 )->getInput<Plug>() )
+			if( nextIndex == 1 && !a->getChild<ImagePlug>( 0 )->getInput() )
 			{
 				// CopyChannels starts with two input plugs, and we must use
 				// the first one to make sure the format etc is passed through.
@@ -309,7 +309,7 @@ class Catalogue::InternalImage : public ImageNode
 
 		void updateImageFlags( unsigned flags, bool enable )
 		{
-			Plug *p = fileNamePlug()->getInput<Plug>();
+			Plug *p = fileNamePlug()->getInput();
 			if( !p )
 			{
 				return;
@@ -832,7 +832,7 @@ void Catalogue::imageRemoved( GraphComponent *graphComponent )
 	for( size_t i = 0, offset = 0; i < plug->children().size(); ++i )
 	{
 		Plug *element = plug->getChild<Plug>( i );
-		if( !element->getInput<Plug>() )
+		if( !element->getInput() )
 		{
 			offset++;
 		}
@@ -840,7 +840,7 @@ void Catalogue::imageRemoved( GraphComponent *graphComponent )
 		{
 			if( i + offset < plug->children().size() - 1 )
 			{
-				element->setInput( plug->getChild<Plug>( i + offset )->source<Plug>() );
+				element->setInput( plug->getChild<Plug>( i + offset )->source() );
 			}
 			else
 			{
@@ -889,7 +889,7 @@ void Catalogue::driverCreated( IECore::DisplayDriver *driver, const IECore::Comp
 	// AOVs into a single image. We iterate backwards
 	// because the last image is most likely to be the
 	// one we want.
-	Plug *images = imagesPlug()->source<Plug>();
+	Plug *images = imagesPlug()->source();
 	for( int i = images->children().size() - 1; i >= 0; --i )
 	{
 		InternalImage *candidateImage = imageNode( images->getChild<Image>( i ) );

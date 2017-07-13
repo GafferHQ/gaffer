@@ -284,7 +284,7 @@ bool Animation::canAnimate( const ValuePlug *plug )
 		return false;
 	}
 
-	if( plug->getInput<Plug>() && !isAnimated( plug ) )
+	if( plug->getInput() && !isAnimated( plug ) )
 	{
 		return false;
 	}

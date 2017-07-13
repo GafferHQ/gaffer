@@ -327,7 +327,7 @@ void ImagePlug::ChannelDataScope::setChannelName( const std::string &channelName
 
 IECore::ConstFloatVectorDataPtr ImagePlug::channelData( const std::string &channelName, const Imath::V2i &tile ) const
 {
-	if( direction()==In && !getInput<Plug>() )
+	if( direction()==In && !getInput() )
 	{
 		return channelDataPlug()->defaultValue();
 	}

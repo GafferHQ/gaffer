@@ -484,7 +484,7 @@ bool BoxIO::canInsert( const Box *box )
 		}
 		else
 		{
-			const Plug *input = plug->getInput<Plug>();
+			const Plug *input = plug->getInput();
 			if( input && hasNodule( input ) && !runTimeCast<const BoxOut>( input->node() ) )
 			{
 				return true;
@@ -535,7 +535,7 @@ void BoxIO::insert( Box *box )
 		{
 			// Output plug
 
-			Plug *input = plug->getInput<Plug>();
+			Plug *input = plug->getInput();
 			if( !input || !hasNodule( input ) || runTimeCast<BoxOut>( input->node() ) )
 			{
 				continue;

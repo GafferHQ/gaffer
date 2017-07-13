@@ -91,7 +91,7 @@ void PathFilter::plugDirtied( const Gaffer::Plug *plug )
 	if( plug == pathsPlug() )
 	{
 		//\todo: share this logic with Switch::variesWithContext()
-		Plug* sourcePlug = pathsPlug()->source<Plug>();
+		Plug* sourcePlug = pathsPlug()->source();
 		if( sourcePlug->direction() == Plug::Out && IECore::runTimeCast<const ComputeNode>( sourcePlug->node() ) )
 		{
 			// pathsPlug() is receiving data from a plug whose value is context varying, meaning

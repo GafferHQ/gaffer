@@ -122,7 +122,7 @@ void PlugGadget::contextChanged( const Gaffer::Context *context, const IECore::I
 void PlugGadget::updateContextConnection()
 {
 	Context *context = m_context.get();
-	if( !m_plug->getInput<Plug>() )
+	if( !m_plug->getInput() )
 	{
 		// we only want to be notified of context changes if the plug has an incoming
 		// connection. otherwise context changes are irrelevant and we'd just be slowing

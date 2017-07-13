@@ -625,7 +625,7 @@ void Dispatcher::dispatch( const std::vector<NodePtr> &nodes ) const
 		{
 			for ( RecursiveOutputPlugIterator plugIt( subGraph ); !plugIt.done(); ++plugIt )
 			{
-				Node *sourceNode = plugIt->get()->source<Plug>()->node();
+				Node *sourceNode = plugIt->get()->source()->node();
 				if ( TaskNode *taskNode = runTimeCast<TaskNode>( sourceNode ) )
 				{
 					taskNodes.push_back( taskNode );

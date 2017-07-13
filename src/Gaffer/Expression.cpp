@@ -404,8 +404,8 @@ void Expression::updatePlug( ValuePlug *parentPlug, size_t childIndex, ValuePlug
 		// See if we can reuse the existing plug
 		Plug *existingChildPlug = parentPlug->getChild<Plug>( childIndex );
 		if(
-			( existingChildPlug->direction() == Plug::In && existingChildPlug->getInput<Plug>() == plug ) ||
-			( existingChildPlug->direction() == Plug::Out && plug->getInput<Plug>() == existingChildPlug )
+			( existingChildPlug->direction() == Plug::In && existingChildPlug->getInput() == plug ) ||
+			( existingChildPlug->direction() == Plug::Out && plug->getInput() == existingChildPlug )
 		)
 		{
 			return;

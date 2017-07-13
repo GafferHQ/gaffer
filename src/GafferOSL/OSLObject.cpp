@@ -176,7 +176,7 @@ bool OSLObject::acceptsInput( const Gaffer::Plug *plug, const Gaffer::Plug *inpu
 
 	if( plug == shaderPlug() )
 	{
-		if( const GafferScene::Shader *shader = runTimeCast<const GafferScene::Shader>( inputPlug->source<Plug>()->node() ) )
+		if( const GafferScene::Shader *shader = runTimeCast<const GafferScene::Shader>( inputPlug->source()->node() ) )
 		{
 			const OSLShader *oslShader = runTimeCast<const OSLShader>( shader );
 			return oslShader && oslShader->typePlug()->getValue() == "osl:surface";
@@ -188,7 +188,7 @@ bool OSLObject::acceptsInput( const Gaffer::Plug *plug, const Gaffer::Plug *inpu
 
 bool OSLObject::processesBound() const
 {
-	return runTimeCast<const OSLShader>( shaderPlug()->source<Plug>()->node() );
+	return runTimeCast<const OSLShader>( shaderPlug()->source()->node() );
 }
 
 void OSLObject::hashProcessedBound( const ScenePath &path, const Gaffer::Context *context, IECore::MurmurHash &h ) const
@@ -208,12 +208,12 @@ Imath::Box3f OSLObject::computeProcessedBound( const ScenePath &path, const Gaff
 
 bool OSLObject::processesObject() const
 {
-	return runTimeCast<const OSLShader>( shaderPlug()->source<Plug>()->node() );
+	return runTimeCast<const OSLShader>( shaderPlug()->source()->node() );
 }
 
 void OSLObject::hashProcessedObject( const ScenePath &path, const Gaffer::Context *context, IECore::MurmurHash &h ) const
 {
-	const OSLShader *shader = runTimeCast<const OSLShader>( shaderPlug()->source<Plug>()->node() );
+	const OSLShader *shader = runTimeCast<const OSLShader>( shaderPlug()->source()->node() );
 	if( shader )
 	{
 		shader->attributesHash( h );
@@ -234,7 +234,7 @@ IECore::ConstObjectPtr OSLObject::computeProcessedObject( const ScenePath &path,
 		return inputObject;
 	}
 
-	ConstOSLShaderPtr shader = runTimeCast<const OSLShader>( shaderPlug()->source<Plug>()->node() );
+	ConstOSLShaderPtr shader = runTimeCast<const OSLShader>( shaderPlug()->source()->node() );
 	ConstShadingEnginePtr shadingEngine = shader ? shader->shadingEngine() : nullptr;
 
 	if( !shadingEngine )

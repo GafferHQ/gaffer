@@ -78,7 +78,7 @@ void FilteredSceneProcessor::affects( const Gaffer::Plug *input, AffectedPlugsCo
 	const ScenePlug *scenePlug = input->parent<ScenePlug>();
 	if( scenePlug && scenePlug == inPlug() )
 	{
-		const Filter *filter = runTimeCast<const Filter>( filterPlug()->source<Plug>()->node() );
+		const Filter *filter = runTimeCast<const Filter>( filterPlug()->source()->node() );
 		if( filter && filter->sceneAffectsMatch( scenePlug, static_cast<const ValuePlug *>( input ) ) )
 		{
 			outputs.push_back( filterPlug() );

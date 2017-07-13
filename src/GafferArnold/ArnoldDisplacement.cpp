@@ -203,7 +203,7 @@ bool ArnoldDisplacement::acceptsInput( const Gaffer::Plug *plug, const Gaffer::P
 
 	if( plug == mapPlug() )
 	{
-		if( const GafferScene::Shader *shader = runTimeCast<const GafferScene::Shader>( inputPlug->source<Plug>()->node() ) )
+		if( const GafferScene::Shader *shader = runTimeCast<const GafferScene::Shader>( inputPlug->source()->node() ) )
 		{
 			return runTimeCast<const ArnoldShader>( shader ) || shader->isInstanceOf( "GafferOSL::OSLShader" );
 		}

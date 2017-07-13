@@ -181,7 +181,7 @@ bool RenderManShader::acceptsInput( const Plug *plug, const Plug *inputPlug ) co
 
 	if( parametersPlug()->isAncestorOf( plug ) )
 	{
-		const Plug *sourcePlug = inputPlug->source<Plug>();
+		const Plug *sourcePlug = inputPlug->source();
 
 		if( plug->typeId() == Plug::staticTypeId() )
 		{
@@ -330,9 +330,9 @@ static void loadCoshaderParameter( Gaffer::Plug *parametersPlug, const std::stri
 	}
 
 	PlugPtr plug = new Plug( name, Plug::In, Plug::Default | Plug::Dynamic );
-	if( existingPlug && existingPlug->getInput<Plug>() )
+	if( existingPlug && existingPlug->getInput() )
 	{
-		plug->setInput( existingPlug->getInput<Plug>() );
+		plug->setInput( existingPlug->getInput() );
 	}
 
 	parametersPlug->setChild( name, plug );
@@ -372,7 +372,7 @@ static void loadCoshaderArrayParameter( Gaffer::Plug *parametersPlug, const std:
 		{
 			if( i < plug->children().size() )
 			{
-				plug->getChild<Plug>( i )->setInput( existingPlug->getChild<Plug>( i )->getInput<Plug>() );
+				plug->getChild<Plug>( i )->setInput( existingPlug->getChild<Plug>( i )->getInput() );
 			}
 			else
 			{
@@ -415,9 +415,9 @@ static void loadNumericParameter( Gaffer::Plug *parametersPlug, const std::strin
 
 	if( existingPlug )
 	{
-		if( existingPlug->template getInput<Plug>() )
+		if( existingPlug->template getInput() )
 		{
-			plug->setInput( existingPlug->template getInput<Plug>() );
+			plug->setInput( existingPlug->template getInput() );
 		}
 		else
 		{
@@ -493,9 +493,9 @@ static void loadCompoundNumericParameter( Gaffer::Plug *parametersPlug, const st
 		{
 			FloatPlug *existingComponentPlug = static_cast<GraphComponent *>( existingPlug )->getChild<FloatPlug>( i );
 			FloatPlug *componentPlug = static_cast<GraphComponent *>( plug.get() )->getChild<FloatPlug>( i );
-			if( existingComponentPlug->getInput<Plug>() )
+			if( existingComponentPlug->getInput() )
 			{
-				componentPlug->setInput( existingComponentPlug->getInput<Plug>() );
+				componentPlug->setInput( existingComponentPlug->getInput() );
 			}
 			else
 			{

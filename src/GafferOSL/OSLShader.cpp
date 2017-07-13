@@ -199,7 +199,7 @@ bool OSLShader::acceptsInput( const Plug *plug, const Plug *inputPlug ) const
 
 	if( parametersPlug()->isAncestorOf( plug ) )
 	{
-		const Plug *sourcePlug = inputPlug->source<Plug>();
+		const Plug *sourcePlug = inputPlug->source();
 		const GafferScene::Shader *sourceShader = runTimeCast<const GafferScene::Shader>( sourcePlug->node() );
 		const Plug *sourceShaderOutPlug = sourceShader ? sourceShader->outPlug() : nullptr;
 

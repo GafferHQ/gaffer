@@ -274,7 +274,7 @@ class ValuePlug::ComputeProcess : public Process
 		{
 			const ValuePlug *p = sourcePlug( plug );
 
-			if( !p->getInput<Plug>() )
+			if( !p->getInput() )
 			{
 				if( p->direction()==In || !p->ancestor<ComputeNode>() )
 				{
@@ -539,7 +539,7 @@ bool ValuePlug::acceptsInput( const Plug *input ) const
 
 void ValuePlug::setInput( PlugPtr input )
 {
-	if( input.get() == getInput<Plug>() )
+	if( input.get() == getInput() )
 	{
 		return;
 	}
@@ -577,7 +577,7 @@ bool ValuePlug::settable() const
 		return false;
 	}
 
-	if( getInput<Plug>() )
+	if( getInput() )
 	{
 		return false;
 	}
@@ -694,7 +694,7 @@ IECore::ConstObjectPtr ValuePlug::getObjectValue( const IECore::MurmurHash *prec
 
 void ValuePlug::setObjectValue( IECore::ConstObjectPtr value )
 {
-	bool haveInput = getInput<Plug>();
+	bool haveInput = getInput();
 	if( direction()==In && !haveInput )
 	{
 		// input plug with no input connection. there can only ever be a single value,

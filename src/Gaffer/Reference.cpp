@@ -66,7 +66,7 @@ void copyInputsAndValues( Gaffer::Plug *srcPlug, Gaffer::Plug *dstPlug, bool ign
 	// recursion to the `setInput()` call, which will
 	// also set all descendant inputs.
 
-	if( Plug *input = srcPlug->getInput<Plug>() )
+	if( Plug *input = srcPlug->getInput() )
 	{
 		dstPlug->setInput( input );
 		return;

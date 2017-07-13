@@ -324,7 +324,7 @@ bool Plug::acceptsInputInternal( const Plug *input ) const
 	}
 
 	// If we accepted it previously, we can't change our minds now.
-	if( input == getInput<Plug>() )
+	if( input == getInput() )
 	{
 		return true;
 	}
@@ -511,7 +511,7 @@ void Plug::updateInputFromChildInputs( Plug *checkFirst )
 		checkFirst = static_cast<Plug *>( children().front().get() );
 	}
 
-	Plug *input = checkFirst->getInput<Plug>();
+	Plug *input = checkFirst->getInput();
 	if( !input || !input->parent<Plug>() )
 	{
 		setInput( nullptr, /* setChildInputs = */ false, /* updateParentInput = */ true );
@@ -530,7 +530,7 @@ void Plug::updateInputFromChildInputs( Plug *checkFirst )
 
 	for( PlugIterator it1( this ), it2( candidateInput ); !it1.done(); ++it1, ++it2 )
 	{
-		if( (*it1)->getInput<Plug>() != it2->get() )
+		if( (*it1)->getInput() != it2->get() )
 		{
 			setInput( nullptr, /* setChildInputs = */ false, /* updateParentInput = */ true );
 			return;
@@ -617,7 +617,7 @@ void Plug::parentChanging( Gaffer::GraphComponent *newParent )
 			{
 				Plug *output = *it++;
 				Plug *outputParent = output->parent<Plug>();
-				if( outputParent && outputParent->getInput<Plug>() == oldParent )
+				if( outputParent && outputParent->getInput() == oldParent )
 				{
 					// We're removing the child precisely so that the parent connection
 					// remains valid, so we can block its updateInputFromChildInputs() call.

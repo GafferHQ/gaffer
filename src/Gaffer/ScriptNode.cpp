@@ -595,7 +595,7 @@ void ScriptNode::deleteNodes( Node *parent, const Set *filter, bool reconnect )
 						continue;
 					}
 
-					Plug *srcPlug = inPlug->getInput<Plug>();
+					Plug *srcPlug = inPlug->getInput();
 					if ( !srcPlug )
 					{
 						continue;
