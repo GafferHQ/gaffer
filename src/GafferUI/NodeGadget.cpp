@@ -99,7 +99,7 @@ NodeGadgetPtr NodeGadget::create( Gaffer::NodePtr node )
 	{
 		if( nodeGadgetType->readable() == "" )
 		{
-			return NULL;
+			return nullptr;
 		}
 		const TypeCreatorMap &m = typeCreators();
 		TypeCreatorMap::const_iterator it = m.find( nodeGadgetType->readable() );
@@ -126,7 +126,7 @@ NodeGadgetPtr NodeGadget::create( Gaffer::NodePtr node )
 		typeId = IECore::RunTimeTyped::baseTypeId( typeId );
 	}
 
-	return NULL;
+	return nullptr;
 }
 
 void NodeGadget::registerNodeGadget( const std::string &nodeGadgetType, NodeGadgetCreator creator, IECore::TypeId nodeType )

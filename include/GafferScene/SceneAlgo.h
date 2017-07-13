@@ -108,9 +108,9 @@ IECore::TransformPtr transform( const ScenePlug *scene, const ScenePlug::ScenePa
 /// Returns the primary render camera, with all globals settings such as
 /// crop, resolution, overscan etc applied as they would be for rendering.
 /// The globals may be passed if they are available, if not they will be computed.
-IECore::CameraPtr camera( const ScenePlug *scene, const IECore::CompoundObject *globals = NULL );
+IECore::CameraPtr camera( const ScenePlug *scene, const IECore::CompoundObject *globals = nullptr );
 /// As above, but choosing a specific camera rather than the primary one.
-IECore::CameraPtr camera( const ScenePlug *scene, const ScenePlug::ScenePath &cameraPath, const IECore::CompoundObject *globals = NULL );
+IECore::CameraPtr camera( const ScenePlug *scene, const ScenePlug::ScenePath &cameraPath, const IECore::CompoundObject *globals = nullptr );
 /// Applies the resolution, aspect ratio etc from the globals to the camera.
 void applyCameraGlobals( IECore::Camera *camera, const IECore::CompoundObject *globals );
 

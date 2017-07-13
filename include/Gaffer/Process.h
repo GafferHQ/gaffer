@@ -76,13 +76,13 @@ class Process : public boost::noncopyable
 		const Process *parent() const { return m_parent; }
 
 		/// Returns the Process currently being performed on
-		/// this thread, or NULL if there is no such process.
+		/// this thread, or null if there is no such process.
 		static const Process *current();
 
 	protected :
 
 		/// Protected constructor for use by derived classes only.
-		Process( const IECore::InternedString &type, const Plug *plug, const Plug *downstream = NULL );
+		Process( const IECore::InternedString &type, const Plug *plug, const Plug *downstream = nullptr );
 		~Process();
 
 		/// Derived classes should catch exceptions thrown

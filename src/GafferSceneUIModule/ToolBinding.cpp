@@ -103,11 +103,11 @@ TransformPlugPtr transformPlug( const TransformTool::Selection &s )
 void GafferSceneUIModule::bindTools()
 {
 
-	GafferBindings::NodeClass<SelectionTool>( NULL, no_init );
-	GafferBindings::NodeClass<CropWindowTool>( NULL, no_init );
+	GafferBindings::NodeClass<SelectionTool>( nullptr, no_init );
+	GafferBindings::NodeClass<CropWindowTool>( nullptr, no_init );
 
 	{
-		scope s = GafferBindings::NodeClass<TransformTool>( NULL, no_init )
+		scope s = GafferBindings::NodeClass<TransformTool>( nullptr, no_init )
 			.def( "selection", &TransformTool::selection, return_value_policy<copy_const_reference>() )
 		;
 
@@ -133,17 +133,17 @@ void GafferSceneUIModule::bindTools()
 		;
 	}
 
-	GafferBindings::NodeClass<TranslateTool>( NULL, no_init )
+	GafferBindings::NodeClass<TranslateTool>( nullptr, no_init )
 		.def( init<SceneView *>() )
 		.def( "translate", &TranslateTool::translate )
 	;
 
-	GafferBindings::NodeClass<ScaleTool>( NULL, no_init )
+	GafferBindings::NodeClass<ScaleTool>( nullptr, no_init )
 		.def( init<SceneView *>() )
 		.def( "scale", &ScaleTool::scale )
 	;
 
-	GafferBindings::NodeClass<RotateTool>( NULL, no_init )
+	GafferBindings::NodeClass<RotateTool>( nullptr, no_init )
 		.def( init<SceneView *>() )
 		.def( "rotate", &RotateTool::rotate )
 	;

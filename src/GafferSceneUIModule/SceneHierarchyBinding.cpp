@@ -79,7 +79,7 @@ class SceneHierarchyFilter : public Gaffer::PathFilter
 
 		IE_CORE_DECLAREMEMBERPTR( SceneHierarchyFilter )
 
-		SceneHierarchyFilter( IECore::CompoundDataPtr userData = NULL )
+		SceneHierarchyFilter( IECore::CompoundDataPtr userData = nullptr )
 			:	PathFilter( userData ), m_context( new Context )
 		{
 		}
@@ -91,7 +91,7 @@ class SceneHierarchyFilter : public Gaffer::PathFilter
 				return;
 			}
 			m_scene = scene;
-			Node *node = NULL;
+			Node *node = nullptr;
 			if( m_scene )
 			{
 				node = const_cast<Node *>( m_scene->node() );
@@ -145,7 +145,7 @@ class SceneHierarchyFilter : public Gaffer::PathFilter
 			for( vector<InternedString>::const_iterator it = names.begin(), eIt = names.end(); it != eIt; ++it )
 			{
 				const Data *newValue = m_context->get<Data>( *it );
-				const Data *oldValue = oldContext->get<Data>( *it, NULL );
+				const Data *oldValue = oldContext->get<Data>( *it, nullptr );
 				if( !oldValue || !newValue->isEqualTo( oldValue ) )
 				{
 					contextChanged( *it );
@@ -157,7 +157,7 @@ class SceneHierarchyFilter : public Gaffer::PathFilter
 			oldContext->names( names );
 			for( vector<InternedString>::const_iterator it = names.begin(), eIt = names.end(); it != eIt; ++it )
 			{
-				if( !m_context->get<Data>( *it, NULL ) )
+				if( !m_context->get<Data>( *it, nullptr ) )
 				{
 					contextChanged( *it );
 				}
@@ -225,7 +225,7 @@ class SceneHierarchySetFilter : public SceneHierarchyFilter
 
 		IE_CORE_DECLAREMEMBERPTR( SceneHierarchySetFilter )
 
-		SceneHierarchySetFilter( IECore::CompoundDataPtr userData = NULL )
+		SceneHierarchySetFilter( IECore::CompoundDataPtr userData = nullptr )
 			:	SceneHierarchyFilter( userData ), m_setsDirty( true )
 		{
 		}
@@ -371,7 +371,7 @@ class SceneHierarchySearchFilter : public SceneHierarchyFilter
 
 		IE_CORE_DECLAREMEMBERPTR( SceneHierarchySearchFilter )
 
-		SceneHierarchySearchFilter( IECore::CompoundDataPtr userData = NULL )
+		SceneHierarchySearchFilter( IECore::CompoundDataPtr userData = nullptr )
 			:	SceneHierarchyFilter( userData ), m_pathMatcherDirty( true )
 		{
 		}

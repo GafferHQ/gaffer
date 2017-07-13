@@ -48,7 +48,7 @@ class PathClass : public IECorePython::RunTimeTypedClass<T, TWrapper>
 
 	public :
 
-		PathClass( const char *docString = NULL );
+		PathClass( const char *docString = nullptr );
 
 };
 

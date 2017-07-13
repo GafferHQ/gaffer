@@ -398,7 +398,7 @@ void Plug::setInput( PlugPtr input, bool setChildInputs, bool updateParentInput 
 		{
 			for( PlugIterator it( this ); !it.done(); ++it )
 			{
-				(*it)->setInput( NULL, /* setChildInputs = */ true, /* updateParentInput = */ false );
+				(*it)->setInput( nullptr, /* setChildInputs = */ true, /* updateParentInput = */ false );
 			}
 		}
 		else
@@ -514,7 +514,7 @@ void Plug::updateInputFromChildInputs( Plug *checkFirst )
 	Plug *input = checkFirst->getInput<Plug>();
 	if( !input || !input->parent<Plug>() )
 	{
-		setInput( NULL, /* setChildInputs = */ false, /* updateParentInput = */ true );
+		setInput( nullptr, /* setChildInputs = */ false, /* updateParentInput = */ true );
 		return;
 	}
 
@@ -524,7 +524,7 @@ void Plug::updateInputFromChildInputs( Plug *checkFirst )
 		// if we're never going to accept the candidate input anyway, then
 		// don't even bother checking to see if all the candidate's children
 		// are connected to our children.
-		setInput( NULL, /* setChildInputs = */ false, /* updateParentInput = */ true );
+		setInput( nullptr, /* setChildInputs = */ false, /* updateParentInput = */ true );
 		return;
 	}
 
@@ -532,7 +532,7 @@ void Plug::updateInputFromChildInputs( Plug *checkFirst )
 	{
 		if( (*it1)->getInput<Plug>() != it2->get() )
 		{
-			setInput( NULL, /* setChildInputs = */ false, /* updateParentInput = */ true );
+			setInput( nullptr, /* setChildInputs = */ false, /* updateParentInput = */ true );
 			return;
 		}
 	}
@@ -593,7 +593,7 @@ void Plug::parentChanging( Gaffer::GraphComponent *newParent )
 	// So here we early out if we're in such an Undo/Redo situation.
 
 	ScriptNode *scriptNode = ancestor<ScriptNode>();
-	scriptNode = scriptNode ? scriptNode : ( newParent ? newParent->ancestor<ScriptNode>() : NULL );
+	scriptNode = scriptNode ? scriptNode : ( newParent ? newParent->ancestor<ScriptNode>() : nullptr );
 	if( scriptNode && ( scriptNode->currentActionStage() == Action::Undo || scriptNode->currentActionStage() == Action::Redo ) )
 	{
 		return;

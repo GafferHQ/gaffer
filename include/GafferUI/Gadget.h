@@ -123,7 +123,7 @@ class Gadget : public Gaffer::GraphComponent
 		bool getVisible() const;
 		/// Returns true if this Gadget and all its parents up to the specified
 		/// ancestor are visible.
-		bool visible( Gadget *relativeTo = NULL ) const;
+		bool visible( Gadget *relativeTo = nullptr ) const;
 		typedef boost::signal<void ( Gadget * )> VisibilityChangedSignal;
 		/// Emitted when the result of `Gadget::visible()` changes.
 		VisibilityChangedSignal &visibilityChangedSignal();
@@ -137,7 +137,7 @@ class Gadget : public Gaffer::GraphComponent
 		bool getEnabled() const;
 		/// Returns true if this gadget and all its parents up to the
 		/// specified ancestor are enabled.
-		bool enabled( Gadget *relativeTo = NULL ) const;
+		bool enabled( Gadget *relativeTo = nullptr ) const;
 		/// Sets whether or not this Gadget should be rendered in a highlighted
 		/// state. This status is not inherited by child Gadgets. Note that highlighted
 		/// drawing has not yet been implemented for all Gadget types. Derived

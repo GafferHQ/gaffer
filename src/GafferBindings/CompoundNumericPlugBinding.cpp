@@ -56,7 +56,7 @@ namespace
 {
 
 template<typename T>
-std::string maskedCompoundNumericPlugRepr( const T *plug, unsigned flagsMask, const Serialisation *serialisation = NULL )
+std::string maskedCompoundNumericPlugRepr( const T *plug, unsigned flagsMask, const Serialisation *serialisation = nullptr )
 {
 	std::string extraArgs = "";
 

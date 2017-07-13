@@ -80,7 +80,7 @@ T *BoxIO::promotedPlug()
 			}
 		}
 	}
-	return NULL;
+	return nullptr;
 }
 
 template<typename T>

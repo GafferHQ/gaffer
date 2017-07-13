@@ -89,7 +89,7 @@ class GraphComponent : public IECore::RunTimeTyped, public boost::signals::track
 		/// Returns the full path name from the topmost parent to this component.
 		std::string fullName() const;
 		/// Returns the relative path name from the specified ancestor to this component.
-		/// Passing NULL for ancestor yields the same result as calling fullName().
+		/// Passing nullptr for ancestor yields the same result as calling fullName().
 		std::string relativeName( const GraphComponent *ancestor ) const;
 		/// A signal which is emitted whenever a name is changed.
 		UnarySignal &nameChangedSignal();
@@ -200,7 +200,7 @@ class GraphComponent : public IECore::RunTimeTyped, public boost::signals::track
 		/// A signal emitted when the parent of this component changes. Slots should
 		/// be of the form void ( child, oldParent ). Note that in the special case
 		/// of a child being removed from the destructor of the parent, oldParent
-		/// will be NULL as it is no longer available.
+		/// will be null as it is no longer available.
 		BinarySignal &parentChangedSignal();
 		//@}
 
@@ -211,8 +211,8 @@ class GraphComponent : public IECore::RunTimeTyped, public boost::signals::track
 		/// in preparation for the new relationship - currently it allows
 		/// Plugs to remove their connections if they're about to have no parent.
 		/// In the special case of a child being removed from the destructor of the
-		/// parent, parent() will already be NULL in addition to newParent
-		/// being NULL - this is to avoid the temptation to access the dying parent.
+		/// parent, parent() will already be null in addition to newParent
+		/// being null - this is to avoid the temptation to access the dying parent.
 		///
 		/// Implementations should call the base class implementation
 		/// before doing their own thing.

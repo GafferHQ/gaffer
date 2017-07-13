@@ -56,7 +56,7 @@ using namespace std;
 IE_CORE_DEFINERUNTIMETYPED( GraphComponent );
 
 GraphComponent::GraphComponent( const std::string &name )
-	: m_name( name ), m_parent( NULL )
+	: m_name( name ), m_parent( nullptr )
 {
 }
 
@@ -69,9 +69,9 @@ GraphComponent::~GraphComponent()
 	// childRemoved signals for this object, which is undesirable as it's dying.
 	for( ChildContainer::iterator it=m_children.begin(); it!=m_children.end(); it++ )
 	{
-		(*it)->m_parent = NULL;
-		(*it)->parentChanging( NULL );
-		(*it)->parentChangedSignal()( (*it).get(), NULL );
+		(*it)->m_parent = nullptr;
+		(*it)->parentChanging( nullptr );
+		(*it)->parentChangedSignal()( (*it).get(), nullptr );
 	}
 }
 
@@ -116,7 +116,7 @@ const IECore::InternedString &GraphComponent::setName( const IECore::InternedStr
 				}
 				if( (*it)->m_name.value().compare( 0, prefix.size(), prefix ) == 0 )
 				{
-					char *endPtr = NULL;
+					char *endPtr = nullptr;
 					long siblingSuffix = strtol( (*it)->m_name.value().c_str() + prefix.size(), &endPtr, 10 );
 					if( *endPtr == '\0' )
 					{
@@ -159,7 +159,7 @@ const IECore::InternedString &GraphComponent::getName() const
 
 std::string GraphComponent::fullName() const
 {
-	return relativeName( NULL );
+	return relativeName( nullptr );
 }
 
 std::string GraphComponent::relativeName( const GraphComponent *ancestor ) const
@@ -298,7 +298,7 @@ void GraphComponent::addChildInternal( GraphComponentPtr child )
 	if( previousParent )
 	{
 		// remove the child from the previous parent, but don't emit parentChangedSignal.
-		// this prevents a parent changed signal with new parent NULL followed by a parent
+		// this prevents a parent changed signal with new parent null followed by a parent
 		// changed signal with the new parent.
 		previousParent->removeChildInternal( child, false );
 	}
@@ -351,7 +351,7 @@ void GraphComponent::removeChildInternal( GraphComponentPtr child, bool emitPare
 {
 	if( emitParentChanged )
 	{
-		child->parentChanging( NULL );
+		child->parentChanging( nullptr );
 	}
 	ChildContainer::iterator it = std::find( m_children.begin(), m_children.end(), child );
 	if( it == m_children.end() || child->m_parent != this )
@@ -366,7 +366,7 @@ void GraphComponent::removeChildInternal( GraphComponentPtr child, bool emitPare
 		throw Exception( boost::str( boost::format( "GraphComponent::removeChildInternal : \"%s\" is not a child of \"%s\"." ) % child->fullName() % fullName() ) );
 	}
 	m_children.erase( it );
-	child->m_parent = NULL;
+	child->m_parent = nullptr;
 	childRemovedSignal()( this, child.get() );
 	if( emitParentChanged )
 	{
@@ -390,7 +390,7 @@ GraphComponent *GraphComponent::ancestor( IECore::TypeId type )
 		}
 		a = a->m_parent;
 	}
-	return NULL;
+	return nullptr;
 }
 
 const GraphComponent *GraphComponent::ancestor( IECore::TypeId type ) const
@@ -423,7 +423,7 @@ GraphComponent *GraphComponent::commonAncestor( const GraphComponent *other, IEC
 		}
 		ancestor = ancestor->m_parent;
 	}
-	return NULL;
+	return nullptr;
 
 }
 

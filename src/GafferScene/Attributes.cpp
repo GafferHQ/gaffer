@@ -229,9 +229,9 @@ void Attributes::updateInternalConnections()
 	}
 
 	outPlug()->globalsPlug()->setInput(
-		global || boost::indeterminate( global ) ? NULL : inPlug()->globalsPlug()
+		global || boost::indeterminate( global ) ? nullptr : inPlug()->globalsPlug()
 	);
 	outPlug()->attributesPlug()->setInput(
-		!global || boost::indeterminate( global ) ? NULL : inPlug()->attributesPlug()
+		!global || boost::indeterminate( global ) ? nullptr : inPlug()->attributesPlug()
 	);
 }

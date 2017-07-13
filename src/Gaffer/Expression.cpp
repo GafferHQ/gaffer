@@ -59,7 +59,7 @@ size_t Expression::g_firstPlugIndex;
 IE_CORE_DEFINERUNTIMETYPED( Expression );
 
 Expression::Expression( const std::string &name )
-	:	ComputeNode( name ), m_engine( NULL )
+	:	ComputeNode( name ), m_engine( nullptr )
 {
 	storeIndexOfNextChild( g_firstPlugIndex );
 
@@ -467,7 +467,7 @@ std::string Expression::transcribe( const std::string &expression, bool toIntern
 		}
 		else
 		{
-			externalPlugs.push_back( NULL );
+			externalPlugs.push_back( nullptr );
 		}
 	}
 
@@ -491,7 +491,7 @@ Expression::EnginePtr Expression::Engine::create( const std::string engineType )
 	CreatorMap::const_iterator it = m.find( engineType );
 	if( it == m.end() )
 	{
-		return NULL;
+		return nullptr;
 	}
 	return it->second();
 }

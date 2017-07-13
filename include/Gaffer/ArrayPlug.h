@@ -62,7 +62,7 @@ class ArrayPlug : public Plug
 		ArrayPlug(
 			const std::string &name = defaultName<ArrayPlug>(),
 			Direction direction = In,
-			PlugPtr element = NULL,
+			PlugPtr element = nullptr,
 			size_t minSize = 1,
 			size_t maxSize = Imath::limits<size_t>::max(),
 			unsigned flags = Default

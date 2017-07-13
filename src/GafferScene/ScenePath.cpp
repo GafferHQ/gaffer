@@ -211,7 +211,7 @@ Gaffer::PathFilterPtr ScenePath::createStandardFilter( const std::vector<std::st
 {
 	if( !setNames.size() )
 	{
-		return NULL;
+		return nullptr;
 	}
 
 	UnionFilterPtr unionFilter = new UnionFilter;

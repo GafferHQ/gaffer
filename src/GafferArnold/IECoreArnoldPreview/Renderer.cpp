@@ -92,7 +92,7 @@ T *reportedCast( const IECore::RunTimeTyped *v, const char *type, const IECore::
 	}
 
 	IECore::msg( IECore::Msg::Warning, "IECoreArnold::Renderer", boost::format( "Expected %s but got %s for %s \"%s\"." ) % T::staticTypeName() % v->typeName() % type % name.c_str() );
-	return NULL;
+	return nullptr;
 }
 
 template<typename T>
@@ -374,7 +374,7 @@ class ArnoldShader : public IECore::RefCounted
 
 		AtNode *root()
 		{
-			return !m_nodes.empty() ? m_nodes.back() : NULL;
+			return !m_nodes.empty() ? m_nodes.back() : nullptr;
 		}
 
 	private :
@@ -977,7 +977,7 @@ class ArnoldAttributes : public IECoreScenePreview::Renderer::AttributesInterfac
 			IECore::CompoundObject::ObjectMap::const_iterator it = attributes->members().find( name );
 			if( it == attributes->members().end() )
 			{
-				return NULL;
+				return nullptr;
 			}
 			return reportedCast<const T>( it->second.get(), "attribute", name );
 		}
@@ -1198,7 +1198,7 @@ class InstanceCache : public IECore::RefCounted
 				return std::shared_ptr<AtNode>();
 			}
 
-			AtNode *node = NULL;
+			AtNode *node = nullptr;
 			if( attributes->requiresBoxGeometry( object ) )
 			{
 				node = convertToBox( object );
@@ -1220,7 +1220,7 @@ class InstanceCache : public IECore::RefCounted
 
 		std::shared_ptr<AtNode> convert( const std::vector<const IECore::Object *> &samples, const std::vector<float> &times, const ArnoldAttributes *attributes )
 		{
-			AtNode *node = NULL;
+			AtNode *node = nullptr;
 			if( attributes->requiresBoxGeometry( samples.front() ) )
 			{
 				node = convertToBox( samples, times );
@@ -1264,7 +1264,7 @@ class ArnoldObject : public IECoreScenePreview::Renderer::ObjectInterface
 	public :
 
 		ArnoldObject( const Instance &instance )
-			:	m_instance( instance ), m_attributes( NULL )
+			:	m_instance( instance ), m_attributes( nullptr )
 		{
 		}
 
@@ -1394,7 +1394,7 @@ class ArnoldLight : public ArnoldObject
 
 			// Update light shader.
 
-			m_lightShader = NULL;
+			m_lightShader = nullptr;
 			if( !arnoldAttributes->lightShader() )
 			{
 				return true;
@@ -1417,7 +1417,7 @@ class ArnoldLight : public ArnoldObject
 				else
 				{
 					// Don't output mesh_lights from locations with no object
-					m_lightShader = NULL;
+					m_lightShader = nullptr;
 					return true;
 				}
 			}
@@ -1606,7 +1606,7 @@ class ArnoldRenderer : public IECoreScenePreview::Renderer
 			AtNode *options = AiUniverseGetOptions();
 			if( name == g_frameOptionName )
 			{
-				if( value == NULL )
+				if( value == nullptr )
 				{
 					m_frame = boost::none;
 				}
@@ -1618,7 +1618,7 @@ class ArnoldRenderer : public IECoreScenePreview::Renderer
 			}
 			else if( name == g_cameraOptionName )
 			{
-				if( value == NULL )
+				if( value == nullptr )
 				{
 					m_cameraName = "";
 				}
@@ -1631,7 +1631,7 @@ class ArnoldRenderer : public IECoreScenePreview::Renderer
 			}
 			else if( name == g_logFileNameOptionName )
 			{
-				if( value == NULL )
+				if( value == nullptr )
 				{
 					AiMsgSetLogFileName( "" );
 				}
@@ -1657,7 +1657,7 @@ class ArnoldRenderer : public IECoreScenePreview::Renderer
 			}
 			else if( name == g_logMaxWarningsOptionName )
 			{
-				if( value == NULL )
+				if( value == nullptr )
 				{
 					AiMsgSetMaxWarnings( 100 );
 				}
@@ -1683,7 +1683,7 @@ class ArnoldRenderer : public IECoreScenePreview::Renderer
 			}
 			else if( name == g_aaSeedOptionName )
 			{
-				if( value == NULL )
+				if( value == nullptr )
 				{
 					m_aaSeed = boost::none;
 				}
@@ -1695,7 +1695,7 @@ class ArnoldRenderer : public IECoreScenePreview::Renderer
 			}
 			else if( name == g_sampleMotionOptionName )
 			{
-				if( value == NULL )
+				if( value == nullptr )
 				{
 					m_sampleMotion = boost::none;
 				}
@@ -1959,7 +1959,7 @@ class ArnoldRenderer : public IECoreScenePreview::Renderer
 			}
 
 			bool turnOn = false;
-			if( value == NULL )
+			if( value == nullptr )
 			{
 				turnOn = flagToModify & ( console == false ? g_logFlagsDefault : g_consoleFlagsDefault );
 			}
@@ -2023,7 +2023,7 @@ class ArnoldRenderer : public IECoreScenePreview::Renderer
 			if( cortexCamera )
 			{
 				arnoldCamera = AiNodeLookUpByName( m_cameraName.c_str() );
-				m_defaultCamera = NULL;
+				m_defaultCamera = nullptr;
 			}
 			else
 			{

@@ -67,7 +67,7 @@ class FileSequencePathFilter : public PathFilter
 			All = Files | SequentialFiles | Sequences,
 		};
 
-		FileSequencePathFilter( Keep mode = Concise, IECore::CompoundDataPtr userData = NULL );
+		FileSequencePathFilter( Keep mode = Concise, IECore::CompoundDataPtr userData = nullptr );
 		virtual ~FileSequencePathFilter();
 
 		IE_CORE_DECLARERUNTIMETYPEDEXTENSION( Gaffer::FileSequencePathFilter, FileSequencePathFilterTypeId, Gaffer::PathFilter );

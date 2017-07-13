@@ -235,7 +235,7 @@ IECore::ConstObjectPtr OSLObject::computeProcessedObject( const ScenePath &path,
 	}
 
 	ConstOSLShaderPtr shader = runTimeCast<const OSLShader>( shaderPlug()->source<Plug>()->node() );
-	ConstShadingEnginePtr shadingEngine = shader ? shader->shadingEngine() : NULL;
+	ConstShadingEnginePtr shadingEngine = shader ? shader->shadingEngine() : nullptr;
 
 	if( !shadingEngine )
 	{

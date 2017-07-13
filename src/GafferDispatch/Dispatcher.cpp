@@ -254,7 +254,7 @@ const TaskNode::TaskPlug *Dispatcher::TaskBatch::plug() const
 
 const TaskNode *Dispatcher::TaskBatch::node() const
 {
-	return m_plug ? runTimeCast<const TaskNode>( m_plug->node() ) : NULL;
+	return m_plug ? runTimeCast<const TaskNode>( m_plug->node() ) : nullptr;
 }
 
 const Context *Dispatcher::TaskBatch::context() const
@@ -406,7 +406,7 @@ class Dispatcher::Batcher
 			// our current batches, or we may need to make a new one
 			// entirely if the current batch is full.
 
-			TaskBatchPtr batch = NULL;
+			TaskBatchPtr batch = nullptr;
 			const MurmurHash batchMapHash = batchHash( task );
 			BatchMap::iterator bIt = m_currentBatches.find( batchMapHash );
 			if( bIt != m_currentBatches.end() )

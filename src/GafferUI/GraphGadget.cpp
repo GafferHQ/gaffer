@@ -105,7 +105,7 @@ const InternedString g_nodeGadgetTypeName( "nodeGadget:type" );
 IE_CORE_DEFINERUNTIMETYPED( GraphGadget );
 
 GraphGadget::GraphGadget( Gaffer::NodePtr root, Gaffer::SetPtr filter )
-	:	m_dragStartPosition( 0 ), m_lastDragPosition( 0 ), m_dragMode( None ), m_dragReconnectCandidate( NULL ), m_dragReconnectSrcNodule( NULL ), m_dragReconnectDstNodule( NULL )
+	:	m_dragStartPosition( 0 ), m_lastDragPosition( 0 ), m_dragMode( None ), m_dragReconnectCandidate( nullptr ), m_dragReconnectSrcNodule( nullptr ), m_dragReconnectDstNodule( nullptr )
 {
 	keyPressSignal().connect( boost::bind( &GraphGadget::keyPressed, this, ::_1,  ::_2 ) );
 	buttonPressSignal().connect( boost::bind( &GraphGadget::buttonPress, this, ::_1,  ::_2 ) );
@@ -399,8 +399,8 @@ void GraphGadget::connectedNodeGadgetsWalk( NodeGadget *gadget, std::set<NodeGad
 		if( plug->direction() == Gaffer::Plug::In )
 		{
 			ConnectionGadget *connection = connectionGadget( plug );
-			Nodule *nodule = connection ? connection->srcNodule() : NULL;
-			NodeGadget *inputNodeGadget = nodule ? nodeGadget( nodule->plug()->node() ) : NULL;
+			Nodule *nodule = connection ? connection->srcNodule() : nullptr;
+			NodeGadget *inputNodeGadget = nodule ? nodeGadget( nodule->plug()->node() ) : nullptr;
 			if( inputNodeGadget )
 			{
 				if( connectedNodeGadgets.insert( inputNodeGadget ).second )
@@ -416,8 +416,8 @@ void GraphGadget::connectedNodeGadgetsWalk( NodeGadget *gadget, std::set<NodeGad
 			for( Gaffer::Plug::OutputContainer::const_iterator oIt = plug->outputs().begin(), eOIt = plug->outputs().end(); oIt != eOIt; oIt++ )
 			{
 				ConnectionGadget *connection = connectionGadget( *oIt );
-				Nodule *nodule = connection ? connection->dstNodule() : NULL;
-				NodeGadget *outputNodeGadget = nodule ? nodeGadget( nodule->plug()->node() ) : NULL;
+				Nodule *nodule = connection ? connection->dstNodule() : nullptr;
+				NodeGadget *outputNodeGadget = nodule ? nodeGadget( nodule->plug()->node() ) : nullptr;
 				if( outputNodeGadget )
 				{
 					if( connectedNodeGadgets.insert( outputNodeGadget ).second )
@@ -551,7 +551,7 @@ NodeGadget *GraphGadget::nodeGadgetAt( const IECore::LineSegment3f &lineInGadget
 
 	if( !gadgetsUnderMouse.size() )
 	{
-		return NULL;
+		return nullptr;
 	}
 
 	NodeGadget *nodeGadget = runTimeCast<NodeGadget>( gadgetsUnderMouse[0].get() );
@@ -572,7 +572,7 @@ ConnectionGadget *GraphGadget::connectionGadgetAt( const IECore::LineSegment3f &
 
 	if ( !gadgetsUnderMouse.size() )
 	{
-		return NULL;
+		return nullptr;
 	}
 
 	ConnectionGadget *connectionGadget = runTimeCast<ConnectionGadget>( gadgetsUnderMouse[0].get() );
@@ -621,7 +621,7 @@ ConnectionGadget *GraphGadget::reconnectionGadgetAt( const NodeGadget *gadget, c
 		}
 	}
 
-	return NULL;
+	return nullptr;
 }
 
 void GraphGadget::doRender( const Style *style ) const
@@ -989,13 +989,13 @@ IECore::RunTimeTypedPtr GraphGadget::dragBegin( GadgetPtr gadget, const DragDrop
 {
 	if( !m_scriptNode )
 	{
-		return NULL;
+		return nullptr;
 	}
 
 	V3f i;
 	if( !event.line.intersect( Plane3f( V3f( 0, 0, 1 ), 0 ), i ) )
 	{
-		return NULL;
+		return nullptr;
 	}
 
 	m_dragMode = None;
@@ -1039,7 +1039,7 @@ IECore::RunTimeTypedPtr GraphGadget::dragBegin( GadgetPtr gadget, const DragDrop
 		}
 	}
 
-	return NULL;
+	return nullptr;
 }
 
 bool GraphGadget::dragEnter( GadgetPtr gadget, const DragDropEvent &event )
@@ -1143,9 +1143,9 @@ bool GraphGadget::dragMove( GadgetPtr gadget, const DragDropEvent &event )
 
 void GraphGadget::updateDragReconnectCandidate( const DragDropEvent &event )
 {
-	m_dragReconnectCandidate = NULL;
-	m_dragReconnectSrcNodule = NULL;
-	m_dragReconnectDstNodule = NULL;
+	m_dragReconnectCandidate = nullptr;
+	m_dragReconnectSrcNodule = nullptr;
+	m_dragReconnectDstNodule = nullptr;
 
 	// Find the node being dragged.
 
@@ -1259,7 +1259,7 @@ bool GraphGadget::dragEnd( GadgetPtr gadget, const DragDropEvent &event )
 		m_dragReconnectDstNodule->plug()->setInput( m_dragReconnectCandidate->srcNodule()->plug() );
 		m_dragReconnectCandidate->dstNodule()->plug()->setInput( m_dragReconnectSrcNodule->plug() );
 
-		m_dragReconnectCandidate = NULL;
+		m_dragReconnectCandidate = nullptr;
  		requestRender();
 	}
 	else if( dragMode == Selecting )
@@ -1344,8 +1344,8 @@ void GraphGadget::calculateDragSnapOffsets( Gaffer::Set *nodes )
 			// compute an offset that will position the node snugly next to its input
 			// in the other axis.
 
-			Box3f srcNodeBound = srcNodeGadget->transformedBound( NULL );
-			Box3f dstNodeBound = dstNodeGadget->transformedBound( NULL );
+			Box3f srcNodeBound = srcNodeGadget->transformedBound( nullptr );
+			Box3f dstNodeBound = dstNodeGadget->transformedBound( nullptr );
 
 			const int otherAxis = snapAxis == 1 ? 0 : 1;
 			if( otherAxis == 1 )
@@ -1462,7 +1462,7 @@ NodeGadget *GraphGadget::addNodeGadget( Gaffer::Node *node )
 	NodeGadgetPtr nodeGadget = NodeGadget::create( node );
 	if( !nodeGadget )
 	{
-		return NULL;
+		return nullptr;
 	}
 
 	addChild( nodeGadget );
@@ -1501,7 +1501,7 @@ NodeGadget *GraphGadget::findNodeGadget( const Gaffer::Node *node ) const
 	NodeGadgetMap::const_iterator it = m_nodeGadgets.find( node );
 	if( it==m_nodeGadgets.end() )
 	{
-		return NULL;
+		return nullptr;
 	}
 	return it->second.gadget;
 }
@@ -1531,7 +1531,7 @@ void GraphGadget::addConnectionGadgets( NodeGadget *nodeGadget )
 Nodule *GraphGadget::findNodule( const Gaffer::Plug *plug ) const
 {
 	NodeGadget *g = findNodeGadget( plug->node() );
-	return g ? g->nodule( plug ) : NULL;
+	return g ? g->nodule( plug ) : nullptr;
 }
 
 void GraphGadget::addConnectionGadgets( Nodule *nodule )
@@ -1608,7 +1608,7 @@ void GraphGadget::removeConnectionGadgets( const Nodule *nodule )
 			{
 				if( connection->srcNodule() == nodule )
 				{
-					connection->setNodules( NULL, connection->dstNodule() );
+					connection->setNodules( nullptr, connection->dstNodule() );
 				}
 			}
 		}
@@ -1632,7 +1632,7 @@ ConnectionGadget *GraphGadget::findConnectionGadget( const Nodule *dstNodule ) c
 	ConnectionGadgetMap::const_iterator it = m_connectionGadgets.find( dstNodule );
 	if( it==m_connectionGadgets.end() )
 	{
-		return NULL;
+		return nullptr;
 	}
 	return it->second;
 }
@@ -1642,7 +1642,7 @@ ConnectionGadget *GraphGadget::findConnectionGadget( const Gaffer::Plug *plug ) 
 	Nodule *nodule = findNodule( plug );
 	if( !nodule )
 	{
-		return NULL;
+		return nullptr;
 	}
 	return findConnectionGadget( nodule );
 }

@@ -78,7 +78,7 @@ struct ShadingEngineCacheKey
 {
 
 	ShadingEngineCacheKey()
-		:	shader( NULL )
+		:	shader( nullptr )
 	{
 	}
 
@@ -117,18 +117,18 @@ ConstShadingEnginePtr getter( const ShadingEngineCacheKey &key, size_t &cost )
 	cost = 1;
 
 	ConstCompoundObjectPtr attributes = key.shader->attributes();
-	key.shader = NULL; // there's no guarantee the node would even exist after this call, so zero it out to avoid temptation
+	key.shader = nullptr; // there's no guarantee the node would even exist after this call, so zero it out to avoid temptation
 
 	CompoundObject::ObjectMap::const_iterator it = attributes->members().find( "osl:surface" );
 	if( it == attributes->members().end() )
 	{
-		return NULL;
+		return nullptr;
 	}
 
 	const ObjectVector *network = runTimeCast<const ObjectVector>( it->second.get() );
 	if( !network || network->members().empty() )
 	{
-		return NULL;
+		return nullptr;
 	}
 
 	return new ShadingEngine( network );
@@ -167,14 +167,14 @@ const Gaffer::Plug *OSLShader::correspondingInput( const Gaffer::Plug *output ) 
 	const StringData *input = IECore::runTimeCast<const StringData>( OSLShader::parameterMetadata( output, "correspondingInput" ) );
 	if( !input )
 	{
-		return NULL;
+		return nullptr;
 	}
 
 	const Plug *result = parametersPlug()->getChild<Plug>( input->readable() );
 	if( !result )
 	{
 		IECore::msg( IECore::Msg::Error, "OSLShader::correspondingInput", boost::format( "Parameter \"%s\" does not exist" ) % input->readable() );
-		return NULL;
+		return nullptr;
 	}
 
 	return result;
@@ -201,7 +201,7 @@ bool OSLShader::acceptsInput( const Plug *plug, const Plug *inputPlug ) const
 	{
 		const Plug *sourcePlug = inputPlug->source<Plug>();
 		const GafferScene::Shader *sourceShader = runTimeCast<const GafferScene::Shader>( sourcePlug->node() );
-		const Plug *sourceShaderOutPlug = sourceShader ? sourceShader->outPlug() : NULL;
+		const Plug *sourceShaderOutPlug = sourceShader ? sourceShader->outPlug() : nullptr;
 
 		if( sourceShaderOutPlug && ( sourceShaderOutPlug == inputPlug || sourceShaderOutPlug->isAncestorOf( inputPlug ) ) )
 		{
@@ -690,8 +690,8 @@ Plug *loadSplineParameters( const OSLQuery::Parameter *positionsParameter, const
 
 bool findSplineParameters( const OSLQuery &query, const OSLQuery::Parameter *parameter, std::string &nameWithoutSuffix, const OSLQuery::Parameter * &positionsParameter, const OSLQuery::Parameter * &valuesParameter, const OSLQuery::Parameter * &basisParameter )
 {
-	const char *suffixes[] = { "Positions", "Values", "Basis", NULL };
-	const char *suffix = NULL;
+	const char *suffixes[] = { "Positions", "Values", "Basis", nullptr };
+	const char *suffix = nullptr;
 	for( const char **suffixPtr = suffixes; *suffixPtr; ++suffixPtr )
 	{
 		if( boost::ends_with( parameter->name.c_str(), *suffixPtr ) )
@@ -749,7 +749,7 @@ Plug *loadSplineParameter( const OSLQuery &query, const OSLQuery::Parameter *par
 
 	if( !findSplineParameters( query, parameter, nameWithoutSuffix, positionsParameter, valuesParameter, basisParameter ) )
 	{
-		return NULL;
+		return nullptr;
 	}
 
 	const string name = nameWithoutSuffix.substr( prefix.size() );
@@ -768,7 +768,7 @@ void loadShaderParameters( const OSLQuery &query, Gaffer::Plug *parent, const Co
 
 Plug *loadStructParameter( const OSLQuery &query, const OSLQuery::Parameter *parameter, const InternedString &name, Gaffer::Plug *parent )
 {
-	Plug *result = NULL;
+	Plug *result = nullptr;
 
 	Plug *existingPlug = parent->getChild<Plug>( name );
 	if( !existingPlug || existingPlug->typeId() != Plug::staticTypeId() )
@@ -793,7 +793,7 @@ Plug *loadStructParameter( const OSLQuery &query, const OSLQuery::Parameter *par
 	/// The OSL spec doesn't appear to standardize a way to specify this.
 	/// We could attach metadata to the struct, but would it then be named
 	/// something like "structElementName_min"?
-	loadShaderParameters( query, result, NULL, parameter->name.string() + "." );
+	loadShaderParameters( query, result, nullptr, parameter->name.string() + "." );
 
 	parent->setChild( name, result );
 
@@ -802,7 +802,7 @@ Plug *loadStructParameter( const OSLQuery &query, const OSLQuery::Parameter *par
 
 Plug *loadShaderParameter( const OSLQuery &query, const OSLQuery::Parameter *parameter, const InternedString &name, Gaffer::Plug *parent, const CompoundData *metadata )
 {
-	Plug *result = NULL;
+	Plug *result = nullptr;
 
 	if( parameter->isstruct )
 	{
@@ -950,7 +950,7 @@ void loadShaderParameters( const OSLQuery &query, Gaffer::Plug *parent, const Co
 		const Plug *plug = loadSplineParameter( query, parameter, parent, prefix );
 		if( !plug )
 		{
-			const CompoundData *parameterMetadata = NULL;
+			const CompoundData *parameterMetadata = nullptr;
 			if( metadata )
 			{
 				parameterMetadata = metadata->member<IECore::CompoundData>( name );
@@ -1017,12 +1017,12 @@ void OSLShader::loadShader( const std::string &shaderName, bool keepExistingValu
 		}
 	}
 
-	m_metadata = NULL;
+	m_metadata = nullptr;
 	namePlug()->setValue( shaderName );
 	typePlug()->setValue( std::string( "osl:" ) + query.shadertype().c_str() );
 
 	const IECore::CompoundData *metadata = OSLShader::metadata();
-	const IECore::CompoundData *parameterMetadata = NULL;
+	const IECore::CompoundData *parameterMetadata = nullptr;
 	if( metadata )
 	{
 		parameterMetadata = metadata->member<IECore::CompoundData>( "parameter" );
@@ -1135,7 +1135,7 @@ static IECore::DataPtr convertMetadata( const OSLQuery::Parameter &metadata )
 	}
 
 	IECore::msg( IECore::Msg::Warning, "OSLShader", string( "Metadata \"" ) + metadata.name.c_str() + "\" has unsupported type" );
-	return NULL;
+	return nullptr;
 }
 
 static IECore::CompoundDataPtr convertMetadata( const std::vector<OSLQuery::Parameter> &metadata )
@@ -1157,7 +1157,7 @@ static IECore::ConstCompoundDataPtr metadataGetter( const std::string &key, size
 	cost = 1;
 	if( !key.size() )
 	{
-		return NULL;
+		return nullptr;
 	}
 
 	const char *searchPath = getenv( "OSL_SHADER_PATHS" );
@@ -1225,7 +1225,7 @@ const IECore::Data *OSLShader::shaderMetadata( const IECore::InternedString &key
 	const IECore::CompoundData *m = metadata();
 	if( !m )
 	{
-		return NULL;
+		return nullptr;
 	}
 	return m->member<IECore::CompoundData>( "shader" )->member<IECore::Data>( key );
 }
@@ -1235,18 +1235,18 @@ const IECore::Data *OSLShader::parameterMetadata( const Gaffer::Plug *plug, cons
 	const IECore::CompoundData *m = metadata();
 	if( !m )
 	{
-		return NULL;
+		return nullptr;
 	}
 
 	if( plug->parent<Plug>() != parametersPlug() && plug->parent<Plug>() != outPlug() )
 	{
-		return NULL;
+		return nullptr;
 	}
 
 	const IECore::CompoundData *p = m->member<IECore::CompoundData>( "parameter" )->member<IECore::CompoundData>( plug->getName() );
 	if( !p )
 	{
-		return NULL;
+		return nullptr;
 	}
 
 	return p->member<IECore::Data>( key );

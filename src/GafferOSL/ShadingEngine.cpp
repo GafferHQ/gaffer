@@ -144,7 +144,7 @@ DataPtr dataFromTypeDesc( TypeDesc type, void *&basePointer )
 		}
 	}
 
-	return NULL;
+	return nullptr;
 }
 
 } // namespace
@@ -322,7 +322,7 @@ class RendererServices : public OSL::RendererServices
 
 		virtual bool get_matrix( OSL::ShaderGlobals *sg, OSL::Matrix44 &result, ustring from, float time )
 		{
-			const RenderState *renderState = sg ? static_cast<RenderState *>( sg->renderstate ) : NULL;
+			const RenderState *renderState = sg ? static_cast<RenderState *>( sg->renderstate ) : nullptr;
 			if( renderState )
 			{
 				return renderState->matrixToObject( from, result  );
@@ -333,7 +333,7 @@ class RendererServices : public OSL::RendererServices
 
 		virtual bool get_inverse_matrix( OSL::ShaderGlobals *sg, OSL::Matrix44 &result, ustring to, float time )
 		{
-			const RenderState *renderState = sg ? static_cast<RenderState *>( sg->renderstate ) : NULL;
+			const RenderState *renderState = sg ? static_cast<RenderState *>( sg->renderstate ) : nullptr;
 			if( renderState )
 			{
 				return renderState->matrixFromObject( to, result  );
@@ -349,7 +349,7 @@ class RendererServices : public OSL::RendererServices
 
 		virtual bool get_attribute( OSL::ShaderGlobals *sg, bool derivatives, ustring object, TypeDesc type, ustring name, void *value )
 		{
-			const RenderState *renderState = sg ? static_cast<RenderState *>( sg->renderstate ) : NULL;
+			const RenderState *renderState = sg ? static_cast<RenderState *>( sg->renderstate ) : nullptr;
 			if( !renderState )
 			{
 				return false;
@@ -366,7 +366,7 @@ class RendererServices : public OSL::RendererServices
 
 		virtual bool get_userdata( bool derivatives, ustring name, TypeDesc type, OSL::ShaderGlobals *sg, void *value )
 		{
-			const RenderState *renderState = sg ? static_cast<RenderState *>( sg->renderstate ) : NULL;
+			const RenderState *renderState = sg ? static_cast<RenderState *>( sg->renderstate ) : nullptr;
 			if( !renderState )
 			{
 				return false;
@@ -376,12 +376,12 @@ class RendererServices : public OSL::RendererServices
 
 		virtual bool has_userdata( ustring name, TypeDesc type, OSL::ShaderGlobals *sg )
 		{
-			const RenderState *renderState = sg ? static_cast<RenderState *>( sg->renderstate ) : NULL;
+			const RenderState *renderState = sg ? static_cast<RenderState *>( sg->renderstate ) : nullptr;
 			if( !renderState )
 			{
 				return false;
 			}
-			return renderState->userData( name, type, NULL );
+			return renderState->userData( name, type, nullptr );
 		}
 
 };
@@ -431,7 +431,7 @@ ShadingSystemWriteMutex g_shadingSystemWriteMutex;
 OSL::ShadingSystem *shadingSystem()
 {
 	ShadingSystemWriteMutex::scoped_lock shadingSystemWriteLock( g_shadingSystemWriteMutex );
-	static OSL::ShadingSystem *s = NULL;
+	static OSL::ShadingSystem *s = nullptr;
 	if( s )
 	{
 		return s;
@@ -466,7 +466,7 @@ OSL::ShadingSystem *shadingSystem()
 			DebugParameters::prepare
 		},
 		// end marker
-		{ NULL, 0, {} }
+		{ nullptr, 0, {} }
 	};
 
 	for( int i = 0; closureDefinitions[i].name; ++i )
@@ -476,7 +476,7 @@ OSL::ShadingSystem *shadingSystem()
 			closureDefinitions[i].id,
 			closureDefinitions[i].parameters,
 			closureDefinitions[i].prepare,
-			NULL
+			nullptr
 		);
 	}
 
@@ -506,7 +506,7 @@ class ShadingResults
 	public :
 
 		ShadingResults( size_t numPoints )
-			:	m_results( new CompoundData ), m_ci( NULL )
+			:	m_results( new CompoundData ), m_ci( nullptr )
 		{
 			Color3fVectorDataPtr ciData = new Color3fVectorData();
 			m_ci = &ciData->writable();
@@ -601,7 +601,7 @@ class ShadingResults
 		struct DebugResult
 		{
 			DebugResult()
-				:	basePointer( NULL )
+				:	basePointer( nullptr )
 			{
 			}
 
@@ -777,7 +777,7 @@ static const T *varyingValue( const IECore::CompoundData *points, const char *na
 	}
 	else
 	{
-		return NULL;
+		return nullptr;
 	}
 }
 
@@ -801,7 +801,7 @@ ShadingEngine::ShadingEngine( const IECore::ObjectVector *shaderNetwork )
 			}
 
 			declareParameters( shader->parameters(), shadingSystem );
-			const char *handle = NULL;
+			const char *handle = nullptr;
 			if( const StringData *handleData = shader->parametersData()->member<StringData>( "__handle" ) )
 			{
 				handle = handleData->readable().c_str();
@@ -838,8 +838,8 @@ void ShadingEngine::queryAttributesNeeded()
 	shadingSystem->getattribute( &shaderGroup, "num_attributes_needed", numAttributes );
 	if( numAttributes )
 	{
-		ustring *attributeNames = NULL;
-		ustring *scopeNames = NULL;
+		ustring *attributeNames = nullptr;
+		ustring *scopeNames = nullptr;
 		shadingSystem->getattribute(  &shaderGroup, "attributes_needed", TypeDesc::PTR, &attributeNames );
 		shadingSystem->getattribute(  &shaderGroup, "attribute_scopes", TypeDesc::PTR, &scopeNames );
 
@@ -940,7 +940,7 @@ IECore::CompoundDataPtr ShadingEngine::shade( const IECore::CompoundData *points
 			shaderGlobals.N = *n++;
 		}
 
-		shaderGlobals.Ci = NULL;
+		shaderGlobals.Ci = nullptr;
 
 		shadingSystem->execute( shadingContext, shaderGroup, shaderGlobals );
 		results.addResult( i, shaderGlobals.Ci );

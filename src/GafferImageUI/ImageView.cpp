@@ -262,7 +262,7 @@ class ImageView::ColorInspector : public boost::signals::trackable
 		{
 			if( event.buttons != ButtonEvent::Left || event.modifiers )
 			{
-				return NULL;
+				return nullptr;
 			}
 
 			Color4f color;
@@ -275,7 +275,7 @@ class ImageView::ColorInspector : public boost::signals::trackable
 			{
 				// If there's an error computing the image, we can't
 				// start a drag.
-				return NULL;
+				return nullptr;
 			}
 
 			Pointer::setCurrent( "rgba" );

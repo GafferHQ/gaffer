@@ -79,7 +79,7 @@ inline const bool PathMatcher::RawIterator::exactMatch() const
 }
 
 inline PathMatcher::RawIterator::RawIterator( const PathMatcher &matcher, bool atEnd )
-	:	m_nodeIfRoot( NULL ), m_pruned( false )
+	:	m_nodeIfRoot( nullptr ), m_pruned( false )
 {
 	if( atEnd )
 	{
@@ -96,7 +96,7 @@ inline PathMatcher::RawIterator::RawIterator( const PathMatcher &matcher, bool a
 }
 
 inline PathMatcher::RawIterator::RawIterator( const PathMatcher &matcher, const std::vector<IECore::InternedString> &path )
-	:	m_nodeIfRoot( NULL ), m_pruned( false )
+	:	m_nodeIfRoot( nullptr ), m_pruned( false )
 {
 	if( !path.size() )
 	{
@@ -130,7 +130,7 @@ inline void PathMatcher::RawIterator::increment()
 	if( m_nodeIfRoot )
 	{
 		m_path.push_back( m_stack.back().it->first.name );
-		m_nodeIfRoot = NULL;
+		m_nodeIfRoot = nullptr;
 		return;
 	}
 
@@ -186,7 +186,7 @@ inline PathMatcher::Node *PathMatcher::RawIterator::node() const
 			return m_stack.back().it->second.get();
 		}
 	}
-	return NULL;
+	return nullptr;
 }
 
 inline PathMatcher::RawIterator::Level::Level( const Node::ChildMap &children, Node::ConstChildMapIterator it )

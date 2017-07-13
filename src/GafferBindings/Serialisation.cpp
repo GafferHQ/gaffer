@@ -301,7 +301,7 @@ const Serialisation::Serialiser *Serialisation::acquireSerialiser( const GraphCo
 	}
 
 	assert( false );
-	return NULL;
+	return nullptr;
 }
 
 Serialisation::SerialiserMap &Serialisation::serialiserMap()

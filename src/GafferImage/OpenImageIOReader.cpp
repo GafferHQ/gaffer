@@ -99,13 +99,13 @@ ImageCache *imageCache()
 }
 
 // Returns the OIIO ImageSpec for the given filename in the current
-// context. Throws if the file is invalid, and returns NULL if
+// context. Throws if the file is invalid, and returns null if
 // the filename is empty.
 const ImageSpec *imageSpec( std::string &fileName, OpenImageIOReader::MissingFrameMode mode, const OpenImageIOReader *node, const Context *context )
 {
 	if( fileName.empty() )
 	{
-		return NULL;
+		return nullptr;
 	}
 
 	const std::string resolvedFileName = context->substitute( fileName );
@@ -179,7 +179,7 @@ void oiioParameterListToMetadata( const ImageIOParameterList &paramList, Compoun
 	CompoundData::ValueType &members = metadata->writable();
 	for ( ImageIOParameterList::const_iterator it = paramList.begin(); it != paramList.end(); ++it )
 	{
-		DataPtr value = NULL;
+		DataPtr value = nullptr;
 
 		const TypeDesc &type = it->type();
 		switch ( type.basetype )
@@ -479,7 +479,7 @@ void OpenImageIOReader::compute( ValuePlug *output, const Context *context ) con
 {
 	if( output == availableFramesPlug() )
 	{
-		FileSequencePtr fileSequence = NULL;
+		FileSequencePtr fileSequence = nullptr;
 		IECore::ls( fileNamePlug()->getValue(), fileSequence, /* minSequenceSize */ 1 );
 
 		if( fileSequence )
@@ -611,7 +611,7 @@ IECore::ConstCompoundDataPtr OpenImageIOReader::computeMetadata( const Gaffer::C
 
 	// Add file format
 
-	const char *fileFormat = NULL;
+	const char *fileFormat = nullptr;
 	if( imageCache()->get_image_info( ustring( fileName ), 0, 0, ustring( "fileformat" ), TypeDesc::TypeString, &fileFormat ) )
 	{
 		result->writable()["fileFormat"] = new StringData( fileFormat );

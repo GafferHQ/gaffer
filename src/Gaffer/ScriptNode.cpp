@@ -429,7 +429,7 @@ void ScriptNode::popUndoState()
 
 			haveUnsavedChanges = true;
 		}
-		m_actionAccumulator = NULL;
+		m_actionAccumulator = nullptr;
 		m_currentActionStage = Action::Invalid;
 	}
 
@@ -675,7 +675,7 @@ bool ScriptNode::load( bool continueOnError)
 	deleteNodes();
 	variablesPlug()->clearChildren();
 
-	const bool result = executeInternal( s, NULL, continueOnError, fileName );
+	const bool result = executeInternal( s, nullptr, continueOnError, fileName );
 
 	UndoScope undoDisabled( this, UndoScope::Disabled );
 	unsavedChangesPlug()->setValue( false );

@@ -94,7 +94,7 @@ Plug *ContextProcessor<BaseType>::correspondingInput( const Plug *output )
 	{
 		return const_cast<Plug *>( static_cast<const Plug *>( oppositePlug( v ) ) );
 	}
-	return NULL;
+	return nullptr;
 }
 
 template<typename BaseType>
@@ -104,7 +104,7 @@ const Plug *ContextProcessor<BaseType>::correspondingInput( const Plug *output )
 	{
 		return oppositePlug( v );
 	}
-	return NULL;
+	return nullptr;
 }
 
 template<typename BaseType>
@@ -217,15 +217,15 @@ const ValuePlug *ContextProcessor<BaseType>::correspondingDescendant( const Valu
 	{
 		// looks like the "plug" we initially called this function with wasn't
 		// a descendant of plugAncestor and we've recursed up into nothing, so
-		// we return NULL:
-		return NULL;
+		// we return nullptr:
+		return nullptr;
 	}
 
 	// find the corresponding plug for the parent:
 	const ValuePlug *oppositeParent = correspondingDescendant( plugParent, plugAncestor, oppositeAncestor );
 	if( !oppositeParent )
 	{
-		return NULL;
+		return nullptr;
 	}
 
 	// find the child corresponding to "plug"

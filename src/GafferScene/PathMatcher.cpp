@@ -96,7 +96,7 @@ inline PathMatcher::Node *PathMatcher::Node::child( const Name &name )
 	{
 		return it->second.get();
 	}
-	return NULL;
+	return nullptr;
 }
 
 inline const PathMatcher::Node *PathMatcher::Node::child( const Name &name ) const
@@ -106,7 +106,7 @@ inline const PathMatcher::Node *PathMatcher::Node::child( const Name &name ) con
 	{
 		return it->second.get();
 	}
-	return NULL;
+	return nullptr;
 }
 
 bool PathMatcher::Node::operator == ( const Node &other ) const
@@ -292,7 +292,7 @@ void PathMatcher::matchWalk( const Node *node, const NameIterator &start, const 
 
 	// then check all the wildcarded children to see if they might match.
 
-	const Node *ellipsis = NULL;
+	const Node *ellipsis = nullptr;
 	for( childIt = node->wildcardsBegin(); childIt != childItEnd; ++childIt )
 	{
 		assert( childIt->first.type == Name::Wildcarded );
@@ -524,7 +524,7 @@ PathMatcher::NodePtr PathMatcher::addWalk( Node *node, const NameIterator &start
 		if( node->terminator )
 		{
 			// Nothing to do.
-			return NULL;
+			return nullptr;
 		}
 
 		writable( node, result, shared )->terminator = true;

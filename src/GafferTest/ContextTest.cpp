@@ -137,7 +137,7 @@ void GafferTest::testScopingNullContext()
 		const std::string s = Context::current()->substitute( phrase );
 		GAFFERTEST_ASSERT( s == expectedResult );
 
-		const Context *nullContext = NULL;
+		const Context *nullContext = nullptr;
 		{
 			Context::Scope scope( nullContext );
 			const std::string s = Context::current()->substitute( phrase );

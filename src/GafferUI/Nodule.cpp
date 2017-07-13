@@ -91,7 +91,7 @@ NodulePtr Nodule::create( Gaffer::PlugPtr plug )
 	{
 		if( noduleType->readable() == "" )
 		{
-			return NULL;
+			return nullptr;
 		}
 		const TypeNameCreatorMap &m = typeNameCreators();
 		TypeNameCreatorMap::const_iterator it = m.find( noduleType->readable() );

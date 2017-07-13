@@ -173,7 +173,7 @@ bool Handle::dragEnter( const DragDropEvent &event )
 //////////////////////////////////////////////////////////////////////////
 
 Handle::LinearDrag::LinearDrag()
-	:	m_gadget( NULL ),
+	:	m_gadget( nullptr ),
 		m_worldLine( V3f( 0 ), V3f( 1, 0, 0 ) ),
 		m_dragBeginPosition( 0 )
 {
@@ -238,7 +238,7 @@ float Handle::LinearDrag::position( const DragDropEvent &event ) const
 //////////////////////////////////////////////////////////////////////////
 
 Handle::PlanarDrag::PlanarDrag()
-	:	m_gadget( NULL )
+	:	m_gadget( nullptr )
 {
 }
 

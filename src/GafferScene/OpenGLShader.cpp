@@ -95,38 +95,38 @@ void OpenGLShader::loadShader( const std::string &shaderName, bool keepExistingV
 		}
 
 		const IECoreGL::Shader::Parameter *parameter = shader->uniformParameter( *it );
-		PlugPtr plug = NULL;
+		PlugPtr plug = nullptr;
 
 		const Plug *existingPlug = parametersPlug()->getChild<Plug>( *it );
 		const IECore::TypeId existingType = existingPlug ? (IECore::TypeId)existingPlug->typeId() : IECore::InvalidTypeId;
 		switch( parameter->type )
 		{
 			case GL_BOOL :
-				plug = existingType != (IECore::TypeId)BoolPlugTypeId ? new BoolPlug( *it ) : NULL;
+				plug = existingType != (IECore::TypeId)BoolPlugTypeId ? new BoolPlug( *it ) : nullptr;
 				break;
 			case GL_INT :
-				plug = existingType != (IECore::TypeId)IntPlugTypeId ? new IntPlug( *it ) : NULL;
+				plug = existingType != (IECore::TypeId)IntPlugTypeId ? new IntPlug( *it ) : nullptr;
 				break;
 			case GL_INT_VEC2 :
-				plug = existingType != (IECore::TypeId)V2iPlugTypeId ? new V2iPlug( *it ) : NULL;
+				plug = existingType != (IECore::TypeId)V2iPlugTypeId ? new V2iPlug( *it ) : nullptr;
 				break;
 			case GL_INT_VEC3 :
-				plug = existingType != (IECore::TypeId)V3iPlugTypeId ? new V3iPlug( *it ) : NULL;
+				plug = existingType != (IECore::TypeId)V3iPlugTypeId ? new V3iPlug( *it ) : nullptr;
 				break;
 			case GL_FLOAT :
-				plug = existingType != (IECore::TypeId)FloatPlugTypeId ? new FloatPlug( *it ) : NULL;
+				plug = existingType != (IECore::TypeId)FloatPlugTypeId ? new FloatPlug( *it ) : nullptr;
 				break;
 			case GL_FLOAT_VEC2 :
-				plug = existingType != (IECore::TypeId)V2fPlugTypeId ? new V2fPlug( *it ) : NULL;
+				plug = existingType != (IECore::TypeId)V2fPlugTypeId ? new V2fPlug( *it ) : nullptr;
 				break;
 			case GL_FLOAT_VEC3 :
 				// we don't know it's a colour any more than it's a point,
 				// but the colour ui is harmless for point types, and the point
 				// ui is useless for colour types.
-				plug = existingType != (IECore::TypeId)Color3fPlugTypeId ? new Color3fPlug( *it ) : NULL;
+				plug = existingType != (IECore::TypeId)Color3fPlugTypeId ? new Color3fPlug( *it ) : nullptr;
 				break;
 			case GL_FLOAT_VEC4 :
-				plug = existingType != (IECore::TypeId)Color4fPlugTypeId ? new Color4fPlug( *it ) : NULL;
+				plug = existingType != (IECore::TypeId)Color4fPlugTypeId ? new Color4fPlug( *it ) : nullptr;
 				break;
 			case GL_SAMPLER_2D :
 				/// \todo This introduces a GafferImage dependency into GafferScene,
@@ -135,7 +135,7 @@ void OpenGLShader::loadShader( const std::string &shaderName, bool keepExistingV
 				/// but that might be a bit annoying for users. Keeping the dependency
 				/// might turn out to be useful for other nodes (Seeds perhaps?), so
 				/// revisit this at some point to see how things are working out.
-				plug = existingType != (IECore::TypeId)GafferImage::ImagePlugTypeId ? new GafferImage::ImagePlug( *it ) : NULL;
+				plug = existingType != (IECore::TypeId)GafferImage::ImagePlugTypeId ? new GafferImage::ImagePlug( *it ) : nullptr;
 				break;
 			default :
 				msg(
@@ -187,7 +187,7 @@ IECore::DataPtr OpenGLShader::parameterValue( const Gaffer::Plug *parameterPlug 
 			value->writable()["channels"] = channelData;
 			return value;
 		}
-		return NULL;
+		return nullptr;
 	}
 	else
 	{

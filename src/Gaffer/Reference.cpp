@@ -80,7 +80,7 @@ void copyInputsAndValues( Gaffer::Plug *srcPlug, Gaffer::Plug *dstPlug, bool ign
 
 	if( !dstPlug->children().size() )
 	{
-		dstPlug->setInput( NULL );
+		dstPlug->setInput( nullptr );
 		if( ValuePlug *srcValuePlug = runTimeCast<ValuePlug>( srcPlug ) )
 		{
 			if( !ignoreDefaultValues || !srcValuePlug->isSetToDefault() )

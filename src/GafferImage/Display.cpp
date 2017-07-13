@@ -276,7 +276,7 @@ class GafferDisplayDriver : public IECore::DisplayDriver
 			)
 			{
 				// outside data window
-				return NULL;
+				return nullptr;
 			}
 
 			tbb::spin_rw_mutex::scoped_lock tileLock( m_tileMutex, false /* read */ );

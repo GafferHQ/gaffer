@@ -208,7 +208,7 @@ IECore::RunTimeTypedPtr TranslateTool::dragBegin( int axis )
 	m_drag = createTranslation( handleVector );
 
 	TransformTool::dragBegin();
-	return NULL; // let the handle start the drag with the event system
+	return nullptr; // let the handle start the drag with the event system
 }
 
 bool TranslateTool::dragMove( const GafferUI::Gadget *gadget, const GafferUI::DragDropEvent &event )

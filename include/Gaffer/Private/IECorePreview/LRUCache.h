@@ -189,7 +189,7 @@ class LRUCache : private boost::noncopyable
 			public :
 
 				Handle()
-					:	m_cache( NULL ), m_binIndex( 0 )
+					:	m_cache( nullptr ), m_binIndex( 0 )
 				{
 				}
 
@@ -269,7 +269,7 @@ class LRUCache : private boost::noncopyable
 					if( m_cache )
 					{
 						releaseBin();
-						m_cache = NULL;
+						m_cache = nullptr;
 					}
 				}
 

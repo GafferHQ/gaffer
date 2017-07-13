@@ -52,5 +52,5 @@ DeleteAttributes::~DeleteAttributes()
 
 IECore::ConstObjectPtr DeleteAttributes::processAttribute( const ScenePath &path, const Gaffer::Context *context, const IECore::InternedString &attributeName, const IECore::Object *inputAttribute ) const
 {
-	return NULL;
+	return nullptr;
 }

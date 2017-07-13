@@ -267,7 +267,7 @@ class SceneView::ShadingMode : public boost::signals::trackable
 
 			const std::string name = shadingModePlug()->getValue();
 
-			SceneProcessorPtr shadingMode = NULL;
+			SceneProcessorPtr shadingMode = nullptr;
 			ShadingModes::const_iterator it = m_shadingModes.find( name );
 			if( it != m_shadingModes.end() )
 			{
@@ -772,7 +772,7 @@ class SceneView::LookThrough : public boost::signals::trackable
 				m_standardOptions( new StandardOptions ),
 				m_originalCamera( m_view->viewportGadget()->getCamera() ),
 				m_lookThroughCameraDirty( true ),
-				m_lookThroughCamera( NULL ),
+				m_lookThroughCamera( nullptr ),
 				m_viewportCameraDirty( true ),
 				m_overlay( new CameraOverlay )
 		{
@@ -935,7 +935,7 @@ class SceneView::LookThrough : public boost::signals::trackable
 			}
 
 			m_lookThroughCameraDirty = false;
-			m_lookThroughCamera = NULL;
+			m_lookThroughCamera = nullptr;
 			if( !enabledPlug()->getValue() )
 			{
 				m_view->viewportGadget()->setCamera( m_originalCamera.get() );
@@ -967,7 +967,7 @@ class SceneView::LookThrough : public boost::signals::trackable
 			{
 				// If an invalid path has been entered for the camera, computation will fail.
 				// We just ignore that and lock to the current camera instead.
-				m_lookThroughCamera = NULL;
+				m_lookThroughCamera = nullptr;
 			}
 
 			m_view->viewportGadget()->setCameraEditable( false );

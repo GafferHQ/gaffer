@@ -80,7 +80,7 @@ namespace
 		}
 		else
 		{
-			return NULL;
+			return nullptr;
 		}
 	}
 }
@@ -95,7 +95,7 @@ float Warp::approximateDerivative( float upper, float center, float lower )
 	{
 		float high = upper - center;
 		float low = center - lower;
-		
+
 		// We have valid derivatives on both sides
 		// The accurate thing to do would be to average them, but here we take the minimum
 		// instead.  This may underfilter sometimes, but there are two arguments for it:
@@ -315,7 +315,7 @@ void Warp::hash( const Gaffer::ValuePlug *output, const Gaffer::Context *context
 				ImagePlug::GlobalScope c( context );
 				dataWindow = outPlug()->dataWindowPlug()->getValue();
 			}
-			
+
 			hashEngineIfTileValid( tileScope, enginePlug(), dataWindow,
 				tileOrigin + V2i( ImagePlug::tileSize(), 0 ), h );
 			hashEngineIfTileValid( tileScope, enginePlug(), dataWindow,
@@ -422,7 +422,7 @@ void Warp::compute( Gaffer::ValuePlug *output, const Gaffer::Context *context ) 
 			// dataWindow )
 			ImagePlug::ChannelDataScope tileScope( context );
 
-			ConstEngineDataPtr engineDataPlusX = static_pointer_cast<const EngineData>( 
+			ConstEngineDataPtr engineDataPlusX = static_pointer_cast<const EngineData>(
 				computeEngineIfTileValid( tileScope, enginePlug(), dataWindow,
 					tileOrigin + V2i( ImagePlug::tileSize(), 0 )
 				)
@@ -443,7 +443,7 @@ void Warp::compute( Gaffer::ValuePlug *output, const Gaffer::Context *context ) 
 				)
 			);
 
-			const Engine *enginePlusX = NULL, *engineMinusX = NULL, *enginePlusY = NULL, *engineMinusY = NULL;
+			const Engine *enginePlusX = nullptr, *engineMinusX = nullptr, *enginePlusY = nullptr, *engineMinusY = nullptr;
 			if( engineDataPlusX ) enginePlusX = engineDataPlusX->engine;
 			if( engineDataMinusX ) engineMinusX = engineDataMinusX->engine;
 			if( engineDataPlusY ) enginePlusY = engineDataPlusY->engine;

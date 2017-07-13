@@ -62,7 +62,7 @@ void replacePlug( GraphComponent *parent, PlugPtr plug );
 
 /// Returns true if a call to `promote( plug, parent )` would
 /// succeed, false otherwise.
-bool canPromote( const Plug *plug, const Plug *parent = NULL );
+bool canPromote( const Plug *plug, const Plug *parent = nullptr );
 /// Promotes an internal plug, returning the newly created
 /// external plug. By default the external plug is parented
 /// directly to the node, but the `parent` argument
@@ -72,7 +72,7 @@ bool canPromote( const Plug *plug, const Plug *parent = NULL );
 /// plug - this can be controlled with the `excludeMetadata`
 /// argument.
 /// \undoable
-Plug *promote( Plug *plug, Plug *parent = NULL, const StringAlgo::MatchPattern &excludeMetadata = "layout:*" );
+Plug *promote( Plug *plug, Plug *parent = nullptr, const StringAlgo::MatchPattern &excludeMetadata = "layout:*" );
 /// Returns true if the plug appears to have been promoted.
 bool isPromoted( const Plug *plug );
 /// Unpromotes a previously promoted plug, removing the

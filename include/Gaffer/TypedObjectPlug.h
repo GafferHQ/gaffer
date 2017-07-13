@@ -108,7 +108,7 @@ class TypedObjectPlug : public ValuePlug
 		/// This pattern is particularly effective because it not only
 		/// avoids unnecessary conversions, but it also avoids churn in
 		/// the ValuePlug cache.
-		ConstValuePtr getValue( const IECore::MurmurHash *precomputedHash = NULL ) const;
+		ConstValuePtr getValue( const IECore::MurmurHash *precomputedHash = nullptr ) const;
 
 		virtual void setFrom( const ValuePlug *other );
 

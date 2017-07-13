@@ -189,7 +189,7 @@ const Gaffer::StringPlug *ShaderView::scenePlug() const
 std::string ShaderView::shaderPrefix() const
 {
 	IECore::ConstCompoundObjectPtr attributes = inPlug<ShaderPlug>()->attributes();
-	const char *shaders[] = { "surface", "displacement", "shader", NULL };
+	const char *shaders[] = { "surface", "displacement", "shader", nullptr };
 	for( IECore::CompoundObject::ObjectMap::const_iterator it = attributes->members().begin(), eIt = attributes->members().end(); it != eIt; ++it )
 	{
 		for( const char **shader = shaders; *shader; ++shader )
@@ -296,7 +296,7 @@ void ShaderView::updateRenderer()
 		return;
 	}
 
-	m_renderer = NULL;
+	m_renderer = nullptr;
 	m_rendererShaderPrefix = shaderPrefix;
 	if( !inPlug<Plug>()->getInput<Plug>() )
 	{
@@ -350,7 +350,7 @@ void ShaderView::updateScene()
 		return;
 	}
 
-	m_scene = NULL;
+	m_scene = nullptr;
 	m_scenePrefixAndName = prefixAndName;
 
 	Scenes::const_iterator it = m_scenes.find( prefixAndName );

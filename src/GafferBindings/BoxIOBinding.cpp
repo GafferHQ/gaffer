@@ -104,7 +104,7 @@ PlugPtr promotedPlug( BoxIO &b )
 void GafferBindings::bindBoxIO()
 {
 
-	NodeClass<BoxIO>( NULL, no_init )
+	NodeClass<BoxIO>( nullptr, no_init )
 		.def( "setup", &BoxIO::setup, ( arg( "plug" ) = object() ) )
 		.def( "plug", &plug )
 		.def( "promotedPlug", &promotedPlug )

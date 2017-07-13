@@ -125,7 +125,7 @@ void CopyChannels::affects( const Gaffer::Plug *input, AffectedPlugsContainer &o
 	const ImagePlug *imagePlug = input->parent<ImagePlug>();
 	if( imagePlug && imagePlug->parent<Plug>() != inPlugs() )
 	{
-		imagePlug = NULL;
+		imagePlug = nullptr;
 	}
 
 	if( imagePlug && input == imagePlug->dataWindowPlug() )

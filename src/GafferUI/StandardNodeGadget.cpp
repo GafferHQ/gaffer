@@ -367,7 +367,7 @@ Nodule *StandardNodeGadget::nodule( const Gaffer::Plug *plug )
 			return n;
 		}
 	}
-	return NULL;
+	return nullptr;
 }
 
 const Nodule *StandardNodeGadget::nodule( const Gaffer::Plug *plug ) const
@@ -518,7 +518,7 @@ Gadget *StandardNodeGadget::getEdgeGadget( Edge edge )
 	const size_t s = c->children().size();
 	if( s != 4 )
 	{
-		return NULL;
+		return nullptr;
 	}
 
 	return c->getChild<Gadget>( s - 2 );
@@ -612,7 +612,7 @@ bool StandardNodeGadget::dragLeave( GadgetPtr gadget, const DragDropEvent &event
 	{
 		m_dragDestinationProxy->dragLeaveSignal()( m_dragDestinationProxy, event );
 	}
-	m_dragDestinationProxy = NULL;
+	m_dragDestinationProxy = nullptr;
 
 	return true;
 }
@@ -625,7 +625,7 @@ bool StandardNodeGadget::drop( GadgetPtr gadget, const DragDropEvent &event )
 	}
 
 	const bool result = m_dragDestinationProxy->dropSignal()( m_dragDestinationProxy, event );
-	m_dragDestinationProxy = NULL;
+	m_dragDestinationProxy = nullptr;
 	return result;
 }
 
@@ -634,7 +634,7 @@ Gadget *StandardNodeGadget::closestDragDestinationProxy( const DragDropEvent &ev
 	if( event.buttons != DragDropEvent::Left )
 	{
 		// See comments in StandardNodule::dragEnter()
-		return NULL;
+		return nullptr;
 	}
 
 	Gadget *result = 0;
@@ -872,7 +872,7 @@ StandardNodeGadget::ErrorGadget *StandardNodeGadget::errorGadget( bool createIfM
 
 	if( !createIfMissing )
 	{
-		return NULL;
+		return nullptr;
 	}
 
 	ErrorGadgetPtr g = new ErrorGadget;

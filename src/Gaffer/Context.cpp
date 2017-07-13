@@ -97,7 +97,7 @@ class Environment
 			{
 				return it->second.c_str();
 			}
-			return NULL;
+			return nullptr;
 		}
 
 	private :
@@ -119,14 +119,14 @@ static InternedString g_frame( "frame" );
 static InternedString g_framesPerSecond( "framesPerSecond" );
 
 Context::Context()
-	:	m_changedSignal( NULL ), m_hashValid( false )
+	:	m_changedSignal( nullptr ), m_hashValid( false )
 {
 	set( g_frame, 1.0f );
 	set( g_framesPerSecond, 24.0f );
 }
 
 Context::Context( const Context &other, Ownership ownership )
-	:	m_map( other.m_map ), m_changedSignal( NULL ), m_hash( other.m_hash ), m_hashValid( other.m_hashValid )
+	:	m_map( other.m_map ), m_changedSignal( nullptr ), m_hash( other.m_hash ), m_hashValid( other.m_hashValid )
 {
 	// We used the (shallow) Map copy constructor in our initialiser above
 	// because it offers a big performance win over iterating and inserting copies
@@ -416,8 +416,8 @@ void Context::substituteInternal( const char *s, std::string &result, const int 
 				{
 					s++; // skip $
 					bool bracketed = *s =='{';
-					const char *variableNameStart = NULL;
-					const char *variableNameEnd = NULL;
+					const char *variableNameStart = nullptr;
+					const char *variableNameEnd = nullptr;
 					if( bracketed )
 					{
 						s++; // skip initial bracket
@@ -443,7 +443,7 @@ void Context::substituteInternal( const char *s, std::string &result, const int 
 					}
 
 					InternedString variableName( variableNameStart, variableNameEnd - variableNameStart );
-					const IECore::Data *d = get<IECore::Data>( variableName, NULL );
+					const IECore::Data *d = get<IECore::Data>( variableName, nullptr );
 					if( d )
 					{
 						switch( d->typeId() )

@@ -115,7 +115,7 @@ bool tolerantExec( const char *pythonScript, boost::python::object globals, boos
 		pythonScript,
 		"<string>",
 		Py_file_input,
-		NULL,
+		nullptr,
 		arena.get()
 	);
 
@@ -136,7 +136,7 @@ bool tolerantExec( const char *pythonScript, boost::python::object globals, boos
 		);
 
 		// Compile it.
-		boost::python::handle<PyCodeObject> code( PyAST_Compile( newModule, "<string>", NULL, arena.get() ) );
+		boost::python::handle<PyCodeObject> code( PyAST_Compile( newModule, "<string>", nullptr, arena.get() ) );
 
 		// And execute it.
 		boost::python::handle<> v( boost::python::allow_null(
@@ -148,7 +148,7 @@ bool tolerantExec( const char *pythonScript, boost::python::object globals, boos
 		) );
 
 		// Report any errors.
-		if( v == NULL)
+		if( v == nullptr)
 		{
 			int lineNumber = 0;
 			std::string message = ExceptionAlgo::formatPythonException( /* withTraceback = */ false, &lineNumber );

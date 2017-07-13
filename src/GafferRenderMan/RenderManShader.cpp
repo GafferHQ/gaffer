@@ -98,26 +98,26 @@ const Gaffer::Plug *RenderManShader::correspondingInput( const Gaffer::Plug *out
 	ConstCompoundDataPtr ann = annotations();
 	if( !ann )
 	{
-		return NULL;
+		return nullptr;
 	}
 
 	const StringData *primaryInput = ann->member<StringData>( "primaryInput" );
 	if( !primaryInput )
 	{
-		return NULL;
+		return nullptr;
 	}
 
 	const Plug *result = parametersPlug()->getChild<Plug>( primaryInput->readable() );
 	if( !result )
 	{
 		IECore::msg( IECore::Msg::Error, "RenderManShader::correspondingInput", boost::format( "Parameter \"%s\" does not exist" ) % primaryInput->readable() );
-		return NULL;
+		return nullptr;
 	}
 
 	if( result->typeId() != Gaffer::Plug::staticTypeId() )
 	{
 		IECore::msg( IECore::Msg::Error, "RenderManShader::correspondingInput", boost::format( "Parameter \"%s\" is not of type shader" ) % primaryInput->readable() );
-		return NULL;
+		return nullptr;
 	}
 
 	return result;
@@ -263,10 +263,10 @@ const IECore::ConstCompoundDataPtr RenderManShader::annotations() const
 	std::string shaderName = namePlug()->getValue();
 	if( !shaderName.size() )
 	{
-		return NULL;
+		return nullptr;
 	}
 
-	IECore::ConstShaderPtr shader = NULL;
+	IECore::ConstShaderPtr shader = nullptr;
 	try
 	{
 		shader = runTimeCast<const IECore::Shader>( shaderLoader()->read( shaderName + ".sdl" ) );
@@ -274,7 +274,7 @@ const IECore::ConstCompoundDataPtr RenderManShader::annotations() const
 	catch( const std::exception &e )
 	{
 		IECore::msg( IECore::Msg::Error, "RenderManShader::annotations", e.what() );
-		return NULL;
+		return nullptr;
 	}
 
 	return shader->blindData()->member<CompoundData>( "ri:annotations" );
@@ -610,7 +610,7 @@ static IECore::FloatVectorDataPtr parseFloats( const std::string &value )
 
 	if( !r || first != value.end() )
 	{
-		return NULL;
+		return nullptr;
 	}
 
 	return result;
@@ -674,7 +674,7 @@ static IECore::Color3fVectorDataPtr parseColors( const std::string &value )
 
 	if( !r || first != value.end() )
 	{
-		return NULL;
+		return nullptr;
 	}
 	return result;
 }

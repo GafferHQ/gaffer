@@ -304,7 +304,7 @@ void BoxIO::plugInputChanged( Plug *plug )
 	// the parent box node. This gives us the opportunity
 	// to discover our promoted plug and connect to its
 	// signals.
-	Plug *promoted = NULL;
+	Plug *promoted = nullptr;
 	if( m_direction == Plug::In && plug == inPlugInternal() )
 	{
 		promoted = promotedPlug<Plug>();
@@ -415,7 +415,7 @@ Box *enclosingBox( Plug *plug )
 	Node *node = plug->node();
 	if( !node )
 	{
-		return NULL;
+		return nullptr;
 	}
 	return node->parent<Box>();
 }

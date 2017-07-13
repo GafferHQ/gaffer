@@ -141,10 +141,10 @@ FileSequencePtr FileSystemPath::fileSequence() const
 {
 	if( !m_includeSequences || is_directory( path( this->string() ) ) )
 	{
-		return NULL;
+		return nullptr;
 	}
 
-	FileSequencePtr sequence = NULL;
+	FileSequencePtr sequence = nullptr;
 	IECore::ls( this->string(), sequence, /* minSequenceSize = */ 1 );
 	return sequence;
 }

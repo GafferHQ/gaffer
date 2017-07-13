@@ -163,13 +163,13 @@ namespace
 Node *externalNode( Plug *plug )
 {
 	Node *node = plug->node();
-	return node ? node->parent<Node>() : NULL;
+	return node ? node->parent<Node>() : nullptr;
 }
 
 const Node *externalNode( const Plug *plug )
 {
 	const Node *node = plug->node();
-	return node ? node->parent<Node>() : NULL;
+	return node ? node->parent<Node>() : nullptr;
 }
 
 bool validatePromotability( const Plug *plug, const Plug *parent, bool throwExceptions, bool childPlug = false )
@@ -469,11 +469,11 @@ void unpromote( Plug *plug )
 	}
 
 	Node *externalNode = ::externalNode( plug );
-	Plug *externalPlug = NULL;
+	Plug *externalPlug = nullptr;
 	if( plug->direction() == Plug::In )
 	{
 		externalPlug = plug->getInput<Plug>();
-		plug->setInput( NULL );
+		plug->setInput( nullptr );
 	}
 	else
 	{
@@ -486,7 +486,7 @@ void unpromote( Plug *plug )
 			}
 		}
 		assert( externalPlug ); // should be true because we checked isPromoted()
-		externalPlug->setInput( NULL );
+		externalPlug->setInput( nullptr );
 	}
 
 	// Remove the top level external plug , but only if

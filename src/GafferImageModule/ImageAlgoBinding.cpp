@@ -56,7 +56,7 @@ struct StringVectorFromStringVectorData
 	{
 		boost::python::converter::registry::push_back(
 			&convertible,
-			NULL,
+			nullptr,
 			boost::python::type_id<std::vector<std::string> >()
 		);
 	}
@@ -72,7 +72,7 @@ struct StringVectorFromStringVectorData
 			}
 		}
 
-		return NULL;
+		return nullptr;
 	}
 
 };

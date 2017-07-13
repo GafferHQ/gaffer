@@ -319,7 +319,7 @@ class LayoutEngine
 
 			VertexDescriptor groupDescriptor = add_vertex( m_graph );
 			Vertex &group = m_graph[groupDescriptor];
-			group.node = NULL;
+			group.node = nullptr;
 			group.pinned = false;
 			group.collisionGroup = 0;
 			group.position = bound.center();
@@ -568,7 +568,7 @@ class LayoutEngine
 		struct Vertex
 		{
 			// The node this vertex represents.
-			// May be NULL for vertices introduced
+			// May be nullptr for vertices introduced
 			// by groupNodes().
 			Node *node;
 			// Node position within graph.
@@ -638,7 +638,7 @@ class LayoutEngine
 			// make constraints among the siblings to keep them in order with
 			// respect to their connection order.
 
-			Vertex *prev = NULL;
+			Vertex *prev = nullptr;
 			for( std::vector<EdgeDescriptor>::const_iterator it = edges.begin(); it != edges.end(); ++it )
 			{
 				Vertex *curr = &(m_graph[source( *it, m_graph )]);

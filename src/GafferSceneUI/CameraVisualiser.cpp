@@ -70,7 +70,7 @@ class CameraVisualiser : public ObjectVisualiser
 			const IECore::Camera *camera = IECore::runTimeCast<const IECore::Camera>( object );
 			if( !camera )
 			{
-				return NULL;
+				return nullptr;
 			}
 
 			IECore::CameraPtr fullCamera = camera->copy();

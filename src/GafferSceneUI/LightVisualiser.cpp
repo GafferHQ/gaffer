@@ -103,11 +103,11 @@ IECoreGL::ConstRenderablePtr AttributeVisualiserForLights::visualise( const IECo
 {
 	if( !attributes )
 	{
-		return NULL;
+		return nullptr;
 	}
 
-	IECoreGL::GroupPtr resultGroup = NULL;
-	IECoreGL::StatePtr resultState = NULL;
+	IECoreGL::GroupPtr resultGroup = nullptr;
+	IECoreGL::StatePtr resultState = nullptr;
 
 	/// This seems pretty expensive to do everywhere.
 	/// The alternative would be to register attribute visualisers to specific attributes.  But then we wouldn't be able to have a visualiser that is influenced by multiple attributes simultaneously
@@ -152,7 +152,7 @@ IECoreGL::ConstRenderablePtr AttributeVisualiserForLights::visualise( const IECo
 			visualiser = visIt->second.get();
 		}
 
-		IECoreGL::ConstStatePtr curState = NULL;
+		IECoreGL::ConstStatePtr curState = nullptr;
 		IECoreGL::ConstRenderablePtr curVis = visualiser->visualise( it->first, shaderVector, curState );
 
 		if( curVis )

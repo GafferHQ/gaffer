@@ -90,7 +90,7 @@ Gaffer::CompoundDataPlug *OpenColorIOTransform::contextPlug()
 {
 	if( !m_hasContextPlug )
 	{
-		return NULL;
+		return nullptr;
 	}
 	return getChild<CompoundDataPlug>( g_firstPlugIndex );
 }
@@ -99,7 +99,7 @@ const Gaffer::CompoundDataPlug *OpenColorIOTransform::contextPlug() const
 {
 	if( !m_hasContextPlug )
 	{
-		return NULL;
+		return nullptr;
 	}
 	return getChild<CompoundDataPlug>( g_firstPlugIndex );
 }

@@ -177,7 +177,7 @@ struct UnusableFromNone
 
 	static void *convertible( PyObject *obj )
 	{
-		return obj == Py_None ? obj : NULL;
+		return obj == Py_None ? obj : nullptr;
 	}
 
 	static void construct( PyObject *obj, boost::python::converter::rvalue_from_python_stage1_data *data )

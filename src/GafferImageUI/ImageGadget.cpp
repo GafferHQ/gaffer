@@ -72,7 +72,7 @@ using namespace GafferImageUI;
 
 ImageGadget::ImageGadget()
 	:	Gadget( defaultName<ImageGadget>() ),
-		m_image( NULL ),
+		m_image( nullptr ),
 		m_soloChannel( -1 ),
 		m_dirtyFlags( AllDirty )
 {
@@ -413,7 +413,7 @@ void ImageGadget::updateTiles() const
 			glTexParameteri( GL_TEXTURE_2D, GL_TEXTURE_WRAP_S, GL_CLAMP_TO_EDGE );
 			glTexParameteri( GL_TEXTURE_2D, GL_TEXTURE_WRAP_T, GL_CLAMP_TO_EDGE );
 
-			it->second.channelDataToConvert = NULL;
+			it->second.channelDataToConvert = nullptr;
 		}
 	}
 	m_dirtyFlags &= ~TilesDirty;

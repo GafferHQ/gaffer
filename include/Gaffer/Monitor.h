@@ -62,7 +62,7 @@ class Monitor : boost::noncopyable
 			public :
 
 				/// Constructing the Scope makes the monitor active.
-				/// If monitor is NULL, the Scope is a no-op.
+				/// If monitor is null, the Scope is a no-op.
 				Scope( Monitor *monitor );
 				/// Destruction of the Scope makes the monitor inactive.
 				~Scope();

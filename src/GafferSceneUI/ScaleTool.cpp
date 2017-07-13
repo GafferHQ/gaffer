@@ -144,7 +144,7 @@ IECore::RunTimeTypedPtr ScaleTool::dragBegin( GafferUI::Style::Axes axes )
 {
 	m_drag = createScale( axes );
 	TransformTool::dragBegin();
-	return NULL; // Let the handle start the drag.
+	return nullptr; // Let the handle start the drag.
 }
 
 bool ScaleTool::dragMove( const GafferUI::Gadget *gadget, const GafferUI::DragDropEvent &event )

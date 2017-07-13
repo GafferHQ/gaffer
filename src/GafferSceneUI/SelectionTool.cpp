@@ -259,7 +259,7 @@ IECore::RunTimeTypedPtr SelectionTool::dragBegin( GafferUI::Gadget *gadget, cons
 			return dragData;
 		}
 	}
-	return NULL;
+	return nullptr;
 }
 
 bool SelectionTool::dragEnter( const GafferUI::Gadget *gadget, const GafferUI::DragDropEvent &event )

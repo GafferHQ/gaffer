@@ -105,7 +105,7 @@ void Sampler::cachedData( Imath::V2i p, const float *& tileData, Imath::V2i &til
 	int cacheI = cacheIndex.x + cacheIndex.y * m_cacheWidth;
 	const float *(&cacheTileRawPtr) = m_dataCacheRaw[ cacheI ];
 
-	if ( cacheTileRawPtr == NULL )
+	if ( cacheTileRawPtr == nullptr )
 	{
 		// Get the origin of the tile we want.
 		Imath::V2i tileOrigin = ( ImagePlug::tileIndex( m_cacheWindow.min ) + cacheIndex ) * ImagePlug::tileSize();

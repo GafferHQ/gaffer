@@ -88,20 +88,20 @@ const Gaffer::Plug *ArnoldShader::correspondingInput( const Gaffer::Plug *output
 	const CompoundData *metadata = ArnoldShader::metadata();
 	if( !metadata )
 	{
-		return NULL;
+		return nullptr;
 	}
 
 	const StringData *primaryInput = static_cast<const StringData*>( metadata->member<IECore::CompoundData>( "shader" )->member<IECore::Data>( "primaryInput" ) );
 	if( !primaryInput )
 	{
-		return NULL;
+		return nullptr;
 	}
 
 	const Plug *result = parametersPlug()->getChild<Plug>( primaryInput->readable() );
 	if( !result )
 	{
 		IECore::msg( IECore::Msg::Error, "ArnoldShader::correspondingInput", boost::format( "Parameter \"%s\" does not exist" ) % primaryInput->readable() );
-		return NULL;
+		return nullptr;
 	}
 
 	return result;
@@ -188,7 +188,7 @@ static IECore::ConstCompoundDataPtr metadataGetter( const std::string &key, size
 	metadata->writable()["parameter"] = parameterMetadata;
 
 	const char* value;
-	if( AiMetaDataGetStr( shader, /* look up metadata on node, not on parameter */ NULL , "primaryInput", &value ) )
+	if( AiMetaDataGetStr( shader, /* look up metadata on node, not on parameter */ nullptr , "primaryInput", &value ) )
 	{
 		shaderMetadata->writable()["primaryInput"] = new StringData( value );
 	}

@@ -127,7 +127,7 @@ bool MatchPatternPathFilter::remove( PathPtr path ) const
 	}
 
 	IECore::ConstStringDataPtr propertyData;
-	const std::string *propertyValue = NULL;
+	const std::string *propertyValue = nullptr;
 	if( m_propertyName == g_namePropertyName )
 	{
 		if( !path->names().size() )

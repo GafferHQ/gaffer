@@ -77,7 +77,7 @@ class ImageProcessor : public ImageNode
 		const ImagePlug *inPlug() const;
 
 		/// For nodes with multiple inputs, returns the ArrayPlug which
-		/// hosts them. For single input nodes, returns NULL;
+		/// hosts them. For single input nodes, returns null.
 		Gaffer::ArrayPlug *inPlugs();
 		const Gaffer::ArrayPlug *inPlugs() const;
 

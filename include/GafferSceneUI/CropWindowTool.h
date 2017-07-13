@@ -84,7 +84,7 @@ class CropWindowTool : public GafferUI::Tool
 
 		bool m_needCropWindowPlugSearch;
 		Gaffer::Box2fPlugPtr m_cropWindowPlug;
-		Gaffer::BoolPlugPtr m_cropWindowEnabledPlug; // may be NULL, even when m_cropWindowPlug is not
+		Gaffer::BoolPlugPtr m_cropWindowEnabledPlug; // may be null, even when m_cropWindowPlug is not
 		boost::signals::scoped_connection m_cropWindowPlugDirtiedConnection;
 
 		bool m_overlayDirty;

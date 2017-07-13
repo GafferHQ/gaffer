@@ -437,7 +437,7 @@ void TransformTool::updateSelection() const
 
 	// Find the selected path, and early out if it's not valid.
 	Selection newSelection;
-	if( const IECore::StringVectorData *selection = view()->getContext()->get<IECore::StringVectorData>( "ui:scene:selectedPaths", NULL ) )
+	if( const IECore::StringVectorData *selection = view()->getContext()->get<IECore::StringVectorData>( "ui:scene:selectedPaths", nullptr ) )
 	{
 		if( selection->readable().size() == 1 )
 		{

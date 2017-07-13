@@ -83,7 +83,7 @@ IECoreGL::ConstRenderablePtr objectToRenderable( const IECore::Object *object )
 	}
 	catch( ... )
 	{
-		return NULL;
+		return nullptr;
 	}
 }
 
@@ -113,7 +113,7 @@ void deferReferenceRemoval( boost::intrusive_ptr<T> &o )
 {
 	// insert() can be called concurrently with other inserts.
 	g_pendingReferenceRemovals.insert( o );
-	o = NULL;
+	o = nullptr;
 }
 
 void doPendingReferenceRemovals()
@@ -171,7 +171,7 @@ class SceneGadget::SceneGraph
 			clear();
 		}
 
-		void render( IECoreGL::State *currentState, IECoreGL::Selector *selector = NULL ) const
+		void render( IECoreGL::State *currentState, IECoreGL::Selector *selector = nullptr ) const
 		{
 			if( !m_visible || !valid() )
 			{
@@ -420,7 +420,7 @@ class SceneGadget::UpdateTask : public tbb::task
 
 
 
-					IECoreGL::ConstStatePtr visState = NULL;
+					IECoreGL::ConstStatePtr visState = nullptr;
 
 					deferReferenceRemoval( m_sceneGraph->m_attributesRenderable );
 					m_sceneGraph->m_attributesRenderable = AttributeVisualiser::allVisualisations( attributes.get(), visState );
@@ -446,7 +446,7 @@ class SceneGadget::UpdateTask : public tbb::task
 			if( !m_sceneGraph->m_visible )
 			{
 				// No need to update further since we're not visible.
-				return NULL;
+				return nullptr;
 			}
 			else if( !previouslyVisible )
 			{
@@ -519,7 +519,7 @@ class SceneGadget::UpdateTask : public tbb::task
 						IECoreGL::CachedConverter::defaultCachedConverter()->convert( curvesBound.get() )
 					);
 				}
-				return NULL;
+				return nullptr;
 			}
 
 			// We are expanded, so we need to visit all the children
@@ -577,7 +577,7 @@ class SceneGadget::UpdateTask : public tbb::task
 				m_sceneGraph->m_bound.extendBy( childBound );
 			}
 
-			return NULL;
+			return nullptr;
 		}
 
 	private :
@@ -611,8 +611,8 @@ class SceneGadget::UpdateTask : public tbb::task
 
 SceneGadget::SceneGadget()
 	:	Gadget( defaultName<SceneGadget>() ),
-		m_scene( NULL ),
-		m_context( NULL ),
+		m_scene( nullptr ),
+		m_context( nullptr ),
 		m_dirtyFlags( UpdateTask::AllDirty ),
 		m_expandedPaths( new PathMatcherData ),
 		m_minimumExpansionDepth( 0 ),

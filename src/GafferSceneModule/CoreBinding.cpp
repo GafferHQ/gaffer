@@ -66,7 +66,7 @@ struct ScenePathFromInternedStringVectorData
 	{
 		boost::python::converter::registry::push_back(
 			&convertible,
-			NULL,
+			nullptr,
 			boost::python::type_id<ScenePlug::ScenePath>()
 		);
 	}
@@ -82,7 +82,7 @@ struct ScenePathFromInternedStringVectorData
 			}
 		}
 
-		return NULL;
+		return nullptr;
 	}
 
 };
@@ -108,7 +108,7 @@ struct ScenePathFromString
 		{
 			return obj;
 		}
-		return NULL;
+		return nullptr;
 	}
 
 	static void construct( PyObject *obj, boost::python::converter::rvalue_from_python_stage1_data *data )

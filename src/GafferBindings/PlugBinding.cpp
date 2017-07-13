@@ -159,7 +159,7 @@ std::string PlugSerialiser::flagsRepr( unsigned flags )
 	std::string nonDefaultButOn;
 	for( int i=0; names[i]; i++ )
 	{
-		std::string *s = NULL;
+		std::string *s = nullptr;
 		if( flags & values[i] )
 		{
 			if( !(values[i] & Plug::Default) )

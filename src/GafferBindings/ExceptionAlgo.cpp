@@ -62,7 +62,7 @@ std::string formatPythonException( bool withStacktrace, int *lineNumber )
 
 	object exception( ( handle<>( exceptionPyObject ) ) );
 
-	// valuePyObject and tracebackPyObject may be NULL.
+	// valuePyObject and tracebackPyObject may be null.
 	object value;
 	if( valuePyObject )
 	{

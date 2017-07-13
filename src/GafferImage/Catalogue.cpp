@@ -184,7 +184,7 @@ class Catalogue::InternalImage : public ImageNode
 				copyChannels()->inPlugs()->getChild<Plug>( numDisplays++ )->setInput( displayCopy->outPlug() );
 			}
 
-			m_saver = NULL;
+			m_saver = nullptr;
 			if( other->m_saver )
 			{
 				m_saver = other->m_saver;
@@ -512,7 +512,7 @@ class Catalogue::InternalImage : public ImageNode
 					}
 
 					// Destroy the image to release the memory used by the copied display drivers.
-					m_imageCopy = NULL;
+					m_imageCopy = nullptr;
 				}
 
 				void wrapUpClient( InternalImage *client )
@@ -525,7 +525,7 @@ class Catalogue::InternalImage : public ImageNode
 					// so that we can reuse the cache entries created by the original
 					// Display nodes, rather than force an immediate load of the image
 					// from disk, which would be slow.
-					client->outPlug()->channelDataPlug()->setInput( NULL );
+					client->outPlug()->channelDataPlug()->setInput( nullptr );
 
 					client->removeDisplays();
 					client->updateImageFlags( Plug::Serialisable, true );
@@ -737,7 +737,7 @@ Catalogue::InternalImage *Catalogue::imageNode( Image *image )
 
 const Catalogue::InternalImage *Catalogue::imageNode( const Image *image )
 {
-	const InternalImage *result = NULL;
+	const InternalImage *result = nullptr;
 	for( DownstreamIterator it( image->fileNamePlug() ); !it.done(); ++it )
 	{
 		if( const InternalImage *internalImage = dynamic_cast<const InternalImage *>( it->node() ) )
@@ -844,7 +844,7 @@ void Catalogue::imageRemoved( GraphComponent *graphComponent )
 			}
 			else
 			{
-				element->setInput( NULL );
+				element->setInput( nullptr );
 			}
 		}
 	}

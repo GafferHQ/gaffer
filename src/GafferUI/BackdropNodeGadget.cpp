@@ -172,7 +172,7 @@ void BackdropNodeGadget::frame( const std::vector<Gaffer::Node *> &nodes )
 		NodeGadget *nodeGadget = graph->nodeGadget( *it );
 		if( nodeGadget )
 		{
-			b.extendBy( nodeGadget->transformedBound( NULL ) );
+			b.extendBy( nodeGadget->transformedBound( nullptr ) );
 		}
 	}
 

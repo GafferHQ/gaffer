@@ -96,7 +96,7 @@ class Renderer : public IECore::RefCounted
 		typedef IECore::Display Output;
 
 		/// Sets a global option for the render. In interactive renders an option may
-		/// be unset by passing a NULL value.
+		/// be unset by passing a null value.
 		///
 		/// Standard Options
 		/// ----------------
@@ -106,7 +106,7 @@ class Renderer : public IECore::RefCounted
 		/// "sampleMotion", BoolData, true, Whether to actually render motion blur.  Disable to render with motion blocks set up but no real blur.
 		virtual void option( const IECore::InternedString &name, const IECore::Data *value ) = 0;
 		/// Adds an output image to be rendered, In interactive renders an output may be
-		/// removed by passing NULL as the value.
+		/// removed by passing nullptr as the value.
 		virtual void output( const IECore::InternedString &name, const Output *output ) = 0;
 
 		IE_CORE_FORWARDDECLARE( AttributesInterface );
@@ -240,8 +240,8 @@ class Renderer : public IECore::RefCounted
 		virtual ObjectInterfacePtr camera( const std::string &name, const IECore::Camera *camera, const AttributesInterface *attributes ) = 0;
 
 		/// Adds a named light with the initially supplied set of attributes, which are expected
-		/// to provide at least a light shader. Object may be non-NULL to specify arbitrary geometry
-		/// for a geometric area light, or NULL to indicate that the light shader specifies its own
+		/// to provide at least a light shader. Object may be non-null to specify arbitrary geometry
+		/// for a geometric area light, or null to indicate that the light shader specifies its own
 		/// geometry internally (or is non-geometric in nature).
 		/// \todo Should object be typed as Primitive?
 		virtual ObjectInterfacePtr light( const std::string &name, const IECore::Object *object, const AttributesInterface *attributes ) = 0;

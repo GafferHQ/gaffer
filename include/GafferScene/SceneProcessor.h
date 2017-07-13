@@ -78,7 +78,7 @@ class SceneProcessor : public SceneNode
 		const ScenePlug *inPlug() const;
 
 		/// For nodes with multiple inputs, returns the ArrayPlug which
-		/// hosts them. For single input nodes, returns NULL;
+		/// hosts them. For single input nodes, returns nullptr;
 		Gaffer::ArrayPlug *inPlugs();
 		const Gaffer::ArrayPlug *inPlugs() const;
 

@@ -145,7 +145,7 @@ class DispatcherWrapper : public NodeWrapper<Dispatcher>
 			{
 				return const_cast<TaskNode::TaskPlug *>( p );
 			}
-			return NULL;
+			return nullptr;
 		}
 
 		static ContextPtr taskBatchGetContext( const Dispatcher::TaskBatchPtr &batch, bool copy = true )

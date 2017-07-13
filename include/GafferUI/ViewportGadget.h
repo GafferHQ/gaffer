@@ -61,7 +61,7 @@ class ViewportGadget : public Gadget
 
 		typedef boost::signal<void (ViewportGadget *)> UnarySignal;
 
-		ViewportGadget( GadgetPtr primaryChild = NULL );
+		ViewportGadget( GadgetPtr primaryChild = nullptr );
 		virtual ~ViewportGadget();
 
 		IE_CORE_DECLARERUNTIMETYPEDEXTENSION( GafferUI::ViewportGadget, ViewportGadgetTypeId, Gadget );

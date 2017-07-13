@@ -73,7 +73,7 @@ struct CustomGadgetCreator
 		{
 			GafferBindings::translatePythonException();
 		}
-		return NULL;
+		return nullptr;
 	}
 
 	private :

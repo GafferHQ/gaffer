@@ -123,7 +123,7 @@ Gaffer::Node *DotNodeGadget::upstreamNode()
 	{
 		plug = plug->getInput<Plug>();
 	}
-	return plug ? plug->node() : NULL;
+	return plug ? plug->node() : nullptr;
 }
 
 void DotNodeGadget::plugDirtied( const Gaffer::Plug *plug )

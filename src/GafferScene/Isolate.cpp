@@ -76,7 +76,7 @@ struct Isolate::SetsToKeep
 			}
 			else
 			{
-				m_sets[i] = NULL;
+				m_sets[i] = nullptr;
 			}
 		}
 	}

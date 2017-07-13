@@ -167,7 +167,7 @@ void Node::parentChanging( Gaffer::GraphComponent *newParent )
 
 		for( vector<PlugPtr>::const_iterator it = toDisconnect.begin(), eIt = toDisconnect.end(); it != eIt; ++it )
 		{
-			(*it)->setInput( NULL );
+			(*it)->setInput( nullptr );
 		}
 	}
 }

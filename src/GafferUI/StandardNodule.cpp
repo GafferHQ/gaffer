@@ -158,7 +158,7 @@ void StandardNodule::renderLabel( const Style *style ) const
 		return;
 	}
 
-	const std::string *label = NULL;
+	const std::string *label = nullptr;
 	IECore::ConstStringDataPtr labelData = Metadata::value<IECore::StringData>( plug(), g_labelKey );
 	if( labelData )
 	{

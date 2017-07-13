@@ -154,7 +154,7 @@ const Gaffer::Plug *ShaderPlug::shaderOutPlug() const
 	if( source == this )
 	{
 		// No input
-		return NULL;
+		return nullptr;
 	}
 	return source;
 }

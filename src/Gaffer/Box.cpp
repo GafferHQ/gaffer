@@ -183,7 +183,7 @@ BoxPtr Box::create( Node *parent, const Set *childNodes )
 					PlugMap::const_iterator mapIt = plugMap.find( input );
 					if( mapIt == plugMap.end() )
 					{
-						plug->setInput( NULL ); // To allow promotion
+						plug->setInput( nullptr ); // To allow promotion
 						PlugPtr promoted = PlugAlgo::promote( plug );
 						promoted->setInput( input );
 						plugMap.insert( PlugPair( input, promoted.get() ) );

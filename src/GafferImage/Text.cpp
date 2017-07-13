@@ -69,7 +69,7 @@ namespace
 FT_Library library()
 {
 	typedef tbb::enumerable_thread_specific<FT_Library> ThreadSpecificLibrary;
-	static ThreadSpecificLibrary g_threadLibraries( FT_Library( NULL ) );
+	static ThreadSpecificLibrary g_threadLibraries( FT_Library( nullptr ) );
 
 	FT_Library &l = g_threadLibraries.local();
 	if( !l )
@@ -98,7 +98,7 @@ FacePtr faceLoader( const std::string &font, size_t &cost )
 		throw Exception( boost::str( boost::format( "Unable to find font \"%s\"." ) % font ) );
 	}
 
-	FT_Face face = NULL;
+	FT_Face face = nullptr;
 	FT_Error error = FT_New_Face( library(), file.c_str(), 0, &face );
 	// We use a smart pointer now to make sure we call FT_Done_Face no matter what.
 	FacePtr result( face, FT_Done_Face );
@@ -126,7 +126,7 @@ FacePtr face( const string &font, const V2i &size )
 
 	FacePtr face = g_faceCaches.local()->get( font );
 
-	FT_Set_Transform( face.get(), NULL, NULL );
+	FT_Set_Transform( face.get(), nullptr, nullptr );
 	FT_Error error = FT_Set_Pixel_Sizes( face.get(), size.x, size.y );
 	if( error )
 	{
