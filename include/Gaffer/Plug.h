@@ -179,9 +179,9 @@ class Plug : public GraphComponent
 		virtual void setInput( PlugPtr input );
 		/// Returns the immediate input to this Plug - the
 		/// one set with setInput().
-		template<typename T>
+		template<typename T=Plug>
 		T *getInput();
-		template<typename T>
+		template<typename T=Plug>
 		const T *getInput() const;
 		/// The immediate input to this Plug as returned by getInput() may
 		/// itself have an input, which may itself have an input and so on.
@@ -193,9 +193,9 @@ class Plug : public GraphComponent
 		/// \note The cast to type T is performed after finding the
 		/// source, and not on the intermediate inputs along
 		/// the way.
-		template<typename T>
+		template<typename T=Plug>
 		T *source();
-		template<typename T>
+		template<typename T=Plug>
 		const T *source() const;
 		/// Removes all outputs from this plug.
 		void removeOutputs();
