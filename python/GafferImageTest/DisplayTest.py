@@ -326,11 +326,7 @@ class DisplayTest( GafferImageTest.ImageTestCase ) :
 
 		self.Driver.sendImage( imageReader["out"], port = 2500 )
 
-		# Display doesn't handle image metadata, so we must erase it before comparing the images
-		inImage = imageReader["out"].image()
-		inImage.blindData().clear()
-
-		self.assertEqual( inImage, node["out"].image() )
+		self.assertImagesEqual( imageReader["out"], node["out"], ignoreMetadata = True )
 
 		self.assertEqual( len( imagesReceived ), 1 )
 		self.assertEqual( imagesReceived[0][0], node["out"] )
