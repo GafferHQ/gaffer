@@ -49,5 +49,5 @@ surface splineParameters
 {
 	float t = splineinverse( colorSplineBasis, v, colorSplinePositions  );
 	color c = spline( colorSplineBasis, t, colorSplineValues );
-	Ci = c * emission();
+	Ci = c * emission() + debug( "R", "type", "float", "value", color( c[0] ) );
 }

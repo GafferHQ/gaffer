@@ -44,6 +44,7 @@ import GafferTest
 import GafferScene
 import GafferOSL
 import GafferOSLTest
+import GafferImage
 
 class OSLShaderTest( GafferOSLTest.OSLTestCase ) :
 
@@ -734,6 +735,49 @@ class OSLShaderTest( GafferOSLTest.OSLTestCase ) :
 				]
 			)
 		)
+
+	def testSplineParameterEvaluation( self ) :
+
+		numSamples = 100
+
+		s = self.compileShader( os.path.dirname( __file__ ) + "/shaders/splineParameters.osl" )
+		n = GafferOSL.OSLShader()
+		n.loadShader( s )
+
+		points = [
+			( 0, IECore.Color3f( 0.5 ) ),
+			( 0.3, IECore.Color3f( 0.2 ) ),
+			( 0.6, IECore.Color3f( 1 ) ),
+			( 0.65, IECore.Color3f( 0.5 ) ),
+			( 0.9, IECore.Color3f( 0.7 ) ),
+			( 1, IECore.Color3f( 1 ) )
+		]
+	
+		constant = GafferImage.Constant( "Constant" )
+		constant["format"].setValue( GafferImage.Format( 1, numSamples, 1.000 ) )
+
+		image = GafferOSL.OSLImage()
+		image["in"].setInput( constant["out"] )
+
+		image["shader"].setInput( n["out"] )
+
+		for interpolation in [
+			Gaffer.SplineDefinitionInterpolation.Linear,
+			Gaffer.SplineDefinitionInterpolation.CatmullRom,
+			Gaffer.SplineDefinitionInterpolation.BSpline,
+			Gaffer.SplineDefinitionInterpolation.MonotoneCubic
+			]:
+
+			n["parameters"]["colorSpline"].setValue( Gaffer.SplineDefinitionfColor3f( points, interpolation ) )
+
+			oslSamples = list( reversed( image['out'].image()["R"].data ) )
+
+			s = n['parameters']['colorSpline'].getValue().spline()
+			cortexSamples = [ s( ( i + 0.5 ) / numSamples )[0] for i in range( numSamples ) ]
+
+			for a, b in zip( oslSamples, cortexSamples ):
+				self.assertAlmostEqual( a, b, places = 4 )
+
 
 	def testArrays( self ) :
 
