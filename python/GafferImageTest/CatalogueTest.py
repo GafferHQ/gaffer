@@ -46,40 +46,17 @@ import GafferImageTest
 
 class CatalogueTest( GafferImageTest.ImageTestCase ) :
 
-	def setUp( self ) :
-
-		GafferImageTest.ImageTestCase.setUp( self )
-
-		# Emulate the UI
-		self.__executeOnUIThreadConnection = GafferImage.Display.executeOnUIThreadSignal().connect( lambda f : f() )
-
-	def tearDown( self ) :
-
-		self.__executeOnUIThreadConnection.disconnect()
-
 	@staticmethod
 	def sendImage( image, catalogue, extraParameters = {} ) :
+
+		driver = GafferImageTest.DisplayTest.Driver.sendImage( image, GafferImage.Catalogue.displayDriverServer().portNumber(), extraParameters )
 
 		if catalogue["directory"].getValue() :
 
 			# When the image has been received, the Catalogue will
 			# save it to disk on a background thread, and we need
-			# to wait for that to complete. The background thread uses
-			# executeOnUIThread to signal completion, so we can hook
-			# into that.
-			semaphore = threading.Semaphore( 0 )
-
-			def f( f ) :
-
-				if catalogue["images"][-1]["fileName"].getValue() :
-					semaphore.release()
-
-			c = GafferImage.Display.executeOnUIThreadSignal().connect( f )
-
-		GafferImageTest.DisplayTest.sendImage( image, GafferImage.Catalogue.displayDriverServer().portNumber(), extraParameters )
-
-		if catalogue["directory"].getValue() :
-			semaphore.acquire()
+			# to wait for that to complete.
+			driver.performExpectedUIThreadExecution()
 
 	def testImages( self ) :
 
