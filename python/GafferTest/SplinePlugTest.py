@@ -63,6 +63,12 @@ class SplinePlugTest( GafferTest.TestCase ) :
 		self.assertTrue( d.trimEndPoints() )
 		self.assertEqual( d.points(), ((0, 0), (1,1)) )
 
+		d = Gaffer.SplineDefinitionff( ((0, 0), (0,0), (0,0), (1,1), (1,1), (1,1)), Gaffer.SplineDefinitionInterpolation.MonotoneCubic )
+		self.assertEqual( d.points(), ((0, 0), (0,0), (0,0), (1,1), (1,1), (1,1)) )
+		self.assertEqual( d.interpolation, Gaffer.SplineDefinitionInterpolation.MonotoneCubic )
+		self.assertTrue( d.trimEndPoints() )
+		self.assertEqual( d.points(), ((0, 0), (0,0), (0,0), (1,1), (1,1), (1,1)) )
+
 		d = Gaffer.SplineDefinitionff( ((0, 0), (0,0), (1,1), (1,1)), Gaffer.SplineDefinitionInterpolation.BSpline )
 		self.assertFalse( d.trimEndPoints() ) # Not enough CVs for BSpline
 	
