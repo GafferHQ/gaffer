@@ -367,14 +367,11 @@ class DisplayTest( GafferImageTest.ImageTestCase ) :
 
 	def __assertTilesChangedInRegion( self, t1, t2, region ) :
 
-		# Box2i.intersect assumes inclusive bounds, so make region inclusive
-		inclusiveRegion = IECore.Box2i( region.min, region.max - IECore.V2i( 1 ) )
-
 		for tileOriginTuple in t1.keys() :
 			tileOrigin = IECore.V2i( *tileOriginTuple )
-			tileRegion = IECore.Box2i( tileOrigin, tileOrigin + IECore.V2i( GafferImage.ImagePlug.tileSize() - 1 ) )
+			tileRegion = IECore.Box2i( tileOrigin, tileOrigin + IECore.V2i( GafferImage.ImagePlug.tileSize() ) )
 
-			if tileRegion.intersects( inclusiveRegion ) :
+			if GafferImage.BufferAlgo.intersects( tileRegion, region ) :
 				self.assertNotEqual( t1[tileOriginTuple], t2[tileOriginTuple] )
 			else :
 				self.assertEqual( t1[tileOriginTuple], t2[tileOriginTuple] )
