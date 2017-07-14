@@ -58,11 +58,11 @@ def getOption( name, default ) :
 # parse SConstruct file for the gafferVersion
 ##########################################################################
 
-def getGafferVersion() :
+def gafferRegistryVersion() :
 
 	import re
 	sconsFile = "SConstruct"
-	versionVars = ["gafferMilestoneVersion", "gafferMajorVersion", "gafferMinorVersion",  "gafferPatchVersion"]
+	versionVars = ["gafferMilestoneVersion", "gafferMajorVersion"]
 	varsToFind = list(versionVars)
 
 	varsFound = {}
@@ -80,7 +80,7 @@ def getGafferVersion() :
 	if varsToFind:
 		raise Exception( "Could not find the gaffer version in the SConstruct file. Please review the parsing rules." )
 
-	return ".".join( map( lambda x: varsFound[x], versionVars ) )
+	return varsFound["gafferMilestoneVersion"] + "." + varsFound["gafferMajorVersion"] + ".0.0"
 
 
 cortexMajorVersion = getOption( "CORTEX_MAJOR_VERSION", os.environ["CORTEX_MAJOR_VERSION"] )
@@ -95,8 +95,7 @@ targetAppVersion = None
 ## Gaffer dependency versions in IEEnv. Should we instead have a
 ## more central "libraries we care about" section in IEEnv?
 
-gafferVersion = getGafferVersion()
-gafferReg = IEEnv.registry["apps"]["gaffer"][gafferVersion][IEEnv.platform()]
+gafferReg = IEEnv.registry["apps"]["gaffer"][gafferRegistryVersion()][IEEnv.platform()]
 qtVersion = gafferReg["qtVersion"]
 pyqtVersion = gafferReg.get( "pyqtVersion", "4.8.6" )
 oiioVersion = gafferReg["OpenImageIO"]
