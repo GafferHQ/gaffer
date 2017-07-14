@@ -317,8 +317,12 @@ class DisplayTest( GafferImageTest.ImageTestCase ) :
 		imageReader = GafferImage.ImageReader()
 		imageReader["fileName"].setValue( os.path.expandvars( fileName ) )
 
+		imagesReceived = GafferTest.CapturingSlot( GafferImage.Display.imageReceivedSignal() )
+
 		node = GafferImage.Display()
 		node["port"].setValue( 2500 )
+
+		self.assertEqual( len( imagesReceived ), 0 )
 
 		self.Driver.sendImage( imageReader["out"], port = 2500 )
 
@@ -327,6 +331,9 @@ class DisplayTest( GafferImageTest.ImageTestCase ) :
 		inImage.blindData().clear()
 
 		self.assertEqual( inImage, node["out"].image() )
+
+		self.assertEqual( len( imagesReceived ), 1 )
+		self.assertEqual( imagesReceived[0][0], node["out"] )
 
 		return node
 
