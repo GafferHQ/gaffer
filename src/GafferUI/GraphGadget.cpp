@@ -1341,7 +1341,7 @@ void GraphGadget::calculateDragSnapOffsets( Gaffer::Set *nodes )
 
 			m_dragSnapOffsets[snapAxis].push_back( offset );
 
-			// compute an offset that will position the node snugly next to its input
+			// compute an offset that will position the node neatly next to its input
 			// in the other axis.
 
 			Box3f srcNodeBound = srcNodeGadget->transformedBound( nullptr );
@@ -1350,11 +1350,11 @@ void GraphGadget::calculateDragSnapOffsets( Gaffer::Set *nodes )
 			const int otherAxis = snapAxis == 1 ? 0 : 1;
 			if( otherAxis == 1 )
 			{
-				offset = dstNodeBound.max[otherAxis] - srcNodeBound.min[otherAxis] + 1.0f;
+				offset = dstNodeBound.max[otherAxis] - srcNodeBound.min[otherAxis] + 4.0f;
 			}
 			else
 			{
-				offset = dstNodeBound.min[otherAxis] - srcNodeBound.max[otherAxis] - 1.0f;
+				offset = dstNodeBound.min[otherAxis] - srcNodeBound.max[otherAxis] - 4.0f;
 			}
 
 			if( dstNodule->plug()->node() == node )
