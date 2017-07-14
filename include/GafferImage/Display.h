@@ -79,8 +79,6 @@ class Display : public ImageNode
 		typedef boost::signal<void ( IECore::DisplayDriver *driver, const IECore::CompoundData *parameters )> DriverCreatedSignal;
 		static DriverCreatedSignal &driverCreatedSignal();
 
-		/// Emitted when a new bucket is received.
-		static UnaryPlugSignal &dataReceivedSignal();
 		/// Emitted when a complete image has been received.
 		static UnaryPlugSignal &imageReceivedSignal();
 
