@@ -1,3 +1,11 @@
+0.34.0.2
+========
+
+Fixes
+-----
+
+- GLWidgetBinding : Fixed host resource sharing for Qt4 hosts (#2171)
+
 0.34.0.1
 ========
 
