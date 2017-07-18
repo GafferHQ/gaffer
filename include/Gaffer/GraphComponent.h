@@ -89,7 +89,7 @@ class GraphComponent : public IECore::RunTimeTyped, public boost::signals::track
 		/// Returns the full path name from the topmost parent to this component.
 		std::string fullName() const;
 		/// Returns the relative path name from the specified ancestor to this component.
-		/// Passing NULL for ancestor yields the same result as calling fullName().
+		/// Passing nullptr for ancestor yields the same result as calling fullName().
 		std::string relativeName( const GraphComponent *ancestor ) const;
 		/// A signal which is emitted whenever a name is changed.
 		UnarySignal &nameChangedSignal();
@@ -139,52 +139,52 @@ class GraphComponent : public IECore::RunTimeTyped, public boost::signals::track
 		/// \undoable
 		void clearChildren();
 		/// Get an immediate child by name, performing a runTimeCast to T.
-		template<typename T>
+		template<typename T=GraphComponent>
 		T *getChild( const IECore::InternedString &name );
 		/// Get an immediate child by name, performing a runTimeCast to T.
-		template<typename T>
+		template<typename T=GraphComponent>
 		const T *getChild( const IECore::InternedString &name ) const;
 		/// Get a child by index, performing a runTimeCast to T.
 		/// Note that this function does not perform any bounds checking.
-		template<typename T>
+		template<typename T=GraphComponent>
 		inline T *getChild( size_t index );
 		/// Get a child by index, performing a runTimeCast to T.
 		/// Note that this function does not perform any bounds checking.
-		template<typename T>
+		template<typename T=GraphComponent>
 		inline const T *getChild( size_t index ) const;
 		/// Read only access to the internal container of children. This
 		/// is useful for iteration over children.
 		const ChildContainer &children() const;
 		/// Returns a descendant of this node specified by a "." separated
 		/// relative path, performing a runTimeCast to T.
-		template<typename T>
+		template<typename T=GraphComponent>
 		inline T *descendant( const std::string &relativePath );
 		/// Returns a descendant of this node specified by a "." separated
 		/// relative path, performing a runTimeCast to T.
-		template<typename T>
+		template<typename T=GraphComponent>
 		inline const T *descendant( const std::string &relativePath ) const;
 		/// Returns the parent for this component, performing a runTimeCast to T.
-		template<typename T>
+		template<typename T=GraphComponent>
 		T *parent();
 		/// Returns the parent for this component, performing a runTimeCast to T.
-		template<typename T>
+		template<typename T=GraphComponent>
 		const T *parent() const;
 		/// Returns the first ancestor of type T.
-		template<typename T>
+		template<typename T=GraphComponent>
 		T *ancestor();
 		/// Returns the first ancestor of type T.
-		template<typename T>
+		template<typename T=GraphComponent>
 		const T *ancestor() const;
 		/// As above, but taking a TypeId to specify type - this is mainly provided for the binding.
 		GraphComponent *ancestor( IECore::TypeId ancestorType );
 		const GraphComponent *ancestor( IECore::TypeId ancestorType ) const;
 		/// Returns the first ancestor of type T which
 		/// is also an ancestor of other.
-		template<typename T>
+		template<typename T=GraphComponent>
 		T *commonAncestor( const GraphComponent *other );
 		/// Returns the first ancestor of type T which
 		/// is also an ancestor of other.
-		template<typename T>
+		template<typename T=GraphComponent>
 		const T *commonAncestor( const GraphComponent *other ) const;
 		/// As above, but taking a TypeId to specify type - this is mainly provided for the binding.
 		GraphComponent *commonAncestor( const GraphComponent *other, IECore::TypeId ancestorType );
@@ -200,7 +200,7 @@ class GraphComponent : public IECore::RunTimeTyped, public boost::signals::track
 		/// A signal emitted when the parent of this component changes. Slots should
 		/// be of the form void ( child, oldParent ). Note that in the special case
 		/// of a child being removed from the destructor of the parent, oldParent
-		/// will be NULL as it is no longer available.
+		/// will be null as it is no longer available.
 		BinarySignal &parentChangedSignal();
 		//@}
 
@@ -211,8 +211,8 @@ class GraphComponent : public IECore::RunTimeTyped, public boost::signals::track
 		/// in preparation for the new relationship - currently it allows
 		/// Plugs to remove their connections if they're about to have no parent.
 		/// In the special case of a child being removed from the destructor of the
-		/// parent, parent() will already be NULL in addition to newParent
-		/// being NULL - this is to avoid the temptation to access the dying parent.
+		/// parent, parent() will already be null in addition to newParent
+		/// being null - this is to avoid the temptation to access the dying parent.
 		///
 		/// Implementations should call the base class implementation
 		/// before doing their own thing.

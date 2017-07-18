@@ -355,9 +355,9 @@ class PathModel : public QAbstractItemModel
 
 	public :
 
-		PathModel( QObject *parent = NULL )
+		PathModel( QObject *parent = nullptr )
 			:	QAbstractItemModel( parent ),
-				m_rootItem( new Item( NULL, 0, NULL ) ),
+				m_rootItem( new Item( nullptr, 0, nullptr ) ),
 				m_flat( true ),
 				m_sortColumn( -1 ),
 				m_sortOrder( Qt::AscendingOrder )
@@ -393,7 +393,7 @@ class PathModel : public QAbstractItemModel
 		{
 			beginResetModel();
 			delete m_rootItem;
-			m_rootItem = new Item( root, 0, NULL );
+			m_rootItem = new Item( root, 0, nullptr );
 			endResetModel();
 		}
 
@@ -418,7 +418,7 @@ class PathModel : public QAbstractItemModel
 		{
 			if( !index.isValid() )
 			{
-				return NULL;
+				return nullptr;
 			}
 			return static_cast<Item *>( index.internalPointer() )->path();
 		}
@@ -899,7 +899,7 @@ PathPtr pathForIndex( uint64_t treeViewAddress, uint64_t modelIndexAddress )
 	PathModel *model = dynamic_cast<PathModel *>( treeView->model() );
 	if( !model )
 	{
-		return NULL;
+		return nullptr;
 	}
 
 	QModelIndex *modelIndex = reinterpret_cast<QModelIndex *>( modelIndexAddress );

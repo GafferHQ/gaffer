@@ -67,7 +67,7 @@ class GraphGadget : public ContainerGadget
 		/// Creates a graph showing the children of root, optionally
 		/// filtered by the specified set. Nodes are only displayed if
 		/// they are both a child of root and a member of filter.
-		GraphGadget( Gaffer::NodePtr root, Gaffer::SetPtr filter = NULL );
+		GraphGadget( Gaffer::NodePtr root, Gaffer::SetPtr filter = nullptr );
 
 		virtual ~GraphGadget();
 
@@ -75,24 +75,24 @@ class GraphGadget : public ContainerGadget
 
 		Gaffer::Node *getRoot();
 		const Gaffer::Node *getRoot() const;
-		void setRoot( Gaffer::NodePtr root, Gaffer::SetPtr filter = NULL );
+		void setRoot( Gaffer::NodePtr root, Gaffer::SetPtr filter = nullptr );
 		typedef boost::signal<void ( GraphGadget *, Gaffer::Node * )> RootChangedSignal;
 		/// A signal emitted when the root has been changed - the signature
 		/// of the signal is ( graphGadget, previousRoot ).
 		RootChangedSignal &rootChangedSignal();
 
-		/// May return NULL if no filter has been specified.
+		/// May return nullptr if no filter has been specified.
 		Gaffer::Set *getFilter();
 		const Gaffer::Set *getFilter() const;
 		void setFilter( Gaffer::SetPtr filter );
 
-		/// Returns the NodeGadget representing the specified node or NULL
+		/// Returns the NodeGadget representing the specified node or nullptr
 		/// if none exists.
 		NodeGadget *nodeGadget( const Gaffer::Node *node );
 		const NodeGadget *nodeGadget( const Gaffer::Node *node ) const;
 
 		/// Returns the ConnectionGadget representing the specified
-		/// destination Plug or NULL if none exists.
+		/// destination Plug or nullptr if none exists.
 		ConnectionGadget *connectionGadget( const Gaffer::Plug *dstPlug );
 		const ConnectionGadget *connectionGadget( const Gaffer::Plug *dstPlug ) const;
 
@@ -100,15 +100,15 @@ class GraphGadget : public ContainerGadget
 		/// to the specified plug and appends them to the connections vector.
 		/// Returns the new size of the vector. If excludedNodes is specified,
 		/// then connections to any nodes it contains will be ignored.
-		size_t connectionGadgets( const Gaffer::Plug *plug, std::vector<ConnectionGadget *> &connections, const Gaffer::Set *excludedNodes = NULL );
-		size_t connectionGadgets( const Gaffer::Plug *plug, std::vector<const ConnectionGadget *> &connections, const Gaffer::Set *excludedNodes = NULL ) const;
+		size_t connectionGadgets( const Gaffer::Plug *plug, std::vector<ConnectionGadget *> &connections, const Gaffer::Set *excludedNodes = nullptr );
+		size_t connectionGadgets( const Gaffer::Plug *plug, std::vector<const ConnectionGadget *> &connections, const Gaffer::Set *excludedNodes = nullptr ) const;
 
 		/// Finds all the ConnectionGadgets connected to the specified node and
 		/// appends them to the connections vector. Returns the new size of the
 		/// vector. If excludedNodes is specified, then connections to any
 		/// nodes it contains will be ignored.
-		size_t connectionGadgets( const Gaffer::Node *node, std::vector<ConnectionGadget *> &connections, const Gaffer::Set *excludedNodes = NULL );
-		size_t connectionGadgets( const Gaffer::Node *node, std::vector<const ConnectionGadget *> &connections, const Gaffer::Set *excludedNodes = NULL ) const;
+		size_t connectionGadgets( const Gaffer::Node *node, std::vector<ConnectionGadget *> &connections, const Gaffer::Set *excludedNodes = nullptr );
+		size_t connectionGadgets( const Gaffer::Node *node, std::vector<const ConnectionGadget *> &connections, const Gaffer::Set *excludedNodes = nullptr ) const;
 
 		/// Finds all the upstream NodeGadgets connected to the specified node
 		/// and appends them to the specified vector. Returns the new size of the vector.
@@ -206,7 +206,7 @@ class GraphGadget : public ContainerGadget
 		void updateDragSelection( bool dragEnd );
 
 		void updateGraph();
-		/// May return NULL if NodeGadget::create() returns NULL, signifying that
+		/// May return nullptr if NodeGadget::create() returns nullptr, signifying that
 		/// someone has registered a creator in order to hide all nodes of a certain type.
 		NodeGadget *addNodeGadget( Gaffer::Node *node );
 		void removeNodeGadget( const Gaffer::Node *node );

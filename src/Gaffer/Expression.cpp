@@ -59,7 +59,7 @@ size_t Expression::g_firstPlugIndex;
 IE_CORE_DEFINERUNTIMETYPED( Expression );
 
 Expression::Expression( const std::string &name )
-	:	ComputeNode( name ), m_engine( NULL )
+	:	ComputeNode( name ), m_engine( nullptr )
 {
 	storeIndexOfNextChild( g_firstPlugIndex );
 
@@ -144,7 +144,7 @@ void Expression::setExpression( const std::string &expression, const std::string
 				throw Exception( boost::str(
 					boost::format(
 						"Cannot both read from and write to plug \"%s\""
-					) % (*it)->relativeName( parent<GraphComponent>() )
+					) % (*it)->relativeName( parent() )
 				) );
 			}
 		}
@@ -404,8 +404,8 @@ void Expression::updatePlug( ValuePlug *parentPlug, size_t childIndex, ValuePlug
 		// See if we can reuse the existing plug
 		Plug *existingChildPlug = parentPlug->getChild<Plug>( childIndex );
 		if(
-			( existingChildPlug->direction() == Plug::In && existingChildPlug->getInput<Plug>() == plug ) ||
-			( existingChildPlug->direction() == Plug::Out && plug->getInput<Plug>() == existingChildPlug )
+			( existingChildPlug->direction() == Plug::In && existingChildPlug->getInput() == plug ) ||
+			( existingChildPlug->direction() == Plug::Out && plug->getInput() == existingChildPlug )
 		)
 		{
 			return;
@@ -467,7 +467,7 @@ std::string Expression::transcribe( const std::string &expression, bool toIntern
 		}
 		else
 		{
-			externalPlugs.push_back( NULL );
+			externalPlugs.push_back( nullptr );
 		}
 	}
 
@@ -491,7 +491,7 @@ Expression::EnginePtr Expression::Engine::create( const std::string engineType )
 	CreatorMap::const_iterator it = m.find( engineType );
 	if( it == m.end() )
 	{
-		return NULL;
+		return nullptr;
 	}
 	return it->second();
 }

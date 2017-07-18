@@ -120,7 +120,7 @@ class ValuePlug : public Plug
 
 		/// This constructor must be used by all derived classes which wish
 		/// to store their own values - without calling it defaultObjectValue()
-		/// and getObjectValue() will return NULL. The defaultValue will be
+		/// and getObjectValue() will return null. The defaultValue will be
 		/// referenced directly (not copied) and therefore must not be changed
 		/// after passing to the constructor. The defaultValue must be non-null.
 		/// When this constructor is used, the ValuePlug does not accept child
@@ -150,7 +150,7 @@ class ValuePlug : public Plug
 		/// If a precomputed hash is available it may be passed to avoid computing
 		/// it again unnecessarily. Passing an incorrect hash has dire consequences, so
 		/// use with care.
-		IECore::ConstObjectPtr getObjectValue( const IECore::MurmurHash *precomputedHash = NULL ) const;
+		IECore::ConstObjectPtr getObjectValue( const IECore::MurmurHash *precomputedHash = nullptr ) const;
 		/// Should be called by derived classes when they wish to set the plug
 		/// value - the value is referenced directly (not copied) and so must
 		/// not be changed following the call.

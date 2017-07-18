@@ -195,7 +195,7 @@ class Shader::NetworkBuilder
 			{
 				if( !parameterPlug )
 				{
-					return NULL;
+					return nullptr;
 				}
 
 				if( isOutputParameter( parameterPlug ) )
@@ -223,7 +223,7 @@ class Shader::NetworkBuilder
 						// out the other side.
 						if( const Plug *activeInPlug = switchNode->activeInPlug() )
 						{
-							source = activeInPlug->source<Plug>();
+							source = activeInPlug->source();
 						}
 					}
 
@@ -443,7 +443,7 @@ class Shader::NetworkBuilder
 			const Gaffer::Plug *effectiveParameter = this->effectiveParameter( parameter );
 			if( !effectiveParameter )
 			{
-				return NULL;
+				return nullptr;
 			}
 
 			const Shader *effectiveShader = static_cast<const Shader *>( effectiveParameter->node() );
@@ -751,7 +751,7 @@ IECore::DataPtr Shader::parameterValue( const Gaffer::Plug *parameterPlug ) cons
 		return Gaffer::CompoundDataPlug::extractDataFromPlug( valuePlug );
 	}
 
-	return NULL;
+	return nullptr;
 }
 
 void Shader::nameChanged()

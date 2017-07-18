@@ -74,12 +74,12 @@ const StringPlug *CompoundDataPlug::MemberPlug::namePlug() const
 
 BoolPlug *CompoundDataPlug::MemberPlug::enabledPlug()
 {
-	return children().size() > 2 ? getChild<BoolPlug>( 2 ) : NULL;
+	return children().size() > 2 ? getChild<BoolPlug>( 2 ) : nullptr;
 }
 
 const BoolPlug *CompoundDataPlug::MemberPlug::enabledPlug() const
 {
-	return children().size() > 2 ? getChild<BoolPlug>( 2 ) : NULL;
+	return children().size() > 2 ? getChild<BoolPlug>( 2 ) : nullptr;
 }
 
 bool CompoundDataPlug::MemberPlug::acceptsChild( const Gaffer::GraphComponent *potentialChild ) const

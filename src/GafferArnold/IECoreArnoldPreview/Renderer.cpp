@@ -34,18 +34,12 @@
 //
 //////////////////////////////////////////////////////////////////////////
 
-#include "tbb/tbb_config.h"
-
-#if TBB_IMPLEMENT_CPP0X
-#include "tbb/compat/thread"
-#else
 #include <thread>
-#endif
+#include <memory>
 
 #include "tbb/concurrent_vector.h"
 #include "tbb/concurrent_unordered_map.h"
 
-#include "boost/make_shared.hpp"
 #include "boost/format.hpp"
 #include "boost/algorithm/string.hpp"
 #include "boost/algorithm/string/predicate.hpp"
@@ -98,7 +92,7 @@ T *reportedCast( const IECore::RunTimeTyped *v, const char *type, const IECore::
 	}
 
 	IECore::msg( IECore::Msg::Warning, "IECoreArnold::Renderer", boost::format( "Expected %s but got %s for %s \"%s\"." ) % T::staticTypeName() % v->typeName() % type % name.c_str() );
-	return NULL;
+	return nullptr;
 }
 
 template<typename T>
@@ -343,8 +337,8 @@ class ArnoldOutput : public IECore::RefCounted
 
 	private :
 
-		boost::shared_ptr<AtNode> m_driver;
-		boost::shared_ptr<AtNode> m_filter;
+		std::shared_ptr<AtNode> m_driver;
+		std::shared_ptr<AtNode> m_filter;
 		std::string m_data;
 
 };
@@ -380,7 +374,7 @@ class ArnoldShader : public IECore::RefCounted
 
 		AtNode *root()
 		{
-			return !m_nodes.empty() ? m_nodes.back() : NULL;
+			return !m_nodes.empty() ? m_nodes.back() : nullptr;
 		}
 
 	private :
@@ -983,7 +977,7 @@ class ArnoldAttributes : public IECoreScenePreview::Renderer::AttributesInterfac
 			IECore::CompoundObject::ObjectMap::const_iterator it = attributes->members().find( name );
 			if( it == attributes->members().end() )
 			{
-				return NULL;
+				return nullptr;
 			}
 			return reportedCast<const T>( it->second.get(), "attribute", name );
 		}
@@ -1084,13 +1078,13 @@ class Instance
 
 	public :
 
-		Instance( boost::shared_ptr<AtNode> node, bool instanced )
+		Instance( std::shared_ptr<AtNode> node, bool instanced )
 			:	m_node( node )
 		{
 			if( instanced && node )
 			{
 				AiNodeSetByte( node.get(), "visibility", 0 );
-				m_ginstance = boost::shared_ptr<AtNode>( AiNode( "ginstance" ), AiNodeDestroy );
+				m_ginstance = std::shared_ptr<AtNode>( AiNode( "ginstance" ), AiNodeDestroy );
 				AiNodeSetPtr( m_ginstance.get(), "node", m_node.get() );
 			}
 		}
@@ -1102,8 +1096,8 @@ class Instance
 
 	private :
 
-		boost::shared_ptr<AtNode> m_node;
-		boost::shared_ptr<AtNode> m_ginstance;
+		std::shared_ptr<AtNode> m_node;
+		std::shared_ptr<AtNode> m_ginstance;
 
 };
 
@@ -1197,14 +1191,14 @@ class InstanceCache : public IECore::RefCounted
 
 	private :
 
-		boost::shared_ptr<AtNode> convert( const IECore::Object *object, const ArnoldAttributes *attributes )
+		std::shared_ptr<AtNode> convert( const IECore::Object *object, const ArnoldAttributes *attributes )
 		{
 			if( !object )
 			{
-				return boost::shared_ptr<AtNode>();
+				return std::shared_ptr<AtNode>();
 			}
 
-			AtNode *node = NULL;
+			AtNode *node = nullptr;
 			if( attributes->requiresBoxGeometry( object ) )
 			{
 				node = convertToBox( object );
@@ -1216,17 +1210,17 @@ class InstanceCache : public IECore::RefCounted
 
 			if( !node )
 			{
-				return boost::shared_ptr<AtNode>();
+				return std::shared_ptr<AtNode>();
 			}
 
 			attributes->applyGeometry( object, node );
 
-			return boost::shared_ptr<AtNode>( node, AiNodeDestroy );
+			return std::shared_ptr<AtNode>( node, AiNodeDestroy );
 		}
 
-		boost::shared_ptr<AtNode> convert( const std::vector<const IECore::Object *> &samples, const std::vector<float> &times, const ArnoldAttributes *attributes )
+		std::shared_ptr<AtNode> convert( const std::vector<const IECore::Object *> &samples, const std::vector<float> &times, const ArnoldAttributes *attributes )
 		{
-			AtNode *node = NULL;
+			AtNode *node = nullptr;
 			if( attributes->requiresBoxGeometry( samples.front() ) )
 			{
 				node = convertToBox( samples, times );
@@ -1238,16 +1232,16 @@ class InstanceCache : public IECore::RefCounted
 
 			if( !node )
 			{
-				return boost::shared_ptr<AtNode>();
+				return std::shared_ptr<AtNode>();
 			}
 
 			attributes->applyGeometry( samples.front(), node );
 
-			return boost::shared_ptr<AtNode>( node, AiNodeDestroy );
+			return std::shared_ptr<AtNode>( node, AiNodeDestroy );
 
 		}
 
-		typedef tbb::concurrent_hash_map<IECore::MurmurHash, boost::shared_ptr<AtNode> > Cache;
+		typedef tbb::concurrent_hash_map<IECore::MurmurHash, std::shared_ptr<AtNode> > Cache;
 		Cache m_cache;
 
 };
@@ -1270,7 +1264,7 @@ class ArnoldObject : public IECoreScenePreview::Renderer::ObjectInterface
 	public :
 
 		ArnoldObject( const Instance &instance )
-			:	m_instance( instance ), m_attributes( NULL )
+			:	m_instance( instance ), m_attributes( nullptr )
 		{
 		}
 
@@ -1400,7 +1394,7 @@ class ArnoldLight : public ArnoldObject
 
 			// Update light shader.
 
-			m_lightShader = NULL;
+			m_lightShader = nullptr;
 			if( !arnoldAttributes->lightShader() )
 			{
 				return true;
@@ -1423,7 +1417,7 @@ class ArnoldLight : public ArnoldObject
 				else
 				{
 					// Don't output mesh_lights from locations with no object
-					m_lightShader = NULL;
+					m_lightShader = nullptr;
 					return true;
 				}
 			}
@@ -1589,7 +1583,7 @@ class ArnoldRenderer : public IECoreScenePreview::Renderer
 
 		ArnoldRenderer( RenderType renderType, const std::string &fileName )
 			:	m_renderType( renderType ),
-				m_universeBlock( boost::make_shared<UniverseBlock>(  /* writable = */ true ) ),
+				m_universeBlock( new UniverseBlock(  /* writable = */ true ) ),
 				m_shaderCache( new ShaderCache ),
 				m_instanceCache( new InstanceCache ),
 				m_logFileFlags( g_logFlagsDefault ),
@@ -1612,7 +1606,7 @@ class ArnoldRenderer : public IECoreScenePreview::Renderer
 			AtNode *options = AiUniverseGetOptions();
 			if( name == g_frameOptionName )
 			{
-				if( value == NULL )
+				if( value == nullptr )
 				{
 					m_frame = boost::none;
 				}
@@ -1624,7 +1618,7 @@ class ArnoldRenderer : public IECoreScenePreview::Renderer
 			}
 			else if( name == g_cameraOptionName )
 			{
-				if( value == NULL )
+				if( value == nullptr )
 				{
 					m_cameraName = "";
 				}
@@ -1637,7 +1631,7 @@ class ArnoldRenderer : public IECoreScenePreview::Renderer
 			}
 			else if( name == g_logFileNameOptionName )
 			{
-				if( value == NULL )
+				if( value == nullptr )
 				{
 					AiMsgSetLogFileName( "" );
 				}
@@ -1663,7 +1657,7 @@ class ArnoldRenderer : public IECoreScenePreview::Renderer
 			}
 			else if( name == g_logMaxWarningsOptionName )
 			{
-				if( value == NULL )
+				if( value == nullptr )
 				{
 					AiMsgSetMaxWarnings( 100 );
 				}
@@ -1689,7 +1683,7 @@ class ArnoldRenderer : public IECoreScenePreview::Renderer
 			}
 			else if( name == g_aaSeedOptionName )
 			{
-				if( value == NULL )
+				if( value == nullptr )
 				{
 					m_aaSeed = boost::none;
 				}
@@ -1701,7 +1695,7 @@ class ArnoldRenderer : public IECoreScenePreview::Renderer
 			}
 			else if( name == g_sampleMotionOptionName )
 			{
-				if( value == NULL )
+				if( value == nullptr )
 				{
 					m_sampleMotion = boost::none;
 				}
@@ -1965,7 +1959,7 @@ class ArnoldRenderer : public IECoreScenePreview::Renderer
 			}
 
 			bool turnOn = false;
-			if( value == NULL )
+			if( value == nullptr )
 			{
 				turnOn = flagToModify & ( console == false ? g_logFlagsDefault : g_consoleFlagsDefault );
 			}
@@ -2029,7 +2023,7 @@ class ArnoldRenderer : public IECoreScenePreview::Renderer
 			if( cortexCamera )
 			{
 				arnoldCamera = AiNodeLookUpByName( m_cameraName.c_str() );
-				m_defaultCamera = NULL;
+				m_defaultCamera = nullptr;
 			}
 			else
 			{
@@ -2102,7 +2096,7 @@ class ArnoldRenderer : public IECoreScenePreview::Renderer
 
 		RenderType m_renderType;
 
-		boost::shared_ptr<IECoreArnold::UniverseBlock> m_universeBlock;
+		std::unique_ptr<IECoreArnold::UniverseBlock> m_universeBlock;
 
 		typedef std::map<IECore::InternedString, ArnoldOutputPtr> OutputMap;
 		OutputMap m_outputs;

@@ -51,7 +51,7 @@ using namespace GafferImage;
 void GafferImageModule::bindFilters()
 {
 	DependencyNodeClass<Blur>();
-	DependencyNodeClass<RankFilter>( NULL, no_init );
+	DependencyNodeClass<RankFilter>( nullptr, no_init );
 	DependencyNodeClass<Median>();
 	DependencyNodeClass<Dilate>();
 	DependencyNodeClass<Erode>();

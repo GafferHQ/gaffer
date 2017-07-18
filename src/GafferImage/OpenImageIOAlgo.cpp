@@ -87,12 +87,12 @@ IECore::GeometricData::Interpretation geometricInterpretation( OIIO::TypeDesc::V
 }
 
 DataView::DataView()
-	:	data( NULL ), m_charPointer( NULL )
+	:	data( nullptr ), m_charPointer( nullptr )
 {
 }
 
 DataView::DataView( const IECore::Data *d, bool createUStrings )
-	:	data( NULL ), m_charPointer( NULL )
+	:	data( nullptr ), m_charPointer( nullptr )
 {
 	switch( d ? d->typeId() : IECore::InvalidTypeId )
 	{

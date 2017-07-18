@@ -92,7 +92,7 @@ object get( Context &c, const IECore::InternedString &name, bool copy )
 
 object getWithDefault( Context &c, const IECore::InternedString &name, object defaultValue, bool copy )
 {
-	ConstDataPtr d = c.get<Data>( name, NULL );
+	ConstDataPtr d = c.get<Data>( name, nullptr );
 	return dataToPython( d.get(), copy, defaultValue );
 }
 
@@ -103,7 +103,7 @@ object getItem( Context &c, const IECore::InternedString &name )
 
 bool contains( Context &c, const IECore::InternedString &name )
 {
-	return c.get<Data>( name, NULL );
+	return c.get<Data>( name, nullptr );
 }
 
 void delItem( Context &context, const IECore::InternedString &name )

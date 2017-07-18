@@ -284,7 +284,7 @@ bool Animation::canAnimate( const ValuePlug *plug )
 		return false;
 	}
 
-	if( plug->getInput<Plug>() && !isAnimated( plug ) )
+	if( plug->getInput() && !isAnimated( plug ) )
 	{
 		return false;
 	}
@@ -371,13 +371,13 @@ Animation::CurvePlug *Animation::inputCurve( ValuePlug *plug )
 	ValuePlug *source = plug->source<ValuePlug>();
 	if( source == plug ) // no input
 	{
-		return NULL;
+		return nullptr;
 	}
 
 	CurvePlug *curve = source->parent<CurvePlug>();
 	if( !curve )
 	{
-		return NULL;
+		return nullptr;
 	}
 
 	if( source == curve->outPlug() )
@@ -385,7 +385,7 @@ Animation::CurvePlug *Animation::inputCurve( ValuePlug *plug )
 		return curve;
 	}
 
-	return NULL;
+	return nullptr;
 }
 
 const Animation::CurvePlug *Animation::inputCurve( const ValuePlug *plug )

@@ -58,7 +58,7 @@ class OpenColorIOTransform : public ColorProcessor
 		/// as defined by the current OpenColorIO config.
 		static void availableColorSpaces( std::vector<std::string> &colorSpaces );
 
-		/// May return NULL if the derived class does not
+		/// May return null if the derived class does not
 		/// request OCIO context variable support.
 		Gaffer::CompoundDataPlug *contextPlug();
 		const Gaffer::CompoundDataPlug *contextPlug() const;

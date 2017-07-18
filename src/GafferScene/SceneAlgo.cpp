@@ -225,7 +225,7 @@ void GafferScene::SceneAlgo::applyCameraGlobals( IECore::Camera *camera, const I
 
 	V2i resolution( 640, 480 );
 
-	const Box2fData *cropWindowData = NULL;
+	const Box2fData *cropWindowData = nullptr;
 	const V2iData *resolutionOverrideData = camera->parametersData()->member<V2iData>( "resolutionOverride" );
 	if( resolutionOverrideData )
 	{
@@ -475,7 +475,7 @@ IECore::ConstCompoundDataPtr GafferScene::SceneAlgo::sets( const ScenePlug *scen
 IECore::ConstCompoundDataPtr GafferScene::SceneAlgo::sets( const ScenePlug *scene, const std::vector<IECore::InternedString> &setNames )
 {
 	std::vector<GafferScene::ConstPathMatcherDataPtr> setsVector;
-	setsVector.resize( setNames.size(), NULL );
+	setsVector.resize( setNames.size(), nullptr );
 
 	Sets setsCompute( scene, Context::current(), setNames, setsVector );
 	parallel_for( tbb::blocked_range<size_t>( 0, setsVector.size() ), setsCompute );

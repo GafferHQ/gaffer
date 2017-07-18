@@ -84,7 +84,7 @@ class TraverseTask : public tbb::task
 				wait_for_all();
 			}
 
-			return NULL;
+			return nullptr;
 		}
 
 	protected :

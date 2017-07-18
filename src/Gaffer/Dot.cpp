@@ -67,7 +67,7 @@ void Dot::setup( const Plug *plug )
 {
 	const Plug *originalPlug = plug;
 
-	if( const Plug *inputPlug = plug->getInput<Plug>() )
+	if( const Plug *inputPlug = plug->getInput() )
 	{
 		// We'd prefer to set up based on an input plug if possible - see comments
 		// in DotNodeGadgetTest.testCustomNoduleTangentsPreferInputIfAvailable().

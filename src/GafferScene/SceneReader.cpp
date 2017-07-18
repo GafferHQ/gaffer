@@ -458,7 +458,7 @@ ConstSceneInterfacePtr SceneReader::scene( const ScenePath &path ) const
 	std::string fileName = fileNamePlug()->getValue();
 	if( !fileName.size() )
 	{
-		return NULL;
+		return nullptr;
 	}
 
 	LastScene &lastScene = m_lastScene.local();

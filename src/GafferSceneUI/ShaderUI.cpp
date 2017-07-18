@@ -114,7 +114,7 @@ class ShaderPlugAdder : public PlugAdder
 			return true;
 		}
 
-		vector<Plug *> showablePlugs( const Plug *input = NULL ) const
+		vector<Plug *> showablePlugs( const Plug *input = nullptr ) const
 		{
 			vector<Plug *> result;
 

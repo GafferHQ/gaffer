@@ -61,7 +61,7 @@ class ViewportGadget : public Gadget
 
 		typedef boost::signal<void (ViewportGadget *)> UnarySignal;
 
-		ViewportGadget( GadgetPtr primaryChild = NULL );
+		ViewportGadget( GadgetPtr primaryChild = nullptr );
 		virtual ~ViewportGadget();
 
 		IE_CORE_DECLARERUNTIMETYPEDEXTENSION( GafferUI::ViewportGadget, ViewportGadgetTypeId, Gadget );
@@ -160,7 +160,7 @@ class ViewportGadget : public Gadget
 				void end();
 
 				bool m_depthSort;
-				typedef boost::shared_ptr<IECoreGL::Selector> SelectorPtr;
+				typedef std::unique_ptr<IECoreGL::Selector> SelectorPtr;
 				SelectorPtr m_selector;
 				std::vector<IECoreGL::HitRecord> &m_selection;
 

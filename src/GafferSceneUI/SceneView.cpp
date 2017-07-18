@@ -267,7 +267,7 @@ class SceneView::ShadingMode : public boost::signals::trackable
 
 			const std::string name = shadingModePlug()->getValue();
 
-			SceneProcessorPtr shadingMode = NULL;
+			SceneProcessorPtr shadingMode = nullptr;
 			ShadingModes::const_iterator it = m_shadingModes.find( name );
 			if( it != m_shadingModes.end() )
 			{
@@ -772,7 +772,7 @@ class SceneView::LookThrough : public boost::signals::trackable
 				m_standardOptions( new StandardOptions ),
 				m_originalCamera( m_view->viewportGadget()->getCamera() ),
 				m_lookThroughCameraDirty( true ),
-				m_lookThroughCamera( NULL ),
+				m_lookThroughCamera( nullptr ),
 				m_viewportCameraDirty( true ),
 				m_overlay( new CameraOverlay )
 		{
@@ -935,7 +935,7 @@ class SceneView::LookThrough : public boost::signals::trackable
 			}
 
 			m_lookThroughCameraDirty = false;
-			m_lookThroughCamera = NULL;
+			m_lookThroughCamera = nullptr;
 			if( !enabledPlug()->getValue() )
 			{
 				m_view->viewportGadget()->setCamera( m_originalCamera.get() );
@@ -967,7 +967,7 @@ class SceneView::LookThrough : public boost::signals::trackable
 			{
 				// If an invalid path has been entered for the camera, computation will fail.
 				// We just ignore that and lock to the current camera instead.
-				m_lookThroughCamera = NULL;
+				m_lookThroughCamera = nullptr;
 			}
 
 			m_view->viewportGadget()->setCameraEditable( false );
@@ -1133,11 +1133,11 @@ SceneView::SceneView( const std::string &name )
 
 	m_sceneGadget->setContext( getContext() );
 
-	m_drawingMode = boost::make_shared<DrawingMode>( this );
-	m_shadingMode = boost::make_shared<ShadingMode>( this );
-	m_lookThrough = boost::make_shared<LookThrough>( this );
-	m_grid = boost::make_shared<Grid>( this );
-	m_gnomon = boost::make_shared<Gnomon>( this );
+	m_drawingMode.reset( new DrawingMode( this ) );
+	m_shadingMode.reset( new ShadingMode( this ) );
+	m_lookThrough.reset( new LookThrough( this ) );
+	m_grid.reset( new Grid( this ) );
+	m_gnomon.reset( new Gnomon( this ) );
 
 	//////////////////////////////////////////////////////////////////////////
 	// add a preprocessor which monkeys with the scene before it is displayed.

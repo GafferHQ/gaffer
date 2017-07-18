@@ -111,7 +111,7 @@ void light( const CompoundObject *attributes, const IECore::CompoundData* &shade
 	}
 
 	metadataTarget = "";
-	shaderParameters = NULL;
+	shaderParameters = nullptr;
 	return;
 }
 
@@ -140,7 +140,7 @@ float lightOuterAngle( const IECore::CompoundData *shaderParameters, const std::
 		}
 	}
 
-	const std::string *penumbraType = NULL;
+	const std::string *penumbraType = nullptr;
 	ConstStringDataPtr penumbraTypeData = Metadata::value<StringData>( metadataTarget, "penumbraType" );
 	if( penumbraTypeData )
 	{
@@ -228,7 +228,7 @@ IECore::CameraPtr lightToCamera( const IECore::CompoundData *shaderParameters, c
 	}
 	else
 	{
-		return NULL;
+		return nullptr;
 	}
 
 	// Hardcode resolution to some sort of square by default, interface for selecting resolution
@@ -255,8 +255,8 @@ LightToCamera::LightToCamera( const std::string &name )
 	outPlug()->boundPlug()->setInput( inPlug()->boundPlug() );
 
 	// We do modify sets
-	outPlug()->setNamesPlug()->setInput( NULL );
-	outPlug()->setPlug()->setInput( NULL );
+	outPlug()->setNamesPlug()->setInput( nullptr );
+	outPlug()->setPlug()->setInput( nullptr );
 }
 
 LightToCamera::~LightToCamera()
@@ -290,7 +290,7 @@ bool LightToCamera::acceptsInput( const Gaffer::Plug *plug, const Gaffer::Plug *
 
 	if( plug == filterPlug() )
 	{
-		if( const Filter *filter = runTimeCast<const Filter>( inputPlug->source<Plug>()->node() ) )
+		if( const Filter *filter = runTimeCast<const Filter>( inputPlug->source()->node() ) )
 		{
 			if(
 				filter->sceneAffectsMatch( inPlug(), inPlug()->boundPlug() ) ||
@@ -331,7 +331,7 @@ IECore::ConstObjectPtr LightToCamera::computeProcessedObject( const ScenePath &p
 	const IECore::CompoundData* shaderParameters;
 	std::string metadataTarget;
 	light( inPlug()->attributesPlug()->getValue().get(), shaderParameters, metadataTarget );
-	IECore::ConstCameraPtr camera = NULL;
+	IECore::ConstCameraPtr camera = nullptr;
 	if( shaderParameters )
 	{
 		camera = lightToCamera( shaderParameters, metadataTarget );
@@ -365,7 +365,7 @@ M44f LightToCamera::computeProcessedTransform( const ScenePath &path, const Gaff
 	const IECore::CompoundData* shaderParameters;
 	std::string metadataTarget;
 	light( inPlug()->attributesPlug()->getValue().get(), shaderParameters, metadataTarget );
-	IECore::ConstCameraPtr camera = NULL;
+	IECore::ConstCameraPtr camera = nullptr;
 	if( shaderParameters )
 	{
 		return lightCameraTransform( shaderParameters, metadataTarget ) * inputTransform;

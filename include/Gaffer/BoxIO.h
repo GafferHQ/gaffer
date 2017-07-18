@@ -84,7 +84,7 @@ class BoxIO : public Node
 
 		/// The internal plug which
 		/// can be used within the box.
-		/// Will be NULL unless `setup()`
+		/// Will be null unless `setup()`
 		/// has been called.
 		template<typename T>
 		T *plug();
@@ -93,7 +93,7 @@ class BoxIO : public Node
 
 		/// The external plug which has
 		/// been promoted to the outside
-		/// of the box. Will be NULL unless
+		/// of the box. Will be null unless
 		/// `setup()` has been called.
 		template<typename T>
 		T *promotedPlug();

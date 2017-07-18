@@ -144,7 +144,7 @@ class StandardNodeGadget : public NodeGadget
 
 		bool updateUserColor();
 		void updatePadding();
-		void updateNodeEnabled( const Gaffer::Plug *dirtiedPlug = NULL );
+		void updateNodeEnabled( const Gaffer::Plug *dirtiedPlug = nullptr );
 		void updateIcon();
 		bool updateShape();
 

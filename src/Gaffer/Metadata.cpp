@@ -172,15 +172,15 @@ InstanceValues *instanceMetadata( const GraphComponent *instance, bool createIfM
 		}
 	}
 
-	return NULL;
+	return nullptr;
 }
 
-// It's valid to register NULL as an instance value and expect it to override
-// any non-NULL registration. We use OptionalData as a way of distinguishing
-// between an explicit registration of NULL and no registration at all.
+// It's valid to register null as an instance value and expect it to override
+// any non-null registration. We use OptionalData as a way of distinguishing
+// between an explicit registration of null and no registration at all.
 typedef boost::optional<ConstDataPtr> OptionalData;
 
-OptionalData instanceValue( const GraphComponent *instance, InternedString key, bool *persistent = NULL )
+OptionalData instanceValue( const GraphComponent *instance, InternedString key, bool *persistent = nullptr )
 {
 	const InstanceValues *m = instanceMetadata( instance, /* createIfMissing = */ false );
 	if( !m )
@@ -325,7 +325,7 @@ IECore::ConstDataPtr Metadata::valueInternal( IECore::InternedString target, IEC
 	MetadataMap::const_iterator it = m.find( target );
 	if( it == m.end() )
 	{
-		return NULL;
+		return nullptr;
 	}
 
 	Values::const_iterator vIt = it->second.find( key );
@@ -333,7 +333,7 @@ IECore::ConstDataPtr Metadata::valueInternal( IECore::InternedString target, IEC
 	{
 		return vIt->second();
 	}
-	return NULL;
+	return nullptr;
 }
 
 void Metadata::registerNodeValue( IECore::TypeId nodeTypeId, IECore::InternedString key, IECore::ConstDataPtr value )
@@ -357,7 +357,7 @@ void Metadata::registerNodeValue( IECore::TypeId nodeTypeId, IECore::InternedStr
 		m.replace( it, namedValue );
 	}
 
-	nodeValueChangedSignal()( nodeTypeId, key, NULL );
+	nodeValueChangedSignal()( nodeTypeId, key, nullptr );
 }
 
 void Metadata::registerNodeValue( Node *node, IECore::InternedString key, IECore::ConstDataPtr value, bool persistent )
@@ -398,7 +398,7 @@ IECore::ConstDataPtr Metadata::nodeValueInternal( const Node *node, IECore::Inte
 
 	if( instanceOnly )
 	{
-		return NULL;
+		return nullptr;
 	}
 
 	IECore::TypeId typeId = node->typeId();
@@ -415,7 +415,7 @@ IECore::ConstDataPtr Metadata::nodeValueInternal( const Node *node, IECore::Inte
 		}
 		typeId = inherit ? RunTimeTyped::baseTypeId( typeId ) : InvalidTypeId;
 	}
-	return NULL;
+	return nullptr;
 }
 
 void Metadata::deregisterValue( IECore::TypeId nodeTypeId, IECore::InternedString key )
@@ -444,7 +444,7 @@ void Metadata::deregisterNodeValue( IECore::TypeId nodeTypeId, IECore::InternedS
 	}
 
 	m.erase( it );
-	nodeValueChangedSignal()( nodeTypeId, key, NULL );
+	nodeValueChangedSignal()( nodeTypeId, key, nullptr );
 }
 
 void Metadata::deregisterNodeValue( Node *node, IECore::InternedString key )
@@ -529,7 +529,7 @@ void Metadata::registerPlugValue( IECore::TypeId nodeTypeId, const StringAlgo::M
 		plugValues.replace( it, namedValue );
 	}
 
-	plugValueChangedSignal()( nodeTypeId, plugPath, key, NULL );
+	plugValueChangedSignal()( nodeTypeId, plugPath, key, nullptr );
 }
 
 void Metadata::registerPlugValue( Plug *plug, IECore::InternedString key, IECore::ConstDataPtr value, bool persistent )
@@ -580,13 +580,13 @@ IECore::ConstDataPtr Metadata::plugValueInternal( const Plug *plug, IECore::Inte
 
 	if( instanceOnly )
 	{
-		return NULL;
+		return nullptr;
 	}
 
 	const Node *node = plug->node();
 	if( !node )
 	{
-		return NULL;
+		return nullptr;
 	}
 
 	const string plugPath = plug->relativeName( node );
@@ -624,7 +624,7 @@ IECore::ConstDataPtr Metadata::plugValueInternal( const Plug *plug, IECore::Inte
 		}
 		typeId = inherit ? RunTimeTyped::baseTypeId( typeId ) : InvalidTypeId;
 	}
-	return NULL;
+	return nullptr;
 }
 
 void Metadata::deregisterPlugValue( IECore::TypeId nodeTypeId, const StringAlgo::MatchPattern &plugPath, IECore::InternedString key )
@@ -639,7 +639,7 @@ void Metadata::deregisterPlugValue( IECore::TypeId nodeTypeId, const StringAlgo:
 	}
 
 	plugValues.erase( it );
-	plugValueChangedSignal()( nodeTypeId, plugPath, key, NULL );
+	plugValueChangedSignal()( nodeTypeId, plugPath, key, nullptr );
 }
 
 void Metadata::deregisterPlugValue( Plug *plug, IECore::InternedString key )
@@ -743,7 +743,7 @@ IECore::ConstDataPtr Metadata::valueInternal( const GraphComponent *target, IECo
 			return *iv;
 		}
 	}
-	return NULL;
+	return nullptr;
 }
 
 Metadata::ValueChangedSignal &Metadata::valueChangedSignal()

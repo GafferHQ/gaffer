@@ -319,7 +319,7 @@ class LayoutEngine
 
 			VertexDescriptor groupDescriptor = add_vertex( m_graph );
 			Vertex &group = m_graph[groupDescriptor];
-			group.node = NULL;
+			group.node = nullptr;
 			group.pinned = false;
 			group.collisionGroup = 0;
 			group.position = bound.center();
@@ -568,7 +568,7 @@ class LayoutEngine
 		struct Vertex
 		{
 			// The node this vertex represents.
-			// May be NULL for vertices introduced
+			// May be nullptr for vertices introduced
 			// by groupNodes().
 			Node *node;
 			// Node position within graph.
@@ -638,7 +638,7 @@ class LayoutEngine
 			// make constraints among the siblings to keep them in order with
 			// respect to their connection order.
 
-			Vertex *prev = NULL;
+			Vertex *prev = nullptr;
 			for( std::vector<EdgeDescriptor>::const_iterator it = edges.begin(); it != edges.end(); ++it )
 			{
 				Vertex *curr = &(m_graph[source( *it, m_graph )]);
@@ -949,7 +949,7 @@ bool StandardGraphLayout::connectNodes( GraphGadget *graph, Gaffer::Set *nodes, 
 		bool hasInputs = false;
 		for( RecursiveInputPlugIterator it( node ); !it.done(); ++it )
 		{
-			if( (*it)->getInput<Plug>() && nodeGadget->nodule( it->get() ) )
+			if( (*it)->getInput() && nodeGadget->nodule( it->get() ) )
 			{
 				hasInputs = true;
 				break;
@@ -1183,7 +1183,7 @@ size_t StandardGraphLayout::unconnectedInputPlugs( NodeGadget *nodeGadget, std::
 	plugs.clear();
 	for( RecursiveInputPlugIterator it( nodeGadget->node() ); !it.done(); it++ )
 	{
-		if( (*it)->getInput<Plug>() == 0 and nodeGadget->nodule( it->get() ) )
+		if( (*it)->getInput() == 0 and nodeGadget->nodule( it->get() ) )
 		{
 			plugs.push_back( it->get() );
 		}

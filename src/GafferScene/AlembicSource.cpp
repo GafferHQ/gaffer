@@ -297,7 +297,7 @@ IECoreAlembic::AlembicInputPtr AlembicSource::inputForPath( const ScenePath &pat
 	const std::string fileName = fileNamePlug()->getValue();
 	if( !fileName.size() )
 	{
-		return NULL;
+		return nullptr;
 	}
 
 	AlembicInputPtr result = Detail::alembicInputCache()->get( fileName );

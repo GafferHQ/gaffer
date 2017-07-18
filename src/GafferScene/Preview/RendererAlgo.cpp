@@ -94,14 +94,14 @@ class LocationTask : public tbb::task
 
 			if( !m_f( m_scene, m_path ) )
 			{
-				return NULL;
+				return nullptr;
 			}
 
 			IECore::ConstInternedStringVectorDataPtr childNamesData = m_scene->childNamesPlug()->getValue();
 			const std::vector<IECore::InternedString> &childNames = childNamesData->readable();
 			if( childNames.empty() )
 			{
-				return NULL;
+				return nullptr;
 			}
 
 			std::vector<Functor> childFunctors( childNames.size(), m_f );
@@ -118,7 +118,7 @@ class LocationTask : public tbb::task
 			}
 			wait_for_all();
 
-			return NULL;
+			return nullptr;
 		}
 
 	private :
@@ -207,7 +207,7 @@ struct RenderSets::Updater
 
 		for( size_t i=r.begin(); i!=r.end(); ++i )
 		{
-			Set *s = NULL;
+			Set *s = nullptr;
 			InternedString n;
 			unsigned potentialChange = NothingChanged;
 			if( i < m_renderSets.m_sets.size() )
@@ -329,8 +329,8 @@ const PathMatcher &RenderSets::lightsSet() const
 
 ConstInternedStringVectorDataPtr RenderSets::setsAttribute( const std::vector<IECore::InternedString> &path ) const
 {
-	InternedStringVectorDataPtr resultData = NULL;
-	vector<InternedString> *result = NULL;
+	InternedStringVectorDataPtr resultData = nullptr;
+	vector<InternedString> *result = nullptr;
 	for( Sets::const_iterator it = m_sets.begin(), eIt = m_sets.end(); it != eIt; ++it )
 	{
 		if( it->second.set.match( path ) & ( Filter::ExactMatch | Filter::AncestorMatch ) )
@@ -664,7 +664,7 @@ struct LightOutput : public LocationOutput
 			ScenePlug::pathToString( path, name );
 			IECoreScenePreview::Renderer::ObjectInterfacePtr objectInterface = renderer()->light(
 				name,
-				!runTimeCast<const NullObject>( object.get() ) ? object.get() : NULL,
+				!runTimeCast<const NullObject>( object.get() ) ? object.get() : nullptr,
 				attributes().get()
 			);
 
@@ -752,7 +752,7 @@ namespace RendererAlgo
 
 void outputOptions( const IECore::CompoundObject *globals, IECoreScenePreview::Renderer *renderer )
 {
-	outputOptions( globals, /* previousGlobals = */ NULL, renderer );
+	outputOptions( globals, /* previousGlobals = */ nullptr, renderer );
 }
 
 void outputOptions( const IECore::CompoundObject *globals, const IECore::CompoundObject *previousGlobals, IECoreScenePreview::Renderer *renderer )
@@ -808,7 +808,7 @@ void outputOptions( const IECore::CompoundObject *globals, const IECore::Compoun
 		{
 			if( !globals->member<Data>( it->first ) )
 			{
-				renderer->option( optionName( it->first ), NULL );
+				renderer->option( optionName( it->first ), nullptr );
 			}
 		}
 	}
@@ -816,7 +816,7 @@ void outputOptions( const IECore::CompoundObject *globals, const IECore::Compoun
 
 void outputOutputs( const IECore::CompoundObject *globals, IECoreScenePreview::Renderer *renderer )
 {
-	outputOutputs( globals, /* previousGlobals = */ NULL, renderer );
+	outputOutputs( globals, /* previousGlobals = */ nullptr, renderer );
 }
 
 void outputOutputs( const IECore::CompoundObject *globals, const IECore::CompoundObject *previousGlobals, IECoreScenePreview::Renderer *renderer )
@@ -870,7 +870,7 @@ void outputOutputs( const IECore::CompoundObject *globals, const IECore::Compoun
 		{
 			if( !globals->member<Display>( it->first ) )
 			{
-				renderer->output( it->first.string().substr( prefix.size() ), NULL );
+				renderer->output( it->first.string().substr( prefix.size() ), nullptr );
 			}
 		}
 	}

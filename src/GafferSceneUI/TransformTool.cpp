@@ -34,6 +34,8 @@
 //
 //////////////////////////////////////////////////////////////////////////
 
+#include <memory>
+
 #include "boost/bind.hpp"
 #include "boost/unordered_map.hpp"
 #include "boost/algorithm/string/predicate.hpp"
@@ -74,7 +76,7 @@ namespace
 struct CapturedProcess
 {
 
-	typedef boost::shared_ptr<CapturedProcess> Ptr;
+	typedef std::unique_ptr<CapturedProcess> Ptr;
 	typedef vector<Ptr> PtrVector;
 
 	InternedString type;
@@ -111,22 +113,24 @@ class CapturingMonitor : public Monitor
 
 		virtual void processStarted( const Process *process )
 		{
-			CapturedProcess::Ptr capturedProcess = boost::make_shared<CapturedProcess>();
+			CapturedProcess::Ptr capturedProcess( new CapturedProcess );
 			capturedProcess->type = process->type();
 			capturedProcess->plug = process->plug();
 			capturedProcess->context = new Context( *Context::current() );
 
 			Mutex::scoped_lock lock( m_mutex );
+
+			m_processMap[process] = capturedProcess.get();
+
 			if( process->parent() )
 			{
 				ProcessMap::const_iterator it = m_processMap.find( process->parent() );
-				it->second->children.push_back( capturedProcess );
+				it->second->children.push_back( std::move( capturedProcess ) );
 			}
 			else
 			{
-				m_rootProcesses.push_back( capturedProcess );
+				m_rootProcesses.push_back( std::move( capturedProcess ) );
 			}
-			m_processMap[process] = capturedProcess.get();
 		}
 
 		virtual void processFinished( const Process *process )
@@ -433,7 +437,7 @@ void TransformTool::updateSelection() const
 
 	// Find the selected path, and early out if it's not valid.
 	Selection newSelection;
-	if( const IECore::StringVectorData *selection = view()->getContext()->get<IECore::StringVectorData>( "ui:scene:selectedPaths", NULL ) )
+	if( const IECore::StringVectorData *selection = view()->getContext()->get<IECore::StringVectorData>( "ui:scene:selectedPaths", nullptr ) )
 	{
 		if( selection->readable().size() == 1 )
 		{

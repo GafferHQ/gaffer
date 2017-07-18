@@ -280,7 +280,7 @@ class Context : public IECore::RefCounted
 		// Storage for each entry.
 		struct Storage
 		{
-			Storage() : data( NULL ), ownership( Copied ) {}
+			Storage() : data( nullptr ), ownership( Copied ) {}
 			// We reference the data with a raw pointer to avoid the compulsory
 			// overhead of an intrusive pointer.
 			const IECore::Data *data;

@@ -64,7 +64,7 @@ void initWrapper( PathMatcher &m, boost::python::object paths )
 	{
 		object path = paths[i];
 		extract<const IECore::InternedStringVectorData *> pathDataExtractor( path );
-		const IECore::InternedStringVectorData *pathData = pathDataExtractor.check() ? pathDataExtractor() : NULL;
+		const IECore::InternedStringVectorData *pathData = pathDataExtractor.check() ? pathDataExtractor() : nullptr;
 		if( pathData )
 		{
 			m.addPath( pathData->readable() );

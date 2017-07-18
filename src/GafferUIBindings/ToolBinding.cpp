@@ -62,7 +62,7 @@ static boost::python::list registeredTools( IECore::TypeId viewType )
 
 void GafferUIBindings::bindTool()
 {
-	GafferBindings::NodeClass<Tool>( NULL, no_init )
+	GafferBindings::NodeClass<Tool>( nullptr, no_init )
 		.def( "create", &Tool::create )
 		.staticmethod( "create" )
 		.def( "registeredTools", &registeredTools )

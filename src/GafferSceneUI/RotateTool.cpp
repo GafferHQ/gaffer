@@ -211,7 +211,7 @@ IECore::RunTimeTypedPtr RotateTool::dragBegin( int axis )
 {
 	m_drag = createRotation( axis );
 	TransformTool::dragBegin();
-	return NULL; // Let the handle start the drag.
+	return nullptr; // Let the handle start the drag.
 }
 
 bool RotateTool::dragMove( const GafferUI::Gadget *gadget, const GafferUI::DragDropEvent &event )

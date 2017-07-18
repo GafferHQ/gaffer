@@ -112,7 +112,7 @@ Gaffer::NodePtr GafferUIBindings::getPreprocessor( View &v )
 
 void GafferUIBindings::bindView()
 {
-	GafferBindings::NodeClass<View, ViewWrapper>( NULL, no_init )
+	GafferBindings::NodeClass<View, ViewWrapper>( nullptr, no_init )
 		.def( init<const std::string &, PlugPtr>() )
 		.def( "getContext", (Context *(View::*)())&View::getContext, return_value_policy<IECorePython::CastToIntrusivePtr>() )
 		.def( "setContext", &View::setContext )

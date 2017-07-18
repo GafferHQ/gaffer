@@ -34,6 +34,8 @@
 //
 //////////////////////////////////////////////////////////////////////////
 
+#include <memory>
+
 #include "boost/filesystem.hpp"
 
 #include "IECore/ObjectPool.h"
@@ -165,7 +167,7 @@ const ScenePlug *Render::adaptedInPlug() const
 
 IECore::MurmurHash Render::hash( const Gaffer::Context *context ) const
 {
-	if( !IECore::runTimeCast<const SceneNode>( inPlug()->source<Plug>()->node() ) )
+	if( !IECore::runTimeCast<const SceneNode>( inPlug()->source()->node() ) )
 	{
 		return IECore::MurmurHash();
 	}
@@ -195,7 +197,7 @@ IECore::MurmurHash Render::hash( const Gaffer::Context *context ) const
 
 void Render::execute() const
 {
-	if( !IECore::runTimeCast<const SceneNode>( inPlug()->source<Plug>()->node() ) )
+	if( !IECore::runTimeCast<const SceneNode>( inPlug()->source()->node() ) )
 	{
 		return;
 	}
@@ -241,7 +243,7 @@ void Render::execute() const
 	ConstCompoundObjectPtr globals = adaptedInPlug()->globalsPlug()->getValue();
 	GafferScene::RendererAlgo::createDisplayDirectories( globals.get() );
 
-	boost::shared_ptr<PerformanceMonitor> performanceMonitor;
+	std::unique_ptr<PerformanceMonitor> performanceMonitor;
 	if( const BoolData *d = globals->member<const BoolData>( g_performanceMonitorOptionName ) )
 	{
 		if( d->readable() )

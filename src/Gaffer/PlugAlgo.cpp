@@ -89,7 +89,7 @@ void replacePlugWalk( Plug *existingPlug, Plug *plug, ConnectionsVector &connect
 		// necessary. We only store inputs for leaves because automatic
 		// connection tracking will take care of connecting the parent
 		// levels when all children are connected.
-		c.input = existingPlug->getInput<Plug>();
+		c.input = existingPlug->getInput();
 		if( !c.input && plug->direction() == Plug::In )
 		{
 			ValuePlug *existingValuePlug = runTimeCast<ValuePlug>( existingPlug );
@@ -163,13 +163,13 @@ namespace
 Node *externalNode( Plug *plug )
 {
 	Node *node = plug->node();
-	return node ? node->parent<Node>() : NULL;
+	return node ? node->parent<Node>() : nullptr;
 }
 
 const Node *externalNode( const Plug *plug )
 {
 	const Node *node = plug->node();
-	return node ? node->parent<Node>() : NULL;
+	return node ? node->parent<Node>() : nullptr;
 }
 
 bool validatePromotability( const Plug *plug, const Plug *parent, bool throwExceptions, bool childPlug = false )
@@ -256,7 +256,7 @@ bool validatePromotability( const Plug *plug, const Plug *parent, bool throwExce
 			}
 		}
 
-		if( plug->getInput<Plug>() )
+		if( plug->getInput() )
 		{
 			if( !throwExceptions )
 			{
@@ -434,7 +434,7 @@ bool isPromoted( const Plug *plug )
 
 	if( plug->direction() == Plug::In )
 	{
-		const Plug *input = plug->getInput<Plug>();
+		const Plug *input = plug->getInput();
 		return input && input->node() == enclosingNode;
 	}
 	else
@@ -469,11 +469,11 @@ void unpromote( Plug *plug )
 	}
 
 	Node *externalNode = ::externalNode( plug );
-	Plug *externalPlug = NULL;
+	Plug *externalPlug = nullptr;
 	if( plug->direction() == Plug::In )
 	{
-		externalPlug = plug->getInput<Plug>();
-		plug->setInput( NULL );
+		externalPlug = plug->getInput();
+		plug->setInput( nullptr );
 	}
 	else
 	{
@@ -486,7 +486,7 @@ void unpromote( Plug *plug )
 			}
 		}
 		assert( externalPlug ); // should be true because we checked isPromoted()
-		externalPlug->setInput( NULL );
+		externalPlug->setInput( nullptr );
 	}
 
 	// Remove the top level external plug , but only if
@@ -500,7 +500,7 @@ void unpromote( Plug *plug )
 		{
 			if(
 				( (*it)->direction() == Plug::In && (*it)->outputs().size() ) ||
-				( (*it)->direction() == Plug::Out && (*it)->getInput<Plug>() )
+				( (*it)->direction() == Plug::Out && (*it)->getInput() )
 			)
 			{
 				remove = false;
@@ -510,7 +510,7 @@ void unpromote( Plug *plug )
 	}
 	if( remove )
 	{
-		plugToRemove->parent<GraphComponent>()->removeChild( plugToRemove );
+		plugToRemove->parent()->removeChild( plugToRemove );
 	}
 }
 

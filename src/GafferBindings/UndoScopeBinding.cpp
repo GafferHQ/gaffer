@@ -35,6 +35,8 @@
 //
 //////////////////////////////////////////////////////////////////////////
 
+#include <memory>
+
 #include "boost/python.hpp"
 
 #include "IECorePython/ScopedGILRelease.h"
@@ -51,7 +53,7 @@ using namespace Gaffer;
 namespace
 {
 
-typedef boost::shared_ptr<UndoScope> UndoScopePtr;
+typedef std::shared_ptr<UndoScope> UndoScopePtr;
 
 void deleter( UndoScope *undoScope )
 {

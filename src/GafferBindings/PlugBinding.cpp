@@ -105,7 +105,7 @@ std::string PlugSerialiser::postHierarchy( const Gaffer::GraphComponent *graphCo
 	if( plug->getFlags( Plug::Serialisable ) )
 	{
 		std::string result;
-		std::string inputIdentifier = serialisation.identifier( plug->getInput<Plug>() );
+		std::string inputIdentifier = serialisation.identifier( plug->getInput() );
 		if( inputIdentifier.size() )
 		{
 			result += identifier + ".setInput( " + inputIdentifier + " )\n";
@@ -159,7 +159,7 @@ std::string PlugSerialiser::flagsRepr( unsigned flags )
 	std::string nonDefaultButOn;
 	for( int i=0; names[i]; i++ )
 	{
-		std::string *s = NULL;
+		std::string *s = nullptr;
 		if( flags & values[i] )
 		{
 			if( !(values[i] & Plug::Default) )
@@ -210,12 +210,12 @@ std::string PlugSerialiser::flagsRepr( unsigned flags )
 
 static PlugPtr getInput( Plug &p )
 {
-	return p.getInput<Plug>();
+	return p.getInput();
 }
 
 static PlugPtr source( Plug &p )
 {
-	return p.source<Plug>();
+	return p.source();
 }
 
 void GafferBindings::bindPlug()

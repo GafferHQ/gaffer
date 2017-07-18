@@ -76,7 +76,7 @@ void setValue( typename T::Ptr p, typename T::ValuePtr v, bool copy=true )
 // Likewise, we expose the precomputedHash argument prefixed with an underscore to
 // discourage its use - again it is mainly exposed for use only in the tests.
 template<typename T>
-IECore::ObjectPtr getValue( typename T::Ptr p, const IECore::MurmurHash *precomputedHash=NULL, bool copy=true )
+IECore::ObjectPtr getValue( typename T::Ptr p, const IECore::MurmurHash *precomputedHash=nullptr, bool copy=true )
 {
 	// Must release GIL in case computation spawns threads which need
 	// to reenter Python.
@@ -94,7 +94,7 @@ IECore::ObjectPtr getValue( typename T::Ptr p, const IECore::MurmurHash *precomp
 			return boost::const_pointer_cast<IECore::Object>( v );
 		}
 	}
-	return NULL;
+	return nullptr;
 }
 
 template<typename T>
@@ -105,7 +105,7 @@ typename T::ValuePtr defaultValue( typename T::Ptr p, bool copy )
 	{
 		return copy ? v->copy() : boost::const_pointer_cast<typename T::ValueType>( v );
 	}
-	return NULL;
+	return nullptr;
 }
 
 template<typename T>

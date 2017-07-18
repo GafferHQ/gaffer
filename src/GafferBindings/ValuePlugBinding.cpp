@@ -59,7 +59,7 @@ static bool shouldResetPlugDefault( const Gaffer::Plug *plug, const Serialisatio
 		return false;
 	}
 
-	if( plug->node() != serialisation->parent() || plug->getInput<Plug>() )
+	if( plug->node() != serialisation->parent() || plug->getInput() )
 	{
 		return false;
 	}
@@ -228,7 +228,7 @@ bool ValuePlugSerialiser::valueNeedsSerialisation( const Gaffer::ValuePlug *plug
 	if(
 		plug->direction() != Plug::In ||
 		!plug->getFlags( Plug::Serialisable ) ||
-		plug->getInput<Plug>()
+		plug->getInput()
 	)
 	{
 		return false;

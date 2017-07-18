@@ -70,7 +70,7 @@ Pointer::Pointer( const IECore::ImagePrimitive *image, const Imath::V2i &hotspot
 }
 
 Pointer::Pointer( const std::string &fileName, const Imath::V2i &hotspot )
-	:	m_image( NULL ), m_hotspot( hotspot )
+	:	m_image( nullptr ), m_hotspot( hotspot )
 {
 	static IECore::CachedReaderPtr g_reader;
 	if( !g_reader )
@@ -121,7 +121,7 @@ void Pointer::setCurrent( const std::string &name )
 {
 	if( !name.size() )
 	{
-		Pointer::setCurrent( (Pointer *)NULL );
+		Pointer::setCurrent( (Pointer *)nullptr );
 		return;
 	}
 

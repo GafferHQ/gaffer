@@ -111,7 +111,7 @@ class SwitchPlugAdder : public PlugAdder
 
 		void updateVisibility()
 		{
-			setVisible( m_switch->getChild<ArrayPlug>( "in" ) == NULL );
+			setVisible( m_switch->getChild<ArrayPlug>( "in" ) == nullptr );
 		}
 
 		SwitchComputeNodePtr m_switch;

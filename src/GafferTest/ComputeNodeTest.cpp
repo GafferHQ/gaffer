@@ -34,15 +34,9 @@
 //
 //////////////////////////////////////////////////////////////////////////
 
-#include "tbb/tbb.h"
-#include "tbb/tbb_thread.h"
-#include "tbb/tbb_config.h"
-
-#if TBB_IMPLEMENT_CPP0X
-#include "tbb/compat/thread"
-#else
 #include <thread>
-#endif
+
+#include "tbb/tbb.h"
 
 #include "IECore/Timer.h"
 

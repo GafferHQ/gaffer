@@ -71,7 +71,7 @@ ContextPtr taskContext( const TaskNode::Task &t, bool copy = true )
 		return boost::const_pointer_cast<Context>( context );
 	}
 
-	return NULL;
+	return nullptr;
 }
 
 TaskNodePtr taskNode( const TaskNode::Task &t )
@@ -81,7 +81,7 @@ TaskNodePtr taskNode( const TaskNode::Task &t )
 		return boost::const_pointer_cast<TaskNode>( node );
 	}
 
-	return NULL;
+	return nullptr;
 }
 
 IECore::MurmurHash taskPlugHash( const TaskNode::TaskPlug &t )

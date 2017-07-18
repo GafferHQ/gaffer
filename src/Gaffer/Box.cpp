@@ -177,13 +177,13 @@ BoxPtr Box::create( Node *parent, const Set *childNodes )
 			Plug *plug = plugIt->get();
 			if( plug->direction() == Plug::In )
 			{
-				Plug *input = plug->getInput<Plug>();
+				Plug *input = plug->getInput();
 				if( input && input->node()->parent<Node>() == parent && !verifiedChildNodes->contains( input->node() ) )
 				{
 					PlugMap::const_iterator mapIt = plugMap.find( input );
 					if( mapIt == plugMap.end() )
 					{
-						plug->setInput( NULL ); // To allow promotion
+						plug->setInput( nullptr ); // To allow promotion
 						PlugPtr promoted = PlugAlgo::promote( plug );
 						promoted->setInput( input );
 						plugMap.insert( PlugPair( input, promoted.get() ) );

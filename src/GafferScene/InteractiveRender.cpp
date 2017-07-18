@@ -34,11 +34,12 @@
 //
 //////////////////////////////////////////////////////////////////////////
 
+#include <thread>
+
 #include "boost/bind.hpp"
 
 #include "tbb/task.h"
 #include "tbb/task_scheduler_init.h"
-#include "tbb/tbb_thread.h"
 
 #include "IECore/WorldBlock.h"
 #include "IECore/EditBlock.h"
@@ -83,7 +84,7 @@ class InteractiveRender::SceneGraph
 
 	public :
 
-		SceneGraph() : m_parent( NULL ), m_locationPresent( true )
+		SceneGraph() : m_parent( nullptr ), m_locationPresent( true )
 		{
 		}
 
@@ -328,7 +329,7 @@ class InteractiveRender::ChildNamesUpdateTask : public tbb::task
 			}
 			wait_for_all();
 
-			return NULL;
+			return nullptr;
 		}
 
 	private :
@@ -474,7 +475,7 @@ class InteractiveRender::SceneGraphBuildTask : public tbb::task
 			if( visibilityData && !visibilityData->readable() )
 			{
 				// terminate recursion for invisible locations
-				return NULL;
+				return nullptr;
 			}
 
 			// store the hash of the child names so we know when they change:
@@ -487,7 +488,7 @@ class InteractiveRender::SceneGraphBuildTask : public tbb::task
 			if( childNames.empty() )
 			{
 				// nothing more to do
-				return NULL;
+				return nullptr;
 			}
 
 			// sort the child names so we can compare child name lists easily in ChildNamesUpdateTask:
@@ -533,7 +534,7 @@ class InteractiveRender::SceneGraphBuildTask : public tbb::task
 				m_sceneGraph->m_children.push_back( *it );
 			}
 
-			return NULL;
+			return nullptr;
 		}
 
 	private :
@@ -567,7 +568,7 @@ class InteractiveRender::SceneGraphIteratorFilter : public tbb::filter
 			if( m_childIndices.empty() )
 			{
 				// we've finished the iteration
-				return NULL;
+				return nullptr;
 			}
 			InteractiveRender::SceneGraph *s = m_current;
 			next();
@@ -770,7 +771,7 @@ class InteractiveRender::SceneGraphOutputFilter : public tbb::thread_bound_filte
 					}
 
 					RendererAlgo::outputAttributes( s->m_attributes.get(), m_renderer );
-					s->m_attributes = NULL;
+					s->m_attributes = nullptr;
 
 					if( m_editMode )
 					{
@@ -794,7 +795,7 @@ class InteractiveRender::SceneGraphOutputFilter : public tbb::thread_bound_filte
 				IECore::msg( IECore::Msg::Error, "InteractiveRender::update", name + ": " + e.what() );
 			}
 
-			return NULL;
+			return nullptr;
 		}
 
 	private:
@@ -835,7 +836,7 @@ void InteractiveRender::outputScene( bool update )
 	p.add_filter( output );
 
 	 // Another thread initiates execution of the pipeline
-	tbb::tbb_thread pipelineThread( runPipeline, &p );
+	std::thread pipelineThread( runPipeline, &p );
 
 	// Process the SceneGraphOutputFilter with the current thread:
 	while( output.process_item() != tbb::thread_bound_filter::end_of_stream )
@@ -1077,10 +1078,10 @@ void InteractiveRender::stop()
 		m_renderer->editEnd();
 	}
 
-	m_renderer = NULL;
-	m_scene = NULL;
+	m_renderer = nullptr;
+	m_scene = nullptr;
 	m_state = Stopped;
 	m_lightHandles.clear();
 	m_attributesDirty = m_lightsDirty = m_camerasDirty = true;
-	m_sceneGraph.reset( (SceneGraph*)NULL );
+	m_sceneGraph.reset( (SceneGraph*)nullptr );
 }

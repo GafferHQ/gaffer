@@ -69,7 +69,7 @@ void ComputeNode::hash( const ValuePlug *output, const Context *context, IECore:
 	while( g && g != this )
 	{
 		h.append( g->getName() );
-		g = g->parent<GraphComponent>();
+		g = g->parent();
 	}
 }
 

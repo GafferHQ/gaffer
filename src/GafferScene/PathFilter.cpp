@@ -91,13 +91,13 @@ void PathFilter::plugDirtied( const Gaffer::Plug *plug )
 	if( plug == pathsPlug() )
 	{
 		//\todo: share this logic with Switch::variesWithContext()
-		Plug* sourcePlug = pathsPlug()->source<Plug>();
+		Plug* sourcePlug = pathsPlug()->source();
 		if( sourcePlug->direction() == Plug::Out && IECore::runTimeCast<const ComputeNode>( sourcePlug->node() ) )
 		{
 			// pathsPlug() is receiving data from a plug whose value is context varying, meaning
 			// we need to use the intermediate pathMatcherPlug() in computeMatch() instead:
 
-			m_pathMatcher = NULL;
+			m_pathMatcher = nullptr;
 		}
 		else
 		{
@@ -152,7 +152,7 @@ void PathFilter::compute( Gaffer::ValuePlug *output, const Gaffer::Context *cont
 void PathFilter::hashMatch( const ScenePlug *scene, const Gaffer::Context *context, IECore::MurmurHash &h ) const
 {
 	typedef IECore::TypedData<ScenePlug::ScenePath> ScenePathData;
-	const ScenePathData *pathData = context->get<ScenePathData>( ScenePlug::scenePathContextName, NULL );
+	const ScenePathData *pathData = context->get<ScenePathData>( ScenePlug::scenePathContextName, nullptr );
 	if( pathData )
 	{
 		const ScenePlug::ScenePath &path = pathData->readable();
@@ -171,7 +171,7 @@ void PathFilter::hashMatch( const ScenePlug *scene, const Gaffer::Context *conte
 unsigned PathFilter::computeMatch( const ScenePlug *scene, const Gaffer::Context *context ) const
 {
 	typedef IECore::TypedData<ScenePlug::ScenePath> ScenePathData;
-	const ScenePathData *pathData = context->get<ScenePathData>( ScenePlug::scenePathContextName, NULL );
+	const ScenePathData *pathData = context->get<ScenePathData>( ScenePlug::scenePathContextName, nullptr );
 	if( pathData )
 	{
 		// If we have a precomputed PathMatcher, we use that to compute matches, otherwise

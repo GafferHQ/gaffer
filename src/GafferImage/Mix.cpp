@@ -335,7 +335,7 @@ IECore::ConstFloatVectorDataPtr Mix::computeChannelData( const std::string &chan
 	}
 
 	const std::string &maskChannel = maskChannelPlug()->getValue();
-	ConstFloatVectorDataPtr maskData = NULL;
+	ConstFloatVectorDataPtr maskData = nullptr;
 	Box2i maskValidBound;
 	if( maskPlug()->getInput<ValuePlug>() && ImageAlgo::channelExists( maskChannelNamesData->readable(), maskChannel ) )
 	{
@@ -367,7 +367,7 @@ IECore::ConstFloatVectorDataPtr Mix::computeChannelData( const std::string &chan
 		}
 		else
 		{
-			channelData[i] = NULL;
+			channelData[i] = nullptr;
 			validBound[i] = Box2i();
 		}
 
@@ -376,9 +376,9 @@ IECore::ConstFloatVectorDataPtr Mix::computeChannelData( const std::string &chan
 
 	FloatVectorDataPtr resultData = ImagePlug::blackTile()->copy();
 	float *R = &resultData->writable().front();
-	const float *A = channelData[0] ? &channelData[0]->readable().front() : NULL;
-	const float *B = channelData[1] ? &channelData[1]->readable().front() : NULL;
-	const float *M = maskData ? &maskData->readable().front() : NULL;
+	const float *A = channelData[0] ? &channelData[0]->readable().front() : nullptr;
+	const float *B = channelData[1] ? &channelData[1]->readable().front() : nullptr;
+	const float *M = maskData ? &maskData->readable().front() : nullptr;
 
 	for( int y = tileBound.min.y; y < tileBound.max.y; ++y )
 	{

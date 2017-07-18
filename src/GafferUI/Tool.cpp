@@ -109,7 +109,7 @@ ToolPtr Tool::create( const std::string &toolName, View *view )
 		typeId = IECore::RunTimeTyped::baseTypeId( typeId );
 	} while( typeId != (IECore::TypeId)NodeTypeId && typeId != IECore::InvalidTypeId );
 
-	return NULL;
+	return nullptr;
 }
 
 void Tool::registerTool( const std::string &toolName, IECore::TypeId viewType, ToolCreator creator )

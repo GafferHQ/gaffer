@@ -98,12 +98,12 @@ void Attributes::affects( const Gaffer::Plug *input, AffectedPlugsContainer &out
 	{
 		// We can only affect a particular output if we haven't
 		// connected it as a pass-through in updateInternalConnections().
-		if( !outPlug()->attributesPlug()->getInput<Plug>() )
+		if( !outPlug()->attributesPlug()->getInput() )
 		{
 			outputs.push_back( outPlug()->attributesPlug() );
 		}
 
-		if( !outPlug()->globalsPlug()->getInput<Plug>() )
+		if( !outPlug()->globalsPlug()->getInput() )
 		{
 			outputs.push_back( outPlug()->globalsPlug() );
 		}
@@ -229,9 +229,9 @@ void Attributes::updateInternalConnections()
 	}
 
 	outPlug()->globalsPlug()->setInput(
-		global || boost::indeterminate( global ) ? NULL : inPlug()->globalsPlug()
+		global || boost::indeterminate( global ) ? nullptr : inPlug()->globalsPlug()
 	);
 	outPlug()->attributesPlug()->setInput(
-		!global || boost::indeterminate( global ) ? NULL : inPlug()->attributesPlug()
+		!global || boost::indeterminate( global ) ? nullptr : inPlug()->attributesPlug()
 	);
 }

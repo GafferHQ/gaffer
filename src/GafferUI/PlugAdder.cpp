@@ -62,8 +62,8 @@ namespace
 
 static IECoreGL::Texture *texture( Style::State state )
 {
-	static IECoreGL::TexturePtr normalTexture = NULL;
-	static IECoreGL::TexturePtr highlightedTexture = NULL;
+	static IECoreGL::TexturePtr normalTexture;
+	static IECoreGL::TexturePtr highlightedTexture;
 
 	IECoreGL::TexturePtr &texture = state == Style::HighlightedState ? highlightedTexture : normalTexture;
 	if( !texture )

@@ -67,12 +67,12 @@ IECoreGL::ConstRenderablePtr AttributeVisualiser::allVisualisations( const IECor
 {
 	const AttributeVisualisers &v = visualisers();
 
-	IECoreGL::GroupPtr resultGroup = NULL;
-	IECoreGL::StatePtr resultState = NULL;
+	IECoreGL::GroupPtr resultGroup = nullptr;
+	IECoreGL::StatePtr resultState = nullptr;
 
 	for( unsigned int i = 0; i < v.size(); i++ )
 	{
-		IECoreGL::ConstStatePtr curState = NULL;
+		IECoreGL::ConstStatePtr curState = nullptr;
 		IECoreGL::ConstRenderablePtr curVis = v[i]->visualise( attributes, curState );
 
 		if( curVis )

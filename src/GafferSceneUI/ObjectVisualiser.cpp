@@ -76,7 +76,7 @@ const ObjectVisualiser *ObjectVisualiser::acquire( IECore::TypeId objectType )
 		objectType = IECore::RunTimeTyped::baseTypeId( objectType );
 	}
 
-	return NULL;
+	return nullptr;
 }
 
 void ObjectVisualiser::registerVisualiser( IECore::TypeId objectType, ConstObjectVisualiserPtr visualiser )

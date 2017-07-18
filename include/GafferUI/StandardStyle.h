@@ -82,12 +82,12 @@ class StandardStyle : public Style
 		virtual void renderSelectionBox( const Imath::Box2f &box ) const;
 		virtual void renderHorizontalRule( const Imath::V2f &center, float length, State state = NormalState ) const;
 
-		virtual void renderNodeFrame( const Imath::Box2f &contents, float borderWidth, State state = NormalState, const Imath::Color3f *userColor = NULL ) const;
-		virtual void renderNodule( float radius, State state = NormalState, const Imath::Color3f *userColor = NULL ) const;
-		virtual void renderConnection( const Imath::V3f &srcPosition, const Imath::V3f &srcTangent, const Imath::V3f &dstPosition, const Imath::V3f &dstTangent, State state = NormalState, const Imath::Color3f *userColor = NULL ) const;
+		virtual void renderNodeFrame( const Imath::Box2f &contents, float borderWidth, State state = NormalState, const Imath::Color3f *userColor = nullptr ) const;
+		virtual void renderNodule( float radius, State state = NormalState, const Imath::Color3f *userColor = nullptr ) const;
+		virtual void renderConnection( const Imath::V3f &srcPosition, const Imath::V3f &srcTangent, const Imath::V3f &dstPosition, const Imath::V3f &dstTangent, State state = NormalState, const Imath::Color3f *userColor = nullptr ) const;
 		virtual Imath::V3f closestPointOnConnection( const Imath::V3f &p, const Imath::V3f &srcPosition, const Imath::V3f &srcTangent, const Imath::V3f &dstPosition, const Imath::V3f &dstTangent ) const;
 
-		virtual void renderBackdrop( const Imath::Box2f &box, State state = NormalState, const Imath::Color3f *userColor = NULL ) const;
+		virtual void renderBackdrop( const Imath::Box2f &box, State state = NormalState, const Imath::Color3f *userColor = nullptr ) const;
 
 		virtual void renderTranslateHandle( Axes axes, State state = NormalState ) const;
 		virtual void renderRotateHandle( Axes axes, State state = NormalState ) const;
@@ -134,7 +134,7 @@ class StandardStyle : public Style
 		static int g_t0Parameter;
 		static int g_t1Parameter;
 
-		Imath::Color3f colorForState( Color c, State s, const Imath::Color3f *userColor = NULL ) const;
+		Imath::Color3f colorForState( Color c, State s, const Imath::Color3f *userColor = nullptr ) const;
 		boost::array<Imath::Color3f, LastColor> m_colors;
 
 		IECoreGL::FontPtr m_fonts[LastText];

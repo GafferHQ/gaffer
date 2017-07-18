@@ -113,9 +113,9 @@ std::vector<AtNode *> convert( const IECore::ObjectVector *shaderNetwork, const 
 	vector<AtNode *> result;
 	for( ObjectVector::MemberContainer::const_iterator it = shaderNetwork->members().begin(), eIt = shaderNetwork->members().end(); it != eIt; ++it )
 	{
-		const char *nodeType = NULL;
-		const char *oslShaderName = NULL;
-		const CompoundDataMap *parameters = NULL;
+		const char *nodeType = nullptr;
+		const char *oslShaderName = nullptr;
+		const CompoundDataMap *parameters = nullptr;
 		if( const Shader *shader = runTimeCast<const Shader>( it->get() ) )
 		{
 			if( boost::starts_with( shader->getType(), "osl:" ) )

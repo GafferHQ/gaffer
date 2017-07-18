@@ -56,7 +56,7 @@ namespace
 {
 
 template<typename T>
-std::string maskedCompoundNumericPlugRepr( const T *plug, unsigned flagsMask, const Serialisation *serialisation = NULL )
+std::string maskedCompoundNumericPlugRepr( const T *plug, unsigned flagsMask, const Serialisation *serialisation = nullptr )
 {
 	std::string extraArgs = "";
 
@@ -102,7 +102,7 @@ class CompoundNumericPlugSerialiser : public ValuePlugSerialiser
 
 			for( PlugIterator it( plug ); !it.done(); ++it )
 			{
-				if( (*it)->getInput<Plug>() )
+				if( (*it)->getInput() )
 				{
 					return false;
 				}

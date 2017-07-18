@@ -553,7 +553,7 @@ void CropWindowTool::findCropWindowPlug()
 		return;
 	}
 
-	m_cropWindowPlug = NULL;
+	m_cropWindowPlug = nullptr;
 	if( !findCropWindowPlug( scenePlug(), /* enabledOnly = */ true ) )
 	{
 		findCropWindowPlug( scenePlug(), /* enabledOnly = */ false );
@@ -589,7 +589,7 @@ bool CropWindowTool::findCropWindowPlug( GafferScene::ScenePlug *scene, bool ena
 		}
 		else
 		{
-			scene = NULL;
+			scene = nullptr;
 		}
 
 		if( !scene )
@@ -643,7 +643,7 @@ bool CropWindowTool::findCropWindowPlugFromNode( GafferScene::ScenePlug *scene, 
 		}
 		m_cropWindowPlug = memberPlug->valuePlug<Box2fPlug>()->source<Box2fPlug>();
 		m_cropWindowEnabledPlug = memberPlug->enabledPlug();
-		m_cropWindowEnabledPlug = m_cropWindowEnabledPlug ? m_cropWindowEnabledPlug->source<BoolPlug>() : NULL;
+		m_cropWindowEnabledPlug = m_cropWindowEnabledPlug ? m_cropWindowEnabledPlug->source<BoolPlug>() : nullptr;
 		return true;
 	}
 

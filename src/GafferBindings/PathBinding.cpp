@@ -220,7 +220,7 @@ class PathWrapper : public IECorePython::RunTimeTypedWrapper<WrappedType>
 						{
 							return extract<IECore::ConstRunTimeTypedPtr>( a );
 						}
-						return NULL;
+						return nullptr;
 					}
 				}
 				catch( const error_already_set &e )

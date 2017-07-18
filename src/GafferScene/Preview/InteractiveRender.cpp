@@ -134,7 +134,7 @@ class InteractiveRender::SceneGraph
 		// Constructs the root of the scene graph.
 		// Children are constructed using updateChildren().
 		SceneGraph()
-			:	m_parent( NULL ), m_fullAttributes( new CompoundObject )
+			:	m_parent( nullptr ), m_fullAttributes( new CompoundObject )
 		{
 			clear();
 		}
@@ -310,7 +310,7 @@ class InteractiveRender::SceneGraph
 				fullAttributes[it->first] = it->second;
 			}
 
-			m_attributesInterface = NULL; // Will be updated lazily in attributesInterface()
+			m_attributesInterface = nullptr; // Will be updated lazily in attributesInterface()
 			m_attributesHash = attributesHash;
 
 			return true;
@@ -328,7 +328,7 @@ class InteractiveRender::SceneGraph
 			}
 
 			m_fullAttributes->members() = globalAttributes->members();
-			m_attributesInterface = NULL;
+			m_attributesInterface = nullptr;
 
 			return true;
 		}
@@ -338,7 +338,7 @@ class InteractiveRender::SceneGraph
 			m_fullAttributes->members()[g_setsAttributeName] = boost::const_pointer_cast<InternedStringVectorData>(
 				renderSets.setsAttribute( path )
 			);
-			m_attributesInterface = NULL;
+			m_attributesInterface = nullptr;
 			return true;
 		}
 
@@ -380,7 +380,7 @@ class InteractiveRender::SceneGraph
 			const bool hadObjectInterface = static_cast<bool>( m_objectInterface );
 			if( type == NoType )
 			{
-				m_objectInterface = NULL;
+				m_objectInterface = nullptr;
 				return hadObjectInterface;
 			}
 
@@ -390,7 +390,7 @@ class InteractiveRender::SceneGraph
 				return false;
 			}
 
-			m_objectInterface = NULL;
+			m_objectInterface = nullptr;
 
 			IECore::ConstObjectPtr object = objectPlug->getValue( &objectHash );
 			m_objectHash = objectHash;
@@ -417,7 +417,7 @@ class InteractiveRender::SceneGraph
 			}
 			else if( type == LightType )
 			{
-				m_objectInterface = renderer->light( name, nullObject ? NULL : object.get(), attributesInterface( renderer ) );
+				m_objectInterface = renderer->light( name, nullObject ? nullptr : object.get(), attributesInterface( renderer ) );
 			}
 			else
 			{
@@ -429,7 +429,7 @@ class InteractiveRender::SceneGraph
 
 		void clearObject()
 		{
-			m_objectInterface = NULL;
+			m_objectInterface = nullptr;
 			m_objectHash = MurmurHash();
 		}
 
@@ -541,7 +541,7 @@ class InteractiveRender::SceneGraphUpdateTask : public tbb::task
 			if( !( sceneGraphMatch & ( Filter::ExactMatch | Filter::DescendantMatch ) ) )
 			{
 				m_sceneGraph->clear();
-				return NULL;
+				return nullptr;
 			}
 
 			if( m_sceneGraph->cleared() )
@@ -589,7 +589,7 @@ class InteractiveRender::SceneGraphUpdateTask : public tbb::task
 				wait_for_all();
 			}
 
-			return NULL;
+			return nullptr;
 		}
 
 	private :
@@ -830,7 +830,7 @@ void InteractiveRender::update()
 	// Stop the current render if we've been asked to, or if
 	// there is no real input scene.
 
-	if( requiredState == Stopped || !runTimeCast<SceneNode>( inPlug()->source<Plug>()->node() ) )
+	if( requiredState == Stopped || !runTimeCast<SceneNode>( inPlug()->source()->node() ) )
 	{
 		stop();
 		return;
@@ -934,7 +934,7 @@ void InteractiveRender::updateEffectiveContext()
 void InteractiveRender::updateDefaultCamera()
 {
 	const StringData *cameraOption = m_globals->member<StringData>( g_cameraGlobalName );
-	m_defaultCamera = NULL;
+	m_defaultCamera = nullptr;
 	if( cameraOption && !cameraOption->readable().empty() )
 	{
 		return;
@@ -957,10 +957,10 @@ void InteractiveRender::stop()
 	m_sceneGraphs.clear();
 	for( int i = SceneGraph::FirstType; i <= SceneGraph::LastType; ++i )
 	{
-		m_sceneGraphs.push_back( boost::make_shared<SceneGraph>() );
+		m_sceneGraphs.push_back( unique_ptr<SceneGraph>( new SceneGraph ) );
 	}
-	m_defaultCamera = NULL;
-	m_renderer = NULL;
+	m_defaultCamera = nullptr;
+	m_renderer = nullptr;
 
 	m_globals = adaptedInPlug()->globalsPlug()->defaultValue();
 	m_renderSets.clear();

@@ -103,7 +103,7 @@ void setExpandedPaths( Context *context, const GafferScene::PathMatcher &paths )
 
 GafferScene::PathMatcher getExpandedPaths( const Gaffer::Context *context )
 {
-	if( const GafferScene::PathMatcherData *expandedPaths = context->get<GafferScene::PathMatcherData>( g_expandedPathsName, NULL ) )
+	if( const GafferScene::PathMatcherData *expandedPaths = context->get<GafferScene::PathMatcherData>( g_expandedPathsName, nullptr ) )
 	{
 		return expandedPaths->readable();
 	}
@@ -113,7 +113,7 @@ GafferScene::PathMatcher getExpandedPaths( const Gaffer::Context *context )
 
 void expand( Context *context, const PathMatcher &paths, bool expandAncestors )
 {
-	GafferScene::PathMatcherData *expandedPaths = const_cast<GafferScene::PathMatcherData *>( context->get<GafferScene::PathMatcherData>( g_expandedPathsName, NULL ) );
+	GafferScene::PathMatcherData *expandedPaths = const_cast<GafferScene::PathMatcherData *>( context->get<GafferScene::PathMatcherData>( g_expandedPathsName, nullptr ) );
 	if( !expandedPaths )
 	{
 		expandedPaths = new GafferScene::PathMatcherData();
@@ -149,7 +149,7 @@ void expand( Context *context, const PathMatcher &paths, bool expandAncestors )
 
 GafferScene::PathMatcher expandDescendants( Context *context, const GafferScene::PathMatcher &paths, const ScenePlug *scene, int depth )
 {
-	GafferScene::PathMatcherData *expandedPaths = const_cast<GafferScene::PathMatcherData *>( context->get<GafferScene::PathMatcherData>( g_expandedPathsName, NULL ) );
+	GafferScene::PathMatcherData *expandedPaths = const_cast<GafferScene::PathMatcherData *>( context->get<GafferScene::PathMatcherData>( g_expandedPathsName, nullptr ) );
 	if( !expandedPaths )
 	{
 		expandedPaths = new GafferScene::PathMatcherData();
@@ -197,7 +197,7 @@ GafferScene::PathMatcher getSelectedPaths( const Gaffer::Context *context )
 {
 	GafferScene::PathMatcher result;
 
-	if( const StringVectorData *selection = context->get<StringVectorData>( g_selectedPathsName, NULL ) )
+	if( const StringVectorData *selection = context->get<StringVectorData>( g_selectedPathsName, nullptr ) )
 	{
 		const std::vector<std::string> &values = selection->readable();
 		result.init( values.begin(), values.end() );

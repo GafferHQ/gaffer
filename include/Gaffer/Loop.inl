@@ -79,49 +79,49 @@ Loop<BaseType>::~Loop()
 template<typename BaseType>
 ValuePlug *Loop<BaseType>::nextPlug()
 {
-	return m_firstPlugIndex ? BaseType::template getChild<ValuePlug>( m_firstPlugIndex ) : NULL;
+	return m_firstPlugIndex ? BaseType::template getChild<ValuePlug>( m_firstPlugIndex ) : nullptr;
 }
 
 template<typename BaseType>
 const ValuePlug *Loop<BaseType>::nextPlug() const
 {
-	return m_firstPlugIndex ? BaseType::template getChild<ValuePlug>( m_firstPlugIndex ) : NULL;
+	return m_firstPlugIndex ? BaseType::template getChild<ValuePlug>( m_firstPlugIndex ) : nullptr;
 }
 
 template<typename BaseType>
 ValuePlug *Loop<BaseType>::previousPlug()
 {
-	return m_firstPlugIndex ? BaseType::template getChild<ValuePlug>( m_firstPlugIndex + 1 ) : NULL;
+	return m_firstPlugIndex ? BaseType::template getChild<ValuePlug>( m_firstPlugIndex + 1 ) : nullptr;
 }
 
 template<typename BaseType>
 const ValuePlug *Loop<BaseType>::previousPlug() const
 {
-	return m_firstPlugIndex ? BaseType::template getChild<ValuePlug>( m_firstPlugIndex + 1 ) : NULL;
+	return m_firstPlugIndex ? BaseType::template getChild<ValuePlug>( m_firstPlugIndex + 1 ) : nullptr;
 }
 
 template<typename BaseType>
 IntPlug *Loop<BaseType>::iterationsPlug()
 {
-	return m_firstPlugIndex ? BaseType::template getChild<IntPlug>( m_firstPlugIndex + 2 ) : NULL;
+	return m_firstPlugIndex ? BaseType::template getChild<IntPlug>( m_firstPlugIndex + 2 ) : nullptr;
 }
 
 template<typename BaseType>
 const IntPlug *Loop<BaseType>::iterationsPlug() const
 {
-	return m_firstPlugIndex ? BaseType::template getChild<IntPlug>( m_firstPlugIndex + 2 ) : NULL;
+	return m_firstPlugIndex ? BaseType::template getChild<IntPlug>( m_firstPlugIndex + 2 ) : nullptr;
 }
 
 template<typename BaseType>
 StringPlug *Loop<BaseType>::indexVariablePlug()
 {
-	return m_firstPlugIndex ? BaseType::template getChild<StringPlug>( m_firstPlugIndex + 3 ) : NULL;
+	return m_firstPlugIndex ? BaseType::template getChild<StringPlug>( m_firstPlugIndex + 3 ) : nullptr;
 }
 
 template<typename BaseType>
 const StringPlug *Loop<BaseType>::indexVariablePlug() const
 {
-	return m_firstPlugIndex ? BaseType::template getChild<StringPlug>( m_firstPlugIndex + 3 ) : NULL;
+	return m_firstPlugIndex ? BaseType::template getChild<StringPlug>( m_firstPlugIndex + 3 ) : nullptr;
 }
 
 template<typename BaseType>
@@ -131,7 +131,7 @@ Gaffer::BoolPlug *Loop<BaseType>::enabledPlug()
 	{
 		return p;
 	}
-	return m_firstPlugIndex ? BaseType::template getChild<BoolPlug>( m_firstPlugIndex + 4 ) : NULL;
+	return m_firstPlugIndex ? BaseType::template getChild<BoolPlug>( m_firstPlugIndex + 4 ) : nullptr;
 }
 
 template<typename BaseType>
@@ -141,7 +141,7 @@ const Gaffer::BoolPlug *Loop<BaseType>::enabledPlug() const
 	{
 		return p;
 	}
-	return m_firstPlugIndex ? BaseType::template getChild<BoolPlug>( m_firstPlugIndex + 4 ) : NULL;
+	return m_firstPlugIndex ? BaseType::template getChild<BoolPlug>( m_firstPlugIndex + 4 ) : nullptr;
 }
 
 template<typename BaseType>
@@ -151,7 +151,7 @@ Gaffer::Plug *Loop<BaseType>::correspondingInput( const Gaffer::Plug *output )
 	{
 		return p;
 	}
-	return output == outPlugInternal() ? inPlugInternal() : NULL;
+	return output == outPlugInternal() ? inPlugInternal() : nullptr;
 }
 
 template<typename BaseType>
@@ -161,7 +161,7 @@ const Gaffer::Plug *Loop<BaseType>::correspondingInput( const Gaffer::Plug *outp
 	{
 		return p;
 	}
-	return output == outPlugInternal() ? inPlugInternal() : NULL;
+	return output == outPlugInternal() ? inPlugInternal() : nullptr;
 }
 
 template<typename BaseType>
@@ -298,25 +298,25 @@ bool Loop<BaseType>::setupPlugs()
 template<typename BaseType>
 ValuePlug *Loop<BaseType>::inPlugInternal()
 {
-	return m_inPlugIndex ? BaseType::template getChild<ValuePlug>( m_inPlugIndex ) : NULL;
+	return m_inPlugIndex ? BaseType::template getChild<ValuePlug>( m_inPlugIndex ) : nullptr;
 }
 
 template<typename BaseType>
 const ValuePlug *Loop<BaseType>::inPlugInternal() const
 {
-	return m_inPlugIndex ? BaseType::template getChild<ValuePlug>( m_inPlugIndex ) : NULL;
+	return m_inPlugIndex ? BaseType::template getChild<ValuePlug>( m_inPlugIndex ) : nullptr;
 }
 
 template<typename BaseType>
 ValuePlug *Loop<BaseType>::outPlugInternal()
 {
-	return m_outPlugIndex ? BaseType::template getChild<ValuePlug>( m_outPlugIndex ) : NULL;
+	return m_outPlugIndex ? BaseType::template getChild<ValuePlug>( m_outPlugIndex ) : nullptr;
 }
 
 template<typename BaseType>
 const ValuePlug *Loop<BaseType>::outPlugInternal() const
 {
-	return m_outPlugIndex ? BaseType::template getChild<ValuePlug>( m_outPlugIndex ) : NULL;
+	return m_outPlugIndex ? BaseType::template getChild<ValuePlug>( m_outPlugIndex ) : nullptr;
 }
 
 template<typename BaseType>
@@ -343,7 +343,7 @@ const ValuePlug *Loop<BaseType>::ancestorPlug( const ValuePlug *plug, std::vecto
 {
 	while( plug )
 	{
-		const GraphComponent *plugParent = plug->parent<GraphComponent>();
+		const GraphComponent *plugParent = plug->parent();
 		if( plugParent == this )
 		{
 			return plug;
@@ -354,7 +354,7 @@ const ValuePlug *Loop<BaseType>::ancestorPlug( const ValuePlug *plug, std::vecto
 			plug = static_cast<const ValuePlug *>( plugParent );
 		}
 	}
-	return NULL;
+	return nullptr;
 }
 
 template<typename BaseType>
@@ -406,7 +406,7 @@ const ValuePlug *Loop<BaseType>::sourcePlug( const ValuePlug *output, const Cont
 		}
 	}
 
-	return NULL;
+	return nullptr;
 }
 
 } // namespace Gaffer

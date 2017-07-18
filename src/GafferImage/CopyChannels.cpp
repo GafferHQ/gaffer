@@ -125,7 +125,7 @@ void CopyChannels::affects( const Gaffer::Plug *input, AffectedPlugsContainer &o
 	const ImagePlug *imagePlug = input->parent<ImagePlug>();
 	if( imagePlug && imagePlug->parent<Plug>() != inPlugs() )
 	{
-		imagePlug = NULL;
+		imagePlug = nullptr;
 	}
 
 	if( imagePlug && input == imagePlug->dataWindowPlug() )
@@ -163,7 +163,7 @@ void CopyChannels::hash( const Gaffer::ValuePlug *output, const Gaffer::Context 
 	{
 		for( ImagePlugIterator it( inPlugs() ); !it.done(); ++it )
 		{
-			if( !(*it)->getInput<Plug>() )
+			if( !(*it)->getInput() )
 			{
 				continue;
 			}
@@ -190,7 +190,7 @@ void CopyChannels::compute( Gaffer::ValuePlug *output, const Gaffer::Context *co
 			/// has a default channelNames value of [ "R", "G", "B" ],
 			/// when it should have an empty default instead. Fix
 			/// the ImagePlug constructor and remove the check.
-			if( !(*it)->getInput<Plug>() )
+			if( !(*it)->getInput() )
 			{
 				continue;
 			}

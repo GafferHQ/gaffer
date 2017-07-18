@@ -57,7 +57,7 @@ class NodeClass : public GraphComponentClass<T, TWrapper>
 {
 	public :
 
-		NodeClass( const char *docString = NULL );
+		NodeClass( const char *docString = nullptr );
 		NodeClass( const char *docString, boost::python::no_init_t );
 
 };

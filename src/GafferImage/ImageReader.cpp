@@ -367,7 +367,7 @@ void ImageReader::compute( ValuePlug *output, const Context *context ) const
 
 void ImageReader::hashMaskedOutput( const Gaffer::ValuePlug *output, const Gaffer::Context *context, IECore::MurmurHash &h, bool alwaysClampToFrame ) const
 {
-	ContextPtr maskedContext = NULL;
+	ContextPtr maskedContext = nullptr;
 	if( !computeFrameMask( context, maskedContext ) || alwaysClampToFrame )
 	{
 		Context::Scope scope( maskedContext.get() );
@@ -377,7 +377,7 @@ void ImageReader::hashMaskedOutput( const Gaffer::ValuePlug *output, const Gaffe
 
 void ImageReader::computeMaskedOutput( Gaffer::ValuePlug *output, const Gaffer::Context *context, bool alwaysClampToFrame ) const
 {
-	ContextPtr maskedContext = NULL;
+	ContextPtr maskedContext = nullptr;
 	bool blackOutside = computeFrameMask( context, maskedContext );
 	if( blackOutside && !alwaysClampToFrame )
 	{

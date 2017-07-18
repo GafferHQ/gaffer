@@ -86,7 +86,7 @@ bool ShaderPlug::acceptsInput( const Gaffer::Plug *input ) const
 
 	// We only want to accept connections from the output
 	// plug of a shader.
-	const Plug *sourcePlug = input->source<Plug>();
+	const Plug *sourcePlug = input->source();
 	const Node *sourceNode = sourcePlug->node();
 	if( const Shader *shader = runTimeCast<const Shader>( sourceNode ) )
 	{
@@ -154,7 +154,7 @@ const Gaffer::Plug *ShaderPlug::shaderOutPlug() const
 	if( source == this )
 	{
 		// No input
-		return NULL;
+		return nullptr;
 	}
 	return source;
 }

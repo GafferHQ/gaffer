@@ -155,7 +155,7 @@ ImageGadget::~ImageGadget()
 
 IECoreGL::TextureLoader *ImageGadget::textureLoader()
 {
-	static TextureLoaderPtr loader = NULL;
+	static TextureLoaderPtr loader = nullptr;
 	if( !loader )
 	{
 		const char *s = getenv( "GAFFERUI_IMAGE_PATHS" );

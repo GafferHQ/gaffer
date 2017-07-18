@@ -304,7 +304,7 @@ void BoxIO::plugInputChanged( Plug *plug )
 	// the parent box node. This gives us the opportunity
 	// to discover our promoted plug and connect to its
 	// signals.
-	Plug *promoted = NULL;
+	Plug *promoted = nullptr;
 	if( m_direction == Plug::In && plug == inPlugInternal() )
 	{
 		promoted = promotedPlug<Plug>();
@@ -351,9 +351,9 @@ void BoxIO::promotedPlugParentChanged( GraphComponent *graphComponent )
 		}
 	}
 
-	if( !graphComponent->parent<GraphComponent>() )
+	if( !graphComponent->parent() )
 	{
-		if( GraphComponent *p = parent<GraphComponent>() )
+		if( GraphComponent *p = parent() )
 		{
 			p->removeChild( this );
 		}
@@ -415,7 +415,7 @@ Box *enclosingBox( Plug *plug )
 	Node *node = plug->node();
 	if( !node )
 	{
-		return NULL;
+		return nullptr;
 	}
 	return node->parent<Box>();
 }
@@ -484,7 +484,7 @@ bool BoxIO::canInsert( const Box *box )
 		}
 		else
 		{
-			const Plug *input = plug->getInput<Plug>();
+			const Plug *input = plug->getInput();
 			if( input && hasNodule( input ) && !runTimeCast<const BoxOut>( input->node() ) )
 			{
 				return true;
@@ -535,7 +535,7 @@ void BoxIO::insert( Box *box )
 		{
 			// Output plug
 
-			Plug *input = plug->getInput<Plug>();
+			Plug *input = plug->getInput();
 			if( !input || !hasNodule( input ) || runTimeCast<BoxOut>( input->node() ) )
 			{
 				continue;

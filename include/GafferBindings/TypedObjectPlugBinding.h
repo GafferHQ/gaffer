@@ -52,7 +52,7 @@ class TypedObjectPlugClass : public PlugClass<T, TWrapper>
 
 	public :
 
-		TypedObjectPlugClass( const char *docString = NULL );
+		TypedObjectPlugClass( const char *docString = nullptr );
 
 };
 

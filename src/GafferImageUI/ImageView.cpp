@@ -262,7 +262,7 @@ class ImageView::ColorInspector : public boost::signals::trackable
 		{
 			if( event.buttons != ButtonEvent::Left || event.modifiers )
 			{
-				return NULL;
+				return nullptr;
 			}
 
 			Color4f color;
@@ -275,7 +275,7 @@ class ImageView::ColorInspector : public boost::signals::trackable
 			{
 				// If there's an error computing the image, we can't
 				// start a drag.
-				return NULL;
+				return nullptr;
 			}
 
 			Pointer::setCurrent( "rgba" );
@@ -380,8 +380,8 @@ ImageView::ImageView( const std::string &name )
 	m_imageGadget->setContext( getContext() );
 	viewportGadget()->setPrimaryChild( m_imageGadget );
 
-	m_channelChooser = shared_ptr<ChannelChooser>( new ChannelChooser( this ) );
-	m_colorInspector = shared_ptr<ColorInspector>( new ColorInspector( this ) );
+	m_channelChooser.reset( new ChannelChooser( this ) );
+	m_colorInspector.reset( new ColorInspector( this ) );
 }
 
 void ImageView::insertConverter( Gaffer::NodePtr converter )

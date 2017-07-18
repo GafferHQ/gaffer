@@ -55,7 +55,7 @@ class DirtyPropagationScopeWrapper : boost::noncopyable
 	public :
 
 		DirtyPropagationScopeWrapper()
-			:	m_scope( NULL )
+			:	m_scope( nullptr )
 		{
 		}
 
@@ -91,7 +91,7 @@ class DirtyPropagationScopeWrapper : boost::noncopyable
 			// the GIL for python based nodes and expressions.
 			IECorePython::ScopedGILRelease gilRelease;
 			delete m_scope;
-			m_scope = NULL;
+			m_scope = nullptr;
 		}
 
 		DirtyPropagationScope *m_scope;

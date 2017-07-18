@@ -111,7 +111,7 @@ class TaskNodeProcess : public Gaffer::Process
 	public :
 
 		TaskNodeProcess( const IECore::InternedString &type, const TaskNode::TaskPlug *plug )
-			:	Process( type, plug->source<Plug>(), plug )
+			:	Process( type, plug->source(), plug )
 		{
 		}
 
@@ -179,7 +179,7 @@ bool TaskNode::TaskPlug::acceptsInput( const Plug *input ) const
 	// Boxes and Dots in that form.
 	if( input->typeId() == Plug::staticTypeId() )
 	{
-		const Plug *sourcePlug = input->source<Plug>();
+		const Plug *sourcePlug = input->source();
 		if( sourcePlug->isInstanceOf( staticTypeId() ) )
 		{
 			return true;
@@ -303,7 +303,7 @@ void TaskNode::preTasks( const Context *context, Tasks &tasks ) const
 {
 	for( PlugIterator cIt( preTasksPlug() ); !cIt.done(); ++cIt )
 	{
-		Plug *source = (*cIt)->source<Plug>();
+		Plug *source = (*cIt)->source();
 		if( source != *cIt )
 		{
 			if( TaskNodePtr n = runTimeCast<TaskNode>( source->node() ) )
@@ -318,7 +318,7 @@ void TaskNode::postTasks( const Context *context, Tasks &tasks ) const
 {
 	for( PlugIterator cIt( postTasksPlug() ); !cIt.done(); ++cIt )
 	{
-		Plug *source = (*cIt)->source<Plug>();
+		Plug *source = (*cIt)->source();
 		if( source != *cIt )
 		{
 			if( TaskNodePtr n = runTimeCast<TaskNode>( source->node() ) )

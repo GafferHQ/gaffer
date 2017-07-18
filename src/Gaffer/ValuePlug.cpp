@@ -274,7 +274,7 @@ class ValuePlug::ComputeProcess : public Process
 		{
 			const ValuePlug *p = sourcePlug( plug );
 
-			if( !p->getInput<Plug>() )
+			if( !p->getInput() )
 			{
 				if( p->direction()==In || !p->ancestor<ComputeNode>() )
 				{
@@ -386,7 +386,7 @@ class ValuePlug::ComputeProcess : public Process
 		static IECore::ObjectPtr nullGetter( const IECore::MurmurHash &h, size_t &cost )
 		{
 			cost = 0;
-			return NULL;
+			return nullptr;
 		}
 
 		// A cache mapping from ValuePlug::hash() to the result of the previous computation
@@ -479,7 +479,7 @@ ValuePlug::ValuePlug( const std::string &name, Direction direction,
 }
 
 ValuePlug::ValuePlug( const std::string &name, Direction direction, unsigned flags )
-	:	Plug( name, direction, flags ), m_defaultValue( NULL ), m_staticValue( NULL )
+	:	Plug( name, direction, flags ), m_defaultValue( nullptr ), m_staticValue( nullptr )
 {
 	// We expect to have children added/removed, so arrange to deal with that
 	// appropriately. The other constructor above is for leaf plugs (this is
@@ -503,7 +503,7 @@ bool ValuePlug::acceptsChild( const GraphComponent *potentialChild ) const
 		return false;
 	}
 
-	if( m_staticValue != NULL )
+	if( m_staticValue != nullptr )
 	{
 		return false;
 	}
@@ -539,7 +539,7 @@ bool ValuePlug::acceptsInput( const Plug *input ) const
 
 void ValuePlug::setInput( PlugPtr input )
 {
-	if( input.get() == getInput<Plug>() )
+	if( input.get() == getInput() )
 	{
 		return;
 	}
@@ -577,7 +577,7 @@ bool ValuePlug::settable() const
 		return false;
 	}
 
-	if( getInput<Plug>() )
+	if( getInput() )
 	{
 		return false;
 	}
@@ -627,7 +627,7 @@ void ValuePlug::setFrom( const ValuePlug *other )
 
 void ValuePlug::setToDefault()
 {
-	if( m_defaultValue != NULL )
+	if( m_defaultValue != nullptr )
 	{
 		setObjectValue( m_defaultValue );
 	}
@@ -642,7 +642,7 @@ void ValuePlug::setToDefault()
 
 bool ValuePlug::isSetToDefault() const
 {
-	if( m_defaultValue != NULL )
+	if( m_defaultValue != nullptr )
 	{
 		return getObjectValue()->isEqualTo( m_defaultValue.get() );
 	}
@@ -694,7 +694,7 @@ IECore::ConstObjectPtr ValuePlug::getObjectValue( const IECore::MurmurHash *prec
 
 void ValuePlug::setObjectValue( IECore::ConstObjectPtr value )
 {
-	bool haveInput = getInput<Plug>();
+	bool haveInput = getInput();
 	if( direction()==In && !haveInput )
 	{
 		// input plug with no input connection. there can only ever be a single value,

@@ -63,7 +63,7 @@ class SignalClass : public boost::python::class_<Signal, boost::noncopyable>
 
 	public :
 
-		SignalClass( const char *className, const char *docString = NULL );
+		SignalClass( const char *className, const char *docString = nullptr );
 
 };
 

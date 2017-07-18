@@ -34,6 +34,8 @@
 //
 //////////////////////////////////////////////////////////////////////////
 
+#include <memory>
+
 #include <sys/utsname.h>
 #include <zlib.h>
 
@@ -110,7 +112,7 @@ void copyBufferArea( const float *inData, const Imath::Box2i &inArea, float *out
 	}
 }
 
-typedef boost::shared_ptr<ImageOutput> ImageOutputPtr;
+typedef std::shared_ptr<ImageOutput> ImageOutputPtr;
 
 class TileProcessor
 {
@@ -184,7 +186,7 @@ class FlatTileWriter
 				m_outputDataWindow( m_format.fromEXRSpace( Imath::Box2i( Imath::V2i( m_spec.x, m_spec.y ), Imath::V2i( m_spec.x + m_spec.width - 1, m_spec.y + m_spec.height - 1 ) ) ) ),
 				m_numTiles( Imath::V2i( (int)ceil( float( m_spec.width ) / m_spec.tile_width ), (int)ceil( float( m_spec.height ) / m_spec.tile_height ) ) ),
 				m_nextTileIndex( 0 ),
-				m_blackTile( NULL )
+				m_blackTile( nullptr )
 		{
 			m_tilesData.resize( m_numTiles.x * m_numTiles.y );
 			m_tilesFilled.resize( m_numTiles.x * m_numTiles.y, false );
@@ -255,7 +257,7 @@ class FlatTileWriter
 
 		inline ConstFloatVectorDataPtr blackTile()
 		{
-			if( m_blackTile == NULL )
+			if( m_blackTile == nullptr )
 			{
 				m_blackTile = new IECore::FloatVectorData( std::vector<float>( m_spec.tile_width * m_spec.tile_height * m_spec.channelnames.size(), 0. ) );
 			}
@@ -516,7 +518,7 @@ void setImageSpecFormatOptions( const ImageWriter *node, ImageSpec *spec, const 
 {
 	const ValuePlug *optionsPlug = node->getChild<ValuePlug>( fileFormatName );
 
-	if( optionsPlug == NULL)
+	if( optionsPlug == nullptr)
 	{
 		return;
 	}
@@ -524,7 +526,7 @@ void setImageSpecFormatOptions( const ImageWriter *node, ImageSpec *spec, const 
 	const StringPlug *dataTypePlug = optionsPlug->getChild<StringPlug>( g_dataTypePlugName );
 	std::string dataType;
 
-	if( dataTypePlug != NULL )
+	if( dataTypePlug != nullptr )
 	{
 		dataType = dataTypePlug->getValue();
 
@@ -576,14 +578,14 @@ void setImageSpecFormatOptions( const ImageWriter *node, ImageSpec *spec, const 
 
 	const IntPlug *modePlug = optionsPlug->getChild<IntPlug>( g_modePlugName );
 
-	if( modePlug != NULL && modePlug->getValue() == ImageWriter::Tile )
+	if( modePlug != nullptr && modePlug->getValue() == ImageWriter::Tile )
 	{
 		spec->tile_width = spec->tile_height = ImagePlug::tileSize();
 	}
 
 	const StringPlug *compressionPlug = optionsPlug->getChild<StringPlug>( g_compressionPlugName );
 
-	if( compressionPlug != NULL )
+	if( compressionPlug != nullptr )
 	{
 		spec->attribute( "compression", compressionPlug->getValue() );
 	}
@@ -863,7 +865,7 @@ const std::string ImageWriter::currentFileFormat() const
 {
 	const std::string fileName = fileNamePlug()->getValue();
 	ImageOutputPtr out( ImageOutput::create( fileName.c_str() ) );
-	if( out != NULL )
+	if( out != nullptr )
 	{
 		return out->format_name();
 	}
@@ -942,7 +944,7 @@ IECore::MurmurHash ImageWriter::hash( const Context *context ) const
 	if( fileFormat != "" )
 	{
 		const ValuePlug *fmtSettingsPlug = fileFormatSettingsPlug( fileFormat );
-		if( fmtSettingsPlug != NULL )
+		if( fmtSettingsPlug != nullptr )
 		{
 			h.append( fmtSettingsPlug->hash() );
 		}

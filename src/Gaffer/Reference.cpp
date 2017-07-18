@@ -66,7 +66,7 @@ void copyInputsAndValues( Gaffer::Plug *srcPlug, Gaffer::Plug *dstPlug, bool ign
 	// recursion to the `setInput()` call, which will
 	// also set all descendant inputs.
 
-	if( Plug *input = srcPlug->getInput<Plug>() )
+	if( Plug *input = srcPlug->getInput() )
 	{
 		dstPlug->setInput( input );
 		return;
@@ -80,7 +80,7 @@ void copyInputsAndValues( Gaffer::Plug *srcPlug, Gaffer::Plug *dstPlug, bool ign
 
 	if( !dstPlug->children().size() )
 	{
-		dstPlug->setInput( NULL );
+		dstPlug->setInput( nullptr );
 		if( ValuePlug *srcValuePlug = runTimeCast<ValuePlug>( srcPlug ) )
 		{
 			if( !ignoreDefaultValues || !srcValuePlug->isSetToDefault() )
@@ -308,7 +308,7 @@ void Reference::loadInternal( const std::string &fileName )
 		}
 
 		// remove the old plug now we're done with it.
-		oldPlug->parent<GraphComponent>()->removeChild( oldPlug );
+		oldPlug->parent()->removeChild( oldPlug );
 	}
 
 	// Finish up.
@@ -334,7 +334,7 @@ bool Reference::isReferencePlug( const Plug *plug ) const
 
 	// find ancestor of p which is a direct child of this node:
 	const Plug* ancestorPlug = plug;
-	const GraphComponent* parent = plug->parent<GraphComponent>();
+	const GraphComponent* parent = plug->parent();
 	while( parent != this )
 	{
 		ancestorPlug = runTimeCast< const Plug >( parent );
@@ -344,7 +344,7 @@ bool Reference::isReferencePlug( const Plug *plug ) const
 			// so we exit the loop.
 			break;
 		}
-		parent = ancestorPlug->parent<GraphComponent>();
+		parent = ancestorPlug->parent();
 	}
 
 	if( ancestorPlug && boost::starts_with( ancestorPlug->getName().c_str(), "__" ) )

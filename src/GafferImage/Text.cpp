@@ -34,6 +34,8 @@
 //
 //////////////////////////////////////////////////////////////////////////
 
+#include <memory>
+
 #include "ft2build.h"
 #include FT_FREETYPE_H
 
@@ -67,7 +69,7 @@ namespace
 FT_Library library()
 {
 	typedef tbb::enumerable_thread_specific<FT_Library> ThreadSpecificLibrary;
-	static ThreadSpecificLibrary g_threadLibraries( FT_Library( NULL ) );
+	static ThreadSpecificLibrary g_threadLibraries( FT_Library( nullptr ) );
 
 	FT_Library &l = g_threadLibraries.local();
 	if( !l )
@@ -84,7 +86,7 @@ FT_Library library()
 // We want to maintain a cache of FT_Faces, because creating them
 // is fairly costly. But since FT_Faces belong to FT_Libraries
 // the cache must be maintained per-thread.
-typedef boost::shared_ptr<FT_FaceRec_> FacePtr;
+typedef std::shared_ptr<FT_FaceRec_> FacePtr;
 FacePtr faceLoader( const std::string &font, size_t &cost )
 {
 	const char *e = getenv( "IECORE_FONT_PATHS" );
@@ -96,7 +98,7 @@ FacePtr faceLoader( const std::string &font, size_t &cost )
 		throw Exception( boost::str( boost::format( "Unable to find font \"%s\"." ) % font ) );
 	}
 
-	FT_Face face = NULL;
+	FT_Face face = nullptr;
 	FT_Error error = FT_New_Face( library(), file.c_str(), 0, &face );
 	// We use a smart pointer now to make sure we call FT_Done_Face no matter what.
 	FacePtr result( face, FT_Done_Face );
@@ -111,10 +113,10 @@ FacePtr faceLoader( const std::string &font, size_t &cost )
 }
 
 typedef LRUCache<string, FacePtr> FaceCache;
-typedef boost::shared_ptr<FaceCache> FaceCachePtr;
+typedef std::unique_ptr<FaceCache> FaceCachePtr;
 FaceCachePtr createFaceCache()
 {
-	return boost::make_shared<FaceCache>( faceLoader );
+	return FaceCachePtr( new FaceCache( faceLoader ) );
 }
 
 FacePtr face( const string &font, const V2i &size )
@@ -124,7 +126,7 @@ FacePtr face( const string &font, const V2i &size )
 
 	FacePtr face = g_faceCaches.local()->get( font );
 
-	FT_Set_Transform( face.get(), NULL, NULL );
+	FT_Set_Transform( face.get(), nullptr, nullptr );
 	FT_Error error = FT_Set_Pixel_Sizes( face.get(), size.x, size.y );
 	if( error )
 	{

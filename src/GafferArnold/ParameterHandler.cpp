@@ -172,7 +172,7 @@ Gaffer::Plug *setupColorPlug( const AtNodeEntry *node, const AtParamEntry *param
 			defaultValue[3] = AiParamGetDefault( parameter )->RGBA.a;
 			break;
 		default :
-			return NULL;
+			return nullptr;
 	}
 
 	ValueType minValue( Imath::limits<BaseType>::min() );
@@ -253,14 +253,14 @@ Gaffer::Plug *ParameterHandler::setupPlug( const IECore::InternedString &paramet
 					parameterName.string() %
 					nodeName( plugParent )
 			);
-			return NULL;
+			return nullptr;
 
 	}
 }
 
 Gaffer::Plug *ParameterHandler::setupPlug( const AtNodeEntry *node, const AtParamEntry *parameter, Gaffer::GraphComponent *plugParent, Gaffer::Plug::Direction direction )
 {
-	Plug *plug = NULL;
+	Plug *plug = nullptr;
 
 	int parameterType = AiParamGetType( parameter );
 
@@ -441,7 +441,7 @@ void ParameterHandler::setupPlugs( const AtNodeEntry *nodeEntry, Gaffer::GraphCo
 			continue;
 		}
 
-		const char *plugType = NULL;
+		const char *plugType = nullptr;
 		if( AiMetaDataGetStr( nodeEntry, name.c_str(), "gaffer.plugType", &plugType ) )
 		{
 			if( !strcmp( plugType, "" ) )

@@ -89,7 +89,7 @@ bool FilterPlug::acceptsInput( const Gaffer::Plug *input ) const
 	/// \todo Remove this compatibility for version 1.0.0.0?
 	if( runTimeCast<const IntPlug>( input ) )
 	{
-		const Plug *p = input->source<Plug>();
+		const Plug *p = input->source();
 		const Node *n = p->node();
 		if( runTimeCast<const FilterPlug>( p ) || runTimeCast<const SubGraph>( n ) || runTimeCast<const Dot>( n ) )
 		{

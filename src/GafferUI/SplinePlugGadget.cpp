@@ -189,7 +189,7 @@ bool SplinePlugGadget::selectionAcceptance( ConstStandardSetPtr selection, IECor
 	{
 		return false;
 	}
-	ConstGraphComponentPtr pp = p->parent<GraphComponent>();
+	ConstGraphComponentPtr pp = p->parent();
 	if( !pp )
 	{
 		return false;
@@ -399,7 +399,7 @@ bool SplinePlugGadget::keyPress( GadgetPtr gadget, const KeyEvent &event )
 		for( size_t i = 0, e = m_selection->size(); i < e ; i++ )
 		{
 			Plug *pointPlug = static_cast<Plug *>( m_selection->member( i ) );
-			GraphComponentPtr parent = pointPlug->parent<GraphComponent>();
+			GraphComponentPtr parent = pointPlug->parent();
 			if( parent )
 			{
 				parent->removeChild( pointPlug );

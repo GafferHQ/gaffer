@@ -66,7 +66,7 @@ class ContextMonitor : public Monitor
 
 		/// Statistics are only collected for the root and its
 		/// descendants.
-		ContextMonitor( const GraphComponent *root = NULL );
+		ContextMonitor( const GraphComponent *root = nullptr );
 		virtual ~ContextMonitor();
 
 		struct Statistics

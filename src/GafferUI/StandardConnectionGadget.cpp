@@ -232,7 +232,7 @@ Imath::V3f StandardConnectionGadget::closestPoint( const Imath::V3f& p ) const
 
 float StandardConnectionGadget::distanceToNodeGadget( const IECore::LineSegment3f &line, const Nodule *nodule ) const
 {
-	const NodeGadget *nodeGadget = nodule ? nodule->ancestor<NodeGadget>() : NULL;
+	const NodeGadget *nodeGadget = nodule ? nodule->ancestor<NodeGadget>() : nullptr;
 	if( !nodeGadget )
 	{
 		return Imath::limits<float>::max();
@@ -331,7 +331,7 @@ IECore::RunTimeTypedPtr StandardConnectionGadget::dragBegin( const DragDropEvent
 		( srcNodule() && MetadataAlgo::readOnly( srcNodule()->plug() ) )
 	)
 	{
-		return NULL;
+		return nullptr;
 	}
 
 	setPositionsFromNodules();
@@ -343,7 +343,7 @@ IECore::RunTimeTypedPtr StandardConnectionGadget::dragBegin( const DragDropEvent
 		case Gaffer::Plug::In :
 			return dstNodule()->plug()->getInput<Gaffer::Plug>();
 		default :
-			return NULL;
+			return nullptr;
 	}
 }
 
@@ -368,7 +368,7 @@ bool StandardConnectionGadget::dragEnd( const DragDropEvent &event )
 	{
 		// noone wanted the drop so we'll disconnect
 		Gaffer::UndoScope undoEnabler( dstNodule()->plug()->ancestor<Gaffer::ScriptNode>() );
-		dstNodule()->plug()->setInput( NULL );
+		dstNodule()->plug()->setInput( nullptr );
 	}
 	else
 	{

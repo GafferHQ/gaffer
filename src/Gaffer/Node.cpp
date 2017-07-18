@@ -149,7 +149,7 @@ void Node::parentChanging( Gaffer::GraphComponent *newParent )
 		vector<PlugPtr> toDisconnect;
 		for( RecursivePlugIterator it( this ); !it.done(); ++it )
 		{
-			if( Plug *input = (*it)->getInput<Plug>() )
+			if( Plug *input = (*it)->getInput() )
 			{
 				if( !this->isAncestorOf( input ) )
 				{
@@ -167,7 +167,7 @@ void Node::parentChanging( Gaffer::GraphComponent *newParent )
 
 		for( vector<PlugPtr>::const_iterator it = toDisconnect.begin(), eIt = toDisconnect.end(); it != eIt; ++it )
 		{
-			(*it)->setInput( NULL );
+			(*it)->setInput( nullptr );
 		}
 	}
 }

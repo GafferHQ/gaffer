@@ -35,11 +35,12 @@
 //
 //////////////////////////////////////////////////////////////////////////
 
+#include <memory>
+
 #include "boost/bind.hpp"
 #include "boost/bind/placeholders.hpp"
 #include "boost/lexical_cast.hpp"
 #include "boost/multi_array.hpp"
-#include "boost/shared_ptr.hpp"
 
 #include "IECore/LRUCache.h"
 #include "IECore/DisplayDriverServer.h"
@@ -275,7 +276,7 @@ class GafferDisplayDriver : public IECore::DisplayDriver
 			)
 			{
 				// outside data window
-				return NULL;
+				return nullptr;
 			}
 
 			tbb::spin_rw_mutex::scoped_lock tileLock( m_tileMutex, false /* read */ );
@@ -624,8 +625,7 @@ namespace
 {
 
 typedef set<PlugPtr> PlugSet;
-/// \todo Use std::unique_ptr when we can guarantee C++11
-typedef boost::shared_ptr<PlugSet> PlugSetPtr;
+typedef std::unique_ptr<PlugSet> PlugSetPtr;
 
 struct PendingUpdates
 {
@@ -665,7 +665,7 @@ void Display::dataReceived()
 		if( !pending.plugs.get() )
 		{
 			scheduleUpdate = true;
-			pending.plugs = boost::make_shared<PlugSet>();
+			pending.plugs.reset( new PlugSet );
 		}
 		pending.plugs->insert( outPlug() );
 	}
@@ -689,8 +689,7 @@ void Display::dataReceivedUI()
 	{
 		PendingUpdates &pending = pendingUpdates();
 		tbb::spin_mutex::scoped_lock lock( pending.mutex );
-		batch = pending.plugs;
-		pending.plugs.reset();
+		batch.reset( pending.plugs.release() );
 	}
 
 	// Now increment the update count for the Display nodes

@@ -34,14 +34,7 @@
 //
 //////////////////////////////////////////////////////////////////////////
 
-#include "tbb/tbb_thread.h"
-#include "tbb/tbb_config.h"
-
-#if TBB_IMPLEMENT_CPP0X
-#include "tbb/compat/thread"
-#else
 #include <thread>
-#endif
 
 #include "boost/bind.hpp"
 #include "boost/lexical_cast.hpp"
@@ -191,7 +184,7 @@ class Catalogue::InternalImage : public ImageNode
 				copyChannels()->inPlugs()->getChild<Plug>( numDisplays++ )->setInput( displayCopy->outPlug() );
 			}
 
-			m_saver = NULL;
+			m_saver = nullptr;
 			if( other->m_saver )
 			{
 				m_saver = other->m_saver;
@@ -251,7 +244,7 @@ class Catalogue::InternalImage : public ImageNode
 			addChild( display );
 			ArrayPlug *a = copyChannels()->inPlugs();
 			size_t nextIndex = a->children().size() - 1;
-			if( nextIndex == 1 && !a->getChild<ImagePlug>( 0 )->getInput<Plug>() )
+			if( nextIndex == 1 && !a->getChild<ImagePlug>( 0 )->getInput() )
 			{
 				// CopyChannels starts with two input plugs, and we must use
 				// the first one to make sure the format etc is passed through.
@@ -316,7 +309,7 @@ class Catalogue::InternalImage : public ImageNode
 
 		void updateImageFlags( unsigned flags, bool enable )
 		{
-			Plug *p = fileNamePlug()->getInput<Plug>();
+			Plug *p = fileNamePlug()->getInput();
 			if( !p )
 			{
 				return;
@@ -519,7 +512,7 @@ class Catalogue::InternalImage : public ImageNode
 					}
 
 					// Destroy the image to release the memory used by the copied display drivers.
-					m_imageCopy = NULL;
+					m_imageCopy = nullptr;
 				}
 
 				void wrapUpClient( InternalImage *client )
@@ -532,7 +525,7 @@ class Catalogue::InternalImage : public ImageNode
 					// so that we can reuse the cache entries created by the original
 					// Display nodes, rather than force an immediate load of the image
 					// from disk, which would be slow.
-					client->outPlug()->channelDataPlug()->setInput( NULL );
+					client->outPlug()->channelDataPlug()->setInput( nullptr );
 
 					client->removeDisplays();
 					client->updateImageFlags( Plug::Serialisable, true );
@@ -744,7 +737,7 @@ Catalogue::InternalImage *Catalogue::imageNode( Image *image )
 
 const Catalogue::InternalImage *Catalogue::imageNode( const Image *image )
 {
-	const InternalImage *result = NULL;
+	const InternalImage *result = nullptr;
 	for( DownstreamIterator it( image->fileNamePlug() ); !it.done(); ++it )
 	{
 		if( const InternalImage *internalImage = dynamic_cast<const InternalImage *>( it->node() ) )
@@ -839,7 +832,7 @@ void Catalogue::imageRemoved( GraphComponent *graphComponent )
 	for( size_t i = 0, offset = 0; i < plug->children().size(); ++i )
 	{
 		Plug *element = plug->getChild<Plug>( i );
-		if( !element->getInput<Plug>() )
+		if( !element->getInput() )
 		{
 			offset++;
 		}
@@ -847,11 +840,11 @@ void Catalogue::imageRemoved( GraphComponent *graphComponent )
 		{
 			if( i + offset < plug->children().size() - 1 )
 			{
-				element->setInput( plug->getChild<Plug>( i + offset )->source<Plug>() );
+				element->setInput( plug->getChild<Plug>( i + offset )->source() );
 			}
 			else
 			{
-				element->setInput( NULL );
+				element->setInput( nullptr );
 			}
 		}
 	}
@@ -896,7 +889,7 @@ void Catalogue::driverCreated( IECore::DisplayDriver *driver, const IECore::Comp
 	// AOVs into a single image. We iterate backwards
 	// because the last image is most likely to be the
 	// one we want.
-	Plug *images = imagesPlug()->source<Plug>();
+	Plug *images = imagesPlug()->source();
 	for( int i = images->children().size() - 1; i >= 0; --i )
 	{
 		InternalImage *candidateImage = imageNode( images->getChild<Image>( i ) );

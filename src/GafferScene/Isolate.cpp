@@ -76,7 +76,7 @@ struct Isolate::SetsToKeep
 			}
 			else
 			{
-				m_sets[i] = NULL;
+				m_sets[i] = nullptr;
 			}
 		}
 	}
@@ -200,7 +200,7 @@ bool Isolate::acceptsInput( const Gaffer::Plug *plug, const Gaffer::Plug *inputP
 
 	if( plug == filterPlug() )
 	{
-		if( const Filter *filter = runTimeCast<const Filter>( inputPlug->source<Plug>()->node() ) )
+		if( const Filter *filter = runTimeCast<const Filter>( inputPlug->source()->node() ) )
 		{
 			if(
 				filter->sceneAffectsMatch( inPlug(), inPlug()->boundPlug() ) ||

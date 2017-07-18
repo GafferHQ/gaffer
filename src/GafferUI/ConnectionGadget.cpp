@@ -168,7 +168,7 @@ ConnectionGadgetPtr ConnectionGadget::create( NodulePtr srcNodule, NodulePtr dst
 		t = IECore::RunTimeTyped::baseTypeId( t );
 	}
 
-	return NULL;
+	return nullptr;
 }
 
 void ConnectionGadget::registerConnectionGadget( IECore::TypeId dstPlugType, ConnectionGadgetCreator creator )

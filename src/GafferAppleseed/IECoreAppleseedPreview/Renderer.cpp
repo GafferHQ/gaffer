@@ -118,7 +118,7 @@ T *reportedCast( const RunTimeTyped *v, const char *type, const InternedString &
 	}
 
 	msg( Msg::Warning, "AppleseedRenderer", boost::format( "Expected %s but got %s for %s \"%s\"." ) % T::staticTypeName() % v->typeName() % type % name.c_str() );
-	return NULL;
+	return nullptr;
 }
 
 } // namespace
@@ -478,7 +478,7 @@ class AppleseedEntity : public IECoreScenePreview::Renderer::ObjectInterface
 			LockGuardType lock( g_colorsMutex );
 			pair<string, renderer::ColorEntity*> c = ColorAlgo::createColorEntity( container, color, name );
 
-			if( c.second != NULL )
+			if( c.second != nullptr )
 			{
 				m_colors.push_back( c.second );
 			}
@@ -760,7 +760,7 @@ class AppleseedAttributes : public IECoreScenePreview::Renderer::AttributesInter
 			CompoundObject::ObjectMap::const_iterator it = attributes->members().find( name );
 			if( it == attributes->members().end() )
 			{
-				return NULL;
+				return nullptr;
 			}
 			return reportedCast<const T>( it->second.get(), "attribute", name );
 		}
@@ -1228,12 +1228,12 @@ class AppleseedPrimitive : public AppleseedEntity
 
 		void init()
 		{
-			m_objectAssembly = NULL;
-			m_objectAssemblyInstance = NULL;
-			m_object = NULL;
-			m_objectInstance = NULL;
-			m_surfaceShader = NULL;
-			m_material = NULL;
+			m_objectAssembly = nullptr;
+			m_objectAssemblyInstance = nullptr;
+			m_object = nullptr;
+			m_objectInstance = nullptr;
+			m_surfaceShader = nullptr;
+			m_material = nullptr;
 		}
 
 		void clearMaterial()
@@ -1243,7 +1243,7 @@ class AppleseedPrimitive : public AppleseedEntity
 			if( m_surfaceShader )
 			{
 				removeSurfaceShader( m_surfaceShader );
-				m_surfaceShader = NULL;
+				m_surfaceShader = nullptr;
 			}
 
 			m_shaderGroup.reset();
@@ -1251,7 +1251,7 @@ class AppleseedPrimitive : public AppleseedEntity
 			if( m_material )
 			{
 				removeMaterial( m_material );
-				m_material = NULL;
+				m_material = nullptr;
 			}
 		}
 
@@ -1416,13 +1416,13 @@ namespace
 bool isEnvironmentLight( const string &lightModel )
 {
 	asr::EnvironmentEDFFactoryRegistrar envFactoryRegistrar;
-	return envFactoryRegistrar.lookup( lightModel.c_str() ) != NULL;
+	return envFactoryRegistrar.lookup( lightModel.c_str() ) != nullptr;
 }
 
 bool isDeltaLight( const string &lightModel )
 {
 	asr::LightFactoryRegistrar lightFactoryRegistrar;
-	return lightFactoryRegistrar.lookup( lightModel.c_str() ) != NULL;
+	return lightFactoryRegistrar.lookup( lightModel.c_str() ) != nullptr;
 }
 
 string getLightModel( const ObjectVector* lightShader )
@@ -1460,7 +1460,7 @@ const CompoundDataMap *getLightParameters( const ObjectVector* lightShader )
 		}
 	}
 
-	return NULL;
+	return nullptr;
 }
 
 /// Appleseed light handle base class.
@@ -1519,7 +1519,7 @@ class AppleseedEnvironmentLight : public AppleseedLight
 
 		AppleseedEnvironmentLight( asr::Project &project, const string &name,  const IECoreScenePreview::Renderer::AttributesInterface *attributes, bool interactive )
 			:	AppleseedLight( project, name, attributes, interactive )
-			,	m_environment( NULL )
+			,	m_environment( nullptr )
 		{
 			AppleseedEnvironmentLight::attributes( attributes );
 		}
@@ -1603,7 +1603,7 @@ class AppleseedDeltaLight : public AppleseedLight
 	public :
 
 		AppleseedDeltaLight( asr::Project &project, const string &name, const IECoreScenePreview::Renderer::AttributesInterface *attributes, bool interactive )
-			:	AppleseedLight( project, name, attributes, interactive ) , m_light( NULL ) , m_transform( asf::Transformd::identity() )
+			:	AppleseedLight( project, name, attributes, interactive ) , m_light( nullptr ) , m_transform( asf::Transformd::identity() )
 		{
 			AppleseedDeltaLight::attributes( attributes );
 		}
@@ -1670,7 +1670,7 @@ class AppleseedDeltaLight : public AppleseedLight
 				removeLight( m_light );
 				removeSceneTextures();
 				removeSceneColors();
-				m_light = NULL;
+				m_light = nullptr;
 			}
 		}
 
@@ -1711,7 +1711,7 @@ class ScopedLogTarget
 
 		~ScopedLogTarget()
 		{
-			if( m_logTarget.get() != NULL )
+			if( m_logTarget.get() != nullptr )
 			{
 				asr::global_logger().remove_target( m_logTarget.get() );
 			}
@@ -1719,8 +1719,8 @@ class ScopedLogTarget
 
 		void setLogTarget( asf::auto_release_ptr<asf::ILogTarget> logTarget )
 		{
-			assert( m_logTarget.get() == NULL );
-			assert( logTarget.get() != NULL );
+			assert( m_logTarget.get() == nullptr );
+			assert( logTarget.get() != nullptr );
 
 			asr::global_logger().add_target( logTarget.get() );
 			m_logTarget = logTarget;
@@ -1763,7 +1763,7 @@ class AppleseedRenderer : public IECoreScenePreview::Renderer
 		{
 			if( name == g_cameraOptionName )
 			{
-				if( value == NULL )
+				if( value == nullptr )
 				{
 					m_cameraName = "";
 				}
@@ -1790,7 +1790,7 @@ class AppleseedRenderer : public IECoreScenePreview::Renderer
 				// special cases.
 				if( name == g_renderPasses )
 				{
-					if( value == NULL )
+					if( value == nullptr )
 					{
 						// Reset number of render passes to 1.
 						m_project->configurations().get_by_name( "final" )->get_parameters().insert_path( "shading_result_framebuffer", "ephemeral" );
@@ -1814,7 +1814,7 @@ class AppleseedRenderer : public IECoreScenePreview::Renderer
 
 				if( name == g_overrideShadingMode )
 				{
-					if( value == NULL )
+					if( value == nullptr )
 					{
 						// Remove diagnostic shader override.
 						m_project->configurations().get_by_name( "final" )->get_parameters().remove_path( "shading_engine.override_shading" );
@@ -1840,7 +1840,7 @@ class AppleseedRenderer : public IECoreScenePreview::Renderer
 
 				if( name == g_ptMaxRayIntensity )
 				{
-					if( value == NULL )
+					if( value == nullptr )
 					{
 						m_project->configurations().get_by_name( "final" )->get_parameters().remove_path( optName.c_str() );
 						m_project->configurations().get_by_name( "interactive" )->get_parameters().remove_path( optName.c_str() );
@@ -1869,7 +1869,7 @@ class AppleseedRenderer : public IECoreScenePreview::Renderer
 					// expects the total number of samples, not samples per pixels.
 					// We save the value and set it later in the render() method,
 					// where we have all the information we need.
-					if( value == NULL )
+					if( value == nullptr )
 					{
 						m_maxInteractiveRenderSamples = 0;
 					}
@@ -1882,7 +1882,7 @@ class AppleseedRenderer : public IECoreScenePreview::Renderer
 
 				if( boost::algorithm::ends_with( optName, "max_path_length" ) )
 				{
-					if( value == NULL )
+					if( value == nullptr )
 					{
 						m_project->configurations().get_by_name( "final" )->get_parameters().remove_path( optName.c_str() );
 						m_project->configurations().get_by_name( "interactive" )->get_parameters().remove_path( optName.c_str() );
@@ -1906,7 +1906,7 @@ class AppleseedRenderer : public IECoreScenePreview::Renderer
 				}
 
 				// general case.
-				if( value == NULL )
+				if( value == nullptr )
 				{
 					m_project->configurations().get_by_name( "final" )->get_parameters().remove_path( optName.c_str() );
 					m_project->configurations().get_by_name( "interactive" )->get_parameters().remove_path( optName.c_str() );
@@ -1929,7 +1929,7 @@ class AppleseedRenderer : public IECoreScenePreview::Renderer
 			{
 				if( name == g_searchPath )
 				{
-					if( value == NULL )
+					if( value == nullptr )
 					{
 						m_project->search_paths().reset();
 					}
@@ -1943,7 +1943,7 @@ class AppleseedRenderer : public IECoreScenePreview::Renderer
 
 				if( name == g_environmentEDFName )
 				{
-					if( value == NULL )
+					if( value == nullptr )
 					{
 						m_environmentEDFName = "";
 					}
@@ -1956,7 +1956,7 @@ class AppleseedRenderer : public IECoreScenePreview::Renderer
 
 				if( name == g_environmentEDFBackground )
 				{
-					if( value == NULL )
+					if( value == nullptr )
 					{
 						m_environmentEDFVisible = false;
 					}
@@ -1969,7 +1969,7 @@ class AppleseedRenderer : public IECoreScenePreview::Renderer
 
 				if( name == g_logLevelOptionName )
 				{
-					if( value == NULL )
+					if( value == nullptr )
 					{
 						asr::global_logger().set_verbosity_level( asf::LogMessage::Info );
 					}
@@ -1983,7 +1983,7 @@ class AppleseedRenderer : public IECoreScenePreview::Renderer
 
 				if( name == g_logFileNameOptionName )
 				{
-					if( value == NULL )
+					if( value == nullptr )
 					{
 						m_logFileName.clear();
 					}
@@ -2004,7 +2004,7 @@ class AppleseedRenderer : public IECoreScenePreview::Renderer
 				string optName( name.c_str() );
 				replace( optName.begin(), optName.end(), ':', '.' );
 
-				if( value == NULL )
+				if( value == nullptr )
 				{
 					m_project->configurations().get_by_name( "final" )->get_parameters().remove_path( optName.c_str() );
 					m_project->configurations().get_by_name( "interactive" )->get_parameters().remove_path( optName.c_str() );
@@ -2032,7 +2032,7 @@ class AppleseedRenderer : public IECoreScenePreview::Renderer
 
 		virtual void output( const InternedString &name, const Output *output )
 		{
-			if( output == NULL )
+			if( output == nullptr )
 			{
 				// Reset display / image output related params.
 				m_project->get_frame()->get_parameters().remove_path( "output_filename" );
@@ -2098,7 +2098,7 @@ class AppleseedRenderer : public IECoreScenePreview::Renderer
 		virtual ObjectInterfacePtr light( const string &name, const Object *object, const AttributesInterface *attributes )
 		{
 			// For now we only do area lights using OSL emission().
-			if( object == NULL )
+			if( object == nullptr )
 			{
 				const AppleseedAttributes *appleseedAttributes = static_cast<const AppleseedAttributes*>( attributes );
 				if( appleseedAttributes && appleseedAttributes->m_lightShader )
@@ -2189,7 +2189,7 @@ class AppleseedRenderer : public IECoreScenePreview::Renderer
 		virtual void render()
 		{
 			// Create a default camera if needed.
-			if( m_project->get_uncached_active_camera() == NULL )
+			if( m_project->get_uncached_active_camera() == nullptr )
 			{
 				asf::auto_release_ptr<asr::Camera> camera = asr::PinholeCameraFactory().create( "__default_camera", asr::ParamArray() );
 				m_project->get_scene()->cameras().insert( camera );
@@ -2273,7 +2273,7 @@ class AppleseedRenderer : public IECoreScenePreview::Renderer
 
 		void createProject()
 		{
-			assert( m_project.get() == NULL );
+			assert( m_project.get() == nullptr );
 
 			m_project = asr::ProjectFactory::create( "project" );
 			m_project->add_default_configurations();
@@ -2388,7 +2388,7 @@ class AppleseedRenderer : public IECoreScenePreview::Renderer
 			ProgressTileCallbackFactory tileCallbackFactory;
 			asr::ITileCallbackFactory *tileCallbackFactoryPtr = 0;
 
-			if( m_project->get_display() == NULL )
+			if( m_project->get_display() == nullptr )
 			{
 				// If we don't have a display, because we are rendering
 				// directly to an image file, use a progress reporting

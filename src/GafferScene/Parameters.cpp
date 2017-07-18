@@ -102,7 +102,7 @@ IECore::ConstObjectPtr Parameters::computeProcessedObject( const ScenePath &path
 	}
 
 	ConstObjectPtr outputObject = inputObject;
-	CompoundData *outputParameters = NULL;
+	CompoundData *outputParameters = nullptr;
 
 	if( const Camera *camera = runTimeCast<const Camera>( inputObject.get() ) )
 	{

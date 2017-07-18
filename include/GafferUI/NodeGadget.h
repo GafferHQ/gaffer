@@ -84,7 +84,7 @@ class NodeGadget : public Gadget
 		/// NodeGadget created can be controlled by registering a
 		/// "nodeGadget:type" metadata value for the node. Registering
 		/// "" suppresses creation of a NodeGadget, in which case
-		/// NULL will be returned.
+		/// nullptr will be returned.
 		static NodeGadgetPtr create( Gaffer::NodePtr node );
 
 		typedef boost::function<NodeGadgetPtr ( Gaffer::NodePtr )> NodeGadgetCreator;

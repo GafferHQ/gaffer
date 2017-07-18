@@ -72,45 +72,45 @@ Plug *SubGraph::correspondingInput( const Plug *output )
 
 const Plug *SubGraph::correspondingInput( const Plug *output ) const
 {
-	const Plug *internalOutput = output->getInput<Plug>();
+	const Plug *internalOutput = output->getInput();
 	if( !internalOutput )
 	{
-		return NULL;
+		return nullptr;
 	}
 
 	const DependencyNode *node = IECore::runTimeCast<const DependencyNode>( internalOutput->node() );
 	if( !node )
 	{
-		return NULL;
+		return nullptr;
 	}
 
 	const BoolPlug *externalEnabledPlug = enabledPlug();
 	if( !externalEnabledPlug )
 	{
-		return NULL;
+		return nullptr;
 	}
 
 	const BoolPlug *internalEnabledPlug = node->enabledPlug();
 	if( !internalEnabledPlug )
 	{
-		return NULL;
+		return nullptr;
 	}
 
-	if( internalEnabledPlug->getInput<Plug>() != externalEnabledPlug )
+	if( internalEnabledPlug->getInput() != externalEnabledPlug )
 	{
-		return NULL;
+		return nullptr;
 	}
 
 	const Plug *internalInput = node->correspondingInput( internalOutput );
 	if( !internalInput )
 	{
-		return NULL;
+		return nullptr;
 	}
 
-	const Plug *input = internalInput->getInput<Plug>();
+	const Plug *input = internalInput->getInput();
 	if( !input || input->node() != this )
 	{
-		return NULL;
+		return nullptr;
 	}
 
 	return input;

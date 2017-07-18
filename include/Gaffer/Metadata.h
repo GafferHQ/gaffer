@@ -65,11 +65,11 @@ class Metadata
 		/// Type for a singal emitted when new metadata is registered.
 		typedef boost::signal<void ( IECore::InternedString target, IECore::InternedString key ), CatchingSignalCombiner<void> > ValueChangedSignal;
 		/// Type for a signal emitted when new node metadata is registered. The
-		/// node argument will be NULL when generic (rather than per-instance)
+		/// node argument will be null when generic (rather than per-instance)
 		/// metadata is registered.
 		typedef boost::signal<void ( IECore::TypeId nodeTypeId, IECore::InternedString key, Gaffer::Node *node ), CatchingSignalCombiner<void> > NodeValueChangedSignal;
 		/// Type for a signal emitted when new plug metadata is registered. The
-		/// plug argument will be NULL when generic (rather than per-instance)
+		/// plug argument will be null when generic (rather than per-instance)
 		/// metadata is registered.
 		typedef boost::signal<void ( IECore::TypeId nodeTypeId, const StringAlgo::MatchPattern &plugPath, IECore::InternedString key, Gaffer::Plug *plug ), CatchingSignalCombiner<void> > PlugValueChangedSignal;
 
@@ -116,7 +116,7 @@ class Metadata
 		/// Value retrieval
 		/// ===============
 
-		/// Retrieves a value, returning NULL if none exists.
+		/// Retrieves a value, returning null if none exists.
 		template<typename T>
 		static typename T::ConstPtr value( IECore::InternedString target, IECore::InternedString key );
 		template<typename T>

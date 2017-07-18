@@ -98,26 +98,26 @@ const Gaffer::Plug *RenderManShader::correspondingInput( const Gaffer::Plug *out
 	ConstCompoundDataPtr ann = annotations();
 	if( !ann )
 	{
-		return NULL;
+		return nullptr;
 	}
 
 	const StringData *primaryInput = ann->member<StringData>( "primaryInput" );
 	if( !primaryInput )
 	{
-		return NULL;
+		return nullptr;
 	}
 
 	const Plug *result = parametersPlug()->getChild<Plug>( primaryInput->readable() );
 	if( !result )
 	{
 		IECore::msg( IECore::Msg::Error, "RenderManShader::correspondingInput", boost::format( "Parameter \"%s\" does not exist" ) % primaryInput->readable() );
-		return NULL;
+		return nullptr;
 	}
 
 	if( result->typeId() != Gaffer::Plug::staticTypeId() )
 	{
 		IECore::msg( IECore::Msg::Error, "RenderManShader::correspondingInput", boost::format( "Parameter \"%s\" is not of type shader" ) % primaryInput->readable() );
-		return NULL;
+		return nullptr;
 	}
 
 	return result;
@@ -181,7 +181,7 @@ bool RenderManShader::acceptsInput( const Plug *plug, const Plug *inputPlug ) co
 
 	if( parametersPlug()->isAncestorOf( plug ) )
 	{
-		const Plug *sourcePlug = inputPlug->source<Plug>();
+		const Plug *sourcePlug = inputPlug->source();
 
 		if( plug->typeId() == Plug::staticTypeId() )
 		{
@@ -219,10 +219,10 @@ bool RenderManShader::acceptsInput( const Plug *plug, const Plug *inputPlug ) co
 				return true;
 			}
 			InternedString parameterName = plug->getName();
-			if( plug->parent<GraphComponent>() != parametersPlug() )
+			if( plug->parent() != parametersPlug() )
 			{
 				// array parameter
-				parameterName = plug->parent<GraphComponent>()->getName();
+				parameterName = plug->parent()->getName();
 			}
 			const StringData *dstType = dstAnnotations->member<StringData>( parameterName.string() + ".coshaderType" );
 			if( !dstType )
@@ -263,10 +263,10 @@ const IECore::ConstCompoundDataPtr RenderManShader::annotations() const
 	std::string shaderName = namePlug()->getValue();
 	if( !shaderName.size() )
 	{
-		return NULL;
+		return nullptr;
 	}
 
-	IECore::ConstShaderPtr shader = NULL;
+	IECore::ConstShaderPtr shader = nullptr;
 	try
 	{
 		shader = runTimeCast<const IECore::Shader>( shaderLoader()->read( shaderName + ".sdl" ) );
@@ -274,7 +274,7 @@ const IECore::ConstCompoundDataPtr RenderManShader::annotations() const
 	catch( const std::exception &e )
 	{
 		IECore::msg( IECore::Msg::Error, "RenderManShader::annotations", e.what() );
-		return NULL;
+		return nullptr;
 	}
 
 	return shader->blindData()->member<CompoundData>( "ri:annotations" );
@@ -330,9 +330,9 @@ static void loadCoshaderParameter( Gaffer::Plug *parametersPlug, const std::stri
 	}
 
 	PlugPtr plug = new Plug( name, Plug::In, Plug::Default | Plug::Dynamic );
-	if( existingPlug && existingPlug->getInput<Plug>() )
+	if( existingPlug && existingPlug->getInput() )
 	{
-		plug->setInput( existingPlug->getInput<Plug>() );
+		plug->setInput( existingPlug->getInput() );
 	}
 
 	parametersPlug->setChild( name, plug );
@@ -372,7 +372,7 @@ static void loadCoshaderArrayParameter( Gaffer::Plug *parametersPlug, const std:
 		{
 			if( i < plug->children().size() )
 			{
-				plug->getChild<Plug>( i )->setInput( existingPlug->getChild<Plug>( i )->getInput<Plug>() );
+				plug->getChild<Plug>( i )->setInput( existingPlug->getChild<Plug>( i )->getInput() );
 			}
 			else
 			{
@@ -415,9 +415,9 @@ static void loadNumericParameter( Gaffer::Plug *parametersPlug, const std::strin
 
 	if( existingPlug )
 	{
-		if( existingPlug->template getInput<Plug>() )
+		if( existingPlug->template getInput() )
 		{
-			plug->setInput( existingPlug->template getInput<Plug>() );
+			plug->setInput( existingPlug->template getInput() );
 		}
 		else
 		{
@@ -493,9 +493,9 @@ static void loadCompoundNumericParameter( Gaffer::Plug *parametersPlug, const st
 		{
 			FloatPlug *existingComponentPlug = static_cast<GraphComponent *>( existingPlug )->getChild<FloatPlug>( i );
 			FloatPlug *componentPlug = static_cast<GraphComponent *>( plug.get() )->getChild<FloatPlug>( i );
-			if( existingComponentPlug->getInput<Plug>() )
+			if( existingComponentPlug->getInput() )
 			{
-				componentPlug->setInput( existingComponentPlug->getInput<Plug>() );
+				componentPlug->setInput( existingComponentPlug->getInput() );
 			}
 			else
 			{
@@ -610,7 +610,7 @@ static IECore::FloatVectorDataPtr parseFloats( const std::string &value )
 
 	if( !r || first != value.end() )
 	{
-		return NULL;
+		return nullptr;
 	}
 
 	return result;
@@ -674,7 +674,7 @@ static IECore::Color3fVectorDataPtr parseColors( const std::string &value )
 
 	if( !r || first != value.end() )
 	{
-		return NULL;
+		return nullptr;
 	}
 	return result;
 }
@@ -698,7 +698,7 @@ void RenderManShader::loadShaderParameters( const IECore::Shader *shader, Gaffer
 	{
 		for( int i = parametersPlug->children().size() - 1; i >= 0; --i )
 		{
-			parametersPlug->removeChild( parametersPlug->getChild<GraphComponent>( i ) );
+			parametersPlug->removeChild( parametersPlug->getChild( i ) );
 		}
 	}
 
@@ -855,7 +855,7 @@ void RenderManShader::loadShaderParameters( const IECore::Shader *shader, Gaffer
 	{
 		for( int i = parametersPlug->children().size() - 1; i >= 0; --i )
 		{
-			GraphComponent *child = parametersPlug->getChild<GraphComponent>( i );
+			GraphComponent *child = parametersPlug->getChild( i );
 			if( validPlugNames.find( child->getName().string() ) == validPlugNames.end() )
 			{
 				parametersPlug->removeChild( child );

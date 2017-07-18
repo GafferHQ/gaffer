@@ -72,7 +72,7 @@ class Nodule : public Gadget
 		/// Creates a Nodule for the specified plug. The type of nodule created can be
 		/// controlled by registering a "nodule:type" metadata value for the plug. Note
 		/// that registering a value of "" suppresses the creation of a Nodule, and in
-		/// this case NULL will be returned.
+		/// this case nullptr will be returned.
 		static NodulePtr create( Gaffer::PlugPtr plug );
 
 		typedef boost::function<NodulePtr ( Gaffer::PlugPtr )> NoduleCreator;

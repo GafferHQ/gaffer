@@ -50,9 +50,9 @@ class FileSystemPath : public Path
 
 	public :
 
-		FileSystemPath( PathFilterPtr filter = NULL, bool includeSequences = false );
-		FileSystemPath( const std::string &path, PathFilterPtr filter = NULL, bool includeSequences = false );
-		FileSystemPath( const Names &names, const IECore::InternedString &root = "/", PathFilterPtr filter = NULL, bool includeSequences = false );
+		FileSystemPath( PathFilterPtr filter = nullptr, bool includeSequences = false );
+		FileSystemPath( const std::string &path, PathFilterPtr filter = nullptr, bool includeSequences = false );
+		FileSystemPath( const Names &names, const IECore::InternedString &root = "/", PathFilterPtr filter = nullptr, bool includeSequences = false );
 
 		IE_CORE_DECLARERUNTIMETYPEDEXTENSION( Gaffer::FileSystemPath, FileSystemPathTypeId, Path );
 
@@ -78,7 +78,7 @@ class FileSystemPath : public Path
 		// Returns true if the path represents a FileSequence.
 		bool isFileSequence() const;
 		// Returns the FileSequence that represents the current leaf
-		// or NULL if this path is not a leaf, or does not represent
+		// or nullptr if this path is not a leaf, or does not represent
 		// a FileSequence.
 		IECore::FileSequencePtr fileSequence() const;
 

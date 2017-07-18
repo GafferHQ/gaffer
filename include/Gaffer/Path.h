@@ -77,9 +77,9 @@ class Path : public IECore::RunTimeTyped
 
 		typedef std::vector<IECore::InternedString> Names;
 
-		Path( PathFilterPtr filter = NULL );
-		Path( const std::string &path, PathFilterPtr filter = NULL );
-		Path( const Names &names, const IECore::InternedString &root = "/", PathFilterPtr filter = NULL );
+		Path( PathFilterPtr filter = nullptr );
+		Path( const std::string &path, PathFilterPtr filter = nullptr );
+		Path( const Names &names, const IECore::InternedString &root = "/", PathFilterPtr filter = nullptr );
 
 		IE_CORE_DECLARERUNTIMETYPEDEXTENSION( Gaffer::Path, PathTypeId, IECore::RunTimeTyped );
 
@@ -104,7 +104,7 @@ class Path : public IECore::RunTimeTyped
 		virtual void propertyNames( std::vector<IECore::InternedString> &names ) const;
 		/// Queries a property, whose name must have first been retrieved via propertyNames().
 		/// Derived class implementations should fall back to the base class implementation for
-		/// any unrecognised names. Returns NULL for unknown properties. May return NULL for invalid paths.
+		/// any unrecognised names. Returns null for unknown properties. May return null for invalid paths.
 		virtual IECore::ConstRunTimeTypedPtr property( const IECore::InternedString &name ) const;
 
 		/// Returns the parent of this path, or None if the path
@@ -117,7 +117,7 @@ class Path : public IECore::RunTimeTyped
 		size_t children( std::vector<PathPtr> &children ) const;
 
 		void setFilter( PathFilterPtr filter );
-		/// Filter may be NULL.
+		/// Filter may be null.
 		PathFilter *getFilter();
 		const PathFilter *getFilter() const;
 

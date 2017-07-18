@@ -130,12 +130,12 @@ void removeChild( GraphComponent &g, GraphComponentPtr c )
 
 GraphComponentPtr getChild( GraphComponent &g, const char *n )
 {
-	return g.getChild<GraphComponent>( n );
+	return g.getChild( n );
 }
 
 GraphComponentPtr descendant( GraphComponent &g, const char *n )
 {
-	return g.descendant<GraphComponent>( n );
+	return g.descendant( n );
 }
 
 void throwKeyError( const GraphComponent &g, const char *n )
@@ -149,7 +149,7 @@ void throwKeyError( const GraphComponent &g, const char *n )
 
 GraphComponentPtr getItem( GraphComponent &g, const char *n )
 {
-	GraphComponentPtr c = g.getChild<GraphComponent>( n );
+	GraphComponentPtr c = g.getChild( n );
 	if( c )
 	{
 		return c;
@@ -174,14 +174,14 @@ GraphComponentPtr getItem( GraphComponent &g, long index )
 		throw_error_already_set();
 	}
 
-	return g.getChild<GraphComponent>( index );
+	return g.getChild( index );
 }
 
 void delItem( GraphComponent &g, const char *n )
 {
 	{
 		IECorePython::ScopedGILRelease gilRelease;
-		if( GraphComponentPtr c = g.getChild<GraphComponent>( n ) )
+		if( GraphComponentPtr c = g.getChild( n ) )
 		{
 			g.removeChild( c );
 			return;
@@ -203,12 +203,12 @@ bool nonZero( GraphComponent &g )
 
 bool contains( GraphComponent &g, const char *n )
 {
-	return g.getChild<GraphComponent>( n );
+	return g.getChild( n );
 }
 
 GraphComponentPtr parent( GraphComponent &g )
 {
-	return g.parent<GraphComponent>();
+	return g.parent();
 }
 
 GraphComponentPtr ancestor( GraphComponent &g, IECore::TypeId t )

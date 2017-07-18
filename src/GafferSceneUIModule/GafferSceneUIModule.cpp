@@ -65,7 +65,7 @@ IECore::InternedStringVectorDataPtr objectAt( SceneGadget &g, IECore::LineSegmen
 	{
 		return result;
 	}
-	return NULL;
+	return nullptr;
 }
 
 } // namespace

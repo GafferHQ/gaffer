@@ -108,7 +108,7 @@ GadgetPtr createCustomGadget( const InternedString &gadgetType, GraphComponentPt
 	const CustomGadgetCreatorMap::const_iterator it = m.find( gadgetType );
 	if( it == m.end() )
 	{
-		return NULL;
+		return nullptr;
 	}
 	return it->second( parent );
 }
@@ -406,10 +406,10 @@ NoduleLayout::~NoduleLayout()
 
 Nodule *NoduleLayout::nodule( const Gaffer::Plug *plug )
 {
-	const GraphComponent *plugParent = plug->parent<GraphComponent>();
+	const GraphComponent *plugParent = plug->parent();
 	if( !plugParent )
 	{
-		return NULL;
+		return nullptr;
 	}
 
 	if( plugParent == m_parent.get() )
@@ -421,7 +421,7 @@ Nodule *NoduleLayout::nodule( const Gaffer::Plug *plug )
 			// for plug keys.
 			return static_cast<Nodule *>( it->second.gadget.get() );
 		}
-		return NULL;
+		return nullptr;
 	}
 	else if( const Plug *parentPlug = IECore::runTimeCast<const Plug>( plugParent ) )
 	{
@@ -431,7 +431,7 @@ Nodule *NoduleLayout::nodule( const Gaffer::Plug *plug )
 			return compoundNodule->nodule( plug );
 		}
 	}
-	return NULL;
+	return nullptr;
 }
 
 const Nodule *NoduleLayout::nodule( const Gaffer::Plug *plug ) const
@@ -447,7 +447,7 @@ Gadget *NoduleLayout::customGadget( const std::string &name )
 	{
 		return it->second.gadget.get();
 	}
-	return NULL;
+	return nullptr;
 }
 
 const Gadget *NoduleLayout::customGadget( const std::string &name ) const

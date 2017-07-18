@@ -119,13 +119,13 @@ class RendererServices : public OSL::RendererServices
 
 		virtual bool get_attribute( OSL::ShaderGlobals *sg, bool derivatives, ustring object, TypeDesc type, ustring name, void *value )
 		{
-			const RenderState *renderState = sg ? static_cast<RenderState *>( sg->renderstate ) : NULL;
+			const RenderState *renderState = sg ? static_cast<RenderState *>( sg->renderstate ) : nullptr;
 			if( !renderState )
 			{
 				return false;
 			}
 
-			const Data *data = renderState->context->get<Data>( name.c_str(), NULL );
+			const Data *data = renderState->context->get<Data>( name.c_str(), nullptr );
 			if( !data )
 			{
 				return false;
@@ -148,7 +148,7 @@ class RendererServices : public OSL::RendererServices
 		// So we implement it to search for an appropriate input plug and get its value.
 		virtual bool get_userdata( bool derivatives, ustring name, TypeDesc type, OSL::ShaderGlobals *sg, void *value )
 		{
-			const RenderState *renderState = sg ? static_cast<RenderState *>( sg->renderstate ) : NULL;
+			const RenderState *renderState = sg ? static_cast<RenderState *>( sg->renderstate ) : nullptr;
 			if( !renderState )
 			{
 				return false;
@@ -195,7 +195,7 @@ class RendererServices : public OSL::RendererServices
 
 		virtual bool has_userdata( ustring name, TypeDesc type, OSL::ShaderGlobals *sg )
 		{
-			return get_userdata( false, name, type, sg, NULL );
+			return get_userdata( false, name, type, sg, nullptr );
 		}
 
 };
@@ -271,8 +271,8 @@ class OSLExpressionEngine : public Gaffer::Expression::Engine
 			shadingSys->getattribute( m_shaderGroup.get(), "num_attributes_needed", numAttributes );
 			if( numAttributes )
 			{
-				ustring *attributeNames = NULL;
-				ustring *scopeNames = NULL;
+				ustring *attributeNames = nullptr;
+				ustring *scopeNames = nullptr;
 				shadingSys->getattribute( m_shaderGroup.get(), "attributes_needed", TypeDesc::PTR, &attributeNames );
 				shadingSys->getattribute( m_shaderGroup.get(), "attribute_scopes", TypeDesc::PTR, &scopeNames );
 				for( int i = 0; i < numAttributes; ++i )
@@ -289,7 +289,7 @@ class OSLExpressionEngine : public Gaffer::Expression::Engine
 			shadingSys->getattribute( m_shaderGroup.get(), "num_globals_needed", numGlobals );
 			if( numGlobals )
 			{
-				ustring *globalNames = NULL;
+				ustring *globalNames = nullptr;
 				shadingSys->getattribute( m_shaderGroup.get(), "globals_needed", TypeDesc::PTR, &globalNames );
 				for( int i = 0; i < numGlobals; ++i )
 				{
@@ -490,7 +490,7 @@ class OSLExpressionEngine : public Gaffer::Expression::Engine
 
 		virtual std::string defaultExpression( const ValuePlug *output ) const
 		{
-			const Node *parentNode = output->node() ? output->node()->ancestor<Node>() : NULL;
+			const Node *parentNode = output->node() ? output->node()->ancestor<Node>() : nullptr;
 			if( !parentNode )
 			{
 				return "";
@@ -536,7 +536,7 @@ class OSLExpressionEngine : public Gaffer::Expression::Engine
 
 		static OSL::ShadingSystem *shadingSystem()
 		{
-			static OSL::ShadingSystem *g_s = NULL;
+			static OSL::ShadingSystem *g_s = nullptr;
 			if( !g_s )
 			{
 				g_s = new OSL::ShadingSystem( new RendererServices );
@@ -575,7 +575,7 @@ class OSLExpressionEngine : public Gaffer::Expression::Engine
 		static ValuePlug *plug( Expression *node, const std::string &plugPath )
 		{
 			Node *plugScope = node->parent<Node>();
-			GraphComponent *descendant = plugScope->descendant<GraphComponent>( plugPath );
+			GraphComponent *descendant = plugScope->descendant( plugPath );
 			if( !descendant )
 			{
 				throw IECore::Exception( boost::str( boost::format( "\"%s\" does not exist" ) % plugPath ) );

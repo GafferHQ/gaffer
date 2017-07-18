@@ -69,7 +69,7 @@ Process::Process( const IECore::InternedString &type, const Plug *plug, const Pl
 	:	m_type( type ), m_plug( plug ), m_downstream( downstream ? downstream : plug ), m_threadData( &g_threadData.local() )
 {
 	ThreadData::Stack &stack = m_threadData->stack;
-	m_parent = stack.size() ? stack.top() : NULL;
+	m_parent = stack.size() ? stack.top() : nullptr;
 	m_threadData->stack.push( this );
 
 	for( Monitors::const_iterator it = g_activeMonitors.begin(), eIt = g_activeMonitors.end(); it != eIt; ++it )
@@ -88,14 +88,14 @@ Process::~Process()
 	m_threadData->stack.pop();
 	if( m_threadData->stack.empty() )
 	{
-		m_threadData->errorSource = NULL;
+		m_threadData->errorSource = nullptr;
 	}
 }
 
 const Process *Process::current()
 {
 	const ThreadData::Stack &stack = g_threadData.local().stack;
-	return stack.size() ? stack.top() : NULL;
+	return stack.size() ? stack.top() : nullptr;
 }
 
 void Process::handleException()
@@ -138,7 +138,7 @@ void Process::emitError( const std::string &error ) const
 				node->errorSignal()( plug, m_threadData->errorSource, error );
 			}
 		}
-		plug = plug != m_plug ? plug->getInput<Plug>() : NULL;
+		plug = plug != m_plug ? plug->getInput() : nullptr;
 	}
 }
 

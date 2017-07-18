@@ -80,7 +80,7 @@ void OrphanRemover::memberRemoved( const Set *s, Set::Member *m )
 
 void OrphanRemover::parentChanged( GraphComponent *member, const GraphComponent *oldParent )
 {
-	if( !member->parent<GraphComponent>() )
+	if( !member->parent() )
 	{
 		// the node has been deleted - remove it from the selection
 		m_set->remove( member );

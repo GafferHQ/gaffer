@@ -144,7 +144,7 @@ Plug *Switch<BaseType>::activeInPlug()
 	ArrayPlug *inputs = BaseType::template getChild<ArrayPlug>( "in" );
 	if( !inputs )
 	{
-		return NULL;
+		return nullptr;
 	}
 	return inputs->getChild<Plug>( inputIndex( Context::current() ) );
 }
@@ -403,17 +403,17 @@ const Plug *Switch<BaseType>::oppositePlug( const Plug *plug, size_t inputIndex 
 	const Plug *outPlug = BaseType::template getChild<Plug>( "out" );
 	if( !inPlugs || !outPlug )
 	{
-		return NULL;
+		return nullptr;
 	}
 
 	// Find the ancestorPlug - this is either a child of inPlugs or it
 	// is outPlug. At the same time, fill names with the names of the hierarchy
 	// between plug and ancestorPlug.
-	const Plug *ancestorPlug = NULL;
+	const Plug *ancestorPlug = nullptr;
 	std::vector<IECore::InternedString> names;
 	while( plug )
 	{
-		const GraphComponent *plugParent = plug->parent<GraphComponent>();
+		const GraphComponent *plugParent = plug->parent();
 		if( plugParent == inPlugs || plug == outPlug )
 		{
 			ancestorPlug = plug;
@@ -428,11 +428,11 @@ const Plug *Switch<BaseType>::oppositePlug( const Plug *plug, size_t inputIndex 
 
 	if( !ancestorPlug )
 	{
-		return NULL;
+		return nullptr;
 	}
 
 	// Now we can find the opposite for this ancestor plug.
-	const Plug *oppositeAncestorPlug = NULL;
+	const Plug *oppositeAncestorPlug = nullptr;
 	if( plug->direction() == Plug::Out )
 	{
 		oppositeAncestorPlug = inPlugs->getChild<Plug>( inputIndex );
@@ -474,7 +474,7 @@ void Switch<BaseType>::updateInternalConnection()
 		// because the index might vary from context to context. We must
 		// therefore implement switching via hash()/compute().
 		assert( this->isInstanceOf( ComputeNode::staticTypeId() ) );
-		out->setInput( NULL );
+		out->setInput( nullptr );
 		return;
 	}
 

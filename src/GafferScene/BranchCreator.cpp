@@ -476,7 +476,7 @@ void BranchCreator::hashBranchObject( const ScenePath &parentPath, const ScenePa
 
 void BranchCreator::hashBranchChildNames( const ScenePath &parentPath, const ScenePath &branchPath, const Gaffer::Context *context, IECore::MurmurHash &h ) const
 {
-	const InternedStringVectorData *fullPathData = context->get<InternedStringVectorData>( ScenePlug::scenePathContextName, NULL );
+	const InternedStringVectorData *fullPathData = context->get<InternedStringVectorData>( ScenePlug::scenePathContextName, nullptr );
 	if( fullPathData )
 	{
 		// In the common case, the full path is in the context already (and we just decomposed it
@@ -500,10 +500,10 @@ void BranchCreator::hashBranchSetNames( const ScenePath &parentPath, const Gaffe
 
 IECore::ConstInternedStringVectorDataPtr BranchCreator::computeBranchSetNames( const ScenePath &parentPath, const Gaffer::Context *context ) const
 {
-	// It's OK to return NULL, because the value returned from this method
+	// It's OK to return nullptr, because the value returned from this method
 	// isn't used as the result of a compute(), and won't be stored on a plug.
 	// For the same reason, it's ok for hashBranchSetNames() to do nothing by default
-	return NULL;
+	return nullptr;
 }
 
 void BranchCreator::hashBranchSet( const ScenePath &parentPath, const IECore::InternedString &setName, const Gaffer::Context *context, IECore::MurmurHash &h ) const
@@ -513,7 +513,7 @@ void BranchCreator::hashBranchSet( const ScenePath &parentPath, const IECore::In
 GafferScene::ConstPathMatcherDataPtr BranchCreator::computeBranchSet( const ScenePath &parentPath, const IECore::InternedString &setName, const Gaffer::Context *context ) const
 {
 	// See comments in computeBranchSetNames.
-	return NULL;
+	return nullptr;
 }
 
 void BranchCreator::hashMapping( const Gaffer::Context *context, IECore::MurmurHash &h ) const

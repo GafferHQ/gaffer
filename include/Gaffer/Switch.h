@@ -131,9 +131,9 @@ class Switch : public BaseType
 		void childAdded( GraphComponent *child );
 		void plugSet( Plug *plug );
 		void plugInputChanged( Plug *plug );
-		size_t inputIndex( const Context *context = NULL ) const;
+		size_t inputIndex( const Context *context = nullptr ) const;
 
-		// Returns the input corresponding to the output and vice versa. Returns NULL
+		// Returns the input corresponding to the output and vice versa. Returns null
 		// if plug is not meaningful to the switching process.
 		const Plug *oppositePlug( const Plug *plug, size_t inputIndex = 0 ) const;
 

@@ -98,7 +98,7 @@ Renderer::Ptr Renderer::create( const IECore::InternedString &type, RenderType r
 	CreatorMap::const_iterator it = c.find( type );
 	if( it == c.end() )
 	{
-		return NULL;
+		return nullptr;
 	}
 	return it->second( renderType, fileName );
 }

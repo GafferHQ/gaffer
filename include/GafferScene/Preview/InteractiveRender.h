@@ -87,7 +87,7 @@ class InteractiveRender : public Gaffer::Node
 		const GafferScene::ScenePlug *outPlug() const;
 
 		/// Specifies a context in which the InteractiveRender should operate.
-		/// The default is NULL, meaning that the context of the ancestor
+		/// The default is null, meaning that the context of the ancestor
 		/// ScriptNode will be used, or failing that, a default context.
 		void setContext( Gaffer::ContextPtr context );
 		Gaffer::Context *getContext();
@@ -119,7 +119,7 @@ class InteractiveRender : public Gaffer::Node
 		class SceneGraph;
 		class SceneGraphUpdateTask;
 
-		std::vector<boost::shared_ptr<SceneGraph> > m_sceneGraphs;
+		std::vector<std::unique_ptr<SceneGraph> > m_sceneGraphs;
 		IECoreScenePreview::RendererPtr m_renderer;
 		State m_state;
 		unsigned m_dirtyComponents;

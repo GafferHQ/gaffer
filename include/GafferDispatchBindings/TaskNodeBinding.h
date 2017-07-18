@@ -56,7 +56,7 @@ class TaskNodeClass : public GafferBindings::NodeClass<T, TWrapper>
 {
 	public :
 
-		TaskNodeClass( const char *docString = NULL );
+		TaskNodeClass( const char *docString = nullptr );
 
 };
 

@@ -212,7 +212,7 @@ void Merge::hashChannelData( const GafferImage::ImagePlug *output, const Gaffer:
 			channelNamesData = (*it)->channelNamesPlug()->getValue();
 			dataWindow = (*it)->dataWindowPlug()->getValue();
 		}
-		
+
 		const std::vector<std::string> &channelNames = channelNamesData->readable();
 
 		if( ImageAlgo::channelExists( channelNames, channelName ) )
@@ -282,9 +282,9 @@ IECore::ConstFloatVectorDataPtr Merge::computeChannelData( const std::string &ch
 template<typename F>
 IECore::ConstFloatVectorDataPtr Merge::merge( F f, const std::string &channelName, const Imath::V2i &tileOrigin ) const
 {
-	FloatVectorDataPtr resultData = NULL;
+	FloatVectorDataPtr resultData = nullptr;
 	// Temporary buffer for computing the alpha of intermediate composited layers.
-	FloatVectorDataPtr resultAlphaData = NULL;
+	FloatVectorDataPtr resultAlphaData = nullptr;
 
 	const Box2i tileBound( tileOrigin, tileOrigin + V2i( ImagePlug::tileSize() ) );
 

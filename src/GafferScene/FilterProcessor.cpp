@@ -68,7 +68,7 @@ FilterProcessor::~FilterProcessor()
 
 FilterPlug *FilterProcessor::inPlug()
 {
-	GraphComponent *p = getChild<GraphComponent>( g_firstPlugIndex );
+	GraphComponent *p = getChild( g_firstPlugIndex );
 	if( FilterPlug *s = IECore::runTimeCast<FilterPlug>( p ) )
 	{
 		return s;
@@ -81,7 +81,7 @@ FilterPlug *FilterProcessor::inPlug()
 
 const FilterPlug *FilterProcessor::inPlug() const
 {
-	const GraphComponent *p = getChild<GraphComponent>( g_firstPlugIndex );
+	const GraphComponent *p = getChild( g_firstPlugIndex );
 	if( const FilterPlug *s = IECore::runTimeCast<const FilterPlug>( p ) )
 	{
 		return s;
@@ -106,7 +106,7 @@ bool FilterProcessor::sceneAffectsMatch( const ScenePlug *scene, const Gaffer::V
 {
 	for( InputIntPlugIterator it( inPlugs() ); !it.done(); ++it )
 	{
-		const Filter *filter = IECore::runTimeCast<const Filter>( (*it)->source<Plug>()->node() );
+		const Filter *filter = IECore::runTimeCast<const Filter>( (*it)->source()->node() );
 		if( filter && filter != this && filter->sceneAffectsMatch( scene, child ) )
 		{
 			return true;

@@ -51,7 +51,7 @@ class CompoundPathFilter : public Gaffer::PathFilter
 
 		typedef std::vector<PathFilterPtr> Filters;
 
-		CompoundPathFilter( IECore::CompoundDataPtr userData = NULL );
+		CompoundPathFilter( IECore::CompoundDataPtr userData = nullptr );
 		virtual ~CompoundPathFilter();
 
 		IE_CORE_DECLARERUNTIMETYPEDEXTENSION( Gaffer::CompoundPathFilter, CompoundPathFilterTypeId, PathFilter );

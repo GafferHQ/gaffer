@@ -72,7 +72,7 @@ const IECore::CompoundData *parametersAndMetadataTarget( const IECore::InternedS
 {
 	if( !shaderVector || shaderVector->members().size() == 0 )
 	{
-		return NULL;
+		return nullptr;
 	}
 
 	if( const IECore::Shader *shader = IECore::runTimeCast<const IECore::Shader>( shaderVector->members().back().get() ) )
@@ -88,7 +88,7 @@ const IECore::CompoundData *parametersAndMetadataTarget( const IECore::InternedS
 		return light->parametersData().get();
 	}
 
-	return NULL;
+	return nullptr;
 }
 
 template<typename T>
@@ -126,7 +126,7 @@ void spotlightParameters( InternedString metadataTarget, const IECore::CompoundD
 	outerAngle = 0;
 
 	ConstStringDataPtr penumbraTypeData = Metadata::value<StringData>( metadataTarget, "penumbraType" );
-	const std::string *penumbraType = penumbraTypeData ? &penumbraTypeData->readable() : NULL;
+	const std::string *penumbraType = penumbraTypeData ? &penumbraTypeData->readable() : nullptr;
 
 	if( !penumbraType || *penumbraType == "inset" )
 	{
@@ -287,7 +287,7 @@ IECoreGL::ConstRenderablePtr StandardLightVisualiser::visualise( const IECore::I
 	const IECore::CompoundData *shaderParameters = parametersAndMetadataTarget( attributeName, shaderVector, metadataTarget );
 	if( !shaderParameters )
 	{
-		return NULL;
+		return nullptr;
 	}
 
 	ConstStringDataPtr type = Metadata::value<StringData>( metadataTarget, "type" );

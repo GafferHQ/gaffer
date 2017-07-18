@@ -86,7 +86,7 @@ struct PlugMenuSlotCaller
 		{
 			translatePythonException();
 		}
-		return NULL;
+		return nullptr;
 	}
 
 };

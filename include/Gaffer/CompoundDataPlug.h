@@ -87,7 +87,7 @@ class CompoundDataPlug : public Gaffer::ValuePlug
 				template<typename T>
 				const T *valuePlug() const;
 
-				/// May return NULL, since the enabled plug
+				/// May return null, since the enabled plug
 				/// is optional.
 				BoolPlug *enabledPlug();
 				const BoolPlug *enabledPlug() const;

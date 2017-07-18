@@ -67,7 +67,7 @@ std::string getValue( const StringPlug *plug, const IECore::MurmurHash *precompu
 std::string substitutionsRepr( unsigned substitutions )
 {
 	static const Context::Substitutions values[] = { Context::FrameSubstitutions, Context::VariableSubstitutions, Context::EscapeSubstitutions, Context::TildeSubstitutions, Context::NoSubstitutions };
-	static const char *names[] = { "FrameSubstitutions", "VariableSubstitutions", "EscapeSubstitutions", "TildeSubstitutions", NULL };
+	static const char *names[] = { "FrameSubstitutions", "VariableSubstitutions", "EscapeSubstitutions", "TildeSubstitutions", nullptr };
 
 	if( substitutions == Context::AllSubstitutions )
 	{
@@ -106,7 +106,7 @@ std::string maskedRepr( const Gaffer::StringPlug *plug, unsigned flagsMask, cons
 
 std::string repr( const Gaffer::StringPlug *plug )
 {
-	return maskedRepr( plug, Plug::All, NULL );
+	return maskedRepr( plug, Plug::All, nullptr );
 }
 
 class StringPlugSerialiser : public ValuePlugSerialiser
