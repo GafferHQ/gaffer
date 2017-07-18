@@ -90,6 +90,10 @@ class ConnectionGadget : public Gadget
 		void setMinimised( bool minimised );
 		bool getMinimised() const;
 
+		/// Setter and getter for highlighting state
+		void setHighlighted( bool state );
+		bool getHighlighted() const;
+
 		/// May be called by the recipient of a drag to set a more appropriate position
 		/// and tangent for the connection as the drag progresses within the destination.
 		/// Throws if this connection is not currently the source of a connection.
@@ -130,6 +134,7 @@ class ConnectionGadget : public Gadget
 		NodulePtr m_dstNodule;
 
 		bool m_minimised;
+		bool m_highlighted;
 
 		typedef std::map<IECore::TypeId, ConnectionGadgetCreator> CreatorMap;
 		static CreatorMap &creators();

@@ -229,6 +229,9 @@ class GraphGadget : public ContainerGadget
 
 		void connectedNodeGadgetsWalk( NodeGadget *gadget, std::set<NodeGadget *> &connectedGadgets, Gaffer::Plug::Direction direction, size_t degreesOfSeparation );
 
+		void updateConnectionGadgetsHighlighting( const Gaffer::Node *node );
+		void setConnectionGadgetsHighlightingWalk( const Gaffer::Node *node, bool state );
+
 		Gaffer::NodePtr m_root;
 		Gaffer::ScriptNodePtr m_scriptNode;
 		RootChangedSignal m_rootChangedSignal;

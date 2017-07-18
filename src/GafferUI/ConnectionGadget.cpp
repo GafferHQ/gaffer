@@ -130,6 +130,21 @@ bool ConnectionGadget::getMinimised() const
 	return m_minimised;
 }
 
+void ConnectionGadget::setHighlighted( bool state )
+{
+	if( state == m_highlighted )
+	{
+		return;
+	}
+	m_highlighted = state;
+	requestRender();
+}
+
+bool ConnectionGadget::getHighlighted() const
+{
+	return m_highlighted;
+}
+
 ConnectionGadgetPtr ConnectionGadget::create( NodulePtr srcNodule, NodulePtr dstNodule )
 {
 	const Gaffer::Plug *plug = dstNodule->plug();
