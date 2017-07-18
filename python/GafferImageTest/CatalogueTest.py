@@ -47,16 +47,18 @@ import GafferImageTest
 class CatalogueTest( GafferImageTest.ImageTestCase ) :
 
 	@staticmethod
-	def sendImage( image, catalogue, extraParameters = {} ) :
+	def sendImage( image, catalogue, extraParameters = {}, waitForSave = True ) :
 
 		driver = GafferImageTest.DisplayTest.Driver.sendImage( image, GafferImage.Catalogue.displayDriverServer().portNumber(), extraParameters )
 
-		if catalogue["directory"].getValue() :
+		if catalogue["directory"].getValue() and waitForSave :
 
 			# When the image has been received, the Catalogue will
 			# save it to disk on a background thread, and we need
 			# to wait for that to complete.
 			driver.performExpectedUIThreadExecution()
+
+		return driver
 
 	def testImages( self ) :
 
@@ -528,6 +530,18 @@ class CatalogueTest( GafferImageTest.ImageTestCase ) :
 
 		self.assertEqual( c["images"][1]["description"].getValue(), c["images"][0]["description"].getValue() )
 		self.assertEqual( c["images"][1]["fileName"].getValue(), c["images"][0]["fileName"].getValue() )
+
+	def testDeleteBeforeSaveCompletes( self ) :
+
+		c = GafferImage.Catalogue()
+		c["directory"].setValue( os.path.join( self.temporaryDirectory(), "catalogue" ) )
+
+		r = GafferImage.ImageReader()
+		r["fileName"].setValue( "${GAFFER_ROOT}/python/GafferImageTest/images/checker.exr" )
+		driver = self.sendImage( r["out"], c, waitForSave = False )
+
+		del c
+		driver.performExpectedUIThreadExecution()
 
 if __name__ == "__main__":
 	unittest.main()
