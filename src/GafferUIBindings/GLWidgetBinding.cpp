@@ -103,7 +103,9 @@ class HostedGLContext : public QGLContext
 
 		virtual void makeCurrent()
 		{
+#if QT_VERSION >= 0x050000
 			QGLContext::makeCurrent();
+#endif
 			glXMakeCurrent( m_display, static_cast<QWidget *>( device() )->effectiveWinId(), m_context );
 		}
 
