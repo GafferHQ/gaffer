@@ -238,7 +238,7 @@ bool PlugAdder::dragEnter( const DragDropEvent &event )
 
 	if( event.sourceGadget == this )
 	{
-		updateDragEndPoint( event.line.p0, V3f( 0 ) );
+		updateDragEndPoint( V3f( event.line.p0.x, event.line.p0.y, 0 ), V3f( 0 ) );
 		return true;
 	}
 
@@ -268,7 +268,7 @@ bool PlugAdder::dragEnter( const DragDropEvent &event )
 
 bool PlugAdder::dragMove( GadgetPtr gadget, const DragDropEvent &event )
 {
-	m_dragPosition = event.line.p0;
+	m_dragPosition = V3f( event.line.p0.x, event.line.p0.y, 0 );
 	requestRender();
 	return true;
 }
