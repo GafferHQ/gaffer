@@ -44,6 +44,7 @@
 
 [node barndoor]
 
+	shaderType STRING "lightFilter"
 	gaffer.nodeMenu.category STRING "Light"
 
 
@@ -75,7 +76,11 @@
 
 [node gobo]
 
+	shaderType STRING "lightFilter"
 	gaffer.nodeMenu.category STRING "Light"
+
+	[attr rotate]
+		gaffer.plugType STRING "FloatPlug"
 
 
 [node hair]
@@ -98,11 +103,13 @@
 
 [node light_blocker]
 
+	shaderType STRING "lightFilter"
 	gaffer.nodeMenu.category STRING "Light"
 
 
 [node light_decay]
 
+	shaderType STRING "lightFilter"
 	gaffer.nodeMenu.category STRING "Light"
 
 

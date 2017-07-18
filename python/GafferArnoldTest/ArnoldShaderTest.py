@@ -363,6 +363,20 @@ class ArnoldShaderTest( GafferSceneTest.SceneTestCase ) :
 
 		self.assertEqual( a["out"].attributes( "/plane" ).keys(), [ "ai:surface"] )
 
+	def testLightFilterAssignmentAttributeName( self ) :
+
+		p = GafferScene.Plane()
+
+		s = GafferArnold.ArnoldShader( "light_blocker" )
+		s.loadShader( "light_blocker" )  # metadata sets type to ai:lightFilter
+
+		a = GafferScene.ShaderAssignment()
+		a["in"].setInput( p["out"] )
+		a["shader"].setInput( s["out"] )
+
+		self.assertEqual( s["attributeSuffix"].getValue(), "light_blocker" )
+		self.assertEqual( a["out"].attributes( "/plane" ).keys(), [ "ai:lightFilter:light_blocker"] )
+
 	def testDirtyPropagationThroughShaderAssignment( self ) :
 
 		n = GafferArnold.ArnoldShader()
@@ -430,6 +444,25 @@ class ArnoldShaderTest( GafferSceneTest.SceneTestCase ) :
 
 		for name in [ "refraction", "diffuse", "glossy" ] :
 			self.assertTrue( isinstance( n["parameters"][name], Gaffer.Color4fPlug ) )
+
+	def testFloatParameterMetadata( self ) :
+
+		self.__forceArnoldRestart()
+
+		n = GafferArnold.ArnoldShader()
+		n.loadShader( "gobo" )
+
+		self.assertTrue( isinstance( n["parameters"]["slidemap"], Gaffer.Color3fPlug ) )
+
+		self.addCleanup( os.environ.__setitem__, "ARNOLD_PLUGIN_PATH", os.environ["ARNOLD_PLUGIN_PATH"] )
+		os.environ["ARNOLD_PLUGIN_PATH"] = os.environ["ARNOLD_PLUGIN_PATH"] + ":" + os.path.join( os.path.dirname( __file__ ), "metadata" )
+
+		self.__forceArnoldRestart()
+
+		n = GafferArnold.ArnoldShader()
+		n.loadShader( "gobo" )
+
+		self.assertTrue( isinstance( n["parameters"]["slidemap"], Gaffer.FloatPlug ) )
 
 	def testEmptyPlugTypeMetadata( self ) :
 

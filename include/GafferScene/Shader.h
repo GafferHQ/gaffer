@@ -79,6 +79,10 @@ class Shader : public Gaffer::DependencyNode
 		Gaffer::StringPlug *typePlug();
 		const Gaffer::StringPlug *typePlug() const;
 
+		/// A plug defining the suffix used for shader assignment attributes
+		Gaffer::StringPlug *attributeSuffixPlug();
+		const Gaffer::StringPlug *attributeSuffixPlug() const;
+
 		/// Plug under which the shader parameters are defined.
 		Gaffer::Plug *parametersPlug();
 		const Gaffer::Plug *parametersPlug() const;
