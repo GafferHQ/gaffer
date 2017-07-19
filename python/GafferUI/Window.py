@@ -46,6 +46,7 @@ import Gaffer
 from Qt import QtCore
 from Qt import QtGui
 from Qt import QtWidgets
+import Qt
 
 class Window( GafferUI.ContainerWidget ) :
 
@@ -170,6 +171,9 @@ class Window( GafferUI.ContainerWidget ) :
 		assert( isinstance( childWindow, Window ) )
 
 		oldParent = childWindow.parent()
+		if oldParent is self :
+			return
+
 		if oldParent is not None :
 			oldParent.removeChild( childWindow )
 
@@ -195,8 +199,16 @@ class Window( GafferUI.ContainerWidget ) :
 		# things, but on the whole the Dialog type seems best for X11.
 		childWindowType = QtCore.Qt.Tool if sys.platform == "darwin" else QtCore.Qt.Dialog
 		childWindowFlags = ( childWindow._qtWidget().windowFlags() & ~QtCore.Qt.WindowType_Mask ) | childWindowType
-		childWindow._qtWidget().setParent( self._qtWidget(), childWindowFlags )
-		childWindow._applyVisibility()
+
+		if sys.platform == "darwin" and Qt.__binding__ in ( "PySide2", "PyQt5" ) :
+			# Alternative order of operations to work around crashes
+			# on OSX with Qt5.
+			childWindow._qtWidget().setParent( self._qtWidget() )
+			childWindow._applyVisibility()
+			childWindow._qtWidget().setWindowFlags( childWindowFlags )
+		else :
+			childWindow._qtWidget().setParent( self._qtWidget(), childWindowFlags )
+			childWindow._applyVisibility()
 
 		if removeOnClose :
 			childWindow.__removeOnCloseConnection = childWindow.closedSignal().connect( lambda w : w.parent().removeChild( w ) )
