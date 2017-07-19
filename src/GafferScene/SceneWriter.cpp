@@ -43,12 +43,110 @@
 #include "Gaffer/StringPlug.h"
 #include "Gaffer/Context.h"
 
+#include "GafferScene/SceneAlgo.h"
 #include "GafferScene/SceneWriter.h"
+
+#include "tbb/mutex.h"
+#include "tbb/concurrent_unordered_map.h"
 
 using namespace std;
 using namespace IECore;
 using namespace Gaffer;
 using namespace GafferScene;
+
+namespace
+{
+
+struct LocationWriter
+{
+	LocationWriter(SceneInterfacePtr output, ConstCompoundDataPtr sets, float time, tbb::mutex& mutex) : m_output( output ), m_sets(sets), m_time( time ), m_mutex( mutex )
+	{
+	}
+
+	/// first half of this function can be lock free reading data from ScenePlug
+	/// once all the data has been read then we take a global lock and write
+	/// into the SceneInterface
+	bool operator()( const ScenePlug *scene, const ScenePlug::ScenePath &scenePath )
+	{
+		ConstCompoundObjectPtr attributes = scene->attributesPlug()->getValue();
+
+		ConstCompoundObjectPtr globals;
+
+		ConstObjectPtr object = scene->objectPlug()->getValue();
+		Imath::Box3f bound = scene->boundPlug()->getValue();
+
+		IECore::M44dDataPtr transformData;
+
+		if( scenePath.empty() )
+		{
+			globals = scene->globalsPlug()->getValue();
+		}
+		else
+		{
+			Imath::M44f t = scene->transformPlug()->getValue();
+			transformData = new IECore::M44dData( Imath::M44d (
+				t[0][0], t[0][1], t[0][2], t[0][3],
+				t[1][0], t[1][1], t[1][2], t[1][3],
+				t[2][0], t[2][1], t[2][2], t[2][3],
+				t[3][0], t[3][1], t[3][2], t[3][3]
+			) );
+		}
+
+		SceneInterface::NameList locationSets;
+		const CompoundDataMap &setsMap = m_sets->readable();
+		locationSets.reserve( setsMap.size() );
+
+		for( CompoundDataMap::const_iterator it = setsMap.begin(); it != setsMap.end(); ++it)
+		{
+			ConstPathMatcherDataPtr pathMatcher = IECore::runTimeCast<PathMatcherData>( it->second );
+
+			if( pathMatcher->readable().match( scenePath ) & Filter::ExactMatch )
+			{
+				locationSets.push_back( it->first );
+			}
+		}
+
+		tbb::mutex::scoped_lock scopedLock( m_mutex );
+
+		if( !scenePath.empty() )
+		{
+			m_output = m_output->child( scenePath.back(), SceneInterface::CreateIfMissing );
+		}
+
+		for( CompoundObject::ObjectMap::const_iterator it = attributes->members().begin(), eIt = attributes->members().end(); it != eIt; it++ )
+		{
+			m_output->writeAttribute( it->first, it->second.get(), m_time );
+		}
+
+		if( globals )
+		{
+			m_output->writeAttribute( "gaffer:globals", globals.get(), m_time );
+		}
+
+		if( object->typeId() != IECore::NullObjectTypeId && scenePath.size() > 0 )
+		{
+			m_output->writeObject( object.get(), m_time );
+		}
+
+		m_output->writeBound( Imath::Box3d( Imath::V3f( bound.min ), Imath::V3f( bound.max ) ), m_time );
+
+		if( transformData )
+		{
+			m_output->writeTransform( transformData.get(), m_time );
+		}
+
+		m_output->writeTags( locationSets );
+
+		return true;
+	}
+
+	SceneInterfacePtr m_output;
+	ConstCompoundDataPtr m_sets;
+	float m_time;
+	tbb::mutex &m_mutex;
+};
+
+}
 
 IE_CORE_DEFINERUNTIMETYPED( SceneWriter );
 
@@ -130,17 +228,21 @@ void SceneWriter::executeSequence( const std::vector<float> &frames ) const
 		throw IECore::Exception( "No input scene" );
 	}
 
-	ContextPtr context = new Context( *Context::current() );
-	Context::Scope scopedContext( context.get() );
-
 	const std::string fileName = fileNamePlug()->getValue();
 	createDirectories( fileName );
 	SceneInterfacePtr output = SceneInterface::create( fileName, IndexedIO::Write );
+	tbb::mutex mutex;
+	ContextPtr context = new Context( *Context::current() );
+	Context::Scope scopedContext( context.get() );
 
-	for ( std::vector<float>::const_iterator it = frames.begin(); it != frames.end(); ++it )
+	for( std::vector<float>::const_iterator it = frames.begin(); it != frames.end(); ++it )
 	{
 		context->setFrame( *it );
-		writeLocation( scene, ScenePlug::ScenePath(), context.get(), output.get(), context->getTime() );
+
+		ConstCompoundDataPtr sets = SceneAlgo::sets( scene );
+		LocationWriter locationWriter( output, sets, context->getTime(), mutex );
+
+		SceneAlgo::parallelProcessLocations( scene, locationWriter );
 	}
 }
 
@@ -149,59 +251,6 @@ bool SceneWriter::requiresSequenceExecution() const
 	return true;
 }
 
-void SceneWriter::writeLocation( const GafferScene::ScenePlug *scene, const ScenePlug::ScenePath &scenePath, Context *context, IECore::SceneInterface *output, double time ) const
-{
-	context->set( ScenePlug::scenePathContextName, scenePath );
-
-	ConstCompoundObjectPtr attributes = scene->attributesPlug()->getValue();
-	for( CompoundObject::ObjectMap::const_iterator it = attributes->members().begin(), eIt = attributes->members().end(); it != eIt; it++ )
-	{
-		output->writeAttribute( it->first, it->second.get(), time );
-	}
-
-	if( scenePath.empty() )
-	{
-		ConstCompoundObjectPtr globals = scene->globalsPlug()->getValue();
-		output->writeAttribute( "gaffer:globals", globals.get(), time );
-	}
-
-	ConstObjectPtr object = scene->objectPlug()->getValue();
-
-	if( object->typeId() != IECore::NullObjectTypeId && scenePath.size() > 0 )
-	{
-		output->writeObject( object.get(), time );
-	}
-
-	Imath::Box3f b = scene->boundPlug()->getValue();
-
-	output->writeBound( Imath::Box3d( Imath::V3f( b.min ), Imath::V3f( b.max ) ), time );
-
-	if( scenePath.size() )
-	{
-		Imath::M44f t = scene->transformPlug()->getValue();
-		Imath::M44d transform(
-			t[0][0], t[0][1], t[0][2], t[0][3],
-			t[1][0], t[1][1], t[1][2], t[1][3],
-			t[2][0], t[2][1], t[2][2], t[2][3],
-			t[3][0], t[3][1], t[3][2], t[3][3]
-		);
-
-		output->writeTransform( new IECore::M44dData( transform ), time );
-	}
-
-	ConstInternedStringVectorDataPtr childNames = scene->childNamesPlug()->getValue();
-
-	ScenePlug::ScenePath childScenePath = scenePath;
-	childScenePath.push_back( InternedString() );
-	for( vector<InternedString>::const_iterator it=childNames->readable().begin(); it!=childNames->readable().end(); it++ )
-	{
-		childScenePath[scenePath.size()] = *it;
-
-		SceneInterfacePtr outputChild = output->child( *it, SceneInterface::CreateIfMissing );
-
-		writeLocation( scene, childScenePath, context, outputChild.get(), time );
-	}
-}
 
 void SceneWriter::createDirectories( const std::string &fileName ) const
 {
