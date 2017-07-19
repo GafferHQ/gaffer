@@ -403,12 +403,6 @@ Display::DriverCreatedSignal &Display::driverCreatedSignal()
 	return s;
 }
 
-Node::UnaryPlugSignal &Display::dataReceivedSignal()
-{
-	static UnaryPlugSignal s;
-	return s;
-}
-
 Node::UnaryPlugSignal &Display::imageReceivedSignal()
 {
 	static UnaryPlugSignal s;
@@ -710,14 +704,6 @@ void Display::dataReceivedUI()
 				display->updateCountPlug()->setValue( display->updateCountPlug()->getValue() + 1 );
 			}
 		}
-	}
-
-	// Now that dirty propagation is complete, we can emit dataReceivedSignal()
-	// for any observers that wish to update that way.
-	/// \todo Do we even need this now? Could the tests just use plugDirtiedSignal()?
-	for( set<PlugPtr>::const_iterator it = batch->begin(), eIt = batch->end(); it != eIt; ++it )
-	{
-		dataReceivedSignal()( it->get() );
 	}
 }
 
