@@ -347,7 +347,11 @@ class DispatcherTest( GafferTest.TestCase ) :
 		s["n4"]["preTasks"][0].setInput( s["n3"]["task"] )
 		s["n3"]["preTasks"][0].setInput( s["n2"]["task"] )
 		s["n2"]["preTasks"][0].setInput( s["n1"]["task"] )
-		s["n1"]["preTasks"][0].setInput( s["n4"]["task"] )
+
+		with IECore.CapturingMessageHandler() as mh :
+			s["n1"]["preTasks"][0].setInput( s["n4"]["task"] )
+		self.assertEqual( len( mh.messages ), 1 )
+		self.assertRegexpMatches( mh.messages[0].message, "The graph must be a DAG" )
 
 		self.assertNotEqual( s["n1"]["task"].hash(), s["n2"]["task"].hash() )
 		self.assertNotEqual( s["n2"]["task"].hash(), s["n3"]["task"].hash() )
@@ -1013,9 +1017,12 @@ class DispatcherTest( GafferTest.TestCase ) :
 	def testDirectCyles( self ) :
 
 		s = Gaffer.ScriptNode()
-
 		s["t"] = GafferDispatchTest.LoggingTaskNode()
-		s["t"]["preTasks"][0].setInput( s["t"]["task"] )
+
+		with IECore.CapturingMessageHandler() as mh :
+			s["t"]["preTasks"][0].setInput( s["t"]["task"] )
+		self.assertEqual( len( mh.messages ), 1 )
+		self.assertRegexpMatches( mh.messages[0].message, "The graph must be a DAG" )
 
 		dispatcher = GafferDispatch.Dispatcher.create( "testDispatcher" )
 		self.assertRaisesRegexp( RuntimeError, "cannot have cyclic dependencies", dispatcher.dispatch, [ s["t"] ] )
