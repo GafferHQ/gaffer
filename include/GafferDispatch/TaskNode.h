@@ -39,7 +39,7 @@
 
 #include "IECore/MurmurHash.h"
 
-#include "Gaffer/Node.h"
+#include "Gaffer/DependencyNode.h"
 #include "Gaffer/Plug.h"
 
 #include "GafferDispatch/TypeIds.h"
@@ -73,7 +73,7 @@ IE_CORE_FORWARDDECLARE( TaskNode )
 /// TaskNode can be chained together with other TaskNodes to define a required execution
 /// order. Typically TaskNodes should be executed by Dispatcher classes that can query the
 /// required execution order and schedule Tasks appropriately.
-class TaskNode : public Gaffer::Node
+class TaskNode : public Gaffer::DependencyNode
 {
 
 	public :
@@ -123,7 +123,7 @@ class TaskNode : public Gaffer::Node
 
 		typedef std::vector<Task> Tasks;
 
-		IE_CORE_DECLARERUNTIMETYPEDEXTENSION( GafferDispatch::TaskNode, TaskNodeTypeId, Gaffer::Node );
+		IE_CORE_DECLARERUNTIMETYPEDEXTENSION( GafferDispatch::TaskNode, TaskNodeTypeId, Gaffer::DependencyNode );
 
 		TaskNode( const std::string &name=defaultName<TaskNode>() );
 		virtual ~TaskNode();
@@ -193,7 +193,14 @@ class TaskNode : public Gaffer::Node
 		Gaffer::Plug *dispatcherPlug();
 		const Gaffer::Plug *dispatcherPlug() const;
 
+		virtual void affects( const Gaffer::Plug *input, AffectedPlugsContainer &outputs ) const;
+
 	protected :
+
+		/// The default implementation of `affects()` calls this and appends
+		/// `taskPlug()` to the outputs if it returns true. The default implementation
+		/// should be sufficient for most node types.
+		virtual bool affectsTask( const Gaffer::Plug *input ) const;
 
 		/// Called by `TaskPlug::preTasks()`. The default implementation collects
 		/// the upstream Tasks connected into the preTasksPlug().

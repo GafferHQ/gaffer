@@ -125,6 +125,11 @@ class TaskNodeProcess : public Gaffer::Process
 			return n;
 		}
 
+		void handleException()
+		{
+			Gaffer::Process::handleException();
+		}
+
 		static InternedString hashProcessType;
 		static InternedString executeProcessType;
 		static InternedString executeSequenceProcessType;
@@ -200,37 +205,85 @@ PlugPtr TaskNode::TaskPlug::createCounterpart( const std::string &name, Directio
 IECore::MurmurHash TaskNode::TaskPlug::hash() const
 {
 	TaskNodeProcess p( TaskNodeProcess::hashProcessType, this );
-	return p.taskNode()->hash( Context::current() );
+	try
+	{
+		return p.taskNode()->hash( Context::current() );
+	}
+	catch( ... )
+	{
+		p.handleException();
+		return MurmurHash();
+	}
 }
 
 void TaskNode::TaskPlug::execute() const
 {
 	TaskNodeProcess p( TaskNodeProcess::executeProcessType, this );
-	return p.taskNode()->execute();
+	try
+	{
+		p.taskNode()->execute();
+	}
+	catch( ... )
+	{
+		p.handleException();
+		return;
+	}
 }
 
 void TaskNode::TaskPlug::executeSequence( const std::vector<float> &frames ) const
 {
 	TaskNodeProcess p( TaskNodeProcess::executeSequenceProcessType, this );
-	return p.taskNode()->executeSequence( frames );
+	try
+	{
+		p.taskNode()->executeSequence( frames );
+	}
+	catch( ... )
+	{
+		p.handleException();
+		return;
+	}
 }
 
 bool TaskNode::TaskPlug::requiresSequenceExecution() const
 {
 	TaskNodeProcess p( TaskNodeProcess::requiresSequenceExecutionProcessType, this );
-	return p.taskNode()->requiresSequenceExecution();
+	try
+	{
+		return p.taskNode()->requiresSequenceExecution();
+	}
+	catch( ... )
+	{
+		p.handleException();
+		return false;
+	}
 }
 
 void TaskNode::TaskPlug::preTasks( Tasks &tasks ) const
 {
 	TaskNodeProcess p( TaskNodeProcess::preTasksProcessType, this );
-	return p.taskNode()->preTasks( Context::current(), tasks );
+	try
+	{
+		p.taskNode()->preTasks( Context::current(), tasks );
+	}
+	catch( ... )
+	{
+		p.handleException();
+		return;
+	}
 }
 
 void TaskNode::TaskPlug::postTasks( Tasks &tasks ) const
 {
 	TaskNodeProcess p( TaskNodeProcess::postTasksProcessType, this );
-	return p.taskNode()->postTasks( Context::current(), tasks );
+	try
+	{
+		p.taskNode()->postTasks( Context::current(), tasks );
+	}
+	catch( ... )
+	{
+		p.handleException();
+		return;
+	}
 }
 
 //////////////////////////////////////////////////////////////////////////
@@ -242,7 +295,7 @@ IE_CORE_DEFINERUNTIMETYPED( TaskNode )
 size_t TaskNode::g_firstPlugIndex;
 
 TaskNode::TaskNode( const std::string &name )
-	:	Node( name )
+	:	DependencyNode( name )
 {
 	storeIndexOfNextChild( g_firstPlugIndex );
 	addChild( new ArrayPlug( "preTasks", Plug::In, new TaskPlug( "preTask0" ) ) );
@@ -297,6 +350,30 @@ Plug *TaskNode::dispatcherPlug()
 const Plug *TaskNode::dispatcherPlug() const
 {
 	return getChild<Plug>( g_firstPlugIndex + 3 );
+}
+
+void TaskNode::affects( const Plug *input, AffectedPlugsContainer &outputs ) const
+{
+	DependencyNode::affects( input, outputs );
+
+	if( affectsTask( input ) )
+	{
+		outputs.push_back( taskPlug() );
+	}
+}
+
+bool TaskNode::affectsTask( const Plug *input ) const
+{
+	if(
+		input->direction() != Plug::In ||
+		userPlug()->isAncestorOf( input ) ||
+		postTasksPlug()->isAncestorOf( input ) ||
+		input == taskPlug()
+	)
+	{
+		return false;
+	}
+	return true;
 }
 
 void TaskNode::preTasks( const Context *context, Tasks &tasks ) const

@@ -36,6 +36,8 @@
 
 import unittest
 
+import IECore
+
 import Gaffer
 import GafferTest
 import GafferDispatch
@@ -152,7 +154,11 @@ class TaskSwitchTest( GafferTest.TestCase ) :
 
 		s = Gaffer.ScriptNode()
 		s["s"] = GafferDispatch.TaskSwitch()
-		s["s"]["preTasks"][0].setInput( s["s"]["task"] )
+
+		with IECore.CapturingMessageHandler() as mh :
+			s["s"]["preTasks"][0].setInput( s["s"]["task"] )
+		self.assertEqual( len( mh.messages ), 1 )
+		self.assertRegexpMatches( mh.messages[0].message, "The graph must be a DAG" )
 
 		d = self.__dispatcher()
 		self.assertRaisesRegexp( RuntimeError, "cannot have cyclic dependencies", d.dispatch, [ s["s"] ] )

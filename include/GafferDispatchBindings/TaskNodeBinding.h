@@ -41,7 +41,7 @@
 
 #include "IECorePython/ScopedGILLock.h"
 
-#include "GafferBindings/NodeBinding.h"
+#include "GafferBindings/DependencyNodeBinding.h"
 #include "GafferBindings/ExceptionAlgo.h"
 
 #include "GafferDispatch/TaskNode.h"
@@ -52,7 +52,7 @@ namespace GafferDispatchBindings
 void bindTaskNode();
 
 template<typename T, typename TWrapper=T>
-class TaskNodeClass : public GafferBindings::NodeClass<T, TWrapper>
+class TaskNodeClass : public GafferBindings::DependencyNodeClass<T, TWrapper>
 {
 	public :
 
@@ -61,13 +61,36 @@ class TaskNodeClass : public GafferBindings::NodeClass<T, TWrapper>
 };
 
 template<typename WrappedType>
-class TaskNodeWrapper : public GafferBindings::NodeWrapper<WrappedType>
+class TaskNodeWrapper : public GafferBindings::DependencyNodeWrapper<WrappedType>
 {
 	public :
 
 		TaskNodeWrapper( PyObject *self, const std::string &name )
-			:	GafferBindings::NodeWrapper<WrappedType>( self, name )
+			:	GafferBindings::DependencyNodeWrapper<WrappedType>( self, name )
 		{
+		}
+
+		virtual bool affectsTask( const Gaffer::Plug *input ) const
+		{
+			if( this->isSubclassed() )
+			{
+				IECorePython::ScopedGILLock gilLock;
+				try
+				{
+					boost::python::object override = this->methodOverride( "affectsTask" );
+					if( override )
+					{
+						return boost::python::extract<bool>(
+							override( Gaffer::PlugPtr( const_cast<Gaffer::Plug *>( input ) ) )
+						);
+					}
+				}
+				catch( const boost::python::error_already_set &e )
+				{
+					GafferBindings::ExceptionAlgo::translatePythonException();
+				}
+			}
+			return WrappedType::affectsTask( input );
 		}
 
 		virtual void preTasks( const Gaffer::Context *context, GafferDispatch::TaskNode::Tasks &tasks ) const

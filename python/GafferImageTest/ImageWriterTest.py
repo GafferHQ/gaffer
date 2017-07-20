@@ -44,6 +44,7 @@ import datetime
 import IECore
 
 import Gaffer
+import GafferTest
 import GafferDispatch
 import GafferImage
 import GafferImageTest
@@ -1180,6 +1181,16 @@ class ImageWriterTest( GafferImageTest.ImageTestCase ) :
 
 			resultReader["colorSpace"].setValue( colorSpace )
 			self.assertImagesEqual( resultReader["out"], reader["out"], ignoreMetadata=True, maxDifference=0.0007 )
+
+	def testDependencyNode( self ) :
+
+		writer = GafferImage.ImageWriter()
+		self.assertTrue( isinstance( writer, Gaffer.DependencyNode ) )
+		self.assertTrue( writer.isInstanceOf( Gaffer.DependencyNode.staticTypeId() ) )
+
+		cs = GafferTest.CapturingSlot( writer.plugDirtiedSignal() )
+		writer["fileName"].setValue( "test.png" )
+		self.assertIn( writer["task"], { x[0] for x in cs } )
 
 if __name__ == "__main__":
 	unittest.main()

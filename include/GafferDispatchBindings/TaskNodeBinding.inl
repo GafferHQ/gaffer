@@ -51,6 +51,12 @@ struct TaskNodeAccessor
 {
 
 template<typename T>
+static bool affectsTask( T &n, const Gaffer::Plug *plug )
+{
+	return n.T::affectsTask( plug );
+}
+
+template<typename T>
 static boost::python::list preTasks( T &n, Gaffer::Context *context )
 {
 	GafferDispatch::TaskNode::Tasks tasks;
@@ -110,8 +116,9 @@ static bool requiresSequenceExecution( T &n )
 
 template<typename T, typename Ptr>
 TaskNodeClass<T, Ptr>::TaskNodeClass( const char *docString )
-	:	GafferBindings::NodeClass<T, Ptr>( docString )
+	:	GafferBindings::DependencyNodeClass<T, Ptr>( docString )
 {
+	this->def( "affectsTask", &Detail::TaskNodeAccessor::affectsTask<T> );
 	this->def( "preTasks", &Detail::TaskNodeAccessor::preTasks<T> );
 	this->def( "postTasks", &Detail::TaskNodeAccessor::postTasks<T> );
 	this->def( "hash", &Detail::TaskNodeAccessor::hash<T> );
