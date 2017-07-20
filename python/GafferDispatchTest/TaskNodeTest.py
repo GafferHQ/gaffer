@@ -482,5 +482,61 @@ class TaskNodeTest( GafferTest.TestCase ) :
 				cs[0][2]
 			)
 
+	def testDependencyNode( self ) :
+
+		n = GafferDispatchTest.LoggingTaskNode()
+		self.assertTrue( isinstance( n, Gaffer.DependencyNode ) )
+		self.assertTrue( n.isInstanceOf( Gaffer.DependencyNode.staticTypeId() ) )
+
+	def testDirtyPropagation( self ) :
+
+		n1 = GafferDispatchTest.TextWriter()
+		n2 = GafferDispatchTest.TextWriter()
+		n3 = GafferDispatchTest.TextWriter()
+
+		n2["preTasks"][0].setInput( n1["task"] )
+		n3["preTasks"][0].setInput( n2["task"] )
+
+		cs1 = GafferTest.CapturingSlot( n1.plugDirtiedSignal() )
+		cs2 = GafferTest.CapturingSlot( n2.plugDirtiedSignal() )
+		cs3 = GafferTest.CapturingSlot( n3.plugDirtiedSignal() )
+
+		n1["fileName"].setValue( "test.txt" )
+
+		self.assertIn( n1["task"], { x[0] for x in cs1 } )
+		self.assertIn( n2["task"], { x[0] for x in cs2 } )
+		self.assertIn( n3["task"], { x[0] for x in cs3 } )
+
+	def testOverrideAffectsTask( self ) :
+
+		class MySystemCommand( GafferDispatch.SystemCommand ) :
+
+			def __init__( self, name = "MySystemCommand" ) :
+
+				GafferDispatch.SystemCommand.__init__( self, name )
+
+				self["nothingToDoWithTask"] = Gaffer.StringPlug()
+
+			def affectsTask( self, input ) :
+
+				if input == self["nothingToDoWithTask"] :
+					return False
+				else :
+					return GafferDispatch.SystemCommand.affectsTask( self, input )
+
+		IECore.registerRunTimeTyped( MySystemCommand, typeName = "GafferDispatchTest::MySystemCommand" )
+
+		n = MySystemCommand()
+		cs = GafferTest.CapturingSlot( n.plugDirtiedSignal() )
+
+		n["command"].setValue( "ls" )
+		self.assertIn( n["command"], { x[0] for x in cs } )
+		self.assertIn( n["task"], { x[0] for x in cs } )
+		del cs[:]
+
+		n["nothingToDoWithTask"].setValue( "irrelevant" )
+		self.assertIn( n["nothingToDoWithTask"], { x[0] for x in cs } )
+		self.assertNotIn( n["task"], { x[0] for x in cs } )
+
 if __name__ == "__main__":
 	unittest.main()

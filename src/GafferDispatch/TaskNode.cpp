@@ -295,7 +295,7 @@ IE_CORE_DEFINERUNTIMETYPED( TaskNode )
 size_t TaskNode::g_firstPlugIndex;
 
 TaskNode::TaskNode( const std::string &name )
-	:	Node( name )
+	:	DependencyNode( name )
 {
 	storeIndexOfNextChild( g_firstPlugIndex );
 	addChild( new ArrayPlug( "preTasks", Plug::In, new TaskPlug( "preTask0" ) ) );
@@ -350,6 +350,30 @@ Plug *TaskNode::dispatcherPlug()
 const Plug *TaskNode::dispatcherPlug() const
 {
 	return getChild<Plug>( g_firstPlugIndex + 3 );
+}
+
+void TaskNode::affects( const Plug *input, AffectedPlugsContainer &outputs ) const
+{
+	DependencyNode::affects( input, outputs );
+
+	if( affectsTask( input ) )
+	{
+		outputs.push_back( taskPlug() );
+	}
+}
+
+bool TaskNode::affectsTask( const Plug *input ) const
+{
+	if(
+		input->direction() != Plug::In ||
+		userPlug()->isAncestorOf( input ) ||
+		postTasksPlug()->isAncestorOf( input ) ||
+		input == taskPlug()
+	)
+	{
+		return false;
+	}
+	return true;
 }
 
 void TaskNode::preTasks( const Context *context, Tasks &tasks ) const
