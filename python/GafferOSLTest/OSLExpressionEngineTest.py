@@ -117,6 +117,19 @@ class OSLExpressionEngineTest( GafferOSLTest.OSLTestCase ) :
 		s["n"]["user"]["i"].setValue( IECore.V3f( 1, 2, 3 ) )
 		self.assertEqual( s["n"]["user"]["o"].getValue(), IECore.V3f( 2, 4, 6 ) )
 
+	def testM44fPlugs( self ) :
+
+		s = Gaffer.ScriptNode()
+		s["n"] = Gaffer.Node()
+		s["n"]["user"]["i"] = Gaffer.M44fPlug( flags = Gaffer.Plug.Flags.Default | Gaffer.Plug.Flags.Dynamic )
+		s["n"]["user"]["o"] = Gaffer.M44fPlug( flags = Gaffer.Plug.Flags.Default | Gaffer.Plug.Flags.Dynamic )
+
+		s["e"] = Gaffer.Expression()
+		s["e"].setExpression( "parent.n.user.o = parent.n.user.i * 2;", "OSL" )
+
+		s["n"]["user"]["i"].setValue( IECore.M44f( range( 16 ) ) )
+		self.assertEqual( s["n"]["user"]["o"].getValue(), IECore.M44f( range( 0, 32, 2 ) ) )
+
 	def testStringPlugs( self ) :
 
 		s = Gaffer.ScriptNode()
