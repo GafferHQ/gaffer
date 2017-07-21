@@ -181,7 +181,7 @@ class LayoutEngine
 
 		LayoutEngine( GraphGadget *graphGadget, float edgeLengthScale, float nodeSeparationScale )
 			:	m_graphGadget( graphGadget ),
-				m_edgeLength( 5.0f * edgeLengthScale ),
+				m_edgeLength( 4.0f * edgeLengthScale ),
 				m_nodeSeparation( 2.0f * nodeSeparationScale ),
 				m_springStiffness( 0.1 ),
 				m_maxIterations( 10000 ),

@@ -270,6 +270,7 @@ class GraphGadget : public ContainerGadget
 		Nodule *m_dragReconnectSrcNodule;
 		Nodule *m_dragReconnectDstNodule;
 		std::vector<float> m_dragSnapOffsets[2]; // offsets in x and y
+		std::vector<Imath::V2f> m_dragSnapPoints; // specific points that are also target for point snapping
 
 		GraphLayoutPtr m_layout;
 
