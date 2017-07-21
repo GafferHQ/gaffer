@@ -180,6 +180,9 @@ class RendererServices : public OSL::RendererServices
 					case V3fPlugTypeId :
 						*(V3f *)value = static_cast<const V3fPlug *>( plug )->getValue();
 						return true;
+					case M44fPlugTypeId :
+						*(M44f *)value = static_cast<const M44fPlug *>( plug )->getValue();
+						return true;
 					case StringPlugTypeId :
 					{
 						ustring s( static_cast<const StringPlug *>( plug )->getValue() );
@@ -354,6 +357,15 @@ class OSLExpressionEngine : public Gaffer::Expression::Engine
 					const float *f = (const float *)storage;
 					result->members().push_back( new V3fData( V3f( f[0], f[1], f[2] ) ) );
 				}
+				else if( type == TypeDesc::TypeMatrix )
+				{
+					const float *f = (const float *)storage;
+					result->members().push_back( new M44fData( M44f(
+						f[0],  f[1],  f[2],  f[3],
+						f[4],  f[5],  f[6],  f[7],
+						f[8],  f[9],  f[10], f[11],
+						f[12], f[13], f[14], f[15] ) ) );
+				}
 				else if( type == TypeDesc::TypeString )
 				{
 					result->members().push_back( new StringData( *(const char **)storage ) );
@@ -407,6 +419,9 @@ class OSLExpressionEngine : public Gaffer::Expression::Engine
 					}
 					break;
 				}
+				case M44fDataTypeId :
+					static_cast<M44fPlug *>( proxyOutput )->setValue( static_cast<const M44fData *>( value )->readable() );
+					break;
 				case StringDataTypeId :
 					static_cast<StringPlug *>( proxyOutput )->setValue( static_cast<const StringData *>( value )->readable() );
 					break;
@@ -426,6 +441,7 @@ class OSLExpressionEngine : public Gaffer::Expression::Engine
 				case IntPlugTypeId :
 				case Color3fPlugTypeId :
 				case V3fPlugTypeId :
+				case M44fPlugTypeId :
 				case StringPlugTypeId :
 					break;
 				default :
@@ -520,6 +536,12 @@ class OSLExpressionEngine : public Gaffer::Expression::Engine
 					value = boost::str( boost::format( "vector( %f, %f, %f )" ) % v[0] % v[1] % v[2] );
 					break;
 				}
+				case M44fPlugTypeId :
+				{
+					const M44f m = static_cast<const M44fPlug *>( output )->getValue();
+					value = boost::str( boost::format( "matrix( %f, %f, %f, %f, %f, %f, %f, %f, %f, %f, %f, %f, %f, %f, %f, %f )" ) % m[0][0] % m[0][1] % m[0][2] % m[0][3] % m[1][0] % m[1][1] % m[1][2] % m[1][3] % m[2][0] % m[2][1] % m[2][2] % m[2][3] % m[3][0] % m[3][1] % m[3][2] % m[3][3] );
+					break;
+				}
 				case StringPlugTypeId :
 					value = '"' + static_cast<const StringPlug *>( output )->getValue() + '"';
 					break;
@@ -609,6 +631,9 @@ class OSLExpressionEngine : public Gaffer::Expression::Engine
 				case V3fPlugTypeId :
 					defaultValue = "vector( 0.0 )";
 					return "vector";
+				case M44fPlugTypeId :
+					defaultValue = "matrix( 1.0 )";
+					return "matrix";
 				case StringPlugTypeId :
 					defaultValue = "\"\"";
 					return "string";
