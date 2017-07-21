@@ -96,6 +96,13 @@ const InternedString g_inputConnectionsMinimisedPlugName( "__uiInputConnectionsM
 const InternedString g_outputConnectionsMinimisedPlugName( "__uiOutputConnectionsMinimised" );
 const InternedString g_nodeGadgetTypeName( "nodeGadget:type" );
 
+struct CompareV2fX{
+	bool operator()(const Imath::V2f &a, const Imath::V2f &b) const
+	{   
+		return a[0] < b[0];
+	}   
+};
+
 } // namespace
 
 //////////////////////////////////////////////////////////////////////////
@@ -1090,8 +1097,11 @@ bool GraphGadget::dragMove( GadgetPtr gadget, const DragDropEvent &event )
 
 	if( m_dragMode == Moving )
 	{
+		const float snapThresh = 1.5;
+		
 		// snap the position using the offsets precomputed in calculateDragSnapOffsets()
-		V2f pos = V2f( i.x, i.y );
+		V2f startPos = V2f( i.x, i.y );
+		V2f pos = startPos;
 		for( int axis = 0; axis <= 1; ++axis )
 		{
 			const std::vector<float> &snapOffsets = m_dragSnapOffsets[axis];
@@ -1115,9 +1125,25 @@ bool GraphGadget::dragMove( GadgetPtr gadget, const DragDropEvent &event )
 				}
 			}
 
-			if( snappedDist < 1.5 )
+			if( snappedDist < snapThresh )
 			{
 				pos[axis] = snappedOffset + m_dragStartPosition[axis];
+			}
+		}
+
+		// We have sorted the snap points on the X axis, so we just need to check points that are within
+		// the right X range.
+		const std::vector<Imath::V2f> &snapPoints = m_dragSnapPoints;
+		V2f pOffset = startPos - m_dragStartPosition;
+		vector<V2f>::const_iterator pEnd = lower_bound( snapPoints.begin(), snapPoints.end(), pOffset + V2f( snapThresh ), CompareV2fX() );
+		vector<V2f>::const_iterator pIt = upper_bound( snapPoints.begin(), snapPoints.end(), pOffset - V2f( snapThresh ), CompareV2fX() );
+		for( ; pIt != pEnd; pIt++ )
+		{
+			if( fabs( pOffset[1] - (*pIt)[1] ) < snapThresh &&
+			    fabs( pOffset[0] - (*pIt)[0] ) < snapThresh )
+			{
+				pos = *pIt + m_dragStartPosition;
+				break;
 			}
 		}
 
@@ -1275,6 +1301,7 @@ void GraphGadget::calculateDragSnapOffsets( Gaffer::Set *nodes )
 {
 	m_dragSnapOffsets[0].clear();
 	m_dragSnapOffsets[1].clear();
+	m_dragSnapPoints.clear();
 
 	std::vector<const ConnectionGadget *> connections;
 	for( size_t i = 0, s = nodes->size(); i < s; ++i )
@@ -1332,37 +1359,51 @@ void GraphGadget::calculateDragSnapOffsets( Gaffer::Set *nodes )
 
 			V3f srcNodePosition = V3f( 0 ) * srcNodeGadget->fullTransform();
 			V3f dstNodePosition = V3f( 0 ) * dstNodeGadget->fullTransform();
-			offset = srcNodePosition[snapAxis] - dstNodePosition[snapAxis];
+			float nodeOffset = srcNodePosition[snapAxis] - dstNodePosition[snapAxis];
 
 			if( dstNodule->plug()->node() != node )
 			{
-				offset *= -1;
+				nodeOffset *= -1;
 			}
 
-			m_dragSnapOffsets[snapAxis].push_back( offset );
+			m_dragSnapOffsets[snapAxis].push_back( nodeOffset );
 
-			// compute an offset that will position the node snugly next to its input
+			// compute an offset that will position the node neatly next to its input
 			// in the other axis.
 
 			Box3f srcNodeBound = srcNodeGadget->transformedBound( NULL );
 			Box3f dstNodeBound = dstNodeGadget->transformedBound( NULL );
 
 			const int otherAxis = snapAxis == 1 ? 0 : 1;
+			float baseOffsetOtherAxis;
+			float offsetDirectionOtherAxis;
 			if( otherAxis == 1 )
 			{
-				offset = dstNodeBound.max[otherAxis] - srcNodeBound.min[otherAxis] + 1.0f;
+				baseOffsetOtherAxis = dstNodeBound.max[otherAxis] - srcNodeBound.min[otherAxis];
+				offsetDirectionOtherAxis = 1.0f;
 			}
 			else
 			{
-				offset = dstNodeBound.min[otherAxis] - srcNodeBound.max[otherAxis] - 1.0f;
+				baseOffsetOtherAxis = dstNodeBound.min[otherAxis] - srcNodeBound.max[otherAxis];
+				offsetDirectionOtherAxis = -1.0f;
 			}
 
 			if( dstNodule->plug()->node() == node )
 			{
-				offset *= -1;
+				baseOffsetOtherAxis *= -1;
+				offsetDirectionOtherAxis *= -1;
 			}
 
-			m_dragSnapOffsets[otherAxis].push_back( offset );
+			m_dragSnapOffsets[otherAxis].push_back( baseOffsetOtherAxis + 4.0f * offsetDirectionOtherAxis );
+
+			if( snapAxis == 0 )
+			{
+				m_dragSnapPoints.push_back( Imath::V2f( offset, baseOffsetOtherAxis + 1.5f * offsetDirectionOtherAxis ) );
+			}
+			else
+			{
+				m_dragSnapPoints.push_back( Imath::V2f( baseOffsetOtherAxis + 1.5f * offsetDirectionOtherAxis, offset ) );
+			}
 		}
 	}
 
@@ -1374,6 +1415,8 @@ void GraphGadget::calculateDragSnapOffsets( Gaffer::Set *nodes )
 		std::sort( m_dragSnapOffsets[axis].begin(), m_dragSnapOffsets[axis].end() );
 		m_dragSnapOffsets[axis].erase( std::unique( m_dragSnapOffsets[axis].begin(), m_dragSnapOffsets[axis].end()), m_dragSnapOffsets[axis].end() );
 	}
+
+	std::sort( m_dragSnapPoints.begin(), m_dragSnapPoints.end(), CompareV2fX() );
 
 }
 

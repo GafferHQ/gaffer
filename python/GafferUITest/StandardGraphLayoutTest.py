@@ -566,9 +566,9 @@ class StandardGraphLayoutTest( GafferUITest.TestCase ) :
 		s["t2"] = LayoutNode()
 		s["t3"] = LayoutNode()
 
-		s["t1"]["left1"].setInput( s["s"]["bottom1"] )
-		s["t2"]["left1"].setInput( s["s"]["bottom1"] )
-		s["t3"]["left1"].setInput( s["s"]["bottom1"] )
+		s["t1"]["left0"].setInput( s["s"]["bottom1"] )
+		s["t2"]["left0"].setInput( s["s"]["bottom1"] )
+		s["t3"]["left0"].setInput( s["s"]["bottom1"] )
 
 		g = GafferUI.GraphGadget( s )
 		g.getLayout().layoutNodes( g )
