@@ -181,5 +181,29 @@ class TextTest( GafferImageTest.ImageTestCase ) :
 		t["shadow"].setValue( True )
 		self.assertImagesEqual( c["out"], t["out"] )
 
+	def testShadowAssertions( self ) :
+
+		# This used to trigger invalid assertions
+
+		t = GafferImage.Text()
+		dataWindow = t["out"]["dataWindow"].getValue()
+		tile = t["out"].channelData( "R", GafferImage.ImagePlug.tileOrigin( dataWindow.min ) )
+
+		t["shadow"].setValue( True )
+		t["shadowColor"].setValue( IECore.Color4f( 0.5 ) )
+
+		shadowDataWindow = t["out"]["dataWindow"].getValue()
+
+		self.assertEqual( shadowDataWindow.min.x, dataWindow.min.x )
+		self.assertEqual( shadowDataWindow.max.y, dataWindow.max.y )
+		self.assertGreater( shadowDataWindow.max.x, dataWindow.max.x )
+		self.assertLess( shadowDataWindow.min.y, dataWindow.min.y )
+
+		self.assertEqual( t["out"]["channelNames"].getValue(), IECore.StringVectorData( [ "R", "G", "B", "A" ] ) )
+
+		shadowTile = t["out"].channelData( "R", GafferImage.ImagePlug.tileOrigin( dataWindow.min ) )
+
+		self.assertNotEqual( shadowTile, tile )
+
 if __name__ == "__main__":
 	unittest.main()
