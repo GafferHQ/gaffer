@@ -72,6 +72,9 @@ Shape::Shape( const std::string &name )
 	addChild( new ImagePlug( "__shape", Gaffer::Plug::Out, Plug::Default & ~Plug::Serialisable ) );
 	addChild( new ImagePlug( "__shadowShape", Gaffer::Plug::Out, Plug::Default & ~Plug::Serialisable ) );
 
+	shadowShapePlug()->setInput( shapePlug() );
+	shadowShapePlug()->channelDataPlug()->setInput( nullptr );
+
 	BlurPtr shadowBlur = new Blur( "__shadowBlur" );
 	addChild( shadowBlur );
 	shadowBlur->inPlug()->setInput( shadowShapePlug() );
@@ -249,7 +252,7 @@ IECore::ConstStringVectorDataPtr Shape::computeChannelNames( const Gaffer::Conte
 
 void Shape::hashChannelData( const GafferImage::ImagePlug *parent, const Gaffer::Context *context, IECore::MurmurHash &h ) const
 {
-	assert( parent == shapePlug() );
+	assert( parent == shapePlug() || parent == shadowShapePlug()  );
 	const std::string &channelName = context->get<std::string>( ImagePlug::channelNameContextName );
 	if( channelName == g_shapeChannelName )
 	{
@@ -275,7 +278,7 @@ void Shape::hashChannelData( const GafferImage::ImagePlug *parent, const Gaffer:
 
 IECore::ConstFloatVectorDataPtr Shape::computeChannelData( const std::string &channelName, const Imath::V2i &tileOrigin, const Gaffer::Context *context, const ImagePlug *parent ) const
 {
-	assert( parent == shapePlug() );
+	assert( parent == shapePlug() || parent == shadowShapePlug()  );
 	if( channelName == g_shapeChannelName )
 	{
 		// Private channel we use for caching the shape but don't advertise via channelNames.
