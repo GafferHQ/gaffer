@@ -142,7 +142,6 @@ namespace GafferImageBindings
 
 void bindCatalogue()
 {
-
 	scope s = GafferBindings::DependencyNodeClass<Catalogue>()
 		.def( "generateFileName", &generateFileName1 )
 		.def( "generateFileName", &generateFileName2 )
