@@ -383,7 +383,7 @@ class Catalogue::InternalImage : public ImageNode
 			return getChild<ImageMetadata>( g_firstChildIndex + 6 );
 		}
 
-		struct AsynchronousSaver : public IECore::RefCounted
+		struct AsynchronousSaver
 		{
 
 			typedef std::shared_ptr<AsynchronousSaver> Ptr;
