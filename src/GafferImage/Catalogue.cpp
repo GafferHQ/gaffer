@@ -191,7 +191,7 @@ class Catalogue::InternalImage : public ImageNode
 				copyChannels()->inPlugs()->getChild<Plug>( numDisplays++ )->setInput( displayCopy->outPlug() );
 			}
 
-			m_saver = NULL;
+			m_saver.reset();
 			if( other->m_saver )
 			{
 				m_saver = other->m_saver;
@@ -199,7 +199,7 @@ class Catalogue::InternalImage : public ImageNode
 			}
 			else if( numDisplays )
 			{
-				m_saver = new AsynchronousSaver( this );
+				m_saver = AsynchronousSaver::create( this );
 			}
 
 			m_clientPID = -2; // Make sure insertDriver() will reject new drivers
@@ -283,7 +283,7 @@ class Catalogue::InternalImage : public ImageNode
 			// Save the image to disk. We do this in the background because
 			// saving large images with many AOVs takes several seconds.
 
-			m_saver = new AsynchronousSaver( this );
+			m_saver = AsynchronousSaver::create( this );
 		}
 
 	protected :
@@ -390,17 +390,18 @@ class Catalogue::InternalImage : public ImageNode
 			return getChild<ImageMetadata>( g_firstChildIndex + 6 );
 		}
 
-		struct AsynchronousSaver : public IECore::RefCounted
+		struct AsynchronousSaver
 		{
 
-			IE_CORE_DECLAREMEMBERPTR( AsynchronousSaver )
+			typedef boost::shared_ptr<AsynchronousSaver> Ptr;
+			typedef boost::weak_ptr<AsynchronousSaver> WeakPtr;
 
-			AsynchronousSaver( InternalImage *client )
+			static Ptr create( InternalImage *client )
 			{
 				// We use a copy of the image to do the saving, because the original
 				// might be modified on the main thread while we save in the background.
 
-				m_imageCopy = new InternalImage;
+				InternalImagePtr imageCopy = new InternalImage;
 
 				size_t i = 0;
 				for( DisplayIterator it( client ); !it.done(); ++it )
@@ -408,38 +409,45 @@ class Catalogue::InternalImage : public ImageNode
 					Display *display = it->get();
 					DisplayPtr displayCopy = new Display;
 					displayCopy->setDriver( display->getDriver(), /* copy = */ true );
-					m_imageCopy->addChild( displayCopy );
-					m_imageCopy->copyChannels()->inPlugs()->getChild<Plug>( i++ )->setInput( displayCopy->outPlug() );
+					imageCopy->addChild( displayCopy );
+					imageCopy->copyChannels()->inPlugs()->getChild<Plug>( i++ )->setInput( displayCopy->outPlug() );
 				}
-				m_imageCopy->imageSwitch()->indexPlug()->setValue( 1 );
+				imageCopy->imageSwitch()->indexPlug()->setValue( 1 );
 
-				// Set up an ImageWriter to do the actual saving.
-				// We do all graph construction here in the main thread
-				// so that the background thread only does execution.
-
-				const string fileName = client->parent<Catalogue>()->generateFileName( m_imageCopy->outPlug() );
+				// If there's nowhere to save, then a saver is useless, so return null.
+				const string fileName = client->parent<Catalogue>()->generateFileName( imageCopy->outPlug() );
 				if( fileName.empty() )
 				{
-					return;
+					return Ptr();
 				}
 
-				m_writer = new ImageWriter;
-				m_writer->inPlug()->setInput( m_imageCopy->outPlug() );
-				m_writer->fileNamePlug()->setValue( fileName );
+				// Otherwise, make a saver and schedule its background execution.
+				Ptr saver = Ptr( new AsynchronousSaver( imageCopy, fileName ) );
+				saver->registerClient( client );
 
-				registerClient( client );
-
-				// And fire off a thread to do the actual work.
-				std::thread thread( boost::bind( &AsynchronousSaver::save, this ) );
-				m_thread.swap( thread );
+				// Note that the background thread doesn't own a reference to the saver -
+				// see ~AsychronousSaver for details.
+				std::thread thread( boost::bind( &AsynchronousSaver::save, saver.get(), WeakPtr( saver ) ) );
+				saver->m_thread.swap( thread );
+				return saver;
 			}
 
 			virtual ~AsynchronousSaver()
 			{
-				if( m_thread.joinable() )
-				{
-					m_thread.join();
-				}
+				// Wait for our background thread to complete. This achieves
+				// two things :
+				//
+				// - Makes sure our member data is not deleted until the background
+				//   thread has finished using it.
+				// - Ensures that the background thread finishes before program shutdown
+				//   reaches the stage of calling static destructors, at which point
+				//   it would crash as the libraries it relies on are torn down around it.
+				//
+				// Note that for this to work, the background thread must _not_ own a
+				// reference to `this`, as that would prevent destruction on the main
+				// thread and never give us an opportunity to wait for the background
+				// thread.
+				m_thread.join();
 			}
 
 			void registerClient( InternalImage *client )
@@ -469,6 +477,17 @@ class Catalogue::InternalImage : public ImageNode
 
 			private :
 
+				AsynchronousSaver( InternalImagePtr imageCopy, const std::string &fileName )
+					:	m_imageCopy( imageCopy )
+				{
+					// Set up an ImageWriter to do the actual saving.
+					// We do all graph construction here in the main thread
+					// so that the background thread only does execution.
+					m_writer = new ImageWriter;
+					m_writer->inPlug()->setInput( m_imageCopy->outPlug() );
+					m_writer->fileNamePlug()->setValue( fileName );
+				}
+
 				struct HashGatherer
 				{
 
@@ -495,7 +514,7 @@ class Catalogue::InternalImage : public ImageNode
 
 				};
 
-				void save()
+				void save( WeakPtr forWrapUp )
 				{
 					HashGatherer hashGatherer( channelDataHashes );
 					parallelGatherTiles(
@@ -506,7 +525,21 @@ class Catalogue::InternalImage : public ImageNode
 					);
 
 					m_writer->taskPlug()->execute();
-					Display::executeOnUIThread( boost::bind( &AsynchronousSaver::wrapUp, Ptr( this ) ) );
+
+					// Schedule execution of wrapUp() on the UI thread,
+					// to make our results visible to the user. Note that
+					// we absolutely _must not_ create a Ptr here on the
+					// background thread - ownership must be managed on
+					// the UI thread only (see ~AsynchronousSaver).
+					Display::executeOnUIThread( boost::bind( &wrapUpWeak, forWrapUp ) );
+				}
+
+				static void wrapUpWeak( WeakPtr forWrapUp )
+				{
+					if( Ptr that = forWrapUp.lock() )
+					{
+						that->wrapUp();
+					}
 				}
 
 				void wrapUp()
