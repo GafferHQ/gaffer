@@ -122,7 +122,7 @@ class MultiLineTextWidgetTest( GafferUITest.TestCase ) :
 		# changing initial value
 		widget.setFixedLineHeight( 2 )
 
-		self.waitForIdle()
+		self.waitForIdle( 1000 )
 
 		newHeight = widget.size().y
 
