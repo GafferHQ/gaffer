@@ -264,20 +264,19 @@ ParameterisedHolder<BaseType>::ParameterModificationContext::~ParameterModificat
 	}
 }
 
-// specialisation
-
 namespace GafferCortex
 {
 
+// specialisation
 IECORE_RUNTIMETYPED_DEFINETEMPLATESPECIALISATION( GafferCortex::ParameterisedHolderNode, ParameterisedHolderNodeTypeId )
 IECORE_RUNTIMETYPED_DEFINETEMPLATESPECIALISATION( GafferCortex::ParameterisedHolderDependencyNode, ParameterisedHolderDependencyNodeTypeId )
 IECORE_RUNTIMETYPED_DEFINETEMPLATESPECIALISATION( GafferCortex::ParameterisedHolderComputeNode, ParameterisedHolderComputeNodeTypeId )
 IECORE_RUNTIMETYPED_DEFINETEMPLATESPECIALISATION( GafferCortex::ParameterisedHolderTaskNode, ParameterisedHolderTaskNodeTypeId )
-
-} // namespace GafferCortex
 
 // explicit instantiation
 template class ParameterisedHolder<Gaffer::Node>;
 template class ParameterisedHolder<Gaffer::DependencyNode>;
 template class ParameterisedHolder<Gaffer::ComputeNode>;
 template class ParameterisedHolder<GafferDispatch::TaskNode>;
+
+} // namespace GafferCortex

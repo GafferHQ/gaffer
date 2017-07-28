@@ -123,20 +123,20 @@ void TypedParameterHandler<T>::setPlugValue()
 
 // explicit instantiations
 
-template class TypedParameterHandler<std::string>;
-template class TypedParameterHandler<bool>;
+template class GafferCortex::TypedParameterHandler<std::string>;
+template class GafferCortex::TypedParameterHandler<bool>;
 
-template class TypedParameterHandler<Imath::Box2f>;
-template class TypedParameterHandler<Imath::Box3f>;
+template class GafferCortex::TypedParameterHandler<Imath::Box2f>;
+template class GafferCortex::TypedParameterHandler<Imath::Box3f>;
 
-template class TypedParameterHandler<Imath::Box2i>;
-template class TypedParameterHandler<Imath::Box3i>;
+template class GafferCortex::TypedParameterHandler<Imath::Box2i>;
+template class GafferCortex::TypedParameterHandler<Imath::Box3i>;
 
-template class TypedParameterHandler<Imath::V2f>;
-template class TypedParameterHandler<Imath::V3f>;
+template class GafferCortex::TypedParameterHandler<Imath::V2f>;
+template class GafferCortex::TypedParameterHandler<Imath::V3f>;
 
-template class TypedParameterHandler<Imath::V2i>;
-template class TypedParameterHandler<Imath::V3i>;
+template class GafferCortex::TypedParameterHandler<Imath::V2i>;
+template class GafferCortex::TypedParameterHandler<Imath::V3i>;
 
-template class TypedParameterHandler<Imath::Color3f>;
-template class TypedParameterHandler<Imath::Color4f>;
+template class GafferCortex::TypedParameterHandler<Imath::Color3f>;
+template class GafferCortex::TypedParameterHandler<Imath::Color4f>;
