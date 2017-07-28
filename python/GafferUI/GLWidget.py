@@ -35,6 +35,7 @@
 #
 ##########################################################################
 
+import sys
 import logging
 import collections
 
@@ -52,6 +53,7 @@ import _GafferUI
 
 import OpenGL.GL as GL
 
+import Qt
 from Qt import QtCore
 from Qt import QtGui
 from Qt import QtWidgets
@@ -105,6 +107,15 @@ class GLWidget( GafferUI.Widget ) :
 
 		self.__overlays.add( overlay )
 		overlay._setStyleSheet()
+		if sys.platform == "darwin" and Qt.__binding__ in ( "PySide2", "PyQt5" ) :
+			# Force Qt to use a raster drawing path for the overlays,
+			# to avoid "QMacCGContext:: Unsupported painter devtype type 1"
+			# errors. See https://bugreports.qt.io/browse/QTBUG-32639 for
+			# further details.
+			## \todo When we no longer need to support Qt4, we should be
+			# able to stop using a QGLWidget for the viewport, and this
+			# should no longer be needed.
+			overlay._qtWidget().setWindowOpacity( 0.9999 )
 
 		self.__graphicsScene.addOverlay( overlay )
 
