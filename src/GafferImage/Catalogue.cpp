@@ -847,7 +847,7 @@ void Catalogue::imageRemoved( GraphComponent *graphComponent )
 		{
 			if( i + offset < plug->children().size() - 1 )
 			{
-				element->setInput( plug->getChild<Plug>( i + offset )->source<Plug>() );
+				element->setInput( plug->getChild<Plug>( i + offset )->getInput<Plug>() );
 			}
 			else
 			{
