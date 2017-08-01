@@ -320,8 +320,8 @@ class OSLImageTest( GafferOSLTest.OSLTestCase ) :
 		for y in range( displayWindow.min.y, displayWindow.max.y ) :
 			for x in range( displayWindow.min.x, displayWindow.max.x ) :
 
-				self.assertEqual( samplerR.sample( x, y ), x, "Pixel {},{}".format( x, y ) )
-				self.assertEqual( samplerG.sample( x, y ), y, "Pixel {},{}".format( x, y ) )
+				self.assertEqual( samplerR.sample( x, y ), x + 0.5, "Pixel {},{}".format( x, y ) )
+				self.assertEqual( samplerG.sample( x, y ), y + 0.5, "Pixel {},{}".format( x, y ) )
 				self.assertEqual( samplerB.sample( x, y ), 0, "Pixel {},{}".format( x, y ) )
 
 				uv = uvMin + uvStep * IECore.V2f( IECore.V2i( x, y ) - displayWindow.min )
