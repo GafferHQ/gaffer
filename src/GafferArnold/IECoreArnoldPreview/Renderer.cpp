@@ -1582,6 +1582,15 @@ class ArnoldRenderer : public IECoreScenePreview::Renderer
 		virtual ~ArnoldRenderer()
 		{
 			pause();
+
+			// If we start deleting objects from Arnold while the renderer thinks we might still need to
+			// start another render, Arnold will need to perform some sort of potentially costly index
+			// rebuilds. ( We're not sure of the exact cause, but in a scene with millions of objects, we
+			// saw it choking for hours trying to clean out all the objects ).
+			// Resetting the universe block pointer will free the universe block, calling AiEnd, and letting
+			// Arnold know that it doesn't need to do anything expensive when we delete all the objects in
+			// m_objects
+			m_universeBlock.reset();
 		}
 
 		virtual void option( const IECore::InternedString &name, const IECore::Data *value )
