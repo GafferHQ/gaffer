@@ -366,6 +366,7 @@ IECore::ConstInternedStringVectorDataPtr Group::computeChildNames( const ScenePa
 	}
 	else if( path.size() == 1 )
 	{
+		ScenePlug::GlobalScope s( context );
 		ConstCompoundObjectPtr mapping = boost::static_pointer_cast<const CompoundObject>( mappingPlug()->getValue() );
 		return mapping->member<InternedStringVectorData>( "__GroupChildNames" );
 	}
@@ -416,15 +417,21 @@ void Group::hashSet( const IECore::InternedString &setName, const Gaffer::Contex
 	{
 		(*it)->setPlug()->hash( h );
 	}
+
+	ScenePlug::GlobalScope s( context );
 	mappingPlug()->hash( h );
 	namePlug()->hash( h );
 }
 
 GafferScene::ConstPathMatcherDataPtr Group::computeSet( const IECore::InternedString &setName, const Gaffer::Context *context, const ScenePlug *parent ) const
 {
-	InternedString groupName = namePlug()->getValue();
-
-	ConstCompoundObjectPtr mapping = boost::static_pointer_cast<const CompoundObject>( mappingPlug()->getValue() );
+	InternedString groupName;
+	ConstCompoundObjectPtr mapping;
+	{
+		ScenePlug::GlobalScope s( context );
+		groupName = namePlug()->getValue();
+		mapping = boost::static_pointer_cast<const CompoundObject>( mappingPlug()->getValue() );
+	}
 	const ObjectVector *forwardMappings = mapping->member<ObjectVector>( "__GroupForwardMappings", true /* throw if missing */ );
 
 	PathMatcherDataPtr resultData = new PathMatcherData;
@@ -533,7 +540,11 @@ SceneNode::ScenePath Group::sourcePath( const ScenePath &outputPath, const Scene
 {
 	const InternedString mappedChildName = outputPath[1];
 
-	ConstCompoundObjectPtr mapping = boost::static_pointer_cast<const CompoundObject>( mappingPlug()->getValue() );
+	ConstCompoundObjectPtr mapping;
+	{
+		ScenePlug::GlobalScope s( Context::current() );
+		mapping = boost::static_pointer_cast<const CompoundObject>( mappingPlug()->getValue() );
+	}
 	const CompoundObject *entry = mapping->member<CompoundObject>( mappedChildName );
 	if( !entry )
 	{
