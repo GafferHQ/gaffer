@@ -302,7 +302,7 @@ bool StandardConnectionGadget::buttonPress( const ButtonEvent &event )
 		{
 			Gaffer::UndoScope undoEnabler( script );
 
-			Gaffer::Dot *dot = new Gaffer::Dot();
+			Gaffer::DotPtr dot = new Gaffer::Dot();
 			Gaffer::Plug *srcPlug = srcNodule()->plug();
 			dot->setup( srcPlug );
 
