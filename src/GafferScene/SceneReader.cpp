@@ -141,14 +141,13 @@ void SceneReader::hashBound( const ScenePath &path, const Gaffer::Context *conte
 {
 	SceneNode::hashBound( path, context, parent, h );
 
-	fileNamePlug()->hash( h );
-	refreshCountPlug()->hash( h );
-
 	ConstSceneInterfacePtr s = scene( path );
 	if( !s )
 	{
 		return;
 	}
+
+	refreshCountPlug()->hash( h );
 
 	if( s->hasBound() )
 	{
@@ -156,6 +155,7 @@ void SceneReader::hashBound( const ScenePath &path, const Gaffer::Context *conte
 	}
 	else
 	{
+		fileNamePlug()->hash( h );
 		h.append( &path.front(), path.size() );
 	}
 }
@@ -187,15 +187,13 @@ void SceneReader::hashTransform( const ScenePath &path, const Gaffer::Context *c
 {
 	SceneNode::hashTransform( path, context, parent, h );
 
-	fileNamePlug()->hash( h );
-	refreshCountPlug()->hash( h );
-
 	ConstSceneInterfacePtr s = scene( path );
 	if( !s )
 	{
 		return;
 	}
 
+	refreshCountPlug()->hash( h );
 	s->hash( SceneInterface::TransformHash, context->getTime(), h );
 }
 
@@ -228,9 +226,7 @@ void SceneReader::hashAttributes( const ScenePath &path, const Gaffer::Context *
 
 	SceneNode::hashAttributes( path, context, parent, h );
 
-	fileNamePlug()->hash( h );
 	refreshCountPlug()->hash( h );
-
 	s->hash( SceneInterface::AttributesHash, context->getTime(), h );
 }
 
@@ -281,9 +277,7 @@ void SceneReader::hashObject( const ScenePath &path, const Gaffer::Context *cont
 
 	SceneNode::hashObject( path, context, parent, h );
 
-	fileNamePlug()->hash( h );
 	refreshCountPlug()->hash( h );
-
 	s->hash( SceneInterface::ObjectHash, context->getTime(), h );
 }
 
@@ -309,7 +303,6 @@ void SceneReader::hashChildNames( const ScenePath &path, const Gaffer::Context *
 
 	SceneNode::hashChildNames( path, context, parent, h );
 
-	fileNamePlug()->hash( h );
 	refreshCountPlug()->hash( h );
 
 	// append a hash of the tags plug, as restricting the tags can affect the hierarchy
