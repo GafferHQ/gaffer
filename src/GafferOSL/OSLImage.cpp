@@ -308,7 +308,7 @@ IECore::ConstCompoundDataPtr OSLImage::computeShading( const Gaffer::Context *co
 		{
 			uWritable.push_back( uvOrigin.x + p.x * uvStep.x );
 			vWritable.push_back( v );
-			pWritable.push_back( V3f( p.x, p.y, 0.0f ) );
+			pWritable.push_back( V3f( p.x + 0.5f, p.y + 0.5f, 0.0f ) );
 		}
 	}
 
