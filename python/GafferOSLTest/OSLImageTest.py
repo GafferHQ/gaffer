@@ -273,5 +273,60 @@ class OSLImageTest( GafferOSLTest.OSLTestCase ) :
 			for x in range( -128, 128 ) :
 				self.assertEqual( sampler.sample( x, y ), 1, "Pixel {},{}".format( x, y ) )
 
+	def testGlobals( self ) :
+
+		constant = GafferImage.Constant()
+		constant["format"].setValue( GafferImage.Format( IECore.Box2i( IECore.V2i( -10 ), IECore.V2i( 10 ) ) ) )
+
+		globals = GafferOSL.OSLShader()
+		globals.loadShader( "Utility/Globals" )
+
+		outP = GafferOSL.OSLShader()
+		outP.loadShader( "ImageProcessing/OutLayer" )
+		outP["parameters"]["layerColor"].setInput( globals["out"]["globalP"] )
+
+		outU = GafferOSL.OSLShader()
+		outU.loadShader( "ImageProcessing/OutChannel" )
+		outU["parameters"]["channelName"].setValue( "u" )
+		outU["parameters"]["channelValue"].setInput( globals["out"]["globalU"] )
+
+		outV = GafferOSL.OSLShader()
+		outV.loadShader( "ImageProcessing/OutChannel" )
+		outV["parameters"]["channelName"].setValue( "v" )
+		outV["parameters"]["channelValue"].setInput( globals["out"]["globalV"] )
+
+		imageShader = GafferOSL.OSLShader()
+		imageShader.loadShader( "ImageProcessing/OutImage" )
+		imageShader["parameters"]["in0"].setInput( outP["out"]["layer"] )
+		imageShader["parameters"]["in1"].setInput( outU["out"]["channel"] )
+		imageShader["parameters"]["in2"].setInput( outV["out"]["channel"] )
+
+		image = GafferOSL.OSLImage()
+		image["in"].setInput( constant["out"] )
+		image["shader"].setInput( imageShader["out"] )
+
+		displayWindow = image["out"]["format"].getValue().getDisplayWindow()
+
+		samplerR = GafferImage.Sampler( image["out"], "R", displayWindow )
+		samplerG = GafferImage.Sampler( image["out"], "G", displayWindow )
+		samplerB = GafferImage.Sampler( image["out"], "B", displayWindow )
+		samplerU = GafferImage.Sampler( image["out"], "u", displayWindow )
+		samplerV = GafferImage.Sampler( image["out"], "v", displayWindow )
+
+		size = IECore.V2f( displayWindow.size() )
+		uvStep = IECore.V2f( 1.0 ) / size
+		uvMin = 0.5 * uvStep
+
+		for y in range( displayWindow.min.y, displayWindow.max.y ) :
+			for x in range( displayWindow.min.x, displayWindow.max.x ) :
+
+				self.assertEqual( samplerR.sample( x, y ), x, "Pixel {},{}".format( x, y ) )
+				self.assertEqual( samplerG.sample( x, y ), y, "Pixel {},{}".format( x, y ) )
+				self.assertEqual( samplerB.sample( x, y ), 0, "Pixel {},{}".format( x, y ) )
+
+				uv = uvMin + uvStep * IECore.V2f( IECore.V2i( x, y ) - displayWindow.min )
+				self.assertAlmostEqual( samplerU.sample( x, y ), uv.x, delta = 0.0000001, msg = "Pixel {},{}".format( x, y ) )
+				self.assertAlmostEqual( samplerV.sample( x, y ), uv.y, delta = 0.0000001, msg = "Pixel {},{}".format( x, y ) )
+
 if __name__ == "__main__":
 	unittest.main()
