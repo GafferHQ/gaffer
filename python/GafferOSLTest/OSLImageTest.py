@@ -250,5 +250,28 @@ class OSLImageTest( GafferOSLTest.OSLTestCase ) :
 		c["color"]["r"].setValue( 1 )
 		self.assertTrue( o["out"]["channelData"] in set( x[0] for x in cs ) )
 
+	def testNegativeTileCoordinates( self ) :
+
+		constant = GafferImage.Constant()
+		constant["format"].setValue( GafferImage.Format( IECore.Box2i( IECore.V2i( -128 ), IECore.V2i( 128 ) ) ) )
+
+		outR = GafferOSL.OSLShader()
+		outR.loadShader( "ImageProcessing/OutChannel" )
+		outR["parameters"]["channelName"].setValue( "R" )
+		outR["parameters"]["channelValue"].setValue( 1 )
+
+		imageShader = GafferOSL.OSLShader()
+		imageShader.loadShader( "ImageProcessing/OutImage" )
+		imageShader["parameters"]["in0"].setInput( outR["out"]["channel"] )
+
+		image = GafferOSL.OSLImage()
+		image["in"].setInput( constant["out"] )
+		image["shader"].setInput( imageShader["out"] )
+
+		sampler = GafferImage.Sampler( image["out"], "R", image["out"]["dataWindow"].getValue() )
+		for y in range( -128, 128 ) :
+			for x in range( -128, 128 ) :
+				self.assertEqual( sampler.sample( x, y ), 1, "Pixel {},{}".format( x, y ) )
+
 if __name__ == "__main__":
 	unittest.main()
