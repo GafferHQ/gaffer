@@ -150,8 +150,14 @@ void SceneReader::hashBound( const ScenePath &path, const Gaffer::Context *conte
 		return;
 	}
 
-	s->hash( SceneInterface::BoundHash, context->getTime(), h );
-
+	if( s->hasBound() )
+	{
+		s->hash( SceneInterface::BoundHash, context->getTime(), h );
+	}
+	else
+	{
+		h.append( &path.front(), path.size() );
+	}
 }
 
 Imath::Box3f SceneReader::computeBound( const ScenePath &path, const Gaffer::Context *context, const ScenePlug *parent ) const
@@ -162,14 +168,19 @@ Imath::Box3f SceneReader::computeBound( const ScenePath &path, const Gaffer::Con
 		return Box3f();
 	}
 
-	Box3d b = s->readBound( context->getTime() );
-
-	if( b.isEmpty() )
+	if( s->hasBound() )
 	{
-		return Box3f();
+		const Box3d b = s->readBound( context->getTime() );
+		if( b.isEmpty() )
+		{
+			return Box3f();
+		}
+		return Box3f( b.min, b.max );
 	}
-
-	return Box3f( b.min, b.max );
+	else
+	{
+		return unionOfTransformedChildBounds( path, parent );
+	}
 }
 
 void SceneReader::hashTransform( const ScenePath &path, const Gaffer::Context *context, const ScenePlug *parent, IECore::MurmurHash &h ) const
