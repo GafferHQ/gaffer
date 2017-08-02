@@ -216,7 +216,7 @@ class screengrab( Gaffer.Application ) :
 		# of the layouts and configuration of the gui app.
 		self._executeStartupFiles( "gui" )
 
-		GafferUI.ScriptWindow.connect( self.root() )
+		GafferUI.ScriptWidget.connect( self.root() )
 
 		# Load the specified gfr file.
 		script = Gaffer.ScriptNode()
@@ -228,8 +228,8 @@ class screengrab( Gaffer.Application ) :
 		# Choose the widget we'll grab by default. This can be overridden
 		# by the command files below by calling `application.setGrabWidget()`.
 
-		scriptWindow = GafferUI.ScriptWindow.acquire( script )
-		self.setGrabWidget( scriptWindow )
+		scriptWidget = GafferUI.ScriptWidget.acquire( script )
+		self.setGrabWidget( scriptWidget )
 
 		# Execute any commands we've been asked to, exposing the application
 		# and script as variables.

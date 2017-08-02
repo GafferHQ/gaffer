@@ -23,4 +23,4 @@ def __exportRibs( menu ):
 	else:
 		print 'select a node!'
 
-GafferUI.ScriptWindow.menuDefinition(application).append( "/ben/Export Ribs", { "command" : __exportRibs } )
+GafferUI.ScriptWidget.menuDefinition(application).append( "/ben/Export Ribs", { "command" : __exportRibs } )

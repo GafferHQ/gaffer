@@ -58,33 +58,36 @@ def appendDefinitions( menuDefinition, prefix="" ) :
 	menuDefinition.append( prefix + "/Export Selection...", { "command" : exportSelection, "active" : __selectionAvailable } )
 	menuDefinition.append( prefix + "/Import...", { "command" : importFile } )
 	menuDefinition.append( prefix + "/ImportExportDivider", { "divider" : True } )
+	menuDefinition.append( prefix + "/Close Script", { "command" : close, "shortCut" : "Ctrl+F4" } )
+	menuDefinition.append( prefix + "/CloseDivider", { "divider" : True } )
 	menuDefinition.append( prefix + "/Settings...", { "command" : showSettings } )
 
 ## A function suitable as the command for a File/New menu item. It must be invoked from a menu which
-# has a ScriptWindow in its ancestry.
+# has a ScriptWidget in its ancestry.
 def new( menu ) :
-
-	scriptWindow = menu.ancestor( GafferUI.ScriptWindow )
-	application = scriptWindow.scriptNode().ancestor( Gaffer.ApplicationRoot )
+	scriptWidget = GafferUI.ScriptWidget.acquire( menu )
+	application = scriptWidget.scriptNode().ancestor( Gaffer.ApplicationRoot )
 
 	newScript = Gaffer.ScriptNode()
 	Gaffer.NodeAlgo.applyUserDefaults( newScript )
 	application["scripts"].addChild( newScript )
 
 ## A function suitable as the command for a File/Open menu item. It must be invoked from a menu which
-# has a ScriptWindow in its ancestry.
+# has a ScriptWidget in its ancestry.
 def open( menu ) :
 
-	scriptWindow = menu.ancestor( GafferUI.ScriptWindow )
-	path, bookmarks = __pathAndBookmarks( scriptWindow )
+	scriptWidget = GafferUI.ScriptWidget.acquire( menu )
+	applicationWindow = scriptWidget.ancestor( GafferUI.ApplicationWindow )
+
+	path, bookmarks = __pathAndBookmarks( scriptWidget )
 
 	dialogue = GafferUI.PathChooserDialogue( path, title="Open script", confirmLabel="Open", valid=True, leaf=True, bookmarks=bookmarks )
-	path = dialogue.waitForPath( parentWindow = scriptWindow )
+	path = dialogue.waitForPath( parentWindow = applicationWindow )
 
 	if not path :
 		return
 
-	__open( scriptWindow.scriptNode(), str( path ) )
+	__open( scriptWidget.scriptNode(), str( path ) )
 
 def __open( currentScript, fileName ) :
 
@@ -93,10 +96,12 @@ def __open( currentScript, fileName ) :
 	script = Gaffer.ScriptNode()
 	script["fileName"].setValue( fileName )
 
+	applicationWindow = GafferUI.ScriptWidget.acquire( currentScript ).ancestor( GafferUI.ApplicationWindow )
+
 	with GafferUI.ErrorDialogue.ErrorHandler(
 		title = "Errors Occurred During Loading",
 		closeLabel = "Oy vey",
-		parentWindow = GafferUI.ScriptWindow.acquire( currentScript )
+		parentWindow = applicationWindow
 	) :
 		script.load( continueOnError = True )
 
@@ -109,8 +114,8 @@ def __open( currentScript, fileName ) :
 		# the current script is empty - the user will think of the operation as loading
 		# the new script into the current window, rather than adding a new window. so make it
 		# look like that.
-		currentWindow = GafferUI.ScriptWindow.acquire( currentScript )
-		newWindow = GafferUI.ScriptWindow.acquire( script )
+		currentWindow = GafferUI.ScriptWidget.acquire( currentScript )
+		newWindow = GafferUI.ScriptWidget.acquire( script )
 		## \todo We probably want a way of querying and setting geometry in the public API
 		newWindow._qtWidget().restoreGeometry( currentWindow._qtWidget().saveGeometry() )
 		currentWindow.setVisible( False )
@@ -128,12 +133,13 @@ def __removeScript( application, script ) :
 	return False # remove idle callback
 
 ## A function suitable as the submenu callable for a File/OpenRecent menu item. It must be invoked
-# from a menu which has a ScriptWindow in its ancestry.
+# from a menu which has a ScriptWidget in its ancestry.
 def openRecent( menu ) :
 
-	scriptWindow = menu.ancestor( GafferUI.ScriptWindow )
-	currentScript = scriptWindow.scriptNode()
-	applicationRoot = currentScript.ancestor( Gaffer.ApplicationRoot )
+	scriptWidget = GafferUI.ScriptWidget.acquire( menu )
+	applicationWindow = scriptWidget.ancestor( GafferUI.ApplicationWindow )
+	applicationRoot = applicationWindow.applicationRoot
+	currentScript = scriptWidget.scriptNode()
 
 	recentFiles = []
 	with IECore.IgnoredExceptions( AttributeError ) :
@@ -185,27 +191,31 @@ def addRecentFile( application, fileName ) :
 		f.write( "GafferUI.FileMenu.addRecentFile( application, \"%s\" )\n" % fileName )
 
 ## A function suitable as the command for a File/Save menu item. It must be invoked from a menu which
-# has a ScriptWindow in its ancestry.
+# has a ScriptWidget in its ancestry.
 def save( menu ) :
 
-	scriptWindow = menu.ancestor( GafferUI.ScriptWindow )
-	script = scriptWindow.scriptNode()
+	scriptWidget = GafferUI.ScriptWidget.acquire( menu )
+	applicationWindow = scriptWidget.ancestor( GafferUI.ApplicationWindow )
+
+	script = scriptWidget.scriptNode()
 	if script["fileName"].getValue() :
-		with GafferUI.ErrorDialogue.ErrorHandler( title = "Error Saving File", parentWindow = scriptWindow ) :
+		with GafferUI.ErrorDialogue.ErrorHandler( title = "Error Saving File", parentWindow = applicationWindow ) :
 			script.save()
 	else :
 		saveAs( menu )
 
 ## A function suitable as the command for a File/Save As menu item. It must be invoked from a menu which
-# has a ScriptWindow in its ancestry.
+# has a ScriptWidget in its ancestry.
 def saveAs( menu ) :
 
-	scriptWindow = menu.ancestor( GafferUI.ScriptWindow )
-	script = scriptWindow.scriptNode()
-	path, bookmarks = __pathAndBookmarks( scriptWindow )
+	scriptWidget = GafferUI.ScriptWidget.acquire( menu )
+	applicationWindow = scriptWidget.ancestor( GafferUI.ApplicationWindow )
+
+	script = scriptWidget.scriptNode()
+	path, bookmarks = __pathAndBookmarks( applicationWindow )
 
 	dialogue = GafferUI.PathChooserDialogue( path, title="Save script", confirmLabel="Save", leaf=True, bookmarks=bookmarks )
-	path = dialogue.waitForPath( parentWindow = scriptWindow )
+	path = dialogue.waitForPath( parentWindow = applicationWindow )
 
 	if not path :
 		return
@@ -215,25 +225,25 @@ def saveAs( menu ) :
 		path += ".gfr"
 
 	script["fileName"].setValue( path )
-	with GafferUI.ErrorDialogue.ErrorHandler( title = "Error Saving File", parentWindow = scriptWindow ) :
+	with GafferUI.ErrorDialogue.ErrorHandler( title = "Error Saving File", parentWindow = applicationWindow ) :
 		script.save()
 
 	application = script.ancestor( Gaffer.ApplicationRoot )
 	addRecentFile( application, path )
 
 ## A function suitable as the command for a File/Revert To Saved menu item. It must be invoked from a menu which
-# has a ScriptWindow in its ancestry.
+# has a ScriptWidget in its ancestry.
 def revertToSaved( menu ) :
 
-	scriptWindow = menu.ancestor( GafferUI.ScriptWindow )
-	script = scriptWindow.scriptNode()
+	scriptWidget = GafferUI.ScriptWidget.acquire( menu )
+	script = scriptWidget.scriptNode()
 
 	script.load()
 
 def __revertToSavedAvailable( menu ) :
 
-	scriptWindow = menu.ancestor( GafferUI.ScriptWindow )
-	script = scriptWindow.scriptNode()
+	scriptWidget = GafferUI.ScriptWidget.acquire( menu )
+	script = scriptWidget.scriptNode()
 
 	if script["fileName"].getValue() and script["unsavedChanges"].getValue() :
 		return True
@@ -241,12 +251,13 @@ def __revertToSavedAvailable( menu ) :
 	return False
 
 ## A function suitable as the command for a File/Export Selection... menu item. It must be invoked from a menu which
-# has a ScriptWindow in its ancestry.
+# has a ScriptWidget in its ancestry.
 def exportSelection( menu ) :
 
-	scriptWindow = menu.ancestor( GafferUI.ScriptWindow )
-	script = scriptWindow.scriptNode()
-	path, bookmarks = __pathAndBookmarks( scriptWindow )
+	scriptWidget = GafferUI.ScriptWidget.acquire( menu )
+	applicationWindow = scriptWidget.ancestor( GafferUI.ApplicationWindow )
+	script = scriptWidget.scriptNode()
+	path, bookmarks = __pathAndBookmarks( applicationWindow )
 
 	selection = script.selection()
 	parent = selection[0].parent()
@@ -256,7 +267,7 @@ def exportSelection( menu ) :
 			parent = node.parent()
 
 	dialogue = GafferUI.PathChooserDialogue( path, title="Export selection", confirmLabel="Export", leaf=True, bookmarks=bookmarks )
-	path = dialogue.waitForPath( parentWindow = scriptWindow )
+	path = dialogue.waitForPath( parentWindow = applicationWindow )
 
 	if not path :
 		return
@@ -268,15 +279,16 @@ def exportSelection( menu ) :
 	script.serialiseToFile( path, parent, script.selection() )
 
 ## A function suitable as the command for a File/Import File... menu item. It must be invoked from a menu which
-# has a ScriptWindow in its ancestry.
+# has a ScriptWidget in its ancestry.
 def importFile( menu ) :
 
-	scriptWindow = menu.ancestor( GafferUI.ScriptWindow )
-	script = scriptWindow.scriptNode()
-	path, bookmarks = __pathAndBookmarks( scriptWindow )
+	scriptWidget = GafferUI.ScriptWidget.acquire( menu )
+	applicationWindow = scriptWidget.ancestor( GafferUI.ApplicationWindow )
+	script = scriptWidget.scriptNode()
+	path, bookmarks = __pathAndBookmarks( applicationWindow )
 
 	dialogue = GafferUI.PathChooserDialogue( path, title="Import script", confirmLabel="Import", valid=True, leaf=True, bookmarks=bookmarks )
-	path = dialogue.waitForPath( parentWindow = scriptWindow )
+	path = dialogue.waitForPath( parentWindow = applicationWindow )
 
 	if path is None :
 		return
@@ -294,13 +306,23 @@ def importFile( menu ) :
 
 	## \todo Position the nodes somewhere sensible if there's a Node Graph available
 
+def close( menu ) :
+
+	scriptWidget = GafferUI.ScriptWidget.acquire( menu )
+	applicationWindow = scriptWidget.ancestor( GafferUI.ApplicationWindow )
+
+	if applicationWindow.acceptsTabClose(scriptWidget):
+		scriptNode = scriptWidget.scriptNode()
+		scriptNode.parent().removeChild( scriptNode )
+
 ## A function suitable as the command for a File/Settings... menu item.
 def showSettings( menu ) :
 
-	scriptWindow = menu.ancestor( GafferUI.ScriptWindow )
+	scriptWidget = GafferUI.ScriptWidget.acquire( menu )
+	applicationWindow = scriptWidget.ancestor( GafferUI.ApplicationWindow )
 
 	settingsWindow = None
-	for window in scriptWindow.childWindows() :
+	for window in applicationWindow.childWindows() :
 		if hasattr( window, "_settingsEditor" ) :
 			settingsWindow = window
 			break
@@ -308,29 +330,29 @@ def showSettings( menu ) :
 	if settingsWindow is None :
 		settingsWindow = GafferUI.Window( "Settings", borderWidth=8 )
 		settingsWindow._settingsEditor = True
-		settingsWindow.setChild( GafferUI.NodeUI.create( scriptWindow.scriptNode() ) )
-		scriptWindow.addChildWindow( settingsWindow )
+		settingsWindow.setChild( GafferUI.NodeUI.create( scriptWidget.scriptNode() ) )
+		applicationWindow.addChildWindow( settingsWindow )
 
 	settingsWindow.setVisible( True )
 
 def __selectionAvailable( menu ) :
 
-	scriptWindow = menu.ancestor( GafferUI.ScriptWindow )
-	return True if scriptWindow.scriptNode().selection().size() else False
+	scriptWidget = GafferUI.ScriptWidget.acquire( menu )
+	return True if scriptWidget.scriptNode().selection().size() else False
 
-def __pathAndBookmarks( scriptWindow ) :
+def __pathAndBookmarks( scriptWidget ) :
 
 	bookmarks = GafferUI.Bookmarks.acquire(
-		scriptWindow,
+		scriptWidget,
 		pathType = Gaffer.FileSystemPath,
 		category = "script",
 	)
 
-	currentFileName = scriptWindow.scriptNode()["fileName"].getValue()
+	currentFileName = scriptWidget.scriptNode()["fileName"].getValue()
 	if currentFileName :
 		path = Gaffer.FileSystemPath( os.path.dirname( os.path.abspath( currentFileName ) ) )
 	else :
-		path = Gaffer.FileSystemPath( bookmarks.getDefault( scriptWindow ) )
+		path = Gaffer.FileSystemPath( bookmarks.getDefault( scriptWidget ) )
 
 	path.setFilter( Gaffer.FileSystemPath.createStandardFilter( [ "gfr" ] ) )
 

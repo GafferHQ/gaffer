@@ -126,14 +126,16 @@ class NodeSetEditor( GafferUI.EditorWidget ) :
 		else :
 			script = node.scriptNode()
 
-		scriptWindow = GafferUI.ScriptWindow.acquire( script )
+		scriptWindow = GafferUI.ScriptWidget.acquire( script )
 
 		for editor in scriptWindow.getLayout().editors( type = cls ) :
 			if node.isSame( editor._lastAddedNode() ) :
 				editor.reveal()
 				return editor
 
-		childWindows = scriptWindow.childWindows()
+		applicationWindow = scriptWindow.ancestor( GafferUI.ApplicationWindow )
+		childWindows = applicationWindow.childWindows()
+
 		for window in childWindows :
 			if isinstance( window, _EditorWindow ) :
 				if isinstance( window.getChild(), cls ) and node in window.getChild().getNodeSet() :
@@ -266,6 +268,8 @@ class _EditorWindow( GafferUI.Window ) :
 
 		self.__titleChangedConnection = editor.titleChangedSignal().connect( Gaffer.WeakMethod( self.__updateTitle ) )
 		self.__nodeSetMemberRemovedConnection = editor.getNodeSet().memberRemovedSignal().connect( Gaffer.WeakMethod( self.__nodeSetMemberRemoved ) )
+
+		parentWindow = parentWindow.ancestor( GafferUI.ApplicationWindow )
 
 		parentWindow.addChildWindow( self, removeOnClose=True )
 

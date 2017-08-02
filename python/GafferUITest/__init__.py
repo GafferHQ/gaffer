@@ -76,7 +76,7 @@ from MultiLineTextWidgetTest import MultiLineTextWidgetTest
 from LabelTest import LabelTest
 from ScrolledContainerTest import ScrolledContainerTest
 from NodeEditorTest import NodeEditorTest
-from ScriptWindowTest import ScriptWindowTest
+from ScriptWidgetTest import ScriptWidgetTest
 from CompoundPlugValueWidgetTest import CompoundPlugValueWidgetTest
 from CompoundEditorTest import CompoundEditorTest
 from MultiSelectionMenuTest import MultiSelectionMenuTest

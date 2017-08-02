@@ -4,7 +4,7 @@ import GafferUI
 
 def __exportScreenGrabSession( menu ):
 
-	scriptWindow = menu.ancestor( GafferUI.ScriptWindow )
+	scriptWindow = menu.ancestor( GafferUI.ScriptWidget )
 	script = scriptWindow.scriptNode()
 
 	# get current script file name. we will put the cmds file relative to it
@@ -29,13 +29,13 @@ def __exportScreenGrabSession( menu ):
 
 
 			# get the layout from the current gaffer session and stash it in a string
-			scriptWindow = GafferUI.ScriptWindow.acquire( script )
+			scriptWindow = GafferUI.ScriptWidget.acquire( script )
 			layoutStashStr = repr( scriptWindow.getLayout() )
 
 			# write commands to load and set the layout
 
 			fh.write( 'scriptNode = script\n' ) #script is called scriptNode in layout string
-			fh.write( 'scriptWindow = GafferUI.ScriptWindow.acquire( script )\n' )
+			fh.write( 'scriptWindow = GafferUI.ScriptWidget.acquire( script )\n' )
 			fh.write( 'layout = eval( "%s" )\n' % (layoutStashStr))
 			fh.write( 'scriptWindow.setLayout( layout )\n' )
 
@@ -79,4 +79,4 @@ def __exportScreenGrabSession( menu ):
 
 
 
-GafferUI.ScriptWindow.menuDefinition(application).append( "/ben/Export Screen Grab Session", { "command" : __exportScreenGrabSession } )
+GafferUI.ScriptWidget.menuDefinition(application).append( "/ben/Export Screen Grab Session", { "command" : __exportScreenGrabSession } )

@@ -235,7 +235,7 @@ from EditorWidget import EditorWidget
 from ScriptEditor import ScriptEditor
 from GadgetWidget import GadgetWidget
 from NodeGraph import NodeGraph
-from ScriptWindow import ScriptWindow
+from ApplicationWindow import ApplicationWindow
 from CompoundEditor import CompoundEditor
 from NameWidget import NameWidget
 from NameLabel import NameLabel
@@ -248,6 +248,7 @@ import LayoutMenu
 import EditMenu
 import UserPlugs
 from Frame import Frame
+from ScriptWidget import ScriptWidget
 from CompoundNumericPlugValueWidget import CompoundNumericPlugValueWidget
 from BoxPlugValueWidget import BoxPlugValueWidget
 from NodeUI import NodeUI

@@ -93,26 +93,25 @@ __Scope = collections.namedtuple( "Scope", [ "scriptWindow", "script", "parent",
 # to nodes currently visible within the NodeGraph, and that nodes can be
 # filtered within the NodeGraph.
 def scope( menu ) :
-
-	scriptWindow = menu.ancestor( GafferUI.ScriptWindow )
+	scriptWidget = GafferUI.ScriptWidget.acquire( menu )
 
 	nodeGraph = None
 	## \todo Add public methods for querying focus.
-	focusWidget = GafferUI.Widget._owner( scriptWindow._qtWidget().focusWidget() )
+	focusWidget = GafferUI.Widget._owner( scriptWidget._qtWidget().focusWidget() )
 	if focusWidget is not None :
 		nodeGraph = focusWidget.ancestor( GafferUI.NodeGraph )
 
 	if nodeGraph is None :
-		nodeGraphs = scriptWindow.getLayout().editors( GafferUI.NodeGraph )
+		nodeGraphs = scriptWidget.getLayout().editors( GafferUI.NodeGraph )
 		if nodeGraphs :
 			nodeGraph = nodeGraphs[0]
 
 	if nodeGraph is not None :
 		parent = nodeGraph.graphGadget().getRoot()
 	else :
-		parent = scriptWindow.scriptNode()
+		parent = scriptWidget.scriptNode()
 
-	return __Scope( scriptWindow, scriptWindow.scriptNode(), parent, nodeGraph )
+	return __Scope( scriptWidget, scriptWidget.scriptNode(), parent, nodeGraph )
 
 ## Returns True if nodes are currently selected in the scope returned by scope().
 # This can be used for the "active" field in a menu item definition to disable
@@ -122,19 +121,19 @@ def selectionAvailable( menu ) :
 	return True if scope( menu ).script.selection().size() else False
 
 ## A function suitable as the command for an Edit/Undo menu item. It must
-# be invoked from a menu that has a ScriptWindow in its ancestry.
+# be invoked from a menu that has a ScriptWidget in its ancestry.
 def undo( menu ) :
 
 	scope( menu ).script.undo()
 
 ## A function suitable as the command for an Edit/Redo menu item. It must
-# be invoked from a menu that has a ScriptWindow in its ancestry.
+# be invoked from a menu that has a ScriptWidget in its ancestry.
 def redo( menu ) :
 
 	scope( menu ).script.redo()
 
 ## A function suitable as the command for an Edit/Cut menu item. It must
-# be invoked from a menu that has a ScriptWindow in its ancestry.
+# be invoked from a menu that has a ScriptWidget in its ancestry.
 def cut( menu ) :
 
 	s = scope( menu )
@@ -142,14 +141,14 @@ def cut( menu ) :
 		s.script.cut( s.parent, s.script.selection() )
 
 ## A function suitable as the command for an Edit/Copy menu item. It must
-# be invoked from a menu that has a ScriptWindow in its ancestry.
+# be invoked from a menu that has a ScriptWidget in its ancestry.
 def copy( menu ) :
 
 	s = scope( menu )
 	s.script.copy( s.parent, s.script.selection() )
 
 ## A function suitable as the command for an Edit/Paste menu item. It must
-# be invoked from a menu that has a ScriptWindow in its ancestry.
+# be invoked from a menu that has a ScriptWidget in its ancestry.
 def paste( menu ) :
 
 	s = scope( menu )
@@ -191,7 +190,7 @@ def paste( menu ) :
 		s.nodeGraph.frame( s.script.selection(), extend = True )
 
 ## A function suitable as the command for an Edit/Delete menu item. It must
-# be invoked from a menu that has a ScriptWindow in its ancestry.
+# be invoked from a menu that has a ScriptWidget in its ancestry.
 def delete( menu ) :
 
 	s = scope( menu )
@@ -199,7 +198,7 @@ def delete( menu ) :
 		s.script.deleteNodes( s.parent, s.script.selection() )
 
 ## A function suitable as the command for an Edit/Find menu item.  It must
-# be invoked from a menu that has a ScriptWindow in its ancestry.
+# be invoked from a menu that has a ScriptWidget in its ancestry.
 def find( menu ) :
 
 	s = scope( menu )
@@ -215,7 +214,7 @@ def find( menu ) :
 	findDialogue.setVisible( True )
 
 ## A function suitable as the command for an Edit/Arrange menu item.  It must
-# be invoked from a menu that has a ScriptWindow in its ancestry.
+# be invoked from a menu that has a ScriptWidget in its ancestry.
 def arrange( menu ) :
 
 	s = scope( menu )
@@ -232,7 +231,7 @@ def arrange( menu ) :
 		graph.getLayout().layoutNodes( graph, nodes )
 
 ## A function suitable as the command for an Edit/Select All menu item. It must
-# be invoked from a menu that has a ScriptWindow in its ancestry.
+# be invoked from a menu that has a ScriptWidget in its ancestry.
 def selectAll( menu ) :
 
 	s = scope( menu )
@@ -245,61 +244,61 @@ def selectAll( menu ) :
 			s.script.selection().add( node )
 
 ## A function suitable as the command for an Edit/Select None menu item. It must
-# be invoked from a menu that has a ScriptWindow in its ancestry.
+# be invoked from a menu that has a ScriptWidget in its ancestry.
 def selectNone( menu ) :
 
 	scope( menu ).script.selection().clear()
 
 ## The command function for the default "Edit/Select Connected/Inputs" menu item. It must
-# be invoked from a menu that has a ScriptWindow in its ancestry.
+# be invoked from a menu that has a ScriptWidget in its ancestry.
 def selectInputs( menu ) :
 
 	__selectConnected( menu, Gaffer.Plug.Direction.In, degreesOfSeparation = 1, add = False )
 
 ## The command function for the default "Edit/Select Connected/Add Inputs" menu item. It must
-# be invoked from a menu that has a ScriptWindow in its ancestry.
+# be invoked from a menu that has a ScriptWidget in its ancestry.
 def selectAddInputs( menu ) :
 
 	__selectConnected( menu, Gaffer.Plug.Direction.In, degreesOfSeparation = 1, add = True )
 
 ## The command function for the default "Edit/Select Connected/Upstream" menu item. It must
-# be invoked from a menu that has a ScriptWindow in its ancestry.
+# be invoked from a menu that has a ScriptWidget in its ancestry.
 def selectUpstream( menu ) :
 
 	__selectConnected( menu, Gaffer.Plug.Direction.In, degreesOfSeparation = sys.maxint, add = False )
 
 ## The command function for the default "Edit/Select Connected/Add Upstream" menu item. It must
-# be invoked from a menu that has a ScriptWindow in its ancestry.
+# be invoked from a menu that has a ScriptWidget in its ancestry.
 def selectAddUpstream( menu ) :
 
 	__selectConnected( menu, Gaffer.Plug.Direction.In, degreesOfSeparation = sys.maxint, add = True )
 
 ## The command function for the default "Edit/Select Connected/Outputs" menu item. It must
-# be invoked from a menu that has a ScriptWindow in its ancestry.
+# be invoked from a menu that has a ScriptWidget in its ancestry.
 def selectOutputs( menu ) :
 
 	__selectConnected( menu, Gaffer.Plug.Direction.Out, degreesOfSeparation = 1, add = False )
 
 ## The command function for the default "Edit/Select Connected/Add Outputs" menu item. It must
-# be invoked from a menu that has a ScriptWindow in its ancestry.
+# be invoked from a menu that has a ScriptWidget in its ancestry.
 def selectAddOutputs( menu ) :
 
 	__selectConnected( menu, Gaffer.Plug.Direction.Out, degreesOfSeparation = 1, add = True )
 
 ## The command function for the default "Edit/Select Connected/Downstream" menu item. It must
-# be invoked from a menu that has a ScriptWindow in its ancestry.
+# be invoked from a menu that has a ScriptWidget in its ancestry.
 def selectDownstream( menu ) :
 
 	__selectConnected( menu, Gaffer.Plug.Direction.Out, degreesOfSeparation = sys.maxint, add = False )
 
 ## The command function for the default "Edit/Select Connected/Add Downstream" menu item. It must
-# be invoked from a menu that has a ScriptWindow in its ancestry.
+# be invoked from a menu that has a ScriptWidget in its ancestry.
 def selectAddDownstream( menu ) :
 
 	__selectConnected( menu, Gaffer.Plug.Direction.Out, degreesOfSeparation = sys.maxint, add = True )
 
 ## The command function for the default "Edit/Select Connected/Add All" menu item. It must
-# be invoked from a menu that has a ScriptWindow in its ancestry.
+# be invoked from a menu that has a ScriptWidget in its ancestry.
 def selectConnected( menu ) :
 
 	__selectConnected( menu, Gaffer.Plug.Direction.Invalid, degreesOfSeparation = sys.maxint, add = True )
@@ -333,6 +332,7 @@ def __pasteAvailable( menu ) :
 		return False
 
 	root = s.script.ancestor( Gaffer.ApplicationRoot )
+
 	return isinstance( root.getClipboardContents(), IECore.StringData )
 
 def __arrangeAvailable( menu ) :

@@ -83,7 +83,8 @@ class gui( Gaffer.Application ) :
 
 	def _run( self, args ) :
 
-		GafferUI.ScriptWindow.connect( self.root() )
+		applicationWindow = GafferUI.ApplicationWindow( self.root() )
+		applicationWindow.setVisible( True )
 
 		if len( args["scripts"] ) :
 			for fileName in args["scripts"] :
@@ -100,7 +101,7 @@ class gui( Gaffer.Application ) :
 
 		if args["fullScreen"].value :
 			primaryScript = self.root()["scripts"][-1]
-			primaryWindow = GafferUI.ScriptWindow.acquire( primaryScript )
+			primaryWindow = GafferUI.ScriptWidget.acquire( primaryScript )
 			primaryWindow.setFullScreen( True )
 
 		GafferUI.EventLoop.mainEventLoop().start()

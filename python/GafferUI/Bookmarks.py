@@ -97,10 +97,16 @@ class Bookmarks( object ) :
 			scriptWidget = None
 			if isinstance( target, ( GafferUI.EditorWidget, GafferUI.ScriptWindow ) ) :
 				scriptWidget = target
+			elif isinstance( target, GafferUI.ApplicationWindow) :
+				scriptWidget = target.activeScriptWidget()
 			else :
 				scriptWidget = target.ancestor( GafferUI.EditorWidget )
 				if scriptWidget is None :
 					scriptWidget = target.ancestor( GafferUI.ScriptWindow )
+				if scriptWidget is None :
+					applicationWindow = target.ancestor( GafferUI.ApplicationWindow )
+					if applicationWindow:
+						scriptWidget = applicationWindow.activeScriptWidget()
 
 			if scriptWidget is None :
 				# needed to find bookmarks for floating op windows
