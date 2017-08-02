@@ -295,23 +295,20 @@ IECore::ConstCompoundDataPtr OSLImage::computeShading( const Gaffer::Context *co
 	uWritable.reserve( tileSize * tileSize );
 	vWritable.reserve( tileSize * tileSize );
 
-	/// \todo Non-zero display window origins - do we have those?
-	const float uStep = 1.0f / format.width();
-	const float uMin = 0.5f * uStep;
+	const V2f uvStep = V2f( 1.0f ) / format.getDisplayWindow().size();
+	// UV value for the pixel at 0,0
+	const V2f uvOrigin = (V2f(0.5) - format.getDisplayWindow().min) * uvStep;
 
-	const float vStep = 1.0f / format.height();
-	const float vMin = 0.5f * vStep;
-
-	const size_t xMax = tileOrigin.x + tileSize;
-	const size_t yMax = tileOrigin.y + tileSize;
-	for( size_t y = tileOrigin.y; y < yMax; ++y )
+	const V2i pMax = tileOrigin + V2i( tileSize );
+	V2i p;
+	for( p.y = tileOrigin.y; p.y < pMax.y; ++p.y )
 	{
-		const float v = vMin + y * vStep;
-		for( size_t x = tileOrigin.x; x < xMax; ++x )
+		const float v = uvOrigin.y + p.y * uvStep.y;
+		for( p.x = tileOrigin.x; p.x < pMax.x; ++p.x )
 		{
-			uWritable.push_back( uMin + x * uStep );
+			uWritable.push_back( uvOrigin.x + p.x * uvStep.x );
 			vWritable.push_back( v );
-			pWritable.push_back( V3f( x, y, 0.0f ) );
+			pWritable.push_back( V3f( p.x + 0.5f, p.y + 0.5f, 0.0f ) );
 		}
 	}
 
