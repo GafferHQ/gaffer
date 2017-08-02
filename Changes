@@ -1,3 +1,73 @@
+Breaking Changes
+----------------
+
+- Simplified GafferScene/GafferSceneUI/GafferImage/GafferImageUI bindings by hiding code which
+  is only used internally (#2142, #2152).
+- Display : Removed `dataReceivedSignal()`
+- TaskNode : Rederived from DependencyNode (#2163)
+
+Features
+--------
+
+- Light Filters. Added initial support for Arnold light filters. These can be loaded using the
+  regular ArnoldShader node and assigned to lights using the ShaderAssignment node (#2135).
+
+Improvements
+------------
+
+- SceneWriter (#2161) :
+  - Added support for serialising sets to .scc files
+  - Improved performance by multithreading scene generation
+- TaskNode : Errors are now reported in the NodeGraph (#2163)
+- Execute app : Improved error reporting (#2163)
+- OSL expressions : Added support for M44f plugs (#2187)
+- Shader node : Added attributeSuffix plug. This is primarily of
+  use with light filters (#2135).
+
+Fixes
+-----
+
+- NodeGraph : Fixed graphical glitches when drawing connections (#2156, #2170)
+- Dot :
+  - Fixed bug where Dots created with Control+Click were not always immediately draggable (#2139)
+  - Fixed bug where any click (not just left click) would create a Dot (#2147)
+  - Fixed bug with Control+Click creation of Dots in Boxes (#2197)
+- Qt :
+  - Fixed crashes when reparenting child windows (#2168)
+  - Fixed bug with VectorDataWidget and Qt4 (#2162)
+  - Fixed bug with GLWidget host resource sharing for Qt4 hosts (#2173)
+  - Suppressed GLWidget warning messages on OSX (#2195)
+- Catalogue :
+  - Fixed crashes when saving renders to disk (#2174)
+  - Fixed shuffling of switch plugs during image delete (#2193)
+- Fixed loading of old files which referred to OIIO's "catrom" filter, which is now
+  named "catmull-rom" (#2177).
+- OpenGLShader : Fixed problems caused by attempting to reload shaders when no GL
+  implementation is available (#2176)
+- OSLImage (#2198) :
+  - Fixed bug which meant that tiles with origin -64 were passed through unchanged
+  - Fixed UVs for images with negative display window origins
+  - Fixed global `P` values to reflect pixel centres, not corners
+
+API
+---
+
+- Added default template arguments for Plug and GraphComponent methods. This simplifies
+  the use of methods like `GraphComponent::getChild()` and `Plug::getInput()` (#2167).
+- Added `SceneAlgo::parallelProcessLocations`. Over time this will replace `parallelTraverse()` (#2161).
+- ImageAlgo : Fixed tile range for `parallelProcessTiles` (#2164)
+- TaskNode : Rederived from DependencyNode (#2163)
+- Arnold ParameterHandler : Allowed plug type to be overriden using a `gaffer.plugType` metadata
+  entry (#2135).
+
+Build
+-----
+
+- Fixed invalid debug assertions in Shape node (#2186)
+- C++11 is now required as a minimum (#2167)
+- Improved speed of Travis tests (#2145)
+- Display : Removed `dataReceivedSignal()`
+
 0.34.0.0
 ========
 
