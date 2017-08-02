@@ -238,7 +238,7 @@ class SavePresetDialogue( PresetDialogue ) :
 			dialogue = GafferUI.ConfirmationDialogue(
 				"Preset already exists!",
 				"A preset named \"%s\" already exists.\nReplace it?" % presetName,
-				confirmLabel = "Replace"
+				buttonLabels = [ "Cancel", "Replace" ]
 			)
 			if not dialogue.waitForConfirmation( parentWindow = self ) :
 				return False
