@@ -12,11 +12,15 @@ Improvements
 Fixes
 -----
 
+- ArnoldRenderer : Fixed slow shutdown for large scenes (#2210).
 - NodeGraph : Fixed graphical glitches when drawing connections (#2156, #2180)
 - Dot :
+  - Fixed bug where Dots created with Control+Click were not always immediately draggable (#2206)
   - Fixed bug where any click (not just left click) would create a Dot (#2179)
+  - Fixed bug with Control+Click creation of Dots in Boxes (#2206)
 - Qt :
   - Fixed crashes when reparenting child windows (#2196)
+  - Suppressed GLWidget warning messages on OSX (#2208)
 - Catalogue :
   - Fixed crashes when saving renders to disk (#2190)
   - Fixed shuffling of switch plugs during image delete (#2194)
@@ -24,6 +28,10 @@ Fixes
   named "catmull-rom" (#2178).
 - OpenGLShader : Fixed problems caused by attempting to reload shaders when no GL
   implementation is available (#2182)
+- OSLImage (#2207) :
+  - Fixed bug which meant that tiles with origin -64 were passed through unchanged
+  - Fixed UVs for images with negative display window origins
+  - Fixed global `P` values to reflect pixel centres, not corners
 
 API
 ---
@@ -34,6 +42,7 @@ Build
 -----
 
 - Fixed compilation in C++11 mode with Clang on OSX (#2188)
+- Forced Ubuntu Precise for Travis tests.
 
 0.34.0.2
 ========
