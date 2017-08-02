@@ -1,3 +1,40 @@
+0.34.1.0
+========
+
+Improvements
+------------
+
+- SceneWriter (#2185) :
+  - Added support for serialising sets to .scc files
+  - Improved performance by multithreading scene generation
+- OSL expressions : Added support for M44f plugs (#2184)
+
+Fixes
+-----
+
+- NodeGraph : Fixed graphical glitches when drawing connections (#2156, #2180)
+- Dot :
+  - Fixed bug where any click (not just left click) would create a Dot (#2179)
+- Qt :
+  - Fixed crashes when reparenting child windows (#2196)
+- Catalogue :
+  - Fixed crashes when saving renders to disk (#2190)
+  - Fixed shuffling of switch plugs during image delete (#2194)
+- Fixed loading of old files which referred to OIIO's "catrom" filter, which is now
+  named "catmull-rom" (#2178).
+- OpenGLShader : Fixed problems caused by attempting to reload shaders when no GL
+  implementation is available (#2182)
+
+API
+---
+
+- Added `SceneAlgo::parallelProcessLocations`. Over time this will replace `parallelTraverse()` (#2185).
+
+Build
+-----
+
+- Fixed compilation in C++11 mode with Clang on OSX (#2188)
+
 0.34.0.2
 ========
 
