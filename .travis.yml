@@ -62,6 +62,10 @@ script:
     - source ./config/travis/runGafferTest GafferAppleseedUITest
     - ./config/travis/printTestResults
 
+# force Ubuntu Precise until we can determine the source
+# of test failures on Trusty
+dist: precise
+
 # Default values for environment variables we use to
 # control the build.
 env:
