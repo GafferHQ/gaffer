@@ -101,7 +101,7 @@ GafferUI.NodeGraph.nodeDoubleClickSignal().connect( __nodeDoubleClick, scoped = 
 
 def __nodeContextMenu( nodeGraph, node, menuDefinition ) :
 
-	menuDefinition.append( "/Edit...", { "command" : IECore.curry( GafferUI.NodeEditor.acquire, node ) } )
+	menuDefinition.append( "/Edit...", { "command" : IECore.curry( GafferUI.NodeEditor.create, node ) } )
 
 	GafferUI.NodeGraph.appendEnabledPlugMenuDefinitions( nodeGraph, node, menuDefinition )
 	GafferUI.NodeGraph.appendConnectionVisibilityMenuDefinitions( nodeGraph, node, menuDefinition )
