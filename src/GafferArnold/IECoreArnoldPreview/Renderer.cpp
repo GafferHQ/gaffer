@@ -87,6 +87,33 @@ using namespace IECoreArnoldPreview;
 namespace
 {
 
+typedef boost::shared_ptr<AtNode> SharedAtNodePtr;
+typedef bool (*NodeDeleter)( AtNode *);
+
+bool nullNodeDeleter( AtNode *node )
+{
+	return false;
+}
+
+NodeDeleter nodeDeleter( IECoreScenePreview::Renderer::RenderType renderType )
+{
+	if( renderType == IECoreScenePreview::Renderer::Interactive )
+	{
+		// As interactive edits add/remove objects and shaders, we want to
+		// destroy any AtNodes that are no longer needed.
+		return AiNodeDestroy;
+	}
+	else
+	{
+		// Edits are not possible, so we have no need to delete nodes except
+		// when shutting the renderer down. `AiEnd()` (as called by ~UniverseBlock)
+		// automatically destroys all nodes and is _much_ faster than destroying
+		// them one by one with AiNodeDestroy. So we use a null deleter so that we
+		// don't try to destroy the nodes ourselves, and rely entirely on `AiEnd()`.
+		return nullNodeDeleter;
+	}
+}
+
 template<typename T>
 T *reportedCast( const IECore::RunTimeTyped *v, const char *type, const IECore::InternedString &name )
 {
@@ -203,7 +230,7 @@ class ArnoldOutput : public IECore::RefCounted
 
 	public :
 
-		ArnoldOutput( const IECore::InternedString &name, const IECoreScenePreview::Renderer::Output *output )
+		ArnoldOutput( const IECore::InternedString &name, const IECoreScenePreview::Renderer::Output *output, NodeDeleter nodeDeleter )
 		{
 			// Create a driver node and set its parameters.
 
@@ -219,7 +246,7 @@ class ArnoldOutput : public IECore::RefCounted
 				}
 			}
 
-			m_driver.reset( AiNode( driverNodeType.c_str() ), AiNodeDestroy );
+			m_driver.reset( AiNode( driverNodeType.c_str() ), nodeDeleter );
 			if( !m_driver )
 			{
 				throw IECore::Exception( boost::str( boost::format( "Unable to create output driver of type \"%s\"" ) % driverNodeType ) );
@@ -277,7 +304,7 @@ class ArnoldOutput : public IECore::RefCounted
 				filterNodeType = filterNodeType + "_filter";
 			}
 
-			m_filter.reset( AiNode( filterNodeType.c_str() ), AiNodeDestroy );
+			m_filter.reset( AiNode( filterNodeType.c_str() ), nodeDeleter );
 			if( AiNodeEntryGetType( AiNodeGetNodeEntry( m_filter.get() ) ) != AI_NODE_FILTER )
 			{
 				throw IECore::Exception( boost::str( boost::format( "Unable to create filter of type \"%s\"" ) % filterNodeType ) );
@@ -342,8 +369,8 @@ class ArnoldOutput : public IECore::RefCounted
 
 	private :
 
-		boost::shared_ptr<AtNode> m_driver;
-		boost::shared_ptr<AtNode> m_filter;
+		SharedAtNodePtr m_driver;
+		SharedAtNodePtr m_filter;
 		std::string m_data;
 
 };
@@ -364,7 +391,8 @@ class ArnoldShader : public IECore::RefCounted
 
 	public :
 
-		ArnoldShader( const IECore::ObjectVector *shaderNetwork, const std::string &namePrefix = "" )
+		ArnoldShader( const IECore::ObjectVector *shaderNetwork, NodeDeleter nodeDeleter, const std::string &namePrefix = "" )
+			:	m_nodeDeleter( nodeDeleter )
 		{
 			m_nodes = ShaderAlgo::convert( shaderNetwork, namePrefix );
 		}
@@ -373,7 +401,7 @@ class ArnoldShader : public IECore::RefCounted
 		{
 			for( std::vector<AtNode *>::const_iterator it = m_nodes.begin(), eIt = m_nodes.end(); it != eIt; ++it )
 			{
-				AiNodeDestroy( *it );
+				m_nodeDeleter( *it );
 			}
 		}
 
@@ -384,6 +412,7 @@ class ArnoldShader : public IECore::RefCounted
 
 	private :
 
+		NodeDeleter m_nodeDeleter;
 		std::vector<AtNode *> m_nodes;
 
 };
@@ -395,6 +424,11 @@ class ShaderCache : public IECore::RefCounted
 
 	public :
 
+		ShaderCache( NodeDeleter nodeDeleter )
+			:	m_nodeDeleter( nodeDeleter )
+		{
+		}
+
 		// Can be called concurrently with other get() calls.
 		ArnoldShaderPtr get( const IECore::ObjectVector *shader )
 		{
@@ -402,7 +436,7 @@ class ShaderCache : public IECore::RefCounted
 			m_cache.insert( a, shader->Object::hash() );
 			if( !a->second )
 			{
-				a->second = new ArnoldShader( shader, "shader:" + shader->Object::hash().toString() + ":" );
+				a->second = new ArnoldShader( shader, m_nodeDeleter, "shader:" + shader->Object::hash().toString() + ":" );
 			}
 			return a->second;
 		}
@@ -428,6 +462,8 @@ class ShaderCache : public IECore::RefCounted
 		}
 
 	private :
+
+		NodeDeleter m_nodeDeleter;
 
 		typedef tbb::concurrent_hash_map<IECore::MurmurHash, ArnoldShaderPtr> Cache;
 		Cache m_cache;
@@ -1072,13 +1108,13 @@ class Instance
 
 	public :
 
-		Instance( boost::shared_ptr<AtNode> node, bool instanced )
+		Instance( const SharedAtNodePtr &node, bool instanced, NodeDeleter nodeDeleter )
 			:	m_node( node )
 		{
 			if( instanced && node )
 			{
 				AiNodeSetByte( node.get(), "visibility", 0 );
-				m_ginstance = boost::shared_ptr<AtNode>( AiNode( "ginstance" ), AiNodeDestroy );
+				m_ginstance = SharedAtNodePtr( AiNode( "ginstance" ), nodeDeleter );
 				AiNodeSetPtr( m_ginstance.get(), "node", m_node.get() );
 			}
 		}
@@ -1090,8 +1126,8 @@ class Instance
 
 	private :
 
-		boost::shared_ptr<AtNode> m_node;
-		boost::shared_ptr<AtNode> m_ginstance;
+		SharedAtNodePtr m_node;
+		SharedAtNodePtr m_ginstance;
 
 };
 
@@ -1100,6 +1136,11 @@ class InstanceCache : public IECore::RefCounted
 
 	public :
 
+		InstanceCache( NodeDeleter nodeDeleter )
+			:	m_nodeDeleter( nodeDeleter )
+		{
+		}
+
 		// Can be called concurrently with other get() calls.
 		Instance get( const IECore::Object *object, const IECoreScenePreview::Renderer::AttributesInterface *attributes )
 		{
@@ -1107,7 +1148,7 @@ class InstanceCache : public IECore::RefCounted
 
 			if( !arnoldAttributes->canInstanceGeometry( object ) )
 			{
-				return Instance( convert( object, arnoldAttributes ), /* instanced = */ false );
+				return Instance( convert( object, arnoldAttributes ), /* instanced = */ false, m_nodeDeleter );
 			}
 
 			IECore::MurmurHash h = object->hash();
@@ -1125,7 +1166,7 @@ class InstanceCache : public IECore::RefCounted
 				}
 			}
 
-			return Instance( a->second, /* instanced = */ true );
+			return Instance( a->second, /* instanced = */ true, m_nodeDeleter );
 		}
 
 		Instance get( const std::vector<const IECore::Object *> &samples, const std::vector<float> &times, const IECoreScenePreview::Renderer::AttributesInterface *attributes )
@@ -1134,7 +1175,7 @@ class InstanceCache : public IECore::RefCounted
 
 			if( !arnoldAttributes->canInstanceGeometry( samples.front() ) )
 			{
-				return Instance( convert( samples, times, arnoldAttributes ), /* instanced = */ false );
+				return Instance( convert( samples, times, arnoldAttributes ), /* instanced = */ false, m_nodeDeleter );
 			}
 
 			IECore::MurmurHash h;
@@ -1160,7 +1201,7 @@ class InstanceCache : public IECore::RefCounted
 				}
 			}
 
-			return Instance( a->second, /* instanced = */ true );
+			return Instance( a->second, /* instanced = */ true, m_nodeDeleter );
 		}
 
 		// Must not be called concurrently with anything.
@@ -1185,11 +1226,11 @@ class InstanceCache : public IECore::RefCounted
 
 	private :
 
-		boost::shared_ptr<AtNode> convert( const IECore::Object *object, const ArnoldAttributes *attributes )
+		SharedAtNodePtr convert( const IECore::Object *object, const ArnoldAttributes *attributes )
 		{
 			if( !object )
 			{
-				return boost::shared_ptr<AtNode>();
+				return SharedAtNodePtr();
 			}
 
 			AtNode *node = NULL;
@@ -1204,15 +1245,15 @@ class InstanceCache : public IECore::RefCounted
 
 			if( !node )
 			{
-				return boost::shared_ptr<AtNode>();
+				return SharedAtNodePtr();
 			}
 
 			attributes->applyGeometry( object, node );
 
-			return boost::shared_ptr<AtNode>( node, AiNodeDestroy );
+			return SharedAtNodePtr( node, m_nodeDeleter );
 		}
 
-		boost::shared_ptr<AtNode> convert( const std::vector<const IECore::Object *> &samples, const std::vector<float> &times, const ArnoldAttributes *attributes )
+		SharedAtNodePtr convert( const std::vector<const IECore::Object *> &samples, const std::vector<float> &times, const ArnoldAttributes *attributes )
 		{
 			AtNode *node = NULL;
 			if( attributes->requiresBoxGeometry( samples.front() ) )
@@ -1226,16 +1267,16 @@ class InstanceCache : public IECore::RefCounted
 
 			if( !node )
 			{
-				return boost::shared_ptr<AtNode>();
+				return SharedAtNodePtr();
 			}
 
 			attributes->applyGeometry( samples.front(), node );
-
-			return boost::shared_ptr<AtNode>( node, AiNodeDestroy );
-
+			return SharedAtNodePtr( node, m_nodeDeleter );
 		}
 
-		typedef tbb::concurrent_hash_map<IECore::MurmurHash, boost::shared_ptr<AtNode> > Cache;
+		NodeDeleter m_nodeDeleter;
+
+		typedef tbb::concurrent_hash_map<IECore::MurmurHash, SharedAtNodePtr> Cache;
 		Cache m_cache;
 
 };
@@ -1355,8 +1396,8 @@ class ArnoldLight : public ArnoldObject
 
 	public :
 
-		ArnoldLight( const std::string &name, const Instance &instance )
-			:	ArnoldObject( instance ), m_name( name )
+		ArnoldLight( const std::string &name, const Instance &instance, NodeDeleter nodeDeleter )
+			:	ArnoldObject( instance ), m_name( name ), m_nodeDeleter( nodeDeleter )
 		{
 		}
 
@@ -1394,7 +1435,7 @@ class ArnoldLight : public ArnoldObject
 				return true;
 			}
 
-			m_lightShader = new ArnoldShader( arnoldAttributes->lightShader(), "light:" + m_name + ":" );
+			m_lightShader = new ArnoldShader( arnoldAttributes->lightShader(), m_nodeDeleter, "light:" + m_name + ":" );
 
 			// Simplify name for the root shader, for ease of reading of ass files.
 			const std::string name = "light:" + m_name;
@@ -1446,6 +1487,7 @@ class ArnoldLight : public ArnoldObject
 		std::string m_name;
 		vector<Imath::M44f> m_transformMatrices;
 		vector<float> m_transformTimes;
+		NodeDeleter m_nodeDeleter;
 		ArnoldShaderPtr m_lightShader;
 
 };
@@ -1567,8 +1609,8 @@ class ArnoldRenderer : public IECoreScenePreview::Renderer
 		ArnoldRenderer( RenderType renderType, const std::string &fileName )
 			:	m_renderType( renderType ),
 				m_universeBlock( boost::make_shared<UniverseBlock>(  /* writable = */ true ) ),
-				m_shaderCache( new ShaderCache ),
-				m_instanceCache( new InstanceCache ),
+				m_shaderCache( new ShaderCache( nodeDeleter( renderType ) ) ),
+				m_instanceCache( new InstanceCache( nodeDeleter( renderType ) ) ),
 				m_logFileFlags( g_logFlagsDefault ),
 				m_consoleFlags( g_consoleFlagsDefault ),
 				m_assFileName( fileName )
@@ -1769,7 +1811,7 @@ class ArnoldRenderer : public IECoreScenePreview::Renderer
 			{
 				try
 				{
-					m_outputs[name] = new ArnoldOutput( name, output );
+					m_outputs[name] = new ArnoldOutput( name, output, nodeDeleter( m_renderType ) );
 				}
 				catch( const std::exception &e )
 				{
@@ -1803,7 +1845,7 @@ class ArnoldRenderer : public IECoreScenePreview::Renderer
 				AiNodeSetStr( node, "name", name.c_str() );
 			}
 
-			ObjectInterfacePtr result = store( new ArnoldObject( instance ) );
+			ObjectInterfacePtr result = new ArnoldObject( instance );
 			result->attributes( attributes );
 			return result;
 		}
@@ -1816,7 +1858,7 @@ class ArnoldRenderer : public IECoreScenePreview::Renderer
 				AiNodeSetStr( node, "name", name.c_str() );
 			}
 
-			ObjectInterfacePtr result = store( new ArnoldLight( name, instance ) );
+			ObjectInterfacePtr result = new ArnoldLight( name, instance, nodeDeleter( m_renderType ) );
 			result->attributes( attributes );
 			return result;
 		}
@@ -1829,7 +1871,7 @@ class ArnoldRenderer : public IECoreScenePreview::Renderer
 				AiNodeSetStr( node, "name", name.c_str() );
 			}
 
-			ObjectInterfacePtr result = store( new ArnoldObject( instance ) );
+			ObjectInterfacePtr result = new ArnoldObject( instance );
 			result->attributes( attributes );
 			return result;
 		}
@@ -1842,7 +1884,7 @@ class ArnoldRenderer : public IECoreScenePreview::Renderer
 				AiNodeSetStr( node, "name", name.c_str() );
 			}
 
-			ObjectInterfacePtr result = store( new ArnoldObject( instance ) );
+			ObjectInterfacePtr result = new ArnoldObject( instance );
 			result->attributes( attributes );
 			return result;
 		}
@@ -1977,26 +2019,6 @@ class ArnoldRenderer : public IECoreScenePreview::Renderer
 			return true;
 		}
 
-
-		ObjectInterfacePtr store( ObjectInterface *objectInterface )
-		{
-			if( m_renderType != Interactive )
-			{
-				// Our ObjectInterface class owns the AtNodes it
-				// represents. In Interactive mode the client is
-				// responsible for keeping it alive as long as the
-				// object should exist, but in non-interactive modes
-				// we are responsible for ensuring the object doesn't
-				// die. Storing it is the simplest approach.
-				//
-				// \todo We might want to save memory by not storing
-				// ObjectInterfaces, but instead giving them the notion
-				// of whether or not they own the AtNodes they created.
-				m_objects.push_back( objectInterface );
-			}
-			return objectInterface;
-		}
-
 		void updateCamera()
 		{
 			AtNode *options = AiUniverseGetOptions();
@@ -2097,10 +2119,6 @@ class ArnoldRenderer : public IECoreScenePreview::Renderer
 		boost::optional<int> m_frame;
 		boost::optional<int> m_aaSeed;
 		boost::optional<bool> m_sampleMotion;
-
-		// Members used by batch renders
-
-		tbb::concurrent_vector<ObjectInterfacePtr> m_objects;
 
 		// Members used by interactive renders
 
