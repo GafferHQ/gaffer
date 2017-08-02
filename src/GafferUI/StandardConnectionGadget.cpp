@@ -302,11 +302,12 @@ bool StandardConnectionGadget::buttonPress( const ButtonEvent &event )
 		{
 			Gaffer::UndoScope undoEnabler( script );
 
-			Gaffer::Dot *dot = new Gaffer::Dot();
-			dot->setup( srcNodule()->plug() );
+			Gaffer::DotPtr dot = new Gaffer::Dot();
+			Gaffer::Plug *srcPlug = srcNodule()->plug();
+			dot->setup( srcPlug );
 
-			script->addChild( dot );
-			graphGadget->setNodePosition( dot, V2f(  m_dotPreviewLocation.x, m_dotPreviewLocation.y  ) );
+			srcPlug->node()->parent<GraphComponent>()->addChild( dot );
+			graphGadget->setNodePosition( dot.get(), V2f( event.line.p0.x, event.line.p0.y ) );
 
 			dot->inPlug<Plug>()->setInput( srcNodule()->plug() );
 			dstNodule()->plug()->setInput( dot->outPlug<Plug>() );
