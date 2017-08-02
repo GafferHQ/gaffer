@@ -152,8 +152,18 @@ class RendererTest( GafferTest.TestCase ) :
 
 		r = GafferScene.Private.IECoreScenePreview.Renderer.create(
 			"Arnold",
-			GafferScene.Private.IECoreScenePreview.Renderer.RenderType.SceneDescription,
-			self.temporaryDirectory() + "/test.ass"
+			GafferScene.Private.IECoreScenePreview.Renderer.RenderType.Interactive,
+		)
+
+		r.output(
+			"test",
+			IECore.Display(
+				self.temporaryDirectory() + "/beauty.exr",
+				"exr",
+				"rgba",
+				{
+				}
+			)
 		)
 
 		o = r.object(
@@ -168,16 +178,13 @@ class RendererTest( GafferTest.TestCase ) :
 				"ai:surface" : IECore.ObjectVector( [ IECore.Shader( shader ) ] ),
 			} )
 			o.attributes( r.attributes( a ) )
+			del a
+
+		r.render()
+		self.assertEqual( len( self.__allNodes( type = arnold.AI_NODE_SHADER ) ), 1 )
 
 		del o
-		r.render()
 		del r
-
-		with IECoreArnold.UniverseBlock( writable = True ) :
-
-			arnold.AiASSLoad( self.temporaryDirectory() + "/test.ass" )
-			# We only want one shader to have been saved, because only one was genuinely used.
-			self.assertEqual( len( self.__allNodes( type = arnold.AI_NODE_SHADER ) ), 1 )
 
 	def testShaderNames( self ) :
 
