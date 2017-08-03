@@ -167,6 +167,7 @@ static IECore::InternedString g_paddingKey( "nodeGadget:padding"  );
 static IECore::InternedString g_colorKey( "nodeGadget:color" );
 static IECore::InternedString g_shapeKey( "nodeGadget:shape" );
 static IECore::InternedString g_iconKey( "icon" );
+static IECore::InternedString g_iconScaleKey( "iconScale" );
 static IECore::InternedString g_errorGadgetName( "__error" );
 
 StandardNodeGadget::StandardNodeGadget( Gaffer::NodePtr node )
@@ -744,7 +745,7 @@ void StandardNodeGadget::nodeMetadataChanged( IECore::TypeId nodeTypeId, IECore:
 	{
 		updatePadding();
 	}
-	else if( key == g_iconKey )
+	else if( key == g_iconKey || key == g_iconScaleKey )
 	{
 		updateIcon();
 	}
@@ -827,6 +828,13 @@ void StandardNodeGadget::updateNodeEnabled( const Gaffer::Plug *dirtiedPlug )
 
 void StandardNodeGadget::updateIcon()
 {
+	float scale = 1.5f;
+	if( IECore::ConstFloatDataPtr d = Metadata::value<IECore::FloatData>( node(), g_iconScaleKey ) )
+	{
+		scale = d->readable();
+	}
+
+
 	ImageGadgetPtr image;
 	if( IECore::ConstStringDataPtr d = Metadata::value<IECore::StringData>( node(), g_iconKey ) )
 	{
@@ -842,7 +850,7 @@ void StandardNodeGadget::updateIcon()
 
 	if( image )
 	{
-		image->setTransform( M44f().scale( V3f( 1.5 ) / image->bound().size().y ) );
+		image->setTransform( M44f().scale( V3f( scale ) / image->bound().size().y ) );
 	}
 
 	iconContainer()->setChild( image );
