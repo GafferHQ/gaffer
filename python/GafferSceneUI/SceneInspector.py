@@ -1320,28 +1320,47 @@ class __NodeSection( Section ) :
 		Section.__init__( self, collapsed = None )
 
 		with self._mainColumn() :
-			self.__row = DiffRow( self.__Inspector(), diffCreator = functools.partial( TextDiff, highlightDiffs = False ) )
+			with Row().listContainer() :
+
+				label = GafferUI.Label(
+					"Node",
+					horizontalAlignment = GafferUI.Label.HorizontalAlignment.Right,
+				)
+				label._qtWidget().setFixedWidth( 150 )
+
+				self.__diff = SideBySideDiff()
+				for i in range( 0, 2 ) :
+					label = GafferUI.NameLabel( None )
+					label._qtWidget().setSizePolicy( QtWidgets.QSizePolicy.Preferred, QtWidgets.QSizePolicy.Fixed )
+					self.__diff.setValueWidget( i, label )
+
+				GafferUI.Spacer( IECore.V2i( 0 ), parenting = { "expand" : True } )
 
 	def update( self, targets ) :
 
 		Section.update( self, targets )
 
-		self.__row.update( targets )
+		values = [ target.scene.node() for target in targets ]
+		backgrounds = None
+		if len( values ) == 0 :
+			values.append( "Select a node to inspect" )
+			backgrounds = [ SideBySideDiff.Background.Other, SideBySideDiff.Background.Other ]
+		elif len( values ) == 1 :
+			values.append( "Select a second node to inspect differences" )
+			backgrounds = [ SideBySideDiff.Background.AB, SideBySideDiff.Background.Other ]
 
-	class __Inspector( Inspector ) :
+		self.__diff.update( values, backgrounds = backgrounds )
 
-		def name( self ) :
-
-			return "Node Name"
-
-		def supportsHistory( self ) :
-
-			return False
-
-		def __call__( self, target ) :
-
-			node = target.scene.node()
-			return node.relativeName( node.scriptNode() )
+		for index, value in enumerate( values ) :
+			widget = self.__diff.getValueWidget( index )
+			if isinstance( value, Gaffer.Node ) :
+				widget.setFormatter( lambda x : ".".join( [ n.getName() for n in x ] ) )
+				widget.setGraphComponent( value )
+				widget.setEnabled( True )
+			else :
+				widget.setFormatter( lambda x : value )
+				widget.setGraphComponent( None )
+				widget.setEnabled( False )
 
 SceneInspector.registerSection( __NodeSection, tab = None )
 
@@ -1356,27 +1375,39 @@ class __PathSection( LocationSection ) :
 		LocationSection.__init__( self, collapsed = None )
 
 		with self._mainColumn() :
-			self.__row = DiffRow( self.__Inspector(), functools.partial( TextDiff, highlightDiffs = False ) )
+			with Row().listContainer() :
+
+				label = GafferUI.Label(
+					"Location",
+					horizontalAlignment = GafferUI.Label.HorizontalAlignment.Right,
+				)
+				label._qtWidget().setFixedWidth( 150 )
+
+				self.__diff = TextDiff( highlightDiffs = False )
+
+				GafferUI.Spacer( IECore.V2i( 0 ), parenting = { "expand" : True } )
 
 	def update( self, targets ) :
 
 		LocationSection.update( self, targets )
 
-		self.__row.update( targets )
+		numValidPaths = len( set( [ t.path for t in targets if t.path is not None ] ) )
+		backgrounds = None
+		if numValidPaths == 0 :
+			labels = [ "Select a location to inspect" ]
+			backgrounds = [ SideBySideDiff.Background.Other, SideBySideDiff.Background.Other ]
+		else :
+			labels = [ t.path if t.path is not None else "Invalid" for t in targets ]
+			if numValidPaths == 1 and len( targets ) == 1 :
+				labels.append( "Select a second location to inspect differences" )
+				backgrounds = [ SideBySideDiff.Background.AB, SideBySideDiff.Background.Other ]
 
-	class __Inspector( Inspector ) :
+		self.__diff.update( labels, backgrounds = backgrounds )
 
-		def name( self ) :
-
-			return "Location"
-
-		def supportsHistory( self ) :
-
-			return False
-
-		def __call__( self, target ) :
-
-			return target.path or "None"
+		for i in range( 0, 2 ) :
+			self.__diff.getValueWidget( i ).setEnabled(
+				len( labels ) > i and labels[i].startswith( "/" )
+			)
 
 SceneInspector.registerSection( __PathSection, tab = "Selection" )
 
