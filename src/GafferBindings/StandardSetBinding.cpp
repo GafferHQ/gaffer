@@ -53,9 +53,9 @@ namespace GafferBindings
 namespace Detail
 {
 
-SetPtr setConstructor( boost::python::object o )
+SetPtr setConstructor( boost::python::object o, bool removeOrphans )
 {
-	StandardSetPtr result = new StandardSet;
+	StandardSetPtr result = new StandardSet( removeOrphans );
 	std::vector<Set::MemberPtr> members;
 	boost::python::container_utils::extend_container( members, o );
 	result->add( members.begin(), members.end() );
@@ -98,8 +98,14 @@ void bindStandardSet()
 {
 
 	boost::python::scope s = IECorePython::RunTimeTypedClass<StandardSet>()
-		.def( boost::python::init<>() )
-		.def( "__init__", boost::python::make_constructor( Detail::setConstructor ) )
+		.def( boost::python::init<bool>( boost::python::arg( "removeOrphans" ) = false ) )
+		.def( "__init__", boost::python::make_constructor( Detail::setConstructor, boost::python::default_call_policies(),
+				(
+					boost::python::arg( "members" ),
+					boost::python::arg( "removeOrphans" ) = false
+				)
+			)
+		)
 		.def( "add", &Detail::addFromSequence )
 		.def( "add", (bool (StandardSet::*)( Set::MemberPtr ) )&StandardSet::add )
 		.def( "add", (size_t (StandardSet::*)( const Set * ) )&StandardSet::add )
@@ -108,6 +114,8 @@ void bindStandardSet()
 		.def( "remove", (size_t (StandardSet::*)( const Set * ) )&StandardSet::remove )
 		.def( "clear", &StandardSet::clear )
 		.def( "memberAcceptanceSignal", &StandardSet::memberAcceptanceSignal, boost::python::return_internal_reference<1>() )
+		.def( "setRemoveOrphans", &StandardSet::setRemoveOrphans )
+		.def( "getRemoveOrphans", &StandardSet::getRemoveOrphans )
 	;
 
 	SignalClass<StandardSet::MemberAcceptanceSignal, DefaultSignalCaller<StandardSet::MemberAcceptanceSignal>, Detail::MemberAcceptanceSlotCaller>( "MemberAcceptanceSignal" );

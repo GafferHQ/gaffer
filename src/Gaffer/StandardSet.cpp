@@ -41,7 +41,8 @@
 
 using namespace Gaffer;
 
-StandardSet::StandardSet()
+StandardSet::StandardSet( bool removeOrphans )
+	:	m_removeOrphans( removeOrphans )
 {
 }
 
@@ -64,6 +65,13 @@ bool StandardSet::add( MemberPtr member )
 	bool result = m_members.insert( member ).second;
 	if( result )
 	{
+		if( m_removeOrphans )
+		{
+			if( GraphComponent *graphComponent = IECore::runTimeCast<GraphComponent>( member.get() ) )
+			{
+				graphComponent->parentChangedSignal().connect( boost::bind( &StandardSet::parentChanged, this, ::_1 ) );
+			}
+		}
 		memberAddedSignal()( this, member.get() );
 	}
 	return result;
@@ -84,6 +92,13 @@ bool StandardSet::remove( Member *member )
 	MemberContainer::iterator it = m_members.find( member );
 	if( it != m_members.end() )
 	{
+		if( m_removeOrphans )
+		{
+			if( GraphComponent *graphComponent = IECore::runTimeCast<GraphComponent>( member ) )
+			{
+				graphComponent->parentChangedSignal().disconnect( boost::bind( &StandardSet::parentChanged, this, ::_1 ) );
+			}
+		}
 		// we may be the only owner of member, in which
 		// case it would die immediately upon removal
 		// from m_members. so we have to make a temporary
@@ -117,6 +132,37 @@ void StandardSet::clear()
 	}
 }
 
+void StandardSet::setRemoveOrphans( bool removeOrphans )
+{
+	if( removeOrphans == m_removeOrphans )
+	{
+		return;
+	}
+
+	m_removeOrphans = removeOrphans;
+	for( auto &m : m_members )
+	{
+		GraphComponent *graphComponent = IECore::runTimeCast<GraphComponent>( m.get() );
+		if( !graphComponent )
+		{
+			continue;
+		}
+		if( m_removeOrphans )
+		{
+			graphComponent->parentChangedSignal().connect( boost::bind( &StandardSet::parentChanged, this, ::_1 ) );
+		}
+		else
+		{
+			graphComponent->parentChangedSignal().disconnect( boost::bind( &StandardSet::parentChanged, this, ::_1 ) );
+		}
+	}
+}
+
+bool StandardSet::getRemoveOrphans() const
+{
+	return m_removeOrphans;
+}
+
 bool StandardSet::contains( const Member *object ) const
 {
 	// const cast is ugly but safe and it allows us to present the
@@ -139,3 +185,12 @@ size_t StandardSet::size() const
 {
 	return m_members.size();
 }
+
+void StandardSet::parentChanged( GraphComponent *member )
+{
+	if( !member->parent() )
+	{
+		remove( member );
+	}
+}
+
