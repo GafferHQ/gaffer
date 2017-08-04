@@ -674,7 +674,7 @@ class Row( GafferUI.Widget ) :
 
 	def __init__( self, borderWidth = 4, alternate = False, **kw ) :
 
-		self.__frame = GafferUI.Frame( borderWidth = borderWidth )
+		self.__frame = GafferUI.Frame( borderWidth = borderWidth, borderStyle = GafferUI.Frame.BorderStyle.None )
 
 		GafferUI.Widget.__init__( self, self.__frame, **kw )
 
