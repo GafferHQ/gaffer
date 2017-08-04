@@ -39,6 +39,7 @@
 #define GAFFERUI_STANDARDNODULE_H
 
 #include "Gaffer/StringAlgo.h"
+#include "Gaffer/Plug.h"
 
 #include "GafferUI/Nodule.h"
 
@@ -63,7 +64,9 @@ class StandardNodule : public Nodule
 		void setLabelVisible( bool labelVisible );
 		bool getLabelVisible() const;
 
+		bool canCreateConnection( const Gaffer::Plug *destinationPlug ) override;
 		void updateDragEndPoint( const Imath::V3f position, const Imath::V3f &tangent ) override;
+		void createConnection( Gaffer::Plug *destinationPlug ) override;
 
 		Imath::Box3f bound() const override;
 
@@ -82,8 +85,6 @@ class StandardNodule : public Nodule
 		bool dragLeave( GadgetPtr gadget, const DragDropEvent &event );
 		bool dragEnd( GadgetPtr gadget, const DragDropEvent &event );
 		bool drop( GadgetPtr gadget, const DragDropEvent &event );
-
-		void connection( const DragDropEvent &event, Gaffer::PlugPtr &input, Gaffer::PlugPtr &output );
 
 		void setCompatibleLabelsVisible( const DragDropEvent &event, bool visible );
 
