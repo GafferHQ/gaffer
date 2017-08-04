@@ -324,6 +324,8 @@ class Diff( GafferUI.Widget ) :
 # with background colours appropriate to the relationship between the two.
 class SideBySideDiff( Diff ) :
 
+	Background = IECore.Enum.create( "A", "B", "AB", "Other" )
+
 	def __init__( self, **kw ) :
 
 		self.__grid = GafferUI.GridContainer()
@@ -336,10 +338,7 @@ class SideBySideDiff( Diff ) :
 					borderStyle = GafferUI.Frame.BorderStyle.None,
 					parenting = { "index" : ( 0, i ) }
 				)
-				## \todo Should we provide frame types via methods on the
-				# Frame class? Are DiffA/DiffB types for a frame a bit too
-				# specialised?
-				frame._qtWidget().setObjectName( "gafferDiffA" if i == 0 else "gafferDiffB" )
+				frame._qtWidget().setProperty( "gafferRounded", True )
 
 	def setValueWidget( self, index, widget ) :
 
@@ -368,11 +367,13 @@ class SideBySideDiff( Diff ) :
 	#
 	# The visibilities argument can be passed a sequence containing
 	# a boolean per value to override the default visibility. This
-	# is used by the history and inheritance sections.
+	# is used by the history and inheritance sections. Likewise, the
+	# backgrounds argument can be passed to override the default
+	# background styles.
 	#
 	# Derived classes are expected to override this method to additionally
 	# edit the value widgets to display the actual values.
-	def update( self, values, visibilities = None ) :
+	def update( self, values, visibilities = None, backgrounds = None ) :
 
 		assert( len( values ) <= 2 )
 
@@ -386,16 +387,41 @@ class SideBySideDiff( Diff ) :
 				len( values ) > 1 and values[1] is not None and different
 			]
 
+		if backgrounds is None :
+			backgrounds = [
+				self.Background.A if different else self.Background.AB,
+				self.Background.B if different else self.Background.AB,
+			]
+
 		for i in range( 0, 2 ) :
-			self.__frame( i ).setVisible( visibilities[i] )
+
+			frame = self.__frame( i )
+			frame.setVisible( visibilities[i] )
 			cornerWidget = self.getCornerWidget( i )
 			if cornerWidget is not None :
 				cornerWidget.setVisible( visibilities[i] )
 
-		name =  "gafferDiffA" if different else ""
-		if name != self.__frame( 0 )._qtWidget().objectName() :
-			self.__frame( 0 )._qtWidget().setObjectName( name )
-			self.__frame( 0 )._repolish()
+			if not visibilities[i] :
+				continue
+
+			repolish = False
+			name = "gafferDiff" + str( backgrounds[i] )
+			if name != frame._qtWidget().objectName() :
+				frame._qtWidget().setObjectName( name )
+				repolish = True
+
+			if i == 0 :
+				if frame._qtWidget().property( "gafferFlatBottom" ) != visibilities[1] :
+					frame._qtWidget().setProperty( "gafferFlatBottom", visibilities[1] )
+					repolish = True
+			elif i == 1 :
+				if frame._qtWidget().property( "gafferFlatTop" ) != visibilities[0] :
+					frame._qtWidget().setProperty( "gafferFlatTop", visibilities[0] )
+					repolish = True
+
+			if repolish :
+				frame._repolish()
+
 
 	def __frame( self, index ) :
 
@@ -410,6 +436,7 @@ class TextDiff( SideBySideDiff ) :
 		self.__connections = []
 		for i in range( 0, 2 ) :
 			label = GafferUI.Label()
+			label._qtWidget().setSizePolicy( QtWidgets.QSizePolicy( QtWidgets.QSizePolicy.Preferred, QtWidgets.QSizePolicy.Fixed ) )
 			self.__connections.append( label.buttonPressSignal().connect( Gaffer.WeakMethod( self.__buttonPress ) ) )
 			self.__connections.append( label.dragBeginSignal().connect( Gaffer.WeakMethod( self.__dragBegin ) ) )
 			self.__connections.append( label.dragEndSignal().connect( Gaffer.WeakMethod( self.__dragEnd ) )	)
@@ -1959,7 +1986,7 @@ class _SetDiff( Diff ) :
 
 		self.__connections = []
 		with self.__row :
-			for i, name in enumerate( [ "gafferDiffA", "gafferDiffCommon", "gafferDiffB" ] ) :
+			for i, name in enumerate( [ "gafferDiffA", "gafferDiffAB", "gafferDiffB" ] ) :
 				with GafferUI.Frame( borderWidth = 5 ) as frame :
 
 					frame._qtWidget().setObjectName( name )
