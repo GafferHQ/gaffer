@@ -158,6 +158,25 @@ Imath::Box3f StandardConnectionGadget::bound() const
 	return r;
 }
 
+bool StandardConnectionGadget::canCreateConnection( const Gaffer::Plug *endpoint )
+{
+	if( m_dragEnd != endpoint->direction() )
+	{
+		return false;
+	}
+
+	switch( m_dragEnd )
+	{
+	case Gaffer::Plug::Out :
+		return dstNodule()->plug()->acceptsInput( endpoint );
+	case Gaffer::Plug::In :
+		return endpoint->acceptsInput( srcNodule()->plug() );
+	case Gaffer::Plug::Invalid :
+		return false;
+	}
+	return false;
+}
+
 void StandardConnectionGadget::updateDragEndPoint( const Imath::V3f position, const Imath::V3f &tangent )
 {
 	if( m_dragEnd==Gaffer::Plug::Out )
@@ -175,6 +194,36 @@ void StandardConnectionGadget::updateDragEndPoint( const Imath::V3f position, co
 		throw IECore::Exception( "Not dragging" );
 	}
  	requestRender();
+}
+
+void StandardConnectionGadget::createConnection( Gaffer::Plug *endpoint )
+{
+	Plug::Direction destinationDirection = endpoint->direction();
+
+	// If we are asked to make a connection that already exists, we can safely ignore the request.
+	Plug *equivalentPlug = destinationDirection == Plug::Out ? srcNodule()->plug() : dstNodule()->plug();
+	if( endpoint == equivalentPlug )
+	{
+		return;
+	}
+
+	switch( destinationDirection )
+	{
+		case Gaffer::Plug::Out :
+			dstNodule()->plug()->setInput( endpoint );
+			return;
+		case Gaffer::Plug::In :
+
+			// The new connection replaces the old one. It's important that we remove
+			// the old connection /after/ making the new connection, as removing a
+			// connection can trigger an InputGenerator to remove plugs, possibly
+			// including the input plug we want to connect to. See issue #302.
+			dstNodule()->plug()->setInput( 0 );
+			endpoint->setInput( srcNodule()->plug() );
+			return;
+		default :
+			return;
+	}
 }
 
 void StandardConnectionGadget::doRenderLayer( Layer layer, const Style *style ) const
