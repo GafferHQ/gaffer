@@ -6,6 +6,10 @@ os:
     - linux
     - osx
 
+# Force Ubuntu Precise until we can determine the source
+# of test failures on Trusty.
+dist: precise
+
 addons:
   apt:
     sources:
