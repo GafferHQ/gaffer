@@ -170,6 +170,20 @@ Imath::Box3f PlugAdder::bound() const
 	return Box3f( V3f( -0.5f, -0.5f, 0.0f ), V3f( 0.5f, 0.5f, 0.0f ) );
 }
 
+bool PlugAdder::canCreateConnection( const Gaffer::Plug *endpoint )
+{
+	ConstStringDataPtr noduleType = Gaffer::Metadata::value<StringData>( endpoint, IECore::InternedString( "nodule:type" ) );
+	if( noduleType )
+	{
+		if( noduleType->readable() == "GafferUI::CompoundNodule" )
+		{
+			return false;
+		}
+	}
+
+	return true;
+}
+
 void PlugAdder::updateDragEndPoint( const Imath::V3f position, const Imath::V3f &tangent )
 {
 	m_dragPosition = position;
@@ -257,7 +271,7 @@ bool PlugAdder::dragEnter( const DragDropEvent &event )
 	}
 
 	const Plug *plug = runTimeCast<Plug>( event.data.get() );
-	if( !plug || !acceptsPlug( plug ) )
+	if( !plug || !canCreateConnection( plug ) )
 	{
 		return false;
 	}
@@ -299,7 +313,7 @@ bool PlugAdder::drop( const DragDropEvent &event )
 
 	if( Plug *plug = runTimeCast<Plug>( event.data.get() ) )
 	{
-		addPlug( plug );
+		createConnection( plug );
 		return true;
 	}
 

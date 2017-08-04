@@ -37,31 +37,26 @@
 #ifndef GAFFERUI_PLUGADDER_H
 #define GAFFERUI_PLUGADDER_H
 
+#include "GafferUI/ConnectionCreator.h"
 #include "GafferUI/StandardNodeGadget.h"
 
 namespace GafferUI
 {
 
-class GAFFERUI_API PlugAdder : public Gadget
+class GAFFERUI_API PlugAdder : public ConnectionCreator
 {
 
 	public :
 
-		IE_CORE_DECLARERUNTIMETYPEDEXTENSION( GafferUI::PlugAdder, PlugAdderTypeId, Gadget );
+		IE_CORE_DECLARERUNTIMETYPEDEXTENSION( GafferUI::PlugAdder, PlugAdderTypeId, ConnectionCreator );
 
 		PlugAdder( StandardNodeGadget::Edge edge );
 		~PlugAdder() override;
 
 		Imath::Box3f bound() const override;
 
-		void updateDragEndPoint( const Imath::V3f position, const Imath::V3f &tangent );
-
-		/// Returns `true` if a call to `addPlug( connectionEndPoint )` is possible.
-		/// Should be implemented by derived classes.
-		virtual bool acceptsPlug( const Gaffer::Plug *connectionEndPoint ) const = 0;
-		/// Adds a plug compatible with `connectionEndPoint` and connects them together.
-		/// Should be implemented by derived classes.
-		virtual void addPlug( Gaffer::Plug *connectionEndPoint ) = 0;
+		bool canCreateConnection( const Gaffer::Plug *endpoint ) override;
+		void updateDragEndPoint( const Imath::V3f position, const Imath::V3f &tangent ) override;
 
 		/// When emitted, shows a menu containing the specified plugs, and returns
 		/// the chosen plug. Implemented as a signal so the menu can be implemented
