@@ -53,7 +53,7 @@ class ShadingEngine : public IECore::RefCounted
 		IE_CORE_DECLAREMEMBERPTR( ShadingEngine )
 
 		ShadingEngine( const IECore::ObjectVector *shaderNetwork );
-		~ShadingEngine();
+		~ShadingEngine() override;
 
 		struct Transform
 		{

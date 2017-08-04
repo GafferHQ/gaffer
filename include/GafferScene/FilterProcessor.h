@@ -64,7 +64,7 @@ class FilterProcessor : public Filter
 		/// inPlugs() to access the array itself.
 		FilterProcessor( const std::string &name, size_t minInputs, size_t maxInputs = Imath::limits<size_t>::max() );
 
-		virtual ~FilterProcessor();
+		~FilterProcessor() override;
 
 		IE_CORE_DECLARERUNTIMETYPEDEXTENSION( GafferScene::FilterProcessor, FilterProcessorTypeId, Filter );
 
@@ -81,18 +81,18 @@ class FilterProcessor : public Filter
 		Gaffer::ArrayPlug *inPlugs();
 		const Gaffer::ArrayPlug *inPlugs() const;
 
-		virtual bool sceneAffectsMatch( const ScenePlug *scene, const Gaffer::ValuePlug *child ) const;
+		bool sceneAffectsMatch( const ScenePlug *scene, const Gaffer::ValuePlug *child ) const override;
 
 		/// Returns inPlug() as the correspondingInput of outPlug();
-		virtual Gaffer::Plug *correspondingInput( const Gaffer::Plug *output );
-		virtual const Gaffer::Plug *correspondingInput( const Gaffer::Plug *output ) const;
+		Gaffer::Plug *correspondingInput( const Gaffer::Plug *output ) override;
+		const Gaffer::Plug *correspondingInput( const Gaffer::Plug *output ) const override;
 
 	protected :
 
 		/// Reimplemented to pass through the inPlug() hash when the node is disabled.
-		virtual void hash( const Gaffer::ValuePlug *output, const Gaffer::Context *context, IECore::MurmurHash &h ) const;
+		void hash( const Gaffer::ValuePlug *output, const Gaffer::Context *context, IECore::MurmurHash &h ) const override;
 		/// Reimplemented to pass through the inPlug() result when the node is disabled.
-		virtual void compute( Gaffer::ValuePlug *output, const Gaffer::Context *context ) const;
+		void compute( Gaffer::ValuePlug *output, const Gaffer::Context *context ) const override;
 
 	private :
 

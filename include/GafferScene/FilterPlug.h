@@ -73,12 +73,12 @@ class FilterPlug : public Gaffer::IntPlug
 			unsigned flags
 		);
 
-		virtual ~FilterPlug();
+		~FilterPlug() override;
 
 		IE_CORE_DECLARERUNTIMETYPEDEXTENSION( GafferScene::FilterPlug, FilterPlugTypeId, Gaffer::IntPlug );
 
-		virtual bool acceptsInput( const Gaffer::Plug *input ) const;
-		virtual Gaffer::PlugPtr createCounterpart( const std::string &name, Direction direction ) const;
+		bool acceptsInput( const Gaffer::Plug *input ) const override;
+		Gaffer::PlugPtr createCounterpart( const std::string &name, Direction direction ) const override;
 
 		/// Name of a context variable used to provide the input
 		/// scene to the filter

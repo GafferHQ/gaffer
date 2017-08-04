@@ -70,7 +70,7 @@ class TaskNodeWrapper : public GafferBindings::DependencyNodeWrapper<WrappedType
 		{
 		}
 
-		virtual bool affectsTask( const Gaffer::Plug *input ) const
+		bool affectsTask( const Gaffer::Plug *input ) const override
 		{
 			if( this->isSubclassed() )
 			{
@@ -93,7 +93,7 @@ class TaskNodeWrapper : public GafferBindings::DependencyNodeWrapper<WrappedType
 			return WrappedType::affectsTask( input );
 		}
 
-		virtual void preTasks( const Gaffer::Context *context, GafferDispatch::TaskNode::Tasks &tasks ) const
+		void preTasks( const Gaffer::Context *context, GafferDispatch::TaskNode::Tasks &tasks ) const override
 		{
 			if( this->isSubclassed() )
 			{
@@ -124,7 +124,7 @@ class TaskNodeWrapper : public GafferBindings::DependencyNodeWrapper<WrappedType
 			WrappedType::preTasks( context, tasks );
 		}
 
-		virtual void postTasks( const Gaffer::Context *context, GafferDispatch::TaskNode::Tasks &tasks ) const
+		void postTasks( const Gaffer::Context *context, GafferDispatch::TaskNode::Tasks &tasks ) const override
 		{
 			if( this->isSubclassed() )
 			{
@@ -149,7 +149,7 @@ class TaskNodeWrapper : public GafferBindings::DependencyNodeWrapper<WrappedType
 			WrappedType::postTasks( context, tasks );
 		}
 
-		virtual IECore::MurmurHash hash( const Gaffer::Context *context ) const
+		IECore::MurmurHash hash( const Gaffer::Context *context ) const override
 		{
 			if( this->isSubclassed() )
 			{
@@ -172,7 +172,7 @@ class TaskNodeWrapper : public GafferBindings::DependencyNodeWrapper<WrappedType
 			return WrappedType::hash( context );
 		}
 
-		virtual void execute() const
+		void execute() const override
 		{
 			if( this->isSubclassed() )
 			{
@@ -194,7 +194,7 @@ class TaskNodeWrapper : public GafferBindings::DependencyNodeWrapper<WrappedType
 			WrappedType::execute();
 		}
 
-		virtual void executeSequence( const std::vector<float> &frames ) const
+		void executeSequence( const std::vector<float> &frames ) const override
 		{
 			if( this->isSubclassed() )
 			{
@@ -221,7 +221,7 @@ class TaskNodeWrapper : public GafferBindings::DependencyNodeWrapper<WrappedType
 			WrappedType::executeSequence( frames );
 		}
 
-		virtual bool requiresSequenceExecution() const
+		bool requiresSequenceExecution() const override
 		{
 			if( this->isSubclassed() )
 			{

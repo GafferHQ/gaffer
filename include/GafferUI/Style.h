@@ -66,7 +66,7 @@ class Style : public IECore::RunTimeTyped
 	public :
 
 		Style();
-		virtual ~Style();
+		~Style() override;
 
 		IE_CORE_DECLARERUNTIMETYPEDEXTENSION( GafferUI::Style, StyleTypeId, IECore::RunTimeTyped );
 

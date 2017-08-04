@@ -67,7 +67,7 @@ class ContextMonitor : public Monitor
 		/// Statistics are only collected for the root and its
 		/// descendants.
 		ContextMonitor( const GraphComponent *root = nullptr );
-		virtual ~ContextMonitor();
+		~ContextMonitor() override;
 
 		struct Statistics
 		{
@@ -101,8 +101,8 @@ class ContextMonitor : public Monitor
 
 	protected :
 
-		virtual void processStarted( const Process *process );
-		virtual void processFinished( const Process *process );
+		void processStarted( const Process *process ) override;
+		void processFinished( const Process *process ) override;
 
 	private :
 

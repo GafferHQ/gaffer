@@ -100,12 +100,12 @@ class ScriptNode::CompoundAction : public Gaffer::Action
 
 		friend class ScriptNode;
 
-		virtual GraphComponent *subject() const
+		GraphComponent *subject() const override
 		{
 			return m_subject;
 		}
 
-		virtual void doAction()
+		void doAction() override
 		{
 			for( std::vector<ActionPtr>::const_iterator it = m_actions.begin(), eIt = m_actions.end(); it != eIt; ++it )
 			{
@@ -116,7 +116,7 @@ class ScriptNode::CompoundAction : public Gaffer::Action
 			}
 		}
 
-		virtual void undoAction()
+		void undoAction() override
 		{
 			for( std::vector<ActionPtr>::const_reverse_iterator it = m_actions.rbegin(), eIt = m_actions.rend(); it != eIt; ++it )
 			{
@@ -125,7 +125,7 @@ class ScriptNode::CompoundAction : public Gaffer::Action
 			}
 		}
 
-		virtual bool canMerge( const Action *other ) const
+		bool canMerge( const Action *other ) const override
 		{
 			if( !Action::canMerge( other ) )
 			{
@@ -146,7 +146,7 @@ class ScriptNode::CompoundAction : public Gaffer::Action
 			return m_mergeGroup == compoundAction->m_mergeGroup;
 		}
 
-		virtual void merge( const Action *other )
+		void merge( const Action *other ) override
 		{
 			const CompoundAction *compoundAction = static_cast<const CompoundAction *>( other );
 

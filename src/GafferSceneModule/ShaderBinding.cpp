@@ -106,7 +106,7 @@ void reloadShader( Shader &shader )
 class ShaderSerialiser : public GafferBindings::NodeSerialiser
 {
 
-	virtual std::string postScript( const Gaffer::GraphComponent *graphComponent, const std::string &identifier, const Serialisation &serialisation ) const
+	std::string postScript( const Gaffer::GraphComponent *graphComponent, const std::string &identifier, const Serialisation &serialisation ) const override
 	{
 		const Shader *shader = static_cast<const Shader *>( graphComponent );
 		const std::string shaderName = shader->namePlug()->getValue();

@@ -94,7 +94,7 @@ class CropWindowTool::Rectangle : public GafferUI::Gadget
 			leaveSignal().connect( boost::bind( &Rectangle::leave, this ) );
 		}
 
-		virtual Imath::Box3f bound() const
+		Imath::Box3f bound() const override
 		{
 			// We draw in raster space so don't have a sensible bound
 			return Box3f();
@@ -158,7 +158,7 @@ class CropWindowTool::Rectangle : public GafferUI::Gadget
 
 	protected :
 
-		virtual void doRender( const Style *style ) const
+		void doRender( const Style *style ) const override
 		{
 			if( m_rectangle.isEmpty() )
 			{

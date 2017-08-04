@@ -50,7 +50,7 @@ class InteractiveArnoldRender : public GafferScene::Preview::InteractiveRender
 	public :
 
 		InteractiveArnoldRender( const std::string &name=defaultName<InteractiveArnoldRender>() );
-		virtual ~InteractiveArnoldRender();
+		~InteractiveArnoldRender() override;
 
 		IE_CORE_DECLARERUNTIMETYPEDEXTENSION( GafferArnold::InteractiveArnoldRender, InteractiveArnoldRenderTypeId, GafferScene::Preview::InteractiveRender );
 

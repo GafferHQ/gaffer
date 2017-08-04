@@ -61,13 +61,13 @@ class CompoundDataPlug : public Gaffer::ValuePlug
 			Direction direction=In,
 			unsigned flags = Default
 		);
-		virtual ~CompoundDataPlug();
+		~CompoundDataPlug() override;
 
 		IE_CORE_DECLARERUNTIMETYPEDEXTENSION( Gaffer::CompoundDataPlug, CompoundDataPlugTypeId, Gaffer::ValuePlug );
 
 		/// Accepts only children that can generate values for the CompoundData.
-		virtual bool acceptsChild( const Gaffer::GraphComponent *potentialChild ) const;
-		virtual PlugPtr createCounterpart( const std::string &name, Direction direction ) const;
+		bool acceptsChild( const Gaffer::GraphComponent *potentialChild ) const override;
+		PlugPtr createCounterpart( const std::string &name, Direction direction ) const override;
 
 		/// The plug type used to represent the data members.
 		class MemberPlug : public ValuePlug
@@ -92,8 +92,8 @@ class CompoundDataPlug : public Gaffer::ValuePlug
 				BoolPlug *enabledPlug();
 				const BoolPlug *enabledPlug() const;
 
-				virtual bool acceptsChild( const Gaffer::GraphComponent *potentialChild ) const;
-				virtual PlugPtr createCounterpart( const std::string &name, Direction direction ) const;
+				bool acceptsChild( const Gaffer::GraphComponent *potentialChild ) const override;
+				PlugPtr createCounterpart( const std::string &name, Direction direction ) const override;
 
 		};
 
@@ -128,7 +128,7 @@ class CompoundDataPlug : public Gaffer::ValuePlug
 		/// Extracts a Data value from a plug previously created with createPlugFromData().
 		static IECore::DataPtr extractDataFromPlug( const ValuePlug *plug );
 
-		virtual IECore::MurmurHash hash() const;
+		IECore::MurmurHash hash() const override;
 		void hash( IECore::MurmurHash &h ) const;
 
 	private :

@@ -50,17 +50,17 @@ class ObjectToImage : public ImagePrimitiveNode
 		IE_CORE_DECLARERUNTIMETYPEDEXTENSION( GafferImage::ObjectToImage, ObjectToImageTypeId, ImagePrimitiveNode );
 
 		ObjectToImage( const std::string &name = defaultName<ObjectToImage>() );
-		virtual ~ObjectToImage();
+		~ObjectToImage() override;
 
 		Gaffer::ObjectPlug *objectPlug();
 		const Gaffer::ObjectPlug *objectPlug() const;
 
-		virtual void affects( const Gaffer::Plug *input, AffectedPlugsContainer &outputs ) const;
+		void affects( const Gaffer::Plug *input, AffectedPlugsContainer &outputs ) const override;
 
 	protected :
 
-		virtual void hashImagePrimitive( const Gaffer::Context *context, IECore::MurmurHash &h ) const;
-		virtual IECore::ConstImagePrimitivePtr computeImagePrimitive( const Gaffer::Context *context ) const;
+		void hashImagePrimitive( const Gaffer::Context *context, IECore::MurmurHash &h ) const override;
+		IECore::ConstImagePrimitivePtr computeImagePrimitive( const Gaffer::Context *context ) const override;
 
 	private :
 

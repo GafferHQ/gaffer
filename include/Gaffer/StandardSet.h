@@ -83,7 +83,7 @@ class StandardSet : public Gaffer::Set
 	public :
 
 		StandardSet( bool removeOrphans = false );
-		virtual ~StandardSet();
+		~StandardSet() override;
 
 		IE_CORE_DECLARERUNTIMETYPEDEXTENSION( Gaffer::StandardSet, StandardSetTypeId, Gaffer::Set );
 
@@ -140,10 +140,10 @@ class StandardSet : public Gaffer::Set
 		/// @name Implementation of the Set interface
 		////////////////////////////////////////////////////////////////////
 		//@{
-		virtual bool contains( const Member *object ) const;
-		virtual Member *member( size_t index );
-		virtual const Member *member( size_t index ) const;
-		virtual size_t size() const;
+		bool contains( const Member *object ) const override;
+		Member *member( size_t index ) override;
+		const Member *member( size_t index ) const override;
+		size_t size() const override;
 		//@}
 
 	private :

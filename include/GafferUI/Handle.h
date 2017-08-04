@@ -49,7 +49,7 @@ class Handle : public Gadget
 
 	public :
 
-		virtual ~Handle();
+		~Handle() override;
 
 		IE_CORE_DECLARERUNTIMETYPEDEXTENSION( GafferUI::Handle, HandleTypeId, Gadget );
 
@@ -58,7 +58,7 @@ class Handle : public Gadget
 		void setRasterScale( float rasterScale );
 		float getRasterScale() const;
 
-		virtual Imath::Box3f bound() const;
+		Imath::Box3f bound() const override;
 
 	protected :
 
@@ -66,7 +66,7 @@ class Handle : public Gadget
 
 		// Implemented to call renderHandle() after applying
 		// the raster scale.
-		virtual void doRender( const Style *style ) const;
+		void doRender( const Style *style ) const override;
 
 		// Must be implemented by derived classes to draw their
 		// handle.

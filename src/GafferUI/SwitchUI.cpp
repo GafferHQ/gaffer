@@ -68,12 +68,12 @@ class SwitchPlugAdder : public PlugAdder
 
 	protected :
 
-		virtual bool acceptsPlug( const Plug *connectionEndPoint ) const
+		bool acceptsPlug( const Plug *connectionEndPoint ) const override
 		{
 			return true;
 		}
 
-		virtual void addPlug( Plug *connectionEndPoint )
+		void addPlug( Plug *connectionEndPoint ) override
 		{
 			UndoScope undoScope( m_switch->ancestor<ScriptNode>() );
 

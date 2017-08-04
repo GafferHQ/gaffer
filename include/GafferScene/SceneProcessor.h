@@ -65,7 +65,7 @@ class SceneProcessor : public SceneNode
 		/// inPlugs() to access the array itself.
 		SceneProcessor( const std::string &name, size_t minInputs, size_t maxInputs = Imath::limits<size_t>::max() );
 
-		virtual ~SceneProcessor();
+		~SceneProcessor() override;
 
 		IE_CORE_DECLARERUNTIMETYPEDEXTENSION( GafferScene::SceneProcessor, SceneProcessorTypeId, SceneNode );
 
@@ -82,15 +82,15 @@ class SceneProcessor : public SceneNode
 		Gaffer::ArrayPlug *inPlugs();
 		const Gaffer::ArrayPlug *inPlugs() const;
 
-		virtual Gaffer::Plug *correspondingInput( const Gaffer::Plug *output );
-		virtual const Gaffer::Plug *correspondingInput( const Gaffer::Plug *output ) const;
+		Gaffer::Plug *correspondingInput( const Gaffer::Plug *output ) override;
+		const Gaffer::Plug *correspondingInput( const Gaffer::Plug *output ) const override;
 
 	protected :
 
 		/// Reimplemented from SceneNode to pass through the inPlug() hashes when the node is disabled.
-		virtual void hash( const Gaffer::ValuePlug *output, const Gaffer::Context *context, IECore::MurmurHash &h ) const;
+		void hash( const Gaffer::ValuePlug *output, const Gaffer::Context *context, IECore::MurmurHash &h ) const override;
 		/// Reimplemented from SceneNode to pass through the inPlug() computations when the node is disabled.
-		virtual void compute( Gaffer::ValuePlug *output, const Gaffer::Context *context ) const;
+		void compute( Gaffer::ValuePlug *output, const Gaffer::Context *context ) const override;
 
 	private :
 

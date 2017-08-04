@@ -54,20 +54,20 @@ class PathFilter : public Filter
 		IE_CORE_DECLARERUNTIMETYPEDEXTENSION( GafferScene::PathFilter, PathFilterTypeId, Filter );
 
 		PathFilter( const std::string &name=defaultName<PathFilter>() );
-		virtual ~PathFilter();
+		~PathFilter() override;
 
 		Gaffer::StringVectorDataPlug *pathsPlug();
 		const Gaffer::StringVectorDataPlug *pathsPlug() const;
 
-		virtual void affects( const Gaffer::Plug *input, AffectedPlugsContainer &outputs ) const;
+		void affects( const Gaffer::Plug *input, AffectedPlugsContainer &outputs ) const override;
 
 	protected :
 
-		virtual void hash( const Gaffer::ValuePlug *output, const Gaffer::Context *context, IECore::MurmurHash &h ) const;
-		virtual void compute( Gaffer::ValuePlug *output, const Gaffer::Context *context ) const;
+		void hash( const Gaffer::ValuePlug *output, const Gaffer::Context *context, IECore::MurmurHash &h ) const override;
+		void compute( Gaffer::ValuePlug *output, const Gaffer::Context *context ) const override;
 
-		virtual void hashMatch( const ScenePlug *scene, const Gaffer::Context *context, IECore::MurmurHash &h ) const;
-		virtual unsigned computeMatch( const ScenePlug *scene, const Gaffer::Context *context ) const;
+		void hashMatch( const ScenePlug *scene, const Gaffer::Context *context, IECore::MurmurHash &h ) const override;
+		unsigned computeMatch( const ScenePlug *scene, const Gaffer::Context *context ) const override;
 
 	private :
 

@@ -66,7 +66,7 @@ class ParameterisedHolder : public BaseType
 		IE_CORE_DECLARERUNTIMETYPEDDESCRIPTION( ParameterisedHolder<BaseType> );
 
 		ParameterisedHolder( const std::string &name=Gaffer::GraphComponent::defaultName<ParameterisedHolder>() );
-		virtual ~ParameterisedHolder();
+		~ParameterisedHolder() override;
 
 		/// May be overridden by derived classes, but they must call the base class implementation
 		/// first.

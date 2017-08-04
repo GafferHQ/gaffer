@@ -57,7 +57,7 @@ class Clamp : public ChannelDataProcessor
 	public :
 
 		Clamp( const std::string &name=defaultName<Clamp>() );
-		virtual ~Clamp();
+		~Clamp() override;
 
 		IE_CORE_DECLARERUNTIMETYPEDEXTENSION( GafferImage::Clamp, ClampTypeId, ChannelDataProcessor );
 
@@ -84,14 +84,14 @@ class Clamp : public ChannelDataProcessor
 		const Gaffer::BoolPlug *maxClampToEnabledPlug() const;
 		//@}
 
-		virtual void affects( const Gaffer::Plug *input, AffectedPlugsContainer &outputs ) const;
+		void affects( const Gaffer::Plug *input, AffectedPlugsContainer &outputs ) const override;
 
 	protected :
 
-		virtual bool enabled() const;
+		bool enabled() const override;
 
-		virtual void hashChannelData( const GafferImage::ImagePlug *output, const Gaffer::Context *context, IECore::MurmurHash &h ) const;
-		virtual void processChannelData( const Gaffer::Context *context, const ImagePlug *parent, const std::string &channelName, IECore::FloatVectorDataPtr outData ) const;
+		void hashChannelData( const GafferImage::ImagePlug *output, const Gaffer::Context *context, IECore::MurmurHash &h ) const override;
+		void processChannelData( const Gaffer::Context *context, const ImagePlug *parent, const std::string &channelName, IECore::FloatVectorDataPtr outData ) const override;
 
 	private :
 

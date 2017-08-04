@@ -69,7 +69,7 @@ class PlugWrapper : public GraphComponentWrapper<WrappedType>
 		{
 		}
 
-		virtual bool isInstanceOf( IECore::TypeId typeId ) const
+		bool isInstanceOf( IECore::TypeId typeId ) const override
 		{
 			// Optimise for common queries we know should fail.
 			// The standard wrapper implementation of isInstanceOf()
@@ -90,7 +90,7 @@ class PlugWrapper : public GraphComponentWrapper<WrappedType>
 			return GraphComponentWrapper<WrappedType>::isInstanceOf( typeId );
 		}
 
-		virtual bool acceptsInput( const Gaffer::Plug *input ) const
+		bool acceptsInput( const Gaffer::Plug *input ) const override
 		{
 			if( this->isSubclassed() )
 			{
@@ -104,7 +104,7 @@ class PlugWrapper : public GraphComponentWrapper<WrappedType>
 			return WrappedType::acceptsInput( input );
 		}
 
-		virtual void setInput( Gaffer::PlugPtr input )
+		void setInput( Gaffer::PlugPtr input ) override
 		{
 			if( this->isSubclassed() )
 			{
@@ -119,7 +119,7 @@ class PlugWrapper : public GraphComponentWrapper<WrappedType>
 			WrappedType::setInput( input );
 		}
 
-		virtual Gaffer::PlugPtr createCounterpart( const std::string &name, Gaffer::Plug::Direction direction ) const
+		Gaffer::PlugPtr createCounterpart( const std::string &name, Gaffer::Plug::Direction direction ) const override
 		{
 			if( this->isSubclassed() )
 			{
@@ -141,11 +141,11 @@ class PlugSerialiser : public Serialisation::Serialiser
 
 	public :
 
-		virtual void moduleDependencies( const Gaffer::GraphComponent *graphComponent, std::set<std::string> &modules, const Serialisation &serialisation ) const;
-		virtual std::string constructor( const Gaffer::GraphComponent *graphComponent, const Serialisation &serialisation ) const;
-		virtual std::string postHierarchy( const Gaffer::GraphComponent *graphComponent, const std::string &identifier, const Serialisation &serialisation ) const;
-		virtual bool childNeedsSerialisation( const Gaffer::GraphComponent *child, const Serialisation &serialisation ) const;
-		virtual bool childNeedsConstruction( const Gaffer::GraphComponent *child, const Serialisation &serialisation ) const;
+		void moduleDependencies( const Gaffer::GraphComponent *graphComponent, std::set<std::string> &modules, const Serialisation &serialisation ) const override;
+		std::string constructor( const Gaffer::GraphComponent *graphComponent, const Serialisation &serialisation ) const override;
+		std::string postHierarchy( const Gaffer::GraphComponent *graphComponent, const std::string &identifier, const Serialisation &serialisation ) const override;
+		bool childNeedsSerialisation( const Gaffer::GraphComponent *child, const Serialisation &serialisation ) const override;
+		bool childNeedsConstruction( const Gaffer::GraphComponent *child, const Serialisation &serialisation ) const override;
 
 		static std::string directionRepr( Gaffer::Plug::Direction direction );
 		static std::string flagsRepr( unsigned flags );

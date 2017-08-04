@@ -53,7 +53,7 @@ class Plane : public ObjectSource
 		IE_CORE_DECLARERUNTIMETYPEDEXTENSION( GafferScene::Plane, PlaneTypeId, ObjectSource );
 
 		Plane( const std::string &name=defaultName<Plane>() );
-		virtual ~Plane();
+		~Plane() override;
 
 		Gaffer::V2fPlug *dimensionsPlug();
 		const Gaffer::V2fPlug *dimensionsPlug() const;
@@ -61,12 +61,12 @@ class Plane : public ObjectSource
 		Gaffer::V2iPlug *divisionsPlug();
 		const Gaffer::V2iPlug *divisionsPlug() const;
 
-		virtual void affects( const Gaffer::Plug *input, AffectedPlugsContainer &outputs ) const;
+		void affects( const Gaffer::Plug *input, AffectedPlugsContainer &outputs ) const override;
 
 	protected :
 
-		virtual void hashSource( const Gaffer::Context *context, IECore::MurmurHash &h ) const;
-		virtual IECore::ConstObjectPtr computeSource( const Gaffer::Context *context ) const;
+		void hashSource( const Gaffer::Context *context, IECore::MurmurHash &h ) const override;
+		IECore::ConstObjectPtr computeSource( const Gaffer::Context *context ) const override;
 
 	private :
 

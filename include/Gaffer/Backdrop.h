@@ -53,7 +53,7 @@ class Backdrop : public Node
 	public :
 
 		Backdrop( const std::string &name=defaultName<Backdrop>() );
-		virtual ~Backdrop();
+		~Backdrop() override;
 
 		IE_CORE_DECLARERUNTIMETYPEDEXTENSION( Gaffer::Backdrop, BackdropTypeId, Node );
 

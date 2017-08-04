@@ -49,7 +49,7 @@ class ScaleHandle : public Handle
 	public :
 
 		ScaleHandle( Style::Axes axes );
-		virtual ~ScaleHandle();
+		~ScaleHandle() override;
 
 		IE_CORE_DECLARERUNTIMETYPEDEXTENSION( GafferUI::ScaleHandle, ScaleHandleTypeId, Handle );
 
@@ -60,8 +60,8 @@ class ScaleHandle : public Handle
 
 	protected :
 
-		virtual void renderHandle( const Style *style, Style::State state ) const;
-		virtual void dragBegin( const DragDropEvent &event );
+		void renderHandle( const Style *style, Style::State state ) const override;
+		void dragBegin( const DragDropEvent &event ) override;
 
 	private :
 

@@ -54,11 +54,11 @@ class CompoundNodule : public Nodule
 	public :
 
 		CompoundNodule( Gaffer::PlugPtr plug );
-		virtual ~CompoundNodule();
+		~CompoundNodule() override;
 
 		IE_CORE_DECLARERUNTIMETYPEDEXTENSION( GafferUI::CompoundNodule, CompoundNoduleTypeId, Nodule );
 
-		virtual bool acceptsChild( const Gaffer::GraphComponent *potentialChild ) const;
+		bool acceptsChild( const Gaffer::GraphComponent *potentialChild ) const override;
 
 		/// Returns a Nodule for a child of the plug being represented.
 		Nodule *nodule( const Gaffer::Plug *plug );

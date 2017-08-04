@@ -86,7 +86,7 @@ class NodeWrapper : public GraphComponentWrapper<T>
 		{
 		}
 
-		virtual bool isInstanceOf( IECore::TypeId typeId ) const
+		bool isInstanceOf( IECore::TypeId typeId ) const override
 		{
 			// Optimise for common queries we know should fail.
 			// The standard wrapper implementation of isInstanceOf()
@@ -115,7 +115,7 @@ class NodeWrapper : public GraphComponentWrapper<T>
 			return GraphComponentWrapper<T>::isInstanceOf( typeId );
 		}
 
-		virtual bool acceptsInput( const Gaffer::Plug *plug, const Gaffer::Plug *inputPlug ) const
+		bool acceptsInput( const Gaffer::Plug *plug, const Gaffer::Plug *inputPlug ) const override
 		{
 			if( this->isSubclassed() )
 			{
@@ -136,15 +136,15 @@ class NodeSerialiser : public Serialisation::Serialiser
 
 	public :
 
-		virtual void moduleDependencies( const Gaffer::GraphComponent *graphComponent, std::set<std::string> &modules, const Serialisation &serialisation ) const;
+		void moduleDependencies( const Gaffer::GraphComponent *graphComponent, std::set<std::string> &modules, const Serialisation &serialisation ) const override;
 		/// Implemented to serialise per-instance metadata.
-		virtual std::string postHierarchy( const Gaffer::GraphComponent *graphComponent, const std::string &identifier, const Serialisation &serialisation ) const;
+		std::string postHierarchy( const Gaffer::GraphComponent *graphComponent, const std::string &identifier, const Serialisation &serialisation ) const override;
 		/// Implemented so that only plugs are serialised - child nodes are expected to
 		/// be a part of the implementation of the node rather than something the user
 		/// has created themselves.
-		virtual bool childNeedsSerialisation( const Gaffer::GraphComponent *child, const Serialisation &serialisation ) const;
+		bool childNeedsSerialisation( const Gaffer::GraphComponent *child, const Serialisation &serialisation ) const override;
 		/// Implemented so that dynamic plugs are constructed appropriately.
-		virtual bool childNeedsConstruction( const Gaffer::GraphComponent *child, const Serialisation &serialisation ) const;
+		bool childNeedsConstruction( const Gaffer::GraphComponent *child, const Serialisation &serialisation ) const override;
 
 };
 

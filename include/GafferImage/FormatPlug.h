@@ -71,11 +71,11 @@ class FormatPlug : public Gaffer::ValuePlug
 			unsigned flags = Default
 		);
 
-		virtual ~FormatPlug();
+		~FormatPlug() override;
 
 		/// Accepts no children following construction.
-		virtual bool acceptsChild( const GraphComponent *potentialChild ) const;
-		virtual Gaffer::PlugPtr createCounterpart( const std::string &name, Direction direction ) const;
+		bool acceptsChild( const GraphComponent *potentialChild ) const override;
+		Gaffer::PlugPtr createCounterpart( const std::string &name, Direction direction ) const override;
 
 		Gaffer::Box2iPlug *displayWindowPlug();
 		const Gaffer::Box2iPlug *displayWindowPlug() const;
@@ -95,7 +95,7 @@ class FormatPlug : public Gaffer::ValuePlug
 		Format getValue() const;
 
 		/// Reimplemented to account for the substitutions performed in getValue().
-		virtual IECore::MurmurHash hash() const;
+		IECore::MurmurHash hash() const override;
 		/// Ensures the method above doesn't mask
 		/// ValuePlug::hash( h )
 		using ValuePlug::hash;
@@ -129,7 +129,7 @@ class FormatPlug : public Gaffer::ValuePlug
 
 	private :
 
-		virtual void parentChanging( Gaffer::GraphComponent *newParent );
+		void parentChanging( Gaffer::GraphComponent *newParent ) override;
 		void plugDirtied( Gaffer::Plug *plug );
 
 		Format m_defaultValue;

@@ -65,7 +65,7 @@ class ApplicationRootWrapper : public IECorePython::RunTimeTypedWrapper<Applicat
 		{
 		}
 
-		virtual void savePreferences( const std::string &fileName ) const
+		void savePreferences( const std::string &fileName ) const override
 		{
 			IECorePython::ScopedGILLock gilLock;
 

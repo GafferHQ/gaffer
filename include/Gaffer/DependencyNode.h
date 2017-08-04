@@ -56,7 +56,7 @@ class DependencyNode : public Node
 	public :
 
 		DependencyNode( const std::string &name=defaultName<DependencyNode>() );
-		virtual ~DependencyNode();
+		~DependencyNode() override;
 
 		IE_CORE_DECLARERUNTIMETYPEDEXTENSION( Gaffer::DependencyNode, DependencyNodeTypeId, Node );
 

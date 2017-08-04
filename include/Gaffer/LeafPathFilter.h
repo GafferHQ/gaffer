@@ -53,13 +53,13 @@ class LeafPathFilter : public Gaffer::PathFilter
 		/// If leafOnly is true then directories will always be passed
 		/// through.
 		LeafPathFilter( IECore::CompoundDataPtr userData = nullptr );
-		virtual ~LeafPathFilter();
+		~LeafPathFilter() override;
 
 		IE_CORE_DECLARERUNTIMETYPEDEXTENSION( Gaffer::LeafPathFilter, LeafPathFilterTypeId, PathFilter );
 
 	protected :
 
-		virtual void doFilter( std::vector<PathPtr> &paths ) const;
+		void doFilter( std::vector<PathPtr> &paths ) const override;
 
 	private :
 

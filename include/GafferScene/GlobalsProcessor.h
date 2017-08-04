@@ -51,19 +51,19 @@ class GlobalsProcessor : public SceneProcessor
 	public :
 
 		GlobalsProcessor( const std::string &name=defaultName<GlobalsProcessor>() );
-		virtual ~GlobalsProcessor();
+		~GlobalsProcessor() override;
 
 		IE_CORE_DECLARERUNTIMETYPEDEXTENSION( GafferScene::GlobalsProcessor, GlobalsProcessorTypeId, SceneProcessor );
 
 		/// Implemented so that each child of inPlug() affects the corresponding child of outPlug()
-		virtual void affects( const Gaffer::Plug *input, AffectedPlugsContainer &outputs ) const;
+		void affects( const Gaffer::Plug *input, AffectedPlugsContainer &outputs ) const override;
 
 	protected :
 
 		/// Implemented to call hashProcessedGlobals().
-		virtual void hashGlobals( const Gaffer::Context *context, const ScenePlug *parent, IECore::MurmurHash &h ) const;
+		void hashGlobals( const Gaffer::Context *context, const ScenePlug *parent, IECore::MurmurHash &h ) const override;
 		/// Implemented to call computeProcessedGlobals().
-		virtual IECore::ConstCompoundObjectPtr computeGlobals( const Gaffer::Context *context, const ScenePlug *parent ) const;
+		IECore::ConstCompoundObjectPtr computeGlobals( const Gaffer::Context *context, const ScenePlug *parent ) const override;
 
 		/// Must be implemented by derived classes to compute the hash for the work done in processGlobals().
 		virtual void hashProcessedGlobals( const Gaffer::Context *context, IECore::MurmurHash &h ) const = 0;

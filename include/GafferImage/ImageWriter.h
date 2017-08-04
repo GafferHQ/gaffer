@@ -67,7 +67,7 @@ class ImageWriter : public GafferDispatch::TaskNode
 		};
 
 		ImageWriter( const std::string &name=defaultName<ImageWriter>() );
-		virtual ~ImageWriter();
+		~ImageWriter() override;
 
 		IE_CORE_DECLARERUNTIMETYPEDEXTENSION( GafferImage::ImageWriter, ImageWriterTypeId, TaskNode );
 
@@ -89,9 +89,9 @@ class ImageWriter : public GafferDispatch::TaskNode
 		Gaffer::ValuePlug *fileFormatSettingsPlug( const std::string &fileFormat );
 		const Gaffer::ValuePlug *fileFormatSettingsPlug( const std::string &fileFormat ) const;
 
-		virtual IECore::MurmurHash hash( const Gaffer::Context *context ) const;
+		IECore::MurmurHash hash( const Gaffer::Context *context ) const override;
 
-		virtual void execute() const;
+		void execute() const override;
 
 		const std::string currentFileFormat() const;
 

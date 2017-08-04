@@ -50,7 +50,7 @@ class Reference : public SubGraph
 	public :
 
 		Reference( const std::string &name=defaultName<Reference>() );
-		virtual ~Reference();
+		~Reference() override;
 
 		IE_CORE_DECLARERUNTIMETYPEDEXTENSION( Gaffer::Reference, ReferenceTypeId, SubGraph );
 

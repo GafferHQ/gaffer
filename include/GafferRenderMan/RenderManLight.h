@@ -52,14 +52,14 @@ class RenderManLight : public GafferScene::Light
 		IE_CORE_DECLARERUNTIMETYPEDEXTENSION( GafferRenderMan::RenderManLight, RenderManLightTypeId, GafferScene::Light );
 
 		RenderManLight( const std::string &name=defaultName<RenderManLight>() );
-		virtual ~RenderManLight();
+		~RenderManLight() override;
 
 		void loadShader( const std::string &shaderName );
 
 	protected :
 
-		virtual void hashLight( const Gaffer::Context *context, IECore::MurmurHash &h ) const;
-		virtual IECore::ObjectVectorPtr computeLight( const Gaffer::Context *context ) const;
+		void hashLight( const Gaffer::Context *context, IECore::MurmurHash &h ) const override;
+		IECore::ObjectVectorPtr computeLight( const Gaffer::Context *context ) const override;
 
 	private :
 

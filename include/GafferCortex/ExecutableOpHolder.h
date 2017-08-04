@@ -61,7 +61,7 @@ class ExecutableOpHolder : public ParameterisedHolderTaskNode
 
 		ExecutableOpHolder( const std::string &name=defaultName<ExecutableOpHolder>() );
 
-		virtual void setParameterised( IECore::RunTimeTypedPtr parameterised, bool keepExistingValues=false );
+		void setParameterised( IECore::RunTimeTypedPtr parameterised, bool keepExistingValues=false ) override;
 
 		/// Convenience function which calls setParameterised( className, classVersion, "IECORE_OP_PATHS", keepExistingValues )
 		void setOp( const std::string &className, int classVersion, bool keepExistingValues=false );
@@ -69,8 +69,8 @@ class ExecutableOpHolder : public ParameterisedHolderTaskNode
 		IECore::Op *getOp( std::string *className = 0, int *classVersion = 0 );
 		const IECore::Op *getOp( std::string *className = 0, int *classVersion = 0 ) const;
 
-		virtual IECore::MurmurHash hash( const Gaffer::Context *context ) const;
-		virtual void execute() const;
+		IECore::MurmurHash hash( const Gaffer::Context *context ) const override;
+		void execute() const override;
 
 };
 

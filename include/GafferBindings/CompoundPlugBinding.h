@@ -53,7 +53,7 @@ class CompoundPlugSerialiser : public ValuePlugSerialiser
 		// Always returns false - since some children may have input connections, storing the whole value for
 		// the compound may be inappropriate. Derived classes are free to reimplement this to return true in
 		// the event that they can determine that it is appropriate to store the value at the compound level.
-		virtual bool valueNeedsSerialisation( const Gaffer::ValuePlug *plug, const Serialisation &serialisation ) const;
+		bool valueNeedsSerialisation( const Gaffer::ValuePlug *plug, const Serialisation &serialisation ) const override;
 
 };
 

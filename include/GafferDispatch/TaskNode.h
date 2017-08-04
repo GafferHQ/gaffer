@@ -126,7 +126,7 @@ class TaskNode : public Gaffer::DependencyNode
 		IE_CORE_DECLARERUNTIMETYPEDEXTENSION( GafferDispatch::TaskNode, TaskNodeTypeId, Gaffer::DependencyNode );
 
 		TaskNode( const std::string &name=defaultName<TaskNode>() );
-		virtual ~TaskNode();
+		~TaskNode() override;
 
 		/// Plug type used to represent tasks within the
 		/// node graph. This provides the primary public
@@ -140,9 +140,9 @@ class TaskNode : public Gaffer::DependencyNode
 
 				TaskPlug( const std::string &name=defaultName<TaskPlug>(), Direction direction=In, unsigned flags=Default );
 
-				virtual bool acceptsChild( const Gaffer::GraphComponent *potentialChild ) const;
-				virtual bool acceptsInput( const Gaffer::Plug *input ) const;
-				virtual Gaffer::PlugPtr createCounterpart( const std::string &name, Direction direction ) const;
+				bool acceptsChild( const Gaffer::GraphComponent *potentialChild ) const override;
+				bool acceptsInput( const Gaffer::Plug *input ) const override;
+				Gaffer::PlugPtr createCounterpart( const std::string &name, Direction direction ) const override;
 
 				/// Returns a hash representing the side effects of
 				/// calling `execute()` in the current context.
@@ -193,7 +193,7 @@ class TaskNode : public Gaffer::DependencyNode
 		Gaffer::Plug *dispatcherPlug();
 		const Gaffer::Plug *dispatcherPlug() const;
 
-		virtual void affects( const Gaffer::Plug *input, AffectedPlugsContainer &outputs ) const;
+		void affects( const Gaffer::Plug *input, AffectedPlugsContainer &outputs ) const override;
 
 	protected :
 

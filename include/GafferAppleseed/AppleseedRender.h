@@ -50,7 +50,7 @@ class AppleseedRender : public GafferScene::Preview::Render
 	public :
 
 		AppleseedRender( const std::string &name=defaultName<AppleseedRender>() );
-		virtual ~AppleseedRender();
+		~AppleseedRender() override;
 
 		IE_CORE_DECLARERUNTIMETYPEDEXTENSION( GafferAppleseed::AppleseedRender, AppleseedRenderTypeId, GafferScene::Preview::Render );
 

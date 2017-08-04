@@ -71,12 +71,12 @@ class ScriptNode : public Node
 	public :
 
 		ScriptNode( const std::string &name=defaultName<Node>() );
-		virtual ~ScriptNode();
+		~ScriptNode() override;
 
 		IE_CORE_DECLARERUNTIMETYPEDEXTENSION( Gaffer::ScriptNode, ScriptNodeTypeId, Node );
 
 		/// Accepts parenting only to a ScriptContainer.
-		virtual bool acceptsParent( const GraphComponent *potentialParent ) const;
+		bool acceptsParent( const GraphComponent *potentialParent ) const override;
 
 		/// Convenience function which simply returns ancestor<ApplicationRoot>().
 		ApplicationRoot *applicationRoot();

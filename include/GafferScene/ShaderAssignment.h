@@ -50,20 +50,20 @@ class ShaderAssignment : public SceneElementProcessor
 	public :
 
 		ShaderAssignment( const std::string &name=defaultName<ShaderAssignment>() );
-		virtual ~ShaderAssignment();
+		~ShaderAssignment() override;
 
 		IE_CORE_DECLARERUNTIMETYPEDEXTENSION( GafferScene::ShaderAssignment, ShaderAssignmentTypeId, SceneElementProcessor );
 
 		GafferScene::ShaderPlug *shaderPlug();
 		const GafferScene::ShaderPlug *shaderPlug() const;
 
-		virtual void affects( const Gaffer::Plug *input, AffectedPlugsContainer &outputs ) const;
+		void affects( const Gaffer::Plug *input, AffectedPlugsContainer &outputs ) const override;
 
 	protected :
 
-		virtual bool processesAttributes() const;
-		virtual void hashProcessedAttributes( const ScenePath &path, const Gaffer::Context *context, IECore::MurmurHash &h ) const;
-		virtual IECore::ConstCompoundObjectPtr computeProcessedAttributes( const ScenePath &path, const Gaffer::Context *context, IECore::ConstCompoundObjectPtr inputAttributes ) const;
+		bool processesAttributes() const override;
+		void hashProcessedAttributes( const ScenePath &path, const Gaffer::Context *context, IECore::MurmurHash &h ) const override;
+		IECore::ConstCompoundObjectPtr computeProcessedAttributes( const ScenePath &path, const Gaffer::Context *context, IECore::ConstCompoundObjectPtr inputAttributes ) const override;
 
 	private :
 

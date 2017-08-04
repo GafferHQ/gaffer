@@ -73,7 +73,7 @@ class Tool : public Gaffer::Node
 
 	public :
 
-		virtual ~Tool();
+		~Tool() override;
 
 		IE_CORE_DECLARERUNTIMETYPEDEXTENSION( GafferUI::Tool, ToolTypeId, Gaffer::Node );
 

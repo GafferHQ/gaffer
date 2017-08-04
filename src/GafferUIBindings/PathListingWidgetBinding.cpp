@@ -111,7 +111,7 @@ class StandardColumn : public Column
 		{
 		}
 
-		virtual QVariant data( const Path *path, int role = Qt::DisplayRole ) const
+		QVariant data( const Path *path, int role = Qt::DisplayRole ) const override
 		{
 			switch( role )
 			{
@@ -122,7 +122,7 @@ class StandardColumn : public Column
 			}
 		}
 
-		virtual QVariant headerData( int role = Qt::DisplayRole ) const
+		QVariant headerData( int role = Qt::DisplayRole ) const override
 		{
 			if( role == Qt::DisplayRole )
 			{
@@ -207,7 +207,7 @@ class IconColumn : public Column
 		{
 		}
 
-		virtual QVariant data( const Path *path, int role = Qt::DisplayRole ) const
+		QVariant data( const Path *path, int role = Qt::DisplayRole ) const override
 		{
 			if( role == Qt::DecorationRole )
 			{
@@ -243,7 +243,7 @@ class IconColumn : public Column
 			return QVariant();
 		}
 
-		virtual QVariant headerData( int role = Qt::DisplayRole ) const
+		QVariant headerData( int role = Qt::DisplayRole ) const override
 		{
 			if( role == Qt::DisplayRole )
 			{
@@ -295,7 +295,7 @@ class FileIconColumn : public Column
 		{
 		}
 
-		virtual QVariant data( const Path *path, int role = Qt::DisplayRole ) const
+		QVariant data( const Path *path, int role = Qt::DisplayRole ) const override
 		{
 			if( role == Qt::DecorationRole )
 			{
@@ -321,7 +321,7 @@ class FileIconColumn : public Column
 			return QVariant();
 		}
 
-		virtual QVariant headerData( int role = Qt::DisplayRole ) const
+		QVariant headerData( int role = Qt::DisplayRole ) const override
 		{
 			if( role == Qt::DisplayRole )
 			{
@@ -364,7 +364,7 @@ class PathModel : public QAbstractItemModel
 		{
 		}
 
-		~PathModel()
+		~PathModel() override
 		{
 			delete m_rootItem;
 		}
@@ -471,7 +471,7 @@ class PathModel : public QAbstractItemModel
 		// QAbstractItemModel implementation - this is what Qt cares about
 		///////////////////////////////////////////////////////////////////
 
-		virtual QVariant data( const QModelIndex &index, int role ) const
+		QVariant data( const QModelIndex &index, int role ) const override
 		{
 			if( !index.isValid() )
 			{
@@ -482,7 +482,7 @@ class PathModel : public QAbstractItemModel
 			return item->data( index.column(), role, m_columns );
 		}
 
-		virtual QVariant headerData( int section, Qt::Orientation orientation, int role = Qt::DisplayRole ) const
+		QVariant headerData( int section, Qt::Orientation orientation, int role = Qt::DisplayRole ) const override
 		{
 			if( orientation != Qt::Horizontal )
 			{
@@ -491,7 +491,7 @@ class PathModel : public QAbstractItemModel
 			return m_columns[section]->headerData( role );
 		}
 
-		virtual QModelIndex index( int row, int column, const QModelIndex &parentIndex = QModelIndex() ) const
+		QModelIndex index( int row, int column, const QModelIndex &parentIndex = QModelIndex() ) const override
 		{
 			Item *item = parentIndex.isValid() ? static_cast<Item *>( parentIndex.internalPointer() ) : m_rootItem;
 			if( row >=0 and row < (int)item->childItems( this ).size() and column >=0 and column < (int)m_columns.size() )
@@ -504,7 +504,7 @@ class PathModel : public QAbstractItemModel
 			}
 		}
 
-		virtual QModelIndex parent( const QModelIndex &index ) const
+		QModelIndex parent( const QModelIndex &index ) const override
 		{
 			if( !index.isValid() )
 			{
@@ -520,7 +520,7 @@ class PathModel : public QAbstractItemModel
 			return createIndex( item->parent()->row(), 0, item->parent() );
 		}
 
-		virtual int rowCount( const QModelIndex &parentIndex = QModelIndex() ) const
+		int rowCount( const QModelIndex &parentIndex = QModelIndex() ) const override
 		{
 			Item *item = parentIndex.isValid() ? static_cast<Item *>( parentIndex.internalPointer() ) : m_rootItem;
 			if( item == m_rootItem || !m_flat )
@@ -530,7 +530,7 @@ class PathModel : public QAbstractItemModel
 			return 0;
 		}
 
-		virtual int columnCount( const QModelIndex &parent = QModelIndex() ) const
+		int columnCount( const QModelIndex &parent = QModelIndex() ) const override
 		{
 			return m_columns.size();
 		}
@@ -540,7 +540,7 @@ class PathModel : public QAbstractItemModel
 		// this is how you should sort all other stuff you might generate later".
 		// So that's what we do. We also use a column of < 0 to say "turn off
 		// sorting".
-		virtual void sort( int column, Qt::SortOrder order = Qt::AscendingOrder )
+		void sort( int column, Qt::SortOrder order = Qt::AscendingOrder ) override
 		{
 			m_sortColumn = column;
 			m_sortOrder = order;

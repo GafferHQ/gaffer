@@ -53,7 +53,7 @@ class Box : public SubGraph
 	public :
 
 		Box( const std::string &name=defaultName<Box>() );
-		virtual ~Box();
+		~Box() override;
 
 		IE_CORE_DECLARERUNTIMETYPEDEXTENSION( Gaffer::Box, BoxTypeId, SubGraph );
 

@@ -57,7 +57,7 @@ class DeleteChannels : public ImageProcessor
 		};
 
 		DeleteChannels( const std::string &name=defaultName<DeleteChannels>() );
-		virtual ~DeleteChannels();
+		~DeleteChannels() override;
 
 		IE_CORE_DECLARERUNTIMETYPEDEXTENSION( GafferImage::DeleteChannels, DeleteChannelsTypeId, ImageProcessor );
 
@@ -71,13 +71,13 @@ class DeleteChannels : public ImageProcessor
 		const Gaffer::StringPlug *channelsPlug() const;
 		//@}
 
-		virtual void affects( const Gaffer::Plug *input, AffectedPlugsContainer &outputs ) const;
+		void affects( const Gaffer::Plug *input, AffectedPlugsContainer &outputs ) const override;
 
 	protected :
 
 		// Reimplemented to perform the deletion.
-		virtual void hashChannelNames( const GafferImage::ImagePlug *output, const Gaffer::Context *context, IECore::MurmurHash &h ) const;
-		virtual IECore::ConstStringVectorDataPtr computeChannelNames( const Gaffer::Context *context, const ImagePlug *parent ) const;
+		void hashChannelNames( const GafferImage::ImagePlug *output, const Gaffer::Context *context, IECore::MurmurHash &h ) const override;
+		IECore::ConstStringVectorDataPtr computeChannelNames( const Gaffer::Context *context, const ImagePlug *parent ) const override;
 
 	private :
 

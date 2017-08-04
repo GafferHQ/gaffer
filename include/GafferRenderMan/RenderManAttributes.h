@@ -50,7 +50,7 @@ class RenderManAttributes : public GafferScene::Attributes
 	public :
 
 		RenderManAttributes( const std::string &name=defaultName<RenderManAttributes>() );
-		virtual ~RenderManAttributes();
+		~RenderManAttributes() override;
 
 		IE_CORE_DECLARERUNTIMETYPEDEXTENSION( GafferRenderMan::RenderManAttributes, RenderManAttributesTypeId, GafferScene::Attributes );
 

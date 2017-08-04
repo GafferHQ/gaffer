@@ -66,32 +66,32 @@ class SmoothGaussian2D : public OIIO::Filter2D
 		{
 		}
 
-		~SmoothGaussian2D()
+		~SmoothGaussian2D() override
 		{
 		}
 
-		virtual float operator()( float x, float y ) const
+		float operator()( float x, float y ) const override
 		{
 			return gauss1d( x * m_radiusInverse.x ) *
 			       gauss1d( y * m_radiusInverse.y );
 		}
 
-		virtual bool separable() const
+		bool separable() const override
 		{
 			return true;
 		}
 
-		virtual float xfilt( float x ) const
+		float xfilt( float x ) const override
 		{
 			return gauss1d( x * m_radiusInverse.x );
 		}
 
-		virtual float yfilt( float y ) const
+		float yfilt( float y ) const override
 		{
 			return gauss1d( y * m_radiusInverse.y );
 		}
 
-		OIIO::string_view name() const
+		OIIO::string_view name() const override
 		{
 			return "smoothGaussian";
 		}
@@ -122,32 +122,32 @@ class FilterCubicSimple2D : public OIIO::Filter2D
 		{
 		}
 
-		~FilterCubicSimple2D( void )
+		~FilterCubicSimple2D( void ) override
 		{
 		}
 
-		float operator()( float x, float y ) const
+		float operator()( float x, float y ) const override
 		{
 			return cubicSimple( x * m_wrad_inv )
 				 * cubicSimple( y * m_hrad_inv );
 		}
 
-		bool separable() const
+		bool separable() const override
 		{
 			return true;
 		}
 
-		float xfilt( float x ) const
+		float xfilt( float x ) const override
 		{
 			return cubicSimple( x * m_wrad_inv );
 		}
 
-		float yfilt( float y ) const
+		float yfilt( float y ) const override
 		{
 			return cubicSimple( y * m_hrad_inv );
 		}
 
-		virtual OIIO::string_view name() const
+		OIIO::string_view name() const override
 		{
 			return "cubic";
 		}

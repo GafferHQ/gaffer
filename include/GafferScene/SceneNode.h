@@ -54,7 +54,7 @@ class SceneNode : public Gaffer::ComputeNode
 	public :
 
 		SceneNode( const std::string &name=defaultName<SceneNode>() );
-		virtual ~SceneNode();
+		~SceneNode() override;
 
 		IE_CORE_DECLARERUNTIMETYPEDEXTENSION( GafferScene::SceneNode, SceneNodeTypeId, Gaffer::ComputeNode );
 
@@ -64,18 +64,18 @@ class SceneNode : public Gaffer::ComputeNode
 		const ScenePlug *outPlug() const;
 
 		/// The enabled plug provides a mechanism for turning the effect of the node on and off.
-		virtual Gaffer::BoolPlug *enabledPlug();
-		virtual const Gaffer::BoolPlug *enabledPlug() const;
+		Gaffer::BoolPlug *enabledPlug() override;
+		const Gaffer::BoolPlug *enabledPlug() const override;
 
 		/// Implemented so that enabledPlug() affects outPlug().
-		virtual void affects( const Gaffer::Plug *input, AffectedPlugsContainer &outputs ) const;
+		void affects( const Gaffer::Plug *input, AffectedPlugsContainer &outputs ) const override;
 
 	protected :
 
 		typedef ScenePlug::ScenePath ScenePath;
 
 		/// Implemented to call the hash*() methods below whenever output is part of a ScenePlug and the node is enabled.
-		virtual void hash( const Gaffer::ValuePlug *output, const Gaffer::Context *context, IECore::MurmurHash &h ) const;
+		void hash( const Gaffer::ValuePlug *output, const Gaffer::Context *context, IECore::MurmurHash &h ) const override;
 
 		/// Hash methods for the individual children of outPlug(). A derived class must either :
 		///
@@ -102,7 +102,7 @@ class SceneNode : public Gaffer::ComputeNode
 		virtual void hashSet( const IECore::InternedString &setName, const Gaffer::Context *context, const ScenePlug *parent, IECore::MurmurHash &h ) const;
 
 		/// Implemented to call the compute*() methods below whenever output is part of a ScenePlug and the node is enabled.
-		virtual void compute( Gaffer::ValuePlug *output, const Gaffer::Context *context ) const;
+		void compute( Gaffer::ValuePlug *output, const Gaffer::Context *context ) const override;
 
 		/// Compute methods for the individual children of outPlug() - these must be implemented by derived classes, or
 		/// an input connection must be made to the plug, so that the method is not called.

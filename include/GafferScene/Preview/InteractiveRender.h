@@ -63,7 +63,7 @@ class InteractiveRender : public Gaffer::Node
 	public :
 
 		InteractiveRender( const std::string &name=defaultName<InteractiveRender>() );
-		virtual ~InteractiveRender();
+		~InteractiveRender() override;
 
 		IE_CORE_DECLARERUNTIMETYPEDEXTENSION( GafferScene::Preview::InteractiveRender, GafferScene::PreviewInteractiveRenderTypeId, Gaffer::Node );
 

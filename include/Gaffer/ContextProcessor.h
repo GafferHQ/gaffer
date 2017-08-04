@@ -57,23 +57,23 @@ class ContextProcessor : public BaseType
 		IE_CORE_DECLARERUNTIMETYPEDDESCRIPTION( ContextProcessor<BaseType> );
 
 		ContextProcessor( const std::string &name=GraphComponent::defaultName<ContextProcessor>() );
-		virtual ~ContextProcessor();
+		~ContextProcessor() override;
 
-		virtual BoolPlug *enabledPlug();
-		virtual const BoolPlug *enabledPlug() const;
+		BoolPlug *enabledPlug() override;
+		const BoolPlug *enabledPlug() const override;
 
-		virtual Plug *correspondingInput( const Plug *output );
-		virtual const Plug *correspondingInput( const Plug *output ) const;
+		Plug *correspondingInput( const Plug *output ) override;
+		const Plug *correspondingInput( const Plug *output ) const override;
 
-		virtual void affects( const Plug *input, DependencyNode::AffectedPlugsContainer &outputs ) const;
+		void affects( const Plug *input, DependencyNode::AffectedPlugsContainer &outputs ) const override;
 
 	protected :
 
 		/// Implemented to return the hash of the matching input using a context modified by
 		/// processContext() - derived class should therefore not need to reimplement hash(),
 		/// and should only implement processContext().
-		virtual void hash( const ValuePlug *output, const Context *context, IECore::MurmurHash &h ) const;
-		virtual void compute( ValuePlug *output, const Context *context ) const;
+		void hash( const ValuePlug *output, const Context *context, IECore::MurmurHash &h ) const override;
+		void compute( ValuePlug *output, const Context *context ) const override;
 
 		/// Must be implemented to return true if the input is used in `processContext()`.
 		virtual bool affectsContext( const Plug *input ) const = 0;

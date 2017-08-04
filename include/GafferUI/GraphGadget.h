@@ -69,7 +69,7 @@ class GraphGadget : public ContainerGadget
 		/// they are both a child of root and a member of filter.
 		GraphGadget( Gaffer::NodePtr root, Gaffer::SetPtr filter = nullptr );
 
-		virtual ~GraphGadget();
+		~GraphGadget() override;
 
 		IE_CORE_DECLARERUNTIMETYPEDEXTENSION( GafferUI::GraphGadget, GraphGadgetTypeId, ContainerGadget );
 
@@ -173,7 +173,7 @@ class GraphGadget : public ContainerGadget
 
 	protected :
 
-		void doRender( const Style *style ) const;
+		void doRender( const Style *style ) const override;
 
 	private :
 

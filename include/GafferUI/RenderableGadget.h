@@ -64,11 +64,11 @@ class RenderableGadget : public Gadget
 	public :
 
 		RenderableGadget( IECore::VisibleRenderablePtr renderable = 0 );
-		virtual ~RenderableGadget();
+		~RenderableGadget() override;
 
 		IE_CORE_DECLARERUNTIMETYPEDEXTENSION( GafferUI::RenderableGadget, RenderableGadgetTypeId, Gadget );
 
-		virtual Imath::Box3f bound() const;
+		Imath::Box3f bound() const override;
 
 		void setRenderable( IECore::ConstVisibleRenderablePtr renderable );
 		IECore::ConstVisibleRenderablePtr getRenderable() const;
@@ -116,11 +116,11 @@ class RenderableGadget : public Gadget
 
 		/// Implemented to return the name of the object under the mouse as
 		/// a tooltip.
-		virtual std::string getToolTip( const IECore::LineSegment3f &line ) const;
+		std::string getToolTip( const IECore::LineSegment3f &line ) const override;
 
 	protected :
 
-		virtual void doRender( const Style *style ) const;
+		void doRender( const Style *style ) const override;
 
 	private :
 

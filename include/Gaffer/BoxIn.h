@@ -48,7 +48,7 @@ class BoxIn : public BoxIO
 	public :
 
 		BoxIn( const std::string &name=defaultName<BoxIn>() );
-		virtual ~BoxIn();
+		~BoxIn() override;
 
 		IE_CORE_DECLARERUNTIMETYPEDEXTENSION( Gaffer::BoxIn, BoxInTypeId, BoxIO );
 

@@ -321,17 +321,17 @@ class RendererServices : public OSL::RendererServices
 		{
 		}
 
-		virtual bool get_matrix( OSL::ShaderGlobals *sg, OSL::Matrix44 &result, TransformationPtr xform, float time )
+		bool get_matrix( OSL::ShaderGlobals *sg, OSL::Matrix44 &result, TransformationPtr xform, float time ) override
 		{
 			return false;
 		}
 
-		virtual bool get_matrix( OSL::ShaderGlobals *sg, OSL::Matrix44 &result, TransformationPtr xform )
+		bool get_matrix( OSL::ShaderGlobals *sg, OSL::Matrix44 &result, TransformationPtr xform ) override
 		{
 			return false;
 		}
 
-		virtual bool get_matrix( OSL::ShaderGlobals *sg, OSL::Matrix44 &result, ustring from, float time )
+		bool get_matrix( OSL::ShaderGlobals *sg, OSL::Matrix44 &result, ustring from, float time ) override
 		{
 			const RenderState *renderState = sg ? static_cast<RenderState *>( sg->renderstate ) : nullptr;
 			if( renderState )
@@ -342,7 +342,7 @@ class RendererServices : public OSL::RendererServices
 			return false;
 		}
 
-		virtual bool get_inverse_matrix( OSL::ShaderGlobals *sg, OSL::Matrix44 &result, ustring to, float time )
+		bool get_inverse_matrix( OSL::ShaderGlobals *sg, OSL::Matrix44 &result, ustring to, float time ) override
 		{
 			const RenderState *renderState = sg ? static_cast<RenderState *>( sg->renderstate ) : nullptr;
 			if( renderState )
@@ -353,12 +353,12 @@ class RendererServices : public OSL::RendererServices
 			return false;
 		}
 
-		virtual bool get_matrix( OSL::ShaderGlobals *sg, OSL::Matrix44 &result, ustring from )
+		bool get_matrix( OSL::ShaderGlobals *sg, OSL::Matrix44 &result, ustring from ) override
 		{
 			return false;
 		}
 
-		virtual bool get_attribute( OSL::ShaderGlobals *sg, bool derivatives, ustring object, TypeDesc type, ustring name, void *value )
+		bool get_attribute( OSL::ShaderGlobals *sg, bool derivatives, ustring object, TypeDesc type, ustring name, void *value ) override
 		{
 			const RenderState *renderState = sg ? static_cast<RenderState *>( sg->renderstate ) : nullptr;
 			if( !renderState )
@@ -370,12 +370,12 @@ class RendererServices : public OSL::RendererServices
 			return get_userdata( derivatives, name, type, sg, value );
 		}
 
-		virtual bool get_array_attribute( OSL::ShaderGlobals *sg, bool derivatives, ustring object, TypeDesc type, ustring name, int index, void *value )
+		bool get_array_attribute( OSL::ShaderGlobals *sg, bool derivatives, ustring object, TypeDesc type, ustring name, int index, void *value ) override
 		{
 			return false;
 		}
 
-		virtual bool get_userdata( bool derivatives, ustring name, TypeDesc type, OSL::ShaderGlobals *sg, void *value )
+		bool get_userdata( bool derivatives, ustring name, TypeDesc type, OSL::ShaderGlobals *sg, void *value ) override
 		{
 			const RenderState *renderState = sg ? static_cast<RenderState *>( sg->renderstate ) : nullptr;
 			if( !renderState )

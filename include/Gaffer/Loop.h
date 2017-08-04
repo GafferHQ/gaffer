@@ -59,7 +59,7 @@ class Loop : public BaseType
 		IECORE_RUNTIMETYPED_DECLARETEMPLATE( Loop<BaseType>, BaseType );
 
 		Loop( const std::string &name=GraphComponent::defaultName<Loop>() );
-		virtual ~Loop();
+		~Loop() override;
 
 		ValuePlug *nextPlug();
 		const ValuePlug *nextPlug() const;
@@ -73,18 +73,18 @@ class Loop : public BaseType
 		StringPlug *indexVariablePlug();
 		const StringPlug *indexVariablePlug() const;
 
-		virtual Gaffer::BoolPlug *enabledPlug();
-		virtual const Gaffer::BoolPlug *enabledPlug() const;
+		Gaffer::BoolPlug *enabledPlug() override;
+		const Gaffer::BoolPlug *enabledPlug() const override;
 
-		virtual Gaffer::Plug *correspondingInput( const Gaffer::Plug *output );
-		virtual const Gaffer::Plug *correspondingInput( const Gaffer::Plug *output ) const;
+		Gaffer::Plug *correspondingInput( const Gaffer::Plug *output ) override;
+		const Gaffer::Plug *correspondingInput( const Gaffer::Plug *output ) const override;
 
-		void affects( const Plug *input, DependencyNode::AffectedPlugsContainer &outputs ) const;
+		void affects( const Plug *input, DependencyNode::AffectedPlugsContainer &outputs ) const override;
 
 	protected :
 
-		virtual void hash( const ValuePlug *output, const Context *context, IECore::MurmurHash &h ) const;
-		virtual void compute( ValuePlug *output, const Context *context ) const;
+		void hash( const ValuePlug *output, const Context *context, IECore::MurmurHash &h ) const override;
+		void compute( ValuePlug *output, const Context *context ) const override;
 
 	private :
 

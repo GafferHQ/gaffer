@@ -58,9 +58,9 @@ class StandardLightVisualiser : public LightVisualiser
 		IE_CORE_DECLAREMEMBERPTR( StandardLightVisualiser )
 
 		StandardLightVisualiser();
-		virtual ~StandardLightVisualiser();
+		~StandardLightVisualiser() override;
 
-		virtual IECoreGL::ConstRenderablePtr visualise( const IECore::InternedString &attributeName, const IECore::ObjectVector *shaderVector, IECoreGL::ConstStatePtr &state ) const;
+		IECoreGL::ConstRenderablePtr visualise( const IECore::InternedString &attributeName, const IECore::ObjectVector *shaderVector, IECoreGL::ConstStatePtr &state ) const override;
 
 	protected :
 

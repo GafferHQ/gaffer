@@ -82,14 +82,14 @@ class ImagePlug : public Gaffer::ValuePlug
 	public :
 
 		ImagePlug( const std::string &name=defaultName<ImagePlug>(), Direction direction=In, unsigned flags=Default );
-		virtual ~ImagePlug();
+		~ImagePlug() override;
 
 		IE_CORE_DECLARERUNTIMETYPEDEXTENSION( GafferImage::ImagePlug, ImagePlugTypeId, ValuePlug );
 
-		virtual bool acceptsChild( const Gaffer::GraphComponent *potentialChild ) const;
-		virtual Gaffer::PlugPtr createCounterpart( const std::string &name, Direction direction ) const;
+		bool acceptsChild( const Gaffer::GraphComponent *potentialChild ) const override;
+		Gaffer::PlugPtr createCounterpart( const std::string &name, Direction direction ) const override;
 		/// Only accepts ImagePlug inputs.
-		virtual bool acceptsInput( const Gaffer::Plug *input ) const;
+		bool acceptsInput( const Gaffer::Plug *input ) const override;
 
 		/// @name Child plugs
 		/// Different aspects of the image are passed through different

@@ -72,7 +72,7 @@ struct ReferenceLoadedSlotCaller
 class ReferenceSerialiser : public NodeSerialiser
 {
 
-	virtual std::string postConstructor( const Gaffer::GraphComponent *graphComponent, const std::string &identifier, const Serialisation &serialisation ) const
+	std::string postConstructor( const Gaffer::GraphComponent *graphComponent, const std::string &identifier, const Serialisation &serialisation ) const override
 	{
 		const Reference *r = static_cast<const Reference *>( graphComponent );
 

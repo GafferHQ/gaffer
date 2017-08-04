@@ -51,18 +51,18 @@ class TextGadget : public Gadget
 	public :
 
 		TextGadget( const std::string &text );
-		virtual ~TextGadget();
+		~TextGadget() override;
 
 		IE_CORE_DECLARERUNTIMETYPEDEXTENSION( GafferUI::TextGadget, TextGadgetTypeId, Gadget );
 
 		const std::string &getText() const;
 		void setText( const std::string &text );
 
-		virtual Imath::Box3f bound() const;
+		Imath::Box3f bound() const override;
 
 	protected :
 
-		virtual void doRender( const Style *style ) const;
+		void doRender( const Style *style ) const override;
 
 	private :
 

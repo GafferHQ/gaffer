@@ -125,7 +125,7 @@ class Plug : public GraphComponent
 		};
 
 		Plug( const std::string &name=defaultName<Plug>(), Direction direction=In, unsigned flags=Default );
-		virtual ~Plug();
+		~Plug() override;
 
 		IE_CORE_DECLARERUNTIMETYPEDEXTENSION( Gaffer::Plug, PlugTypeId, GraphComponent );
 
@@ -133,9 +133,9 @@ class Plug : public GraphComponent
 		//////////////////////////////////////////////////////////////////////
 		//@{
 		/// Accepts only Plugs with the same direction.
-		virtual bool acceptsChild( const GraphComponent *potentialChild ) const;
+		bool acceptsChild( const GraphComponent *potentialChild ) const override;
 		/// Accepts only Nodes or Plugs as a parent.
-		virtual bool acceptsParent( const GraphComponent *potentialParent ) const;
+		bool acceptsParent( const GraphComponent *potentialParent ) const override;
 		/// Just returns ancestor<Node>() as a syntactic convenience.
 		Node *node();
 		/// Just returns ancestor<Node>() as a syntactic convenience.
@@ -208,7 +208,7 @@ class Plug : public GraphComponent
 
 	protected :
 
-		virtual void parentChanging( Gaffer::GraphComponent *newParent );
+		void parentChanging( Gaffer::GraphComponent *newParent ) override;
 
 		/// Initiates the propagation of dirtiness from the specified
 		/// plug to its outputs and affected plugs (as defined by

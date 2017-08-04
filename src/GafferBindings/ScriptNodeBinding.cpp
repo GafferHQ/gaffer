@@ -276,11 +276,11 @@ class ScriptNodeWrapper : public NodeWrapper<ScriptNode>
 		{
 		}
 
-		virtual ~ScriptNodeWrapper()
+		~ScriptNodeWrapper() override
 		{
 		}
 
-		virtual bool isInstanceOf( IECore::TypeId typeId ) const
+		bool isInstanceOf( IECore::TypeId typeId ) const override
 		{
 			if( typeId == (IECore::TypeId)Gaffer::ScriptNodeTypeId )
 			{

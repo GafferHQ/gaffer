@@ -79,11 +79,11 @@ class StandardNodeGadget : public NodeGadget
 		};
 
 		StandardNodeGadget( Gaffer::NodePtr node );
-		virtual ~StandardNodeGadget();
+		~StandardNodeGadget() override;
 
-		virtual Nodule *nodule( const Gaffer::Plug *plug );
-		virtual const Nodule *nodule( const Gaffer::Plug *plug ) const;
-		virtual Imath::V3f noduleTangent( const Nodule *nodule ) const;
+		Nodule *nodule( const Gaffer::Plug *plug ) override;
+		const Nodule *nodule( const Gaffer::Plug *plug ) const override;
+		Imath::V3f noduleTangent( const Nodule *nodule ) const override;
 
 		/// The central content of the Gadget may be customised. By default
 		/// the contents is a simple NameGadget for the node, but any Gadget or
@@ -100,11 +100,11 @@ class StandardNodeGadget : public NodeGadget
 		void setLabelsVisibleOnHover( bool labelsVisible );
 		bool getLabelsVisibleOnHover() const;
 
-		virtual Imath::Box3f bound() const;
+		Imath::Box3f bound() const override;
 
 	protected :
 
-		virtual void doRender( const Style *style ) const;
+		void doRender( const Style *style ) const override;
 
 		const Imath::Color3f *userColor() const;
 

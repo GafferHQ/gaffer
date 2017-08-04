@@ -50,7 +50,7 @@ class ShaderView : public GafferImageUI::ImageView
 	public :
 
 		ShaderView( const std::string &name = defaultName<ShaderView>() );
-		virtual ~ShaderView();
+		~ShaderView() override;
 
 		IE_CORE_DECLARERUNTIMETYPEDEXTENSION( GafferSceneUI::ShaderView, ShaderViewTypeId, GafferImageUI::ImageView );
 
@@ -67,7 +67,7 @@ class ShaderView : public GafferImageUI::ImageView
 		typedef boost::signal<void ( ShaderView * )> SceneChangedSignal;
 		SceneChangedSignal &sceneChangedSignal();
 
-		virtual void setContext( Gaffer::ContextPtr context );
+		void setContext( Gaffer::ContextPtr context ) override;
 
 		typedef boost::function<Gaffer::NodePtr ()> RendererCreator;
 		static void registerRenderer( const std::string &shaderPrefix, RendererCreator rendererCreator );

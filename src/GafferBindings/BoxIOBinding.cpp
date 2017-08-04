@@ -55,7 +55,7 @@ namespace
 class BoxIOSerialiser : public NodeSerialiser
 {
 
-	virtual std::string postScript( const Gaffer::GraphComponent *graphComponent, const std::string &identifier, const Serialisation &serialisation ) const
+	std::string postScript( const Gaffer::GraphComponent *graphComponent, const std::string &identifier, const Serialisation &serialisation ) const override
 	{
 		std::string result = NodeSerialiser::postScript( graphComponent, identifier, serialisation );
 

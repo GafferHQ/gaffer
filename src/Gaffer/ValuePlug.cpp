@@ -419,22 +419,22 @@ class ValuePlug::SetValueAction : public Gaffer::Action
 
 	protected :
 
-		virtual GraphComponent *subject() const
+		GraphComponent *subject() const override
 		{
 			return m_plug.get();
 		}
 
-		virtual void doAction()
+		void doAction() override
 		{
 			m_plug->setValueInternal( m_doValue, true );
 		}
 
-		virtual void undoAction()
+		void undoAction() override
 		{
 			m_plug->setValueInternal( m_undoValue, true );
 		}
 
-		virtual bool canMerge( const Action *other ) const
+		bool canMerge( const Action *other ) const override
 		{
 			if( !Action::canMerge( other ) )
 			{
@@ -444,7 +444,7 @@ class ValuePlug::SetValueAction : public Gaffer::Action
 			return setValueAction && setValueAction->m_plug == m_plug;
 		}
 
-		virtual void merge( const Action *other )
+		void merge( const Action *other ) override
 		{
 			const SetValueAction *setValueAction = static_cast<const SetValueAction *>( other );
 			m_doValue = setValueAction->m_doValue;

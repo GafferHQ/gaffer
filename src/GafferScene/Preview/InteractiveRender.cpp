@@ -529,7 +529,7 @@ class InteractiveRender::SceneGraphUpdateTask : public tbb::task
 		{
 		}
 
-		virtual task *execute()
+		task *execute() override
 		{
 
 			// Figure out if this location belongs in the type

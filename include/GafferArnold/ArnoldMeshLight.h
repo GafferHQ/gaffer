@@ -48,7 +48,7 @@ class ArnoldMeshLight : public GafferScene::FilteredSceneProcessor
 	public :
 
 		ArnoldMeshLight( const std::string &name=defaultName<ArnoldMeshLight>() );
-		virtual ~ArnoldMeshLight();
+		~ArnoldMeshLight() override;
 
 		IE_CORE_DECLARERUNTIMETYPEDEXTENSION( GafferArnold::ArnoldMeshLight, ArnoldMeshLightTypeId, FilteredSceneProcessor );
 

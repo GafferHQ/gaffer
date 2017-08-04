@@ -83,7 +83,7 @@ class GraphComponentWrapper : public IECorePython::RunTimeTypedWrapper<WrappedTy
 		{
 		}
 
-		virtual bool acceptsChild( const Gaffer::GraphComponent *potentialChild ) const
+		bool acceptsChild( const Gaffer::GraphComponent *potentialChild ) const override
 		{
 			if( this->isSubclassed() )
 			{
@@ -97,7 +97,7 @@ class GraphComponentWrapper : public IECorePython::RunTimeTypedWrapper<WrappedTy
 			return WrappedType::acceptsChild( potentialChild );
 		}
 
-		virtual bool acceptsParent( const Gaffer::GraphComponent *potentialParent ) const
+		bool acceptsParent( const Gaffer::GraphComponent *potentialParent ) const override
 		{
 			if( this->isSubclassed() )
 			{
@@ -111,7 +111,7 @@ class GraphComponentWrapper : public IECorePython::RunTimeTypedWrapper<WrappedTy
 			return WrappedType::acceptsParent( potentialParent );
 		}
 
-		virtual void parentChanging( Gaffer::GraphComponent *newParent )
+		void parentChanging( Gaffer::GraphComponent *newParent ) override
 		{
 			if( this->isSubclassed() )
 			{

@@ -53,7 +53,7 @@ class SplinePlugGadget : public Gadget
 	public :
 
 		SplinePlugGadget( const std::string &name=defaultName<SplinePlugGadget>() );
-		virtual ~SplinePlugGadget();
+		~SplinePlugGadget() override;
 
 		IE_CORE_DECLARERUNTIMETYPEDEXTENSION( GafferUI::SplinePlugGadget, SplinePlugGadgetTypeId, Gadget );
 
@@ -65,11 +65,11 @@ class SplinePlugGadget : public Gadget
 		Gaffer::StandardSetPtr selection();
 		Gaffer::ConstStandardSetPtr selection() const;
 
-		virtual Imath::Box3f bound() const;
+		Imath::Box3f bound() const override;
 
 	protected :
 
-		virtual void doRender( const Style *style ) const;
+		void doRender( const Style *style ) const override;
 
 	private :
 

@@ -48,7 +48,7 @@ class Dilate : public RankFilter
 	public :
 
 		Dilate( const std::string &name=defaultName<Dilate>() );
-		virtual ~Dilate();
+		~Dilate() override;
 
 		IE_CORE_DECLARERUNTIMETYPEDEXTENSION( GafferImage::Dilate, DilateTypeId, RankFilter );
 

@@ -95,13 +95,13 @@ class StringPlug : public ValuePlug
 			unsigned flags = Default,
 			unsigned substitutions = Context::AllSubstitutions
 		);
-		virtual ~StringPlug();
+		~StringPlug() override;
 
 		unsigned substitutions() const;
 
 		/// Accepts only instances of StringPlug or derived classes.
-		virtual bool acceptsInput( const Plug *input ) const;
-		virtual PlugPtr createCounterpart( const std::string &name, Direction direction ) const;
+		bool acceptsInput( const Plug *input ) const override;
+		PlugPtr createCounterpart( const std::string &name, Direction direction ) const override;
 
 		const std::string &defaultValue() const;
 
@@ -112,9 +112,9 @@ class StringPlug : public ValuePlug
 		/// with care!
 		std::string getValue( const IECore::MurmurHash *precomputedHash = nullptr ) const;
 
-		virtual void setFrom( const ValuePlug *other );
+		void setFrom( const ValuePlug *other ) override;
 
-		virtual IECore::MurmurHash hash() const;
+		IECore::MurmurHash hash() const override;
 		/// Ensures the method above doesn't mask
 		/// ValuePlug::hash( h )
 		using ValuePlug::hash;

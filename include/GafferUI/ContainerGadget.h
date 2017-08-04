@@ -56,7 +56,7 @@ class ContainerGadget : public Gadget
 	public :
 
 		ContainerGadget( const std::string &name=defaultName<ContainerGadget>() );
-		virtual ~ContainerGadget();
+		~ContainerGadget() override;
 
 		IE_CORE_DECLARERUNTIMETYPEDEXTENSION( GafferUI::ContainerGadget, ContainerGadgetTypeId, Gadget );
 
@@ -69,7 +69,7 @@ class ContainerGadget : public Gadget
 
 		/// Applies the padding to the default union-of-children
 		/// bounding box.
-		virtual Imath::Box3f bound() const;
+		Imath::Box3f bound() const override;
 
 	private :
 

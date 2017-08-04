@@ -77,13 +77,13 @@ class ShaderPlugAdder : public PlugAdder
 
 	protected :
 
-		bool acceptsPlug( const Plug *plug ) const
+		bool acceptsPlug( const Plug *plug ) const override
 		{
 			vector<Plug *> plugs = showablePlugs( plug );
 			return !plugs.empty();
 		}
 
-		void addPlug( Plug *connectionEndPoint )
+		void addPlug( Plug *connectionEndPoint ) override
 		{
 			vector<Plug *> plugs = showablePlugs( connectionEndPoint );
 			Plug *plug = plugMenuSignal()( "Connect To", plugs );

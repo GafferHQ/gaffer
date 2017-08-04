@@ -87,8 +87,8 @@ class AttributeVisualiserForLights : public AttributeVisualiser
 
 		/// Uses a custom visualisation registered via `registerLightVisualiser()` if one
 		/// is available, if not falls back to a basic point light visualisation.
-		virtual IECoreGL::ConstRenderablePtr visualise( const IECore::CompoundObject *attributes,
-			IECoreGL::ConstStatePtr &state ) const;
+		IECoreGL::ConstRenderablePtr visualise( const IECore::CompoundObject *attributes,
+			IECoreGL::ConstStatePtr &state ) const override;
 
 	protected :
 

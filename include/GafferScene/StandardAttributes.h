@@ -48,7 +48,7 @@ class StandardAttributes : public Attributes
 	public :
 
 		StandardAttributes( const std::string &name=defaultName<StandardAttributes>() );
-		virtual ~StandardAttributes();
+		~StandardAttributes() override;
 
 		IE_CORE_DECLARERUNTIMETYPEDEXTENSION( GafferScene::StandardAttributes, StandardAttributesTypeId, Attributes );
 

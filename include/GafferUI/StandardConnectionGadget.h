@@ -53,23 +53,23 @@ class StandardConnectionGadget : public ConnectionGadget
 	public :
 
 		StandardConnectionGadget( GafferUI::NodulePtr srcNodule, GafferUI::NodulePtr dstNodule );
-		virtual ~StandardConnectionGadget();
+		~StandardConnectionGadget() override;
 
 		IE_CORE_DECLARERUNTIMETYPEDEXTENSION( GafferUI::StandardConnectionGadget, StandardConnectionGadgetTypeId, ConnectionGadget );
 
-		virtual Imath::Box3f bound() const;
+		Imath::Box3f bound() const override;
 
-		virtual void setNodules( GafferUI::NodulePtr srcNodule, GafferUI::NodulePtr dstNodule );
+		void setNodules( GafferUI::NodulePtr srcNodule, GafferUI::NodulePtr dstNodule ) override;
 
-		virtual void updateDragEndPoint( const Imath::V3f position, const Imath::V3f &tangent );
+		void updateDragEndPoint( const Imath::V3f position, const Imath::V3f &tangent ) override;
 
-		virtual Imath::V3f closestPoint( const Imath::V3f &p ) const;
+		Imath::V3f closestPoint( const Imath::V3f &p ) const override;
 
-		virtual std::string getToolTip( const IECore::LineSegment3f &line ) const;
+		std::string getToolTip( const IECore::LineSegment3f &line ) const override;
 
 	protected :
 
-		void doRender( const Style *style ) const;
+		void doRender( const Style *style ) const override;
 
 	private :
 

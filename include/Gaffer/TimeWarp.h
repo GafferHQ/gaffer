@@ -53,7 +53,7 @@ class TimeWarp : public ContextProcessor<BaseType>
 		IE_CORE_DECLARERUNTIMETYPEDDESCRIPTION( TimeWarp<BaseType> );
 
 		TimeWarp( const std::string &name=GraphComponent::defaultName<TimeWarp>() );
-		virtual ~TimeWarp();
+		~TimeWarp() override;
 
 		FloatPlug *speedPlug();
 		const FloatPlug *speedPlug() const;
@@ -63,8 +63,8 @@ class TimeWarp : public ContextProcessor<BaseType>
 
 	protected :
 
-		virtual bool affectsContext( const Plug *input ) const;
-		virtual void processContext( Context::EditableScope &context ) const;
+		bool affectsContext( const Plug *input ) const override;
+		void processContext( Context::EditableScope &context ) const override;
 
 };
 

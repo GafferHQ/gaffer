@@ -54,11 +54,11 @@ class ImageStats : public Gaffer::ComputeNode
 	public :
 
 		ImageStats( const std::string &name=staticTypeName() );
-		virtual ~ImageStats();
+		~ImageStats() override;
 
 		IE_CORE_DECLARERUNTIMETYPEDEXTENSION( GafferImage::ImageStats, ImageStatsTypeId, Gaffer::ComputeNode );
 
-		virtual void affects( const Gaffer::Plug *input, AffectedPlugsContainer &outputs ) const;
+		void affects( const Gaffer::Plug *input, AffectedPlugsContainer &outputs ) const override;
 
 		GafferImage::ImagePlug *inPlug();
 		const GafferImage::ImagePlug *inPlug() const;
@@ -81,17 +81,17 @@ class ImageStats : public Gaffer::ComputeNode
 	protected :
 
 		/// Implemented to hash the area we are sampling along with the channel context and regionOfInterest.
-		virtual void hash( const Gaffer::ValuePlug *output, const Gaffer::Context *context, IECore::MurmurHash &h ) const;
+		void hash( const Gaffer::ValuePlug *output, const Gaffer::Context *context, IECore::MurmurHash &h ) const override;
 
 		/// Computes the min, max and average plugs by analyzing the input ImagePlug.
-		virtual void compute( Gaffer::ValuePlug *output, const Gaffer::Context *context ) const;
+		void compute( Gaffer::ValuePlug *output, const Gaffer::Context *context ) const override;
 
 	private :
 
 		std::string channelName( int colorIndex ) const;
 
 		/// Implemented to initialize the default format settings if they don't exist already.
-		void parentChanging( Gaffer::GraphComponent *newParent );
+		void parentChanging( Gaffer::GraphComponent *newParent ) override;
 
 		static size_t g_firstPlugIndex;
 

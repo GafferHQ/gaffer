@@ -68,11 +68,11 @@ class DispatcherWrapper : public NodeWrapper<Dispatcher>
 		{
 		}
 
-		virtual ~DispatcherWrapper()
+		~DispatcherWrapper() override
 		{
 		}
 
-		virtual void doDispatch( const TaskBatch *batch ) const
+		void doDispatch( const TaskBatch *batch ) const override
 		{
 			ScopedGILLock gilLock;
 
@@ -94,7 +94,7 @@ class DispatcherWrapper : public NodeWrapper<Dispatcher>
 			}
 		}
 
-		virtual FrameListPtr frameRange( const ScriptNode *script, const Context *context ) const
+		FrameListPtr frameRange( const ScriptNode *script, const Context *context ) const override
 		{
 			ScopedGILLock gilLock;
 

@@ -71,14 +71,14 @@ class SceneProcedural : public IECore::Renderer::Procedural
 
 		/// A copy of context is taken.
 		SceneProcedural( ConstScenePlugPtr scenePlug, const Gaffer::Context *context, const ScenePlug::ScenePath &scenePath=ScenePlug::ScenePath(), bool computeBound = true );
-		virtual ~SceneProcedural();
+		~SceneProcedural() override;
 
-		virtual IECore::MurmurHash hash() const;
+		IECore::MurmurHash hash() const override;
 		/// Returns an accurate computed bound if `computeBound=true`
 		/// was passed to the constructor, otherwise returns
 		/// Procedural::noBound.
-		virtual Imath::Box3f bound() const;
-		virtual void render( IECore::Renderer *renderer ) const;
+		Imath::Box3f bound() const override;
+		void render( IECore::Renderer *renderer ) const override;
 
 		typedef boost::signal<void ( void )> AllRenderedSignal;
 

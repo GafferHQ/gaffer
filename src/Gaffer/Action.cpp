@@ -130,7 +130,7 @@ class SimpleAction : public Action
 			}
 		}
 
-		virtual ~SimpleAction()
+		~SimpleAction() override
 		{
 			if( !m_subject->isInstanceOf( Gaffer::ScriptNode::staticTypeId() ) )
 			{
@@ -142,12 +142,12 @@ class SimpleAction : public Action
 
 	protected :
 
-		virtual GraphComponent *subject() const
+		GraphComponent *subject() const override
 		{
 			return m_subject;
 		}
 
-		void doAction()
+		void doAction() override
 		{
 			Action::doAction();
 			if( !m_doFn.empty() )
@@ -156,7 +156,7 @@ class SimpleAction : public Action
 			}
 		}
 
-		void undoAction()
+		void undoAction() override
 		{
 			Action::undoAction();
 			if( !m_undoFn.empty() )
@@ -165,12 +165,12 @@ class SimpleAction : public Action
 			}
 		}
 
-		bool canMerge( const Action *other ) const
+		bool canMerge( const Action *other ) const override
 		{
 			return false;
 		}
 
-		void merge( const Action *other )
+		void merge( const Action *other ) override
 		{
 		}
 

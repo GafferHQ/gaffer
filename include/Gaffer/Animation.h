@@ -50,7 +50,7 @@ class Animation : public ComputeNode
 	public :
 
 		Animation( const std::string &name=defaultName<Animation>() );
-		virtual ~Animation();
+		~Animation() override;
 
 		IE_CORE_DECLARERUNTIMETYPEDEXTENSION( Gaffer::Animation, AnimationTypeId, ComputeNode );
 
@@ -158,12 +158,12 @@ class Animation : public ComputeNode
 		/// to aid in the production of a tidy graph.
 		static CurvePlug *acquire( ValuePlug *plug );
 
-		virtual void affects( const Plug *input, AffectedPlugsContainer &outputs ) const;
+		void affects( const Plug *input, AffectedPlugsContainer &outputs ) const override;
 
 	protected :
 
-		virtual void hash( const ValuePlug *output, const Context *context, IECore::MurmurHash &h ) const;
-		virtual void compute( ValuePlug *output, const Context *context ) const;
+		void hash( const ValuePlug *output, const Context *context, IECore::MurmurHash &h ) const override;
+		void compute( ValuePlug *output, const Context *context ) const override;
 
 	private :
 

@@ -48,17 +48,17 @@ class OpenGLShader : public GafferScene::Shader
 	public :
 
 		OpenGLShader( const std::string &name=defaultName<OpenGLShader>() );
-		virtual ~OpenGLShader();
+		~OpenGLShader() override;
 
 		IE_CORE_DECLARERUNTIMETYPEDEXTENSION( GafferScene::OpenGLShader, OpenGLShaderTypeId, GafferScene::Shader );
 
-		virtual void loadShader( const std::string &shaderName, bool keepExistingValues=false );
+		void loadShader( const std::string &shaderName, bool keepExistingValues=false ) override;
 
 	protected :
 
 		/// Reimplemented to allow ImageNodes to be plugged in to texture parameters.
-		virtual void parameterHash( const Gaffer::Plug *parameterPlug, IECore::MurmurHash &h ) const;
-		virtual IECore::DataPtr parameterValue( const Gaffer::Plug *parameterPlug ) const;
+		void parameterHash( const Gaffer::Plug *parameterPlug, IECore::MurmurHash &h ) const override;
+		IECore::DataPtr parameterValue( const Gaffer::Plug *parameterPlug ) const override;
 
 };
 

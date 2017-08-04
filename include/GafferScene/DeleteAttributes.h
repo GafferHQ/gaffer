@@ -48,13 +48,13 @@ class DeleteAttributes : public AttributeProcessor
 	public :
 
 		DeleteAttributes( const std::string &name=defaultName<DeleteAttributes>() );
-		virtual ~DeleteAttributes();
+		~DeleteAttributes() override;
 
 		IE_CORE_DECLARERUNTIMETYPEDEXTENSION( GafferScene::DeleteAttributes, DeleteAttributesTypeId, AttributeProcessor );
 
 	protected :
 
-		virtual IECore::ConstObjectPtr processAttribute( const ScenePath &path, const Gaffer::Context *context, const IECore::InternedString &attributeName, const IECore::Object *inputAttribute ) const;
+		IECore::ConstObjectPtr processAttribute( const ScenePath &path, const Gaffer::Context *context, const IECore::InternedString &attributeName, const IECore::Object *inputAttribute ) const override;
 
 };
 

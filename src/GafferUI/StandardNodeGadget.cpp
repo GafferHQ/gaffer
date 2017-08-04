@@ -110,7 +110,7 @@ class StandardNodeGadget::ErrorGadget : public Gadget
 			m_image->setVisible( m_errors.size() );
 		}
 
-		virtual std::string getToolTip( const IECore::LineSegment3f &position ) const
+		std::string getToolTip( const IECore::LineSegment3f &position ) const override
 		{
 			std::string result = Gadget::getToolTip( position );
 			if( !result.empty() )

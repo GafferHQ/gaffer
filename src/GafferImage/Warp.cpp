@@ -145,7 +145,7 @@ class Warp::EngineData : public Data
 		{
 		}
 
-		virtual ~EngineData()
+		~EngineData() override
 		{
 			delete engine;
 		}
@@ -154,19 +154,19 @@ class Warp::EngineData : public Data
 
 	protected :
 
-		virtual void copyFrom( const Object *other, CopyContext *context )
+		void copyFrom( const Object *other, CopyContext *context ) override
 		{
 			Data::copyFrom( other, context );
 			msg( Msg::Warning, "EngineData::copyFrom", "Not implemented" );
 		}
 
-		virtual void save( SaveContext *context ) const
+		void save( SaveContext *context ) const override
 		{
 			Data::save( context );
 			msg( Msg::Warning, "EngineData::save", "Not implemented" );
 		}
 
-		virtual void load( LoadContextPtr context )
+		void load( LoadContextPtr context ) override
 		{
 			Data::load( context );
 			msg( Msg::Warning, "EngineData::load", "Not implemented" );

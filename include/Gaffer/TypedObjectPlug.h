@@ -69,11 +69,11 @@ class TypedObjectPlug : public ValuePlug
 			ConstValuePtr defaultValue,
 			unsigned flags = Default
 		);
-		virtual ~TypedObjectPlug();
+		~TypedObjectPlug() override;
 
 		/// Accepts only instances of TypedObjectPlug<T>, or derived classes.
-		virtual bool acceptsInput( const Plug *input ) const;
-		virtual PlugPtr createCounterpart( const std::string &name, Direction direction ) const;
+		bool acceptsInput( const Plug *input ) const override;
+		PlugPtr createCounterpart( const std::string &name, Direction direction ) const override;
 
 		const ValueType *defaultValue() const;
 
@@ -110,7 +110,7 @@ class TypedObjectPlug : public ValuePlug
 		/// the ValuePlug cache.
 		ConstValuePtr getValue( const IECore::MurmurHash *precomputedHash = nullptr ) const;
 
-		virtual void setFrom( const ValuePlug *other );
+		void setFrom( const ValuePlug *other ) override;
 
 	private :
 

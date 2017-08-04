@@ -74,12 +74,12 @@ class BoxIOPlugAdder : public PlugAdder
 
 	protected :
 
-		virtual bool acceptsPlug( const Plug *connectionEndPoint ) const
+		bool acceptsPlug( const Plug *connectionEndPoint ) const override
 		{
 			return connectionEndPoint->direction() == m_boxIO->direction();
 		}
 
-		virtual void addPlug( Plug *connectionEndPoint )
+		void addPlug( Plug *connectionEndPoint ) override
 		{
 			UndoScope undoScope( m_boxIO->ancestor<ScriptNode>() );
 

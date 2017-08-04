@@ -75,7 +75,7 @@ class Gadget : public Gaffer::GraphComponent
 	public :
 
 		Gadget( const std::string &name=defaultName<Gadget>() );
-		virtual ~Gadget();
+		~Gadget() override;
 
 		IE_CORE_DECLARERUNTIMETYPEDEXTENSION( GafferUI::Gadget, GadgetTypeId, Gaffer::GraphComponent );
 
@@ -89,9 +89,9 @@ class Gadget : public Gaffer::GraphComponent
 		//@{
 		/// Gadgets accept any number of other Gadgets as children. Derived classes
 		/// may further restrict this if they wish, but they must not accept non-Gadget children.
-		virtual bool acceptsChild( const Gaffer::GraphComponent *potentialChild ) const;
+		bool acceptsChild( const Gaffer::GraphComponent *potentialChild ) const override;
 		/// Gadgets only accept other Gadgets as parent.
-		virtual bool acceptsParent( const Gaffer::GraphComponent *potentialParent ) const;
+		bool acceptsParent( const Gaffer::GraphComponent *potentialParent ) const override;
 		//@}
 
 		/// @name Style

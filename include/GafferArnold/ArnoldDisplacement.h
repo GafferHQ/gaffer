@@ -57,7 +57,7 @@ class ArnoldDisplacement : public GafferScene::Shader
 	public :
 
 		ArnoldDisplacement( const std::string &name=defaultName<ArnoldDisplacement>() );
-		virtual ~ArnoldDisplacement();
+		~ArnoldDisplacement() override;
 
 		IE_CORE_DECLARERUNTIMETYPEDEXTENSION( GafferArnold::ArnoldDisplacement, ArnoldDisplacementTypeId, GafferScene::Shader );
 
@@ -79,14 +79,14 @@ class ArnoldDisplacement : public GafferScene::Shader
 		Gaffer::Plug *outPlug();
 		const Gaffer::Plug *outPlug() const;
 
-		virtual void affects( const Gaffer::Plug *input, AffectedPlugsContainer &outputs ) const;
+		void affects( const Gaffer::Plug *input, AffectedPlugsContainer &outputs ) const override;
 
 	protected :
 
-		virtual void attributesHash( const Gaffer::Plug *output, IECore::MurmurHash &h ) const;
-		virtual IECore::ConstCompoundObjectPtr attributes( const Gaffer::Plug *output ) const;
+		void attributesHash( const Gaffer::Plug *output, IECore::MurmurHash &h ) const override;
+		IECore::ConstCompoundObjectPtr attributes( const Gaffer::Plug *output ) const override;
 
-		virtual bool acceptsInput( const Gaffer::Plug *plug, const Gaffer::Plug *inputPlug ) const;
+		bool acceptsInput( const Gaffer::Plug *plug, const Gaffer::Plug *inputPlug ) const override;
 
 	private :
 

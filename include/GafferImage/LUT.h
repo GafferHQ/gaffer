@@ -57,7 +57,7 @@ class LUT : public OpenColorIOTransform
 	public :
 
 		LUT( const std::string &name=defaultName<LUT>() );
-		virtual ~LUT();
+		~LUT() override;
 
 		IE_CORE_DECLARERUNTIMETYPEDEXTENSION( GafferImage::LUT, LUTTypeId, OpenColorIOTransform );
 
@@ -90,9 +90,9 @@ class LUT : public OpenColorIOTransform
 
 	protected :
 
-		virtual bool affectsTransform( const Gaffer::Plug *input ) const;
-		virtual void hashTransform( const Gaffer::Context *context, IECore::MurmurHash &h ) const;
-		virtual OpenColorIO::ConstTransformRcPtr transform() const;
+		bool affectsTransform( const Gaffer::Plug *input ) const override;
+		void hashTransform( const Gaffer::Context *context, IECore::MurmurHash &h ) const override;
+		OpenColorIO::ConstTransformRcPtr transform() const override;
 
 	private :
 

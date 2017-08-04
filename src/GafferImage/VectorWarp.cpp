@@ -68,7 +68,7 @@ struct VectorWarp::Engine : public Warp::Engine
 	{
 	}
 
-	virtual Imath::V2f inputPixel( const Imath::V2f &outputPixel ) const
+	Imath::V2f inputPixel( const Imath::V2f &outputPixel ) const override
 	{
 		const V2i outputPixelI( (int)floorf( outputPixel.x ), (int)floorf( outputPixel.y ) );
 		const size_t i = BufferAlgo::index( outputPixelI, m_tileBound );

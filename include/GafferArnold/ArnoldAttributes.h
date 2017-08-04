@@ -50,7 +50,7 @@ class ArnoldAttributes : public GafferScene::Attributes
 	public :
 
 		ArnoldAttributes( const std::string &name=defaultName<ArnoldAttributes>() );
-		virtual ~ArnoldAttributes();
+		~ArnoldAttributes() override;
 
 		IE_CORE_DECLARERUNTIMETYPEDEXTENSION( GafferArnold::ArnoldAttributes, ArnoldAttributesTypeId, GafferScene::Attributes );
 

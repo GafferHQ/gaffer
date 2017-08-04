@@ -51,7 +51,7 @@ class Camera : public ObjectSource
 		IE_CORE_DECLARERUNTIMETYPEDEXTENSION( GafferScene::Camera, CameraTypeId, ObjectSource );
 
 		Camera( const std::string &name=defaultName<Camera>() );
-		virtual ~Camera();
+		~Camera() override;
 
 		Gaffer::StringPlug *projectionPlug();
 		const Gaffer::StringPlug *projectionPlug() const;
@@ -62,14 +62,14 @@ class Camera : public ObjectSource
 		Gaffer::V2fPlug *clippingPlanesPlug();
 		const Gaffer::V2fPlug *clippingPlanesPlug() const;
 
-		virtual void affects( const Gaffer::Plug *input, AffectedPlugsContainer &outputs ) const;
+		void affects( const Gaffer::Plug *input, AffectedPlugsContainer &outputs ) const override;
 
 	protected :
 
-		virtual void hashSource( const Gaffer::Context *context, IECore::MurmurHash &h ) const;
-		virtual IECore::ConstObjectPtr computeSource( const Gaffer::Context *context ) const;
+		void hashSource( const Gaffer::Context *context, IECore::MurmurHash &h ) const override;
+		IECore::ConstObjectPtr computeSource( const Gaffer::Context *context ) const override;
 
-		virtual IECore::ConstInternedStringVectorDataPtr computeStandardSetNames() const;
+		IECore::ConstInternedStringVectorDataPtr computeStandardSetNames() const override;
 
 	private :
 

@@ -88,12 +88,12 @@ class TweakPlugSerialiser : public PlugSerialiser
 
 	public :
 
-		virtual std::string constructor( const Gaffer::GraphComponent *graphComponent, const Serialisation &serialisation ) const
+		std::string constructor( const Gaffer::GraphComponent *graphComponent, const Serialisation &serialisation ) const override
 		{
 			return maskedTweakPlugRepr( static_cast<const LightTweaks::TweakPlug *>( graphComponent ), Plug::All & ~Plug::ReadOnly );
 		}
 
-		virtual bool childNeedsConstruction( const Gaffer::GraphComponent *child, const Serialisation &serialisation ) const
+		bool childNeedsConstruction( const Gaffer::GraphComponent *child, const Serialisation &serialisation ) const override
 		{
 			// If the parent is dynamic then all the children will need construction.
 			const Plug *parent = child->parent<Plug>();

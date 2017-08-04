@@ -509,19 +509,19 @@ class AppleseedNullObject : public AppleseedEntity
 		{
 		}
 
-		virtual ~AppleseedNullObject()
+		~AppleseedNullObject() override
 		{
 		}
 
-		virtual void transform( const M44f &transform )
+		void transform( const M44f &transform ) override
 		{
 		}
 
-		virtual void transform( const vector<M44f> &samples, const vector<float> &times )
+		void transform( const vector<M44f> &samples, const vector<float> &times ) override
 		{
 		}
 
-		virtual bool attributes( const IECoreScenePreview::Renderer::AttributesInterface *attributes )
+		bool attributes( const IECoreScenePreview::Renderer::AttributesInterface *attributes ) override
 		{
 			return true;
 		}
@@ -552,7 +552,7 @@ class AppleseedShader : public AppleseedEntity
 			insertShaderGroup( shaderGroup );
 		}
 
-		virtual ~AppleseedShader()
+		~AppleseedShader() override
 		{
 			if( isInteractiveRender() )
 			{
@@ -560,15 +560,15 @@ class AppleseedShader : public AppleseedEntity
 			}
 		}
 
-		virtual void transform( const M44f &transform )
+		void transform( const M44f &transform ) override
 		{
 		}
 
-		virtual void transform( const vector<M44f> &samples, const vector<float> &times )
+		void transform( const vector<M44f> &samples, const vector<float> &times ) override
 		{
 		}
 
-		virtual bool attributes( const IECoreScenePreview::Renderer::AttributesInterface *attributes )
+		bool attributes( const IECoreScenePreview::Renderer::AttributesInterface *attributes ) override
 		{
 			return true;
 		}
@@ -808,7 +808,7 @@ class AppleseedCamera : public AppleseedEntity
 			}
 		}
 
-		virtual ~AppleseedCamera()
+		~AppleseedCamera() override
 		{
 			if( isInteractiveRender() )
 			{
@@ -821,17 +821,17 @@ class AppleseedCamera : public AppleseedEntity
 			}
 		}
 
-		virtual void transform( const M44f &transform )
+		void transform( const M44f &transform ) override
 		{
 			TransformAlgo::makeTransformSequence( transform, m_camera->transform_sequence() );
 		}
 
-		virtual void transform( const vector<M44f> &samples, const vector<float> &times )
+		void transform( const vector<M44f> &samples, const vector<float> &times ) override
 		{
 			TransformAlgo::makeTransformSequence( times, samples, m_camera->transform_sequence() );
 		}
 
-		virtual bool attributes( const IECoreScenePreview::Renderer::AttributesInterface *attributes )
+		bool attributes( const IECoreScenePreview::Renderer::AttributesInterface *attributes ) override
 		{
 			// todo: check if this has to be implemented...
 			return true;
@@ -919,7 +919,7 @@ class AppleseedInstance : public AppleseedEntity
 		{
 		}
 
-		virtual ~AppleseedInstance()
+		~AppleseedInstance() override
 		{
 			// Create an instance of the master primitive assembly and add it to the main assembly.
 			string assemblyName = m_masterName + "_assembly";
@@ -929,17 +929,17 @@ class AppleseedInstance : public AppleseedEntity
 			insertAssemblyInstance( assInstance );
 		}
 
-		virtual void transform( const M44f &transform )
+		void transform( const M44f &transform ) override
 		{
 			TransformAlgo::makeTransformSequence( transform, m_transformSequence );
 		}
 
-		virtual void transform( const vector<M44f> &samples, const vector<float> &times )
+		void transform( const vector<M44f> &samples, const vector<float> &times ) override
 		{
 			TransformAlgo::makeTransformSequence( times, samples, m_transformSequence );
 		}
 
-		virtual bool attributes( const IECoreScenePreview::Renderer::AttributesInterface *attributes )
+		bool attributes( const IECoreScenePreview::Renderer::AttributesInterface *attributes ) override
 		{
 			// We reuse the attributes of the master primitive.
 			return true;
@@ -1087,7 +1087,7 @@ class AppleseedPrimitive : public AppleseedEntity
 			}
 		}
 
-		virtual ~AppleseedPrimitive()
+		~AppleseedPrimitive() override
 		{
 			if( isInteractiveRender() )
 			{
@@ -1136,7 +1136,7 @@ class AppleseedPrimitive : public AppleseedEntity
 			}
 		}
 
-		virtual void transform( const M44f &transform )
+		void transform( const M44f &transform ) override
 		{
 			if( isInteractiveRender() )
 			{
@@ -1149,7 +1149,7 @@ class AppleseedPrimitive : public AppleseedEntity
 			}
 		}
 
-		virtual void transform( const vector<M44f> &samples, const vector<float> &times )
+		void transform( const vector<M44f> &samples, const vector<float> &times ) override
 		{
 			if( isInteractiveRender() )
 			{
@@ -1162,7 +1162,7 @@ class AppleseedPrimitive : public AppleseedEntity
 			}
 		}
 
-		virtual bool attributes( const IECoreScenePreview::Renderer::AttributesInterface *attributes )
+		bool attributes( const IECoreScenePreview::Renderer::AttributesInterface *attributes ) override
 		{
 			if( isInteractiveRender() )
 			{
@@ -1524,7 +1524,7 @@ class AppleseedEnvironmentLight : public AppleseedLight
 			AppleseedEnvironmentLight::attributes( attributes );
 		}
 
-		virtual ~AppleseedEnvironmentLight()
+		~AppleseedEnvironmentLight() override
 		{
 			if( isInteractiveRender() )
 			{
@@ -1532,7 +1532,7 @@ class AppleseedEnvironmentLight : public AppleseedLight
 			}
 		}
 
-		virtual void transform( const M44f &transform )
+		void transform( const M44f &transform ) override
 		{
 			TransformAlgo::makeTransformSequence( transform, m_transformSequence );
 
@@ -1542,7 +1542,7 @@ class AppleseedEnvironmentLight : public AppleseedLight
 			}
 		}
 
-		virtual void transform( const vector<M44f> &samples, const vector<float> &times )
+		void transform( const vector<M44f> &samples, const vector<float> &times ) override
 		{
 			TransformAlgo::makeTransformSequence( times, samples, m_transformSequence );
 
@@ -1552,7 +1552,7 @@ class AppleseedEnvironmentLight : public AppleseedLight
 			}
 		}
 
-		virtual bool attributes( const IECoreScenePreview::Renderer::AttributesInterface *attributes )
+		bool attributes( const IECoreScenePreview::Renderer::AttributesInterface *attributes ) override
 		{
 			// Remove any previously created environment.
 			removeEnvironmentEntities();
@@ -1608,7 +1608,7 @@ class AppleseedDeltaLight : public AppleseedLight
 			AppleseedDeltaLight::attributes( attributes );
 		}
 
-		virtual ~AppleseedDeltaLight()
+		~AppleseedDeltaLight() override
 		{
 			if( isInteractiveRender() )
 			{
@@ -1616,7 +1616,7 @@ class AppleseedDeltaLight : public AppleseedLight
 			}
 		}
 
-		virtual void transform( const M44f &transform )
+		void transform( const M44f &transform ) override
 		{
 			TransformAlgo::makeTransform( transform, m_transform );
 
@@ -1626,13 +1626,13 @@ class AppleseedDeltaLight : public AppleseedLight
 			}
 		}
 
-		virtual void transform( const vector<M44f> &samples, const vector<float> &times )
+		void transform( const vector<M44f> &samples, const vector<float> &times ) override
 		{
 			// appleseed does not support light transform motion blur yet.
 			transform(samples[0]);
 		}
 
-		virtual bool attributes( const IECoreScenePreview::Renderer::AttributesInterface *attributes )
+		bool attributes( const IECoreScenePreview::Renderer::AttributesInterface *attributes ) override
 		{
 			// Remove any previously created light.
 			removeLightEntities();
@@ -1753,13 +1753,13 @@ class AppleseedRenderer : public IECoreScenePreview::Renderer
 			}
 		}
 
-		virtual ~AppleseedRenderer()
+		~AppleseedRenderer() override
 		{
 			pause();
 			delete m_rendererController;
 		}
 
-		virtual void option( const InternedString &name, const Data *value )
+		void option( const InternedString &name, const Data *value ) override
 		{
 			if( name == g_cameraOptionName )
 			{
@@ -2030,7 +2030,7 @@ class AppleseedRenderer : public IECoreScenePreview::Renderer
 			msg( Msg::Warning, "AppleseedRenderer::option", boost::format( "Unknown option \"%s\"." ) % name.c_str() );
 		}
 
-		virtual void output( const InternedString &name, const Output *output )
+		void output( const InternedString &name, const Output *output ) override
 		{
 			if( output == nullptr )
 			{
@@ -2070,12 +2070,12 @@ class AppleseedRenderer : public IECoreScenePreview::Renderer
 			}
 		}
 
-		virtual Renderer::AttributesInterfacePtr attributes( const CompoundObject *attributes )
+		Renderer::AttributesInterfacePtr attributes( const CompoundObject *attributes ) override
 		{
 			return new AppleseedAttributes( attributes, m_shaderCache.get() );
 		}
 
-		virtual ObjectInterfacePtr camera( const string &name, const Camera *camera, const AttributesInterface *attributes )
+		ObjectInterfacePtr camera( const string &name, const Camera *camera, const AttributesInterface *attributes ) override
 		{
 			CameraPtr cameraCopy = camera->copy();
 			cameraCopy->addStandardParameters();
@@ -2095,7 +2095,7 @@ class AppleseedRenderer : public IECoreScenePreview::Renderer
 			return new AppleseedCamera( *m_project, name, cameraCopy.get(), attributes, activeCamera, isInteractiveRender() );
 		}
 
-		virtual ObjectInterfacePtr light( const string &name, const Object *object, const AttributesInterface *attributes )
+		ObjectInterfacePtr light( const string &name, const Object *object, const AttributesInterface *attributes ) override
 		{
 			// For now we only do area lights using OSL emission().
 			if( object == nullptr )
@@ -2118,7 +2118,7 @@ class AppleseedRenderer : public IECoreScenePreview::Renderer
 			return new AppleseedNullObject( *m_project, name, isInteractiveRender() );
 		}
 
-		virtual ObjectInterfacePtr object( const string &name, const Object *object, const AttributesInterface *attributes )
+		ObjectInterfacePtr object( const string &name, const Object *object, const AttributesInterface *attributes ) override
 		{
 			if( !ObjectAlgo::isPrimitiveSupported( object ) )
 			{
@@ -2150,7 +2150,7 @@ class AppleseedRenderer : public IECoreScenePreview::Renderer
 			}
 		}
 
-		virtual ObjectInterfacePtr object( const string &name, const vector<const Object *> &samples, const vector<float> &times, const AttributesInterface *attributes )
+		ObjectInterfacePtr object( const string &name, const vector<const Object *> &samples, const vector<float> &times, const AttributesInterface *attributes ) override
 		{
 			if( !ObjectAlgo::isPrimitiveSupported( samples[0] ) )
 			{
@@ -2186,7 +2186,7 @@ class AppleseedRenderer : public IECoreScenePreview::Renderer
 			}
 		}
 
-		virtual void render()
+		void render() override
 		{
 			// Create a default camera if needed.
 			if( m_project->get_uncached_active_camera() == nullptr )
@@ -2254,7 +2254,7 @@ class AppleseedRenderer : public IECoreScenePreview::Renderer
 			}
 		}
 
-		virtual void pause()
+		void pause() override
 		{
 			m_rendererController->set_status( asr::IRendererController::AbortRendering );
 

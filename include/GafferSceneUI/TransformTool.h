@@ -55,7 +55,7 @@ class TransformTool : public GafferSceneUI::SelectionTool
 
 	public :
 
-		virtual ~TransformTool();
+		~TransformTool() override;
 
 		IE_CORE_DECLARERUNTIMETYPEDEXTENSION( GafferSceneUI::TransformTool, TransformToolTypeId, SelectionTool );
 

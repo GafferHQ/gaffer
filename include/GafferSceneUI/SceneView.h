@@ -70,7 +70,7 @@ class SceneView : public GafferUI::View
 	public :
 
 		SceneView( const std::string &name = defaultName<SceneView>() );
-		virtual ~SceneView();
+		~SceneView() override;
 
 		IE_CORE_DECLARERUNTIMETYPEDEXTENSION( GafferSceneUI::SceneView, SceneViewTypeId, GafferUI::View );
 
@@ -90,7 +90,7 @@ class SceneView : public GafferUI::View
 		void expandSelection( size_t depth = 1 );
 		void collapseSelection();
 
-		virtual void setContext( Gaffer::ContextPtr context );
+		void setContext( Gaffer::ContextPtr context ) override;
 
 		/// If the view is locked to a particular camera,
 		/// this returns the bound of the resolution gate
@@ -107,8 +107,8 @@ class SceneView : public GafferUI::View
 
 	protected :
 
-		virtual void contextChanged( const IECore::InternedString &name );
-		virtual Imath::Box3f framingBound() const;
+		void contextChanged( const IECore::InternedString &name ) override;
+		Imath::Box3f framingBound() const override;
 
 	private :
 

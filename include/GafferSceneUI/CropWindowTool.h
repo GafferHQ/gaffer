@@ -56,7 +56,7 @@ class CropWindowTool : public GafferUI::Tool
 
 		CropWindowTool( SceneView *view, const std::string &name = defaultName<CropWindowTool>() );
 
-		virtual ~CropWindowTool();
+		~CropWindowTool() override;
 
 		IE_CORE_DECLARERUNTIMETYPEDEXTENSION( GafferSceneUI::CropWindowTool, CropWindowToolTypeId, GafferUI::Tool );
 

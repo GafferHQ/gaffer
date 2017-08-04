@@ -53,7 +53,7 @@ class Dot : public DependencyNode
 	public :
 
 		Dot( const std::string &name=defaultName<Dot>() );
-		virtual ~Dot();
+		~Dot() override;
 
 		IE_CORE_DECLARERUNTIMETYPEDEXTENSION( Gaffer::Dot, DotTypeId, DependencyNode );
 
@@ -93,9 +93,9 @@ class Dot : public DependencyNode
 		StringPlug *labelPlug();
 		const StringPlug *labelPlug() const;
 
-		virtual void affects( const Plug *input, AffectedPlugsContainer &outputs ) const;
-		virtual Plug *correspondingInput( const Plug *output );
-		virtual const Plug *correspondingInput( const Plug *output ) const;
+		void affects( const Plug *input, AffectedPlugsContainer &outputs ) const override;
+		Plug *correspondingInput( const Plug *output ) override;
+		const Plug *correspondingInput( const Plug *output ) const override;
 
 	private :
 

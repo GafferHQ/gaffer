@@ -59,11 +59,11 @@ class DotNodeGadget : public StandardNodeGadget
 		IE_CORE_DECLARERUNTIMETYPEDEXTENSION( GafferUI::DotNodeGadget, DotNodeGadgetTypeId, StandardNodeGadget );
 
 		DotNodeGadget( Gaffer::NodePtr node );
-		virtual ~DotNodeGadget();
+		~DotNodeGadget() override;
 
 	protected :
 
-		virtual void doRender( const Style *style ) const;
+		void doRender( const Style *style ) const override;
 
 	private :
 

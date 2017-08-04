@@ -54,13 +54,13 @@ class ShaderPlug : public Gaffer::Plug
 	public :
 
 		ShaderPlug( const std::string &name=defaultName<ShaderPlug>(), Direction direction=In, unsigned flags=Default );
-		virtual ~ShaderPlug();
+		~ShaderPlug() override;
 
 		IE_CORE_DECLARERUNTIMETYPEDEXTENSION( GafferScene::ShaderPlug, ShaderPlugTypeId, Plug );
 
-		virtual bool acceptsChild( const Gaffer::GraphComponent *potentialChild ) const;
-		virtual Gaffer::PlugPtr createCounterpart( const std::string &name, Direction direction ) const;
-		virtual bool acceptsInput( const Gaffer::Plug *input ) const;
+		bool acceptsChild( const Gaffer::GraphComponent *potentialChild ) const override;
+		Gaffer::PlugPtr createCounterpart( const std::string &name, Direction direction ) const override;
+		bool acceptsInput( const Gaffer::Plug *input ) const override;
 
 		/// Returns a hash representing the shading network generated
 		/// by the input shader.

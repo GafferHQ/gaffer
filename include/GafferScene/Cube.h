@@ -52,17 +52,17 @@ class Cube : public ObjectSource
 		IE_CORE_DECLARERUNTIMETYPEDEXTENSION( GafferScene::Cube, CubeTypeId, ObjectSource );
 
 		Cube( const std::string &name=defaultName<Cube>() );
-		virtual ~Cube();
+		~Cube() override;
 
 		Gaffer::V3fPlug *dimensionsPlug();
 		const Gaffer::V3fPlug *dimensionsPlug() const;
 
-		virtual void affects( const Gaffer::Plug *input, AffectedPlugsContainer &outputs ) const;
+		void affects( const Gaffer::Plug *input, AffectedPlugsContainer &outputs ) const override;
 
 	protected :
 
-		virtual void hashSource( const Gaffer::Context *context, IECore::MurmurHash &h ) const;
-		virtual IECore::ConstObjectPtr computeSource( const Gaffer::Context *context ) const;
+		void hashSource( const Gaffer::Context *context, IECore::MurmurHash &h ) const override;
+		IECore::ConstObjectPtr computeSource( const Gaffer::Context *context ) const override;
 
 	private :
 

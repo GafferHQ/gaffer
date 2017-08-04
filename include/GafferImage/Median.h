@@ -48,7 +48,7 @@ class Median : public RankFilter
 	public :
 
 		Median( const std::string &name=defaultName<Median>() );
-		virtual ~Median();
+		~Median() override;
 
 		IE_CORE_DECLARERUNTIMETYPEDEXTENSION( GafferImage::Median, MedianTypeId, RankFilter );
 

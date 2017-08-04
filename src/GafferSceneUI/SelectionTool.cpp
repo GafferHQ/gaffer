@@ -66,7 +66,7 @@ class SelectionTool::DragOverlay : public GafferUI::Gadget
 		{
 		}
 
-		virtual Imath::Box3f bound() const
+		Imath::Box3f bound() const override
 		{
 			// we draw in raster space so don't have a sensible bound
 			return Box3f();
@@ -104,7 +104,7 @@ class SelectionTool::DragOverlay : public GafferUI::Gadget
 
 	protected :
 
-		virtual void doRender( const Style *style ) const
+		void doRender( const Style *style ) const override
 		{
 			if( IECoreGL::Selector::currentSelector() )
 			{

@@ -50,9 +50,9 @@ class PlugAdder : public Gadget
 		IE_CORE_DECLARERUNTIMETYPEDEXTENSION( GafferUI::PlugAdder, PlugAdderTypeId, Gadget );
 
 		PlugAdder( StandardNodeGadget::Edge edge );
-		virtual ~PlugAdder();
+		~PlugAdder() override;
 
-		virtual Imath::Box3f bound() const;
+		Imath::Box3f bound() const override;
 
 		void updateDragEndPoint( const Imath::V3f position, const Imath::V3f &tangent );
 
@@ -71,7 +71,7 @@ class PlugAdder : public Gadget
 
 	protected :
 
-		virtual void doRender( const Style *style ) const;
+		void doRender( const Style *style ) const override;
 
 		void applyEdgeMetadata( Gaffer::Plug *plug, bool opposite = false ) const;
 

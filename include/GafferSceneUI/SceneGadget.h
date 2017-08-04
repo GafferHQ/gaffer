@@ -62,11 +62,11 @@ class SceneGadget : public GafferUI::Gadget
 	public :
 
 		SceneGadget();
-		virtual ~SceneGadget();
+		~SceneGadget() override;
 
 		IE_CORE_DECLARERUNTIMETYPEDEXTENSION( GafferSceneUI::SceneGadget, SceneGadgetTypeId, Gadget );
 
-		virtual Imath::Box3f bound() const;
+		Imath::Box3f bound() const override;
 
 		void setScene( GafferScene::ConstScenePlugPtr scene );
 		const GafferScene::ScenePlug *getScene() const;
@@ -110,11 +110,11 @@ class SceneGadget : public GafferUI::Gadget
 		Imath::Box3f selectionBound() const;
 
 		/// Implemented to return the name of the object under the mouse.
-		virtual std::string getToolTip( const IECore::LineSegment3f &line ) const;
+		std::string getToolTip( const IECore::LineSegment3f &line ) const override;
 
 	protected :
 
-		virtual void doRender( const GafferUI::Style *style ) const;
+		void doRender( const GafferUI::Style *style ) const override;
 
 	private :
 

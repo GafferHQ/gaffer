@@ -50,7 +50,7 @@ class Text : public ObjectSource
 		IE_CORE_DECLARERUNTIMETYPEDEXTENSION( GafferScene::Text, TextTypeId, ObjectSource );
 
 		Text( const std::string &name=defaultName<Text>() );
-		virtual ~Text();
+		~Text() override;
 
 		Gaffer::StringPlug *textPlug();
 		const Gaffer::StringPlug *textPlug() const;
@@ -58,12 +58,12 @@ class Text : public ObjectSource
 		Gaffer::StringPlug *fontPlug();
 		const Gaffer::StringPlug *fontPlug() const;
 
-		virtual void affects( const Gaffer::Plug *input, AffectedPlugsContainer &outputs ) const;
+		void affects( const Gaffer::Plug *input, AffectedPlugsContainer &outputs ) const override;
 
 	protected :
 
-		virtual void hashSource( const Gaffer::Context *context, IECore::MurmurHash &h ) const;
-		virtual IECore::ConstObjectPtr computeSource( const Gaffer::Context *context ) const;
+		void hashSource( const Gaffer::Context *context, IECore::MurmurHash &h ) const override;
+		IECore::ConstObjectPtr computeSource( const Gaffer::Context *context ) const override;
 
 	private :
 

@@ -50,20 +50,20 @@ class Parameters : public SceneElementProcessor
 	public :
 
 		Parameters( const std::string &name=defaultName<Parameters>() );
-		virtual ~Parameters();
+		~Parameters() override;
 
 		IE_CORE_DECLARERUNTIMETYPEDEXTENSION( GafferScene::Parameters, ParametersTypeId, SceneElementProcessor );
 
 		Gaffer::CompoundDataPlug *parametersPlug();
 		const Gaffer::CompoundDataPlug *parametersPlug() const;
 
-		virtual void affects( const Gaffer::Plug *input, AffectedPlugsContainer &outputs ) const;
+		void affects( const Gaffer::Plug *input, AffectedPlugsContainer &outputs ) const override;
 
 	protected :
 
-		virtual bool processesObject() const;
-		virtual void hashProcessedObject( const ScenePath &path, const Gaffer::Context *context, IECore::MurmurHash &h ) const;
-		virtual IECore::ConstObjectPtr computeProcessedObject( const ScenePath &path, const Gaffer::Context *context, IECore::ConstObjectPtr inputObject ) const;
+		bool processesObject() const override;
+		void hashProcessedObject( const ScenePath &path, const Gaffer::Context *context, IECore::MurmurHash &h ) const override;
+		IECore::ConstObjectPtr computeProcessedObject( const ScenePath &path, const Gaffer::Context *context, IECore::ConstObjectPtr inputObject ) const override;
 
 	private :
 

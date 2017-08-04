@@ -83,11 +83,11 @@ class CoordinateSystemVisualiser : public ObjectVisualiser
 			m_group->addChild( curves );
 		}
 
-		virtual ~CoordinateSystemVisualiser()
+		~CoordinateSystemVisualiser() override
 		{
 		}
 
-		virtual IECoreGL::ConstRenderablePtr visualise( const IECore::Object *object ) const
+		IECoreGL::ConstRenderablePtr visualise( const IECore::Object *object ) const override
 		{
 			return m_group;
 		}

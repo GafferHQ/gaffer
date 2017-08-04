@@ -56,20 +56,20 @@ class StandardNodule : public Nodule
 	public :
 
 		StandardNodule( Gaffer::PlugPtr plug );
-		virtual ~StandardNodule();
+		~StandardNodule() override;
 
 		IE_CORE_DECLARERUNTIMETYPEDEXTENSION( GafferUI::StandardNodule, StandardNoduleTypeId, Nodule );
 
 		void setLabelVisible( bool labelVisible );
 		bool getLabelVisible() const;
 
-		virtual void updateDragEndPoint( const Imath::V3f position, const Imath::V3f &tangent );
+		void updateDragEndPoint( const Imath::V3f position, const Imath::V3f &tangent ) override;
 
-		virtual Imath::Box3f bound() const;
+		Imath::Box3f bound() const override;
 
 	protected :
 
-		void doRender( const Style *style ) const;
+		void doRender( const Style *style ) const override;
 		void renderLabel( const Style *style ) const;
 
 		void enter( GadgetPtr gadget, const ButtonEvent &event );

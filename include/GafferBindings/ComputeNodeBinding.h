@@ -76,7 +76,7 @@ class ComputeNodeWrapper : public DependencyNodeWrapper<WrappedType>
 		{
 		}
 
-		virtual void hash( const Gaffer::ValuePlug *output, const Gaffer::Context *context, IECore::MurmurHash &h ) const
+		void hash( const Gaffer::ValuePlug *output, const Gaffer::Context *context, IECore::MurmurHash &h ) const override
 		{
 			/// \todo Stop calling the base class unconditionally - if an override
 			/// exists then the override should call the base class explicitly itself
@@ -107,7 +107,7 @@ class ComputeNodeWrapper : public DependencyNodeWrapper<WrappedType>
 			}
 		}
 
-		virtual void compute( Gaffer::ValuePlug *output, const Gaffer::Context *context ) const
+		void compute( Gaffer::ValuePlug *output, const Gaffer::Context *context ) const override
 		{
 			if( this->isSubclassed() )
 			{

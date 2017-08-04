@@ -99,7 +99,7 @@ struct PlugAdderWrapper : public GadgetWrapper<PlugAdder>
 	{
 	}
 
-	virtual bool acceptsPlug( const Gaffer::Plug *connectionEndPoint ) const
+	bool acceptsPlug( const Gaffer::Plug *connectionEndPoint ) const override
 	{
 		if( this->isSubclassed() )
 		{
@@ -120,7 +120,7 @@ struct PlugAdderWrapper : public GadgetWrapper<PlugAdder>
 		throw IECore::Exception( "No acceptsPlug method defined in Python." );
 	}
 
-	virtual void addPlug( Gaffer::Plug *connectionEndPoint )
+	void addPlug( Gaffer::Plug *connectionEndPoint ) override
 	{
 		if( this->isSubclassed() )
 		{

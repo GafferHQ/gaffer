@@ -56,11 +56,11 @@ class FileSystemPath : public Path
 
 		IE_CORE_DECLARERUNTIMETYPEDEXTENSION( Gaffer::FileSystemPath, FileSystemPathTypeId, Path );
 
-		virtual ~FileSystemPath();
+		~FileSystemPath() override;
 
-		virtual bool isValid() const;
-		virtual bool isLeaf() const;
-		virtual void propertyNames( std::vector<IECore::InternedString> &names ) const;
+		bool isValid() const override;
+		bool isLeaf() const override;
+		void propertyNames( std::vector<IECore::InternedString> &names ) const override;
 		/// Supported properties :
 		///
 		/// "fileSystem:owner" -> StringData
@@ -68,8 +68,8 @@ class FileSystemPath : public Path
 		/// "fileSystem:modificationTime" -> DateTimeData, in UTC time
 		/// "fileSystem:size" -> UInt64Data, in bytes
 		/// "fileSystem:frameRange" -> StringData
-		virtual IECore::ConstRunTimeTypedPtr property( const IECore::InternedString &name ) const;
-		virtual PathPtr copy() const;
+		IECore::ConstRunTimeTypedPtr property( const IECore::InternedString &name ) const override;
+		PathPtr copy() const override;
 
 		// Returns true if this FileSystemPath includes FileSequences
 		bool getIncludeSequences() const;
@@ -86,7 +86,7 @@ class FileSystemPath : public Path
 
 	protected :
 
-		virtual void doChildren( std::vector<PathPtr> &children ) const;
+		void doChildren( std::vector<PathPtr> &children ) const override;
 
 	private :
 

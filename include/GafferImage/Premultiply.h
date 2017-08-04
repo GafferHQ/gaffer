@@ -51,7 +51,7 @@ class Premultiply : public ChannelDataProcessor
 	public :
 
 		Premultiply( const std::string &name=defaultName<Premultiply>() );
-		virtual ~Premultiply();
+		~Premultiply() override;
 
 		IE_CORE_DECLARERUNTIMETYPEDEXTENSION( GafferImage::Premultiply, PremultiplyTypeId, ChannelDataProcessor );
 
@@ -63,12 +63,12 @@ class Premultiply : public ChannelDataProcessor
 		const Gaffer::StringPlug *alphaChannelPlug() const;
 		//@}
 
-		virtual void affects( const Gaffer::Plug *input, AffectedPlugsContainer &outputs ) const;
+		void affects( const Gaffer::Plug *input, AffectedPlugsContainer &outputs ) const override;
 
 	protected :
 
-		virtual void hashChannelData( const GafferImage::ImagePlug *output, const Gaffer::Context *context, IECore::MurmurHash &h ) const;
-		virtual void processChannelData( const Gaffer::Context *context, const ImagePlug *parent, const std::string &channelIndex, IECore::FloatVectorDataPtr outData ) const;
+		void hashChannelData( const GafferImage::ImagePlug *output, const Gaffer::Context *context, IECore::MurmurHash &h ) const override;
+		void processChannelData( const Gaffer::Context *context, const ImagePlug *parent, const std::string &channelIndex, IECore::FloatVectorDataPtr outData ) const override;
 
 	private :
 

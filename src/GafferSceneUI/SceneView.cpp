@@ -412,14 +412,14 @@ class GnomonPlane : public GafferUI::Gadget
 			leaveSignal().connect( boost::bind( &GnomonPlane::leave, this ) );
 		}
 
-		Imath::Box3f bound() const
+		Imath::Box3f bound() const override
 		{
 			return Box3f( V3f( 0 ), V3f( 1, 1, 0 ) );
 		}
 
 	protected :
 
-		virtual void doRender( const Style *style ) const
+		void doRender( const Style *style ) const override
 		{
 			if( m_hovering || IECoreGL::Selector::currentSelector() )
 			{
@@ -458,7 +458,7 @@ class GnomonGadget : public GafferUI::Gadget
 
 	protected :
 
-		virtual void doRender( const Style *style ) const
+		void doRender( const Style *style ) const override
 		{
 			const float pixelWidth = 30.0f;
 			const V2i viewport = ancestor<ViewportGadget>()->getViewport();
@@ -653,7 +653,7 @@ class CameraOverlay : public GafferUI::Gadget
 		{
 		}
 
-		virtual Imath::Box3f bound() const
+		Imath::Box3f bound() const override
 		{
 			// we draw in raster space so don't have a sensible bound
 			return Box3f();
@@ -708,7 +708,7 @@ class CameraOverlay : public GafferUI::Gadget
 
 	protected :
 
-		virtual void doRender( const Style *style ) const
+		void doRender( const Style *style ) const override
 		{
 			if( IECoreGL::Selector::currentSelector() || m_resolutionGate.isEmpty() )
 			{

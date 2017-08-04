@@ -64,12 +64,12 @@ class ConnectionGadget : public Gadget
 
 	public :
 
-		virtual ~ConnectionGadget();
+		~ConnectionGadget() override;
 
 		IE_CORE_DECLARERUNTIMETYPEDEXTENSION( GafferUI::ConnectionGadget, ConnectionGadgetTypeId, Gadget );
 
 		/// Accepts only GraphGadgets as parent.
-		virtual bool acceptsParent( const Gaffer::GraphComponent *potentialParent ) const;
+		bool acceptsParent( const Gaffer::GraphComponent *potentialParent ) const override;
 
 		/// Returns the Nodule representing the source plug in the connection.
 		/// Note that this may be null if the source plug belongs to a node which

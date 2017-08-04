@@ -52,11 +52,11 @@ class BackdropNodeGadget : public NodeGadget
 	public :
 
 		BackdropNodeGadget( Gaffer::NodePtr node );
-		virtual ~BackdropNodeGadget();
+		~BackdropNodeGadget() override;
 
 		IE_CORE_DECLARERUNTIMETYPEDEXTENSION( GafferUI::BackdropNodeGadget, BackdropNodeGadgetTypeId, NodeGadget );
 
-		virtual std::string getToolTip( const IECore::LineSegment3f &line ) const;
+		std::string getToolTip( const IECore::LineSegment3f &line ) const override;
 
 		/// Resizes the backdrop to frame the specified nodes.
 		/// \undoable
@@ -64,11 +64,11 @@ class BackdropNodeGadget : public NodeGadget
 		/// Fills nodes with all the nodes currently enclosed by the backdrop.
 		void framed( std::vector<Gaffer::Node *> &nodes ) const;
 
-		Imath::Box3f bound() const;
+		Imath::Box3f bound() const override;
 
 	protected :
 
-		virtual void doRender( const Style *style ) const;
+		void doRender( const Style *style ) const override;
 
 	private :
 

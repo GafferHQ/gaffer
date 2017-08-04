@@ -54,15 +54,15 @@ class DeleteContextVariables : public ContextProcessor<BaseType>
 		IE_CORE_DECLARERUNTIMETYPEDDESCRIPTION( DeleteContextVariables<BaseType> );
 
 		DeleteContextVariables( const std::string &name=GraphComponent::defaultName<DeleteContextVariables>() );
-		virtual ~DeleteContextVariables();
+		~DeleteContextVariables() override;
 
 		StringPlug *variablesPlug();
 		const StringPlug *variablesPlug() const;
 
 	protected :
 
-		virtual bool affectsContext( const Plug *input ) const;
-		virtual void processContext( Context::EditableScope &context ) const;
+		bool affectsContext( const Plug *input ) const override;
+		void processContext( Context::EditableScope &context ) const override;
 
 	private :
 

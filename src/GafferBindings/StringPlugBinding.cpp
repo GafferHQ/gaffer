@@ -114,7 +114,7 @@ class StringPlugSerialiser : public ValuePlugSerialiser
 
 	public :
 
-		virtual std::string constructor( const Gaffer::GraphComponent *graphComponent, const Serialisation &serialisation ) const
+		std::string constructor( const Gaffer::GraphComponent *graphComponent, const Serialisation &serialisation ) const override
 		{
 			return maskedRepr( static_cast<const StringPlug *>( graphComponent ), Plug::All & ~Plug::ReadOnly, &serialisation );
 		}

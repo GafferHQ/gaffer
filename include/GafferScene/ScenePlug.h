@@ -57,14 +57,14 @@ class ScenePlug : public Gaffer::ValuePlug
 	public :
 
 		ScenePlug( const std::string &name=defaultName<ScenePlug>(), Direction direction=In, unsigned flags=Default );
-		virtual ~ScenePlug();
+		~ScenePlug() override;
 
 		IE_CORE_DECLARERUNTIMETYPEDEXTENSION( GafferScene::ScenePlug, ScenePlugTypeId, ValuePlug );
 
-		virtual bool acceptsChild( const Gaffer::GraphComponent *potentialChild ) const;
-		virtual Gaffer::PlugPtr createCounterpart( const std::string &name, Direction direction ) const;
+		bool acceptsChild( const Gaffer::GraphComponent *potentialChild ) const override;
+		Gaffer::PlugPtr createCounterpart( const std::string &name, Direction direction ) const override;
 		/// Only accepts ScenePlug inputs.
-		virtual bool acceptsInput( const Gaffer::Plug *input ) const;
+		bool acceptsInput( const Gaffer::Plug *input ) const override;
 
 		/// @name Child plugs
 		/// Different aspects of the scene are passed through different

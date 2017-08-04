@@ -72,7 +72,7 @@ class NodeGadgetWrapper : public GadgetWrapper<WrappedType>
 		{
 		}
 
-		virtual GafferUI::Nodule *nodule( const Gaffer::Plug *plug )
+		GafferUI::Nodule *nodule( const Gaffer::Plug *plug ) override
 		{
 			if( this->isSubclassed() )
 			{
@@ -88,13 +88,13 @@ class NodeGadgetWrapper : public GadgetWrapper<WrappedType>
 			return WrappedType::nodule( plug );
 		}
 
-		virtual const GafferUI::Nodule *nodule( const Gaffer::Plug *plug ) const
+		const GafferUI::Nodule *nodule( const Gaffer::Plug *plug ) const override
 		{
 			// naughty cast is better than repeating the above logic.
 			return const_cast<NodeGadgetWrapper *>( this )->nodule( plug );
 		}
 
-		virtual Imath::V3f noduleTangent( const GafferUI::Nodule *nodule ) const
+		Imath::V3f noduleTangent( const GafferUI::Nodule *nodule ) const override
 		{
 			if( this->isSubclassed() )
 			{

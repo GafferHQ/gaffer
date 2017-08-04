@@ -100,7 +100,7 @@ class Dispatcher : public Gaffer::Node
 	public :
 
 		Dispatcher( const std::string &name=defaultName<Dispatcher>() );
-		virtual ~Dispatcher();
+		~Dispatcher() override;
 
 		IE_CORE_DECLARERUNTIMETYPEDEXTENSION( GafferDispatch::Dispatcher, DispatcherTypeId, Gaffer::Node );
 

@@ -50,7 +50,7 @@ class AppleseedAttributes : public GafferScene::Attributes
 	public :
 
 		AppleseedAttributes( const std::string &name=defaultName<AppleseedAttributes>() );
-		virtual ~AppleseedAttributes();
+		~AppleseedAttributes() override;
 
 		IE_CORE_DECLARERUNTIMETYPEDEXTENSION( GafferAppleseed::AppleseedAttributes, AppleseedAttributesTypeId, GafferScene::Attributes );
 

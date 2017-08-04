@@ -57,7 +57,7 @@ class AttributeProcessor : public SceneElementProcessor
 	public :
 
 		AttributeProcessor( const std::string &name=defaultName<AttributeProcessor>() );
-		virtual ~AttributeProcessor();
+		~AttributeProcessor() override;
 
 		IE_CORE_DECLARERUNTIMETYPEDEXTENSION( GafferScene::AttributeProcessor, AttributeProcessorTypeId, SceneElementProcessor );
 
@@ -68,13 +68,13 @@ class AttributeProcessor : public SceneElementProcessor
 		const Gaffer::BoolPlug *invertNamesPlug() const;
 
 		/// Implemented so that namesPlug() affects outPlug()->attributesPlug().
-		virtual void affects( const Gaffer::Plug *input, AffectedPlugsContainer &outputs ) const;
+		void affects( const Gaffer::Plug *input, AffectedPlugsContainer &outputs ) const override;
 
 	protected :
 
-		virtual bool processesAttributes() const;
-		virtual void hashProcessedAttributes( const ScenePath &path, const Gaffer::Context *context, IECore::MurmurHash &h ) const;
-		virtual IECore::ConstCompoundObjectPtr computeProcessedAttributes( const ScenePath &path, const Gaffer::Context *context, IECore::ConstCompoundObjectPtr inputAttributes ) const;
+		bool processesAttributes() const override;
+		void hashProcessedAttributes( const ScenePath &path, const Gaffer::Context *context, IECore::MurmurHash &h ) const override;
+		IECore::ConstCompoundObjectPtr computeProcessedAttributes( const ScenePath &path, const Gaffer::Context *context, IECore::ConstCompoundObjectPtr inputAttributes ) const override;
 
 		/// Must be implemented by subclasses to process the attribute.
 		virtual IECore::ConstObjectPtr processAttribute( const ScenePath &path, const Gaffer::Context *context, const IECore::InternedString &attributeName, const IECore::Object *inputAttribute ) const = 0;
