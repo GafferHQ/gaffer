@@ -50,7 +50,7 @@ class NodeGadgetClass : public GadgetClass<T, TWrapper>
 {
 	public :
 
-		NodeGadgetClass( const char *docString = 0 );
+		NodeGadgetClass( const char *docString = nullptr );
 
 };
 

@@ -1127,7 +1127,7 @@ int StandardStyle::g_t1Parameter;
 IECoreGL::Shader *StandardStyle::shader()
 {
 
-	static ShaderPtr g_shader = 0;
+	static ShaderPtr g_shader = nullptr;
 
 	if( !g_shader )
 	{

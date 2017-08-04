@@ -66,7 +66,7 @@ class StandardStyle : public Style
 
 		IE_CORE_DECLARERUNTIMETYPEDEXTENSION( GafferUI::StandardStyle, StandardStyleTypeId, Style );
 
-		void bind( const Style *currentStyle=0 ) const override;
+		void bind( const Style *currentStyle=nullptr ) const override;
 
 		void renderImage( const Imath::Box2f &box, const IECoreGL::Texture *texture ) const override;
 		void renderLine( const IECore::LineSegment3f &line ) const override;

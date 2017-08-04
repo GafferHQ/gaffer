@@ -51,7 +51,7 @@ class GadgetClass : public GafferBindings::GraphComponentClass<T, TWrapper>
 {
 	public :
 
-		GadgetClass( const char *docString = 0 );
+		GadgetClass( const char *docString = nullptr );
 
 };
 

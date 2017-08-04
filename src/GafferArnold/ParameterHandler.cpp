@@ -264,7 +264,7 @@ Gaffer::Plug *ParameterHandler::setupPlug( const AtNodeEntry *node, const AtPara
 
 	int parameterType = AiParamGetType( parameter );
 
-	const char *plugTypeOverride = NULL;
+	const char *plugTypeOverride = nullptr;
 	std::string name = AiParamGetName( parameter );
 	if( AiMetaDataGetStr( node, name.c_str(), "gaffer.plugType", &plugTypeOverride ) )
 	{

@@ -138,7 +138,7 @@ void AppleseedLight::setupPlugs( const std::string &shaderName, const asf::Dicti
 		std::string inputName = inputMetadata.get( "name" );
 		std::string inputType = inputMetadata.get( "type" );
 
-		Gaffer::Plug *plug = 0;
+		Gaffer::Plug *plug = nullptr;
 
 		// some environment lights need their radiance color input
 		// replaced by a texture input: latlong map and mirrorball map.

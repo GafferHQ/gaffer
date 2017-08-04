@@ -787,7 +787,7 @@ class InteractiveRender::SceneGraphOutputFilter : public tbb::thread_bound_filte
 					{
 						renderable->render( m_renderer );
 					}
-					s->m_object = 0;
+					s->m_object = nullptr;
 				}
 			}
 			catch( const std::exception &e )

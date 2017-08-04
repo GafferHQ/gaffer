@@ -152,7 +152,7 @@ std::string PlugSerialiser::directionRepr( Plug::Direction direction )
 std::string PlugSerialiser::flagsRepr( unsigned flags )
 {
 	static const Plug::Flags values[] = { Plug::Dynamic, Plug::Serialisable, Plug::AcceptsInputs, Plug::PerformsSubstitutions, Plug::Cacheable, Plug::ReadOnly, Plug::AcceptsDependencyCycles, Plug::None };
-	static const char *names[] = { "Dynamic", "Serialisable", "AcceptsInputs", "PerformsSubstitutions", "Cacheable", "ReadOnly", "AcceptsDependencyCycles", 0 };
+	static const char *names[] = { "Dynamic", "Serialisable", "AcceptsInputs", "PerformsSubstitutions", "Cacheable", "ReadOnly", "AcceptsDependencyCycles", nullptr };
 
 	int defaultButOffCount = 0;
 	std::string defaultButOff;

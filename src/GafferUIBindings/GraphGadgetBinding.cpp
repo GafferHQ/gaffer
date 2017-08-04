@@ -66,7 +66,7 @@ struct RootChangedSlotCaller
 	}
 };
 
-list connectionGadgets1( GraphGadget &graphGadget, const Gaffer::Plug *plug, const Gaffer::Set *excludedNodes = 0 )
+list connectionGadgets1( GraphGadget &graphGadget, const Gaffer::Plug *plug, const Gaffer::Set *excludedNodes = nullptr )
 {
 	std::vector<ConnectionGadget *> connections;
 	graphGadget.connectionGadgets( plug, connections, excludedNodes );
@@ -79,7 +79,7 @@ list connectionGadgets1( GraphGadget &graphGadget, const Gaffer::Plug *plug, con
 	return l;
 }
 
-list connectionGadgets2( GraphGadget &graphGadget, const Gaffer::Node *node, const Gaffer::Set *excludedNodes = 0 )
+list connectionGadgets2( GraphGadget &graphGadget, const Gaffer::Node *node, const Gaffer::Set *excludedNodes = nullptr )
 {
 	std::vector<ConnectionGadget *> connections;
 	graphGadget.connectionGadgets( node, connections, excludedNodes );

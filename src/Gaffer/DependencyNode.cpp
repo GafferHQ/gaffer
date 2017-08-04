@@ -61,20 +61,20 @@ void DependencyNode::affects( const Plug *input, AffectedPlugsContainer &outputs
 
 BoolPlug *DependencyNode::enabledPlug()
 {
-	return 0;
+	return nullptr;
 }
 
 const BoolPlug *DependencyNode::enabledPlug() const
 {
-	return 0;
+	return nullptr;
 }
 
 Plug *DependencyNode::correspondingInput( const Plug *output )
 {
-	return 0;
+	return nullptr;
 }
 
 const Plug *DependencyNode::correspondingInput( const Plug *output ) const
 {
-	return 0;
+	return nullptr;
 }

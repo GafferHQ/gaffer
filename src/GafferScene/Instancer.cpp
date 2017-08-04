@@ -447,7 +447,7 @@ ConstV3fVectorDataPtr Instancer::sourcePoints( const ScenePath &parentPath ) con
 	ConstPrimitivePtr primitive = runTimeCast<const Primitive>( inPlug()->object( parentPath ) );
 	if( !primitive )
 	{
-		return 0;
+		return nullptr;
 	}
 
 	return primitive->variableData<V3fVectorData>( "P" );

@@ -156,7 +156,7 @@ GraphComponentPtr getItem( GraphComponent &g, const char *n )
 	}
 
 	throwKeyError( g, n );
-	return 0; // shouldn't get here
+	return nullptr; // shouldn't get here
 }
 
 GraphComponentPtr getItem( GraphComponent &g, long index )

@@ -190,7 +190,7 @@ ViewPtr View::create( Gaffer::PlugPtr plug )
 		t = IECore::RunTimeTyped::baseTypeId( t );
 	}
 
-	return 0;
+	return nullptr;
 }
 
 void View::registerView( IECore::TypeId plugType, ViewCreator creator )

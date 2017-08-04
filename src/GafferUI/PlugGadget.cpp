@@ -48,7 +48,7 @@ using namespace Gaffer;
 IE_CORE_DEFINERUNTIMETYPED( PlugGadget );
 
 PlugGadget::PlugGadget( Gaffer::PlugPtr plug )
-	:	ContainerGadget( defaultName<PlugGadget>() ), m_plug( 0 )
+	:	ContainerGadget( defaultName<PlugGadget>() ), m_plug( nullptr )
 {
 	setPlug( plug );
 }
@@ -127,7 +127,7 @@ void PlugGadget::updateContextConnection()
 		// we only want to be notified of context changes if the plug has an incoming
 		// connection. otherwise context changes are irrelevant and we'd just be slowing
 		// things down by asking for notifications.
-		context = 0;
+		context = nullptr;
 	}
 
 	if( context )

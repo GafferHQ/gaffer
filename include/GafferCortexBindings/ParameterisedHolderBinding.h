@@ -105,7 +105,7 @@ class ParameterisedHolderClass : public BaseType
 
 	public :
 
-		ParameterisedHolderClass( const char *docString = 0 )
+		ParameterisedHolderClass( const char *docString = nullptr )
 			:	BaseType( docString )
 		{
 

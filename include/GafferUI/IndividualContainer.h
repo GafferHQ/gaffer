@@ -50,7 +50,7 @@ class IndividualContainer : public ContainerGadget
 
 	public :
 
-		IndividualContainer( GadgetPtr child=0 );
+		IndividualContainer( GadgetPtr child=nullptr );
 		~IndividualContainer() override;
 
 		IE_CORE_DECLARERUNTIMETYPEDEXTENSION( GafferUI::IndividualContainer, IndividualContainerTypeId, ContainerGadget );

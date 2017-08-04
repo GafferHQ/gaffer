@@ -104,7 +104,7 @@ static IECore::ObjectPtr getClipboardContents( ApplicationRoot &a )
 	{
 		return o->copy();
 	}
-	return 0;
+	return nullptr;
 }
 
 struct ClipboardSlotCaller

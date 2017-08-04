@@ -155,12 +155,12 @@ const Gaffer::Node *NodeGadget::node() const
 
 Nodule *NodeGadget::nodule( const Gaffer::Plug *plug )
 {
-	return 0;
+	return nullptr;
 }
 
 const Nodule *NodeGadget::nodule( const Gaffer::Plug *plug ) const
 {
-	return 0;
+	return nullptr;
 }
 
 Imath::V3f NodeGadget::noduleTangent( const Nodule *nodule ) const

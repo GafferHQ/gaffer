@@ -63,7 +63,7 @@ class RenderableGadget : public Gadget
 
 	public :
 
-		RenderableGadget( IECore::VisibleRenderablePtr renderable = 0 );
+		RenderableGadget( IECore::VisibleRenderablePtr renderable = nullptr );
 		~RenderableGadget() override;
 
 		IE_CORE_DECLARERUNTIMETYPEDEXTENSION( GafferUI::RenderableGadget, RenderableGadgetTypeId, Gadget );
@@ -130,7 +130,7 @@ class RenderableGadget : public Gadget
 		bool dragMove( GadgetPtr gadget, const DragDropEvent &event );
 		bool dragEnd( GadgetPtr gadget, const DragDropEvent &event );
 
-		void applySelection( IECoreGL::Group *group = 0 );
+		void applySelection( IECoreGL::Group *group = nullptr );
 		Imath::Box3f selectionBound( IECoreGL::Group *group ) const;
 
 		IECore::ConstVisibleRenderablePtr m_renderable;

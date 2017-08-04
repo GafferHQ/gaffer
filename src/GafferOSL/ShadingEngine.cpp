@@ -873,7 +873,7 @@ IECore::CompoundDataPtr ShadingEngine::shade( const IECore::CompoundData *points
 
 	size_t numPoints = 0;
 
-	const OSL::Vec3 *p = 0;
+	const OSL::Vec3 *p = nullptr;
 	if( const V3fVectorData *pData = points->member<V3fVectorData>( "P" ) )
 	{
 		numPoints = pData->readable().size();

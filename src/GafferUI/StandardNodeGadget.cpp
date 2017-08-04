@@ -174,7 +174,7 @@ StandardNodeGadget::StandardNodeGadget( Gaffer::NodePtr node )
 	:	NodeGadget( node ),
 		m_nodeEnabled( true ),
 		m_labelsVisibleOnHover( true ),
-		m_dragDestinationProxy( 0 ),
+		m_dragDestinationProxy( nullptr ),
 		m_userColor( 0 ),
 		m_oval( false )
 {
@@ -638,7 +638,7 @@ Gadget *StandardNodeGadget::closestDragDestinationProxy( const DragDropEvent &ev
 		return nullptr;
 	}
 
-	Gadget *result = 0;
+	Gadget *result = nullptr;
 	float maxDist = Imath::limits<float>::max();
 	for( RecursiveGadgetIterator it( this ); !it.done(); it++ )
 	{

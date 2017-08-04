@@ -55,7 +55,7 @@ class PlugClass : public GraphComponentClass<T, TWrapper>
 {
 	public :
 
-		PlugClass( const char *docString = 0 );
+		PlugClass( const char *docString = nullptr );
 
 };
 

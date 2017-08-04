@@ -60,7 +60,7 @@ class DependencyNodeClass : public NodeClass<T, TWrapper>
 {
 	public :
 
-		DependencyNodeClass( const char *docString = 0 );
+		DependencyNodeClass( const char *docString = nullptr );
 		DependencyNodeClass( const char *docString, boost::python::no_init_t );
 
 };

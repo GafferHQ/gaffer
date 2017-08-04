@@ -55,7 +55,7 @@ const IECore::RunTimeTyped::TypeDescription<ParameterisedHolder<BaseType> > Para
 
 template<typename BaseType>
 ParameterisedHolder<BaseType>::ParameterisedHolder( const std::string &name )
-	:	BaseType( name ), m_parameterised( 0 ), m_parameterHandler( 0 )
+	:	BaseType( name ), m_parameterised( nullptr ), m_parameterHandler( nullptr )
 {
 	BaseType::addChild( new Gaffer::StringPlug( "__className" ) );
 	BaseType::addChild( new Gaffer::IntPlug( "__classVersion", Gaffer::Plug::In, -1 ) );

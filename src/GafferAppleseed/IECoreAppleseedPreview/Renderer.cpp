@@ -869,7 +869,7 @@ class InstanceMaster : public IECore::RefCounted
 
 			// Move the object into its own assembly if needed, so that it can be instanced.
 			const string assemblyName = m_name + "_assembly";
-			if( m_mainAssembly->assemblies().get_by_name( assemblyName.c_str() ) == 0 )
+			if( m_mainAssembly->assemblies().get_by_name( assemblyName.c_str() ) == nullptr )
 			{
 				// Create an assembly for the object.
 				asf::auto_release_ptr<asr::Assembly> ass( asr::AssemblyFactory().create( assemblyName.c_str() ) );
@@ -1589,7 +1589,7 @@ class AppleseedEnvironmentLight : public AppleseedLight
 				removeEnvironmentEDF( m_environment );
 				removeSceneTextures();
 				removeSceneColors();
-				m_environment = 0;
+				m_environment = nullptr;
 			}
 		}
 
@@ -2386,7 +2386,7 @@ class AppleseedRenderer : public IECoreScenePreview::Renderer
 
 			// Render progress logging.
 			ProgressTileCallbackFactory tileCallbackFactory;
-			asr::ITileCallbackFactory *tileCallbackFactoryPtr = 0;
+			asr::ITileCallbackFactory *tileCallbackFactoryPtr = nullptr;
 
 			if( m_project->get_display() == nullptr )
 			{

@@ -398,7 +398,7 @@ bool StandardNodule::drop( GadgetPtr gadget, const DragDropEvent &event )
 				// see issue #302.
 				if( connection->dstNodule()->plug() != input )
 				{
-					connection->dstNodule()->plug()->setInput( 0 );
+					connection->dstNodule()->plug()->setInput( nullptr );
 				}
 			}
 
@@ -435,7 +435,7 @@ void StandardNodule::connection( const DragDropEvent &event, Gaffer::PlugPtr &in
 		}
 	}
 
-	input = output = 0;
+	input = output = nullptr;
 	return;
 }
 

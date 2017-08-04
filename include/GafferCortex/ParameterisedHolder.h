@@ -72,9 +72,9 @@ class ParameterisedHolder : public BaseType
 		/// first.
 		virtual void setParameterised( IECore::RunTimeTypedPtr parameterised, bool keepExistingValues=false );
 		void setParameterised( const std::string &className, int classVersion, const std::string &searchPathEnvVar, bool keepExistingValues=false );
-		IECore::RunTimeTyped *getParameterised( std::string *className = 0, int *classVersion = 0, std::string *searchPathEnvVar = 0 ) const;
+		IECore::RunTimeTyped *getParameterised( std::string *className = nullptr, int *classVersion = nullptr, std::string *searchPathEnvVar = nullptr ) const;
 		/// Convenience method to return dynamic_cast<const IECore::ParameterisedInterface *>( getParameterised().get() )
-		IECore::ParameterisedInterface *parameterisedInterface( std::string *className = 0, int *classVersion = 0, std::string *searchPathEnvVar = 0 );
+		IECore::ParameterisedInterface *parameterisedInterface( std::string *className = nullptr, int *classVersion = nullptr, std::string *searchPathEnvVar = nullptr );
 
 		CompoundParameterHandler *parameterHandler();
 		const CompoundParameterHandler *parameterHandler() const;

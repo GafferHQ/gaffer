@@ -50,7 +50,7 @@ class GraphComponentClass : public IECorePython::RunTimeTypedClass<T, TWrapper>
 {
 	public :
 
-		GraphComponentClass( const char *docString = 0 );
+		GraphComponentClass( const char *docString = nullptr );
 
 };
 

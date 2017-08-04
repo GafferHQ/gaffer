@@ -60,7 +60,7 @@ const T *GraphComponent::getChild( const IECore::InternedString &name ) const
 			return IECore::runTimeCast<const T>( it->get() );
 		}
 	}
-	return 0;
+	return nullptr;
 }
 
 template<typename T>
@@ -87,7 +87,7 @@ const T *GraphComponent::descendant( const std::string &relativePath ) const
 {
 	if( !relativePath.size() )
 	{
-		return 0;
+		return nullptr;
 	}
 
 	typedef boost::tokenizer<boost::char_separator<char> > Tokenizer;
@@ -96,7 +96,7 @@ const T *GraphComponent::descendant( const std::string &relativePath ) const
 	const GraphComponent *result = this;
 	for( Tokenizer::iterator tIt=t.begin(); tIt!=t.end(); tIt++ )
 	{
-		const GraphComponent *child = 0;
+		const GraphComponent *child = nullptr;
 		IECore::InternedString internedName( *tIt );
 		for( ChildContainer::const_iterator it=result->m_children.begin(), eIt=result->m_children.end(); it!=eIt; it++ )
 		{
@@ -108,7 +108,7 @@ const T *GraphComponent::descendant( const std::string &relativePath ) const
 		}
 		if( !child )
 		{
-			return 0;
+			return nullptr;
 		}
 		result = child;
 	}

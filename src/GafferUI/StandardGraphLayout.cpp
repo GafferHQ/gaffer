@@ -1074,7 +1074,7 @@ bool StandardGraphLayout::connectNodeInternal( GraphGadget *graph, Gaffer::Node 
 	// iterate over the output plugs, connecting them in to the node if we can
 
 	size_t numConnectionsMade = 0;
-	Plug *firstConnectionSrc = 0, *firstConnectionDst = 0;
+	Plug *firstConnectionSrc = nullptr, *firstConnectionDst = nullptr;
 	vector<Plug *> inputPlugs;
 	unconnectedInputPlugs( nodeGadget, inputPlugs );
 	for( vector<Plug *>::const_iterator oIt = outputPlugs.begin(), oEIt = outputPlugs.end(); oIt != oEIt; oIt++ )
@@ -1183,7 +1183,7 @@ size_t StandardGraphLayout::unconnectedInputPlugs( NodeGadget *nodeGadget, std::
 	plugs.clear();
 	for( RecursiveInputPlugIterator it( nodeGadget->node() ); !it.done(); it++ )
 	{
-		if( (*it)->getInput() == 0 and nodeGadget->nodule( it->get() ) )
+		if( (*it)->getInput() == nullptr and nodeGadget->nodule( it->get() ) )
 		{
 			plugs.push_back( it->get() );
 		}
@@ -1199,7 +1199,7 @@ Gaffer::Plug *StandardGraphLayout::correspondingOutput( const Gaffer::Plug *inpu
 	const DependencyNode *dependencyNode = IECore::runTimeCast<const DependencyNode>( input->node() );
 	if( !dependencyNode )
 	{
-		return 0;
+		return nullptr;
 	}
 
 	for( RecursiveOutputPlugIterator it( dependencyNode ); !it.done(); ++it )
@@ -1210,7 +1210,7 @@ Gaffer::Plug *StandardGraphLayout::correspondingOutput( const Gaffer::Plug *inpu
 		}
 	}
 
-	return 0;
+	return nullptr;
 }
 
 void StandardGraphLayout::setConnectionScale( float scale )

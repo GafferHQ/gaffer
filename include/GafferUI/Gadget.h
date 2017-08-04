@@ -158,7 +158,7 @@ class Gadget : public Gaffer::GraphComponent
 		/// Returns the full transform of this Gadget relative to the
 		/// specified ancestor. If ancestor is not specified then the
 		/// transform from the root of the hierarchy is returned.
-		Imath::M44f fullTransform( const Gadget *ancestor = 0 ) const;
+		Imath::M44f fullTransform( const Gadget *ancestor = nullptr ) const;
 		//@}
 
 		/// @name Display
@@ -170,7 +170,7 @@ class Gadget : public Gaffer::GraphComponent
 		/// specifically to this Gadget. Typically users will not pass currentStyle -
 		/// but it must be passed by Gadget implementations when rendering child
 		/// Gadgets in doRender().
-		void render( const Style *currentStyle = 0 ) const;
+		void render( const Style *currentStyle = nullptr ) const;
 		/// The bounding box of the Gadget before transformation. The default
 		/// implementation returns the union of the transformed bounding boxes
 		/// of all the children.
