@@ -319,10 +319,9 @@ class Diff( GafferUI.Widget ) :
 
 		raise NotImplementedError
 
-# Base class for showing side-by-side diffs. It maintains two frames,
-# one for each value, and in update() it displays one or both of the frames,
-# with background colours appropriate to the relationship between the two
-# values.
+# Base class for showing side-by-side diffs. It houses two widgets,
+# one for each value, and in update() it displays one or both of them,
+# with background colours appropriate to the relationship between the two.
 class SideBySideDiff( Diff ) :
 
 	def __init__( self, **kw ) :
@@ -342,9 +341,13 @@ class SideBySideDiff( Diff ) :
 				# specialised?
 				frame._qtWidget().setObjectName( "gafferDiffA" if i == 0 else "gafferDiffB" )
 
-	def frame( self, index ) :
+	def setValueWidget( self, index, widget ) :
 
-		return self.__grid[0,index]
+		self.__frame( index ).setChild( widget )
+
+	def getValueWidget( self, index ) :
+
+		return self.__frame( index ).getChild()
 
 	def setCornerWidget( self, index, widget ) :
 
@@ -359,8 +362,8 @@ class SideBySideDiff( Diff ) :
 
 	## Updates the UI to reflect the relationship between the values.
 	# If they are equal or if there is only one, then only the first
-	# frame is shown, with a default background colour. If there are
-	# two and they differ, then both frames are shown, with red and
+	# value is shown, with a default background colour. If there are
+	# two and they differ, then both values are shown, with red and
 	# green backgrounds respectively.
 	#
 	# The visibilities argument can be passed a sequence containing
@@ -368,7 +371,7 @@ class SideBySideDiff( Diff ) :
 	# is used by the history and inheritance sections.
 	#
 	# Derived classes are expected to override this method to additionally
-	# edit widgets inside the frames to display the actual values.
+	# edit the value widgets to display the actual values.
 	def update( self, values, visibilities = None ) :
 
 		assert( len( values ) <= 2 )
@@ -384,15 +387,19 @@ class SideBySideDiff( Diff ) :
 			]
 
 		for i in range( 0, 2 ) :
-			self.frame( i ).setVisible( visibilities[i] )
+			self.__frame( i ).setVisible( visibilities[i] )
 			cornerWidget = self.getCornerWidget( i )
 			if cornerWidget is not None :
 				cornerWidget.setVisible( visibilities[i] )
 
 		name =  "gafferDiffA" if different else ""
-		if name != self.frame( 0 )._qtWidget().objectName() :
-			self.frame( 0 )._qtWidget().setObjectName( name )
-			self.frame( 0 )._repolish()
+		if name != self.__frame( 0 )._qtWidget().objectName() :
+			self.__frame( 0 )._qtWidget().setObjectName( name )
+			self.__frame( 0 )._repolish()
+
+	def __frame( self, index ) :
+
+		return self.__grid[0,index]
 
 class TextDiff( SideBySideDiff ) :
 
@@ -406,7 +413,7 @@ class TextDiff( SideBySideDiff ) :
 			self.__connections.append( label.buttonPressSignal().connect( Gaffer.WeakMethod( self.__buttonPress ) ) )
 			self.__connections.append( label.dragBeginSignal().connect( Gaffer.WeakMethod( self.__dragBegin ) ) )
 			self.__connections.append( label.dragEndSignal().connect( Gaffer.WeakMethod( self.__dragEnd ) )	)
-			self.frame( i ).setChild( label )
+			self.setValueWidget( i, label )
 
 		self.__highlightDiffs = highlightDiffs
 
@@ -418,7 +425,7 @@ class TextDiff( SideBySideDiff ) :
 
 		formattedValues = self.__formatValues( values )
 		for i, value in enumerate( formattedValues ) :
-			self.frame( i ).getChild().setText( self.__htmlHeader + value + self.__htmlFooter )
+			self.getValueWidget( i ).setText( self.__htmlHeader + value + self.__htmlFooter )
 
 	def __formatValues( self, values ) :
 
@@ -614,7 +621,7 @@ class TextDiff( SideBySideDiff ) :
 			return None
 
 		GafferUI.Pointer.setCurrent( "values" )
-		return self.__values[0] if self.frame( 0 ).isAncestorOf( widget ) else self.__values[1]
+		return self.__values[0] if widget is self.getValueWidget( 0 ) else self.__values[1]
 
 	def __dragEnd( self, widget, event ) :
 
@@ -743,7 +750,7 @@ class DiffRow( Row ) :
 				diff.setCornerWidget( 1, GafferUI.Label( "" ) )
 
 			self.__diffConnections = []
-			diffWidgets = [ diff.frame( 0 ), diff.frame( 1 ) ] if isinstance( diff, SideBySideDiff ) else [ diff ]
+			diffWidgets = [ diff.getValueWidget( 0 ), diff.getValueWidget( 1 ) ] if isinstance( diff, SideBySideDiff ) else [ diff ]
 			for diffWidget in diffWidgets :
 				self.__diffConnections.extend( [
 					diffWidget.enterSignal().connect( Gaffer.WeakMethod( self.__enter ) ),
@@ -800,7 +807,7 @@ class DiffRow( Row ) :
 		if isinstance( diff, SideBySideDiff ) :
 			# For SideBySideDiffs, we know which target the user has clicked on
 			# and only present menu items for that target.
-			targets = [ self.__targets[ 0 if widget is diff.frame( 0 ) else 1 ] ]
+			targets = [ self.__targets[ 0 if widget is diff.getValueWidget( 0 ) else 1 ] ]
 		else :
 			# But for other Diff types we don't know, and so present menu items
 			# for any target which has a value.
@@ -1729,8 +1736,7 @@ class _SetMembershipDiff( SideBySideDiff ) :
 		SideBySideDiff.__init__( self, **kw )
 
 		for i in range( 0, 2 ) :
-			self.frame( i )._qtWidget().layout().setContentsMargins( 2, 2, 2, 2 )
-			self.frame( i ).setChild( GafferUI.Image( "setMembershipDot.png" ) )
+			self.setValueWidget( i, GafferUI.Image( "setMembershipDot.png" ) )
 
 class __SetMembershipSection( LocationSection ) :
 
