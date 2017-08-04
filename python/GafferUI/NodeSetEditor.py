@@ -63,16 +63,8 @@ class NodeSetEditor( GafferUI.EditorWidget ) :
 
 	## Sets the nodes that will be displayed by this editor. As members are
 	# added to and removed from the set, the UI will be updated automatically
-	# to show them. If the set is not scriptNode.selection(), then an OrphanRemover
-	# will be applied automatically to the set so that deleted nodes are not
-	# visible in the UI.
-	# \todo Although the OrphanRemover behaviour is convenient for our current use cases
-	# where it prevents the callers of setNodeSet() from having to worry about nodes
-	# being deleted, it might not be ideal in all cases. For instance the same set may be
-	# reused across multiple NodeSetEditors and end up with multiple OrphanRemovers applied.
-	# We might like to consider an API where the behaviours applied to a given object can be
-	# queried, or we could make it the responsibility of the caller to apply an OrphanRemover
-	# explicitly where appropriate.
+	# to show them. This also calls `nodeSet.setRemoveOrphans( True )` so that
+	# deleted nodes are not visible in the UI.
 	def setNodeSet( self, nodeSet ) :
 
 		self.__setNodeSetInternal( nodeSet, callUpdateFromSet=True )
@@ -219,10 +211,7 @@ class NodeSetEditor( GafferUI.EditorWidget ) :
 		self.__memberAddedConnection = self.__nodeSet.memberAddedSignal().connect( Gaffer.WeakMethod( self.__membersChanged ) )
 		self.__memberRemovedConnection = self.__nodeSet.memberRemovedSignal().connect( Gaffer.WeakMethod( self.__membersChanged ) )
 
-		if not self.__nodeSet.isSame( self.scriptNode().selection() ) :
-			self.__orphanRemover = Gaffer.Behaviours.OrphanRemover( self.__nodeSet )
-		else :
-			self.__orphanRemover = None
+		nodeSet.setRemoveOrphans( True )
 
 		if callUpdateFromSet :
 			# only update if the nodes being held have actually changed,
