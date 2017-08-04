@@ -76,7 +76,6 @@
 #include "GafferBindings/BoxBinding.h"
 #include "GafferBindings/ActionBinding.h"
 #include "GafferBindings/ReferenceBinding.h"
-#include "GafferBindings/BehaviourBinding.h"
 #include "GafferBindings/ArrayPlugBinding.h"
 #include "GafferBindings/Serialisation.h"
 #include "GafferBindings/MetadataBinding.h"
@@ -222,13 +221,6 @@ BOOST_PYTHON_MODULE( _Gaffer )
 		.def( "__exit__", &TaskSchedulerInitWrapper::exit )
 	;
 	tsi.attr( "automatic" ) = int( tbb::task_scheduler_init::automatic );
-
-	object behavioursModule( borrowed( PyImport_AddModule( "Gaffer.Behaviours" ) ) );
-	scope().attr( "Behaviours" ) = behavioursModule;
-
-	scope behavioursScope( behavioursModule );
-
-	bindBehaviours();
 
 	// Various parts of gaffer create new threads from C++, and those
 	// threads may call back into Python via wrapped classes at any time.
