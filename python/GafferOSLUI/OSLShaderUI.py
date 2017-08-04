@@ -53,6 +53,14 @@ def __nodeDescription( node ) :
 	description = node.shaderMetadata( "help" )
 	return description or __defaultDescription
 
+def __nodeIcon ( node ) :
+
+	return node.shaderMetadata ( "icon" )
+
+def __nodeIconScale ( node ) :
+
+	return node.shaderMetadata ( "iconScale" )
+
 def __nodeUrl( node ) :
 
 	return node.shaderMetadata( "URL" )
@@ -149,6 +157,8 @@ Gaffer.Metadata.registerNode(
 
 	"description", __nodeDescription,
 	"documentation:url", __nodeUrl,
+	"icon", __nodeIcon,
+	"iconScale", __nodeIconScale,
 
 	plugs = {
 
