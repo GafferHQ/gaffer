@@ -1,7 +1,6 @@
 //////////////////////////////////////////////////////////////////////////
 //
-//  Copyright (c) 2011-2012, John Haddon. All rights reserved.
-//  Copyright (c) 2011-2014, Image Engine Design Inc. All rights reserved.
+//  Copyright (c) 2017, Image Engine Design Inc. All rights reserved.
 //
 //  Redistribution and use in source and binary forms, with or without
 //  modification, are permitted provided that the following conditions are
@@ -35,64 +34,18 @@
 //
 //////////////////////////////////////////////////////////////////////////
 
-#include "boost/python.hpp"
+#include "GafferUI/ConnectionCreator.h"
 
-#include "GafferUIBindings/ConnectionCreatorBinding.h"
+using namespace Imath;
+using namespace GafferUI;
 
-#include "EventBinding.h"
-#include "GadgetBinding.h"
-#include "WidgetSignalBinding.h"
-#include "ViewBinding.h"
-#include "ViewportGadgetBinding.h"
-#include "ToolBinding.h"
-#include "TextGadgetBinding.h"
-#include "StyleBinding.h"
-#include "NoduleBinding.h"
-#include "NodeGadgetBinding.h"
-#include "ContainerGadgetBinding.h"
-#include "GLWidgetBinding.h"
-#include "PointerBinding.h"
-#include "PathListingWidgetBinding.h"
-#include "GraphGadgetBinding.h"
-#include "ConnectionGadgetBinding.h"
-#include "RenderableGadgetBinding.h"
-#include "NameGadgetBinding.h"
-#include "SplinePlugGadgetBinding.h"
-#include "ImageGadgetBinding.h"
-#include "PlugGadgetBinding.h"
-#include "SpacerGadgetBinding.h"
-#include "HandleBinding.h"
-#include "PlugAdderBinding.h"
+IE_CORE_DEFINERUNTIMETYPED( ConnectionCreator );
 
-using namespace GafferUIModule;
-
-BOOST_PYTHON_MODULE( _GafferUI )
+ConnectionCreator::ConnectionCreator( const std::string &name )
+	: Gadget( name )
 {
+}
 
-	bindGadget();
-	bindEvent();
-	bindContainerGadget();
-	bindGraphGadget();
-	bindRenderableGadget();
-	bindTextGadget();
-	bindNameGadget();
-	bindNodeGadget();
-	bindConnectionCreator();
-	bindNodule();
-	bindConnectionGadget();
-	bindWidgetSignal();
-	bindSplinePlugGadget();
-	bindImageGadget();
-	bindStyle();
-	bindViewportGadget();
-	bindView();
-	bindPlugGadget();
-	bindPointer();
-	bindSpacerGadget();
-	bindHandle();
-	bindTool();
-	bindPathListingWidget();
-	bindGLWidget();
-	bindPlugAdder();
-
+ConnectionCreator::~ConnectionCreator()
+{
 }
