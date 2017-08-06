@@ -108,6 +108,14 @@ def __ptSummary( plug ) :
 		info.append( "Caustics" )
 	if plug["ptMaxBounces"]["enabled"].getValue() :
 		info.append( "Max Bounces %d" % plug["ptMaxBounces"]["value"].getValue() )
+	if plug["ptMaxBounces"]["enabled"].getValue() :
+		info.append( "Max Bounces %d" % plug["ptMaxBounces"]["value"].getValue() )
+	if plug["ptMaxDiffuseBounces"]["enabled"].getValue() :
+		info.append( "Max Diffuse Bounces %d" % plug["ptMaxDiffuseBounces"]["value"].getValue() )
+	if plug["ptMaxGlossyBounces"]["enabled"].getValue() :
+		info.append( "Max Glossy Bounces %d" % plug["ptMaxGlossyBounces"]["value"].getValue() )
+	if plug["ptMaxSpecularBounces"]["enabled"].getValue() :
+		info.append( "Max Specular Bounces %d" % plug["ptMaxSpecularBounces"]["value"].getValue() )
 	if plug["ptLightingSamples"]["enabled"].getValue() :
 		info.append( "Lighting Samples %f" % plug["ptLightingSamples"]["value"].getValue() )
 	if plug["ptIBLSamples"]["enabled"].getValue() :
