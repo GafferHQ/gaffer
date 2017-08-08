@@ -36,6 +36,7 @@
 ##########################################################################
 
 import gc
+import functools
 
 import IECore
 
@@ -145,7 +146,7 @@ class CompoundEditor( GafferUI.EditorWidget ) :
 
 		layouts = GafferUI.Layouts.acquire( self.scriptNode().applicationRoot() )
 		for c in layouts.registeredEditors() :
-			m.append( "/" + IECore.CamelCase.toSpaced( c ), { "command" : IECore.curry( self.__addChild, splitContainer, c ) } )
+			m.append( "/" + IECore.CamelCase.toSpaced( c ), { "command" : functools.partial( self.__addChild, splitContainer, c ) } )
 
 		m.append( "/divider", { "divider" : True } )
 
@@ -153,12 +154,12 @@ class CompoundEditor( GafferUI.EditorWidget ) :
 
 		splitContainerParent = splitContainer.parent()
 		if isinstance( splitContainerParent, GafferUI.SplitContainer ) :
-			m.append( "Remove Panel", { "command" : IECore.curry( self.__join, splitContainerParent, 1 - splitContainerParent.index( splitContainer ) ) } )
+			m.append( "Remove Panel", { "command" : functools.partial( self.__join, splitContainerParent, 1 - splitContainerParent.index( splitContainer ) ) } )
 			removeItemAdded = True
 
 		currentTab = tabbedContainer.getCurrent()
 		if currentTab :
-			m.append( "/Remove " + tabbedContainer.getLabel( currentTab ), { "command" : IECore.curry( self.__removeCurrentTab, tabbedContainer ) } )
+			m.append( "/Remove " + tabbedContainer.getLabel( currentTab ), { "command" : functools.partial( self.__removeCurrentTab, tabbedContainer ) } )
 			removeItemAdded = True
 
 		if removeItemAdded :
@@ -167,13 +168,13 @@ class CompoundEditor( GafferUI.EditorWidget ) :
 		tabsVisible = tabbedContainer.getTabsVisible()
 		# because the menu isn't visible most of the time, the Ctrl+T shortcut doesn't work - it's just there to let
 		# users know it exists. it is actually implemented directly in __keyPress.
-		m.append( "/Hide Tabs" if tabsVisible else "/Show Tabs", { "command" : IECore.curry( Gaffer.WeakMethod( tabbedContainer.setTabsVisible ), not tabsVisible ), "shortCut" : "Ctrl+T" } )
+		m.append( "/Hide Tabs" if tabsVisible else "/Show Tabs", { "command" : functools.partial( Gaffer.WeakMethod( tabbedContainer.setTabsVisible ), not tabsVisible ), "shortCut" : "Ctrl+T" } )
 		m.append( "/TabsDivider", { "divider" : True } )
 
-		m.append( "/Split Left", { "command" : IECore.curry( self.__split, splitContainer, GafferUI.SplitContainer.Orientation.Horizontal, 0 ) } )
-		m.append( "/Split Right", { "command" : IECore.curry( self.__split, splitContainer, GafferUI.SplitContainer.Orientation.Horizontal, 1 ) } )
-		m.append( "/Split Bottom", { "command" : IECore.curry( self.__split, splitContainer, GafferUI.SplitContainer.Orientation.Vertical, 1 ) } )
-		m.append( "/Split Top", { "command" : IECore.curry( self.__split, splitContainer, GafferUI.SplitContainer.Orientation.Vertical, 0 ) } )
+		m.append( "/Split Left", { "command" : functools.partial( self.__split, splitContainer, GafferUI.SplitContainer.Orientation.Horizontal, 0 ) } )
+		m.append( "/Split Right", { "command" : functools.partial( self.__split, splitContainer, GafferUI.SplitContainer.Orientation.Horizontal, 1 ) } )
+		m.append( "/Split Bottom", { "command" : functools.partial( self.__split, splitContainer, GafferUI.SplitContainer.Orientation.Vertical, 1 ) } )
+		m.append( "/Split Top", { "command" : functools.partial( self.__split, splitContainer, GafferUI.SplitContainer.Orientation.Vertical, 0 ) } )
 
 		return m
 

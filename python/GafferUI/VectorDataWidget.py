@@ -35,6 +35,8 @@
 #
 ##########################################################################
 
+import functools
+
 import IECore
 
 import Gaffer
@@ -418,7 +420,7 @@ class VectorDataWidget( GafferUI.Widget ) :
 		if self.getEditable() and self.getSizeEditable() :
 
 			m.append( "/divider", { "divider" : True } )
-			m.append( "/Remove Selected Rows", { "command" : IECore.curry( Gaffer.WeakMethod( self.__removeRows ), selectedRows ) } )
+			m.append( "/Remove Selected Rows", { "command" : functools.partial( Gaffer.WeakMethod( self.__removeRows ), selectedRows ) } )
 
 		return m
 

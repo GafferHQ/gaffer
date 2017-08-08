@@ -37,6 +37,7 @@
 
 import os
 import warnings
+import functools
 
 import IECore
 
@@ -171,7 +172,7 @@ class PathWidget( GafferUI.TextWidget ) :
 				"/" + str( i ),
 				IECore.MenuItemDefinition(
 					label = str( pathCopy ),
-					command = IECore.curry( Gaffer.WeakMethod( self.__path.setFromString ), str( pathCopy ) ),
+					command = functools.partial( Gaffer.WeakMethod( self.__path.setFromString ), str( pathCopy ) ),
 				)
 			)
 			del pathCopy[-1]
@@ -196,7 +197,7 @@ class PathWidget( GafferUI.TextWidget ) :
 				md.append( "/" + o,
 					IECore.MenuItemDefinition(
 						label=o,
-						command = IECore.curry( Gaffer.WeakMethod( self.__replacePathEntry ), len( dirPath ), o )
+						command = functools.partial( Gaffer.WeakMethod( self.__replacePathEntry ), len( dirPath ), o )
 					)
 				)
 

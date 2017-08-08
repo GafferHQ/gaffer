@@ -36,6 +36,7 @@
 ##########################################################################
 
 import os.path
+import functools
 
 import IECore
 
@@ -179,6 +180,6 @@ def __plugPopupMenu( menuDefinition, plugValueWidget ) :
 	node = plug.node()
 	if plug.parent().isSame( node["user"] ) :
 		menuDefinition.append( "/DeleteDivider", { "divider" : True } )
-		menuDefinition.append( "/Delete", { "command" : IECore.curry( __deletePlug, plug ), "active" : not plugValueWidget.getReadOnly() and not Gaffer.MetadataAlgo.readOnly( plug ) } )
+		menuDefinition.append( "/Delete", { "command" : functools.partial( __deletePlug, plug ), "active" : not plugValueWidget.getReadOnly() and not Gaffer.MetadataAlgo.readOnly( plug ) } )
 
 __plugPopupMenuConnection = GafferUI.PlugValueWidget.popupMenuSignal().connect( __plugPopupMenu )

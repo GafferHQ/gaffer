@@ -35,6 +35,8 @@
 #
 ##########################################################################
 
+import functools
+
 import IECore
 
 import Gaffer
@@ -325,7 +327,7 @@ class PathChooserWidget( GafferUI.Widget ) :
 			m.append(
 				"/" + name,
 				{
-					"command" : IECore.curry( self.__path.setFromString, bookmark ),
+					"command" : functools.partial( self.__path.setFromString, bookmark ),
 					"active" : testPath.isValid(),
 					"description" : bookmark,
 				}
@@ -340,7 +342,7 @@ class PathChooserWidget( GafferUI.Widget ) :
 				m.append(
 					"/Recent/%d" % i,
 					{
-						"command" : IECore.curry( self.__path.setFromString, bookmark ),
+						"command" : functools.partial( self.__path.setFromString, bookmark ),
 						"active" : testPath.isValid(),
 						"description" : bookmark,
 						"label" : bookmark,
@@ -350,7 +352,7 @@ class PathChooserWidget( GafferUI.Widget ) :
 		m.append( "/SaveDeleteDivider", { "divider" : True } )
 
 		for name in self.__bookmarks.names( persistent=True ) :
-			m.append( "/Delete/" + name, { "command" : IECore.curry( self.__bookmarks.remove, name ) } )
+			m.append( "/Delete/" + name, { "command" : functools.partial( self.__bookmarks.remove, name ) } )
 
 		m.append( "/Add Bookmark...", {
 			"command" : Gaffer.WeakMethod( self.__saveBookmark ),

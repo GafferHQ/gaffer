@@ -35,6 +35,8 @@
 #
 ##########################################################################
 
+import functools
+
 import IECore
 
 import Gaffer
@@ -105,34 +107,34 @@ class CompoundDataPlugValueWidget( GafferUI.PlugValueWidget ) :
 	def __addMenuDefinition( self ) :
 
 		result = IECore.MenuDefinition()
-		result.append( "/Add/Bool", { "command" : IECore.curry( Gaffer.WeakMethod( self.__addItem ), "", IECore.BoolData( False ) ) } )
-		result.append( "/Add/Float", { "command" : IECore.curry( Gaffer.WeakMethod( self.__addItem ), "", IECore.FloatData( 0 ) ) } )
-		result.append( "/Add/Int", { "command" : IECore.curry( Gaffer.WeakMethod( self.__addItem ), "", IECore.IntData( 0 ) ) } )
+		result.append( "/Add/Bool", { "command" : functools.partial( Gaffer.WeakMethod( self.__addItem ), "", IECore.BoolData( False ) ) } )
+		result.append( "/Add/Float", { "command" : functools.partial( Gaffer.WeakMethod( self.__addItem ), "", IECore.FloatData( 0 ) ) } )
+		result.append( "/Add/Int", { "command" : functools.partial( Gaffer.WeakMethod( self.__addItem ), "", IECore.IntData( 0 ) ) } )
 		result.append( "/Add/NumericDivider", { "divider" : True } )
 
-		result.append( "/Add/String", { "command" : IECore.curry( Gaffer.WeakMethod( self.__addItem ), "", IECore.StringData( "" ) ) } )
+		result.append( "/Add/String", { "command" : functools.partial( Gaffer.WeakMethod( self.__addItem ), "", IECore.StringData( "" ) ) } )
 		result.append( "/Add/StringDivider", { "divider" : True } )
 
-		result.append( "/Add/V2i/Vector", { "command" : IECore.curry( Gaffer.WeakMethod( self.__addItem ), "", IECore.V2iData( IECore.V2i( 0 ), IECore.GeometricData.Interpretation.Vector ) ) } )
-		result.append( "/Add/V2i/Normal", { "command" : IECore.curry( Gaffer.WeakMethod( self.__addItem ), "", IECore.V2iData( IECore.V2i( 0 ), IECore.GeometricData.Interpretation.Normal ) ) } )
-		result.append( "/Add/V2i/Point", { "command" : IECore.curry( Gaffer.WeakMethod( self.__addItem ), "", IECore.V2iData( IECore.V2i( 0 ), IECore.GeometricData.Interpretation.Point ) ) } )
+		result.append( "/Add/V2i/Vector", { "command" : functools.partial( Gaffer.WeakMethod( self.__addItem ), "", IECore.V2iData( IECore.V2i( 0 ), IECore.GeometricData.Interpretation.Vector ) ) } )
+		result.append( "/Add/V2i/Normal", { "command" : functools.partial( Gaffer.WeakMethod( self.__addItem ), "", IECore.V2iData( IECore.V2i( 0 ), IECore.GeometricData.Interpretation.Normal ) ) } )
+		result.append( "/Add/V2i/Point", { "command" : functools.partial( Gaffer.WeakMethod( self.__addItem ), "", IECore.V2iData( IECore.V2i( 0 ), IECore.GeometricData.Interpretation.Point ) ) } )
 
-		result.append( "/Add/V3i/Vector", { "command" : IECore.curry( Gaffer.WeakMethod( self.__addItem ), "", IECore.V3iData( IECore.V3i( 0 ), IECore.GeometricData.Interpretation.Vector ) ) } )
-		result.append( "/Add/V3i/Normal", { "command" : IECore.curry( Gaffer.WeakMethod( self.__addItem ), "", IECore.V3iData( IECore.V3i( 0 ), IECore.GeometricData.Interpretation.Normal ) ) } )
-		result.append( "/Add/V3i/Point", { "command" : IECore.curry( Gaffer.WeakMethod( self.__addItem ), "", IECore.V3iData( IECore.V3i( 0 ), IECore.GeometricData.Interpretation.Point ) ) } )
+		result.append( "/Add/V3i/Vector", { "command" : functools.partial( Gaffer.WeakMethod( self.__addItem ), "", IECore.V3iData( IECore.V3i( 0 ), IECore.GeometricData.Interpretation.Vector ) ) } )
+		result.append( "/Add/V3i/Normal", { "command" : functools.partial( Gaffer.WeakMethod( self.__addItem ), "", IECore.V3iData( IECore.V3i( 0 ), IECore.GeometricData.Interpretation.Normal ) ) } )
+		result.append( "/Add/V3i/Point", { "command" : functools.partial( Gaffer.WeakMethod( self.__addItem ), "", IECore.V3iData( IECore.V3i( 0 ), IECore.GeometricData.Interpretation.Point ) ) } )
 
-		result.append( "/Add/V2f/Vector", { "command" : IECore.curry( Gaffer.WeakMethod( self.__addItem ), "", IECore.V2fData( IECore.V2f( 0 ), IECore.GeometricData.Interpretation.Vector ) ) } )
-		result.append( "/Add/V2f/Normal", { "command" : IECore.curry( Gaffer.WeakMethod( self.__addItem ), "", IECore.V2fData( IECore.V2f( 0 ), IECore.GeometricData.Interpretation.Normal ) ) } )
-		result.append( "/Add/V2f/Point", { "command" : IECore.curry( Gaffer.WeakMethod( self.__addItem ), "", IECore.V2fData( IECore.V2f( 0 ), IECore.GeometricData.Interpretation.Point ) ) } )
+		result.append( "/Add/V2f/Vector", { "command" : functools.partial( Gaffer.WeakMethod( self.__addItem ), "", IECore.V2fData( IECore.V2f( 0 ), IECore.GeometricData.Interpretation.Vector ) ) } )
+		result.append( "/Add/V2f/Normal", { "command" : functools.partial( Gaffer.WeakMethod( self.__addItem ), "", IECore.V2fData( IECore.V2f( 0 ), IECore.GeometricData.Interpretation.Normal ) ) } )
+		result.append( "/Add/V2f/Point", { "command" : functools.partial( Gaffer.WeakMethod( self.__addItem ), "", IECore.V2fData( IECore.V2f( 0 ), IECore.GeometricData.Interpretation.Point ) ) } )
 
-		result.append( "/Add/V3f/Vector", { "command" : IECore.curry( Gaffer.WeakMethod( self.__addItem ), "", IECore.V3fData( IECore.V3f( 0 ), IECore.GeometricData.Interpretation.Vector ) ) } )
-		result.append( "/Add/V3f/Normal", { "command" : IECore.curry( Gaffer.WeakMethod( self.__addItem ), "", IECore.V3fData( IECore.V3f( 0 ), IECore.GeometricData.Interpretation.Normal ) ) } )
-		result.append( "/Add/V3f/Point", { "command" : IECore.curry( Gaffer.WeakMethod( self.__addItem ), "", IECore.V3fData( IECore.V3f( 0 ), IECore.GeometricData.Interpretation.Point ) ) } )
+		result.append( "/Add/V3f/Vector", { "command" : functools.partial( Gaffer.WeakMethod( self.__addItem ), "", IECore.V3fData( IECore.V3f( 0 ), IECore.GeometricData.Interpretation.Vector ) ) } )
+		result.append( "/Add/V3f/Normal", { "command" : functools.partial( Gaffer.WeakMethod( self.__addItem ), "", IECore.V3fData( IECore.V3f( 0 ), IECore.GeometricData.Interpretation.Normal ) ) } )
+		result.append( "/Add/V3f/Point", { "command" : functools.partial( Gaffer.WeakMethod( self.__addItem ), "", IECore.V3fData( IECore.V3f( 0 ), IECore.GeometricData.Interpretation.Point ) ) } )
 
 		result.append( "/Add/VectorDivider", { "divider" : True } )
 
-		result.append( "/Add/Color3f", { "command" : IECore.curry( Gaffer.WeakMethod( self.__addItem ), "", IECore.Color3fData( IECore.Color3f( 0 ) ) ) } )
-		result.append( "/Add/Color4f", { "command" : IECore.curry( Gaffer.WeakMethod( self.__addItem ), "", IECore.Color4fData( IECore.Color4f( 0, 0, 0, 1 ) ) ) } )
+		result.append( "/Add/Color3f", { "command" : functools.partial( Gaffer.WeakMethod( self.__addItem ), "", IECore.Color3fData( IECore.Color3f( 0 ) ) ) } )
+		result.append( "/Add/Color4f", { "command" : functools.partial( Gaffer.WeakMethod( self.__addItem ), "", IECore.Color4fData( IECore.Color4f( 0, 0, 0, 1 ) ) ) } )
 
 		return result
 
@@ -257,7 +259,7 @@ def __plugPopupMenu( menuDefinition, plugValueWidget ) :
 	menuDefinition.append(
 		"/Delete",
 		{
-			"command" : IECore.curry( __deletePlug, memberPlug ),
+			"command" : functools.partial( __deletePlug, memberPlug ),
 			"active" : not plugValueWidget.getReadOnly() and not Gaffer.MetadataAlgo.readOnly( memberPlug ),
 		}
 	)

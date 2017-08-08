@@ -35,7 +35,7 @@
 #
 ##########################################################################
 
-import IECore
+import functools
 
 import Gaffer
 import GafferUI
@@ -106,7 +106,7 @@ class Timeline( GafferUI.EditorWidget ) :
 		frameIncrementShortcut.activated.connect( Gaffer.WeakMethod( self.__incrementFrame ) )
 
 		frameDecrementShortcut = QtWidgets.QShortcut( QtGui.QKeySequence( "Left" ), self._qtWidget() )
-		frameDecrementShortcut.activated.connect( IECore.curry( Gaffer.WeakMethod( self.__incrementFrame ), -1 ) )
+		frameDecrementShortcut.activated.connect( functools.partial( Gaffer.WeakMethod( self.__incrementFrame ), -1 ) )
 
 		self.__playback = None
 		self._updateFromContext( set() )
