@@ -52,7 +52,7 @@ class ShadingEngineTest( GafferOSLTest.OSLTestCase ) :
 		vData = IECore.FloatVectorData()
 		floatUserData = IECore.FloatVectorData()
 		colorUserData = IECore.Color3fVectorData()
-		for y in range( 0, divisions. y ) :
+		for y in range( 0, divisions.y ) :
 			for x in range( 0, divisions.x ) :
 				u = float( x ) / float( divisions.x - 1 )
 				v = float( y ) / float( divisions.y - 1 )
@@ -421,6 +421,33 @@ class ShadingEngineTest( GafferOSLTest.OSLTestCase ) :
 
 		for i, c in enumerate( r["Ci"] ) :
 			self.assertEqual( IECore.V3f( *c ), p["P"][i] )
+
+	def testCanReadV3iArrayUserData( self ) :
+
+		s = self.compileShader( os.path.dirname( __file__ ) +  "/shaders/V3iArrayAttributeRead.osl" )
+
+		e = GafferOSL.ShadingEngine( IECore.ObjectVector( [
+			IECore.Shader( s, "surface" )
+		] ) )
+
+		p = self.rectanglePoints()
+
+		numPoints = len(p["P"])
+		p["v3i"] = IECore.V3iVectorData( numPoints )
+
+		for i in range( numPoints ) :
+			p["v3i"][i] = IECore.V3i( [i, i + 1 , i + 2 ] )
+
+		r = e.shade( p )
+
+		for i, c in enumerate( r["Ci"] ) :
+			if i < 50:
+				expected = IECore.Color3f( 0.0, i / 100.0, i / 200.0 )
+			else:
+				expected = IECore.Color3f( 1.0, 0.0, 0.0 )
+
+			self.assertEqual( c, expected )
+
 
 if __name__ == "__main__":
 	unittest.main()

@@ -228,7 +228,18 @@ class RenderState
 				src += m_pointIndex * it->dataView.type.elementsize();
 			}
 
-			return ShadingSystem::convert_value( value, type, src, it->dataView.type );
+			bool result = ShadingSystem::convert_value( value, type, src, it->dataView.type );
+
+			//! If the convert_value fails then attempt to convert an aggregate (vec2, vec3, vec4, matrix33, matrix44) to an array with the same base type.
+			//! note the aggregate enum is the number of elements
+			//! todo create a PR for OSL
+			if (!result && it->dataView.type.basetype == type.basetype && it->dataView.type.aggregate == type.arraylen)
+			{
+				memcpy (value, src, type.size());
+				result = true;
+			}
+
+			return result;
 		}
 
 		void incrementPointIndex()
@@ -492,6 +503,7 @@ OSL::ShadingSystem *shadingSystem()
 }
 
 } // namespace
+
 
 //////////////////////////////////////////////////////////////////////////
 // ShadingResults
