@@ -42,6 +42,7 @@
 
 #include "GafferUI/NodeGadget.h"
 #include "GafferUI/LinearContainer.h"
+#include "GafferUI/ConnectionCreator.h"
 
 namespace GafferUI
 {
@@ -136,7 +137,7 @@ class StandardNodeGadget : public NodeGadget
 		bool dragLeave( GadgetPtr gadget, const DragDropEvent &event );
 		bool drop( GadgetPtr gadget, const DragDropEvent &event );
 
-		Gadget *closestDragDestinationProxy( const DragDropEvent &event ) const;
+		ConnectionCreator *closestDragDestinationProxy( const DragDropEvent &event ) const;
 		bool noduleIsCompatible( const Nodule *nodule, const DragDropEvent &event ) const;
 		bool plugAdderIsCompatible( const PlugAdder *plugAdder, const DragDropEvent &event ) const;
 
@@ -160,7 +161,7 @@ class StandardNodeGadget : public NodeGadget
 		// Nodule or PlugAdder. This provides the user
 		// with a bigger drag target that is easier
 		// to hit.
-		Gadget *m_dragDestinationProxy;
+		ConnectionCreator *m_dragDestinationProxy;
 		boost::optional<Imath::Color3f> m_userColor;
 		bool m_oval;
 

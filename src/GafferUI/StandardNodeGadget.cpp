@@ -584,7 +584,7 @@ bool StandardNodeGadget::dragEnter( GadgetPtr gadget, const DragDropEvent &event
 
 bool StandardNodeGadget::dragMove( GadgetPtr gadget, const DragDropEvent &event )
 {
-	Gadget *closest = closestDragDestinationProxy( event );
+	ConnectionCreator *closest = closestDragDestinationProxy( event );
 	if( closest != m_dragDestinationProxy )
 	{
 		if( closest->dragEnterSignal()( closest, event ) )
@@ -622,12 +622,32 @@ bool StandardNodeGadget::drop( GadgetPtr gadget, const DragDropEvent &event )
 		return false;
 	}
 
-	const bool result = m_dragDestinationProxy->dropSignal()( m_dragDestinationProxy, event );
+	PlugPtr plug = IECore::runTimeCast<Plug>( event.data );
+
+	if( plug )
+	{
+		m_dragDestinationProxy->createConnection( plug.get() );
+	}
+	else
+	{
+		if( ConnectionCreator *creator = IECore::runTimeCast<ConnectionCreator>( event.sourceGadget.get() ) )
+		{
+			// see comment in closestDragDestinationProxy() about why this has to be a Nodule
+			Nodule *nodule = IECore::runTimeCast<Nodule>( m_dragDestinationProxy );
+			if( nodule )
+			{
+				UndoScope undoScope( nodule->plug()->ancestor<ScriptNode>() );
+				creator->createConnection( nodule->plug() );
+			}
+		}
+	}
+
+	m_dragDestinationProxy->dragEndSignal()( m_dragDestinationProxy, event );
 	m_dragDestinationProxy = nullptr;
-	return result;
+	return true;
 }
 
-Gadget *StandardNodeGadget::closestDragDestinationProxy( const DragDropEvent &event ) const
+ConnectionCreator *StandardNodeGadget::closestDragDestinationProxy( const DragDropEvent &event ) const
 {
 	if( event.buttons != DragDropEvent::Left )
 	{
@@ -635,8 +655,11 @@ Gadget *StandardNodeGadget::closestDragDestinationProxy( const DragDropEvent &ev
 		return nullptr;
 	}
 
-	Gadget *result = nullptr;
+	ConnectionCreator *result = nullptr;
 	float maxDist = Imath::limits<float>::max();
+
+	Gaffer::Plug *eventPlug = IECore::runTimeCast<Gaffer::Plug>( event.data.get() );
+
 	for( RecursiveGadgetIterator it( this ); !it.done(); it++ )
 	{
 		if( !(*it)->getVisible() )
@@ -645,26 +668,43 @@ Gadget *StandardNodeGadget::closestDragDestinationProxy( const DragDropEvent &ev
 			continue;
 		}
 
-		/// \todo It's a bit ugly that we have to have these
-		/// `*IsCompatible()` methods - can we just use dragEnterSignal
-		/// to find out if the potential proxy accepts the drag?
-		if( const Nodule *nodule = IECore::runTimeCast<const Nodule>( it->get() ) )
+		ConnectionCreator *creator = IECore::runTimeCast<ConnectionCreator>( it->get() );
+		if( !creator )
 		{
-			if( !noduleIsCompatible( nodule, event ) )
-			{
-				continue;
-			}
+			continue;
 		}
-		else if( const PlugAdder *plugAdder = IECore::runTimeCast<const PlugAdder>( it->get() ) )
+
+		// For a ConnectionCreator to be able to make a connection, one end needs to
+		// be a plug. If the sourceGadget of the drag is able to provide one, we can
+		// easily check if we can connect. If that's not the case we need to
+		// determine if the source Gadget is able to make the connection - by
+		// providing the Plug ourselves.
+
+		if( eventPlug )
 		{
-			if( !plugAdderIsCompatible( plugAdder, event ) )
+			if( !creator->canCreateConnection( eventPlug ) )
 			{
 				continue;
 			}
 		}
 		else
 		{
-			continue;
+			ConnectionCreator *creatorAtSource = IECore::runTimeCast<ConnectionCreator>( event.sourceGadget.get() );
+			if( !creatorAtSource )
+			{
+				continue;
+			}
+
+			Nodule *destinationNodule = IECore::runTimeCast<Nodule>( it->get() );
+			if( !destinationNodule )
+			{
+				continue;
+			}
+
+			if( !creatorAtSource->canCreateConnection( destinationNodule->plug() ) )
+			{
+				continue;
+			}
 		}
 
 		const Box3f bound = (*it)->transformedBound( this );
@@ -672,51 +712,12 @@ Gadget *StandardNodeGadget::closestDragDestinationProxy( const DragDropEvent &ev
 		const float dist = ( closestPoint - event.line.p0 ).length2();
 		if( dist < maxDist )
 		{
-			result = it->get();
+			result = creator;
 			maxDist = dist;
 		}
 	}
 
 	return result;
-}
-
-bool StandardNodeGadget::noduleIsCompatible( const Nodule *nodule, const DragDropEvent &event ) const
-{
-	if( const PlugAdder *plugAdder = IECore::runTimeCast<PlugAdder>( event.sourceGadget.get() ) )
-	{
-		return plugAdder->acceptsPlug( nodule->plug() );
-	}
-
-	const Plug *dropPlug = IECore::runTimeCast<Gaffer::Plug>( event.data.get() );
-	if( !dropPlug || dropPlug->node() == node() )
-	{
-		return false;
-	}
-
-	const Plug *nodulePlug = nodule->plug();
-	if( MetadataAlgo::readOnly( nodulePlug ) )
-	{
-		return false;
-	}
-
-	if( dropPlug->direction() == Plug::Out )
-	{
-		return nodulePlug->direction() == Plug::In && nodulePlug->acceptsInput( dropPlug );
-	}
-	else
-	{
-		return nodulePlug->direction() == Plug::Out && dropPlug->acceptsInput( nodulePlug );
-	}
-}
-
-bool StandardNodeGadget::plugAdderIsCompatible( const PlugAdder *plugAdder, const DragDropEvent &event ) const
-{
-	Gaffer::Plug *plug = IECore::runTimeCast<Gaffer::Plug>( event.data.get() );
-	if( !plug )
-	{
-		return false;
-	}
-	return plugAdder->acceptsPlug( plug );
 }
 
 void StandardNodeGadget::nodeMetadataChanged( IECore::TypeId nodeTypeId, IECore::InternedString key, const Gaffer::Node *node )
