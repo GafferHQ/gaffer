@@ -34,6 +34,8 @@
 #
 ##########################################################################
 
+import functools
+
 import appleseed
 
 import IECore
@@ -67,7 +69,7 @@ def __addToMenu( menuDefinition, prefix, model, displayName = None ) :
 	menuDefinition.append(
 		menuPath,
 		{
-			"command" : GafferUI.NodeMenu.nodeCreatorWrapper( IECore.curry( __lightCreator, model ) ),
+			"command" : GafferUI.NodeMenu.nodeCreatorWrapper( functools.partial( __lightCreator, model ) ),
 			"searchText" : "as" + displayName.replace( " ", "" ),
 		}
 	)
