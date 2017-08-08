@@ -50,8 +50,7 @@ IE_CORE_DEFINERUNTIMETYPED( CompoundNodule );
 
 Nodule::NoduleTypeDescription<CompoundNodule> CompoundNodule::g_noduleTypeDescription;
 
-CompoundNodule::CompoundNodule( Gaffer::PlugPtr plug, LinearContainer::Orientation orientation,
-	float spacing, LinearContainer::Direction direction )
+CompoundNodule::CompoundNodule( Gaffer::PlugPtr plug )
 	:	Nodule( plug )
 {
 	addChild( new NoduleLayout( plug ) );

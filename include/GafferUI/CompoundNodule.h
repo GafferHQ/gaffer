@@ -53,10 +53,7 @@ class CompoundNodule : public Nodule
 
 	public :
 
-		/// \deprecated All arguments except the plug are ignored -
-		/// use plug metadata instead.
-		CompoundNodule( Gaffer::PlugPtr plug, LinearContainer::Orientation orientation=LinearContainer::X,
-			float spacing = 0.0f, LinearContainer::Direction direction=LinearContainer::InvalidDirection );
+		CompoundNodule( Gaffer::PlugPtr plug );
 		virtual ~CompoundNodule();
 
 		IE_CORE_DECLARERUNTIMETYPEDEXTENSION( GafferUI::CompoundNodule, CompoundNoduleTypeId, Nodule );
