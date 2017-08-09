@@ -110,7 +110,6 @@ from OutputRedirectionTest import OutputRedirectionTest
 from RecursiveChildIteratorTest import RecursiveChildIteratorTest
 from FilteredRecursiveChildIteratorTest import FilteredRecursiveChildIteratorTest
 from ReferenceTest import ReferenceTest
-from OrphanRemoverTest import OrphanRemoverTest
 from GraphComponentPathTest import GraphComponentPathTest
 from ArrayPlugNode import ArrayPlugNode
 from ArrayPlugTest import ArrayPlugTest

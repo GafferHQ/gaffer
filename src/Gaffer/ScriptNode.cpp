@@ -238,8 +238,7 @@ ScriptNode::ExecuteFunction ScriptNode::g_executeFunction;
 ScriptNode::ScriptNode( const std::string &name )
 	:
 	Node( name ),
-	m_selection( new StandardSet ),
-	m_selectionOrphanRemover( m_selection ),
+	m_selection( new StandardSet( /* removeOrphans = */ true ) ),
 	m_undoIterator( m_undoList.end() ),
 	m_currentActionStage( Action::Invalid ),
 	m_executing( false ),

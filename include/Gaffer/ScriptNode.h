@@ -47,7 +47,6 @@
 #include "Gaffer/Set.h"
 #include "Gaffer/UndoScope.h"
 #include "Gaffer/Action.h"
-#include "Gaffer/Behaviours/OrphanRemover.h"
 
 #include "GafferBindings/ScriptNodeBinding.h" // to enable friend declaration for SerialiserRegistration
 
@@ -241,7 +240,6 @@ class ScriptNode : public Node
 
 		bool selectionSetAcceptor( const Set *s, const Set::Member *m );
 		StandardSetPtr m_selection;
-		Behaviours::OrphanRemover m_selectionOrphanRemover;
 
 		// Actions and undo
 		// ================

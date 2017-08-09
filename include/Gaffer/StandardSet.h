@@ -82,7 +82,7 @@ class StandardSet : public Gaffer::Set
 
 	public :
 
-		StandardSet();
+		StandardSet( bool removeOrphans = false );
 		virtual ~StandardSet();
 
 		IE_CORE_DECLARERUNTIMETYPEDEXTENSION( Gaffer::StandardSet, StandardSetTypeId, Gaffer::Set );
@@ -127,6 +127,16 @@ class StandardSet : public Gaffer::Set
 		void clear();
 		//@}
 
+		/// @name Orphan removal
+		/// When orphan removal is on, all GraphComponent set members
+		/// are removed from the set automatically when they are removed
+		/// from their parent GraphComponent.
+		////////////////////////////////////////////////////////////////////
+		//@{
+		void setRemoveOrphans( bool removeOrphans );
+		bool getRemoveOrphans() const;
+		//@}
+
 		/// @name Implementation of the Set interface
 		////////////////////////////////////////////////////////////////////
 		//@{
@@ -137,6 +147,8 @@ class StandardSet : public Gaffer::Set
 		//@}
 
 	private :
+
+		void parentChanged( GraphComponent *member );
 
 		MemberAcceptanceSignal m_memberAcceptanceSignal;
 
@@ -152,6 +164,7 @@ class StandardSet : public Gaffer::Set
 		typedef const MemberContainer::nth_index<1>::type SequencedIndex;
 
 		MemberContainer m_members;
+		bool m_removeOrphans;
 
 };
 

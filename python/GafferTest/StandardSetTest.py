@@ -309,5 +309,121 @@ class StandardSetTest( GafferTest.TestCase ) :
 		self.assertEqual( l[:40], s[:40] )
 		self.assertEqual( l[1:-20], s[1:-20] )
 
+	def testOrphanRemoval( self ) :
+
+		p = Gaffer.GraphComponent()
+		c1 = Gaffer.GraphComponent()
+		c2 = Gaffer.GraphComponent()
+		p["c1"] = c1
+		p["c2"] = c2
+
+		s = Gaffer.StandardSet( p.children(), removeOrphans = True )
+		self.assertTrue( s.getRemoveOrphans() )
+
+		self.assertEqual( len( s ), 2 )
+		self.assertTrue( c1 in s )
+		self.assertTrue( c2 in s )
+
+		p.removeChild( c1 )
+
+		self.assertEqual( len( s ), 1 )
+		self.assertFalse( c1 in s )
+		self.assertTrue( c2 in s )
+
+		p["c1"] = c1
+
+		self.assertEqual( len( s ), 1 )
+		self.assertFalse( c1 in s )
+		self.assertTrue( c2 in s )
+
+		s.add( c1 )
+
+		self.assertEqual( len( s ), 2 )
+		self.assertTrue( c1 in s )
+		self.assertTrue( c2 in s )
+
+		p.removeChild( c1 )
+
+		self.assertEqual( len( s ), 1 )
+		self.assertFalse( c1 in s )
+		self.assertTrue( c2 in s )
+
+		p.removeChild( c2 )
+
+		self.assertEqual( len( s ), 0 )
+		self.assertFalse( c1 in s )
+		self.assertFalse( c2 in s )
+
+		c3 = Gaffer.GraphComponent()
+		s.add( c3 )
+
+		self.assertEqual( len( s ), 1 )
+		self.assertFalse( c1 in s )
+		self.assertFalse( c2 in s )
+		self.assertTrue( c3 in s )
+
+		p["c3"] = c3
+
+		self.assertEqual( len( s ), 1 )
+		self.assertFalse( c1 in s )
+		self.assertFalse( c2 in s )
+		self.assertTrue( c3 in s )
+
+		p.removeChild( c3 )
+
+		self.assertEqual( len( s ), 0 )
+		self.assertFalse( c1 in s )
+		self.assertFalse( c2 in s )
+		self.assertFalse( c3 in s )
+
+		p["c3"] = c3
+		s.add( c3 )
+
+		self.assertEqual( len( s ), 1 )
+		self.assertFalse( c1 in s )
+		self.assertFalse( c2 in s )
+		self.assertTrue( c3 in s )
+
+		s.setRemoveOrphans( False )
+		self.assertFalse( s.getRemoveOrphans() )
+		p.removeChild( c3 )
+
+		self.assertEqual( len( s ), 1 )
+		self.assertFalse( c1 in s )
+		self.assertFalse( c2 in s )
+		self.assertTrue( c3 in s )
+
+		s.setRemoveOrphans( True )
+		self.assertTrue( s.getRemoveOrphans() )
+		p.addChild( c3 )
+		p.removeChild( c3 )
+
+		self.assertEqual( len( s ), 0 )
+		self.assertFalse( c1 in s )
+		self.assertFalse( c2 in s )
+		self.assertFalse( c3 in s )
+
+	def testNoOrphanRemoval( self ) :
+
+		p = Gaffer.GraphComponent()
+		c1 = Gaffer.GraphComponent()
+		c2 = Gaffer.GraphComponent()
+		p["c1"] = c1
+		p["c2"] = c2
+
+		s1 = Gaffer.StandardSet( p.children() )
+		s2 = Gaffer.StandardSet( p.children(), removeOrphans = False )
+
+		self.assertFalse( s1.getRemoveOrphans() )
+		self.assertFalse( s2.getRemoveOrphans() )
+
+		p.removeChild( c1 )
+		p.removeChild( c2 )
+
+		self.assertTrue( c1 in s1 )
+		self.assertTrue( c2 in s1 )
+		self.assertTrue( c1 in s2 )
+		self.assertTrue( c2 in s2 )
+
 if __name__ == "__main__":
 	unittest.main()
