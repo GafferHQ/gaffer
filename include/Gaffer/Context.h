@@ -134,8 +134,9 @@ class Context : public IECore::RefCounted
 		/// Removes an entry from the context if it exists
 		void remove( const IECore::InternedString& name );
 
-		/// Removes an entry from the context if it exists
-		void removeMatching( const StringAlgo::MatchPattern& pattern );
+		/// Removes any entries whose names match the space separated patterns
+		/// provided. Matching is performed using `StringAlgo::matchMultiple()`.
+		void removeMatching( const StringAlgo::MatchPattern &pattern );
 
 		/// When a Shared or Borrowed value is changed behind the scenes, this method
 		/// must be called to notify the Context of the change.
@@ -263,6 +264,7 @@ class Context : public IECore::RefCounted
 				void setTime( float timeInSeconds );
 
 				void remove( const IECore::InternedString &name );
+				void removeMatching( const StringAlgo::MatchPattern &pattern );
 
 			private :
 
