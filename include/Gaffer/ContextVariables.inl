@@ -95,17 +95,9 @@ const AtomicCompoundDataPlug *ContextVariables<BaseType>::extraVariablesPlug() c
 }
 
 template<typename BaseType>
-void ContextVariables<BaseType>::affects( const Plug *input, DependencyNode::AffectedPlugsContainer &outputs ) const
+bool ContextVariables<BaseType>::affectsContext( const Plug *input ) const
 {
-	ContextProcessor<BaseType>::affects( input, outputs );
-
-	if(
-		variablesPlug()->isAncestorOf( input ) ||
-		input == extraVariablesPlug()
-	)
-	{
-		ContextProcessor<BaseType>::appendAffectedPlugs( outputs );
-	}
+	return variablesPlug()->isAncestorOf( input ) || input == extraVariablesPlug();
 }
 
 template<typename BaseType>

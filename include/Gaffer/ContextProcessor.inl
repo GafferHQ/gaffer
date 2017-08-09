@@ -123,27 +123,26 @@ void ContextProcessor<BaseType>::affects( const Plug *input, DependencyNode::Aff
 			}
 		}
 	}
-}
 
-template<typename BaseType>
-void ContextProcessor<BaseType>::appendAffectedPlugs( DependencyNode::AffectedPlugsContainer &outputs ) const
-{
-	Node *n = const_cast<Node *>( static_cast<const Node *>( this ) );
-	for( OutputPlugIterator it( n ); !it.done(); ++it )
+	if( affectsContext( input ) )
 	{
-		const ValuePlug *valuePlug = IECore::runTimeCast<const ValuePlug>( it->get() );
-		if( 0 == valuePlug->getName().string().compare( 0, 3, "out" ) && oppositePlug( valuePlug ) )
+		Node *n = const_cast<Node *>( static_cast<const Node *>( this ) );
+		for( OutputPlugIterator it( n ); !it.done(); ++it )
 		{
-			if( valuePlug->children().size() )
+			const ValuePlug *valuePlug = IECore::runTimeCast<const ValuePlug>( it->get() );
+			if( 0 == valuePlug->getName().string().compare( 0, 3, "out" ) && oppositePlug( valuePlug ) )
 			{
-				for( ValuePlugIterator cIt( valuePlug ); !cIt.done(); ++cIt )
+				if( valuePlug->children().size() )
 				{
-					outputs.push_back( cIt->get() );
+					for( ValuePlugIterator cIt( valuePlug ); !cIt.done(); ++cIt )
+					{
+						outputs.push_back( cIt->get() );
+					}
 				}
-			}
-			else
-			{
-				outputs.push_back( valuePlug );
+				else
+				{
+					outputs.push_back( valuePlug );
+				}
 			}
 		}
 	}

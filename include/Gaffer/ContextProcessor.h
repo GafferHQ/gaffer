@@ -75,10 +75,8 @@ class ContextProcessor : public BaseType
 		virtual void hash( const ValuePlug *output, const Context *context, IECore::MurmurHash &h ) const;
 		virtual void compute( ValuePlug *output, const Context *context ) const;
 
-		/// Should be called by derived class affects() methods when the input
-		/// affects their implementation of processContext().
-		void appendAffectedPlugs( DependencyNode::AffectedPlugsContainer &outputs ) const;
-
+		/// Must be implemented to return true if the input is used in `processContext()`.
+		virtual bool affectsContext( const Plug *input ) const = 0;
 		/// Must be implemented to modify context in place.
 		virtual void processContext( Context::EditableScope &context ) const = 0;
 
