@@ -35,8 +35,6 @@
 #
 ##########################################################################
 
-from __future__ import with_statement
-
 import os
 import inspect
 import unittest
