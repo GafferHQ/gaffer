@@ -57,13 +57,12 @@ class DeleteContextVariables : public ContextProcessor<BaseType>
 		virtual ~DeleteContextVariables();
 
 		StringPlug *variablesPlug();
-		const StringPlug *variablesPlug() const; 
-
-		void affects( const Plug *input, DependencyNode::AffectedPlugsContainer &outputs ) const;
+		const StringPlug *variablesPlug() const;
 
 	protected :
 
-		virtual void processContext( Context *context ) const;
+		virtual bool affectsContext( const Plug *input ) const;
+		virtual void processContext( Context::EditableScope &context ) const;
 
 	private :
 

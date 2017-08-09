@@ -586,6 +586,11 @@ void Context::EditableScope::remove( const IECore::InternedString &name )
 	m_context->remove( name );
 }
 
+void Context::EditableScope::removeMatching( const StringAlgo::MatchPattern &pattern )
+{
+	m_context->removeMatching( pattern );
+}
+
 const Context *Context::current()
 {
 	ContextStack &stack = g_threadContexts.local();

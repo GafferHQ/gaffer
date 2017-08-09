@@ -94,25 +94,21 @@ const FloatPlug *TimeWarp<BaseType>::offsetPlug() const
 }
 
 template<typename BaseType>
-void TimeWarp<BaseType>::affects( const Plug *input, DependencyNode::AffectedPlugsContainer &outputs ) const
+bool TimeWarp<BaseType>::affectsContext( const Plug *input ) const
 {
-	ContextProcessor<BaseType>::affects( input, outputs );
-
-	if( input == speedPlug() || input == offsetPlug() )
-	{
-		ContextProcessor<BaseType>::appendAffectedPlugs( outputs );
-	}
+	return input == speedPlug() || input == offsetPlug();
 }
 
 template<typename BaseType>
-void TimeWarp<BaseType>::processContext( Context *context ) const
+void TimeWarp<BaseType>::processContext( Context::EditableScope &context ) const
 {
 	float frame;
 	{
-		typename TimeWarpTraits<BaseType>::TimeScope timeScope( context );
-		frame = context->getFrame() * speedPlug()->getValue() + offsetPlug()->getValue();
+		const Context *c = Context::current();
+		typename TimeWarpTraits<BaseType>::TimeScope timeScope( c );
+		frame = c->getFrame() * speedPlug()->getValue() + offsetPlug()->getValue();
 	}
-	context->setFrame( frame );
+	context.setFrame( frame );
 }
 
 } // namespace Gaffer

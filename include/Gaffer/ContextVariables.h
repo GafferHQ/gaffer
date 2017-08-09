@@ -62,11 +62,10 @@ class ContextVariables : public ContextProcessor<BaseType>
 		AtomicCompoundDataPlug *extraVariablesPlug();
 		const AtomicCompoundDataPlug *extraVariablesPlug() const;
 
-		void affects( const Plug *input, DependencyNode::AffectedPlugsContainer &outputs ) const;
-
 	protected :
 
-		virtual void processContext( Context *context ) const;
+		virtual bool affectsContext( const Plug *input ) const;
+		virtual void processContext( Context::EditableScope &context ) const;
 
 	private :
 

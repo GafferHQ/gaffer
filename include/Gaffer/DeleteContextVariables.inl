@@ -80,20 +80,15 @@ const StringPlug *DeleteContextVariables<BaseType>::variablesPlug() const
 }
 
 template<typename BaseType>
-void DeleteContextVariables<BaseType>::affects( const Plug *input, DependencyNode::AffectedPlugsContainer &outputs ) const
+bool DeleteContextVariables<BaseType>::affectsContext( const Plug *input ) const
 {
-	ContextProcessor<BaseType>::affects( input, outputs );
-
-	if( input == variablesPlug() )
-	{
-		ContextProcessor<BaseType>::appendAffectedPlugs( outputs );
-	}
+	return input == variablesPlug();
 }
 
 template<typename BaseType>
-void DeleteContextVariables<BaseType>::processContext( Context *context ) const
+void DeleteContextVariables<BaseType>::processContext( Context::EditableScope &context ) const
 {
-	context->removeMatching( variablesPlug()->getValue() );
+	context.removeMatching( variablesPlug()->getValue() );
 }
 
 } // namespace Gaffer
