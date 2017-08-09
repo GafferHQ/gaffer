@@ -200,6 +200,15 @@ DataView::DataView( const IECore::Data *d, bool createUStrings )
 			);
 			data = static_cast<const V3fVectorData *>( d )->baseReadable();
 			break;
+		case V3iVectorDataTypeId :
+			type = TypeDesc(
+				TypeDesc::INT,
+				TypeDesc::VEC3,
+				vecSemantics( static_cast<const V3iVectorData *>( d )->getInterpretation() ),
+				static_cast<const V3iVectorData *>( d )->readable().size()
+			);
+			data = static_cast<const V3iVectorData *> ( d )->baseReadable();
+			break;
 		case Color3fVectorDataTypeId :
 			type = TypeDesc(
 				TypeDesc::FLOAT,
