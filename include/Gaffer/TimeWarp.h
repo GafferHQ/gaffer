@@ -65,7 +65,7 @@ class TimeWarp : public ContextProcessor<BaseType>
 
 	protected :
 
-		virtual void processContext( Context *context ) const;
+		virtual void processContext( Context::EditableScope &context ) const;
 
 };
 

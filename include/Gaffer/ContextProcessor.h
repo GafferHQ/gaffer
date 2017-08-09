@@ -38,6 +38,7 @@
 #define GAFFER_CONTEXTPROCESSOR_H
 
 #include "Gaffer/ComputeNode.h"
+#include "Gaffer/Context.h"
 
 namespace Gaffer
 {
@@ -79,8 +80,7 @@ class ContextProcessor : public BaseType
 		void appendAffectedPlugs( DependencyNode::AffectedPlugsContainer &outputs ) const;
 
 		/// Must be implemented to modify context in place.
-		/// \todo Pass `EditableScope` here in place of `Context`.
-		virtual void processContext( Context *context ) const = 0;
+		virtual void processContext( Context::EditableScope &context ) const = 0;
 
 	private :
 

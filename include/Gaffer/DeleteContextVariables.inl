@@ -91,9 +91,9 @@ void DeleteContextVariables<BaseType>::affects( const Plug *input, DependencyNod
 }
 
 template<typename BaseType>
-void DeleteContextVariables<BaseType>::processContext( Context *context ) const
+void DeleteContextVariables<BaseType>::processContext( Context::EditableScope &context ) const
 {
-	context->removeMatching( variablesPlug()->getValue() );
+	context.removeMatching( variablesPlug()->getValue() );
 }
 
 } // namespace Gaffer

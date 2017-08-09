@@ -109,7 +109,7 @@ void ContextVariables<BaseType>::affects( const Plug *input, DependencyNode::Aff
 }
 
 template<typename BaseType>
-void ContextVariables<BaseType>::processContext( Context *context ) const
+void ContextVariables<BaseType>::processContext( Context::EditableScope &context ) const
 {
 	std::string name;
 	for( CompoundDataPlug::MemberPlugIterator it( variablesPlug() ); !it.done(); ++it )
@@ -117,14 +117,14 @@ void ContextVariables<BaseType>::processContext( Context *context ) const
 		IECore::DataPtr data = variablesPlug()->memberDataAndName( it->get(), name );
 		if( data )
 		{
-			context->set( name, data.get() );
+			context.set( name, data.get() );
 		}
 	}
 	IECore::ConstCompoundDataPtr extraVariablesData = extraVariablesPlug()->getValue();
 	const IECore::CompoundDataMap &extraVariables = extraVariablesData->readable();
 	for( IECore::CompoundDataMap::const_iterator it = extraVariables.begin(), eIt = extraVariables.end(); it != eIt; ++it )
 	{
-		context->set( it->first, it->second.get() );
+		context.set( it->first, it->second.get() );
 	}
 }
 

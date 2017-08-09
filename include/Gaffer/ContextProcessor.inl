@@ -157,9 +157,8 @@ void ContextProcessor<BaseType>::hash( const ValuePlug *output, const Context *c
 	{
 		if( enabledPlug()->getValue() )
 		{
-			ContextPtr modifiedContext = new Context( *context, Context::Borrowed );
-			processContext( modifiedContext.get() );
-			Context::Scope scopedContext( modifiedContext.get() );
+			Context::EditableScope scope( context );
+			processContext( scope );
 			h = input->hash();
 		}
 		else
@@ -180,9 +179,8 @@ void ContextProcessor<BaseType>::compute( ValuePlug *output, const Context *cont
 	{
 		if( enabledPlug()->getValue() )
 		{
-			ContextPtr modifiedContext = new Context( *context, Context::Borrowed );
-			processContext( modifiedContext.get() );
-			Context::Scope scopedContext( modifiedContext.get() );
+			Context::EditableScope scope( context );
+			processContext( scope );
 			output->setFrom( input );
 		}
 		else
