@@ -137,6 +137,12 @@ options.Add(
 )
 
 options.Add(
+	"VTUNE_ROOT",
+	"The directory in which VTune is installed.",
+	""
+)
+
+options.Add(
 	"ARNOLD_ROOT",
 	"The directory in which Arnold is installed. Used to build GafferArnold",
 	"",
@@ -564,10 +570,25 @@ else :
 # Definitions for the libraries we wish to build
 ###############################################################################################
 
+vTuneRoot = env.subst("$VTUNE_ROOT")
+
+gafferLib = {}
+
+if os.path.exists( vTuneRoot ):
+	gafferLib = {
+		"envAppends" : {
+			"CXXFLAGS" : [ "-isystem", "$VTUNE_ROOT/include", "-DGAFFER_VTUNE"],
+			"LIBPATH" : [ "$VTUNE_ROOT/lib64" ],
+			"LIBS" : [ "ittnotify" ]
+		},
+		"pythonEnvAppends" : {
+			"CXXFLAGS" : [ "-DGAFFER_VTUNE"]
+		}
+	}
+
 libraries = {
 
-	"Gaffer" : {
-	},
+	"Gaffer" : gafferLib,
 
 	"GafferTest" : {
 		"envAppends" : {
@@ -870,6 +891,7 @@ for library in ( "GafferUI", ) :
 	addQtLibrary( library, "OpenGL" )
 	if int( env["QT_VERSION"] ) > 4 :
 		addQtLibrary( library, "Widgets" )
+
 
 ###############################################################################################
 # The stuff that actually builds the libraries and python modules

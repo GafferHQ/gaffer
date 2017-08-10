@@ -40,6 +40,7 @@
 #include "Gaffer/Monitor.h"
 #include "Gaffer/PerformanceMonitor.h"
 #include "Gaffer/ContextMonitor.h"
+#include "Gaffer/VTuneMonitor.h"
 #include "Gaffer/MonitorAlgo.h"
 #include "Gaffer/Plug.h"
 
@@ -219,5 +220,17 @@ void GafferBindings::bindMonitor()
 			.def( self != self )
 		;
 	}
+
+#ifdef GAFFER_VTUNE
+	{
+		scope s = class_<VTuneMonitor, bases<Monitor>, boost::noncopyable>( "VTuneMonitor" )
+			.def( init<bool>(
+					(
+						arg( "monitorHashProcess" ) = false )
+					)
+				);
+	}
+
+#endif //GAFFER_VTUNE
 
 }
