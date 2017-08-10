@@ -163,6 +163,12 @@ class stats( Gaffer.Application ) :
 						"context monitor. Statistics will only be captured for this root "
 						"downwards.",
 					defaultValue = "",
+				),
+
+				IECore.BoolParameter(
+					name = "vtune",
+					description = "enable vtune instrumentation. When enabled the VTune profile 'Tasks & Frames' view will be broken down by node type.",
+					defaultValue = False,
 				)
 
 			]
@@ -174,6 +180,8 @@ class stats( Gaffer.Application ) :
 				"flagless" : IECore.StringVectorData( [ "script" ] )
 			}
 		)
+
+		self.__vtuneMonitor = None
 
 	def _run( self, args ) :
 
@@ -206,6 +214,13 @@ class stats( Gaffer.Application ) :
 			self.__contextMonitor = Gaffer.ContextMonitor( contextMonitorRoot )
 		else :
 			self.__contextMonitor = None
+
+		if args["vtune"].value :
+			try:
+				self.__vtuneMonitor = Gaffer.VTuneMonitor()
+				self.__vtuneMonitor.setActive(True)
+			except AttributeError:
+				IECore.msg( IECore.Msg.Level.Error, "gui", "unable to create requested VTune monitor" )
 
 		self.__output = file( args["outputFile"].value, "w" ) if args["outputFile"].value else sys.stdout
 
