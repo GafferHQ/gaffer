@@ -110,6 +110,8 @@ Gaffer.Metadata.registerNode(
 			"preset:Min", GafferImage.Merge.Operation.Min,
 			"preset:Max", GafferImage.Merge.Operation.Max,
 
+			"userDefault", GafferImage.Merge.Operation.Over,
+
 			"plugValueWidget:type", "GafferUI.PresetsPlugValueWidget",
 
 		],
