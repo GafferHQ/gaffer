@@ -35,6 +35,8 @@
 #
 ##########################################################################
 
+import functools
+
 import IECore
 
 import GafferImage # this sets the OCIO environment variable
@@ -108,7 +110,7 @@ def __displayTransformCreator( name ) :
 	return result
 
 for name in config.getViews( defaultDisplay ) :
-	GafferImageUI.ImageView.registerDisplayTransform( name, IECore.curry( __displayTransformCreator, name ) )
+	GafferImageUI.ImageView.registerDisplayTransform( name, functools.partial( __displayTransformCreator, name ) )
 
 # and register a special "Default" display transform which tracks the
 # global settings from the preferences

@@ -192,7 +192,7 @@ class BrowserEditor( GafferUI.EditorWidget ) :
 				else :
 					parameterValue = selectedPaths
 
-				menuDefinition.append( "/Actions", { "subMenu" : IECore.curry( Gaffer.WeakMethod( self.__actionsSubMenu ), parameterValue ) } )
+				menuDefinition.append( "/Actions", { "subMenu" : functools.partial( Gaffer.WeakMethod( self.__actionsSubMenu ), parameterValue ) } )
 
 			else :
 

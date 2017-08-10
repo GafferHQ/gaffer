@@ -34,6 +34,8 @@
 #
 ##########################################################################
 
+import functools
+
 import IECore
 
 import Gaffer
@@ -142,7 +144,7 @@ class MatchPatternPathFilterWidget( GafferUI.PathFilterWidget ) :
 			menuDefinition.append(
 				"/" + label,
 				{
-					"command" : IECore.curry( Gaffer.WeakMethod( self.__setPropertyName ), property ),
+					"command" : functools.partial( Gaffer.WeakMethod( self.__setPropertyName ), property ),
 					"checkBox" : property == self.pathFilter().getPropertyName()
 				}
 			)

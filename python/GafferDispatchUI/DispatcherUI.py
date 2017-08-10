@@ -36,8 +36,7 @@
 ##########################################################################
 
 import weakref
-
-import IECore
+import functools
 
 import Gaffer
 import GafferUI
@@ -179,7 +178,7 @@ def appendNodeContextMenuDefinitions( nodeGraph, node, menuDefinition ) :
 		return
 
 	menuDefinition.append( "/ExecuteDivider", { "divider" : True } )
-	menuDefinition.append( "/Execute", { "command" : IECore.curry( _showDispatcherWindow, [ node ] ) } )
+	menuDefinition.append( "/Execute", { "command" : functools.partial( _showDispatcherWindow, [ node ] ) } )
 
 def executeSelected( menu ) :
 	scriptWindow = menu.ancestor( GafferUI.ScriptWindow )

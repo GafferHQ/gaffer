@@ -37,6 +37,7 @@
 
 import re
 import os
+import functools
 
 import IECore
 
@@ -120,7 +121,7 @@ def __open( currentScript, fileName ) :
 	# in PySide - I think this is because the menu item that invokes us is a child of
 	# currentWindow, and that will get deleted immediately when the script is removed.
 	if removeCurrentScript :
-		GafferUI.EventLoop.addIdleCallback( IECore.curry( __removeScript, application, currentScript ) )
+		GafferUI.EventLoop.addIdleCallback( functools.partial( __removeScript, application, currentScript ) )
 
 def __removeScript( application, script ) :
 
@@ -146,7 +147,7 @@ def openRecent( menu ) :
 				"/" + str( index ),
 				{
 					"label": os.path.basename( fileName ),
-					"command" : IECore.curry( __open, currentScript, fileName ),
+					"command" : functools.partial( __open, currentScript, fileName ),
 					"description" : fileName,
 					"active" : os.path.isfile( fileName )
 				}

@@ -35,6 +35,7 @@
 ##########################################################################
 
 import weakref
+import functools
 
 import IECore
 
@@ -230,7 +231,7 @@ class _MessageHandler( IECore.MessageHandler ) :
 		w = self.__messageWidget()
 
 		if w :
-			GafferUI.EventLoop.executeOnUIThread( IECore.curry( w.appendMessage, level, context, msg ) )
+			GafferUI.EventLoop.executeOnUIThread( functools.partial( w.appendMessage, level, context, msg ) )
 		else :
 			# the widget has died. bad things are probably afoot so its best
 			# that we output the messages somewhere to aid in debugging.

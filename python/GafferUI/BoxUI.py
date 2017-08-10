@@ -124,7 +124,7 @@ def appendNodeContextMenuDefinitions( nodeGraph, node, menuDefinition ) :
 		return
 
 	menuDefinition.append( "/BoxDivider", { "divider" : True } )
-	menuDefinition.append( "/Show Contents...", { "command" : IECore.curry( __showContents, nodeGraph, node ) } )
+	menuDefinition.append( "/Show Contents...", { "command" : functools.partial( __showContents, nodeGraph, node ) } )
 
 ## A callback suitable for use with NodeEditor.toolMenuSignal() - it provides
 # menu options specific to Boxes. We don't actually register it automatically,

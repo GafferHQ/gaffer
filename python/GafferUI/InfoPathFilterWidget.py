@@ -37,6 +37,7 @@
 import re
 import time
 import fnmatch
+import functools
 
 import IECore
 
@@ -115,7 +116,7 @@ class InfoPathFilterWidget( GafferUI.PathFilterWidget ) :
 
 		menuDefinition = IECore.MenuDefinition()
 		for key, label in infoFields :
-			menuDefinition.append( "/" + label, { "command" : IECore.curry( Gaffer.WeakMethod( self.__setInfoKey ), self.pathFilter(), key ), "checkBox" : key == self.pathFilter().getMatcher()[0] } )
+			menuDefinition.append( "/" + label, { "command" : functools.partial( Gaffer.WeakMethod( self.__setInfoKey ), self.pathFilter(), key ), "checkBox" : key == self.pathFilter().getMatcher()[0] } )
 
 		self.__menu = GafferUI.Menu( menuDefinition )
 		self.__menu.popup()

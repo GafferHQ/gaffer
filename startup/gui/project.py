@@ -35,6 +35,7 @@
 ##########################################################################
 
 import os
+import functools
 
 import IECore
 
@@ -84,9 +85,9 @@ def __projectBookmark( forWidget, location ) :
 	else :
 		return os.getcwd()
 
-GafferUI.Bookmarks.acquire( application ).add( "Project", IECore.curry( __projectBookmark, location="${project:rootDirectory}" ) )
-GafferUI.Bookmarks.acquire( application, category="script" ).setDefault( IECore.curry( __projectBookmark, location="${project:rootDirectory}/scripts" ) )
-GafferUI.Bookmarks.acquire( application, category="reference" ).setDefault( IECore.curry( __projectBookmark, location="${project:rootDirectory}/references" ) )
+GafferUI.Bookmarks.acquire( application ).add( "Project", functools.partial( __projectBookmark, location="${project:rootDirectory}" ) )
+GafferUI.Bookmarks.acquire( application, category="script" ).setDefault( functools.partial( __projectBookmark, location="${project:rootDirectory}/scripts" ) )
+GafferUI.Bookmarks.acquire( application, category="reference" ).setDefault( functools.partial( __projectBookmark, location="${project:rootDirectory}/references" ) )
 
 ##########################################################################
 # Dispatchers

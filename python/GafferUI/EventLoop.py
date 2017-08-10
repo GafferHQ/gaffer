@@ -39,6 +39,7 @@ import time
 import weakref
 import threading
 import traceback
+import functools
 
 import IECore
 
@@ -110,7 +111,7 @@ class EventLoop( object ) :
 		elif self.__runStyle == self.__RunStyle.Houdini :
 			if self.__houdiniCallback is None :
 				import hou
-				hou.ui.addEventLoopCallback( IECore.curry( self.__pump, 5 ) )
+				hou.ui.addEventLoopCallback( functools.partial( self.__pump, 5 ) )
 				self.__houdiniCallback = hou.ui.eventLoopCallbacks()[-1]
 		else :
 			# RunStyle.AlreadyRunning

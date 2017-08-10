@@ -268,7 +268,7 @@ def __plugPopupMenu( menuDefinition, plugValueWidget ) :
 	menuDefinition.append( "/EditUIDivider", { "divider" : True } )
 	menuDefinition.append( "/Edit UI...",
 		{
-			"command" : IECore.curry( __editPlugUI, node, plug ),
+			"command" : functools.partial( __editPlugUI, node, plug ),
 			"active" : not plugValueWidget.getReadOnly() and not Gaffer.MetadataAlgo.readOnly( plug )
 		}
 	)

@@ -34,7 +34,7 @@
 #
 ##########################################################################
 
-import IECore
+import functools
 
 import Gaffer
 import GafferUI
@@ -63,8 +63,8 @@ class ConnectionPlugValueWidget( GafferUI.PlugValueWidget ) :
 		self.__connections = [
 			self.__frame.buttonReleaseSignal().connect( Gaffer.WeakMethod( self.__buttonRelease ) ),
 			self.__inputLabel.buttonReleaseSignal().connect( Gaffer.WeakMethod( self.__buttonRelease ) ),
-			self.__frame.enterSignal().connect( IECore.curry( GafferUI.Frame.setHighlighted, highlighted=True ) ),
-			self.__frame.leaveSignal().connect( IECore.curry( GafferUI.Frame.setHighlighted, highlighted=False ) ),
+			self.__frame.enterSignal().connect( functools.partial( GafferUI.Frame.setHighlighted, highlighted=True ) ),
+			self.__frame.leaveSignal().connect( functools.partial( GafferUI.Frame.setHighlighted, highlighted=False ) ),
 		]
 
 		self._addPopupMenu( self.__frame )
