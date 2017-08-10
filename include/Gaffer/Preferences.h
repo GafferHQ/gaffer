@@ -49,14 +49,14 @@ class Preferences : public Node
 	public :
 
 		Preferences( const std::string &name=defaultName<Preferences>() );
-		virtual ~Preferences();
+		~Preferences() override;
 
 		IE_CORE_DECLARERUNTIMETYPEDEXTENSION( Gaffer::Preferences, PreferencesTypeId, Node );
 
 		/// Accepts only Plugs.
-		virtual bool acceptsChild( const GraphComponent *potentialChild ) const;
+		bool acceptsChild( const GraphComponent *potentialChild ) const override;
 		/// Accepts only ApplicationRoots.
-		virtual bool acceptsParent( const GraphComponent *potentialParent ) const;
+		bool acceptsParent( const GraphComponent *potentialParent ) const override;
 
 };
 

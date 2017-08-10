@@ -50,15 +50,15 @@ class Frame : public IndividualContainer
 	public :
 
 		Frame( GadgetPtr child );
-		virtual ~Frame();
+		~Frame() override;
 
 		IE_CORE_DECLARERUNTIMETYPEDEXTENSION( GafferUI::Frame, FrameTypeId, IndividualContainer );
 
-		virtual Imath::Box3f bound() const;
+		Imath::Box3f bound() const override;
 
 	protected :
 
-		virtual void doRender( const Style *style ) const;
+		void doRender( const Style *style ) const override;
 
 	private :
 

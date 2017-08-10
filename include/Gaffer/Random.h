@@ -53,7 +53,7 @@ class Random : public ComputeNode
 	public :
 
 		Random( const std::string &name=defaultName<Random>() );
-		virtual ~Random();
+		~Random() override;
 
 		IE_CORE_DECLARERUNTIMETYPEDEXTENSION( Gaffer::Random, RandomTypeId, ComputeNode );
 
@@ -78,14 +78,14 @@ class Random : public ComputeNode
 		Color3fPlug *outColorPlug();
 		const Color3fPlug *outColorPlug() const;
 
-		virtual void affects( const Plug *input, AffectedPlugsContainer &outputs ) const;
+		void affects( const Plug *input, AffectedPlugsContainer &outputs ) const override;
 
 		Imath::Color3f randomColor( unsigned long int seed ) const;
 
 	protected :
 
-		virtual void hash( const ValuePlug *output, const Context *context, IECore::MurmurHash &h ) const;
-		virtual void compute( ValuePlug *output, const Context *context ) const;
+		void hash( const ValuePlug *output, const Context *context, IECore::MurmurHash &h ) const override;
+		void compute( ValuePlug *output, const Context *context ) const override;
 
 	private :
 

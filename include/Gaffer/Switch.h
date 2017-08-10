@@ -117,16 +117,16 @@ class Switch : public BaseType
 		// The internal implementation for hash(). Does nothing when BaseType is not a ComputeNode,
 		// and passes through the hash from the appropriate input when it is.
 		template<typename T>
-		void hashInternal( const ValuePlug *output, const Context *context, IECore::MurmurHash &h, typename boost::enable_if<boost::is_base_of<ComputeNode, T> >::type *enabler = 0 ) const;
+		void hashInternal( const ValuePlug *output, const Context *context, IECore::MurmurHash &h, typename boost::enable_if<boost::is_base_of<ComputeNode, T> >::type *enabler = nullptr ) const;
 		template<typename T>
-		void hashInternal( const ValuePlug *output, const Context *context, IECore::MurmurHash &h, typename boost::disable_if<boost::is_base_of<ComputeNode, T> >::type *enabler = 0 ) const;
+		void hashInternal( const ValuePlug *output, const Context *context, IECore::MurmurHash &h, typename boost::disable_if<boost::is_base_of<ComputeNode, T> >::type *enabler = nullptr ) const;
 
 		// The internal implementation for compute(). Does nothing when BaseType is not a ComputeNode,
 		// and passes through the value from the appropriate input when it is.
 		template<typename T>
-		void computeInternal( ValuePlug *output, const Context *context, typename boost::enable_if<boost::is_base_of<ComputeNode, T> >::type *enabler = 0 ) const;
+		void computeInternal( ValuePlug *output, const Context *context, typename boost::enable_if<boost::is_base_of<ComputeNode, T> >::type *enabler = nullptr ) const;
 		template<typename T>
-		void computeInternal( ValuePlug *output, const Context *context, typename boost::disable_if<boost::is_base_of<ComputeNode, T> >::type *enabler = 0 ) const;
+		void computeInternal( ValuePlug *output, const Context *context, typename boost::disable_if<boost::is_base_of<ComputeNode, T> >::type *enabler = nullptr ) const;
 
 		void childAdded( GraphComponent *child );
 		void plugSet( Plug *plug );

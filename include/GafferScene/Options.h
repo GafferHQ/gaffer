@@ -51,19 +51,19 @@ class Options : public GlobalsProcessor
 	public :
 
 		Options( const std::string &name=defaultName<Options>() );
-		virtual ~Options();
+		~Options() override;
 
 		IE_CORE_DECLARERUNTIMETYPEDEXTENSION( GafferScene::Options, OptionsTypeId, GlobalsProcessor );
 
 		Gaffer::CompoundDataPlug *optionsPlug();
 		const Gaffer::CompoundDataPlug *optionsPlug() const;
 
-		virtual void affects( const Gaffer::Plug *input, AffectedPlugsContainer &outputs ) const;
+		void affects( const Gaffer::Plug *input, AffectedPlugsContainer &outputs ) const override;
 
 	protected :
 
-		virtual void hashProcessedGlobals( const Gaffer::Context *context, IECore::MurmurHash &h ) const;
-		virtual IECore::ConstCompoundObjectPtr computeProcessedGlobals( const Gaffer::Context *context, IECore::ConstCompoundObjectPtr inputGlobals ) const;
+		void hashProcessedGlobals( const Gaffer::Context *context, IECore::MurmurHash &h ) const override;
+		IECore::ConstCompoundObjectPtr computeProcessedGlobals( const Gaffer::Context *context, IECore::ConstCompoundObjectPtr inputGlobals ) const override;
 
 		virtual void hashPrefix( const Gaffer::Context *context, IECore::MurmurHash &h ) const;
 		virtual std::string computePrefix( const Gaffer::Context *context ) const;

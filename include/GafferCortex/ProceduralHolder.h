@@ -58,20 +58,20 @@ class ProceduralHolder : public ParameterisedHolderComputeNode
 
 		ProceduralHolder( const std::string &name=defaultName<ProceduralHolder>() );
 
-		virtual void setParameterised( IECore::RunTimeTypedPtr parameterised, bool keepExistingValues=false );
+		void setParameterised( IECore::RunTimeTypedPtr parameterised, bool keepExistingValues=false ) override;
 
 		/// Convenience function which calls setParameterised( className, classVersion, "IECORE_PROCEDURAL_PATHS" )
 		void setProcedural( const std::string &className, int classVersion );
 		/// Convenience function which returns runTimeCast<ParameterisedProcedural>( getParameterised() );
-		IECore::ParameterisedProcedural *getProcedural( std::string *className = 0, int *classVersion = 0 );
-		const IECore::ParameterisedProcedural *getProcedural( std::string *className = 0, int *classVersion = 0 ) const;
+		IECore::ParameterisedProcedural *getProcedural( std::string *className = nullptr, int *classVersion = nullptr );
+		const IECore::ParameterisedProcedural *getProcedural( std::string *className = nullptr, int *classVersion = nullptr ) const;
 
-		virtual void affects( const Gaffer::Plug *input, AffectedPlugsContainer &outputs ) const;
+		void affects( const Gaffer::Plug *input, AffectedPlugsContainer &outputs ) const override;
 
 	protected :
 
-		virtual void hash( const Gaffer::ValuePlug *output, const Gaffer::Context *context, IECore::MurmurHash &h ) const;
-		virtual void compute( Gaffer::ValuePlug *output, const Gaffer::Context *context ) const;
+		void hash( const Gaffer::ValuePlug *output, const Gaffer::Context *context, IECore::MurmurHash &h ) const override;
+		void compute( Gaffer::ValuePlug *output, const Gaffer::Context *context ) const override;
 
 };
 

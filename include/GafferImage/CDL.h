@@ -51,7 +51,7 @@ class CDL : public OpenColorIOTransform
 	public :
 
 		CDL( const std::string &name=defaultName<CDL>() );
-		virtual ~CDL();
+		~CDL() override;
 
 		IE_CORE_DECLARERUNTIMETYPEDEXTENSION( GafferImage::CDL, CDLTypeId, OpenColorIOTransform );
 
@@ -72,9 +72,9 @@ class CDL : public OpenColorIOTransform
 
 	protected :
 
-		virtual bool affectsTransform( const Gaffer::Plug *input ) const;
-		virtual void hashTransform( const Gaffer::Context *context, IECore::MurmurHash &h ) const;
-		virtual OpenColorIO::ConstTransformRcPtr transform() const;
+		bool affectsTransform( const Gaffer::Plug *input ) const override;
+		void hashTransform( const Gaffer::Context *context, IECore::MurmurHash &h ) const override;
+		OpenColorIO::ConstTransformRcPtr transform() const override;
 
 	private :
 

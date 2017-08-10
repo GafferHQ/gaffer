@@ -55,7 +55,7 @@ class Constraint : public SceneElementProcessor
 	public :
 
 		Constraint( const std::string &name=defaultName<Constraint>() );
-		virtual ~Constraint();
+		~Constraint() override;
 
 		IE_CORE_DECLARERUNTIMETYPEDEXTENSION( GafferScene::Constraint, ConstraintTypeId, SceneElementProcessor );
 
@@ -76,14 +76,14 @@ class Constraint : public SceneElementProcessor
 		Gaffer::V3fPlug *targetOffsetPlug();
 		const Gaffer::V3fPlug *targetOffsetPlug() const;
 
-		virtual void affects( const Gaffer::Plug *input, AffectedPlugsContainer &outputs ) const;
+		void affects( const Gaffer::Plug *input, AffectedPlugsContainer &outputs ) const override;
 
 	protected :
 
 		/// Reimplemented from SceneElementProcessor to call the constraint functions below.
-		virtual bool processesTransform() const;
-		virtual void hashProcessedTransform( const ScenePath &path, const Gaffer::Context *context, IECore::MurmurHash &h ) const;
-		virtual Imath::M44f computeProcessedTransform( const ScenePath &path, const Gaffer::Context *context, const Imath::M44f &inputTransform ) const;
+		bool processesTransform() const override;
+		void hashProcessedTransform( const ScenePath &path, const Gaffer::Context *context, IECore::MurmurHash &h ) const override;
+		Imath::M44f computeProcessedTransform( const ScenePath &path, const Gaffer::Context *context, const Imath::M44f &inputTransform ) const override;
 
 		/// Must be implemented to return true if the specified plug affects the computation of the constraint.
 		virtual bool affectsConstraint( const Gaffer::Plug *input ) const = 0;

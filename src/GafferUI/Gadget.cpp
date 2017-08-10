@@ -56,7 +56,7 @@ using namespace std;
 IE_CORE_DEFINERUNTIMETYPED( Gadget );
 
 Gadget::Gadget( const std::string &name )
-	:	GraphComponent( name ), m_style( 0 ), m_visible( true ), m_enabled( true ), m_highlighted( false ), m_toolTip( "" )
+	:	GraphComponent( name ), m_style( nullptr ), m_visible( true ), m_enabled( true ), m_highlighted( false ), m_toolTip( "" )
 {
 	std::string n = "__Gaffer::Gadget::" + boost::lexical_cast<std::string>( (size_t)this );
 	m_glName = IECoreGL::NameStateComponent::glNameFromName( n, true );
@@ -69,7 +69,7 @@ GadgetPtr Gadget::select( GLuint id )
 	const std::string &name = IECoreGL::NameStateComponent::nameFromGLName( id );
 	if( name.compare( 0, 18, "__Gaffer::Gadget::" ) )
 	{
-		return 0;
+		return nullptr;
 	}
 	std::string address = name.c_str() + 18;
 	size_t a = boost::lexical_cast<size_t>( address );

@@ -67,7 +67,7 @@ class ScenePath : public Gaffer::Path
 
 		IE_CORE_DECLARERUNTIMETYPEDEXTENSION( GafferScene::ScenePath, ScenePathTypeId, Gaffer::Path );
 
-		virtual ~ScenePath();
+		~ScenePath() override;
 
 		void setScene( ScenePlugPtr scene );
 		ScenePlug *getScene();
@@ -77,16 +77,16 @@ class ScenePath : public Gaffer::Path
 		Gaffer::Context *getContext();
 		const Gaffer::Context *getContext() const;
 
-		virtual bool isValid() const;
-		virtual bool isLeaf() const;
-		virtual Gaffer::PathPtr copy() const;
+		bool isValid() const override;
+		bool isLeaf() const override;
+		Gaffer::PathPtr copy() const override;
 
 		static Gaffer::PathFilterPtr createStandardFilter( const std::vector<std::string> &setNames = std::vector<std::string>(), const std::string &setsLabel = "" );
 
 	protected :
 
-		virtual void doChildren( std::vector<Gaffer::PathPtr> &children ) const;
-		virtual void pathChangedSignalCreated();
+		void doChildren( std::vector<Gaffer::PathPtr> &children ) const override;
+		void pathChangedSignalCreated() override;
 
 	private :
 

@@ -59,7 +59,7 @@ class ObjectVisualiser : public IECore::RefCounted
 
 		IE_CORE_DECLAREMEMBERPTR( ObjectVisualiser )
 
-		virtual ~ObjectVisualiser();
+		~ObjectVisualiser() override;
 
 		/// Must be implemented by derived classes to return a suitable
 		/// visualisation of the object.

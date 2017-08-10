@@ -721,7 +721,7 @@ DispatcherPtr Dispatcher::create( const std::string &dispatcherType )
 	CreatorMap::const_iterator it = m.find( dispatcherType );
 	if( it == m.end() )
 	{
-		return 0;
+		return nullptr;
 	}
 
 	return it->second.first();

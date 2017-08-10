@@ -123,7 +123,7 @@ class Renderer : public IECore::RefCounted
 
 			protected :
 
-				virtual ~AttributesInterface();
+				~AttributesInterface() override;
 
 		};
 
@@ -188,7 +188,7 @@ class Renderer : public IECore::RefCounted
 
 			protected :
 
-				virtual ~ObjectInterface();
+				~ObjectInterface() override;
 
 		};
 
@@ -271,7 +271,7 @@ class Renderer : public IECore::RefCounted
 	protected :
 
 		Renderer();
-		virtual ~Renderer();
+		~Renderer() override;
 
 		/// Construct a static instance of this to register a
 		/// renderer implementation.

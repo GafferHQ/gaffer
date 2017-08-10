@@ -50,14 +50,14 @@ class TestLight : public GafferScene::Light
 	public :
 
 		TestLight( const std::string &name=defaultName<TestLight>() );
-		virtual ~TestLight();
+		~TestLight() override;
 
 		IE_CORE_DECLARERUNTIMETYPEDEXTENSION( GafferSceneTest::TestLight, TestLightTypeId, GafferScene::Light );
 
 	protected :
 
-		virtual void hashLight( const Gaffer::Context *context, IECore::MurmurHash &h ) const;
-		virtual IECore::ObjectVectorPtr computeLight( const Gaffer::Context *context ) const;
+		void hashLight( const Gaffer::Context *context, IECore::MurmurHash &h ) const override;
+		IECore::ObjectVectorPtr computeLight( const Gaffer::Context *context ) const override;
 
 };
 

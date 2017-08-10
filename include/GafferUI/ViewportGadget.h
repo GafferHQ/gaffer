@@ -62,13 +62,13 @@ class ViewportGadget : public Gadget
 		typedef boost::signal<void (ViewportGadget *)> UnarySignal;
 
 		ViewportGadget( GadgetPtr primaryChild = nullptr );
-		virtual ~ViewportGadget();
+		~ViewportGadget() override;
 
 		IE_CORE_DECLARERUNTIMETYPEDEXTENSION( GafferUI::ViewportGadget, ViewportGadgetTypeId, Gadget );
 
 		/// Accepts no parents - the ViewportGadget must always be the topmost Gadget.
-		virtual bool acceptsParent( const Gaffer::GraphComponent *potentialParent ) const;
-		virtual std::string getToolTip( const IECore::LineSegment3f &position ) const;
+		bool acceptsParent( const Gaffer::GraphComponent *potentialParent ) const override;
+		std::string getToolTip( const IECore::LineSegment3f &position ) const override;
 
 		/// Typically mouse event signals are emitted for the gadget under
 		/// the mouse, but in the case that there is no such gadget, they
@@ -184,7 +184,7 @@ class ViewportGadget : public Gadget
 
 	protected :
 
-		virtual void doRender( const Style *style ) const;
+		void doRender( const Style *style ) const override;
 
 	private :
 

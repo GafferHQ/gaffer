@@ -80,7 +80,7 @@ class ImageView : public GafferUI::View
 	public :
 
 		ImageView( const std::string &name = defaultName<ImageView>() );
-		virtual ~ImageView();
+		~ImageView() override;
 
 		IE_CORE_DECLARERUNTIMETYPEDEXTENSION( GafferImageUI::ImageView, ImageViewTypeId, GafferUI::View );
 
@@ -97,7 +97,7 @@ class ImageView : public GafferUI::View
 		Gaffer::StringPlug *displayTransformPlug();
 		const Gaffer::StringPlug *displayTransformPlug() const;
 
-		virtual void setContext( Gaffer::ContextPtr context );
+		void setContext( Gaffer::ContextPtr context ) override;
 
 		typedef boost::function<GafferImage::ImageProcessorPtr ()> DisplayTransformCreator;
 

@@ -68,15 +68,15 @@ class Filter : public Gaffer::ComputeNode
 		IE_CORE_DECLARERUNTIMETYPEDEXTENSION( GafferScene::Filter, FilterTypeId, Gaffer::ComputeNode );
 
 		Filter( const std::string &name=defaultName<Filter>() );
-		virtual ~Filter();
+		~Filter() override;
 
-		virtual Gaffer::BoolPlug *enabledPlug();
-		virtual const Gaffer::BoolPlug *enabledPlug() const;
+		Gaffer::BoolPlug *enabledPlug() override;
+		const Gaffer::BoolPlug *enabledPlug() const override;
 
 		FilterPlug *outPlug();
 		const FilterPlug *outPlug() const;
 
-		virtual void affects( const Gaffer::Plug *input, AffectedPlugsContainer &outputs ) const;
+		void affects( const Gaffer::Plug *input, AffectedPlugsContainer &outputs ) const override;
 		virtual bool sceneAffectsMatch( const ScenePlug *scene, const Gaffer::ValuePlug *child ) const;
 
 		/// \deprecated Use FilterPlug::SceneScope instead.
@@ -89,9 +89,9 @@ class Filter : public Gaffer::ComputeNode
 	protected :
 
 		/// Implemented to call hashMatch() below when computing the hash for outPlug().
-		virtual void hash( const Gaffer::ValuePlug *output, const Gaffer::Context *context, IECore::MurmurHash &h ) const;
+		void hash( const Gaffer::ValuePlug *output, const Gaffer::Context *context, IECore::MurmurHash &h ) const override;
 		/// Implemented to call computeMatch() below when computing the value of outPlug().
-		virtual void compute( Gaffer::ValuePlug *output, const Gaffer::Context *context ) const;
+		void compute( Gaffer::ValuePlug *output, const Gaffer::Context *context ) const override;
 
 		/// Hash method for outPlug(). A derived class must either :
 		///

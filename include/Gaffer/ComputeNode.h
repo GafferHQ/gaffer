@@ -59,7 +59,7 @@ class ComputeNode : public DependencyNode
 	public :
 
 		ComputeNode( const std::string &name=defaultName<ComputeNode>() );
-		virtual ~ComputeNode();
+		~ComputeNode() override;
 
 		IE_CORE_DECLARERUNTIMETYPEDEXTENSION( Gaffer::ComputeNode, ComputeNodeTypeId, DependencyNode );
 

@@ -47,7 +47,7 @@ class VectorWarp : public Warp
 	public :
 
 		VectorWarp( const std::string &name=defaultName<Warp>() );
-		virtual ~VectorWarp();
+		~VectorWarp() override;
 
 		IE_CORE_DECLARERUNTIMETYPEDEXTENSION( GafferImage::VectorWarp, VectorWarpTypeId, Warp );
 
@@ -74,9 +74,9 @@ class VectorWarp : public Warp
 
 	protected :
 
-		virtual bool affectsEngine( const Gaffer::Plug *input ) const;
-		virtual void hashEngine( const Imath::V2i &tileOrigin, const Gaffer::Context *context, IECore::MurmurHash &h ) const;
-		virtual const Engine *computeEngine( const Imath::V2i &tileOrigin, const Gaffer::Context *context ) const;
+		bool affectsEngine( const Gaffer::Plug *input ) const override;
+		void hashEngine( const Imath::V2i &tileOrigin, const Gaffer::Context *context, IECore::MurmurHash &h ) const override;
+		const Engine *computeEngine( const Imath::V2i &tileOrigin, const Gaffer::Context *context ) const override;
 
 	private :
 

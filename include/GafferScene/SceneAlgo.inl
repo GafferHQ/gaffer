@@ -58,11 +58,11 @@ class TraverseTask : public tbb::task
 		{
 		}
 
-		virtual ~TraverseTask()
+		~TraverseTask() override
 		{
 		}
 
-		virtual task *execute()
+		task *execute() override
 		{
 			ScenePlug::PathScope pathScope( m_context, m_path );
 
@@ -122,11 +122,11 @@ class LocationTask : public tbb::task
 		{
 		}
 
-		virtual ~LocationTask()
+		~LocationTask() override
 		{
 		}
 
-		virtual task *execute()
+		task *execute() override
 		{
 			ScenePlug::PathScope pathScope( m_context, m_path );
 

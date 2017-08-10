@@ -50,7 +50,7 @@ namespace GafferScene
 	public :
 
 		CopyOptions( const std::string &name=defaultName<CopyOptions>() );
-		virtual ~CopyOptions();
+		~CopyOptions() override;
 
 		IE_CORE_DECLARERUNTIMETYPEDEXTENSION( GafferScene::CopyOptions, CopyOptionsTypeId, GlobalsProcessor );
 
@@ -60,12 +60,12 @@ namespace GafferScene
 		Gaffer::StringPlug *namesPlug();
 		const Gaffer::StringPlug *namesPlug() const;
 
-		virtual void affects( const Gaffer::Plug *input, AffectedPlugsContainer &outputs ) const;
+		void affects( const Gaffer::Plug *input, AffectedPlugsContainer &outputs ) const override;
 
 	protected :
 
-		virtual void hashProcessedGlobals( const Gaffer::Context *context, IECore::MurmurHash &h ) const;
-		virtual IECore::ConstCompoundObjectPtr computeProcessedGlobals( const Gaffer::Context *context, IECore::ConstCompoundObjectPtr inputGlobals ) const;
+		void hashProcessedGlobals( const Gaffer::Context *context, IECore::MurmurHash &h ) const override;
+		IECore::ConstCompoundObjectPtr computeProcessedGlobals( const Gaffer::Context *context, IECore::ConstCompoundObjectPtr inputGlobals ) const override;
 
 	private :
 

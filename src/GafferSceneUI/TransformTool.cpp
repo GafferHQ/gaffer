@@ -100,7 +100,7 @@ class CapturingMonitor : public Monitor
 		{
 		}
 
-		virtual ~CapturingMonitor()
+		~CapturingMonitor() override
 		{
 		}
 
@@ -111,7 +111,7 @@ class CapturingMonitor : public Monitor
 
 	protected :
 
-		virtual void processStarted( const Process *process )
+		void processStarted( const Process *process ) override
 		{
 			CapturedProcess::Ptr capturedProcess( new CapturedProcess );
 			capturedProcess->type = process->type();
@@ -133,7 +133,7 @@ class CapturingMonitor : public Monitor
 			}
 		}
 
-		virtual void processFinished( const Process *process )
+		void processFinished( const Process *process ) override
 		{
 			Mutex::scoped_lock lock( m_mutex );
 			m_processMap.erase( process );
@@ -254,7 +254,7 @@ class HandlesGadget : public Gadget
 
 	protected :
 
-		virtual void doRender( const Style *style ) const
+		void doRender( const Style *style ) const override
 		{
 			glEnable( GL_DEPTH_TEST );
 			// Render with reversed depth test so

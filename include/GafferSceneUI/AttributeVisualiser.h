@@ -53,7 +53,7 @@ class AttributeVisualiser : public IECore::RefCounted
 	public :
 
 		IE_CORE_DECLAREMEMBERPTR( AttributeVisualiser )
-		virtual ~AttributeVisualiser();
+		~AttributeVisualiser() override;
 
 		virtual IECoreGL::ConstRenderablePtr visualise( const IECore::CompoundObject *attributes,
 			IECoreGL::ConstStatePtr &state ) const = 0;

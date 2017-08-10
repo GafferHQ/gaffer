@@ -51,7 +51,7 @@ class GadgetClass : public GafferBindings::GraphComponentClass<T, TWrapper>
 {
 	public :
 
-		GadgetClass( const char *docString = 0 );
+		GadgetClass( const char *docString = nullptr );
 
 };
 
@@ -77,7 +77,7 @@ class GadgetWrapper : public GafferBindings::GraphComponentWrapper<WrappedType>
 		{
 		}
 
-		virtual void setHighlighted( bool highlighted )
+		void setHighlighted( bool highlighted ) override
 		{
 			if( this->isSubclassed() )
 			{
@@ -92,7 +92,7 @@ class GadgetWrapper : public GafferBindings::GraphComponentWrapper<WrappedType>
 			WrappedType::setHighlighted( highlighted );
 		}
 
-		virtual Imath::Box3f bound() const
+		Imath::Box3f bound() const override
 		{
 			if( this->isSubclassed() )
 			{
@@ -106,7 +106,7 @@ class GadgetWrapper : public GafferBindings::GraphComponentWrapper<WrappedType>
 			return WrappedType::bound();
 		}
 
-		virtual std::string getToolTip( const IECore::LineSegment3f &line ) const
+		std::string getToolTip( const IECore::LineSegment3f &line ) const override
 		{
 			if( this->isSubclassed() )
 			{
@@ -120,7 +120,7 @@ class GadgetWrapper : public GafferBindings::GraphComponentWrapper<WrappedType>
 			return WrappedType::getToolTip( line );
 		}
 
-		virtual void doRender( const GafferUI::Style *style ) const
+		void doRender( const GafferUI::Style *style ) const override
 		{
 			if( this->isSubclassed() )
 			{

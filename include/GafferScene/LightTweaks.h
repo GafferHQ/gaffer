@@ -50,7 +50,7 @@ class LightTweaks : public SceneElementProcessor
 	public :
 
 		LightTweaks( const std::string &name=defaultName<LightTweaks>() );
-		virtual ~LightTweaks();
+		~LightTweaks() override;
 
 		IE_CORE_DECLARERUNTIMETYPEDEXTENSION( GafferScene::LightTweaks, LightTweaksTypeId, SceneElementProcessor );
 
@@ -91,8 +91,8 @@ class LightTweaks : public SceneElementProcessor
 				template<typename T>
 				const T *valuePlug() const;
 
-				virtual bool acceptsChild( const Gaffer::GraphComponent *potentialChild ) const;
-				virtual Gaffer::PlugPtr createCounterpart( const std::string &name, Direction direction ) const;
+				bool acceptsChild( const Gaffer::GraphComponent *potentialChild ) const override;
+				Gaffer::PlugPtr createCounterpart( const std::string &name, Direction direction ) const override;
 
 			private :
 
@@ -109,13 +109,13 @@ class LightTweaks : public SceneElementProcessor
 		Gaffer::Plug *tweaksPlug();
 		const Gaffer::Plug *tweaksPlug() const;
 
-		virtual void affects( const Gaffer::Plug *input, AffectedPlugsContainer &outputs ) const;
+		void affects( const Gaffer::Plug *input, AffectedPlugsContainer &outputs ) const override;
 
 	protected :
 
-		virtual bool processesAttributes() const;
-		virtual void hashProcessedAttributes( const ScenePath &path, const Gaffer::Context *context, IECore::MurmurHash &h ) const;
-		virtual IECore::ConstCompoundObjectPtr computeProcessedAttributes( const ScenePath &path, const Gaffer::Context *context, IECore::ConstCompoundObjectPtr inputAttributes ) const;
+		bool processesAttributes() const override;
+		void hashProcessedAttributes( const ScenePath &path, const Gaffer::Context *context, IECore::MurmurHash &h ) const override;
+		IECore::ConstCompoundObjectPtr computeProcessedAttributes( const ScenePath &path, const Gaffer::Context *context, IECore::ConstCompoundObjectPtr inputAttributes ) const override;
 
 		static size_t g_firstPlugIndex;
 

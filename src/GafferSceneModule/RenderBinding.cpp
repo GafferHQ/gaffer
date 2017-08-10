@@ -72,7 +72,7 @@ class ExecutableRenderWrapper : public TaskNodeWrapper<ExecutableRender>
 		{
 		}
 
-		virtual IECore::RendererPtr createRenderer() const
+		IECore::RendererPtr createRenderer() const override
 		{
 			if( this->isSubclassed() )
 			{
@@ -86,7 +86,7 @@ class ExecutableRenderWrapper : public TaskNodeWrapper<ExecutableRender>
 			throw IECore::Exception( "No _createRenderer method defined in Python." );
 		}
 
-		virtual void outputWorldProcedural( const ScenePlug *scene, IECore::Renderer *renderer ) const
+		void outputWorldProcedural( const ScenePlug *scene, IECore::Renderer *renderer ) const override
 		{
 			if( this->isSubclassed() )
 			{

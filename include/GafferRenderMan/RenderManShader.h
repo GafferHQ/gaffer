@@ -54,19 +54,19 @@ class RenderManShader : public GafferScene::Shader
 	public :
 
 		RenderManShader( const std::string &name=defaultName<RenderManShader>() );
-		virtual ~RenderManShader();
+		~RenderManShader() override;
 
 		IE_CORE_DECLARERUNTIMETYPEDEXTENSION( GafferRenderMan::RenderManShader, RenderManShaderTypeId, GafferScene::Shader );
 
 		/// Implemented for outPlug(), returning the parameter named in the "primaryInput"
 		/// shader annotation if it has been specified.
-		virtual Gaffer::Plug *correspondingInput( const Gaffer::Plug *output );
-		virtual const Gaffer::Plug *correspondingInput( const Gaffer::Plug *output ) const;
+		Gaffer::Plug *correspondingInput( const Gaffer::Plug *output ) override;
+		const Gaffer::Plug *correspondingInput( const Gaffer::Plug *output ) const override;
 
 		/// \undoable.
-		virtual void loadShader( const std::string &shaderName, bool keepExistingValues=false );
+		void loadShader( const std::string &shaderName, bool keepExistingValues=false ) override;
 
-		virtual void reloadShader();
+		void reloadShader() override;
 
 		/// The loader used by loadShader() - this is exposed so that the ui
 		/// can use it too.
@@ -74,7 +74,7 @@ class RenderManShader : public GafferScene::Shader
 
 	protected :
 
-		virtual bool acceptsInput( const Gaffer::Plug *plug, const Gaffer::Plug *inputPlug ) const;
+		bool acceptsInput( const Gaffer::Plug *plug, const Gaffer::Plug *inputPlug ) const override;
 
 		const IECore::ConstCompoundDataPtr annotations() const;
 

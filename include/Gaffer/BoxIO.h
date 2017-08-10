@@ -69,7 +69,7 @@ class BoxIO : public Node
 
 	public :
 
-		virtual ~BoxIO();
+		~BoxIO() override;
 
 		IE_CORE_DECLARERUNTIMETYPEDEXTENSION( Gaffer::BoxIO, BoxIOTypeId, Node );
 
@@ -135,7 +135,7 @@ class BoxIO : public Node
 		Gaffer::Plug *outPlugInternal();
 		const Gaffer::Plug *outPlugInternal() const;
 
-		virtual void parentChanging( Gaffer::GraphComponent *newParent );
+		void parentChanging( Gaffer::GraphComponent *newParent ) override;
 
 	private :
 

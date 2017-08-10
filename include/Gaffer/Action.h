@@ -101,7 +101,7 @@ class Action : public IECore::RunTimeTyped
 	protected :
 
 		Action();
-		virtual ~Action();
+		~Action() override;
 
 		/// Must be implemented by derived classes to
 		/// return the subject of the work they perform -

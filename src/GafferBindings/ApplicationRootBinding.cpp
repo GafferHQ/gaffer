@@ -65,7 +65,7 @@ class ApplicationRootWrapper : public IECorePython::RunTimeTypedWrapper<Applicat
 		{
 		}
 
-		virtual void savePreferences( const std::string &fileName ) const
+		void savePreferences( const std::string &fileName ) const override
 		{
 			IECorePython::ScopedGILLock gilLock;
 
@@ -104,7 +104,7 @@ static IECore::ObjectPtr getClipboardContents( ApplicationRoot &a )
 	{
 		return o->copy();
 	}
-	return 0;
+	return nullptr;
 }
 
 struct ClipboardSlotCaller

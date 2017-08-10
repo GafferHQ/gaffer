@@ -48,21 +48,21 @@ class SpacerGadget : public Gadget
 	public :
 
 		SpacerGadget( const Imath::Box3f &size );
-		virtual ~SpacerGadget();
+		~SpacerGadget() override;
 
 		IE_CORE_DECLARERUNTIMETYPEDEXTENSION( GafferUI::SpacerGadget, SpacerGadgetTypeId, Gadget );
 
-		virtual Imath::Box3f bound() const;
+		Imath::Box3f bound() const override;
 
 		const Imath::Box3f &getSize() const;
 		void setSize( const Imath::Box3f &size );
 
 		/// Rejects all children.
-		virtual bool acceptsChild( const GraphComponent *potentialChild ) const;
+		bool acceptsChild( const GraphComponent *potentialChild ) const override;
 
 	protected :
 
-		virtual void doRender( const Style *style ) const;
+		void doRender( const Style *style ) const override;
 
 	private :
 

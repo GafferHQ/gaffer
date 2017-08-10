@@ -143,12 +143,12 @@ class MemberPlugSerialiser : public ValuePlugSerialiser
 
 	public :
 
-		virtual std::string constructor( const Gaffer::GraphComponent *graphComponent, const Serialisation &serialisation ) const
+		std::string constructor( const Gaffer::GraphComponent *graphComponent, const Serialisation &serialisation ) const override
 		{
 			return maskedMemberPlugRepr( static_cast<const CompoundDataPlug::MemberPlug *>( graphComponent ), Plug::All & ~Plug::ReadOnly );
 		}
 
-		virtual bool childNeedsConstruction( const Gaffer::GraphComponent *child, const Serialisation &serialisation ) const
+		bool childNeedsConstruction( const Gaffer::GraphComponent *child, const Serialisation &serialisation ) const override
 		{
 			// if the parent is dynamic then all the children will need construction.
 			const Plug *parent = child->parent<Plug>();

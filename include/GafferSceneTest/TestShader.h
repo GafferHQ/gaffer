@@ -50,7 +50,7 @@ class TestShader : public GafferScene::Shader
 	public :
 
 		TestShader( const std::string &name=defaultName<TestShader>() );
-		virtual ~TestShader();
+		~TestShader() override;
 
 		IE_CORE_DECLARERUNTIMETYPEDEXTENSION( GafferSceneTest::TestShader, TestShaderTypeId, GafferScene::Shader );
 

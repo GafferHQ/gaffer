@@ -240,7 +240,7 @@ const ValuePlug *ContextProcessor<BaseType>::oppositePlug( const ValuePlug *plug
 
 	if( !( outPlug && inPlug ) )
 	{
-		return 0;
+		return nullptr;
 	}
 
 	if( plug->direction() == Plug::Out )

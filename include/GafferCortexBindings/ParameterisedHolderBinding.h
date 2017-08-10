@@ -61,7 +61,7 @@ class ParameterisedHolderWrapper : public BaseType
 		{
 		}
 
-		virtual IECore::RunTimeTypedPtr loadClass( const std::string &className, int classVersion, const std::string &searchPathEnvVar ) const
+		IECore::RunTimeTypedPtr loadClass( const std::string &className, int classVersion, const std::string &searchPathEnvVar ) const override
 		{
 			IECorePython::ScopedGILLock gilLock;
 			boost::python::dict scopeDict;
@@ -75,7 +75,7 @@ class ParameterisedHolderWrapper : public BaseType
 			return boost::python::extract<IECore::RunTimeTypedPtr>( result );
 		}
 
-		virtual void parameterChanged( IECore::RunTimeTyped *parameterised, IECore::Parameter *parameter )
+		void parameterChanged( IECore::RunTimeTyped *parameterised, IECore::Parameter *parameter ) override
 		{
 			IECorePython::ScopedGILLock gilLock;
 			IECore::RunTimeTypedPtr parameterisedPtr( parameterised );
@@ -105,7 +105,7 @@ class ParameterisedHolderClass : public BaseType
 
 	public :
 
-		ParameterisedHolderClass( const char *docString = 0 )
+		ParameterisedHolderClass( const char *docString = nullptr )
 			:	BaseType( docString )
 		{
 

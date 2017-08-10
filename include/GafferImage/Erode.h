@@ -48,7 +48,7 @@ class Erode : public RankFilter
 	public :
 
 		Erode( const std::string &name=defaultName<Erode>() );
-		virtual ~Erode();
+		~Erode() override;
 
 		IE_CORE_DECLARERUNTIMETYPEDEXTENSION( GafferImage::Erode, ErodeTypeId, RankFilter );
 

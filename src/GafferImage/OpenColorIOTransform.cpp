@@ -219,7 +219,7 @@ void OpenColorIOTransform::processColorData( const Gaffer::Context *context, IEC
 		r->baseWritable(),
 		g->baseWritable(),
 		b->baseWritable(),
-		0, // alpha
+		nullptr, // alpha
 		ImagePlug::tileSize(), // width
 		ImagePlug::tileSize() // height
 	);

@@ -117,7 +117,7 @@ NodulePtr Nodule::create( Gaffer::PlugPtr plug )
 		t = IECore::RunTimeTyped::baseTypeId( t );
 	}
 
-	return 0;
+	return nullptr;
 }
 
 void Nodule::registerNodule( const std::string &noduleTypeName, NoduleCreator creator, IECore::TypeId plugType )

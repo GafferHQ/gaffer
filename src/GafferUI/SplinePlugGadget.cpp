@@ -347,12 +347,12 @@ IECore::RunTimeTypedPtr SplinePlugGadget::dragBegin( GadgetPtr gadget, const But
 {
 	if( gadget!=this )
 	{
-		return 0;
+		return nullptr;
 	}
 
 	if( !m_selection->size() )
 	{
-		return 0;
+		return nullptr;
 	}
 
 	V3f i;
@@ -362,7 +362,7 @@ IECore::RunTimeTypedPtr SplinePlugGadget::dragBegin( GadgetPtr gadget, const But
 		return m_selection;
 	}
 
-	return 0;
+	return nullptr;
 }
 
 bool SplinePlugGadget::dragMove( GadgetPtr gadget, const ButtonEvent &event )

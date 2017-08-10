@@ -54,14 +54,14 @@ class AppleseedLight : public GafferScene::Light
 		IE_CORE_DECLARERUNTIMETYPEDEXTENSION( GafferAppleseed::AppleseedLight, AppleseedLightTypeId, GafferScene::Light );
 
 		AppleseedLight( const std::string &name=defaultName<AppleseedLight>() );
-		virtual ~AppleseedLight();
+		~AppleseedLight() override;
 
 		void loadShader( const std::string &shaderName );
 
 	protected :
 
-		virtual void hashLight( const Gaffer::Context *context, IECore::MurmurHash &h ) const;
-		virtual IECore::ObjectVectorPtr computeLight( const Gaffer::Context *context ) const;
+		void hashLight( const Gaffer::Context *context, IECore::MurmurHash &h ) const override;
+		IECore::ObjectVectorPtr computeLight( const Gaffer::Context *context ) const override;
 
 	private :
 

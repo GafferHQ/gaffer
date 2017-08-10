@@ -69,7 +69,7 @@ class GraphLayout : public IECore::RunTimeTyped
 
 	public :
 
-		virtual ~GraphLayout();
+		~GraphLayout() override;
 
 		IE_CORE_DECLARERUNTIMETYPEDEXTENSION( GafferUI::GraphLayout, GraphLayoutTypeId, IECore::RunTimeTyped );
 

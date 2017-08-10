@@ -151,7 +151,7 @@ void SetFilter::hashMatch( const ScenePlug *scene, const Gaffer::Context *contex
 	/// of filters. If we manage that, then we should go back to throwing an exception here if
 	/// the context doesn't contain a path. We should then do the same in the PathFilter.
 	typedef IECore::TypedData<ScenePlug::ScenePath> ScenePathData;
-	const ScenePathData *pathData = context->get<ScenePathData>( ScenePlug::scenePathContextName, 0 );
+	const ScenePathData *pathData = context->get<ScenePathData>( ScenePlug::scenePathContextName, nullptr );
 	if( pathData )
 	{
 		const ScenePlug::ScenePath &path = pathData->readable();

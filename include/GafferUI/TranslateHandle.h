@@ -49,7 +49,7 @@ class TranslateHandle : public Handle
 	public :
 
 		TranslateHandle( Style::Axes axes );
-		virtual ~TranslateHandle();
+		~TranslateHandle() override;
 
 		IE_CORE_DECLARERUNTIMETYPEDEXTENSION( GafferUI::TranslateHandle, TranslateHandleTypeId, Handle );
 
@@ -66,8 +66,8 @@ class TranslateHandle : public Handle
 
 	protected :
 
-		virtual void renderHandle( const Style *style, Style::State state ) const;
-		virtual void dragBegin( const DragDropEvent &event );
+		void renderHandle( const Style *style, Style::State state ) const override;
+		void dragBegin( const DragDropEvent &event ) override;
 
 	private :
 

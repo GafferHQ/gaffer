@@ -372,7 +372,7 @@ class SerialiserWrapper : public IECorePython::RefCountedWrapper<Serialisation::
 		{
 		}
 
-		virtual void moduleDependencies( const Gaffer::GraphComponent *graphComponent, std::set<std::string> &modules, const Serialisation &serialisation ) const
+		void moduleDependencies( const Gaffer::GraphComponent *graphComponent, std::set<std::string> &modules, const Serialisation &serialisation ) const override
 		{
 			if( this->isSubclassed() )
 			{
@@ -390,7 +390,7 @@ class SerialiserWrapper : public IECorePython::RefCountedWrapper<Serialisation::
 			Serialiser::moduleDependencies( graphComponent, modules, serialisation );
 		}
 
-		virtual std::string constructor( const Gaffer::GraphComponent *graphComponent, const Serialisation &serialisation ) const
+		std::string constructor( const Gaffer::GraphComponent *graphComponent, const Serialisation &serialisation ) const override
 		{
 			if( this->isSubclassed() )
 			{
@@ -406,7 +406,7 @@ class SerialiserWrapper : public IECorePython::RefCountedWrapper<Serialisation::
 			return Serialiser::constructor( graphComponent, serialisation );
 		}
 
-		virtual std::string postConstructor( const Gaffer::GraphComponent *graphComponent, const std::string &identifier, const Serialisation &serialisation ) const
+		std::string postConstructor( const Gaffer::GraphComponent *graphComponent, const std::string &identifier, const Serialisation &serialisation ) const override
 		{
 			if( this->isSubclassed() )
 			{
@@ -422,7 +422,7 @@ class SerialiserWrapper : public IECorePython::RefCountedWrapper<Serialisation::
 			return Serialiser::postConstructor( graphComponent, identifier, serialisation );
 		}
 
-		virtual std::string postHierarchy( const Gaffer::GraphComponent *graphComponent, const std::string &identifier, const Serialisation &serialisation ) const
+		std::string postHierarchy( const Gaffer::GraphComponent *graphComponent, const std::string &identifier, const Serialisation &serialisation ) const override
 		{
 			if( this->isSubclassed() )
 			{
@@ -438,7 +438,7 @@ class SerialiserWrapper : public IECorePython::RefCountedWrapper<Serialisation::
 			return Serialiser::postHierarchy( graphComponent, identifier, serialisation );
 		}
 
-		virtual std::string postScript( const Gaffer::GraphComponent *graphComponent, const std::string &identifier, const Serialisation &serialisation ) const
+		std::string postScript( const Gaffer::GraphComponent *graphComponent, const std::string &identifier, const Serialisation &serialisation ) const override
 		{
 			if( this->isSubclassed() )
 			{
@@ -454,7 +454,7 @@ class SerialiserWrapper : public IECorePython::RefCountedWrapper<Serialisation::
 			return Serialiser::postScript( graphComponent, identifier, serialisation );
 		}
 
-		virtual bool childNeedsSerialisation( const Gaffer::GraphComponent *child, const Serialisation &serialisation ) const
+		bool childNeedsSerialisation( const Gaffer::GraphComponent *child, const Serialisation &serialisation ) const override
 		{
 			if( this->isSubclassed() )
 			{
@@ -468,7 +468,7 @@ class SerialiserWrapper : public IECorePython::RefCountedWrapper<Serialisation::
 			return Serialiser::childNeedsSerialisation( child, serialisation );
 		}
 
-		virtual bool childNeedsConstruction( const Gaffer::GraphComponent *child, const Serialisation &serialisation ) const
+		bool childNeedsConstruction( const Gaffer::GraphComponent *child, const Serialisation &serialisation ) const override
 		{
 			if( this->isSubclassed() )
 			{

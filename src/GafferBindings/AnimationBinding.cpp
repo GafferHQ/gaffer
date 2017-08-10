@@ -80,7 +80,7 @@ class CurvePlugSerialiser : public ValuePlugSerialiser
 
 	public :
 
-		virtual std::string postConstructor( const Gaffer::GraphComponent *graphComponent, const std::string &identifier, const Serialisation &serialisation ) const
+		std::string postConstructor( const Gaffer::GraphComponent *graphComponent, const std::string &identifier, const Serialisation &serialisation ) const override
 		{
 			std::string result = ValuePlugSerialiser::postConstructor( graphComponent, identifier, serialisation );
 			const Animation::CurvePlug *curve = static_cast<const Animation::CurvePlug *>( graphComponent );

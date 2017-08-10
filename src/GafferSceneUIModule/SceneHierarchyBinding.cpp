@@ -248,7 +248,7 @@ class SceneHierarchySetFilter : public SceneHierarchyFilter
 
 	protected :
 
-		virtual void sceneDirtied( const ValuePlug *child )
+		void sceneDirtied( const ValuePlug *child ) override
 		{
 			if(
 				child == getScene()->setNamesPlug() ||
@@ -260,7 +260,7 @@ class SceneHierarchySetFilter : public SceneHierarchyFilter
 			}
 		}
 
-		virtual void contextChanged( const IECore::InternedString &variableName )
+		void contextChanged( const IECore::InternedString &variableName ) override
 		{
 			if( !boost::starts_with( variableName.c_str(), "ui:" ) )
 			{
@@ -269,7 +269,7 @@ class SceneHierarchySetFilter : public SceneHierarchyFilter
 			}
 		}
 
-		virtual void doFilter( vector<Gaffer::PathPtr> &paths ) const
+		void doFilter( vector<Gaffer::PathPtr> &paths ) const override
 		{
 			if( paths.empty() )
 			{
@@ -394,7 +394,7 @@ class SceneHierarchySearchFilter : public SceneHierarchyFilter
 
 	protected :
 
-		virtual void sceneDirtied( const ValuePlug *child )
+		void sceneDirtied( const ValuePlug *child ) override
 		{
 			if( child == getScene()->childNamesPlug() )
 			{
@@ -403,7 +403,7 @@ class SceneHierarchySearchFilter : public SceneHierarchyFilter
 			}
 		}
 
-		virtual void contextChanged( const IECore::InternedString &variableName )
+		void contextChanged( const IECore::InternedString &variableName ) override
 		{
 			if( !boost::starts_with( variableName.c_str(), "ui:" ) )
 			{
@@ -412,7 +412,7 @@ class SceneHierarchySearchFilter : public SceneHierarchyFilter
 			}
 		}
 
-		virtual void doFilter( vector<Gaffer::PathPtr> &paths ) const
+		void doFilter( vector<Gaffer::PathPtr> &paths ) const override
 		{
 			if( m_matchPattern.empty() || paths.empty() )
 			{

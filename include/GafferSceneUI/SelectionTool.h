@@ -55,7 +55,7 @@ class SelectionTool : public GafferUI::Tool
 
 		SelectionTool( SceneView *view, const std::string &name = defaultName<SelectionTool>() );
 
-		virtual ~SelectionTool();
+		~SelectionTool() override;
 
 		IE_CORE_DECLARERUNTIMETYPEDEXTENSION( GafferSceneUI::SelectionTool, SelectionToolTypeId, GafferUI::Tool );
 

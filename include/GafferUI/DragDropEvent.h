@@ -55,7 +55,7 @@ struct DragDropEvent : public ButtonEvent
 		const IECore::LineSegment3f &Line=IECore::LineSegment3f(),
 		Modifiers m = ModifiableEvent::None
 	)
-		:	ButtonEvent( button, buttons, Line, 0, m ), sourceGadget( 0 ), data( 0 ), destinationGadget( 0 ), dropResult( false )
+		:	ButtonEvent( button, buttons, Line, 0, m ), sourceGadget( nullptr ), data( nullptr ), destinationGadget( nullptr ), dropResult( false )
 	{
 	};
 

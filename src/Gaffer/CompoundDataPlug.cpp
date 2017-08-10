@@ -267,7 +267,7 @@ IECore::DataPtr CompoundDataPlug::memberDataAndName( const MemberPlug *parameter
 	{
 		if( !parameterPlug->getChild<BoolPlug>( 2 )->getValue() )
 		{
-			return 0;
+			return nullptr;
 		}
 	}
 
@@ -276,13 +276,13 @@ IECore::DataPtr CompoundDataPlug::memberDataAndName( const MemberPlug *parameter
 		// we can end up here either if someone has very naughtily deleted
 		// some plugs, or if we're being called during loading and the
 		// child plugs haven't been fully constructed.
-		return 0;
+		return nullptr;
 	}
 
 	name = parameterPlug->getChild<StringPlug>( 0 )->getValue();
 	if( !name.size() )
 	{
-		return 0;
+		return nullptr;
 	}
 
 	const ValuePlug *valuePlug = parameterPlug->getChild<ValuePlug>( 1 );

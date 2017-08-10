@@ -96,7 +96,7 @@ class ScopedAssignment : boost::noncopyable
 IE_CORE_DEFINERUNTIMETYPED( Plug );
 
 Plug::Plug( const std::string &name, Direction direction, unsigned flags )
-	:	GraphComponent( name ), m_direction( direction ), m_input( 0 ), m_flags( None ), m_skipNextUpdateInputFromChildInputs( false )
+	:	GraphComponent( name ), m_direction( direction ), m_input( nullptr ), m_flags( None ), m_skipNextUpdateInputFromChildInputs( false )
 {
 	setFlags( flags );
 	parentChangedSignal().connect( boost::bind( &Plug::parentChanged, this ) );
@@ -104,13 +104,13 @@ Plug::Plug( const std::string &name, Direction direction, unsigned flags )
 
 Plug::~Plug()
 {
-	setInputInternal( 0, false );
+	setInputInternal( nullptr, false );
 	for( OutputContainer::iterator it=m_outputs.begin(); it!=m_outputs.end(); )
 	{
 	 	// get the next iterator now, as the call to setInputInternal invalidates
 		// the current iterator.
 		OutputContainer::iterator next = it; next++;
-		(*it)->setInputInternal( 0, true );
+		(*it)->setInputInternal( nullptr, true );
 		it = next;
 	}
 	Metadata::clearInstanceMetadata( this );
@@ -545,7 +545,7 @@ void Plug::removeOutputs()
 	for( OutputContainer::iterator it = m_outputs.begin(); it!=m_outputs.end();  )
 	{
 		Plug *p = *it++;
-		p->setInput( 0 );
+		p->setInput( nullptr );
 	}
 }
 
@@ -607,7 +607,7 @@ void Plug::parentChanging( Gaffer::GraphComponent *newParent )
 		// We're losing our parent - remove all our connections first.
 		// this must be done here (rather than in a parentChangedSignal() slot)
 		// because we need a current parent for the operation to be undoable.
-		setInput( 0 );
+		setInput( nullptr );
 		// Deal with outputs whose parent is an output of our parent.
 		// For these we actually remove the destination plug itself,
 		// so that the parent plugs may remain connected.

@@ -61,7 +61,7 @@ class PerformanceMonitor : public Monitor
 	public :
 
 		PerformanceMonitor();
-		virtual ~PerformanceMonitor();
+		~PerformanceMonitor() override;
 
 		struct Statistics
 		{
@@ -94,8 +94,8 @@ class PerformanceMonitor : public Monitor
 
 	protected :
 
-		virtual void processStarted( const Process *process );
-		virtual void processFinished( const Process *process );
+		void processStarted( const Process *process ) override;
+		void processFinished( const Process *process ) override;
 
 	private :
 

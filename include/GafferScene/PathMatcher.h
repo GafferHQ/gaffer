@@ -184,7 +184,7 @@ class PathMatcher
 				Node( bool terminator = false );
 				// Shallow copy.
 				Node( const Node &other );
-				~Node();
+				~Node() override;
 
 				// Returns an iterator to the first child whose name contains wildcards.
 				// All children between here and children.end() will also contain wildcards.

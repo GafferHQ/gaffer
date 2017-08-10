@@ -75,11 +75,11 @@ class BoxPlug : public ValuePlug
 			unsigned flags = Default
 		);
 
-		virtual ~BoxPlug();
+		~BoxPlug() override;
 
 		/// Accepts no children following construction.
-		virtual bool acceptsChild( const GraphComponent *potentialChild ) const;
-		virtual PlugPtr createCounterpart( const std::string &name, Direction direction ) const;
+		bool acceptsChild( const GraphComponent *potentialChild ) const override;
+		PlugPtr createCounterpart( const std::string &name, Direction direction ) const override;
 
 		ChildType *minPlug();
 		const ChildType *minPlug() const;

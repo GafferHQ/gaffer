@@ -55,7 +55,7 @@ class ImageSampler : public Gaffer::ComputeNode
 	public :
 
 		ImageSampler( const std::string &name=defaultName<ImageSampler>() );
-		virtual ~ImageSampler();
+		~ImageSampler() override;
 
 		IE_CORE_DECLARERUNTIMETYPEDEXTENSION( GafferImage::ImageSampler, ImageSamplerTypeId, ComputeNode );
 
@@ -71,12 +71,12 @@ class ImageSampler : public Gaffer::ComputeNode
 		Gaffer::Color4fPlug *colorPlug();
 		const Gaffer::Color4fPlug *colorPlug() const;
 
-		virtual void affects( const Gaffer::Plug *input, AffectedPlugsContainer &outputs ) const;
+		void affects( const Gaffer::Plug *input, AffectedPlugsContainer &outputs ) const override;
 
 	protected :
 
-		virtual void hash( const Gaffer::ValuePlug *output, const Gaffer::Context *context, IECore::MurmurHash &h ) const;
-		virtual void compute( Gaffer::ValuePlug *output, const Gaffer::Context *context ) const;
+		void hash( const Gaffer::ValuePlug *output, const Gaffer::Context *context, IECore::MurmurHash &h ) const override;
+		void compute( Gaffer::ValuePlug *output, const Gaffer::Context *context ) const override;
 
 	private :
 

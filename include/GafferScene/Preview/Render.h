@@ -57,7 +57,7 @@ class Render : public GafferDispatch::TaskNode
 	public :
 
 		Render( const std::string &name=defaultName<Render>() );
-		virtual ~Render();
+		~Render() override;
 
 		IE_CORE_DECLARERUNTIMETYPEDEXTENSION( GafferScene::Preview::Render, GafferScene::RenderTypeId, GafferDispatch::TaskNode );
 
@@ -82,8 +82,8 @@ class Render : public GafferDispatch::TaskNode
 		ScenePlug *outPlug();
 		const ScenePlug *outPlug() const;
 
-		virtual IECore::MurmurHash hash( const Gaffer::Context *context ) const;
-		virtual void execute() const;
+		IECore::MurmurHash hash( const Gaffer::Context *context ) const override;
+		void execute() const override;
 
 	protected :
 

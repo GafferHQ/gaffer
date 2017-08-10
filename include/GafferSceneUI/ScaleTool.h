@@ -52,7 +52,7 @@ class ScaleTool : public TransformTool
 	public :
 
 		ScaleTool( SceneView *view, const std::string &name = defaultName<ScaleTool>() );
-		virtual ~ScaleTool();
+		~ScaleTool() override;
 
 		IE_CORE_DECLARERUNTIMETYPEDEXTENSION( GafferSceneUI::ScaleTool, ScaleToolTypeId, TransformTool );
 
@@ -63,8 +63,8 @@ class ScaleTool : public TransformTool
 
 	protected :
 
-		virtual bool affectsHandles( const Gaffer::Plug *input ) const;
-		virtual void updateHandles();
+		bool affectsHandles( const Gaffer::Plug *input ) const override;
+		void updateHandles() override;
 
 	private :
 

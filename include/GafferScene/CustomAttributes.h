@@ -48,7 +48,7 @@ class CustomAttributes : public GafferScene::Attributes
 	public :
 
 		CustomAttributes( const std::string &name=defaultName<CustomAttributes>() );
-		virtual ~CustomAttributes();
+		~CustomAttributes() override;
 
 		IE_CORE_DECLARERUNTIMETYPEDEXTENSION( GafferScene::CustomAttributes,CustomAttributesTypeId, Attributes );
 

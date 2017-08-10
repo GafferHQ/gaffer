@@ -58,7 +58,7 @@ class ParameterHandler : public IECore::RefCounted
 
 		IE_CORE_DECLAREMEMBERPTR( ParameterHandler );
 
-		virtual ~ParameterHandler();
+		~ParameterHandler() override;
 
 		virtual IECore::Parameter *parameter() = 0;
 		virtual const IECore::Parameter *parameter() const = 0;

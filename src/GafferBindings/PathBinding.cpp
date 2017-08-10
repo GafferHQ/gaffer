@@ -123,7 +123,7 @@ class PathWrapper : public IECorePython::RunTimeTypedWrapper<WrappedType>
 		}
 
 
-		virtual bool isValid() const
+		bool isValid() const override
 		{
 			if( this->isSubclassed() )
 			{
@@ -144,7 +144,7 @@ class PathWrapper : public IECorePython::RunTimeTypedWrapper<WrappedType>
 			return WrappedType::isValid();
 		}
 
-		virtual bool isLeaf() const
+		bool isLeaf() const override
 		{
 			if( this->isSubclassed() )
 			{
@@ -165,7 +165,7 @@ class PathWrapper : public IECorePython::RunTimeTypedWrapper<WrappedType>
 			return WrappedType::isLeaf();
 		}
 
-		virtual void propertyNames( std::vector<IECore::InternedString> &names ) const
+		void propertyNames( std::vector<IECore::InternedString> &names ) const override
 		{
 			if( this->isSubclassed() )
 			{
@@ -198,7 +198,7 @@ class PathWrapper : public IECorePython::RunTimeTypedWrapper<WrappedType>
 			WrappedType::propertyNames( names );
 		}
 
-		virtual IECore::ConstRunTimeTypedPtr property( const IECore::InternedString &name ) const
+		IECore::ConstRunTimeTypedPtr property( const IECore::InternedString &name ) const override
 		{
 			if( this->isSubclassed() )
 			{
@@ -231,7 +231,7 @@ class PathWrapper : public IECorePython::RunTimeTypedWrapper<WrappedType>
 			return WrappedType::property( name );
 		}
 
-		virtual PathPtr copy() const
+		PathPtr copy() const override
 		{
 			if( this->isSubclassed() )
 			{
@@ -256,7 +256,7 @@ class PathWrapper : public IECorePython::RunTimeTypedWrapper<WrappedType>
 			return WrappedType::copy();
 		}
 
-		virtual void doChildren( std::vector<PathPtr> &children ) const
+		void doChildren( std::vector<PathPtr> &children ) const override
 		{
 			if( this->isSubclassed() )
 			{
@@ -279,7 +279,7 @@ class PathWrapper : public IECorePython::RunTimeTypedWrapper<WrappedType>
 			WrappedType::doChildren( children );
 		}
 
-		virtual void pathChangedSignalCreated()
+		void pathChangedSignalCreated() override
 		{
 			if( this->isSubclassed() )
 			{

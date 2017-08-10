@@ -100,7 +100,7 @@ class Dispatcher : public Gaffer::Node
 	public :
 
 		Dispatcher( const std::string &name=defaultName<Dispatcher>() );
-		virtual ~Dispatcher();
+		~Dispatcher() override;
 
 		IE_CORE_DECLARERUNTIMETYPEDEXTENSION( GafferDispatch::Dispatcher, DispatcherTypeId, Gaffer::Node );
 
@@ -191,7 +191,7 @@ class Dispatcher : public Gaffer::Node
 		static const std::string &getDefaultDispatcherType();
 		static void setDefaultDispatcherType( const std::string &dispatcherType );
 		/// Register a Dispatcher creation function.
-		static void registerDispatcher( const std::string &dispatcherType, Creator creator, SetupPlugsFn setupPlugsFn = 0 );
+		static void registerDispatcher( const std::string &dispatcherType, Creator creator, SetupPlugsFn setupPlugsFn = nullptr );
 		/// Fills the vector with the names of all the registered Dispatcher creators.
 		static void registeredDispatchers( std::vector<std::string> &dispatcherTypes );
 		//@}

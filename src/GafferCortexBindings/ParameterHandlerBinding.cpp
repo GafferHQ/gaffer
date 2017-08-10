@@ -60,56 +60,56 @@ class ParameterHandlerWrapper : public IECorePython::RefCountedWrapper<Parameter
 		{
 		}
 
-		virtual IECore::Parameter *parameter()
+		IECore::Parameter *parameter() override
 		{
 			IECorePython::ScopedGILLock gilLock;
 			object o = methodOverride( "parameter" );
 			return extract<IECore::Parameter *>( o() );
 		}
 
-		virtual const IECore::Parameter *parameter() const
+		const IECore::Parameter *parameter() const override
 		{
 			IECorePython::ScopedGILLock gilLock;
 			object o = methodOverride( "parameter" );
 			return extract<IECore::Parameter *>( o() );
 		}
 
-		virtual void restore( Gaffer::GraphComponent *plugParent )
+		void restore( Gaffer::GraphComponent *plugParent ) override
 		{
 			/// \todo Implement this to call through to python. We're not
 			/// doing that right now to maintain compatibility with existing
 			/// python-based parameter handlers in other packages.
 		}
 
-		virtual Gaffer::Plug *setupPlug( Gaffer::GraphComponent *plugParent, Gaffer::Plug::Direction direction, unsigned flags )
+		Gaffer::Plug *setupPlug( Gaffer::GraphComponent *plugParent, Gaffer::Plug::Direction direction, unsigned flags ) override
 		{
 			IECorePython::ScopedGILLock gilLock;
 			object o = methodOverride( "setupPlug" );
 			return extract<Gaffer::Plug *>( o( Gaffer::GraphComponentPtr( plugParent ), direction, flags ) );
 		}
 
-		virtual Gaffer::Plug *plug()
+		Gaffer::Plug *plug() override
 		{
 			IECorePython::ScopedGILLock gilLock;
 			object o = methodOverride( "plug" );
 			return extract<Gaffer::Plug *>( o() );
 		}
 
-		virtual const Gaffer::Plug *plug() const
+		const Gaffer::Plug *plug() const override
 		{
 			IECorePython::ScopedGILLock gilLock;
 			object o = methodOverride( "plug" );
 			return extract<Gaffer::Plug *>( o() );
 		}
 
-		virtual void setParameterValue()
+		void setParameterValue() override
 		{
 			IECorePython::ScopedGILLock gilLock;
 			object o = methodOverride( "setParameterValue" );
 			o();
 		}
 
-		virtual void setPlugValue()
+		void setPlugValue() override
 		{
 			IECorePython::ScopedGILLock gilLock;
 			object o = methodOverride( "setPlugValue" );

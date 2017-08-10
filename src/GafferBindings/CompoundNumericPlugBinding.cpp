@@ -84,7 +84,7 @@ class CompoundNumericPlugSerialiser : public ValuePlugSerialiser
 {
   public:
 
-	virtual std::string constructor( const Gaffer::GraphComponent *graphComponent, const Serialisation &serialisation ) const
+	std::string constructor( const Gaffer::GraphComponent *graphComponent, const Serialisation &serialisation ) const override
 	{
 		return maskedCompoundNumericPlugRepr( static_cast<const T *>( graphComponent ), Plug::All & ~Plug::ReadOnly, &serialisation );
 	}
@@ -93,7 +93,7 @@ class CompoundNumericPlugSerialiser : public ValuePlugSerialiser
 
 		// Ideally we'll serialise the value as a single getValue() call for this plug,
 		// but we can't do that if any of the children have input connections.
-		virtual bool valueNeedsSerialisation( const Gaffer::ValuePlug *plug, const Serialisation &serialisation ) const
+		bool valueNeedsSerialisation( const Gaffer::ValuePlug *plug, const Serialisation &serialisation ) const override
 		{
 			if( !ValuePlugSerialiser::valueNeedsSerialisation( plug, serialisation ) )
 			{

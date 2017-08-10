@@ -53,7 +53,7 @@ class TranslateTool : public TransformTool
 	public :
 
 		TranslateTool( SceneView *view, const std::string &name = defaultName<TranslateTool>() );
-		virtual ~TranslateTool();
+		~TranslateTool() override;
 
 		IE_CORE_DECLARERUNTIMETYPEDEXTENSION( GafferSceneUI::TranslateTool, TranslateToolTypeId, TransformTool );
 
@@ -68,8 +68,8 @@ class TranslateTool : public TransformTool
 
 	protected :
 
-		virtual bool affectsHandles( const Gaffer::Plug *input ) const;
-		virtual void updateHandles();
+		bool affectsHandles( const Gaffer::Plug *input ) const override;
+		void updateHandles() override;
 
 	private :
 

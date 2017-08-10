@@ -193,7 +193,7 @@ static IECore::ConstCompoundDataPtr metadataGetter( const std::string &key, size
 		shaderMetadata->writable()["primaryInput"] = new StringData( value );
 	}
 	const char* shaderType;
-	if( AiMetaDataGetStr( shader, /* look up metadata on node, not on parameter */ NULL , "shaderType", &shaderType ) )
+	if( AiMetaDataGetStr( shader, /* look up metadata on node, not on parameter */ nullptr , "shaderType", &shaderType ) )
 	{
 		shaderMetadata->writable()["shaderType"] = new StringData( shaderType );
 	}

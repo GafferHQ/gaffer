@@ -65,11 +65,11 @@ class NumericPlug : public ValuePlug
 			T maxValue = Imath::limits<T>::max(),
 			unsigned flags = Default
 		);
-		virtual ~NumericPlug();
+		~NumericPlug() override;
 
 		/// Accepts other NumericPlugs, including those of different types, and BoolPlugs.
-		virtual bool acceptsInput( const Plug *input ) const;
-		virtual PlugPtr createCounterpart( const std::string &name, Direction direction ) const;
+		bool acceptsInput( const Plug *input ) const override;
+		PlugPtr createCounterpart( const std::string &name, Direction direction ) const override;
 
 		T defaultValue() const;
 
@@ -87,7 +87,7 @@ class NumericPlug : public ValuePlug
 		/// the optional precomputedHash argument - and use with care!
 		T getValue( const IECore::MurmurHash *precomputedHash = nullptr ) const;
 
-		virtual void setFrom( const ValuePlug *other );
+		void setFrom( const ValuePlug *other ) override;
 
 	private :
 

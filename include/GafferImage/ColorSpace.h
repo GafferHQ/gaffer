@@ -56,7 +56,7 @@ class ColorSpace : public OpenColorIOTransform
 	public :
 
 		ColorSpace( const std::string &name=defaultName<ColorSpace>() );
-		virtual ~ColorSpace();
+		~ColorSpace() override;
 
 		IE_CORE_DECLARERUNTIMETYPEDEXTENSION( GafferImage::ColorSpace, ColorSpaceTypeId, OpenColorIOTransform );
 
@@ -68,9 +68,9 @@ class ColorSpace : public OpenColorIOTransform
 
 	protected :
 
-		virtual bool affectsTransform( const Gaffer::Plug *input ) const;
-		virtual void hashTransform( const Gaffer::Context *context, IECore::MurmurHash &h ) const;
-		virtual OpenColorIO::ConstTransformRcPtr transform() const;
+		bool affectsTransform( const Gaffer::Plug *input ) const override;
+		void hashTransform( const Gaffer::Context *context, IECore::MurmurHash &h ) const override;
+		OpenColorIO::ConstTransformRcPtr transform() const override;
 
 	private :
 

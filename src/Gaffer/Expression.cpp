@@ -303,7 +303,7 @@ void Expression::hash( const ValuePlug *output, const Context *context, IECore::
 
 		for( std::vector<IECore::InternedString>::const_iterator it = m_contextNames.begin(); it != m_contextNames.end(); it++ )
 		{
-			const IECore::Data *d = context->get<IECore::Data>( *it, 0 );
+			const IECore::Data *d = context->get<IECore::Data>( *it, nullptr );
 			if( d )
 			{
 				d->hash( h );

@@ -79,11 +79,11 @@ class ImageGadget : public GafferUI::Gadget
 	public :
 
 		ImageGadget();
-		virtual ~ImageGadget();
+		~ImageGadget() override;
 
 		IE_CORE_DECLARERUNTIMETYPEDEXTENSION( GafferImageUI::ImageGadget, ImageGadgetTypeId, Gadget );
 
-		virtual Imath::Box3f bound() const;
+		Imath::Box3f bound() const override;
 
 		void setImage( GafferImage::ConstImagePlugPtr image );
 		const GafferImage::ImagePlug *getImage() const;
@@ -113,7 +113,7 @@ class ImageGadget : public GafferUI::Gadget
 
 	protected :
 
-		virtual void doRender( const GafferUI::Style *style ) const;
+		void doRender( const GafferUI::Style *style ) const override;
 
 	private :
 

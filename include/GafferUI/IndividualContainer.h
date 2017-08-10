@@ -50,13 +50,13 @@ class IndividualContainer : public ContainerGadget
 
 	public :
 
-		IndividualContainer( GadgetPtr child=0 );
-		virtual ~IndividualContainer();
+		IndividualContainer( GadgetPtr child=nullptr );
+		~IndividualContainer() override;
 
 		IE_CORE_DECLARERUNTIMETYPEDEXTENSION( GafferUI::IndividualContainer, IndividualContainerTypeId, ContainerGadget );
 
 		/// Accepts the child only if there are currently no children.
-		virtual bool acceptsChild( const Gaffer::GraphComponent *potentialChild ) const;
+		bool acceptsChild( const Gaffer::GraphComponent *potentialChild ) const override;
 
 		/// Removes the current child if there is one, and replaces it
 		/// with the specified gadget.

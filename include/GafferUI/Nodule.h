@@ -60,7 +60,7 @@ class Nodule : public Gadget
 	public :
 
 		IE_CORE_DECLARERUNTIMETYPEDEXTENSION( GafferUI::Nodule, NoduleTypeId, Gadget );
-		virtual ~Nodule();
+		~Nodule() override;
 
 		Gaffer::Plug *plug();
 		const Gaffer::Plug *plug() const;
@@ -80,7 +80,7 @@ class Nodule : public Gadget
 		/// nodule type for a particular type of plug.
 		static void registerNodule( const std::string &noduleTypeName, NoduleCreator creator, IECore::TypeId plugType = IECore::InvalidTypeId );
 
-		virtual std::string getToolTip( const IECore::LineSegment3f &line ) const;
+		std::string getToolTip( const IECore::LineSegment3f &line ) const override;
 
 	protected :
 

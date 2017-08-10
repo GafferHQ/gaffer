@@ -59,17 +59,17 @@ class StandardGraphLayout : public GraphLayout
 	public :
 
 		StandardGraphLayout();
-		virtual ~StandardGraphLayout();
+		~StandardGraphLayout() override;
 
 		IE_CORE_DECLARERUNTIMETYPEDEXTENSION( GafferUI::StandardGraphLayout, StandardGraphLayoutTypeId, GraphLayout );
 
-		virtual bool connectNode( GraphGadget *graph, Gaffer::Node *node, Gaffer::Set *potentialInputs ) const;
-		virtual bool connectNodes( GraphGadget *graph, Gaffer::Set *nodes, Gaffer::Set *potentialInputs ) const;
+		bool connectNode( GraphGadget *graph, Gaffer::Node *node, Gaffer::Set *potentialInputs ) const override;
+		bool connectNodes( GraphGadget *graph, Gaffer::Set *nodes, Gaffer::Set *potentialInputs ) const override;
 
-		virtual void positionNode( GraphGadget *graph, Gaffer::Node *node, const Imath::V2f &fallbackPosition = Imath::V2f( 0 ) ) const;
-		virtual void positionNodes( GraphGadget *graph, Gaffer::Set *nodes, const Imath::V2f &fallbackPosition = Imath::V2f( 0 ) ) const;
+		void positionNode( GraphGadget *graph, Gaffer::Node *node, const Imath::V2f &fallbackPosition = Imath::V2f( 0 ) ) const override;
+		void positionNodes( GraphGadget *graph, Gaffer::Set *nodes, const Imath::V2f &fallbackPosition = Imath::V2f( 0 ) ) const override;
 
-		virtual void layoutNodes( GraphGadget *graph, Gaffer::Set *nodes ) const;
+		void layoutNodes( GraphGadget *graph, Gaffer::Set *nodes ) const override;
 
 		/// @name Layout algorithm parameters
 		////////////////////////////////////////////////////////////////////

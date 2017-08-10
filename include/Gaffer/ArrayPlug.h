@@ -68,13 +68,13 @@ class ArrayPlug : public Plug
 			unsigned flags = Default
 		);
 
-		virtual ~ArrayPlug();
+		~ArrayPlug() override;
 
 		IE_CORE_DECLARERUNTIMETYPEDEXTENSION( Gaffer::ArrayPlug, ArrayPlugTypeId, Plug );
 
-		virtual bool acceptsChild( const GraphComponent *potentialChild ) const;
-		virtual void setInput( PlugPtr input );
-		virtual PlugPtr createCounterpart( const std::string &name, Direction direction ) const;
+		bool acceptsChild( const GraphComponent *potentialChild ) const override;
+		void setInput( PlugPtr input ) override;
+		PlugPtr createCounterpart( const std::string &name, Direction direction ) const override;
 
 		size_t minSize() const;
 		size_t maxSize() const;

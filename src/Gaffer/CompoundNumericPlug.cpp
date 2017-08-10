@@ -253,7 +253,7 @@ void CompoundNumericPlug<T>::ungang()
 		{
 			if( input->parent<Plug>() == this )
 			{
-				child->setInput( 0 );
+				child->setInput( nullptr );
 			}
 		}
 	}

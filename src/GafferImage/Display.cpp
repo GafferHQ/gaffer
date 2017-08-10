@@ -139,7 +139,7 @@ class GafferDisplayDriver : public IECore::DisplayDriver
 			m_tiles = other.m_tiles;
 		}
 
-		virtual ~GafferDisplayDriver()
+		~GafferDisplayDriver() override
 		{
 		}
 
@@ -158,7 +158,7 @@ class GafferDisplayDriver : public IECore::DisplayDriver
 			return m_parameters.get();
 		}
 
-		virtual void imageData( const Imath::Box2i &box, const float *data, size_t dataSize )
+		void imageData( const Imath::Box2i &box, const float *data, size_t dataSize ) override
 		{
 			Box2i gafferBox = m_gafferFormat.fromEXRSpace( box );
 
@@ -209,17 +209,17 @@ class GafferDisplayDriver : public IECore::DisplayDriver
 			dataReceivedSignal()( this, box );
 		}
 
-		virtual void imageClose()
+		void imageClose() override
 		{
 			imageReceivedSignal()( this );
 		}
 
-		virtual bool scanLineOrderOnly() const
+		bool scanLineOrderOnly() const override
 		{
 			return false;
 		}
 
-		virtual bool acceptsRepeatedData() const
+		bool acceptsRepeatedData() const override
 		{
 			return true;
 		}
@@ -574,7 +574,7 @@ void Display::setupServer()
 	}
 	catch( const std::exception &e )
 	{
-		m_server = 0;
+		m_server = nullptr;
 		g_serverCache.erase( portPlug()->getValue() );
 		msg( Msg::Error, "Display::setupServer", e.what() );
 	}

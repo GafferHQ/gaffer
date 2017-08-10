@@ -60,7 +60,7 @@ class PlugGadget : public ContainerGadget
 	public :
 
 		PlugGadget( Gaffer::PlugPtr plug );
-		virtual ~PlugGadget();
+		~PlugGadget() override;
 
 		IE_CORE_DECLARERUNTIMETYPEDEXTENSION( GafferUI::PlugGadget, PlugGadgetTypeId, Gadget );
 

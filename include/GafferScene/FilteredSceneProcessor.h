@@ -53,14 +53,14 @@ class FilteredSceneProcessor : public SceneProcessor
 	public :
 
 		FilteredSceneProcessor( const std::string &name=defaultName<FilteredSceneProcessor>(), Filter::Result filterDefault = Filter::EveryMatch );
-		virtual ~FilteredSceneProcessor();
+		~FilteredSceneProcessor() override;
 
 		IE_CORE_DECLARERUNTIMETYPEDEXTENSION( GafferScene::FilteredSceneProcessor, FilteredSceneProcessorTypeId, SceneProcessor );
 
 		FilterPlug *filterPlug();
 		const FilterPlug *filterPlug() const;
 
-		virtual void affects( const Gaffer::Plug *input, AffectedPlugsContainer &outputs ) const;
+		void affects( const Gaffer::Plug *input, AffectedPlugsContainer &outputs ) const override;
 
 	protected :
 

@@ -56,11 +56,11 @@ class CompoundPlug : public ValuePlug
 	public :
 
 		CompoundPlug( const std::string &name=defaultName<CompoundPlug>(), Direction direction=In, unsigned flags=Default );
-		virtual ~CompoundPlug();
+		~CompoundPlug() override;
 
 		IE_CORE_DECLARERUNTIMETYPEDEXTENSION( Gaffer::CompoundPlug, CompoundPlugTypeId, ValuePlug );
 
-		virtual PlugPtr createCounterpart( const std::string &name, Direction direction ) const;
+		PlugPtr createCounterpart( const std::string &name, Direction direction ) const override;
 
 };
 

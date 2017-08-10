@@ -59,11 +59,11 @@ class ExternalProceduralVisualiser : public ObjectVisualiser
 		{
 		}
 
-		virtual ~ExternalProceduralVisualiser()
+		~ExternalProceduralVisualiser() override
 		{
 		}
 
-		virtual IECoreGL::ConstRenderablePtr visualise( const IECore::Object *object ) const
+		IECoreGL::ConstRenderablePtr visualise( const IECore::Object *object ) const override
 		{
 			const IECore::ExternalProcedural *externalProcedural = IECore::runTimeCast<const IECore::ExternalProcedural>( object );
 

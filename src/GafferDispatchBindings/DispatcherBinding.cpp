@@ -68,11 +68,11 @@ class DispatcherWrapper : public NodeWrapper<Dispatcher>
 		{
 		}
 
-		virtual ~DispatcherWrapper()
+		~DispatcherWrapper() override
 		{
 		}
 
-		virtual void doDispatch( const TaskBatch *batch ) const
+		void doDispatch( const TaskBatch *batch ) const override
 		{
 			ScopedGILLock gilLock;
 
@@ -94,7 +94,7 @@ class DispatcherWrapper : public NodeWrapper<Dispatcher>
 			}
 		}
 
-		virtual FrameListPtr frameRange( const ScriptNode *script, const Context *context ) const
+		FrameListPtr frameRange( const ScriptNode *script, const Context *context ) const override
 		{
 			ScopedGILLock gilLock;
 
@@ -136,7 +136,7 @@ class DispatcherWrapper : public NodeWrapper<Dispatcher>
 			{
 				return boost::const_pointer_cast<TaskNode>( node );
 			}
-			return 0;
+			return nullptr;
 		}
 
 		static TaskNode::TaskPlugPtr taskBatchPlug( const Dispatcher::TaskBatchPtr &batch )
@@ -160,7 +160,7 @@ class DispatcherWrapper : public NodeWrapper<Dispatcher>
 				return boost::const_pointer_cast<Context>( context );
 			}
 
-			return 0;
+			return nullptr;
 		}
 
 		static boost::python::list taskBatchGetFrames( const Dispatcher::TaskBatchPtr &batch )
@@ -211,7 +211,7 @@ struct DispatcherHelper
 			ExceptionAlgo::translatePythonException();
 		}
 
-		return 0;
+		return nullptr;
 	}
 
 	void operator()( Plug *parentPlug )

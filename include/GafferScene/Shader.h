@@ -67,7 +67,7 @@ class Shader : public Gaffer::DependencyNode
 	public :
 
 		Shader( const std::string &name=defaultName<Shader>() );
-		virtual ~Shader();
+		~Shader() override;
 
 		IE_CORE_DECLARERUNTIMETYPEDEXTENSION( GafferScene::Shader, ShaderTypeId, Gaffer::DependencyNode );
 
@@ -101,12 +101,12 @@ class Shader : public Gaffer::DependencyNode
 		/// then by default its output connections are ignored on any
 		/// downstream nodes. Derived classes may implement correspondingInput( outPlug() )
 		/// to allow disabled shaders to act as a pass-through instead.
-		virtual Gaffer::BoolPlug *enabledPlug();
-		virtual const Gaffer::BoolPlug *enabledPlug() const;
+		Gaffer::BoolPlug *enabledPlug() override;
+		const Gaffer::BoolPlug *enabledPlug() const override;
 
 		/// Implemented so that the children of parametersPlug() affect
 		/// outPlug().
-		virtual void affects( const Gaffer::Plug *input, AffectedPlugsContainer &outputs ) const;
+		void affects( const Gaffer::Plug *input, AffectedPlugsContainer &outputs ) const override;
 
 		/// \undoable
 		/// Subclasses of Shader should define how to load a given shader name, and populate the parameters

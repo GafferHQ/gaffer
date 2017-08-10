@@ -50,7 +50,7 @@ class NameGadget : public TextGadget
 	public :
 
 		NameGadget( Gaffer::GraphComponentPtr object );
-		virtual ~NameGadget();
+		~NameGadget() override;
 
 		IE_CORE_DECLARERUNTIMETYPEDEXTENSION( GafferUI::NameGadget, NameGadgetTypeId, TextGadget );
 

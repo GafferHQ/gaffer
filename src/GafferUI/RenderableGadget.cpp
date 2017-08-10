@@ -72,8 +72,8 @@ static IECore::InternedString g_drawWireframeName( "renderableGadget:drawWirefra
 
 RenderableGadget::RenderableGadget( IECore::VisibleRenderablePtr renderable )
 	: Gadget( defaultName<RenderableGadget>() ),
-	  m_renderable( 0 ),
-	  m_scene( 0 ),
+	  m_renderable( nullptr ),
+	  m_scene( nullptr ),
 	  m_baseState( new IECoreGL::State( true ) ),
 	  m_selectionColor( new IECoreGL::WireframeColorStateComponent( Color4f( 0.466f, 0.612f, 0.741f, 1.0f ) ) ),
 	  m_wireframeOn( new IECoreGL::Primitive::DrawWireframe( true ) ),
@@ -142,7 +142,7 @@ void RenderableGadget::setRenderable( IECore::ConstVisibleRenderablePtr renderab
 	if( renderable!=m_renderable )
 	{
 		m_renderable = renderable;
-		m_scene = 0;
+		m_scene = nullptr;
 		if( m_renderable )
 		{
 			IECoreGL::RendererPtr renderer = new IECoreGL::Renderer;
@@ -152,7 +152,7 @@ void RenderableGadget::setRenderable( IECore::ConstVisibleRenderablePtr renderab
 				m_renderable->render( renderer.get() );
 			}
 			m_scene = renderer->scene();
-			m_scene->setCamera( 0 );
+			m_scene->setCamera( nullptr );
 			applySelection();
 		}
  		requestRender();
@@ -331,7 +331,7 @@ IECore::RunTimeTypedPtr RenderableGadget::dragBegin( GadgetPtr gadget, const Dra
 {
 	if( !m_scene )
 	{
-		return 0;
+		return nullptr;
 	}
 
 	std::string objectUnderMouse = objectAt( event.line );
@@ -354,7 +354,7 @@ IECore::RunTimeTypedPtr RenderableGadget::dragBegin( GadgetPtr gadget, const Dra
 			return dragData;
 		}
 	}
-	return 0;
+	return nullptr;
 }
 
 bool RenderableGadget::dragEnter( GadgetPtr gadget, const DragDropEvent &event )

@@ -63,12 +63,12 @@ class TypedPlug : public ValuePlug
 			const T &defaultValue = T(),
 			unsigned flags = Default
 		);
-		virtual ~TypedPlug();
+		~TypedPlug() override;
 
 		/// Accepts only instances of TypedPlug<T> or derived classes.
 		/// In addition, BoolPlug accepts inputs from NumericPlug.
-		virtual bool acceptsInput( const Plug *input ) const;
-		virtual PlugPtr createCounterpart( const std::string &name, Direction direction ) const;
+		bool acceptsInput( const Plug *input ) const override;
+		PlugPtr createCounterpart( const std::string &name, Direction direction ) const override;
 
 		const T &defaultValue() const;
 
@@ -79,11 +79,11 @@ class TypedPlug : public ValuePlug
 		/// with care!
 		T getValue( const IECore::MurmurHash *precomputedHash = nullptr ) const;
 
-		virtual void setFrom( const ValuePlug *other );
+		void setFrom( const ValuePlug *other ) override;
 
 		/// Implemented to just return ValuePlug::hash(),
 		/// but may be specialised in particular instantiations.
-		virtual IECore::MurmurHash hash() const;
+		IECore::MurmurHash hash() const override;
 		/// Ensures the method above doesn't mask
 		/// ValuePlug::hash( h )
 		using ValuePlug::hash;

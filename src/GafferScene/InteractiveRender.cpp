@@ -252,11 +252,11 @@ class InteractiveRender::ChildNamesUpdateTask : public tbb::task
 		{
 		}
 
-		~ChildNamesUpdateTask()
+		~ChildNamesUpdateTask() override
 		{
 		}
 
-		virtual task *execute()
+		task *execute() override
 		{
 			ScenePlug::PathScope pathScope( m_context, m_scenePath );
 
@@ -455,11 +455,11 @@ class InteractiveRender::SceneGraphBuildTask : public tbb::task
 		{
 		}
 
-		~SceneGraphBuildTask()
+		~SceneGraphBuildTask() override
 		{
 		}
 
-		virtual task *execute()
+		task *execute() override
 		{
 			ScenePlug::PathScope pathScope( m_context, m_scenePath );
 
@@ -563,7 +563,7 @@ class InteractiveRender::SceneGraphIteratorFilter : public tbb::filter
 			m_childIndices.push_back( 0 );
 		}
 
-		virtual void *operator()( void *item )
+		void *operator()( void *item ) override
 		{
 			if( m_childIndices.empty() )
 			{
@@ -639,7 +639,7 @@ class InteractiveRender::SceneGraphEvaluatorFilter : public tbb::filter
 		{
 		}
 
-		virtual void *operator()( void *item )
+		void *operator()( void *item ) override
 		{
 			SceneGraph *s = (SceneGraph*)item;
 			ScenePlug::ScenePath path;
@@ -711,7 +711,7 @@ class InteractiveRender::SceneGraphOutputFilter : public tbb::thread_bound_filte
 		{
 		}
 
-		virtual ~SceneGraphOutputFilter()
+		~SceneGraphOutputFilter() override
 		{
 			// close pending attribute blocks:
 			while( m_attrBlockCounter )
@@ -721,7 +721,7 @@ class InteractiveRender::SceneGraphOutputFilter : public tbb::thread_bound_filte
 			}
 		}
 
-		virtual void *operator()( void *item )
+		void *operator()( void *item ) override
 		{
 			SceneGraph *s = (SceneGraph*)item;
 			ScenePlug::ScenePath path;
@@ -787,7 +787,7 @@ class InteractiveRender::SceneGraphOutputFilter : public tbb::thread_bound_filte
 					{
 						renderable->render( m_renderer );
 					}
-					s->m_object = 0;
+					s->m_object = nullptr;
 				}
 			}
 			catch( const std::exception &e )

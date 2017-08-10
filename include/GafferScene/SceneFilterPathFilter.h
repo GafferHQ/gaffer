@@ -54,13 +54,13 @@ class SceneFilterPathFilter : public Gaffer::PathFilter
 	public :
 
 		SceneFilterPathFilter( FilterPtr sceneFilter, IECore::CompoundDataPtr userData = nullptr );
-		virtual ~SceneFilterPathFilter();
+		~SceneFilterPathFilter() override;
 
 		IE_CORE_DECLARERUNTIMETYPEDEXTENSION( GafferScene::SceneFilterPathFilter, SceneFilterPathFilterTypeId, Gaffer::PathFilter );
 
 	protected :
 
-		virtual void doFilter( std::vector<Gaffer::PathPtr> &paths ) const;
+		void doFilter( std::vector<Gaffer::PathPtr> &paths ) const override;
 
 	private :
 

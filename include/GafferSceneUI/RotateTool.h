@@ -52,7 +52,7 @@ class RotateTool : public TransformTool
 	public :
 
 		RotateTool( SceneView *view, const std::string &name = defaultName<RotateTool>() );
-		virtual ~RotateTool();
+		~RotateTool() override;
 
 		IE_CORE_DECLARERUNTIMETYPEDEXTENSION( GafferSceneUI::RotateTool, RotateToolTypeId, TransformTool );
 
@@ -66,8 +66,8 @@ class RotateTool : public TransformTool
 
 	protected :
 
-		virtual bool affectsHandles( const Gaffer::Plug *input ) const;
-		virtual void updateHandles();
+		bool affectsHandles( const Gaffer::Plug *input ) const override;
+		void updateHandles() override;
 
 	private :
 

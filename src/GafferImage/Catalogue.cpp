@@ -138,7 +138,7 @@ class Catalogue::InternalImage : public ImageNode
 			outPlug()->setInput( imageMetadata()->outPlug() );
 		}
 
-		virtual ~InternalImage()
+		~InternalImage() override
 		{
 			if( m_saver )
 			{
@@ -281,7 +281,7 @@ class Catalogue::InternalImage : public ImageNode
 
 	protected :
 
-		virtual void hashChannelData( const GafferImage::ImagePlug *parent, const Gaffer::Context *context, IECore::MurmurHash &h ) const
+		void hashChannelData( const GafferImage::ImagePlug *parent, const Gaffer::Context *context, IECore::MurmurHash &h ) const override
 		{
 			assert( m_saver );
 			AsynchronousSaver::ChannelDataHashes::const_iterator it = m_saver->channelDataHashes.find(
@@ -300,7 +300,7 @@ class Catalogue::InternalImage : public ImageNode
 			}
 		}
 
-		virtual IECore::ConstFloatVectorDataPtr computeChannelData( const std::string &channelName, const Imath::V2i &tileOrigin, const Gaffer::Context *context, const ImagePlug *parent ) const
+		IECore::ConstFloatVectorDataPtr computeChannelData( const std::string &channelName, const Imath::V2i &tileOrigin, const Gaffer::Context *context, const ImagePlug *parent ) const override
 		{
 			return imageReader()->outPlug()->channelDataPlug()->getValue();
 		}

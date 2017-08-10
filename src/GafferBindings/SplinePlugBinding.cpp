@@ -59,7 +59,7 @@ class SplinePlugSerialiser : public ValuePlugSerialiser
 
 	public :
 
-		virtual std::string postConstructor( const Gaffer::GraphComponent *child, const std::string &identifier, const Serialisation &serialisation ) const
+		std::string postConstructor( const Gaffer::GraphComponent *child, const std::string &identifier, const Serialisation &serialisation ) const override
 		{
 			// this isn't ideal, but the newly constructed spline plug will already have child plugs representing the points for the
 			// default value - so we get rid of those so the real value can be loaded appropriately (using the usual mechanism for

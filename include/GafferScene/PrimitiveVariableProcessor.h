@@ -60,7 +60,7 @@ class PrimitiveVariableProcessor : public SceneElementProcessor
 	public :
 
 		PrimitiveVariableProcessor( const std::string &name=defaultName<PrimitiveVariableProcessor>(), Filter::Result filterDefault = Filter::EveryMatch );
-		virtual ~PrimitiveVariableProcessor();
+		~PrimitiveVariableProcessor() override;
 
 		IE_CORE_DECLARERUNTIMETYPEDEXTENSION( GafferScene::PrimitiveVariableProcessor, PrimitiveVariableProcessorTypeId, SceneElementProcessor );
 
@@ -71,14 +71,14 @@ class PrimitiveVariableProcessor : public SceneElementProcessor
 		const Gaffer::BoolPlug *invertNamesPlug() const;
 
 		/// Implemented so that namesPlug() affects outPlug()->objectPlug().
-		virtual void affects( const Gaffer::Plug *input, AffectedPlugsContainer &outputs ) const;
+		void affects( const Gaffer::Plug *input, AffectedPlugsContainer &outputs ) const override;
 
 	protected :
 
 		/// Implemented to call processPrimitiveVariable() for the appropriate variables of inputObject.
-		virtual bool processesObject() const;
-		virtual void hashProcessedObject( const ScenePath &path, const Gaffer::Context *context, IECore::MurmurHash &h ) const;
-		virtual IECore::ConstObjectPtr computeProcessedObject( const ScenePath &path, const Gaffer::Context *context, IECore::ConstObjectPtr inputObject ) const;
+		bool processesObject() const override;
+		void hashProcessedObject( const ScenePath &path, const Gaffer::Context *context, IECore::MurmurHash &h ) const override;
+		IECore::ConstObjectPtr computeProcessedObject( const ScenePath &path, const Gaffer::Context *context, IECore::ConstObjectPtr inputObject ) const override;
 
 		/// Must be implemented by subclasses to process the primitive variable in place.
 		virtual void processPrimitiveVariable( const ScenePath &path, const Gaffer::Context *context, IECore::ConstPrimitivePtr inputGeometry, IECore::PrimitiveVariable &inputVariable ) const = 0;

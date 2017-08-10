@@ -97,27 +97,27 @@ class RendererServices : public OSL::RendererServices
 		{
 		}
 
-		virtual bool get_matrix( OSL::ShaderGlobals *sg, OSL::Matrix44 &result, TransformationPtr xform, float time )
+		bool get_matrix( OSL::ShaderGlobals *sg, OSL::Matrix44 &result, TransformationPtr xform, float time ) override
 		{
 			return false;
 		}
 
-		virtual bool get_matrix( OSL::ShaderGlobals *sg, OSL::Matrix44 &result, TransformationPtr xform )
+		bool get_matrix( OSL::ShaderGlobals *sg, OSL::Matrix44 &result, TransformationPtr xform ) override
 		{
 			return false;
 		}
 
-		virtual bool get_matrix( OSL::ShaderGlobals *sg, OSL::Matrix44 &result, ustring from, float time )
+		bool get_matrix( OSL::ShaderGlobals *sg, OSL::Matrix44 &result, ustring from, float time ) override
 		{
 			return false;
 		}
 
-		virtual bool get_matrix( OSL::ShaderGlobals *sg, OSL::Matrix44 &result, ustring from )
+		bool get_matrix( OSL::ShaderGlobals *sg, OSL::Matrix44 &result, ustring from ) override
 		{
 			return false;
 		}
 
-		virtual bool get_attribute( OSL::ShaderGlobals *sg, bool derivatives, ustring object, TypeDesc type, ustring name, void *value )
+		bool get_attribute( OSL::ShaderGlobals *sg, bool derivatives, ustring object, TypeDesc type, ustring name, void *value ) override
 		{
 			const RenderState *renderState = sg ? static_cast<RenderState *>( sg->renderstate ) : nullptr;
 			if( !renderState )
@@ -139,14 +139,14 @@ class RendererServices : public OSL::RendererServices
 			return ShadingSystem::convert_value( value, type, dataView.data, dataView.type );
 		}
 
-		virtual bool get_array_attribute( OSL::ShaderGlobals *sg, bool derivatives, ustring object, TypeDesc type, ustring name, int index, void *value )
+		bool get_array_attribute( OSL::ShaderGlobals *sg, bool derivatives, ustring object, TypeDesc type, ustring name, int index, void *value ) override
 		{
 			return false;
 		}
 
 		// OSL tries to populate shader parameter values per-object by calling this method.
 		// So we implement it to search for an appropriate input plug and get its value.
-		virtual bool get_userdata( bool derivatives, ustring name, TypeDesc type, OSL::ShaderGlobals *sg, void *value )
+		bool get_userdata( bool derivatives, ustring name, TypeDesc type, OSL::ShaderGlobals *sg, void *value ) override
 		{
 			const RenderState *renderState = sg ? static_cast<RenderState *>( sg->renderstate ) : nullptr;
 			if( !renderState )
@@ -224,7 +224,7 @@ class OSLExpressionEngine : public Gaffer::Expression::Engine
 		{
 		}
 
-		virtual void parse( Expression *node, const std::string &expression, std::vector<ValuePlug *> &inputs, std::vector<ValuePlug *> &outputs, std::vector<IECore::InternedString> &contextVariables )
+		void parse( Expression *node, const std::string &expression, std::vector<ValuePlug *> &inputs, std::vector<ValuePlug *> &outputs, std::vector<IECore::InternedString> &contextVariables ) override
 		{
 			m_inParameters.clear();
 			m_outSymbols.clear();
@@ -314,7 +314,7 @@ class OSLExpressionEngine : public Gaffer::Expression::Engine
 
 		}
 
-		virtual IECore::ConstObjectVectorPtr execute( const Gaffer::Context *context, const std::vector<const Gaffer::ValuePlug *> &proxyInputs ) const
+		IECore::ConstObjectVectorPtr execute( const Gaffer::Context *context, const std::vector<const Gaffer::ValuePlug *> &proxyInputs ) const override
 		{
 			ShadingSystem *s = shadingSystem();
 			OSL::ShadingContext *shadingContext = s->get_context();
@@ -377,7 +377,7 @@ class OSLExpressionEngine : public Gaffer::Expression::Engine
 			return result;
 		}
 
-		virtual void apply( Gaffer::ValuePlug *proxyOutput, const Gaffer::ValuePlug *topLevelProxyOutput, const IECore::Object *value ) const
+		void apply( Gaffer::ValuePlug *proxyOutput, const Gaffer::ValuePlug *topLevelProxyOutput, const IECore::Object *value ) const override
 		{
 			switch( value->typeId() )
 			{
@@ -433,7 +433,7 @@ class OSLExpressionEngine : public Gaffer::Expression::Engine
 			}
 		}
 
-		virtual std::string identifier( const Expression *node, const ValuePlug *plug ) const
+		std::string identifier( const Expression *node, const ValuePlug *plug ) const override
 		{
 			switch( (Gaffer::TypeId)plug->typeId() )
 			{
@@ -462,7 +462,7 @@ class OSLExpressionEngine : public Gaffer::Expression::Engine
 			return "parent." + relativeName;
 		}
 
-		virtual std::string replace( const Expression *node, const std::string &expression, const std::vector<const ValuePlug *> &oldPlugs, const std::vector<const ValuePlug *> &newPlugs ) const
+		std::string replace( const Expression *node, const std::string &expression, const std::vector<const ValuePlug *> &oldPlugs, const std::vector<const ValuePlug *> &newPlugs ) const override
 		{
 			vector<Replacement> replacements;
 
@@ -505,7 +505,7 @@ class OSLExpressionEngine : public Gaffer::Expression::Engine
 			return result;
 		}
 
-		virtual std::string defaultExpression( const ValuePlug *output ) const
+		std::string defaultExpression( const ValuePlug *output ) const override
 		{
 			const Node *parentNode = output->node() ? output->node()->ancestor<Node>() : nullptr;
 			if( !parentNode )

@@ -49,12 +49,12 @@ class TransformPlug : public ValuePlug
 	public :
 
 		TransformPlug( const std::string &name = defaultName<TransformPlug>(), Direction direction=In, unsigned flags = Default );
-		virtual ~TransformPlug();
+		~TransformPlug() override;
 
 		IE_CORE_DECLARERUNTIMETYPEDEXTENSION( Gaffer::TransformPlug, TransformPlugTypeId, ValuePlug );
 
-		virtual bool acceptsChild( const GraphComponent *potentialChild ) const;
-		virtual PlugPtr createCounterpart( const std::string &name, Direction direction ) const;
+		bool acceptsChild( const GraphComponent *potentialChild ) const override;
+		PlugPtr createCounterpart( const std::string &name, Direction direction ) const override;
 
 		V3fPlug *translatePlug();
 		const V3fPlug *translatePlug() const;

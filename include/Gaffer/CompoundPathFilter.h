@@ -52,7 +52,7 @@ class CompoundPathFilter : public Gaffer::PathFilter
 		typedef std::vector<PathFilterPtr> Filters;
 
 		CompoundPathFilter( IECore::CompoundDataPtr userData = nullptr );
-		virtual ~CompoundPathFilter();
+		~CompoundPathFilter() override;
 
 		IE_CORE_DECLARERUNTIMETYPEDEXTENSION( Gaffer::CompoundPathFilter, CompoundPathFilterTypeId, PathFilter );
 
@@ -64,7 +64,7 @@ class CompoundPathFilter : public Gaffer::PathFilter
 
 	protected :
 
-		virtual void doFilter( std::vector<PathPtr> &paths ) const;
+		void doFilter( std::vector<PathPtr> &paths ) const override;
 
 	private :
 

@@ -75,7 +75,7 @@ class Gadget : public Gaffer::GraphComponent
 	public :
 
 		Gadget( const std::string &name=defaultName<Gadget>() );
-		virtual ~Gadget();
+		~Gadget() override;
 
 		IE_CORE_DECLARERUNTIMETYPEDEXTENSION( GafferUI::Gadget, GadgetTypeId, Gaffer::GraphComponent );
 
@@ -89,9 +89,9 @@ class Gadget : public Gaffer::GraphComponent
 		//@{
 		/// Gadgets accept any number of other Gadgets as children. Derived classes
 		/// may further restrict this if they wish, but they must not accept non-Gadget children.
-		virtual bool acceptsChild( const Gaffer::GraphComponent *potentialChild ) const;
+		bool acceptsChild( const Gaffer::GraphComponent *potentialChild ) const override;
 		/// Gadgets only accept other Gadgets as parent.
-		virtual bool acceptsParent( const Gaffer::GraphComponent *potentialParent ) const;
+		bool acceptsParent( const Gaffer::GraphComponent *potentialParent ) const override;
 		//@}
 
 		/// @name Style
@@ -158,7 +158,7 @@ class Gadget : public Gaffer::GraphComponent
 		/// Returns the full transform of this Gadget relative to the
 		/// specified ancestor. If ancestor is not specified then the
 		/// transform from the root of the hierarchy is returned.
-		Imath::M44f fullTransform( const Gadget *ancestor = 0 ) const;
+		Imath::M44f fullTransform( const Gadget *ancestor = nullptr ) const;
 		//@}
 
 		/// @name Display
@@ -170,7 +170,7 @@ class Gadget : public Gaffer::GraphComponent
 		/// specifically to this Gadget. Typically users will not pass currentStyle -
 		/// but it must be passed by Gadget implementations when rendering child
 		/// Gadgets in doRender().
-		void render( const Style *currentStyle = 0 ) const;
+		void render( const Style *currentStyle = nullptr ) const;
 		/// The bounding box of the Gadget before transformation. The default
 		/// implementation returns the union of the transformed bounding boxes
 		/// of all the children.

@@ -53,5 +53,5 @@ DeletePrimitiveVariables::~DeletePrimitiveVariables()
 void DeletePrimitiveVariables::processPrimitiveVariable( const ScenePath &path, const Gaffer::Context *context, IECore::ConstPrimitivePtr inputGeometry, IECore::PrimitiveVariable &variable ) const
 {
 	variable.interpolation = IECore::PrimitiveVariable::Invalid;
-	variable.data = 0;
+	variable.data = nullptr;
 }

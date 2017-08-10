@@ -65,7 +65,7 @@ class GraphComponent : public IECore::RunTimeTyped, public boost::signals::track
 	public :
 
 		GraphComponent( const std::string &name=GraphComponent::defaultName<GraphComponent>() );
-		virtual ~GraphComponent();
+		~GraphComponent() override;
 
 		IE_CORE_DECLARERUNTIMETYPEDEXTENSION( Gaffer::GraphComponent, GraphComponentTypeId, IECore::RunTimeTyped );
 

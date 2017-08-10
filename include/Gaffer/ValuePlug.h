@@ -59,20 +59,20 @@ class ValuePlug : public Plug
 
 		/// Constructs a ValuePlug which can be used as a parent for other ValuePlugs.
 		ValuePlug( const std::string &name=defaultName<ValuePlug>(), Direction direction=In, unsigned flags=Default );
-		virtual ~ValuePlug();
+		~ValuePlug() override;
 
 		IE_CORE_DECLARERUNTIMETYPEDEXTENSION( Gaffer::ValuePlug, ValuePlugTypeId, Plug );
 
-		virtual bool acceptsChild( const GraphComponent *potentialChild ) const;
+		bool acceptsChild( const GraphComponent *potentialChild ) const override;
 		/// Accepts the input only if it is derived from ValuePlug.
 		/// Derived classes may accept more types provided they
 		/// derive from ValuePlug too, and they can deal with them
 		/// in setFrom().
-		virtual bool acceptsInput( const Plug *input ) const;
+		bool acceptsInput( const Plug *input ) const override;
 		/// Reimplemented so that values can be propagated from inputs.
-		virtual void setInput( PlugPtr input );
+		void setInput( PlugPtr input ) override;
 
-		virtual PlugPtr createCounterpart( const std::string &name, Direction direction ) const;
+		PlugPtr createCounterpart( const std::string &name, Direction direction ) const override;
 
 		/// Returns true if it is valid to call setFrom(), setToDefault(),
 		/// or setValue() on this plug. False will be returned if the plug
@@ -157,7 +157,7 @@ class ValuePlug : public Plug
 		void setObjectValue( IECore::ConstObjectPtr value );
 
 		/// Reimplemented for cache management.
-		virtual void dirty();
+		void dirty() override;
 
 	private :
 

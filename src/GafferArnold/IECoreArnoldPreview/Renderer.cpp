@@ -392,7 +392,7 @@ class ArnoldShader : public IECore::RefCounted
 			m_nodes = ShaderAlgo::convert( shaderNetwork, namePrefix );
 		}
 
-		virtual ~ArnoldShader()
+		~ArnoldShader() override
 		{
 			for( std::vector<AtNode *>::const_iterator it = m_nodes.begin(), eIt = m_nodes.end(); it != eIt; ++it )
 			{
@@ -1311,7 +1311,7 @@ class ArnoldObject : public IECoreScenePreview::Renderer::ObjectInterface
 		{
 		}
 
-		virtual void transform( const Imath::M44f &transform )
+		void transform( const Imath::M44f &transform ) override
 		{
 			AtNode *node = m_instance.node();
 			if( !node )
@@ -1321,7 +1321,7 @@ class ArnoldObject : public IECoreScenePreview::Renderer::ObjectInterface
 			applyTransform( node, transform );
 		}
 
-		virtual void transform( const std::vector<Imath::M44f> &samples, const std::vector<float> &times )
+		void transform( const std::vector<Imath::M44f> &samples, const std::vector<float> &times ) override
 		{
 			AtNode *node = m_instance.node();
 			if( !node )
@@ -1331,7 +1331,7 @@ class ArnoldObject : public IECoreScenePreview::Renderer::ObjectInterface
 			applyTransform( node, samples, times );
 		}
 
-		virtual bool attributes( const IECoreScenePreview::Renderer::AttributesInterface *attributes )
+		bool attributes( const IECoreScenePreview::Renderer::AttributesInterface *attributes ) override
 		{
 			AtNode *node = m_instance.node();
 			if( !node )
@@ -1409,7 +1409,7 @@ class ArnoldLight : public ArnoldObject
 		{
 		}
 
-		virtual void transform( const Imath::M44f &transform )
+		void transform( const Imath::M44f &transform ) override
 		{
 			ArnoldObject::transform( transform );
 			m_transformMatrices.clear();
@@ -1418,7 +1418,7 @@ class ArnoldLight : public ArnoldObject
 			applyLightTransform();
 		}
 
-		virtual void transform( const std::vector<Imath::M44f> &samples, const std::vector<float> &times )
+		void transform( const std::vector<Imath::M44f> &samples, const std::vector<float> &times ) override
 		{
 			ArnoldObject::transform( samples, times );
 			m_transformMatrices = samples;
@@ -1426,7 +1426,7 @@ class ArnoldLight : public ArnoldObject
 			applyLightTransform();
 		}
 
-		virtual bool attributes( const IECoreScenePreview::Renderer::AttributesInterface *attributes )
+		bool attributes( const IECoreScenePreview::Renderer::AttributesInterface *attributes ) override
 		{
 			if( !ArnoldObject::attributes( attributes ) )
 			{
@@ -1640,12 +1640,12 @@ class ArnoldRenderer : public IECoreScenePreview::Renderer
 			option( g_shaderSearchPathOptionName, new IECore::StringData( "" ) );
 		}
 
-		virtual ~ArnoldRenderer()
+		~ArnoldRenderer() override
 		{
 			pause();
 		}
 
-		virtual void option( const IECore::InternedString &name, const IECore::Data *value )
+		void option( const IECore::InternedString &name, const IECore::Data *value ) override
 		{
 			AtNode *options = AiUniverseGetOptions();
 			if( name == g_frameOptionName )
@@ -1823,7 +1823,7 @@ class ArnoldRenderer : public IECoreScenePreview::Renderer
 			IECore::msg( IECore::Msg::Warning, "IECoreArnold::Renderer::option", boost::format( "Unknown option \"%s\"." ) % name.c_str() );
 		}
 
-		virtual void output( const IECore::InternedString &name, const Output *output )
+		void output( const IECore::InternedString &name, const Output *output ) override
 		{
 			m_outputs.erase( name );
 			if( output )
@@ -1847,12 +1847,12 @@ class ArnoldRenderer : public IECoreScenePreview::Renderer
 			IECoreArnold::ParameterAlgo::setParameter( AiUniverseGetOptions(), "outputs", outputs.get() );
 		}
 
-		virtual Renderer::AttributesInterfacePtr attributes( const IECore::CompoundObject *attributes )
+		Renderer::AttributesInterfacePtr attributes( const IECore::CompoundObject *attributes ) override
 		{
 			return new ArnoldAttributes( attributes, m_shaderCache.get() );
 		}
 
-		virtual ObjectInterfacePtr camera( const std::string &name, const IECore::Camera *camera, const AttributesInterface *attributes )
+		ObjectInterfacePtr camera( const std::string &name, const IECore::Camera *camera, const AttributesInterface *attributes ) override
 		{
 			IECore::CameraPtr cameraCopy = camera->copy();
 			cameraCopy->addStandardParameters();
@@ -1869,7 +1869,7 @@ class ArnoldRenderer : public IECoreScenePreview::Renderer
 			return result;
 		}
 
-		virtual ObjectInterfacePtr light( const std::string &name, const IECore::Object *object, const AttributesInterface *attributes )
+		ObjectInterfacePtr light( const std::string &name, const IECore::Object *object, const AttributesInterface *attributes ) override
 		{
 			Instance instance = m_instanceCache->get( object, attributes );
 			if( AtNode *node = instance.node() )
@@ -1882,7 +1882,7 @@ class ArnoldRenderer : public IECoreScenePreview::Renderer
 			return result;
 		}
 
-		virtual Renderer::ObjectInterfacePtr object( const std::string &name, const IECore::Object *object, const AttributesInterface *attributes )
+		Renderer::ObjectInterfacePtr object( const std::string &name, const IECore::Object *object, const AttributesInterface *attributes ) override
 		{
 			Instance instance = m_instanceCache->get( object, attributes );
 			if( AtNode *node = instance.node() )
@@ -1895,7 +1895,7 @@ class ArnoldRenderer : public IECoreScenePreview::Renderer
 			return result;
 		}
 
-		virtual ObjectInterfacePtr object( const std::string &name, const std::vector<const IECore::Object *> &samples, const std::vector<float> &times, const AttributesInterface *attributes )
+		ObjectInterfacePtr object( const std::string &name, const std::vector<const IECore::Object *> &samples, const std::vector<float> &times, const AttributesInterface *attributes ) override
 		{
 			Instance instance = m_instanceCache->get( samples, times, attributes );
 			if( AtNode *node = instance.node() )
@@ -1908,7 +1908,7 @@ class ArnoldRenderer : public IECoreScenePreview::Renderer
 			return result;
 		}
 
-		virtual void render()
+		void render() override
 		{
 			updateCamera();
 			AiNodeSetInt(
@@ -1935,7 +1935,7 @@ class ArnoldRenderer : public IECoreScenePreview::Renderer
 			}
 		}
 
-		virtual void pause()
+		void pause() override
 		{
 			m_interactiveRenderController.setRendering( false );
 		}

@@ -81,7 +81,7 @@ ParameterHandlerPtr ParameterHandler::create( IECore::ParameterPtr parameter )
 		}
 		typeId = RunTimeTyped::baseTypeId( typeId );
 	}
-	return 0;
+	return nullptr;
 }
 
 void ParameterHandler::registerParameterHandler( IECore::TypeId parameterType, Creator creator )

@@ -399,7 +399,7 @@ class SceneGadget::UpdateTask : public tbb::task
 		{
 		}
 
-		virtual task *execute()
+		task *execute() override
 		{
 			ScenePlug::PathScope pathScope( m_sceneGadget->m_context.get(), m_scenePath );
 

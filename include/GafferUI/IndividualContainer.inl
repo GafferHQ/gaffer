@@ -48,7 +48,7 @@ T *IndividualContainer::getChild()
 {
 	if( !children().size() )
 	{
-		return 0;
+		return nullptr;
 	}
 	return Gaffer::GraphComponent::getChild<T>( 0 );
 }
@@ -58,7 +58,7 @@ const T *IndividualContainer::getChild() const
 {
 	if( !children().size() )
 	{
-		return 0;
+		return nullptr;
 	}
 	return Gaffer::GraphComponent::getChild<T>( 0 );
 }

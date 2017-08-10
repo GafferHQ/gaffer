@@ -50,7 +50,7 @@ class InteractiveAppleseedRender : public GafferScene::Preview::InteractiveRende
 	public :
 
 		InteractiveAppleseedRender( const std::string &name=defaultName<InteractiveAppleseedRender>() );
-		virtual ~InteractiveAppleseedRender();
+		~InteractiveAppleseedRender() override;
 
 		IE_CORE_DECLARERUNTIMETYPEDEXTENSION( GafferAppleseed::InteractiveAppleseedRender, InteractiveAppleseedRenderTypeId, GafferScene::Preview::InteractiveRender );
 

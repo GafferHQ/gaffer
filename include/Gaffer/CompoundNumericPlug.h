@@ -68,10 +68,10 @@ class CompoundNumericPlug : public ValuePlug
 			unsigned flags = Default,
 			IECore::GeometricData::Interpretation interpretation = IECore::GeometricData::None
 		);
-		virtual ~CompoundNumericPlug();
+		~CompoundNumericPlug() override;
 		/// Accepts no children following construction.
-		virtual bool acceptsChild( const GraphComponent *potentialChild ) const;
-		virtual PlugPtr createCounterpart( const std::string &name, Direction direction ) const;
+		bool acceptsChild( const GraphComponent *potentialChild ) const override;
+		PlugPtr createCounterpart( const std::string &name, Direction direction ) const override;
 
 		using GraphComponent::getChild;
 		ChildType *getChild( size_t index );
@@ -95,7 +95,7 @@ class CompoundNumericPlug : public ValuePlug
 
 		/// Returns a hash to represent the value of this plug
 		/// in the current context.
-		virtual IECore::MurmurHash hash() const;
+		IECore::MurmurHash hash() const override;
 		/// Convenience function to append the hash to h.
 		void hash( IECore::MurmurHash &h ) const;
 

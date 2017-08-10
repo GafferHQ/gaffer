@@ -52,7 +52,7 @@ class CapturingErrorHandler : public OIIO::ErrorHandler
 
 		CapturingErrorHandler();
 
-		virtual void operator()( int errorCode, const std::string &message );
+		void operator()( int errorCode, const std::string &message ) override;
 
 		const std::string &errors();
 

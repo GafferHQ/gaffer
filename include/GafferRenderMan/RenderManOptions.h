@@ -50,7 +50,7 @@ class RenderManOptions : public GafferScene::Options
 	public :
 
 		RenderManOptions( const std::string &name=defaultName<RenderManOptions>() );
-		virtual ~RenderManOptions();
+		~RenderManOptions() override;
 
 		IE_CORE_DECLARERUNTIMETYPEDEXTENSION( GafferRenderMan::RenderManOptions, RenderManOptionsTypeId, GafferScene::Options );
 

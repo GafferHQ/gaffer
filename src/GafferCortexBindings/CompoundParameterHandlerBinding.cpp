@@ -64,7 +64,7 @@ class CompoundParameterHandlerWrapper : public IECorePython::RefCountedWrapper<C
 		{
 		}
 
-		virtual void restore( Gaffer::GraphComponent *plugParent )
+		void restore( Gaffer::GraphComponent *plugParent ) override
 		{
 			IECorePython::ScopedGILLock gilLock;
 			object o = methodOverride( "restore" );
@@ -78,7 +78,7 @@ class CompoundParameterHandlerWrapper : public IECorePython::RefCountedWrapper<C
 			}
 		}
 
-		virtual Gaffer::Plug *setupPlug( Gaffer::GraphComponent *plugParent, Gaffer::Plug::Direction direction, unsigned flags )
+		Gaffer::Plug *setupPlug( Gaffer::GraphComponent *plugParent, Gaffer::Plug::Direction direction, unsigned flags ) override
 		{
 			IECorePython::ScopedGILLock gilLock;
 			object o = methodOverride( "setupPlug" );
@@ -92,7 +92,7 @@ class CompoundParameterHandlerWrapper : public IECorePython::RefCountedWrapper<C
 			}
 		}
 
-		virtual void setParameterValue()
+		void setParameterValue() override
 		{
 			IECorePython::ScopedGILLock gilLock;
 			object o = methodOverride( "setParameterValue" );
@@ -106,7 +106,7 @@ class CompoundParameterHandlerWrapper : public IECorePython::RefCountedWrapper<C
 			}
 		}
 
-		virtual void setPlugValue()
+		void setPlugValue() override
 		{
 			IECorePython::ScopedGILLock gilLock;
 			object o = methodOverride( "setPlugValue" );
@@ -120,7 +120,7 @@ class CompoundParameterHandlerWrapper : public IECorePython::RefCountedWrapper<C
 			}
 		}
 
-		virtual IECore::RunTimeTyped *childParameterProvider( IECore::Parameter *childParameter )
+		IECore::RunTimeTyped *childParameterProvider( IECore::Parameter *childParameter ) override
 		{
 			IECorePython::ScopedGILLock gilLock;
 			object o = methodOverride( "childParameterProvider" );

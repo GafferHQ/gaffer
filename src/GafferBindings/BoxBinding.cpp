@@ -53,7 +53,7 @@ namespace
 class BoxSerialiser : public NodeSerialiser
 {
 
-	virtual bool childNeedsSerialisation( const Gaffer::GraphComponent *child, const Serialisation &serialisation ) const
+	bool childNeedsSerialisation( const Gaffer::GraphComponent *child, const Serialisation &serialisation ) const override
 	{
 		if( child->isInstanceOf( Node::staticTypeId() ) )
 		{
@@ -62,7 +62,7 @@ class BoxSerialiser : public NodeSerialiser
 		return NodeSerialiser::childNeedsSerialisation( child, serialisation );
 	}
 
-	virtual bool childNeedsConstruction( const Gaffer::GraphComponent *child, const Serialisation &serialisation ) const
+	bool childNeedsConstruction( const Gaffer::GraphComponent *child, const Serialisation &serialisation ) const override
 	{
 		if( child->isInstanceOf( Node::staticTypeId() ) )
 		{

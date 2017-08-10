@@ -53,7 +53,7 @@ class ImageNode : public Gaffer::ComputeNode
 	public :
 
 		ImageNode( const std::string &name=defaultName<ImageNode>() );
-		virtual ~ImageNode();
+		~ImageNode() override;
 
 		IE_CORE_DECLARERUNTIMETYPEDEXTENSION( GafferImage::ImageNode, ImageNodeTypeId, Gaffer::ComputeNode );
 
@@ -64,10 +64,10 @@ class ImageNode : public Gaffer::ComputeNode
 
 		/// The enabled plug provides a mechanism for turning the effect of a node on and off.
 		/// When disabled the node will just pass through the plug's default values.
-		virtual Gaffer::BoolPlug *enabledPlug();
-		virtual const Gaffer::BoolPlug *enabledPlug() const;
+		Gaffer::BoolPlug *enabledPlug() override;
+		const Gaffer::BoolPlug *enabledPlug() const override;
 
-		virtual void affects( const Gaffer::Plug *input, AffectedPlugsContainer &outputs ) const;
+		void affects( const Gaffer::Plug *input, AffectedPlugsContainer &outputs ) const override;
 
 	protected :
 
@@ -91,7 +91,7 @@ class ImageNode : public Gaffer::ComputeNode
 		virtual bool enabled() const;
 
 		/// Implemented to call the hash*() methods below whenever output is part of an ImagePlug.
-		virtual void hash( const Gaffer::ValuePlug *output, const Gaffer::Context *context, IECore::MurmurHash &h ) const;
+		void hash( const Gaffer::ValuePlug *output, const Gaffer::Context *context, IECore::MurmurHash &h ) const override;
 		/// Hash methods for the individual children of outPlug(). A derived class must either :
 		///
 		///    * Implement the method to call the base class implementation and then append to the hash.
@@ -115,7 +115,7 @@ class ImageNode : public Gaffer::ComputeNode
 
 		/// Implemented to call the compute*() methods below whenever output is part of an ImagePlug.
 		/// Derived classes should reimplement the specific compute*() methods rather than compute() itself.
-		virtual void compute( Gaffer::ValuePlug *output, const Gaffer::Context *context ) const;
+		void compute( Gaffer::ValuePlug *output, const Gaffer::Context *context ) const override;
 		/// Compute methods for the individual children of outPlug() - these must be implemented by derived classes, or
 		/// an input connection must be made to the plug, so that the method is not called.
 		virtual GafferImage::Format computeFormat( const Gaffer::Context *context, const ImagePlug *parent ) const;
@@ -125,7 +125,7 @@ class ImageNode : public Gaffer::ComputeNode
 		virtual IECore::ConstFloatVectorDataPtr computeChannelData( const std::string &channelName, const Imath::V2i &tileOrigin, const Gaffer::Context *context, const ImagePlug *parent ) const;
 
 		/// Implemented to initialize the default format settings if they don't exist already.
-		void parentChanging( Gaffer::GraphComponent *newParent );
+		void parentChanging( Gaffer::GraphComponent *newParent ) override;
 
 	private :
 

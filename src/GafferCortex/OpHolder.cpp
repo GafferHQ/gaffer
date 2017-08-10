@@ -48,7 +48,7 @@ using namespace GafferCortex;
 IE_CORE_DEFINERUNTIMETYPED( OpHolder )
 
 OpHolder::OpHolder( const std::string &name )
-	:	ParameterisedHolderComputeNode( name ), m_resultParameterHandler( 0 )
+	:	ParameterisedHolderComputeNode( name ), m_resultParameterHandler( nullptr )
 {
 }
 

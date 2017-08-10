@@ -50,19 +50,19 @@ class ImageMetadata : public MetadataProcessor
 	public :
 
 		ImageMetadata( const std::string &name=defaultName<ImageMetadata>() );
-		virtual ~ImageMetadata();
+		~ImageMetadata() override;
 
 		IE_CORE_DECLARERUNTIMETYPEDEXTENSION( GafferImage::ImageMetadata, ImageMetadataTypeId, MetadataProcessor );
 
 		Gaffer::CompoundDataPlug *metadataPlug();
 		const Gaffer::CompoundDataPlug *metadataPlug() const;
 
-		virtual void affects( const Gaffer::Plug *input, AffectedPlugsContainer &outputs ) const;
+		void affects( const Gaffer::Plug *input, AffectedPlugsContainer &outputs ) const override;
 
 	protected :
 
-		virtual void hashProcessedMetadata( const Gaffer::Context *context, IECore::MurmurHash &h ) const;
-		virtual IECore::ConstCompoundDataPtr computeProcessedMetadata( const Gaffer::Context *context, const IECore::CompoundData *inputMetadata ) const;
+		void hashProcessedMetadata( const Gaffer::Context *context, IECore::MurmurHash &h ) const override;
+		IECore::ConstCompoundDataPtr computeProcessedMetadata( const Gaffer::Context *context, const IECore::CompoundData *inputMetadata ) const override;
 
 	private :
 

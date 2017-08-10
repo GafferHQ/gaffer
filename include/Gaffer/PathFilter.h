@@ -61,7 +61,7 @@ class PathFilter : public IECore::RunTimeTyped
 	public :
 
 		PathFilter( IECore::CompoundDataPtr userData = nullptr );
-		virtual ~PathFilter();
+		~PathFilter() override;
 
 		IE_CORE_DECLARERUNTIMETYPEDEXTENSION( Gaffer::PathFilter, PathFilterTypeId, IECore::RunTimeTyped );
 

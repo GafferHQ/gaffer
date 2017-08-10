@@ -68,7 +68,7 @@ class FileSequencePathFilter : public PathFilter
 		};
 
 		FileSequencePathFilter( Keep mode = Concise, IECore::CompoundDataPtr userData = nullptr );
-		virtual ~FileSequencePathFilter();
+		~FileSequencePathFilter() override;
 
 		IE_CORE_DECLARERUNTIMETYPEDEXTENSION( Gaffer::FileSequencePathFilter, FileSequencePathFilterTypeId, Gaffer::PathFilter );
 
@@ -77,7 +77,7 @@ class FileSequencePathFilter : public PathFilter
 
 	protected :
 
-		virtual void doFilter( std::vector<PathPtr> &paths ) const;
+		void doFilter( std::vector<PathPtr> &paths ) const override;
 
 	private :
 

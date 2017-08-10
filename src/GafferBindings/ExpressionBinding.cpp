@@ -113,7 +113,7 @@ class EngineWrapper : public IECorePython::RefCountedWrapper<Expression::Engine>
 		{
 		}
 
-		virtual void parse( Expression *node, const std::string &expression, std::vector<ValuePlug *> &inputs, std::vector<ValuePlug *> &outputs, std::vector<IECore::InternedString> &contextVariables )
+		void parse( Expression *node, const std::string &expression, std::vector<ValuePlug *> &inputs, std::vector<ValuePlug *> &outputs, std::vector<IECore::InternedString> &contextVariables ) override
 		{
 			if( isSubclassed() )
 			{
@@ -141,7 +141,7 @@ class EngineWrapper : public IECorePython::RefCountedWrapper<Expression::Engine>
 			throw IECore::Exception( "Engine::parse() python method not defined" );
 		}
 
-		virtual IECore::ConstObjectVectorPtr execute( const Context *context, const std::vector<const ValuePlug *> &proxyInputs ) const
+		IECore::ConstObjectVectorPtr execute( const Context *context, const std::vector<const ValuePlug *> &proxyInputs ) const override
 		{
 			if( isSubclassed() )
 			{
@@ -170,7 +170,7 @@ class EngineWrapper : public IECorePython::RefCountedWrapper<Expression::Engine>
 			throw IECore::Exception( "Engine::execute() python method not defined" );
 		}
 
-		virtual void apply( ValuePlug *proxyOutput, const ValuePlug *topLevelProxyOutput, const IECore::Object *value ) const
+		void apply( ValuePlug *proxyOutput, const ValuePlug *topLevelProxyOutput, const IECore::Object *value ) const override
 		{
 			if( isSubclassed() )
 			{
@@ -193,7 +193,7 @@ class EngineWrapper : public IECorePython::RefCountedWrapper<Expression::Engine>
 			throw IECore::Exception( "Engine::apply() python method not defined" );
 		}
 
-		virtual std::string identifier( const Expression *node, const ValuePlug *plug ) const
+		std::string identifier( const Expression *node, const ValuePlug *plug ) const override
 		{
 			if( isSubclassed() )
 			{
@@ -216,7 +216,7 @@ class EngineWrapper : public IECorePython::RefCountedWrapper<Expression::Engine>
 			throw IECore::Exception( "Engine::identifier() python method not defined" );
 		}
 
-		virtual std::string replace( const Expression *node, const std::string &expression, const std::vector<const ValuePlug *> &oldPlugs, const std::vector<const ValuePlug *> &newPlugs ) const
+		std::string replace( const Expression *node, const std::string &expression, const std::vector<const ValuePlug *> &oldPlugs, const std::vector<const ValuePlug *> &newPlugs ) const override
 		{
 			if( isSubclassed() )
 			{
@@ -249,7 +249,7 @@ class EngineWrapper : public IECorePython::RefCountedWrapper<Expression::Engine>
 			throw IECore::Exception( "Engine::replace() python method not defined" );
 		}
 
-		virtual std::string defaultExpression( const ValuePlug *output ) const
+		std::string defaultExpression( const ValuePlug *output ) const override
 		{
 			if( isSubclassed() )
 			{
@@ -307,7 +307,7 @@ static tuple languages()
 class ExpressionSerialiser : public NodeSerialiser
 {
 
-	virtual void moduleDependencies( const Gaffer::GraphComponent *graphComponent, std::set<std::string> &modules, const Serialisation &serialisation ) const
+	void moduleDependencies( const Gaffer::GraphComponent *graphComponent, std::set<std::string> &modules, const Serialisation &serialisation ) const override
 	{
 		const Expression *e = static_cast<const Expression *>( graphComponent );
 		std::string language;
@@ -320,7 +320,7 @@ class ExpressionSerialiser : public NodeSerialiser
 		}
 	}
 
-	virtual std::string postScript( const Gaffer::GraphComponent *graphComponent, const std::string &identifier, const Serialisation &serialisation ) const
+	std::string postScript( const Gaffer::GraphComponent *graphComponent, const std::string &identifier, const Serialisation &serialisation ) const override
 	{
 		const Expression *e = static_cast<const Expression *>( graphComponent );
 

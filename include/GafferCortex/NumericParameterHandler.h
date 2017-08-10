@@ -57,16 +57,16 @@ class NumericParameterHandler : public ParameterHandler
 		typedef Gaffer::NumericPlug<T> PlugType;
 
 		NumericParameterHandler( typename ParameterType::Ptr parameter );
-		virtual ~NumericParameterHandler();
+		~NumericParameterHandler() override;
 
-		virtual IECore::Parameter *parameter();
-		virtual const IECore::Parameter *parameter() const;
-		virtual void restore( Gaffer::GraphComponent *plugParent );
-		virtual Gaffer::Plug *setupPlug( Gaffer::GraphComponent *plugParent, Gaffer::Plug::Direction direction=Gaffer::Plug::In, unsigned flags = Gaffer::Plug::Default | Gaffer::Plug::Dynamic );
-		virtual Gaffer::Plug *plug();
-		virtual const Gaffer::Plug *plug() const;
-		virtual void setParameterValue();
-		virtual void setPlugValue();
+		IECore::Parameter *parameter() override;
+		const IECore::Parameter *parameter() const override;
+		void restore( Gaffer::GraphComponent *plugParent ) override;
+		Gaffer::Plug *setupPlug( Gaffer::GraphComponent *plugParent, Gaffer::Plug::Direction direction=Gaffer::Plug::In, unsigned flags = Gaffer::Plug::Default | Gaffer::Plug::Dynamic ) override;
+		Gaffer::Plug *plug() override;
+		const Gaffer::Plug *plug() const override;
+		void setParameterValue() override;
+		void setPlugValue() override;
 
 	private :
 

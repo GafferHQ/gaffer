@@ -52,7 +52,7 @@ class OSLCode : public OSLShader
 	public :
 
 		OSLCode( const std::string &name=defaultName<OSLCode>() );
-		virtual ~OSLCode();
+		~OSLCode() override;
 
 		IE_CORE_DECLARERUNTIMETYPEDEXTENSION( GafferOSL::OSLCode, OSLCodeTypeId, OSLShader );
 
@@ -75,7 +75,7 @@ class OSLCode : public OSLShader
 		// This is implemented to do nothing, because OSLCode node generates the shader from
 		// the plugs, and not the other way around.  We don't want to inherit the loading behaviour
 		// from OSLShader which tries to match the plugs to a shader on disk
-		virtual void loadShader( const std::string &shaderName, bool keepExistingValues=false );
+		void loadShader( const std::string &shaderName, bool keepExistingValues=false ) override;
 
 	private :
 

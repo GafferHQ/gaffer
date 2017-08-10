@@ -60,7 +60,7 @@ class DependencyNodeClass : public NodeClass<T, TWrapper>
 {
 	public :
 
-		DependencyNodeClass( const char *docString = 0 );
+		DependencyNodeClass( const char *docString = nullptr );
 		DependencyNodeClass( const char *docString, boost::python::no_init_t );
 
 };
@@ -87,7 +87,7 @@ class DependencyNodeWrapper : public NodeWrapper<WrappedType>
 		{
 		}
 
-		virtual bool isInstanceOf( IECore::TypeId typeId ) const
+		bool isInstanceOf( IECore::TypeId typeId ) const override
 		{
 			if( typeId == (IECore::TypeId)Gaffer::DependencyNodeTypeId )
 			{
@@ -98,7 +98,7 @@ class DependencyNodeWrapper : public NodeWrapper<WrappedType>
 			return NodeWrapper<WrappedType>::isInstanceOf( typeId );
 		}
 
-		virtual void affects( const Gaffer::Plug *input, Gaffer::DependencyNode::AffectedPlugsContainer &outputs ) const
+		void affects( const Gaffer::Plug *input, Gaffer::DependencyNode::AffectedPlugsContainer &outputs ) const override
 		{
 			if( this->isSubclassed() )
 			{
@@ -122,7 +122,7 @@ class DependencyNodeWrapper : public NodeWrapper<WrappedType>
 			WrappedType::affects( input, outputs );
 		}
 
-		virtual Gaffer::BoolPlug *enabledPlug()
+		Gaffer::BoolPlug *enabledPlug() override
 		{
 			if( this->isSubclassed() )
 			{
@@ -143,13 +143,13 @@ class DependencyNodeWrapper : public NodeWrapper<WrappedType>
 			return WrappedType::enabledPlug();
 		}
 
-		virtual const Gaffer::BoolPlug *enabledPlug() const
+		const Gaffer::BoolPlug *enabledPlug() const override
 		{
 			// Better to make an ugly cast than repeat the implementation of the non-const version.
 			return const_cast<DependencyNodeWrapper *>( this )->enabledPlug();
 		}
 
-		virtual Gaffer::Plug *correspondingInput( const Gaffer::Plug *output )
+		Gaffer::Plug *correspondingInput( const Gaffer::Plug *output ) override
 		{
 			if( this->isSubclassed() )
 			{
@@ -173,7 +173,7 @@ class DependencyNodeWrapper : public NodeWrapper<WrappedType>
 			return WrappedType::correspondingInput( output );
 		}
 
-		virtual const Gaffer::Plug *correspondingInput( const Gaffer::Plug *output ) const
+		const Gaffer::Plug *correspondingInput( const Gaffer::Plug *output ) const override
 		{
 			// Better to make an ugly cast than repeat the implementation of the non-const version.
 			return const_cast<DependencyNodeWrapper *>( this )->correspondingInput( output );

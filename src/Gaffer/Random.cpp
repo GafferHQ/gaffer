@@ -276,7 +276,7 @@ void Random::hashSeed( const Context *context, IECore::MurmurHash &h ) const
 	std::string contextEntry = contextEntryPlug()->getValue();
 	if( contextEntry.size() )
 	{
-		const IECore::Data *contextData = 0;
+		const IECore::Data *contextData = nullptr;
 		try
 		{
 			contextData = context->get<IECore::Data>( contextEntry );
@@ -297,7 +297,7 @@ unsigned long int Random::computeSeed( const Context *context ) const
 	std::string contextEntry = contextEntryPlug()->getValue();
 	if( contextEntry.size() )
 	{
-		const IECore::Data *contextData = 0;
+		const IECore::Data *contextData = nullptr;
 		try
 		{
 			contextData = context->get<IECore::Data>( contextEntry );

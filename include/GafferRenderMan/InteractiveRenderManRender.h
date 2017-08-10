@@ -50,14 +50,14 @@ class InteractiveRenderManRender : public GafferScene::InteractiveRender
 	public :
 
 		InteractiveRenderManRender( const std::string &name=defaultName<InteractiveRenderManRender>() );
-		virtual ~InteractiveRenderManRender();
+		~InteractiveRenderManRender() override;
 
 		IE_CORE_DECLARERUNTIMETYPEDEXTENSION( GafferRenderMan::InteractiveRenderManRender, InteractiveRenderManRenderTypeId, GafferScene::InteractiveRender );
 
 	protected :
 
 		/// Must be implemented by derived classes to return the renderer that will be used.
-		virtual IECore::RendererPtr createRenderer() const;
+		IECore::RendererPtr createRenderer() const override;
 
 };
 

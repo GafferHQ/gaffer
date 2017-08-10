@@ -107,7 +107,7 @@ class Context : public IECore::RefCounted
 		/// Copy constructor. The ownership argument is deprecated - use
 		/// an EditableScope instead of Borrowed ownership.
 		Context( const Context &other, Ownership ownership = Copied );
-		~Context();
+		~Context() override;
 
 		IE_CORE_DECLAREMEMBERPTR( Context )
 

@@ -80,7 +80,7 @@ class NoduleLayout : public Gadget
 		IE_CORE_DECLARERUNTIMETYPEDEXTENSION( GafferUI::NoduleLayout, NoduleLayoutTypeId, Gadget );
 
 		NoduleLayout( Gaffer::GraphComponentPtr parent, IECore::InternedString section = IECore::InternedString() );
-		virtual ~NoduleLayout();
+		~NoduleLayout() override;
 
 		/// \todo These do not need to be virtual, since this is
 		/// not intended to be used as a base class.

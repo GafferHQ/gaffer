@@ -110,7 +110,7 @@ class StandardNodeGadget::ErrorGadget : public Gadget
 			m_image->setVisible( m_errors.size() );
 		}
 
-		virtual std::string getToolTip( const IECore::LineSegment3f &position ) const
+		std::string getToolTip( const IECore::LineSegment3f &position ) const override
 		{
 			std::string result = Gadget::getToolTip( position );
 			if( !result.empty() )
@@ -174,7 +174,7 @@ StandardNodeGadget::StandardNodeGadget( Gaffer::NodePtr node )
 	:	NodeGadget( node ),
 		m_nodeEnabled( true ),
 		m_labelsVisibleOnHover( true ),
-		m_dragDestinationProxy( 0 ),
+		m_dragDestinationProxy( nullptr ),
 		m_userColor( 0 ),
 		m_oval( false )
 {
@@ -638,7 +638,7 @@ Gadget *StandardNodeGadget::closestDragDestinationProxy( const DragDropEvent &ev
 		return nullptr;
 	}
 
-	Gadget *result = 0;
+	Gadget *result = nullptr;
 	float maxDist = Imath::limits<float>::max();
 	for( RecursiveGadgetIterator it( this ); !it.done(); it++ )
 	{

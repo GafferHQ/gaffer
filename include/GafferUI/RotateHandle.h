@@ -48,7 +48,7 @@ class RotateHandle : public Handle
 	public :
 
 		RotateHandle( Style::Axes axes );
-		virtual ~RotateHandle();
+		~RotateHandle() override;
 
 		IE_CORE_DECLARERUNTIMETYPEDEXTENSION( GafferUI::RotateHandle, RotateHandleTypeId, Handle );
 
@@ -60,8 +60,8 @@ class RotateHandle : public Handle
 
 	protected :
 
-		virtual void renderHandle( const Style *style, Style::State state ) const;
-		virtual void dragBegin( const DragDropEvent &event );
+		void renderHandle( const Style *style, Style::State state ) const override;
+		void dragBegin( const DragDropEvent &event ) override;
 
 	private :
 

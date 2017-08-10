@@ -67,7 +67,7 @@ template<typename T>
 class ParameterisedHolderSerialiser : public NodeSerialiser
 {
 
-	virtual std::string postScript( const Gaffer::GraphComponent *graphComponent, const std::string &identifier, const Serialisation &serialisation ) const
+	std::string postScript( const Gaffer::GraphComponent *graphComponent, const std::string &identifier, const Serialisation &serialisation ) const override
 	{
 		const T *parameterisedHolder = static_cast<const T *>( graphComponent );
 

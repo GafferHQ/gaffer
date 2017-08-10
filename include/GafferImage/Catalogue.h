@@ -57,7 +57,7 @@ class Catalogue : public ImageNode
 		IE_CORE_DECLARERUNTIMETYPEDEXTENSION( GafferImage::Catalogue, CatalogueTypeId, ImageNode );
 
 		Catalogue( const std::string &name = defaultName<Catalogue>() );
-		virtual ~Catalogue();
+		~Catalogue() override;
 
 		/// Plug type used to represent an image in the catalogue.
 		class Image : public Gaffer::Plug
@@ -84,7 +84,7 @@ class Catalogue : public ImageNode
 				static Ptr load( const std::string &fileName );
 				void save( const std::string &fileName ) const;
 
-				virtual Gaffer::PlugPtr createCounterpart( const std::string &name, Direction direction ) const;
+				Gaffer::PlugPtr createCounterpart( const std::string &name, Direction direction ) const override;
 
 		};
 

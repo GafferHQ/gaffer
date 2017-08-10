@@ -65,7 +65,7 @@ class View : public Gaffer::Node
 
 	public :
 
-		virtual ~View();
+		~View() override;
 
 		IE_CORE_DECLARERUNTIMETYPEDEXTENSION( GafferUI::View, ViewTypeId, Gaffer::Node );
 

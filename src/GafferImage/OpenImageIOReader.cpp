@@ -75,8 +75,8 @@ spin_rw_mutex g_imageCacheMutex;
 ImageCache *imageCache()
 {
 	spin_rw_mutex::scoped_lock lock( g_imageCacheMutex, false );
-	static ImageCache *cache = 0;
-	if( cache == 0 )
+	static ImageCache *cache = nullptr;
+	if( cache == nullptr )
 	{
 		if( lock.upgrade_to_writer() )
 		{

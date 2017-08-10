@@ -58,7 +58,7 @@ class LightVisualiser : public IECore::RefCounted
 		IE_CORE_DECLAREMEMBERPTR( LightVisualiser )
 
 		LightVisualiser();
-		virtual ~LightVisualiser();
+		~LightVisualiser() override;
 
 		/// Must be implemented by derived classes to visualise
 		/// the light contained within shaderVector.

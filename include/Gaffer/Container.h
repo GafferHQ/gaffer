@@ -49,15 +49,15 @@ class Container : public Base
 		IE_CORE_DECLAREMEMBERPTR( Container );
 
 		Container();
-		virtual ~Container();
+		~Container() override;
 
 		//! @name RunTimeTyped interface
 		////////////////////////////////////////////////////////////
 		//@{
-		virtual IECore::TypeId typeId() const;
-		virtual const char *typeName() const;
-		virtual bool isInstanceOf( IECore::TypeId typeId ) const;
-		virtual bool isInstanceOf( const char *typeName ) const;
+		IECore::TypeId typeId() const override;
+		const char *typeName() const override;
+		bool isInstanceOf( IECore::TypeId typeId ) const override;
+		bool isInstanceOf( const char *typeName ) const override;
 		static IECore::TypeId staticTypeId();
 		static const char *staticTypeName();
 		static bool inheritsFrom( IECore::TypeId typeId );
@@ -66,7 +66,7 @@ class Container : public Base
 		//@}
 
 		/// Accepts only type T.
-		virtual bool acceptsChild( const GraphComponent *potentialChild ) const;
+		bool acceptsChild( const GraphComponent *potentialChild ) const override;
 
 	private :
 

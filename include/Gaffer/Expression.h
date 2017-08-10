@@ -52,7 +52,7 @@ class Expression : public ComputeNode
 	public :
 
 		Expression( const std::string &name=defaultName<Expression>() );
-		virtual ~Expression();
+		~Expression() override;
 
 		IE_CORE_DECLARERUNTIMETYPEDEXTENSION( Gaffer::Expression, ExpressionTypeId, ComputeNode );
 
@@ -170,12 +170,12 @@ class Expression : public ComputeNode
 
 		};
 
-		virtual void affects( const Plug *input, AffectedPlugsContainer &outputs ) const;
+		void affects( const Plug *input, AffectedPlugsContainer &outputs ) const override;
 
 	protected :
 
-		virtual void hash( const ValuePlug *output, const Context *context, IECore::MurmurHash &h ) const;
-		virtual void compute( ValuePlug *output, const Context *context ) const;
+		void hash( const ValuePlug *output, const Context *context, IECore::MurmurHash &h ) const override;
+		void compute( ValuePlug *output, const Context *context ) const override;
 
 	private :
 

@@ -49,7 +49,7 @@ class Serialisation
 
 	public :
 
-		Serialisation( const Gaffer::GraphComponent *parent, const std::string &parentName = "parent", const Gaffer::Set *filter = 0 );
+		Serialisation( const Gaffer::GraphComponent *parent, const std::string &parentName = "parent", const Gaffer::Set *filter = nullptr );
 
 		/// Returns the parent passed to the constructor.
 		const Gaffer::GraphComponent *parent() const;

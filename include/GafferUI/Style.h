@@ -66,7 +66,7 @@ class Style : public IECore::RunTimeTyped
 	public :
 
 		Style();
-		virtual ~Style();
+		~Style() override;
 
 		IE_CORE_DECLARERUNTIMETYPEDEXTENSION( GafferUI::Style, StyleTypeId, IECore::RunTimeTyped );
 
@@ -80,7 +80,7 @@ class Style : public IECore::RunTimeTyped
 		/// Must be called once to allow the Style to set up any necessary state before calling
 		/// any of the render* methods below. The currently bound style is passed as it may
 		/// be possible to use it to optimise the binding of a new style of the same type.
-		virtual void bind( const Style *currentStyle=0 ) const = 0;
+		virtual void bind( const Style *currentStyle=nullptr ) const = 0;
 
 		enum TextType
 		{

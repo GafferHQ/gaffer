@@ -215,7 +215,7 @@ const ParameterHandler *CompoundParameterHandler::childParameterHandler( IECore:
 
 IECore::RunTimeTyped *CompoundParameterHandler::childParameterProvider( IECore::Parameter *childParameter )
 {
-	return 0;
+	return nullptr;
 }
 
 ParameterHandler *CompoundParameterHandler::handler( Parameter *child, bool createIfMissing )
@@ -226,7 +226,7 @@ ParameterHandler *CompoundParameterHandler::handler( Parameter *child, bool crea
 		return it->second.get();
 	}
 
-	ParameterHandlerPtr h = 0;
+	ParameterHandlerPtr h = nullptr;
 	if( createIfMissing )
 	{
 		IECore::ConstBoolDataPtr noHostMapping = child->userData()->member<BoolData>( "noHostMapping" );

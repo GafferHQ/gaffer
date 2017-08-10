@@ -48,13 +48,13 @@ class DeletePrimitiveVariables : public PrimitiveVariableProcessor
 	public :
 
 		DeletePrimitiveVariables( const std::string &name=defaultName<DeletePrimitiveVariables>() );
-		virtual ~DeletePrimitiveVariables();
+		~DeletePrimitiveVariables() override;
 
 		IE_CORE_DECLARERUNTIMETYPEDEXTENSION( GafferScene::DeletePrimitiveVariables, DeletePrimitiveVariablesTypeId, PrimitiveVariableProcessor );
 
 	protected :
 
-		virtual void processPrimitiveVariable( const ScenePath &path, const Gaffer::Context *context, IECore::ConstPrimitivePtr inputGeometry, IECore::PrimitiveVariable &inputVariable ) const;
+		void processPrimitiveVariable( const ScenePath &path, const Gaffer::Context *context, IECore::ConstPrimitivePtr inputGeometry, IECore::PrimitiveVariable &inputVariable ) const override;
 
 };
 

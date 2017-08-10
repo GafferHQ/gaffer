@@ -60,7 +60,7 @@ class Node : public GraphComponent
 	public :
 
 		Node( const std::string &name=defaultName<Node>() );
-		virtual ~Node();
+		~Node() override;
 
 		IE_CORE_DECLARERUNTIMETYPEDEXTENSION( Gaffer::Node, NodeTypeId, GraphComponent );
 
@@ -126,9 +126,9 @@ class Node : public GraphComponent
 		const ScriptNode *scriptNode() const;
 
 		/// Accepts only Nodes and Plugs.
-		virtual bool acceptsChild( const GraphComponent *potentialChild ) const;
+		bool acceptsChild( const GraphComponent *potentialChild ) const override;
 		/// Accepts only Nodes.
-		virtual bool acceptsParent( const GraphComponent *potentialParent ) const;
+		bool acceptsParent( const GraphComponent *potentialParent ) const override;
 
 		/// Signal type for communicating errors. The plug argument is the
 		/// plug being processed when the error occurred. The source argument
@@ -170,7 +170,7 @@ class Node : public GraphComponent
 
 		/// Implemented to remove all connections when the node is being
 		/// unparented.
-		virtual void parentChanging( Gaffer::GraphComponent *newParent );
+		void parentChanging( Gaffer::GraphComponent *newParent ) override;
 
 	private :
 

@@ -64,7 +64,7 @@ class PathFilterWrapper : public IECorePython::RunTimeTypedWrapper<WrappedType>
 		{
 		}
 
-		virtual void doFilter( std::vector<PathPtr> &paths ) const
+		void doFilter( std::vector<PathPtr> &paths ) const override
 		{
 			if( this->isSubclassed() )
 			{

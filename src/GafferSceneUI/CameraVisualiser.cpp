@@ -61,11 +61,11 @@ class CameraVisualiser : public ObjectVisualiser
 		{
 		}
 
-		virtual ~CameraVisualiser()
+		~CameraVisualiser() override
 		{
 		}
 
-		virtual IECoreGL::ConstRenderablePtr visualise( const IECore::Object *object ) const
+		IECoreGL::ConstRenderablePtr visualise( const IECore::Object *object ) const override
 		{
 			const IECore::Camera *camera = IECore::runTimeCast<const IECore::Camera>( object );
 			if( !camera )

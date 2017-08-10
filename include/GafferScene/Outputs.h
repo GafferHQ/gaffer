@@ -51,7 +51,7 @@ class Outputs : public GlobalsProcessor
 	public :
 
 		Outputs( const std::string &name=defaultName<Outputs>() );
-		virtual ~Outputs();
+		~Outputs() override;
 
 		IE_CORE_DECLARERUNTIMETYPEDEXTENSION( GafferScene::Outputs, OutputsTypeId, GlobalsProcessor );
 
@@ -62,15 +62,15 @@ class Outputs : public GlobalsProcessor
 		Gaffer::ValuePlug *addOutput( const std::string &name );
 		Gaffer::ValuePlug *addOutput( const std::string &name, const IECore::Display *output );
 
-		virtual void affects( const Gaffer::Plug *input, AffectedPlugsContainer &outputs ) const;
+		void affects( const Gaffer::Plug *input, AffectedPlugsContainer &outputs ) const override;
 
 		static void registerOutput( const std::string &name, const IECore::Display *output );
 		static void registeredOutputs( std::vector<std::string> &names );
 
 	protected :
 
-		virtual void hashProcessedGlobals( const Gaffer::Context *context, IECore::MurmurHash &h ) const;
-		virtual IECore::ConstCompoundObjectPtr computeProcessedGlobals( const Gaffer::Context *context, IECore::ConstCompoundObjectPtr inputGlobals ) const;
+		void hashProcessedGlobals( const Gaffer::Context *context, IECore::MurmurHash &h ) const override;
+		IECore::ConstCompoundObjectPtr computeProcessedGlobals( const Gaffer::Context *context, IECore::ConstCompoundObjectPtr inputGlobals ) const override;
 
 	private :
 

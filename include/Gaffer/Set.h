@@ -54,7 +54,7 @@ class Set : public IECore::RunTimeTyped, public boost::signals::trackable
 	public :
 
 		Set();
-		virtual ~Set();
+		~Set() override;
 
 		IE_CORE_DECLARERUNTIMETYPEDEXTENSION( Gaffer::Set, SetTypeId, IECore::RunTimeTyped );
 

@@ -50,20 +50,20 @@ class PrimitiveVariables : public SceneElementProcessor
 	public :
 
 		PrimitiveVariables( const std::string &name=defaultName<PrimitiveVariables>() );
-		virtual ~PrimitiveVariables();
+		~PrimitiveVariables() override;
 
 		IE_CORE_DECLARERUNTIMETYPEDEXTENSION( GafferScene::PrimitiveVariables, PrimitiveVariablesTypeId, SceneElementProcessor );
 
 		Gaffer::CompoundDataPlug *primitiveVariablesPlug();
 		const Gaffer::CompoundDataPlug *primitiveVariablesPlug() const;
 
-		virtual void affects( const Gaffer::Plug *input, AffectedPlugsContainer &outputs ) const;
+		void affects( const Gaffer::Plug *input, AffectedPlugsContainer &outputs ) const override;
 
 	protected :
 
-		virtual bool processesObject() const;
-		virtual void hashProcessedObject( const ScenePath &path, const Gaffer::Context *context, IECore::MurmurHash &h ) const;
-		virtual IECore::ConstObjectPtr computeProcessedObject( const ScenePath &path, const Gaffer::Context *context, IECore::ConstObjectPtr inputObject ) const;
+		bool processesObject() const override;
+		void hashProcessedObject( const ScenePath &path, const Gaffer::Context *context, IECore::MurmurHash &h ) const override;
+		IECore::ConstObjectPtr computeProcessedObject( const ScenePath &path, const Gaffer::Context *context, IECore::ConstObjectPtr inputObject ) const override;
 
 	private :
 

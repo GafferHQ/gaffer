@@ -52,14 +52,14 @@ class ArnoldLight : public GafferScene::Light
 		IE_CORE_DECLARERUNTIMETYPEDEXTENSION( GafferArnold::ArnoldLight, ArnoldLightTypeId, GafferScene::Light );
 
 		ArnoldLight( const std::string &name=defaultName<ArnoldLight>() );
-		virtual ~ArnoldLight();
+		~ArnoldLight() override;
 
 		void loadShader( const std::string &shaderName );
 
 	protected :
 
-		virtual void hashLight( const Gaffer::Context *context, IECore::MurmurHash &h ) const;
-		virtual IECore::ObjectVectorPtr computeLight( const Gaffer::Context *context ) const;
+		void hashLight( const Gaffer::Context *context, IECore::MurmurHash &h ) const override;
+		IECore::ObjectVectorPtr computeLight( const Gaffer::Context *context ) const override;
 
 	private :
 

@@ -48,16 +48,16 @@ class EvaluateLightLinks : public GafferScene::SceneProcessor
 	public :
 
 		EvaluateLightLinks( const std::string &name=defaultName<EvaluateLightLinks>() );
-		virtual ~EvaluateLightLinks();
+		~EvaluateLightLinks() override;
 
 		IE_CORE_DECLARERUNTIMETYPEDEXTENSION( GafferScene::EvaluateLightLinks, EvaluateLightLinksTypeId, SceneProcessor );
 
-		virtual void affects( const Gaffer::Plug *input, AffectedPlugsContainer &outputs ) const;
+		void affects( const Gaffer::Plug *input, AffectedPlugsContainer &outputs ) const override;
 
 	protected:
 
-		void hashAttributes( const ScenePath &path, const Gaffer::Context *context, const ScenePlug *parent, IECore::MurmurHash &h ) const;
-		virtual IECore::ConstCompoundObjectPtr computeAttributes( const ScenePath &path, const Gaffer::Context *context, const ScenePlug *parent ) const;
+		void hashAttributes( const ScenePath &path, const Gaffer::Context *context, const ScenePlug *parent, IECore::MurmurHash &h ) const override;
+		IECore::ConstCompoundObjectPtr computeAttributes( const ScenePath &path, const Gaffer::Context *context, const ScenePlug *parent ) const override;
 
 };
 

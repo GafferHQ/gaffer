@@ -55,7 +55,7 @@ class SceneWriter : public GafferDispatch::TaskNode
 	public :
 
 		SceneWriter( const std::string &name=defaultName<SceneWriter>() );
-		virtual ~SceneWriter();
+		~SceneWriter() override;
 
 		IE_CORE_DECLARERUNTIMETYPEDEXTENSION( GafferScene::SceneWriter, SceneWriterTypeId, GafferDispatch::TaskNode );
 
@@ -68,16 +68,16 @@ class SceneWriter : public GafferDispatch::TaskNode
 		ScenePlug *outPlug();
 		const ScenePlug *outPlug() const;
 
-		virtual IECore::MurmurHash hash( const Gaffer::Context *context ) const;
+		IECore::MurmurHash hash( const Gaffer::Context *context ) const override;
 
-		virtual void execute() const;
+		void execute() const override;
 
 		/// Re-implemented to open the file for writing, then iterate through the
 		/// frames, modifying the current Context and calling writeLocation().
-		virtual void executeSequence( const std::vector<float> &frames ) const;
+		void executeSequence( const std::vector<float> &frames ) const override;
 
 		/// Re-implemented to return true, since the entire file must be written at once.
-		virtual bool requiresSequenceExecution() const;
+		bool requiresSequenceExecution() const override;
 
 	private :
 

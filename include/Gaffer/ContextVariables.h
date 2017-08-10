@@ -54,7 +54,7 @@ class ContextVariables : public ContextProcessor<BaseType>
 		IE_CORE_DECLARERUNTIMETYPEDDESCRIPTION( ContextVariables<BaseType> );
 
 		ContextVariables( const std::string &name=GraphComponent::defaultName<ContextVariables>() );
-		virtual ~ContextVariables();
+		~ContextVariables() override;
 
 		CompoundDataPlug *variablesPlug();
 		const CompoundDataPlug *variablesPlug() const;
@@ -64,8 +64,8 @@ class ContextVariables : public ContextProcessor<BaseType>
 
 	protected :
 
-		virtual bool affectsContext( const Plug *input ) const;
-		virtual void processContext( Context::EditableScope &context ) const;
+		bool affectsContext( const Plug *input ) const override;
+		void processContext( Context::EditableScope &context ) const override;
 
 	private :
 

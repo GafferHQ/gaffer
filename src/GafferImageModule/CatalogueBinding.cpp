@@ -152,7 +152,7 @@ std::string repr( const Catalogue::Image *plug )
 class ImageSerialiser : public PlugSerialiser
 {
 
-	virtual std::string constructor( const Gaffer::GraphComponent *graphComponent, const Serialisation &serialisation ) const
+	std::string constructor( const Gaffer::GraphComponent *graphComponent, const Serialisation &serialisation ) const override
 	{
 		return maskedRepr( static_cast<const Catalogue::Image *>( graphComponent ), Plug::All & ~Plug::ReadOnly );
 	}
@@ -162,7 +162,7 @@ class ImageSerialiser : public PlugSerialiser
 class CatalogueSerialiser : public NodeSerialiser
 {
 
-	virtual bool childNeedsSerialisation( const Gaffer::GraphComponent *child, const Serialisation &serialisation ) const
+	bool childNeedsSerialisation( const Gaffer::GraphComponent *child, const Serialisation &serialisation ) const override
 	{
 		if( child == child->parent<Catalogue>()->outPlug() )
 		{

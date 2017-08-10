@@ -50,7 +50,7 @@ class ShaderSwitch : public Gaffer::SwitchComputeNode
 	public :
 
 		ShaderSwitch( const std::string &name=defaultName<ShaderSwitch>() );
-		virtual ~ShaderSwitch();
+		~ShaderSwitch() override;
 
 		IE_CORE_DECLARERUNTIMETYPEDEXTENSION( GafferScene::ShaderSwitch, ShaderSwitchTypeId, Gaffer::SwitchComputeNode );
 

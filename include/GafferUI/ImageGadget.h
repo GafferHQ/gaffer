@@ -65,11 +65,11 @@ class ImageGadget : public Gadget
 		ImageGadget( const std::string &fileName );
 		/// A copy of the image is taken.
 		ImageGadget( const IECore::ConstImagePrimitivePtr image );
-		virtual ~ImageGadget();
+		~ImageGadget() override;
 
 		IE_CORE_DECLARERUNTIMETYPEDEXTENSION( GafferUI::ImageGadget, ImageGadgetTypeId, Gadget );
 
-		virtual Imath::Box3f bound() const;
+		Imath::Box3f bound() const override;
 
 		/// Returns the texture loader used for converting images
 		/// on disk into textures for rendering. This is exposed
@@ -79,7 +79,7 @@ class ImageGadget : public Gadget
 
 	protected :
 
-		virtual void doRender( const Style *style ) const;
+		void doRender( const Style *style ) const override;
 
 	private :
 

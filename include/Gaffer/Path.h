@@ -83,7 +83,7 @@ class Path : public IECore::RunTimeTyped
 
 		IE_CORE_DECLARERUNTIMETYPEDEXTENSION( Gaffer::Path, PathTypeId, IECore::RunTimeTyped );
 
-		virtual ~Path();
+		~Path() override;
 
 		/// Returns the root of the path - this will be "/" for absolute
 		/// paths and "" for relative paths.

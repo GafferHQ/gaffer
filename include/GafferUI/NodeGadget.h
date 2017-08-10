@@ -54,7 +54,7 @@ class NodeGadget : public Gadget
 
 	public :
 
-		virtual ~NodeGadget();
+		~NodeGadget() override;
 
 		IE_CORE_DECLARERUNTIMETYPEDEXTENSION( GafferUI::NodeGadget, NodeGadgetTypeId, Gadget );
 
@@ -97,7 +97,7 @@ class NodeGadget : public Gadget
 		/// \deprecated Use the function above, or register "nodeGadget:type" metadata instead.
 		static void registerNodeGadget( IECore::TypeId nodeType, NodeGadgetCreator creator );
 
-		virtual std::string getToolTip( const IECore::LineSegment3f &line ) const;
+		std::string getToolTip( const IECore::LineSegment3f &line ) const override;
 
 	protected :
 
