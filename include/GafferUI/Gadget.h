@@ -38,6 +38,8 @@
 #ifndef GAFFERUI_GADGET_H
 #define GAFFERUI_GADGET_H
 
+#include <functional>
+
 #include "OpenEXR/ImathBox.h"
 
 #include "IECoreGL/GL.h"
@@ -260,7 +262,7 @@ class Gadget : public Gaffer::GraphComponent
 		static IdleSignal &idleSignal();
 		//@}
 
-		typedef boost::function<void ()> UIThreadFunction;
+		typedef std::function<void ()> UIThreadFunction;
 		/// Arranges for the specified function to be run on the main UI thread.
 		/// Note that this is run asynchronously at some point in the future. If
 		/// using boost::bind() to pass a member function here, you _must_

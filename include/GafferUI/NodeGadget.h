@@ -38,6 +38,8 @@
 #ifndef GAFFERUI_NODEGADGET_H
 #define GAFFERUI_NODEGADGET_H
 
+#include <functional>
+
 #include "GafferUI/IndividualContainer.h"
 
 #include "Gaffer/Set.h"
@@ -87,7 +89,7 @@ class NodeGadget : public Gadget
 		/// nullptr will be returned.
 		static NodeGadgetPtr create( Gaffer::NodePtr node );
 
-		typedef boost::function<NodeGadgetPtr ( Gaffer::NodePtr )> NodeGadgetCreator;
+		typedef std::function<NodeGadgetPtr ( Gaffer::NodePtr )> NodeGadgetCreator;
 		/// Registers a named NodeGadget creator, optionally registering it as the default
 		/// creator for a particular type of node. The nodeGadgetType may subsequently be
 		/// used in a "nodeGadget:type" metadata registration to register the creator with

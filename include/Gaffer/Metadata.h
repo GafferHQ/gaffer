@@ -37,7 +37,8 @@
 #ifndef GAFFER_METADATA_H
 #define GAFFER_METADATA_H
 
-#include "boost/function.hpp"
+#include <functional>
+
 #include "boost/signals.hpp"
 
 #include "IECore/InternedString.h"
@@ -73,9 +74,9 @@ class Metadata
 		/// metadata is registered.
 		typedef boost::signal<void ( IECore::TypeId nodeTypeId, const StringAlgo::MatchPattern &plugPath, IECore::InternedString key, Gaffer::Plug *plug ), CatchingSignalCombiner<void> > PlugValueChangedSignal;
 
-		typedef boost::function<IECore::ConstDataPtr ()> ValueFunction;
-		typedef boost::function<IECore::ConstDataPtr ( const Node *node )> NodeValueFunction;
-		typedef boost::function<IECore::ConstDataPtr ( const Plug *plug )> PlugValueFunction;
+		typedef std::function<IECore::ConstDataPtr ()> ValueFunction;
+		typedef std::function<IECore::ConstDataPtr ( const Node *node )> NodeValueFunction;
+		typedef std::function<IECore::ConstDataPtr ( const Plug *plug )> PlugValueFunction;
 
 		/// Value registration
 		/// ==================

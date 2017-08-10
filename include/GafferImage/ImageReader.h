@@ -37,6 +37,8 @@
 #ifndef GAFFERIMAGE_IMAGEREADER_H
 #define GAFFERIMAGE_IMAGEREADER_H
 
+#include <functional>
+
 #include "Gaffer/CompoundNumericPlug.h"
 
 #include "GafferImage/ImageNode.h"
@@ -117,7 +119,7 @@ class ImageReader : public ImageNode
 		/// A function which can take information about a file being read, and return the colorspace
 		/// of the data within the file. This is used whenever the colorSpace plug is at its default
 		/// value.
-		typedef boost::function<const std::string ( const std::string &fileName, const std::string &fileFormat, const std::string &dataType, const IECore::CompoundData *metadata )> DefaultColorSpaceFunction;
+		typedef std::function<const std::string ( const std::string &fileName, const std::string &fileFormat, const std::string &dataType, const IECore::CompoundData *metadata )> DefaultColorSpaceFunction;
 		static void setDefaultColorSpaceFunction( DefaultColorSpaceFunction f );
 		static DefaultColorSpaceFunction getDefaultColorSpaceFunction();
 

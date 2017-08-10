@@ -36,7 +36,6 @@
 
 #include "boost/python.hpp"
 #include "boost/python/raw_function.hpp"
-#include "boost/lambda/lambda.hpp"
 #include "boost/format.hpp"
 
 #include "IECore/SimpleTypedData.h"
@@ -144,7 +143,8 @@ Metadata::ValueFunction objectToValueFunction( InternedString name, object o )
 	extract<IECore::DataPtr> dataExtractor( o );
 	if( dataExtractor.check() )
 	{
-		return boost::lambda::constant( dedent( name, dataExtractor() ) );
+		ConstDataPtr data = dedent( name, dataExtractor() );
+		return [data]{ return data; };
 	}
 	else
 	{
@@ -157,7 +157,8 @@ Metadata::NodeValueFunction objectToNodeValueFunction( InternedString name, obje
 	extract<IECore::DataPtr> dataExtractor( o );
 	if( dataExtractor.check() )
 	{
-		return boost::lambda::constant( dedent( name, dataExtractor() ) );
+		ConstDataPtr data = dedent( name, dataExtractor() );
+		return [data](const Node *) { return data; };
 	}
 	else
 	{
@@ -170,7 +171,8 @@ Metadata::PlugValueFunction objectToPlugValueFunction( InternedString name, obje
 	extract<IECore::DataPtr> dataExtractor( o );
 	if( dataExtractor.check() )
 	{
-		return boost::lambda::constant( dedent( name, dataExtractor() ) );
+		ConstDataPtr data = dedent( name, dataExtractor() );
+		return [data](const Plug *) { return data; };
 	}
 	else
 	{

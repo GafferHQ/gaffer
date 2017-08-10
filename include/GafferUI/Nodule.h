@@ -38,6 +38,8 @@
 #ifndef GAFFERUI_NODULE_H
 #define GAFFERUI_NODULE_H
 
+#include <functional>
+
 #include "boost/regex.hpp"
 
 #include "Gaffer/FilteredRecursiveChildIterator.h"
@@ -75,7 +77,7 @@ class Nodule : public Gadget
 		/// this case nullptr will be returned.
 		static NodulePtr create( Gaffer::PlugPtr plug );
 
-		typedef boost::function<NodulePtr ( Gaffer::PlugPtr )> NoduleCreator;
+		typedef std::function<NodulePtr ( Gaffer::PlugPtr )> NoduleCreator;
 		/// Registers a Nodule subclass, optionally registering it as the default
 		/// nodule type for a particular type of plug.
 		static void registerNodule( const std::string &noduleTypeName, NoduleCreator creator, IECore::TypeId plugType = IECore::InvalidTypeId );

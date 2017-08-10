@@ -37,6 +37,8 @@
 #ifndef GAFFERSCENE_RENDERERALGO_H
 #define GAFFERSCENE_RENDERERALGO_H
 
+#include <functional>
+
 #include "IECore/Renderer.h"
 #include "IECore/CompoundObject.h"
 #include "IECore/Transform.h"
@@ -122,7 +124,7 @@ void outputObject( const ScenePlug *scene, IECore::Renderer *renderer, size_t se
 
 /// Function to return a SceneProcessor used to adapt the
 /// scene for rendering.
-typedef boost::function<SceneProcessorPtr ()> Adaptor;
+typedef std::function<SceneProcessorPtr ()> Adaptor;
 /// Registers an adaptor.
 void registerAdaptor( const std::string &name, Adaptor adaptor );
 /// Removes a previously registered adaptor.

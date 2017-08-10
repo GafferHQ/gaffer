@@ -38,6 +38,8 @@
 #ifndef GAFFERIMAGE_DISPLAY_H
 #define GAFFERIMAGE_DISPLAY_H
 
+#include <functional>
+
 #include "IECore/DisplayDriverServer.h"
 
 #include "Gaffer/NumericPlug.h"
@@ -87,7 +89,7 @@ class Display : public ImageNode
 		/// Used to trigger UI updates when image data is received
 		/// via a driver on a background thread. Exposed publicly
 		/// for the use of the Catalogue node.
-		typedef boost::function<void ()> UIThreadFunction;
+		typedef std::function<void ()> UIThreadFunction;
 		static void executeOnUIThread( UIThreadFunction function );
 
 	protected :

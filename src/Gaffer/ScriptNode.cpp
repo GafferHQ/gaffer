@@ -691,7 +691,7 @@ void ScriptNode::save() const
 
 std::string ScriptNode::serialiseInternal( const Node *parent, const Set *filter ) const
 {
-	if( g_serialiseFunction.empty() )
+	if( !g_serialiseFunction )
 	{
 		throw IECore::Exception( "Serialisation not available - please link to libGafferBindings." );
 	}
@@ -700,7 +700,7 @@ std::string ScriptNode::serialiseInternal( const Node *parent, const Set *filter
 
 bool ScriptNode::executeInternal( const std::string &serialisation, Node *parent, bool continueOnError, const std::string &context )
 {
-	if( g_executeFunction.empty() )
+	if( !g_executeFunction )
 	{
 		throw IECore::Exception( "Execution not available - please link to libGafferBindings." );
 	}

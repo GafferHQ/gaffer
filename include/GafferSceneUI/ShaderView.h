@@ -37,6 +37,8 @@
 #ifndef GAFFERSCENEUI_SHADERVIEW_H
 #define GAFFERSCENEUI_SHADERVIEW_H
 
+#include <functional>
+
 #include "GafferImageUI/ImageView.h"
 
 #include "GafferSceneUI/TypeIds.h"
@@ -69,10 +71,10 @@ class ShaderView : public GafferImageUI::ImageView
 
 		void setContext( Gaffer::ContextPtr context ) override;
 
-		typedef boost::function<Gaffer::NodePtr ()> RendererCreator;
+		typedef std::function<Gaffer::NodePtr ()> RendererCreator;
 		static void registerRenderer( const std::string &shaderPrefix, RendererCreator rendererCreator );
 
-		typedef boost::function<Gaffer::NodePtr ()> SceneCreator;
+		typedef std::function<Gaffer::NodePtr ()> SceneCreator;
 		static void registerScene( const std::string &shaderPrefix, const std::string &name, SceneCreator sceneCreator );
 		static void registerScene( const std::string &shaderPrefix, const std::string &name, const std::string &referenceFileName );
 		static void registeredScenes( const std::string &shaderPrefix, std::vector<std::string> &names );

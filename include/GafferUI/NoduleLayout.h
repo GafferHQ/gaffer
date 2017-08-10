@@ -38,6 +38,8 @@
 #ifndef GAFFERUI_NODULELAYOUT_H
 #define GAFFERUI_NODULELAYOUT_H
 
+#include <functional>
+
 #include "boost/variant.hpp"
 
 #include "Gaffer/StringAlgo.h"
@@ -90,7 +92,7 @@ class NoduleLayout : public Gadget
 		Gadget *customGadget( const std::string &name );
 		const Gadget *customGadget( const std::string &name ) const;
 
-		typedef boost::function<GadgetPtr ( Gaffer::GraphComponentPtr )> CustomGadgetCreator;
+		typedef std::function<GadgetPtr ( Gaffer::GraphComponentPtr )> CustomGadgetCreator;
 		/// Registers a custom gadget type that can be added to the layout using
 		/// "noduleLayout:customGadget:*"" metadata entries.
 		static void registerCustomGadget( const std::string &gadgetType, CustomGadgetCreator creator );

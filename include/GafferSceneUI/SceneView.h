@@ -38,6 +38,8 @@
 #ifndef GAFFERSCENEUI_SCENEVIEW_H
 #define GAFFERSCENEUI_SCENEVIEW_H
 
+#include <functional>
+
 #include "GafferUI/View.h"
 
 #include "GafferScene/ScenePlug.h"
@@ -100,7 +102,7 @@ class SceneView : public GafferUI::View
 		/// empty bound.
 		const Imath::Box2f &resolutionGate() const;
 
-		typedef boost::function<GafferScene::SceneProcessorPtr ()> ShadingModeCreator;
+		typedef std::function<GafferScene::SceneProcessorPtr ()> ShadingModeCreator;
 
 		static void registerShadingMode( const std::string &name, ShadingModeCreator );
 		static void registeredShadingModes( std::vector<std::string> &names );
