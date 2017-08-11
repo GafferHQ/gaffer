@@ -175,7 +175,7 @@ def __duplicateAsBox( nodeGraph, node ) :
 	with Gaffer.UndoScope( script ) :
 
 		box = Gaffer.Box( node.getName() + "Copy" )
-		script.addChild( box )
+		node.parent().addChild( box )
 
 		graphGadget = nodeGraph.graphGadget()
 		graphGadget.getLayout().positionNode(
