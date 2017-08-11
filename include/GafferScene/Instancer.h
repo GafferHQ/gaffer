@@ -59,9 +59,21 @@ class GAFFERSCENE_API Instancer : public BranchCreator
 		ScenePlug *instancePlug();
 		const ScenePlug *instancePlug() const;
 
+		Gaffer::StringPlug *positionPlug();
+		const Gaffer::StringPlug *positionPlug() const;
+
+		Gaffer::StringPlug *orientationPlug();
+		const Gaffer::StringPlug *orientationPlug() const;
+
+		Gaffer::StringPlug *scalePlug();
+		const Gaffer::StringPlug *scalePlug() const;
+
 		void affects( const Gaffer::Plug *input, AffectedPlugsContainer &outputs ) const override;
 
 	protected :
+
+		void hash( const Gaffer::ValuePlug *output, const Gaffer::Context *context, IECore::MurmurHash &h ) const override;
+		void compute( Gaffer::ValuePlug *output, const Gaffer::Context *context ) const override;
 
 		void hashBranchBound( const ScenePath &parentPath, const ScenePath &branchPath, const Gaffer::Context *context, IECore::MurmurHash &h ) const override;
 		Imath::Box3f computeBranchBound( const ScenePath &parentPath, const ScenePath &branchPath, const Gaffer::Context *context ) const override;
@@ -83,7 +95,14 @@ class GAFFERSCENE_API Instancer : public BranchCreator
 		struct BoundHash;
 		struct BoundUnion;
 
-		IECore::ConstV3fVectorDataPtr sourcePoints( const ScenePath &parentPath ) const;
+		IE_CORE_FORWARDDECLARE( EngineData );
+
+		Gaffer::ObjectPlug *enginePlug();
+		const Gaffer::ObjectPlug *enginePlug() const;
+
+		ConstEngineDataPtr engine( const ScenePath &parentPath, const Gaffer::Context *context ) const;
+		void engineHash( const ScenePath &parentPath, const Gaffer::Context *context, IECore::MurmurHash &h ) const;
+
 		static int instanceIndex( const ScenePath &branchPath );
 
 		struct InstanceScope : public Gaffer::Context::EditableScope
@@ -93,8 +112,6 @@ class GAFFERSCENE_API Instancer : public BranchCreator
 			void update( const ScenePath &branchPath );
 			void update( const ScenePath &branchPath, int instanceId );
 		};
-
-		Imath::M44f instanceTransform( const IECore::V3fVectorData *p, int instanceId ) const;
 
 		static size_t g_firstPlugIndex;
 

@@ -35,6 +35,8 @@
 #
 ##########################################################################
 
+import math
+
 import imath
 
 import IECore
@@ -548,6 +550,58 @@ class InstancerTest( GafferSceneTest.SceneTestCase ) :
 			for i in range( 1, 10 ) :
 				c.setFrame( i )
 				dispatcher.dispatch( [ script["pythonCommand"] ] )
+
+	def testTransform( self ) :
+
+		point = IECoreScene.PointsPrimitive( IECore.V3fVectorData( [ imath.V3f( 4, 0, 0 ) ] ) )
+		point["orientation"] = IECoreScene.PrimitiveVariable(
+			IECoreScene.PrimitiveVariable.Interpolation.Vertex,
+			IECore.QuatfVectorData( [ imath.Quatf().setAxisAngle( imath.V3f( 0, 1, 0 ), math.pi / 2.0 ) ] )
+		)
+		point["scale"] = IECoreScene.PrimitiveVariable(
+			IECoreScene.PrimitiveVariable.Interpolation.Vertex,
+			IECore.V3fVectorData( [ imath.V3f( 2, 3, 4 ) ] )
+		)
+		point["uniformScale"] = IECoreScene.PrimitiveVariable(
+			IECoreScene.PrimitiveVariable.Interpolation.Vertex,
+			IECore.FloatVectorData( [ 10 ] )
+		)
+
+		objectToScene = GafferScene.ObjectToScene()
+		objectToScene["object"].setValue( point )
+
+		sphere = GafferScene.Sphere()
+
+		instancer = GafferScene.Instancer()
+		instancer["in"].setInput( objectToScene["out"] )
+		instancer["instance"].setInput( sphere["out"] )
+		instancer["parent"].setValue( "/object" )
+
+		self.assertEqual( instancer["out"].transform( "/object/instances/0" ), imath.M44f().translate( imath.V3f( 4, 0, 0 ) ) )
+
+		instancer["orientation"].setValue( "orientation" )
+		self.assertTrue(
+			imath.V3f( 4, 0, -1 ).equalWithAbsError(
+				imath.V3f( 1, 0, 0 ) * instancer["out"].transform( "/object/instances/0" ),
+				0.00001
+			)
+		)
+
+		instancer["scale"].setValue( "scale" )
+		self.assertTrue(
+			imath.V3f( 4, 0, -2 ).equalWithAbsError(
+				imath.V3f( 1, 0, 0 ) * instancer["out"].transform( "/object/instances/0" ),
+				0.00001
+			)
+		)
+
+		instancer["scale"].setValue( "uniformScale" )
+		self.assertTrue(
+			imath.V3f( 4, 0, -10 ).equalWithAbsError(
+				imath.V3f( 1, 0, 0 ) * instancer["out"].transform( "/object/instances/0" ),
+				0.00001
+			)
+		)
 
 if __name__ == "__main__":
 	unittest.main()

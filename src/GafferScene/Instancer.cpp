@@ -42,6 +42,8 @@
 
 #include "IECoreScene/Primitive.h"
 
+#include "IECore/MessageHandler.h"
+#include "IECore/NullObject.h"
 #include "IECore/VectorTypedData.h"
 
 #include "boost/lexical_cast.hpp"
@@ -57,6 +59,132 @@ using namespace IECoreScene;
 using namespace Gaffer;
 using namespace GafferScene;
 
+//////////////////////////////////////////////////////////////////////////
+// EngineData
+//////////////////////////////////////////////////////////////////////////
+
+// Custom Data derived class used to encapsulate the data and
+// logic needed to generate instances. We are deliberately omitting
+// a custom TypeId etc because this is just a private class.
+class Instancer::EngineData : public Data
+{
+
+	public :
+
+		EngineData(
+			ConstObjectPtr object,
+			const std::string &position,
+			const std::string &orientation,
+			const std::string &scale
+		)
+			:	m_positions( nullptr ),
+				m_orientations( nullptr ),
+				m_scales( nullptr ),
+				m_uniformScales( nullptr )
+		{
+			m_primitive = runTimeCast<const Primitive>( object );
+			if( !m_primitive )
+			{
+				return;
+			}
+
+			if( const V3fVectorData *p = m_primitive->variableData<V3fVectorData>( position ) )
+			{
+				m_positions = &p->readable();
+				if( m_positions->size() != numInstances() )
+				{
+					throw IECore::Exception( "Position primitive variable has incorrect size" );
+				}
+			}
+
+			if( const QuatfVectorData *o = m_primitive->variableData<QuatfVectorData>( orientation ) )
+			{
+				m_orientations = &o->readable();
+				if( m_orientations->size() != numInstances() )
+				{
+					throw IECore::Exception( "Orientation primitive variable has incorrect size" );
+				}
+			}
+
+			if( const V3fVectorData *s = m_primitive->variableData<V3fVectorData>( scale ) )
+			{
+				m_scales = &s->readable();
+				if( m_scales->size() != numInstances() )
+				{
+					throw IECore::Exception( "Scale primitive variable has incorrect size" );
+				}
+			}
+			else if( const FloatVectorData *s = m_primitive->variableData<FloatVectorData>( scale ) )
+			{
+				m_uniformScales = &s->readable();
+				if( m_uniformScales->size() != numInstances() )
+				{
+					throw IECore::Exception( "Scale primitive variable has incorrect size" );
+				}
+			}
+		}
+
+		size_t numInstances() const
+		{
+			return m_primitive ? m_primitive->variableSize( PrimitiveVariable::Vertex ) : 0;
+		}
+
+		M44f instanceTransform( size_t instanceIndex ) const
+		{
+			M44f result;
+			if( m_positions )
+			{
+				result.translate( (*m_positions)[instanceIndex] );
+			}
+			if( m_orientations )
+			{
+				result = (*m_orientations)[instanceIndex].toMatrix44() * result;
+			}
+			if( m_scales )
+			{
+				result.scale( (*m_scales)[instanceIndex] );
+			}
+			if( m_uniformScales )
+			{
+				result.scale( V3f( (*m_uniformScales)[instanceIndex] ) );
+			}
+			return result;
+		}
+
+	protected :
+
+		void copyFrom( const Object *other, CopyContext *context ) override
+		{
+			Data::copyFrom( other, context );
+			msg( Msg::Warning, "EngineData::copyFrom", "Not implemented" );
+		}
+
+		void save( SaveContext *context ) const override
+		{
+			Data::save( context );
+			msg( Msg::Warning, "EngineData::save", "Not implemented" );
+		}
+
+		void load( LoadContextPtr context ) override
+		{
+			Data::load( context );
+			msg( Msg::Warning, "EngineData::load", "Not implemented" );
+		}
+
+	private :
+
+		IECoreScene::ConstPrimitivePtr m_primitive;
+		const std::vector<Imath::V3f> *m_positions;
+		const std::vector<Imath::Quatf> *m_orientations;
+		const std::vector<Imath::V3f> *m_scales;
+		const std::vector<float> *m_uniformScales;
+
+};
+
+//////////////////////////////////////////////////////////////////////////
+// Instancer
+//////////////////////////////////////////////////////////////////////////
+
 IE_CORE_DEFINERUNTIMETYPED( Instancer );
 
 size_t Instancer::g_firstPlugIndex = 0;
@@ -69,6 +197,10 @@ Instancer::Instancer( const std::string &name )
 	storeIndexOfNextChild( g_firstPlugIndex );
 	addChild( new StringPlug( "name", Plug::In, "instances" ) );
 	addChild( new ScenePlug( "instance" ) );
+	addChild( new StringPlug( "position", Plug::In, "P" ) );
+	addChild( new StringPlug( "orientation", Plug::In ) );
+	addChild( new StringPlug( "scale", Plug::In ) );
+	addChild( new ObjectPlug( "__engine", Plug::Out, NullObject::defaultNullObject() ) );
 }
 
 Instancer::~Instancer()
@@ -95,36 +227,121 @@ const ScenePlug *Instancer::instancePlug() const
 	return getChild<ScenePlug>( g_firstPlugIndex + 1 );
 }
 
+Gaffer::StringPlug *Instancer::positionPlug()
+{
+	return getChild<StringPlug>( g_firstPlugIndex + 2 );
+}
+
+const Gaffer::StringPlug *Instancer::positionPlug() const
+{
+	return getChild<StringPlug>( g_firstPlugIndex + 2 );
+}
+
+Gaffer::StringPlug *Instancer::orientationPlug()
+{
+	return getChild<StringPlug>( g_firstPlugIndex + 3 );
+}
+
+const Gaffer::StringPlug *Instancer::orientationPlug() const
+{
+	return getChild<StringPlug>( g_firstPlugIndex + 3 );
+}
+
+Gaffer::StringPlug *Instancer::scalePlug()
+{
+	return getChild<StringPlug>( g_firstPlugIndex + 4 );
+}
+
+const Gaffer::StringPlug *Instancer::scalePlug() const
+{
+	return getChild<StringPlug>( g_firstPlugIndex + 4 );
+}
+
+Gaffer::ObjectPlug *Instancer::enginePlug()
+{
+	return getChild<ObjectPlug>( g_firstPlugIndex + 5 );
+}
+
+const Gaffer::ObjectPlug *Instancer::enginePlug() const
+{
+	return getChild<ObjectPlug>( g_firstPlugIndex + 5 );
+}
+
 void Instancer::affects( const Plug *input, AffectedPlugsContainer &outputs ) const
 {
 	BranchCreator::affects( input, outputs );
+
+	if(
+		input == inPlug()->objectPlug() ||
+		input == positionPlug() ||
+		input == orientationPlug() ||
+		input == scalePlug()
+	)
+	{
+		outputs.push_back( enginePlug() );
+	}
 
 	if( input->parent<ScenePlug>() == instancePlug() )
 	{
 		outputs.push_back( outPlug()->getChild<ValuePlug>( input->getName() ) );
 	}
-	else if( input == namePlug() )
+
+	if(
+		input == namePlug() ||
+		input == enginePlug()
+	)
 	{
 		outputs.push_back( outPlug()->childNamesPlug() );
 	}
-	else if( input == inPlug()->objectPlug() )
+
+	if( input == enginePlug() )
 	{
-		outputs.push_back( outPlug()->childNamesPlug() );
 		outputs.push_back( outPlug()->boundPlug() );
 		outputs.push_back( outPlug()->transformPlug() );
 	}
 }
 
+void Instancer::hash( const Gaffer::ValuePlug *output, const Gaffer::Context *context, IECore::MurmurHash &h ) const
+{
+	BranchCreator::hash( output, context, h );
+
+	if( output == enginePlug() )
+	{
+		inPlug()->objectPlug()->hash( h );
+		positionPlug()->hash( h );
+		orientationPlug()->hash( h );
+		scalePlug()->hash( h );
+	}
+}
+
+void Instancer::compute( Gaffer::ValuePlug *output, const Gaffer::Context *context ) const
+{
+	if( output == enginePlug() )
+	{
+		static_cast<ObjectPlug *>( output )->setValue(
+			new EngineData(
+				inPlug()->objectPlug()->getValue(),
+				positionPlug()->getValue(),
+				orientationPlug()->getValue(),
+				scalePlug()->getValue()
+			)
+		);
+		return;
+	}
+
+	BranchCreator::compute( output, context );
+}
+
 struct Instancer::BoundHash
 {
 
-	BoundHash( const Instancer *instancer, const ScenePath &branchPath, const Context *c )
-		:	m_instancer( instancer ), m_branchPath( branchPath ), m_context( c ), m_hash()
+	BoundHash( const Instancer *instancer, const Instancer::EngineData *engine, const ScenePath &branchPath, const Context *c )
+		:	m_instancer( instancer ), m_engine( engine ), m_branchPath( branchPath ), m_context( c ), m_hash()
 	{
 	}
 
 	BoundHash( const BoundHash &rhs, split )
-		:	m_instancer( rhs.m_instancer ), m_branchPath( rhs.m_branchPath ), m_context( rhs.m_context ), m_hash()
+		:	m_instancer( rhs.m_instancer ), m_engine( rhs.m_engine ), m_branchPath( rhs.m_branchPath ), m_context( rhs.m_context ), m_hash()
 	{
 	}
 
@@ -142,6 +359,7 @@ struct Instancer::BoundHash
 			m_instancer->instancePlug()->boundPlug()->hash( m_hash );
 			// no need to hash transform of instance because we know all
 			// root transforms are identity.
+			m_hash.append( m_engine->instanceTransform( i ) );
 		}
 	}
 
@@ -158,6 +376,7 @@ struct Instancer::BoundHash
 	private :
 
 		const Instancer *m_instancer;
+		const Instancer::EngineData *m_engine;
 		const ScenePath &m_branchPath;
 		const Context *m_context;
 		MurmurHash m_hash;
@@ -172,21 +391,19 @@ void Instancer::hashBranchBound( const ScenePath &parentPath, const ScenePath &b
 
 		BranchCreator::hashBranchBound( parentPath, branchPath, context, h );
 
-		ConstV3fVectorDataPtr p = sourcePoints( parentPath );
-		if( p )
+		ConstEngineDataPtr e = engine( parentPath, context );
+		if( e->numInstances() )
 		{
-			p->hash( h );
-
 			ScenePath branchChildPath( branchPath );
 			if( branchChildPath.size() == 0 )
 			{
 				branchChildPath.push_back( namePlug()->getValue() );
 			}
 
-			BoundHash hasher( this, branchChildPath, context );
+			BoundHash hasher( this, e.get(), branchChildPath, context );
 			task_group_context taskGroupContext( task_group_context::isolated );
 			parallel_deterministic_reduce(
-				blocked_range<size_t>( 0, p->readable().size(), 100 ),
+				blocked_range<size_t>( 0, e->numInstances(), 100 ),
 				hasher,
 				// Prevents outer tasks silently cancelling our tasks
 				taskGroupContext
@@ -205,13 +422,13 @@ void Instancer::hashBranchBound( const ScenePath &parentPath, const ScenePath &b
 struct Instancer::BoundUnion
 {
 
-	BoundUnion( const Instancer *instancer, const ScenePath &branchPath, const Context *c, const V3fVectorData *p )
-		:	m_instancer( instancer ), m_branchPath( branchPath ), m_context( c ), m_p( p ), m_union()
+	BoundUnion( const Instancer *instancer, const Instancer::EngineData *engine, const ScenePath &branchPath, const Context *c )
+		:	m_instancer( instancer ), m_engine( engine ), m_branchPath( branchPath ), m_context( c ), m_union()
 	{
 	}
 
 	BoundUnion( const BoundUnion &rhs, split )
-		:	m_instancer( rhs.m_instancer ), m_branchPath( rhs.m_branchPath ), m_context( rhs.m_context ), m_p( rhs.m_p ), m_union()
+		:	m_instancer( rhs.m_instancer ), m_engine( rhs.m_engine ), m_branchPath( rhs.m_branchPath ), m_context( rhs.m_context ), m_union()
 	{
 	}
 
@@ -228,7 +445,7 @@ struct Instancer::BoundUnion
 			instanceScope.update( branchChildPath, i );
 
 			Box3f branchChildBound = m_instancer->instancePlug()->boundPlug()->getValue();
-			branchChildBound = transform( branchChildBound, m_instancer->instanceTransform( m_p, i ) );
+			branchChildBound = transform( branchChildBound, m_engine->instanceTransform( i ) );
 			m_union.extendBy( branchChildBound );
 		}
 	}
@@ -246,9 +463,9 @@ struct Instancer::BoundUnion
 	private :
 
 		const Instancer *m_instancer;
+		const Instancer::EngineData *m_engine;
 		const ScenePath &m_branchPath;
 		const Context *m_context;
-		const V3fVectorData *m_p;
 		Box3f m_union;
 
 };
@@ -259,8 +476,8 @@ Imath::Box3f Instancer::computeBranchBound( const ScenePath &parentPath, const S
 	{
 		// "/" or "/name"
 		Box3f result;
-		ConstV3fVectorDataPtr p = sourcePoints( parentPath );
-		if( p )
+		ConstEngineDataPtr e = engine( parentPath, context );
+		if( e->numInstances() )
 		{
 			ScenePath branchChildPath( branchPath );
 			if( branchChildPath.size() == 0 )
@@ -268,10 +485,10 @@ Imath::Box3f Instancer::computeBranchBound( const ScenePath &parentPath, const S
 				branchChildPath.push_back( namePlug()->getValue() );
 			}
 
-			BoundUnion unioner( this, branchChildPath, context, p.get() );
+			BoundUnion unioner( this, e.get(), branchChildPath, context );
 			task_group_context taskGroupContext( task_group_context::isolated );
 			parallel_reduce(
-				blocked_range<size_t>( 0, p->readable().size() ),
+				blocked_range<size_t>( 0, e->numInstances() ),
 				unioner,
 				tbb::auto_partitioner(),
 				// Prevents outer tasks silently cancelling our tasks
@@ -301,7 +518,7 @@ void Instancer::hashBranchTransform( const ScenePath &parentPath, const ScenePat
 	{
 		// "/name/instanceNumber"
 		BranchCreator::hashBranchTransform( parentPath, branchPath, context, h );
-		h.append( inPlug()->objectHash( parentPath ) );
+		engineHash( parentPath, context, h );
 		h.append( instanceIndex( branchPath ) );
 	}
 	else
@@ -321,9 +538,9 @@ Imath::M44f Instancer::computeBranchTransform( const ScenePath &parentPath, cons
 	else if( branchPath.size() == 2 )
 	{
 		// "/name/instanceNumber"
-		int index = instanceIndex( branchPath );
-		ConstV3fVectorDataPtr p = sourcePoints( parentPath );
-		return instanceTransform( p.get(), index );
+		const int index = instanceIndex( branchPath );
+		ConstEngineDataPtr e = engine( parentPath, context );
+		return e->instanceTransform( index );
 	}
 	else
 	{
@@ -400,7 +617,7 @@ void Instancer::hashBranchChildNames( const ScenePath &parentPath, const ScenePa
 	{
 		// "/name"
 		BranchCreator::hashBranchChildNames( parentPath, branchPath, context, h );
-		h.append( inPlug()->objectHash( parentPath ) );
+		engineHash( parentPath, context, h );
 	}
 	else
 	{
@@ -426,13 +643,13 @@ IECore::ConstInternedStringVectorDataPtr Instancer::computeBranchChildNames( con
 	}
 	else if( branchPath.size() == 1 )
 	{
-		ConstV3fVectorDataPtr p = sourcePoints( parentPath );
-		if( !p || !p->readable().size() )
+		ConstEngineDataPtr e = engine( parentPath, context );
+		const size_t s = e->numInstances();
+		if( !s )
 		{
 			return outPlug()->childNamesPlug()->defaultValue();
 		}
 
-		const size_t s = p->readable().size();
 		InternedStringVectorDataPtr resultData = new InternedStringVectorData();
 		vector<InternedString> &result = resultData->writable();
 		result.resize( s );
@@ -441,7 +658,6 @@ IECore::ConstInternedStringVectorDataPtr Instancer::computeBranchChildNames( con
 		{
 			result[i] = InternedString( i );
 		}
-
 		return resultData;
 	}
 	else
@@ -451,15 +667,16 @@ IECore::ConstInternedStringVectorDataPtr Instancer::computeBranchChildNames( con
 	}
 }
 
-ConstV3fVectorDataPtr Instancer::sourcePoints( const ScenePath &parentPath ) const
+Instancer::ConstEngineDataPtr Instancer::engine( const ScenePath &parentPath, const Gaffer::Context *context ) const
 {
-	ConstPrimitivePtr primitive = runTimeCast<const Primitive>( inPlug()->object( parentPath ) );
-	if( !primitive )
-	{
-		return nullptr;
-	}
+	ScenePlug::PathScope scope( context, parentPath );
+	return boost::static_pointer_cast<const EngineData>( enginePlug()->getValue() );
+}
 
-	return primitive->variableData<V3fVectorData>( "P" );
+void Instancer::engineHash( const ScenePath &parentPath, const Gaffer::Context *context, IECore::MurmurHash &h ) const
+{
+	ScenePlug::PathScope scope( context, parentPath );
+	enginePlug()->hash( h );
 }
 
 int Instancer::instanceIndex( const ScenePath &branchPath )
@@ -490,11 +707,4 @@ void Instancer::InstanceScope::update( const ScenePath &branchPath, int instance
 	instancePath.insert( instancePath.end(), branchPath.begin() + 2, branchPath.end() );
 	set( ScenePlug::scenePathContextName, instancePath );
 	set( idContextName, instanceId );
-}
-
-Imath::M44f Instancer::instanceTransform( const IECore::V3fVectorData *p, int instanceId ) const
-{
-	M44f result;
-	result.translate( p->readable()[instanceId] );
-	return result;
 }

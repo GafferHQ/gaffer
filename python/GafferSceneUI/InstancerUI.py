@@ -74,9 +74,10 @@ Gaffer.Metadata.registerNode(
 
 			"description",
 			"""
-			The object on which to make the instances. This
-			must have a "P" primitive variable specifying the
-			location of each instance.
+			The object on which to make the instances. The
+			position, orientation and scale of the instances
+			are taken from per-vertex primitive variables on
+			this object.
 			"""
 
 		],
@@ -102,6 +103,39 @@ Gaffer.Metadata.registerNode(
 			""",
 
 			"plugValueWidget:type", "",
+
+		],
+
+		"position" : [
+
+			"description",
+			"""
+			The name of the per-vertex primitive variable used
+			to specify the position of each instance.
+			""",
+
+		],
+
+		"orientation" : [
+
+			"description",
+			"""
+			The name of the per-vertex primitive variable used
+			to specify the orientation of each instance. The
+			orientation must be provided as a quaternion.
+			""",
+
+		],
+
+		"scale" : [
+
+			"description",
+			"""
+			The name of the per-vertex primitive variable used
+			to specify the scale of each instance. Scale can be
+			provided as a float for uniform scaling, or as a vector
+			to define different scaling in each axis.
+			""",
 
 		],
 
