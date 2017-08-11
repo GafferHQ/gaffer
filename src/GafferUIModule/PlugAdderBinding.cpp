@@ -102,17 +102,17 @@ struct PlugAdderWrapper : public GadgetWrapper<PlugAdder>
 	{
 	}
 
-	bool acceptsPlug( const Gaffer::Plug *connectionEndPoint ) const override
+	bool canCreateConnection( const Gaffer::Plug *endpoint ) override
 	{
 		if( this->isSubclassed() )
 		{
 			IECorePython::ScopedGILLock gilLock;
-			boost::python::object f = this->methodOverride( "acceptsPlug" );
+			boost::python::object f = this->methodOverride( "canCreateConnection" );
 			if( f )
 			{
 				try
 				{
-					return f( Gaffer::PlugPtr( const_cast<Gaffer::Plug *>( connectionEndPoint ) ) );
+					return f( Gaffer::PlugPtr( const_cast<Gaffer::Plug *>( endpoint ) ) );
 				}
 				catch( const error_already_set &e )
 				{
@@ -120,20 +120,20 @@ struct PlugAdderWrapper : public GadgetWrapper<PlugAdder>
 				}
 			}
 		}
-		throw IECore::Exception( "No acceptsPlug method defined in Python." );
+		throw IECore::Exception( "No canCreateConnection method defined in Python." );
 	}
 
-	void addPlug( Gaffer::Plug *connectionEndPoint ) override
+	void createConnection( Gaffer::Plug *endpoint ) override
 	{
 		if( this->isSubclassed() )
 		{
 			IECorePython::ScopedGILLock gilLock;
-			boost::python::object f = this->methodOverride( "addPlug" );
+			boost::python::object f = this->methodOverride( "createConnection" );
 			if( f )
 			{
 				try
 				{
-					f( Gaffer::PlugPtr( const_cast<Gaffer::Plug *>( connectionEndPoint ) ) );
+					f( Gaffer::PlugPtr( const_cast<Gaffer::Plug *>( endpoint ) ) );
 					return;
 				}
 				catch( const error_already_set &e )
@@ -142,7 +142,7 @@ struct PlugAdderWrapper : public GadgetWrapper<PlugAdder>
 				}
 			}
 		}
-		throw IECore::Exception( "No addPlug method defined in Python." );
+		throw IECore::Exception( "No canCreateConnection method defined in Python." );
 	}
 };
 
@@ -154,8 +154,8 @@ void GafferUIModule::bindPlugAdder()
 		.def( init<StandardNodeGadget::Edge>() )
 		.def( "plugMenuSignal", &PlugAdder::plugMenuSignal, return_value_policy<reference_existing_object>() )
 		.staticmethod( "plugMenuSignal" )
-		.def( "acceptsPlug", &PlugAdderWrapper::acceptsPlug )
-		.def( "addPlug", &PlugAdderWrapper::addPlug )
+		.def( "canCreateConnection", &PlugAdderWrapper::canCreateConnection )
+		.def( "createConnection", &PlugAdderWrapper::createConnection )
 	;
 
 	SignalClass<PlugAdder::PlugMenuSignal, PlugMenuSignalCaller, PlugMenuSlotCaller>( "PlugMenuSignal" );
