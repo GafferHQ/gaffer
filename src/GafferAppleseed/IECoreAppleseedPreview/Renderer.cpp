@@ -2290,12 +2290,12 @@ class AppleseedRenderer : public IECoreScenePreview::Renderer
 			}
 			else
 			{
-				// Create a display.
 				asr::ParamArray params = ParameterAlgo::convertParams( output->parameters() );
-				params.insert( "displayName", name.c_str() );
-				params.insert( "type", output->getType().c_str() );
-				params.insert( "data", output->getData().c_str() );
+
+				// Insert the plugin_name parameter for appleseed.
 				params.insert( "plugin_name", output->getType().c_str() );
+
+				// Create and set the display in the project.
 				asf::auto_release_ptr<asr::Display> dpy( asr::DisplayFactory::create( name.c_str(), params ) );
 				m_project->set_display( dpy );
 			}
