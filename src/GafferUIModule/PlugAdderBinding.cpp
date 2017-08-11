@@ -100,7 +100,7 @@ struct PlugAdderWrapper : public GadgetWrapper<PlugAdder>
 	{
 	}
 
-	bool canCreateConnection( const Gaffer::Plug *endpoint ) override
+	bool canCreateConnection( const Gaffer::Plug *endpoint ) const override
 	{
 		if( this->isSubclassed() )
 		{

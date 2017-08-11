@@ -65,7 +65,7 @@ class CompoundNodule : public Nodule
 		Nodule *nodule( const Gaffer::Plug *plug );
 		const Nodule *nodule( const Gaffer::Plug *plug ) const;
 
-		bool canCreateConnection( const Gaffer::Plug *endpoint ) override;
+		bool canCreateConnection( const Gaffer::Plug *endpoint ) const override;
 		void createConnection( Gaffer::Plug *endpoint ) override;
 
 	private :

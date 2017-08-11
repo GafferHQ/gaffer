@@ -170,7 +170,7 @@ Imath::Box3f PlugAdder::bound() const
 	return Box3f( V3f( -0.5f, -0.5f, 0.0f ), V3f( 0.5f, 0.5f, 0.0f ) );
 }
 
-bool PlugAdder::canCreateConnection( const Gaffer::Plug *endpoint )
+bool PlugAdder::canCreateConnection( const Gaffer::Plug *endpoint ) const
 {
 	ConstStringDataPtr noduleType = Gaffer::Metadata::value<StringData>( endpoint, IECore::InternedString( "nodule:type" ) );
 	if( noduleType )

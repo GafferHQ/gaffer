@@ -68,7 +68,7 @@ class SwitchPlugAdder : public PlugAdder
 
 	protected :
 
-		bool canCreateConnection( const Plug *endpoint ) override
+		bool canCreateConnection( const Plug *endpoint ) const override
 		{
 			return PlugAdder::canCreateConnection( endpoint );
 		}

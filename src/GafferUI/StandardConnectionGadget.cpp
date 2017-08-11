@@ -158,7 +158,7 @@ Imath::Box3f StandardConnectionGadget::bound() const
 	return r;
 }
 
-bool StandardConnectionGadget::canCreateConnection( const Gaffer::Plug *endpoint )
+bool StandardConnectionGadget::canCreateConnection( const Gaffer::Plug *endpoint ) const
 {
 	if( m_dragEnd != endpoint->direction() )
 	{

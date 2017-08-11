@@ -64,7 +64,7 @@ class StandardNodule : public Nodule
 		void setLabelVisible( bool labelVisible );
 		bool getLabelVisible() const;
 
-		bool canCreateConnection( const Gaffer::Plug *destinationPlug ) override;
+		bool canCreateConnection( const Gaffer::Plug *destinationPlug ) const override;
 		void updateDragEndPoint( const Imath::V3f position, const Imath::V3f &tangent ) override;
 		void createConnection( Gaffer::Plug *destinationPlug ) override;
 
