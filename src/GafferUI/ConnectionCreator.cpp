@@ -49,3 +49,16 @@ ConnectionCreator::ConnectionCreator( const std::string &name )
 ConnectionCreator::~ConnectionCreator()
 {
 }
+
+bool ConnectionCreator::canCreateConnection( const Gaffer::Plug *endpoint ) const
+{
+	return false;
+}
+
+void ConnectionCreator::updateDragEndPoint( const Imath::V3f position, const Imath::V3f &tangent )
+{
+}
+
+void ConnectionCreator::createConnection( Gaffer::Plug *plug )
+{
+}

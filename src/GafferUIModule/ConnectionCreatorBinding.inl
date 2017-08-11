@@ -1,7 +1,6 @@
 //////////////////////////////////////////////////////////////////////////
 //
-//  Copyright (c) 2011-2012, John Haddon. All rights reserved.
-//  Copyright (c) 2011-2014, Image Engine Design Inc. All rights reserved.
+//  Copyright (c) 2017, Image Engine Design Inc. All rights reserved.
 //
 //  Redistribution and use in source and binary forms, with or without
 //  modification, are permitted provided that the following conditions are
@@ -35,57 +34,47 @@
 //
 //////////////////////////////////////////////////////////////////////////
 
-#include "boost/python.hpp"
+#ifndef GAFFERUIMODULE_CONNECTIONCREATORBINDING_INL
+#define GAFFERUIMODULE_CONNECTIONCREATORBINDING_INL
 
-#include "ConnectionGadgetBinding.h"
-#include "ContainerGadgetBinding.h"
-#include "EventBinding.h"
-#include "GLWidgetBinding.h"
-#include "GadgetBinding.h"
-#include "GraphGadgetBinding.h"
-#include "HandleBinding.h"
-#include "ImageGadgetBinding.h"
-#include "NameGadgetBinding.h"
-#include "NodeGadgetBinding.h"
-#include "NoduleBinding.h"
-#include "PathListingWidgetBinding.h"
-#include "PlugAdderBinding.h"
-#include "PlugGadgetBinding.h"
-#include "PointerBinding.h"
-#include "SpacerGadgetBinding.h"
-#include "StyleBinding.h"
-#include "TextGadgetBinding.h"
-#include "ToolBinding.h"
-#include "ViewBinding.h"
-#include "ViewportGadgetBinding.h"
-#include "WidgetSignalBinding.h"
-
-using namespace GafferUIModule;
-
-BOOST_PYTHON_MODULE( _GafferUI )
+namespace GafferUIModule
 {
 
-	bindGadget();
-	bindEvent();
-	bindContainerGadget();
-	bindGraphGadget();
-	bindTextGadget();
-	bindNameGadget();
-	bindNodeGadget();
-	bindNodule();
-	bindConnectionGadget();
-	bindWidgetSignal();
-	bindImageGadget();
-	bindStyle();
-	bindViewportGadget();
-	bindView();
-	bindPlugGadget();
-	bindPointer();
-	bindSpacerGadget();
-	bindHandle();
-	bindTool();
-	bindPathListingWidget();
-	bindGLWidget();
-	bindPlugAdder();
+namespace Detail
+{
 
+template<typename T>
+static bool canCreateConnection( const T &connectionCreator, const Gaffer::Plug *endpoint )
+{
+	IECorePython::ScopedGILRelease gilRelease;
+	return connectionCreator.T::canCreateConnection( endpoint );
 }
+
+template<typename T>
+static void updateDragEndPoint( T &connectionCreator, const Imath::V3f position, const Imath::V3f &tangent )
+{
+	IECorePython::ScopedGILRelease gilRelease;
+	return connectionCreator.T::updateDragEndPoint( position, tangent );
+}
+
+template<typename T>
+static void createConnection( T &connectionCreator, Gaffer::Plug *endpoint )
+{
+	IECorePython::ScopedGILRelease gilRelease;
+	return connectionCreator.T::createConnection( endpoint );
+}
+
+} // namespace Detail
+
+template<typename T, typename TWrapper>
+ConnectionCreatorClass<T, TWrapper>::ConnectionCreatorClass( const char *docString )
+	:	GafferUIBindings::GadgetClass<T, TWrapper>( docString )
+{
+	this->def( "canCreateConnection", &Detail::canCreateConnection<T> );
+	this->def( "updateDragEndPoint", &Detail::updateDragEndPoint<T> );
+	this->def( "createConnection", &Detail::createConnection<T> );
+}
+
+} // namespace GafferUIModule
+
+#endif // GAFFERUIMODULE_CONNECTIONCREATORBINDING_INL

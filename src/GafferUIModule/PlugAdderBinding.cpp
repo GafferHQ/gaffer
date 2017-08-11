@@ -38,6 +38,8 @@
 
 #include "PlugAdderBinding.h"
 
+#include "ConnectionCreatorBinding.h"
+
 #include "GafferUIBindings/GadgetBinding.h"
 
 #include "GafferUI/PlugAdder.h"
@@ -94,68 +96,14 @@ struct PlugMenuSlotCaller
 
 };
 
-struct PlugAdderWrapper : public GadgetWrapper<PlugAdder>
-{
-
-	PlugAdderWrapper(PyObject *self, StandardNodeGadget::Edge edge )
-		: GadgetWrapper<PlugAdder>( self, edge )
-	{
-	}
-
-	bool canCreateConnection( const Gaffer::Plug *endpoint ) const override
-	{
-		if( this->isSubclassed() )
-		{
-			IECorePython::ScopedGILLock gilLock;
-			boost::python::object f = this->methodOverride( "canCreateConnection" );
-			if( f )
-			{
-				try
-				{
-					return f( Gaffer::PlugPtr( const_cast<Gaffer::Plug *>( endpoint ) ) );
-				}
-				catch( const error_already_set &e )
-				{
-					IECorePython::ExceptionAlgo::translatePythonException();
-				}
-			}
-		}
-		throw IECore::Exception( "No canCreateConnection method defined in Python." );
-	}
-
-	void createConnection( Gaffer::Plug *endpoint ) override
-	{
-		if( this->isSubclassed() )
-		{
-			IECorePython::ScopedGILLock gilLock;
-			boost::python::object f = this->methodOverride( "createConnection" );
-			if( f )
-			{
-				try
-				{
-					f( Gaffer::PlugPtr( const_cast<Gaffer::Plug *>( endpoint ) ) );
-					return;
-				}
-				catch( const error_already_set &e )
-				{
-					IECorePython::ExceptionAlgo::translatePythonException();
-				}
-			}
-		}
-		throw IECore::Exception( "No canCreateConnection method defined in Python." );
-	}
-};
-
 } // namespace
 
 void GafferUIModule::bindPlugAdder()
 {
-	scope s = GadgetClass<PlugAdder, PlugAdderWrapper>( "PlugAdder" )
+	scope s = ConnectionCreatorClass<PlugAdder, ConnectionCreatorWrapper<PlugAdder>>( "PlugAdder" )
 		.def( init<StandardNodeGadget::Edge>() )
 		.def( "plugMenuSignal", &PlugAdder::plugMenuSignal, return_value_policy<reference_existing_object>() )
 		.staticmethod( "plugMenuSignal" )
-		.def( "canCreateConnection", &PlugAdderWrapper::canCreateConnection )
-		.def( "createConnection", &PlugAdderWrapper::createConnection )
 	;
 
 	SignalClass<PlugAdder::PlugMenuSignal, PlugMenuSignalCaller, PlugMenuSlotCaller>( "PlugMenuSignal" );

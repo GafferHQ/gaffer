@@ -37,11 +37,118 @@
 #ifndef GAFFERUIMODULE_CONNECTIONCREATORBINDING_H
 #define GAFFERUIMODULE_CONNECTIONCREATORBINDING_H
 
+#include "GafferUIBindings/GadgetBinding.h"
+
+#include "GafferUI/ConnectionCreator.h"
+
+#include "Gaffer/Plug.h"
+
+#include "IECorePython/ExceptionAlgo.h"
+
+#include "IECore/Exception.h"
+
 namespace GafferUIModule
 {
 
-void bindConnectionCreator();
+template<typename T, typename TWrapper=T>
+class ConnectionCreatorClass : public GafferUIBindings::GadgetClass<T, TWrapper>
+{
+	public :
+
+		ConnectionCreatorClass( const char *docString = nullptr );
+
+};
+
+template<typename WrappedType>
+class ConnectionCreatorWrapper : public GafferUIBindings::GadgetWrapper<WrappedType>
+{
+
+	public :
+
+		template<typename... Args>
+		ConnectionCreatorWrapper( PyObject *self, Args&&... args )
+			:	GafferUIBindings::GadgetWrapper<WrappedType>( self, std::forward<Args>( args )... )
+		{
+		}
+
+		bool canCreateConnection( const Gaffer::Plug *endpoint ) const override
+		{
+			if( this->isSubclassed() )
+			{
+				IECorePython::ScopedGILLock gilLock;
+				boost::python::object f = this->methodOverride( "canCreateConnection" );
+				if( f )
+				{
+					try
+					{
+						return f( Gaffer::PlugPtr( const_cast<Gaffer::Plug *>( endpoint ) ) );
+					}
+					catch( const boost::python::error_already_set &e )
+					{
+						IECorePython::ExceptionAlgo::translatePythonException();
+					}
+				}
+			}
+			throw IECore::Exception( "No canCreateConnection method defined in Python." );
+		}
+
+		void updateDragEndPoint( const Imath::V3f position, const Imath::V3f &tangent ) override
+		{
+			if( this->isSubclassed() )
+			{
+				IECorePython::ScopedGILLock gilLock;
+				boost::python::object f = this->methodOverride( "updateDragEndPoint" );
+				if( f )
+				{
+					try
+					{
+						f( position, tangent );
+						return;
+					}
+					catch( const boost::python::error_already_set &e )
+					{
+						IECorePython::ExceptionAlgo::translatePythonException();
+					}
+				}
+			}
+
+			if( &WrappedType::updateDragEndPoint != &GafferUI::ConnectionCreator::updateDragEndPoint )
+			{
+				// No need to force PlugAdder derived classes to reimplement this.
+				WrappedType::updateDragEndPoint( position, tangent );
+			}
+			else
+			{
+				throw IECore::Exception( "No updateDragEndPoint method defined in Python." );
+			}
+		}
+
+		void createConnection( Gaffer::Plug *endpoint ) override
+		{
+			if( this->isSubclassed() )
+			{
+				IECorePython::ScopedGILLock gilLock;
+				boost::python::object f = this->methodOverride( "createConnection" );
+				if( f )
+				{
+					try
+					{
+						f( Gaffer::PlugPtr( const_cast<Gaffer::Plug *>( endpoint ) ) );
+						return;
+					}
+					catch( const boost::python::error_already_set &e )
+					{
+						IECorePython::ExceptionAlgo::translatePythonException();
+					}
+				}
+			}
+			throw IECore::Exception( "No createConnection method defined in Python." );
+		}
+
+};
 
 } // namespace GafferUIModule
+
+#include "ConnectionCreatorBinding.inl"
 
 #endif // GAFFERUIMODULE_CONNECTIONCREATORBINDING_H
