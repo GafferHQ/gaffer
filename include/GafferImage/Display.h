@@ -51,8 +51,6 @@ namespace GafferImage
 
 IE_CORE_FORWARDDECLARE( GafferDisplayDriver )
 
-/// \todo Pass GafferDisplayDriver rather than IECore::DisplayDriver
-/// in setDriver/getDriver/driverCreatedSignal.
 class Display : public ImageNode
 {
 
