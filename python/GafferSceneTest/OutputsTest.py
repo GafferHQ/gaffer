@@ -157,5 +157,15 @@ class OutputsTest( GafferSceneTest.SceneTestCase ) :
 		self.assertEqual( g["output:Interactive/Beauty"].getName(), "beauty" )
 		self.assertTrue( g["output:Batch/Beauty"].getName().endswith( "displaysBeforePlugRename/beauty/beauty.0001.exr" ) )
 
+	def testColonInParameterName( self ) :
+
+		output = IECore.Display( "name", "type", "data", { "test:paramA" : 1 } )
+
+		outputs = GafferScene.Outputs()
+		outputs.addOutput( "test", output )
+		self.assertTrue( "test_paramA" in outputs["outputs"][0]["parameters"] )
+
+		self.assertEqual( outputs["out"]["globals"].getValue()["output:test"], output )
+
 if __name__ == "__main__":
 	unittest.main()

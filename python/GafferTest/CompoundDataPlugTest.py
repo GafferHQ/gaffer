@@ -447,5 +447,20 @@ class CompoundDataPlugTest( GafferTest.TestCase ) :
 		self.assertEqual( v, d )
 		self.assertEqual( n, "test" )
 
+	def testNonAlphanumericNames( self ) :
+
+		p = Gaffer.CompoundDataPlug()
+		p.addMembers(
+			IECore.CompoundData( {
+				"test:A" : 10,
+				"@j" : 20
+			} ),
+			useNameAsPlugName = True,
+		)
+
+		self.assertEqual( set( p.keys() ), { "test_A", "_j" } )
+		self.assertEqual( p["test_A"]["value"].getValue(), 10 )
+		self.assertEqual( p["_j"]["value"].getValue(), 20 )
+
 if __name__ == "__main__":
 	unittest.main()
