@@ -65,9 +65,7 @@ class Display : public ImageNode
 
 		/// Sets the driver used to provide the
 		/// image to this node.
-		void setDriver( IECore::DisplayDriverPtr driver );
-		/// \todo Default copy to false and remove method above
-		void setDriver( IECore::DisplayDriverPtr driver, bool copy );
+		void setDriver( IECore::DisplayDriverPtr driver, bool copy = false );
 		IECore::DisplayDriver *getDriver();
 		const IECore::DisplayDriver *getDriver() const;
 

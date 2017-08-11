@@ -364,11 +364,6 @@ Node::UnaryPlugSignal &Display::imageReceivedSignal()
 	return s;
 }
 
-void Display::setDriver( IECore::DisplayDriverPtr driver )
-{
-	setDriver( driver, false );
-}
-
 void Display::setDriver( IECore::DisplayDriverPtr driver, bool copy )
 {
 	GafferDisplayDriver *gafferDisplayDriver = runTimeCast<GafferDisplayDriver>( driver.get() );
