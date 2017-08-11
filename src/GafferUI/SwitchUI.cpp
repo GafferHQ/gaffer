@@ -75,8 +75,6 @@ class SwitchPlugAdder : public PlugAdder
 
 		void createConnection( Plug *endpoint ) override
 		{
-			UndoScope undoScope( m_switch->ancestor<ScriptNode>() );
-
 			m_switch->setup( endpoint );
 			ArrayPlug *inPlug = m_switch->getChild<ArrayPlug>( "in" );
 			Plug *outPlug = m_switch->getChild<Plug>( "out" );

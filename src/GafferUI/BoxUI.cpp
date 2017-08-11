@@ -82,8 +82,6 @@ class BoxPlugAdder : public PlugAdder
 
 		void createConnection( Plug *endpoint ) override
 		{
-			UndoScope undoScope( m_box->ancestor<ScriptNode>() );
-
 			BoxIOPtr boxIO;
 			if( endpoint->direction() == Plug::In )
 			{

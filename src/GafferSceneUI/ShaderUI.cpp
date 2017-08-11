@@ -93,8 +93,6 @@ class ShaderPlugAdder : public PlugAdder
 				return;
 			}
 
-			UndoScope undoScope( m_shader->scriptNode() );
-
 			Metadata::registerValue( plug, g_visibleKey, new IECore::BoolData( true ) );
 			plug->setInput( endpoint );
 		}

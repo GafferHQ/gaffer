@@ -38,8 +38,6 @@
 #include "boost/algorithm/string/replace.hpp"
 
 #include "Gaffer/BoxIO.h"
-#include "Gaffer/UndoScope.h"
-#include "Gaffer/ScriptNode.h"
 #include "Gaffer/Metadata.h"
 #include "Gaffer/StringPlug.h"
 
@@ -86,8 +84,6 @@ class BoxIOPlugAdder : public PlugAdder
 
 		void createConnection( Plug *endpoint ) override
 		{
-			UndoScope undoScope( m_boxIO->ancestor<ScriptNode>() );
-
 			std::string name = endpoint->relativeName( endpoint->node() );
 			boost::replace_all( name, ".", "_" );
 			m_boxIO->namePlug()->setValue( name );
