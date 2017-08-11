@@ -74,20 +74,25 @@ class BoxIOPlugAdder : public PlugAdder
 
 	protected :
 
-		bool acceptsPlug( const Plug *connectionEndPoint ) const override
+		bool canCreateConnection( const Plug *endpoint ) override
 		{
-			return connectionEndPoint->direction() == m_boxIO->direction();
+			if( !PlugAdder::canCreateConnection( endpoint ) )
+			{
+				return false;
+			}
+
+			return endpoint->direction() == m_boxIO->direction();
 		}
 
-		void addPlug( Plug *connectionEndPoint ) override
+		void createConnection( Plug *endpoint ) override
 		{
 			UndoScope undoScope( m_boxIO->ancestor<ScriptNode>() );
 
-			std::string name = connectionEndPoint->relativeName( connectionEndPoint->node() );
+			std::string name = endpoint->relativeName( endpoint->node() );
 			boost::replace_all( name, ".", "_" );
 			m_boxIO->namePlug()->setValue( name );
 
-			m_boxIO->setup( connectionEndPoint );
+			m_boxIO->setup( endpoint );
 
 			applyEdgeMetadata( m_boxIO->plug<Plug>() );
 			if( m_boxIO->promotedPlug<Plug>() )
@@ -97,11 +102,11 @@ class BoxIOPlugAdder : public PlugAdder
 
 			if( m_boxIO->direction() == Plug::In )
 			{
-				connectionEndPoint->setInput( m_boxIO->plug<Plug>() );
+				endpoint->setInput( m_boxIO->plug<Plug>() );
 			}
 			else
 			{
-				m_boxIO->plug<Plug>()->setInput( connectionEndPoint );
+				m_boxIO->plug<Plug>()->setInput( endpoint );
 			}
 		}
 

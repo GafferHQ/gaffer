@@ -68,28 +68,28 @@ class SwitchPlugAdder : public PlugAdder
 
 	protected :
 
-		bool acceptsPlug( const Plug *connectionEndPoint ) const override
+		bool canCreateConnection( const Plug *endpoint ) override
 		{
-			return true;
+			return PlugAdder::canCreateConnection( endpoint );
 		}
 
-		void addPlug( Plug *connectionEndPoint ) override
+		void createConnection( Plug *endpoint ) override
 		{
 			UndoScope undoScope( m_switch->ancestor<ScriptNode>() );
 
-			m_switch->setup( connectionEndPoint );
+			m_switch->setup( endpoint );
 			ArrayPlug *inPlug = m_switch->getChild<ArrayPlug>( "in" );
 			Plug *outPlug = m_switch->getChild<Plug>( "out" );
 
 			bool inOpposite = false;
-			if( connectionEndPoint->direction() == Plug::Out )
+			if( endpoint->direction() == Plug::Out )
 			{
-				inPlug->getChild<Plug>( 0 )->setInput( connectionEndPoint );
+				inPlug->getChild<Plug>( 0 )->setInput( endpoint );
 				inOpposite = false;
 			}
 			else
 			{
-				connectionEndPoint->setInput( outPlug );
+				endpoint->setInput( outPlug );
 				inOpposite = true;
 			}
 

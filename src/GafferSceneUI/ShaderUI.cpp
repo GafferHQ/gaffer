@@ -77,15 +77,16 @@ class ShaderPlugAdder : public PlugAdder
 
 	protected :
 
-		bool acceptsPlug( const Plug *plug ) const override
+
+		bool canCreateConnection( const Plug *endpoint ) override
 		{
-			vector<Plug *> plugs = showablePlugs( plug );
+			vector<Plug *> plugs = showablePlugs( endpoint );
 			return !plugs.empty();
 		}
 
-		void addPlug( Plug *connectionEndPoint ) override
+		void createConnection( Plug *endpoint ) override
 		{
-			vector<Plug *> plugs = showablePlugs( connectionEndPoint );
+			vector<Plug *> plugs = showablePlugs( endpoint );
 			Plug *plug = plugMenuSignal()( "Connect To", plugs );
 			if( !plug )
 			{
@@ -95,7 +96,7 @@ class ShaderPlugAdder : public PlugAdder
 			UndoScope undoScope( m_shader->scriptNode() );
 
 			Metadata::registerValue( plug, g_visibleKey, new IECore::BoolData( true ) );
-			plug->setInput( connectionEndPoint );
+			plug->setInput( endpoint );
 		}
 
 	private :
