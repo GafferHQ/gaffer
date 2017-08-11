@@ -156,21 +156,6 @@ class DisplayTest( GafferImageTest.ImageTestCase ) :
 				self.__executeOnUIThreadCondition.toExecute = f
 				self.__executeOnUIThreadCondition.notify()
 
-	def setUp( self ) :
-
-		GafferTest.TestCase.setUp( self )
-
-		# We just make this connection to force the display nodes to create servers,
-		# because if no connections exist they assume they're in a batch render and do
-		# nothing. The real UI thread execution is performed in the Driver class.
-		## \todo We can remove this when we remove all the server management from
-		# the Display node.
-		self.__executeOnUIThreadConnection = GafferImage.Display.executeOnUIThreadSignal().connect( lambda f : None )
-
-	def tearDown( self ) :
-
-		self.__executeOnUIThreadConnection.disconnect()
-
 	def testDefaultFormat( self ) :
 
 		d = GafferImage.Display()
@@ -183,14 +168,15 @@ class DisplayTest( GafferImageTest.ImageTestCase ) :
 	def testTileHashes( self ) :
 
 		node = GafferImage.Display()
-		node["port"].setValue( 2500 )
+		server = IECore.DisplayDriverServer()
+		driverCreatedConnection = GafferImage.Display.driverCreatedSignal().connect( lambda driver, parameters : node.setDriver( driver ) )
 
 		dataWindow = IECore.Box2i( IECore.V2i( -100, -200 ), IECore.V2i( 303, 557 ) )
 		driver = self.Driver(
 			GafferImage.Format( dataWindow ),
 			dataWindow,
 			[ "Y" ],
-			port = 2500,
+			port = server.portNumber(),
 		)
 
 		for i in range( 0, 1000 ) :
@@ -250,7 +236,6 @@ class DisplayTest( GafferImageTest.ImageTestCase ) :
 		s = Gaffer.ScriptNode()
 
 		s["d"] = GafferImage.Display()
-		s["d"]["port"].setValue( 2500 )
 
 		s["p"] = GafferDispatch.PythonCommand()
 		s["p"]["command"].setValue( "pass" )
@@ -320,11 +305,12 @@ class DisplayTest( GafferImageTest.ImageTestCase ) :
 		imagesReceived = GafferTest.CapturingSlot( GafferImage.Display.imageReceivedSignal() )
 
 		node = GafferImage.Display()
-		node["port"].setValue( 2500 )
+		server = IECore.DisplayDriverServer()
+		driverCreatedConnection = GafferImage.Display.driverCreatedSignal().connect( lambda driver, parameters : node.setDriver( driver ) )
 
 		self.assertEqual( len( imagesReceived ), 0 )
 
-		self.Driver.sendImage( imageReader["out"], port = 2500 )
+		self.Driver.sendImage( imageReader["out"], port = server.portNumber() )
 
 		self.assertImagesEqual( imageReader["out"], node["out"], ignoreMetadata = True )
 

@@ -51,7 +51,6 @@ namespace GafferImage
 
 IE_CORE_FORWARDDECLARE( GafferDisplayDriver )
 
-/// \todo Remove portPlug() and the internal server
 /// \todo Pass GafferDisplayDriver rather than IECore::DisplayDriver
 /// in setDriver/getDriver/driverCreatedSignal.
 class Display : public ImageNode
@@ -63,9 +62,6 @@ class Display : public ImageNode
 
 		Display( const std::string &name = defaultName<Display>() );
 		~Display() override;
-
-		Gaffer::IntPlug *portPlug();
-		const Gaffer::IntPlug *portPlug() const;
 
 		/// Sets the driver used to provide the
 		/// image to this node.
@@ -116,15 +112,11 @@ class Display : public ImageNode
 
 	private :
 
-		IECore::DisplayDriverServerPtr m_server;
 		GafferDisplayDriverPtr m_driver;
 
 		Gaffer::IntPlug *updateCountPlug();
 		const Gaffer::IntPlug *updateCountPlug() const;
 
-		void plugSet( Gaffer::Plug *plug );
-		void setupServer();
-		void driverCreated( IECore::DisplayDriver *driver );
 		void setupDriver( GafferDisplayDriverPtr driver );
 		void dataReceived();
 		void imageReceived();
