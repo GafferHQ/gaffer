@@ -118,6 +118,10 @@ class StandardConnectionGadget : public ConnectionGadget
 		bool m_dotPreview;
 		Imath::V3f m_dotPreviewLocation;
 
+		bool m_addingConnection;
+		Imath::V3f m_dstPosOrig;
+		Imath::V3f m_dstTangentOrig;
+
 		boost::signals::scoped_connection m_keyPressConnection;
 		boost::signals::scoped_connection m_keyReleaseConnection;
 };
