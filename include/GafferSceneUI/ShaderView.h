@@ -39,6 +39,8 @@
 
 #include <functional>
 
+#include "GafferImage/Display.h"
+
 #include "GafferImageUI/ImageView.h"
 
 #include "GafferSceneUI/TypeIds.h"
@@ -84,6 +86,9 @@ class ShaderView : public GafferImageUI::ImageView
 		typedef std::pair<std::string, std::string> PrefixAndName;
 		typedef std::map<PrefixAndName, Gaffer::NodePtr> Scenes;
 
+		GafferImage::Display *display();
+		const GafferImage::Display *display() const;
+
 		void viewportVisibilityChanged();
 
 		void plugSet( Gaffer::Plug *plug );
@@ -96,6 +101,8 @@ class ShaderView : public GafferImageUI::ImageView
 		void updateRendererState();
 		void updateScene();
 		void preRender();
+
+		void driverCreated( IECore::DisplayDriver *driver, const IECore::CompoundData *parameters );
 
 		bool m_framed;
 		Gaffer::NodePtr m_imageConverter;

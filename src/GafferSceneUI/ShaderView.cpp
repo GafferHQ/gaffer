@@ -40,6 +40,8 @@
 #include "boost/asio.hpp"
 #include "boost/lexical_cast.hpp"
 
+#include "IECore/DisplayDriverServer.h"
+
 #include "Gaffer/Context.h"
 #include "Gaffer/Reference.h"
 #include "Gaffer/StringPlug.h"
@@ -91,25 +93,10 @@ SceneRegistrationChangedSignal &sceneRegistrationChangedSignal()
 	return s;
 }
 
-int freePort()
+IECore::DisplayDriverServer *displayDriverServer()
 {
-	typedef boost::asio::ip::tcp::resolver Resolver;
-	typedef boost::asio::io_service Service;
-	typedef boost::asio::ip::tcp::socket Socket;
-
-	// It is totally unclear why this would be so, but if we use the
-	// default constructor we get crashes when using `--std=c++11`.
-	// So we use the form that takes a concurrency hint instead. It
-	// doesn't seem to matter what value we pass (we can even pass the
-	// same value used internally by the default constructor), but we
-	// pass 1 because we don't really care about concurrency at all.
-	// An alternative workaround appears to be to make `service` static.
-	Service service( /* concurrency_hint = */ 1 );
-	Resolver resolver( service );
-	Resolver::iterator it = resolver.resolve( Resolver::query( "localhost", "" ) );
-	Socket socket( service, it->endpoint() );
-
-	return socket.local_endpoint().port();
+	static IECore::DisplayDriverServerPtr g_server = new IECore::DisplayDriverServer();
+	return g_server.get();
 }
 
 } // namespace
@@ -138,8 +125,6 @@ ShaderView::ShaderView( const std::string &name )
 	m_imageConverter->addChild( deleteOutputs );
 	deleteOutputs->namesPlug()->setValue( "*" );
 
-	const int port = freePort();
-
 	OutputsPtr outputs = new Outputs();
 	m_imageConverter->addChild( outputs );
 	outputs->inPlug()->setInput( deleteOutputs->outPlug() );
@@ -147,12 +132,13 @@ ShaderView::ShaderView( const std::string &name )
 	output->parameters()["quantize"] = new IECore::IntVectorData( std::vector<int>( 4, 0 ) );
 	output->parameters()["driverType"] = new IECore::StringData( "ClientDisplayDriver" );
 	output->parameters()["displayHost"] = new IECore::StringData( "localhost" );
-	output->parameters()["displayPort"] = new IECore::StringData( boost::lexical_cast<std::string>( port ) );
+	output->parameters()["displayPort"] = new IECore::StringData( boost::lexical_cast<std::string>( displayDriverServer()->portNumber() ) );
 	output->parameters()["remoteDisplayType"] = new IECore::StringData( "GafferImage::GafferDisplayDriver" );
+	output->parameters()["shaderView:id"] = new IECore::StringData( boost::lexical_cast<std::string>( this ) );
+
 	outputs->addOutput( "Beauty", output.get() );
 
 	DisplayPtr display = new Display;
-	display->portPlug()->setValue( port );
 	m_imageConverter->addChild( display );
 	PlugAlgo::promote( display->outPlug() );
 
@@ -169,6 +155,7 @@ ShaderView::ShaderView( const std::string &name )
 	plugSetSignal().connect( boost::bind( &ShaderView::plugSet, this, ::_1 ) );
 	plugDirtiedSignal().connect( boost::bind( &ShaderView::plugDirtied, this, ::_1 ) );
 	sceneRegistrationChangedSignal().connect( boost::bind( &ShaderView::sceneRegistrationChanged, this, ::_1 ) );
+	Display::driverCreatedSignal().connect( boost::bind( &ShaderView::driverCreated, this, ::_1, ::_2 ) );
 
 }
 
@@ -184,6 +171,16 @@ Gaffer::StringPlug *ShaderView::scenePlug()
 const Gaffer::StringPlug *ShaderView::scenePlug() const
 {
 	return getChild<StringPlug>( "scene" );
+}
+
+GafferImage::Display *ShaderView::display()
+{
+	return m_imageConverter->getChild<Display>( "Display" );
+}
+
+const GafferImage::Display *ShaderView::display() const
+{
+	return m_imageConverter->getChild<Display>( "Display" );
 }
 
 std::string ShaderView::shaderPrefix() const
@@ -456,3 +453,15 @@ void ShaderView::registeredScenes( const std::string &shaderPrefix, std::vector<
 		}
 	}
 }
+
+void ShaderView::driverCreated( IECore::DisplayDriver *driver, const IECore::CompoundData *parameters )
+{
+	if( const IECore::StringData *idData = parameters->member<IECore::StringData>( "shaderView:id" ) )
+	{
+		if( idData->readable() == boost::lexical_cast<std::string>( this ) )
+		{
+			display()->setDriver( driver );
+		}
+	}
+}
+
