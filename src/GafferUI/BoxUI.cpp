@@ -65,17 +65,28 @@ class BoxPlugAdder : public PlugAdder
 
 	protected :
 
-		bool acceptsPlug( const Plug *connectionEndPoint ) const override
+
+		bool canCreateConnection( const Plug *endpoint ) override
 		{
+			if( !PlugAdder::canCreateConnection( endpoint ) )
+			{
+				return false;
+			}
+
+			if( endpoint->node() == m_box )
+			{
+				return false;
+			}
+
 			return true;
 		}
 
-		void addPlug( Plug *connectionEndPoint ) override
+		void createConnection( Plug *endpoint ) override
 		{
 			UndoScope undoScope( m_box->ancestor<ScriptNode>() );
 
 			BoxIOPtr boxIO;
-			if( connectionEndPoint->direction() == Plug::In )
+			if( endpoint->direction() == Plug::In )
 			{
 				boxIO = new BoxOut;
 			}
@@ -85,15 +96,15 @@ class BoxPlugAdder : public PlugAdder
 			}
 
 			m_box->addChild( boxIO );
-			boxIO->setup( connectionEndPoint );
+			boxIO->setup( endpoint );
 
-			if( connectionEndPoint->direction() == Plug::In )
+			if( endpoint->direction() == Plug::In )
 			{
-				connectionEndPoint->setInput( boxIO->promotedPlug() );
+				endpoint->setInput( boxIO->promotedPlug() );
 			}
 			else
 			{
-				boxIO->promotedPlug()->setInput( connectionEndPoint );
+				boxIO->promotedPlug()->setInput( endpoint );
 			}
 
 			applyEdgeMetadata( boxIO->promotedPlug() );
