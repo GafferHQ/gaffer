@@ -587,13 +587,20 @@ bool StandardNodeGadget::dragMove( GadgetPtr gadget, const DragDropEvent &event 
 	ConnectionCreator *closest = closestDragDestinationProxy( event );
 	if( closest != m_dragDestinationProxy )
 	{
-		if( closest->dragEnterSignal()( closest, event ) )
+		if( m_dragDestinationProxy )
 		{
-			if( m_dragDestinationProxy )
+			m_dragDestinationProxy->setHighlighted( false );
+		}
+		m_dragDestinationProxy = closest;
+		if( m_dragDestinationProxy )
+		{
+			if( ConnectionCreator *creator = IECore::runTimeCast<ConnectionCreator>( event.sourceGadget.get() ) )
 			{
-				m_dragDestinationProxy->dragLeaveSignal()( m_dragDestinationProxy, event );
+				V3f centre = V3f( 0 ) * m_dragDestinationProxy->fullTransform();
+				centre = centre * creator->fullTransform().inverse();
+				creator->updateDragEndPoint( centre, V3f( 0 ) ); // FIX TANGENT!!!
 			}
-			m_dragDestinationProxy = closest;
+			m_dragDestinationProxy->setHighlighted( true );
 		}
 	}
 	return m_dragDestinationProxy;
@@ -608,7 +615,7 @@ bool StandardNodeGadget::dragLeave( GadgetPtr gadget, const DragDropEvent &event
 
 	if( m_dragDestinationProxy != event.destinationGadget )
 	{
-		m_dragDestinationProxy->dragLeaveSignal()( m_dragDestinationProxy, event );
+		m_dragDestinationProxy->setHighlighted( false );
 	}
 	m_dragDestinationProxy = nullptr;
 
@@ -642,7 +649,7 @@ bool StandardNodeGadget::drop( GadgetPtr gadget, const DragDropEvent &event )
 		}
 	}
 
-	m_dragDestinationProxy->dragEndSignal()( m_dragDestinationProxy, event );
+	m_dragDestinationProxy->setHighlighted( false );
 	m_dragDestinationProxy = nullptr;
 	return true;
 }
