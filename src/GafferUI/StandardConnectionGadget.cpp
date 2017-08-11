@@ -67,7 +67,7 @@ ConnectionGadget::ConnectionGadgetTypeDescription<StandardConnectionGadget> Stan
 static IECore::InternedString g_colorKey( "connectionGadget:color" );
 
 StandardConnectionGadget::StandardConnectionGadget( GafferUI::NodulePtr srcNodule, GafferUI::NodulePtr dstNodule )
-	:	ConnectionGadget( srcNodule, dstNodule ), m_dragEnd( Gaffer::Plug::Invalid ), m_hovering( false ), m_dotPreview( false ), m_dotPreviewLocation( 0 )
+	:	ConnectionGadget( srcNodule, dstNodule ), m_dragEnd( Gaffer::Plug::Invalid ), m_hovering( false ), m_dotPreview( false ), m_dotPreviewLocation( 0 ), m_addingConnection( false )
 {
 	enterSignal().connect( boost::bind( &StandardConnectionGadget::enter, this, ::_2 ) );
 	mouseMoveSignal().connect( boost::bind( &StandardConnectionGadget::mouseMove, this, ::_2 ) );
@@ -214,13 +214,16 @@ void StandardConnectionGadget::createConnection( Gaffer::Plug *endpoint )
 			dstNodule()->plug()->setInput( endpoint );
 			return;
 		case Gaffer::Plug::In :
-
-			// The new connection replaces the old one. It's important that we remove
-			// the old connection /after/ making the new connection, as removing a
-			// connection can trigger an InputGenerator to remove plugs, possibly
-			// including the input plug we want to connect to. See issue #302.
-			dstNodule()->plug()->setInput( 0 );
 			endpoint->setInput( srcNodule()->plug() );
+
+			// The new connection potentially replaces the old one. It's important
+			// that we remove the old connection /after/ making the new connection, as
+			// removing a connection can trigger an InputGenerator to remove plugs,
+			// possibly including the input plug we want to connect to. See issue #302.
+			if( !m_addingConnection )
+			{
+				dstNodule()->plug()->setInput( nullptr );
+			}
 			return;
 		default :
 			return;
@@ -264,6 +267,12 @@ void StandardConnectionGadget::doRenderLayer( Layer layer, const Style *style ) 
 	}
 
 	style->renderConnection( adjustedSrcPos, adjustedSrcTangent, m_dstPos, m_dstTangent, state, m_userColor.get_ptr() );
+
+	if(m_addingConnection)
+	{
+		style->renderConnection( m_srcPos, m_srcTangent, m_dstPosOrig, m_dstTangentOrig, state, m_userColor.get_ptr() );
+	}
+
 	if( m_dotPreview )
 	{
 		Imath::Box2f bounds = Imath::Box2f( V2f( m_dotPreviewLocation.x, m_dotPreviewLocation.y ) );
@@ -416,6 +425,16 @@ IECore::RunTimeTypedPtr StandardConnectionGadget::dragBegin( const DragDropEvent
 
 	setPositionsFromNodules();
 	m_dragEnd = endAt( event.line );
+
+	// prepare for adding additional connection
+	if( event.modifiers & ButtonEvent::Shift && m_dragEnd == Gaffer::Plug::In )
+	{
+		m_addingConnection = true;
+
+		m_dstPosOrig = m_dstPos;
+		m_dstTangentOrig = m_dstTangent;
+	}
+
 	switch( m_dragEnd )
 	{
 		case Gaffer::Plug::Out :
@@ -452,10 +471,12 @@ bool StandardConnectionGadget::dragEnd( const DragDropEvent &event )
 	}
 	else
 	{
-		// we let the Nodule do all the work when a drop has actually landed
+		// We let the Nodule setup the connection through createConnection() when a
+		// drop has actually landed.
 	}
 
 	m_dragEnd = Gaffer::Plug::Invalid;
+	m_addingConnection = false;
 	requestRender();
 	return true;
 }
