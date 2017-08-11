@@ -147,12 +147,13 @@ class StandardNodeGadget::ErrorGadget : public Gadget
 };
 
 //////////////////////////////////////////////////////////////////////////
-// StandardNodeGadget implementation
+// Internal utilities
 //////////////////////////////////////////////////////////////////////////
 
 namespace
 {
-static IECoreGL::Texture *bookmarkTexture()
+
+IECoreGL::Texture *bookmarkTexture()
 {
 	static IECoreGL::TexturePtr bookmarkTexture;
 
@@ -169,7 +170,44 @@ static IECoreGL::Texture *bookmarkTexture()
 	return bookmarkTexture.get();
 }
 
+bool canConnect( const DragDropEvent &event, const ConnectionCreator *destination )
+{
+	if( auto plug = IECore::runTimeCast<const Plug>( event.data.get() ) )
+	{
+		return destination->canCreateConnection( plug );
+	}
+	else if( auto sourceCreator = IECore::runTimeCast<const ConnectionCreator>( event.sourceGadget.get() ) )
+	{
+		if( auto destinationNodule = IECore::runTimeCast<const Nodule>( destination ) )
+		{
+			return sourceCreator->canCreateConnection( destinationNodule->plug() );
+		}
+	}
+	return false;
+}
+
+void connect( const DragDropEvent &event, ConnectionCreator *destination )
+{
+	if( auto plug = IECore::runTimeCast<Plug>( event.data.get() ) )
+	{
+		UndoScope undoScope( plug->ancestor<ScriptNode>() );
+		destination->createConnection( plug );
+	}
+	else if( auto sourceCreator = IECore::runTimeCast<ConnectionCreator>( event.sourceGadget.get() ) )
+	{
+		if( auto destinationNodule = IECore::runTimeCast<Nodule>( destination ) )
+		{
+			UndoScope undoScope( destinationNodule->plug()->ancestor<ScriptNode>() );
+			sourceCreator->createConnection( destinationNodule->plug() );
+		}
+	}
+}
+
 } // namespace
+
+//////////////////////////////////////////////////////////////////////////
+// StandardNodeGadget implementation
+//////////////////////////////////////////////////////////////////////////
 
 IE_CORE_DEFINERUNTIMETYPED( StandardNodeGadget );
 
@@ -188,7 +226,7 @@ StandardNodeGadget::StandardNodeGadget( Gaffer::NodePtr node )
 	:	NodeGadget( node ),
 		m_nodeEnabled( true ),
 		m_labelsVisibleOnHover( true ),
-		m_dragDestinationProxy( nullptr ),
+		m_dragDestination( nullptr ),
 		m_userColor( 0 ),
 		m_oval( false )
 {
@@ -610,11 +648,15 @@ void StandardNodeGadget::leave( Gadget *gadget )
 
 bool StandardNodeGadget::dragEnter( GadgetPtr gadget, const DragDropEvent &event )
 {
-	// we'll accept the drag if we know we can forward it on to a nodule
-	// we own. we don't actually start the forwarding until dragMove, here we
-	// just check there is something to forward to.
-	if( closestDragDestinationProxy( event ) )
+	// Accept the drag if there's something we can connect it to.
+	if( closestDragDestination( event ) )
 	{
+		// Display the labels for all the compatible nodules so the
+		// user can see their options.
+		for( RecursiveStandardNoduleIterator it( this ); !it.done(); ++it )
+		{
+			(*it)->setLabelVisible( canConnect( event, it->get() ) );
+		}
 		return true;
 	}
 
@@ -623,71 +665,63 @@ bool StandardNodeGadget::dragEnter( GadgetPtr gadget, const DragDropEvent &event
 
 bool StandardNodeGadget::dragMove( GadgetPtr gadget, const DragDropEvent &event )
 {
-	ConnectionCreator *closest = closestDragDestinationProxy( event );
-	if( closest != m_dragDestinationProxy )
+	ConnectionCreator *closest = closestDragDestination( event );
+	if( closest != m_dragDestination )
 	{
-		if( closest->dragEnterSignal()( closest, event ) )
+		if( m_dragDestination )
 		{
-			if( m_dragDestinationProxy )
+			m_dragDestination->setHighlighted( false );
+		}
+		m_dragDestination = closest;
+		if( m_dragDestination )
+		{
+			if( ConnectionCreator *creator = IECore::runTimeCast<ConnectionCreator>( event.sourceGadget.get() ) )
 			{
-				m_dragDestinationProxy->dragLeaveSignal()( m_dragDestinationProxy, event );
+				V3f centre = V3f( 0 ) * m_dragDestination->fullTransform();
+				centre = centre * creator->fullTransform().inverse();
+				creator->updateDragEndPoint( centre, connectionTangent( m_dragDestination ) );
 			}
-			m_dragDestinationProxy = closest;
+			m_dragDestination->setHighlighted( true );
 		}
 	}
-	return m_dragDestinationProxy;
+	return m_dragDestination;
 }
 
 bool StandardNodeGadget::dragLeave( GadgetPtr gadget, const DragDropEvent &event )
 {
-	if( !m_dragDestinationProxy )
+	if( !m_dragDestination )
 	{
 		return false;
 	}
 
-	if( m_dragDestinationProxy != event.destinationGadget )
+	if( m_dragDestination != event.destinationGadget )
 	{
-		m_dragDestinationProxy->dragLeaveSignal()( m_dragDestinationProxy, event );
+		m_dragDestination->setHighlighted( false );
+		for( RecursiveStandardNoduleIterator it( this ); !it.done(); ++it )
+		{
+			(*it)->setLabelVisible( false );
+		}
 	}
-	m_dragDestinationProxy = nullptr;
+	m_dragDestination = nullptr;
 
 	return true;
 }
 
 bool StandardNodeGadget::drop( GadgetPtr gadget, const DragDropEvent &event )
 {
-	if( !m_dragDestinationProxy )
+	if( !m_dragDestination )
 	{
 		return false;
 	}
 
-	PlugPtr plug = IECore::runTimeCast<Plug>( event.data );
+	connect( event, m_dragDestination );
 
-	if( plug )
-	{
-		UndoScope undoScope( node()->scriptNode() );
-		m_dragDestinationProxy->createConnection( plug.get() );
-	}
-	else
-	{
-		if( ConnectionCreator *creator = IECore::runTimeCast<ConnectionCreator>( event.sourceGadget.get() ) )
-		{
-			// see comment in closestDragDestinationProxy() about why this has to be a Nodule
-			Nodule *nodule = IECore::runTimeCast<Nodule>( m_dragDestinationProxy );
-			if( nodule )
-			{
-				UndoScope undoScope( nodule->plug()->ancestor<ScriptNode>() );
-				creator->createConnection( nodule->plug() );
-			}
-		}
-	}
-
-	m_dragDestinationProxy->dragEndSignal()( m_dragDestinationProxy, event );
-	m_dragDestinationProxy = nullptr;
+	m_dragDestination->setHighlighted( false );
+	m_dragDestination = nullptr;
 	return true;
 }
 
-ConnectionCreator *StandardNodeGadget::closestDragDestinationProxy( const DragDropEvent &event ) const
+ConnectionCreator *StandardNodeGadget::closestDragDestination( const DragDropEvent &event ) const
 {
 	if( event.buttons != DragDropEvent::Left )
 	{
@@ -698,53 +732,16 @@ ConnectionCreator *StandardNodeGadget::closestDragDestinationProxy( const DragDr
 	ConnectionCreator *result = nullptr;
 	float maxDist = Imath::limits<float>::max();
 
-	Gaffer::Plug *eventPlug = IECore::runTimeCast<Gaffer::Plug>( event.data.get() );
-
-	for( RecursiveGadgetIterator it( this ); !it.done(); it++ )
+	for( RecursiveConnectionCreatorIterator it( this ); !it.done(); it++ )
 	{
 		if( !(*it)->getVisible() )
 		{
 			it.prune();
 			continue;
 		}
-
-		ConnectionCreator *creator = IECore::runTimeCast<ConnectionCreator>( it->get() );
-		if( !creator )
+		if( !canConnect( event, it->get() ) )
 		{
 			continue;
-		}
-
-		// For a ConnectionCreator to be able to make a connection, one end needs to
-		// be a plug. If the sourceGadget of the drag is able to provide one, we can
-		// easily check if we can connect. If that's not the case we need to
-		// determine if the source Gadget is able to make the connection - by
-		// providing the Plug ourselves.
-
-		if( eventPlug )
-		{
-			if( !creator->canCreateConnection( eventPlug ) )
-			{
-				continue;
-			}
-		}
-		else
-		{
-			ConnectionCreator *creatorAtSource = IECore::runTimeCast<ConnectionCreator>( event.sourceGadget.get() );
-			if( !creatorAtSource )
-			{
-				continue;
-			}
-
-			Nodule *destinationNodule = IECore::runTimeCast<Nodule>( it->get() );
-			if( !destinationNodule )
-			{
-				continue;
-			}
-
-			if( !creatorAtSource->canCreateConnection( destinationNodule->plug() ) )
-			{
-				continue;
-			}
 		}
 
 		const Box3f bound = (*it)->transformedBound( this );
@@ -752,7 +749,7 @@ ConnectionCreator *StandardNodeGadget::closestDragDestinationProxy( const DragDr
 		const float dist = ( closestPoint - event.line.p0 ).length2();
 		if( dist < maxDist )
 		{
-			result = creator;
+			result = it->get();
 			maxDist = dist;
 		}
 	}

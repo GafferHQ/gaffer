@@ -136,7 +136,7 @@ class GAFFERUI_API StandardNodeGadget : public NodeGadget
 		bool dragLeave( GadgetPtr gadget, const DragDropEvent &event );
 		bool drop( GadgetPtr gadget, const DragDropEvent &event );
 
-		ConnectionCreator *closestDragDestinationProxy( const DragDropEvent &event ) const;
+		ConnectionCreator *closestDragDestination( const DragDropEvent &event ) const;
 
 		void nodeMetadataChanged( IECore::TypeId nodeTypeId, IECore::InternedString key, const Gaffer::Node *node );
 
@@ -153,12 +153,12 @@ class GAFFERUI_API StandardNodeGadget : public NodeGadget
 
 		bool m_nodeEnabled;
 		bool m_labelsVisibleOnHover;
-		// We accept drags onto the node itself and
-		// forward them to the nearest compatible
-		// Nodule or PlugAdder. This provides the user
-		// with a bigger drag target that is easier
+		// We accept drags onto the NodeGadget itself and
+		// use them to create a connection to the
+		// nearest Nodule or PlugAdder child. This provides
+		// the user with a bigger drag target that is easier
 		// to hit.
-		ConnectionCreator *m_dragDestinationProxy;
+		ConnectionCreator *m_dragDestination;
 		boost::optional<Imath::Color3f> m_userColor;
 		bool m_oval;
 
