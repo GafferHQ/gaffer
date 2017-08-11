@@ -39,7 +39,8 @@
 
 #include "IECorePython/ExceptionAlgo.h"
 
-#include "GafferUIBindings/GadgetBinding.h"
+#include "GafferUIBindings/ConnectionCreatorBinding.h"
+
 #include "GafferUI/Nodule.h"
 #include "GafferUI/StandardNodule.h"
 #include "GafferUI/CompoundNodule.h"
@@ -120,7 +121,12 @@ void registerCustomGadget( const std::string &gadgetName, object creator )
 
 void GafferUIModule::bindNodule()
 {
-	GadgetClass<Nodule>()
+
+	ConnectionCreatorClass<ConnectionCreator, ConnectionCreatorWrapper<ConnectionCreator>>( "ConnectionCreator" )
+		.def( init<>() )
+	;
+
+	ConnectionCreatorClass<Nodule>()
 		.def(
 			"plug",
 			(Gaffer::Plug *(Nodule::*)())&Nodule::plug,
@@ -131,13 +137,13 @@ void GafferUIModule::bindNodule()
 		.staticmethod( "registerNodule" )
 	;
 
-	GadgetClass<StandardNodule>()
+	ConnectionCreatorClass<StandardNodule>()
 		.def( init<Gaffer::PlugPtr>() )
 		.def( "setLabelVisible", &StandardNodule::setLabelVisible )
 		.def( "getLabelVisible", &StandardNodule::getLabelVisible )
 	;
 
-	GadgetClass<CompoundNodule>()
+	ConnectionCreatorClass<CompoundNodule>()
 		.def( init<Gaffer::PlugPtr>( ( arg( "plug" ) ) ) )
 	;
 

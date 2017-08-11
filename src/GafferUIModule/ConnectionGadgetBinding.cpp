@@ -43,7 +43,7 @@
 #include "GafferUI/ConnectionGadget.h"
 #include "GafferUI/StandardConnectionGadget.h"
 
-#include "GafferUIBindings/GadgetBinding.h"
+#include "GafferUIBindings/ConnectionCreatorBinding.h"
 
 #include "ConnectionGadgetBinding.h"
 
@@ -98,7 +98,7 @@ void registerConnectionGadget2( IECore::TypeId nodeType, const std::string &dstP
 
 void GafferUIModule::bindConnectionGadget()
 {
-	GadgetClass<ConnectionGadget>()
+	ConnectionCreatorClass<ConnectionGadget>()
 		.def( "srcNodule", &srcNodule )
 		.def( "dstNodule", &dstNodule )
 		.def( "setNodules", &ConnectionGadget::setNodules )
@@ -111,7 +111,7 @@ void GafferUIModule::bindConnectionGadget()
 		.staticmethod( "registerConnectionGadget" )
 	;
 
-	GadgetClass<StandardConnectionGadget>()
+	ConnectionCreatorClass<StandardConnectionGadget>()
 		.def( init<NodulePtr, NodulePtr>() )
 	;
 }

@@ -37,8 +37,6 @@
 
 #include "boost/python.hpp"
 
-#include "GafferUIBindings/ConnectionCreatorBinding.h"
-
 #include "EventBinding.h"
 #include "GadgetBinding.h"
 #include "WidgetSignalBinding.h"
@@ -77,7 +75,6 @@ BOOST_PYTHON_MODULE( _GafferUI )
 	bindTextGadget();
 	bindNameGadget();
 	bindNodeGadget();
-	bindConnectionCreator();
 	bindNodule();
 	bindConnectionGadget();
 	bindWidgetSignal();

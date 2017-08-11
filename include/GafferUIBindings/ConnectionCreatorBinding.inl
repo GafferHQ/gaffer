@@ -34,31 +34,47 @@
 //
 //////////////////////////////////////////////////////////////////////////
 
-#include "GafferUI/ConnectionCreator.h"
+#ifndef GAFFERUIBINDINGS_CONNECTIONCREATORBINDING_INL
+#define GAFFERUIBINDINGS_CONNECTIONCREATORBINDING_INL
 
-using namespace Imath;
-using namespace GafferUI;
-
-IE_CORE_DEFINERUNTIMETYPED( ConnectionCreator );
-
-ConnectionCreator::ConnectionCreator( const std::string &name )
-	: Gadget( name )
+namespace GafferUIBindings
 {
+
+namespace Detail
+{
+
+template<typename T>
+static bool canCreateConnection( const T &connectionCreator, const Gaffer::Plug *endpoint )
+{
+	IECorePython::ScopedGILRelease gilRelease;
+	return connectionCreator.T::canCreateConnection( endpoint );
 }
 
-ConnectionCreator::~ConnectionCreator()
+template<typename T>
+static void updateDragEndPoint( T &connectionCreator, const Imath::V3f position, const Imath::V3f &tangent )
 {
+	IECorePython::ScopedGILRelease gilRelease;
+	return connectionCreator.T::updateDragEndPoint( position, tangent );
 }
 
-bool ConnectionCreator::canCreateConnection( const Gaffer::Plug *endpoint ) const
+template<typename T>
+static void createConnection( T &connectionCreator, Gaffer::Plug *endpoint )
 {
-	return false;
+	IECorePython::ScopedGILRelease gilRelease;
+	return connectionCreator.T::createConnection( endpoint );
 }
 
-void ConnectionCreator::updateDragEndPoint( const Imath::V3f position, const Imath::V3f &tangent )
+} // namespace Detail
+
+template<typename T, typename TWrapper>
+ConnectionCreatorClass<T, TWrapper>::ConnectionCreatorClass( const char *docString )
+	:	GadgetClass<T, TWrapper>( docString )
 {
+	this->def( "canCreateConnection", &Detail::canCreateConnection<T> );
+	this->def( "updateDragEndPoint", &Detail::updateDragEndPoint<T> );
+	this->def( "createConnection", &Detail::createConnection<T> );
 }
 
-void ConnectionCreator::createConnection( Gaffer::Plug *plug )
-{
-}
+} // namespace GafferUIBindings
+
+#endif // GAFFERUIBINDINGS_CONNECTIONCREATORBINDING_INL
