@@ -359,7 +359,7 @@ bool StandardConnectionGadget::dragEnter( const DragDropEvent &event )
 
 bool StandardConnectionGadget::dragMove( const DragDropEvent &event )
 {
-	updateDragEndPoint( event.line.p0, V3f( 0 ) );
+	updateDragEndPoint( V3f( event.line.p0.x, event.line.p0.y, 0.0f ), V3f( 0 ) );
 	return true;
 }
 
