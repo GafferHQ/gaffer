@@ -94,6 +94,7 @@ struct ConnectionCreatorWrapper : public GadgetWrapper<ConnectionCreator>
 				try
 				{
 					f( position, tangent );
+					return;
 				}
 				catch( const error_already_set &e )
 				{
@@ -101,7 +102,7 @@ struct ConnectionCreatorWrapper : public GadgetWrapper<ConnectionCreator>
 				}
 			}
 		}
-		throw IECore::Exception( "No canCreateConnection method defined in Python." );
+		throw IECore::Exception( "No updateDragEndPoint method defined in Python." );
 	}
 
 	void createConnection( Gaffer::Plug *endpoint ) override
@@ -123,7 +124,7 @@ struct ConnectionCreatorWrapper : public GadgetWrapper<ConnectionCreator>
 				}
 			}
 		}
-		throw IECore::Exception( "No canCreateConnection method defined in Python." );
+		throw IECore::Exception( "No createConnection method defined in Python." );
 	}
 };
 
