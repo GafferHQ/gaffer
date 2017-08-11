@@ -1245,20 +1245,43 @@ class ScriptNodeTest( GafferTest.TestCase ) :
 
 		self.assertFalse( s.isExecuting() )
 
-		self.__wasExecuting = None
+		self.__wasExecuting = []
 		def f( script, child ) :
-			self.__wasExecuting = script.isExecuting()
+			self.__wasExecuting.append( script.isExecuting() )
 
 		c = s.childAddedSignal().connect( f )
 
 		s["n"] = GafferTest.AddNode()
-		self.assertEqual( self.__wasExecuting, False )
 
-		ss = s.serialise( filter = Gaffer.StandardSet( [ s["n"] ] ) )
+		# add a reference so we guarantee it works with nested loads
+		s["n1"] = GafferTest.AddNode()
+		s["n2"] = GafferTest.AddNode()
+		s["n2"]["op1"].setInput( s["n1"]["sum"] )
+		b = Gaffer.Box.create( s, Gaffer.StandardSet( [ s["n1"] ] ) )
+		Gaffer.PlugAlgo.promote( b["n1"]["op1"] )
+
+		b.exportForReference( self.temporaryDirectory() + "/test.grf" )
+
+		s["r"] = Gaffer.Reference()
+		s["r"].load( self.temporaryDirectory() + "/test.grf" )
+
+		s["r"]["op1"].setInput( s["n"]["sum"] )
+
+		s["x"] = GafferTest.AddNode()
+		# verifies that wasExecuting was False throughout this setup stage
+		self.assertEqual( self.__wasExecuting, map( lambda x: False, self.__wasExecuting ) )
+
+		self.__wasExecuting = []
+
+		# connecting n to r and then to x guarantees the order of serialisation
+		s["x"]["op1"].setInput( s["r"]["sum"] )
+
+		ss = s.serialise( filter = Gaffer.StandardSet( [ s["n"], s["r"], s["x"] ] ) )
 		s.execute( ss )
-		self.assertEqual( self.__wasExecuting, True )
+		# verifies that wasExecuting was True throughout this setup stage
+		self.assertEqual( self.__wasExecuting, map( lambda x: True, self.__wasExecuting ) )
 
-		self.__wasExecuting = None
+		self.__wasExecuting = []
 		self.assertRaises( RuntimeError, s.execute, ss + "\nsyntaxError" )
 		self.assertFalse( s.isExecuting() )
 
