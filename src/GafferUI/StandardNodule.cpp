@@ -112,7 +112,7 @@ Imath::Box3f StandardNodule::bound() const
 	return Box3f( V3f( -0.5, -0.5, 0 ), V3f( 0.5, 0.5, 0 ) );
 }
 
-bool StandardNodule::canCreateConnection( const Gaffer::Plug *endpoint )
+bool StandardNodule::canCreateConnection( const Gaffer::Plug *endpoint ) const
 {
 	const Gaffer::Plug *localPlug = plug();
 

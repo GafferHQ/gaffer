@@ -55,7 +55,7 @@ class GAFFERUI_API PlugAdder : public ConnectionCreator
 
 		Imath::Box3f bound() const override;
 
-		bool canCreateConnection( const Gaffer::Plug *endpoint ) override;
+		bool canCreateConnection( const Gaffer::Plug *endpoint ) const override;
 		void updateDragEndPoint( const Imath::V3f position, const Imath::V3f &tangent ) override;
 
 		/// When emitted, shows a menu containing the specified plugs, and returns

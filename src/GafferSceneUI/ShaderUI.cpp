@@ -77,7 +77,7 @@ class ShaderPlugAdder : public PlugAdder
 
 	protected :
 
-		bool canCreateConnection( const Plug *endpoint ) override
+		bool canCreateConnection( const Plug *endpoint ) const override
 		{
 			vector<Plug *> plugs = showablePlugs( endpoint );
 			return !plugs.empty();

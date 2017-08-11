@@ -61,7 +61,7 @@ class GAFFERUI_API ConnectionCreator : public Gadget
 
 		/// May be called by the recipient of a drag to figure out if this
 		/// ConnectionCreator can set up the connection.
-		virtual bool canCreateConnection( const Gaffer::Plug *endpoint ) = 0;
+		virtual bool canCreateConnection( const Gaffer::Plug *endpoint ) const = 0;
 
 		/// May be called by the recipient of a drag to set a more appropriate position
 		/// and tangent for the connection as the drag progresses within the destination.

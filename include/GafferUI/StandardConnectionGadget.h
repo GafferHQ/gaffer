@@ -62,7 +62,7 @@ class GAFFERUI_API StandardConnectionGadget : public ConnectionGadget
 
 		void setNodules( GafferUI::NodulePtr srcNodule, GafferUI::NodulePtr dstNodule ) override;
 
-		bool canCreateConnection( const Gaffer::Plug *endpoint ) override;
+		bool canCreateConnection( const Gaffer::Plug *endpoint ) const override;
 		void updateDragEndPoint( const Imath::V3f position, const Imath::V3f &tangent ) override;
 		void createConnection( Gaffer::Plug *endpoint ) override;
 
