@@ -707,6 +707,8 @@ bool ScriptNode::executeInternal( const std::string &serialisation, Node *parent
 	}
 	DirtyPropagationScope dirtyScope;
 	bool result = false;
+	bool wasExecuting = m_executing;
+
 	m_executing = true;
 	try
 	{
@@ -715,10 +717,10 @@ bool ScriptNode::executeInternal( const std::string &serialisation, Node *parent
 	}
 	catch( ... )
 	{
-		m_executing = false;
+		m_executing = wasExecuting;
 		throw;
 	}
-	m_executing = false;
+	m_executing = wasExecuting;
 	return result;
 }
 
