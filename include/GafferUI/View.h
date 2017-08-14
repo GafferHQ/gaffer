@@ -38,6 +38,8 @@
 #ifndef GAFFERUI_VIEW_H
 #define GAFFERUI_VIEW_H
 
+#include <functional>
+
 #include "boost/regex.hpp"
 
 #include "Gaffer/Node.h"
@@ -96,7 +98,7 @@ class View : public Gaffer::Node
 		//@{
 		/// Creates a View for the specified plug.
 		static ViewPtr create( Gaffer::PlugPtr input );
-		typedef boost::function<ViewPtr ( Gaffer::PlugPtr )> ViewCreator;
+		typedef std::function<ViewPtr ( Gaffer::PlugPtr )> ViewCreator;
 		/// Registers a function which will return a View instance for a
 		/// plug of a specific type.
 		static void registerView( IECore::TypeId plugType, ViewCreator creator );

@@ -37,6 +37,7 @@
 
 #include <vector>
 #include <memory>
+#include <functional>
 
 #include "tbb/spin_mutex.h"
 #include "tbb/spin_rw_mutex.h"
@@ -72,10 +73,10 @@ class LRUCache : private boost::noncopyable
 		/// The GetterFunction is responsible for computing the value and cost for a cache entry
 		/// when given the key. It should throw a descriptive exception if it can't get the data for
 		/// any reason. It is unsafe to access the LRUCache itself from the GetterFunction.
-		typedef boost::function<Value ( const Key &key, Cost &cost )> GetterFunction;
+		typedef std::function<Value ( const Key &key, Cost &cost )> GetterFunction;
 		/// The optional RemovalCallback is called whenever an item is discarded from the cache.
 		///  It is unsafe to access the LRUCache itself from the RemovalCallback.
-		typedef boost::function<void ( const Key &key, const Value &data )> RemovalCallback;
+		typedef std::function<void ( const Key &key, const Value &data )> RemovalCallback;
 
 		LRUCache( GetterFunction getter, Cost maxCost = 500 );
 		LRUCache( GetterFunction getter, RemovalCallback removalCallback, Cost maxCost );

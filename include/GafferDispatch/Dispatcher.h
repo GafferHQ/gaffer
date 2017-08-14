@@ -41,6 +41,7 @@
 #include <vector>
 #include <map>
 #include <set>
+#include <functional>
 
 #include "boost/signals.hpp"
 
@@ -170,7 +171,7 @@ class Dispatcher : public Gaffer::Node
 		//@}
 
 		/// A function which creates a Dispatcher.
-		typedef boost::function<DispatcherPtr ()> Creator;
+		typedef std::function<DispatcherPtr ()> Creator;
 		/// SetupPlugsFn may be registered along with a Dispatcher Creator. It will be called by setupPlugs,
 		/// along with all other registered SetupPlugsFns. It is recommended that each registered dispatcher
 		/// store its plugs contained within a dedicated parent Plug, named according to the registration
@@ -180,7 +181,7 @@ class Dispatcher : public Gaffer::Node
 		/// the TaskNode constructor, the non-dynamic plugs will always be created according to the current
 		/// definition, and will not be serialized into scripts. The downside of using non-dynamic plugs is that
 		/// loading a script before all Dispatchers have been registered could result in lost settings.
-		typedef boost::function<void ( Gaffer::Plug *parentPlug )> SetupPlugsFn;
+		typedef std::function<void ( Gaffer::Plug *parentPlug )> SetupPlugsFn;
 
 		//! @name Registration
 		/// Utility functions for registering and retrieving Dispatchers.

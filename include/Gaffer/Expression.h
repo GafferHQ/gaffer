@@ -38,6 +38,8 @@
 #ifndef GAFFER_EXPRESSION_H
 #define GAFFER_EXPRESSION_H
 
+#include <functional>
+
 #include "Gaffer/ComputeNode.h"
 #include "Gaffer/TypedObjectPlug.h"
 
@@ -150,7 +152,7 @@ class Expression : public ComputeNode
 				/// Creates an engine of the specified type.
 				static EnginePtr create( const std::string engineType );
 
-				typedef boost::function<EnginePtr ()> Creator;
+				typedef std::function<EnginePtr ()> Creator;
 				static void registerEngine( const std::string engineType, Creator creator );
 				static void registeredEngines( std::vector<std::string> &engineTypes );
 

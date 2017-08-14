@@ -36,7 +36,6 @@
 
 #include "tbb/tbb.h"
 
-#include "boost/lambda/lambda.hpp"
 #include "boost/bind.hpp"
 #include "boost/multi_index_container.hpp"
 #include "boost/multi_index/sequenced_index.hpp"
@@ -294,7 +293,7 @@ void registeredInstanceValues( const GraphComponent *graphComponent, std::vector
 
 void Metadata::registerValue( IECore::InternedString target, IECore::InternedString key, IECore::ConstDataPtr value )
 {
-	registerValue( target, key, boost::lambda::constant( value ) );
+	registerValue( target, key, [value]{ return value; } );
 }
 
 void Metadata::registerValue( IECore::InternedString target, IECore::InternedString key, ValueFunction value )
@@ -338,7 +337,7 @@ IECore::ConstDataPtr Metadata::valueInternal( IECore::InternedString target, IEC
 
 void Metadata::registerNodeValue( IECore::TypeId nodeTypeId, IECore::InternedString key, IECore::ConstDataPtr value )
 {
-	registerNodeValue( nodeTypeId, key, boost::lambda::constant( value ) );
+	registerNodeValue( nodeTypeId, key, [value]( const Node * ){ return value; } );
 }
 
 void Metadata::registerNodeValue( IECore::TypeId nodeTypeId, IECore::InternedString key, NodeValueFunction value )
@@ -509,7 +508,7 @@ std::vector<Node*> Metadata::nodesWithMetadata( GraphComponent *root, IECore::In
 
 void Metadata::registerPlugValue( IECore::TypeId nodeTypeId, const StringAlgo::MatchPattern &plugPath, IECore::InternedString key, IECore::ConstDataPtr value )
 {
-	registerPlugValue( nodeTypeId, plugPath, key, boost::lambda::constant( value ) );
+	registerPlugValue( nodeTypeId, plugPath, key, [value](const Plug *){ return value; } );
 }
 
 void Metadata::registerPlugValue( IECore::TypeId nodeTypeId, const StringAlgo::MatchPattern &plugPath, IECore::InternedString key, PlugValueFunction value )

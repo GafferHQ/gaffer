@@ -38,7 +38,7 @@
 #ifndef GAFFERCORTEX_PARAMETERHANDLER_H
 #define GAFFERCORTEX_PARAMETERHANDLER_H
 
-#include "boost/function.hpp"
+#include <functional>
 
 #include "IECore/Parameter.h"
 
@@ -78,7 +78,7 @@ class ParameterHandler : public IECore::RefCounted
 		static ParameterHandlerPtr create( IECore::ParameterPtr parameter );
 		/// A function for creating ParameterHandlers which will represent a Parameter with a plug on a given
 		/// parent.
-		typedef boost::function<ParameterHandlerPtr ( IECore::ParameterPtr )> Creator;
+		typedef std::function<ParameterHandlerPtr ( IECore::ParameterPtr )> Creator;
 		/// Registers a function which can return a ParameterHandler for a given Parameter type.
 		static void registerParameterHandler( IECore::TypeId parameterType, Creator creator );
 

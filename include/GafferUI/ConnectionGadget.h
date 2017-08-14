@@ -38,6 +38,8 @@
 #ifndef GAFFERUI_CONNECTIONGADGET_H
 #define GAFFERUI_CONNECTIONGADGET_H
 
+#include <functional>
+
 #include "boost/regex.hpp"
 
 #include "Gaffer/Plug.h"
@@ -103,7 +105,7 @@ class ConnectionGadget : public Gadget
 		/// specified Nodules.
 		static ConnectionGadgetPtr create( NodulePtr srcNodule, NodulePtr dstNodule );
 
-		typedef boost::function<ConnectionGadgetPtr ( NodulePtr, NodulePtr )> ConnectionGadgetCreator;
+		typedef std::function<ConnectionGadgetPtr ( NodulePtr, NodulePtr )> ConnectionGadgetCreator;
 		/// Registers a function which will return a ConnectionGadget instance for a
 		/// destination plug of a specific type.
 		static void registerConnectionGadget( IECore::TypeId dstPlugType, ConnectionGadgetCreator creator );

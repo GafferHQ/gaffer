@@ -39,6 +39,7 @@
 #define GAFFER_SCRIPTNODE_H
 
 #include <stack>
+#include <functional>
 
 #include "Gaffer/Node.h"
 #include "Gaffer/NumericPlug.h"
@@ -273,8 +274,8 @@ class ScriptNode : public Node
 		std::string serialiseInternal( const Node *parent, const Set *filter ) const;
 		bool executeInternal( const std::string &serialisation, Node *parent, bool continueOnError, const std::string &context = "" );
 
-		typedef boost::function<std::string ( const Node *, const Set * )> SerialiseFunction;
-		typedef boost::function<bool ( ScriptNode *, const std::string &, Node *, bool, const std::string &context )> ExecuteFunction;
+		typedef std::function<std::string ( const Node *, const Set * )> SerialiseFunction;
+		typedef std::function<bool ( ScriptNode *, const std::string &, Node *, bool, const std::string &context )> ExecuteFunction;
 
 		// Actual implementations reside in libGafferBindings (due to Python
 		// dependency), and are injected into these functions.

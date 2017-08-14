@@ -39,6 +39,7 @@
 #define GAFFERIMAGEUI_IMAGEVIEW_H
 
 #include <memory>
+#include <functional>
 
 #include "Gaffer/NumericPlug.h"
 #include "Gaffer/TypedPlug.h"
@@ -99,7 +100,7 @@ class ImageView : public GafferUI::View
 
 		void setContext( Gaffer::ContextPtr context ) override;
 
-		typedef boost::function<GafferImage::ImageProcessorPtr ()> DisplayTransformCreator;
+		typedef std::function<GafferImage::ImageProcessorPtr ()> DisplayTransformCreator;
 
 		static void registerDisplayTransform( const std::string &name, DisplayTransformCreator creator );
 		static void registeredDisplayTransforms( std::vector<std::string> &names );

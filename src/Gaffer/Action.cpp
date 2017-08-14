@@ -150,7 +150,7 @@ class SimpleAction : public Action
 		void doAction() override
 		{
 			Action::doAction();
-			if( !m_doFn.empty() )
+			if( m_doFn )
 			{
 				m_doFn();
 			}
@@ -159,7 +159,7 @@ class SimpleAction : public Action
 		void undoAction() override
 		{
 			Action::undoAction();
-			if( !m_undoFn.empty() )
+			if( m_undoFn )
 			{
 				m_undoFn();
 			}

@@ -38,7 +38,7 @@
 #ifndef GAFFER_ACTION_H
 #define GAFFER_ACTION_H
 
-#include "boost/function.hpp"
+#include <functional>
 
 #include "IECore/RunTimeTyped.h"
 
@@ -80,7 +80,7 @@ class Action : public IECore::RunTimeTyped
 
 		IE_CORE_DECLARERUNTIMETYPEDEXTENSION( Gaffer::Action, ActionTypeId, IECore::RunTimeTyped );
 
-		typedef boost::function<void ()> Function;
+		typedef std::function<void ()> Function;
 
 		/// Enacts the specified action by calling doAction() and
 		/// adding it to the undo queue in the appropriate ScriptNode.
