@@ -38,6 +38,20 @@ import Gaffer
 import GafferUI
 import GafferImage
 
+def __inputLabel( plug ) :
+
+	s = int( plug.getName().replace( "in", "" ) )
+	if s == 0 :
+		return "B"
+	elif s == 1 :
+		return "A"
+	else :
+		return "A{}".format( s )
+
+def __inputDescription( plug ) :
+
+	return "The {} input.".format( __inputLabel( plug ) )
+
 Gaffer.Metadata.registerNode(
 
 	GafferImage.Merge,
@@ -65,21 +79,10 @@ Gaffer.Metadata.registerNode(
 
 	plugs = {
 
-		"in.in0" : [
+		"in.*" : [
 
-			"description",
-			"""
-			The B input.
-			""",
-
-		],
-
-		"in.in1" : [
-
-			"description",
-			"""
-			The A input.
-			""",
+			"description", __inputDescription,
+			"noduleLayout:label", __inputLabel,
 
 		],
 
@@ -106,6 +109,8 @@ Gaffer.Metadata.registerNode(
 			"preset:Under", GafferImage.Merge.Operation.Under,
 			"preset:Min", GafferImage.Merge.Operation.Min,
 			"preset:Max", GafferImage.Merge.Operation.Max,
+
+			"userDefault", GafferImage.Merge.Operation.Over,
 
 			"plugValueWidget:type", "GafferUI.PresetsPlugValueWidget",
 
