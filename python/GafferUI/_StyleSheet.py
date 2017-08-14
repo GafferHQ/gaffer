@@ -455,6 +455,12 @@ _styleSheet = string.Template(
 		margin-top: 4px;
 	}
 
+	QTabBar::tab:disabled {
+
+		color: $foregroundFaded;
+
+	}
+
 	QSplitter::handle:vertical {
 
 		background-color: $backgroundDark;
@@ -996,9 +1002,15 @@ _styleSheet = string.Template(
 
 	}
 
-	QFrame#gafferDiffCommon {
+	QFrame#gafferDiffAB {
 
-		background: solid rgba( 170, 170, 170, 80 );
+		background: solid rgba( 170, 170, 170, 60 );
+
+	}
+
+	QFrame#gafferDiffOther {
+
+		background: solid rgba( 70, 184, 255, 25 );
 
 	}
 
@@ -1016,7 +1028,7 @@ _styleSheet = string.Template(
 
 	}
 
-	QFrame[gafferHighlighted=\"true\"]#gafferDiffA, QFrame[gafferHighlighted=\"true\"]#gafferDiffB, QFrame[gafferHighlighted=\"true\"]#gafferDiffCommon {
+	QFrame[gafferHighlighted=\"true\"]#gafferDiffA, QFrame[gafferHighlighted=\"true\"]#gafferDiffB, QFrame[gafferHighlighted=\"true\"]#gafferDiffAB {
 		background-color: $brightColor;
 	}
 
@@ -1024,7 +1036,7 @@ _styleSheet = string.Template(
 
 	*[gafferRounded="true"] {
 
-		border-radius: 8px;
+		border-radius: 6px;
 
 	}
 
