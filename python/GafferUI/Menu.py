@@ -460,11 +460,10 @@ class Menu( GafferUI.Widget ) :
 			self.__searchLine.setFocus()
 			self.__searchMenu.setUpdatesEnabled( True )
 
-	def __matchingActions( self, searchText, path = "" ) :
+	def __matchingActions( self, searchText ) :
 
 		results = {}
-		# find all actions matching a case-insensitive regex
-		matcher = re.compile( "".join( [ "[%s|%s]" % ( c.upper(), c.lower() ) for c in searchText ] ) )
+		matcher = re.compile( re.escape( searchText ), re.IGNORECASE )
 
 		for name in self.__searchStructure :
 
