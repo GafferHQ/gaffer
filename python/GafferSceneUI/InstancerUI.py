@@ -93,16 +93,37 @@ Gaffer.Metadata.registerNode(
 
 		],
 
-		"instance" : [
+		"instances" : [
 
 			"description",
 			"""
-			The scene to be instanced. Use the ${instancer:id}
-			variable in the upstream graph to create per-instance
-			variations.
+			The scene containing the instances to be applied to
+			each vertex. Specify multiple instances by parenting
+			them at the root of the scene :
+
+			- /instance0
+			- /instance1
+			- /instance2
+
+			Note that the instances are not limited to being a
+			single object : they can each have arbitrary child
+			hierarchies.
 			""",
 
 			"plugValueWidget:type", "",
+
+		],
+
+		"index" : [
+
+			"description",
+			"""
+			The name of a per-vertex integer primitive variable
+			used to determine which instance is applied to the
+			vertex. An index of 0 applies the first location from
+			the instances scene, an index of 1 applies the second
+			and so on.
+			"""
 
 		],
 

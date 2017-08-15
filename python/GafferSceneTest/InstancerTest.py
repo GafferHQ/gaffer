@@ -88,7 +88,7 @@ class InstancerTest( GafferSceneTest.SceneTestCase ) :
 
 		instancer = GafferScene.Instancer()
 		instancer["in"].setInput( seedsInput["out"] )
-		instancer["instance"].setInput( instanceInput["out"] )
+		instancer["instances"].setInput( instanceInput["out"] )
 		instancer["parent"].setValue( "/seeds" )
 		instancer["name"].setValue( "instances" )
 
@@ -105,21 +105,24 @@ class InstancerTest( GafferSceneTest.SceneTestCase ) :
 		self.assertEqual( instancer["out"].object( "/seeds/instances" ), IECore.NullObject() )
 		self.assertEqual( instancer["out"].transform( "/seeds/instances" ), imath.M44f() )
 		self.assertEqual( instancer["out"].bound( "/seeds/instances" ), imath.Box3f( imath.V3f( -2, -2, -2 ), imath.V3f( 3, 3, 2 ) ) )
-		self.assertEqual( instancer["out"].childNames( "/seeds/instances" ), IECore.InternedStringVectorData( [ "0", "1", "2", "3" ] ) )
+		self.assertEqual( instancer["out"].childNames( "/seeds/instances" ), IECore.InternedStringVectorData( [ "sphere" ] ) )
+
+		self.assertEqual( instancer["out"].object( "/seeds/instances/sphere" ), IECore.NullObject() )
+		self.assertEqual( instancer["out"].transform( "/seeds/instances/sphere" ), imath.M44f() )
+		self.assertEqual( instancer["out"].bound( "/seeds/instances/sphere" ), imath.Box3f( imath.V3f( -2, -2, -2 ), imath.V3f( 3, 3, 2 ) ) )
+		self.assertEqual( instancer["out"].childNames( "/seeds/instances/sphere" ), IECore.InternedStringVectorData( [ "0", "1", "2", "3" ] ) )
 
 		for i in range( 0, 4 ) :
 
-			instancePath = "/seeds/instances/%d" % i
+			instancePath = "/seeds/instances/sphere/%d" % i
 
-			self.assertEqual( instancer["out"].object( instancePath ), IECore.NullObject() )
-			self.assertEqual( instancer["out"].transform( instancePath ), imath.M44f().translate( seeds["P"].data[i] ) )
-			self.assertEqual( instancer["out"].bound( instancePath ), imath.Box3f( imath.V3f( -2 ), imath.V3f( 2 ) ) )
-			self.assertEqual( instancer["out"].childNames( instancePath ), IECore.InternedStringVectorData( [ "sphere" ] ) )
-
-			self.assertEqual( instancer["out"].object( instancePath + "/sphere" ), sphere )
-			self.assertEqual( instancer["out"].transform( instancePath + "/sphere" ), imath.M44f().scale( imath.V3f( 2 ) ) )
-			self.assertEqual( instancer["out"].bound( instancePath + "/sphere" ), sphere.bound() )
-			self.assertEqual( instancer["out"].childNames( instancePath + "/sphere" ), IECore.InternedStringVectorData() )
+			self.assertEqual( instancer["out"].object( instancePath ), sphere )
+			self.assertEqual(
+				instancer["out"].transform( instancePath ),
+				imath.M44f().scale( imath.V3f( 2 ) ) * imath.M44f().translate( seeds["P"].data[i] )
+			)
+			self.assertEqual( instancer["out"].bound( instancePath ), sphere.bound() )
+			self.assertEqual( instancer["out"].childNames( instancePath ), IECore.InternedStringVectorData() )
 
 	def testThreading( self ) :
 
@@ -159,7 +162,7 @@ class InstancerTest( GafferSceneTest.SceneTestCase ) :
 
 		instancer = GafferScene.Instancer()
 		instancer["in"].setInput( seedsInput["out"] )
-		instancer["instance"].setInput( instanceInput["out"] )
+		instancer["instances"].setInput( instanceInput["out"] )
 		instancer["parent"].setValue( "/seeds" )
 		instancer["name"].setValue( "instances" )
 
@@ -175,7 +178,7 @@ class InstancerTest( GafferSceneTest.SceneTestCase ) :
 
 		n = GafferScene.Instancer()
 		a = n.affects( n["name"] )
-		self.assertEqual( [ x.relativeName( n ) for x in a ], [ "out.childNames" ] )
+		self.assertEqual( { x.relativeName( n ) for x in a }, { "out.childNames", "out.bound" } )
 
 	def testParentBoundsWhenNoInstances( self ) :
 
@@ -185,7 +188,7 @@ class InstancerTest( GafferSceneTest.SceneTestCase ) :
 		instancer = GafferScene.Instancer()
 		instancer["in"].setInput( sphere["out"] )
 		instancer["parent"].setValue( "/sphere" )
-		instancer["instance"].setInput( sphere["out"] )
+		instancer["instances"].setInput( sphere["out"] )
 
 		self.assertSceneValid( instancer["out"] )
 		self.assertEqual( instancer["out"].bound( "/sphere" ), sphere["out"].bound( "/sphere" ) )
@@ -209,7 +212,7 @@ class InstancerTest( GafferSceneTest.SceneTestCase ) :
 
 		instancer = GafferScene.Instancer()
 		instancer["in"].setInput( plane["out"] )
-		instancer["instance"].setInput( sphere["out"] )
+		instancer["instances"].setInput( sphere["out"] )
 
 		instancer["parent"].setValue( "" )
 
@@ -223,7 +226,7 @@ class InstancerTest( GafferSceneTest.SceneTestCase ) :
 
 		instancer = GafferScene.Instancer()
 		instancer["in"].setInput( plane["out"] )
-		instancer["instance"].setInput( sphere["out"] )
+		instancer["instances"].setInput( sphere["out"] )
 
 		instancer["parent"].setValue( "/plane" )
 
@@ -245,7 +248,7 @@ class InstancerTest( GafferSceneTest.SceneTestCase ) :
 
 		instancer = GafferScene.Instancer()
 		instancer["in"].setInput( plane["out"] )
-		instancer["instance"].setInput( sphere["out"] )
+		instancer["instances"].setInput( sphere["out"] )
 
 		instancer["parent"].setValue( "/plane" )
 
@@ -260,7 +263,7 @@ class InstancerTest( GafferSceneTest.SceneTestCase ) :
 
 		instancer = GafferScene.Instancer()
 		instancer["in"].setInput( plane["out"] )
-		instancer["instance"].setInput( sphere["out"] )
+		instancer["instances"].setInput( sphere["out"] )
 		instancer["parent"].setValue( "/plane" )
 
 		cs = GafferTest.CapturingSlot( instancer.plugDirtiedSignal() )
@@ -286,7 +289,7 @@ class InstancerTest( GafferSceneTest.SceneTestCase ) :
 
 		script["instancer"] = GafferScene.Instancer()
 		script["instancer"]["in"].setInput( script["plane"]["out"] )
-		script["instancer"]["instance"].setInput( script["sphere"]["out"] )
+		script["instancer"]["instances"].setInput( script["sphere"]["out"] )
 		script["instancer"]["parent"].setValue( "/plane" )
 
 		# The Instancer spawns its own threads, so if we don't release the GIL
@@ -374,7 +377,7 @@ class InstancerTest( GafferSceneTest.SceneTestCase ) :
 
 		script["instancer"] = GafferScene.Instancer()
 		script["instancer"]["in"].setInput( script["plane"]["out"] )
-		script["instancer"]["instance"].setInput( script["sphere"]["out"] )
+		script["instancer"]["instances"].setInput( script["sphere"]["out"] )
 		script["instancer"]["parent"].setValue( "/plane" )
 
 		script["attributes"] = GafferScene.CustomAttributes()
@@ -442,7 +445,7 @@ class InstancerTest( GafferSceneTest.SceneTestCase ) :
 
 		script["instancer"] = GafferScene.Instancer()
 		script["instancer"]["in"].setInput( script["plane"]["out"] )
-		script["instancer"]["instance"].setInput( script["sphere"]["out"] )
+		script["instancer"]["instances"].setInput( script["sphere"]["out"] )
 		script["instancer"]["parent"].setValue( "/plane" )
 
 		script["box"] = Gaffer.Box()
@@ -477,7 +480,7 @@ class InstancerTest( GafferSceneTest.SceneTestCase ) :
 
 		script["instancer"] = GafferScene.Instancer()
 		script["instancer"]["in"].setInput( script["plane"]["out"] )
-		script["instancer"]["instance"].setInput( script["sphere"]["out"] )
+		script["instancer"]["instances"].setInput( script["sphere"]["out"] )
 		script["instancer"]["parent"].setValue( "/plane" )
 
 		context = Gaffer.Context()
@@ -535,7 +538,7 @@ class InstancerTest( GafferSceneTest.SceneTestCase ) :
 
 		script["instancer"] = GafferScene.Instancer()
 		script["instancer"]["in"].setInput( script["plane"]["out"] )
-		script["instancer"]["instance"].setInput( script["sphere"]["out"] )
+		script["instancer"]["instances"].setInput( script["sphere"]["out"] )
 		script["instancer"]["parent"].setValue( "/plane" )
 
 		script["pythonCommand"] = GafferDispatch.PythonCommand()
@@ -574,15 +577,15 @@ class InstancerTest( GafferSceneTest.SceneTestCase ) :
 
 		instancer = GafferScene.Instancer()
 		instancer["in"].setInput( objectToScene["out"] )
-		instancer["instance"].setInput( sphere["out"] )
+		instancer["instances"].setInput( sphere["out"] )
 		instancer["parent"].setValue( "/object" )
 
-		self.assertEqual( instancer["out"].transform( "/object/instances/0" ), imath.M44f().translate( imath.V3f( 4, 0, 0 ) ) )
+		self.assertEqual( instancer["out"].transform( "/object/instances/sphere/0" ), imath.M44f().translate( imath.V3f( 4, 0, 0 ) ) )
 
 		instancer["orientation"].setValue( "orientation" )
 		self.assertTrue(
 			imath.V3f( 4, 0, -1 ).equalWithAbsError(
-				imath.V3f( 1, 0, 0 ) * instancer["out"].transform( "/object/instances/0" ),
+				imath.V3f( 1, 0, 0 ) * instancer["out"].transform( "/object/instances/sphere/0" ),
 				0.00001
 			)
 		)
@@ -590,7 +593,7 @@ class InstancerTest( GafferSceneTest.SceneTestCase ) :
 		instancer["scale"].setValue( "scale" )
 		self.assertTrue(
 			imath.V3f( 4, 0, -2 ).equalWithAbsError(
-				imath.V3f( 1, 0, 0 ) * instancer["out"].transform( "/object/instances/0" ),
+				imath.V3f( 1, 0, 0 ) * instancer["out"].transform( "/object/instances/sphere/0" ),
 				0.00001
 			)
 		)
@@ -598,10 +601,53 @@ class InstancerTest( GafferSceneTest.SceneTestCase ) :
 		instancer["scale"].setValue( "uniformScale" )
 		self.assertTrue(
 			imath.V3f( 4, 0, -10 ).equalWithAbsError(
-				imath.V3f( 1, 0, 0 ) * instancer["out"].transform( "/object/instances/0" ),
+				imath.V3f( 1, 0, 0 ) * instancer["out"].transform( "/object/instances/sphere/0" ),
 				0.00001
 			)
 		)
+
+	def testIndices( self ) :
+
+		points = IECoreScene.PointsPrimitive( IECore.V3fVectorData( [ imath.V3f( x, 0, 0 ) for x in range( 0, 4 ) ] ) )
+		points["index"] = IECoreScene.PrimitiveVariable(
+			IECoreScene.PrimitiveVariable.Interpolation.Vertex,
+			IECore.IntVectorData( [ 0, 1, 1, 0 ] ),
+		)
+
+		objectToScene = GafferScene.ObjectToScene()
+		objectToScene["object"].setValue( points )
+
+		sphere = GafferScene.Sphere()
+		sphere["type"].setValue( sphere.Type.Primitive )
+		cube = GafferScene.Cube()
+		instances = GafferScene.Parent()
+		instances["in"].setInput( sphere["out"] )
+		instances["child"].setInput( cube["out"] )
+		instances["parent"].setValue( "/" )
+
+		instancer = GafferScene.Instancer()
+		instancer["in"].setInput( objectToScene["out"] )
+		instancer["instances"].setInput( instances["out"] )
+		instancer["parent"].setValue( "/object" )
+		instancer["index"].setValue( "index" )
+
+		self.assertEqual( instancer["out"].childNames( "/object/instances" ), IECore.InternedStringVectorData( [ "sphere", "cube" ] ) )
+		self.assertEqual( instancer["out"].childNames( "/object/instances/sphere" ), IECore.InternedStringVectorData( [ "0", "3" ] ) )
+		self.assertEqual( instancer["out"].childNames( "/object/instances/cube" ), IECore.InternedStringVectorData( [ "1", "2" ] ) )
+		self.assertEqual( instancer["out"].childNames( "/object/instances/sphere/0" ), IECore.InternedStringVectorData() )
+		self.assertEqual( instancer["out"].childNames( "/object/instances/sphere/3" ), IECore.InternedStringVectorData() )
+		self.assertEqual( instancer["out"].childNames( "/object/instances/cube/1" ), IECore.InternedStringVectorData() )
+		self.assertEqual( instancer["out"].childNames( "/object/instances/cube/2" ), IECore.InternedStringVectorData() )
+
+		self.assertEqual( instancer["out"].object( "/object/instances" ), IECore.NullObject.defaultNullObject() )
+		self.assertEqual( instancer["out"].object( "/object/instances/sphere" ), IECore.NullObject.defaultNullObject() )
+		self.assertEqual( instancer["out"].object( "/object/instances/cube" ), IECore.NullObject.defaultNullObject() )
+		self.assertEqual( instancer["out"].object( "/object/instances/sphere/0" ), sphere["out"].object( "/sphere" ) )
+		self.assertEqual( instancer["out"].object( "/object/instances/sphere/3" ), sphere["out"].object( "/sphere" ) )
+		self.assertEqual( instancer["out"].object( "/object/instances/cube/1" ), cube["out"].object( "/cube" ) )
+		self.assertEqual( instancer["out"].object( "/object/instances/cube/2" ), cube["out"].object( "/cube" ) )
+
+		self.assertSceneValid( instancer["out"] )
 
 if __name__ == "__main__":
 	unittest.main()
