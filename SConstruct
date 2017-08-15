@@ -1123,7 +1123,7 @@ def buildDocs( target, source, env ) :
 	# then we use `gaffer env python` to launch Gaffer's python, and generate
 	# all the docs in that environment.
 
-	for module in ( "sphinx", "markupsafe", "CommonMark" ) :
+	for module in ( "sphinx", "markupsafe", "CommonMark", "pytz" ) :
 		if not findOnPath( module, env["ENV"]["PYTHONPATH"] ) :
 			try :
 				m = __import__( module )
