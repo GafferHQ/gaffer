@@ -1731,7 +1731,7 @@ class ScopedLogTarget
 		asf::auto_release_ptr<asf::ILogTarget> m_logTarget;
 };
 
-class AppleseedRenderer : public IECoreScenePreview::Renderer
+class AppleseedRenderer final : public IECoreScenePreview::Renderer
 {
 
 	public :

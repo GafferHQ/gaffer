@@ -1620,7 +1620,7 @@ std::string g_consoleFlagsOptionPrefix( "ai:console:" );
 const int g_logFlagsDefault = AI_LOG_ALL;
 const int g_consoleFlagsDefault = AI_LOG_WARNINGS | AI_LOG_ERRORS | AI_LOG_TIMESTAMP | AI_LOG_BACKTRACE | AI_LOG_MEMORY | AI_LOG_COLOR;
 
-class ArnoldRenderer : public IECoreScenePreview::Renderer
+class ArnoldRenderer final : public IECoreScenePreview::Renderer
 {
 
 	public :
