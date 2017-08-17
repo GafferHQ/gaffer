@@ -30,6 +30,13 @@ def __query( url ) :
 
 	return result
 
+def __versionLessEqual( v1, v2 ) :
+
+	v1 = [ int( x ) for x in v1.split( "." ) ]
+	v2 = [ int( x ) for x in v2.split( "." ) ]
+
+	return v1 < v2
+
 # check we have a token available for the upload
 
 if "GITHUB_RELEASE_TOKEN" not in os.environ	:
@@ -71,7 +78,7 @@ installDir = "install/gaffer-%s-%s" % ( args.tag, platform )
 os.makedirs( buildDir )
 
 dependenciesReleases = __query( "https://api.github.com/repos/GafferHQ/dependencies/releases" )
-dependenciesRelease = next( r for r in dependenciesReleases if len( r["assets"] ) )
+dependenciesRelease = next( r for r in dependenciesReleases if len( r["assets"] ) and __versionLessEqual( r["tag_name"], args.tag ) )
 dependenciesAsset = next( a for a in dependenciesRelease["assets"] if platform in a["name"] )
 
 sys.stderr.write( "Downloading dependencies \"%s\"\n" % dependenciesAsset["browser_download_url"] )
