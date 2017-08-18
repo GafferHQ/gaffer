@@ -54,7 +54,7 @@ class ShuffleTest( GafferImageTest.ImageTestCase ) :
 		s = GafferImage.Shuffle()
 		s["in"].setInput( c["out"] )
 
-		self.assertEqual( s["out"].image(), c["out"].image() )
+		self.assertImagesEqual( s["out"], c["out"] )
 
 		for outName, inName in [ ( "R", "R" ), ( "G", "G" ), ( "B", "B" ), ( "A", "A" ) ] :
 			self.assertEqual(

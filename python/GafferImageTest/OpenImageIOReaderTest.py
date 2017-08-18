@@ -234,18 +234,7 @@ class OpenImageIOReaderTest( GafferImageTest.ImageTestCase ) :
 		jpgOCIO["inputSpace"].setValue( "sRGB" )
 		jpgOCIO["outputSpace"].setValue( "linear" )
 
-		exrImage = exrReader["out"].image()
-		jpgImage = jpgOCIO["out"].image()
-
-		exrImage.blindData().clear()
-		jpgImage.blindData().clear()
-
-		imageDiffOp = IECore.ImageDiffOp()
-		res = imageDiffOp(
-			imageA = exrImage,
-			imageB = jpgImage,
-		)
-		self.assertFalse( res.value )
+		self.assertImagesEqual( exrReader["out"], jpgOCIO["out"], ignoreMetadata = True, maxDifference = 0.001 )
 
 	def testOIIOJpgRead( self ) :
 

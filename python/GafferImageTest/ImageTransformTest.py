@@ -82,21 +82,11 @@ class ImageTransformTest( GafferImageTest.ImageTestCase ) :
 		t["in"].setInput( r["out"] )
 		t["transform"]["rotate"].setValue( -1. )
 		t["transform"]["scale"].setValue( IECore.V2f( 1.5, 1. ) )
-		imageToTest = t["out"].image()
-		imageToTest.blindData().clear()
 
 		r2 = GafferImage.ImageReader()
 		r2["fileName"].setValue( os.path.join( self.path, "knownTransformBug.exr" ) )
-		expectedImage = r2['out'].image()
-		expectedImage.blindData().clear()
 
-		op = IECore.ImageDiffOp()
-		res = op(
-			imageA = imageToTest,
-			imageB = expectedImage
-		)
-
-		self.assertFalse( res.value )
+		self.assertImagesEqual( t["out"], r2["out"], ignoreMetadata = True, maxDifference = 0.05 )
 
 	def testImageHash( self ) :
 

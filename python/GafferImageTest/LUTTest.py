@@ -57,7 +57,7 @@ class LUTTest( GafferImageTest.ImageTestCase ) :
 		o = GafferImage.LUT()
 		o["in"].setInput( n["out"] )
 
-		self.assertEqual( n["out"].image(), o["out"].image() )
+		self.assertImagesEqual( n["out"], o["out"] )
 
 		o["fileName"].setValue( self.lut )
 		o["interpolation"].setValue( GafferImage.LUT.Interpolation.Linear )
@@ -105,7 +105,8 @@ class LUTTest( GafferImageTest.ImageTestCase ) :
 		o = GafferImage.LUT()
 		o["in"].setInput( n["out"] )
 
-		self.assertEqual( n["out"].image(), o["out"].image() )
+		self.assertImageHashesEqual( n["out"], o["out"] )
+		self.assertImagesEqual( n["out"], o["out"] )
 
 		o["fileName"].setValue( self.lut )
 
@@ -113,7 +114,8 @@ class LUTTest( GafferImageTest.ImageTestCase ) :
 
 		o["enabled"].setValue( False )
 
-		self.assertEqual( n["out"].image(), o["out"].image() )
+		self.assertImageHashesEqual( n["out"], o["out"] )
+		self.assertImagesEqual( n["out"], o["out"] )
 		self.assertEqual( n["out"]['format'].hash(), o["out"]['format'].hash() )
 		self.assertEqual( n["out"]['dataWindow'].hash(), o["out"]['dataWindow'].hash() )
 		self.assertEqual( n["out"]["metadata"].getValue(), o["out"]["metadata"].getValue() )
@@ -122,7 +124,8 @@ class LUTTest( GafferImageTest.ImageTestCase ) :
 		o["enabled"].setValue( True )
 
 		o["fileName"].setValue( "" )
-		self.assertEqual( n["out"].image(), o["out"].image() )
+		self.assertImageHashesEqual( n["out"], o["out"] )
+		self.assertImagesEqual( n["out"], o["out"] )
 		self.assertEqual( n["out"]['format'].hash(), o["out"]['format'].hash() )
 		self.assertEqual( n["out"]['dataWindow'].hash(), o["out"]['dataWindow'].hash() )
 		self.assertEqual( n["out"]["metadata"].getValue(), o["out"]["metadata"].getValue() )

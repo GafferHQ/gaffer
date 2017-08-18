@@ -102,18 +102,18 @@ class ImageSwitchTest( GafferImageTest.ImageTestCase ) :
 		switch["in"][0].setInput( in0["out"] )
 		switch["in"][1].setInput( in1["out"] )
 
-		self.assertEqual( switch["out"].imageHash(), in0["out"].imageHash() )
-		self.assertEqual( switch["out"].image(), in0["out"].image() )
+		self.assertImageHashesEqual( switch["out"], in0["out"] )
+		self.assertImagesEqual( switch["out"], in0["out"] )
 
 		switch["index"].setValue( 1 )
 
-		self.assertEqual( switch["out"].imageHash(), in1["out"].imageHash() )
-		self.assertEqual( switch["out"].image(), in1["out"].image() )
+		self.assertImageHashesEqual( switch["out"], in1["out"] )
+		self.assertImagesEqual( switch["out"], in1["out"] )
 
 		switch["enabled"].setValue( False )
 
-		self.assertEqual( switch["out"].imageHash(), in0["out"].imageHash() )
-		self.assertEqual( switch["out"].image(), in0["out"].image() )
+		self.assertImageHashesEqual( switch["out"], in0["out"] )
+		self.assertImagesEqual( switch["out"], in0["out"] )
 
 	def testSerialisation( self ) :
 

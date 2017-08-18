@@ -60,7 +60,7 @@ class DeleteImageMetadataTest( GafferImageTest.ImageTestCase ) :
 
 		metadata = m["out"]["metadata"].getValue()
 		self.assertEqual( m["out"]["metadata"].getValue(), inMetadata )
-		self.assertEqual( m["out"].image(), i["out"].image() )
+		self.assertImagesEqual( m["out"], i["out"] )
 		self.assertTrue( "screenWindowWidth" in metadata )
 		self.assertTrue( "screenWindowCenter" in metadata )
 		self.assertTrue( "compression" in metadata )
