@@ -123,6 +123,13 @@ class stats( Gaffer.Application ) :
 					defaultValue = "",
 				),
 
+				IECore.BoolParameter(
+					name = "preCache",
+					description = "Prepopulates the cache by evaluating the scene or image "
+						"once prior to measuring the second evaluation.",
+					defaultValue = False,
+				),
+
 				IECore.StringParameter(
 					name = "task",
 					description = "The name of a TaskNode or TaskPlug to dispatch.",
@@ -357,6 +364,9 @@ class stats( Gaffer.Application ) :
 			IECore.msg( IECore.Msg.Level.Error, "stats", "Scene \"%s\" does not exist" % args["scene"].value )
 			return
 
+		if args["preCache"].value :
+			GafferSceneTest.traverseScene( scene )
+
 		memory = _Memory.maxRSS()
 		with _Timer() as sceneTimer :
 			with self.__performanceMonitor or _NullContextManager(), self.__contextMonitor or _NullContextManager() :
@@ -380,6 +390,9 @@ class stats( Gaffer.Application ) :
 		if image is None :
 			IECore.msg( IECore.Msg.Level.Error, "stats", "Image \"%s\" does not exist" % args["image"].value )
 			return
+
+		if args["preCache"].value :
+			GafferImageTest.processTiles( image )
 
 		memory = _Memory.maxRSS()
 		with _Timer() as imageTimer :
