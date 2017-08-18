@@ -829,12 +829,6 @@ libraries = {
 
 		"classStubs" : [
 
-			# images
-			( "ImageThinner", "ops/image/thinner" ),
-			( "ImagePremultiplyOp", "ops/image/premultiply" ),
-			( "ImageUnpremultiplyOp", "ops/image/unpremultiply" ),
-			( "CurveTracer", "ops/image/traceCurves" ),
-
 			# curves
 			( "CurveExtrudeOp", "ops/curves/extrude" ),
 			( "CurveLineariser", "ops/curves/linearise" ),
