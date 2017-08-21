@@ -436,59 +436,6 @@ void Instancer::compute( Gaffer::ValuePlug *output, const Gaffer::Context *conte
 	BranchCreator::compute( output, context );
 }
 
-struct Instancer::BoundHash
-{
-
-	BoundHash( const Instancer *instancer, const Instancer::EngineData *engine, const ScenePath &branchPath, const vector<InternedString> &childNames, const Context *c )
-		:	m_instancer( instancer ), m_engine( engine ), m_branchPath( branchPath ), m_childNames( childNames ), m_context( c ), m_hash()
-	{
-	}
-
-	BoundHash( const BoundHash &rhs, split )
-		:	m_instancer( rhs.m_instancer ), m_engine( rhs.m_engine ), m_branchPath( rhs.m_branchPath ), m_childNames( rhs.m_childNames ), m_context( rhs.m_context ), m_hash()
-	{
-	}
-
-	void operator() ( const blocked_range<size_t> &r )
-	{
-		InstanceScope instanceScope( m_context );
-
-		ScenePath branchChildPath( m_branchPath );
-		branchChildPath.push_back( InternedString() ); // where we'll place the instance index
-
-		for( size_t i=r.begin(); i!=r.end(); ++i )
-		{
-			branchChildPath.back() = m_childNames[i];
-			const size_t index = instanceIndex( branchChildPath );
-			instanceScope.update( branchChildPath, index );
-
-			m_instancer->instancesPlug()->boundPlug()->hash( m_hash );
-			m_instancer->instancesPlug()->transformPlug()->hash( m_hash );
-			m_hash.append( m_engine->instanceTransform( index ) );
-		}
-	}
-
-	void join( const BoundHash &rhs )
-	{
-		m_hash.append( rhs.m_hash );
-	}
-
-	const MurmurHash &result()
-	{
-		return m_hash;
-	}
-
-	private :
-
-		const Instancer *m_instancer;
-		const Instancer::EngineData *m_engine;
-		const ScenePath &m_branchPath;
-		const vector<InternedString> &m_childNames;
-		const Context *m_context;
-		MurmurHash m_hash;
-
-};
-
 void Instancer::hashBranchBound( const ScenePath &parentPath, const ScenePath &branchPath, const Gaffer::Context *context, IECore::MurmurHash &h ) const
 {
 	if( branchPath.size() < 2 )
@@ -507,22 +454,14 @@ void Instancer::hashBranchBound( const ScenePath &parentPath, const ScenePath &b
 		// "/instances/<instanceName>"
 		BranchCreator::hashBranchBound( parentPath, branchPath, context, h );
 
-		ConstEngineDataPtr e = engine( parentPath, context );
-		if( e->numInstances() )
+		engineHash( parentPath, context, h );
+		instanceChildNamesHash( parentPath, context, h );
+		h.append( branchPath.back() );
+
 		{
-			ConstCompoundDataPtr ic = instanceChildNames( parentPath, context );
-			const vector<InternedString> &childNames = ic->member<InternedStringVectorData>( branchPath.back() )->readable();
-
-			BoundHash hasher( this, e.get(), branchPath, childNames, context );
-			task_group_context taskGroupContext( task_group_context::isolated );
-			parallel_deterministic_reduce(
-				blocked_range<size_t>( 0, childNames.size(), 100 ),
-				hasher,
-				// Prevents outer tasks silently cancelling our tasks
-				taskGroupContext
-			);
-
-			h.append( hasher.result() );
+			InstanceScope scope( context, branchPath );
+			instancesPlug()->transformPlug()->hash( h );
+			instancesPlug()->boundPlug()->hash( h );
 		}
 	}
 	else
@@ -532,62 +471,6 @@ void Instancer::hashBranchBound( const ScenePath &parentPath, const ScenePath &b
 		h = instancesPlug()->boundPlug()->hash();
 	}
 }
-
-struct Instancer::BoundUnion
-{
-
-	BoundUnion( const Instancer *instancer, const Instancer::EngineData *engine, const ScenePath &branchPath, const vector<InternedString> &childNames, const Context *c )
-		:	m_instancer( instancer ), m_engine( engine ), m_branchPath( branchPath ), m_childNames( childNames ), m_context( c ), m_union()
-	{
-	}
-
-	BoundUnion( const BoundUnion &rhs, split )
-		:	m_instancer( rhs.m_instancer ), m_engine( rhs.m_engine ), m_branchPath( rhs.m_branchPath ), m_childNames( rhs.m_childNames ), m_context( rhs.m_context ), m_union()
-	{
-	}
-
-	void operator() ( const blocked_range<size_t> &r )
-	{
-		InstanceScope instanceScope( m_context );
-
-		ScenePath branchChildPath( m_branchPath );
-		branchChildPath.push_back( InternedString() ); // where we'll place the instance index
-
-		for( size_t i=r.begin(); i!=r.end(); ++i )
-		{
-			branchChildPath.back() = m_childNames[i];
-			const size_t index = instanceIndex( branchChildPath );
-			instanceScope.update( branchChildPath, index );
-
-			Box3f branchChildBound = m_instancer->instancesPlug()->boundPlug()->getValue();
-			M44f branchChildTransform = m_instancer->instancesPlug()->transformPlug()->getValue();
-			branchChildTransform = branchChildTransform * m_engine->instanceTransform( index );
-			branchChildBound = transform( branchChildBound, branchChildTransform );
-
-			m_union.extendBy( branchChildBound );
-		}
-	}
-
-	void join( const BoundUnion &rhs )
-	{
-		m_union.extendBy( rhs.m_union );
-	}
-
-	const Box3f &result()
-	{
-		return m_union;
-	}
-
-	private :
-
-		const Instancer *m_instancer;
-		const Instancer::EngineData *m_engine;
-		const ScenePath &m_branchPath;
-		const vector<InternedString> &m_childNames;
-		const Context *m_context;
-		Box3f m_union;
-
-};
 
 Imath::Box3f Instancer::computeBranchBound( const ScenePath &parentPath, const ScenePath &branchPath, const Gaffer::Context *context ) const
 {
@@ -605,26 +488,50 @@ Imath::Box3f Instancer::computeBranchBound( const ScenePath &parentPath, const S
 	else if( branchPath.size() == 2 )
 	{
 		// "/instances/<instanceName>"
-		Box3f result;
-		ConstEngineDataPtr e = engine( parentPath, context );
-		if( e->numInstances() )
-		{
-			ConstCompoundDataPtr ic = instanceChildNames( parentPath, context );
-			const vector<InternedString> &childNames = ic->member<InternedStringVectorData>( branchPath.back() )->readable();
+		//
+		// We need to return the union of all the transformed children, but
+		// because we have direct access to the engine, we can implement this
+		// more efficiently than `unionOfTransformedChildBounds()`.
 
-			BoundUnion unioner( this, e.get(), branchPath, childNames, context );
-			task_group_context taskGroupContext( task_group_context::isolated );
-			parallel_reduce(
-				blocked_range<size_t>( 0, childNames.size() ),
-				unioner,
-				tbb::auto_partitioner(),
-				// Prevents outer tasks silently cancelling our tasks
-				taskGroupContext
-			);
-			result = unioner.result();
+		ConstEngineDataPtr e = engine( parentPath, context );
+		ConstCompoundDataPtr ic = instanceChildNames( parentPath, context );
+		const vector<InternedString> &childNames = ic->member<InternedStringVectorData>( branchPath.back() )->readable();
+
+		M44f childTransform;
+		Box3f childBound;
+		{
+			InstanceScope scope( context, branchPath );
+			childTransform = instancesPlug()->transformPlug()->getValue();
+			childBound = instancesPlug()->boundPlug()->getValue();
 		}
 
-		return result;
+		typedef vector<InternedString>::const_iterator Iterator;
+		typedef blocked_range<Iterator> Range;
+
+		task_group_context taskGroupContext( task_group_context::isolated );
+		return parallel_reduce(
+			Range( childNames.begin(), childNames.end() ),
+			Box3f(),
+			[ &e, &childBound, &childTransform ] ( const Range &r, Box3f u ) {
+				for( Iterator i = r.begin(); i != r.end(); ++i )
+				{
+					const size_t index = instanceIndex( *i );
+					const M44f m = childTransform * e->instanceTransform( index );
+					const Box3f b = transform( childBound, m );
+					u.extendBy( b );
+				}
+				return u;
+			},
+			// Union
+			[] ( const Box3f &b0, const Box3f &b1 ) {
+				Box3f u( b0 );
+				u.extendBy( b1 );
+				return u;
+			},
+			tbb::auto_partitioner(),
+			// Prevents outer tasks silently cancelling our tasks
+			taskGroupContext
+		);
 	}
 	else
 	{
@@ -833,33 +740,22 @@ void Instancer::instanceChildNamesHash( const ScenePath &parentPath, const Gaffe
 	instanceChildNamesPlug()->hash( h );
 }
 
-int Instancer::instanceIndex( const ScenePath &branchPath )
+int Instancer::instanceIndex( const IECore::InternedString &name )
 {
-	return boost::lexical_cast<int>( branchPath[2].value() );
+	return boost::lexical_cast<int>( name );
 }
 
-Instancer::InstanceScope::InstanceScope( const Gaffer::Context *context )
-	:	EditableScope( context )
+int Instancer::instanceIndex( const ScenePath &branchPath )
 {
+	return instanceIndex( branchPath[2] );
 }
 
 Instancer::InstanceScope::InstanceScope( const Gaffer::Context *context, const ScenePath &branchPath )
 	:	EditableScope( context )
-{
-	update( branchPath );
-}
-
-void Instancer::InstanceScope::update( const ScenePath &branchPath )
-{
-	update( branchPath, instanceIndex( branchPath ) );
-}
-
-void Instancer::InstanceScope::update( const ScenePath &branchPath, int instanceId )
 {
 	assert( branchPath.size() >= 3 );
 	ScenePath instancePath; instancePath.reserve( branchPath.size() - 2 );
 	instancePath.push_back( branchPath[1] );
 	instancePath.insert( instancePath.end(), branchPath.begin() + 3, branchPath.end() );
 	set( ScenePlug::scenePathContextName, instancePath );
-	set( idContextName, instanceId );
 }

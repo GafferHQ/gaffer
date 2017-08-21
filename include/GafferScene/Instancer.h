@@ -95,9 +95,6 @@ class GAFFERSCENE_API Instancer : public BranchCreator
 
 	private :
 
-		struct BoundHash;
-		struct BoundUnion;
-
 		IE_CORE_FORWARDDECLARE( EngineData );
 
 		Gaffer::ObjectPlug *enginePlug();
@@ -112,14 +109,12 @@ class GAFFERSCENE_API Instancer : public BranchCreator
 		IECore::ConstCompoundDataPtr instanceChildNames( const ScenePath &parentPath, const Gaffer::Context *context ) const;
 		void instanceChildNamesHash( const ScenePath &parentPath, const Gaffer::Context *context, IECore::MurmurHash &h ) const;
 
+		static int instanceIndex( const IECore::InternedString &name );
 		static int instanceIndex( const ScenePath &branchPath );
 
 		struct InstanceScope : public Gaffer::Context::EditableScope
 		{
-			InstanceScope( const Gaffer::Context *context );
 			InstanceScope( const Gaffer::Context *context, const ScenePath &branchPath );
-			void update( const ScenePath &branchPath );
-			void update( const ScenePath &branchPath, int instanceId );
 		};
 
 		static size_t g_firstPlugIndex;

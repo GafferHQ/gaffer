@@ -285,7 +285,7 @@ class InstancerTest( GafferSceneTest.SceneTestCase ) :
 		script["sphere"] = GafferScene.Sphere()
 
 		script["expression"] = Gaffer.Expression()
-		script["expression"].setExpression( "parent['sphere']['radius'] = context.getFrame() + float( context['instancer:id'] )" )
+		script["expression"].setExpression( "parent['sphere']['radius'] = context.getFrame()" )
 
 		script["instancer"] = GafferScene.Instancer()
 		script["instancer"]["in"].setInput( script["plane"]["out"] )
@@ -373,7 +373,7 @@ class InstancerTest( GafferSceneTest.SceneTestCase ) :
 		script["sphere"] = GafferScene.Sphere()
 
 		script["expression"] = Gaffer.Expression()
-		script["expression"].setExpression( "parent['sphere']['radius'] = context.getFrame() + float( context['instancer:id'] )" )
+		script["expression"].setExpression( "parent['sphere']['radius'] = context.getFrame()" )
 
 		script["instancer"] = GafferScene.Instancer()
 		script["instancer"]["in"].setInput( script["plane"]["out"] )
@@ -441,7 +441,7 @@ class InstancerTest( GafferSceneTest.SceneTestCase ) :
 		script["sphere"] = GafferScene.Sphere()
 
 		script["expression"] = Gaffer.Expression()
-		script["expression"].setExpression( "parent['sphere']['radius'] = 0.1 + context.getFrame() + float( context['instancer:id'] )" )
+		script["expression"].setExpression( "parent['sphere']['radius'] = 0.1 + context.getFrame()" )
 
 		script["instancer"] = GafferScene.Instancer()
 		script["instancer"]["in"].setInput( script["plane"]["out"] )
@@ -476,7 +476,7 @@ class InstancerTest( GafferSceneTest.SceneTestCase ) :
 		script["sphere"] = GafferScene.Sphere()
 
 		script["expression"] = Gaffer.Expression()
-		script["expression"].setExpression( "parent['sphere']['radius'] = context.get( 'minRadius', 0.1 ) + context.getFrame() + float( context['instancer:id'] )" )
+		script["expression"].setExpression( "parent['sphere']['radius'] = context.get( 'minRadius', 0.1 ) + context.getFrame()" )
 
 		script["instancer"] = GafferScene.Instancer()
 		script["instancer"]["in"].setInput( script["plane"]["out"] )
@@ -534,7 +534,7 @@ class InstancerTest( GafferSceneTest.SceneTestCase ) :
 		script["sphere"] = GafferScene.Sphere()
 
 		script["expression"] = Gaffer.Expression()
-		script["expression"].setExpression( "parent['sphere']['radius'] = context.get( 'minRadius', 0.1 ) + context.getFrame() + float( context['instancer:id'] )" )
+		script["expression"].setExpression( "parent['sphere']['radius'] = context.get( 'minRadius', 0.1 ) + context.getFrame()" )
 
 		script["instancer"] = GafferScene.Instancer()
 		script["instancer"]["in"].setInput( script["plane"]["out"] )
