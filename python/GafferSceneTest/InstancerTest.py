@@ -618,7 +618,6 @@ class InstancerTest( GafferSceneTest.SceneTestCase ) :
 		objectToScene["object"].setValue( points )
 
 		sphere = GafferScene.Sphere()
-		sphere["type"].setValue( sphere.Type.Primitive )
 		cube = GafferScene.Cube()
 		instances = GafferScene.Parent()
 		instances["in"].setInput( sphere["out"] )
@@ -648,6 +647,58 @@ class InstancerTest( GafferSceneTest.SceneTestCase ) :
 		self.assertEqual( instancer["out"].object( "/object/instances/cube/2" ), cube["out"].object( "/cube" ) )
 
 		self.assertSceneValid( instancer["out"] )
+
+	def testSets( self ) :
+
+		points = IECoreScene.PointsPrimitive( IECore.V3fVectorData( [ imath.V3f( x, 0, 0 ) for x in range( 0, 4 ) ] ) )
+		points["index"] = IECoreScene.PrimitiveVariable(
+			IECoreScene.PrimitiveVariable.Interpolation.Vertex,
+			IECore.IntVectorData( [ 0, 1, 1, 0 ] ),
+		)
+
+		objectToScene = GafferScene.ObjectToScene()
+		objectToScene["object"].setValue( points )
+
+		sphere = GafferScene.Sphere()
+		sphere["sets"].setValue( "sphereSet" )
+
+		cube = GafferScene.Cube()
+		cube["sets"].setValue( "cubeSet" )
+		cubeGroup = GafferScene.Group()
+		cubeGroup["name"].setValue( "cubeGroup" )
+		cubeGroup["in"][0].setInput( cube["out"] )
+
+		instances = GafferScene.Parent()
+		instances["in"].setInput( sphere["out"] )
+		instances["child"].setInput( cubeGroup["out"] )
+		instances["parent"].setValue( "/" )
+
+		instancer = GafferScene.Instancer()
+		instancer["in"].setInput( objectToScene["out"] )
+		instancer["instances"].setInput( instances["out"] )
+		instancer["parent"].setValue( "/object" )
+		instancer["index"].setValue( "index" )
+
+		self.assertEqual(
+			instancer["out"]["setNames"].getValue(),
+			IECore.InternedStringVectorData( [ "sphereSet", "cubeSet" ] )
+		)
+
+		self.assertEqual(
+			set( instancer["out"].set( "sphereSet" ).value.paths() ),
+			{
+				"/object/instances/sphere/0",
+				"/object/instances/sphere/3",
+			}
+		)
+
+		self.assertEqual(
+			set( instancer["out"].set( "cubeSet" ).value.paths() ),
+			{
+				"/object/instances/cubeGroup/1/cube",
+				"/object/instances/cubeGroup/2/cube",
+			}
+		)
 
 if __name__ == "__main__":
 	unittest.main()

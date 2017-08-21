@@ -716,6 +716,59 @@ IECore::ConstInternedStringVectorDataPtr Instancer::computeBranchChildNames( con
 	}
 }
 
+void Instancer::hashBranchSetNames( const ScenePath &parentPath, const Gaffer::Context *context, IECore::MurmurHash &h ) const
+{
+	h = instancesPlug()->setNamesPlug()->hash();
+}
+
+IECore::ConstInternedStringVectorDataPtr Instancer::computeBranchSetNames( const ScenePath &parentPath, const Gaffer::Context *context ) const
+{
+	return instancesPlug()->setNamesPlug()->getValue();
+}
+
+void Instancer::hashBranchSet( const ScenePath &parentPath, const IECore::InternedString &setName, const Gaffer::Context *context, IECore::MurmurHash &h ) const
+{
+	BranchCreator::hashBranchSet( parentPath, setName, context, h );
+
+	h.append( instancesPlug()->childNamesHash( ScenePath() ) );
+	instanceChildNamesHash( parentPath, context, h );
+	instancesPlug()->setPlug()->hash( h );
+	namePlug()->hash( h );
+}
+
+IECore::ConstPathMatcherDataPtr Instancer::computeBranchSet( const ScenePath &parentPath, const IECore::InternedString &setName, const Gaffer::Context *context ) const
+{
+	ConstInternedStringVectorDataPtr instanceNames = instancesPlug()->childNames( ScenePath() );
+	IECore::ConstCompoundDataPtr instanceChildNames = this->instanceChildNames( parentPath, context );
+	ConstPathMatcherDataPtr inputSet = instancesPlug()->setPlug()->getValue();
+
+	PathMatcherDataPtr outputSetData = new PathMatcherData;
+	PathMatcher &outputSet = outputSetData->writable();
+
+	vector<InternedString> branchPath( { namePlug()->getValue() } );
+	vector<InternedString> instancePath( 1 );
+
+	for( const auto &instanceName : instanceNames->readable() )
+	{
+		branchPath.resize( 2 );
+		branchPath.back() = instanceName;
+		instancePath.back() = instanceName;
+
+		PathMatcher instanceSet = inputSet->readable().subTree( instancePath );
+
+		const vector<InternedString> &childNames = instanceChildNames->member<InternedStringVectorData>( instanceName )->readable();
+
+		branchPath.push_back( InternedString() );
+		for( const auto &instanceChildName : childNames )
+		{
+			branchPath.back() = instanceChildName;
+			outputSet.addPaths( instanceSet, branchPath );
+		}
+	}
+
+	return outputSetData;
+}
+
 Instancer::ConstEngineDataPtr Instancer::engine( const ScenePath &parentPath, const Gaffer::Context *context ) const
 {
 	ScenePlug::PathScope scope( context, parentPath );
