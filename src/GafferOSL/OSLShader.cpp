@@ -74,50 +74,34 @@ using namespace GafferOSL;
 namespace
 {
 
-struct ShadingEngineCacheKey
+struct ShadingEngineCacheGetterKey
 {
 
-	ShadingEngineCacheKey()
+	ShadingEngineCacheGetterKey()
 		:	shader( nullptr )
 	{
 	}
 
-	ShadingEngineCacheKey( const OSLShader *s )
+	ShadingEngineCacheGetterKey( const OSLShader *s )
 		:	shader( s ), hash( s->attributesHash() )
 	{
 	}
 
-	bool operator == ( const ShadingEngineCacheKey &other ) const
+	operator const IECore::MurmurHash & () const
 	{
-		return hash == other.hash;
+		return hash;
 	}
 
-	bool operator != ( const ShadingEngineCacheKey &other ) const
-	{
-		return hash != other.hash;
-	}
-
-	bool operator < ( const ShadingEngineCacheKey &other ) const
-	{
-		return hash < other.hash;
-	}
-
-	mutable const OSLShader *shader;
+	const OSLShader *shader;
 	MurmurHash hash;
 
 };
 
-inline size_t tbb_hasher( const ShadingEngineCacheKey &cacheKey )
-{
-	return tbb_hasher( cacheKey.hash );
-}
-
-ConstShadingEnginePtr getter( const ShadingEngineCacheKey &key, size_t &cost )
+ConstShadingEnginePtr getter( const ShadingEngineCacheGetterKey &key, size_t &cost )
 {
 	cost = 1;
 
 	ConstCompoundObjectPtr attributes = key.shader->attributes();
-	key.shader = nullptr; // there's no guarantee the node would even exist after this call, so zero it out to avoid temptation
 
 	CompoundObject::ObjectMap::const_iterator it = attributes->members().find( "osl:surface" );
 	if( it == attributes->members().end() )
@@ -134,7 +118,7 @@ ConstShadingEnginePtr getter( const ShadingEngineCacheKey &key, size_t &cost )
 	return new ShadingEngine( network );
 }
 
-typedef LRUCache<ShadingEngineCacheKey, ConstShadingEnginePtr> ShadingEngineCache;
+typedef LRUCache<IECore::MurmurHash, ConstShadingEnginePtr, LRUCachePolicy::Parallel, ShadingEngineCacheGetterKey> ShadingEngineCache;
 ShadingEngineCache g_shadingEngineCache( getter, 10000 );
 
 } // namespace
@@ -182,7 +166,7 @@ const Gaffer::Plug *OSLShader::correspondingInput( const Gaffer::Plug *output ) 
 
 ConstShadingEnginePtr OSLShader::shadingEngine() const
 {
-	return g_shadingEngineCache.get( ShadingEngineCacheKey( this ) );
+	return g_shadingEngineCache.get( ShadingEngineCacheGetterKey( this ) );
 }
 
 bool OSLShader::acceptsInput( const Plug *plug, const Plug *inputPlug ) const
