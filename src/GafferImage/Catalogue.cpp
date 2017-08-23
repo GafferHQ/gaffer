@@ -206,7 +206,7 @@ class Catalogue::InternalImage : public ImageNode
 			imageWriter->taskPlug()->execute();
 		}
 
-		bool insertDriver( IECore::DisplayDriverPtr driver, const IECore::CompoundData *parameters )
+		bool insertDriver( IECoreImage::DisplayDriverPtr driver, const IECore::CompoundData *parameters )
 		{
 			// If we represent a disk-based image, we can't accept
 			// a render.
@@ -882,13 +882,13 @@ void Catalogue::imageRemoved( GraphComponent *graphComponent )
 	}
 }
 
-IECore::DisplayDriverServer *Catalogue::displayDriverServer()
+IECoreImage::DisplayDriverServer *Catalogue::displayDriverServer()
 {
-	static IECore::DisplayDriverServerPtr g_server = new IECore::DisplayDriverServer();
+	static IECoreImage::DisplayDriverServerPtr g_server = new IECoreImage::DisplayDriverServer();
 	return g_server.get();
 }
 
-void Catalogue::driverCreated( IECore::DisplayDriver *driver, const IECore::CompoundData *parameters )
+void Catalogue::driverCreated( IECoreImage::DisplayDriver *driver, const IECore::CompoundData *parameters )
 {
 	// Check the image is destined for catalogues in general
 	if( const StringData *portNumberData = parameters->member<StringData>( "displayPort" ) )

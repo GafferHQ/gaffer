@@ -347,7 +347,7 @@ IECore::MurmurHash ImagePlug::channelDataHash( const std::string &channelName, c
 	return channelDataPlug()->hash();
 }
 
-IECore::ImagePrimitivePtr ImagePlug::image() const
+IECoreImage::ImagePrimitivePtr ImagePlug::image() const
 {
 	Format format = formatPlug()->getValue();
 	Box2i dataWindow = dataWindowPlug()->getValue();
@@ -364,7 +364,7 @@ IECore::ImagePrimitivePtr ImagePlug::image() const
 
 	Box2i newDisplayWindow = format.toEXRSpace( format.getDisplayWindow() );
 
-	ImagePrimitivePtr result = new ImagePrimitive( newDataWindow, newDisplayWindow );
+	IECoreImage::ImagePrimitivePtr result = new IECoreImage::ImagePrimitive( newDataWindow, newDisplayWindow );
 
 	ConstCompoundDataPtr metadata = metadataPlug()->getValue();
 	result->blindData()->Object::copyFrom( metadata.get() );
@@ -377,8 +377,8 @@ IECore::ImagePrimitivePtr ImagePlug::image() const
 	{
 		FloatVectorDataPtr cd = new FloatVectorData;
 		vector<float> &c = cd->writable();
-		c.resize( result->variableSize( PrimitiveVariable::Vertex ), 0.0f );
-		result->variables[*it] = PrimitiveVariable( PrimitiveVariable::Vertex, cd );
+		c.resize( result->channelSize(), 0.0f );
+		result->channels[*it] = cd;
 		imageChannelData.push_back( &(c[0]) );
 	}
 

@@ -85,7 +85,7 @@ void ObjectToImage::hashImagePrimitive( const Gaffer::Context *context, IECore::
 	objectPlug()->hash( h );
 }
 
-IECore::ConstImagePrimitivePtr ObjectToImage::computeImagePrimitive( const Gaffer::Context *context ) const
+IECoreImage::ConstImagePrimitivePtr ObjectToImage::computeImagePrimitive( const Gaffer::Context *context ) const
 {
-	return runTimeCast<const ImagePrimitive>( objectPlug()->getValue() );
+	return runTimeCast<const IECoreImage::ImagePrimitive>( objectPlug()->getValue() );
 }

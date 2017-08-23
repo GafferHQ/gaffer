@@ -171,19 +171,13 @@ IECore::DataPtr OpenGLShader::parameterValue( const Gaffer::Plug *parameterPlug 
 {
 	if( const GafferImage::ImagePlug *imagePlug = runTimeCast<const GafferImage::ImagePlug>( parameterPlug ) )
 	{
-		IECore::ImagePrimitivePtr image = imagePlug->image();
+		IECoreImage::ImagePrimitivePtr image = imagePlug->image();
 		if( image )
 		{
 			CompoundDataPtr value = new CompoundData;
 			value->writable()["displayWindow"] = new Box2iData( image->getDisplayWindow() );
 			value->writable()["dataWindow"] = new Box2iData( image->getDataWindow() );
-			CompoundDataPtr channelData = new CompoundData;
-			vector<string> channelNames;
-			image->channelNames( channelNames );
-			for( vector<string>::const_iterator cIt = channelNames.begin(), eCIt = channelNames.end(); cIt != eCIt; cIt++ )
-			{
-				channelData->writable()[*cIt] = image->variableData<Data>( *cIt );
-			}
+			CompoundDataPtr channelData = new CompoundData( CompoundDataMap( image->channels.begin(), image->channels.end() ) );
 			value->writable()["channels"] = channelData;
 			return value;
 		}

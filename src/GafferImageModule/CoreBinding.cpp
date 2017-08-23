@@ -75,7 +75,7 @@ IECore::MurmurHash channelDataHash( const ImagePlug &plug, const std::string &ch
 	return plug.channelDataHash( channelName, tileOrigin );
 }
 
-IECore::ImagePrimitivePtr image( const ImagePlug &plug )
+IECoreImage::ImagePrimitivePtr image( const ImagePlug &plug )
 {
 	IECorePython::ScopedGILRelease gilRelease;
 	return plug.image();

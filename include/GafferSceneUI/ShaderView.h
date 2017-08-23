@@ -102,7 +102,7 @@ class ShaderView : public GafferImageUI::ImageView
 		void updateScene();
 		void preRender();
 
-		void driverCreated( IECore::DisplayDriver *driver, const IECore::CompoundData *parameters );
+		void driverCreated( IECoreImage::DisplayDriver *driver, const IECore::CompoundData *parameters );
 
 		bool m_framed;
 		Gaffer::NodePtr m_imageConverter;

@@ -37,7 +37,8 @@
 #include "IECore/LRUCache.h"
 #include "IECore/Exception.h"
 #include "IECore/SearchPath.h"
-#include "IECore/ImageReader.h"
+
+#include "IECoreImage/ImageReader.h"
 
 #include "IECoreGL/ToGLTextureConverter.h"
 #include "IECoreGL/TextureLoader.h"
@@ -48,6 +49,7 @@
 
 using namespace Imath;
 using namespace IECore;
+using namespace IECoreImage;
 using namespace IECoreGL;
 using namespace GafferUI;
 
@@ -144,9 +146,12 @@ ImageGadget::ImageGadget( const std::string &fileName )
 	m_imageOrTextureOrFileName = new StringData( fileName );
 }
 
-ImageGadget::ImageGadget( IECore::ConstImagePrimitivePtr image )
-	:	Gadget( defaultName<ImageGadget>() ), m_bound( image->bound() ), m_imageOrTextureOrFileName( image->copy() )
+ImageGadget::ImageGadget( IECoreImage::ConstImagePrimitivePtr image )
+	:	Gadget( defaultName<ImageGadget>() ), m_imageOrTextureOrFileName( image->copy() )
 {
+	const V2i pixelSize = image->getDisplayWindow().size() + V2i( 1 );
+	const V3f size( pixelSize.x, pixelSize.y, 0.0f );
+	m_bound = Box3f( -size/2.0f, size/2.0f );
 }
 
 ImageGadget::~ImageGadget()

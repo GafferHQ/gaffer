@@ -100,7 +100,7 @@ void ImagePrimitiveSource<BaseType>::compute( Gaffer::ValuePlug *output, const G
 {
 	if( output == imagePrimitivePlug() )
 	{
-		IECore::ConstImagePrimitivePtr image = computeImagePrimitive( context );
+		IECoreImage::ConstImagePrimitivePtr image = computeImagePrimitive( context );
 		Gaffer::ObjectPlug *plug = static_cast<Gaffer::ObjectPlug *>( output );
 		if( image )
 		{
@@ -127,7 +127,7 @@ template<typename BaseType>
 GafferImage::Format ImagePrimitiveSource<BaseType>::computeFormat( const Gaffer::Context *context, const ImagePlug *parent ) const
 {
 	Imath::Box2i result;
-	IECore::ConstImagePrimitivePtr image = IECore::runTimeCast<const IECore::ImagePrimitive>( inputImagePrimitivePlug()->getValue() );
+	IECoreImage::ConstImagePrimitivePtr image = IECore::runTimeCast<const IECoreImage::ImagePrimitive>( inputImagePrimitivePlug()->getValue() );
 	if( image )
 	{
 		return GafferImage::Format( image->getDisplayWindow(), 1.0f, /* fromEXRSpace = */ true );
@@ -145,7 +145,7 @@ void ImagePrimitiveSource<BaseType>::hashDataWindow( const GafferImage::ImagePlu
 template<typename BaseType>
 Imath::Box2i ImagePrimitiveSource<BaseType>::computeDataWindow( const Gaffer::Context *context, const ImagePlug *parent ) const
 {
-	IECore::ConstImagePrimitivePtr image = IECore::runTimeCast<const IECore::ImagePrimitive>( inputImagePrimitivePlug()->getValue() );
+	IECoreImage::ConstImagePrimitivePtr image = IECore::runTimeCast<const IECoreImage::ImagePrimitive>( inputImagePrimitivePlug()->getValue() );
 	if( image )
 	{
 		const Format format( image->getDisplayWindow(), 1.0f, /* fromEXRSpace = */ true );
@@ -164,7 +164,7 @@ void ImagePrimitiveSource<BaseType>::hashMetadata( const GafferImage::ImagePlug 
 template<typename BaseType>
 IECore::ConstCompoundDataPtr ImagePrimitiveSource<BaseType>::computeMetadata( const Gaffer::Context *context, const ImagePlug *parent ) const
 {
-	IECore::ConstImagePrimitivePtr image = IECore::runTimeCast<const IECore::ImagePrimitive>( inputImagePrimitivePlug()->getValue() );
+	IECoreImage::ConstImagePrimitivePtr image = IECore::runTimeCast<const IECoreImage::ImagePrimitive>( inputImagePrimitivePlug()->getValue() );
 	if( image )
 	{
 		return image->blindData();
@@ -186,7 +186,7 @@ template<typename BaseType>
 IECore::ConstStringVectorDataPtr ImagePrimitiveSource<BaseType>::computeChannelNames( const Gaffer::Context *context, const ImagePlug *parent ) const
 {
 	IECore::StringVectorDataPtr result = new IECore::StringVectorData();
-	IECore::ConstImagePrimitivePtr image = IECore::runTimeCast<const IECore::ImagePrimitive>( inputImagePrimitivePlug()->getValue() );
+	IECoreImage::ConstImagePrimitivePtr image = IECore::runTimeCast<const IECoreImage::ImagePrimitive>( inputImagePrimitivePlug()->getValue() );
 	if( image )
 	{
 		image->channelNames( result->writable() );
@@ -214,7 +214,7 @@ void ImagePrimitiveSource<BaseType>::hashChannelData( const GafferImage::ImagePl
 template<typename BaseType>
 IECore::ConstFloatVectorDataPtr ImagePrimitiveSource<BaseType>::computeChannelData( const std::string &channelName, const Imath::V2i &tileOrigin, const Gaffer::Context *context, const ImagePlug *parent ) const
 {
-	IECore::ConstImagePrimitivePtr image = IECore::runTimeCast<const IECore::ImagePrimitive>( inputImagePrimitivePlug()->getValue() );
+	IECoreImage::ConstImagePrimitivePtr image = IECore::runTimeCast<const IECoreImage::ImagePrimitive>( inputImagePrimitivePlug()->getValue() );
 	if( !image )
 	{
 		return ImagePlug::blackTile();

@@ -37,8 +37,8 @@
 #ifndef GAFFERIMAGE_CATALOGUE_H
 #define GAFFERIMAGE_CATALOGUE_H
 
-#include "IECore/DisplayDriver.h"
-#include "IECore/DisplayDriverServer.h"
+#include "IECoreImage/DisplayDriver.h"
+#include "IECoreImage/DisplayDriverServer.h"
 
 #include "Gaffer/StringPlug.h"
 #include "Gaffer/NumericPlug.h"
@@ -104,9 +104,9 @@ class Catalogue : public ImageNode
 
 		/// All Catalogues share a single DisplayDriverServer instance
 		/// to receive rendered images. To send an image to the catalogues,
-		/// use an IECore::ClientDisplayDriver with the "displayPort" parameter
+		/// use an IECoreImage::ClientDisplayDriver with the "displayPort" parameter
 		/// set to match `Catalogue::displayDriverServer()->portNumber()`.
-		static IECore::DisplayDriverServer *displayDriverServer();
+		static IECoreImage::DisplayDriverServer *displayDriverServer();
 
 		/// Generates a filename that could be used for storing
 		/// a particular image locally in this Catalogue's directory.
@@ -126,7 +126,7 @@ class Catalogue : public ImageNode
 		void imageAdded( GraphComponent *graphComponent );
 		void imageRemoved( GraphComponent *graphComponent );
 
-		void driverCreated( IECore::DisplayDriver *driver, const IECore::CompoundData *parameters );
+		void driverCreated( IECoreImage::DisplayDriver *driver, const IECore::CompoundData *parameters );
 		void imageReceived( Gaffer::Plug *plug );
 
 		static size_t g_firstPlugIndex;

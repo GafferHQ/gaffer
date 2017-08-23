@@ -57,11 +57,11 @@ namespace
 
 struct DriverCreatedSlotCaller
 {
-	boost::signals::detail::unusable operator()( boost::python::object slot, IECore::DisplayDriver *driver, const IECore::CompoundData *parameters )
+	boost::signals::detail::unusable operator()( boost::python::object slot, IECoreImage::DisplayDriver *driver, const IECore::CompoundData *parameters )
 	{
 		try
 		{
-			slot( IECore::DisplayDriverPtr( driver ), IECore::CompoundDataPtr( const_cast<IECore::CompoundData *>( parameters ) ) );
+			slot( IECoreImage::DisplayDriverPtr( driver ), IECore::CompoundDataPtr( const_cast<IECore::CompoundData *>( parameters ) ) );
 		}
 		catch( const error_already_set &e )
 		{
@@ -216,7 +216,7 @@ void GafferImageModule::bindCatalogue()
 	{
 		scope s = GafferBindings::DependencyNodeClass<Display>()
 			.def( "setDriver", &Display::setDriver, ( arg( "driver" ), arg( "copy" ) = false ) )
-			.def( "getDriver", (IECore::DisplayDriver *(Display::*)())&Display::getDriver, return_value_policy<CastToIntrusivePtr>() )
+			.def( "getDriver", (IECoreImage::DisplayDriver *(Display::*)())&Display::getDriver, return_value_policy<CastToIntrusivePtr>() )
 			.def( "driverCreatedSignal", &Display::driverCreatedSignal, return_value_policy<reference_existing_object>() ).staticmethod( "driverCreatedSignal" )
 			.def( "imageReceivedSignal", &Display::imageReceivedSignal, return_value_policy<reference_existing_object>() ).staticmethod( "imageReceivedSignal" )
 			.def( "executeOnUIThreadSignal", &DisplayWrapper::executeOnUIThreadSignal, return_value_policy<reference_existing_object>() ).staticmethod( "executeOnUIThreadSignal" )
