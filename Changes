@@ -1,5 +1,5 @@
-Version 0.40.0.0
-================
+0.40.0.0
+========
 
 This release brings improved Alembic support, support for Arnold light filters and Appleseed area lights,
 and the usual medley of miscellaneous improvements and bug fixes.
