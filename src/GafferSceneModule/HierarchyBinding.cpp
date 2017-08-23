@@ -48,6 +48,7 @@
 #include "GafferScene/Seeds.h"
 #include "GafferScene/Instancer.h"
 #include "GafferScene/Capsule.h"
+#include "GafferScene/Encapsulate.h"
 
 #include "HierarchyBinding.h"
 
@@ -110,5 +111,6 @@ void GafferSceneModule::bindHierarchy()
 	GafferBindings::DependencyNodeClass<CollectScenes>();
 	GafferBindings::DependencyNodeClass<Seeds>();
 	GafferBindings::DependencyNodeClass<Instancer>();
+	GafferBindings::DependencyNodeClass<Encapsulate>();
 
 }
