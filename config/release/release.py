@@ -35,7 +35,7 @@ def __versionLessEqual( v1, v2 ) :
 	v1 = [ int( x ) for x in v1.split( "." ) ]
 	v2 = [ int( x ) for x in v2.split( "." ) ]
 
-	return v1 < v2
+	return v1 <= v2
 
 # check we have a token available for the upload
 
