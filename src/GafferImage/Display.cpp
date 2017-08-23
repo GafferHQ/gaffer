@@ -37,13 +37,13 @@
 
 #include <memory>
 
+#include "tbb/spin_mutex.h"
+
 #include "boost/bind.hpp"
 #include "boost/bind/placeholders.hpp"
 #include "boost/lexical_cast.hpp"
 #include "boost/multi_array.hpp"
 
-#include "IECore/LRUCache.h"
-#include "IECore/DisplayDriverServer.h"
 #include "IECore/DisplayDriver.h"
 #include "IECore/MessageHandler.h"
 #include "IECore/BoxOps.h"
@@ -59,22 +59,6 @@ using namespace Imath;
 using namespace IECore;
 using namespace Gaffer;
 using namespace GafferImage;
-
-//////////////////////////////////////////////////////////////////////////
-// Implementation of a cache of DisplayDriverServers. We use the cache
-// as many nodes may want to use the same port number, and this allows us
-// to share the servers between the nodes.
-//////////////////////////////////////////////////////////////////////////
-
-typedef LRUCache<int, DisplayDriverServerPtr> DisplayDriverServerCache;
-
-static DisplayDriverServerPtr cacheGetter( int key, size_t &cost )
-{
-	cost = 1;
-	return new DisplayDriverServer( key );
-}
-
-static DisplayDriverServerCache g_serverCache( cacheGetter, 10 );
 
 //////////////////////////////////////////////////////////////////////////
 // Implementation of a DisplayDriver to support the node itself
@@ -327,21 +311,6 @@ Display::Display( const std::string &name )
 {
 	storeIndexOfNextChild( g_firstPlugIndex );
 
-	addChild(
-		new IntPlug(
-			"port",
-			Plug::In,
-			1559,
-			1,
-			65535,
-			// disabling input connections because they could be used
-			// to create a port number which changes with context. we
-			// can't allow that because we can only have a single server
-			// associated with a given node.
-			Plug::Default & ~Plug::AcceptsInputs
-		)
-	);
-
 	// This plug is incremented when new data is received, triggering dirty signals
 	// and prompting reevaluation in the viewer.
 	addChild(
@@ -354,41 +323,27 @@ Display::Display( const std::string &name )
 			Plug::Default & ~Plug::Serialisable
 		)
 	);
-
-	plugSetSignal().connect( boost::bind( &Display::plugSet, this, ::_1 ) );
-	driverCreatedSignal().connect( boost::bind( &Display::driverCreated, this, ::_1 ) );
-	setupServer();
 }
 
 Display::~Display()
 {
 }
 
-Gaffer::IntPlug *Display::portPlug()
-{
-	return getChild<IntPlug>( g_firstPlugIndex );
-}
-
-const Gaffer::IntPlug *Display::portPlug() const
-{
-	return getChild<IntPlug>( g_firstPlugIndex );
-}
-
 Gaffer::IntPlug *Display::updateCountPlug()
 {
-	return getChild<IntPlug>( g_firstPlugIndex + 1 );
+	return getChild<IntPlug>( g_firstPlugIndex );
 }
 
 const Gaffer::IntPlug *Display::updateCountPlug() const
 {
-	return getChild<IntPlug>( g_firstPlugIndex + 1 );
+	return getChild<IntPlug>( g_firstPlugIndex );
 }
 
 void Display::affects( const Gaffer::Plug *input, AffectedPlugsContainer &outputs ) const
 {
 	ImageNode::affects( input, outputs );
 
-	if( input == portPlug() || input == updateCountPlug() )
+	if( input == updateCountPlug() )
 	{
 		for( ValuePlugIterator it( outPlug() ); !it.done(); ++it )
 		{
@@ -407,11 +362,6 @@ Node::UnaryPlugSignal &Display::imageReceivedSignal()
 {
 	static UnaryPlugSignal s;
 	return s;
-}
-
-void Display::setDriver( IECore::DisplayDriverPtr driver )
-{
-	setDriver( driver, false );
 }
 
 void Display::setDriver( IECore::DisplayDriverPtr driver, bool copy )
@@ -539,60 +489,6 @@ IECore::ConstFloatVectorDataPtr Display::computeChannelData( const std::string &
 		);
 	}
 	return channelData;
-}
-
-void Display::plugSet( Gaffer::Plug *plug )
-{
-	if( plug == portPlug() )
-	{
-		setupServer();
-	}
-}
-
-void Display::setupServer()
-{
-	if( executeOnUIThreadSignal().empty() )
-	{
-		// If the executeOnUIThreadSignal is empty,
-		// it means that GafferImageUI hasn't
-		// been imported (see DisplayUI.py).
-		// If there's no UI then there's no point
-		// running a server because no-one will
-		// be looking anyway.
-		//
-		// This allows us to avoid confusing error output
-		// when the script is loaded in a separate process
-		// to do a local render dispatch, and the
-		// Display node trys to reuse the port that
-		// is already in use in the main GUI process.
-		return;
-	}
-
-	try
-	{
-		m_server = g_serverCache.get( portPlug()->getValue() );
-	}
-	catch( const std::exception &e )
-	{
-		m_server = nullptr;
-		g_serverCache.erase( portPlug()->getValue() );
-		msg( Msg::Error, "Display::setupServer", e.what() );
-	}
-}
-
-void Display::driverCreated( IECore::DisplayDriver *driver )
-{
-	GafferDisplayDriver *gafferDisplayDriver = runTimeCast<GafferDisplayDriver>( driver );
-	if( !gafferDisplayDriver )
-	{
-		return;
-	}
-
-	const StringData *portNumber = gafferDisplayDriver->parameters()->member<StringData>( "displayPort" );
-	if( portNumber && boost::lexical_cast<int>( portNumber->readable() ) == portPlug()->getValue() )
-	{
-		setupDriver( gafferDisplayDriver );
-	}
 }
 
 void Display::setupDriver( GafferDisplayDriverPtr driver )

@@ -205,6 +205,7 @@ void CompoundDataPlug::addMembers( const IECore::CompoundData *parameters, bool 
 		if( useNameAsPlugName )
 		{
 			plugName = it->first;
+			std::replace_if( plugName.begin(), plugName.end(), []( char c ) { return !::isalnum( c ); }, '_' );
 		}
 		addMember( it->first, it->second.get(), plugName );
 	}
