@@ -67,6 +67,9 @@ class CollectScenes : public SceneProcessor
 
 		virtual void affects( const Gaffer::Plug *input, AffectedPlugsContainer &outputs ) const;
 
+		Gaffer::StringPlug *rootPlug();
+		const Gaffer::StringPlug *rootPlug() const;
+
 	protected :
 
 		virtual void hashBound( const ScenePath &path, const Gaffer::Context *context, const ScenePlug *parent, IECore::MurmurHash &h ) const;
