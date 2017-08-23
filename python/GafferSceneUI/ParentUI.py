@@ -61,6 +61,8 @@ Gaffer.Metadata.registerNode(
 			The location which the child is parented under.
 			""",
 
+			"userDefault", "/",
+
 		],
 
 		"child" : [
