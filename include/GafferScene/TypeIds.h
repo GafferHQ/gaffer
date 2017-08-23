@@ -143,6 +143,7 @@ enum TypeId
 	DeleteSceneContextVariablesTypeId = 110598,
 	CollectScenesTypeId = 110599,
 	CapsuleTypeId = 110600,
+	EncapsulateTypeId = 110601,
 
 	PreviewProceduralTypeId = 110648,
 	PreviewInteractiveRenderTypeId = 110649,
