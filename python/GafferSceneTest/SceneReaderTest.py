@@ -492,5 +492,11 @@ class SceneReaderTest( GafferSceneTest.SceneTestCase ) :
 		r1 = GafferScene.SceneReader()
 		self.assertEqual( r1["out"].set( "blahblah" ).value.paths(), [] )
 
+	def testAlembic( self ) :
+
+		r = GafferScene.SceneReader()
+		r["fileName"].setValue( os.path.dirname( __file__ ) + "/alembicFiles/cube.abc" )
+		self.assertSceneValid( r["out"] )
+
 if __name__ == "__main__":
 	unittest.main()
