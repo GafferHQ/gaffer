@@ -203,6 +203,9 @@ def __nodeDocumentation( node ) :
 			result += description
 
 			extensions = Gaffer.Metadata.value( plug, "fileSystemPath:extensions" ) or []
+			if isinstance( extensions, str ) :
+				extensions = extensions.split()
+
 			if extensions :
 				result += "\n\n**Supported file extensions** : "+ ", ".join( extensions )
 
