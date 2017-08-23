@@ -1,33 +1,82 @@
+Version 0.40.0.0
+================
+
+This release brings improved Alembic support, support for Arnold light filters and Appleseed area lights,
+and the usual medley of miscellaneous improvements and bug fixes.
+
+The astute observer may note that the version number leaves a gap from the previous major version
+of 0.34. This is because 0.40 is the first version to require the use of a C++11 compiler,
+but some current users are stuck on older toolchains for a little while longer. We intend to use the
+intervening versions to provide backported feature releases for the older toolchains where needed.
+
 Breaking Changes
 ----------------
 
 - Simplified GafferScene/GafferSceneUI/GafferImage/GafferImageUI bindings by hiding code which
   is only used internally (#2142, #2152).
-- Display : Removed `dataReceivedSignal()`
 - TaskNode : Rederived from DependencyNode (#2163)
+- Removed OrphanRemover/Behaviour classes. Use StandardSet's built-in orphan removal instead (#2212).
+- CompoundNodule : Removed deprecated constructor arguments. Use metadata instead (#2216).
+- ContextProcessor : Changed signature of `processContext()` and added `affectsContext()` pure
+  virtual method (#2220).
+- SceneInspector (#2222) :
+  - Renamed `SceneInspector.inspectsAttributes()` to SceneInspector.supportsInheritance()`.
+  - Removed `SceneInspector.SideBySideDiff.frame()` method. Client code should use the new
+    setValueWidget/getValueWidget accessors to get access to the frame contents instead.
+- Replaced use of boost::function with std::function (#2224)
+- Display :
+  - Removed server management. Use the Catalogue or manage a display server directly instead (#2228).
+  - Display : Removed `dataReceivedSignal()`
+- Removed GafferBindings::ExceptionAlgo. Use IECorePython::ExceptionAlgo instead (#2241).
 
 Features
 --------
 
+- Alembic (#2234) :
+  - SceneReader and SceneWriter nodes can now read and write Alembic files directly.
+    The old AlembicSource node is now deprecated.
+  - Improved performance.
+  - Added support for points and curves geometry.
+  - Fixed mesh winding order.
 - Light Filters. Added initial support for Arnold light filters. These can be loaded using the
   regular ArnoldShader node and assigned to lights using the ShaderAssignment node (#2135).
+- Appleseed : Added rectangular area lights (#2237).
 
 Improvements
 ------------
 
 - SceneWriter (#2161) :
-  - Added support for serialising sets to .scc files
-  - Improved performance by multithreading scene generation
+  - Added support for serialising sets to .scc files.
+  - Improved performance by multithreading scene generation.
 - TaskNode : Errors are now reported in the NodeGraph (#2163)
 - Execute app : Improved error reporting (#2163)
 - OSL expressions : Added support for M44f plugs (#2187)
 - Shader node : Added attributeSuffix plug. This is primarily of
   use with light filters (#2135).
+- StandardNodeGadget : Added support for "iconScale" metadata (#2211)
+- OSLShader : Added support for "icon" and "iconScale" shader metadata (#2211)
+- ArnoldRender : Improved render shutdown performance (#2203)
+- OSL ShadingEngine : Added support for converting aggregate data to arrays in `getattribute()` (#2219).
+- SceneInspector (#2222) :
+  - Improved discoverability of diff, inheritance and history views
+  - Removed history traceback from fields where it was irrelevant
+  - Fixed click-to-select in Set history tracebacks
+- NodeGraph : Node double click and Edit.. menu items now always open a floating
+  NodeEditor (#2222)
+- Merge (#2223) :
+  - Improved labelling of node inputs (#260)
+  - Changed default operation to "Over"
+- Stats app : Added -preCache argument (#2236)
+- Appleseed (#2237) :
+  - Updated to version 1.7.1-beta
+  - Added double sided material assignment attribute
+  - Added per ray type bounce limits
+  - Improved default texture cache size
 
 Fixes
 -----
 
-- NodeGraph : Fixed graphical glitches when drawing connections (#2156, #2170)
+- NodeGraph : Fixed graphical glitches when drawing connections (#2156, #2170, #2230)
 - Dot :
   - Fixed bug where Dots created with Control+Click were not always immediately draggable (#2139)
   - Fixed bug where any click (not just left click) would create a Dot (#2147)
@@ -48,6 +97,16 @@ Fixes
   - Fixed bug which meant that tiles with origin -64 were passed through unchanged
   - Fixed UVs for images with negative display window origins
   - Fixed global `P` values to reflect pixel centres, not corners
+- Menu : Fixed handling of special regex characters in search field (#2221)
+- Color editors : Fixed bug that allowed the creation of multiple editors for the
+  same plug (#2209, #2222)
+- ScriptNode : Fixed bug where `isExecuting()` returned the wrong result when
+  loading a script containing references (#2227).
+- Reference : Fixed "Duplicate as Box" menu item to create the Box with the
+  right parent when the Reference node is not at the root of the script (#2229).
+- MonitorAlgo : Fixed use of unitialised value (#2233)
+- CompoundDataPlug : Fixed bug which prevented non-alphanumeric names being used
+  in `addMembers()` (#2228)
 
 API
 ---
@@ -59,6 +118,10 @@ API
 - TaskNode : Rederived from DependencyNode (#2163)
 - Arnold ParameterHandler : Allowed plug type to be overriden using a `gaffer.plugType` metadata
   entry (#2135).
+- StandardSet : Added automatic orphan removal feature (#2212)
+- Context : Added `EditableScope::removeMatching()` method (#2220)
+- Menu : Added support for `partial( WeakMethod( ... ) )` in commands (#2222)
+- NodeSetEditor : Added `floating` argument to `acquire()` method (#2222)
 
 Build
 -----
@@ -66,7 +129,7 @@ Build
 - Fixed invalid debug assertions in Shape node (#2186)
 - C++11 is now required as a minimum (#2167)
 - Improved speed of Travis tests (#2145)
-- Display : Removed `dataReceivedSignal()`
+- Requires Cortex 10.0.0-a1
 
 0.34.0.0
 ========
