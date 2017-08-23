@@ -43,6 +43,7 @@
 
 #include "IECorePython/ScopedGILLock.h"
 #include "IECorePython/ScopedGILRelease.h"
+#include "IECorePython/ExceptionAlgo.h"
 
 #include "Gaffer/ScriptNode.h"
 #include "Gaffer/Context.h"
@@ -54,7 +55,6 @@
 #include "GafferBindings/ScriptNodeBinding.h"
 #include "GafferBindings/SignalBinding.h"
 #include "GafferBindings/NodeBinding.h"
-#include "GafferBindings/ExceptionAlgo.h"
 
 using namespace Gaffer;
 using namespace GafferBindings;
@@ -151,7 +151,7 @@ bool tolerantExec( const char *pythonScript, boost::python::object globals, boos
 		if( v == nullptr)
 		{
 			int lineNumber = 0;
-			std::string message = ExceptionAlgo::formatPythonException( /* withTraceback = */ false, &lineNumber );
+			std::string message = IECorePython::ExceptionAlgo::formatPythonException( /* withTraceback = */ false, &lineNumber );
 			IECore::msg( IECore::Msg::Error, formattedErrorContext( lineNumber, context ), message );
 			result = true;
 		}
@@ -196,7 +196,7 @@ std::string serialise( const Node *parent, const Set *filter )
 	}
 	catch( boost::python::error_already_set &e )
 	{
-		ExceptionAlgo::translatePythonException();
+		IECorePython::ExceptionAlgo::translatePythonException();
 	}
 
 	return result;
@@ -224,7 +224,7 @@ bool execute( ScriptNode *script, const std::string &serialisation, Node *parent
 			catch( boost::python::error_already_set &e )
 			{
 				int lineNumber = 0;
-				std::string message = ExceptionAlgo::formatPythonException( /* withTraceback = */ false, &lineNumber );
+				std::string message = IECorePython::ExceptionAlgo::formatPythonException( /* withTraceback = */ false, &lineNumber );
 				throw IECore::Exception( formattedErrorContext( lineNumber, context ) + " : " + message );
 			}
 		}
@@ -235,7 +235,7 @@ bool execute( ScriptNode *script, const std::string &serialisation, Node *parent
 	}
 	catch( boost::python::error_already_set &e )
 	{
-		ExceptionAlgo::translatePythonException();
+		IECorePython::ExceptionAlgo::translatePythonException();
 	}
 
 	return result;

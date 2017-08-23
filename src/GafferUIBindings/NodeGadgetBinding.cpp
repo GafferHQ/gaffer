@@ -37,8 +37,9 @@
 
 #include "boost/python.hpp"
 
+#include "IECorePython/ExceptionAlgo.h"
+
 #include "Gaffer/Plug.h"
-#include "GafferBindings/ExceptionAlgo.h"
 #include "GafferBindings/SignalBinding.h"
 
 #include "GafferUI/NodeGadget.h"

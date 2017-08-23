@@ -40,9 +40,9 @@
 #include "boost/python/suite/indexing/container_utils.hpp"
 
 #include "IECorePython/ScopedGILLock.h"
+#include "IECorePython/ExceptionAlgo.h"
 
 #include "GafferBindings/DependencyNodeBinding.h"
-#include "GafferBindings/ExceptionAlgo.h"
 
 #include "GafferDispatch/TaskNode.h"
 
@@ -87,7 +87,7 @@ class TaskNodeWrapper : public GafferBindings::DependencyNodeWrapper<WrappedType
 				}
 				catch( const boost::python::error_already_set &e )
 				{
-					GafferBindings::ExceptionAlgo::translatePythonException();
+					IECorePython::ExceptionAlgo::translatePythonException();
 				}
 			}
 			return WrappedType::affectsTask( input );
@@ -118,7 +118,7 @@ class TaskNodeWrapper : public GafferBindings::DependencyNodeWrapper<WrappedType
 				}
 				catch( const boost::python::error_already_set &e )
 				{
-					GafferBindings::ExceptionAlgo::translatePythonException();
+					IECorePython::ExceptionAlgo::translatePythonException();
 				}
 			}
 			WrappedType::preTasks( context, tasks );
@@ -143,7 +143,7 @@ class TaskNodeWrapper : public GafferBindings::DependencyNodeWrapper<WrappedType
 				}
 				catch( const boost::python::error_already_set &e )
 				{
-					GafferBindings::ExceptionAlgo::translatePythonException();
+					IECorePython::ExceptionAlgo::translatePythonException();
 				}
 			}
 			WrappedType::postTasks( context, tasks );
@@ -166,7 +166,7 @@ class TaskNodeWrapper : public GafferBindings::DependencyNodeWrapper<WrappedType
 				}
 				catch( const boost::python::error_already_set &e )
 				{
-					GafferBindings::ExceptionAlgo::translatePythonException();
+					IECorePython::ExceptionAlgo::translatePythonException();
 				}
 			}
 			return WrappedType::hash( context );
@@ -188,7 +188,7 @@ class TaskNodeWrapper : public GafferBindings::DependencyNodeWrapper<WrappedType
 				}
 				catch( const boost::python::error_already_set &e )
 				{
-					GafferBindings::ExceptionAlgo::translatePythonException();
+					IECorePython::ExceptionAlgo::translatePythonException();
 				}
 			}
 			WrappedType::execute();
@@ -215,7 +215,7 @@ class TaskNodeWrapper : public GafferBindings::DependencyNodeWrapper<WrappedType
 				}
 				catch( const boost::python::error_already_set &e )
 				{
-					GafferBindings::ExceptionAlgo::translatePythonException();
+					IECorePython::ExceptionAlgo::translatePythonException();
 				}
 			}
 			WrappedType::executeSequence( frames );
@@ -236,7 +236,7 @@ class TaskNodeWrapper : public GafferBindings::DependencyNodeWrapper<WrappedType
 				}
 				catch( const boost::python::error_already_set &e )
 				{
-					GafferBindings::ExceptionAlgo::translatePythonException();
+					IECorePython::ExceptionAlgo::translatePythonException();
 				}
 			}
 			return WrappedType::requiresSequenceExecution();

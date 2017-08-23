@@ -35,6 +35,7 @@
 #include "boost/python.hpp"
 
 #include "IECorePython/ScopedGILRelease.h"
+#include "IECorePython/ExceptionAlgo.h"
 
 #include "GafferBindings/DependencyNodeBinding.h"
 #include "GafferBindings/PlugBinding.h"
@@ -64,7 +65,7 @@ struct DriverCreatedSlotCaller
 		}
 		catch( const error_already_set &e )
 		{
-			translatePythonException();
+			ExceptionAlgo::translatePythonException();
 		}
 		return boost::signals::detail::unusable();
 	}

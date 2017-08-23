@@ -35,11 +35,14 @@
 //
 //////////////////////////////////////////////////////////////////////////
 
+#include <string>
+
+#include "IECorePython/ExceptionAlgo.h"
+
 #include "Gaffer/Reference.h"
 #include "Gaffer/ScriptNode.h"
 
 #include "GafferBindings/NodeBinding.h"
-#include "GafferBindings/ExceptionAlgo.h"
 #include "GafferBindings/SignalBinding.h"
 
 #include "GafferScene/SceneProcessor.h"
@@ -216,7 +219,7 @@ struct SceneChangedSlotCaller
 		}
 		catch( const boost::python::error_already_set &e )
 		{
-			ExceptionAlgo::translatePythonException();
+			IECorePython::ExceptionAlgo::translatePythonException();
 		}
 		return boost::signals::detail::unusable();
 	}

@@ -39,13 +39,13 @@
 #include "IECore/MessageHandler.h"
 #include "IECorePython/RefCountedBinding.h"
 #include "IECorePython/ScopedGILLock.h"
+#include "IECorePython/ExceptionAlgo.h"
 
 #include "Gaffer/Expression.h"
 #include "Gaffer/StringPlug.h"
 
 #include "GafferBindings/DependencyNodeBinding.h"
 #include "GafferBindings/ExpressionBinding.h"
-#include "GafferBindings/ExceptionAlgo.h"
 #include "GafferBindings/SignalBinding.h"
 
 using namespace boost::python;
@@ -98,7 +98,7 @@ struct ExpressionChangedSlotCaller
 		}
 		catch( const error_already_set &e )
 		{
-			ExceptionAlgo::translatePythonException();
+			IECorePython::ExceptionAlgo::translatePythonException();
 		}
 		return boost::signals::detail::unusable();
 	}
@@ -134,7 +134,7 @@ class EngineWrapper : public IECorePython::RefCountedWrapper<Expression::Engine>
 				}
 				catch( const error_already_set &e )
 				{
-					ExceptionAlgo::translatePythonException();
+					IECorePython::ExceptionAlgo::translatePythonException();
 				}
 			}
 
@@ -163,7 +163,7 @@ class EngineWrapper : public IECorePython::RefCountedWrapper<Expression::Engine>
 				}
 				catch( const error_already_set &e )
 				{
-					ExceptionAlgo::translatePythonException();
+					IECorePython::ExceptionAlgo::translatePythonException();
 				}
 			}
 
@@ -186,7 +186,7 @@ class EngineWrapper : public IECorePython::RefCountedWrapper<Expression::Engine>
 				}
 				catch( const error_already_set &e )
 				{
-					ExceptionAlgo::translatePythonException();
+					IECorePython::ExceptionAlgo::translatePythonException();
 				}
 			}
 
@@ -209,7 +209,7 @@ class EngineWrapper : public IECorePython::RefCountedWrapper<Expression::Engine>
 				}
 				catch( const error_already_set &e )
 				{
-					ExceptionAlgo::translatePythonException();
+					IECorePython::ExceptionAlgo::translatePythonException();
 				}
 			}
 
@@ -242,7 +242,7 @@ class EngineWrapper : public IECorePython::RefCountedWrapper<Expression::Engine>
 				}
 				catch( const error_already_set &e )
 				{
-					ExceptionAlgo::translatePythonException();
+					IECorePython::ExceptionAlgo::translatePythonException();
 				}
 			}
 
@@ -265,7 +265,7 @@ class EngineWrapper : public IECorePython::RefCountedWrapper<Expression::Engine>
 				}
 				catch( const error_already_set &e )
 				{
-					ExceptionAlgo::translatePythonException();
+					IECorePython::ExceptionAlgo::translatePythonException();
 				}
 			}
 

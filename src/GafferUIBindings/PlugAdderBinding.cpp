@@ -37,9 +37,9 @@
 #include "boost/python.hpp"
 
 #include "IECorePython/ScopedGILLock.h"
+#include "IECorePython/ExceptionAlgo.h"
 
 #include "Gaffer/Plug.h"
-#include "GafferBindings/ExceptionAlgo.h"
 #include "GafferBindings/SignalBinding.h"
 
 #include "GafferUI/PlugAdder.h"
@@ -84,7 +84,7 @@ struct PlugMenuSlotCaller
 		}
 		catch( const error_already_set &e )
 		{
-			translatePythonException();
+			IECorePython::ExceptionAlgo::translatePythonException();
 		}
 		return nullptr;
 	}
@@ -113,7 +113,7 @@ struct PlugAdderWrapper : public GadgetWrapper<PlugAdder>
 				}
 				catch( const error_already_set &e )
 				{
-					translatePythonException();
+					IECorePython::ExceptionAlgo::translatePythonException();
 				}
 			}
 		}
@@ -135,7 +135,7 @@ struct PlugAdderWrapper : public GadgetWrapper<PlugAdder>
 				}
 				catch( const error_already_set &e )
 				{
-					translatePythonException();
+					IECorePython::ExceptionAlgo::translatePythonException();
 				}
 			}
 		}
