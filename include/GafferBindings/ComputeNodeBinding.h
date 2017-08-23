@@ -41,13 +41,13 @@
 #include "boost/python.hpp"
 
 #include "IECorePython/ScopedGILLock.h"
+#include "IECorePython/ExceptionAlgo.h"
 
 #include "Gaffer/ComputeNode.h"
 #include "Gaffer/Context.h"
 #include "Gaffer/ValuePlug.h"
 
 #include "GafferBindings/DependencyNodeBinding.h"
-#include "GafferBindings/ExceptionAlgo.h"
 
 namespace GafferBindings
 {
@@ -102,7 +102,7 @@ class ComputeNodeWrapper : public DependencyNodeWrapper<WrappedType>
 				}
 				catch( const boost::python::error_already_set &e )
 				{
-					ExceptionAlgo::translatePythonException();
+					IECorePython::ExceptionAlgo::translatePythonException();
 				}
 			}
 		}
@@ -123,7 +123,7 @@ class ComputeNodeWrapper : public DependencyNodeWrapper<WrappedType>
 				}
 				catch( const boost::python::error_already_set &e )
 				{
-					ExceptionAlgo::translatePythonException();
+					IECorePython::ExceptionAlgo::translatePythonException();
 				}
 			}
 			WrappedType::compute( output, context );

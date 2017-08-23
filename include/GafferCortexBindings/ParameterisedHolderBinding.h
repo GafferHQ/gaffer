@@ -41,9 +41,9 @@
 #include "boost/format.hpp"
 
 #include "IECore/Parameter.h"
+#include "IECorePython/ExceptionAlgo.h"
 
 #include "GafferBindings/NodeBinding.h"
-#include "GafferBindings/ExceptionAlgo.h"
 
 #include "GafferCortex/ParameterisedHolder.h"
 
@@ -92,7 +92,7 @@ class ParameterisedHolderWrapper : public BaseType
 				}
 				catch( boost::python::error_already_set &e )
 				{
-					GafferBindings::ExceptionAlgo::translatePythonException();
+					IECorePython::ExceptionAlgo::translatePythonException();
 				}
 			}
 		}

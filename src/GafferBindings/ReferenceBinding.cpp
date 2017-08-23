@@ -37,13 +37,13 @@
 #include "boost/python.hpp" // must be the first include
 
 #include "IECorePython/ScopedGILRelease.h"
+#include "IECorePython/ExceptionAlgo.h"
 
 #include "Gaffer/Reference.h"
 #include "Gaffer/StringPlug.h"
 
 #include "GafferBindings/ReferenceBinding.h"
 #include "GafferBindings/NodeBinding.h"
-#include "GafferBindings/ExceptionAlgo.h"
 #include "GafferBindings/SignalBinding.h"
 
 using namespace boost::python;
@@ -63,7 +63,7 @@ struct ReferenceLoadedSlotCaller
 		}
 		catch( const error_already_set &e )
 		{
-			ExceptionAlgo::translatePythonException();
+			IECorePython::ExceptionAlgo::translatePythonException();
 		}
 		return boost::signals::detail::unusable();
 	}

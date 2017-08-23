@@ -38,13 +38,13 @@
 #include "boost/python/suite/indexing/container_utils.hpp"
 
 #include "IECorePython/ScopedGILRelease.h"
+#include "IECorePython/ExceptionAlgo.h"
 
 #include "Gaffer/Context.h"
 #include "Gaffer/ScriptNode.h"
 
 #include "GafferBindings/NodeBinding.h"
 #include "GafferBindings/SignalBinding.h"
-#include "GafferBindings/ExceptionAlgo.h"
 
 #include "GafferDispatch/Dispatcher.h"
 #include "GafferDispatchBindings/DispatcherBinding.h"

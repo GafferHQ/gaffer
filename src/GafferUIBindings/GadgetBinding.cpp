@@ -37,6 +37,8 @@
 
 #include "boost/python.hpp"
 
+#include "IECorePython/ExceptionAlgo.h"
+
 #include "GafferBindings/SignalBinding.h"
 
 #include "GafferUI/Gadget.h"
@@ -153,7 +155,7 @@ struct ExecuteOnUIThreadSlotCaller
 		}
 		catch( const error_already_set &e )
 		{
-			ExceptionAlgo::translatePythonException();
+			IECorePython::ExceptionAlgo::translatePythonException();
 		}
 		return boost::signals::detail::unusable();
 	}

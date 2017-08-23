@@ -36,8 +36,9 @@
 
 #include "boost/python.hpp"
 
+#include "IECorePython/ExceptionAlgo.h"
+
 #include "Gaffer/Plug.h"
-#include "GafferBindings/ExceptionAlgo.h"
 
 #include "GafferUI/NoduleLayout.h"
 #include "GafferUI/Nodule.h"
@@ -71,7 +72,7 @@ struct CustomGadgetCreator
 		}
 		catch( const error_already_set & )
 		{
-			GafferBindings::translatePythonException();
+			ExceptionAlgo::translatePythonException();
 		}
 		return nullptr;
 	}

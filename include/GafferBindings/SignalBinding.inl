@@ -43,9 +43,9 @@
 
 #include "IECorePython/ScopedGILRelease.h"
 #include "IECorePython/ScopedGILLock.h"
+#include "IECorePython/ExceptionAlgo.h"
 
 #include "GafferBindings/ConnectionBinding.h"
-#include "GafferBindings/ExceptionAlgo.h"
 
 namespace GafferBindings
 {
@@ -210,7 +210,7 @@ struct SlotBase<0, Signal, Caller>
 		}
 		catch( const boost::python::error_already_set& e )
 		{
-			ExceptionAlgo::translatePythonException();
+			IECorePython::ExceptionAlgo::translatePythonException();
 		}
 		return typename Signal::slot_result_type();
 	}
@@ -242,7 +242,7 @@ struct SlotBase<1, Signal, Caller>
 		}
 		catch( const boost::python::error_already_set& e )
 		{
-			ExceptionAlgo::translatePythonException();
+			IECorePython::ExceptionAlgo::translatePythonException();
 		}
 		return typename Signal::slot_result_type();
 	}
@@ -274,7 +274,7 @@ struct SlotBase<2, Signal, Caller>
 		}
 		catch( const boost::python::error_already_set& e )
 		{
-			ExceptionAlgo::translatePythonException();
+			IECorePython::ExceptionAlgo::translatePythonException();
 		}
 		return typename Signal::slot_result_type();
 	}
@@ -306,7 +306,7 @@ struct SlotBase<3, Signal, Caller>
 		}
 		catch( const boost::python::error_already_set& e )
 		{
-			ExceptionAlgo::translatePythonException();
+			IECorePython::ExceptionAlgo::translatePythonException();
 		}
 		return typename Signal::slot_result_type();
 	}
@@ -338,7 +338,7 @@ struct SlotBase<4, Signal, Caller>
 		}
 		catch( const boost::python::error_already_set& e )
 		{
-			ExceptionAlgo::translatePythonException();
+			IECorePython::ExceptionAlgo::translatePythonException();
 		}
 		return typename Signal::slot_result_type();
 	}

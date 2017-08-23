@@ -39,6 +39,7 @@
 #include "boost/python/suite/indexing/container_utils.hpp"
 
 #include "IECorePython/RunTimeTypedBinding.h"
+#include "IECorePython/ExceptionAlgo.h"
 
 #include "Gaffer/Path.h"
 #include "Gaffer/PathFilter.h"
