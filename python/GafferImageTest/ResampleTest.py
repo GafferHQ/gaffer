@@ -161,7 +161,7 @@ class ResampleTest( GafferImageTest.ImageTestCase ) :
 		r["in"].setInput( c["out"] )
 
 		i = r["out"].image()
-		self.assertEqual( i["R"].data, IECore.FloatVectorData( [ 1.0 ] * 400 * 400 ) )
+		self.assertEqual( i["R"], IECore.FloatVectorData( [ 1.0 ] * 400 * 400 ) )
 
 	def testExpandDataWindow( self ) :
 

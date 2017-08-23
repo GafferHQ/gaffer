@@ -752,7 +752,7 @@ class OSLShaderTest( GafferOSLTest.OSLTestCase ) :
 			( 0.9, IECore.Color3f( 0.7 ) ),
 			( 1, IECore.Color3f( 1 ) )
 		]
-	
+
 		constant = GafferImage.Constant( "Constant" )
 		constant["format"].setValue( GafferImage.Format( 1, numSamples, 1.000 ) )
 
@@ -770,7 +770,7 @@ class OSLShaderTest( GafferOSLTest.OSLTestCase ) :
 
 			n["parameters"]["colorSpline"].setValue( Gaffer.SplineDefinitionfColor3f( points, interpolation ) )
 
-			oslSamples = list( reversed( image['out'].image()["R"].data ) )
+			oslSamples = list( reversed( image['out'].image()["R"] ) )
 
 			s = n['parameters']['colorSpline'].getValue().spline()
 			cortexSamples = [ s( ( i + 0.5 ) / numSamples )[0] for i in range( numSamples ) ]

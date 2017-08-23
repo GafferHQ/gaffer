@@ -39,6 +39,7 @@ import time
 import unittest
 
 import IECore
+import IECoreImage
 
 import Gaffer
 import GafferTest
@@ -77,8 +78,8 @@ class InteractiveArnoldRenderTest( GafferSceneTest.InteractiveRenderTest ) :
 
 		time.sleep( 0.5 )
 
-		image = IECore.ImageDisplayDriver.storedImage( "myLovelySphere" )
-		self.assertTrue( isinstance( image, IECore.ImagePrimitive ) )
+		image = IECoreImage.ImageDisplayDriver.storedImage( "myLovelySphere" )
+		self.assertTrue( isinstance( image, IECoreImage.ImagePrimitive ) )
 
 		# Try to start a second render while the first is running.
 		# Arnold is limited to one instance per process, so this
@@ -116,25 +117,17 @@ class InteractiveArnoldRenderTest( GafferSceneTest.InteractiveRenderTest ) :
 				"ieDisplay",
 				"rgba",
 				{
-					"driverType" : "ClientDisplayDriver",
-					"displayType" : "IECore::ClientDisplayDriver",
-					"displayHost" : "localhost",
-					"displayPort" : "2500",
-					"remoteDisplayType" : "GafferImage::GafferDisplayDriver",
+					"driverType" : "ImageDisplayDriver",
+					"handle" : "subdivisionTest",
 				}
 			)
 		)
 		script["outputs"]["in"].setInput( script["attributes"]["out"] )
 
-		# Emulate the connection the UI makes, so the Display knows someone is listening and
-		# it needs to actually make servers.
-		executeOnUIThreadConnection = GafferImage.Display.executeOnUIThreadSignal().connect( lambda f : f() )
-
-		script["display"] = GafferImage.Display()
-		script["display"]["port"].setValue( 2500 )
+		script["objectToImage"] = GafferImage.ObjectToImage()
 
 		script["imageStats"] = GafferImage.ImageStats()
-		script["imageStats"]["in"].setInput( script["display"]["out"] )
+		script["imageStats"]["in"].setInput( script["objectToImage"]["out"] )
 		script["imageStats"]["channels"].setValue( IECore.StringVectorData( [ "R", "G", "B", "A" ] ) )
 		script["imageStats"]["area"].setValue( IECore.Box2i( IECore.V2i( 0 ), IECore.V2i( 640, 480 ) ) )
 
@@ -147,6 +140,7 @@ class InteractiveArnoldRenderTest( GafferSceneTest.InteractiveRenderTest ) :
 		script["render"]["state"].setValue( script["render"].State.Running )
 		time.sleep( 1 )
 
+		script["objectToImage"]["object"].setValue( IECoreImage.ImageDisplayDriver.storedImage( "subdivisionTest" ) )
 		self.assertAlmostEqual( script["imageStats"]["average"][3].getValue(), 0.381, delta = 0.001 )
 
 		# Now up the number of subdivision levels. The alpha coverage should
@@ -155,6 +149,7 @@ class InteractiveArnoldRenderTest( GafferSceneTest.InteractiveRenderTest ) :
 		script["attributes"]["attributes"]["subdivIterations"]["value"].setValue( 4 )
 		time.sleep( 1 )
 
+		script["objectToImage"]["object"].setValue( IECoreImage.ImageDisplayDriver.storedImage( "subdivisionTest" ) )
 		self.assertAlmostEqual( script["imageStats"]["average"][3].getValue(), 0.424, delta = 0.001 )
 
 	def _createInteractiveRender( self ) :

@@ -39,11 +39,13 @@ import os
 import unittest
 
 import IECore
+import IECoreImage
 import IECoreArnold
 
 import Gaffer
 import GafferOSL
 import GafferTest
+import GafferImage
 import GafferScene
 import GafferSceneTest
 import GafferArnold
@@ -198,14 +200,16 @@ class ArnoldShaderTest( GafferSceneTest.SceneTestCase ) :
 
 		r.render()
 
-		image = IECore.ImageDisplayDriver.removeStoredImage( "test" )
-		e = IECore.PrimitiveEvaluator.create( image )
- 		result = e.createResult()
+		image = GafferImage.ObjectToImage()
+		image["object"].setValue( IECoreImage.ImageDisplayDriver.removeStoredImage( "test" ) )
 
-		e.pointAtUV( IECore.V2f( 0.5 ), result )
-		self.assertAlmostEqual( result.floatPrimVar( e.R() ), 1, 5 )
-		self.assertAlmostEqual( result.floatPrimVar( e.G() ), 1, 5 )
-		self.assertEqual( result.floatPrimVar( e.B() ), 0 )
+		sampler = GafferImage.ImageSampler()
+		sampler["image"].setInput( image["out"] )
+		sampler["pixel"].setValue( IECore.V2f( 320, 240 ) )
+
+		self.assertAlmostEqual( sampler["color"]["r"].getValue(), 1, 5 )
+		self.assertAlmostEqual( sampler["color"]["g"].getValue(), 1, 5 )
+		self.assertEqual( sampler["color"]["b"].getValue(), 0 )
 
 	def testShaderNetworkHash( self ) :
 

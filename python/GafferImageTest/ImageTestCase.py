@@ -35,6 +35,7 @@
 ##########################################################################
 
 import IECore
+import IECoreImage
 
 import Gaffer
 import GafferTest
@@ -94,11 +95,11 @@ class ImageTestCase( GafferTest.TestCase ) :
 	# verifying that nodes deal correctly with such inputs.
 	def emptyImage( self ) :
 
-		image = IECore.ImagePrimitive( IECore.Box2i(), IECore.Box2i( IECore.V2i( 0 ), IECore.V2i( 100 ) ) )
-		image["R"] = IECore.PrimitiveVariable( IECore.PrimitiveVariable.Interpolation.Varying, IECore.FloatVectorData() )
-		image["G"] = IECore.PrimitiveVariable( IECore.PrimitiveVariable.Interpolation.Varying, IECore.FloatVectorData() )
-		image["B"] = IECore.PrimitiveVariable( IECore.PrimitiveVariable.Interpolation.Varying, IECore.FloatVectorData() )
-		image["A"] = IECore.PrimitiveVariable( IECore.PrimitiveVariable.Interpolation.Varying, IECore.FloatVectorData() )
+		image = IECoreImage.ImagePrimitive( IECore.Box2i(), IECore.Box2i( IECore.V2i( 0 ), IECore.V2i( 100 ) ) )
+		image["R"] = IECore.FloatVectorData()
+		image["G"] = IECore.FloatVectorData()
+		image["B"] = IECore.FloatVectorData()
+		image["A"] = IECore.FloatVectorData()
 
 		result = GafferImage.ObjectToImage()
 		result["object"].setValue( image )

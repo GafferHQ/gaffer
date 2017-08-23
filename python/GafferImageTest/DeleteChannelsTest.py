@@ -160,7 +160,7 @@ class DeleteChannelsTest( GafferImageTest.ImageTestCase ) :
 
 		self.assertEqual( set( ri.keys() ), set( [ "R", "G", "B", "A" ] ) )
 		self.assertEqual( di.keys(), [ "R" ] )
-		self.assertEqual( di["R"].data, ri["R"].data )
+		self.assertEqual( di["R"], ri["R"] )
 
 	def testPassThrough( self ) :
 

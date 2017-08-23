@@ -35,6 +35,7 @@
 ##########################################################################
 
 import IECore
+import IECoreImage
 
 import Gaffer
 import GafferTest
@@ -46,13 +47,13 @@ class ImageSamplerTest( GafferImageTest.ImageTestCase ) :
 	def test( self ) :
 
 		dataWindow = IECore.Box2i( IECore.V2i( 0 ), IECore.V2i( 74 ) )
-		image = IECore.ImagePrimitive( dataWindow, dataWindow )
+		image = IECoreImage.ImagePrimitive( dataWindow, dataWindow )
 		red = IECore.FloatVectorData()
 		green = IECore.FloatVectorData()
 		blue = IECore.FloatVectorData()
-		image["R"] = IECore.PrimitiveVariable( IECore.PrimitiveVariable.Interpolation.Vertex, red )
-		image["G"] = IECore.PrimitiveVariable( IECore.PrimitiveVariable.Interpolation.Vertex, green )
-		image["B"] = IECore.PrimitiveVariable( IECore.PrimitiveVariable.Interpolation.Vertex, blue )
+		image["R"] = red
+		image["G"] = green
+		image["B"] = blue
 		for y in range( 0, 75 ) :
 			for x in range( 0, 75 ) :
 				red.append( x )

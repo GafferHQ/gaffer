@@ -39,6 +39,7 @@ import unittest
 import math
 
 import IECore
+import IECoreImage
 
 import Gaffer
 import GafferTest
@@ -118,14 +119,14 @@ class VectorWarpTest( GafferImageTest.ImageTestCase ) :
 	def testWarpImage( self ):
 		def __warpImage( size, distortion, idistortStyle ):
 			w = IECore.Box2i( IECore.V2i( 0 ), size - IECore.V2i( 1 ) )
-			image = IECore.ImagePrimitive( w, w )
+			image = IECoreImage.ImagePrimitive( w, w )
 
 			R = IECore.FloatVectorData( size.x * size.y )
 			G = IECore.FloatVectorData( size.x * size.y )
 
 			for iy in range( size.y ):
 				for ix in range( size.x ):
-					x = (ix + 0.5) / size.x 
+					x = (ix + 0.5) / size.x
 					y = 1 - (iy + 0.5) / size.y
 					if idistortStyle:
 						R[ iy * size.x + ix ] = distortion * math.sin( y * 8 ) * size.x
@@ -133,16 +134,16 @@ class VectorWarpTest( GafferImageTest.ImageTestCase ) :
 					else:
 						R[ iy * size.x + ix ] = x + distortion * math.sin( y * 8 )
 						G[ iy * size.x + ix ] = y + distortion * math.sin( x * 8 )
-						
 
-			image["R"] = IECore.PrimitiveVariable( IECore.PrimitiveVariable.Interpolation.Vertex, R )
-			image["G"] = IECore.PrimitiveVariable( IECore.PrimitiveVariable.Interpolation.Vertex, G )
+
+			image["R"] = R
+			image["G"] = G
 
 			return image
 
 		def __dotGrid( size ):
 			w = IECore.Box2i( IECore.V2i( 0 ), size - IECore.V2i( 1 ) )
-			image = IECore.ImagePrimitive( w, w )
+			image = IECoreImage.ImagePrimitive( w, w )
 
 			R = IECore.FloatVectorData( size.x * size.y )
 			G = IECore.FloatVectorData( size.x * size.y )
@@ -151,14 +152,14 @@ class VectorWarpTest( GafferImageTest.ImageTestCase ) :
 			for iy in range( 0, size.y ):
 				for ix in range( 0, size.x ):
 					q = max( ix % 16, iy % 16 )
-					
+
 					R[ iy * size.x + ix ] = q < 1
 					G[ iy * size.x + ix ] = q < 4
 					B[ iy * size.x + ix ] = q < 8
 
-			image["R"] = IECore.PrimitiveVariable( IECore.PrimitiveVariable.Interpolation.Vertex, R )
-			image["G"] = IECore.PrimitiveVariable( IECore.PrimitiveVariable.Interpolation.Vertex, G )
-			image["B"] = IECore.PrimitiveVariable( IECore.PrimitiveVariable.Interpolation.Vertex, B )
+			image["R"] = R
+			image["G"] = G
+			image["B"] = B
 
 			return image
 
@@ -210,7 +211,7 @@ class VectorWarpTest( GafferImageTest.ImageTestCase ) :
 		vectorWarp["vectorUnits"].setValue( GafferImage.VectorWarp.VectorUnits.Pixels )
 
 		self.assertImagesEqual( vectorWarp["out"], expectedReader["out"], maxDifference = 0.0005, ignoreMetadata = True )
-		
+
 
 if __name__ == "__main__":
 	unittest.main()

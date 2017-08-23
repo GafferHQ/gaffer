@@ -40,6 +40,7 @@ import unittest
 import IECore
 
 import Gaffer
+import GafferImage
 import GafferScene
 import GafferRenderMan
 import GafferRenderManTest
@@ -110,14 +111,16 @@ class RenderManLightTest( GafferRenderManTest.RenderManTestCase ) :
 
 		s["r"].execute()
 
-		i = IECore.EXRImageReader( self.temporaryDirectory() + "/testRenderManLight.exr" ).read()
-		e = IECore.ImagePrimitiveEvaluator( i )
-		r = e.createResult()
-		e.pointAtUV( IECore.V2f( 0.5 ), r )
+		imageReader = GafferImage.ImageReader()
+		imageReader["fileName"].setValue( self.temporaryDirectory() + "/testRenderManLight.exr" )
 
-		self.assertEqual( r.floatPrimVar( e.R() ), 1 )
-		self.assertEqual( r.floatPrimVar( e.G() ), 0.5 )
-		self.assertEqual( r.floatPrimVar( e.B() ), 0.25 )
+		imageSampler = GafferImage.ImageSampler()
+		imageSampler["image"].setInput( imageReader["out"] )
+		imageSampler["pixel"].setValue( IECore.V2f( 320, 240 ) )
+
+		self.assertEqual( imageSampler["color"]["r"].getValue(), 1 )
+		self.assertEqual( imageSampler["color"]["g"].getValue(), 0.5 )
+		self.assertEqual( imageSampler["color"]["b"].getValue(), 0.25 )
 
 if __name__ == "__main__":
 	unittest.main()

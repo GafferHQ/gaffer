@@ -41,6 +41,7 @@ import threading
 import subprocess32 as subprocess
 
 import IECore
+import IECoreImage
 
 import Gaffer
 import GafferTest
@@ -74,7 +75,7 @@ class DisplayTest( GafferImageTest.ImageTestCase ) :
 			}
 			parameters.update( extraParameters )
 
-			self.__driver = IECore.ClientDisplayDriver(
+			self.__driver = IECoreImage.ClientDisplayDriver(
 				self.__format.toEXRSpace( self.__format.getDisplayWindow() ),
 				self.__format.toEXRSpace( dataWindow ),
 				list( channelNames ),
@@ -168,7 +169,7 @@ class DisplayTest( GafferImageTest.ImageTestCase ) :
 	def testTileHashes( self ) :
 
 		node = GafferImage.Display()
-		server = IECore.DisplayDriverServer()
+		server = IECoreImage.DisplayDriverServer()
 		driverCreatedConnection = GafferImage.Display.driverCreatedSignal().connect( lambda driver, parameters : node.setDriver( driver ) )
 
 		dataWindow = IECore.Box2i( IECore.V2i( -100, -200 ), IECore.V2i( 303, 557 ) )
@@ -250,7 +251,7 @@ class DisplayTest( GafferImageTest.ImageTestCase ) :
 
 		driversCreated = GafferTest.CapturingSlot( GafferImage.Display.driverCreatedSignal() )
 
-		server = IECore.DisplayDriverServer()
+		server = IECoreImage.DisplayDriverServer()
 		dataWindow = IECore.Box2i( IECore.V2i( 0 ), IECore.V2i( 100 ) )
 
 		driver = self.Driver(
@@ -305,7 +306,7 @@ class DisplayTest( GafferImageTest.ImageTestCase ) :
 		imagesReceived = GafferTest.CapturingSlot( GafferImage.Display.imageReceivedSignal() )
 
 		node = GafferImage.Display()
-		server = IECore.DisplayDriverServer()
+		server = IECoreImage.DisplayDriverServer()
 		driverCreatedConnection = GafferImage.Display.driverCreatedSignal().connect( lambda driver, parameters : node.setDriver( driver ) )
 
 		self.assertEqual( len( imagesReceived ), 0 )

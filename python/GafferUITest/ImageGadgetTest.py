@@ -38,6 +38,7 @@ import os
 import unittest
 
 import IECore
+import IECoreImage
 
 import GafferUI
 import GafferUITest
@@ -47,7 +48,7 @@ class ImageGadgetTest( GafferUITest.TestCase ) :
 	def testConstructFromImagePrimitive( self ) :
 
 		window = IECore.Box2i( IECore.V2i( 0 ), IECore.V2i( 255 ) )
-		imagePrimitive = IECore.ImagePrimitive.createRGBFloat( IECore.Color3f( 0.25, .5, .75 ), window, window )
+		imagePrimitive = IECoreImage.ImagePrimitive.createRGBFloat( IECore.Color3f( 0.25, .5, .75 ), window, window )
 
 		i = GafferUI.ImageGadget( imagePrimitive )
 		self.assertEqual( i.bound(), IECore.Box3f( IECore.V3f( -128, -128, 0 ), IECore.V3f( 128, 128, 0 ) ) )

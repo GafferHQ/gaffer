@@ -102,9 +102,9 @@ class OSLImageTest( GafferOSLTest.OSLTestCase ) :
 		outputImage = image["out"].image()
 
 		self.assertNotEqual( inputImage, outputImage )
-		self.assertEqual( outputImage["R"].data, inputImage["B"].data )
-		self.assertEqual( outputImage["G"].data, inputImage["G"].data )
-		self.assertEqual( outputImage["B"].data, inputImage["R"].data )
+		self.assertEqual( outputImage["R"], inputImage["B"] )
+		self.assertEqual( outputImage["G"], inputImage["G"] )
+		self.assertEqual( outputImage["B"], inputImage["R"] )
 
 		# changes in the shader network should signal more dirtiness
 
@@ -133,9 +133,9 @@ class OSLImageTest( GafferOSLTest.OSLTestCase ) :
 		inputImage = reader["out"].image()
 		outputImage = image["out"].image()
 
-		self.assertEqual( outputImage["R"].data, inputImage["R"].data )
-		self.assertEqual( outputImage["G"].data, inputImage["R"].data )
-		self.assertEqual( outputImage["B"].data, inputImage["R"].data )
+		self.assertEqual( outputImage["R"], inputImage["R"] )
+		self.assertEqual( outputImage["G"], inputImage["R"] )
+		self.assertEqual( outputImage["B"], inputImage["R"] )
 
 	def testOnlyAcceptsSurfaceShaders( self ) :
 
@@ -190,9 +190,9 @@ class OSLImageTest( GafferOSLTest.OSLTestCase ) :
 		inputImage = reader["out"].image()
 		outputImage = image["out"].image()
 
-		self.assertEqual( outputImage["R"].data, IECore.FloatVectorData( [ 0 ] * inputImage["R"].data.size() ) )
-		self.assertEqual( outputImage["G"].data, inputImage["G"].data )
-		self.assertEqual( outputImage["B"].data, inputImage["B"].data )
+		self.assertEqual( outputImage["R"], IECore.FloatVectorData( [ 0 ] * inputImage["R"].size() ) )
+		self.assertEqual( outputImage["G"], inputImage["G"] )
+		self.assertEqual( outputImage["B"], inputImage["B"] )
 
 	def testPassThrough( self ) :
 

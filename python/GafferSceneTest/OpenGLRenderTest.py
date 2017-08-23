@@ -91,13 +91,16 @@ class OpenGLRenderTest( GafferSceneTest.SceneTestCase ) :
 
 		self.assertTrue( os.path.exists( self.temporaryDirectory() + "/test.exr" ) )
 
-		i = IECore.EXRImageReader( self.temporaryDirectory() + "/test.exr" ).read()
-		e = IECore.ImagePrimitiveEvaluator( i )
-		r = e.createResult()
-		e.pointAtUV( IECore.V2f( 0.5 ), r )
-		self.assertAlmostEqual( r.floatPrimVar( e.R() ), 0.666666, 5 )
-		self.assertAlmostEqual( r.floatPrimVar( e.G() ), 0.666666, 5 )
-		self.assertEqual( r.floatPrimVar( e.B() ), 0 )
+		imageReader = GafferImage.ImageReader()
+		imageReader["fileName"].setValue( self.temporaryDirectory() + "/test.exr" )
+
+		imageSampler = GafferImage.ImageSampler()
+		imageSampler["image"].setInput( imageReader["out"] )
+		imageSampler["pixel"].setValue( IECore.V2f( 320, 240 ) )
+
+		self.assertAlmostEqual( imageSampler["color"]["r"].getValue(), 0.666666, delta = 0.001 )
+		self.assertAlmostEqual( imageSampler["color"]["g"].getValue(), 0.666666, delta = 0.001 )
+		self.assertEqual( imageSampler["color"]["b"].getValue(), 0 )
 
 	def testOutputDirectoryCreation( self ) :
 

@@ -39,6 +39,7 @@ import time
 import os
 
 import IECore
+import IECoreImage
 
 import Gaffer
 import GafferImage
@@ -51,15 +52,20 @@ class InteractiveRenderManRenderTest( GafferRenderManTest.RenderManTestCase ) :
 
 	def __colorAtUV( self, image, uv ) :
 
-		e = IECore.ImagePrimitiveEvaluator( image )
-		r = e.createResult()
-		e.pointAtUV( uv, r )
+		objectToImage = GafferImage.ObjectToImage()
+		objectToImage["object"].setValue( image )
 
-		return IECore.Color3f(
-			r.floatPrimVar( image["R"] ),
-			r.floatPrimVar( image["G"] ),
-			r.floatPrimVar( image["B"] ),
+		sampler = GafferImage.ImageSampler()
+		sampler["image"].setInput( objectToImage["out"] )
+		sampler["pixel"].setValue(
+			uv * IECore.V2f(
+				image.displayWindow.size().x,
+				image.displayWindow.size().y
+			)
 		)
+
+		c = sampler["color"].getValue()
+		return IECore.Color3f( c.r, c.g, c.b )
 
 	def testLights( self ) :
 
@@ -117,7 +123,7 @@ class InteractiveRenderManRenderTest( GafferRenderManTest.RenderManTestCase ) :
 		time.sleep( 2 )
 
 		c = self.__colorAtUV(
-			IECore.ImageDisplayDriver.storedImage( "myLovelyPlane" ),
+			IECoreImage.ImageDisplayDriver.storedImage( "myLovelyPlane" ),
 			IECore.V2f( 0.5 ),
 		)
 		self.assertEqual( c / c[0], IECore.Color3f( 1, 0.5, 0.25 ) )
@@ -129,7 +135,7 @@ class InteractiveRenderManRenderTest( GafferRenderManTest.RenderManTestCase ) :
 		time.sleep( 1 )
 
 		c = self.__colorAtUV(
-			IECore.ImageDisplayDriver.storedImage( "myLovelyPlane" ),
+			IECoreImage.ImageDisplayDriver.storedImage( "myLovelyPlane" ),
 			IECore.V2f( 0.5 ),
 		)
 		self.assertEqual( c / c[2], IECore.Color3f( 0.25, 0.5, 1 ) )
@@ -142,7 +148,7 @@ class InteractiveRenderManRenderTest( GafferRenderManTest.RenderManTestCase ) :
 		time.sleep( 1 )
 
 		c = self.__colorAtUV(
-			IECore.ImageDisplayDriver.storedImage( "myLovelyPlane" ),
+			IECoreImage.ImageDisplayDriver.storedImage( "myLovelyPlane" ),
 			IECore.V2f( 0.5 ),
 		)
 		self.assertEqual( c / c[2], IECore.Color3f( 0.25, 0.5, 1 ) )
@@ -153,7 +159,7 @@ class InteractiveRenderManRenderTest( GafferRenderManTest.RenderManTestCase ) :
 		time.sleep( 1 )
 
 		c = self.__colorAtUV(
-			IECore.ImageDisplayDriver.storedImage( "myLovelyPlane" ),
+			IECoreImage.ImageDisplayDriver.storedImage( "myLovelyPlane" ),
 			IECore.V2f( 0.5 ),
 		)
 		self.assertEqual( c / c[0], IECore.Color3f( 1, 0.5, 0.25 ) )
@@ -166,7 +172,7 @@ class InteractiveRenderManRenderTest( GafferRenderManTest.RenderManTestCase ) :
 		time.sleep( 1 )
 
 		c = self.__colorAtUV(
-			IECore.ImageDisplayDriver.storedImage( "myLovelyPlane" ),
+			IECoreImage.ImageDisplayDriver.storedImage( "myLovelyPlane" ),
 			IECore.V2f( 0.5 ),
 		)
 		self.assertEqual( c / c[0], IECore.Color3f( 1, 0.5, 0.25 ) )
@@ -178,7 +184,7 @@ class InteractiveRenderManRenderTest( GafferRenderManTest.RenderManTestCase ) :
 		time.sleep( 1 )
 
 		c = self.__colorAtUV(
-			IECore.ImageDisplayDriver.storedImage( "myLovelyPlane" ),
+			IECoreImage.ImageDisplayDriver.storedImage( "myLovelyPlane" ),
 			IECore.V2f( 0.5 ),
 		)
 		self.assertEqual( c / c[2], IECore.Color3f( 0.25, 0.5, 1 ) )
@@ -190,7 +196,7 @@ class InteractiveRenderManRenderTest( GafferRenderManTest.RenderManTestCase ) :
 		time.sleep( 1 )
 
 		c = self.__colorAtUV(
-			IECore.ImageDisplayDriver.storedImage( "myLovelyPlane" ),
+			IECoreImage.ImageDisplayDriver.storedImage( "myLovelyPlane" ),
 			IECore.V2f( 0.5 ),
 		)
 		self.assertEqual( c / c[2], IECore.Color3f( 0.25, 0.5, 1 ) )
@@ -248,7 +254,7 @@ class InteractiveRenderManRenderTest( GafferRenderManTest.RenderManTestCase ) :
 		time.sleep( 2 )
 
 		c = self.__colorAtUV(
-			IECore.ImageDisplayDriver.storedImage( "myLovelyPlane" ),
+			IECoreImage.ImageDisplayDriver.storedImage( "myLovelyPlane" ),
 			IECore.V2f( 0.5 ),
 		)
 		self.assertEqual( c, IECore.Color3f( 1, 0.5, 0.25 ) )
@@ -258,7 +264,7 @@ class InteractiveRenderManRenderTest( GafferRenderManTest.RenderManTestCase ) :
 		s["s"]["parameters"]["c"].setValue( IECore.Color3f( 1, 1, 1 ) )
 		time.sleep( 1 )
 		c = self.__colorAtUV(
-			IECore.ImageDisplayDriver.storedImage( "myLovelyPlane" ),
+			IECoreImage.ImageDisplayDriver.storedImage( "myLovelyPlane" ),
 			IECore.V2f( 0.5 ),
 		)
 		self.assertEqual( c, IECore.Color3f( 1 ) )
@@ -269,7 +275,7 @@ class InteractiveRenderManRenderTest( GafferRenderManTest.RenderManTestCase ) :
 		s["s"]["parameters"]["c"].setValue( IECore.Color3f( 0.5 ) )
 		time.sleep( 1 )
 		c = self.__colorAtUV(
-			IECore.ImageDisplayDriver.storedImage( "myLovelyPlane" ),
+			IECoreImage.ImageDisplayDriver.storedImage( "myLovelyPlane" ),
 			IECore.V2f( 0.5 ),
 		)
 		self.assertEqual( c, IECore.Color3f( 1 ) )
@@ -279,7 +285,7 @@ class InteractiveRenderManRenderTest( GafferRenderManTest.RenderManTestCase ) :
 		s["r"]["updateAttributes"].setValue( True )
 		time.sleep( 1 )
 		c = self.__colorAtUV(
-			IECore.ImageDisplayDriver.storedImage( "myLovelyPlane" ),
+			IECoreImage.ImageDisplayDriver.storedImage( "myLovelyPlane" ),
 			IECore.V2f( 0.5 ),
 		)
 		self.assertEqual( c, IECore.Color3f( 0.5 ) )
@@ -350,13 +356,13 @@ class InteractiveRenderManRenderTest( GafferRenderManTest.RenderManTestCase ) :
 		time.sleep( 2 )
 
 		c = self.__colorAtUV(
-			IECore.ImageDisplayDriver.storedImage( "myLovelyPlanes" ),
+			IECoreImage.ImageDisplayDriver.storedImage( "myLovelyPlanes" ),
 			IECore.V2f( 0.25, 0.5 ),
 		)
 		self.assertEqual( c, IECore.Color3f( 1, 0, 0 ) )
 
 		c1 = self.__colorAtUV(
-			IECore.ImageDisplayDriver.storedImage( "myLovelyPlanes" ),
+			IECoreImage.ImageDisplayDriver.storedImage( "myLovelyPlanes" ),
 			IECore.V2f( 0.75, 0.5 ),
 		)
 		self.assertTrue( c1[0] > 0.9 )
@@ -371,13 +377,13 @@ class InteractiveRenderManRenderTest( GafferRenderManTest.RenderManTestCase ) :
 		time.sleep( 2 )
 
 		c = self.__colorAtUV(
-			IECore.ImageDisplayDriver.storedImage( "myLovelyPlanes" ),
+			IECoreImage.ImageDisplayDriver.storedImage( "myLovelyPlanes" ),
 			IECore.V2f( 0.25, 0.5 ),
 		)
 		self.assertEqual( c, IECore.Color3f( 0, 1, 0 ) )
 
 		c1 = self.__colorAtUV(
-			IECore.ImageDisplayDriver.storedImage( "myLovelyPlanes" ),
+			IECoreImage.ImageDisplayDriver.storedImage( "myLovelyPlanes" ),
 			IECore.V2f( 0.75, 0.5 ),
 		)
 		self.assertTrue( c1[0] > 0.9 )
@@ -457,7 +463,7 @@ class InteractiveRenderManRenderTest( GafferRenderManTest.RenderManTestCase ) :
 		time.sleep( 2 )
 
 		c = self.__colorAtUV(
-			IECore.ImageDisplayDriver.storedImage( "myLovelyPlane" ),
+			IECoreImage.ImageDisplayDriver.storedImage( "myLovelyPlane" ),
 			IECore.V2f( 0.5 ),
 		)
 		self.assertEqual( c / c[0], IECore.Color3f( 1, 0, 0 ) )
@@ -476,7 +482,7 @@ class InteractiveRenderManRenderTest( GafferRenderManTest.RenderManTestCase ) :
 		time.sleep( 1 )
 
 		c = self.__colorAtUV(
-			IECore.ImageDisplayDriver.storedImage( "myLovelyPlane" ),
+			IECoreImage.ImageDisplayDriver.storedImage( "myLovelyPlane" ),
 			IECore.V2f( 0.5 ),
 		)
 		self.assertEqual( c / c[0], IECore.Color3f( 1, 1, 0 ) )
@@ -536,7 +542,7 @@ class InteractiveRenderManRenderTest( GafferRenderManTest.RenderManTestCase ) :
 		time.sleep( 2 )
 
 		c = self.__colorAtUV(
-			IECore.ImageDisplayDriver.storedImage( "myLovelyPlane" ),
+			IECoreImage.ImageDisplayDriver.storedImage( "myLovelyPlane" ),
 			IECore.V2f( 0.5 ),
 		)
 		self.assertNotEqual( c[0], 0.0 )
@@ -547,7 +553,7 @@ class InteractiveRenderManRenderTest( GafferRenderManTest.RenderManTestCase ) :
 		time.sleep( 2 )
 
 		c = self.__colorAtUV(
-			IECore.ImageDisplayDriver.storedImage( "myLovelyPlane" ),
+			IECoreImage.ImageDisplayDriver.storedImage( "myLovelyPlane" ),
 			IECore.V2f( 0.5 ),
 		)
 		self.assertEqual( c[0], 0.0 )
@@ -558,7 +564,7 @@ class InteractiveRenderManRenderTest( GafferRenderManTest.RenderManTestCase ) :
 		time.sleep( 2 )
 
 		c = self.__colorAtUV(
-			IECore.ImageDisplayDriver.storedImage( "myLovelyPlane" ),
+			IECoreImage.ImageDisplayDriver.storedImage( "myLovelyPlane" ),
 			IECore.V2f( 0.5 ),
 		)
 		self.assertNotEqual( c[0], 0.0 )
@@ -622,7 +628,7 @@ class InteractiveRenderManRenderTest( GafferRenderManTest.RenderManTestCase ) :
 		time.sleep( 2 )
 
 		c = self.__colorAtUV(
-			IECore.ImageDisplayDriver.storedImage( "myLovelyPlane" ),
+			IECoreImage.ImageDisplayDriver.storedImage( "myLovelyPlane" ),
 			IECore.V2f( 0.5 ),
 		)
 		self.assertNotEqual( c[0], 0.0 )
@@ -633,7 +639,7 @@ class InteractiveRenderManRenderTest( GafferRenderManTest.RenderManTestCase ) :
 		time.sleep( 2 )
 
 		c = self.__colorAtUV(
-			IECore.ImageDisplayDriver.storedImage( "myLovelyPlane" ),
+			IECoreImage.ImageDisplayDriver.storedImage( "myLovelyPlane" ),
 			IECore.V2f( 0.5 ),
 		)
 		self.assertEqual( c[0], 0.0 )
@@ -644,7 +650,7 @@ class InteractiveRenderManRenderTest( GafferRenderManTest.RenderManTestCase ) :
 		time.sleep( 2 )
 
 		c = self.__colorAtUV(
-			IECore.ImageDisplayDriver.storedImage( "myLovelyPlane" ),
+			IECoreImage.ImageDisplayDriver.storedImage( "myLovelyPlane" ),
 			IECore.V2f( 0.5 ),
 		)
 		self.assertNotEqual( c[0], 0.0 )
@@ -661,6 +667,8 @@ class InteractiveRenderManRenderTest( GafferRenderManTest.RenderManTestCase ) :
 		s["g"]["in"][0].setInput( s["p"]["out"] )
 		s["g"]["in"][1].setInput( s["c"]["out"] )
 
+		s["m"] = GafferImage.Catalogue()
+
 		s["d"] = GafferScene.Outputs()
 		s["d"].addOutput(
 			"beauty",
@@ -671,7 +679,7 @@ class InteractiveRenderManRenderTest( GafferRenderManTest.RenderManTestCase ) :
 				{
 					"driverType" : "ClientDisplayDriver",
 					"displayHost" : "localhost",
-					"displayPort" : "1559",
+					"displayPort" : str( GafferImage.Catalogue.displayDriverServer().portNumber() ),
 					"remoteDisplayType" : "GafferImage::GafferDisplayDriver",
 					"quantize" : IECore.IntVectorData( [ 0, 0, 0, 0 ] ),
 				}
@@ -680,11 +688,8 @@ class InteractiveRenderManRenderTest( GafferRenderManTest.RenderManTestCase ) :
 
 		s["d"]["in"].setInput( s["g"]["out"] )
 
-		# Emulate the connection the UI makes, so the Display knows someone is listening and
-		# it needs to actually make servers.
+		# Emulate the connection the UI makes
 		executeOnUIThreadConnection = GafferImage.Display.executeOnUIThreadSignal().connect( lambda f : f() )
-
-		s["m"] = GafferImage.Display()
 
 		s["o"] = GafferScene.StandardOptions()
 		s["o"]["in"].setInput( s["d"]["out"] )
@@ -750,7 +755,7 @@ class InteractiveRenderManRenderTest( GafferRenderManTest.RenderManTestCase ) :
 		time.sleep( 2 )
 
 		c = self.__colorAtUV(
-			IECore.ImageDisplayDriver.storedImage( "myLovelyPlane" ),
+			IECoreImage.ImageDisplayDriver.storedImage( "myLovelyPlane" ),
 			IECore.V2f( 0.5 ),
 		)
 		self.assertAlmostEqual( c[1], 1, delta = 0.001 )
@@ -762,7 +767,7 @@ class InteractiveRenderManRenderTest( GafferRenderManTest.RenderManTestCase ) :
 		time.sleep( 2 )
 
 		c = self.__colorAtUV(
-			IECore.ImageDisplayDriver.storedImage( "myLovelyPlane" ),
+			IECoreImage.ImageDisplayDriver.storedImage( "myLovelyPlane" ),
 			IECore.V2f( 0.5 ),
 		)
 		self.assertAlmostEqual( c[0], 0 )
@@ -774,7 +779,7 @@ class InteractiveRenderManRenderTest( GafferRenderManTest.RenderManTestCase ) :
 		time.sleep( 2 )
 
 		c = self.__colorAtUV(
-			IECore.ImageDisplayDriver.storedImage( "myLovelyPlane" ),
+			IECoreImage.ImageDisplayDriver.storedImage( "myLovelyPlane" ),
 			IECore.V2f( 0.5 ),
 		)
 		self.assertAlmostEqual( c[1], 1, delta = 0.001 )
@@ -836,7 +841,7 @@ class InteractiveRenderManRenderTest( GafferRenderManTest.RenderManTestCase ) :
 		time.sleep( 2 )
 
 		c = self.__colorAtUV(
-			IECore.ImageDisplayDriver.storedImage( "myLovelyPlane" ),
+			IECoreImage.ImageDisplayDriver.storedImage( "myLovelyPlane" ),
 			IECore.V2f( 0.5 ),
 		)
 		self.assertAlmostEqual( c[1], 1, delta = 0.001 )
@@ -848,13 +853,13 @@ class InteractiveRenderManRenderTest( GafferRenderManTest.RenderManTestCase ) :
 		time.sleep( 2 )
 
 		c = self.__colorAtUV(
-			IECore.ImageDisplayDriver.storedImage( "myLovelyPlane" ),
+			IECoreImage.ImageDisplayDriver.storedImage( "myLovelyPlane" ),
 			IECore.V2f( 0.6, 0.5 ),
 		)
 		self.assertAlmostEqual( c[0], 1 )
 
 		c = self.__colorAtUV(
-			IECore.ImageDisplayDriver.storedImage( "myLovelyPlane" ),
+			IECoreImage.ImageDisplayDriver.storedImage( "myLovelyPlane" ),
 			IECore.V2f( 0.6, 0.7 ),
 		)
 		self.assertAlmostEqual( c[0], 0 )
@@ -871,7 +876,7 @@ class InteractiveRenderManRenderTest( GafferRenderManTest.RenderManTestCase ) :
 			IECore.V2f( 0.85 ),
 		] :
 			c = self.__colorAtUV(
-				IECore.ImageDisplayDriver.storedImage( "myLovelyPlane" ),
+				IECoreImage.ImageDisplayDriver.storedImage( "myLovelyPlane" ),
 				p,
 			)
 			self.assertAlmostEqual( c[0], 1, delta = 0.001 )
