@@ -35,8 +35,8 @@
 //
 //////////////////////////////////////////////////////////////////////////
 
-#ifndef GAFFERCORTEXBINDINGS_PARAMETERISEDHOLDERBINDING_H
-#define GAFFERCORTEXBINDINGS_PARAMETERISEDHOLDERBINDING_H
+#ifndef GAFFERCORTEXMODULE_PARAMETERISEDHOLDERBINDING_H
+#define GAFFERCORTEXMODULE_PARAMETERISEDHOLDERBINDING_H
 
 #include "boost/format.hpp"
 
@@ -47,7 +47,7 @@
 
 #include "GafferCortex/ParameterisedHolder.h"
 
-namespace GafferCortexBindings
+namespace GafferCortexModule
 {
 
 template<typename BaseType>
@@ -198,6 +198,6 @@ class ParameterisedHolderClass : public BaseType
 
 void bindParameterisedHolder();
 
-} // namespace GafferCortexBindings
+} // namespace GafferCortexModule
 
-#endif // GAFFERCORTEXBINDINGS_PARAMETERISEDHOLDERBINDING_H
+#endif // GAFFERCORTEXMODULE_PARAMETERISEDHOLDERBINDING_H

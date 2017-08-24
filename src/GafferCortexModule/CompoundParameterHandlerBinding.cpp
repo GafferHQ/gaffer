@@ -43,11 +43,14 @@
 
 #include "GafferCortex/CompoundParameterHandler.h"
 
-#include "GafferCortexBindings/CompoundParameterHandlerBinding.h"
+#include "CompoundParameterHandlerBinding.h"
 
 using namespace boost::python;
 using namespace GafferCortex;
-using namespace GafferCortexBindings;
+using namespace GafferCortexModule;
+
+namespace
+{
 
 /// Note that we've copied parts of the ParameterHandlerWrapper here. Typically we'd template
 /// the ParameterHandlerWrapper class and make it possible to wrap any of the ParameterHandler classes
@@ -136,27 +139,29 @@ class CompoundParameterHandlerWrapper : public IECorePython::RefCountedWrapper<C
 
 };
 
-static void compoundParameterHandlerRestore( CompoundParameterHandler &ph, Gaffer::GraphComponent *plugParent )
+void compoundParameterHandlerRestore( CompoundParameterHandler &ph, Gaffer::GraphComponent *plugParent )
 {
 	return ph.CompoundParameterHandler::restore( plugParent );
 }
 
-static Gaffer::PlugPtr compoundParameterHandlerSetupPlug( CompoundParameterHandler &ph, Gaffer::GraphComponent *plugParent, Gaffer::Plug::Direction direction, unsigned flags )
+Gaffer::PlugPtr compoundParameterHandlerSetupPlug( CompoundParameterHandler &ph, Gaffer::GraphComponent *plugParent, Gaffer::Plug::Direction direction, unsigned flags )
 {
 	return ph.CompoundParameterHandler::setupPlug( plugParent, direction, flags );
 }
 
-static void compoundParameterHandlerSetParameterValue( CompoundParameterHandler &ph )
+void compoundParameterHandlerSetParameterValue( CompoundParameterHandler &ph )
 {
 	return ph.CompoundParameterHandler::setParameterValue();
 }
 
-static void compoundParameterHandlerSetPlugValue( CompoundParameterHandler &ph )
+void compoundParameterHandlerSetPlugValue( CompoundParameterHandler &ph )
 {
 	return ph.CompoundParameterHandler::setPlugValue();
 }
 
-void GafferCortexBindings::bindCompoundParameterHandler()
+} // namespace
+
+void GafferCortexModule::bindCompoundParameterHandler()
 {
 
 	IECorePython::RefCountedClass<CompoundParameterHandler, ParameterHandler, CompoundParameterHandlerWrapper>( "CompoundParameterHandler" )

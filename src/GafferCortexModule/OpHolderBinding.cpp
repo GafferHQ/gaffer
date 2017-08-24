@@ -37,34 +37,43 @@
 
 #include "boost/python.hpp"
 
-#include "IECore/ParameterisedProcedural.h"
+#include "IECore/Op.h"
 
 #include "GafferBindings/DependencyNodeBinding.h"
 
-#include "GafferCortex/ProceduralHolder.h"
+#include "GafferCortex/OpHolder.h"
 #include "GafferCortex/CompoundParameterHandler.h"
 
-#include "GafferCortexBindings/ParameterisedHolderBinding.h"
-#include "GafferCortexBindings/ProceduralHolderBinding.h"
+#include "ParameterisedHolderBinding.h"
+#include "OpHolderBinding.h"
 
 using namespace boost::python;
+using namespace Gaffer;
 using namespace GafferBindings;
 using namespace GafferCortex;
-using namespace GafferCortexBindings;
+using namespace GafferCortexModule;
 
-typedef ParameterisedHolderWrapper<DependencyNodeWrapper<ProceduralHolder> > ProceduralHolderWrapper;
+typedef ParameterisedHolderWrapper<DependencyNodeWrapper<OpHolder> > OpHolderWrapper;
 
-static IECore::ParameterisedProceduralPtr getProcedural( ProceduralHolder &n )
+static IECore::OpPtr getOp( OpHolder &n )
 {
-	return n.getProcedural();
+	return n.getOp();
 }
 
-void GafferCortexBindings::bindProceduralHolder()
+void GafferCortexModule::bindOpHolder()
 {
 
-	GafferBindings::DependencyNodeClass<ProceduralHolder, ProceduralHolderWrapper>()
-		.def( "setProcedural", &ProceduralHolder::setProcedural )
-		.def( "getProcedural", &getProcedural )
+	DependencyNodeClass<OpHolder, OpHolderWrapper>()
+		.def(
+			"setOp",
+			&OpHolder::setOp,
+			(
+				boost::python::arg_( "className" ),
+				boost::python::arg_( "classVersion" ),
+				boost::python::arg_( "keepExistingValues" ) = false
+			)
+		)
+		.def( "getOp", &getOp )
 	;
 
 }

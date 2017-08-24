@@ -47,13 +47,13 @@
 #include "GafferCortex/ParameterisedHolder.h"
 #include "GafferCortex/CompoundParameterHandler.h"
 
-#include "GafferCortexBindings/ParameterisedHolderBinding.h"
+#include "ParameterisedHolderBinding.h"
 
 using namespace boost::python;
 using namespace GafferBindings;
 using namespace GafferDispatchBindings;
 using namespace GafferCortex;
-using namespace GafferCortexBindings;
+using namespace GafferCortexModule;
 
 namespace
 {
@@ -88,7 +88,7 @@ class ParameterisedHolderSerialiser : public NodeSerialiser
 
 } // namespace
 
-void GafferCortexBindings::bindParameterisedHolder()
+void GafferCortexModule::bindParameterisedHolder()
 {
 
 	ParameterisedHolderClass<NodeClass<ParameterisedHolderNode, ParameterisedHolderNodeWrapper> >();

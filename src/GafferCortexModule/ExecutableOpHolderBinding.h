@@ -1,7 +1,6 @@
 //////////////////////////////////////////////////////////////////////////
 //
-//  Copyright (c) 2011-2012, John Haddon. All rights reserved.
-//  Copyright (c) 2012, Image Engine Design Inc. All rights reserved.
+//  Copyright (c) 2013, Image Engine Design Inc. All rights reserved.
 //
 //  Redistribution and use in source and binary forms, with or without
 //  modification, are permitted provided that the following conditions are
@@ -35,45 +34,14 @@
 //
 //////////////////////////////////////////////////////////////////////////
 
-#include "boost/python.hpp"
+#ifndef GAFFERCORTEXMODULE_EXECUTABLEOPHOLDERBINDING_H
+#define GAFFERCORTEXMODULE_EXECUTABLEOPHOLDERBINDING_H
 
-#include "IECore/Op.h"
-
-#include "GafferBindings/DependencyNodeBinding.h"
-
-#include "GafferCortex/OpHolder.h"
-#include "GafferCortex/CompoundParameterHandler.h"
-
-#include "GafferCortexBindings/ParameterisedHolderBinding.h"
-#include "GafferCortexBindings/OpHolderBinding.h"
-
-using namespace boost::python;
-using namespace Gaffer;
-using namespace GafferBindings;
-using namespace GafferCortex;
-using namespace GafferCortexBindings;
-
-typedef ParameterisedHolderWrapper<DependencyNodeWrapper<OpHolder> > OpHolderWrapper;
-
-static IECore::OpPtr getOp( OpHolder &n )
-{
-	return n.getOp();
-}
-
-void GafferCortexBindings::bindOpHolder()
+namespace GafferCortexModule
 {
 
-	DependencyNodeClass<OpHolder, OpHolderWrapper>()
-		.def(
-			"setOp",
-			&OpHolder::setOp,
-			(
-				boost::python::arg_( "className" ),
-				boost::python::arg_( "classVersion" ),
-				boost::python::arg_( "keepExistingValues" ) = false
-			)
-		)
-		.def( "getOp", &getOp )
-	;
+void bindExecutableOpHolder();
 
-}
+} // namespace GafferCortexModule
+
+#endif // GAFFERCORTEXMODULE_EXECUTABLEOPHOLDERBINDING_H

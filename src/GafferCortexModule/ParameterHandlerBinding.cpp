@@ -44,11 +44,14 @@
 
 #include "GafferCortex/ParameterHandler.h"
 
-#include "GafferCortexBindings/ParameterHandlerBinding.h"
+#include "ParameterHandlerBinding.h"
 
 using namespace boost::python;
 using namespace GafferCortex;
-using namespace GafferCortexBindings;
+using namespace GafferCortexModule;
+
+namespace
+{
 
 class ParameterHandlerWrapper : public IECorePython::RefCountedWrapper<ParameterHandler>
 {
@@ -138,12 +141,14 @@ struct ParameterHandlerCreator
 
 };
 
-static void registerParameterHandler( IECore::TypeId parameterType, object creator )
+void registerParameterHandler( IECore::TypeId parameterType, object creator )
 {
 	ParameterHandler::registerParameterHandler( parameterType, ParameterHandlerCreator( creator ) );
 }
 
-void GafferCortexBindings::bindParameterHandler()
+} // namespace
+
+void GafferCortexModule::bindParameterHandler()
 {
 
 	IECorePython::RefCountedClass<ParameterHandler, IECore::RefCounted, ParameterHandlerWrapper>( "ParameterHandler" )

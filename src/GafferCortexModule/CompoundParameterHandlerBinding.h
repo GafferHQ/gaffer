@@ -1,6 +1,6 @@
 //////////////////////////////////////////////////////////////////////////
 //
-//  Copyright (c) 2011, John Haddon. All rights reserved.
+//  Copyright (c) 2011, Image Engine Design Inc. All rights reserved.
 //
 //  Redistribution and use in source and binary forms, with or without
 //  modification, are permitted provided that the following conditions are
@@ -34,14 +34,14 @@
 //
 //////////////////////////////////////////////////////////////////////////
 
-#ifndef GAFFERCORTEXBINDINGS_OPHOLDERBINDING_H
-#define GAFFERCORTEXBINDINGS_OPHOLDERBINDING_H
+#ifndef GAFFERCORTEXMODULE_COMPOUNDPARAMETERHANDLERBINDING_H
+#define GAFFERCORTEXMODULE_COMPOUNDPARAMETERHANDLERBINDING_H
 
-namespace GafferCortexBindings
+namespace GafferCortexModule
 {
 
-void bindOpHolder();
+void bindCompoundParameterHandler();
 
-} // namespace GafferCortexBindings
+} // namespace GafferCortexModule
 
-#endif // GAFFERCORTEXBINDINGS_OPHOLDERBINDING_H
+#endif // GAFFERCORTEXMODULE_COMPOUNDPARAMETERHANDLERBINDING_H
