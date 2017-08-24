@@ -140,6 +140,7 @@ import DeleteFacesUI
 import DeleteCurvesUI
 import DeletePointsUI
 import CollectScenesUI
+import EncapsulateUI
 
 # then all the PathPreviewWidgets. note that the order
 # of import controls the order of display.
