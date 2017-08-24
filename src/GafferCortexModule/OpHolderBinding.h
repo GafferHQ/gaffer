@@ -34,14 +34,14 @@
 //
 //////////////////////////////////////////////////////////////////////////
 
-#ifndef GAFFERCORTEXBINDINGS_PROCEDURALHOLDERBINDING_H
-#define GAFFERCORTEXBINDINGS_PROCEDURALHOLDERBINDING_H
+#ifndef GAFFERCORTEXMODULE_OPHOLDERBINDING_H
+#define GAFFERCORTEXMODULE_OPHOLDERBINDING_H
 
-namespace GafferCortexBindings
+namespace GafferCortexModule
 {
 
-void bindProceduralHolder();
+void bindOpHolder();
 
-} // namespace GafferCortexBindings
+} // namespace GafferCortexModule
 
-#endif // GAFFERCORTEXBINDINGS_PROCEDURALHOLDERBINDING_H
+#endif // GAFFERCORTEXMODULE_OPHOLDERBINDING_H

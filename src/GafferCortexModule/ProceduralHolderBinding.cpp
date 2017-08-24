@@ -1,6 +1,7 @@
 //////////////////////////////////////////////////////////////////////////
 //
-//  Copyright (c) 2011, Image Engine Design Inc. All rights reserved.
+//  Copyright (c) 2011-2012, John Haddon. All rights reserved.
+//  Copyright (c) 2012, Image Engine Design Inc. All rights reserved.
 //
 //  Redistribution and use in source and binary forms, with or without
 //  modification, are permitted provided that the following conditions are
@@ -34,14 +35,36 @@
 //
 //////////////////////////////////////////////////////////////////////////
 
-#ifndef GAFFERCORTEXBINDINGS_PARAMETERHANDLERBINDING_H
-#define GAFFERCORTEXBINDINGS_PARAMETERHANDLERBINDING_H
+#include "boost/python.hpp"
 
-namespace GafferCortexBindings
+#include "IECore/ParameterisedProcedural.h"
+
+#include "GafferBindings/DependencyNodeBinding.h"
+
+#include "GafferCortex/ProceduralHolder.h"
+#include "GafferCortex/CompoundParameterHandler.h"
+
+#include "ParameterisedHolderBinding.h"
+#include "ProceduralHolderBinding.h"
+
+using namespace boost::python;
+using namespace GafferBindings;
+using namespace GafferCortex;
+using namespace GafferCortexModule;
+
+typedef ParameterisedHolderWrapper<DependencyNodeWrapper<ProceduralHolder> > ProceduralHolderWrapper;
+
+static IECore::ParameterisedProceduralPtr getProcedural( ProceduralHolder &n )
+{
+	return n.getProcedural();
+}
+
+void GafferCortexModule::bindProceduralHolder()
 {
 
-void bindParameterHandler();
+	GafferBindings::DependencyNodeClass<ProceduralHolder, ProceduralHolderWrapper>()
+		.def( "setProcedural", &ProceduralHolder::setProcedural )
+		.def( "getProcedural", &getProcedural )
+	;
 
-} // namespace GafferCortexBindings
-
-#endif // GAFFERCORTEXBINDINGS_PARAMETERHANDLERBINDING_H
+}
