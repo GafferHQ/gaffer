@@ -128,6 +128,7 @@ from DeleteCurvesTest import DeleteCurvesTest
 from DeletePointsTest import DeletePointsTest
 from CollectScenesTest import CollectScenesTest
 from CapsuleTest import CapsuleTest
+from EncapsulateTest import EncapsulateTest
 
 if __name__ == "__main__":
 	import unittest
