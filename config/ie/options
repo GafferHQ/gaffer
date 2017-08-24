@@ -104,6 +104,9 @@ oslVersion = gafferReg["OpenShadingLanguage"]
 vdbVersion = gafferReg.get( "OpenVDB", "3.0.0" )
 qtPyVersion = gafferReg.get( "qtPyVersion", "1.0.0.b3" )
 
+vTuneVersion = getOption( "VTUNE_VERSION", os.environ["VTUNE_VERSION"] )
+VTUNE_ROOT = IEEnv.registry["apps"]["vtune"][vTuneVersion][IEEnv.platform()]["location"]
+
 if targetApp :
 
 	if targetApp not in ( "nuke", "maya", "houdini" ) :
