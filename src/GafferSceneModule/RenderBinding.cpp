@@ -48,6 +48,7 @@
 #include "GafferScene/Preview/Render.h"
 #include "GafferScene/Preview/InteractiveRender.h"
 #include "GafferScene/Private/IECoreScenePreview/Renderer.h"
+#include "GafferScene/Private/IECoreScenePreview/Procedural.h"
 
 #include "RenderBinding.h"
 
@@ -155,6 +156,47 @@ void objectInterfaceTransform2( Renderer::ObjectInterface &objectInterface, obje
 
 	return objectInterface.transform( samples, times );
 }
+
+class ProceduralWrapper : public IECorePython::RunTimeTypedWrapper<IECoreScenePreview::Procedural>
+{
+
+	public :
+
+		ProceduralWrapper( PyObject *self )
+			:	IECorePython::RunTimeTypedWrapper<IECoreScenePreview::Procedural>( self )
+		{
+		}
+
+		Imath::Box3f bound() const final
+		{
+			IECorePython::ScopedGILLock gilLock;
+			boost::python::object f = this->methodOverride( "bound" );
+			if( f )
+			{
+				return extract<Imath::Box3f>( f() );
+			}
+			else
+			{
+				throw IECore::Exception( "No bound method defined" );
+			}
+		}
+
+		void render( IECoreScenePreview::Renderer *renderer ) const final
+		{
+			IECorePython::ScopedGILLock gilLock;
+			boost::python::object f = this->methodOverride( "render" );
+			if( f )
+			{
+				f( IECoreScenePreview::RendererPtr( renderer ) );
+				return;
+			}
+			else
+			{
+				throw IECore::Exception( "No render method defined" );
+			}
+		}
+
+};
 
 } // namespace
 
@@ -278,6 +320,11 @@ void GafferSceneModule::bindRender()
 			.def( "render", &Renderer::render )
 			.def( "pause", &Renderer::pause )
 
+		;
+
+		IECorePython::RunTimeTypedClass<IECoreScenePreview::Procedural, ProceduralWrapper>()
+			.def( init<>() )
+			.def( "render", (void (Procedural::*)( IECoreScenePreview::Renderer *)const)&Procedural::render )
 		;
 
 	}
