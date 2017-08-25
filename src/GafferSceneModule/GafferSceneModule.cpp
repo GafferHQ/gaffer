@@ -69,7 +69,6 @@ BOOST_PYTHON_MODULE( _GafferScene )
 	bindTransform();
 	bindGlobals();
 	bindOptions();
-	bindHierarchy();
 	bindAttributes();
 	bindSceneAlgo();
 	bindRendererAlgo();
@@ -79,6 +78,7 @@ BOOST_PYTHON_MODULE( _GafferScene )
 	bindScenePath();
 	bindShader();
 	bindRender();
+	bindHierarchy();
 	bindObjectProcessor();
 	bindPrimitiveVariables();
 	bindLightTweaks();
