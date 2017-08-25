@@ -60,15 +60,9 @@ class NodeGadgetWrapper : public GadgetWrapper<WrappedType>
 
 	public :
 
-		template<typename Arg1>
-		NodeGadgetWrapper( PyObject *self, Arg1 arg1 )
-			:	GadgetWrapper<WrappedType>( self, arg1 )
-		{
-		}
-
-		template<typename Arg1, typename Arg2>
-		NodeGadgetWrapper( PyObject *self, Arg1 arg1, Arg2 arg2 )
-			:	GadgetWrapper<WrappedType>( self, arg1, arg2 )
+		template<typename... Args>
+		NodeGadgetWrapper( PyObject *self, Args&&... args )
+			:	GadgetWrapper<WrappedType>( self, std::forward<Args>( args )... )
 		{
 		}
 

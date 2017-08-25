@@ -38,6 +38,8 @@
 #ifndef GAFFERBINDINGS_NODEBINDING_H
 #define GAFFERBINDINGS_NODEBINDING_H
 
+#include <utility>
+
 #include "boost/python.hpp"
 
 #include "IECorePython/ScopedGILLock.h"
@@ -69,20 +71,9 @@ class NodeWrapper : public GraphComponentWrapper<T>
 
 		typedef T WrappedType;
 
-		NodeWrapper( PyObject *self, const std::string &name )
-			:	GraphComponentWrapper<T>( self, name )
-		{
-		}
-
-		template<typename Arg1, typename Arg2>
-		NodeWrapper( PyObject *self, Arg1 arg1, Arg2 arg2 )
-			:	GraphComponentWrapper<WrappedType>( self, arg1, arg2 )
-		{
-		}
-
-		template<typename Arg1, typename Arg2, typename Arg3>
-		NodeWrapper( PyObject *self, Arg1 arg1, Arg2 arg2, Arg3 arg3 )
-			:	GraphComponentWrapper<WrappedType>( self, arg1, arg2, arg3 )
+		template<typename... Args>
+		NodeWrapper( PyObject *self, Args&&... args )
+			:	GraphComponentWrapper<T>( self, std::forward<Args>( args )... )
 		{
 		}
 

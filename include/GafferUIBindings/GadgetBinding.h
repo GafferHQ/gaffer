@@ -38,6 +38,8 @@
 #ifndef GAFFERUIBINDINGS_GADGETBINDING_H
 #define GAFFERUIBINDINGS_GADGETBINDING_H
 
+#include <utility>
+
 #include "GafferUI/Gadget.h"
 #include "GafferUI/Style.h"
 
@@ -60,20 +62,9 @@ class GadgetWrapper : public GafferBindings::GraphComponentWrapper<WrappedType>
 {
 	public :
 
-		GadgetWrapper( PyObject *self )
-			:	GafferBindings::GraphComponentWrapper<WrappedType>( self )
-		{
-		}
-
-		template<typename Arg1>
-		GadgetWrapper( PyObject *self, Arg1 arg1 )
-			:	GafferBindings::GraphComponentWrapper<WrappedType>( self, arg1 )
-		{
-		}
-
-		template<typename Arg1, typename Arg2>
-		GadgetWrapper( PyObject *self, Arg1 arg1, Arg2 arg2 )
-			:	GafferBindings::GraphComponentWrapper<WrappedType>( self, arg1, arg2 )
+		template<typename... Args>
+		GadgetWrapper( PyObject *self, Args&&... args )
+			:	GafferBindings::GraphComponentWrapper<WrappedType>( self, std::forward<Args>( args )... )
 		{
 		}
 
