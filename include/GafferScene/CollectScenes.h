@@ -65,6 +65,9 @@ class CollectScenes : public SceneProcessor
 		Gaffer::StringPlug *rootNameVariablePlug();
 		const Gaffer::StringPlug *rootNameVariablePlug() const;
 
+		Gaffer::StringPlug *sourceRootPlug();
+		const Gaffer::StringPlug *sourceRootPlug() const;
+
 		void affects( const Gaffer::Plug *input, AffectedPlugsContainer &outputs ) const override;
 
 	protected :
