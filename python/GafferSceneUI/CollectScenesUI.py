@@ -85,6 +85,24 @@ Gaffer.Metadata.registerNode(
 
 		],
 
+		"sourceRoot" : [
+
+			"description",
+			"""
+			Specifies the root of the subtree to be copied from the input
+			scene. The default value causes the whole scene to be collected.
+
+			The rootName variable may be used in expressions and string
+			substitutions for this plug, allowing different subtrees to be
+			collected for each root name in the output.
+
+			> Tip :
+			> By specifying a leaf location as the root, it is possible to
+			> collect single objects from the input scene.
+			"""
+
+		],
+
 	}
 
 )
