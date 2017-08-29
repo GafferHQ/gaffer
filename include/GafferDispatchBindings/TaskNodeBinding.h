@@ -37,6 +37,8 @@
 #ifndef GAFFERDISPATCHBINDINGS_TASKNODEBINDING_H
 #define GAFFERDISPATCHBINDINGS_TASKNODEBINDING_H
 
+#include <utility>
+
 #include "boost/python/suite/indexing/container_utils.hpp"
 
 #include "IECorePython/ScopedGILLock.h"
@@ -65,8 +67,9 @@ class TaskNodeWrapper : public GafferBindings::DependencyNodeWrapper<WrappedType
 {
 	public :
 
-		TaskNodeWrapper( PyObject *self, const std::string &name )
-			:	GafferBindings::DependencyNodeWrapper<WrappedType>( self, name )
+		template<typename... Args>
+		TaskNodeWrapper( PyObject *self, Args&&... args )
+			:	GafferBindings::DependencyNodeWrapper<WrappedType>( self, std::forward<Args>( args )... )
 		{
 		}
 

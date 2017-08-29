@@ -38,6 +38,8 @@
 #ifndef GAFFERBINDINGS_PLUGBINDING_H
 #define GAFFERBINDINGS_PLUGBINDING_H
 
+#include <utility>
+
 #include "IECorePython/ScopedGILRelease.h"
 
 #include "Gaffer/Plug.h"
@@ -64,8 +66,9 @@ class PlugWrapper : public GraphComponentWrapper<WrappedType>
 {
 	public :
 
-		PlugWrapper( PyObject *self, const std::string &name, Gaffer::Plug::Direction direction, unsigned flags )
-			:	GraphComponentWrapper<WrappedType>( self, name, direction, flags )
+		template<typename... Args>
+		PlugWrapper( PyObject *self, Args&&... args )
+			:	GraphComponentWrapper<WrappedType>( self, std::forward<Args>( args )... )
 		{
 		}
 

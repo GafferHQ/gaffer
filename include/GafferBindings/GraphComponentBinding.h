@@ -38,6 +38,8 @@
 #ifndef GAFFERBINDINGS_GRAPHCOMPONENTBINDING_H
 #define GAFFERBINDINGS_GRAPHCOMPONENTBINDING_H
 
+#include <utility>
+
 #include "IECorePython/RunTimeTypedBinding.h"
 
 #include "Gaffer/GraphComponent.h"
@@ -60,26 +62,9 @@ class GraphComponentWrapper : public IECorePython::RunTimeTypedWrapper<WrappedTy
 
 	public :
 
-		GraphComponentWrapper( PyObject *self )
-			:	IECorePython::RunTimeTypedWrapper<WrappedType>( self )
-		{
-		}
-
-		template<typename Arg1>
-		GraphComponentWrapper( PyObject *self, Arg1 arg1 )
-			:	IECorePython::RunTimeTypedWrapper<WrappedType>( self, arg1 )
-		{
-		}
-
-		template<typename Arg1, typename Arg2>
-		GraphComponentWrapper( PyObject *self, Arg1 arg1, Arg2 arg2 )
-			:	IECorePython::RunTimeTypedWrapper<WrappedType>( self, arg1, arg2 )
-		{
-		}
-
-		template<typename Arg1, typename Arg2, typename Arg3>
-		GraphComponentWrapper( PyObject *self, Arg1 arg1, Arg2 arg2, Arg3 arg3 )
-			:	IECorePython::RunTimeTypedWrapper<WrappedType>( self, arg1, arg2, arg3 )
+		template<typename... Args>
+		GraphComponentWrapper( PyObject *self, Args&&... args )
+			:	IECorePython::RunTimeTypedWrapper<WrappedType>( self, std::forward<Args>( args )... )
 		{
 		}
 

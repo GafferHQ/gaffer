@@ -59,20 +59,9 @@ class ComputeNodeWrapper : public DependencyNodeWrapper<WrappedType>
 {
 	public :
 
-		ComputeNodeWrapper( PyObject *self, const std::string &name )
-			:	DependencyNodeWrapper<WrappedType>( self, name )
-		{
-		}
-
-		template<typename Arg1, typename Arg2>
-		ComputeNodeWrapper( PyObject *self, Arg1 arg1, Arg2 arg2 )
-			:	DependencyNodeWrapper<WrappedType>( self, arg1, arg2 )
-		{
-		}
-
-		template<typename Arg1, typename Arg2, typename Arg3>
-		ComputeNodeWrapper( PyObject *self, Arg1 arg1, Arg2 arg2, Arg3 arg3 )
-			:	DependencyNodeWrapper<WrappedType>( self, arg1, arg2, arg3 )
+		template<typename... Args>
+		ComputeNodeWrapper( PyObject *self, Args&&... args )
+			:	DependencyNodeWrapper<WrappedType>( self, std::forward<Args>( args )... )
 		{
 		}
 
