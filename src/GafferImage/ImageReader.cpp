@@ -64,7 +64,7 @@ class FrameMaskScope : public Context::EditableScope
 
 	public :
 
-		FrameMaskScope( const Context *context, const ImageReader *reader, bool clampBlack )
+		FrameMaskScope( const Context *context, const ImageReader *reader, bool clampBlack = false )
 			:	EditableScope( context ), m_mode( ImageReader::None )
 		{
 				const int startFrame = reader->startFramePlug()->getValue();
@@ -356,23 +356,6 @@ void ImageReader::hash( const ValuePlug *output, const Context *context, IECore:
 		colorSpacePlug()->hash( h );
 		fileNamePlug()->hash( h );
 	}
-	else if(
-		output == outPlug()->formatPlug() ||
-		output == outPlug()->dataWindowPlug()
-	)
-	{
-		// we always want to match the windows
-		// we would get inside the frame mask
-		hashMaskedOutput( output, context, h, /* alwaysClampToFrame */ true );
-	}
-	else if(
-		output == outPlug()->metadataPlug() ||
-		output == outPlug()->channelNamesPlug() ||
-		output == outPlug()->channelDataPlug()
-	)
-	{
-		hashMaskedOutput( output, context, h );
-	}
 }
 
 void ImageReader::compute( ValuePlug *output, const Context *context ) const
@@ -396,47 +379,110 @@ void ImageReader::compute( ValuePlug *output, const Context *context ) const
 		}
 		static_cast<StringPlug *>( output )->setValue( colorSpace );
 	}
-	else if(
-		output == outPlug()->formatPlug() ||
-		output == outPlug()->dataWindowPlug()
-	)
-	{
-		// we always want to match the windows
-		// we would get inside the frame mask
-		computeMaskedOutput( output, context, /* alwaysClampToFrame */ true );
-	}
-	else if(
-		output == outPlug()->metadataPlug() ||
-		output == outPlug()->channelNamesPlug() ||
-		output == outPlug()->channelDataPlug()
-	)
-	{
-		computeMaskedOutput( output, context );
-	}
 	else
 	{
 		ImageNode::compute( output, context );
 	}
 }
 
-void ImageReader::hashMaskedOutput( const Gaffer::ValuePlug *output, const Gaffer::Context *context, IECore::MurmurHash &h, bool clampBlack ) const
+void ImageReader::hashFormat( const GafferImage::ImagePlug *parent, const Gaffer::Context *context, IECore::MurmurHash &h ) const
 {
-	FrameMaskScope scope( context, this, clampBlack );
-	if( scope.mode() != BlackOutside )
-	{
-		h = intermediateImagePlug()->getChild<ValuePlug>( output->getName() )->hash();
-	}
+	FrameMaskScope scope( context, this, /* clampBlack = */ true );
+	h = intermediateImagePlug()->formatPlug()->hash();
 }
 
-void ImageReader::computeMaskedOutput( Gaffer::ValuePlug *output, const Gaffer::Context *context, bool clampBlack ) const
+GafferImage::Format ImageReader::computeFormat( const Gaffer::Context *context, const ImagePlug *parent ) const
 {
-	FrameMaskScope scope( context, this, clampBlack );
-	if( scope.mode() != BlackOutside )
+	FrameMaskScope scope( context, this, /* clampBlack = */ true );
+	return intermediateImagePlug()->formatPlug()->getValue();
+}
+
+void ImageReader::hashDataWindow( const GafferImage::ImagePlug *parent, const Gaffer::Context *context, IECore::MurmurHash &h ) const
+{
+	FrameMaskScope scope( context, this, /* clampBlack = */ true );
+	h = intermediateImagePlug()->dataWindowPlug()->hash();
+}
+
+Imath::Box2i ImageReader::computeDataWindow( const Gaffer::Context *context, const ImagePlug *parent ) const
+{
+	FrameMaskScope scope( context, this, /* clampBlack = */ true );
+	return intermediateImagePlug()->dataWindowPlug()->getValue();
+}
+
+void ImageReader::hashMetadata( const GafferImage::ImagePlug *parent, const Gaffer::Context *context, IECore::MurmurHash &h ) const
+{
+	FrameMaskScope scope( context, this );
+	if( scope.mode() == BlackOutside )
 	{
-		output->setFrom( intermediateImagePlug()->getChild<ValuePlug>( output->getName() ) );
+		h = intermediateImagePlug()->metadataPlug()->defaultValue()->Object::hash();
 	}
 	else
 	{
-		output->setToDefault();
+		h = intermediateImagePlug()->metadataPlug()->hash();
+	}
+}
+
+IECore::ConstCompoundDataPtr ImageReader::computeMetadata( const Gaffer::Context *context, const ImagePlug *parent ) const
+{
+	FrameMaskScope scope( context, this );
+	if( scope.mode() == BlackOutside )
+	{
+		return intermediateImagePlug()->metadataPlug()->defaultValue();
+	}
+	else
+	{
+		return intermediateImagePlug()->metadataPlug()->getValue();
+	}
+}
+
+void ImageReader::hashChannelNames( const GafferImage::ImagePlug *parent, const Gaffer::Context *context, IECore::MurmurHash &h ) const
+{
+	FrameMaskScope scope( context, this );
+	if( scope.mode() == BlackOutside )
+	{
+		h = intermediateImagePlug()->channelNamesPlug()->defaultValue()->Object::hash();
+	}
+	else
+	{
+		h = intermediateImagePlug()->channelNamesPlug()->hash();
+	}
+}
+
+IECore::ConstStringVectorDataPtr ImageReader::computeChannelNames( const Gaffer::Context *context, const ImagePlug *parent ) const
+{
+	FrameMaskScope scope( context, this );
+	if( scope.mode() == BlackOutside )
+	{
+		return intermediateImagePlug()->channelNamesPlug()->defaultValue();
+	}
+	else
+	{
+		return intermediateImagePlug()->channelNamesPlug()->getValue();
+	}
+}
+
+void ImageReader::hashChannelData( const GafferImage::ImagePlug *parent, const Gaffer::Context *context, IECore::MurmurHash &h ) const
+{
+	FrameMaskScope scope( context, this );
+	if( scope.mode() == BlackOutside )
+	{
+		h = intermediateImagePlug()->channelDataPlug()->defaultValue()->Object::hash();
+	}
+	else
+	{
+		h = intermediateImagePlug()->channelDataPlug()->hash();
+	}
+}
+
+IECore::ConstFloatVectorDataPtr ImageReader::computeChannelData( const std::string &channelName, const Imath::V2i &tileOrigin, const Gaffer::Context *context, const ImagePlug *parent ) const
+{
+	FrameMaskScope scope( context, this );
+	if( scope.mode() == BlackOutside )
+	{
+		return intermediateImagePlug()->channelDataPlug()->defaultValue();
+	}
+	else
+	{
+		return intermediateImagePlug()->channelDataPlug()->getValue();
 	}
 }
