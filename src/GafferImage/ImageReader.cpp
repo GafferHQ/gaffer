@@ -36,6 +36,8 @@
 
 #include "boost/bind.hpp"
 
+#include "OpenEXR/ImathFun.h"
+
 #include "OpenColorIO/OpenColorIO.h"
 
 #include "Gaffer/StringPlug.h"
@@ -49,6 +51,58 @@ using namespace Imath;
 using namespace IECore;
 using namespace Gaffer;
 using namespace GafferImage;
+
+//////////////////////////////////////////////////////////////////////////
+// Internal utilities
+//////////////////////////////////////////////////////////////////////////
+
+namespace
+{
+
+class FrameMaskScope : public Context::EditableScope
+{
+
+	public :
+
+		FrameMaskScope( const Context *context, const ImageReader *reader, bool clampBlack )
+			:	EditableScope( context ), m_mode( ImageReader::None )
+		{
+				const int startFrame = reader->startFramePlug()->getValue();
+				const int endFrame = reader->endFramePlug()->getValue();
+				const int frame = (int)context->getFrame();
+
+				if( frame < startFrame )
+				{
+					m_mode = (ImageReader::FrameMaskMode)reader->startModePlug()->getValue();
+				}
+				else if( frame > endFrame )
+				{
+					m_mode = (ImageReader::FrameMaskMode)reader->endModePlug()->getValue();
+				}
+
+				if( m_mode == ImageReader::BlackOutside && clampBlack )
+				{
+					m_mode = ImageReader::ClampToFrame;
+				}
+
+				if( m_mode == ImageReader::ClampToFrame )
+				{
+					setFrame( clamp( frame, startFrame, endFrame ) );
+				}
+		}
+
+		ImageReader::FrameMaskMode mode()
+		{
+			return m_mode;
+		}
+
+	private :
+
+		ImageReader::FrameMaskMode m_mode;
+
+};
+
+} // namespace
 
 //////////////////////////////////////////////////////////////////////////
 // ImageReader implementation
@@ -365,63 +419,24 @@ void ImageReader::compute( ValuePlug *output, const Context *context ) const
 	}
 }
 
-void ImageReader::hashMaskedOutput( const Gaffer::ValuePlug *output, const Gaffer::Context *context, IECore::MurmurHash &h, bool alwaysClampToFrame ) const
+void ImageReader::hashMaskedOutput( const Gaffer::ValuePlug *output, const Gaffer::Context *context, IECore::MurmurHash &h, bool clampBlack ) const
 {
-	ContextPtr maskedContext = nullptr;
-	if( !computeFrameMask( context, maskedContext ) || alwaysClampToFrame )
+	FrameMaskScope scope( context, this, clampBlack );
+	if( scope.mode() != BlackOutside )
 	{
-		Context::Scope scope( maskedContext.get() );
 		h = intermediateImagePlug()->getChild<ValuePlug>( output->getName() )->hash();
 	}
 }
 
-void ImageReader::computeMaskedOutput( Gaffer::ValuePlug *output, const Gaffer::Context *context, bool alwaysClampToFrame ) const
+void ImageReader::computeMaskedOutput( Gaffer::ValuePlug *output, const Gaffer::Context *context, bool clampBlack ) const
 {
-	ContextPtr maskedContext = nullptr;
-	bool blackOutside = computeFrameMask( context, maskedContext );
-	if( blackOutside && !alwaysClampToFrame )
+	FrameMaskScope scope( context, this, clampBlack );
+	if( scope.mode() != BlackOutside )
+	{
+		output->setFrom( intermediateImagePlug()->getChild<ValuePlug>( output->getName() ) );
+	}
+	else
 	{
 		output->setToDefault();
-		return;
 	}
-
-	Context::Scope scope( maskedContext.get() );
-	output->setFrom( intermediateImagePlug()->getChild<ValuePlug>( output->getName() ) );
-}
-
-bool ImageReader::computeFrameMask( const Context *context, ContextPtr &maskedContext ) const
-{
-	int frameStartMask = startFramePlug()->getValue();
-	int frameEndMask = endFramePlug()->getValue();
-	FrameMaskMode frameStartMaskMode = (FrameMaskMode)startModePlug()->getValue();
-	FrameMaskMode frameEndMaskMode = (FrameMaskMode)endModePlug()->getValue();
-
-	int origFrame = (int)context->getFrame();
-	int maskedFrame = std::min( frameEndMask, std::max( frameStartMask, origFrame ) );
-
-	if( origFrame == maskedFrame )
-	{
-		// no need for anything special when
-		// we're within the mask range.
-		return false;
-	}
-
-	FrameMaskMode maskMode = ( origFrame < maskedFrame ) ? frameStartMaskMode : frameEndMaskMode;
-
-	if( maskMode == None )
-	{
-		// no need for anything special when
-		// we're in FrameMaskMode::None
-		return false;
-	}
-
-	// we need to create the masked context
-	// for both BlackOutSide and ClampToFrame,
-	// because some plugs require valid data
-	// from the mask range even in either way.
-
-	maskedContext = new Gaffer::Context( *context, Context::Borrowed );
-	maskedContext->setFrame( maskedFrame );
-
-	return ( maskMode == BlackOutside );
 }

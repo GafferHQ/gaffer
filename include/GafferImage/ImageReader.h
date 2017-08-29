@@ -149,10 +149,8 @@ class ImageReader : public ImageNode
 		GafferImage::ImagePlug *intermediateImagePlug();
 		const GafferImage::ImagePlug *intermediateImagePlug() const;
 
-		void hashMaskedOutput( const Gaffer::ValuePlug *output, const Gaffer::Context *context, IECore::MurmurHash &h, bool alwaysClampToFrame = false ) const;
-		void computeMaskedOutput( Gaffer::ValuePlug *output, const Gaffer::Context *context, bool alwaysClampToFrame = false ) const;
-
-		bool computeFrameMask( const Gaffer::Context *context, Gaffer::ContextPtr &maskedContext ) const;
+		void hashMaskedOutput( const Gaffer::ValuePlug *output, const Gaffer::Context *context, IECore::MurmurHash &h, bool clampBlack = false ) const;
+		void computeMaskedOutput( Gaffer::ValuePlug *output, const Gaffer::Context *context, bool clampBlack = false ) const;
 
 		static DefaultColorSpaceFunction &defaultColorSpaceFunction();
 
