@@ -37,59 +37,81 @@
 
 #include "boost/python.hpp"
 
-#include "EventBinding.h"
-#include "GadgetBinding.h"
-#include "WidgetSignalBinding.h"
-#include "ViewBinding.h"
-#include "ViewportGadgetBinding.h"
-#include "ToolBinding.h"
-#include "TextGadgetBinding.h"
-#include "StyleBinding.h"
-#include "NoduleBinding.h"
-#include "NodeGadgetBinding.h"
-#include "ContainerGadgetBinding.h"
-#include "GLWidgetBinding.h"
-#include "PointerBinding.h"
-#include "PathListingWidgetBinding.h"
-#include "GraphGadgetBinding.h"
+#include "Gaffer/Node.h"
+
+#include "GafferUI/Nodule.h"
+#include "GafferUI/ConnectionGadget.h"
+#include "GafferUI/StandardConnectionGadget.h"
+
+#include "GafferUIBindings/GadgetBinding.h"
+
 #include "ConnectionGadgetBinding.h"
-#include "RenderableGadgetBinding.h"
-#include "NameGadgetBinding.h"
-#include "SplinePlugGadgetBinding.h"
-#include "ImageGadgetBinding.h"
-#include "PlugGadgetBinding.h"
-#include "SpacerGadgetBinding.h"
-#include "HandleBinding.h"
-#include "PlugAdderBinding.h"
 
-using namespace GafferUIModule;
+using namespace boost::python;
+using namespace GafferUIBindings;
+using namespace GafferUI;
 
-BOOST_PYTHON_MODULE( _GafferUI )
+namespace
 {
 
-	bindGadget();
-	bindEvent();
-	bindContainerGadget();
-	bindGraphGadget();
-	bindRenderableGadget();
-	bindTextGadget();
-	bindNameGadget();
-	bindNodeGadget();
-	bindNodule();
-	bindConnectionGadget();
-	bindWidgetSignal();
-	bindSplinePlugGadget();
-	bindImageGadget();
-	bindStyle();
-	bindViewportGadget();
-	bindView();
-	bindPlugGadget();
-	bindPointer();
-	bindSpacerGadget();
-	bindHandle();
-	bindTool();
-	bindPathListingWidget();
-	bindGLWidget();
-	bindPlugAdder();
+NodulePtr srcNodule( ConnectionGadget &c )
+{
+	return c.srcNodule();
+}
 
+NodulePtr dstNodule( ConnectionGadget &c )
+{
+	return c.dstNodule();
+}
+
+struct ConnectionGadgetCreator
+{
+	ConnectionGadgetCreator( object fn )
+		:	m_fn( fn )
+	{
+	}
+
+	ConnectionGadgetPtr operator()( NodulePtr srcNodule, NodulePtr dstNodule )
+	{
+		IECorePython::ScopedGILLock gilLock;
+		ConnectionGadgetPtr result = extract<ConnectionGadgetPtr>( m_fn( srcNodule, dstNodule ) );
+		return result;
+	}
+
+	private :
+
+		object m_fn;
+
+};
+
+void registerConnectionGadget1( IECore::TypeId dstPlugType, object creator )
+{
+	ConnectionGadget::registerConnectionGadget( dstPlugType, ConnectionGadgetCreator( creator ) );
+}
+
+void registerConnectionGadget2( IECore::TypeId nodeType, const std::string &dstPlugPathRegex, object creator )
+{
+	ConnectionGadget::registerConnectionGadget( nodeType, dstPlugPathRegex, ConnectionGadgetCreator( creator ) );
+}
+
+} // namespace
+
+void GafferUIModule::bindConnectionGadget()
+{
+	GadgetClass<ConnectionGadget>()
+		.def( "srcNodule", &srcNodule )
+		.def( "dstNodule", &dstNodule )
+		.def( "setNodules", &ConnectionGadget::setNodules )
+		.def( "setMinimised", &ConnectionGadget::setMinimised )
+		.def( "getMinimised", &ConnectionGadget::getMinimised )
+		.def( "create", &ConnectionGadget::create )
+		.staticmethod( "create" )
+		.def( "registerConnectionGadget", &registerConnectionGadget1 )
+		.def( "registerConnectionGadget", &registerConnectionGadget2 )
+		.staticmethod( "registerConnectionGadget" )
+	;
+
+	GadgetClass<StandardConnectionGadget>()
+		.def( init<NodulePtr, NodulePtr>() )
+	;
 }

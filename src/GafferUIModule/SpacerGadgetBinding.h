@@ -1,7 +1,6 @@
 //////////////////////////////////////////////////////////////////////////
 //
-//  Copyright (c) 2011-2012, John Haddon. All rights reserved.
-//  Copyright (c) 2011-2014, Image Engine Design Inc. All rights reserved.
+//  Copyright (c) 2013, Image Engine Design Inc. All rights reserved.
 //
 //  Redistribution and use in source and binary forms, with or without
 //  modification, are permitted provided that the following conditions are
@@ -32,64 +31,17 @@
 //  LIABILITY, WHETHER IN CONTRACT, STRICT LIABILITY, OR TORT (INCLUDING
 //  NEGLIGENCE OR OTHERWISE) ARISING IN ANY WAY OUT OF THE USE OF THIS
 //  SOFTWARE, EVEN IF ADVISED OF THE POSSIBILITY OF SUCH DAMAGE.
-//
+//Ga
 //////////////////////////////////////////////////////////////////////////
 
-#include "boost/python.hpp"
+#ifndef GAFFERUIMODULE_SPACERGADGETBINDING_H
+#define GAFFERUIMODULE_SPACERGADGETBINDING_H
 
-#include "EventBinding.h"
-#include "GadgetBinding.h"
-#include "WidgetSignalBinding.h"
-#include "ViewBinding.h"
-#include "ViewportGadgetBinding.h"
-#include "ToolBinding.h"
-#include "TextGadgetBinding.h"
-#include "StyleBinding.h"
-#include "NoduleBinding.h"
-#include "NodeGadgetBinding.h"
-#include "ContainerGadgetBinding.h"
-#include "GLWidgetBinding.h"
-#include "PointerBinding.h"
-#include "PathListingWidgetBinding.h"
-#include "GraphGadgetBinding.h"
-#include "ConnectionGadgetBinding.h"
-#include "RenderableGadgetBinding.h"
-#include "NameGadgetBinding.h"
-#include "SplinePlugGadgetBinding.h"
-#include "ImageGadgetBinding.h"
-#include "PlugGadgetBinding.h"
-#include "SpacerGadgetBinding.h"
-#include "HandleBinding.h"
-#include "PlugAdderBinding.h"
-
-using namespace GafferUIModule;
-
-BOOST_PYTHON_MODULE( _GafferUI )
+namespace GafferUIModule
 {
 
-	bindGadget();
-	bindEvent();
-	bindContainerGadget();
-	bindGraphGadget();
-	bindRenderableGadget();
-	bindTextGadget();
-	bindNameGadget();
-	bindNodeGadget();
-	bindNodule();
-	bindConnectionGadget();
-	bindWidgetSignal();
-	bindSplinePlugGadget();
-	bindImageGadget();
-	bindStyle();
-	bindViewportGadget();
-	bindView();
-	bindPlugGadget();
-	bindPointer();
-	bindSpacerGadget();
-	bindHandle();
-	bindTool();
-	bindPathListingWidget();
-	bindGLWidget();
-	bindPlugAdder();
+void bindSpacerGadget();
 
-}
+} // namespace GafferUIModule
+
+#endif // GAFFERUIMODULE_SPACERGADGETBINDING_H

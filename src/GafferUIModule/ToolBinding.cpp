@@ -1,7 +1,6 @@
 //////////////////////////////////////////////////////////////////////////
 //
-//  Copyright (c) 2011-2012, John Haddon. All rights reserved.
-//  Copyright (c) 2011-2014, Image Engine Design Inc. All rights reserved.
+//  Copyright (c) 2014, John Haddon. All rights reserved.
 //
 //  Redistribution and use in source and binary forms, with or without
 //  modification, are permitted provided that the following conditions are
@@ -37,59 +36,35 @@
 
 #include "boost/python.hpp"
 
-#include "EventBinding.h"
-#include "GadgetBinding.h"
-#include "WidgetSignalBinding.h"
-#include "ViewBinding.h"
-#include "ViewportGadgetBinding.h"
+#include "GafferBindings/NodeBinding.h"
+
+#include "GafferUI/Tool.h"
+#include "GafferUI/View.h"
+
 #include "ToolBinding.h"
-#include "TextGadgetBinding.h"
-#include "StyleBinding.h"
-#include "NoduleBinding.h"
-#include "NodeGadgetBinding.h"
-#include "ContainerGadgetBinding.h"
-#include "GLWidgetBinding.h"
-#include "PointerBinding.h"
-#include "PathListingWidgetBinding.h"
-#include "GraphGadgetBinding.h"
-#include "ConnectionGadgetBinding.h"
-#include "RenderableGadgetBinding.h"
-#include "NameGadgetBinding.h"
-#include "SplinePlugGadgetBinding.h"
-#include "ImageGadgetBinding.h"
-#include "PlugGadgetBinding.h"
-#include "SpacerGadgetBinding.h"
-#include "HandleBinding.h"
-#include "PlugAdderBinding.h"
 
-using namespace GafferUIModule;
+using namespace std;
+using namespace boost::python;
+using namespace GafferUI;
 
-BOOST_PYTHON_MODULE( _GafferUI )
+static boost::python::list registeredTools( IECore::TypeId viewType )
 {
+	vector<string> tools;
+	Tool::registeredTools( viewType, tools );
+	boost::python::list result;
+	for( vector<string>::const_iterator it = tools.begin(), eIt = tools.end(); it!=eIt; ++it )
+	{
+		result.append( *it );
+	}
+	return result;
+}
 
-	bindGadget();
-	bindEvent();
-	bindContainerGadget();
-	bindGraphGadget();
-	bindRenderableGadget();
-	bindTextGadget();
-	bindNameGadget();
-	bindNodeGadget();
-	bindNodule();
-	bindConnectionGadget();
-	bindWidgetSignal();
-	bindSplinePlugGadget();
-	bindImageGadget();
-	bindStyle();
-	bindViewportGadget();
-	bindView();
-	bindPlugGadget();
-	bindPointer();
-	bindSpacerGadget();
-	bindHandle();
-	bindTool();
-	bindPathListingWidget();
-	bindGLWidget();
-	bindPlugAdder();
-
+void GafferUIModule::bindTool()
+{
+	GafferBindings::NodeClass<Tool>( nullptr, no_init )
+		.def( "create", &Tool::create )
+		.staticmethod( "create" )
+		.def( "registeredTools", &registeredTools )
+		.staticmethod( "registeredTools" )
+	;
 }

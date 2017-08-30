@@ -1,7 +1,6 @@
 //////////////////////////////////////////////////////////////////////////
 //
 //  Copyright (c) 2011-2012, John Haddon. All rights reserved.
-//  Copyright (c) 2011-2014, Image Engine Design Inc. All rights reserved.
 //
 //  Redistribution and use in source and binary forms, with or without
 //  modification, are permitted provided that the following conditions are
@@ -37,59 +36,26 @@
 
 #include "boost/python.hpp"
 
-#include "EventBinding.h"
-#include "GadgetBinding.h"
+#include "IECore/RunTimeTyped.h"
+
+#include "GafferUI/EventSignalCombiner.h"
+
+#include "GafferBindings/SignalBinding.h"
+
 #include "WidgetSignalBinding.h"
-#include "ViewBinding.h"
-#include "ViewportGadgetBinding.h"
-#include "ToolBinding.h"
-#include "TextGadgetBinding.h"
-#include "StyleBinding.h"
-#include "NoduleBinding.h"
-#include "NodeGadgetBinding.h"
-#include "ContainerGadgetBinding.h"
-#include "GLWidgetBinding.h"
-#include "PointerBinding.h"
-#include "PathListingWidgetBinding.h"
-#include "GraphGadgetBinding.h"
-#include "ConnectionGadgetBinding.h"
-#include "RenderableGadgetBinding.h"
-#include "NameGadgetBinding.h"
-#include "SplinePlugGadgetBinding.h"
-#include "ImageGadgetBinding.h"
-#include "PlugGadgetBinding.h"
-#include "SpacerGadgetBinding.h"
-#include "HandleBinding.h"
-#include "PlugAdderBinding.h"
 
-using namespace GafferUIModule;
+using namespace boost::python;
+using namespace GafferBindings;
+using namespace GafferUI;
 
-BOOST_PYTHON_MODULE( _GafferUI )
+void GafferUIModule::bindWidgetSignal()
 {
+	typedef boost::signal<bool ( object ), EventSignalCombiner<bool> > WidgetSignal;
+	SignalClass<WidgetSignal>( "WidgetSignal" );
 
-	bindGadget();
-	bindEvent();
-	bindContainerGadget();
-	bindGraphGadget();
-	bindRenderableGadget();
-	bindTextGadget();
-	bindNameGadget();
-	bindNodeGadget();
-	bindNodule();
-	bindConnectionGadget();
-	bindWidgetSignal();
-	bindSplinePlugGadget();
-	bindImageGadget();
-	bindStyle();
-	bindViewportGadget();
-	bindView();
-	bindPlugGadget();
-	bindPointer();
-	bindSpacerGadget();
-	bindHandle();
-	bindTool();
-	bindPathListingWidget();
-	bindGLWidget();
-	bindPlugAdder();
+	typedef boost::signal<bool ( object, object ), EventSignalCombiner<bool> > WidgetEventSignal;
+	SignalClass<WidgetEventSignal>( "WidgetEventSignal" );
 
+	typedef boost::signal<IECore::RunTimeTypedPtr ( object, object ), EventSignalCombiner<IECore::RunTimeTypedPtr> > WidgetDragBeginSignal;
+	SignalClass<WidgetDragBeginSignal>( "WidgetDragBeginSignal" );
 }

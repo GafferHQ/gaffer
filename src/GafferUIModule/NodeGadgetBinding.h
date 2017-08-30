@@ -35,79 +35,14 @@
 //
 //////////////////////////////////////////////////////////////////////////
 
-#ifndef GAFFERUIBINDINGS_NODEGADGETBINDING_H
-#define GAFFERUIBINDINGS_NODEGADGETBINDING_H
+#ifndef GAFFERUIMODULE_NODEGADGETBINDING_H
+#define GAFFERUIMODULE_NODEGADGETBINDING_H
 
-#include "GafferUI/NodeGadget.h"
-
-#include "GafferUIBindings/GadgetBinding.h"
-
-namespace GafferUIBindings
+namespace GafferUIModule
 {
 
-template<typename T, typename TWrapper=T>
-class NodeGadgetClass : public GadgetClass<T, TWrapper>
-{
-	public :
+void bindNodeGadget();
 
-		NodeGadgetClass( const char *docString = nullptr );
+} // namespace GafferUIModule
 
-};
-
-template<typename WrappedType>
-class NodeGadgetWrapper : public GadgetWrapper<WrappedType>
-{
-
-	public :
-
-		template<typename... Args>
-		NodeGadgetWrapper( PyObject *self, Args&&... args )
-			:	GadgetWrapper<WrappedType>( self, std::forward<Args>( args )... )
-		{
-		}
-
-		GafferUI::Nodule *nodule( const Gaffer::Plug *plug ) override
-		{
-			if( this->isSubclassed() )
-			{
-				IECorePython::ScopedGILLock gilLock;
-				boost::python::object f = this->methodOverride( "nodule" );
-				if( f )
-				{
-					return boost::python::extract<GafferUI::Nodule *>(
-						f( Gaffer::PlugPtr( const_cast<Gaffer::Plug *>( plug ) ) )
-					);
-				}
-			}
-			return WrappedType::nodule( plug );
-		}
-
-		const GafferUI::Nodule *nodule( const Gaffer::Plug *plug ) const override
-		{
-			// naughty cast is better than repeating the above logic.
-			return const_cast<NodeGadgetWrapper *>( this )->nodule( plug );
-		}
-
-		Imath::V3f noduleTangent( const GafferUI::Nodule *nodule ) const override
-		{
-			if( this->isSubclassed() )
-			{
-				IECorePython::ScopedGILLock gilLock;
-				boost::python::object f = this->methodOverride( "noduleTangent" );
-				if( f )
-				{
-					return boost::python::extract<Imath::V3f>(
-						f( GafferUI::NodulePtr( const_cast<GafferUI::Nodule *>( nodule ) ) )
-					);
-				}
-			}
-			return WrappedType::noduleTangent( nodule );
-		}
-
-};
-
-} // namespace GafferUIBindings
-
-#include "GafferUIBindings/NodeGadgetBinding.inl"
-
-#endif // GAFFERUIBINDINGS_NODEGADGETBINDING_H
+#endif // GAFFERUIMODULE_NODEGADGETBINDING_H

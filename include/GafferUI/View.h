@@ -45,7 +45,6 @@
 #include "Gaffer/Node.h"
 
 #include "GafferUI/ViewportGadget.h"
-#include "GafferUIBindings/ViewBinding.h" // to enable friend declaration for bindView().
 
 namespace Gaffer
 {
@@ -58,6 +57,20 @@ namespace GafferUI
 {
 
 IE_CORE_FORWARDDECLARE( View )
+
+} // namespace GafferUI
+
+namespace GafferUIModule
+{
+
+// Forward declarations for friendship
+void bindView();
+Gaffer::NodePtr getPreprocessor( GafferUI::View &v );
+
+}
+
+namespace GafferUI
+{
 
 /// The View classes provide the content for the Viewer, which is implemented in the
 /// GafferUI python module. The View presents whatever is connected into inPlug(),
@@ -178,8 +191,8 @@ class View : public Gaffer::Node
 
 		static size_t g_firstPlugIndex;
 
-		friend void GafferUIBindings::bindView();
-		friend Gaffer::NodePtr GafferUIBindings::getPreprocessor( View & );
+		friend void GafferUIModule::bindView();
+		friend Gaffer::NodePtr GafferUIModule::getPreprocessor( View & );
 
 };
 
