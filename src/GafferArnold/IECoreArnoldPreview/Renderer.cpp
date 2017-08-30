@@ -1514,7 +1514,7 @@ class ArnoldLight : public ArnoldObject
 } // namespace
 
 //////////////////////////////////////////////////////////////////////////
-// ArnoldRenderer
+// InteractiveRenderController
 //////////////////////////////////////////////////////////////////////////
 
 namespace
@@ -1598,7 +1598,7 @@ class InteractiveRenderController
 } // namespace
 
 //////////////////////////////////////////////////////////////////////////
-// ArnoldRenderer
+// Globals
 //////////////////////////////////////////////////////////////////////////
 
 namespace
@@ -1608,6 +1608,7 @@ namespace
 /// Or maybe be in a utility header somewhere?
 IECore::InternedString g_frameOptionName( "frame" );
 IECore::InternedString g_cameraOptionName( "camera" );
+
 IECore::InternedString g_logFileNameOptionName( "ai:log:filename" );
 IECore::InternedString g_logMaxWarningsOptionName( "ai:log:max_warnings" );
 IECore::InternedString g_shaderSearchPathOptionName( "ai:shader_searchpath" );
@@ -1620,16 +1621,14 @@ std::string g_consoleFlagsOptionPrefix( "ai:console:" );
 const int g_logFlagsDefault = AI_LOG_ALL;
 const int g_consoleFlagsDefault = AI_LOG_WARNINGS | AI_LOG_ERRORS | AI_LOG_TIMESTAMP | AI_LOG_BACKTRACE | AI_LOG_MEMORY | AI_LOG_COLOR;
 
-class ArnoldRenderer final : public IECoreScenePreview::Renderer
+class ArnoldGlobals
 {
 
 	public :
 
-		ArnoldRenderer( RenderType renderType, const std::string &fileName )
+		ArnoldGlobals( IECoreScenePreview::Renderer::RenderType renderType, const std::string &fileName )
 			:	m_renderType( renderType ),
-				m_universeBlock( new UniverseBlock(  /* writable = */ true ) ),
-				m_shaderCache( new ShaderCache( nodeDeleter( renderType ) ) ),
-				m_instanceCache( new InstanceCache( nodeDeleter( renderType ) ) ),
+				m_universeBlock( /* writable = */ true ),
 				m_logFileFlags( g_logFlagsDefault ),
 				m_consoleFlags( g_consoleFlagsDefault ),
 				m_assFileName( fileName )
@@ -1640,12 +1639,8 @@ class ArnoldRenderer final : public IECoreScenePreview::Renderer
 			option( g_shaderSearchPathOptionName, new IECore::StringData( "" ) );
 		}
 
-		~ArnoldRenderer() override
-		{
-			pause();
-		}
 
-		void option( const IECore::InternedString &name, const IECore::Data *value ) override
+		void option( const IECore::InternedString &name, const IECore::Data *value )
 		{
 			AtNode *options = AiUniverseGetOptions();
 			if( name == g_frameOptionName )
@@ -1823,7 +1818,7 @@ class ArnoldRenderer final : public IECoreScenePreview::Renderer
 			IECore::msg( IECore::Msg::Warning, "IECoreArnold::Renderer::option", boost::format( "Unknown option \"%s\"." ) % name.c_str() );
 		}
 
-		void output( const IECore::InternedString &name, const Output *output ) override
+		void output( const IECore::InternedString &name, const IECoreScenePreview::Renderer::Output *output )
 		{
 			m_outputs.erase( name );
 			if( output )
@@ -1847,68 +1842,15 @@ class ArnoldRenderer final : public IECoreScenePreview::Renderer
 			IECoreArnold::ParameterAlgo::setParameter( AiUniverseGetOptions(), "outputs", outputs.get() );
 		}
 
-		Renderer::AttributesInterfacePtr attributes( const IECore::CompoundObject *attributes ) override
+		// Some of Arnold's globals come from camera parameters, so the
+		// ArnoldRenderer calls this method to notify the ArnoldGlobals
+		// of each camera as it is created.
+		void camera( const std::string &name, IECore::ConstCameraPtr camera )
 		{
-			return new ArnoldAttributes( attributes, m_shaderCache.get() );
+			m_cameras[name] = camera;
 		}
 
-		ObjectInterfacePtr camera( const std::string &name, const IECore::Camera *camera, const AttributesInterface *attributes ) override
-		{
-			IECore::CameraPtr cameraCopy = camera->copy();
-			cameraCopy->addStandardParameters();
-			m_cameras[name] = cameraCopy;
-
-			Instance instance = m_instanceCache->get( camera, attributes );
-			if( AtNode *node = instance.node() )
-			{
-				AiNodeSetStr( node, "name", name.c_str() );
-			}
-
-			ObjectInterfacePtr result = new ArnoldObject( instance );
-			result->attributes( attributes );
-			return result;
-		}
-
-		ObjectInterfacePtr light( const std::string &name, const IECore::Object *object, const AttributesInterface *attributes ) override
-		{
-			Instance instance = m_instanceCache->get( object, attributes );
-			if( AtNode *node = instance.node() )
-			{
-				AiNodeSetStr( node, "name", name.c_str() );
-			}
-
-			ObjectInterfacePtr result = new ArnoldLight( name, instance, nodeDeleter( m_renderType ) );
-			result->attributes( attributes );
-			return result;
-		}
-
-		Renderer::ObjectInterfacePtr object( const std::string &name, const IECore::Object *object, const AttributesInterface *attributes ) override
-		{
-			Instance instance = m_instanceCache->get( object, attributes );
-			if( AtNode *node = instance.node() )
-			{
-				AiNodeSetStr( node, "name", name.c_str() );
-			}
-
-			ObjectInterfacePtr result = new ArnoldObject( instance );
-			result->attributes( attributes );
-			return result;
-		}
-
-		ObjectInterfacePtr object( const std::string &name, const std::vector<const IECore::Object *> &samples, const std::vector<float> &times, const AttributesInterface *attributes ) override
-		{
-			Instance instance = m_instanceCache->get( samples, times, attributes );
-			if( AtNode *node = instance.node() )
-			{
-				AiNodeSetStr( node, "name", name.c_str() );
-			}
-
-			ObjectInterfacePtr result = new ArnoldObject( instance );
-			result->attributes( attributes );
-			return result;
-		}
-
-		void render() override
+		void render()
 		{
 			updateCamera();
 			AiNodeSetInt(
@@ -1916,14 +1858,11 @@ class ArnoldRenderer final : public IECoreScenePreview::Renderer
 				m_aaSeed.get_value_or( m_frame.get_value_or( 1 ) )
 			);
 
-			m_shaderCache->clearUnused();
-			m_instanceCache->clearUnused();
-
 			// Do the appropriate render based on
 			// m_renderType.
 			switch( m_renderType )
 			{
-				case Batch :
+				case IECoreScenePreview::Renderer::Batch :
 				{
 					const int result = AiRender( AI_RENDER_MODE_CAMERA );
 					if( result != AI_SUCCESS )
@@ -1932,16 +1871,16 @@ class ArnoldRenderer final : public IECoreScenePreview::Renderer
 					}
 					break;
 				}
-				case SceneDescription :
+				case IECoreScenePreview::Renderer::SceneDescription :
 					AiASSWrite( m_assFileName.c_str(), AI_NODE_ALL );
 					break;
-				case Interactive :
+				case IECoreScenePreview::Renderer::Interactive :
 					m_interactiveRenderController.setRendering( true );
 					break;
 			}
 		}
 
-		void pause() override
+		void pause()
 		{
 			m_interactiveRenderController.setRendering( false );
 		}
@@ -2079,11 +2018,11 @@ class ArnoldRenderer final : public IECoreScenePreview::Renderer
 		{
 			AtNode *options = AiUniverseGetOptions();
 
-			const IECore::Camera *cortexCamera = m_cameras[m_cameraName].get();
-			AtNode *arnoldCamera;
-			if( cortexCamera )
+			const IECore::Camera *cortexCamera;
+			AtNode *arnoldCamera = AiNodeLookUpByName( m_cameraName.c_str() );
+			if( arnoldCamera )
 			{
-				arnoldCamera = AiNodeLookUpByName( m_cameraName.c_str() );
+				cortexCamera = m_cameras[m_cameraName].get();
 				m_defaultCamera = nullptr;
 			}
 			else
@@ -2092,12 +2031,12 @@ class ArnoldRenderer final : public IECoreScenePreview::Renderer
 				{
 					IECore::CameraPtr defaultCortexCamera = new IECore::Camera();
 					defaultCortexCamera->addStandardParameters();
-					IECore::CompoundObjectPtr defaultCortexAttributes = new IECore::CompoundObject();
-					AttributesInterfacePtr defaultAttributes = this->attributes( defaultCortexAttributes.get() );
-					m_defaultCamera = camera( "ieCoreArnold:defaultCamera", defaultCortexCamera.get(), defaultAttributes.get() );
+					m_cameras["ieCoreArnold:defaultCamera"] = defaultCortexCamera;
+					m_defaultCamera = SharedAtNodePtr( CameraAlgo::convert( defaultCortexCamera.get() ), nodeDeleter( m_renderType ) );
+					AiNodeSetStr( m_defaultCamera.get(), "name", "ieCoreArnold:defaultCamera" );
 				}
 				cortexCamera = m_cameras["ieCoreArnold:defaultCamera"].get();
-				arnoldCamera = AiNodeLookUpByName( "ieCoreArnold:defaultCamera" );
+				arnoldCamera = m_defaultCamera.get();
 			}
 			AiNodeSetPtr( options, "camera", arnoldCamera );
 
@@ -2153,11 +2092,11 @@ class ArnoldRenderer final : public IECoreScenePreview::Renderer
 			}
 		}
 
-		// Members used by all render types.
+		// Members used by all render types
 
-		RenderType m_renderType;
+		IECoreScenePreview::Renderer::RenderType m_renderType;
 
-		std::unique_ptr<IECoreArnold::UniverseBlock> m_universeBlock;
+		IECoreArnold::UniverseBlock m_universeBlock;
 
 		typedef std::map<IECore::InternedString, ArnoldOutputPtr> OutputMap;
 		OutputMap m_outputs;
@@ -2165,10 +2104,7 @@ class ArnoldRenderer final : public IECoreScenePreview::Renderer
 		std::string m_cameraName;
 		typedef tbb::concurrent_unordered_map<std::string, IECore::ConstCameraPtr> CameraMap;
 		CameraMap m_cameras;
-		ObjectInterfacePtr m_defaultCamera;
-
-		ShaderCachePtr m_shaderCache;
-		InstanceCachePtr m_instanceCache;
+		SharedAtNodePtr m_defaultCamera;
 
 		int m_logFileFlags;
 		int m_consoleFlags;
@@ -2183,6 +2119,126 @@ class ArnoldRenderer final : public IECoreScenePreview::Renderer
 		// Members used by ass generation "renders"
 
 		std::string m_assFileName;
+
+};
+
+} // namespace
+
+//////////////////////////////////////////////////////////////////////////
+// ArnoldRenderer
+//////////////////////////////////////////////////////////////////////////
+
+namespace
+{
+
+class ArnoldRenderer final : public IECoreScenePreview::Renderer
+{
+
+	public :
+
+		ArnoldRenderer( RenderType renderType, const std::string &fileName )
+			:	m_renderType( renderType ),
+				m_globals( new ArnoldGlobals( renderType, fileName ) ),
+				m_shaderCache( new ShaderCache( nodeDeleter( renderType ) ) ),
+				m_instanceCache( new InstanceCache( nodeDeleter( renderType ) ) )
+		{
+		}
+
+		~ArnoldRenderer() override
+		{
+			pause();
+		}
+
+		void option( const IECore::InternedString &name, const IECore::Data *value ) override
+		{
+			m_globals->option( name, value );
+		}
+
+		void output( const IECore::InternedString &name, const Output *output ) override
+		{
+			m_globals->output( name, output );
+		}
+
+		Renderer::AttributesInterfacePtr attributes( const IECore::CompoundObject *attributes ) override
+		{
+			return new ArnoldAttributes( attributes, m_shaderCache.get() );
+		}
+
+		ObjectInterfacePtr camera( const std::string &name, const IECore::Camera *camera, const AttributesInterface *attributes ) override
+		{
+			IECore::CameraPtr cameraCopy = camera->copy();
+			cameraCopy->addStandardParameters();
+			m_globals->camera( name, cameraCopy.get() );
+
+			Instance instance = m_instanceCache->get( camera, attributes );
+			if( AtNode *node = instance.node() )
+			{
+				AiNodeSetStr( node, "name", name.c_str() );
+			}
+
+			ObjectInterfacePtr result = new ArnoldObject( instance );
+			result->attributes( attributes );
+			return result;
+		}
+
+		ObjectInterfacePtr light( const std::string &name, const IECore::Object *object, const AttributesInterface *attributes ) override
+		{
+			Instance instance = m_instanceCache->get( object, attributes );
+			if( AtNode *node = instance.node() )
+			{
+				AiNodeSetStr( node, "name", name.c_str() );
+			}
+
+			ObjectInterfacePtr result = new ArnoldLight( name, instance, nodeDeleter( m_renderType ) );
+			result->attributes( attributes );
+			return result;
+		}
+
+		Renderer::ObjectInterfacePtr object( const std::string &name, const IECore::Object *object, const AttributesInterface *attributes ) override
+		{
+			Instance instance = m_instanceCache->get( object, attributes );
+			if( AtNode *node = instance.node() )
+			{
+				AiNodeSetStr( node, "name", name.c_str() );
+			}
+
+			ObjectInterfacePtr result = new ArnoldObject( instance );
+			result->attributes( attributes );
+			return result;
+		}
+
+		ObjectInterfacePtr object( const std::string &name, const std::vector<const IECore::Object *> &samples, const std::vector<float> &times, const AttributesInterface *attributes ) override
+		{
+			Instance instance = m_instanceCache->get( samples, times, attributes );
+			if( AtNode *node = instance.node() )
+			{
+				AiNodeSetStr( node, "name", name.c_str() );
+			}
+
+			ObjectInterfacePtr result = new ArnoldObject( instance );
+			result->attributes( attributes );
+			return result;
+		}
+
+		void render() override
+		{
+			m_shaderCache->clearUnused();
+			m_instanceCache->clearUnused();
+			m_globals->render();
+		}
+
+		void pause() override
+		{
+			m_globals->pause();
+		}
+
+	private :
+
+		RenderType m_renderType;
+
+		std::unique_ptr<ArnoldGlobals> m_globals;
+		ShaderCachePtr m_shaderCache;
+		InstanceCachePtr m_instanceCache;
 
 		// Registration with factory
 
