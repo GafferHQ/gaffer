@@ -296,14 +296,24 @@ IECoreGL::ConstRenderablePtr GoboVisualiser::visualise( const IECore::InternedSt
 
 		addSurfaceShader( oslNetwork, slidemap->readable() );
 
-		imageData = g_oslTextureCache.get( OSLTextureCacheGetterKey( oslNetwork.get() ) );
+		try
+		{
+			imageData = g_oslTextureCache.get( OSLTextureCacheGetterKey( oslNetwork.get() ) );
+		}
+		catch( const Exception &e )
+		{
+			// The osl evaluation system didn't work, but we just want to paint a
+			// white gobo in these cases instead of failing completely.
+			msg( Msg::Warning, "GoboVisualiser", e.what() );
+		}
 	}
-	else // nothing connected - just visualise the current value if possible
+
+	if( imageData->readable().empty() )
 	{
-		const Color3fData *goboColor = IECore::runTimeCast<const Color3fData>( it->second.get() );
+		ConstColor3fDataPtr goboColor = IECore::runTimeCast<const Color3fData>( it->second.get() );
 		if( !goboColor )
 		{
-			return result;
+			goboColor = new Color3fData( Color3f( 1 ) );
 		}
 
 		// single-pixel windows

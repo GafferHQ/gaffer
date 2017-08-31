@@ -44,6 +44,7 @@
 #include "boost/algorithm/string/split.hpp"
 #include "boost/algorithm/string/predicate.hpp"
 #include "boost/algorithm/string/classification.hpp"
+#include "boost/algorithm/string/join.hpp"
 #include "boost/unordered_map.hpp"
 
 #include "OSL/oslclosure.h"
@@ -859,6 +860,8 @@ ShadingEngine::ShadingEngine( const IECore::ObjectVector *shaderNetwork )
 	: m_unknownAttributesNeeded( false )
 {
 	ShadingSystem *shadingSystem = ::shadingSystem();
+
+	std::vector<std::string> invalidShaders;
 	{
 		ShadingSystemWriteMutex::scoped_lock shadingSystemWriteLock( g_shadingSystemWriteMutex );
 
@@ -868,6 +871,18 @@ ShadingEngine::ShadingEngine( const IECore::ObjectVector *shaderNetwork )
 		{
 			const Shader *shader = runTimeCast<const Shader>( it->get() );
 			if( !shader )
+			{
+				continue;
+			}
+
+			string type = shader->getType();
+			if( !boost::starts_with( type, "osl:" ) )
+			{
+				invalidShaders.push_back( shader->getName() + " (" + type + ")" );
+				continue;
+			}
+
+			if( !invalidShaders.empty() )
 			{
 				continue;
 			}
@@ -891,6 +906,12 @@ ShadingEngine::ShadingEngine( const IECore::ObjectVector *shaderNetwork )
 		}
 
 		shadingSystem->ShaderGroupEnd();
+
+		if( !invalidShaders.empty() )
+		{
+			std::string exceptionMessage = "The following shaders can't be used as they are not OSL shaders: ";
+			throw Exception( exceptionMessage + boost::algorithm::join( invalidShaders, ", " ) );
+		}
 	}
 
 	queryAttributesNeeded();
