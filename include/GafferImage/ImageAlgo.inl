@@ -82,8 +82,7 @@ class ProcessTiles
 
 		void operator()( const tbb::blocked_range2d<size_t>& r ) const
 		{
-			Gaffer::ContextPtr context = new Gaffer::Context( *m_parentContext, Gaffer::Context::Borrowed );
-			Gaffer::Context::Scope scope( context.get() );
+			ImagePlug::ChannelDataScope channelDataScope( m_parentContext );
 
 			Imath::V2i tileId;
 			Imath::V2i tileIdMax( r.rows().end(), r.cols().end() );
@@ -93,7 +92,7 @@ class ProcessTiles
 				for( tileId.y = r.cols().begin(); tileId.y < tileIdMax.y; ++tileId.y )
 				{
 					Imath::V2i tileOrigin = m_tilesOrigin + ( tileId * ImagePlug::tileSize() );
-					context->set( ImagePlug::tileOriginContextName, tileOrigin );
+					channelDataScope.setTileOrigin( tileOrigin );
 
 					m_functor( m_imagePlug, tileOrigin );
 				}
@@ -102,8 +101,7 @@ class ProcessTiles
 
 		void operator()( const tbb::blocked_range3d<size_t>& r ) const
 		{
-			Gaffer::ContextPtr context = new Gaffer::Context( *m_parentContext, Gaffer::Context::Borrowed );
-			Gaffer::Context::Scope scope( context.get() );
+			ImagePlug::ChannelDataScope channelDataScope( m_parentContext );
 
 			Imath::V2i tileId;
 			Imath::V2i tileIdMax( r.rows().end(), r.cols().end() );
@@ -113,11 +111,11 @@ class ProcessTiles
 				for( tileId.y = r.cols().begin(); tileId.y < tileIdMax.y; ++tileId.y )
 				{
 					Imath::V2i tileOrigin = m_tilesOrigin + ( tileId * ImagePlug::tileSize() );
-					context->set( ImagePlug::tileOriginContextName, tileOrigin );
+					channelDataScope.setTileOrigin( tileOrigin );
 
 					for( size_t channelIndex = r.pages().begin(); channelIndex < r.pages().end(); ++channelIndex )
 					{
-						context->set( ImagePlug::channelNameContextName, m_channelNames[channelIndex] );
+						channelDataScope.setChannelName( m_channelNames[channelIndex] );
 
 						m_functor( m_imagePlug, m_channelNames[channelIndex], tileOrigin );
 					}
@@ -316,12 +314,11 @@ class TileFunctorFilter
 
 		boost::tuple<size_t, Imath::V2i, typename TileFunctor::Result> operator()( boost::tuple<size_t, Imath::V2i> &it ) const
 		{
-			Gaffer::ContextPtr context = new Gaffer::Context( *m_parentContext, Gaffer::Context::Borrowed );
-			Gaffer::Context::Scope scope( context.get() );
+			ImagePlug::ChannelDataScope channelDataScope( m_parentContext );
 
 			const Imath::V2i tileOrigin = m_tilesOrigin + ( boost::get<1>( it ) * ImagePlug::tileSize() );
-			context->set( ImagePlug::tileOriginContextName, tileOrigin );
-			context->set( ImagePlug::channelNameContextName, m_channelNames[boost::get<0>( it )] );
+			channelDataScope.setTileOrigin( tileOrigin );
+			channelDataScope.setChannelName( m_channelNames[boost::get<0>( it )] );
 
 			typename TileFunctor::Result result = m_functor( m_imagePlug, m_channelNames[boost::get<0>( it )], tileOrigin );
 
@@ -330,11 +327,10 @@ class TileFunctorFilter
 
 		boost::tuple<Imath::V2i, typename TileFunctor::Result> operator()( boost::tuple<Imath::V2i> &it ) const
 		{
-			Gaffer::ContextPtr context = new Gaffer::Context( *m_parentContext, Gaffer::Context::Borrowed );
-			Gaffer::Context::Scope scope( context.get() );
+			ImagePlug::ChannelDataScope channelDataScope( m_parentContext );
 
 			const Imath::V2i tileOrigin = m_tilesOrigin + ( boost::get<0>( it ) * ImagePlug::tileSize() );
-			context->set( ImagePlug::tileOriginContextName, tileOrigin );
+			channelDataScope.setTileOrigin( tileOrigin );
 
 			typename TileFunctor::Result result = m_functor( m_imagePlug, tileOrigin );
 
@@ -381,23 +377,21 @@ class GatherFunctorFilter
 
 		void operator()( boost::tuple<size_t, Imath::V2i, typename TileFunctor::Result> &it ) const
 		{
-			Gaffer::ContextPtr context = new Gaffer::Context( *m_parentContext, Gaffer::Context::Borrowed );
-			Gaffer::Context::Scope scope( context.get() );
+			ImagePlug::ChannelDataScope channelDataScope( m_parentContext );
 
 			const Imath::V2i tileOrigin = m_tilesOrigin + ( boost::get<1>( it ) * ImagePlug::tileSize() );
-			context->set( ImagePlug::tileOriginContextName, tileOrigin );
-			context->set( ImagePlug::channelNameContextName, m_channelNames[boost::get<0>( it )] );
+			channelDataScope.setTileOrigin( tileOrigin );
+			channelDataScope.setChannelName( m_channelNames[boost::get<0>( it )] );
 
 			m_functor( m_imagePlug, m_channelNames[boost::get<0>( it )], tileOrigin, boost::get<2>( it ) );
 		}
 
 		void operator()( boost::tuple<Imath::V2i, typename TileFunctor::Result> &it ) const
 		{
-			Gaffer::ContextPtr context = new Gaffer::Context( *m_parentContext, Gaffer::Context::Borrowed );
-			Gaffer::Context::Scope scope( context.get() );
+			ImagePlug::ChannelDataScope channelDataScope( m_parentContext );
 
 			const Imath::V2i tileOrigin = m_tilesOrigin + ( boost::get<0>( it ) * ImagePlug::tileSize() );
-			context->set( ImagePlug::tileOriginContextName, tileOrigin );
+			channelDataScope.setTileOrigin( tileOrigin );
 
 			m_functor( m_imagePlug, tileOrigin, boost::get<1>( it ) );
 		}
