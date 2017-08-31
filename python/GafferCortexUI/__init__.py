@@ -38,7 +38,6 @@
 # PathPreviewWidgets and browser modes
 
 from FileIndexedIOPathPreview import FileIndexedIOPathPreview
-from ImageReaderPathPreview import ImageReaderPathPreview
 from OpPathPreview import OpPathPreview
 import OpBrowserMode
 
