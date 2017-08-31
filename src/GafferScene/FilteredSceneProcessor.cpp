@@ -86,13 +86,6 @@ void FilteredSceneProcessor::affects( const Gaffer::Plug *input, AffectedPlugsCo
 	}
 }
 
-Gaffer::ContextPtr FilteredSceneProcessor::filterContext( const Gaffer::Context *context ) const
-{
-	Context *result = new Context( *context, Context::Borrowed );
-	Filter::setInputScene( result, inPlug() );
-	return result;
-}
-
 void FilteredSceneProcessor::filterHash( const Gaffer::Context *context, IECore::MurmurHash &h ) const
 {
 	FilterPlug::SceneScope sceneScope( context, inPlug() );
