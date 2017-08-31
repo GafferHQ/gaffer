@@ -624,8 +624,15 @@ void LRUCache<Key, Value, Policy, GetterKey>::clear()
 template<typename Key, typename Value, template <typename> class Policy, typename GetterKey>
 void LRUCache<Key, Value, Policy, GetterKey>::setMaxCost( Cost maxCost )
 {
-	m_maxCost = maxCost;
-	limitCost( maxCost );
+	if( maxCost >= m_maxCost )
+	{
+		m_maxCost = maxCost;
+	}
+	else
+	{
+		m_maxCost = maxCost;
+		limitCost( maxCost );
+	}
 }
 
 template<typename Key, typename Value, template <typename> class Policy, typename GetterKey>
