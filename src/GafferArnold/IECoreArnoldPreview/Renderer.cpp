@@ -214,7 +214,7 @@ std::string formatHeaderParameter( const std::string name, const IECore::Data *d
 } // namespace
 
 //////////////////////////////////////////////////////////////////////////
-// ArnoldRenderer forward declaration
+// ArnoldRendererBase forward declaration
 //////////////////////////////////////////////////////////////////////////
 
 namespace
@@ -224,16 +224,17 @@ class ArnoldGlobals;
 IE_CORE_FORWARDDECLARE( ShaderCache );
 IE_CORE_FORWARDDECLARE( InstanceCache );
 
-class ArnoldRenderer : public IECoreScenePreview::Renderer
+/// This class implements the basics of outputting attributes
+/// and objects to Arnold, but is not a complete implementation
+/// of the renderer interface. It is subclassed to provide concrete
+/// implementations suitable for use as the master renderer or
+/// for use in procedurals.
+class ArnoldRendererBase : public IECoreScenePreview::Renderer
 {
 
 	public :
 
-		ArnoldRenderer( RenderType renderType, const std::string &fileName );
-		~ArnoldRenderer() override;
-
-		void option( const IECore::InternedString &name, const IECore::Data *value ) override;
-		void output( const IECore::InternedString &name, const Output *output ) override;
+		~ArnoldRendererBase() override;
 
 		Renderer::AttributesInterfacePtr attributes( const IECore::CompoundObject *attributes ) override;
 
@@ -242,20 +243,13 @@ class ArnoldRenderer : public IECoreScenePreview::Renderer
 		Renderer::ObjectInterfacePtr object( const std::string &name, const IECore::Object *object, const AttributesInterface *attributes ) override;
 		ObjectInterfacePtr object( const std::string &name, const std::vector<const IECore::Object *> &samples, const std::vector<float> &times, const AttributesInterface *attributes ) override;
 
-		void render() override;
-		void pause() override;
+	protected :
 
-	private :
+		ArnoldRendererBase( NodeDeleter nodeDeleter );
 
-		RenderType m_renderType;
-
-		std::unique_ptr<ArnoldGlobals> m_globals;
+		NodeDeleter m_nodeDeleter;
 		ShaderCachePtr m_shaderCache;
 		InstanceCachePtr m_instanceCache;
-
-		// Registration with factory
-
-		static Renderer::TypeDescription<ArnoldRenderer> g_typeDescription;
 
 };
 
@@ -2178,45 +2172,32 @@ class ArnoldGlobals
 } // namespace
 
 //////////////////////////////////////////////////////////////////////////
-// ArnoldRenderer definition
+// ArnoldRendererBase definition
 //////////////////////////////////////////////////////////////////////////
 
 namespace
 {
 
-ArnoldRenderer::ArnoldRenderer( RenderType renderType, const std::string &fileName )
-	:	m_renderType( renderType ),
-		m_globals( new ArnoldGlobals( renderType, fileName ) ),
-		m_shaderCache( new ShaderCache( nodeDeleter( renderType ) ) ),
-		m_instanceCache( new InstanceCache( nodeDeleter( renderType ) ) )
+ArnoldRendererBase::ArnoldRendererBase( NodeDeleter nodeDeleter )
+	:	m_nodeDeleter( nodeDeleter ),
+		m_shaderCache( new ShaderCache( nodeDeleter ) ),
+		m_instanceCache( new InstanceCache( nodeDeleter ) )
 {
 }
 
-ArnoldRenderer::~ArnoldRenderer()
+ArnoldRendererBase::~ArnoldRendererBase()
 {
-	pause();
 }
 
-void ArnoldRenderer::option( const IECore::InternedString &name, const IECore::Data *value )
-{
-	m_globals->option( name, value );
-}
-
-void ArnoldRenderer::output( const IECore::InternedString &name, const Output *output )
-{
-	m_globals->output( name, output );
-}
-
-ArnoldRenderer::AttributesInterfacePtr ArnoldRenderer::attributes( const IECore::CompoundObject *attributes )
+ArnoldRendererBase::AttributesInterfacePtr ArnoldRendererBase::attributes( const IECore::CompoundObject *attributes )
 {
 	return new ArnoldAttributes( attributes, m_shaderCache.get() );
 }
 
-ArnoldRenderer::ObjectInterfacePtr ArnoldRenderer::camera( const std::string &name, const IECore::Camera *camera, const AttributesInterface *attributes )
+ArnoldRendererBase::ObjectInterfacePtr ArnoldRendererBase::camera( const std::string &name, const IECore::Camera *camera, const AttributesInterface *attributes )
 {
 	IECore::CameraPtr cameraCopy = camera->copy();
 	cameraCopy->addStandardParameters();
-	m_globals->camera( name, cameraCopy.get() );
 
 	Instance instance = m_instanceCache->get( camera, attributes );
 	if( AtNode *node = instance.node() )
@@ -2229,7 +2210,7 @@ ArnoldRenderer::ObjectInterfacePtr ArnoldRenderer::camera( const std::string &na
 	return result;
 }
 
-ArnoldRenderer::ObjectInterfacePtr ArnoldRenderer::light( const std::string &name, const IECore::Object *object, const AttributesInterface *attributes )
+ArnoldRendererBase::ObjectInterfacePtr ArnoldRendererBase::light( const std::string &name, const IECore::Object *object, const AttributesInterface *attributes )
 {
 	Instance instance = m_instanceCache->get( object, attributes );
 	if( AtNode *node = instance.node() )
@@ -2237,12 +2218,12 @@ ArnoldRenderer::ObjectInterfacePtr ArnoldRenderer::light( const std::string &nam
 		AiNodeSetStr( node, "name", name.c_str() );
 	}
 
-	ObjectInterfacePtr result = new ArnoldLight( name, instance, nodeDeleter( m_renderType ) );
+	ObjectInterfacePtr result = new ArnoldLight( name, instance, m_nodeDeleter );
 	result->attributes( attributes );
 	return result;
 }
 
-ArnoldRenderer::ObjectInterfacePtr ArnoldRenderer::object( const std::string &name, const IECore::Object *object, const AttributesInterface *attributes )
+ArnoldRendererBase::ObjectInterfacePtr ArnoldRendererBase::object( const std::string &name, const IECore::Object *object, const AttributesInterface *attributes )
 {
 	Instance instance = m_instanceCache->get( object, attributes );
 	if( AtNode *node = instance.node() )
@@ -2255,7 +2236,7 @@ ArnoldRenderer::ObjectInterfacePtr ArnoldRenderer::object( const std::string &na
 	return result;
 }
 
-ArnoldRenderer::ObjectInterfacePtr ArnoldRenderer::object( const std::string &name, const std::vector<const IECore::Object *> &samples, const std::vector<float> &times, const AttributesInterface *attributes )
+ArnoldRendererBase::ObjectInterfacePtr ArnoldRendererBase::object( const std::string &name, const std::vector<const IECore::Object *> &samples, const std::vector<float> &times, const AttributesInterface *attributes )
 {
 	Instance instance = m_instanceCache->get( samples, times, attributes );
 	if( AtNode *node = instance.node() )
@@ -2268,17 +2249,71 @@ ArnoldRenderer::ObjectInterfacePtr ArnoldRenderer::object( const std::string &na
 	return result;
 }
 
-void ArnoldRenderer::render()
-{
-	m_shaderCache->clearUnused();
-	m_instanceCache->clearUnused();
-	m_globals->render();
-}
+} // namespace
 
-void ArnoldRenderer::pause()
+//////////////////////////////////////////////////////////////////////////
+// ArnoldRenderer
+//////////////////////////////////////////////////////////////////////////
+
+namespace
 {
-	m_globals->pause();
-}
+
+/// The full renderer implementation as presented to the outside world.
+class ArnoldRenderer final : public ArnoldRendererBase
+{
+
+	public :
+
+		ArnoldRenderer( RenderType renderType, const std::string &fileName )
+			:	ArnoldRendererBase( nodeDeleter( renderType ) ),
+				m_globals( new ArnoldGlobals( renderType, fileName ) )
+		{
+		}
+
+		~ArnoldRenderer() override
+		{
+			pause();
+		}
+
+		void option( const IECore::InternedString &name, const IECore::Data *value ) override
+		{
+			m_globals->option( name, value );
+		}
+
+		void output( const IECore::InternedString &name, const Output *output ) override
+		{
+			m_globals->output( name, output );
+		}
+
+		ObjectInterfacePtr camera( const std::string &name, const IECore::Camera *camera, const AttributesInterface *attributes ) override
+		{
+			IECore::CameraPtr cameraCopy = camera->copy();
+			cameraCopy->addStandardParameters();
+			m_globals->camera( name, cameraCopy.get() );
+			return ArnoldRendererBase::camera( name, camera, attributes );
+		}
+
+		void render() override
+		{
+			m_shaderCache->clearUnused();
+			m_instanceCache->clearUnused();
+			m_globals->render();
+		}
+
+		void pause() override
+		{
+			m_globals->pause();
+		}
+
+	private :
+
+		std::unique_ptr<ArnoldGlobals> m_globals;
+
+		// Registration with factory
+
+		static Renderer::TypeDescription<ArnoldRenderer> g_typeDescription;
+
+};
 
 IECoreScenePreview::Renderer::TypeDescription<ArnoldRenderer> ArnoldRenderer::g_typeDescription( "Arnold" );
 
