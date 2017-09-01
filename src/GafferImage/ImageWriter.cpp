@@ -973,7 +973,7 @@ void ImageWriter::execute() const
 	ImageOutputPtr out( ImageOutput::create( fileName.c_str() ) );
 	if( !out )
 	{
-		throw IECore::Exception( OpenImageIO::geterror() );
+		throw IECore::Exception( OIIO::geterror() );
 	}
 
 	// Create an OIIO::ImageSpec describing what we'll write
