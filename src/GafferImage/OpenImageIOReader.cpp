@@ -93,6 +93,9 @@ ImageCache *imageCache()
 
 			// Set an initial cache size of 500Mb
 			cache->attribute( "max_memory_MB", 500.0f );
+			// Make sure all errors are reported, otherwise we end up
+			// throwing exceptions with no descriptive error message.
+			cache->attribute( "max_errors_per_file", std::numeric_limits<int>::max() );
 		}
 	}
 	return cache;
