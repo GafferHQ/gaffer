@@ -353,17 +353,15 @@ class OSLObjectTest( GafferOSLTest.OSLTestCase ) :
 		self.assertTrue( "st_add" in planeObject.keys() )
 		self.assertEqual( planeObject["st_add"].interpolation, IECore.PrimitiveVariable.Interpolation.Vertex)
 
-		# note our plane origin position (0,0,0) has a UV (0,1) because of 1.0 - t convention in cortex.
-		self.assertEqual( planeObject["st_add"].data[0], 0.0 + 1.0)
-		self.assertEqual( planeObject["st_add"].data[1], 0.5 + 1.0)
-		self.assertEqual( planeObject["st_add"].data[2], 1.0 + 1.0)
-		self.assertEqual( planeObject["st_add"].data[3], 0.0 + 0.5)
-		self.assertEqual( planeObject["st_add"].data[4], 0.5 + 0.5)
-		self.assertEqual( planeObject["st_add"].data[5], 1.0 + 0.5)
-		self.assertEqual( planeObject["st_add"].data[6], 0.0 + 0.0)
-		self.assertEqual( planeObject["st_add"].data[7], 0.5 + 0.0)
-		self.assertEqual( planeObject["st_add"].data[8], 1.0 + 0.0)
-
+		self.assertEqual( planeObject["st_add"].data[0], 0.0 + 0.0 )
+		self.assertEqual( planeObject["st_add"].data[1], 0.5 + 0.0 )
+		self.assertEqual( planeObject["st_add"].data[2], 1.0 + 0.0 )
+		self.assertEqual( planeObject["st_add"].data[3], 0.0 + 0.5 )
+		self.assertEqual( planeObject["st_add"].data[4], 0.5 + 0.5 )
+		self.assertEqual( planeObject["st_add"].data[5], 1.0 + 0.5 )
+		self.assertEqual( planeObject["st_add"].data[6], 0.0 + 1.0 )
+		self.assertEqual( planeObject["st_add"].data[7], 0.5 + 1.0 )
+		self.assertEqual( planeObject["st_add"].data[8], 1.0 + 1.0 )
 
 	def testCanReadFromConstantPrimitiveVariables( self ) :
 
