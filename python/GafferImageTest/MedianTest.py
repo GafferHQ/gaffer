@@ -109,7 +109,7 @@ class MedianTest( GafferImageTest.ImageTestCase ) :
 		masterMedian["radius"].setValue( IECore.V2i( 2 ) )
 
 		masterMedian["masterChannel"].setValue( "G" )
-		
+
 		expected = GafferImage.ImageReader()
 		expected["fileName"].setValue( os.path.dirname( __file__ ) + "/images/circlesGreenMedian.exr" )
 
@@ -117,9 +117,9 @@ class MedianTest( GafferImageTest.ImageTestCase ) :
 		# unchanged in areas where there is no green.  In areas where red and blue overlap with a noisy green,
 		# they get a bit scrambled.  This is why in practice, you would use something like luminance, rather
 		# than just the green channel
-		self.assertImagesEqual( masterMedian["out"], expected["out"], ignoreMetadata = True )
+		self.assertImagesEqual( masterMedian["out"], expected["out"], ignoreMetadata = True, maxDifference=0.0005 )
 
-		
+
 		defaultMedian = GafferImage.Median()
 		defaultMedian["in"].setInput( r["out"] )
 		defaultMedian["radius"].setValue( IECore.V2i( 2 ) )
