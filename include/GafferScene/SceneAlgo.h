@@ -104,6 +104,9 @@ void matchingPaths( const PathMatcher &filter, const ScenePlug *scene, PathMatch
 /// ```
 template <class ThreadableFunctor>
 void parallelProcessLocations( const GafferScene::ScenePlug *scene, ThreadableFunctor &f );
+/// As above, but starting the traversal at the specified root.
+template <class ThreadableFunctor>
+void parallelProcessLocations( const GafferScene::ScenePlug *scene, ThreadableFunctor &f, const ScenePlug::ScenePath &root );
 
 /// Calls a functor on all paths in the scene
 /// The functor must take ( const ScenePlug*, const ScenePlug::ScenePath& ), and can return false to prune traversal

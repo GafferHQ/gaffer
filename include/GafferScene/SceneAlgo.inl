@@ -230,8 +230,14 @@ namespace SceneAlgo
 template <class ThreadableFunctor>
 void parallelProcessLocations( const GafferScene::ScenePlug *scene, ThreadableFunctor &f )
 {
+	return parallelProcessLocations( scene, f, ScenePlug::ScenePath() );
+}
+
+template <class ThreadableFunctor>
+void parallelProcessLocations( const GafferScene::ScenePlug *scene, ThreadableFunctor &f, const ScenePlug::ScenePath &root )
+{
 	FilterPlug::SceneScope sceneScope( Gaffer::Context::current(), scene );
-	Detail::LocationTask<ThreadableFunctor> *task = new( tbb::task::allocate_root() ) Detail::LocationTask<ThreadableFunctor>( scene, Gaffer::Context::current(), ScenePlug::ScenePath(), f );
+	Detail::LocationTask<ThreadableFunctor> *task = new( tbb::task::allocate_root() ) Detail::LocationTask<ThreadableFunctor>( scene, Gaffer::Context::current(), root, f );
 	tbb::task::spawn_root_and_wait( *task );
 }
 
