@@ -197,33 +197,6 @@ Gaffer::Plug *setupColorPlug( const AtNodeEntry *node, const AtParamEntry *param
 	return plug.get();
 }
 
-Gaffer::Plug *setupRGBAPlug( const AtNodeEntry *node, const AtParamEntry *parameter, Gaffer::GraphComponent *plugParent, Gaffer::Plug::Direction direction )
-{
-	const char *name = AiParamGetName( parameter );
-
-	const char *plugType = "Color4fPlug";
-	AiMetaDataGetStr( node, name, "gaffer.plugType", &plugType );
-	if( !strcmp( plugType, "Color4fPlug" ) )
-	{
-		return setupColorPlug<Color4fPlug>( node, parameter, plugParent, direction );
-	}
-	else if( !strcmp( plugType, "Color3fPlug" ) )
-	{
-		return setupColorPlug<Color3fPlug>( node, parameter, plugParent, direction );
-	}
-	else
-	{
-		msg(
-			Msg::Warning,
-			"GafferArnold::ParameterHandler::setupPlug",
-			format( "Unsupported plug type \"%s\" for parameter \"%s\"" ) %
-				plugType %
-				AiParamGetName( parameter )
-		);
-		return NULL;
-	}
-}
-
 const string nodeName ( Gaffer::GraphComponent *plugParent )
 {
 	const Gaffer::Node *node = IECore::runTimeCast<const Gaffer::Node>( plugParent );
@@ -289,7 +262,37 @@ Gaffer::Plug *ParameterHandler::setupPlug( const AtNodeEntry *node, const AtPara
 {
 	Plug *plug = NULL;
 
-	switch( AiParamGetType( parameter ) )
+	int parameterType = AiParamGetType( parameter );
+
+	const char *plugTypeOverride = NULL;
+	std::string name = AiParamGetName( parameter );
+	if( AiMetaDataGetStr( node, name.c_str(), "gaffer.plugType", &plugTypeOverride ) )
+	{
+		if( !strcmp( plugTypeOverride, "FloatPlug" ) )
+		{
+			parameterType = AI_TYPE_FLOAT;
+		}
+		else if( !strcmp( plugTypeOverride, "Color3fPlug" ) )
+		{
+			parameterType = AI_TYPE_RGB;
+		}
+		else if( !strcmp( plugTypeOverride, "Color4fPlug" ) )
+		{
+			parameterType = AI_TYPE_RGBA;
+		}
+		else
+		{
+			msg(
+				Msg::Warning,
+				"GafferArnold::ParameterHandler::setupPlug",
+				format( "Unsupported plug type \"%s\" for parameter \"%s\"" ) %
+				plugTypeOverride %
+				name
+			);
+		}
+	}
+
+	switch( parameterType )
 	{
 		case AI_TYPE_BYTE :
 		case AI_TYPE_INT :
@@ -321,7 +324,7 @@ Gaffer::Plug *ParameterHandler::setupPlug( const AtNodeEntry *node, const AtPara
 
 		case AI_TYPE_RGBA :
 
-			plug = setupRGBAPlug( node, parameter, plugParent, direction );
+			plug = setupColorPlug<Color4fPlug>( node, parameter, plugParent, direction );
 			break;
 
 		case AI_TYPE_POINT2 :
@@ -446,7 +449,6 @@ void ParameterHandler::setupPlugs( const AtNodeEntry *nodeEntry, Gaffer::GraphCo
 				continue;
 			}
 		}
-
 		validPlugs.insert( setupPlug( nodeEntry, param, plugsParent, direction ) );
 	}
 	AiParamIteratorDestroy( it );

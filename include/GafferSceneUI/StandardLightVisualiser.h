@@ -62,6 +62,8 @@ class StandardLightVisualiser : public LightVisualiser
 
 		virtual IECoreGL::ConstRenderablePtr visualise( const IECore::InternedString &attributeName, const IECore::ObjectVector *shaderVector, IECoreGL::ConstStatePtr &state ) const;
 
+		static void spotlightParameters( const IECore::InternedString &attributeName, const IECore::ObjectVector *shaderVector, float &innerAngle, float &outerAngle, float &lensRadius );
+
 	protected :
 
 		static const char *faceCameraVertexSource();

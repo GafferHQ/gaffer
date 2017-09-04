@@ -135,6 +135,9 @@ class ShaderTest( GafferSceneTest.SceneTestCase ) :
 		self.assertEqual( network[0].type, "test:shader" )
 		self.assertEqual( network[1].type, "test:surface" )
 
+		surface['attributeSuffix'].setValue( "TestSurface" )
+		self.assertIn( "test:surface:TestSurface", surface.attributes() )
+
 	def testDirtyPropagationThroughShaderAssignment( self ) :
 
 		n = GafferSceneTest.TestShader()

@@ -522,6 +522,7 @@ Shader::Shader( const std::string &name )
 	storeIndexOfNextChild( g_firstPlugIndex );
 	addChild( new StringPlug( "name" ) );
 	addChild( new StringPlug( "type" ) );
+	addChild( new StringPlug( "attributeSuffix", Gaffer::Plug::In, "" ) );
 	addChild( new Plug( "parameters", Plug::In, Plug::Default & ~Plug::AcceptsInputs ) );
 	addChild( new BoolPlug( "enabled", Gaffer::Plug::In, true ) );
 	addChild( new StringPlug( "__nodeName", Gaffer::Plug::In, name, Plug::Default & ~(Plug::Serialisable | Plug::AcceptsInputs), Context::NoSubstitutions ) );
@@ -556,14 +557,25 @@ const Gaffer::StringPlug *Shader::typePlug() const
 	return getChild<StringPlug>( g_firstPlugIndex + 1 );
 }
 
+Gaffer::StringPlug *Shader::attributeSuffixPlug()
+{
+	return getChild<StringPlug>( g_firstPlugIndex + 2 );
+}
+
+const Gaffer::StringPlug *Shader::attributeSuffixPlug() const
+{
+	return getChild<StringPlug>( g_firstPlugIndex + 2 );
+}
+
+
 Gaffer::Plug *Shader::parametersPlug()
 {
-	return getChild<Plug>( g_firstPlugIndex + 2 );
+	return getChild<Plug>( g_firstPlugIndex + 3 );
 }
 
 const Gaffer::Plug *Shader::parametersPlug() const
 {
-	return getChild<Plug>( g_firstPlugIndex + 2 );
+	return getChild<Plug>( g_firstPlugIndex + 3 );
 }
 
 Gaffer::Plug *Shader::outPlug()
@@ -580,32 +592,32 @@ const Gaffer::Plug *Shader::outPlug() const
 
 Gaffer::BoolPlug *Shader::enabledPlug()
 {
-	return getChild<BoolPlug>( g_firstPlugIndex + 3 );
+	return getChild<BoolPlug>( g_firstPlugIndex + 4 );
 }
 
 const Gaffer::BoolPlug *Shader::enabledPlug() const
 {
-	return getChild<BoolPlug>( g_firstPlugIndex + 3 );
+	return getChild<BoolPlug>( g_firstPlugIndex + 4 );
 }
 
 Gaffer::StringPlug *Shader::nodeNamePlug()
 {
-	return getChild<StringPlug>( g_firstPlugIndex + 4 );
+	return getChild<StringPlug>( g_firstPlugIndex + 5 );
 }
 
 const Gaffer::StringPlug *Shader::nodeNamePlug() const
 {
-	return getChild<StringPlug>( g_firstPlugIndex + 4 );
+	return getChild<StringPlug>( g_firstPlugIndex + 5 );
 }
 
 Gaffer::Color3fPlug *Shader::nodeColorPlug()
 {
-	return getChild<Color3fPlug>( g_firstPlugIndex + 5 );
+	return getChild<Color3fPlug>( g_firstPlugIndex + 6 );
 }
 
 const Gaffer::Color3fPlug *Shader::nodeColorPlug() const
 {
-	return getChild<Color3fPlug>( g_firstPlugIndex + 5 );
+	return getChild<Color3fPlug>( g_firstPlugIndex + 6 );
 }
 
 IECore::MurmurHash Shader::attributesHash() const
@@ -627,6 +639,8 @@ IECore::ConstCompoundObjectPtr Shader::attributes() const
 
 void Shader::attributesHash( const Gaffer::Plug *output, IECore::MurmurHash &h ) const
 {
+	attributeSuffixPlug()->hash( h );
+
 	NetworkBuilder networkBuilder( output );
 	h.append( networkBuilder.stateHash() );
 }
@@ -637,9 +651,13 @@ IECore::ConstCompoundObjectPtr Shader::attributes( const Gaffer::Plug *output ) 
 	NetworkBuilder networkBuilder( output );
 	if( !networkBuilder.state()->members().empty() )
 	{
-		result->members()[typePlug()->getValue()] = boost::const_pointer_cast<IECore::ObjectVector>(
-			networkBuilder.state()
-		);
+		std::string attr = typePlug()->getValue();
+		std::string postfix = attributeSuffixPlug()->getValue();
+		if( postfix != "" )
+		{
+			attr += ":" + postfix;
+		}
+		result->members()[attr] = boost::const_pointer_cast<IECore::ObjectVector>(networkBuilder.state());
 	}
 	return result;
 }
