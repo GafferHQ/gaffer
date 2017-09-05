@@ -39,6 +39,8 @@
 #include "IECoreGL/CurvesPrimitive.h"
 #include "IECoreGL/Group.h"
 
+#include "GafferScene/Private/IECoreScenePreview/Procedural.h"
+
 #include "GafferSceneUI/ObjectVisualiser.h"
 
 using namespace std;
@@ -48,24 +50,22 @@ using namespace GafferSceneUI;
 namespace
 {
 
-class ExternalProceduralVisualiser : public ObjectVisualiser
+class BoundVisualiser : public ObjectVisualiser
 {
 
 	public :
 
-		typedef IECore::ExternalProcedural ObjectType;
-
-		ExternalProceduralVisualiser()
+		BoundVisualiser()
 		{
 		}
 
-		~ExternalProceduralVisualiser() override
+		~BoundVisualiser() override
 		{
 		}
 
 		IECoreGL::ConstRenderablePtr visualise( const IECore::Object *object ) const override
 		{
-			const IECore::ExternalProcedural *externalProcedural = IECore::runTimeCast<const IECore::ExternalProcedural>( object );
+			const IECore::VisibleRenderable *renderable = IECore::runTimeCast<const IECore::VisibleRenderable>( object );
 
 			IECoreGL::GroupPtr group = new IECoreGL::Group();
 			group->getState()->add( new IECoreGL::Primitive::DrawWireframe( true ) );
@@ -79,7 +79,7 @@ class ExternalProceduralVisualiser : public ObjectVisualiser
 
 			// box representing the location of the renderable
 
-			const Box3f b = externalProcedural->bound();
+			const Box3f b = renderable->bound();
 
 			vertsPerCurve.push_back( 5 );
 			p.push_back( b.min );
@@ -117,6 +117,30 @@ class ExternalProceduralVisualiser : public ObjectVisualiser
 
 			return group;
 		}
+
+};
+
+class ProceduralVisualiser : public BoundVisualiser
+{
+
+	public :
+
+		typedef IECoreScenePreview::Procedural ObjectType;
+
+	protected :
+
+		static ObjectVisualiserDescription<ProceduralVisualiser> g_visualiserDescription;
+
+};
+
+ObjectVisualiser::ObjectVisualiserDescription<ProceduralVisualiser> ProceduralVisualiser::g_visualiserDescription;
+
+class ExternalProceduralVisualiser : public BoundVisualiser
+{
+
+	public :
+
+		typedef IECore::ExternalProcedural ObjectType;
 
 	protected :
 
