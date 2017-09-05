@@ -37,6 +37,9 @@
 #include <limits>
 
 #include "tbb/spin_mutex.h"
+#include "tbb/spin_rw_mutex.h"
+#include "tbb/parallel_for.h"
+#include "tbb/enumerable_thread_specific.h"
 
 #include "boost/algorithm/string/split.hpp"
 #include "boost/algorithm/string/predicate.hpp"
@@ -165,7 +168,6 @@ class RenderState
 	public :
 
 		RenderState( const IECore::CompoundData *shadingPoints, const ShadingEngine::Transforms &transforms )
-			:	m_pointIndex( 0 )
 		{
 			for( CompoundDataMap::const_iterator it = shadingPoints->readable().begin(),
 				 eIt = shadingPoints->readable().end(); it != eIt; ++it )
@@ -194,21 +196,21 @@ class RenderState
 			}
 		}
 
-		bool userData( ustring name, TypeDesc type, void *value ) const
+		bool userData( size_t pointIndex, ustring name, TypeDesc type, void *value ) const
 		{
 			if( name == gIndex )
 			{
 				// if a 4 byte type has been requested then ensure we fit and cast to narrower type
 				// this way f32 reads of shading:index will succeed.
-				if( type.size() == sizeof( int ) && m_pointIndex <= ( (size_t) std::numeric_limits<int>::max() ) )
+				if( type.size() == sizeof( int ) && pointIndex <= ( (size_t) std::numeric_limits<int>::max() ) )
 				{
-					int v = ( int ) m_pointIndex;
+					int v = (int) pointIndex;
 					return ShadingSystem::convert_value( value, type, &v, OIIO::TypeDesc( OIIO::TypeDesc::INT32 ) );
 				}
 				else
 				{
 					// OSL language doesn't define UINT64 type so we'll probably never enter this branch.
-					return ShadingSystem::convert_value( value, type, &m_pointIndex, OIIO::TypeDesc( OIIO::TypeDesc::UINT64 ) );
+					return ShadingSystem::convert_value( value, type, &pointIndex, OIIO::TypeDesc( OIIO::TypeDesc::UINT64 ) );
 				}
 			}
 
@@ -226,7 +228,7 @@ class RenderState
 			const char *src = static_cast<const char *>( it->dataView.data );
 			if( it->array )
 			{
-				src += m_pointIndex * it->dataView.type.elementsize();
+				src += pointIndex * it->dataView.type.elementsize();
 			}
 
 			bool result = ShadingSystem::convert_value( value, type, src, it->dataView.type );
@@ -241,11 +243,6 @@ class RenderState
 			}
 
 			return result;
-		}
-
-		void incrementPointIndex()
-		{
-			m_pointIndex++;
 		}
 
 		bool matrixToObject( OIIO::ustring name, Imath::M44f &result ) const
@@ -271,9 +268,6 @@ class RenderState
 		}
 
 	private :
-
-		size_t m_pointIndex;
-
 
 		typedef boost::unordered_map< OIIO::ustring, ShadingEngine::Transform, OIIO::ustringHash > RenderStateTransforms;
 		RenderStateTransforms m_transforms;
@@ -302,6 +296,13 @@ class RenderState
 
 		vector<UserData> m_userData; // sorted on name for quick lookups
 
+};
+
+struct ThreadRenderState
+{
+	ThreadRenderState(const RenderState& renderState) : pointIndex(0), renderState ( renderState ) {}
+	size_t pointIndex;
+	const RenderState& renderState;
 };
 
 } // namespace
@@ -334,10 +335,10 @@ class RendererServices : public OSL::RendererServices
 
 		bool get_matrix( OSL::ShaderGlobals *sg, OSL::Matrix44 &result, ustring from, float time ) override
 		{
-			const RenderState *renderState = sg ? static_cast<RenderState *>( sg->renderstate ) : nullptr;
-			if( renderState )
+			const ThreadRenderState *threadRenderState = sg ? static_cast<ThreadRenderState *>( sg->renderstate ) : nullptr;
+			if( threadRenderState )
 			{
-				return renderState->matrixToObject( from, result  );
+				return threadRenderState->renderState.matrixToObject( from, result  );
 			}
 
 			return false;
@@ -345,10 +346,10 @@ class RendererServices : public OSL::RendererServices
 
 		bool get_inverse_matrix( OSL::ShaderGlobals *sg, OSL::Matrix44 &result, ustring to, float time ) override
 		{
-			const RenderState *renderState = sg ? static_cast<RenderState *>( sg->renderstate ) : nullptr;
-			if( renderState )
+			const ThreadRenderState *threadRenderState = sg ? static_cast<ThreadRenderState *>( sg->renderstate ) : nullptr;
+			if( threadRenderState )
 			{
-				return renderState->matrixFromObject( to, result  );
+				return threadRenderState->renderState.matrixFromObject( to, result  );
 			}
 
 			return false;
@@ -361,8 +362,8 @@ class RendererServices : public OSL::RendererServices
 
 		bool get_attribute( OSL::ShaderGlobals *sg, bool derivatives, ustring object, TypeDesc type, ustring name, void *value ) override
 		{
-			const RenderState *renderState = sg ? static_cast<RenderState *>( sg->renderstate ) : nullptr;
-			if( !renderState )
+			const ThreadRenderState *threadRenderState = sg ? static_cast<ThreadRenderState *>( sg->renderstate ) : nullptr;
+			if( !threadRenderState )
 			{
 				return false;
 			}
@@ -378,22 +379,22 @@ class RendererServices : public OSL::RendererServices
 
 		bool get_userdata( bool derivatives, ustring name, TypeDesc type, OSL::ShaderGlobals *sg, void *value ) override
 		{
-			const RenderState *renderState = sg ? static_cast<RenderState *>( sg->renderstate ) : nullptr;
-			if( !renderState )
+			const ThreadRenderState *threadRenderState = sg ? static_cast<ThreadRenderState *>( sg->renderstate ) : nullptr;
+			if( !threadRenderState )
 			{
 				return false;
 			}
-			return renderState->userData( name, type, value );
+			return threadRenderState->renderState.userData( threadRenderState->pointIndex,  name, type, value );
 		}
 
 		virtual bool has_userdata( ustring name, TypeDesc type, OSL::ShaderGlobals *sg )
 		{
-			const RenderState *renderState = sg ? static_cast<RenderState *>( sg->renderstate ) : nullptr;
-			if( !renderState )
+			const ThreadRenderState *threadRenderState = sg ? static_cast<ThreadRenderState *>( sg->renderstate ) : nullptr;
+			if( !threadRenderState )
 			{
 				return false;
 			}
-			return renderState->userData( name, type, nullptr );
+			return threadRenderState->renderState.userData( threadRenderState->pointIndex, name, type, nullptr );
 		}
 
 };
@@ -529,86 +530,6 @@ class ShadingResults
 			m_results->writable()["Ci"] = ciData;
 		}
 
-		void addResult( size_t pointIndex, const ClosureColor *result )
-		{
-			addResult( pointIndex, result, Color3f( 1.0f ) );
-		}
-
-		CompoundDataPtr results()
-		{
-			return m_results;
-		}
-
-	private :
-
-		void addResult( size_t pointIndex, const ClosureColor *closure, const Color3f &weight )
-		{
-			if( closure )
-			{
-				switch( closure->id )
-				{
-					case ClosureColor::MUL :
-						addResult(
-							pointIndex,
-							closure->as_mul()->closure,
-							weight * closure->as_mul()->weight
-						);
-						break;
-					case ClosureColor::ADD :
-						addResult( pointIndex, closure->as_add()->closureA, weight );
-						addResult( pointIndex, closure->as_add()->closureB, weight );
-						break;
-					case EmissionClosureId :
-						addEmission( pointIndex, closure->as_comp()->as<EmissionParameters>(), weight * closure->as_comp()->w );
-						break;
-					case DebugClosureId :
-						addDebug( pointIndex, closure->as_comp()->as<DebugParameters>(), weight * closure->as_comp()->w );
-						break;
-				}
-			}
-		}
-
-		void addEmission( size_t pointIndex, const EmissionParameters *parameters, const Color3f &weight )
-		{
-			(*m_ci)[pointIndex] += weight;
-		}
-
-		void addDebug( size_t pointIndex, const DebugParameters *parameters, const Color3f &weight )
-		{
-			vector<DebugResult>::iterator it = lower_bound(
-				m_debugResults.begin(),
-				m_debugResults.end(),
-				parameters->name
-			);
-
-			if( it == m_debugResults.end() || it->name != parameters->name )
-			{
-				DebugResult result;
-				result.name = parameters->name;
-				result.type = parameters->type != ustring() ? TypeDesc( parameters->type.c_str() ) : TypeDesc::TypeColor;
-				result.type.arraylen = m_ci->size();
-				DataPtr data = dataFromTypeDesc( result.type, result.basePointer );
-				if( !data )
-				{
-					throw IECore::Exception( "Unsupported type specified in debug() closure." );
-				}
-				result.type.unarray(); // so we can use convert_value
-				m_results->writable()[result.name.c_str()] = data;
-				it = m_debugResults.insert( it, result );
-			}
-
-			Color3f value = weight * parameters->value;
-
-			char *dst = static_cast<char *>( it->basePointer );
-			dst += pointIndex * it->type.elementsize();
-			ShadingSystem::convert_value(
-				dst,
-				it->type,
-				&value,
-				it->type.aggregate == TypeDesc::SCALAR ? TypeDesc::TypeFloat : TypeDesc::TypeColor
-			);
-		}
-
 		/// \todo This is a lot like the UserData struct above - maybe we should
 		/// just have one type we can use for both?
 		struct DebugResult
@@ -633,10 +554,147 @@ class ShadingResults
 			}
 		};
 
+		typedef vector<DebugResult> DebugResultsContainer;
+
+		void addResult( size_t pointIndex, const ClosureColor *result, DebugResultsContainer& threadCache )
+		{
+			addResult( pointIndex, result, Color3f( 1.0f ), threadCache );
+		}
+
+		CompoundDataPtr results()
+		{
+			return m_results;
+		}
+
+	private :
+
+		void addResult( size_t pointIndex, const ClosureColor *closure, const Color3f &weight, DebugResultsContainer& threadCache )
+		{
+			if( closure )
+			{
+				switch( closure->id )
+				{
+					case ClosureColor::MUL :
+						addResult(
+							pointIndex,
+							closure->as_mul()->closure,
+							weight * closure->as_mul()->weight,
+							threadCache
+						);
+						break;
+					case ClosureColor::ADD :
+						addResult( pointIndex, closure->as_add()->closureA, weight, threadCache );
+						addResult( pointIndex, closure->as_add()->closureB, weight, threadCache );
+						break;
+					case EmissionClosureId :
+						addEmission( pointIndex, closure->as_comp()->as<EmissionParameters>(), weight * closure->as_comp()->w );
+						break;
+					case DebugClosureId :
+						addDebug( pointIndex, closure->as_comp()->as<DebugParameters>(), weight * closure->as_comp()->w, threadCache );
+						break;
+				}
+			}
+		}
+
+		void addEmission( size_t pointIndex, const EmissionParameters *parameters, const Color3f &weight )
+		{
+			(*m_ci)[pointIndex] += weight;
+		}
+
+
+		vector<DebugResult>::iterator search(ustring name, bool& match)
+		{
+			vector<DebugResult>::iterator it = lower_bound(
+				m_debugResults.begin(),
+				m_debugResults.end(),
+				name
+			);
+
+			if (it != m_debugResults.end() && it->name == name)
+			{
+				match = true;
+			}
+
+			return it;
+		}
+
+		DebugResult findDebugResult(const DebugParameters *parameters, DebugResultsContainer& threadCache)
+		{
+			vector<DebugResult>::iterator threadCacheIt = lower_bound(
+				threadCache.begin(),
+				threadCache.end(),
+				parameters->name
+			);
+
+			if (threadCacheIt != threadCache.end() && threadCacheIt->name == parameters->name)
+			{
+				return *threadCacheIt;
+			}
+
+			// take a reader lock and attempt to find the DebugResults object
+			tbb::spin_rw_mutex::scoped_lock rwScopedLock( m_resultsMutex, /* write = */ false  );
+
+			bool match = false;
+			vector<DebugResult>::iterator it = search( parameters->name , match);
+
+			if( match )
+			{
+				threadCache.insert( threadCacheIt, *it);
+				// we've found the object and our reader lock will be released here
+				return *it;
+			}
+
+			// lets take a writer lock and crate the output data array
+			rwScopedLock.upgrade_to_writer();
+
+			match = false;
+			it = search( parameters->name, match );
+
+			if( match )
+			{
+				return *it;
+			}
+
+			DebugResult result;
+			result.name = parameters->name;
+			result.type = parameters->type != ustring() ? TypeDesc( parameters->type.c_str() ) : TypeDesc::TypeColor;
+			result.type.arraylen = m_ci->size();
+			DataPtr data = dataFromTypeDesc( result.type, result.basePointer );
+			if( !data )
+			{
+				throw IECore::Exception( "Unsupported type specified in debug() closure." );
+			}
+			result.type.unarray(); // so we can use convert_value
+
+			m_results->writable()[result.name.c_str()] = data;
+			m_debugResults.insert( it, result );
+			threadCache.insert( threadCacheIt, result);
+
+			return result;
+		}
+
+		void addDebug( size_t pointIndex, const DebugParameters *parameters, const Color3f &weight, DebugResultsContainer& threadCache )
+		{
+			DebugResult debugResult = findDebugResult( parameters, threadCache );
+
+			Color3f value = weight * parameters->value;
+
+			char *dst = static_cast<char *>( debugResult.basePointer );
+			dst += pointIndex * debugResult.type.elementsize();
+			ShadingSystem::convert_value(
+				dst,
+				debugResult.type,
+				&value,
+				debugResult.type.aggregate == TypeDesc::SCALAR ? TypeDesc::TypeFloat : TypeDesc::TypeColor
+			);
+		}
+
+
 		CompoundDataPtr m_results;
 		vector<Color3f> *m_ci;
-		vector<DebugResult> m_debugResults; // sorted on name for quick lookups
+		DebugResultsContainer m_debugResults; // sorted on name for quick lookups
 
+		tbb::spin_rw_mutex m_resultsMutex;
 };
 
 } // namespace
@@ -919,7 +977,6 @@ IECore::CompoundDataPtr ShadingEngine::shade( const IECore::CompoundData *points
 	// get passed to our RendererServices queries.
 
 	RenderState renderState( points, transforms );
-	shaderGlobals.renderstate = &renderState;
 
 	// Get pointers to varying data, we'll use these to
 	// update the shaderGlobals as we iterate over our points.
@@ -937,32 +994,62 @@ IECore::CompoundDataPtr ShadingEngine::shade( const IECore::CompoundData *points
 	// Iterate over the input points, doing the shading as we go
 
 	ShadingSystem *shadingSystem = ::shadingSystem();
-	ShadingContext *shadingContext = shadingSystem->get_context();
 	ShaderGroup &shaderGroup = **static_cast<ShaderGroupRef *>( m_shaderGroupRef );
-	for( size_t i = 0; i < numPoints; ++i )
+
+	struct ThreadContext
 	{
-		shaderGlobals.P = *p++;
-		if( u )
+		ShadingContext *shadingContext;
+		ShadingResults::DebugResultsContainer results;
+	};
+
+	typedef tbb::enumerable_thread_specific<ThreadContext> ThreadContextType;
+	ThreadContextType contexts;
+
+	auto f = [&shadingSystem, &renderState, &results, &shaderGlobals, &p, &u, &v, &n, &shaderGroup, &contexts]( const tbb::blocked_range<size_t> &r )
+	{
+		ThreadContextType::reference context = contexts.local();
+		if( !context.shadingContext )
 		{
-			shaderGlobals.u = *u++;
-		}
-		if( v )
-		{
-			shaderGlobals.v = *v++;
-		}
-		if( n )
-		{
-			shaderGlobals.N = *n++;
+			context.shadingContext = shadingSystem->get_context();
 		}
 
-		shaderGlobals.Ci = nullptr;
+		ThreadRenderState threadRenderState( renderState );
 
-		shadingSystem->execute( shadingContext, shaderGroup, shaderGlobals );
-		results.addResult( i, shaderGlobals.Ci );
-		renderState.incrementPointIndex();
+		ShaderGlobals threadShaderGlobals = shaderGlobals;
+
+		threadShaderGlobals.renderstate = &threadRenderState;
+
+		for( size_t i = r.begin(); i < r.end(); ++i )
+		{
+			threadShaderGlobals.P = p[i];
+			if( u )
+			{
+				threadShaderGlobals.u = u[i];
+			}
+			if( v )
+			{
+				threadShaderGlobals.v = v[i];
+			}
+			if( n )
+			{
+				threadShaderGlobals.N = n[i];
+			}
+
+			threadShaderGlobals.Ci = nullptr;
+
+			threadRenderState.pointIndex = i;
+			shadingSystem->execute( context.shadingContext, shaderGroup, threadShaderGlobals );
+
+			results.addResult( i, threadShaderGlobals.Ci, context.results );
+		}
+	};
+
+	tbb::parallel_for( tbb::blocked_range<size_t>( 0, numPoints, 5000 ), f );
+
+	for( auto &shadingContext : contexts )
+	{
+		shadingSystem->release_context( shadingContext.shadingContext );
 	}
-
-	shadingSystem->release_context( shadingContext );
 
 	return results.results();
 }
