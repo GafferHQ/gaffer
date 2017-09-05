@@ -54,9 +54,6 @@ class SceneReaderPathPreview( GafferUI.PathPreviewWidget ) :
 		# for reading IECore.SceneInterface files (scc, lscc)
 		self.__script["SceneReader"] = GafferScene.SceneReader()
 
-		# for reading Alembic files (abc)
-		self.__script["AlembicSource"] = GafferScene.AlembicSource()
-
 		# for reading more generic single object files (cob, ptc, pdc, etc)
 		## \todo: can we unify all file input to SceneReader by creating a SceneInterface that makes
 		# single object scenes using Reader ops behind the scenes?
@@ -94,8 +91,7 @@ class SceneReaderPathPreview( GafferUI.PathPreviewWidget ) :
 		else :
 			ext = str(path).split( "." )[-1]
 
-		supported = set( [ "abc" ] )
-		supported.update( GafferScene.SceneReader.supportedExtensions() )
+		supported = set( GafferScene.SceneReader.supportedExtensions() )
 		supported.update( IECore.Reader.supportedExtensions() )
 		# no reason to preview a single image as a 3D scene
 		supported.difference_update( IECore.Reader.supportedExtensions( IECore.TypeId.ImageReader ) )
@@ -105,7 +101,6 @@ class SceneReaderPathPreview( GafferUI.PathPreviewWidget ) :
 	def _updateFromPath( self ) :
 
 		self.__script["SceneReader"]["fileName"].setValue( "" )
-		self.__script["AlembicSource"]["fileName"].setValue( "" )
 		self.__script["ObjectPreview"]["fileName"].setValue( "" )
 
 		if not self.isValid() :
@@ -155,12 +150,6 @@ class SceneReaderPathPreview( GafferUI.PathPreviewWidget ) :
 
 			self.__script["ObjectPreview"]["fileName"].setValue( fileName )
 			outPlug = self.__script["ObjectPreview"]["out"]
-
-		elif ext == "abc" :
-
-			self.__script["AlembicSource"]["fileName"].setValue( fileName )
-			outPlug = self.__script["AlembicSource"]["out"]
-			## \todo: determine the frame range from the abc file
 
 		self.__script["OpenGLAttributes"]["in"].setInput( outPlug )
 
