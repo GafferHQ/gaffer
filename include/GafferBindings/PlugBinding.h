@@ -50,8 +50,6 @@
 namespace GafferBindings
 {
 
-void bindPlug();
-
 template<typename T, typename TWrapper=T>
 class PlugClass : public GraphComponentClass<T, TWrapper>
 {
@@ -152,6 +150,7 @@ class PlugSerialiser : public Serialisation::Serialiser
 
 		static std::string directionRepr( Gaffer::Plug::Direction direction );
 		static std::string flagsRepr( unsigned flags );
+		static std::string repr( const Gaffer::Plug *plug, unsigned flagsMask = Gaffer::Plug::All );
 
 };
 

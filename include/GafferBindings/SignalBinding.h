@@ -40,8 +40,6 @@
 
 #include "boost/python.hpp"
 
-#include "GafferBindings/ConnectionBinding.h"
-
 namespace GafferBindings
 {
 
@@ -66,10 +64,6 @@ class SignalClass : public boost::python::class_<Signal, boost::noncopyable>
 		SignalClass( const char *className, const char *docString = nullptr );
 
 };
-
-/// This function binds a series of generic signals taking and returning python objects, with
-/// combiners being provided as python callables.
-void bindSignal();
 
 } // namespace GafferBindings
 

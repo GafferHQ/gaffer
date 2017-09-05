@@ -139,8 +139,6 @@ class Serialisation
 
 };
 
-void bindSerialisation();
-
 } // namespace GafferBindings
 
 #endif // GAFFERBINDINGS_SERIALISATION_H

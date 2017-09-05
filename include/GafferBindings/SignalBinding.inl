@@ -45,8 +45,6 @@
 #include "IECorePython/ScopedGILLock.h"
 #include "IECorePython/ExceptionAlgo.h"
 
-#include "GafferBindings/ConnectionBinding.h"
-
 namespace GafferBindings
 {
 

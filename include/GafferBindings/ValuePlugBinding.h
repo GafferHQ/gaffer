@@ -44,8 +44,6 @@
 namespace GafferBindings
 {
 
-void bindValuePlug();
-
 /// Supports the following Context variables :
 ///
 /// "valuePlugSerialiser:resetParentPlugDefaults"

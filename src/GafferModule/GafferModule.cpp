@@ -43,61 +43,51 @@
 #include "Gaffer/Backdrop.h"
 #include "Gaffer/Loop.h"
 
-#include "GafferBindings/ConnectionBinding.h"
-#include "GafferBindings/SignalBinding.h"
-#include "GafferBindings/GraphComponentBinding.h"
-#include "GafferBindings/NodeBinding.h"
-#include "GafferBindings/PlugBinding.h"
-#include "GafferBindings/ValuePlugBinding.h"
-#include "GafferBindings/NumericPlugBinding.h"
-#include "GafferBindings/TypedPlugBinding.h"
-#include "GafferBindings/StringPlugBinding.h"
-#include "GafferBindings/TypedObjectPlugBinding.h"
-#include "GafferBindings/ScriptNodeBinding.h"
-#include "GafferBindings/ApplicationRootBinding.h"
-#include "GafferBindings/SetBinding.h"
-#include "GafferBindings/DirtyPropagationScopeBinding.h"
-#include "GafferBindings/UndoScopeBinding.h"
-#include "GafferBindings/CompoundPlugBinding.h"
-#include "GafferBindings/CompoundNumericPlugBinding.h"
-#include "GafferBindings/SplinePlugBinding.h"
-#include "GafferBindings/StandardSetBinding.h"
-#include "GafferBindings/ChildSetBinding.h"
-#include "GafferBindings/PreferencesBinding.h"
-#include "GafferBindings/ContextBinding.h"
-#include "GafferBindings/BoxPlugBinding.h"
-#include "GafferBindings/ExpressionBinding.h"
-#include "GafferBindings/TransformPlugBinding.h"
-#include "GafferBindings/Transform2DPlugBinding.h"
-#include "GafferBindings/CompoundDataPlugBinding.h"
-#include "GafferBindings/RandomBinding.h"
 #include "GafferBindings/DependencyNodeBinding.h"
-#include "GafferBindings/ComputeNodeBinding.h"
-#include "GafferBindings/BoxBinding.h"
-#include "GafferBindings/ActionBinding.h"
-#include "GafferBindings/ReferenceBinding.h"
-#include "GafferBindings/ArrayPlugBinding.h"
-#include "GafferBindings/Serialisation.h"
-#include "GafferBindings/MetadataBinding.h"
-#include "GafferBindings/StringAlgoBinding.h"
-#include "GafferBindings/SubGraphBinding.h"
-#include "GafferBindings/DotBinding.h"
-#include "GafferBindings/PathBinding.h"
-#include "GafferBindings/PathFilterBinding.h"
-#include "GafferBindings/CompoundPathFilterBinding.h"
-#include "GafferBindings/LeafPathFilterBinding.h"
-#include "GafferBindings/MatchPatternPathFilterBinding.h"
-#include "GafferBindings/FileSystemPathBinding.h"
-#include "GafferBindings/FileSequencePathFilterBinding.h"
-#include "GafferBindings/AnimationBinding.h"
-#include "GafferBindings/MonitorBinding.h"
-#include "GafferBindings/MetadataAlgoBinding.h"
-#include "GafferBindings/SwitchBinding.h"
-#include "GafferBindings/PlugAlgoBinding.h"
-#include "GafferBindings/BoxIOBinding.h"
+
+#include "ActionBinding.h"
+#include "AnimationBinding.h"
+#include "ApplicationRootBinding.h"
+#include "ArrayPlugBinding.h"
+#include "BoxPlugBinding.h"
+#include "CompoundDataPlugBinding.h"
+#include "CompoundNumericPlugBinding.h"
+#include "CompoundPlugBinding.h"
+#include "ConnectionBinding.h"
+#include "ContextBinding.h"
+#include "DirtyPropagationScopeBinding.h"
+#include "DotBinding.h"
+#include "ExpressionBinding.h"
+#include "GraphComponentBinding.h"
+#include "MetadataAlgoBinding.h"
+#include "MetadataBinding.h"
+#include "MonitorBinding.h"
+#include "NodeBinding.h"
+#include "NumericPlugBinding.h"
+#include "PathBinding.h"
+#include "PathFilterBinding.h"
+#include "PlugAlgoBinding.h"
+#include "PlugBinding.h"
+#include "RandomBinding.h"
+#include "ScriptNodeBinding.h"
+#include "SerialisationBinding.h"
+#include "SetBinding.h"
+#include "SignalBinding.h"
+#include "SplinePlugBinding.h"
+#include "StringAlgoBinding.h"
+#include "StringPlugBinding.h"
+#include "SubGraphBinding.h"
+#include "SwitchBinding.h"
+#include "Transform2DPlugBinding.h"
+#include "TransformPlugBinding.h"
+#include "TypedObjectPlugBinding.h"
+#include "TypedPlugBinding.h"
+#include "UndoScopeBinding.h"
+#include "ValuePlugBinding.h"
 
 using namespace boost::python;
 using namespace Gaffer;
+using namespace GafferModule;
 using namespace GafferBindings;
 
 namespace
@@ -157,8 +147,6 @@ BOOST_PYTHON_MODULE( _Gaffer )
 	bindGraphComponent();
 	bindContext();
 	bindNode();
-	bindDependencyNode();
-	bindComputeNode();
 	bindPlug();
 	bindValuePlug();
 	bindNumericPlug();
@@ -173,9 +161,6 @@ BOOST_PYTHON_MODULE( _Gaffer )
 	bindCompoundPlug();
 	bindCompoundNumericPlug();
 	bindSplinePlug();
-	bindStandardSet();
-	bindChildSet();
-	bindPreferences();
 	bindBoxPlug();
 	bindExpression();
 	bindTransformPlug();
@@ -183,9 +168,7 @@ BOOST_PYTHON_MODULE( _Gaffer )
 	bindCompoundDataPlug();
 	bindRandom();
 	bindSubGraph();
-	bindBox();
 	bindAction();
-	bindReference();
 	bindArrayPlug();
 	bindSerialisation();
 	bindMetadata();
@@ -193,17 +176,11 @@ BOOST_PYTHON_MODULE( _Gaffer )
 	bindDot();
 	bindPath();
 	bindPathFilter();
-	bindCompoundPathFilter();
-	bindLeafPathFilter();
-	bindMatchPatternPathFilter();
-	bindFileSystemPath();
-	bindFileSequencePathFilter();
 	bindAnimation();
 	bindMonitor();
 	bindMetadataAlgo();
 	bindSwitch();
 	bindPlugAlgo();
-	bindBoxIO();
 
 	NodeClass<Backdrop>();
 

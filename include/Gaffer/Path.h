@@ -46,7 +46,7 @@
 
 #include "Gaffer/TypeIds.h"
 
-namespace GafferBindings
+namespace GafferModule
 {
 
 // Forward declaration for friendship declared below.
@@ -55,7 +55,7 @@ namespace GafferBindings
 // modules.
 void bindPath();
 
-}
+} // namespace GafferModule
 
 namespace Gaffer
 {
@@ -212,7 +212,7 @@ class Path : public IECore::RunTimeTyped
 		PathChangedSignal *m_pathChangedSignal;
 
 		// So we can bind the emitPathChanged() method.
-		friend void GafferBindings::bindPath();
+		friend void GafferModule::bindPath();
 
 };
 

@@ -67,11 +67,6 @@ static bool shouldResetPlugDefault( const Gaffer::Plug *plug, const Serialisatio
 	return Context::current()->get<bool>( "valuePlugSerialiser:resetParentPlugDefaults", false );
 }
 
-static std::string repr( const ValuePlug *plug )
-{
-	return ValuePlugSerialiser::repr( plug );
-}
-
 std::string ValuePlugSerialiser::repr( const Gaffer::ValuePlug *plug, unsigned flagsMask, const std::string &extraArguments, const Serialisation *serialisation )
 {
 	std::string result = Serialisation::classPath( plug ) + "( \"" + plug->getName().string() + "\", ";
@@ -265,35 +260,4 @@ bool ValuePlugSerialiser::valueNeedsSerialisation( const Gaffer::ValuePlug *plug
 	}
 
 	return true;
-}
-
-void GafferBindings::bindValuePlug()
-{
-	PlugClass<ValuePlug, PlugWrapper<ValuePlug> >()
-		.def( boost::python::init<const std::string &, Plug::Direction, unsigned>(
-				(
-					boost::python::arg_( "name" ) = GraphComponent::defaultName<ValuePlug>(),
-					boost::python::arg_( "direction" ) = Plug::In,
-					boost::python::arg_( "flags" ) = Plug::Default
-				)
-			)
-		)
-		.def( "settable", &ValuePlug::settable )
-		.def( "setFrom", &ValuePlug::setFrom )
-		.def( "setToDefault", &ValuePlug::setToDefault )
-		.def( "isSetToDefault", &ValuePlug::isSetToDefault )
-		.def( "hash", (IECore::MurmurHash (ValuePlug::*)() const)&ValuePlug::hash )
-		.def( "hash", (void (ValuePlug::*)( IECore::MurmurHash & ) const)&ValuePlug::hash )
-		.def( "getCacheMemoryLimit", &ValuePlug::getCacheMemoryLimit )
-		.staticmethod( "getCacheMemoryLimit" )
-		.def( "setCacheMemoryLimit", &ValuePlug::setCacheMemoryLimit )
-		.staticmethod( "setCacheMemoryLimit" )
-		.def( "cacheMemoryUsage", &ValuePlug::cacheMemoryUsage )
-		.staticmethod( "cacheMemoryUsage" )
-		.def( "clearCache", &ValuePlug::clearCache )
-		.staticmethod( "clearCache" )
-		.def( "__repr__", &repr )
-	;
-
-	Serialisation::registerSerialiser( Gaffer::ValuePlug::staticTypeId(), new ValuePlugSerialiser );
 }

@@ -52,8 +52,6 @@
 namespace GafferBindings
 {
 
-void bindNode();
-
 template<typename T, typename TWrapper=T>
 class NodeClass : public GraphComponentClass<T, TWrapper>
 {

@@ -53,8 +53,6 @@
 namespace GafferBindings
 {
 
-void bindDependencyNode();
-
 template<typename T, typename TWrapper=T>
 class DependencyNodeClass : public NodeClass<T, TWrapper>
 {

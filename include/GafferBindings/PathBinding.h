@@ -52,8 +52,6 @@ class PathClass : public IECorePython::RunTimeTypedClass<T, TWrapper>
 
 };
 
-void bindPath();
-
 } // namespace GafferBindings
 
 #include "GafferBindings/PathBinding.inl"

@@ -49,7 +49,13 @@
 #include "Gaffer/UndoScope.h"
 #include "Gaffer/Action.h"
 
-#include "GafferBindings/ScriptNodeBinding.h" // to enable friend declaration for SerialiserRegistration
+namespace GafferModule
+{
+
+// Forward declaration to enable friend declaration
+struct SerialiserRegistration;
+
+} // namespace GafferModule
 
 namespace Gaffer
 {
@@ -281,7 +287,7 @@ class ScriptNode : public Node
 		// dependency), and are injected into these functions.
 		static SerialiseFunction g_serialiseFunction;
 		static ExecuteFunction g_executeFunction;
-		friend struct GafferBindings::SerialiserRegistration;
+		friend struct GafferModule::SerialiserRegistration;
 
 		bool m_executing;
 		ScriptExecutedSignal m_scriptExecutedSignal;

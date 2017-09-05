@@ -52,8 +52,6 @@
 namespace GafferBindings
 {
 
-void bindComputeNode();
-
 template<typename WrappedType>
 class ComputeNodeWrapper : public DependencyNodeWrapper<WrappedType>
 {
