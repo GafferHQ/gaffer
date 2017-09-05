@@ -48,6 +48,7 @@
 #include "IECoreArnold/ParameterAlgo.h"
 
 #include "GafferArnold/Private/IECoreArnoldPreview/ShaderAlgo.h"
+#include "GafferOSL/OSLShader.h"
 
 using namespace std;
 using namespace IECore;
@@ -78,8 +79,6 @@ void setSplineParameter( AtNode *node, const InternedString &name, const Spline 
 		values.push_back( it->second );
 	}
 
-	ParameterAlgo::setParameter( node, ( name.string() + "Positions" ).c_str(), positionsData.get() );
-	ParameterAlgo::setParameter( node, ( name.string() + "Values" ).c_str(), valuesData.get() );
 
 	const char *basis = "catmull-rom";
 	if( spline.basis == Spline::Basis::bezier() )
@@ -94,6 +93,10 @@ void setSplineParameter( AtNode *node, const InternedString &name, const Spline 
 	{
 		basis = "linear";
 	}
+
+	GafferOSL::OSLShader::prepareSplineCVsForOSL( positions, values, basis );
+	ParameterAlgo::setParameter( node, ( name.string() + "Positions" ).c_str(), positionsData.get() );
+	ParameterAlgo::setParameter( node, ( name.string() + "Values" ).c_str(), valuesData.get() );
 	AiNodeSetStr( node, ( name.string() + "Basis" ).c_str(), basis );
 }
 

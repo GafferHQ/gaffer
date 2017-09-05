@@ -52,8 +52,16 @@ class RampPlugValueWidget( GafferUI.PlugValueWidget ) :
 		with column :
 			with GafferUI.ListContainer( GafferUI.ListContainer.Orientation.Horizontal, spacing = 4 ) :
 				GafferUI.Spacer( IECore.V2i( 0 ), parenting = { "expand" : True } )
-				GafferUI.LabelPlugValueWidget( plug["basis"], horizontalAlignment=GafferUI.Label.HorizontalAlignment.Right )
-				GafferUI.SplineBasisPlugValueWidget( plug )
+
+				# TODO: Since we don't have a good way to register metadata on child plugs, we just write the
+				# metadata on this child plug right before constructing a widget for it.  There should probably
+				# be some way to do this genericly during initialization
+				Gaffer.Metadata.registerValue( plug['interpolation'],
+					"plugValueWidget:type", "GafferUI.PresetsPlugValueWidget", persistent=False )  
+				for name, value in sorted( Gaffer.SplineDefinitionInterpolation.names.items() ):
+					Gaffer.Metadata.registerValue( plug['interpolation'], "preset:" + name, value, persistent=False )
+
+				GafferUI.PlugWidget( GafferUI.PlugValueWidget.create( plug["interpolation"] ) )
 
 			self.__splineWidget = GafferUI.SplineWidget()
 			self.__splineWidget.setDrawMode( self.__splineWidget.DrawMode.Ramp )
@@ -104,7 +112,7 @@ class RampPlugValueWidget( GafferUI.PlugValueWidget ) :
 		plug = self.getPlug()
 		with self.getContext() :
 
-			self.__splineWidget.setSpline( plug.getValue() )
+			self.__splineWidget.setSpline( plug.getValue().spline() )
 
 			positions = []
 			for i in range( 0, plug.numPoints() ) :
@@ -134,7 +142,7 @@ class RampPlugValueWidget( GafferUI.PlugValueWidget ) :
 				# on an empty area of the slider.
 				numPoints = plug.numPoints()
 				assert( len( slider.getPositions() ) == numPoints + 1 )
-				spline = plug.getValue()
+				spline = plug.getValue().spline()
 				position = slider.getPositions()[numPoints]
 				plug.addPoint()
 				plug.pointXPlug( numPoints ).setValue( position )

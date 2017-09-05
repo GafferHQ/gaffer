@@ -564,9 +564,9 @@ IECore::DataPtr CompoundDataPlug::extractDataFromPlug( const ValuePlug *plug )
 		case M44fVectorDataPlugTypeId :
 			return static_cast<const M44fVectorDataPlug *>( plug )->getValue()->copy();
 		case SplineffPlugTypeId :
-			return new SplineffData( static_cast<const SplineffPlug *>( plug )->getValue() );
+			return new SplineffData( static_cast<const SplineffPlug *>( plug )->getValue().spline() );
 		case SplinefColor3fPlugTypeId :
-			return new SplinefColor3fData( static_cast<const SplinefColor3fPlug *>( plug )->getValue() );
+			return new SplinefColor3fData( static_cast<const SplinefColor3fPlug *>( plug )->getValue().spline() );
 		case TransformPlugTypeId :
 			return new M44fData( static_cast<const TransformPlug *>( plug )->matrix() );
 		case M44fPlugTypeId :

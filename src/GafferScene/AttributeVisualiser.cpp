@@ -62,11 +62,9 @@ AttributeVisualiser::AttributeVisualiser( const std::string &name )
 	addChild( new FloatPlug( "min", Plug::In, 0.0f ) );
 	addChild( new FloatPlug( "max", Plug::In, 1.0f ) );
 
-	SplinefColor3f rampDefault;
-	rampDefault.points.insert( SplinefColor3f::Point( 1.0f, Color3f( 0.0f, 1.0f, 0.0f ) ) );
-	rampDefault.points.insert( SplinefColor3f::Point( 1.0f, Color3f( 0.0f, 1.0f, 0.0f ) ) );
-	rampDefault.points.insert( SplinefColor3f::Point( 0.0f, Color3f( 1.0f, 0.0f, 0.0f ) ) );
-	rampDefault.points.insert( SplinefColor3f::Point( 0.0f, Color3f( 1.0f, 0.0f, 0.0f ) ) );
+	SplinefColor3fPlug::ValueType rampDefault;
+	rampDefault.points.insert( SplinefColor3fPlug::ValueType::Point( 1.0f, Color3f( 0.0f, 1.0f, 0.0f ) ) );
+	rampDefault.points.insert( SplinefColor3fPlug::ValueType::Point( 0.0f, Color3f( 1.0f, 0.0f, 0.0f ) ) );
 	addChild( new SplinefColor3fPlug( "ramp", Plug::In, rampDefault ) );
 
 	addChild( new StringPlug( "shaderType", Plug::In, "gl:surface" ) );
@@ -296,7 +294,7 @@ IECore::ConstCompoundObjectPtr AttributeVisualiser::computeProcessedAttributes( 
 		color = ( color - min ) / ( max - min );
 		if( mode == FalseColor )
 		{
-			const SplinefColor3f ramp = rampPlug()->getValue();
+			const SplinefColor3f ramp = rampPlug()->getValue().spline();
 			color = ramp( color[0] );
 		}
 	}

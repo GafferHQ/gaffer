@@ -47,18 +47,73 @@
 namespace Gaffer
 {
 
-/// The SplinePlug allows IECore::Splines to be represented and
-/// manipulated. Rather than storing a value atomically, the
-/// points and basis matrix are represented as individual plugs,
+// This lives outside the class because we don't want multiple incompatible templated versions of
+// the same enum floating around
+enum SplineDefinitionInterpolation
+{
+	SplineDefinitionInterpolationLinear,
+	SplineDefinitionInterpolationCatmullRom,
+	SplineDefinitionInterpolationBSpline,
+	SplineDefinitionInterpolationMonotoneCubic,
+};
+
+
+template<typename T>
+struct SplineDefinition
+{
+	typedef typename T::XType XType;
+	typedef typename T::YType YType;
+	typedef typename T::PointContainer PointContainer;
+	typedef typename PointContainer::value_type Point;
+
+	SplineDefinition() : interpolation( SplineDefinitionInterpolationCatmullRom )
+	{
+	}
+
+	SplineDefinition( const PointContainer &p, SplineDefinitionInterpolation i )
+		: points( p ), interpolation( i )
+	{
+	}
+
+	PointContainer points;
+	SplineDefinitionInterpolation interpolation;
+
+
+	// Convert to Cortex Spline
+	T spline() const;
+
+	// If you are starting with a curve representation that needs duplicated end point values, and you're
+	// converting it into this representation, you need to trim off the duplicated end point values,
+	// and you can do that with this method
+	bool trimEndPoints();
+
+	bool operator==( const SplineDefinition<T> &rhs ) const
+	{
+		return interpolation == rhs.interpolation && points == rhs.points;
+	}
+
+	bool operator!=( const SplineDefinition<T> &rhs ) const
+	{
+		return interpolation != rhs.interpolation || points != rhs.points;
+	}
+
+private:
+	int endPointMultiplicity() const;
+};
+
+/// The SplinePlug allows the user to manipulate splines that can be
+/// converted to IECore::Splines. It's value is a very simple and easy to edit
+/// spline representation named SplineDefinition - just a list of control points
+/// with one of the interpolations above.
+//
+/// Rather than storing the value atomically, the
+/// points and interpolation are represented as individual plugs,
 /// allowing the positions of individual points to have input
-/// connections from other nodes. For many common splines, it's
-/// useful to repeat the endpoint values to force interpolation
-/// all the way to the first and last values, but dealing with
-/// such repeated endpoints in scripting and via the user interface
-/// would be awkward. For this reason, the setValue() method removes
-/// duplicate endpoints, storing the number of duplicates in the
-/// endPointMultiplicity plug. When calling getValue(), the
-/// endPointMultiplicity is then used to restore the duplicate endpoints.
+/// connections from other nodes.
+///
+/// The value stored should be a clean, user editable value.  Underlying technical
+/// details such as adding repeated endpoint values are added when converting to
+/// IECore::Spline.
 template<typename T>
 class SplinePlug : public ValuePlug
 {
@@ -71,6 +126,7 @@ class SplinePlug : public ValuePlug
 
 		IECORE_RUNTIMETYPED_DECLARETEMPLATE( SplinePlug<T>, ValuePlug );
 		IE_CORE_DECLARERUNTIMETYPEDDESCRIPTION( SplinePlug<T> );
+
 
 		SplinePlug(
 			const std::string &name = defaultName<SplinePlug>(),
@@ -89,21 +145,15 @@ class SplinePlug : public ValuePlug
 		void setToDefault() override;
 		bool isSetToDefault() const override;
 
-		/// Sets the value of all the child plugs by decomposing
-		/// the passed spline and storing it in the basis, points,
-		/// and endPointMultiplicity plug.
+
+		/// Sets the value of the points and interpolation child plugs
 		/// \undoable
 		void setValue( const T &value );
-		/// Recreates the spline by retrieving its basis and points
-		/// from the basis, points and endPointMultiplicity plugs.
+		/// Matching to setValue
 		T getValue() const;
 
-		ValuePlug *basisPlug();
-		const ValuePlug *basisPlug() const;
-		M44fPlug *basisMatrixPlug();
-		const M44fPlug *basisMatrixPlug() const;
-		IntPlug *basisStepPlug();
-		const IntPlug *basisStepPlug() const;
+		IntPlug *interpolationPlug();
+		const IntPlug *interpolationPlug() const;
 
 		/// Returns the number of point plugs - note that
 		/// because duplicate endpoints are not stored directly as
@@ -124,19 +174,16 @@ class SplinePlug : public ValuePlug
 		YPlugType *pointYPlug( unsigned pointIndex );
 		const YPlugType *pointYPlug( unsigned pointIndex ) const;
 
-		IntPlug *endPointMultiplicityPlug();
-		const IntPlug *endPointMultiplicityPlug() const;
-
 	private :
 
-		size_t endPointMultiplicity( const T &value ) const;
-
 		T m_defaultValue;
-
 };
 
-typedef SplinePlug<IECore::Splineff> SplineffPlug;
-typedef SplinePlug<IECore::SplinefColor3f> SplinefColor3fPlug;
+typedef SplineDefinition<IECore::Splineff> SplineDefinitionff;
+typedef SplineDefinition<IECore::SplinefColor3f> SplineDefinitionfColor3f;
+
+typedef SplinePlug< SplineDefinitionff > SplineffPlug;
+typedef SplinePlug< SplineDefinitionfColor3f > SplinefColor3fPlug;
 
 IE_CORE_DECLAREPTR( SplineffPlug );
 IE_CORE_DECLAREPTR( SplinefColor3fPlug );

@@ -41,21 +41,246 @@
 
 using namespace Gaffer;
 
+namespace {
+
+template<typename Y, typename X>
+inline Y monotoneSlopeCompute( const Y& deltaY1, const Y& deltaY2, const X& deltaX1, const X& deltaX2 )
+{
+	// Using this weighted harmonic mean to compute slopes ensures a monotone curve.
+	// This is apparently a result by Fritsch and Carlson, from here:
+	//
+	// F. N. Fritsch and R. E. Carlson
+	// SIAM Journal on Numerical Analysis
+	// Vol. 17, No. 2 (Apr., 1980), pp. 238-246
+	//
+	// Haven't actually gotten ahold of this paper, but stackexchange says that it says this,
+	// and it seems to work quite well.
+	if( deltaY1 * deltaY2 > 0.0f )
+	{
+		return 3.0f * ( deltaX1 + deltaX2 ) / (
+			( 2.0f * deltaX2 + deltaX1 ) / deltaY1 +
+			( deltaX2 + 2.0f * deltaX1 ) / deltaY2 );
+	}
+	else
+	{
+		return 0;
+	}
+}
+
+template<>
+inline Imath::Color3f monotoneSlopeCompute<>(
+	const Imath::Color3f& deltaY1, const Imath::Color3f& deltaY2,
+	const float& deltaX1, const float& deltaX2 )
+{
+	return Imath::Color3f(
+		monotoneSlopeCompute( deltaY1[0], deltaY2[0], deltaX1, deltaX2 ),
+		monotoneSlopeCompute( deltaY1[1], deltaY2[1], deltaX1, deltaX2 ),
+		monotoneSlopeCompute( deltaY1[2], deltaY2[2], deltaX1, deltaX2 )
+	);
+}
+
+// This function translates a set of control points for a MonotoneCubic curve into a set of
+// bezier control points.  The X values are set up to make each segment linear in X, which 
+// makes the control point behaviour a bit more predictable when used as a color ramp.
+// The Y tangents are adjusted to compensate for the discontinuity in the slope of the
+// parameterization across control points, which mean that the X/Y tangent is continuous across
+// control points.  This curve type seems to work quite well in practice for color ramps.
+//
+// Note that the way we are evaluating this type of curve by using a spline solver on the X
+// axis is ridiculously inefficient - the bezier control points are arranged so it's actually
+// always linear, and could be quickly solved analyticly.  But because we need to store these
+// curves in IECore::Spline, we don't have any way to specify different interpolations for
+// X and Y. So we just use bezier curve with appropriately set handles to store our linear X
+// curve.
+template<typename T>
+void monotoneCubicCVsToBezierCurve( const typename T::PointContainer &cvs, typename T::PointContainer &result )
+{
+	// NOTE : It would seem more reasonable to use the slope of the first and last segment for the
+	// endpoints, instead of clamping to 0.  The current argument for clamping to zero is consistency
+	// with the Htoa ramp
+	typename T::YType prevSlope = typename T::YType(0);
+
+	typename T::PointContainer::const_iterator i = cvs.begin();
+	const typename T::Point *p1 = &*i;
+	i++;
+	const typename T::Point *p2 = &*i;
+	i++;
+
+	for(;;)
+	{
+		typename T::YType nextSlope;
+
+		
+		const typename T::Point *pNext;
+		if( i == cvs.end() )
+		{
+			nextSlope = typename T::YType( 0 );
+		}
+		else
+		{
+			pNext = &*i;
+
+			typename T::XType xDelta1 = p2->first - p1->first;
+			typename T::XType xDelta2 = pNext->first - p2->first;
+			typename T::YType yDelta1 = p2->second - p1->second;
+			typename T::YType yDelta2 = pNext->second - p2->second;
+			
+			nextSlope = monotoneSlopeCompute( yDelta1 / xDelta1, yDelta2 / xDelta2, xDelta1, xDelta2);
+
+			// NOTE : If we copied everything else about this function, but instead just used:
+			// 	   0.5 * ( yDelta1 / xDelta1 + yDelta2 / xDelta2 )
+			// for the slope here, this would produce a CatmullRom sort of spline, but with the simpler linear
+			// behaviour of the knot values.  This is what Htoa uses for a CatmullRom ramp, and might be a pretty
+			// useful curve type ( quite possibly more useful than our current CatmullRom, though it would no
+			// longer correspond to a CatmullRom basis in OSL ).
+		}
+
+		typename T::XType xDelta = p2->first - p1->first;
+
+		result.insert( *p1 );
+		result.insert( typename T::Point(
+			p1->first + ( 1.0f/3.0f ) * xDelta,
+			p1->second + (1.0f/3.0f) * prevSlope * xDelta ) );
+		result.insert( typename T::Point(
+			p1->first + ( 2.0f/3.0f ) * xDelta,
+			p2->second - (1.0f/3.0f) * nextSlope * xDelta ) );
+
+		if( i == cvs.end() )
+		{
+			break;
+		}
+		else
+		{
+			p1 = p2;
+			p2 = pNext;
+			prevSlope = nextSlope;
+			i++;
+		}
+	}
+
+	result.insert( *p2 );
+}
+
+}
+
 template<typename T>
 const IECore::RunTimeTyped::TypeDescription<SplinePlug<T> > SplinePlug<T>::g_typeDescription;
 
 template<typename T>
-SplinePlug<T>::SplinePlug( const std::string &name, Direction direction, const T &defaultValue, unsigned flags )
+T SplineDefinition<T>::spline() const
+{
+	T result;
+
+	result.points = points;	
+
+	if( interpolation == SplineDefinitionInterpolationLinear )
+	{
+		result.basis = T::Basis::linear();
+	}
+	else if( interpolation == SplineDefinitionInterpolationCatmullRom )
+	{
+		result.basis = T::Basis::catmullRom();
+	}
+	else if( interpolation == SplineDefinitionInterpolationBSpline )
+	{
+		result.basis = T::Basis::bSpline();
+	}
+	else if( interpolation == SplineDefinitionInterpolationMonotoneCubic )
+	{
+		result.basis = T::Basis::bezier();
+		if( points.size() > 1 )
+		{
+			result.points.clear();
+			monotoneCubicCVsToBezierCurve<T>( points, result.points );
+		}
+	}
+
+	int multiplicity = endPointMultiplicity();
+
+	if( multiplicity && result.points.size() )
+	{
+		for( int i = 0; i < multiplicity - 1; ++i )
+		{
+			result.points.insert( *result.points.begin() );
+			result.points.insert( *result.points.rbegin() );
+		}
+	}
+
+	return result;	
+}
+
+template<typename T>
+bool SplineDefinition<T>::trimEndPoints()
+{
+	int multiplicity = endPointMultiplicity();
+
+	if( (int)points.size() < multiplicity * 2 )
+	{
+		// Not enough points to make a curve once we account for endpoint multiplicity
+		return false;
+	}
+
+	if( multiplicity > 1 )
+	{
+		typename PointContainer::const_iterator it = points.begin();
+		for( int i = 1; i < multiplicity; i++ )
+		{
+			++it;
+			if( *it != *points.begin() )
+			{
+				// We don't have enough matching points to equal the endPointMultiplicity
+				return false;
+			}
+		}
+
+		typename PointContainer::const_reverse_iterator rit = points.rbegin();
+		for( int i = 1; i < multiplicity; i++ )
+		{
+			++rit;
+			if( *rit != *points.rbegin() )
+			{
+				// We don't have enough matching points to equal the endPointMultiplicity
+				return false;
+			}
+		}
+
+		// We have an appropriate amount of duplication of the end points.  This will be added automatically
+		// when converting to a Cortex spline, so we trim it off of the source points here
+
+		typename PointContainer::reverse_iterator endMultiplicity = points.rbegin();
+		advance( endMultiplicity, multiplicity - 1 );
+		points.erase( endMultiplicity.base(), points.rbegin().base() );
+
+		typename PointContainer::iterator startMultiplicity = points.begin();
+		advance( startMultiplicity, multiplicity - 1 );
+		points.erase( points.begin(), startMultiplicity );
+	}
+
+	return true;
+}
+
+template<typename T>
+int SplineDefinition<T>::endPointMultiplicity() const
+{
+	int multiplicity = 1;
+	if( interpolation == SplineDefinitionInterpolationCatmullRom )
+	{
+		multiplicity = 2;
+	}
+	else if( interpolation == SplineDefinitionInterpolationBSpline )
+	{
+		multiplicity = 3;
+	}
+	return multiplicity;
+}
+
+
+template<typename T>
+SplinePlug<T>::SplinePlug( const std::string &name, Direction direction, const ValueType &defaultValue, unsigned flags )
 	:	ValuePlug( name, direction, flags ), m_defaultValue( defaultValue )
 {
-	ValuePlugPtr basis = new ValuePlug( "basis", direction );
-	M44fPlugPtr basisMatrix = new M44fPlug( "matrix", direction, defaultValue.basis.matrix );
-	IntPlugPtr basisStep = new IntPlug( "step", direction, defaultValue.basis.step );
-	basis->addChild( basisMatrix );
-	basis->addChild( basisStep );
-	addChild( basis );
-
-	addChild( new IntPlug( "endPointMultiplicity", direction, endPointMultiplicity( defaultValue ), 1 ) );
+	addChild( new IntPlug( "interpolation", direction, SplineDefinitionInterpolationCatmullRom,
+		SplineDefinitionInterpolationLinear, SplineDefinitionInterpolationMonotoneCubic ) );
 
 	setValue( defaultValue );
 }
@@ -68,9 +293,9 @@ SplinePlug<T>::~SplinePlug()
 template<typename T>
 bool SplinePlug<T>::acceptsChild( const GraphComponent *potentialChild ) const
 {
-	if( children().size() < 2 )
+	if( children().size() < 1 )
 	{
-		// to let the basis and endPointMultiplicity plugs through during construction
+		// to let the interpolation plug through during construction
 		return true;
 	}
 
@@ -106,8 +331,7 @@ bool SplinePlug<T>::acceptsChild( const GraphComponent *potentialChild ) const
 template<typename T>
 PlugPtr SplinePlug<T>::createCounterpart( const std::string &name, Direction direction ) const
 {
-	Ptr result = new SplinePlug<T>( name, direction, defaultValue(), getFlags() );
-	result->setValue( getValue() );
+	Ptr result = new SplinePlug<T>( name, direction, m_defaultValue, getFlags() );
 	return result;
 }
 
@@ -132,19 +356,10 @@ bool SplinePlug<T>::isSetToDefault() const
 template<typename T>
 void SplinePlug<T>::setValue( const T &value )
 {
-	basisMatrixPlug()->setValue( value.basis.matrix );
-	basisStepPlug()->setValue( value.basis.step );
-
-	const int multiplicity = endPointMultiplicity( value );
-	endPointMultiplicityPlug()->setValue( multiplicity );
+	interpolationPlug()->setValue( value.interpolation );
 
 	typename T::PointContainer::const_iterator it = value.points.begin();
 	typename T::PointContainer::const_iterator eIt = value.points.end();
-	if( multiplicity )
-	{
-		advance( it, multiplicity - 1 );
-		advance( eIt, - (multiplicity - 1) );
-	}
 
 	unsigned existingPoints = numPoints();
 	unsigned i = 0;
@@ -170,68 +385,34 @@ template<typename T>
 T SplinePlug<T>::getValue() const
 {
 	T result;
-	result.basis.matrix = basisMatrixPlug()->getValue();
-	result.basis.step = basisStepPlug()->getValue();
+	result.interpolation = (SplineDefinitionInterpolation)interpolationPlug()->getValue();
 
 	unsigned n = numPoints();
 	for( unsigned i=0; i<n; i++ )
 	{
-		result.points.insert( typename T::PointContainer::value_type( pointXPlug( i )->getValue(), pointYPlug( i )->getValue() ) );
-	}
-
-	const size_t multiplicity = endPointMultiplicityPlug()->getValue();
-	if( multiplicity && n )
-	{
-		for( size_t i = 0; i < multiplicity - 1; ++i )
-		{
-			result.points.insert( *result.points.begin() );
-			result.points.insert( *result.points.rbegin() );
-		}
+		result.points.insert( typename T::Point( pointXPlug( i )->getValue(), pointYPlug( i )->getValue() ) );
 	}
 
 	return result;
 }
 
+
 template<typename T>
-ValuePlug *SplinePlug<T>::basisPlug()
+IntPlug *SplinePlug<T>::interpolationPlug()
 {
-	return getChild<ValuePlug>( "basis" );
+	return getChild<IntPlug>( "interpolation" );
 }
 
 template<typename T>
-const ValuePlug *SplinePlug<T>::basisPlug() const
+const IntPlug *SplinePlug<T>::interpolationPlug() const
 {
-	return getChild<ValuePlug>( "basis" );
-}
-
-template<typename T>
-M44fPlug *SplinePlug<T>::basisMatrixPlug()
-{
-	return basisPlug()->template getChild<M44fPlug>( "matrix" );
-}
-
-template<typename T>
-const M44fPlug *SplinePlug<T>::basisMatrixPlug() const
-{
-	return basisPlug()->template getChild<M44fPlug>( "matrix" );
-}
-
-template<typename T>
-IntPlug *SplinePlug<T>::basisStepPlug()
-{
-	return basisPlug()->template getChild<IntPlug>( "step" );
-}
-
-template<typename T>
-const IntPlug *SplinePlug<T>::basisStepPlug() const
-{
-	return basisPlug()->template getChild<IntPlug>( "step" );
+	return getChild<IntPlug>( "interpolation" );
 }
 
 template<typename T>
 unsigned SplinePlug<T>::numPoints() const
 {
-	return children().size() - 2;
+	return children().size() - 1;
 }
 
 template<typename T>
@@ -281,7 +462,7 @@ ValuePlug *SplinePlug<T>::pointPlug( unsigned pointIndex )
 	{
 		throw IECore::Exception( "Point index out of range." );
 	}
-	return getChild<ValuePlug>( pointIndex + 2 ); // plus two is to skip basis and endPointMultiplicity plugs
+	return getChild<ValuePlug>( pointIndex + 1 ); // plus one is to skip interpolation plug
 }
 
 template<typename T>
@@ -291,7 +472,7 @@ const ValuePlug *SplinePlug<T>::pointPlug( unsigned pointIndex ) const
 	{
 		throw IECore::Exception( "Point index out of range." );
 	}
-	return getChild<ValuePlug>( pointIndex + 2 ); // plus two is to skip basis and endPointMultiplicity plugs
+	return getChild<ValuePlug>( pointIndex + 1 ); // plus one is to skip interpolation plug
 }
 
 template<typename T>
@@ -338,50 +519,6 @@ const typename SplinePlug<T>::YPlugType *SplinePlug<T>::pointYPlug( unsigned poi
 	return p;
 }
 
-template<typename T>
-IntPlug *SplinePlug<T>::endPointMultiplicityPlug()
-{
-	return getChild<IntPlug>( "endPointMultiplicity" );
-}
-
-template<typename T>
-const IntPlug *SplinePlug<T>::endPointMultiplicityPlug() const
-{
-	return getChild<IntPlug>( "endPointMultiplicity" );
-}
-
-template<typename T>
-size_t SplinePlug<T>::endPointMultiplicity( const T &value ) const
-{
-	size_t startMultiplicity = 0;
-	for( typename T::PointContainer::const_iterator it=value.points.begin(); it!=value.points.end(); ++it )
-	{
-		if( *it != *value.points.begin() )
-		{
-			break;
-		}
-		startMultiplicity++;
-	}
-
-	size_t endMultiplicity = 0;
-	for( typename T::PointContainer::const_reverse_iterator it=value.points.rbegin(); it!=value.points.rend(); ++it )
-	{
-		if( *it != *value.points.rbegin() )
-		{
-			break;
-		}
-		endMultiplicity++;
-	}
-
-	if( startMultiplicity == endMultiplicity )
-	{
-		return startMultiplicity;
-	}
-	else
-	{
-		return 1;
-	}
-}
 
 namespace Gaffer
 {
@@ -391,7 +528,9 @@ IECORE_RUNTIMETYPED_DEFINETEMPLATESPECIALISATION( Gaffer::SplineffPlug, Splineff
 IECORE_RUNTIMETYPED_DEFINETEMPLATESPECIALISATION( Gaffer::SplinefColor3fPlug, SplinefColor3fPlugTypeId )
 
 // explicit instantiation
-template class SplinePlug<IECore::Splineff>;
-template class SplinePlug<IECore::SplinefColor3f>;
+template struct SplineDefinition< IECore::Splineff >;
+template struct SplineDefinition< IECore::SplinefColor3f >;
+template class SplinePlug< SplineDefinitionff >;
+template class SplinePlug< SplineDefinitionfColor3f >;
 
 }

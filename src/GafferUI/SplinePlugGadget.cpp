@@ -224,7 +224,7 @@ void SplinePlugGadget::plugSet( Plug *plug )
 void SplinePlugGadget::updateCurve( SplineUIMap::iterator it ) const
 {
 	SplineffPlugPtr splinePlug = IECore::runTimeCast<SplineffPlug>( it->first );
-	IECore::Splineff spline = splinePlug->getValue();
+	IECore::Splineff spline = splinePlug->getValue().spline();
 	IECore::Splineff::XInterval interval = spline.interval();
 
 	unsigned numPoints = 100;
