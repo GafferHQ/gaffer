@@ -64,8 +64,6 @@ class FilteredSceneProcessor : public SceneProcessor
 
 	protected :
 
-		/// \deprecated Use FilterPlug::FilterScope instead
-		Gaffer::ContextPtr filterContext( const Gaffer::Context *context ) const;
 		/// Convenience method for appending filterPlug() to a hash. This simply
 		/// calls filterPlug()->hash() using a FilterPlug::SceneScope. Note that
 		/// if you need to make multiple queries, it is more efficient to make your
