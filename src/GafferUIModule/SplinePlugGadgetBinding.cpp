@@ -1,6 +1,6 @@
 //////////////////////////////////////////////////////////////////////////
 //
-//  Copyright (c) 2011-2012, John Haddon. All rights reserved.
+//  Copyright (c) 2011, John Haddon. All rights reserved.
 //  Copyright (c) 2011, Image Engine Design Inc. All rights reserved.
 //
 //  Redistribution and use in source and binary forms, with or without
@@ -35,79 +35,22 @@
 //
 //////////////////////////////////////////////////////////////////////////
 
-#ifndef GAFFERUIBINDINGS_NODEGADGETBINDING_H
-#define GAFFERUIBINDINGS_NODEGADGETBINDING_H
-
-#include "GafferUI/NodeGadget.h"
+#include "boost/python.hpp"
 
 #include "GafferUIBindings/GadgetBinding.h"
+#include "GafferUI/SplinePlugGadget.h"
 
-namespace GafferUIBindings
+#include "SplinePlugGadgetBinding.h"
+
+using namespace boost::python;
+using namespace GafferUIBindings;
+using namespace GafferUI;
+
+void GafferUIModule::bindSplinePlugGadget()
 {
-
-template<typename T, typename TWrapper=T>
-class NodeGadgetClass : public GadgetClass<T, TWrapper>
-{
-	public :
-
-		NodeGadgetClass( const char *docString = nullptr );
-
-};
-
-template<typename WrappedType>
-class NodeGadgetWrapper : public GadgetWrapper<WrappedType>
-{
-
-	public :
-
-		template<typename... Args>
-		NodeGadgetWrapper( PyObject *self, Args&&... args )
-			:	GadgetWrapper<WrappedType>( self, std::forward<Args>( args )... )
-		{
-		}
-
-		GafferUI::Nodule *nodule( const Gaffer::Plug *plug ) override
-		{
-			if( this->isSubclassed() )
-			{
-				IECorePython::ScopedGILLock gilLock;
-				boost::python::object f = this->methodOverride( "nodule" );
-				if( f )
-				{
-					return boost::python::extract<GafferUI::Nodule *>(
-						f( Gaffer::PlugPtr( const_cast<Gaffer::Plug *>( plug ) ) )
-					);
-				}
-			}
-			return WrappedType::nodule( plug );
-		}
-
-		const GafferUI::Nodule *nodule( const Gaffer::Plug *plug ) const override
-		{
-			// naughty cast is better than repeating the above logic.
-			return const_cast<NodeGadgetWrapper *>( this )->nodule( plug );
-		}
-
-		Imath::V3f noduleTangent( const GafferUI::Nodule *nodule ) const override
-		{
-			if( this->isSubclassed() )
-			{
-				IECorePython::ScopedGILLock gilLock;
-				boost::python::object f = this->methodOverride( "noduleTangent" );
-				if( f )
-				{
-					return boost::python::extract<Imath::V3f>(
-						f( GafferUI::NodulePtr( const_cast<GafferUI::Nodule *>( nodule ) ) )
-					);
-				}
-			}
-			return WrappedType::noduleTangent( nodule );
-		}
-
-};
-
-} // namespace GafferUIBindings
-
-#include "GafferUIBindings/NodeGadgetBinding.inl"
-
-#endif // GAFFERUIBINDINGS_NODEGADGETBINDING_H
+	GadgetClass<SplinePlugGadget>()
+		.def( init<>() )
+		.def( "splines", (Gaffer::StandardSetPtr (SplinePlugGadget::*)())&SplinePlugGadget::splines )
+		.def( "selection", (Gaffer::StandardSetPtr (SplinePlugGadget::*)())&SplinePlugGadget::selection )
+	;
+}

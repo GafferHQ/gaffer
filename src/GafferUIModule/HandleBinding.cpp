@@ -1,7 +1,6 @@
 //////////////////////////////////////////////////////////////////////////
 //
-//  Copyright (c) 2011-2012, John Haddon. All rights reserved.
-//  Copyright (c) 2011-2014, Image Engine Design Inc. All rights reserved.
+//  Copyright (c) 2014, John Haddon. All rights reserved.
 //
 //  Redistribution and use in source and binary forms, with or without
 //  modification, are permitted provided that the following conditions are
@@ -37,59 +36,37 @@
 
 #include "boost/python.hpp"
 
-#include "EventBinding.h"
-#include "GadgetBinding.h"
-#include "WidgetSignalBinding.h"
-#include "ViewBinding.h"
-#include "ViewportGadgetBinding.h"
-#include "ToolBinding.h"
-#include "TextGadgetBinding.h"
-#include "StyleBinding.h"
-#include "NoduleBinding.h"
-#include "NodeGadgetBinding.h"
-#include "ContainerGadgetBinding.h"
-#include "GLWidgetBinding.h"
-#include "PointerBinding.h"
-#include "PathListingWidgetBinding.h"
-#include "GraphGadgetBinding.h"
-#include "ConnectionGadgetBinding.h"
-#include "RenderableGadgetBinding.h"
-#include "NameGadgetBinding.h"
-#include "SplinePlugGadgetBinding.h"
-#include "ImageGadgetBinding.h"
-#include "PlugGadgetBinding.h"
-#include "SpacerGadgetBinding.h"
+#include "GafferUI/TranslateHandle.h"
+#include "GafferUI/ScaleHandle.h"
+
+#include "GafferUIBindings/GadgetBinding.h"
+
 #include "HandleBinding.h"
-#include "PlugAdderBinding.h"
 
-using namespace GafferUIModule;
+using namespace boost::python;
+using namespace GafferUI;
+using namespace GafferUIBindings;
 
-BOOST_PYTHON_MODULE( _GafferUI )
+void GafferUIModule::bindHandle()
 {
 
-	bindGadget();
-	bindEvent();
-	bindContainerGadget();
-	bindGraphGadget();
-	bindRenderableGadget();
-	bindTextGadget();
-	bindNameGadget();
-	bindNodeGadget();
-	bindNodule();
-	bindConnectionGadget();
-	bindWidgetSignal();
-	bindSplinePlugGadget();
-	bindImageGadget();
-	bindStyle();
-	bindViewportGadget();
-	bindView();
-	bindPlugGadget();
-	bindPointer();
-	bindSpacerGadget();
-	bindHandle();
-	bindTool();
-	bindPathListingWidget();
-	bindGLWidget();
-	bindPlugAdder();
+	GadgetClass<Handle>()
+		.def( "setRasterScale", &Handle::setRasterScale )
+		.def( "getRasterScale", &Handle::getRasterScale )
+	;
+
+	GadgetClass<TranslateHandle>()
+		.def( init<Style::Axes>() )
+		.def( "setAxes", &TranslateHandle::setAxes )
+		.def( "getAxes", &TranslateHandle::getAxes )
+		.def( "translation", &TranslateHandle::translation )
+	;
+
+	GadgetClass<ScaleHandle>()
+		.def( init<Style::Axes>() )
+		.def( "setAxes", &ScaleHandle::setAxes )
+		.def( "getAxes", &ScaleHandle::getAxes )
+		.def( "scaling", &ScaleHandle::scaling )
+	;
 
 }

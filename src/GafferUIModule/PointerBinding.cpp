@@ -1,7 +1,6 @@
 //////////////////////////////////////////////////////////////////////////
 //
-//  Copyright (c) 2011-2012, John Haddon. All rights reserved.
-//  Copyright (c) 2011-2014, Image Engine Design Inc. All rights reserved.
+//  Copyright (c) 2013, Image Engine Design Inc. All rights reserved.
 //
 //  Redistribution and use in source and binary forms, with or without
 //  modification, are permitted provided that the following conditions are
@@ -37,59 +36,51 @@
 
 #include "boost/python.hpp"
 
-#include "EventBinding.h"
-#include "GadgetBinding.h"
-#include "WidgetSignalBinding.h"
-#include "ViewBinding.h"
-#include "ViewportGadgetBinding.h"
-#include "ToolBinding.h"
-#include "TextGadgetBinding.h"
-#include "StyleBinding.h"
-#include "NoduleBinding.h"
-#include "NodeGadgetBinding.h"
-#include "ContainerGadgetBinding.h"
-#include "GLWidgetBinding.h"
+#include "IECorePython/RefCountedBinding.h"
+
+#include "GafferBindings/SignalBinding.h"
+
+#include "GafferUI/Pointer.h"
+
 #include "PointerBinding.h"
-#include "PathListingWidgetBinding.h"
-#include "GraphGadgetBinding.h"
-#include "ConnectionGadgetBinding.h"
-#include "RenderableGadgetBinding.h"
-#include "NameGadgetBinding.h"
-#include "SplinePlugGadgetBinding.h"
-#include "ImageGadgetBinding.h"
-#include "PlugGadgetBinding.h"
-#include "SpacerGadgetBinding.h"
-#include "HandleBinding.h"
-#include "PlugAdderBinding.h"
 
-using namespace GafferUIModule;
+using namespace boost::python;
+using namespace GafferBindings;
+using namespace GafferUI;
 
-BOOST_PYTHON_MODULE( _GafferUI )
+namespace
 {
 
-	bindGadget();
-	bindEvent();
-	bindContainerGadget();
-	bindGraphGadget();
-	bindRenderableGadget();
-	bindTextGadget();
-	bindNameGadget();
-	bindNodeGadget();
-	bindNodule();
-	bindConnectionGadget();
-	bindWidgetSignal();
-	bindSplinePlugGadget();
-	bindImageGadget();
-	bindStyle();
-	bindViewportGadget();
-	bindView();
-	bindPlugGadget();
-	bindPointer();
-	bindSpacerGadget();
-	bindHandle();
-	bindTool();
-	bindPathListingWidget();
-	bindGLWidget();
-	bindPlugAdder();
+IECore::ImagePrimitivePtr image( Pointer *pointer )
+{
+	return const_cast<IECore::ImagePrimitive *>( pointer->image() );
+}
+
+PointerPtr getCurrent()
+{
+	return const_cast<Pointer *>( Pointer::getCurrent() );
+}
+
+} // namespace
+
+void GafferUIModule::bindPointer()
+{
+	scope s = IECorePython::RefCountedClass<Pointer, IECore::RefCounted>( "Pointer" )
+		.def( init<const IECore::ImagePrimitive *, const Imath::V2i &>( ( arg( "image" ), arg( "hotspot" ) = Imath::V2i( -1 ) ) ) )
+		.def( init<const std::string &, const Imath::V2i &>( ( arg( "fileName" ), arg( "hotspot" ) = Imath::V2i( -1 ) ) ) )
+		.def( "image", &image )
+		.def( "hotspot", &Pointer::hotspot, return_value_policy<copy_const_reference>() )
+		.def( "setCurrent", (void (*)( ConstPointerPtr ))&Pointer::setCurrent )
+		.def( "setCurrent", (void (*)( const std::string & ))&Pointer::setCurrent )
+		.staticmethod( "setCurrent" )
+		.def( "getCurrent", &getCurrent )
+		.staticmethod( "getCurrent" )
+		.def( "registerPointer", &Pointer::registerPointer )
+		.staticmethod( "registerPointer" )
+		.def( "changedSignal", &Pointer::changedSignal, return_value_policy<reference_existing_object>() )
+		.staticmethod( "changedSignal" )
+	;
+
+	SignalClass<Pointer::ChangedSignal>( "ChangedSignal" );
 
 }

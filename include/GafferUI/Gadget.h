@@ -54,7 +54,7 @@
 #include "GafferUI/EventSignalCombiner.h"
 #include "GafferUI/DragDropEvent.h"
 
-namespace GafferUIBindings
+namespace GafferUIModule
 {
 
 // forward declaration for friendship
@@ -327,7 +327,7 @@ class Gadget : public Gaffer::GraphComponent
 		// has been accessed, and only use an idle timer
 		// when absolutely necessary (when slots are connected).
 		static IdleSignal &idleSignalAccessedSignal();
-		friend void GafferUIBindings::bindGadget();
+		friend void GafferUIModule::bindGadget();
 		// Used to implement executeOnUIThread(). When Gadget::executeOnUIThread()
 		// is called, it emits this signal to request that EventLoop.py arranges
 		// to call the passed function on the UI thread.

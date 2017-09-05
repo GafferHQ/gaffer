@@ -128,8 +128,6 @@ class GadgetWrapper : public GafferBindings::GraphComponentWrapper<WrappedType>
 
 };
 
-void bindGadget();
-
 } // namespace GafferUIBindings
 
 #include "GafferUIBindings/GadgetBinding.inl"
