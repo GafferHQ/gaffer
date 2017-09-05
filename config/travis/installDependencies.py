@@ -15,7 +15,7 @@ buildDir = "build/gaffer-%d.%d.%d.%d-%s" % ( gafferMilestoneVersion, gafferMajor
 
 # get the prebuilt dependencies package and unpack it into the build directory
 
-downloadURL = "https://github.com/GafferHQ/dependencies/releases/download/0.40.0.0/gafferDependencies-0.40.0.0-" + platform + ".tar.gz"
+downloadURL = "https://github.com/GafferHQ/dependencies/releases/download/0.41.0.0/gafferDependencies-0.41.0.0-" + platform + ".tar.gz"
 
 sys.stderr.write( "Downloading dependencies \"%s\"" % downloadURL )
 tarFileName, headers = urllib.urlretrieve( downloadURL )
