@@ -256,6 +256,28 @@ void numericTweak( Data *data, PlugType *plug, LightTweaks::TweakPlug::Mode mode
 	}
 }
 
+template<typename PlugType>
+void splineTweak( Data *data, PlugType *plug, LightTweaks::TweakPlug::Mode mode )
+{
+	if( mode != LightTweaks::TweakPlug::Replace )
+	{
+		throw IECore::Exception( boost::str( boost::format(
+			"%s mode not supported for \"%s\""
+		) % modeToString( mode ) % data->typeName() ) );
+	}
+
+	typedef TypedData< IECore::Spline<float, typename PlugType::ValueType::YType> > DataType;
+	DataType *typedData = runTimeCast<DataType>( data );
+	if( !typedData )
+	{
+		throw IECore::Exception( boost::str( boost::format(
+			"Plug type \"%s\" does not match parameter type \"%s\""
+		) % plug->typeName() % data->typeName() ) );
+	}
+
+	typedData->writable() = plug->getValue().spline();
+}
+
 void tweak( Data *data, Plug *plug, LightTweaks::TweakPlug::Mode mode )
 {
 	switch( static_cast<Gaffer::TypeId>( plug->typeId() ) )
@@ -303,10 +325,10 @@ void tweak( Data *data, Plug *plug, LightTweaks::TweakPlug::Mode mode )
 			basicTweak( data, static_cast<const Box3iPlug *>( plug ), mode );
 			break;
 		case SplineffPlugTypeId :
-			basicTweak( data, static_cast<const SplineffPlug *>( plug ), mode );
+			splineTweak( data, static_cast<const SplineffPlug *>( plug ), mode );
 			break;
 		case SplinefColor3fPlugTypeId :
-			basicTweak( data, static_cast<const SplinefColor3fPlug *>( plug ), mode );
+			splineTweak( data, static_cast<const SplinefColor3fPlug *>( plug ), mode );
 			break;
 		case M44fPlugTypeId :
 			basicTweak( data, static_cast<const M44fPlug *>( plug ), mode );

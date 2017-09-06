@@ -60,6 +60,7 @@
 #include "GafferImage/OpenImageIOAlgo.h"
 
 #include "GafferOSL/ShadingEngine.h"
+#include "GafferOSL/OSLShader.h"
 
 using namespace std;
 using namespace boost;
@@ -662,6 +663,8 @@ void declareSpline( const InternedString &name, const Spline &spline, ShadingSys
 	{
 		basis = "linear";
 	}
+
+    OSLShader::prepareSplineCVsForOSL( positions, values, basis );
 
 	TypeDesc positionsType = TypeDescFromType<typename Spline::XType>::typeDesc();
 	TypeDesc valuesType = TypeDescFromType<typename Spline::YType>::typeDesc();

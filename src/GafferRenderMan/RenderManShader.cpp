@@ -564,6 +564,14 @@ static void loadSplineParameter( Gaffer::Plug *parametersPlug, const std::string
 				)
 			);
 		}
+
+		// The Renderman definition includes duplicated end points
+		if( !defaultValue.trimEndPoints() )
+		{
+			// Failed to trim end points - the value of the RenderMan spline can't be represented,
+			// so just wipe out the control points
+			defaultValue.points.clear();
+		}
 	}
 	else
 	{
@@ -576,8 +584,6 @@ static void loadSplineParameter( Gaffer::Plug *parametersPlug, const std::string
 			);
 		}
 		defaultValue.points.insert( typename PlugType::ValueType::Point( XValueType( 0 ), YValueType( 0 ) ) );
-		defaultValue.points.insert( typename PlugType::ValueType::Point( XValueType( 0 ), YValueType( 0 ) ) );
-		defaultValue.points.insert( typename PlugType::ValueType::Point( XValueType( 1 ), YValueType( 1 ) ) );
 		defaultValue.points.insert( typename PlugType::ValueType::Point( XValueType( 1 ), YValueType( 1 ) ) );
 	}
 

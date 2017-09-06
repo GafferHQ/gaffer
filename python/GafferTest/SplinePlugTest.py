@@ -44,26 +44,56 @@ import GafferTest
 
 class SplinePlugTest( GafferTest.TestCase ) :
 
+	def testSplineDefinition( self ) :
+		d = Gaffer.SplineDefinitionff( ((0, 0), (0,0), (0,0), (1,1), (1,1), (1,1)), Gaffer.SplineDefinitionInterpolation.Linear )
+		self.assertEqual( d.points(), ((0, 0), (0,0), (0,0), (1,1), (1,1), (1,1)) )
+		self.assertEqual( d.interpolation, Gaffer.SplineDefinitionInterpolation.Linear )
+		self.assertTrue( d.trimEndPoints() )
+		self.assertEqual( d.points(), ((0, 0), (0,0), (0,0), (1,1), (1,1), (1,1)) )
+
+		d = Gaffer.SplineDefinitionff( ((0, 0), (0,0), (0,0), (1,1), (1,1), (1,1)), Gaffer.SplineDefinitionInterpolation.CatmullRom )
+		self.assertEqual( d.points(), ((0, 0), (0,0), (0,0), (1,1), (1,1), (1,1)) )
+		self.assertEqual( d.interpolation, Gaffer.SplineDefinitionInterpolation.CatmullRom )
+		self.assertTrue( d.trimEndPoints() )
+		self.assertEqual( d.points(), ((0, 0), (0,0), (1,1), (1,1)) )
+
+		d = Gaffer.SplineDefinitionff( ((0, 0), (0,0), (0,0), (1,1), (1,1), (1,1)), Gaffer.SplineDefinitionInterpolation.BSpline )
+		self.assertEqual( d.points(), ((0, 0), (0,0), (0,0), (1,1), (1,1), (1,1)) )
+		self.assertEqual( d.interpolation, Gaffer.SplineDefinitionInterpolation.BSpline )
+		self.assertTrue( d.trimEndPoints() )
+		self.assertEqual( d.points(), ((0, 0), (1,1)) )
+
+		d = Gaffer.SplineDefinitionff( ((0, 0), (0,0), (0,0), (1,1), (1,1), (1,1)), Gaffer.SplineDefinitionInterpolation.MonotoneCubic )
+		self.assertEqual( d.points(), ((0, 0), (0,0), (0,0), (1,1), (1,1), (1,1)) )
+		self.assertEqual( d.interpolation, Gaffer.SplineDefinitionInterpolation.MonotoneCubic )
+		self.assertTrue( d.trimEndPoints() )
+		self.assertEqual( d.points(), ((0, 0), (0,0), (0,0), (1,1), (1,1), (1,1)) )
+
+		d = Gaffer.SplineDefinitionff( ((0, 0), (0,0), (1,1), (1,1)), Gaffer.SplineDefinitionInterpolation.BSpline )
+		self.assertFalse( d.trimEndPoints() ) # Not enough CVs for BSpline
+	
+		
+		d = Gaffer.SplineDefinitionff( ((0, 0), (0,0), (0,0), (1,1), (1,1), (1,1.1)), Gaffer.SplineDefinitionInterpolation.BSpline )
+		self.assertFalse( d.trimEndPoints() ) # Endpoints don't match
+		
+
 	def testConstructor( self ) :
 
-		s = IECore.Splineff(
-			IECore.CubicBasisf.catmullRom(),
+		s = Gaffer.SplineDefinitionff(
 			(
-				( 0, 0 ),
 				( 0, 0 ),
 				( 0.2, 0.3 ),
 				( 0.4, 0.9 ),
 				( 1, 1 ),
-				( 1, 1 ),
-			)
+			),
+			Gaffer.SplineDefinitionInterpolation.CatmullRom
 		)
 
 		p = Gaffer.SplineffPlug( "a", defaultValue=s )
 
 		self.assertEqual( p.getValue(), s )
 
-		s2 = IECore.Splineff(
-			IECore.CubicBasisf.linear(),
+		s2 = Gaffer.SplineDefinitionff(
 			(
 				( 1, 1 ),
 				( 1, 1 ),
@@ -71,7 +101,8 @@ class SplinePlugTest( GafferTest.TestCase ) :
 				( 0.4, 0.9 ),
 				( 0, 0 ),
 				( 0, 0 ),
-			)
+			),
+			Gaffer.SplineDefinitionInterpolation.Linear
 		)
 
 		p.setValue( s2 )
@@ -80,16 +111,14 @@ class SplinePlugTest( GafferTest.TestCase ) :
 
 	def testSerialisation( self ) :
 
-		s = IECore.Splineff(
-			IECore.CubicBasisf.catmullRom(),
+		s = Gaffer.SplineDefinitionff(
 			(
-				( 0, 0 ),
 				( 0, 0 ),
 				( 0.2, 0.3 ),
 				( 0.4, 0.9 ),
 				( 1, 1 ),
-				( 1, 1 ),
-			)
+			),
+			Gaffer.SplineDefinitionInterpolation.CatmullRom
 		)
 
 		p = Gaffer.SplineffPlug( "a", defaultValue=s, flags = Gaffer.Plug.Flags.Default | Gaffer.Plug.Flags.Dynamic )
@@ -109,14 +138,12 @@ class SplinePlugTest( GafferTest.TestCase ) :
 
 	def testSerialisationWithNonDefaultValue( self ) :
 
-		defaultSpline = IECore.Splineff(
-			IECore.CubicBasisf.catmullRom(),
+		defaultSpline = Gaffer.SplineDefinitionff(
 			(
 				( 0, 0 ),
-				( 0, 0 ),
 				( 1, 1 ),
-				( 1, 1 ),
-			)
+			),
+			Gaffer.SplineDefinitionInterpolation.CatmullRom
 		)
 
 		sn = Gaffer.ScriptNode()
@@ -125,16 +152,14 @@ class SplinePlugTest( GafferTest.TestCase ) :
 
 		self.assertEqual( sn["n"]["p"].getValue(), defaultSpline )
 
-		valueSpline = IECore.Splineff(
-			IECore.CubicBasisf.catmullRom(),
+		valueSpline = Gaffer.SplineDefinitionff(
 			(
-				( 0, 0 ),
 				( 0, 0 ),
 				( 0.2, 0.3 ),
 				( 0.4, 0.9 ),
 				( 1, 1 ),
-				( 1, 1 ),
-			)
+			),
+			Gaffer.SplineDefinitionInterpolation.CatmullRom
 		)
 
 		sn["n"]["p"].setValue( valueSpline )
@@ -149,16 +174,14 @@ class SplinePlugTest( GafferTest.TestCase ) :
 
 	def testPointAccess( self ) :
 
-		s = IECore.Splineff(
-			IECore.CubicBasisf.catmullRom(),
+		s = Gaffer.SplineDefinitionff(
 			(
-				( 0, 0 ),
 				( 0, 0 ),
 				( 0.2, 0.3 ),
 				( 0.4, 0.9 ),
 				( 1, 1 ),
-				( 1, 1 ),
-			)
+			),
+			Gaffer.SplineDefinitionInterpolation.CatmullRom
 		)
 		p = Gaffer.SplineffPlug( "a", defaultValue=s, flags=Gaffer.Plug.Flags.Dynamic )
 
@@ -176,16 +199,14 @@ class SplinePlugTest( GafferTest.TestCase ) :
 
 	def testPointDeletion( self ) :
 
-		s = IECore.Splineff(
-			IECore.CubicBasisf.catmullRom(),
+		s = Gaffer.SplineDefinitionff(
 			(
-				( 0, 0 ),
 				( 0, 0 ),
 				( 0.2, 0.3 ),
 				( 0.4, 0.9 ),
 				( 1, 1 ),
-				( 1, 1 ),
-			)
+			),
+			Gaffer.SplineDefinitionInterpolation.CatmullRom
 		)
 		p = Gaffer.SplineffPlug( "a", defaultValue=s, flags=Gaffer.Plug.Flags.Dynamic )
 
@@ -213,16 +234,14 @@ class SplinePlugTest( GafferTest.TestCase ) :
 
 	def testPointTampering( self ) :
 
-		s = IECore.Splineff(
-			IECore.CubicBasisf.catmullRom(),
+		s = Gaffer.SplineDefinitionff(
 			(
-				( 0, 0 ),
 				( 0, 0 ),
 				( 0.2, 0.3 ),
 				( 0.4, 0.9 ),
 				( 1, 1 ),
-				( 1, 1 ),
-			)
+			),
+			Gaffer.SplineDefinitionInterpolation.CatmullRom
 		)
 		p = Gaffer.SplineffPlug( "a", defaultValue=s, flags=Gaffer.Plug.Flags.Dynamic )
 
@@ -234,16 +253,14 @@ class SplinePlugTest( GafferTest.TestCase ) :
 
 	def testPlugSetSignal( self ) :
 
-		s = IECore.Splineff(
-			IECore.CubicBasisf.catmullRom(),
+		s = Gaffer.SplineDefinitionff(
 			(
-				( 0, 0 ),
 				( 0, 0 ),
 				( 0.2, 0.3 ),
 				( 0.4, 0.9 ),
 				( 1, 1 ),
-				( 1, 1 ),
-			)
+			),
+			Gaffer.SplineDefinitionInterpolation.CatmullRom
 		)
 		p = Gaffer.SplineffPlug( "a", defaultValue=s, flags=Gaffer.Plug.Flags.Dynamic )
 		n = Gaffer.Node()
@@ -271,26 +288,22 @@ class SplinePlugTest( GafferTest.TestCase ) :
 
 	def testDefaultValue( self ) :
 
-		s1 = IECore.Splineff(
-			IECore.CubicBasisf.catmullRom(),
+		s1 = Gaffer.SplineDefinitionff(
 			(
-				( 0, 0 ),
 				( 0, 0 ),
 				( 0.2, 0.3 ),
 				( 0.4, 0.9 ),
 				( 1, 1 ),
-				( 1, 1 ),
-			)
+			),
+			Gaffer.SplineDefinitionInterpolation.CatmullRom
 		)
 
-		s2 = IECore.Splineff(
-			IECore.CubicBasisf.catmullRom(),
+		s2 = Gaffer.SplineDefinitionff(
 			(
 				( 1, 1 ),
-				( 1, 1 ),
 				( 0, 0 ),
-				( 0, 0 ),
-			)
+			),
+			Gaffer.SplineDefinitionInterpolation.CatmullRom
 		)
 
 		p = Gaffer.SplineffPlug( "a", defaultValue=s1, flags=Gaffer.Plug.Flags.Dynamic )
@@ -311,16 +324,14 @@ class SplinePlugTest( GafferTest.TestCase ) :
 
 	def testPlugFlags( self ) :
 
-		s = IECore.Splineff(
-			IECore.CubicBasisf.catmullRom(),
+		s = Gaffer.SplineDefinitionff(
 			(
-				( 0, 0 ),
 				( 0, 0 ),
 				( 0.2, 0.3 ),
 				( 0.4, 0.9 ),
 				( 1, 1 ),
-				( 1, 1 ),
-			)
+			),
+			Gaffer.SplineDefinitionInterpolation.CatmullRom
 		)
 
 		p = Gaffer.SplineffPlug( "a", defaultValue=s )
@@ -329,16 +340,14 @@ class SplinePlugTest( GafferTest.TestCase ) :
 
 	def testConnection( self ) :
 
-		s = IECore.Splineff(
-			IECore.CubicBasisf.catmullRom(),
+		s = Gaffer.SplineDefinitionff(
 			(
-				( 0, 0 ),
 				( 0, 0 ),
 				( 0.2, 0.3 ),
 				( 0.4, 0.9 ),
 				( 1, 1 ),
-				( 1, 1 ),
-			)
+			),
+			Gaffer.SplineDefinitionInterpolation.CatmullRom
 		)
 
 		p1 = Gaffer.SplineffPlug( defaultValue=s )
@@ -347,22 +356,20 @@ class SplinePlugTest( GafferTest.TestCase ) :
 		p1.setInput( p2 )
 
 		self.assertTrue( p1.getInput().isSame( p2 ) )
-		self.assertTrue( p1["basis"].getInput().isSame( p2["basis"] ) )
+		self.assertTrue( p1["interpolation"].getInput().isSame( p2["interpolation"] ) )
 		for i in range( 0, 4 ) :
 			self.assertTrue( p1.pointPlug( i ).getInput().isSame( p2.pointPlug( i ) ) )
 
 	def testCreateCounterpart( self ) :
 
-		s = IECore.Splineff(
-			IECore.CubicBasisf.catmullRom(),
+		s = Gaffer.SplineDefinitionff(
 			(
-				( 0, 0 ),
 				( 0, 0 ),
 				( 0.2, 0.3 ),
 				( 0.4, 0.9 ),
 				( 1, 1 ),
-				( 1, 1 ),
-			)
+			),
+			Gaffer.SplineDefinitionInterpolation.CatmullRom
 		)
 
 		p1 = Gaffer.SplineffPlug( defaultValue=s )
@@ -376,16 +383,14 @@ class SplinePlugTest( GafferTest.TestCase ) :
 
 	def testPromoteToBox( self ) :
 
-		spline = IECore.Splineff(
-			IECore.CubicBasisf.catmullRom(),
+		spline = Gaffer.SplineDefinitionff(
 			(
-				( 0, 0 ),
 				( 0, 0 ),
 				( 0.2, 0.3 ),
 				( 0.4, 0.9 ),
 				( 1, 1 ),
-				( 1, 1 ),
-			)
+			),
+			Gaffer.SplineDefinitionInterpolation.CatmullRom
 		)
 
 		s = Gaffer.ScriptNode()
@@ -397,33 +402,29 @@ class SplinePlugTest( GafferTest.TestCase ) :
 
 		self.assertEqual( p.defaultValue(), b["n"]["p"].defaultValue() )
 		self.assertEqual( p.numPoints(), b["n"]["p"].numPoints() )
-		self.assertEqual( p.getValue().basis, b["n"]["p"].getValue().basis )
-		self.assertEqual( len( p.getValue() ), len( b["n"]["p"].getValue() ) )
+		self.assertEqual( p.getValue().interpolation, b["n"]["p"].getValue().interpolation )
+		self.assertEqual( len( p.getValue().points() ), len( b["n"]["p"].getValue().points() ) )
 		self.assertEqual( p.getValue(), b["n"]["p"].getValue() )
 		self.assertTrue( b["n"]["p"].getInput().isSame( p ) )
 
 	def testSerialisationWithMorePointsThanDefault( self ) :
 
-		s1 = IECore.Splineff(
-			IECore.CubicBasisf.catmullRom(),
+		s1 = Gaffer.SplineDefinitionff(
 			(
 				( 0, 0 ),
-				( 0, 0 ),
 				( 1, 1 ),
-				( 1, 1 ),
-			)
+			),
+			Gaffer.SplineDefinitionInterpolation.CatmullRom
 		)
 
-		s2 = IECore.Splineff(
-			IECore.CubicBasisf.catmullRom(),
+		s2 = Gaffer.SplineDefinitionff(
 			(
-				( 0, 0 ),
 				( 0, 0 ),
 				( 0.2, 0.3 ),
 				( 0.4, 0.9 ),
 				( 1, 1 ),
-				( 1, 1 ),
-			)
+			),
+			Gaffer.SplineDefinitionInterpolation.CatmullRom
 		)
 
 		s = Gaffer.ScriptNode()
@@ -441,26 +442,22 @@ class SplinePlugTest( GafferTest.TestCase ) :
 
 	def testSerialisationWithLessPointsThanDefault( self ) :
 
-		s1 = IECore.Splineff(
-			IECore.CubicBasisf.catmullRom(),
+		s1 = Gaffer.SplineDefinitionff(
 			(
-				( 0, 0 ),
 				( 0, 0 ),
 				( 0.2, 0.3 ),
 				( 0.4, 0.9 ),
 				( 1, 1 ),
-				( 1, 1 ),
-			)
+			),
+			Gaffer.SplineDefinitionInterpolation.CatmullRom
 		)
 
-		s2 = IECore.Splineff(
-			IECore.CubicBasisf.catmullRom(),
+		s2 = Gaffer.SplineDefinitionff(
 			(
 				( 0, 0 ),
-				( 0, 0 ),
 				( 1, 1 ),
-				( 1, 1 ),
-			)
+			),
+			Gaffer.SplineDefinitionInterpolation.CatmullRom
 		)
 
 		s = Gaffer.ScriptNode()
@@ -476,37 +473,6 @@ class SplinePlugTest( GafferTest.TestCase ) :
 
 		self.assertEqual( s["n"]["p"].getValue(), s2 )
 
-	def testEndPointMultiplicity( self ) :
-
-		s1 = IECore.Splineff(
-			IECore.CubicBasisf.catmullRom(),
-			(
-				( 0, 0 ),
-				( 0, 0 ),
-				( 1, 1 ),
-				( 1, 1 ),
-			)
-		)
-
-		s2 = IECore.Splineff(
-			IECore.CubicBasisf.linear(),
-			(
-				( 0, 0 ),
-				( 1, 1 ),
-			)
-		)
-
-		p = Gaffer.SplineffPlug( defaultValue = s1 )
-		self.assertEqual( p.getValue(), s1 )
-		self.assertEqual( p["endPointMultiplicity"].defaultValue(), 2 )
-		self.assertEqual( p["endPointMultiplicity"].getValue(), 2 )
-		self.assertEqual( p.numPoints(), 2 )
-
-		p.setValue( s2 )
-		self.assertEqual( p.getValue(), s2 )
-		self.assertEqual( p["endPointMultiplicity"].getValue(), 1 )
-		self.assertEqual( p.numPoints(), 2 )
-
 	def testDefaultConstructor( self ) :
 
 		p = Gaffer.SplineffPlug()
@@ -514,28 +480,24 @@ class SplinePlugTest( GafferTest.TestCase ) :
 
 	def testTruncatedDefaultValue( self ) :
 
-		defaultValue = IECore.Splineff(
-			IECore.CubicBasisf.catmullRom(),
+		defaultValue = Gaffer.SplineDefinitionff(
 			(
 				( 0, 0 ),
-				( 0, 0 ),
 				( 0.5, 0.5 ),
 				( 0.5, 0.5 ),
 				( 1, 1 ),
-				( 1, 1 ),
-			)
+			),
+			Gaffer.SplineDefinitionInterpolation.CatmullRom
 		)
 
 		# This tricky value could fool a naive implementation
 		# of isSetToDefault().
-		truncatedDefaultValue = IECore.Splineff(
-			IECore.CubicBasisf.catmullRom(),
+		truncatedDefaultValue = Gaffer.SplineDefinitionff(
 			(
 				( 0, 0 ),
-				( 0, 0 ),
 				( 0.5, 0.5 ),
-				( 0.5, 0.5 ),
-			)
+			),
+			Gaffer.SplineDefinitionInterpolation.CatmullRom
 		)
 
 		p = Gaffer.SplineffPlug( "a", defaultValue=defaultValue, flags=Gaffer.Plug.Flags.Dynamic )
@@ -547,16 +509,14 @@ class SplinePlugTest( GafferTest.TestCase ) :
 
 	def testConnectionSerialisation( self ) :
 
-		s = IECore.Splineff(
-			IECore.CubicBasisf.catmullRom(),
+		s = Gaffer.SplineDefinitionff(
 			(
-				( 0, 0 ),
 				( 0, 0 ),
 				( 0.2, 0.3 ),
 				( 0.4, 0.9 ),
 				( 1, 1 ),
-				( 1, 1 ),
-			)
+			),
+			Gaffer.SplineDefinitionInterpolation.CatmullRom
 		)
 
 		script = Gaffer.ScriptNode()
@@ -569,7 +529,7 @@ class SplinePlugTest( GafferTest.TestCase ) :
 		def assertConnection( script ) :
 
 			self.assertTrue( script["n"]["user"]["p2"].getInput().isSame( script["n"]["user"]["p1"] ) )
-			self.assertTrue( script["n"]["user"]["p2"]["basis"].getInput().isSame( script["n"]["user"]["p1"]["basis"] ) )
+			self.assertTrue( script["n"]["user"]["p2"]["interpolation"].getInput().isSame( script["n"]["user"]["p1"]["interpolation"] ) )
 			for i in range( 0, 4 ) :
 				self.assertTrue( script["n"]["user"]["p2"].pointPlug( i ).getInput().isSame( script["n"]["user"]["p1"].pointPlug( i ) ) )
 
@@ -582,16 +542,14 @@ class SplinePlugTest( GafferTest.TestCase ) :
 
 	def testPartialConnectionSerialisation( self ) :
 
-		s = IECore.Splineff(
-			IECore.CubicBasisf.catmullRom(),
+		s = Gaffer.SplineDefinitionff(
 			(
-				( 0, 0 ),
 				( 0, 0 ),
 				( 0.2, 0.3 ),
 				( 0.4, 0.9 ),
 				( 1, 1 ),
-				( 1, 1 ),
-			)
+			),
+			Gaffer.SplineDefinitionInterpolation.CatmullRom
 		)
 
 		script = Gaffer.ScriptNode()
@@ -606,7 +564,7 @@ class SplinePlugTest( GafferTest.TestCase ) :
 		def assertConnection( script ) :
 
 			self.assertTrue( script["n"]["user"]["s"].getInput() is None )
-			self.assertTrue( script["n"]["user"]["s"]["basis"].getInput() is None )
+			self.assertTrue( script["n"]["user"]["s"]["interpolation"].getInput() is None )
 			for i in range( 0, 4 ) :
 
 				if i == 0 :
