@@ -66,7 +66,7 @@ class CopyImageMetadataTest( GafferImageTest.ImageTestCase ) :
 
 		metadata = m["out"]["metadata"].getValue()
 		self.assertEqual( m["out"]["metadata"].getValue(), IECore.CompoundData() )
-		self.assertEqual( m["out"].image(), d["out"].image() )
+		self.assertImagesEqual( m["out"], d["out"] )
 
 		# check that we can copy specific metadata
 
@@ -105,7 +105,7 @@ class CopyImageMetadataTest( GafferImageTest.ImageTestCase ) :
 		metadata = m["out"]["metadata"].getValue()
 		self.assertEqual( metadata["compression"], IECore.StringData( "zips" ) )
 		self.assertEqual( m["out"]["metadata"].getValue(), inMetadata )
-		self.assertEqual( m["out"].image(), r["out"].image() )
+		self.assertImagesEqual( m["out"], r["out"] )
 
 		# check that we can overwrite certain metadata
 

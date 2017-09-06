@@ -54,8 +54,8 @@ class BlurTest( GafferImageTest.ImageTestCase ) :
 		b["in"].setInput( c["out"] )
 		b["radius"].setValue( IECore.V2f( 0 ) )
 
-		self.assertEqual( c["out"].imageHash(), b["out"].imageHash() )
-		self.assertEqual( c["out"].image(), b["out"].image() )
+		self.assertImageHashesEqual( c["out"], b["out"] )
+		self.assertImagesEqual( c["out"], b["out"] )
 
 	def testExpandDataWindow( self ) :
 
@@ -134,7 +134,7 @@ class BlurTest( GafferImageTest.ImageTestCase ) :
 		constant["format"].setValue( GafferImage.Format( 5, 5, 1.000 ) )
 		constant["color"].setValue( IECore.Color4f( 1, 1, 1, 1 ) )
 
-		
+
 
 		cropDot = GafferImage.Crop()
 		cropDot["area"].setValue( IECore.Box2i( IECore.V2i( 2, 2 ), IECore.V2i( 3, 3 ) ) )

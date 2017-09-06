@@ -133,9 +133,9 @@ class About :
 			},
 
 			{
-				"name" : "libjpeg",
-				"url" : "http://www.ijg.org/",
-				"license" : "$GAFFER_ROOT/doc/licenses/libjpeg",
+				"name" : "libjpeg-turbo",
+				"url" : "https://libjpeg-turbo.org/",
+				"license" : "$GAFFER_ROOT/doc/licenses/libjpeg-turbo",
 				"credit" : "This software is based in part on the work of the Independent JPEG Group.",
 			},
 

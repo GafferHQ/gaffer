@@ -39,6 +39,7 @@ import os
 import unittest
 
 import IECore
+import IECoreImage # To register ImageReader
 
 import Gaffer
 import GafferTest

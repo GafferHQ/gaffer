@@ -185,7 +185,7 @@ class ResizeTest( GafferImageTest.ImageTestCase ) :
 		r["format"].setValue( GafferImage.Format( 1920, 1080 ) )
 		r["fitMode"].setValue( r.FitMode.Vertical )
 
-		r["out"].image()
+		GafferImageTest.processTiles( r["out"] )
 
 	def testDownsizingSamplerBounds( self ) :
 
@@ -202,7 +202,7 @@ class ResizeTest( GafferImageTest.ImageTestCase ) :
 		for width in range( 1, 50 ) :
 			for height in range( 1, 53 ) :
 				r["format"].setValue( GafferImage.Format( width, height ) )
-				r["out"].image()
+				GafferImageTest.processTiles( r["out"] )
 
 	def testFormatDependencies( self ) :
 

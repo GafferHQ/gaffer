@@ -52,6 +52,8 @@ OIIO_NAMESPACE_USING
 
 #include "IECore/MessageHandler.h"
 
+#include "IECoreImage/OpenImageIOAlgo.h"
+
 #include "Gaffer/Context.h"
 #include "Gaffer/ScriptNode.h"
 #include "Gaffer/StringPlug.h"
@@ -62,7 +64,6 @@ OIIO_NAMESPACE_USING
 #include "GafferImage/BufferAlgo.h"
 #include "GafferImage/ImageWriter.h"
 #include "GafferImage/ImagePlug.h"
-#include "GafferImage/OpenImageIOAlgo.h"
 #include "GafferImage/ColorSpace.h"
 
 using namespace std;
@@ -506,7 +507,7 @@ void metadataToImageSpecAttributes( const CompoundData *metadata, ImageSpec &spe
 	const CompoundData::ValueType &members = metadata->readable();
 	for( CompoundData::ValueType::const_iterator it = members.begin(); it != members.end(); ++it )
 	{
-		const OpenImageIOAlgo::DataView dataView( it->second.get() );
+		const IECoreImage::OpenImageIOAlgo::DataView dataView( it->second.get() );
 		if( dataView.data )
 		{
 			spec.attribute( it->first.c_str(), dataView.type, dataView.data );

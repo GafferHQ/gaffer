@@ -59,7 +59,7 @@ class ImageMetadataTest( GafferImageTest.ImageTestCase ) :
 		# check that the image is passed through
 
 		self.assertEqual( m["out"]["metadata"].getValue(), inMetadata )
-		self.assertEqual( m["out"].image(), i["out"].image() )
+		self.assertImagesEqual( m["out"], i["out"] )
 
 		# check that we can make metadata
 
@@ -84,12 +84,13 @@ class ImageMetadataTest( GafferImageTest.ImageTestCase ) :
 		del metadata["comment"]
 		self.assertEqual( metadata, inMetadata )
 
-		# check disabling the node entirely metadata
+		# check disabling the node entirely
 
 		m["enabled"].setValue( False )
 		self.assertEqual( m["out"]["metadata"].hash(), i["out"]["metadata"].hash() )
 		self.assertEqual( m["out"]["metadata"].getValue(), inMetadata )
-		self.assertEqual( m["out"].image(), i["out"].image() )
+		self.assertImageHashesEqual( m["out"], i["out"] )
+		self.assertImagesEqual( m["out"], i["out"] )
 
 	def testSubstitution( self ) :
 

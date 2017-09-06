@@ -371,7 +371,7 @@ class MergeTest( GafferImageTest.ImageTestCase ) :
 		merge["in"][0].setInput( bResized["out"] )
 		merge["in"][1].setInput( a["out"] )
 
-		merge["out"].image()
+		GafferImageTest.processTiles( merge["out"] )
 
 	def testModes( self ) :
 

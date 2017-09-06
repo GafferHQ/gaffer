@@ -109,7 +109,6 @@ class TextTest( GafferImageTest.ImageTestCase ) :
 
 		reader = GafferImage.ImageReader()
 		reader["fileName"].setValue( os.path.dirname( __file__ ) + "/images/text.exr" )
-		expectedImage = reader['out'].image()
 
 		self.assertImagesEqual( text["out"], reader["out"], ignoreMetadata = True, maxDifference = 0.001 )
 

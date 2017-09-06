@@ -39,6 +39,7 @@ import os
 import unittest
 
 import IECore
+import IECoreImage
 
 import Gaffer
 import GafferCortex
@@ -84,9 +85,6 @@ class ObjectWriterTest( GafferTest.TestCase ) :
 			node["task"].execute()
 		self.failUnless( os.path.exists( self.__exrFileName ) )
 
-		checker2 = IECore.Reader.create( self.__exrFileName ).read()
-		self.assertEqual( checker, checker2 )
-
 	def testChangingFileType( self ) :
 
 		checker = os.path.expandvars( "$GAFFER_ROOT/python/GafferCortexTest/images/checker.exr" )
@@ -102,7 +100,8 @@ class ObjectWriterTest( GafferTest.TestCase ) :
 			node["task"].execute()
 		self.failUnless( os.path.exists( self.__tifFileName ) )
 
-		self.failUnless( IECore.TIFFImageReader.canRead( self.__tifFileName ) )
+		image = IECoreImage.ImageReader( self.__tifFileName ).read()
+		self.failUnless( "tiff:Compression" in image.blindData() )
 
 	def testExtraneousPlugsAfterSerialisation( self ) :
 

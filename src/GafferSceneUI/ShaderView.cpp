@@ -40,7 +40,7 @@
 #include "boost/asio.hpp"
 #include "boost/lexical_cast.hpp"
 
-#include "IECore/DisplayDriverServer.h"
+#include "IECoreImage/DisplayDriverServer.h"
 
 #include "Gaffer/Context.h"
 #include "Gaffer/Reference.h"
@@ -93,9 +93,9 @@ SceneRegistrationChangedSignal &sceneRegistrationChangedSignal()
 	return s;
 }
 
-IECore::DisplayDriverServer *displayDriverServer()
+IECoreImage::DisplayDriverServer *displayDriverServer()
 {
-	static IECore::DisplayDriverServerPtr g_server = new IECore::DisplayDriverServer();
+	static IECoreImage::DisplayDriverServerPtr g_server = new IECoreImage::DisplayDriverServer();
 	return g_server.get();
 }
 
@@ -454,7 +454,7 @@ void ShaderView::registeredScenes( const std::string &shaderPrefix, std::vector<
 	}
 }
 
-void ShaderView::driverCreated( IECore::DisplayDriver *driver, const IECore::CompoundData *parameters )
+void ShaderView::driverCreated( IECoreImage::DisplayDriver *driver, const IECore::CompoundData *parameters )
 {
 	if( const IECore::StringData *idData = parameters->member<IECore::StringData>( "shaderView:id" ) )
 	{

@@ -47,6 +47,8 @@ OIIO_NAMESPACE_USING
 #include "IECore/FileSequence.h"
 #include "IECore/FileSequenceFunctions.h"
 
+#include "IECoreImage/OpenImageIOAlgo.h"
+
 #include "Gaffer/Context.h"
 #include "Gaffer/StringPlug.h"
 
@@ -93,6 +95,9 @@ ImageCache *imageCache()
 
 			// Set an initial cache size of 500Mb
 			cache->attribute( "max_memory_MB", 500.0f );
+			// Make sure all errors are reported, otherwise we end up
+			// throwing exceptions with no descriptive error message.
+			cache->attribute( "max_errors_per_file", std::numeric_limits<int>::max() );
 		}
 	}
 	return cache;
@@ -163,185 +168,6 @@ const ImageSpec *imageSpec( std::string &fileName, OpenImageIOReader::MissingFra
 	fileName = resolvedFileName;
 
 	return spec;
-}
-
-} // namespace
-
-//////////////////////////////////////////////////////////////////////////
-// Utility for converting OIIO::TypeDesc types to IECore::Data types.
-//////////////////////////////////////////////////////////////////////////
-
-namespace
-{
-
-void oiioParameterListToMetadata( const ImageIOParameterList &paramList, CompoundData *metadata )
-{
-	CompoundData::ValueType &members = metadata->writable();
-	for ( ImageIOParameterList::const_iterator it = paramList.begin(); it != paramList.end(); ++it )
-	{
-		DataPtr value = nullptr;
-
-		const TypeDesc &type = it->type();
-		switch ( type.basetype )
-		{
-			case TypeDesc::CHAR :
-			{
-				if ( type.aggregate == TypeDesc::SCALAR )
-				{
-					value = new CharData( *static_cast<const char *>( it->data() ) );
-				}
-				break;
-			}
-			case TypeDesc::UCHAR :
-			{
-				if ( type.aggregate == TypeDesc::SCALAR )
-				{
-					value = new UCharData( *static_cast<const unsigned char *>( it->data() ) );
-				}
-				break;
-			}
-			case TypeDesc::STRING :
-			{
-				if ( type.aggregate == TypeDesc::SCALAR )
-				{
-					value = new StringData( static_cast<const ustring *>( it->data() )->c_str() );
-				}
-				break;
-			}
-			case TypeDesc::USHORT :
-			{
-				if ( type.aggregate == TypeDesc::SCALAR )
-				{
-					value = new UShortData( *static_cast<const unsigned short *>( it->data() ) );
-				}
-				break;
-			}
-			case TypeDesc::SHORT :
-			{
-				if ( type.aggregate == TypeDesc::SCALAR )
-				{
-					value = new ShortData( *static_cast<const short *>( it->data() ) );
-				}
-				break;
-			}
-			case TypeDesc::UINT :
-			{
-				if ( type.aggregate == TypeDesc::SCALAR )
-				{
-					value = new UIntData( *static_cast<const unsigned *>( it->data() ) );
-				}
-				break;
-			}
-			case TypeDesc::INT :
-			{
-				const int *data = static_cast<const int *>( it->data() );
-				switch ( type.aggregate )
-				{
-					case TypeDesc::SCALAR :
-					{
-						value = new IntData( *data );
-						break;
-					}
-					case TypeDesc::VEC2 :
-					{
-						value = new V2iData( Imath::V2i( data[0], data[1] ) );
-						break;
-					}
-					case TypeDesc::VEC3 :
-					{
-						value = new V3iData( Imath::V3i( data[0], data[1], data[2] ) );
-						break;
-					}
-					default :
-					{
-						break;
-					}
-				}
-				break;
-			}
-			case TypeDesc::HALF :
-			{
-				if ( type.aggregate == TypeDesc::SCALAR )
-				{
-					value = new HalfData( *static_cast<const half *>( it->data() ) );
-				}
-				break;
-			}
-			case TypeDesc::FLOAT :
-			{
-				const float *data = static_cast<const float *>( it->data() );
-				switch ( type.aggregate )
-				{
-					case TypeDesc::SCALAR :
-					{
-						value = new FloatData( *data );
-						break;
-					}
-					case TypeDesc::VEC2 :
-					{
-						value = new V2fData( Imath::V2f( data[0], data[1] ) );
-						break;
-					}
-					case TypeDesc::VEC3 :
-					{
-						value = new V3fData( Imath::V3f( data[0], data[1], data[2] ) );
-						break;
-					}
-					case TypeDesc::MATRIX44 :
-					{
-						value = new M44fData( Imath::M44f( data[0], data[1], data[2], data[3], data[4], data[5], data[6], data[7], data[8], data[9], data[10], data[11], data[12], data[13], data[14], data[15] ) );
-						break;
-					}
-					default :
-					{
-						break;
-					}
-				}
-				break;
-			}
-			case TypeDesc::DOUBLE :
-			{
-				const double *data = static_cast<const double *>( it->data() );
-				switch ( type.aggregate )
-				{
-					case TypeDesc::SCALAR :
-					{
-						value = new DoubleData( *data );
-						break;
-					}
-					case TypeDesc::VEC2 :
-					{
-						value = new V2dData( Imath::V2d( data[0], data[1] ) );
-						break;
-					}
-					case TypeDesc::VEC3 :
-					{
-						value = new V3dData( Imath::V3d( data[0], data[1], data[2] ) );
-						break;
-					}
-					case TypeDesc::MATRIX44 :
-					{
-						value = new M44dData( Imath::M44d( data[0], data[1], data[2], data[3], data[4], data[5], data[6], data[7], data[8], data[9], data[10], data[11], data[12], data[13], data[14], data[15] ) );
-						break;
-					}
-					default :
-					{
-						break;
-					}
-				}
-				break;
-			}
-			default :
-			{
-				break;
-			}
-		}
-
-		if ( value )
-		{
-			members[ it->name().string() ] = value;
-		}
-	}
 }
 
 } // namespace
@@ -619,7 +445,13 @@ IECore::ConstCompoundDataPtr OpenImageIOReader::computeMetadata( const Gaffer::C
 
 	// Add on any custom metadata provided by the file format
 
-	oiioParameterListToMetadata( spec->extra_attribs, result.get() );
+	for( const auto &attrib : spec->extra_attribs )
+	{
+		if( DataPtr data = IECoreImage::OpenImageIOAlgo::data( attrib ) )
+		{
+			result->writable()[attrib.name().string()] = data;
+		}
+	}
 
 	return result;
 }

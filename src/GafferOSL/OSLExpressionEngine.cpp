@@ -43,14 +43,14 @@
 #include "OSL/oslcomp.h"
 #include "OSL/oslexec.h"
 
+#include "IECoreImage/OpenImageIOAlgo.h"
+
 #include "Gaffer/Expression.h"
 #include "Gaffer/NumericPlug.h"
 #include "Gaffer/StringAlgo.h"
 #include "Gaffer/Context.h"
 #include "Gaffer/CompoundNumericPlug.h"
 #include "Gaffer/StringPlug.h"
-
-#include "GafferImage/OpenImageIOAlgo.h"
 
 #include "GafferOSL/Private/CapturingErrorHandler.h"
 
@@ -131,7 +131,7 @@ class RendererServices : public OSL::RendererServices
 				return false;
 			}
 
-			GafferImage::OpenImageIOAlgo::DataView dataView( data, /* createUStrings = */ true );
+			IECoreImage::OpenImageIOAlgo::DataView dataView( data, /* createUStrings = */ true );
 			if( !dataView.data )
 			{
 				return false;

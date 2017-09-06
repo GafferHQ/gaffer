@@ -51,9 +51,9 @@ using namespace GafferUI;
 namespace
 {
 
-IECore::ImagePrimitivePtr image( Pointer *pointer )
+IECoreImage::ImagePrimitivePtr image( Pointer *pointer )
 {
-	return const_cast<IECore::ImagePrimitive *>( pointer->image() );
+	return const_cast<IECoreImage::ImagePrimitive *>( pointer->image() );
 }
 
 PointerPtr getCurrent()
@@ -66,7 +66,7 @@ PointerPtr getCurrent()
 void GafferUIModule::bindPointer()
 {
 	scope s = IECorePython::RefCountedClass<Pointer, IECore::RefCounted>( "Pointer" )
-		.def( init<const IECore::ImagePrimitive *, const Imath::V2i &>( ( arg( "image" ), arg( "hotspot" ) = Imath::V2i( -1 ) ) ) )
+		.def( init<const IECoreImage::ImagePrimitive *, const Imath::V2i &>( ( arg( "image" ), arg( "hotspot" ) = Imath::V2i( -1 ) ) ) )
 		.def( init<const std::string &, const Imath::V2i &>( ( arg( "fileName" ), arg( "hotspot" ) = Imath::V2i( -1 ) ) ) )
 		.def( "image", &image )
 		.def( "hotspot", &Pointer::hotspot, return_value_policy<copy_const_reference>() )

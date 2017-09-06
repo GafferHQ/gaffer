@@ -86,7 +86,8 @@ class DisplayTransformTest( GafferImageTest.ImageTestCase ) :
 		o = GafferImage.DisplayTransform()
 		o["in"].setInput( n["out"] )
 
-		self.assertEqual( n["out"].image(), o["out"].image() )
+		self.assertImageHashesEqual( n["out"], o["out"] )
+		self.assertImagesEqual( n["out"], o["out"] )
 
 		o["inputColorSpace"].setValue( "linear" )
 		o["display"].setValue( "default" )
@@ -96,7 +97,8 @@ class DisplayTransformTest( GafferImageTest.ImageTestCase ) :
 
 		o["enabled"].setValue( False )
 
-		self.assertEqual( n["out"].image(), o["out"].image() )
+		self.assertImageHashesEqual( n["out"], o["out"] )
+		self.assertImagesEqual( n["out"], o["out"] )
 		self.assertEqual( n["out"]['format'].hash(), o["out"]['format'].hash() )
 		self.assertEqual( n["out"]['dataWindow'].hash(), o["out"]['dataWindow'].hash() )
 		self.assertEqual( n["out"]["metadata"].getValue(), o["out"]["metadata"].getValue() )
@@ -105,7 +107,8 @@ class DisplayTransformTest( GafferImageTest.ImageTestCase ) :
 		o["enabled"].setValue( True )
 
 		o["inputColorSpace"].setValue( "" )
-		self.assertEqual( n["out"].image(), o["out"].image() )
+		self.assertImageHashesEqual( n["out"], o["out"] )
+		self.assertImagesEqual( n["out"], o["out"] )
 		self.assertEqual( n["out"]['format'].hash(), o["out"]['format'].hash() )
 		self.assertEqual( n["out"]['dataWindow'].hash(), o["out"]['dataWindow'].hash() )
 		self.assertEqual( n["out"]["metadata"].getValue(), o["out"]["metadata"].getValue() )

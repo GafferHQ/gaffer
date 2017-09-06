@@ -44,9 +44,10 @@
 #include "boost/lexical_cast.hpp"
 #include "boost/multi_array.hpp"
 
-#include "IECore/DisplayDriver.h"
 #include "IECore/MessageHandler.h"
 #include "IECore/BoxOps.h"
+
+#include "IECoreImage/DisplayDriver.h"
 
 #include "Gaffer/Context.h"
 #include "Gaffer/DirtyPropagationScope.h"
@@ -67,7 +68,7 @@ using namespace GafferImage;
 namespace GafferImage
 {
 
-class GafferDisplayDriver : public IECore::DisplayDriver
+class GafferDisplayDriver : public IECoreImage::DisplayDriver
 {
 
 	public :
@@ -294,7 +295,7 @@ class GafferDisplayDriver : public IECore::DisplayDriver
 
 };
 
-const DisplayDriver::DisplayDriverDescription<GafferDisplayDriver> GafferDisplayDriver::g_description;
+const IECoreImage::DisplayDriver::DisplayDriverDescription<GafferDisplayDriver> GafferDisplayDriver::g_description;
 
 } // namespace GafferImage
 
@@ -364,7 +365,7 @@ Node::UnaryPlugSignal &Display::imageReceivedSignal()
 	return s;
 }
 
-void Display::setDriver( IECore::DisplayDriverPtr driver, bool copy )
+void Display::setDriver( IECoreImage::DisplayDriverPtr driver, bool copy )
 {
 	GafferDisplayDriver *gafferDisplayDriver = runTimeCast<GafferDisplayDriver>( driver.get() );
 	if( !gafferDisplayDriver )
@@ -375,12 +376,12 @@ void Display::setDriver( IECore::DisplayDriverPtr driver, bool copy )
 	setupDriver( copy ? new GafferDisplayDriver( *gafferDisplayDriver ) : gafferDisplayDriver );
 }
 
-IECore::DisplayDriver *Display::getDriver()
+IECoreImage::DisplayDriver *Display::getDriver()
 {
 	return m_driver.get();
 }
 
-const IECore::DisplayDriver *Display::getDriver() const
+const IECoreImage::DisplayDriver *Display::getDriver() const
 {
 	return m_driver.get();
 }

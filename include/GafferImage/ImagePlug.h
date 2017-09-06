@@ -38,7 +38,7 @@
 #ifndef GAFFER_IMAGEPLUG_H
 #define GAFFER_IMAGEPLUG_H
 
-#include "IECore/ImagePrimitive.h"
+#include "IECoreImage/ImagePrimitive.h"
 
 #include "Gaffer/TypedObjectPlug.h"
 #include "Gaffer/TypedPlug.h"
@@ -132,7 +132,7 @@ class ImagePlug : public Gaffer::ValuePlug
 		/// Y axis pointing downwards rather than Gaffer's internal representation where
 		/// the origin is in the bottom left of the display window with the Y axis
 		/// ascending towards the top of the display window.
-		IECore::ImagePrimitivePtr image() const;
+		IECoreImage::ImagePrimitivePtr image() const;
 		IECore::MurmurHash imageHash() const;
 		//@}
 

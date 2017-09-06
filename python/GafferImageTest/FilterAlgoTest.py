@@ -38,6 +38,7 @@ import os
 import unittest
 
 import IECore
+import IECoreImage
 
 import Gaffer
 import GafferImage
@@ -49,7 +50,7 @@ class FilterAlgoTest( GafferImageTest.ImageTestCase ) :
 	derivativesReferenceParallelFileName = os.path.expandvars( "$GAFFER_ROOT/python/GafferImageTest/images/filterDerivativesTest.parallel.exr" )
 	derivativesReferenceBoxFileName = os.path.expandvars( "$GAFFER_ROOT/python/GafferImageTest/images/filterDerivativesTest.box.exr" )
 
-	# Artificial test of several filters passing in different derivatives, including a bunch of 15 degree rotations 
+	# Artificial test of several filters passing in different derivatives, including a bunch of 15 degree rotations
 	def testFilterDerivatives( self ):
 		# Size of one grid cell
 		subSize = 35
@@ -68,7 +69,7 @@ class FilterAlgoTest( GafferImageTest.ImageTestCase ) :
 		sampleRegion.max += IECore.V2i( borderForFilterWidth )
 
 		s = GafferImage.Sampler( redDotCentered["out"], "R", sampleRegion, GafferImage.Sampler.BoundingMode.Black )
-	
+
 		filters = GafferImage.FilterAlgo.filterNames()
 		dirs = [
 			(IECore.V2f(1,0), IECore.V2f(0,1)),
@@ -83,32 +84,32 @@ class FilterAlgoTest( GafferImageTest.ImageTestCase ) :
 
 		size = subSize * IECore.V2i( len( dirs ), len( filters ) )
 		w = IECore.Box2i( IECore.V2i( 0 ), size - IECore.V2i( 1 ) )
-		parallelogramImage = IECore.ImagePrimitive( w, w )
-		boxImage = IECore.ImagePrimitive( w, w )
+		parallelogramImage = IECoreImage.ImagePrimitive( w, w )
+		boxImage = IECoreImage.ImagePrimitive( w, w )
 
 		parallelogramR = IECore.FloatVectorData( size[0] * size[1] )
 		boxR = IECore.FloatVectorData( size[0] * size[1] )
-		
+
 		for x_sub, d in enumerate( dirs ):
 			for y_sub, f in enumerate( filters ):
 				for y in range( subSize ):
 					for x in range( subSize ):
 						p = IECore.V2f( x + 0.5, y + 0.5 )
 						inputDerivatives = GafferImage.FilterAlgo.derivativesToAxisAligned( p, d[0], d[1] )
-					
-							
+
+
 						boxR[ ( y_sub * subSize + y ) * size[0] + x_sub * subSize + x ] = GafferImage.FilterAlgo.sampleBox(
 							s, p, inputDerivatives[0], inputDerivatives[1], f )
 						parallelogramR[ ( y_sub * subSize + y ) * size[0] + x_sub * subSize + x ] = GafferImage.FilterAlgo.sampleParallelogram(
 							s, p, d[0], d[1], f )
 
-		parallelogramImage["R"] = IECore.PrimitiveVariable( IECore.PrimitiveVariable.Interpolation.Vertex, parallelogramR )
-		boxImage["R"] = IECore.PrimitiveVariable( IECore.PrimitiveVariable.Interpolation.Vertex, boxR )
+		parallelogramImage["R"] = parallelogramR
+		boxImage["R"] = boxR
 
 		# Enable to write out images for visual comparison
 		if False:
-			IECore.Writer.create( parallelogramImage, "/tmp/filterDerivativesTestResult.parallelogram.exr" ).write()	
-			IECore.Writer.create( boxImage, "/tmp/filterDerivativesTestResult.box.exr" ).write()	
+			IECore.Writer.create( parallelogramImage, "/tmp/filterDerivativesTestResult.parallelogram.exr" ).write()
+			IECore.Writer.create( boxImage, "/tmp/filterDerivativesTestResult.box.exr" ).write()
 
 		imageNode = GafferImage.ObjectToImage()
 		imageNode["object"].setValue( parallelogramImage )
@@ -133,7 +134,7 @@ class FilterAlgoTest( GafferImageTest.ImageTestCase ) :
 
 			inSize = reader["out"]["format"].getValue().getDisplayWindow().size()
 			inSize = IECore.V2f( inSize.x, inSize.y )
-			
+
 			deleteChannels = GafferImage.DeleteChannels()
 			deleteChannels["mode"].setValue( 1 )
 			deleteChannels["channels"].setValue( IECore.StringVectorData( [ 'R' ] ) )
@@ -162,12 +163,12 @@ class FilterAlgoTest( GafferImageTest.ImageTestCase ) :
 			s = GafferImage.Sampler( reader["out"], "R", sampleRegion, GafferImage.Sampler.BoundingMode.Clamp )
 
 			w = IECore.Box2i( IECore.V2i( 0 ), size - IECore.V2i( 1 ) )
-			boxImage = IECore.ImagePrimitive( w, w )
-			parallelImage = IECore.ImagePrimitive( w, w )
+			boxImage = IECoreImage.ImagePrimitive( w, w )
+			parallelImage = IECoreImage.ImagePrimitive( w, w )
 
 			boxR = IECore.FloatVectorData( size.x * size.y )
 			parallelR = IECore.FloatVectorData( size.x * size.y )
-		
+
 			for y in range( size.y ):
 				for x in range( size.x ):
 						boxR[ ( size.y - 1 - y ) * size.x + x ] = GafferImage.FilterAlgo.sampleBox(
@@ -183,8 +184,8 @@ class FilterAlgoTest( GafferImageTest.ImageTestCase ) :
 							IECore.V2f( 0, 1.0 / scale[1]),
 							filter )
 
-			boxImage["R"] = IECore.PrimitiveVariable( IECore.PrimitiveVariable.Interpolation.Vertex, boxR )
-			parallelImage["R"] = IECore.PrimitiveVariable( IECore.PrimitiveVariable.Interpolation.Vertex, parallelR )
+			boxImage["R"] = boxR
+			parallelImage["R"] = parallelR
 
 			# Enable to write out images for visual comparison
 			if False:
@@ -196,9 +197,9 @@ class FilterAlgoTest( GafferImageTest.ImageTestCase ) :
 				expectedWriter["task"].execute()
 
 				outputFileName = tempDirectory + "/%s_%dx%d_%s.box.exr" % ( os.path.splitext( fileName )[0], size.x, size.y, filter )
-				IECore.Writer.create( boxImage, outputFileName ).write()	
+				IECore.Writer.create( boxImage, outputFileName ).write()
 				outputFileName = tempDirectory + "/%s_%dx%d_%s.parallel.exr" % ( os.path.splitext( fileName )[0], size.x, size.y, filter )
-				IECore.Writer.create( parallelImage, outputFileName ).write()	
+				IECore.Writer.create( parallelImage, outputFileName ).write()
 
 			imageNode = GafferImage.ObjectToImage()
 			imageNode["object"].setValue( boxImage )

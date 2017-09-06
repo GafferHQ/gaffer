@@ -42,8 +42,9 @@ import IECore
 import Gaffer
 import GafferTest
 import GafferImage
+import GafferImageTest
 
-class OffsetTest( GafferTest.TestCase ) :
+class OffsetTest( GafferImageTest.ImageTestCase ) :
 
 	def testPassThrough( self ) :
 
@@ -54,8 +55,8 @@ class OffsetTest( GafferTest.TestCase ) :
 		o["in"].setInput( c["out"] )
 
 		self.assertEqual( o["offset"].getValue(), IECore.V2i( 0 ) )
-		self.assertEqual( o["out"].imageHash(), c["out"].imageHash() )
-		self.assertEqual( o["out"].image(), c["out"].image() )
+		self.assertImageHashesEqual( o["out"], c["out"] )
+		self.assertImagesEqual( o["out"], c["out"] )
 
 	def testDataWindow( self ) :
 
@@ -146,7 +147,7 @@ class OffsetTest( GafferTest.TestCase ) :
 		o2["in"].setInput( o1["out"] )
 		o2["offset"].setValue( IECore.V2i( -101, 45 ) )
 
-		self.assertEqual( c["out"].image(), o2["out"].image() )
+		self.assertImagesEqual( c["out"], o2["out"] )
 
 	def testChannelDataDirtyPropagation( self ) :
 

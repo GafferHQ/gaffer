@@ -35,6 +35,7 @@
 ##########################################################################
 
 import IECore
+import IECoreImage
 
 import Gaffer
 import GafferUI
@@ -94,7 +95,7 @@ class SceneReaderPathPreview( GafferUI.PathPreviewWidget ) :
 		supported = set( GafferScene.SceneReader.supportedExtensions() )
 		supported.update( IECore.Reader.supportedExtensions() )
 		# no reason to preview a single image as a 3D scene
-		supported.difference_update( IECore.Reader.supportedExtensions( IECore.TypeId.ImageReader ) )
+		supported.difference_update( IECore.Reader.supportedExtensions( IECoreImage.ImageReader.staticTypeId() ) )
 
 		return ext in supported
 

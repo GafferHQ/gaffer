@@ -75,7 +75,7 @@ class ImageReaderTest( GafferImageTest.ImageTestCase ) :
 		self.assertEqual( n["out"]["metadata"].getValue(), oiio["out"]["metadata"].getValue() )
 		self.assertEqual( n["out"]["channelNames"].getValue(), oiio["out"]["channelNames"].getValue() )
 		self.assertEqual( n["out"].channelData( "R", IECore.V2i( 0 ) ),oiio["out"].channelData( "R", IECore.V2i( 0 ) ) )
-		self.assertEqual( n["out"].image(), oiio["out"].image() )
+		self.assertImagesEqual( n["out"], oiio["out"] )
 
 	def testUnspecifiedFilename( self ) :
 
@@ -114,18 +114,7 @@ class ImageReaderTest( GafferImageTest.ImageTestCase ) :
 		jpgReader = GafferImage.ImageReader()
 		jpgReader["fileName"].setValue( self.jpgFileName )
 
-		exrImage = exrReader["out"].image()
-		jpgImage = jpgReader["out"].image()
-
-		exrImage.blindData().clear()
-		jpgImage.blindData().clear()
-
-		imageDiffOp = IECore.ImageDiffOp()
-		res = imageDiffOp(
-			imageA = exrImage,
-			imageB = jpgImage,
-		)
-		self.assertFalse( res.value )
+		self.assertImagesEqual( exrReader["out"], jpgReader["out"], ignoreMetadata = True, maxDifference = 0.001 )
 
 	def testSupportedExtensions( self ) :
 
@@ -180,7 +169,7 @@ class ImageReaderTest( GafferImageTest.ImageTestCase ) :
 			self.assertEqual( reader["out"]["metadata"].getValue(), oiio["out"]["metadata"].getValue() )
 			self.assertEqual( reader["out"]["channelNames"].getValue(), oiio["out"]["channelNames"].getValue() )
 			self.assertEqual( reader["out"].channelData( "R", IECore.V2i( 0 ) ), oiio["out"].channelData( "R", IECore.V2i( 0 ) ) )
-			self.assertEqual( reader["out"].image(), oiio["out"].image() )
+			self.assertImagesEqual( reader["out"], oiio["out"] )
 
 		context = Gaffer.Context()
 
@@ -305,7 +294,7 @@ class ImageReaderTest( GafferImageTest.ImageTestCase ) :
 			self.assertEqual( reader["out"]["metadata"].getValue(), oiio["out"]["metadata"].getValue() )
 			self.assertEqual( reader["out"]["channelNames"].getValue(), oiio["out"]["channelNames"].getValue() )
 			self.assertEqual( reader["out"].channelData( "R", IECore.V2i( 0 ) ), oiio["out"].channelData( "R", IECore.V2i( 0 ) ) )
-			self.assertEqual( reader["out"].image(), oiio["out"].image() )
+			self.assertImagesEqual( reader["out"], oiio["out"] )
 
 		def assertHold( holdFrame ) :
 

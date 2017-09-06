@@ -45,6 +45,8 @@ from ChannelMaskPlugValueWidget import ChannelMaskPlugValueWidget
 from RGBAChannelsPlugValueWidget import RGBAChannelsPlugValueWidget
 from ChannelPlugValueWidget import ChannelPlugValueWidget
 
+import ImageReaderPathPreview
+
 import OpenImageIOReaderUI
 import ImageReaderUI
 import ImageViewUI
@@ -91,7 +93,7 @@ import CopyChannelsUI
 import MedianUI
 import RankFilterUI
 import ErodeUI
-import DilateUI 
+import DilateUI
 import ColorProcessorUI
 import MixUI
 import CatalogueUI

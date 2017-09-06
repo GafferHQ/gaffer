@@ -41,6 +41,7 @@ import IECore
 import Gaffer
 import GafferUI
 import GafferCortexUI
+import GafferImageUI
 import GafferSceneUI # for alembic previews
 
 from Qt import QtWidgets

@@ -64,7 +64,7 @@ static Registry &registry()
 	return r;
 }
 
-Pointer::Pointer( const IECore::ImagePrimitive *image, const Imath::V2i &hotspot )
+Pointer::Pointer( const IECoreImage::ImagePrimitive *image, const Imath::V2i &hotspot )
 	:	m_image( image->copy() ), m_hotspot( hotspot )
 {
 }
@@ -80,7 +80,7 @@ Pointer::Pointer( const std::string &fileName, const Imath::V2i &hotspot )
 		g_reader = new IECore::CachedReader( IECore::SearchPath( sp, ":" ) );
 	}
 
-	m_image = IECore::runTimeCast<const IECore::ImagePrimitive>( g_reader->read( fileName ) );
+	m_image = IECore::runTimeCast<const IECoreImage::ImagePrimitive>( g_reader->read( fileName ) );
 	if( !m_image )
 	{
 		throw IECore::Exception(
@@ -89,7 +89,7 @@ Pointer::Pointer( const std::string &fileName, const Imath::V2i &hotspot )
 	}
 }
 
-const IECore::ImagePrimitive *Pointer::image() const
+const IECoreImage::ImagePrimitive *Pointer::image() const
 {
 	return m_image.get();
 }

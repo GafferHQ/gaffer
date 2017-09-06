@@ -60,7 +60,7 @@ class ObjectToImage : public ImagePrimitiveNode
 	protected :
 
 		void hashImagePrimitive( const Gaffer::Context *context, IECore::MurmurHash &h ) const override;
-		IECore::ConstImagePrimitivePtr computeImagePrimitive( const Gaffer::Context *context ) const override;
+		IECoreImage::ConstImagePrimitivePtr computeImagePrimitive( const Gaffer::Context *context ) const override;
 
 	private :
 

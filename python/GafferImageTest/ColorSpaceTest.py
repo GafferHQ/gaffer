@@ -58,7 +58,8 @@ class ColorSpaceTest( GafferImageTest.ImageTestCase ) :
 		o = GafferImage.ColorSpace()
 		o["in"].setInput( n["out"] )
 
-		self.assertEqual( n["out"].image(), o["out"].image() )
+		self.assertImageHashesEqual( n["out"], o["out"] )
+		self.assertImagesEqual( n["out"], o["out"] )
 
 		o["inputSpace"].setValue( "linear" )
 		o["outputSpace"].setValue( "sRGB" )
@@ -73,7 +74,8 @@ class ColorSpaceTest( GafferImageTest.ImageTestCase ) :
 		o = GafferImage.ColorSpace()
 		o["in"].setInput( n["out"] )
 
-		self.assertEqual( n["out"].image(), o["out"].image() )
+		self.assertImageHashesEqual( n["out"], o["out"] )
+		self.assertImagesEqual( n["out"], o["out"] )
 
 		o["inputSpace"].setValue( "linear" )
 		o["outputSpace"].setValue( "sRGB" )
@@ -82,7 +84,8 @@ class ColorSpaceTest( GafferImageTest.ImageTestCase ) :
 
 		o["enabled"].setValue( False )
 
-		self.assertEqual( n["out"].image(), o["out"].image() )
+		self.assertImageHashesEqual( n["out"], o["out"] )
+		self.assertImagesEqual( n["out"], o["out"] )
 		self.assertEqual( n["out"]['format'].hash(), o["out"]['format'].hash() )
 		self.assertEqual( n["out"]['dataWindow'].hash(), o["out"]['dataWindow'].hash() )
 		self.assertEqual( n["out"]["metadata"].getValue(), o["out"]["metadata"].getValue() )
@@ -92,7 +95,8 @@ class ColorSpaceTest( GafferImageTest.ImageTestCase ) :
 
 		o["inputSpace"].setValue( "linear" )
 		o["outputSpace"].setValue( "linear" )
-		self.assertEqual( n["out"].image(), o["out"].image() )
+		self.assertImageHashesEqual( n["out"], o["out"] )
+		self.assertImagesEqual( n["out"], o["out"] )
 		self.assertEqual( n["out"]['format'].hash(), o["out"]['format'].hash() )
 		self.assertEqual( n["out"]['dataWindow'].hash(), o["out"]['dataWindow'].hash() )
 		self.assertEqual( n["out"]["metadata"].getValue(), o["out"]["metadata"].getValue() )

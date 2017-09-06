@@ -40,7 +40,7 @@
 
 #include <functional>
 
-#include "IECore/DisplayDriverServer.h"
+#include "IECoreImage/DisplayDriver.h"
 
 #include "Gaffer/NumericPlug.h"
 
@@ -63,14 +63,14 @@ class Display : public ImageNode
 
 		/// Sets the driver used to provide the
 		/// image to this node.
-		void setDriver( IECore::DisplayDriverPtr driver, bool copy = false );
-		IECore::DisplayDriver *getDriver();
-		const IECore::DisplayDriver *getDriver() const;
+		void setDriver( IECoreImage::DisplayDriverPtr driver, bool copy = false );
+		IECoreImage::DisplayDriver *getDriver();
+		const IECoreImage::DisplayDriver *getDriver() const;
 
 		/// Emitted when a new driver has been created. This can
 		/// then be passed to `Display::setDriver()` to populate
 		/// a Display with an incoming image.
-		typedef boost::signal<void ( IECore::DisplayDriver *driver, const IECore::CompoundData *parameters )> DriverCreatedSignal;
+		typedef boost::signal<void ( IECoreImage::DisplayDriver *driver, const IECore::CompoundData *parameters )> DriverCreatedSignal;
 		static DriverCreatedSignal &driverCreatedSignal();
 
 		/// Emitted when a complete image has been received.

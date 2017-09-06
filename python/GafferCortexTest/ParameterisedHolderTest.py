@@ -40,6 +40,7 @@ import unittest
 import datetime
 
 import IECore
+import IECoreImage
 
 import Gaffer
 import GafferTest
@@ -430,15 +431,15 @@ class ParameterisedHolderTest( GafferTest.TestCase ) :
 
 		ph = GafferCortex.ParameterisedHolderNode()
 
-		ph.setParameterised( IECore.Grade() )
-		ph["parameters"]["lift"].setValue( IECore.Color3f( 1, 0, 0 ) )
+		ph.setParameterised( IECoreImage.MedianCutSampler() )
+		ph["parameters"]["channelName"].setValue( "R" )
 
-		ph.setParameterised( IECore.Grade() )
-		self.assertEqual( ph["parameters"]["lift"].getValue(), IECore.Color3f( 0 ) )
+		ph.setParameterised( IECoreImage.MedianCutSampler() )
+		self.assertEqual( ph["parameters"]["channelName"].getValue(), "Y" )
 
-		ph["parameters"]["lift"].setValue( IECore.Color3f( 1, 0, 0 ) )
-		ph.setParameterised( IECore.Grade(), keepExistingValues=True )
-		self.assertEqual( ph["parameters"]["lift"].getValue(), IECore.Color3f( 1, 0, 0 ) )
+		ph["parameters"]["channelName"].setValue( "R" )
+		ph.setParameterised( IECoreImage.MedianCutSampler(), keepExistingValues=True )
+		self.assertEqual( ph["parameters"]["channelName"].getValue(), "R" )
 
 	def testDateTimeParameter( self ) :
 

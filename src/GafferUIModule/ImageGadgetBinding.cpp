@@ -51,7 +51,7 @@ void GafferUIModule::bindImageGadget()
 {
 	GadgetClass<ImageGadget>()
 		.def( init<const std::string &>() )
-		.def( init<IECore::ConstImagePrimitivePtr>() )
+		.def( init<IECoreImage::ConstImagePrimitivePtr>() )
 		.def( "textureLoader", &ImageGadget::textureLoader, return_value_policy<CastToIntrusivePtr>() )
 		.staticmethod( "textureLoader" )
 	;

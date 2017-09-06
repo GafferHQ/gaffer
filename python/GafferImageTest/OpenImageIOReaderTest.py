@@ -40,6 +40,7 @@ import shutil
 import unittest
 
 import IECore
+import IECoreImage
 
 import Gaffer
 import GafferTest
@@ -57,7 +58,7 @@ class OpenImageIOReaderTest( GafferImageTest.ImageTestCase ) :
 
 	def testInternalImageSpaceConversion( self ) :
 
-		r = IECore.EXRImageReader( self.negativeDataWindowFileName )
+		r = IECore.Reader.create( self.negativeDataWindowFileName )
 		image = r.read()
 		exrDisplayWindow = image.displayWindow
 		exrDataWindow = image.dataWindow
@@ -141,7 +142,7 @@ class OpenImageIOReaderTest( GafferImageTest.ImageTestCase ) :
 		image = n["out"].image()
 		image2 = IECore.Reader.create( self.negativeDataWindowFileName ).read()
 
-		op = IECore.ImageDiffOp()
+		op = IECoreImage.ImageDiffOp()
 		res = op(
 			imageA = image,
 			imageB = image2
@@ -234,18 +235,7 @@ class OpenImageIOReaderTest( GafferImageTest.ImageTestCase ) :
 		jpgOCIO["inputSpace"].setValue( "sRGB" )
 		jpgOCIO["outputSpace"].setValue( "linear" )
 
-		exrImage = exrReader["out"].image()
-		jpgImage = jpgOCIO["out"].image()
-
-		exrImage.blindData().clear()
-		jpgImage.blindData().clear()
-
-		imageDiffOp = IECore.ImageDiffOp()
-		res = imageDiffOp(
-			imageA = exrImage,
-			imageB = jpgImage,
-		)
-		self.assertFalse( res.value )
+		self.assertImagesEqual( exrReader["out"], jpgOCIO["out"], ignoreMetadata = True, maxDifference = 0.001 )
 
 	def testOIIOJpgRead( self ) :
 

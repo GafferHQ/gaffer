@@ -55,7 +55,7 @@ class ClampTest( GafferImageTest.ImageTestCase ) :
 		clamp["in"].setInput(i["out"])
 		clamp["max"].setValue( IECore.Color4f( .5, .5, .5, .5 ) )
 
-		self.assertEqual(i['out'].image().hash(), clamp['out'].image().hash())
+		self.assertImagesEqual( i["out"], clamp["out"] )
 
 	def testPerChannelHash( self ) :
 
@@ -117,7 +117,7 @@ class ClampTest( GafferImageTest.ImageTestCase ) :
 		clamp["minClampToEnabled"].setValue( False )
 		clamp["maxClampToEnabled"].setValue( True )
 
-		self.assertEqual(i['out'].image().hash(), clamp['out'].image().hash())
+		self.assertImagesEqual( i["out"], clamp["out"] )
 
 	def testDefaultState( self ) :
 

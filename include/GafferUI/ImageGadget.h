@@ -38,7 +38,7 @@
 #ifndef GAFFERUI_IMAGEGADGET_H
 #define GAFFERUI_IMAGEGADGET_H
 
-#include "IECore/ImagePrimitive.h"
+#include "IECoreImage/ImagePrimitive.h"
 
 #include "IECoreGL/TextureLoader.h"
 
@@ -64,7 +64,7 @@ class ImageGadget : public Gadget
 		/// Throws if the file cannot be loaded.
 		ImageGadget( const std::string &fileName );
 		/// A copy of the image is taken.
-		ImageGadget( const IECore::ConstImagePrimitivePtr image );
+		ImageGadget( const IECoreImage::ConstImagePrimitivePtr image );
 		~ImageGadget() override;
 
 		IE_CORE_DECLARERUNTIMETYPEDEXTENSION( GafferUI::ImageGadget, ImageGadgetTypeId, Gadget );

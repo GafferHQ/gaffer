@@ -59,7 +59,7 @@
 #include "IECore/Shader.h"
 #include "IECore/SplineData.h"
 
-#include "GafferImage/OpenImageIOAlgo.h"
+#include "IECoreImage/OpenImageIOAlgo.h"
 
 #include "GafferOSL/ShadingEngine.h"
 #include "GafferOSL/OSLShader.h"
@@ -69,7 +69,6 @@ using namespace boost;
 using namespace Imath;
 using namespace IECore;
 using namespace OSL;
-using namespace GafferImage;
 using namespace GafferOSL;
 
 //////////////////////////////////////////////////////////////////////////
@@ -114,7 +113,7 @@ template<typename T>
 typename T::Ptr geometricVectorDataFromTypeDesc( TypeDesc type, void *&basePointer )
 {
 	typename T::Ptr result = vectorDataFromTypeDesc<T>( type, basePointer );
-	result->setInterpretation( OpenImageIOAlgo::geometricInterpretation( ( (TypeDesc::VECSEMANTICS)type.vecsemantics ) ) );
+	result->setInterpretation( IECoreImage::OpenImageIOAlgo::geometricInterpretation( ( (TypeDesc::VECSEMANTICS)type.vecsemantics ) ) );
 	return result;
 }
 
@@ -173,7 +172,7 @@ class RenderState
 				 eIt = shadingPoints->readable().end(); it != eIt; ++it )
 			{
 				UserData userData;
-				userData.dataView = OpenImageIOAlgo::DataView( it->second.get() );
+				userData.dataView = IECoreImage::OpenImageIOAlgo::DataView( it->second.get() );
 				if( userData.dataView.data )
 				{
 					userData.name = it->first;
@@ -280,7 +279,7 @@ class RenderState
 			}
 
 			ustring name;
-			OpenImageIOAlgo::DataView dataView;
+			IECoreImage::OpenImageIOAlgo::DataView dataView;
 			bool array;
 
 			bool operator < ( const UserData &rhs ) const
@@ -776,7 +775,7 @@ void declareParameters( const CompoundDataMap &parameters, ShadingSystem *shadin
 			continue;
 		}
 
-		OpenImageIOAlgo::DataView dataView( it->second.get() );
+		IECoreImage::OpenImageIOAlgo::DataView dataView( it->second.get() );
 		if( dataView.data )
 		{
 			if(
