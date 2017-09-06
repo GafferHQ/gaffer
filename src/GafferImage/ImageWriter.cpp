@@ -470,7 +470,7 @@ class FlatScanlineWriter
 			for(
 				int blankScanlinesBegin = yBegin, blankScanlinesEnd = std::min( yBegin + ImagePlug::tileSize(), yEnd );
 				blankScanlinesEnd <= yEnd;
-				blankScanlinesBegin += ImagePlug::tileSize(), blankScanlinesEnd += ImagePlug::tileSize()
+				blankScanlinesBegin += ImagePlug::tileSize(), blankScanlinesEnd += std::min( ImagePlug::tileSize(), std::abs( yEnd - blankScanlinesBegin ) )
 			)
 			{
 				writeScanlines( blankScanlinesBegin, std::min( blankScanlinesEnd, yEnd ) );
