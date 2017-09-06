@@ -442,5 +442,16 @@ class ImageReaderTest( GafferImageTest.ImageTestCase ) :
 			self.assertEqual( capturedArguments["dataType"], dataType )
 			self.assertEqual( capturedArguments["metadata"], r["out"]["metadata"].getValue() )
 
+	def testDisabling( self ) :
+
+		reader = GafferImage.ImageReader()
+		reader["fileName"].setValue( self.fileName )
+		reader["enabled"].setValue( False )
+
+		constant = GafferImage.Constant()
+		constant["enabled"].setValue( False )
+
+		self.assertImagesEqual( reader["out"], constant["out"] )
+
 if __name__ == "__main__":
 	unittest.main()
