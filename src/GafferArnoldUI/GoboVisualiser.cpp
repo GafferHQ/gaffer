@@ -86,52 +86,37 @@ V2f parameterOrDefault( const IECore::CompoundData *data, const char *key, const
 
 CompoundDataPtr evalOSLTexture( IECore::ObjectVectorPtr shaderVector, int resolution );
 
-struct OSLTextureCacheKey
+struct OSLTextureCacheGetterKey
 {
 
-	OSLTextureCacheKey()
+	OSLTextureCacheGetterKey()
 		:	shaders( NULL )
 	{
 	}
 
-	OSLTextureCacheKey( IECore::ObjectVector *s )
+	OSLTextureCacheGetterKey( IECore::ObjectVector *s )
 		:	shaders( s )
 	{
 		s->hash( hash );
 	}
 
-	bool operator == ( const OSLTextureCacheKey &other ) const
+	operator const IECore::MurmurHash & () const
 	{
-		return hash == other.hash;
+		return hash;
 	}
 
-	bool operator != ( const OSLTextureCacheKey &other ) const
-	{
-		return hash != other.hash;
-	}
-
-	bool operator < ( const OSLTextureCacheKey &other ) const
-	{
-		return hash < other.hash;
-	}
-
-	mutable IECore::ObjectVector *shaders;
+	IECore::ObjectVector *shaders;
 	MurmurHash hash;
 
 };
 
-inline size_t tbb_hasher( const OSLTextureCacheKey &cacheKey )
-{
-	return tbb_hasher( cacheKey.hash );
-}
-
-CompoundDataPtr getter( const OSLTextureCacheKey &key, size_t &cost )
+CompoundDataPtr getter( const OSLTextureCacheGetterKey &key, size_t &cost )
 {
 	cost = 1;
 	return evalOSLTexture( key.shaders, 512 );
 }
 
-typedef LRUCache<OSLTextureCacheKey, CompoundDataPtr> OSLTextureCache;
+	typedef LRUCache<IECore::MurmurHash, CompoundDataPtr, LRUCachePolicy::Parallel, OSLTextureCacheGetterKey> OSLTextureCache;
 OSLTextureCache g_oslTextureCache( getter, 100 );
 
 const char *goboFragSource()
@@ -243,7 +228,6 @@ CompoundDataPtr evalOSLTexture( IECore::ObjectVectorPtr shaderVector, int resolu
 	return result;
 }
 
-class GoboVisualiser : public LightFilterVisualiser
 class GoboVisualiser final : public LightFilterVisualiser
 {
 
@@ -254,7 +238,7 @@ class GoboVisualiser final : public LightFilterVisualiser
 		GoboVisualiser();
 		~GoboVisualiser();
 
-		virtual IECoreGL::ConstRenderablePtr visualise( const IECore::InternedString &attributeName, const IECore::ObjectVector *shaderVector, const IECore::ObjectVector *lightShaderVector, IECoreGL::ConstStatePtr &state ) const;
+		IECoreGL::ConstRenderablePtr visualise( const IECore::InternedString &attributeName, const IECore::ObjectVector *shaderVector, const IECore::ObjectVector *lightShaderVector, IECoreGL::ConstStatePtr &state ) const override;
 
 	protected :
 
@@ -296,7 +280,7 @@ IECoreGL::ConstRenderablePtr GoboVisualiser::visualise( const IECore::InternedSt
 		return result;
 	}
 
-	CompoundDataMap::const_iterator it = filterShader->parameters().find( "slidemap" );
+	auto it = filterShader->parameters().find( "slidemap" );
 	if( it == filterShader->parameters().end() )
 	{
 		return result;
@@ -314,7 +298,7 @@ IECoreGL::ConstRenderablePtr GoboVisualiser::visualise( const IECore::InternedSt
 
 		try
 		{
-			imageData = g_oslTextureCache.get( OSLTextureCacheKey( oslNetwork.get() ) );
+			imageData = g_oslTextureCache.get( OSLTextureCacheGetterKey( oslNetwork.get() ) );
 		}
 		catch( const Exception &e )
 		{
