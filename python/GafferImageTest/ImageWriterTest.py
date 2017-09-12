@@ -1170,5 +1170,31 @@ class ImageWriterTest( GafferImageTest.ImageTestCase ) :
 			resultReader["colorSpace"].setValue( colorSpace )
 			self.assertImagesEqual( resultReader["out"], reader["out"], ignoreMetadata=True, maxDifference=0.0007 )
 
+	def testBlankScanlines( self ) :
+
+		# create a wide image
+		constant = GafferImage.Constant()
+		constant["color"].setValue( IECore.Color4f( 0.5, 0.5, 0.5, 1 ) )
+		constant["format"].setValue( GafferImage.Format( IECore.Box2i( IECore.V2i( 0 ), IECore.V2i( 3000, 1080 ) ), 1. ) )
+
+		# fit it such that we have several tiles of blank lines on top (and bottom)
+		resize = GafferImage.Resize()
+		resize["in"].setInput( constant["out"] )
+		resize["fitMode"].setValue( GafferImage.Resize.FitMode.Horizontal )
+
+		# write to a file format that requires consecutive scanlines
+		writer = GafferImage.ImageWriter()
+		writer["in"].setInput( resize["out"] )
+		writer["fileName"].setValue( "{0}/blankScanlines.jpg".format( self.temporaryDirectory() ) )
+		writer["task"].execute()
+
+		# ensure we wrote the file successfully
+		reader = GafferImage.ImageReader()
+		reader["fileName"].setInput( writer["fileName"] )
+		cleanOutput = GafferImage.DeleteChannels()
+		cleanOutput["in"].setInput( writer["in"] )
+		cleanOutput["channels"].setValue( "A" )
+		self.assertImagesEqual( reader["out"], cleanOutput["out"], ignoreMetadata=True, ignoreDataWindow=True, maxDifference=0.05 )
+
 if __name__ == "__main__":
 	unittest.main()
