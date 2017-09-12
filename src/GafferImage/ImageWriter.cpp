@@ -466,17 +466,15 @@ class FlatScanlineWriter
 			}
 		}
 
-		void writeBlankScanlines( const int yBegin, const int yEnd )
+		void writeBlankScanlines( int yBegin, int yEnd )
 		{
 			float *scanlines = &m_scanlinesData[0];
 			memset( scanlines, 0, sizeof(float) * m_spec.width * std::min( ImagePlug::tileSize(), yEnd - yBegin ) * m_spec.channelnames.size() );
-			for(
-				int blankScanlinesBegin = yBegin, blankScanlinesEnd = std::min( yBegin + ImagePlug::tileSize(), yEnd );
-				blankScanlinesEnd <= yEnd;
-				blankScanlinesBegin += ImagePlug::tileSize(), blankScanlinesEnd += ImagePlug::tileSize()
-			)
+			while( yBegin < yEnd )
 			{
-				writeScanlines( blankScanlinesBegin, std::min( blankScanlinesEnd, yEnd ) );
+				const int numLines = std::min( yEnd - yBegin, ImagePlug::tileSize() );
+				writeScanlines( yBegin, yBegin + numLines );
+				yBegin += numLines;
 			}
 		}
 
