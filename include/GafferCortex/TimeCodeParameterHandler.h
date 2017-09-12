@@ -39,8 +39,6 @@
 
 #include "IECore/TimeCodeParameter.h"
 
-#include "Gaffer/CompoundPlug.h"
-
 #include "GafferCortex/ParameterHandler.h"
 
 namespace GafferCortex
@@ -68,7 +66,7 @@ class TimeCodeParameterHandler : public ParameterHandler
 	private :
 
 		IECore::TimeCodeParameterPtr m_parameter;
-		Gaffer::CompoundPlugPtr m_plug;
+		Gaffer::PlugPtr m_plug;
 
 		static ParameterHandlerDescription<TimeCodeParameterHandler, IECore::TimeCodeParameter> g_description;
 

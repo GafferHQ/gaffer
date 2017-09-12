@@ -68,10 +68,10 @@ void TimeCodeParameterHandler::restore( Gaffer::GraphComponent *plugParent )
 
 Gaffer::Plug *TimeCodeParameterHandler::setupPlug( Gaffer::GraphComponent *plugParent, Gaffer::Plug::Direction direction, unsigned flags )
 {
-	m_plug = plugParent->getChild<Gaffer::CompoundPlug>( m_parameter->name() );
+	m_plug = plugParent->getChild<Gaffer::Plug>( m_parameter->name() );
 	if( !m_plug || m_plug->direction()!=direction )
 	{
-		m_plug = new Gaffer::CompoundPlug( m_parameter->name(), direction );
+		m_plug = new Gaffer::Plug( m_parameter->name(), direction );
 		plugParent->setChild( m_parameter->name(), m_plug );
 	}
 

@@ -55,7 +55,7 @@ class ObjectWriter( GafferDispatch.TaskNode ) :
 		fileNamePlug = Gaffer.StringPlug( "fileName", Gaffer.Plug.Direction.In )
 		self.addChild( fileNamePlug )
 
-		self.addChild( Gaffer.CompoundPlug( "parameters" ) )
+		self.addChild( Gaffer.Plug( "parameters" ) )
 
 		self.__writer = None
 		self.__writerExtension = ""
