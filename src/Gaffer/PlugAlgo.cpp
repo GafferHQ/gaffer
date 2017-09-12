@@ -343,8 +343,8 @@ void applyDynamicFlag( Plug *plug )
 	// for types like CompoundNumericPlug that create children in their constructors.
 	// Or, even better, abolish the Dynamic flag entirely and deal with everything
 	// via serialisers.
-	const Gaffer::TypeId compoundTypes[] = { PlugTypeId, ValuePlugTypeId, CompoundPlugTypeId, ArrayPlugTypeId };
-	const Gaffer::TypeId *compoundTypesEnd = compoundTypes + 4;
+	const Gaffer::TypeId compoundTypes[] = { PlugTypeId, ValuePlugTypeId, ArrayPlugTypeId };
+	const Gaffer::TypeId *compoundTypesEnd = compoundTypes + 3;
 	if( find( compoundTypes, compoundTypesEnd, (Gaffer::TypeId)plug->typeId() ) != compoundTypesEnd )
 	{
 		for( RecursivePlugIterator it( plug ); !it.done(); ++it )

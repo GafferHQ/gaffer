@@ -343,8 +343,8 @@ class ExpressionTest( GafferTest.TestCase ) :
 		with IECore.CapturingMessageHandler() as mh :
 			s.load( continueOnError = True )
 
-		self.assertEqual( len( mh.messages ), 1 )
-		self.assertTrue( "rejects input " in mh.messages[0].message )
+		self.assertEqual( len( mh.messages ), 4 )
+		self.assertTrue( "has no attribute 'CompoundPlug'" in mh.messages[0].message )
 
 		s.context().setFrame( 3 )
 		with s.context() :

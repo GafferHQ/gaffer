@@ -52,7 +52,6 @@
 #include "BoxPlugBinding.h"
 #include "CompoundDataPlugBinding.h"
 #include "CompoundNumericPlugBinding.h"
-#include "CompoundPlugBinding.h"
 #include "ConnectionBinding.h"
 #include "ContextBinding.h"
 #include "DirtyPropagationScopeBinding.h"
@@ -158,7 +157,6 @@ BOOST_PYTHON_MODULE( _Gaffer )
 	bindSet();
 	bindDirtyPropagationScope();
 	bindUndoScope();
-	bindCompoundPlug();
 	bindCompoundNumericPlug();
 	bindSplinePlug();
 	bindBoxPlug();

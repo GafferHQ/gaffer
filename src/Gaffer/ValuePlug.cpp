@@ -508,20 +508,7 @@ bool ValuePlug::acceptsChild( const GraphComponent *potentialChild ) const
 		return false;
 	}
 
-	if( this->isInstanceOf( (IECore::TypeId)CompoundPlugTypeId ) )
-	{
-		/// \todo Remove this special case when we remove
-		/// CompoundPlug - it exists only for backwards
-		/// compatibility for that class. When we do this,
-		/// we'll be able to remove a lot of runTimeCasts in
-		/// our other methods, because we'll know our children
-		/// are all ValuePlugs.
-		return true;
-	}
-	else
-	{
-		return IECore::runTimeCast<const ValuePlug>( potentialChild );
-	}
+	return IECore::runTimeCast<const ValuePlug>( potentialChild );
 }
 
 bool ValuePlug::acceptsInput( const Plug *input ) const
@@ -592,10 +579,9 @@ bool ValuePlug::settable() const
 		{
 			return false;
 		}
-		for( PlugIterator it( this ); !it.done(); ++it )
+		for( ValuePlugIterator it( this ); !it.done(); ++it )
 		{
-			ValuePlug *valuePlug = IECore::runTimeCast<ValuePlug>( it->get() );
-			if( !valuePlug || !valuePlug->settable() )
+			if( !(*it)->settable() )
 			{
 				return false;
 			}
@@ -615,12 +601,8 @@ void ValuePlug::setFrom( const ValuePlug *other )
 	ChildContainer::const_iterator it, otherIt;
 	for( it = children().begin(), otherIt = typedOther->children().begin(); it!=children().end() && otherIt!=typedOther->children().end(); it++, otherIt++ )
 	{
-		ValuePlug *child = IECore::runTimeCast<ValuePlug>( it->get() );
-		const ValuePlug *otherChild = IECore::runTimeCast<ValuePlug>( otherIt->get() );
-		if( !child || !otherChild )
-		{
-			throw IECore::Exception( "Children are not ValuePlugs" );
-		}
+		ValuePlug *child = static_cast<ValuePlug *>( it->get() );
+		const ValuePlug *otherChild = static_cast<ValuePlug *>( otherIt->get() );
 		child->setFrom( otherChild );
 	}
 }
