@@ -84,6 +84,22 @@ ContextMonitor::Statistics & ContextMonitor::Statistics::operator += ( const Con
 		const Data *d = context->get<Data>( *it );
 		m_variables[*it][d->Object::hash()] += 1;
 	}
+	
+	for( VariableMap::iterator it = m_variables.begin(), eIt = m_variables.end(); it != eIt; ++it )
+	{
+		if( std::find( names.begin(), names.end(), it->first ) == names.end() )
+		{
+			// Record that we have seen a context where this variable was unset
+			// This helps to distinguish between a variable which is always set ( no impact on unique hashes )
+			// and a variable which is sometimes set ( may be doubling the number of unique hashes ).
+			//
+			// Note that this is not 100% accurate - if we happen to see all evaluations where the variable 
+			// is unset before the first evaluation where it is set, we would not capture this variation.
+			// Still seems better than nothing to me.
+			it->second[ IECore::MurmurHash() ] += 1;
+		}
+	}
+
 	return *this;
 }
 
