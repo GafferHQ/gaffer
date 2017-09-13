@@ -92,7 +92,7 @@ class PlugLayout( GafferUI.Widget ) :
 
 		assert( isinstance( parent, ( Gaffer.Node, Gaffer.Plug ) ) )
 
-		self.__layout = _TabLayout( orientation ) if isinstance( parent, Gaffer.Node ) else _CollapsibleLayout( orientation )
+		self.__layout = _TabLayout( orientation ) if isinstance( parent, Gaffer.Node ) and not rootSection else _CollapsibleLayout( orientation )
 
 		GafferUI.Widget.__init__( self, self.__layout, **kw )
 
