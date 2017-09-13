@@ -119,38 +119,43 @@ class ValuePlug::HashProcess : public Process
 			// from our cache, and if we can't we'll compute it using a HashProcess instance.
 
 			ThreadData &threadData = g_threadData.local();
+
 			if( !Process::current() )
 			{
 				// Starting a new root computation.
-				if( ++(threadData.cacheClearCount) == 3200 )
+				// Check if we have reached the end of our hardcoded block size
+				if( ++(threadData.rootComputationCountInBlock) == 10 )
 				{
-					// Prevent unbounded growth in the hash cache
-					// if many computations are being performed
-					// without any plugs being dirtied in between,
-					// by clearing it after every Nth computation.
-					// N == 3200 was observed to be 6x faster than
-					// N == 100 for a procedural instancing scene at
-					// a memory cost of about 100 mb.
-					threadData.clearCache = 1;
+					// If we have completed a block of root computations, hopefully the cache
+					// has been allowed to grow enough.  Set the hashProcessCount back to 0, so
+					// that we will stop growing the cache ( unless a later block requires a larger
+					// number of hashProcesses )
+					threadData.rootComputationCountInBlock = 0;
+					threadData.hashProcessCountInBlock = 0;
 				}
 			}
 
 			if( threadData.clearCache )
 			{
 				threadData.cache.clear();
-				threadData.cacheClearCount = 0;
 				threadData.clearCache = 0;
 			}
 
+
 			const CacheKey key( p, Context::current()->hash() );
-			Cache::iterator it = threadData.cache.find( key );
-			if( it != threadData.cache.end() )
+
+			threadData.cache.setMaxCost( std::max( threadData.cache.getMaxCost(), threadData.hashProcessCountInBlock + 1 ) );
+
+			const IECore::MurmurHash &result = threadData.cache.get( key );
+			if( result != g_nullHash )
 			{
-				return it->second;
+				return result;
 			}
 
+			
+			threadData.hashProcessCountInBlock++;
 			HashProcess process( p, plug );
-			threadData.cache[key] = process.m_result;
+			threadData.cache.set( key, process.m_result, 1 );
 			return process.m_result;
 		}
 
@@ -212,26 +217,42 @@ class ValuePlug::HashProcess : public Process
 		// in the length of the chain of nodes - not good. Thanks is due to David Minor for
 		// being the first to point this out.
 		//
-		// We address this problem by keeping a per-thread cache of hashes, indexed
+		// We address this problem by keeping a per-thread LRU cache of hashes, indexed
 		// by the plug the hash is for and the context the hash was performed in. The
 		// typedefs below describe that data structure. We use Plug::dirty() to empty
 		// the caches, because they are invalidated whenever an upstream value or
-		// connection is changed. We also clear the cache unconditionally every N
+		// connection is changed. We also only allow the cache to grow large enough to hold N
 		// computations, to prevent unbounded growth.
 		typedef std::pair<const ValuePlug *, IECore::MurmurHash> CacheKey;
-		typedef boost::unordered_map<CacheKey, IECore::MurmurHash> Cache;
+		typedef IECorePreview::LRUCache<CacheKey, IECore::MurmurHash, IECorePreview::LRUCachePolicy::Serial> Cache;
+
+		static const IECore::MurmurHash& hashCacheNullGetter( const CacheKey &k, size_t &cost )
+		{
+			cost = 0;
+			return g_nullHash;
+		}
 
 		// To support multithreading, each thread has it's own state.
 		struct ThreadData
 		{
-			ThreadData() : cacheClearCount( 0 ) {}
-			int cacheClearCount;
+			ThreadData() :
+				cache( hashCacheNullGetter, 0 ),
+				hashProcessCountInBlock( 0 ),
+				rootComputationCountInBlock( 0 )
+			{}
 			Cache cache;
+			// How many hash processes we've done in the current block
+			size_t hashProcessCountInBlock;
+			// How many root computations we've done in the current block
+			// ( used to decide when we've finished a block of computations )
+			int rootComputationCountInBlock;
 			// Flag to request that hashCache be cleared.
 			tbb::atomic<int> clearCache;
 		};
 
 		static tbb::enumerable_thread_specific<ThreadData, tbb::cache_aligned_allocator<ThreadData>, tbb::ets_key_per_instance > g_threadData;
+
+		static IECore::MurmurHash g_nullHash;
 
 		IECore::MurmurHash m_result;
 
@@ -239,6 +260,7 @@ class ValuePlug::HashProcess : public Process
 
 const IECore::InternedString ValuePlug::HashProcess::staticType( "computeNode:hash" );
 tbb::enumerable_thread_specific<ValuePlug::HashProcess::ThreadData, tbb::cache_aligned_allocator<ValuePlug::HashProcess::ThreadData>, tbb::ets_key_per_instance > ValuePlug::HashProcess::g_threadData;
+IECore::MurmurHash ValuePlug::HashProcess::g_nullHash = IECore::MurmurHash();
 
 //////////////////////////////////////////////////////////////////////////
 // The ComputeProcess manages the task of calling ComputeNode::compute()
