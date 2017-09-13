@@ -382,7 +382,11 @@ IECore::ConstInternedStringVectorDataPtr BranchCreator::computeSetNames( const G
 
 void BranchCreator::hashSet( const IECore::InternedString &setName, const Gaffer::Context *context, const ScenePlug *parent, IECore::MurmurHash &h ) const
 {
-	ConstCompoundDataPtr mapping = boost::static_pointer_cast<const CompoundData>( mappingPlug()->getValue() );
+	ConstCompoundDataPtr mapping;
+	{
+		ScenePlug::GlobalScope s( context );
+		mapping = boost::static_pointer_cast<const CompoundData>( mappingPlug()->getValue() );
+	}
 	if( !mapping->readable().size() )
 	{
 		h = inPlug()->setPlug()->hash();
@@ -407,7 +411,11 @@ GafferScene::ConstPathMatcherDataPtr BranchCreator::computeSet( const IECore::In
 {
 	ConstPathMatcherDataPtr inputSetData = inPlug()->set( setName );
 
-	ConstCompoundDataPtr mapping = boost::static_pointer_cast<const CompoundData>( mappingPlug()->getValue() );
+	ConstCompoundDataPtr mapping;
+	{
+		ScenePlug::GlobalScope s( context );
+		mapping = boost::static_pointer_cast<const CompoundData>( mappingPlug()->getValue() );
+	}
 	if( !mapping->readable().size() )
 	{
 		return inputSetData;
