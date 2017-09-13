@@ -508,9 +508,20 @@ class TextDiff( SideBySideDiff ) :
 		formattedValues = []
 		for value in values :
 
-			shader = value[-1] if isinstance( value, IECore.ObjectVector ) else value
-			shaderName = shader.name
-			nodeName = shader.blindData().get( "gaffer:nodeName", None )
+			if isinstance( value, IECore.ObjectVector ):
+				if len(value) > 0:
+					shader = value[-1]
+				else:
+					shader = None
+			else:
+				shader = value
+
+			if shader:
+				shaderName = shader.name
+				nodeName = shader.blindData().get( "gaffer:nodeName", None )
+			else:
+				nodeName = None
+				shaderName = "none"
 
 			formattedValue = "<table cellspacing=2><tr>"
 			if nodeName is not None :
