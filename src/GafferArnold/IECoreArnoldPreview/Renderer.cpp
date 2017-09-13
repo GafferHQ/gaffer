@@ -79,6 +79,82 @@ using namespace IECoreArnold;
 using namespace IECoreArnoldPreview;
 
 //////////////////////////////////////////////////////////////////////////
+//
+// Namespacing Utilities
+// =====================
+//
+// In Arnold 4 all nodes are in a global namespace, so there can easily be
+// clashes between names generated from different procedurals. We must
+// therefore make sure we prefix such names ourselves to keep them unique.
+// In Arnold 5, nodes are created with a parent node which provides a
+// namespace, so we won't need to prefix them, but we will instead need
+// to provide a parent. The utilities below do the namespacing needed for
+// Arnold 4, but designed such that when we move to Arnold 5 we'll just be
+// able to remove the utilities and replace them with direct calls to
+// AiNode/NodeAlgo etc.
+//
+//////////////////////////////////////////////////////////////////////////
+
+namespace
+{
+
+std::string namespacedName( const std::string &nodeName, const AtNode *parentNode )
+{
+	if( parentNode )
+	{
+		return AiNodeGetName( parentNode ) + string( ":" ) + nodeName;
+	}
+	return nodeName;
+}
+
+AtNode *namespacedNode( const std::string &nodeType, const std::string &nodeName, const AtNode *parentNode = nullptr )
+{
+	AtNode *node = AiNode( nodeType.c_str() );
+	if( node )
+	{
+		AiNodeSetStr( node, "name", namespacedName( nodeName, parentNode ).c_str() );
+	}
+	return node;
+}
+
+AtNode *namespacedNodeAlgoConvert( const IECore::Object *object, const std::string &nodeName, const AtNode *parentNode )
+{
+	AtNode *node = NodeAlgo::convert( object );
+	if( node )
+	{
+		AiNodeSetStr( node, "name", namespacedName( nodeName, parentNode ).c_str() );
+	}
+	return node;
+}
+
+AtNode *namespacedNodeAlgoConvert( const std::vector<const IECore::Object *> &samples, const std::vector<float> &times, const std::string &nodeName, const AtNode *parentNode )
+{
+	AtNode *node = NodeAlgo::convert( samples, times );
+	if( node )
+	{
+		AiNodeSetStr( node, "name", namespacedName( nodeName, parentNode ).c_str() );
+	}
+	return node;
+}
+
+AtNode *namespacedCameraAlgoConvert( const IECore::Camera *camera, const std::string &name, const AtNode *parentNode )
+{
+	AtNode *node = CameraAlgo::convert( camera );
+	if( node )
+	{
+		AiNodeSetStr( node, "name", namespacedName( name, parentNode ).c_str() );
+	}
+	return node;
+}
+
+std::vector<AtNode *> namespacedShaderAlgoConvert( const IECore::ObjectVector *shaderNetwork, const std::string &namePrefix, const AtNode *parentNode )
+{
+	return ShaderAlgo::convert( shaderNetwork, namespacedName( namePrefix, parentNode ) );
+}
+
+} // namespace
+
+//////////////////////////////////////////////////////////////////////////
 // Utilities
 //////////////////////////////////////////////////////////////////////////
 
@@ -145,9 +221,9 @@ T parameter( const IECore::CompoundDataMap &parameters, const IECore::InternedSt
 	}
 }
 
-AtNode *convertToBox( const IECore::Object *object )
+AtNode *convertToBox( const IECore::Object *object, const std::string &name, const AtNode *parentNode )
 {
-	AtNode *node = AiNode( "box" );
+	AtNode *node = namespacedNode( "box", name.c_str(), parentNode );
 	if( const IECore::VisibleRenderable *visibleRenderable = IECore::runTimeCast<const IECore::VisibleRenderable>( object ) )
 	{
 		const Imath::Box3f b = visibleRenderable->bound();
@@ -158,11 +234,11 @@ AtNode *convertToBox( const IECore::Object *object )
 	return node;
 }
 
-AtNode *convertToBox( const std::vector<const IECore::Object *> &samples, const std::vector<float> &times )
+AtNode *convertToBox( const std::vector<const IECore::Object *> &samples, const std::vector<float> &times, const std::string &name, const AtNode *parentNode )
 {
 	// Boxes don't support motion blurred extent, so just convert
 	// the first sample.
-	return convertToBox( samples.front() );
+	return convertToBox( samples.front(), name, parentNode );
 }
 
 std::string formatHeaderParameter( const std::string name, const IECore::Data *data )
@@ -224,6 +300,7 @@ namespace
 {
 
 class ArnoldGlobals;
+class Instance;
 IE_CORE_FORWARDDECLARE( ShaderCache );
 IE_CORE_FORWARDDECLARE( InstanceCache );
 
@@ -248,11 +325,15 @@ class ArnoldRendererBase : public IECoreScenePreview::Renderer
 
 	protected :
 
-		ArnoldRendererBase( NodeDeleter nodeDeleter );
+		ArnoldRendererBase( NodeDeleter nodeDeleter, AtNode *parentNode = nullptr );
 
 		NodeDeleter m_nodeDeleter;
 		ShaderCachePtr m_shaderCache;
 		InstanceCachePtr m_instanceCache;
+
+	private :
+
+		AtNode *m_parentNode;
 
 };
 
@@ -286,14 +367,15 @@ class ArnoldOutput : public IECore::RefCounted
 				}
 			}
 
-			m_driver.reset( AiNode( driverNodeType.c_str() ), nodeDeleter );
+			const std::string driverNodeName = boost::str( boost::format( "ieCoreArnold:display:%s" ) % name.string() );
+			m_driver.reset(
+				namespacedNode( driverNodeType.c_str(), driverNodeName.c_str() ),
+				nodeDeleter
+			);
 			if( !m_driver )
 			{
 				throw IECore::Exception( boost::str( boost::format( "Unable to create output driver of type \"%s\"" ) % driverNodeType ) );
 			}
-
-			const std::string driverNodeName = boost::str( boost::format( "ieCoreArnold:display:%s" ) % name.string() );
-			AiNodeSetStr( m_driver.get(), "name", driverNodeName.c_str() );
 
 			if( const AtParamEntry *fileNameParameter = AiNodeEntryLookUpParameter( AiNodeGetNodeEntry( m_driver.get() ), "filename" ) )
 			{
@@ -344,14 +426,15 @@ class ArnoldOutput : public IECore::RefCounted
 				filterNodeType = filterNodeType + "_filter";
 			}
 
-			m_filter.reset( AiNode( filterNodeType.c_str() ), nodeDeleter );
+			const std::string filterNodeName = boost::str( boost::format( "ieCoreArnold:filter:%s" ) % name.string() );
+			m_filter.reset(
+				namespacedNode( filterNodeType.c_str(), filterNodeName.c_str() ),
+				nodeDeleter
+			);
 			if( AiNodeEntryGetType( AiNodeGetNodeEntry( m_filter.get() ) ) != AI_NODE_FILTER )
 			{
 				throw IECore::Exception( boost::str( boost::format( "Unable to create filter of type \"%s\"" ) % filterNodeType ) );
 			}
-
-			const std::string filterNodeName = boost::str( boost::format( "ieCoreArnold:filter:%s" ) % name.string() );
-			AiNodeSetStr( m_filter.get(), "name", filterNodeName.c_str() );
 
 			for( IECore::CompoundDataMap::const_iterator it = output->parameters().begin(), eIt = output->parameters().end(); it != eIt; ++it )
 			{
@@ -431,10 +514,10 @@ class ArnoldShader : public IECore::RefCounted
 
 	public :
 
-		ArnoldShader( const IECore::ObjectVector *shaderNetwork, NodeDeleter nodeDeleter, const std::string &namePrefix = "" )
+		ArnoldShader( const IECore::ObjectVector *shaderNetwork, NodeDeleter nodeDeleter, const std::string &namePrefix, const AtNode *parentNode )
 			:	m_nodeDeleter( nodeDeleter )
 		{
-			m_nodes = ShaderAlgo::convert( shaderNetwork, namePrefix );
+			m_nodes = namespacedShaderAlgoConvert( shaderNetwork, namePrefix, parentNode );
 		}
 
 		~ArnoldShader() override
@@ -469,8 +552,8 @@ class ShaderCache : public IECore::RefCounted
 
 	public :
 
-		ShaderCache( NodeDeleter nodeDeleter )
-			:	m_nodeDeleter( nodeDeleter )
+		ShaderCache( NodeDeleter nodeDeleter, AtNode *parentNode )
+			:	m_nodeDeleter( nodeDeleter ), m_parentNode( parentNode )
 		{
 		}
 
@@ -481,7 +564,8 @@ class ShaderCache : public IECore::RefCounted
 			m_cache.insert( a, shader->Object::hash() );
 			if( !a->second )
 			{
-				a->second = new ArnoldShader( shader, m_nodeDeleter, "shader:" + shader->Object::hash().toString() + ":" );
+				const std::string namePrefix = "shader:" + shader->Object::hash().toString() + ":";
+				a->second = new ArnoldShader( shader, m_nodeDeleter, namePrefix, m_parentNode );
 			}
 			return a->second;
 		}
@@ -517,6 +601,7 @@ class ShaderCache : public IECore::RefCounted
 	private :
 
 		NodeDeleter m_nodeDeleter;
+		AtNode *m_parentNode;
 
 		typedef tbb::concurrent_hash_map<IECore::MurmurHash, ArnoldShaderPtr> Cache;
 		Cache m_cache;
@@ -1175,13 +1260,23 @@ class Instance
 
 	public :
 
-		Instance( const SharedAtNodePtr &node, bool instanced, NodeDeleter nodeDeleter )
+		// Non-instanced
+		Instance( const SharedAtNodePtr &node )
 			:	m_node( node )
 		{
-			if( instanced && node )
+		}
+
+		// Instanced
+		Instance( const SharedAtNodePtr &node, NodeDeleter nodeDeleter, const std::string &instanceName, const AtNode *parent )
+			:	m_node( node )
+		{
+			if( node )
 			{
 				AiNodeSetByte( node.get(), "visibility", 0 );
-				m_ginstance = SharedAtNodePtr( AiNode( "ginstance" ), nodeDeleter );
+				m_ginstance = SharedAtNodePtr(
+					namespacedNode( "ginstance", instanceName, parent ),
+					nodeDeleter
+				);
 				AiNodeSetPtr( m_ginstance.get(), "node", m_node.get() );
 			}
 		}
@@ -1207,26 +1302,26 @@ class Instance
 };
 
 // Forward declaration
-AtNode *convertProcedural( IECoreScenePreview::ConstProceduralPtr procedural );
+AtNode *convertProcedural( IECoreScenePreview::ConstProceduralPtr procedural, const std::string &nodeName, const AtNode *parentNode );
 
 class InstanceCache : public IECore::RefCounted
 {
 
 	public :
 
-		InstanceCache( NodeDeleter nodeDeleter )
-			:	m_nodeDeleter( nodeDeleter )
+		InstanceCache( NodeDeleter nodeDeleter, AtNode *parentNode )
+			:	m_nodeDeleter( nodeDeleter ), m_parentNode( parentNode )
 		{
 		}
 
 		// Can be called concurrently with other get() calls.
-		Instance get( const IECore::Object *object, const IECoreScenePreview::Renderer::AttributesInterface *attributes )
+		Instance get( const IECore::Object *object, const IECoreScenePreview::Renderer::AttributesInterface *attributes, const std::string &nodeName )
 		{
 			const ArnoldAttributes *arnoldAttributes = static_cast<const ArnoldAttributes *>( attributes );
 
 			if( !canInstance( object, arnoldAttributes ) )
 			{
-				return Instance( convert( object, arnoldAttributes ), /* instanced = */ false, m_nodeDeleter );
+				return Instance( convert( object, arnoldAttributes, nodeName ) );
 			}
 
 			IECore::MurmurHash h = object->hash();
@@ -1236,24 +1331,19 @@ class InstanceCache : public IECore::RefCounted
 			m_cache.insert( a, h );
 			if( !a->second )
 			{
-				a->second = convert( object, arnoldAttributes );
-				if( a->second )
-				{
-					std::string name = "instance:" + h.toString();
-					AiNodeSetStr( a->second.get(), "name", name.c_str() );
-				}
+				a->second = convert( object, arnoldAttributes, "instance:" + h.toString() );
 			}
 
-			return Instance( a->second, /* instanced = */ true, m_nodeDeleter );
+			return Instance( a->second, m_nodeDeleter, nodeName, m_parentNode );
 		}
 
-		Instance get( const std::vector<const IECore::Object *> &samples, const std::vector<float> &times, const IECoreScenePreview::Renderer::AttributesInterface *attributes )
+		Instance get( const std::vector<const IECore::Object *> &samples, const std::vector<float> &times, const IECoreScenePreview::Renderer::AttributesInterface *attributes, const std::string &nodeName )
 		{
 			const ArnoldAttributes *arnoldAttributes = static_cast<const ArnoldAttributes *>( attributes );
 
 			if( !canInstance( samples.front(), arnoldAttributes ) )
 			{
-				return Instance( convert( samples, times, arnoldAttributes ), /* instanced = */ false, m_nodeDeleter );
+				return Instance( convert( samples, times, arnoldAttributes, nodeName ) );
 			}
 
 			IECore::MurmurHash h;
@@ -1271,15 +1361,10 @@ class InstanceCache : public IECore::RefCounted
 			m_cache.insert( a, h );
 			if( !a->second )
 			{
-				a->second = convert( samples, times, arnoldAttributes );
-				if( a->second )
-				{
-					std::string name = "instance:" + h.toString();
-					AiNodeSetStr( a->second.get(), "name", name.c_str() );
-				}
+				a->second = convert( samples, times, arnoldAttributes, "instance:" + h.toString() );
 			}
 
-			return Instance( a->second, /* instanced = */ true, m_nodeDeleter );
+			return Instance( a->second, m_nodeDeleter, nodeName, m_parentNode );
 		}
 
 		// Must not be called concurrently with anything.
@@ -1329,7 +1414,7 @@ class InstanceCache : public IECore::RefCounted
 			return attributes->canInstanceGeometry( object );
 		}
 
-		SharedAtNodePtr convert( const IECore::Object *object, const ArnoldAttributes *attributes )
+		SharedAtNodePtr convert( const IECore::Object *object, const ArnoldAttributes *attributes, const std::string &nodeName )
 		{
 			if( !object )
 			{
@@ -1339,15 +1424,15 @@ class InstanceCache : public IECore::RefCounted
 			AtNode *node = nullptr;
 			if( attributes->requiresBoxGeometry( object ) )
 			{
-				node = convertToBox( object );
+				node = convertToBox( object, nodeName, m_parentNode );
 			}
 			else if( const IECoreScenePreview::Procedural *procedural = IECore::runTimeCast<const IECoreScenePreview::Procedural>( object ) )
 			{
-				node = convertProcedural( procedural );
+				node = convertProcedural( procedural, nodeName, m_parentNode );
 			}
 			else
 			{
-				node = NodeAlgo::convert( object );
+				node = namespacedNodeAlgoConvert( object, nodeName, m_parentNode );
 			}
 
 			if( !node )
@@ -1360,20 +1445,20 @@ class InstanceCache : public IECore::RefCounted
 			return SharedAtNodePtr( node, m_nodeDeleter );
 		}
 
-		SharedAtNodePtr convert( const std::vector<const IECore::Object *> &samples, const std::vector<float> &times, const ArnoldAttributes *attributes )
+		SharedAtNodePtr convert( const std::vector<const IECore::Object *> &samples, const std::vector<float> &times, const ArnoldAttributes *attributes, const std::string &nodeName )
 		{
 			AtNode *node = nullptr;
 			if( attributes->requiresBoxGeometry( samples.front() ) )
 			{
-				node = convertToBox( samples, times );
+				node = convertToBox( samples, times, nodeName, m_parentNode );
 			}
 			else if( const IECoreScenePreview::Procedural *procedural = IECore::runTimeCast<const IECoreScenePreview::Procedural>( samples.front() ) )
 			{
-				node = convertProcedural( procedural );
+				node = convertProcedural( procedural, nodeName, m_parentNode );
 			}
 			else
 			{
-				node = NodeAlgo::convert( samples, times );
+				node = namespacedNodeAlgoConvert( samples, times, nodeName, m_parentNode );
 			}
 
 			if( !node )
@@ -1388,6 +1473,7 @@ class InstanceCache : public IECore::RefCounted
 		}
 
 		NodeDeleter m_nodeDeleter;
+		AtNode *m_parentNode;
 
 		typedef tbb::concurrent_hash_map<IECore::MurmurHash, SharedAtNodePtr> Cache;
 		Cache m_cache;
@@ -1518,8 +1604,8 @@ class ArnoldLight : public ArnoldObject
 
 	public :
 
-		ArnoldLight( const std::string &name, const Instance &instance, NodeDeleter nodeDeleter )
-			:	ArnoldObject( instance ), m_name( name ), m_nodeDeleter( nodeDeleter )
+		ArnoldLight( const std::string &name, const Instance &instance, NodeDeleter nodeDeleter, const AtNode *parentNode )
+			:	ArnoldObject( instance ), m_name( name ), m_nodeDeleter( nodeDeleter ), m_parentNode( parentNode )
 		{
 		}
 
@@ -1557,7 +1643,7 @@ class ArnoldLight : public ArnoldObject
 				return true;
 			}
 
-			m_lightShader = new ArnoldShader( arnoldAttributes->lightShader(), m_nodeDeleter, "light:" + m_name + ":" );
+			m_lightShader = new ArnoldShader( arnoldAttributes->lightShader(), m_nodeDeleter, "light:" + m_name + ":", m_parentNode );
 
 			// Simplify name for the root shader, for ease of reading of ass files.
 			const std::string name = "light:" + m_name;
@@ -1629,6 +1715,7 @@ class ArnoldLight : public ArnoldObject
 		vector<Imath::M44f> m_transformMatrices;
 		vector<float> m_transformTimes;
 		NodeDeleter m_nodeDeleter;
+		const AtNode *m_parentNode;
 		ArnoldShaderPtr m_lightShader;
 
 };
@@ -1655,8 +1742,8 @@ class ProceduralRenderer final : public ArnoldRendererBase
 		/// \todo The base class currently makes a new shader cache
 		/// and a new instance cache. Can we share with the parent
 		/// renderer instead?
-		ProceduralRenderer()
-			:	ArnoldRendererBase( nullNodeDeleter )
+		ProceduralRenderer( AtNode *procedural )
+			:	ArnoldRendererBase( nullNodeDeleter, procedural )
 		{
 		}
 
@@ -1746,7 +1833,7 @@ struct ProceduralData : boost::noncopyable
 int procInit( AtNode *node, void **userPtr )
 {
 	ProceduralData *data = (ProceduralData *)( AiNodeGetPtr( node, "userptr" ) );
-	ProceduralRendererPtr renderer = new ProceduralRenderer;
+	ProceduralRendererPtr renderer = new ProceduralRenderer( node );
 	data->procedural->render( renderer.get() );
 	renderer->nodesCreated( data->nodesCreated );
 	data->procedural = nullptr;
@@ -1783,9 +1870,9 @@ int procLoader( AtProcVtable *vTable )
 	return 1;
 }
 
-AtNode *convertProcedural( IECoreScenePreview::ConstProceduralPtr procedural )
+AtNode *convertProcedural( IECoreScenePreview::ConstProceduralPtr procedural, const std::string &nodeName, const AtNode *parentNode )
 {
-	AtNode *node = AiNode( "procedural" );
+	AtNode *node = namespacedNode( "procedural", nodeName, parentNode );
 
 	AiNodeSetPtr( node, "funcptr", (void *)procLoader );
 
@@ -2318,8 +2405,10 @@ class ArnoldGlobals
 					IECore::CameraPtr defaultCortexCamera = new IECore::Camera();
 					defaultCortexCamera->addStandardParameters();
 					m_cameras["ieCoreArnold:defaultCamera"] = defaultCortexCamera;
-					m_defaultCamera = SharedAtNodePtr( CameraAlgo::convert( defaultCortexCamera.get() ), nodeDeleter( m_renderType ) );
-					AiNodeSetStr( m_defaultCamera.get(), "name", "ieCoreArnold:defaultCamera" );
+					m_defaultCamera = SharedAtNodePtr(
+						namespacedCameraAlgoConvert( defaultCortexCamera.get(), "ieCoreArnold:defaultCamera", nullptr ),
+						nodeDeleter( m_renderType )
+					);
 				}
 				cortexCamera = m_cameras["ieCoreArnold:defaultCamera"].get();
 				arnoldCamera = m_defaultCamera.get();
@@ -2417,10 +2506,11 @@ class ArnoldGlobals
 namespace
 {
 
-ArnoldRendererBase::ArnoldRendererBase( NodeDeleter nodeDeleter )
+ArnoldRendererBase::ArnoldRendererBase( NodeDeleter nodeDeleter, AtNode *parentNode )
 	:	m_nodeDeleter( nodeDeleter ),
-		m_shaderCache( new ShaderCache( nodeDeleter ) ),
-		m_instanceCache( new InstanceCache( nodeDeleter ) )
+		m_shaderCache( new ShaderCache( nodeDeleter, parentNode ) ),
+		m_instanceCache( new InstanceCache( nodeDeleter, parentNode ) ),
+		m_parentNode( parentNode )
 {
 }
 
@@ -2438,11 +2528,7 @@ ArnoldRendererBase::ObjectInterfacePtr ArnoldRendererBase::camera( const std::st
 	IECore::CameraPtr cameraCopy = camera->copy();
 	cameraCopy->addStandardParameters();
 
-	Instance instance = m_instanceCache->get( camera, attributes );
-	if( AtNode *node = instance.node() )
-	{
-		AiNodeSetStr( node, "name", name.c_str() );
-	}
+	Instance instance = m_instanceCache->get( camera, attributes, name );
 
 	ObjectInterfacePtr result = new ArnoldObject( instance );
 	result->attributes( attributes );
@@ -2451,25 +2537,15 @@ ArnoldRendererBase::ObjectInterfacePtr ArnoldRendererBase::camera( const std::st
 
 ArnoldRendererBase::ObjectInterfacePtr ArnoldRendererBase::light( const std::string &name, const IECore::Object *object, const AttributesInterface *attributes )
 {
-	Instance instance = m_instanceCache->get( object, attributes );
-	if( AtNode *node = instance.node() )
-	{
-		AiNodeSetStr( node, "name", name.c_str() );
-	}
-
-	ObjectInterfacePtr result = new ArnoldLight( name, instance, m_nodeDeleter );
+	Instance instance = m_instanceCache->get( object, attributes, name );
+	ObjectInterfacePtr result = new ArnoldLight( name, instance, m_nodeDeleter, m_parentNode );
 	result->attributes( attributes );
 	return result;
 }
 
 ArnoldRendererBase::ObjectInterfacePtr ArnoldRendererBase::object( const std::string &name, const IECore::Object *object, const AttributesInterface *attributes )
 {
-	Instance instance = m_instanceCache->get( object, attributes );
-	if( AtNode *node = instance.node() )
-	{
-		AiNodeSetStr( node, "name", name.c_str() );
-	}
-
+	Instance instance = m_instanceCache->get( object, attributes, name );
 	ObjectInterfacePtr result = new ArnoldObject( instance );
 	result->attributes( attributes );
 	return result;
@@ -2477,12 +2553,7 @@ ArnoldRendererBase::ObjectInterfacePtr ArnoldRendererBase::object( const std::st
 
 ArnoldRendererBase::ObjectInterfacePtr ArnoldRendererBase::object( const std::string &name, const std::vector<const IECore::Object *> &samples, const std::vector<float> &times, const AttributesInterface *attributes )
 {
-	Instance instance = m_instanceCache->get( samples, times, attributes );
-	if( AtNode *node = instance.node() )
-	{
-		AiNodeSetStr( node, "name", name.c_str() );
-	}
-
+	Instance instance = m_instanceCache->get( samples, times, attributes, name );
 	ObjectInterfacePtr result = new ArnoldObject( instance );
 	result->attributes( attributes );
 	return result;
