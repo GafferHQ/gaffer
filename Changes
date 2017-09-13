@@ -1,3 +1,43 @@
+0.35.0.0
+========
+
+Breaking Changes
+----------------
+
+- SplinePlug : Redesigned storage to support alternate basis (#2202).
+  Older scenes are still expected to function correctly.
+
+Features
+--------
+
+- Light Filters. Added initial support for Arnold light filters. These can be loaded using the
+  regular ArnoldShader node and assigned to lights using the ShaderAssignment node (#2135).
+
+Improvements
+------------
+
+- Splines (#2202) :
+  - Added support for alternate basis, including Linear, CatmullRom, BSpline, and MonotoneCubic.
+  - Fixed bug when passing splines to OSL.
+- Hash Cache : Improved performance for heavy scenes (#2262).
+- CollectScenes : Added "root" plug, allowing subtrees to be collected from the input scene. (#2240).
+- Shader node : Added attributeSuffix plug. This is primarily of use with light filters (#2135).
+
+Fixes
+-----
+
+- Group and BranchCreator : Improved performance when accessing the mappingPlug (#2271).
+- ImageWriter : Fixed bug when writing jpg with blank scanlines (#2269).
+- SceneInspector : Fixed bug when location have null shaders assigned (#2274).
+- ScriptNode : Fixed bug in isExecuting() when loading References (#2226).
+- ReferenceUI : Fixed bug when using DuplicateAsBox for references inside boxes (#2225).
+- Prune : Fixed hashing of sets (#2249).
+
+API
+---
+
+- VTuneMonitor : Added monitor to annotate vtune profile with node processes (#2231).
+
 0.34.1.0
 ========
 
