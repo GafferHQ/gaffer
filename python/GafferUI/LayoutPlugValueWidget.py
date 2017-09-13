@@ -39,10 +39,6 @@ import GafferUI
 
 ## A PlugValueWidget which uses a PlugLayout to present all the child
 # plugs of the main plug.
-## \todo If required, add support for a surrounding collapsible layout,
-# the presence of which should be specified via a metadata item. All
-# additional features should be driven by metadata only as far as is
-# feasible.
 class LayoutPlugValueWidget( GafferUI.PlugValueWidget ) :
 
 	def __init__( self, plug, **kw ) :
