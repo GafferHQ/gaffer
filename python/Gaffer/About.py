@@ -86,7 +86,7 @@ class About :
 	@staticmethod
 	def url() :
 
-		return "http://imageengine.github.io/gaffer/"
+		return "http://www.gafferhq.org"
 
 	@staticmethod
 	def dependenciesPreamble() :
