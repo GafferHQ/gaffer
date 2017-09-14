@@ -1826,17 +1826,12 @@ IE_CORE_DECLAREPTR( ProceduralRenderer )
 
 struct ProceduralData : boost::noncopyable
 {
-	IECoreScenePreview::ConstProceduralPtr procedural;
 	vector<AtNode *> nodesCreated;
 };
 
 int procInit( AtNode *node, void **userPtr )
 {
 	ProceduralData *data = (ProceduralData *)( AiNodeGetPtr( node, "userptr" ) );
-	ProceduralRendererPtr renderer = new ProceduralRenderer( node );
-	data->procedural->render( renderer.get() );
-	renderer->nodesCreated( data->nodesCreated );
-	data->procedural = nullptr;
 	*userPtr = data;
 	return 1;
 }
@@ -1875,12 +1870,14 @@ AtNode *convertProcedural( IECoreScenePreview::ConstProceduralPtr procedural, co
 	AtNode *node = namespacedNode( "procedural", nodeName, parentNode );
 
 	AiNodeSetPtr( node, "funcptr", (void *)procLoader );
+	AiNodeSetBool( node, "load_at_init", true );
+
+	ProceduralRendererPtr renderer = new ProceduralRenderer( node );
+	procedural->render( renderer.get() );
 
 	ProceduralData *data = new ProceduralData;
-	data->procedural = procedural;
+	renderer->nodesCreated( data->nodesCreated );
 	AiNodeSetPtr( node, "userptr", data );
-
-	AiNodeSetBool( node, "load_at_init", true );
 
 	return node;
 }
