@@ -734,7 +734,14 @@ libraries = {
 		"additionalFiles" : glob.glob( "python/GafferArnoldTest/volumes/*" ) + glob.glob( "python/GafferArnoldTest/metadata/*" ),
 	},
 
-	"GafferArnoldUI" : {},
+	"GafferArnoldUI" : {
+		"envAppends" : {
+			"LIBS" : [ "IECoreGL$CORTEX_LIB_SUFFIX", "GafferOSL", "GafferSceneUI" ],
+			},
+		"pythonEnvAppends" : {
+			"LIBS" : [ "GafferArnoldUI", "GafferSceneUI" ],
+		},
+	},
 
 	"GafferArnoldUITest" : {},
 

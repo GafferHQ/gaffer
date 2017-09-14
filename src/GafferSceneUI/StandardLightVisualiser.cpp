@@ -109,48 +109,6 @@ T parameter( InternedString metadataTarget, const IECore::CompoundData *paramete
 	return defaultValue;
 }
 
-void spotlightParameters( InternedString metadataTarget, const IECore::CompoundData *parameters, float &innerAngle, float &outerAngle, float &lensRadius )
-{
-	float coneAngle = parameter<float>( metadataTarget, parameters, "coneAngleParameter", 0.0f );
-	float penumbraAngle = parameter<float>( metadataTarget, parameters, "penumbraAngleParameter", 0.0f );
-	if( ConstStringDataPtr angleUnit = Metadata::value<StringData>( metadataTarget, "angleUnit" ) )
-	{
-		if( angleUnit->readable() == "radians" )
-		{
-			coneAngle *= 180.0 / M_PI;
-			penumbraAngle *= 180 / M_PI;
-		}
-	}
-
-	innerAngle = 0;
-	outerAngle = 0;
-
-	ConstStringDataPtr penumbraTypeData = Metadata::value<StringData>( metadataTarget, "penumbraType" );
-	const std::string *penumbraType = penumbraTypeData ? &penumbraTypeData->readable() : nullptr;
-
-	if( !penumbraType || *penumbraType == "inset" )
-	{
-		outerAngle = coneAngle;
-		innerAngle = coneAngle - 2.0f * penumbraAngle;
-	}
-	else if( *penumbraType == "outset" )
-	{
-		outerAngle = coneAngle + 2.0f * penumbraAngle;
-		innerAngle = coneAngle ;
-	}
-	else if( *penumbraType == "absolute" )
-	{
-		outerAngle = coneAngle;
-		innerAngle = penumbraAngle;
-	}
-
-	lensRadius = 0.0f;
-	if( parameter<bool>( metadataTarget, parameters, "lensRadiusEnableParameter", true ) )
-	{
-		lensRadius = parameter<float>( metadataTarget, parameters, "lensRadiusParameter", 0.0f );
-	}
-}
-
 void addWireframeCurveState( IECoreGL::Group *group )
 {
 	group->getState()->add( new IECoreGL::Primitive::DrawWireframe( false ) );
@@ -329,7 +287,7 @@ IECoreGL::ConstRenderablePtr StandardLightVisualiser::visualise( const IECore::I
 	else if( type && type->readable() == "spot" )
 	{
 		float innerAngle, outerAngle, lensRadius;
-		spotlightParameters( metadataTarget, shaderParameters, innerAngle, outerAngle, lensRadius );
+		spotlightParameters( attributeName, shaderVector, innerAngle, outerAngle, lensRadius );
 		result->addChild( const_pointer_cast<IECoreGL::Renderable>( spotlightCone( innerAngle, outerAngle, lensRadius / locatorScale ) ) );
 		result->addChild( const_pointer_cast<IECoreGL::Renderable>( ray() ) );
 		result->addChild( const_pointer_cast<IECoreGL::Renderable>( colorIndicator( finalColor, /* cameraFacing = */ false ) ) );
@@ -367,6 +325,52 @@ IECoreGL::ConstRenderablePtr StandardLightVisualiser::visualise( const IECore::I
 	}
 
 	return result;
+}
+
+void StandardLightVisualiser::spotlightParameters( const InternedString &attributeName, const IECore::ObjectVector *shaderVector, float &innerAngle, float &outerAngle, float &lensRadius )
+{
+
+	InternedString metadataTarget;
+	const IECore::CompoundData *shaderParameters = parametersAndMetadataTarget( attributeName, shaderVector, metadataTarget );
+
+	float coneAngle = parameter<float>( metadataTarget, shaderParameters, "coneAngleParameter", 0.0f );
+	float penumbraAngle = parameter<float>( metadataTarget, shaderParameters, "penumbraAngleParameter", 0.0f );
+	if( ConstStringDataPtr angleUnit = Metadata::value<StringData>( metadataTarget, "angleUnit" ) )
+	{
+		if( angleUnit->readable() == "radians" )
+		{
+			coneAngle *= 180.0 / M_PI;
+			penumbraAngle *= 180 / M_PI;
+		}
+	}
+
+	innerAngle = 0;
+	outerAngle = 0;
+
+	ConstStringDataPtr penumbraTypeData = Metadata::value<StringData>( metadataTarget, "penumbraType" );
+	const std::string *penumbraType = penumbraTypeData ? &penumbraTypeData->readable() : NULL;
+
+	if( !penumbraType || *penumbraType == "inset" )
+	{
+		outerAngle = coneAngle;
+		innerAngle = coneAngle - 2.0f * penumbraAngle;
+	}
+	else if( *penumbraType == "outset" )
+	{
+		outerAngle = coneAngle + 2.0f * penumbraAngle;
+		innerAngle = coneAngle ;
+	}
+	else if( *penumbraType == "absolute" )
+	{
+		outerAngle = coneAngle;
+		innerAngle = penumbraAngle;
+	}
+
+	lensRadius = 0.0f;
+	if( parameter<bool>( metadataTarget, shaderParameters, "lensRadiusEnableParameter", true ) )
+	{
+		lensRadius = parameter<float>( metadataTarget, shaderParameters, "lensRadiusParameter", 0.0f );
+	}
 }
 
 const char *StandardLightVisualiser::faceCameraVertexSource()
