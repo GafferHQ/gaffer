@@ -35,28 +35,22 @@
 //
 //////////////////////////////////////////////////////////////////////////
 
-#ifndef GAFFERARNOLD_TYPEIDS_H
-#define GAFFERARNOLD_TYPEIDS_H
+#ifndef GAFFERDELIGHT_TYPEIDS_H
+#define GAFFERDELIGHT_TYPEIDS_H
 
-namespace GafferArnold
+namespace GafferDelight
 {
 
 enum TypeId
 {
-	ArnoldShaderTypeId = 110900,
-	ArnoldOptionsTypeId = 110901,
-	ArnoldAttributesTypeId = 110902,
-	ArnoldLightTypeId = 110903,
-	ArnoldVDBTypeId = 110904,
-	InteractiveArnoldRenderTypeId = 110905,
-	ArnoldRenderTypeId = 110906,
-	ArnoldDisplacementTypeId = 110907,
-	ArnoldMeshLightTypeId = 110908,
-	ArnoldAOVShaderTypeId = 110909,
+	DelightAttributesTypeId = 110925,
+	DelightOptionsTypeId = 110926,
+	DelightRenderTypeId = 110927,
+	InteractiveDelightRenderTypeId = 110928,
 
-	LastTypeId = 110924
+	LastTypeId = 110949
 };
 
-} // namespace GafferArnold
+} // namespace GafferDelight
 
-#endif // GAFFERARNOLD_TYPEIDS_H
+#endif // GAFFERDELIGHT_TYPEIDS_H
