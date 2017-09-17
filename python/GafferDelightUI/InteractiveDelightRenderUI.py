@@ -1,6 +1,6 @@
 ##########################################################################
 #
-#  Copyright (c) 2017, John Haddon. All rights reserved.
+#  Copyright (c) 2016, Image Engine Design Inc. All rights reserved.
 #
 #  Redistribution and use in source and binary forms, with or without
 #  modification, are permitted provided that the following conditions are
@@ -34,8 +34,18 @@
 #
 ##########################################################################
 
-import DelightAttributesUI
-import DelightRenderUI
-import InteractiveDelightRenderUI
+import Gaffer
+import GafferDelight
 
-__import__( "IECore" ).loadConfig( "GAFFER_STARTUP_PATHS", {}, subdirectory = "GafferDelightUI" )
+Gaffer.Metadata.registerNode(
+
+	GafferDelight.InteractiveDelightRender,
+
+	"description",
+	"""
+	Performs interactive renders using 3Delight, updating the render on the fly
+	whenever the input scene changes. 3Delight supports edits to all aspects of
+	the scene without needing to restart the render.
+	""",
+
+)
