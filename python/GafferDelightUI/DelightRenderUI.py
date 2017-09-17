@@ -34,7 +34,37 @@
 #
 ##########################################################################
 
-import DelightAttributesUI
-import DelightRenderUI
+import Gaffer
+import GafferDelight
 
-__import__( "IECore" ).loadConfig( "GAFFER_STARTUP_PATHS", {}, subdirectory = "GafferDelightUI" )
+Gaffer.Metadata.registerNode(
+
+	GafferDelight.DelightRender,
+
+	"description",
+	"""
+	Performs offline batch rendering using the
+	3Delight renderer, or optionally generates
+	.nsi files for later rendering using a SystemCommand
+	node.
+	""",
+
+	plugs = {
+
+		"fileName" : [
+
+			"description",
+			"""
+			The name of the .nsi file to be generated when in
+			scene description mode.
+			""",
+
+			"nodule:type", "",
+			"path:bookmarks", "nsi",
+			"fileSystemPath:extensions", "nsi",
+
+		],
+
+	}
+
+)
