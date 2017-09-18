@@ -49,22 +49,23 @@ class FilterPlugValueWidget( GafferUI.PlugValueWidget ) :
 		self.__column = GafferUI.ListContainer( spacing = 8 )
 		GafferUI.PlugValueWidget.__init__( self, self.__column, plug, **kw )
 
-		row = GafferUI.ListContainer( GafferUI.ListContainer.Orientation.Horizontal, spacing = 4 )
+		with self.__column :
 
-		label = GafferUI.LabelPlugValueWidget(
-			plug,
-			horizontalAlignment = GafferUI.Label.HorizontalAlignment.Right,
-			verticalAlignment = GafferUI.Label.VerticalAlignment.Top,
-		)
-		label.label()._qtWidget().setMinimumWidth( GafferUI.PlugWidget.labelWidth() )
-		row.append( label )
+			with GafferUI.ListContainer( GafferUI.ListContainer.Orientation.Horizontal, spacing = 4 ) :
 
-		self.__menuButton = GafferUI.MenuButton()
-		self.__menuButton.setMenu( GafferUI.Menu( Gaffer.WeakMethod( self.__menuDefinition ) ) )
-		row.append( self.__menuButton )
-		row.append( GafferUI.Spacer( IECore.V2i( 1 ), IECore.V2i( 100000, 1 ) ), expand = True )
+				label = GafferUI.LabelPlugValueWidget(
+					plug,
+					horizontalAlignment = GafferUI.Label.HorizontalAlignment.Right,
+					verticalAlignment = GafferUI.Label.VerticalAlignment.Top,
+				)
+				label.label()._qtWidget().setFixedWidth( GafferUI.PlugWidget.labelWidth() )
 
-		self.__column.append( row )
+				self.__menuButton = GafferUI.MenuButton()
+				self.__menuButton.setMenu( GafferUI.Menu( Gaffer.WeakMethod( self.__menuDefinition ) ) )
+
+				GafferUI.Spacer( IECore.V2i( 1 ), IECore.V2i( 100000, 1 ), parenting = { "expand" : True } )
+
+			GafferUI.Divider()
 
 		self._updateFromPlug()
 
@@ -72,8 +73,6 @@ class FilterPlugValueWidget( GafferUI.PlugValueWidget ) :
 
 		return True
 
-	## Must be implemented by subclasses so that the widget reflects the current
-	# status of the plug.
 	def _updateFromPlug( self ) :
 
 		thisNode = self.getPlug().node()
@@ -92,18 +91,17 @@ class FilterPlugValueWidget( GafferUI.PlugValueWidget ) :
 			)
 
 		# update the filter node ui
+		filterUI = self.__column[-1] if isinstance( self.__column[-1], GafferUI.PlugLayout ) else None
 		if filterNode is None :
-			del self.__column[1:]
+			if filterUI is not None :
+				self.__column.removeChild( filterUI )
 		else :
-			filterNodeUI = None
-			if len( self.__column ) > 1 :
-				filterNodeUI = self.__column[1]
-			if filterNodeUI is None or not filterNodeUI.node().isSame( filterNode ) :
-				filterNodeUI = GafferUI.NodeUI.create( filterNode )
-			if len( self.__column ) > 1 :
-				self.__column[1] = filterNodeUI
-			else :
-				self.__column.append( filterNodeUI )
+			if filterUI is None or not filterUI.__node.isSame( filterNode ) :
+				if filterUI is not None :
+					self.__column.removeChild( filterUI )
+				filterUI = GafferUI.PlugLayout( filterNode, rootSection = "Settings" )
+				filterUI.__node = filterNode
+				self.__column.append( filterUI )
 
 	def __filterNode( self ) :
 
