@@ -71,19 +71,19 @@ Gaffer::Plug *setupNumericPlug( const AtNodeEntry *node, const AtParamEntry *par
 	switch( AiParamGetType( parameter ) )
 	{
 		case AI_TYPE_BYTE :
-			defaultValue = (ValueType)AiParamGetDefault( parameter )->BYTE;
+			defaultValue = (ValueType)AiParamGetDefault( parameter )->BYTE();
 			minValue = 0;
 			maxValue = 255;
 			break;
 		case AI_TYPE_INT :
-			defaultValue = (ValueType)AiParamGetDefault( parameter )->INT;
+			defaultValue = (ValueType)AiParamGetDefault( parameter )->INT();
 			break;
 		case AI_TYPE_UINT :
-			defaultValue = (ValueType)AiParamGetDefault( parameter )->UINT;
+			defaultValue = (ValueType)AiParamGetDefault( parameter )->UINT();
 			minValue = 0;
 			break;
 		case AI_TYPE_FLOAT :
-			defaultValue = (ValueType)AiParamGetDefault( parameter )->FLT;
+			defaultValue = (ValueType)AiParamGetDefault( parameter )->FLT();
 			break;
 	}
 
@@ -161,15 +161,15 @@ Gaffer::Plug *setupColorPlug( const AtNodeEntry *node, const AtParamEntry *param
 	switch( AiParamGetType( parameter ) )
 	{
 		case AI_TYPE_RGB :
-			defaultValue[0] = AiParamGetDefault( parameter )->RGB.r;
-			defaultValue[1] = AiParamGetDefault( parameter )->RGB.g;
-			defaultValue[2] = AiParamGetDefault( parameter )->RGB.b;
+			defaultValue[0] = AiParamGetDefault( parameter )->RGB().r;
+			defaultValue[1] = AiParamGetDefault( parameter )->RGB().g;
+			defaultValue[2] = AiParamGetDefault( parameter )->RGB().b;
 			break;
 		case AI_TYPE_RGBA :
-			defaultValue[0] = AiParamGetDefault( parameter )->RGBA.r;
-			defaultValue[1] = AiParamGetDefault( parameter )->RGBA.g;
-			defaultValue[2] = AiParamGetDefault( parameter )->RGBA.b;
-			defaultValue[3] = AiParamGetDefault( parameter )->RGBA.a;
+			defaultValue[0] = AiParamGetDefault( parameter )->RGBA().r;
+			defaultValue[1] = AiParamGetDefault( parameter )->RGBA().g;
+			defaultValue[2] = AiParamGetDefault( parameter )->RGBA().b;
+			defaultValue[3] = AiParamGetDefault( parameter )->RGBA().a;
 			break;
 		default :
 			return NULL;
@@ -312,7 +312,7 @@ Gaffer::Plug *ParameterHandler::setupPlug( const AtNodeEntry *node, const AtPara
 				parameter,
 				plugParent,
 				direction,
-				AiParamGetDefault( parameter )->BOOL
+				AiParamGetDefault( parameter )->BOOL()
 			);
 			break;
 
@@ -334,8 +334,8 @@ Gaffer::Plug *ParameterHandler::setupPlug( const AtNodeEntry *node, const AtPara
 				plugParent,
 				direction,
 				V2f(
-					AiParamGetDefault( parameter )->VEC2.x,
-					AiParamGetDefault( parameter )->VEC2.y
+					AiParamGetDefault( parameter )->VEC2().x,
+					AiParamGetDefault( parameter )->VEC2().y
 				)
 			);
 			break;
@@ -348,9 +348,9 @@ Gaffer::Plug *ParameterHandler::setupPlug( const AtNodeEntry *node, const AtPara
 				plugParent,
 				direction,
 				V3f(
-					AiParamGetDefault( parameter )->VEC.x,
-					AiParamGetDefault( parameter )->VEC.y,
-					AiParamGetDefault( parameter )->VEC.z
+					AiParamGetDefault( parameter )->VEC().x,
+					AiParamGetDefault( parameter )->VEC().y,
+					AiParamGetDefault( parameter )->VEC().z
 				)
 			);
 			break;
@@ -364,7 +364,7 @@ Gaffer::Plug *ParameterHandler::setupPlug( const AtNodeEntry *node, const AtPara
 					parameter,
 					plugParent,
 					direction,
-					AiEnumGetString( e, AiParamGetDefault( parameter )->INT )
+					AiEnumGetString( e, AiParamGetDefault( parameter )->INT() )
 				);
 			}
 			break;
@@ -376,7 +376,7 @@ Gaffer::Plug *ParameterHandler::setupPlug( const AtNodeEntry *node, const AtPara
 				parameter,
 				plugParent,
 				direction,
-				AiParamGetDefault( parameter )->STR
+				AiParamGetDefault( parameter )->STR().c_str()
 			);
 			break;
 
@@ -387,7 +387,7 @@ Gaffer::Plug *ParameterHandler::setupPlug( const AtNodeEntry *node, const AtPara
 				parameter,
 				plugParent,
 				direction,
-				M44f( *AiParamGetDefault( parameter )->pMTX )
+				M44f( AiParamGetDefault( parameter )->pMTX()->data )
 			);
 			break;
 
