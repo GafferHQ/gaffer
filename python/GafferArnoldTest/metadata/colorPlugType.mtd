@@ -42,10 +42,10 @@
 
 		gaffer.plugType       STRING  "Color3fPlug"
 
-	[attr reflection]
+	[attr diffuse_transmission]
 
 		gaffer.plugType       STRING  "Color3fPlug"
 
-	[attr refraction]
+	[attr diffuse_reflection]
 
 		gaffer.plugType       STRING  "Color4fPlug"

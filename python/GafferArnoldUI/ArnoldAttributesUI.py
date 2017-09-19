@@ -50,10 +50,12 @@ def __visibilitySummary( plug ) :
 
 		( "camera", "Camera" ),
 		( "shadow", "Shad" ),
-		( "reflected", "Refl" ),
-		( "refracted", "Refr" ),
-		( "diffuse", "Diff" ),
-		( "glossy", "Glossy" ),
+		( "diffuseReflection", "DiffRefl" ),
+		( "specularReflection", "SpecRefl" ),
+		( "diffuseTransmission", "DiffTrans" ),
+		( "specularTransmission", "SpecTrans" ),
+		( "volume", "Volume" ),
+		( "subsurface", "Subsurf" ),
 
 	)	:
 		if plug[childName+"Visibility"]["enabled"].getValue() :
@@ -156,56 +158,81 @@ Gaffer.Metadata.registerNode(
 			"label", "Shadow",
 
 		],
-
-		"attributes.reflectedVisibility" : [
-
-			"description",
-			"""
-			Whether or not the object is visible in
-			tight mirror reflections.
-			""",
-
-			"layout:section", "Visibility",
-			"label", "Reflections",
-
-		],
-
-		"attributes.refractedVisibility" : [
+		"attributes.diffuseReflectionVisibility" : [
 
 			"description",
 			"""
 			Whether or not the object is visible in
-			refractions.
+			reflected diffuse ( ie. if it casts bounce light )
 			""",
 
 			"layout:section", "Visibility",
-			"label", "Refractions",
+			"label", "Diffuse Reflection",
 
 		],
 
-		"attributes.diffuseVisibility" : [
-
-			"description",
-			"""
-			Whether or not the object is visible to diffuse
-			rays - whether it casts bounce light or not.
-			""",
-
-			"layout:section", "Visibility",
-			"label", "Diffuse",
-
-		],
-
-		"attributes.glossyVisibility" : [
+		"attributes.specularReflectionVisibility" : [
 
 			"description",
 			"""
 			Whether or not the object is visible in
-			soft specular reflections.
+			reflected specular ( ie. if it is visible in mirrors ).
 			""",
 
 			"layout:section", "Visibility",
-			"label", "Glossy",
+			"label", "Specular Reflection",
+
+		],
+
+		"attributes.diffuseTransmissionVisibility" : [
+
+			"description",
+			"""
+			Whether or not the object is visible in
+			transmitted diffuse ( ie. if it casts light through leaves ).
+			""",
+
+			"layout:section", "Visibility",
+			"label", "Diffuse Transmission",
+
+		],
+
+		"attributes.specularTransmissionVisibility" : [
+
+			"description",
+			"""
+			Whether or not the object is visible in
+			refracted specular ( ie. if it can be seen through glass ).
+			""",
+
+			"layout:section", "Visibility",
+			"label", "Specular Transmission",
+
+		],
+
+		"attributes.volumeVisibility" : [
+
+			"description",
+			"""
+			Whether or not the object is visible in
+			volume scattering.
+			""",
+
+			"layout:section", "Visibility",
+			"label", "Volume",
+
+		],
+
+		"attributes.subsurfaceVisibility" : [
+
+			"description",
+			"""
+			Whether or not the object is visible to subsurface
+			rays.
+			""",
+
+			"layout:section", "Visibility",
+			"label", "Subsurface",
 
 		],
 

@@ -432,10 +432,12 @@ class RendererTest( GafferTest.TestCase ) :
 				"doubleSided" : IECore.BoolData( True ),
 				"ai:visibility:camera" : IECore.BoolData( False ),
 				"ai:visibility:shadow" : IECore.BoolData( True ),
-				"ai:visibility:reflected" : IECore.BoolData( False ),
-				"ai:visibility:refracted" : IECore.BoolData( True ),
-				"ai:visibility:diffuse" : IECore.BoolData( False ),
-				"ai:visibility:glossy" : IECore.BoolData( True ),
+				"ai:visibility:diffuse_reflect" : IECore.BoolData( False ),
+				"ai:visibility:specular_reflect" : IECore.BoolData( True ),
+				"ai:visibility:diffuse_transmit" : IECore.BoolData( False ),
+				"ai:visibility:specular_transmit" : IECore.BoolData( True ),
+				"ai:visibility:volume" : IECore.BoolData( False ),
+				"ai:visibility:subsurface" : IECore.BoolData( True ),
 				"ai:receive_shadows" : IECore.BoolData( True ),
 				"ai:self_shadows" : IECore.BoolData( True ),
 				"ai:matte" : IECore.BoolData( True ),
@@ -450,10 +452,12 @@ class RendererTest( GafferTest.TestCase ) :
 				"doubleSided" : IECore.BoolData( False ),
 				"ai:visibility:camera" : IECore.BoolData( True ),
 				"ai:visibility:shadow" : IECore.BoolData( False ),
-				"ai:visibility:reflected" : IECore.BoolData( True ),
-				"ai:visibility:refracted" : IECore.BoolData( False ),
-				"ai:visibility:diffuse" : IECore.BoolData( True ),
-				"ai:visibility:glossy" : IECore.BoolData( False ),
+				"ai:visibility:diffuse_reflect" : IECore.BoolData( True ),
+				"ai:visibility:specular_reflect" : IECore.BoolData( False ),
+				"ai:visibility:diffuse_transmit" : IECore.BoolData( True ),
+				"ai:visibility:specular_transmit" : IECore.BoolData( False ),
+				"ai:visibility:volume" : IECore.BoolData( True ),
+				"ai:visibility:subsurface" : IECore.BoolData( False ),
 				"ai:receive_shadows" : IECore.BoolData( False ),
 				"ai:self_shadows" : IECore.BoolData( False ),
 				"ai:matte" : IECore.BoolData( False ),
@@ -484,11 +488,11 @@ class RendererTest( GafferTest.TestCase ) :
 
 			self.assertEqual(
 				arnold.AiNodeGetByte( o1, "visibility" ),
-				arnold.AI_RAY_ALL & ~( arnold.AI_RAY_CAMERA | arnold.AI_RAY_REFLECTED | arnold.AI_RAY_DIFFUSE )
+				arnold.AI_RAY_ALL & ~( arnold.AI_RAY_CAMERA | arnold.AI_RAY_DIFFUSE_TRANSMIT | arnold.AI_RAY_DIFFUSE_REFLECT | arnold.AI_RAY_VOLUME )
 			)
 			self.assertEqual(
 				arnold.AiNodeGetByte( o2, "visibility" ),
-				arnold.AI_RAY_ALL & ~( arnold.AI_RAY_SHADOW | arnold.AI_RAY_REFRACTED | arnold.AI_RAY_GLOSSY )
+				arnold.AI_RAY_ALL & ~( arnold.AI_RAY_SHADOW | arnold.AI_RAY_SPECULAR_TRANSMIT | arnold.AI_RAY_SPECULAR_REFLECT | arnold.AI_RAY_SUBSURFACE )
 			)
 			self.assertEqual(
 				arnold.AiNodeGetByte( o3, "visibility" ),
