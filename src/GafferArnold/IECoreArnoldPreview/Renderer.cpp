@@ -2084,7 +2084,7 @@ class ArnoldRenderer : public IECoreScenePreview::Renderer
 			AiNodeSetInt( options, "yres", resolution->readable().y );
 
 			const IECore::FloatData *pixelAspectRatio = cortexCamera->parametersData()->member<IECore::FloatData>( "pixelAspectRatio" );
-			AiNodeSetFlt( options, "aspect_ratio", 1.0f / pixelAspectRatio->readable() ); // arnold is y/x, we're x/y
+			AiNodeSetFlt( options, "pixel_aspect_ratio", pixelAspectRatio->readable() );
 
 			const IECore::Box2iData *renderRegion = cortexCamera->parametersData()->member<IECore::Box2iData>( "renderRegion" );
 
