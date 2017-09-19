@@ -230,11 +230,10 @@ Gaffer::Plug *ParameterHandler::setupPlug( const IECore::InternedString &paramet
 
 			return setupTypedPlug<IntPlug>( parameterName, plugParent, direction, 0 );
 
-		case AI_TYPE_POINT2 :
+		case AI_TYPE_VECTOR2 :
 
 			return setupTypedPlug<V2fPlug>( parameterName, plugParent, direction, V2f( 0.0f ) );
 
-		case AI_TYPE_POINT :
 		case AI_TYPE_VECTOR :
 
 			return setupTypedPlug<V3fPlug>( parameterName, plugParent, direction, V3f( 0.0f ) );
@@ -327,7 +326,7 @@ Gaffer::Plug *ParameterHandler::setupPlug( const AtNodeEntry *node, const AtPara
 			plug = setupColorPlug<Color4fPlug>( node, parameter, plugParent, direction );
 			break;
 
-		case AI_TYPE_POINT2 :
+		case AI_TYPE_VECTOR2 :
 
 			plug = setupTypedPlug<V2fPlug>(
 				node,
@@ -335,23 +334,8 @@ Gaffer::Plug *ParameterHandler::setupPlug( const AtNodeEntry *node, const AtPara
 				plugParent,
 				direction,
 				V2f(
-					AiParamGetDefault( parameter )->PNT2.x,
-					AiParamGetDefault( parameter )->PNT2.y
-				)
-			);
-			break;
-
-		case AI_TYPE_POINT :
-
-			plug = setupTypedPlug<V3fPlug>(
-				node,
-				parameter,
-				plugParent,
-				direction,
-				V3f(
-					AiParamGetDefault( parameter )->PNT.x,
-					AiParamGetDefault( parameter )->PNT.y,
-					AiParamGetDefault( parameter )->PNT.z
+					AiParamGetDefault( parameter )->VEC2.x,
+					AiParamGetDefault( parameter )->VEC2.y
 				)
 			);
 			break;

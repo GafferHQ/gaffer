@@ -86,8 +86,8 @@ AtNode *convert( const IECore::ExternalProcedural *procedural )
 	const Box3f bound = procedural->bound();
 	if( bound != Renderer::Procedural::noBound )
 	{
-		AiNodeSetPnt( node, "min", bound.min.x, bound.min.y, bound.min.z );
-		AiNodeSetPnt( node, "max", bound.max.x, bound.max.y, bound.max.z );
+		AiNodeSetVec( node, "min", bound.min.x, bound.min.y, bound.min.z );
+		AiNodeSetVec( node, "max", bound.max.x, bound.max.y, bound.max.z );
 	}
 	else
 	{
