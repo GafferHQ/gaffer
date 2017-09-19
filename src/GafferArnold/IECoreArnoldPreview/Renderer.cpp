@@ -1371,7 +1371,7 @@ class ArnoldObject : public IECoreScenePreview::Renderer::ObjectInterface
 
 		void applyTransform( AtNode *node, const Imath::M44f &transform )
 		{
-			AiNodeSetMatrix( node, "matrix", const_cast<float (*)[4]>( transform.x ) );
+			AiNodeSetMatrix( node, "matrix", reinterpret_cast<const AtMatrix&>( transform.x ) );
 		}
 
 		void applyTransform( AtNode *node, const std::vector<Imath::M44f> &samples, const std::vector<float> &times )
@@ -1382,7 +1382,7 @@ class ArnoldObject : public IECoreScenePreview::Renderer::ObjectInterface
 			for( size_t i = 0; i < numSamples; ++i )
 			{
 				AiArraySetFlt( timesArray, i, times[i] );
-				AiArraySetMtx( matricesArray, i, const_cast<float (*)[4]>( samples[i].x ) );
+				AiArraySetMtx( matricesArray, i, reinterpret_cast<const AtMatrix&>( samples[i].x ) );
 			}
 			AiNodeSetArray( node, "matrix", matricesArray );
 			if( AiNodeEntryLookUpParameter( AiNodeGetNodeEntry( node ), "transform_time_samples" ) )

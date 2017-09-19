@@ -369,22 +369,20 @@ class RendererTest( GafferTest.TestCase ) :
 			staticLight = arnold.AiNodeLookUpByName( "light:staticLight" )
 			movingLight = arnold.AiNodeLookUpByName( "light:movingLight" )
 
-			m = arnold.AtMatrix()
-			arnold.AiNodeGetMatrix( untransformedLight, "matrix", m )
+			m = arnold.AiNodeGetMatrix( untransformedLight, "matrix" )
 			self.assertEqual( self.__m44f( m ), IECore.M44f() )
 
-			arnold.AiNodeGetMatrix( staticLight, "matrix", m )
+			m = arnold.AiNodeGetMatrix( staticLight, "matrix" )
 			self.assertEqual( self.__m44f( m ), IECore.M44f().translate( IECore.V3f( 1, 2, 3 ) ) )
 
 			matrices = arnold.AiNodeGetArray( movingLight, "matrix" )
 			times = arnold.AiNodeGetArray( movingLight, "time_samples" )
-
 			self.assertEqual( arnold.AiArrayGetFlt( times, 0 ), 2.5 )
 			self.assertEqual( arnold.AiArrayGetFlt( times, 1 ), 3.5 )
 
-			arnold.AiArrayGetMtx( matrices, 0, m )
+			m = arnold.AiArrayGetMtx( matrices, 0 )
 			self.assertEqual( self.__m44f( m ), IECore.M44f().translate( IECore.V3f( 1, 2, 3 ) ) )
-			arnold.AiArrayGetMtx( matrices, 1, m )
+			m = arnold.AiArrayGetMtx( matrices, 1 )
 			self.assertEqual( self.__m44f( m ), IECore.M44f().translate( IECore.V3f( 4, 5, 6 ) ) )
 
 	def testSharedLightAttributes( self ) :
@@ -1661,12 +1659,7 @@ class RendererTest( GafferTest.TestCase ) :
 	@staticmethod
 	def __m44f( m ) :
 
-		return IECore.M44f(
-			m.a00, m.a01, m.a02, m.a03,
-			m.a10, m.a11, m.a12, m.a13,
-			m.a20, m.a21, m.a22, m.a23,
-			m.a30, m.a31, m.a32, m.a33
-		)
+		return IECore.M44f( *[ i for row in m.data for i in row ] )
 
 	def __allNodes( self, type = arnold.AI_NODE_ALL, ignoreBuiltIn = True ) :
 
