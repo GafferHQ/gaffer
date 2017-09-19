@@ -56,9 +56,9 @@ import GafferArnold
 
 def __aiMetadataGetStr( nodeEntry, paramName, name, defaultValue = None ) :
 
-	value = arnold.AtString()
+	value = arnold.AtStringReturn()
 	if arnold.AiMetaDataGetStr( nodeEntry, paramName, name, value ) :
-		return value.value
+		return arnold.AtStringToStr( value )
 
 	return defaultValue
 
@@ -220,7 +220,7 @@ def __translateHoudiniLayout( nodeEntry ) :
 	while not arnold.AiMetaDataIteratorFinished( metaIt ) :
 
 		metadata = arnold.AiMetaDataIteratorGetNext( metaIt )
-		m = re.match( "houdini\.parm\.([^.]*)\.([^.]+)", metadata.contents.name )
+		m = re.match( "houdini\.parm\.([^.]*)\.([^.]+)", arnold.AtStringToStr( metadata.contents.name ) )
 		if m :
 			parameters[m.group(2)] = Parameter( m.group(2), m.group(1), __aiMetadataGetStr( nodeEntry, None, m.group(0) ) )
 
