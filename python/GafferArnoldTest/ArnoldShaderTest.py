@@ -443,10 +443,10 @@ class ArnoldShaderTest( GafferSceneTest.SceneTestCase ) :
 		n = GafferArnold.ArnoldShader()
 		n.loadShader( "ray_switch" )
 
-		for name in [ "camera", "shadow", "reflection" ] :
+		for name in [ "camera", "shadow", "diffuse_transmission" ] :
 			self.assertTrue( isinstance( n["parameters"][name], Gaffer.Color3fPlug ) )
 
-		for name in [ "refraction", "diffuse", "glossy" ] :
+		for name in [ "diffuse_reflection", "specular_transmission", "specular_reflection", "volume" ] :
 			self.assertTrue( isinstance( n["parameters"][name], Gaffer.Color4fPlug ) )
 
 	def testFloatParameterMetadata( self ) :

@@ -629,10 +629,12 @@ IECore::InternedString g_oslShaderAttributeName( "osl:shader" );
 
 IECore::InternedString g_cameraVisibilityAttributeName( "ai:visibility:camera" );
 IECore::InternedString g_shadowVisibilityAttributeName( "ai:visibility:shadow" );
-IECore::InternedString g_reflectedVisibilityAttributeName( "ai:visibility:reflected" );
-IECore::InternedString g_refractedVisibilityAttributeName( "ai:visibility:refracted" );
-IECore::InternedString g_diffuseVisibilityAttributeName( "ai:visibility:diffuse" );
-IECore::InternedString g_glossyVisibilityAttributeName( "ai:visibility:glossy" );
+IECore::InternedString g_diffuseReflectVisibilityAttributeName( "ai:visibility:diffuse_reflect" );
+IECore::InternedString g_specularReflectVisibilityAttributeName( "ai:visibility:specular_reflect" );
+IECore::InternedString g_diffuseTransmitVisibilityAttributeName( "ai:visibility:diffuse_transmit" );
+IECore::InternedString g_specularTransmitVisibilityAttributeName( "ai:visibility:specular_transmit" );
+IECore::InternedString g_volumeVisibilityAttributeName( "ai:visibility:volume" );
+IECore::InternedString g_subsurfaceVisibilityAttributeName( "ai:visibility:subsurface" );
 
 IECore::InternedString g_arnoldSurfaceShaderAttributeName( "ai:surface" );
 IECore::InternedString g_arnoldLightShaderAttributeName( "ai:light" );
@@ -685,10 +687,12 @@ class ArnoldAttributes : public IECoreScenePreview::Renderer::AttributesInterfac
 		{
 			updateVisibility( g_cameraVisibilityAttributeName, AI_RAY_CAMERA, attributes );
 			updateVisibility( g_shadowVisibilityAttributeName, AI_RAY_SHADOW, attributes );
-			updateVisibility( g_reflectedVisibilityAttributeName, AI_RAY_REFLECTED, attributes );
-			updateVisibility( g_refractedVisibilityAttributeName, AI_RAY_REFRACTED, attributes );
-			updateVisibility( g_diffuseVisibilityAttributeName, AI_RAY_DIFFUSE, attributes );
-			updateVisibility( g_glossyVisibilityAttributeName, AI_RAY_GLOSSY, attributes );
+			updateVisibility( g_diffuseReflectVisibilityAttributeName, AI_RAY_DIFFUSE_REFLECT, attributes );
+			updateVisibility( g_specularReflectVisibilityAttributeName, AI_RAY_SPECULAR_REFLECT, attributes );
+			updateVisibility( g_diffuseTransmitVisibilityAttributeName, AI_RAY_DIFFUSE_TRANSMIT, attributes );
+			updateVisibility( g_specularTransmitVisibilityAttributeName, AI_RAY_SPECULAR_TRANSMIT, attributes );
+			updateVisibility( g_volumeVisibilityAttributeName, AI_RAY_VOLUME, attributes );
+			updateVisibility( g_subsurfaceVisibilityAttributeName, AI_RAY_SUBSURFACE, attributes );
 
 			if( const IECore::BoolData *d = attribute<IECore::BoolData>( g_doubleSidedAttributeName, attributes ) )
 			{

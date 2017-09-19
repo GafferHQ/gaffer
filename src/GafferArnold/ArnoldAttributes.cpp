@@ -54,10 +54,12 @@ ArnoldAttributes::ArnoldAttributes( const std::string &name )
 
 	attributes->addOptionalMember( "ai:visibility:camera", new IECore::BoolData( true ), "cameraVisibility", Gaffer::Plug::Default, false );
 	attributes->addOptionalMember( "ai:visibility:shadow", new IECore::BoolData( true ), "shadowVisibility", Gaffer::Plug::Default, false );
-	attributes->addOptionalMember( "ai:visibility:reflected", new IECore::BoolData( true ), "reflectedVisibility", Gaffer::Plug::Default, false );
-	attributes->addOptionalMember( "ai:visibility:refracted", new IECore::BoolData( true ), "refractedVisibility", Gaffer::Plug::Default, false );
-	attributes->addOptionalMember( "ai:visibility:diffuse", new IECore::BoolData( true ), "diffuseVisibility", Gaffer::Plug::Default, false );
-	attributes->addOptionalMember( "ai:visibility:glossy", new IECore::BoolData( true ), "glossyVisibility", Gaffer::Plug::Default, false );
+	attributes->addOptionalMember( "ai:visibility:diffuse_reflect", new IECore::BoolData( true ), "diffuseReflectionVisibility", Gaffer::Plug::Default, false );
+	attributes->addOptionalMember( "ai:visibility:specular_reflect", new IECore::BoolData( true ), "specularReflectionVisibility", Gaffer::Plug::Default, false );
+	attributes->addOptionalMember( "ai:visibility:diffuse_transmit", new IECore::BoolData( true ), "diffuseTransmissionVisibility", Gaffer::Plug::Default, false );
+	attributes->addOptionalMember( "ai:visibility:specular_transmit", new IECore::BoolData( true ), "specularTransmissionVisibility", Gaffer::Plug::Default, false );
+	attributes->addOptionalMember( "ai:visibility:volume", new IECore::BoolData( true ), "volumeVisibility", Gaffer::Plug::Default, false );
+	attributes->addOptionalMember( "ai:visibility:subsurface", new IECore::BoolData( true ), "subsurfaceVisibility", Gaffer::Plug::Default, false );
 
 	// Shading parameters
 
