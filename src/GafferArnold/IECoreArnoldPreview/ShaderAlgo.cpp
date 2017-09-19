@@ -123,7 +123,7 @@ std::vector<AtNode *> convert( const IECore::ObjectVector *shaderNetwork, const 
 		{
 			if( boost::starts_with( shader->getType(), "osl:" ) )
 			{
-				nodeType = "osl_shader";
+				nodeType = "osl";
 				oslShaderName = shader->getName().c_str();
 			}
 			else

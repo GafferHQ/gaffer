@@ -1140,7 +1140,7 @@ class RendererTest( GafferTest.TestCase ) :
 			self.assertEqual( arnold.AiNodeEntryGetName( arnold.AiNodeGetNodeEntry( add ) ), "add" )
 
 			spline = arnold.AiNodeGetLink( add, "input1" )
-			self.assertEqual( arnold.AiNodeEntryGetName( arnold.AiNodeGetNodeEntry( spline ) ), "osl_shader" )
+			self.assertEqual( arnold.AiNodeEntryGetName( arnold.AiNodeGetNodeEntry( spline ) ), "osl" )
 			self.assertEqual( arnold.AiNodeGetStr( spline, "shadername" ), "Pattern/ColorSpline" )
 			self.assertEqual( arnold.AiNodeGetStr( spline, "param_splineBasis" ), "bspline" )
 
@@ -1157,7 +1157,7 @@ class RendererTest( GafferTest.TestCase ) :
 			self.assertEqual( arnold.AiArrayGetRGB( splineValues, 3 ), arnold.AtRGB( 0.5, 0.5, 0.5 ) )
 
 			noise = arnold.AiNodeGetLink( add, "input2" )
-			self.assertEqual( arnold.AiNodeEntryGetName( arnold.AiNodeGetNodeEntry( noise ) ), "osl_shader" )
+			self.assertEqual( arnold.AiNodeEntryGetName( arnold.AiNodeGetNodeEntry( noise ) ), "osl" )
 			self.assertEqual( arnold.AiNodeGetStr( noise, "shadername" ), "Pattern/Noise" )
 			self.assertEqual( arnold.AiNodeGetFlt( noise, "param_scale" ), 10.0 )
 
@@ -1190,7 +1190,7 @@ class RendererTest( GafferTest.TestCase ) :
 			n = arnold.AiNodeLookUpByName( "testPlane" )
 
 			noise = arnold.AtNode.from_address( arnold.AiNodeGetPtr( n, "shader" ) )
-			self.assertEqual( arnold.AiNodeEntryGetName( arnold.AiNodeGetNodeEntry( noise ) ), "osl_shader" )
+			self.assertEqual( arnold.AiNodeEntryGetName( arnold.AiNodeGetNodeEntry( noise ) ), "osl" )
 			self.assertEqual( arnold.AiNodeGetStr( noise, "shadername" ), "Pattern/Noise" )
 
 	def testTraceSets( self ) :
