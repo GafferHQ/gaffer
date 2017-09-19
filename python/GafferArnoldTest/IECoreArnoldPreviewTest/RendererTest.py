@@ -614,7 +614,7 @@ class RendererTest( GafferTest.TestCase ) :
 			# test if data was added correctly to existing data
 			exrDriver = arnold.AiNodeLookUpByName( "ieCoreArnold:display:exrTest" )
 			customAttributes = arnold.AiNodeGetArray( exrDriver, "custom_attributes" )
-			customAttributesValues = set([ arnold.AiArrayGetStr( customAttributes, i ) for i in range( customAttributes.contents.nelements ) ])
+			customAttributesValues = set([ arnold.AiArrayGetStr( customAttributes, i ) for i in range( arnold.AiArrayGetNumElements( customAttributes.contents ) ) ])
 			customAttributesExpected = set([
 				"int 'bar' 1",
 				"string 'original data' test"])
@@ -624,7 +624,7 @@ class RendererTest( GafferTest.TestCase ) :
 			# test if all data types work correctly
 			exrDriver = arnold.AiNodeLookUpByName( "ieCoreArnold:display:exrDataTest" )
 			customAttributes = arnold.AiNodeGetArray( exrDriver, "custom_attributes" )
-			customAttributesValues = set([ arnold.AiArrayGetStr( customAttributes, i ) for i in range( customAttributes.contents.nelements ) ])
+			customAttributesValues = set([ arnold.AiArrayGetStr( customAttributes, i ) for i in range( arnold.AiArrayGetNumElements( customAttributes.contents ) ) ])
 
 			customAttributesExpected = set([
 				"string 'foo' bar",
@@ -1237,8 +1237,8 @@ class RendererTest( GafferTest.TestCase ) :
 				if sets is None or len( sets ) == 0 :
 					sets = [ "__none__" ]
 
-				self.assertEqual( a.contents.nelements, len( sets ) )
-				for i in range( 0, a.contents.nelements ) :
+				self.assertEqual( arnold.AiArrayGetNumElements( a.contents ), len( sets ) )
+				for i in range( 0, arnold.AiArrayGetNumElements( a.contents ) ) :
 					self.assertEqual( arnold.AiArrayGetStr( a, i ), sets[i] )
 
 	def testCurvesAttributes( self ) :
