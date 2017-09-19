@@ -438,10 +438,11 @@ Gaffer::Plug *ParameterHandler::setupPlug( const AtNodeEntry *node, const AtPara
 		msg(
 			Msg::Warning,
 			"GafferArnold::ParameterHandler::setupPlug",
-			format( "Unsupported parameter \"%s\" of type \"%s\" on node \"%s\"" ) %
+			format( "Unsupported parameter \"%s\" of type \"%s\" on node \"%s\" of type \"%s\"" ) %
 				AiParamGetName( parameter ) %
 				AiParamGetTypeName( AiParamGetType( parameter ) ) %
-				nodeName( plugParent )
+				nodeName( plugParent ) %
+				AiNodeEntryGetName( node )
 		);
 	}
 
