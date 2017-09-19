@@ -173,7 +173,7 @@ class RendererTest( GafferTest.TestCase ) :
 		)
 
 		# Replace the shader a few times.
-		for shader in ( "utility", "flat", "standard" ) :
+		for shader in ( "utility", "flat", "standard_surface" ) :
 			a = IECore.CompoundObject( {
 				"ai:surface" : IECore.ObjectVector( [ IECore.Shader( shader ) ] ),
 			} )
@@ -211,7 +211,7 @@ class RendererTest( GafferTest.TestCase ) :
 
 		shader2 = IECore.ObjectVector( [
 			IECore.Shader( "noise", parameters = { "__handle" : "myHandle" } ),
-			IECore.Shader( "standard", parameters = { "Kd_color" : "link:myHandle" } ),
+			IECore.Shader( "standard_surface", parameters = { "base_color" : "link:myHandle" } ),
 		] )
 
 		r.object(
@@ -1108,11 +1108,11 @@ class RendererTest( GafferTest.TestCase ) :
 				}
 			),
 			IECore.Shader(
-				"flat",
+				"add",
 				"ai:surface",
 				{
-					"color" : "link:splineHandle",
-					"opacity" : "link:noiseHandle"
+					"input1" : "link:splineHandle",
+					"input2" : "link:noiseHandle"
 				}
 			)
 		] )
@@ -1136,10 +1136,10 @@ class RendererTest( GafferTest.TestCase ) :
 
 			n = arnold.AiNodeLookUpByName( "testPlane" )
 
-			flat = arnold.AtNode.from_address( arnold.AiNodeGetPtr( n, "shader" ) )
-			self.assertEqual( arnold.AiNodeEntryGetName( arnold.AiNodeGetNodeEntry( flat ) ), "flat" )
+			add = arnold.AtNode.from_address( arnold.AiNodeGetPtr( n, "shader" ) )
+			self.assertEqual( arnold.AiNodeEntryGetName( arnold.AiNodeGetNodeEntry( add ) ), "add" )
 
-			spline = arnold.AiNodeGetLink( flat, "color" )
+			spline = arnold.AiNodeGetLink( add, "input1" )
 			self.assertEqual( arnold.AiNodeEntryGetName( arnold.AiNodeGetNodeEntry( spline ) ), "osl_shader" )
 			self.assertEqual( arnold.AiNodeGetStr( spline, "shadername" ), "Pattern/ColorSpline" )
 			self.assertEqual( arnold.AiNodeGetStr( spline, "param_splineBasis" ), "bspline" )
@@ -1156,7 +1156,7 @@ class RendererTest( GafferTest.TestCase ) :
 			self.assertEqual( arnold.AiArrayGetRGB( splineValues, 2 ), arnold.AtRGB( 0.5, 0.5, 0.5 ) )
 			self.assertEqual( arnold.AiArrayGetRGB( splineValues, 3 ), arnold.AtRGB( 0.5, 0.5, 0.5 ) )
 
-			noise = arnold.AiNodeGetLink( flat, "opacity" )
+			noise = arnold.AiNodeGetLink( add, "input2" )
 			self.assertEqual( arnold.AiNodeEntryGetName( arnold.AiNodeGetNodeEntry( noise ) ), "osl_shader" )
 			self.assertEqual( arnold.AiNodeGetStr( noise, "shadername" ), "Pattern/Noise" )
 			self.assertEqual( arnold.AiNodeGetFlt( noise, "param_scale" ), 10.0 )
