@@ -117,8 +117,8 @@ def __shaderCreator( name, nodeType ) :
 
 def __aiMetadataGetStr( nodeEntry, paramName, name ) :
 
-	value = arnold.AtString()
+	value = arnold.AtStringReturn()
 	if arnold.AiMetaDataGetStr( nodeEntry, paramName, name, value ) :
-		return value.value
+		return arnold.AtStringToStr( value )
 
 	return None

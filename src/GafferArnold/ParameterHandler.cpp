@@ -148,7 +148,7 @@ Gaffer::Plug *setupTypedPlug( const IECore::InternedString &parameterName, Gaffe
 template<typename PlugType>
 Gaffer::Plug *setupTypedPlug( const AtNodeEntry *node, const AtParamEntry *parameter, Gaffer::GraphComponent *plugParent, Gaffer::Plug::Direction direction, const typename PlugType::ValueType &defaultValue )
 {
-	return setupTypedPlug<PlugType>( AiParamGetName( parameter ), plugParent, direction, defaultValue );
+	return setupTypedPlug<PlugType>( AiParamGetName( parameter ).c_str(), plugParent, direction, defaultValue );
 }
 
 template<typename PlugType>
@@ -257,25 +257,31 @@ Gaffer::Plug *ParameterHandler::setupPlug( const IECore::InternedString &paramet
 	}
 }
 
+namespace {
+AtString g_FloatPlugArnoldString( "FloatPlug" );
+AtString g_Color3fPlugArnoldString( "Color3fPlug" );
+AtString g_Color4fPlugArnoldString( "Color4fPlug" );
+}
+
 Gaffer::Plug *ParameterHandler::setupPlug( const AtNodeEntry *node, const AtParamEntry *parameter, Gaffer::GraphComponent *plugParent, Gaffer::Plug::Direction direction )
 {
 	Plug *plug = NULL;
 
 	int parameterType = AiParamGetType( parameter );
 
-	const char *plugTypeOverride = NULL;
-	std::string name = AiParamGetName( parameter );
-	if( AiMetaDataGetStr( node, name.c_str(), "gaffer.plugType", &plugTypeOverride ) )
+	AtString plugTypeOverride;
+	AtString name = AiParamGetName( parameter );
+	if( AiMetaDataGetStr( node, name, "gaffer.plugType", &plugTypeOverride ) )
 	{
-		if( !strcmp( plugTypeOverride, "FloatPlug" ) )
+		if( plugTypeOverride == g_FloatPlugArnoldString )
 		{
 			parameterType = AI_TYPE_FLOAT;
 		}
-		else if( !strcmp( plugTypeOverride, "Color3fPlug" ) )
+		else if( plugTypeOverride == g_Color3fPlugArnoldString )
 		{
 			parameterType = AI_TYPE_RGB;
 		}
-		else if( !strcmp( plugTypeOverride, "Color4fPlug" ) )
+		else if( plugTypeOverride == g_Color4fPlugArnoldString )
 		{
 			parameterType = AI_TYPE_RGBA;
 		}
@@ -286,7 +292,7 @@ Gaffer::Plug *ParameterHandler::setupPlug( const AtNodeEntry *node, const AtPara
 				"GafferArnold::ParameterHandler::setupPlug",
 				format( "Unsupported plug type \"%s\" for parameter \"%s\"" ) %
 				plugTypeOverride %
-				name
+				name.c_str()
 			);
 		}
 	}
@@ -408,6 +414,11 @@ Gaffer::Plug *ParameterHandler::setupPlug( const AtNodeEntry *node, const AtPara
 	return plug;
 }
 
+namespace {
+const AtString g_nameArnoldString( "name" );
+const AtString g_gafferPlugTypeArnoldString( "gaffer.plugType" );
+}
+
 void ParameterHandler::setupPlugs( const AtNodeEntry *nodeEntry, Gaffer::GraphComponent *plugsParent, Gaffer::Plug::Direction direction )
 {
 
@@ -419,16 +430,16 @@ void ParameterHandler::setupPlugs( const AtNodeEntry *nodeEntry, Gaffer::GraphCo
 	const std::string nodeName = AiNodeEntryGetName( nodeEntry );
 	while( const AtParamEntry *param = AiParamIteratorGetNext( it ) )
 	{
-		std::string name = AiParamGetName( param );
-		if( name == "name" )
+		AtString name = AiParamGetName( param );
+		if( name == g_nameArnoldString )
 		{
 			continue;
 		}
 
-		const char *plugType = NULL;
-		if( AiMetaDataGetStr( nodeEntry, name.c_str(), "gaffer.plugType", &plugType ) )
+		AtString plugType;
+		if( AiMetaDataGetStr( nodeEntry, name, g_gafferPlugTypeArnoldString, &plugType ) )
 		{
-			if( !strcmp( plugType, "" ) )
+			if( plugType.length() == 0 )
 			{
 				continue;
 			}

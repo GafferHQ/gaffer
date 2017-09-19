@@ -527,6 +527,17 @@ IECore::InternedString g_curvesModeAttributeName( "ai:curves:mode" );
 IECore::InternedString g_linkedLights( "linkedLights" );
 IECore::InternedString g_lightFilterPrefix( "ai:lightFilter:" );
 
+const AtString g_nodeArnoldString("node");
+const AtString g_ginstanceArnoldString("ginstance");
+const AtString g_polymeshArnoldString("polymesh");
+const AtString g_curvesArnoldString("curves");
+const AtString g_boxArnoldString("box");
+const AtString g_volumeArnoldString("volume");
+const AtString g_sphereArnoldString("sphere");
+const AtString g_subdivTypeArnoldString("subdiv_type");
+const AtString g_catclarkArnoldString("catclark");
+const AtString g_meshLightArnoldString("mesh_light");
+
 class ArnoldAttributes : public IECoreScenePreview::Renderer::AttributesInterface
 {
 
@@ -712,33 +723,33 @@ class ArnoldAttributes : public IECoreScenePreview::Renderer::AttributesInterfac
 			if( previousAttributes )
 			{
 				const AtNode *geometry = node;
-				if( AiNodeIs( node, "ginstance" ) )
+				if( AiNodeIs( node, g_ginstanceArnoldString ) )
 				{
-					geometry = static_cast<const AtNode *>( AiNodeGetPtr( node, "node" ) );
+					geometry = static_cast<const AtNode *>( AiNodeGetPtr( node, g_nodeArnoldString ) );
 				}
 
 				IECore::TypeId objectType = IECore::InvalidTypeId;
 				bool meshInterpolationIsLinear = false;
 				bool proceduralIsVolumetric = false;
-				if( AiNodeIs( geometry, "polymesh" ) )
+				if( AiNodeIs( geometry, g_polymeshArnoldString ) )
 				{
 					objectType = IECore::MeshPrimitiveTypeId;
-					meshInterpolationIsLinear = strcmp( AiNodeGetStr( geometry, "subdiv_type" ), "catclark" );
+					meshInterpolationIsLinear = AiNodeGetStr( geometry, g_subdivTypeArnoldString ) != g_catclarkArnoldString;
 				}
-				else if( AiNodeIs( geometry, "curves" ) )
+				else if( AiNodeIs( geometry, g_curvesArnoldString ) )
 				{
 					objectType = IECore::CurvesPrimitiveTypeId;
 				}
-				else if( AiNodeIs( geometry, "box" ) )
+				else if( AiNodeIs( geometry, g_boxArnoldString ) )
 				{
 					objectType = IECore::MeshPrimitiveTypeId;
 				}
-				else if( AiNodeIs( geometry, "volume" ) )
+				else if( AiNodeIs( geometry, g_volumeArnoldString ) )
 				{
 					objectType = IECore::ExternalProceduralTypeId;
 					proceduralIsVolumetric = true;
 				}
-				else if( AiNodeIs( geometry, "sphere" ) )
+				else if( AiNodeIs( geometry, g_sphereArnoldString ) )
 				{
 					objectType = IECore::SpherePrimitiveTypeId;
 				}
@@ -1453,9 +1464,9 @@ class ArnoldLight : public ArnoldObject
 			const std::string name = "light:" + m_name;
 			AiNodeSetStr( m_lightShader->root(), "name", name.c_str() );
 
-			// Deal with mesh_lights.
+			// Deal with mesh lights.
 
-			if( AiNodeIs( m_lightShader->root(), "mesh_light" ) )
+			if( AiNodeIs( m_lightShader->root(), g_meshLightArnoldString ) )
 			{
 				if( m_instance.node() )
 				{
@@ -1463,7 +1474,7 @@ class ArnoldLight : public ArnoldObject
 				}
 				else
 				{
-					// Don't output mesh_lights from locations with no object
+					// Don't output mesh lights from locations with no object
 					m_lightShader = NULL;
 					return true;
 				}
