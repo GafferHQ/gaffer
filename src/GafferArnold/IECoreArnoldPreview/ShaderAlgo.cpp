@@ -247,7 +247,7 @@ std::vector<AtNode *> convert( const IECore::ObjectVector *shaderNetwork, const 
 						const AtParamValue *def = AiParamGetDefault( parmEntry );
 
 						// Appropriately use SetArray vs LinkOutput depending on target type, as above
-						if( def->ARRAY->type == AI_TYPE_NODE )
+						if( AiArrayGetType( def->ARRAY() ) == AI_TYPE_NODE )
 						{
 							AtArray *nodesArray = AiArrayConvert( nodes.size(), 1, AI_TYPE_POINTER, &nodes[0] );
 							AiNodeSetArray( node, parameterName.c_str(), nodesArray );
