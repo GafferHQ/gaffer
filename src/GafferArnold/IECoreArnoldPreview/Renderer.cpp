@@ -1625,7 +1625,7 @@ IECore::InternedString g_frameOptionName( "frame" );
 IECore::InternedString g_cameraOptionName( "camera" );
 IECore::InternedString g_logFileNameOptionName( "ai:log:filename" );
 IECore::InternedString g_logMaxWarningsOptionName( "ai:log:max_warnings" );
-IECore::InternedString g_shaderSearchPathOptionName( "ai:shader_searchpath" );
+IECore::InternedString g_pluginSearchPathOptionName( "ai:plugin_searchpath" );
 IECore::InternedString g_aaSeedOptionName( "ai:AA_seed" );
 IECore::InternedString g_sampleMotionOptionName( "sampleMotion" );
 
@@ -1652,7 +1652,7 @@ class ArnoldRenderer : public IECoreScenePreview::Renderer
 			AiMsgSetLogFileFlags( m_logFileFlags );
 			AiMsgSetConsoleFlags( m_consoleFlags );
 			// Get OSL shaders onto the shader searchpath.
-			option( g_shaderSearchPathOptionName, new IECore::StringData( "" ) );
+			option( g_pluginSearchPathOptionName, new IECore::StringData( "" ) );
 		}
 
 		virtual ~ArnoldRenderer()
@@ -1764,7 +1764,7 @@ class ArnoldRenderer : public IECoreScenePreview::Renderer
 				}
 				return;
 			}
-			else if( name == g_shaderSearchPathOptionName )
+			else if( name == g_pluginSearchPathOptionName )
 			{
 				// We must include the OSL searchpaths in Arnold's shader
 				// searchpaths so that the OSL shaders can be found.
@@ -1777,7 +1777,7 @@ class ArnoldRenderer : public IECoreScenePreview::Renderer
 						s = d->readable() + ":" + s;
 					}
 				}
-				AiNodeSetStr( options, "shader_searchpath", s.c_str() );
+				AiNodeSetStr( options, "plugin_searchpath", s.c_str() );
 				return;
 			}
 			else if( boost::starts_with( name.c_str(), "ai:declare:" ) )

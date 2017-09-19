@@ -100,7 +100,7 @@ ArnoldOptions::ArnoldOptions( const std::string &name )
 
 	options->addOptionalMember( "ai:texture_searchpath", new IECore::StringData( "" ), "textureSearchPath", Gaffer::Plug::Default, false );
 	options->addOptionalMember( "ai:procedural_searchpath", new IECore::StringData( "" ), "proceduralSearchPath", Gaffer::Plug::Default, false );
-	options->addOptionalMember( "ai:shader_searchpath", new IECore::StringData( "" ), "shaderSearchPath", Gaffer::Plug::Default, false );
+	options->addOptionalMember( "ai:plugin_searchpath", new IECore::StringData( "" ), "pluginSearchPath", Gaffer::Plug::Default, false );
 
 	// Error colours
 
