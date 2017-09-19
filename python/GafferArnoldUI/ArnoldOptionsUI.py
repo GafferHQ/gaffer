@@ -498,18 +498,6 @@ Gaffer.Metadata.registerNode(
 
 		],
 
-		"options.autoTransparencyThreshold" : [
-
-			"description",
-			"""
-			A threshold for accumulated opacity, after which the
-			last object will be treated as opaque.
-			""",
-
-			"layout:section", "Ray Depth",
-			"label", "Opacity Threshold",
-		],
-
 		# Texturing
 
 		"options.textureMaxMemoryMB" : [
