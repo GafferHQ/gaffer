@@ -138,7 +138,7 @@ def __featuresSummary( plug ) :
 def __searchPathsSummary( plug ) :
 
 	info = []
-	for prefix in ( "texture", "procedural", "shader" ) :
+	for prefix in ( "texture", "procedural", "plugin" ) :
 		if plug[prefix+"SearchPath"]["enabled"].getValue() :
 			info.append( prefix.capitalize() )
 
@@ -729,15 +729,15 @@ Gaffer.Metadata.registerNode(
 
 		],
 
-		"options.shaderSearchPath" : [
+		"options.pluginSearchPath" : [
 
 			"description",
 			"""
-			The locations used to search for shader plugins.
+			The locations used to search for shaders and other plugins.
 			""",
 
 			"layout:section", "Search Paths",
-			"label", "Shaders",
+			"label", "Plugins (Shaders)",
 
 		],
 
