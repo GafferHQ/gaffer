@@ -390,15 +390,15 @@ class ArnoldRenderTest( GafferSceneTest.SceneTestCase ) :
 			planeTimes = arnold.AiNodeGetArray( plane, "transform_time_samples" )
 			planeMatrices = arnold.AiNodeGetArray( plane, "matrix" )
 
-			self.assertEqual( sphereTimes.contents.nelements, 2 )
-			self.assertEqual( sphereTimes.contents.nkeys, 1 )
-			self.assertEqual( sphereMatrices.contents.nelements, 1 )
-			self.assertEqual( sphereMatrices.contents.nkeys, 2 )
+			self.assertEqual( arnold.AiArrayGetNumElements( sphereTimes.contents ), 2 )
+			self.assertEqual( arnold.AiArrayGetNumKeys( sphereTimes.contents ), 1 )
+			self.assertEqual( arnold.AiArrayGetNumElements( sphereMatrices.contents ), 1 )
+			self.assertEqual( arnold.AiArrayGetNumKeys( sphereMatrices.contents ), 2 )
 
-			self.assertEqual( planeTimes.contents.nelements, 2 )
-			self.assertEqual( planeTimes.contents.nkeys, 1 )
-			self.assertEqual( planeMatrices.contents.nelements, 1 )
-			self.assertEqual( planeMatrices.contents.nkeys, 2 )
+			self.assertEqual( arnold.AiArrayGetNumElements( planeTimes.contents ), 2 )
+			self.assertEqual( arnold.AiArrayGetNumKeys( planeTimes.contents ), 1 )
+			self.assertEqual( arnold.AiArrayGetNumElements( planeMatrices.contents ), 1 )
+			self.assertEqual( arnold.AiArrayGetNumKeys( planeMatrices.contents ), 2 )
 
 			for i in range( 0, 2 ) :
 
@@ -443,15 +443,15 @@ class ArnoldRenderTest( GafferSceneTest.SceneTestCase ) :
 			planeTimes = arnold.AiNodeGetArray( plane, "transform_time_samples" )
 			planeMatrices = arnold.AiNodeGetArray( plane, "matrix" )
 
-			self.assertEqual( sphereTimes.contents.nelements, 2 )
-			self.assertEqual( sphereTimes.contents.nkeys, 1 )
-			self.assertEqual( sphereMatrices.contents.nelements, 1 )
-			self.assertEqual( sphereMatrices.contents.nkeys, 2 )
+			self.assertEqual( arnold.AiArrayGetNumElements( sphereTimes.contents ), 2 )
+			self.assertEqual( arnold.AiArrayGetNumKeys( sphereTimes.contents ), 1 )
+			self.assertEqual( arnold.AiArrayGetNumElements( sphereMatrices.contents ), 1 )
+			self.assertEqual( arnold.AiArrayGetNumKeys( sphereMatrices.contents ), 2 )
 
-			self.assertEqual( planeTimes.contents.nelements, 2 )
-			self.assertEqual( planeTimes.contents.nkeys, 1 )
-			self.assertEqual( planeMatrices.contents.nelements, 1 )
-			self.assertEqual( planeMatrices.contents.nkeys, 2 )
+			self.assertEqual( arnold.AiArrayGetNumElements( planeTimes.contents ), 2 )
+			self.assertEqual( arnold.AiArrayGetNumKeys( planeTimes.contents ), 1 )
+			self.assertEqual( arnold.AiArrayGetNumElements( planeMatrices.contents ), 1 )
+			self.assertEqual( arnold.AiArrayGetNumKeys( planeMatrices.contents ), 2 )
 
 			for i in range( 0, 2 ) :
 
@@ -881,7 +881,7 @@ class ArnoldRenderTest( GafferSceneTest.SceneTestCase ) :
 			sphere = arnold.AiNodeLookUpByName( "/group/sphere" )
 			lights = arnold.AiNodeGetArray( sphere, "light_group" )
 			lightNames = []
-			for i in range(lights.contents.nelements):
+			for i in range( arnold.AiArrayGetNumElements( lights.contents ) ):
 				light = arnold.cast(arnold.AiArrayGetPtr(lights, i), arnold.POINTER(arnold.AtNode))
 				lightNames.append( arnold.AiNodeGetName(light.contents)  )
 
@@ -894,7 +894,7 @@ class ArnoldRenderTest( GafferSceneTest.SceneTestCase ) :
 			sphere1 = arnold.AiNodeLookUpByName( "/group/sphere1" )
 			lights = arnold.AiNodeGetArray( sphere1, "light_group" )
 			lightNames = []
-			for i in range(lights.contents.nelements):
+			for i in range( arnold.AiArrayGetNumElements( lights.contents ) ):
 				light = arnold.cast(arnold.AiArrayGetPtr(lights, i), arnold.POINTER(arnold.AtNode))
 				lightNames.append( arnold.AiNodeGetName(light.contents)  )
 
@@ -943,8 +943,8 @@ class ArnoldRenderTest( GafferSceneTest.SceneTestCase ) :
 	def __arrayToSet( self, a ) :
 
 		result = set()
-		for i in range( 0, a.contents.nelements ) :
-			if a.contents.type == arnold.AI_TYPE_STRING :
+		for i in range( 0,  arnold.AiArrayGetNumElements( a.contents ) ) :
+			if arnold.AiArrayGetType( a.contents ) == arnold.AI_TYPE_STRING :
 				result.add( arnold.AiArrayGetStr( a, i ) )
 			else :
 				raise TypeError
