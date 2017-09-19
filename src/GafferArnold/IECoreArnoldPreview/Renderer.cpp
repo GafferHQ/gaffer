@@ -1473,7 +1473,8 @@ class InstanceCache : public IECore::RefCounted
 			}
 			else
 			{
-				node = namespacedNodeAlgoConvert( samples, times, nodeName, m_parentNode );
+				NodeAlgo::ensureUniformTimeSamples( times );
+				node = namespacedNodeAlgoConvert( samples, times[0], times[times.size() - 1], nodeName, m_parentNode );
 			}
 
 			if( !node )
@@ -1571,22 +1572,17 @@ class ArnoldObject : public IECoreScenePreview::Renderer::ObjectInterface
 		void applyTransform( AtNode *node, const std::vector<Imath::M44f> &samples, const std::vector<float> &times )
 		{
 			const size_t numSamples = samples.size();
-			AtArray *timesArray = AiArrayAllocate( samples.size(), 1, AI_TYPE_FLOAT );
 			AtArray *matricesArray = AiArrayAllocate( 1, numSamples, AI_TYPE_MATRIX );
 			for( size_t i = 0; i < numSamples; ++i )
 			{
-				AiArraySetFlt( timesArray, i, times[i] );
 				AiArraySetMtx( matricesArray, i, reinterpret_cast<const AtMatrix&>( samples[i].x ) );
 			}
 			AiNodeSetArray( node, "matrix", matricesArray );
-			if( AiNodeEntryLookUpParameter( AiNodeGetNodeEntry( node ), "transform_time_samples" ) )
-			{
-				AiNodeSetArray( node, "transform_time_samples", timesArray );
-			}
-			else
-			{
-				AiNodeSetArray( node, "time_samples", timesArray );
-			}
+
+			NodeAlgo::ensureUniformTimeSamples( times );
+			AiNodeSetFlt( node, "motion_start", times[0] );
+			AiNodeSetFlt( node, "motion_end", times[times.size() - 1] );
+
 		}
 
 		Instance m_instance;

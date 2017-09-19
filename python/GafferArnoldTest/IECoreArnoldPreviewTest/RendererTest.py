@@ -375,10 +375,10 @@ class RendererTest( GafferTest.TestCase ) :
 			m = arnold.AiNodeGetMatrix( staticLight, "matrix" )
 			self.assertEqual( self.__m44f( m ), IECore.M44f().translate( IECore.V3f( 1, 2, 3 ) ) )
 
+			self.assertEqual( arnold.AiNodeGetFlt( movingLight, "motion_start" ), 2.5 )
+			self.assertEqual( arnold.AiNodeGetFlt( movingLight, "motion_end" ), 3.5 )
+
 			matrices = arnold.AiNodeGetArray( movingLight, "matrix" )
-			times = arnold.AiNodeGetArray( movingLight, "time_samples" )
-			self.assertEqual( arnold.AiArrayGetFlt( times, 0 ), 2.5 )
-			self.assertEqual( arnold.AiArrayGetFlt( times, 1 ), 3.5 )
 
 			m = arnold.AiArrayGetMtx( matrices, 0 )
 			self.assertEqual( self.__m44f( m ), IECore.M44f().translate( IECore.V3f( 1, 2, 3 ) ) )

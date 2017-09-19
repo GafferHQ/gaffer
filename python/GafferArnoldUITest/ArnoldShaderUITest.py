@@ -86,7 +86,7 @@ class ArnoldShaderUITest( GafferUITest.TestCase ) :
 
 		## \todo Here we're suppressing warnings about not being
 		# able to create plugs for some parameters. In many cases
-		# these are parameters like "matrix" and "time_samples"
+		# these are parameters like "matrix"
 		# that we don't actually want to represent anyway. We should
 		# add a mechanism for ignoring irrelevant parameters (perhaps
 		# using custom gaffer.something metadata in additional Arnold
