@@ -227,8 +227,8 @@ AtNode *convertToBox( const IECore::Object *object, const std::string &name, con
 	if( const IECore::VisibleRenderable *visibleRenderable = IECore::runTimeCast<const IECore::VisibleRenderable>( object ) )
 	{
 		const Imath::Box3f b = visibleRenderable->bound();
-		AiNodeSetPnt( node, "min", b.min.x, b.min.y, b.min.z );
-		AiNodeSetPnt( node, "max", b.max.x, b.max.y, b.max.z );
+		AiNodeSetVec( node, "min", b.min.x, b.min.y, b.min.z );
+		AiNodeSetVec( node, "max", b.max.x, b.max.y, b.max.z );
 	}
 
 	return node;
