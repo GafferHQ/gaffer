@@ -34,6 +34,10 @@
 #
 ##########################################################################
 
+__import__( "GafferSceneUI" )
+
+from _GafferArnoldUI import *
+
 import ArnoldShaderUI
 import ArnoldRenderUI
 import ShaderMenu
