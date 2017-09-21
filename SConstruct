@@ -131,12 +131,6 @@ options.Add(
 )
 
 options.Add(
-	"RMAN_ROOT",
-	"The directory in which your RenderMan renderer is installed. Used to build GafferRenderMan.",
-	"",
-)
-
-options.Add(
 	"VTUNE_ROOT",
 	"The directory in which VTune is installed.",
 	""
@@ -745,26 +739,6 @@ libraries = {
 
 	"GafferArnoldUITest" : {},
 
-	"GafferRenderMan" : {
-		"envAppends" : {
-			"LIBS" : [ "Gaffer", "GafferScene", "IECoreRI$CORTEX_LIB_SUFFIX" ],
-			"LIBPATH" : [ "$RMAN_ROOT/lib" ],
-		},
-		"pythonEnvAppends" : {
-			"LIBS" : [ "GafferBindings", "GafferScene", "GafferRenderMan" ],
-			"LIBPATH" : [ "$RMAN_ROOT/lib" ],
-		},
-		"requiredOptions" : [ "RMAN_ROOT" ],
-	},
-
-	"GafferRenderManUI" : {},
-
-	"GafferRenderManTest" : {
-		"additionalFiles" : glob.glob( "python/GafferRenderManTest/*/*" ),
-	},
-
-	"GafferRenderManUITest" : {},
-
 	"GafferOSL" : {
 		"envAppends" : {
 			"CPPPATH" : [ "$OSLHOME/include/OSL" ],
@@ -1141,10 +1115,6 @@ def buildDocs( target, source, env ) :
 		env["ENV"]["PATH"] += ":" + env.subst( "$ARNOLD_ROOT/bin" )
 		env["ENV"]["PYTHONPATH"] += ":" + env.subst( "$ARNOLD_ROOT/python" )
 		env["ENV"][libraryPathEnvVar] += ":" + env.subst( "$ARNOLD_ROOT/bin" )
-
-	if env.subst( "$RMAN_ROOT" ) :
-		env["ENV"]["PATH"] += ":" + env.subst( "$RMAN_ROOT/bin" )
-		env["ENV"][libraryPathEnvVar] += ":" + env.subst( "$RMAN_ROOT/lib" )
 
 	if env.subst( "$APPLESEED_ROOT" ) and env["APPLESEED_ROOT"] != "$BUILD_DIR/appleseed" :
 		env["ENV"]["PATH"] += ":" + env.subst( "$APPLESEED_ROOT/bin" )

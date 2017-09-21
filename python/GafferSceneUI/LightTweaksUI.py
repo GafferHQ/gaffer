@@ -67,7 +67,6 @@ Gaffer.Metadata.registerNode(
 			"preset:All", "light *:light",
 			"preset:Appleseed", "as:light",
 			"preset:Arnold", "ai:light",
-			"preset:RenderMan", "ri:light",
 
 		],
 

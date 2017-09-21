@@ -88,26 +88,6 @@ def __registerShadingModes( modes ) :
 
 with IECore.IgnoredExceptions( ImportError ) :
 
-	# If this import fails, then our "with" block will swallow the error
-	# and we'll not add any useless visualisation modes (because the code
-	# below won't be reached). We leave the actual error reporting to the
-	# startup/gui/menus.py config file.
-	import GafferRenderMan
-
-	__registerShadingModes( [
-
-		( "Diagnostic/RenderMan/Shader Assignment", GafferScene.AttributeVisualiser, { "attributeName" : "ri:surface", "mode" : GafferScene.AttributeVisualiser.Mode.ShaderNodeColor } ),
-		( "Diagnostic/RenderMan/Camera Visibility", GafferScene.AttributeVisualiser, { "attributeName" : "ri:visibility:camera" } ),
-		( "Diagnostic/RenderMan/Transmission Visibility", GafferScene.AttributeVisualiser, { "attributeName" : "ri:visibility:transmission" } ),
-		( "Diagnostic/RenderMan/Diffuse Visibility", GafferScene.AttributeVisualiser, { "attributeName" : "ri:visibility:diffuse" } ),
-		( "Diagnostic/RenderMan/Specular Visibility", GafferScene.AttributeVisualiser, { "attributeName" : "ri:visibility:specular" } ),
-		( "Diagnostic/RenderMan/Photon Visibility", GafferScene.AttributeVisualiser, { "attributeName" : "ri:visibility:photon" } ),
-		( "Diagnostic/RenderMan/Matte", GafferScene.AttributeVisualiser, { "attributeName" : "ri:visibility:matte" } ),
-
-	] )
-
-with IECore.IgnoredExceptions( ImportError ) :
-
 	import GafferArnold
 
 	__registerShadingModes( [

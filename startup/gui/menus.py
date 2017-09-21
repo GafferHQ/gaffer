@@ -125,41 +125,6 @@ if moduleSearchPath.find( "arnold" ) :
 		stacktrace = traceback.format_exc()
 		IECore.msg( IECore.Msg.Level.Error, "startup/gui/menus.py", "Error loading Arnold module - \"%s\".\n %s" % ( m, stacktrace ) )
 
-# RenderMan nodes
-
-if "DELIGHT" in os.environ :
-
-	try :
-
-		import GafferRenderMan
-		import GafferRenderManUI
-
-		GafferRenderManUI.ShaderMenu.appendShaders( nodeMenu.definition() )
-
-		nodeMenu.append( "/RenderMan/Attributes", GafferRenderMan.RenderManAttributes, searchText = "RenderManAttributes" )
-		nodeMenu.append( "/RenderMan/Options", GafferRenderMan.RenderManOptions, searchText = "RenderManOptions" )
-		nodeMenu.append(
-			"/RenderMan/Render", GafferRenderMan.RenderManRender,
-			plugValues = {
-				"ribFileName" : "${project:rootDirectory}/ribs/${script:name}/${script:name}.####.rib",
-			},
-			searchText = "RenderManRender"
-		)
-		nodeMenu.append( "/RenderMan/Interactive Render", GafferRenderMan.InteractiveRenderManRender, searchText = "InteractiveRenderManRender" )
-		nodeMenu.append( "/RenderMan/Shader Ball", GafferRenderMan.RenderManShaderBall, searchText = "RenderManShaderBall" )
-
-		scriptWindowMenu.append(
-			"/Help/3Delight/User Guide",
-			{
-				"command" : functools.partial( GafferUI.showURL, os.path.expandvars( "$DELIGHT/doc/3Delight-UserManual.pdf" ) ),
-			}
-		)
-
-	except Exception, m :
-
-		stacktrace = traceback.format_exc()
-		IECore.msg( IECore.Msg.Level.Error, "startup/gui/menus.py", "Error loading RenderMan module - \"%s\".\n %s" % ( m, stacktrace ) )
-
 # appleseed nodes
 
 if "APPLESEED" in os.environ :
