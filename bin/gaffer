@@ -177,9 +177,6 @@ else
 	# Work around this by putting them on the DYLD_LIBRARY_PATH.
 	prependToPath "$PYTHONHOME/lib/python2.7/site-packages/PySide2" DYLD_LIBRARY_PATH
 	prependToPath /System/Library/Frameworks/ApplicationServices.framework/Versions/A/Frameworks/ImageIO.framework/Resources/ DYLD_LIBRARY_PATH
-	if [[ -n $DELIGHT ]] ; then
-		appendToPath "$DELIGHT/lib" DYLD_LIBRARY_PATH
-	fi
 fi
 
 if [[ -e $GAFFER_ROOT/qt/plugins ]] ; then
@@ -236,6 +233,26 @@ if [[ $ARNOLD_ROOT ]] ; then
 
 	appendToPath "$ARNOLD_ROOT/bin" PATH
 	appendToPath "$ARNOLD_ROOT/python" PYTHONPATH
+
+fi
+
+# Set up 3Delight
+##########################################################################
+
+if [[ -n $DELIGHT ]] ; then
+
+	if [[ `uname` = "Linux" ]] ; then
+		appendToPath "$DELIGHT/lib" LD_LIBRARY_PATH
+	else
+		appendToPath "$DELIGHT/lib" DYLD_LIBRARY_PATH
+	fi
+
+	appendToPath "$DELIGHT/bin" PATH
+	appendToPath "$DELIGHT/python2.7" PYTHONPATH
+	appendToPath "$DELIGHT/shaders" DL_SHADERS_PATH
+	appendToPath "$DELIGHT/displays" DL_DISPLAYS_PATH
+
+	appendToPath "$GAFFER_ROOT/renderMan/displayDrivers" DL_DISPLAYS_PATH
 
 fi
 
