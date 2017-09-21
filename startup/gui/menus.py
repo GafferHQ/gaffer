@@ -475,6 +475,14 @@ nodeMenu.definition().append( "/Utility/Backdrop", { "command" : GafferUI.Backdr
 nodeMenu.append( "/Utility/Dot", Gaffer.Dot )
 nodeMenu.append( "/Utility/Switch", functools.partial( Gaffer.SwitchComputeNode, "Switch" ) )
 
+# VDB nodes
+
+import GafferVDB
+import GafferVDBUI
+
+nodeMenu.append( "/VDB/VDB To Mesh", GafferVDB.VDBToMesh, searchText = "VDBToMesh" )
+nodeMenu.append( "/VDB/Mesh To VDB", GafferVDB.MeshToVDB, searchText = "MeshToVDB" )
+
 ## Miscellaneous UI
 ###########################################################################
 
