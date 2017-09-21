@@ -156,6 +156,7 @@ Gaffer.Metadata.registerNode(
 
 			"description", __plugDescription,
 			"label", __plugLabel,
+			"noduleLayout:label", __plugLabel,
 			"layout:divider", __plugDivider,
 			"layout:section", __plugPage,
 			"presetNames", __plugPresetNames,
