@@ -131,6 +131,13 @@ options.Add(
 )
 
 options.Add(
+	"DELIGHT_ROOT",
+	"The directory in which 3delight is installed. Used to build GafferDelight, an NSI-based"
+	"3delight backend.",
+	"",
+)
+
+options.Add(
 	"VTUNE_ROOT",
 	"The directory in which VTune is installed.",
 	""
@@ -759,6 +766,25 @@ libraries = {
 	},
 
 	"GafferOSLUITest" : {},
+
+	"GafferDelight" : {
+		"envAppends" : {
+			"CPPPATH" : [ "$DELIGHT_ROOT/include" ],
+			"LIBS" : [ "Gaffer", "GafferScene", "GafferDispatch", "3delight" ],
+			"LIBPATH" : [ "$DELIGHT_ROOT/lib" ],
+		},
+		"pythonEnvAppends" : {
+			"LIBS" : [ "GafferBindings", "GafferScene", "GafferDispatch", "GafferDelight" ],
+			"LIBPATH" : [ "$DELIGHT_ROOT/lib" ],
+		},
+		"requiredOptions" : [ "DELIGHT_ROOT" ],
+	},
+
+	"GafferDelightTest" : {},
+
+	"GafferDelightUI" : {},
+
+	"GafferDelightUITest" : {},
 
 	"GafferAppleseed" : {
 		"envAppends" : {
