@@ -717,12 +717,12 @@ libraries = {
 		"envAppends" : {
 			"CPPPATH" : [ "$ARNOLD_ROOT/include" ],
 			"LIBPATH" : [ "$ARNOLD_ROOT/bin" ],
-			"LIBS" : [ "Gaffer", "GafferScene", "GafferDispatch", "ai", "openvdb", "IECoreScene$CORTEX_LIB_SUFFIX", "IECoreArnold$CORTEX_LIB_SUFFIX", "GafferOSL" ],
+			"LIBS" : [ "Gaffer", "GafferScene", "GafferDispatch", "ai", "GafferVDB", "openvdb",  "IECoreScene$CORTEX_LIB_SUFFIX", "IECoreArnold$CORTEX_LIB_SUFFIX", "GafferOSL" ],
 		},
 		"pythonEnvAppends" : {
 			"CPPPATH" : [ "$ARNOLD_ROOT/include" ],
 			"LIBPATH" : [ "$ARNOLD_ROOT/bin" ],
-			"LIBS" : [ "Gaffer", "GafferScene", "GafferBindings", "GafferDispatch", "GafferArnold", "GafferOSL" ],
+			"LIBS" : [ "Gaffer", "GafferScene", "GafferBindings", "GafferVDB", "GafferDispatch", "GafferArnold", "GafferOSL" ],
 		},
 		"requiredOptions" : [ "ARNOLD_ROOT" ],
 		"additionalFiles" : [ "arnold/plugins/gaffer.mtd" ],
@@ -812,6 +812,28 @@ libraries = {
 	"GafferTractorUI" : {},
 
 	"GafferTractorUITest" : {},
+
+	"GafferVDB" : {
+		"envAppends" : {
+			"LIBS" : [ "Gaffer", "GafferScene", "Half", "openvdb" ],
+		},
+		"pythonEnvAppends" : {
+			"LIBS" : [ "GafferScene", "GafferVDB", "openvdb" ],
+		}
+	},
+
+	"GafferVDBUI" : {
+		"envAppends" : {
+			"LIBS" : [ "Gaffer", "GafferScene", "GafferSceneUI", "IECoreGL$CORTEX_LIB_SUFFIX", "GafferVDB", "openvdb" ],
+		},
+		"pythonEnvAppends" : {
+			"LIBS" : [ "GafferScene", "GafferVDB", "GafferVDBUI", "openvdb" ],
+		}
+	},
+
+	"GafferVDBTest" : {
+		"additionalFiles" : glob.glob( "python/GafferVDBTest/*/*" ),
+	},
 
 	"apps" : {
 		"additionalFiles" : glob.glob( "apps/*/*-1.py" ),
