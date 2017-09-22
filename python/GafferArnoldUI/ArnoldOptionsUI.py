@@ -61,10 +61,10 @@ def __samplingSummary( plug ) :
 		info.append( "AA %d" % plug["aaSamples"]["value"].getValue() )
 	if plug["giDiffuseSamples"]["enabled"].getValue() :
 		info.append( "Diffuse %d" % plug["giDiffuseSamples"]["value"].getValue() )
-	if plug["giGlossySamples"]["enabled"].getValue() :
-		info.append( "Glossy %d" % plug["giGlossySamples"]["value"].getValue() )
-	if plug["giRefractionSamples"]["enabled"].getValue() :
-		info.append( "Refraction %d" % plug["giRefractionSamples"]["value"].getValue() )
+	if plug["giSpecularSamples"]["enabled"].getValue() :
+		info.append( "Specular %d" % plug["giSpecularSamples"]["value"].getValue() )
+	if plug["giTransmissionSamples"]["enabled"].getValue() :
+		info.append( "Transmission %d" % plug["giTransmissionSamples"]["value"].getValue() )
 	if plug["giSSSSamples"]["enabled"].getValue() :
 		info.append( "SSS %d" % plug["giSSSSamples"]["value"].getValue() )
 	if plug["giVolumeSamples"]["enabled"].getValue() :
@@ -84,18 +84,14 @@ def __rayDepthSummary( plug ) :
 		info.append( "Total %d" % plug["giTotalDepth"]["value"].getValue() )
 	if plug["giDiffuseDepth"]["enabled"].getValue() :
 		info.append( "Diffuse %d" % plug["giDiffuseDepth"]["value"].getValue() )
-	if plug["giGlossyDepth"]["enabled"].getValue() :
-		info.append( "Glossy %d" % plug["giGlossyDepth"]["value"].getValue() )
-	if plug["giReflectionDepth"]["enabled"].getValue() :
-		info.append( "Reflection %d" % plug["giReflectionDepth"]["value"].getValue() )
-	if plug["giRefractionDepth"]["enabled"].getValue() :
-		info.append( "Refraction %d" % plug["giRefractionDepth"]["value"].getValue() )
+	if plug["giSpecularDepth"]["enabled"].getValue() :
+		info.append( "Specular %d" % plug["giSpecularDepth"]["value"].getValue() )
+	if plug["giTransmissionDepth"]["enabled"].getValue() :
+		info.append( "Transmission %d" % plug["giTransmissionDepth"]["value"].getValue() )
 	if plug["giVolumeDepth"]["enabled"].getValue() :
 		info.append( "Volume %d" % plug["giVolumeDepth"]["value"].getValue() )
 	if plug["autoTransparencyDepth"]["enabled"].getValue() :
 		info.append( "Transparency %d" % plug["autoTransparencyDepth"]["value"].getValue() )
-	if plug["autoTransparencyThreshold"]["enabled"].getValue() :
-		info.append( "Threshold %s" % GafferUI.NumericWidget.valueToString( plug["autoTransparencyThreshold"]["value"].getValue() ) )
 	return ", ".join( info )
 
 def __subdivisionSummary( plug ) :
@@ -310,32 +306,32 @@ Gaffer.Metadata.registerNode(
 
 		],
 
-		"options.giGlossySamples" : [
+		"options.giSpecularSamples" : [
 
 			"description",
 			"""
 			Controls the number of rays traced when
-			computing glossy specular reflections.
+			computing specular reflections.
 			The number of actual specular rays traced
 			is the square of this number.
 			""",
 
 			"layout:section", "Sampling",
-			"label", "Glossy Samples",
+			"label", "Specular Samples",
 
 		],
 
-		"options.giRefractionSamples" : [
+		"options.giTransmissionSamples" : [
 
 			"description",
 			"""
 			Controls the number of rays traced when
-			computing refractions. The number of actual
-			specular rays traced is the square of this number.
+			computing specular refractions. The number of actual
+			transmitted specular rays traced is the square of this number.
 			""",
 
 			"layout:section", "Sampling",
-			"label", "Refraction Samples",
+			"label", "Transmission Samples",
 
 		],
 
@@ -413,14 +409,27 @@ Gaffer.Metadata.registerNode(
 
 		],
 
+		"options.indirectSampleClamp" : [
+
+			"description",
+			"""
+			Clamp fireflies resulting from indirect calculations.
+			May cause problems with dulling highlights in reflections.
+			""",
+
+			"layout:section", "Sampling",
+			"label", "Indirect Sample Clamp",
+
+		],
+
 		# Ray Depth
 
 		"options.giTotalDepth" : [
 
 			"description",
 			"""
-			The maximum depth of any ray (Diffuse + Glossy +
-			Reflection + Refraction + Volume).
+			The maximum depth of any ray (Diffuse + Specular +
+			Transmission + Volume).
 			""",
 
 			"layout:section", "Ray Depth",
@@ -441,43 +450,29 @@ Gaffer.Metadata.registerNode(
 
 		],
 
-		"options.giGlossyDepth" : [
+		"options.giSpecularDepth" : [
 
 			"description",
 			"""
 			Controls the number of ray bounces when
-			computing glossy specular reflections.
+			computing specular reflections.
 			""",
 
 			"layout:section", "Ray Depth",
-			"label", "Glossy Depth",
+			"label", "Specular Depth",
 
 		],
 
-		"options.giReflectionDepth" : [
+		"options.giTransmissionDepth" : [
 
 			"description",
 			"""
 			Controls the number of ray bounces when
-			computing reflections.
+			computing specular refractions.
 			""",
 
 			"layout:section", "Ray Depth",
-			"label", "Reflection Depth",
-
-		],
-
-
-		"options.giRefractionDepth" : [
-
-			"description",
-			"""
-			Controls the number of ray bounces when
-			computing refractions.
-			""",
-
-			"layout:section", "Ray Depth",
-			"label", "Refraction Depth",
+			"label", "Transmission Depth",
 
 		],
 
