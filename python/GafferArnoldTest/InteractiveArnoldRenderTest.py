@@ -201,7 +201,7 @@ class InteractiveArnoldRenderTest( GafferSceneTest.InteractiveRenderTest ) :
 
 	def _traceDepthOptions( self ) :
 
-		return "ai:GI_glossy_depth", "ai:GI_diffuse_depth", "ai:GI_reflection_depth"
+		return "ai:GI_specular_depth", "ai:GI_diffuse_depth", "ai:GI_transmission_depth"
 
 	def _createPointLight( self ) :
 

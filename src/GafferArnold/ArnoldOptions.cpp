@@ -58,24 +58,23 @@ ArnoldOptions::ArnoldOptions( const std::string &name )
 
 	options->addOptionalMember( "ai:AA_samples", new IECore::IntData( 3 ), "aaSamples", Gaffer::Plug::Default, false );
 	options->addOptionalMember( "ai:GI_diffuse_samples", new IECore::IntData( 2 ), "giDiffuseSamples", Gaffer::Plug::Default, false );
-	options->addOptionalMember( "ai:GI_glossy_samples", new IECore::IntData( 2 ), "giGlossySamples", Gaffer::Plug::Default, false );
-	options->addOptionalMember( "ai:GI_refraction_samples", new IECore::IntData( 2 ), "giRefractionSamples", Gaffer::Plug::Default, false );
+	options->addOptionalMember( "ai:GI_specular_samples", new IECore::IntData( 2 ), "giSpecularSamples", Gaffer::Plug::Default, false );
+	options->addOptionalMember( "ai:GI_transmission_samples", new IECore::IntData( 2 ), "giTransmissionSamples", Gaffer::Plug::Default, false );
 	options->addOptionalMember( "ai:GI_sss_samples", new IECore::IntData( 2 ), "giSSSSamples", Gaffer::Plug::Default, false );
 	options->addOptionalMember( "ai:GI_volume_samples", new IECore::IntData( 2 ), "giVolumeSamples", Gaffer::Plug::Default, false );
 	options->addOptionalMember( "ai:AA_seed", new IECore::IntData( 1 ), "aaSeed", Gaffer::Plug::Default, false );
 	options->addOptionalMember( "ai:AA_sample_clamp", new IECore::FloatData( 10 ), "aaSampleClamp", Gaffer::Plug::Default, false );
 	options->addOptionalMember( "ai:AA_sample_clamp_affects_aovs", new IECore::BoolData( false ), "aaSampleClampAffectsAOVs", Gaffer::Plug::Default, false );
+	options->addOptionalMember( "ai:indirect_sample_clamp", new IECore::FloatData( 10 ), "indirectSampleClamp", Gaffer::Plug::Default, false );
 
 	// Ray depth parameters
 
 	options->addOptionalMember( "ai:GI_total_depth", new IECore::IntData( 10 ), "giTotalDepth", Gaffer::Plug::Default, false );
 	options->addOptionalMember( "ai:GI_diffuse_depth", new IECore::IntData( 2 ), "giDiffuseDepth", Gaffer::Plug::Default, false );
-	options->addOptionalMember( "ai:GI_glossy_depth", new IECore::IntData( 2 ), "giGlossyDepth", Gaffer::Plug::Default, false );
-	options->addOptionalMember( "ai:GI_reflection_depth", new IECore::IntData( 2 ), "giReflectionDepth", Gaffer::Plug::Default, false );
-	options->addOptionalMember( "ai:GI_refraction_depth", new IECore::IntData( 2 ), "giRefractionDepth", Gaffer::Plug::Default, false );
+	options->addOptionalMember( "ai:GI_specular_depth", new IECore::IntData( 2 ), "giSpecularDepth", Gaffer::Plug::Default, false );
+	options->addOptionalMember( "ai:GI_transmission_depth", new IECore::IntData( 2 ), "giTransmissionDepth", Gaffer::Plug::Default, false );
 	options->addOptionalMember( "ai:GI_volume_depth", new IECore::IntData( 0 ), "giVolumeDepth", Gaffer::Plug::Default, false );
 	options->addOptionalMember( "ai:auto_transparency_depth", new IECore::IntData( 10 ), "autoTransparencyDepth", Gaffer::Plug::Default, false );
-	options->addOptionalMember( "ai:auto_transparency_threshold", new IECore::FloatData( 0.99 ), "autoTransparencyThreshold", Gaffer::Plug::Default, false );
 
 	// Texturing parameters
 
