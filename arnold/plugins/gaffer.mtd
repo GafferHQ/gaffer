@@ -717,6 +717,7 @@
 
 [node trace_set]
 
+	primaryInput STRING "passthrough"
 	gaffer.nodeMenu.category STRING "Utility"
 
 
