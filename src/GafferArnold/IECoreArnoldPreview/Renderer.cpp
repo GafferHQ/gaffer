@@ -653,9 +653,9 @@ class ArnoldAttributes : public IECoreScenePreview::Renderer::AttributesInterfac
 			else if( objectType == IECore::ExternalProceduralTypeId )
 			{
 				const IECore::ExternalProcedural *procedural = static_cast<const IECore::ExternalProcedural *>( object );
-				if( const IECore::StringData *nodeType = procedural->parameters()->member<const IECore::StringData>( "ai:nodeType" ) )
+				if( procedural->getFileName() == "volume" )
 				{
-					proceduralIsVolumetric = nodeType->readable() == "volume";
+					proceduralIsVolumetric = true;
 				}
 			}
 			hashGeometryInternal( objectType, meshInterpolationIsLinear, proceduralIsVolumetric, h );
