@@ -35,8 +35,7 @@
 //
 //////////////////////////////////////////////////////////////////////////
 
-#include "IECore/PointDistributionOp.h"
-#include "IECore/CompoundParameter.h"
+#include "IECore/MeshAlgo.h"
 
 #include "Gaffer/StringPlug.h"
 
@@ -185,12 +184,12 @@ IECore::ConstObjectPtr Seeds::computeBranchObject( const ScenePath &parentPath, 
 			return outPlug()->objectPlug()->defaultValue();
 		}
 
-		PointDistributionOpPtr op = new PointDistributionOp();
-		op->meshParameter()->setValue( mesh->copy() );
-		op->densityParameter()->setNumericValue( densityPlug()->getValue() );
-		op->parameters()->parameter<StringParameter>( "densityPrimVarName" )->setTypedValue( densityPrimitiveVariablePlug()->getValue() );
-
-		PrimitivePtr result = runTimeCast<Primitive>( op->operate() );
+		PointsPrimitivePtr result = MeshAlgo::distributePoints(
+			mesh.get(),
+			densityPlug()->getValue(),
+			V2f( 0 ),
+			densityPrimitiveVariablePlug()->getValue()
+		);
 		result->variables["type"] = PrimitiveVariable( PrimitiveVariable::Constant, new StringData( pointTypePlug()->getValue() ) );
 
 		return result;
