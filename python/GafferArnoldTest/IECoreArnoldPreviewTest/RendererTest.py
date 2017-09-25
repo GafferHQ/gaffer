@@ -786,7 +786,7 @@ class RendererTest( GafferTest.TestCase ) :
 			arnold.AiASSLoad( self.temporaryDirectory() + "/test.ass" )
 			node = arnold.AiNodeLookUpByName( "plane" )
 			self.assertEqual( arnold.AiNodeEntryGetName( arnold.AiNodeGetNodeEntry( node ) ), "polymesh" )
-			self.assertEqual( arnold.AiNodeGetInt( node, "subdiv_iterations" ), 10 )
+			self.assertEqual( arnold.AiNodeGetByte( node, "subdiv_iterations" ), 10 )
 			self.assertEqual( arnold.AiNodeGetFlt( node, "subdiv_adaptive_error" ), 0.25 )
 			self.assertEqual( arnold.AiNodeGetStr( node, "subdiv_adaptive_metric" ), "edge_length" )
 			self.assertEqual( arnold.AiNodeGetStr( node, "subdiv_adaptive_space" ), "raster" )
@@ -1686,7 +1686,7 @@ class RendererTest( GafferTest.TestCase ) :
 
 			nodePtr = arnold.AiNodeGetPtr( instanceNode, "node" )
 			self.assertEqual( nodePtr, arnold.AiNodeGetPtr( firstInstanceNode, "node" ) )
-			self.assertEqual( arnold.AiNodeGetInt( arnold.AtNode.from_address( nodePtr ), "visibility" ), 0 )
+			self.assertEqual( arnold.AiNodeGetByte( arnold.AtNode.from_address( nodePtr ), "visibility" ), 0 )
 
 	def __assertNotInstanced( self, *names ) :
 
