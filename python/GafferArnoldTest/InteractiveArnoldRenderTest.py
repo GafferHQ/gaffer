@@ -175,25 +175,44 @@ class InteractiveArnoldRenderTest( GafferSceneTest.InteractiveRenderTest ) :
 		return shader, shader["parameters"]["Kd_color"]
 
 	def _createTraceSetShader( self ) :
+		return None, None # TODO - Arnold currently crashes if we try to use trace_set
 
-		# There appears to be no standard Arnold shader
-		# which uses trace sets, so we use an AlSurface.
-		# If one is not available, the base class will
-		# skip the test.
+		# It's currently pretty ugly how we need to disable the trace set when it is left empty,
+		# to match the behaviour expected by GafferSceneTest.InteractiveRenderTest.
+		# Would be somewhat cleaner if we had the primaryInput metadata on trace_set
+		# available, so we could just put an expression on it to disable it when no trace set is given,
+		# but it doesn't seem very safe to do a metadata load in the middle of the tests
+		shaderBox = Gaffer.Box()
 
-		shader = GafferArnold.ArnoldShader()
-		try :
-			shader.loadShader( "alSurface" )
-		except :
-			return None, None
+		shader = GafferArnold.ArnoldShader("shader")
+		shader.loadShader( "standard_surface" )
 
-		shader["parameters"]["diffuseStrength"].setValue( 0 )
-		shader["parameters"]["specular1Roughness"].setValue( 0 )
-		shader["parameters"]["specular1FresnelMode"].setValue( "metallic" )
-		shader["parameters"]["specular1Reflectivity"].setValue( IECore.Color3f( 1 ) )
-		shader["parameters"]["specular1EdgeTint"].setValue( IECore.Color3f( 1 ) )
+		shader["parameters"]["base"].setValue( 1 )
+		shader["parameters"]["specular_roughness"].setValue( 0 )
+		shader["parameters"]["metalness"].setValue( 1 )
+		shader["parameters"]["specular_IOR"].setValue( 100 )
 
-		return shader, shader["parameters"]["traceSetSpecular1"]
+		#return shader, Gaffer.StringPlug( "unused" )
+
+		traceSetShader = GafferArnold.ArnoldShader("traceSetShader")
+		traceSetShader.loadShader( "trace_set" )
+		traceSetShader["parameters"]["passthrough"].setInput( shader["out"] )
+
+		switchShader = GafferArnold.ArnoldShader("switchShader")
+		switchShader.loadShader( "switch_shader" )
+		switchShader["parameters"]["input0"].setInput( shader["out"] )
+		switchShader["parameters"]["input1"].setInput( traceSetShader["out"] )
+
+		shaderBox.addChild( shader )
+		shaderBox.addChild( traceSetShader )
+		shaderBox.addChild( switchShader )
+
+		shaderBox["enableExpression"] = Gaffer.Expression()
+		shaderBox["enableExpression"].setExpression( 'parent.switchShader.parameters.index = parent.traceSetShader.parameters.trace_set != ""', "OSL" )
+
+		Gaffer.PlugAlgo.promote( switchShader["out"] )
+
+		return shaderBox, traceSetShader["parameters"]["trace_set"]
 
 	def _cameraVisibilityAttribute( self ) :
 
