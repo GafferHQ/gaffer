@@ -1386,7 +1386,7 @@ class RendererTest( GafferTest.TestCase ) :
 
 		# Likewise, turning off subdivide polygons should fail.
 
-		polygonMeshObject = r.object( "polygonMesh", polygonMesh, subdividePolygonsAttributes )
+		polygonMeshObject = r.object( "polygonMesh2", polygonMesh, subdividePolygonsAttributes )
 		self.assertTrue( polygonMeshObject.attributes( subdividePolygonsAttributes ) )
 		self.assertFalse( polygonMeshObject.attributes( defaultAttributes ) )
 
