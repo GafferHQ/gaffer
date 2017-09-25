@@ -902,6 +902,43 @@ class ArnoldRenderTest( GafferSceneTest.SceneTestCase ) :
 			self.assertEqual( lightNames, [] )
 			self.assertEqual( doLinking, False )
 
+	def testAbortRaises( self ) :
+
+		s = Gaffer.ScriptNode()
+
+		s["plane"] = GafferScene.Plane()
+		s["plane"]["transform"]["translate"]["z"].setValue( -10 )
+
+		s["shader"] = GafferArnold.ArnoldShader()
+		s["shader"].loadShader( "image" )
+		# Missing texture should cause render to abort
+		s["shader"]["parameters"]["filename"].setValue( "iDontExist" )
+
+		s["filter"] = GafferScene.PathFilter()
+		s["filter"]["paths"].setValue( IECore.StringVectorData( [ "/plane" ] ) )
+
+		s["shaderAssignment"] = GafferScene.ShaderAssignment()
+		s["shaderAssignment"]["in"].setInput( s["plane"]["out"] )
+		s["shaderAssignment"]["filter"].setInput( s["filter"]["out"] )
+		s["shaderAssignment"]["shader"].setInput( s["shader"]["out"] )
+
+		s["outputs"] = GafferScene.Outputs()
+		s["outputs"].addOutput(
+			"beauty",
+			IECore.Display(
+				self.temporaryDirectory() + "/test.tif",
+				"tiff",
+				"rgba",
+				{}
+			)
+		)
+		s["outputs"]["in"].setInput( s["shaderAssignment"]["out"] )
+
+		s["render"] = GafferArnold.ArnoldRender()
+		s["render"]["in"].setInput( s["outputs"]["out"] )
+
+		self.assertRaisesRegexp( RuntimeError, "Render aborted", s["render"]["task"].execute )
+
 	def __arrayToSet( self, a ) :
 
 		result = set()
