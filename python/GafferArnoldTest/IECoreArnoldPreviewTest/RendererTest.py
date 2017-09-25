@@ -1428,11 +1428,8 @@ class RendererTest( GafferTest.TestCase ) :
 			"mesh" : IECore.MeshPrimitive.createPlane( IECore.Box2f( IECore.V2f( -1 ), IECore.V2f( 1 ) ) ),
 			"curves" : IECore.CurvesPrimitive.createBox( IECore.Box3f( IECore.V3f( -1 ), IECore.V3f( 1 ) ) ),
 			"volumeProcedural" : IECore.ExternalProcedural(
-				"volume_vdb.so",
+				"volume",
 				IECore.Box3f( IECore.V3f( -1 ), IECore.V3f( 1 ) ),
-				IECore.CompoundData( {
-					"ai:nodeType" : "volume",
-				} )
 			),
 		}
 
@@ -1526,7 +1523,7 @@ class RendererTest( GafferTest.TestCase ) :
 			"test",
 
 			IECore.ExternalProcedural(
-				"volume_vdb.so",
+				"volume",
 				IECore.Box3f( IECore.V3f( -1 ), IECore.V3f( 1 ) ),
 				IECore.CompoundData( {
 					"ai:nodeType" : "volume",
