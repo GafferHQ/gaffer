@@ -35,6 +35,7 @@
 ##########################################################################
 
 import DelightAttributesUI
+import DelightOptionsUI
 import DelightRenderUI
 import InteractiveDelightRenderUI
 
