@@ -770,9 +770,9 @@ class ArnoldAttributes : public IECoreScenePreview::Renderer::AttributesInterfac
 			else if( objectType == IECore::ExternalProceduralTypeId )
 			{
 				const IECore::ExternalProcedural *procedural = static_cast<const IECore::ExternalProcedural *>( object );
-				if( const IECore::StringData *nodeType = procedural->parameters()->member<const IECore::StringData>( "ai:nodeType" ) )
+				if( procedural->getFileName() == "volume" )
 				{
-					proceduralIsVolumetric = nodeType->readable() == "volume";
+					proceduralIsVolumetric = true;
 				}
 			}
 			hashGeometryInternal( objectType, meshInterpolationIsLinear, proceduralIsVolumetric, h );
@@ -1808,32 +1808,31 @@ int procInit( AtNode *node, void **userPtr )
 	return 1;
 }
 
-int procCleanup( void *userPtr )
+int procCleanup( const AtNode *node, void *userPtr )
 {
 	const ProceduralData *data = (ProceduralData *)( userPtr );
 	delete data;
 	return 1;
 }
 
-int procNumNodes( void *userPtr )
+int procNumNodes( const AtNode *node, void *userPtr )
 {
 	const ProceduralData *data = (ProceduralData *)( userPtr );
 	return data->nodesCreated.size();
 }
 
-AtNode *procGetNode( void *userPtr, int i )
+AtNode *procGetNode( const AtNode *node, void *userPtr, int i )
 {
 	const ProceduralData *data = (ProceduralData *)( userPtr );
 	return data->nodesCreated[i];
 }
 
-int procLoader( AtProcVtable *vTable )
+int procFunc( AtProceduralNodeMethods *methods )
 {
-	vTable->Init = procInit;
-	vTable->Cleanup = procCleanup;
-	vTable->NumNodes = procNumNodes;
-	vTable->GetNode = procGetNode;
-	strcpy( vTable->version, AI_VERSION );
+	methods->Init = procInit;
+	methods->Cleanup = procCleanup;
+	methods->NumNodes = procNumNodes;
+	methods->GetNode = procGetNode;
 	return 1;
 }
 
@@ -1841,8 +1840,7 @@ AtNode *convertProcedural( IECoreScenePreview::ConstProceduralPtr procedural, co
 {
 	AtNode *node = namespacedNode( "procedural", nodeName, parentNode );
 
-	AiNodeSetPtr( node, "funcptr", (void *)procLoader );
-	AiNodeSetBool( node, "load_at_init", true );
+	AiNodeSetPtr( node, "funcptr", (void *)procFunc );
 
 	ProceduralRendererPtr renderer = new ProceduralRenderer( node );
 	procedural->render( renderer.get() );
