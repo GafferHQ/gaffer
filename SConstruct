@@ -844,7 +844,6 @@ libraries = {
 
 			# meshes
 			( "TriangulateOp", "ops/mesh/triangulate" ),
-			( "FaceAreaOp", "ops/mesh/faceArea" ),
 			( "MeshMergeOp", "ops/mesh/merge" ),
 			( "MeshNormalsOp", "ops/mesh/normals" ),
 
