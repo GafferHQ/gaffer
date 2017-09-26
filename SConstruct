@@ -463,8 +463,8 @@ conf = Configure(
 
 haveInkscape = conf.checkInkscape()
 if not haveInkscape and env["INKSCAPE"] != "disableGraphics" :
-	print 'Inkscape is not installed!'
-	Exit(1)
+	sys.stderr.write( "ERROR : Inkscape not found. Check INKSCAPE build variable.\n" )
+	Exit( 1 )
 
 if not conf.checkQtVersion() :
 	sys.stderr.write( "Qt not found\n" )
@@ -1165,7 +1165,7 @@ def buildDocs( target, source, env ) :
 			elif ext == ".sh" :
 				command = [ "gaffer", "env", "./" + f ]
 			if command :
-				print "Running", os.path.join( root, f )
+				sys.stdout.write( "Running {}\n".format( os.path.join( root, f ) ) )
 				subprocess.check_call( command, cwd = root, env = env["ENV"] )
 
 	# Run sphinx to generate the final documentation.
