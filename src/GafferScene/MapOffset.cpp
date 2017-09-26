@@ -56,8 +56,7 @@ MapOffset::MapOffset( const std::string &name )
 	storeIndexOfNextChild( g_firstPlugIndex );
 	addChild( new V2fPlug( "offset" ) );
 	addChild( new IntPlug( "udim", Plug::In, 1001, 1001 ) );
-	addChild( new StringPlug( "sName", Plug::In, "s" ) );
-	addChild( new StringPlug( "tName", Plug::In, "t" ) );
+	addChild( new StringPlug( "uvSet", Plug::In, "uv" ) );
 
 	// Fast pass-throughs for things we don't modify
 	outPlug()->attributesPlug()->setInput( inPlug()->attributesPlug() );
@@ -89,24 +88,14 @@ const Gaffer::IntPlug *MapOffset::udimPlug() const
 	return getChild<IntPlug>( g_firstPlugIndex + 1 );
 }
 
-Gaffer::StringPlug *MapOffset::sNamePlug()
+Gaffer::StringPlug *MapOffset::uvSetPlug()
 {
 	return getChild<StringPlug>( g_firstPlugIndex + 2 );
 }
 
-const Gaffer::StringPlug *MapOffset::sNamePlug() const
+const Gaffer::StringPlug *MapOffset::uvSetPlug() const
 {
 	return getChild<StringPlug>( g_firstPlugIndex + 2 );
-}
-
-Gaffer::StringPlug *MapOffset::tNamePlug()
-{
-	return getChild<StringPlug>( g_firstPlugIndex + 3 );
-}
-
-const Gaffer::StringPlug *MapOffset::tNamePlug() const
-{
-	return getChild<StringPlug>( g_firstPlugIndex + 3 );
 }
 
 void MapOffset::affects( const Gaffer::Plug *input, AffectedPlugsContainer &outputs ) const
@@ -116,8 +105,7 @@ void MapOffset::affects( const Gaffer::Plug *input, AffectedPlugsContainer &outp
 	if(
 		input->parent<Plug>() == offsetPlug() ||
 		input == udimPlug() ||
-		input == sNamePlug() ||
-		input == tNamePlug()
+		input == uvSetPlug()
 	)
 	{
 		outputs.push_back( outPlug()->objectPlug() );
@@ -133,8 +121,7 @@ void MapOffset::hashProcessedObject( const ScenePath &path, const Gaffer::Contex
 {
 	offsetPlug()->hash( h );
 	udimPlug()->hash( h );
-	sNamePlug()->hash( h );
-	tNamePlug()->hash( h );
+	uvSetPlug()->hash( h );
 }
 
 IECore::ConstObjectPtr MapOffset::computeProcessedObject( const ScenePath &path, const Gaffer::Context *context, IECore::ConstObjectPtr inputObject ) const
@@ -146,12 +133,10 @@ IECore::ConstObjectPtr MapOffset::computeProcessedObject( const ScenePath &path,
 		return inputObject;
 	}
 
-	// early out if the s/t names haven't been provided.
+	// early out if the uv set hasn't been specified
 
-	std::string sName = sNamePlug()->getValue();
-	std::string tName = tNamePlug()->getValue();
-
-	if( sName == "" || tName == "" )
+	const string uvSet = uvSetPlug()->getValue();
+	if( uvSet == "" )
 	{
 		return inputObject;
 	}
@@ -166,19 +151,11 @@ IECore::ConstObjectPtr MapOffset::computeProcessedObject( const ScenePath &path,
 	offset.x += (udim - 1001) % 10;
 	offset.y += (udim - 1001) / 10;
 
-	if( FloatVectorDataPtr sData = result->variableData<FloatVectorData>( sName ) )
+	if( V2fVectorData *uvData = result->variableData<V2fVectorData>( uvSet ) )
 	{
-		for( vector<float>::iterator it = sData->writable().begin(), eIt = sData->writable().end(); it != eIt; ++it )
+		for( V2f &uv : uvData->writable() )
 		{
-			*it += offset.x;
-		}
-	}
-
-	if( FloatVectorDataPtr tData = result->variableData<FloatVectorData>( tName ) )
-	{
-		for( vector<float>::iterator it = tData->writable().begin(), eIt = tData->writable().end(); it != eIt; ++it )
-		{
-			*it += offset.y;
+			uv += offset;
 		}
 	}
 

@@ -71,20 +71,11 @@ Gaffer.Metadata.registerNode(
 
 		],
 
-		"sName" : [
+		"uvSet" : [
 
 			"description",
 			"""
-			The name of the primitive variable holding the s coordinate.
-			""",
-
-		],
-
-		"tName" : [
-
-			"description",
-			"""
-			The name of the primitive variable holding the t coordinate.
+			The name of the primitive variable holding the UV coordinates.
 			""",
 
 		],
