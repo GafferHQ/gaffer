@@ -310,58 +310,43 @@ class OSLObjectTest( GafferOSLTest.OSLTestCase ) :
 		f["paths"].setValue( IECore.StringVectorData( [ '/plane' ] ) )
 		o["filter"].setInput( f["out"] )
 
-		# ensure the source primvars are face varying
-		self.assertEqual(p["out"].object("/plane")['s'].interpolation, IECore.PrimitiveVariable.Interpolation.FaceVarying )
-		self.assertEqual(p["out"].object("/plane")['t'].interpolation, IECore.PrimitiveVariable.Interpolation.FaceVarying )
+		# We're going to copy the FaceVarying UV primvar
+		# into a Vertex Color3f primvar. Assert that the source
+		# is indeed FaceVarying.
+		self.assertEqual( p["out"].object( "/plane" )["uv"].interpolation, IECore.PrimitiveVariable.Interpolation.FaceVarying )
 
 		o['in'].setInput( p["out"] )
 		o['interpolation'].setValue( IECore.PrimitiveVariable.Interpolation.Vertex )
 
-		inS = GafferOSL.OSLShader( "InFloat" )
-		s.addChild( inS )
-		inS.loadShader( "ObjectProcessing/InFloat" )
-		inS['parameters']['name'].setValue('s')
+		s["inUV"] = GafferOSL.OSLShader()
+		s["inUV"].loadShader( "ObjectProcessing/InVector" )
+		s["inUV"]["parameters"]["name"].setValue( "uv" )
 
-		inT = GafferOSL.OSLShader( "InFloat" )
-		s.addChild( inT )
-		inT.loadShader( "ObjectProcessing/InFloat" )
-		inT['parameters']['name'].setValue('t')
+		s["outColor"] = GafferOSL.OSLShader()
+		s["outColor"].loadShader( "ObjectProcessing/OutColor" )
+		s["outColor"]["parameters"]["value"].setInput( s["inUV"]["out"]["value"] )
+		s["outColor"]["parameters"]["name"].setValue( "c" )
 
-		floatAdd = GafferOSL.OSLShader( "FloatAdd" )
-		s.addChild( floatAdd )
-		floatAdd.loadShader( "Maths/FloatAdd" )
+		s["outObject"] = GafferOSL.OSLShader()
+		s["outObject"].loadShader( "ObjectProcessing/OutObject" )
+		s["outObject"]["parameters"]["in0"].setInput( s["outColor"]["out"]["primitiveVariable"] )
 
-		floatAdd["parameters"]["a"].setInput( inT["out"]["value"] )
-		floatAdd["parameters"]["b"].setInput( inS["out"]["value"] )
-
-		outFloat = GafferOSL.OSLShader( "OutFloat" )
-		s.addChild( outFloat )
-		outFloat.loadShader( "ObjectProcessing/OutFloat" )
-		outFloat['parameters']['name'].setValue("st_add")
-
-		outFloat["parameters"]["value"].setInput( floatAdd["out"]["out"] )
-
-		outObject = GafferOSL.OSLShader( "OutObject" )
-		s.addChild( outObject )
-		outObject.loadShader( "ObjectProcessing/OutObject" )
-		outObject["parameters"]["in0"].setInput( outFloat["out"]["primitiveVariable"] )
-
-		o["shader"].setInput( outObject["out"] )
+		o["shader"].setInput( s["outObject"]["out"] )
 
 		planeObject = s['OSLObject']['out'].object( "/plane" )
 
-		self.assertTrue( "st_add" in planeObject.keys() )
-		self.assertEqual( planeObject["st_add"].interpolation, IECore.PrimitiveVariable.Interpolation.Vertex)
+		self.assertIn( "c", planeObject )
+		self.assertEqual( planeObject["c"].interpolation, IECore.PrimitiveVariable.Interpolation.Vertex )
 
-		self.assertEqual( planeObject["st_add"].data[0], 0.0 + 0.0 )
-		self.assertEqual( planeObject["st_add"].data[1], 0.5 + 0.0 )
-		self.assertEqual( planeObject["st_add"].data[2], 1.0 + 0.0 )
-		self.assertEqual( planeObject["st_add"].data[3], 0.0 + 0.5 )
-		self.assertEqual( planeObject["st_add"].data[4], 0.5 + 0.5 )
-		self.assertEqual( planeObject["st_add"].data[5], 1.0 + 0.5 )
-		self.assertEqual( planeObject["st_add"].data[6], 0.0 + 1.0 )
-		self.assertEqual( planeObject["st_add"].data[7], 0.5 + 1.0 )
-		self.assertEqual( planeObject["st_add"].data[8], 1.0 + 1.0 )
+		self.assertEqual( planeObject["c"].data[0], IECore.Color3f( 0.0, 0.0, 0.0 ) )
+		self.assertEqual( planeObject["c"].data[1], IECore.Color3f( 0.5, 0.0, 0.0 ) )
+		self.assertEqual( planeObject["c"].data[2], IECore.Color3f( 1.0, 0.0, 0.0 ) )
+		self.assertEqual( planeObject["c"].data[3], IECore.Color3f( 0.0, 0.5, 0.0 ) )
+		self.assertEqual( planeObject["c"].data[4], IECore.Color3f( 0.5, 0.5, 0.0 ) )
+		self.assertEqual( planeObject["c"].data[5], IECore.Color3f( 1.0, 0.5, 0.0 ) )
+		self.assertEqual( planeObject["c"].data[6], IECore.Color3f( 0.0, 1.0, 0.0 ) )
+		self.assertEqual( planeObject["c"].data[7], IECore.Color3f( 0.5, 1.0, 0.0 ) )
+		self.assertEqual( planeObject["c"].data[8], IECore.Color3f( 1.0, 1.0, 0.0 ) )
 
 	def testCanReadFromConstantPrimitiveVariables( self ) :
 
