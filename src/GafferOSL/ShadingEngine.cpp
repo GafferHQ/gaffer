@@ -231,18 +231,30 @@ class RenderState
 				src += pointIndex * it->dataView.type.elementsize();
 			}
 
-			bool result = ShadingSystem::convert_value( value, type, src, it->dataView.type );
-
-			//! If the convert_value fails then attempt to convert an aggregate (vec2, vec3, vec4, matrix33, matrix44) to an array with the same base type.
-			//! note the aggregate enum is the number of elements
-			//! todo create a PR for OSL
-			if (!result && it->dataView.type.basetype == type.basetype && it->dataView.type.aggregate == type.arraylen)
+			if( ShadingSystem::convert_value( value, type, src, it->dataView.type ) )
 			{
-				memcpy (value, src, type.size());
-				result = true;
+				// OSL converted successfully
+				return true;
 			}
+			else if( it->dataView.type.basetype == type.basetype && it->dataView.type.aggregate == type.arraylen )
+			{
+				// Convert an aggregate (vec2, vec3, vec4, matrix33, matrix44) to an array with the same base type.
+				// Note that the aggregate enum value is the number of elements.
+				memcpy( value, src, type.size() );
+				return true;
+			}
+			else if( it->dataView.type.aggregate == TypeDesc::VEC2 )
+			{
+				// OSL doesn't know how to convert these, but it knows how to convert
+				// float[2], which has an identical layout.
+				TypeDesc t = it->dataView.type;
+				t.aggregate = TypeDesc::SCALAR;
+				t.arraylen = 2;
+				return ShadingSystem::convert_value( value, type, src, t );
+			}
+			/// \todo Try to get these additional conversions accepted into OSL itself
 
-			return result;
+			return false;
 		}
 
 		bool matrixToObject( OIIO::ustring name, Imath::M44f &result ) const

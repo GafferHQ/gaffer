@@ -459,5 +459,23 @@ class ShadingEngineTest( GafferOSLTest.OSLTestCase ) :
 
 		self.assertEqual( str(engineError.exception), "Exception : The following shaders can't be used as they are not OSL shaders: aiImage (shader), aiImage (shader)" )
 
+	def testReadV2fUserData( self ) :
+
+		s = self.compileShader( os.path.dirname( __file__ ) +  "/shaders/attribute.osl" )
+		e = GafferOSL.ShadingEngine( IECore.ObjectVector( [
+			IECore.Shader( s, "osl:surface", { "name" : "v2f" } )
+		] ) )
+
+		p = self.rectanglePoints()
+		p["v2f"] = IECore.V2fVectorData( [ IECore.V2f( x.x, x.y ) for x in p["P"] ] )
+
+		r = e.shade( p )
+
+		for i, c in enumerate( r["Ci"] ) :
+			self.assertEqual(
+				c,
+				IECore.Color3f( p["P"][i].x, p["P"][i].y, 0 )
+			)
+
 if __name__ == "__main__":
 	unittest.main()
