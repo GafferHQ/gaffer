@@ -126,17 +126,15 @@ const char *goboFragSource()
 		"#define in varying\n"
 		"#endif\n"
 		""
-		"in vec2 fragmentst;"
+		"in vec2 fragmentuv;"
 		""
 		"uniform sampler2D texture;"
 		""
 		"void main()"
 		"{"
-			"vec2 texCoords = vec2( fragmentst.x, fragmentst.y );"
-			"vec4 tx = texture2D( texture, texCoords );"
-			"gl_FragColor = tx;"
+			"gl_FragColor = texture2D( texture, fragmentuv );"
 		"}"
-		;
+	;
 }
 
 // OSLTextureEvaluation
@@ -169,12 +167,14 @@ CompoundDataPtr evalOSLTexture( IECore::ObjectVectorPtr shaderVector, int resolu
 	uWritable.reserve( numPoints );
 	vWritable.reserve( numPoints );
 
-	for( int x = 0; x < resolution; ++x )
+	for( int y = 0; y < resolution; ++y )
 	{
-		for( int y = 0; y < resolution; ++y )
+		for( int x = 0; x < resolution; ++x )
 		{
 			uWritable.push_back( (float)(x + 0.5f) / resolution );
-			vWritable.push_back( (float)(y + 0.5f) / resolution );
+			// V is flipped because we're generating a Cortex image,
+			// and Cortex has the pixel origin at the top left.
+			vWritable.push_back( 1.0f - ( (y + 0.5f) / resolution ) );
 			pWritable.push_back( V3f( x + 0.5f, y + 0.5f, 0.0f ) );
 		}
 	}
@@ -377,7 +377,6 @@ IECoreGL::ConstRenderablePtr GoboVisualiser::visualise( const IECore::InternedSt
 	goboTrans.rotate( V3f( 0, 0, M_PI * rotate / 180.0 ) );
 	goboTrans.scale( V3f( 2 * baseRadius / scaleS, 2 * baseRadius / scaleT, 0 ) );
 	goboTrans.translate( V3f( offset.x, offset.y, 0.0f ) );
-	goboTrans.rotate( V3f( 0.0f, 0.0f, halfPi ) );
 
 	result->setTransform( goboTrans );
 
