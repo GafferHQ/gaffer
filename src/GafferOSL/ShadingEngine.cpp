@@ -1015,6 +1015,7 @@ IECore::CompoundDataPtr ShadingEngine::shade( const IECore::CompoundData *points
 
 	const float *u = varyingValue<float>( points, "u" );
 	const float *v = varyingValue<float>( points, "v" );
+	const V2f *uv = varyingValue<V2f>( points, "uv" );
 	const V3f *n = varyingValue<V3f>( points, "N" );
 
 	/// \todo Get the other globals - match the uniform list
@@ -1037,7 +1038,7 @@ IECore::CompoundDataPtr ShadingEngine::shade( const IECore::CompoundData *points
 	typedef tbb::enumerable_thread_specific<ThreadContext> ThreadContextType;
 	ThreadContextType contexts;
 
-	auto f = [&shadingSystem, &renderState, &results, &shaderGlobals, &p, &u, &v, &n, &shaderGroup, &contexts]( const tbb::blocked_range<size_t> &r )
+	auto f = [&shadingSystem, &renderState, &results, &shaderGlobals, &p, &u, &v, &uv, &n, &shaderGroup, &contexts]( const tbb::blocked_range<size_t> &r )
 	{
 		ThreadContextType::reference context = contexts.local();
 		if( !context.shadingContext )
@@ -1054,14 +1055,24 @@ IECore::CompoundDataPtr ShadingEngine::shade( const IECore::CompoundData *points
 		for( size_t i = r.begin(); i < r.end(); ++i )
 		{
 			threadShaderGlobals.P = p[i];
-			if( u )
+
+			if( uv )
 			{
-				threadShaderGlobals.u = u[i];
+				threadShaderGlobals.u = uv[i].x;
+				threadShaderGlobals.v = uv[i].y;
 			}
-			if( v )
+			else
 			{
-				threadShaderGlobals.v = v[i];
+				if( u )
+				{
+					threadShaderGlobals.u = u[i];
+				}
+				if( v )
+				{
+					threadShaderGlobals.v = v[i];
+				}
 			}
+
 			if( n )
 			{
 				threadShaderGlobals.N = n[i];

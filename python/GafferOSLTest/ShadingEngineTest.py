@@ -477,5 +477,26 @@ class ShadingEngineTest( GafferOSLTest.OSLTestCase ) :
 				IECore.Color3f( p["P"][i].x, p["P"][i].y, 0 )
 			)
 
+	def testUVProvidedAsV2f( self ) :
+
+		shader = self.compileShader( os.path.dirname( __file__ ) + "/shaders/globals.osl" )
+
+		rp = self.rectanglePoints()
+		rp["uv"] = IECore.V2fVectorData(
+			[ IECore.V2f( u, v ) for u, v in zip( rp["u"], rp["v"] ) ]
+		)
+		del rp["u"]
+		del rp["v"]
+
+		for uvIndex, uvName in enumerate( [ "u", "v" ] ) :
+
+			e = GafferOSL.ShadingEngine( IECore.ObjectVector( [
+				IECore.Shader( shader, "osl:surface", { "global" : uvName } ),
+			] ) )
+
+			p = e.shade( rp )
+			for i, c in enumerate( p["Ci"] ) :
+				self.assertEqual( c, IECore.Color3f( rp["uv"][i][uvIndex] ) )
+
 if __name__ == "__main__":
 	unittest.main()
