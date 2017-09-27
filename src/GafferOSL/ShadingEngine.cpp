@@ -331,7 +331,8 @@ class RendererServices : public OSL::RendererServices
 
 	public :
 
-		RendererServices()
+		RendererServices( OSL::TextureSystem *textureSystem )
+			:	OSL::RendererServices( textureSystem )
 		{
 		}
 
@@ -456,13 +457,23 @@ ShadingSystemWriteMutex g_shadingSystemWriteMutex;
 OSL::ShadingSystem *shadingSystem()
 {
 	ShadingSystemWriteMutex::scoped_lock shadingSystemWriteLock( g_shadingSystemWriteMutex );
-	static OSL::ShadingSystem *s = nullptr;
-	if( s )
+	static OSL::TextureSystem *g_textureSystem = nullptr;
+	static OSL::ShadingSystem *g_shadingSystem = nullptr;
+	if( g_shadingSystem )
 	{
-		return s;
+		return g_shadingSystem;
 	}
 
-	s = new ShadingSystem( new RendererServices );
+	g_textureSystem = OIIO::TextureSystem::create( /* shared = */ false );
+	// By default, OIIO considers the image origin to be at the
+	// top left. We consider it to be at the bottom left.
+	// Compensate.
+	g_textureSystem->attribute( "flip_t", 1 );
+
+	g_shadingSystem = new ShadingSystem(
+		new RendererServices( g_textureSystem ),
+		g_textureSystem
+	);
 
 	struct ClosureDefinition{
 		const char *name;
@@ -496,7 +507,7 @@ OSL::ShadingSystem *shadingSystem()
 
 	for( int i = 0; closureDefinitions[i].name; ++i )
 	{
-		s->register_closure(
+		g_shadingSystem->register_closure(
 			closureDefinitions[i].name,
 			closureDefinitions[i].id,
 			closureDefinitions[i].parameters,
@@ -507,13 +518,13 @@ OSL::ShadingSystem *shadingSystem()
 
 	if( const char *searchPath = getenv( "OSL_SHADER_PATHS" ) )
 	{
-		s->attribute( "searchpath:shader", searchPath );
+		g_shadingSystem->attribute( "searchpath:shader", searchPath );
 	}
-	s->attribute( "lockgeom", 1 );
+	g_shadingSystem->attribute( "lockgeom", 1 );
 
-	s->attribute( "commonspace", "object" );
+	g_shadingSystem->attribute( "commonspace", "object" );
 
-	return s;
+	return g_shadingSystem;
 }
 
 } // namespace

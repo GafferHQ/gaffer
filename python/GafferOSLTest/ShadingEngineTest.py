@@ -498,5 +498,18 @@ class ShadingEngineTest( GafferOSLTest.OSLTestCase ) :
 			for i, c in enumerate( p["Ci"] ) :
 				self.assertEqual( c, IECore.Color3f( rp["uv"][i][uvIndex] ) )
 
+	def testTextureOrientation( self ) :
+
+		s = self.compileShader( os.path.dirname( __file__ ) +  "/shaders/uvTextureMap.osl" )
+		e = GafferOSL.ShadingEngine( IECore.ObjectVector( [
+			IECore.Shader( s, "osl:surface", { "fileName" : os.path.dirname( __file__ ) + "/images/vRamp.tx" } )
+		] ) )
+
+		p = self.rectanglePoints()
+		r = e.shade( p )
+
+		for i, c in enumerate( r["Ci"] ) :
+			self.assertAlmostEqual( c[1], p["v"][i], delta = 0.02 )
+
 if __name__ == "__main__":
 	unittest.main()

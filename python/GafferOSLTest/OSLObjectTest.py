@@ -416,6 +416,42 @@ class OSLObjectTest( GafferOSLTest.OSLTestCase ) :
 		self.assertEqual( planeObject["out_foo"].data[7], 1)
 		self.assertEqual( planeObject["out_foo"].data[8], 1)
 
+	def testTextureOrientation( self ) :
+
+		textureFileName = os.path.dirname( __file__ ) + "/images/vRamp.tx"
+
+		outColor = GafferOSL.OSLCode()
+		outColor["out"]["c"] = Gaffer.Plug(
+			direction = Gaffer.Plug.Direction.Out,
+			flags = Gaffer.Plug.Flags.Default | Gaffer.Plug.Flags.Dynamic
+		)
+		outColor["code"].setValue( 'c = outColor( "Cs", texture( "{}", u, v ) )'.format( textureFileName ) )
+
+		outObject = GafferOSL.OSLShader()
+		outObject.loadShader( "ObjectProcessing/OutObject" )
+		outObject["parameters"]["in0"].setInput( outColor["out"]["c"] )
+
+		plane = GafferScene.Plane()
+		plane["divisions"].setValue( IECore.V2i( 32 ) )
+
+		filter = GafferScene.PathFilter()
+		filter["paths"].setValue( IECore.StringVectorData( [ "/plane" ] ) )
+
+		resample = GafferScene.ResamplePrimitiveVariables()
+		resample["in"].setInput( plane["out"] )
+		resample["filter"].setInput( filter["out"] )
+		resample["names"].setValue( "uv" )
+
+		oslObject = GafferOSL.OSLObject()
+		oslObject["in"].setInput( resample["out"] )
+		oslObject["shader"].setInput( outObject["out"] )
+		oslObject["filter"].setInput( filter["out"] )
+
+		mesh = oslObject["out"].object( "/plane" )
+
+		for i, c in enumerate( mesh["Cs"].data ) :
+			self.assertAlmostEqual( c.r, mesh["uv"].data[i].y, delta = 0.02 )
+
 if __name__ == "__main__":
 	unittest.main()
 
