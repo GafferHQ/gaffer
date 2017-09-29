@@ -1,6 +1,6 @@
 //////////////////////////////////////////////////////////////////////////
 //
-//  Copyright (c) 2015, Image Engine Design Inc. All rights reserved.
+//  Copyright (c) 2015, John Haddon. All rights reserved.
 //
 //  Redistribution and use in source and binary forms, with or without
 //  modification, are permitted provided that the following conditions are
@@ -15,7 +15,7 @@
 //        disclaimer in the documentation and/or other materials provided with
 //        the distribution.
 //
-//      * Neither the name of Image Engine Design Inc nor the names of
+//      * Neither the name of John Haddon nor the names of
 //        any other contributors to this software may be used to endorse or
 //        promote products derived from this software without specific prior
 //        written permission.
@@ -34,23 +34,49 @@
 //
 //////////////////////////////////////////////////////////////////////////
 
-#ifndef GAFFERVDB_TYPEIDS_H
-#define GAFFERVDB_TYPEIDS_H
+#ifndef GAFFERVDB_VDBLEVELSET_OFFSET_H
+#define GAFFERVDB_VDBLEVELSET_OFFSET_H
+
+
+#include "Gaffer/NumericPlug.h"
+
+#include "GafferScene/SceneElementProcessor.h"
+
+#include "GafferVDB/TypeIds.h"
 
 namespace GafferVDB
 {
 
-enum TypeId
+class VDBLevelSetOffset : public GafferScene::SceneElementProcessor
 {
-	VDBGridTypeId = 110925,
-	VDBObjectTypeId = 110926,
-	VDBSceneTypeId = 110927,
-	MeshToVDBTypeId = 110928,
-	VDBToMeshTypeId = 110929,
-	VDBErodeTypeId = 110930,
-	LastTypeId = 110949
+
+	public :
+
+		VDBLevelSetOffset(const std::string &name);
+		~VDBLevelSetOffset();
+
+		IE_CORE_DECLARERUNTIMETYPEDEXTENSION( GafferVDB::VDBLevelSetOffset, VDBErodeTypeId, GafferScene::SceneElementProcessor );
+
+		Gaffer::StringPlug *gridNamePlug();
+		const Gaffer::StringPlug *gridNamePlug() const;
+
+		Gaffer::FloatPlug *offsetPlug();
+		const Gaffer::FloatPlug *offsetPlug() const;
+
+		virtual void affects( const Gaffer::Plug *input, AffectedPlugsContainer &outputs ) const;
+
+	protected :
+
+		bool processesObject() const override;
+		void hashProcessedObject( const ScenePath &path, const Gaffer::Context *context, IECore::MurmurHash &h ) const override;
+		IECore::ConstObjectPtr computeProcessedObject( const ScenePath &path, const Gaffer::Context *context, IECore::ConstObjectPtr inputObject ) const override;
+
+	private:
+		static size_t g_firstPlugIndex;
 };
+
+IE_CORE_DECLAREPTR( VDBLevelSetOffset )
 
 } // namespace GafferVDB
 
-#endif // GAFFERVDB_TYPEIDS_H
+#endif // GAFFERVDB_VDBLEVELSET_OFFSET_H
