@@ -482,6 +482,7 @@ import GafferVDBUI
 
 nodeMenu.append( "/VDB/VDB To Mesh", GafferVDB.VDBToMesh, searchText = "VDBToMesh" )
 nodeMenu.append( "/VDB/Mesh To VDB", GafferVDB.MeshToVDB, searchText = "MeshToVDB" )
+nodeMenu.append( "/VDB/VDB LevelSet Offset", GafferVDB.VDBLevelSetOffset, searchText = "VDBLevelSetOffset" )
 
 ## Miscellaneous UI
 ###########################################################################
