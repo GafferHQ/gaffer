@@ -178,6 +178,32 @@ class _TweakPlugValueWidget( GafferUI.PlugValueWidget ) :
 		for i in ( 0, 2, 3 ) :
 			self.__row[i].setEnabled( enabled )
 
+
+def __deletePlug( plug ) :
+
+	with Gaffer.UndoScope( plug.ancestor( Gaffer.ScriptNode ) ) :
+		plug.parent().removeChild( plug )
+
+def __plugPopupMenu( menuDefinition, plugValueWidget ):
+
+	plug = plugValueWidget.getPlug()
+	parent = plug.parent()
+	node = plug.node()
+
+	if not isinstance( node, GafferScene.LightTweaks ) or not parent.parent().isSame( node["tweaks"] ) :
+		return
+
+	menuDefinition.append( "/DeleteDivider", { "divider" : True } )
+	menuDefinition.append(
+		"/Delete",
+		{
+			"command" : functools.partial( __deletePlug, parent ),
+			"active" : not plugValueWidget.getReadOnly() and not Gaffer.MetadataAlgo.readOnly( parent )
+		}
+	)
+
+__plugPopupMenuConnection = GafferUI.PlugValueWidget.popupMenuSignal().connect( __plugPopupMenu )
+
 GafferUI.PlugValueWidget.registerType( GafferScene.LightTweaks.TweakPlug, _TweakPlugValueWidget )
 
 class _TweaksFooter( GafferUI.PlugValueWidget ) :
