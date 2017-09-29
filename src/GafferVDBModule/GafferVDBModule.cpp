@@ -40,6 +40,7 @@
 
 #include "GafferVDB/MeshToVDB.h"
 #include "GafferVDB/VDBToMesh.h"
+#include "GafferVDB/VDBLevelSetOffset.h"
 
 #include "GafferVDBBindings/VDBObjectBinding.h"
 
@@ -54,5 +55,6 @@ BOOST_PYTHON_MODULE( _GafferVDB )
 
 	GafferBindings::DependencyNodeClass<MeshToVDB>();
 	GafferBindings::DependencyNodeClass<VDBToMesh>();
+	GafferBindings::DependencyNodeClass<VDBLevelSetOffset>();
 
 }
