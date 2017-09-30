@@ -72,9 +72,6 @@ class ArnoldVDB : public GafferScene::ObjectSource
 		Gaffer::FloatPlug *stepScalePlug();
 		const Gaffer::FloatPlug *stepScalePlug() const;
 
-		Gaffer::StringPlug *dsoPlug();
-		const Gaffer::StringPlug *dsoPlug() const;
-
 		virtual void affects( const Gaffer::Plug *input, AffectedPlugsContainer &outputs ) const;
 
 	protected :
