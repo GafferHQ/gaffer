@@ -110,7 +110,6 @@ ArnoldVDB::ArnoldVDB( const std::string &name )
 	addChild( new FloatPlug( "velocityScale", Plug::In, 1.0f ) );
 	addChild( new FloatPlug( "stepSize", Plug::In, 0.0f, 0.0f ) );
 	addChild( new FloatPlug( "stepScale", Plug::In, 1.0f, 0.0f ) );
-	addChild( new StringPlug( "dso", Plug::In, "volume_vdb.so" ) );
 }
 
 ArnoldVDB::~ArnoldVDB()
@@ -177,16 +176,6 @@ const Gaffer::FloatPlug *ArnoldVDB::stepScalePlug() const
 	return getChild<FloatPlug>( g_firstPlugIndex + 5 );
 }
 
-Gaffer::StringPlug *ArnoldVDB::dsoPlug()
-{
-	return getChild<StringPlug>( g_firstPlugIndex + 6 );
-}
-
-const Gaffer::StringPlug *ArnoldVDB::dsoPlug() const
-{
-	return getChild<StringPlug>( g_firstPlugIndex + 6 );
-}
-
 void ArnoldVDB::affects( const Gaffer::Plug *input, AffectedPlugsContainer &outputs ) const
 {
 	ObjectSource::affects( input, outputs );
@@ -197,8 +186,7 @@ void ArnoldVDB::affects( const Gaffer::Plug *input, AffectedPlugsContainer &outp
 		input == velocityGridsPlug() ||
 		input == velocityScalePlug() ||
 		input == stepSizePlug() ||
-		input == stepScalePlug() ||
-		input == dsoPlug()
+		input == stepScalePlug()
 	)
 	{
 		outputs.push_back( sourcePlug() );
@@ -213,13 +201,12 @@ void ArnoldVDB::hashSource( const Gaffer::Context *context, IECore::MurmurHash &
 	velocityScalePlug()->hash( h );
 	stepSizePlug()->hash( h );
 	stepScalePlug()->hash( h );
-	dsoPlug()->hash( h );
 	h.append( context->getFramesPerSecond() );
 }
 
 IECore::ConstObjectPtr ArnoldVDB::computeSource( const Context *context ) const
 {
-	IECore::ExternalProceduralPtr result = new ExternalProcedural( dsoPlug()->getValue() );
+	IECore::ExternalProceduralPtr result = new ExternalProcedural( "volume" );
 	const std::string fileName = fileNamePlug()->getValue();
 	const std::string gridsString = gridsPlug()->getValue();
 	if( fileName.empty() || gridsString.empty() )
@@ -230,7 +217,6 @@ IECore::ConstObjectPtr ArnoldVDB::computeSource( const Context *context ) const
 
 	CompoundDataMap &parameters = result->parameters()->writable();
 
-	parameters["ai:nodeType"] = new StringData( "volume" );
 	parameters["filename"] = new StringData( fileNamePlug()->getValue() );
 
 	StringVectorDataPtr grids = new StringVectorData();

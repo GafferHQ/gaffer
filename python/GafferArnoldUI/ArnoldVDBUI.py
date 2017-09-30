@@ -125,25 +125,6 @@ Gaffer.Metadata.registerNode(
 
 		],
 
-		"dso" : [
-
-			"description",
-			"""
-			The file name of the volume plugin that will be used to load
-			the VDB file at render time. Currently this plugin is not supplied
-			with Arnold itself, but is provided with MtoA as
-			`procedurals/volume_vdb.so`, and with HtoA as
-			`arnold/procedurals/htoa_volume_openvdb.so`.
-			""",
-
-			"plugValueWidget:type", "GafferUI.FileSystemPathPlugValueWidget",
-			"path:leaf", True,
-			"path:bookmarks", "arnoldProcedural",
-			"fileSystemPath:extensions", "so dylib",
-			"fileSystemPath:extensionsLabel", "Show only DSOs",
-
-		],
-
 	}
 
 )
