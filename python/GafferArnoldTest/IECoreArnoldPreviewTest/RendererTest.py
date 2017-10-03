@@ -943,7 +943,7 @@ class RendererTest( GafferTest.TestCase ) :
 		for subdividePolygons in ( None, False, True ) :
 			a = IECore.CompoundObject()
 			if subdividePolygons is not None :
-				a["ai:polymesh:subdividePolygons"] = IECore.BoolData( subdividePolygons )
+				a["ai:polymesh:subdivide_polygons"] = IECore.BoolData( subdividePolygons )
 			attributes[subdividePolygons] = r.attributes( a )
 
 		for interpolation in meshes.keys() :
@@ -1363,7 +1363,7 @@ class RendererTest( GafferTest.TestCase ) :
 		} ) )
 
 		subdividePolygonsAttributes = r.attributes( IECore.CompoundObject( {
-			"ai:polymesh:subdividePolygons" : IECore.BoolData( True )
+			"ai:polymesh:subdivide_polygons" : IECore.BoolData( True )
 		} ) )
 
 		# Polygon mesh
