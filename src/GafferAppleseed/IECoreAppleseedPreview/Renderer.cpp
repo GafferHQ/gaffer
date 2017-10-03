@@ -2567,6 +2567,7 @@ class AppleseedRenderer final : public IECoreScenePreview::Renderer
 			cfg_params->insert( "lighting_engine", "pt" );
 			cfg_params->insert( "pixel_renderer", "uniform" );
 			cfg_params->insert( "sampling_mode", "qmc" );
+			cfg_params->insert( "spectrum_mode", "rgb" );
 			cfg_params->insert_path( "progressive_frame_renderer.max_fps", "5" );
 
 			// Insert some config params needed by the final renderer.
@@ -2579,6 +2580,7 @@ class AppleseedRenderer final : public IECoreScenePreview::Renderer
 			cfg_params->insert( "lighting_engine", "pt" );
 			cfg_params->insert( "pixel_renderer", "uniform" );
 			cfg_params->insert( "sampling_mode", "qmc" );
+			cfg_params->insert( "spectrum_mode", "rgb" );
 			cfg_params->insert_path( "uniform_pixel_renderer.samples", "16" );
 
 			// Create some basic project entities.
