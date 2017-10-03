@@ -514,7 +514,7 @@ IECore::InternedString g_polyMeshSubdivAdaptiveErrorAttributeName( "ai:polymesh:
 IECore::InternedString g_polyMeshSubdivAdaptiveMetricAttributeName( "ai:polymesh:subdiv_adaptive_metric" );
 IECore::InternedString g_polyMeshSubdivAdaptiveSpaceAttributeName( "ai:polymesh:subdiv_adaptive_space" );
 IECore::InternedString g_polyMeshSubdivSmoothDerivsAttributeName( "ai:polymesh:subdiv_smooth_derivs" );
-IECore::InternedString g_polyMeshSubdividePolygonsAttributeName( "ai:polymesh:subdividePolygons" );
+IECore::InternedString g_polyMeshSubdividePolygonsAttributeName( "ai:polymesh:subdivide_polygons" );
 IECore::InternedString g_objectSpace( "object" );
 
 IECore::InternedString g_dispMapAttributeName( "ai:disp_map" );
