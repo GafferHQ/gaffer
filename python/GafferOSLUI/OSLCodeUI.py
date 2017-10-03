@@ -93,7 +93,7 @@ Gaffer.Metadata.registerNode(
 			- V3fPlug (`vector`)
 			- M44fPlug (`matrix`)
 			- StringPlug (`string`)
-			- Plug (`closure color`)
+			- ClosurePlug (`closure color`)
 			- SplinefColor3f ( triplet of `float [], color [], string` )
 			""",
 
@@ -199,7 +199,7 @@ class _ParametersFooter( GafferUI.PlugValueWidget ) :
 			( "Color", Gaffer.Color3fPlug ),
 			( "Matrix", Gaffer.M44fPlug ),
 			( "String", Gaffer.StringPlug ),
-			( "Closure", Gaffer.Plug )
+			( "Closure", GafferOSL.ClosurePlug )
 		]
 
 		if self.getPlug().direction() == Gaffer.Plug.Direction.In :
