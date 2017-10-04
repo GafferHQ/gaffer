@@ -46,6 +46,7 @@
 #include "Gaffer/Node.h"
 #include "Gaffer/ScriptNode.h"
 #include "Gaffer/PlugAlgo.h"
+#include "GafferOSL/ClosurePlug.h"
 
 #include "GafferArnold/ParameterHandler.h"
 
@@ -197,6 +198,25 @@ Gaffer::Plug *setupColorPlug( const AtNodeEntry *node, const AtParamEntry *param
 	return plug.get();
 }
 
+Gaffer::Plug *setupClosurePlug( const IECore::InternedString &parameterName, Gaffer::GraphComponent *plugParent, Gaffer::Plug::Direction direction )
+{
+	GafferOSL::ClosurePlug *existingPlug = plugParent->getChild<GafferOSL::ClosurePlug>( parameterName );
+	if(
+		existingPlug &&
+		existingPlug->direction() == direction
+	)
+	{
+		return existingPlug;
+	}
+
+	GafferOSL::ClosurePlugPtr plug = new GafferOSL::ClosurePlug( parameterName, direction );
+	plug->setFlags( Plug::Dynamic, true );
+
+	PlugAlgo::replacePlug( plugParent, plug );
+
+	return plug.get();
+}
+
 const string nodeName ( Gaffer::GraphComponent *plugParent )
 {
 	const Gaffer::Node *node = IECore::runTimeCast<const Gaffer::Node>( plugParent );
@@ -241,6 +261,10 @@ Gaffer::Plug *ParameterHandler::setupPlug( const IECore::InternedString &paramet
 		case AI_TYPE_POINTER :
 
 			return ::setupPlug( parameterName, plugParent, direction );
+
+		case AI_TYPE_CLOSURE :
+
+			return setupClosurePlug( parameterName, plugParent, direction );
 
 		default :
 
@@ -394,6 +418,15 @@ Gaffer::Plug *ParameterHandler::setupPlug( const AtNodeEntry *node, const AtPara
 				plugParent,
 				direction,
 				M44f( AiParamGetDefault( parameter )->pMTX()->data )
+			);
+			break;
+
+		case AI_TYPE_CLOSURE :
+
+			plug = setupClosurePlug(
+				AiParamGetName( parameter ).c_str(),
+				plugParent,
+				direction
 			);
 			break;
 
