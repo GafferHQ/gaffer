@@ -57,6 +57,18 @@ using namespace GafferUIBindings;
 namespace
 {
 
+void setRoot( GraphGadget &graphGadget, Gaffer::NodePtr root, Gaffer::SetPtr filter )
+{
+	ScopedGILRelease gilRelease;
+	graphGadget.setRoot( root, filter );
+}
+
+void setFilter( GraphGadget &graphGadget, Gaffer::SetPtr filter )
+{
+	ScopedGILRelease gilRelease;
+	graphGadget.setFilter( filter );
+}
+
 struct RootChangedSlotCaller
 {
 	boost::signals::detail::unusable operator()( boost::python::object slot, GraphGadgetPtr g, Gaffer::NodePtr n )
@@ -151,10 +163,10 @@ void GafferUIBindings::bindGraphGadget()
 	scope s = GadgetClass<GraphGadget>()
 		.def( init<Gaffer::NodePtr, Gaffer::SetPtr>( ( arg_( "root" ), arg_( "filter" ) = object() ) ) )
 		.def( "getRoot", (Gaffer::Node *(GraphGadget::*)())&GraphGadget::getRoot, return_value_policy<CastToIntrusivePtr>() )
-		.def( "setRoot", &GraphGadget::setRoot, ( arg_( "root" ), arg_( "filter" ) = object() ) )
+		.def( "setRoot", &setRoot, ( arg_( "root" ), arg_( "filter" ) = object() ) )
 		.def( "rootChangedSignal", &GraphGadget::rootChangedSignal, return_internal_reference<1>() )
 		.def( "getFilter", (Gaffer::Set *(GraphGadget::*)())&GraphGadget::getFilter, return_value_policy<CastToIntrusivePtr>() )
-		.def( "setFilter", &GraphGadget::setFilter )
+		.def( "setFilter", &setFilter )
 		.def( "nodeGadget", (NodeGadget *(GraphGadget::*)( const Gaffer::Node * ))&GraphGadget::nodeGadget, return_value_policy<CastToIntrusivePtr>() )
 		.def( "connectionGadget", (ConnectionGadget *(GraphGadget::*)( const Gaffer::Plug * ))&GraphGadget::connectionGadget, return_value_policy<CastToIntrusivePtr>() )
 		.def( "connectionGadgets", &connectionGadgets1, ( arg_( "plug" ), arg_( "excludedNodes" ) = object() ) )
