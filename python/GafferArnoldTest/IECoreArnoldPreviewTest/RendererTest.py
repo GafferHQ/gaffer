@@ -1434,10 +1434,6 @@ class RendererTest( GafferTest.TestCase ) :
 					"ai:nodeType" : "volume",
 				} )
 			),
-			"regularProcedural" : IECore.ExternalProcedural(
-				"test.so",
-				IECore.Box3f( IECore.V3f( -1 ), IECore.V3f( 1 ) ),
-			),
 		}
 
 		attributes = {
@@ -1471,15 +1467,13 @@ class RendererTest( GafferTest.TestCase ) :
 			numSpheres = len( [ s for s in shapes if arnold.AiNodeEntryGetName( arnold.AiNodeGetNodeEntry( s ) ) == "sphere" ] )
 			numCurves = len( [ s for s in shapes if arnold.AiNodeEntryGetName( arnold.AiNodeGetNodeEntry( s ) ) == "curves" ] )
 			numVolumes = len( [ s for s in shapes if arnold.AiNodeEntryGetName( arnold.AiNodeGetNodeEntry( s ) ) == "volume" ] )
-			numProcedurals = len( [ s for s in shapes if arnold.AiNodeEntryGetName( arnold.AiNodeGetNodeEntry( s ) ) == "procedural" ] )
 
-			self.assertEqual( numInstances, 20 )
-			self.assertEqual( numMeshes, 1 )
-			self.assertEqual( numBoxes, 2 )
+			self.assertEqual( numInstances, 16 )
+			self.assertEqual( numMeshes, 3 )
+			self.assertEqual( numBoxes, 0 )
 			self.assertEqual( numSpheres, 3 )
 			self.assertEqual( numCurves, 1 )
 			self.assertEqual( numVolumes, 3 )
-			self.assertEqual( numProcedurals, 1 )
 
 			self.__assertInstanced(
 				"mesh_default",
@@ -1513,16 +1507,11 @@ class RendererTest( GafferTest.TestCase ) :
 						self.assertTrue( arnold.AiNodeIs( shape, "sphere" ) )
 						self.assertEqual( arnold.AiNodeGetFlt( shape, "step_size" ), stepSize )
 					elif pn == "mesh" :
-						if stepSize == 0 :
-							self.assertTrue( arnold.AiNodeIs( shape, "polymesh" ) )
-						else :
-							self.assertTrue( arnold.AiNodeIs( shape, "box" ) )
-							self.assertEqual( arnold.AiNodeGetFlt( shape, "step_size" ), stepSize )
+						self.assertTrue( arnold.AiNodeIs( shape, "polymesh" ) )
+						self.assertEqual( arnold.AiNodeGetFlt( shape, "step_size" ), stepSize )
 					elif pn == "volumeProcedural" :
 						self.assertTrue( arnold.AiNodeIs( shape, "volume" ) )
 						self.assertEqual( arnold.AiNodeGetFlt( shape, "step_size" ), stepSize )
-					elif pn == "regularProcedural" :
-						self.assertTrue( arnold.AiNodeIs( shape, "procedural" ) )
 
 	def testStepSizeAttributeDefersToProceduralParameter( self ) :
 

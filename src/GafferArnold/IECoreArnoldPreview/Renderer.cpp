@@ -697,17 +697,6 @@ class ArnoldAttributes : public IECoreScenePreview::Renderer::AttributesInterfac
 			return true;
 		}
 
-		// As if the interaction between attributes and geometry wasn't
-		// bad enough, we want a non-zero step_size value to cause meshes
-		// to be rendered as boxes, because Arnold doesn't currently support
-		// volume rendering of meshes. This method tells the InstanceCache
-		// when this is the case, so it can be taken into account in the
-		// geometry conversion.
-		bool requiresBoxGeometry( const IECore::Object *object ) const
-		{
-			return m_stepSize != 0.0f && IECore::runTimeCast<const IECore::MeshPrimitive>( object );
-		}
-
 		// Most attributes (visibility, surface shader etc) are orthogonal to the
 		// type of object to which they are applied. These are the good kind, because
 		// they can be applied to ginstance nodes, making attribute edits easy. This
@@ -1260,15 +1249,7 @@ class InstanceCache : public IECore::RefCounted
 				return SharedAtNodePtr();
 			}
 
-			AtNode *node = NULL;
-			if( attributes->requiresBoxGeometry( object ) )
-			{
-				node = convertToBox( object );
-			}
-			else
-			{
-				node = NodeAlgo::convert( object );
-			}
+			AtNode *node = NodeAlgo::convert( object );
 
 			if( !node )
 			{
@@ -1282,16 +1263,8 @@ class InstanceCache : public IECore::RefCounted
 
 		SharedAtNodePtr convert( const std::vector<const IECore::Object *> &samples, const std::vector<float> &times, const ArnoldAttributes *attributes )
 		{
-			AtNode *node = NULL;
-			if( attributes->requiresBoxGeometry( samples.front() ) )
-			{
-				node = convertToBox( samples, times );
-			}
-			else
-			{
-				NodeAlgo::ensureUniformTimeSamples( times );
-				node = NodeAlgo::convert( samples, times[0], times[times.size() - 1] );
-			}
+			NodeAlgo::ensureUniformTimeSamples( times );
+			AtNode *node = NodeAlgo::convert( samples, times[0], times[times.size() - 1] );
 
 			if( !node )
 			{
