@@ -41,15 +41,19 @@
 #include "IECorePython/ScopedGILRelease.h"
 #include "IECorePython/IECoreBinding.h"
 
+#include "Gaffer/Plug.h"
+
 #include "GafferBindings/DependencyNodeBinding.h"
 #include "GafferBindings/DataBinding.h"
 #include "GafferBindings/SignalBinding.h"
+#include "GafferBindings/PlugBinding.h"
 
 #include "GafferOSL/OSLShader.h"
 #include "GafferOSL/ShadingEngine.h"
 #include "GafferOSL/OSLImage.h"
 #include "GafferOSL/OSLObject.h"
 #include "GafferOSL/OSLCode.h"
+#include "GafferOSL/ClosurePlug.h"
 
 using namespace boost::python;
 using namespace GafferBindings;
@@ -147,6 +151,18 @@ BOOST_PYTHON_MODULE( _GafferOSL )
 
 	GafferBindings::DependencyNodeClass<OSLImage>();
 	GafferBindings::DependencyNodeClass<OSLObject>();
+
+	PlugClass<ClosurePlug>()
+		.def( init<const std::string &, Gaffer::Plug::Direction, unsigned>(
+				(
+					arg( "name" ) = Gaffer::GraphComponent::defaultName<ClosurePlug>(),
+					arg( "direction" ) = Gaffer::Plug::In,
+					arg( "flags" ) = Gaffer::Plug::Default
+				)
+			)
+		)
+	;
+
 
 	def( "oslLibraryVersionMajor", &oslLibraryVersionMajor );
 	def( "oslLibraryVersionMinor", &oslLibraryVersionMinor );
