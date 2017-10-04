@@ -1,3 +1,12 @@
+0.35.0.1
+========
+
+Fixes
+-----
+
+- GraphGadget binding : Fixed deadlock in NodeGraph drawing (#2288)
+- GafferArnoldUI : Automatically load light visualisers (#2277)
+
 0.35.0.0
 ========
 
