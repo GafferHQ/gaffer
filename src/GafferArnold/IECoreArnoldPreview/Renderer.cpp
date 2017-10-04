@@ -221,26 +221,6 @@ T parameter( const IECore::CompoundDataMap &parameters, const IECore::InternedSt
 	}
 }
 
-AtNode *convertToBox( const IECore::Object *object, const std::string &name, const AtNode *parentNode )
-{
-	AtNode *node = namespacedNode( "box", name.c_str(), parentNode );
-	if( const IECore::VisibleRenderable *visibleRenderable = IECore::runTimeCast<const IECore::VisibleRenderable>( object ) )
-	{
-		const Imath::Box3f b = visibleRenderable->bound();
-		AiNodeSetVec( node, "min", b.min.x, b.min.y, b.min.z );
-		AiNodeSetVec( node, "max", b.max.x, b.max.y, b.max.z );
-	}
-
-	return node;
-}
-
-AtNode *convertToBox( const std::vector<const IECore::Object *> &samples, const std::vector<float> &times, const std::string &name, const AtNode *parentNode )
-{
-	// Boxes don't support motion blurred extent, so just convert
-	// the first sample.
-	return convertToBox( samples.front(), name, parentNode );
-}
-
 std::string formatHeaderParameter( const std::string name, const IECore::Data *data )
 {
 	if( const IECore::BoolData *boolData = IECore::runTimeCast<const IECore::BoolData>( data ) )
@@ -832,17 +812,6 @@ class ArnoldAttributes : public IECoreScenePreview::Renderer::AttributesInterfac
 			}
 
 			return true;
-		}
-
-		// As if the interaction between attributes and geometry wasn't
-		// bad enough, we want a non-zero step_size value to cause meshes
-		// to be rendered as boxes, because Arnold doesn't currently support
-		// volume rendering of meshes. This method tells the InstanceCache
-		// when this is the case, so it can be taken into account in the
-		// geometry conversion.
-		bool requiresBoxGeometry( const IECore::Object *object ) const
-		{
-			return m_stepSize != 0.0f && IECore::runTimeCast<const IECore::MeshPrimitive>( object );
 		}
 
 		// Most attributes (visibility, surface shader etc) are orthogonal to the
@@ -1437,11 +1406,7 @@ class InstanceCache : public IECore::RefCounted
 			}
 
 			AtNode *node = nullptr;
-			if( attributes->requiresBoxGeometry( object ) )
-			{
-				node = convertToBox( object, nodeName, m_parentNode );
-			}
-			else if( const IECoreScenePreview::Procedural *procedural = IECore::runTimeCast<const IECoreScenePreview::Procedural>( object ) )
+			if( const IECoreScenePreview::Procedural *procedural = IECore::runTimeCast<const IECoreScenePreview::Procedural>( object ) )
 			{
 				node = convertProcedural( procedural, nodeName, m_parentNode );
 			}
@@ -1462,18 +1427,14 @@ class InstanceCache : public IECore::RefCounted
 
 		SharedAtNodePtr convert( const std::vector<const IECore::Object *> &samples, const std::vector<float> &times, const ArnoldAttributes *attributes, const std::string &nodeName )
 		{
+			NodeAlgo::ensureUniformTimeSamples( times );
 			AtNode *node = nullptr;
-			if( attributes->requiresBoxGeometry( samples.front() ) )
-			{
-				node = convertToBox( samples, times, nodeName, m_parentNode );
-			}
-			else if( const IECoreScenePreview::Procedural *procedural = IECore::runTimeCast<const IECoreScenePreview::Procedural>( samples.front() ) )
+			if( const IECoreScenePreview::Procedural *procedural = IECore::runTimeCast<const IECoreScenePreview::Procedural>( samples.front() ) )
 			{
 				node = convertProcedural( procedural, nodeName, m_parentNode );
 			}
 			else
 			{
-				NodeAlgo::ensureUniformTimeSamples( times );
 				node = namespacedNodeAlgoConvert( samples, times[0], times[times.size() - 1], nodeName, m_parentNode );
 			}
 
