@@ -1,6 +1,6 @@
 //////////////////////////////////////////////////////////////////////////
 //
-//  Copyright (c) 2013, John Haddon. All rights reserved.
+//  Copyright (c) 2017, Image Engine Design Inc. All rights reserved.
 //
 //  Redistribution and use in source and binary forms, with or without
 //  modification, are permitted provided that the following conditions are
@@ -34,24 +34,42 @@
 //
 //////////////////////////////////////////////////////////////////////////
 
-#ifndef GAFFEROSL_TYPEIDS_H
-#define GAFFEROSL_TYPEIDS_H
+#ifndef GAFFEROSL_CLOSUREPLUG_H
+#define GAFFEROSL_CLOSUREPLUG_H
+
+#include "IECore/CompoundObject.h"
+
+#include "Gaffer/Plug.h"
+
+#include "GafferOSL/TypeIds.h"
 
 namespace GafferOSL
 {
 
-enum TypeId
+/// Plug that provides a proxy for representing closure types when
+/// loader a shader from OSL or a renderer.  We probably won't be able
+/// to set or get closure plugs, but we need to be able to connect 
+/// them, and they should only connect to other closure plugs.
+class ClosurePlug : public Gaffer::Plug
 {
-	OSLShaderTypeId = 110975,
-	OSLRendererTypeId = 110976,
-	OSLImageTypeId = 110977,
-	OSLObjectTypeId = 110978,
-	OSLCodeTypeId = 110979,
-	ClosurePlugTypeId = 110980,
 
-	LastTypeId = 110999
+	public :
+
+		ClosurePlug( const std::string &name=defaultName<ClosurePlug>(), Direction direction=In, unsigned flags=Default );
+		virtual ~ClosurePlug();
+
+		IE_CORE_DECLARERUNTIMETYPEDEXTENSION( GafferOSL::ClosurePlug, ClosurePlugTypeId, Plug );
+
+		virtual bool acceptsChild( const Gaffer::GraphComponent *potentialChild ) const;
+		virtual Gaffer::PlugPtr createCounterpart( const std::string &name, Direction direction ) const;
+		virtual bool acceptsInput( const Gaffer::Plug *input ) const;
+
+	private:
+
 };
+
+IE_CORE_DECLAREPTR( ClosurePlug );
 
 } // namespace GafferOSL
 
-#endif // GAFFEROSL_TYPEIDS_H
+#endif // GAFFEROSL_CLOSUREPLUG_H

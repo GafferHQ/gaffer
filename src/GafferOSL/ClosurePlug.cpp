@@ -1,6 +1,6 @@
 //////////////////////////////////////////////////////////////////////////
 //
-//  Copyright (c) 2013, John Haddon. All rights reserved.
+//  Copyright (c) 2016, Image Engine Design Inc. All rights reserved.
 //
 //  Redistribution and use in source and binary forms, with or without
 //  modification, are permitted provided that the following conditions are
@@ -34,24 +34,59 @@
 //
 //////////////////////////////////////////////////////////////////////////
 
-#ifndef GAFFEROSL_TYPEIDS_H
-#define GAFFEROSL_TYPEIDS_H
+#include "IECore/MurmurHash.h"
 
-namespace GafferOSL
+#include "Gaffer/SubGraph.h"
+#include "Gaffer/Dot.h"
+
+#include "GafferOSL/ClosurePlug.h"
+
+using namespace IECore;
+using namespace Gaffer;
+using namespace GafferOSL;
+
+//////////////////////////////////////////////////////////////////////////
+// ClosurePlug
+//////////////////////////////////////////////////////////////////////////
+
+IE_CORE_DEFINERUNTIMETYPED( ClosurePlug );
+
+ClosurePlug::ClosurePlug( const std::string &name, Direction direction, unsigned flags )
+	:	Plug( name, direction, flags )
 {
+}
 
-enum TypeId
+ClosurePlug::~ClosurePlug()
 {
-	OSLShaderTypeId = 110975,
-	OSLRendererTypeId = 110976,
-	OSLImageTypeId = 110977,
-	OSLObjectTypeId = 110978,
-	OSLCodeTypeId = 110979,
-	ClosurePlugTypeId = 110980,
+}
 
-	LastTypeId = 110999
-};
+bool ClosurePlug::acceptsChild( const GraphComponent *potentialChild ) const
+{
+	return false;
+}
 
-} // namespace GafferOSL
+Gaffer::PlugPtr ClosurePlug::createCounterpart( const std::string &name, Direction direction ) const
+{
+	return new ClosurePlug( name, direction, getFlags() );
+}
 
-#endif // GAFFEROSL_TYPEIDS_H
+bool ClosurePlug::acceptsInput( const Gaffer::Plug *input ) const
+{
+	if( !Plug::acceptsInput( input ) )
+	{
+		return false;
+	}
+
+	if( !input )
+	{
+		return true;
+	}
+
+	// We only accept connections from other ClosurePlugs
+	if( runTimeCast<const ClosurePlug>( input ) )
+	{
+		return true;
+	}
+
+	return false;
+}
