@@ -1,6 +1,6 @@
 ##########################################################################
 #
-#  Copyright (c) 2013, Image Engine Design Inc. All rights reserved.
+#  Copyright (c) 2017, Image Engine Design Inc. All rights reserved.
 #
 #  Redistribution and use in source and binary forms, with or without
 #  modification, are permitted provided that the following conditions are
@@ -35,51 +35,38 @@
 ##########################################################################
 
 import Gaffer
-import GafferUI
 import GafferScene
 
-Gaffer.Metadata.registerNode(
+class __STPlugProxy( object ) :
 
-	GafferScene.MapOffset,
+	def __init__( self, uvSetPlug, coordinate ) :
 
-	"description",
-	"""
-	Adds an offset to object texture coordinates. This provides a convenient way of
-	looking at specific texture UDIMs.
-	""",
+		self.__uvSetPlug = uvSetPlug
+		self.__coordinate = coordinate
 
-	plugs = {
+	def setValue( self, value ) :
 
-		"offset" : [
+		if value == self.__coordinate :
+			self.__uvSetPlug.setValue( "uv" )
+		elif value.endswith( "_" + self.__coordinate ) :
+			self.__uvSetPlug.setValue( value[:-2] )
+		else :
+			IECore.msg( IECore.Msg.Level.Warning, "__STPlugProxy.setValue", "Unable to remap value \"{}\"".format( value ) )
 
-			"description",
-			"""
-			An offset added to the texture coordinates. Note that moving the
-			texture coordinates in the positive direction will move the texture
-			in the negative direction.
-			""",
+# Provides backwards compatibility by converting from old sName/tName
+# plugs to uvSet plugs.
+def __mapNodeGetItem( originalGetItem ) :
 
-		],
+	def getItem( self, key ) :
 
-		"udim" : [
+		if key == "sName" :
+			return __STPlugProxy( self["uvSet"], "s" )
+		elif key == "tName" :
+			return __STPlugProxy( self["uvSet"], "t" )
+		else :
+			return originalGetItem( self, key )
 
-			"description",
-			"""
-			A specific UDIM to offset the texture coordinates to. The UDIM is
-			converted to an offset which is added to the offset above.
-			""",
+	return getItem
 
-		],
-
-		"uvSet" : [
-
-			"description",
-			"""
-			The name of the primitive variable holding the UV coordinates.
-			""",
-
-		],
-
-	}
-
-)
+GafferScene.MapProjection.__getitem__ = __mapNodeGetItem( GafferScene.MapProjection.__getitem__ )
+GafferScene.MapOffset.__getitem__ = __mapNodeGetItem( GafferScene.MapOffset.__getitem__ )

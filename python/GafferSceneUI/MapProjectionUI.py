@@ -53,7 +53,7 @@ Gaffer.Metadata.registerNode(
 	"""
 	Applies texture coordinates to meshes via a camera projection.
 	In Gaffer, texture coordinates (commonly referred to as UVs)
-	are represented as primitive variables named "s" and "t".
+	are represented as primitive variables.
 	""",
 
 	plugs = {
@@ -71,26 +71,13 @@ Gaffer.Metadata.registerNode(
 
 		],
 
-		"sName" : [
+		"uvSet" : [
 
 			"description",
 			"""
-			The name of the primitive variable to store the s
-			coordinate of the projected texture coordinates.
-			This may be changed in order to store multiple
-			sets of texture coordinates on a single mesh.
-			""",
-
-		],
-
-		"tName" : [
-
-			"description",
-			"""
-			The name of the primitive variable to store the t
-			coordinate of the projected texture coordinates.
-			This may be changed in order to store multiple
-			sets of texture coordinates on a single mesh.
+			The name of the primitive variable used to store the
+			projected UV coordinates. This may be changed to store
+			multiple sets of UVs on a single mesh.
 			""",
 
 		],

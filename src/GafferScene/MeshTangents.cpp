@@ -50,7 +50,7 @@ size_t MeshTangents::g_firstPlugIndex = 0;
 MeshTangents::MeshTangents( const std::string &name ) : SceneElementProcessor( name )
 {
 	storeIndexOfNextChild( g_firstPlugIndex );
-	addChild( new StringPlug( "uvSet", Plug::In, "st" ) );
+	addChild( new StringPlug( "uvSet", Plug::In, "uv" ) );
 	addChild( new StringPlug( "position", Plug::In, "P" ) );
 	addChild( new StringPlug( "uTangent", Plug::In, "uTangent" ) );
 	addChild( new StringPlug( "vTangent", Plug::In, "vTangent" ) );

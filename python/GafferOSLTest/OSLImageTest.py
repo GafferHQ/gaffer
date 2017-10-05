@@ -328,5 +328,31 @@ class OSLImageTest( GafferOSLTest.OSLTestCase ) :
 				self.assertAlmostEqual( samplerU.sample( x, y ), uv.x, delta = 0.0000001, msg = "Pixel {},{}".format( x, y ) )
 				self.assertAlmostEqual( samplerV.sample( x, y ), uv.y, delta = 0.0000001, msg = "Pixel {},{}".format( x, y ) )
 
+	def testTextureOrientation( self ) :
+
+		constant = GafferImage.Constant()
+		constant["format"].setValue( GafferImage.Format( 32, 32 ) )
+
+		textureFileName = os.path.dirname( __file__ ) + "/images/vRamp.tx"
+
+		outLayer = GafferOSL.OSLCode()
+		outLayer["out"]["layer"] = Gaffer.Plug(
+			direction = Gaffer.Plug.Direction.Out,
+			flags = Gaffer.Plug.Flags.Default | Gaffer.Plug.Flags.Dynamic
+		)
+		outLayer["code"].setValue( 'layer = outLayer( "", texture( "{}", u, v ) )'.format( textureFileName ) )
+
+		outImage = GafferOSL.OSLShader()
+		outImage.loadShader( "ImageProcessing/OutImage" )
+		outImage["parameters"]["in0"].setInput( outLayer["out"]["layer"] )
+
+		oslImage = GafferOSL.OSLImage()
+		oslImage["in"].setInput( constant["out"] )
+		oslImage["shader"].setInput( outImage["out"] )
+
+		sampler = GafferImage.Sampler( oslImage["out"], "R", oslImage["out"]["dataWindow"].getValue() )
+		for y in range( 0, 31 ) :
+			self.assertAlmostEqual( sampler.sample( 5, y ), (y + 0.5) / 32.0, delta = 0.02 )
+
 if __name__ == "__main__":
 	unittest.main()

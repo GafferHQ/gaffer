@@ -59,8 +59,7 @@ MapProjection::MapProjection( const std::string &name )
 {
 	storeIndexOfNextChild( g_firstPlugIndex );
 	addChild( new StringPlug( "camera" ) );
-	addChild( new StringPlug( "sName", Plug::In, "s" ) );
-	addChild( new StringPlug( "tName", Plug::In, "t" ) );
+	addChild( new StringPlug( "uvSet", Plug::In, "uv" ) );
 
 	// Fast pass-throughs for things we don't modify
 	outPlug()->attributesPlug()->setInput( inPlug()->attributesPlug() );
@@ -82,24 +81,14 @@ const Gaffer::StringPlug *MapProjection::cameraPlug() const
 	return getChild<StringPlug>( g_firstPlugIndex );
 }
 
-Gaffer::StringPlug *MapProjection::sNamePlug()
+Gaffer::StringPlug *MapProjection::uvSetPlug()
 {
 	return getChild<StringPlug>( g_firstPlugIndex + 1 );
 }
 
-const Gaffer::StringPlug *MapProjection::sNamePlug() const
+const Gaffer::StringPlug *MapProjection::uvSetPlug() const
 {
 	return getChild<StringPlug>( g_firstPlugIndex + 1 );
-}
-
-Gaffer::StringPlug *MapProjection::tNamePlug()
-{
-	return getChild<StringPlug>( g_firstPlugIndex + 2 );
-}
-
-const Gaffer::StringPlug *MapProjection::tNamePlug() const
-{
-	return getChild<StringPlug>( g_firstPlugIndex + 2 );
 }
 
 void MapProjection::affects( const Gaffer::Plug *input, AffectedPlugsContainer &outputs ) const
@@ -108,8 +97,7 @@ void MapProjection::affects( const Gaffer::Plug *input, AffectedPlugsContainer &
 
 	if(
 		input == cameraPlug() ||
-		input == sNamePlug() ||
-		input == tNamePlug() ||
+		input == uvSetPlug() ||
 		input == inPlug()->transformPlug()
 	)
 	{
@@ -131,8 +119,7 @@ void MapProjection::hashProcessedObject( const ScenePath &path, const Gaffer::Co
 	h.append( inPlug()->transformHash( cameraPath ) );
 
 	inPlug()->transformPlug()->hash( h );
-	sNamePlug()->hash( h );
-	tNamePlug()->hash( h );
+	uvSetPlug()->hash( h );
 }
 
 IECore::ConstObjectPtr MapProjection::computeProcessedObject( const ScenePath &path, const Gaffer::Context *context, IECore::ConstObjectPtr inputObject ) const
@@ -150,12 +137,11 @@ IECore::ConstObjectPtr MapProjection::computeProcessedObject( const ScenePath &p
 		return inputObject;
 	}
 
-	// early out if the s/t names haven't been provided.
+	// early out if the uv set name hasn't been provided
 
-	std::string sName = sNamePlug()->getValue();
-	std::string tName = tNamePlug()->getValue();
+	const string uvSet = uvSetPlug()->getValue();
 
-	if( sName == "" || tName == "" )
+	if( uvSet == "" )
 	{
 		return inputObject;
 	}
@@ -190,17 +176,14 @@ IECore::ConstObjectPtr MapProjection::computeProcessedObject( const ScenePath &p
 
 	PrimitivePtr result = inputPrimitive->copy();
 
-	FloatVectorDataPtr sData = new FloatVectorData();
-	FloatVectorDataPtr tData = new FloatVectorData();
+	V2fVectorDataPtr uvData = new V2fVectorData();
+	uvData->setInterpretation( GeometricData::UV );
 
-	result->variables[sName] = PrimitiveVariable( PrimitiveVariable::Vertex, sData );
-	result->variables[tName] = PrimitiveVariable( PrimitiveVariable::Vertex, tData );
+	result->variables[uvSet] = PrimitiveVariable( PrimitiveVariable::Vertex, uvData );
 
 	const vector<V3f> &p = pData->readable();
-	vector<float> &s = sData->writable();
-	vector<float> &t = tData->writable();
-	s.reserve( p.size() );
-	t.reserve( p.size() );
+	vector<V2f> &uv = uvData->writable();
+	uv.reserve( p.size() );
 
 	for( size_t i = 0, e = p.size(); i < e; ++i )
 	{
@@ -209,7 +192,7 @@ IECore::ConstObjectPtr MapProjection::computeProcessedObject( const ScenePath &p
 		if( tanFOV > 0.0f )
 		{
 			// perspective
-			const float d = pCamera.z * tanFOV;
+			const float d = -pCamera.z * tanFOV;
 			pScreen = V2f( pCamera.x / d, pCamera.y / d );
 		}
 		else
@@ -217,8 +200,12 @@ IECore::ConstObjectPtr MapProjection::computeProcessedObject( const ScenePath &p
 			// orthographic
 			pScreen = V2f( pCamera.x, pCamera.y );
 		}
-		s.push_back( lerpfactor( pScreen.x, screenWindow.min.x, screenWindow.max.x ) );
-		t.push_back( lerpfactor( pScreen.y, screenWindow.min.y, screenWindow.max.y ) );
+		uv.push_back(
+			V2f(
+				lerpfactor( pScreen.x, screenWindow.min.x, screenWindow.max.x ),
+				lerpfactor( pScreen.y, screenWindow.min.y, screenWindow.max.y )
+			)
+		);
 	}
 
 	return result;

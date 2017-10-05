@@ -66,11 +66,8 @@ class MapOffset : public SceneElementProcessor
 		Gaffer::IntPlug *udimPlug();
 		const Gaffer::IntPlug *udimPlug() const;
 
-		Gaffer::StringPlug *sNamePlug();
-		const Gaffer::StringPlug *sNamePlug() const;
-
-		Gaffer::StringPlug *tNamePlug();
-		const Gaffer::StringPlug *tNamePlug() const;
+		Gaffer::StringPlug *uvSetPlug();
+		const Gaffer::StringPlug *uvSetPlug() const;
 
 		void affects( const Gaffer::Plug *input, AffectedPlugsContainer &outputs ) const override;
 

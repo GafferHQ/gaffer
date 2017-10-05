@@ -459,5 +459,57 @@ class ShadingEngineTest( GafferOSLTest.OSLTestCase ) :
 
 		self.assertEqual( str(engineError.exception), "Exception : The following shaders can't be used as they are not OSL shaders: aiImage (shader), aiImage (shader)" )
 
+	def testReadV2fUserData( self ) :
+
+		s = self.compileShader( os.path.dirname( __file__ ) +  "/shaders/attribute.osl" )
+		e = GafferOSL.ShadingEngine( IECore.ObjectVector( [
+			IECore.Shader( s, "osl:surface", { "name" : "v2f" } )
+		] ) )
+
+		p = self.rectanglePoints()
+		p["v2f"] = IECore.V2fVectorData( [ IECore.V2f( x.x, x.y ) for x in p["P"] ] )
+
+		r = e.shade( p )
+
+		for i, c in enumerate( r["Ci"] ) :
+			self.assertEqual(
+				c,
+				IECore.Color3f( p["P"][i].x, p["P"][i].y, 0 )
+			)
+
+	def testUVProvidedAsV2f( self ) :
+
+		shader = self.compileShader( os.path.dirname( __file__ ) + "/shaders/globals.osl" )
+
+		rp = self.rectanglePoints()
+		rp["uv"] = IECore.V2fVectorData(
+			[ IECore.V2f( u, v ) for u, v in zip( rp["u"], rp["v"] ) ]
+		)
+		del rp["u"]
+		del rp["v"]
+
+		for uvIndex, uvName in enumerate( [ "u", "v" ] ) :
+
+			e = GafferOSL.ShadingEngine( IECore.ObjectVector( [
+				IECore.Shader( shader, "osl:surface", { "global" : uvName } ),
+			] ) )
+
+			p = e.shade( rp )
+			for i, c in enumerate( p["Ci"] ) :
+				self.assertEqual( c, IECore.Color3f( rp["uv"][i][uvIndex] ) )
+
+	def testTextureOrientation( self ) :
+
+		s = self.compileShader( os.path.dirname( __file__ ) +  "/shaders/uvTextureMap.osl" )
+		e = GafferOSL.ShadingEngine( IECore.ObjectVector( [
+			IECore.Shader( s, "osl:surface", { "fileName" : os.path.dirname( __file__ ) + "/images/vRamp.tx" } )
+		] ) )
+
+		p = self.rectanglePoints()
+		r = e.shade( p )
+
+		for i, c in enumerate( r["Ci"] ) :
+			self.assertAlmostEqual( c[1], p["v"][i], delta = 0.02 )
+
 if __name__ == "__main__":
 	unittest.main()

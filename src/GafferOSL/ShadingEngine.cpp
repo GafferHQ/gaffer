@@ -231,18 +231,30 @@ class RenderState
 				src += pointIndex * it->dataView.type.elementsize();
 			}
 
-			bool result = ShadingSystem::convert_value( value, type, src, it->dataView.type );
-
-			//! If the convert_value fails then attempt to convert an aggregate (vec2, vec3, vec4, matrix33, matrix44) to an array with the same base type.
-			//! note the aggregate enum is the number of elements
-			//! todo create a PR for OSL
-			if (!result && it->dataView.type.basetype == type.basetype && it->dataView.type.aggregate == type.arraylen)
+			if( ShadingSystem::convert_value( value, type, src, it->dataView.type ) )
 			{
-				memcpy (value, src, type.size());
-				result = true;
+				// OSL converted successfully
+				return true;
 			}
+			else if( it->dataView.type.basetype == type.basetype && it->dataView.type.aggregate == type.arraylen )
+			{
+				// Convert an aggregate (vec2, vec3, vec4, matrix33, matrix44) to an array with the same base type.
+				// Note that the aggregate enum value is the number of elements.
+				memcpy( value, src, type.size() );
+				return true;
+			}
+			else if( it->dataView.type.aggregate == TypeDesc::VEC2 )
+			{
+				// OSL doesn't know how to convert these, but it knows how to convert
+				// float[2], which has an identical layout.
+				TypeDesc t = it->dataView.type;
+				t.aggregate = TypeDesc::SCALAR;
+				t.arraylen = 2;
+				return ShadingSystem::convert_value( value, type, src, t );
+			}
+			/// \todo Try to get these additional conversions accepted into OSL itself
 
-			return result;
+			return false;
 		}
 
 		bool matrixToObject( OIIO::ustring name, Imath::M44f &result ) const
@@ -319,7 +331,8 @@ class RendererServices : public OSL::RendererServices
 
 	public :
 
-		RendererServices()
+		RendererServices( OSL::TextureSystem *textureSystem )
+			:	OSL::RendererServices( textureSystem )
 		{
 		}
 
@@ -444,13 +457,23 @@ ShadingSystemWriteMutex g_shadingSystemWriteMutex;
 OSL::ShadingSystem *shadingSystem()
 {
 	ShadingSystemWriteMutex::scoped_lock shadingSystemWriteLock( g_shadingSystemWriteMutex );
-	static OSL::ShadingSystem *s = nullptr;
-	if( s )
+	static OSL::TextureSystem *g_textureSystem = nullptr;
+	static OSL::ShadingSystem *g_shadingSystem = nullptr;
+	if( g_shadingSystem )
 	{
-		return s;
+		return g_shadingSystem;
 	}
 
-	s = new ShadingSystem( new RendererServices );
+	g_textureSystem = OIIO::TextureSystem::create( /* shared = */ false );
+	// By default, OIIO considers the image origin to be at the
+	// top left. We consider it to be at the bottom left.
+	// Compensate.
+	g_textureSystem->attribute( "flip_t", 1 );
+
+	g_shadingSystem = new ShadingSystem(
+		new RendererServices( g_textureSystem ),
+		g_textureSystem
+	);
 
 	struct ClosureDefinition{
 		const char *name;
@@ -484,7 +507,7 @@ OSL::ShadingSystem *shadingSystem()
 
 	for( int i = 0; closureDefinitions[i].name; ++i )
 	{
-		s->register_closure(
+		g_shadingSystem->register_closure(
 			closureDefinitions[i].name,
 			closureDefinitions[i].id,
 			closureDefinitions[i].parameters,
@@ -495,13 +518,13 @@ OSL::ShadingSystem *shadingSystem()
 
 	if( const char *searchPath = getenv( "OSL_SHADER_PATHS" ) )
 	{
-		s->attribute( "searchpath:shader", searchPath );
+		g_shadingSystem->attribute( "searchpath:shader", searchPath );
 	}
-	s->attribute( "lockgeom", 1 );
+	g_shadingSystem->attribute( "lockgeom", 1 );
 
-	s->attribute( "commonspace", "object" );
+	g_shadingSystem->attribute( "commonspace", "object" );
 
-	return s;
+	return g_shadingSystem;
 }
 
 } // namespace
@@ -1003,6 +1026,7 @@ IECore::CompoundDataPtr ShadingEngine::shade( const IECore::CompoundData *points
 
 	const float *u = varyingValue<float>( points, "u" );
 	const float *v = varyingValue<float>( points, "v" );
+	const V2f *uv = varyingValue<V2f>( points, "uv" );
 	const V3f *n = varyingValue<V3f>( points, "N" );
 
 	/// \todo Get the other globals - match the uniform list
@@ -1025,7 +1049,7 @@ IECore::CompoundDataPtr ShadingEngine::shade( const IECore::CompoundData *points
 	typedef tbb::enumerable_thread_specific<ThreadContext> ThreadContextType;
 	ThreadContextType contexts;
 
-	auto f = [&shadingSystem, &renderState, &results, &shaderGlobals, &p, &u, &v, &n, &shaderGroup, &contexts]( const tbb::blocked_range<size_t> &r )
+	auto f = [&shadingSystem, &renderState, &results, &shaderGlobals, &p, &u, &v, &uv, &n, &shaderGroup, &contexts]( const tbb::blocked_range<size_t> &r )
 	{
 		ThreadContextType::reference context = contexts.local();
 		if( !context.shadingContext )
@@ -1042,14 +1066,24 @@ IECore::CompoundDataPtr ShadingEngine::shade( const IECore::CompoundData *points
 		for( size_t i = r.begin(); i < r.end(); ++i )
 		{
 			threadShaderGlobals.P = p[i];
-			if( u )
+
+			if( uv )
 			{
-				threadShaderGlobals.u = u[i];
+				threadShaderGlobals.u = uv[i].x;
+				threadShaderGlobals.v = uv[i].y;
 			}
-			if( v )
+			else
 			{
-				threadShaderGlobals.v = v[i];
+				if( u )
+				{
+					threadShaderGlobals.u = u[i];
+				}
+				if( v )
+				{
+					threadShaderGlobals.v = v[i];
+				}
 			}
+
 			if( n )
 			{
 				threadShaderGlobals.N = n[i];

@@ -61,16 +61,13 @@ class MapProjectionTest( GafferSceneTest.SceneTestCase ) :
 		map["camera"].setValue( "/group/camera" )
 
 		oIn = group["out"].object( "/group/cube" )
-		self.assertTrue( "s" not in oIn )
-		self.assertTrue( "t" not in oIn )
+		self.assertTrue( "uv" not in oIn )
 
 		oOut = map["out"].object( "/group/cube" )
-		self.assertTrue( "s" in oOut )
-		self.assertTrue( "t" in oOut )
+		self.assertTrue( "uv" in oOut )
 		self.assertTrue( oOut.arePrimitiveVariablesValid() )
 
-		oIn["s"] = oOut["s"]
-		oIn["t"] = oOut["t"]
+		oIn["uv"] = oOut["uv"]
 		self.assertEqual( oIn, oOut )
 
 		camera["transform"]["translate"]["z"].setValue( 3 )
