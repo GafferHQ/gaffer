@@ -108,6 +108,7 @@ class ImageReaderPathPreview( GafferUI.PathPreviewWidget ) :
 
 		with self.__script.context() :
 			viewport = self.__viewer.viewGadgetWidget().getViewportGadget()
-			viewport.frame( viewport.getPrimaryChild().bound() )
+			if viewport.getPrimaryChild() is not None :
+				viewport.frame( viewport.getPrimaryChild().bound() )
 
 GafferUI.PathPreviewWidget.registerType( "Image", ImageReaderPathPreview )
