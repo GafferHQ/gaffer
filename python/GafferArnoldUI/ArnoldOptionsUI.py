@@ -98,6 +98,12 @@ def __rayDepthSummary( plug ) :
 		info.append( "Threshold %s" % GafferUI.NumericWidget.valueToString( plug["autoTransparencyThreshold"]["value"].getValue() ) )
 	return ", ".join( info )
 
+def __subdivisionSummary( plug ) :
+	info = []
+	if plug["maxSubdivisions"]["enabled"].getValue():
+		info.append( "Max Subdivisions  %d" % plug["maxSubdivisions"]["value"].getValue() )
+	return ", ".join( info )
+
 def __texturingSummary( plug ) :
 
 	info = []
@@ -138,9 +144,11 @@ def __searchPathsSummary( plug ) :
 
 	return ", ".join( info )
 
-def __errorColorsSummary( plug ) :
+def __errorHandlingSummary( plug ) :
 
 	info = []
+	if plug["abortOnError"]["enabled"].getValue() :
+		info.append( "Abort on Error " + ( "On" if plug['abortOnError']["value"].getValue() else "Off" ) )
 	for suffix in ( "Texture", "Pixel", "Shader" ) :
 		if plug["errorColorBad"+suffix]["enabled"].getValue() :
 			info.append( suffix )
@@ -189,10 +197,11 @@ Gaffer.Metadata.registerNode(
 			"layout:section:Rendering:summary", __renderingSummary,
 			"layout:section:Sampling:summary", __samplingSummary,
 			"layout:section:Ray Depth:summary", __rayDepthSummary,
+			"layout:section:Subdivision:summary", __subdivisionSummary,
 			"layout:section:Texturing:summary", __texturingSummary,
 			"layout:section:Features:summary", __featuresSummary,
 			"layout:section:Search Paths:summary", __searchPathsSummary,
-			"layout:section:Error Colors:summary", __errorColorsSummary,
+			"layout:section:Error Handling:summary", __errorHandlingSummary,
 			"layout:section:Logging:summary", __loggingSummary,
 			"layout:section:Licensing:summary", __licensingSummary,
 
@@ -510,6 +519,19 @@ Gaffer.Metadata.registerNode(
 			"label", "Opacity Threshold",
 		],
 
+		# Subdivision
+
+		"options.maxSubdivisions" : [
+
+			"description",
+			"""
+			A global override for the maximum polymesh.subdiv_iterations.
+			""",
+
+			"layout:section", "Subdivision", 
+			"label", "Max Subdivisions",
+		],
+
 		# Texturing
 
 		"options.textureMaxMemoryMB" : [
@@ -719,7 +741,18 @@ Gaffer.Metadata.registerNode(
 
 		],
 
-		# Error Colors
+		# Error Handling
+
+		"options.abortOnError" : [
+
+			"description", 
+			"""
+			Aborts the render if an error is encountered.
+			""",
+
+			"layout:section", "Error Handling"
+
+		],
 
 		"options.errorColorBadTexture" : [
 
@@ -729,7 +762,7 @@ Gaffer.Metadata.registerNode(
 			made to use a bad or non-existent texture.
 			""",
 
-			"layout:section", "Error Colors",
+			"layout:section", "Error Handling",
 			"label", "Bad Texture",
 
 		],
@@ -742,7 +775,7 @@ Gaffer.Metadata.registerNode(
 			a NaN is encountered.
 			""",
 
-			"layout:section", "Error Colors",
+			"layout:section", "Error Handling",
 			"label", "Bad Pixel",
 
 		],
@@ -755,7 +788,7 @@ Gaffer.Metadata.registerNode(
 			in a shader.
 			""",
 
-			"layout:section", "Error Colors",
+			"layout:section", "Error Handling",
 			"label", "Bad Shader",
 
 		],
