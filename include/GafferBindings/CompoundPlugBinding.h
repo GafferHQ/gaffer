@@ -43,8 +43,6 @@
 namespace GafferBindings
 {
 
-void bindCompoundPlug();
-
 class CompoundPlugSerialiser : public ValuePlugSerialiser
 {
 

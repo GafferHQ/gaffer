@@ -47,47 +47,6 @@ using namespace boost::python;
 using namespace GafferBindings;
 using namespace Gaffer;
 
-static std::string maskedRepr( const Plug *plug, unsigned flagsMask )
-{
-	std::string result = Serialisation::classPath( plug ) + "( \"" + plug->getName().string() + "\", ";
-
-	if( plug->direction()!=Plug::In )
-	{
-		result += "direction = " + PlugSerialiser::directionRepr( plug->direction() ) + ", ";
-	}
-
-	const unsigned flags = plug->getFlags() & flagsMask;
-	if( flags != Plug::Default )
-	{
-		result += "flags = " + PlugSerialiser::flagsRepr( flags ) + ", ";
-	}
-
-	result += ")";
-
-	return result;
-}
-
-static std::string repr( const Plug *plug )
-{
-	return maskedRepr( plug, Plug::All );
-}
-
-static boost::python::tuple outputs( Plug &p )
-{
-	const Plug::OutputContainer &o = p.outputs();
-	boost::python::list l;
-	for( Plug::OutputContainer::const_iterator it=o.begin(); it!=o.end(); it++ )
-	{
-		l.append( PlugPtr( *it ) );
-	}
-	return boost::python::tuple( l );
-}
-
-static NodePtr node( Plug &p )
-{
-	return p.node();
-}
-
 void PlugSerialiser::moduleDependencies( const Gaffer::GraphComponent *graphComponent, std::set<std::string> &modules, const Serialisation &serialisation ) const
 {
 	Serialiser::moduleDependencies( graphComponent, modules, serialisation );
@@ -96,7 +55,7 @@ void PlugSerialiser::moduleDependencies( const Gaffer::GraphComponent *graphComp
 
 std::string PlugSerialiser::constructor( const Gaffer::GraphComponent *graphComponent, const Serialisation &serialisation ) const
 {
-	return maskedRepr( static_cast<const Plug *>( graphComponent ), Plug::All & ~Plug::ReadOnly );
+	return repr( static_cast<const Plug *>( graphComponent ), Plug::All & ~Plug::ReadOnly );
 }
 
 std::string PlugSerialiser::postHierarchy( const Gaffer::GraphComponent *graphComponent, const std::string &identifier, const Serialisation &serialisation ) const
@@ -208,64 +167,23 @@ std::string PlugSerialiser::flagsRepr( unsigned flags )
 	return result;
 }
 
-static PlugPtr getInput( Plug &p )
+std::string PlugSerialiser::repr( const Plug *plug, unsigned flagsMask )
 {
-	return p.getInput();
-}
+	std::string result = Serialisation::classPath( plug ) + "( \"" + plug->getName().string() + "\", ";
 
-static PlugPtr source( Plug &p )
-{
-	return p.source();
-}
-
-void GafferBindings::bindPlug()
-{
-	typedef PlugWrapper<Plug> Wrapper;
-
-	PlugClass<Plug, Wrapper> c;
+	if( plug->direction()!=Plug::In )
 	{
-		scope s( c );
-		enum_<Plug::Direction>( "Direction" )
-			.value( "Invalid", Plug::Invalid )
-			.value( "In", Plug::In )
-			.value( "Out", Plug::Out )
-		;
-		enum_<Plug::Flags>( "Flags" )
-			.value( "None", Plug::None )
-			.value( "Dynamic", Plug::Dynamic )
-			.value( "Serialisable", Plug::Serialisable )
-			.value( "AcceptsInputs", Plug::AcceptsInputs )
-			.value( "PerformsSubstitutions", Plug::PerformsSubstitutions )
-			.value( "Cacheable", Plug::Cacheable )
-			.value( "ReadOnly", Plug::ReadOnly )
-			.value( "AcceptsDependencyCycles", Plug::AcceptsDependencyCycles )
-			.value( "Default", Plug::Default )
-			.value( "All", Plug::All )
-		;
+		result += "direction = " + PlugSerialiser::directionRepr( plug->direction() ) + ", ";
 	}
 
-	c.def(  init< const std::string &, Plug::Direction, unsigned >
-			(
-				(
-					arg( "name" ) = GraphComponent::defaultName<Plug>(),
-					arg( "direction" ) = Plug::In,
-					arg( "flags" ) = Plug::Default
-				)
-			)
-		)
-		.def( "node", &node )
-		.def( "direction", &Plug::direction )
-		.def( "getFlags", (unsigned (Plug::*)() const )&Plug::getFlags )
-		.def( "getFlags", (bool (Plug::*)( unsigned ) const )&Plug::getFlags )
-		.def( "setFlags", (void (Plug::*)( unsigned ) )&Plug::setFlags )
-		.def( "setFlags", (void (Plug::*)( unsigned, bool ) )&Plug::setFlags )
-		.def( "getInput", &getInput )
-		.def( "source", &source )
-		.def( "removeOutputs", &Plug::removeOutputs )
-		.def( "outputs", &outputs )
-		.def( "__repr__", &repr )
-	;
+	const unsigned flags = plug->getFlags() & flagsMask;
+	if( flags != Plug::Default )
+	{
+		result += "flags = " + PlugSerialiser::flagsRepr( flags ) + ", ";
+	}
 
-	Serialisation::registerSerialiser( Gaffer::Plug::staticTypeId(), new PlugSerialiser );
+	result += ")";
 
+	return result;
 }
+

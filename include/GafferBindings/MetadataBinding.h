@@ -42,8 +42,6 @@
 namespace GafferBindings
 {
 
-void bindMetadata();
-
 void metadataModuleDependencies( const Gaffer::Node *node, std::set<std::string> &modules );
 void metadataModuleDependencies( const Gaffer::Plug *plug, std::set<std::string> &modules );
 

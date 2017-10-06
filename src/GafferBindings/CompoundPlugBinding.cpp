@@ -35,47 +35,11 @@
 //
 //////////////////////////////////////////////////////////////////////////
 
-#include "boost/python.hpp"
-
-#include "Gaffer/CompoundPlug.h"
 #include "GafferBindings/CompoundPlugBinding.h"
-#include "GafferBindings/ValuePlugBinding.h"
 
-using namespace boost::python;
 using namespace GafferBindings;
-using namespace Gaffer;
-
-class CompoundPlugWrapper : public PlugWrapper<CompoundPlug>
-{
-
-	public :
-
-		CompoundPlugWrapper( PyObject *self, const std::string &name, Direction direction, unsigned flags )
-			:	PlugWrapper<CompoundPlug>( self, name, direction, flags )
-		{
-		}
-
-};
 
 bool CompoundPlugSerialiser::valueNeedsSerialisation( const Gaffer::ValuePlug *plug, const Serialisation &serialisation ) const
 {
 	return false;
-}
-
-void GafferBindings::bindCompoundPlug()
-{
-	PlugClass<CompoundPlug, CompoundPlugWrapper>()
-		.def(	init< const std::string &, Plug::Direction, unsigned >
-				(
-					(
-						arg( "name" ) = GraphComponent::defaultName<CompoundPlug>(),
-						arg( "direction" ) = Plug::In,
-						arg( "flags" ) = Plug::Default
-					)
-				)
-		)
-	;
-
-	Serialisation::registerSerialiser( Gaffer::CompoundPlug::staticTypeId(), new CompoundPlugSerialiser );
-
 }

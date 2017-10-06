@@ -42,8 +42,6 @@
 namespace GafferBindings
 {
 
-void bindTypedPlug();
-
 template<typename T, typename TWrapper=T>
 class TypedPlugClass : public PlugClass<T, TWrapper>
 {

@@ -113,8 +113,6 @@ class GraphComponentWrapper : public IECorePython::RunTimeTypedWrapper<WrappedTy
 
 };
 
-void bindGraphComponent();
-
 } // namespace GafferBindings
 
 #include "GafferBindings/GraphComponentBinding.inl"
