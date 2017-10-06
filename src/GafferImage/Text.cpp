@@ -385,6 +385,8 @@ IECore::ConstCompoundObjectPtr Text::computeLayout( const Gaffer::Context *conte
 	vector<Line> lines;
 	lines.push_back( Line( pen.y ) );
 
+	int penYCutoff = area.min.y - face->size->metrics.descender;
+
 	const std::string text = textPlug()->getValue();
 	typedef boost::tokenizer<boost::char_separator<char> > Tokenizer;
 	boost::char_separator<char> separator( "", " \n\t" );
@@ -394,6 +396,13 @@ IECore::ConstCompoundObjectPtr Text::computeLayout( const Gaffer::Context *conte
 		if( *it == "\n" )
 		{
 			pen.x = area.min.x;
+
+			if( pen.y - face->size->metrics.height < penYCutoff )
+			{
+				// We ran out of vertical space.
+				break;
+			}
+
 			pen.y -= face->size->metrics.height;
 			lines.push_back( Line( pen.y ) );
 		}
@@ -407,13 +416,15 @@ IECore::ConstCompoundObjectPtr Text::computeLayout( const Gaffer::Context *conte
 			if( pen.x + width > area.max.x )
 			{
 				pen.x = area.min.x;
+
+				if( pen.y - face->size->metrics.height < penYCutoff )
+				{
+					// We ran out of vertical space.
+					break;
+				}
+
 				pen.y -= face->size->metrics.height;
 				lines.push_back( Line( pen.y ) );
-			}
-			if( ( pen.y + face->size->metrics.descender ) < area.min.y )
-			{
-				// We ran out of vertical space.
-				break;
 			}
 
 			lines.back().words.push_back( Word( *it, pen.x ) );
