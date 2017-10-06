@@ -203,6 +203,7 @@ class SplineWidget( GafferUI.Widget ) :
 		if self.__splineBound.height() :
 			transform.translate( 0, rect.y() + rect.height() )
 			transform.scale( 1, -rect.height() / self.__splineBound.height() )
+			transform.translate( 0, -self.__splineBound.top() )
 
 		painter.setTransform( transform )
 		for s in self.__splinesToDraw :
