@@ -51,6 +51,13 @@ class RampPlugValueWidget( GafferUI.PlugValueWidget ) :
 
 		with column :
 			with GafferUI.ListContainer( GafferUI.ListContainer.Orientation.Horizontal, spacing = 4 ) :
+				GafferUI.Label( "Display Mode" )
+				drawModeWidget = GafferUI.MultiSelectionMenu( allowMultipleSelection = False, allowEmptySelection = False )
+				drawModeWidget.append( "Ramp" )
+				drawModeWidget.append( "Curves" )
+				drawModeWidget.setSelection( "Ramp" )
+				self.__drawModeChangedConnection = drawModeWidget.selectionChangedSignal().connect( Gaffer.WeakMethod( self.__drawModeChanged ) )
+
 				GafferUI.Spacer( IECore.V2i( 0 ), parenting = { "expand" : True } )
 
 				# TODO: Since we don't have a good way to register metadata on child plugs, we just write the
@@ -89,6 +96,10 @@ class RampPlugValueWidget( GafferUI.PlugValueWidget ) :
 					self.__valueField = GafferUI.ColorPlugValueWidget( plug.pointYPlug( 0 ) )
 
 		self.setPlug( plug )
+
+	def __drawModeChanged( self, drawModeWidget ) :
+		name = drawModeWidget.getSelection()[0]
+		self.__splineWidget.setDrawMode( self.__splineWidget.DrawMode.Ramp if name == "Ramp" else self.__splineWidget.DrawMode.Splines )
 
 	def setPlug( self, plug ) :
 
