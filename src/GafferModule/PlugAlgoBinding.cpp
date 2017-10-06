@@ -57,6 +57,7 @@ void GafferModule::bindPlugAlgo()
 
 	def( "canPromote", &PlugAlgo::canPromote, ( arg( "plug" ), arg( "parent" ) = object() ) );
 	def( "promote", &PlugAlgo::promote, ( arg( "plug" ), arg( "parent" ) = object(), arg( "excludeMetadata" ) = "layout:*" ), return_value_policy<CastToIntrusivePtr>() );
+	def( "promoteWithName", &PlugAlgo::promoteWithName, ( arg( "plug" ), arg( "name" ), arg( "parent" ) = object(), arg( "excludeMetadata" ) = "layout:*" ), return_value_policy<CastToIntrusivePtr>() );
 	def( "isPromoted", &PlugAlgo::isPromoted, ( arg( "plug" ) ) );
 	def( "unpromote", &PlugAlgo::unpromote, ( arg( "plug" ) ) );
 
