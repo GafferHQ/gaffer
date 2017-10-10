@@ -207,6 +207,7 @@ class SplineWidget( GafferUI.Widget ) :
 		painter.setTransform( transform )
 		for s in self.__splinesToDraw :
 			pen = QtGui.QPen( self._qtColor( s.color ) )
+			pen.setCosmetic( True )
 			painter.setPen( pen )
 			painter.drawPath( s.path )
 
