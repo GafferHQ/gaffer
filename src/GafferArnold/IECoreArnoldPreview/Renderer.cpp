@@ -525,6 +525,7 @@ IECore::InternedString g_dispAutoBumpAttributeName( "ai:disp_autobump" );
 
 IECore::InternedString g_curvesMinPixelWidthAttributeName( "ai:curves:min_pixel_width" );
 IECore::InternedString g_curvesModeAttributeName( "ai:curves:mode" );
+IECore::InternedString g_sssSetNameName( "ai:sss_setname" );
 
 IECore::InternedString g_linkedLights( "linkedLights" );
 IECore::InternedString g_lightFilterPrefix( "ai:lightFilter:" );
@@ -583,6 +584,7 @@ class ArnoldAttributes : public IECoreScenePreview::Renderer::AttributesInterfac
 			m_stepSize = attributeValue<float>( g_stepSizeAttributeName, attributes, 0.0f );
 
 			m_linkedLights = attribute<IECore::StringVectorData>( g_linkedLights, attributes );
+			m_sssSetName = attribute<IECore::StringData>( g_sssSetNameName, attributes );
 
 			for( IECore::CompoundObject::ObjectMap::const_iterator it = attributes->members().begin(), eIt = attributes->members().end(); it != eIt; ++it )
 			{
@@ -593,7 +595,7 @@ class ArnoldAttributes : public IECoreScenePreview::Renderer::AttributesInterfac
 						m_user[it->first] = data;
 					}
 				}
-				if( boost::starts_with( it->first.string(), g_lightFilterPrefix.string() ) )
+				else if( boost::starts_with( it->first.string(), g_lightFilterPrefix.string() ) )
 				{
 					ArnoldShaderPtr filter = shaderCache->get( IECore::runTimeCast<const IECore::ObjectVector>( it->second.get() ) );
 					m_lightFilterShaders.push_back( filter );
@@ -820,6 +822,15 @@ class ArnoldAttributes : public IECoreScenePreview::Renderer::AttributesInterfac
 					// is in every trace set. So we instead make `trace_sets == [ "__none__" ]`
 					// to get the behaviour people expect.
 					AiNodeSetArray( node, "trace_sets", AiArray( 1, 1, AI_TYPE_STRING, "__none__" ) );
+				}
+
+				if( m_sssSetName )
+				{
+					ParameterAlgo::setParameter( node, "sss_setname", m_sssSetName.get() );
+				}
+				else
+				{
+					AiNodeResetParameter( node, "sss_setname" );
 				}
 
 				if( m_linkedLights )
@@ -1108,6 +1119,8 @@ class ArnoldAttributes : public IECoreScenePreview::Renderer::AttributesInterfac
 
 		typedef boost::container::flat_map<IECore::InternedString, IECore::ConstDataPtr> UserAttributes;
 		UserAttributes m_user;
+
+		IECore::ConstStringDataPtr m_sssSetName;
 
 };
 

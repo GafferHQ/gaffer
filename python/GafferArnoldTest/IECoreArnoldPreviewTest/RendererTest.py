@@ -793,6 +793,35 @@ class RendererTest( GafferTest.TestCase ) :
 			self.assertEqual( arnold.AiNodeGetStr( node, "subdiv_adaptive_metric" ), "edge_length" )
 			self.assertEqual( arnold.AiNodeGetStr( node, "subdiv_adaptive_space" ), "raster" )
 
+	def testSSSSetNameAttribute( self ) :
+
+		r = GafferScene.Private.IECoreScenePreview.Renderer.create(
+			"Arnold",
+			GafferScene.Private.IECoreScenePreview.Renderer.RenderType.SceneDescription,
+			self.temporaryDirectory() + "/test.ass"
+		)
+
+		plane = IECore.MeshPrimitive.createPlane( IECore.Box2f( IECore.V2f( -1 ), IECore.V2f( 1 ) ) )
+
+		r.object(
+			"plane",
+			plane,
+			r.attributes(
+				IECore.CompoundObject( {
+					"ai:sss_setname" : IECore.StringData( "testSet" ),
+				} )
+			)
+		)
+
+		r.render()
+		del r
+
+		with IECoreArnold.UniverseBlock( writable = True ) :
+
+			arnold.AiASSLoad( self.temporaryDirectory() + "/test.ass" )
+			node = arnold.AiNodeLookUpByName( "plane" )
+			self.assertEqual( arnold.AiNodeGetStr( node, "sss_setname" ), "testSet" )
+
 	def testUserAttributes( self ) :
 
 		r = GafferScene.Private.IECoreScenePreview.Renderer.create(
