@@ -67,6 +67,7 @@ ArnoldAttributes::ArnoldAttributes( const std::string &name )
 	attributes->addOptionalMember( "ai:opaque", new IECore::BoolData( true ), "opaque", Gaffer::Plug::Default, false );
 	attributes->addOptionalMember( "ai:receive_shadows", new IECore::BoolData( true ), "receiveShadows", Gaffer::Plug::Default, false );
 	attributes->addOptionalMember( "ai:self_shadows", new IECore::BoolData( true ), "selfShadows", Gaffer::Plug::Default, false );
+	attributes->addOptionalMember( "ai:sss_setname", new StringPlug( "value", Plug::In, "" ), "sssSetName", false );
 
 	// Subdivision parameters
 
