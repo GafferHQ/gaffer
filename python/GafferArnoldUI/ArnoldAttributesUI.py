@@ -70,6 +70,9 @@ def __shadingSummary( plug ) :
 		if plug[childName]["enabled"].getValue() :
 			info.append( IECore.CamelCase.toSpaced( childName ) + ( " On" if plug[childName]["value"].getValue() else " Off" ) )
 
+	if plug["sssSetName"]["enabled"].getValue() :
+		info.append( "SSS Set Name " + plug["sssSetName"]["value"].getValue() )
+
 	return ", ".join( info )
 
 def __subdivisionSummary( plug ) :
@@ -284,6 +287,17 @@ Gaffer.Metadata.registerNode(
 
 			"layout:section", "Shading",
 
+		],
+
+		"attributes.sssSetName" : [
+
+			"description",
+			"""
+			If given, subsurface will be blended across any other objects which share the same sss set name.
+			""",
+
+			"layout:section", "Shading",
+			"label", "SSS Set Name",
 		],
 
 		# Subdivision
