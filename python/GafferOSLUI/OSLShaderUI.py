@@ -87,7 +87,7 @@ def __plugPresetNames( plug ) :
 	if not options :
 		return None
 
-	return IECore.StringVectorData( [ o.partition( ":" )[0] for o in options.split( "|" ) ] )
+	return IECore.StringVectorData( [ o.partition( ":" )[0] for o in options.split( "|" ) if o ] )
 
 def __plugPresetValues( plug ) :
 
@@ -95,7 +95,8 @@ def __plugPresetValues( plug ) :
 	if not options :
 		return None
 
-	values = [ o.rpartition( ":" )[2] for o in options.split( "|" ) ]
+	values = [ o.rpartition( ":" )[2] for o in options.split( "|" ) if o ]
+
 	if isinstance( plug, Gaffer.StringPlug ) :
 		return IECore.StringVectorData( values )
 	elif isinstance( plug, Gaffer.IntPlug ) :
