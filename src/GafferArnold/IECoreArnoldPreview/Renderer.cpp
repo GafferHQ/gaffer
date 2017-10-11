@@ -445,6 +445,8 @@ class ArnoldOutput : public IECore::RefCounted
 			// supported by Arnold.
 
 			m_data = output->getData();
+			m_lpeName = "ieCoreArnold:lpe:" + name.string();
+			m_lpeValue = "";
 
 			if( m_data=="rgb" )
 			{
@@ -456,18 +458,36 @@ class ArnoldOutput : public IECore::RefCounted
 			}
 			else
 			{
+				std::string arnoldType = "RGB";
+				if( parameter<bool>( output->parameters(), "includeAlpha", false ) )
+				{
+					arnoldType = "RGBA";
+				}
+
 				vector<std::string> tokens;
 				Gaffer::StringAlgo::tokenize( m_data, ' ', tokens );
-				if( tokens.size() == 2 && tokens[0] == "color" )
+				if( tokens.size() == 2 )
 				{
-					m_data = tokens[1] + " RGBA";
+					if( tokens[0] == "color" )
+					{
+						m_data = tokens[1] + " " + arnoldType;
+					}
+					else if( tokens[0] == "lpe" )
+					{
+						m_lpeValue = tokens[1];
+						m_data = m_lpeName + " " + arnoldType;
+					}
 				}
 			}
 		}
 
-		std::string string() const
+		void append( std::vector<std::string> &outputs, std::vector<std::string> &lightPathExpressions ) const
 		{
-			return boost::str( boost::format( "%s %s %s" ) % m_data % AiNodeGetName( m_filter.get() ) % AiNodeGetName( m_driver.get() ) );
+			outputs.push_back( boost::str( boost::format( "%s %s %s" ) % m_data % AiNodeGetName( m_filter.get() ) % AiNodeGetName( m_driver.get() ) ) );
+			if( m_lpeValue.size() )
+			{
+				lightPathExpressions.push_back( m_lpeName + " " + m_lpeValue );
+			}
 		}
 
 	private :
@@ -475,6 +495,8 @@ class ArnoldOutput : public IECore::RefCounted
 		SharedAtNodePtr m_driver;
 		SharedAtNodePtr m_filter;
 		std::string m_data;
+		std::string m_lpeName;
+		std::string m_lpeValue;
 
 };
 
@@ -2187,12 +2209,14 @@ class ArnoldGlobals
 			}
 
 			IECore::StringVectorDataPtr outputs = new IECore::StringVectorData;
+			IECore::StringVectorDataPtr lpes = new IECore::StringVectorData;
 			for( OutputMap::const_iterator it = m_outputs.begin(), eIt = m_outputs.end(); it != eIt; ++it )
 			{
-				outputs->writable().push_back( it->second->string() );
+				it->second->append( outputs->writable(), lpes->writable() );
 			}
 
 			IECoreArnold::ParameterAlgo::setParameter( AiUniverseGetOptions(), "outputs", outputs.get() );
+			IECoreArnold::ParameterAlgo::setParameter( AiUniverseGetOptions(), "light_path_expressions", lpes.get() );
 		}
 
 		// Some of Arnold's globals come from camera parameters, so the
