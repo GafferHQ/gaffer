@@ -127,6 +127,10 @@
 
 		gaffer.plugType STRING ""
 
+	[attr shader ]
+
+		gaffer.plugType STRING "ClosurePlug"
+
 [node cylinder_light]
 
 	[attr bottom]
