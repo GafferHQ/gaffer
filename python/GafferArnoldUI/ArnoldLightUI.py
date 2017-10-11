@@ -57,6 +57,13 @@ Gaffer.Metadata.registerNode(
 
 		],
 
+		"parameters.shader" : [
+
+			# The shader parameter, which only exists on skydome lights, is connectable.
+			"nodule:type", "GafferUI::StandardNodule"
+
+		],
+
 	}
 
 )
