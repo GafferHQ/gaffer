@@ -234,6 +234,7 @@ const AtString g_gafferPlugTypeArnoldString( "gaffer.plugType" );
 const AtString g_FloatPlugArnoldString( "FloatPlug" );
 const AtString g_Color3fPlugArnoldString( "Color3fPlug" );
 const AtString g_Color4fPlugArnoldString( "Color4fPlug" );
+const AtString g_ClosurePlugArnoldString( "ClosurePlug" );
 
 } // namespace
 
@@ -309,6 +310,10 @@ Gaffer::Plug *ParameterHandler::setupPlug( const AtNodeEntry *node, const AtPara
 		else if( plugTypeOverride == g_Color4fPlugArnoldString )
 		{
 			parameterType = AI_TYPE_RGBA;
+		}
+		else if( plugTypeOverride == g_ClosurePlugArnoldString )
+		{
+			parameterType = AI_TYPE_CLOSURE;
 		}
 		else
 		{
