@@ -502,6 +502,54 @@ class RendererTest( GafferTest.TestCase ) :
 				self.assertEqual( arnold.AiNodeGetBool( o2, p ), False )
 				self.assertEqual( arnold.AiNodeGetBool( o3, p ), p != "matte" )
 
+	def testOutputs( self ) :
+
+		r = GafferScene.Private.IECoreScenePreview.Renderer.create(
+			"Arnold",
+			GafferScene.Private.IECoreScenePreview.Renderer.RenderType.SceneDescription,
+			self.temporaryDirectory() + "/test.ass"
+		)
+
+		r.output(
+			"testA",
+			IECore.Display(
+				"beauty.exr",
+				"exr",
+				"color A",
+				{}
+			)
+		)
+
+		# NOTE : includeAlpha is currently undocumented, and we have not yet decided exactly how
+		# to generalize it across renderer backends, so it may change in the future.
+		r.output(
+			"testB",
+			IECore.Display(
+				"beauty.exr",
+				"exr",
+				"color B",
+				{
+					"includeAlpha" : True,
+				}
+			)
+		)
+
+		r.render()
+		del r
+
+		with IECoreArnold.UniverseBlock( writable = True ) :
+
+			arnold.AiASSLoad( self.temporaryDirectory() + "/test.ass" )
+
+			options = arnold.AiUniverseGetOptions()
+			outputs = arnold.AiNodeGetArray( options, "outputs" ) 
+			self.assertEqual( arnold.AiArrayGetNumElements( outputs ), 2 )
+			outputSet = set( [ arnold.AiArrayGetStr( outputs, 0 ), arnold.AiArrayGetStr( outputs, 1 ) ] )
+			self.assertEqual( outputSet, set( [
+				"A RGB ieCoreArnold:filter:testA ieCoreArnold:display:testA",
+				"B RGBA ieCoreArnold:filter:testB ieCoreArnold:display:testB"
+			] ) )
+
 	def testOutputFilters( self ) :
 
 		r = GafferScene.Private.IECoreScenePreview.Renderer.create(
@@ -535,6 +583,60 @@ class RendererTest( GafferTest.TestCase ) :
 
 			self.assertEqual( arnold.AiNodeEntryGetName( arnold.AiNodeGetNodeEntry( f ) ), "gaussian_filter" )
 			self.assertEqual( arnold.AiNodeGetFlt( f, "width" ), 3.5 )
+
+	def testOutputLPEs( self ) :
+
+		r = GafferScene.Private.IECoreScenePreview.Renderer.create(
+			"Arnold",
+			GafferScene.Private.IECoreScenePreview.Renderer.RenderType.SceneDescription,
+			self.temporaryDirectory() + "/test.ass"
+		)
+
+		r.output(
+			"test",
+			IECore.Display(
+				"beauty.exr",
+				"exr",
+				"lpe C.*D.*",
+				{}
+			)
+		)
+
+		r.output(
+			"testWithAlpha",
+			IECore.Display(
+				"beauty.exr",
+				"exr",
+				"lpe C.*D.*",
+				{
+					"includeAlpha" : True,
+				}
+			)
+		)
+
+		r.render()
+		del r
+
+		with IECoreArnold.UniverseBlock( writable = True ) :
+
+			arnold.AiASSLoad( self.temporaryDirectory() + "/test.ass" )
+
+			options = arnold.AiUniverseGetOptions()
+			outputs = arnold.AiNodeGetArray( options, "outputs" ) 
+			self.assertEqual( arnold.AiArrayGetNumElements( outputs ), 2 )
+			outputSet = set( [ arnold.AiArrayGetStr( outputs, 0 ), arnold.AiArrayGetStr( outputs, 1 ) ] )
+			self.assertEqual( outputSet, set( [
+				"ieCoreArnold:lpe:test RGB ieCoreArnold:filter:test ieCoreArnold:display:test",
+				"ieCoreArnold:lpe:testWithAlpha RGBA ieCoreArnold:filter:testWithAlpha ieCoreArnold:display:testWithAlpha"
+			] ) )
+
+			lpes = arnold.AiNodeGetArray( options, "light_path_expressions" ) 
+			self.assertEqual( arnold.AiArrayGetNumElements( lpes ), 2 )
+			lpeSet = set( [ arnold.AiArrayGetStr( lpes, 0 ), arnold.AiArrayGetStr( lpes, 1 ) ] )
+			self.assertEqual( lpeSet, set( [
+				"ieCoreArnold:lpe:test C.*D.*",
+				"ieCoreArnold:lpe:testWithAlpha C.*D.*"
+			] ) )
 
 	def testExrMetadata( self ) :
 
