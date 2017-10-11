@@ -125,6 +125,92 @@ if moduleSearchPath.find( "arnold" ) :
 		stacktrace = traceback.format_exc()
 		IECore.msg( IECore.Msg.Level.Error, "startup/gui/menus.py", "Error loading Arnold module - \"%s\".\n %s" % ( m, stacktrace ) )
 
+# 3delight nodes
+
+if moduleSearchPath.find( "nsi.so" ) and moduleSearchPath.find( "GafferDelight" ) :
+
+	try :
+
+		import GafferOSL
+		import GafferDelight
+		import GafferDelightUI
+
+		def __shaderNodeCreator( nodeName, shaderName ) :
+
+			node = GafferOSL.OSLShader( nodeName )
+			node.loadShader( "maya/osl/" + shaderName )
+
+			return node
+
+		for label, shader in [
+			( "Standard", "material3Delight" ),
+			( "Glass", "material3DelightGlass" ),
+			( "Metal", "material3DelightMetal" ),
+			( "Skin", "material3DelightSkin" ),
+			( "Hair", "materialHairAndFur" ),
+		] :
+
+			nodeMenu.append(
+				"/3Delight/Shader/" + label,
+				functools.partial( __shaderNodeCreator, label, shader ),
+				searchText = "dl" + label
+			)
+
+		GafferSceneUI.ShaderUI.appendShaders(
+			nodeMenu.definition(), "/3Delight/Shader/Maya",
+			[ os.path.join( os.environ["DELIGHT"], "maya", "osl" ) ],
+			[ "oso" ],
+			__shaderNodeCreator,
+			matchExpression = re.compile( "^[^_].*$"),
+			searchTextPrefix = "maya"
+		)
+
+		def __lightCreator( nodeName, shaderName, shape ) :
+
+			node = GafferOSL.OSLLight( nodeName )
+			node.loadShader( shaderName )
+
+			if isinstance( shape, node.Shape ) :
+				node["shape"].setValue( shape )
+			else  :
+				node["shape"].setValue( node.Shape.Geometry )
+				node["geometryType"].setValue( "dl:environment" )
+				Gaffer.Metadata.registerValue( node["geometryType"], "plugValueWidget:type", "" )
+				Gaffer.Metadata.registerValue( node["geometryBound"], "plugValueWidget:type", "" )
+				Gaffer.Metadata.registerValue( node["geometryParameters"], "plugValueWidget:type", "" )
+
+				if shape == "distant" :
+					node["geometryParameters"].addMember( "angle", 0.0, plugName = "angle" )
+
+			Gaffer.Metadata.registerPlugValue( node["shape"], "plugValueWidget:type", "" )
+
+			visibilityPlug = node["attributes"].addMember( "dl:visibility.camera", False, "cameraVisibility" )
+			Gaffer.MetadataAlgo.setReadOnly( visibilityPlug["name"], True )
+
+			return node
+
+		for label, shader, shape in [
+			[ "PointLight", "maya/osl/pointLight", GafferOSL.OSLLight.Shape.Sphere ],
+			[ "SpotLight", "maya/osl/spotLight", GafferOSL.OSLLight.Shape.Disk ],
+			[ "DistantLight", "maya/osl/distantLight", "distant" ],
+			[ "EnvironmentLight", "maya/osl/environmentLight", "environment" ],
+		] :
+			nodeMenu.append(
+				"/3Delight/Light/" + label,
+				functools.partial( __lightCreator, label, shader, shape ),
+				searchText = "dl" + label
+			)
+
+		nodeMenu.append( "/3Delight/Attributes", GafferDelight.DelightAttributes, searchText = "DelightAttributes"  )
+		nodeMenu.append( "/3Delight/Options", GafferDelight.DelightOptions, searchText = "DelightOptions"  )
+		nodeMenu.append( "/3Delight/Render", GafferDelight.DelightRender, searchText = "DelightRender"  )
+		nodeMenu.append( "/3Delight/Interactive Render", GafferDelight.InteractiveDelightRender, searchText = "InteractiveDelightRender"  )
+
+	except Exception, m :
+
+		stacktrace = traceback.format_exc()
+		IECore.msg( IECore.Msg.Level.Error, "startup/gui/menus.py", "Error loading Delight module - \"%s\".\n %s" % ( m, stacktrace ) )
+
 # appleseed nodes
 
 if "APPLESEED" in os.environ :
@@ -318,6 +404,8 @@ if moduleSearchPath.find( "GafferOSL" ) :
 		# Appleseed comes with a library of OSL shaders which we put
 		# on the OSL_SHADER_PATHS, but we don't want to show them in
 		# this menu, because we show them in the Appleseed menu instead.
+		# Likewise, 3Delight comes with a library of shaders that we
+		# show in the 3Delight menu and don't want to show here.
 		#
 		# The OSLCode node also generates a great many shaders behind
 		# the scenes that we don't want to place in the menus. Typically
@@ -329,17 +417,23 @@ if moduleSearchPath.find( "GafferOSL" ) :
 		# shader plugins at startup, but we hide any oslCode shaders here
 		# in case someone else enables it.
 		#
-		# This match expression filters both categories of shader out :
+		# This match expression filters these categories of shader out
+		# as follows :
 		#
 		# - (^|.*/) matches any number (including zero) of directory
 		#   names preceding the shader name.
+		# - (?<!maya/osl/) is a negative lookbehind, asserting that the
+		#   directory is not maya/osl, the directory containing 3delight's
+		#   shaders.
+		# - (?<!3DelightForKatana/osl/) is the same, but for another location
+		#   where 3delight seems to put copies of the same shaders.
 		# - (?!as_|oslCode) is a negative lookahead, asserting that the shader
 		#   name does not start with "as_", the prefix for all
 		#   Appleseed shaders, or "oslCode", the prefix for all OSLCode
 		#   shaders.
 		# - [^/]*$ matches the rest of the shader name, ensuring it
 		#   doesn't include any directory separators.
-		matchExpression = re.compile( "(^|.*/)(?!as_|oslCode)[^/]*$"),
+		matchExpression = re.compile( "(^|.*/)(?<!maya/osl/)(?<!3DelightForKatana/osl/)(?!as_|oslCode)[^/]*$"),
 		searchTextPrefix = "osl",
 	)
 

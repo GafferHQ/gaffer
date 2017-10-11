@@ -252,6 +252,8 @@ if [[ -n $DELIGHT ]] ; then
 	appendToPath "$DELIGHT/shaders" DL_SHADERS_PATH
 	appendToPath "$DELIGHT/displays" DL_DISPLAYS_PATH
 
+	appendToPath "$DELIGHT" OSL_SHADER_PATHS
+
 	appendToPath "$GAFFER_ROOT/renderMan/displayDrivers" DL_DISPLAYS_PATH
 
 fi
