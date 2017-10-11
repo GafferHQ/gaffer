@@ -63,6 +63,18 @@ def __visibilitySummary( plug ) :
 
 	return ", ".join( info )
 
+__transformTypeEnumNames = { "linear" : "Linear", "rotate_about_origin" : "RotateAboutOrigin",
+	"rotate_about_center" : "RotateAboutCenter" }
+
+def __transformSummary( plug ) :
+
+	info = []
+
+	if plug["transformType"]["enabled"].getValue() :
+		info.append( "Transform Type " + __transformTypeEnumNames[ plug["transformType"]["value"].getValue() ] )
+
+	return ", ".join( info )
+
 def __shadingSummary( plug ) :
 
 	info = []
@@ -125,6 +137,7 @@ Gaffer.Metadata.registerNode(
 		"attributes" : [
 
 			"layout:section:Visibility:summary", __visibilitySummary,
+			"layout:section:Transform:summary", __transformSummary,
 			"layout:section:Shading:summary", __shadingSummary,
 			"layout:section:Subdivision:summary", __subdivisionSummary,
 			"layout:section:Curves:summary", __curvesSummary,
@@ -236,6 +249,31 @@ Gaffer.Metadata.registerNode(
 
 			"layout:section", "Visibility",
 			"label", "Subsurface",
+
+		],
+
+		# Transform
+
+		"attributes.transformType" : [
+
+			"description",
+			"""
+			Choose how transform motion is interpolated.  Linear
+			produces classic linear vertex motion, RotateAboutOrigin
+			produces curved arcs centred on the object's origin, and
+			RotateAboutCenter, the default, produces curved arcs
+			centred on the object's bounding box middle.
+			""",
+
+			"layout:section", "Transform",
+
+		],
+		"attributes.transformType.value" : [
+
+			"presetNames", lambda plug : IECore.StringVectorData( __transformTypeEnumNames.values() ),
+			"presetValues", lambda plug : IECore.StringVectorData( __transformTypeEnumNames.keys() ),
+
+			"plugValueWidget:type", "GafferUI.PresetsPlugValueWidget",
 
 		],
 

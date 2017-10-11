@@ -648,6 +648,8 @@ IECore::InternedString g_arnoldMatteAttributeName( "ai:matte" );
 
 IECore::InternedString g_stepSizeAttributeName( "ai:shape:step_size" );
 
+IECore::InternedString g_transformTypeAttributeName( "ai:transform_type" );
+
 IECore::InternedString g_polyMeshSubdivIterationsAttributeName( "ai:polymesh:subdiv_iterations" );
 IECore::InternedString g_polyMeshSubdivAdaptiveErrorAttributeName( "ai:polymesh:subdiv_adaptive_error" );
 IECore::InternedString g_polyMeshSubdivAdaptiveMetricAttributeName( "ai:polymesh:subdiv_adaptive_metric" );
@@ -720,6 +722,7 @@ class ArnoldAttributes : public IECoreScenePreview::Renderer::AttributesInterfac
 			m_lightShader = m_lightShader ? m_lightShader : attribute<IECore::ObjectVector>( g_lightShaderAttributeName, attributes );
 
 			m_traceSets = attribute<IECore::InternedStringVectorData>( g_setsAttributeName, attributes );
+			m_transformType = attribute<IECore::StringData>( g_transformTypeAttributeName, attributes );
 			m_stepSize = attributeValue<float>( g_stepSizeAttributeName, attributes, 0.0f );
 
 			m_linkedLights = attribute<IECore::StringVectorData>( g_linkedLights, attributes );
@@ -930,6 +933,17 @@ class ArnoldAttributes : public IECoreScenePreview::Renderer::AttributesInterfac
 			{
 				AiNodeSetByte( node, "visibility", m_visibility );
 				AiNodeSetByte( node, "sidedness", m_sidedness );
+
+				if( m_transformType )
+				{
+					// \todo : Arnold quite explicitly discourages constructing AtStrings repeatedly,
+					// but given the need to pass m_transformType around as a string for consistency
+					// reasons, it seems like there's not much else we can do here.
+					// If we start reusing ArnoldAttributes for multiple locations with identical attributes,
+					// it could be worth caching this, or possibly in the future we could come up with
+					// some way of cleanly exposing enum values as something other than strings.
+					AiNodeSetStr( node, "transform_type", AtString( m_transformType->readable().c_str() ) );
+				}
 
 				AiNodeSetBool( node, "receive_shadows", m_shadingFlags & ArnoldAttributes::ReceiveShadows );
 				AiNodeSetBool( node, "self_shadows", m_shadingFlags & ArnoldAttributes::SelfShadows );
@@ -1250,6 +1264,7 @@ class ArnoldAttributes : public IECoreScenePreview::Renderer::AttributesInterfac
 		IECore::ConstObjectVectorPtr m_lightShader;
 		std::vector<ArnoldShaderPtr> m_lightFilterShaders;
 		IECore::ConstInternedStringVectorDataPtr m_traceSets;
+		IECore::ConstStringDataPtr m_transformType;
 		float m_stepSize;
 		PolyMesh m_polyMesh;
 		Displacement m_displacement;
