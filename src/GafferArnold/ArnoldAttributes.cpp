@@ -61,6 +61,9 @@ ArnoldAttributes::ArnoldAttributes( const std::string &name )
 	attributes->addOptionalMember( "ai:visibility:volume", new IECore::BoolData( true ), "volumeVisibility", Gaffer::Plug::Default, false );
 	attributes->addOptionalMember( "ai:visibility:subsurface", new IECore::BoolData( true ), "subsurfaceVisibility", Gaffer::Plug::Default, false );
 
+	// Transform parameters
+	attributes->addOptionalMember( "ai:transform_type", new StringPlug( "value", Plug::In, "rotate_about_center" ), "transformType", false );
+
 	// Shading parameters
 
 	attributes->addOptionalMember( "ai:matte", new IECore::BoolData( false ), "matte", Gaffer::Plug::Default, false );

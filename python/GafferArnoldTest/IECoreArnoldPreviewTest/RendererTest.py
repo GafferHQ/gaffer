@@ -858,6 +858,42 @@ class RendererTest( GafferTest.TestCase ) :
 				"subdivAdaptiveObjectSpaceAttributes2",
 			)
 
+	def testTransformTypeAttribute( self ) :
+
+		r = GafferScene.Private.IECoreScenePreview.Renderer.create(
+			"Arnold",
+			GafferScene.Private.IECoreScenePreview.Renderer.RenderType.SceneDescription,
+			self.temporaryDirectory() + "/test.ass"
+		)
+
+		plane = IECore.MeshPrimitive.createPlane( IECore.Box2f( IECore.V2f( -1 ), IECore.V2f( 1 ) ) )
+
+		r.object(
+			"planeDefault",
+			plane,
+			r.attributes( IECore.CompoundObject() )
+		)
+		r.object(
+			"planeLinear",
+			plane,
+			r.attributes(
+				IECore.CompoundObject( {
+					"ai:transform_type" : IECore.StringData( "linear" ),
+				} )
+			)
+		)
+
+		r.render()
+		del r
+
+		with IECoreArnold.UniverseBlock( writable = True ) :
+
+			arnold.AiASSLoad( self.temporaryDirectory() + "/test.ass" )
+			defaultNode = arnold.AiNodeLookUpByName( "planeDefault" )
+			linearNode = arnold.AiNodeLookUpByName( "planeLinear" )
+			self.assertEqual( arnold.AiNodeGetStr( defaultNode, "transform_type" ), "rotate_about_center" )
+			self.assertEqual( arnold.AiNodeGetStr( linearNode, "transform_type" ), "linear" )
+
 	def testSubdivisionAttributes( self ) :
 
 		r = GafferScene.Private.IECoreScenePreview.Renderer.create(
