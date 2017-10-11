@@ -178,9 +178,15 @@ def __translateNodeMetadata( nodeEntry ) :
 			__metadata[paramPath]["layout:section"] = page
 
 		# Label from OSL "label"
-		label = __aiMetadataGetStr( nodeEntry, paramName, "label", label )
+		label = __aiMetadataGetStr( nodeEntry, paramName, "label" )
 		if label is not None :
 			__metadata[paramPath]["label"] = label
+		elif "_" in paramName:
+			# Label from Arnold naming convention
+			# Arnold uses snake_case rather than camelCase for naming, so translate this into
+			# nice looking names
+			__metadata[paramPath]["label"] = " ".join( [ i.capitalize() for i in paramName.split( "_" ) ] )
+			
 
 		# NodeGraph visibility from Gaffer-specific metadata
 
