@@ -705,7 +705,7 @@ class InteractiveRenderTest( GafferSceneTest.SceneTestCase ) :
 				"ieDisplay",
 				"rgba",
 				{
-					"quantize" : IECore.FloatVectorData( [ 0, 0, 0, 0 ] ),
+					"quantize" : IECore.IntVectorData( [ 0, 0, 0, 0 ] ),
 					"driverType" : "ImageDisplayDriver",
 					"handle" : "myLovelyPlane",
 				}
@@ -750,7 +750,7 @@ class InteractiveRenderTest( GafferSceneTest.SceneTestCase ) :
 				"ieDisplay",
 				"rgba",
 				{
-					"quantize" : IECore.FloatVectorData( [ 0, 0, 0, 0 ] ),
+					"quantize" : IECore.IntVectorData( [ 0, 0, 0, 0 ] ),
 					"driverType" : "ImageDisplayDriver",
 					"handle" : "myLovelyPlane",
 				}
@@ -882,7 +882,7 @@ class InteractiveRenderTest( GafferSceneTest.SceneTestCase ) :
 				"ieDisplay",
 				"rgba",
 				{
-					"quantize" : IECore.FloatVectorData( [ 0, 0, 0, 0 ] ),
+					"quantize" : IECore.IntVectorData( [ 0, 0, 0, 0 ] ),
 					"driverType" : "ImageDisplayDriver",
 					"handle" : "myLovelyPlane",
 				}
@@ -989,7 +989,7 @@ class InteractiveRenderTest( GafferSceneTest.SceneTestCase ) :
 				"ieDisplay",
 				"rgba",
 				{
-					"quantize" : IECore.FloatVectorData( [ 0, 0, 0, 0 ] ),
+					"quantize" : IECore.IntVectorData( [ 0, 0, 0, 0 ] ),
 					"driverType" : "ImageDisplayDriver",
 					"handle" : "myLovelyPlane",
 				}
@@ -1065,7 +1065,7 @@ class InteractiveRenderTest( GafferSceneTest.SceneTestCase ) :
 				"ieDisplay",
 				"rgba",
 				{
-					"quantize" : IECore.FloatVectorData( [ 0, 0, 0, 0 ] ),
+					"quantize" : IECore.IntVectorData( [ 0, 0, 0, 0 ] ),
 					"driverType" : "ImageDisplayDriver",
 					"handle" : "myLovelyPlane",
 				}
@@ -1149,7 +1149,7 @@ class InteractiveRenderTest( GafferSceneTest.SceneTestCase ) :
 				"ieDisplay",
 				"rgba",
 				{
-					"quantize" : IECore.FloatVectorData( [ 0, 0, 0, 0 ] ),
+					"quantize" : IECore.IntVectorData( [ 0, 0, 0, 0 ] ),
 					"driverType" : "ImageDisplayDriver",
 					"handle" : "myLovelyPlane",
 				}
