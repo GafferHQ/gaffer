@@ -151,7 +151,7 @@ class SplineWidget( GafferUI.Widget ) :
 	def __paintSplines( self, painter ) :
 
 		# update the evaluation of our splines if necessary
-		numPoints = 50
+		numPoints = 200
 		if not self.__splinesToDraw :
 			self.__splinesToDraw = []
 			interval = self.__spline.interval()
@@ -203,6 +203,7 @@ class SplineWidget( GafferUI.Widget ) :
 		if self.__splineBound.height() :
 			transform.translate( 0, rect.y() + rect.height() )
 			transform.scale( 1, -rect.height() / self.__splineBound.height() )
+			transform.translate( 0, -self.__splineBound.top() )
 
 		painter.setTransform( transform )
 		for s in self.__splinesToDraw :
