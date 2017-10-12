@@ -238,8 +238,8 @@ Gaffer.Metadata.registerNode(
 		"options.bucketScanning.value": [
 
 			"plugValueWidget:type", 'GafferUI.PresetsPlugValueWidget',
-			"presetNames", IECore.StringVectorData( ["Top", "Bottom", "Left", "Right", "Random", "Woven", "Spiral", "Spiral"] ),
-			"presetValues", IECore.StringVectorData( ["top", "bottom", "left", "right", "random", "woven", "spiral", "spiral"] ),
+			"presetNames", IECore.StringVectorData( ["Top", "Left", "Random", "Spiral", "Hilbert"] ),
+			"presetValues", IECore.StringVectorData( ["top", "left", "random", "spiral", "hilbert"] ),
 		],
 
 		"options.parallelNodeInit" : [
