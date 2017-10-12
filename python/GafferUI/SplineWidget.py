@@ -206,6 +206,7 @@ class SplineWidget( GafferUI.Widget ) :
 			transform.translate( 0, -self.__splineBound.top() )
 
 		painter.setTransform( transform )
+		painter.setCompositionMode( QtGui.QPainter.CompositionMode.CompositionMode_Plus )
 		for s in self.__splinesToDraw :
 			pen = QtGui.QPen( self._qtColor( s.color ) )
 			pen.setCosmetic( True )
