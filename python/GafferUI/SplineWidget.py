@@ -125,6 +125,7 @@ class SplineWidget( GafferUI.Widget ) :
 			self.__paintSplines( painter )
 
 	def __paintRamp( self, painter ) :
+
 		numStops = 500
 		if self.__gradientToDraw is None :
 
@@ -143,15 +144,12 @@ class SplineWidget( GafferUI.Widget ) :
 				c = displayTransform( c )
 				self.__gradientToDraw.setPixel( i, 0, self._qtColor( c ).rgb() )
 
-		rect = self._qtWidget().contentsRect()
-		brush = QtGui.QBrush( self.__gradientToDraw )
-		brush.setTransform( QtGui.QTransform( float( rect.width() ) / numStops, 0, 0, 1, 0, 0 ) )
-		painter.fillRect( rect, brush )
+		painter.drawImage( self._qtWidget().contentsRect(), self.__gradientToDraw )
 
 	def __paintSplines( self, painter ) :
 
 		# update the evaluation of our splines if necessary
-		numPoints = 50
+		numPoints = 200
 		if not self.__splinesToDraw :
 			self.__splinesToDraw = []
 			interval = self.__spline.interval()
@@ -203,10 +201,13 @@ class SplineWidget( GafferUI.Widget ) :
 		if self.__splineBound.height() :
 			transform.translate( 0, rect.y() + rect.height() )
 			transform.scale( 1, -rect.height() / self.__splineBound.height() )
+			transform.translate( 0, -self.__splineBound.top() )
 
 		painter.setTransform( transform )
+		painter.setCompositionMode( QtGui.QPainter.CompositionMode.CompositionMode_Plus )
 		for s in self.__splinesToDraw :
 			pen = QtGui.QPen( self._qtColor( s.color ) )
+			pen.setCosmetic( True )
 			painter.setPen( pen )
 			painter.drawPath( s.path )
 
