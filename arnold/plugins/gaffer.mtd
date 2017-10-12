@@ -670,15 +670,222 @@
 
 	gaffer.nodeMenu.category STRING "Surface"
 
+	gaffer.nodeGraphLayout.defaultVisibility BOOL false
+
+
+	[attr base]
+		gaffer.nodeGraphLayout.visible BOOL true
+		page STRING "Base"
+	[attr base_color]
+		gaffer.nodeGraphLayout.visible BOOL true
+		page STRING "Base"
+	[attr diffuse_roughness]
+		page STRING "Base"
+	[attr metalness]
+		gaffer.nodeGraphLayout.visible BOOL true
+		page STRING "Base"
+
+	[attr specular]
+		gaffer.nodeGraphLayout.visible BOOL true
+		page STRING "Specular"
+	[attr specular_color]
+		gaffer.nodeGraphLayout.visible BOOL true
+		page STRING "Specular"
+	[attr specular_roughness]
+		gaffer.nodeGraphLayout.visible BOOL true
+		page STRING "Specular"
+	[attr specular_IOR]
+		page STRING "Specular"
+	[attr specular_anisotropy]
+		page STRING "Specular"
+	[attr specular_rotation]
+		page STRING "Specular"
+
+	[attr transmission]
+		page STRING "Transmission"
+	[attr transmission_color]
+		page STRING "Transmission"
+	[attr transmission_depth]
+		page STRING "Transmission"
+	[attr transmission_scatter]
+		page STRING "Transmission"
+	[attr transmission_scatter_anisotropy]
+		page STRING "Transmission"
+	[attr transmission_dispersion]
+		page STRING "Transmission"
+	[attr transmission_extra_roughness]
+		page STRING "Transmission"
+
+	[attr subsurface]
+		page STRING "Subsurface"
+	[attr subsurface_color]
+		gaffer.nodeGraphLayout.visible BOOL true
+		page STRING "Subsurface"
+	[attr subsurface_radius]
+		page STRING "Subsurface"
+	[attr subsurface_scale]
+		page STRING "Subsurface"
+
+	[attr coat]
+		page STRING "Coat"
+	[attr coat_color]
+		page STRING "Coat"
+	[attr coat_roughness]
+		page STRING "Coat"
+	[attr coat_IOR]
+		page STRING "Coat"
+	[attr coat_normal]
+		gaffer.nodeGraphLayout.visible BOOL true
+		widget STRING "null"
+		page STRING "Coat"
+	[attr coat_affect_color]
+		page STRING "Coat"
+	[attr coat_affect_roughness]
+		page STRING "Coat"
+
+	[attr emission]
+		page STRING "Emission"
+	[attr emission_color]
+		page STRING "Emission"
+
+	[attr thin_film_thickness]
+		page STRING "Thin Film"
+	[attr thin_film_IOR]
+		page STRING "Thin Film"
+
+	[attr thin_walled]
+		page STRING "Geometry"
+	[attr opacity]
+		page STRING "Geometry"
+	[attr normal]
+		gaffer.nodeGraphLayout.visible BOOL true
+		widget STRING "null"
+		page STRING "Geometry"
+	[attr tangent]
+		gaffer.nodeGraphLayout.visible BOOL true
+		widget STRING "null"
+		page STRING "Geometry"
+
+	[attr caustics]
+		page STRING "Advanced"
+	[attr internal_reflections]
+		page STRING "Advanced"
+	[attr exit_to_background]
+		page STRING "Advanced"
+	[attr indirect_diffuse]
+		page STRING "Advanced"
+	[attr indirect_specular]
+		page STRING "Advanced"
+
 
 [node standard_hair]
 
 	gaffer.nodeMenu.category STRING "Surface"
+	gaffer.nodeGraphLayout.defaultVisibility BOOL false
+
+	[attr base]
+		gaffer.nodeGraphLayout.visible BOOL true
+		page STRING "Color"
+	[attr base_color]
+		gaffer.nodeGraphLayout.visible BOOL true
+		page STRING "Color"
+	[attr melanin]
+		page STRING "Color"
+	[attr melanin_redness]
+		page STRING "Color"
+	[attr melanin_randomize]
+		page STRING "Color"
+
+	[attr roughness]
+		gaffer.nodeGraphLayout.visible BOOL true
+		page STRING "Specular"
+	[attr ior]
+		page STRING "Specular"
+	[attr shift]
+		page STRING "Specular"
+
+	[attr specular_tint]
+		page STRING "Tint"
+	[attr specular2_tint]
+		page STRING "Tint"
+	[attr transmission_tint]
+		page STRING "Tint"
+
+	[attr diffuse]
+		page STRING "Diffuse"
+	[attr diffuse_color]
+		page STRING "Diffuse"
+
+	[attr emission]
+		page STRING "Emission"
+	[attr emission_color]
+		page STRING "Emission"
+
+	[attr opacity]
+		page STRING "Advanced"
+	[attr indirect_diffuse]
+		page STRING "Advanced"
+	[attr indirect_specular]
+		page STRING "Advanced"
+	[attr extra_depth]
+		page STRING "Advanced"
+
 
 
 [node standard_volume]
 
 	gaffer.nodeMenu.category STRING "Volume"
+	gaffer.nodeGraphLayout.defaultVisibility BOOL false
+
+	[attr density]
+		gaffer.nodeGraphLayout.visible BOOL true
+		page STRING "Density"
+	[attr density_channel]
+		page STRING "Density"
+
+	[attr scatter]
+		gaffer.nodeGraphLayout.visible BOOL true
+		page STRING "Scatter"
+	[attr scatter_color]
+		gaffer.nodeGraphLayout.visible BOOL true
+		page STRING "Scatter"
+	[attr scatter_color_channel]
+		page STRING "Scatter"
+	[attr scatter_anisotropy]
+		page STRING "Scatter"
+
+	[attr transparent]
+		page STRING "Transparent"
+	[attr transparent_channel]
+		page STRING "Transparent"
+	[attr transparent_depth]
+		page STRING "Transparent"
+
+	[attr emission_mode]
+		page STRING "Emission"
+	[attr emission]
+		gaffer.nodeGraphLayout.visible BOOL true
+		page STRING "Emission"
+	[attr emission_color]
+		gaffer.nodeGraphLayout.visible BOOL true
+		page STRING "Emission"
+	[attr emission_channel]
+		page STRING "Emission"
+	[attr temperature]
+		gaffer.nodeGraphLayout.visible BOOL true
+		page STRING "Emission"
+	[attr temperature_channel]
+		page STRING "Emission"
+	[attr blackbody_kelvin]
+		page STRING "Emission"
+	[attr blackbody_intensity]
+		page STRING "Emission"
+
+	[attr displacement]
+		gaffer.nodeGraphLayout.visible BOOL true
+		page STRING "Sampling"
+	[attr interpolation]
+		page STRING "Sampling"
 
 
 [node state_float]
