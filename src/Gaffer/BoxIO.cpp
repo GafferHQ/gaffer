@@ -191,8 +191,8 @@ void BoxIO::setup( const Plug *plug )
 	if( parent<Box>() )
 	{
 		Plug *toPromote = m_direction == Plug::In ? inPlugInternal() : outPlugInternal();
-		Plug *promoted = PlugAlgo::promote( toPromote );
-		promoted->setName( namePlug()->getValue() );
+		Plug *promoted = PlugAlgo::promoteWithName( toPromote, namePlug()->getValue() );
+		namePlug()->setValue( promoted->getName() );
 	}
 }
 
