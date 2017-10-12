@@ -1,6 +1,6 @@
 ##########################################################################
 #
-#  Copyright (c) 2017, John Haddon. All rights reserved.
+#  Copyright (c) 2017, Image Engine Design Inc. All rights reserved.
 #
 #  Redistribution and use in source and binary forms, with or without
 #  modification, are permitted provided that the following conditions are
@@ -34,10 +34,61 @@
 #
 ##########################################################################
 
-from IECoreDelightPreviewTest import *
+import os
+import unittest
 
-from InteractiveDelightRenderTest import InteractiveDelightRenderTest
+import Gaffer
+import GafferTest
+import GafferScene
+import GafferSceneTest
+import GafferOSL
+import GafferDelight
+
+@unittest.skipIf( "TRAVIS" in os.environ, "No license available on Travis" )
+class InteractiveDelightRenderTest( GafferSceneTest.InteractiveRenderTest ) :
+
+	# Temporarily disable this test (which is implemented in the
+	# base class) because it fails. The issue is that we're automatically
+	# instancing the geometry for the two lights, and that appears to
+	# trigger a bug in 3delight where the sampling goes awry.
+	@unittest.skip( "Awaiting feedback from 3delight developers" )
+	def testAddLight( self ) :
+
+		pass
+
+	def _createInteractiveRender( self ) :
+
+		return GafferDelight.InteractiveDelightRender()
+
+	def _createConstantShader( self ) :
+
+		shader = GafferOSL.OSLShader()
+		shader.loadShader( "Surface/Constant" )
+		return shader, shader["parameters"]["Cs"]
+
+	def _createTraceSetShader( self ) :
+
+		return None, None
+
+	def _cameraVisibilityAttribute( self ) :
+
+		return "dl:visibility.camera"
+
+	def _createMatteShader( self ) :
+
+		shader = GafferOSL.OSLShader()
+		shader.loadShader( "matte" )
+		return shader, shader["parameters"]["Cs"]
+
+	def _createPointLight( self ) :
+
+		light = GafferOSL.OSLLight()
+		light["shape"].setValue( light.Shape.Sphere )
+		light["radius"].setValue( 0.01 )
+		light.loadShader( "maya/osl/pointLight" )
+		light["attributes"].addMember( "dl:visibility.camera", False )
+
+		return light, light["parameters"]["i_color"]
 
 if __name__ == "__main__":
-	import unittest
 	unittest.main()
