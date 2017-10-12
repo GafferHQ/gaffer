@@ -81,6 +81,20 @@ bool visible( const CompoundObject *attributes )
 	return d ? d->readable() : true;
 }
 
+bool cameraGlobalsChanged( const CompoundObject *globals, const CompoundObject *previousGlobals )
+{
+	if( !previousGlobals )
+	{
+		return true;
+	}
+	CameraPtr camera1 = new Camera;
+	CameraPtr camera2 = new Camera;
+	Preview::RendererAlgo::applyCameraGlobals( camera1.get(), globals );
+	Preview::RendererAlgo::applyCameraGlobals( camera2.get(), previousGlobals );
+
+	return *camera1 != *camera2;
+}
+
 } // namespace
 
 //////////////////////////////////////////////////////////////////////////
@@ -854,11 +868,13 @@ void InteractiveRender::update()
 	// and the scene graph, and kick off a render.
 	assert( requiredState == Running );
 
+	bool cameraGlobalsChanged = false;
 	if( m_dirtyComponents & SceneGraph::GlobalsComponent )
 	{
 		ConstCompoundObjectPtr globals = adaptedInPlug()->globalsPlug()->getValue();
 		Preview::RendererAlgo::outputOptions( globals.get(), m_globals.get(), m_renderer.get() );
 		Preview::RendererAlgo::outputOutputs( globals.get(), m_globals.get(), m_renderer.get() );
+		cameraGlobalsChanged = ::cameraGlobalsChanged( globals.get(), m_globals.get() );
 		m_globals = globals;
 	}
 
@@ -873,20 +889,17 @@ void InteractiveRender::update()
 	for( int i = SceneGraph::FirstType; i <= SceneGraph::LastType; ++i )
 	{
 		SceneGraph *sceneGraph = m_sceneGraphs[i].get();
-		if( i == SceneGraph::CameraType && ( m_dirtyComponents & SceneGraph::GlobalsComponent ) )
+		if( i == SceneGraph::CameraType && cameraGlobalsChanged )
 		{
 			// Because the globals are applied to camera objects, we must update the object whenever
-			// the globals have changed, so we clear the scene graph and start again. We don't expect
-			// this to be a big overhead because typically there aren't many cameras in a scene. If it
-			// does cause a problem, we could examine the exact changes to the globals and avoid clearing
-			// if we know they won't affect the camera.
+			// the globals have changed, so we clear the scene graph and start again.
 			sceneGraph->clear();
 		}
 		SceneGraphUpdateTask *task = new( tbb::task::allocate_root() ) SceneGraphUpdateTask( this, sceneGraph, (SceneGraph::Type)i, m_dirtyComponents, SceneGraph::NoComponent, context.get(), ScenePlug::ScenePath() );
 		tbb::task::spawn_root_and_wait( *task );
 	}
 
-	if( m_dirtyComponents & SceneGraph::GlobalsComponent )
+	if( cameraGlobalsChanged )
 	{
 		updateDefaultCamera();
 	}
