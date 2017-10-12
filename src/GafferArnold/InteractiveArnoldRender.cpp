@@ -42,7 +42,6 @@
 
 using namespace Gaffer;
 using namespace GafferScene;
-using namespace GafferScene::Preview;
 using namespace GafferArnold;
 
 //////////////////////////////////////////////////////////////////////////

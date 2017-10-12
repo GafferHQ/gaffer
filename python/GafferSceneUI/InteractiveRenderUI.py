@@ -96,7 +96,7 @@ class _StatePlugValueWidget( GafferUI.PlugValueWidget ) :
 
 Gaffer.Metadata.registerNode(
 
-	GafferScene.Preview.InteractiveRender,
+	GafferScene.InteractiveRender,
 
 	"description",
 	"""
@@ -155,101 +155,3 @@ Gaffer.Metadata.registerNode(
 	}
 )
 
-##########################################################################
-# Metadata for original InteractiveRender node. We hope to phase this
-# node out over time.
-##########################################################################
-
-Gaffer.Metadata.registerNode(
-
-	GafferScene.InteractiveRender,
-
-	"description",
-	"""
-	A base class for nodes which can render scenes interactively, updating
-	the render to reflect changes to the node graph.
-	""",
-
-	plugs = {
-
-		"*" : [
-
-			"nodule:type", "",
-
-		],
-
-		"in" : [
-
-			"description",
-			"""
-			The scene to be rendered.
-			""",
-
-			"nodule:type", "GafferUI::StandardNodule",
-
-		],
-
-		"out" : [
-
-			"description",
-			"""
-			A direct pass-through of the input scene.
-			""",
-
-		],
-
-		"state" : [
-
-			"description",
-			"""
-			The interactive state.
-			""",
-
-			"plugValueWidget:type", "GafferSceneUI.InteractiveRenderUI._StatePlugValueWidget",
-
-		],
-
-		"updateLights" : [
-
-			"description",
-			"""
-			When on, changes to lights are reflected in the
-			interactive render.
-			""",
-
-		],
-
-		"updateAttributes" : [
-
-			"description",
-			"""
-			When on, changes to attribute (and shaders) are reflected in the
-			interactive render. When working with complex scenes, it may be
-			worth turning this off to gain increased performance when only
-			editing lights.
-			""",
-
-		],
-
-		"updateCameras" : [
-
-			"description",
-			"""
-			When on, changes to the camera are reflected in the
-			interactive render.
-			""",
-
-		],
-
-		"updateCoordinateSystems" : [
-
-			"description",
-			"""
-			When on, changes to coordinate systems are reflected in the
-			interactive render.
-			""",
-
-		],
-
-	}
-)

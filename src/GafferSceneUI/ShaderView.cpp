@@ -54,7 +54,6 @@
 #include "GafferScene/Outputs.h"
 #include "GafferScene/ShaderPlug.h"
 #include "GafferScene/InteractiveRender.h"
-#include "GafferScene/Preview/InteractiveRender.h"
 
 #include "GafferSceneUI/ShaderView.h"
 
@@ -308,7 +307,7 @@ void ShaderView::updateRenderer()
 	}
 
 	m_renderer = it->second();
-	m_renderer->getChild<ScenePlug>( "in" )->setInput(
+	m_renderer->inPlug()->setInput(
 		m_imageConverter->getChild<SceneNode>( "Outputs" )->outPlug()
 	);
 
@@ -317,13 +316,9 @@ void ShaderView::updateRenderer()
 
 void ShaderView::updateRendererContext()
 {
-	if( InteractiveRender *renderer = IECore::runTimeCast<InteractiveRender>( m_renderer.get() ) )
+	if( m_renderer )
 	{
-		renderer->setContext( getContext() );
-	}
-	else if( Preview::InteractiveRender *renderer = IECore::runTimeCast<Preview::InteractiveRender>( m_renderer.get() ) )
-	{
-		renderer->setContext( getContext() );
+		m_renderer->setContext( getContext() );
 	}
 }
 
@@ -334,7 +329,7 @@ void ShaderView::updateRendererState()
 		return;
 	}
 
-	m_renderer->getChild<IntPlug>( "state" )->setValue(
+	m_renderer->statePlug()->setValue(
 		viewportGadget()->visible() ? InteractiveRender::Running : InteractiveRender::Stopped
 	);
 }

@@ -34,125 +34,641 @@
 //
 //////////////////////////////////////////////////////////////////////////
 
-#include <thread>
-
 #include "boost/bind.hpp"
+#include "boost/algorithm/string/predicate.hpp"
 
 #include "tbb/task.h"
-#include "tbb/task_scheduler_init.h"
 
-#include "IECore/WorldBlock.h"
-#include "IECore/EditBlock.h"
 #include "IECore/MessageHandler.h"
-#include "IECore/SceneInterface.h"
 #include "IECore/VisibleRenderable.h"
+#include "IECore/NullObject.h"
 
 #include "Gaffer/Context.h"
 #include "Gaffer/ScriptNode.h"
+#include "Gaffer/StringPlug.h"
 
+#include "GafferScene/Preview/RendererAlgo.h"
 #include "GafferScene/InteractiveRender.h"
-#include "GafferScene/RendererAlgo.h"
+#include "GafferScene/SceneAlgo.h"
 #include "GafferScene/PathMatcherData.h"
+#include "GafferScene/SceneNode.h"
+#include "GafferScene/SceneProcessor.h"
+#include "GafferScene/RendererAlgo.h"
 
 using namespace std;
 using namespace Imath;
 using namespace IECore;
 using namespace Gaffer;
 using namespace GafferScene;
-
-IE_CORE_DEFINERUNTIMETYPED( InteractiveRender );
+using namespace GafferScene::Preview;
 
 //////////////////////////////////////////////////////////////////////////
-// SceneGraph implementation
-//
-// This is a node in a scene hierarchy, which gets built when the
-// interactive render starts up. Each node stores the attribute hash of
-// the input scene at its corresponding location in the hierarchy, so
-// when the incoming scene updates, we are able to determine the locations
-// at which the attributes have changed since the last update, reevaluate
-// those attributes and send updates to the renderer.
-//
-// \todo: This is very similar to the SceneGraph mechanism in
-// GafferSceneUI::SceneGadget. At some point it would be good to refactor
-// this and use the same class for both of them. See the comments in
-// src/GafferSceneUI/SceneGadget.cpp for details.
-//
+// Private utilities
 //////////////////////////////////////////////////////////////////////////
 
+namespace
+{
+
+InternedString g_cameraGlobalName( "option:render:camera" );
+
+InternedString g_visibleAttributeName( "scene:visible" );
+InternedString g_setsAttributeName( "sets" );
+InternedString g_rendererContextName( "scene:renderer" );
+
+bool visible( const CompoundObject *attributes )
+{
+	const IECore::BoolData *d = attributes->member<IECore::BoolData>( g_visibleAttributeName );
+	return d ? d->readable() : true;
+}
+
+} // namespace
+
+//////////////////////////////////////////////////////////////////////////
+// Internal implementation details
+//////////////////////////////////////////////////////////////////////////
+
+// Represents a location in the Gaffer scene as specified to the
+// renderer. We use this to build up a persistent representation of
+// the scene which we can traverse to perform selective updates to
+// only the changed locations. A Renderer's representation of the
+// scene contains only a flat list of objects, whereas the SceneGraph
+// maintains the original hierarchy, providing the means of flattening
+// attribute and transform state for passing to the renderer. Calls
+// to update() are made from a threaded scene traversal performed by
+// SceneGraphUpdateTask.
 class InteractiveRender::SceneGraph
 {
 
 	public :
 
-		SceneGraph() : m_parent( nullptr ), m_locationPresent( true )
+		// We store separate scene graphs for
+		// objects which are classified differently
+		// by the renderer. This lets us output
+		// lights and cameras prior to the
+		// rest of the scene, which may be a
+		// requirement of some renderer backends.
+		enum Type
 		{
+			CameraType = 0,
+			LightType = 1,
+			ObjectType = 2,
+			FirstType = CameraType,
+			LastType = ObjectType,
+			NoType = LastType + 1
+		};
+
+		enum Component
+		{
+			NoComponent = 0,
+			BoundComponent = 1,
+			TransformComponent = 2,
+			AttributesComponent = 4,
+			ObjectComponent = 8,
+			ChildNamesComponent = 16,
+			GlobalsComponent = 32,
+			SetsComponent = 64,
+			RenderSetsComponent = 128, // Sets prefixed with "render:"
+			AllComponents = BoundComponent | TransformComponent | AttributesComponent | ObjectComponent | ChildNamesComponent | GlobalsComponent | SetsComponent | RenderSetsComponent
+		};
+
+		// Constructs the root of the scene graph.
+		// Children are constructed using updateChildren().
+		SceneGraph()
+			:	m_parent( nullptr ), m_fullAttributes( new CompoundObject )
+		{
+			clear();
 		}
 
 		~SceneGraph()
+		{
+			clear();
+		}
+
+		const InternedString &name() const
+		{
+			return m_name;
+		}
+
+		// Called by SceneGraphUpdateTask to update this location. Returns a bitmask
+		// of the components which were changed.
+		unsigned update( const ScenePlug *scene, const ScenePlug::ScenePath &path, unsigned dirtyComponents, unsigned changedParentComponents, Type type, IECoreScenePreview::Renderer *renderer, const IECore::CompoundObject *globals, const Preview::RendererAlgo::RenderSets &renderSets )
+		{
+			unsigned changedComponents = 0;
+
+			// Attributes
+
+			if( !m_parent )
+			{
+				// Root - get attributes from globals.
+				if( dirtyComponents & GlobalsComponent )
+				{
+					if( updateAttributes( globals ) )
+					{
+						changedComponents |= AttributesComponent;
+					}
+				}
+			}
+			else
+			{
+				// Non-root - get attributes the standard way.
+				const bool parentAttributesChanged = changedParentComponents & AttributesComponent;
+				if( parentAttributesChanged || ( dirtyComponents & AttributesComponent ) )
+				{
+					if( updateAttributes( scene->attributesPlug(), parentAttributesChanged ) )
+					{
+						changedComponents |= AttributesComponent;
+					}
+				}
+			}
+
+			if( !::visible( m_fullAttributes.get() ) )
+			{
+				clear();
+				return changedComponents;
+			}
+
+			// Render Sets. We must obviously update these if
+			// the sets have changed, but we also need to do an
+			// update if the attributes have changed, because in
+			// that case we may have overwritten the sets attribute.
+
+			if( ( dirtyComponents & RenderSetsComponent ) || ( changedComponents & AttributesComponent ) )
+			{
+				if( updateRenderSets( path, renderSets ) )
+				{
+					changedComponents |= AttributesComponent;
+				}
+			}
+
+			// Transform
+
+			if( ( dirtyComponents & TransformComponent ) && updateTransform( scene->transformPlug(), changedParentComponents & TransformComponent ) )
+			{
+				changedComponents |= TransformComponent;
+			}
+
+			// Object
+
+			if( ( dirtyComponents & ObjectComponent ) && updateObject( scene->objectPlug(), type, renderer, globals ) )
+			{
+				changedComponents |= ObjectComponent;
+			}
+
+			// Object updates for transform and attributes
+
+			if( m_objectInterface )
+			{
+				if( !(changedComponents & ObjectComponent) )
+				{
+					// Apply attribute update to old object if necessary.
+					if( changedComponents & AttributesComponent )
+					{
+						if( !m_objectInterface->attributes( attributesInterface( renderer ) ) )
+						{
+							// Failed to apply attributes - must replace entire object.
+							m_objectHash = MurmurHash();
+							if( updateObject( scene->objectPlug(), type, renderer, globals ) )
+							{
+								changedComponents |= ObjectComponent;
+							}
+						}
+					}
+				}
+
+				// If the transform has changed, or we have an entirely new object,
+				// the apply the transform.
+				if( changedComponents & ( ObjectComponent | TransformComponent ) )
+				{
+					m_objectInterface->transform( m_fullTransform );
+				}
+			}
+
+			// Children
+
+			if( ( dirtyComponents & ChildNamesComponent ) && updateChildren( scene->childNamesPlug() ) )
+			{
+				changedComponents |= ChildNamesComponent;
+			}
+
+			m_cleared = false;
+
+			return changedComponents;
+		}
+
+		const std::vector<SceneGraph *> &children()
+		{
+			return m_children;
+		}
+
+		// Invalidates this location, removing any resources it
+		// holds in the renderer, and clearing all children. This is
+		// used to "remove" a location without having to delete it
+		// from the children() of its parent. We avoid the latter
+		// because it would involve some unwanted locking - we
+		// process children in parallel, and therefore want to avoid
+		// child updates having to write to the parent.
+		void clear()
+		{
+			clearChildren();
+			clearObject();
+			m_attributesHash = m_transformHash = m_childNamesHash = IECore::MurmurHash();
+			m_cleared = true;
+		}
+
+		// Returns true if the location has not been finalised
+		// since the last call to clear() - ie that it is not
+		// in a valid state.
+		bool cleared()
+		{
+			return m_cleared;
+		}
+
+	private :
+
+		SceneGraph( const InternedString &name, const SceneGraph *parent )
+			:	m_name( name ), m_parent( parent ), m_fullAttributes( new CompoundObject )
+		{
+			clear();
+		}
+
+		// Returns true if the attributes changed.
+		bool updateAttributes( const CompoundObjectPlug *attributesPlug, bool parentAttributesChanged )
+		{
+			assert( m_parent );
+
+			const IECore::MurmurHash attributesHash = attributesPlug->hash();
+			if( attributesHash == m_attributesHash && !parentAttributesChanged )
+			{
+				return false;
+			}
+
+			ConstCompoundObjectPtr attributes = attributesPlug->getValue( &attributesHash );
+			CompoundObject::ObjectMap &fullAttributes = m_fullAttributes->members();
+			fullAttributes = m_parent->m_fullAttributes->members();
+			for( CompoundObject::ObjectMap::const_iterator it = attributes->members().begin(), eIt = attributes->members().end(); it != eIt; ++it )
+			{
+				fullAttributes[it->first] = it->second;
+			}
+
+			m_attributesInterface = nullptr; // Will be updated lazily in attributesInterface()
+			m_attributesHash = attributesHash;
+
+			return true;
+		}
+
+		// As above, but for use at the root.
+		bool updateAttributes( const CompoundObject *globals )
+		{
+			assert( !m_parent );
+
+			ConstCompoundObjectPtr globalAttributes = GafferScene::SceneAlgo::globalAttributes( globals );
+			if( m_fullAttributes && *m_fullAttributes == *globalAttributes )
+			{
+				return false;
+			}
+
+			m_fullAttributes->members() = globalAttributes->members();
+			m_attributesInterface = nullptr;
+
+			return true;
+		}
+
+		bool updateRenderSets( const ScenePlug::ScenePath &path, const Preview::RendererAlgo::RenderSets &renderSets )
+		{
+			m_fullAttributes->members()[g_setsAttributeName] = boost::const_pointer_cast<InternedStringVectorData>(
+				renderSets.setsAttribute( path )
+			);
+			m_attributesInterface = nullptr;
+			return true;
+		}
+
+		IECoreScenePreview::Renderer::AttributesInterface *attributesInterface( IECoreScenePreview::Renderer *renderer )
+		{
+			if( !m_attributesInterface )
+			{
+				m_attributesInterface = renderer->attributes( m_fullAttributes.get() );
+			}
+			return m_attributesInterface.get();
+		}
+
+		// Returns true if the transform changed.
+		bool updateTransform( const M44fPlug *transformPlug, bool parentTransformChanged )
+		{
+			const IECore::MurmurHash transformHash = transformPlug->hash();
+			if( transformHash == m_transformHash && !parentTransformChanged )
+			{
+				return false;
+			}
+
+			const M44f transform = transformPlug->getValue( &transformHash );
+			if( m_parent )
+			{
+				m_fullTransform = transform * m_parent->m_fullTransform;
+			}
+			else
+			{
+				m_fullTransform = transform;
+			}
+
+			m_transformHash = transformHash;
+			return true;
+		}
+
+		// Returns true if the object changed.
+		bool updateObject( const ObjectPlug *objectPlug, Type type, IECoreScenePreview::Renderer *renderer, const IECore::CompoundObject *globals )
+		{
+			const bool hadObjectInterface = static_cast<bool>( m_objectInterface );
+			if( type == NoType )
+			{
+				m_objectInterface = nullptr;
+				return hadObjectInterface;
+			}
+
+			const IECore::MurmurHash objectHash = objectPlug->hash();
+			if( objectHash == m_objectHash )
+			{
+				return false;
+			}
+
+			m_objectInterface = nullptr;
+
+			IECore::ConstObjectPtr object = objectPlug->getValue( &objectHash );
+			m_objectHash = objectHash;
+
+			const IECore::NullObject *nullObject = runTimeCast<const IECore::NullObject>( object.get() );
+			if( (type != LightType) && nullObject )
+			{
+				return hadObjectInterface;
+			}
+
+			std::string name;
+			ScenePlug::pathToString( Context::current()->get<vector<InternedString> >( ScenePlug::scenePathContextName ), name );
+			if( type == CameraType )
+			{
+				if( const IECore::Camera *camera = runTimeCast<const IECore::Camera>( object.get() ) )
+				{
+					IECore::CameraPtr cameraCopy = camera->copy();
+
+					// Explicit namespace can be removed once deprecated applyCameraGlobals
+					// is removed from GafferScene::SceneAlgo
+					GafferScene::Preview::RendererAlgo::applyCameraGlobals( cameraCopy.get(), globals );
+					m_objectInterface = renderer->camera( name, cameraCopy.get(), attributesInterface( renderer ) );
+				}
+			}
+			else if( type == LightType )
+			{
+				m_objectInterface = renderer->light( name, nullObject ? nullptr : object.get(), attributesInterface( renderer ) );
+			}
+			else
+			{
+				m_objectInterface = renderer->object( name, object.get(), attributesInterface( renderer ) );
+			}
+
+			return true;
+		}
+
+		void clearObject()
+		{
+			m_objectInterface = nullptr;
+			m_objectHash = MurmurHash();
+		}
+
+		// Ensures that children() contains a child for every name specified
+		// by childNamesPlug(). This just ensures that the children exist - they
+		// will be subsequently be updated in parallel by the SceneGraphUpdateTask.
+		bool updateChildren( const InternedStringVectorDataPlug *childNamesPlug )
+		{
+			const IECore::MurmurHash childNamesHash = childNamesPlug->hash();
+			if( childNamesHash == m_childNamesHash )
+			{
+				return false;
+			}
+
+			IECore::ConstInternedStringVectorDataPtr childNamesData = childNamesPlug->getValue( &childNamesHash );
+			const std::vector<IECore::InternedString> &childNames = childNamesData->readable();
+			if( !existingChildNamesValid( childNames ) )
+			{
+				clearChildren();
+				for( std::vector<IECore::InternedString>::const_iterator it = childNames.begin(), eIt = childNames.end(); it != eIt; ++it )
+				{
+					SceneGraph *child = new SceneGraph( *it, this );
+					m_children.push_back( child );
+				}
+			}
+			return true;
+		}
+
+		void clearChildren()
 		{
 			for( std::vector<SceneGraph *>::const_iterator it = m_children.begin(), eIt = m_children.end(); it != eIt; ++it )
 			{
 				delete *it;
 			}
+			m_children.clear();
 		}
 
-		void path( ScenePlug::ScenePath &p )
+		bool existingChildNamesValid( const vector<IECore::InternedString> &childNames ) const
 		{
-			if( !m_parent )
+			if( m_children.size() != childNames.size() )
 			{
-				return;
+				return false;
 			}
-			m_parent->path( p );
-			p.push_back( m_name );
+			for( size_t i = 0, e = childNames.size(); i < e; ++i )
+			{
+				if( m_children[i]->m_name != childNames[i] )
+				{
+					return false;
+				}
+			}
+			return true;
+		}
+
+		IECore::InternedString m_name;
+
+		const SceneGraph *m_parent;
+
+		IECore::MurmurHash m_objectHash;
+		IECoreScenePreview::Renderer::ObjectInterfacePtr m_objectInterface;
+
+		IECore::MurmurHash m_attributesHash;
+		IECore::CompoundObjectPtr m_fullAttributes;
+		IECoreScenePreview::Renderer::AttributesInterfacePtr m_attributesInterface;
+
+		IECore::MurmurHash m_transformHash;
+		Imath::M44f m_fullTransform;
+
+		IECore::MurmurHash m_childNamesHash;
+		std::vector<SceneGraph *> m_children;
+
+		bool m_cleared;
+
+};
+
+// TBB task used to perform multithreaded updates on our SceneGraph.
+class InteractiveRender::SceneGraphUpdateTask : public tbb::task
+{
+
+	public :
+
+		SceneGraphUpdateTask(
+			const InteractiveRender *interactiveRender,
+			SceneGraph *sceneGraph,
+			SceneGraph::Type sceneGraphType,
+			unsigned dirtyComponents,
+			unsigned changedParentComponents,
+			const Context *context,
+			const ScenePlug::ScenePath &scenePath
+		)
+			:	m_interactiveRender( interactiveRender ),
+				m_sceneGraph( sceneGraph ),
+				m_sceneGraphType( sceneGraphType ),
+				m_dirtyComponents( dirtyComponents ),
+				m_changedParentComponents( changedParentComponents ),
+				m_context( context ),
+				m_scenePath( scenePath )
+		{
+		}
+
+		task *execute() override
+		{
+
+			// Figure out if this location belongs in the type
+			// of scene graph we're constructing. If it doesn't
+			// belong, and neither do any of its descendants,
+			// we can just early out.
+
+			const unsigned sceneGraphMatch = this->sceneGraphMatch();
+			if( !( sceneGraphMatch & ( Filter::ExactMatch | Filter::DescendantMatch ) ) )
+			{
+				m_sceneGraph->clear();
+				return nullptr;
+			}
+
+			if( m_sceneGraph->cleared() )
+			{
+				// We cleared this location in the past, but now
+				// want it. So we need to start from scratch, and
+				// update everything.
+				m_dirtyComponents = SceneGraph::AllComponents;
+			}
+
+			// Set up a context to compute the scene at the right
+			// location.
+
+			ScenePlug::PathScope pathScope( m_context, m_scenePath );
+
+			// Update the scene graph at this location.
+
+			unsigned changedComponents = m_sceneGraph->update(
+				scene(),
+				m_scenePath,
+				m_dirtyComponents,
+				m_changedParentComponents,
+				sceneGraphMatch & Filter::ExactMatch ? m_sceneGraphType : SceneGraph::NoType,
+				m_interactiveRender->m_renderer.get(),
+				m_interactiveRender->m_globals.get(),
+				m_interactiveRender->m_renderSets
+			);
+
+			// Spawn subtasks to apply updates to each child.
+
+			const std::vector<SceneGraph *> &children = m_sceneGraph->children();
+			if( children.size() )
+			{
+				set_ref_count( 1 + children.size() );
+
+				ScenePlug::ScenePath childPath = m_scenePath;
+				childPath.push_back( IECore::InternedString() ); // space for the child name
+				for( std::vector<SceneGraph *>::const_iterator it = children.begin(), eIt = children.end(); it != eIt; ++it )
+				{
+					childPath.back() = (*it)->name();
+					SceneGraphUpdateTask *t = new( allocate_child() ) SceneGraphUpdateTask( m_interactiveRender, *it, m_sceneGraphType, m_dirtyComponents, changedComponents, m_context, childPath );
+					spawn( *t );
+				}
+
+				wait_for_all();
+			}
+
+			return nullptr;
 		}
 
 	private :
 
-		friend class SceneGraphBuildTask;
-		friend class ChildNamesUpdateTask;
+		const ScenePlug *scene()
+		{
+			return m_interactiveRender->adaptedInPlug();
+		}
 
-		friend class SceneGraphIteratorFilter;
-		friend class SceneGraphEvaluatorFilter;
-		friend class SceneGraphOutputFilter;
+		/// \todo Fast path for when sets were not dirtied.
+		const unsigned sceneGraphMatch() const
+		{
+			switch( m_sceneGraphType )
+			{
+				case SceneGraph::CameraType :
+					return m_interactiveRender->m_renderSets.camerasSet().match( m_scenePath );
+				case SceneGraph::LightType :
+					return m_interactiveRender->m_renderSets.lightsSet().match( m_scenePath );
+				case SceneGraph::ObjectType :
+				{
+					unsigned m = m_interactiveRender->m_renderSets.lightsSet().match( m_scenePath ) |
+					             m_interactiveRender->m_renderSets.camerasSet().match( m_scenePath );
+					if( m & Filter::ExactMatch )
+					{
+						return Filter::AncestorMatch | Filter::DescendantMatch;
+					}
+					else
+					{
+						return Filter::EveryMatch;
+					}
+				}
+				default :
+					return Filter::NoMatch;
+			}
+		}
 
-		// scene structure data:
-		IECore::InternedString m_name;
-		SceneGraph *m_parent;
-		std::vector<InteractiveRender::SceneGraph *> m_children;
+		const InteractiveRender *m_interactiveRender;
+		SceneGraph *m_sceneGraph;
+		SceneGraph::Type m_sceneGraphType;
+		unsigned m_dirtyComponents;
+		unsigned m_changedParentComponents;
+		const Context *m_context;
+		ScenePlug::ScenePath m_scenePath;
 
-		// hashes as of the most recent evaluation:
-		IECore::MurmurHash m_attributesHash;
-		IECore::MurmurHash m_childNamesHash;
-
-		// actual scene data:
-		IECore::ConstCompoundObjectPtr m_attributes;
-		IECore::ConstObjectPtr m_object;
-		Imath::M44f m_transform;
-
-		// flag indicating if this location is currently present - (used
-		// when the child names change)
-		bool m_locationPresent;
 };
+
+//////////////////////////////////////////////////////////////////////////
+// InteractiveRender
+//////////////////////////////////////////////////////////////////////////
 
 size_t InteractiveRender::g_firstPlugIndex = 0;
 
+IE_CORE_DEFINERUNTIMETYPED( InteractiveRender );
+
 InteractiveRender::InteractiveRender( const std::string &name )
-	:	Node( name ), m_lightsDirty( true ), m_attributesDirty( true ), m_camerasDirty( true ), m_coordinateSystemsDirty( true )
+	:	InteractiveRender( /* rendererType = */ InternedString(), name )
+{
+}
+
+InteractiveRender::InteractiveRender( const IECore::InternedString &rendererType, const std::string &name )
+	:	Node( name )
 {
 	storeIndexOfNextChild( g_firstPlugIndex );
 	addChild( new ScenePlug( "in" ) );
-	addChild( new ScenePlug( "out", Plug::Out, Plug::Default & ~Plug::Serialisable ) );
-	outPlug()->setInput( inPlug() );
+	addChild( new StringPlug( rendererType.string().empty() ? "renderer" : "__renderer", Plug::In, rendererType.string() ) );
 	addChild( new IntPlug( "state", Plug::In, Stopped, Stopped, Paused, Plug::Default & ~Plug::Serialisable ) );
-	addChild( new BoolPlug( "updateLights", Plug::In, true ) );
-	addChild( new BoolPlug( "updateAttributes", Plug::In, true ) );
-	addChild( new BoolPlug( "updateCameras", Plug::In, true ) );
-	addChild( new BoolPlug( "updateCoordinateSystems", Plug::In, true ) );
+	addChild( new ScenePlug( "out", Plug::Out, Plug::Default & ~Plug::Serialisable ) );
+	addChild( new ScenePlug( "__adaptedIn", Plug::In, Plug::Default & ~Plug::Serialisable ) );
+
+	SceneProcessorPtr adaptors = RendererAlgo::createAdaptors();
+	setChild( "__adaptors", adaptors );
+	adaptors->inPlug()->setInput( inPlug() );
+	adaptedInPlug()->setInput( adaptors->outPlug() );
+
+	outPlug()->setInput( inPlug() );
 
 	plugDirtiedSignal().connect( boost::bind( &InteractiveRender::plugDirtied, this, ::_1 ) );
-	parentChangedSignal().connect( boost::bind( &InteractiveRender::parentChanged, this, ::_1, ::_2 ) );
 
-	setContext( new Context() );
+	stop(); // Use stop to initialise remaining member variables
 }
 
 InteractiveRender::~InteractiveRender()
@@ -170,14 +686,14 @@ const ScenePlug *InteractiveRender::inPlug() const
 	return getChild<ScenePlug>( g_firstPlugIndex );
 }
 
-ScenePlug *InteractiveRender::outPlug()
+Gaffer::StringPlug *InteractiveRender::rendererPlug()
 {
-	return getChild<ScenePlug>( g_firstPlugIndex + 1 );
+	return getChild<StringPlug>( g_firstPlugIndex + 1 );
 }
 
-const ScenePlug *InteractiveRender::outPlug() const
+const Gaffer::StringPlug *InteractiveRender::rendererPlug() const
 {
-	return getChild<ScenePlug>( g_firstPlugIndex + 1 );
+	return getChild<StringPlug>( g_firstPlugIndex + 1 );
 }
 
 Gaffer::IntPlug *InteractiveRender::statePlug()
@@ -190,867 +706,24 @@ const Gaffer::IntPlug *InteractiveRender::statePlug() const
 	return getChild<IntPlug>( g_firstPlugIndex + 2 );
 }
 
-Gaffer::BoolPlug *InteractiveRender::updateLightsPlug()
+ScenePlug *InteractiveRender::outPlug()
 {
-	return getChild<BoolPlug>( g_firstPlugIndex + 3 );
+	return getChild<ScenePlug>( g_firstPlugIndex + 3 );
 }
 
-const Gaffer::BoolPlug *InteractiveRender::updateLightsPlug() const
+const ScenePlug *InteractiveRender::outPlug() const
 {
-	return getChild<BoolPlug>( g_firstPlugIndex + 3 );
+	return getChild<ScenePlug>( g_firstPlugIndex + 3 );
 }
 
-Gaffer::BoolPlug *InteractiveRender::updateAttributesPlug()
+ScenePlug *InteractiveRender::adaptedInPlug()
 {
-	return getChild<BoolPlug>( g_firstPlugIndex + 4 );
+	return getChild<ScenePlug>( g_firstPlugIndex + 4 );
 }
 
-const Gaffer::BoolPlug *InteractiveRender::updateAttributesPlug() const
+const ScenePlug *InteractiveRender::adaptedInPlug() const
 {
-	return getChild<BoolPlug>( g_firstPlugIndex + 4 );
-}
-
-Gaffer::BoolPlug *InteractiveRender::updateCamerasPlug()
-{
-	return getChild<BoolPlug>( g_firstPlugIndex + 5 );
-}
-
-const Gaffer::BoolPlug *InteractiveRender::updateCamerasPlug() const
-{
-	return getChild<BoolPlug>( g_firstPlugIndex + 5 );
-}
-
-Gaffer::BoolPlug *InteractiveRender::updateCoordinateSystemsPlug()
-{
-	return getChild<BoolPlug>( g_firstPlugIndex + 6 );
-}
-
-const Gaffer::BoolPlug *InteractiveRender::updateCoordinateSystemsPlug() const
-{
-	return getChild<BoolPlug>( g_firstPlugIndex + 6 );
-}
-
-//////////////////////////////////////////////////////////////////////////
-// ChildNamesUpdateTask implementation
-//
-// We use this tbb::task to traverse the input scene and check if the child
-// names are still valid at each location. If not, we flag the location as
-// not present so it doesn't get traversed during an update
-//
-//////////////////////////////////////////////////////////////////////////
-
-class InteractiveRender::ChildNamesUpdateTask : public tbb::task
-{
-
-	public :
-
-		ChildNamesUpdateTask( const ScenePlug *scene, const Context *context, SceneGraph *sceneGraph, const ScenePlug::ScenePath &scenePath )
-			:	m_scene( scene ),
-				m_context( context ),
-				m_sceneGraph( sceneGraph ),
-				m_scenePath( scenePath )
-		{
-		}
-
-		~ChildNamesUpdateTask() override
-		{
-		}
-
-		task *execute() override
-		{
-			ScenePlug::PathScope pathScope( m_context, m_scenePath );
-
-			IECore::MurmurHash childNamesHash = m_scene->childNamesPlug()->hash();
-
-			if( childNamesHash != m_sceneGraph->m_childNamesHash )
-			{
-				// child names have changed - we need to update m_locationPresent on the children:
-				m_sceneGraph->m_childNamesHash = childNamesHash;
-
-				// read updated child names:
-				IECore::ConstInternedStringVectorDataPtr childNamesData = m_scene->childNamesPlug()->getValue( &m_sceneGraph->m_childNamesHash );
-				std::vector<IECore::InternedString> childNames = childNamesData->readable();
-
-				// m_sceneGraph->m_children should be sorted by name. Sort this list too so we can
-				// compare the two easily:
-				std::sort( childNames.begin(), childNames.end() );
-
-				std::vector<InternedString>::iterator childNamesBegin = childNames.begin();
-				for( std::vector<SceneGraph *>::const_iterator it = m_sceneGraph->m_children.begin(), eIt = m_sceneGraph->m_children.end(); it != eIt; ++it )
-				{
-					// try and find the current child name in the list of child names:
-					std::vector<InternedString>::iterator nameIt = std::find( childNamesBegin, childNames.end(), (*it)->m_name );
-					if( nameIt != childNames.end() )
-					{
-						// ok, it's there - mark this child as still present
-						(*it)->m_locationPresent = true;
-
-						// As both the name lists are sorted, no further child names will be found beyond nameIt
-						// in the list, nor will they be found at nameIt as there shouldn't be any duplicates.
-						// This means we can move the start of the child names list one position past nameIt
-						// to save a bit of time:
-						/// \todo Note that if all the children have changed names, we never end up in here, and
-						/// we will end up with quadratic behaviour calling find (a linear search N times).
-						childNamesBegin = nameIt;
-						++childNamesBegin;
-					}
-					else
-					{
-						(*it)->m_locationPresent = false;
-					}
-				}
-			}
-
-			// count children currently present in the scene:
-			size_t numPresentChildren = 0;
-			for( std::vector<SceneGraph *>::const_iterator it = m_sceneGraph->m_children.begin(), eIt = m_sceneGraph->m_children.end(); it != eIt; ++it )
-			{
-				numPresentChildren += (*it)->m_locationPresent;
-			}
-
-			// spawn child tasks:
-			set_ref_count( 1 + numPresentChildren );
-			ScenePlug::ScenePath childPath = m_scenePath;
-			childPath.push_back( IECore::InternedString() ); // space for the child name
-			for( std::vector<SceneGraph *>::const_iterator it = m_sceneGraph->m_children.begin(), eIt = m_sceneGraph->m_children.end(); it != eIt; ++it )
-			{
-				if( (*it)->m_locationPresent )
-				{
-					childPath.back() = (*it)->m_name;
-					ChildNamesUpdateTask *t = new( allocate_child() ) ChildNamesUpdateTask(
-						m_scene,
-						m_context,
-						(*it),
-						childPath
-					);
-
-					spawn( *t );
-				}
-			}
-			wait_for_all();
-
-			return nullptr;
-		}
-
-	private :
-
-		const ScenePlug *m_scene;
-		const Context *m_context;
-		SceneGraph *m_sceneGraph;
-		ScenePlug::ScenePath m_scenePath;
-};
-
-
-void InteractiveRender::plugDirtied( const Gaffer::Plug *plug )
-{
-
-	if(
-		plug == inPlug()->transformPlug() ||
-		plug == inPlug()->globalsPlug()
-	)
-	{
-		// just store the fact that something needs
-		// updating. we'll do the actual update when
-		// the dirty signal is emitted for the parent plug.
-		m_lightsDirty = true;
-		m_camerasDirty = true;
-		m_coordinateSystemsDirty = true;
-	}
-	else if( plug == inPlug()->objectPlug() )
-	{
-		// as above.
-		m_lightsDirty = true;
-		m_camerasDirty = true;
-		m_coordinateSystemsDirty = true;
-	}
-	else if( plug == inPlug()->attributesPlug() )
-	{
-		// as above.
-		m_attributesDirty = true;
-		m_lightsDirty = true;
-	}
-	else if( plug == inPlug()->childNamesPlug() )
-	{
-		if( m_sceneGraph.get() )
-		{
-			// child names may have changed: we need to run through the scene graph data structure
-			// checking for locations that are no longer present, and flag them as absent if this
-			// is the case:
-			/// \todo doing this directly here is out of keeping with the basic structure
-			/// of this node. Everything else just figures out what is dirty here, and then
-			/// waits until update() to do the work. Since we'll most likely delay calls to update()
-			/// further in the future, we should fix this.
-			ChildNamesUpdateTask *task = new( tbb::task::allocate_root() ) ChildNamesUpdateTask( inPlug(), m_context.get(), m_sceneGraph.get(), ScenePlug::ScenePath() );
-			try
-			{
-				tbb::task::spawn_root_and_wait( *task );
-			}
-			catch( const std::exception& e )
-			{
-				IECore::msg( IECore::Msg::Error, "InteractiveRender::update", e.what() );
-			}
-		}
-	}
-	else if(
-		plug == inPlug() ||
-		plug == updateLightsPlug() ||
-		plug == updateAttributesPlug() ||
-		plug == updateCamerasPlug() ||
-		plug == updateCoordinateSystemsPlug() ||
-		plug == statePlug()
-	)
-	{
-		try
-		{
-			update();
-		}
-		catch( const std::exception &e )
-		{
-			// Since we're inside an emission of plugDirtiedSignal(),
-			// it's of no use to anyone to go throwing an exception.
-			// instead we'll just report it as a message.
-			/// \todo When we have Node::errorSignal(), we should
-			/// emit that, and the UI will be able to show the error
-			/// more appropriately.
-			IECore::msg( IECore::Msg::Error, "InteractiveRender::update", e.what() );
-		}
-	}
-}
-
-void InteractiveRender::parentChanged( GraphComponent *child, GraphComponent *oldParent )
-{
-	ScriptNode *n = ancestor<ScriptNode>();
-	if( n )
-	{
-		setContext( n->context() );
-	}
-	else
-	{
-		setContext( new Context() );
-	}
-}
-
-
-
-//////////////////////////////////////////////////////////////////////////
-// BuildTask implementation
-//
-// We use this tbb::task to traverse the input scene and build the
-// hierarchy for the first time. Recursion is terminated for locations
-// at which scene:visible is set to false, so this task also computes
-// and stores the attributes.
-//
-//////////////////////////////////////////////////////////////////////////
-
-class InteractiveRender::SceneGraphBuildTask : public tbb::task
-{
-
-	public :
-
-		SceneGraphBuildTask( const ScenePlug *scene, const Context *context, SceneGraph *sceneGraph, const ScenePlug::ScenePath &scenePath )
-			:	m_scene( scene ),
-				m_context( context ),
-				m_sceneGraph( sceneGraph ),
-				m_scenePath( scenePath )
-		{
-		}
-
-		~SceneGraphBuildTask() override
-		{
-		}
-
-		task *execute() override
-		{
-			ScenePlug::PathScope pathScope( m_context, m_scenePath );
-
-			// we need the attributes so we can terminate recursion at invisible locations, so
-			// we might as well store them in the scene graph, along with the hash:
-
-			m_sceneGraph->m_attributesHash = m_scene->attributesPlug()->hash();
-
-			// use the precomputed hash in getValue() to save a bit of time:
-
-			m_sceneGraph->m_attributes = m_scene->attributesPlug()->getValue( &m_sceneGraph->m_attributesHash );
-			const BoolData *visibilityData = m_sceneGraph->m_attributes->member<BoolData>( SceneInterface::visibilityName );
-			if( visibilityData && !visibilityData->readable() )
-			{
-				// terminate recursion for invisible locations
-				return nullptr;
-			}
-
-			// store the hash of the child names so we know when they change:
-			m_sceneGraph->m_childNamesHash = m_scene->childNamesPlug()->hash();
-
-			// compute child names:
-			IECore::ConstInternedStringVectorDataPtr childNamesData = m_scene->childNamesPlug()->getValue( &m_sceneGraph->m_childNamesHash );
-
-			std::vector<IECore::InternedString> childNames = childNamesData->readable();
-			if( childNames.empty() )
-			{
-				// nothing more to do
-				return nullptr;
-			}
-
-			// sort the child names so we can compare child name lists easily in ChildNamesUpdateTask:
-			std::sort( childNames.begin(), childNames.end() );
-
-			// add children for this location:
-			std::vector<InteractiveRender::SceneGraph *> children;
-			for( std::vector<IECore::InternedString>::const_iterator it = childNames.begin(), eIt = childNames.end(); it != eIt; ++it )
-			{
-				SceneGraph *child = new SceneGraph();
-				child->m_name = *it;
-				child->m_parent = m_sceneGraph;
-				children.push_back( child );
-			}
-
-			// spawn child tasks:
-			set_ref_count( 1 + children.size() );
-			ScenePlug::ScenePath childPath = m_scenePath;
-			childPath.push_back( IECore::InternedString() ); // space for the child name
-			for( std::vector<SceneGraph *>::const_iterator it = children.begin(), eIt = children.end(); it != eIt; ++it )
-			{
-				childPath.back() = (*it)->m_name;
-				SceneGraphBuildTask *t = new( allocate_child() ) SceneGraphBuildTask(
-					m_scene,
-					m_context,
-					(*it),
-					childPath
-				);
-
-				spawn( *t );
-			}
-
-			wait_for_all();
-
-			// add visible children to m_sceneGraph->m_children:
-			for( std::vector<SceneGraph *>::const_iterator it = children.begin(), eIt = children.end(); it != eIt; ++it )
-			{
-				const BoolData *visibilityData = (*it)->m_attributes->member<BoolData>( SceneInterface::visibilityName );
-				if( visibilityData && !visibilityData->readable() )
-				{
-					continue;
-				}
-				m_sceneGraph->m_children.push_back( *it );
-			}
-
-			return nullptr;
-		}
-
-	private :
-
-		const ScenePlug *m_scene;
-		const Context *m_context;
-		SceneGraph *m_sceneGraph;
-		ScenePlug::ScenePath m_scenePath;
-};
-
-
-//////////////////////////////////////////////////////////////////////////
-// SceneGraphIteratorFilter implementation
-//
-// Does a serial, depth first traversal of a SceneGraph hierarchy based at
-// "start", and spits out SceneGraph* tokens:
-//
-//////////////////////////////////////////////////////////////////////////
-
-class InteractiveRender::SceneGraphIteratorFilter : public tbb::filter
-{
-	public:
-		SceneGraphIteratorFilter( InteractiveRender::SceneGraph *start ) :
-			tbb::filter( tbb::filter::serial_in_order ), m_current( start )
-		{
-			m_childIndices.push_back( 0 );
-		}
-
-		void *operator()( void *item ) override
-		{
-			if( m_childIndices.empty() )
-			{
-				// we've finished the iteration
-				return nullptr;
-			}
-			InteractiveRender::SceneGraph *s = m_current;
-			next();
-			return s;
-		}
-
-	private:
-
-		void next()
-		{
-			// go down one level in the hierarchy if we can:
-			for( size_t i=0; i < m_current->m_children.size(); ++i )
-			{
-				// skip out locations that aren't present
-				if( m_current->m_children[i]->m_locationPresent )
-				{
-					m_current = m_current->m_children[i];
-					m_childIndices.push_back(i);
-					return;
-				}
-			}
-
-			while( m_childIndices.size() )
-			{
-
-				// increment child index:
-				++m_childIndices.back();
-
-				// find parent's child count - for the root we define this as 1:
-				size_t parentNumChildren = m_current->m_parent ? m_current->m_parent->m_children.size() : 1;
-
-				if( m_childIndices.back() == parentNumChildren )
-				{
-					// we've got to the end of the child list, jump up one level:
-					m_childIndices.pop_back();
-					m_current = m_current->m_parent;
-					continue;
-				}
-				else if( m_current->m_parent->m_children[ m_childIndices.back() ]->m_locationPresent )
-				{
-					// move to next child of the parent, if it is still present in the scene:
-					m_current = m_current->m_parent->m_children[ m_childIndices.back() ];
-					return;
-				}
-			}
-		}
-
-		SceneGraph *m_current;
-		std::vector<size_t> m_childIndices;
-};
-
-
-//////////////////////////////////////////////////////////////////////////
-// SceneGraphEvaluatorFilter implementation
-//
-// This parallel filter computes the data living at the scene graph
-// location it receives. If the "onlyChanged" flag is set to true, it
-// only recomputes data when the hashes change, otherwise it computes
-// all non null scene data.
-//
-//////////////////////////////////////////////////////////////////////////
-
-class InteractiveRender::SceneGraphEvaluatorFilter : public tbb::filter
-{
-	public:
-		SceneGraphEvaluatorFilter( const ScenePlug *scene, const Context *context, bool update ) :
-			tbb::filter( tbb::filter::parallel ), m_scene( scene ), m_context( context ), m_update( update )
-		{
-		}
-
-		void *operator()( void *item ) override
-		{
-			SceneGraph *s = (SceneGraph*)item;
-			ScenePlug::ScenePath path;
-			s->path( path );
-
-			try
-			{
-				ScenePlug::PathScope pathScope( m_context, path );
-
-				if( m_update )
-				{
-					// we're re-traversing this location, so lets only recompute attributes where
-					// their hashes change:
-
-					IECore::MurmurHash attributesHash = m_scene->attributesPlug()->hash();
-					if( attributesHash != s->m_attributesHash )
-					{
-						s->m_attributes = m_scene->attributesPlug()->getValue( &attributesHash );
-						s->m_attributesHash = attributesHash;
-					}
-				}
-				else
-				{
-					// First traversal: attributes and attribute hash should have been computed
-					// by the SceneGraphBuildTasks, so we only need to compute the object/transform:
-
-					s->m_object = m_scene->objectPlug()->getValue();
-					s->m_transform = m_scene->transformPlug()->getValue();
-
-				}
-			}
-			catch( const std::exception &e )
-			{
-				std::string name;
-				ScenePlug::pathToString( path, name );
-
-				IECore::msg( IECore::Msg::Error, "InteractiveRender::update", name + ": " + e.what() );
-			}
-
-			return s;
-		}
-
-	private:
-
-		const ScenePlug *m_scene;
-		const Context *m_context;
-		const bool m_update;
-};
-
-//////////////////////////////////////////////////////////////////////////
-// SceneGraphOutputFilter implementation
-//
-// This serial thread bound filter outputs scene data to a renderer on
-// the main thread, then discards that data to save memory. If the
-// editMode flag is set to true, the filter outputs edits, otherwise
-// it renders the data directly.
-//
-//////////////////////////////////////////////////////////////////////////
-
-class InteractiveRender::SceneGraphOutputFilter : public tbb::thread_bound_filter
-{
-	public:
-
-		SceneGraphOutputFilter( Renderer *renderer, bool editMode ) :
-			tbb::thread_bound_filter( tbb::filter::serial_in_order ),
-			m_renderer( renderer ),
-			m_attrBlockCounter( 0 ),
-			m_editMode( editMode )
-		{
-		}
-
-		~SceneGraphOutputFilter() override
-		{
-			// close pending attribute blocks:
-			while( m_attrBlockCounter )
-			{
-				--m_attrBlockCounter;
-				m_renderer->attributeEnd();
-			}
-		}
-
-		void *operator()( void *item ) override
-		{
-			SceneGraph *s = (SceneGraph*)item;
-			ScenePlug::ScenePath path;
-			s->path( path );
-
-			std::string name;
-			ScenePlug::pathToString( path, name );
-
-			try
-			{
-				if( !m_editMode )
-				{
-					// outputting scene for the first time - do some attribute block tracking:
-					if( path.size() )
-					{
-						for( int i = m_previousPath.size(); i >= (int)path.size(); --i )
-						{
-							--m_attrBlockCounter;
-							m_renderer->attributeEnd();
-						}
-					}
-
-					m_previousPath = path;
-
-					++m_attrBlockCounter;
-					m_renderer->attributeBegin();
-
-					// set the name for this location:
-					m_renderer->setAttribute( "name", new StringData( name ) );
-
-				}
-
-				// transform:
-				if( !m_editMode )
-				{
-					m_renderer->concatTransform( s->m_transform );
-				}
-
-				// attributes:
-				if( s->m_attributes )
-				{
-					if( m_editMode )
-					{
-						CompoundDataMap parameters;
-						parameters["exactscopename"] = new StringData( name );
-						m_renderer->editBegin( "attribute", parameters );
-					}
-
-					RendererAlgo::outputAttributes( s->m_attributes.get(), m_renderer );
-					s->m_attributes = nullptr;
-
-					if( m_editMode )
-					{
-						m_renderer->editEnd();
-					}
-
-				}
-
-				// object:
-				if( s->m_object && !m_editMode )
-				{
-					if( const VisibleRenderable *renderable = runTimeCast< const VisibleRenderable >( s->m_object.get() ) )
-					{
-						renderable->render( m_renderer );
-					}
-					s->m_object = nullptr;
-				}
-			}
-			catch( const std::exception &e )
-			{
-				IECore::msg( IECore::Msg::Error, "InteractiveRender::update", name + ": " + e.what() );
-			}
-
-			return nullptr;
-		}
-
-	private:
-
-		Renderer *m_renderer;
-		ScenePlug::ScenePath m_previousPath;
-		int m_attrBlockCounter;
-		bool m_editMode;
-};
-
-void InteractiveRender::runPipeline(tbb::pipeline *p)
-{
-	// \todo: tune this number to find a balance between memory and speed once
-	// we have a load of production data:
-
-	p->run( 2 * tbb::task_scheduler_init::default_num_threads() );
-}
-
-void InteractiveRender::outputScene( bool update )
-{
-
-	SceneGraphIteratorFilter iterator( m_sceneGraph.get() );
-
-	SceneGraphEvaluatorFilter evaluator(
-		inPlug(),
-		m_context.get(),
-		update // only recompute locations whose hashes have changed if true:
-	);
-
-	SceneGraphOutputFilter output(
-		m_renderer.get(),
-		update // edit mode if true
-	);
-
-	tbb::pipeline p;
-	p.add_filter( iterator );
-	p.add_filter( evaluator );
-	p.add_filter( output );
-
-	 // Another thread initiates execution of the pipeline
-	std::thread pipelineThread( runPipeline, &p );
-
-	// Process the SceneGraphOutputFilter with the current thread:
-	while( output.process_item() != tbb::thread_bound_filter::end_of_stream )
-	{
-		continue;
-	}
-	pipelineThread.join();
-
-}
-
-void InteractiveRender::update()
-{
-	Context::Scope scopedContext( m_context.get() );
-
-	const State requiredState = (State)statePlug()->getValue();
-	ConstScenePlugPtr requiredScene = inPlug()->getInput<ScenePlug>();
-
-	// Stop the current render if it's not what we want,
-	// and early-out if we don't want another one.
-
-	if( !requiredScene || requiredScene != m_scene || requiredState == Stopped )
-	{
-		stop();
-		if( !requiredScene || requiredState == Stopped )
-		{
-			return;
-		}
-	}
-
-	// no point doing an update if the scene's empty
-	if( inPlug()->childNames( ScenePlug::ScenePath() )->readable().empty() )
-	{
-		stop();
-		return;
-	}
-
-	// If we've got this far, we know we want to be running or paused.
-	// Start a render if we don't have one.
-
-	if( !m_renderer )
-	{
-		m_renderer = createRenderer();
-		m_renderer->setOption( "editable", new BoolData( true ) );
-
-		ConstCompoundObjectPtr globals = inPlug()->globalsPlug()->getValue();
-		RendererAlgo::outputOptions( globals.get(), m_renderer.get() );
-		RendererAlgo::outputOutputs( globals.get(), m_renderer.get() );
-		RendererAlgo::outputCameras( inPlug(), globals.get(), m_renderer.get() );
-		RendererAlgo::outputClippingPlanes( inPlug(), globals.get(), m_renderer.get() );
-		{
-			WorldBlock world( m_renderer );
-
-			RendererAlgo::outputGlobalAttributes( globals.get(), m_renderer.get() );
-			RendererAlgo::outputCoordinateSystems( inPlug(), globals.get(), m_renderer.get() );
-			outputLightsInternal( globals.get(), /* editing = */ false );
-
-			// build the scene graph structure in parallel:
-			m_sceneGraph.reset( new SceneGraph );
-			SceneGraphBuildTask *task = new( tbb::task::allocate_root() ) SceneGraphBuildTask( inPlug(), m_context.get(), m_sceneGraph.get(), ScenePlug::ScenePath() );
-			tbb::task::spawn_root_and_wait( *task );
-
-			// output the scene for the first time:
-			outputScene( false );
-		}
-
-		m_scene = requiredScene;
-		m_state = Running;
-		m_lightsDirty = m_attributesDirty = m_camerasDirty = false;
-	}
-
-	// Make sure the paused/running state is as we want.
-
-	if( requiredState != m_state )
-	{
-		if( requiredState == Paused )
-		{
-			m_renderer->editBegin( "suspendrendering", CompoundDataMap() );
-		}
-		else
-		{
-			m_renderer->editEnd();
-		}
-		m_state = requiredState;
-	}
-
-	// If we're not paused, then send any edits we need.
-
-	if( m_state == Running )
-	{
-		EditBlock edit( m_renderer.get(), "suspendrendering", CompoundDataMap() );
-		updateLights();
-		updateAttributes();
-		updateCameras();
-		updateCoordinateSystems();
-	}
-}
-
-void InteractiveRender::updateLights()
-{
-	if( !m_lightsDirty || !updateLightsPlug()->getValue() )
-	{
-		return;
-	}
-	IECore::ConstCompoundObjectPtr globals = inPlug()->globalsPlug()->getValue();
-	outputLightsInternal( globals.get(), /* editing = */ true );
-	m_lightsDirty = false;
-}
-
-void InteractiveRender::outputLightsInternal( const IECore::CompoundObject *globals, bool editing )
-{
-	// Get the paths to all the lights
-	ConstPathMatcherDataPtr lightSet = inPlug()->set( "__lights" );
-
-	std::vector<std::string> lightPaths;
-	lightSet->readable().paths( lightPaths );
-
-	// Create or update lights in the renderer as necessary
-
-	for( vector<string>::const_iterator it = lightPaths.begin(), eIt = lightPaths.end(); it != eIt; ++it )
-	{
-		ScenePlug::ScenePath path;
-		ScenePlug::stringToPath( *it, path );
-
-		if( !editing )
-		{
-			// defining the scene for the first time
-			if( RendererAlgo::outputLight( inPlug(), path, m_renderer.get() ) )
-			{
-				m_lightHandles.insert( *it );
-			}
-		}
-		else
-		{
-			if( m_lightHandles.find( *it ) != m_lightHandles.end() )
-			{
-				// we've already output this light - update it
-				bool visible = false;
-				{
-					EditBlock edit( m_renderer.get(), "light", CompoundDataMap() );
-					visible = RendererAlgo::outputLight( inPlug(), path, m_renderer.get() );
-				}
-				// we may have turned it off before, and need to turn
-				// it back on, or it may have been hidden and we need
-				// to turn it off.
-				{
-					EditBlock edit( m_renderer.get(), "attribute", CompoundDataMap() );
-					m_renderer->illuminate( *it, visible );
-				}
-			}
-			else
-			{
-				// we've not seen this light before - create a new one
-				EditBlock edit( m_renderer.get(), "attribute", CompoundDataMap() );
-				if( RendererAlgo::outputLight( inPlug(), path, m_renderer.get() ) )
-				{
-					m_lightHandles.insert( *it );
-				}
-			}
-		}
-	}
-
-	// Turn off any lights we don't want any more
-
-	for( LightHandles::const_iterator it = m_lightHandles.begin(), eIt = m_lightHandles.end(); it != eIt; ++it )
-	{
-		if( !lightSet || !(lightSet->readable().match( *it ) & Filter::ExactMatch) )
-		{
-			EditBlock edit( m_renderer.get(), "attribute", CompoundDataMap() );
-			m_renderer->illuminate( *it, false );
-		}
-	}
-}
-
-void InteractiveRender::updateAttributes()
-{
-	if( !m_attributesDirty || !updateAttributesPlug()->getValue() )
-	{
-		return;
-	}
-
-	// output the scene, updating locations whose hashes have changed since last time:
-	outputScene( true );
-
-	m_attributesDirty = false;
-}
-
-void InteractiveRender::updateCameras()
-{
-	if( !m_camerasDirty || !updateCamerasPlug()->getValue() )
-	{
-		return;
-	}
-
-	IECore::ConstCompoundObjectPtr globals = inPlug()->globalsPlug()->getValue();
-	{
-		EditBlock edit( m_renderer.get(), "option", CompoundDataMap() );
-		RendererAlgo::outputCameras( inPlug(), globals.get(), m_renderer.get() );
-	}
-	m_camerasDirty = false;
-}
-
-void InteractiveRender::updateCoordinateSystems()
-{
-	if( !m_coordinateSystemsDirty || !updateCoordinateSystemsPlug()->getValue() )
-	{
-		return;
-	}
-
-	IECore::ConstCompoundObjectPtr globals = inPlug()->globalsPlug()->getValue();
-	{
-		EditBlock edit( m_renderer.get(), "attribute", CompoundDataMap() );
-		RendererAlgo::outputCoordinateSystems( inPlug(), globals.get(), m_renderer.get() );
-	}
-	m_coordinateSystemsDirty = false;
+	return getChild<ScenePlug>( g_firstPlugIndex + 4 );
 }
 
 Gaffer::Context *InteractiveRender::getContext()
@@ -1065,23 +738,227 @@ const Gaffer::Context *InteractiveRender::getContext() const
 
 void InteractiveRender::setContext( Gaffer::ContextPtr context )
 {
+	if( m_context == context )
+	{
+		return;
+	}
+
 	m_context = context;
+	m_dirtyComponents = SceneGraph::AllComponents;
+	update();
+}
+
+void InteractiveRender::plugDirtied( const Gaffer::Plug *plug )
+{
+
+	if( plug == adaptedInPlug()->boundPlug() )
+	{
+		m_dirtyComponents |= SceneGraph::BoundComponent;
+	}
+	else if( plug == adaptedInPlug()->transformPlug() )
+	{
+		m_dirtyComponents |= SceneGraph::TransformComponent;
+	}
+	else if( plug == adaptedInPlug()->attributesPlug() )
+	{
+		m_dirtyComponents |= SceneGraph::AttributesComponent;
+	}
+	else if( plug == adaptedInPlug()->objectPlug() )
+	{
+		m_dirtyComponents |= SceneGraph::ObjectComponent;
+	}
+	else if( plug == adaptedInPlug()->childNamesPlug() )
+	{
+		m_dirtyComponents |= SceneGraph::ChildNamesComponent;
+	}
+	else if( plug == adaptedInPlug()->globalsPlug() )
+	{
+		m_dirtyComponents |= SceneGraph::GlobalsComponent;
+	}
+	else if( plug == adaptedInPlug()->setPlug() )
+	{
+		m_dirtyComponents |= SceneGraph::SetsComponent;
+	}
+	else if( plug == rendererPlug() )
+	{
+		stop();
+		m_dirtyComponents = SceneGraph::AllComponents;
+	}
+
+	if( plug == adaptedInPlug() ||
+	    plug == statePlug()
+	)
+	{
+		try
+		{
+			update();
+		}
+		catch( const std::exception &e )
+		{
+			errorSignal()( plug, plug, e.what() );
+		}
+	}
+}
+
+void InteractiveRender::contextChanged( const IECore::InternedString &name )
+{
+	if( boost::starts_with( name.string(), "ui:" ) )
+	{
+		return;
+	}
+	m_dirtyComponents = SceneGraph::AllComponents;
+	update();
+}
+
+void InteractiveRender::update()
+{
+	const std::string rendererName = rendererPlug()->getValue();
+
+	updateEffectiveContext();
+	ContextPtr context = new Context( *m_effectiveContext );
+	context->set( g_rendererContextName, rendererName );
+	Context::Scope scopedContext( context.get() );
+
+	const State requiredState = (State)statePlug()->getValue();
+
+	// Stop the current render if we've been asked to, or if
+	// there is no real input scene.
+
+	if( requiredState == Stopped || !runTimeCast<SceneNode>( inPlug()->source()->node() ) )
+	{
+		stop();
+		return;
+	}
+
+	// If we've got this far, we know we want to be running or paused.
+	// Start a render if we don't have one.
+
+	if( !m_renderer )
+	{
+		m_renderer = IECoreScenePreview::Renderer::create(
+			rendererName,
+			IECoreScenePreview::Renderer::Interactive
+		);
+	}
+
+	// We need to pause to make edits, even if we want to
+	// be running in the end.
+	m_renderer->pause();
+	if( requiredState == Paused )
+	{
+		m_state = requiredState;
+		return;
+	}
+
+	// We want to be running, so update the globals
+	// and the scene graph, and kick off a render.
+	assert( requiredState == Running );
+
+	if( m_dirtyComponents & SceneGraph::GlobalsComponent )
+	{
+		ConstCompoundObjectPtr globals = adaptedInPlug()->globalsPlug()->getValue();
+		Preview::RendererAlgo::outputOptions( globals.get(), m_globals.get(), m_renderer.get() );
+		Preview::RendererAlgo::outputOutputs( globals.get(), m_globals.get(), m_renderer.get() );
+		m_globals = globals;
+	}
+
+	if( m_dirtyComponents & SceneGraph::SetsComponent )
+	{
+		if( m_renderSets.update( adaptedInPlug() ) & Preview::RendererAlgo::RenderSets::RenderSetsChanged )
+		{
+			m_dirtyComponents |= SceneGraph::RenderSetsComponent;
+		}
+	}
+
+	for( int i = SceneGraph::FirstType; i <= SceneGraph::LastType; ++i )
+	{
+		SceneGraph *sceneGraph = m_sceneGraphs[i].get();
+		if( i == SceneGraph::CameraType && ( m_dirtyComponents & SceneGraph::GlobalsComponent ) )
+		{
+			// Because the globals are applied to camera objects, we must update the object whenever
+			// the globals have changed, so we clear the scene graph and start again. We don't expect
+			// this to be a big overhead because typically there aren't many cameras in a scene. If it
+			// does cause a problem, we could examine the exact changes to the globals and avoid clearing
+			// if we know they won't affect the camera.
+			sceneGraph->clear();
+		}
+		SceneGraphUpdateTask *task = new( tbb::task::allocate_root() ) SceneGraphUpdateTask( this, sceneGraph, (SceneGraph::Type)i, m_dirtyComponents, SceneGraph::NoComponent, context.get(), ScenePlug::ScenePath() );
+		tbb::task::spawn_root_and_wait( *task );
+	}
+
+	if( m_dirtyComponents & SceneGraph::GlobalsComponent )
+	{
+		updateDefaultCamera();
+	}
+
+	m_dirtyComponents = SceneGraph::NoComponent;
+	m_state = requiredState;
+
+	m_renderer->render();
+}
+
+void InteractiveRender::updateEffectiveContext()
+{
+	if( m_context )
+	{
+		if( m_effectiveContext == m_context )
+		{
+			return;
+		}
+		m_effectiveContext = m_context;
+	}
+	else if( ScriptNode *n = ancestor<ScriptNode>() )
+	{
+		if( m_effectiveContext == n->context() )
+		{
+			return;
+		}
+		m_effectiveContext = n->context();
+	}
+	else
+	{
+		m_effectiveContext = new Context();
+	}
+
+	m_contextChangedConnection = m_effectiveContext->changedSignal().connect(
+		boost::bind( &InteractiveRender::contextChanged, this, ::_2 )
+	);
+}
+
+void InteractiveRender::updateDefaultCamera()
+{
+	const StringData *cameraOption = m_globals->member<StringData>( g_cameraGlobalName );
+	m_defaultCamera = nullptr;
+	if( cameraOption && !cameraOption->readable().empty() )
+	{
+		return;
+	}
+
+	CameraPtr defaultCamera = SceneAlgo::camera( adaptedInPlug(), m_globals.get() );
+	StringDataPtr name = new StringData( "gaffer:defaultCamera" );
+	IECoreScenePreview::Renderer::AttributesInterfacePtr defaultAttributes = m_renderer->attributes( adaptedInPlug()->attributesPlug()->defaultValue() );
+	m_defaultCamera = m_renderer->camera( name->readable(), defaultCamera.get(), defaultAttributes.get() );
+	m_renderer->option( "camera", name.get() );
 }
 
 void InteractiveRender::stop()
 {
-	if( m_renderer && m_state == Paused )
+	if( m_renderer )
 	{
-		// Unpause if necessary. Prior to 3delight 11.0.142,
-		// deleting the renderer (calling RiEnd()) while
-		// paused led to deadlock.
-		m_renderer->editEnd();
+		m_renderer->pause();
 	}
 
+	m_sceneGraphs.clear();
+	for( int i = SceneGraph::FirstType; i <= SceneGraph::LastType; ++i )
+	{
+		m_sceneGraphs.push_back( unique_ptr<SceneGraph>( new SceneGraph ) );
+	}
+	m_defaultCamera = nullptr;
 	m_renderer = nullptr;
-	m_scene = nullptr;
+
+	m_globals = adaptedInPlug()->globalsPlug()->defaultValue();
+	m_renderSets.clear();
+
+	m_dirtyComponents = SceneGraph::AllComponents;
 	m_state = Stopped;
-	m_lightHandles.clear();
-	m_attributesDirty = m_lightsDirty = m_camerasDirty = true;
-	m_sceneGraph.reset( (SceneGraph*)nullptr );
 }
