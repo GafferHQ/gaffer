@@ -104,6 +104,23 @@ with IECore.IgnoredExceptions( ImportError ) :
 
 with IECore.IgnoredExceptions( ImportError ) :
 
+	import GafferDelight
+
+	__registerShadingModes( [
+
+		( "Diagnostic/3Delight/Shader Assignment", GafferScene.AttributeVisualiser, { "attributeName" : "osl:surface", "mode" : GafferScene.AttributeVisualiser.Mode.ShaderNodeColor } ),
+		( "Diagnostic/3Delight/Camera Visibility", GafferScene.AttributeVisualiser, { "attributeName" : "dl:visibility.camera" } ),
+		( "Diagnostic/3Delight/Shadow Visibility", GafferScene.AttributeVisualiser, { "attributeName" : "dl:visibility.shadow" } ),
+		( "Diagnostic/3Delight/Reflection Visibility", GafferScene.AttributeVisualiser, { "attributeName" : "dl:visibility.reflection" } ),
+		( "Diagnostic/3Delight/Refraction Visibility", GafferScene.AttributeVisualiser, { "attributeName" : "dl:visibility.refraction" } ),
+		( "Diagnostic/3Delight/Diffuse Visibility", GafferScene.AttributeVisualiser, { "attributeName" : "dl:visibility.diffuse" } ),
+		( "Diagnostic/3Delight/Specular Visibility", GafferScene.AttributeVisualiser, { "attributeName" : "dl:visibility.specular" } ),
+		( "Diagnostic/3Delight/Hair Visibility", GafferScene.AttributeVisualiser, { "attributeName" : "dl:visibility.hair" } ),
+
+	] )
+
+with IECore.IgnoredExceptions( ImportError ) :
+
 	import GafferAppleseed
 
 	__registerShadingModes( [
