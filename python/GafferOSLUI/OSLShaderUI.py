@@ -144,6 +144,18 @@ def __plugNoduleVisibility( plug ) :
 
 	return bool( visible ) if visible is not None else True
 
+def __plugNoduleLabel( plug ) :
+
+	label = __plugLabel( plug )
+	if label is None :
+		return None
+
+	page = __plugPage( plug )
+	if page is not None :
+		label = page + "." + label
+
+	return label
+
 Gaffer.Metadata.registerNode(
 
 	GafferOSL.OSLShader,
@@ -165,6 +177,7 @@ Gaffer.Metadata.registerNode(
 			"plugValueWidget:type", __plugWidgetType,
 			"nodule:type", __plugNoduleType,
 			"noduleLayout:visible", __plugNoduleVisibility,
+			"noduleLayout:label", __plugNoduleLabel,
 
 		],
 
