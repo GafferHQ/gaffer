@@ -80,39 +80,50 @@ with IECore.IgnoredExceptions( ImportError ) :
 	import GafferArnold
 
 	for aov in [
-		"diffuse_color",
-		"direct_diffuse",
-		"indirect_diffuse",
-		"direct_specular",
-		"indirect_specular",
-		"direct_specular_2",
-		"indirect_specular_2",
-		"reflection",
-		"refraction",
-		"refraction_opacity",
+		"direct",
+		"indirect",
 		"emission",
-		"single_scatter",
+		"background",
+		"diffuse",
+		"specular",
+		"coat",
+		"transmission",
 		"sss",
-		"direct_sss",
-		"indirect_sss",
-		"light_group_1",
-		"light_group_2",
-		"light_group_3",
-		"light_group_4",
-		"light_group_5",
-		"light_group_6",
-		"light_group_7",
-		"light_group_8",
+		"volume",
+		"albedo",
+		"diffuse_direct",
+		"diffuse_indirect",
+		"diffuse_albedo",
+		"specular_direct",
+		"specular_indirect",
+		"specular_albedo",
+		"coat_direct",
+		"coat_indirect",
+		"coat_albedo",
+		"transmission_direct",
+		"transmission_indirect",
+		"transmission_albedo",
+		"sss_direct",
+		"sss_indirect",
+		"sss_albedo",
+		"volume_direct",
+		"volume_indirect",
+		"volume_albedo",
+		"light_groups",
 	] :
 
 		label = aov.replace( "_", " " ).title().replace( " ", "_" )
+
+		data = aov
+		if data == "light_groups":
+			data = "RGBA_*"
 
 		GafferScene.Outputs.registerOutput(
 			"Interactive/Arnold/" + label,
 			IECore.Display(
 				aov,
 				"ieDisplay",
-				"color " + aov,
+				"color " + data,
 				{
 					"driverType" : "ClientDisplayDriver",
 					"displayHost" : "localhost",
@@ -127,7 +138,7 @@ with IECore.IgnoredExceptions( ImportError ) :
 			IECore.Display(
 				"${project:rootDirectory}/renders/${script:name}/%s/%s.####.exr" % ( aov, aov ),
 				"exr",
-				"color " + aov,
+				"color " + data,
 			)
 		)
 
