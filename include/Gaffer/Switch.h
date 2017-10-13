@@ -69,7 +69,7 @@ class Switch : public BaseType
 		IECORE_RUNTIMETYPED_DECLARETEMPLATE( Switch<BaseType>, BaseType );
 
 		Switch( const std::string &name=GraphComponent::defaultName<Switch>() );
-		virtual ~Switch();
+		~Switch() override;
 
 		/// Sets up a SwitchComputeNode or SwitchDependencyNode
 		/// to work with the specified plug type. The passed plug
@@ -88,20 +88,28 @@ class Switch : public BaseType
 		IntPlug *indexPlug();
 		const IntPlug *indexPlug() const;
 
-		virtual BoolPlug *enabledPlug();
-		virtual const BoolPlug *enabledPlug() const;
+		BoolPlug *enabledPlug() override;
+		const BoolPlug *enabledPlug() const override;
 
-		virtual Plug *correspondingInput( const Plug *output );
-		virtual const Plug *correspondingInput( const Plug *output ) const;
+		Plug *correspondingInput( const Plug *output ) override;
+		const Plug *correspondingInput( const Plug *output ) const override;
 
-		virtual void affects( const Plug *input, DependencyNode::AffectedPlugsContainer &outputs ) const;
+		void affects( const Plug *input, DependencyNode::AffectedPlugsContainer &outputs ) const override;
 
 	protected :
 
 		// Implemented to reject ComputeNode inputs to "index" and "enabled" if we ourselves
 		// are not a ComputeNode, and to reject input branches inputs if they wouldn't
 		// be accepted by the output.
-		virtual bool acceptsInput( const Plug *plug, const Plug *inputPlug ) const;
+		bool acceptsInput( const Plug *plug, const Plug *inputPlug ) const override;
+
+#ifdef __clang__
+// Because BaseType is sometimes ComputeNode and sometimes DependencyNode,
+// the methods below are sometimes overrides and sometimes not. We must disable
+// Clangs's warnings so that we don't get a compilation error when they are.
+#pragma clang diagnostic push
+#pragma clang diagnostic ignored "-Winconsistent-missing-override"
+#endif
 
 		// The hash() and compute() methods are implemented to pass through the results from
 		// the input branch specified by indexPlug(). They operate via the hashInternal() and
@@ -109,6 +117,10 @@ class Switch : public BaseType
 		// not inherit from ComputeNode.
 		virtual void hash( const ValuePlug *output, const Context *context, IECore::MurmurHash &h ) const;
 		virtual void compute( ValuePlug *output, const Context *context ) const;
+
+#ifdef __clang__
+#pragma clang diagnostic pop
+#endif
 
 	private :
 
