@@ -1,7 +1,6 @@
 //////////////////////////////////////////////////////////////////////////
 //
-//  Copyright (c) 2012-2014, Image Engine Design Inc. All rights reserved.
-//  Copyright (c) 2013, John Haddon. All rights reserved.
+//  Copyright (c) 2017, Image Engine Design Inc. All rights reserved.
 //
 //  Redistribution and use in source and binary forms, with or without
 //  modification, are permitted provided that the following conditions are
@@ -35,54 +34,41 @@
 //
 //////////////////////////////////////////////////////////////////////////
 
-#include "boost/python.hpp"
+#ifndef IECORESCENEPREVIEW_PROCEDURAL_H
+#define IECORESCENEPREVIEW_PROCEDURAL_H
 
-#include "CoreBinding.h"
-#include "FilterBinding.h"
-#include "HierarchyBinding.h"
-#include "TransformBinding.h"
-#include "GlobalsBinding.h"
-#include "OptionsBinding.h"
-#include "AttributesBinding.h"
-#include "SceneAlgoBinding.h"
-#include "RendererAlgoBinding.h"
-#include "SetAlgoBinding.h"
-#include "PrimitivesBinding.h"
-#include "PathMatcherBinding.h"
-#include "ScenePathBinding.h"
-#include "ShaderBinding.h"
-#include "RenderBinding.h"
-#include "ObjectProcessorBinding.h"
-#include "PrimitiveVariablesBinding.h"
-#include "LightTweaksBinding.h"
-#include "IOBinding.h"
-#include "MixinBinding.h"
+#include "IECore/VisibleRenderable.h"
 
-using namespace boost::python;
-using namespace GafferSceneModule;
+#include "GafferScene/TypeIds.h"
 
-BOOST_PYTHON_MODULE( _GafferScene )
+namespace IECoreScenePreview
 {
 
-	bindCore();
-	bindFilter();
-	bindTransform();
-	bindGlobals();
-	bindOptions();
-	bindAttributes();
-	bindSceneAlgo();
-	bindRendererAlgo();
-	bindSetAlgo();
-	bindPrimitives();
-	bindPathMatcher();
-	bindScenePath();
-	bindShader();
-	bindRender();
-	bindHierarchy();
-	bindObjectProcessor();
-	bindPrimitiveVariables();
-	bindLightTweaks();
-	bindIO();
-	bindMixin();
+class Renderer;
 
-}
+/// \todo Would it be useful to have a virtual function that returns an
+/// ExternalProcedural, for use when serialising scenes?
+class Procedural : public IECore::VisibleRenderable
+{
+
+	public :
+
+		Procedural();
+		~Procedural();
+
+		IE_CORE_DECLAREABSTRACTEXTENSIONOBJECT( Procedural, GafferScene::PreviewProceduralTypeId, IECore::VisibleRenderable );
+
+		/// Legacy inherited from IECore::VisibleRenderable.
+		/// Should not be implemented by derived classes.
+		void render( IECore::Renderer *renderer ) const final;
+		/// Render function for use with new renderer backends.
+		/// Must be implemented by derived classes.
+		virtual void render( Renderer *renderer ) const = 0;
+
+};
+
+IE_CORE_DECLAREPTR( Procedural )
+
+} // namespace IECoreScenePreview
+
+#endif // IECORESCENEPREVIEW_PROCEDURAL_H

@@ -281,8 +281,8 @@ IECore::InternedString optionName( const IECore::InternedString &globalsName )
 struct LocationOutput
 {
 
-	LocationOutput( IECoreScenePreview::Renderer *renderer, const IECore::CompoundObject *globals, const GafferScene::Preview::RendererAlgo::RenderSets &renderSets )
-		:	m_renderer( renderer ), m_attributes( SceneAlgo::globalAttributes( globals ) ), m_renderSets( renderSets )
+	LocationOutput( IECoreScenePreview::Renderer *renderer, const IECore::CompoundObject *globals, const GafferScene::Preview::RendererAlgo::RenderSets &renderSets, const ScenePlug::ScenePath &root )
+		:	m_renderer( renderer ), m_attributes( SceneAlgo::globalAttributes( globals ) ), m_renderSets( renderSets ), m_root( root )
 	{
 		const BoolData *transformBlurData = globals->member<BoolData>( g_transformBlurOptionName );
 		m_options.transformBlur = transformBlurData ? transformBlurData->readable() : false;
@@ -313,6 +313,23 @@ struct LocationOutput
 	}
 
 	protected :
+
+		std::string name( const ScenePlug::ScenePath &path ) const
+		{
+			if( m_root.size() == path.size() )
+			{
+				return "/";
+			}
+			else
+			{
+				string result;
+				for( ScenePlug::ScenePath::const_iterator it = path.begin() + m_root.size(), eIt = path.end(); it != eIt; ++it )
+				{
+					result += "/" + it->string();
+				}
+				return result;
+			}
+		}
 
 		IECoreScenePreview::Renderer *renderer()
 		{
@@ -476,6 +493,7 @@ struct LocationOutput
 		Options m_options;
 		IECore::ConstCompoundObjectPtr m_attributes;
 		const GafferScene::Preview::RendererAlgo::RenderSets &m_renderSets;
+		const ScenePlug::ScenePath &m_root;
 
 		std::vector<M44f> m_transformSamples;
 		std::vector<float> m_transformTimes;
@@ -485,8 +503,8 @@ struct LocationOutput
 struct CameraOutput : public LocationOutput
 {
 
-	CameraOutput( IECoreScenePreview::Renderer *renderer, const IECore::CompoundObject *globals, const GafferScene::Preview::RendererAlgo::RenderSets &renderSets )
-		:	LocationOutput( renderer, globals, renderSets ), m_globals( globals ), m_cameraSet( renderSets.camerasSet() )
+	CameraOutput( IECoreScenePreview::Renderer *renderer, const IECore::CompoundObject *globals, const GafferScene::Preview::RendererAlgo::RenderSets &renderSets, const ScenePlug::ScenePath &root )
+		:	LocationOutput( renderer, globals, renderSets, root ), m_globals( globals ), m_cameraSet( renderSets.camerasSet() )
 	{
 	}
 
@@ -509,11 +527,8 @@ struct CameraOutput : public LocationOutput
 				// is removed from GafferScene::SceneAlgo
 				GafferScene::Preview::RendererAlgo::applyCameraGlobals( cameraCopy.get(), m_globals );
 
-				std::string name;
-				ScenePlug::pathToString( path, name );
-
 				IECoreScenePreview::Renderer::ObjectInterfacePtr objectInterface = renderer()->camera(
-					name,
+					name( path ),
 					cameraCopy.get(),
 					attributes().get()
 				);
@@ -535,8 +550,8 @@ struct CameraOutput : public LocationOutput
 struct LightOutput : public LocationOutput
 {
 
-	LightOutput( IECoreScenePreview::Renderer *renderer, const IECore::CompoundObject *globals, const GafferScene::Preview::RendererAlgo::RenderSets &renderSets )
-		:	LocationOutput( renderer, globals, renderSets ), m_lightSet( renderSets.lightsSet() )
+	LightOutput( IECoreScenePreview::Renderer *renderer, const IECore::CompoundObject *globals, const GafferScene::Preview::RendererAlgo::RenderSets &renderSets, const ScenePlug::ScenePath &root )
+		:	LocationOutput( renderer, globals, renderSets, root ), m_lightSet( renderSets.lightsSet() )
 	{
 	}
 
@@ -552,10 +567,8 @@ struct LightOutput : public LocationOutput
 		{
 			IECore::ConstObjectPtr object = scene->objectPlug()->getValue();
 
-			std::string name;
-			ScenePlug::pathToString( path, name );
 			IECoreScenePreview::Renderer::ObjectInterfacePtr objectInterface = renderer()->light(
-				name,
+				name( path ),
 				!runTimeCast<const NullObject>( object.get() ) ? object.get() : nullptr,
 				attributes().get()
 			);
@@ -573,8 +586,8 @@ struct LightOutput : public LocationOutput
 struct ObjectOutput : public LocationOutput
 {
 
-	ObjectOutput( IECoreScenePreview::Renderer *renderer, const IECore::CompoundObject *globals, const GafferScene::Preview::RendererAlgo::RenderSets &renderSets )
-		:	LocationOutput( renderer, globals, renderSets ), m_cameraSet( renderSets.camerasSet() ), m_lightSet( renderSets.lightsSet() )
+	ObjectOutput( IECoreScenePreview::Renderer *renderer, const IECore::CompoundObject *globals, const GafferScene::Preview::RendererAlgo::RenderSets &renderSets, const ScenePlug::ScenePath &root )
+		:	LocationOutput( renderer, globals, renderSets, root ), m_cameraSet( renderSets.camerasSet() ), m_lightSet( renderSets.lightsSet() )
 	{
 	}
 
@@ -597,13 +610,11 @@ struct ObjectOutput : public LocationOutput
 			return true;
 		}
 
-		std::string name;
-		ScenePlug::pathToString( path, name );
 		IECoreScenePreview::Renderer::ObjectInterfacePtr objectInterface;
 		IECoreScenePreview::Renderer::AttributesInterfacePtr attributesInterface = attributes();
 		if( !sampleTimes.size() )
 		{
-			objectInterface = renderer()->object( name, samples[0].get(), attributesInterface.get() );
+			objectInterface = renderer()->object( name( path ), samples[0].get(), attributesInterface.get() );
 		}
 		else
 		{
@@ -614,7 +625,7 @@ struct ObjectOutput : public LocationOutput
 			{
 				objectsVector.push_back( it->get() );
 			}
-			objectInterface = renderer()->object( name, objectsVector, timesVector, attributesInterface.get() );
+			objectInterface = renderer()->object( name( path ), objectsVector, timesVector, attributesInterface.get() );
 		}
 
 		applyTransform( objectInterface.get() );
@@ -784,7 +795,8 @@ void outputCameras( const ScenePlug *scene, const IECore::CompoundObject *global
 		}
 	}
 
-	CameraOutput output( renderer, globals, renderSets );
+	const ScenePlug::ScenePath root;
+	CameraOutput output( renderer, globals, renderSets, root );
 	SceneAlgo::parallelProcessLocations( scene, output );
 
 	if( !cameraOption || cameraOption->readable().empty() )
@@ -803,14 +815,15 @@ void outputCameras( const ScenePlug *scene, const IECore::CompoundObject *global
 
 void outputLights( const ScenePlug *scene, const IECore::CompoundObject *globals, const RenderSets &renderSets, IECoreScenePreview::Renderer *renderer )
 {
-	LightOutput output( renderer, globals, renderSets );
+	const ScenePlug::ScenePath root;
+	LightOutput output( renderer, globals, renderSets, root );
 	SceneAlgo::parallelProcessLocations( scene, output );
 }
 
-void outputObjects( const ScenePlug *scene, const IECore::CompoundObject *globals, const RenderSets &renderSets, IECoreScenePreview::Renderer *renderer )
+void outputObjects( const ScenePlug *scene, const IECore::CompoundObject *globals, const RenderSets &renderSets, IECoreScenePreview::Renderer *renderer, const ScenePlug::ScenePath &root )
 {
-	ObjectOutput output( renderer, globals, renderSets );
-	SceneAlgo::parallelProcessLocations( scene, output );
+	ObjectOutput output( renderer, globals, renderSets, root );
+	SceneAlgo::parallelProcessLocations( scene, output, root );
 }
 
 void applyCameraGlobals( IECore::Camera *camera, const IECore::CompoundObject *globals )

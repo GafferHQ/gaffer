@@ -42,12 +42,11 @@
 #include "IECore/VectorTypedData.h"
 
 #include "GafferScene/PathMatcher.h"
+#include "GafferScene/ScenePlug.h"
 #include "GafferScene/Private/IECoreScenePreview/Renderer.h"
 
 namespace GafferScene
 {
-
-IE_CORE_FORWARDDECLARE( ScenePlug )
 
 namespace Preview
 {
@@ -110,7 +109,7 @@ class RenderSets : boost::noncopyable
 
 void outputCameras( const ScenePlug *scene, const IECore::CompoundObject *globals, const RenderSets &renderSets, IECoreScenePreview::Renderer *renderer );
 void outputLights( const ScenePlug *scene, const IECore::CompoundObject *globals, const RenderSets &renderSets, IECoreScenePreview::Renderer *renderer );
-void outputObjects( const ScenePlug *scene, const IECore::CompoundObject *globals, const RenderSets &renderSets, IECoreScenePreview::Renderer *renderer );
+void outputObjects( const ScenePlug *scene, const IECore::CompoundObject *globals, const RenderSets &renderSets, IECoreScenePreview::Renderer *renderer, const ScenePlug::ScenePath &root = ScenePlug::ScenePath() );
 
 /// Applies the resolution, aspect ratio etc from the globals to the camera.
 void applyCameraGlobals( IECore::Camera *camera, const IECore::CompoundObject *globals );

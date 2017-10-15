@@ -866,7 +866,8 @@ class ArnoldRenderTest( GafferSceneTest.SceneTestCase ) :
 		# make sure we pass correct data into the renderer
 		self.assertEqual(
 			set( render["in"].attributes( "/group/sphere" )["linkedLights"] ),
-			set( IECore.StringVectorData( ["/group/light", "/group/light1"] ) ) )
+			set( IECore.StringVectorData( ["/group/light", "/group/light1"] ) )
+		)
 
 		render["mode"].setValue( render.Mode.SceneDescriptionMode )
 		render["fileName"].setValue( self.temporaryDirectory() + "/test.ass" )
@@ -886,7 +887,7 @@ class ArnoldRenderTest( GafferSceneTest.SceneTestCase ) :
 
 			doLinking = arnold.AiNodeGetBool( sphere, "use_light_group" )
 
-			self.assertEqual( lightNames, ["light:/group/light", "light:/group/light1"] )
+			self.assertEqual( set( lightNames ), { "light:/group/light", "light:/group/light1" } )
 			self.assertEqual( doLinking, True )
 
 			# the second sphere does not have any light linking enabled

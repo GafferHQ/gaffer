@@ -1,7 +1,6 @@
 //////////////////////////////////////////////////////////////////////////
 //
-//  Copyright (c) 2012-2014, Image Engine Design Inc. All rights reserved.
-//  Copyright (c) 2013, John Haddon. All rights reserved.
+//  Copyright (c) 2017, Image Engine Design Inc. All rights reserved.
 //
 //  Redistribution and use in source and binary forms, with or without
 //  modification, are permitted provided that the following conditions are
@@ -35,54 +34,54 @@
 //
 //////////////////////////////////////////////////////////////////////////
 
-#include "boost/python.hpp"
+#include "IECore/MessageHandler.h"
 
-#include "CoreBinding.h"
-#include "FilterBinding.h"
-#include "HierarchyBinding.h"
-#include "TransformBinding.h"
-#include "GlobalsBinding.h"
-#include "OptionsBinding.h"
-#include "AttributesBinding.h"
-#include "SceneAlgoBinding.h"
-#include "RendererAlgoBinding.h"
-#include "SetAlgoBinding.h"
-#include "PrimitivesBinding.h"
-#include "PathMatcherBinding.h"
-#include "ScenePathBinding.h"
-#include "ShaderBinding.h"
-#include "RenderBinding.h"
-#include "ObjectProcessorBinding.h"
-#include "PrimitiveVariablesBinding.h"
-#include "LightTweaksBinding.h"
-#include "IOBinding.h"
-#include "MixinBinding.h"
+#include "GafferScene/Private/IECoreScenePreview/Procedural.h"
 
-using namespace boost::python;
-using namespace GafferSceneModule;
+using namespace IECore;
+using namespace IECoreScenePreview;
 
-BOOST_PYTHON_MODULE( _GafferScene )
+IE_CORE_DEFINEABSTRACTOBJECTTYPEDESCRIPTION( Procedural );
+
+Procedural::Procedural()
 {
+}
 
-	bindCore();
-	bindFilter();
-	bindTransform();
-	bindGlobals();
-	bindOptions();
-	bindAttributes();
-	bindSceneAlgo();
-	bindRendererAlgo();
-	bindSetAlgo();
-	bindPrimitives();
-	bindPathMatcher();
-	bindScenePath();
-	bindShader();
-	bindRender();
-	bindHierarchy();
-	bindObjectProcessor();
-	bindPrimitiveVariables();
-	bindLightTweaks();
-	bindIO();
-	bindMixin();
+Procedural::~Procedural()
+{
+}
 
+bool Procedural::isEqualTo( const IECore::Object *other ) const
+{
+	return VisibleRenderable::isEqualTo( other );
+}
+
+void Procedural::hash( IECore::MurmurHash &h ) const
+{
+	VisibleRenderable::hash( h );
+}
+
+void Procedural::copyFrom( const IECore::Object *other, IECore::Object::CopyContext *context )
+{
+	VisibleRenderable::copyFrom( other, context );
+}
+
+void Procedural::save( IECore::Object::SaveContext *context ) const
+{
+	VisibleRenderable::save( context );
+}
+
+void Procedural::load( IECore::Object::LoadContextPtr context )
+{
+	VisibleRenderable::load( context );
+}
+
+void Procedural::memoryUsage( IECore::Object::MemoryAccumulator &accumulator ) const
+{
+	VisibleRenderable::memoryUsage( accumulator );
+}
+
+void Procedural::render( IECore::Renderer *renderer ) const
+{
+	IECore::msg( IECore::Msg::Warning, std::string( typeName() ) + "::render", "Legacy renderers are not supported." );
 }

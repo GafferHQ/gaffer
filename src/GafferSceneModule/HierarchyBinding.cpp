@@ -47,6 +47,8 @@
 #include "GafferScene/CollectScenes.h"
 #include "GafferScene/Seeds.h"
 #include "GafferScene/Instancer.h"
+#include "GafferScene/Capsule.h"
+#include "GafferScene/Encapsulate.h"
 
 #include "HierarchyBinding.h"
 
@@ -56,8 +58,45 @@ using namespace Gaffer;
 using namespace GafferBindings;
 using namespace GafferScene;
 
+namespace
+{
+
+ScenePlugPtr scene( const Capsule &c )
+{
+	return const_cast<ScenePlug *>( c.scene() );
+}
+
+std::string root( const Capsule &c )
+{
+	std::string result;
+	ScenePlug::pathToString( c.root(), result );
+	return result;
+}
+
+ContextPtr context( const Capsule &c )
+{
+	return const_cast<Context *>( c.context() );
+}
+
+} // namespace
+
 void GafferSceneModule::bindHierarchy()
 {
+
+	IECorePython::RunTimeTypedClass<Capsule>()
+		.def(
+			init<
+				const ScenePlug *,
+				const ScenePlug::ScenePath &,
+				const Gaffer::Context &,
+				const IECore::MurmurHash &,
+				const Imath::Box3f &
+			>()
+		)
+		.def( "scene", &scene )
+		.def( "root", &root )
+		.def( "context", &context )
+	;
 
 	GafferBindings::DependencyNodeClass<Group>()
 		.def( "nextInPlug", (ScenePlug *(Group::*)())&Group::nextInPlug, return_value_policy<CastToIntrusivePtr>() )
@@ -72,5 +111,6 @@ void GafferSceneModule::bindHierarchy()
 	GafferBindings::DependencyNodeClass<CollectScenes>();
 	GafferBindings::DependencyNodeClass<Seeds>();
 	GafferBindings::DependencyNodeClass<Instancer>();
+	GafferBindings::DependencyNodeClass<Encapsulate>();
 
 }

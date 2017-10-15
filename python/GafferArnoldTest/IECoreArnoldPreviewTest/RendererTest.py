@@ -1654,6 +1654,61 @@ class RendererTest( GafferTest.TestCase ) :
 		self.assertEqual( mh.messages[0].level, IECore.Msg.Level.Error )
 		self.assertTrue( "Permission denied" in mh.messages[0].message )
 
+	def testProcedural( self ) :
+
+		class SphereProcedural( GafferScene.Private.IECoreScenePreview.Procedural ) :
+
+			def render( self, renderer ) :
+
+				for i in range( 0, 5 ) :
+					o = renderer.object(
+						"/sphere{0}".format( i ),
+						IECore.SpherePrimitive(),
+						renderer.attributes( IECore.CompoundObject() ),
+					)
+					o.transform( IECore.M44f().translate( IECore.V3f( i, 0, 0 ) ) )
+
+		r = GafferScene.Private.IECoreScenePreview.Renderer.create(
+			"Arnold",
+			GafferScene.Private.IECoreScenePreview.Renderer.RenderType.Batch,
+		)
+
+		r.output(
+			"test",
+			IECore.Display(
+				self.temporaryDirectory() + "/beauty.exr",
+				"exr",
+				"rgba",
+				{
+				}
+			)
+		)
+
+		r.object( "/sphere", IECore.SpherePrimitive(), r.attributes( IECore.CompoundObject() ) )
+		r.object( "/procedural", SphereProcedural(), r.attributes( IECore.CompoundObject() ) )
+
+		procedurals = self.__allNodes( nodeEntryName = "procedural" )
+		self.assertEqual( len( procedurals ), 1 )
+
+		r.render()
+
+		for i in range( 0, 5 ) :
+			sphere = arnold.AiNodeLookUpByName( "{0}:/sphere{1}".format( arnold.AiNodeGetName( procedurals[0] ), i ) )
+			# We actually expect the node to be a ginstance, but during `render()` Arnold seems
+			# to switch the type of ginstances to match the type of the node they are instancing.
+			self.assertEqual( arnold.AiNodeEntryGetName( arnold.AiNodeGetNodeEntry( sphere ) ), "sphere" )
+
+		# We expect to find 8 "spheres" - the 6 ginstances masquerading
+		# as spheres (1 from the top level sphere, 5 from the procedural),
+		# and the two true spheres that they reference.
+		spheres = self.__allNodes( nodeEntryName = "sphere" )
+		self.assertEqual( len( spheres ), 8 )
+		# Use node names to distinguish the true spheres.
+		trueSpheres = [ x for x in spheres if "sphere" not in arnold.AiNodeGetName( x ) ]
+		self.assertEqual( len( trueSpheres ), 2 )
+		# Check they both have names
+		self.assertTrue( all( [ arnold.AiNodeGetName( x ) for x in trueSpheres ] ) )
+
 	@staticmethod
 	def __m44f( m ) :
 
@@ -1664,13 +1719,15 @@ class RendererTest( GafferTest.TestCase ) :
 			m.a30, m.a31, m.a32, m.a33
 		)
 
-	def __allNodes( self, type = arnold.AI_NODE_ALL, ignoreBuiltIn = True ) :
+	def __allNodes( self, type = arnold.AI_NODE_ALL, ignoreBuiltIn = True, nodeEntryName = None ) :
 
 		result = []
 		i = arnold.AiUniverseGetNodeIterator( type )
 		while not arnold.AiNodeIteratorFinished( i ) :
 			node = arnold.AiNodeIteratorGetNext( i )
 			if ignoreBuiltIn and arnold.AiNodeGetName( node ) in ( "root", "ai_default_reflection_shader" ) :
+				continue
+			if nodeEntryName is not None and arnold.AiNodeEntryGetName( arnold.AiNodeGetNodeEntry( node ) ) != nodeEntryName :
 				continue
 			result.append( node )
 
