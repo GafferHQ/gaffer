@@ -576,5 +576,22 @@ class PlugAlgoTest( GafferTest.TestCase ) :
 
 		self.assertTrue( s2["b"]["sum"].getInput().isSame( s2["b"]["a"]["sum"] ) )
 
+	def testPromotePlugWithDescendantValues( self ) :
+
+		n = Gaffer.Node()
+		n["a"] = Gaffer.Node()
+		n["a"]["p"] = Gaffer.Plug( flags = Gaffer.Plug.Flags.Default | Gaffer.Plug.Flags.Dynamic )
+		n["a"]["p"]["c"] = Gaffer.Plug( flags = Gaffer.Plug.Flags.Default | Gaffer.Plug.Flags.Dynamic )
+		n["a"]["p"]["c"]["i"] = Gaffer.IntPlug( flags = Gaffer.Plug.Flags.Default | Gaffer.Plug.Flags.Dynamic )
+		n["a"]["p"]["c"]["v"] = Gaffer.V3fPlug( flags = Gaffer.Plug.Flags.Default | Gaffer.Plug.Flags.Dynamic )
+
+		n["a"]["p"]["c"]["i"].setValue( 10 )
+		n["a"]["p"]["c"]["v"].setValue( IECore.V3f( 1, 2, 3 ) )
+
+		p = Gaffer.PlugAlgo.promote( n["a"]["p"] )
+
+		self.assertEqual( n["a"]["p"]["c"]["i"].getValue(), 10 )
+		self.assertEqual( n["a"]["p"]["c"]["v"].getValue(), IECore.V3f( 1, 2, 3 ) )
+
 if __name__ == "__main__":
 	unittest.main()
