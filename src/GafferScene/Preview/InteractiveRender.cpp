@@ -645,18 +645,12 @@ size_t InteractiveRender::g_firstPlugIndex = 0;
 IE_CORE_DEFINERUNTIMETYPED( InteractiveRender );
 
 InteractiveRender::InteractiveRender( const std::string &name )
-	:	Node( name )
+	:	InteractiveRender( /* rendererType = */ InternedString(), name )
 {
-	construct();
 }
 
 InteractiveRender::InteractiveRender( const IECore::InternedString &rendererType, const std::string &name )
 	:	Node( name )
-{
-	construct( rendererType );
-}
-
-void InteractiveRender::construct( const IECore::InternedString &rendererType )
 {
 	storeIndexOfNextChild( g_firstPlugIndex );
 	addChild( new ScenePlug( "in" ) );
