@@ -94,9 +94,6 @@ void tokenize( const std::string &s, const char separator, OutputContainer &outp
 
 } // namespace StringAlgo
 
-/// \todo Remove this temporary backwards compatibility.
-using namespace StringAlgo;
-
 } // namespace Gaffer
 
 #include "Gaffer/StringAlgo.inl"

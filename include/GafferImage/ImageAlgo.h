@@ -141,9 +141,6 @@ void parallelGatherTiles(
 
 } // namespace ImageAlgo
 
-/// \todo Remove this temporary backwards compatibility.
-using namespace ImageAlgo;
-
 } // namespace GafferImage
 
 #include "GafferImage/ImageAlgo.inl"

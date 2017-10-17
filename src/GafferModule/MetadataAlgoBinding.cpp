@@ -82,7 +82,7 @@ void GafferModule::bindMetadataAlgo()
 	def( "bookmarks", &bookmarksWrapper );
 	def(
 		"affectedByChange",
-		(bool (*)( const Plug *, IECore::TypeId, const MatchPattern &, const Plug * ))&affectedByChange,
+		(bool (*)( const Plug *, IECore::TypeId, const StringAlgo::MatchPattern &, const Plug * ))&affectedByChange,
 		( arg( "plug" ), arg( "changedNodeTypeId"), arg( "changedPlugPath" ), arg( "changedPlug" ) )
 	);
 	def(

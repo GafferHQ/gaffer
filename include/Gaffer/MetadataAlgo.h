@@ -127,9 +127,6 @@ void copyColors( const Gaffer::Plug *srcPlug , Gaffer::Plug *dstPlug, bool overw
 
 } // namespace MetadataAlgo
 
-/// \todo Remove this temporary backwards compatibility.
-using namespace MetadataAlgo;
-
 } // namespace Gaffer
 
 #endif // GAFFER_METADATAALGO_H

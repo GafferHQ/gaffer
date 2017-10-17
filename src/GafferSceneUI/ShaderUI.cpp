@@ -141,7 +141,7 @@ class ShaderPlugAdder : public PlugAdder
 				{
 					continue;
 				}
-				if( readOnly( plug ) )
+				if( MetadataAlgo::readOnly( plug ) )
 				{
 					continue;
 				}
@@ -166,9 +166,9 @@ class ShaderPlugAdder : public PlugAdder
 			updateVisibility();
 		}
 
-		void plugMetadataChanged( IECore::TypeId nodeTypeId, const Gaffer::MatchPattern &plugPath, IECore::InternedString key, const Gaffer::Plug *plug )
+		void plugMetadataChanged( IECore::TypeId nodeTypeId, const Gaffer::StringAlgo::MatchPattern &plugPath, IECore::InternedString key, const Gaffer::Plug *plug )
 		{
-			if( childAffectedByChange( m_shader->parametersPlug(), nodeTypeId, plugPath, plug ) )
+			if( MetadataAlgo::childAffectedByChange( m_shader->parametersPlug(), nodeTypeId, plugPath, plug ) )
 			{
 				if( key == g_visibleKey || key == g_noduleTypeKey )
 				{

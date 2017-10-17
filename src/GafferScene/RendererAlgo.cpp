@@ -613,7 +613,7 @@ void outputObject( const ScenePlug *scene, IECore::Renderer *renderer, size_t se
 namespace
 {
 
-typedef boost::container::flat_map<string, GafferScene::Adaptor> Adaptors;
+typedef boost::container::flat_map<string, GafferScene::RendererAlgo::Adaptor> Adaptors;
 
 Adaptors &adaptors()
 {

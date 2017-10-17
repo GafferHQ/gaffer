@@ -68,9 +68,6 @@ std::string formatStatistics( const PerformanceMonitor &monitor, PerformanceMetr
 
 } // namespace MonitorAlgo
 
-/// \todo Remove this temporary backwards compatibility.
-using namespace MonitorAlgo;
-
 } // namespace Gaffer
 
 #endif // GAFFER_MONITORALGO_H

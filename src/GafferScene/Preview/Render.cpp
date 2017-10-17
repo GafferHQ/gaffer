@@ -93,7 +93,7 @@ void Render::construct( const IECore::InternedString &rendererType )
 	addChild( new ScenePlug( "out", Plug::Out, Plug::Default & ~Plug::Serialisable ) );
 	addChild( new ScenePlug( "__adaptedIn", Plug::In, Plug::Default & ~Plug::Serialisable ) );
 
-	SceneProcessorPtr adaptors = createAdaptors();
+	SceneProcessorPtr adaptors = GafferScene::RendererAlgo::createAdaptors();
 	setChild( "__adaptors", adaptors );
 	adaptors->inPlug()->setInput( inPlug() );
 	adaptedInPlug()->setInput( adaptors->outPlug() );

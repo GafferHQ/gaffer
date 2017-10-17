@@ -161,9 +161,6 @@ Imath::Box3f bound( const IECore::Object *object );
 
 } // namespace SceneAlgo
 
-/// \todo Remove this temporary backwards compatibility.
-using namespace SceneAlgo;
-
 } // namespace GafferScene
 
 #include "GafferScene/SceneAlgo.inl"

@@ -166,7 +166,7 @@ void Capsule::render( IECoreScenePreview::Renderer *renderer ) const
 {
 	throwIfExpired();
 	IECore::ConstCompoundObjectPtr globals = m_scene->globalsPlug()->getValue();
-	Preview::RenderSets renderSets( m_scene );
+	Preview::RendererAlgo::RenderSets renderSets( m_scene );
 	Context::Scope scope( m_context.get() );
 	Preview::RendererAlgo::outputObjects( m_scene, globals.get(), renderSets, renderer, m_root );
 }
