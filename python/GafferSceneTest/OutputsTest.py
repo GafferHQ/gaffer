@@ -143,20 +143,6 @@ class OutputsTest( GafferSceneTest.SceneTestCase ) :
 		outputs["outputs"].removeChild( p )
 		self.assertTrue( outputs["out"]["globals"] in [ c[0] for c in cs ] )
 
-	def testBackwardsCompatibility( self ) :
-
-		script = Gaffer.ScriptNode()
-		script["fileName"].setValue( os.path.dirname( __file__ ) + "/scripts/displaysBeforePlugRename.gfr" )
-		script.load()
-
-		with script.context() :
-			g = script["Displays"]["out"]["globals"].getValue()
-
-		self.assertTrue( "output:Batch/Beauty" in g )
-		self.assertTrue( "output:Interactive/Beauty" in g )
-		self.assertEqual( g["output:Interactive/Beauty"].getName(), "beauty" )
-		self.assertTrue( g["output:Batch/Beauty"].getName().endswith( "displaysBeforePlugRename/beauty/beauty.0001.exr" ) )
-
 	def testColonInParameterName( self ) :
 
 		output = IECore.Display( "name", "type", "data", { "test:paramA" : 1 } )
