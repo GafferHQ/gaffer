@@ -78,8 +78,7 @@ class ObjectWriter( GafferDispatch.TaskNode ) :
 			h = GafferDispatch.TaskNode.hash( self, context )
 			h.append( self["fileName"].hash() )
 			h.append( self["in"].hash() )
-			if "parameters" in self.keys() :
-				h.append( self["parameters"].hash() )
+			h.append( self.__parameterHandler.hash() )
 
 			return h
 

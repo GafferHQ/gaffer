@@ -74,6 +74,12 @@ class ParameterHandler : public IECore::RefCounted
 		virtual void setParameterValue() = 0;
 		virtual void setPlugValue() = 0;
 
+		/// Returns a hash representing the current state
+		/// of the parameter. This is achieved by hashing
+		/// all ValuePlug descendants of `plug()` (and the
+		/// plug itself if is is a ValuePlug too).
+		IECore::MurmurHash hash() const;
+
 		/// Returns a handler for the specified parameter.
 		static ParameterHandlerPtr create( IECore::ParameterPtr parameter );
 		/// A function for creating ParameterHandlers which will represent a Parameter with a plug on a given

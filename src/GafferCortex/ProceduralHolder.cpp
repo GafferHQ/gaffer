@@ -113,10 +113,9 @@ void ProceduralHolder::hash( const Gaffer::ValuePlug *output, const Gaffer::Cont
 		h.append( className );
 		h.append( classVersion );
 
-		const Gaffer::ValuePlug *parametersPlug = getChild<Gaffer::ValuePlug>( "parameters" );
-		if( parametersPlug )
+		if( const ParameterHandler *handler = parameterHandler() )
 		{
-			parametersPlug->hash( h );
+			h.append( handler->hash() );
 		}
 	}
 }
