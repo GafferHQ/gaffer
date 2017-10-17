@@ -80,7 +80,7 @@ class DependencyNodeTest( GafferTest.TestCase ) :
 				Gaffer.DependencyNode.__init__( self, name )
 
 				self["in"] = Gaffer.IntPlug()
-				self["out"] = Gaffer.CompoundPlug( direction = Gaffer.Plug.Direction.Out )
+				self["out"] = Gaffer.Plug( direction = Gaffer.Plug.Direction.Out )
 				self["out"]["one"] = Gaffer.IntPlug( direction = Gaffer.Plug.Direction.Out )
 				self["out"]["two"] = Gaffer.IntPlug( direction = Gaffer.Plug.Direction.Out )
 
@@ -92,7 +92,7 @@ class DependencyNodeTest( GafferTest.TestCase ) :
 
 				if input.isSame( self["in"] ) :
 					if self["behaveBadly"].getValue() :
-						# we're not allowed to return a CompoundPlug in affects() - we're
+						# we're not allowed to return a compound plug in affects() - we're
 						# just doing it here to make sure we can see that the error is detected.
 						outputs.append( self["out"] )
 					else :
@@ -107,7 +107,7 @@ class DependencyNodeTest( GafferTest.TestCase ) :
 
 				Gaffer.DependencyNode.__init__( self, name )
 
-				self["in"] = Gaffer.CompoundPlug()
+				self["in"] = Gaffer.Plug()
 				self["in"]["one"] = Gaffer.IntPlug()
 				self["in"]["two"] = Gaffer.IntPlug()
 
@@ -115,7 +115,7 @@ class DependencyNodeTest( GafferTest.TestCase ) :
 
 			def affects( self, input ) :
 
-				# affects should never be called with a CompoundPlug - only
+				# affects should never be called with a compound plug - only
 				# leaf level plugs.
 				assert( not input.isSame( self["in"] ) )
 
@@ -345,8 +345,8 @@ class DependencyNodeTest( GafferTest.TestCase ) :
 
 				Gaffer.DependencyNode.__init__( self, name )
 
-				self["in"] = Gaffer.CompoundPlug()
-				self["out"] = Gaffer.CompoundPlug( direction = Gaffer.Plug.Direction.Out )
+				self["in"] = Gaffer.Plug()
+				self["out"] = Gaffer.Plug( direction = Gaffer.Plug.Direction.Out )
 
 				for i in range( 0, 10 ) :
 

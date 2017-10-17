@@ -60,10 +60,10 @@ class ApplicationRootTest( GafferTest.TestCase ) :
 		p = applicationRoot["preferences"]
 		self.failUnless( isinstance( p, Gaffer.Preferences ) )
 
-		p["category1"] = Gaffer.CompoundPlug()
+		p["category1"] = Gaffer.Plug()
 		p["category1"]["i"] = Gaffer.IntPlug( defaultValue = 2 )
 
-		p["category2"] = Gaffer.CompoundPlug()
+		p["category2"] = Gaffer.Plug()
 		p["category2"]["s"] = Gaffer.StringPlug( defaultValue = "apples" )
 		p["category2"]["v"] = Gaffer.V3fPlug( defaultValue = IECore.V3f( 1, 0, 0 ) )
 

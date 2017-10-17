@@ -253,7 +253,7 @@ class CompoundDataPlugTest( GafferTest.TestCase ) :
 		p = Gaffer.CompoundDataPlug()
 
 		self.assertRaises( RuntimeError, p.addChild, Gaffer.IntPlug() )
-		self.assertRaises( RuntimeError, p.addChild, Gaffer.CompoundPlug() )
+		self.assertRaises( RuntimeError, p.addChild, Gaffer.Plug() )
 
 		m = p.addMember( "a", IECore.IntData( 10 ) )
 		self.assertRaises( RuntimeError, m.addChild, Gaffer.IntPlug() )
