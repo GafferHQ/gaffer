@@ -68,11 +68,11 @@ class StandardNodeGadgetTest( GafferUITest.TestCase ) :
 
 				Gaffer.Node.__init__( self, name )
 
-				self["c1"] = Gaffer.CompoundPlug()
+				self["c1"] = Gaffer.Plug()
 				self["c1"]["i1"] = Gaffer.IntPlug()
-				self["c1"]["c2"] = Gaffer.CompoundPlug()
+				self["c1"]["c2"] = Gaffer.Plug()
 				self["c1"]["c2"]["i2"] = Gaffer.IntPlug()
-				self["c1"]["c2"]["c3"] = Gaffer.CompoundPlug()
+				self["c1"]["c2"]["c3"] = Gaffer.Plug()
 				self["c1"]["c2"]["c3"]["i3"] = Gaffer.IntPlug()
 
 		IECore.registerRunTimeTyped( DeeplyNestedNode )
@@ -80,7 +80,7 @@ class StandardNodeGadgetTest( GafferUITest.TestCase ) :
 		n = DeeplyNestedNode()
 
 		def noduleType( plug ) :
-			if isinstance( plug, Gaffer.CompoundPlug ) :
+			if plug.typeId() == Gaffer.Plug.staticTypeId() :
 				return "GafferUI::CompoundNodule"
 			else :
 				return "GafferUI::StandardNodule"

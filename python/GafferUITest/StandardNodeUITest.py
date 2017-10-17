@@ -43,9 +43,11 @@ class StandardNodeUITest( GafferUITest.TestCase ) :
 	def testPlugValueWidgetAccess( self ) :
 
 		n = Gaffer.Node()
-		n["c"] = Gaffer.CompoundPlug()
+		n["c"] = Gaffer.Plug()
 		n["c"]["i"] = Gaffer.IntPlug()
 		n["c"]["s"] = Gaffer.StringPlug()
+
+		Gaffer.Metadata.registerValue( n["c"], "plugValueWidget:type", "GafferUI.LayoutPlugValueWidget" )
 
 		u = GafferUI.StandardNodeUI( n )
 

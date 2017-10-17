@@ -63,7 +63,7 @@ class NoduleTest( GafferUITest.TestCase ) :
 
 				self.addChild(
 
-					Gaffer.CompoundPlug( "c" )
+					Gaffer.Plug( "c" )
 
 				)
 

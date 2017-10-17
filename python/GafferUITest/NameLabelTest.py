@@ -90,7 +90,7 @@ class NameLabelTest( GafferUITest.TestCase ) :
 
 		n1 = Gaffer.Node( "n1" )
 		n2 = Gaffer.Node( "n2" )
-		p1 = Gaffer.CompoundPlug( "p1" )
+		p1 = Gaffer.Plug( "p1" )
 		p2 = Gaffer.Plug( "p2" )
 
 		l = GafferUI.NameLabel( p2, numComponents = 3 )

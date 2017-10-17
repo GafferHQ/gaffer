@@ -375,11 +375,11 @@ class GraphGadgetTest( GafferUITest.TestCase ) :
 		script = Gaffer.ScriptNode()
 
 		script["n"] = NestedPlugTestNode()
-		script["n"]["c"] = Gaffer.CompoundPlug()
+		script["n"]["c"] = Gaffer.Plug()
 		script["n"]["c"]["i"] = Gaffer.IntPlug()
 
 		script["n2"] = NestedPlugTestNode()
-		script["n2"]["c"] = Gaffer.CompoundPlug(  direction = Gaffer.Plug.Direction.Out )
+		script["n2"]["c"] = Gaffer.Plug(  direction = Gaffer.Plug.Direction.Out )
 		script["n2"]["c"]["o"] = Gaffer.IntPlug( direction = Gaffer.Plug.Direction.Out )
 
 		script["n"]["c"]["i"].setInput( script["n2"]["c"]["o"] )
