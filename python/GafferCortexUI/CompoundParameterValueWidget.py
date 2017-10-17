@@ -40,6 +40,8 @@ import IECore
 import GafferUI
 import GafferCortexUI
 
+from GafferCortexUI.CompoundPlugValueWidget import CompoundPlugValueWidget
+
 ## Supported parameter userData entries :
 #
 # ["UI"]["collapsible"]
@@ -77,11 +79,11 @@ class CompoundParameterValueWidget( GafferCortexUI.ParameterValueWidget ) :
 # CompoundParameterValueWidget is simply a lightweight wrapper around this CompoundPlugValueWidget
 # derived class. This allows us to take advantage of all the code in CompoundPlugValueWidget that
 # deals with dynamically adding and removing children etc.
-class _PlugValueWidget( GafferUI.CompoundPlugValueWidget ) :
+class _PlugValueWidget( CompoundPlugValueWidget ) :
 
 	def __init__( self, parameterHandler, collapsed ) :
 
-		GafferUI.CompoundPlugValueWidget.__init__( self, parameterHandler.plug(), collapsed )
+		CompoundPlugValueWidget.__init__( self, parameterHandler.plug(), collapsed )
 
 		self.__parameterHandler = parameterHandler
 

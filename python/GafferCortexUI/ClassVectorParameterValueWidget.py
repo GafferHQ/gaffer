@@ -41,6 +41,8 @@ import Gaffer
 import GafferUI
 import GafferCortexUI
 
+from GafferCortexUI.CompoundPlugValueWidget import CompoundPlugValueWidget
+
 class ClassVectorParameterValueWidget( GafferCortexUI.CompoundParameterValueWidget ) :
 
 	def __init__( self, parameterHandler, collapsible=None, **kw ) :
@@ -216,11 +218,11 @@ class _PlugValueWidget( GafferCortexUI.CompoundParameterValueWidget._PlugValueWi
 
 GafferCortexUI.ParameterValueWidget.registerType( IECore.ClassVectorParameter, ClassVectorParameterValueWidget )
 
-class _ChildParameterUI( GafferUI.CompoundPlugValueWidget ) :
+class _ChildParameterUI( CompoundPlugValueWidget ) :
 
 	def __init__( self, parameterHandler, **kw ) :
 
-		GafferUI.CompoundPlugValueWidget.__init__(
+		CompoundPlugValueWidget.__init__(
 			self,
 			parameterHandler.plug(),
 			collapsed = None,
