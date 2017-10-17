@@ -94,10 +94,6 @@ class LightTweaks : public SceneElementProcessor
 				bool acceptsChild( const Gaffer::GraphComponent *potentialChild ) const override;
 				Gaffer::PlugPtr createCounterpart( const std::string &name, Direction direction ) const override;
 
-			private :
-
-				void construct( const std::string &tweakName, Gaffer::ValuePlugPtr tweakValuePlug, bool enabled );
-
 		};
 
 		typedef Gaffer::FilteredChildIterator<Gaffer::PlugPredicate<Gaffer::Plug::Invalid, TweakPlug> > TweakPlugIterator;

@@ -58,22 +58,6 @@ IE_CORE_DEFINERUNTIMETYPED( LightTweaks::TweakPlug );
 LightTweaks::TweakPlug::TweakPlug( const std::string &tweakName, Gaffer::ValuePlugPtr valuePlug, bool enabled )
 	:	Plug( "tweak", In, Default | Dynamic )
 {
-	construct( tweakName, valuePlug, enabled );
-}
-
-LightTweaks::TweakPlug::TweakPlug( const std::string &tweakName, const IECore::Data *value, bool enabled )
-	:	Plug( "tweak", In, Default | Dynamic )
-{
-	construct( tweakName, CompoundDataPlug::createPlugFromData( "value", In, Default | Dynamic, value ), enabled );
-}
-
-LightTweaks::TweakPlug::TweakPlug( const std::string &name, Direction direction, unsigned flags )
-	:	Plug( name, direction, flags )
-{
-}
-
-void LightTweaks::TweakPlug::construct( const std::string &tweakName, Gaffer::ValuePlugPtr valuePlug, bool enabled )
-{
 	addChild( new StringPlug( "name" ) );
 	addChild( new BoolPlug( "enabled", Plug::In, true ) );
 	addChild( new IntPlug( "mode", Plug::In, Replace, Replace, Multiply ) );
@@ -83,6 +67,16 @@ void LightTweaks::TweakPlug::construct( const std::string &tweakName, Gaffer::Va
 
 	namePlug()->setValue( tweakName );
 	enabledPlug()->setValue( enabled );
+}
+
+LightTweaks::TweakPlug::TweakPlug( const std::string &tweakName, const IECore::Data *value, bool enabled )
+	:	TweakPlug( tweakName, CompoundDataPlug::createPlugFromData( "value", In, Default | Dynamic, value ), enabled )
+{
+}
+
+LightTweaks::TweakPlug::TweakPlug( const std::string &name, Direction direction, unsigned flags )
+	:	Plug( name, direction, flags )
+{
 }
 
 Gaffer::StringPlug *LightTweaks::TweakPlug::namePlug()
