@@ -757,11 +757,11 @@ void ValuePlug::emitPlugSet()
 {
 	if( Node *n = node() )
 	{
-		ValuePlug *p = this;
+		Plug *p = this;
 		while( p )
 		{
 			n->plugSetSignal()( p );
-			p = p->parent<ValuePlug>();
+			p = p->parent<Plug>();
 		}
 	}
 
