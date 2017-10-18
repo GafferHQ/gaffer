@@ -32,8 +32,8 @@
 #
 ##########################################################################
 
-[node standard]
+[node standard_surface]
 
-	[attr aov_direct_diffuse]
+	[attr diffuse_roughness]
 
 		gaffer.plugType       STRING  ""

@@ -173,7 +173,7 @@ class RendererTest( GafferTest.TestCase ) :
 		)
 
 		# Replace the shader a few times.
-		for shader in ( "utility", "flat", "standard" ) :
+		for shader in ( "utility", "flat", "standard_surface" ) :
 			a = IECore.CompoundObject( {
 				"ai:surface" : IECore.ObjectVector( [ IECore.Shader( shader ) ] ),
 			} )
@@ -211,7 +211,7 @@ class RendererTest( GafferTest.TestCase ) :
 
 		shader2 = IECore.ObjectVector( [
 			IECore.Shader( "noise", parameters = { "__handle" : "myHandle" } ),
-			IECore.Shader( "standard", parameters = { "Kd_color" : "link:myHandle" } ),
+			IECore.Shader( "standard_surface", parameters = { "base_color" : "link:myHandle" } ),
 		] )
 
 		r.object(
@@ -369,22 +369,20 @@ class RendererTest( GafferTest.TestCase ) :
 			staticLight = arnold.AiNodeLookUpByName( "light:staticLight" )
 			movingLight = arnold.AiNodeLookUpByName( "light:movingLight" )
 
-			m = arnold.AtMatrix()
-			arnold.AiNodeGetMatrix( untransformedLight, "matrix", m )
+			m = arnold.AiNodeGetMatrix( untransformedLight, "matrix" )
 			self.assertEqual( self.__m44f( m ), IECore.M44f() )
 
-			arnold.AiNodeGetMatrix( staticLight, "matrix", m )
+			m = arnold.AiNodeGetMatrix( staticLight, "matrix" )
 			self.assertEqual( self.__m44f( m ), IECore.M44f().translate( IECore.V3f( 1, 2, 3 ) ) )
+
+			self.assertEqual( arnold.AiNodeGetFlt( movingLight, "motion_start" ), 2.5 )
+			self.assertEqual( arnold.AiNodeGetFlt( movingLight, "motion_end" ), 3.5 )
 
 			matrices = arnold.AiNodeGetArray( movingLight, "matrix" )
-			times = arnold.AiNodeGetArray( movingLight, "time_samples" )
 
-			self.assertEqual( arnold.AiArrayGetFlt( times, 0 ), 2.5 )
-			self.assertEqual( arnold.AiArrayGetFlt( times, 1 ), 3.5 )
-
-			arnold.AiArrayGetMtx( matrices, 0, m )
+			m = arnold.AiArrayGetMtx( matrices, 0 )
 			self.assertEqual( self.__m44f( m ), IECore.M44f().translate( IECore.V3f( 1, 2, 3 ) ) )
-			arnold.AiArrayGetMtx( matrices, 1, m )
+			m = arnold.AiArrayGetMtx( matrices, 1 )
 			self.assertEqual( self.__m44f( m ), IECore.M44f().translate( IECore.V3f( 4, 5, 6 ) ) )
 
 	def testSharedLightAttributes( self ) :
@@ -432,10 +430,12 @@ class RendererTest( GafferTest.TestCase ) :
 				"doubleSided" : IECore.BoolData( True ),
 				"ai:visibility:camera" : IECore.BoolData( False ),
 				"ai:visibility:shadow" : IECore.BoolData( True ),
-				"ai:visibility:reflected" : IECore.BoolData( False ),
-				"ai:visibility:refracted" : IECore.BoolData( True ),
-				"ai:visibility:diffuse" : IECore.BoolData( False ),
-				"ai:visibility:glossy" : IECore.BoolData( True ),
+				"ai:visibility:diffuse_reflect" : IECore.BoolData( False ),
+				"ai:visibility:specular_reflect" : IECore.BoolData( True ),
+				"ai:visibility:diffuse_transmit" : IECore.BoolData( False ),
+				"ai:visibility:specular_transmit" : IECore.BoolData( True ),
+				"ai:visibility:volume" : IECore.BoolData( False ),
+				"ai:visibility:subsurface" : IECore.BoolData( True ),
 				"ai:receive_shadows" : IECore.BoolData( True ),
 				"ai:self_shadows" : IECore.BoolData( True ),
 				"ai:matte" : IECore.BoolData( True ),
@@ -450,10 +450,12 @@ class RendererTest( GafferTest.TestCase ) :
 				"doubleSided" : IECore.BoolData( False ),
 				"ai:visibility:camera" : IECore.BoolData( True ),
 				"ai:visibility:shadow" : IECore.BoolData( False ),
-				"ai:visibility:reflected" : IECore.BoolData( True ),
-				"ai:visibility:refracted" : IECore.BoolData( False ),
-				"ai:visibility:diffuse" : IECore.BoolData( True ),
-				"ai:visibility:glossy" : IECore.BoolData( False ),
+				"ai:visibility:diffuse_reflect" : IECore.BoolData( True ),
+				"ai:visibility:specular_reflect" : IECore.BoolData( False ),
+				"ai:visibility:diffuse_transmit" : IECore.BoolData( True ),
+				"ai:visibility:specular_transmit" : IECore.BoolData( False ),
+				"ai:visibility:volume" : IECore.BoolData( True ),
+				"ai:visibility:subsurface" : IECore.BoolData( False ),
 				"ai:receive_shadows" : IECore.BoolData( False ),
 				"ai:self_shadows" : IECore.BoolData( False ),
 				"ai:matte" : IECore.BoolData( False ),
@@ -484,11 +486,11 @@ class RendererTest( GafferTest.TestCase ) :
 
 			self.assertEqual(
 				arnold.AiNodeGetByte( o1, "visibility" ),
-				arnold.AI_RAY_ALL & ~( arnold.AI_RAY_CAMERA | arnold.AI_RAY_REFLECTED | arnold.AI_RAY_DIFFUSE )
+				arnold.AI_RAY_ALL & ~( arnold.AI_RAY_CAMERA | arnold.AI_RAY_DIFFUSE_TRANSMIT | arnold.AI_RAY_DIFFUSE_REFLECT | arnold.AI_RAY_VOLUME )
 			)
 			self.assertEqual(
 				arnold.AiNodeGetByte( o2, "visibility" ),
-				arnold.AI_RAY_ALL & ~( arnold.AI_RAY_SHADOW | arnold.AI_RAY_REFRACTED | arnold.AI_RAY_GLOSSY )
+				arnold.AI_RAY_ALL & ~( arnold.AI_RAY_SHADOW | arnold.AI_RAY_SPECULAR_TRANSMIT | arnold.AI_RAY_SPECULAR_REFLECT | arnold.AI_RAY_SUBSURFACE )
 			)
 			self.assertEqual(
 				arnold.AiNodeGetByte( o3, "visibility" ),
@@ -499,6 +501,54 @@ class RendererTest( GafferTest.TestCase ) :
 				self.assertEqual( arnold.AiNodeGetBool( o1, p ), True )
 				self.assertEqual( arnold.AiNodeGetBool( o2, p ), False )
 				self.assertEqual( arnold.AiNodeGetBool( o3, p ), p != "matte" )
+
+	def testOutputs( self ) :
+
+		r = GafferScene.Private.IECoreScenePreview.Renderer.create(
+			"Arnold",
+			GafferScene.Private.IECoreScenePreview.Renderer.RenderType.SceneDescription,
+			self.temporaryDirectory() + "/test.ass"
+		)
+
+		r.output(
+			"testA",
+			IECore.Display(
+				"beauty.exr",
+				"exr",
+				"color A",
+				{}
+			)
+		)
+
+		# NOTE : includeAlpha is currently undocumented, and we have not yet decided exactly how
+		# to generalize it across renderer backends, so it may change in the future.
+		r.output(
+			"testB",
+			IECore.Display(
+				"beauty.exr",
+				"exr",
+				"color B",
+				{
+					"includeAlpha" : True,
+				}
+			)
+		)
+
+		r.render()
+		del r
+
+		with IECoreArnold.UniverseBlock( writable = True ) :
+
+			arnold.AiASSLoad( self.temporaryDirectory() + "/test.ass" )
+
+			options = arnold.AiUniverseGetOptions()
+			outputs = arnold.AiNodeGetArray( options, "outputs" ) 
+			self.assertEqual( arnold.AiArrayGetNumElements( outputs ), 2 )
+			outputSet = set( [ arnold.AiArrayGetStr( outputs, 0 ), arnold.AiArrayGetStr( outputs, 1 ) ] )
+			self.assertEqual( outputSet, set( [
+				"A RGB ieCoreArnold:filter:testA ieCoreArnold:display:testA",
+				"B RGBA ieCoreArnold:filter:testB ieCoreArnold:display:testB"
+			] ) )
 
 	def testOutputFilters( self ) :
 
@@ -533,6 +583,60 @@ class RendererTest( GafferTest.TestCase ) :
 
 			self.assertEqual( arnold.AiNodeEntryGetName( arnold.AiNodeGetNodeEntry( f ) ), "gaussian_filter" )
 			self.assertEqual( arnold.AiNodeGetFlt( f, "width" ), 3.5 )
+
+	def testOutputLPEs( self ) :
+
+		r = GafferScene.Private.IECoreScenePreview.Renderer.create(
+			"Arnold",
+			GafferScene.Private.IECoreScenePreview.Renderer.RenderType.SceneDescription,
+			self.temporaryDirectory() + "/test.ass"
+		)
+
+		r.output(
+			"test",
+			IECore.Display(
+				"beauty.exr",
+				"exr",
+				"lpe C.*D.*",
+				{}
+			)
+		)
+
+		r.output(
+			"testWithAlpha",
+			IECore.Display(
+				"beauty.exr",
+				"exr",
+				"lpe C.*D.*",
+				{
+					"includeAlpha" : True,
+				}
+			)
+		)
+
+		r.render()
+		del r
+
+		with IECoreArnold.UniverseBlock( writable = True ) :
+
+			arnold.AiASSLoad( self.temporaryDirectory() + "/test.ass" )
+
+			options = arnold.AiUniverseGetOptions()
+			outputs = arnold.AiNodeGetArray( options, "outputs" ) 
+			self.assertEqual( arnold.AiArrayGetNumElements( outputs ), 2 )
+			outputSet = set( [ arnold.AiArrayGetStr( outputs, 0 ), arnold.AiArrayGetStr( outputs, 1 ) ] )
+			self.assertEqual( outputSet, set( [
+				"ieCoreArnold:lpe:test RGB ieCoreArnold:filter:test ieCoreArnold:display:test",
+				"ieCoreArnold:lpe:testWithAlpha RGBA ieCoreArnold:filter:testWithAlpha ieCoreArnold:display:testWithAlpha"
+			] ) )
+
+			lpes = arnold.AiNodeGetArray( options, "light_path_expressions" ) 
+			self.assertEqual( arnold.AiArrayGetNumElements( lpes ), 2 )
+			lpeSet = set( [ arnold.AiArrayGetStr( lpes, 0 ), arnold.AiArrayGetStr( lpes, 1 ) ] )
+			self.assertEqual( lpeSet, set( [
+				"ieCoreArnold:lpe:test C.*D.*",
+				"ieCoreArnold:lpe:testWithAlpha C.*D.*"
+			] ) )
 
 	def testExrMetadata( self ) :
 
@@ -614,7 +718,7 @@ class RendererTest( GafferTest.TestCase ) :
 			# test if data was added correctly to existing data
 			exrDriver = arnold.AiNodeLookUpByName( "ieCoreArnold:display:exrTest" )
 			customAttributes = arnold.AiNodeGetArray( exrDriver, "custom_attributes" )
-			customAttributesValues = set([ arnold.AiArrayGetStr( customAttributes, i ) for i in range( customAttributes.contents.nelements ) ])
+			customAttributesValues = set([ arnold.AiArrayGetStr( customAttributes, i ) for i in range( arnold.AiArrayGetNumElements( customAttributes.contents ) ) ])
 			customAttributesExpected = set([
 				"int 'bar' 1",
 				"string 'original data' test"])
@@ -624,7 +728,7 @@ class RendererTest( GafferTest.TestCase ) :
 			# test if all data types work correctly
 			exrDriver = arnold.AiNodeLookUpByName( "ieCoreArnold:display:exrDataTest" )
 			customAttributes = arnold.AiNodeGetArray( exrDriver, "custom_attributes" )
-			customAttributesValues = set([ arnold.AiArrayGetStr( customAttributes, i ) for i in range( customAttributes.contents.nelements ) ])
+			customAttributesValues = set([ arnold.AiArrayGetStr( customAttributes, i ) for i in range( arnold.AiArrayGetNumElements( customAttributes.contents ) ) ])
 
 			customAttributesExpected = set([
 				"string 'foo' bar",
@@ -754,6 +858,42 @@ class RendererTest( GafferTest.TestCase ) :
 				"subdivAdaptiveObjectSpaceAttributes2",
 			)
 
+	def testTransformTypeAttribute( self ) :
+
+		r = GafferScene.Private.IECoreScenePreview.Renderer.create(
+			"Arnold",
+			GafferScene.Private.IECoreScenePreview.Renderer.RenderType.SceneDescription,
+			self.temporaryDirectory() + "/test.ass"
+		)
+
+		plane = IECore.MeshPrimitive.createPlane( IECore.Box2f( IECore.V2f( -1 ), IECore.V2f( 1 ) ) )
+
+		r.object(
+			"planeDefault",
+			plane,
+			r.attributes( IECore.CompoundObject() )
+		)
+		r.object(
+			"planeLinear",
+			plane,
+			r.attributes(
+				IECore.CompoundObject( {
+					"ai:transform_type" : IECore.StringData( "linear" ),
+				} )
+			)
+		)
+
+		r.render()
+		del r
+
+		with IECoreArnold.UniverseBlock( writable = True ) :
+
+			arnold.AiASSLoad( self.temporaryDirectory() + "/test.ass" )
+			defaultNode = arnold.AiNodeLookUpByName( "planeDefault" )
+			linearNode = arnold.AiNodeLookUpByName( "planeLinear" )
+			self.assertEqual( arnold.AiNodeGetStr( defaultNode, "transform_type" ), "rotate_about_center" )
+			self.assertEqual( arnold.AiNodeGetStr( linearNode, "transform_type" ), "linear" )
+
 	def testSubdivisionAttributes( self ) :
 
 		r = GafferScene.Private.IECoreScenePreview.Renderer.create(
@@ -786,10 +926,39 @@ class RendererTest( GafferTest.TestCase ) :
 			arnold.AiASSLoad( self.temporaryDirectory() + "/test.ass" )
 			node = arnold.AiNodeLookUpByName( "plane" )
 			self.assertEqual( arnold.AiNodeEntryGetName( arnold.AiNodeGetNodeEntry( node ) ), "polymesh" )
-			self.assertEqual( arnold.AiNodeGetInt( node, "subdiv_iterations" ), 10 )
+			self.assertEqual( arnold.AiNodeGetByte( node, "subdiv_iterations" ), 10 )
 			self.assertEqual( arnold.AiNodeGetFlt( node, "subdiv_adaptive_error" ), 0.25 )
 			self.assertEqual( arnold.AiNodeGetStr( node, "subdiv_adaptive_metric" ), "edge_length" )
 			self.assertEqual( arnold.AiNodeGetStr( node, "subdiv_adaptive_space" ), "raster" )
+
+	def testSSSSetNameAttribute( self ) :
+
+		r = GafferScene.Private.IECoreScenePreview.Renderer.create(
+			"Arnold",
+			GafferScene.Private.IECoreScenePreview.Renderer.RenderType.SceneDescription,
+			self.temporaryDirectory() + "/test.ass"
+		)
+
+		plane = IECore.MeshPrimitive.createPlane( IECore.Box2f( IECore.V2f( -1 ), IECore.V2f( 1 ) ) )
+
+		r.object(
+			"plane",
+			plane,
+			r.attributes(
+				IECore.CompoundObject( {
+					"ai:sss_setname" : IECore.StringData( "testSet" ),
+				} )
+			)
+		)
+
+		r.render()
+		del r
+
+		with IECoreArnold.UniverseBlock( writable = True ) :
+
+			arnold.AiASSLoad( self.temporaryDirectory() + "/test.ass" )
+			node = arnold.AiNodeLookUpByName( "plane" )
+			self.assertEqual( arnold.AiNodeGetStr( node, "sss_setname" ), "testSet" )
 
 	def testUserAttributes( self ) :
 
@@ -941,7 +1110,7 @@ class RendererTest( GafferTest.TestCase ) :
 		for subdividePolygons in ( None, False, True ) :
 			a = IECore.CompoundObject()
 			if subdividePolygons is not None :
-				a["ai:polymesh:subdividePolygons"] = IECore.BoolData( subdividePolygons )
+				a["ai:polymesh:subdivide_polygons"] = IECore.BoolData( subdividePolygons )
 			attributes[subdividePolygons] = r.attributes( a )
 
 		for interpolation in meshes.keys() :
@@ -1108,11 +1277,11 @@ class RendererTest( GafferTest.TestCase ) :
 				}
 			),
 			IECore.Shader(
-				"flat",
+				"add",
 				"ai:surface",
 				{
-					"color" : "link:splineHandle",
-					"opacity" : "link:noiseHandle"
+					"input1" : "link:splineHandle",
+					"input2" : "link:noiseHandle"
 				}
 			)
 		] )
@@ -1132,15 +1301,15 @@ class RendererTest( GafferTest.TestCase ) :
 			arnold.AiASSLoad( self.temporaryDirectory() + "/test.ass" )
 
 			options = arnold.AiUniverseGetOptions()
-			self.assertTrue( os.path.expandvars( "$GAFFER_ROOT/shaders" ) in arnold.AiNodeGetStr( options, "shader_searchpath" ) )
+			self.assertTrue( os.path.expandvars( "$GAFFER_ROOT/shaders" ) in arnold.AiNodeGetStr( options, "plugin_searchpath" ) )
 
 			n = arnold.AiNodeLookUpByName( "testPlane" )
 
-			flat = arnold.AtNode.from_address( arnold.AiNodeGetPtr( n, "shader" ) )
-			self.assertEqual( arnold.AiNodeEntryGetName( arnold.AiNodeGetNodeEntry( flat ) ), "flat" )
+			add = arnold.AtNode.from_address( arnold.AiNodeGetPtr( n, "shader" ) )
+			self.assertEqual( arnold.AiNodeEntryGetName( arnold.AiNodeGetNodeEntry( add ) ), "add" )
 
-			spline = arnold.AiNodeGetLink( flat, "color" )
-			self.assertEqual( arnold.AiNodeEntryGetName( arnold.AiNodeGetNodeEntry( spline ) ), "osl_shader" )
+			spline = arnold.AiNodeGetLink( add, "input1" )
+			self.assertEqual( arnold.AiNodeEntryGetName( arnold.AiNodeGetNodeEntry( spline ) ), "osl" )
 			self.assertEqual( arnold.AiNodeGetStr( spline, "shadername" ), "Pattern/ColorSpline" )
 			self.assertEqual( arnold.AiNodeGetStr( spline, "param_splineBasis" ), "bspline" )
 
@@ -1156,8 +1325,8 @@ class RendererTest( GafferTest.TestCase ) :
 			self.assertEqual( arnold.AiArrayGetRGB( splineValues, 2 ), arnold.AtRGB( 0.5, 0.5, 0.5 ) )
 			self.assertEqual( arnold.AiArrayGetRGB( splineValues, 3 ), arnold.AtRGB( 0.5, 0.5, 0.5 ) )
 
-			noise = arnold.AiNodeGetLink( flat, "opacity" )
-			self.assertEqual( arnold.AiNodeEntryGetName( arnold.AiNodeGetNodeEntry( noise ) ), "osl_shader" )
+			noise = arnold.AiNodeGetLink( add, "input2" )
+			self.assertEqual( arnold.AiNodeEntryGetName( arnold.AiNodeGetNodeEntry( noise ) ), "osl" )
 			self.assertEqual( arnold.AiNodeGetStr( noise, "shadername" ), "Pattern/Noise" )
 			self.assertEqual( arnold.AiNodeGetFlt( noise, "param_scale" ), 10.0 )
 
@@ -1190,7 +1359,7 @@ class RendererTest( GafferTest.TestCase ) :
 			n = arnold.AiNodeLookUpByName( "testPlane" )
 
 			noise = arnold.AtNode.from_address( arnold.AiNodeGetPtr( n, "shader" ) )
-			self.assertEqual( arnold.AiNodeEntryGetName( arnold.AiNodeGetNodeEntry( noise ) ), "osl_shader" )
+			self.assertEqual( arnold.AiNodeEntryGetName( arnold.AiNodeGetNodeEntry( noise ) ), "osl" )
 			self.assertEqual( arnold.AiNodeGetStr( noise, "shadername" ), "Pattern/Noise" )
 
 	def testTraceSets( self ) :
@@ -1237,8 +1406,8 @@ class RendererTest( GafferTest.TestCase ) :
 				if sets is None or len( sets ) == 0 :
 					sets = [ "__none__" ]
 
-				self.assertEqual( a.contents.nelements, len( sets ) )
-				for i in range( 0, a.contents.nelements ) :
+				self.assertEqual( arnold.AiArrayGetNumElements( a.contents ), len( sets ) )
+				for i in range( 0, arnold.AiArrayGetNumElements( a.contents ) ) :
 					self.assertEqual( arnold.AiArrayGetStr( a, i ), sets[i] )
 
 	def testCurvesAttributes( self ) :
@@ -1361,7 +1530,7 @@ class RendererTest( GafferTest.TestCase ) :
 		} ) )
 
 		subdividePolygonsAttributes = r.attributes( IECore.CompoundObject( {
-			"ai:polymesh:subdividePolygons" : IECore.BoolData( True )
+			"ai:polymesh:subdivide_polygons" : IECore.BoolData( True )
 		} ) )
 
 		# Polygon mesh
@@ -1386,7 +1555,7 @@ class RendererTest( GafferTest.TestCase ) :
 
 		# Likewise, turning off subdivide polygons should fail.
 
-		polygonMeshObject = r.object( "polygonMesh", polygonMesh, subdividePolygonsAttributes )
+		polygonMeshObject = r.object( "polygonMesh2", polygonMesh, subdividePolygonsAttributes )
 		self.assertTrue( polygonMeshObject.attributes( subdividePolygonsAttributes ) )
 		self.assertFalse( polygonMeshObject.attributes( defaultAttributes ) )
 
@@ -1426,14 +1595,7 @@ class RendererTest( GafferTest.TestCase ) :
 			"mesh" : IECore.MeshPrimitive.createPlane( IECore.Box2f( IECore.V2f( -1 ), IECore.V2f( 1 ) ) ),
 			"curves" : IECore.CurvesPrimitive.createBox( IECore.Box3f( IECore.V3f( -1 ), IECore.V3f( 1 ) ) ),
 			"volumeProcedural" : IECore.ExternalProcedural(
-				"volume_vdb.so",
-				IECore.Box3f( IECore.V3f( -1 ), IECore.V3f( 1 ) ),
-				IECore.CompoundData( {
-					"ai:nodeType" : "volume",
-				} )
-			),
-			"regularProcedural" : IECore.ExternalProcedural(
-				"test.so",
+				"volume",
 				IECore.Box3f( IECore.V3f( -1 ), IECore.V3f( 1 ) ),
 			),
 		}
@@ -1469,15 +1631,13 @@ class RendererTest( GafferTest.TestCase ) :
 			numSpheres = len( [ s for s in shapes if arnold.AiNodeEntryGetName( arnold.AiNodeGetNodeEntry( s ) ) == "sphere" ] )
 			numCurves = len( [ s for s in shapes if arnold.AiNodeEntryGetName( arnold.AiNodeGetNodeEntry( s ) ) == "curves" ] )
 			numVolumes = len( [ s for s in shapes if arnold.AiNodeEntryGetName( arnold.AiNodeGetNodeEntry( s ) ) == "volume" ] )
-			numProcedurals = len( [ s for s in shapes if arnold.AiNodeEntryGetName( arnold.AiNodeGetNodeEntry( s ) ) == "procedural" ] )
 
-			self.assertEqual( numInstances, 20 )
-			self.assertEqual( numMeshes, 1 )
-			self.assertEqual( numBoxes, 2 )
+			self.assertEqual( numInstances, 16 )
+			self.assertEqual( numMeshes, 3 )
+			self.assertEqual( numBoxes, 0 )
 			self.assertEqual( numSpheres, 3 )
 			self.assertEqual( numCurves, 1 )
 			self.assertEqual( numVolumes, 3 )
-			self.assertEqual( numProcedurals, 1 )
 
 			self.__assertInstanced(
 				"mesh_default",
@@ -1511,16 +1671,11 @@ class RendererTest( GafferTest.TestCase ) :
 						self.assertTrue( arnold.AiNodeIs( shape, "sphere" ) )
 						self.assertEqual( arnold.AiNodeGetFlt( shape, "step_size" ), stepSize )
 					elif pn == "mesh" :
-						if stepSize == 0 :
-							self.assertTrue( arnold.AiNodeIs( shape, "polymesh" ) )
-						else :
-							self.assertTrue( arnold.AiNodeIs( shape, "box" ) )
-							self.assertEqual( arnold.AiNodeGetFlt( shape, "step_size" ), stepSize )
+						self.assertTrue( arnold.AiNodeIs( shape, "polymesh" ) )
+						self.assertEqual( arnold.AiNodeGetFlt( shape, "step_size" ), stepSize )
 					elif pn == "volumeProcedural" :
 						self.assertTrue( arnold.AiNodeIs( shape, "volume" ) )
 						self.assertEqual( arnold.AiNodeGetFlt( shape, "step_size" ), stepSize )
-					elif pn == "regularProcedural" :
-						self.assertTrue( arnold.AiNodeIs( shape, "procedural" ) )
 
 	def testStepSizeAttributeDefersToProceduralParameter( self ) :
 
@@ -1535,7 +1690,7 @@ class RendererTest( GafferTest.TestCase ) :
 			"test",
 
 			IECore.ExternalProcedural(
-				"volume_vdb.so",
+				"volume",
 				IECore.Box3f( IECore.V3f( -1 ), IECore.V3f( 1 ) ),
 				IECore.CompoundData( {
 					"ai:nodeType" : "volume",
@@ -1657,12 +1812,7 @@ class RendererTest( GafferTest.TestCase ) :
 	@staticmethod
 	def __m44f( m ) :
 
-		return IECore.M44f(
-			m.a00, m.a01, m.a02, m.a03,
-			m.a10, m.a11, m.a12, m.a13,
-			m.a20, m.a21, m.a22, m.a23,
-			m.a30, m.a31, m.a32, m.a33
-		)
+		return IECore.M44f( *[ i for row in m.data for i in row ] )
 
 	def __allNodes( self, type = arnold.AI_NODE_ALL, ignoreBuiltIn = True ) :
 
@@ -1686,7 +1836,7 @@ class RendererTest( GafferTest.TestCase ) :
 
 			nodePtr = arnold.AiNodeGetPtr( instanceNode, "node" )
 			self.assertEqual( nodePtr, arnold.AiNodeGetPtr( firstInstanceNode, "node" ) )
-			self.assertEqual( arnold.AiNodeGetInt( arnold.AtNode.from_address( nodePtr ), "visibility" ), 0 )
+			self.assertEqual( arnold.AiNodeGetByte( arnold.AtNode.from_address( nodePtr ), "visibility" ), 0 )
 
 	def __assertNotInstanced( self, *names ) :
 

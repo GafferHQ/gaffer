@@ -154,8 +154,8 @@ AtNode *convertToBox( const IECore::Object *object )
 	if( const IECore::VisibleRenderable *visibleRenderable = IECore::runTimeCast<const IECore::VisibleRenderable>( object ) )
 	{
 		const Imath::Box3f b = visibleRenderable->bound();
-		AiNodeSetPnt( node, "min", b.min.x, b.min.y, b.min.z );
-		AiNodeSetPnt( node, "max", b.max.x, b.max.y, b.max.z );
+		AiNodeSetVec( node, "min", b.min.x, b.min.y, b.min.z );
+		AiNodeSetVec( node, "max", b.max.x, b.max.y, b.max.z );
 	}
 
 	return node;
@@ -343,6 +343,8 @@ class ArnoldOutput : public IECore::RefCounted
 			// supported by Arnold.
 
 			m_data = output->getData();
+			m_lpeName = "ieCoreArnold:lpe:" + name.string();
+			m_lpeValue = "";
 
 			if( m_data=="rgb" )
 			{
@@ -354,18 +356,36 @@ class ArnoldOutput : public IECore::RefCounted
 			}
 			else
 			{
+				std::string arnoldType = "RGB";
+				if( parameter<bool>( output->parameters(), "includeAlpha", false ) )
+				{
+					arnoldType = "RGBA";
+				}
+
 				vector<std::string> tokens;
 				Gaffer::StringAlgo::tokenize( m_data, ' ', tokens );
-				if( tokens.size() == 2 && tokens[0] == "color" )
+				if( tokens.size() == 2 )
 				{
-					m_data = tokens[1] + " RGBA";
+					if( tokens[0] == "color" )
+					{
+						m_data = tokens[1] + " " + arnoldType;
+					}
+					else if( tokens[0] == "lpe" )
+					{
+						m_lpeValue = tokens[1];
+						m_data = m_lpeName + " " + arnoldType;
+					}
 				}
 			}
 		}
 
-		std::string string() const
+		void append( std::vector<std::string> &outputs, std::vector<std::string> &lightPathExpressions ) const
 		{
-			return boost::str( boost::format( "%s %s %s" ) % m_data % AiNodeGetName( m_filter.get() ) % AiNodeGetName( m_driver.get() ) );
+			outputs.push_back( boost::str( boost::format( "%s %s %s" ) % m_data % AiNodeGetName( m_filter.get() ) % AiNodeGetName( m_driver.get() ) ) );
+			if( m_lpeValue.size() )
+			{
+				lightPathExpressions.push_back( m_lpeName + " " + m_lpeValue );
+			}
 		}
 
 	private :
@@ -373,6 +393,8 @@ class ArnoldOutput : public IECore::RefCounted
 		SharedAtNodePtr m_driver;
 		SharedAtNodePtr m_filter;
 		std::string m_data;
+		std::string m_lpeName;
+		std::string m_lpeValue;
 
 };
 
@@ -492,10 +514,12 @@ IECore::InternedString g_oslShaderAttributeName( "osl:shader" );
 
 IECore::InternedString g_cameraVisibilityAttributeName( "ai:visibility:camera" );
 IECore::InternedString g_shadowVisibilityAttributeName( "ai:visibility:shadow" );
-IECore::InternedString g_reflectedVisibilityAttributeName( "ai:visibility:reflected" );
-IECore::InternedString g_refractedVisibilityAttributeName( "ai:visibility:refracted" );
-IECore::InternedString g_diffuseVisibilityAttributeName( "ai:visibility:diffuse" );
-IECore::InternedString g_glossyVisibilityAttributeName( "ai:visibility:glossy" );
+IECore::InternedString g_diffuseReflectVisibilityAttributeName( "ai:visibility:diffuse_reflect" );
+IECore::InternedString g_specularReflectVisibilityAttributeName( "ai:visibility:specular_reflect" );
+IECore::InternedString g_diffuseTransmitVisibilityAttributeName( "ai:visibility:diffuse_transmit" );
+IECore::InternedString g_specularTransmitVisibilityAttributeName( "ai:visibility:specular_transmit" );
+IECore::InternedString g_volumeVisibilityAttributeName( "ai:visibility:volume" );
+IECore::InternedString g_subsurfaceVisibilityAttributeName( "ai:visibility:subsurface" );
 
 IECore::InternedString g_arnoldSurfaceShaderAttributeName( "ai:surface" );
 IECore::InternedString g_arnoldLightShaderAttributeName( "ai:light" );
@@ -507,12 +531,14 @@ IECore::InternedString g_arnoldMatteAttributeName( "ai:matte" );
 
 IECore::InternedString g_stepSizeAttributeName( "ai:shape:step_size" );
 
+IECore::InternedString g_transformTypeAttributeName( "ai:transform_type" );
+
 IECore::InternedString g_polyMeshSubdivIterationsAttributeName( "ai:polymesh:subdiv_iterations" );
 IECore::InternedString g_polyMeshSubdivAdaptiveErrorAttributeName( "ai:polymesh:subdiv_adaptive_error" );
 IECore::InternedString g_polyMeshSubdivAdaptiveMetricAttributeName( "ai:polymesh:subdiv_adaptive_metric" );
 IECore::InternedString g_polyMeshSubdivAdaptiveSpaceAttributeName( "ai:polymesh:subdiv_adaptive_space" );
 IECore::InternedString g_polyMeshSubdivSmoothDerivsAttributeName( "ai:polymesh:subdiv_smooth_derivs" );
-IECore::InternedString g_polyMeshSubdividePolygonsAttributeName( "ai:polymesh:subdividePolygons" );
+IECore::InternedString g_polyMeshSubdividePolygonsAttributeName( "ai:polymesh:subdivide_polygons" );
 IECore::InternedString g_objectSpace( "object" );
 
 IECore::InternedString g_dispMapAttributeName( "ai:disp_map" );
@@ -523,9 +549,21 @@ IECore::InternedString g_dispAutoBumpAttributeName( "ai:disp_autobump" );
 
 IECore::InternedString g_curvesMinPixelWidthAttributeName( "ai:curves:min_pixel_width" );
 IECore::InternedString g_curvesModeAttributeName( "ai:curves:mode" );
+IECore::InternedString g_sssSetNameName( "ai:sss_setname" );
 
 IECore::InternedString g_linkedLights( "linkedLights" );
 IECore::InternedString g_lightFilterPrefix( "ai:lightFilter:" );
+
+const AtString g_nodeArnoldString("node");
+const AtString g_ginstanceArnoldString("ginstance");
+const AtString g_polymeshArnoldString("polymesh");
+const AtString g_curvesArnoldString("curves");
+const AtString g_boxArnoldString("box");
+const AtString g_volumeArnoldString("volume");
+const AtString g_sphereArnoldString("sphere");
+const AtString g_subdivTypeArnoldString("subdiv_type");
+const AtString g_catclarkArnoldString("catclark");
+const AtString g_meshLightArnoldString("mesh_light");
 
 class ArnoldAttributes : public IECoreScenePreview::Renderer::AttributesInterface
 {
@@ -537,10 +575,12 @@ class ArnoldAttributes : public IECoreScenePreview::Renderer::AttributesInterfac
 		{
 			updateVisibility( g_cameraVisibilityAttributeName, AI_RAY_CAMERA, attributes );
 			updateVisibility( g_shadowVisibilityAttributeName, AI_RAY_SHADOW, attributes );
-			updateVisibility( g_reflectedVisibilityAttributeName, AI_RAY_REFLECTED, attributes );
-			updateVisibility( g_refractedVisibilityAttributeName, AI_RAY_REFRACTED, attributes );
-			updateVisibility( g_diffuseVisibilityAttributeName, AI_RAY_DIFFUSE, attributes );
-			updateVisibility( g_glossyVisibilityAttributeName, AI_RAY_GLOSSY, attributes );
+			updateVisibility( g_diffuseReflectVisibilityAttributeName, AI_RAY_DIFFUSE_REFLECT, attributes );
+			updateVisibility( g_specularReflectVisibilityAttributeName, AI_RAY_SPECULAR_REFLECT, attributes );
+			updateVisibility( g_diffuseTransmitVisibilityAttributeName, AI_RAY_DIFFUSE_TRANSMIT, attributes );
+			updateVisibility( g_specularTransmitVisibilityAttributeName, AI_RAY_SPECULAR_TRANSMIT, attributes );
+			updateVisibility( g_volumeVisibilityAttributeName, AI_RAY_VOLUME, attributes );
+			updateVisibility( g_subsurfaceVisibilityAttributeName, AI_RAY_SUBSURFACE, attributes );
 
 			if( const IECore::BoolData *d = attribute<IECore::BoolData>( g_doubleSidedAttributeName, attributes ) )
 			{
@@ -565,9 +605,11 @@ class ArnoldAttributes : public IECoreScenePreview::Renderer::AttributesInterfac
 			m_lightShader = m_lightShader ? m_lightShader : attribute<IECore::ObjectVector>( g_lightShaderAttributeName, attributes );
 
 			m_traceSets = attribute<IECore::InternedStringVectorData>( g_setsAttributeName, attributes );
+			m_transformType = attribute<IECore::StringData>( g_transformTypeAttributeName, attributes );
 			m_stepSize = attributeValue<float>( g_stepSizeAttributeName, attributes, 0.0f );
 
 			m_linkedLights = attribute<IECore::StringVectorData>( g_linkedLights, attributes );
+			m_sssSetName = attribute<IECore::StringData>( g_sssSetNameName, attributes );
 
 			for( IECore::CompoundObject::ObjectMap::const_iterator it = attributes->members().begin(), eIt = attributes->members().end(); it != eIt; ++it )
 			{
@@ -578,7 +620,7 @@ class ArnoldAttributes : public IECoreScenePreview::Renderer::AttributesInterfac
 						m_user[it->first] = data;
 					}
 				}
-				if( boost::starts_with( it->first.string(), g_lightFilterPrefix.string() ) )
+				else if( boost::starts_with( it->first.string(), g_lightFilterPrefix.string() ) )
 				{
 					ArnoldShaderPtr filter = shaderCache->get( IECore::runTimeCast<const IECore::ObjectVector>( it->second.get() ) );
 					m_lightFilterShaders.push_back( filter );
@@ -638,9 +680,9 @@ class ArnoldAttributes : public IECoreScenePreview::Renderer::AttributesInterfac
 			else if( objectType == IECore::ExternalProceduralTypeId )
 			{
 				const IECore::ExternalProcedural *procedural = static_cast<const IECore::ExternalProcedural *>( object );
-				if( const IECore::StringData *nodeType = procedural->parameters()->member<const IECore::StringData>( "ai:nodeType" ) )
+				if( procedural->getFileName() == "volume" )
 				{
-					proceduralIsVolumetric = nodeType->readable() == "volume";
+					proceduralIsVolumetric = true;
 				}
 			}
 			hashGeometryInternal( objectType, meshInterpolationIsLinear, proceduralIsVolumetric, h );
@@ -682,17 +724,6 @@ class ArnoldAttributes : public IECoreScenePreview::Renderer::AttributesInterfac
 			return true;
 		}
 
-		// As if the interaction between attributes and geometry wasn't
-		// bad enough, we want a non-zero step_size value to cause meshes
-		// to be rendered as boxes, because Arnold doesn't currently support
-		// volume rendering of meshes. This method tells the InstanceCache
-		// when this is the case, so it can be taken into account in the
-		// geometry conversion.
-		bool requiresBoxGeometry( const IECore::Object *object ) const
-		{
-			return m_stepSize != 0.0f && IECore::runTimeCast<const IECore::MeshPrimitive>( object );
-		}
-
 		// Most attributes (visibility, surface shader etc) are orthogonal to the
 		// type of object to which they are applied. These are the good kind, because
 		// they can be applied to ginstance nodes, making attribute edits easy. This
@@ -712,33 +743,33 @@ class ArnoldAttributes : public IECoreScenePreview::Renderer::AttributesInterfac
 			if( previousAttributes )
 			{
 				const AtNode *geometry = node;
-				if( AiNodeIs( node, "ginstance" ) )
+				if( AiNodeIs( node, g_ginstanceArnoldString ) )
 				{
-					geometry = static_cast<const AtNode *>( AiNodeGetPtr( node, "node" ) );
+					geometry = static_cast<const AtNode *>( AiNodeGetPtr( node, g_nodeArnoldString ) );
 				}
 
 				IECore::TypeId objectType = IECore::InvalidTypeId;
 				bool meshInterpolationIsLinear = false;
 				bool proceduralIsVolumetric = false;
-				if( AiNodeIs( geometry, "polymesh" ) )
+				if( AiNodeIs( geometry, g_polymeshArnoldString ) )
 				{
 					objectType = IECore::MeshPrimitiveTypeId;
-					meshInterpolationIsLinear = strcmp( AiNodeGetStr( geometry, "subdiv_type" ), "catclark" );
+					meshInterpolationIsLinear = AiNodeGetStr( geometry, g_subdivTypeArnoldString ) != g_catclarkArnoldString;
 				}
-				else if( AiNodeIs( geometry, "curves" ) )
+				else if( AiNodeIs( geometry, g_curvesArnoldString ) )
 				{
 					objectType = IECore::CurvesPrimitiveTypeId;
 				}
-				else if( AiNodeIs( geometry, "box" ) )
+				else if( AiNodeIs( geometry, g_boxArnoldString ) )
 				{
 					objectType = IECore::MeshPrimitiveTypeId;
 				}
-				else if( AiNodeIs( geometry, "volume" ) )
+				else if( AiNodeIs( geometry, g_volumeArnoldString ) )
 				{
 					objectType = IECore::ExternalProceduralTypeId;
 					proceduralIsVolumetric = true;
 				}
-				else if( AiNodeIs( geometry, "sphere" ) )
+				else if( AiNodeIs( geometry, g_sphereArnoldString ) )
 				{
 					objectType = IECore::SpherePrimitiveTypeId;
 				}
@@ -785,6 +816,17 @@ class ArnoldAttributes : public IECoreScenePreview::Renderer::AttributesInterfac
 			{
 				AiNodeSetByte( node, "visibility", m_visibility );
 				AiNodeSetByte( node, "sidedness", m_sidedness );
+				
+				if( m_transformType )
+				{
+					// \todo : Arnold quite explicitly discourages constructing AtStrings repeatedly,
+					// but given the need to pass m_transformType around as a string for consistency
+					// reasons, it seems like there's not much else we can do here.
+					// If we start reusing ArnoldAttributes for multiple locations with identical attributes,
+					// it could be worth caching this, or possibly in the future we could come up with
+					// some way of cleanly exposing enum values as something other than strings.
+					AiNodeSetStr( node, "transform_type", AtString( m_transformType->readable().c_str() ) );
+				}
 
 				AiNodeSetBool( node, "receive_shadows", m_shadingFlags & ArnoldAttributes::ReceiveShadows );
 				AiNodeSetBool( node, "self_shadows", m_shadingFlags & ArnoldAttributes::SelfShadows );
@@ -816,6 +858,15 @@ class ArnoldAttributes : public IECoreScenePreview::Renderer::AttributesInterfac
 					// is in every trace set. So we instead make `trace_sets == [ "__none__" ]`
 					// to get the behaviour people expect.
 					AiNodeSetArray( node, "trace_sets", AiArray( 1, 1, AI_TYPE_STRING, "__none__" ) );
+				}
+
+				if( m_sssSetName )
+				{
+					ParameterAlgo::setParameter( node, "sss_setname", m_sssSetName.get() );
+				}
+				else
+				{
+					AiNodeResetParameter( node, "sss_setname" );
 				}
 
 				if( m_linkedLights )
@@ -1096,6 +1147,7 @@ class ArnoldAttributes : public IECoreScenePreview::Renderer::AttributesInterfac
 		IECore::ConstObjectVectorPtr m_lightShader;
 		std::vector<ArnoldShaderPtr> m_lightFilterShaders;
 		IECore::ConstInternedStringVectorDataPtr m_traceSets;
+		IECore::ConstStringDataPtr m_transformType;
 		float m_stepSize;
 		PolyMesh m_polyMesh;
 		Displacement m_displacement;
@@ -1104,6 +1156,8 @@ class ArnoldAttributes : public IECoreScenePreview::Renderer::AttributesInterfac
 
 		typedef boost::container::flat_map<IECore::InternedString, IECore::ConstDataPtr> UserAttributes;
 		UserAttributes m_user;
+
+		IECore::ConstStringDataPtr m_sssSetName;
 
 };
 
@@ -1245,15 +1299,7 @@ class InstanceCache : public IECore::RefCounted
 				return SharedAtNodePtr();
 			}
 
-			AtNode *node = NULL;
-			if( attributes->requiresBoxGeometry( object ) )
-			{
-				node = convertToBox( object );
-			}
-			else
-			{
-				node = NodeAlgo::convert( object );
-			}
+			AtNode *node = NodeAlgo::convert( object );
 
 			if( !node )
 			{
@@ -1267,15 +1313,8 @@ class InstanceCache : public IECore::RefCounted
 
 		SharedAtNodePtr convert( const std::vector<const IECore::Object *> &samples, const std::vector<float> &times, const ArnoldAttributes *attributes )
 		{
-			AtNode *node = NULL;
-			if( attributes->requiresBoxGeometry( samples.front() ) )
-			{
-				node = convertToBox( samples, times );
-			}
-			else
-			{
-				node = NodeAlgo::convert( samples, times );
-			}
+			NodeAlgo::ensureUniformTimeSamples( times );
+			AtNode *node = NodeAlgo::convert( samples, times[0], times[times.size() - 1] );
 
 			if( !node )
 			{
@@ -1356,28 +1395,23 @@ class ArnoldObject : public IECoreScenePreview::Renderer::ObjectInterface
 
 		void applyTransform( AtNode *node, const Imath::M44f &transform )
 		{
-			AiNodeSetMatrix( node, "matrix", const_cast<float (*)[4]>( transform.x ) );
+			AiNodeSetMatrix( node, "matrix", reinterpret_cast<const AtMatrix&>( transform.x ) );
 		}
 
 		void applyTransform( AtNode *node, const std::vector<Imath::M44f> &samples, const std::vector<float> &times )
 		{
 			const size_t numSamples = samples.size();
-			AtArray *timesArray = AiArrayAllocate( samples.size(), 1, AI_TYPE_FLOAT );
 			AtArray *matricesArray = AiArrayAllocate( 1, numSamples, AI_TYPE_MATRIX );
 			for( size_t i = 0; i < numSamples; ++i )
 			{
-				AiArraySetFlt( timesArray, i, times[i] );
-				AiArraySetMtx( matricesArray, i, const_cast<float (*)[4]>( samples[i].x ) );
+				AiArraySetMtx( matricesArray, i, reinterpret_cast<const AtMatrix&>( samples[i].x ) );
 			}
 			AiNodeSetArray( node, "matrix", matricesArray );
-			if( AiNodeEntryLookUpParameter( AiNodeGetNodeEntry( node ), "transform_time_samples" ) )
-			{
-				AiNodeSetArray( node, "transform_time_samples", timesArray );
-			}
-			else
-			{
-				AiNodeSetArray( node, "time_samples", timesArray );
-			}
+
+			NodeAlgo::ensureUniformTimeSamples( times );
+			AiNodeSetFlt( node, "motion_start", times[0] );
+			AiNodeSetFlt( node, "motion_end", times[times.size() - 1] );
+
 		}
 
 		Instance m_instance;
@@ -1453,9 +1487,9 @@ class ArnoldLight : public ArnoldObject
 			const std::string name = "light:" + m_name;
 			AiNodeSetStr( m_lightShader->root(), "name", name.c_str() );
 
-			// Deal with mesh_lights.
+			// Deal with mesh lights.
 
-			if( AiNodeIs( m_lightShader->root(), "mesh_light" ) )
+			if( AiNodeIs( m_lightShader->root(), g_meshLightArnoldString ) )
 			{
 				if( m_instance.node() )
 				{
@@ -1463,7 +1497,7 @@ class ArnoldLight : public ArnoldObject
 				}
 				else
 				{
-					// Don't output mesh_lights from locations with no object
+					// Don't output mesh lights from locations with no object
 					m_lightShader = NULL;
 					return true;
 				}
@@ -1614,7 +1648,7 @@ IECore::InternedString g_frameOptionName( "frame" );
 IECore::InternedString g_cameraOptionName( "camera" );
 IECore::InternedString g_logFileNameOptionName( "ai:log:filename" );
 IECore::InternedString g_logMaxWarningsOptionName( "ai:log:max_warnings" );
-IECore::InternedString g_shaderSearchPathOptionName( "ai:shader_searchpath" );
+IECore::InternedString g_pluginSearchPathOptionName( "ai:plugin_searchpath" );
 IECore::InternedString g_aaSeedOptionName( "ai:AA_seed" );
 IECore::InternedString g_sampleMotionOptionName( "sampleMotion" );
 
@@ -1641,7 +1675,7 @@ class ArnoldRenderer : public IECoreScenePreview::Renderer
 			AiMsgSetLogFileFlags( m_logFileFlags );
 			AiMsgSetConsoleFlags( m_consoleFlags );
 			// Get OSL shaders onto the shader searchpath.
-			option( g_shaderSearchPathOptionName, new IECore::StringData( "" ) );
+			option( g_pluginSearchPathOptionName, new IECore::StringData( "" ) );
 		}
 
 		virtual ~ArnoldRenderer()
@@ -1753,7 +1787,7 @@ class ArnoldRenderer : public IECoreScenePreview::Renderer
 				}
 				return;
 			}
-			else if( name == g_shaderSearchPathOptionName )
+			else if( name == g_pluginSearchPathOptionName )
 			{
 				// We must include the OSL searchpaths in Arnold's shader
 				// searchpaths so that the OSL shaders can be found.
@@ -1766,7 +1800,7 @@ class ArnoldRenderer : public IECoreScenePreview::Renderer
 						s = d->readable() + ":" + s;
 					}
 				}
-				AiNodeSetStr( options, "shader_searchpath", s.c_str() );
+				AiNodeSetStr( options, "plugin_searchpath", s.c_str() );
 				return;
 			}
 			else if( boost::starts_with( name.c_str(), "ai:declare:" ) )
@@ -1843,12 +1877,14 @@ class ArnoldRenderer : public IECoreScenePreview::Renderer
 			}
 
 			IECore::StringVectorDataPtr outputs = new IECore::StringVectorData;
+			IECore::StringVectorDataPtr lpes = new IECore::StringVectorData;
 			for( OutputMap::const_iterator it = m_outputs.begin(), eIt = m_outputs.end(); it != eIt; ++it )
 			{
-				outputs->writable().push_back( it->second->string() );
+				it->second->append( outputs->writable(), lpes->writable() );
 			}
 
 			IECoreArnold::ParameterAlgo::setParameter( AiUniverseGetOptions(), "outputs", outputs.get() );
+			IECoreArnold::ParameterAlgo::setParameter( AiUniverseGetOptions(), "light_path_expressions", lpes.get() );
 		}
 
 		virtual Renderer::AttributesInterfacePtr attributes( const IECore::CompoundObject *attributes )
@@ -2073,7 +2109,7 @@ class ArnoldRenderer : public IECoreScenePreview::Renderer
 			AiNodeSetInt( options, "yres", resolution->readable().y );
 
 			const IECore::FloatData *pixelAspectRatio = cortexCamera->parametersData()->member<IECore::FloatData>( "pixelAspectRatio" );
-			AiNodeSetFlt( options, "aspect_ratio", 1.0f / pixelAspectRatio->readable() ); // arnold is y/x, we're x/y
+			AiNodeSetFlt( options, "pixel_aspect_ratio", pixelAspectRatio->readable() );
 
 			const IECore::Box2iData *renderRegion = cortexCamera->parametersData()->member<IECore::Box2iData>( "renderRegion" );
 

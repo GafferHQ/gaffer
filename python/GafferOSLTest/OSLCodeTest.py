@@ -61,7 +61,7 @@ class OSLCodeTest( GafferOSLTest.OSLTestCase ) :
 			Gaffer.Color3fPlug,
 			Gaffer.M44fPlug,
 			Gaffer.StringPlug,
-			Gaffer.Plug,
+			GafferOSL.ClosurePlug,
 		] ) :
 
 			inName = "in%d" % i

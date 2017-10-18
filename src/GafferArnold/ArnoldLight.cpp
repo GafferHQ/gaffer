@@ -103,7 +103,7 @@ IECore::ObjectVectorPtr ArnoldLight::computeLight( const Gaffer::Context *contex
 {
 	IECore::ObjectVectorPtr result = new IECore::ObjectVector;
 	IECore::ShaderPtr lightShader = new IECore::Shader( shaderNamePlug()->getValue(), "ai:light" );
-	for( InputValuePlugIterator it( parametersPlug() ); !it.done(); ++it )
+	for( InputPlugIterator it( parametersPlug() ); !it.done(); ++it )
 	{
 		if( const Shader *shader = (*it)->source<Plug>()->ancestor<Shader>() )
 		{
@@ -125,9 +125,9 @@ IECore::ObjectVectorPtr ArnoldLight::computeLight( const Gaffer::Context *contex
 			// Add a parameter value linking to the input network.
 			lightShader->parameters()[(*it)->getName()] = new IECore::StringData( "link:" + (*it)->getName().string() );
 		}
-		else
+		else if( ValuePlug *valuePlug = IECore::runTimeCast<ValuePlug>( it->get() ) )
 		{
-			lightShader->parameters()[(*it)->getName()] = CompoundDataPlug::extractDataFromPlug( it->get() );
+			lightShader->parameters()[valuePlug->getName()] = CompoundDataPlug::extractDataFromPlug( valuePlug );
 		}
 	}
 

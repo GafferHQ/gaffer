@@ -166,6 +166,11 @@ void ArnoldShader::loadShader( const std::string &shaderName, bool keepExistingV
 // Metadata loading code
 //////////////////////////////////////////////////////////////////////////
 
+namespace {
+	const AtString g_primaryInputArnoldString( "primaryInput" );
+	const AtString g_shaderTypeArnoldString( "shaderType" );
+}
+
 static IECore::ConstCompoundDataPtr metadataGetter( const std::string &key, size_t &cost )
 {
 	IECoreArnold::UniverseBlock arnoldUniverse( /* writable = */ false );
@@ -187,15 +192,15 @@ static IECore::ConstCompoundDataPtr metadataGetter( const std::string &key, size
 	CompoundDataPtr parameterMetadata = new CompoundData;
 	metadata->writable()["parameter"] = parameterMetadata;
 
-	const char* value;
-	if( AiMetaDataGetStr( shader, /* look up metadata on node, not on parameter */ NULL , "primaryInput", &value ) )
+	AtString value;
+	if( AiMetaDataGetStr( shader, /* look up metadata on node, not on parameter */ NULL , g_primaryInputArnoldString, &value ) )
 	{
-		shaderMetadata->writable()["primaryInput"] = new StringData( value );
+		shaderMetadata->writable()["primaryInput"] = new StringData( value.c_str() );
 	}
-	const char* shaderType;
-	if( AiMetaDataGetStr( shader, /* look up metadata on node, not on parameter */ NULL , "shaderType", &shaderType ) )
+	AtString shaderType;
+	if( AiMetaDataGetStr( shader, /* look up metadata on node, not on parameter */ NULL , g_shaderTypeArnoldString, &shaderType ) )
 	{
-		shaderMetadata->writable()["shaderType"] = new StringData( shaderType );
+		shaderMetadata->writable()["shaderType"] = new StringData( shaderType.c_str() );
 	}
 
 	return metadata;

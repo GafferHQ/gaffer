@@ -61,10 +61,10 @@ def __samplingSummary( plug ) :
 		info.append( "AA %d" % plug["aaSamples"]["value"].getValue() )
 	if plug["giDiffuseSamples"]["enabled"].getValue() :
 		info.append( "Diffuse %d" % plug["giDiffuseSamples"]["value"].getValue() )
-	if plug["giGlossySamples"]["enabled"].getValue() :
-		info.append( "Glossy %d" % plug["giGlossySamples"]["value"].getValue() )
-	if plug["giRefractionSamples"]["enabled"].getValue() :
-		info.append( "Refraction %d" % plug["giRefractionSamples"]["value"].getValue() )
+	if plug["giSpecularSamples"]["enabled"].getValue() :
+		info.append( "Specular %d" % plug["giSpecularSamples"]["value"].getValue() )
+	if plug["giTransmissionSamples"]["enabled"].getValue() :
+		info.append( "Transmission %d" % plug["giTransmissionSamples"]["value"].getValue() )
 	if plug["giSSSSamples"]["enabled"].getValue() :
 		info.append( "SSS %d" % plug["giSSSSamples"]["value"].getValue() )
 	if plug["giVolumeSamples"]["enabled"].getValue() :
@@ -84,18 +84,14 @@ def __rayDepthSummary( plug ) :
 		info.append( "Total %d" % plug["giTotalDepth"]["value"].getValue() )
 	if plug["giDiffuseDepth"]["enabled"].getValue() :
 		info.append( "Diffuse %d" % plug["giDiffuseDepth"]["value"].getValue() )
-	if plug["giGlossyDepth"]["enabled"].getValue() :
-		info.append( "Glossy %d" % plug["giGlossyDepth"]["value"].getValue() )
-	if plug["giReflectionDepth"]["enabled"].getValue() :
-		info.append( "Reflection %d" % plug["giReflectionDepth"]["value"].getValue() )
-	if plug["giRefractionDepth"]["enabled"].getValue() :
-		info.append( "Refraction %d" % plug["giRefractionDepth"]["value"].getValue() )
+	if plug["giSpecularDepth"]["enabled"].getValue() :
+		info.append( "Specular %d" % plug["giSpecularDepth"]["value"].getValue() )
+	if plug["giTransmissionDepth"]["enabled"].getValue() :
+		info.append( "Transmission %d" % plug["giTransmissionDepth"]["value"].getValue() )
 	if plug["giVolumeDepth"]["enabled"].getValue() :
 		info.append( "Volume %d" % plug["giVolumeDepth"]["value"].getValue() )
 	if plug["autoTransparencyDepth"]["enabled"].getValue() :
 		info.append( "Transparency %d" % plug["autoTransparencyDepth"]["value"].getValue() )
-	if plug["autoTransparencyThreshold"]["enabled"].getValue() :
-		info.append( "Threshold %s" % GafferUI.NumericWidget.valueToString( plug["autoTransparencyThreshold"]["value"].getValue() ) )
 	return ", ".join( info )
 
 def __texturingSummary( plug ) :
@@ -132,7 +128,7 @@ def __featuresSummary( plug ) :
 def __searchPathsSummary( plug ) :
 
 	info = []
-	for prefix in ( "texture", "procedural", "shader" ) :
+	for prefix in ( "texture", "procedural", "plugin" ) :
 		if plug[prefix+"SearchPath"]["enabled"].getValue() :
 			info.append( prefix.capitalize() )
 
@@ -233,8 +229,8 @@ Gaffer.Metadata.registerNode(
 		"options.bucketScanning.value": [
 
 			"plugValueWidget:type", 'GafferUI.PresetsPlugValueWidget',
-			"presetNames", IECore.StringVectorData( ["Top", "Bottom", "Left", "Right", "Random", "Woven", "Spiral", "Spiral"] ),
-			"presetValues", IECore.StringVectorData( ["top", "bottom", "left", "right", "random", "woven", "spiral", "spiral"] ),
+			"presetNames", IECore.StringVectorData( ["Top", "Left", "Random", "Spiral", "Hilbert"] ),
+			"presetValues", IECore.StringVectorData( ["top", "left", "random", "spiral", "hilbert"] ),
 		],
 
 		"options.parallelNodeInit" : [
@@ -301,32 +297,32 @@ Gaffer.Metadata.registerNode(
 
 		],
 
-		"options.giGlossySamples" : [
+		"options.giSpecularSamples" : [
 
 			"description",
 			"""
 			Controls the number of rays traced when
-			computing glossy specular reflections.
+			computing specular reflections.
 			The number of actual specular rays traced
 			is the square of this number.
 			""",
 
 			"layout:section", "Sampling",
-			"label", "Glossy Samples",
+			"label", "Specular Samples",
 
 		],
 
-		"options.giRefractionSamples" : [
+		"options.giTransmissionSamples" : [
 
 			"description",
 			"""
 			Controls the number of rays traced when
-			computing refractions. The number of actual
-			specular rays traced is the square of this number.
+			computing specular refractions. The number of actual
+			transmitted specular rays traced is the square of this number.
 			""",
 
 			"layout:section", "Sampling",
-			"label", "Refraction Samples",
+			"label", "Transmission Samples",
 
 		],
 
@@ -404,14 +400,27 @@ Gaffer.Metadata.registerNode(
 
 		],
 
+		"options.indirectSampleClamp" : [
+
+			"description",
+			"""
+			Clamp fireflies resulting from indirect calculations.
+			May cause problems with dulling highlights in reflections.
+			""",
+
+			"layout:section", "Sampling",
+			"label", "Indirect Sample Clamp",
+
+		],
+
 		# Ray Depth
 
 		"options.giTotalDepth" : [
 
 			"description",
 			"""
-			The maximum depth of any ray (Diffuse + Glossy +
-			Reflection + Refraction + Volume).
+			The maximum depth of any ray (Diffuse + Specular +
+			Transmission + Volume).
 			""",
 
 			"layout:section", "Ray Depth",
@@ -432,43 +441,29 @@ Gaffer.Metadata.registerNode(
 
 		],
 
-		"options.giGlossyDepth" : [
+		"options.giSpecularDepth" : [
 
 			"description",
 			"""
 			Controls the number of ray bounces when
-			computing glossy specular reflections.
+			computing specular reflections.
 			""",
 
 			"layout:section", "Ray Depth",
-			"label", "Glossy Depth",
+			"label", "Specular Depth",
 
 		],
 
-		"options.giReflectionDepth" : [
+		"options.giTransmissionDepth" : [
 
 			"description",
 			"""
 			Controls the number of ray bounces when
-			computing reflections.
+			computing specular refractions.
 			""",
 
 			"layout:section", "Ray Depth",
-			"label", "Reflection Depth",
-
-		],
-
-
-		"options.giRefractionDepth" : [
-
-			"description",
-			"""
-			Controls the number of ray bounces when
-			computing refractions.
-			""",
-
-			"layout:section", "Ray Depth",
-			"label", "Refraction Depth",
+			"label", "Transmission Depth",
 
 		],
 
@@ -496,18 +491,6 @@ Gaffer.Metadata.registerNode(
 			"layout:section", "Ray Depth",
 			"label", "Transparency Depth",
 
-		],
-
-		"options.autoTransparencyThreshold" : [
-
-			"description",
-			"""
-			A threshold for accumulated opacity, after which the
-			last object will be treated as opaque.
-			""",
-
-			"layout:section", "Ray Depth",
-			"label", "Opacity Threshold",
 		],
 
 		# Texturing
@@ -707,15 +690,15 @@ Gaffer.Metadata.registerNode(
 
 		],
 
-		"options.shaderSearchPath" : [
+		"options.pluginSearchPath" : [
 
 			"description",
 			"""
-			The locations used to search for shader plugins.
+			The locations used to search for shaders and other plugins.
 			""",
 
 			"layout:section", "Search Paths",
-			"label", "Shaders",
+			"label", "Plugins (Shaders)",
 
 		],
 

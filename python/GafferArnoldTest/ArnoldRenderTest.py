@@ -300,6 +300,11 @@ class ArnoldRenderTest( GafferSceneTest.SceneTestCase ) :
 		self.assertLess( hiddenStats["average"].getValue()[0], 0.05 )
 		self.assertGreater( visibleStats["average"].getValue()[0], .27 )
 
+	@staticmethod
+	def __m44f( m ) :
+
+		return IECore.M44f( *[ i for row in m.data for i in row ] )
+
 	def testTransformMotion( self ) :
 
 		s = Gaffer.ScriptNode()
@@ -351,23 +356,27 @@ class ArnoldRenderTest( GafferSceneTest.SceneTestCase ) :
 
 			camera = arnold.AiNodeLookUpByName( "gaffer:defaultCamera" )
 			sphere = arnold.AiNodeLookUpByName( "/group/sphere" )
-			sphereTimes = arnold.AiNodeGetArray( sphere, "transform_time_samples" )
-			sphereMatrix = arnold.AtMatrix()
-			arnold.AiNodeGetMatrix( sphere, "matrix", sphereMatrix )
+			sphereMotionStart = arnold.AiNodeGetFlt( sphere, "motion_start" )
+			sphereMotionEnd = arnold.AiNodeGetFlt( sphere, "motion_end" )
+			sphereMatrix = arnold.AiNodeGetMatrix( sphere, "matrix" )
 
 			plane = arnold.AiNodeLookUpByName( "/group/plane" )
-			planeTimes = arnold.AiNodeGetArray( plane, "transform_time_samples" )
-			planeMatrix = arnold.AtMatrix()
-			arnold.AiNodeGetMatrix( plane, "matrix", planeMatrix )
+			planeMotionStart = arnold.AiNodeGetFlt( plane, "motion_start" )
+			planeMotionEnd = arnold.AiNodeGetFlt( plane, "motion_end" )
+			planeMatrix = arnold.AiNodeGetMatrix( plane, "matrix" )
 
-			expectedSphereMatrix = arnold.AtMatrix()
-			arnold.AiM4Translation( expectedSphereMatrix, arnold.AtVector( 0, 2, 0 ) )
+			# Motion parameters should be left at default
+			self.assertEqual( sphereMotionStart, 0 )
+			self.assertEqual( sphereMotionEnd, 1 )
+			self.assertEqual( planeMotionStart, 0 )
+			self.assertEqual( planeMotionEnd, 1 )
 
-			expectedPlaneMatrix = arnold.AtMatrix()
-			arnold.AiM4Translation( expectedPlaneMatrix, arnold.AtVector( 1, 0, 0 ) )
+			expectedSphereMatrix = arnold.AiM4Translation( arnold.AtVector( 0, 2, 0 ) )
 
-			self.__assertStructsEqual( sphereMatrix, expectedSphereMatrix )
-			self.__assertStructsEqual( planeMatrix, expectedPlaneMatrix )
+			expectedPlaneMatrix = arnold.AiM4Translation( arnold.AtVector( 1, 0, 0 ) )
+
+			self.assertEqual( self.__m44f( sphereMatrix ), self.__m44f( expectedSphereMatrix ) )
+			self.assertEqual( self.__m44f( planeMatrix ), self.__m44f( expectedPlaneMatrix ) )
 
 			self.assertEqual( arnold.AiNodeGetFlt( camera, "shutter_start" ), 1 )
 			self.assertEqual( arnold.AiNodeGetFlt( camera, "shutter_end" ), 1 )
@@ -383,43 +392,38 @@ class ArnoldRenderTest( GafferSceneTest.SceneTestCase ) :
 
 			camera = arnold.AiNodeLookUpByName( "gaffer:defaultCamera" )
 			sphere = arnold.AiNodeLookUpByName( "/group/sphere" )
-			sphereTimes = arnold.AiNodeGetArray( sphere, "transform_time_samples" )
+			sphereMotionStart = arnold.AiNodeGetFlt( sphere, "motion_start" )
+			sphereMotionEnd = arnold.AiNodeGetFlt( sphere, "motion_end" )
 			sphereMatrices = arnold.AiNodeGetArray( sphere, "matrix" )
 
 			plane = arnold.AiNodeLookUpByName( "/group/plane" )
-			planeTimes = arnold.AiNodeGetArray( plane, "transform_time_samples" )
+			planeMotionStart = arnold.AiNodeGetFlt( plane, "motion_start" )
+			planeMotionEnd = arnold.AiNodeGetFlt( plane, "motion_end" )
 			planeMatrices = arnold.AiNodeGetArray( plane, "matrix" )
 
-			self.assertEqual( sphereTimes.contents.nelements, 2 )
-			self.assertEqual( sphereTimes.contents.nkeys, 1 )
-			self.assertEqual( sphereMatrices.contents.nelements, 1 )
-			self.assertEqual( sphereMatrices.contents.nkeys, 2 )
+			self.assertEqual( sphereMotionStart, 0.75 )
+			self.assertEqual( sphereMotionEnd, 1.25 )
+			self.assertEqual( arnold.AiArrayGetNumElements( sphereMatrices.contents ), 1 )
+			self.assertEqual( arnold.AiArrayGetNumKeys( sphereMatrices.contents ), 2 )
 
-			self.assertEqual( planeTimes.contents.nelements, 2 )
-			self.assertEqual( planeTimes.contents.nkeys, 1 )
-			self.assertEqual( planeMatrices.contents.nelements, 1 )
-			self.assertEqual( planeMatrices.contents.nkeys, 2 )
+			self.assertEqual( planeMotionStart, 0.75 )
+			self.assertEqual( planeMotionEnd, 1.25 )
+			self.assertEqual( arnold.AiArrayGetNumElements( planeMatrices.contents ), 1 )
+			self.assertEqual( arnold.AiArrayGetNumKeys( planeMatrices.contents ), 2 )
 
 			for i in range( 0, 2 ) :
 
 				frame = 0.75 + 0.5 * i
-				self.assertEqual( arnold.AiArrayGetFlt( sphereTimes, i ), frame )
-				self.assertEqual( arnold.AiArrayGetFlt( planeTimes, i ), frame )
+				sphereMatrix = arnold.AiArrayGetMtx( sphereMatrices, i )
 
-				sphereMatrix = arnold.AtMatrix()
-				arnold.AiArrayGetMtx( sphereMatrices, i, sphereMatrix )
+				expectedSphereMatrix = arnold.AiM4Translation( arnold.AtVector( 0, frame * 2, frame - 1 ) )
 
-				expectedSphereMatrix = arnold.AtMatrix()
-				arnold.AiM4Translation( expectedSphereMatrix, arnold.AtVector( 0, frame * 2, frame - 1 ) )
+				planeMatrix = arnold.AiArrayGetMtx( planeMatrices, i )
 
-				planeMatrix = arnold.AtMatrix()
-				arnold.AiArrayGetMtx( planeMatrices, i, planeMatrix )
+				expectedPlaneMatrix = arnold.AiM4Translation( arnold.AtVector( 1, 0, frame - 1 ) )
 
-				expectedPlaneMatrix = arnold.AtMatrix()
-				arnold.AiM4Translation( expectedPlaneMatrix, arnold.AtVector( 1, 0, frame - 1 ) )
-
-				self.__assertStructsEqual( sphereMatrix, expectedSphereMatrix )
-				self.__assertStructsEqual( planeMatrix, expectedPlaneMatrix )
+				self.assertEqual( self.__m44f( sphereMatrix ), self.__m44f( expectedSphereMatrix ) )
+				self.assertEqual( self.__m44f( planeMatrix ), self.__m44f( expectedPlaneMatrix ) )
 
 			self.assertEqual( arnold.AiNodeGetFlt( camera, "shutter_start" ), 0.75 )
 			self.assertEqual( arnold.AiNodeGetFlt( camera, "shutter_end" ), 1.25 )
@@ -436,43 +440,39 @@ class ArnoldRenderTest( GafferSceneTest.SceneTestCase ) :
 
 			camera = arnold.AiNodeLookUpByName( "gaffer:defaultCamera" )
 			sphere = arnold.AiNodeLookUpByName( "/group/sphere" )
-			sphereTimes = arnold.AiNodeGetArray( sphere, "transform_time_samples" )
+			sphereMotionStart = arnold.AiNodeGetFlt( sphere, "motion_start" )
+			sphereMotionEnd = arnold.AiNodeGetFlt( sphere, "motion_end" )
 			sphereMatrices = arnold.AiNodeGetArray( sphere, "matrix" )
 
 			plane = arnold.AiNodeLookUpByName( "/group/plane" )
-			planeTimes = arnold.AiNodeGetArray( plane, "transform_time_samples" )
+			planeMotionStart = arnold.AiNodeGetFlt( plane, "motion_start" )
+			planeMotionEnd = arnold.AiNodeGetFlt( plane, "motion_end" )
 			planeMatrices = arnold.AiNodeGetArray( plane, "matrix" )
 
-			self.assertEqual( sphereTimes.contents.nelements, 2 )
-			self.assertEqual( sphereTimes.contents.nkeys, 1 )
-			self.assertEqual( sphereMatrices.contents.nelements, 1 )
-			self.assertEqual( sphereMatrices.contents.nkeys, 2 )
+			self.assertEqual( sphereMotionStart, 0.75 )
+			self.assertEqual( sphereMotionEnd, 1.25 )
+			self.assertEqual( arnold.AiArrayGetNumElements( sphereMatrices.contents ), 1 )
+			self.assertEqual( arnold.AiArrayGetNumKeys( sphereMatrices.contents ), 2 )
 
-			self.assertEqual( planeTimes.contents.nelements, 2 )
-			self.assertEqual( planeTimes.contents.nkeys, 1 )
-			self.assertEqual( planeMatrices.contents.nelements, 1 )
-			self.assertEqual( planeMatrices.contents.nkeys, 2 )
+			self.assertEqual( planeMotionStart, 0.75 )
+			self.assertEqual( planeMotionEnd, 1.25 )
+			self.assertEqual( arnold.AiArrayGetNumElements( planeMatrices.contents ), 1 )
+			self.assertEqual( arnold.AiArrayGetNumKeys( planeMatrices.contents ), 2 )
 
 			for i in range( 0, 2 ) :
 
 				frame = 0.75 + 0.5 * i
-				self.assertEqual( arnold.AiArrayGetFlt( sphereTimes, i ), frame )
-				self.assertEqual( arnold.AiArrayGetFlt( planeTimes, i ), frame )
 
-				sphereMatrix = arnold.AtMatrix()
-				arnold.AiArrayGetMtx( sphereMatrices, i, sphereMatrix )
+				sphereMatrix = arnold.AiArrayGetMtx( sphereMatrices, i )
 
-				expectedSphereMatrix = arnold.AtMatrix()
-				arnold.AiM4Translation( expectedSphereMatrix, arnold.AtVector( 0, frame * 2, frame - 1 ) )
+				expectedSphereMatrix = arnold.AiM4Translation( arnold.AtVector( 0, frame * 2, frame - 1 ) )
 
-				planeMatrix = arnold.AtMatrix()
-				arnold.AiArrayGetMtx( planeMatrices, i, planeMatrix )
+				planeMatrix = arnold.AiArrayGetMtx( planeMatrices, i )
 
-				expectedPlaneMatrix = arnold.AtMatrix()
-				arnold.AiM4Translation( expectedPlaneMatrix, arnold.AtVector( 1, 0, frame - 1 ) )
+				expectedPlaneMatrix = arnold.AiM4Translation( arnold.AtVector( 1, 0, frame - 1 ) )
 
-				self.__assertStructsEqual( sphereMatrix, expectedSphereMatrix )
-				self.__assertStructsEqual( planeMatrix, expectedPlaneMatrix )
+				self.assertEqual( self.__m44f( sphereMatrix ), self.__m44f( expectedSphereMatrix ) )
+				self.assertEqual( self.__m44f( planeMatrix ), self.__m44f( expectedPlaneMatrix ) )
 
 			self.assertEqual( arnold.AiNodeGetFlt( camera, "shutter_start" ), 0.75 )
 			self.assertEqual( arnold.AiNodeGetFlt( camera, "shutter_end" ), 0.75 )
@@ -794,7 +794,7 @@ class ArnoldRenderTest( GafferSceneTest.SceneTestCase ) :
 
 		render["task"].execute()
 
-		with IECoreArnold.UniverseBlock() :
+		with IECoreArnold.UniverseBlock( writable = True ) :
 
 			arnold.AiASSLoad( self.temporaryDirectory() + "/test.ass" )
 			self.assertTrue( arnold.AiNodeLookUpByName( "/sphereArnold" ) is not None )
@@ -822,7 +822,7 @@ class ArnoldRenderTest( GafferSceneTest.SceneTestCase ) :
 
 		render["task"].execute()
 
-		with IECoreArnold.UniverseBlock() :
+		with IECoreArnold.UniverseBlock( writable = True ) :
 
 			arnold.AiASSLoad( self.temporaryDirectory() + "/test.ass" )
 			node = arnold.AiNodeLookUpByName( "/sphere" )
@@ -880,7 +880,7 @@ class ArnoldRenderTest( GafferSceneTest.SceneTestCase ) :
 			sphere = arnold.AiNodeLookUpByName( "/group/sphere" )
 			lights = arnold.AiNodeGetArray( sphere, "light_group" )
 			lightNames = []
-			for i in range(lights.contents.nelements):
+			for i in range( arnold.AiArrayGetNumElements( lights.contents ) ):
 				light = arnold.cast(arnold.AiArrayGetPtr(lights, i), arnold.POINTER(arnold.AtNode))
 				lightNames.append( arnold.AiNodeGetName(light.contents)  )
 
@@ -893,7 +893,7 @@ class ArnoldRenderTest( GafferSceneTest.SceneTestCase ) :
 			sphere1 = arnold.AiNodeLookUpByName( "/group/sphere1" )
 			lights = arnold.AiNodeGetArray( sphere1, "light_group" )
 			lightNames = []
-			for i in range(lights.contents.nelements):
+			for i in range( arnold.AiArrayGetNumElements( lights.contents ) ):
 				light = arnold.cast(arnold.AiArrayGetPtr(lights, i), arnold.POINTER(arnold.AtNode))
 				lightNames.append( arnold.AiNodeGetName(light.contents)  )
 
@@ -905,18 +905,13 @@ class ArnoldRenderTest( GafferSceneTest.SceneTestCase ) :
 	def __arrayToSet( self, a ) :
 
 		result = set()
-		for i in range( 0, a.contents.nelements ) :
-			if a.contents.type == arnold.AI_TYPE_STRING :
+		for i in range( 0,  arnold.AiArrayGetNumElements( a.contents ) ) :
+			if arnold.AiArrayGetType( a.contents ) == arnold.AI_TYPE_STRING :
 				result.add( arnold.AiArrayGetStr( a, i ) )
 			else :
 				raise TypeError
 
 		return result
-
-	def __assertStructsEqual( self, a, b ) :
-
-		for field in a._fields_ :
-			self.assertEqual( getattr( a, field[0] ), getattr( b, field[0] ) )
 
 if __name__ == "__main__":
 	unittest.main()

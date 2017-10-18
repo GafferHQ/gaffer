@@ -1,6 +1,6 @@
 //////////////////////////////////////////////////////////////////////////
 //
-//  Copyright (c) 2016, Image Engine Design Inc. All rights reserved.
+//  Copyright (c) 2017, Image Engine Design Inc. All rights reserved.
 //
 //  Redistribution and use in source and binary forms, with or without
 //  modification, are permitted provided that the following conditions are
@@ -34,59 +34,42 @@
 //
 //////////////////////////////////////////////////////////////////////////
 
-#ifndef GAFFERARNOLD_ARNOLDVDB_H
-#define GAFFERARNOLD_ARNOLDVDB_H
+#ifndef GAFFEROSL_CLOSUREPLUG_H
+#define GAFFEROSL_CLOSUREPLUG_H
 
-#include "GafferScene/ObjectSource.h"
+#include "IECore/CompoundObject.h"
 
-#include "GafferArnold/TypeIds.h"
+#include "Gaffer/Plug.h"
 
-namespace GafferArnold
+#include "GafferOSL/TypeIds.h"
+
+namespace GafferOSL
 {
 
-class ArnoldVDB : public GafferScene::ObjectSource
+/// Plug that provides a proxy for representing closure types when
+/// loader a shader from OSL or a renderer.  We probably won't be able
+/// to set or get closure plugs, but we need to be able to connect 
+/// them, and they should only connect to other closure plugs.
+class ClosurePlug : public Gaffer::Plug
 {
 
 	public :
 
-		IE_CORE_DECLARERUNTIMETYPEDEXTENSION( GafferArnold::ArnoldVDB, ArnoldVDBTypeId, GafferScene::ObjectSource );
+		ClosurePlug( const std::string &name=defaultName<ClosurePlug>(), Direction direction=In, unsigned flags=Default );
+		virtual ~ClosurePlug();
 
-		ArnoldVDB( const std::string &name=defaultName<ArnoldVDB>() );
-		virtual ~ArnoldVDB();
+		IE_CORE_DECLARERUNTIMETYPEDEXTENSION( GafferOSL::ClosurePlug, ClosurePlugTypeId, Plug );
 
-		Gaffer::StringPlug *fileNamePlug();
-		const Gaffer::StringPlug *fileNamePlug() const;
+		virtual bool acceptsChild( const Gaffer::GraphComponent *potentialChild ) const;
+		virtual Gaffer::PlugPtr createCounterpart( const std::string &name, Direction direction ) const;
+		virtual bool acceptsInput( const Gaffer::Plug *input ) const;
 
-		Gaffer::StringPlug *gridsPlug();
-		const Gaffer::StringPlug *gridsPlug() const;
-
-		Gaffer::StringPlug *velocityGridsPlug();
-		const Gaffer::StringPlug *velocityGridsPlug() const;
-
-		Gaffer::FloatPlug *velocityScalePlug();
-		const Gaffer::FloatPlug *velocityScalePlug() const;
-
-		Gaffer::FloatPlug *stepSizePlug();
-		const Gaffer::FloatPlug *stepSizePlug() const;
-
-		Gaffer::FloatPlug *stepScalePlug();
-		const Gaffer::FloatPlug *stepScalePlug() const;
-
-		virtual void affects( const Gaffer::Plug *input, AffectedPlugsContainer &outputs ) const;
-
-	protected :
-
-		virtual void hashSource( const Gaffer::Context *context, IECore::MurmurHash &h ) const;
-		virtual IECore::ConstObjectPtr computeSource( const Gaffer::Context *context ) const;
-
-	private :
-
-		static size_t g_firstPlugIndex;
+	private:
 
 };
 
-IE_CORE_DECLAREPTR( ArnoldVDB )
+IE_CORE_DECLAREPTR( ClosurePlug );
 
-} // namespace GafferArnold
+} // namespace GafferOSL
 
-#endif // GAFFERARNOLD_ARNOLDVDB_H
+#endif // GAFFEROSL_CLOSUREPLUG_H

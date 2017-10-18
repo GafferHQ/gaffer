@@ -68,32 +68,8 @@ namespace ProceduralAlgo
 
 AtNode *convert( const IECore::ExternalProcedural *procedural )
 {
-	std::string nodeType = "procedural";
-	// Allow a parameter "ai:nodeType" == "volume" to create a volume shape rather
-	// than a procedural shape. Volume shapes provide "dso", "min" and "max" parameters
-	// just as procedural shapes do, so the mapping is a fairly natural one.
-	const CompoundDataMap &parameters = procedural->parameters()->readable();
-	CompoundDataMap::const_iterator nodeTypeIt = parameters.find( "ai:nodeType" );
-	if( nodeTypeIt != parameters.end() && nodeTypeIt->second->isInstanceOf( StringData::staticTypeId() ) )
-	{
-		nodeType = static_cast<const StringData *>( nodeTypeIt->second.get() )->readable();
-	}
-	AtNode *node = AiNode( nodeType.c_str() );
-
-	AiNodeSetStr( node, "dso", procedural->getFileName().c_str() );
-	ParameterAlgo::setParameters( node, parameters );
-
-	const Box3f bound = procedural->bound();
-	if( bound != Renderer::Procedural::noBound )
-	{
-		AiNodeSetPnt( node, "min", bound.min.x, bound.min.y, bound.min.z );
-		AiNodeSetPnt( node, "max", bound.max.x, bound.max.y, bound.max.z );
-	}
-	else
-	{
-		// No bound available - expand procedural immediately.
-		AiNodeSetBool( node, "load_at_init", true );
-	}
+	AtNode *node = AiNode( procedural->getFileName().c_str() );
+	ParameterAlgo::setParameters( node, procedural->parameters()->readable() );
 
 	return node;
 }

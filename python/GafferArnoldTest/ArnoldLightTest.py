@@ -79,15 +79,26 @@ class ArnoldLightTest( GafferSceneTest.SceneTestCase ) :
 		s.loadShader( "physical_sky" )
 		s["parameters"]["intensity"].setValue( 2 )
 
+		# Test setting up a matte closure connected to "shader"
+		# Note that this doesn't currently render correctly, but SolidAngle assures me that they are fixing
+		# it and is the preferred way
+		s2 = GafferArnold.ArnoldShader()
+		s2.loadShader( "matte" )
+		s2["parameters"]["color"].setValue( IECore.Color4f( 0, 1, 0, 0.5 ) )
+
 		l = GafferArnold.ArnoldLight()
 		l.loadShader( "skydome_light" )
 		l["parameters"]["color"].setInput( s["out"] )
+		l["parameters"]["shader"].setInput( s2["out"] )
 
 		network = l["out"].attributes( "/light" )["ai:light"]
-		self.assertEqual( len( network ), 2 )
+		self.assertEqual( len( network ), 3 )
 		self.assertEqual( network[0].name, "physical_sky" )
 		self.assertEqual( network[0].parameters["intensity"].value, 2 )
-		self.assertEqual( network[1].parameters["color"].value, "link:" + network[0].parameters["__handle"].value )
+		self.assertEqual( network[1].name, "matte" )
+		self.assertEqual( network[1].parameters["color"].value, IECore.Color4f( 0, 1, 0, 0.5 ) )
+		self.assertEqual( network[2].parameters["color"].value, "link:" + network[0].parameters["__handle"].value )
+		self.assertEqual( network[2].parameters["shader"].value, "link:" + network[1].parameters["__handle"].value )
 
 		s["parameters"]["intensity"].setValue( 4 )
 		network = l["out"].attributes( "/light" )["ai:light"]
