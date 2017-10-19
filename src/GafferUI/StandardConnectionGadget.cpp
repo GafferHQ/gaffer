@@ -465,9 +465,12 @@ bool StandardConnectionGadget::dragEnd( const DragDropEvent &event )
 {
 	if( !event.destinationGadget || event.destinationGadget == this )
 	{
-		// noone wanted the drop so we'll disconnect
-		Gaffer::UndoScope undoEnabler( dstNodule()->plug()->ancestor<Gaffer::ScriptNode>() );
-		dstNodule()->plug()->setInput( nullptr );
+		// noone wanted the drop so we'll disconnect unless we were meant to add an additional connection
+		if( !m_addingConnection )
+		{
+			Gaffer::UndoScope undoEnabler( dstNodule()->plug()->ancestor<Gaffer::ScriptNode>() );
+			dstNodule()->plug()->setInput( nullptr );
+		}
 	}
 	else
 	{
