@@ -969,12 +969,16 @@ void loadShaderParameters( const OSLQuery &query, Gaffer::Plug *parent, const Co
 
 void OSLShader::loadShader( const std::string &shaderName, bool keepExistingValues )
 {
+	StringPlug *namePlug = this->namePlug()->source<StringPlug>();
+	StringPlug *typePlug = this->typePlug()->source<StringPlug>();
+	Plug *parametersPlug = this->parametersPlug()->source<Plug>();
+
 	Plug *existingOut = outPlug();
 	if( shaderName.empty() )
 	{
-		parametersPlug()->clearChildren();
-		namePlug()->setValue( "" );
-		typePlug()->setValue( "" );
+		parametersPlug->clearChildren();
+		namePlug->setValue( "" );
+		typePlug->setValue( "" );
 		if( existingOut )
 		{
 			existingOut->clearChildren();
@@ -996,7 +1000,7 @@ void OSLShader::loadShader( const std::string &shaderName, bool keepExistingValu
 		// If we're not preserving existing values then remove all existing
 		// parameter plugs - the various plug creators above know that if a
 		// plug exists then they should preserve its values.
-		parametersPlug()->clearChildren();
+		parametersPlug->clearChildren();
 		if( existingOut )
 		{
 			existingOut->clearChildren();
@@ -1004,8 +1008,8 @@ void OSLShader::loadShader( const std::string &shaderName, bool keepExistingValu
 	}
 
 	m_metadata = nullptr;
-	namePlug()->setValue( shaderName );
-	typePlug()->setValue( std::string( "osl:" ) + query.shadertype().c_str() );
+	namePlug->source<StringPlug>()->setValue( shaderName );
+	typePlug->source<StringPlug>()->setValue( std::string( "osl:" ) + query.shadertype().c_str() );
 
 	const IECore::CompoundData *metadata = OSLShader::metadata();
 	const IECore::CompoundData *parameterMetadata = nullptr;
@@ -1014,8 +1018,7 @@ void OSLShader::loadShader( const std::string &shaderName, bool keepExistingValu
 		parameterMetadata = metadata->member<IECore::CompoundData>( "parameter" );
 	}
 
-
-	loadShaderParameters( query, parametersPlug(), parameterMetadata );
+	loadShaderParameters( query, parametersPlug, parameterMetadata );
 
 	if( !existingOut || existingOut->typeId() != Plug::staticTypeId() )
 	{
