@@ -139,8 +139,6 @@ void GafferUIModule::bindNodule()
 
 	ConnectionCreatorClass<StandardNodule>()
 		.def( init<Gaffer::PlugPtr>() )
-		.def( "setLabelVisible", &StandardNodule::setLabelVisible )
-		.def( "getLabelVisible", &StandardNodule::getLabelVisible )
 	;
 
 	ConnectionCreatorClass<CompoundNodule>()

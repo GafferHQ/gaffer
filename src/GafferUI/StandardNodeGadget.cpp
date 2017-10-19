@@ -41,6 +41,7 @@
 #include "OpenEXR/ImathBoxAlgo.h"
 
 #include "IECore/MessageHandler.h"
+#include "IECore/AngleConversion.h"
 
 #include "IECoreGL/Selector.h"
 
@@ -314,40 +315,62 @@ Imath::Box3f StandardNodeGadget::bound() const
 
 void StandardNodeGadget::doRenderLayer( Layer layer, const Style *style ) const
 {
-	if( layer != GraphLayer::Nodes )
+	switch( layer )
 	{
-		return NodeGadget::doRenderLayer( layer, style );
+	  case GraphLayer::Nodes :
+		{
+			// decide what state we're rendering in
+			Style::State state = getHighlighted() ? Style::HighlightedState : Style::NormalState;
+
+			// draw our background frame
+			const Box3f b = bound();
+			float borderWidth = g_borderWidth;
+			if( m_oval )
+			{
+				const V3f s = b.size();
+				borderWidth = std::min( s.x, s.y ) / 2.0f;
+			}
+
+			style->renderNodeFrame(
+				Box2f( V2f( b.min.x, b.min.y ) + V2f( borderWidth ), V2f( b.max.x, b.max.y ) - V2f( borderWidth ) ),
+				borderWidth,
+				state,
+				m_userColor.get_ptr()
+			);
+
+			break;
+		}
+
+  	case GraphLayer::Highlighting :
+		{
+			// draw a strikethrough if we're disabled
+			if( !m_nodeEnabled && !IECoreGL::Selector::currentSelector() )
+			{
+				const Box3f b = bound();
+				/// \todo Replace renderLine() with a specific method (renderNodeStrikeThrough?) on the Style class
+				/// so that styles can do customised drawing based on knowledge of what is being drawn.
+				style->renderLine( IECore::LineSegment3f( V3f( b.min.x, b.min.y, 0 ), V3f( b.max.x, b.max.y, 0 ) ) );
+			}
+
+			// draw the labels for the nodules
+			for( NoduleSet::const_iterator it = m_visibleNodules.begin(); it != m_visibleNodules.end(); ++it)
+			{
+				glPushMatrix();
+				glMultMatrixf( (*it)->fullTransform( this ).getValue() );
+
+				renderNoduleLabel( (*it), style );
+
+				glPopMatrix();
+			}
+
+			break;
+		}
+
+	  default :
+			break;
 	}
 
-	// decide what state we're rendering in
-	Style::State state = getHighlighted() ? Style::HighlightedState : Style::NormalState;
-
-	// draw our background frame
-	const Box3f b = bound();
-	float borderWidth = g_borderWidth;
-	if( m_oval )
-	{
-		const V3f s = b.size();
-		borderWidth = std::min( s.x, s.y ) / 2.0f;
-	}
-
-	style->renderNodeFrame(
-		Box2f( V2f( b.min.x, b.min.y ) + V2f( borderWidth ), V2f( b.max.x, b.max.y ) - V2f( borderWidth ) ),
-		borderWidth,
-		state,
-		m_userColor.get_ptr()
-	);
-
-	// draw our contents
-	NodeGadget::doRenderLayer( layer, style );
-
-	// draw a strikethrough if we're disabled
-	if( !m_nodeEnabled && !IECoreGL::Selector::currentSelector() )
-	{
-		/// \todo Replace renderLine() with a specific method (renderNodeStrikeThrough?) on the Style class
-		/// so that styles can do customised drawing based on knowledge of what is being drawn.
-		style->renderLine( IECore::LineSegment3f( V3f( b.min.x, b.min.y, 0 ), V3f( b.max.x, b.max.y, 0 ) ) );
-	}
+	return NodeGadget::doRenderLayer( layer, style );
 }
 
 const Imath::Color3f *StandardNodeGadget::userColor() const
@@ -553,7 +576,7 @@ void StandardNodeGadget::enter( Gadget *gadget )
 	{
 		for( RecursiveStandardNoduleIterator it( gadget  ); !it.done(); ++it )
 		{
-			(*it)->setLabelVisible( true );
+			setNoduleLabelVisible( (*it) );
 		}
 	}
 }
@@ -562,10 +585,7 @@ void StandardNodeGadget::leave( Gadget *gadget )
 {
 	if( m_labelsVisibleOnHover )
 	{
-		for( RecursiveStandardNoduleIterator it( gadget  ); !it.done(); ++it )
-		{
-			(*it)->setLabelVisible( false );
-		}
+		setNoduleLabelsInvisible();
 	}
 }
 
@@ -602,7 +622,7 @@ bool StandardNodeGadget::dragMove( GadgetPtr gadget, const DragDropEvent &event 
 				if( ConnectionCreator *endpoint = IECore::runTimeCast<ConnectionCreator>( m_dragDestinationProxy ) )
 				{
 					creator->updateDragEndPoint( centre, connectionTangent( endpoint ) );
-					setCompatibleLabelsVisible( creator );
+					setCompatibleNoduleLabelsVisible( creator );
 				}
 			}
 			m_dragDestinationProxy->setHighlighted( true );
@@ -621,7 +641,9 @@ bool StandardNodeGadget::dragLeave( GadgetPtr gadget, const DragDropEvent &event
 	if( m_dragDestinationProxy != event.destinationGadget )
 	{
 		m_dragDestinationProxy->setHighlighted( false );
+		setNoduleLabelsInvisible();
 	}
+
 	m_dragDestinationProxy = nullptr;
 
 	return true;
@@ -657,6 +679,7 @@ bool StandardNodeGadget::drop( GadgetPtr gadget, const DragDropEvent &event )
 
 	m_dragDestinationProxy->setHighlighted( false );
 	m_dragDestinationProxy = nullptr;
+	setNoduleLabelsInvisible();
 	return true;
 }
 
@@ -932,4 +955,98 @@ void StandardNodeGadget::displayError( ConstPlugPtr plug, const std::string &mes
 	// on any thread so modifying the plug would be a big no-no. But now we're back
 	// on the main thread, converting to non-const access is OK.
 	errorGadget()->addError( boost::const_pointer_cast<Plug>( plug ), message );
+}
+
+// todo: add some documentation
+void StandardNodeGadget::setNoduleLabelVisible( const NodulePtr nodule )
+{
+	if( !nodule )
+	{
+		return;
+	}
+
+	m_visibleNodules.insert( nodule );
+}
+
+// todo: add some documentation
+void StandardNodeGadget::setCompatibleNoduleLabelsVisible( const ConnectionCreator *creator )
+{
+	// clear current state
+	setNoduleLabelsInvisible();
+
+	if( !creator )
+	{
+		return;
+	}
+
+	for( RecursiveStandardNoduleIterator it( this ); !it.done(); ++it )
+	{
+		if( creator->canCreateConnection( it->get()->plug() ) )
+		{
+			m_visibleNodules.insert( (*it) );
+		}
+	}
+}
+
+// todo: add some documentation
+void StandardNodeGadget::setNoduleLabelsInvisible()
+{
+	m_visibleNodules.clear();
+}
+
+// todo: add some documentation
+void StandardNodeGadget::renderNoduleLabel( const NodulePtr nodule, const Style *style ) const
+{
+	// labelKey is a global variable in StandardNodule
+	// static IECore::InternedString g_labelKey( "noduleLayout:label" );
+	IECore::InternedString labelKey( "noduleLayout:label" );
+
+	const std::string *label = nullptr;
+	IECore::ConstStringDataPtr labelData = Metadata::value<IECore::StringData>( nodule->plug(), labelKey );
+	if( labelData )
+	{
+		label = &labelData->readable();
+	}
+	else
+	{
+		label = &nodule->plug()->getName().string();
+	}
+
+	// we rotate the label based on the angle the connection exits the node at.
+	V3f tangent = connectionTangent( nodule.get() );
+	float theta = IECore::radiansToDegrees( atan2f( tangent.y, tangent.x ) );
+
+	// but we don't want the text to be vertical, so we bend it away from the
+	// vertical axis.
+	if( ( theta > 0.0f && theta < 90.0f ) || ( theta < 0.0f && theta >= -90.0f ) )
+	{
+		theta = sign( theta ) * lerp( 0.0f, 45.0f, fabs( theta ) / 90.0f );
+	}
+	else
+	{
+		theta = sign( theta ) * lerp( 135.0f, 180.0f, (fabs( theta ) - 90.0f) / 90.0f );
+	}
+
+	// we also don't want the text to be upside down, so we correct the rotation
+	// if that would be the case.
+	Box3f labelBound = style->textBound( Style::LabelText, *label );
+	V2f anchor( labelBound.min.x - 1.0f, labelBound.center().y );
+
+	if( theta > 90.0f || theta < -90.0f )
+	{
+		theta = theta - 180.0f;
+		anchor.x = labelBound.max.x + 1.0f;
+	}
+
+	// now we can actually do the rendering.
+
+	if( nodule->getHighlighted() )
+	{
+		glScalef( 1.2, 1.2, 1.2 );
+	}
+
+	glRotatef( theta, 0, 0, 1.0f );
+	glTranslatef( -anchor.x, -anchor.y, 0.0f );
+
+	style->renderText( Style::LabelText, *label );
 }

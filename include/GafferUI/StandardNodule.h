@@ -61,9 +61,6 @@ class StandardNodule : public Nodule
 
 		IE_CORE_DECLARERUNTIMETYPEDEXTENSION( GafferUI::StandardNodule, StandardNoduleTypeId, Nodule );
 
-		void setLabelVisible( bool labelVisible );
-		bool getLabelVisible() const;
-
 		bool canCreateConnection( const Gaffer::Plug *destinationPlug ) const override;
 		void updateDragEndPoint( const Imath::V3f position, const Imath::V3f &tangent ) override;
 		void createConnection( Gaffer::Plug *destinationPlug ) override;
@@ -94,7 +91,6 @@ class StandardNodule : public Nodule
 
 		bool updateUserColor();
 
-		bool m_labelVisible;
 		bool m_draggingConnection;
 		Imath::V3f m_dragPosition;
 		Imath::V3f m_dragTangent;

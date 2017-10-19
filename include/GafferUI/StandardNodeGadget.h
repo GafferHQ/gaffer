@@ -103,6 +103,10 @@ class StandardNodeGadget : public NodeGadget
 
 		Imath::Box3f bound() const override;
 
+		void setNoduleLabelVisible( const NodulePtr nodule );
+		void setCompatibleNoduleLabelsVisible( const ConnectionCreator *creator );
+		void setNoduleLabelsInvisible();
+
 	protected :
 
 		void doRenderLayer( Layer layer, const Style *style ) const override;
@@ -154,6 +158,8 @@ class StandardNodeGadget : public NodeGadget
 		void error( const Gaffer::Plug *plug, const Gaffer::Plug *source, const std::string &message );
 		void displayError( Gaffer::ConstPlugPtr plug, const std::string &message );
 
+		void renderNoduleLabel( const NodulePtr nodule, const Style *style ) const;
+
 		bool m_nodeEnabled;
 		bool m_labelsVisibleOnHover;
 		// We accept drags onto the node itself and
@@ -164,6 +170,9 @@ class StandardNodeGadget : public NodeGadget
 		ConnectionCreator *m_dragDestinationProxy;
 		boost::optional<Imath::Color3f> m_userColor;
 		bool m_oval;
+
+		typedef std::set<NodulePtr> NoduleSet;
+		NoduleSet m_visibleNodules;
 
 };
 
