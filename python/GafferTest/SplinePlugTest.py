@@ -45,6 +45,7 @@ import GafferTest
 class SplinePlugTest( GafferTest.TestCase ) :
 
 	def testSplineDefinition( self ) :
+
 		d = Gaffer.SplineDefinitionff( ((0, 0), (0,0), (0,0), (1,1), (1,1), (1,1)), Gaffer.SplineDefinitionInterpolation.Linear )
 		self.assertEqual( d.points(), ((0, 0), (0,0), (0,0), (1,1), (1,1), (1,1)) )
 		self.assertEqual( d.interpolation, Gaffer.SplineDefinitionInterpolation.Linear )
@@ -71,11 +72,10 @@ class SplinePlugTest( GafferTest.TestCase ) :
 
 		d = Gaffer.SplineDefinitionff( ((0, 0), (0,0), (1,1), (1,1)), Gaffer.SplineDefinitionInterpolation.BSpline )
 		self.assertFalse( d.trimEndPoints() ) # Not enough CVs for BSpline
-	
-		
+
+
 		d = Gaffer.SplineDefinitionff( ((0, 0), (0,0), (0,0), (1,1), (1,1), (1,1.1)), Gaffer.SplineDefinitionInterpolation.BSpline )
 		self.assertFalse( d.trimEndPoints() ) # Endpoints don't match
-		
 
 	def testConstructor( self ) :
 
