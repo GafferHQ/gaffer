@@ -137,7 +137,12 @@ def __plugWidgetType( plug ) :
 
 def __plugNoduleType( plug ) :
 
-	return "" if plug.node().parameterMetadata( plug, "connectable" ) == 0 else "GafferUI::StandardNodule"
+	if isinstance( plug, ( Gaffer.SplinefColor3fPlug, Gaffer.SplineffPlug ) ) :
+		return ""
+	elif plug.node().parameterMetadata( plug, "connectable" ) == 0 :
+		return ""
+	else :
+		return "GafferUI::StandardNodule"
 
 def __outPlugNoduleType( plug ) :
 
