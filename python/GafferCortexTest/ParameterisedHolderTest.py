@@ -325,7 +325,7 @@ class ParameterisedHolderTest( GafferTest.TestCase ) :
 		ph = GafferCortex.ParameterisedHolderNode()
 		ph.setParameterised( p )
 
-		self.failUnless( isinstance( ph["parameters"], Gaffer.CompoundPlug ) )
+		self.assertEqual( ph["parameters"].typeId(), Gaffer.Plug.staticTypeId() )
 		self.failUnless( isinstance( ph["parameters"]["a"], Gaffer.IntPlug ) )
 		self.assertEqual( len( ph["parameters"] ), 1 )
 
@@ -334,7 +334,7 @@ class ParameterisedHolderTest( GafferTest.TestCase ) :
 			p.parameters().removeParameter( p.parameters()["a"] )
 			p.parameters().addParameter( IECore.IntParameter( "b", "", 2 ) )
 
-		self.failUnless( isinstance( ph["parameters"], Gaffer.CompoundPlug ) )
+		self.assertEqual( ph["parameters"].typeId(), Gaffer.Plug.staticTypeId() )
 		self.failUnless( isinstance( ph["parameters"]["b"], Gaffer.IntPlug ) )
 		self.assertEqual( len( ph["parameters"] ), 1 )
 
@@ -355,7 +355,7 @@ class ParameterisedHolderTest( GafferTest.TestCase ) :
 		ph = GafferCortex.ParameterisedHolderNode()
 		ph.setParameterised( p )
 
-		self.failUnless( isinstance( ph["parameters"], Gaffer.CompoundPlug ) )
+		self.assertEqual( ph["parameters"].typeId(), Gaffer.Plug.staticTypeId() )
 		self.failUnless( isinstance( ph["parameters"]["a"], Gaffer.IntPlug ) )
 		self.assertEqual( len( ph["parameters"] ), 1 )
 
@@ -363,7 +363,7 @@ class ParameterisedHolderTest( GafferTest.TestCase ) :
 			p.parameters().removeParameter( p.parameters()["a"] )
 			p.parameters().addParameter( IECore.FloatParameter( "a", "", 2 ) )
 
-		self.failUnless( isinstance( ph["parameters"], Gaffer.CompoundPlug ) )
+		self.assertEqual( ph["parameters"].typeId(), Gaffer.Plug.staticTypeId() )
 		self.failUnless( isinstance( ph["parameters"]["a"], Gaffer.FloatPlug ) )
 		self.assertEqual( len( ph["parameters"] ), 1 )
 
@@ -627,7 +627,7 @@ class ParameterisedHolderTest( GafferTest.TestCase ) :
 		ph.setParameterised( p )
 
 		self.failUnless( "t" in ph["parameters"] )
-		self.failUnless( isinstance( ph["parameters"]["t"], Gaffer.CompoundPlug ) )
+		self.assertEqual( ph["parameters"]["t"].typeId(), Gaffer.Plug.staticTypeId() )
 
 		self.failUnless( isinstance( ph["parameters"]["t"]["hours"], Gaffer.IntPlug ) )
 		self.assertEqual( ph["parameters"]["t"]["hours"].minValue(), 0 )

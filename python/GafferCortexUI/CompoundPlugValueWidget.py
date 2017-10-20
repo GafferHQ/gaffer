@@ -42,8 +42,10 @@ import GafferUI
 
 from Qt import QtWidgets
 
-## \deprecated. CompoundPlug itself will be removed in the future, as will this
-# class. Use LayoutPlugValueWidget instead.
+# This was the predecessor to the far superior GafferUI.PlugLayout
+# class that we now use. It survives here as a relic because it is
+# still relied upon by CompoundParameterValueWidget and
+# ClassVectorParameterValueWidget. Do not use it for anything else!
 class CompoundPlugValueWidget( GafferUI.PlugValueWidget ) :
 
 	## Possible values for collapsed are :
@@ -312,5 +314,3 @@ class CompoundPlugValueWidget( GafferUI.PlugValueWidget ) :
 			return default
 
 		return value.value
-
-GafferUI.PlugValueWidget.registerType( Gaffer.CompoundPlug, CompoundPlugValueWidget )

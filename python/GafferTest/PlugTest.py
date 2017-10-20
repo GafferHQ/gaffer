@@ -158,7 +158,7 @@ class PlugTest( GafferTest.TestCase ) :
 				if not Gaffer.Plug.acceptsParent( self, potentialParent ) :
 					return False
 
-				if isinstance( potentialParent, Gaffer.CompoundPlug ) :
+				if isinstance( potentialParent, Gaffer.ValuePlug ) :
 					return False
 
 				return True
@@ -199,7 +199,7 @@ class PlugTest( GafferTest.TestCase ) :
 		# check that acceptsParent can be overridden
 
 		p2 = TestPlug()
-		self.assertRaises( RuntimeError, Gaffer.CompoundPlug().addChild, p2 )
+		self.assertRaises( RuntimeError, Gaffer.ValuePlug().addChild, p2 )
 
 		# try making a counterpart
 
@@ -217,7 +217,7 @@ class PlugTest( GafferTest.TestCase ) :
 		s["n1"]["o"] = Gaffer.IntPlug( direction = Gaffer.Plug.Direction.Out )
 
 		s["n2"]["i"] = Gaffer.IntPlug()
-		s["n2"]["c"] = Gaffer.CompoundPlug()
+		s["n2"]["c"] = Gaffer.Plug()
 		s["n2"]["c"]["i"] = Gaffer.IntPlug()
 
 		s["n2"]["i"].setInput( s["n1"]["o"] )

@@ -37,6 +37,8 @@
 
 #include "boost/python.hpp"
 
+#include "IECore/MurmurHash.h"
+
 #include "IECorePython/RefCountedBinding.h"
 #include "IECorePython/ScopedGILLock.h"
 
@@ -172,6 +174,7 @@ void GafferCortexModule::bindParameterHandler()
 		)
 		.def( "setParameterValue", &ParameterHandler::setParameterValue )
 		.def( "setPlugValue", &ParameterHandler::setPlugValue )
+		.def( "hash", &ParameterHandler::hash )
 		.def( "create", &ParameterHandler::create ).staticmethod( "create" )
 		.def( "registerParameterHandler", &registerParameterHandler ).staticmethod( "registerParameterHandler" )
 	;

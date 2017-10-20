@@ -209,5 +209,34 @@ class ParameterHandlerTest( GafferTest.TestCase ) :
 		self.assertFalse( h.plug().getFlags( Gaffer.Plug.Flags.Dynamic ) )
 		self.assertTrue( h.plug().getFlags( Gaffer.Plug.Flags.ReadOnly ) )
 
+	def testHash( self ) :
+
+		c = IECore.CompoundParameter(
+
+			"c",
+			"",
+
+			[
+				IECore.IntParameter( "i", "" ),
+				IECore.FloatParameter( "f", "" )
+			]
+
+		)
+
+		n = Gaffer.Node()
+
+		h = GafferCortex.CompoundParameterHandler( c )
+		h.setupPlug( n )
+
+		hash1 = h.hash()
+		n["c"]["i"].setValue( 10 )
+		hash2 = h.hash()
+		n["c"]["f"].setValue( 10 )
+		hash3 = h.hash()
+
+		self.assertNotEqual( hash1, hash2 )
+		self.assertNotEqual( hash1, hash3 )
+		self.assertNotEqual( hash2, hash3 )
+
 if __name__ == "__main__":
 	unittest.main()

@@ -66,11 +66,11 @@ class PlugValueWidgetTest( unittest.TestCase ) :
 
 	def testDisableCreationForSpecificTypes( self ) :
 
-		class ValueWidgetTestPlug( Gaffer.CompoundPlug ) :
+		class ValueWidgetTestPlug( Gaffer.ValuePlug ) :
 
 			def __init__( self, name="TestPlug", direction=Gaffer.Plug.Direction.In, flags=Gaffer.Plug.Flags.Default ) :
 
-				Gaffer.CompoundPlug.__init__( self, name, direction, flags )
+				Gaffer.ValuePlug.__init__( self, name, direction, flags )
 
 		IECore.registerRunTimeTyped( ValueWidgetTestPlug )
 
@@ -78,7 +78,7 @@ class PlugValueWidgetTest( unittest.TestCase ) :
 		n["p"] = ValueWidgetTestPlug()
 
 		w = GafferUI.PlugValueWidget.create( n["p"] )
-		self.assertTrue( isinstance( w, GafferUI.CompoundPlugValueWidget ) )
+		self.assertIsInstance( w, GafferUI.ConnectionPlugValueWidget )
 
 		GafferUI.PlugValueWidget.registerType( ValueWidgetTestPlug, None )
 

@@ -42,13 +42,6 @@
 
 #include "GafferCortex/ParameterHandler.h"
 
-namespace Gaffer
-{
-
-IE_CORE_FORWARDDECLARE( CompoundPlug )
-
-} // namespace Gaffer
-
 namespace GafferCortex
 {
 
@@ -85,7 +78,7 @@ class CompoundParameterHandler : public ParameterHandler
 		std::string plugName() const;
 
 		IECore::CompoundParameterPtr m_parameter;
-		Gaffer::CompoundPlugPtr m_plug;
+		Gaffer::PlugPtr m_plug;
 
 		ParameterHandler *handler( IECore::Parameter *child, bool createIfMissing = false );
 		typedef std::map<IECore::ParameterPtr, ParameterHandlerPtr> HandlerMap;

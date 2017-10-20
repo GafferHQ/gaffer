@@ -192,20 +192,10 @@ IECore::ConstCompoundObjectPtr Outputs::computeProcessedGlobals( const Gaffer::C
 		const ValuePlug *outputPlug = it->get();
 		if( outputPlug->getChild<BoolPlug>( "active" )->getValue() )
 		{
-			// backwards compatibility with old plug layout
-			const StringPlug *namePlug = outputPlug->getChild<StringPlug>( "label" );
-			if( !namePlug )
-			{
-				namePlug = outputPlug->getChild<StringPlug>( "name" );
-			}
+			const StringPlug *namePlug = outputPlug->getChild<StringPlug>( "name" );
 			const std::string name = namePlug->getValue();
 
 			const StringPlug *fileNamePlug = outputPlug->getChild<StringPlug>( "fileName" );
-			if( !fileNamePlug )
-			{
-				// backwards compatibility with old plug layout
-				fileNamePlug = outputPlug->getChild<StringPlug>( "name" );
-			}
 			const std::string fileName = fileNamePlug->getValue();
 
 			const std::string type = outputPlug->getChild<StringPlug>( "type" )->getValue();

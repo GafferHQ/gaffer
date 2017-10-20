@@ -262,7 +262,6 @@ import ApplicationMenu
 from BrowserEditor import BrowserEditor
 from Timeline import Timeline
 from MultiLineStringPlugValueWidget import MultiLineStringPlugValueWidget
-from CompoundPlugValueWidget import CompoundPlugValueWidget
 from EnumPlugValueWidget import EnumPlugValueWidget
 from PresetsPlugValueWidget import PresetsPlugValueWidget
 from GraphComponentBrowserMode import GraphComponentBrowserMode

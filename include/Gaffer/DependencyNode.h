@@ -63,7 +63,7 @@ class DependencyNode : public Node
 		typedef std::vector<const Plug *> AffectedPlugsContainer;
 
 		/// Must be implemented to fill outputs with all the plugs whose computation
-		/// will be affected by the specified input. It is an error to pass a CompoundPlug
+		/// will be affected by the specified input. It is an error to pass a compound plug
 		/// for input or to place one in outputs as computations are always performed on the
 		/// leaf level plugs only. Implementations of this method should call the base class
 		/// implementation first.

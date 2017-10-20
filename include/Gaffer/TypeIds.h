@@ -56,7 +56,7 @@ enum TypeId
 	ScriptContainerTypeId = 110009,
 	SetTypeId = 110010,
 	ObjectPlugTypeId = 110011,
-	CompoundPlugTypeId = 110012,
+	ObsoleteCompoundPlugTypeId = 110012, // obsolete - available for reuse
 	V2fPlugTypeId = 110013,
 	V3fPlugTypeId = 110014,
 	V2iPlugTypeId = 110015,

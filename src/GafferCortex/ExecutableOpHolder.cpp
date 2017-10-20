@@ -93,10 +93,9 @@ IECore::MurmurHash ExecutableOpHolder::hash( const Gaffer::Context *context ) co
 	h.append( classVersion );
 
 	Gaffer::Context::Scope scope( context );
-	const Gaffer::ValuePlug *parametersPlug = getChild<Gaffer::ValuePlug>( "parameters" );
-	if( parametersPlug )
+	if( const ParameterHandler *handler = parameterHandler() )
 	{
-		parametersPlug->hash( h );
+		h.append( handler->hash() );
 	}
 
 	return h;

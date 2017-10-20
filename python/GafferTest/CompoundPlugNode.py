@@ -39,29 +39,29 @@ import IECore
 
 import Gaffer
 
-## This class is used by the CompoundPlugTest.
+## This class is used by several of the unit tests.
 class CompoundPlugNode( Gaffer.DependencyNode ) :
 
 	def __init__( self, name="CompoundPlugNode" ) :
 
 		Gaffer.DependencyNode.__init__( self, name )
 
-		p = Gaffer.CompoundPlug( name = "p" )
+		p = Gaffer.Plug( name = "p" )
 		c1 = Gaffer.FloatPlug( name = "f" )
 		c2 = Gaffer.StringPlug( name = "s" )
 		p.addChild( c1 )
 		p.addChild( c2 )
 		self.addChild( p )
 
-		po = Gaffer.CompoundPlug( name = "o", direction = Gaffer.Plug.Direction.Out )
+		po = Gaffer.Plug( name = "o", direction = Gaffer.Plug.Direction.Out )
 		co1 = Gaffer.FloatPlug( name = "f", direction = Gaffer.Plug.Direction.Out )
 		co2 = Gaffer.StringPlug( name = "s", direction = Gaffer.Plug.Direction.Out )
 		po.addChild( co1 )
 		po.addChild( co2 )
 		self.addChild( po )
 
-		# for CompoundPlugTest.testSerialisationOfDynamicPlugsOnNondynamicParent().
-		self.addChild( Gaffer.CompoundPlug( name = "nonDynamicParent" ) )
+		# For ValuePlugTest.testSerialisationOfDynamicPlugsOnNondynamicParent().
+		self.addChild( Gaffer.Plug( name = "nonDynamicParent" ) )
 
 		# For BoxTest.testPromoteStaticPlugsWithChildren
 		self["valuePlug"] = Gaffer.ValuePlug()

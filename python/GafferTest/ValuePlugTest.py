@@ -501,10 +501,10 @@ class ValuePlugTest( GafferTest.TestCase ) :
 	def testSetInputShortcut( self ) :
 
 		n1 = Gaffer.Node()
-		n1["c"] = Gaffer.CompoundPlug()
+		n1["c"] = Gaffer.Plug()
 
 		n2 = Gaffer.Node()
-		n2["c"] = Gaffer.CompoundPlug( direction = Gaffer.Plug.Direction.Out )
+		n2["c"] = Gaffer.Plug( direction = Gaffer.Plug.Direction.Out )
 
 		cs = GafferTest.CapturingSlot( n1.plugInputChangedSignal() )
 		self.assertEqual( len( cs ), 0 )
@@ -520,10 +520,10 @@ class ValuePlugTest( GafferTest.TestCase ) :
 
 	def testSetInputWithoutParent( self ) :
 
-		c1 = Gaffer.CompoundPlug( direction=Gaffer.Plug.Direction.Out )
+		c1 = Gaffer.Plug( direction=Gaffer.Plug.Direction.Out )
 		c1["n"] = Gaffer.IntPlug( direction=Gaffer.Plug.Direction.Out )
 
-		c2 = Gaffer.CompoundPlug()
+		c2 = Gaffer.Plug()
 		c2["n"] = Gaffer.IntPlug()
 
 		c2.setInput( c1 )

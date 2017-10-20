@@ -343,8 +343,8 @@ void applyDynamicFlag( Plug *plug )
 	// for types like CompoundNumericPlug that create children in their constructors.
 	// Or, even better, abolish the Dynamic flag entirely and deal with everything
 	// via serialisers.
-	const Gaffer::TypeId compoundTypes[] = { PlugTypeId, ValuePlugTypeId, CompoundPlugTypeId, ArrayPlugTypeId };
-	const Gaffer::TypeId *compoundTypesEnd = compoundTypes + 4;
+	const Gaffer::TypeId compoundTypes[] = { PlugTypeId, ValuePlugTypeId, ArrayPlugTypeId };
+	const Gaffer::TypeId *compoundTypesEnd = compoundTypes + 3;
 	if( find( compoundTypes, compoundTypesEnd, (Gaffer::TypeId)plug->typeId() ) != compoundTypesEnd )
 	{
 		for( RecursivePlugIterator it( plug ); !it.done(); ++it )
@@ -354,6 +354,25 @@ void applyDynamicFlag( Plug *plug )
 			{
 				it.prune();
 			}
+		}
+	}
+}
+
+void setFrom( Plug *dst, const Plug *src )
+{
+	assert( dst->typeId() == src->typeId() );
+	if( ValuePlug *dstValuePlug = IECore::runTimeCast<ValuePlug>( dst ) )
+	{
+		dstValuePlug->setFrom( static_cast<const ValuePlug *>( src ) );
+	}
+	else
+	{
+		for( PlugIterator it( dst ); !it.done(); ++it )
+		{
+			Plug *dstChild = it->get();
+			const Plug *srcChild = src->getChild<Plug>( dstChild->getName() );
+			assert( srcChild );
+			setFrom( dstChild, srcChild );
 		}
 	}
 }
@@ -383,10 +402,7 @@ Plug *promoteWithName( Plug *plug, const InternedString &name, Plug *parent, con
 	PlugPtr externalPlug = plug->createCounterpart( name, plug->direction() );
 	if( externalPlug->direction() == Plug::In )
 	{
-		if( ValuePlug *externalValuePlug = IECore::runTimeCast<ValuePlug>( externalPlug.get() ) )
-		{
-			externalValuePlug->setFrom( static_cast<ValuePlug *>( plug ) );
-		}
+		setFrom( externalPlug.get(), plug );
 	}
 
 	Node *externalNode = ::externalNode( plug );

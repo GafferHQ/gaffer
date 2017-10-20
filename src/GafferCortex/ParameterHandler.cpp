@@ -38,6 +38,7 @@
 #include "IECore/SimpleTypedData.h"
 
 #include "Gaffer/GraphComponent.h"
+#include "Gaffer/ValuePlug.h"
 
 #include "GafferCortex/ParameterHandler.h"
 
@@ -51,6 +52,18 @@ ParameterHandler::ParameterHandler()
 
 ParameterHandler::~ParameterHandler()
 {
+}
+
+IECore::MurmurHash ParameterHandler::hash() const
+{
+	IECore::MurmurHash result;
+	const Gaffer::Plug *p = plug();
+	for( Gaffer::RecursiveValuePlugIterator it( p ); !it.done(); ++it )
+	{
+		result.append( (*it)->relativeName( p ) );
+		(*it)->hash( result );
+	}
+	return result;
 }
 
 void ParameterHandler::setupPlugFlags( Gaffer::Plug *plug, unsigned flags )

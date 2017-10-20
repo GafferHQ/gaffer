@@ -38,16 +38,18 @@ import Gaffer
 import GafferUI
 import GafferUITest
 
+from GafferCortexUI.CompoundPlugValueWidget import CompoundPlugValueWidget
+
 class CompoundPlugValueWidgetTest( GafferUITest.TestCase ) :
 
 	def testChildAccess( self ) :
 
 		n = Gaffer.Node()
-		n["c"] = Gaffer.CompoundPlug()
+		n["c"] = Gaffer.Plug()
 		n["c"]["i"] = Gaffer.IntPlug()
 		n["c"]["s"] = Gaffer.StringPlug()
 
-		pw = GafferUI.CompoundPlugValueWidget( n["c"] )
+		pw = CompoundPlugValueWidget( n["c"] )
 
 		# shouldn't get anything because the ui is being built lazily
 		self.assertEqual( pw.childPlugValueWidget( n["c"]["i"] ), None )
@@ -57,7 +59,7 @@ class CompoundPlugValueWidgetTest( GafferUITest.TestCase ) :
 		self.failUnless( isinstance( pw.childPlugValueWidget( n["c"]["s"], lazy=False ), GafferUI.PlugValueWidget ) )
 
 		# shouldn't need to force with lazy=False if the ui is user-visible.
-		pw = GafferUI.CompoundPlugValueWidget( n["c"], collapsed=None )
+		pw = CompoundPlugValueWidget( n["c"], collapsed=None )
 		w = GafferUI.Window()
 		w.setChild( pw )
 		w.setVisible( True )
@@ -67,11 +69,11 @@ class CompoundPlugValueWidgetTest( GafferUITest.TestCase ) :
 	def testChildReadOnlyStatus( self ) :
 
 		n = Gaffer.Node()
-		n["c"] = Gaffer.CompoundPlug()
+		n["c"] = Gaffer.Plug()
 		n["c"]["i"] = Gaffer.IntPlug()
 		n["c"]["s"] = Gaffer.StringPlug()
 
-		w = GafferUI.CompoundPlugValueWidget( n["c"] )
+		w = CompoundPlugValueWidget( n["c"] )
 		w.setReadOnly( True )
 
 		iw = w.childPlugValueWidget( n["c"]["i"], lazy=False )

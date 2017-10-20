@@ -73,7 +73,6 @@ from SpeedTest import SpeedTest
 from KeywordPlugNode import KeywordPlugNode
 from CompoundNumericPlugTest import CompoundNumericPlugTest
 from CompoundNumericNode import CompoundNumericNode
-from CompoundPlugTest import CompoundPlugTest
 from CompoundPlugNode import CompoundPlugNode
 from TypedObjectPlugTest import TypedObjectPlugTest
 from SplinePlugTest import SplinePlugTest
