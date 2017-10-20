@@ -45,7 +45,7 @@ namespace IECoreArnoldPreview
 namespace ProceduralAlgo
 {
 
-AtNode *convert( const IECore::ExternalProcedural *procedural );
+AtNode *convert( const IECore::ExternalProcedural *procedural, const std::string &nodeName, const AtNode *parentNode );
 
 } // namespace ProceduralAlgo
 

@@ -66,9 +66,9 @@ namespace IECoreArnoldPreview
 namespace ProceduralAlgo
 {
 
-AtNode *convert( const IECore::ExternalProcedural *procedural )
+AtNode *convert( const IECore::ExternalProcedural *procedural, const std::string &nodeName, const AtNode *parentNode  )
 {
-	AtNode *node = AiNode( procedural->getFileName().c_str() );
+	AtNode *node = AiNode( procedural->getFileName().c_str(), AtString( nodeName.c_str() ), parentNode );
 	ParameterAlgo::setParameters( node, procedural->parameters()->readable() );
 
 	return node;

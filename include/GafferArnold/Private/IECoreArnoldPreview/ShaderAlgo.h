@@ -49,7 +49,7 @@ namespace IECoreArnoldPreview
 namespace ShaderAlgo
 {
 
-std::vector<AtNode *> convert( const IECore::ObjectVector *shaderNetwork, const std::string &namePrefix = "" );
+std::vector<AtNode *> convert( const IECore::ObjectVector *shaderNetwork, const std::string &namePrefix = "", const AtNode *parentNode = nullptr );
 
 } // namespace ShaderAlgo
 
