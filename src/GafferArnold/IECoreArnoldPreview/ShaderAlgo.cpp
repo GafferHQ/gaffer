@@ -57,6 +57,8 @@ using namespace IECoreArnold;
 namespace
 {
 
+const IECore::InternedString g_handleString( "__handle" );
+
 template<typename Spline>
 void setSplineParameter( AtNode *node, const InternedString &name, const Spline &spline )
 {
@@ -108,7 +110,7 @@ namespace IECoreArnoldPreview
 namespace ShaderAlgo
 {
 
-std::vector<AtNode *> convert( const IECore::ObjectVector *shaderNetwork, const std::string &namePrefix )
+std::vector<AtNode *> convert( const IECore::ObjectVector *shaderNetwork, const std::string &namePrefix, const AtNode *parentNode )
 {
 	typedef boost::unordered_map<std::string, AtNode *> ShaderMap;
 	ShaderMap shaderMap; // Maps handles to nodes
@@ -151,11 +153,29 @@ std::vector<AtNode *> convert( const IECore::ObjectVector *shaderNetwork, const 
 			continue;
 		}
 
-		AtNode *node = AiNode( nodeType );
+		std::string nodeName = boost::lexical_cast<string>( result.size() );
+		auto handleIt = parameters->find( g_handleString );
+		const StringData *handleData = nullptr;
+		if( handleIt != parameters->end() )
+		{
+			handleData = runTimeCast<const StringData>( handleIt->second.get() );
+			if( handleData )
+			{
+				nodeName = handleData->readable();
+			}
+		}
+
+		AtNode *node = AiNode( nodeType, AtString( (namePrefix + nodeName).c_str() ), parentNode );
+
 		if( !node )
 		{
 			msg( Msg::Warning, "IECoreArnold::ShaderAlgo", boost::format( "Couldn't load shader \"%s\"" ) % nodeType );
 			continue;
+		}
+
+		if( handleData )
+		{
+			shaderMap[nodeName] = node;
 		}
 
 		if( oslShaderName )
@@ -163,7 +183,6 @@ std::vector<AtNode *> convert( const IECore::ObjectVector *shaderNetwork, const 
 			AiNodeSetStr( node, "shadername", oslShaderName );
 		}
 
-		std::string nodeName = boost::lexical_cast<string>( result.size() );
 		for( CompoundDataMap::const_iterator pIt = parameters->begin(), peIt = parameters->end(); pIt != peIt; ++pIt )
 		{
 			std::string parameterName = pIt->first;
@@ -211,8 +230,6 @@ std::vector<AtNode *> convert( const IECore::ObjectVector *shaderNetwork, const 
 				}
 				else if( pIt->first.value() == "__handle" )
 				{
-					shaderMap[value] = node;
-					nodeName = value;
 					continue;
 				}
 			}
@@ -281,8 +298,6 @@ std::vector<AtNode *> convert( const IECore::ObjectVector *shaderNetwork, const 
 			ParameterAlgo::setParameter( node, parameterName.c_str(), pIt->second.get() );
 		}
 
-		nodeName = namePrefix + nodeName;
-		AiNodeSetStr( node, "name", nodeName.c_str() );
 		result.push_back( node );
 	}
 

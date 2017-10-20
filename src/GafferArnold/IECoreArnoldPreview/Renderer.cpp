@@ -79,82 +79,6 @@ using namespace IECoreArnold;
 using namespace IECoreArnoldPreview;
 
 //////////////////////////////////////////////////////////////////////////
-//
-// Namespacing Utilities
-// =====================
-//
-// In Arnold 4 all nodes are in a global namespace, so there can easily be
-// clashes between names generated from different procedurals. We must
-// therefore make sure we prefix such names ourselves to keep them unique.
-// In Arnold 5, nodes are created with a parent node which provides a
-// namespace, so we won't need to prefix them, but we will instead need
-// to provide a parent. The utilities below do the namespacing needed for
-// Arnold 4, but designed such that when we move to Arnold 5 we'll just be
-// able to remove the utilities and replace them with direct calls to
-// AiNode/NodeAlgo etc.
-//
-//////////////////////////////////////////////////////////////////////////
-
-namespace
-{
-
-std::string namespacedName( const std::string &nodeName, const AtNode *parentNode )
-{
-	if( parentNode )
-	{
-		return AiNodeGetName( parentNode ) + string( ":" ) + nodeName;
-	}
-	return nodeName;
-}
-
-AtNode *namespacedNode( const std::string &nodeType, const std::string &nodeName, const AtNode *parentNode = nullptr )
-{
-	AtNode *node = AiNode( nodeType.c_str() );
-	if( node )
-	{
-		AiNodeSetStr( node, "name", namespacedName( nodeName, parentNode ).c_str() );
-	}
-	return node;
-}
-
-AtNode *namespacedNodeAlgoConvert( const IECore::Object *object, const std::string &nodeName, const AtNode *parentNode )
-{
-	AtNode *node = NodeAlgo::convert( object );
-	if( node )
-	{
-		AiNodeSetStr( node, "name", namespacedName( nodeName, parentNode ).c_str() );
-	}
-	return node;
-}
-
-AtNode *namespacedNodeAlgoConvert( const std::vector<const IECore::Object *> &samples, const std::vector<float> &times, const std::string &nodeName, const AtNode *parentNode )
-{
-	AtNode *node = NodeAlgo::convert( samples, times );
-	if( node )
-	{
-		AiNodeSetStr( node, "name", namespacedName( nodeName, parentNode ).c_str() );
-	}
-	return node;
-}
-
-AtNode *namespacedCameraAlgoConvert( const IECore::Camera *camera, const std::string &name, const AtNode *parentNode )
-{
-	AtNode *node = CameraAlgo::convert( camera );
-	if( node )
-	{
-		AiNodeSetStr( node, "name", namespacedName( name, parentNode ).c_str() );
-	}
-	return node;
-}
-
-std::vector<AtNode *> namespacedShaderAlgoConvert( const IECore::ObjectVector *shaderNetwork, const std::string &namePrefix, const AtNode *parentNode )
-{
-	return ShaderAlgo::convert( shaderNetwork, namespacedName( namePrefix, parentNode ) );
-}
-
-} // namespace
-
-//////////////////////////////////////////////////////////////////////////
 // Utilities
 //////////////////////////////////////////////////////////////////////////
 
@@ -349,7 +273,7 @@ class ArnoldOutput : public IECore::RefCounted
 
 			const std::string driverNodeName = boost::str( boost::format( "ieCoreArnold:display:%s" ) % name.string() );
 			m_driver.reset(
-				namespacedNode( driverNodeType.c_str(), driverNodeName.c_str() ),
+				AiNode( AtString( driverNodeType.c_str() ), AtString( driverNodeName.c_str() ) ),
 				nodeDeleter
 			);
 			if( !m_driver )
@@ -408,7 +332,7 @@ class ArnoldOutput : public IECore::RefCounted
 
 			const std::string filterNodeName = boost::str( boost::format( "ieCoreArnold:filter:%s" ) % name.string() );
 			m_filter.reset(
-				namespacedNode( filterNodeType.c_str(), filterNodeName.c_str() ),
+				AiNode( AtString( filterNodeType.c_str() ), AtString( filterNodeName.c_str() ) ),
 				nodeDeleter
 			);
 			if( AiNodeEntryGetType( AiNodeGetNodeEntry( m_filter.get() ) ) != AI_NODE_FILTER )
@@ -519,7 +443,7 @@ class ArnoldShader : public IECore::RefCounted
 		ArnoldShader( const IECore::ObjectVector *shaderNetwork, NodeDeleter nodeDeleter, const std::string &namePrefix, const AtNode *parentNode )
 			:	m_nodeDeleter( nodeDeleter )
 		{
-			m_nodes = namespacedShaderAlgoConvert( shaderNetwork, namePrefix, parentNode );
+			m_nodes = ShaderAlgo::convert( shaderNetwork, namePrefix, parentNode );
 		}
 
 		~ArnoldShader() override
@@ -1308,7 +1232,7 @@ class Instance
 			{
 				AiNodeSetByte( node.get(), "visibility", 0 );
 				m_ginstance = SharedAtNodePtr(
-					namespacedNode( "ginstance", instanceName, parent ),
+					AiNode( "ginstance", AtString( instanceName.c_str() ), parent ),
 					nodeDeleter
 				);
 				AiNodeSetPtr( m_ginstance.get(), "node", m_node.get() );
@@ -1462,7 +1386,7 @@ class InstanceCache : public IECore::RefCounted
 			}
 			else
 			{
-				node = namespacedNodeAlgoConvert( object, nodeName, m_parentNode );
+				node = NodeAlgo::convert( object, nodeName, m_parentNode );
 			}
 
 			if( !node )
@@ -1485,7 +1409,7 @@ class InstanceCache : public IECore::RefCounted
 			}
 			else
 			{
-				node = namespacedNodeAlgoConvert( samples, times[0], times[times.size() - 1], nodeName, m_parentNode );
+				node = NodeAlgo::convert( samples, times[0], times[times.size() - 1], nodeName, m_parentNode );
 			}
 
 			if( !node )
@@ -1888,7 +1812,7 @@ int procFunc( AtProceduralNodeMethods *methods )
 
 AtNode *convertProcedural( IECoreScenePreview::ConstProceduralPtr procedural, const std::string &nodeName, const AtNode *parentNode )
 {
-	AtNode *node = namespacedNode( "procedural", nodeName, parentNode );
+	AtNode *node = AiNode( "procedural", AtString( nodeName.c_str() ), parentNode );
 
 	AiNodeSetPtr( node, "funcptr", (void *)procFunc );
 
@@ -2425,7 +2349,7 @@ class ArnoldGlobals
 					defaultCortexCamera->addStandardParameters();
 					m_cameras["ieCoreArnold:defaultCamera"] = defaultCortexCamera;
 					m_defaultCamera = SharedAtNodePtr(
-						namespacedCameraAlgoConvert( defaultCortexCamera.get(), "ieCoreArnold:defaultCamera", nullptr ),
+						CameraAlgo::convert( defaultCortexCamera.get(), "ieCoreArnold:defaultCamera", nullptr ),
 						nodeDeleter( m_renderType )
 					);
 				}

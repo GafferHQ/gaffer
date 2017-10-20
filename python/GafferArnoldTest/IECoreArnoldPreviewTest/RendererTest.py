@@ -1850,7 +1850,8 @@ class RendererTest( GafferTest.TestCase ) :
 		r.render()
 
 		for i in range( 0, 5 ) :
-			sphere = arnold.AiNodeLookUpByName( "{0}:/sphere{1}".format( arnold.AiNodeGetName( procedurals[0] ), i ) )
+			# Look for spheres of the correct types parented under the procedural
+			sphere = arnold.AiNodeLookUpByName( "/sphere%i" % i, procedurals[0] )
 			# We actually expect the node to be a ginstance, but during `render()` Arnold seems
 			# to switch the type of ginstances to match the type of the node they are instancing.
 			self.assertEqual( arnold.AiNodeEntryGetName( arnold.AiNodeGetNodeEntry( sphere ) ), "sphere" )
