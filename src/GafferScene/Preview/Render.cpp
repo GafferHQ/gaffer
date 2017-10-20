@@ -72,18 +72,12 @@ static IECore::InternedString g_rendererContextName( "scene:renderer" );
 IE_CORE_DEFINERUNTIMETYPED( Render );
 
 Render::Render( const std::string &name )
-	:	TaskNode( name )
+	:	Render( /* rendererType = */ InternedString(), name )
 {
-	construct();
 }
 
 Render::Render( const IECore::InternedString &rendererType, const std::string &name )
 	:	TaskNode( name )
-{
-	construct( rendererType );
-}
-
-void Render::construct( const IECore::InternedString &rendererType )
 {
 	storeIndexOfNextChild( g_firstPlugIndex );
 	addChild( new ScenePlug( "in" ) );

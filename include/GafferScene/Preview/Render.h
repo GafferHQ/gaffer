@@ -95,8 +95,6 @@ class Render : public GafferDispatch::TaskNode
 
 	private :
 
-		void construct( const IECore::InternedString &rendererType = IECore::InternedString() );
-
 		ScenePlug *adaptedInPlug();
 		const ScenePlug *adaptedInPlug() const;
 
