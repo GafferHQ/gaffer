@@ -233,7 +233,9 @@ class RendererTest( GafferTest.TestCase ) :
 
 			shaders = self.__allNodes( type = arnold.AI_NODE_SHADER )
 			self.assertEqual( len( shaders ), 4 )
-			self.assertEqual( len( set( [ arnold.AiNodeGetName( s ) for s in shaders ] ) ), 4 )
+			shaderNames = [ arnold.AiNodeGetName( s ) for s in shaders ]
+			self.assertEqual( len( shaderNames ), 4 )
+			self.assertEqual( len( [ i for i in shaderNames if i.split(":")[-1] == "myHandle" ] ), 2 )
 
 	def testShaderNodeConnectionType( self ) :
 
