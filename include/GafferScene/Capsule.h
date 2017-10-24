@@ -73,8 +73,8 @@ class Capsule : public IECoreScenePreview::Procedural
 
 		IE_CORE_DECLAREEXTENSIONOBJECT( GafferScene::Capsule, GafferScene::CapsuleTypeId, IECoreScenePreview::Procedural );
 
-		virtual Imath::Box3f bound() const;
-		virtual void render( IECoreScenePreview::Renderer *renderer ) const;
+		Imath::Box3f bound() const override;
+		void render( IECoreScenePreview::Renderer *renderer ) const override;
 
 		const ScenePlug *scene() const;
 		const ScenePlug::ScenePath &root() const;
