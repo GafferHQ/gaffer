@@ -54,17 +54,18 @@ defaultDisplay = config.getDefaultDisplay()
 # add preferences plugs
 
 preferences = application.root()["preferences"]
-preferences["displayColorSpace"] = Gaffer.CompoundPlug()
+preferences["displayColorSpace"] = Gaffer.Plug()
 preferences["displayColorSpace"]["view"] = Gaffer.StringPlug( defaultValue = config.getDefaultView( defaultDisplay ) )
 
 # configure ui for preferences plugs
 
-GafferUI.PlugValueWidget.registerCreator(
-	Gaffer.Preferences.staticTypeId(),
-	"displayColorSpace.view",
-	GafferUI.EnumPlugValueWidget,
-	labelsAndValues = zip( config.getViews( defaultDisplay ), config.getViews( defaultDisplay ) ),
-)
+Gaffer.Metadata.registerValue( preferences["displayColorSpace"], "plugValueWidget:type", "GafferUI.LayoutPlugValueWidget", persistent = False )
+Gaffer.Metadata.registerValue( preferences["displayColorSpace"], "layout:section", "Display Color Space", persistent = False )
+
+Gaffer.Metadata.registerValue( preferences["displayColorSpace"]["view"], "plugValueWidget:type", "GafferUI.PresetsPlugValueWidget", persistent = False )
+
+for view in config.getViews( defaultDisplay ) :
+	Gaffer.Metadata.registerValue( preferences["displayColorSpace"]["view"], "preset:" + view, view, persistent = False )
 
 # update the display transform from the plugs
 
