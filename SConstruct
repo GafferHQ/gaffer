@@ -1164,7 +1164,7 @@ def buildDocs( target, source, env ) :
 			elif ext == ".sh" :
 				command = [ "gaffer", "env", "./" + f ]
 			if command :
-				sys.stdout.write( "Running {}\n".format( os.path.join( root, f ) ) )
+				sys.stdout.write( "Running {0}\n".format( os.path.join( root, f ) ) )
 				subprocess.check_call( command, cwd = root, env = env["ENV"] )
 
 	# Run sphinx to generate the final documentation.
