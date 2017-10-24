@@ -46,8 +46,11 @@ import GafferSceneUI
 # add plugs to the preferences node
 
 preferences = application.root()["preferences"]
-preferences["viewer"] = Gaffer.CompoundPlug()
+preferences["viewer"] = Gaffer.Plug()
 preferences["viewer"]["gridDimensions"] = Gaffer.V2fPlug( defaultValue = IECore.V2f( 10 ), minValue = IECore.V2f( 0 ) )
+
+Gaffer.Metadata.registerValue( preferences["viewer"], "plugValueWidget:type", "GafferUI.LayoutPlugValueWidget", persistent = False )
+Gaffer.Metadata.registerValue( preferences["viewer"], "layout:section", "Viewer", persistent = False )
 
 # register a customised view for viewing scenes
 

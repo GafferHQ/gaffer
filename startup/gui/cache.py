@@ -41,10 +41,13 @@ import GafferImage
 # add plugs to the preferences node
 
 preferences = application.root()["preferences"]
-preferences["cache"] = Gaffer.CompoundPlug()
+preferences["cache"] = Gaffer.Plug()
 preferences["cache"]["enabled"] = Gaffer.BoolPlug( defaultValue = True )
 preferences["cache"]["memoryLimit"] = Gaffer.IntPlug( defaultValue = Gaffer.ValuePlug.getCacheMemoryLimit() / ( 1024 * 1024 ) )
 preferences["cache"]["imageReaderMemoryLimit"] = Gaffer.IntPlug( defaultValue = GafferImage.OpenImageIOReader.getCacheMemoryLimit() / ( 1024 * 1024 ) )
+
+Gaffer.Metadata.registerValue( preferences["cache"], "plugValueWidget:type", "GafferUI.LayoutPlugValueWidget", persistent = False )
+Gaffer.Metadata.registerValue( preferences["cache"], "layout:section", "Cache", persistent = False )
 
 Gaffer.Metadata.registerPlugValue(
 	preferences["cache"]["memoryLimit"],

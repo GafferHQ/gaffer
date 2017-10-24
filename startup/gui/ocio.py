@@ -54,10 +54,13 @@ defaultDisplay = config.getDefaultDisplay()
 # add preferences plugs
 
 preferences = application.root()["preferences"]
-preferences["displayColorSpace"] = Gaffer.CompoundPlug()
+preferences["displayColorSpace"] = Gaffer.Plug()
 preferences["displayColorSpace"]["view"] = Gaffer.StringPlug( defaultValue = config.getDefaultView( defaultDisplay ) )
 
 # configure ui for preferences plugs
+
+Gaffer.Metadata.registerValue( preferences["displayColorSpace"], "plugValueWidget:type", "GafferUI.LayoutPlugValueWidget", persistent = False )
+Gaffer.Metadata.registerValue( preferences["displayColorSpace"], "layout:section", "Display Color Space", persistent = False )
 
 GafferUI.PlugValueWidget.registerCreator(
 	Gaffer.Preferences.staticTypeId(),
