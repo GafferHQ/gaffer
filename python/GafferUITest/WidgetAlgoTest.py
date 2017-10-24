@@ -34,63 +34,43 @@
 #
 ##########################################################################
 
-import os
-import sys
+import unittest
+
+import IECore
+import IECoreImage
 
 import GafferUI
+import GafferUITest
 
 import Qt
-from Qt import QtCore
-from Qt import QtGui
 from Qt import QtWidgets
 
-def joinEdges( listContainer ) :
+class WidgetAlgoTest( GafferUITest.TestCase ) :
 
-	if listContainer.orientation() == listContainer.Orientation.Horizontal :
-		lowProperty = "gafferFlatLeft"
-		highProperty = "gafferFlatRight"
-	else :
-		lowProperty = "gafferFlatTop"
-		highProperty = "gafferFlatBottom"
+	def testGrab( self ) :
 
-	visibleWidgets = [ w for w in listContainer if w.getVisible() ]
-	l = len( visibleWidgets )
-	for i in range( 0, l ) :
-		visibleWidgets[i]._qtWidget().setProperty( lowProperty, i > 0 )
-		visibleWidgets[i]._qtWidget().setProperty( highProperty, i < l - 1 )
+		with GafferUI.Window() as w :
+			b = GafferUI.Button( "HI!" )
 
-def grab( widget, imagePath ) :
+		w.setVisible( True )
+		self.waitForIdle( 1000 )
 
-	GafferUI.EventLoop.waitForIdle()
+		GafferUI.WidgetAlgo.grab( b, self.temporaryDirectory() + "/grab.png" )
 
-	imageDir = os.path.dirname( imagePath )
-	if imageDir and not os.path.isdir( imageDir ) :
-		os.makedirs( imageDir )
+		i = IECore.Reader.create( self.temporaryDirectory() + "/grab.png" ).read()
 
-	if Qt.__binding__ in ( "PySide2", "PyQt5" ) :
-		# Qt 5
-		screen = QtWidgets.QApplication.primaryScreen()
-		windowHandle = widget._qtWidget().windowHandle()
-		if windowHandle :
-			screen = windowHandle.screen()
+		## \todo Should we have an official method for getting
+		# physical pixel size like this? Or should `grab()` downsize
+		# to return an image with the logical pixel size?
+		expectedSize = IECore.V2f( b.size() )
+		if Qt.__binding__ in ( "PySide2", "PyQt5" ) :
+			screen= QtWidgets.QApplication.primaryScreen()
+			windowHandle = b._qtWidget().windowHandle()
+			if windowHandle :
+				screen = windowHandle.screen()
+			expectedSize *= screen.devicePixelRatio()
 
-		pixmap = screen.grabWindow( long( widget._qtWidget().winId() ) )
+		self.assertEqual( IECore.V2f( i.displayWindow.size() ) + IECore.V2f( 1 ), expectedSize )
 
-		if sys.platform == "darwin" and pixmap.size() == screen.size() * screen.devicePixelRatio() :
-			# A bug means that the entire screen will have been captured,
-			# not just the widget we requested. Copy out just the widget.
-			topLeft = widget._qtWidget().mapToGlobal( QtCore.QPoint( 0, 0 ) )
-			bottomRight = widget._qtWidget().mapToGlobal( QtCore.QPoint( widget._qtWidget().width(), widget._qtWidget().height() ) )
-			size = bottomRight - topLeft
-			pixmap = pixmap.copy(
-				QtCore.QRect(
-					topLeft * screen.devicePixelRatio(),
-					QtCore.QSize( size.x(), size.y() ) * screen.devicePixelRatio()
-				)
-			)
-
-	else :
-		# Qt 4
-		pixmap = QtGui.QPixmap.grabWindow( long( widget._qtWidget().winId() ) )
-
-	pixmap.save( imagePath )
+if __name__ == "__main__":
+	unittest.main()
