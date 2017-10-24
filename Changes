@@ -1,3 +1,112 @@
+0.41.0.0
+========
+
+Breaking Changes
+----------------
+
+- Adopted Cortex 10 UV representation (#2281) :
+  - UVs are now represented as V2f primitive variables,
+    not separate s/t float primitive variables.
+  - Primary UV set is called "uv".
+  - UV origin is in the bottom left, with increasing values of
+    V going _up_ (flipped vertically compared to previous orientation).
+  - Indices are now stored on the same primitive variable as the
+    UVs themselves.
+  - This has affected the plugs and default values for a number of
+    nodes.
+- SplinePlug : Changed value representation from IECore::Spline to new
+  SplineDefinition class (#2148).
+- Algo headers : Removed compatibility namespacing (#2299).
+- Removed CompoundPlug. Use Plug or ValuePlug instead (#2298, #1323).
+- Removed CompoundPlugValueWidget. Use PlugLayout instead (#2298).
+- FilteredSceneProcessor : Removed deprecated `filterContext` method.
+  Use FilterPlug::FilterScope instead (#2260).
+- Stopped installing Cortex image ops. Use GafferImage nodes instead (#2258).
+- Removed OpenImageIOAlgo. Use IECoreImage::OpenImageIOAlgo instead (#2258).
+- Removed GafferCortexUI::ImageReaderPathPreview. Use
+  GafferImageUI::ImageReaderPathPreview instead (#2258).
+- GafferBindings : Hid internal details in GafferModule (#2289).
+- GafferUIBindings : Hid internal details in GafferUIModule (#2256).
+- GafferCortexBindings : Hid internal details in GafferCortexModule (#2248).
+
+Features
+--------
+
+- Added Viewer visualisation of Arnold light filters (#2275).
+- Added Encapsulate node. This encapsulates portions of a scene by
+  collapsing the hierarchy and replacing it with a procedural which
+  will be evaluated at render time (#2283).
+- Added FloatSpline OSL shader ((#2292).
+- Added VTuneMonitor to annotate VTune profiles with node processes (#2247).
+
+Improvements
+------------
+
+- LightTweaks : Added "Delete" menu item to context menu (#2285).
+- OSLShader : Improved node graph labels (#2296).
+- Parent : Defaulted "root" plug to value of "/" (#2242).
+- ArnoldOptions : Added abortOnError and maxSubdivison settings (#2290).
+- SplinePlug :
+  - Added MonotoneCubic interpolation option (#2148).
+  - Added option to preview splines as curves rather than a colour ramp (#2292).
+- CollectScenes : Added "root" plug, to allow subtrees to be collected
+  from the input scene (#2238).
+- OSLObject/ShadingEngine : Added multithreaded evaluation for improved
+  performance (#2251).
+- CompoundDataPlug : Added menu items for adding box plugs (#2263).
+- Browser/View apps : Improved image preview (#2258).
+- Filter plug UI : Decluttered embedded filter UIs (#2276).
+- Group/BranchCreator : Optimised context management (#2270).
+
+Fixes
+-----
+
+- ArnoldRender : Fixed error handling for aborted renders (#2279).
+- SplineWidget :
+  - Fixed incorrect colours in rightmost column (#2295).
+  - Fixed editing of float splines (#2292).
+  - Fixed curve width (#2293).
+  - Fixed drawing of curves with minimum Y values other than 0 (#2292).
+- ImageWriter : Fixed bug when writing JPEG with blank scanlines (#2268).
+- ImageReader : Fixed "enabled" plug, so that turning it off outputs a default
+  blank image (#2254).
+- Documentation :
+  - Fixed formatting of supported file extensions (#2244).
+  - Clarified that the SceneReader node does support Alembic (#2244).
+  - Fixed URL (#2273).
+- BoxIO : Fixed bug that could cause promoted plugs to initially be
+  invisible in the NodeGraph (#2284).
+- GraphGadget : Fixed GIL handling in `setRoot()` and `setFilter()`
+  methods (#2287).
+- PlugLayout : Collapsible layouts are now used if a `rootSection`
+  is specified (#2276).
+- PlugAlgo : Fixed bug where promoted plugs had the wrong value (#2298).
+- Prune : Fixed hashing of sets (#2243).
+- Text : Fixed problems with vertical alignment when there was too much
+  text to fit in the text area (#2291).
+
+API
+---
+
+- ValuePlug : The `Node::plugSetSignal()` is now emitted for all ancestors, not
+  just for ValuePlugs (#2298).
+- GafferCortex::ParameterHandler : Added `hash()` method (#2298).
+- RendererAlgo : Added optional `root` argument to `outputObjects()` (#2283).
+- SceneAlgo : Added `parallelProcessLocations()` overload taking `root` (#2283).
+- Wrapper classes : Added templated variadic constructors (#2250).
+- PlugAlgo : Added `promoteWithName()` function (#2284).
+- Added Capsule class to represent encapsulated scene hierarchy (#2283).
+- StandardLightVisualiser : Added method for querying spotlight parameters (#2275).
+- WidgetAlgo : Fixed `grab()` to work around Qt bugs on OSX (#2307).
+
+Build
+-----
+
+- Added compatibility with OIIO 1.8 (#2261).
+- Requires Cortex 10.0.0-a4.
+- Made SConstruct compatible with Python 3 (#2280).
+- Fixed problems building the documentation (#2307).
+
 0.40.0.0
 ========
 
