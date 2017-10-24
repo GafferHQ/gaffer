@@ -510,7 +510,7 @@ class Catalogue::InternalImage : public ImageNode
 				void save( WeakPtr forWrapUp )
 				{
 					HashGatherer hashGatherer( channelDataHashes );
-					parallelGatherTiles(
+					ImageAlgo::parallelGatherTiles(
 						m_imageCopy->copyChannels()->outPlug(),
 						m_imageCopy->copyChannels()->outPlug()->channelNamesPlug()->getValue()->readable(),
 						hashGatherer,

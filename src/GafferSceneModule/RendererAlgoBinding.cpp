@@ -72,7 +72,7 @@ struct AdaptorWrapper
 
 void registerAdaptorWrapper( const std::string &name, object adaptor )
 {
-	registerAdaptor( name, AdaptorWrapper( adaptor ) );
+	RendererAlgo::registerAdaptor( name, AdaptorWrapper( adaptor ) );
 }
 
 } // namespace
@@ -84,8 +84,8 @@ void bindRendererAlgo()
 {
 
 	def( "registerAdaptor", &registerAdaptorWrapper );
-	def( "deregisterAdaptor", &deregisterAdaptor );
-	def( "createAdaptors", &createAdaptors );
+	def( "deregisterAdaptor", &RendererAlgo::deregisterAdaptor );
+	def( "createAdaptors", &RendererAlgo::createAdaptors );
 
 }
 

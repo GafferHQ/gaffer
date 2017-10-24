@@ -444,7 +444,7 @@ void TransformTool::updateSelection() const
 			ScenePlug::stringToPath( selection->readable()[0], newSelection.path );
 		}
 	}
-	if( newSelection.path.empty() || !exists( scenePlug(), newSelection.path ) )
+	if( newSelection.path.empty() || !SceneAlgo::exists( scenePlug(), newSelection.path ) )
 	{
 		return;
 	}

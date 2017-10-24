@@ -135,9 +135,6 @@ SceneProcessorPtr createAdaptors();
 
 } // namespace RendererAlgo
 
-/// \todo Remove this temporary backwards compatibility.
-using namespace RendererAlgo;
-
 } // namespace GafferScene
 
 #endif // GAFFERSCENE_RENDERERALGO_H

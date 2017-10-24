@@ -116,9 +116,6 @@ void applyCameraGlobals( IECore::Camera *camera, const IECore::CompoundObject *g
 
 } // namespace RendererAlgo
 
-/// \todo Remove this temporary backwards compatibility.
-using namespace RendererAlgo;
-
 } // namespace Preview
 
 } // namespace GafferScene

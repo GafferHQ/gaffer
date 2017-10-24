@@ -487,9 +487,9 @@ void NoduleLayout::childRemoved( Gaffer::GraphComponent *child )
 	}
 }
 
-void NoduleLayout::plugMetadataChanged( IECore::TypeId nodeTypeId, const Gaffer::MatchPattern &plugPath, IECore::InternedString key, const Gaffer::Plug *plug )
+void NoduleLayout::plugMetadataChanged( IECore::TypeId nodeTypeId, const Gaffer::StringAlgo::MatchPattern &plugPath, IECore::InternedString key, const Gaffer::Plug *plug )
 {
-	if( childAffectedByChange( m_parent.get(), nodeTypeId, plugPath, plug ) )
+	if( MetadataAlgo::childAffectedByChange( m_parent.get(), nodeTypeId, plugPath, plug ) )
 	{
 		if(
 			key == g_sectionKey || key == g_indexKey || key == g_visibleKey ||
@@ -503,7 +503,7 @@ void NoduleLayout::plugMetadataChanged( IECore::TypeId nodeTypeId, const Gaffer:
 
 	if( const Plug *typedParent = runTimeCast<const Plug>( m_parent.get() ) )
 	{
-		if( affectedByChange( typedParent, nodeTypeId, plugPath, plug ) )
+		if( MetadataAlgo::affectedByChange( typedParent, nodeTypeId, plugPath, plug ) )
 		{
 			if( affectsSpacing( key, m_section ) )
 			{
@@ -528,7 +528,7 @@ void NoduleLayout::plugMetadataChanged( IECore::TypeId nodeTypeId, const Gaffer:
 void NoduleLayout::nodeMetadataChanged( IECore::TypeId nodeTypeId, IECore::InternedString key, const Gaffer::Node *node )
 {
 	const Node *typedParent = runTimeCast<const Node>( m_parent.get() );
-	if( !typedParent || !affectedByChange( typedParent, nodeTypeId, node ) )
+	if( !typedParent || !MetadataAlgo::affectedByChange( typedParent, nodeTypeId, node ) )
 	{
 		return;
 	}

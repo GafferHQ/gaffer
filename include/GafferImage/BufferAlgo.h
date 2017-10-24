@@ -74,9 +74,6 @@ inline size_t index( const Imath::V2i &p, const Imath::Box2i &b );
 
 } // namespace BufferAlgo
 
-/// \todo Remove this temporary backwards compatibility.
-using namespace BufferAlgo;
-
 } // namespace GafferImage
 
 #include "GafferImage/BufferAlgo.inl"
