@@ -1123,7 +1123,7 @@ def buildDocs( target, source, env ) :
 	# then we use `gaffer env python` to launch Gaffer's python, and generate
 	# all the docs in that environment.
 
-	for module in ( "sphinx", "markupsafe", "CommonMark" ) :
+	for module in ( "sphinx", "markupsafe", "CommonMark", "pytz" ) :
 		if not findOnPath( module, env["ENV"]["PYTHONPATH"] ) :
 			try :
 				m = __import__( module )
@@ -1164,7 +1164,7 @@ def buildDocs( target, source, env ) :
 			elif ext == ".sh" :
 				command = [ "gaffer", "env", "./" + f ]
 			if command :
-				sys.stdout.write( "Running {}\n".format( os.path.join( root, f ) ) )
+				sys.stdout.write( "Running {0}\n".format( os.path.join( root, f ) ) )
 				subprocess.check_call( command, cwd = root, env = env["ENV"] )
 
 	# Run sphinx to generate the final documentation.
