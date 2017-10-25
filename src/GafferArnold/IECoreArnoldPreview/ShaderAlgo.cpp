@@ -59,6 +59,12 @@ namespace
 
 const IECore::InternedString g_handleString( "__handle" );
 
+const AtString g_catmullRomArnoldString( "catmull-rom" );
+const AtString g_bezierArnoldString( "bezier" );
+const AtString g_bsplineArnoldString( "bspline" );
+const AtString g_linearArnoldString( "linear" );
+const AtString g_shaderNameArnoldString( "shadername" );
+
 template<typename Spline>
 void setSplineParameter( AtNode *node, const std::string &name, const Spline &spline )
 {
@@ -82,18 +88,18 @@ void setSplineParameter( AtNode *node, const std::string &name, const Spline &sp
 	}
 
 
-	const char *basis = "catmull-rom";
+	AtString basis( g_catmullRomArnoldString );
 	if( spline.basis == Spline::Basis::bezier() )
 	{
-		basis = "bezier";
+		basis = g_bezierArnoldString;
 	}
 	else if( spline.basis == Spline::Basis::bSpline() )
 	{
-		basis = "bspline";
+		basis = g_bsplineArnoldString;
 	}
 	else if( spline.basis == Spline::Basis::linear() )
 	{
-		basis = "linear";
+		basis = g_linearArnoldString;
 	}
 
 	GafferOSL::OSLShader::prepareSplineCVsForOSL( positions, values, basis );
@@ -180,7 +186,7 @@ std::vector<AtNode *> convert( const IECore::ObjectVector *shaderNetwork, const 
 
 		if( oslShaderName )
 		{
-			AiNodeSetStr( node, "shadername", AtString( oslShaderName ) );
+			AiNodeSetStr( node, g_shaderNameArnoldString, AtString( oslShaderName ) );
 		}
 
 		for( CompoundDataMap::const_iterator pIt = parameters->begin(), peIt = parameters->end(); pIt != peIt; ++pIt )
