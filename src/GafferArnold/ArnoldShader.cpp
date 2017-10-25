@@ -111,7 +111,7 @@ void ArnoldShader::loadShader( const std::string &shaderName, bool keepExistingV
 {
 	IECoreArnold::UniverseBlock arnoldUniverse( /* writable = */ false );
 
-	const AtNodeEntry *shader = AiNodeEntryLookUp( shaderName.c_str() );
+	const AtNodeEntry *shader = AiNodeEntryLookUp( AtString( shaderName.c_str() ) );
 	if( !shader )
 	{
 		throw Exception( str( format( "Shader \"%s\" not found" ) % shaderName ) );
@@ -167,6 +167,7 @@ void ArnoldShader::loadShader( const std::string &shaderName, bool keepExistingV
 //////////////////////////////////////////////////////////////////////////
 
 namespace {
+	const AtString g_nullArnoldString( nullptr );
 	const AtString g_primaryInputArnoldString( "primaryInput" );
 	const AtString g_shaderTypeArnoldString( "shaderType" );
 }
@@ -175,7 +176,7 @@ static IECore::ConstCompoundDataPtr metadataGetter( const std::string &key, size
 {
 	IECoreArnold::UniverseBlock arnoldUniverse( /* writable = */ false );
 
-	const AtNodeEntry *shader = AiNodeEntryLookUp( key.c_str() );
+	const AtNodeEntry *shader = AiNodeEntryLookUp( AtString( key.c_str() ) );
 	if( !shader )
 	{
 		throw Exception( str( format( "Shader \"%s\" not found" ) % key ) );
@@ -193,13 +194,13 @@ static IECore::ConstCompoundDataPtr metadataGetter( const std::string &key, size
 	metadata->writable()["parameter"] = parameterMetadata;
 
 	AtString value;
-	if( AiMetaDataGetStr( shader, /* look up metadata on node, not on parameter */ nullptr , g_primaryInputArnoldString, &value ) )
+	if( AiMetaDataGetStr( shader, /* look up metadata on node, not on parameter */ g_nullArnoldString , g_primaryInputArnoldString, &value ) )
 	{
 		shaderMetadata->writable()["primaryInput"] = new StringData( value.c_str() );
 	}
 
 	AtString shaderType;
-	if( AiMetaDataGetStr( shader, /* look up metadata on node, not on parameter */ nullptr , g_shaderTypeArnoldString, &shaderType ) )
+	if( AiMetaDataGetStr( shader, /* look up metadata on node, not on parameter */ g_nullArnoldString , g_shaderTypeArnoldString, &shaderType ) )
 	{
 		shaderMetadata->writable()["shaderType"] = new StringData( shaderType.c_str() );
 	}
