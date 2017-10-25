@@ -62,7 +62,6 @@ Duplicate::Duplicate( const std::string &name )
 	addChild( new InternedStringVectorDataPlug( "__outChildNames", Plug::Out, inPlug()->childNamesPlug()->defaultValue() ) );
 
 	parentPlug()->setInput( outParentPlug() );
-	parentPlug()->setFlags( Plug::ReadOnly, true );
 	parentPlug()->setFlags( Plug::Serialisable, false );
 
 	// Since we don't introduce any new sets, but just duplicate parts
