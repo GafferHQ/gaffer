@@ -259,13 +259,13 @@ class ArnoldOutput : public IECore::RefCounted
 		{
 			// Create a driver node and set its parameters.
 
-			std::string driverNodeType = output->getType();
-			if( AiNodeEntryGetType( AiNodeEntryLookUp( driverNodeType.c_str() ) ) != AI_NODE_DRIVER )
+			AtString driverNodeType( output->getType().c_str() );
+			if( AiNodeEntryGetType( AiNodeEntryLookUp( driverNodeType ) ) != AI_NODE_DRIVER )
 			{
 				// Automatically map tiff to driver_tiff and so on, to provide a degree of
 				// compatibility with existing renderman driver names.
-				std::string prefixedType = "driver_" + driverNodeType;
-				if( AiNodeEntryLookUp( prefixedType.c_str() ) )
+				AtString prefixedType( ( std::string("driver_") + driverNodeType.c_str() ).c_str() );
+				if( AiNodeEntryLookUp( prefixedType ) )
 				{
 					driverNodeType = prefixedType;
 				}
@@ -273,17 +273,17 @@ class ArnoldOutput : public IECore::RefCounted
 
 			const std::string driverNodeName = boost::str( boost::format( "ieCoreArnold:display:%s" ) % name.string() );
 			m_driver.reset(
-				AiNode( AtString( driverNodeType.c_str() ), AtString( driverNodeName.c_str() ) ),
+				AiNode( driverNodeType, AtString( driverNodeName.c_str() ) ),
 				nodeDeleter
 			);
 			if( !m_driver )
 			{
-				throw IECore::Exception( boost::str( boost::format( "Unable to create output driver of type \"%s\"" ) % driverNodeType ) );
+				throw IECore::Exception( boost::str( boost::format( "Unable to create output driver of type \"%s\"" ) % driverNodeType.c_str() ) );
 			}
 
 			if( const AtParamEntry *fileNameParameter = AiNodeEntryLookUpParameter( AiNodeGetNodeEntry( m_driver.get() ), "filename" ) )
 			{
-				AiNodeSetStr( m_driver.get(), AiParamGetName( fileNameParameter ), output->getName().c_str() );
+				AiNodeSetStr( m_driver.get(), AiParamGetName( fileNameParameter ), AtString( output->getName().c_str() ) );
 			}
 
 			IECore::StringVectorDataPtr customAttributesData;
@@ -325,7 +325,7 @@ class ArnoldOutput : public IECore::RefCounted
 			// Create a filter.
 
 			std::string filterNodeType = parameter<std::string>( output->parameters(), "filter", "gaussian" );
-			if( AiNodeEntryGetType( AiNodeEntryLookUp( filterNodeType.c_str() ) ) != AI_NODE_FILTER )
+			if( AiNodeEntryGetType( AiNodeEntryLookUp( AtString( filterNodeType.c_str() ) ) ) != AI_NODE_FILTER )
 			{
 				filterNodeType = filterNodeType + "_filter";
 			}
@@ -912,13 +912,18 @@ class ArnoldAttributes : public IECoreScenePreview::Renderer::AttributesInterfac
 
 				if( m_linkedLights )
 				{
+					// NOTE : There is an awful lot of AtString conversion and AiNodeLookUpByName
+					// happening here if we have lots lights.  It seems like it would be great if there
+					// was some way of caching the evaluation of light expressions as a vector of node
+					// pointers, instead of a vector of strings - this might be tricky with how the 
+					// baking of expressions currently happens in the EvaluateLightLinks node?
 					const std::vector<std::string> &lightNames = m_linkedLights->readable();
 
 					std::vector<AtNode*> lightNodesVector;
 					for ( IECore::StringVectorData::ValueType::const_iterator it = lightNames.begin(); it != lightNames.end(); ++it )
 					{
 						std::string lightName = "light:" + *(it);
-						AtNode *lightNode = AiNodeLookUpByName( lightName.c_str() );
+						AtNode *lightNode = AiNodeLookUpByName( AtString( lightName.c_str() ) );
 						if( lightNode )
 						{
 							lightNodesVector.push_back( lightNode );
@@ -1593,7 +1598,7 @@ class ArnoldLight : public ArnoldObject
 
 			// Simplify name for the root shader, for ease of reading of ass files.
 			const std::string name = "light:" + m_name;
-			AiNodeSetStr( m_lightShader->root(), "name", name.c_str() );
+			AiNodeSetStr( m_lightShader->root(), "name", AtString( name.c_str() ) );
 
 			// Deal with mesh lights.
 
@@ -2071,55 +2076,58 @@ class ArnoldGlobals
 						s = d->readable() + ":" + s;
 					}
 				}
-				AiNodeSetStr( options, "plugin_searchpath", s.c_str() );
+				AiNodeSetStr( options, "plugin_searchpath", AtString( s.c_str() ) );
 				return;
 			}
 			else if( boost::starts_with( name.c_str(), "ai:declare:" ) )
 			{
-				const AtParamEntry *parameter = AiNodeEntryLookUpParameter( AiNodeGetNodeEntry( options ), name.c_str() + 11 );
+				AtString arnoldName( name.c_str() + 11 );
+				const AtParamEntry *parameter = AiNodeEntryLookUpParameter( AiNodeGetNodeEntry( options ), arnoldName );
 				if( parameter )
 				{
-					IECore::msg( IECore::Msg::Warning, "IECoreArnold::Renderer::option", boost::format( "Unable to declare existing option \"%s\"." ) % (name.c_str() + 11) );
+					IECore::msg( IECore::Msg::Warning, "IECoreArnold::Renderer::option", boost::format( "Unable to declare existing option \"%s\"." ) % arnoldName.c_str() );
 				}
 				else
 				{
-					const AtUserParamEntry *userParameter = AiNodeLookUpUserParameter( options, name.c_str() + 11);
+					const AtUserParamEntry *userParameter = AiNodeLookUpUserParameter( options, arnoldName );
 					if( userParameter )
 					{
-						AiNodeResetParameter( options, name.c_str() + 11 );
+						AiNodeResetParameter( options, arnoldName );
 					}
 					if( value )
 					{
-						ParameterAlgo::setParameter( options, name.c_str() + 11, value );
+						ParameterAlgo::setParameter( options, arnoldName, value );
 					}
 				}
 				return;
 			}
 			else if( boost::starts_with( name.c_str(), "ai:" ) )
 			{
-				const AtParamEntry *parameter = AiNodeEntryLookUpParameter( AiNodeGetNodeEntry( options ), name.c_str() + 3 );
+				AtString arnoldName( name.c_str() + 3 );
+				const AtParamEntry *parameter = AiNodeEntryLookUpParameter( AiNodeGetNodeEntry( options ), arnoldName );
 				if( parameter )
 				{
 					if( value )
 					{
-						ParameterAlgo::setParameter( options, name.c_str() + 3, value );
+						ParameterAlgo::setParameter( options, arnoldName, value );
 					}
 					else
 					{
-						AiNodeResetParameter( options, name.c_str() + 3 );
+						AiNodeResetParameter( options, arnoldName );
 					}
 					return;
 				}
 			}
 			else if( boost::starts_with( name.c_str(), "user:" ) )
 			{
+				AtString arnoldName( name.c_str() );
 				if( value )
 				{
-					ParameterAlgo::setParameter( options, name.c_str(), value );
+					ParameterAlgo::setParameter( options, arnoldName, value );
 				}
 				else
 				{
-					AiNodeResetParameter( options, name.c_str() );
+					AiNodeResetParameter( options, arnoldName );
 				}
 				return;
 			}
@@ -2335,7 +2343,7 @@ class ArnoldGlobals
 			AtNode *options = AiUniverseGetOptions();
 
 			const IECore::Camera *cortexCamera;
-			AtNode *arnoldCamera = AiNodeLookUpByName( m_cameraName.c_str() );
+			AtNode *arnoldCamera = AiNodeLookUpByName( AtString( m_cameraName.c_str() ) );
 			if( arnoldCamera )
 			{
 				cortexCamera = m_cameras[m_cameraName].get();

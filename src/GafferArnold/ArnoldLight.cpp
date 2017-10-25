@@ -72,7 +72,7 @@ void ArnoldLight::loadShader( const std::string &shaderName )
 {
 	IECoreArnold::UniverseBlock arnoldUniverse( /* writable = */ false );
 
-	const AtNodeEntry *shader = AiNodeEntryLookUp( shaderName.c_str() );
+	const AtNodeEntry *shader = AiNodeEntryLookUp( AtString( shaderName.c_str() ) );
 	if( !shader )
 	{
 		throw IECore::Exception( boost::str( boost::format( "Shader \"%s\" not found" ) % shaderName ) );
