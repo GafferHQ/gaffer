@@ -102,12 +102,6 @@ class Plug : public GraphComponent
 			/// calls will be stored in a cache and reused if equivalent computations
 			/// are requested in the future.
 			Cacheable = 0x00000010,
-			/// Read only plugs do not accept any changes to their inputs, and will throw
-			/// an exception if an attempt is made to call their setValue() method. It is
-			/// not valid to make an output plug read only - in the case of an attempt to
-			/// do so an exception will be thrown from setFlags().
-			/// \deprecated Use MetadataAlgo instead.
-			ReadOnly = 0x00000020,
 			/// Generally it is an error to have cyclic dependencies between plugs,
 			/// and creating them will cause an exception to be thrown during dirty
 			/// propagation. However, it is possible to design nodes that create
@@ -117,11 +111,11 @@ class Plug : public GraphComponent
 			/// not infinite. Because dirty propagation is performed independent of context,
 			/// this flag must be used by such nodes to indicate that the cycle is
 			/// intentional in this case, and is guaranteed to terminate during compute.
-			AcceptsDependencyCycles = 0x00000040,
+			AcceptsDependencyCycles = 0x00000020,
 			/// When adding values, don't forget to update the Default and All values below,
 			/// and to update PlugBinding.cpp too!
 			Default = Serialisable | AcceptsInputs | PerformsSubstitutions | Cacheable,
-			All = Dynamic | Serialisable | AcceptsInputs | PerformsSubstitutions | Cacheable | ReadOnly | AcceptsDependencyCycles
+			All = Dynamic | Serialisable | AcceptsInputs | PerformsSubstitutions | Cacheable | AcceptsDependencyCycles
 		};
 
 		Plug( const std::string &name=defaultName<Plug>(), Direction direction=In, unsigned flags=Default );
@@ -168,7 +162,6 @@ class Plug : public GraphComponent
 		/// implementation accepts inputs provided that :
 		///
 		///  - direction()==In and the AcceptsInputs flag is set
-		///  - the ReadOnly flag is not set
 		///  - node()->acceptsInput() also accepts the input
 		///  - corresponding child plugs also accept the input
 		virtual bool acceptsInput( const Plug *input ) const;

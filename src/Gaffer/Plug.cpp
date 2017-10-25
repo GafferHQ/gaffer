@@ -190,11 +190,6 @@ void Plug::setFlags( unsigned flags )
 		return;
 	}
 
-	if( (flags & ReadOnly) && direction() == Out )
-	{
-		throw IECore::Exception( "Output plug cannot be read only" );
-	}
-
 	if( !refCount() )
 	{
 		// No references to us - chances are we're being called
@@ -319,7 +314,7 @@ bool Plug::acceptsInput( const Plug *input ) const
 
 bool Plug::acceptsInputInternal( const Plug *input ) const
 {
-	if( !getFlags( AcceptsInputs ) || getFlags( ReadOnly ) )
+	if( !getFlags( AcceptsInputs ) )
 	{
 		return false;
 	}

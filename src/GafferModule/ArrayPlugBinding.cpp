@@ -51,7 +51,7 @@ using namespace Gaffer;
 namespace
 {
 
-std::string maskedRepr( const ArrayPlug *plug, unsigned flagsMask )
+std::string repr( const ArrayPlug *plug )
 {
 	std::string result = Serialisation::classPath( plug ) + "( \"" + plug->getName().string() + "\", ";
 
@@ -70,7 +70,7 @@ std::string maskedRepr( const ArrayPlug *plug, unsigned flagsMask )
 		result += boost::str( boost::format( "maxSize = %d, " ) % plug->maxSize() );
 	}
 
-	const unsigned flags = plug->getFlags() & flagsMask;
+	const unsigned flags = plug->getFlags();
 	if( flags != Plug::Default )
 	{
 		result += "flags = " + PlugSerialiser::flagsRepr( flags ) + ", ";
@@ -82,11 +82,6 @@ std::string maskedRepr( const ArrayPlug *plug, unsigned flagsMask )
 
 }
 
-std::string repr( const ArrayPlug *plug )
-{
-	return maskedRepr( plug, Plug::All );
-}
-
 class ArrayPlugSerialiser : public PlugSerialiser
 {
 
@@ -94,7 +89,7 @@ class ArrayPlugSerialiser : public PlugSerialiser
 
 		std::string constructor( const Gaffer::GraphComponent *graphComponent, const Serialisation &serialisation ) const override
 		{
-			return maskedRepr( static_cast<const ArrayPlug *>( graphComponent ), Plug::All & ~Plug::ReadOnly );
+			return ::repr( static_cast<const ArrayPlug *>( graphComponent ) );
 		}
 
 };

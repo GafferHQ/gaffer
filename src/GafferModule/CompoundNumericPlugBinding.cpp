@@ -88,7 +88,7 @@ class CompoundNumericPlugSerialiser : public ValuePlugSerialiser
 
 		std::string constructor( const Gaffer::GraphComponent *graphComponent, const Serialisation &serialisation ) const override
 		{
-			return maskedCompoundNumericPlugRepr( static_cast<const T *>( graphComponent ), Plug::All & ~Plug::ReadOnly, &serialisation );
+			return maskedCompoundNumericPlugRepr( static_cast<const T *>( graphComponent ), Plug::All, &serialisation );
 		}
 
 };
