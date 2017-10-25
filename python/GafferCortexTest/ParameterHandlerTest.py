@@ -181,14 +181,14 @@ class ParameterHandlerTest( GafferTest.TestCase ) :
 		h = GafferCortex.ParameterHandler.create( p )
 		h.setupPlug( n )
 
-		self.failIf( h.plug().getFlags( Gaffer.Plug.Flags.ReadOnly ) )
+		self.assertFalse( Gaffer.MetadataAlgo.getReadOnly( h.plug() ) )
 
 		p.userData()["gaffer"] = IECore.CompoundObject( {
 			"readOnly" : IECore.BoolData( True ),
 		} )
 
 		h.setupPlug( n )
-		self.failUnless( h.plug().getFlags( Gaffer.Plug.Flags.ReadOnly ) )
+		self.assertTrue( Gaffer.MetadataAlgo.getReadOnly( h.plug() ) )
 
 	def testNonDefaultFlags( self ) :
 
@@ -199,15 +199,15 @@ class ParameterHandlerTest( GafferTest.TestCase ) :
 
 		h.setupPlug( n )
 		self.assertTrue( h.plug().getFlags( Gaffer.Plug.Flags.Dynamic ) )
-		self.assertFalse( h.plug().getFlags( Gaffer.Plug.Flags.ReadOnly ) )
+		self.assertTrue( h.plug().getFlags( Gaffer.Plug.Flags.Serialisable ) )
 
 		h.setupPlug( n, flags = Gaffer.Plug.Flags.Default )
 		self.assertFalse( h.plug().getFlags( Gaffer.Plug.Flags.Dynamic ) )
-		self.assertFalse( h.plug().getFlags( Gaffer.Plug.Flags.ReadOnly ) )
+		self.assertTrue( h.plug().getFlags( Gaffer.Plug.Flags.Serialisable ) )
 
-		h.setupPlug( n, flags = Gaffer.Plug.Flags.Default | Gaffer.Plug.Flags.ReadOnly )
+		h.setupPlug( n, flags = Gaffer.Plug.Flags.Default & ~Gaffer.Plug.Flags.Serialisable )
 		self.assertFalse( h.plug().getFlags( Gaffer.Plug.Flags.Dynamic ) )
-		self.assertTrue( h.plug().getFlags( Gaffer.Plug.Flags.ReadOnly ) )
+		self.assertFalse( h.plug().getFlags( Gaffer.Plug.Flags.Serialisable ) )
 
 	def testHash( self ) :
 

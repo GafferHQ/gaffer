@@ -39,6 +39,7 @@
 
 #include "Gaffer/GraphComponent.h"
 #include "Gaffer/ValuePlug.h"
+#include "Gaffer/MetadataAlgo.h"
 
 #include "GafferCortex/ParameterHandler.h"
 
@@ -76,7 +77,7 @@ void ParameterHandler::setupPlugFlags( Gaffer::Plug *plug, unsigned flags )
 		const BoolData *readOnly = ud->member<BoolData>( "readOnly" );
 		if( readOnly )
 		{
-			plug->setFlags( Gaffer::Plug::ReadOnly, readOnly->readable() );
+			Gaffer::MetadataAlgo::setReadOnly( plug, readOnly->readable() );
 		}
 	}
 }
