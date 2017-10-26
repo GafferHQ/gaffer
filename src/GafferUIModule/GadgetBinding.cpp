@@ -246,6 +246,14 @@ void GafferUIModule::bindGadget()
 		.def( "select", &Gadget::select ).staticmethod( "select" )
 	;
 
+	enum_<Gadget::Layer>( "Layer" )
+		.value( "Back", Gadget::Layer::Back )
+		.value( "MidBack", Gadget::Layer::MidBack )
+		.value( "Main", Gadget::Layer::Main )
+		.value( "MidFront", Gadget::Layer::MidFront )
+		.value( "Front", Gadget::Layer::Front )
+	;
+
 	SignalClass<Gadget::RenderRequestSignal, DefaultSignalCaller<Gadget::RenderRequestSignal>, RenderRequestSlotCaller>( "RenderRequestSignal" );
 	SignalClass<Gadget::ButtonSignal, DefaultSignalCaller<Gadget::ButtonSignal>, ButtonSlotCaller>( "ButtonSignal" );
 	SignalClass<Gadget::KeySignal, DefaultSignalCaller<Gadget::KeySignal>, KeySlotCaller>( "KeySignal" );
