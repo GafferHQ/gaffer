@@ -95,20 +95,6 @@ class AtomicFormatPlugTest( GafferImageTest.ImageTestCase ) :
 		# The default value of any input plug should be it's real value regardless of whether it is empty or not.
 		self.assertEqual( f1, GafferImage.Format() )
 
-	def testReadOnlySerialisation( self ) :
-
-		s = Gaffer.ScriptNode()
-		s["n"] = Gaffer.Node()
-		s["n"]["p"] = GafferImage.AtomicFormatPlug( flags = Gaffer.Plug.Flags.Default | Gaffer.Plug.Flags.Dynamic )
-		s["n"]["p"].setValue( GafferImage.Format( imath.Box2i( imath.V2i( 0 ), imath.V2i( 10 ) ), 2.0 ) )
-		s["n"]["p"].setFlags( Gaffer.Plug.Flags.ReadOnly, True )
-
-		s2 = Gaffer.ScriptNode()
-		s2.execute( s.serialise() )
-
-		self.assertEqual( s2["n"]["p"].getValue(), GafferImage.Format( imath.Box2i( imath.V2i( 0 ), imath.V2i( 10 ) ), 2.0 ) )
-		self.assertTrue( s2["n"]["p"].getFlags( Gaffer.Plug.Flags.ReadOnly ) )
-
 	def testExpressions( self ) :
 
 		s = Gaffer.ScriptNode()

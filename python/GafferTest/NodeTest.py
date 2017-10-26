@@ -256,15 +256,15 @@ class NodeTest( GafferTest.TestCase ) :
 		cs = GafferTest.CapturingSlot( n.plugFlagsChangedSignal() )
 		self.assertEqual( len( cs ), 0 )
 
-		n["p"].setFlags( Gaffer.Plug.Flags.ReadOnly, True )
+		n["p"].setFlags( Gaffer.Plug.Flags.Dynamic, True )
 		self.assertEqual( len( cs ), 1 )
 		self.failUnless( cs[0][0].isSame( n["p"] ) )
 
 		# second time should have no effect because they're the same
-		n["p"].setFlags( Gaffer.Plug.Flags.ReadOnly, True )
+		n["p"].setFlags( Gaffer.Plug.Flags.Dynamic, True )
 		self.assertEqual( len( cs ), 1 )
 
-		n["p"].setFlags( Gaffer.Plug.Flags.ReadOnly, False )
+		n["p"].setFlags( Gaffer.Plug.Flags.Dynamic, False )
 		self.assertEqual( len( cs ), 2 )
 		self.failUnless( cs[1][0].isSame( n["p"] ) )
 

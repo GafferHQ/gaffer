@@ -216,11 +216,6 @@ class CompoundNumericPlugTest( GafferTest.TestCase ) :
 		p.setToDefault()
 		self.assertEqual( p.getValue(), imath.V3f( 1, 2, 3 ) )
 
-	def testReadOnlySetValueRaises( self ) :
-
-		p = Gaffer.V3fPlug( flags = Gaffer.Plug.Flags.Default | Gaffer.Plug.Flags.ReadOnly )
-		self.assertRaises( RuntimeError, p.setValue, imath.V3f( 1 ) )
-
 	def testColor3fAcceptsColor4fInput( self ) :
 
 		p4 = Gaffer.Color4fPlug( direction = Gaffer.Plug.Direction.Out )
@@ -267,9 +262,9 @@ class CompoundNumericPlugTest( GafferTest.TestCase ) :
 
 	def testFlags( self ) :
 
-		p = Gaffer.V3fPlug( flags = Gaffer.Plug.Flags.Default | Gaffer.Plug.Flags.ReadOnly )
-		self.assertEqual( p.getFlags(), Gaffer.Plug.Flags.Default | Gaffer.Plug.Flags.ReadOnly )
-		self.assertEqual( p[0].getFlags(), Gaffer.Plug.Flags.Default | Gaffer.Plug.Flags.ReadOnly )
+		p = Gaffer.V3fPlug( flags = Gaffer.Plug.Flags.Default & ~Gaffer.Plug.Flags.Serialisable )
+		self.assertEqual( p.getFlags(), Gaffer.Plug.Flags.Default & ~Gaffer.Plug.Flags.Serialisable )
+		self.assertEqual( p[0].getFlags(), Gaffer.Plug.Flags.Default & ~Gaffer.Plug.Flags.Serialisable )
 
 	def testCreateCounterpart( self ) :
 
@@ -437,17 +432,6 @@ class CompoundNumericPlugTest( GafferTest.TestCase ) :
 		self.assertFalse( '["x"].setValue' in ss )
 		self.assertFalse( '["y"].setValue' in ss )
 		self.assertFalse( '["z"].setValue' in ss )
-
-	def testDifferingChildPlugFlags( self ) :
-
-		s = Gaffer.ScriptNode()
-		s["n"] = GafferTest.CompoundNumericNode()
-		s["n"]["p"]["x"].setFlags( Gaffer.Plug.Flags.ReadOnly, True )
-
-		s2 = Gaffer.ScriptNode()
-		s2.execute( s.serialise() )
-
-		self.assertTrue( s2["n"]["p"]["x"].getFlags( Gaffer.Plug.Flags.ReadOnly ) )
 
 	def testIsSetToDefault( self ) :
 
