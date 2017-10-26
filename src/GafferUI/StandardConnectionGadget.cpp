@@ -177,8 +177,14 @@ void StandardConnectionGadget::updateDragEndPoint( const Imath::V3f position, co
  	requestRender();
 }
 
-void StandardConnectionGadget::doRender( const Style *style ) const
+void StandardConnectionGadget::doRenderLayer( Layer layer, const Style *style ) const
 {
+	// Connections get rendered below NodeGadgets but over BackdropGadgets
+	if( layer != GraphLayer::Connections )
+	{
+		return;
+	}
+
 	const_cast<StandardConnectionGadget *>( this )->setPositionsFromNodules();
 
 	Style::State state = ( m_hovering || m_dragEnd || m_dotPreview ) ? Style::HighlightedState : Style::NormalState;
