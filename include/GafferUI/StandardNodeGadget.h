@@ -104,7 +104,7 @@ class StandardNodeGadget : public NodeGadget
 
 	protected :
 
-		void doRender( const Style *style ) const override;
+		void doRenderLayer( Layer layer, const Style *style ) const override;
 
 		const Imath::Color3f *userColor() const;
 
