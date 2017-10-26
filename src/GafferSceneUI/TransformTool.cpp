@@ -254,19 +254,25 @@ class HandlesGadget : public Gadget
 
 	protected :
 
-		void doRender( const Style *style ) const override
+		void doRenderLayer( Layer layer, const Style *style ) const override
 		{
+			if( layer != Layer::Main )
+			{
+				return;
+			}
+			// TODO: can this be done via layers now?
+
 			glEnable( GL_DEPTH_TEST );
 			// Render with reversed depth test so
 			// the handles are visible even when
 			// behind an object.
 			glDepthFunc( GL_GREATER );
-			Gadget::doRender( style );
+			Gadget::doRenderLayer( layer, style );
 			// The render with the regular depth
 			// test so that the handles occlude
 			// themselves appropriately.
 			glDepthFunc( GL_LESS );
-			Gadget::doRender( style );
+			Gadget::doRenderLayer( layer, style );
 		}
 
 };

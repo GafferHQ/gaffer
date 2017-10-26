@@ -159,10 +159,10 @@ Imath::Box3f LinearContainer::bound() const
 	return ContainerGadget::bound();
 }
 
-void LinearContainer::doRender( const Style *style ) const
+void LinearContainer::doRenderLayer( Layer layer, const Style *style ) const
 {
 	calculateChildTransforms();
-	ContainerGadget::doRender( style );
+	ContainerGadget::doRenderLayer( layer, style );
 }
 
 void LinearContainer::calculateChildTransforms() const

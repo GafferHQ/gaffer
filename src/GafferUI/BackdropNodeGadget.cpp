@@ -229,8 +229,13 @@ Imath::Box3f BackdropNodeGadget::bound() const
 	return Box3f( V3f( b.min.x, b.min.y, 0.0f ), V3f( b.max.x, b.max.y, 0.0f ) );
 }
 
-void BackdropNodeGadget::doRender( const Style *style ) const
+void BackdropNodeGadget::doRenderLayer( Layer layer, const Style *style ) const
 {
+	if( layer != GraphLayer::Backdrops )
+	{
+		return;
+	}
+
 	// this is our bound in gadget space
 	Box2f bound = boundPlug()->getValue();
 

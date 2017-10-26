@@ -122,8 +122,13 @@ Imath::Box3f SplinePlugGadget::bound() const
 	return result;
 }
 
-void SplinePlugGadget::doRender( const Style *style ) const
+void SplinePlugGadget::doRenderLayer( Layer layer, const Style *style ) const
 {
+	if( layer != Layer::Main)
+	{
+		return;
+	}
+
 	for( size_t i = 0, e = m_splines->size(); i < e ; i++ )
 	{
 		SplineffPlugPtr spline = IECore::runTimeCast<SplineffPlug>( m_splines->member( i ) );

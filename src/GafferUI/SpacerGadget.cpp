@@ -49,7 +49,7 @@ SpacerGadget::~SpacerGadget()
 {
 }
 
-void SpacerGadget::doRender( const Style *style ) const
+void SpacerGadget::doRenderLayer( Layer layer, const Style *style ) const
 {
 }
 

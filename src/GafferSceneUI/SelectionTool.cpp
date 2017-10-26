@@ -104,8 +104,13 @@ class SelectionTool::DragOverlay : public GafferUI::Gadget
 
 	protected :
 
-		void doRender( const Style *style ) const override
+		void doRenderLayer( Layer layer, const Style *style ) const override
 		{
+			if( layer != Layer::Main )
+			{
+				return Gadget::doRenderLayer( layer, style );
+			}
+
 			if( IECoreGL::Selector::currentSelector() )
 			{
 				return;

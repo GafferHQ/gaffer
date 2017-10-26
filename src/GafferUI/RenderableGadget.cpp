@@ -107,8 +107,13 @@ Imath::Box3f RenderableGadget::bound() const
 	}
 }
 
-void RenderableGadget::doRender( const Style *style ) const
+void RenderableGadget::doRenderLayer( Layer layer, const Style *style ) const
 {
+	if( layer != Layer::Main )
+	{
+		return;
+	}
+
 	if( IECoreGL::Selector::currentSelector() )
 	{
 		// our scene may contain shaders which don't work with

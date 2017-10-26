@@ -37,6 +37,7 @@
 
 #include "GafferUI/Frame.h"
 #include "GafferUI/Style.h"
+#include "GafferUI/GraphGadget.h"
 
 #include "IECore/CurvesPrimitive.h"
 #include "IECore/MeshPrimitive.h"
@@ -72,11 +73,16 @@ Imath::Box3f Frame::bound() const
 	return b;
 }
 
-void Frame::doRender( const Style *style ) const
+void Frame::doRenderLayer( Layer layer, const Style *style ) const
 {
+	if( layer != GraphLayer::Nodes )
+	{
+		return;
+	}
+
 	Imath::Box3f b = IndividualContainer::bound();
 
 	style->renderFrame( Box2f( V2f( b.min.x, b.min.y ), V2f( b.max.x, b.max.y ) ), m_border );
 
-	IndividualContainer::doRender( style );
+	IndividualContainer::doRenderLayer( layer, style );
 }
