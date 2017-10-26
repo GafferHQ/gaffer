@@ -196,6 +196,7 @@ std::string formatHeaderParameter( const std::string name, const IECore::Data *d
 
 const AtString g_aaSamplesArnoldString( "AA_samples" );
 const AtString g_aaSeedArnoldString( "AA_seed" );
+const AtString g_autoArnoldString( "auto" );
 const AtString g_boxArnoldString("box");
 const AtString g_cameraArnoldString( "camera" );
 const AtString g_catclarkArnoldString("catclark");
@@ -222,11 +223,13 @@ const AtString g_motionStartArnoldString( "motion_start" );
 const AtString g_motionEndArnoldString( "motion_end" );
 const AtString g_nameArnoldString( "name" );
 const AtString g_nodeArnoldString("node");
+const AtString g_objectArnoldString( "object" );
 const AtString g_opaqueArnoldString( "opaque" );
 const AtString g_proceduralArnoldString( "procedural" );
 const AtString g_pixelAspectRatioArnoldString( "pixel_aspect_ratio" );
 const AtString g_pluginSearchPathArnoldString( "plugin_searchpath" );
 const AtString g_polymeshArnoldString("polymesh");
+const AtString g_rasterArnoldString( "raster" );
 const AtString g_receiveShadowsArnoldString( "receive_shadows" );
 const AtString g_regionMinXArnoldString( "region_min_x" );
 const AtString g_regionMaxXArnoldString( "region_max_x" );
@@ -644,7 +647,6 @@ IECore::InternedString g_polyMeshSubdivAdaptiveMetricAttributeName( "ai:polymesh
 IECore::InternedString g_polyMeshSubdivAdaptiveSpaceAttributeName( "ai:polymesh:subdiv_adaptive_space" );
 IECore::InternedString g_polyMeshSubdivSmoothDerivsAttributeName( "ai:polymesh:subdiv_smooth_derivs" );
 IECore::InternedString g_polyMeshSubdividePolygonsAttributeName( "ai:polymesh:subdivide_polygons" );
-IECore::InternedString g_objectSpace( "object" );
 
 IECore::InternedString g_dispMapAttributeName( "ai:disp_map" );
 IECore::InternedString g_dispHeightAttributeName( "ai:disp_height" );
@@ -802,7 +804,7 @@ class ArnoldAttributes : public IECoreScenePreview::Renderer::AttributesInterfac
 				{
 					// We shouldn't instance poly meshes with view dependent subdivision, because the subdivision
 					// for the master mesh might be totally inappropriate for the position of the ginstances in frame.
-					return m_polyMesh.subdivAdaptiveError == 0.0f || m_polyMesh.subdivAdaptiveSpace == g_objectSpace;
+					return m_polyMesh.subdivAdaptiveError == 0.0f || m_polyMesh.subdivAdaptiveSpace == g_objectArnoldString;
 				}
 			}
 			else if( const IECore::ExternalProcedural *procedural = IECore::runTimeCast<const IECore::ExternalProcedural>( object ) )
@@ -1017,16 +1019,35 @@ class ArnoldAttributes : public IECoreScenePreview::Renderer::AttributesInterfac
 			{
 				subdivIterations = attributeValue<int>( g_polyMeshSubdivIterationsAttributeName, attributes, 1 );
 				subdivAdaptiveError = attributeValue<float>( g_polyMeshSubdivAdaptiveErrorAttributeName, attributes, 0.0f );
-				subdivAdaptiveMetric = attributeValue<string>( g_polyMeshSubdivAdaptiveMetricAttributeName, attributes, "auto" );
-				subdivAdaptiveSpace = attributeValue<string>( g_polyMeshSubdivAdaptiveSpaceAttributeName, attributes, "raster" );
+
+				const IECore::StringData *subdivAdaptiveMetricData = attribute<IECore::StringData>( g_polyMeshSubdivAdaptiveMetricAttributeName, attributes );
+				if( subdivAdaptiveMetricData )
+				{
+					subdivAdaptiveMetric = AtString( subdivAdaptiveMetricData->readable().c_str() );
+				}
+				else
+				{
+					subdivAdaptiveMetric = g_autoArnoldString;
+				}
+
+				const IECore::StringData *subdivAdaptiveSpaceData = attribute<IECore::StringData>( g_polyMeshSubdivAdaptiveSpaceAttributeName, attributes );
+				if( subdivAdaptiveSpaceData )
+				{
+					subdivAdaptiveSpace = AtString( subdivAdaptiveSpaceData->readable().c_str() );
+				}
+				else
+				{
+					subdivAdaptiveSpace = g_rasterArnoldString;
+				}
+
 				subdividePolygons = attributeValue<bool>( g_polyMeshSubdividePolygonsAttributeName, attributes, false );
 				subdivSmoothDerivs = attributeValue<bool>( g_polyMeshSubdivSmoothDerivsAttributeName, attributes, false );
 			}
 
 			int subdivIterations;
 			float subdivAdaptiveError;
-			IECore::InternedString subdivAdaptiveMetric;
-			IECore::InternedString subdivAdaptiveSpace;
+			AtString subdivAdaptiveMetric;
+			AtString subdivAdaptiveSpace;
 			bool subdividePolygons;
 			bool subdivSmoothDerivs;
 
@@ -1036,8 +1057,8 @@ class ArnoldAttributes : public IECoreScenePreview::Renderer::AttributesInterfac
 				{
 					h.append( subdivIterations );
 					h.append( subdivAdaptiveError );
-					h.append( subdivAdaptiveMetric );
-					h.append( subdivAdaptiveSpace );
+					h.append( subdivAdaptiveMetric.c_str() );
+					h.append( subdivAdaptiveSpace.c_str() );
 					h.append( subdivSmoothDerivs );
 				}
 			}
@@ -1048,8 +1069,8 @@ class ArnoldAttributes : public IECoreScenePreview::Renderer::AttributesInterfac
 				{
 					AiNodeSetByte( node, g_subdivIterationsArnoldString, subdivIterations );
 					AiNodeSetFlt( node, g_subdivAdaptiveErrorArnoldString, subdivAdaptiveError );
-					AiNodeSetStr( node, g_subdivAdaptiveMetricArnoldString, subdivAdaptiveMetric.c_str() );
-					AiNodeSetStr( node, g_subdivAdaptiveSpaceArnoldString, subdivAdaptiveSpace.c_str() );
+					AiNodeSetStr( node, g_subdivAdaptiveMetricArnoldString, subdivAdaptiveMetric );
+					AiNodeSetStr( node, g_subdivAdaptiveSpaceArnoldString, subdivAdaptiveSpace );
 					AiNodeSetBool( node, g_subdivSmoothDerivsArnoldString, subdivSmoothDerivs );
 					if( mesh->interpolation() == "linear" )
 					{
