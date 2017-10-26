@@ -1290,5 +1290,44 @@ class ExpressionTest( GafferTest.TestCase ) :
 		self.assertEqual( s["e"].getExpression(), ( e, "python" ) )
 		self.assertEqual( s["n"]["user"]["p"]["m"]["value"].getValue(), 10 )
 
+	def testCopyPaste( self ) :
+
+		s = Gaffer.ScriptNode()
+		s["n"] = GafferTest.AddNode()
+
+		expression = """parent["n"]["op2"] = parent["n"]["op1"] * 2 + context.getFrame()"""
+
+		s["e"] = Gaffer.Expression()
+		s["e"].setExpression( expression )
+
+		s["n"]["op1"].setValue( 2 )
+		self.assertEqual( s["n"]["sum"].getValue(), 7 )
+		self.assertTrue( s["n"]["op1"].outputs()[0].node().isSame( s["e"] ) )
+		self.assertTrue( s["n"]["op2"].getInput().node().isSame( s["e"] ) )
+
+		s.execute( s.serialise( filter = Gaffer.StandardSet( [ s["n"], s["e"] ] ) ) )
+
+		self.assertEqual( s["n"]["sum"].getValue(), 7 )
+		self.assertTrue( s["n"]["op1"].outputs()[0].node().isSame( s["e"] ) )
+		self.assertTrue( s["n"]["op2"].getInput().node().isSame( s["e"] ) )
+
+		self.assertEqual( s["n1"]["sum"].getValue(), 7 )
+		self.assertTrue( s["n1"]["op1"].outputs()[0].node().isSame( s["e1"] ) )
+		self.assertTrue( s["n1"]["op2"].getInput().node().isSame( s["e1"] ) )
+
+		self.assertEqual( s["e"].getExpression(), ( expression, "python" ) )
+		self.assertEqual( s["e1"].getExpression(), ( expression.replace( '"n"', '"n1"' ), "python" ) )
+
+		s["n"]["op1"].setValue( 10 )
+		s["n1"]["op1"].setValue( 11 )
+
+		self.assertEqual( s["n"]["sum"].getValue(), 31 )
+		self.assertEqual( s["n1"]["sum"].getValue(), 34 )
+
+		with Gaffer.Context() as c :
+			c.setFrame( 2 )
+			self.assertEqual( s["n"]["sum"].getValue(), 32 )
+			self.assertEqual( s["n1"]["sum"].getValue(), 35 )
+
 if __name__ == "__main__":
 	unittest.main()
