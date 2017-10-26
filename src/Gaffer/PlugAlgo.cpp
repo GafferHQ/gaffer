@@ -38,6 +38,7 @@
 #include "boost/format.hpp"
 #include "boost/algorithm/string/replace.hpp"
 #include "boost/algorithm/string/predicate.hpp"
+#include "boost/algorithm/string/erase.hpp"
 
 #include "Gaffer/ValuePlug.h"
 #include "Gaffer/Node.h"
@@ -373,9 +374,14 @@ bool canPromote( const Plug *plug, const Plug *parent )
 
 Plug *promote( Plug *plug, Plug *parent, const StringAlgo::MatchPattern &excludeMetadata )
 {
+	return promoteWithName( plug, promotedName( plug ), parent, excludeMetadata );
+}
+
+Plug *promoteWithName( Plug *plug, const IECore::InternedString name, Plug *parent, const StringAlgo::MatchPattern &excludeMetadata )
+{
 	validatePromotability( plug, parent, /* throwExceptions = */ true );
 
-	PlugPtr externalPlug = plug->createCounterpart( promotedName( plug ), plug->direction() );
+	PlugPtr externalPlug = plug->createCounterpart( name, plug->direction() );
 	if( externalPlug->direction() == Plug::In )
 	{
 		if( ValuePlug *externalValuePlug = IECore::runTimeCast<ValuePlug>( externalPlug.get() ) )
