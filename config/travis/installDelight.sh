@@ -2,7 +2,7 @@
 
 set -e
 
-version=12.0.113
+version=13.0.18
 
 if [[ `uname` = "Linux" ]] ; then
 	package=3delight-$version-Linux-x86_64

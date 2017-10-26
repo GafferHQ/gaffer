@@ -45,7 +45,7 @@ install:
     - $COMPILER --version
 
 script:
-    - scons -j 2 install CXX=$COMPILER CXXSTD=$CXXSTD DEBUG=$DEBUG ENV_VARS_TO_IMPORT=PATH BUILD_CACHEDIR=sconsCache
+    - scons -j 2 install CXX=$COMPILER CXXSTD=$CXXSTD DEBUG=$DEBUG ENV_VARS_TO_IMPORT=PATH DELIGHT_ROOT=$DELIGHT BUILD_CACHEDIR=sconsCache
     # Preload libSegFault when running tests, so we get stack
     # traces from any crashes.
     - export LD_PRELOAD=/lib/x86_64-linux-gnu/libSegFault.so
@@ -63,6 +63,8 @@ script:
     - source ./config/travis/runGafferTest GafferOSLUITest
     - source ./config/travis/runGafferTest GafferAppleseedTest
     - source ./config/travis/runGafferTest GafferAppleseedUITest
+    - source ./config/travis/runGafferTest GafferDelightTest
+    - source ./config/travis/runGafferTest GafferDelightUITest
     - ./config/travis/printTestResults
 
 before_cache:
