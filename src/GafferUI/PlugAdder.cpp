@@ -47,6 +47,7 @@
 #include "GafferUI/PlugAdder.h"
 #include "GafferUI/Style.h"
 #include "GafferUI/ConnectionGadget.h"
+#include "GafferUI/GraphGadget.h"
 
 using namespace Imath;
 using namespace IECore;
@@ -182,25 +183,37 @@ PlugAdder::PlugMenuSignal &PlugAdder::plugMenuSignal()
 	return s;
 }
 
-void PlugAdder::doRender( const Style *style ) const
+void PlugAdder::doRenderLayer( Layer layer, const Style *style ) const
 {
-	if( m_dragging )
+	switch( layer )
 	{
-		if( !IECoreGL::Selector::currentSelector() )
-		{
-			V3f srcTangent( 0.0f, 0.0f, 0.0f );
-			style->renderConnection( V3f( 0 ), srcTangent, m_dragPosition, m_dragTangent, Style::HighlightedState );
-		}
+		case GraphLayer::Connections :
+			if( m_dragging )
+			{
+				if( !IECoreGL::Selector::currentSelector() )
+				{
+					V3f srcTangent( 0.0f, 0.0f, 0.0f );
+					style->renderConnection( V3f( 0 ), srcTangent, m_dragPosition, m_dragTangent, Style::HighlightedState );
+				}
+			}
+			break;
+		case GraphLayer::Nodes :
+			if( !getHighlighted() )
+			{
+				const float radius = 0.75f;
+				style->renderImage( Box2f( V2f( -radius ), V2f( radius ) ), texture( Style::NormalState ) );
+			}
+			break;
+		case GraphLayer::Highlighting :
+			if( getHighlighted() )
+			{
+				const float radius = 1.25f;
+				style->renderImage( Box2f( V2f( -radius ), V2f( radius ) ), texture( Style::HighlightedState ) );
+			}
+			break;
+		default:
+			break;
 	}
-
-	float radius = 0.75f;
-	Style::State state = Style::NormalState;
-	if( getHighlighted() )
-	{
-		radius = 1.25f;
-		state = Style::HighlightedState;
-	}
-	style->renderImage( Box2f( V2f( -radius ), V2f( radius ) ), texture( state ) );
 }
 
 void PlugAdder::applyEdgeMetadata( Gaffer::Plug *plug, bool opposite ) const

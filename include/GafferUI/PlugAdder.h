@@ -71,7 +71,7 @@ class PlugAdder : public Gadget
 
 	protected :
 
-		void doRender( const Style *style ) const override;
+		void doRenderLayer( Layer layer, const Style *style ) const override;
 
 		void applyEdgeMetadata( Gaffer::Plug *plug, bool opposite = false ) const;
 
