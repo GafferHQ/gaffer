@@ -185,10 +185,10 @@ void setEnabled( Gadget &g, bool enabled )
 	g.setEnabled( enabled );
 }
 
-void render( const Gadget &g, const Style *currentStyle )
+void render( const Gadget &g )
 {
 	IECorePython::ScopedGILRelease gilRelease;
-	g.render( currentStyle );
+	g.render();
 }
 
 BOOST_PYTHON_MEMBER_FUNCTION_OVERLOADS( fullTransformOverloads, fullTransform, 0, 1 );

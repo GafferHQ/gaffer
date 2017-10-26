@@ -98,9 +98,9 @@ const InternedString g_nodeGadgetTypeName( "nodeGadget:type" );
 
 struct CompareV2fX{
 	bool operator()(const Imath::V2f &a, const Imath::V2f &b) const
-	{   
+	{
 		return a[0] < b[0];
-	}   
+	}
 };
 
 } // namespace
@@ -603,9 +603,6 @@ ConnectionGadget *GraphGadget::reconnectionGadgetAt( const NodeGadget *gadget, c
 	{
 		ViewportGadget::SelectionScope selectionScope( corner0, corner1, this, selection, IECoreGL::Selector::IDRender );
 
-		const Style *s = style();
-		s->bind();
-
 		for ( ChildContainer::const_iterator it = children().begin(); it != children().end(); ++it )
 		{
 			if ( ConnectionGadget *c = IECore::runTimeCast<ConnectionGadget>( it->get() ) )
@@ -613,7 +610,7 @@ ConnectionGadget *GraphGadget::reconnectionGadgetAt( const NodeGadget *gadget, c
 				// don't consider the node's own connections, or connections without a source nodule
 				if ( c->srcNodule() && gadget->node() != c->srcNodule()->plug()->node() && gadget->node() != c->dstNodule()->plug()->node() )
 				{
-					c->render( s );
+					c->render();
 				}
 			}
 		}
@@ -1098,7 +1095,7 @@ bool GraphGadget::dragMove( GadgetPtr gadget, const DragDropEvent &event )
 	if( m_dragMode == Moving )
 	{
 		const float snapThresh = 1.5;
-		
+
 		// snap the position using the offsets precomputed in calculateDragSnapOffsets()
 		V2f startPos = V2f( i.x, i.y );
 		V2f pos = startPos;
