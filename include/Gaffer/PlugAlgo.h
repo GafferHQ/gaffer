@@ -39,6 +39,7 @@
 #define GAFFER_PLUGALGO_H
 
 #include "IECore/RefCounted.h"
+#include "IECore/InternedString.h"
 
 #include "Gaffer/StringAlgo.h"
 
@@ -73,6 +74,10 @@ bool canPromote( const Plug *plug, const Plug *parent = NULL );
 /// argument.
 /// \undoable
 Plug *promote( Plug *plug, Plug *parent = NULL, const StringAlgo::MatchPattern &excludeMetadata = "layout:*" );
+/// As `promote` but by providing the name argument, you can skip an additional
+/// renaming step after promoting.
+/// \undoable
+Plug *promoteWithName( Plug *plug, const IECore::InternedString name, Plug *parent = NULL, const StringAlgo::MatchPattern &excludeMetadata = "layout:*" );
 /// Returns true if the plug appears to have been promoted.
 bool isPromoted( const Plug *plug );
 /// Unpromotes a previously promoted plug, removing the
