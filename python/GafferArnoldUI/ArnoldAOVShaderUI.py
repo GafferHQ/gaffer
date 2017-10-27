@@ -1,6 +1,6 @@
 ##########################################################################
 #
-#  Copyright (c) 2012, John Haddon. All rights reserved.
+#  Copyright (c) 2017, Image Engine Design Inc. All rights reserved.
 #
 #  Redistribution and use in source and binary forms, with or without
 #  modification, are permitted provided that the following conditions are
@@ -34,22 +34,40 @@
 #
 ##########################################################################
 
-__import__( "GafferSceneUI" )
+import IECore
 
-from _GafferArnoldUI import *
+import Gaffer
+import GafferUI
+import GafferArnold
 
-import ArnoldShaderUI
-import ArnoldRenderUI
-import ShaderMenu
-import ArnoldOptionsUI
-import ArnoldAttributesUI
-import ArnoldLightUI
-import ArnoldVDBUI
-import InteractiveArnoldRenderUI
-import ArnoldDisplacementUI
-import ArnoldMeshLightUI
-import ArnoldShaderBallUI
-import ArnoldAOVShaderUI
-import CacheMenu
+Gaffer.Metadata.registerNode(
 
-__import__( "IECore" ).loadConfig( "GAFFER_STARTUP_PATHS", {}, subdirectory = "GafferArnoldUI" )
+	GafferArnold.ArnoldAOVShader,
+
+	"description",
+	"""
+	Sets up global shaders in the Arnold options which can be used to populate global AOVs.
+	""",
+
+	plugs = {
+		"optionSuffix" : [
+
+			"description",
+			"""
+			This suffix defines where the aov shader is stored in the render options. If you use
+			an existing suffix, you will overwrite instead of creating a new AOV shader.
+			""",
+		],
+		"shader" : [
+
+			"description",
+			"""
+			The shader to be assigned.
+			""",
+
+			"noduleLayout:section", "left",
+			"nodule:type", "GafferUI::StandardNodule",
+
+		]
+	}
+)

@@ -107,6 +107,7 @@ if moduleSearchPath.find( "arnold" ) :
 		nodeMenu.append( "/Arnold/VDB", GafferArnold.ArnoldVDB, searchText = "ArnoldVDB"  )
 		nodeMenu.append( "/Arnold/Options", GafferArnold.ArnoldOptions, searchText = "ArnoldOptions" )
 		nodeMenu.append( "/Arnold/Attributes", GafferArnold.ArnoldAttributes, searchText = "ArnoldAttributes" )
+		nodeMenu.append( "/Arnold/AOVShader", GafferArnold.ArnoldAOVShader, searchText = "ArnoldAOVShader" )
 		nodeMenu.append(
 			"/Arnold/Render", GafferArnold.ArnoldRender,
 			plugValues = {
