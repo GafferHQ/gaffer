@@ -550,5 +550,16 @@ class PlugAlgoTest( GafferTest.TestCase ) :
 		self.assertTrue( "testPersistence" in Gaffer.Metadata.registeredValues( p ) )
 		self.assertTrue( "testPersistence" not in Gaffer.Metadata.registeredValues( p, persistentOnly = True ) )
 
+	def testPromoteWithName( self ) :
+
+		s = Gaffer.ScriptNode()
+
+		s["b"] = Gaffer.Box()
+		s["b"]["n1"] = GafferTest.AddNode()
+
+		p = Gaffer.PlugAlgo.promoteWithName( s["b"]["n1"]["op1"], 'newName' )
+
+		self.assertEqual( p.getName(), 'newName' )
+
 if __name__ == "__main__":
 	unittest.main()
