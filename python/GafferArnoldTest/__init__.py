@@ -45,6 +45,7 @@ from InteractiveArnoldRenderTest import InteractiveArnoldRenderTest
 from ArnoldDisplacementTest import ArnoldDisplacementTest
 from LightToCameraTest import LightToCameraTest
 from IECoreArnoldPreviewTest import *
+from ArnoldAOVShaderTest import *
 
 if __name__ == "__main__":
 	import unittest

@@ -1,6 +1,7 @@
 ##########################################################################
 #
 #  Copyright (c) 2012, John Haddon. All rights reserved.
+#  Copyright (c) 2013, Image Engine Design Inc. All rights reserved.
 #
 #  Redistribution and use in source and binary forms, with or without
 #  modification, are permitted provided that the following conditions are
@@ -34,22 +35,25 @@
 #
 ##########################################################################
 
-__import__( "GafferSceneUI" )
+import IECore
 
-from _GafferArnoldUI import *
+import Gaffer
+import GafferScene
+import GafferSceneTest
+import GafferArnold
 
-import ArnoldShaderUI
-import ArnoldRenderUI
-import ShaderMenu
-import ArnoldOptionsUI
-import ArnoldAttributesUI
-import ArnoldLightUI
-import ArnoldVDBUI
-import InteractiveArnoldRenderUI
-import ArnoldDisplacementUI
-import ArnoldMeshLightUI
-import ArnoldShaderBallUI
-import ArnoldAOVShaderUI
-import CacheMenu
+class ArnoldAOVShaderTest( GafferSceneTest.SceneTestCase ) :
 
-__import__( "IECore" ).loadConfig( "GAFFER_STARTUP_PATHS", {}, subdirectory = "GafferArnoldUI" )
+	def testBasics( self ) :
+
+		s = GafferArnold.ArnoldShader()
+		s.loadShader( "aov_write_rgb" )
+
+		a = GafferArnold.ArnoldAOVShader()
+		a["optionSuffix"].setValue( "test" )
+		a["shader"].setInput( s["out"] )
+
+		self.assertEqual( a['out']["globals"].getValue()['option:ai:aov_shader:test'][0].name, 'aov_write_rgb' )
+
+if __name__ == "__main__":
+	unittest.main()
