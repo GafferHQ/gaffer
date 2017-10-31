@@ -87,16 +87,7 @@ class StandardNodeGadget::ErrorGadget : public Gadget
 		void addError( PlugPtr plug, const std::string &error )
 		{
 			PlugEntry &entry = m_errors[plug];
-			if( entry.error.empty() || !boost::ends_with( error, "Previous attempt to get item failed." ) )
-			{
-				// Update the error message. Unfortunately the IECore::LRUCache at the
-				// heart of Gaffer's caching  does not remember the details of exceptions that
-				// occurred when the cache entry is in error - instead it throws a different
-				// exception saying "Previous attempt to get item failed.". We ignore these less
-				// helpful messages in favour of a previous messages if one exists.
-				/// \todo Improve LRUCache behaviour and remove this workaround.
-				entry.error = error;
-			}
+			entry.error = error;
 			if( !entry.parentChangedConnection.connected() )
 			{
 				entry.parentChangedConnection = plug->parentChangedSignal().connect( boost::bind( &ErrorGadget::parentChanged, this, ::_1 ) );
