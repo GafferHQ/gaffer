@@ -1687,7 +1687,7 @@ class ArnoldRenderer : public IECoreScenePreview::Renderer
 			pause();
 		}
 
-		virtual void option( const IECore::InternedString &name, const IECore::Data *value )
+		virtual void option( const IECore::InternedString &name, const IECore::Object *value )
 		{
 			AtNode *options = AiUniverseGetOptions();
 			if( name == g_frameOptionName )
@@ -1755,14 +1755,14 @@ class ArnoldRenderer : public IECoreScenePreview::Renderer
 			}
 			else if( boost::starts_with( name.c_str(), g_logFlagsOptionPrefix ) )
 			{
-				if( updateLogFlags( name.string().substr( g_logFlagsOptionPrefix.size() ), value, /* console = */ false ) )
+				if( updateLogFlags( name.string().substr( g_logFlagsOptionPrefix.size() ), IECore::runTimeCast<const IECore::Data>( value ), /* console = */ false ) )
 				{
 					return;
 				}
 			}
 			else if( boost::starts_with( name.c_str(), g_consoleFlagsOptionPrefix ) )
 			{
-				if( updateLogFlags( name.string().substr( g_consoleFlagsOptionPrefix.size() ), value, /* console = */ true ) )
+				if( updateLogFlags( name.string().substr( g_consoleFlagsOptionPrefix.size() ), IECore::runTimeCast<const IECore::Data>( value ), /* console = */ true ) )
 				{
 					return;
 				}
@@ -1821,9 +1821,10 @@ class ArnoldRenderer : public IECoreScenePreview::Renderer
 					{
 						AiNodeResetParameter( options, name.c_str() + 11 );
 					}
-					if( value )
+					const IECore::Data *dataValue = IECore::runTimeCast<const IECore::Data>( value );
+					if( dataValue )
 					{
-						ParameterAlgo::setParameter( options, name.c_str() + 11, value );
+						ParameterAlgo::setParameter( options, name.c_str() + 11, dataValue );
 					}
 				}
 				return;
@@ -1833,9 +1834,10 @@ class ArnoldRenderer : public IECoreScenePreview::Renderer
 				const AtParamEntry *parameter = AiNodeEntryLookUpParameter( AiNodeGetNodeEntry( options ), name.c_str() + 3 );
 				if( parameter )
 				{
-					if( value )
+					const IECore::Data *dataValue = IECore::runTimeCast<const IECore::Data>( value );
+					if( dataValue )
 					{
-						ParameterAlgo::setParameter( options, name.c_str() + 3, value );
+						ParameterAlgo::setParameter( options, name.c_str() + 3, dataValue );
 					}
 					else
 					{
@@ -1846,9 +1848,10 @@ class ArnoldRenderer : public IECoreScenePreview::Renderer
 			}
 			else if( boost::starts_with( name.c_str(), "user:" ) )
 			{
-				if( value )
+				const IECore::Data *dataValue = IECore::runTimeCast<const IECore::Data>( value );
+				if( dataValue )
 				{
-					ParameterAlgo::setParameter( options, name.c_str(), value );
+					ParameterAlgo::setParameter( options, name.c_str(), dataValue );
 				}
 				else
 				{
