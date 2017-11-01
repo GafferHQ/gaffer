@@ -72,6 +72,11 @@ using namespace IECore;
 using namespace OSL;
 using namespace GafferOSL;
 
+
+// keyword matrix parameter macro. reference: OSL/genclosure.h
+#define CLOSURE_MATRIX_KEYPARAM(st, fld, key) \
+    { TypeDesc::TypeMatrix44, (int)reckless_offsetof(st, fld), key, fieldsize(st, fld) }
+
 //////////////////////////////////////////////////////////////////////////
 // Utility for converting IECore::Data types to OSL::TypeDesc types.
 //////////////////////////////////////////////////////////////////////////
@@ -101,11 +106,28 @@ struct TypeDescFromType<Color3f>
 	}
 };
 
+
+// required to ensure we construct M44f in vectorDataFromTypeDesc correctly
+template<typename T>
+void initialiser( T &v )
+{
+	v = T( 0 );
+}
+
+// template specialisation for the M44f case
+template<>
+void initialiser( Imath::M44f &v )
+{
+	v = Imath::M44f();
+}
+
 template<typename T>
 typename T::Ptr vectorDataFromTypeDesc( TypeDesc type, void *&basePointer )
 {
 	typename T::Ptr result = new T();
-	result->writable().resize( type.arraylen, typename T::ValueType::value_type( 0 ) );
+	typename T::ValueType::value_type initialValue;
+	initialiser( initialValue );
+	result->writable().resize( type.arraylen, initialValue );
 	basePointer = result->baseWritable();
 	return result;
 }
@@ -146,6 +168,13 @@ DataPtr dataFromTypeDesc( TypeDesc type, void *&basePointer )
 					return geometricVectorDataFromTypeDesc<V3fVectorData>( type, basePointer );
 			}
 		}
+		else if ( type.aggregate == TypeDesc::MATRIX44 )
+		{
+			if ( type.basetype == TypeDesc::FLOAT )
+			{
+				return vectorDataFromTypeDesc<M44fVectorData>( type, basePointer );
+			}
+		}
 	}
 
 	return nullptr;
@@ -161,6 +190,7 @@ namespace
 {
 
 OIIO::ustring gIndex( "shading:index" );
+OIIO::ustring gMatrixType( "matrix" );
 
 class RenderState
 {
@@ -437,6 +467,7 @@ struct DebugParameters
 	ustring name;
 	ustring type;
 	Color3f value;
+	M44f matrixValue;
 
 	static void prepare( OSL::RendererServices *rendererServices, int id, void *data )
 	{
@@ -444,6 +475,7 @@ struct DebugParameters
 		debugParameters->name = ustring();
 		debugParameters->type = ustring();
 		debugParameters->value = Color3f( 1.0f );
+		debugParameters->matrixValue = M44f();
 	}
 
 };
@@ -497,6 +529,7 @@ OSL::ShadingSystem *shadingSystem()
 				CLOSURE_STRING_PARAM( DebugParameters, name ),
 				CLOSURE_STRING_KEYPARAM( DebugParameters, type, "type" ),
 				CLOSURE_COLOR_KEYPARAM( DebugParameters, value, "value" ),
+				CLOSURE_MATRIX_KEYPARAM( DebugParameters, matrixValue, "matrixValue"),
 				CLOSURE_FINISH_PARAM( DebugParameters )
 			},
 			DebugParameters::prepare
@@ -700,16 +733,29 @@ class ShadingResults
 		{
 			DebugResult debugResult = findDebugResult( parameters, threadCache );
 
-			Color3f value = weight * parameters->value;
+			if ( parameters->type == gMatrixType )
+			{
+				M44f value = parameters->matrixValue;
 
-			char *dst = static_cast<char *>( debugResult.basePointer );
-			dst += pointIndex * debugResult.type.elementsize();
-			ShadingSystem::convert_value(
-				dst,
-				debugResult.type,
-				&value,
-				debugResult.type.aggregate == TypeDesc::SCALAR ? TypeDesc::TypeFloat : TypeDesc::TypeColor
-			);
+				char *dst = static_cast<char *>( debugResult.basePointer );
+				dst += pointIndex * debugResult.type.elementsize();
+				ShadingSystem::convert_value(
+					dst, debugResult.type, &value, TypeDesc::TypeMatrix44
+				);
+			}
+			else
+			{
+				Color3f value = weight * parameters->value;
+
+				char *dst = static_cast<char *>( debugResult.basePointer );
+				dst += pointIndex * debugResult.type.elementsize();
+				ShadingSystem::convert_value(
+					dst,
+					debugResult.type,
+					&value,
+					debugResult.type.aggregate == TypeDesc::SCALAR ? TypeDesc::TypeFloat : TypeDesc::TypeColor
+				);
+			}
 		}
 
 
