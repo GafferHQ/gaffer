@@ -639,6 +639,7 @@ void StandardStyle::renderConnection( const Imath::V3f &srcPosition, const Imath
 	glUniform1i( g_borderParameter, 0 );
 	glUniform1i( g_edgeAntiAliasingParameter, 1 );
 	glUniform1i( g_textureTypeParameter, 0 );
+	glUniform1f( g_lineWidthParameter, 0.5 );
 
 	glColor( colorForState( ConnectionColor, state, userColor ) );
 
@@ -661,7 +662,7 @@ Imath::V3f StandardStyle::closestPointOnConnection( const Imath::V3f &p, const I
 
 	V3f offsetCenter0 = srcPosition + ( srcTangent != V3f( 0 ) ? srcTangent :  dir ) * g_endPointSize;
 	V3f offsetCenter1 = dstPosition + ( dstTangent != V3f( 0 ) ? dstTangent :  -dir ) * g_endPointSize;
-	
+
 	float straightSegmentLength = ( offsetCenter0 - offsetCenter1 ).length();
 
 	if( straightSegmentLength < 2.0f * g_endPointSize )
@@ -678,9 +679,9 @@ Imath::V3f StandardStyle::closestPointOnConnection( const Imath::V3f &p, const I
 		V3f straightSegmentDir = ( offsetCenter0 - offsetCenter1 ).normalized();
 
 		float alongSegment = ( p - straightSegmentCenter ).dot( straightSegmentDir );
-		float clampDist = straightSegmentLength * 0.5f - g_endPointSize; 
+		float clampDist = straightSegmentLength * 0.5f - g_endPointSize;
 		alongSegment = std::max( -clampDist, std::min( clampDist, alongSegment ) );
-		
+
 		return straightSegmentCenter + alongSegment * straightSegmentDir;
 	}
 
@@ -855,6 +856,7 @@ void StandardStyle::renderLine( const IECore::LineSegment3f &line ) const
 	glUniform1i( g_borderParameter, 0 );
 	glUniform1i( g_edgeAntiAliasingParameter, 1 );
 	glUniform1i( g_textureTypeParameter, 0 );
+	glUniform1f( g_lineWidthParameter, 0.5 );
 
 	glColor( getColor( BackgroundColor ) );
 
@@ -977,6 +979,7 @@ static const std::string &vertexSource()
 		"uniform vec3 t0;"
 		"uniform vec3 t1;"
 		"uniform float endPointSize;"
+		"uniform float lineWidth;"
 
 		"void main()"
 		"{"
@@ -1015,7 +1018,7 @@ static const std::string &vertexSource()
 		"		vec3 p = abs(cosAngle) > 0.9999 ? endPoint + 2.0 * t * effectiveEndPointSize * endTangent : endPoint + radius * ( ( 1.0 - cos( angle * t ) ) * bendDir * endTangentPerp + sin( angle * t ) * endTangent );"
 		"		vec3 uTangent = ( gl_MultiTexCoord0.y > 0.5 ? 1.0 : -1.0 ) * ( abs(cosAngle) > 0.9999 ? -endTangentPerp : bendDir * normalize( p - ( endPoint + radius * bendDir * endTangentPerp) ) );"
 
-		"		p += 0.5 * uTangent * ( gl_MultiTexCoord0.x - 0.5 );"
+		"		p += lineWidth * uTangent * ( gl_MultiTexCoord0.x - 0.5 );"
 
 		"		gl_Position = gl_ProjectionMatrix * gl_ModelViewMatrix * vec4( p, 1 );"
 		"	}"
@@ -1125,6 +1128,7 @@ int StandardStyle::g_v0Parameter;
 int StandardStyle::g_v1Parameter;
 int StandardStyle::g_t0Parameter;
 int StandardStyle::g_t1Parameter;
+int StandardStyle::g_lineWidthParameter;
 
 IECoreGL::Shader *StandardStyle::shader()
 {
@@ -1146,6 +1150,7 @@ IECoreGL::Shader *StandardStyle::shader()
 		g_v1Parameter = g_shader->uniformParameter( "v1" )->location;
 		g_t0Parameter = g_shader->uniformParameter( "t0" )->location;
 		g_t1Parameter = g_shader->uniformParameter( "t1" )->location;
+		g_lineWidthParameter = g_shader->uniformParameter( "lineWidth" )->location;
 	}
 
 	return g_shader.get();
