@@ -88,20 +88,20 @@ class NodeGadgetWrapper : public GadgetWrapper<WrappedType>
 			return const_cast<NodeGadgetWrapper *>( this )->nodule( plug );
 		}
 
-		Imath::V3f noduleTangent( const GafferUI::Nodule *nodule ) const override
+		Imath::V3f connectionTangent( const GafferUI::ConnectionCreator *creator ) const override
 		{
 			if( this->isSubclassed() )
 			{
 				IECorePython::ScopedGILLock gilLock;
-				boost::python::object f = this->methodOverride( "noduleTangent" );
+				boost::python::object f = this->methodOverride( "connectionTangent" );
 				if( f )
 				{
 					return boost::python::extract<Imath::V3f>(
-						f( GafferUI::NodulePtr( const_cast<GafferUI::Nodule *>( nodule ) ) )
+						f( GafferUI::ConnectionCreatorPtr( const_cast<GafferUI::ConnectionCreator *>( creator ) ) )
 					);
 				}
 			}
-			return WrappedType::noduleTangent( nodule );
+			return WrappedType::connectionTangent( creator );
 		}
 
 };

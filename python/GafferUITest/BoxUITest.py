@@ -72,8 +72,8 @@ class BoxUITest( GafferUITest.TestCase ) :
 
 		boxGadget = g.nodeGadget( box )
 
-		self.assertEqual( boxGadget.noduleTangent( boxGadget.nodule( box["op1"] ) ), IECore.V3f( -1, 0, 0 ) )
-		self.assertEqual( boxGadget.noduleTangent( boxGadget.nodule( box["sum"] ) ), IECore.V3f( 1, 0, 0 ) )
+		self.assertEqual( boxGadget.connectionTangent( boxGadget.nodule( box["op1"] ) ), IECore.V3f( -1, 0, 0 ) )
+		self.assertEqual( boxGadget.connectionTangent( boxGadget.nodule( box["sum"] ) ), IECore.V3f( 1, 0, 0 ) )
 
 		# Now test that a copy/paste of the box maintains the tangents in the copy.
 
@@ -85,8 +85,8 @@ class BoxUITest( GafferUITest.TestCase ) :
 		box2 = s2[box.getName()]
 		boxGadget2 = g2.nodeGadget( box2 )
 
-		self.assertEqual( boxGadget2.noduleTangent( boxGadget2.nodule( box2["op1"] ) ), IECore.V3f( -1, 0, 0 ) )
-		self.assertEqual( boxGadget2.noduleTangent( boxGadget2.nodule( box2["sum"] ) ), IECore.V3f( 1, 0, 0 ) )
+		self.assertEqual( boxGadget2.connectionTangent( boxGadget2.nodule( box2["op1"] ) ), IECore.V3f( -1, 0, 0 ) )
+		self.assertEqual( boxGadget2.connectionTangent( boxGadget2.nodule( box2["sum"] ) ), IECore.V3f( 1, 0, 0 ) )
 
 	def testNodulePositionsForPromotedPlugs( self ) :
 
@@ -101,8 +101,8 @@ class BoxUITest( GafferUITest.TestCase ) :
 		p1 = Gaffer.PlugAlgo.promote( s["b"]["n"]["op1"] )
 		p2 = Gaffer.PlugAlgo.promote( s["b"]["n"]["sum"] )
 
-		self.assertEqual( boxGadget.noduleTangent( boxGadget.nodule( p1 ) ), IECore.V3f( -1, 0, 0 ) )
-		self.assertEqual( boxGadget.noduleTangent( boxGadget.nodule( p2 ) ), IECore.V3f( 1, 0, 0 ) )
+		self.assertEqual( boxGadget.connectionTangent( boxGadget.nodule( p1 ) ), IECore.V3f( -1, 0, 0 ) )
+		self.assertEqual( boxGadget.connectionTangent( boxGadget.nodule( p2 ) ), IECore.V3f( 1, 0, 0 ) )
 
 	def testDisabledNodulesForPromotedPlugs( self ) :
 

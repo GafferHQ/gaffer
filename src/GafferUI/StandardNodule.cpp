@@ -335,7 +335,7 @@ bool StandardNodule::dragEnter( GadgetPtr gadget, const DragDropEvent &event )
 		V3f tangent( 0 );
 		if( NodeGadget *nodeGadget = ancestor<NodeGadget>() )
 		{
-			tangent = nodeGadget->noduleTangent( this );
+			tangent = nodeGadget->connectionTangent( this );
 		}
 
 		creator->updateDragEndPoint( centre, tangent );

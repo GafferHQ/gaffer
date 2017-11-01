@@ -83,21 +83,6 @@ static IECoreGL::Texture *texture( Style::State state )
 	return texture.get();
 }
 
-V3f edgeTangent( StandardNodeGadget::Edge edge )
-{
-	switch( edge )
-	{
-		case StandardNodeGadget::TopEdge :
-			return V3f( 0, 1, 0 );
-		case StandardNodeGadget::BottomEdge :
-			return V3f( 0, -1, 0 );
-		case StandardNodeGadget::LeftEdge :
-			return V3f( -1, 0, 0 );
-		default :
-			return V3f( 1, 0, 0 );
-	}
-}
-
 StandardNodeGadget::Edge oppositeEdge( StandardNodeGadget::Edge edge )
 {
 	switch( edge )
@@ -200,6 +185,21 @@ PlugAdder::PlugMenuSignal &PlugAdder::plugMenuSignal()
 	return s;
 }
 
+V3f PlugAdder::edgeTangent() const
+{
+	switch( m_edge )
+	{
+	case StandardNodeGadget::TopEdge :
+		return V3f( 0, 1, 0 );
+	case StandardNodeGadget::BottomEdge :
+		return V3f( 0, -1, 0 );
+	case StandardNodeGadget::LeftEdge :
+		return V3f( -1, 0, 0 );
+	default :
+		return V3f( 1, 0, 0 );
+	}
+}
+
 void PlugAdder::doRenderLayer( Layer layer, const Style *style ) const
 {
 	switch( layer )
@@ -284,7 +284,7 @@ bool PlugAdder::dragEnter( const DragDropEvent &event )
 	{
 		V3f center = V3f( 0.0f ) * fullTransform();
 		center = center * event.sourceGadget->fullTransform().inverse();
-		const V3f tangent = edgeTangent( m_edge );
+		const V3f tangent = edgeTangent();
 		connectionCreator->updateDragEndPoint( center, tangent );
 	}
 

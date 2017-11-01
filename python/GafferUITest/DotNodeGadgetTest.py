@@ -60,8 +60,8 @@ class DotNodeGadgetTest( GafferUITest.TestCase ) :
 		self.assertTrue( g.nodule( s["d"]["in"] ) is not None )
 		self.assertTrue( g.nodule( s["d"]["out"] ) is not None )
 
-		self.assertEqual( g.noduleTangent( g.nodule( s["d"]["in"] ) ), IECore.V3f( 0, 1, 0 ) )
-		self.assertEqual( g.noduleTangent( g.nodule( s["d"]["out"] ) ), IECore.V3f( 0, -1, 0 ) )
+		self.assertEqual( g.connectionTangent( g.nodule( s["d"]["in"] ) ), IECore.V3f( 0, 1, 0 ) )
+		self.assertEqual( g.connectionTangent( g.nodule( s["d"]["out"] ) ), IECore.V3f( 0, -1, 0 ) )
 
 	def testCustomNoduleTangentsFromInput( self ) :
 
@@ -79,8 +79,8 @@ class DotNodeGadgetTest( GafferUITest.TestCase ) :
 		self.assertTrue( g.nodule( s["d"]["in"] ) is not None )
 		self.assertTrue( g.nodule( s["d"]["out"] ) is not None )
 
-		self.assertEqual( g.noduleTangent( g.nodule( s["d"]["in"] ) ), IECore.V3f( -1, 0, 0 ) )
-		self.assertEqual( g.noduleTangent( g.nodule( s["d"]["out"] ) ), IECore.V3f( 1, 0, 0 ) )
+		self.assertEqual( g.connectionTangent( g.nodule( s["d"]["in"] ) ), IECore.V3f( -1, 0, 0 ) )
+		self.assertEqual( g.connectionTangent( g.nodule( s["d"]["out"] ) ), IECore.V3f( 1, 0, 0 ) )
 
 	def testCustomNoduleTangentsFromOutput( self ) :
 
@@ -98,8 +98,8 @@ class DotNodeGadgetTest( GafferUITest.TestCase ) :
 		self.assertTrue( g.nodule( s["d"]["in"] ) is not None )
 		self.assertTrue( g.nodule( s["d"]["out"] ) is not None )
 
-		self.assertEqual( g.noduleTangent( g.nodule( s["d"]["in"] ) ), IECore.V3f( -1, 0, 0 ) )
-		self.assertEqual( g.noduleTangent( g.nodule( s["d"]["out"] ) ), IECore.V3f( 1, 0, 0 ) )
+		self.assertEqual( g.connectionTangent( g.nodule( s["d"]["in"] ) ), IECore.V3f( -1, 0, 0 ) )
+		self.assertEqual( g.connectionTangent( g.nodule( s["d"]["out"] ) ), IECore.V3f( 1, 0, 0 ) )
 
 	def testCustomNoduleTangentsPreferInputIfAvailable( self ) :
 
@@ -120,8 +120,8 @@ class DotNodeGadgetTest( GafferUITest.TestCase ) :
 		# as a way of conveniently making that output available at other places in the graph.
 		s["d"].setup( s["n2"]["op1"] )
 
-		self.assertEqual( g.noduleTangent( g.nodule( s["d"]["in"] ) ), IECore.V3f( -1, 0, 0 ) )
-		self.assertEqual( g.noduleTangent( g.nodule( s["d"]["out"] ) ), IECore.V3f( 1, 0, 0 ) )
+		self.assertEqual( g.connectionTangent( g.nodule( s["d"]["in"] ) ), IECore.V3f( -1, 0, 0 ) )
+		self.assertEqual( g.connectionTangent( g.nodule( s["d"]["out"] ) ), IECore.V3f( 1, 0, 0 ) )
 
 	def testCutAndPasteKeepsTangents( self ) :
 
@@ -138,12 +138,12 @@ class DotNodeGadgetTest( GafferUITest.TestCase ) :
 
 		dotNodeGadget = graphGadget.nodeGadget( s["d"] )
 
-		self.assertEqual( dotNodeGadget.noduleTangent( dotNodeGadget.nodule( s["d"]["in"] ) ), IECore.V3f( -1, 0, 0 ) )
+		self.assertEqual( dotNodeGadget.connectionTangent( dotNodeGadget.nodule( s["d"]["in"] ) ), IECore.V3f( -1, 0, 0 ) )
 
 		s.execute( s.serialise( filter = Gaffer.StandardSet( [ s["n"], s["d"] ] ) ) )
 
 		dot1NodeGadget = graphGadget.nodeGadget( s["d1"] )
-		self.assertEqual( dot1NodeGadget.noduleTangent( dot1NodeGadget.nodule( s["d1"]["in"] ) ), IECore.V3f( -1, 0, 0 ) )
+		self.assertEqual( dot1NodeGadget.connectionTangent( dot1NodeGadget.nodule( s["d1"]["in"] ) ), IECore.V3f( -1, 0, 0 ) )
 
 if __name__ == "__main__":
 	unittest.main()

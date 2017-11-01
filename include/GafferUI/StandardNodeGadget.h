@@ -84,7 +84,7 @@ class StandardNodeGadget : public NodeGadget
 
 		Nodule *nodule( const Gaffer::Plug *plug ) override;
 		const Nodule *nodule( const Gaffer::Plug *plug ) const override;
-		Imath::V3f noduleTangent( const Nodule *nodule ) const override;
+		Imath::V3f connectionTangent( const ConnectionCreator *creator ) const override;
 
 		/// The central content of the Gadget may be customised. By default
 		/// the contents is a simple NameGadget for the node, but any Gadget or

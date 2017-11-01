@@ -121,7 +121,7 @@ void StandardConnectionGadget::setPositionsFromNodules()
 		m_dstPos = V3f( 0 ) * m;
 
 		const NodeGadget *dstNoduleNodeGadget = dstNodule()->ancestor<NodeGadget>();
-		m_dstTangent = dstNoduleNodeGadget ? dstNoduleNodeGadget->noduleTangent( dstNodule() ) : V3f( 0, 1, 0 );
+		m_dstTangent = dstNoduleNodeGadget ? dstNoduleNodeGadget->connectionTangent( dstNodule() ) : V3f( 0, 1, 0 );
 	}
 
 	if( srcNodule() && m_dragEnd!=Gaffer::Plug::Out )
@@ -136,7 +136,7 @@ void StandardConnectionGadget::setPositionsFromNodules()
 		m_srcPos = V3f( 0 ) * m;
 
 		const NodeGadget *srcNoduleNodeGadget = srcNodule()->ancestor<NodeGadget>();
-		m_srcTangent = srcNoduleNodeGadget ? srcNoduleNodeGadget->noduleTangent( srcNodule() ) : V3f( 0, -1, 0 );
+		m_srcTangent = srcNoduleNodeGadget ? srcNoduleNodeGadget->connectionTangent( srcNodule() ) : V3f( 0, -1, 0 );
 	}
 	else if( m_dragEnd != Gaffer::Plug::Out )
 	{

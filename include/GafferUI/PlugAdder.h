@@ -64,6 +64,8 @@ class PlugAdder : public ConnectionCreator
 		typedef boost::signal<Gaffer::Plug *( const std::string &title, const std::vector<Gaffer::Plug *> & )> PlugMenuSignal;
 		static PlugMenuSignal &plugMenuSignal();
 
+		Imath::V3f edgeTangent() const;
+
 	protected :
 
 		void doRenderLayer( Layer layer, const Style *style ) const override;

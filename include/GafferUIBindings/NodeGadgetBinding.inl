@@ -50,9 +50,9 @@ GafferUI::NodulePtr nodule( T &p, const Gaffer::Plug *plug )
 }
 
 template<typename T>
-Imath::V3f noduleTangent( T &p, const GafferUI::Nodule *nodule )
+Imath::V3f connectionTangent( T &p, const GafferUI::ConnectionCreator *creator )
 {
-	return p.T::noduleTangent( nodule );
+	return p.T::connectionTangent( creator );
 }
 
 } // namespace Detail
@@ -62,7 +62,7 @@ NodeGadgetClass<T, TWrapper>::NodeGadgetClass( const char *docString )
 	:	GadgetClass<T, TWrapper>( docString )
 {
 	this->def( "nodule", &Detail::nodule<T> );
-	this->def( "noduleTangent", &Detail::noduleTangent<T> );
+	this->def( "connectionTangent", &Detail::connectionTangent<T> );
 }
 
 } // namespace GafferUIBindings

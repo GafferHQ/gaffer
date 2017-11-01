@@ -374,17 +374,17 @@ const Nodule *StandardNodeGadget::nodule( const Gaffer::Plug *plug ) const
 	return const_cast<StandardNodeGadget *>( this )->nodule( plug );
 }
 
-Imath::V3f StandardNodeGadget::noduleTangent( const Nodule *nodule ) const
+Imath::V3f StandardNodeGadget::connectionTangent( const ConnectionCreator *creator ) const
 {
-	if( noduleContainer( LeftEdge )->isAncestorOf( nodule ) )
+	if( noduleContainer( LeftEdge )->isAncestorOf( creator ) )
 	{
 		return V3f( -1, 0, 0 );
 	}
-	else if( noduleContainer( RightEdge )->isAncestorOf( nodule ) )
+	else if( noduleContainer( RightEdge )->isAncestorOf( creator ) )
 	{
 		return V3f( 1, 0, 0 );
 	}
-	else if( noduleContainer( TopEdge )->isAncestorOf( nodule ) )
+	else if( noduleContainer( TopEdge )->isAncestorOf( creator ) )
 	{
 		return V3f( 0, 1, 0 );
 	}
@@ -598,7 +598,12 @@ bool StandardNodeGadget::dragMove( GadgetPtr gadget, const DragDropEvent &event 
 			{
 				V3f centre = V3f( 0 ) * m_dragDestinationProxy->fullTransform();
 				centre = centre * creator->fullTransform().inverse();
-				creator->updateDragEndPoint( centre, V3f( 0 ) ); // FIX TANGENT!!!
+
+				if( ConnectionCreator *endpoint = IECore::runTimeCast<ConnectionCreator>( m_dragDestinationProxy ) )
+				{
+					creator->updateDragEndPoint( centre, connectionTangent( endpoint ) );
+					setCompatibleLabelsVisible( creator );
+				}
 			}
 			m_dragDestinationProxy->setHighlighted( true );
 		}
