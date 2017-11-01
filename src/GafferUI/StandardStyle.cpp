@@ -638,6 +638,7 @@ void StandardStyle::renderConnection( const Imath::V3f &srcPosition, const Imath
 	glUniform1i( g_borderParameter, 0 );
 	glUniform1i( g_edgeAntiAliasingParameter, 1 );
 	glUniform1i( g_textureTypeParameter, 0 );
+	glUniform1f( g_lineWidthParameter, 0.5 );
 
 	glColor( colorForState( ConnectionColor, state, userColor ) );
 
@@ -854,6 +855,7 @@ void StandardStyle::renderLine( const IECore::LineSegment3f &line ) const
 	glUniform1i( g_borderParameter, 0 );
 	glUniform1i( g_edgeAntiAliasingParameter, 1 );
 	glUniform1i( g_textureTypeParameter, 0 );
+	glUniform1f( g_lineWidthParameter, 0.5 );
 
 	glColor( getColor( BackgroundColor ) );
 
@@ -976,6 +978,7 @@ static const std::string &vertexSource()
 		"uniform vec3 t0;"
 		"uniform vec3 t1;"
 		"uniform float endPointSize;"
+		"uniform float lineWidth;"
 
 		"void main()"
 		"{"
@@ -1014,7 +1017,7 @@ static const std::string &vertexSource()
 		"		vec3 p = abs(cosAngle) > 0.9999 ? endPoint + 2.0 * t * effectiveEndPointSize * endTangent : endPoint + radius * ( ( 1.0 - cos( angle * t ) ) * bendDir * endTangentPerp + sin( angle * t ) * endTangent );"
 		"		vec3 uTangent = ( gl_MultiTexCoord0.y > 0.5 ? 1.0 : -1.0 ) * ( abs(cosAngle) > 0.9999 ? -endTangentPerp : bendDir * normalize( p - ( endPoint + radius * bendDir * endTangentPerp) ) );"
 
-		"		p += 0.5 * uTangent * ( gl_MultiTexCoord0.x - 0.5 );"
+		"		p += lineWidth * uTangent * ( gl_MultiTexCoord0.x - 0.5 );"
 
 		"		gl_Position = gl_ProjectionMatrix * gl_ModelViewMatrix * vec4( p, 1 );"
 		"	}"
@@ -1124,6 +1127,7 @@ int StandardStyle::g_v0Parameter;
 int StandardStyle::g_v1Parameter;
 int StandardStyle::g_t0Parameter;
 int StandardStyle::g_t1Parameter;
+float StandardStyle::g_lineWidthParameter;
 
 IECoreGL::Shader *StandardStyle::shader()
 {
@@ -1145,6 +1149,7 @@ IECoreGL::Shader *StandardStyle::shader()
 		g_v1Parameter = g_shader->uniformParameter( "v1" )->location;
 		g_t0Parameter = g_shader->uniformParameter( "t0" )->location;
 		g_t1Parameter = g_shader->uniformParameter( "t1" )->location;
+		g_lineWidthParameter = g_shader->uniformParameter( "lineWidth" )->location;
 	}
 
 	return g_shader.get();

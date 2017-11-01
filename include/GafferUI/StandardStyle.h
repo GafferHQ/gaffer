@@ -133,6 +133,7 @@ class StandardStyle : public Style
 		static int g_v1Parameter;
 		static int g_t0Parameter;
 		static int g_t1Parameter;
+		static float g_lineWidthParameter;
 
 		Imath::Color3f colorForState( Color c, State s, const Imath::Color3f *userColor = nullptr ) const;
 		boost::array<Imath::Color3f, LastColor> m_colors;
