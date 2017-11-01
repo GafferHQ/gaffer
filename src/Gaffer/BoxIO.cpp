@@ -523,13 +523,13 @@ void BoxIO::insert( Box *box )
 			BoxInPtr boxIn = new BoxIn;
 			boxIn->namePlug()->setValue( plug->getName() );
 			boxIn->setup( plug );
+			box->addChild( boxIn );
+
 			boxIn->inPlugInternal()->setInput( plug );
 			for( std::vector<Plug *>::const_iterator oIt = outputsNeedingBoxIn.begin(), oeIt = outputsNeedingBoxIn.end(); oIt != oeIt; ++oIt )
 			{
 				(*oIt)->setInput( boxIn->plug<Plug>() );
 			}
-
-			box->addChild( boxIn );
 		}
 		else
 		{
@@ -544,9 +544,10 @@ void BoxIO::insert( Box *box )
 			BoxOutPtr boxOut = new BoxOut;
 			boxOut->namePlug()->setValue( plug->getName() );
 			boxOut->setup( plug );
+			box->addChild( boxOut );
+
 			boxOut->plug<Plug>()->setInput( input );
 			plug->setInput( boxOut->outPlugInternal() );
-			box->addChild( boxOut );
 		}
 	}
 
