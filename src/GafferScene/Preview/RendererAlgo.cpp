@@ -673,24 +673,24 @@ void outputOptions( const IECore::CompoundObject *globals, const IECore::Compoun
 		{
 			continue;
 		}
-		if( const Data *data = runTimeCast<Data>( it->second.get() ) )
+		if( const Object *object = it->second.get() )
 		{
 			bool changedOrAdded = true;
 			if( previousGlobals )
 			{
-				if( const Data *previousData = previousGlobals->member<Data>( it->first ) )
+				if( const Object *previousObject = previousGlobals->member<Object>( it->first ) )
 				{
-					changedOrAdded = *previousData != *data;
+					changedOrAdded = *previousObject != *object;
 				}
 			}
 			if( changedOrAdded )
 			{
-				renderer->option( optionName( it->first ), data );
+				renderer->option( optionName( it->first ), object );
 			}
 		}
 		else
 		{
-			throw IECore::Exception( "Global \"" + it->first.string() + "\" is not an IECore::Data" );
+			throw IECore::Exception( "Global \"" + it->first.string() + "\" is null" );
 		}
 	}
 
@@ -707,9 +707,9 @@ void outputOptions( const IECore::CompoundObject *globals, const IECore::Compoun
 		{
 			continue;
 		}
-		if( runTimeCast<Data>( it->second.get() ) )
+		if( it->second.get() )
 		{
-			if( !globals->member<Data>( it->first ) )
+			if( !globals->member<Object>( it->first ) )
 			{
 				renderer->option( optionName( it->first ), nullptr );
 			}
