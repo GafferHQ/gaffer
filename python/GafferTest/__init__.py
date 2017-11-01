@@ -136,6 +136,7 @@ from PlugAlgoTest import PlugAlgoTest
 from BoxInTest import BoxInTest
 from BoxOutTest import BoxOutTest
 from DirtyPropagationScopeTest import DirtyPropagationScopeTest
+from BoxIOTest import BoxIOTest
 
 if __name__ == "__main__":
 	import unittest
