@@ -1773,7 +1773,7 @@ class ProceduralRenderer final : public ArnoldRendererBase
 		{
 		}
 
-		virtual void option( const IECore::InternedString &name, const IECore::Data *value ) override
+		virtual void option( const IECore::InternedString &name, const IECore::Object *value ) override
 		{
 			IECore::msg( IECore::Msg::Warning, "ArnoldRenderer", "Procedurals can not call option()" );
 		}
@@ -2034,7 +2034,7 @@ class ArnoldGlobals
 			option( g_pluginSearchPathOptionName, new IECore::StringData( "" ) );
 		}
 
-		void option( const IECore::InternedString &name, const IECore::Data *value )
+		void option( const IECore::InternedString &name, const IECore::Object *value )
 		{
 			AtNode *options = AiUniverseGetOptions();
 			if( name == g_frameOptionName )
@@ -2102,14 +2102,14 @@ class ArnoldGlobals
 			}
 			else if( boost::starts_with( name.c_str(), g_logFlagsOptionPrefix ) )
 			{
-				if( updateLogFlags( name.string().substr( g_logFlagsOptionPrefix.size() ), value, /* console = */ false ) )
+				if( updateLogFlags( name.string().substr( g_logFlagsOptionPrefix.size() ), IECore::runTimeCast<const IECore::Data>( value ), /* console = */ false ) )
 				{
 					return;
 				}
 			}
 			else if( boost::starts_with( name.c_str(), g_consoleFlagsOptionPrefix ) )
 			{
-				if( updateLogFlags( name.string().substr( g_consoleFlagsOptionPrefix.size() ), value, /* console = */ true ) )
+				if( updateLogFlags( name.string().substr( g_consoleFlagsOptionPrefix.size() ), IECore::runTimeCast<const IECore::Data>( value ), /* console = */ true ) )
 				{
 					return;
 				}
@@ -2169,9 +2169,10 @@ class ArnoldGlobals
 					{
 						AiNodeResetParameter( options, arnoldName );
 					}
-					if( value )
+					const IECore::Data *dataValue = IECore::runTimeCast<const IECore::Data>( value );
+					if( dataValue )
 					{
-						ParameterAlgo::setParameter( options, arnoldName, value );
+						ParameterAlgo::setParameter( options, arnoldName, dataValue );
 					}
 				}
 				return;
@@ -2182,9 +2183,10 @@ class ArnoldGlobals
 				const AtParamEntry *parameter = AiNodeEntryLookUpParameter( AiNodeGetNodeEntry( options ), arnoldName );
 				if( parameter )
 				{
-					if( value )
+					const IECore::Data *dataValue = IECore::runTimeCast<const IECore::Data>( value );
+					if( dataValue )
 					{
-						ParameterAlgo::setParameter( options, arnoldName, value );
+						ParameterAlgo::setParameter( options, arnoldName, dataValue );
 					}
 					else
 					{
@@ -2196,9 +2198,10 @@ class ArnoldGlobals
 			else if( boost::starts_with( name.c_str(), "user:" ) )
 			{
 				AtString arnoldName( name.c_str() );
-				if( value )
+				const IECore::Data *dataValue = IECore::runTimeCast<const IECore::Data>( value );
+				if( dataValue )
 				{
-					ParameterAlgo::setParameter( options, arnoldName, value );
+					ParameterAlgo::setParameter( options, arnoldName, dataValue );
 				}
 				else
 				{
@@ -2611,7 +2614,7 @@ class ArnoldRenderer final : public ArnoldRendererBase
 			pause();
 		}
 
-		void option( const IECore::InternedString &name, const IECore::Data *value ) override
+		void option( const IECore::InternedString &name, const IECore::Object *value ) override
 		{
 			m_globals->option( name, value );
 		}
