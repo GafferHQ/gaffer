@@ -182,7 +182,7 @@ void StandardNodule::doRenderLayer( Layer layer, const Style *style ) const
 				V3f srcTangent( 0.0f, 1.0f, 0.0f );
 				if( const NodeGadget *nodeGadget = ancestor<NodeGadget>() )
 				{
-					srcTangent = nodeGadget->noduleTangent( this );
+					srcTangent = nodeGadget->connectionTangent( this );
 				}
 				style->renderConnection( V3f( 0 ), srcTangent, m_dragPosition, m_dragTangent, Style::HighlightedState );
 			}
@@ -241,7 +241,7 @@ void StandardNodule::renderLabel( const Style *style ) const
 	}
 
 	// we rotate the label based on the angle the connection exits the node at.
-	V3f tangent = nodeGadget->noduleTangent( this );
+	V3f tangent = nodeGadget->connectionTangent( this );
 	float theta = IECore::radiansToDegrees( atan2f( tangent.y, tangent.x ) );
 
 	// but we don't want the text to be vertical, so we bend it away from the
@@ -356,7 +356,7 @@ bool StandardNodule::dragEnter( GadgetPtr gadget, const DragDropEvent &event )
 		V3f tangent( 0 );
 		if( NodeGadget *nodeGadget = ancestor<NodeGadget>() )
 		{
-			tangent = nodeGadget->noduleTangent( this );
+			tangent = nodeGadget->connectionTangent( this );
 		}
 
 		creator->updateDragEndPoint( centre, tangent );
