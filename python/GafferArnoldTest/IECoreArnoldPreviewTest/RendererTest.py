@@ -1868,6 +1868,52 @@ class RendererTest( GafferTest.TestCase ) :
 		self.assertTrue( all( [ arnold.AiNodeGetName( x ) for x in trueSpheres ] ) )
 
 	@staticmethod
+	def __aovShaders() :
+		options = arnold.AiUniverseGetOptions()
+		shaders = arnold.AiNodeGetArray( options, "aov_shaders" ) 
+
+		result = {}
+		for i in range( arnold.AiArrayGetNumElements( shaders ) ):
+			node = arnold.cast( arnold.AiArrayGetPtr( shaders, i ), arnold.POINTER( arnold.AtNode ) )
+			nodeType = arnold.AiNodeEntryGetName( arnold.AiNodeGetNodeEntry( node ) )
+			result[nodeType] = node
+	
+		return result
+
+
+	def testAOVShaders( self ) :
+
+		r = GafferScene.Private.IECoreScenePreview.Renderer.create(
+			"Arnold",
+			GafferScene.Private.IECoreScenePreview.Renderer.RenderType.Interactive
+		)
+
+		r.option( "ai:aov_shader:test", IECore.ObjectVector( [ 
+			IECore.Shader( "float_to_rgb", "ai:shader", { "__handle":IECore.StringData( "rgbSource" ) } ),
+			IECore.Shader( "aov_write_rgb", "ai:shader", { "aov_input":IECore.StringData( "link:rgbSource.out" ) } ),
+		] ) )
+
+		self.assertEqual( self.__aovShaders().keys(), [ "aov_write_rgb" ] )
+		source = arnold.AiNodeGetLink( self.__aovShaders()["aov_write_rgb"], "aov_input" )
+		self.assertEqual( arnold.AiNodeEntryGetName( arnold.AiNodeGetNodeEntry( source ) ), "float_to_rgb" )
+
+		# Add another 
+		r.option( "ai:aov_shader:test2", IECore.ObjectVector( [ IECore.Shader( "aov_write_float", "ai:shader" ) ] ) )
+		self.assertEqual( set( self.__aovShaders().keys() ), set( [ "aov_write_rgb", "aov_write_float" ] ) )
+
+		# Add overwrite 
+		r.option( "ai:aov_shader:test", IECore.ObjectVector( [ IECore.Shader( "aov_write_int", "ai:shader" ) ] ) )
+		self.assertEqual( set( self.__aovShaders().keys() ), set( [ "aov_write_int", "aov_write_float" ] ) )
+
+		r.option( "ai:aov_shader:test", None )
+		self.assertEqual( self.__aovShaders().keys(), [ "aov_write_float" ] )
+
+		r.option( "ai:aov_shader:test2", None )
+		self.assertEqual( self.__aovShaders().keys(), [] )
+
+		del r
+
+	@staticmethod
 	def __m44f( m ) :
 
 		return IECore.M44f( *[ i for row in m.data for i in row ] )

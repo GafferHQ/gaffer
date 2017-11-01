@@ -196,6 +196,7 @@ std::string formatHeaderParameter( const std::string name, const IECore::Data *d
 
 const AtString g_aaSamplesArnoldString( "AA_samples" );
 const AtString g_aaSeedArnoldString( "AA_seed" );
+const AtString g_aovShadersArnoldString( "aov_shaders" );
 const AtString g_autoArnoldString( "auto" );
 const AtString g_boxArnoldString("box");
 const AtString g_cameraArnoldString( "camera" );
@@ -2021,11 +2022,12 @@ class ArnoldGlobals
 
 	public :
 
-		ArnoldGlobals( IECoreScenePreview::Renderer::RenderType renderType, const std::string &fileName )
+		ArnoldGlobals( IECoreScenePreview::Renderer::RenderType renderType, const std::string &fileName, ShaderCache *shaderCache )
 			:	m_renderType( renderType ),
 				m_universeBlock( /* writable = */ true ),
 				m_logFileFlags( g_logFlagsDefault ),
 				m_consoleFlags( g_consoleFlagsDefault ),
+				m_shaderCache( shaderCache ),
 				m_assFileName( fileName )
 		{
 			AiMsgSetLogFileFlags( m_logFileFlags );
@@ -2152,6 +2154,26 @@ class ArnoldGlobals
 					}
 				}
 				AiNodeSetStr( options, g_pluginSearchPathArnoldString, AtString( s.c_str() ) );
+				return;
+			}
+			else if( boost::starts_with( name.c_str(), "ai:aov_shader:" ) )
+			{
+				m_aovShaders.erase( name );
+				if( value )
+				{
+					if( const IECore::ObjectVector *d = reportedCast<const IECore::ObjectVector>( value, "option", name ) )
+					{
+						m_aovShaders[name] = m_shaderCache->get( d );
+					}
+				}
+
+				AtArray *array = AiArrayAllocate( m_aovShaders.size(), 1, AI_TYPE_NODE );
+				int i = 0;
+				for( AOVShaderMap::const_iterator it = m_aovShaders.begin(); it != m_aovShaders.end(); ++it )
+				{
+					AiArraySetPtr( array, i++, it->second->root() );
+				}
+				AiNodeSetArray( options, g_aovShadersArnoldString, array );
 				return;
 			}
 			else if( boost::starts_with( name.c_str(), "ai:declare:" ) )
@@ -2505,6 +2527,9 @@ class ArnoldGlobals
 		typedef std::map<IECore::InternedString, ArnoldOutputPtr> OutputMap;
 		OutputMap m_outputs;
 
+		typedef std::map<IECore::InternedString, ArnoldShaderPtr> AOVShaderMap;
+		AOVShaderMap m_aovShaders;
+
 		std::string m_cameraName;
 		typedef tbb::concurrent_unordered_map<std::string, IECore::ConstCameraPtr> CameraMap;
 		CameraMap m_cameras;
@@ -2515,6 +2540,7 @@ class ArnoldGlobals
 		boost::optional<int> m_frame;
 		boost::optional<int> m_aaSeed;
 		boost::optional<bool> m_sampleMotion;
+		ShaderCache *m_shaderCache;
 
 		// Members used by interactive renders
 
@@ -2605,7 +2631,7 @@ class ArnoldRenderer final : public ArnoldRendererBase
 
 		ArnoldRenderer( RenderType renderType, const std::string &fileName )
 			:	ArnoldRendererBase( nodeDeleter( renderType ) ),
-				m_globals( new ArnoldGlobals( renderType, fileName ) )
+				m_globals( new ArnoldGlobals( renderType, fileName, m_shaderCache.get() ) )
 		{
 		}
 
