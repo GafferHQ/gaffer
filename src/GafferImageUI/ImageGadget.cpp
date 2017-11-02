@@ -637,8 +637,13 @@ void ImageGadget::renderText( const std::string &text, const Imath::V2f &positio
 	style->renderText( Style::LabelText, text );
 }
 
-void ImageGadget::doRender( const GafferUI::Style *style ) const
+void ImageGadget::doRenderLayer( Layer layer, const GafferUI::Style *style ) const
 {
+	if( layer != Layer::Main )
+	{
+		return;
+	}
+
 	if( IECoreGL::Selector::currentSelector() )
 	{
 		return;

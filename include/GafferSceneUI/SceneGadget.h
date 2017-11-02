@@ -114,7 +114,7 @@ class SceneGadget : public GafferUI::Gadget
 
 	protected :
 
-		void doRender( const GafferUI::Style *style ) const override;
+		void doRenderLayer( Layer layer, const GafferUI::Style *style ) const override;
 
 	private :
 

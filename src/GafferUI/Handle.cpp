@@ -101,8 +101,13 @@ Imath::Box3f Handle::bound() const
 	return Box3f( V3f( -1 ), V3f( 1 ) );
 }
 
-void Handle::doRender( const Style *style ) const
+void Handle::doRenderLayer( Layer layer, const Style *style ) const
 {
+	if( layer != Layer::Main )
+	{
+		return;
+	}
+
 	if( m_rasterScale > 0.0f )
 	{
 		// We want our handles to be a constant length in

@@ -87,8 +87,13 @@ DotNodeGadget::~DotNodeGadget()
 {
 }
 
-void DotNodeGadget::doRender( const Style *style ) const
+void DotNodeGadget::doRenderLayer( Layer layer, const Style *style ) const
 {
+	if( layer != GraphLayer::Nodes )
+	{
+		return NodeGadget::doRenderLayer( layer, style );
+	}
+
 	Style::State state = getHighlighted() ? Style::HighlightedState : Style::NormalState;
 
 	const Box3f b = bound();
@@ -103,7 +108,7 @@ void DotNodeGadget::doRender( const Style *style ) const
 		glPopMatrix();
 	}
 
-	NodeGadget::doRender( style );
+	NodeGadget::doRenderLayer( layer, style );
 }
 
 Gaffer::Dot *DotNodeGadget::dotNode()

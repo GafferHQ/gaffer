@@ -170,15 +170,20 @@ IECoreGL::TextureLoader *ImageGadget::textureLoader()
 	return loader.get();
 }
 
-void ImageGadget::doRender( const Style *style ) const
+void ImageGadget::doRenderLayer( Layer layer, const Style *style ) const
 {
+	if( layer != Layer::Main )
+	{
+		return Gadget::doRenderLayer( layer, style );
+	}
+
 	if( const Texture *texture = loadTexture( m_imageOrTextureOrFileName ) )
 	{
 		Box2f b( V2f( m_bound.min.x, m_bound.min.y ), V2f( m_bound.max.x, m_bound.max.y ) );
 		style->renderImage( b, texture );
 	}
 
-	Gadget::doRender( style );
+	Gadget::doRenderLayer( layer, style );
 }
 
 Imath::Box3f ImageGadget::bound() const

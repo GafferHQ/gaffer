@@ -66,7 +66,7 @@ class Handle : public Gadget
 
 		// Implemented to call renderHandle() after applying
 		// the raster scale.
-		void doRender( const Style *style ) const override;
+		void doRenderLayer( Layer layer, const Style *style ) const override;
 
 		// Must be implemented by derived classes to draw their
 		// handle.

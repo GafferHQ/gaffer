@@ -81,6 +81,16 @@ class Gadget : public Gaffer::GraphComponent
 
 		IE_CORE_DECLARERUNTIMETYPEDEXTENSION( GafferUI::Gadget, GadgetTypeId, Gaffer::GraphComponent );
 
+		enum class Layer
+		{
+			Back = -2,
+			MidBack = -1,
+			Main = 0,
+			MidFront = 1,
+			Front = 2,
+			Last = 3
+		};
+
 		/// Returns the Gadget with the specified name, where name has been retrieved
 		/// from an IECoreGL::HitRecord after rendering some Gadget in GL_SELECT mode.
 		/// \todo Consider better mechanisms.
@@ -171,8 +181,8 @@ class Gadget : public Gaffer::GraphComponent
 		/// and will be used if and only if not overridden by a Style applied
 		/// specifically to this Gadget. Typically users will not pass currentStyle -
 		/// but it must be passed by Gadget implementations when rendering child
-		/// Gadgets in doRender().
-		void render( const Style *currentStyle = nullptr ) const;
+		/// Gadgets in doRenderLayer().
+		void render() const;
 		/// The bounding box of the Gadget before transformation. The default
 		/// implementation returns the union of the transformed bounding boxes
 		/// of all the children.
@@ -277,13 +287,16 @@ class Gadget : public Gaffer::GraphComponent
 		/// Use this rather than emit the signal manually.
 		void requestRender();
 
-		/// The subclass specific part of render(). The public render() method
-		/// sets the GL state up with the name attribute and transform for
-		/// this Gadget, makes sure the style is bound and then calls doRender().
-		/// The default implementation just renders all the visible child Gadgets.
-		virtual void doRender( const Style *style ) const;
+		/// Should be implemented by subclasses to draw themselves as appropriate
+		/// for the specified layer. The default implementation just renders all
+		/// the visible child Gadgets.
+		virtual void doRenderLayer( Layer layer, const Style *style ) const;
 
 	private :
+
+		// Sets the GL state up with the name attribute and transform for
+		// this Gadget, makes sure the style is bound and then calls doRenderLayer().
+		void renderLayer( Layer layer, const Style *currentStyle = nullptr ) const;
 
 		void styleChanged();
 		void parentChanged( GraphComponent *child, GraphComponent *oldParent );
@@ -340,6 +353,8 @@ class Gadget : public Gaffer::GraphComponent
 
 typedef Gaffer::FilteredChildIterator<Gaffer::TypePredicate<Gadget> > GadgetIterator;
 typedef Gaffer::FilteredRecursiveChildIterator<Gaffer::TypePredicate<Gadget> > RecursiveGadgetIterator;
+
+inline Gadget::Layer &operator++( Gadget::Layer &x ) { return x = (Gadget::Layer)(((int)(x) + 1)); };
 
 } // namespace GafferUI
 

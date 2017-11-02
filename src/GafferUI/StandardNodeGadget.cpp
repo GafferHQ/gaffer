@@ -62,6 +62,7 @@
 #include "GafferUI/ImageGadget.h"
 #include "GafferUI/PlugAdder.h"
 #include "GafferUI/NoduleLayout.h"
+#include "GafferUI/GraphGadget.h"
 
 using namespace std;
 using namespace Imath;
@@ -311,8 +312,13 @@ Imath::Box3f StandardNodeGadget::bound() const
 	return b;
 }
 
-void StandardNodeGadget::doRender( const Style *style ) const
+void StandardNodeGadget::doRenderLayer( Layer layer, const Style *style ) const
 {
+	if( layer != GraphLayer::Nodes )
+	{
+		return NodeGadget::doRenderLayer( layer, style );
+	}
+
 	// decide what state we're rendering in
 	Style::State state = getHighlighted() ? Style::HighlightedState : Style::NormalState;
 
@@ -333,7 +339,7 @@ void StandardNodeGadget::doRender( const Style *style ) const
 	);
 
 	// draw our contents
-	NodeGadget::doRender( style );
+	NodeGadget::doRenderLayer( layer, style );
 
 	// draw a strikethrough if we're disabled
 	if( !m_nodeEnabled && !IECoreGL::Selector::currentSelector() )

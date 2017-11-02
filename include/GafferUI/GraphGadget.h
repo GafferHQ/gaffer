@@ -58,6 +58,17 @@ IE_CORE_FORWARDDECLARE( Nodule );
 IE_CORE_FORWARDDECLARE( ConnectionGadget );
 IE_CORE_FORWARDDECLARE( GraphLayout );
 
+/// Aliases that define the intended use of each
+/// Gadget::Layer by the GraphGadget components.
+namespace GraphLayer
+{
+	constexpr Gadget::Layer Backdrops = Gadget::Layer::Back;
+	constexpr Gadget::Layer Connections = Gadget::Layer::MidBack;
+	constexpr Gadget::Layer Nodes = Gadget::Layer::Main;
+	constexpr Gadget::Layer Highlighting = Gadget::Layer::MidFront;
+	constexpr Gadget::Layer Overlay = Gadget::Layer::Front;
+};
+
 /// The GraphGadget class provides a ui for connecting nodes together.
 class GraphGadget : public ContainerGadget
 {
@@ -173,7 +184,7 @@ class GraphGadget : public ContainerGadget
 
 	protected :
 
-		void doRender( const Style *style ) const override;
+		void doRenderLayer( Layer layer, const Style *style ) const override;
 
 	private :
 

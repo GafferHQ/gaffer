@@ -79,7 +79,7 @@ class ImageGadget : public Gadget
 
 	protected :
 
-		void doRender( const Style *style ) const override;
+		void doRenderLayer( Layer layer, const Style *style ) const override;
 
 	private :
 

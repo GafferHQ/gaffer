@@ -185,10 +185,10 @@ void setEnabled( Gadget &g, bool enabled )
 	g.setEnabled( enabled );
 }
 
-void render( const Gadget &g, const Style *currentStyle )
+void render( const Gadget &g )
 {
 	IECorePython::ScopedGILRelease gilRelease;
-	g.render( currentStyle );
+	g.render();
 }
 
 BOOST_PYTHON_MEMBER_FUNCTION_OVERLOADS( fullTransformOverloads, fullTransform, 0, 1 );
@@ -244,6 +244,14 @@ void GafferUIModule::bindGadget()
 		.staticmethod( "_executeOnUIThreadSignal" )
 		.def( "_requestRender", &Gadget::requestRender )
 		.def( "select", &Gadget::select ).staticmethod( "select" )
+	;
+
+	enum_<Gadget::Layer>( "Layer" )
+		.value( "Back", Gadget::Layer::Back )
+		.value( "MidBack", Gadget::Layer::MidBack )
+		.value( "Main", Gadget::Layer::Main )
+		.value( "MidFront", Gadget::Layer::MidFront )
+		.value( "Front", Gadget::Layer::Front )
 	;
 
 	SignalClass<Gadget::RenderRequestSignal, DefaultSignalCaller<Gadget::RenderRequestSignal>, RenderRequestSlotCaller>( "RenderRequestSignal" );

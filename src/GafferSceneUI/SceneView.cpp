@@ -419,8 +419,13 @@ class GnomonPlane : public GafferUI::Gadget
 
 	protected :
 
-		void doRender( const Style *style ) const override
+		void doRenderLayer( Layer layer, const Style *style ) const override
 		{
+			if( layer != Layer::Main )
+			{
+				return;
+			}
+
 			if( m_hovering || IECoreGL::Selector::currentSelector() )
 			{
 				/// \todo Really the style should be choosing the colours.
@@ -458,8 +463,13 @@ class GnomonGadget : public GafferUI::Gadget
 
 	protected :
 
-		void doRender( const Style *style ) const override
+		void doRenderLayer( Layer layer, const Style *style ) const override
 		{
+			if( layer != Layer::Main )
+			{
+				return Gadget::doRenderLayer( layer, style );
+			}
+
 			const float pixelWidth = 30.0f;
 			const V2i viewport = ancestor<ViewportGadget>()->getViewport();
 
@@ -512,7 +522,7 @@ class GnomonGadget : public GafferUI::Gadget
 			style->renderTranslateHandle( Style::Y );
 			style->renderTranslateHandle( Style::Z );
 
-			Gadget::doRender( style );
+			Gadget::doRenderLayer( layer, style );
 
 			// and pop the matrices back to their original values
 
@@ -708,8 +718,13 @@ class CameraOverlay : public GafferUI::Gadget
 
 	protected :
 
-		void doRender( const Style *style ) const override
+		void doRenderLayer( Layer layer, const Style *style ) const override
 		{
+			if( layer != Layer::Main )
+			{
+				return Gadget::doRenderLayer( layer, style );
+			}
+
 			if( IECoreGL::Selector::currentSelector() || m_resolutionGate.isEmpty() )
 			{
 				return;

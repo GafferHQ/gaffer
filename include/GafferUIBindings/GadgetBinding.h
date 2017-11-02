@@ -111,19 +111,19 @@ class GadgetWrapper : public GafferBindings::GraphComponentWrapper<WrappedType>
 			return WrappedType::getToolTip( line );
 		}
 
-		void doRender( const GafferUI::Style *style ) const override
+		void doRenderLayer( GafferUI::Gadget::Layer layer, const GafferUI::Style *style ) const override
 		{
 			if( this->isSubclassed() )
 			{
 				IECorePython::ScopedGILLock gilLock;
-				boost::python::object f = this->methodOverride( "doRender" );
+				boost::python::object f = this->methodOverride( "doRenderLayer" );
 				if( f )
 				{
-					f( style );
+					f( layer, style );
 					return;
 				}
 			}
-			WrappedType::doRender( style );
+			WrappedType::doRenderLayer( layer, style );
 		}
 
 };

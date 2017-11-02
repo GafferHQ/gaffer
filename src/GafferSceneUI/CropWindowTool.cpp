@@ -158,8 +158,13 @@ class CropWindowTool::Rectangle : public GafferUI::Gadget
 
 	protected :
 
-		void doRender( const Style *style ) const override
+		void doRenderLayer( Layer layer, const Style *style ) const override
 		{
+			if( layer != Layer::Main )
+			{
+				return;
+			}
+
 			if( m_rectangle.isEmpty() )
 			{
 				return;

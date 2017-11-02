@@ -798,8 +798,13 @@ Imath::Box3f SceneGadget::bound() const
 	return m_sceneGraph->bound();
 }
 
-void SceneGadget::doRender( const GafferUI::Style *style ) const
+void SceneGadget::doRenderLayer( Layer layer, const GafferUI::Style *style ) const
 {
+	if( layer != Layer::Main )
+	{
+		return;
+	}
+
 	if( !m_scene || IECoreGL::Selector::currentSelector() )
 	{
 		return;

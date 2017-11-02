@@ -54,6 +54,7 @@
 #include "GafferUI/NodeGadget.h"
 #include "GafferUI/Pointer.h"
 #include "GafferUI/PlugAdder.h"
+#include "GafferUI/GraphGadget.h"
 
 using namespace std;
 using namespace Imath;
@@ -118,36 +119,55 @@ void StandardNodule::updateDragEndPoint( const Imath::V3f position, const Imath:
  	requestRender();
 }
 
-void StandardNodule::doRender( const Style *style ) const
+void StandardNodule::doRenderLayer( Layer layer, const Style *style ) const
 {
-	if( m_draggingConnection )
+	switch( layer )
 	{
-		if( !IECoreGL::Selector::currentSelector() )
-		{
-			V3f srcTangent( 0.0f, 1.0f, 0.0f );
-			const NodeGadget *nodeGadget = ancestor<NodeGadget>();
-			if( nodeGadget )
+
+		case GraphLayer::Connections :
+
+			if( m_draggingConnection && !IECoreGL::Selector::currentSelector() )
 			{
-				srcTangent = nodeGadget->noduleTangent( this );
+				V3f srcTangent( 0.0f, 1.0f, 0.0f );
+				if( const NodeGadget *nodeGadget = ancestor<NodeGadget>() )
+				{
+					srcTangent = nodeGadget->noduleTangent( this );
+				}
+				style->renderConnection( V3f( 0 ), srcTangent, m_dragPosition, m_dragTangent, Style::HighlightedState );
 			}
-			style->renderConnection( V3f( 0 ), srcTangent, m_dragPosition, m_dragTangent, Style::HighlightedState );
-		}
+			break;
+
+		case GraphLayer::Nodes :
+
+			if( !getHighlighted() )
+			{
+				style->renderNodule( 0.5f, Style::NormalState, m_userColor.get_ptr() );
+			}
+			break;
+
+		case GraphLayer::Highlighting :
+
+			if( getHighlighted() )
+			{
+				style->renderNodule( 1.0f, Style::HighlightedState, m_userColor.get_ptr() );
+			}
+			break;
+
+		case GraphLayer::Overlay :
+
+			if( m_labelVisible && !IECoreGL::Selector::currentSelector() )
+			{
+				renderLabel( style );
+			}
+			break;
+
+		default :
+
+			break;
+
 	}
 
-	float radius = 0.5f;
-	Style::State state = Style::NormalState;
-	if( getHighlighted() )
-	{
-		state = Style::HighlightedState;
-		radius = 1.0f;
-	}
-
-	style->renderNodule( radius, state, m_userColor.get_ptr() );
-
-	if( m_labelVisible && !IECoreGL::Selector::currentSelector() )
-	{
-		renderLabel( style );
-	}
+	// if the nodule isn't highlighted it will be drawn in the normal, non-overlayed manner
 }
 
 void StandardNodule::renderLabel( const Style *style ) const

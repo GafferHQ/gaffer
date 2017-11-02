@@ -254,7 +254,15 @@ Imath::M44f Gadget::fullTransform( const Gadget *ancestor ) const
 	return result;
 }
 
-void Gadget::render( const Style *currentStyle ) const
+void Gadget::render() const
+{
+	for( Layer layer = Layer::Back; layer < Layer::Last; ++layer )
+	{
+		renderLayer( layer, /* currentStyle = */ nullptr );
+	}
+}
+
+void Gadget::renderLayer( Layer layer, const Style *currentStyle ) const
 {
 	glPushMatrix();
 
@@ -279,7 +287,7 @@ void Gadget::render( const Style *currentStyle ) const
 			selector->loadName( m_glName );
 		}
 
-		doRender( currentStyle );
+		doRenderLayer( layer, currentStyle );
 
 	glPopMatrix();
 }
@@ -294,7 +302,7 @@ void Gadget::requestRender()
 	}
 }
 
-void Gadget::doRender( const Style *style ) const
+void Gadget::doRenderLayer( Layer layer, const Style *style ) const
 {
 	for( ChildContainer::const_iterator it=children().begin(); it!=children().end(); it++ )
 	{
@@ -304,7 +312,7 @@ void Gadget::doRender( const Style *style ) const
 		{
 			continue;
 		}
-		c->render( style );
+		c->renderLayer( layer, style );
 	}
 }
 

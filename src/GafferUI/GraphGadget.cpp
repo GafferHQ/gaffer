@@ -98,9 +98,9 @@ const InternedString g_nodeGadgetTypeName( "nodeGadget:type" );
 
 struct CompareV2fX{
 	bool operator()(const Imath::V2f &a, const Imath::V2f &b) const
-	{   
+	{
 		return a[0] < b[0];
-	}   
+	}
 };
 
 } // namespace
@@ -603,9 +603,6 @@ ConnectionGadget *GraphGadget::reconnectionGadgetAt( const NodeGadget *gadget, c
 	{
 		ViewportGadget::SelectionScope selectionScope( corner0, corner1, this, selection, IECoreGL::Selector::IDRender );
 
-		const Style *s = style();
-		s->bind();
-
 		for ( ChildContainer::const_iterator it = children().begin(); it != children().end(); ++it )
 		{
 			if ( ConnectionGadget *c = IECore::runTimeCast<ConnectionGadget>( it->get() ) )
@@ -613,7 +610,7 @@ ConnectionGadget *GraphGadget::reconnectionGadgetAt( const NodeGadget *gadget, c
 				// don't consider the node's own connections, or connections without a source nodule
 				if ( c->srcNodule() && gadget->node() != c->srcNodule()->plug()->node() && gadget->node() != c->dstNodule()->plug()->node() )
 				{
-					c->render( s );
+					c->render();
 				}
 			}
 		}
@@ -631,78 +628,62 @@ ConnectionGadget *GraphGadget::reconnectionGadgetAt( const NodeGadget *gadget, c
 	return nullptr;
 }
 
-void GraphGadget::doRender( const Style *style ) const
+void GraphGadget::doRenderLayer( Layer layer, const Style *style ) const
 {
 	glDisable( GL_DEPTH_TEST );
 
-	// render backdrops before anything else
-	/// \todo Perhaps we need a more general layering system as part
-	/// of the Gadget system, to allow Gadgets to choose their own layering,
-	/// and perhaps to also allow one gadget to draw into multiple layers.
-	for( ChildContainer::const_iterator it=children().begin(); it!=children().end(); it++ )
+	switch( layer )
 	{
-		if( (*it)->isInstanceOf( (IECore::TypeId)BackdropNodeGadgetTypeId ) )
+
+	case GraphLayer::Connections :
+
+		// render the new drag connections if they exist
+		if ( m_dragReconnectCandidate )
 		{
-			static_cast<const Gadget *>( it->get() )->render( style );
+			if ( m_dragReconnectDstNodule )
+			{
+				const Nodule *srcNodule = m_dragReconnectCandidate->srcNodule();
+				const NodeGadget *srcNodeGadget = nodeGadget( srcNodule->plug()->node() );
+				const Imath::V3f srcP = srcNodule->fullTransform( this ).translation();
+				const Imath::V3f dstP = m_dragReconnectDstNodule->fullTransform( this ).translation();
+				const Imath::V3f dstTangent = nodeGadget( m_dragReconnectDstNodule->plug()->node() )->noduleTangent( m_dragReconnectDstNodule );
+				/// \todo: can there be a highlighted/dashed state?
+				style->renderConnection( srcP, srcNodeGadget->noduleTangent( srcNodule ), dstP, dstTangent, Style::HighlightedState );
+			}
+
+			if ( m_dragReconnectSrcNodule )
+			{
+				const Nodule *dstNodule = m_dragReconnectCandidate->dstNodule();
+				const NodeGadget *dstNodeGadget = nodeGadget( dstNodule->plug()->node() );
+				const Imath::V3f srcP = m_dragReconnectSrcNodule->fullTransform( this ).translation();
+				const Imath::V3f dstP = dstNodule->fullTransform( this ).translation();
+				const Imath::V3f srcTangent = nodeGadget( m_dragReconnectSrcNodule->plug()->node() )->noduleTangent( m_dragReconnectSrcNodule );
+				/// \todo: can there be a highlighted/dashed state?
+				style->renderConnection( srcP, srcTangent, dstP, dstNodeGadget->noduleTangent( dstNodule ), Style::HighlightedState );
+			}
 		}
+		break;
+
+	case GraphLayer::Overlay :
+
+		// render drag select thing if needed
+		if( m_dragMode == Selecting )
+		{
+			const ViewportGadget *viewportGadget = ancestor<ViewportGadget>();
+			ViewportGadget::RasterScope rasterScope( viewportGadget );
+
+			Box2f b;
+			b.extendBy( viewportGadget->gadgetToRasterSpace( V3f( m_dragStartPosition.x, m_dragStartPosition.y, 0 ), this ) );
+			b.extendBy( viewportGadget->gadgetToRasterSpace( V3f( m_lastDragPosition.x, m_lastDragPosition.y, 0 ), this ) );
+			style->renderSelectionBox( b );
+		}
+		break;
+
+	default:
+		break;
 	}
 
-	// then render connections so they go underneath the nodes
-	for( ChildContainer::const_iterator it=children().begin(); it!=children().end(); it++ )
-	{
-		ConnectionGadget *c = IECore::runTimeCast<ConnectionGadget>( it->get() );
-		if ( c && c != m_dragReconnectCandidate )
-		{
-			c->render( style );
-		}
-	}
-
-	// render the new drag connections if they exist
-	if ( m_dragReconnectCandidate )
-	{
-		if ( m_dragReconnectDstNodule )
-		{
-			const Nodule *srcNodule = m_dragReconnectCandidate->srcNodule();
-			const NodeGadget *srcNodeGadget = nodeGadget( srcNodule->plug()->node() );
-			const Imath::V3f srcP = srcNodule->fullTransform( this ).translation();
-			const Imath::V3f dstP = m_dragReconnectDstNodule->fullTransform( this ).translation();
-			const Imath::V3f dstTangent = nodeGadget( m_dragReconnectDstNodule->plug()->node() )->noduleTangent( m_dragReconnectDstNodule );
-			/// \todo: can there be a highlighted/dashed state?
-			style->renderConnection( srcP, srcNodeGadget->noduleTangent( srcNodule ), dstP, dstTangent, Style::HighlightedState );
-		}
-
-		if ( m_dragReconnectSrcNodule )
-		{
-			const Nodule *dstNodule = m_dragReconnectCandidate->dstNodule();
-			const NodeGadget *dstNodeGadget = nodeGadget( dstNodule->plug()->node() );
-			const Imath::V3f srcP = m_dragReconnectSrcNodule->fullTransform( this ).translation();
-			const Imath::V3f dstP = dstNodule->fullTransform( this ).translation();
-			const Imath::V3f srcTangent = nodeGadget( m_dragReconnectSrcNodule->plug()->node() )->noduleTangent( m_dragReconnectSrcNodule );
-			/// \todo: can there be a highlighted/dashed state?
-			style->renderConnection( srcP, srcTangent, dstP, dstNodeGadget->noduleTangent( dstNodule ), Style::HighlightedState );
-		}
-	}
-
-	// then render the rest on top
-	for( ChildContainer::const_iterator it=children().begin(); it!=children().end(); it++ )
-	{
-		if( !((*it)->isInstanceOf( ConnectionGadget::staticTypeId() )) && !((*it)->isInstanceOf( (IECore::TypeId)BackdropNodeGadgetTypeId )) )
-		{
-			static_cast<const Gadget *>( it->get() )->render( style );
-		}
-	}
-
-	// render drag select thing if needed
-	if( m_dragMode == Selecting )
-	{
-		const ViewportGadget *viewportGadget = ancestor<ViewportGadget>();
-		ViewportGadget::RasterScope rasterScope( viewportGadget );
-
-		Box2f b;
-		b.extendBy( viewportGadget->gadgetToRasterSpace( V3f( m_dragStartPosition.x, m_dragStartPosition.y, 0 ), this ) );
-		b.extendBy( viewportGadget->gadgetToRasterSpace( V3f( m_lastDragPosition.x, m_lastDragPosition.y, 0 ), this ) );
-		style->renderSelectionBox( b );
-	}
+	Gadget::doRenderLayer( layer, style );
 
 }
 
@@ -1098,7 +1079,7 @@ bool GraphGadget::dragMove( GadgetPtr gadget, const DragDropEvent &event )
 	if( m_dragMode == Moving )
 	{
 		const float snapThresh = 1.5;
-		
+
 		// snap the position using the offsets precomputed in calculateDragSnapOffsets()
 		V2f startPos = V2f( i.x, i.y );
 		V2f pos = startPos;
@@ -1169,6 +1150,10 @@ bool GraphGadget::dragMove( GadgetPtr gadget, const DragDropEvent &event )
 
 void GraphGadget::updateDragReconnectCandidate( const DragDropEvent &event )
 {
+	if( m_dragReconnectCandidate )
+	{
+		m_dragReconnectCandidate->setVisible( true );
+	}
 	m_dragReconnectCandidate = nullptr;
 	m_dragReconnectSrcNodule = nullptr;
 	m_dragReconnectDstNodule = nullptr;
@@ -1256,6 +1241,7 @@ void GraphGadget::updateDragReconnectCandidate( const DragDropEvent &event )
 			m_dragReconnectCandidate = connection;
 			m_dragReconnectDstNodule = inNodule;
 			m_dragReconnectSrcNodule = outNodule;
+			m_dragReconnectCandidate->setVisible( false );
 			return;
 		}
 	}

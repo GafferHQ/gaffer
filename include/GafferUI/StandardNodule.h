@@ -69,7 +69,7 @@ class StandardNodule : public Nodule
 
 	protected :
 
-		void doRender( const Style *style ) const override;
+		void doRenderLayer( Layer layer, const Style *style ) const override;
 		void renderLabel( const Style *style ) const;
 
 		void enter( GadgetPtr gadget, const ButtonEvent &event );
