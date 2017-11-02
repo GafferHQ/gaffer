@@ -42,6 +42,7 @@
 #include "IECore/MessageHandler.h"
 #include "IECore/VisibleRenderable.h"
 #include "IECore/NullObject.h"
+#include "IECore/Transform.h"
 
 #include "Gaffer/Context.h"
 #include "Gaffer/ScriptNode.h"
