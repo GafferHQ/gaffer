@@ -39,7 +39,7 @@ import GafferScene
 
 Gaffer.Metadata.registerNode(
 
-	GafferScene.Preview.Render,
+	GafferScene.Render,
 
 	"description",
 	"""
@@ -76,8 +76,8 @@ Gaffer.Metadata.registerNode(
 			The type of render to perform.
 			""",
 
-			"preset:Render", GafferScene.Preview.Render.Mode.RenderMode,
-			"preset:Scene Description", GafferScene.Preview.Render.Mode.SceneDescriptionMode,
+			"preset:Render", GafferScene.Render.Mode.RenderMode,
+			"preset:Scene Description", GafferScene.Render.Mode.SceneDescriptionMode,
 
 			"plugValueWidget:type", "GafferUI.PresetsPlugValueWidget",
 

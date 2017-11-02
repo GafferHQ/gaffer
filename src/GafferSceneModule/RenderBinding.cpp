@@ -44,7 +44,7 @@
 
 #include "GafferScene/OpenGLRender.h"
 #include "GafferScene/InteractiveRender.h"
-#include "GafferScene/Preview/Render.h"
+#include "GafferScene/Render.h"
 #include "GafferScene/Private/IECoreScenePreview/Renderer.h"
 #include "GafferScene/Private/IECoreScenePreview/Procedural.h"
 #include "GafferScene/Private/IECoreScenePreview/Geometry.h"
@@ -171,20 +171,12 @@ void GafferSceneModule::bindRender()
 	}
 
 	{
-		object previewModule( borrowed( PyImport_AddModule( "GafferScene.Preview" ) ) );
-		scope().attr( "Preview" ) = previewModule;
+		scope s = TaskNodeClass<GafferScene::Render>();
 
-		scope previewScope( previewModule );
-
-		{
-			scope s = TaskNodeClass<GafferScene::Preview::Render>();
-
-			enum_<GafferScene::Preview::Render::Mode>( "Mode" )
-				.value( "RenderMode", GafferScene::Preview::Render::RenderMode )
-				.value( "SceneDescriptionMode", GafferScene::Preview::Render::SceneDescriptionMode )
-			;
-		}
-
+		enum_<GafferScene::Render::Mode>( "Mode" )
+			.value( "RenderMode", GafferScene::Render::RenderMode )
+			.value( "SceneDescriptionMode", GafferScene::Render::SceneDescriptionMode )
+		;
 	}
 
 	{

@@ -37,12 +37,12 @@
 #ifndef GAFFERSCENE_OPENGLRENDER_H
 #define GAFFERSCENE_OPENGLRENDER_H
 
-#include "GafferScene/Preview/Render.h"
+#include "GafferScene/Render.h"
 
 namespace GafferScene
 {
 
-class OpenGLRender : public Preview::Render
+class OpenGLRender : public Render
 {
 
 	public :
@@ -50,7 +50,7 @@ class OpenGLRender : public Preview::Render
 		OpenGLRender( const std::string &name=defaultName<OpenGLRender>() );
 		~OpenGLRender() override;
 
-		IE_CORE_DECLARERUNTIMETYPEDEXTENSION( GafferScene::OpenGLRender, OpenGLRenderTypeId, Preview::Render );
+		IE_CORE_DECLARERUNTIMETYPEDEXTENSION( GafferScene::OpenGLRender, OpenGLRenderTypeId, Render );
 
 };
 

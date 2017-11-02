@@ -45,7 +45,7 @@
 
 #include "GafferScene/Private/IECoreScenePreview/Renderer.h"
 
-#include "GafferScene/Preview/Render.h"
+#include "GafferScene/Render.h"
 #include "GafferScene/ScenePlug.h"
 #include "GafferScene/SceneNode.h"
 #include "GafferScene/RendererAlgo.h"
@@ -55,7 +55,6 @@ using namespace IECore;
 using namespace Gaffer;
 using namespace GafferDispatch;
 using namespace GafferScene;
-using namespace GafferScene::Preview;
 
 namespace
 {

@@ -34,8 +34,8 @@
 //
 //////////////////////////////////////////////////////////////////////////
 
-#ifndef GAFFERSCENE_PREVIEW_RENDER_H
-#define GAFFERSCENE_PREVIEW_RENDER_H
+#ifndef GAFFERSCENE_RENDER_H
+#define GAFFERSCENE_RENDER_H
 
 #include "Gaffer/StringPlug.h"
 #include "Gaffer/NumericPlug.h"
@@ -48,9 +48,6 @@ namespace GafferScene
 
 IE_CORE_FORWARDDECLARE( ScenePlug )
 
-namespace Preview
-{
-
 class Render : public GafferDispatch::TaskNode
 {
 
@@ -59,7 +56,7 @@ class Render : public GafferDispatch::TaskNode
 		Render( const std::string &name=defaultName<Render>() );
 		~Render() override;
 
-		IE_CORE_DECLARERUNTIMETYPEDEXTENSION( GafferScene::Preview::Render, GafferScene::RenderTypeId, GafferDispatch::TaskNode );
+		IE_CORE_DECLARERUNTIMETYPEDEXTENSION( GafferScene::Render, GafferScene::RenderTypeId, GafferDispatch::TaskNode );
 
 		enum Mode
 		{
@@ -104,8 +101,6 @@ class Render : public GafferDispatch::TaskNode
 
 IE_CORE_DECLAREPTR( Render );
 
-} // namespace Preview
-
 } // namespace GafferScene
 
-#endif // GAFFERSCENE_PREVIEW_RENDER_H
+#endif // GAFFERSCENE_RENDER_H
