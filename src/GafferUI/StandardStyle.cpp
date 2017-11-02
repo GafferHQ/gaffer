@@ -412,6 +412,36 @@ IECoreGL::StatePtr disabledState()
 	return s;
 }
 
+// - p is connection destination ( guaranteed to be contained within the frame)
+// - v is the normalized direction of the connection ( towards the source )
+V3f auxiliaryConnectionArrowPosition( const Box2f &dstNodeFrame, const V3f &p, const V3f &v )
+{
+	const float offset = 1.0;
+
+	float xT;
+	if( v.x > 0 )
+	{
+		xT = ( offset + dstNodeFrame.max.x - p.x ) / v.x;
+	}
+	else
+	{
+		xT = ( offset + p.x - dstNodeFrame.min.x ) / -v.x;
+	}
+
+	float yT;
+	if( v.y > 0 )
+	{
+		yT = ( offset + dstNodeFrame.max.y - p.y ) / v.y;
+	}
+	else
+	{
+		yT = ( offset + p.y - dstNodeFrame.min.y ) / -v.y;
+	}
+
+	const float t = min( xT, yT );
+	return p + v * t;
+}
+
 } // namespace
 
 //////////////////////////////////////////////////////////////////////////
@@ -438,6 +468,7 @@ StandardStyle::StandardStyle()
 	setColor( ForegroundColor, Color3f( 0.9 ) );
 	setColor( HighlightColor, Color3f( 0.466, 0.612, 0.741 ) );
 	setColor( ConnectionColor, Color3f( 0.125, 0.125, 0.125 ) );
+	setColor( AuxiliaryConnectionColor, Color3f( 0.3, 0.45, 0.3 ) );
 }
 
 StandardStyle::~StandardStyle()
@@ -654,6 +685,62 @@ void StandardStyle::renderConnection( const Imath::V3f &srcPosition, const Imath
 	glUniform1f( g_endPointSizeParameter, g_endPointSize );
 
 	glCallList( connectionDisplayList() );
+}
+
+void StandardStyle::renderAuxiliaryConnection( const Imath::Box2f &srcNodeFrame, const Imath::Box2f &dstNodeFrame ) const
+{
+
+	glUniform1i( g_isCurveParameter, 1 );
+	glUniform1i( g_borderParameter, 0 );
+	glUniform1i( g_edgeAntiAliasingParameter, 1 );
+	glUniform1i( g_textureTypeParameter, 0 );
+	glUniform1f( g_lineWidthParameter, 0.2 );
+
+	glColor( getColor( AuxiliaryConnectionColor ) );
+
+	// Get basic properties of a line between the src and dst nodes
+
+	V3f p0( srcNodeFrame.center().x, srcNodeFrame.center().y, 0 );
+	V3f p1( dstNodeFrame.center().x, dstNodeFrame.center().y, 0 );
+
+	const V3f direction = ( p1 - p0 ).normalized();
+	const V3f normal( direction.y, -direction.x, 0 );
+
+	// Offset the line slightly to one side. This separates connections
+	// going in opposite directions between the same two nodes.
+
+	p0 += normal * 0.5f;
+	p1 += normal * 0.5f;
+
+	// Draw the line
+
+	glUniform3fv( g_v0Parameter, 1, ( p0 ).getValue() );
+	glUniform3fv( g_v1Parameter, 1, ( p1 ).getValue() );
+	glUniform3fv( g_t0Parameter, 1, ( direction ).getValue() );
+	glUniform3fv( g_t1Parameter, 1, ( -direction ).getValue() );
+
+	glCallList( connectionDisplayList() );
+
+	// Draw a little arrow to indicate connection direction.
+
+	const V3f tip = auxiliaryConnectionArrowPosition( dstNodeFrame, p1, -direction );
+
+	const V3f leftDir = -direction + normal * 0.5f;
+	const V3f rightDir = -direction - normal * 0.5f;
+
+	glUniform3fv( g_v0Parameter, 1, ( tip ).getValue() );
+	glUniform3fv( g_v1Parameter, 1, ( tip + leftDir ).getValue() );
+	glUniform3fv( g_t0Parameter, 1, ( leftDir ).getValue() );
+	glUniform3fv( g_t1Parameter, 1, ( -leftDir ).getValue() );
+
+	glCallList( connectionDisplayList() );
+
+	glUniform3fv( g_v1Parameter, 1, ( tip + rightDir ).getValue() );
+	glUniform3fv( g_t0Parameter, 1, ( rightDir ).getValue() );
+	glUniform3fv( g_t1Parameter, 1, ( -rightDir ).getValue() );
+
+	glCallList( connectionDisplayList() );
+
 }
 
 Imath::V3f StandardStyle::closestPointOnConnection( const Imath::V3f &p, const Imath::V3f &srcPosition, const Imath::V3f &srcTangent, const Imath::V3f &dstPosition, const Imath::V3f &dstTangent ) const

@@ -90,6 +90,7 @@ class GAFFERUI_API StandardStyle : public Style
 		void renderNodule( float radius, State state = NormalState, const Imath::Color3f *userColor = nullptr ) const override;
 		void renderConnection( const Imath::V3f &srcPosition, const Imath::V3f &srcTangent, const Imath::V3f &dstPosition, const Imath::V3f &dstTangent, State state = NormalState, const Imath::Color3f *userColor = nullptr ) const override;
 		Imath::V3f closestPointOnConnection( const Imath::V3f &p, const Imath::V3f &srcPosition, const Imath::V3f &srcTangent, const Imath::V3f &dstPosition, const Imath::V3f &dstTangent ) const override;
+		void renderAuxiliaryConnection( const Imath::Box2f &srcNodeFrame, const Imath::Box2f &dstNodeFrame ) const override;
 
 		void renderBackdrop( const Imath::Box2f &box, State state = NormalState, const Imath::Color3f *userColor = nullptr ) const override;
 
@@ -105,9 +106,9 @@ class GAFFERUI_API StandardStyle : public Style
 			ForegroundColor,
 			HighlightColor,
 			ConnectionColor,
+			AuxiliaryConnectionColor,
 			LastColor
 		};
-
 
 		void setColor( Color c, Imath::Color3f v );
 		const Imath::Color3f &getColor( Color c ) const;
