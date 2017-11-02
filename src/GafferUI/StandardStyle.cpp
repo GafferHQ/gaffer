@@ -437,6 +437,7 @@ StandardStyle::StandardStyle()
 	setColor( ForegroundColor, Color3f( 0.9 ) );
 	setColor( HighlightColor, Color3f( 0.466, 0.612, 0.741 ) );
 	setColor( ConnectionColor, Color3f( 0.125, 0.125, 0.125 ) );
+	setColor( AuxiliaryConnectionColor, Color3f( 0.3, 0.45, 0.3 ) );
 }
 
 StandardStyle::~StandardStyle()
@@ -657,6 +658,63 @@ void StandardStyle::renderConnection( const Imath::V3f &srcPosition, const Imath
 	glUniform1f( g_endPointSizeParameter, g_endPointSize );
 
 	glCallList( connectionDisplayList() );
+}
+
+void StandardStyle::renderAuxiliaryConnection( const IECore::LineSegment3f &line, V2f directionIndicatorLocation ) const
+{
+	glUniform1i( g_isCurveParameter, 1 );
+	glUniform1i( g_borderParameter, 0 );
+	glUniform1f( g_xAntiAliasingParameter, 0.2 );
+	glUniform1f( g_yAntiAliasingParameter, 0.0 );
+	glUniform1i( g_textureTypeParameter, 0 );
+	glUniform1f( g_lineWidthParameter, 0.2 );
+
+	glColor( getColor( AuxiliaryConnectionColor ) );
+
+	V3f lineDir = line.normalizedDirection();
+
+	float arrowScale = 0.5;
+	V3f arrowDir = lineDir * V3f( arrowScale );
+	V3f arrowDirOrth = V3f( arrowDir.y, -arrowDir.x, 0 );
+
+	glUniform3fv( g_v0Parameter, 1, ( line.p0 - arrowDirOrth ).getValue() );
+	glUniform3fv( g_v1Parameter, 1, ( line.p1 - arrowDirOrth ).getValue() );
+	glUniform3fv( g_t0Parameter, 1, ( lineDir ).getValue() );
+	glUniform3fv( g_t1Parameter, 1, ( -lineDir ).getValue() );
+
+	glCallList( connectionDisplayList() );
+
+	// Render a little direction indication on top. The arrow is build from two
+	// triangles so that it's possible to anti-alias all outer edges.
+
+	V2f tip = directionIndicatorLocation - V2f( arrowDirOrth.x, arrowDirOrth.y );
+	V2f bot = tip - V2f( arrowDir.x, arrowDir.y );
+	V2f botL = bot + V2f( arrowDirOrth.x, arrowDirOrth.y );
+	V2f botR = bot - V2f( arrowDirOrth.x, arrowDirOrth.y );
+
+	glUniform1i( g_isCurveParameter, 0 );
+	glUniform1i( g_borderParameter, 0 );
+	glUniform1i( g_textureTypeParameter, 0 );
+	glUniform1f( g_xAntiAliasingParameter, 0.2 );
+	glUniform1f( g_yAntiAliasingParameter, 0.1 );
+
+	glBegin( GL_TRIANGLES );
+
+	glTexCoord2f( 0, 1 );
+	glVertex2f( botL.x, botL.y);
+	glTexCoord2f( 0, 0 );
+	glVertex2f( bot.x, bot.y );
+	glTexCoord2f( 1, 1 );
+	glVertex2f( tip.x, tip.y);
+
+	glTexCoord2f( 0, 0 );
+	glVertex2f( bot.x, bot.y);
+	glTexCoord2f( 0, 1 );
+	glVertex2f( botR.x, botR.y);
+	glTexCoord2f( 1, 1 );
+	glVertex2f( tip.x, tip.y);
+
+	glEnd();
 }
 
 Imath::V3f StandardStyle::closestPointOnConnection( const Imath::V3f &p, const Imath::V3f &srcPosition, const Imath::V3f &srcTangent, const Imath::V3f &dstPosition, const Imath::V3f &dstTangent ) const
