@@ -60,9 +60,8 @@ class ArnoldVDBTest( GafferSceneTest.SceneTestCase ) :
 
 		procedural = v["out"].object( "/volume" )
 		self.assertTrue( isinstance( procedural, IECore.ExternalProcedural ) )
-		self.assertEqual( procedural.getFileName(), v["dso"].getValue() )
 		self.assertEqual( procedural.getBound(), v["out"].bound( "/volume" ) )
-		self.assertEqual( procedural.parameters()["ai:nodeType" ].value, "volume" )
+		self.assertEqual( procedural.getFileName(), "volume" )
 		self.assertEqual( procedural.parameters()["filename" ].value, v["fileName"].getValue() )
 		self.assertEqual( procedural.parameters()["grids" ], IECore.StringVectorData( [ v["grids"].getValue() ] ) )
 

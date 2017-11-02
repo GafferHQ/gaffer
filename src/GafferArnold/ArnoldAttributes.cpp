@@ -54,10 +54,15 @@ ArnoldAttributes::ArnoldAttributes( const std::string &name )
 
 	attributes->addOptionalMember( "ai:visibility:camera", new IECore::BoolData( true ), "cameraVisibility", Gaffer::Plug::Default, false );
 	attributes->addOptionalMember( "ai:visibility:shadow", new IECore::BoolData( true ), "shadowVisibility", Gaffer::Plug::Default, false );
-	attributes->addOptionalMember( "ai:visibility:reflected", new IECore::BoolData( true ), "reflectedVisibility", Gaffer::Plug::Default, false );
-	attributes->addOptionalMember( "ai:visibility:refracted", new IECore::BoolData( true ), "refractedVisibility", Gaffer::Plug::Default, false );
-	attributes->addOptionalMember( "ai:visibility:diffuse", new IECore::BoolData( true ), "diffuseVisibility", Gaffer::Plug::Default, false );
-	attributes->addOptionalMember( "ai:visibility:glossy", new IECore::BoolData( true ), "glossyVisibility", Gaffer::Plug::Default, false );
+	attributes->addOptionalMember( "ai:visibility:diffuse_reflect", new IECore::BoolData( true ), "diffuseReflectionVisibility", Gaffer::Plug::Default, false );
+	attributes->addOptionalMember( "ai:visibility:specular_reflect", new IECore::BoolData( true ), "specularReflectionVisibility", Gaffer::Plug::Default, false );
+	attributes->addOptionalMember( "ai:visibility:diffuse_transmit", new IECore::BoolData( true ), "diffuseTransmissionVisibility", Gaffer::Plug::Default, false );
+	attributes->addOptionalMember( "ai:visibility:specular_transmit", new IECore::BoolData( true ), "specularTransmissionVisibility", Gaffer::Plug::Default, false );
+	attributes->addOptionalMember( "ai:visibility:volume", new IECore::BoolData( true ), "volumeVisibility", Gaffer::Plug::Default, false );
+	attributes->addOptionalMember( "ai:visibility:subsurface", new IECore::BoolData( true ), "subsurfaceVisibility", Gaffer::Plug::Default, false );
+
+	// Transform parameters
+	attributes->addOptionalMember( "ai:transform_type", new StringPlug( "value", Plug::In, "rotate_about_center" ), "transformType", false );
 
 	// Shading parameters
 
@@ -65,10 +70,11 @@ ArnoldAttributes::ArnoldAttributes( const std::string &name )
 	attributes->addOptionalMember( "ai:opaque", new IECore::BoolData( true ), "opaque", Gaffer::Plug::Default, false );
 	attributes->addOptionalMember( "ai:receive_shadows", new IECore::BoolData( true ), "receiveShadows", Gaffer::Plug::Default, false );
 	attributes->addOptionalMember( "ai:self_shadows", new IECore::BoolData( true ), "selfShadows", Gaffer::Plug::Default, false );
+	attributes->addOptionalMember( "ai:sss_setname", new StringPlug( "value", Plug::In, "" ), "sssSetName", false );
 
 	// Subdivision parameters
 
-	attributes->addOptionalMember( "ai:polymesh:subdividePolygons", new BoolPlug( "value" ), "subdividePolygons", false );
+	attributes->addOptionalMember( "ai:polymesh:subdivide_polygons", new BoolPlug( "value" ), "subdividePolygons", false );
 	attributes->addOptionalMember( "ai:polymesh:subdiv_iterations", new IntPlug( "value", Plug::In, 1, 1 ), "subdivIterations", false );
 	attributes->addOptionalMember( "ai:polymesh:subdiv_adaptive_error", new FloatPlug( "value", Plug::In, 0.0f, 0.0f ), "subdivAdaptiveError", false );
 	attributes->addOptionalMember( "ai:polymesh:subdiv_adaptive_metric", new StringPlug( "value", Plug::In, "auto" ), "subdivAdaptiveMetric", false );

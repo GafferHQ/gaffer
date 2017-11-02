@@ -336,7 +336,7 @@ class OSLImageTest( GafferOSLTest.OSLTestCase ) :
 		textureFileName = os.path.dirname( __file__ ) + "/images/vRamp.tx"
 
 		outLayer = GafferOSL.OSLCode()
-		outLayer["out"]["layer"] = Gaffer.Plug(
+		outLayer["out"]["layer"] = GafferOSL.ClosurePlug(
 			direction = Gaffer.Plug.Direction.Out,
 			flags = Gaffer.Plug.Flags.Default | Gaffer.Plug.Flags.Dynamic
 		)

@@ -1,6 +1,6 @@
 //////////////////////////////////////////////////////////////////////////
 //
-//  Copyright (c) 2012, John Haddon. All rights reserved.
+//  Copyright (c) 2017, Image Engine Design Inc. All rights reserved.
 //
 //  Redistribution and use in source and binary forms, with or without
 //  modification, are permitted provided that the following conditions are
@@ -34,55 +34,48 @@
 //
 //////////////////////////////////////////////////////////////////////////
 
-#include "boost/python.hpp"
+#ifndef GAFFERARNOLD_ARNOLDAOVSHADER_H
+#define GAFFERARNOLD_ARNOLDAOVSHADER_H
 
-#include "GafferBindings/DependencyNodeBinding.h"
-#include "GafferDispatchBindings/TaskNodeBinding.h"
+#include "Gaffer/StringPlug.h"
+#include "GafferScene/GlobalsProcessor.h"
+#include "GafferScene/ShaderPlug.h"
+#include "GafferArnold/TypeIds.h"
 
-#include "GafferArnold/ArnoldShader.h"
-#include "GafferArnold/ArnoldOptions.h"
-#include "GafferArnold/ArnoldAttributes.h"
-#include "GafferArnold/ArnoldLight.h"
-#include "GafferArnold/ArnoldVDB.h"
-#include "GafferArnold/InteractiveArnoldRender.h"
-#include "GafferArnold/ArnoldRender.h"
-#include "GafferArnold/ArnoldDisplacement.h"
-#include "GafferArnold/ArnoldMeshLight.h"
-#include "GafferArnold/ArnoldAOVShader.h"
-
-using namespace boost::python;
-using namespace GafferArnold;
-
-namespace
+namespace GafferArnold
 {
 
-void flushCaches( int flags )
-{
-	IECorePython::ScopedGILRelease gilRelease;
-	InteractiveArnoldRender::flushCaches( flags );
-}
-
-} // namespace
-
-BOOST_PYTHON_MODULE( _GafferArnold )
+class ArnoldAOVShader : public GafferScene::GlobalsProcessor
 {
 
-	GafferBindings::DependencyNodeClass<ArnoldShader>();
+	public :
 
-	GafferBindings::NodeClass<ArnoldLight>()
-		.def( "loadShader", (void (ArnoldLight::*)( const std::string & ) )&ArnoldLight::loadShader )
-	;
+		ArnoldAOVShader( const std::string &name=defaultName<ArnoldAOVShader>() );
+		~ArnoldAOVShader() override;
 
-	GafferBindings::DependencyNodeClass<ArnoldOptions>();
-	GafferBindings::DependencyNodeClass<ArnoldAttributes>();
-	GafferBindings::DependencyNodeClass<ArnoldVDB>();
-	GafferBindings::DependencyNodeClass<ArnoldDisplacement>();
-	GafferBindings::DependencyNodeClass<ArnoldMeshLight>();
-	GafferBindings::DependencyNodeClass<ArnoldAOVShader>();
-	GafferBindings::NodeClass<InteractiveArnoldRender>()
-		.def( "flushCaches", &flushCaches )
-		.staticmethod( "flushCaches" )
-	;
-	GafferDispatchBindings::TaskNodeClass<ArnoldRender>();
+		IE_CORE_DECLARERUNTIMETYPEDEXTENSION( GafferArnold::ArnoldAOVShader, ArnoldAOVShaderTypeId, GafferScene::GlobalsProcessor );
 
-}
+		Gaffer::StringPlug *optionSuffixPlug();
+		const Gaffer::StringPlug *optionSuffixPlug() const;
+
+		GafferScene::ShaderPlug *shaderPlug();
+		const GafferScene::ShaderPlug *shaderPlug() const;
+
+		void affects( const Gaffer::Plug *input, AffectedPlugsContainer &outputs ) const override;
+
+	protected :
+
+		void hashProcessedGlobals( const Gaffer::Context *context, IECore::MurmurHash &h ) const override;
+		IECore::ConstCompoundObjectPtr computeProcessedGlobals( const Gaffer::Context *context, IECore::ConstCompoundObjectPtr inputGlobals ) const override;
+
+	private :
+
+		static size_t g_firstPlugIndex;
+
+};
+
+IE_CORE_DECLAREPTR( ArnoldAOVShader )
+
+} // namespace GafferArnold
+
+#endif // GAFFERARNOLD_ARNOLDAOVSHADER_H

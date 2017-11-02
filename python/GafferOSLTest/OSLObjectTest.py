@@ -420,8 +420,9 @@ class OSLObjectTest( GafferOSLTest.OSLTestCase ) :
 
 		textureFileName = os.path.dirname( __file__ ) + "/images/vRamp.tx"
 
+
 		outColor = GafferOSL.OSLCode()
-		outColor["out"]["c"] = Gaffer.Plug(
+		outColor["out"]["c"] = GafferOSL.ClosurePlug(
 			direction = Gaffer.Plug.Direction.Out,
 			flags = Gaffer.Plug.Flags.Default | Gaffer.Plug.Flags.Dynamic
 		)
