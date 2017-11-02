@@ -40,7 +40,7 @@
 #include "Gaffer/Node.h"
 
 #include "GafferScene/ScenePlug.h"
-#include "GafferScene/Preview/RendererAlgo.h"
+#include "GafferScene/RendererAlgo.h"
 #include "GafferScene/Private/IECoreScenePreview/Renderer.h"
 
 namespace Gaffer
@@ -119,7 +119,7 @@ class InteractiveRender : public Gaffer::Node
 		State m_state;
 		unsigned m_dirtyComponents;
 		IECore::ConstCompoundObjectPtr m_globals;
-		GafferScene::Preview::RendererAlgo::RenderSets m_renderSets;
+		RendererAlgo::RenderSets m_renderSets;
 		IECoreScenePreview::Renderer::ObjectInterfacePtr m_defaultCamera;
 
 		Gaffer::ContextPtr m_context; // Accessed with setContext()/getContext()

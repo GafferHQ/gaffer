@@ -39,10 +39,15 @@
 
 #include <functional>
 
+#include "boost/container/flat_map.hpp"
+
 #include "IECore/CompoundObject.h"
 #include "IECore/VisibleRenderable.h"
+#include "IECore/VectorTypedData.h"
 
 #include "GafferScene/ScenePlug.h"
+#include "GafferScene/PathMatcher.h"
+#include "GafferScene/Private/IECoreScenePreview/Renderer.h"
 
 namespace GafferScene
 {
@@ -77,6 +82,66 @@ void deregisterAdaptor( const std::string &name );
 /// Returns a SceneProcessor that will apply all the currently
 /// registered adaptors.
 SceneProcessorPtr createAdaptors();
+
+void outputOptions( const IECore::CompoundObject *globals, IECoreScenePreview::Renderer *renderer );
+void outputOptions( const IECore::CompoundObject *globals, const IECore::CompoundObject *previousGlobals, IECoreScenePreview::Renderer *renderer );
+
+void outputOutputs( const IECore::CompoundObject *globals, IECoreScenePreview::Renderer *renderer );
+void outputOutputs( const IECore::CompoundObject *globals, const IECore::CompoundObject *previousGlobals, IECoreScenePreview::Renderer *renderer );
+
+/// Utility class to handle all the set computations needed for a render.
+class RenderSets : boost::noncopyable
+{
+
+	public :
+
+		RenderSets();
+		RenderSets( const ScenePlug *scene );
+
+		enum Changed
+		{
+			NothingChanged = 0,
+			CamerasSetChanged = 1,
+			LightsSetChanged = 2,
+			RenderSetsChanged = 4
+		};
+
+		/// Returns a bitmask describing which sets
+		/// changed.
+		unsigned update( const ScenePlug *scene );
+		void clear();
+
+		const PathMatcher &camerasSet() const;
+		const PathMatcher &lightsSet() const;
+
+		IECore::ConstInternedStringVectorDataPtr setsAttribute( const std::vector<IECore::InternedString> &path ) const;
+
+	private :
+
+		struct Set
+		{
+			IECore::InternedString unprefixedName; // With "render:" stripped off
+			IECore::MurmurHash hash;
+			PathMatcher set;
+		};
+
+		typedef boost::container::flat_map<IECore::InternedString, Set> Sets;
+
+		struct Updater;
+
+		// Stores all the "render:" sets.
+		Sets m_sets;
+		Set m_camerasSet;
+		Set m_lightsSet;
+
+};
+
+void outputCameras( const ScenePlug *scene, const IECore::CompoundObject *globals, const RenderSets &renderSets, IECoreScenePreview::Renderer *renderer );
+void outputLights( const ScenePlug *scene, const IECore::CompoundObject *globals, const RenderSets &renderSets, IECoreScenePreview::Renderer *renderer );
+void outputObjects( const ScenePlug *scene, const IECore::CompoundObject *globals, const RenderSets &renderSets, IECoreScenePreview::Renderer *renderer, const ScenePlug::ScenePath &root = ScenePlug::ScenePath() );
+
+/// Applies the resolution, aspect ratio etc from the globals to the camera.
+void applyCameraGlobals( IECore::Camera *camera, const IECore::CompoundObject *globals );
 
 } // namespace RendererAlgo
 

@@ -48,20 +48,17 @@
 #include "Gaffer/ScriptNode.h"
 #include "Gaffer/StringPlug.h"
 
-#include "GafferScene/Preview/RendererAlgo.h"
 #include "GafferScene/InteractiveRender.h"
 #include "GafferScene/SceneAlgo.h"
 #include "GafferScene/PathMatcherData.h"
 #include "GafferScene/SceneNode.h"
 #include "GafferScene/SceneProcessor.h"
-#include "GafferScene/RendererAlgo.h"
 
 using namespace std;
 using namespace Imath;
 using namespace IECore;
 using namespace Gaffer;
 using namespace GafferScene;
-using namespace GafferScene::Preview;
 
 //////////////////////////////////////////////////////////////////////////
 // Private utilities
@@ -90,8 +87,8 @@ bool cameraGlobalsChanged( const CompoundObject *globals, const CompoundObject *
 	}
 	CameraPtr camera1 = new Camera;
 	CameraPtr camera2 = new Camera;
-	Preview::RendererAlgo::applyCameraGlobals( camera1.get(), globals );
-	Preview::RendererAlgo::applyCameraGlobals( camera2.get(), previousGlobals );
+	RendererAlgo::applyCameraGlobals( camera1.get(), globals );
+	RendererAlgo::applyCameraGlobals( camera2.get(), previousGlobals );
 
 	return *camera1 != *camera2;
 }
@@ -166,7 +163,7 @@ class InteractiveRender::SceneGraph
 
 		// Called by SceneGraphUpdateTask to update this location. Returns a bitmask
 		// of the components which were changed.
-		unsigned update( const ScenePlug *scene, const ScenePlug::ScenePath &path, unsigned dirtyComponents, unsigned changedParentComponents, Type type, IECoreScenePreview::Renderer *renderer, const IECore::CompoundObject *globals, const Preview::RendererAlgo::RenderSets &renderSets )
+		unsigned update( const ScenePlug *scene, const ScenePlug::ScenePath &path, unsigned dirtyComponents, unsigned changedParentComponents, Type type, IECoreScenePreview::Renderer *renderer, const IECore::CompoundObject *globals, const RendererAlgo::RenderSets &renderSets )
 		{
 			unsigned changedComponents = 0;
 
@@ -348,7 +345,7 @@ class InteractiveRender::SceneGraph
 			return true;
 		}
 
-		bool updateRenderSets( const ScenePlug::ScenePath &path, const Preview::RendererAlgo::RenderSets &renderSets )
+		bool updateRenderSets( const ScenePlug::ScenePath &path, const RendererAlgo::RenderSets &renderSets )
 		{
 			m_fullAttributes->members()[g_setsAttributeName] = boost::const_pointer_cast<InternedStringVectorData>(
 				renderSets.setsAttribute( path )
@@ -423,10 +420,7 @@ class InteractiveRender::SceneGraph
 				if( const IECore::Camera *camera = runTimeCast<const IECore::Camera>( object.get() ) )
 				{
 					IECore::CameraPtr cameraCopy = camera->copy();
-
-					// Explicit namespace can be removed once deprecated applyCameraGlobals
-					// is removed from GafferScene::SceneAlgo
-					GafferScene::Preview::RendererAlgo::applyCameraGlobals( cameraCopy.get(), globals );
+					RendererAlgo::applyCameraGlobals( cameraCopy.get(), globals );
 					m_objectInterface = renderer->camera( name, cameraCopy.get(), attributesInterface( renderer ) );
 				}
 			}
@@ -873,15 +867,15 @@ void InteractiveRender::update()
 	if( m_dirtyComponents & SceneGraph::GlobalsComponent )
 	{
 		ConstCompoundObjectPtr globals = adaptedInPlug()->globalsPlug()->getValue();
-		Preview::RendererAlgo::outputOptions( globals.get(), m_globals.get(), m_renderer.get() );
-		Preview::RendererAlgo::outputOutputs( globals.get(), m_globals.get(), m_renderer.get() );
+		RendererAlgo::outputOptions( globals.get(), m_globals.get(), m_renderer.get() );
+		RendererAlgo::outputOutputs( globals.get(), m_globals.get(), m_renderer.get() );
 		cameraGlobalsChanged = ::cameraGlobalsChanged( globals.get(), m_globals.get() );
 		m_globals = globals;
 	}
 
 	if( m_dirtyComponents & SceneGraph::SetsComponent )
 	{
-		if( m_renderSets.update( adaptedInPlug() ) & Preview::RendererAlgo::RenderSets::RenderSetsChanged )
+		if( m_renderSets.update( adaptedInPlug() ) & RendererAlgo::RenderSets::RenderSetsChanged )
 		{
 			m_dirtyComponents |= SceneGraph::RenderSetsComponent;
 		}

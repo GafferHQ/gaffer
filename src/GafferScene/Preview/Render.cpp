@@ -46,7 +46,6 @@
 #include "GafferScene/Private/IECoreScenePreview/Renderer.h"
 
 #include "GafferScene/Preview/Render.h"
-#include "GafferScene/Preview/RendererAlgo.h"
 #include "GafferScene/ScenePlug.h"
 #include "GafferScene/SceneNode.h"
 #include "GafferScene/RendererAlgo.h"
