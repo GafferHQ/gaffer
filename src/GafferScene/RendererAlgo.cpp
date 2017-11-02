@@ -55,7 +55,6 @@
 #include "Gaffer/Metadata.h"
 
 #include "GafferScene/RendererAlgo.h"
-#include "GafferScene/SceneProcedural.h"
 #include "GafferScene/PathMatcherData.h"
 #include "GafferScene/SceneAlgo.h"
 #include "GafferScene/SceneProcessor.h"
@@ -91,24 +90,6 @@ namespace GafferScene
 
 namespace RendererAlgo
 {
-
-void outputScene( const ScenePlug *scene, IECore::Renderer *renderer )
-{
-	ConstCompoundObjectPtr globals = scene->globalsPlug()->getValue();
-	outputOptions( globals.get(), renderer );
-	outputOutputs( globals.get(), renderer );
-	outputCamera( scene, globals.get(), renderer );
-	{
-		WorldBlock world( renderer );
-
-		outputGlobalAttributes( globals.get(), renderer );
-		outputCoordinateSystems( scene, globals.get(), renderer );
-		outputLights( scene, globals.get(), renderer );
-
-		SceneProceduralPtr proc = new SceneProcedural( scene, Context::current() );
-		renderer->procedural( proc );
-	}
-}
 
 void outputOutputs( const IECore::CompoundObject *globals, IECore::Renderer *renderer )
 {

@@ -418,17 +418,7 @@ class GroupTest( GafferSceneTest.SceneTestCase ) :
 		group["in"][0].setInput( input1["out"] )
 		group["in"][1].setInput( input2["out"] )
 
-		sceneProcedural = GafferScene.SceneProcedural( group["out"], Gaffer.Context(), "/" )
-
-		for i in range( 0, 1000 ) :
-			mh = IECore.CapturingMessageHandler()
-			with mh :
-				# we use a CapturingRenderer as it will invoke the procedural
-				# on multiple threads for us automatically.
-				renderer = IECore.CapturingRenderer()
-				with IECore.WorldBlock( renderer ) :
-					renderer.procedural( sceneProcedural )
-			self.assertEqual( len( mh.messages ), 0 )
+		GafferSceneTest.traverseScene( group["out"] )
 
 	def testHashes( self ) :
 

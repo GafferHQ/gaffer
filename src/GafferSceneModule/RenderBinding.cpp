@@ -44,7 +44,6 @@
 
 #include "GafferScene/OpenGLRender.h"
 #include "GafferScene/InteractiveRender.h"
-#include "GafferScene/SceneProcedural.h"
 #include "GafferScene/Preview/Render.h"
 #include "GafferScene/Private/IECoreScenePreview/Renderer.h"
 #include "GafferScene/Private/IECoreScenePreview/Procedural.h"
@@ -157,27 +156,6 @@ class ProceduralWrapper : public IECorePython::RunTimeTypedWrapper<IECoreScenePr
 
 void GafferSceneModule::bindRender()
 {
-
-	IECorePython::RefCountedClass<SceneProcedural, IECore::Renderer::Procedural>( "SceneProcedural" )
-		.def(
-			init<
-				ConstScenePlugPtr,
-				const Gaffer::Context *,
-				const ScenePlug::ScenePath &,
-				bool
-			>(
-				(
-					boost::python::arg( "scenePlug" ),
-					boost::python::arg( "context" ),
-					boost::python::arg( "scenePath" ),
-					boost::python::arg( "computeBound" ) = true
-				)
-			)
-		)
-		.def( "allRenderedSignal", &SceneProcedural::allRenderedSignal, boost::python::return_value_policy<reference_existing_object>() ).staticmethod( "allRenderedSignal" )
-	;
-
-	SignalClass<SceneProcedural::AllRenderedSignal>( "AllRenderedSignal" );
 
 	{
 		scope s = GafferBindings::NodeClass<InteractiveRender>()

@@ -54,10 +54,6 @@ IE_CORE_FORWARDDECLARE( SceneProcessor )
 namespace RendererAlgo
 {
 
-/// Outputs an entire scene, using a SceneProcedural for the main body of the world.
-/// Individual parts of a scene may be output more specifically using the methods below.
-void outputScene( const ScenePlug *scene, IECore::Renderer *renderer );
-
 /// Outputs the output declarations from the globals.
 void outputOutputs( const IECore::CompoundObject *globals, IECore::Renderer *renderer );
 

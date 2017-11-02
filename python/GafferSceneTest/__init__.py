@@ -43,7 +43,6 @@ from SceneTestCase import SceneTestCase
 from ScenePlugTest import ScenePlugTest
 from GroupTest import GroupTest
 from SceneTimeWarpTest import SceneTimeWarpTest
-from SceneProceduralTest import SceneProceduralTest
 from CubeTest import CubeTest
 from PlaneTest import PlaneTest
 from SphereTest import SphereTest
