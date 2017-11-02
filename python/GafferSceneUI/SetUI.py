@@ -137,6 +137,19 @@ def __setValue( plug, value, *unused ) :
 	with Gaffer.UndoScope( plug.ancestor( Gaffer.ScriptNode ) ) :
 		plug.setValue( value )
 
+def __downstreamNodes( plug ) :
+
+	result = set()
+	outputs = plug.outputs()
+	if outputs :
+		for output in outputs :
+			result |= __downstreamNodes( output )
+	else :
+		if plug.node() :
+			result.add( plug.node() )
+
+	return result
+
 def __setsPopupMenu( menuDefinition, plugValueWidget ) :
 
 	plug = plugValueWidget.getPlug()
@@ -166,12 +179,11 @@ def __setsPopupMenu( menuDefinition, plugValueWidget ) :
 		if insertAt == (0, 0) :  # if there's no selection to be replaced, use position of cursor
 			insertAt = (cursorPosition, cursorPosition)
 
-
 	node = plug.node()
 	if isinstance( node, GafferScene.Filter ) :
-		nodes = [ o.node() for o in node["out"].outputs() ]
+		nodes = __downstreamNodes( node["out"] )
 	else :
-		nodes = [ node ]
+		nodes = { node }
 
 	setNames = set()
 	with plugValueWidget.getContext() :
