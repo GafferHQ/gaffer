@@ -37,9 +37,7 @@
 #include "boost/filesystem.hpp"
 
 #include "IECore/SceneInterface.h"
-#include "IECore/Transform.h"
 
-#include "Gaffer/ScriptNode.h"
 #include "Gaffer/StringPlug.h"
 #include "Gaffer/Context.h"
 
