@@ -396,6 +396,7 @@ Plug *promoteWithName( Plug *plug, const IECore::InternedString name, Plug *pare
 	if( dynamic )
 	{
 		applyDynamicFlag( externalPlug.get() );
+		externalPlug->setFlags( Plug::Serialisable, true );
 	}
 
 	if( parent )

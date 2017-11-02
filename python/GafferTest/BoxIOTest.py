@@ -104,5 +104,25 @@ class BoxIOTest( GafferTest.TestCase ) :
 		s.redo()
 		assertPostconditions()
 
+	def testInsertWithNonSerialisableOutput( self ) :
+
+		s = Gaffer.ScriptNode()
+		s["b"] = Gaffer.Box()
+		s["b"]["a"] = GafferTest.AddNode()
+		s["b"]["a"]["sum"].setFlags( Gaffer.Plug.Flags.Serialisable, False )
+
+		Gaffer.Metadata.registerValue( s["b"]["a"]["sum"], "nodule:type", "GafferUI::StandardNodule" )
+		Gaffer.PlugAlgo.promote( s["b"]["a"]["sum"] )
+		Gaffer.BoxIO.insert( s["b"] )
+
+		self.assertIsInstance( s["b"]["sum"].getInput().node(), Gaffer.BoxOut )
+		self.assertTrue( s["b"]["sum"].source().isSame( s["b"]["a"]["sum"] ) )
+
+		s2 = Gaffer.ScriptNode()
+		s2.execute( s.serialise() )
+
+		self.assertIsInstance( s2["b"]["sum"].getInput().node(), Gaffer.BoxOut )
+		self.assertTrue( s2["b"]["sum"].source().isSame( s2["b"]["a"]["sum"] ) )
+
 if __name__ == "__main__":
 	unittest.main()
