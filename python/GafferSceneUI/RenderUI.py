@@ -43,6 +43,10 @@ Gaffer.Metadata.registerNode(
 
 	"description",
 	"""
+	Performs offline batch rendering using any of the
+	available renderer backends, or optionally writes
+	scene descriptions to disk for later rendering via
+	a SystemCommand node.
 	""",
 
 	"layout:activator:modeIsSceneDescription", lambda node : node["mode"].getValue() == node.Mode.SceneDescriptionMode,
