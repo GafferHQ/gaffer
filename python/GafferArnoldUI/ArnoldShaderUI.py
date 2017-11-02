@@ -56,9 +56,9 @@ import GafferArnold
 
 def __aiMetadataGetStr( nodeEntry, paramName, name, defaultValue = None ) :
 
-	value = arnold.AtString()
+	value = arnold.AtStringReturn()
 	if arnold.AiMetaDataGetStr( nodeEntry, paramName, name, value ) :
-		return value.value
+		return arnold.AtStringToStr( value )
 
 	return defaultValue
 
@@ -83,9 +83,6 @@ def __aiMetadataGetBool( nodeEntry, paramName, name, defaultValue = None ) :
 #   us min/max/desc/linkable.
 # - The OSL metadata convention. This gives us a bit more, and is also
 #   the convention we support already for RSL and OSL shaders.
-# - Houdini's metadata convention. We support this so that we can pull
-#   otherwise unavailable information out of 3rd party shaders - AlShaders
-#   in particular.
 #
 # The alternative to this would be to add one more "standard" by defining
 # a Gaffer-specific convention, and then contribute to the AlShaders
@@ -108,12 +105,9 @@ def __translateNodeMetadata( nodeEntry ) :
 	if description is not None :
 		__metadata[nodeName]["description"] = description
 
-	# Documentation URL. We support OSL-style "URL" and
-	# Houdini-style "help_url".
+	# Documentation URL. We support OSL-style "URL"
 
-	url = __aiMetadataGetStr( nodeEntry, None, "URL",
-		defaultValue = __aiMetadataGetStr( nodeEntry, None, "houdini.help_url" )
-	)
+	url = __aiMetadataGetStr( nodeEntry, None, "URL" )
 	if url is not None :
 		__metadata[nodeName]["documentation:url"] = url
 
@@ -161,11 +155,8 @@ def __translateNodeMetadata( nodeEntry ) :
 		)
 		__metadata[paramPath]["nodule:type"] = "GafferUI::StandardNodule" if linkable else ""
 
-		# PlugValueWidget type from OSL "widget" or "houdini.type".
-
+		# PlugValueWidget type from OSL "widget"
 		widget = None
-		if __aiMetadataGetStr( nodeEntry, paramName, "houdini.type" ) == "file:image" :
-			widget = "filename"
 		widget = __aiMetadataGetStr( nodeEntry, paramName, "widget", widget )
 		if widget is not None :
 			__metadata[paramPath]["plugValueWidget:type"] = {
@@ -186,12 +177,16 @@ def __translateNodeMetadata( nodeEntry ) :
 			havePages = True
 			__metadata[paramPath]["layout:section"] = page
 
-		# Label from OSL "label" or "houdini.label".
-
-		label = __aiMetadataGetStr( nodeEntry, paramName, "houdini.label" )
-		label = __aiMetadataGetStr( nodeEntry, paramName, "label", label )
+		# Label from OSL "label"
+		label = __aiMetadataGetStr( nodeEntry, paramName, "label" )
 		if label is not None :
 			__metadata[paramPath]["label"] = label
+		elif "_" in paramName:
+			# Label from Arnold naming convention
+			# Arnold uses snake_case rather than camelCase for naming, so translate this into
+			# nice looking names
+			__metadata[paramPath]["label"] = " ".join( [ i.capitalize() for i in paramName.split( "_" ) ] )
+
 
 		# NodeGraph visibility from Gaffer-specific metadata
 
@@ -199,132 +194,6 @@ def __translateNodeMetadata( nodeEntry ) :
 		visible = __aiMetadataGetBool( nodeEntry, paramName, "gaffer.nodeGraphLayout.visible", visible )
 		if visible is not None :
 			__metadata[paramPath]["noduleLayout:visible"] = visible
-
-	# If we haven't seen any nice sane OSL "page" metadata, then have
-	# a go at translating the houdini layout metadata. Surely one of the
-	# most tortured ways of defining a UI ever.
-	if not havePages :
-		__translateHoudiniLayout( nodeEntry )
-
-def __translateHoudiniLayout( nodeEntry ) :
-
-	# Houdini defines UI groupings through the use of extra
-	# parameters with special types, which HtoA allows the
-	# user to define via metadata on the Arnold shader. Grab
-	# all those extra parameters.
-
-	Parameter = collections.namedtuple( "Parameter", [ "name", "type", "contents" ] )
-	parameters = collections.OrderedDict()
-
-	metaIt = arnold.AiNodeEntryGetMetaDataIterator( nodeEntry )
-	while not arnold.AiMetaDataIteratorFinished( metaIt ) :
-
-		metadata = arnold.AiMetaDataIteratorGetNext( metaIt )
-		m = re.match( "houdini\.parm\.([^.]*)\.([^.]+)", metadata.contents.name )
-		if m :
-			parameters[m.group(2)] = Parameter( m.group(2), m.group(1), __aiMetadataGetStr( nodeEntry, None, m.group(0) ) )
-
-	arnold.AiMetaDataIteratorDestroy( metaIt )
-
-	# Add on all the regular Arnold parameters.
-
-	paramIt = arnold.AiNodeEntryGetParamIterator( nodeEntry )
-	while not arnold.AiParamIteratorFinished( paramIt ) :
-		parameterName = arnold.AiParamGetName( arnold.AiParamIteratorGetNext( paramIt ) )
-		if parameterName != "name" :
-			parameters[parameterName] = Parameter( parameterName, "arnold", "" )
-
-	arnold.AiParamIteratorDestroy( paramIt )
-
-	# Now, reorder the parameters according to the
-	# houdini.order metadata. There seem to be two
-	# different styles for doing this. For instance,
-	# the HtoA metadata for "image" and "barndoor"
-	# orders everything once with a single "order"
-	# entry, even though different parameters are
-	# destined for different tabs. The AlShader and
-	# other HtoA metadata on the other hand seems
-	# to use "order", "order2" ... "orderN" where
-	# the numeric suffices map to tabs. So we try
-	# to support both.
-
-	orderedParameters = []
-	i = 1
-	while True :
-
-		order = __aiMetadataGetStr( nodeEntry, None, "houdini.order%s" % ( str( i ) if i > 1 else "" ) )
-		if order is None :
-			break
-
-		for parameterName in order.split() :
-			parameter = parameters.pop( parameterName, None )
-			if parameter is not None :
-				orderedParameters.append( parameter )
-			else :
-				# Tolerate non-existent parameters being listed
-				# in the order metadata, for the sake of AlShaders.
-				pass
-
-		i += 1
-
-	# Any parameters not ordered explicitly go on the end.
-
-	orderedParameters.extend( parameters.values() )
-
-	# Now we can set up the layout:index metadata from
-	# the parameter order.
-
-	nodeName = arnold.AiNodeEntryGetName( nodeEntry )
-	for i, parameter in enumerate( orderedParameters ) :
-		__metadata[nodeName+".parameters."+parameter.name]["layout:index"] = i
-
-	# Finally, we can recurse over all the parameters,
-	# using the special parameters to figure out the section
-	# metadata that applies to the regular parameters.
-
-	__walkHoudiniParameters( nodeEntry, orderedParameters, sectionName = "" )
-
-def __walkHoudiniParameters( nodeEntry, parameters, sectionName ) :
-
-	nodeName = arnold.AiNodeEntryGetName( nodeEntry )
-
-	# Iterate over our parameters, recursing if we
-	# hit new sections, and adding metadata to regular
-	# parameters.
-
-	sectionNameWithHeading = sectionName
-	parameterIndex = 0
-	while parameterIndex < len( parameters ) :
-
-		parameter = parameters[parameterIndex]
-		parameterIndex += 1
-
-		if parameter.type == "folder" :
-
-			# A folder is actually a tab bar, grouping
-			# parameters into different tabs below it.
-			# It is specified as a series of NAME;N; pairs
-			# in a string, where NAME is the name of a tab,
-			# and N is how many parameters it should include.
-
-			tabs = parameter.contents.strip( ";" ).split( ";" )
-			for tabName, tabSize in [ ( tabs[i], int( tabs[i+1] ) ) for i in range( 0, len( tabs ), 2 ) ] :
-				tabSectionName = sectionNameWithHeading + ( "." if sectionNameWithHeading else "" ) + tabName
-				__walkHoudiniParameters( nodeEntry, parameters[parameterIndex:parameterIndex+tabSize], tabSectionName )
-				parameterIndex += tabSize
-
-		elif parameter.type == "heading" :
-
-			# A heading is a horizontal rule with a label.
-			# We don't have those, so we map them to a
-			# collapsible section.
-
-			sectionNameWithHeading = sectionName + ( "." if sectionName else "" ) + parameter.contents
-			__metadata[nodeName + ".parameters"]["layout:section:"+sectionNameWithHeading+":collapsed"] = False
-
-		elif parameter.type == "arnold" :
-
-			__metadata[nodeName + ".parameters." + parameter.name]["layout:section"] = sectionNameWithHeading
 
 with IECoreArnold.UniverseBlock( writable = False ) :
 

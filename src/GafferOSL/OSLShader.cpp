@@ -55,6 +55,7 @@
 
 #include "GafferScene/RendererAlgo.h"
 
+#include "GafferOSL/ClosurePlug.h"
 #include "GafferOSL/OSLShader.h"
 #include "GafferOSL/ShadingEngine.h"
 
@@ -198,11 +199,6 @@ bool OSLShader::acceptsInput( const Plug *plug, const Plug *inputPlug ) const
 			}
 			const std::string sourceShaderType = sourceShader->typePlug()->getValue();
 			if( sourceShaderType != "osl:shader" && sourceShaderType != "ai:surface" )
-			{
-				return false;
-			}
-			// and we can only connect closures into closures
-			if( plug->typeId() == Plug::staticTypeId() && inputPlug->typeId() != Plug::staticTypeId() )
 			{
 				return false;
 			}
@@ -588,12 +584,12 @@ Plug *loadMatrixArrayParameter( const OSLQuery::Parameter *parameter, const Inte
 Plug *loadClosureParameter( const OSLQuery::Parameter *parameter, const InternedString &name, Gaffer::Plug *parent )
 {
 	Plug *existingPlug = parent->getChild<Plug>( name );
-	if(	existingPlug && existingPlug->typeId() == Plug::staticTypeId() )
+	if( runTimeCast<ClosurePlug>( existingPlug ) )
 	{
 		return existingPlug;
 	}
 
-	PlugPtr plug = new Plug( name, parent->direction(), Plug::Default | Plug::Dynamic );
+	ClosurePlugPtr plug = new ClosurePlug( name, parent->direction(), Plug::Default | Plug::Dynamic );
 
 	if( existingPlug )
 	{
@@ -644,7 +640,7 @@ Plug *loadSplineParameters( const OSLQuery::Parameter *positionsParameter, const
 	const std::string &basis = basisParameter->sdefault.front().string();
 
 	typename PlugType::ValueType defaultValue;
-	
+
 	defaultValue.interpolation = SplineDefinitionInterpolationCatmullRom;
 	if( basis == "bspline" )
 	{

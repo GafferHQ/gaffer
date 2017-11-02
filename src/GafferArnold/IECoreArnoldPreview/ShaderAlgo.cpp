@@ -57,8 +57,16 @@ using namespace IECoreArnold;
 namespace
 {
 
+const IECore::InternedString g_handleString( "__handle" );
+
+const AtString g_catmullRomArnoldString( "catmull-rom" );
+const AtString g_bezierArnoldString( "bezier" );
+const AtString g_bsplineArnoldString( "bspline" );
+const AtString g_linearArnoldString( "linear" );
+const AtString g_shaderNameArnoldString( "shadername" );
+
 template<typename Spline>
-void setSplineParameter( AtNode *node, const InternedString &name, const Spline &spline )
+void setSplineParameter( AtNode *node, const std::string &name, const Spline &spline )
 {
 	typedef vector<typename Spline::XType> PositionsVector;
 	typedef vector<typename Spline::YType> ValuesVector;
@@ -80,24 +88,24 @@ void setSplineParameter( AtNode *node, const InternedString &name, const Spline 
 	}
 
 
-	const char *basis = "catmull-rom";
+	AtString basis( g_catmullRomArnoldString );
 	if( spline.basis == Spline::Basis::bezier() )
 	{
-		basis = "bezier";
+		basis = g_bezierArnoldString;
 	}
 	else if( spline.basis == Spline::Basis::bSpline() )
 	{
-		basis = "bspline";
+		basis = g_bsplineArnoldString;
 	}
 	else if( spline.basis == Spline::Basis::linear() )
 	{
-		basis = "linear";
+		basis = g_linearArnoldString;
 	}
 
 	GafferOSL::OSLShader::prepareSplineCVsForOSL( positions, values, basis );
-	ParameterAlgo::setParameter( node, ( name.string() + "Positions" ).c_str(), positionsData.get() );
-	ParameterAlgo::setParameter( node, ( name.string() + "Values" ).c_str(), valuesData.get() );
-	AiNodeSetStr( node, ( name.string() + "Basis" ).c_str(), basis );
+	ParameterAlgo::setParameter( node, ( name + "Positions" ).c_str(), positionsData.get() );
+	ParameterAlgo::setParameter( node, ( name + "Values" ).c_str(), valuesData.get() );
+	AiNodeSetStr( node, AtString( ( name + "Basis" ).c_str() ), basis );
 }
 
 } // namespace
@@ -108,7 +116,7 @@ namespace IECoreArnoldPreview
 namespace ShaderAlgo
 {
 
-std::vector<AtNode *> convert( const IECore::ObjectVector *shaderNetwork, const std::string &namePrefix )
+std::vector<AtNode *> convert( const IECore::ObjectVector *shaderNetwork, const std::string &namePrefix, const AtNode *parentNode )
 {
 	typedef boost::unordered_map<std::string, AtNode *> ShaderMap;
 	ShaderMap shaderMap; // Maps handles to nodes
@@ -123,7 +131,7 @@ std::vector<AtNode *> convert( const IECore::ObjectVector *shaderNetwork, const 
 		{
 			if( boost::starts_with( shader->getType(), "osl:" ) )
 			{
-				nodeType = "osl_shader";
+				nodeType = "osl";
 				oslShaderName = shader->getName().c_str();
 			}
 			else
@@ -151,26 +159,44 @@ std::vector<AtNode *> convert( const IECore::ObjectVector *shaderNetwork, const 
 			continue;
 		}
 
-		AtNode *node = AiNode( nodeType );
+		std::string nodeName = boost::lexical_cast<string>( result.size() );
+		auto handleIt = parameters->find( g_handleString );
+		const StringData *handleData = nullptr;
+		if( handleIt != parameters->end() )
+		{
+			handleData = runTimeCast<const StringData>( handleIt->second.get() );
+			if( handleData )
+			{
+				nodeName = handleData->readable();
+			}
+		}
+
+		AtNode *node = AiNode( AtString( nodeType ), AtString( (namePrefix + nodeName).c_str() ), parentNode );
+
 		if( !node )
 		{
 			msg( Msg::Warning, "IECoreArnold::ShaderAlgo", boost::format( "Couldn't load shader \"%s\"" ) % nodeType );
 			continue;
 		}
 
-		if( oslShaderName )
+		if( handleData )
 		{
-			AiNodeSetStr( node, "shadername", oslShaderName );
+			shaderMap[nodeName] = node;
 		}
 
-		std::string nodeName = boost::lexical_cast<string>( result.size() );
+		if( oslShaderName )
+		{
+			AiNodeSetStr( node, g_shaderNameArnoldString, AtString( oslShaderName ) );
+		}
+
 		for( CompoundDataMap::const_iterator pIt = parameters->begin(), peIt = parameters->end(); pIt != peIt; ++pIt )
 		{
-			std::string parameterName = pIt->first;
+			std::string parameterNameString = pIt->first;
 			if( oslShaderName )
 			{
-				parameterName = "param_" + parameterName;
+				parameterNameString = "param_" + parameterNameString;
 			}
+			AtString parameterName( parameterNameString.c_str() );
 
 			if( const StringData *stringData = runTimeCast<const StringData>( pIt->second.get() ) )
 			{
@@ -190,17 +216,17 @@ std::vector<AtNode *> convert( const IECore::ObjectVector *shaderNetwork, const 
 					ShaderMap::const_iterator shaderIt = shaderMap.find( linkHandle );
 					if( shaderIt != shaderMap.end() )
 					{
-						const AtParamEntry *parmEntry = AiNodeEntryLookUpParameter( AiNodeGetNodeEntry( node ), parameterName.c_str() );
+						const AtParamEntry *parmEntry = AiNodeEntryLookUpParameter( AiNodeGetNodeEntry( node ), parameterName );
 						// If the parameter is a node pointer, we just set it to the source node.
 						// Otherwise we assume that it is of a matching type to the output of the
 						// source node, and try to link it
 						if( AiParamGetType( parmEntry ) == AI_TYPE_NODE )
 						{
-							AiNodeSetPtr( node, parameterName.c_str(), shaderIt->second );
+							AiNodeSetPtr( node, parameterName, shaderIt->second );
 						}
 						else
 						{
-							AiNodeLinkOutput( shaderIt->second, "", node, parameterName.c_str() );
+							AiNodeLinkOutput( shaderIt->second, "", node, parameterName );
 						}
 					}
 					else
@@ -211,8 +237,6 @@ std::vector<AtNode *> convert( const IECore::ObjectVector *shaderNetwork, const 
 				}
 				else if( pIt->first.value() == "__handle" )
 				{
-					shaderMap[value] = node;
-					nodeName = value;
 					continue;
 				}
 			}
@@ -241,16 +265,16 @@ std::vector<AtNode *> convert( const IECore::ObjectVector *shaderNetwork, const 
 
 				if( nodes.size() )
 				{
-					const AtParamEntry *parmEntry = AiNodeEntryLookUpParameter( AiNodeGetNodeEntry( node ), parameterName.c_str() );
+					const AtParamEntry *parmEntry = AiNodeEntryLookUpParameter( AiNodeGetNodeEntry( node ), parameterName );
 					if( AiParamGetType( parmEntry ) == AI_TYPE_ARRAY )
 					{
 						const AtParamValue *def = AiParamGetDefault( parmEntry );
 
 						// Appropriately use SetArray vs LinkOutput depending on target type, as above
-						if( def->ARRAY->type == AI_TYPE_NODE )
+						if( AiArrayGetType( def->ARRAY() ) == AI_TYPE_NODE )
 						{
 							AtArray *nodesArray = AiArrayConvert( nodes.size(), 1, AI_TYPE_POINTER, &nodes[0] );
-							AiNodeSetArray( node, parameterName.c_str(), nodesArray );
+							AiNodeSetArray( node, parameterName, nodesArray );
 						}
 						else
 						{
@@ -258,7 +282,7 @@ std::vector<AtNode *> convert( const IECore::ObjectVector *shaderNetwork, const 
 							{
 								AiNodeLinkOutput(
 									nodes[i], "", node,
-									( parameterName + "[" + boost::lexical_cast<string>( i ) + "]" ).c_str()
+									( parameterNameString + "[" + boost::lexical_cast<string>( i ) + "]" ).c_str()
 								);
 							}
 						}
@@ -269,20 +293,18 @@ std::vector<AtNode *> convert( const IECore::ObjectVector *shaderNetwork, const 
 			}
 			else if( const SplineffData *splineData = runTimeCast<const SplineffData>( pIt->second.get() ) )
 			{
-				setSplineParameter( node, parameterName.c_str(), splineData->readable() );
+				setSplineParameter( node, parameterNameString, splineData->readable() );
 				continue;
 			}
 			else if( const SplinefColor3fData *splineData = runTimeCast<const SplinefColor3fData>( pIt->second.get() ) )
 			{
-				setSplineParameter( node, parameterName.c_str(), splineData->readable() );
+				setSplineParameter( node, parameterNameString, splineData->readable() );
 				continue;
 			}
 
-			ParameterAlgo::setParameter( node, parameterName.c_str(), pIt->second.get() );
+			ParameterAlgo::setParameter( node, parameterName, pIt->second.get() );
 		}
 
-		nodeName = namePrefix + nodeName;
-		AiNodeSetStr( node, "name", nodeName.c_str() );
 		result.push_back( node );
 	}
 

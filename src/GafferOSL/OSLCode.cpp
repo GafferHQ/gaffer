@@ -84,7 +84,7 @@ string parameter( const Plug *plug )
 
 	string type;
 	string defaultValue;
-	switch( plugType )
+	switch( (int)plugType )
 	{
 		case FloatPlugTypeId :
 			defaultValue = "0.0";
@@ -110,7 +110,7 @@ string parameter( const Plug *plug )
 			defaultValue = "\"\"";
 			type = "string";
 			break;
-		case PlugTypeId :
+		case ClosurePlugTypeId :
 			defaultValue = "0";
 			type = "closure color";
 			break;

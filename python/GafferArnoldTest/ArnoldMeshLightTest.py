@@ -62,7 +62,7 @@ class ArnoldMeshLightTest( GafferSceneTest.SceneTestCase ) :
 		self.assertEqual( l["out"].attributes( "/group/sphere" )["ai:light"][0].name, "mesh_light" )
 		self.assertTrue( "ai:light" not in l["out"].attributes( "/group/plane" ) )
 
-		for v in ( "shadow", "reflected", "refracted", "diffuse", "glossy" ) :
+		for v in ( "shadow", "diffuse_transmit", "specular_transmit", "volume", "diffuse_reflect", "specular_reflect", "subsurface" ) :
 			v = "ai:visibility:" + v
 			self.assertEqual( l["out"].attributes( "/group/sphere" )[v].value, False )
 			self.assertTrue( v not in l["out"].attributes( "/group/plane" ) )

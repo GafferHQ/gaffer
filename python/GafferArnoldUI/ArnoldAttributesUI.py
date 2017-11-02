@@ -50,14 +50,28 @@ def __visibilitySummary( plug ) :
 
 		( "camera", "Camera" ),
 		( "shadow", "Shad" ),
-		( "reflected", "Refl" ),
-		( "refracted", "Refr" ),
-		( "diffuse", "Diff" ),
-		( "glossy", "Glossy" ),
+		( "diffuseReflection", "DiffRefl" ),
+		( "specularReflection", "SpecRefl" ),
+		( "diffuseTransmission", "DiffTrans" ),
+		( "specularTransmission", "SpecTrans" ),
+		( "volume", "Volume" ),
+		( "subsurface", "Subsurf" ),
 
 	)	:
 		if plug[childName+"Visibility"]["enabled"].getValue() :
 			info.append( label + ( " On" if plug[childName+"Visibility"]["value"].getValue() else " Off" ) )
+
+	return ", ".join( info )
+
+__transformTypeEnumNames = { "linear" : "Linear", "rotate_about_origin" : "RotateAboutOrigin",
+	"rotate_about_center" : "RotateAboutCenter" }
+
+def __transformSummary( plug ) :
+
+	info = []
+
+	if plug["transformType"]["enabled"].getValue() :
+		info.append( "Transform Type " + __transformTypeEnumNames[ plug["transformType"]["value"].getValue() ] )
 
 	return ", ".join( info )
 
@@ -67,6 +81,9 @@ def __shadingSummary( plug ) :
 	for childName in ( "matte", "opaque", "receiveShadows", "selfShadows" ) :
 		if plug[childName]["enabled"].getValue() :
 			info.append( IECore.CamelCase.toSpaced( childName ) + ( " On" if plug[childName]["value"].getValue() else " Off" ) )
+
+	if plug["sssSetName"]["enabled"].getValue() :
+		info.append( "SSS Set Name " + plug["sssSetName"]["value"].getValue() )
 
 	return ", ".join( info )
 
@@ -120,6 +137,7 @@ Gaffer.Metadata.registerNode(
 		"attributes" : [
 
 			"layout:section:Visibility:summary", __visibilitySummary,
+			"layout:section:Transform:summary", __transformSummary,
 			"layout:section:Shading:summary", __shadingSummary,
 			"layout:section:Subdivision:summary", __subdivisionSummary,
 			"layout:section:Curves:summary", __curvesSummary,
@@ -156,56 +174,106 @@ Gaffer.Metadata.registerNode(
 			"label", "Shadow",
 
 		],
-
-		"attributes.reflectedVisibility" : [
-
-			"description",
-			"""
-			Whether or not the object is visible in
-			tight mirror reflections.
-			""",
-
-			"layout:section", "Visibility",
-			"label", "Reflections",
-
-		],
-
-		"attributes.refractedVisibility" : [
+		"attributes.diffuseReflectionVisibility" : [
 
 			"description",
 			"""
 			Whether or not the object is visible in
-			refractions.
+			reflected diffuse ( ie. if it casts bounce light )
 			""",
 
 			"layout:section", "Visibility",
-			"label", "Refractions",
+			"label", "Diffuse Reflection",
 
 		],
 
-		"attributes.diffuseVisibility" : [
-
-			"description",
-			"""
-			Whether or not the object is visible to diffuse
-			rays - whether it casts bounce light or not.
-			""",
-
-			"layout:section", "Visibility",
-			"label", "Diffuse",
-
-		],
-
-		"attributes.glossyVisibility" : [
+		"attributes.specularReflectionVisibility" : [
 
 			"description",
 			"""
 			Whether or not the object is visible in
-			soft specular reflections.
+			reflected specular ( ie. if it is visible in mirrors ).
 			""",
 
 			"layout:section", "Visibility",
-			"label", "Glossy",
+			"label", "Specular Reflection",
+
+		],
+
+		"attributes.diffuseTransmissionVisibility" : [
+
+			"description",
+			"""
+			Whether or not the object is visible in
+			transmitted diffuse ( ie. if it casts light through leaves ).
+			""",
+
+			"layout:section", "Visibility",
+			"label", "Diffuse Transmission",
+
+		],
+
+		"attributes.specularTransmissionVisibility" : [
+
+			"description",
+			"""
+			Whether or not the object is visible in
+			refracted specular ( ie. if it can be seen through glass ).
+			""",
+
+			"layout:section", "Visibility",
+			"label", "Specular Transmission",
+
+		],
+
+		"attributes.volumeVisibility" : [
+
+			"description",
+			"""
+			Whether or not the object is visible in
+			volume scattering.
+			""",
+
+			"layout:section", "Visibility",
+			"label", "Volume",
+
+		],
+
+		"attributes.subsurfaceVisibility" : [
+
+			"description",
+			"""
+			Whether or not the object is visible to subsurface
+			rays.
+			""",
+
+			"layout:section", "Visibility",
+			"label", "Subsurface",
+
+		],
+
+		# Transform
+
+		"attributes.transformType" : [
+
+			"description",
+			"""
+			Choose how transform motion is interpolated.  Linear
+			produces classic linear vertex motion, RotateAboutOrigin
+			produces curved arcs centred on the object's origin, and
+			RotateAboutCenter, the default, produces curved arcs
+			centred on the object's bounding box middle.
+			""",
+
+			"layout:section", "Transform",
+
+		],
+		"attributes.transformType.value" : [
+
+			"presetNames", lambda plug : IECore.StringVectorData( __transformTypeEnumNames.values() ),
+			"presetValues", lambda plug : IECore.StringVectorData( __transformTypeEnumNames.keys() ),
+
+			"plugValueWidget:type", "GafferUI.PresetsPlugValueWidget",
 
 		],
 
@@ -257,6 +325,17 @@ Gaffer.Metadata.registerNode(
 
 			"layout:section", "Shading",
 
+		],
+
+		"attributes.sssSetName" : [
+
+			"description",
+			"""
+			If given, subsurface will be blended across any other objects which share the same sss set name.
+			""",
+
+			"layout:section", "Shading",
+			"label", "SSS Set Name",
 		],
 
 		# Subdivision

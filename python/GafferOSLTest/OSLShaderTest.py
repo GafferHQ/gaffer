@@ -268,8 +268,8 @@ class OSLShaderTest( GafferOSLTest.OSLTestCase ) :
 		inputClosure = GafferOSL.OSLShader()
 		inputClosure.loadShader( inputClosureShader )
 
-		self.assertEqual( outputClosure["out"]["c"].typeId(), Gaffer.Plug.staticTypeId() )
-		self.assertEqual( inputClosure["parameters"]["i"].typeId(), Gaffer.Plug.staticTypeId() )
+		self.assertEqual( outputClosure["out"]["c"].typeId(), GafferOSL.ClosurePlug.staticTypeId() )
+		self.assertEqual( inputClosure["parameters"]["i"].typeId(), GafferOSL.ClosurePlug.staticTypeId() )
 
 		inputClosure["parameters"]["i"].setInput( outputClosure["out"]["c"] )
 

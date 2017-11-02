@@ -1,0 +1,470 @@
+##########################################################################
+#
+#  Copyright (c) 2017, Image Engine Design Inc. All rights reserved.
+#
+#  Redistribution and use in source and binary forms, with or without
+#  modification, are permitted provided that the following conditions are
+#  met:
+#
+#      * Redistributions of source code must retain the above
+#        copyright notice, this list of conditions and the following
+#        disclaimer.
+#
+#      * Redistributions in binary form must reproduce the above
+#        copyright notice, this list of conditions and the following
+#        disclaimer in the documentation and/or other materials provided with
+#        the distribution.
+#
+#      * Neither the name of John Haddon nor the names of
+#        any other contributors to this software may be used to endorse or
+#        promote products derived from this software without specific prior
+#        written permission.
+#
+#  THIS SOFTWARE IS PROVIDED BY THE COPYRIGHT HOLDERS AND CONTRIBUTORS "AS
+#  IS" AND ANY EXPRESS OR IMPLIED WARRANTIES, INCLUDING, BUT NOT LIMITED TO,
+#  THE IMPLIED WARRANTIES OF MERCHANTABILITY AND FITNESS FOR A PARTICULAR
+#  PURPOSE ARE DISCLAIMED. IN NO EVENT SHALL THE COPYRIGHT OWNER OR
+#  CONTRIBUTORS BE LIABLE FOR ANY DIRECT, INDIRECT, INCIDENTAL, SPECIAL,
+#  EXEMPLARY, OR CONSEQUENTIAL DAMAGES (INCLUDING, BUT NOT LIMITED TO,
+#  PROCUREMENT OF SUBSTITUTE GOODS OR SERVICES; LOSS OF USE, DATA, OR
+#  PROFITS; OR BUSINESS INTERRUPTION) HOWEVER CAUSED AND ON ANY THEORY OF
+#  LIABILITY, WHETHER IN CONTRACT, STRICT LIABILITY, OR TORT (INCLUDING
+#  NEGLIGENCE OR OTHERWISE) ARISING IN ANY WAY OUT OF THE USE OF THIS
+#  SOFTWARE, EVEN IF ADVISED OF THE POSSIBILITY OF SUCH DAMAGE.
+#
+##########################################################################
+
+
+# If you want to use these old Mtoa nodes in Gaffer, you can add this mtd file
+# to your plugin path in order to categorize them.
+#
+# We add these to "Maya" submenus based on the classification
+# at https://support.solidangle.com/display/AFMUG/Maya+Shaders
+##########################################################################
+
+[node MayaBlendColors]
+
+	primaryInput STRING "color1"
+	gaffer.nodeMenu.category STRING "Maya/Color Utilities"
+
+
+[node MayaBrownian]
+
+	gaffer.nodeMenu.category STRING "Maya/3D Textures"
+
+
+[node MayaBulge]
+
+	gaffer.nodeMenu.category STRING "Maya/2D Textures"
+
+
+[node MayaBump2D]
+
+	gaffer.nodeMenu.category STRING "Maya/General Utilities"
+
+
+[node MayaChecker]
+
+	gaffer.nodeMenu.category STRING "Maya/2D Textures"
+
+
+[node MayaClamp]
+
+	gaffer.nodeMenu.category STRING "Maya/Color Utilities"
+
+
+[node MayaCloth]
+
+	gaffer.nodeMenu.category STRING "Maya/2D Textures"
+
+
+[node MayaCloud]
+
+	gaffer.nodeMenu.category STRING "Maya/3D Textures"
+
+
+[node MayaCloudAlpha]
+
+	gaffer.nodeMenu.category STRING "Maya/3D Textures"
+
+
+[node MayaCondition]
+
+	primaryInput STRING "colorIfTrue"
+	gaffer.nodeMenu.category STRING "Maya/General Utilities"
+
+
+[node MayaContrast]
+
+	gaffer.nodeMenu.category STRING "Maya/Color Utilities"
+
+
+[node MayaCrater]
+
+	gaffer.nodeMenu.category STRING "Maya/3D Textures"
+
+
+[node MayaDoubleShadingSwitch]
+
+	gaffer.nodeMenu.category STRING "Maya/General Utilities"
+
+
+[node MayaEnvSphere]
+
+	gaffer.nodeMenu.category STRING "Maya/Env Textures"
+
+
+[node MayaFile]
+
+	gaffer.nodeMenu.category STRING "Maya/2D Textures"
+
+
+[node MayaFluid]
+
+	gaffer.nodeMenu.category STRING "Maya/3D Textures"
+
+
+[node MayaFluidData]
+
+	gaffer.nodeMenu.category STRING "Maya/General Utilities"
+
+
+[node MayaFluidTexture2D]
+
+	gaffer.nodeMenu.category STRING "Maya/2D Textures"
+
+
+[node MayaFractal]
+
+	gaffer.nodeMenu.category STRING "Maya/2D Textures"
+
+
+[node MayaGammaCorrect]
+
+	gaffer.nodeMenu.category STRING "Maya/Color Utilities"
+
+
+[node MayaGranite]
+
+	gaffer.nodeMenu.category STRING "Maya/3D Textures"
+
+
+[node MayaGrid]
+
+	gaffer.nodeMenu.category STRING "Maya/2D Textures"
+
+
+[node MayaHair]
+
+	gaffer.nodeMenu.category STRING "Maya/Surface"
+
+
+[node MayaHsvToRgb]
+
+  primaryInput STRING "inHsv"
+	gaffer.nodeMenu.category STRING "Maya/Color Utilities"
+
+
+[node MayaImagePlane]
+
+	gaffer.nodeMenu.category STRING "Maya/General Utilities"
+
+
+[node MayaLayeredShader]
+
+	primaryInput STRING "color0"
+	gaffer.nodeMenu.category STRING "Maya/Surface"
+
+
+[node MayaLayeredTexture]
+
+	primaryInput STRING "color0"
+	gaffer.nodeMenu.category STRING "Maya/2D Textures"
+
+
+[node MayaLeather]
+
+	gaffer.nodeMenu.category STRING "Maya/3D Textures"
+
+
+[node MayaLuminance]
+
+	gaffer.nodeMenu.category STRING "Maya/Color Utilities"
+
+
+[node MayaMarble]
+
+	gaffer.nodeMenu.category STRING "Maya/3D Textures"
+
+
+[node MayaMultiplyDivide]
+
+	primaryInput STRING "input1"
+	gaffer.nodeMenu.category STRING "Maya/General Utilities"
+
+
+[node MayaNoise]
+
+	gaffer.nodeMenu.category STRING "Maya/2D Textures"
+
+
+[node MayaNormalDisplacement]
+
+	gaffer.nodeMenu.category STRING "Maya/General Utilities"
+
+
+[node MayaPlace2DTexture]
+
+	gaffer.nodeMenu.category STRING "Maya/General Utilities"
+
+
+[node MayaPlace3DTexture]
+
+	gaffer.nodeMenu.category STRING "Maya/General Utilities"
+
+
+[node MayaPlusMinusAverage1D]
+
+	gaffer.nodeMenu.category STRING "Maya/General Utilities"
+
+
+[node MayaPlusMinusAverage2D]
+
+	gaffer.nodeMenu.category STRING "Maya/General Utilities"
+
+
+[node MayaPlusMinusAverage3D]
+
+	gaffer.nodeMenu.category STRING "Maya/General Utilities"
+
+
+[node MayaProjection]
+
+	gaffer.nodeMenu.category STRING "Maya/General Utilities"
+
+
+[node MayaQuadShadingSwitch]
+
+	gaffer.nodeMenu.category STRING "Maya/General Utilities"
+
+
+[node MayaRamp]
+
+	gaffer.nodeMenu.category STRING "Maya/2D Textures"
+
+
+[node MayaRemapColor]
+
+	primaryInput STRING "input"
+	gaffer.nodeMenu.category STRING "Maya/Color Utilities"
+
+
+[node MayaRemapHsv]
+
+	primaryInput STRING "input"
+	gaffer.nodeMenu.category STRING "Maya/Color Utilities"
+
+
+[node MayaRemapValueToColor]
+
+	gaffer.nodeMenu.category STRING "Maya/General Utilities"
+
+
+[node MayaRemapValueToValue]
+
+	gaffer.nodeMenu.category STRING "Maya/General Utilities"
+
+
+[node MayaReverse]
+
+	primaryInput STRING "input"
+	gaffer.nodeMenu.category STRING "Maya/General Utilities"
+
+
+[node MayaRgbToHsv]
+
+	primaryInput STRING "inRgb"
+	gaffer.nodeMenu.category STRING "Maya/Color Utilities"
+
+
+[node MayaRock]
+
+	gaffer.nodeMenu.category STRING "Maya/3D Textures"
+
+
+[node MayaSamplerInfo1D]
+
+	gaffer.nodeMenu.category STRING "Maya/General Utilities"
+
+
+[node MayaSamplerInfo2D]
+
+	gaffer.nodeMenu.category STRING "Maya/General Utilities"
+
+
+[node MayaSamplerInfo3D]
+
+	gaffer.nodeMenu.category STRING "Maya/General Utilities"
+
+
+[node MayaSetRange]
+
+	gaffer.nodeMenu.category STRING "Maya/General Utilities"
+
+
+[node MayaShadingEngine]
+
+	gaffer.nodeMenu.category STRING "Maya/General Utilities"
+
+
+[node MayaSingleShadingSwitch]
+
+	gaffer.nodeMenu.category STRING "Maya/General Utilities"
+
+
+[node MayaSnow]
+
+	gaffer.nodeMenu.category STRING "Maya/3D Textures"
+
+
+[node MayaSolidFractal]
+
+	gaffer.nodeMenu.category STRING "Maya/3D Textures"
+
+
+[node MayaStucco]
+
+	gaffer.nodeMenu.category STRING "Maya/3D Textures"
+
+
+[node MayaSurfaceLuminance]
+
+	gaffer.nodeMenu.category STRING "Maya/General Utilities"
+
+
+[node MayaSurfaceShader]
+
+	gaffer.nodeMenu.category STRING "Maya/Surface"
+
+
+[node MayaTripleShadingSwitch]
+
+	gaffer.nodeMenu.category STRING "Maya/General Utilities"
+
+
+[node MayaVectorDisplacement]
+
+	gaffer.nodeMenu.category STRING "Maya/General Utilities"
+
+
+[node MayaVolumeNoise]
+
+	gaffer.nodeMenu.category STRING "Maya/3D Textures"
+
+
+[node MayaWater]
+
+	gaffer.nodeMenu.category STRING "Maya/2D Textures"
+
+
+[node MtoaAnimColor]
+
+	gaffer.nodeMenu.category STRING ""
+
+
+[node MtoaAnimFloat]
+
+	gaffer.nodeMenu.category STRING ""
+
+
+[node MtoaAnimMatrix]
+
+	gaffer.nodeMenu.category STRING ""
+
+
+[node MtoaAnimPoint]
+
+	gaffer.nodeMenu.category STRING ""
+
+
+[node MtoaAnimVector]
+
+	gaffer.nodeMenu.category STRING ""
+
+
+[node MtoaAovWriteColor]
+
+	gaffer.nodeMenu.category STRING "Maya/General Utilities"
+
+
+[node MtoaAovWriteFloat]
+
+	gaffer.nodeMenu.category STRING "Maya/General Utilities"
+
+
+[node MtoaAovWriteVector2]
+
+	gaffer.nodeMenu.category STRING "Maya/General Utilities"
+
+
+[node MtoaAovWriteVector]
+
+	gaffer.nodeMenu.category STRING "Maya/General Utilities"
+
+
+[node MtoaCameraUvMapper]
+
+	gaffer.nodeMenu.category STRING "Maya/General Utilities"
+
+
+[node MtoaColorToFloat]
+
+	gaffer.nodeMenu.category STRING "Maya/Color Utilities"
+
+
+[node MtoaMeshLightMaterial]
+
+	gaffer.nodeMenu.category STRING "Maya/Surface"
+
+
+[node MtoaPoint2ToFloat]
+
+	gaffer.nodeMenu.category STRING "Maya/General Utilities"
+
+
+[node MtoaPointToFloat]
+
+	gaffer.nodeMenu.category STRING "Maya/General Utilities"
+
+
+[node MtoaUserDataBool]
+
+	gaffer.nodeMenu.category STRING "Maya/General Utilities"
+
+
+[node MtoaUserDataColor]
+
+	gaffer.nodeMenu.category STRING "Maya/General Utilities"
+
+[node MtoaUserDataVec2]
+
+	gaffer.nodeMenu.category STRING "Maya/General Utilities"
+
+[node MtoaUserDataVector]
+
+	gaffer.nodeMenu.category STRING "Maya/General Utilities"
+
+
+[node MtoaVectorToFloat]
+
+	gaffer.nodeMenu.category STRING "Maya/General Utilities"
+
+
+[node MtoaWriteColor]
+
+	gaffer.nodeMenu.category STRING "Maya/General Utilities"
+
+
+[node MtoaWriteFloat]
+
+	gaffer.nodeMenu.category STRING "Maya/General Utilities"

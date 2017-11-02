@@ -1,6 +1,6 @@
 //////////////////////////////////////////////////////////////////////////
 //
-//  Copyright (c) 2012, John Haddon. All rights reserved.
+//  Copyright (c) 2016, Image Engine Design Inc. All rights reserved.
 //
 //  Redistribution and use in source and binary forms, with or without
 //  modification, are permitted provided that the following conditions are
@@ -34,55 +34,59 @@
 //
 //////////////////////////////////////////////////////////////////////////
 
-#include "boost/python.hpp"
+#include "IECore/MurmurHash.h"
 
-#include "GafferBindings/DependencyNodeBinding.h"
-#include "GafferDispatchBindings/TaskNodeBinding.h"
+#include "Gaffer/SubGraph.h"
+#include "Gaffer/Dot.h"
 
-#include "GafferArnold/ArnoldShader.h"
-#include "GafferArnold/ArnoldOptions.h"
-#include "GafferArnold/ArnoldAttributes.h"
-#include "GafferArnold/ArnoldLight.h"
-#include "GafferArnold/ArnoldVDB.h"
-#include "GafferArnold/InteractiveArnoldRender.h"
-#include "GafferArnold/ArnoldRender.h"
-#include "GafferArnold/ArnoldDisplacement.h"
-#include "GafferArnold/ArnoldMeshLight.h"
-#include "GafferArnold/ArnoldAOVShader.h"
+#include "GafferOSL/ClosurePlug.h"
 
-using namespace boost::python;
-using namespace GafferArnold;
+using namespace IECore;
+using namespace Gaffer;
+using namespace GafferOSL;
 
-namespace
+//////////////////////////////////////////////////////////////////////////
+// ClosurePlug
+//////////////////////////////////////////////////////////////////////////
+
+IE_CORE_DEFINERUNTIMETYPED( ClosurePlug );
+
+ClosurePlug::ClosurePlug( const std::string &name, Direction direction, unsigned flags )
+	:	Plug( name, direction, flags )
 {
-
-void flushCaches( int flags )
-{
-	IECorePython::ScopedGILRelease gilRelease;
-	InteractiveArnoldRender::flushCaches( flags );
 }
 
-} // namespace
-
-BOOST_PYTHON_MODULE( _GafferArnold )
+ClosurePlug::~ClosurePlug()
 {
+}
 
-	GafferBindings::DependencyNodeClass<ArnoldShader>();
+bool ClosurePlug::acceptsChild( const GraphComponent *potentialChild ) const
+{
+	return false;
+}
 
-	GafferBindings::NodeClass<ArnoldLight>()
-		.def( "loadShader", (void (ArnoldLight::*)( const std::string & ) )&ArnoldLight::loadShader )
-	;
+Gaffer::PlugPtr ClosurePlug::createCounterpart( const std::string &name, Direction direction ) const
+{
+	return new ClosurePlug( name, direction, getFlags() );
+}
 
-	GafferBindings::DependencyNodeClass<ArnoldOptions>();
-	GafferBindings::DependencyNodeClass<ArnoldAttributes>();
-	GafferBindings::DependencyNodeClass<ArnoldVDB>();
-	GafferBindings::DependencyNodeClass<ArnoldDisplacement>();
-	GafferBindings::DependencyNodeClass<ArnoldMeshLight>();
-	GafferBindings::DependencyNodeClass<ArnoldAOVShader>();
-	GafferBindings::NodeClass<InteractiveArnoldRender>()
-		.def( "flushCaches", &flushCaches )
-		.staticmethod( "flushCaches" )
-	;
-	GafferDispatchBindings::TaskNodeClass<ArnoldRender>();
+bool ClosurePlug::acceptsInput( const Gaffer::Plug *input ) const
+{
+	if( !Plug::acceptsInput( input ) )
+	{
+		return false;
+	}
 
+	if( !input )
+	{
+		return true;
+	}
+
+	// We only accept connections from other ClosurePlugs
+	if( runTimeCast<const ClosurePlug>( input ) )
+	{
+		return true;
+	}
+
+	return false;
 }
