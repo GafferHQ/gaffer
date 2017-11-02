@@ -47,14 +47,15 @@
 #include "GafferScene/SceneProcedural.h"
 #include "GafferScene/ExecutableRender.h"
 #include "GafferScene/Preview/Render.h"
-#include "GafferScene/Preview/InteractiveRender.h"
 #include "GafferScene/Private/IECoreScenePreview/Renderer.h"
 #include "GafferScene/Private/IECoreScenePreview/Procedural.h"
+#include "GafferScene/Private/IECoreScenePreview/Geometry.h"
 
 #include "RenderBinding.h"
 
 using namespace boost::python;
 
+using namespace Imath;
 using namespace IECoreScenePreview;
 using namespace Gaffer;
 using namespace GafferBindings;
@@ -106,11 +107,6 @@ class ExecutableRenderWrapper : public TaskNodeWrapper<ExecutableRender>
 };
 
 ContextPtr interactiveRenderGetContext( InteractiveRender &r )
-{
-	return r.getContext();
-}
-
-ContextPtr previewInteractiveRenderGetContext( Preview::InteractiveRender &r )
 {
 	return r.getContext();
 }
@@ -230,7 +226,8 @@ void GafferSceneModule::bindRender()
 	{
 		scope s = GafferBindings::NodeClass<InteractiveRender>()
 			.def( "getContext", &interactiveRenderGetContext )
-			.def( "setContext", &InteractiveRender::setContext );
+			.def( "setContext", &InteractiveRender::setContext )
+		;
 
 		enum_<InteractiveRender::State>( "State" )
 			.value( "Stopped", InteractiveRender::Stopped )
@@ -244,19 +241,6 @@ void GafferSceneModule::bindRender()
 		scope().attr( "Preview" ) = previewModule;
 
 		scope previewScope( previewModule );
-
-		{
-			scope s = GafferBindings::NodeClass<GafferScene::Preview::InteractiveRender>()
-				.def( "getContext", &previewInteractiveRenderGetContext )
-				.def( "setContext", &GafferScene::Preview::InteractiveRender::setContext )
-			;
-
-			enum_<GafferScene::Preview::InteractiveRender::State>( "State" )
-				.value( "Stopped", GafferScene::Preview::InteractiveRender::Stopped )
-				.value( "Running", GafferScene::Preview::InteractiveRender::Running )
-				.value( "Paused", GafferScene::Preview::InteractiveRender::Paused )
-			;
-		}
 
 		{
 			scope s = TaskNodeClass<GafferScene::Preview::Render>();
@@ -324,6 +308,24 @@ void GafferSceneModule::bindRender()
 		IECorePython::RunTimeTypedClass<IECoreScenePreview::Procedural, ProceduralWrapper>()
 			.def( init<>() )
 			.def( "render", (void (Procedural::*)( IECoreScenePreview::Renderer *)const)&Procedural::render )
+		;
+
+
+		IECorePython::RunTimeTypedClass<Geometry>()
+			.def(
+				init<const std::string &, const Box3f &, const IECore::CompoundDataPtr &>(
+					(
+						arg( "type" ) = "",
+						arg( "bound" ) = Box3f(),
+						arg( "parameters" ) = object()
+					)
+				)
+			)
+			.def( "setType", &Geometry::setType )
+			.def( "getType", &Geometry::getType, return_value_policy<copy_const_reference>() )
+			.def( "setBound", &Geometry::setBound )
+			.def( "getBound", &Geometry::getBound, return_value_policy<copy_const_reference>() )
+			.def( "parameters", (IECore::CompoundData *(Geometry::*)())&Geometry::parameters, return_value_policy<IECorePython::CastToIntrusivePtr>() )
 		;
 
 	}

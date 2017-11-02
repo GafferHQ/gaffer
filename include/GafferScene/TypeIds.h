@@ -145,8 +145,8 @@ enum TypeId
 	CapsuleTypeId = 110600,
 	EncapsulateTypeId = 110601,
 
-	PreviewProceduralTypeId = 110648,
-	PreviewInteractiveRenderTypeId = 110649,
+	PreviewGeometryTypeId = 110648,
+	PreviewProceduralTypeId = 110649,
 
 	LastTypeId = 110650
 };

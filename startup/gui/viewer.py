@@ -88,26 +88,6 @@ def __registerShadingModes( modes ) :
 
 with IECore.IgnoredExceptions( ImportError ) :
 
-	# If this import fails, then our "with" block will swallow the error
-	# and we'll not add any useless visualisation modes (because the code
-	# below won't be reached). We leave the actual error reporting to the
-	# startup/gui/menus.py config file.
-	import GafferRenderMan
-
-	__registerShadingModes( [
-
-		( "Diagnostic/RenderMan/Shader Assignment", GafferScene.AttributeVisualiser, { "attributeName" : "ri:surface", "mode" : GafferScene.AttributeVisualiser.Mode.ShaderNodeColor } ),
-		( "Diagnostic/RenderMan/Camera Visibility", GafferScene.AttributeVisualiser, { "attributeName" : "ri:visibility:camera" } ),
-		( "Diagnostic/RenderMan/Transmission Visibility", GafferScene.AttributeVisualiser, { "attributeName" : "ri:visibility:transmission" } ),
-		( "Diagnostic/RenderMan/Diffuse Visibility", GafferScene.AttributeVisualiser, { "attributeName" : "ri:visibility:diffuse" } ),
-		( "Diagnostic/RenderMan/Specular Visibility", GafferScene.AttributeVisualiser, { "attributeName" : "ri:visibility:specular" } ),
-		( "Diagnostic/RenderMan/Photon Visibility", GafferScene.AttributeVisualiser, { "attributeName" : "ri:visibility:photon" } ),
-		( "Diagnostic/RenderMan/Matte", GafferScene.AttributeVisualiser, { "attributeName" : "ri:visibility:matte" } ),
-
-	] )
-
-with IECore.IgnoredExceptions( ImportError ) :
-
 	import GafferArnold
 
 	__registerShadingModes( [
@@ -119,6 +99,23 @@ with IECore.IgnoredExceptions( ImportError ) :
 		( "Diagnostic/Arnold/Refraction Visibility", GafferScene.AttributeVisualiser, { "attributeName" : "ai:visibility:refracted" } ),
 		( "Diagnostic/Arnold/Diffuse Visibility", GafferScene.AttributeVisualiser, { "attributeName" : "ai:visibility:diffuse" } ),
 		( "Diagnostic/Arnold/Glossy Visibility", GafferScene.AttributeVisualiser, { "attributeName" : "ai:visibility:glossy" } ),
+
+	] )
+
+with IECore.IgnoredExceptions( ImportError ) :
+
+	import GafferDelight
+
+	__registerShadingModes( [
+
+		( "Diagnostic/3Delight/Shader Assignment", GafferScene.AttributeVisualiser, { "attributeName" : "osl:surface", "mode" : GafferScene.AttributeVisualiser.Mode.ShaderNodeColor } ),
+		( "Diagnostic/3Delight/Camera Visibility", GafferScene.AttributeVisualiser, { "attributeName" : "dl:visibility.camera" } ),
+		( "Diagnostic/3Delight/Shadow Visibility", GafferScene.AttributeVisualiser, { "attributeName" : "dl:visibility.shadow" } ),
+		( "Diagnostic/3Delight/Reflection Visibility", GafferScene.AttributeVisualiser, { "attributeName" : "dl:visibility.reflection" } ),
+		( "Diagnostic/3Delight/Refraction Visibility", GafferScene.AttributeVisualiser, { "attributeName" : "dl:visibility.refraction" } ),
+		( "Diagnostic/3Delight/Diffuse Visibility", GafferScene.AttributeVisualiser, { "attributeName" : "dl:visibility.diffuse" } ),
+		( "Diagnostic/3Delight/Specular Visibility", GafferScene.AttributeVisualiser, { "attributeName" : "dl:visibility.specular" } ),
+		( "Diagnostic/3Delight/Hair Visibility", GafferScene.AttributeVisualiser, { "attributeName" : "dl:visibility.hair" } ),
 
 	] )
 

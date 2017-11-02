@@ -42,6 +42,7 @@ from OSLObjectTest import OSLObjectTest
 from OSLExpressionEngineTest import OSLExpressionEngineTest
 from ModuleTest import ModuleTest
 from OSLCodeTest import OSLCodeTest
+from OSLLightTest import OSLLightTest
 
 if __name__ == "__main__":
 	import unittest

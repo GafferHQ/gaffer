@@ -54,7 +54,7 @@ enum TypeId
 	ArnoldMeshLightTypeId = 110908,
 	ArnoldAOVShaderTypeId = 110909,
 
-	LastTypeId = 110949
+	LastTypeId = 110924
 };
 
 } // namespace GafferArnold

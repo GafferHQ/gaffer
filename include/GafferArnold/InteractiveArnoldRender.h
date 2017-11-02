@@ -37,14 +37,14 @@
 #ifndef GAFFERARNOLD_INTERACTIVEARNOLDRENDER_H
 #define GAFFERARNOLD_INTERACTIVEARNOLDRENDER_H
 
-#include "GafferScene/Preview/InteractiveRender.h"
+#include "GafferScene/InteractiveRender.h"
 
 #include "GafferArnold/TypeIds.h"
 
 namespace GafferArnold
 {
 
-class InteractiveArnoldRender : public GafferScene::Preview::InteractiveRender
+class InteractiveArnoldRender : public GafferScene::InteractiveRender
 {
 
 	public :
@@ -52,7 +52,7 @@ class InteractiveArnoldRender : public GafferScene::Preview::InteractiveRender
 		InteractiveArnoldRender( const std::string &name=defaultName<InteractiveArnoldRender>() );
 		~InteractiveArnoldRender() override;
 
-		IE_CORE_DECLARERUNTIMETYPEDEXTENSION( GafferArnold::InteractiveArnoldRender, InteractiveArnoldRenderTypeId, GafferScene::Preview::InteractiveRender );
+		IE_CORE_DECLARERUNTIMETYPEDEXTENSION( GafferArnold::InteractiveArnoldRender, InteractiveArnoldRenderTypeId, GafferScene::InteractiveRender );
 
 		/// Utility to call AiUniverseCacheFlush() and
 		/// restart any running sessions.

@@ -41,6 +41,8 @@
 
 #include "GafferImage/Display.h"
 
+#include "GafferScene/InteractiveRender.h"
+
 #include "GafferImageUI/ImageView.h"
 
 #include "GafferSceneUI/TypeIds.h"
@@ -73,7 +75,7 @@ class ShaderView : public GafferImageUI::ImageView
 
 		void setContext( Gaffer::ContextPtr context ) override;
 
-		typedef std::function<Gaffer::NodePtr ()> RendererCreator;
+		typedef std::function<GafferScene::InteractiveRenderPtr ()> RendererCreator;
 		static void registerRenderer( const std::string &shaderPrefix, RendererCreator rendererCreator );
 
 		typedef std::function<Gaffer::NodePtr ()> SceneCreator;
@@ -109,7 +111,7 @@ class ShaderView : public GafferImageUI::ImageView
 
 		boost::signals::scoped_connection m_idleConnection;
 
-		Gaffer::NodePtr m_renderer;
+		GafferScene::InteractiveRenderPtr m_renderer;
 		std::string m_rendererShaderPrefix;
 
 		Scenes m_scenes;

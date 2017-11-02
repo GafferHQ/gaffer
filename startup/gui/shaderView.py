@@ -61,12 +61,6 @@ with IECore.IgnoredExceptions( ImportError ) :
 
 with IECore.IgnoredExceptions( ImportError ) :
 
-	import GafferRenderMan
-	GafferSceneUI.ShaderView.registerRenderer( "ri", GafferRenderMan.InteractiveRenderManRender )
-	GafferSceneUI.ShaderView.registerScene( "ri", "Default", GafferRenderMan.RenderManShaderBall )
-
-with IECore.IgnoredExceptions( ImportError ) :
-
 	import GafferArnold
 	GafferSceneUI.ShaderView.registerRenderer( "ai", GafferArnold.InteractiveArnoldRender )
 

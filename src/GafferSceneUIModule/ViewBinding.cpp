@@ -120,6 +120,7 @@ void frame( SceneView &view, PathMatcher &filter, Imath::V3f &direction )
 namespace
 {
 
+template<typename T>
 struct CreatorWrapper
 {
 
@@ -128,10 +129,10 @@ struct CreatorWrapper
 	{
 	}
 
-	NodePtr operator()()
+	typename T::Ptr operator()()
 	{
 		ScopedGILLock gilLock;
-		NodePtr result = extract<NodePtr>( m_fn() );
+		typename T::Ptr result = extract<typename T::Ptr>( m_fn() );
 		return result;
 	}
 
@@ -182,12 +183,12 @@ struct ReferenceCreator
 
 void registerRenderer( const std::string &shaderPrefix, object creator )
 {
-	ShaderView::registerRenderer( shaderPrefix, CreatorWrapper( creator ) );
+	ShaderView::registerRenderer( shaderPrefix, CreatorWrapper<InteractiveRender>( creator ) );
 }
 
 void registerScene( const std::string &shaderPrefix, const std::string &name, object creator )
 {
-	ShaderView::registerScene( shaderPrefix, name, CreatorWrapper( creator ) );
+	ShaderView::registerScene( shaderPrefix, name, CreatorWrapper<Node>( creator ) );
 }
 
 void registerReferenceScene( const std::string &shaderPrefix, const std::string &name, const std::string &referenceFileName )

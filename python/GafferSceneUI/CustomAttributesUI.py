@@ -49,10 +49,11 @@ Gaffer.Metadata.registerNode(
 	"description",
 	"""
 	Applies arbitrary user-defined attributes to locations in the scene. Note
-	that for most common cases the StandardAttributes, OpenGLAttributes, RenderManAttributes,
-	ArnoldAttributes and AppleseedAttributes nodes should be used in preference - they provide predefined
-	sets of attributes with customised user interfaces. The CustomAttributes node is of most use when
-	needing to set a custom attribute not supported by the specialised nodes.
+	that for most common cases the StandardAttributes or renderer-specific
+	attributes nodes should be preferred, as they provide predefined sets of
+	attributes with customised user interfaces. The CustomAttributes node is
+	of most use when needing to set an attribute not supported by the
+	specialised nodes.
 	""",
 
 	plugs = {

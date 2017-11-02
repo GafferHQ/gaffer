@@ -33,11 +33,7 @@ Gaffer is shipped with the open source Appleseed renderer, ready to use with no 
 
 ### 3delight
 
-- Ensure `<3DELIGHT_INSTALL_PATH>/bin` is in your `$PATH`.
-- Set the `$DELIGHT` environment variable to point to `<3DELIGHT_INSTALL_PATH>`.
-- Add `<3DELIGHT_INSTALL_PATH>/shaders` to the `$DL_SHADERS_PATH` environment variable.
-- Add `<3DELIGHT_INSTALL_PATH>/displays` to the `$DL_DISPLAYS_PATH` environment variable.
-- Add `<3DELIGHT_INSTALL_PATH>/lib` to the `$LD_LIBRARY_PATH` environment variable.
+- Ensure that `$DELIGHT` points to the location where 3delight is installed.
 
 ### Arnold
 

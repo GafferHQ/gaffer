@@ -142,6 +142,48 @@ with IECore.IgnoredExceptions( ImportError ) :
 			)
 		)
 
+# Add standard AOVs as they are defined in the 3Delight shaders
+
+with IECore.IgnoredExceptions( ImportError ) :
+
+	# If 3Delight isn't available for any reason, this will fail
+	# and we won't add any unnecessary output definitions.
+	import GafferDelight
+
+	for aov in [
+		"diffuse",
+		"subsurface",
+		"reflection",
+		"refraction",
+		"incandescence",
+	] :
+
+		label = aov.title()
+
+		GafferScene.Outputs.registerOutput(
+			"Interactive/3Delight/" + label,
+			IECore.Display(
+				aov,
+				"ieDisplay",
+				"color " + aov,
+				{
+					"driverType" : "ClientDisplayDriver",
+					"displayHost" : "localhost",
+					"displayPort" : "${image:catalogue:port}",
+					"remoteDisplayType" : "GafferImage::GafferDisplayDriver",
+				}
+			)
+		)
+
+		GafferScene.Outputs.registerOutput(
+			"Batch/3Delight/" + label,
+			IECore.Display(
+				"${project:rootDirectory}/renders/${script:name}/%s/%s.####.exr" % ( aov, aov ),
+				"exr",
+				"color " + aov,
+			)
+		)
+
 # Publish the Catalogue port number as a context variable, so we can refer
 # to it easily in output definitions.
 

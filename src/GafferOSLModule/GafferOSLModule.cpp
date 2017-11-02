@@ -54,6 +54,7 @@
 #include "GafferOSL/OSLObject.h"
 #include "GafferOSL/OSLCode.h"
 #include "GafferOSL/ClosurePlug.h"
+#include "GafferOSL/OSLLight.h"
 
 using namespace boost::python;
 using namespace GafferBindings;
@@ -139,6 +140,12 @@ IECore::CompoundDataPtr shadeWrapper( ShadingEngine &shadingEngine, const IECore
 	return shadingEngine.shade( points, transforms );
 }
 
+void loadShader( OSLLight &l, const std::string &shaderName )
+{
+	IECorePython::ScopedGILRelease gilRelease;
+	l.loadShader( shaderName );
+}
+
 } // namespace
 
 BOOST_PYTHON_MODULE( _GafferOSL )
@@ -191,16 +198,29 @@ BOOST_PYTHON_MODULE( _GafferOSL )
 		;
 	}
 
-	scope s = GafferBindings::DependencyNodeClass<OSLCode>()
-		.def( "source", &oslCodeSource, ( arg_( "shaderName" ) = "" ) )
-		.def( "shaderCompiledSignal", &OSLCode::shaderCompiledSignal, return_internal_reference<1>() )
-	;
+	{
+		scope s = GafferBindings::DependencyNodeClass<OSLCode>()
+			.def( "source", &oslCodeSource, ( arg_( "shaderName" ) = "" ) )
+			.def( "shaderCompiledSignal", &OSLCode::shaderCompiledSignal, return_internal_reference<1>() )
+		;
 
-	// Use a default serialiser for OSLCode, so that we don't get a loadShader call like every other
-	// kind of shader
-	GafferBindings::Serialisation::registerSerialiser( OSLCode::staticTypeId(), new GafferBindings::NodeSerialiser() );
+		SignalClass<OSLCode::ShaderCompiledSignal>( "ShaderCompiledSignal" );
 
+		// Use a default serialiser for OSLCode, so that we don't get a
+		// loadShader call like every other kind of shader.
+		GafferBindings::Serialisation::registerSerialiser( OSLCode::staticTypeId(), new GafferBindings::NodeSerialiser() );
+	}
 
-	SignalClass<OSLCode::ShaderCompiledSignal>( "ShaderCompiledSignal" );
+	{
+		scope s = GafferBindings::DependencyNodeClass<OSLLight>()
+			.def( "loadShader", &loadShader )
+		;
+
+		enum_<OSLLight::Shape>( "Shape" )
+			.value( "Disk", OSLLight::Disk )
+			.value( "Sphere", OSLLight::Sphere )
+			.value( "Geometry", OSLLight::Geometry )
+		;
+	}
 
 }

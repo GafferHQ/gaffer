@@ -131,8 +131,9 @@ options.Add(
 )
 
 options.Add(
-	"RMAN_ROOT",
-	"The directory in which your RenderMan renderer is installed. Used to build GafferRenderMan.",
+	"DELIGHT_ROOT",
+	"The directory in which 3delight is installed. Used to build GafferDelight, an NSI-based"
+	"3delight backend.",
 	"",
 )
 
@@ -745,26 +746,6 @@ libraries = {
 
 	"GafferArnoldUITest" : {},
 
-	"GafferRenderMan" : {
-		"envAppends" : {
-			"LIBS" : [ "Gaffer", "GafferScene", "IECoreRI$CORTEX_LIB_SUFFIX" ],
-			"LIBPATH" : [ "$RMAN_ROOT/lib" ],
-		},
-		"pythonEnvAppends" : {
-			"LIBS" : [ "GafferBindings", "GafferScene", "GafferRenderMan" ],
-			"LIBPATH" : [ "$RMAN_ROOT/lib" ],
-		},
-		"requiredOptions" : [ "RMAN_ROOT" ],
-	},
-
-	"GafferRenderManUI" : {},
-
-	"GafferRenderManTest" : {
-		"additionalFiles" : glob.glob( "python/GafferRenderManTest/*/*" ),
-	},
-
-	"GafferRenderManUITest" : {},
-
 	"GafferOSL" : {
 		"envAppends" : {
 			"CPPPATH" : [ "$OSLHOME/include/OSL" ],
@@ -785,6 +766,25 @@ libraries = {
 	},
 
 	"GafferOSLUITest" : {},
+
+	"GafferDelight" : {
+		"envAppends" : {
+			"CPPPATH" : [ "$DELIGHT_ROOT/include" ],
+			"LIBS" : [ "Gaffer", "GafferScene", "GafferDispatch", "3delight" ],
+			"LIBPATH" : [ "$DELIGHT_ROOT/lib" ],
+		},
+		"pythonEnvAppends" : {
+			"LIBS" : [ "GafferBindings", "GafferScene", "GafferDispatch", "GafferDelight" ],
+			"LIBPATH" : [ "$DELIGHT_ROOT/lib" ],
+		},
+		"requiredOptions" : [ "DELIGHT_ROOT" ],
+	},
+
+	"GafferDelightTest" : {},
+
+	"GafferDelightUI" : {},
+
+	"GafferDelightUITest" : {},
 
 	"GafferAppleseed" : {
 		"envAppends" : {
@@ -1141,10 +1141,6 @@ def buildDocs( target, source, env ) :
 		env["ENV"]["PATH"] += ":" + env.subst( "$ARNOLD_ROOT/bin" )
 		env["ENV"]["PYTHONPATH"] += ":" + env.subst( "$ARNOLD_ROOT/python" )
 		env["ENV"][libraryPathEnvVar] += ":" + env.subst( "$ARNOLD_ROOT/bin" )
-
-	if env.subst( "$RMAN_ROOT" ) :
-		env["ENV"]["PATH"] += ":" + env.subst( "$RMAN_ROOT/bin" )
-		env["ENV"][libraryPathEnvVar] += ":" + env.subst( "$RMAN_ROOT/lib" )
 
 	if env.subst( "$APPLESEED_ROOT" ) and env["APPLESEED_ROOT"] != "$BUILD_DIR/appleseed" :
 		env["ENV"]["PATH"] += ":" + env.subst( "$APPLESEED_ROOT/bin" )

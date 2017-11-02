@@ -338,18 +338,7 @@ class Shader::NetworkBuilder
 			{
 				result += "." + outputParameter->relativeName( shaderNode->outPlug() );
 			}
-
-			if( !shaderNode->isInstanceOf( "GafferRenderMan::RenderManShader" ) )
-			{
-				// All our other renderer backends use a "link:" prefix to specify
-				// shader connections, but the legacy RenderMan backend doesn't. In
-				// return for the special case hack here, we get to remove complexity
-				// from the entire shader generation mechanism.
-				/// \todo Write a new RenderMan backend following the usual conventio
-				/// and remove this hack.
-				result = "link:" + result;
-			}
-
+			result = "link:" + result;
 			return result;
 		}
 

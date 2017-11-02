@@ -109,7 +109,11 @@ IECore::ObjectVectorPtr ArnoldLight::computeLight( const Gaffer::Context *contex
 		{
 			/// \todo We should generalise Shader::NetworkBuilder so we can
 			/// use it directly to do the whole of the light generation, instead
-			/// of dealing with input networks manually one by one here.
+			/// of dealing with input networks manually one by one here. Alternatively
+			/// we could take the approach that OSLLight takes, and use an internal
+			/// ArnoldShader to do all the shader loading and network generation.
+			/// This would avoid exposing any Shader internals, and would generalise
+			/// nicely to the other Light subclasses too.
 			IECore::ConstObjectVectorPtr inputNetwork = shader->state();
 			if( inputNetwork->members().empty() )
 			{
