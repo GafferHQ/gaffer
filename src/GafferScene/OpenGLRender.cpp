@@ -47,7 +47,7 @@ using namespace GafferScene;
 IE_CORE_DEFINERUNTIMETYPED( OpenGLRender );
 
 OpenGLRender::OpenGLRender( const std::string &name )
-	:	ExecutableRender( name )
+	:	Render( "OpenGL", name )
 {
 }
 
@@ -55,10 +55,3 @@ OpenGLRender::~OpenGLRender()
 {
 }
 
-IECore::RendererPtr OpenGLRender::createRenderer() const
-{
-	IECoreGL::init( false );
-	IECore::RendererPtr result = new IECoreGL::Renderer();
-	result->setOption( "gl:mode", new IECore::StringData( "immediate" ) );
-	return result;
-}

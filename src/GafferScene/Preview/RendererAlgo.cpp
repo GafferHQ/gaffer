@@ -359,7 +359,7 @@ struct LocationOutput
 
 		void applyTransform( IECoreScenePreview::Renderer::ObjectInterface *objectInterface )
 		{
-			if( !m_transformSamples.size() )
+			if( !m_transformSamples.size() || !objectInterface )
 			{
 				return;
 			}

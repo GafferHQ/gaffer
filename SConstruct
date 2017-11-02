@@ -602,7 +602,7 @@ libraries = {
 
 	"GafferUI" : {
 		"envAppends" : {
-			"LIBS" : [ "Gaffer", "Iex$OPENEXR_LIB_SUFFIX", "IECoreGL$CORTEX_LIB_SUFFIX", "IECoreImage$CORTEX_LIB_SUFFIX", "GLEW$GLEW_LIB_SUFFIX" ],
+			"LIBS" : [ "Gaffer", "Iex$OPENEXR_LIB_SUFFIX", "IECoreGL$CORTEX_LIB_SUFFIX", "IECoreImage$CORTEX_LIB_SUFFIX" ],
 		},
 		"pythonEnvAppends" : {
 			"LIBS" : [ "IECoreImage$CORTEX_LIB_SUFFIX", "IECoreGL$CORTEX_LIB_SUFFIX", "GafferUI", "GafferBindings" ],
@@ -675,7 +675,7 @@ libraries = {
 
 	"GafferSceneUI" : {
 		"envAppends" : {
-			"LIBS" : [ "Gaffer", "GafferUI", "GafferImage", "GafferImageUI", "GafferScene", "Iex$OPENEXR_LIB_SUFFIX", "IECoreGL$CORTEX_LIB_SUFFIX", "IECoreImage$CORTEX_LIB_SUFFIX", "GLEW$GLEW_LIB_SUFFIX" ],
+			"LIBS" : [ "Gaffer", "GafferUI", "GafferImage", "GafferImageUI", "GafferScene", "Iex$OPENEXR_LIB_SUFFIX", "IECoreGL$CORTEX_LIB_SUFFIX", "IECoreImage$CORTEX_LIB_SUFFIX" ],
 		},
 		"pythonEnvAppends" : {
 			"LIBS" : [ "IECoreGL$CORTEX_LIB_SUFFIX", "GafferBindings", "GafferScene", "GafferUI", "GafferImageUI", "GafferSceneUI" ],
@@ -708,7 +708,7 @@ libraries = {
 
 	"GafferImageUI" : {
 		"envAppends" : {
-			"LIBS" : [ "IECoreGL$CORTEX_LIB_SUFFIX", "Gaffer", "GafferImage", "GafferUI", "GLEW$GLEW_LIB_SUFFIX" ],
+			"LIBS" : [ "IECoreGL$CORTEX_LIB_SUFFIX", "Gaffer", "GafferImage", "GafferUI" ],
 		},
 		"pythonEnvAppends" : {
 			"LIBS" : [ "GafferUI", "GafferImage", "GafferImageUI" ],
@@ -869,11 +869,12 @@ libraries = {
 }
 
 # Add on OpenGL libraries to definitions - these vary from platform to platform
-for library in ( "GafferUI", "GafferSceneUI", "GafferImageUI" ) :
+for library in ( "GafferUI", "GafferScene", "GafferSceneUI", "GafferImageUI" ) :
 	if env["PLATFORM"] == "darwin" :
 		libraries[library]["envAppends"].setdefault( "FRAMEWORKS", [] ).append( "OpenGL" )
 	else :
 		libraries[library]["envAppends"]["LIBS"].append( "GL" )
+	libraries[library]["envAppends"]["LIBS"].append( "GLEW$GLEW_LIB_SUFFIX" )
 
 # Add on Qt libraries to definitions - these vary from platform to platform
 

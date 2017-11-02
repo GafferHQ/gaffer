@@ -45,6 +45,7 @@
 #include "GafferScene/OpenGLRender.h"
 #include "GafferScene/InteractiveRender.h"
 #include "GafferScene/SceneProcedural.h"
+#include "GafferScene/ExecutableRender.h"
 #include "GafferScene/Preview/Render.h"
 #include "GafferScene/Preview/InteractiveRender.h"
 #include "GafferScene/Private/IECoreScenePreview/Renderer.h"
@@ -226,8 +227,6 @@ void GafferSceneModule::bindRender()
 
 	TaskNodeClass<ExecutableRender, ExecutableRenderWrapper>();
 
-	TaskNodeClass<OpenGLRender>();
-
 	{
 		scope s = GafferBindings::NodeClass<InteractiveRender>()
 			.def( "getContext", &interactiveRenderGetContext )
@@ -328,5 +327,7 @@ void GafferSceneModule::bindRender()
 		;
 
 	}
+
+	TaskNodeClass<OpenGLRender>();
 
 }
