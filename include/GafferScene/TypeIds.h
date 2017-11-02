@@ -90,7 +90,7 @@ enum TypeId
 	FilteredSceneProcessorTypeId = 110545,
 	PruneTypeId = 110546,
 	FreezeTransformTypeId = 110547,
-	ExecutableRenderTypeId = 110548,
+	ObsoleteExecutableRenderTypeId = 110548, // Obsolete - available for reuse
 	OpenGLRenderTypeId = 110549,
 	InteractiveRenderTypeId = 110550,
 	CubeTypeId = 110551,

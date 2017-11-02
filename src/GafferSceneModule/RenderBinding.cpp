@@ -45,7 +45,6 @@
 #include "GafferScene/OpenGLRender.h"
 #include "GafferScene/InteractiveRender.h"
 #include "GafferScene/SceneProcedural.h"
-#include "GafferScene/ExecutableRender.h"
 #include "GafferScene/Preview/Render.h"
 #include "GafferScene/Private/IECoreScenePreview/Renderer.h"
 #include "GafferScene/Private/IECoreScenePreview/Procedural.h"
@@ -64,47 +63,6 @@ using namespace GafferScene;
 
 namespace
 {
-
-class ExecutableRenderWrapper : public TaskNodeWrapper<ExecutableRender>
-{
-
-	public :
-
-		ExecutableRenderWrapper( PyObject *self, const std::string &name )
-			:	TaskNodeWrapper<ExecutableRender>( self, name )
-		{
-		}
-
-		IECore::RendererPtr createRenderer() const override
-		{
-			if( this->isSubclassed() )
-			{
-				IECorePython::ScopedGILLock gilLock;
-				boost::python::object f = this->methodOverride( "_createRenderer" );
-				if( f )
-				{
-					return extract<IECore::RendererPtr>( f() );
-				}
-			}
-			throw IECore::Exception( "No _createRenderer method defined in Python." );
-		}
-
-		void outputWorldProcedural( const ScenePlug *scene, IECore::Renderer *renderer ) const override
-		{
-			if( this->isSubclassed() )
-			{
-				IECorePython::ScopedGILLock gilLock;
-				boost::python::object f = this->methodOverride( "_outputWorldProcedural" );
-				if( f )
-				{
-					f( ScenePlugPtr( const_cast<ScenePlug *>( scene ) ), IECore::RendererPtr( renderer ) );
-					return;
-				}
-			}
-			return ExecutableRender::outputWorldProcedural( scene, renderer );
-		}
-
-};
 
 ContextPtr interactiveRenderGetContext( InteractiveRender &r )
 {
@@ -220,8 +178,6 @@ void GafferSceneModule::bindRender()
 	;
 
 	SignalClass<SceneProcedural::AllRenderedSignal>( "AllRenderedSignal" );
-
-	TaskNodeClass<ExecutableRender, ExecutableRenderWrapper>();
 
 	{
 		scope s = GafferBindings::NodeClass<InteractiveRender>()
