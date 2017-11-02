@@ -124,7 +124,8 @@ class StandardStyle : public Style
 		static int g_borderParameter;
 		static int g_borderRadiusParameter;
 		static int g_borderWidthParameter;
-		static int g_edgeAntiAliasingParameter;
+		static float g_xAntiAliasingParameter;
+		static float g_yAntiAliasingParameter;
 		static int g_textureParameter;
 		static int g_textureTypeParameter;
 		static int g_isCurveParameter;

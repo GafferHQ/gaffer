@@ -495,7 +495,8 @@ void StandardStyle::renderText( TextType textType, const std::string &text, Stat
 
 	glUniform1i( g_isCurveParameter, 0 );
 	glUniform1i( g_borderParameter, 0 );
-	glUniform1i( g_edgeAntiAliasingParameter, 0 );
+	glUniform1f( g_xAntiAliasingParameter, 0 );
+	glUniform1f( g_yAntiAliasingParameter, 0 );
 	glUniform1i( g_textureParameter, 0 );
 	/// \todo IECore is currently providing sRGB data in IECore::Font::image() and therefore
 	/// in IECoreGL::Font::texture(). Either we should change image() to return linear data,
@@ -587,7 +588,8 @@ void StandardStyle::renderNodeFrame( const Imath::Box2f &contents, float borderW
 	glUniform1i( g_borderParameter, 1 );
 	glUniform2f( g_borderRadiusParameter, cornerSizes.x, cornerSizes.y );
 	glUniform1f( g_borderWidthParameter, 0.15f / borderWidth );
-	glUniform1i( g_edgeAntiAliasingParameter, 0 );
+	glUniform1f( g_xAntiAliasingParameter, 0 );
+	glUniform1f( g_yAntiAliasingParameter, 0 );
 	glUniform1i( g_textureTypeParameter, 0 );
 
 	glColor( colorForState( RaisedColor, state, userColor ) );
@@ -613,7 +615,8 @@ void StandardStyle::renderNodule( float radius, State state, const Imath::Color3
 	glUniform1i( g_borderParameter, 1 );
 	glUniform2f( g_borderRadiusParameter, 0.5f, 0.5f );
 	glUniform1f( g_borderWidthParameter, 0.2f );
-	glUniform1i( g_edgeAntiAliasingParameter, 0 );
+	glUniform1f( g_xAntiAliasingParameter, 0 );
+	glUniform1f( g_yAntiAliasingParameter, 0 );
 	glUniform1i( g_textureTypeParameter, 0 );
 
 	glColor( colorForState( RaisedColor, state, userColor ) );
@@ -636,7 +639,8 @@ void StandardStyle::renderConnection( const Imath::V3f &srcPosition, const Imath
 {
 	glUniform1i( g_isCurveParameter, 1 );
 	glUniform1i( g_borderParameter, 0 );
-	glUniform1i( g_edgeAntiAliasingParameter, 1 );
+	glUniform1f( g_xAntiAliasingParameter, 0.2 );
+	glUniform1f( g_yAntiAliasingParameter, 0.0 );
 	glUniform1i( g_textureTypeParameter, 0 );
 	glUniform1f( g_lineWidthParameter, 0.5 );
 
@@ -690,7 +694,8 @@ void StandardStyle::renderSolidRectangle( const Imath::Box2f &box ) const
 {
 	glUniform1i( g_isCurveParameter, 0 );
 	glUniform1i( g_borderParameter, 0 );
-	glUniform1i( g_edgeAntiAliasingParameter, 0 );
+	glUniform1f( g_xAntiAliasingParameter, 0 );
+	glUniform1f( g_yAntiAliasingParameter, 0 );
 	glUniform1i( g_textureTypeParameter, 0 );
 
 	glBegin( GL_QUADS );
@@ -707,7 +712,8 @@ void StandardStyle::renderRectangle( const Imath::Box2f &box ) const
 {
 	glUniform1i( g_isCurveParameter, 0 );
 	glUniform1i( g_borderParameter, 0 );
-	glUniform1i( g_edgeAntiAliasingParameter, 0 );
+	glUniform1f( g_xAntiAliasingParameter, 0 );
+	glUniform1f( g_yAntiAliasingParameter, 0 );
 	glUniform1i( g_textureTypeParameter, 0 );
 
 	glBegin( GL_LINE_LOOP );
@@ -741,7 +747,8 @@ void StandardStyle::renderSelectionBox( const Imath::Box2f &box ) const
 	glUniform1i( g_isCurveParameter, 0 );
 	glUniform1i( g_borderParameter, 1 );
 	glUniform2f( g_borderRadiusParameter, cornerSizes.x, cornerSizes.y );
-	glUniform1i( g_edgeAntiAliasingParameter, 0 );
+	glUniform1f( g_xAntiAliasingParameter, 0 );
+	glUniform1f( g_yAntiAliasingParameter, 0 );
 	glUniform1i( g_textureTypeParameter, 0 );
 
 	Color4f c(
@@ -774,7 +781,8 @@ void StandardStyle::renderHorizontalRule( const Imath::V2f &center, float length
 
 	glUniform1i( g_isCurveParameter, 0 );
 	glUniform1i( g_borderParameter, 0 );
-	glUniform1i( g_edgeAntiAliasingParameter, 0 );
+	glUniform1f( g_xAntiAliasingParameter, 0 );
+	glUniform1f( g_yAntiAliasingParameter, 0 );
 	glUniform1i( g_textureTypeParameter, 0 );
 
 	glBegin( GL_LINES );
@@ -827,7 +835,8 @@ void StandardStyle::renderImage( const Imath::Box2f &box, const IECoreGL::Textur
 
 	glUniform1i( g_isCurveParameter, 0 );
 	glUniform1i( g_borderParameter, 0 );
-	glUniform1i( g_edgeAntiAliasingParameter, 0 );
+	glUniform1f( g_xAntiAliasingParameter, 0 );
+	glUniform1f( g_yAntiAliasingParameter, 0 );
 	glUniform1i( g_textureParameter, 0 );
 	glUniform1i( g_textureTypeParameter, 1 );
 
@@ -853,7 +862,8 @@ void StandardStyle::renderLine( const IECore::LineSegment3f &line ) const
 {
 	glUniform1i( g_isCurveParameter, 1 );
 	glUniform1i( g_borderParameter, 0 );
-	glUniform1i( g_edgeAntiAliasingParameter, 1 );
+	glUniform1f( g_xAntiAliasingParameter, 0.2 );
+	glUniform1f( g_yAntiAliasingParameter, 0.0 );
 	glUniform1i( g_textureTypeParameter, 0 );
 	glUniform1f( g_lineWidthParameter, 0.5 );
 
@@ -1049,10 +1059,11 @@ static const std::string &fragmentSource()
 		"uniform vec2 borderRadius;"
 		"uniform float borderWidth;"
 
-		"uniform bool edgeAntiAliasing;"
-
 		"uniform int textureType;"
-		"uniform sampler2D texture;\n"
+		"uniform sampler2D texture;"
+
+		"uniform float xAntiAliasing;"
+		"uniform float yAntiAliasing;\n"
 
 		"#if __VERSION__ >= 330\n"
 
@@ -1081,9 +1092,14 @@ static const std::string &fragmentSource()
 		"		OUTCOLOR.a *= ( 1.0 - ieFilteredStep( 1.0, r ) );"
 		"	}"
 
-		"	if( edgeAntiAliasing )"
+		"	if( xAntiAliasing > 0.0 )"
 		"	{"
-		"		OUTCOLOR.a *= ieFilteredPulse( 0.2, 0.8, gl_TexCoord[0].x );"
+		"		OUTCOLOR.a *= ieFilteredPulse( xAntiAliasing, 1.0 - xAntiAliasing, gl_TexCoord[0].x);"
+		"	}"
+
+		"	if( yAntiAliasing > 0.0 )"
+		"	{"
+		"		OUTCOLOR.a *= ieFilteredPulse( yAntiAliasing, 1.0 - yAntiAliasing, gl_TexCoord[0].y);"
 		"	}"
 
 		/// \todo Deal with all colourspace nonsense outside of the shader. Ideally the shader would accept only linear"
@@ -1118,7 +1134,8 @@ static const std::string &fragmentSource()
 int StandardStyle::g_borderParameter;
 int StandardStyle::g_borderRadiusParameter;
 int StandardStyle::g_borderWidthParameter;
-int StandardStyle::g_edgeAntiAliasingParameter;
+float StandardStyle::g_xAntiAliasingParameter;
+float StandardStyle::g_yAntiAliasingParameter;
 int StandardStyle::g_textureParameter;
 int StandardStyle::g_textureTypeParameter;
 int StandardStyle::g_isCurveParameter;
@@ -1140,7 +1157,8 @@ IECoreGL::Shader *StandardStyle::shader()
 		g_borderParameter = g_shader->uniformParameter( "border" )->location;
 		g_borderRadiusParameter = g_shader->uniformParameter( "borderRadius" )->location;
 		g_borderWidthParameter = g_shader->uniformParameter( "borderWidth" )->location;
-		g_edgeAntiAliasingParameter = g_shader->uniformParameter( "edgeAntiAliasing" )->location;
+		g_xAntiAliasingParameter = g_shader->uniformParameter( "xAntiAliasing" )->location;
+		g_yAntiAliasingParameter = g_shader->uniformParameter( "yAntiAliasing" )->location;
 		g_textureParameter = g_shader->uniformParameter( "texture" )->location;
 		g_textureTypeParameter = g_shader->uniformParameter( "textureType" )->location;
 		g_isCurveParameter = g_shader->uniformParameter( "isCurve" )->location;
