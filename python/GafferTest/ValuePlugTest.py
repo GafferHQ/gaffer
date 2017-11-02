@@ -626,6 +626,19 @@ class ValuePlugTest( GafferTest.TestCase ) :
 
 		self.failUnless( n["p"] is p )
 
+	def testNullInputPropagatesToChildren( self ) :
+
+		n = Gaffer.Node()
+		n["user"]["c"] = Gaffer.ValuePlug()
+		n["user"]["c"]["o"] = Gaffer.IntPlug()
+		n["user"]["c"]["i"] = Gaffer.IntPlug()
+
+		n["user"]["c"]["i"].setInput( n["user"]["c"]["o"] )
+		self.assertTrue( n["user"]["c"]["i"].getInput().isSame( n["user"]["c"]["o"] ) )
+
+		n["user"]["c"].setInput( None )
+		self.assertTrue( n["user"]["c"]["i"].getInput() is None )
+
 	def setUp( self ) :
 
 		GafferTest.TestCase.setUp( self )

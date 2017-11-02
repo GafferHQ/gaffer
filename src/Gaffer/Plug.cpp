@@ -56,7 +56,7 @@ using namespace boost;
 using namespace Gaffer;
 
 //////////////////////////////////////////////////////////////////////////
-// ScopedAssignment utility class
+// Internal utilities
 //////////////////////////////////////////////////////////////////////////
 
 namespace
@@ -86,6 +86,18 @@ class ScopedAssignment : boost::noncopyable
 		T m_originalValue;
 
 };
+
+bool allDescendantInputsAreNull( const Plug *plug )
+{
+	for( RecursivePlugIterator it( plug ); !it.done(); ++it )
+	{
+		if( (*it)->getInput() )
+		{
+			return false;
+		}
+	}
+	return true;
+}
 
 } // namespace
 
@@ -364,6 +376,11 @@ bool Plug::acceptsInputInternal( const Plug *input ) const
 	return true;
 }
 
+/// \todo Make this non-virtual - it is too error prone to allow derived classes to
+/// modify the mechanics of making connections. We could add a protected
+/// `virtual inputChanging()` method that ValuePlug uses to do what it currently does
+/// in `setInput()`, and we could rewrite ArrayPlug so that it only adds new plugs on
+/// explicit request, not automatically in `plugInputChanged()`.
 void Plug::setInput( PlugPtr input )
 {
 	setInput( input, /* setChildInputs = */ true, /* updateParentInput = */ true );
@@ -373,7 +390,21 @@ void Plug::setInput( PlugPtr input, bool setChildInputs, bool updateParentInput 
 {
 	if( input.get()==m_input )
 	{
-		return;
+		if(
+			// If the current input is non-null, we know that our
+			// children have the appropriate corresponding
+			// inputs too, so can exit early.
+			m_input ||
+			// But if the input is null, our children might
+			// still have inputs of their own that we're meant
+			// to be clearing, so we need to be careful about
+			// when we take the shortcut.
+			!setChildInputs ||
+			allDescendantInputsAreNull( this )
+		)
+		{
+			return;
+		}
 	}
 
 	if( input && !acceptsInput( input.get() ) )
