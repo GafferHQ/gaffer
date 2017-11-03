@@ -36,8 +36,11 @@
 
 #include "IECore/MurmurHash.h"
 
+#include "Gaffer/ScriptNode.h"
 #include "Gaffer/SubGraph.h"
 #include "Gaffer/Dot.h"
+
+#include "GafferScene/ShaderSwitch.h"
 
 #include "GafferOSL/ClosurePlug.h"
 
@@ -82,11 +85,30 @@ bool ClosurePlug::acceptsInput( const Gaffer::Plug *input ) const
 		return true;
 	}
 
-	// We only accept connections from other ClosurePlugs
+	// We only want to accept connections from other
+	// ClosurePlugs.
 	if( runTimeCast<const ClosurePlug>( input ) )
 	{
 		return true;
 	}
 
-	return false;
+	// But we must also provide backwards compatibility
+	// to a time when closure plugs didn't exist, and
+	// regular Plugs were used instead. These may have
+	// been promoted onto Boxes and passed through Dots,
+	// so we must accept such connections to keep old
+	// files loading. We only need to consider this when
+	// a script is currently being loaded.
+	const ScriptNode *script = ancestor<ScriptNode>();
+	if( !script || !script->isExecuting() )
+	{
+		return false;
+	}
+
+	const Node *node = input->node();
+	return
+		runTimeCast<const SubGraph>( node ) ||
+		runTimeCast<const GafferScene::ShaderSwitch>( node ) ||
+		runTimeCast<const Dot>( node )
+	;
 }

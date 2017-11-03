@@ -954,5 +954,16 @@ class OSLShaderTest( GafferOSLTest.OSLTestCase ) :
 
 		self.assertEqual( shader[0].name.split('/')[-1], "red")
 
+	def testLoadClosureNetworkFromVersion0_41( self ) :
+
+		script = Gaffer.ScriptNode()
+		script["fileName"].setValue( os.path.dirname( __file__ ) + "/scripts/networkWithDotAndBoxVersion-0.41.0.0.gfr" )
+		script.load()
+
+		self.assertTrue( script["OutObject"]["parameters"]["in0"].getInput().isSame( script["Dot"]["out"] ) )
+		self.assertTrue( script["OutObject"]["parameters"]["in0"].source().isSame( script["OutFloat"]["out"]["primitiveVariable"] ) )
+		self.assertTrue( script["OutObject"]["parameters"]["in1"].getInput().isSame( script["Box"]["out_primitiveVariable"] ) )
+		self.assertTrue( script["OutObject"]["parameters"]["in1"].source().isSame( script["Box"]["OutFloat"]["out"]["primitiveVariable"] ) )
+
 if __name__ == "__main__":
 	unittest.main()
