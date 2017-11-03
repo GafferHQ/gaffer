@@ -164,19 +164,27 @@ class OSLObjectTest( GafferOSLTest.OSLTestCase ) :
 
 	def testAcceptsShaderSwitch( self ) :
 
-		object = GafferOSL.OSLObject()
-		switch = GafferScene.ShaderSwitch()
+		script = Gaffer.ScriptNode()
+		script["object"] = GafferOSL.OSLObject()
+		script["switch"] = GafferScene.ShaderSwitch()
 
-		self.assertTrue( object["shader"].acceptsInput( switch["out"] ) )
+		# We're testing a backwards compatibility special case that is
+		# only enabled when loading a script, hence the use of `execute()`.
+		script.execute( """script["object"]["shader"].setInput( script["switch"]["out"] )""" )
+		self.assertTrue( script["object"]["shader"].getInput().isSame( script["switch"]["out"] ) )
 
 	def testAcceptsDot( self ) :
 
-		object = GafferOSL.OSLObject()
-		switch = GafferScene.ShaderSwitch()
-		dot = Gaffer.Dot()
-		dot.setup( switch["out"] )
+		script = Gaffer.ScriptNode()
+		script["object"] = GafferOSL.OSLObject()
+		script["switch"] = GafferScene.ShaderSwitch()
+		script["dot"] = Gaffer.Dot()
+		script["dot"].setup( script["switch"]["out"] )
 
-		self.assertTrue( object["shader"].acceptsInput( dot["out"] ) )
+		# We're testing a backwards compatibility special case that is
+		# only enabled when loading a script, hence the use of `execute()`.
+		script.execute( """script["object"]["shader"].setInput( script["dot"]["out"] )""" )
+		self.assertTrue( script["object"]["shader"].getInput().isSame( script["dot"]["out"] ) )
 
 	def testPrimitiveVariableWithZeroValue( self ) :
 
