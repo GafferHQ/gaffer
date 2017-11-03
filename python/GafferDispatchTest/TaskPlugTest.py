@@ -1,6 +1,6 @@
 ##########################################################################
 #
-#  Copyright (c) 2015, Image Engine Design Inc. All rights reserved.
+#  Copyright (c) 2017, Image Engine Design Inc. All rights reserved.
 #
 #  Redistribution and use in source and binary forms, with or without
 #  modification, are permitted provided that the following conditions are
@@ -34,27 +34,33 @@
 #
 ##########################################################################
 
-# Utility classes
+import Gaffer
+import GafferTest
+import GafferDispatch
 
-from TextWriter import TextWriter
-from LoggingTaskNode import LoggingTaskNode
-from DebugDispatcher import DebugDispatcher
-from ErroringTaskNode import ErroringTaskNode
+class TaskPlugTest( GafferTest.TestCase ) :
 
-# Test cases
+	def testAcceptsInput( self ) :
 
-from DispatcherTest import DispatcherTest
-from LocalDispatcherTest import LocalDispatcherTest
-from TaskNodeTest import TaskNodeTest
-from TaskSwitchTest import TaskSwitchTest
-from PythonCommandTest import PythonCommandTest
-from SystemCommandTest import SystemCommandTest
-from TaskListTest import TaskListTest
-from WedgeTest import WedgeTest
-from TaskContextVariablesTest import TaskContextVariablesTest
-from ExecuteApplicationTest import ExecuteApplicationTest
-from TaskPlugTest import TaskPlugTest
+		taskPlug1 = GafferDispatch.TaskNode.TaskPlug()
+		taskPlug2 = GafferDispatch.TaskNode.TaskPlug()
+
+		# We want to accept inputs from TaskPlugs.
+		self.assertTrue( taskPlug1.acceptsInput( taskPlug2 ) )
+
+		# But not from regular plugs.
+		plug = Gaffer.Plug()
+		self.assertFalse( taskPlug1.acceptsInput( plug ) )
+
+		# Even if they are on a box.
+		box = Gaffer.Box()
+		box["p"] = Gaffer.Plug()
+		self.assertFalse( taskPlug1.acceptsInput( box["p"] ) )
+
+		# Or a dot.
+		dot = Gaffer.Dot()
+		dot.setup( Gaffer.Plug() )
+		self.assertFalse( taskPlug1.acceptsInput( dot["out"] ) )
 
 if __name__ == "__main__":
-	import unittest
 	unittest.main()
