@@ -37,6 +37,7 @@
 #include "Gaffer/Dot.h"
 #include "Gaffer/SubGraph.h"
 #include "Gaffer/ArrayPlug.h"
+#include "Gaffer/ScriptNode.h"
 
 #include "GafferScene/FilterPlug.h"
 #include "GafferScene/Filter.h"
@@ -86,7 +87,12 @@ bool FilterPlug::acceptsInput( const Gaffer::Plug *input ) const
 	// routed via Dots, or used within ArrayPlugs. In each case, dynamic
 	// IntPlugs will have been created and serialised into the script, so
 	// we must accept them.
-	/// \todo Remove this compatibility for version 1.0.0.0?
+	const ScriptNode *script = ancestor<ScriptNode>();
+	if( !script || !script->isExecuting() )
+	{
+		return false;
+	}
+
 	if( runTimeCast<const IntPlug>( input ) )
 	{
 		const Plug *p = input->source<Plug>();
