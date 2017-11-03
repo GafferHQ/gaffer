@@ -117,6 +117,14 @@ bool tolerantExec( const char *pythonScript, boost::python::object globals, boos
 		arena.get()
 	);
 
+	if( !mod )
+	{
+		int lineNumber = 0;
+		std::string message = IECorePython::ExceptionAlgo::formatPythonException( /* withTraceback = */ false, &lineNumber );
+		IECore::msg( IECore::Msg::Error, formattedErrorContext( lineNumber, context ), message );
+		return false;
+	}
+
 	assert( mod->kind == Module_kind );
 
 	// Loop over the top-level statements in the module body,
