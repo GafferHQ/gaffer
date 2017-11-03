@@ -129,6 +129,7 @@ from DeletePointsTest import DeletePointsTest
 from CollectScenesTest import CollectScenesTest
 from CapsuleTest import CapsuleTest
 from EncapsulateTest import EncapsulateTest
+from FilterPlugTest import FilterPlugTest
 
 if __name__ == "__main__":
 	import unittest
