@@ -38,6 +38,7 @@
 
 #include "Gaffer/SubGraph.h"
 #include "Gaffer/Dot.h"
+#include "Gaffer/ScriptNode.h"
 
 #include "GafferScene/Shader.h"
 #include "GafferScene/ShaderPlug.h"
@@ -109,6 +110,12 @@ bool ShaderPlug::acceptsInput( const Gaffer::Plug *input ) const
 	// connections, and rely on the checks above being
 	// called when the intermediate plug receives a
 	// connection.
+
+	const ScriptNode *script = ancestor<ScriptNode>();
+	if( !script || !script->isExecuting() )
+	{
+		return false;
+	}
 
 	return
 		runTimeCast<const SubGraph>( sourceNode ) ||
