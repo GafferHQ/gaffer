@@ -1363,5 +1363,15 @@ class ScriptNodeTest( GafferTest.TestCase ) :
 		self.assertTrue( "iAmAnError" in mh.messages[0].message )
 		self.assertEqual( len( script.children( Gaffer.Node ) ), 1 )
 
+	def testErrorTolerantExecutionWithSyntaxError( self ) :
+
+		script = Gaffer.ScriptNode()
+
+		with IECore.CapturingMessageHandler() as mh :
+			script.execute( "import", continueOnError = True )
+
+		self.assertEqual( len( mh.messages ), 1 )
+		self.assertIn( "SyntaxError: invalid syntax", mh.messages[0].message )
+
 if __name__ == "__main__":
 	unittest.main()
