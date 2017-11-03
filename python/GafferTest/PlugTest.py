@@ -854,5 +854,45 @@ class PlugTest( GafferTest.TestCase ) :
 		s3.execute( s.serialise() )
 		self.assertFalse( "a" in s3["n"]["user"] )
 
+	def testNullInputPropagatesToChildren( self ) :
+
+		n = Gaffer.Node()
+		n["user"]["c"] = Gaffer.Plug()
+		n["user"]["c"]["o"] = Gaffer.IntPlug()
+		n["user"]["c"]["i"] = Gaffer.IntPlug()
+
+		n["user"]["c"]["i"].setInput( n["user"]["c"]["o"] )
+		self.assertTrue( n["user"]["c"]["i"].getInput().isSame( n["user"]["c"]["o"] ) )
+
+		n["user"]["c"].setInput( None )
+		self.assertTrue( n["user"]["c"]["i"].getInput() is None )
+
+	def testRemovePlugRemovesNestedInputs( self ) :
+
+		s = Gaffer.ScriptNode()
+
+		s["n1"] = Gaffer.Node()
+		s["n2"] = Gaffer.Node()
+
+		s["n1"]["o"] = Gaffer.IntPlug( direction = Gaffer.Plug.Direction.Out )
+
+		s["n2"]["c"] = Gaffer.Plug()
+		s["n2"]["c"]["i"] = Gaffer.IntPlug()
+
+		s["n2"]["c"]["i"].setInput( s["n1"]["o"] )
+		self.failUnless( s["n2"]["c"]["i"].getInput().isSame(  s["n1"]["o"] ) )
+		self.failUnless( s["n2"]["c"].getInput() is None )
+		self.assertEqual( len( s["n1"]["o"].outputs() ), 1 )
+
+		with Gaffer.UndoScope( s ) :
+			del s["n2"]["c"]
+
+		self.assertEqual( len( s["n1"]["o"].outputs() ), 0 )
+
+		s.undo()
+
+		self.failUnless( s["n2"]["c"]["i"].getInput().isSame(  s["n1"]["o"] ) )
+		self.assertEqual( len( s["n1"]["o"].outputs() ), 1 )
+
 if __name__ == "__main__":
 	unittest.main()

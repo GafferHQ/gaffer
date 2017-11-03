@@ -561,11 +561,6 @@ bool ValuePlug::acceptsInput( const Plug *input ) const
 
 void ValuePlug::setInput( PlugPtr input )
 {
-	if( input.get() == getInput<Plug>() )
-	{
-		return;
-	}
-
 	// set value back to what it was before
 	// we received a connection. we do that
 	// before calling Plug::setInput, so that
@@ -574,7 +569,7 @@ void ValuePlug::setInput( PlugPtr input )
 	// in the setValueInternal call, because we don't
 	// want to double up on the signals that the Plug
 	// is emitting for us in Plug::setInput().
-	if( !input )
+	if( getInput<Plug>() && !input )
 	{
 		setValueInternal( m_staticValue, false );
 	}
