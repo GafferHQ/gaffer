@@ -1801,7 +1801,7 @@ class AppleseedAreaLight : public AppleseedLight
 				asf::auto_release_ptr<asr::Object> object;
 				if( m_renderType == IECoreScenePreview::Renderer::SceneDescription )
 				{
-					object = asr::MeshObjectFactory::create( name().c_str(), params );
+					object = asr::MeshObjectFactory().create( name().c_str(), params );
 				}
 				else
 				{
@@ -2521,7 +2521,7 @@ class AppleseedRenderer final : public IECoreScenePreview::Renderer
 			if( m_renderType == SceneDescription )
 			{
 				// Export the project and exit.
-				asr::ProjectFileWriter::write( *m_project, m_appleseedFileName.c_str(), asr::ProjectFileWriter::OmitHandlingAssetFiles | asr::ProjectFileWriter::OmitWritingGeometryFiles );
+				asr::ProjectFileWriter::write( *m_project, m_appleseedFileName.c_str(), asr::ProjectFileWriter::OmitHandlingAssetFiles | asr::ProjectFileWriter::OmitWritingGeometryFiles, nullptr );
 			}
 			else if( m_renderType == Batch )
 			{
