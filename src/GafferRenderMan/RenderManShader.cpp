@@ -361,6 +361,19 @@ static void loadCoshaderArrayParameter( Gaffer::Plug *parametersPlug, const std:
 	}
 
 	ArrayPlugPtr plug = new ArrayPlug( name, Plug::In, new Plug( elementName ), minSize, maxSize, Plug::Default | Plug::Dynamic );
+
+	// Remember existing inputs, because they will be disconnected
+	// automatically when we replace the existing plug, and we need
+	// to reconnect them afterwards.
+	vector<PlugPtr> existingInputs;
+	if( existingPlug )
+	{
+		for( PlugIterator it( existingPlug.get() ); !it.done(); ++it )
+		{
+			existingInputs.push_back( (*it)->getInput<Plug>() );
+		}
+	}
+
 	parametersPlug->setChild( name, plug );
 
 	if( existingPlug )
@@ -372,11 +385,12 @@ static void loadCoshaderArrayParameter( Gaffer::Plug *parametersPlug, const std:
 		{
 			if( i < plug->children().size() )
 			{
-				plug->getChild<Plug>( i )->setInput( existingPlug->getChild<Plug>( i )->getInput<Plug>() );
+				plug->getChild<Plug>( i )->setInput( existingInputs[i] );
 			}
 			else
 			{
 				plug->addChild( existingChildren[i] );
+				plug->getChild<Plug>( i )->setInput( existingInputs[i] );
 			}
 		}
 	}
