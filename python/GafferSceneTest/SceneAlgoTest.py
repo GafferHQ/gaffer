@@ -185,16 +185,6 @@ class SceneAlgoTest( GafferSceneTest.SceneTestCase ) :
 
 		self.assertEqual( set( m.paths() ), { "/group/sphere", "/group/sphere1", "/group/sphere2" } )
 
-	def testDefaultCamera( self ) :
-
-		o = GafferScene.StandardOptions()
-		c1 = GafferScene.SceneAlgo.camera( o["out"] )
-		self.assertTrue( isinstance( c1, IECore.Camera ) )
-
-		o["options"]["renderCamera"]["enabled"].setValue( True )
-		c2 = GafferScene.SceneAlgo.camera( o["out"] )
-		self.assertEqual( c1, c2 )
-
 	def testSetsNeedContextEntry( self ) :
 
 		script = Gaffer.ScriptNode()
