@@ -264,9 +264,12 @@ void Gadget::render() const
 
 void Gadget::renderLayer( Layer layer, const Style *currentStyle ) const
 {
-	glPushMatrix();
-
+	const bool haveTransform = m_transform != M44f();
+	if( haveTransform )
+	{
+		glPushMatrix();
 		glMultMatrixf( m_transform.getValue() );
+	}
 
 		if( !currentStyle )
 		{
@@ -289,7 +292,10 @@ void Gadget::renderLayer( Layer layer, const Style *currentStyle ) const
 
 		doRenderLayer( layer, currentStyle );
 
-	glPopMatrix();
+	if( haveTransform )
+	{
+		glPopMatrix();
+	}
 }
 
 void Gadget::requestRender()
