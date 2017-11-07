@@ -942,9 +942,10 @@ void InteractiveRender::updateDefaultCamera()
 		return;
 	}
 
-	CameraPtr defaultCamera = SceneAlgo::camera( adaptedInPlug(), m_globals.get() );
-	StringDataPtr name = new StringData( "gaffer:defaultCamera" );
+	CameraPtr defaultCamera = new IECore::Camera;
+	RendererAlgo::applyCameraGlobals( defaultCamera.get(), m_globals.get() );
 	IECoreScenePreview::Renderer::AttributesInterfacePtr defaultAttributes = m_renderer->attributes( adaptedInPlug()->attributesPlug()->defaultValue() );
+	ConstStringDataPtr name = new StringData( "gaffer:defaultCamera" );
 	m_defaultCamera = m_renderer->camera( name->readable(), defaultCamera.get(), defaultAttributes.get() );
 	m_renderer->option( "camera", name.get() );
 }
