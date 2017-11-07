@@ -65,6 +65,7 @@
 #include "GafferScene/SceneAlgo.h"
 #include "GafferScene/StandardOptions.h"
 #include "GafferScene/LightToCamera.h"
+#include "GafferScene/RendererAlgo.h"
 
 #include "GafferSceneUI/ContextAlgo.h"
 #include "GafferSceneUI/SceneView.h"
@@ -812,20 +813,10 @@ class SceneView::LookThrough : public boost::signals::trackable
 			m_internalNodes.push_back( lightFilter );
 			m_internalNodes.push_back( lightConverter );
 
-			// We use a standard options node to disable camera motion blur
-			// and overscan because we don't want them applied to the cameras we retrieve with SceneAlgo.
-			// We also must disable transform blur and deformation blur, because if either of those is
-			// on, the shutter range becomes non-zero and the SceneAlgo transform() method will evaluate the
-			// camera at the shutter start rather than the current time, even though its only evaluating a
-			// single time sample.
+			// We use a standard options node to disable overscan because we don't want it applied
+			// by RendererAlgo::applyCameraGlobals.
 
 			m_standardOptions->inPlug()->setInput( lightConverter->outPlug() );
-			m_standardOptions->optionsPlug()->getChild<CompoundDataPlug::MemberPlug>( "cameraBlur" )->enabledPlug()->setValue( true );
-			m_standardOptions->optionsPlug()->getChild<CompoundDataPlug::MemberPlug>( "cameraBlur" )->valuePlug<BoolPlug>()->setValue( false );
-			m_standardOptions->optionsPlug()->getChild<CompoundDataPlug::MemberPlug>( "transformBlur" )->enabledPlug()->setValue( true );
-			m_standardOptions->optionsPlug()->getChild<CompoundDataPlug::MemberPlug>( "transformBlur" )->valuePlug<BoolPlug>()->setValue( false );
-			m_standardOptions->optionsPlug()->getChild<CompoundDataPlug::MemberPlug>( "deformationBlur" )->enabledPlug()->setValue( true );
-			m_standardOptions->optionsPlug()->getChild<CompoundDataPlug::MemberPlug>( "deformationBlur" )->valuePlug<BoolPlug>()->setValue( false );
 			m_standardOptions->optionsPlug()->getChild<CompoundDataPlug::MemberPlug>( "overscan" )->enabledPlug()->setValue( true );
 			m_standardOptions->optionsPlug()->getChild<CompoundDataPlug::MemberPlug>( "overscan" )->valuePlug<BoolPlug>()->setValue( false );
 
@@ -960,22 +951,51 @@ class SceneView::LookThrough : public boost::signals::trackable
 			}
 
 			// We want to look through a specific camera.
-			// Retrieve it.
+			// Retrieve it, along with the scene globals
+			// and the camera set.
 
 			Context::Scope scopedContext( m_view->getContext() );
 
+			string cameraPathString = cameraPlug()->getValue();
+			ConstCompoundObjectPtr globals;
+			ConstPathMatcherDataPtr cameraSet;
 			try
 			{
-				const string cameraPathString = cameraPlug()->getValue();
+				globals = scenePlug()->globals();
+				cameraSet = m_view->inPlug<ScenePlug>()->set( "__cameras" );
+
 				if( cameraPathString.empty() )
 				{
-					m_lookThroughCamera = GafferScene::SceneAlgo::camera( scenePlug() ); // primary render camera
+					if( const StringData *cameraData = globals->member<StringData>( "option:render:camera" ) )
+					{
+						cameraPathString = cameraData->readable();
+					}
 				}
-				else
+
+				if( !cameraPathString.empty() )
 				{
 					ScenePlug::ScenePath cameraPath;
 					ScenePlug::stringToPath( cameraPathString, cameraPath );
-					m_lookThroughCamera = GafferScene::SceneAlgo::camera( scenePlug(), cameraPath );
+					if( !SceneAlgo::exists( scenePlug(), cameraPath ) )
+					{
+						throw IECore::Exception( "Camera \"" + cameraPathString + "\" does not exist" );
+					}
+
+					IECore::ConstCameraPtr constCamera = runTimeCast<const IECore::Camera>( scenePlug()->object( cameraPath ) );
+					if( !constCamera )
+					{
+						throw IECore::Exception( "Location \"" + cameraPathString + "\" does not have a camera" );
+					}
+					IECore::CameraPtr camera = constCamera->copy();
+					RendererAlgo::applyCameraGlobals( camera.get(), globals.get() );
+					camera->setTransform( new MatrixTransform( scenePlug()->fullTransform( cameraPath ) ) );
+					m_lookThroughCamera = camera;
+				}
+				else
+				{
+					CameraPtr defaultCamera = new IECore::Camera;
+					RendererAlgo::applyCameraGlobals( defaultCamera.get(), globals.get() );
+					m_lookThroughCamera = defaultCamera;
 				}
 			}
 			catch( ... )
@@ -986,25 +1006,45 @@ class SceneView::LookThrough : public boost::signals::trackable
 			}
 
 			m_view->viewportGadget()->setCameraEditable( false );
-			if( m_lookThroughCamera )
+			m_view->hideFilter()->pathsPlug()->setToDefault();
+			if( !m_lookThroughCamera )
 			{
-				StringVectorDataPtr invisiblePaths = new StringVectorData();
+				return;
+			}
 
-				// When looking through a camera, we hide the camera, since the overlay
-				// tells us everything we need to know about the camera.
-				// If looking through something else, such as a light, we may want to
-				// see the viewport visualisation of what we're looking through
-				if( m_view->inPlug<ScenePlug>()->set( "__cameras" )->readable().match(
-					m_lookThroughCamera->getName() ) )
-				{
-					invisiblePaths->writable().push_back( m_lookThroughCamera->getName() );
-				}
-				m_view->hideFilter()->pathsPlug()->setValue( invisiblePaths );
+			// When looking through a camera, we hide the camera, since the overlay
+			// tells us everything we need to know about the camera. If looking through
+			// something else, such as a light, we may want to see the viewport
+			// visualisation of what we're looking through.
+			const bool isCamera = cameraSet->readable().match( cameraPathString );
+			if( isCamera )
+			{
+				m_view->hideFilter()->pathsPlug()->setValue(
+					new StringVectorData( { cameraPathString } )
+				);
+			}
+
+			// Set up the static parts of the overlay. The parts that change when the
+			// viewport changes will be updated in updateViewportCameraAndOverlay().
+
+			const Box2fData *cropWindowData = globals->member<Box2fData>( "option:render:cropWindow" );
+			if( isCamera && cropWindowData )
+			{
+				m_overlay->setCropWindow( cropWindowData->readable() );
 			}
 			else
 			{
-				m_view->hideFilter()->pathsPlug()->setToDefault();
+				m_overlay->setCropWindow( Box2f( V2f( 0 ), V2f( 1 ) ) );
 			}
+
+			const V2i resolution = m_lookThroughCamera->parametersData()->member<V2iData>( "resolution" )->readable();
+			const float pixelAspectRatio = m_lookThroughCamera->parametersData()->member<FloatData>( "pixelAspectRatio" )->readable();
+			m_overlay->setCaption( boost::str(
+				boost::format( "%dx%d, %.3f, %s" ) %
+					resolution.x % resolution.y %
+					pixelAspectRatio %
+					(!cameraPathString.empty() ? cameraPathString : "default")
+			) );
 		}
 
 		void updateViewportCameraAndOverlay()
@@ -1056,8 +1096,6 @@ class SceneView::LookThrough : public boost::signals::trackable
 			const V2f offset = ( viewport - resolutionGateSize ) / 2.0f;
 
 			m_overlay->setResolutionGate( Box2f( V2f( offset ), V2f( resolutionGateSize + offset ) ) );
-			m_overlay->setCropWindow( camera->parametersData()->member<Box2fData>( "cropWindow" )->readable() );
-			m_overlay->setCaption( boost::str( boost::format( "%dx%d, %.3f, %s" ) % resolution.x % resolution.y % pixelAspectRatio % camera->getName() ) );
 			m_overlay->setVisible( true );
 
 			// Now modify the camera, so that the view through the resolution gate we've calculated
