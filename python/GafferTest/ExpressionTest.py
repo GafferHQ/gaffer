@@ -1267,5 +1267,28 @@ class ExpressionTest( GafferTest.TestCase ) :
 			s["e"].setExpression( mutationAttempt + """\nparent["n"]["user"]["p"] = 100""" )
 			self.assertRaisesRegexp( RuntimeError, expectedError, s["n"]["user"]["p"].getValue )
 
+	def testDeleteCompoundDataPlug( self ) :
+
+		s = Gaffer.ScriptNode()
+		s["n"] = Gaffer.Node()
+		s["n"]["user"]["p"] = Gaffer.CompoundDataPlug()
+		m = s["n"]["user"]["p"].addMember( "test", 10, plugName = "m" )
+
+		e = """parent["n"]["user"]["p"]["m"]["value"] = 10"""
+		s["e"] = Gaffer.Expression()
+		s["e"].setExpression( e )
+		self.assertEqual( s["e"].getExpression(), ( e, "python" ) )
+		self.assertEqual( s["n"]["user"]["p"]["m"]["value"].getValue(), 10 )
+
+		with Gaffer.UndoScope( s ) :
+			del s["n"]["user"]["p"]["m"]
+
+		self.assertEqual( m["value"].getInput(), None )
+		self.assertEqual( s["e"].getExpression(), ( "__disconnected = 10", "python" ) )
+
+		s.undo()
+		self.assertEqual( s["e"].getExpression(), ( e, "python" ) )
+		self.assertEqual( s["n"]["user"]["p"]["m"]["value"].getValue(), 10 )
+
 if __name__ == "__main__":
 	unittest.main()
