@@ -1746,8 +1746,6 @@ class __ObjectSection( LocationSection ) :
 			object = target.object()
 			if isinstance( object, ( IECore.Camera, IECore.ExternalProcedural ) ) :
 				return object.parameters()
-			elif isinstance( object, IECore.Light ) :
-				return object.parameters
 
 			return None
 
