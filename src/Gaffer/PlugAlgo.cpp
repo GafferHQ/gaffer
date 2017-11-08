@@ -411,6 +411,7 @@ Plug *promoteWithName( Plug *plug, const InternedString &name, Plug *parent, con
 	if( dynamic )
 	{
 		applyDynamicFlag( externalPlug.get() );
+		externalPlug->setFlags( Plug::Serialisable, true );
 	}
 
 	if( parent )
