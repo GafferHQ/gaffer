@@ -39,7 +39,6 @@
 #include "boost/lexical_cast.hpp"
 
 #include "IECore/Shader.h"
-#include "IECore/Light.h"
 #include "IECore/MessageHandler.h"
 #include "IECore/SimpleTypedData.h"
 #include "IECore/VectorTypedData.h"
@@ -139,19 +138,6 @@ std::vector<AtNode *> convert( const IECore::ObjectVector *shaderNetwork, const 
 				nodeType = shader->getName().c_str();
 			}
 			parameters = &shader->parameters();
-		}
-		else if( const Light *light = runTimeCast<const Light>( it->get() ) )
-		{
-			/// \todo We don't really have much need for IECore::Lights any more.
-			/// Just use shaders everywhere instead.
-			nodeType = light->getName().c_str();
-			if( boost::starts_with( nodeType, "ai:" ) )
-			{
-				/// \todo This is working around the addition of prefixes in Gaffer.
-				/// We should find a way of not needing the prefixes.
-				nodeType += 3;
-			}
-			parameters = &light->parameters();
 		}
 
 		if( !nodeType )
