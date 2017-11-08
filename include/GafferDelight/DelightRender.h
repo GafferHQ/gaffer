@@ -37,14 +37,14 @@
 #ifndef GAFFERDELIGHT_DELIGHTRENDER_H
 #define GAFFERDELIGHT_DELIGHTRENDER_H
 
-#include "GafferScene/Preview/Render.h"
+#include "GafferScene/Render.h"
 
 #include "GafferDelight/TypeIds.h"
 
 namespace GafferDelight
 {
 
-class DelightRender : public GafferScene::Preview::Render
+class DelightRender : public GafferScene::Render
 {
 
 	public :
@@ -52,7 +52,7 @@ class DelightRender : public GafferScene::Preview::Render
 		DelightRender( const std::string &name=defaultName<DelightRender>() );
 		~DelightRender() override;
 
-		IE_CORE_DECLARERUNTIMETYPEDEXTENSION( GafferDelight::DelightRender, DelightRenderTypeId, GafferScene::Preview::Render );
+		IE_CORE_DECLARERUNTIMETYPEDEXTENSION( GafferDelight::DelightRender, DelightRenderTypeId, GafferScene::Render );
 
 };
 

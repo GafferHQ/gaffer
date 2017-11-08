@@ -37,14 +37,14 @@
 #ifndef GAFFERARNOLD_ARNOLDRENDER_H
 #define GAFFERARNOLD_ARNOLDRENDER_H
 
-#include "GafferScene/Preview/Render.h"
+#include "GafferScene/Render.h"
 
 #include "GafferArnold/TypeIds.h"
 
 namespace GafferArnold
 {
 
-class ArnoldRender : public GafferScene::Preview::Render
+class ArnoldRender : public GafferScene::Render
 {
 
 	public :
@@ -52,7 +52,7 @@ class ArnoldRender : public GafferScene::Preview::Render
 		ArnoldRender( const std::string &name=defaultName<ArnoldRender>() );
 		~ArnoldRender() override;
 
-		IE_CORE_DECLARERUNTIMETYPEDEXTENSION( GafferArnold::ArnoldRender, ArnoldRenderTypeId, GafferScene::Preview::Render );
+		IE_CORE_DECLARERUNTIMETYPEDEXTENSION( GafferArnold::ArnoldRender, ArnoldRenderTypeId, GafferScene::Render );
 
 };
 

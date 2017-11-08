@@ -40,7 +40,7 @@
 
 #include "GafferScene/Capsule.h"
 #include "GafferScene/ScenePlug.h"
-#include "GafferScene/Preview/RendererAlgo.h"
+#include "GafferScene/RendererAlgo.h"
 
 using namespace IECore;
 using namespace Gaffer;
@@ -166,9 +166,9 @@ void Capsule::render( IECoreScenePreview::Renderer *renderer ) const
 {
 	throwIfExpired();
 	IECore::ConstCompoundObjectPtr globals = m_scene->globalsPlug()->getValue();
-	Preview::RendererAlgo::RenderSets renderSets( m_scene );
+	RendererAlgo::RenderSets renderSets( m_scene );
 	Context::Scope scope( m_context.get() );
-	Preview::RendererAlgo::outputObjects( m_scene, globals.get(), renderSets, renderer, m_root );
+	RendererAlgo::outputObjects( m_scene, globals.get(), renderSets, renderer, m_root );
 }
 
 const ScenePlug *Capsule::scene() const

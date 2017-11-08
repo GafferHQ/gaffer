@@ -44,9 +44,7 @@
 
 #include "GafferScene/OpenGLRender.h"
 #include "GafferScene/InteractiveRender.h"
-#include "GafferScene/SceneProcedural.h"
-#include "GafferScene/ExecutableRender.h"
-#include "GafferScene/Preview/Render.h"
+#include "GafferScene/Render.h"
 #include "GafferScene/Private/IECoreScenePreview/Renderer.h"
 #include "GafferScene/Private/IECoreScenePreview/Procedural.h"
 #include "GafferScene/Private/IECoreScenePreview/Geometry.h"
@@ -64,47 +62,6 @@ using namespace GafferScene;
 
 namespace
 {
-
-class ExecutableRenderWrapper : public TaskNodeWrapper<ExecutableRender>
-{
-
-	public :
-
-		ExecutableRenderWrapper( PyObject *self, const std::string &name )
-			:	TaskNodeWrapper<ExecutableRender>( self, name )
-		{
-		}
-
-		IECore::RendererPtr createRenderer() const override
-		{
-			if( this->isSubclassed() )
-			{
-				IECorePython::ScopedGILLock gilLock;
-				boost::python::object f = this->methodOverride( "_createRenderer" );
-				if( f )
-				{
-					return extract<IECore::RendererPtr>( f() );
-				}
-			}
-			throw IECore::Exception( "No _createRenderer method defined in Python." );
-		}
-
-		void outputWorldProcedural( const ScenePlug *scene, IECore::Renderer *renderer ) const override
-		{
-			if( this->isSubclassed() )
-			{
-				IECorePython::ScopedGILLock gilLock;
-				boost::python::object f = this->methodOverride( "_outputWorldProcedural" );
-				if( f )
-				{
-					f( ScenePlugPtr( const_cast<ScenePlug *>( scene ) ), IECore::RendererPtr( renderer ) );
-					return;
-				}
-			}
-			return ExecutableRender::outputWorldProcedural( scene, renderer );
-		}
-
-};
 
 ContextPtr interactiveRenderGetContext( InteractiveRender &r )
 {
@@ -200,29 +157,6 @@ class ProceduralWrapper : public IECorePython::RunTimeTypedWrapper<IECoreScenePr
 void GafferSceneModule::bindRender()
 {
 
-	IECorePython::RefCountedClass<SceneProcedural, IECore::Renderer::Procedural>( "SceneProcedural" )
-		.def(
-			init<
-				ConstScenePlugPtr,
-				const Gaffer::Context *,
-				const ScenePlug::ScenePath &,
-				bool
-			>(
-				(
-					boost::python::arg( "scenePlug" ),
-					boost::python::arg( "context" ),
-					boost::python::arg( "scenePath" ),
-					boost::python::arg( "computeBound" ) = true
-				)
-			)
-		)
-		.def( "allRenderedSignal", &SceneProcedural::allRenderedSignal, boost::python::return_value_policy<reference_existing_object>() ).staticmethod( "allRenderedSignal" )
-	;
-
-	SignalClass<SceneProcedural::AllRenderedSignal>( "AllRenderedSignal" );
-
-	TaskNodeClass<ExecutableRender, ExecutableRenderWrapper>();
-
 	{
 		scope s = GafferBindings::NodeClass<InteractiveRender>()
 			.def( "getContext", &interactiveRenderGetContext )
@@ -237,20 +171,12 @@ void GafferSceneModule::bindRender()
 	}
 
 	{
-		object previewModule( borrowed( PyImport_AddModule( "GafferScene.Preview" ) ) );
-		scope().attr( "Preview" ) = previewModule;
+		scope s = TaskNodeClass<GafferScene::Render>();
 
-		scope previewScope( previewModule );
-
-		{
-			scope s = TaskNodeClass<GafferScene::Preview::Render>();
-
-			enum_<GafferScene::Preview::Render::Mode>( "Mode" )
-				.value( "RenderMode", GafferScene::Preview::Render::RenderMode )
-				.value( "SceneDescriptionMode", GafferScene::Preview::Render::SceneDescriptionMode )
-			;
-		}
-
+		enum_<GafferScene::Render::Mode>( "Mode" )
+			.value( "RenderMode", GafferScene::Render::RenderMode )
+			.value( "SceneDescriptionMode", GafferScene::Render::SceneDescriptionMode )
+		;
 	}
 
 	{

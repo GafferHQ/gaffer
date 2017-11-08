@@ -1,6 +1,6 @@
 //////////////////////////////////////////////////////////////////////////
 //
-//  Copyright (c) 2013-2014, Image Engine Design Inc. All rights reserved.
+//  Copyright (c) 2016, Image Engine Design Inc. All rights reserved.
 //
 //  Redistribution and use in source and binary forms, with or without
 //  modification, are permitted provided that the following conditions are
@@ -34,13 +34,13 @@
 //
 //////////////////////////////////////////////////////////////////////////
 
-#ifndef GAFFERSCENE_EXECUTABLERENDER_H
-#define GAFFERSCENE_EXECUTABLERENDER_H
+#ifndef GAFFERSCENE_RENDER_H
+#define GAFFERSCENE_RENDER_H
 
-#include "IECore/Renderer.h"
+#include "Gaffer/StringPlug.h"
+#include "Gaffer/NumericPlug.h"
 
 #include "GafferDispatch/TaskNode.h"
-
 #include "GafferScene/TypeIds.h"
 
 namespace GafferScene
@@ -48,52 +48,59 @@ namespace GafferScene
 
 IE_CORE_FORWARDDECLARE( ScenePlug )
 
-/// Base class for executable nodes which perform a render of some sort
-/// in the execute() method.
-/// Note that this is in the process of being replaced by the
-/// GafferScene::Preview::Render node.
-class ExecutableRender : public GafferDispatch::TaskNode
+class Render : public GafferDispatch::TaskNode
 {
 
 	public :
 
-		ExecutableRender( const std::string &name=defaultName<ExecutableRender>() );
-		~ExecutableRender() override;
+		Render( const std::string &name=defaultName<Render>() );
+		~Render() override;
 
-		IE_CORE_DECLARERUNTIMETYPEDEXTENSION( GafferScene::ExecutableRender, ExecutableRenderTypeId, GafferDispatch::TaskNode );
+		IE_CORE_DECLARERUNTIMETYPEDEXTENSION( GafferScene::Render, GafferScene::RenderTypeId, GafferDispatch::TaskNode );
 
-		/// The scene to be rendered.
+		enum Mode
+		{
+			RenderMode = 0,
+			SceneDescriptionMode = 1
+		};
+
 		ScenePlug *inPlug();
 		const ScenePlug *inPlug() const;
 
-		/// A direct pass-through of the input scene.
+		Gaffer::StringPlug *rendererPlug();
+		const Gaffer::StringPlug *rendererPlug() const;
+
+		Gaffer::IntPlug *modePlug();
+		const Gaffer::IntPlug *modePlug() const;
+
+		Gaffer::StringPlug *fileNamePlug();
+		const Gaffer::StringPlug *fileNamePlug() const;
+
 		ScenePlug *outPlug();
 		const ScenePlug *outPlug() const;
 
 		IECore::MurmurHash hash( const Gaffer::Context *context ) const override;
-		/// Implemented to perform the render.
 		void execute() const override;
 
 	protected :
 
-		/// Must be implemented by derived classes to return the renderer that will
-		/// be used by execute.
-		virtual IECore::RendererPtr createRenderer() const = 0;
-		/// May be implemented by derived classes to change the way the procedural that
-		/// generates the world is output. We need this method because Cortex has no mechanism for getting
-		/// a delayed load procedural into a rib or ass file, and derived classes may want to be
-		/// generating just such a file. The default implementation just outputs a SceneProcedural
-		/// which is suitable for immediate mode rendering.
-		virtual void outputWorldProcedural( const ScenePlug *scene, IECore::Renderer *renderer ) const;
+		// Constructor for derived classes which wish to hardcode the renderer type. Perhaps
+		// at some point we won't even have derived classes, but instead will always use the
+		// base class? At the moment the main purpose of the derived classes is to force the
+		// loading of the module which registers the required renderer type.
+		Render( const IECore::InternedString &rendererType, const std::string &name );
 
 	private :
+
+		ScenePlug *adaptedInPlug();
+		const ScenePlug *adaptedInPlug() const;
 
 		static size_t g_firstPlugIndex;
 
 };
 
-IE_CORE_DECLAREPTR( ExecutableRender );
+IE_CORE_DECLAREPTR( Render );
 
 } // namespace GafferScene
 
-#endif // GAFFERSCENE_EXECUTABLERENDER_H
+#endif // GAFFERSCENE_RENDER_H

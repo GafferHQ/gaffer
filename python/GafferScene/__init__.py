@@ -41,7 +41,6 @@ __import__( "GafferImage" )
 
 from _GafferScene import *
 
-from ScriptProcedural import ScriptProcedural
 from AlembicPath import AlembicPath
 from ShaderBall import ShaderBall
 

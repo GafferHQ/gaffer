@@ -143,43 +143,6 @@ class CustomAttributesTest( GafferSceneTest.SceneTestCase ) :
 			} )
 		)
 
-	def testRendering( self ) :
-
-		sphere = IECore.SpherePrimitive()
-		input = GafferSceneTest.CompoundObjectSource()
-		input["in"].setValue(
-			IECore.CompoundObject( {
-				"bound" : IECore.Box3fData( sphere.bound() ),
-				"children" : {
-					"ball1" : {
-						"object" : sphere,
-						"bound" : IECore.Box3fData( sphere.bound() ),
-					},
-				},
-			} )
-		)
-
-		a = GafferScene.CustomAttributes()
-		a["in"].setInput( input["out"] )
-
-		a["attributes"].addMember( "ri:shadingRate", IECore.FloatData( 0.25 ) )
-		a["attributes"].addMember( "user:something", IECore.IntData( 1 ) )
-
-		r = IECore.CapturingRenderer()
-		with IECore.WorldBlock( r ) :
-			r.procedural( GafferScene.SceneProcedural( a["out"], Gaffer.Context(), "/" ) )
-
-		g = r.world()
-		attributes = g.children()[0].children()[0].children()[0].children()[0].state()[0]
-		self.assertEqual(
-			attributes.attributes,
-			IECore.CompoundData( {
-				"name" : IECore.StringData( "/ball1" ),
-				"ri:shadingRate" : IECore.FloatData( 0.25 ),
-				"user:something" : IECore.IntData( 1 ),
-			} )
-		)
-
 	def testHashPassThrough( self ) :
 
 		sphere = IECore.SpherePrimitive()

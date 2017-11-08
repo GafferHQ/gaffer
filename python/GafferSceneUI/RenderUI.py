@@ -39,10 +39,14 @@ import GafferScene
 
 Gaffer.Metadata.registerNode(
 
-	GafferScene.Preview.Render,
+	GafferScene.Render,
 
 	"description",
 	"""
+	Performs offline batch rendering using any of the
+	available renderer backends, or optionally writes
+	scene descriptions to disk for later rendering via
+	a SystemCommand node.
 	""",
 
 	"layout:activator:modeIsSceneDescription", lambda node : node["mode"].getValue() == node.Mode.SceneDescriptionMode,
@@ -76,8 +80,8 @@ Gaffer.Metadata.registerNode(
 			The type of render to perform.
 			""",
 
-			"preset:Render", GafferScene.Preview.Render.Mode.RenderMode,
-			"preset:Scene Description", GafferScene.Preview.Render.Mode.SceneDescriptionMode,
+			"preset:Render", GafferScene.Render.Mode.RenderMode,
+			"preset:Scene Description", GafferScene.Render.Mode.SceneDescriptionMode,
 
 			"plugValueWidget:type", "GafferUI.PresetsPlugValueWidget",
 

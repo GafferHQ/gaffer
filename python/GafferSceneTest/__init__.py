@@ -43,7 +43,6 @@ from SceneTestCase import SceneTestCase
 from ScenePlugTest import ScenePlugTest
 from GroupTest import GroupTest
 from SceneTimeWarpTest import SceneTimeWarpTest
-from SceneProceduralTest import SceneProceduralTest
 from CubeTest import CubeTest
 from PlaneTest import PlaneTest
 from SphereTest import SphereTest
@@ -70,8 +69,6 @@ from StandardOptionsTest import StandardOptionsTest
 from ScenePathTest import ScenePathTest
 from PathMatcherDataTest import PathMatcherDataTest
 from LightTest import LightTest
-from TestRender import TestRender
-from RenderTest import RenderTest
 from OpenGLShaderTest import OpenGLShaderTest
 from OpenGLRenderTest import OpenGLRenderTest
 from TransformTest import TransformTest
