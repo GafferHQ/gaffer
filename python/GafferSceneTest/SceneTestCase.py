@@ -126,12 +126,7 @@ class SceneTestCase( GafferTest.TestCase ) :
 		def walkScene( scenePath ) :
 
 			object = scenePlug.object( scenePath, _copy = False )
-			if isinstance( object, IECore.Light ) :
-				self.assertTrue(
-					lightSet.value.match( scenePath ) & GafferScene.Filter.Result.ExactMatch,
-					scenePath + " in __lights set"
-				)
-			elif isinstance( object, IECore.Camera ) :
+			if isinstance( object, IECore.Camera ) :
 				self.assertTrue(
 					cameraSet.value.match( scenePath ) & GafferScene.Filter.Result.ExactMatch,
 					scenePath + " in __cameras set"
@@ -140,6 +135,13 @@ class SceneTestCase( GafferTest.TestCase ) :
 				self.assertTrue(
 					coordinateSystemSet.value.match( scenePath ) & GafferScene.Filter.Result.ExactMatch,
 					scenePath + " in __coordinateSystems set"
+				 )
+
+			attributes = scenePlug.attributes( scenePath, _copy = False )
+			if any( [ n == "light" or n.endswith( ":light" ) for n in attributes.keys() ] ) :
+				self.assertTrue(
+					lightSet.value.match( scenePath ) & GafferScene.Filter.Result.ExactMatch,
+					scenePath + " in __lights set"
 				 )
 
 			childNames = scenePlug.childNames( scenePath, _copy = False )
