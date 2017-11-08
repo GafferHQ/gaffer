@@ -44,7 +44,6 @@
 #include "IECore/PreWorldRenderable.h"
 #include "IECore/Camera.h"
 #include "IECore/WorldBlock.h"
-#include "IECore/Light.h"
 #include "IECore/Shader.h"
 #include "IECore/AttributeBlock.h"
 #include "IECore/Display.h"
