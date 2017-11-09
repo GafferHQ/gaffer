@@ -42,16 +42,37 @@
 #include "GafferVDB/VDBToMesh.h"
 #include "GafferVDB/VDBLevelSetOffset.h"
 
-#include "GafferVDBBindings/VDBObjectBinding.h"
+#include "GafferVDB/VDBObject.h"
 
 using namespace boost::python;
 using namespace GafferVDB;
-using namespace GafferVDBBindings;
+
+namespace
+{
+
+boost::python::list gridNames( VDBObject::Ptr vdbObject )
+{
+	boost::python::list result;
+	std::vector<std::string> names = vdbObject->gridNames();
+	for( const auto &name : names )
+	{
+		result.append( name );
+	}
+	return result;
+}
+
+}
 
 BOOST_PYTHON_MODULE( _GafferVDB )
 {
 
-	bindVDBObject();
+	IECorePython::RunTimeTypedClass<VDBObject>()
+		.def(init<const std::string &>())
+		.def("gridNames", &::gridNames)
+		.def("metadata", &VDBObject::metadata)
+		.def("forceRead", &VDBObject::forceRead)
+		.def("removeGrid", &VDBObject::removeGrid)
+		;
 
 	GafferBindings::DependencyNodeClass<MeshToVDB>();
 	GafferBindings::DependencyNodeClass<VDBToMesh>();
