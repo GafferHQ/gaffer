@@ -124,9 +124,6 @@ class ImageNode : public Gaffer::ComputeNode
 		virtual IECore::ConstStringVectorDataPtr computeChannelNames( const Gaffer::Context *context, const ImagePlug *parent ) const;
 		virtual IECore::ConstFloatVectorDataPtr computeChannelData( const std::string &channelName, const Imath::V2i &tileOrigin, const Gaffer::Context *context, const ImagePlug *parent ) const;
 
-		/// Implemented to initialize the default format settings if they don't exist already.
-		void parentChanging( Gaffer::GraphComponent *newParent ) override;
-
 	private :
 
 		static size_t g_firstPlugIndex;

@@ -165,24 +165,6 @@ const Color4fPlug *ImageStats::maxPlug() const
 	return getChild<Color4fPlug>( g_firstPlugIndex + 5 );
 }
 
-void ImageStats::parentChanging( Gaffer::GraphComponent *newParent )
-{
-	ComputeNode::parentChanging( newParent );
-
-	// Set up the default format plug.
-	Node *parentNode = IECore::runTimeCast<Node>( newParent );
-	if( !parentNode )
-	{
-		return;
-	}
-
-	ScriptNode *scriptNode = parentNode->scriptNode();
-	if( scriptNode )
-	{
-		FormatPlug::acquireDefaultFormatPlug( scriptNode );
-	}
-}
-
 void ImageStats::affects( const Gaffer::Plug *input, AffectedPlugsContainer &outputs ) const
 {
 	ComputeNode::affects( input, outputs );
