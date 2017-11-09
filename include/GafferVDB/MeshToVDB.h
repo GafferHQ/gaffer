@@ -52,8 +52,6 @@ class StringPlug;
 namespace GafferVDB
 {
 
-/// \todo Should this be MeshToLevelSet? NO! (because it could make fog type volumes too).
-/// Maybe MeshToVolume though?
 class MeshToVDB : public GafferScene::SceneElementProcessor
 {
 
