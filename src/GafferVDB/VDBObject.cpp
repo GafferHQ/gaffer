@@ -303,10 +303,9 @@ void VDBObject::hash( IECore::MurmurHash &h ) const
 {
 	IECore::VisibleRenderable::hash( h );
 
-	// hash the pointers of the grids for now. todo discuss with John / Andrew
 	for (const auto &grid : *m_grids)
 	{
-		h.append( (size_t) grid.get() );
+		h.append( (uint64_t) grid.get() );
 	}
 }
 
@@ -318,7 +317,7 @@ void VDBObject::copyFrom( const IECore::Object *other, IECore::Object::CopyConte
 
 	for (const auto &grid : *vdbObject->m_grids)
 	{
-		m_grids->push_back( grid );
+		m_grids->push_back( grid->deepCopyGrid() );
 	}
 }
 
@@ -338,10 +337,9 @@ void VDBObject::memoryUsage( IECore::Object::MemoryAccumulator &acc) const
 {
 	IECore::VisibleRenderable::memoryUsage( acc );
 
-	// todo this is going to over estimate memory usage because the grids might be shared with other VDBObjects
 	for ( const auto &grid  : *m_grids )
 	{
-		acc.accumulate( grid->memUsage() );
+		acc.accumulate( grid.get(), grid->memUsage() );
 	}
 }
 
