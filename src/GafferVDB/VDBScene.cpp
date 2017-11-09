@@ -39,7 +39,6 @@
 #include "IECore/SimpleTypedData.h"
 #include "GafferVDB/TypeIds.h"
 #include "GafferVDB/VDBObject.h"
-#include "VDBUtil.h"
 
 #include "GafferScene/ScenePlug.h"
 

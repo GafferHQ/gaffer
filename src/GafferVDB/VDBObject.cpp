@@ -41,12 +41,31 @@
 #include "IECore/MurmurHash.h"
 #include "IECore/SimpleTypedData.h"
 
-#include "VDBUtil.h"
-
 #include "GafferVDB/VDBObject.h"
 
 using namespace IECore;
 using namespace GafferVDB;
+
+namespace
+{
+
+//! Calculate the worldspace bounds - 0.5 padding required to include the full volume and not the bound of the voxel centres.
+template<typename T>
+Imath::Box<Imath::Vec3<T> > worldBound( const openvdb::GridBase* grid, float padding = 0.50f )
+{
+	openvdb::Vec3i min = grid->metaValue<openvdb::Vec3i>( grid->META_FILE_BBOX_MIN );
+	openvdb::Vec3i max = grid->metaValue<openvdb::Vec3i>( grid->META_FILE_BBOX_MAX );
+
+	openvdb::Vec3d offset = openvdb::Vec3d( padding );
+	openvdb::BBoxd indexBounds = openvdb::BBoxd( min - offset, max + offset );
+	openvdb::BBoxd worldBounds = grid->transform().indexToWorld( indexBounds );
+	openvdb::Vec3d minBB = worldBounds.min();
+	openvdb::Vec3d maxBB = worldBounds.max();
+
+	return Imath::Box<Imath::Vec3<T> >( Imath::Vec3<T>( minBB[0], minBB[1], minBB[2] ), Imath::Vec3<T>( maxBB[0], maxBB[1], maxBB[2] ) );
+}
+
+}
 
 IE_CORE_DEFINEOBJECTTYPEDESCRIPTION( VDBObject );
 
@@ -129,7 +148,7 @@ Imath::Box3f VDBObject::bound() const
 
 	for (const auto& grid : *m_grids)
 	{
-		Imath::Box3f gridBounds = getBounds<float>( grid );
+		Imath::Box3f gridBounds = worldBound<float>( grid.get() );
 
 		combinedBounds.extendBy( gridBounds );
 	}
