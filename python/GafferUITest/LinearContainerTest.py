@@ -93,17 +93,9 @@ class LinearContainerTest( GafferUITest.TestCase ) :
 
 	def testHorizontalCentred( self ) :
 
-		twoByFour = GafferUI.RenderableGadget(
-			IECore.MeshPrimitive.createPlane( IECore.Box2f( IECore.V2f( -1, -2 ), IECore.V2f( 1, 2 ) ) )
-		)
-
-		fourByFour = GafferUI.RenderableGadget(
-			IECore.MeshPrimitive.createPlane( IECore.Box2f( IECore.V2f( -2, -2 ), IECore.V2f( 2, 2 ) ) )
-		)
-
-		fourByTwo = GafferUI.RenderableGadget(
-			IECore.MeshPrimitive.createPlane( IECore.Box2f( IECore.V2f( -2, -1 ), IECore.V2f( 2, 1 ) ) )
-		)
+		twoByFour = GafferUI.SpacerGadget( IECore.Box3f( IECore.V3f( -1, -2, 0 ), IECore.V3f( 1, 2, 0 ) ) )
+		fourByFour = GafferUI.SpacerGadget( IECore.Box3f( IECore.V3f( -2, -2, 0 ), IECore.V3f( 2, 2, 0 ) ) )
+		fourByTwo = GafferUI.SpacerGadget( IECore.Box3f( IECore.V3f( -2, -1, 0 ), IECore.V3f( 2, 1, 0 ) ) )
 
 		c = GafferUI.LinearContainer()
 
@@ -124,17 +116,9 @@ class LinearContainerTest( GafferUITest.TestCase ) :
 
 	def testVerticalMin( self ) :
 
-		twoByFour = GafferUI.RenderableGadget(
-			IECore.MeshPrimitive.createPlane( IECore.Box2f( IECore.V2f( -1, -2 ), IECore.V2f( 1, 2 ) ) )
-		)
-
-		fourByFour = GafferUI.RenderableGadget(
-			IECore.MeshPrimitive.createPlane( IECore.Box2f( IECore.V2f( -2, -2 ), IECore.V2f( 2, 2 ) ) )
-		)
-
-		fourByTwo = GafferUI.RenderableGadget(
-			IECore.MeshPrimitive.createPlane( IECore.Box2f( IECore.V2f( -2, -1 ), IECore.V2f( 2, 1 ) ) )
-		)
+		twoByFour = GafferUI.SpacerGadget( IECore.Box3f( IECore.V3f( -1, -2, 0 ), IECore.V3f( 1, 2, 0 ) ) )
+		fourByFour = GafferUI.SpacerGadget( IECore.Box3f( IECore.V3f( -2, -2, 0 ), IECore.V3f( 2, 2, 0 ) ) )
+		fourByTwo = GafferUI.SpacerGadget( IECore.Box3f( IECore.V3f( -2, -1, 0 ), IECore.V3f( 2, 1, 0 ) ) )
 
 		c = GafferUI.LinearContainer( orientation=GafferUI.LinearContainer.Orientation.Y, alignment=GafferUI.LinearContainer.Alignment.Min)
 
@@ -155,9 +139,7 @@ class LinearContainerTest( GafferUITest.TestCase ) :
 
 	def testPadding( self ) :
 
-		twoByFour = GafferUI.RenderableGadget(
-			IECore.MeshPrimitive.createPlane( IECore.Box2f( IECore.V2f( -1, -2 ), IECore.V2f( 1, 2 ) ) )
-		)
+		twoByFour = GafferUI.SpacerGadget( IECore.Box3f( IECore.V3f( -1, -2, 0 ), IECore.V3f( 1, 2, 0 ) ) )
 
 		c = GafferUI.LinearContainer( orientation=GafferUI.LinearContainer.Orientation.Y )
 		c.addChild( twoByFour )
@@ -171,13 +153,8 @@ class LinearContainerTest( GafferUITest.TestCase ) :
 
 	def testDirection( self ) :
 
-		first = GafferUI.RenderableGadget(
-			IECore.MeshPrimitive.createPlane( IECore.Box2f( IECore.V2f( -1, -2 ), IECore.V2f( 1, 2 ) ) )
-		)
-
-		second = GafferUI.RenderableGadget(
-			IECore.MeshPrimitive.createPlane( IECore.Box2f( IECore.V2f( -1, -2 ), IECore.V2f( 1, 2 ) ) )
-		)
+		first = GafferUI.SpacerGadget( IECore.Box3f( IECore.V3f( -1, -2, 0 ), IECore.V3f( 1, 2, 0 ) ) )
+		second = GafferUI.SpacerGadget( IECore.Box3f( IECore.V3f( -1, -2, 0 ), IECore.V3f( 1, 2, 0 ) ) )
 
 		c = GafferUI.LinearContainer( orientation=GafferUI.LinearContainer.Orientation.Y )
 
@@ -197,12 +174,8 @@ class LinearContainerTest( GafferUITest.TestCase ) :
 	def testDirectionAndSpacing( self ) :
 
 		c = GafferUI.LinearContainer( orientation = GafferUI.LinearContainer.Orientation.Y )
-		c["g1"] = GafferUI.RenderableGadget(
-			IECore.MeshPrimitive.createPlane( IECore.Box2f( IECore.V2f( -1 ), IECore.V2f( 1 ) ) )
-		)
-		c["g2"] = GafferUI.RenderableGadget(
-			IECore.MeshPrimitive.createPlane( IECore.Box2f( IECore.V2f( -1 ), IECore.V2f( 1 ) ) )
-		)
+		c["g1"] = GafferUI.SpacerGadget( IECore.Box3f( IECore.V3f( -1, -1, 0 ), IECore.V3f( 1, 1, 0 ) ) )
+		c["g2"] = GafferUI.SpacerGadget( IECore.Box3f( IECore.V3f( -1, -1, 0 ), IECore.V3f( 1, 1, 0 ) ) )
 
 		self.assertEqual( c.bound(), IECore.Box3f( IECore.V3f( -1, -2, 0 ), IECore.V3f( 1, 2, 0 ) ) )
 
