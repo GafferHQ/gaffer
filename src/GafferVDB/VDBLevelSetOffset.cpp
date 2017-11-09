@@ -48,7 +48,6 @@ using namespace IECore;
 using namespace Gaffer;
 using namespace GafferVDB;
 
-
 IE_CORE_DEFINERUNTIMETYPED( VDBLevelSetOffset );
 
 size_t VDBLevelSetOffset::g_firstPlugIndex = 0;
@@ -111,32 +110,46 @@ void VDBLevelSetOffset::hashProcessedObject( const ScenePath &path, const Gaffer
 
 IECore::ConstObjectPtr VDBLevelSetOffset::computeProcessedObject( const ScenePath &path, const Gaffer::Context *context, IECore::ConstObjectPtr inputObject ) const
 {
-	if (ConstVDBObjectPtr vdbObject = runTimeCast<const VDBObject>(inputObject))
+	const VDBObject *vdbObject = runTimeCast<const VDBObject>(inputObject.get());
+	if( !vdbObject )
 	{
-		std::string gridName = gridNamePlug()->getValue();
-
-		openvdb::GridBase::ConstPtr gridBase = vdbObject->findGrid( gridName );
-
-		if (!gridBase)
-		{
-			return inputObject;
-		}
-
-		openvdb::GridBase::Ptr newGrid = gridBase->deepCopyGrid();
-		openvdb::FloatGrid::Ptr floatGrid = openvdb::GridBase::grid<openvdb::FloatGrid>( newGrid );
-		openvdb::tools::LevelSetFilter<openvdb::FloatGrid> filter ( *floatGrid ) ;
-		filter.offset( offsetPlug()->getValue() );
-		VDBObjectPtr newVDBObject = runTimeCast<VDBObject>( vdbObject->copy() );
-
-		// todo this needs to be a better API
-		newVDBObject->removeGrid( gridName );
-		newVDBObject->addGrid( newGrid );
-
-		return newVDBObject;
-
-
+		return inputObject;
 	}
-	return inputObject;
+
+	std::string gridName = gridNamePlug()->getValue();
+
+	openvdb::GridBase::ConstPtr gridBase = vdbObject->findGrid( gridName );
+
+	if (!gridBase)
+	{
+		return inputObject;
+	}
+
+	openvdb::GridBase::Ptr newGrid;
+
+	if ( openvdb::FloatGrid::ConstPtr floatGrid = openvdb::GridBase::constGrid<openvdb::FloatGrid>( gridBase ) )
+	{
+		openvdb::FloatGrid::Ptr newFloatGrid = openvdb::GridBase::grid<openvdb::FloatGrid> ( floatGrid->deepCopyGrid() );
+		newGrid = newFloatGrid;
+		openvdb::tools::LevelSetFilter <openvdb::FloatGrid> filter( *newFloatGrid );
+		filter.offset( offsetPlug()->getValue() );
+	}
+	else if ( openvdb::DoubleGrid::ConstPtr doubleGrid = openvdb::GridBase::constGrid<openvdb::DoubleGrid>( newGrid ) )
+	{
+		openvdb::DoubleGrid::Ptr newDoubleGrid = openvdb::GridBase::grid<openvdb::DoubleGrid>( doubleGrid->deepCopyGrid() );
+		newGrid = newDoubleGrid;
+		openvdb::tools::LevelSetFilter <openvdb::DoubleGrid> filter( *newDoubleGrid );
+		filter.offset( offsetPlug()->getValue() );
+	}
+	else
+	{
+		throw IECore::Exception( boost::str( boost::format( "Unable to Offset LevelSet grid: '%1%' with type: %2% " ) % gridName % newGrid->type()) );
+	}
+
+	VDBObjectPtr newVDBObject = vdbObject->copy();
+
+	newVDBObject->removeGrid( gridName );
+	newVDBObject->addGrid( newGrid );
+
+	return newVDBObject;
 }
-
-
