@@ -278,11 +278,13 @@ class VDBScene : public SceneInterface
 
 			return SceneInterfacePtr();
 		}
+
 		/// Returns a read-only interface for a child location in the scene.
 		ConstSceneInterfacePtr child( const Name &name, MissingBehaviour missingBehaviour = ThrowIfMissing ) const override
 		{
 			return const_cast< VDBScene* >( this )->child( name, missingBehaviour );
 		}
+
 		/// Returns a writable interface to a new child. Throws an exception if it already exists.
 		/// Bounding boxes will be automatically propagated up from the children
 		/// to the parent as it is written.
@@ -290,6 +292,7 @@ class VDBScene : public SceneInterface
 		{
 			throw IECore::NotImplementedException("");
 		}
+
 		/// Returns a interface for querying the scene at the given path (full path).
 		SceneInterfacePtr scene( const Path &path, MissingBehaviour missingBehaviour = ThrowIfMissing ) override
 		{
@@ -339,6 +342,7 @@ class VDBScene : public SceneInterface
 				return nullptr;
 			}
 		}
+
 		/// Returns a const interface for querying the scene at the given path (full path).
 		ConstSceneInterfacePtr scene( const Path &path, MissingBehaviour missingBehaviour = ThrowIfMissing ) const override
 		{
@@ -372,9 +376,8 @@ class VDBScene : public SceneInterface
 	private :
 
 		VDBScene( VDBScene* parent )
-		: m_parent(parent)
+		: m_parent( parent )
 		{
-
 		}
 
 		static FileFormatDescription<VDBScene> g_description;
