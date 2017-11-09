@@ -57,6 +57,68 @@ namespace
 struct GeometryCollector
 {
 	template<typename GridType>
+	void collect( typename GridType::ConstPtr grid )
+	{
+		using openvdb::Index64;
+
+		for( typename GridType::TreeType::NodeCIter iter = grid->tree().cbeginNode(); iter; ++iter )
+		{
+			openvdb::CoordBBox bbox;
+			iter.getBoundingBox( bbox );
+
+			// Nodes are rendered as cell-centered
+			const openvdb::Vec3d min( bbox.min().x() - 0.5, bbox.min().y() - 0.5, bbox.min().z() - 0.5 );
+			const openvdb::Vec3d max( bbox.max().x() + 0.5, bbox.max().y() + 0.5, bbox.max().z() + 0.5 );
+
+			addBox( grid.get(), iter.getDepth(), min, max );
+		}
+	}
+
+	void collect( openvdb::GridBase::ConstPtr grid )
+	{
+		if( openvdb::BoolGrid::ConstPtr t = openvdb::GridBase::constGrid<openvdb::BoolGrid>( grid ) )
+		{
+			collect<openvdb::BoolGrid>( t );
+		}
+		else if( openvdb::DoubleGrid::ConstPtr t = openvdb::GridBase::constGrid<openvdb::DoubleGrid>( grid ) )
+		{
+			collect<openvdb::DoubleGrid>( t );
+		}
+		else if( openvdb::FloatGrid::ConstPtr t = openvdb::GridBase::constGrid<openvdb::FloatGrid>( grid ) )
+		{
+			collect<openvdb::FloatGrid>( t );
+		}
+		else if( openvdb::Int32Grid::ConstPtr t = openvdb::GridBase::constGrid<openvdb::Int32Grid>( grid ) )
+		{
+			collect<openvdb::Int32Grid>( t );
+		}
+		else if( openvdb::Int64Grid::ConstPtr t = openvdb::GridBase::constGrid<openvdb::Int64Grid>( grid ) )
+		{
+			collect<openvdb::Int64Grid>( t );
+		}
+		else if( openvdb::MaskGrid::ConstPtr t = openvdb::GridBase::constGrid<openvdb::MaskGrid>( grid ) )
+		{
+			collect<openvdb::MaskGrid>( t );
+		}
+		else if( openvdb::StringGrid::ConstPtr t = openvdb::GridBase::constGrid<openvdb::StringGrid>( grid ) )
+		{
+			collect<openvdb::StringGrid>( t );
+		}
+		else if( openvdb::Vec3DGrid::ConstPtr t = openvdb::GridBase::constGrid<openvdb::Vec3DGrid>( grid ) )
+		{
+			collect<openvdb::Vec3DGrid>( t );
+		}
+		else if( openvdb::Vec3IGrid::ConstPtr t = openvdb::GridBase::constGrid<openvdb::Vec3IGrid>( grid ) )
+		{
+			collect<openvdb::Vec3IGrid>( t );
+		}
+		else if( openvdb::Vec3SGrid::ConstPtr t = openvdb::GridBase::constGrid<openvdb::Vec3SGrid>( grid ) )
+		{
+			collect<openvdb::Vec3SGrid>( t );
+		}
+	}
+
+	template<typename GridType>
 	void addBox(const GridType* grid,  openvdb::Index64 depth, openvdb::Vec3d min, openvdb::Vec3d max)
 	{
 		if (depth >= positions.size())
@@ -74,8 +136,6 @@ struct GeometryCollector
 			}
 		}
 
-
-		// todo not create to readable per box call.
 		std::vector<V3f> &depthPositions = positions[depth]->writable();
 		std::vector<int> &depthVertsPerCurve = vertsPerCurve[depth]->writable();
 
@@ -174,66 +234,6 @@ struct GeometryCollector
 	std::vector<IECore::IntVectorDataPtr>  vertsPerCurve;
 };
 
-template<typename GridType>
-void collect(typename GridType::ConstPtr grid, GeometryCollector &collector)
-{
-	using openvdb::Index64;
-
-	for (typename GridType::TreeType::NodeCIter iter = grid->tree().cbeginNode(); iter; ++iter)
-	{
-		openvdb::CoordBBox bbox;
-		iter.getBoundingBox(bbox);
-
-		// Nodes are rendered as cell-centered
-		const openvdb::Vec3d min(bbox.min().x()-0.5, bbox.min().y()-0.5, bbox.min().z()-0.5);
-		const openvdb::Vec3d max(bbox.max().x()+0.5, bbox.max().y()+0.5, bbox.max().z()+0.5);
-
-		collector.addBox(grid.get(), iter.getDepth(), min, max);
-
-	}
-}
-
-//! list of grid types which can be visualised.
-typedef boost::mpl::list
-<
-	openvdb::BoolGrid,
-	openvdb::DoubleGrid,
-	openvdb::FloatGrid,
-	openvdb::Int32Grid,
-	openvdb::Int64Grid,
-	openvdb::MaskGrid,
-	openvdb::StringGrid,
-	openvdb::Vec3DGrid,
-	openvdb::Vec3IGrid,
-	openvdb::Vec3SGrid
-> VDBGridList;
-
-
-//! utility struct to use with boost::mpl::for_each to attempt to cast GridBase to concrete grid type and if the cast
-//! succeeds then pass to the collector if we have a matching type
-struct Dispatcher
-{
-	Dispatcher(GeometryCollector& collector, openvdb::GridBase::ConstPtr grid ) : m_collector(collector), m_grid( grid ), m_matchingTypeFound( false ){}
-
-	template<typename GridType> void operator()( GridType )
-	{
-		if ( m_matchingTypeFound )
-		{
-			return;
-		}
-
-		if (typename GridType::ConstPtr t =  openvdb::GridBase::constGrid<GridType>( m_grid ))
-		{
-			m_matchingTypeFound = true;
-			collect<GridType>( t, m_collector );
-		}
-	}
-
-	GeometryCollector &m_collector;
-	openvdb::GridBase::ConstPtr m_grid;
-	bool m_matchingTypeFound;
-};
-
 class VDBVisualiser : public ObjectVisualiser
 {
 
@@ -296,9 +296,7 @@ class VDBVisualiser : public ObjectVisualiser
 			static std::array<Color4f, 4> colors = { { Color4f( 0.56, 0.06, 0.2, 0.2 ), Color4f( 0.06, 0.56, 0.2, 0.2 ), Color4f( 0.06, 0.2, 0.56, 0.2 ), Color4f( 0.6, 0.6, 0.6, 0.2 ) } };
 
 			GeometryCollector collector;
-
-			// attempt to cast a concrete grid type and if it succeeds then collect the grid structure geometry
-			boost::mpl::for_each<VDBGridList> ( Dispatcher( collector, grid) );
+			collector.collect( grid );
 
 			// todo options to define what to visualise (tree, values)
 			openvdb::Index64 depth = collector.positions.size() - 1;
