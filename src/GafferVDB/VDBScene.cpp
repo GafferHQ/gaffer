@@ -247,36 +247,20 @@ class VDBScene : public SceneInterface
 		/// to the parent as it is written.
 		SceneInterfacePtr child( const Name &name, MissingBehaviour missingBehaviour = ThrowIfMissing ) override
 		{
-			if ( m_parent )
+			if ( !m_parent && name == g_objectName)
 			{
-				if (missingBehaviour == ThrowIfMissing)
-				{
-					throw IECore::InvalidArgumentException("VDBSCene::child(): no child called \" + name.string()");
-				}
-				else if (missingBehaviour == CreateIfMissing)
-				{
-					throw IECore::InvalidArgumentException("VDBScene::child(): CreateIfMissing not supported");
-				}
-				return nullptr;
+				return new VDBScene( this );
 			}
-			else
+			else if (missingBehaviour == ThrowIfMissing)
 			{
-				if (name == g_objectName)
-				{
-					return new VDBScene(this);
-				}
-				else if (missingBehaviour == ThrowIfMissing)
-				{
-					throw IECore::InvalidArgumentException("VDBSCene::child(): no child called \" + name.string()");
-				}
-				else if (missingBehaviour == CreateIfMissing)
-				{
-					throw IECore::InvalidArgumentException("VDBScene::child(): CreateIfMissing not supported");
-				}
+				throw IECore::InvalidArgumentException("VDBSCene::child(): no child called \" + name.string()");
+			}
+			else if (missingBehaviour == CreateIfMissing)
+			{
+				throw IECore::InvalidArgumentException("VDBScene::child(): CreateIfMissing not supported");
 			}
 
-
-			return SceneInterfacePtr();
+			return nullptr;
 		}
 
 		/// Returns a read-only interface for a child location in the scene.
