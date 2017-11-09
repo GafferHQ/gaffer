@@ -70,13 +70,13 @@ class MeshToVDB : public GafferScene::SceneElementProcessor
 		Gaffer::FloatPlug *voxelSizePlug();
 		const Gaffer::FloatPlug *voxelSizePlug() const;
 
-		virtual void affects( const Gaffer::Plug *input, AffectedPlugsContainer &outputs ) const;
+		virtual void affects( const Gaffer::Plug *input, AffectedPlugsContainer &outputs ) const override;
 
 	protected :
 
-		virtual bool processesObject() const;
-		virtual void hashProcessedObject( const ScenePath &path, const Gaffer::Context *context, IECore::MurmurHash &h ) const;
-		virtual IECore::ConstObjectPtr computeProcessedObject( const ScenePath &path, const Gaffer::Context *context, IECore::ConstObjectPtr inputObject ) const;
+		virtual bool processesObject() const override;
+		virtual void hashProcessedObject( const ScenePath &path, const Gaffer::Context *context, IECore::MurmurHash &h ) const override;
+		virtual IECore::ConstObjectPtr computeProcessedObject( const ScenePath &path, const Gaffer::Context *context, IECore::ConstObjectPtr inputObject ) const override;
 
 	private :
 
