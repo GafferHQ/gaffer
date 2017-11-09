@@ -77,7 +77,7 @@ class VDBObject : public IECore::VisibleRenderable
 		IECore::UCharVectorDataPtr memoryBuffer() const;
 
 		void forceRead(const std::string& name);
-		IECore::CompoundObjectPtr metadata(const std::string& name) const;
+		IECore::CompoundObjectPtr metadata(const std::string& name);
 
 	protected :
 

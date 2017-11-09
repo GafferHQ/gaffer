@@ -40,6 +40,7 @@
 #include "openvdb/openvdb.h"
 #include "openvdb/io/Stream.h"
 
+#include "IECore/MessageHandler.h"
 #include "IECore/Exception.h"
 #include "IECore/MurmurHash.h"
 #include "IECore/SimpleTypedData.h"
@@ -217,16 +218,16 @@ void VDBObject::forceRead(const std::string& name)
 	grid->readNonresidentBuffers();
 }
 
-IECore::CompoundObjectPtr VDBObject::metadata(const std::string& name) const
+IECore::CompoundObjectPtr VDBObject::metadata(const std::string& name)
 {
-	//todo dirty this when the grid has been updated rather
-	//than assuming it always has to be done.
-	openvdb::GridBase::ConstPtr grid = findGrid( name );
+	openvdb::GridBase::Ptr grid = findGrid( name );
 
-	if (!grid)
+	if( !grid )
 	{
 		return IECore::CompoundObjectPtr();
 	}
+
+	grid->addStatsMetadata();
 
 	CompoundObjectPtr metadata = new CompoundObject();
 
@@ -278,9 +279,7 @@ IECore::CompoundObjectPtr VDBObject::metadata(const std::string& name) const
 		}
 		else
 		{
-			StringDataPtr stringData = new StringData();
-			stringData->writable() = "unsupported type: " + metaIt->second->typeName();
-			metadata->members()[metaIt->first] = stringData;
+			IECore::msg( IECore::MessageHandler::Warning, "VDBObject::metadata", boost::format("'%1%' has unsupported metadata type: '%2%'") % metaIt->second->typeName() % metaIt->first);
 		}
 	}
 	return metadata;
