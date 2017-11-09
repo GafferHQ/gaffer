@@ -132,6 +132,8 @@ MeshToVDB::MeshToVDB( const std::string &name )
 
 	addChild( new StringPlug( "gridName", Plug::In, "levelset") );
 	addChild( new FloatPlug( "voxelSize", Plug::In, 0.1f, 0.0001f ) );
+	addChild( new FloatPlug( "exteriorBandwidth", Plug::In, 3.0f, 0.0001f ) );
+	addChild( new FloatPlug( "interiorBandwidth", Plug::In, 3.0f, 0.0001f ) );
 }
 
 MeshToVDB::~MeshToVDB()
@@ -155,7 +157,27 @@ FloatPlug *MeshToVDB::voxelSizePlug()
 
 const FloatPlug *MeshToVDB::voxelSizePlug() const
 {
-	return getChild<FloatPlug>( g_firstPlugIndex + 1);
+	return getChild<FloatPlug>( g_firstPlugIndex + 1 );
+}
+
+FloatPlug *MeshToVDB::exteriorBandwidthPlug()
+{
+	return getChild<FloatPlug>( g_firstPlugIndex + 2 );
+}
+
+const FloatPlug *MeshToVDB::exteriorBandwidthPlug() const
+{
+	return getChild<FloatPlug>( g_firstPlugIndex + 2 );
+}
+
+FloatPlug *MeshToVDB::interiorBandwidthPlug()
+{
+	return getChild<FloatPlug>( g_firstPlugIndex + 3 );
+}
+
+const FloatPlug *MeshToVDB::interiorBandwidthPlug() const
+{
+	return getChild<FloatPlug>( g_firstPlugIndex + 3 );
 }
 
 void MeshToVDB::affects( const Gaffer::Plug *input, AffectedPlugsContainer &outputs ) const
@@ -179,6 +201,8 @@ void MeshToVDB::hashProcessedObject( const ScenePath &path, const Gaffer::Contex
 
 	gridNamePlug()->hash( h );
 	voxelSizePlug()->hash( h );
+	exteriorBandwidthPlug()->hash ( h );
+	interiorBandwidthPlug()->hash ( h );
 }
 
 IECore::ConstObjectPtr MeshToVDB::computeProcessedObject( const ScenePath &path, const Gaffer::Context *context, IECore::ConstObjectPtr inputObject ) const
@@ -190,19 +214,21 @@ IECore::ConstObjectPtr MeshToVDB::computeProcessedObject( const ScenePath &path,
 	}
 
 	const float voxelSize = voxelSizePlug()->getValue();
+	const float exteriorBandwidth = exteriorBandwidthPlug()->getValue();
+	const float interiorBandwidth = interiorBandwidthPlug()->getValue();
+
 	openvdb::math::Transform::Ptr transform = openvdb::math::Transform::createLinearTransform( voxelSize );
 
 	openvdb::FloatGrid::Ptr grid = openvdb::tools::meshToVolume<openvdb::FloatGrid>(
 		CortexMeshAdapter( mesh, transform.get() ),
 		*transform,
-		3.0f, //exBand in voxel units, PLUGS PLEASE!!!
-		3.0f, //inBand in voxel units,
+		exteriorBandwidth, //in voxel units
+		interiorBandwidth, //in voxel units
 		0 //conversionFlags,
 		//primitiveIndexGrid.get()
 	);
 
 	grid->setName( gridNamePlug()->getValue() );
-
 
 	VDBObjectPtr newVDBObject =  new VDBObject();
 	newVDBObject->addGrid( grid );

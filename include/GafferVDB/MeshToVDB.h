@@ -70,6 +70,12 @@ class MeshToVDB : public GafferScene::SceneElementProcessor
 		Gaffer::FloatPlug *voxelSizePlug();
 		const Gaffer::FloatPlug *voxelSizePlug() const;
 
+		Gaffer::FloatPlug *exteriorBandwidthPlug();
+		const Gaffer::FloatPlug *exteriorBandwidthPlug() const;
+
+		Gaffer::FloatPlug *interiorBandwidthPlug();
+		const Gaffer::FloatPlug *interiorBandwidthPlug() const;
+
 		virtual void affects( const Gaffer::Plug *input, AffectedPlugsContainer &outputs ) const override;
 
 	protected :
