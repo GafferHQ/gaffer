@@ -52,10 +52,10 @@ class VDBLevelSetOffset : public GafferScene::SceneElementProcessor
 
 	public :
 
-		VDBLevelSetOffset(const std::string &name);
+		VDBLevelSetOffset(const std::string &name = defaultName<VDBLevelSetOffset>() );
 		~VDBLevelSetOffset();
 
-		IE_CORE_DECLARERUNTIMETYPEDEXTENSION( GafferVDB::VDBLevelSetOffset, VDBErodeTypeId, GafferScene::SceneElementProcessor );
+		IE_CORE_DECLARERUNTIMETYPEDEXTENSION( GafferVDB::VDBLevelSetOffset, VDBLevelSetOffsetTypeId, GafferScene::SceneElementProcessor );
 
 		Gaffer::StringPlug *gridNamePlug();
 		const Gaffer::StringPlug *gridNamePlug() const;
@@ -63,7 +63,7 @@ class VDBLevelSetOffset : public GafferScene::SceneElementProcessor
 		Gaffer::FloatPlug *offsetPlug();
 		const Gaffer::FloatPlug *offsetPlug() const;
 
-		virtual void affects( const Gaffer::Plug *input, AffectedPlugsContainer &outputs ) const;
+		virtual void affects( const Gaffer::Plug *input, AffectedPlugsContainer &outputs ) const override;
 
 	protected :
 
@@ -72,6 +72,7 @@ class VDBLevelSetOffset : public GafferScene::SceneElementProcessor
 		IECore::ConstObjectPtr computeProcessedObject( const ScenePath &path, const Gaffer::Context *context, IECore::ConstObjectPtr inputObject ) const override;
 
 	private:
+
 		static size_t g_firstPlugIndex;
 };
 
