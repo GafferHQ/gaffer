@@ -34,6 +34,9 @@
 
 #include <algorithm>
 
+#include "boost/iostreams/categories.hpp"
+#include "boost/iostreams/stream.hpp"
+
 #include "openvdb/openvdb.h"
 #include "openvdb/io/Stream.h"
 
@@ -64,6 +67,25 @@ Imath::Box<Imath::Vec3<T> > worldBound( const openvdb::GridBase* grid, float pad
 
 	return Imath::Box<Imath::Vec3<T> >( Imath::Vec3<T>( minBB[0], minBB[1], minBB[2] ), Imath::Vec3<T>( maxBB[0], maxBB[1], maxBB[2] ) );
 }
+
+///! utility to allow us to stream directly into a UCharVectorData
+struct UCharVectorDataSink
+{
+	typedef char char_type;
+	typedef boost::iostreams::sink_tag category;
+
+	UCharVectorDataSink( IECore::UCharVectorData *storage ) : m_storage( storage->writable() )
+	{
+	}
+
+	std::streamsize write( const char *s, std::streamsize n )
+	{
+		m_storage.insert( m_storage.end(), s, s + n );
+		return n;
+	}
+
+	std::vector<unsigned char>& m_storage;
+};
 
 }
 
@@ -160,19 +182,33 @@ void VDBObject::render( IECore::Renderer *renderer ) const
 {
 }
 
-IECore::UCharVectorDataPtr VDBObject::memoryBuffer() const
+UCharVectorDataPtr VDBObject::memoryBuffer() const
 {
-	std::ostringstream ss;
-	openvdb::io::Stream vdbStream( ss );
+	// estimate the size of the memory required to hand the VDB to arnold.
+	// This is required so we can reserve the right amount of space in the output
+	// buffer.
+	int64_t totalSizeBytes = 0;
+	try
+	{
+		for( const auto &grid : *m_grids )
+		{
+			totalSizeBytes += grid->metaValue<int64_t>( "file_mem_bytes" );
+		}
+	}
+	catch(const std::exception& e)
+	{
+		msg( MessageHandler::Warning, "VDBObject::memoryBuffer", "Unable to estimate vdb size." );
+	}
+
+	IECore::UCharVectorDataPtr buffer = new IECore::UCharVectorData();
+	buffer->writable().reserve( totalSizeBytes );
+	UCharVectorDataSink sink( buffer.get() );
+	boost::iostreams::stream<UCharVectorDataSink> memoryStream( sink );
+
+	openvdb::io::Stream vdbStream( memoryStream );
 	vdbStream.write( *m_grids );
-	std::string s = ss.str();
 
-	IECore::UCharVectorDataPtr newByteArray = new IECore::UCharVectorData();
-	auto& v = newByteArray->writable();
-	v.resize( s.length() );
-	std::copy( s.begin(), s.end(), v.begin() );
-
-	return newByteArray;
+	return buffer;
 }
 
 void VDBObject::forceRead(const std::string& name)
