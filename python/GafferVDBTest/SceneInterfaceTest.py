@@ -82,3 +82,6 @@ class SceneInterfaceTest( GafferVDBTest.VDBTestCase ) :
 		# print transformData
 		# print transform
 		# todo check the bounds
+
+if __name__ == "__main__":
+	unittest.main()
