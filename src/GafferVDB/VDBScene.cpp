@@ -97,7 +97,7 @@ class VDBScene : public SceneInterface
 			}
 			else
 			{
-				p = {};
+				p.clear();
 			}
 		}
 
@@ -349,10 +349,10 @@ class VDBScene : public SceneInterface
 			else if ( hashType == ObjectHash || hashType == BoundHash)
 			{
 				h.append( rootData().m_fileName );
-				h.append( m_parent == nullptr );
 			}
 			else if ( hashType == HierarchyHash )
 			{
+				h.append( rootData().m_fileName );
 				h.append( m_parent == nullptr );
 			}
 		}
