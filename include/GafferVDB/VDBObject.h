@@ -37,9 +37,9 @@
 #ifndef GAFFERVDB_VDBOBJECT_H
 #define GAFFERVDB_VDBOBJECT_H
 
-
-#include "ImathBox.h"
 #include "openvdb/openvdb.h"
+
+#include "OpenEXR/ImathBox.h"
 
 #include "IECore/Object.h"
 #include "IECore/CompoundObject.h"
@@ -59,7 +59,7 @@ class VDBObject : public IECore::VisibleRenderable
 		VDBObject();
 
 		//! initialise VDBObject from a vdb file
-		VDBObject(const std::string& fileanme);
+		VDBObject(const std::string& filename);
 
 		IE_CORE_DECLAREEXTENSIONOBJECT( GafferVDB::VDBObject, VDBObjectTypeId, IECore::VisibleRenderable );
 
