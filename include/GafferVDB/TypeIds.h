@@ -42,13 +42,13 @@ namespace GafferVDB
 
 enum TypeId
 {
-	VDBGridTypeId = 110925,
-	VDBObjectTypeId = 110926,
-	VDBSceneTypeId = 110927,
-	MeshToVDBTypeId = 110928,
-	VDBToMeshTypeId = 110929,
-	VDBErodeTypeId = 110930,
-	LastTypeId = 110949
+	VDBGridTypeId = 110950,
+	VDBObjectTypeId = 110951,
+	VDBSceneTypeId = 110952,
+	MeshToVDBTypeId = 110953,
+	VDBToMeshTypeId = 110954,
+	VDBLevelSetOffsetTypeId = 110955,
+	LastTypeId = 110974
 };
 
 } // namespace GafferVDB
