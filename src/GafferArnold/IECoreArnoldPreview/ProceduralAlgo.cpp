@@ -33,7 +33,6 @@
 //////////////////////////////////////////////////////////////////////////
 
 #include "IECore/SimpleTypedData.h"
-#include "IECore/Renderer.h"
 
 #include "IECoreArnold/NodeAlgo.h"
 #include "IECoreArnold/ParameterAlgo.h"
