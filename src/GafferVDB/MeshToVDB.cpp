@@ -104,7 +104,6 @@ struct CortexMeshAdapter
 
 	private :
 
-	/// \todo WE DON'T NEED ALL THIS CRAP
 		const size_t m_numFaces;
 		const size_t m_numVertices;
 		const vector<int> &m_verticesPerFace;
@@ -235,66 +234,3 @@ IECore::ConstObjectPtr MeshToVDB::computeProcessedObject( const ScenePath &path,
 
 	return newVDBObject;
 }
-
-
-	/*doMeshConversion(
-    const openvdb::math::Transform& xform,
-    const std::vector<Vec3s>& points,
-    const std::vector<Vec3I>& triangles,
-    const std::vector<Vec4I>& quads,
-    float exBandWidth,
-    float inBandWidth,
-    bool unsignedDistanceField = false)
-{
-    if (points.empty()) {
-        return typename GridType::Ptr(new GridType(typename GridType::ValueType(exBandWidth)));
-    }
-
-    const size_t numPoints = points.size();
-    boost::scoped_array<Vec3s> indexSpacePoints(new Vec3s[numPoints]);
-
-    // transform points to local grid index space
-    tbb::parallel_for(tbb::blocked_range<size_t>(0, numPoints),
-        mesh_to_volume_internal::TransformPoints<Vec3s>(
-                &points[0], indexSpacePoints.get(), xform));
-
-    const int conversionFlags = unsignedDistanceField ? UNSIGNED_DISTANCE_FIELD : 0;
-
-    if (quads.empty()) {
-
-        QuadAndTriangleDataAdapter<Vec3s, Vec3I>
-            mesh(indexSpacePoints.get(), numPoints, &triangles[0], triangles.size());
-
-        return meshToVolume<GridType>(mesh, xform, exBandWidth, inBandWidth, conversionFlags);
-
-    } else if (triangles.empty()) {
-
-        QuadAndTriangleDataAdapter<Vec3s, Vec4I>
-            mesh(indexSpacePoints.get(), numPoints, &quads[0], quads.size());
-
-        return meshToVolume<GridType>(mesh, xform, exBandWidth, inBandWidth, conversionFlags);
-    }
-
-    // pack primitives
-
-    const size_t numPrimitives = triangles.size() + quads.size();
-    boost::scoped_array<Vec4I> prims(new Vec4I[numPrimitives]);
-
-    for (size_t n = 0, N = triangles.size(); n < N; ++n) {
-        const Vec3I& triangle = triangles[n];
-        Vec4I& prim = prims[n];
-        prim[0] = triangle[0];
-        prim[1] = triangle[1];
-        prim[2] = triangle[2];
-        prim[3] = util::INVALID_IDX;
-    }
-
-    const size_t offset = triangles.size();
-    for (size_t n = 0, N = quads.size(); n < N; ++n) {
-        prims[offset + n] = quads[n];
-    }
-
-    QuadAndTriangleDataAdapter<Vec3s, Vec4I>
-        mesh(indexSpacePoints.get(), numPoints, prims.get(), numPrimitives);
-
-    return meshToVolume<GridType>(mesh, xform, exBandWidth, inB*/
