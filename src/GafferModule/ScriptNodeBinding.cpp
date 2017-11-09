@@ -371,6 +371,24 @@ struct UndoAddedSlotCaller
 
 };
 
+struct ScriptExecutedSlotCaller
+{
+
+	boost::signals::detail::unusable operator()( boost::python::object slot, ScriptNode *script, const std::string &s )
+	{
+		try
+		{
+			slot( ScriptNodePtr( script ), s );
+		}
+		catch( const boost::python::error_already_set &e )
+		{
+			IECorePython::ExceptionAlgo::translatePythonException();
+		}
+		return boost::signals::detail::unusable();
+	}
+
+};
+
 } // namespace
 
 void GafferModule::bindScriptNode()
@@ -403,6 +421,6 @@ void GafferModule::bindScriptNode()
 	SignalClass<ScriptNode::ActionSignal, DefaultSignalCaller<ScriptNode::ActionSignal>, ActionSlotCaller>( "ActionSignal" );
 	SignalClass<ScriptNode::UndoAddedSignal, DefaultSignalCaller<ScriptNode::UndoAddedSignal>, UndoAddedSlotCaller>( "UndoAddedSignal" );
 
-	SignalClass<ScriptNode::ScriptExecutedSignal>( "ScriptExecutedSignal" );
+	SignalClass<ScriptNode::ScriptExecutedSignal, DefaultSignalCaller<ScriptNode::ScriptExecutedSignal>, ScriptExecutedSlotCaller>( "ScriptExecutedSignal" );
 
 }
