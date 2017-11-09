@@ -450,6 +450,15 @@ if moduleSearchPath.find( "GafferOSL" ) :
 		}
 	)
 
+# VDB nodes
+
+import GafferVDB
+import GafferVDBUI
+
+nodeMenu.append( "/VDB/LevelSet To Mesh", GafferVDB.LevelSetToMesh, searchText = "LevelSetToMesh" )
+nodeMenu.append( "/VDB/Mesh To LevelSet", GafferVDB.MeshToLevelSet, searchText = "MeshToLevelSet" )
+nodeMenu.append( "/VDB/LevelSet Offset", GafferVDB.LevelSetOffset, searchText = "LevelSetOffset" )
+
 # Dispatch nodes
 
 import GafferDispatch
@@ -474,15 +483,6 @@ nodeMenu.append( "/Utility/Reference", GafferUI.ReferenceUI.nodeMenuCreateComman
 nodeMenu.definition().append( "/Utility/Backdrop", { "command" : GafferUI.BackdropUI.nodeMenuCreateCommand } )
 nodeMenu.append( "/Utility/Dot", Gaffer.Dot )
 nodeMenu.append( "/Utility/Switch", functools.partial( Gaffer.SwitchComputeNode, "Switch" ) )
-
-# VDB nodes
-
-import GafferVDB
-import GafferVDBUI
-
-nodeMenu.append( "/VDB/VDB To Mesh", GafferVDB.VDBToMesh, searchText = "VDBToMesh" )
-nodeMenu.append( "/VDB/Mesh To VDB", GafferVDB.MeshToVDB, searchText = "MeshToVDB" )
-nodeMenu.append( "/VDB/VDB LevelSet Offset", GafferVDB.VDBLevelSetOffset, searchText = "VDBLevelSetOffset" )
 
 ## Miscellaneous UI
 ###########################################################################

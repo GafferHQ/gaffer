@@ -42,7 +42,7 @@
 #include "IECore/MeshPrimitive.h"
 
 #include "GafferVDB/VDBObject.h"
-#include "GafferVDB/MeshToVDB.h"
+#include "GafferVDB/MeshToLevelSet.h"
 
 using namespace std;
 using namespace Imath;
@@ -117,14 +117,14 @@ struct CortexMeshAdapter
 } // namespace
 
 //////////////////////////////////////////////////////////////////////////
-// MeshToVDB implementation
+// MeshToLevelSet implementation
 //////////////////////////////////////////////////////////////////////////
 
-IE_CORE_DEFINERUNTIMETYPED( MeshToVDB );
+IE_CORE_DEFINERUNTIMETYPED( MeshToLevelSet );
 
-size_t MeshToVDB::g_firstPlugIndex = 0;
+size_t MeshToLevelSet::g_firstPlugIndex = 0;
 
-MeshToVDB::MeshToVDB( const std::string &name )
+MeshToLevelSet::MeshToLevelSet( const std::string &name )
 	:	SceneElementProcessor( name )
 {
 	storeIndexOfNextChild( g_firstPlugIndex );
@@ -135,51 +135,51 @@ MeshToVDB::MeshToVDB( const std::string &name )
 	addChild( new FloatPlug( "interiorBandwidth", Plug::In, 3.0f, 0.0001f ) );
 }
 
-MeshToVDB::~MeshToVDB()
+MeshToLevelSet::~MeshToLevelSet()
 {
 }
 
-Gaffer::StringPlug *MeshToVDB::gridNamePlug()
-{
-	return  getChild<StringPlug>( g_firstPlugIndex );
-}
-
-const Gaffer::StringPlug *MeshToVDB::gridNamePlug() const
+Gaffer::StringPlug *MeshToLevelSet::gridNamePlug()
 {
 	return  getChild<StringPlug>( g_firstPlugIndex );
 }
 
-FloatPlug *MeshToVDB::voxelSizePlug()
+const Gaffer::StringPlug *MeshToLevelSet::gridNamePlug() const
+{
+	return  getChild<StringPlug>( g_firstPlugIndex );
+}
+
+FloatPlug *MeshToLevelSet::voxelSizePlug()
 {
 	return getChild<FloatPlug>( g_firstPlugIndex + 1 );
 }
 
-const FloatPlug *MeshToVDB::voxelSizePlug() const
+const FloatPlug *MeshToLevelSet::voxelSizePlug() const
 {
 	return getChild<FloatPlug>( g_firstPlugIndex + 1 );
 }
 
-FloatPlug *MeshToVDB::exteriorBandwidthPlug()
+FloatPlug *MeshToLevelSet::exteriorBandwidthPlug()
 {
 	return getChild<FloatPlug>( g_firstPlugIndex + 2 );
 }
 
-const FloatPlug *MeshToVDB::exteriorBandwidthPlug() const
+const FloatPlug *MeshToLevelSet::exteriorBandwidthPlug() const
 {
 	return getChild<FloatPlug>( g_firstPlugIndex + 2 );
 }
 
-FloatPlug *MeshToVDB::interiorBandwidthPlug()
+FloatPlug *MeshToLevelSet::interiorBandwidthPlug()
 {
 	return getChild<FloatPlug>( g_firstPlugIndex + 3 );
 }
 
-const FloatPlug *MeshToVDB::interiorBandwidthPlug() const
+const FloatPlug *MeshToLevelSet::interiorBandwidthPlug() const
 {
 	return getChild<FloatPlug>( g_firstPlugIndex + 3 );
 }
 
-void MeshToVDB::affects( const Gaffer::Plug *input, AffectedPlugsContainer &outputs ) const
+void MeshToLevelSet::affects( const Gaffer::Plug *input, AffectedPlugsContainer &outputs ) const
 {
 	SceneElementProcessor::affects( input, outputs );
 
@@ -189,12 +189,12 @@ void MeshToVDB::affects( const Gaffer::Plug *input, AffectedPlugsContainer &outp
 	}
 }
 
-bool MeshToVDB::processesObject() const
+bool MeshToLevelSet::processesObject() const
 {
 	return true;
 }
 
-void MeshToVDB::hashProcessedObject( const ScenePath &path, const Gaffer::Context *context, IECore::MurmurHash &h ) const
+void MeshToLevelSet::hashProcessedObject( const ScenePath &path, const Gaffer::Context *context, IECore::MurmurHash &h ) const
 {
 	SceneElementProcessor::hashProcessedObject( path, context, h );
 
@@ -204,7 +204,7 @@ void MeshToVDB::hashProcessedObject( const ScenePath &path, const Gaffer::Contex
 	interiorBandwidthPlug()->hash ( h );
 }
 
-IECore::ConstObjectPtr MeshToVDB::computeProcessedObject( const ScenePath &path, const Gaffer::Context *context, IECore::ConstObjectPtr inputObject ) const
+IECore::ConstObjectPtr MeshToLevelSet::computeProcessedObject( const ScenePath &path, const Gaffer::Context *context, IECore::ConstObjectPtr inputObject ) const
 {
 	const MeshPrimitive *mesh = runTimeCast<const MeshPrimitive>( inputObject.get() );
 	if( !mesh )

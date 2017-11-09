@@ -46,15 +46,15 @@
 namespace GafferVDB
 {
 
-class VDBToMesh : public GafferScene::SceneElementProcessor
+class LevelSetToMesh : public GafferScene::SceneElementProcessor
 {
 
 	public :
 
-		VDBToMesh( const std::string &name=defaultName<VDBToMesh>() );
-		virtual ~VDBToMesh();
+		LevelSetToMesh( const std::string &name=defaultName<LevelSetToMesh>() );
+		virtual ~LevelSetToMesh();
 
-		IE_CORE_DECLARERUNTIMETYPEDEXTENSION( GafferVDB::VDBToMesh, VDBToMeshTypeId, GafferScene::SceneElementProcessor );
+		IE_CORE_DECLARERUNTIMETYPEDEXTENSION( GafferVDB::LevelSetToMesh, LevelSetToMeshTypeId, GafferScene::SceneElementProcessor );
 
 		Gaffer::StringPlug *gridNamePlug();
 		const Gaffer::StringPlug *gridNamePlug() const;
@@ -79,7 +79,7 @@ class VDBToMesh : public GafferScene::SceneElementProcessor
 
 };
 
-IE_CORE_DECLAREPTR( VDBToMesh )
+IE_CORE_DECLAREPTR( LevelSetToMesh )
 
 } // namespace GafferVDB
 

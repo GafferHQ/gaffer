@@ -45,9 +45,9 @@ enum TypeId
 	VDBGridTypeId = 110950,
 	VDBObjectTypeId = 110951,
 	VDBSceneTypeId = 110952,
-	MeshToVDBTypeId = 110953,
-	VDBToMeshTypeId = 110954,
-	VDBLevelSetOffsetTypeId = 110955,
+	MeshToLevelSetTypeId = 110953,
+	LevelSetToMeshTypeId = 110954,
+	LevelSetOffsetTypeId = 110955,
 	LastTypeId = 110974
 };
 

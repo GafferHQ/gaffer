@@ -38,9 +38,9 @@
 
 #include "GafferBindings/DependencyNodeBinding.h"
 
-#include "GafferVDB/MeshToVDB.h"
-#include "GafferVDB/VDBToMesh.h"
-#include "GafferVDB/VDBLevelSetOffset.h"
+#include "GafferVDB/MeshToLevelSet.h"
+#include "GafferVDB/LevelSetToMesh.h"
+#include "GafferVDB/LevelSetOffset.h"
 
 #include "GafferVDB/VDBObject.h"
 
@@ -74,8 +74,8 @@ BOOST_PYTHON_MODULE( _GafferVDB )
 		.def("removeGrid", &VDBObject::removeGrid)
 		;
 
-	GafferBindings::DependencyNodeClass<MeshToVDB>();
-	GafferBindings::DependencyNodeClass<VDBToMesh>();
-	GafferBindings::DependencyNodeClass<VDBLevelSetOffset>();
+	GafferBindings::DependencyNodeClass<MeshToLevelSet>();
+	GafferBindings::DependencyNodeClass<LevelSetToMesh>();
+	GafferBindings::DependencyNodeClass<LevelSetOffset>();
 
 }

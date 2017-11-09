@@ -40,7 +40,7 @@
 #include "Gaffer/StringPlug.h"
 
 #include "GafferVDB/VDBObject.h"
-#include "GafferVDB/VDBLevelSetOffset.h"
+#include "GafferVDB/LevelSetOffset.h"
 
 using namespace std;
 using namespace Imath;
@@ -48,11 +48,11 @@ using namespace IECore;
 using namespace Gaffer;
 using namespace GafferVDB;
 
-IE_CORE_DEFINERUNTIMETYPED( VDBLevelSetOffset );
+IE_CORE_DEFINERUNTIMETYPED( LevelSetOffset );
 
-size_t VDBLevelSetOffset::g_firstPlugIndex = 0;
+size_t LevelSetOffset::g_firstPlugIndex = 0;
 
-VDBLevelSetOffset::VDBLevelSetOffset( const std::string &name )
+LevelSetOffset::LevelSetOffset( const std::string &name )
 	:	SceneElementProcessor( name )
 {
 	storeIndexOfNextChild( g_firstPlugIndex );
@@ -61,31 +61,31 @@ VDBLevelSetOffset::VDBLevelSetOffset( const std::string &name )
 	addChild( new FloatPlug( "offset", Plug::In, 0.5) );
 }
 
-VDBLevelSetOffset::~VDBLevelSetOffset()
+LevelSetOffset::~LevelSetOffset()
 {
 }
 
-Gaffer::StringPlug *VDBLevelSetOffset::gridNamePlug()
-{
-	return  getChild<StringPlug>( g_firstPlugIndex );
-}
-
-const Gaffer::StringPlug *VDBLevelSetOffset::gridNamePlug() const
+Gaffer::StringPlug *LevelSetOffset::gridNamePlug()
 {
 	return  getChild<StringPlug>( g_firstPlugIndex );
 }
 
-Gaffer::FloatPlug *VDBLevelSetOffset::offsetPlug()
+const Gaffer::StringPlug *LevelSetOffset::gridNamePlug() const
+{
+	return  getChild<StringPlug>( g_firstPlugIndex );
+}
+
+Gaffer::FloatPlug *LevelSetOffset::offsetPlug()
 {
 	return  getChild<FloatPlug>( g_firstPlugIndex + 1 );
 }
 
-const Gaffer::FloatPlug *VDBLevelSetOffset::offsetPlug() const
+const Gaffer::FloatPlug *LevelSetOffset::offsetPlug() const
 {
 	return  getChild<FloatPlug>( g_firstPlugIndex + 1 );
 }
 
-void VDBLevelSetOffset::affects( const Gaffer::Plug *input, AffectedPlugsContainer &outputs ) const
+void LevelSetOffset::affects( const Gaffer::Plug *input, AffectedPlugsContainer &outputs ) const
 {
 	SceneElementProcessor::affects( input, outputs );
 
@@ -95,12 +95,12 @@ void VDBLevelSetOffset::affects( const Gaffer::Plug *input, AffectedPlugsContain
 	}
 }
 
-bool VDBLevelSetOffset::processesObject() const
+bool LevelSetOffset::processesObject() const
 {
 	return true;
 }
 
-void VDBLevelSetOffset::hashProcessedObject( const ScenePath &path, const Gaffer::Context *context, IECore::MurmurHash &h ) const
+void LevelSetOffset::hashProcessedObject( const ScenePath &path, const Gaffer::Context *context, IECore::MurmurHash &h ) const
 {
 	SceneElementProcessor::hashProcessedObject( path, context, h );
 
@@ -108,7 +108,7 @@ void VDBLevelSetOffset::hashProcessedObject( const ScenePath &path, const Gaffer
 	offsetPlug()->hash( h );
 }
 
-IECore::ConstObjectPtr VDBLevelSetOffset::computeProcessedObject( const ScenePath &path, const Gaffer::Context *context, IECore::ConstObjectPtr inputObject ) const
+IECore::ConstObjectPtr LevelSetOffset::computeProcessedObject( const ScenePath &path, const Gaffer::Context *context, IECore::ConstObjectPtr inputObject ) const
 {
 	const VDBObject *vdbObject = runTimeCast<const VDBObject>(inputObject.get());
 	if( !vdbObject )

@@ -1,6 +1,6 @@
 //////////////////////////////////////////////////////////////////////////
 //
-//  Copyright (c) 2017, Image Engine Design. All rights reserved.
+//  Copyright (c) 2017, John Haddon. All rights reserved.
 //
 //  Redistribution and use in source and binary forms, with or without
 //  modification, are permitted provided that the following conditions are
@@ -15,7 +15,7 @@
 //        disclaimer in the documentation and/or other materials provided with
 //        the distribution.
 //
-//      * Neither the name of Image Engine Design nor the names of
+//      * Neither the name of John Haddon nor the names of
 //        any other contributors to this software may be used to endorse or
 //        promote products derived from this software without specific prior
 //        written permission.
@@ -34,9 +34,8 @@
 //
 //////////////////////////////////////////////////////////////////////////
 
-#ifndef GAFFERVDB_VDBLEVELSET_OFFSET_H
-#define GAFFERVDB_VDBLEVELSET_OFFSET_H
-
+#ifndef GAFFERVDB_MESHTOLEVELSET_H
+#define GAFFERVDB_MESHTOLEVELSET_H
 
 #include "Gaffer/NumericPlug.h"
 
@@ -44,40 +43,53 @@
 
 #include "GafferVDB/TypeIds.h"
 
+
+namespace Gaffer
+{
+class StringPlug;
+}
+
 namespace GafferVDB
 {
 
-class VDBLevelSetOffset : public GafferScene::SceneElementProcessor
+class MeshToLevelSet : public GafferScene::SceneElementProcessor
 {
 
 	public :
 
-		VDBLevelSetOffset(const std::string &name = defaultName<VDBLevelSetOffset>() );
-		~VDBLevelSetOffset();
+		MeshToLevelSet( const std::string &name=defaultName<MeshToLevelSet>() );
+		virtual ~MeshToLevelSet();
 
-		IE_CORE_DECLARERUNTIMETYPEDEXTENSION( GafferVDB::VDBLevelSetOffset, VDBLevelSetOffsetTypeId, GafferScene::SceneElementProcessor );
+		IE_CORE_DECLARERUNTIMETYPEDEXTENSION( GafferVDB::MeshToLevelSet, MeshToLevelSetTypeId, GafferScene::SceneElementProcessor );
 
 		Gaffer::StringPlug *gridNamePlug();
 		const Gaffer::StringPlug *gridNamePlug() const;
 
-		Gaffer::FloatPlug *offsetPlug();
-		const Gaffer::FloatPlug *offsetPlug() const;
+		Gaffer::FloatPlug *voxelSizePlug();
+		const Gaffer::FloatPlug *voxelSizePlug() const;
+
+		Gaffer::FloatPlug *exteriorBandwidthPlug();
+		const Gaffer::FloatPlug *exteriorBandwidthPlug() const;
+
+		Gaffer::FloatPlug *interiorBandwidthPlug();
+		const Gaffer::FloatPlug *interiorBandwidthPlug() const;
 
 		virtual void affects( const Gaffer::Plug *input, AffectedPlugsContainer &outputs ) const override;
 
 	protected :
 
-		bool processesObject() const override;
-		void hashProcessedObject( const ScenePath &path, const Gaffer::Context *context, IECore::MurmurHash &h ) const override;
-		IECore::ConstObjectPtr computeProcessedObject( const ScenePath &path, const Gaffer::Context *context, IECore::ConstObjectPtr inputObject ) const override;
+		virtual bool processesObject() const override;
+		virtual void hashProcessedObject( const ScenePath &path, const Gaffer::Context *context, IECore::MurmurHash &h ) const override;
+		virtual IECore::ConstObjectPtr computeProcessedObject( const ScenePath &path, const Gaffer::Context *context, IECore::ConstObjectPtr inputObject ) const override;
 
-	private:
+	private :
 
 		static size_t g_firstPlugIndex;
+
 };
 
-IE_CORE_DECLAREPTR( VDBLevelSetOffset )
+IE_CORE_DECLAREPTR( MeshToLevelSet )
 
 } // namespace GafferVDB
 
-#endif // GAFFERVDB_VDBLEVELSET_OFFSET_H
+#endif // GAFFERVDB_MESHTOLEVELSET_H

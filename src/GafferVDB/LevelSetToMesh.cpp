@@ -45,7 +45,7 @@
 #include "Gaffer/StringPlug.h"
 
 #include "GafferVDB/VDBObject.h"
-#include "GafferVDB/VDBToMesh.h"
+#include "GafferVDB/LevelSetToMesh.h"
 
 using namespace std;
 using namespace Imath;
@@ -167,11 +167,11 @@ IECore::MeshPrimitivePtr volumeToMesh( openvdb::GridBase::ConstPtr grid, double 
 // VolumeToMesh implementation
 //////////////////////////////////////////////////////////////////////////
 
-IE_CORE_DEFINERUNTIMETYPED( VDBToMesh );
+IE_CORE_DEFINERUNTIMETYPED( LevelSetToMesh );
 
-size_t VDBToMesh::g_firstPlugIndex = 0;
+size_t LevelSetToMesh::g_firstPlugIndex = 0;
 
-VDBToMesh::VDBToMesh( const std::string &name )
+LevelSetToMesh::LevelSetToMesh( const std::string &name )
 	:	SceneElementProcessor( name )
 {
 	storeIndexOfNextChild( g_firstPlugIndex );
@@ -182,42 +182,42 @@ VDBToMesh::VDBToMesh( const std::string &name )
 
 }
 
-VDBToMesh::~VDBToMesh()
+LevelSetToMesh::~LevelSetToMesh()
 {
 }
 
-Gaffer::StringPlug *VDBToMesh::gridNamePlug()
-{
-	return  getChild<StringPlug>( g_firstPlugIndex );
-}
-
-const Gaffer::StringPlug *VDBToMesh::gridNamePlug() const
+Gaffer::StringPlug *LevelSetToMesh::gridNamePlug()
 {
 	return  getChild<StringPlug>( g_firstPlugIndex );
 }
 
+const Gaffer::StringPlug *LevelSetToMesh::gridNamePlug() const
+{
+	return  getChild<StringPlug>( g_firstPlugIndex );
+}
 
-Gaffer::FloatPlug *VDBToMesh::isoValuePlug()
+
+Gaffer::FloatPlug *LevelSetToMesh::isoValuePlug()
 {
 	return getChild<FloatPlug>( g_firstPlugIndex + 1);
 }
 
-const Gaffer::FloatPlug *VDBToMesh::isoValuePlug() const
+const Gaffer::FloatPlug *LevelSetToMesh::isoValuePlug() const
 {
 	return getChild<FloatPlug>( g_firstPlugIndex + 1);
 }
 
-Gaffer::FloatPlug *VDBToMesh::adaptivityPlug()
+Gaffer::FloatPlug *LevelSetToMesh::adaptivityPlug()
 {
 	return getChild<FloatPlug>( g_firstPlugIndex + 2 );
 }
 
-const Gaffer::FloatPlug *VDBToMesh::adaptivityPlug() const
+const Gaffer::FloatPlug *LevelSetToMesh::adaptivityPlug() const
 {
 	return getChild<FloatPlug>( g_firstPlugIndex + 2 );
 }
 
-void VDBToMesh::affects( const Gaffer::Plug *input, AffectedPlugsContainer &outputs ) const
+void LevelSetToMesh::affects( const Gaffer::Plug *input, AffectedPlugsContainer &outputs ) const
 {
 	SceneElementProcessor::affects( input, outputs );
 
@@ -231,12 +231,12 @@ void VDBToMesh::affects( const Gaffer::Plug *input, AffectedPlugsContainer &outp
 	}
 }
 
-bool VDBToMesh::processesObject() const
+bool LevelSetToMesh::processesObject() const
 {
 	return true;
 }
 
-void VDBToMesh::hashProcessedObject( const ScenePath &path, const Gaffer::Context *context, IECore::MurmurHash &h ) const
+void LevelSetToMesh::hashProcessedObject( const ScenePath &path, const Gaffer::Context *context, IECore::MurmurHash &h ) const
 {
 	SceneElementProcessor::hashProcessedObject( path, context, h );
 
@@ -245,7 +245,7 @@ void VDBToMesh::hashProcessedObject( const ScenePath &path, const Gaffer::Contex
 	adaptivityPlug()->hash( h );
 }
 
-IECore::ConstObjectPtr VDBToMesh::computeProcessedObject( const ScenePath &path, const Gaffer::Context *context, IECore::ConstObjectPtr inputObject ) const
+IECore::ConstObjectPtr LevelSetToMesh::computeProcessedObject( const ScenePath &path, const Gaffer::Context *context, IECore::ConstObjectPtr inputObject ) const
 {
 	const VDBObject *vdbObject = runTimeCast<const VDBObject>( inputObject.get() );
 	if( !vdbObject )
