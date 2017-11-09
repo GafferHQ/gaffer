@@ -111,7 +111,17 @@ IECore::MeshPrimitivePtr volumeToMesh( openvdb::GridBase::ConstPtr grid, double 
 	IntVectorDataPtr vertexIdsData = new IntVectorData;
 	vector<int> &vertexIds = vertexIdsData->writable();
 
-	/// \todo PREALLOCATE
+	size_t numPolygons = 0;
+	size_t numVerts = 0;
+	for( size_t i = 0, n = mesher.polygonPoolListSize(); i < n; ++i )
+	{
+		const openvdb::tools::PolygonPool &polygonPool = mesher.polygonPoolList()[i];
+		numPolygons += polygonPool.numQuads() + polygonPool.numTriangles();
+		numVerts += polygonPool.numQuads() * 4 + polygonPool.numTriangles() * 3;
+	}
+
+	verticesPerFace.reserve( numPolygons );
+	vertexIds.reserve( numVerts );
 
 	for( size_t i = 0, n = mesher.polygonPoolListSize(); i < n; ++i )
 	{
@@ -137,7 +147,6 @@ IECore::MeshPrimitivePtr volumeToMesh( openvdb::GridBase::ConstPtr grid, double 
 	}
 
 	// Copy out points
-
 	V3fVectorDataPtr pointsData = new V3fVectorData;
 	vector<V3f> &points = pointsData->writable();
 
