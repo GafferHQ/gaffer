@@ -150,7 +150,7 @@ std::vector<std::string> VDBObject::gridNames() const
 
 void VDBObject::addGrid(openvdb::GridBase::Ptr grid)
 {
-	m_grids->push_back(grid);
+	m_grids->push_back( grid );
 }
 
 void VDBObject::removeGrid(const std::string& name)
@@ -288,15 +288,19 @@ IECore::CompoundObjectPtr VDBObject::metadata(const std::string& name)
 
 bool VDBObject::isEqualTo( const IECore::Object *other ) const
 {
-	if (!IECore::VisibleRenderable::isNotEqualTo( other ))
+	if( !IECore::VisibleRenderable::isNotEqualTo( other ) )
 	{
 		return false;
 	}
 
-	const VDBObject *vdbObject = runTimeCast<const VDBObject>(other);
+	const VDBObject *vdbObject = runTimeCast<const VDBObject>( other );
 
-	// are the grid pointers identical
-	return *m_grids == *vdbObject->m_grids;
+	if ( !vdbObject )
+	{
+		return false;
+	}
+
+	return (*m_grids) == (*vdbObject->m_grids);
 }
 
 void VDBObject::hash( IECore::MurmurHash &h ) const
@@ -311,9 +315,14 @@ void VDBObject::hash( IECore::MurmurHash &h ) const
 
 void VDBObject::copyFrom( const IECore::Object *other, IECore::Object::CopyContext *context  )
 {
-	IECore::VisibleRenderable::copyFrom( other, context);
+	IECore::VisibleRenderable::copyFrom( other, context );
 
-	const VDBObject *vdbObject = runTimeCast<const VDBObject>(other);
+	const VDBObject *vdbObject = runTimeCast<const VDBObject>( other );
+
+	if ( !vdbObject )
+	{
+		return;
+	}
 
 	for (const auto &grid : *vdbObject->m_grids)
 	{

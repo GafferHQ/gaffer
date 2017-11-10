@@ -47,8 +47,8 @@ class VDBObjectTest( GafferVDBTest.VDBTestCase ) :
 		GafferVDBTest.VDBTestCase.setUp( self )
 
 	def testCanLoadVDBFromFile( self ) :
-		sourcePath = os.path.join(self.dataDir, "sphere.vdb")
-		vdbObject = GafferVDB.VDBObject(sourcePath)
+		sourcePath = os.path.join( self.dataDir, "sphere.vdb" )
+		vdbObject = GafferVDB.VDBObject( sourcePath )
 
 		gridNames = vdbObject.gridNames()
 		self.assertEqual(gridNames, ['ls_sphere'])
@@ -65,12 +65,47 @@ class VDBObjectTest( GafferVDBTest.VDBTestCase ) :
 				'is_saved_as_half_float': IECore.BoolData( 1 ),
 				'value_type': IECore.StringData( 'float' ),
 				'class': IECore.StringData( 'level set' ),
-				'file_mem_bytes': IECore.Int64Data( 5528004 ),
+				'file_mem_bytes': IECore.Int64Data( 2643448 ),
 				'vector_type': IECore.StringData( 'invariant' )
 			}
 		)
 
-		self.assertEqual(metadata, expected)
+		self.assertEqual( metadata, expected )
+
+	def testCanEstimateMemoryUsage( self ):
+		sourcePath = os.path.join( self.dataDir, "smoke.vdb" )
+		vdbObject = GafferVDB.VDBObject( sourcePath )
+
+		self.assertEqual(788108, vdbObject.memoryUsage())
+		vdbObject.forceRead("density")
+		self.assertEqual(7022108, vdbObject.memoryUsage())
+
+	def testCanRemoveGrid( self ) :
+		sourcePath = os.path.join( self.dataDir, "smoke.vdb" )
+
+		vdbObject = GafferVDB.VDBObject( sourcePath )
+		self.assertEqual(vdbObject.gridNames(), ['density'])
+		vdbObject.removeGrid('density')
+		self.assertEqual(vdbObject.gridNames(), [])
+
+	def testCopiedVDBObjectHasDifferentHash( self ) :
+		sourcePath = os.path.join( self.dataDir, "smoke.vdb" )
+		vdbObject = GafferVDB.VDBObject( sourcePath )
+		vdbObjectCopy = vdbObject.copy()
+
+		self.assertNotEqual( vdbObject.hash(), vdbObjectCopy.hash() )
+
+	def testCanCreateMemoryBufferForRendering( self ):
+		sourcePath = os.path.join( self.dataDir, "smoke.vdb" )
+		vdbObject = GafferVDB.VDBObject( sourcePath )
+		memBuffer = vdbObject.memoryBuffer()
+
+		self.assertEqual(len(memBuffer), 2585819)
+
+		self.assertEqual(memBuffer[0],	ord(' '))
+		self.assertEqual(memBuffer[1],	ord('B'))
+		self.assertEqual(memBuffer[2],	ord('D'))
+		self.assertEqual(memBuffer[3],	ord('V'))
 
 
 if __name__ == "__main__":

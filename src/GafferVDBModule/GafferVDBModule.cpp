@@ -68,10 +68,12 @@ BOOST_PYTHON_MODULE( _GafferVDB )
 
 	IECorePython::RunTimeTypedClass<VDBObject>()
 		.def(init<const std::string &>())
+		.def(init<>())
 		.def("gridNames", &::gridNames)
 		.def("metadata", &VDBObject::metadata)
 		.def("forceRead", &VDBObject::forceRead)
 		.def("removeGrid", &VDBObject::removeGrid)
+		.def("memoryBuffer", &VDBObject::memoryBuffer)
 		;
 
 	GafferBindings::DependencyNodeClass<MeshToLevelSet>();

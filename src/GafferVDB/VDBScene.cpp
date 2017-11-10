@@ -253,7 +253,7 @@ class VDBScene : public SceneInterface
 			}
 			else if (missingBehaviour == ThrowIfMissing)
 			{
-				throw IECore::InvalidArgumentException("VDBSCene::child(): no child called \" + name.string()");
+				throw IECore::InvalidArgumentException("VDBSCene::child(): no child called " + name.string());
 			}
 			else if (missingBehaviour == CreateIfMissing)
 			{
@@ -339,6 +339,8 @@ class VDBScene : public SceneInterface
 
 		void hash( HashType hashType, double time, MurmurHash &h ) const override
 		{
+			// todo split this into multiple functions once SceneInterface API
+			// has been updated to have separate hash functions for each HashType
 			SceneInterface::hash (hashType, time, h);
 			h.append( hashType );
 
@@ -346,7 +348,16 @@ class VDBScene : public SceneInterface
 			{
 				h.append( m_parent == nullptr );
 			}
-			else if ( hashType == ObjectHash || hashType == BoundHash)
+			else if ( hashType == ObjectHash )
+			{
+				h.append( m_parent == nullptr );
+
+				if ( m_parent )
+				{
+					h.append( rootData().m_fileName );
+				}
+			}
+			else if ( hashType == BoundHash )
 			{
 				h.append( rootData().m_fileName );
 			}
@@ -355,6 +366,11 @@ class VDBScene : public SceneInterface
 				h.append( rootData().m_fileName );
 				h.append( m_parent == nullptr );
 			}
+			else if ( hashType == AttributesHash )
+			{
+				//no attributes on VDB files so pass through
+			}
+
 		}
 
 	private :
