@@ -41,6 +41,7 @@
 #include "GafferImage/ImageAlgo.h"
 #include "GafferImage/VectorWarp.h"
 #include "GafferImage/FilterAlgo.h"
+#include "math.h"
 
 using namespace Imath;
 using namespace IECore;
@@ -83,7 +84,12 @@ struct VectorWarp::Engine : public Warp::Engine
 			result += m_vectorUnits == Screen ?
 				screenToPixel( V2f( m_x[i], m_y[i] ) ) :
 				V2f( m_x[i], m_y[i] );
-				
+
+			if( !std::isfinite( result[0] ) || !std::isfinite( result[1] ) )
+			{
+				return black;
+			}
+
 			return result;
 		}
 	}
