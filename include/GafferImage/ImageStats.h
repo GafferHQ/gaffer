@@ -90,9 +90,6 @@ class ImageStats : public Gaffer::ComputeNode
 
 		std::string channelName( int colorIndex ) const;
 
-		/// Implemented to initialize the default format settings if they don't exist already.
-		void parentChanging( Gaffer::GraphComponent *newParent ) override;
-
 		static size_t g_firstPlugIndex;
 
 };

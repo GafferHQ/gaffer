@@ -40,6 +40,7 @@ import functools
 import IECore
 
 import Gaffer
+import GafferImage
 import GafferUI
 import GafferDispatch
 
@@ -56,6 +57,8 @@ def __scriptAdded( container, script ) :
 	if "projectRootDirectory" not in variables :
 		projectRoot = variables.addMember( "project:rootDirectory", IECore.StringData( "$HOME/gaffer/projects/${project:name}" ), "projectRootDirectory" )
 		projectRoot["name"].setFlags( Gaffer.Plug.Flags.ReadOnly, True )
+
+	GafferImage.FormatPlug.acquireDefaultFormatPlug( script )
 
 application.root()["scripts"].childAddedSignal().connect( __scriptAdded, scoped = False )
 

@@ -176,24 +176,6 @@ void ImageNode::hashChannelData( const GafferImage::ImagePlug *parent, const Gaf
 	ComputeNode::hash( parent->channelDataPlug(), context, h );
 }
 
-void ImageNode::parentChanging( Gaffer::GraphComponent *newParent )
-{
-	ComputeNode::parentChanging( newParent );
-
-	// Set up the default format plug.
-	Node *parentNode = runTimeCast<Node>( newParent );
-	if( !parentNode )
-	{
-		return;
-	}
-
-	ScriptNode *scriptNode = parentNode->scriptNode();
-	if( scriptNode )
-	{
-		FormatPlug::acquireDefaultFormatPlug( scriptNode );
-	}
-}
-
 void ImageNode::compute( ValuePlug *output, const Context *context ) const
 {
 	ImagePlug *imagePlug = output->parent<ImagePlug>();

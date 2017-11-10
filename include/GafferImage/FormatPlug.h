@@ -120,10 +120,6 @@ class FormatPlug : public Gaffer::ValuePlug
 		/// to specify the default format for a particular script. When the
 		/// value of this plug is changed, the default format within
 		/// ScriptNode::context() will be updated automatically.
-		/// \todo This is currently called automatically in ImageNode::parentChanging(),
-		/// but it would be better to leave it to application config
-		/// files to call it, so each application can decide if it is
-		/// appropriate or not.
 		static FormatPlug *acquireDefaultFormatPlug( Gaffer::ScriptNode *scriptNode );
 		//@}
 

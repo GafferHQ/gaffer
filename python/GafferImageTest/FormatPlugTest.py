@@ -131,7 +131,7 @@ class FormatPlugTest( GafferImageTest.ImageTestCase ) :
 		self.assertFalse( "defaultFormat" in s )
 
 		s["c"] = GafferImage.Constant()
-		self.assertTrue( "defaultFormat" in s )
+		self.assertFalse( "defaultFormat" in s )
 
 		defaultFormatPlug = GafferImage.FormatPlug.acquireDefaultFormatPlug( s )
 		self.assertTrue( defaultFormatPlug.isSame( s["defaultFormat"] ) )
@@ -166,15 +166,6 @@ class FormatPlugTest( GafferImageTest.ImageTestCase ) :
 		s2.execute( s.serialise() )
 		with s2.context() :
 			self.assertEqual( s2["c"]["out"]["format"].getValue(), f )
-
-	def testDefaultFormatFromScriptWithBox( self ) :
-
-		s = Gaffer.ScriptNode()
-		self.assertFalse( "defaultFormat" in s )
-
-		s["b"] = Gaffer.Box()
-		s["b"]["c"] = GafferImage.Constant()
-		self.assertTrue( "defaultFormat" in s )
 
 	def testExpressions( self ) :
 
