@@ -88,7 +88,6 @@ class Gadget : public Gaffer::GraphComponent
 			Main = 0,
 			MidFront = 1,
 			Front = 2,
-			Last = 3
 		};
 
 		/// Returns the Gadget with the specified name, where name has been retrieved
@@ -353,8 +352,6 @@ class Gadget : public Gaffer::GraphComponent
 
 typedef Gaffer::FilteredChildIterator<Gaffer::TypePredicate<Gadget> > GadgetIterator;
 typedef Gaffer::FilteredRecursiveChildIterator<Gaffer::TypePredicate<Gadget> > RecursiveGadgetIterator;
-
-inline Gadget::Layer &operator++( Gadget::Layer &x ) { return x = (Gadget::Layer)(((int)(x) + 1)); };
 
 } // namespace GafferUI
 

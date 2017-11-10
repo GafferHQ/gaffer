@@ -256,9 +256,9 @@ Imath::M44f Gadget::fullTransform( const Gadget *ancestor ) const
 
 void Gadget::render() const
 {
-	for( Layer layer = Layer::Back; layer < Layer::Last; ++layer )
+	for( int layer = (int)Layer::Back; layer <= (int)Layer::Front; ++layer )
 	{
-		renderLayer( layer, /* currentStyle = */ nullptr );
+		renderLayer( (Layer)layer, /* currentStyle = */ nullptr );
 	}
 }
 
