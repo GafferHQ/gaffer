@@ -53,7 +53,7 @@ using namespace Gaffer;
 namespace
 {
 
-const char *setName( GraphComponent &c, const char *name )
+const char *setName( GraphComponent &c, const IECore::InternedString &name )
 {
 	return c.setName( name ).c_str();
 }
@@ -128,26 +128,26 @@ void removeChild( GraphComponent &g, GraphComponentPtr c )
 	g.removeChild( c );
 }
 
-GraphComponentPtr getChild( GraphComponent &g, const char *n )
+GraphComponentPtr getChild( GraphComponent &g, const IECore::InternedString &n )
 {
 	return g.getChild<GraphComponent>( n );
 }
 
-GraphComponentPtr descendant( GraphComponent &g, const char *n )
+GraphComponentPtr descendant( GraphComponent &g, const std::string &n )
 {
 	return g.descendant<GraphComponent>( n );
 }
 
-void throwKeyError( const GraphComponent &g, const char *n )
+void throwKeyError( const GraphComponent &g, const IECore::InternedString &n )
 {
 	const std::string error = boost::str(
-		boost::format( "'%s' is not a child of '%s'" ) % n % g.getName()
+		boost::format( "'%s' is not a child of '%s'" ) % n.string() % g.getName()
 	);
 	PyErr_SetString( PyExc_KeyError, error.c_str() );
 	throw_error_already_set();
 }
 
-GraphComponentPtr getItem( GraphComponent &g, const char *n )
+GraphComponentPtr getItem( GraphComponent &g, const IECore::InternedString &n )
 {
 	GraphComponentPtr c = g.getChild<GraphComponent>( n );
 	if( c )
@@ -177,7 +177,7 @@ GraphComponentPtr getItem( GraphComponent &g, long index )
 	return g.getChild<GraphComponent>( index );
 }
 
-void delItem( GraphComponent &g, const char *n )
+void delItem( GraphComponent &g, const IECore::InternedString &n )
 {
 	{
 		IECorePython::ScopedGILRelease gilRelease;
@@ -201,7 +201,7 @@ bool nonZero( GraphComponent &g )
 	return true;
 }
 
-bool contains( GraphComponent &g, const char *n )
+bool contains( GraphComponent &g, const IECore::InternedString &n )
 {
 	return g.getChild<GraphComponent>( n );
 }
@@ -279,7 +279,7 @@ void GafferBindings::bindGraphComponent()
 		.def( "setChild", &setChild )
 		.def( "getChild", &getChild )
 		.def( "descendant", &descendant )
-		.def( "__getitem__", (GraphComponentPtr (*)( GraphComponent &, const char * ))&getItem )
+		.def( "__getitem__", (GraphComponentPtr (*)( GraphComponent &, const IECore::InternedString & ))&getItem )
 		.def( "__getitem__", (GraphComponentPtr (*)( GraphComponent &, long ))&getItem )
 		.def( "__setitem__", &setChild )
 		.def( "__delitem__", delItem )
