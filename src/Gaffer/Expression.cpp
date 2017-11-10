@@ -46,6 +46,7 @@
 #include "Gaffer/Context.h"
 #include "Gaffer/StringPlug.h"
 #include "Gaffer/Action.h"
+#include "Gaffer/ScriptNode.h"
 
 using namespace IECore;
 using namespace Gaffer;
@@ -85,6 +86,8 @@ Expression::Expression( const std::string &name )
 	addChild( new ValuePlug( "__in", Plug::In, Plug::Default & ~Plug::AcceptsInputs ) );
 	addChild( new ValuePlug( "__out", Plug::Out ) );
 	addChild( new ObjectVectorPlug( "__execute", Plug::Out, new ObjectVector ) );
+
+	plugSetSignal().connect( boost::bind( &Expression::plugSet, this, ::_1 ) );
 }
 
 Expression::~Expression()
@@ -479,6 +482,38 @@ std::string Expression::transcribe( const std::string &expression, bool toIntern
 	{
 		return m_engine->replace( this, expression, internalPlugs, externalPlugs );
 	}
+}
+
+void Expression::plugSet( const Plug *plug )
+{
+	if( m_engine || plug != expressionPlug() )
+	{
+		return;
+	}
+
+	const std::string engineType = enginePlug()->getValue();
+	std::string expression = expressionPlug()->getValue();
+	if( engineType.empty() || expression.empty() )
+	{
+		return;
+	}
+
+	const ScriptNode *script = scriptNode();
+	if( !script || !script->isExecuting() )
+	{
+		IECore::msg( IECore::Msg::Warning, "Expression::plugSet", "Unexpected change to __engine plug. Should you be calling setExpression() instead?" );
+		return;
+	}
+
+	// We've just been loaded from serialised form. All our plugs
+	// will already have been connected appropriately by the serialisation,
+	// but we need to initialise m_engine so we're ready for hash/compute.
+
+	m_contextNames.clear();
+	m_engine = Engine::create( engineType );
+	expression = transcribe( expression, /* toInternalForm = */ false );
+	std::vector<ValuePlug *> inPlugs, outPlugs;
+	m_engine->parse( this, expression, inPlugs, outPlugs, m_contextNames );
 }
 
 //////////////////////////////////////////////////////////////////////////

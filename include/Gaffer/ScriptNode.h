@@ -188,7 +188,7 @@ class ScriptNode : public Node
 		/// distinguishing between them.
 		bool isExecuting() const;
 		/// This signal is emitted following successful execution of a script.
-		typedef boost::signal<void ( ScriptNodePtr, const std::string )> ScriptExecutedSignal;
+		typedef boost::signal<void ( ScriptNode *, const std::string )> ScriptExecutedSignal;
 		ScriptExecutedSignal &scriptExecutedSignal();
 		//@}
 

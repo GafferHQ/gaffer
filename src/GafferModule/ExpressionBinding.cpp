@@ -323,15 +323,30 @@ class ExpressionSerialiser : public NodeSerialiser
 
 	std::string postScript( const Gaffer::GraphComponent *graphComponent, const std::string &identifier, const Serialisation &serialisation ) const override
 	{
-		const Expression *e = static_cast<const Expression *>( graphComponent );
+		// We delay the serialisation of the values for the engine and expression plugs
+		// until now so that `Expression::plugSet()` can successfully restore the engine
+		// after all connections to the node have been made.
 
-		std::string language;
-		const std::string expression = e->getExpression( language );
+		std::string result = NodeSerialiser::postScript( graphComponent, identifier, serialisation );
 
-		object pythonExpression( expression );
-		std::string quotedExpression = extract<std::string>( pythonExpression.attr( "__repr__" )() );
+		const Expression *expression = static_cast<const Expression *>( graphComponent );
+		const StringPlug *enginePlug = expression->getChild<StringPlug>( "__engine" );
+		const StringPlug *expressionPlug = expression->getChild<StringPlug>( "__expression" );
 
-		return identifier + ".setExpression( " + quotedExpression + ", \"" + language + "\" )\n";
+		const std::string engineValue = enginePlug->getValue();
+		const std::string expressionValue = expressionPlug->getValue();
+		if( engineValue.empty() || expressionValue.empty() )
+		{
+			return result;
+		}
+
+		std::string engineRepr = extract<std::string>( object( engineValue ).attr( "__repr__" )() );
+		std::string expressionRepr = extract<std::string>( object( expressionValue ).attr( "__repr__" )() );
+
+		result += serialisation.identifier( enginePlug ) + ".setValue( " + engineRepr + " )\n";
+		result += serialisation.identifier( expressionPlug ) + ".setValue( " + expressionRepr + " )\n";
+
+		return result;
 	}
 
 };
