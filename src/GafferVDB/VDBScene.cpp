@@ -375,7 +375,7 @@ class VDBScene : public SceneInterface
 
 	private :
 
-		VDBScene( VDBScene* parent )
+		VDBScene( VDBScene::Ptr parent )
 		: m_parent( parent )
 		{
 		}
