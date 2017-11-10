@@ -760,5 +760,15 @@ class GraphComponentTest( GafferTest.TestCase ) :
 		self.assertRaisesRegexp( KeyError, "'a' is not a child of 'GraphComponent'", g.__getitem__, "a" )
 		self.assertRaisesRegexp( KeyError, "'a' is not a child of 'GraphComponent'", g.__delitem__, "a" )
 
+	def testNoneIsNotAString( self ) :
+
+		g = Gaffer.GraphComponent()
+		self.assertRaises( TypeError, g.getChild, None )
+		self.assertRaises( TypeError, g.__getitem__, None )
+		self.assertRaises( TypeError, g.__delitem__, None )
+		self.assertRaises( TypeError, g.descendant, None )
+		self.assertRaises( TypeError, g.__contains__, None )
+		self.assertRaises( TypeError, g.setName, None )
+
 if __name__ == "__main__":
 	unittest.main()
