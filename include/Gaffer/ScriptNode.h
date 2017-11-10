@@ -183,7 +183,7 @@ class ScriptNode : public Node
 		/// As above, but loads the serialisation from the specified file.
 		bool executeFile( const std::string &fileName, Node *parent = nullptr, bool continueOnError = false );
 		/// Returns true if a script is currently being executed. Note that
-		/// `execute()`, `executeFile()`, `load()` and `paste()` are all
+		/// `execute()`, `executeFile()`, `load()`, `importFile()` and `paste()` are all
 		/// sources of execution, and there is intentionally no way of
 		/// distinguishing between them.
 		bool isExecuting() const;
@@ -208,6 +208,10 @@ class ScriptNode : public Node
 		bool load( bool continueOnError = false );
 		/// Saves the script to the file specified by the filename plug.
 		void save() const;
+		/// Imports the nodes from the specified script, adding them to
+		/// the contents of this script. See `execute()` for a description
+		/// of the continueOnError argument and the return value.
+		bool importFile( const std::string &fileName, Node *parent = nullptr, bool continueOnError = false );
 		//@}
 
 		//! @name Computation context
