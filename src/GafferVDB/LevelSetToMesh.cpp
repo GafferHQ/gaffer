@@ -60,51 +60,51 @@ using namespace GafferVDB;
 namespace
 {
 
-
-//! list of grid types which can be converted to a mesh
-//! AccorindCall with scalar typed grid.
-typedef boost::mpl::list
-<
-	openvdb::BoolGrid,
-	openvdb::DoubleGrid,
-	openvdb::FloatGrid,
-	openvdb::Int32Grid,
-	openvdb::Int64Grid
-> VDBScalarGridList;
-
-struct Dispatcher
+struct MesherDispatch
 {
-	Dispatcher( openvdb::GridBase::ConstPtr grid, openvdb::tools::VolumeToMesh &mesher ) : m_grid( grid ), m_mesher( mesher ), m_matchingTypeFound( false )
+	MesherDispatch( openvdb::GridBase::ConstPtr grid, openvdb::tools::VolumeToMesh &mesher ) : m_grid( grid ), m_mesher( mesher )
 	{
 	}
 
 	template<typename GridType>
-	void operator()( GridType )
+	void execute()
 	{
-		if ( m_matchingTypeFound )
-		{
-			return;
-		}
-
 		if( typename GridType::ConstPtr t = openvdb::GridBase::constGrid<GridType>( m_grid ) )
 		{
-			m_matchingTypeFound = true;
 			m_mesher( *t );
 		}
 	}
 
 	openvdb::GridBase::ConstPtr m_grid;
 	openvdb::tools::VolumeToMesh &m_mesher;
-	bool m_matchingTypeFound;
 };
+
+static std::map<std::string, std::function<void( MesherDispatch& dispatch )> > meshers =
+{
+	{ openvdb::typeNameAsString<bool>(), []( MesherDispatch& dispatch ) { dispatch.execute<openvdb::BoolGrid>(); } },
+	{ openvdb::typeNameAsString<double>(), []( MesherDispatch& dispatch ) { dispatch.execute<openvdb::DoubleGrid>(); } },
+	{ openvdb::typeNameAsString<float>(), []( MesherDispatch& dispatch ) { dispatch.execute<openvdb::FloatGrid>(); } },
+	{ openvdb::typeNameAsString<int32_t>(), []( MesherDispatch& dispatch ) { dispatch.execute<openvdb::Int32Grid>(); } },
+	{ openvdb::typeNameAsString<int64_t>(), []( MesherDispatch& dispatch ) { dispatch.execute<openvdb::Int64Grid>(); } }
+};
+
 
 IECore::MeshPrimitivePtr volumeToMesh( openvdb::GridBase::ConstPtr grid, double isoValue, double adaptivity )
 {
 	openvdb::tools::VolumeToMesh mesher( isoValue, adaptivity );
-	boost::mpl::for_each<VDBScalarGridList> ( Dispatcher( grid, mesher ) );
+	MesherDispatch dispatch( grid, mesher );
+
+	const auto it = meshers.find( grid->valueType() );
+	if( it != meshers.end() )
+	{
+		it->second( dispatch );
+	}
+	else
+	{
+		throw IECore::InvalidArgumentException( boost::str( boost::format( "Incompatible Grid found name: '%1%' type: '%2' " ) % grid->valueType() % grid->getName() ) );
+	}
 
 	// Copy out topology
-
 	IntVectorDataPtr verticesPerFaceData = new IntVectorData;
 	vector<int> &verticesPerFace = verticesPerFaceData->writable();
 
