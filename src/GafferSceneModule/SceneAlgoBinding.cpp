@@ -94,18 +94,6 @@ Imath::V2f shutterWrapper( const IECore::CompoundObject *globals )
 	return SceneAlgo::shutter( globals );
 }
 
-IECore::CameraPtr cameraWrapper1( const ScenePlug *scene, const IECore::CompoundObject *globals )
-{
-	IECorePython::ScopedGILRelease r;
-	return SceneAlgo::camera( scene, globals );
-}
-
-IECore::CameraPtr cameraWrapper2( const ScenePlug *scene, const ScenePlug::ScenePath &cameraPath, const IECore::CompoundObject *globals )
-{
-	IECorePython::ScopedGILRelease r;
-	return SceneAlgo::camera( scene, cameraPath, globals );
-}
-
 bool setExistsWrapper( const ScenePlug *scene, const IECore::InternedString &setName )
 {
 	IECorePython::ScopedGILRelease r;
@@ -146,16 +134,6 @@ void bindSceneAlgo()
 	def( "matchingPaths", &matchingPathsWrapper2 );
 	def( "matchingPaths", &matchingPathsWrapper3 );
 	def( "shutter", &shutterWrapper );
-	def(
-		"camera",
-		&cameraWrapper1,
-		( arg( "scene" ), arg( "globals" ) = object() )
-	);
-	def(
-		"camera",
-		&cameraWrapper2,
-		( arg( "scene" ), args( "cameraPath" ), arg( "globals" ) = object() )
-	);
 	def( "setExists", &setExistsWrapper );
 	def(
 		"sets",

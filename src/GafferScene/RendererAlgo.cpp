@@ -56,6 +56,7 @@
 #include "IECore/MotionBlock.h"
 #include "IECore/Interpolator.h"
 #include "IECore/NullObject.h"
+#include "IECore/Transform.h"
 
 #include "Gaffer/Context.h"
 #include "Gaffer/Metadata.h"
@@ -1010,14 +1011,11 @@ void outputCameras( const ScenePlug *scene, const IECore::CompoundObject *global
 
 	if( !cameraOption || cameraOption->readable().empty() )
 	{
-		CameraPtr defaultCamera = SceneAlgo::camera( scene, globals );
-		StringDataPtr name = new StringData( "gaffer:defaultCamera" );
-		IECoreScenePreview::Renderer::AttributesInterfacePtr defaultAttributes = renderer->attributes( scene->attributesPlug()->defaultValue() ).get();
-		renderer->camera(
-			name->readable(),
-			defaultCamera.get(),
-			defaultAttributes.get()
-		);
+		CameraPtr defaultCamera = new IECore::Camera;
+		RendererAlgo::applyCameraGlobals( defaultCamera.get(), globals );
+		IECoreScenePreview::Renderer::AttributesInterfacePtr defaultAttributes = renderer->attributes( scene->attributesPlug()->defaultValue() );
+		ConstStringDataPtr name = new StringData( "gaffer:defaultCamera" );
+		renderer->camera( name->readable(), defaultCamera.get(), defaultAttributes.get() );
 		renderer->option( "camera", name.get() );
 	}
 }
