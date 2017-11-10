@@ -366,6 +366,13 @@ class _ImageListing( GafferUI.PlugValueWidget ) :
 	def __removeClicked( self, *unused ) :
 
 		index = self.__indexFromSelection()
+
+		# If the user repeatedly clicks the delete button, we might end up in a
+		# state, where selection hasn't been restored yet. In that case we
+		# can't delete anything and will ignore the request.
+		if index is None :
+			return
+
 		with Gaffer.UndoScope( self.getPlug().ancestor( Gaffer.ScriptNode ) ) :
 			self.__images().removeChild( self.__images()[index] )
 			self.getPlug().setValue( max( 0, index - 1 ) )
