@@ -71,7 +71,6 @@
 #include "renderer/api/utility.h"
 
 #include "IECore/Camera.h"
-#include "IECore/Light.h"
 #include "IECore/MessageHandler.h"
 #include "IECore/Shader.h"
 #include "IECore/SimpleTypedData.h"
@@ -1468,14 +1467,6 @@ string getLightModel( const ObjectVector* lightShader )
 		{
 			return shader->getName();
 		}
-		else if( const Light *light = runTimeCast<const Light>( it->get() ) )
-		{
-			string lightModel = light->getName();
-			if( boost::starts_with( lightModel, "as:" ) )
-			{
-				return string( lightModel, 3, string::npos );
-			}
-		}
 	}
 
 	return string();
@@ -1488,10 +1479,6 @@ const CompoundDataMap *getLightParameters( const ObjectVector* lightShader )
 		if( const Shader *shader = runTimeCast<const Shader>( it->get() ) )
 		{
 			return &shader->parameters();
-		}
-		else if( const Light *light = runTimeCast<const Light>( it->get() ) )
-		{
-			return &light->parameters();
 		}
 	}
 

@@ -35,7 +35,6 @@
 //////////////////////////////////////////////////////////////////////////
 
 #include "IECore/Camera.h"
-#include "IECore/Light.h"
 #include "IECore/ExternalProcedural.h"
 
 #include "GafferScene/Parameters.h"
@@ -109,12 +108,6 @@ IECore::ConstObjectPtr Parameters::computeProcessedObject( const ScenePath &path
 		CameraPtr cameraCopy = camera->copy();
 		outputParameters = cameraCopy->parametersData();
 		outputObject = cameraCopy;
-	}
-	else if( const Light *light = runTimeCast<const Light>( inputObject.get() ) )
-	{
-		LightPtr lightCopy = light->copy();
-		outputParameters = lightCopy->parametersData().get();
-		outputObject = lightCopy;
 	}
 	else if( const ExternalProcedural *procedural = runTimeCast<const ExternalProcedural>( inputObject.get() ) )
 	{

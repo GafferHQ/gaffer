@@ -37,7 +37,6 @@
 #include "boost/container/flat_map.hpp"
 #include "boost/algorithm/string/predicate.hpp"
 
-#include "IECore/Light.h"
 #include "IECore/Shader.h"
 
 #include "IECoreGL/CurvesPrimitive.h"
@@ -130,12 +129,6 @@ IECoreGL::ConstRenderablePtr AttributeVisualiserForLights::visualise( const IECo
 		if( const IECore::Shader *shader = IECore::runTimeCast<const IECore::Shader>( shaderVector->members().back().get() ) )
 		{
 			shaderName = shader->getName();
-		}
-		else if( const IECore::Light *light = IECore::runTimeCast<const IECore::Light>( shaderVector->members().back().get() ) )
-		{
-			/// \todo Remove once all Light node derived classes are
-			/// creating only shaders.
-			shaderName = light->getName();
 		}
 
 		if( shaderName.string().empty() )

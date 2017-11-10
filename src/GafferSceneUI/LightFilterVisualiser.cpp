@@ -38,7 +38,6 @@
 #include "boost/algorithm/string/predicate.hpp"
 #include "boost/algorithm/string.hpp"
 
-#include "IECore/Light.h"
 #include "IECore/Shader.h"
 
 #include "IECoreGL/Group.h"

@@ -44,7 +44,7 @@ Gaffer.Metadata.registerNode(
 
 	"description",
 	"""
-	Modifies the parameters of lights, cameras and procedurals.
+	Modifies the parameters of cameras and procedurals.
 	Existing parameters can be tweaked and new parameters be added.
 	""",
 

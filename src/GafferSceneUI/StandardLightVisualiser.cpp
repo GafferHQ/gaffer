@@ -37,7 +37,6 @@
 #include "IECore/MeshPrimitive.h"
 #include "IECore/Shader.h"
 #include "IECore/ObjectVector.h"
-#include "IECore/Light.h"
 
 #include "IECoreGL/CurvesPrimitive.h"
 #include "IECoreGL/SpherePrimitive.h"
@@ -79,13 +78,6 @@ const IECore::CompoundData *parametersAndMetadataTarget( const IECore::InternedS
 	{
 		metadataTarget = attributeName.string() + ":" + shader->getName();
 		return shader->parametersData();
-	}
-	else if( const IECore::Light *light = IECore::runTimeCast<const IECore::Light>( shaderVector->members().back().get() ) )
-	{
-		/// \todo Remove once all Light node derived classes are
-		/// creating only shaders.
-		metadataTarget = attributeName.string() + ":" + light->getName();
-		return light->parametersData().get();
 	}
 
 	return nullptr;
