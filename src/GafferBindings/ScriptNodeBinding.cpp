@@ -386,6 +386,7 @@ void GafferBindings::bindScriptNode()
 		.def( "serialiseToFile", &ScriptNode::serialiseToFile, ( boost::python::arg( "fileName" ), boost::python::arg( "parent" ) = boost::python::object(), boost::python::arg( "filter" ) = boost::python::object() ) )
 		.def( "save", &ScriptNode::save )
 		.def( "load", &ScriptNode::load, ( boost::python::arg( "continueOnError" ) = false ) )
+		.def( "importFile", &ScriptNode::importFile, ( boost::python::arg( "fileName" ), boost::python::arg( "parent" ) = boost::python::object(), boost::python::arg( "continueOnError" ) = false ) )
 		.def( "context", &context )
 	;
 

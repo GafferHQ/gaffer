@@ -1363,5 +1363,41 @@ class ScriptNodeTest( GafferTest.TestCase ) :
 		self.assertTrue( "iAmAnError" in mh.messages[0].message )
 		self.assertEqual( len( script.children( Gaffer.Node ) ), 1 )
 
+	def testErrorTolerantExecutionWithSyntaxError( self ) :
+
+		script = Gaffer.ScriptNode()
+
+		with IECore.CapturingMessageHandler() as mh :
+			script.execute( "import", continueOnError = True )
+
+		self.assertEqual( len( mh.messages ), 1 )
+		self.assertIn( "SyntaxError: invalid syntax", mh.messages[0].message )
+
+	def testImport( self ) :
+
+		s1 = Gaffer.ScriptNode()
+
+		s1["n1"] = GafferTest.AddNode()
+		s1["n2"] = GafferTest.AddNode()
+		s1["n2"]["op1"].setInput( s1["n1"]["sum"] )
+
+		s1["p"] = Gaffer.Plug()
+		s1["frameRange"]["start"].setValue( -10 )
+		s1["frameRange"]["end"].setValue( 101 )
+		s1["variables"].addMember( "test", "test" )
+
+		fileName = self.temporaryDirectory() + "/toImport.gfr"
+		s1.serialiseToFile( fileName )
+
+		s2 = Gaffer.ScriptNode()
+		s2.importFile( fileName )
+
+		self.assertIn( "n1", s2 )
+		self.assertIn( "n2", s2 )
+		self.assertTrue( s2["n2"]["op1"].getInput().isSame( s2["n1"]["sum"] ) )
+
+		self.assertNotIn( "p", s2 )
+		self.assertEqual( len( s2["variables"] ), 0 )
+
 if __name__ == "__main__":
 	unittest.main()
