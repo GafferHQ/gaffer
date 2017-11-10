@@ -230,7 +230,7 @@ IECore::ConstObjectPtr MeshToLevelSet::computeProcessedObject( const ScenePath &
 	grid->setName( gridNamePlug()->getValue() );
 
 	VDBObjectPtr newVDBObject =  new VDBObject();
-	newVDBObject->addGrid( grid );
+	newVDBObject->insertGrid( grid );
 
 	return newVDBObject;
 }

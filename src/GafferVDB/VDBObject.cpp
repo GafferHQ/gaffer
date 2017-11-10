@@ -148,8 +148,9 @@ std::vector<std::string> VDBObject::gridNames() const
 	return outputGridNames;
 }
 
-void VDBObject::addGrid(openvdb::GridBase::Ptr grid)
+void VDBObject::insertGrid( openvdb::GridBase::Ptr grid )
 {
+	removeGrid( grid->getName() );
 	m_grids->push_back( grid );
 }
 

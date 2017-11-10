@@ -148,8 +148,7 @@ IECore::ConstObjectPtr LevelSetOffset::computeProcessedObject( const ScenePath &
 
 	VDBObjectPtr newVDBObject = vdbObject->copy();
 
-	newVDBObject->removeGrid( gridName );
-	newVDBObject->addGrid( newGrid );
+	newVDBObject->insertGrid( newGrid );
 
 	return newVDBObject;
 }

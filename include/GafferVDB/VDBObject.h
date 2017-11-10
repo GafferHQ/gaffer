@@ -63,13 +63,13 @@ class VDBObject : public IECore::VisibleRenderable
 
 		IE_CORE_DECLAREEXTENSIONOBJECT( GafferVDB::VDBObject, VDBObjectTypeId, IECore::VisibleRenderable );
 
-		openvdb::GridBase::ConstPtr findGrid(const std::string& name) const;
-		openvdb::GridBase::Ptr findGrid(const std::string& name);
+		void insertGrid( openvdb::GridBase::Ptr grid );
 		void removeGrid(const std::string& name);
 
-		std::vector<std::string> gridNames() const;
+		openvdb::GridBase::ConstPtr findGrid(const std::string& name) const;
+		openvdb::GridBase::Ptr findGrid(const std::string& name);
 
-		void addGrid(openvdb::GridBase::Ptr grid);
+		std::vector<std::string> gridNames() const;
 
 		Imath::Box3f bound() const override;
 		void render( IECore::Renderer *renderer ) const override;
