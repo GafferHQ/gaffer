@@ -248,13 +248,7 @@ void ViewportGadget::gadgetsAt( const Imath::V2f &rasterPosition, std::vector<Ga
 	std::vector<HitRecord> selection;
 	{
 		SelectionScope selectionScope( this, rasterPosition, selection, IECoreGL::Selector::IDRender );
-		const Style *s = style();
-		s->bind();
-
-		for( Layer layer = Layer::Back; layer < Layer::Last; ++layer )
-		{
-			Gadget::doRenderLayer( layer, s );
-		}
+		Gadget::render();
 	}
 
 	for( std::vector<HitRecord>::const_iterator it = selection.begin(); it!= selection.end(); it++ )
@@ -309,41 +303,39 @@ Imath::V2f ViewportGadget::worldToRasterSpace( const Imath::V3f &worldPosition )
 	return m_cameraController.project( worldPosition );
 }
 
-ViewportGadget::UnarySignal &ViewportGadget::preRenderSignal()
+void ViewportGadget::render() const
 {
-	return m_preRenderSignal;
-}
+	const_cast<ViewportGadget *>( this )->preRenderSignal()(
+		const_cast<ViewportGadget *>( this )
+	);
 
-void ViewportGadget::doRenderLayer( Layer layer, const Style *style ) const
-{
-	// \todo Camera setup is needed for each layer. Maybe we should cache the
-	// converted camera, though, and only do the conversion when we hit the Back
-	// layer.
 	IECoreGL::ToGLConverterPtr converter = new IECoreGL::ToGLCameraConverter(
 		const_cast<CameraController &>( m_cameraController ).getCamera()
 	);
 	IECoreGL::CameraPtr camera = boost::static_pointer_cast<IECoreGL::Camera>( converter->convert() );
 	camera->render( nullptr );
 
-	if( layer == Layer::Back )
-	{
-		glClearColor( 0.3f, 0.3f, 0.3f, 0.0f );
-		glClearDepth( 1.0f );
-		glClear( GL_COLOR_BUFFER_BIT | GL_DEPTH_BUFFER_BIT );
+	glClearColor( 0.3f, 0.3f, 0.3f, 0.0f );
+	glClearDepth( 1.0f );
+	glClear( GL_COLOR_BUFFER_BIT | GL_DEPTH_BUFFER_BIT );
 
-		// Set up the camera to world matrix in gl_TextureMatrix[0] so that we can
-		// reference world space positions in shaders
-		// This should be more appropriately named in a uniform buffer, but the
-		// easiest time to get this right is probably when we switch everything
-		// away from using fixed function stuff
-		glActiveTexture( GL_TEXTURE0 );
-		glMatrixMode( GL_TEXTURE );
-		glLoadIdentity();
-		glMultMatrixf( camera->getTransform().getValue() );
-		glMatrixMode( GL_MODELVIEW );
-	}
+	// Set up the camera to world matrix in gl_TextureMatrix[0] so that we can
+	// reference world space positions in shaders
+	// This should be more appropriately named in a uniform buffer, but the
+	// easiest time to get this right is probably when we switch everything
+	// away from using fixed function stuff
+	glActiveTexture( GL_TEXTURE0 );
+	glMatrixMode( GL_TEXTURE );
+	glLoadIdentity();
+	glMultMatrixf( camera->getTransform().getValue() );
+	glMatrixMode( GL_MODELVIEW );
 
-	Gadget::doRenderLayer( layer, style );
+	Gadget::render();
+}
+
+ViewportGadget::UnarySignal &ViewportGadget::preRenderSignal()
+{
+	return m_preRenderSignal;
 }
 
 void ViewportGadget::childRemoved( GraphComponent *parent, GraphComponent *child )
