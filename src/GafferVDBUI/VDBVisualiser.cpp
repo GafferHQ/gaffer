@@ -54,12 +54,54 @@ using namespace GafferVDB;
 namespace
 {
 
-struct GeometryCollector
+class GeometryCollector
 {
+
+public:
+	//! dispatch a base grid to a typed grid
+	void collect( openvdb::GridBase::ConstPtr grid )
+	{
+		static const std::map<std::string, std::function<void(GeometryCollector&, openvdb::GridBase::ConstPtr)> > collectors =
+		{
+			{ openvdb::typeNameAsString<bool>(), []( GeometryCollector& collector, openvdb::GridBase::ConstPtr grid) { collector.collectTyped<openvdb::BoolGrid>( grid ); } },
+			{ openvdb::typeNameAsString<double>(), []( GeometryCollector& collector, openvdb::GridBase::ConstPtr grid ) { collector.collectTyped<openvdb::DoubleGrid>( grid ); } },
+			{ openvdb::typeNameAsString<float>(), []( GeometryCollector& collector, openvdb::GridBase::ConstPtr grid ) { collector.collectTyped<openvdb::FloatGrid>( grid ); } },
+			{ openvdb::typeNameAsString<int32_t>(), []( GeometryCollector& collector, openvdb::GridBase::ConstPtr grid ) { collector.collectTyped<openvdb::Int32Grid>( grid ); } },
+			{ openvdb::typeNameAsString<int64_t>(), []( GeometryCollector& collector , openvdb::GridBase::ConstPtr grid) { collector.collectTyped<openvdb::Int64Grid>( grid ); } },
+			{ openvdb::typeNameAsString<openvdb::ValueMask>(), []( GeometryCollector& collector , openvdb::GridBase::ConstPtr grid) { collector.collectTyped<openvdb::MaskGrid>( grid ); } },
+			{ openvdb::typeNameAsString<std::string>(), []( GeometryCollector& collector , openvdb::GridBase::ConstPtr grid) { collector.collectTyped<openvdb::StringGrid>( grid ); } },
+			{ openvdb::typeNameAsString<openvdb::Vec3d>(), []( GeometryCollector& collector , openvdb::GridBase::ConstPtr grid) { collector.collectTyped<openvdb::Vec3DGrid>( grid ); } },
+			{ openvdb::typeNameAsString<openvdb::Vec3i>(), []( GeometryCollector& collector , openvdb::GridBase::ConstPtr grid) { collector.collectTyped<openvdb::Vec3IGrid>( grid ); } },
+			{ openvdb::typeNameAsString<openvdb::Vec3f>(), []( GeometryCollector& collector , openvdb::GridBase::ConstPtr grid) { collector.collectTyped<openvdb::Vec3SGrid>( grid ); } }
+		};
+
+		const auto it = collectors.find( grid->valueType() );
+		if( it != collectors.end() )
+		{
+			it->second( *this, grid );
+		}
+		else
+		{
+			throw IECore::InvalidArgumentException( boost::str( boost::format( "VDBVisualiser: Incompatible Grid found name: '%1%' type: '%2' " ) % grid->valueType() % grid->getName() ) );
+		}
+	}
+
+	std::vector<IECore::V3fVectorDataPtr>  positions;
+	std::vector<IECore::IntVectorDataPtr>  vertsPerCurve;
+
+private:
+
 	template<typename GridType>
-	void collect( typename GridType::ConstPtr grid )
+	void collectTyped( openvdb::GridBase::ConstPtr baseGrid )
 	{
 		using openvdb::Index64;
+
+		typename GridType::ConstPtr grid = openvdb::GridBase::constGrid<GridType>( baseGrid );
+
+		if ( !grid )
+		{
+			return;
+		}
 
 		for( typename GridType::TreeType::NodeCIter iter = grid->tree().cbeginNode(); iter; ++iter )
 		{
@@ -71,50 +113,6 @@ struct GeometryCollector
 			const openvdb::Vec3d max( bbox.max().x() + 0.5, bbox.max().y() + 0.5, bbox.max().z() + 0.5 );
 
 			addBox( grid.get(), iter.getDepth(), min, max );
-		}
-	}
-
-	void collect( openvdb::GridBase::ConstPtr grid )
-	{
-		if( openvdb::BoolGrid::ConstPtr t = openvdb::GridBase::constGrid<openvdb::BoolGrid>( grid ) )
-		{
-			collect<openvdb::BoolGrid>( t );
-		}
-		else if( openvdb::DoubleGrid::ConstPtr t = openvdb::GridBase::constGrid<openvdb::DoubleGrid>( grid ) )
-		{
-			collect<openvdb::DoubleGrid>( t );
-		}
-		else if( openvdb::FloatGrid::ConstPtr t = openvdb::GridBase::constGrid<openvdb::FloatGrid>( grid ) )
-		{
-			collect<openvdb::FloatGrid>( t );
-		}
-		else if( openvdb::Int32Grid::ConstPtr t = openvdb::GridBase::constGrid<openvdb::Int32Grid>( grid ) )
-		{
-			collect<openvdb::Int32Grid>( t );
-		}
-		else if( openvdb::Int64Grid::ConstPtr t = openvdb::GridBase::constGrid<openvdb::Int64Grid>( grid ) )
-		{
-			collect<openvdb::Int64Grid>( t );
-		}
-		else if( openvdb::MaskGrid::ConstPtr t = openvdb::GridBase::constGrid<openvdb::MaskGrid>( grid ) )
-		{
-			collect<openvdb::MaskGrid>( t );
-		}
-		else if( openvdb::StringGrid::ConstPtr t = openvdb::GridBase::constGrid<openvdb::StringGrid>( grid ) )
-		{
-			collect<openvdb::StringGrid>( t );
-		}
-		else if( openvdb::Vec3DGrid::ConstPtr t = openvdb::GridBase::constGrid<openvdb::Vec3DGrid>( grid ) )
-		{
-			collect<openvdb::Vec3DGrid>( t );
-		}
-		else if( openvdb::Vec3IGrid::ConstPtr t = openvdb::GridBase::constGrid<openvdb::Vec3IGrid>( grid ) )
-		{
-			collect<openvdb::Vec3IGrid>( t );
-		}
-		else if( openvdb::Vec3SGrid::ConstPtr t = openvdb::GridBase::constGrid<openvdb::Vec3SGrid>( grid ) )
-		{
-			collect<openvdb::Vec3SGrid>( t );
 		}
 	}
 
@@ -201,7 +199,6 @@ struct GeometryCollector
 		depthPositions.push_back(boundPositions[0]);
 
 		//
-
 		depthPositions.push_back(boundPositions[4]);
 		depthPositions.push_back(boundPositions[5]);
 
@@ -215,7 +212,6 @@ struct GeometryCollector
 		depthPositions.push_back(boundPositions[4]);
 
 		//
-
 		depthPositions.push_back(boundPositions[0]);
 		depthPositions.push_back(boundPositions[4]);
 
@@ -227,11 +223,7 @@ struct GeometryCollector
 
 		depthPositions.push_back(boundPositions[3]);
 		depthPositions.push_back(boundPositions[7]);
-
 	}
-
-	std::vector<IECore::V3fVectorDataPtr>  positions;
-	std::vector<IECore::IntVectorDataPtr>  vertsPerCurve;
 };
 
 class VDBVisualiser : public ObjectVisualiser
