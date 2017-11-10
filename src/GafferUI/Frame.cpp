@@ -43,8 +43,6 @@
 #include "IECore/MeshPrimitive.h"
 #include "IECore/SimpleTypedData.h"
 
-#include "math.h"
-
 using namespace GafferUI;
 using namespace IECore;
 using namespace Imath;
@@ -75,14 +73,12 @@ Imath::Box3f Frame::bound() const
 
 void Frame::doRenderLayer( Layer layer, const Style *style ) const
 {
-	if( layer != GraphLayer::Nodes )
+	IndividualContainer::doRenderLayer( layer, style );
+	if( layer != Layer::Main )
 	{
 		return;
 	}
 
 	Imath::Box3f b = IndividualContainer::bound();
-
 	style->renderFrame( Box2f( V2f( b.min.x, b.min.y ), V2f( b.max.x, b.max.y ) ), m_border );
-
-	IndividualContainer::doRenderLayer( layer, style );
 }
