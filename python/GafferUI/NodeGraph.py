@@ -415,6 +415,9 @@ class NodeGraph( GafferUI.EditorWidget ) :
 
 		return frame
 
+	def __selectedNodeNames(self):
+		return IECore.StringVectorData( [ s.getName() for s in self.scriptNode().selection() ] )
+
 	def __rootChanged( self, graphGadget, previousRoot ) :
 
 		# save/restore the current framing so jumping in
@@ -429,6 +432,18 @@ class NodeGraph( GafferUI.EditorWidget ) :
 			)
 		else :
 			self.__frame( self.graphGadget().getRoot().children( Gaffer.Node ) )
+
+		# save/restore selection for each level of box
+		Gaffer.Metadata.registerValue( previousRoot, "ui:nodeGraph:selection", self.__selectedNodeNames(), persistent = False )
+
+		storedSelection = Gaffer.Metadata.value( self.graphGadget().getRoot(), "ui:nodeGraph:selection" )
+		if storedSelection is not None:
+			selection = self.scriptNode().selection()
+			selection.clear()
+			for s in storedSelection:
+				if s in self.graphGadget().getRoot():
+					# Node still exists
+					selection.add( self.graphGadget().getRoot()[s] )
 
 		# do what we need to do to keep our title up to date.
 
