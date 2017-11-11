@@ -87,13 +87,3 @@ Gaffer.Metadata.registerNode(
 	}
 
 )
-
-##########################################################################
-# PlugValueWidgets
-##########################################################################
-
-def __createParameterWidget( plug ) :
-
-	return GafferCortexUI.CompoundParameterValueWidget( plug.node().parameterHandler(), collapsible=False )
-
-GafferUI.PlugValueWidget.registerCreator( GafferCortex.ObjectReader, "parameters", __createParameterWidget )
