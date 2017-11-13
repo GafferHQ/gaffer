@@ -7,12 +7,25 @@ More information can be found on the [project homepage](http://gafferhq.org).
 
 Developer notes are available on the [project wiki](https://github.com/GafferHQ/gaffer/wiki).
 
-Downloading
+Easy way - Downloading
 ===========
 
-Compiled binary releases are available for download from the [releases page](https://github.com/GafferHQ/gaffer/releases).
+If you want to give Gaffer a try, without going trough the complex building process, just download the latest compiled binary release from the [releases page](https://github.com/GafferHQ/gaffer/releases).
 
-Building
+To run it, extract the archive and run the `gaffer` executable you will find in the `bin` directory.
+
+For example, on linux (after you download it):
+
+```
+cd ~/apps
+tar -xzf ~/Downloads/gaffer-*-linux.tar.gz
+cd gaffer-*-linux
+./bin/gaffer
+```
+
+More in detail information can be found on the [installation page](http://gafferhq.org/documentation/Installation)
+
+Hard way - Building
 ========
 
 [![Build Status](https://travis-ci.org/GafferHQ/gaffer.svg?branch=master)](https://travis-ci.org/GafferHQ/gaffer)
