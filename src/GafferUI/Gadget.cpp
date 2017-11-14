@@ -292,6 +292,20 @@ void Gadget::renderLayer( Layer layer, const Style *currentStyle ) const
 
 		doRenderLayer( layer, currentStyle );
 
+		for( ChildContainer::const_iterator it=children().begin(); it!=children().end(); it++ )
+		{
+			// Cast is safe because of the guarantees acceptsChild() gives us
+			const Gadget *c = static_cast<const Gadget *>( it->get() );
+			if( !c->getVisible() )
+			{
+				continue;
+			}
+			if( c->hasLayer( layer ) )
+			{
+				c->renderLayer( layer, currentStyle );
+			}
+		}
+
 	if( haveTransform )
 	{
 		glPopMatrix();
@@ -310,19 +324,6 @@ void Gadget::requestRender()
 
 void Gadget::doRenderLayer( Layer layer, const Style *style ) const
 {
-	for( ChildContainer::const_iterator it=children().begin(); it!=children().end(); it++ )
-	{
-		// cast is safe because of the guarantees acceptsChild() gives us
-		const Gadget *c = static_cast<const Gadget *>( it->get() );
-		if( !c->getVisible() )
-		{
-			continue;
-		}
-		if( c->hasLayer( layer ) )
-		{
-			c->renderLayer( layer, style );
-		}
-	}
 }
 
 bool Gadget::hasLayer( Layer layer ) const

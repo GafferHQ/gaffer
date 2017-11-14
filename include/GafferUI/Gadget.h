@@ -287,8 +287,8 @@ class Gadget : public Gaffer::GraphComponent
 		void requestRender();
 
 		/// Should be implemented by subclasses to draw themselves as appropriate
-		/// for the specified layer. The default implementation just renders all
-		/// the visible child Gadgets.
+		/// for the specified layer. Child gadgets will be drawn automatically
+		/// _after_ the parent gadget has been drawn.
 		virtual void doRenderLayer( Layer layer, const Style *style ) const;
 		/// May return false to indicate that neither this gadget nor any
 		/// of its children will render anything for the specified layer.
