@@ -48,10 +48,6 @@ using namespace Imath;
 using namespace IECore;
 using namespace IECoreArnold;
 
-//////////////////////////////////////////////////////////////////////////
-// Implementation of public API
-//////////////////////////////////////////////////////////////////////////
-
 namespace
 {
 	IECore::InternedString g_filedataParam("filedata");
@@ -68,35 +64,21 @@ namespace
 
 		return parameters;
 	}
+
+	AtNode *convert( const GafferVDB::VDBObject *vdbObject, const std::string & name, const AtNode* parent )
+	{
+		AtNode *node = AiNode( g_volume, AtString( name.c_str() ), parent );
+
+		CompoundDataPtr parameters = createParameters( vdbObject );
+		ParameterAlgo::setParameters( node, parameters->readable() );
+
+		return node;
+	}
 }
-
-namespace IECoreArnoldPreview
-{
-
-namespace VDBAlgo
-{
-
-AtNode *convert( const GafferVDB::VDBObject *vdbObject, const std::string & /*name*/, const AtNode* /* parent */ )
-{
-	AtNode *node = AiNode( g_volume );
-
-	CompoundDataPtr parameters = createParameters( vdbObject );
-	ParameterAlgo::setParameters( node, parameters->readable() );
-
-	return node;
-}
-
-} // namespace ProceduralAlgo
-
-} // namespace IECoreArnoldPreview
-
-//////////////////////////////////////////////////////////////////////////
-// Internal utilities
-//////////////////////////////////////////////////////////////////////////
 
 namespace
 {
 
-NodeAlgo::ConverterDescription<GafferVDB::VDBObject> g_description( IECoreArnoldPreview::VDBAlgo::convert );
+NodeAlgo::ConverterDescription<GafferVDB::VDBObject> g_description( ::convert );
 
 } // namespace
