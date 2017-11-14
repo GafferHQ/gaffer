@@ -304,10 +304,13 @@ class PlugLayout( GafferUI.Widget ) :
 				section = section.subsection( sectionName )
 
 			if len( section.widgets ) and self.__itemMetadataValue( item, "accessory" ) :
-				row = GafferUI.ListContainer( GafferUI.ListContainer.Orientation.Horizontal, spacing = 4 )
-				row.append( section.widgets[-1] )
-				row.append( widget )
-				section.widgets[-1] = row
+				if isinstance( section.widgets[-1], _AccessoryRow ) :
+					section.widgets[-1].append( widget )
+				else :
+					row = _AccessoryRow()
+					row.append( section.widgets[-1] )
+					row.append( widget )
+					section.widgets[-1] = row
 			else :
 				section.widgets.append( widget )
 
@@ -514,6 +517,13 @@ class PlugLayout( GafferUI.Widget ) :
 		self.__activationsDirty = True
 		self.__summariesDirty = True
 		self.__updateLazily()
+
+
+class _AccessoryRow( GafferUI.ListContainer ) :
+
+	def __init__( self, **kw ) :
+
+		GafferUI.ListContainer.__init__( self, GafferUI.ListContainer.Orientation.Horizontal, spacing = 4, **kw )
 
 # The _Section class provides a simple abstract representation of a hierarchical
 # layout. Each section contains a list of widgets to be displayed in that section,
