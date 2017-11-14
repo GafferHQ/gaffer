@@ -1,3 +1,11 @@
+0.35.1.1
+========
+
+Fixes
+-----
+
+- GafferImage::VectorWarp : Fixed crash on pixels with value nan/inf
+
 0.35.1.0
 ========
 
