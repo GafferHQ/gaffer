@@ -296,13 +296,16 @@ class NodeGraph( GafferUI.EditorWidget ) :
 			return True
 		elif event.key == "Down" :
 			selection = self.scriptNode().selection()
-			if selection.size() :
-				needsModifiers = not Gaffer.Metadata.value( selection[0], "nodeGraph:childrenViewable" )
+			if selection.size() == 1 and self.graphGadget().getRoot().isAncestorOf( selection[0] ) :
+				newRoot = selection[0]
+				while newRoot.parent() != self.graphGadget().getRoot() :
+					newRoot = newRoot.parent()
+				needsModifiers = not Gaffer.Metadata.value( newRoot, "nodeGraph:childrenViewable" )
 				if (
 					( needsModifiers and event.modifiers == event.modifiers.Shift | event.modifiers.Control ) or
 					( not needsModifiers and event.modifiers == event.modifiers.None )
 				) :
-					self.graphGadget().setRoot( selection[0] )
+					self.graphGadget().setRoot( newRoot )
 					return True
 		elif event.key == "Up" :
 			root = self.graphGadget().getRoot()
