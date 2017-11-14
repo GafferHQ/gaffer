@@ -91,8 +91,11 @@ class ViewportGadget : public Gadget
 		const IECore::Camera *getCamera() const;
 		/// A copy is taken.
 		void setCamera( const IECore::Camera *camera );
+		const Imath::M44f &getCameraTransform() const;
+		void setCameraTransform( const Imath::M44f &transform );
 		/// A signal emitted when the camera is changed, either by
-		/// a setCamera() call or through user interaction.
+		/// a setCamera() or setCameraTransform() call, or through
+		/// user interaction.
 		UnarySignal &cameraChangedSignal();
 
 		/// If the camera is editable, the user can move it around

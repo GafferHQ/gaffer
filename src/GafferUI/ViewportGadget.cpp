@@ -43,10 +43,11 @@
 #include "OpenEXR/ImathBoxAlgo.h"
 #include "OpenEXR/ImathMatrixAlgo.h"
 
-#include "IECore/MatrixTransform.h"
+#include "IECore/Transform.h"
 #include "IECore/NullObject.h"
 #include "IECore/SimpleTypedData.h"
 #include "IECore/AngleConversion.h"
+#include "IECore/MessageHandler.h"
 
 #include "IECoreGL/ToGLCameraConverter.h"
 #include "IECoreGL/PerspectiveCamera.h"
@@ -92,14 +93,6 @@ class ViewportGadget::CameraController : public boost::noncopyable
 				m_fov = nullptr;
 			}
 
-			TransformPtr transform = m_camera->getTransform();
-			m_transform = runTimeCast<MatrixTransform>( transform );
-			if( !m_transform )
-			{
-				m_transform = new MatrixTransform( transform ? transform->transform() : M44f() );
-				m_camera->setTransform( m_transform );
-			}
-
 			m_centreOfInterest = 1;
 		}
 
@@ -111,6 +104,16 @@ class ViewportGadget::CameraController : public boost::noncopyable
 		const IECore::Camera *getCamera() const
 		{
 			return m_camera.get();
+		}
+
+		void setTransform( const M44f &transform )
+		{
+			m_transform = transform;
+		}
+
+		const M44f &getTransform() const
+		{
+			return m_transform;
 		}
 
 		/// Positive.
@@ -176,7 +179,7 @@ class ViewportGadget::CameraController : public boost::noncopyable
 		{
 			V3f z( 0, 0, -1 );
 			V3f y( 0, 1, 0 );
-			M44f t = m_transform->matrix;
+			M44f t = m_transform;
 			t.multDirMatrix( z, z );
 			t.multDirMatrix( y, y );
 			frame( box, z, y );
@@ -229,7 +232,7 @@ class ViewportGadget::CameraController : public boost::noncopyable
 				screenWindow.max.y = cBox.center().y + newSize.y / 2.0f;
 			}
 
-			m_transform->matrix = cameraMatrix;
+			m_transform = cameraMatrix;
 			m_screenWindow->writable() = screenWindow;
 
 		}
@@ -260,14 +263,14 @@ class ViewportGadget::CameraController : public boost::noncopyable
 				far = V3f( screen.x, screen.y, -clippingPlanes[1] );
 			}
 
-			near = near * m_transform->matrix;
-			far = far * m_transform->matrix;
+			near = near * m_transform;
+			far = far * m_transform;
 		}
 
 		/// Projects the point in world space into a raster space position.
 		Imath::V2f project( const Imath::V3f &worldPosition ) const
 		{
-			M44f inverseCameraMatrix = m_transform->matrix.inverse();
+			M44f inverseCameraMatrix = m_transform.inverse();
 			V3f cameraPosition = worldPosition * inverseCameraMatrix;
 
 			const V2i &resolution = m_resolution->readable();
@@ -320,7 +323,7 @@ class ViewportGadget::CameraController : public boost::noncopyable
 		{
 			m_motionType = motion;
 			m_motionStart = startPosition;
-			m_motionMatrix = m_transform->transform();
+			m_motionMatrix = m_transform;
 			m_motionScreenWindow = m_screenWindow->readable();
 			m_motionCentreOfInterest = m_centreOfInterest;
 		}
@@ -382,7 +385,7 @@ class ViewportGadget::CameraController : public boost::noncopyable
 			}
 			M44f t = m_motionMatrix;
 			t.translate( translate );
-			m_transform->matrix = t;
+			m_transform = t;
 		}
 
 		void tumble( const Imath::V2f &p )
@@ -406,7 +409,7 @@ class ViewportGadget::CameraController : public boost::noncopyable
 
 			t.translate( -centreOfInterestInWorld );
 
-			m_transform->matrix = m_motionMatrix * t;
+			m_transform = m_motionMatrix * t;
 		}
 
 		void dolly( const Imath::V2f &p )
@@ -423,7 +426,7 @@ class ViewportGadget::CameraController : public boost::noncopyable
 				M44f t = m_motionMatrix;
 				t.translate( V3f( 0, 0, m_centreOfInterest - m_motionCentreOfInterest ) );
 
-				m_transform->matrix = t;
+				m_transform = t;
 			}
 			else
 			{
@@ -451,11 +454,11 @@ class ViewportGadget::CameraController : public boost::noncopyable
 		IECore::CameraPtr m_camera;
 		V2iDataPtr m_resolution;
 		Box2fDataPtr m_screenWindow;
-		MatrixTransformPtr m_transform;
 		ConstStringDataPtr m_projection;
 		ConstFloatDataPtr m_fov;
 		ConstV2fDataPtr m_clippingPlanes;
 		float m_centreOfInterest;
+		M44f m_transform;
 
 		// Motion state
 		MotionType m_motionType;
@@ -615,6 +618,21 @@ void ViewportGadget::setCamera( const IECore::Camera *camera )
 	m_cameraChangedSignal( this );
 }
 
+const Imath::M44f &ViewportGadget::getCameraTransform() const
+{
+	return m_cameraController->getTransform();
+}
+
+void ViewportGadget::setCameraTransform( const Imath::M44f &transform )
+{
+	if( transform == getCameraTransform() )
+	{
+		return;
+	}
+	m_cameraController->setTransform( transform );
+	m_cameraChangedSignal( this );
+}
+
 ViewportGadget::UnarySignal &ViewportGadget::cameraChangedSignal()
 {
 	return m_cameraChangedSignal;
@@ -733,6 +751,11 @@ void ViewportGadget::doRenderLayer( Layer layer, const Style *style ) const
 		m_cameraController->getCamera()
 	);
 	IECoreGL::CameraPtr camera = boost::static_pointer_cast<IECoreGL::Camera>( converter->convert() );
+	camera->setTransform( getCameraTransform() );
+	if( m_cameraController->getCamera()->getTransform() )
+	{
+		IECore::msg( IECore::Msg::Warning, "ViewportGadget", "Camera has unexpected transform" );
+	}
 	camera->render( nullptr );
 
 	if( layer == Layer::Back )
@@ -1398,6 +1421,7 @@ void ViewportGadget::SelectionScope::begin( const ViewportGadget *viewportGadget
 		viewportGadget->m_cameraController->getCamera()
 	);
 	IECoreGL::CameraPtr camera = boost::static_pointer_cast<IECoreGL::Camera>( converter->convert() );
+	camera->setTransform( viewportGadget->getCameraTransform() );
 	/// \todo It would be better to base this on whether we have a depth buffer or not, but
 	/// we don't have access to that information right now.
 	m_depthSort = camera->isInstanceOf( IECoreGL::PerspectiveCamera::staticTypeId() );
