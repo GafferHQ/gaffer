@@ -65,6 +65,8 @@ script:
     - source ./config/travis/runGafferTest GafferAppleseedUITest
     - source ./config/travis/runGafferTest GafferDelightTest
     - source ./config/travis/runGafferTest GafferDelightUITest
+    - source ./config/travis/runGafferTest GafferVDBTest
+    - source ./config/travis/runGafferTest GafferVDBUITest
     - ./config/travis/printTestResults
 
 before_cache:
