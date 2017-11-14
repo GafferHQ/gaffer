@@ -822,6 +822,11 @@ libraries = {
 		}
 	},
 
+	"GafferVDBTest" : {
+		"additionalFiles" : glob.glob( "python/GafferVDBTest/*/*" ),
+	},
+
+
 	"GafferVDBUI" : {
 		"envAppends" : {
 			"LIBS" : [ "Gaffer", "GafferScene", "GafferSceneUI", "IECoreGL$CORTEX_LIB_SUFFIX", "GafferVDB", "openvdb" ],
@@ -831,9 +836,11 @@ libraries = {
 		}
 	},
 
-	"GafferVDBTest" : {
-		"additionalFiles" : glob.glob( "python/GafferVDBTest/*/*" ),
+	"GafferVDBUITest" : {
+		"additionalFiles" : glob.glob( "python/GafferVDBUITest/*/*" ),
 	},
+
+
 
 	"apps" : {
 		"additionalFiles" : glob.glob( "apps/*/*-1.py" ),
