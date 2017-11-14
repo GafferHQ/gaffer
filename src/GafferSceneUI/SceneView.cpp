@@ -401,58 +401,6 @@ class SceneView::Grid : public boost::signals::trackable
 namespace
 {
 
-class GnomonPlane : public GafferUI::Gadget
-{
-
-	public :
-
-		GnomonPlane()
-			:	Gadget(), m_hovering( false )
-		{
-			enterSignal().connect( boost::bind( &GnomonPlane::enter, this ) );
-			leaveSignal().connect( boost::bind( &GnomonPlane::leave, this ) );
-		}
-
-		Imath::Box3f bound() const override
-		{
-			return Box3f( V3f( 0 ), V3f( 1, 1, 0 ) );
-		}
-
-	protected :
-
-		void doRenderLayer( Layer layer, const Style *style ) const override
-		{
-			if( layer != Layer::Main )
-			{
-				return;
-			}
-
-			if( m_hovering || IECoreGL::Selector::currentSelector() )
-			{
-				/// \todo Really the style should be choosing the colours.
-				glColor4f( 0.5f, 0.7f, 1.0f, 0.5f );
-				style->renderSolidRectangle( Box2f( V2f( 0 ), V2f( 1, 1 ) ) );
-			}
-		}
-
-	private :
-
-		void enter()
-		{
-			m_hovering = true;
-			requestRender();
-		}
-
-		void leave()
-		{
-			m_hovering = false;
-			requestRender();
-		}
-
-		bool m_hovering;
-
-};
-
 class GnomonGadget : public GafferUI::Gadget
 {
 
@@ -464,11 +412,11 @@ class GnomonGadget : public GafferUI::Gadget
 
 	protected :
 
-		void doRenderLayer( Layer layer, const Style *style ) const override
+		void doRenderLayer( Layer layer, const Style *style ) const final
 		{
 			if( layer != Layer::Main )
 			{
-				return Gadget::doRenderLayer( layer, style );
+				return;
 			}
 
 			const float pixelWidth = 30.0f;
@@ -517,13 +465,10 @@ class GnomonGadget : public GafferUI::Gadget
 			glLoadIdentity();
 			glMultMatrixf( m.getValue() );
 
-			// now we can render our axes and our children
+			// now we can defer to the derived class to draw
+			// the required content
 
-			style->renderTranslateHandle( Style::X );
-			style->renderTranslateHandle( Style::Y );
-			style->renderTranslateHandle( Style::Z );
-
-			Gadget::doRenderLayer( layer, style );
+			renderGnomon( style );
 
 			// and pop the matrices back to their original values
 
@@ -533,6 +478,64 @@ class GnomonGadget : public GafferUI::Gadget
 			glPopMatrix();
 
 		}
+
+		virtual void renderGnomon( const Style *style ) const = 0;
+
+};
+
+class GnomonAxes : public GnomonGadget
+{
+
+	protected :
+
+		void renderGnomon( const Style *style ) const override
+		{
+			style->renderTranslateHandle( Style::X );
+			style->renderTranslateHandle( Style::Y );
+			style->renderTranslateHandle( Style::Z );
+		}
+
+};
+
+class GnomonPlane : public GnomonGadget
+{
+
+	public :
+
+		GnomonPlane()
+			:	GnomonGadget(), m_hovering( false )
+		{
+			enterSignal().connect( boost::bind( &GnomonPlane::enter, this ) );
+			leaveSignal().connect( boost::bind( &GnomonPlane::leave, this ) );
+		}
+
+	protected :
+
+		void renderGnomon( const Style *style ) const override
+		{
+			if( m_hovering || IECoreGL::Selector::currentSelector() )
+			{
+				/// \todo Really the style should be choosing the colours.
+				glColor4f( 0.5f, 0.7f, 1.0f, 0.5f );
+				style->renderSolidRectangle( Box2f( V2f( 0 ), V2f( 1, 1 ) ) );
+			}
+		}
+
+	private :
+
+		void enter()
+		{
+			m_hovering = true;
+			requestRender();
+		}
+
+		void leave()
+		{
+			m_hovering = false;
+			requestRender();
+		}
+
+		bool m_hovering;
 
 };
 
@@ -544,12 +547,14 @@ class SceneView::Gnomon : public boost::signals::trackable
 	public :
 
 		Gnomon( SceneView *view )
-			:	m_view( view ), m_gadget( new GnomonGadget() )
+			:	m_view( view ), m_gadget( new Gadget() )
 		{
 			ValuePlugPtr plug = new ValuePlug( "gnomon" );
 			view->addChild( plug );
 
 			plug->addChild( new BoolPlug( "visible", Plug::In, true ) );
+
+			m_gadget->setChild( "axes", new GnomonAxes() );
 
 			GadgetPtr xyPlane = new GnomonPlane();
 			GadgetPtr yzPlane = new GnomonPlane();
