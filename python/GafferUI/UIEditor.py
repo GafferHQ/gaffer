@@ -470,9 +470,9 @@ class _StringMetadataWidget( _MetadataWidget ) :
 
 class _MultiLineStringMetadataWidget( _MetadataWidget ) :
 
-	def __init__( self, key, target = None, **kw ) :
+	def __init__( self, key, target = None, role = GafferUI.MultiLineTextWidget.Role.Text, **kw ) :
 
-		self.__textWidget = GafferUI.MultiLineTextWidget()
+		self.__textWidget = GafferUI.MultiLineTextWidget( role = role )
 		_MetadataWidget.__init__( self, self.__textWidget, key, target, **kw )
 
 		self.__editingFinishedConnection = self.__textWidget.editingFinishedSignal().connect(
@@ -1524,11 +1524,6 @@ class _PlugEditor( GafferUI.Widget ) :
 
 				with GafferUI.ListContainer( spacing = 4 ) :
 
-					with _Row() :
-
-						_Label( "Divider" )
-						self.__metadataWidgets["divider"] = _BoolMetadataWidget( key = "divider" )
-
 					for m in self.__metadataDefinitions :
 
 						with _Row() :
@@ -1632,7 +1627,7 @@ class _PlugEditor( GafferUI.Widget ) :
 
 		for m in self.__metadataDefinitions :
 			widget = self.__metadataWidgets[m.key]
-			widget.parent().setEnabled( Gaffer.StringAlgo.match( widgetType, m.plugValueWidgetType ) )
+			widget.parent().setVisible( Gaffer.StringAlgo.match( widgetType, m.plugValueWidgetType ) )
 
 		self.__metadataWidgets["connectionGadget:color"].parent().setEnabled(
 			self.getPlug() is not None and self.getPlug().direction() == Gaffer.Plug.Direction.In
@@ -1712,6 +1707,7 @@ class _PlugEditor( GafferUI.Widget ) :
 		__WidgetDefinition( "File Chooser", Gaffer.StringVectorDataPlug, "GafferUI.FileSystemPathVectorDataPlugValueWidget" ),
 		__WidgetDefinition( "Presets Menu", Gaffer.ValuePlug, "GafferUI.PresetsPlugValueWidget" ),
 		__WidgetDefinition( "Connection", Gaffer.Plug, "GafferUI.ConnectionPlugValueWidget" ),
+		__WidgetDefinition( "Button", Gaffer.Plug, "GafferUI.ButtonPlugValueWidget" ),
 		__WidgetDefinition( "None", Gaffer.Plug, "" ),
 	)
 
@@ -1725,6 +1721,15 @@ class _PlugEditor( GafferUI.Widget ) :
 		# Note that includeSequenceFrameRange is primarily used by GafferCortex.
 		# Think twice before using it elsewhere	as it may not exist in the future.
 		__MetadataDefinition( "fileSystemPath:includeSequenceFrameRange", "Sequences include frame range", _BoolMetadataWidget, "GafferUI.FileSystemPath*PlugValueWidget" ),
+		__MetadataDefinition(
+			"buttonPlugValueWidget:clicked",
+			"Button Click Code",
+			lambda key : _MultiLineStringMetadataWidget( key, role = GafferUI.MultiLineTextWidget.Role.Code ),
+			"GafferUI.ButtonPlugValueWidget"
+		),
+		__MetadataDefinition( "layout:accessory", "Inline", _BoolMetadataWidget,  "GafferUI.ButtonPlugValueWidget" ),
+		__MetadataDefinition( "divider", "Divider", _BoolMetadataWidget,  "*" ),
+
 	)
 
 	__GadgetDefinition = collections.namedtuple( "GadgetDefinition", ( "label", "plugType", "metadata" ) )
