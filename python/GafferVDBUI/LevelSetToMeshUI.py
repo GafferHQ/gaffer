@@ -1,6 +1,6 @@
 ##########################################################################
 #
-#  Copyright (c) 2015, John Haddon. All rights reserved.
+#  Copyright (c) 2017, Image Engine Design Inc. All rights reserved.
 #
 #  Redistribution and use in source and binary forms, with or without
 #  modification, are permitted provided that the following conditions are
@@ -15,7 +15,7 @@
 #        disclaimer in the documentation and/or other materials provided with
 #        the distribution.
 #
-#      * Neither the name of John Haddon nor the names of
+#      * Neither the name of Image Engine Design Inc nor the names of
 #        any other contributors to this software may be used to endorse or
 #        promote products derived from this software without specific prior
 #        written permission.
@@ -34,10 +34,33 @@
 #
 ##########################################################################
 
-from _GafferVDBUI import *
+import GafferUI
+import GafferVDB
 
-import LevelSetToMeshUI
-import MeshToLevelSetUI
-import LevelSetOffsetUI
+GafferUI.Metadata.registerNode(
+	GafferVDB.LevelSetToMesh,
+	'description',
+	"""Converts a mesh primitive to a level set VDB object.""",
 
-__import__( "IECore" ).loadConfig( "GAFFER_STARTUP_PATHS", {}, subdirectory = "GafferVDBUI" )
+	plugs={
+		'gridName' : [
+			'description',
+			"""
+			Name of the level set grid to create a mesh primitive from.
+			"""
+		],
+		'isoValue' : [
+			'description',
+			"""
+			Value which defines the isosurface to convert to a mesh primitive. 
+			Usually this is set to zero but setting a small positive number will generate a dilated mesh and negative will create an eroded mesh. 
+			"""
+		],
+		'adaptivity' : [
+			'description',
+			"""
+			Adaptively generate fewer polygons from level set. 0 - uniform meshing, 1 - maximum level of adaptivity.
+			"""
+		]
+	}
+)
