@@ -88,6 +88,25 @@ struct UCharVectorDataSink
 	std::vector<unsigned char>& m_storage;
 };
 
+//! allow hashing via a io stream interface.
+struct MurmurHashSink
+{
+	typedef char char_type;
+	typedef boost::iostreams::sink_tag category;
+
+	MurmurHashSink()
+	{
+	}
+
+	std::streamsize write( const char *s, std::streamsize n )
+	{
+		hash.append( s, n );
+		return n;
+	}
+
+	MurmurHash hash;
+};
+
 }
 
 IE_CORE_DEFINEOBJECTTYPEDESCRIPTION( VDBObject );
@@ -310,7 +329,15 @@ void VDBObject::hash( IECore::MurmurHash &h ) const
 
 	for (const auto &grid : *m_grids)
 	{
-		h.append( (uint64_t) grid.get() );
+		MurmurHashSink sink;
+		boost::iostreams::stream<MurmurHashSink> hashStream( sink );
+
+		// todo cache grid hashes and if they're dirty and require recalculation.
+		grid->writeTopology( hashStream );
+		grid->writeBuffers( hashStream );
+		grid->writeTransform( hashStream );
+
+		h.append( sink.hash );
 	}
 }
 

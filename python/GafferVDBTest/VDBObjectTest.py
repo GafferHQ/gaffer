@@ -85,15 +85,31 @@ class VDBObjectTest( GafferVDBTest.VDBTestCase ) :
 
 		vdbObject = GafferVDB.VDBObject( sourcePath )
 		self.assertEqual(vdbObject.gridNames(), ['density'])
+		h1 = vdbObject.hash()
 		vdbObject.removeGrid('density')
 		self.assertEqual(vdbObject.gridNames(), [])
 
-	def testCopiedVDBObjectHasDifferentHash( self ) :
+		h2 = vdbObject.hash()
+		self.assertNotEqual(h1, h2)
+
+		emptyVDBObject = GafferVDB.VDBObject()
+		h3 = emptyVDBObject.hash()
+		self.assertEqual(h3, h2)
+
+	def testHashIdenticalForFileLoadedTwice( self ):
+		sourcePath = os.path.join( self.dataDir, "smoke.vdb" )
+
+		vdbObject1 = GafferVDB.VDBObject( sourcePath )
+		vdbObject2 = GafferVDB.VDBObject( sourcePath )
+
+		self.assertEqual( vdbObject1.hash(), vdbObject2.hash() )
+
+	def testCopiedVDBObjectHasIdenticalHash( self ) :
 		sourcePath = os.path.join( self.dataDir, "smoke.vdb" )
 		vdbObject = GafferVDB.VDBObject( sourcePath )
 		vdbObjectCopy = vdbObject.copy()
 
-		self.assertNotEqual( vdbObject.hash(), vdbObjectCopy.hash() )
+		self.assertEqual( vdbObject.hash(), vdbObjectCopy.hash() )
 
 	def testCanCreateMemoryBufferForRendering( self ):
 		sourcePath = os.path.join( self.dataDir, "smoke.vdb" )
