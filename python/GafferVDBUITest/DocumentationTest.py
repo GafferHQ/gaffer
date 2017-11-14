@@ -36,13 +36,19 @@
 
 import GafferUITest
 import GafferVDB
+import GafferVDBUI
+import GafferScene
+import GafferSceneUI
 
 class DocumentationTest( GafferUITest.TestCase ) :
 
 	def test( self ) :
 
 		self.maxDiff = None
-		self.assertNodesAreDocumented( GafferVDB )
+		self.assertNodesAreDocumented(
+			GafferVDB,
+			additionalTerminalPlugTypes = ( GafferScene.ScenePlug, )
+		)
 
 if __name__ == "__main__":
 	unittest.main()
