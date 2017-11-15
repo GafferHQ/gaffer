@@ -45,6 +45,7 @@
 #include "Gaffer/StringAlgo.h"
 
 #include "GafferUI/Gadget.h"
+#include "GafferUI/GraphGadget.h"
 
 namespace Gaffer
 {
@@ -96,6 +97,11 @@ class NoduleLayout : public Gadget
 		/// Registers a custom gadget type that can be added to the layout using
 		/// "noduleLayout:customGadget:*"" metadata entries.
 		static void registerCustomGadget( const std::string &gadgetType, CustomGadgetCreator creator );
+
+
+	protected :
+
+		bool hasLayer( Layer layer ) const override;
 
 	private :
 

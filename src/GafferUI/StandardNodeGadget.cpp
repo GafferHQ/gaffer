@@ -350,6 +350,11 @@ void StandardNodeGadget::doRenderLayer( Layer layer, const Style *style ) const
 	}
 }
 
+bool StandardNodeGadget::hasLayer( Layer layer ) const
+{
+	return layer != GraphLayer::Backdrops;
+}
+
 const Imath::Color3f *StandardNodeGadget::userColor() const
 {
 	return m_userColor.get_ptr();

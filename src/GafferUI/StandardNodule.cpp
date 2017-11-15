@@ -119,6 +119,23 @@ void StandardNodule::updateDragEndPoint( const Imath::V3f position, const Imath:
  	requestRender();
 }
 
+bool StandardNodule::hasLayer( Layer layer ) const
+{
+	switch( layer )
+	{
+		case GraphLayer::Connections :
+			return m_draggingConnection;
+		case GraphLayer::Nodes :
+			return !getHighlighted();
+		case GraphLayer::Highlighting :
+			return getHighlighted();
+		case GraphLayer::Overlay :
+			return m_labelVisible && !IECoreGL::Selector::currentSelector();
+		default :
+			return false;
+	}
+}
+
 void StandardNodule::doRenderLayer( Layer layer, const Style *style ) const
 {
 	switch( layer )

@@ -312,8 +312,16 @@ void Gadget::doRenderLayer( Layer layer, const Style *style ) const
 		{
 			continue;
 		}
-		c->renderLayer( layer, style );
+		if( c->hasLayer( layer ) )
+		{
+			c->renderLayer( layer, style );
+		}
 	}
+}
+
+bool Gadget::hasLayer( Layer layer ) const
+{
+	return true;
 }
 
 Imath::Box3f Gadget::bound() const

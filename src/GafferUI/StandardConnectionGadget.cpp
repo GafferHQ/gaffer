@@ -212,6 +212,11 @@ void StandardConnectionGadget::doRenderLayer( Layer layer, const Style *style ) 
 	}
 }
 
+bool StandardConnectionGadget::hasLayer( Layer layer ) const
+{
+	return layer == GraphLayer::Connections;
+}
+
 Imath::V3f StandardConnectionGadget::closestPoint( const Imath::V3f& p ) const
 {
 	const_cast<StandardConnectionGadget *>( this )->setPositionsFromNodules();

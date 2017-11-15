@@ -290,6 +290,10 @@ class Gadget : public Gaffer::GraphComponent
 		/// for the specified layer. The default implementation just renders all
 		/// the visible child Gadgets.
 		virtual void doRenderLayer( Layer layer, const Style *style ) const;
+		/// May return false to indicate that neither this gadget nor any
+		/// of its children will render anything for the specified layer.
+		/// The default implementation returns true.
+		virtual bool hasLayer( Layer layer ) const;
 
 	private :
 
