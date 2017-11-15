@@ -41,7 +41,7 @@
 
 #include "IECore/ParameterisedProcedural.h"
 #include "IECore/VectorTypedData.h"
-#include "IECore/MatrixTransform.h"
+#include "IECore/Transform.h"
 #include "IECore/AngleConversion.h"
 
 #include "IECoreGL/GL.h"
@@ -787,7 +787,8 @@ class SceneView::LookThrough : public boost::signals::trackable
 				m_framed( false ),
 				m_standardOptions( new StandardOptions ),
 				m_originalCamera( m_view->viewportGadget()->getCamera() ),
-				m_lookThroughCameraDirty( true ),
+				m_originalCameraTransform( m_view->viewportGadget()->getCameraTransform() ),
+				m_lookThroughCameraDirty( false ),
 				m_lookThroughCamera( nullptr ),
 				m_viewportCameraDirty( true ),
 				m_overlay( new CameraOverlay )
@@ -908,6 +909,7 @@ class SceneView::LookThrough : public boost::signals::trackable
 				if( plug == enabledPlug() && enabledPlug()->getValue() )
 				{
 					m_originalCamera = m_view->viewportGadget()->getCamera()->copy();
+					m_originalCameraTransform = m_view->viewportGadget()->getCameraTransform();
 				}
 				m_view->viewportGadget()->renderRequestSignal()( m_view->viewportGadget() );
 			}
@@ -945,6 +947,7 @@ class SceneView::LookThrough : public boost::signals::trackable
 			if( !enabledPlug()->getValue() )
 			{
 				m_view->viewportGadget()->setCamera( m_originalCamera.get() );
+				m_view->viewportGadget()->setCameraTransform( m_originalCameraTransform );
 				m_view->viewportGadget()->setCameraEditable( true );
 				m_view->hideFilter()->pathsPlug()->setToDefault();
 				return;
@@ -959,6 +962,7 @@ class SceneView::LookThrough : public boost::signals::trackable
 			string cameraPathString = cameraPlug()->getValue();
 			ConstCompoundObjectPtr globals;
 			ConstPathMatcherDataPtr cameraSet;
+			M44f cameraTransform;
 			try
 			{
 				globals = scenePlug()->globals();
@@ -986,9 +990,10 @@ class SceneView::LookThrough : public boost::signals::trackable
 					{
 						throw IECore::Exception( "Location \"" + cameraPathString + "\" does not have a camera" );
 					}
+					cameraTransform = scenePlug()->fullTransform( cameraPath );
+
 					IECore::CameraPtr camera = constCamera->copy();
 					RendererAlgo::applyCameraGlobals( camera.get(), globals.get() );
-					camera->setTransform( new MatrixTransform( scenePlug()->fullTransform( cameraPath ) ) );
 					m_lookThroughCamera = camera;
 				}
 				else
@@ -1004,6 +1009,8 @@ class SceneView::LookThrough : public boost::signals::trackable
 				// We just ignore that and lock to the current camera instead.
 				m_lookThroughCamera = nullptr;
 			}
+
+			m_view->viewportGadget()->setCameraTransform( cameraTransform );
 
 			m_view->viewportGadget()->setCameraEditable( false );
 			m_view->hideFilter()->pathsPlug()->setToDefault();
@@ -1129,6 +1136,7 @@ class SceneView::LookThrough : public boost::signals::trackable
 		/// The default viewport camera - we store this so we can
 		/// return to it after looking through a scene camera.
 		IECore::ConstCameraPtr m_originalCamera;
+		M44f m_originalCameraTransform;
 		// Camera we want to look through - retrieved from scene
 		// and dirtied on plug and context changes.
 		bool m_lookThroughCameraDirty;
@@ -1160,16 +1168,14 @@ SceneView::SceneView( const std::string &name )
 	// set up a sensible default camera
 
 	IECore::CameraPtr camera = new IECore::Camera();
-
 	camera->parameters()["projection"] = new IECore::StringData( "perspective" );
 	camera->parameters()["projection:fov"] = new IECore::FloatData( 54.43 ); // 35 mm focal length
+	viewportGadget()->setCamera( camera.get() );
 
 	M44f matrix;
 	matrix.translate( V3f( 0, 0, 1 ) );
 	matrix.rotate( IECore::degreesToRadians( V3f( -25, 45, 0 ) ) );
-	camera->setTransform( new IECore::MatrixTransform( matrix ) );
-
-	viewportGadget()->setCamera( camera.get() );
+	viewportGadget()->setCameraTransform( matrix );
 
 	// add plugs and signal handling for them
 
