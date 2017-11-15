@@ -44,7 +44,6 @@
 #include "OpenEXR/ImathVecAlgo.h"
 
 #include "IECore/NullObject.h"
-#include "IECore/Transform.h"
 
 #include "IECoreGL/Camera.h"
 
@@ -250,9 +249,7 @@ Handle::PlanarDrag::PlanarDrag()
 Handle::PlanarDrag::PlanarDrag( const Gadget *gadget, const DragDropEvent &dragBeginEvent )
 {
 	const ViewportGadget *viewport = gadget->ancestor<ViewportGadget>();
-	const Camera *camera = viewport->getCamera();
-
-	const M44f cameraTransform = camera->getTransform()->transform();
+	const M44f cameraTransform = viewport->getCameraTransform();
 	const M44f gadgetInverseTransform = gadget->fullTransform().inverse();
 	const M44f cameraToGadget = cameraTransform * gadgetInverseTransform;
 
