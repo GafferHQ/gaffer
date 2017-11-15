@@ -39,7 +39,6 @@
 #define GAFFERUI_VIEWPORTGADGET_H
 
 #include "IECore/Camera.h"
-#include "IECore/CameraController.h"
 
 #include "IECoreGL/Selector.h"
 
@@ -220,7 +219,8 @@ class ViewportGadget : public Gadget
 		template<typename Event, typename Signal>
 		typename Signal::result_type dispatchEvent( GadgetPtr gadget, Signal &(Gadget::*signalGetter)(), const Event &event );
 
-		IECore::CameraController m_cameraController;
+		class CameraController;
+		std::unique_ptr<CameraController> m_cameraController;
 		bool m_cameraInMotion;
 		bool m_cameraEditable;
 
