@@ -53,7 +53,6 @@
 #include "PathListingWidgetBinding.h"
 #include "GraphGadgetBinding.h"
 #include "ConnectionGadgetBinding.h"
-#include "RenderableGadgetBinding.h"
 #include "NameGadgetBinding.h"
 #include "SplinePlugGadgetBinding.h"
 #include "ImageGadgetBinding.h"
@@ -71,7 +70,6 @@ BOOST_PYTHON_MODULE( _GafferUI )
 	bindEvent();
 	bindContainerGadget();
 	bindGraphGadget();
-	bindRenderableGadget();
 	bindTextGadget();
 	bindNameGadget();
 	bindNodeGadget();

@@ -69,7 +69,6 @@ from SelectionMenuTest import SelectionMenuTest
 from StandardStyleTest import StandardStyleTest
 from EditorWidgetTest import EditorWidgetTest
 from NumericSliderTest import NumericSliderTest
-from RenderableGadgetTest import RenderableGadgetTest
 from PlugValueWidgetTest import PlugValueWidgetTest
 from PathListingWidgetTest import PathListingWidgetTest
 from MultiLineTextWidgetTest import MultiLineTextWidgetTest
