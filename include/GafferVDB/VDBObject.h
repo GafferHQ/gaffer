@@ -61,15 +61,15 @@ class VDBObject : public IECore::VisibleRenderable
 		VDBObject();
 
 		//! initialise VDBObject from a vdb file
-		VDBObject(const std::string& filename);
+		VDBObject( const std::string &filename );
 
 		IE_CORE_DECLAREEXTENSIONOBJECT( GafferVDB::VDBObject, VDBObjectTypeId, IECore::VisibleRenderable );
 
 		void insertGrid( openvdb::GridBase::Ptr grid );
-		void removeGrid(const std::string& name);
+		void removeGrid( const std::string &name );
 
-		openvdb::GridBase::ConstPtr findGrid(const std::string& name) const;
-		openvdb::GridBase::Ptr findGrid(const std::string& name);
+		openvdb::GridBase::ConstPtr findGrid( const std::string &name ) const;
+		openvdb::GridBase::Ptr findGrid( const std::string &name );
 
 		std::vector<std::string> gridNames() const;
 

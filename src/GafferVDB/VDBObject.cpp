@@ -55,7 +55,7 @@ namespace
 
 //! Calculate the worldspace bounds - 0.5 padding required to include the full volume and not the bound of the voxel centres.
 template<typename T>
-Imath::Box<Imath::Vec3<T> > worldBound( const openvdb::GridBase* grid, float padding = 0.50f )
+Imath::Box<Imath::Vec3<T> > worldBound( const openvdb::GridBase *grid, float padding = 0.50f )
 {
 	openvdb::Vec3i min = grid->metaValue<openvdb::Vec3i>( grid->META_FILE_BBOX_MIN );
 	openvdb::Vec3i max = grid->metaValue<openvdb::Vec3i>( grid->META_FILE_BBOX_MAX );
@@ -100,7 +100,7 @@ VDBObject::VDBObject()
 {
 }
 
-VDBObject::VDBObject(const std::string& filename)
+VDBObject::VDBObject( const std::string &filename )
 : m_filename( filename )
 {
 	openvdb::initialize(); // safe to call multiple times but has a performance hit of a mutex.
@@ -127,7 +127,7 @@ VDBObject::~VDBObject()
 {
 }
 
-openvdb::GridBase::ConstPtr VDBObject::findGrid(const std::string& name) const
+openvdb::GridBase::ConstPtr VDBObject::findGrid( const std::string &name ) const
 {
 	auto it = m_grids.find(name);
 	if ( it != m_grids.end() )
@@ -138,7 +138,7 @@ openvdb::GridBase::ConstPtr VDBObject::findGrid(const std::string& name) const
 	return openvdb::GridBase::Ptr();
 }
 
-openvdb::GridBase::Ptr VDBObject::findGrid(const std::string& name)
+openvdb::GridBase::Ptr VDBObject::findGrid( const std::string &name )
 {
 	auto it = m_grids.find( name );
 	if ( it != m_grids.end() )
@@ -165,7 +165,7 @@ void VDBObject::insertGrid( openvdb::GridBase::Ptr grid )
 	m_grids[grid->getName()] = HashedGrid( grid, false );
 }
 
-void VDBObject::removeGrid(const std::string& name)
+void VDBObject::removeGrid( const std::string &name )
 {
 	auto it = m_grids.find( name );
 
@@ -206,35 +206,35 @@ IECore::CompoundObjectPtr VDBObject::metadata( const std::string &name )
 
 	CompoundObjectPtr metadata = new CompoundObject();
 
-	for (auto metaIt = grid->beginMeta(); metaIt != grid->endMeta(); ++metaIt)
+	for( auto metaIt = grid->beginMeta(); metaIt != grid->endMeta(); ++metaIt )
 	{
 		openvdb::Metadata::Ptr ptr = metaIt->second;
 
-		if (metaIt->second->typeName() == "string")
+		if( metaIt->second->typeName() == "string" )
 		{
-			openvdb::TypedMetadata<openvdb::Name>::ConstPtr typedPtr = openvdb::DynamicPtrCast<openvdb::TypedMetadata<openvdb::Name> >(ptr);
+			openvdb::TypedMetadata<openvdb::Name>::ConstPtr typedPtr = openvdb::DynamicPtrCast<openvdb::TypedMetadata<openvdb::Name> >( ptr );
 
-			if (typedPtr)
+			if( typedPtr )
 			{
 				StringDataPtr stringData = new StringData();
 				stringData->writable() = typedPtr->value();
 				metadata->members()[metaIt->first] = stringData;
 			}
 		}
-		else if (metaIt->second->typeName() == "int64")
+		else if( metaIt->second->typeName() == "int64" )
 		{
-			openvdb::TypedMetadata<openvdb::Int64>::ConstPtr typedPtr = openvdb::DynamicPtrCast<openvdb::TypedMetadata<openvdb::Int64> >(ptr);
-			if (typedPtr)
+			openvdb::TypedMetadata<openvdb::Int64>::ConstPtr typedPtr = openvdb::DynamicPtrCast<openvdb::TypedMetadata<openvdb::Int64> >( ptr );
+			if( typedPtr )
 			{
 				Int64DataPtr intData = new Int64Data();
 				intData->writable() = typedPtr->value();
 				metadata->members()[metaIt->first] = intData;
 			}
 		}
-		else if (metaIt->second->typeName() == "bool")
+		else if( metaIt->second->typeName() == "bool" )
 		{
-			openvdb::TypedMetadata<bool>::ConstPtr typedPtr = openvdb::DynamicPtrCast<openvdb::TypedMetadata<bool> > (ptr);
-			if (typedPtr)
+			openvdb::TypedMetadata<bool>::ConstPtr typedPtr = openvdb::DynamicPtrCast<openvdb::TypedMetadata<bool> >( ptr );
+			if( typedPtr )
 			{
 				BoolDataPtr data = new BoolData();
 				data->writable() = typedPtr->value();
@@ -242,10 +242,10 @@ IECore::CompoundObjectPtr VDBObject::metadata( const std::string &name )
 			}
 
 		}
-		else if (metaIt->second->typeName() == "vec3i")
+		else if( metaIt->second->typeName() == "vec3i" )
 		{
-			openvdb::TypedMetadata<openvdb::math::Vec3i>::ConstPtr typedPtr = openvdb::DynamicPtrCast<openvdb::TypedMetadata<openvdb::math::Vec3i> >(ptr);
-			if (typedPtr)
+			openvdb::TypedMetadata<openvdb::math::Vec3i>::ConstPtr typedPtr = openvdb::DynamicPtrCast<openvdb::TypedMetadata<openvdb::math::Vec3i> >( ptr );
+			if( typedPtr )
 			{
 				V3iDataPtr data = new V3iData();
 				data->writable() = Imath::V3i( typedPtr->value().x(), typedPtr->value().y(), typedPtr->value().z() );
@@ -254,12 +254,11 @@ IECore::CompoundObjectPtr VDBObject::metadata( const std::string &name )
 		}
 		else
 		{
-			IECore::msg( IECore::MessageHandler::Warning, "VDBObject::metadata", boost::format("'%1%' has unsupported metadata type: '%2%'") % metaIt->second->typeName() % metaIt->first);
+			IECore::msg( IECore::MessageHandler::Warning, "VDBObject::metadata", boost::format( "'%1%' has unsupported metadata type: '%2%'" ) % metaIt->second->typeName() % metaIt->first );
 		}
 	}
 	return metadata;
 }
-
 
 bool VDBObject::isEqualTo( const IECore::Object *other ) const
 {
@@ -270,7 +269,7 @@ bool VDBObject::isEqualTo( const IECore::Object *other ) const
 
 	const VDBObject *vdbObject = runTimeCast<const VDBObject>( other );
 
-	if ( !vdbObject )
+	if( !vdbObject )
 	{
 		return false;
 	}
@@ -307,13 +306,13 @@ void VDBObject::hash( IECore::MurmurHash &h ) const
 	}
 }
 
-void VDBObject::copyFrom( const IECore::Object *other, IECore::Object::CopyContext *context  )
+void VDBObject::copyFrom( const IECore::Object *other, IECore::Object::CopyContext *context )
 {
 	IECore::VisibleRenderable::copyFrom( other, context );
 
 	const VDBObject *vdbObject = runTimeCast<const VDBObject>( other );
 
-	if ( !vdbObject )
+	if( !vdbObject )
 	{
 		return;
 	}
@@ -334,7 +333,7 @@ void VDBObject::load( IECore::Object::LoadContextPtr context )
 	throw IECore::NotImplementedException( "VDBObject::load" );
 }
 
-void VDBObject::memoryUsage( IECore::Object::MemoryAccumulator &acc) const
+void VDBObject::memoryUsage( IECore::Object::MemoryAccumulator &acc ) const
 {
 	IECore::VisibleRenderable::memoryUsage( acc );
 
