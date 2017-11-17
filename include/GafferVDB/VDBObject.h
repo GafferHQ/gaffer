@@ -37,6 +37,8 @@
 #ifndef GAFFERVDB_VDBOBJECT_H
 #define GAFFERVDB_VDBOBJECT_H
 
+#include <unordered_map>
+
 #include "openvdb/openvdb.h"
 
 #include "OpenEXR/ImathBox.h"
@@ -74,10 +76,18 @@ class VDBObject : public IECore::VisibleRenderable
 		Imath::Box3f bound() const override;
 		void render( IECore::Renderer *renderer ) const override;
 
-		IECore::UCharVectorDataPtr memoryBuffer() const;
+		IECore::CompoundObjectPtr metadata( const std::string &name );
 
-		void forceRead(const std::string& name);
-		IECore::CompoundObjectPtr metadata(const std::string& name);
+		//! Are the grids in this VDBObject unmodified from the vdb file in filename?
+		//! Useful for passing VDB objects to renders by filename instead of memory buffer
+		bool unmodifiedFromFile() const;
+
+		//! path to VDB file used to initialise this object
+		//! empty for procedurally generated VDBs
+		std::string filename() const
+		{
+			return m_filename;
+		}
 
 	protected :
 
@@ -87,7 +97,33 @@ class VDBObject : public IECore::VisibleRenderable
 
 		static const unsigned int m_ioVersion;
 
-		openvdb::GridPtrVecPtr m_grids;
+		class HashedGrid
+		{
+			public:
+				HashedGrid() : m_hashValid( false ), m_unmodifiedFromFile( false )
+				{
+				}
+
+				HashedGrid( openvdb::GridBase::Ptr grid, bool initFromFile = false ) : m_grid( grid ), m_hashValid( false ), m_unmodifiedFromFile( initFromFile )
+				{
+				}
+
+				IECore::MurmurHash hash() const;
+				openvdb::GridBase::Ptr grid() const;
+				bool unmodifiedFromFile() const;
+				void markedAsEdited();
+
+			private:
+				openvdb::GridBase::Ptr m_grid;
+				mutable bool m_hashValid;
+				mutable IECore::MurmurHash m_hash;
+				bool m_unmodifiedFromFile;
+		};
+
+		std::unordered_map<std::string, HashedGrid> m_grids;
+
+		//! store the filename incase we need don't modify the vdb and we can pass it on to clients who can only deal with file VDBs
+		std::string m_filename;
 };
 
 IE_CORE_DECLAREPTR( VDBObject )

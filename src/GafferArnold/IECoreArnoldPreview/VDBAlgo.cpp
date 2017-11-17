@@ -32,9 +32,17 @@
 //
 //////////////////////////////////////////////////////////////////////////
 
+#include "boost/iostreams/categories.hpp"
+#include "boost/iostreams/stream.hpp"
+
+#include "openvdb/openvdb.h"
+#include "openvdb/io/Stream.h"
+
 #include "IECore/SimpleTypedData.h"
 #include "IECore/Renderer.h"
 #include "IECore/CompoundData.h"
+#include "IECore/MessageHandler.h"
+#include "IECore/Exception.h"
 
 #include "IECoreArnold/ParameterAlgo.h"
 
@@ -51,8 +59,64 @@ using namespace IECoreArnold;
 namespace
 {
 	IECore::InternedString g_filedataParam("filedata");
+	IECore::InternedString g_filenameParam("filename");
+
 	IECore::InternedString g_gridParam("grids");
 	AtString g_volume("volume");
+
+
+	///! utility to allow us to stream directly into a UCharVectorData
+	struct UCharVectorDataSink
+	{
+		typedef char char_type;
+		typedef boost::iostreams::sink_tag category;
+
+		UCharVectorDataSink( IECore::UCharVectorData *storage ) : m_storage( storage->writable() )
+		{
+		}
+
+		std::streamsize write( const char *s, std::streamsize n )
+		{
+			m_storage.insert( m_storage.end(), s, s + n );
+			return n;
+		}
+
+		std::vector<unsigned char> &m_storage;
+	};
+
+
+	UCharVectorDataPtr createMemoryBuffer(const GafferVDB::VDBObject* vdbObject)
+	{
+		// estimate the size of the memory required to hand the VDB to arnold.
+		// This is required so we can reserve the right amount of space in the output
+		// buffer.
+		int64_t totalSizeBytes = 0;
+		openvdb::GridCPtrVec gridsToWrite;
+		std::vector<std::string> gridNames = vdbObject->gridNames();
+		try
+		{
+			for( const std::string& gridName : gridNames )
+			{
+				openvdb::GridBase::ConstPtr grid = vdbObject->findGrid( gridName );
+				totalSizeBytes += grid->metaValue<int64_t>( "file_mem_bytes" );
+				gridsToWrite.push_back( grid );
+			}
+		}
+		catch( const std::exception &e )
+		{
+			IECore::msg( IECore::MessageHandler::Warning, "VDBObject::memoryBuffer", "Unable to estimate vdb size." );
+		}
+
+		IECore::UCharVectorDataPtr buffer = new IECore::UCharVectorData();
+		buffer->writable().reserve( totalSizeBytes );
+		UCharVectorDataSink sink( buffer.get() );
+		boost::iostreams::stream<UCharVectorDataSink> memoryStream( sink );
+
+		openvdb::io::Stream vdbStream( memoryStream );
+		vdbStream.write( gridsToWrite );
+
+		return buffer;
+	}
 
 	CompoundDataPtr  createParameters(const GafferVDB::VDBObject* vdbObject)
 	{
@@ -60,7 +124,15 @@ namespace
 		CompoundDataMap& compoundData = parameters->writable();
 
 		compoundData[g_gridParam] = new StringVectorData( vdbObject->gridNames() );
-		compoundData[g_filedataParam] = vdbObject->memoryBuffer();
+
+		if ( vdbObject->unmodifiedFromFile() )
+		{
+			compoundData[g_filenameParam] = new StringData( vdbObject->filename() );
+		}
+		else
+		{
+			compoundData[g_filedataParam] = createMemoryBuffer( vdbObject );
+		}
 
 		return parameters;
 	}

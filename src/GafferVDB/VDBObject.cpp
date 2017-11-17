@@ -69,24 +69,6 @@ Imath::Box<Imath::Vec3<T> > worldBound( const openvdb::GridBase* grid, float pad
 	return Imath::Box<Imath::Vec3<T> >( Imath::Vec3<T>( minBB[0], minBB[1], minBB[2] ), Imath::Vec3<T>( maxBB[0], maxBB[1], maxBB[2] ) );
 }
 
-///! utility to allow us to stream directly into a UCharVectorData
-struct UCharVectorDataSink
-{
-	typedef char char_type;
-	typedef boost::iostreams::sink_tag category;
-
-	UCharVectorDataSink( IECore::UCharVectorData *storage ) : m_storage( storage->writable() )
-	{
-	}
-
-	std::streamsize write( const char *s, std::streamsize n )
-	{
-		m_storage.insert( m_storage.end(), s, s + n );
-		return n;
-	}
-
-	std::vector<unsigned char>& m_storage;
-};
 
 //! allow hashing via a io stream interface.
 struct MurmurHashSink
@@ -94,7 +76,8 @@ struct MurmurHashSink
 	typedef char char_type;
 	typedef boost::iostreams::sink_tag category;
 
-	MurmurHashSink()
+	MurmurHashSink(MurmurHash &hash)
+	: hash(hash)
 	{
 	}
 
@@ -104,7 +87,7 @@ struct MurmurHashSink
 		return n;
 	}
 
-	MurmurHash hash;
+	MurmurHash &hash;
 };
 
 }
@@ -114,11 +97,11 @@ IE_CORE_DEFINEOBJECTTYPEDESCRIPTION( VDBObject );
 const unsigned int VDBObject::m_ioVersion = 0;
 
 VDBObject::VDBObject()
-: m_grids(new openvdb::GridPtrVec)
 {
 }
 
 VDBObject::VDBObject(const std::string& filename)
+: m_filename( filename )
 {
 	openvdb::initialize(); // safe to call multiple times but has a performance hit of a mutex.
 
@@ -127,7 +110,17 @@ VDBObject::VDBObject(const std::string& filename)
 	openvdb::io::File file( filename );
 	file.open(); //lazy loading of grid data is default enabling OPENVDB_DISABLE_DELAYED_LOAD will load the grids up front
 
-	m_grids = file.getGrids();
+	openvdb::GridPtrVecPtr grids = file.getGrids();
+
+	if ( !grids )
+	{
+		throw IECore::Exception( "VDBObject::VDBObject - no grids " );
+	}
+
+	for (auto grid : *grids)
+	{
+		m_grids[grid->getName()] = HashedGrid ( grid, true ) ;
+	}
 }
 
 VDBObject::~VDBObject()
@@ -136,11 +129,10 @@ VDBObject::~VDBObject()
 
 openvdb::GridBase::ConstPtr VDBObject::findGrid(const std::string& name) const
 {
-
-	for(const auto &grid : *m_grids )
+	auto it = m_grids.find(name);
+	if ( it != m_grids.end() )
 	{
-		if (grid->getName() == name)
-			return grid;
+		return it->second.grid();
 	}
 
 	return openvdb::GridBase::Ptr();
@@ -148,10 +140,11 @@ openvdb::GridBase::ConstPtr VDBObject::findGrid(const std::string& name) const
 
 openvdb::GridBase::Ptr VDBObject::findGrid(const std::string& name)
 {
-	for(const auto &grid : *m_grids )
+	auto it = m_grids.find( name );
+	if ( it != m_grids.end() )
 	{
-		if (grid->getName() == name)
-			return grid;
+		it->second.markedAsEdited();
+		return it->second.grid();
 	}
 
 	return openvdb::GridBase::Ptr();
@@ -160,28 +153,25 @@ openvdb::GridBase::Ptr VDBObject::findGrid(const std::string& name)
 std::vector<std::string> VDBObject::gridNames() const
 {
 	std::vector<std::string> outputGridNames;
-	for(const auto &grid : *m_grids )
+	for( const auto &it : m_grids )
 	{
-		outputGridNames.push_back( grid->getName() );
+		outputGridNames.push_back( it.first );
 	}
 	return outputGridNames;
 }
 
 void VDBObject::insertGrid( openvdb::GridBase::Ptr grid )
 {
-	removeGrid( grid->getName() );
-	m_grids->push_back( grid );
+	m_grids[grid->getName()] = HashedGrid( grid, false );
 }
 
 void VDBObject::removeGrid(const std::string& name)
 {
-	for(auto it = m_grids->begin(); it != m_grids->end(); ++it )
+	auto it = m_grids.find( name );
+
+	if ( it != m_grids.end() )
 	{
-		if( ( *it )->getName() == name )
-		{
-			m_grids->erase( it );
-			return;
-		}
+		m_grids.erase( it );
 	}
 }
 
@@ -189,9 +179,9 @@ Imath::Box3f VDBObject::bound() const
 {
 	Imath::Box3f combinedBounds;
 
-	for (const auto& grid : *m_grids)
+	for( const auto &it : m_grids )
 	{
-		Imath::Box3f gridBounds = worldBound<float>( grid.get() );
+		Imath::Box3f gridBounds = worldBound<float>( it.second.grid().get() );
 
 		combinedBounds.extendBy( gridBounds );
 	}
@@ -203,42 +193,7 @@ void VDBObject::render( IECore::Renderer *renderer ) const
 {
 }
 
-UCharVectorDataPtr VDBObject::memoryBuffer() const
-{
-	// estimate the size of the memory required to hand the VDB to arnold.
-	// This is required so we can reserve the right amount of space in the output
-	// buffer.
-	int64_t totalSizeBytes = 0;
-	try
-	{
-		for( const auto &grid : *m_grids )
-		{
-			totalSizeBytes += grid->metaValue<int64_t>( "file_mem_bytes" );
-		}
-	}
-	catch(const std::exception& e)
-	{
-		msg( MessageHandler::Warning, "VDBObject::memoryBuffer", "Unable to estimate vdb size." );
-	}
-
-	IECore::UCharVectorDataPtr buffer = new IECore::UCharVectorData();
-	buffer->writable().reserve( totalSizeBytes );
-	UCharVectorDataSink sink( buffer.get() );
-	boost::iostreams::stream<UCharVectorDataSink> memoryStream( sink );
-
-	openvdb::io::Stream vdbStream( memoryStream );
-	vdbStream.write( *m_grids );
-
-	return buffer;
-}
-
-void VDBObject::forceRead(const std::string& name)
-{
-	openvdb::GridBase::Ptr grid = findGrid( name );
-	grid->readNonresidentBuffers();
-}
-
-IECore::CompoundObjectPtr VDBObject::metadata(const std::string& name)
+IECore::CompoundObjectPtr VDBObject::metadata( const std::string &name )
 {
 	openvdb::GridBase::Ptr grid = findGrid( name );
 
@@ -320,24 +275,35 @@ bool VDBObject::isEqualTo( const IECore::Object *other ) const
 		return false;
 	}
 
-	return (*m_grids) == (*vdbObject->m_grids);
+	if (m_grids.size() != vdbObject->m_grids.size())
+	{
+		return false;
+	}
+
+	for (const auto& it : m_grids)
+	{
+		const auto itOther = vdbObject->m_grids.find( it.first );
+		if ( itOther == vdbObject->m_grids.end() )
+		{
+			return false;
+		}
+
+		if (itOther->second.hash() != it.second.hash())
+		{
+			return false;
+		}
+	}
+
+	return true;
 }
 
 void VDBObject::hash( IECore::MurmurHash &h ) const
 {
 	IECore::VisibleRenderable::hash( h );
 
-	for (const auto &grid : *m_grids)
+	for( const auto& it : m_grids )
 	{
-		MurmurHashSink sink;
-		boost::iostreams::stream<MurmurHashSink> hashStream( sink );
-
-		// todo cache grid hashes and if they're dirty and require recalculation.
-		grid->writeTopology( hashStream );
-		grid->writeBuffers( hashStream );
-		grid->writeTransform( hashStream );
-
-		h.append( sink.hash );
+		h.append( it.second.hash() );
 	}
 }
 
@@ -352,10 +318,8 @@ void VDBObject::copyFrom( const IECore::Object *other, IECore::Object::CopyConte
 		return;
 	}
 
-	for (const auto &grid : *vdbObject->m_grids)
-	{
-		m_grids->push_back( grid->deepCopyGrid() );
-	}
+	m_grids = vdbObject->m_grids;
+	m_filename = vdbObject->m_filename;
 }
 
 void VDBObject::save( IECore::Object::SaveContext *context ) const
@@ -374,9 +338,60 @@ void VDBObject::memoryUsage( IECore::Object::MemoryAccumulator &acc) const
 {
 	IECore::VisibleRenderable::memoryUsage( acc );
 
-	for ( const auto &grid  : *m_grids )
+	for( const auto it : m_grids )
 	{
-		acc.accumulate( grid.get(), grid->memUsage() );
+		acc.accumulate( it.second.grid().get(), it.second.grid()->memUsage() );
 	}
 }
 
+bool VDBObject::unmodifiedFromFile() const
+{
+	for( const auto it : m_grids )
+	{
+		if( !it.second.unmodifiedFromFile() )
+		{
+			return false;
+		}
+	}
+
+	return true;
+}
+
+openvdb::GridBase::Ptr VDBObject::HashedGrid::grid() const
+{
+	return m_grid;
+}
+
+bool VDBObject::HashedGrid::unmodifiedFromFile() const
+{
+	return m_unmodifiedFromFile;
+}
+
+IECore::MurmurHash VDBObject::HashedGrid::hash() const
+{
+	if( !m_hashValid )
+	{
+		MurmurHashSink sink( m_hash );
+		boost::iostreams::stream<MurmurHashSink> hashStream( sink );
+
+		m_grid->writeTopology( hashStream );
+		m_grid->writeBuffers( hashStream );
+		m_grid->writeTransform( hashStream );
+
+		m_hashValid = true;
+	}
+
+	return m_hash;
+}
+
+void VDBObject::HashedGrid::markedAsEdited()
+{
+	m_unmodifiedFromFile = false;
+
+	if( m_grid.use_count() > 1 )
+	{
+		m_grid = m_grid->deepCopyGrid();
+		m_hash = IECore::MurmurHash();
+		m_hashValid = false;
+	}
+}

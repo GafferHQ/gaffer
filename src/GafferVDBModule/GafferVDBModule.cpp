@@ -71,9 +71,9 @@ BOOST_PYTHON_MODULE( _GafferVDB )
 		.def(init<>())
 		.def("gridNames", &::gridNames)
 		.def("metadata", &VDBObject::metadata)
-		.def("forceRead", &VDBObject::forceRead)
 		.def("removeGrid", &VDBObject::removeGrid)
-		.def("memoryBuffer", &VDBObject::memoryBuffer)
+		.def("unmodifiedFromFile", &VDBObject::unmodifiedFromFile)
+		.def("filename", &VDBObject::filename)
 		;
 
 	GafferBindings::DependencyNodeClass<MeshToLevelSet>();
