@@ -37,6 +37,9 @@
 from VDBTestCase import VDBTestCase
 from SceneInterfaceTest import SceneInterfaceTest
 from VDBObjectTest import VDBObjectTest
+from MeshToLevelSetTest import MeshToLevelSetTest
+from LevelSetToMeshTest import LevelSetToMeshTest
+from LevelSetOffsetTest import LevelSetOffsetTest
 
 if __name__ == "__main__":
 	import unittest
