@@ -36,6 +36,8 @@
 
 #include "boost/python.hpp"
 
+#include "pyopenvdb.h"
+
 #include "GafferBindings/DependencyNodeBinding.h"
 
 #include "GafferVDB/MeshToLevelSet.h"
@@ -61,6 +63,25 @@ boost::python::list gridNames( VDBObject::Ptr vdbObject )
 	return result;
 }
 
+boost::python::object findGrid( VDBObject::Ptr vdbObject, const std::string &gridName )
+{
+	openvdb::GridBase::Ptr grid = vdbObject->findGrid( gridName );
+	if( grid )
+	{
+		return pyopenvdb::getPyObjectFromGrid( grid );
+	}
+	else
+	{
+		return boost::python::object();
+	}
+}
+
+void insertGrid( VDBObject::Ptr vdbObject, boost::python::object pyObject )
+{
+	openvdb::GridBase::Ptr gridPtr = pyopenvdb::getGridFromPyObject( pyObject );
+	vdbObject->insertGrid( gridPtr );
+}
+
 }
 
 BOOST_PYTHON_MODULE( _GafferVDB )
@@ -72,6 +93,8 @@ BOOST_PYTHON_MODULE( _GafferVDB )
 		.def("gridNames", &::gridNames)
 		.def("metadata", &VDBObject::metadata)
 		.def("removeGrid", &VDBObject::removeGrid)
+		.def("findGrid", &::findGrid)
+		.def("insertGrid", &::insertGrid)
 		.def("unmodifiedFromFile", &VDBObject::unmodifiedFromFile)
 		.def("filename", &VDBObject::filename)
 		;
