@@ -262,3 +262,27 @@ IECore::ConstObjectPtr LevelSetToMesh::computeProcessedObject( const ScenePath &
 
 	return volumeToMesh( grid, isoValuePlug()->getValue(), adaptivityPlug()->getValue() );
 }
+
+bool LevelSetToMesh::processesBound() const
+{
+	return true;
+}
+
+void LevelSetToMesh::hashProcessedBound( const ScenePath &path, const Gaffer::Context *context, IECore::MurmurHash &h ) const
+{
+	SceneElementProcessor::hashProcessedBound( path, context, h );
+
+	gridNamePlug()->hash( h );
+	isoValuePlug()->hash( h );
+}
+
+Imath::Box3f LevelSetToMesh::computeProcessedBound( const ScenePath &path, const Gaffer::Context *context, const Imath::Box3f &inputBound ) const
+{
+	Imath::Box3f newBound = inputBound;
+	float offset = isoValuePlug()->getValue();
+
+	newBound.min -= Imath::V3f(offset, offset, offset);
+	newBound.max += Imath::V3f(offset, offset, offset);
+
+	return newBound;
+}
