@@ -57,7 +57,7 @@ LevelSetOffset::LevelSetOffset( const std::string &name )
 {
 	storeIndexOfNextChild( g_firstPlugIndex );
 
-	addChild( new StringPlug( "gridName", Plug::In, "density") );
+	addChild( new StringPlug( "gridName", Plug::In, "levelset") );
 	addChild( new FloatPlug( "offset", Plug::In, 0.5) );
 }
 
