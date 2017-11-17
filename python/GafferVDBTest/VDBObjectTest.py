@@ -55,6 +55,9 @@ class VDBObjectTest( GafferVDBTest.VDBTestCase ) :
 
 		metadata = vdbObject.metadata('ls_sphere')
 
+		# skip the file size
+		del metadata['file_mem_bytes']
+
 		expected = IECore.CompoundObject(
 			{
 				'name': IECore.StringData( 'ls_sphere' ),
@@ -65,7 +68,7 @@ class VDBObjectTest( GafferVDBTest.VDBTestCase ) :
 				'is_saved_as_half_float': IECore.BoolData( 1 ),
 				'value_type': IECore.StringData( 'float' ),
 				'class': IECore.StringData( 'level set' ),
-				'file_mem_bytes': IECore.Int64Data( 2643448 ),
+				#'file_mem_bytes': IECore.Int64Data( 2643448 ),
 				'vector_type': IECore.StringData( 'invariant' )
 			}
 		)
@@ -77,7 +80,14 @@ class VDBObjectTest( GafferVDBTest.VDBTestCase ) :
 		vdbObject = GafferVDB.VDBObject( sourcePath )
 
 		self.assertEqual(788108, vdbObject.memoryUsage())
-		vdbObject.forceRead("density")
+
+		d = vdbObject.findGrid("density")
+
+		def incValue( value ):
+			return value + 1
+
+		d.mapAll( incValue )
+
 		self.assertEqual(7022108, vdbObject.memoryUsage())
 
 	def testCanRemoveGrid( self ) :
@@ -111,18 +121,84 @@ class VDBObjectTest( GafferVDBTest.VDBTestCase ) :
 
 		self.assertEqual( vdbObject.hash(), vdbObjectCopy.hash() )
 
-	def testCanCreateMemoryBufferForRendering( self ):
+	def testCanGetGridFromObject( self ) :
 		sourcePath = os.path.join( self.dataDir, "smoke.vdb" )
 		vdbObject = GafferVDB.VDBObject( sourcePath )
-		memBuffer = vdbObject.memoryBuffer()
 
-		self.assertEqual(len(memBuffer), 2585819)
+		grid = vdbObject.findGrid( "density" )
+		self.assertEqual(grid.leafCount(), 3117)
 
-		self.assertEqual(memBuffer[0],	ord(' '))
-		self.assertEqual(memBuffer[1],	ord('B'))
-		self.assertEqual(memBuffer[2],	ord('D'))
-		self.assertEqual(memBuffer[3],	ord('V'))
+	def testIfDifferentFromFile( self ) :
+		sourcePath = os.path.join( self.dataDir, "smoke.vdb" )
+		vdbObject = GafferVDB.VDBObject( sourcePath )
 
+		vdbObjectCopy = vdbObject.copy()
+
+		self.assertEqual( vdbObject.unmodifiedFromFile(), True )
+
+		densityGrid = vdbObject.findGrid( "density" )
+		self.assertFalse( vdbObject.unmodifiedFromFile() )
+
+		self.assertEqual( vdbObjectCopy.unmodifiedFromFile(), True )
+
+	def testCanAddGridFromOneObjectToAnother( self ) :
+		sourcePath = os.path.join( self.dataDir, "smoke.vdb" )
+		smoke = GafferVDB.VDBObject( sourcePath )
+		h = smoke.hash()
+		self.assertTrue( smoke.unmodifiedFromFile() )
+
+		sourcePath = os.path.join( self.dataDir, "sphere.vdb" )
+		sphere = GafferVDB.VDBObject( sourcePath )
+		self.assertTrue( sphere.unmodifiedFromFile() )
+
+		sphereLevelSet = sphere.findGrid( "ls_sphere" )
+		smoke.insertGrid( sphereLevelSet )
+		self.assertFalse( smoke.unmodifiedFromFile() )  # in practice this comes from the ls_sphere grid having the modified from file flag set.
+
+		self.assertEqual( set( smoke.gridNames() ), set( ['ls_sphere', 'density'] ) )
+		h1 = smoke.hash()
+
+		self.assertNotEqual( h, h1 )
+
+	# TODO! This is a problem in that you can modify a grid in python
+	# and the hash on the VDBObject isn't updated correctly
+	def testModifyingGridModifiesHash( self ) :
+		sourcePath = os.path.join( self.dataDir, "smoke.vdb" )
+		smoke = GafferVDB.VDBObject( sourcePath )
+
+		d = smoke.findGrid( "density" )
+		h = smoke.hash()
+
+		def incValue( value ) :
+			return value + 1
+
+		d.mapAll( incValue )
+
+		h1 = smoke.hash()
+		self.assertEqual( h, h1 )
+
+	def testFindGridMakesACopy( self ) :
+		sourcePath = os.path.join( self.dataDir, "smoke.vdb" )
+		smoke = GafferVDB.VDBObject( sourcePath )
+
+		smoke2 = smoke.copy()
+		d2 = smoke2.findGrid( "density" )
+
+		def incValue( value ) :
+			return value + 1
+
+		d2.mapAll( incValue )
+
+		d = smoke.findGrid( "density" )
+
+		d2Value = list( d2.citerAllValues() )[0]
+		dValue = list( d.citerAllValues() )[0]
+
+		self.assertEqual( d2Value['value'], dValue['value'] + 1 )
+
+		# we've requested mutable grids from both vdb objects so they could have been edited.
+		self.assertFalse( smoke.unmodifiedFromFile() )
+		self.assertFalse( smoke2.unmodifiedFromFile() )
 
 if __name__ == "__main__":
 	unittest.main()
