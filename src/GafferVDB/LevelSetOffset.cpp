@@ -92,6 +92,7 @@ void LevelSetOffset::affects( const Gaffer::Plug *input, AffectedPlugsContainer 
 	if( input == gridNamePlug() || input == offsetPlug() )
 	{
 		outputs.push_back( outPlug()->objectPlug() );
+		outputs.push_back( outPlug()->boundPlug() );
 	}
 }
 
@@ -151,4 +152,29 @@ IECore::ConstObjectPtr LevelSetOffset::computeProcessedObject( const ScenePath &
 	newVDBObject->insertGrid( newGrid );
 
 	return newVDBObject;
+}
+
+
+bool LevelSetOffset::processesBound() const
+{
+	return true;
+}
+
+void LevelSetOffset::hashProcessedBound( const ScenePath &path, const Gaffer::Context *context, IECore::MurmurHash &h ) const
+{
+	SceneElementProcessor::hashProcessedBound( path, context, h );
+
+	gridNamePlug()->hash( h );
+	offsetPlug()->hash( h );
+}
+
+Imath::Box3f LevelSetOffset::computeProcessedBound( const ScenePath &path, const Gaffer::Context *context, const Imath::Box3f &inputBound ) const
+{
+	Imath::Box3f newBound = inputBound;
+	float offset = -offsetPlug()->getValue();
+
+	newBound.min -= Imath::V3f(offset, offset, offset);
+	newBound.max += Imath::V3f(offset, offset, offset);
+
+	return newBound;
 }
