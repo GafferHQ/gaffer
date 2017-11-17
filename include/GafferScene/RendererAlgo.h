@@ -44,10 +44,17 @@
 #include "IECore/CompoundObject.h"
 #include "IECore/VisibleRenderable.h"
 #include "IECore/VectorTypedData.h"
+#include "IECore/Camera.h"
 
 #include "GafferScene/ScenePlug.h"
 #include "GafferScene/PathMatcher.h"
-#include "GafferScene/Private/IECoreScenePreview/Renderer.h"
+
+namespace IECoreScenePreview
+{
+
+class Renderer;
+
+} // namespace IECoreScenePreview
 
 namespace GafferScene
 {

@@ -64,6 +64,7 @@
 #include "GafferScene/PathMatcherData.h"
 #include "GafferScene/SceneAlgo.h"
 #include "GafferScene/SceneProcessor.h"
+#include "GafferScene/Private/IECoreScenePreview/Renderer.h"
 
 using namespace std;
 using namespace Imath;
