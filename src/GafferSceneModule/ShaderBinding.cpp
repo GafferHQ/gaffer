@@ -142,12 +142,8 @@ void GafferSceneModule::bindShader()
 		.def( "attributesHash", (IECore::MurmurHash (Shader::*)() const )&Shader::attributesHash )
 		.def( "attributesHash", (void (Shader::*)( IECore::MurmurHash &h ) const )&Shader::attributesHash )
 		.def( "attributes", &shaderAttributes, ( boost::python::arg_( "_copy" ) = true ) )
-		.def( "stateHash", (IECore::MurmurHash (Shader::*)() const )&Shader::stateHash )
-		.def( "stateHash", (void (Shader::*)( IECore::MurmurHash &h ) const )&Shader::stateHash )
-		.def( "state", &state, ( boost::python::arg_( "_copy" ) = true ) )
 		.def( "loadShader", &loadShader, ( arg_( "shaderName" ), arg_( "keepExistingValues" ) = false ) )
 		.def( "reloadShader", &reloadShader )
-
 	;
 
 	GafferBindings::Serialisation::registerSerialiser( Shader::staticTypeId(), new ShaderSerialiser() );
