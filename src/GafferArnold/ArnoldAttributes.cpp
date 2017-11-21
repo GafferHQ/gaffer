@@ -89,6 +89,7 @@ ArnoldAttributes::ArnoldAttributes( const std::string &name )
 	// Volume parameters
 
 	attributes->addOptionalMember( "ai:shape:step_size", new FloatPlug( "value", Plug::In, 0.0f, 0.0f ), "volumeStepSize", false );
+	attributes->addOptionalMember( "ai:shape:volume_padding", new FloatPlug( "value", Plug::In, 0.0f, 0.0f ), "volumePadding", false );
 
 }
 
