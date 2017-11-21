@@ -1679,6 +1679,101 @@ class RendererTest( GafferTest.TestCase ) :
 						self.assertTrue( arnold.AiNodeIs( shape, "volume" ) )
 						self.assertEqual( arnold.AiNodeGetFlt( shape, "step_size" ), stepSize )
 
+	def testVolumePaddingAttribute( self ) :
+
+		r = GafferScene.Private.IECoreScenePreview.Renderer.create(
+			"Arnold",
+			GafferScene.Private.IECoreScenePreview.Renderer.RenderType.SceneDescription,
+			self.temporaryDirectory() + "/test.ass"
+		)
+
+		primitives = {
+			"sphere" : IECore.SpherePrimitive(),
+			"mesh" : IECore.MeshPrimitive.createPlane( IECore.Box2f( IECore.V2f( -1 ), IECore.V2f( 1 ) ) ),
+			"curves" : IECore.CurvesPrimitive.createBox( IECore.Box3f( IECore.V3f( -1 ), IECore.V3f( 1 ) ) ),
+			"volumeProcedural" : IECore.ExternalProcedural(
+				"volume",
+				IECore.Box3f( IECore.V3f( -1 ), IECore.V3f( 1 ) ),
+			),
+		}
+
+		attributes = {
+			"default" : IECore.CompoundObject(),
+			"volumePaddingZero" : IECore.CompoundObject( {
+				"ai:shape:volume_padding" : IECore.FloatData( 0 ),
+			} ),
+			"volumePaddingOne" : IECore.CompoundObject( {
+				"ai:shape:volume_padding" : IECore.FloatData( 1 ),
+			} ),
+			"volumePaddingTwo" : IECore.CompoundObject( {
+				"ai:shape:volume_padding" : IECore.FloatData( 2 ),
+			} )
+		}
+
+		for pn, p in primitives.items() :
+			for an, a in attributes.items() :
+				r.object( pn + "_" + an, p, r.attributes( a ) )
+
+		r.render()
+		del r
+
+		with IECoreArnold.UniverseBlock( writable = True ) :
+
+			arnold.AiASSLoad( self.temporaryDirectory() + "/test.ass" )
+
+			shapes = self.__allNodes( type = arnold.AI_NODE_SHAPE )
+			numInstances = len( [ s for s in shapes if arnold.AiNodeEntryGetName( arnold.AiNodeGetNodeEntry( s ) ) == "ginstance" ] )
+			numMeshes = len( [ s for s in shapes if arnold.AiNodeEntryGetName( arnold.AiNodeGetNodeEntry( s ) ) == "polymesh" ] )
+			numBoxes = len( [ s for s in shapes if arnold.AiNodeEntryGetName( arnold.AiNodeGetNodeEntry( s ) ) == "box" ] )
+			numSpheres = len( [ s for s in shapes if arnold.AiNodeEntryGetName( arnold.AiNodeGetNodeEntry( s ) ) == "sphere" ] )
+			numCurves = len( [ s for s in shapes if arnold.AiNodeEntryGetName( arnold.AiNodeGetNodeEntry( s ) ) == "curves" ] )
+			numVolumes = len( [ s for s in shapes if arnold.AiNodeEntryGetName( arnold.AiNodeGetNodeEntry( s ) ) == "volume" ] )
+
+			self.assertEqual( numInstances, 16 )
+			self.assertEqual( numMeshes, 3 )
+			self.assertEqual( numBoxes, 0 )
+			self.assertEqual( numSpheres, 3 )
+			self.assertEqual( numCurves, 1 )
+			self.assertEqual( numVolumes, 3 )
+
+			self.__assertInstanced(
+				"mesh_default",
+				"mesh_volumePaddingZero",
+			)
+
+			self.__assertInstanced(
+				"sphere_default",
+				"sphere_volumePaddingZero",
+			)
+
+			self.__assertInstanced(
+				"curves_default",
+				"curves_volumePaddingZero",
+				"curves_volumePaddingOne",
+				"curves_volumePaddingTwo",
+			)
+
+			for pn in primitives.keys() :
+				for an, a in attributes.items() :
+
+					instance = arnold.AiNodeLookUpByName( pn + "_" + an )
+					shape = arnold.AtNode.from_address( arnold.AiNodeGetPtr( instance, "node" ) )
+
+					volumePadding = a.get( "ai:shape:volume_padding" )
+					volumePadding = volumePadding.value if volumePadding is not None else 0
+
+					if pn == "curves" :
+						self.assertTrue( arnold.AiNodeIs( shape, "curves" ) )
+					elif pn == "sphere" :
+						self.assertTrue( arnold.AiNodeIs( shape, "sphere" ) )
+						self.assertEqual( arnold.AiNodeGetFlt( shape, "volume_padding" ), volumePadding )
+					elif pn == "mesh" :
+						self.assertTrue( arnold.AiNodeIs( shape, "polymesh" ) )
+						self.assertEqual( arnold.AiNodeGetFlt( shape, "volume_padding" ), volumePadding )
+					elif pn == "volumeProcedural" :
+						self.assertTrue( arnold.AiNodeIs( shape, "volume" ) )
+						self.assertEqual( arnold.AiNodeGetFlt( shape, "volume_padding" ), volumePadding )
+
 	def testStepSizeAttributeDefersToProceduralParameter( self ) :
 
 		r = GafferScene.Private.IECoreScenePreview.Renderer.create(
