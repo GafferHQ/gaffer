@@ -170,8 +170,6 @@ class InteractiveArnoldRenderTest( GafferSceneTest.InteractiveRenderTest ) :
 		return shader, shader["parameters"]["Kd_color"]
 
 	def _createTraceSetShader( self ) :
-		return None, None # TODO - Arnold currently crashes if we try to use trace_set
-
 		# It's currently pretty ugly how we need to disable the trace set when it is left empty,
 		# to match the behaviour expected by GafferSceneTest.InteractiveRenderTest.
 		# Would be somewhat cleaner if we had the primaryInput metadata on trace_set
