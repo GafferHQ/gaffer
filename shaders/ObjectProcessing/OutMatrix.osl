@@ -1,6 +1,6 @@
 //////////////////////////////////////////////////////////////////////////
 //
-//  Copyright (c) 2017, Image Engine Design Inc. All rights reserved.
+//  Copyright (c) 2017, Image Engine Design. All rights reserved.
 //
 //  Redistribution and use in source and binary forms, with or without
 //  modification, are permitted provided that the following conditions are
@@ -15,7 +15,7 @@
 //        disclaimer in the documentation and/or other materials provided with
 //        the distribution.
 //
-//      * Neither the name of John Haddon nor the names of
+//      * Neither the name of Image Engine Design nor the names of
 //        any other contributors to this software may be used to endorse or
 //        promote products derived from this software without specific prior
 //        written permission.
@@ -34,36 +34,14 @@
 //
 //////////////////////////////////////////////////////////////////////////
 
-#include "boost/python.hpp"
+#include "GafferOSL/ObjectProcessing.h"
 
-#include "IECorePython/RefCountedBinding.h"
-
-#include "Gaffer/Plug.h"
-#include "Gaffer/PlugAlgo.h"
-
-#include "GafferBindings/PlugAlgoBinding.h"
-
-using namespace boost::python;
-using namespace IECorePython;
-using namespace Gaffer;
-
-namespace GafferBindings
+shader OutMatrix
+(
+	string name = "transform",
+	matrix value = 1,
+	output closure matrix primitiveVariable = 0
+)
 {
-
-void bindPlugAlgo()
-{
-	object module( borrowed( PyImport_AddModule( "Gaffer.PlugAlgo" ) ) );
-	scope().attr( "PlugAlgo" ) = module;
-	scope moduleScope( module );
-
-	def( "replacePlug", &PlugAlgo::replacePlug, ( arg( "parent" ), arg( "plug" ) ) );
-
-	def( "canPromote", &PlugAlgo::canPromote, ( arg( "plug" ), arg( "parent" ) = object() ) );
-	def( "promote", &PlugAlgo::promote, ( arg( "plug" ), arg( "parent" ) = object(), arg( "excludeMetadata" ) = "layout:*" ), return_value_policy<CastToIntrusivePtr>() );
-	def( "promoteWithName", &PlugAlgo::promoteWithName, ( arg( "plug" ), arg( "name" ), arg( "parent" ) = object(), arg( "excludeMetadata" ) = "layout:*" ), return_value_policy<CastToIntrusivePtr>() );
-	def( "isPromoted", &PlugAlgo::isPromoted, ( arg( "plug" ) ) );
-	def( "unpromote", &PlugAlgo::unpromote, ( arg( "plug" ) ) );
-
+	primitiveVariable = outMatrix( name, value );
 }
-
-} // namespace GafferBindings

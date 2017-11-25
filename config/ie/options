@@ -148,23 +148,23 @@ else :
 
 pythonReg = IEEnv.registry['apps']['python'][pythonVersion][IEEnv.platform()]
 
-arnoldVersion = getOption( "ARNOLD_VERSION", os.environ["ARNOLD_VERSION"] )
+arnoldVersion = getOption( "ARNOLD_VERSION", os.environ.get( "ARNOLD_VERSION", "" ) )
 
 try :
 	arnoldReg = IEEnv.registry["apps"]["arnold"][arnoldVersion][IEEnv.platform()]
 	ARNOLD_ROOT = arnoldReg["location"]
 except :
-	pass
+	ARNOLD_ROOT = ""
 
-dlVersion = getOption( "DL_VERSION", os.environ["DL_VERSION"] )
+dlVersion = getOption( "DL_VERSION", os.environ.get( "DL_VERSION", "" ) )
 
 try :
 	dlReg = IEEnv.registry["apps"]["3delight"][dlVersion][IEEnv.platform()]
 	RMAN_ROOT = dlReg["location"]
 except :
-	pass
+	RMAN_ROOT = ""
 
-appleseedVersion = getOption( "APPLESEED_VERSION", os.environ.get( "APPLESEED_VERSION" ) )
+appleseedVersion = getOption( "APPLESEED_VERSION", os.environ.get( "APPLESEED_VERSION", "" ) )
 try :
 	appleseedReg = IEEnv.registry["apps"]["appleseed"][appleseedVersion][IEEnv.platform()]
 	APPLESEED_ROOT = appleseedReg["location"] if compilerVersion != "4.1.2" else ""
@@ -180,7 +180,7 @@ sphinxRoot = os.path.join( IEEnv.Environment.rootPath(), "apps", "sphinx", "1.4.
 # set where we'll put things
 ##########################################################################
 
-versionString = "${GAFFER_MILESTONE_VERSION}.${GAFFER_MAJOR_VERSION}.${GAFFER_MINOR_VERSION}.${GAFFER_PATCH_VERSION}"
+versionString = "${GAFFER_MILESTONE_VERSION}.${GAFFER_MAJOR_VERSION}.${GAFFER_MINOR_VERSION}.${GAFFER_PATCH_VERSION}-arnold5"
 if getOption( "RELEASE", "0" )=="1" :
 	buildRoot = "/tmp/gafferBuilds"
 	installRoot = "/software"

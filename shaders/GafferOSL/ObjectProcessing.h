@@ -79,6 +79,13 @@ normal inNormal( string name, normal defaultValue )
 	return result;
 }
 
+matrix inMatrix( string name, matrix defaultValue )
+{
+	matrix result = defaultValue;
+	getattribute( name, result );
+	return result;
+}
+
 closure color outFloat( string name, float value )
 {
 	return debug( name, "type", "float", "value", color( value ) );
@@ -107,6 +114,11 @@ closure color outVector( string name, vector value )
 closure color outNormal( string name, normal value )
 {
 	return debug( name, "type", "normal", "value", color( value ) );
+}
+
+closure color outMatrix( string name, matrix value )
+{
+	return debug( name, "type", "matrix", "matrixValue", value );
 }
 
 #endif // GAFFEROSL_OBJECTPROCESSING_H

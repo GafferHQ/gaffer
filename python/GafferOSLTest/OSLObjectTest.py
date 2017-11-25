@@ -433,6 +433,82 @@ class OSLObjectTest( GafferOSLTest.OSLTestCase ) :
 		self.assertEqual( planeObject["out_foo"].data[7], 1)
 		self.assertEqual( planeObject["out_foo"].data[8], 1)
 
+	def testCanReadAndWriteMatrices( self ) :
+
+		s = Gaffer.ScriptNode()
+
+		p = GafferScene.Plane()
+		p["divisions"].setValue( IECore.V2i( 2, 2 ) )  # 2x2 plane = 4 quads & 9 vertices
+		s.addChild( p )
+
+		o = GafferOSL.OSLObject()
+		s.addChild( o )
+
+		o['in'].setInput( p["out"] )
+
+		f = GafferScene.PathFilter( "PathFilter" )
+		s.addChild( f )
+		f["paths"].setValue( IECore.StringVectorData( ['/plane'] ) )
+		o["filter"].setInput( f["out"] )
+
+		outMatrix = GafferOSL.OSLShader( "OutMatrix" )
+		s.addChild( outMatrix )
+		outMatrix.loadShader( "ObjectProcessing/OutMatrix" )
+		outMatrix['parameters']['name'].setValue( "out_foo" )
+
+		inInt = GafferOSL.OSLShader( "InInt" )
+		s.addChild( inInt )
+		inInt.loadShader( "ObjectProcessing/InInt" )
+
+		oslCode = GafferOSL.OSLCode( "OSLCode" )
+		oslCode["code"].setValue( 'outMat = matrix(inIndex, inIndex, inIndex, inIndex, inIndex, inIndex, inIndex, inIndex, inIndex, inIndex, inIndex, inIndex, inIndex, inIndex, inIndex, inIndex);' )
+		s.addChild( oslCode )
+		inIntPlug = Gaffer.IntPlug( "inIndex", defaultValue = 0, flags = Gaffer.Plug.Flags.Default | Gaffer.Plug.Flags.Dynamic, )
+		oslCode["parameters"].addChild( inIntPlug )
+		inIntPlug.setInput( inInt['out']['value'] )
+		oslCode["out"].addChild( Gaffer.M44fPlug( "outMat", direction = Gaffer.Plug.Direction.Out, defaultValue = IECore.M44f( 1, 0, 0, 0, 0, 1, 0, 0, 0, 0, 1, 0, 0, 0, 0, 1 ),
+			flags = Gaffer.Plug.Flags.Default | Gaffer.Plug.Flags.Dynamic, ) )
+
+		outMatrix["parameters"]["value"].setInput( oslCode['out']['outMat'] )
+
+		outObject = GafferOSL.OSLShader( "OutObject" )
+		s.addChild( outObject )
+		outObject.loadShader( "ObjectProcessing/OutObject" )
+		outObject["parameters"]["in0"].setInput( outMatrix["out"]["primitiveVariable"] )
+
+		o["shader"].setInput( outObject["out"] )
+
+		matrixPrimvar = o['out'].object( "/plane" )["out_foo"]
+		for index, m in enumerate( matrixPrimvar.data ) :
+			self.assertEqual( m, IECore.M44f( index ) )
+
+		# check we can read the matrix44 primvar by reading and writing as out_foo2
+		inMatrix = GafferOSL.OSLShader( "InMatrix" )
+		s.addChild( inMatrix  )
+		inMatrix.loadShader( "ObjectProcessing/InMatrix" )
+		inMatrix["parameters"]["name"].setValue( 'out_foo' )
+
+		outMatrix2 = GafferOSL.OSLShader( "OutMatrix" )
+		s.addChild( outMatrix2 )
+		outMatrix2.loadShader( "ObjectProcessing/OutMatrix" )
+		outMatrix2["parameters"]["name"].setValue( 'out_foo2' )
+		outMatrix2["parameters"]["value"].setInput( inMatrix["out"]["value"] )
+
+		outObject2 = GafferOSL.OSLShader( "OutObject" )
+		s.addChild( outObject2 )
+		outObject2.loadShader( "ObjectProcessing/OutObject" )
+		outObject2["parameters"]["in0"].setInput( outMatrix2["out"]["primitiveVariable"] )
+
+		o2 = GafferOSL.OSLObject()
+		s.addChild(o2)
+		o2['in'].setInput( o["out"] )
+		o2["shader"].setInput( outObject2["out"] )
+		o2["filter"].setInput( f["out"] )
+
+		matrixPrimvar = o2['out'].object( "/plane" )["out_foo2"]
+		for index, m in enumerate( matrixPrimvar.data ) :
+			self.assertEqual( m, IECore.M44f( index ) )
+
 if __name__ == "__main__":
 	unittest.main()
 

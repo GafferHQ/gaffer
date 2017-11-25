@@ -118,6 +118,8 @@ def __volumeSummary( plug ) :
 	info = []
 	if plug["volumeStepSize"]["enabled"].getValue() :
 		info.append( "Step %s" % GafferUI.NumericWidget.valueToString( plug["volumeStepSize"]["value"].getValue() ) )
+	if plug["volumePadding"]["enabled"].getValue() :
+		info.append( "Padding %s" % GafferUI.NumericWidget.valueToString( plug["volumePadding"]["value"].getValue() ) )
 
 	return ", ".join( info )
 
@@ -554,6 +556,19 @@ Gaffer.Metadata.registerNode(
 
 			"layout:section", "Volume",
 			"label", "Step Size",
+
+		],
+
+		"attributes.volumePadding" : [
+
+			"description",
+			"""
+			Allows a volume to be displaced outside its bounds.  When
+			rendering a mesh as a volume, this enables displacement.
+			""",
+
+			"layout:section", "Volume",
+			"label", "Padding",
 
 		],
 

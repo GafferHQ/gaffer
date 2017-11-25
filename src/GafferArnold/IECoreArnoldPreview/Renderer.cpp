@@ -530,6 +530,7 @@ IECore::InternedString g_arnoldOpaqueAttributeName( "ai:opaque" );
 IECore::InternedString g_arnoldMatteAttributeName( "ai:matte" );
 
 IECore::InternedString g_stepSizeAttributeName( "ai:shape:step_size" );
+IECore::InternedString g_volumePaddingAttributeName( "ai:shape:volume_padding" );
 
 IECore::InternedString g_transformTypeAttributeName( "ai:transform_type" );
 
@@ -564,6 +565,7 @@ const AtString g_sphereArnoldString("sphere");
 const AtString g_subdivTypeArnoldString("subdiv_type");
 const AtString g_catclarkArnoldString("catclark");
 const AtString g_meshLightArnoldString("mesh_light");
+const AtString g_volumePaddingArnoldString("volume_padding");
 
 class ArnoldAttributes : public IECoreScenePreview::Renderer::AttributesInterface
 {
@@ -571,7 +573,7 @@ class ArnoldAttributes : public IECoreScenePreview::Renderer::AttributesInterfac
 	public :
 
 		ArnoldAttributes( const IECore::CompoundObject *attributes, ShaderCache *shaderCache )
-			:	m_visibility( AI_RAY_ALL ), m_sidedness( AI_RAY_ALL ), m_shadingFlags( Default ), m_stepSize( 0.0f ), m_polyMesh( attributes ), m_displacement( attributes, shaderCache ), m_curves( attributes )
+			:	m_visibility( AI_RAY_ALL ), m_sidedness( AI_RAY_ALL ), m_shadingFlags( Default ), m_stepSize( 0.0f ), m_volumePadding( 0.0f ), m_polyMesh( attributes ), m_displacement( attributes, shaderCache ), m_curves( attributes )
 		{
 			updateVisibility( g_cameraVisibilityAttributeName, AI_RAY_CAMERA, attributes );
 			updateVisibility( g_shadowVisibilityAttributeName, AI_RAY_SHADOW, attributes );
@@ -607,6 +609,7 @@ class ArnoldAttributes : public IECoreScenePreview::Renderer::AttributesInterfac
 			m_traceSets = attribute<IECore::InternedStringVectorData>( g_setsAttributeName, attributes );
 			m_transformType = attribute<IECore::StringData>( g_transformTypeAttributeName, attributes );
 			m_stepSize = attributeValue<float>( g_stepSizeAttributeName, attributes, 0.0f );
+			m_volumePadding = attributeValue<float>( g_volumePaddingAttributeName, attributes, 0.0f );
 
 			m_linkedLights = attribute<IECore::StringVectorData>( g_linkedLights, attributes );
 			m_sssSetName = attribute<IECore::StringData>( g_sssSetNameName, attributes );
@@ -637,16 +640,8 @@ class ArnoldAttributes : public IECoreScenePreview::Renderer::AttributesInterfac
 		{
 			if( const IECore::MeshPrimitive *mesh = IECore::runTimeCast<const IECore::MeshPrimitive>( object ) )
 			{
-				if( m_stepSize == 0.0f )
-				{
-					m_polyMesh.apply( mesh, node );
-					m_displacement.apply( node );
-				}
-				else
-				{
-					// Non-zero step sizes will have caused conversion to a box,
-					// so we can't apply our mesh attributes at all.
-				}
+				m_polyMesh.apply( mesh, node );
+				m_displacement.apply( node );
 			}
 			else if( IECore::runTimeCast<const IECore::CurvesPrimitive>( object ) )
 			{
@@ -664,6 +659,11 @@ class ArnoldAttributes : public IECoreScenePreview::Renderer::AttributesInterfac
 				{
 					AiNodeSetFlt( node, "step_size", m_stepSize );
 				}
+			}
+
+			if( m_volumePadding != 0.0f && AiNodeEntryLookUpParameter( AiNodeGetNodeEntry( node ), g_volumePaddingArnoldString ) )
+			{
+				AiNodeSetFlt( node, g_volumePaddingArnoldString, m_volumePadding );
 			}
 		}
 
@@ -1121,17 +1121,20 @@ class ArnoldAttributes : public IECoreScenePreview::Renderer::AttributesInterfac
 					m_polyMesh.hash( meshInterpolationIsLinear, h );
 					m_displacement.hash( h );
 					h.append( m_stepSize );
+					h.append( m_volumePadding );
 					break;
 				case IECore::CurvesPrimitiveTypeId :
 					m_curves.hash( h );
 					break;
 				case IECore::SpherePrimitiveTypeId :
 					h.append( m_stepSize );
+					h.append( m_volumePadding );
 					break;
 				case IECore::ExternalProceduralTypeId :
 					if( proceduralIsVolumetric )
 					{
 						h.append( m_stepSize );
+						h.append( m_volumePadding );
 					}
 					break;
 				default :
@@ -1149,6 +1152,7 @@ class ArnoldAttributes : public IECoreScenePreview::Renderer::AttributesInterfac
 		IECore::ConstInternedStringVectorDataPtr m_traceSets;
 		IECore::ConstStringDataPtr m_transformType;
 		float m_stepSize;
+		float m_volumePadding;
 		PolyMesh m_polyMesh;
 		Displacement m_displacement;
 		Curves m_curves;

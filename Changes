@@ -1,3 +1,42 @@
+0.35.1.1
+========
+
+Fixes
+-----
+
+- GafferImage::VectorWarp : Fixed crash on pixels with value nan/inf
+
+0.35.1.0
+========
+
+Features
+--------
+
+- GafferOSL : Added support for reading and writing matrices in OSLObject (#2315).
+
+
+Fixes
+-----
+
+- BoxIO : Fixed bug that could cause promoted plugs to initially be invisible in the NodeGraph (#2284).
+- ie/options : Fixed errors when building without renderer support (#2325).
+- Plug : Fixed `setInput (nullptr )` to remove descendant inputs (#2329).
+- RenderManShader : Fixed reloading of coshader arrays (#2329).
+
+API
+---
+
+- PlugAlgo : Added promoteWithName() function (#2284).
+
+0.35.0.1
+========
+
+Fixes
+-----
+
+- GraphGadget binding : Fixed deadlock in NodeGraph drawing (#2288)
+- GafferArnoldUI : Automatically load light visualisers (#2277)
+
 0.35.0.0
 ========
 

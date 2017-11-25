@@ -589,7 +589,20 @@ void ScriptNode::deleteNodes( Node *parent, const Set *filter, bool reconnect )
 			{
 				for( RecursiveOutputPlugIterator it( node ); !it.done(); ++it )
 				{
-					Plug *inPlug = dependencyNode->correspondingInput( it->get() );
+					Plug *inPlug = NULL;
+					try
+					{
+						inPlug = dependencyNode->correspondingInput( it->get() );
+					}
+					catch( const std::exception &e )
+					{
+						msg(
+							IECore::Msg::Warning,
+							boost::str( boost::format( "correspondingInput error while deleting - cannot reconnect \"%s\"" ) % it->get()->fullName() ),
+							e.what()
+						);
+					}
+
 					if ( !inPlug )
 					{
 						continue;

@@ -61,6 +61,10 @@
 
 		gaffer.plugType STRING ""
 
+	[attr direction]
+
+		gaffer.plugType STRING ""
+
 	[attr filters]
 
 		gaffer.plugType STRING ""
@@ -715,6 +719,8 @@
 		page STRING "Transmission"
 	[attr transmission_extra_roughness]
 		page STRING "Transmission"
+	[attr transmit_aovs]
+		page STRING "Transmission"
 
 	[attr subsurface]
 		page STRING "Subsurface"
@@ -724,6 +730,10 @@
 	[attr subsurface_radius]
 		page STRING "Subsurface"
 	[attr subsurface_scale]
+		page STRING "Subsurface"
+	[attr subsurface_type]
+		page STRING "Subsurface"
+	[attr subsurface_anisotropy]
 		page STRING "Subsurface"
 
 	[attr coat]
