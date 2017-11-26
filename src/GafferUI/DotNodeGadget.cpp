@@ -185,7 +185,7 @@ void DotNodeGadget::updateLabel()
 	Edge labelEdge = RightEdge;
 	if( const Plug *p = dot->inPlug<Plug>() )
 	{
-		if( noduleTangent( nodule( p ) ).x != 0 )
+		if( connectionTangent( nodule( p ) ).x != 0 )
 		{
 			labelEdge = TopEdge;
 		}
@@ -250,7 +250,7 @@ bool DotNodeGadget::dragEnter( const DragDropEvent &event )
 		return false;
 	}
 
-	V3f tangent = -nodeGadget->noduleTangent( nodule );
+	V3f tangent = -nodeGadget->connectionTangent( nodule );
 	V3f position = ( tangent * bound().size().x / 2.0f ) * fullTransform();
 	position = position * event.sourceGadget->fullTransform().inverse();
 

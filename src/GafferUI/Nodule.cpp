@@ -50,7 +50,7 @@ using namespace std;
 IE_CORE_DEFINERUNTIMETYPED( Nodule );
 
 Nodule::Nodule( Gaffer::PlugPtr plug )
-	:	Gadget( defaultName<Nodule>() ), m_plug( plug )
+	:	ConnectionCreator( defaultName<Nodule>() ), m_plug( plug )
 {
 }
 

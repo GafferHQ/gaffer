@@ -646,9 +646,9 @@ void GraphGadget::doRenderLayer( Layer layer, const Style *style ) const
 				const NodeGadget *srcNodeGadget = nodeGadget( srcNodule->plug()->node() );
 				const Imath::V3f srcP = srcNodule->fullTransform( this ).translation();
 				const Imath::V3f dstP = m_dragReconnectDstNodule->fullTransform( this ).translation();
-				const Imath::V3f dstTangent = nodeGadget( m_dragReconnectDstNodule->plug()->node() )->noduleTangent( m_dragReconnectDstNodule );
+				const Imath::V3f dstTangent = nodeGadget( m_dragReconnectDstNodule->plug()->node() )->connectionTangent( m_dragReconnectDstNodule );
 				/// \todo: can there be a highlighted/dashed state?
-				style->renderConnection( srcP, srcNodeGadget->noduleTangent( srcNodule ), dstP, dstTangent, Style::HighlightedState );
+				style->renderConnection( srcP, srcNodeGadget->connectionTangent( srcNodule ), dstP, dstTangent, Style::HighlightedState );
 			}
 
 			if ( m_dragReconnectSrcNodule )
@@ -657,9 +657,9 @@ void GraphGadget::doRenderLayer( Layer layer, const Style *style ) const
 				const NodeGadget *dstNodeGadget = nodeGadget( dstNodule->plug()->node() );
 				const Imath::V3f srcP = m_dragReconnectSrcNodule->fullTransform( this ).translation();
 				const Imath::V3f dstP = dstNodule->fullTransform( this ).translation();
-				const Imath::V3f srcTangent = nodeGadget( m_dragReconnectSrcNodule->plug()->node() )->noduleTangent( m_dragReconnectSrcNodule );
+				const Imath::V3f srcTangent = nodeGadget( m_dragReconnectSrcNodule->plug()->node() )->connectionTangent( m_dragReconnectSrcNodule );
 				/// \todo: can there be a highlighted/dashed state?
-				style->renderConnection( srcP, srcTangent, dstP, dstNodeGadget->noduleTangent( dstNodule ), Style::HighlightedState );
+				style->renderConnection( srcP, srcTangent, dstP, dstNodeGadget->connectionTangent( dstNodule ), Style::HighlightedState );
 			}
 		}
 		break;
@@ -1318,8 +1318,8 @@ void GraphGadget::calculateDragSnapOffsets( Gaffer::Set *nodes )
 
 			// check that the connection tangents are opposed - if not we don't want to snap
 
-			V3f srcTangent = srcNodeGadget->noduleTangent( srcNodule );
-			V3f dstTangent = dstNodeGadget->noduleTangent( dstNodule );
+			V3f srcTangent = srcNodeGadget->connectionTangent( srcNodule );
+			V3f dstTangent = dstNodeGadget->connectionTangent( dstNodule );
 
 			if( srcTangent.dot( dstTangent ) > -0.5f )
 			{

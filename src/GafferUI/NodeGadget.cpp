@@ -163,7 +163,7 @@ const Nodule *NodeGadget::nodule( const Gaffer::Plug *plug ) const
 	return nullptr;
 }
 
-Imath::V3f NodeGadget::noduleTangent( const Nodule *nodule ) const
+Imath::V3f NodeGadget::connectionTangent( const ConnectionCreator *creator ) const
 {
 	return V3f( 0, 1, 0 );
 }

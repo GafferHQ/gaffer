@@ -42,6 +42,7 @@
 
 #include "GafferUI/NodeGadget.h"
 #include "GafferUI/LinearContainer.h"
+#include "GafferUI/ConnectionCreator.h"
 
 namespace GafferUI
 {
@@ -83,7 +84,7 @@ class StandardNodeGadget : public NodeGadget
 
 		Nodule *nodule( const Gaffer::Plug *plug ) override;
 		const Nodule *nodule( const Gaffer::Plug *plug ) const override;
-		Imath::V3f noduleTangent( const Nodule *nodule ) const override;
+		Imath::V3f connectionTangent( const ConnectionCreator *creator ) const override;
 
 		/// The central content of the Gadget may be customised. By default
 		/// the contents is a simple NameGadget for the node, but any Gadget or
@@ -101,6 +102,10 @@ class StandardNodeGadget : public NodeGadget
 		bool getLabelsVisibleOnHover() const;
 
 		Imath::Box3f bound() const override;
+
+		void setNoduleLabelVisible( const NodulePtr nodule );
+		void setCompatibleNoduleLabelsVisible( const ConnectionCreator *creator );
+		void setNoduleLabelsInvisible();
 
 	protected :
 
@@ -136,7 +141,7 @@ class StandardNodeGadget : public NodeGadget
 		bool dragLeave( GadgetPtr gadget, const DragDropEvent &event );
 		bool drop( GadgetPtr gadget, const DragDropEvent &event );
 
-		Gadget *closestDragDestinationProxy( const DragDropEvent &event ) const;
+		ConnectionCreator *closestDragDestinationProxy( const DragDropEvent &event ) const;
 		bool noduleIsCompatible( const Nodule *nodule, const DragDropEvent &event ) const;
 		bool plugAdderIsCompatible( const PlugAdder *plugAdder, const DragDropEvent &event ) const;
 
@@ -153,6 +158,8 @@ class StandardNodeGadget : public NodeGadget
 		void error( const Gaffer::Plug *plug, const Gaffer::Plug *source, const std::string &message );
 		void displayError( Gaffer::ConstPlugPtr plug, const std::string &message );
 
+		void renderNoduleLabel( const NodulePtr nodule, const Style *style ) const;
+
 		bool m_nodeEnabled;
 		bool m_labelsVisibleOnHover;
 		// We accept drags onto the node itself and
@@ -160,9 +167,12 @@ class StandardNodeGadget : public NodeGadget
 		// Nodule or PlugAdder. This provides the user
 		// with a bigger drag target that is easier
 		// to hit.
-		Gadget *m_dragDestinationProxy;
+		ConnectionCreator *m_dragDestinationProxy;
 		boost::optional<Imath::Color3f> m_userColor;
 		bool m_oval;
+
+		typedef std::set<NodulePtr> NoduleSet;
+		NoduleSet m_visibleNodules;
 
 };
 

@@ -44,7 +44,7 @@
 
 #include "Gaffer/Plug.h"
 
-#include "GafferUI/Gadget.h"
+#include "GafferUI/ConnectionCreator.h"
 
 namespace GafferUI
 {
@@ -61,14 +61,14 @@ IE_CORE_FORWARDDECLARE( ConnectionGadget )
 /// nodes - this allows the customisation of connection display. The most
 /// common customisation would be to apply a different style or custom
 /// tooltip - see ConnectionGadgetTest for an example.
-class ConnectionGadget : public Gadget
+class ConnectionGadget : public ConnectionCreator
 {
 
 	public :
 
 		~ConnectionGadget() override;
 
-		IE_CORE_DECLARERUNTIMETYPEDEXTENSION( GafferUI::ConnectionGadget, ConnectionGadgetTypeId, Gadget );
+		IE_CORE_DECLARERUNTIMETYPEDEXTENSION( GafferUI::ConnectionGadget, ConnectionGadgetTypeId, ConnectionCreator );
 
 		/// Accepts only GraphGadgets as parent.
 		bool acceptsParent( const Gaffer::GraphComponent *potentialParent ) const override;
@@ -91,11 +91,6 @@ class ConnectionGadget : public Gadget
 		/// uncluttering a complex graph.
 		void setMinimised( bool minimised );
 		bool getMinimised() const;
-
-		/// May be called by the recipient of a drag to set a more appropriate position
-		/// and tangent for the connection as the drag progresses within the destination.
-		/// Throws if this connection is not currently the source of a connection.
-		virtual void updateDragEndPoint( const Imath::V3f position, const Imath::V3f &tangent ) = 0;
 
 		/// Returns the closest point on this connection to the given point.
 		/// Used for snapping new dots onto an existing connection

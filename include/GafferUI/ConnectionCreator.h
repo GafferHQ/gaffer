@@ -1,6 +1,6 @@
 //////////////////////////////////////////////////////////////////////////
 //
-//  Copyright (c) 2014, Image Engine Design Inc. All rights reserved.
+//  Copyright (c) 2017, Image Engine Design Inc. All rights reserved.
 //
 //  Redistribution and use in source and binary forms, with or without
 //  modification, are permitted provided that the following conditions are
@@ -34,37 +34,46 @@
 //
 //////////////////////////////////////////////////////////////////////////
 
-#ifndef GAFFERUIBINDINGS_NODEGADGETBINDING_INL
-#define GAFFERUIBINDINGS_NODEGADGETBINDING_INL
+#ifndef GAFFERUI_CONNECTIONCREATOR_H
+#define GAFFERUI_CONNECTIONCREATOR_H
 
-namespace GafferUIBindings
-{
+#include "GafferUI/Gadget.h"
 
-namespace Detail
+namespace Gaffer
 {
-
-template<typename T>
-GafferUI::NodulePtr nodule( T &p, const Gaffer::Plug *plug )
-{
-	return p.T::nodule( plug );
+IE_CORE_FORWARDDECLARE( Plug )
 }
 
-template<typename T>
-Imath::V3f connectionTangent( T &p, const GafferUI::ConnectionCreator *creator )
+namespace GafferUI
 {
-	return p.T::connectionTangent( creator );
-}
 
-} // namespace Detail
-
-template<typename T, typename TWrapper>
-NodeGadgetClass<T, TWrapper>::NodeGadgetClass( const char *docString )
-	:	GadgetClass<T, TWrapper>( docString )
+class ConnectionCreator : public Gadget
 {
-	this->def( "nodule", &Detail::nodule<T> );
-	this->def( "connectionTangent", &Detail::connectionTangent<T> );
-}
 
-} // namespace GafferUIBindings
+	public :
 
-#endif // GAFFERUIBINDINGS_NODEGADGETBINDING_INL
+		IE_CORE_DECLARERUNTIMETYPEDEXTENSION( GafferUI::ConnectionCreator, ConnectionCreatorTypeId, Gadget );
+
+		ConnectionCreator( const std::string &name=defaultName<ConnectionCreator>() );
+		virtual ~ConnectionCreator();
+
+		/// May be called by the recipient of a drag to figure out if this
+		/// ConnectionCreator can set up the connection.
+		virtual bool canCreateConnection( const Gaffer::Plug *endpoint ) const = 0;
+
+		/// May be called by the recipient of a drag to set a more appropriate position
+		/// and tangent for the connection as the drag progresses within the destination.
+		virtual void updateDragEndPoint( const Imath::V3f position, const Imath::V3f &tangent ) = 0;
+
+		/// May be called by the recipient of a drag to create a connection,
+		/// allowing this ConnectionCreator to set up the necessary plugs or clean up
+		/// potentially outdated connections afterwards.
+		virtual void createConnection( Gaffer::Plug *plug ) = 0;
+
+};
+
+IE_CORE_DECLAREPTR( ConnectionCreator )
+
+} // namespace GafferUI
+
+#endif // GAFFERUI_CONNECTIONCREATOR_H

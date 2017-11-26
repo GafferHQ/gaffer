@@ -44,7 +44,7 @@
 
 #include "Gaffer/FilteredRecursiveChildIterator.h"
 
-#include "GafferUI/Gadget.h"
+#include "GafferUI/ConnectionCreator.h"
 
 namespace Gaffer
 {
@@ -56,20 +56,18 @@ namespace GafferUI
 
 IE_CORE_FORWARDDECLARE( Nodule )
 
-class Nodule : public Gadget
+class Nodule : public ConnectionCreator
 {
 
 	public :
 
-		IE_CORE_DECLARERUNTIMETYPEDEXTENSION( GafferUI::Nodule, NoduleTypeId, Gadget );
+		IE_CORE_DECLARERUNTIMETYPEDEXTENSION( GafferUI::Nodule, NoduleTypeId, ConnectionCreator );
 		~Nodule() override;
 
 		Gaffer::Plug *plug();
 		const Gaffer::Plug *plug() const;
 
-		/// May be called by the recipient of a drag to set a more appropriate position
-		/// and tangent for the connection as the drag progresses within the destination.
-		virtual void updateDragEndPoint( const Imath::V3f position, const Imath::V3f &tangent );
+		void updateDragEndPoint( const Imath::V3f position, const Imath::V3f &tangent ) override;
 
 		/// Creates a Nodule for the specified plug. The type of nodule created can be
 		/// controlled by registering a "nodule:type" metadata value for the plug. Note

@@ -1,6 +1,6 @@
 //////////////////////////////////////////////////////////////////////////
 //
-//  Copyright (c) 2014, Image Engine Design Inc. All rights reserved.
+//  Copyright (c) 2017, Image Engine Design Inc. All rights reserved.
 //
 //  Redistribution and use in source and binary forms, with or without
 //  modification, are permitted provided that the following conditions are
@@ -34,8 +34,8 @@
 //
 //////////////////////////////////////////////////////////////////////////
 
-#ifndef GAFFERUIBINDINGS_NODEGADGETBINDING_INL
-#define GAFFERUIBINDINGS_NODEGADGETBINDING_INL
+#ifndef GAFFERUIBINDINGS_CONNECTIONCREATORBINDING_INL
+#define GAFFERUIBINDINGS_CONNECTIONCREATORBINDING_INL
 
 namespace GafferUIBindings
 {
@@ -44,27 +44,37 @@ namespace Detail
 {
 
 template<typename T>
-GafferUI::NodulePtr nodule( T &p, const Gaffer::Plug *plug )
+static bool canCreateConnection( const T &connectionCreator, const Gaffer::Plug *endpoint )
 {
-	return p.T::nodule( plug );
+	IECorePython::ScopedGILRelease gilRelease;
+	return connectionCreator.T::canCreateConnection( endpoint );
 }
 
 template<typename T>
-Imath::V3f connectionTangent( T &p, const GafferUI::ConnectionCreator *creator )
+static void updateDragEndPoint( T &connectionCreator, const Imath::V3f position, const Imath::V3f &tangent )
 {
-	return p.T::connectionTangent( creator );
+	IECorePython::ScopedGILRelease gilRelease;
+	return connectionCreator.T::updateDragEndPoint( position, tangent );
+}
+
+template<typename T>
+static void createConnection( T &connectionCreator, Gaffer::Plug *endpoint )
+{
+	IECorePython::ScopedGILRelease gilRelease;
+	return connectionCreator.T::createConnection( endpoint );
 }
 
 } // namespace Detail
 
 template<typename T, typename TWrapper>
-NodeGadgetClass<T, TWrapper>::NodeGadgetClass( const char *docString )
+ConnectionCreatorClass<T, TWrapper>::ConnectionCreatorClass( const char *docString )
 	:	GadgetClass<T, TWrapper>( docString )
 {
-	this->def( "nodule", &Detail::nodule<T> );
-	this->def( "connectionTangent", &Detail::connectionTangent<T> );
+	this->def( "canCreateConnection", &Detail::canCreateConnection<T> );
+	this->def( "updateDragEndPoint", &Detail::updateDragEndPoint<T> );
+	this->def( "createConnection", &Detail::createConnection<T> );
 }
 
 } // namespace GafferUIBindings
 
-#endif // GAFFERUIBINDINGS_NODEGADGETBINDING_INL
+#endif // GAFFERUIBINDINGS_CONNECTIONCREATORBINDING_INL

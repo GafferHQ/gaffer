@@ -1,6 +1,6 @@
 //////////////////////////////////////////////////////////////////////////
 //
-//  Copyright (c) 2014, Image Engine Design Inc. All rights reserved.
+//  Copyright (c) 2017, Image Engine Design Inc. All rights reserved.
 //
 //  Redistribution and use in source and binary forms, with or without
 //  modification, are permitted provided that the following conditions are
@@ -34,37 +34,31 @@
 //
 //////////////////////////////////////////////////////////////////////////
 
-#ifndef GAFFERUIBINDINGS_NODEGADGETBINDING_INL
-#define GAFFERUIBINDINGS_NODEGADGETBINDING_INL
+#include "GafferUI/ConnectionCreator.h"
 
-namespace GafferUIBindings
-{
+using namespace Imath;
+using namespace GafferUI;
 
-namespace Detail
-{
+IE_CORE_DEFINERUNTIMETYPED( ConnectionCreator );
 
-template<typename T>
-GafferUI::NodulePtr nodule( T &p, const Gaffer::Plug *plug )
+ConnectionCreator::ConnectionCreator( const std::string &name )
+	: Gadget( name )
 {
-	return p.T::nodule( plug );
 }
 
-template<typename T>
-Imath::V3f connectionTangent( T &p, const GafferUI::ConnectionCreator *creator )
+ConnectionCreator::~ConnectionCreator()
 {
-	return p.T::connectionTangent( creator );
 }
 
-} // namespace Detail
-
-template<typename T, typename TWrapper>
-NodeGadgetClass<T, TWrapper>::NodeGadgetClass( const char *docString )
-	:	GadgetClass<T, TWrapper>( docString )
+bool ConnectionCreator::canCreateConnection( const Gaffer::Plug *endpoint ) const
 {
-	this->def( "nodule", &Detail::nodule<T> );
-	this->def( "connectionTangent", &Detail::connectionTangent<T> );
+	return false;
 }
 
-} // namespace GafferUIBindings
+void ConnectionCreator::updateDragEndPoint( const Imath::V3f position, const Imath::V3f &tangent )
+{
+}
 
-#endif // GAFFERUIBINDINGS_NODEGADGETBINDING_INL
+void ConnectionCreator::createConnection( Gaffer::Plug *plug )
+{
+}

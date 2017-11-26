@@ -38,6 +38,7 @@
 #ifndef GAFFERUI_COMPOUNDNODULE_H
 #define GAFFERUI_COMPOUNDNODULE_H
 
+#include "Gaffer/Plug.h"
 #include "GafferUI/Nodule.h"
 #include "GafferUI/LinearContainer.h"
 
@@ -63,6 +64,9 @@ class CompoundNodule : public Nodule
 		/// Returns a Nodule for a child of the plug being represented.
 		Nodule *nodule( const Gaffer::Plug *plug );
 		const Nodule *nodule( const Gaffer::Plug *plug ) const;
+
+		bool canCreateConnection( const Gaffer::Plug *endpoint ) const override;
+		void createConnection( Gaffer::Plug *endpoint ) override;
 
 	private :
 

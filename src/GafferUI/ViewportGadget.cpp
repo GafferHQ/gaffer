@@ -53,6 +53,8 @@
 #include "GafferUI/ViewportGadget.h"
 #include "GafferUI/Style.h"
 
+#include "GafferUI/StandardNodeGadget.h"
+
 using namespace Imath;
 using namespace IECore;
 using namespace IECoreGL;
@@ -604,6 +606,7 @@ bool ViewportGadget::dragMove( GadgetPtr gadget, const DragDropEvent &event )
 		// update the destination gadget. if the drag data is a NullObject then we know
 		// that it isn't intended for use outside of the source gadget, and can skip this
 		// step as an optimisation.
+
 		if( !event.destinationGadget || !event.data->isInstanceOf( IECore::NullObjectTypeId ) )
 		{
 			std::vector<GadgetPtr> gadgets;
@@ -736,9 +739,11 @@ GadgetPtr ViewportGadget::updatedDragDestination( std::vector<GadgetPtr> &gadget
 {
 	for( std::vector<GadgetPtr>::const_iterator it = gadgets.begin(), eIt = gadgets.end(); it != eIt; it++ )
 	{
+
 		GadgetPtr gadget = *it;
 		while( gadget && gadget != this )
 		{
+
 			if( gadget == event.destinationGadget )
 			{
 				// no need to emit enter events when the current destination
