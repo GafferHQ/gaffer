@@ -104,7 +104,7 @@ class Renderer : public IECore::RefCounted
 		/// "camera", StringData, "", The name of the primary render camera.
 		/// "frame", IntData, 1, The frame being rendered.
 		/// "sampleMotion", BoolData, true, Whether to actually render motion blur.  Disable to render with motion blocks set up but no real blur.
-		virtual void option( const IECore::InternedString &name, const IECore::Data *value ) = 0;
+		virtual void option( const IECore::InternedString &name, const IECore::Object *value ) = 0;
 		/// Adds an output image to be rendered, In interactive renders an output may be
 		/// removed by passing NULL as the value.
 		virtual void output( const IECore::InternedString &name, const Output *output ) = 0;

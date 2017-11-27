@@ -1687,7 +1687,7 @@ class ArnoldRenderer : public IECoreScenePreview::Renderer
 			pause();
 		}
 
-		virtual void option( const IECore::InternedString &name, const IECore::Data *value )
+		virtual void option( const IECore::InternedString &name, const IECore::Object *value )
 		{
 			AtNode *options = AiUniverseGetOptions();
 			if( name == g_frameOptionName )
@@ -1755,14 +1755,14 @@ class ArnoldRenderer : public IECoreScenePreview::Renderer
 			}
 			else if( boost::starts_with( name.c_str(), g_logFlagsOptionPrefix ) )
 			{
-				if( updateLogFlags( name.string().substr( g_logFlagsOptionPrefix.size() ), value, /* console = */ false ) )
+				if( updateLogFlags( name.string().substr( g_logFlagsOptionPrefix.size() ), IECore::runTimeCast<const IECore::Data>( value ), /* console = */ false ) )
 				{
 					return;
 				}
 			}
 			else if( boost::starts_with( name.c_str(), g_consoleFlagsOptionPrefix ) )
 			{
-				if( updateLogFlags( name.string().substr( g_consoleFlagsOptionPrefix.size() ), value, /* console = */ true ) )
+				if( updateLogFlags( name.string().substr( g_consoleFlagsOptionPrefix.size() ), IECore::runTimeCast<const IECore::Data>( value ), /* console = */ true ) )
 				{
 					return;
 				}
@@ -1807,6 +1807,26 @@ class ArnoldRenderer : public IECoreScenePreview::Renderer
 				AiNodeSetStr( options, "plugin_searchpath", s.c_str() );
 				return;
 			}
+			else if( boost::starts_with( name.c_str(), "ai:aov_shader:" ) )
+			{
+				m_aovShaders.erase( name );
+				if( value )
+				{
+					if( const IECore::ObjectVector *d = reportedCast<const IECore::ObjectVector>( value, "option", name ) )
+					{
+						m_aovShaders[name] = m_shaderCache->get( d );
+					}
+				}
+
+				AtArray *array = AiArrayAllocate( m_aovShaders.size(), 1, AI_TYPE_NODE );
+				int i = 0;
+				for( AOVShaderMap::const_iterator it = m_aovShaders.begin(); it != m_aovShaders.end(); ++it )
+				{
+					AiArraySetPtr( array, i++, it->second->root() );
+				}
+				AiNodeSetArray( options, "aov_shaders", array );
+				return;
+			}
 			else if( boost::starts_with( name.c_str(), "ai:declare:" ) )
 			{
 				const AtParamEntry *parameter = AiNodeEntryLookUpParameter( AiNodeGetNodeEntry( options ), name.c_str() + 11 );
@@ -1821,9 +1841,10 @@ class ArnoldRenderer : public IECoreScenePreview::Renderer
 					{
 						AiNodeResetParameter( options, name.c_str() + 11 );
 					}
-					if( value )
+					const IECore::Data *dataValue = IECore::runTimeCast<const IECore::Data>( value );
+					if( dataValue )
 					{
-						ParameterAlgo::setParameter( options, name.c_str() + 11, value );
+						ParameterAlgo::setParameter( options, name.c_str() + 11, dataValue );
 					}
 				}
 				return;
@@ -1833,9 +1854,10 @@ class ArnoldRenderer : public IECoreScenePreview::Renderer
 				const AtParamEntry *parameter = AiNodeEntryLookUpParameter( AiNodeGetNodeEntry( options ), name.c_str() + 3 );
 				if( parameter )
 				{
-					if( value )
+					const IECore::Data *dataValue = IECore::runTimeCast<const IECore::Data>( value );
+					if( dataValue )
 					{
-						ParameterAlgo::setParameter( options, name.c_str() + 3, value );
+						ParameterAlgo::setParameter( options, name.c_str() + 3, dataValue );
 					}
 					else
 					{
@@ -1846,9 +1868,10 @@ class ArnoldRenderer : public IECoreScenePreview::Renderer
 			}
 			else if( boost::starts_with( name.c_str(), "user:" ) )
 			{
-				if( value )
+				const IECore::Data *dataValue = IECore::runTimeCast<const IECore::Data>( value );
+				if( dataValue )
 				{
-					ParameterAlgo::setParameter( options, name.c_str(), value );
+					ParameterAlgo::setParameter( options, name.c_str(), dataValue );
 				}
 				else
 				{
@@ -2168,6 +2191,9 @@ class ArnoldRenderer : public IECoreScenePreview::Renderer
 
 		typedef std::map<IECore::InternedString, ArnoldOutputPtr> OutputMap;
 		OutputMap m_outputs;
+
+		typedef std::map<IECore::InternedString, ArnoldShaderPtr> AOVShaderMap;
+		AOVShaderMap m_aovShaders;
 
 		std::string m_cameraName;
 		typedef tbb::concurrent_unordered_map<std::string, IECore::ConstCameraPtr> CameraMap;

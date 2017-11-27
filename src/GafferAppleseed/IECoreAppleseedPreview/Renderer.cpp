@@ -1759,7 +1759,7 @@ class AppleseedRenderer : public IECoreScenePreview::Renderer
 			delete m_rendererController;
 		}
 
-		virtual void option( const InternedString &name, const Data *value )
+		virtual void option( const InternedString &name, const Object *value )
 		{
 			if( name == g_cameraOptionName )
 			{
@@ -1906,14 +1906,15 @@ class AppleseedRenderer : public IECoreScenePreview::Renderer
 				}
 
 				// general case.
-				if( value == NULL )
+				const IECore::Data *dataValue = IECore::runTimeCast<const IECore::Data>( value );
+				if( dataValue == NULL )
 				{
 					m_project->configurations().get_by_name( "final" )->get_parameters().remove_path( optName.c_str() );
 					m_project->configurations().get_by_name( "interactive" )->get_parameters().remove_path( optName.c_str() );
 				}
 				else
 				{
-					string valueStr = ParameterAlgo::dataToString( value );
+					string valueStr = ParameterAlgo::dataToString( dataValue );
 					if( !valueStr.empty() )
 					{
 						m_project->configurations().get_by_name( "final" )->get_parameters().insert_path( optName.c_str(), valueStr.c_str() );
@@ -2004,14 +2005,15 @@ class AppleseedRenderer : public IECoreScenePreview::Renderer
 				string optName( name.c_str() );
 				replace( optName.begin(), optName.end(), ':', '.' );
 
-				if( value == NULL )
+				const IECore::Data *dataValue = IECore::runTimeCast<const IECore::Data>( value );
+				if( dataValue == NULL )
 				{
 					m_project->configurations().get_by_name( "final" )->get_parameters().remove_path( optName.c_str() );
 					m_project->configurations().get_by_name( "interactive" )->get_parameters().remove_path( optName.c_str() );
 				}
 				else
 				{
-					string valueStr = ParameterAlgo::dataToString( value );
+					string valueStr = ParameterAlgo::dataToString( dataValue );
 					if( !valueStr.empty() )
 					{
 						m_project->configurations().get_by_name( "final" )->get_parameters().insert_path( optName.c_str(), valueStr.c_str() );
