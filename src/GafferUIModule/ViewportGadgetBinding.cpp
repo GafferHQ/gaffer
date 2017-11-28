@@ -121,6 +121,7 @@ void GafferUIModule::bindViewportGadget()
 		.def( "gadgetToRasterSpace", &ViewportGadget::gadgetToRasterSpace, ( arg_( "gadgetPosition" ), arg_( "gadget" ) ) )
 		.def( "rasterToWorldSpace", &ViewportGadget::rasterToWorldSpace, ( arg_( "rasterPosition" ) ) )
 		.def( "worldToRasterSpace", &ViewportGadget::worldToRasterSpace, ( arg_( "worldPosition" ) ) )
+		.def( "render", &ViewportGadget::render )
 		.def( "preRenderSignal", &ViewportGadget::preRenderSignal, return_internal_reference<1>() )
 	;
 

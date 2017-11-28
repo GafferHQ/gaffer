@@ -41,6 +41,7 @@
 #include "Gaffer/StringAlgo.h"
 
 #include "GafferUI/Nodule.h"
+#include "GafferUI/GraphGadget.h"
 
 namespace Gaffer
 {
@@ -69,7 +70,9 @@ class StandardNodule : public Nodule
 
 	protected :
 
+		bool hasLayer( Layer layer ) const override;
 		void doRenderLayer( Layer layer, const Style *style ) const override;
+
 		void renderLabel( const Style *style ) const;
 
 		void enter( GadgetPtr gadget, const ButtonEvent &event );

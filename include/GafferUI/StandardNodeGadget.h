@@ -42,6 +42,7 @@
 
 #include "GafferUI/NodeGadget.h"
 #include "GafferUI/LinearContainer.h"
+#include "GafferUI/GraphGadget.h"
 
 namespace GafferUI
 {
@@ -105,6 +106,7 @@ class StandardNodeGadget : public NodeGadget
 	protected :
 
 		void doRenderLayer( Layer layer, const Style *style ) const override;
+		bool hasLayer( Layer layer ) const override;
 
 		const Imath::Color3f *userColor() const;
 

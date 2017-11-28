@@ -119,7 +119,7 @@ class GadgetWrapper : public GafferBindings::GraphComponentWrapper<WrappedType>
 				boost::python::object f = this->methodOverride( "doRenderLayer" );
 				if( f )
 				{
-					f( layer, style );
+					f( layer, GafferUI::StylePtr( const_cast<GafferUI::Style *>( style ) ) );
 					return;
 				}
 			}

@@ -82,9 +82,15 @@ class GadgetTest( GafferUITest.TestCase ) :
 
 				GafferUI.Gadget.__init__( self )
 
+				self.layersRendered = set()
+
 			def bound( self ) :
 
 				return IECore.Box3f( IECore.V3f( -20, 10, 2 ), IECore.V3f( 10, 15, 5 ) )
+
+			def doRenderLayer( self, layer, style ) :
+
+				self.layersRendered.add( layer )
 
 		mg = MyGadget()
 
@@ -97,6 +103,14 @@ class GadgetTest( GafferUITest.TestCase ) :
 		c.addChild( mg )
 
 		self.assertEqual( c.bound().size(), mg.bound().size() )
+
+		with GafferUI.Window() as w :
+			GafferUI.GadgetWidget( c )
+
+		w.setVisible( True )
+		self.waitForIdle( 1000 )
+
+		self.assertEqual( mg.layersRendered, set( GafferUI.Gadget.Layer.values.values() ) )
 
 	def testStyle( self ) :
 

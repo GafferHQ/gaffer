@@ -172,9 +172,10 @@ IECoreGL::TextureLoader *ImageGadget::textureLoader()
 
 void ImageGadget::doRenderLayer( Layer layer, const Style *style ) const
 {
+	Gadget::doRenderLayer( layer, style );
 	if( layer != Layer::Main )
 	{
-		return Gadget::doRenderLayer( layer, style );
+		return;
 	}
 
 	if( const Texture *texture = loadTexture( m_imageOrTextureOrFileName ) )

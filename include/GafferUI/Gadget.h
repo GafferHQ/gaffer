@@ -88,7 +88,6 @@ class Gadget : public Gaffer::GraphComponent
 			Main = 0,
 			MidFront = 1,
 			Front = 2,
-			Last = 3
 		};
 
 		/// Returns the Gadget with the specified name, where name has been retrieved
@@ -288,9 +287,13 @@ class Gadget : public Gaffer::GraphComponent
 		void requestRender();
 
 		/// Should be implemented by subclasses to draw themselves as appropriate
-		/// for the specified layer. The default implementation just renders all
-		/// the visible child Gadgets.
+		/// for the specified layer. Child gadgets will be drawn automatically
+		/// _after_ the parent gadget has been drawn.
 		virtual void doRenderLayer( Layer layer, const Style *style ) const;
+		/// May return false to indicate that neither this gadget nor any
+		/// of its children will render anything for the specified layer.
+		/// The default implementation returns true.
+		virtual bool hasLayer( Layer layer ) const;
 
 	private :
 
@@ -353,8 +356,6 @@ class Gadget : public Gaffer::GraphComponent
 
 typedef Gaffer::FilteredChildIterator<Gaffer::TypePredicate<Gadget> > GadgetIterator;
 typedef Gaffer::FilteredRecursiveChildIterator<Gaffer::TypePredicate<Gadget> > RecursiveGadgetIterator;
-
-inline Gadget::Layer &operator++( Gadget::Layer &x ) { return x = (Gadget::Layer)(((int)(x) + 1)); };
 
 } // namespace GafferUI
 

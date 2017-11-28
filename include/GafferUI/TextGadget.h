@@ -63,6 +63,7 @@ class TextGadget : public Gadget
 	protected :
 
 		void doRenderLayer( Layer layer, const Style *style ) const override;
+		bool hasLayer( Layer layer ) const override { return layer == Layer::Main; };
 
 	private :
 

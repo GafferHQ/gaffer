@@ -314,40 +314,51 @@ Imath::Box3f StandardNodeGadget::bound() const
 
 void StandardNodeGadget::doRenderLayer( Layer layer, const Style *style ) const
 {
-	if( layer != GraphLayer::Nodes )
-	{
-		return NodeGadget::doRenderLayer( layer, style );
-	}
-
-	// decide what state we're rendering in
-	Style::State state = getHighlighted() ? Style::HighlightedState : Style::NormalState;
-
-	// draw our background frame
-	const Box3f b = bound();
-	float borderWidth = g_borderWidth;
-	if( m_oval )
-	{
-		const V3f s = b.size();
-		borderWidth = std::min( s.x, s.y ) / 2.0f;
-	}
-
-	style->renderNodeFrame(
-		Box2f( V2f( b.min.x, b.min.y ) + V2f( borderWidth ), V2f( b.max.x, b.max.y ) - V2f( borderWidth ) ),
-		borderWidth,
-		state,
-		m_userColor.get_ptr()
-	);
-
-	// draw our contents
 	NodeGadget::doRenderLayer( layer, style );
 
-	// draw a strikethrough if we're disabled
-	if( !m_nodeEnabled && !IECoreGL::Selector::currentSelector() )
+	switch( layer )
 	{
-		/// \todo Replace renderLine() with a specific method (renderNodeStrikeThrough?) on the Style class
-		/// so that styles can do customised drawing based on knowledge of what is being drawn.
-		style->renderLine( IECore::LineSegment3f( V3f( b.min.x, b.min.y, 0 ), V3f( b.max.x, b.max.y, 0 ) ) );
+		case GraphLayer::Nodes :
+		{
+			// decide what state we're rendering in
+			Style::State state = getHighlighted() ? Style::HighlightedState : Style::NormalState;
+
+			// draw our background frame
+			const Box3f b = bound();
+			float borderWidth = g_borderWidth;
+			if( m_oval )
+			{
+				const V3f s = b.size();
+				borderWidth = std::min( s.x, s.y ) / 2.0f;
+			}
+
+			style->renderNodeFrame(
+				Box2f( V2f( b.min.x, b.min.y ) + V2f( borderWidth ), V2f( b.max.x, b.max.y ) - V2f( borderWidth ) ),
+				borderWidth,
+				state,
+				m_userColor.get_ptr()
+			);
+			break;
+		}
+		case GraphLayer::Overlay :
+		{
+			if( !m_nodeEnabled && !IECoreGL::Selector::currentSelector() )
+			{
+				const Box3f b = bound();
+				/// \todo Replace renderLine() with a specific method (renderNodeStrikeThrough?) on the Style class
+				/// so that styles can do customised drawing based on knowledge of what is being drawn.
+				style->renderLine( IECore::LineSegment3f( V3f( b.min.x, b.min.y, 0 ), V3f( b.max.x, b.max.y, 0 ) ) );
+			}
+			break;
+		}
+		default :
+			break;
 	}
+}
+
+bool StandardNodeGadget::hasLayer( Layer layer ) const
+{
+	return layer != GraphLayer::Backdrops;
 }
 
 const Imath::Color3f *StandardNodeGadget::userColor() const

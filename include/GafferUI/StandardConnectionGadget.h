@@ -70,6 +70,7 @@ class StandardConnectionGadget : public ConnectionGadget
 	protected :
 
 		void doRenderLayer( Layer layer, const Style *style ) const override;
+		bool hasLayer( Layer layer ) const override;
 
 	private :
 
