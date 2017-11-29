@@ -472,47 +472,6 @@ if not conf.checkQtVersion() :
 	Exit( 1 )
 
 ###############################################################################################
-# Helper function to locate pyopenvdb.so
-# We link to this using a File object to force Scons to link using the full path
-# Hence the need to search through all LOCATE_DEPENDENCY_LIBPATH paths and BUILD_DIR for pyopenvdb.so
-###############################################################################################
-
-def findPyOpenVDBPath( env ):
-	import os, fnmatch
-	def find( pattern, path ) :
-		result = []
-		for root, dirs, files in os.walk( path ) :
-			for name in files :
-				if fnmatch.fnmatch( name, pattern ) :
-					result.append( os.path.join( root, name ) )
-					return root
-
-		return None
-
-	pathsToSearch = [ env.subst("$BUILD_DIR/python") ]
-	pathsToSearch.extend( env["LOCATE_DEPENDENCY_LIBPATH"] )
-
-	for p in pathsToSearch :
-		foundPath = find( "pyopenvdb.so", p )
-		if foundPath :
-			return File( os.path.join( foundPath, "pyopenvdb.so" ) )
-
-	return None
-
-
-def addPythonVDB( existingLibs, env ):
-
-	pyOpenVDBPath = findPyOpenVDBPath( env )
-
-	if pyOpenVDBPath:
-		updatedLibs = existingLibs[:]
-		updatedLibs.append( pyOpenVDBPath )
-		return updatedLibs
-	else:
-		sys.stderr.write( "pyopenvdb not found. Add directory which contains 'pyopenvdb.so' to 'LOCATE_DEPENDENCY_LIBPATH' or 'BUILD_DIR' \n" )
-		Exit( 1 )
-
-###############################################################################################
 # An environment for running commands with access to the applications we've built
 ###############################################################################################
 
@@ -859,7 +818,7 @@ libraries = {
 			"LIBS" : [ "Gaffer", "GafferScene", "Half", "openvdb" ],
 		},
 		"pythonEnvAppends" : {
-			"LIBS" : addPythonVDB([ "GafferScene", "GafferVDB", "openvdb"], env),
+			"LIBS" : [ "GafferScene", "GafferVDB", "openvdb"],
 		}
 	},
 
