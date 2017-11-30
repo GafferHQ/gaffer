@@ -79,7 +79,7 @@ class VDBObjectTest( GafferVDBTest.VDBTestCase ) :
 		sourcePath = os.path.join( self.dataDir, "smoke.vdb" )
 		vdbObject = GafferVDB.VDBObject( sourcePath )
 
-		self.assertEqual(788108, vdbObject.memoryUsage())
+		self.assertTrue(788000 <= vdbObject.memoryUsage() <= 788200)
 
 		d = vdbObject.findGrid("density")
 
@@ -88,7 +88,7 @@ class VDBObjectTest( GafferVDBTest.VDBTestCase ) :
 
 		d.mapAll( incValue )
 
-		self.assertEqual(7022108, vdbObject.memoryUsage())
+		self.assertTrue(7022000 <= vdbObject.memoryUsage() <= 7022300)
 
 	def testCanRemoveGrid( self ) :
 		sourcePath = os.path.join( self.dataDir, "smoke.vdb" )

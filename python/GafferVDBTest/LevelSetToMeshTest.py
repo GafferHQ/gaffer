@@ -43,6 +43,7 @@ import os
 import GafferScene
 
 class LevelSetToMeshTest( GafferVDBTest.VDBTestCase ) :
+
 	def setUp( self ) :
 		GafferVDBTest.VDBTestCase.setUp( self )
 		self.sourcePath = os.path.join( self.dataDir, "sphere.vdb" )
@@ -80,13 +81,13 @@ class LevelSetToMeshTest( GafferVDBTest.VDBTestCase ) :
 		levelSetToMesh = GafferVDB.LevelSetToMesh()
 		levelSetToMesh["in"].setInput( meshToLevelSet["out"] )
 
-		self.assertAlmostEqual( 5.0, levelSetToMesh['out'].bound( "sphere" ).max[0] )
+		self.assertEqualTolerance( 5.0, levelSetToMesh['out'].bound( "sphere" ).max[0], 0.05 )
 
 		levelSetToMesh['isoValue'].setValue(0.5)
-		self.assertAlmostEqual( 5.5, levelSetToMesh['out'].bound( "sphere" ).max[0] )
+		self.assertEqualTolerance( 5.5, levelSetToMesh['out'].bound( "sphere" ).max[0], 0.05 )
 
 		levelSetToMesh['isoValue'].setValue(-0.5)
-		self.assertAlmostEqual( 4.5, levelSetToMesh['out'].bound( "sphere" ).max[0] )
+		self.assertEqualTolerance( 4.5, levelSetToMesh['out'].bound( "sphere" ).max[0], 0.05 )
 
 	def testIncreasingAdapativityDecreasesPolyCount( self ) :
 		sphere = GafferScene.Sphere()
@@ -102,8 +103,8 @@ class LevelSetToMeshTest( GafferVDBTest.VDBTestCase ) :
 		levelSetToMesh["in"].setInput( meshToLevelSet["out"] )
 
 		levelSetToMesh['adaptivity'].setValue(0.0)
-		self.assertEqual( 187514, len( levelSetToMesh['out'].object( "sphere" ).verticesPerFace ) )
+		self.assertTrue( 187000 <=  len( levelSetToMesh['out'].object( "sphere" ).verticesPerFace ) <= 188000 )
 
 		levelSetToMesh['adaptivity'].setValue(1.0)
-		self.assertEqual( 2934, len( levelSetToMesh['out'].object( "sphere" ).verticesPerFace ) )
+		self.assertTrue( 2800 <= len( levelSetToMesh['out'].object( "sphere" ).verticesPerFace ) <= 3200 )
 

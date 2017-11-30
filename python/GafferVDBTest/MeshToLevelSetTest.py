@@ -93,13 +93,13 @@ class MeshToLevelSetTest( GafferVDBTest.VDBTestCase ) :
 		meshToLevelSet["voxelSize"].setValue( 0.1 )
 		meshToLevelSet["in"].setInput( sphere["out"] )
 
-		self.assertEqual( 648, meshToLevelSet['out'].object( "sphere" ).findGrid( "levelset" ).leafCount() )
+		self.assertTrue( 640 <= meshToLevelSet['out'].object( "sphere" ).findGrid( "levelset" ).leafCount() <= 650 )
 
 		meshToLevelSet["exteriorBandwidth"].setValue( 4.0 )
-		self.assertEqual( 690, meshToLevelSet['out'].object( "sphere" ).findGrid( "levelset" ).leafCount() )
+		self.assertTrue( 685 <= meshToLevelSet['out'].object( "sphere" ).findGrid( "levelset" ).leafCount() <= 695 )
 
 		meshToLevelSet["interiorBandwidth"].setValue( 4.0 )
-		self.assertEqual( 722, meshToLevelSet['out'].object( "sphere" ).findGrid( "levelset" ).leafCount() )
+		self.assertTrue( 715 <= meshToLevelSet['out'].object( "sphere" ).findGrid( "levelset" ).leafCount() <= 725 )
 
 	def testCanSpecifyLevelsetGridname( self ) :
 		sphere = GafferScene.Sphere()
