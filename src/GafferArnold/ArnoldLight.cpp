@@ -89,7 +89,7 @@ void ArnoldLight::hashLight( const Gaffer::Context *context, IECore::MurmurHash 
 	{
 		if( const Shader *shader = (*it)->source()->ancestor<Shader>() )
 		{
-			shader->stateHash( h );
+			shader->attributesHash( h );
 		}
 		else
 		{
@@ -114,8 +114,9 @@ IECore::ObjectVectorPtr ArnoldLight::computeLight( const Gaffer::Context *contex
 			/// ArnoldShader to do all the shader loading and network generation.
 			/// This would avoid exposing any Shader internals, and would generalise
 			/// nicely to the other Light subclasses too.
-			IECore::ConstObjectVectorPtr inputNetwork = shader->state();
-			if( inputNetwork->members().empty() )
+			IECore::ConstCompoundObjectPtr inputAttributes = shader->attributes();
+			const IECore::ObjectVector *inputNetwork = inputAttributes->member<const IECore::ObjectVector>( "ai:surface" );
+			if( !inputNetwork || inputNetwork->members().empty() )
 			{
 				continue;
 			}

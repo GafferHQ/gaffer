@@ -651,23 +651,6 @@ IECore::ConstCompoundObjectPtr Shader::attributes( const Gaffer::Plug *output ) 
 	return result;
 }
 
-IECore::MurmurHash Shader::stateHash() const
-{
-	NetworkBuilder networkBuilder( outPlug() );
-	return networkBuilder.stateHash();
-}
-
-void Shader::stateHash( IECore::MurmurHash &h ) const
-{
-	h.append( stateHash() );
-}
-
-IECore::ConstObjectVectorPtr Shader::state() const
-{
-	NetworkBuilder networkBuilder( outPlug() );
-	return networkBuilder.state();
-}
-
 void Shader::affects( const Gaffer::Plug *input, AffectedPlugsContainer &outputs ) const
 {
 	DependencyNode::affects( input, outputs );

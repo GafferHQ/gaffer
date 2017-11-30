@@ -127,13 +127,6 @@ class Shader : public Gaffer::DependencyNode
 		/// \deprecated See above.
 		IECore::ConstCompoundObjectPtr attributes() const;
 
-		/// \deprecated
-		IECore::MurmurHash stateHash() const;
-		/// \deprecated
-		void stateHash( IECore::MurmurHash &h ) const;
-		/// \deprecated
-		IECore::ConstObjectVectorPtr state() const;
-
 	protected :
 
 		/// Called when computing the hash for this node. May be reimplemented in derived classes

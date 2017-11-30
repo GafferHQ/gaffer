@@ -57,8 +57,21 @@ using namespace GafferScene;
 namespace
 {
 
+IECore::MurmurHash shaderAttributesHash1( const Shader &s )
+{
+	IECorePython::ScopedGILRelease gilRelease;
+	return s.attributesHash();
+}
+
+void shaderAttributesHash2( const Shader &s, IECore::MurmurHash &h )
+{
+	IECorePython::ScopedGILRelease gilRelease;
+	s.attributesHash( h );
+}
+
 IECore::CompoundObjectPtr shaderAttributes( const Shader &s, bool copy=true )
 {
+	IECorePython::ScopedGILRelease gilRelease;
 	IECore::ConstCompoundObjectPtr o = s.attributes();
 	if( copy )
 	{
@@ -67,19 +80,6 @@ IECore::CompoundObjectPtr shaderAttributes( const Shader &s, bool copy=true )
 	else
 	{
 		return boost::const_pointer_cast<IECore::CompoundObject>( o );
-	}
-}
-
-IECore::ObjectVectorPtr state( const Shader &s, bool copy=true )
-{
-	IECore::ConstObjectVectorPtr o = s.state();
-	if( copy )
-	{
-		return o->copy();
-	}
-	else
-	{
-		return boost::const_pointer_cast<IECore::ObjectVector>( o );
 	}
 }
 
@@ -101,8 +101,6 @@ void reloadShader( Shader &shader )
 	shader.reloadShader();
 }
 
-
-
 class ShaderSerialiser : public GafferBindings::NodeSerialiser
 {
 
@@ -120,8 +118,15 @@ class ShaderSerialiser : public GafferBindings::NodeSerialiser
 
 };
 
+IECore::MurmurHash shaderPlugAttributesHash( const ShaderPlug &p )
+{
+	IECorePython::ScopedGILRelease gilRelease;
+	return p.attributesHash();
+}
+
 IECore::CompoundObjectPtr shaderPlugAttributes( const ShaderPlug &p, bool copy=true )
 {
+	IECorePython::ScopedGILRelease gilRelease;
 	IECore::ConstCompoundObjectPtr o = p.attributes();
 	if( copy )
 	{
@@ -139,15 +144,11 @@ void GafferSceneModule::bindShader()
 {
 
 	GafferBindings::DependencyNodeClass<Shader>()
-		.def( "attributesHash", (IECore::MurmurHash (Shader::*)() const )&Shader::attributesHash )
-		.def( "attributesHash", (void (Shader::*)( IECore::MurmurHash &h ) const )&Shader::attributesHash )
+		.def( "attributesHash", shaderAttributesHash1 )
+		.def( "attributesHash", shaderAttributesHash2 )
 		.def( "attributes", &shaderAttributes, ( boost::python::arg_( "_copy" ) = true ) )
-		.def( "stateHash", (IECore::MurmurHash (Shader::*)() const )&Shader::stateHash )
-		.def( "stateHash", (void (Shader::*)( IECore::MurmurHash &h ) const )&Shader::stateHash )
-		.def( "state", &state, ( boost::python::arg_( "_copy" ) = true ) )
 		.def( "loadShader", &loadShader, ( arg_( "shaderName" ), arg_( "keepExistingValues" ) = false ) )
 		.def( "reloadShader", &reloadShader )
-
 	;
 
 	GafferBindings::Serialisation::registerSerialiser( Shader::staticTypeId(), new ShaderSerialiser() );
@@ -164,7 +165,7 @@ void GafferSceneModule::bindShader()
 			)
 		)
 		// value accessors
-		.def( "attributesHash", &ShaderPlug::attributesHash )
+		.def( "attributesHash", &shaderPlugAttributesHash )
 		.def( "attributes", &shaderPlugAttributes )
 	;
 
