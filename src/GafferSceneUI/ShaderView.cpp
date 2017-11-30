@@ -242,7 +242,7 @@ void ShaderView::plugSet( Gaffer::Plug *plug )
 
 void ShaderView::plugDirtied( Gaffer::Plug *plug )
 {
-	if( plug == inPlug<Plug>() )
+	if( plug == inPlug() )
 	{
 		// The shader has changed, so we may need to update
 		// our scene and renderer. But we're not allowed to
@@ -294,7 +294,7 @@ void ShaderView::updateRenderer()
 
 	m_renderer = nullptr;
 	m_rendererShaderPrefix = shaderPrefix;
-	if( !inPlug<Plug>()->getInput() )
+	if( !inPlug()->getInput() )
 	{
 		return;
 	}
