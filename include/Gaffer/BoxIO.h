@@ -86,18 +86,18 @@ class BoxIO : public Node
 		/// can be used within the box.
 		/// Will be null unless `setup()`
 		/// has been called.
-		template<typename T>
+		template<typename T=Plug>
 		T *plug();
-		template<typename T>
+		template<typename T=Plug>
 		const T *plug() const;
 
 		/// The external plug which has
 		/// been promoted to the outside
 		/// of the box. Will be null unless
 		/// `setup()` has been called.
-		template<typename T>
+		template<typename T=Plug>
 		T *promotedPlug();
-		template<typename T>
+		template<typename T=Plug>
 		const T *promotedPlug() const;
 
 		Plug::Direction direction() const;

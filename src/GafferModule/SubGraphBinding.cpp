@@ -92,13 +92,13 @@ class BoxIOSerialiser : public NodeSerialiser
 		std::string result = NodeSerialiser::postScript( graphComponent, identifier, serialisation );
 
 		const BoxIO *boxIO = static_cast<const BoxIO *>( graphComponent );
-		if( !boxIO->plug<Plug>() )
+		if( !boxIO->plug() )
 		{
 			// BoxIO::setup() hasn't been called yet.
 			return result;
 		}
 
-		const Plug *promoted = boxIO->promotedPlug<Plug>();
+		const Plug *promoted = boxIO->promotedPlug();
 		if( promoted && serialisation.identifier( promoted ) != "" )
 		{
 			return result;
@@ -123,12 +123,12 @@ class BoxIOSerialiser : public NodeSerialiser
 
 PlugPtr plug( BoxIO &b )
 {
-	return b.plug<Plug>();
+	return b.plug();
 }
 
 PlugPtr promotedPlug( BoxIO &b )
 {
-	return b.promotedPlug<Plug>();
+	return b.promotedPlug();
 }
 
 // Reference

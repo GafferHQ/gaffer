@@ -1065,7 +1065,7 @@ bool StandardGraphLayout::connectNodeInternal( GraphGadget *graph, Gaffer::Node 
 	}
 	else if( BoxOut *boxOut = runTimeCast<BoxOut>( node ) )
 	{
-		if( !boxOut->plug<Plug>() )
+		if( !boxOut->plug() )
 		{
 			boxOut->setup( outputPlugs.front() );
 		}
