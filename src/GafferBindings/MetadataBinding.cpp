@@ -83,7 +83,7 @@ std::string metadataSerialisation( const Gaffer::Node *node, const std::string &
 		object pythonKey( it->c_str() );
 		std::string key = extract<std::string>( pythonKey.attr( "__repr__" )() );
 
-		ConstDataPtr value = Metadata::value<Data>( node, *it );
+		ConstDataPtr value = Metadata::value( node, *it );
 		object pythonValue = dataToPython( value.get(), /* copy = */ false );
 		std::string stringValue = extract<std::string>( pythonValue.attr( "__repr__" )() );
 
@@ -109,7 +109,7 @@ std::string metadataSerialisation( const Plug *plug, const std::string &identifi
 		object pythonKey( it->c_str() );
 		std::string key = extract<std::string>( pythonKey.attr( "__repr__" )() );
 
-		ConstDataPtr value = Metadata::value<Data>( plug, *it );
+		ConstDataPtr value = Metadata::value( plug, *it );
 		object pythonValue = dataToPython( value.get(), /* copy = */ false );
 		std::string stringValue = extract<std::string>( pythonValue.attr( "__repr__" )() );
 
