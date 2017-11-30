@@ -38,6 +38,7 @@
 import unittest
 
 import IECore
+import IECoreScene
 
 import Gaffer
 import GafferTest
@@ -62,7 +63,7 @@ class ProceduralHolderTest( GafferTest.TestCase ) :
 
 		p = n["output"].getValue()
 
-		self.failUnless( isinstance( p, IECore.ReadProcedural ) )
+		self.failUnless( isinstance( p, IECoreScene.ReadProcedural ) )
 		self.assertEqual( p.parameters().getValue(), n.getProcedural().parameters().getValue() )
 
 	def testAffects( self ) :

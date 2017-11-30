@@ -81,13 +81,13 @@ class ExecutableOpHolderTest( GafferTest.TestCase ) :
 	def testSetOp( self ) :
 
 		n = GafferCortex.ExecutableOpHolder()
-		opSpec = GafferCortexTest.ParameterisedHolderTest.classSpecification( "primitive/renameVariables", "IECORE_OP_PATHS" )[:-1]
+		opSpec = GafferCortexTest.ParameterisedHolderTest.classSpecification( "files/sequenceRenumber", "IECORE_OP_PATHS" )[:-1]
 		n.setOp( *opSpec )
 
 	def testHash( self ) :
 
 		n = GafferCortex.ExecutableOpHolder()
-		opSpec = GafferCortexTest.ParameterisedHolderTest.classSpecification( "primitive/renameVariables", "IECORE_OP_PATHS" )[:-1]
+		opSpec = GafferCortexTest.ParameterisedHolderTest.classSpecification( "files/sequenceRenumber", "IECORE_OP_PATHS" )[:-1]
 		n.setOp( *opSpec )
 		c = Gaffer.Context()
 		h = n.hash(c)
@@ -179,7 +179,7 @@ class ExecutableOpHolderTest( GafferTest.TestCase ) :
 		s = Gaffer.ScriptNode()
 		s["n"] = GafferCortex.ExecutableOpHolder()
 
-		opSpec = GafferCortexTest.ParameterisedHolderTest.classSpecification( "primitive/renameVariables", "IECORE_OP_PATHS" )[:-1]
+		opSpec = GafferCortexTest.ParameterisedHolderTest.classSpecification( "files/sequenceRenumber", "IECORE_OP_PATHS" )[:-1]
 		s["n"].setOp( *opSpec )
 
 		s2 = Gaffer.ScriptNode()

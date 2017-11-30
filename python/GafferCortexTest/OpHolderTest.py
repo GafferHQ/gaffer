@@ -56,34 +56,49 @@ class OpHolderTest( GafferTest.TestCase ) :
 
 	def testCompute( self ) :
 
-		m = IECore.MeshPrimitive.createPlane( IECore.Box2f( IECore.V2f( -1 ), IECore.V2f( 1 ) ) )
-		self.failUnless( "P" in m )
-		self.failUnless( "renamed" not in m )
+		class MultiplyOp( IECore.Op ) :
+
+			def __init__( self ) :
+
+				IECore.Op.__init__( self, "", IECore.IntParameter( "result", "", 0 ) )
+
+				self.parameters().addParameters( [
+
+					IECore.IntParameter(
+						"a",
+						"",
+						0
+					),
+
+					IECore.IntParameter(
+						"b",
+						"",
+						0
+					)
+
+				] )
+
+			def doOperation( self, args ) :
+
+				return IECore.IntData( args["a"].value * args["b"].value )
 
 		n = GafferCortex.OpHolder()
-		opSpec = GafferCortexTest.ParameterisedHolderTest.classSpecification( "primitive/renameVariables", "IECORE_OP_PATHS" )[:-1]
-		n.setOp( *opSpec )
+		n.setParameterised( MultiplyOp() )
 
-		n["parameters"]["input"].setValue( m )
-		n["parameters"]["names"].setValue( IECore.StringVectorData( [ "P renamed" ] ) )
+		n["parameters"]["a"].setValue( 2 )
+		n["parameters"]["b"].setValue( 20 )
+		self.assertEqual( n["result"].getValue(), 40 )
 
-		m2 = n["result"].getValue()
-
-		self.failUnless( "P" not in m2 )
-		self.failUnless( "renamed" in m2 )
-
-		n["parameters"]["names"].setValue( IECore.StringVectorData( [ "P renamedAgain" ] ) )
-
-		self.failUnless( "P" not in m2 )
-		self.failUnless( "renamed" in m2 )
+		n["parameters"]["b"].setValue( 3 )
+		self.assertEqual( n["result"].getValue(), 6 )
 
 	def testAffects( self ) :
 
 		n = GafferCortex.OpHolder()
-		opSpec = GafferCortexTest.ParameterisedHolderTest.classSpecification( "primitive/renameVariables", "IECORE_OP_PATHS" )[:-1]
+		opSpec = GafferCortexTest.ParameterisedHolderTest.classSpecification( "files/sequenceRenumber", "IECORE_OP_PATHS" )[:-1]
 		n.setOp( *opSpec )
 
-		a = n.affects( n["parameters"]["input"] )
+		a = n.affects( n["parameters"]["offset"] )
 		self.assertEqual( len( a ), 1 )
 		self.failUnless( a[0].isSame( n["result"] ) )
 
@@ -92,7 +107,7 @@ class OpHolderTest( GafferTest.TestCase ) :
 		s = Gaffer.ScriptNode()
 
 		s["op"] = GafferCortex.OpHolder()
-		opSpec = GafferCortexTest.ParameterisedHolderTest.classSpecification( "primitive/renameVariables", "IECORE_OP_PATHS" )[:-1]
+		opSpec = GafferCortexTest.ParameterisedHolderTest.classSpecification( "files/sequenceRenumber", "IECORE_OP_PATHS" )[:-1]
 		s["op"].setOp( *opSpec )
 
 		ss = s.serialise()
