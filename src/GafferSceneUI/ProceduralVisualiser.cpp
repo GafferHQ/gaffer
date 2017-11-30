@@ -34,7 +34,7 @@
 //
 //////////////////////////////////////////////////////////////////////////
 
-#include "IECore/ExternalProcedural.h"
+#include "IECoreScene/ExternalProcedural.h"
 
 #include "IECoreGL/CurvesPrimitive.h"
 #include "IECoreGL/Group.h"
@@ -65,7 +65,7 @@ class BoundVisualiser : public ObjectVisualiser
 
 		IECoreGL::ConstRenderablePtr visualise( const IECore::Object *object ) const override
 		{
-			const IECore::VisibleRenderable *renderable = IECore::runTimeCast<const IECore::VisibleRenderable>( object );
+			const IECoreScene::VisibleRenderable *renderable = IECore::runTimeCast<const IECoreScene::VisibleRenderable>( object );
 
 			IECoreGL::GroupPtr group = new IECoreGL::Group();
 			group->getState()->add( new IECoreGL::Primitive::DrawWireframe( true ) );
@@ -112,7 +112,7 @@ class BoundVisualiser : public ObjectVisualiser
 			p.push_back( V3f( b.min.x, b.max.y, b.max.z ) );
 
 			IECoreGL::CurvesPrimitivePtr curves = new IECoreGL::CurvesPrimitive( IECore::CubicBasisf::linear(), false, vertsPerCurveData );
-			curves->addPrimitiveVariable( "P", IECore::PrimitiveVariable( IECore::PrimitiveVariable::Vertex, pData ) );
+			curves->addPrimitiveVariable( "P", IECoreScene::PrimitiveVariable( IECoreScene::PrimitiveVariable::Vertex, pData ) );
 			group->addChild( curves );
 
 			return group;
@@ -140,7 +140,7 @@ class ExternalProceduralVisualiser : public BoundVisualiser
 
 	public :
 
-		typedef IECore::ExternalProcedural ObjectType;
+		typedef IECoreScene::ExternalProcedural ObjectType;
 
 	protected :
 

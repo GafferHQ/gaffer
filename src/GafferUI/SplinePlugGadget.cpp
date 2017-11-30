@@ -41,9 +41,9 @@
 #include "Gaffer/UndoScope.h"
 #include "Gaffer/ScriptNode.h"
 
-#include "IECore/CurvesPrimitive.h"
-#include "IECore/AttributeBlock.h"
 #include "IECore/SimpleTypedData.h"
+#include "IECoreScene/CurvesPrimitive.h"
+#include "IECoreScene/AttributeBlock.h"
 
 #include "boost/bind.hpp"
 #include "boost/bind/placeholders.hpp"
@@ -58,7 +58,7 @@ IE_CORE_DEFINERUNTIMETYPED( SplinePlugGadget );
 
 struct SplinePlugGadget::UI
 {
-	IECore::CurvesPrimitivePtr curve;
+	IECoreScene::CurvesPrimitivePtr curve;
 };
 
 SplinePlugGadget::SplinePlugGadget( const std::string &name )
@@ -248,7 +248,7 @@ void SplinePlugGadget::updateCurve( SplineUIMap::iterator it ) const
 	IECore::IntVectorDataPtr vertsPerCurve = new IECore::IntVectorData;
 	vertsPerCurve->writable().push_back( numPoints );
 
-	IECore::CurvesPrimitivePtr curve = new IECore::CurvesPrimitive(
+	IECoreScene::CurvesPrimitivePtr curve = new IECoreScene::CurvesPrimitive(
 		vertsPerCurve,
 		IECore::CubicBasisf::linear(),
 		false,

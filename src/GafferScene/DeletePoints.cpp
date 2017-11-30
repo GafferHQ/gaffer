@@ -38,14 +38,15 @@
 #include "boost/format.hpp"
 #include "boost/algorithm/string.hpp"
 
-#include "IECore/PointsPrimitive.h"
-#include "IECore/PointsAlgo.h"
+#include "IECoreScene/PointsPrimitive.h"
+#include "IECoreScene/PointsAlgo.h"
 
 #include "Gaffer/StringPlug.h"
 
 #include "GafferScene/DeletePoints.h"
 
 using namespace IECore;
+using namespace IECoreScene;
 using namespace Gaffer;
 using namespace GafferScene;
 

@@ -36,9 +36,9 @@
 
 #include "OpenEXR/ImathFun.h"
 
-#include "IECore/Primitive.h"
-#include "IECore/Camera.h"
 #include "IECore/AngleConversion.h"
+#include "IECoreScene/Primitive.h"
+#include "IECoreScene/Camera.h"
 
 #include "Gaffer/StringPlug.h"
 
@@ -47,6 +47,7 @@
 using namespace std;
 using namespace Imath;
 using namespace IECore;
+using namespace IECoreScene;
 using namespace Gaffer;
 using namespace GafferScene;
 

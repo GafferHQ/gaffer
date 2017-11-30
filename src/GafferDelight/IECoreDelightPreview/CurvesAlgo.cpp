@@ -34,14 +34,15 @@
 
 #include "nsi.h"
 
-#include "IECore/CurvesPrimitive.h"
 #include "IECore/MessageHandler.h"
+#include "IECoreScene/CurvesPrimitive.h"
 
 #include "GafferDelight/IECoreDelightPreview/NodeAlgo.h"
 #include "GafferDelight/IECoreDelightPreview/ParameterList.h"
 
 using namespace std;
 using namespace IECore;
+using namespace IECoreScene;
 using namespace IECoreDelight;
 
 namespace
@@ -50,7 +51,7 @@ namespace
 static const char *g_catmullRom = "catmull-rom";
 static const char *g_bSpline = "b-spline";
 
-void staticParameters( const IECore::CurvesPrimitive *object, ParameterList &parameters )
+void staticParameters( const IECoreScene::CurvesPrimitive *object, ParameterList &parameters )
 {
 	parameters.add( "nvertices", object->verticesPerCurve() );
 
@@ -85,7 +86,7 @@ void staticParameters( const IECore::CurvesPrimitive *object, ParameterList &par
 	}
 }
 
-bool convertStatic( const IECore::CurvesPrimitive *object, NSIContext_t context, const char *handle )
+bool convertStatic( const IECoreScene::CurvesPrimitive *object, NSIContext_t context, const char *handle )
 {
 	NSICreate( context, handle, "cubiccurves", 0, nullptr );
 
@@ -99,7 +100,7 @@ bool convertStatic( const IECore::CurvesPrimitive *object, NSIContext_t context,
 	return true;
 }
 
-bool convertAnimated( const vector<const IECore::CurvesPrimitive *> &objects, const vector<float> &times, NSIContext_t context, const char *handle )
+bool convertAnimated( const vector<const IECoreScene::CurvesPrimitive *> &objects, const vector<float> &times, NSIContext_t context, const char *handle )
 {
 	NSICreate( context, handle, "cubiccurves", 0, nullptr );
 

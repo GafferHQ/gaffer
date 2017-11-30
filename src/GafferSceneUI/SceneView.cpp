@@ -39,10 +39,10 @@
 #include "boost/bind/placeholders.hpp"
 #include "boost/algorithm/string/predicate.hpp"
 
-#include "IECore/ParameterisedProcedural.h"
 #include "IECore/VectorTypedData.h"
-#include "IECore/Transform.h"
 #include "IECore/AngleConversion.h"
+#include "IECoreScene/ParameterisedProcedural.h"
+#include "IECoreScene/Transform.h"
 
 #include "IECoreGL/GL.h"
 #include "IECoreGL/State.h"
@@ -73,6 +73,7 @@
 using namespace std;
 using namespace Imath;
 using namespace IECore;
+using namespace IECoreScene;
 using namespace Gaffer;
 using namespace GafferUI;
 using namespace GafferScene;
@@ -990,20 +991,20 @@ class SceneView::LookThrough : public boost::signals::trackable
 						throw IECore::Exception( "Camera \"" + cameraPathString + "\" does not exist" );
 					}
 
-					IECore::ConstCameraPtr constCamera = runTimeCast<const IECore::Camera>( scenePlug()->object( cameraPath ) );
+					IECoreScene::ConstCameraPtr constCamera = runTimeCast<const IECoreScene::Camera>( scenePlug()->object( cameraPath ) );
 					if( !constCamera )
 					{
 						throw IECore::Exception( "Location \"" + cameraPathString + "\" does not have a camera" );
 					}
 					cameraTransform = scenePlug()->fullTransform( cameraPath );
 
-					IECore::CameraPtr camera = constCamera->copy();
+					IECoreScene::CameraPtr camera = constCamera->copy();
 					RendererAlgo::applyCameraGlobals( camera.get(), globals.get() );
 					m_lookThroughCamera = camera;
 				}
 				else
 				{
-					CameraPtr defaultCamera = new IECore::Camera;
+					CameraPtr defaultCamera = new IECoreScene::Camera;
 					RendererAlgo::applyCameraGlobals( defaultCamera.get(), globals.get() );
 					m_lookThroughCamera = defaultCamera;
 				}
@@ -1078,7 +1079,7 @@ class SceneView::LookThrough : public boost::signals::trackable
 			// the resolution gate centrally with a border around it. Start by figuring
 			// out where we'll draw the resolution gate in raster space.
 
-			IECore::CameraPtr camera = m_lookThroughCamera->copy();
+			IECoreScene::CameraPtr camera = m_lookThroughCamera->copy();
 
 			const float borderPixels = 40;
 			const V2f viewport = m_view->viewportGadget()->getViewport();
@@ -1140,12 +1141,12 @@ class SceneView::LookThrough : public boost::signals::trackable
 
 		/// The default viewport camera - we store this so we can
 		/// return to it after looking through a scene camera.
-		IECore::ConstCameraPtr m_originalCamera;
+		IECoreScene::ConstCameraPtr m_originalCamera;
 		M44f m_originalCameraTransform;
 		// Camera we want to look through - retrieved from scene
 		// and dirtied on plug and context changes.
 		bool m_lookThroughCameraDirty;
-		IECore::ConstCameraPtr m_lookThroughCamera;
+		IECoreScene::ConstCameraPtr m_lookThroughCamera;
 		// We transfer the look through camera onto the viewport,
 		// adjusting it to fit when we do. This needs repeating when
 		// the viewport changes, which is tracked by this flag.
@@ -1172,7 +1173,7 @@ SceneView::SceneView( const std::string &name )
 
 	// set up a sensible default camera
 
-	IECore::CameraPtr camera = new IECore::Camera();
+	IECoreScene::CameraPtr camera = new IECoreScene::Camera();
 	camera->parameters()["projection"] = new IECore::StringData( "perspective" );
 	camera->parameters()["projection:fov"] = new IECore::FloatData( 54.43 ); // 35 mm focal length
 	viewportGadget()->setCamera( camera.get() );

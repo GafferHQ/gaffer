@@ -38,11 +38,11 @@
 #include "boost/unordered_map.hpp"
 #include "boost/lexical_cast.hpp"
 
-#include "IECore/Shader.h"
 #include "IECore/MessageHandler.h"
 #include "IECore/SimpleTypedData.h"
 #include "IECore/VectorTypedData.h"
 #include "IECore/SplineData.h"
+#include "IECoreScene/Shader.h"
 
 #include "IECoreArnold/ParameterAlgo.h"
 
@@ -51,6 +51,7 @@
 
 using namespace std;
 using namespace IECore;
+using namespace IECoreScene;
 using namespace IECoreArnold;
 
 namespace

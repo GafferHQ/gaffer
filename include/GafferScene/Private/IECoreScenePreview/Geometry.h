@@ -35,7 +35,7 @@
 #ifndef IECORE_GEOMETRY_H
 #define IECORE_GEOMETRY_H
 
-#include "IECore/VisibleRenderable.h"
+#include "IECoreScene/VisibleRenderable.h"
 
 #include "GafferScene/TypeIds.h"
 
@@ -44,14 +44,14 @@ namespace IECoreScenePreview
 
 /// Class used to represent additional geometry types supported
 /// by specific renderers but not present in Cortex (think RiGeometry).
-class Geometry : public IECore::VisibleRenderable
+class Geometry : public IECoreScene::VisibleRenderable
 {
 
 	public:
 
 		Geometry( const std::string &type = "", const Imath::Box3f &bound = Imath::Box3f(), const IECore::CompoundDataPtr &parameters = nullptr );
 
-		IE_CORE_DECLAREEXTENSIONOBJECT( IECoreScenePreview::Geometry, GafferScene::PreviewGeometryTypeId, IECore::VisibleRenderable );
+		IE_CORE_DECLAREEXTENSIONOBJECT( IECoreScenePreview::Geometry, GafferScene::PreviewGeometryTypeId, IECoreScene::VisibleRenderable );
 
 		void setType( const std::string &type );
 		const std::string &getType() const;
@@ -63,7 +63,7 @@ class Geometry : public IECore::VisibleRenderable
 		const IECore::CompoundData *parameters() const;
 
 		Imath::Box3f bound() const override;
-		void render( IECore::Renderer *renderer ) const override;
+		void render( IECoreScene::Renderer *renderer ) const override;
 
 	private:
 

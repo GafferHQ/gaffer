@@ -41,6 +41,7 @@
 
 using namespace std;
 using namespace IECore;
+using namespace IECoreScene;
 
 //////////////////////////////////////////////////////////////////////////
 // Internal utilities
@@ -82,7 +83,7 @@ Registry &registry()
 	return r;
 }
 
-void addPrimitiveVariableParameters( const char *name, const IECore::PrimitiveVariable &value, const IECore::IntVectorData *vertexIndices, ParameterList &parameterList, ParameterList *indicesParameterList )
+void addPrimitiveVariableParameters( const char *name, const IECoreScene::PrimitiveVariable &value, const IECore::IntVectorData *vertexIndices, ParameterList &parameterList, ParameterList *indicesParameterList )
 {
 	NSIParam_t p = parameterList.parameter( name, value.data.get() );
 	if( p.type == NSITypeInvalid )
@@ -197,7 +198,7 @@ void registerConverter( IECore::TypeId fromType, Converter converter, MotionConv
 	registry()[fromType] = { converter, motionConverter };
 }
 
-void primitiveVariableParameterList( const IECore::Primitive *primitive, ParameterList &parameters, const IECore::IntVectorData *vertexIndices )
+void primitiveVariableParameterList( const IECoreScene::Primitive *primitive, ParameterList &parameters, const IECore::IntVectorData *vertexIndices )
 {
 	for( const auto &variable : primitive->variables )
 	{
@@ -205,7 +206,7 @@ void primitiveVariableParameterList( const IECore::Primitive *primitive, Paramet
 	}
 }
 
-void primitiveVariableParameterLists( const std::vector<const IECore::Primitive *> &primitives, ParameterList &staticParameters, std::vector<ParameterList> &animatedParameters, const IECore::IntVectorData *vertexIndices )
+void primitiveVariableParameterLists( const std::vector<const IECoreScene::Primitive *> &primitives, ParameterList &staticParameters, std::vector<ParameterList> &animatedParameters, const IECore::IntVectorData *vertexIndices )
 {
 	for( const auto &variable : primitives.front()->variables )
 	{

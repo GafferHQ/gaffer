@@ -52,6 +52,7 @@
 #include "GafferScene/SceneProcessor.h"
 
 using namespace IECore;
+using namespace IECoreScene;
 using namespace Gaffer;
 using namespace GafferDispatch;
 using namespace GafferScene;

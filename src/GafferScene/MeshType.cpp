@@ -34,14 +34,15 @@
 //
 //////////////////////////////////////////////////////////////////////////
 
-#include "IECore/MeshPrimitive.h"
-#include "IECore/MeshNormalsOp.h"
+#include "IECoreScene/MeshPrimitive.h"
+#include "IECoreScene/MeshNormalsOp.h"
 
 #include "Gaffer/StringPlug.h"
 
 #include "GafferScene/MeshType.h"
 
 using namespace IECore;
+using namespace IECoreScene;
 using namespace Gaffer;
 using namespace GafferScene;
 
@@ -148,11 +149,11 @@ IECore::ConstObjectPtr MeshType::computeProcessedObject( const ScenePath &path, 
 		return inputObject;
 	}
 
-	IECore::MeshPrimitivePtr result = inputGeometry->copy();
+	IECoreScene::MeshPrimitivePtr result = inputGeometry->copy();
 	result->setInterpolation( meshType );
 	if( meshType != "linear" )
 	{
-		IECore::PrimitiveVariableMap::iterator varN = result->variables.find( "N" );
+		IECoreScene::PrimitiveVariableMap::iterator varN = result->variables.find( "N" );
 		if( varN != result->variables.end() )
 		{
 			result->variables.erase( varN );
@@ -161,7 +162,7 @@ IECore::ConstObjectPtr MeshType::computeProcessedObject( const ScenePath &path, 
 
 	if( doNormals )
 	{
-		IECore::MeshNormalsOpPtr normalOp = new IECore::MeshNormalsOp();
+		IECoreScene::MeshNormalsOpPtr normalOp = new IECoreScene::MeshNormalsOp();
 		normalOp->inputParameter()->setValue( result );
 		normalOp->copyParameter()->setTypedValue( false );
 		normalOp->operate();

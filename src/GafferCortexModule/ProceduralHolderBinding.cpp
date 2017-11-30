@@ -37,7 +37,7 @@
 
 #include "boost/python.hpp"
 
-#include "IECore/ParameterisedProcedural.h"
+#include "IECoreScene/ParameterisedProcedural.h"
 
 #include "GafferBindings/DependencyNodeBinding.h"
 
@@ -54,7 +54,7 @@ using namespace GafferCortexModule;
 
 typedef ParameterisedHolderWrapper<DependencyNodeWrapper<ProceduralHolder> > ProceduralHolderWrapper;
 
-static IECore::ParameterisedProceduralPtr getProcedural( ProceduralHolder &n )
+static IECoreScene::ParameterisedProceduralPtr getProcedural( ProceduralHolder &n )
 {
 	return n.getProcedural();
 }

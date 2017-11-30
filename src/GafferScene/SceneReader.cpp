@@ -36,9 +36,9 @@
 
 #include "boost/bind.hpp"
 
-#include "IECore/SharedSceneInterfaces.h"
 #include "IECore/InternedString.h"
-#include "IECore/SceneCache.h"
+#include "IECoreScene/SharedSceneInterfaces.h"
+#include "IECoreScene/SceneCache.h"
 
 #include "Gaffer/Context.h"
 #include "Gaffer/StringAlgo.h"
@@ -50,6 +50,7 @@
 using namespace std;
 using namespace Imath;
 using namespace IECore;
+using namespace IECoreScene;
 using namespace Gaffer;
 using namespace GafferScene;
 
@@ -341,7 +342,7 @@ IECore::ConstInternedStringVectorDataPtr SceneReader::computeChildNames( const S
 		{
 			ConstSceneInterfacePtr child = s->child( *cIt );
 			childTags.clear();
-			child->readTags( childTags, IECore::SceneInterface::EveryTag );
+			child->readTags( childTags, IECoreScene::SceneInterface::EveryTag );
 
 			bool childMatches = false;
 			for( SceneInterface::NameList::const_iterator tIt = childTags.begin(), tEIt = childTags.end(); tIt != tEIt; ++tIt )

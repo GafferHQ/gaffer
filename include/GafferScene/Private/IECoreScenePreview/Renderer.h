@@ -38,8 +38,8 @@
 #define IECORESCENEPREVIEW_RENDERER_H
 
 #include "IECore/CompoundObject.h"
-#include "IECore/Display.h"
-#include "IECore/Camera.h"
+#include "IECoreScene/Display.h"
+#include "IECoreScene/Camera.h"
 
 namespace IECoreScenePreview
 {
@@ -93,7 +93,7 @@ class Renderer : public IECore::RefCounted
 		static Ptr create( const IECore::InternedString &type, RenderType renderType = Batch, const std::string &fileName = "" );
 
 		/// \todo Rename Display->Output in Cortex.
-		typedef IECore::Display Output;
+		typedef IECoreScene::Display Output;
 
 		/// Sets a global option for the render. In interactive renders an option may
 		/// be unset by passing a null value.
@@ -237,7 +237,7 @@ class Renderer : public IECore::RefCounted
 		/// "shutter", V2fData
 		/// The time interval for which the shutter is open - this is used in conjunction with the
 		/// times passed to motionBegin() to specify motion blur. Defaults to 0,0 if unspecified.
-		virtual ObjectInterfacePtr camera( const std::string &name, const IECore::Camera *camera, const AttributesInterface *attributes ) = 0;
+		virtual ObjectInterfacePtr camera( const std::string &name, const IECoreScene::Camera *camera, const AttributesInterface *attributes ) = 0;
 
 		/// Adds a named light with the initially supplied set of attributes, which are expected
 		/// to provide at least a light shader. Object may be non-null to specify arbitrary geometry

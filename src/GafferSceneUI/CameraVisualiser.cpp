@@ -34,9 +34,9 @@
 //
 //////////////////////////////////////////////////////////////////////////
 
-#include "IECore/Camera.h"
 #include "IECore/SimpleTypedData.h"
 #include "IECore/AngleConversion.h"
+#include "IECoreScene/Camera.h"
 
 #include "IECoreGL/CurvesPrimitive.h"
 #include "IECoreGL/Group.h"
@@ -55,7 +55,7 @@ class CameraVisualiser : public ObjectVisualiser
 
 	public :
 
-		typedef IECore::Camera ObjectType;
+		typedef IECoreScene::Camera ObjectType;
 
 		CameraVisualiser()
 		{
@@ -67,13 +67,13 @@ class CameraVisualiser : public ObjectVisualiser
 
 		IECoreGL::ConstRenderablePtr visualise( const IECore::Object *object ) const override
 		{
-			const IECore::Camera *camera = IECore::runTimeCast<const IECore::Camera>( object );
+			const IECoreScene::Camera *camera = IECore::runTimeCast<const IECoreScene::Camera>( object );
 			if( !camera )
 			{
 				return nullptr;
 			}
 
-			IECore::CameraPtr fullCamera = camera->copy();
+			IECoreScene::CameraPtr fullCamera = camera->copy();
 			fullCamera->addStandardParameters();
 
 			IECoreGL::GroupPtr group = new IECoreGL::Group();
@@ -174,7 +174,7 @@ class CameraVisualiser : public ObjectVisualiser
 			p.push_back( V3f( far.min.x, far.max.y, -clippingPlanes[1] ) );
 
 			IECoreGL::CurvesPrimitivePtr curves = new IECoreGL::CurvesPrimitive( IECore::CubicBasisf::linear(), false, vertsPerCurveData );
-			curves->addPrimitiveVariable( "P", IECore::PrimitiveVariable( IECore::PrimitiveVariable::Vertex, pData ) );
+			curves->addPrimitiveVariable( "P", IECoreScene::PrimitiveVariable( IECoreScene::PrimitiveVariable::Vertex, pData ) );
 			group->addChild( curves );
 
 			return group;

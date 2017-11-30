@@ -41,6 +41,7 @@
 using namespace std;
 using namespace Imath;
 using namespace IECore;
+using namespace IECoreScene;
 using namespace IECoreArnold;
 using namespace IECoreArnoldPreview;
 
@@ -65,7 +66,7 @@ namespace IECoreArnoldPreview
 namespace ProceduralAlgo
 {
 
-AtNode *convert( const IECore::ExternalProcedural *procedural, const std::string &nodeName, const AtNode *parentNode  )
+AtNode *convert( const IECoreScene::ExternalProcedural *procedural, const std::string &nodeName, const AtNode *parentNode  )
 {
 	AtNode *node = AiNode( AtString( procedural->getFileName().c_str() ), AtString( nodeName.c_str() ), parentNode );
 	ParameterAlgo::setParameters( node, procedural->parameters()->readable() );

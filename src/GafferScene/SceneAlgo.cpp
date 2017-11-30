@@ -40,12 +40,12 @@
 
 #include "boost/algorithm/string/predicate.hpp"
 
-#include "IECore/MatrixMotionTransform.h"
-#include "IECore/Camera.h"
-#include "IECore/CoordinateSystem.h"
-#include "IECore/ClippingPlane.h"
 #include "IECore/NullObject.h"
-#include "IECore/VisibleRenderable.h"
+#include "IECoreScene/MatrixMotionTransform.h"
+#include "IECoreScene/Camera.h"
+#include "IECoreScene/CoordinateSystem.h"
+#include "IECoreScene/ClippingPlane.h"
+#include "IECoreScene/VisibleRenderable.h"
 
 #include "Gaffer/Context.h"
 
@@ -57,6 +57,7 @@
 using namespace std;
 using namespace Imath;
 using namespace IECore;
+using namespace IECoreScene;
 using namespace Gaffer;
 using namespace GafferScene;
 
@@ -252,19 +253,19 @@ IECore::ConstCompoundDataPtr GafferScene::SceneAlgo::sets( const ScenePlug *scen
 
 Imath::Box3f GafferScene::SceneAlgo::bound( const IECore::Object *object )
 {
-	if( const IECore::VisibleRenderable *renderable = IECore::runTimeCast<const IECore::VisibleRenderable>( object ) )
+	if( const IECoreScene::VisibleRenderable *renderable = IECore::runTimeCast<const IECoreScene::VisibleRenderable>( object ) )
 	{
 		return renderable->bound();
 	}
-	else if( object->isInstanceOf( IECore::Camera::staticTypeId() ) )
+	else if( object->isInstanceOf( IECoreScene::Camera::staticTypeId() ) )
 	{
 		return Imath::Box3f( Imath::V3f( -0.5, -0.5, 0 ), Imath::V3f( 0.5, 0.5, 2.0 ) );
 	}
-	else if( object->isInstanceOf( IECore::CoordinateSystem::staticTypeId() ) )
+	else if( object->isInstanceOf( IECoreScene::CoordinateSystem::staticTypeId() ) )
 	{
 		return Imath::Box3f( Imath::V3f( 0 ), Imath::V3f( 1 ) );
 	}
-	else if( object->isInstanceOf( IECore::ClippingPlane::staticTypeId() ) )
+	else if( object->isInstanceOf( IECoreScene::ClippingPlane::staticTypeId() ) )
 	{
 		return Imath::Box3f( Imath::V3f( -0.5, -0.5, 0 ), Imath::V3f( 0.5 ) );
 	}

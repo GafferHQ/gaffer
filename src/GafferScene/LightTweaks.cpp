@@ -34,9 +34,9 @@
 //
 //////////////////////////////////////////////////////////////////////////
 
-#include "IECore/Shader.h"
 #include "IECore/SimpleTypedData.h"
 #include "IECore/SplineData.h"
+#include "IECoreScene/Shader.h"
 
 #include "Gaffer/StringAlgo.h"
 #include "Gaffer/CompoundDataPlug.h"
@@ -46,6 +46,7 @@
 
 using namespace std;
 using namespace IECore;
+using namespace IECoreScene;
 using namespace Gaffer;
 using namespace GafferScene;
 

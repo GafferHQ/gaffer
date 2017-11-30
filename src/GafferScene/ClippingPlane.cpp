@@ -34,7 +34,7 @@
 //
 //////////////////////////////////////////////////////////////////////////
 
-#include "IECore/ClippingPlane.h"
+#include "IECoreScene/ClippingPlane.h"
 
 #include "Gaffer/StringPlug.h"
 
@@ -64,7 +64,7 @@ void ClippingPlane::hashSource( const Gaffer::Context *context, IECore::MurmurHa
 
 IECore::ConstObjectPtr ClippingPlane::computeSource( const Context *context ) const
 {
-	return new IECore::ClippingPlane();
+	return new IECoreScene::ClippingPlane();
 }
 
 IECore::ConstInternedStringVectorDataPtr ClippingPlane::computeStandardSetNames() const

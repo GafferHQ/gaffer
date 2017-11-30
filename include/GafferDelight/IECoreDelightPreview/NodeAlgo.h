@@ -40,8 +40,8 @@
 #include "nsi.h"
 
 #include "IECore/Object.h"
-#include "IECore/Primitive.h"
 #include "IECore/VectorTypedData.h"
+#include "IECoreScene/Primitive.h"
 
 namespace IECoreDelight
 {
@@ -93,10 +93,10 @@ class ConverterDescription
 };
 
 /// Adds all PrimitiveVariables into a ParameterList for use with NSISetAttribute.
-void primitiveVariableParameterList( const IECore::Primitive *primitive, ParameterList &parameters, const IECore::IntVectorData *vertexIndices = nullptr );
+void primitiveVariableParameterList( const IECoreScene::Primitive *primitive, ParameterList &parameters, const IECore::IntVectorData *vertexIndices = nullptr );
 /// As above, but splits out animated primitive variables into a separate vector of ParameterLists
 /// for use with NSISetAttributeAtTime.
-void primitiveVariableParameterLists( const std::vector<const IECore::Primitive *> &primitives, ParameterList &staticParameters, std::vector<ParameterList> &animatedParameters, const IECore::IntVectorData *vertexIndices = nullptr );
+void primitiveVariableParameterLists( const std::vector<const IECoreScene::Primitive *> &primitives, ParameterList &staticParameters, std::vector<ParameterList> &animatedParameters, const IECore::IntVectorData *vertexIndices = nullptr );
 
 } // namespace NodeAlgo
 

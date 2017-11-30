@@ -40,9 +40,9 @@
 #include "OpenEXR/ImathVec.h"
 
 #include "IECore/CompoundData.h"
-#include "IECore/Camera.h"
-#include "IECore/Shader.h"
-#include "IECore/Transform.h"
+#include "IECoreScene/Camera.h"
+#include "IECoreScene/Shader.h"
+#include "IECoreScene/Transform.h"
 
 #include "Gaffer/Metadata.h"
 #include "Gaffer/Context.h"
@@ -50,6 +50,7 @@
 #include "GafferScene/LightToCamera.h"
 
 using namespace IECore;
+using namespace IECoreScene;
 using namespace Gaffer;
 using namespace GafferScene;
 using namespace Imath;
@@ -99,7 +100,7 @@ void light( const CompoundObject *attributes, const IECore::CompoundData* &shade
 		}
 
 		IECore::InternedString shaderName;
-		const IECore::Shader *shader = IECore::runTimeCast<const IECore::Shader>( shaderVector->members().back().get() );
+		const IECoreScene::Shader *shader = IECore::runTimeCast<const IECoreScene::Shader>( shaderVector->members().back().get() );
 		if( !shader )
 		{
 			continue;
@@ -196,9 +197,9 @@ M44f lightCameraTransform( const IECore::CompoundData *shaderParameters, const s
 	}
 }
 
-IECore::CameraPtr lightToCamera( const IECore::CompoundData *shaderParameters, const std::string &metadataTarget )
+IECoreScene::CameraPtr lightToCamera( const IECore::CompoundData *shaderParameters, const std::string &metadataTarget )
 {
-	IECore::CameraPtr result = new IECore::Camera();
+	IECoreScene::CameraPtr result = new IECoreScene::Camera();
 	const char *type = lightType( shaderParameters, metadataTarget );
 
 
@@ -331,7 +332,7 @@ IECore::ConstObjectPtr LightToCamera::computeProcessedObject( const ScenePath &p
 	const IECore::CompoundData* shaderParameters;
 	std::string metadataTarget;
 	light( inPlug()->attributesPlug()->getValue().get(), shaderParameters, metadataTarget );
-	IECore::ConstCameraPtr camera = nullptr;
+	IECoreScene::ConstCameraPtr camera = nullptr;
 	if( shaderParameters )
 	{
 		camera = lightToCamera( shaderParameters, metadataTarget );
@@ -343,7 +344,7 @@ IECore::ConstObjectPtr LightToCamera::computeProcessedObject( const ScenePath &p
 	}
 	else
 	{
-		IECore::CameraPtr defaultCamera = new IECore::Camera();
+		IECoreScene::CameraPtr defaultCamera = new IECoreScene::Camera();
 		defaultCamera->parameters()["projection"] = new StringData( "perspective" );
 		defaultCamera->parameters()["resolutionOverride"] = new V2iData( V2i( 512, 512 ) );
 		return defaultCamera;
@@ -365,7 +366,7 @@ M44f LightToCamera::computeProcessedTransform( const ScenePath &path, const Gaff
 	const IECore::CompoundData* shaderParameters;
 	std::string metadataTarget;
 	light( inPlug()->attributesPlug()->getValue().get(), shaderParameters, metadataTarget );
-	IECore::ConstCameraPtr camera = nullptr;
+	IECoreScene::ConstCameraPtr camera = nullptr;
 	if( shaderParameters )
 	{
 		return lightCameraTransform( shaderParameters, metadataTarget ) * inputTransform;

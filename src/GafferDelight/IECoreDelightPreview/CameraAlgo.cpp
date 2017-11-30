@@ -34,8 +34,8 @@
 
 #include "nsi.h"
 
-#include "IECore/Camera.h"
 #include "IECore/SimpleTypedData.h"
+#include "IECoreScene/Camera.h"
 
 #include "GafferDelight/IECoreDelightPreview/NodeAlgo.h"
 #include "GafferDelight/IECoreDelightPreview/ParameterList.h"
@@ -43,12 +43,13 @@
 using namespace std;
 using namespace Imath;
 using namespace IECore;
+using namespace IECoreScene;
 using namespace IECoreDelight;
 
 namespace
 {
 
-bool convert( const IECore::Camera *camera, NSIContext_t context, const char *handle )
+bool convert( const IECoreScene::Camera *camera, NSIContext_t context, const char *handle )
 {
 	CameraPtr cameraCopy = camera->copy();
 	cameraCopy->addStandardParameters();

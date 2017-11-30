@@ -38,14 +38,15 @@
 
 #include "GafferScene/ResamplePrimitiveVariables.h"
 
-#include "IECore/MeshPrimitive.h"
-#include "IECore/CurvesPrimitive.h"
-#include "IECore/PointsPrimitive.h"
-#include "IECore/MeshAlgo.h"
-#include "IECore/CurvesAlgo.h"
-#include "IECore/PointsAlgo.h"
+#include "IECoreScene/MeshPrimitive.h"
+#include "IECoreScene/CurvesPrimitive.h"
+#include "IECoreScene/PointsPrimitive.h"
+#include "IECoreScene/MeshAlgo.h"
+#include "IECoreScene/CurvesAlgo.h"
+#include "IECoreScene/PointsAlgo.h"
 
 using namespace IECore;
+using namespace IECoreScene;
 using namespace Gaffer;
 using namespace GafferScene;
 
@@ -91,7 +92,7 @@ void ResamplePrimitiveVariables::hashProcessedObject( const ScenePath &path, con
 	interpolationPlug()->hash( h );
 }
 
-void ResamplePrimitiveVariables::processPrimitiveVariable( const ScenePath &path, const Gaffer::Context *context, IECore::ConstPrimitivePtr inputGeometry, IECore::PrimitiveVariable &variable ) const
+void ResamplePrimitiveVariables::processPrimitiveVariable( const ScenePath &path, const Gaffer::Context *context, IECoreScene::ConstPrimitivePtr inputGeometry, IECoreScene::PrimitiveVariable &variable ) const
 {
 	PrimitiveVariable::Interpolation interpolation = static_cast<PrimitiveVariable::Interpolation> ( interpolationPlug()->getValue() );
 

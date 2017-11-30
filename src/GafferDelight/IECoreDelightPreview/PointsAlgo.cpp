@@ -34,13 +34,14 @@
 
 #include "nsi.h"
 
-#include "IECore/PointsPrimitive.h"
+#include "IECoreScene/PointsPrimitive.h"
 
 #include "GafferDelight/IECoreDelightPreview/NodeAlgo.h"
 #include "GafferDelight/IECoreDelightPreview/ParameterList.h"
 
 using namespace std;
 using namespace IECore;
+using namespace IECoreScene;
 using namespace IECoreDelight;
 
 namespace
@@ -48,7 +49,7 @@ namespace
 
 static float g_one = 1.0f;
 
-void staticParameters( const IECore::PointsPrimitive *object, ParameterList &parameters )
+void staticParameters( const IECoreScene::PointsPrimitive *object, ParameterList &parameters )
 {
 	if( object->variables.find( "width" ) == object->variables.end() )
 	{
@@ -63,7 +64,7 @@ void staticParameters( const IECore::PointsPrimitive *object, ParameterList &par
 	}
 }
 
-bool convertStatic( const IECore::PointsPrimitive *object, NSIContext_t context, const char *handle )
+bool convertStatic( const IECoreScene::PointsPrimitive *object, NSIContext_t context, const char *handle )
 {
 	NSICreate( context, handle, "particles", 0, nullptr );
 
@@ -77,7 +78,7 @@ bool convertStatic( const IECore::PointsPrimitive *object, NSIContext_t context,
 	return true;
 }
 
-bool convertAnimated( const vector<const IECore::PointsPrimitive *> &objects, const vector<float> &times, NSIContext_t context, const char *handle )
+bool convertAnimated( const vector<const IECoreScene::PointsPrimitive *> &objects, const vector<float> &times, NSIContext_t context, const char *handle )
 {
 	NSICreate( context, handle, "particles", 0, nullptr );
 

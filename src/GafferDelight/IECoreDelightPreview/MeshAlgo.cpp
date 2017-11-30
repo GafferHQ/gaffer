@@ -34,13 +34,14 @@
 
 #include "nsi.h"
 
-#include "IECore/MeshPrimitive.h"
+#include "IECoreScene/MeshPrimitive.h"
 
 #include "GafferDelight/IECoreDelightPreview/NodeAlgo.h"
 #include "GafferDelight/IECoreDelightPreview/ParameterList.h"
 
 using namespace std;
 using namespace IECore;
+using namespace IECoreScene;
 using namespace IECoreDelight;
 
 namespace
@@ -48,7 +49,7 @@ namespace
 
 const char *g_catmullClark = "catmull-clark";
 
-void staticParameters( const IECore::MeshPrimitive *mesh, ParameterList &parameters )
+void staticParameters( const IECoreScene::MeshPrimitive *mesh, ParameterList &parameters )
 {
 	parameters.add( "nvertices", mesh->verticesPerFace() );
 
@@ -64,7 +65,7 @@ void staticParameters( const IECore::MeshPrimitive *mesh, ParameterList &paramet
 	}
 }
 
-bool convertStatic( const IECore::MeshPrimitive *mesh, NSIContext_t context, const char *handle )
+bool convertStatic( const IECoreScene::MeshPrimitive *mesh, NSIContext_t context, const char *handle )
 {
 	NSICreate( context, handle, "mesh", 0, nullptr );
 
@@ -77,7 +78,7 @@ bool convertStatic( const IECore::MeshPrimitive *mesh, NSIContext_t context, con
 	return true;
 }
 
-bool convertAnimated( const vector<const IECore::MeshPrimitive *> &meshes, const vector<float> &times, NSIContext_t context, const char *handle )
+bool convertAnimated( const vector<const IECoreScene::MeshPrimitive *> &meshes, const vector<float> &times, NSIContext_t context, const char *handle )
 {
 	NSICreate( context, handle, "mesh", 0, nullptr );
 

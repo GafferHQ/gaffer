@@ -34,7 +34,7 @@
 //
 //////////////////////////////////////////////////////////////////////////
 
-#include "IECore/Shader.h"
+#include "IECoreScene/Shader.h"
 
 #include "Gaffer/CompoundNumericPlug.h"
 
@@ -66,7 +66,7 @@ void TestLight::hashLight( const Gaffer::Context *context, IECore::MurmurHash &h
 
 IECore::ObjectVectorPtr TestLight::computeLight( const Gaffer::Context *context ) const
 {
-	IECore::ShaderPtr result = new IECore::Shader( "testLight", "light" );
+	IECoreScene::ShaderPtr result = new IECoreScene::Shader( "testLight", "light" );
 	result->parameters()["intensity"] = new IECore::Color3fData( parametersPlug()->getChild<Color3fPlug>( "intensity" )->getValue() );
 	result->parameters()["__areaLight"] = new IECore::BoolData( parametersPlug()->getChild<BoolPlug>( "areaLight" )->getValue() );
 

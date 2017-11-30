@@ -34,14 +34,15 @@
 //
 //////////////////////////////////////////////////////////////////////////
 
-#include "IECore/MeshPrimitive.h"
-#include "IECore/PointsPrimitive.h"
+#include "IECoreScene/MeshPrimitive.h"
+#include "IECoreScene/PointsPrimitive.h"
 
 #include "Gaffer/StringPlug.h"
 
 #include "GafferScene/MeshToPoints.h"
 
 using namespace IECore;
+using namespace IECoreScene;
 using namespace Gaffer;
 using namespace GafferScene;
 
@@ -126,7 +127,7 @@ IECore::ConstObjectPtr MeshToPoints::computeProcessedObject( const ScenePath &pa
 		return inputObject;
 	}
 
-	IECore::PointsPrimitivePtr result = new PointsPrimitive( mesh->variableSize( PrimitiveVariable::Vertex ) );
+	IECoreScene::PointsPrimitivePtr result = new PointsPrimitive( mesh->variableSize( PrimitiveVariable::Vertex ) );
 	for( PrimitiveVariableMap::const_iterator it = mesh->variables.begin(), eIt = mesh->variables.end(); it != eIt; ++it )
 	{
 		PrimitiveVariable::Interpolation interpolation = it->second.interpolation;

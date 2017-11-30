@@ -48,6 +48,7 @@
 using namespace std;
 using namespace boost;
 using namespace IECore;
+using namespace IECoreScene;
 using namespace Gaffer;
 using namespace GafferScene;
 
@@ -117,7 +118,7 @@ Gaffer::ValuePlug *Outputs::addOutput( const std::string &name )
 	return addOutput( it->first, it->second.get() );
 }
 
-Gaffer::ValuePlug *Outputs::addOutput( const std::string &name, const IECore::Display *output )
+Gaffer::ValuePlug *Outputs::addOutput( const std::string &name, const IECoreScene::Display *output )
 {
 	ValuePlugPtr outputPlug = new ValuePlug( "output1" );
 	outputPlug->setFlags( Plug::Dynamic, true );
@@ -212,7 +213,7 @@ IECore::ConstCompoundObjectPtr Outputs::computeProcessedGlobals( const Gaffer::C
 	return result;
 }
 
-void Outputs::registerOutput( const std::string &name, const IECore::Display *output )
+void Outputs::registerOutput( const std::string &name, const IECoreScene::Display *output )
 {
 	NamedOutput d( name, output->copy() );
 

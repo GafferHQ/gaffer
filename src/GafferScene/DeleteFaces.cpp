@@ -37,14 +37,15 @@
 #include "boost/format.hpp"
 #include "boost/algorithm/string.hpp"
 
-#include "IECore/MeshPrimitive.h"
-#include "IECore/MeshAlgo.h"
+#include "IECoreScene/MeshPrimitive.h"
+#include "IECoreScene/MeshAlgo.h"
 
 #include "Gaffer/StringPlug.h"
 
 #include "GafferScene/DeleteFaces.h"
 
 using namespace IECore;
+using namespace IECoreScene;
 using namespace Gaffer;
 using namespace GafferScene;
 

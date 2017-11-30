@@ -102,7 +102,7 @@ void ArnoldLight::hashLight( const Gaffer::Context *context, IECore::MurmurHash 
 IECore::ObjectVectorPtr ArnoldLight::computeLight( const Gaffer::Context *context ) const
 {
 	IECore::ObjectVectorPtr result = new IECore::ObjectVector;
-	IECore::ShaderPtr lightShader = new IECore::Shader( shaderNamePlug()->getValue(), "ai:light" );
+	IECoreScene::ShaderPtr lightShader = new IECoreScene::Shader( shaderNamePlug()->getValue(), "ai:light" );
 	for( InputPlugIterator it( parametersPlug() ); !it.done(); ++it )
 	{
 		if( const Shader *shader = (*it)->source<Plug>()->ancestor<Shader>() )
@@ -125,7 +125,7 @@ IECore::ObjectVectorPtr ArnoldLight::computeLight( const Gaffer::Context *contex
 			result->members().insert( result->members().end(), inputNetwork->members().begin(), inputNetwork->members().end() );
 			// Update endpoint of network with a handle we can refer to it with.
 			result->members().back() = result->members().back()->copy();
-			IECore::Shader *endpoint = static_cast<IECore::Shader *>( result->members().back().get() );
+			IECoreScene::Shader *endpoint = static_cast<IECoreScene::Shader *>( result->members().back().get() );
 			endpoint->parameters()["__handle"] = new IECore::StringData( (*it)->getName() );
 			// Add a parameter value linking to the input network.
 			lightShader->parameters()[(*it)->getName()] = new IECore::StringData( "link:" + (*it)->getName().string() );

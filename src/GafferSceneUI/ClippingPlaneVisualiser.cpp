@@ -34,7 +34,7 @@
 //
 //////////////////////////////////////////////////////////////////////////
 
-#include "IECore/ClippingPlane.h"
+#include "IECoreScene/ClippingPlane.h"
 
 #include "IECoreGL/CurvesPrimitive.h"
 #include "IECoreGL/Group.h"
@@ -53,7 +53,7 @@ class ClippingPlaneVisualiser : public ObjectVisualiser
 
 	public :
 
-		typedef IECore::ClippingPlane ObjectType;
+		typedef IECoreScene::ClippingPlane ObjectType;
 
 		ClippingPlaneVisualiser()
 			:	m_group( new IECoreGL::Group() )
@@ -90,7 +90,7 @@ class ClippingPlaneVisualiser : public ObjectVisualiser
 			vertsPerCurve.push_back( 2 );
 
 			IECoreGL::CurvesPrimitivePtr curves = new IECoreGL::CurvesPrimitive( IECore::CubicBasisf::linear(), false, vertsPerCurveData );
-			curves->addPrimitiveVariable( "P", IECore::PrimitiveVariable( IECore::PrimitiveVariable::Vertex, pData ) );
+			curves->addPrimitiveVariable( "P", IECoreScene::PrimitiveVariable( IECoreScene::PrimitiveVariable::Vertex, pData ) );
 			m_group->addChild( curves );
 		}
 

@@ -34,15 +34,15 @@
 //
 //////////////////////////////////////////////////////////////////////////
 
-#include "IECore/MeshPrimitive.h"
 #include "IECoreGL/CurvesPrimitive.h"
-#include "IECore/Shader.h"
 #include "IECoreGL/Group.h"
 #include "IECoreGL/ToGLMeshConverter.h"
 #include "IECoreGL/ShaderStateComponent.h"
 #include "IECoreGL/ShaderLoader.h"
 #include "IECoreGL/TextureLoader.h"
 #include "IECore/ObjectVector.h"
+#include "IECoreScene/MeshPrimitive.h"
+#include "IECoreScene/Shader.h"
 #include "IECoreGL/Renderable.h"
 
 #include "Gaffer/Metadata.h"
@@ -51,6 +51,7 @@
 
 using namespace Imath;
 using namespace IECore;
+using namespace IECoreScene;
 using namespace IECoreGL;
 using namespace GafferSceneUI;
 
@@ -115,7 +116,7 @@ void addBarndoor( IECoreGL::GroupPtr result, BarndoorLocation location, float co
 	pVec.push_back( V3f( 1, cornerRight, 0  ) );
 	pVec.push_back( V3f( -1, cornerLeft, 0  ) );
 
-	IECore::MeshPrimitivePtr mesh = new IECore::MeshPrimitive( vertsPerPoly, vertIds, "linear", p );
+	IECoreScene::MeshPrimitivePtr mesh = new IECoreScene::MeshPrimitive( vertsPerPoly, vertIds, "linear", p );
 
 	Imath::M44f trans;
 	switch( location )
@@ -183,13 +184,13 @@ IECoreGL::ConstRenderablePtr BarndoorVisualiser::visualise( const IECore::Intern
 		return result;
 	}
 
-	const IECore::Shader *filterShader = IECore::runTimeCast<const IECore::Shader>( shaderVector->members().back().get() );
+	const IECoreScene::Shader *filterShader = IECore::runTimeCast<const IECoreScene::Shader>( shaderVector->members().back().get() );
 	if( !filterShader )
 	{
 		return result;
 	}
 
-	const IECore::Shader *lightShader = IECore::runTimeCast<const IECore::Shader>( lightShaderVector->members().back().get() );
+	const IECoreScene::Shader *lightShader = IECore::runTimeCast<const IECoreScene::Shader>( lightShaderVector->members().back().get() );
 	if( !lightShader )
 	{
 		return result;

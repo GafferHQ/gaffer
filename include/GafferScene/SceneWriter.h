@@ -37,7 +37,7 @@
 #ifndef GAFFERSCENE_SCENEWRITER_H
 #define GAFFERSCENE_SCENEWRITER_H
 
-#include "IECore/SceneInterface.h"
+#include "IECoreScene/SceneInterface.h"
 
 #include "Gaffer/TypedPlug.h"
 

@@ -39,7 +39,7 @@
 
 #include "GafferUI/TextGadget.h"
 
-#include "IECore/Font.h"
+#include "IECoreScene/Font.h"
 
 namespace GafferUI
 {

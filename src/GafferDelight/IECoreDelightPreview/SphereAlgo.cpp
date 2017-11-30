@@ -34,7 +34,7 @@
 
 #include "nsi.h"
 
-#include "IECore/SpherePrimitive.h"
+#include "IECoreScene/SpherePrimitive.h"
 
 #include "GafferDelight/IECoreDelightPreview/NodeAlgo.h"
 #include "GafferDelight/IECoreDelightPreview/ParameterList.h"
@@ -42,12 +42,13 @@
 using namespace std;
 using namespace Imath;
 using namespace IECore;
+using namespace IECoreScene;
 using namespace IECoreDelight;
 
 namespace
 {
 
-bool convert( const IECore::SpherePrimitive *object, NSIContext_t context, const char *handle )
+bool convert( const IECoreScene::SpherePrimitive *object, NSIContext_t context, const char *handle )
 {
 	NSICreate( context, handle, "particles", 0, nullptr );
 

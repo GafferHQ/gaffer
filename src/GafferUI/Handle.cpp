@@ -53,6 +53,7 @@
 
 using namespace Imath;
 using namespace IECore;
+using namespace IECoreScene;
 using namespace GafferUI;
 
 //////////////////////////////////////////////////////////////////////////

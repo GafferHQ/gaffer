@@ -35,8 +35,8 @@
 //
 //////////////////////////////////////////////////////////////////////////
 
-#include "IECore/Camera.h"
-#include "IECore/Transform.h"
+#include "IECoreScene/Camera.h"
+#include "IECoreScene/Transform.h"
 
 #include "Gaffer/StringPlug.h"
 
@@ -119,7 +119,7 @@ void Camera::hashSource( const Gaffer::Context *context, IECore::MurmurHash &h )
 
 IECore::ConstObjectPtr Camera::computeSource( const Context *context ) const
 {
-	IECore::CameraPtr result = new IECore::Camera;
+	IECoreScene::CameraPtr result = new IECoreScene::Camera;
 	result->parameters()["projection"] = new IECore::StringData( projectionPlug()->getValue() );
 	result->parameters()["projection:fov"] = new IECore::FloatData( fieldOfViewPlug()->getValue() );
 	result->parameters()["clippingPlanes"] = new IECore::V2fData( clippingPlanesPlug()->getValue() );

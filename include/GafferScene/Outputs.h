@@ -38,7 +38,7 @@
 #ifndef GAFFERSCENE_OUTPUTS_H
 #define GAFFERSCENE_OUTPUTS_H
 
-#include "IECore/Display.h"
+#include "IECoreScene/Display.h"
 
 #include "GafferScene/GlobalsProcessor.h"
 
@@ -60,11 +60,11 @@ class Outputs : public GlobalsProcessor
 
 		/// Add an output previously registered with registerOutput().
 		Gaffer::ValuePlug *addOutput( const std::string &name );
-		Gaffer::ValuePlug *addOutput( const std::string &name, const IECore::Display *output );
+		Gaffer::ValuePlug *addOutput( const std::string &name, const IECoreScene::Display *output );
 
 		void affects( const Gaffer::Plug *input, AffectedPlugsContainer &outputs ) const override;
 
-		static void registerOutput( const std::string &name, const IECore::Display *output );
+		static void registerOutput( const std::string &name, const IECoreScene::Display *output );
 		static void registeredOutputs( std::vector<std::string> &names );
 
 	protected :

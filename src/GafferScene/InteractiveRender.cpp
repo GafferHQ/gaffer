@@ -40,9 +40,9 @@
 #include "tbb/task.h"
 
 #include "IECore/MessageHandler.h"
-#include "IECore/VisibleRenderable.h"
 #include "IECore/NullObject.h"
-#include "IECore/Transform.h"
+#include "IECoreScene/VisibleRenderable.h"
+#include "IECoreScene/Transform.h"
 
 #include "Gaffer/Context.h"
 #include "Gaffer/ScriptNode.h"
@@ -57,6 +57,7 @@
 using namespace std;
 using namespace Imath;
 using namespace IECore;
+using namespace IECoreScene;
 using namespace Gaffer;
 using namespace GafferScene;
 
@@ -417,9 +418,9 @@ class InteractiveRender::SceneGraph
 			ScenePlug::pathToString( Context::current()->get<vector<InternedString> >( ScenePlug::scenePathContextName ), name );
 			if( type == CameraType )
 			{
-				if( const IECore::Camera *camera = runTimeCast<const IECore::Camera>( object.get() ) )
+				if( const IECoreScene::Camera *camera = runTimeCast<const IECoreScene::Camera>( object.get() ) )
 				{
-					IECore::CameraPtr cameraCopy = camera->copy();
+					IECoreScene::CameraPtr cameraCopy = camera->copy();
 					RendererAlgo::applyCameraGlobals( cameraCopy.get(), globals );
 					m_objectInterface = renderer->camera( name, cameraCopy.get(), attributesInterface( renderer ) );
 				}
@@ -942,7 +943,7 @@ void InteractiveRender::updateDefaultCamera()
 		return;
 	}
 
-	CameraPtr defaultCamera = new IECore::Camera;
+	CameraPtr defaultCamera = new IECoreScene::Camera;
 	RendererAlgo::applyCameraGlobals( defaultCamera.get(), m_globals.get() );
 	IECoreScenePreview::Renderer::AttributesInterfacePtr defaultAttributes = m_renderer->attributes( adaptedInPlug()->attributesPlug()->defaultValue() );
 	ConstStringDataPtr name = new StringData( "gaffer:defaultCamera" );

@@ -57,8 +57,8 @@
 #include "IECore/MessageHandler.h"
 #include "IECore/SimpleTypedData.h"
 #include "IECore/VectorTypedData.h"
-#include "IECore/Shader.h"
 #include "IECore/SplineData.h"
+#include "IECoreScene/Shader.h"
 
 #include "IECoreImage/OpenImageIOAlgo.h"
 
@@ -69,6 +69,7 @@ using namespace std;
 using namespace boost;
 using namespace Imath;
 using namespace IECore;
+using namespace IECoreScene;
 using namespace OSL;
 using namespace GafferOSL;
 

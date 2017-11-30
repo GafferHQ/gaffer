@@ -38,7 +38,7 @@
 #include "boost/bind.hpp"
 
 #include "IECore/LRUCache.h"
-#include "IECore/Renderable.h"
+#include "IECoreScene/Renderable.h"
 
 #include "Gaffer/Context.h"
 #include "Gaffer/StringPlug.h"
@@ -47,6 +47,7 @@
 
 using namespace Imath;
 using namespace IECore;
+using namespace IECoreScene;
 using namespace IECoreAlembic;
 using namespace Gaffer;
 using namespace GafferScene;
@@ -227,7 +228,7 @@ IECore::ConstObjectPtr AlembicSource::computeObject( const ScenePath &path, cons
 	if( AlembicInputPtr i = inputForPath( path ) )
 	{
 		/// \todo Maybe template objectAtTime and then we don't need the cast.
-		ConstRenderablePtr renderable = runTimeCast<Renderable>( i->objectAtTime( context->getTime(), IECore::RenderableTypeId ) );
+		ConstRenderablePtr renderable = runTimeCast<Renderable>( i->objectAtTime( context->getTime(), IECoreScene::Renderable::staticTypeId() ) );
 		if( renderable )
 		{
 			result = renderable;

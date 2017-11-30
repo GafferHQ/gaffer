@@ -40,6 +40,7 @@
 
 using namespace Imath;
 using namespace IECore;
+using namespace IECoreScene;
 using namespace IECoreScenePreview;
 
 const unsigned int Geometry::m_ioVersion = 0;

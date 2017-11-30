@@ -40,8 +40,8 @@
 #include "OpenEXR/ImathVecAlgo.h"
 
 #include "IECore/SearchPath.h"
-#include "IECore/Font.h"
-#include "IECore/MeshPrimitive.h"
+#include "IECoreScene/Font.h"
+#include "IECoreScene/MeshPrimitive.h"
 
 #include "IECoreGL/GL.h"
 #include "IECoreGL/Font.h"
@@ -63,6 +63,7 @@
 
 using namespace GafferUI;
 using namespace IECore;
+using namespace IECoreScene;
 using namespace IECoreGL;
 using namespace Imath;
 using namespace std;
@@ -99,7 +100,7 @@ IECoreGL::GroupPtr line( const V3f &p0, const V3f &p1 )
 	V3fVectorDataPtr verts = new V3fVectorData();
 	verts->writable().push_back( p0 );
 	verts->writable().push_back( p1 );
-	curves->addPrimitiveVariable( "P", IECore::PrimitiveVariable( IECore::PrimitiveVariable::Vertex, verts ) );
+	curves->addPrimitiveVariable( "P", IECoreScene::PrimitiveVariable( IECoreScene::PrimitiveVariable::Vertex, verts ) );
 
 	IECoreGL::GroupPtr result = new IECoreGL::Group();
 	result->addChild( curves );
@@ -150,7 +151,7 @@ IECoreGL::MeshPrimitivePtr cylinder()
 		vertexIds.push_back( ii * 2 );
 	}
 
-	IECore::MeshPrimitivePtr mesh = new IECore::MeshPrimitive( verticesPerFaceData, vertexIdsData, "linear", pData );
+	IECoreScene::MeshPrimitivePtr mesh = new IECoreScene::MeshPrimitive( verticesPerFaceData, vertexIdsData, "linear", pData );
 	IECoreGL::ToGLMeshConverterPtr converter = new ToGLMeshConverter( mesh );
 	result = runTimeCast<IECoreGL::MeshPrimitive>( converter->convert() );
 
@@ -206,7 +207,7 @@ IECoreGL::MeshPrimitivePtr torus()
 		}
 	}
 
-	IECore::MeshPrimitivePtr mesh = new IECore::MeshPrimitive( verticesPerFaceData, vertexIdsData, "linear", pData );
+	IECoreScene::MeshPrimitivePtr mesh = new IECoreScene::MeshPrimitive( verticesPerFaceData, vertexIdsData, "linear", pData );
 	IECoreGL::ToGLMeshConverterPtr converter = new ToGLMeshConverter( mesh );
 	result = runTimeCast<IECoreGL::MeshPrimitive>( converter->convert() );
 
@@ -247,7 +248,7 @@ IECoreGL::MeshPrimitivePtr cone()
 		vertexIds.push_back( i == numDivisions - 1 ? 1 : i + 2 );
 	}
 
-	IECore::MeshPrimitivePtr mesh = new IECore::MeshPrimitive( verticesPerFaceData, vertexIdsData, "linear", pData );
+	IECoreScene::MeshPrimitivePtr mesh = new IECoreScene::MeshPrimitive( verticesPerFaceData, vertexIdsData, "linear", pData );
 	IECoreGL::ToGLMeshConverterPtr converter = new ToGLMeshConverter( mesh );
 	result = runTimeCast<IECoreGL::MeshPrimitive>( converter->convert() );
 
@@ -262,7 +263,7 @@ IECoreGL::MeshPrimitivePtr cube()
 		return result;
 	}
 
-	IECore::MeshPrimitivePtr mesh = IECore::MeshPrimitive::createBox(
+	IECoreScene::MeshPrimitivePtr mesh = IECoreScene::MeshPrimitive::createBox(
 		Box3f( V3f( -1 ), V3f( 1 ) )
 	);
 
@@ -515,7 +516,7 @@ void StandardStyle::renderText( TextType textType, const std::string &text, Stat
 void StandardStyle::renderWrappedText( TextType textType, const std::string &text, const Imath::Box2f &bound, State state ) const
 {
 	IECoreGL::Font *glFont = m_fonts[textType].get();
-	const IECore::Font *coreFont = glFont->coreFont();
+	const IECoreScene::Font *coreFont = glFont->coreFont();
 
 	const float spaceWidth = coreFont->bound().size().x * 0.25;
 	const float descent = coreFont->bound().min.y;

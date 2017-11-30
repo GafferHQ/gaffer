@@ -38,7 +38,7 @@
 #ifndef GAFFERSCENE_PRIMITIVEVARIABLEPROCESSOR_H
 #define GAFFERSCENE_PRIMITIVEVARIABLEPROCESSOR_H
 
-#include "IECore/Primitive.h"
+#include "IECoreScene/Primitive.h"
 
 #include "GafferScene/SceneElementProcessor.h"
 
@@ -81,7 +81,7 @@ class PrimitiveVariableProcessor : public SceneElementProcessor
 		IECore::ConstObjectPtr computeProcessedObject( const ScenePath &path, const Gaffer::Context *context, IECore::ConstObjectPtr inputObject ) const override;
 
 		/// Must be implemented by subclasses to process the primitive variable in place.
-		virtual void processPrimitiveVariable( const ScenePath &path, const Gaffer::Context *context, IECore::ConstPrimitivePtr inputGeometry, IECore::PrimitiveVariable &inputVariable ) const = 0;
+		virtual void processPrimitiveVariable( const ScenePath &path, const Gaffer::Context *context, IECoreScene::ConstPrimitivePtr inputGeometry, IECoreScene::PrimitiveVariable &inputVariable ) const = 0;
 
 	private :
 

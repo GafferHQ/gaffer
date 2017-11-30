@@ -37,7 +37,7 @@
 
 #include "ai.h"
 
-#include "IECore/ExternalProcedural.h"
+#include "IECoreScene/ExternalProcedural.h"
 
 namespace IECoreArnoldPreview
 {
@@ -45,7 +45,7 @@ namespace IECoreArnoldPreview
 namespace ProceduralAlgo
 {
 
-AtNode *convert( const IECore::ExternalProcedural *procedural, const std::string &nodeName, const AtNode *parentNode );
+AtNode *convert( const IECoreScene::ExternalProcedural *procedural, const std::string &nodeName, const AtNode *parentNode );
 
 } // namespace ProceduralAlgo
 

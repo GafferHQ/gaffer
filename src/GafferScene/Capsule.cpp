@@ -43,6 +43,7 @@
 #include "GafferScene/RendererAlgo.h"
 
 using namespace IECore;
+using namespace IECoreScene;
 using namespace Gaffer;
 using namespace GafferScene;
 

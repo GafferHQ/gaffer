@@ -34,9 +34,9 @@
 //
 //////////////////////////////////////////////////////////////////////////
 
-#include "IECore/SpherePrimitive.h"
-#include "IECore/DiskPrimitive.h"
 #include "IECore/NullObject.h"
+#include "IECoreScene/SpherePrimitive.h"
+#include "IECoreScene/DiskPrimitive.h"
 
 #include "Gaffer/StringPlug.h"
 
@@ -48,6 +48,7 @@
 
 using namespace Imath;
 using namespace IECore;
+using namespace IECoreScene;
 using namespace Gaffer;
 using namespace GafferScene;
 using namespace GafferOSL;

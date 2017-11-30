@@ -45,10 +45,10 @@
 
 #include "IECore/MessageHandler.h"
 #include "IECore/ObjectVector.h"
-#include "IECore/Shader.h"
 #include "IECore/SimpleTypedData.h"
 #include "IECore/SearchPath.h"
 #include "IECore/LRUCache.h"
+#include "IECoreScene/Shader.h"
 
 #include "Gaffer/StringAlgo.h"
 
@@ -60,6 +60,7 @@
 using namespace std;
 using namespace Imath;
 using namespace IECore;
+using namespace IECoreScene;
 using namespace IECoreDelight;
 
 //////////////////////////////////////////////////////////////////////////
@@ -1109,7 +1110,7 @@ class DelightRenderer final : public IECoreScenePreview::Renderer
 			return m_attributesCache->get( attributes );
 		}
 
-		ObjectInterfacePtr camera( const std::string &name, const IECore::Camera *camera, const AttributesInterface *attributes ) override
+		ObjectInterfacePtr camera( const std::string &name, const IECoreScene::Camera *camera, const AttributesInterface *attributes ) override
 		{
 			const string objectHandle = "camera:" + name;
 			if( !NodeAlgo::convert( camera, m_context, objectHandle.c_str() ) )
