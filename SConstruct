@@ -833,21 +833,6 @@ libraries = {
 
 		"classStubs" : [
 
-			# curves
-			( "CurveExtrudeOp", "ops/curves/extrude" ),
-			( "CurveLineariser", "ops/curves/linearise" ),
-			( "CurvesMergeOp", "ops/curves/merge" ),
-			( "CurveTangentsOp", "ops/curves/tangents" ),
-
-			# meshes
-			( "TriangulateOp", "ops/mesh/triangulate" ),
-			( "MeshMergeOp", "ops/mesh/merge" ),
-			( "MeshNormalsOp", "ops/mesh/normals" ),
-
-			# primitives
-			( "TransformOp", "ops/primitive/transform" ),
-			( "RenamePrimitiveVariables", "ops/primitive/renameVariables" ),
-
 			# files
 			( "SequenceLsOp", "ops/files/sequenceLs" ),
 			( "SequenceCpOp", "ops/files/sequenceCopy" ),
@@ -856,7 +841,14 @@ libraries = {
 			( "SequenceRenumberOp", "ops/files/sequenceRenumber" ),
 			( "SequenceConvertOp", "ops/files/sequenceConvert" ),
 
-			# procedurals
+		],
+
+	},
+
+	"IECoreScene" : {
+
+		"classStubs" : [
+
 			( "ReadProcedural", "procedurals/read" ),
 
 		],
