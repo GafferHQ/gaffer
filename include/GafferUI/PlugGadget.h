@@ -65,7 +65,7 @@ class PlugGadget : public ContainerGadget
 		IE_CORE_DECLARERUNTIMETYPEDEXTENSION( GafferUI::PlugGadget, PlugGadgetTypeId, Gadget );
 
 		void setPlug( Gaffer::PlugPtr plug );
-		template<typename T>
+		template<typename T=Gaffer::Plug>
 		T *getPlug();
 
 		void setContext( Gaffer::ContextPtr context );
