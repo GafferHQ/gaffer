@@ -42,7 +42,6 @@
 
 #include "IECore/MessageHandler.h"
 #include "IECore/LRUCache.h"
-#include "IECoreScene/AttributeBlock.h"
 
 #include "IECoreImage/OpenImageIOAlgo.h"
 

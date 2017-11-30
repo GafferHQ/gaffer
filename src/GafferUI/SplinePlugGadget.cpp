@@ -43,7 +43,6 @@
 
 #include "IECore/SimpleTypedData.h"
 #include "IECoreScene/CurvesPrimitive.h"
-#include "IECoreScene/AttributeBlock.h"
 
 #include "boost/bind.hpp"
 #include "boost/bind/placeholders.hpp"
