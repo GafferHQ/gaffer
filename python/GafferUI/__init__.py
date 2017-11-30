@@ -275,6 +275,7 @@ from SplinePlugValueWidget import SplinePlugValueWidget
 from RampPlugValueWidget import RampPlugValueWidget
 from NodeFinderDialogue import NodeFinderDialogue
 from ConnectionPlugValueWidget import ConnectionPlugValueWidget
+from ButtonPlugValueWidget import ButtonPlugValueWidget
 import ViewUI
 from Playback import Playback
 from UIEditor import UIEditor
