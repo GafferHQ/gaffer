@@ -702,6 +702,23 @@ void ScriptNode::save() const
 	const_cast<BoolPlug *>( unsavedChangesPlug() )->setValue( false );
 }
 
+bool ScriptNode::importFile( const std::string &fileName, Node *parent, bool continueOnError )
+{
+	DirtyPropagationScope dirtyScope;
+
+	ScriptNodePtr script = new ScriptNode();
+	script->fileNamePlug()->setValue( fileName );
+	bool result = script->load( continueOnError );
+
+	StandardSetPtr nodeSet = new StandardSet();
+	nodeSet->add( NodeIterator( script.get() ), NodeIterator( script->children().end(), script->children().end() ) );
+	const std::string nodeSerialisation = script->serialise( script.get(), nodeSet.get() );
+
+	result |= execute( nodeSerialisation, parent, continueOnError );
+
+	return result;
+}
+
 std::string ScriptNode::serialiseInternal( const Node *parent, const Set *filter ) const
 {
 	if( !g_serialiseFunction )
