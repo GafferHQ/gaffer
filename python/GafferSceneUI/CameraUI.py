@@ -100,11 +100,11 @@ Gaffer.Metadata.registerNode(
 # NodeEditor tool menu
 ##########################################################################
 
-def __copyCamera( node, camera ) :
+def __copyCamera( node, transform ) :
 
 	with Gaffer.UndoScope( node.scriptNode() ) :
 
-		s, h, r, t = camera.getTransform().transform().extractSHRT()
+		s, h, r, t = transform.extractSHRT()
 		node["transform"]["translate"].setValue( t )
 		node["transform"]["rotate"].setValue( r * 180.0 / math.pi )
 		node["transform"]["scale"].setValue( s )
@@ -128,7 +128,7 @@ def __nodeEditorToolMenu( nodeEditor, node, menuDefinition ) :
 
 			"/Copy From Viewer" + ( "/" + viewer.getTitle() if len( viewers ) > 1 else "" ),
 			{
-				"command" : functools.partial( __copyCamera, node, viewer.view().viewportGadget().getCamera() ),
+				"command" : functools.partial( __copyCamera, node, viewer.view().viewportGadget().getCameraTransform() ),
 				"active" : not Gaffer.MetadataAlgo.readOnly( node["transform"] ),
 			}
 

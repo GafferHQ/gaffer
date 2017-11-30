@@ -39,7 +39,6 @@
 #define GAFFERUI_VIEWPORTGADGET_H
 
 #include "IECore/Camera.h"
-#include "IECore/CameraController.h"
 
 #include "IECoreGL/Selector.h"
 
@@ -92,8 +91,11 @@ class ViewportGadget : public Gadget
 		const IECore::Camera *getCamera() const;
 		/// A copy is taken.
 		void setCamera( const IECore::Camera *camera );
+		const Imath::M44f &getCameraTransform() const;
+		void setCameraTransform( const Imath::M44f &transform );
 		/// A signal emitted when the camera is changed, either by
-		/// a setCamera() call or through user interaction.
+		/// a setCamera() or setCameraTransform() call, or through
+		/// user interaction.
 		UnarySignal &cameraChangedSignal();
 
 		/// If the camera is editable, the user can move it around
@@ -218,7 +220,8 @@ class ViewportGadget : public Gadget
 		template<typename Event, typename Signal>
 		typename Signal::result_type dispatchEvent( GadgetPtr gadget, Signal &(Gadget::*signalGetter)(), const Event &event );
 
-		IECore::CameraController m_cameraController;
+		class CameraController;
+		std::unique_ptr<CameraController> m_cameraController;
 		bool m_cameraInMotion;
 		bool m_cameraEditable;
 

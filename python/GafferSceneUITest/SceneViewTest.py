@@ -228,13 +228,11 @@ class SceneViewTest( GafferUITest.TestCase ) :
 
 		def setViewCameraTransform( matrix ) :
 
-			camera = view.viewportGadget().getCamera()
-			camera.getTransform().matrix = matrix
-			view.viewportGadget().setCamera( camera )
+			view.viewportGadget().setCameraTransform( matrix )
 
 		def getViewCameraTransform() :
 
-			return view.viewportGadget().getCamera().getTransform().transform()
+			return view.viewportGadget().getCameraTransform()
 
 		# Simulate the user translating the camera.
 		setViewCameraTransform( IECore.M44f.createTranslated( IECore.V3f( 100, 0, 0 ) ) )

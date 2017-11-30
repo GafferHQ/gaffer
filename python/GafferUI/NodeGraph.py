@@ -407,9 +407,10 @@ class NodeGraph( GafferUI.EditorWidget ) :
 
 	def __currentFrame( self ) :
 
-		camera = self.graphGadgetWidget().getViewportGadget().getCamera()
+		viewportGadget = self.graphGadgetWidget().getViewportGadget()
+		camera = viewportGadget.getCamera()
 		frame = camera.parameters()["screenWindow"].value
-		translation = camera.getTransform().matrix.translation()
+		translation = viewportGadget.getCameraTransform().translation()
 		frame.min += IECore.V2f( translation.x, translation.y )
 		frame.max += IECore.V2f( translation.x, translation.y )
 

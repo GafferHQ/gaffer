@@ -225,12 +225,6 @@ IECore::ConstObjectPtr FreezeTransform::computeObject( const ScenePath &path, co
 		const Primitive *inputPrimitive = runTimeCast<const Primitive>( inputObject.get() );
 		if( !inputPrimitive )
 		{
-			/// \todo It's not entirely clear what to do here. We'd end up here for
-			/// any non-primitive objects, which to date include cameras and lights, and
-			/// will most likely include coordinate systems in the future. In Cortex, cameras
-			/// and coordinate systems actually have a setTransform() method, so in theory we
-			/// could use that to bake the transform into the object - maybe we could do the
-			/// same for lights?
 			return inputObject;
 		}
 

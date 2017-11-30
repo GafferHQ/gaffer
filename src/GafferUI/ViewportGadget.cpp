@@ -41,9 +41,13 @@
 #include "boost/bind/placeholders.hpp"
 
 #include "OpenEXR/ImathBoxAlgo.h"
+#include "OpenEXR/ImathMatrixAlgo.h"
 
-#include "IECore/MatrixTransform.h"
+#include "IECore/Transform.h"
 #include "IECore/NullObject.h"
+#include "IECore/SimpleTypedData.h"
+#include "IECore/AngleConversion.h"
+#include "IECore/MessageHandler.h"
 
 #include "IECoreGL/ToGLCameraConverter.h"
 #include "IECoreGL/PerspectiveCamera.h"
@@ -58,11 +62,422 @@ using namespace IECore;
 using namespace IECoreGL;
 using namespace GafferUI;
 
+//////////////////////////////////////////////////////////////////////////
+// CameraController
+//////////////////////////////////////////////////////////////////////////
+
+class ViewportGadget::CameraController : public boost::noncopyable
+{
+
+	public :
+
+		CameraController( IECore::CameraPtr camera )
+		{
+			setCamera( camera );
+		}
+
+		void setCamera( IECore::CameraPtr camera )
+		{
+			m_camera = camera;
+			m_camera->addStandardParameters(); // subsequent casts are safe because of this
+			m_resolution = boost::static_pointer_cast<V2iData>( m_camera->parameters()["resolution"] );
+			m_screenWindow = boost::static_pointer_cast<Box2fData>( m_camera->parameters()["screenWindow"] );
+			m_clippingPlanes = boost::static_pointer_cast<V2fData>( m_camera->parameters()["clippingPlanes"] );
+			m_projection = boost::static_pointer_cast<StringData>( m_camera->parameters()["projection"] );
+			if( m_projection->readable()=="perspective" )
+			{
+				m_fov = boost::static_pointer_cast<FloatData>( m_camera->parameters()["projection:fov"] );
+			}
+			else
+			{
+				m_fov = nullptr;
+			}
+
+			m_centreOfInterest = 1;
+		}
+
+		IECore::Camera *getCamera()
+		{
+			return m_camera.get();
+		}
+
+		const IECore::Camera *getCamera() const
+		{
+			return m_camera.get();
+		}
+
+		void setTransform( const M44f &transform )
+		{
+			m_transform = transform;
+		}
+
+		const M44f &getTransform() const
+		{
+			return m_transform;
+		}
+
+		/// Positive.
+		void setCentreOfInterest( float centreOfInterest )
+		{
+			m_centreOfInterest = centreOfInterest;
+		}
+
+		float getCentreOfInterest()
+		{
+			return m_centreOfInterest;
+		}
+
+		enum ScreenWindowAdjustment
+		{
+			/// Crop/extend the screen window to accommodate
+			/// the new resolution without scaling the content.
+			CropScreenWindow,
+			/// Preserve the horizontal framing and change the
+			/// vertical framing to maintain aspect ratio.
+			ScaleScreenWindow
+		};
+
+		/// Changes the camera resolution, modifying the screen window
+		/// in a manner determined by the adjustment argument.
+		void setResolution( const Imath::V2i &resolution, ScreenWindowAdjustment adjustment )
+		{
+			const V2i oldResolution = m_resolution->readable();
+			const Box2f oldScreenWindow = m_screenWindow->readable();
+
+			m_resolution->writable() = resolution;
+
+			Box2f newScreenWindow;
+			if( adjustment == ScaleScreenWindow )
+			{
+				const float oldAspect = (float)oldResolution.x/(float)oldResolution.y;
+				const float badAspect = (float)resolution.x/(float)resolution.y;
+				const float yScale = oldAspect / badAspect;
+
+				newScreenWindow = oldScreenWindow;
+				newScreenWindow.min.y *= yScale;
+				newScreenWindow.max.y *= yScale;
+			}
+			else
+			{
+				const V2f screenWindowCenter = oldScreenWindow.center();
+				const V2f scale = V2f( resolution ) / V2f( oldResolution );
+				newScreenWindow.min = screenWindowCenter + (oldScreenWindow.min - screenWindowCenter) * scale;
+				newScreenWindow.max = screenWindowCenter + (oldScreenWindow.max - screenWindowCenter) * scale;
+			}
+
+			m_screenWindow->writable() = newScreenWindow;
+		}
+
+		const Imath::V2i &getResolution() const
+		{
+			return m_resolution->readable();
+		}
+
+		/// Moves the camera to frame the specified box, keeping the
+		/// current viewing direction unchanged.
+		void frame( const Imath::Box3f &box )
+		{
+			V3f z( 0, 0, -1 );
+			V3f y( 0, 1, 0 );
+			M44f t = m_transform;
+			t.multDirMatrix( z, z );
+			t.multDirMatrix( y, y );
+			frame( box, z, y );
+		}
+
+		/// Moves the camera to frame the specified box, viewing it from the
+		/// specified direction, and with the specified up vector.
+		void frame( const Imath::Box3f &box, const Imath::V3f &viewDirection,
+			const Imath::V3f &upVector = Imath::V3f( 0, 1, 0 ) )
+		{
+			// make a matrix to centre the camera on the box, with the appropriate view direction
+			M44f cameraMatrix = rotationMatrixWithUpDir( V3f( 0, 0, -1 ), viewDirection, upVector );
+			M44f translationMatrix;
+			translationMatrix.translate( box.center() );
+			cameraMatrix *= translationMatrix;
+
+			// translate the camera back until the box is completely visible
+			M44f inverseCameraMatrix = cameraMatrix.inverse();
+			Box3f cBox = transform( box, inverseCameraMatrix );
+
+			Box2f screenWindow = m_screenWindow->readable();
+			if( m_projection->readable()=="perspective" )
+			{
+				// perspective. leave the field of view and screen window as is and translate
+				// back till the box is wholly visible. this currently assumes the screen window
+				// is centred about the camera axis.
+				float z0 = cBox.size().x / screenWindow.size().x;
+				float z1 = cBox.size().y / screenWindow.size().y;
+
+				m_centreOfInterest = std::max( z0, z1 ) / tan( M_PI * m_fov->readable() / 360.0 ) + cBox.max.z +
+					m_clippingPlanes->readable()[0];
+
+				cameraMatrix.translate( V3f( 0.0f, 0.0f, m_centreOfInterest ) );
+			}
+			else
+			{
+				// orthographic. translate to front of box and set screen window
+				// to frame the box, maintaining the aspect ratio of the screen window.
+				m_centreOfInterest = cBox.max.z + m_clippingPlanes->readable()[0] + 0.1; // 0.1 is a fudge factor
+				cameraMatrix.translate( V3f( 0.0f, 0.0f, m_centreOfInterest ) );
+
+				float xScale = cBox.size().x / screenWindow.size().x;
+				float yScale = cBox.size().y / screenWindow.size().y;
+				float scale = std::max( xScale, yScale );
+
+				V2f newSize = screenWindow.size() * scale;
+				screenWindow.min.x = cBox.center().x - newSize.x / 2.0f;
+				screenWindow.min.y = cBox.center().y - newSize.y / 2.0f;
+				screenWindow.max.x = cBox.center().x + newSize.x / 2.0f;
+				screenWindow.max.y = cBox.center().y + newSize.y / 2.0f;
+			}
+
+			m_transform = cameraMatrix;
+			m_screenWindow->writable() = screenWindow;
+
+		}
+
+		/// Computes the points on the near and far clipping planes that correspond
+		/// with the specified raster position. Points are computed in world space.
+		void unproject( const Imath::V2f rasterPosition, Imath::V3f &near, Imath::V3f &far ) const
+		{
+			V2f ndc = V2f( rasterPosition ) / m_resolution->readable();
+			const Box2f &screenWindow = m_screenWindow->readable();
+			V2f screen(
+				lerp( screenWindow.min.x, screenWindow.max.x, ndc.x ),
+				lerp( screenWindow.max.y, screenWindow.min.y, ndc.y )
+			);
+
+			const V2f &clippingPlanes = m_clippingPlanes->readable();
+			if( m_projection->readable()=="perspective" )
+			{
+				float fov = m_fov->readable();
+				float d = tan( degreesToRadians( fov / 2.0f ) ); // camera x coordinate at screen window x==1
+				V3f camera( screen.x * d, screen.y * d, -1.0f );
+				near = camera * clippingPlanes[0];
+				far = camera * clippingPlanes[1];
+			}
+			else
+			{
+				near = V3f( screen.x, screen.y, -clippingPlanes[0] );
+				far = V3f( screen.x, screen.y, -clippingPlanes[1] );
+			}
+
+			near = near * m_transform;
+			far = far * m_transform;
+		}
+
+		/// Projects the point in world space into a raster space position.
+		Imath::V2f project( const Imath::V3f &worldPosition ) const
+		{
+			M44f inverseCameraMatrix = m_transform.inverse();
+			V3f cameraPosition = worldPosition * inverseCameraMatrix;
+
+			const V2i &resolution = m_resolution->readable();
+			const Box2f &screenWindow = m_screenWindow->readable();
+			if( m_projection->readable() == "perspective" )
+			{
+				V3f screenPosition = cameraPosition / cameraPosition.z;
+				float fov = m_fov->readable();
+				float d = tan( degreesToRadians( fov / 2.0f ) ); // camera x coordinate at screen window x==1
+				screenPosition /= d;
+				V2f ndcPosition(
+					lerpfactor( screenPosition.x, screenWindow.max.x, screenWindow.min.x ),
+					lerpfactor( screenPosition.y, screenWindow.min.y, screenWindow.max.y )
+				);
+				return V2f(
+					ndcPosition.x * resolution.x,
+					ndcPosition.y * resolution.y
+				);
+			}
+			else
+			{
+				V2f ndcPosition(
+					lerpfactor( cameraPosition.x, screenWindow.min.x, screenWindow.max.x ),
+					lerpfactor( cameraPosition.y, screenWindow.max.y, screenWindow.min.y )
+				);
+				return V2f(
+					ndcPosition.x * resolution.x,
+					ndcPosition.y * resolution.y
+				);
+			}
+		}
+
+		/// Motion
+		/// ======
+		///
+		/// These functions facilitate the implementation of maya style
+		/// camera movement controls within a UI. All coordinates passed
+		/// are mouse coordinates in raster space (0,0 at top left).
+
+		enum MotionType
+		{
+			None,
+			Track,
+			Tumble,
+			Dolly
+		};
+
+		/// Starts a motion of the specified type.
+		void motionStart( MotionType motion, const Imath::V2f &startPosition )
+		{
+			m_motionType = motion;
+			m_motionStart = startPosition;
+			m_motionMatrix = m_transform;
+			m_motionScreenWindow = m_screenWindow->readable();
+			m_motionCentreOfInterest = m_centreOfInterest;
+		}
+
+		/// Updates the camera position based on a changed mouse position. Can only
+		/// be called after motionStart() and before motionEnd().
+		void motionUpdate( const Imath::V2f &newPosition )
+		{
+			switch( m_motionType )
+			{
+				case Track :
+					track( newPosition );
+					break;
+				case Tumble :
+					tumble( newPosition );
+					break;
+				case Dolly :
+					dolly( newPosition );
+					break;
+				default :
+					throw Exception( "CameraController not in motion." );
+			}
+		}
+
+		/// End the current motion, ready to call motionStart() again if required.
+		void motionEnd( const Imath::V2f &endPosition )
+		{
+			switch( m_motionType )
+			{
+				case Track :
+					track( endPosition );
+					break;
+				case Tumble :
+					tumble( endPosition );
+					break;
+				case Dolly :
+					dolly( endPosition );
+					break;
+				default :
+					break;
+			}
+			m_motionType = None;
+		}
+
+	private:
+
+		void track( const Imath::V2f &p )
+		{
+			V2i resolution = m_resolution->readable();
+			Box2f screenWindow = m_screenWindow->readable();
+
+			V2f d = p - m_motionStart;
+			V3f translate( 0.0f );
+			translate.x = -screenWindow.size().x * d.x/(float)resolution.x;
+			translate.y = screenWindow.size().y * d.y/(float)resolution.y;
+			if( m_projection->readable()=="perspective" && m_fov )
+			{
+				translate *= tan( M_PI * m_fov->readable() / 360.0f ) * (float)m_centreOfInterest;
+			}
+			M44f t = m_motionMatrix;
+			t.translate( translate );
+			m_transform = t;
+		}
+
+		void tumble( const Imath::V2f &p )
+		{
+			V2f d = p - m_motionStart;
+
+			V3f centreOfInterestInWorld = V3f( 0, 0, -m_centreOfInterest ) * m_motionMatrix;
+			V3f xAxisInWorld = V3f( 1, 0, 0 );
+			m_motionMatrix.multDirMatrix( xAxisInWorld, xAxisInWorld );
+			xAxisInWorld.normalize();
+
+			M44f t;
+			t.translate( centreOfInterestInWorld );
+
+				t.rotate( V3f( 0, -d.x / 100.0f, 0 ) );
+
+				M44f xRotate;
+				xRotate.setAxisAngle( xAxisInWorld, -d.y / 100.0f );
+
+				t = xRotate * t;
+
+			t.translate( -centreOfInterestInWorld );
+
+			m_transform = m_motionMatrix * t;
+		}
+
+		void dolly( const Imath::V2f &p )
+		{
+			V2i resolution = m_resolution->readable();
+			V2f dv = V2f( (p - m_motionStart) ) / resolution;
+			float d = dv.x - dv.y;
+
+			if( m_projection->readable()=="perspective" )
+			{
+				// perspective
+				m_centreOfInterest = m_motionCentreOfInterest * expf( -1.9f * d );
+
+				M44f t = m_motionMatrix;
+				t.translate( V3f( 0, 0, m_centreOfInterest - m_motionCentreOfInterest ) );
+
+				m_transform = t;
+			}
+			else
+			{
+				// orthographic
+				Box2f screenWindow = m_motionScreenWindow;
+
+				V2f centreNDC = V2f( m_motionStart ) / resolution;
+				V2f centre(
+					lerp( screenWindow.min.x, screenWindow.max.x, centreNDC.x ),
+					lerp( screenWindow.max.y, screenWindow.min.y, centreNDC.y )
+				);
+
+				float newWidth = m_motionScreenWindow.size().x * expf( -1.9f * d );
+				newWidth = std::max( newWidth, 0.01f );
+
+				float scale = newWidth / screenWindow.size().x;
+
+				screenWindow.min = (screenWindow.min - centre) * scale + centre;
+				screenWindow.max = (screenWindow.max - centre) * scale + centre;
+				m_screenWindow->writable() = screenWindow;
+			}
+		}
+
+		// Parts of the camera we manipulate
+		IECore::CameraPtr m_camera;
+		V2iDataPtr m_resolution;
+		Box2fDataPtr m_screenWindow;
+		ConstStringDataPtr m_projection;
+		ConstFloatDataPtr m_fov;
+		ConstV2fDataPtr m_clippingPlanes;
+		float m_centreOfInterest;
+		M44f m_transform;
+
+		// Motion state
+		MotionType m_motionType;
+		Imath::V2f m_motionStart;
+		Imath::M44f m_motionMatrix;
+		float m_motionCentreOfInterest;
+		Imath::Box2f m_motionScreenWindow;
+
+};
+
+//////////////////////////////////////////////////////////////////////////
+// ViewportGadget
+//////////////////////////////////////////////////////////////////////////
+
 IE_CORE_DEFINERUNTIMETYPED( ViewportGadget );
 
 ViewportGadget::ViewportGadget( GadgetPtr primaryChild )
 	: Gadget(),
-	  m_cameraController( new IECore::Camera ),
+	  m_cameraController( new CameraController( new IECore::Camera ) ),
 	  m_cameraInMotion( false ),
 	  m_cameraEditable( true ),
 	  m_dragTracking( false )
@@ -154,12 +569,12 @@ const Gadget *ViewportGadget::getPrimaryChild() const
 
 const Imath::V2i &ViewportGadget::getViewport() const
 {
-	return m_cameraController.getResolution();
+	return m_cameraController->getResolution();
 }
 
 void ViewportGadget::setViewport( const Imath::V2i &viewport )
 {
-	if( viewport == m_cameraController.getResolution() )
+	if( viewport == m_cameraController->getResolution() )
 	{
 		return;
 	}
@@ -173,7 +588,7 @@ void ViewportGadget::setViewport( const Imath::V2i &viewport )
 		}
 	}
 
-	m_cameraController.setResolution( viewport, adjustment );
+	m_cameraController->setResolution( viewport, adjustment );
 
 	m_viewportChangedSignal( this );
 }
@@ -185,21 +600,36 @@ ViewportGadget::UnarySignal &ViewportGadget::viewportChangedSignal()
 
 const IECore::Camera *ViewportGadget::getCamera() const
 {
-	return const_cast<CameraController &>( m_cameraController ).getCamera().get();
+	return m_cameraController->getCamera();
 }
 
 void ViewportGadget::setCamera( const IECore::Camera *camera )
 {
-	if( m_cameraController.getCamera()->isEqualTo( camera ) )
+	if( m_cameraController->getCamera()->isEqualTo( camera ) )
 	{
 		return;
 	}
 	// Remember the viewport size
 	const V2i viewport = getViewport();
 	// Because the incoming camera resolution might not be right
-	m_cameraController.setCamera( camera->copy() );
+	m_cameraController->setCamera( camera->copy() );
 	// So we must reset the viewport to update the camera
 	setViewport( viewport );
+	m_cameraChangedSignal( this );
+}
+
+const Imath::M44f &ViewportGadget::getCameraTransform() const
+{
+	return m_cameraController->getTransform();
+}
+
+void ViewportGadget::setCameraTransform( const Imath::M44f &transform )
+{
+	if( transform == getCameraTransform() )
+	{
+		return;
+	}
+	m_cameraController->setTransform( transform );
 	m_cameraChangedSignal( this );
 }
 
@@ -220,7 +650,7 @@ void ViewportGadget::setCameraEditable( bool editable )
 
 void ViewportGadget::frame( const Imath::Box3f &box )
 {
-	m_cameraController.frame( box );
+	m_cameraController->frame( box );
 	m_cameraChangedSignal( this );
 	requestRender();
 }
@@ -228,7 +658,7 @@ void ViewportGadget::frame( const Imath::Box3f &box )
 void ViewportGadget::frame( const Imath::Box3f &box, const Imath::V3f &viewDirection,
 	const Imath::V3f &upVector )
 {
-	m_cameraController.frame( box, viewDirection, upVector );
+	m_cameraController->frame( box, viewDirection, upVector );
 	m_cameraChangedSignal( this );
 	requestRender();
 }
@@ -272,8 +702,7 @@ void ViewportGadget::gadgetsAt( const Imath::V2f &rasterPosition, std::vector<Ga
 IECore::LineSegment3f ViewportGadget::rasterToGadgetSpace( const Imath::V2f &position, const Gadget *gadget ) const
 {
 	LineSegment3f result;
-	/// \todo The CameraController::unproject() method should be const.
-	const_cast<IECore::CameraController &>( m_cameraController ).unproject( position, result.p0, result.p1 );
+	m_cameraController->unproject( position, result.p0, result.p1 );
 	if( gadget )
 	{
 		M44f m = gadget->fullTransform();
@@ -287,20 +716,19 @@ Imath::V2f ViewportGadget::gadgetToRasterSpace( const Imath::V3f &gadgetPosition
 {
 	M44f gadgetTransform = gadget->fullTransform();
 	V3f worldSpacePosition = gadgetPosition * gadgetTransform;
-	return m_cameraController.project( worldSpacePosition );
+	return m_cameraController->project( worldSpacePosition );
 }
 
 IECore::LineSegment3f ViewportGadget::rasterToWorldSpace( const Imath::V2f &rasterPosition ) const
 {
 	LineSegment3f result;
-	/// \todo The CameraController::unproject() method should be const.
-	const_cast<IECore::CameraController &>( m_cameraController ).unproject( rasterPosition, result.p0, result.p1 );
+	m_cameraController->unproject( rasterPosition, result.p0, result.p1 );
 	return result;
 }
 
 Imath::V2f ViewportGadget::worldToRasterSpace( const Imath::V3f &worldPosition ) const
 {
-	return m_cameraController.project( worldPosition );
+	return m_cameraController->project( worldPosition );
 }
 
 void ViewportGadget::render() const
@@ -310,9 +738,14 @@ void ViewportGadget::render() const
 	);
 
 	IECoreGL::ToGLConverterPtr converter = new IECoreGL::ToGLCameraConverter(
-		const_cast<CameraController &>( m_cameraController ).getCamera()
+		m_cameraController->getCamera()
 	);
 	IECoreGL::CameraPtr camera = boost::static_pointer_cast<IECoreGL::Camera>( converter->convert() );
+	camera->setTransform( getCameraTransform() );
+	if( m_cameraController->getCamera()->getTransform() )
+	{
+		IECore::msg( IECore::Msg::Warning, "ViewportGadget", "Camera has unexpected transform" );
+	}
 	camera->render( nullptr );
 
 	glClearColor( 0.3f, 0.3f, 0.3f, 0.0f );
@@ -538,7 +971,7 @@ IECore::RunTimeTypedPtr ViewportGadget::dragBegin( GadgetPtr gadget, const DragD
 			// their gestures fell through and affected the viewport contents.
 			if( getCameraEditable() )
 			{
-				m_cameraController.motionStart( motionType, V2i( (int)event.line.p1.x, (int)event.line.p1.y ) );
+				m_cameraController->motionStart( motionType, V2i( (int)event.line.p1.x, (int)event.line.p1.y ) );
 			}
 
 			// we have to return something to start the drag, but we return something that
@@ -582,7 +1015,7 @@ bool ViewportGadget::dragMove( GadgetPtr gadget, const DragDropEvent &event )
 	{
 		if( getCameraEditable() )
 		{
-			m_cameraController.motionUpdate( V2i( (int)event.line.p1.x, (int)event.line.p1.y ) );
+			m_cameraController->motionUpdate( V2i( (int)event.line.p1.x, (int)event.line.p1.y ) );
 			m_cameraChangedSignal( this );
 			requestRender();
 		}
@@ -710,8 +1143,8 @@ void ViewportGadget::trackDragIdle()
 	double now = currentTime();
 	float duration = (float)(now - m_dragTrackingTime);
 
-	m_cameraController.motionStart( CameraController::Track, V2f( 0 ) );
-	m_cameraController.motionEnd( m_dragTrackingVelocity * duration * 20.0f );
+	m_cameraController->motionStart( CameraController::Track, V2f( 0 ) );
+	m_cameraController->motionEnd( m_dragTrackingVelocity * duration * 20.0f );
 
 	m_dragTrackingTime = now;
 
@@ -812,7 +1245,7 @@ bool ViewportGadget::dragEnd( GadgetPtr gadget, const DragDropEvent &event )
 		m_cameraInMotion = false;
 		if( getCameraEditable() )
 		{
-			m_cameraController.motionEnd( V2i( (int)event.line.p1.x, (int)event.line.p1.y ) );
+			m_cameraController->motionEnd( V2i( (int)event.line.p1.x, (int)event.line.p1.y ) );
 			m_cameraChangedSignal( this );
 			requestRender();
 		}
@@ -846,10 +1279,10 @@ bool ViewportGadget::wheel( GadgetPtr gadget, const ButtonEvent &event )
 
 	V2f position( event.line.p0.x, event.line.p0.y );
 
-	m_cameraController.motionStart( CameraController::Dolly, position );
+	m_cameraController->motionStart( CameraController::Dolly, position );
 	position.x += event.wheelRotation * getViewport().x / 140.0f;
-	m_cameraController.motionUpdate( position );
-	m_cameraController.motionEnd( position );
+	m_cameraController->motionUpdate( position );
+	m_cameraController->motionEnd( position );
 
 	m_cameraChangedSignal( this );
 	requestRender();
@@ -977,9 +1410,10 @@ void ViewportGadget::SelectionScope::begin( const ViewportGadget *viewportGadget
 	Box2f ndcRegion( rasterRegion.min / viewport, rasterRegion.max / viewport );
 
 	IECoreGL::ToGLConverterPtr converter = new IECoreGL::ToGLCameraConverter(
-		const_cast<CameraController &>( viewportGadget->m_cameraController ).getCamera()
+		viewportGadget->m_cameraController->getCamera()
 	);
 	IECoreGL::CameraPtr camera = boost::static_pointer_cast<IECoreGL::Camera>( converter->convert() );
+	camera->setTransform( viewportGadget->getCameraTransform() );
 	/// \todo It would be better to base this on whether we have a depth buffer or not, but
 	/// we don't have access to that information right now.
 	m_depthSort = camera->isInstanceOf( IECoreGL::PerspectiveCamera::staticTypeId() );
