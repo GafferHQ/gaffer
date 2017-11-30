@@ -43,6 +43,7 @@ import collections
 import functools
 
 import IECore
+import IECoreScene
 
 import Gaffer
 import GafferScene
@@ -469,13 +470,13 @@ class TextDiff( SideBySideDiff ) :
 			return self.__formatMatrices( values )
 		elif isinstance( values[0], ( IECore.Box3f, IECore.Box3d, IECore.Box3i, IECore.Box2f, IECore.Box2d, IECore.Box2i ) ) :
 			return self.__formatBoxes( values )
-		elif isinstance( values[0], ( IECore.Shader, IECore.ObjectVector ) ) :
+		elif isinstance( values[0], ( IECoreScene.Shader, IECore.ObjectVector ) ) :
 			return self.__formatShaders( values )
 		elif isinstance( values[0], ( float, int ) ) :
 			return self.__formatNumbers( values )
 		elif isinstance( values[0], basestring ) :
 			return self.__formatStrings( [ str( v ) for v in values ] )
-		elif isinstance( values[0], IECore.PrimitiveVariable ) :
+		elif isinstance( values[0], IECoreScene.PrimitiveVariable ) :
 			return self.__formatPrimitiveVariables( values )
 		else :
 			return [ cgi.escape( str( v ) ) for v in values ]
@@ -1681,7 +1682,7 @@ class __ObjectSection( LocationSection ) :
 				return None
 
 			if self.__interpolation is not None :
-				return object.variableSize( self.__interpolation ) if isinstance( object, IECore.Primitive ) else None
+				return object.variableSize( self.__interpolation ) if isinstance( object, IECoreScene.Primitive ) else None
 			else :
 				return getattr( object, self.__property, None )
 
@@ -1691,20 +1692,20 @@ class __ObjectSection( LocationSection ) :
 				return []
 
 			object = target.object()
-			if not isinstance( object, IECore.Primitive ) :
+			if not isinstance( object, IECoreScene.Primitive ) :
 				return []
 
 			result = []
 
-			if isinstance( object, IECore.MeshPrimitive ) :
+			if isinstance( object, IECoreScene.MeshPrimitive ) :
 				result.append( self.__class__( property = "interpolation" ) )
 
 			for i in [
-				IECore.PrimitiveVariable.Interpolation.Constant,
-				IECore.PrimitiveVariable.Interpolation.Uniform,
-				IECore.PrimitiveVariable.Interpolation.Vertex,
-				IECore.PrimitiveVariable.Interpolation.Varying,
-				IECore.PrimitiveVariable.Interpolation.FaceVarying,
+				IECoreScene.PrimitiveVariable.Interpolation.Constant,
+				IECoreScene.PrimitiveVariable.Interpolation.Uniform,
+				IECoreScene.PrimitiveVariable.Interpolation.Vertex,
+				IECoreScene.PrimitiveVariable.Interpolation.Varying,
+				IECoreScene.PrimitiveVariable.Interpolation.FaceVarying,
 			] :
 				result.append( self.__class__( interpolation = i ) )
 
@@ -1744,7 +1745,7 @@ class __ObjectSection( LocationSection ) :
 				return None
 
 			object = target.object()
-			if isinstance( object, ( IECore.Camera, IECore.ExternalProcedural ) ) :
+			if isinstance( object, ( IECoreScene.Camera, IECoreScene.ExternalProcedural ) ) :
 				return object.parameters()
 
 			return None
@@ -1767,7 +1768,7 @@ class __ObjectSection( LocationSection ) :
 				return None
 
 			object = target.object()
-			if not isinstance( object, IECore.Primitive ) :
+			if not isinstance( object, IECoreScene.Primitive ) :
 				return None
 
 			if self.__primitiveVariableName not in object :
@@ -1781,7 +1782,7 @@ class __ObjectSection( LocationSection ) :
 				return []
 
 			object = target.object()
-			if not isinstance( object, IECore.Primitive ) :
+			if not isinstance( object, IECoreScene.Primitive ) :
 				return []
 
 			return [ self.__class__( k ) for k in object.keys() ]

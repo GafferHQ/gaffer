@@ -35,6 +35,7 @@
 ##########################################################################
 
 import IECore
+import IECoreScene
 
 import Gaffer
 import GafferUI
@@ -70,7 +71,7 @@ Gaffer.Metadata.registerNode(
 			"path:leaf", True,
 			"path:valid", True,
 			"path:bookmarks", "sceneCache",
-			"fileSystemPath:extensions", " ".join( IECore.SceneInterface.supportedExtensions() ),
+			"fileSystemPath:extensions", " ".join( IECoreScene.SceneInterface.supportedExtensions() ),
 			"fileSystemPath:extensionsLabel", "Show only cache files",
 
 		],
@@ -131,7 +132,7 @@ def __tagsPopupMenu( menuDefinition, plugValueWidget ) :
 
 	fileName = plugValueWidget.getContext().substitute( node["fileName"].getValue() )
 	try :
-		scene = IECore.SharedSceneInterfaces.get( fileName )
+		scene = IECoreScene.SharedSceneInterfaces.get( fileName )
 	except :
 		return
 

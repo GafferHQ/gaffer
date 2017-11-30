@@ -37,6 +37,7 @@
 import functools
 
 import IECore
+import IECoreScene
 
 import Gaffer
 import GafferUI
@@ -321,7 +322,7 @@ class _TweaksFooter( GafferUI.PlugValueWidget ) :
 						continue
 					if not isinstance( network, IECore.ObjectVector ) or not len( network ):
 						continue
-					if not isinstance( network[-1], IECore.Shader ) :
+					if not isinstance( network[-1], IECoreScene.Shader ) :
 						continue
 					shader = network[-1]
 					for parameterName, parameterValue in shader.parameters.items() :

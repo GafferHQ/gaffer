@@ -37,6 +37,7 @@
 import os
 
 import IECore
+import IECoreScene
 
 import Gaffer
 import GafferScene
@@ -173,10 +174,10 @@ Gaffer.Metadata.registerNode(
 			Target interpolation for the primitive variables
 			""",
 
-			"preset:Constant", IECore.PrimitiveVariable.Interpolation.Constant,
-			"preset:Uniform", IECore.PrimitiveVariable.Interpolation.Uniform,
-			"preset:Vertex", IECore.PrimitiveVariable.Interpolation.Vertex,
-			"preset:FaceVarying", IECore.PrimitiveVariable.Interpolation.FaceVarying,
+			"preset:Constant", IECoreScene.PrimitiveVariable.Interpolation.Constant,
+			"preset:Uniform", IECoreScene.PrimitiveVariable.Interpolation.Uniform,
+			"preset:Vertex", IECoreScene.PrimitiveVariable.Interpolation.Vertex,
+			"preset:FaceVarying", IECoreScene.PrimitiveVariable.Interpolation.FaceVarying,
 
 			"plugValueWidget:type", "GafferUI.PresetsPlugValueWidget",
 

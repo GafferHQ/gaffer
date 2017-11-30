@@ -37,6 +37,7 @@
 import re
 
 import IECore
+import IECoreScene
 
 import Gaffer
 import GafferUI
@@ -164,7 +165,7 @@ class OutputsPlugValueWidget( GafferUI.PlugValueWidget ) :
 		if len( registeredOutputs ) :
 			m.append( "/BlankDivider", { "divider" : True } )
 
-		m.append( "/Blank", { "command" : IECore.curry( node.addOutput, "", IECore.Display( "", "", "" ) ) } )
+		m.append( "/Blank", { "command" : IECore.curry( node.addOutput, "", IECoreScene.Display( "", "", "" ) ) } )
 
 		return m
 

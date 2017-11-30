@@ -35,6 +35,7 @@
 #
 ##########################################################################
 
+__import__( "IECoreScene" )
 __import__( "Gaffer" )
 __import__( "GafferDispatch" )
 __import__( "GafferImage" )
