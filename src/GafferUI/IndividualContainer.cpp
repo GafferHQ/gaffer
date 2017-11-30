@@ -61,7 +61,7 @@ bool IndividualContainer::acceptsChild( const Gaffer::GraphComponent *potentialC
 
 void IndividualContainer::setChild( GadgetPtr child )
 {
-	GadgetPtr c = getChild<Gadget>();
+	GadgetPtr c = getChild();
 	if( c )
 	{
 		removeChild( c );

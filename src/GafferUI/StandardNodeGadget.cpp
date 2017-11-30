@@ -485,12 +485,12 @@ void StandardNodeGadget::setContents( GadgetPtr contents )
 
 Gadget *StandardNodeGadget::getContents()
 {
-	return contentsContainer()->getChild<Gadget>();
+	return contentsContainer()->getChild();
 }
 
 const Gadget *StandardNodeGadget::getContents() const
 {
-	return contentsContainer()->getChild<Gadget>();
+	return contentsContainer()->getChild();
 }
 
 void StandardNodeGadget::setEdgeGadget( Edge edge, GadgetPtr gadget )
