@@ -658,9 +658,6 @@ libraries = {
 		"pythonEnvAppends" : {
 			"LIBS" : [ "GafferBindings", "GafferScene", "GafferDispatch" ],
 		},
-		"classStubs" : [
-			( "ScriptProcedural", "procedurals/gaffer/script" ),
-		],
 		"additionalFiles" : glob.glob( "glsl/*.frag" ) + glob.glob( "glsl/*.vert" ),
 	},
 
