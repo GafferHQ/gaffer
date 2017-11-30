@@ -35,6 +35,8 @@
 //////////////////////////////////////////////////////////////////////////
 
 #include "Gaffer/SubGraph.h"
+#include "Gaffer/BoxOut.h"
+#include "Gaffer/BoxIn.h"
 
 using namespace IECore;
 using namespace Gaffer;
@@ -78,6 +80,11 @@ const Plug *SubGraph::correspondingInput( const Plug *output ) const
 		return NULL;
 	}
 
+	if( const BoxOut *boxOut = internalOutput->parent<BoxOut>() )
+	{
+		internalOutput = boxOut->plug()->getInput();
+	}
+
 	const DependencyNode *node = IECore::runTimeCast<const DependencyNode>( internalOutput->node() );
 	if( !node )
 	{
@@ -107,7 +114,12 @@ const Plug *SubGraph::correspondingInput( const Plug *output ) const
 		return NULL;
 	}
 
-	const Plug *input = internalInput->getInput<Plug>();
+	const Plug *input = internalInput->getInput();
+	if( const BoxIn *boxIn = input->parent<BoxIn>() )
+	{
+		input = boxIn->promotedPlug();
+	}
+
 	if( !input || input->node() != this )
 	{
 		return NULL;
