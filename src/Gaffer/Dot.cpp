@@ -158,18 +158,18 @@ void Dot::affects( const Plug *input, AffectedPlugsContainer &outputs ) const
 
 Plug *Dot::correspondingInput( const Plug *output )
 {
-	if( output == outPlug<Plug>() )
+	if( output == outPlug() )
 	{
-		return inPlug<Plug>();
+		return inPlug();
 	}
 	return DependencyNode::correspondingInput( output );
 }
 
 const Plug *Dot::correspondingInput( const Plug *output ) const
 {
-	if( output == outPlug<Plug>() )
+	if( output == outPlug() )
 	{
-		return inPlug<Plug>();
+		return inPlug();
 	}
 	return DependencyNode::correspondingInput( output );
 }

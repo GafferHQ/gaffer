@@ -69,14 +69,14 @@ class Dot : public DependencyNode
 		/// \undoable
 		void setup( const Plug *plug );
 
-		template<typename T>
+		template<typename T=Plug>
 		T *inPlug();
-		template<typename T>
+		template<typename T=Plug>
 		const T *inPlug() const;
 
-		template<typename T>
+		template<typename T=Plug>
 		T *outPlug();
-		template<typename T>
+		template<typename T=Plug>
 		const T *outPlug() const;
 
 		enum LabelType

@@ -320,8 +320,8 @@ bool StandardConnectionGadget::buttonPress( const ButtonEvent &event )
 			srcPlug->node()->parent()->addChild( dot );
 			graphGadget->setNodePosition( dot.get(), V2f( event.line.p0.x, event.line.p0.y ) );
 
-			dot->inPlug<Plug>()->setInput( srcNodule()->plug() );
-			dstNodule()->plug()->setInput( dot->outPlug<Plug>() );
+			dot->inPlug()->setInput( srcNodule()->plug() );
+			dstNodule()->plug()->setInput( dot->outPlug() );
 
 			script->selection()->clear();
 			script->selection()->add( dot );

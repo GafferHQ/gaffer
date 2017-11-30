@@ -123,7 +123,7 @@ const Gaffer::Dot *DotNodeGadget::dotNode() const
 
 Gaffer::Node *DotNodeGadget::upstreamNode()
 {
-	Plug *plug = dotNode()->inPlug<Plug>();
+	Plug *plug = dotNode()->inPlug();
 	while( plug && runTimeCast<Dot>( plug->node() ) )
 	{
 		plug = plug->getInput();
@@ -138,7 +138,7 @@ void DotNodeGadget::plugDirtied( const Gaffer::Plug *plug )
 	{
 		updateLabel();
 	}
-	else if( plug == dot->inPlug<Plug>() )
+	else if( plug == dot->inPlug() )
 	{
 		updateUpstreamNameChangedConnection();
 		updateLabel();
@@ -183,7 +183,7 @@ void DotNodeGadget::updateLabel()
 	}
 
 	Edge labelEdge = RightEdge;
-	if( const Plug *p = dot->inPlug<Plug>() )
+	if( const Plug *p = dot->inPlug() )
 	{
 		if( noduleTangent( nodule( p ) ).x != 0 )
 		{
@@ -219,7 +219,7 @@ bool DotNodeGadget::dragEnter( const DragDropEvent &event )
 		return false;
 	}
 
-	if( dotNode()->inPlug<Plug>() )
+	if( dotNode()->inPlug() )
 	{
 		// We've already got our plugs set up - StandardNodeGadget
 		// behaviour will take care of everything.
@@ -268,7 +268,7 @@ bool DotNodeGadget::dragEnter( const DragDropEvent &event )
 
 bool DotNodeGadget::drop( const DragDropEvent &event )
 {
-	if( dotNode()->inPlug<Plug>() )
+	if( dotNode()->inPlug() )
 	{
 		// We've already got our plugs set up - StandardNodeGadget
 		// behaviour will take care of everything.
@@ -286,11 +286,11 @@ bool DotNodeGadget::drop( const DragDropEvent &event )
 	dotNode()->setup( plug );
 	if( plug->direction() == Plug::In )
 	{
-		plug->setInput( dotNode()->outPlug<Plug>() );
+		plug->setInput( dotNode()->outPlug() );
 	}
 	else
 	{
-		dotNode()->inPlug<Plug>()->setInput( plug );
+		dotNode()->inPlug()->setInput( plug );
 	}
 
 	return true;

@@ -1051,7 +1051,7 @@ bool StandardGraphLayout::connectNodeInternal( GraphGadget *graph, Gaffer::Node 
 	// to give it plugs first.
 	if( Dot *dot = runTimeCast<Dot>( node ) )
 	{
-		if( !dot->inPlug<Plug>() )
+		if( !dot->inPlug() )
 		{
 			dot->setup( outputPlugs.front() );
 		}
