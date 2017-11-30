@@ -37,6 +37,7 @@
 import unittest
 
 import IECore
+import IECoreScene
 
 import GafferScene
 import GafferSceneTest
@@ -56,7 +57,7 @@ class ExternalProceduralTest( GafferSceneTest.SceneTestCase ) :
 
 		p = n["out"].object( "/procedural" )
 
-		self.assertTrue( isinstance( p, IECore.ExternalProcedural ) )
+		self.assertTrue( isinstance( p, IECoreScene.ExternalProcedural ) )
 		self.assertEqual( p.getFileName(), "test.so" )
 		self.assertEqual( p.getBound(), IECore.Box3f( IECore.V3f( 1, 2, 3 ), IECore.V3f( 4, 5, 6 ) ) )
 		self.assertEqual( p.parameters().keys(), [ "testFloat" ] )

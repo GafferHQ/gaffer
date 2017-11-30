@@ -35,6 +35,7 @@
 ##########################################################################
 
 import IECore
+import IECoreScene
 import GafferScene
 import GafferSceneTest
 
@@ -42,7 +43,7 @@ class DeletePointsTest( GafferSceneTest.SceneTestCase ) :
 
 	def makePoints( self ) :
 
-		testObject = IECore.PointsPrimitive(
+		testObject = IECoreScene.PointsPrimitive(
 			IECore.V3fVectorData(
 				[
 					IECore.V3f( 0, 0, 0 ),
@@ -55,8 +56,8 @@ class DeletePointsTest( GafferSceneTest.SceneTestCase ) :
 			IECore.FloatVectorData( range( 0, 4 ) )
 		)
 
-		testObject["deletePoints"] = IECore.PrimitiveVariable( IECore.PrimitiveVariable.Interpolation.Vertex, IECore.IntVectorData( [0, 1, 0, 1] ) )
-		testObject["deletePoints2"] = IECore.PrimitiveVariable( IECore.PrimitiveVariable.Interpolation.Vertex, IECore.IntVectorData( [1, 1, 0, 0] ) )
+		testObject["deletePoints"] = IECoreScene.PrimitiveVariable( IECoreScene.PrimitiveVariable.Interpolation.Vertex, IECore.IntVectorData( [0, 1, 0, 1] ) )
+		testObject["deletePoints2"] = IECoreScene.PrimitiveVariable( IECoreScene.PrimitiveVariable.Interpolation.Vertex, IECore.IntVectorData( [1, 1, 0, 0] ) )
 
 		self.assertTrue( testObject.arePrimitiveVariablesValid() )
 

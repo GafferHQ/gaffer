@@ -39,7 +39,6 @@ import unittest
 import IECore
 import Gaffer
 import GafferTest
-import IECore
 
 class SwitchTest( GafferTest.TestCase ) :
 

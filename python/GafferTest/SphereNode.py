@@ -36,6 +36,7 @@
 ##########################################################################
 
 import IECore
+import IECoreScene
 
 import Gaffer
 
@@ -79,7 +80,7 @@ class SphereNode( Gaffer.ComputeNode ) :
 
 		assert( plug.isSame( self["out"] ) )
 
-		result = IECore.SpherePrimitive( self["radius"].getValue(), self["zMin"].getValue(), self["zMax"].getValue(), self["theta"].getValue() )
+		result = IECoreScene.SpherePrimitive( self["radius"].getValue(), self["zMin"].getValue(), self["zMax"].getValue(), self["theta"].getValue() )
 		plug.setValue( result )
 
 IECore.registerRunTimeTyped( SphereNode, typeName = "GafferTest::SphereNode" )

@@ -38,6 +38,7 @@ import os
 import unittest
 
 import IECore
+import IECoreScene
 
 import Gaffer
 import GafferTest
@@ -61,11 +62,11 @@ class TextTest( GafferSceneTest.SceneTestCase ) :
 		self.assertEqual( t["out"].childNames( "/" ), IECore.InternedStringVectorData( [ "text" ] ) )
 
 		m1 = t["out"].object( "/text" )
-		self.assertTrue( isinstance( m1, IECore.MeshPrimitive ) )
+		self.assertTrue( isinstance( m1, IECoreScene.MeshPrimitive ) )
 
 		t["text"].setValue( "Hello World 2" )
 		m2 = t["out"].object( "/text" )
-		self.assertTrue( isinstance( m2, IECore.MeshPrimitive ) )
+		self.assertTrue( isinstance( m2, IECoreScene.MeshPrimitive ) )
 
 		self.failUnless( m2.bound().size().x > m1.bound().size().x )
 

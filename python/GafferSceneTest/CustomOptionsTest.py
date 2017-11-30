@@ -38,6 +38,7 @@
 import unittest
 
 import IECore
+import IECoreScene
 
 import Gaffer
 import GafferTest
@@ -59,7 +60,7 @@ class CustomOptionsTest( GafferSceneTest.SceneTestCase ) :
 		self.assertEqual( options["out"].bound( "/" ), IECore.Box3f( IECore.V3f( -0.5, -0.5, 0 ), IECore.V3f( 0.5, 0.5, 0 ) ) )
 		self.assertEqual( options["out"].childNames( "/" ), IECore.InternedStringVectorData( [ "plane" ] ) )
 
-		self.assertEqual( options["out"].object( "/plane" ), IECore.MeshPrimitive.createPlane( IECore.Box2f( IECore.V2f( -0.5 ), IECore.V2f( 0.5 ) ) ) )
+		self.assertEqual( options["out"].object( "/plane" ), IECoreScene.MeshPrimitive.createPlane( IECore.Box2f( IECore.V2f( -0.5 ), IECore.V2f( 0.5 ) ) ) )
 		self.assertEqual( options["out"].transform( "/plane" ), IECore.M44f() )
 		self.assertEqual( options["out"].bound( "/plane" ), IECore.Box3f( IECore.V3f( -0.5, -0.5, 0 ), IECore.V3f( 0.5, 0.5, 0 ) ) )
 		self.assertEqual( options["out"].childNames( "/plane" ), IECore.InternedStringVectorData() )

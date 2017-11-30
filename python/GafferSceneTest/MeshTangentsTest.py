@@ -38,6 +38,7 @@ import os
 import unittest
 
 import IECore
+import IECoreScene
 
 import Gaffer
 import GafferScene
@@ -52,25 +53,25 @@ class MeshTangentsTest( GafferSceneTest.SceneTestCase ) :
 		p = IECore.V3fVectorData( [IECore.V3f( 0, 0, 0 ), IECore.V3f( 1, 0, 0 ), IECore.V3f( 0, 1, 0 )] )
 		prefData = IECore.V3fVectorData( [IECore.V3f( 0, 0, 0 ), IECore.V3f( 0, -1, 0 ), IECore.V3f( 1, 0, 0 )] )
 
-		mesh = IECore.MeshPrimitive( verticesPerFace, vertexIds, "linear", p )
+		mesh = IECoreScene.MeshPrimitive( verticesPerFace, vertexIds, "linear", p )
 
-		mesh["uv"] = IECore.PrimitiveVariable(
-			IECore.PrimitiveVariable.Interpolation.FaceVarying,
+		mesh["uv"] = IECoreScene.PrimitiveVariable(
+			IECoreScene.PrimitiveVariable.Interpolation.FaceVarying,
 			IECore.V2fVectorData(
 				[ IECore.V2f( 0, 0 ), IECore.V2f( 1, 0 ), IECore.V2f( 0, 1 ) ],
 				IECore.GeometricData.Interpretation.UV
 			)
 		)
 
-		mesh["foo"] = IECore.PrimitiveVariable(
-			IECore.PrimitiveVariable.Interpolation.FaceVarying,
+		mesh["foo"] = IECoreScene.PrimitiveVariable(
+			IECoreScene.PrimitiveVariable.Interpolation.FaceVarying,
 			IECore.V2fVectorData(
 				[ IECore.V2f( 0, 0 ), IECore.V2f( 0, 1 ), IECore.V2f( 1, 0 ) ],
 				IECore.GeometricData.Interpretation.UV
 			)
 		)
 
-		mesh["Pref"] = IECore.PrimitiveVariable( IECore.PrimitiveVariable.Interpolation.Vertex, prefData )
+		mesh["Pref"] = IECoreScene.PrimitiveVariable( IECoreScene.PrimitiveVariable.Interpolation.Vertex, prefData )
 
 		objectToScene = GafferScene.ObjectToScene()
 		objectToScene["object"].setValue( mesh )

@@ -37,6 +37,7 @@
 import unittest
 
 import IECore
+import IECoreScene
 
 import Gaffer
 import GafferTest
@@ -60,7 +61,7 @@ class SphereTest( GafferSceneTest.SceneTestCase ) :
 		self.assertEqual( s["out"].bound( "/" ), IECore.Box3f( IECore.V3f( -1 ), IECore.V3f( 1 ) ) )
 		self.assertEqual( s["out"].childNames( "/" ), IECore.InternedStringVectorData( [ "sphere" ] ) )
 
-		self.assertEqual( s["out"].object( "/sphere" ), IECore.SpherePrimitive( 1 ) )
+		self.assertEqual( s["out"].object( "/sphere" ), IECoreScene.SpherePrimitive( 1 ) )
 		self.assertEqual( s["out"].transform( "/sphere" ), IECore.M44f() )
 		self.assertEqual( s["out"].bound( "/sphere" ), IECore.Box3f( IECore.V3f( -1 ), IECore.V3f( 1 ) ) )
 		self.assertEqual( s["out"].childNames( "/sphere" ), IECore.InternedStringVectorData() )
@@ -69,37 +70,37 @@ class SphereTest( GafferSceneTest.SceneTestCase ) :
 
 		s = GafferScene.Sphere()
 		s["type"].setValue( GafferScene.Sphere.Type.Mesh )
-		m = IECore.MeshPrimitive.createSphere( 1 )
+		m = IECoreScene.MeshPrimitive.createSphere( 1 )
 		self.assertEqual( s["out"].object( "/sphere" ), m )
 		c = Gaffer.Context()
 		h = s["out"].objectHash( "/sphere" )
 
 		s["radius"].setValue( 3 )
-		m = IECore.MeshPrimitive.createSphere( 3 )
+		m = IECoreScene.MeshPrimitive.createSphere( 3 )
 		self.assertEqual( s["out"].object( "/sphere" ), m )
 		self.assertNotEqual( s["out"].objectHash( "/sphere" ), h )
 		h = s["out"].objectHash( "/sphere" )
 
 		s["zMin"].setValue( -0.75 )
-		m = IECore.MeshPrimitive.createSphere( 3, -0.75 )
+		m = IECoreScene.MeshPrimitive.createSphere( 3, -0.75 )
 		self.assertEqual( s["out"].object( "/sphere" ), m )
 		self.assertNotEqual( s["out"].objectHash( "/sphere" ), h )
 		h = s["out"].objectHash( "/sphere" )
 
 		s["zMax"].setValue( 0.75 )
-		m = IECore.MeshPrimitive.createSphere( 3, -0.75, 0.75 )
+		m = IECoreScene.MeshPrimitive.createSphere( 3, -0.75, 0.75 )
 		self.assertEqual( s["out"].object( "/sphere" ), m )
 		self.assertNotEqual( s["out"].objectHash( "/sphere" ), h )
 		h = s["out"].objectHash( "/sphere" )
 
 		s["thetaMax"].setValue( 300 )
-		m = IECore.MeshPrimitive.createSphere( 3, -0.75, 0.75, 300 )
+		m = IECoreScene.MeshPrimitive.createSphere( 3, -0.75, 0.75, 300 )
 		self.assertEqual( s["out"].object( "/sphere" ), m )
 		self.assertNotEqual( s["out"].objectHash( "/sphere" ), h )
 		h = s["out"].objectHash( "/sphere" )
 
 		s["divisions"].setValue( IECore.V2i( 5, 10 ) )
-		m = IECore.MeshPrimitive.createSphere( 3, -0.75, 0.75, 300, IECore.V2i( 5, 10 ) )
+		m = IECoreScene.MeshPrimitive.createSphere( 3, -0.75, 0.75, 300, IECore.V2i( 5, 10 ) )
 		self.assertEqual( s["out"].object( "/sphere" ), m )
 		self.assertNotEqual( s["out"].objectHash( "/sphere" ), h )
 
@@ -107,30 +108,30 @@ class SphereTest( GafferSceneTest.SceneTestCase ) :
 
 		s = GafferScene.Sphere()
 		s["type"].setValue( GafferScene.Sphere.Type.Primitive )
-		m = IECore.SpherePrimitive( 1 )
+		m = IECoreScene.SpherePrimitive( 1 )
 		self.assertEqual( s["out"].object( "/sphere" ), m )
 		h = s["out"].objectHash( "/sphere" )
 
 		s["radius"].setValue( 3 )
-		m = IECore.SpherePrimitive( 3 )
+		m = IECoreScene.SpherePrimitive( 3 )
 		self.assertEqual( s["out"].object( "/sphere" ), m )
 		self.assertNotEqual( s["out"].objectHash( "/sphere" ), h )
 		h = s["out"].objectHash( "/sphere" )
 
 		s["zMin"].setValue( -0.75 )
-		m = IECore.SpherePrimitive( 3, -0.75 )
+		m = IECoreScene.SpherePrimitive( 3, -0.75 )
 		self.assertEqual( s["out"].object( "/sphere" ), m )
 		self.assertNotEqual( s["out"].objectHash( "/sphere" ), h )
 		h = s["out"].objectHash( "/sphere" )
 
 		s["zMax"].setValue( 0.75 )
-		m = IECore.SpherePrimitive( 3, -0.75, 0.75 )
+		m = IECoreScene.SpherePrimitive( 3, -0.75, 0.75 )
 		self.assertEqual( s["out"].object( "/sphere" ), m )
 		self.assertNotEqual( s["out"].objectHash( "/sphere" ), h )
 		h = s["out"].objectHash( "/sphere" )
 
 		s["thetaMax"].setValue( 300 )
-		m = IECore.SpherePrimitive( 3, -0.75, 0.75, 300 )
+		m = IECoreScene.SpherePrimitive( 3, -0.75, 0.75, 300 )
 		self.assertEqual( s["out"].object( "/sphere" ), m )
 		self.assertNotEqual( s["out"].objectHash( "/sphere" ), h )
 		h = s["out"].objectHash( "/sphere" )

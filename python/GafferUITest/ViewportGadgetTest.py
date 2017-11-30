@@ -37,6 +37,7 @@
 import unittest
 
 import IECore
+import IECoreScene
 
 import GafferTest
 import GafferUI
@@ -84,7 +85,7 @@ class ViewportGadgetTest( GafferUITest.TestCase ) :
 		v = GafferUI.ViewportGadget()
 		v.setViewport( IECore.V2i( 200, 100 ) )
 		v.setCamera(
-			IECore.Camera( parameters = {
+			IECoreScene.Camera( parameters = {
 				"resolution" : IECore.V2i( 200, 100 ),
 				"screenWindow" : IECore.Box2f( IECore.V2f( -2, -1 ), IECore.V2f( 2, 1 ) ),
 				"projection" : "perspective",
@@ -104,7 +105,7 @@ class ViewportGadgetTest( GafferUITest.TestCase ) :
 		v = GafferUI.ViewportGadget()
 		v.setViewport( IECore.V2i( 200, 100 ) )
 		v.setCamera(
-			IECore.Camera( parameters = {
+			IECoreScene.Camera( parameters = {
 				"resolution" : IECore.V2i( 200, 100 ),
 				"screenWindow" : IECore.Box2f( IECore.V2f( -2, -1 ), IECore.V2f( 2, 1 ) ),
 				"projection" : "orthographic",
@@ -124,7 +125,7 @@ class ViewportGadgetTest( GafferUITest.TestCase ) :
 		v = GafferUI.ViewportGadget()
 		v.setViewport( IECore.V2i( 200, 100 ) )
 		v.setCamera(
-			IECore.Camera( parameters = {
+			IECoreScene.Camera( parameters = {
 				"resolution" : IECore.V2i( 200, 100 ),
 				"screenWindow" : IECore.Box2f( IECore.V2f( -2, -1 ), IECore.V2f( 0, 0 ) ),
 				"projection" : "orthographic",
@@ -144,7 +145,7 @@ class ViewportGadgetTest( GafferUITest.TestCase ) :
 		v = GafferUI.ViewportGadget()
 		v.setViewport( IECore.V2i( 500, 250 ) )
 		v.setCamera(
-			IECore.Camera( parameters = {
+			IECoreScene.Camera( parameters = {
 				"resolution" : IECore.V2i( 500, 250 ),
 				"screenWindow" : IECore.Box2f( IECore.V2f( -2, -1 ), IECore.V2f( 2, 1 ) ),
 				"projection" : "orthographic",
@@ -172,7 +173,7 @@ class ViewportGadgetTest( GafferUITest.TestCase ) :
 		v = GafferUI.ViewportGadget()
 		v.setViewport( IECore.V2i( 500, 250 ) )
 		v.setCamera(
-			IECore.Camera( parameters = {
+			IECoreScene.Camera( parameters = {
 				"resolution" : IECore.V2i( 500, 250 ),
 				"screenWindow" : IECore.Box2f( IECore.V2f( -1, -.5 ), IECore.V2f( 1, .5 ) ),
 				"projection" : "perspective",
@@ -201,7 +202,7 @@ class ViewportGadgetTest( GafferUITest.TestCase ) :
 		v = GafferUI.ViewportGadget()
 		v.setViewport( IECore.V2i( 500, 250 ) )
 		v.setCamera(
-			IECore.Camera( parameters = {
+			IECoreScene.Camera( parameters = {
 				"resolution" : IECore.V2i( 500, 250 ),
 				"screenWindow" : IECore.Box2f( IECore.V2f( -2, -1 ), IECore.V2f( 2, 1 ) ),
 				"projection" : "orthographic",
@@ -227,7 +228,7 @@ class ViewportGadgetTest( GafferUITest.TestCase ) :
 		v = GafferUI.ViewportGadget()
 		v.setViewport( IECore.V2i( 500, 250 ) )
 		v.setCamera(
-			IECore.Camera( parameters = {
+			IECoreScene.Camera( parameters = {
 				"resolution" : IECore.V2i( 500, 250 ),
 				"screenWindow" : IECore.Box2f( IECore.V2f( -1, -.5 ), IECore.V2f( 1, .5 ) ),
 				"projection" : "perspective",

@@ -37,6 +37,7 @@
 import unittest
 
 import IECore
+import IECoreScene
 
 import Gaffer
 import GafferScene
@@ -76,7 +77,7 @@ class ParametersTest( GafferSceneTest.SceneTestCase ) :
 		self.assertEqual( cameraOut.parameters()["test"], IECore.IntData( 10 ) )
 		del cameraOut.parameters()["test"]
 		self.assertEqual( cameraIn, cameraOut )
-		self.assertTrue( isinstance( cameraOut, IECore.Camera ) )
+		self.assertTrue( isinstance( cameraOut, IECoreScene.Camera ) )
 
 		proceduralIn = group["out"].object( "/group/procedural" )
 		proceduralOut = parameters["out"].object( "/group/procedural" )
@@ -84,7 +85,7 @@ class ParametersTest( GafferSceneTest.SceneTestCase ) :
 		self.assertEqual( proceduralOut.parameters()["test"], IECore.IntData( 10 ) )
 		del proceduralOut.parameters()["test"]
 		self.assertEqual( proceduralIn, proceduralOut )
-		self.assertTrue( isinstance( proceduralOut, IECore.ExternalProcedural ) )
+		self.assertTrue( isinstance( proceduralOut, IECoreScene.ExternalProcedural ) )
 
 	def testAffects( self ) :
 

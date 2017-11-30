@@ -40,6 +40,7 @@ import gc
 import os
 
 import IECore
+import IECoreScene
 
 import Gaffer
 import GafferTest
@@ -50,7 +51,7 @@ class GroupTest( GafferSceneTest.SceneTestCase ) :
 
 	def testTwoLevels( self ) :
 
-		sphere = IECore.SpherePrimitive()
+		sphere = IECoreScene.SpherePrimitive()
 		input = GafferSceneTest.CompoundObjectSource()
 		input["in"].setValue(
 			IECore.CompoundObject( {
@@ -97,7 +98,7 @@ class GroupTest( GafferSceneTest.SceneTestCase ) :
 
 	def testTransform( self ) :
 
-		sphere = IECore.SpherePrimitive()
+		sphere = IECoreScene.SpherePrimitive()
 		originalRootBound = sphere.bound()
 		originalRootBound.min += IECore.V3f( 1, 0, 0 )
 		originalRootBound.max += IECore.V3f( 1, 0, 0 )
@@ -170,7 +171,7 @@ class GroupTest( GafferSceneTest.SceneTestCase ) :
 
 	def testMerge( self ) :
 
-		sphere = IECore.SpherePrimitive()
+		sphere = IECoreScene.SpherePrimitive()
 		input1 = GafferSceneTest.CompoundObjectSource()
 		input1["in"].setValue(
 			IECore.CompoundObject( {
@@ -189,7 +190,7 @@ class GroupTest( GafferSceneTest.SceneTestCase ) :
 			} ),
 		)
 
-		plane = IECore.MeshPrimitive.createPlane( IECore.Box2f( IECore.V2f( -1 ), IECore.V2f( 1 ) ) )
+		plane = IECoreScene.MeshPrimitive.createPlane( IECore.Box2f( IECore.V2f( -1 ), IECore.V2f( 1 ) ) )
 		input2 = GafferSceneTest.CompoundObjectSource()
 		input2["in"].setValue(
 			IECore.CompoundObject( {
@@ -248,7 +249,7 @@ class GroupTest( GafferSceneTest.SceneTestCase ) :
 
 	def testNameClashes( self ) :
 
-		sphere = IECore.SpherePrimitive()
+		sphere = IECoreScene.SpherePrimitive()
 		input1 = GafferSceneTest.CompoundObjectSource()
 		input1["in"].setValue(
 			IECore.CompoundObject( {
@@ -262,7 +263,7 @@ class GroupTest( GafferSceneTest.SceneTestCase ) :
 			} ),
 		)
 
-		plane = IECore.MeshPrimitive.createPlane( IECore.Box2f( IECore.V2f( -1 ), IECore.V2f( 1 ) ) )
+		plane = IECoreScene.MeshPrimitive.createPlane( IECore.Box2f( IECore.V2f( -1 ), IECore.V2f( 1 ) ) )
 		input2 = GafferSceneTest.CompoundObjectSource()
 		input2["in"].setValue(
 			IECore.CompoundObject( {
@@ -327,7 +328,7 @@ class GroupTest( GafferSceneTest.SceneTestCase ) :
 
 	def testNameClashesWithNumericSuffixes( self ) :
 
-		sphere = IECore.SpherePrimitive()
+		sphere = IECoreScene.SpherePrimitive()
 		input1 = GafferSceneTest.CompoundObjectSource()
 		input1["in"].setValue(
 			IECore.CompoundObject( {
@@ -341,7 +342,7 @@ class GroupTest( GafferSceneTest.SceneTestCase ) :
 			} ),
 		)
 
-		plane = IECore.MeshPrimitive.createPlane( IECore.Box2f( IECore.V2f( -1 ), IECore.V2f( 1 ) ) )
+		plane = IECoreScene.MeshPrimitive.createPlane( IECore.Box2f( IECore.V2f( -1 ), IECore.V2f( 1 ) ) )
 		input2 = GafferSceneTest.CompoundObjectSource()
 		input2["in"].setValue(
 			IECore.CompoundObject( {
@@ -385,7 +386,7 @@ class GroupTest( GafferSceneTest.SceneTestCase ) :
 
 	def testNameClashesWithThreading( self ) :
 
-		sphere = IECore.SpherePrimitive()
+		sphere = IECoreScene.SpherePrimitive()
 		input1 = GafferSceneTest.CompoundObjectSource()
 		input1["in"].setValue(
 			IECore.CompoundObject( {
@@ -399,7 +400,7 @@ class GroupTest( GafferSceneTest.SceneTestCase ) :
 			} ),
 		)
 
-		plane = IECore.MeshPrimitive.createPlane( IECore.Box2f( IECore.V2f( -1 ), IECore.V2f( 1 ) ) )
+		plane = IECoreScene.MeshPrimitive.createPlane( IECore.Box2f( IECore.V2f( -1 ), IECore.V2f( 1 ) ) )
 		input2 = GafferSceneTest.CompoundObjectSource()
 		input2["in"].setValue(
 			IECore.CompoundObject( {

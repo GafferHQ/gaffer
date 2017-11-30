@@ -35,6 +35,7 @@
 ##########################################################################
 
 import IECore
+import IECoreScene
 import GafferScene
 import GafferSceneTest
 
@@ -48,12 +49,12 @@ class DeleteFacesTest( GafferSceneTest.SceneTestCase ) :
 		p = IECore.V3fVectorData( [IECore.V3f( 0, 0, 0 ), IECore.V3f( 1, 0, 0 ), IECore.V3f( 2, 0, 0 ), IECore.V3f( 0, 1, 0 ), IECore.V3f( 1, 1, 0 ), IECore.V3f( 2, 1, 0 )] )
 		deleteData = IECore.IntVectorData( [0, 1] )
 
-		mesh = IECore.MeshPrimitive( verticesPerFace, vertexIds, "linear", p )
-		mesh["deleteFaces"] = IECore.PrimitiveVariable( IECore.PrimitiveVariable.Interpolation.Uniform, deleteData )
+		mesh = IECoreScene.MeshPrimitive( verticesPerFace, vertexIds, "linear", p )
+		mesh["deleteFaces"] = IECoreScene.PrimitiveVariable( IECoreScene.PrimitiveVariable.Interpolation.Uniform, deleteData )
 
-		mesh["uniform"] = IECore.PrimitiveVariable( IECore.PrimitiveVariable.Interpolation.Uniform, IECore.IntVectorData( [10, 11] ) )
-		mesh["vertex"] = IECore.PrimitiveVariable( IECore.PrimitiveVariable.Interpolation.Vertex, IECore.IntVectorData( [100, 101, 102, 103, 104, 105] ) )
-		mesh["faceVarying"] = IECore.PrimitiveVariable( IECore.PrimitiveVariable.Interpolation.FaceVarying, IECore.IntVectorData( [20, 21, 22, 23, 24, 25, 26, 27] ) )
+		mesh["uniform"] = IECoreScene.PrimitiveVariable( IECoreScene.PrimitiveVariable.Interpolation.Uniform, IECore.IntVectorData( [10, 11] ) )
+		mesh["vertex"] = IECoreScene.PrimitiveVariable( IECoreScene.PrimitiveVariable.Interpolation.Vertex, IECore.IntVectorData( [100, 101, 102, 103, 104, 105] ) )
+		mesh["faceVarying"] = IECoreScene.PrimitiveVariable( IECoreScene.PrimitiveVariable.Interpolation.FaceVarying, IECore.IntVectorData( [20, 21, 22, 23, 24, 25, 26, 27] ) )
 
 		self.assertTrue(mesh.arePrimitiveVariablesValid())
 

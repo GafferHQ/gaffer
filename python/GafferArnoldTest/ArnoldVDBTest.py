@@ -37,6 +37,7 @@
 import os
 
 import IECore
+import IECoreScene
 
 import GafferSceneTest
 import GafferArnold
@@ -51,7 +52,7 @@ class ArnoldVDBTest( GafferSceneTest.SceneTestCase ) :
 		self.assertEqual( v["out"].childNames( "/" ), IECore.InternedStringVectorData( [ "volume" ] ) )
 		self.assertSceneValid( v["out"] )
 		self.assertEqual( v["out"].bound( "/volume" ), IECore.Box3f( IECore.V3f( -0.5 ), IECore.V3f( 0.5 ) ) )
-		self.assertTrue( isinstance( v["out"].object( "/volume" ), IECore.ExternalProcedural ) )
+		self.assertTrue( isinstance( v["out"].object( "/volume" ), IECoreScene.ExternalProcedural ) )
 
 		# If we enter a valid vdb filename, then we should get something
 		# with the right bounds, and the right parameters in the procedural.
@@ -59,7 +60,7 @@ class ArnoldVDBTest( GafferSceneTest.SceneTestCase ) :
 		self.assertEqual( v["out"].bound( "/volume" ), IECore.Box3f( IECore.V3f( -1.1, 1.1, -1.1 ), IECore.V3f( 1.1, 2.9, 1.1 ) ) )
 
 		procedural = v["out"].object( "/volume" )
-		self.assertTrue( isinstance( procedural, IECore.ExternalProcedural ) )
+		self.assertTrue( isinstance( procedural, IECoreScene.ExternalProcedural ) )
 		self.assertEqual( procedural.getBound(), v["out"].bound( "/volume" ) )
 		self.assertEqual( procedural.getFileName(), "volume" )
 		self.assertEqual( procedural.parameters()["filename" ].value, v["fileName"].getValue() )

@@ -37,6 +37,7 @@
 import unittest
 
 import IECore
+import IECoreScene
 
 import Gaffer
 import GafferTest
@@ -70,7 +71,7 @@ class GridTest( GafferSceneTest.SceneTestCase ) :
 		g = GafferScene.Grid()
 
 		a = g["out"].attributes( "/grid" )
-		self.assertEqual( a["gl:surface"], IECore.Shader( "Constant", "gl:surface", { "Cs" : IECore.Color3f( 1 ) } ) )
+		self.assertEqual( a["gl:surface"], IECoreScene.Shader( "Constant", "gl:surface", { "Cs" : IECore.Color3f( 1 ) } ) )
 
 		g["centerPixelWidth"].setValue( 2 )
 		a2 = g["out"].attributes( "/grid/centerLines" )

@@ -35,6 +35,7 @@
 ##########################################################################
 
 import IECore
+import IECoreScene
 
 import Gaffer
 import GafferScene
@@ -63,7 +64,7 @@ class PrimitiveVariablesTest( GafferSceneTest.SceneTestCase ) :
 		o2 = p["out"].object( "/sphere" )
 
 		self.assertEqual( set( o1.keys() + [ "a" ] ), set( o2.keys() ) )
-		self.assertEqual( o2["a"], IECore.PrimitiveVariable( IECore.PrimitiveVariable.Interpolation.Constant, IECore.IntData( 10 ) ) )
+		self.assertEqual( o2["a"], IECoreScene.PrimitiveVariable( IECoreScene.PrimitiveVariable.Interpolation.Constant, IECore.IntData( 10 ) ) )
 
 		del o2["a"]
 		self.assertEqual( o1, o2 )

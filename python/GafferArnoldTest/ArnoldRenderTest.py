@@ -44,6 +44,7 @@ import threading
 import arnold
 
 import IECore
+import IECoreScene
 import IECoreArnold
 
 import Gaffer
@@ -104,7 +105,7 @@ class ArnoldRenderTest( GafferSceneTest.SceneTestCase ) :
 		s["outputs"] = GafferScene.Outputs()
 		s["outputs"].addOutput(
 			"beauty",
-			IECore.Display(
+			IECoreScene.Display(
 				self.temporaryDirectory() + "/test.tif",
 				"tiff",
 				"rgba",
@@ -152,7 +153,7 @@ class ArnoldRenderTest( GafferSceneTest.SceneTestCase ) :
 		s["outputs"] = GafferScene.Outputs()
 		s["outputs"].addOutput(
 			"beauty",
-			IECore.Display(
+			IECoreScene.Display(
 				self.temporaryDirectory() + "/test.####.tif",
 				"tiff",
 				"rgba",
@@ -200,7 +201,7 @@ class ArnoldRenderTest( GafferSceneTest.SceneTestCase ) :
 		s["outputs"]["in"].setInput( s["plane"]["out"] )
 		s["outputs"].addOutput(
 			"beauty",
-			IECore.Display(
+			IECoreScene.Display(
 				"$renderDirectory/test.####.exr",
 				"exr",
 				"rgba",
@@ -254,7 +255,7 @@ class ArnoldRenderTest( GafferSceneTest.SceneTestCase ) :
 		s["outputs"] = GafferScene.Outputs()
 		s["outputs"].addOutput(
 			"beauty",
-			IECore.Display(
+			IECoreScene.Display(
 				self.temporaryDirectory() + "/${wedge:value}.tif",
 				"tiff",
 				"rgba",
@@ -926,7 +927,7 @@ class ArnoldRenderTest( GafferSceneTest.SceneTestCase ) :
 		s["outputs"] = GafferScene.Outputs()
 		s["outputs"].addOutput(
 			"beauty",
-			IECore.Display(
+			IECoreScene.Display(
 				self.temporaryDirectory() + "/test.tif",
 				"tiff",
 				"rgba",

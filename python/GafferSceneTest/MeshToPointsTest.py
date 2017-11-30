@@ -37,6 +37,7 @@
 import unittest
 
 import IECore
+import IECoreScene
 
 import Gaffer
 import GafferScene
@@ -77,7 +78,7 @@ class MeshToPointsTest( GafferSceneTest.SceneTestCase ) :
 		p["in"].setInput( c["out"] )
 
 		self.assertSceneValid( p["out"] )
-		self.failUnless( isinstance( p["out"].object( "/camera" ), IECore.Camera ) )
+		self.failUnless( isinstance( p["out"].object( "/camera" ), IECoreScene.Camera ) )
 		self.assertEqual( p["out"].object( "/camera" ), c["out"].object( "/camera" ) )
 		self.assertTrue(
 			p["out"].object( "/camera", _copy = False ).isSame( c["out"].object( "/camera", _copy = False ) )

@@ -38,6 +38,7 @@ import os
 import unittest
 
 import IECore
+import IECoreScene
 
 import Gaffer
 import GafferImage
@@ -72,7 +73,7 @@ class OpenGLRenderTest( GafferSceneTest.SceneTestCase ) :
 		s["outputs"] = GafferScene.Outputs()
 		s["outputs"].addOutput(
 			"beauty",
-			IECore.Display(
+			IECoreScene.Display(
 				self.temporaryDirectory() + "/test.exr",
 				"exr",
 				"rgba",
@@ -113,7 +114,7 @@ class OpenGLRenderTest( GafferSceneTest.SceneTestCase ) :
 		s["outputs"]["in"].setInput( s["plane"]["out"] )
 		s["outputs"].addOutput(
 			"beauty",
-			IECore.Display(
+			IECoreScene.Display(
 				"$renderDirectory/test.####.exr",
 				"exr",
 				"rgba",
@@ -146,7 +147,7 @@ class OpenGLRenderTest( GafferSceneTest.SceneTestCase ) :
 		s["plane"] = GafferScene.Plane()
 		s["outputs"] = GafferScene.Outputs()
 		s["outputs"]["in"].setInput( s["plane"]["out"] )
-		s["outputs"].addOutput( "beauty", IECore.Display( "$renderDirectory/test.####.exr", "exr", "rgba", {} ) )
+		s["outputs"].addOutput( "beauty", IECoreScene.Display( "$renderDirectory/test.####.exr", "exr", "rgba", {} ) )
 		s["render"] = GafferScene.OpenGLRender()
 
 		# no input scene produces no effect

@@ -39,6 +39,7 @@ import unittest
 import threading
 
 import IECore
+import IECoreScene
 
 import Gaffer
 import GafferTest
@@ -61,7 +62,7 @@ class SceneNodeTest( GafferSceneTest.SceneTestCase ) :
 		node = GafferSceneTest.CompoundObjectSource()
 		node["in"].setValue(
 			IECore.CompoundObject( {
-				"object" : IECore.SpherePrimitive()
+				"object" : IECoreScene.SpherePrimitive()
 			} )
 		)
 
@@ -118,7 +119,7 @@ class SceneNodeTest( GafferSceneTest.SceneTestCase ) :
 		context = Gaffer.Context()
 		context.set("scene:path", IECore.InternedStringVectorData(["sphere"]) )
 		with context:
-			self.assertEqual( sphere["out"]["object"].getValue().typeId(), IECore.MeshPrimitive.staticTypeId() )
+			self.assertEqual( sphere["out"]["object"].getValue().typeId(), IECoreScene.MeshPrimitive.staticTypeId() )
 
 		# right, now subtree it. If the cache is behaving itself, then there shouldn't be an object at the root of the
 		# resulting scene, cuz that aint allowed.

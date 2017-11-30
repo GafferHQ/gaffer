@@ -38,6 +38,7 @@
 import unittest
 
 import IECore
+import IECoreScene
 
 import Gaffer
 import GafferTest
@@ -66,7 +67,7 @@ class CameraTest( GafferSceneTest.SceneTestCase ) :
 		self.assertEqual( p["out"].childNames( "/camera" ), IECore.InternedStringVectorData() )
 
 		o = p["out"].object( "/camera" )
-		self.failUnless( isinstance( o, IECore.Camera ) )
+		self.failUnless( isinstance( o, IECoreScene.Camera ) )
 		self.assertEqual( o.parameters()["projection"].value, "perspective" )
 		self.assertEqual( o.parameters()["projection:fov"].value, 45 )
 

@@ -70,7 +70,7 @@ class ArnoldShaderUITest( GafferUITest.TestCase ) :
 
 		self.assertEqual(
 			Gaffer.Metadata.value( shader["parameters"]["coord_space"], "presetNames" ),
-			IECore.StringVectorData( [ "world", "object", "Pref" ] ),
+			IECore.StringVectorData( [ "world", "object", "Pref", "uv" ] ),
 		)
 
 		self.assertEqual(

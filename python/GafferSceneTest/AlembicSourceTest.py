@@ -40,6 +40,7 @@ import shutil
 import unittest
 
 import IECore
+import IECoreScene
 import IECoreAlembic
 
 import Gaffer
@@ -73,7 +74,7 @@ class AlembicSourceTest( GafferSceneTest.SceneTestCase ) :
 		self.assertEqual( a["out"].attributes( "/group1/pCube1" ), IECore.CompoundObject() )
 		self.assertEqual( a["out"].childNames( "/group1/pCube1" ), IECore.InternedStringVectorData( [ "pCubeShape1"] ) )
 
-		self.assertTrue( isinstance( a["out"].object( "/group1/pCube1/pCubeShape1" ), IECore.MeshPrimitive ) )
+		self.assertTrue( isinstance( a["out"].object( "/group1/pCube1/pCubeShape1" ), IECoreScene.MeshPrimitive ) )
 		self.assertEqual( a["out"].transform( "/group1/pCube1/pCubeShape1" ), IECore.M44f() )
 		self.assertEqual( a["out"].bound( "/group1/pCube1/pCubeShape1" ), IECore.Box3f( IECore.V3f( -1 ), IECore.V3f( 1 ) ) )
 		self.assertEqual( a["out"].attributes( "/group1/pCube1/pCubeShape1" ), IECore.CompoundObject() )

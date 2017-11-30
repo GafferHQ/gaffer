@@ -37,6 +37,7 @@
 import unittest
 
 import IECore
+import IECoreScene
 
 import Gaffer
 import GafferScene
@@ -46,7 +47,7 @@ class IsolateTest( GafferSceneTest.SceneTestCase ) :
 
 	def testPassThrough( self ) :
 
-		sphere = IECore.SpherePrimitive()
+		sphere = IECoreScene.SpherePrimitive()
 		input = GafferSceneTest.CompoundObjectSource()
 		input["in"].setValue(
 			IECore.CompoundObject( {
@@ -108,7 +109,7 @@ class IsolateTest( GafferSceneTest.SceneTestCase ) :
 
 	def testIsolation( self ) :
 
-		sphere = IECore.SpherePrimitive()
+		sphere = IECoreScene.SpherePrimitive()
 		input = GafferSceneTest.CompoundObjectSource()
 		input["in"].setValue(
 			IECore.CompoundObject( {
@@ -162,8 +163,8 @@ class IsolateTest( GafferSceneTest.SceneTestCase ) :
 
 	def testAdjustBounds( self ) :
 
-		sphere1 = IECore.SpherePrimitive()
-		sphere2 = IECore.SpherePrimitive( 2 )
+		sphere1 = IECoreScene.SpherePrimitive()
+		sphere2 = IECoreScene.SpherePrimitive( 2 )
 		input = GafferSceneTest.CompoundObjectSource()
 		input["in"].setValue(
 			IECore.CompoundObject( {
