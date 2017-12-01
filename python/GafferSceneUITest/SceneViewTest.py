@@ -244,12 +244,12 @@ class SceneViewTest( GafferUITest.TestCase ) :
 
 		# Enable the look-through - the camera should update.
 		view["lookThrough"]["enabled"].setValue( True )
-		self.waitForIdle( 10 )
+		self.waitForIdle( 100 )
 		self.assertEqual( getViewCameraTransform(), script["group"]["out"].transform( "/group/camera" ) )
 
 		# Disable the look-through - the camera should revert to its previous position.
 		view["lookThrough"]["enabled"].setValue( False )
-		self.waitForIdle( 10 )
+		self.waitForIdle( 100 )
 		self.assertEqual( getViewCameraTransform(), IECore.M44f.createTranslated( IECore.V3f( 100, 0, 0 ) ) )
 
 		# Simulate the user moving the viewport camera, and then move the (now disabled) look-through
@@ -257,12 +257,12 @@ class SceneViewTest( GafferUITest.TestCase ) :
 		setViewCameraTransform( IECore.M44f.createTranslated( IECore.V3f( 200, 0, 0 ) ) )
 		self.assertEqual( getViewCameraTransform(), IECore.M44f.createTranslated( IECore.V3f( 200, 0, 0 ) ) )
 		script["camera"]["transform"]["translate"].setValue( IECore.V3f( 2, 0, 0 ) )
-		self.waitForIdle( 10 )
+		self.waitForIdle( 100 )
 		self.assertEqual( getViewCameraTransform(), IECore.M44f.createTranslated( IECore.V3f( 200, 0, 0 ) ) )
 
 		# Change the viewer context - since look-through is disabled the user camera should not move.
 		viewer.getContext().setFrame( 10 )
-		self.waitForIdle( 10 )
+		self.waitForIdle( 100 )
 		self.assertEqual( getViewCameraTransform(), IECore.M44f.createTranslated( IECore.V3f( 200, 0, 0 ) ) )
 
 		# Work around "Internal C++ object (PySide.QtWidgets.QWidget) already deleted" error. In an
