@@ -34,7 +34,6 @@
 //
 //////////////////////////////////////////////////////////////////////////
 
-#include "IECore/MeshPrimitive.h"
 #include "IECore/CompoundObject.h"
 #include "IECoreGL/Group.h"
 #include "IECoreGL/Primitive.h"
@@ -43,12 +42,14 @@
 #include "IECoreGL/ShaderLoader.h"
 #include "IECoreGL/TextureLoader.h"
 #include "IECore/ObjectVector.h"
+#include "IECoreScene/MeshPrimitive.h"
 #include "IECoreGL/Renderable.h"
 
 #include "GafferSceneUI/LightFilterVisualiser.h"
 
 using namespace Imath;
 using namespace IECore;
+using namespace IECoreScene;
 using namespace IECoreGL;
 using namespace GafferSceneUI;
 
@@ -119,7 +120,7 @@ bool parameterOrDefault( const IECore::CompoundData *data, const char *key, cons
 
 void getKnotsToVisualize( const IECore::ObjectVector *shaderVector, KnotVector &knots )
 {
-	const IECore::Shader *filterShader = IECore::runTimeCast<const IECore::Shader>( shaderVector->members().back().get() );
+	const IECoreScene::Shader *filterShader = IECore::runTimeCast<const IECoreScene::Shader>( shaderVector->members().back().get() );
 	if( !filterShader )
 	{
 		return;
@@ -169,7 +170,7 @@ void addKnot( IECoreGL::GroupPtr group, const Knot &knot )
 	pVec.push_back( V3f(  0, 1, -1  ) );
 	pVec.push_back( V3f(  0, 1,  1  ) );
 
-	IECore::MeshPrimitivePtr mesh = new IECore::MeshPrimitive( vertsPerPoly, vertIds, "linear", p );
+	IECoreScene::MeshPrimitivePtr mesh = new IECoreScene::MeshPrimitive( vertsPerPoly, vertIds, "linear", p );
 	ToGLMeshConverterPtr meshConverter = new ToGLMeshConverter( mesh );
 	markerGroup->addChild( IECore::runTimeCast<IECoreGL::Renderable>( meshConverter->convert() ) );
 
@@ -234,13 +235,13 @@ IECoreGL::ConstRenderablePtr DecayVisualiser::visualise( const IECore::InternedS
 		return result;
 	}
 
-	const IECore::Shader *filterShader = IECore::runTimeCast<const IECore::Shader>( shaderVector->members().back().get() );
+	const IECoreScene::Shader *filterShader = IECore::runTimeCast<const IECoreScene::Shader>( shaderVector->members().back().get() );
 	if( !filterShader )
 	{
 		return result;
 	}
 
-	const IECore::Shader *lightShader = IECore::runTimeCast<const IECore::Shader>( lightShaderVector->members().back().get() );
+	const IECoreScene::Shader *lightShader = IECore::runTimeCast<const IECoreScene::Shader>( lightShaderVector->members().back().get() );
 	if( !lightShader )
 	{
 		return result;

@@ -38,6 +38,7 @@ import os
 import unittest
 
 import IECore
+import IECoreScene
 
 import Gaffer
 import GafferTest
@@ -83,13 +84,13 @@ class OSLLightTest( GafferOSLTest.OSLTestCase ) :
 	def testShape( self ) :
 
 		node = GafferOSL.OSLLight()
-		self.assertEqual( node["out"].object( "/light" ), IECore.DiskPrimitive( 0.01 ) )
+		self.assertEqual( node["out"].object( "/light" ), IECoreScene.DiskPrimitive( 0.01 ) )
 
 		node["radius"].setValue( 2 )
-		self.assertEqual( node["out"].object( "/light" ), IECore.DiskPrimitive( 2 ) )
+		self.assertEqual( node["out"].object( "/light" ), IECoreScene.DiskPrimitive( 2 ) )
 
 		node["shape"].setValue( node.Shape.Sphere )
-		self.assertEqual( node["out"].object( "/light" ), IECore.SpherePrimitive( 2 ) )
+		self.assertEqual( node["out"].object( "/light" ), IECoreScene.SpherePrimitive( 2 ) )
 
 		node["shape"].setValue( node.Shape.Geometry )
 		node["geometryType"].setValue( "teapot" )

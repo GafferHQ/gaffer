@@ -39,6 +39,7 @@ import os
 import unittest
 
 import IECore
+import IECoreScene
 
 import Gaffer
 import GafferTest
@@ -50,24 +51,24 @@ class ObjectToSceneTest( GafferSceneTest.SceneTestCase ) :
 	def testMeshInput( self ) :
 
 		p = GafferScene.ObjectToScene()
-		p["object"].setValue( IECore.MeshPrimitive.createPlane( IECore.Box2f( IECore.V2f( -1 ), IECore.V2f( 1 ) ) ) )
+		p["object"].setValue( IECoreScene.MeshPrimitive.createPlane( IECore.Box2f( IECore.V2f( -1 ), IECore.V2f( 1 ) ) ) )
 
 		self.assertSceneValid( p["out"] )
-		self.assertEqual( p["out"].object( "/object" ),  IECore.MeshPrimitive.createPlane( IECore.Box2f( IECore.V2f( -1 ), IECore.V2f( 1 ) ) ) )
+		self.assertEqual( p["out"].object( "/object" ),  IECoreScene.MeshPrimitive.createPlane( IECore.Box2f( IECore.V2f( -1 ), IECore.V2f( 1 ) ) ) )
 
-		p["object"].setValue( IECore.MeshPrimitive.createPlane( IECore.Box2f( IECore.V2f( -2 ), IECore.V2f( 2 ) ) ) )
+		p["object"].setValue( IECoreScene.MeshPrimitive.createPlane( IECore.Box2f( IECore.V2f( -2 ), IECore.V2f( 2 ) ) ) )
 
 		self.assertSceneValid( p["out"] )
-		self.assertEqual( p["out"].object( "/object" ),  IECore.MeshPrimitive.createPlane( IECore.Box2f( IECore.V2f( -2 ), IECore.V2f( 2 ) ) ) )
+		self.assertEqual( p["out"].object( "/object" ),  IECoreScene.MeshPrimitive.createPlane( IECore.Box2f( IECore.V2f( -2 ), IECore.V2f( 2 ) ) ) )
 
 	def testProceduralInput( self ) :
 
-		p = IECore.ReadProcedural()
+		p = IECoreScene.ReadProcedural()
 
 		s = GafferScene.ObjectToScene()
 		s["object"].setValue( p, _copy = False )
 
-		self.failUnless( isinstance( s["out"].object( "/object" ), IECore.ParameterisedProcedural ) )
+		self.failUnless( isinstance( s["out"].object( "/object" ), IECoreScene.ParameterisedProcedural ) )
 		self.assertTrue( s["out"].object( "/object", _copy=False ).isSame( p ) )
 
 if __name__ == "__main__":

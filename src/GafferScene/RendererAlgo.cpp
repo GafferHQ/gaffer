@@ -41,21 +41,17 @@
 #include "boost/filesystem.hpp"
 #include "boost/algorithm/string/predicate.hpp"
 
-#include "IECore/PreWorldRenderable.h"
-#include "IECore/Camera.h"
-#include "IECore/WorldBlock.h"
-#include "IECore/Shader.h"
-#include "IECore/AttributeBlock.h"
-#include "IECore/Display.h"
-#include "IECore/TransformBlock.h"
-#include "IECore/CoordinateSystem.h"
-#include "IECore/ClippingPlane.h"
-#include "IECore/VisibleRenderable.h"
-#include "IECore/Primitive.h"
-#include "IECore/MotionBlock.h"
 #include "IECore/Interpolator.h"
 #include "IECore/NullObject.h"
-#include "IECore/Transform.h"
+#include "IECoreScene/PreWorldRenderable.h"
+#include "IECoreScene/Camera.h"
+#include "IECoreScene/Shader.h"
+#include "IECoreScene/Display.h"
+#include "IECoreScene/CoordinateSystem.h"
+#include "IECoreScene/ClippingPlane.h"
+#include "IECoreScene/VisibleRenderable.h"
+#include "IECoreScene/Primitive.h"
+#include "IECoreScene/Transform.h"
 
 #include "Gaffer/Context.h"
 #include "Gaffer/Metadata.h"
@@ -69,6 +65,7 @@
 using namespace std;
 using namespace Imath;
 using namespace IECore;
+using namespace IECoreScene;
 using namespace Gaffer;
 using namespace GafferScene;
 
@@ -152,7 +149,7 @@ void transformSamples( const ScenePlug *scene, size_t segments, const Imath::V2f
 	}
 }
 
-void objectSamples( const ScenePlug *scene, size_t segments, const Imath::V2f &shutter, std::vector<IECore::ConstVisibleRenderablePtr> &samples, std::set<float> &sampleTimes )
+void objectSamples( const ScenePlug *scene, size_t segments, const Imath::V2f &shutter, std::vector<IECoreScene::ConstVisibleRenderablePtr> &samples, std::set<float> &sampleTimes )
 {
 
 	// Static case
@@ -736,7 +733,7 @@ struct CameraOutput : public LocationOutput
 			IECore::ConstObjectPtr object = scene->objectPlug()->getValue();
 			if( const Camera *camera = runTimeCast<const Camera>( object.get() ) )
 			{
-				IECore::CameraPtr cameraCopy = camera->copy();
+				IECoreScene::CameraPtr cameraCopy = camera->copy();
 
 				GafferScene::RendererAlgo::applyCameraGlobals( cameraCopy.get(), m_globals );
 
@@ -962,7 +959,7 @@ void outputOutputs( const IECore::CompoundObject *globals, const IECore::Compoun
 		}
 		else
 		{
-			throw IECore::Exception( "Global \"" + it->first.string() + "\" is not an IECore::Display" );
+			throw IECore::Exception( "Global \"" + it->first.string() + "\" is not an IECoreScene::Display" );
 		}
 	}
 
@@ -1011,7 +1008,7 @@ void outputCameras( const ScenePlug *scene, const IECore::CompoundObject *global
 
 	if( !cameraOption || cameraOption->readable().empty() )
 	{
-		CameraPtr defaultCamera = new IECore::Camera;
+		CameraPtr defaultCamera = new IECoreScene::Camera;
 		RendererAlgo::applyCameraGlobals( defaultCamera.get(), globals );
 		IECoreScenePreview::Renderer::AttributesInterfacePtr defaultAttributes = renderer->attributes( scene->attributesPlug()->defaultValue() );
 		ConstStringDataPtr name = new StringData( "gaffer:defaultCamera" );
@@ -1033,7 +1030,7 @@ void outputObjects( const ScenePlug *scene, const IECore::CompoundObject *global
 	SceneAlgo::parallelProcessLocations( scene, output, root );
 }
 
-void applyCameraGlobals( IECore::Camera *camera, const IECore::CompoundObject *globals )
+void applyCameraGlobals( IECoreScene::Camera *camera, const IECore::CompoundObject *globals )
 {
 
 	// apply the resolution, aspect ratio and crop window

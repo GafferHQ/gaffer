@@ -34,7 +34,7 @@
 //
 //////////////////////////////////////////////////////////////////////////
 
-#include "IECore/CoordinateSystem.h"
+#include "IECoreScene/CoordinateSystem.h"
 
 #include "Gaffer/StringPlug.h"
 
@@ -64,7 +64,7 @@ void CoordinateSystem::hashSource( const Gaffer::Context *context, IECore::Murmu
 
 IECore::ConstObjectPtr CoordinateSystem::computeSource( const Context *context ) const
 {
-	return new IECore::CoordinateSystem();
+	return new IECoreScene::CoordinateSystem();
 }
 
 IECore::ConstInternedStringVectorDataPtr CoordinateSystem::computeStandardSetNames() const

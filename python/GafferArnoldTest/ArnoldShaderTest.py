@@ -39,6 +39,7 @@ import os
 import unittest
 
 import IECore
+import IECoreScene
 import IECoreImage
 import IECoreArnold
 
@@ -65,7 +66,7 @@ class ArnoldShaderTest( GafferSceneTest.SceneTestCase ) :
 		s = n.attributes()["ai:surface"]
 		self.failUnless( isinstance( s, IECore.ObjectVector ) )
 		self.assertEqual( len( s ), 1 )
-		self.failUnless( isinstance( s[0], IECore.Shader ) )
+		self.failUnless( isinstance( s[0], IECoreScene.Shader ) )
 
 		s = s[0]
 		self.assertEqual( s.name, "utility" )
@@ -180,7 +181,7 @@ class ArnoldShaderTest( GafferSceneTest.SceneTestCase ) :
 
 		r.output(
 			"test",
-			IECore.Display(
+			IECoreScene.Display(
 				"test",
 				"ieDisplay",
 				"rgba",
@@ -193,7 +194,7 @@ class ArnoldShaderTest( GafferSceneTest.SceneTestCase ) :
 
 		mesh = r.object(
 			"mesh",
-			IECore.MeshPrimitive.createPlane( IECore.Box2f( IECore.V2f( -1 ), IECore.V2f( 1 ) ) ),
+			IECoreScene.MeshPrimitive.createPlane( IECore.Box2f( IECore.V2f( -1 ), IECore.V2f( 1 ) ) ),
 			r.attributes( s.attributes() )
 		)
 		mesh.transform( IECore.M44f().translate( IECore.V3f( 0, 0, -5 ) ) )

@@ -40,8 +40,8 @@
 #include "boost/bind.hpp"
 #include "boost/algorithm/string/predicate.hpp"
 
-#include "IECore/CurvesPrimitive.h"
 #include "IECore/MessageHandler.h"
+#include "IECoreScene/CurvesPrimitive.h"
 
 #include "IECoreGL/Renderable.h"
 #include "IECoreGL/CachedConverter.h"
@@ -514,7 +514,7 @@ class SceneGadget::UpdateTask : public tbb::task
 
 				if( haveChildren )
 				{
-					IECore::CurvesPrimitivePtr curvesBound = IECore::CurvesPrimitive::createBox( m_sceneGraph->m_bound );
+					IECoreScene::CurvesPrimitivePtr curvesBound = IECoreScene::CurvesPrimitive::createBox( m_sceneGraph->m_bound );
 					m_sceneGraph->m_boundRenderable = boost::static_pointer_cast<const IECoreGL::Renderable>(
 						IECoreGL::CachedConverter::defaultCachedConverter()->convert( curvesBound.get() )
 					);

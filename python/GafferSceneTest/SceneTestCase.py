@@ -39,6 +39,7 @@ import os
 import unittest
 
 import IECore
+import IECoreScene
 
 import Gaffer
 import GafferTest
@@ -56,7 +57,7 @@ class SceneTestCase( GafferTest.TestCase ) :
 			thisBound = scenePlug.bound( scenePath )
 
 			o = scenePlug.object( scenePath, _copy = False )
-			if isinstance( o, IECore.VisibleRenderable ) :
+			if isinstance( o, IECoreScene.VisibleRenderable ) :
 				 if not thisBound.contains( o.bound() ) :
 					self.fail( "Bound %s does not contain object %s at %s" % ( thisBound, o.bound(), scenePath ) )
 
@@ -126,12 +127,12 @@ class SceneTestCase( GafferTest.TestCase ) :
 		def walkScene( scenePath ) :
 
 			object = scenePlug.object( scenePath, _copy = False )
-			if isinstance( object, IECore.Camera ) :
+			if isinstance( object, IECoreScene.Camera ) :
 				self.assertTrue(
 					cameraSet.value.match( scenePath ) & GafferScene.Filter.Result.ExactMatch,
 					scenePath + " in __cameras set"
 				)
-			elif isinstance( object, IECore.CoordinateSystem ) :
+			elif isinstance( object, IECoreScene.CoordinateSystem ) :
 				self.assertTrue(
 					coordinateSystemSet.value.match( scenePath ) & GafferScene.Filter.Result.ExactMatch,
 					scenePath + " in __coordinateSystems set"

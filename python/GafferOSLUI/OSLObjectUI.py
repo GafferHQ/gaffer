@@ -35,6 +35,7 @@
 ##########################################################################
 
 import IECore
+import IECoreScene
 import Gaffer
 import GafferUI
 
@@ -80,9 +81,9 @@ Gaffer.Metadata.registerNode(
 			All non-constant input primitive variables are resampled to match the selected interpolation so that they can be accessed from the shader.
 			""",
 
-			"preset:Uniform", IECore.PrimitiveVariable.Interpolation.Uniform,
-			"preset:Vertex", IECore.PrimitiveVariable.Interpolation.Vertex,
-			"preset:FaceVarying", IECore.PrimitiveVariable.Interpolation.FaceVarying,
+			"preset:Uniform", IECoreScene.PrimitiveVariable.Interpolation.Uniform,
+			"preset:Vertex", IECoreScene.PrimitiveVariable.Interpolation.Vertex,
+			"preset:FaceVarying", IECoreScene.PrimitiveVariable.Interpolation.FaceVarying,
 
 			"plugValueWidget:type", "GafferUI.PresetsPlugValueWidget",
 

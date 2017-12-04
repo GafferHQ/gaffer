@@ -36,6 +36,7 @@
 ##########################################################################
 
 import IECore
+import IECoreScene
 
 import GafferScene
 import GafferImageUI
@@ -45,7 +46,7 @@ import GafferImageUI
 
 GafferScene.Outputs.registerOutput(
 	"Interactive/Beauty",
-	IECore.Display(
+	IECoreScene.Display(
 		"beauty",
 		"ieDisplay",
 		"rgba",
@@ -61,7 +62,7 @@ GafferScene.Outputs.registerOutput(
 
 GafferScene.Outputs.registerOutput(
 	"Batch/Beauty",
-	IECore.Display(
+	IECoreScene.Display(
 		"${project:rootDirectory}/renders/${script:name}/beauty/beauty.####.exr",
 		"exr",
 		"rgba",
@@ -120,7 +121,7 @@ with IECore.IgnoredExceptions( ImportError ) :
 
 		GafferScene.Outputs.registerOutput(
 			"Interactive/Arnold/" + label,
-			IECore.Display(
+			IECoreScene.Display(
 				aov,
 				"ieDisplay",
 				"color " + data,
@@ -135,7 +136,7 @@ with IECore.IgnoredExceptions( ImportError ) :
 
 		GafferScene.Outputs.registerOutput(
 			"Batch/Arnold/" + label,
-			IECore.Display(
+			IECoreScene.Display(
 				"${project:rootDirectory}/renders/${script:name}/%s/%s.####.exr" % ( aov, aov ),
 				"exr",
 				"color " + data,
@@ -162,7 +163,7 @@ with IECore.IgnoredExceptions( ImportError ) :
 
 		GafferScene.Outputs.registerOutput(
 			"Interactive/3Delight/" + label,
-			IECore.Display(
+			IECoreScene.Display(
 				aov,
 				"ieDisplay",
 				"color " + aov,
@@ -177,7 +178,7 @@ with IECore.IgnoredExceptions( ImportError ) :
 
 		GafferScene.Outputs.registerOutput(
 			"Batch/3Delight/" + label,
-			IECore.Display(
+			IECoreScene.Display(
 				"${project:rootDirectory}/renders/${script:name}/%s/%s.####.exr" % ( aov, aov ),
 				"exr",
 				"color " + aov,

@@ -38,7 +38,7 @@
 #include "boost/algorithm/string/predicate.hpp"
 #include "boost/algorithm/string.hpp"
 
-#include "IECore/Shader.h"
+#include "IECoreScene/Shader.h"
 
 #include "IECoreGL/Group.h"
 #include "IECoreGL/Primitive.h"
@@ -118,7 +118,7 @@ IECoreGL::ConstRenderablePtr AttributeVisualiserForLightFilters::visualise( cons
 		}
 
 		IECore::InternedString filterShaderName;
-		if( const IECore::Shader *filterShader = IECore::runTimeCast<const IECore::Shader>( filterShaderVector->members().back().get() ) )
+		if( const IECoreScene::Shader *filterShader = IECore::runTimeCast<const IECoreScene::Shader>( filterShaderVector->members().back().get() ) )
 		{
 			filterShaderName = filterShader->getName();
 		}

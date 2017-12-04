@@ -39,6 +39,7 @@ import unittest
 import threading
 
 import IECore
+import IECoreScene
 
 import Gaffer
 import GafferScene
@@ -75,7 +76,7 @@ class SeedsTest( GafferSceneTest.SceneTestCase ) :
 		self.assertEqual( s["out"].objectHash( "/plane" ), p["out"].objectHash( "/plane" ) )
 		self.assertEqual( s["out"].object( "/plane" ), p["out"].object( "/plane" ) )
 
-		self.failUnless( isinstance( s["out"].object( "/plane/seeds" ), IECore.PointsPrimitive ) )
+		self.failUnless( isinstance( s["out"].object( "/plane/seeds" ), IECoreScene.PointsPrimitive ) )
 		numPoints = s["out"].object( "/plane/seeds" ).numPoints
 
 		s["density"].setValue( 10 )

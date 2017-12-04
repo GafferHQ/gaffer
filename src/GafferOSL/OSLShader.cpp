@@ -41,7 +41,6 @@
 #include "OSL/oslquery.h"
 
 #include "IECore/MessageHandler.h"
-#include "IECore/AttributeBlock.h"
 #include "IECore/LRUCache.h"
 
 #include "IECoreImage/OpenImageIOAlgo.h"
@@ -62,6 +61,7 @@
 using namespace std;
 using namespace Imath;
 using namespace IECore;
+using namespace IECoreScene;
 using namespace OSL;
 using namespace Gaffer;
 using namespace GafferScene;

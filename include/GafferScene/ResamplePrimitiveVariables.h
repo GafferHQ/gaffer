@@ -59,7 +59,7 @@ class ResamplePrimitiveVariables : public PrimitiveVariableProcessor
 
 	protected :
 
-		void processPrimitiveVariable( const ScenePath &path, const Gaffer::Context *context, IECore::ConstPrimitivePtr inputGeometry, IECore::PrimitiveVariable &inputVariable ) const override;
+		void processPrimitiveVariable( const ScenePath &path, const Gaffer::Context *context, IECoreScene::ConstPrimitivePtr inputGeometry, IECoreScene::PrimitiveVariable &inputVariable ) const override;
 		void hashProcessedObject( const ScenePath &path, const Gaffer::Context *context, IECore::MurmurHash &h ) const override;
 	private :
 

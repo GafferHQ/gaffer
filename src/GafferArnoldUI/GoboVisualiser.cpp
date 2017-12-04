@@ -34,7 +34,6 @@
 //
 //////////////////////////////////////////////////////////////////////////
 
-#include "IECore/Shader.h"
 #include "IECoreGL/Group.h"
 #include "IECoreGL/Primitive.h"
 #include "IECoreGL/ShaderStateComponent.h"
@@ -45,6 +44,7 @@
 #include "IECore/ObjectVector.h"
 #include "IECoreGL/Renderable.h"
 #include "IECore/LRUCache.h"
+#include "IECoreScene/Shader.h"
 
 #include "Gaffer/Metadata.h"
 #include "GafferSceneUI/StandardLightVisualiser.h"
@@ -56,6 +56,7 @@
 using namespace std;
 using namespace Imath;
 using namespace IECore;
+using namespace IECoreScene;
 using namespace IECoreGL;
 using namespace GafferSceneUI;
 
@@ -141,7 +142,7 @@ const char *goboFragSource()
 
 void addSurfaceShader( IECore::ObjectVectorPtr shaderVector, string surfaceInput )
 {
-	IECore::Shader *surfaceShader = new IECore::Shader( "Surface/Constant", "osl:shader" );
+	IECoreScene::Shader *surfaceShader = new IECoreScene::Shader( "Surface/Constant", "osl:shader" );
 	surfaceShader->parameters()["Cs"] = new StringData( surfaceInput );
 
 	shaderVector->members().push_back( surfaceShader );
@@ -268,13 +269,13 @@ IECoreGL::ConstRenderablePtr GoboVisualiser::visualise( const IECore::InternedSt
 		return result;
 	}
 
-	const IECore::Shader *filterShader = IECore::runTimeCast<const IECore::Shader>( shaderVector->members().back().get() );
+	const IECoreScene::Shader *filterShader = IECore::runTimeCast<const IECoreScene::Shader>( shaderVector->members().back().get() );
 	if( !filterShader )
 	{
 		return result;
 	}
 
-	const IECore::Shader *lightShader = IECore::runTimeCast<const IECore::Shader>( lightShaderVector->members().back().get() );
+	const IECoreScene::Shader *lightShader = IECore::runTimeCast<const IECoreScene::Shader>( lightShaderVector->members().back().get() );
 	if( !lightShader )
 	{
 		return result;

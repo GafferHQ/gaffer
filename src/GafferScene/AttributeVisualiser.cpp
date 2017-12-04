@@ -36,7 +36,7 @@
 
 #include "OpenEXR/ImathRandom.h"
 
-#include "IECore/Shader.h"
+#include "IECoreScene/Shader.h"
 
 #include "Gaffer/StringPlug.h"
 
@@ -44,6 +44,7 @@
 
 using namespace Imath;
 using namespace IECore;
+using namespace IECoreScene;
 using namespace Gaffer;
 using namespace GafferScene;
 

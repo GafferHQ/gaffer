@@ -41,7 +41,7 @@
 #include "boost/lexical_cast.hpp"
 
 #include "IECore/VectorTypedData.h"
-#include "IECore/Primitive.h"
+#include "IECoreScene/Primitive.h"
 
 #include "Gaffer/Context.h"
 #include "Gaffer/StringPlug.h"
@@ -52,6 +52,7 @@ using namespace std;
 using namespace tbb;
 using namespace Imath;
 using namespace IECore;
+using namespace IECoreScene;
 using namespace Gaffer;
 using namespace GafferScene;
 

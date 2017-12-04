@@ -34,11 +34,12 @@
 //
 //////////////////////////////////////////////////////////////////////////
 
-#include "IECore/Primitive.h"
+#include "IECoreScene/Primitive.h"
 
 #include "GafferScene/PrimitiveVariables.h"
 
 using namespace IECore;
+using namespace IECoreScene;
 using namespace Gaffer;
 using namespace GafferScene;
 

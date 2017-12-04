@@ -337,7 +337,7 @@ class ComputeNodeTest( GafferTest.TestCase ) :
 	def testPassThroughSharesHashes( self ) :
 
 		n = self.PassThrough()
-		n["in"].setValue( IECore.MeshPrimitive.createPlane( IECore.Box2f( IECore.V2f( -1 ), IECore.V2f( 1 ) ) ) )
+		n["in"].setValue( IECore.IntVectorData( [ 1, 2, 3 ] ) )
 
 		self.assertEqual( n["in"].hash(), n["out"].hash() )
 		self.assertEqual( n["in"].getValue(), n["out"].getValue() )
@@ -345,7 +345,7 @@ class ComputeNodeTest( GafferTest.TestCase ) :
 	def testPassThroughSharesCacheEntries( self ) :
 
 		n = self.PassThrough()
-		n["in"].setValue( IECore.MeshPrimitive.createPlane( IECore.Box2f( IECore.V2f( -1 ), IECore.V2f( 1 ) ) ) )
+		n["in"].setValue( IECore.IntVectorData( [ 1, 2, 3 ] ) )
 
 		self.failUnless( n["in"].getValue( _copy=False ).isSame( n["out"].getValue( _copy=False ) ) )
 

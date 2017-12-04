@@ -38,6 +38,7 @@ import os
 import unittest
 
 import IECore
+import IECoreScene
 
 import GafferTest
 import GafferScene
@@ -73,7 +74,7 @@ class RendererTest( GafferTest.TestCase ) :
 
 		r.output(
 			"test",
-			IECore.Display(
+			IECoreScene.Display(
 				self.temporaryDirectory() + "/beauty.exr",
 				"exr",
 				"rgba",
@@ -138,7 +139,7 @@ class RendererTest( GafferTest.TestCase ) :
 
 			r.output(
 				"test",
-				IECore.Display(
+				IECoreScene.Display(
 					"beauty.exr",
 					"exr",
 					data,
@@ -166,7 +167,7 @@ class RendererTest( GafferTest.TestCase ) :
 
 		r.object(
 			"testPlane",
-			IECore.MeshPrimitive.createPlane( IECore.Box2f( IECore.V2f( -1 ), IECore.V2f( 1 ) ), IECore.V2i( 2, 1 ) ),
+			IECoreScene.MeshPrimitive.createPlane( IECore.Box2f( IECore.V2f( -1 ), IECore.V2f( 1 ) ), IECore.V2i( 2, 1 ) ),
 			r.attributes( IECore.CompoundObject() ),
 		)
 
@@ -191,8 +192,8 @@ class RendererTest( GafferTest.TestCase ) :
 		r.object(
 			"testPlane",
 			[
-				IECore.MeshPrimitive.createPlane( IECore.Box2f( IECore.V2f( -1 ), IECore.V2f( 1 ) ) ),
-				IECore.MeshPrimitive.createPlane( IECore.Box2f( IECore.V2f( -2 ), IECore.V2f( 2 ) ) ),
+				IECoreScene.MeshPrimitive.createPlane( IECore.Box2f( IECore.V2f( -1 ), IECore.V2f( 1 ) ) ),
+				IECoreScene.MeshPrimitive.createPlane( IECore.Box2f( IECore.V2f( -2 ), IECore.V2f( 2 ) ) ),
 			],
 			[ 0, 1 ],
 			r.attributes( IECore.CompoundObject() ),
@@ -218,9 +219,9 @@ class RendererTest( GafferTest.TestCase ) :
 			self.temporaryDirectory() + "/test.nsi",
 		)
 
-		points = IECore.PointsPrimitive( IECore.V3fVectorData( [ IECore.V3f( x ) for x in range( 0, 4 ) ] ) )
-		points["width"] = IECore.PrimitiveVariable(
-			IECore.PrimitiveVariable.Interpolation.Vertex,
+		points = IECoreScene.PointsPrimitive( IECore.V3fVectorData( [ IECore.V3f( x ) for x in range( 0, 4 ) ] ) )
+		points["width"] = IECoreScene.PrimitiveVariable(
+			IECoreScene.PrimitiveVariable.Interpolation.Vertex,
 			IECore.FloatVectorData( [ x + 1 for x in range( 0, 4 ) ] )
 		)
 
@@ -245,7 +246,7 @@ class RendererTest( GafferTest.TestCase ) :
 			self.temporaryDirectory() + "/test.nsi",
 		)
 
-		points = IECore.PointsPrimitive( IECore.V3fVectorData( [ IECore.V3f( x ) for x in range( 0, 4 ) ] ) )
+		points = IECoreScene.PointsPrimitive( IECore.V3fVectorData( [ IECore.V3f( x ) for x in range( 0, 4 ) ] ) )
 
 		r.object(
 			"testPoints",
@@ -267,7 +268,7 @@ class RendererTest( GafferTest.TestCase ) :
 			self.temporaryDirectory() + "/test.nsi",
 		)
 
-		curves = IECore.CurvesPrimitive(
+		curves = IECoreScene.CurvesPrimitive(
 			IECore.IntVectorData( [ 4, 4 ] ),
 			IECore.CubicBasisf.bSpline(),
 			False,
@@ -301,7 +302,7 @@ class RendererTest( GafferTest.TestCase ) :
 
 		r.object(
 			"testDisk",
-			IECore.DiskPrimitive( 2, 1 ),
+			IECoreScene.DiskPrimitive( 2, 1 ),
 			r.attributes( IECore.CompoundObject() ),
 		)
 
@@ -326,7 +327,7 @@ class RendererTest( GafferTest.TestCase ) :
 
 		r.object(
 			"testSphere",
-			IECore.SpherePrimitive( 2 ),
+			IECoreScene.SpherePrimitive( 2 ),
 			r.attributes( IECore.CompoundObject() ),
 		)
 
@@ -402,7 +403,7 @@ class RendererTest( GafferTest.TestCase ) :
 
 		r.camera(
 			"testCamera",
-			IECore.Camera(
+			IECoreScene.Camera(
 				parameters = {
 					"resolution" : IECore.V2i( 2000, 1000 ),
 					"projection" : "perspective",
@@ -436,7 +437,7 @@ class RendererTest( GafferTest.TestCase ) :
 			self.temporaryDirectory() + "/test.nsi",
 		)
 
-		m = IECore.MeshPrimitive.createPlane( IECore.Box2f( IECore.V2f( -1 ), IECore.V2f( 1 ) ) )
+		m = IECoreScene.MeshPrimitive.createPlane( IECore.Box2f( IECore.V2f( -1 ), IECore.V2f( 1 ) ) )
 		a = r.attributes( IECore.CompoundObject() )
 
 		r.object( "testPlane1", m, a )
@@ -458,7 +459,7 @@ class RendererTest( GafferTest.TestCase ) :
 			self.temporaryDirectory() + "/test.nsi",
 		)
 
-		m = IECore.MeshPrimitive.createPlane( IECore.Box2f( IECore.V2f( -1 ), IECore.V2f( 1 ) ) )
+		m = IECoreScene.MeshPrimitive.createPlane( IECore.Box2f( IECore.V2f( -1 ), IECore.V2f( 1 ) ) )
 		a = r.attributes( IECore.CompoundObject() )
 
 		r.object( "untransformed", m, a )

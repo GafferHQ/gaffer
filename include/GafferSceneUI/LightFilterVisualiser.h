@@ -38,7 +38,7 @@
 #define GAFFERSCENEUI_LIGHTFILTERVISUALISER_H
 
 #include "IECore/ObjectVector.h"
-#include "IECore/Shader.h"
+#include "IECoreScene/Shader.h"
 #include "IECoreGL/Renderable.h"
 
 namespace GafferSceneUI

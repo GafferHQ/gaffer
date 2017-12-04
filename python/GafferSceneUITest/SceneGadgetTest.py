@@ -35,6 +35,7 @@
 ##########################################################################
 
 import IECore
+import IECoreScene
 import IECoreGL
 
 import Gaffer
@@ -239,7 +240,7 @@ class SceneGadgetTest( GafferUITest.TestCase ) :
 		with GafferUI.Window() as w :
 			gw = GafferUI.GadgetWidget( sg )
 			gw.getViewportGadget().setCamera(
-				IECore.Camera( parameters = { "projection" : "perspective", } )
+				IECoreScene.Camera( parameters = { "projection" : "perspective", } )
 			)
 
 		with IECore.CapturingMessageHandler() as mh :

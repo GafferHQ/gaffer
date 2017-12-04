@@ -39,6 +39,7 @@ import time
 import unittest
 
 import IECore
+import IECoreScene
 import IECoreImage
 
 import Gaffer
@@ -59,7 +60,7 @@ class InteractiveArnoldRenderTest( GafferSceneTest.InteractiveRenderTest ) :
 		s["o"] = GafferScene.Outputs()
 		s["o"].addOutput(
 			"beauty",
-			IECore.Display(
+			IECoreScene.Display(
 				"test",
 				"ieDisplay",
 				"rgba",
@@ -112,7 +113,7 @@ class InteractiveArnoldRenderTest( GafferSceneTest.InteractiveRenderTest ) :
 		script["outputs"] = GafferScene.Outputs()
 		script["outputs"].addOutput(
 			"beauty",
-			IECore.Display(
+			IECoreScene.Display(
 				"test",
 				"ieDisplay",
 				"rgba",

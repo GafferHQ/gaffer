@@ -37,7 +37,7 @@
 #include "boost/container/flat_map.hpp"
 #include "boost/algorithm/string/predicate.hpp"
 
-#include "IECore/Shader.h"
+#include "IECoreScene/Shader.h"
 
 #include "IECoreGL/CurvesPrimitive.h"
 #include "IECoreGL/Group.h"
@@ -126,7 +126,7 @@ IECoreGL::ConstRenderablePtr AttributeVisualiserForLights::visualise( const IECo
 		}
 
 		IECore::InternedString shaderName;
-		if( const IECore::Shader *shader = IECore::runTimeCast<const IECore::Shader>( shaderVector->members().back().get() ) )
+		if( const IECoreScene::Shader *shader = IECore::runTimeCast<const IECoreScene::Shader>( shaderVector->members().back().get() ) )
 		{
 			shaderName = shader->getName();
 		}

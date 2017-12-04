@@ -41,6 +41,7 @@ import unittest
 import arnold
 
 import IECore
+import IECoreScene
 import IECoreArnold
 
 import GafferTest
@@ -65,7 +66,7 @@ class RendererTest( GafferTest.TestCase ) :
 
 		o = r.object(
 			"testPlane",
-			IECore.MeshPrimitive.createPlane( IECore.Box2f( IECore.V2f( -1 ), IECore.V2f( 1 ) ) ),
+			IECoreScene.MeshPrimitive.createPlane( IECore.Box2f( IECore.V2f( -1 ), IECore.V2f( 1 ) ) ),
 			r.attributes( IECore.CompoundObject() ),
 		)
 		o.transform( IECore.M44f().translate( IECore.V3f( 1, 2, 3 ) ) )
@@ -91,7 +92,7 @@ class RendererTest( GafferTest.TestCase ) :
 
 		r.camera(
 			"testCamera",
-			IECore.Camera(
+			IECoreScene.Camera(
 				parameters = {
 					"resolution" : IECore.V2i( 2000, 1000 ),
 					"renderRegion" : IECore.Box2i( IECore.V2i( 0 ), IECore.V2i( 1999, 749 ) ),
@@ -129,12 +130,12 @@ class RendererTest( GafferTest.TestCase ) :
 		for i in range( 0, 10 ) :
 
 			a = IECore.CompoundObject( {
-				"ai:surface" : IECore.ObjectVector( [ IECore.Shader( "flat" ) ] ),
+				"ai:surface" : IECore.ObjectVector( [ IECoreScene.Shader( "flat" ) ] ),
 			} )
 
 			r.object(
 				"testPlane%d" % i,
-				IECore.MeshPrimitive.createPlane( IECore.Box2f( IECore.V2f( -1 ), IECore.V2f( 1 ) ) ),
+				IECoreScene.MeshPrimitive.createPlane( IECore.Box2f( IECore.V2f( -1 ), IECore.V2f( 1 ) ) ),
 				# We keep specifying the same shader, but we'd like the renderer
 				# to be frugal and reuse a single arnold shader on the other side.
 				r.attributes( a )
@@ -157,7 +158,7 @@ class RendererTest( GafferTest.TestCase ) :
 
 		r.output(
 			"test",
-			IECore.Display(
+			IECoreScene.Display(
 				self.temporaryDirectory() + "/beauty.exr",
 				"exr",
 				"rgba",
@@ -168,14 +169,14 @@ class RendererTest( GafferTest.TestCase ) :
 
 		o = r.object(
 			"testPlane",
-			IECore.MeshPrimitive.createPlane( IECore.Box2f( IECore.V2f( -1 ), IECore.V2f( 1 ) ) ),
+			IECoreScene.MeshPrimitive.createPlane( IECore.Box2f( IECore.V2f( -1 ), IECore.V2f( 1 ) ) ),
 			r.attributes( IECore.CompoundObject() )
 		)
 
 		# Replace the shader a few times.
 		for shader in ( "utility", "flat", "standard_surface" ) :
 			a = IECore.CompoundObject( {
-				"ai:surface" : IECore.ObjectVector( [ IECore.Shader( shader ) ] ),
+				"ai:surface" : IECore.ObjectVector( [ IECoreScene.Shader( shader ) ] ),
 			} )
 			o.attributes( r.attributes( a ) )
 			del a
@@ -195,13 +196,13 @@ class RendererTest( GafferTest.TestCase ) :
 		)
 
 		shader1 = IECore.ObjectVector( [
-			IECore.Shader( "noise", parameters = { "__handle" : "myHandle" } ),
-			IECore.Shader( "flat", parameters = { "color" : "link:myHandle" } ),
+			IECoreScene.Shader( "noise", parameters = { "__handle" : "myHandle" } ),
+			IECoreScene.Shader( "flat", parameters = { "color" : "link:myHandle" } ),
 		] )
 
 		r.object(
 			"testPlane1",
-			IECore.MeshPrimitive.createPlane( IECore.Box2f( IECore.V2f( -1 ), IECore.V2f( 1 ) ) ),
+			IECoreScene.MeshPrimitive.createPlane( IECore.Box2f( IECore.V2f( -1 ), IECore.V2f( 1 ) ) ),
 			r.attributes(
 				IECore.CompoundObject( {
 					"ai:surface" : shader1
@@ -210,13 +211,13 @@ class RendererTest( GafferTest.TestCase ) :
 		)
 
 		shader2 = IECore.ObjectVector( [
-			IECore.Shader( "noise", parameters = { "__handle" : "myHandle" } ),
-			IECore.Shader( "standard_surface", parameters = { "base_color" : "link:myHandle" } ),
+			IECoreScene.Shader( "noise", parameters = { "__handle" : "myHandle" } ),
+			IECoreScene.Shader( "standard_surface", parameters = { "base_color" : "link:myHandle" } ),
 		] )
 
 		r.object(
 			"testPlane2",
-			IECore.MeshPrimitive.createPlane( IECore.Box2f( IECore.V2f( -1 ), IECore.V2f( 1 ) ) ),
+			IECoreScene.MeshPrimitive.createPlane( IECore.Box2f( IECore.V2f( -1 ), IECore.V2f( 1 ) ) ),
 			r.attributes(
 				IECore.CompoundObject( {
 					"ai:surface" : shader2
@@ -246,15 +247,15 @@ class RendererTest( GafferTest.TestCase ) :
 		)
 
 		scalarColorShader = IECore.ObjectVector( [
-			IECore.Shader( "image", parameters = { "__handle" : "scalarColorSource" } ),
-			IECore.Shader( "lambert", parameters = { "Kd_color" : "link:scalarColorSource", "__handle" : "scalarColorTarget" } ),
+			IECoreScene.Shader( "image", parameters = { "__handle" : "scalarColorSource" } ),
+			IECoreScene.Shader( "lambert", parameters = { "Kd_color" : "link:scalarColorSource", "__handle" : "scalarColorTarget" } ),
 		] )
 
 		# Note that a persp_camera is not at all legitimate to put in a shader vector,
 		# but it has a non-vector parameter of type NODE, so it works to test this functionality
 		scalarNodeShader = IECore.ObjectVector( [
-			IECore.Shader( "gobo", parameters = { "__handle" : "scalarNodeSource" } ),
-			IECore.Shader( "persp_camera", parameters = { "filtermap" : "link:scalarNodeSource", "__handle" : "scalarNodeTarget" } ),
+			IECoreScene.Shader( "gobo", parameters = { "__handle" : "scalarNodeSource" } ),
+			IECoreScene.Shader( "persp_camera", parameters = { "filtermap" : "link:scalarNodeSource", "__handle" : "scalarNodeTarget" } ),
 		] )
 
 		# Omitting vector color test because there are no nodes included with Arnold which use this,
@@ -265,14 +266,14 @@ class RendererTest( GafferTest.TestCase ) :
 		#] )
 
 		vectorNodeShader = IECore.ObjectVector( [
-			IECore.Shader( "gobo", parameters = { "__handle" : "vectorNodeSource" } ),
-			IECore.Shader( "spot_light", parameters = { "filters" : IECore.StringVectorData(["link:vectorNodeSource"]), "__handle" : "vectorNodeTarget" } ),
+			IECoreScene.Shader( "gobo", parameters = { "__handle" : "vectorNodeSource" } ),
+			IECoreScene.Shader( "spot_light", parameters = { "filters" : IECore.StringVectorData(["link:vectorNodeSource"]), "__handle" : "vectorNodeTarget" } ),
 		] )
 
 		for name,s in [ ( "scalarColor", scalarColorShader ), ( "scalarNode", scalarNodeShader ), ( "vectorNode", vectorNodeShader ) ]:
 			r.object(
 				"testPlane_%s" % name,
-				IECore.MeshPrimitive.createPlane( IECore.Box2f( IECore.V2f( -1 ), IECore.V2f( 1 ) ) ),
+				IECoreScene.MeshPrimitive.createPlane( IECore.Box2f( IECore.V2f( -1 ), IECore.V2f( 1 ) ) ),
 				r.attributes(
 					IECore.CompoundObject( {
 						"ai:surface" : s
@@ -312,7 +313,7 @@ class RendererTest( GafferTest.TestCase ) :
 			self.temporaryDirectory() + "/test.ass"
 		)
 
-		lightShader = IECore.ObjectVector( [ IECore.Shader( "point_light", "ai:light" ), ] )
+		lightShader = IECore.ObjectVector( [ IECoreScene.Shader( "point_light", "ai:light" ), ] )
 		r.light(
 			"testLight",
 			None,
@@ -344,7 +345,7 @@ class RendererTest( GafferTest.TestCase ) :
 
 		lightAttributes = r.attributes(
 			IECore.CompoundObject( {
-				"ai:light" : IECore.ObjectVector( [ IECore.Shader( "point_light", "ai:light" ), ] )
+				"ai:light" : IECore.ObjectVector( [ IECoreScene.Shader( "point_light", "ai:light" ), ] )
 			} )
 		)
 
@@ -395,7 +396,7 @@ class RendererTest( GafferTest.TestCase ) :
 			self.temporaryDirectory() + "/test.ass"
 		)
 
-		lightShader = IECore.ObjectVector( [ IECore.Shader( "point_light", "ai:light" ), ] )
+		lightShader = IECore.ObjectVector( [ IECoreScene.Shader( "point_light", "ai:light" ), ] )
 		lightAttributes = r.attributes(
 			IECore.CompoundObject( {
 				"ai:light" : lightShader
@@ -427,7 +428,7 @@ class RendererTest( GafferTest.TestCase ) :
 
 		r.object(
 			"testMesh1",
-			IECore.MeshPrimitive.createPlane( IECore.Box2f( IECore.V2f( -1 ), IECore.V2f( 1 ) ) ),
+			IECoreScene.MeshPrimitive.createPlane( IECore.Box2f( IECore.V2f( -1 ), IECore.V2f( 1 ) ) ),
 			r.attributes( IECore.CompoundObject( {
 				"doubleSided" : IECore.BoolData( True ),
 				"ai:visibility:camera" : IECore.BoolData( False ),
@@ -447,7 +448,7 @@ class RendererTest( GafferTest.TestCase ) :
 
 		r.object(
 			"testMesh2",
-			IECore.MeshPrimitive.createPlane( IECore.Box2f( IECore.V2f( -1 ), IECore.V2f( 1 ) ) ),
+			IECoreScene.MeshPrimitive.createPlane( IECore.Box2f( IECore.V2f( -1 ), IECore.V2f( 1 ) ) ),
 			r.attributes( IECore.CompoundObject( {
 				"doubleSided" : IECore.BoolData( False ),
 				"ai:visibility:camera" : IECore.BoolData( True ),
@@ -467,7 +468,7 @@ class RendererTest( GafferTest.TestCase ) :
 
 		r.object(
 			"testMesh3",
-			IECore.MeshPrimitive.createPlane( IECore.Box2f( IECore.V2f( -1 ), IECore.V2f( 1 ) ) ),
+			IECoreScene.MeshPrimitive.createPlane( IECore.Box2f( IECore.V2f( -1 ), IECore.V2f( 1 ) ) ),
 			r.attributes( IECore.CompoundObject() ),
 		)
 
@@ -514,7 +515,7 @@ class RendererTest( GafferTest.TestCase ) :
 
 		r.output(
 			"testA",
-			IECore.Display(
+			IECoreScene.Display(
 				"beauty.exr",
 				"exr",
 				"color A",
@@ -526,7 +527,7 @@ class RendererTest( GafferTest.TestCase ) :
 		# to generalize it across renderer backends, so it may change in the future.
 		r.output(
 			"testB",
-			IECore.Display(
+			IECoreScene.Display(
 				"beauty.exr",
 				"exr",
 				"color B",
@@ -562,7 +563,7 @@ class RendererTest( GafferTest.TestCase ) :
 
 		r.output(
 			"test",
-			IECore.Display(
+			IECoreScene.Display(
 				"beauty.exr",
 				"exr",
 				"rgba",
@@ -596,7 +597,7 @@ class RendererTest( GafferTest.TestCase ) :
 
 		r.output(
 			"test",
-			IECore.Display(
+			IECoreScene.Display(
 				"beauty.exr",
 				"exr",
 				"lpe C.*D.*",
@@ -606,7 +607,7 @@ class RendererTest( GafferTest.TestCase ) :
 
 		r.output(
 			"testWithAlpha",
-			IECore.Display(
+			IECoreScene.Display(
 				"beauty.exr",
 				"exr",
 				"lpe C.*D.*",
@@ -650,7 +651,7 @@ class RendererTest( GafferTest.TestCase ) :
 
 		r.output(
 			"exrTest",
-			IECore.Display(
+			IECoreScene.Display(
 				"beauty.exr",
 				"exr",
 				"rgba",
@@ -665,7 +666,7 @@ class RendererTest( GafferTest.TestCase ) :
 
 		r.output(
 			"exrDataTest",
-			IECore.Display(
+			IECoreScene.Display(
 				"beauty.exr",
 				"exr",
 				"rgba",
@@ -691,7 +692,7 @@ class RendererTest( GafferTest.TestCase ) :
 		with msg:
 			r.output(
 				"tiffTest",
-				IECore.Display(
+				IECoreScene.Display(
 					"beauty.tiff",
 					"tiff",
 					"rgba",
@@ -760,7 +761,7 @@ class RendererTest( GafferTest.TestCase ) :
 			self.temporaryDirectory() + "/test.ass"
 		)
 
-		polyPlane = IECore.MeshPrimitive.createPlane( IECore.Box2f( IECore.V2f( -1 ), IECore.V2f( 1 ) ) )
+		polyPlane = IECoreScene.MeshPrimitive.createPlane( IECore.Box2f( IECore.V2f( -1 ), IECore.V2f( 1 ) ) )
 		subdivPlane = polyPlane.copy()
 		subdivPlane.interpolation = "catmullClark"
 
@@ -868,7 +869,7 @@ class RendererTest( GafferTest.TestCase ) :
 			self.temporaryDirectory() + "/test.ass"
 		)
 
-		plane = IECore.MeshPrimitive.createPlane( IECore.Box2f( IECore.V2f( -1 ), IECore.V2f( 1 ) ) )
+		plane = IECoreScene.MeshPrimitive.createPlane( IECore.Box2f( IECore.V2f( -1 ), IECore.V2f( 1 ) ) )
 
 		r.object(
 			"planeDefault",
@@ -904,7 +905,7 @@ class RendererTest( GafferTest.TestCase ) :
 			self.temporaryDirectory() + "/test.ass"
 		)
 
-		subdivPlane = IECore.MeshPrimitive.createPlane( IECore.Box2f( IECore.V2f( -1 ), IECore.V2f( 1 ) ) )
+		subdivPlane = IECoreScene.MeshPrimitive.createPlane( IECore.Box2f( IECore.V2f( -1 ), IECore.V2f( 1 ) ) )
 		subdivPlane.interpolation = "catmullClark"
 
 		r.object(
@@ -941,7 +942,7 @@ class RendererTest( GafferTest.TestCase ) :
 			self.temporaryDirectory() + "/test.ass"
 		)
 
-		plane = IECore.MeshPrimitive.createPlane( IECore.Box2f( IECore.V2f( -1 ), IECore.V2f( 1 ) ) )
+		plane = IECoreScene.MeshPrimitive.createPlane( IECore.Box2f( IECore.V2f( -1 ), IECore.V2f( 1 ) ) )
 
 		r.object(
 			"plane",
@@ -972,7 +973,7 @@ class RendererTest( GafferTest.TestCase ) :
 
 		r.object(
 			"plane1",
-			IECore.MeshPrimitive.createPlane( IECore.Box2f( IECore.V2f( -1 ), IECore.V2f( 1 ) ) ),
+			IECoreScene.MeshPrimitive.createPlane( IECore.Box2f( IECore.V2f( -1 ), IECore.V2f( 1 ) ) ),
 			r.attributes(
 				IECore.CompoundObject( {
 					"user:testInt" : IECore.IntData( 1 ),
@@ -986,7 +987,7 @@ class RendererTest( GafferTest.TestCase ) :
 
 		r.object(
 			"plane2",
-			IECore.MeshPrimitive.createPlane( IECore.Box2f( IECore.V2f( -1 ), IECore.V2f( 1 ) ) ),
+			IECoreScene.MeshPrimitive.createPlane( IECore.Box2f( IECore.V2f( -1 ), IECore.V2f( 1 ) ) ),
 			r.attributes(
 				IECore.CompoundObject( {
 					"user:testInt" : IECore.IntData( 2 ),
@@ -1027,8 +1028,8 @@ class RendererTest( GafferTest.TestCase ) :
 			self.temporaryDirectory() + "/test.ass"
 		)
 
-		plane = IECore.MeshPrimitive.createPlane( IECore.Box2f( IECore.V2f( -1 ), IECore.V2f( 1 ) ) )
-		noise = IECore.ObjectVector( [ IECore.Shader( "noise", "ai:displacement", {} ) ] )
+		plane = IECoreScene.MeshPrimitive.createPlane( IECore.Box2f( IECore.V2f( -1 ), IECore.V2f( 1 ) ) )
+		noise = IECore.ObjectVector( [ IECoreScene.Shader( "noise", "ai:displacement", {} ) ] )
 
 		sharedAttributes = r.attributes(
 			IECore.CompoundObject( {
@@ -1104,7 +1105,7 @@ class RendererTest( GafferTest.TestCase ) :
 		)
 
 		meshes = {}
-		meshes["linear"] = IECore.MeshPrimitive.createPlane( IECore.Box2f( IECore.V2f( -1 ), IECore.V2f( 1 ) ) )
+		meshes["linear"] = IECoreScene.MeshPrimitive.createPlane( IECore.Box2f( IECore.V2f( -1 ), IECore.V2f( 1 ) ) )
 		meshes["catmullClark"] = meshes["linear"].copy()
 		meshes["catmullClark"].interpolation = "catmullClark"
 
@@ -1152,10 +1153,10 @@ class RendererTest( GafferTest.TestCase ) :
 
 		l = r.light(
 			"myLight",
-			IECore.MeshPrimitive.createPlane( IECore.Box2f( IECore.V2f( -1 ), IECore.V2f( 1 ) ) ),
+			IECoreScene.MeshPrimitive.createPlane( IECore.Box2f( IECore.V2f( -1 ), IECore.V2f( 1 ) ) ),
 			r.attributes(
 				IECore.CompoundObject( {
-					"ai:light" : IECore.ObjectVector( [ IECore.Shader( "mesh_light", "ai:light" ), ] )
+					"ai:light" : IECore.ObjectVector( [ IECoreScene.Shader( "mesh_light", "ai:light" ), ] )
 				} )
 			)
 		)
@@ -1191,13 +1192,13 @@ class RendererTest( GafferTest.TestCase ) :
 		)
 
 		lightShaderNetwork = IECore.ObjectVector( [
-			IECore.Shader( "flat", "ai:shader", { "__handle" : "colorHandle" } ),
-			IECore.Shader( "mesh_light", "ai:light", { "color" : "link:colorHandle" } ),
+			IECoreScene.Shader( "flat", "ai:shader", { "__handle" : "colorHandle" } ),
+			IECoreScene.Shader( "mesh_light", "ai:light", { "color" : "link:colorHandle" } ),
 		] )
 
 		l1 = r.light(
 			"myLight1",
-			IECore.MeshPrimitive.createPlane( IECore.Box2f( IECore.V2f( -1 ), IECore.V2f( 1 ) ) ),
+			IECoreScene.MeshPrimitive.createPlane( IECore.Box2f( IECore.V2f( -1 ), IECore.V2f( 1 ) ) ),
 			r.attributes( IECore.CompoundObject( {
 				"ai:light" : lightShaderNetwork,
 			} ) )
@@ -1206,7 +1207,7 @@ class RendererTest( GafferTest.TestCase ) :
 
 		l2 = r.light(
 			"myLight2",
-			IECore.MeshPrimitive.createPlane( IECore.Box2f( IECore.V2f( -1 ), IECore.V2f( 1 ) ) ),
+			IECoreScene.MeshPrimitive.createPlane( IECore.Box2f( IECore.V2f( -1 ), IECore.V2f( 1 ) ) ),
 			r.attributes( IECore.CompoundObject( {
 				"ai:light" : lightShaderNetwork,
 			} ) )
@@ -1254,7 +1255,7 @@ class RendererTest( GafferTest.TestCase ) :
 		)
 
 		network = IECore.ObjectVector( [
-			IECore.Shader(
+			IECoreScene.Shader(
 				"Pattern/Noise",
 				"osl:shader",
 				{
@@ -1262,7 +1263,7 @@ class RendererTest( GafferTest.TestCase ) :
 					"__handle" : "noiseHandle"
 				}
 			),
-			IECore.Shader(
+			IECoreScene.Shader(
 				"Pattern/ColorSpline",
 				"osl:shader",
 				{
@@ -1278,7 +1279,7 @@ class RendererTest( GafferTest.TestCase ) :
 					"__handle" : "splineHandle"
 				}
 			),
-			IECore.Shader(
+			IECoreScene.Shader(
 				"add",
 				"ai:surface",
 				{
@@ -1290,7 +1291,7 @@ class RendererTest( GafferTest.TestCase ) :
 
 		o = r.object(
 			"testPlane",
-			IECore.MeshPrimitive.createPlane( IECore.Box2f( IECore.V2f( -1 ), IECore.V2f( 1 ) ) ),
+			IECoreScene.MeshPrimitive.createPlane( IECore.Box2f( IECore.V2f( -1 ), IECore.V2f( 1 ) ) ),
 			r.attributes( IECore.CompoundObject( { "ai:surface" : network } ) )
 		)
 		del o
@@ -1340,11 +1341,11 @@ class RendererTest( GafferTest.TestCase ) :
 			self.temporaryDirectory() + "/test.ass"
 		)
 
-		network = IECore.ObjectVector( [ IECore.Shader( "Pattern/Noise", "osl:shader" ) ] )
+		network = IECore.ObjectVector( [ IECoreScene.Shader( "Pattern/Noise", "osl:shader" ) ] )
 
 		o = r.object(
 			"testPlane",
-			IECore.MeshPrimitive.createPlane( IECore.Box2f( IECore.V2f( -1 ), IECore.V2f( 1 ) ) ),
+			IECoreScene.MeshPrimitive.createPlane( IECore.Box2f( IECore.V2f( -1 ), IECore.V2f( 1 ) ) ),
 			r.attributes( IECore.CompoundObject( { "osl:shader" : network } ) )
 		)
 		del o
@@ -1389,7 +1390,7 @@ class RendererTest( GafferTest.TestCase ) :
 
 			r.object(
 				objectName,
-				IECore.MeshPrimitive.createPlane( IECore.Box2f( IECore.V2f( -1 ), IECore.V2f( 1 ) ) ),
+				IECoreScene.MeshPrimitive.createPlane( IECore.Box2f( IECore.V2f( -1 ), IECore.V2f( 1 ) ) ),
 				r.attributes( attributes ),
 			)
 
@@ -1420,7 +1421,7 @@ class RendererTest( GafferTest.TestCase ) :
 			self.temporaryDirectory() + "/test.ass"
 		)
 
-		curves = IECore.CurvesPrimitive.createBox( IECore.Box3f( IECore.V3f( -1 ), IECore.V3f( 1 ) ) )
+		curves = IECoreScene.CurvesPrimitive.createBox( IECore.Box3f( IECore.V3f( -1 ), IECore.V3f( 1 ) ) )
 
 		defaultAttributes = r.attributes( IECore.CompoundObject() )
 
@@ -1517,7 +1518,7 @@ class RendererTest( GafferTest.TestCase ) :
 			GafferScene.Private.IECoreScenePreview.Renderer.RenderType.Interactive
 		)
 
-		polygonMesh = IECore.MeshPrimitive.createPlane( IECore.Box2f( IECore.V2f( -1 ), IECore.V2f( 1 ) ) )
+		polygonMesh = IECoreScene.MeshPrimitive.createPlane( IECore.Box2f( IECore.V2f( -1 ), IECore.V2f( 1 ) ) )
 		subdivMesh = polygonMesh.copy()
 		subdivMesh.interpolation = "catmullClark"
 
@@ -1593,10 +1594,10 @@ class RendererTest( GafferTest.TestCase ) :
 		)
 
 		primitives = {
-			"sphere" : IECore.SpherePrimitive(),
-			"mesh" : IECore.MeshPrimitive.createPlane( IECore.Box2f( IECore.V2f( -1 ), IECore.V2f( 1 ) ) ),
-			"curves" : IECore.CurvesPrimitive.createBox( IECore.Box3f( IECore.V3f( -1 ), IECore.V3f( 1 ) ) ),
-			"volumeProcedural" : IECore.ExternalProcedural(
+			"sphere" : IECoreScene.SpherePrimitive(),
+			"mesh" : IECoreScene.MeshPrimitive.createPlane( IECore.Box2f( IECore.V2f( -1 ), IECore.V2f( 1 ) ) ),
+			"curves" : IECoreScene.CurvesPrimitive.createBox( IECore.Box3f( IECore.V3f( -1 ), IECore.V3f( 1 ) ) ),
+			"volumeProcedural" : IECoreScene.ExternalProcedural(
 				"volume",
 				IECore.Box3f( IECore.V3f( -1 ), IECore.V3f( 1 ) ),
 			),
@@ -1688,10 +1689,10 @@ class RendererTest( GafferTest.TestCase ) :
 		)
 
 		primitives = {
-			"sphere" : IECore.SpherePrimitive(),
-			"mesh" : IECore.MeshPrimitive.createPlane( IECore.Box2f( IECore.V2f( -1 ), IECore.V2f( 1 ) ) ),
-			"curves" : IECore.CurvesPrimitive.createBox( IECore.Box3f( IECore.V3f( -1 ), IECore.V3f( 1 ) ) ),
-			"volumeProcedural" : IECore.ExternalProcedural(
+			"sphere" : IECoreScene.SpherePrimitive(),
+			"mesh" : IECoreScene.MeshPrimitive.createPlane( IECore.Box2f( IECore.V2f( -1 ), IECore.V2f( 1 ) ) ),
+			"curves" : IECoreScene.CurvesPrimitive.createBox( IECore.Box3f( IECore.V3f( -1 ), IECore.V3f( 1 ) ) ),
+			"volumeProcedural" : IECoreScene.ExternalProcedural(
 				"volume",
 				IECore.Box3f( IECore.V3f( -1 ), IECore.V3f( 1 ) ),
 			),
@@ -1786,7 +1787,7 @@ class RendererTest( GafferTest.TestCase ) :
 
 			"test",
 
-			IECore.ExternalProcedural(
+			IECoreScene.ExternalProcedural(
 				"volume",
 				IECore.Box3f( IECore.V3f( -1 ), IECore.V3f( 1 ) ),
 				IECore.CompoundData( {
@@ -1915,7 +1916,7 @@ class RendererTest( GafferTest.TestCase ) :
 				for i in range( 0, 5 ) :
 					o = renderer.object(
 						"/sphere{0}".format( i ),
-						IECore.SpherePrimitive(),
+						IECoreScene.SpherePrimitive(),
 						renderer.attributes( IECore.CompoundObject() ),
 					)
 					o.transform( IECore.M44f().translate( IECore.V3f( i, 0, 0 ) ) )
@@ -1927,7 +1928,7 @@ class RendererTest( GafferTest.TestCase ) :
 
 		r.output(
 			"test",
-			IECore.Display(
+			IECoreScene.Display(
 				self.temporaryDirectory() + "/beauty.exr",
 				"exr",
 				"rgba",
@@ -1936,7 +1937,7 @@ class RendererTest( GafferTest.TestCase ) :
 			)
 		)
 
-		r.object( "/sphere", IECore.SpherePrimitive(), r.attributes( IECore.CompoundObject() ) )
+		r.object( "/sphere", IECoreScene.SpherePrimitive(), r.attributes( IECore.CompoundObject() ) )
 		r.object( "/procedural", SphereProcedural(), r.attributes( IECore.CompoundObject() ) )
 
 		procedurals = self.__allNodes( nodeEntryName = "procedural" )
@@ -1984,8 +1985,8 @@ class RendererTest( GafferTest.TestCase ) :
 		)
 
 		r.option( "ai:aov_shader:test", IECore.ObjectVector( [
-			IECore.Shader( "float_to_rgb", "ai:shader", { "__handle":IECore.StringData( "rgbSource" ) } ),
-			IECore.Shader( "aov_write_rgb", "ai:shader", { "aov_input":IECore.StringData( "link:rgbSource.out" ) } ),
+			IECoreScene.Shader( "float_to_rgb", "ai:shader", { "__handle":IECore.StringData( "rgbSource" ) } ),
+			IECoreScene.Shader( "aov_write_rgb", "ai:shader", { "aov_input":IECore.StringData( "link:rgbSource.out" ) } ),
 		] ) )
 
 		self.assertEqual( self.__aovShaders().keys(), [ "aov_write_rgb" ] )
@@ -1993,11 +1994,11 @@ class RendererTest( GafferTest.TestCase ) :
 		self.assertEqual( arnold.AiNodeEntryGetName( arnold.AiNodeGetNodeEntry( source ) ), "float_to_rgb" )
 
 		# Add another
-		r.option( "ai:aov_shader:test2", IECore.ObjectVector( [ IECore.Shader( "aov_write_float", "ai:shader" ) ] ) )
+		r.option( "ai:aov_shader:test2", IECore.ObjectVector( [ IECoreScene.Shader( "aov_write_float", "ai:shader" ) ] ) )
 		self.assertEqual( set( self.__aovShaders().keys() ), set( [ "aov_write_rgb", "aov_write_float" ] ) )
 
 		# Add overwrite
-		r.option( "ai:aov_shader:test", IECore.ObjectVector( [ IECore.Shader( "aov_write_int", "ai:shader" ) ] ) )
+		r.option( "ai:aov_shader:test", IECore.ObjectVector( [ IECoreScene.Shader( "aov_write_int", "ai:shader" ) ] ) )
 		self.assertEqual( set( self.__aovShaders().keys() ), set( [ "aov_write_int", "aov_write_float" ] ) )
 
 		r.option( "ai:aov_shader:test", None )

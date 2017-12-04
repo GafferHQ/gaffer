@@ -35,6 +35,7 @@
 ##########################################################################
 
 import IECore
+import IECoreScene
 import IECoreImage
 
 import Gaffer
@@ -140,7 +141,7 @@ class SceneReaderPathPreview( GafferUI.PathPreviewWidget ) :
 			self.__script["SceneReader"]["fileName"].setValue( fileName )
 			outPlug = self.__script["SceneReader"]["out"]
 
-			scene = IECore.SharedSceneInterfaces.get( fileName )
+			scene = IECoreScene.SharedSceneInterfaces.get( fileName )
 			if hasattr( scene, "numBoundSamples" ) :
 				numSamples = scene.numBoundSamples()
 				if numSamples > 1 :

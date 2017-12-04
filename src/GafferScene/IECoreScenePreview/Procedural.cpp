@@ -39,6 +39,7 @@
 #include "GafferScene/Private/IECoreScenePreview/Procedural.h"
 
 using namespace IECore;
+using namespace IECoreScene;
 using namespace IECoreScenePreview;
 
 IE_CORE_DEFINEABSTRACTOBJECTTYPEDESCRIPTION( Procedural );
@@ -81,7 +82,7 @@ void Procedural::memoryUsage( IECore::Object::MemoryAccumulator &accumulator ) c
 	VisibleRenderable::memoryUsage( accumulator );
 }
 
-void Procedural::render( IECore::Renderer *renderer ) const
+void Procedural::render( IECoreScene::Renderer *renderer ) const
 {
 	IECore::msg( IECore::Msg::Warning, std::string( typeName() ) + "::render", "Legacy renderers are not supported." );
 }

@@ -34,7 +34,7 @@
 //
 //////////////////////////////////////////////////////////////////////////
 
-#include "IECore/Primitive.h"
+#include "IECoreScene/Primitive.h"
 
 #include "Gaffer/StringPlug.h"
 
@@ -43,6 +43,7 @@
 using namespace std;
 using namespace Imath;
 using namespace IECore;
+using namespace IECoreScene;
 using namespace Gaffer;
 using namespace GafferScene;
 

@@ -127,7 +127,7 @@ ShaderView::ShaderView( const std::string &name )
 	OutputsPtr outputs = new Outputs();
 	m_imageConverter->addChild( outputs );
 	outputs->inPlug()->setInput( deleteOutputs->outPlug() );
-	IECore::DisplayPtr output = new IECore::Display( "beauty", "ieDisplay", "rgba" );
+	IECoreScene::DisplayPtr output = new IECoreScene::Display( "beauty", "ieDisplay", "rgba" );
 	output->parameters()["quantize"] = new IECore::IntVectorData( std::vector<int>( 4, 0 ) );
 	output->parameters()["driverType"] = new IECore::StringData( "ClientDisplayDriver" );
 	output->parameters()["displayHost"] = new IECore::StringData( "localhost" );

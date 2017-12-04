@@ -39,6 +39,7 @@ import os
 import unittest
 
 import IECore
+import IECoreScene
 
 import Gaffer
 import GafferTest
@@ -60,35 +61,35 @@ class OutputsTest( GafferSceneTest.SceneTestCase ) :
 		self.assertEqual( outputs["out"].bound( "/" ), IECore.Box3f( IECore.V3f( -0.5, -0.5, 0 ), IECore.V3f( 0.5, 0.5, 0 ) ) )
 		self.assertEqual( outputs["out"].childNames( "/" ), IECore.InternedStringVectorData( [ "plane" ] ) )
 
-		self.assertEqual( outputs["out"].object( "/plane" ), IECore.MeshPrimitive.createPlane( IECore.Box2f( IECore.V2f( -0.5 ), IECore.V2f( 0.5 ) ) ) )
+		self.assertEqual( outputs["out"].object( "/plane" ), IECoreScene.MeshPrimitive.createPlane( IECore.Box2f( IECore.V2f( -0.5 ), IECore.V2f( 0.5 ) ) ) )
 		self.assertEqual( outputs["out"].transform( "/plane" ), IECore.M44f() )
 		self.assertEqual( outputs["out"].bound( "/plane" ), IECore.Box3f( IECore.V3f( -0.5, -0.5, 0 ), IECore.V3f( 0.5, 0.5, 0 ) ) )
 		self.assertEqual( outputs["out"].childNames( "/plane" ), IECore.InternedStringVectorData() )
 
 		# check that we have some outputs
 
-		output = outputs.addOutput( "beauty", IECore.Display( "beauty.exr", "exr", "rgba" ) )
+		output = outputs.addOutput( "beauty", IECoreScene.Display( "beauty.exr", "exr", "rgba" ) )
 		output["parameters"].addMember( "test", IECore.FloatData( 10 ) )
 
-		outputs.addOutput( "diffuse", IECore.Display( "diffuse.exr", "exr", "color aov_diffuse" ) )
+		outputs.addOutput( "diffuse", IECoreScene.Display( "diffuse.exr", "exr", "color aov_diffuse" ) )
 
 		g = outputs["out"]["globals"].getValue()
 		self.assertEqual( len( g ), 2 )
-		self.assertEqual( g["output:beauty"], IECore.Display( "beauty.exr", "exr", "rgba", { "test" : 10.0 } ) )
-		self.assertEqual( g["output:diffuse"], IECore.Display( "diffuse.exr", "exr", "color aov_diffuse" ) )
+		self.assertEqual( g["output:beauty"], IECoreScene.Display( "beauty.exr", "exr", "rgba", { "test" : 10.0 } ) )
+		self.assertEqual( g["output:diffuse"], IECoreScene.Display( "diffuse.exr", "exr", "color aov_diffuse" ) )
 
 		# check that we can turn 'em off as well
 		output["active"].setValue( False )
 
 		g = outputs["out"]["globals"].getValue()
 		self.assertEqual( len( g ), 1 )
-		self.assertEqual( g["output:diffuse"], IECore.Display( "diffuse.exr", "exr", "color aov_diffuse" ) )
+		self.assertEqual( g["output:diffuse"], IECoreScene.Display( "diffuse.exr", "exr", "color aov_diffuse" ) )
 
 	def testSerialisation( self ) :
 
 		s = Gaffer.ScriptNode()
 		s["outputsNode"] = GafferScene.Outputs()
-		output = s["outputsNode"].addOutput( "beauty", IECore.Display( "beauty.exr", "exr", "rgba" ) )
+		output = s["outputsNode"].addOutput( "beauty", IECoreScene.Display( "beauty.exr", "exr", "rgba" ) )
 		output["parameters"].addMember( "test", IECore.FloatData( 10 ) )
 
 		ss = s.serialise()
@@ -98,14 +99,14 @@ class OutputsTest( GafferSceneTest.SceneTestCase ) :
 
 		g = s2["outputsNode"]["out"]["globals"].getValue()
 		self.assertEqual( len( g ), 1 )
-		self.assertEqual( g["output:beauty"], IECore.Display( "beauty.exr", "exr", "rgba", { "test" : 10.0 } ) )
+		self.assertEqual( g["output:beauty"], IECoreScene.Display( "beauty.exr", "exr", "rgba", { "test" : 10.0 } ) )
 		self.assertEqual( len( s2["outputsNode"]["outputs"] ), 1 )
 		self.assertTrue( "outputs1" not in s2["outputsNode"] )
 
 	def testRegistry( self ) :
 
-		GafferScene.Outputs.registerOutput( "test", IECore.Display( "test.exr", "exr", "rgba" ) )
-		GafferScene.Outputs.registerOutput( "test2", IECore.Display( "test.exr", "exr", "rgba" ) )
+		GafferScene.Outputs.registerOutput( "test", IECoreScene.Display( "test.exr", "exr", "rgba" ) )
+		GafferScene.Outputs.registerOutput( "test2", IECoreScene.Display( "test.exr", "exr", "rgba" ) )
 
 		self.assertEqual( GafferScene.Outputs.registeredOutputs(), ( "test", "test2" ) )
 
@@ -123,7 +124,7 @@ class OutputsTest( GafferSceneTest.SceneTestCase ) :
 	def testParametersHaveUsefulNames( self ) :
 
 		outputs = GafferScene.Outputs()
-		outputs.addOutput( "test", IECore.Display( "name", "type", "data", { "paramA" : 1, "paramB" : 2 } ) )
+		outputs.addOutput( "test", IECoreScene.Display( "name", "type", "data", { "paramA" : 1, "paramB" : 2 } ) )
 
 		self.assertEqual( set( outputs["outputs"][0]["parameters"].keys() ), set( [ "paramA", "paramB" ] ) )
 
@@ -132,7 +133,7 @@ class OutputsTest( GafferSceneTest.SceneTestCase ) :
 		outputs = GafferScene.Outputs()
 		cs = GafferTest.CapturingSlot( outputs.plugDirtiedSignal() )
 
-		p = outputs.addOutput( "test", IECore.Display( "name", "type", "data", { "paramA" : 1, "paramB" : 2 } ) )
+		p = outputs.addOutput( "test", IECoreScene.Display( "name", "type", "data", { "paramA" : 1, "paramB" : 2 } ) )
 		self.assertTrue( outputs["out"]["globals"] in [ c[0] for c in cs ] )
 
 		del cs[:]
@@ -145,7 +146,7 @@ class OutputsTest( GafferSceneTest.SceneTestCase ) :
 
 	def testColonInParameterName( self ) :
 
-		output = IECore.Display( "name", "type", "data", { "test:paramA" : 1 } )
+		output = IECoreScene.Display( "name", "type", "data", { "test:paramA" : 1 } )
 
 		outputs = GafferScene.Outputs()
 		outputs.addOutput( "test", output )

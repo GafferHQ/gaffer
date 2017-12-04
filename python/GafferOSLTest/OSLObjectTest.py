@@ -37,6 +37,7 @@
 import os
 
 import IECore
+import IECoreScene
 
 import Gaffer
 import GafferTest
@@ -260,10 +261,10 @@ class OSLObjectTest( GafferOSLTest.OSLTestCase ) :
 		o["filter"].setInput( f["out"] )
 
 		# ensure the source position primitive variable interpolation is set to Vertex
-		self.assertEqual(c["out"].object("/cube")['P'].interpolation, IECore.PrimitiveVariable.Interpolation.Vertex )
+		self.assertEqual(c["out"].object("/cube")['P'].interpolation, IECoreScene.PrimitiveVariable.Interpolation.Vertex )
 
 		o['in'].setInput( c["out"] )
-		o['interpolation'].setValue( IECore.PrimitiveVariable.Interpolation.Uniform )
+		o['interpolation'].setValue( IECoreScene.PrimitiveVariable.Interpolation.Uniform )
 
 		inPoint = GafferOSL.OSLShader( "InPoint" )
 		s.addChild( inPoint )
@@ -293,7 +294,7 @@ class OSLObjectTest( GafferOSLTest.OSLTestCase ) :
 		cubeObject = s['OSLObject']['out'].object( "/cube" )
 
 		self.assertTrue( "P_copy" in cubeObject.keys() )
-		self.assertEqual( cubeObject["P_copy"].interpolation, IECore.PrimitiveVariable.Interpolation.Uniform)
+		self.assertEqual( cubeObject["P_copy"].interpolation, IECoreScene.PrimitiveVariable.Interpolation.Uniform)
 
 		self.assertEqual( cubeObject["P_copy"].data[0], IECore.V3f(  0.0,  0.0, -0.5 ) + IECore.V3f( 1, 2, 3 ))
 		self.assertEqual( cubeObject["P_copy"].data[1], IECore.V3f(  0.5,  0.0,  0.0 ) + IECore.V3f( 1, 2, 3 ))
@@ -321,10 +322,10 @@ class OSLObjectTest( GafferOSLTest.OSLTestCase ) :
 		# We're going to copy the FaceVarying UV primvar
 		# into a Vertex Color3f primvar. Assert that the source
 		# is indeed FaceVarying.
-		self.assertEqual( p["out"].object( "/plane" )["uv"].interpolation, IECore.PrimitiveVariable.Interpolation.FaceVarying )
+		self.assertEqual( p["out"].object( "/plane" )["uv"].interpolation, IECoreScene.PrimitiveVariable.Interpolation.FaceVarying )
 
 		o['in'].setInput( p["out"] )
-		o['interpolation'].setValue( IECore.PrimitiveVariable.Interpolation.Vertex )
+		o['interpolation'].setValue( IECoreScene.PrimitiveVariable.Interpolation.Vertex )
 
 		s["inUV"] = GafferOSL.OSLShader()
 		s["inUV"].loadShader( "ObjectProcessing/InVector" )
@@ -344,7 +345,7 @@ class OSLObjectTest( GafferOSLTest.OSLTestCase ) :
 		planeObject = s['OSLObject']['out'].object( "/plane" )
 
 		self.assertIn( "c", planeObject )
-		self.assertEqual( planeObject["c"].interpolation, IECore.PrimitiveVariable.Interpolation.Vertex )
+		self.assertEqual( planeObject["c"].interpolation, IECoreScene.PrimitiveVariable.Interpolation.Vertex )
 
 		self.assertEqual( planeObject["c"].data[0], IECore.Color3f( 0.0, 0.0, 0.0 ) )
 		self.assertEqual( planeObject["c"].data[1], IECore.Color3f( 0.5, 0.0, 0.0 ) )
@@ -387,7 +388,7 @@ class OSLObjectTest( GafferOSLTest.OSLTestCase ) :
 		pv["filter"].setInput( f["out"] )
 
 		o['in'].setInput( pv["out"] )
-		o['interpolation'].setValue( IECore.PrimitiveVariable.Interpolation.Vertex )
+		o['interpolation'].setValue( IECoreScene.PrimitiveVariable.Interpolation.Vertex )
 
 		inConstFoo = GafferOSL.OSLShader( "InFloat" )
 		s.addChild( inConstFoo )
@@ -412,7 +413,7 @@ class OSLObjectTest( GafferOSLTest.OSLTestCase ) :
 		planeObject = s['OSLObject']['out'].object( "/plane" )
 
 		self.assertTrue( "out_foo" in planeObject.keys() )
-		self.assertEqual( planeObject["out_foo"].interpolation, IECore.PrimitiveVariable.Interpolation.Vertex)
+		self.assertEqual( planeObject["out_foo"].interpolation, IECoreScene.PrimitiveVariable.Interpolation.Vertex)
 
 		self.assertEqual( planeObject["out_foo"].data[0], 1)
 		self.assertEqual( planeObject["out_foo"].data[1], 1)

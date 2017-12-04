@@ -38,7 +38,7 @@
 
 #include "OSL/oslquery.h"
 
-#include "IECore/Shader.h"
+#include "IECoreScene/Shader.h"
 
 #include "Gaffer/Context.h"
 
@@ -50,6 +50,7 @@
 using namespace std;
 using namespace OSL;
 using namespace IECore;
+using namespace IECoreScene;
 using namespace GafferScene;
 using namespace GafferAppleseed;
 

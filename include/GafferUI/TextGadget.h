@@ -40,7 +40,7 @@
 
 #include "GafferUI/Gadget.h"
 
-#include "IECore/Font.h"
+#include "IECoreScene/Font.h"
 
 namespace GafferUI
 {

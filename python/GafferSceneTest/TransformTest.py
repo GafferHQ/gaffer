@@ -38,6 +38,7 @@ import unittest
 import math
 
 import IECore
+import IECoreScene
 
 import Gaffer
 import GafferTest
@@ -48,7 +49,7 @@ class TransformTest( GafferSceneTest.SceneTestCase ) :
 
 	def test( self ) :
 
-		sphere = IECore.SpherePrimitive()
+		sphere = IECoreScene.SpherePrimitive()
 		input = GafferSceneTest.CompoundObjectSource()
 		input["in"].setValue(
 			IECore.CompoundObject( {

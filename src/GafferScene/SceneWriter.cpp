@@ -36,7 +36,7 @@
 
 #include "boost/filesystem.hpp"
 
-#include "IECore/SceneInterface.h"
+#include "IECoreScene/SceneInterface.h"
 
 #include "Gaffer/StringPlug.h"
 #include "Gaffer/Context.h"
@@ -49,6 +49,7 @@
 
 using namespace std;
 using namespace IECore;
+using namespace IECoreScene;
 using namespace Gaffer;
 using namespace GafferScene;
 

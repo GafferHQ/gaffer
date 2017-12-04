@@ -34,9 +34,9 @@
 //
 //////////////////////////////////////////////////////////////////////////
 
-#include "IECore/TransformOp.h"
 #include "IECore/DespatchTypedData.h"
-#include "IECore/Primitive.h"
+#include "IECoreScene/TransformOp.h"
+#include "IECoreScene/Primitive.h"
 
 #include "Gaffer/Context.h"
 
@@ -45,6 +45,7 @@
 using namespace std;
 using namespace Imath;
 using namespace IECore;
+using namespace IECoreScene;
 using namespace Gaffer;
 using namespace GafferScene;
 

@@ -34,7 +34,7 @@
 //
 //////////////////////////////////////////////////////////////////////////
 
-#include "IECore/ExternalProcedural.h"
+#include "IECoreScene/ExternalProcedural.h"
 
 #include "Gaffer/StringPlug.h"
 
@@ -114,7 +114,7 @@ void ExternalProcedural::hashSource( const Gaffer::Context *context, IECore::Mur
 
 IECore::ConstObjectPtr ExternalProcedural::computeSource( const Context *context ) const
 {
-	IECore::ExternalProceduralPtr result = new IECore::ExternalProcedural( fileNamePlug()->getValue(), boundPlug()->getValue() );
+	IECoreScene::ExternalProceduralPtr result = new IECoreScene::ExternalProcedural( fileNamePlug()->getValue(), boundPlug()->getValue() );
 	parametersPlug()->fillCompoundData( result->parameters()->writable() );
 	return result;
 }

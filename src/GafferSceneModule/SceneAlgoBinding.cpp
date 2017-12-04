@@ -37,7 +37,7 @@
 #include "boost/python.hpp"
 #include "boost/python/suite/indexing/container_utils.hpp"
 
-#include "IECore/Camera.h"
+#include "IECoreScene/Camera.h"
 
 #include "IECorePython/ScopedGILRelease.h"
 

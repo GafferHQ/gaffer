@@ -37,6 +37,7 @@
 import unittest
 
 import IECore
+import IECoreScene
 
 import Gaffer
 import GafferTest
@@ -53,7 +54,7 @@ class CoordinateSystemTest( GafferSceneTest.SceneTestCase ) :
 		self.assertEqual( c["out"].bound( "/coordinateSystem" ), IECore.Box3f( IECore.V3f( 0 ), IECore.V3f( 1 ) ) )
 
 		o = c["out"].object( "/coordinateSystem" )
-		self.assertTrue( isinstance( o, IECore.CoordinateSystem ) )
+		self.assertTrue( isinstance( o, IECoreScene.CoordinateSystem ) )
 
 		s = c["out"].set( "__coordinateSystems" )
 		self.assertEqual( s.value.paths(), [ "/coordinateSystem" ] )

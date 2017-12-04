@@ -39,6 +39,7 @@ import unittest
 import subprocess32 as subprocess
 
 import IECore
+import IECoreScene
 
 import Gaffer
 import GafferTest
@@ -90,7 +91,7 @@ class AppleseedRenderTest( GafferTest.TestCase ) :
 		s["outputs"] = GafferScene.Outputs()
 		s["outputs"].addOutput(
 			"beauty",
-			IECore.Display(
+			IECoreScene.Display(
 				self.temporaryDirectory() + "/test.exr",
 				"exr",
 				"rgba",
@@ -145,7 +146,7 @@ class AppleseedRenderTest( GafferTest.TestCase ) :
 		s["outputs"] = GafferScene.Outputs()
 		s["outputs"].addOutput(
 			"beauty",
-			IECore.Display(
+			IECoreScene.Display(
 				self.temporaryDirectory() + "/test.####.exr",
 				"exr",
 				"rgba",
@@ -198,7 +199,7 @@ class AppleseedRenderTest( GafferTest.TestCase ) :
 		s["outputs"]["in"].setInput( s["plane"]["out"] )
 		s["outputs"].addOutput(
 			"beauty",
-			IECore.Display(
+			IECoreScene.Display(
 				"$renderDirectory/test.####.exr",
 				"exr",
 				"rgba",

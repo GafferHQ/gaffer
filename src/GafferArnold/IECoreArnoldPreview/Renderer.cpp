@@ -51,15 +51,16 @@
 #include "boost/lexical_cast.hpp"
 
 #include "IECore/MessageHandler.h"
-#include "IECore/Camera.h"
-#include "IECore/Transform.h"
 #include "IECore/VectorTypedData.h"
 #include "IECore/SimpleTypedData.h"
 #include "IECore/ObjectVector.h"
-#include "IECore/Shader.h"
-#include "IECore/MeshPrimitive.h"
-#include "IECore/CurvesPrimitive.h"
-#include "IECore/ExternalProcedural.h"
+#include "IECoreScene/Camera.h"
+#include "IECoreScene/Transform.h"
+#include "IECoreScene/Shader.h"
+#include "IECoreScene/MeshPrimitive.h"
+#include "IECoreScene/CurvesPrimitive.h"
+#include "IECoreScene/ExternalProcedural.h"
+#include "IECoreScene/SpherePrimitive.h"
 
 #include "IECoreArnold/ParameterAlgo.h"
 #include "IECoreArnold/CameraAlgo.h"
@@ -291,7 +292,7 @@ class ArnoldRendererBase : public IECoreScenePreview::Renderer
 
 		Renderer::AttributesInterfacePtr attributes( const IECore::CompoundObject *attributes ) override;
 
-		ObjectInterfacePtr camera( const std::string &name, const IECore::Camera *camera, const AttributesInterface *attributes ) override;
+		ObjectInterfacePtr camera( const std::string &name, const IECoreScene::Camera *camera, const AttributesInterface *attributes ) override;
 		ObjectInterfacePtr light( const std::string &name, const IECore::Object *object, const AttributesInterface *attributes ) override;
 		Renderer::ObjectInterfacePtr object( const std::string &name, const IECore::Object *object, const AttributesInterface *attributes ) override;
 		ObjectInterfacePtr object( const std::string &name, const std::vector<const IECore::Object *> &samples, const std::vector<float> &times, const AttributesInterface *attributes ) override;
@@ -736,12 +737,12 @@ class ArnoldAttributes : public IECoreScenePreview::Renderer::AttributesInterfac
 		// attributes, and is called from InstanceCache during geometry conversion.
 		void applyGeometry( const IECore::Object *object, AtNode *node ) const
 		{
-			if( const IECore::MeshPrimitive *mesh = IECore::runTimeCast<const IECore::MeshPrimitive>( object ) )
+			if( const IECoreScene::MeshPrimitive *mesh = IECore::runTimeCast<const IECoreScene::MeshPrimitive>( object ) )
 			{
 				m_polyMesh.apply( mesh, node );
 				m_displacement.apply( node );
 			}
-			else if( IECore::runTimeCast<const IECore::CurvesPrimitive>( object ) )
+			else if( IECore::runTimeCast<const IECoreScene::CurvesPrimitive>( object ) )
 			{
 				m_curves.apply( node );
 			}
@@ -771,13 +772,13 @@ class ArnoldAttributes : public IECoreScenePreview::Renderer::AttributesInterfac
 			const IECore::TypeId objectType = object->typeId();
 			bool meshInterpolationIsLinear = false;
 			bool proceduralIsVolumetric = false;
-			if( objectType == IECore::MeshPrimitiveTypeId )
+			if( objectType == IECoreScene::MeshPrimitive::staticTypeId() )
 			{
-				meshInterpolationIsLinear = static_cast<const IECore::MeshPrimitive *>( object )->interpolation() == "linear";
+				meshInterpolationIsLinear = static_cast<const IECoreScene::MeshPrimitive *>( object )->interpolation() == "linear";
 			}
-			else if( objectType == IECore::ExternalProceduralTypeId )
+			else if( objectType == IECoreScene::ExternalProcedural::staticTypeId() )
 			{
-				const IECore::ExternalProcedural *procedural = static_cast<const IECore::ExternalProcedural *>( object );
+				const IECoreScene::ExternalProcedural *procedural = static_cast<const IECoreScene::ExternalProcedural *>( object );
 				if( procedural->getFileName() == "volume" )
 				{
 					proceduralIsVolumetric = true;
@@ -790,12 +791,12 @@ class ArnoldAttributes : public IECoreScenePreview::Renderer::AttributesInterfac
 		// will be applied in `applyGeometry()`.
 		bool canInstanceGeometry( const IECore::Object *object ) const
 		{
-			if( !IECore::runTimeCast<const IECore::VisibleRenderable>( object ) )
+			if( !IECore::runTimeCast<const IECoreScene::VisibleRenderable>( object ) )
 			{
 				return false;
 			}
 
-			if( const IECore::MeshPrimitive *mesh = IECore::runTimeCast<const IECore::MeshPrimitive>( object ) )
+			if( const IECoreScene::MeshPrimitive *mesh = IECore::runTimeCast<const IECoreScene::MeshPrimitive>( object ) )
 			{
 				if( mesh->interpolation() == "linear" )
 				{
@@ -808,7 +809,7 @@ class ArnoldAttributes : public IECoreScenePreview::Renderer::AttributesInterfac
 					return m_polyMesh.subdivAdaptiveError == 0.0f || m_polyMesh.subdivAdaptiveSpace == g_objectArnoldString;
 				}
 			}
-			else if( const IECore::ExternalProcedural *procedural = IECore::runTimeCast<const IECore::ExternalProcedural>( object ) )
+			else if( const IECoreScene::ExternalProcedural *procedural = IECore::runTimeCast<const IECoreScene::ExternalProcedural>( object ) )
 			{
 				// We don't instance "ass archive" procedurals, because Arnold
 				// does automatic instancing of those itself, using its procedural
@@ -851,25 +852,25 @@ class ArnoldAttributes : public IECoreScenePreview::Renderer::AttributesInterfac
 				bool proceduralIsVolumetric = false;
 				if( AiNodeIs( geometry, g_polymeshArnoldString ) )
 				{
-					objectType = IECore::MeshPrimitiveTypeId;
+					objectType = IECoreScene::MeshPrimitive::staticTypeId();
 					meshInterpolationIsLinear = AiNodeGetStr( geometry, g_subdivTypeArnoldString ) != g_catclarkArnoldString;
 				}
 				else if( AiNodeIs( geometry, g_curvesArnoldString ) )
 				{
-					objectType = IECore::CurvesPrimitiveTypeId;
+					objectType = IECoreScene::CurvesPrimitive::staticTypeId();
 				}
 				else if( AiNodeIs( geometry, g_boxArnoldString ) )
 				{
-					objectType = IECore::MeshPrimitiveTypeId;
+					objectType = IECoreScene::MeshPrimitive::staticTypeId();
 				}
 				else if( AiNodeIs( geometry, g_volumeArnoldString ) )
 				{
-					objectType = IECore::ExternalProceduralTypeId;
+					objectType = IECoreScene::ExternalProcedural::staticTypeId();
 					proceduralIsVolumetric = true;
 				}
 				else if( AiNodeIs( geometry, g_sphereArnoldString ) )
 				{
-					objectType = IECore::SpherePrimitiveTypeId;
+					objectType = IECoreScene::SpherePrimitive::staticTypeId();
 				}
 
 				IECore::MurmurHash previousGeometryHash;
@@ -1064,7 +1065,7 @@ class ArnoldAttributes : public IECoreScenePreview::Renderer::AttributesInterfac
 				}
 			}
 
-			void apply( const IECore::MeshPrimitive *mesh, AtNode *node ) const
+			void apply( const IECoreScene::MeshPrimitive *mesh, AtNode *node ) const
 			{
 				if( mesh->interpolation() != "linear" || subdividePolygons )
 				{
@@ -1237,22 +1238,22 @@ class ArnoldAttributes : public IECoreScenePreview::Renderer::AttributesInterfac
 
 		void hashGeometryInternal( IECore::TypeId objectType, bool meshInterpolationIsLinear, bool proceduralIsVolumetric, IECore::MurmurHash &h ) const
 		{
-			switch( objectType )
+			switch( (int)objectType )
 			{
-				case IECore::MeshPrimitiveTypeId :
+				case IECoreScene::MeshPrimitiveTypeId :
 					m_polyMesh.hash( meshInterpolationIsLinear, h );
 					m_displacement.hash( h );
 					h.append( m_stepSize );
 					h.append( m_volumePadding );
 					break;
-				case IECore::CurvesPrimitiveTypeId :
+				case IECoreScene::CurvesPrimitiveTypeId :
 					m_curves.hash( h );
 					break;
-				case IECore::SpherePrimitiveTypeId :
+				case IECoreScene::SpherePrimitiveTypeId :
 					h.append( m_stepSize );
 					h.append( m_volumePadding );
 					break;
-				case IECore::ExternalProceduralTypeId :
+				case IECoreScene::ExternalProceduralTypeId :
 					if( proceduralIsVolumetric )
 					{
 						h.append( m_stepSize );
@@ -1788,7 +1789,7 @@ class ProceduralRenderer final : public ArnoldRendererBase
 			IECore::msg( IECore::Msg::Warning, "ArnoldRenderer", "Procedurals can not call output()" );
 		}
 
-		ObjectInterfacePtr camera( const std::string &name, const IECore::Camera *camera, const AttributesInterface *attributes ) override
+		ObjectInterfacePtr camera( const std::string &name, const IECoreScene::Camera *camera, const AttributesInterface *attributes ) override
 		{
 			IECore::msg( IECore::Msg::Warning, "ArnoldRenderer", "Procedurals can not call camera()" );
 			return nullptr;
@@ -2273,7 +2274,7 @@ class ArnoldGlobals
 		// Some of Arnold's globals come from camera parameters, so the
 		// ArnoldRenderer calls this method to notify the ArnoldGlobals
 		// of each camera as it is created.
-		void camera( const std::string &name, IECore::ConstCameraPtr camera )
+		void camera( const std::string &name, IECoreScene::ConstCameraPtr camera )
 		{
 			m_cameras[name] = camera;
 		}
@@ -2446,7 +2447,7 @@ class ArnoldGlobals
 		{
 			AtNode *options = AiUniverseGetOptions();
 
-			const IECore::Camera *cortexCamera;
+			const IECoreScene::Camera *cortexCamera;
 			AtNode *arnoldCamera = AiNodeLookUpByName( AtString( m_cameraName.c_str() ) );
 			if( arnoldCamera )
 			{
@@ -2457,7 +2458,7 @@ class ArnoldGlobals
 			{
 				if( !m_defaultCamera )
 				{
-					IECore::CameraPtr defaultCortexCamera = new IECore::Camera();
+					IECoreScene::CameraPtr defaultCortexCamera = new IECoreScene::Camera();
 					defaultCortexCamera->addStandardParameters();
 					m_cameras["ieCoreArnold:defaultCamera"] = defaultCortexCamera;
 					m_defaultCamera = SharedAtNodePtr(
@@ -2535,7 +2536,7 @@ class ArnoldGlobals
 		AOVShaderMap m_aovShaders;
 
 		std::string m_cameraName;
-		typedef tbb::concurrent_unordered_map<std::string, IECore::ConstCameraPtr> CameraMap;
+		typedef tbb::concurrent_unordered_map<std::string, IECoreScene::ConstCameraPtr> CameraMap;
 		CameraMap m_cameras;
 		SharedAtNodePtr m_defaultCamera;
 
@@ -2582,9 +2583,9 @@ ArnoldRendererBase::AttributesInterfacePtr ArnoldRendererBase::attributes( const
 	return new ArnoldAttributes( attributes, m_shaderCache.get() );
 }
 
-ArnoldRendererBase::ObjectInterfacePtr ArnoldRendererBase::camera( const std::string &name, const IECore::Camera *camera, const AttributesInterface *attributes )
+ArnoldRendererBase::ObjectInterfacePtr ArnoldRendererBase::camera( const std::string &name, const IECoreScene::Camera *camera, const AttributesInterface *attributes )
 {
-	IECore::CameraPtr cameraCopy = camera->copy();
+	IECoreScene::CameraPtr cameraCopy = camera->copy();
 	cameraCopy->addStandardParameters();
 
 	Instance instance = m_instanceCache->get( camera, attributes, name );
@@ -2654,9 +2655,9 @@ class ArnoldRenderer final : public ArnoldRendererBase
 			m_globals->output( name, output );
 		}
 
-		ObjectInterfacePtr camera( const std::string &name, const IECore::Camera *camera, const AttributesInterface *attributes ) override
+		ObjectInterfacePtr camera( const std::string &name, const IECoreScene::Camera *camera, const AttributesInterface *attributes ) override
 		{
-			IECore::CameraPtr cameraCopy = camera->copy();
+			IECoreScene::CameraPtr cameraCopy = camera->copy();
 			cameraCopy->addStandardParameters();
 			m_globals->camera( name, cameraCopy.get() );
 			return ArnoldRendererBase::camera( name, camera, attributes );

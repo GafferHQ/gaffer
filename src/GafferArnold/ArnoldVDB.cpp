@@ -38,8 +38,8 @@
 
 #include "openvdb/openvdb.h"
 
-#include "IECore/ExternalProcedural.h"
 #include "IECore/CompoundData.h"
+#include "IECoreScene/ExternalProcedural.h"
 
 #include "Gaffer/StringPlug.h"
 #include "Gaffer/StringAlgo.h"
@@ -48,6 +48,7 @@
 
 using namespace Imath;
 using namespace IECore;
+using namespace IECoreScene;
 using namespace Gaffer;
 using namespace GafferScene;
 using namespace GafferArnold;
@@ -206,7 +207,7 @@ void ArnoldVDB::hashSource( const Gaffer::Context *context, IECore::MurmurHash &
 
 IECore::ConstObjectPtr ArnoldVDB::computeSource( const Context *context ) const
 {
-	IECore::ExternalProceduralPtr result = new ExternalProcedural( "volume" );
+	IECoreScene::ExternalProceduralPtr result = new ExternalProcedural( "volume" );
 	const std::string fileName = fileNamePlug()->getValue();
 	const std::string gridsString = gridsPlug()->getValue();
 	if( fileName.empty() || gridsString.empty() )

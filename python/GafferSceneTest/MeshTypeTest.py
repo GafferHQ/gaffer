@@ -38,6 +38,7 @@ import unittest
 import os
 
 import IECore
+import IECoreScene
 
 import Gaffer
 import GafferTest
@@ -111,7 +112,7 @@ class MeshTypeTest( GafferSceneTest.SceneTestCase ) :
 		d["in"].setInput( c["out"] )
 
 		self.assertSceneValid( d["out"] )
-		self.failUnless( isinstance( d["out"].object( "/camera" ), IECore.Camera ) )
+		self.failUnless( isinstance( d["out"].object( "/camera" ), IECoreScene.Camera ) )
 		self.assertEqual( d["out"].object( "/camera" ), c["out"].object( "/camera" ) )
 
 	def testEnabledPlugAffects( self ) :

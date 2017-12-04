@@ -64,6 +64,7 @@
 using namespace std;
 using namespace Imath;
 using namespace IECore;
+using namespace IECoreScene;
 using namespace IECoreGL;
 
 //////////////////////////////////////////////////////////////////////////
@@ -197,7 +198,7 @@ class OpenGLCamera : public IECoreScenePreview::Renderer::ObjectInterface
 
 	public :
 
-		OpenGLCamera( const IECore::Camera *camera )
+		OpenGLCamera( const IECoreScene::Camera *camera )
 		{
 			if( camera )
 			{
@@ -313,7 +314,7 @@ class OpenGLRenderer final : public IECoreScenePreview::Renderer
 			return new OpenGLAttributes( attributes );
 		}
 
-		ObjectInterfacePtr camera( const std::string &name, const IECore::Camera *camera, const AttributesInterface *attributes ) override
+		ObjectInterfacePtr camera( const std::string &name, const IECoreScene::Camera *camera, const AttributesInterface *attributes ) override
 		{
 			OpenGLCameraPtr result = new OpenGLCamera( camera );
 			result->attributes( attributes );

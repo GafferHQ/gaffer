@@ -38,7 +38,7 @@
 #ifndef GAFFERUI_VIEWPORTGADGET_H
 #define GAFFERUI_VIEWPORTGADGET_H
 
-#include "IECore/Camera.h"
+#include "IECoreScene/Camera.h"
 
 #include "IECoreGL/Selector.h"
 
@@ -88,9 +88,9 @@ class ViewportGadget : public Gadget
 		/// a call to setViewport().
 		UnarySignal &viewportChangedSignal();
 
-		const IECore::Camera *getCamera() const;
+		const IECoreScene::Camera *getCamera() const;
 		/// A copy is taken.
-		void setCamera( const IECore::Camera *camera );
+		void setCamera( const IECoreScene::Camera *camera );
 		const Imath::M44f &getCameraTransform() const;
 		void setCameraTransform( const Imath::M44f &transform );
 		/// A signal emitted when the camera is changed, either by

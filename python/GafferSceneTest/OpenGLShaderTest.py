@@ -39,6 +39,7 @@ import sys
 import unittest
 
 import IECore
+import IECoreScene
 import IECoreGL
 
 import Gaffer
@@ -69,7 +70,7 @@ class OpenGLShaderTest( GafferSceneTest.SceneTestCase ) :
 
 		a = s.attributes()
 		self.assertEqual( a.keys(), [ "gl:surface"] )
-		self.failUnless( isinstance( a["gl:surface"][0], IECore.Shader ) )
+		self.failUnless( isinstance( a["gl:surface"][0], IECoreScene.Shader ) )
 
 		self.assertEqual( a["gl:surface"][0].name, "Texture" )
 		self.assertEqual( a["gl:surface"][0].type, "gl:surface" )

@@ -42,7 +42,7 @@
 #include "renderer/api/version.h"
 
 #include "IECore/Exception.h"
-#include "IECore/Shader.h"
+#include "IECoreScene/Shader.h"
 
 #include "Gaffer/CompoundDataPlug.h"
 #include "Gaffer/StringPlug.h"
@@ -115,7 +115,7 @@ void AppleseedLight::hashLight( const Gaffer::Context *context, IECore::MurmurHa
 
 IECore::ObjectVectorPtr AppleseedLight::computeLight( const Gaffer::Context *context ) const
 {
-	IECore::ShaderPtr result = new IECore::Shader( modelPlug()->getValue(), "as:light" );
+	IECoreScene::ShaderPtr result = new IECoreScene::Shader( modelPlug()->getValue(), "as:light" );
 	for( InputValuePlugIterator it( parametersPlug() ); !it.done(); ++it )
 	{
 		result->parameters()[(*it)->getName()] = CompoundDataPlug::extractDataFromPlug( it->get() );

@@ -265,7 +265,7 @@ class Shader::NetworkBuilder
 			return shaderAndHash.hash;
 		}
 
-		IECore::Shader *shader( const Shader *shaderNode )
+		IECoreScene::Shader *shader( const Shader *shaderNode )
 		{
 			assert( shaderNode );
 			assert( shaderNode->enabledPlug()->getValue() );
@@ -278,7 +278,7 @@ class Shader::NetworkBuilder
 				return shaderAndHash.shader.get();
 			}
 
-			shaderAndHash.shader = new IECore::Shader( shaderNode->namePlug()->getValue(), shaderNode->typePlug()->getValue() );
+			shaderAndHash.shader = new IECoreScene::Shader( shaderNode->namePlug()->getValue(), shaderNode->typePlug()->getValue() );
 			parameterValueWalk( shaderNode->parametersPlug(), IECore::InternedString(), shaderAndHash.shader->parameters() );
 
 			shaderAndHash.shader->blindData()->writable()["gaffer:nodeName"] = new IECore::StringData( shaderNode->nodeNamePlug()->getValue() );
@@ -291,7 +291,7 @@ class Shader::NetworkBuilder
 
 		const std::string &shaderHandle( const Shader *shaderNode )
 		{
-			IECore::Shader *s = shader( shaderNode );
+			IECoreScene::Shader *s = shader( shaderNode );
 			if( !s )
 			{
 				static std::string emptyString;
@@ -482,7 +482,7 @@ class Shader::NetworkBuilder
 
 		struct ShaderAndHash
 		{
-			IECore::ShaderPtr shader;
+			IECoreScene::ShaderPtr shader;
 			IECore::MurmurHash hash;
 		};
 

@@ -38,6 +38,7 @@
 import unittest
 
 import IECore
+import IECoreScene
 
 import Gaffer
 import GafferTest
@@ -48,7 +49,7 @@ class ShaderAssignmentTest( GafferSceneTest.SceneTestCase ) :
 
 	def testFilter( self ) :
 
-		sphere = IECore.SpherePrimitive()
+		sphere = IECoreScene.SpherePrimitive()
 		input = GafferSceneTest.CompoundObjectSource()
 		input["in"].setValue(
 			IECore.CompoundObject( {

@@ -40,6 +40,7 @@ import subprocess32 as subprocess
 import unittest
 
 import IECore
+import IECoreScene
 
 import Gaffer
 import GafferTest
@@ -150,7 +151,7 @@ class ExecuteApplicationTest( GafferTest.TestCase ) :
 		self.failUnless( os.path.exists( self.__outputFileSeq.fileNameForFrame( 1 ) ) )
 
 		prim = IECore.ObjectReader( self.__outputFileSeq.fileNameForFrame( 1 ) ).read()
-		self.failUnless( prim.isInstanceOf( IECore.SpherePrimitive.staticTypeId() ) )
+		self.failUnless( prim.isInstanceOf( IECoreScene.SpherePrimitive.staticTypeId() ) )
 		self.assertEqual( prim.bound(), IECore.Box3f( IECore.V3f( -5 ), IECore.V3f( 5 ) ) )
 		self.assertEqual( prim.thetaMax(), 180 )
 

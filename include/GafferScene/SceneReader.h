@@ -39,7 +39,7 @@
 
 #include "tbb/enumerable_thread_specific.h"
 
-#include "IECore/SceneInterface.h"
+#include "IECoreScene/SceneInterface.h"
 
 #include "GafferScene/SceneNode.h"
 
@@ -117,14 +117,14 @@ class SceneReader : public SceneNode
 		struct LastScene
 		{
 			std::string fileName;
-			IECore::ConstSceneInterfacePtr fileNameScene;
+			IECoreScene::ConstSceneInterfacePtr fileNameScene;
 			ScenePlug::ScenePath path;
-			IECore::ConstSceneInterfacePtr pathScene;
+			IECoreScene::ConstSceneInterfacePtr pathScene;
 		};
 		mutable tbb::enumerable_thread_specific<LastScene> m_lastScene;
 		// Returns the SceneInterface for the current filename (in the current Context)
 		// and specified path, using m_lastScene to accelerate the lookups.
-		IECore::ConstSceneInterfacePtr scene( const ScenePath &path ) const;
+		IECoreScene::ConstSceneInterfacePtr scene( const ScenePath &path ) const;
 
 		static const double g_frameRate;
 		static size_t g_firstPlugIndex;

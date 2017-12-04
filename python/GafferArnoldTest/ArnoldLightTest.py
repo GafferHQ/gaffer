@@ -37,6 +37,7 @@
 import arnold
 
 import IECore
+import IECoreScene
 import IECoreArnold
 
 import GafferSceneTest
@@ -52,7 +53,7 @@ class ArnoldLightTest( GafferSceneTest.SceneTestCase ) :
 		n = l["out"].attributes( "/light" )["ai:light"]
 		self.assertTrue( isinstance( n, IECore.ObjectVector ) )
 		self.assertEqual( len( n ), 1 )
-		self.assertTrue( isinstance( n[0], IECore.Shader ) )
+		self.assertTrue( isinstance( n[0], IECoreScene.Shader ) )
 		self.assertEqual( n[0].type, "ai:light" )
 		self.assertEqual( n[0].name, "point_light" )
 

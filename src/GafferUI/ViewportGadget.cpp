@@ -43,11 +43,12 @@
 #include "OpenEXR/ImathBoxAlgo.h"
 #include "OpenEXR/ImathMatrixAlgo.h"
 
-#include "IECore/Transform.h"
 #include "IECore/NullObject.h"
 #include "IECore/SimpleTypedData.h"
 #include "IECore/AngleConversion.h"
 #include "IECore/MessageHandler.h"
+
+#include "IECoreScene/Transform.h"
 
 #include "IECoreGL/ToGLCameraConverter.h"
 #include "IECoreGL/PerspectiveCamera.h"
@@ -59,6 +60,7 @@
 
 using namespace Imath;
 using namespace IECore;
+using namespace IECoreScene;
 using namespace IECoreGL;
 using namespace GafferUI;
 
@@ -71,12 +73,12 @@ class ViewportGadget::CameraController : public boost::noncopyable
 
 	public :
 
-		CameraController( IECore::CameraPtr camera )
+		CameraController( IECoreScene::CameraPtr camera )
 		{
 			setCamera( camera );
 		}
 
-		void setCamera( IECore::CameraPtr camera )
+		void setCamera( IECoreScene::CameraPtr camera )
 		{
 			m_camera = camera;
 			m_camera->addStandardParameters(); // subsequent casts are safe because of this
@@ -96,12 +98,12 @@ class ViewportGadget::CameraController : public boost::noncopyable
 			m_centreOfInterest = 1;
 		}
 
-		IECore::Camera *getCamera()
+		IECoreScene::Camera *getCamera()
 		{
 			return m_camera.get();
 		}
 
-		const IECore::Camera *getCamera() const
+		const IECoreScene::Camera *getCamera() const
 		{
 			return m_camera.get();
 		}
@@ -451,7 +453,7 @@ class ViewportGadget::CameraController : public boost::noncopyable
 		}
 
 		// Parts of the camera we manipulate
-		IECore::CameraPtr m_camera;
+		IECoreScene::CameraPtr m_camera;
 		V2iDataPtr m_resolution;
 		Box2fDataPtr m_screenWindow;
 		ConstStringDataPtr m_projection;
@@ -477,7 +479,7 @@ IE_CORE_DEFINERUNTIMETYPED( ViewportGadget );
 
 ViewportGadget::ViewportGadget( GadgetPtr primaryChild )
 	: Gadget(),
-	  m_cameraController( new CameraController( new IECore::Camera ) ),
+	  m_cameraController( new CameraController( new IECoreScene::Camera ) ),
 	  m_cameraInMotion( false ),
 	  m_cameraEditable( true ),
 	  m_dragTracking( false )
@@ -598,12 +600,12 @@ ViewportGadget::UnarySignal &ViewportGadget::viewportChangedSignal()
 	return m_viewportChangedSignal;
 }
 
-const IECore::Camera *ViewportGadget::getCamera() const
+const IECoreScene::Camera *ViewportGadget::getCamera() const
 {
 	return m_cameraController->getCamera();
 }
 
-void ViewportGadget::setCamera( const IECore::Camera *camera )
+void ViewportGadget::setCamera( const IECoreScene::Camera *camera )
 {
 	if( m_cameraController->getCamera()->isEqualTo( camera ) )
 	{

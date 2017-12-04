@@ -34,7 +34,7 @@
 //
 //////////////////////////////////////////////////////////////////////////
 
-#include "IECore/CoordinateSystem.h"
+#include "IECoreScene/CoordinateSystem.h"
 
 #include "IECoreGL/CurvesPrimitive.h"
 #include "IECoreGL/Group.h"
@@ -53,7 +53,7 @@ class CoordinateSystemVisualiser : public ObjectVisualiser
 
 	public :
 
-		typedef IECore::CoordinateSystem ObjectType;
+		typedef IECoreScene::CoordinateSystem ObjectType;
 
 		CoordinateSystemVisualiser()
 			:	m_group( new IECoreGL::Group() )
@@ -79,7 +79,7 @@ class CoordinateSystemVisualiser : public ObjectVisualiser
 			vertsPerCurve->writable().resize( 3, 2 );
 
 			IECoreGL::CurvesPrimitivePtr curves = new IECoreGL::CurvesPrimitive( IECore::CubicBasisf::linear(), false, vertsPerCurve );
-			curves->addPrimitiveVariable( "P", IECore::PrimitiveVariable( IECore::PrimitiveVariable::Vertex, pData ) );
+			curves->addPrimitiveVariable( "P", IECoreScene::PrimitiveVariable( IECoreScene::PrimitiveVariable::Vertex, pData ) );
 			m_group->addChild( curves );
 		}
 

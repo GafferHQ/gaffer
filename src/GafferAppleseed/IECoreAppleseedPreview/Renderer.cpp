@@ -70,12 +70,12 @@
 #include "renderer/api/texture.h"
 #include "renderer/api/utility.h"
 
-#include "IECore/Camera.h"
 #include "IECore/MessageHandler.h"
-#include "IECore/Shader.h"
 #include "IECore/SimpleTypedData.h"
 #include "IECore/ObjectInterpolator.h"
 #include "IECore/ObjectVector.h"
+#include "IECoreScene/Camera.h"
+#include "IECoreScene/Shader.h"
 
 #include "IECoreAppleseed/CameraAlgo.h"
 #include "IECoreAppleseed/ColorAlgo.h"
@@ -98,6 +98,7 @@ namespace asr = renderer;
 using namespace std;
 using namespace Imath;
 using namespace IECore;
+using namespace IECoreScene;
 using namespace IECoreAppleseed;
 
 //////////////////////////////////////////////////////////////////////////

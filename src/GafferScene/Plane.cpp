@@ -35,7 +35,7 @@
 //
 //////////////////////////////////////////////////////////////////////////
 
-#include "IECore/MeshPrimitive.h"
+#include "IECoreScene/MeshPrimitive.h"
 
 #include "GafferScene/Plane.h"
 
@@ -43,6 +43,7 @@ using namespace Gaffer;
 using namespace GafferScene;
 using namespace Imath;
 using namespace IECore;
+using namespace IECoreScene;
 
 IE_CORE_DEFINERUNTIMETYPED( Plane );
 

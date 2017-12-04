@@ -34,13 +34,14 @@
 //
 //////////////////////////////////////////////////////////////////////////
 
-#include "IECore/PointsPrimitive.h"
+#include "IECoreScene/PointsPrimitive.h"
 
 #include "Gaffer/StringPlug.h"
 
 #include "GafferScene/PointsType.h"
 
 using namespace IECore;
+using namespace IECoreScene;
 using namespace Gaffer;
 using namespace GafferScene;
 

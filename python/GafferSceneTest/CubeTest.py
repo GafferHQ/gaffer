@@ -37,6 +37,7 @@
 import unittest
 
 import IECore
+import IECoreScene
 
 import Gaffer
 import GafferTest
@@ -59,7 +60,7 @@ class CubeTest( GafferSceneTest.SceneTestCase ) :
 		self.assertEqual( c["out"].bound( "/" ), IECore.Box3f( IECore.V3f( -0.5, -0.5, -0.5 ), IECore.V3f( 0.5, 0.5, 0.5 ) ) )
 		self.assertEqual( c["out"].childNames( "/" ), IECore.InternedStringVectorData( [ "cube" ] ) )
 
-		self.assertEqual( c["out"].object( "/cube" ), IECore.MeshPrimitive.createBox( IECore.Box3f( IECore.V3f( -0.5 ), IECore.V3f( 0.5 ) ) ) )
+		self.assertEqual( c["out"].object( "/cube" ), IECoreScene.MeshPrimitive.createBox( IECore.Box3f( IECore.V3f( -0.5 ), IECore.V3f( 0.5 ) ) ) )
 		self.assertEqual( c["out"].transform( "/cube" ), IECore.M44f() )
 		self.assertEqual( c["out"].bound( "/cube" ), IECore.Box3f( IECore.V3f( -0.5, -0.5, -0.5 ), IECore.V3f( 0.5, 0.5, 0.5 ) ) )
 		self.assertEqual( c["out"].childNames( "/cube" ), IECore.InternedStringVectorData() )
@@ -67,12 +68,12 @@ class CubeTest( GafferSceneTest.SceneTestCase ) :
 	def testPlugs( self ) :
 
 		c = GafferScene.Cube()
-		m = IECore.MeshPrimitive.createBox( IECore.Box3f( IECore.V3f( -0.5 ), IECore.V3f( 0.5 ) ) )
+		m = IECoreScene.MeshPrimitive.createBox( IECore.Box3f( IECore.V3f( -0.5 ), IECore.V3f( 0.5 ) ) )
 		self.assertEqual( c["out"].object( "/cube" ), m )
 		h = c["out"].objectHash( "/cube" )
 
 		c["dimensions"].setValue( IECore.V3f( 2.5, 5, 6 ) )
-		m = IECore.MeshPrimitive.createBox( IECore.Box3f( IECore.V3f( -1.25, -2.5, -3 ), IECore.V3f( 1.25, 2.5, 3 ) ) )
+		m = IECoreScene.MeshPrimitive.createBox( IECore.Box3f( IECore.V3f( -1.25, -2.5, -3 ), IECore.V3f( 1.25, 2.5, 3 ) ) )
 		self.assertEqual( c["out"].object( "/cube" ), m )
 		self.assertNotEqual( c["out"].objectHash( "/cube" ), h )
 

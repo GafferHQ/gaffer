@@ -41,7 +41,7 @@
 
 #include "IECore/VectorTypedData.h"
 #include "IECore/CompoundData.h"
-#include "IECore/PrimitiveVariable.h"
+#include "IECoreScene/PrimitiveVariable.h"
 
 namespace IECoreDelight
 {

@@ -41,8 +41,8 @@
 #include "boost/unordered_set.hpp"
 
 #include "IECore/ObjectVector.h"
-#include "IECore/Shader.h"
 #include "IECore/CompoundObject.h"
+#include "IECoreScene/Shader.h"
 
 #include "Gaffer/DependencyNode.h"
 #include "Gaffer/TypedPlug.h"

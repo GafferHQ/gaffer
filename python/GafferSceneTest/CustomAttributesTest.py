@@ -39,6 +39,7 @@ import unittest
 import threading
 
 import IECore
+import IECoreScene
 
 import Gaffer
 import GafferScene
@@ -48,7 +49,7 @@ class CustomAttributesTest( GafferSceneTest.SceneTestCase ) :
 
 	def test( self ) :
 
-		sphere = IECore.SpherePrimitive()
+		sphere = IECoreScene.SpherePrimitive()
 		input = GafferSceneTest.CompoundObjectSource()
 		input["in"].setValue(
 			IECore.CompoundObject( {
@@ -93,7 +94,7 @@ class CustomAttributesTest( GafferSceneTest.SceneTestCase ) :
 
 	def testOverrideAttributes( self ) :
 
-		sphere = IECore.SpherePrimitive()
+		sphere = IECoreScene.SpherePrimitive()
 		input = GafferSceneTest.CompoundObjectSource()
 		input["in"].setValue(
 			IECore.CompoundObject( {
@@ -145,7 +146,7 @@ class CustomAttributesTest( GafferSceneTest.SceneTestCase ) :
 
 	def testHashPassThrough( self ) :
 
-		sphere = IECore.SpherePrimitive()
+		sphere = IECoreScene.SpherePrimitive()
 		input = GafferSceneTest.CompoundObjectSource()
 		input["in"].setValue(
 			IECore.CompoundObject( {

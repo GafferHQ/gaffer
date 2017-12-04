@@ -34,10 +34,10 @@
 //
 //////////////////////////////////////////////////////////////////////////
 
-#include "IECore/Font.h"
 #include "IECore/LRUCache.h"
-#include "IECore/MeshPrimitive.h"
 #include "IECore/SearchPath.h"
+#include "IECoreScene/Font.h"
+#include "IECoreScene/MeshPrimitive.h"
 
 #include "Gaffer/StringPlug.h"
 
@@ -47,6 +47,7 @@ using namespace Gaffer;
 using namespace GafferScene;
 using namespace Imath;
 using namespace IECore;
+using namespace IECoreScene;
 
 //////////////////////////////////////////////////////////////////////////
 // Implementation of an LRUCache of Fonts.

@@ -39,6 +39,7 @@ import re
 import shutil
 
 import IECore
+import IECoreScene
 
 import Gaffer
 import GafferUI
@@ -457,7 +458,7 @@ def _searchPathEnvVar( parameterisedHolder ) :
 		# we need to guess based on type
 		if isinstance( parameterised[0], IECore.Op ) :
 			searchPathEnvVar = "IECORE_OP_PATHS"
-		elif isinstance( parameterised[0], IECore.ParameterisedProcedural ) :
+		elif isinstance( parameterised[0], IECoreScene.ParameterisedProcedural ) :
 			searchPathEnvVar = "IECORE_PROCEDURAL_PATHS"
 		else :
 			raise Exception( "Unable to determine search paths for presets" )

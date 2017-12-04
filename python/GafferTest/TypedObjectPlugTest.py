@@ -129,27 +129,6 @@ class TypedObjectPlugTest( GafferTest.TestCase ) :
  		self.failUnless( s2["n"]["t"].defaultValue() == IECore.IntData( 10 ) )
 		self.failUnless( s2["n"]["t"].getValue() == IECore.CompoundObject( { "a" : IECore.IntData( 20 ) } ) )
 
- 	@GafferTest.expectedFailure
-	def testSerialisationOfMeshPrimitives( self ) :
-
-		# right now we can only serialise types which define __repr__, but that
-		# isn't defined for all cortex types. this test should pass when we get round
-		# to defining it for MeshPrimitives - we should do the other primitives at the
-		# same time, obviously.
-
-		s = Gaffer.ScriptNode()
-		s["n"] = Gaffer.Node()
-		s["n"]["t"] = Gaffer.ObjectPlug( "hello", flags = Gaffer.Plug.Flags.Default | Gaffer.Plug.Flags.Dynamic, defaultValue = IECore.MeshPrimitive.createPlane( IECore.Box2f( IECore.V2f( 0 ), IECore.V2f( 10 ) ) ) )
-		s["n"]["t"].setValue( IECore.MeshPrimitive.createPlane( IECore.Box2f( IECore.V2f( 0 ), IECore.V2f( 1 ) ) ) )
-
- 		se = s.serialise()
-
-		s2 = Gaffer.ScriptNode()
- 		s2.execute( se )
-
-		self.assertEqual( s["n"]["t"].defaultValue(), s2["n"]["t"].defaultValue() )
-		self.assertEqual( s["n"]["t"].getValue(), s2["n"]["t"].getValue() )
-
 	def testConstructCantSpecifyBothInputAndValue( self ) :
 
 		out = Gaffer.ObjectPlug( "out", direction=Gaffer.Plug.Direction.Out, defaultValue=IECore.StringData( "hi" ) )
@@ -183,15 +162,15 @@ class TypedObjectPlugTest( GafferTest.TestCase ) :
 
 	def testSetToDefault( self ) :
 
-		plane = IECore.MeshPrimitive.createPlane( IECore.Box2f( IECore.V2f( 0 ), IECore.V2f( 10 ) ) )
-		plug = Gaffer.ObjectPlug( defaultValue = plane )
-		self.assertEqual( plug.getValue(), plane )
+		defaultValue = IECore.IntVectorData( [ 1, 2, 3 ] )
+		plug = Gaffer.ObjectPlug( defaultValue = defaultValue )
+		self.assertEqual( plug.getValue(), defaultValue )
 
-		plug.setValue( IECore.SpherePrimitive() )
-		self.assertEqual( plug.getValue(), IECore.SpherePrimitive() )
+		plug.setValue( IECore.StringData( "value" ) )
+		self.assertEqual( plug.getValue(), IECore.StringData( "value" ) )
 
 		plug.setToDefault()
-		self.assertEqual( plug.getValue(), plane )
+		self.assertEqual( plug.getValue(), defaultValue )
 
 	def testValueType( self ) :
 

@@ -42,9 +42,9 @@
 #include "boost/container/flat_map.hpp"
 
 #include "IECore/CompoundObject.h"
-#include "IECore/VisibleRenderable.h"
 #include "IECore/VectorTypedData.h"
-#include "IECore/Camera.h"
+#include "IECoreScene/VisibleRenderable.h"
+#include "IECoreScene/Camera.h"
 
 #include "GafferScene/ScenePlug.h"
 #include "GafferScene/PathMatcher.h"
@@ -77,7 +77,7 @@ void transformSamples( const ScenePlug *scene, size_t segments, const Imath::V2f
 /// Samples the object from the current location in preparation for output to the renderer. Sampling parameters
 /// are as for the transformSamples() method. Multiple samples will only be generated for Primitives, since other
 /// object types cannot be interpolated anyway.
-void objectSamples( const ScenePlug *scene, size_t segments, const Imath::V2f &shutter, std::vector<IECore::ConstVisibleRenderablePtr> &samples, std::set<float> &sampleTimes );
+void objectSamples( const ScenePlug *scene, size_t segments, const Imath::V2f &shutter, std::vector<IECoreScene::ConstVisibleRenderablePtr> &samples, std::set<float> &sampleTimes );
 
 /// Function to return a SceneProcessor used to adapt the
 /// scene for rendering.
@@ -148,7 +148,7 @@ void outputLights( const ScenePlug *scene, const IECore::CompoundObject *globals
 void outputObjects( const ScenePlug *scene, const IECore::CompoundObject *globals, const RenderSets &renderSets, IECoreScenePreview::Renderer *renderer, const ScenePlug::ScenePath &root = ScenePlug::ScenePath() );
 
 /// Applies the resolution, aspect ratio etc from the globals to the camera.
-void applyCameraGlobals( IECore::Camera *camera, const IECore::CompoundObject *globals );
+void applyCameraGlobals( IECoreScene::Camera *camera, const IECore::CompoundObject *globals );
 
 } // namespace RendererAlgo
 

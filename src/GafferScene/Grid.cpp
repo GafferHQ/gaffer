@@ -34,8 +34,8 @@
 //
 //////////////////////////////////////////////////////////////////////////
 
-#include "IECore/CurvesPrimitive.h"
-#include "IECore/Shader.h"
+#include "IECoreScene/CurvesPrimitive.h"
+#include "IECoreScene/Shader.h"
 
 #include "Gaffer/StringPlug.h"
 
@@ -44,6 +44,7 @@
 using namespace std;
 using namespace Imath;
 using namespace IECore;
+using namespace IECoreScene;
 using namespace Gaffer;
 using namespace GafferScene;
 

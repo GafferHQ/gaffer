@@ -35,8 +35,8 @@
 //////////////////////////////////////////////////////////////////////////
 
 #include "IECore/NullObject.h"
-#include "IECore/Shader.h"
 #include "IECore/MessageHandler.h"
+#include "IECoreScene/Shader.h"
 
 #include "Gaffer/StringPlug.h"
 
@@ -110,7 +110,7 @@ IECore::ConstCompoundObjectPtr Light::computeAttributes( const SceneNode::SceneP
 	IECore::ObjectVectorPtr lightShaders = computeLight( context );
 	if( lightShaders->members().size() )
 	{
-		if( const IECore::Shader *shader = IECore::runTimeCast<const IECore::Shader>( lightShaders->members().back().get() ) )
+		if( const IECoreScene::Shader *shader = IECore::runTimeCast<const IECoreScene::Shader>( lightShaders->members().back().get() ) )
 		{
 			lightAttribute = shader->getType();
 		}

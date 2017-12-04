@@ -34,7 +34,7 @@
 //
 //////////////////////////////////////////////////////////////////////////
 
-#include "IECore/Primitive.h"
+#include "IECoreScene/Primitive.h"
 
 #include "GafferScene/ResamplePrimitiveVariables.h"
 
@@ -44,6 +44,7 @@
 
 using namespace Imath;
 using namespace IECore;
+using namespace IECoreScene;
 using namespace Gaffer;
 using namespace GafferScene;
 using namespace GafferOSL;
@@ -244,7 +245,7 @@ IECore::ConstObjectPtr OSLObject::computeProcessedObject( const ScenePath &path,
 
 	PrimitiveVariable::Interpolation interpolation = static_cast<PrimitiveVariable::Interpolation>( interpolationPlug()->getValue() );
 
-	IECore::ConstPrimitivePtr resampledObject = IECore::runTimeCast<const IECore::Primitive>( resampledInPlug()->objectPlug()->getValue() );
+	IECoreScene::ConstPrimitivePtr resampledObject = IECore::runTimeCast<const IECoreScene::Primitive>( resampledInPlug()->objectPlug()->getValue() );
 	CompoundDataPtr shadingPoints = prepareShadingPoints( resampledObject.get() );
 
 	PrimitivePtr outputPrimitive = inputPrimitive->copy();
@@ -281,7 +282,7 @@ void OSLObject::compute( Gaffer::ValuePlug *output, const Gaffer::Context *conte
 {
 	if( output == resampledNamesPlug() )
 	{
-		ConstPrimitivePtr prim = runTimeCast<const IECore::Primitive>( inPlug()->objectPlug()->getValue() );
+		ConstPrimitivePtr prim = runTimeCast<const IECoreScene::Primitive>( inPlug()->objectPlug()->getValue() );
 
 		if (!prim)
 		{

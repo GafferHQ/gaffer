@@ -34,8 +34,8 @@
 //
 //////////////////////////////////////////////////////////////////////////
 
-#include "IECore/ParameterisedProcedural.h"
 #include "IECore/NullObject.h"
+#include "IECoreScene/ParameterisedProcedural.h"
 
 #include "Gaffer/TypedObjectPlug.h"
 
@@ -43,6 +43,7 @@
 #include "GafferCortex/CompoundParameterHandler.h"
 
 using namespace IECore;
+using namespace IECoreScene;
 using namespace GafferCortex;
 
 IE_CORE_DEFINERUNTIMETYPED( ProceduralHolder )
@@ -68,7 +69,7 @@ void ProceduralHolder::setParameterised( IECore::RunTimeTypedPtr parameterised, 
 	ParameterisedProceduralPtr op = runTimeCast<ParameterisedProcedural>( parameterised );
 	if( !op )
 	{
-		throw IECore::Exception( "Parameterised object is not an IECore::ParameterisedProcedural" );
+		throw IECore::Exception( "Parameterised object is not an IECoreScene::ParameterisedProcedural" );
 	}
 
 	ParameterisedHolderComputeNode::setParameterised( parameterised, keepExistingValues );
@@ -81,14 +82,14 @@ void ProceduralHolder::setProcedural( const std::string &className, int classVer
 	ParameterisedHolderComputeNode::setParameterised( className, classVersion, "IECORE_PROCEDURAL_PATHS" );
 }
 
-IECore::ParameterisedProcedural *ProceduralHolder::getProcedural( std::string *className, int *classVersion )
+IECoreScene::ParameterisedProcedural *ProceduralHolder::getProcedural( std::string *className, int *classVersion )
 {
-	return IECore::runTimeCast<IECore::ParameterisedProcedural>( getParameterised( className, classVersion ) );
+	return IECore::runTimeCast<IECoreScene::ParameterisedProcedural>( getParameterised( className, classVersion ) );
 }
 
-const IECore::ParameterisedProcedural *ProceduralHolder::getProcedural( std::string *className, int *classVersion ) const
+const IECoreScene::ParameterisedProcedural *ProceduralHolder::getProcedural( std::string *className, int *classVersion ) const
 {
-	return IECore::runTimeCast<IECore::ParameterisedProcedural>( getParameterised( className, classVersion ) );
+	return IECore::runTimeCast<IECoreScene::ParameterisedProcedural>( getParameterised( className, classVersion ) );
 }
 
 void ProceduralHolder::affects( const Gaffer::Plug *input, AffectedPlugsContainer &outputs ) const

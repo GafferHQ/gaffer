@@ -59,7 +59,7 @@ GadgetPtr getPrimaryChild( ViewportGadget &v )
 	return v.getPrimaryChild();
 }
 
-IECore::CameraPtr getCamera( const ViewportGadget &v )
+IECoreScene::CameraPtr getCamera( const ViewportGadget &v )
 {
 	return v.getCamera()->copy();
 }

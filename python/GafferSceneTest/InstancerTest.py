@@ -36,6 +36,7 @@
 ##########################################################################
 
 import IECore
+import IECoreScene
 
 import Gaffer
 import GafferTest
@@ -47,7 +48,7 @@ class InstancerTest( GafferSceneTest.SceneTestCase ) :
 
 	def test( self ) :
 
-		sphere = IECore.SpherePrimitive()
+		sphere = IECoreScene.SpherePrimitive()
 		instanceInput = GafferSceneTest.CompoundObjectSource()
 		instanceInput["in"].setValue(
 			IECore.CompoundObject( {
@@ -62,7 +63,7 @@ class InstancerTest( GafferSceneTest.SceneTestCase ) :
 			} )
 		)
 
-		seeds = IECore.PointsPrimitive(
+		seeds = IECoreScene.PointsPrimitive(
 			IECore.V3fVectorData(
 				[ IECore.V3f( 1, 0, 0 ), IECore.V3f( 1, 1, 0 ), IECore.V3f( 0, 1, 0 ), IECore.V3f( 0, 0, 0 ) ]
 			)
@@ -118,7 +119,7 @@ class InstancerTest( GafferSceneTest.SceneTestCase ) :
 
 	def testThreading( self ) :
 
-		sphere = IECore.SpherePrimitive()
+		sphere = IECoreScene.SpherePrimitive()
 		instanceInput = GafferSceneTest.CompoundObjectSource()
 		instanceInput["in"].setValue(
 			IECore.CompoundObject( {
@@ -133,7 +134,7 @@ class InstancerTest( GafferSceneTest.SceneTestCase ) :
 			} )
 		)
 
-		seeds = IECore.PointsPrimitive(
+		seeds = IECoreScene.PointsPrimitive(
 			IECore.V3fVectorData(
 				[ IECore.V3f( 1, 0, 0 ), IECore.V3f( 1, 1, 0 ), IECore.V3f( 0, 1, 0 ), IECore.V3f( 0, 0, 0 ) ]
 			)
@@ -421,7 +422,7 @@ class InstancerTest( GafferSceneTest.SceneTestCase ) :
 			script["attributes"]["attributes"][p.getName()] = p
 
 			c.setFrame( 10 )
-			script["outputs"].addOutput( "test", IECore.Display( "beauty.exr", "exr", "rgba" ) )
+			script["outputs"].addOutput( "test", IECoreScene.Display( "beauty.exr", "exr", "rgba" ) )
 
 	def testLoadReferenceAndGIL( self ) :
 
