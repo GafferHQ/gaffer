@@ -1,7 +1,6 @@
 //////////////////////////////////////////////////////////////////////////
 //
-//  Copyright (c) 2011-2012, John Haddon. All rights reserved.
-//  Copyright (c) 2011-2014, Image Engine Design Inc. All rights reserved.
+//  Copyright (c) 2017, Image Engine Design Inc. All rights reserved.
 //
 //  Redistribution and use in source and binary forms, with or without
 //  modification, are permitted provided that the following conditions are
@@ -35,56 +34,57 @@
 //
 //////////////////////////////////////////////////////////////////////////
 
-#ifndef GAFFERUI_TYPEIDS_H
-#define GAFFERUI_TYPEIDS_H
+#ifndef GAFFERUI_AUXILIARYCONNECTIONGADGET_H
+#define GAFFERUI_AUXILIARYCONNECTIONGADGET_H
+
+#include "GafferUI/Gadget.h"
+
+namespace Gaffer
+{
+	IE_CORE_FORWARDDECLARE( Plug );
+}
 
 namespace GafferUI
 {
 
-enum TypeId
-{
-	GadgetTypeId = 110251,
-	NodeGadgetTypeId = 110252,
-	GraphGadgetTypeId = 110253,
-	ContainerGadgetTypeId = 110254,
-	RenderableGadgetTypeId = 110255, // Obsolete - available for reuse
-	TextGadgetTypeId = 110256,
-	NameGadgetTypeId = 110257,
-	IndividualContainerTypeId = 110258,
-	FrameTypeId = 110259,
-	StyleTypeId = 110260,
-	StandardStyleTypeId = 110261,
-	NoduleTypeId = 110262,
-	LinearContainerTypeId = 110263,
-	ConnectionGadgetTypeId = 110264,
-	StandardNodeGadgetTypeId = 110265,
-	SplinePlugGadgetTypeId = 110266, // Obsolete - available for reuse
-	StandardNoduleTypeId = 110267,
-	CompoundNoduleTypeId = 110268,
-	ImageGadgetTypeId = 110269,
-	ViewportGadgetTypeId = 110270,
-	ViewTypeId = 110271,
-	View3DTypeId = 110272, // Obsolete - available for reuse
-	ObjectViewTypeId = 110273, // Obsolete - available for reuse
-	PlugGadgetTypeId = 110274,
-	GraphLayoutTypeId = 110275,
-	StandardGraphLayoutTypeId = 110276,
-	BackdropNodeGadgetTypeId = 110277,
-	SpacerGadgetTypeId = 110278,
-	StandardConnectionGadgetTypeId = 110279,
-	HandleTypeId = 110280,
-	ToolTypeId = 110281,
-	DotNodeGadgetTypeId = 110282,
-	PlugAdderTypeId = 110283,
-	NoduleLayoutTypeId = 110284,
-	TranslateHandleTypeId = 110285,
-	ScaleHandleTypeId = 110286,
-	RotateHandleTypeId = 110287,
-	AuxiliaryConnectionGadgetTypeId = 110288,
+IE_CORE_FORWARDDECLARE( NodeGadget );
+IE_CORE_FORWARDDECLARE( Style );
 
-	LastTypeId = 110450
+class AuxiliaryConnectionGadget : public Gadget
+{
+
+	public:
+
+		AuxiliaryConnectionGadget( const NodeGadget *srcGadget, const NodeGadget *dstGadget );
+		~AuxiliaryConnectionGadget();
+
+		IE_CORE_DECLARERUNTIMETYPEDEXTENSION( GafferUI::AuxiliaryConnectionGadget, AuxiliaryConnectionGadgetTypeId, Gadget );
+
+		Imath::Box3f bound() const override;
+
+		void doRenderLayer( Layer layer, const Style *style ) const override;
+		std::string getToolTip( const IECore::LineSegment3f &position ) const override;
+
+		int removeConnection( const Gaffer::Plug *dstPlug );
+		int removeConnection( const Gaffer::Plug *srcPlug, const Gaffer::Plug *dstPlug );
+		void addConnection( const Gaffer::Plug *srcPlug, const Gaffer::Plug *dstPlug );
+		bool hasConnection( const Gaffer::Plug *srcPlug, const Gaffer::Plug *dstPlug ) const;
+		bool empty() const;
+
+	private:
+
+		ConstNodeGadgetPtr m_srcGadget;
+		ConstNodeGadgetPtr m_dstGadget;
+
+		mutable std::string m_toolTip;
+		mutable bool m_toolTipValid;
+
+		std::map<const Gaffer::Plug*, const Gaffer::Plug*> m_representedConnections;
+
 };
+
+IE_CORE_DECLAREPTR( AuxiliaryConnectionGadget );
 
 } // namespace GafferUI
 
-#endif // GAFFERUI_TYPEIDS_H
+#endif // GAFFERUI_AUXILIARYCONNECTIONGADGET_H
