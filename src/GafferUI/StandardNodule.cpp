@@ -233,6 +233,7 @@ void StandardNodule::renderLabel( const Style *style ) const
 	}
 
 	// now we can actually do the rendering.
+	glPushMatrix();
 
 	if( getHighlighted() )
 	{
@@ -243,6 +244,8 @@ void StandardNodule::renderLabel( const Style *style ) const
 	glTranslatef( -anchor.x, -anchor.y, 0.0f );
 
 	style->renderText( Style::LabelText, *label );
+
+	glPopMatrix();
 }
 
 void StandardNodule::enter( GadgetPtr gadget, const ButtonEvent &event )
