@@ -45,7 +45,7 @@ enum TypeId
 
 	ParameterisedHolderNodeTypeId = 110181,
 	OpHolderTypeId = 110182,
-	ProceduralHolderTypeId = 110183,
+	ProceduralHolderTypeId = 110183, // Obsolete
 	ParameterisedHolderDependencyNodeTypeId = 110184,
 	ExecutableOpHolderTypeId = 110185,
 	ParameterisedHolderComputeNodeTypeId = 110186,

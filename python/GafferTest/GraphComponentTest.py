@@ -667,7 +667,6 @@ class GraphComponentTest( GafferTest.TestCase ) :
 				"GafferCortex::ObjectReader",
 				"GafferCortex::ObjectWriter",
 				"GafferCortex::ExecutableOpHolder",
-				"GafferCortex::ProceduralHolder",
 				"GafferCortex::OpHolder",
 				"GafferCortex::ParameterisedHolderNode",
 				"GafferCortex::ParameterisedHolderDependencyNode",
