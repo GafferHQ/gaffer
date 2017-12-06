@@ -41,7 +41,6 @@
 
 #include "IECore/VectorTypedData.h"
 #include "IECore/AngleConversion.h"
-#include "IECoreScene/ParameterisedProcedural.h"
 #include "IECoreScene/Transform.h"
 
 #include "IECoreGL/GL.h"
