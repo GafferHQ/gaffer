@@ -772,6 +772,37 @@ class ImageWriterTest( GafferImageTest.ImageTestCase ) :
 			},
 		)
 
+	def testSinglePixelThatUsedToCrash( self ) :
+
+		i = GafferImage.Constant()
+		i["format"].setValue( GafferImage.Format( 4096, 2304, 1.000 ) )
+
+		overscanCrop = GafferImage.Crop()
+		overscanCrop["area"].setValue( IECore.Box2i( IECore.V2i( 300, 300 ), IECore.V2i( 2220, 1908 ) ) )
+		overscanCrop["affectDataWindow"].setValue( False )
+		overscanCrop["in"].setInput( i["out"] )
+
+		c = GafferImage.Crop()
+		c["area"].setValue( IECore.Box2i( IECore.V2i( -144, 1744 ), IECore.V2i( -143, 1745 ) ) )
+		c["affectDisplayWindow"].setValue( False )
+		c["in"].setInput( overscanCrop["out"] )
+
+		testFile = self.__testFile( "emptyImage", "RGBA", "exr" )
+		self.failIf( os.path.exists( testFile ) )
+
+		w = GafferImage.ImageWriter()
+		w["in"].setInput( c["out"] )
+		w["fileName"].setValue( testFile )
+
+		with Gaffer.Context():
+			w["task"].execute()
+		self.failUnless( os.path.exists( testFile ) )
+
+		after = GafferImage.ImageReader()
+		after["fileName"].setValue( testFile )
+		# Check that the data window is the expected single pixel
+		self.assertEqual( after["out"]["dataWindow"].getValue(), IECore.Box2i( IECore.V2i( -144, 1744 ), IECore.V2i( -143, 1745 ) ) )
+
 	def testWriteEmptyImage( self ) :
 
 		i = GafferImage.Constant()
@@ -797,9 +828,8 @@ class ImageWriterTest( GafferImageTest.ImageTestCase ) :
 
 		after = GafferImage.ImageReader()
 		after["fileName"].setValue( testFile )
-		# Check that the data window and the display window are the same
-		self.assertEqual( after["out"]["format"].getValue().getDisplayWindow(), after["out"]["dataWindow"].getValue() )
-
+		# Check that the data window is the expected single pixel
+		self.assertEqual( after["out"]["dataWindow"].getValue(), IECore.Box2i( IECore.V2i( 0, 99 ), IECore.V2i( 1, 100 ) ) )
 
 	def testPixelAspectRatio( self ) :
 
