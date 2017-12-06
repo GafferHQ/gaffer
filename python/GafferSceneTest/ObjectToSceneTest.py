@@ -61,15 +61,5 @@ class ObjectToSceneTest( GafferSceneTest.SceneTestCase ) :
 		self.assertSceneValid( p["out"] )
 		self.assertEqual( p["out"].object( "/object" ),  IECoreScene.MeshPrimitive.createPlane( IECore.Box2f( IECore.V2f( -2 ), IECore.V2f( 2 ) ) ) )
 
-	def testProceduralInput( self ) :
-
-		p = IECoreScene.ReadProcedural()
-
-		s = GafferScene.ObjectToScene()
-		s["object"].setValue( p, _copy = False )
-
-		self.failUnless( isinstance( s["out"].object( "/object" ), IECoreScene.ParameterisedProcedural ) )
-		self.assertTrue( s["out"].object( "/object", _copy=False ).isSame( p ) )
-
 if __name__ == "__main__":
 	unittest.main()
