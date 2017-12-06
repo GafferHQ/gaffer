@@ -410,6 +410,12 @@ class FlatScanlineWriter
 
 		void finish()
 		{
+			if( BufferAlgo::empty( m_processWindow ) )
+			{
+				// If the source data window is empty, we handle everything during construct
+				return;
+			}
+
 			const int scanlinesEnd = m_format.toEXRSpace( m_tilesBounds.min.y - 1 );
 			if( scanlinesEnd < ( m_spec.y + m_spec.height ) )
 			{
@@ -480,10 +486,18 @@ class FlatScanlineWriter
 
 		void writeInitialBlankScanlines()
 		{
-			const int scanlinesBegin = m_format.toEXRSpace( m_tilesBounds.max.y - 1 );
-			if( scanlinesBegin > m_spec.y )
+			if( BufferAlgo::empty( m_processWindow ) )
 			{
-				writeBlankScanlines( m_spec.y, scanlinesBegin );
+				// There is no data to process, so everything should be blank
+				writeBlankScanlines( m_spec.y, m_spec.y + m_spec.height );
+			}
+			else
+			{
+				const int scanlinesBegin = m_format.toEXRSpace( m_tilesBounds.max.y - 1 );
+				if( scanlinesBegin > m_spec.y )
+				{
+					writeBlankScanlines( m_spec.y, scanlinesBegin );
+				}
 			}
 		}
 
@@ -633,7 +647,7 @@ ImageSpec createImageSpec( const ImageWriter *node, const ImageOutput *out, cons
 	spec.full_width = displayWindow.size().x + 1;
 	spec.full_height = displayWindow.size().y + 1;
 
-	if ( supportsDisplayWindow && dataWindow.hasVolume() )
+	if ( supportsDisplayWindow )
 	{
 		spec.x = dataWindow.min.x;
 		spec.y = dataWindow.min.y;
@@ -978,8 +992,8 @@ void ImageWriter::execute() const
 	// Create an OIIO::ImageSpec describing what we'll write
 
 	const Format imageFormat = inPlug()->formatPlug()->getValue();
-	Imath::Box2i dataWindow = inPlug()->dataWindowPlug()->getValue();
-	Imath::Box2i exrDataWindow( Imath::V2i( 0 ) );
+	const Imath::Box2i dataWindow = inPlug()->dataWindowPlug()->getValue();
+	Imath::Box2i exrDataWindow;
 
 	if( !BufferAlgo::empty( dataWindow ) )
 	{
@@ -987,7 +1001,9 @@ void ImageWriter::execute() const
 	}
 	else
 	{
-		dataWindow = exrDataWindow;
+		// Exr doesn't allow images with no pixel, so if the actual data window is empty,
+		// we make one pixel at the origin
+		exrDataWindow = Imath::Box2i( Imath::V2i( 0 ) );
 	}
 
 	const Imath::Box2i exrDisplayWindow = imageFormat.toEXRSpace( imageFormat.getDisplayWindow() );
