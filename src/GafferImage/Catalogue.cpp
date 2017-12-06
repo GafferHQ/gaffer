@@ -41,6 +41,7 @@
 #include "boost/filesystem/path.hpp"
 #include "boost/filesystem/operations.hpp"
 #include "boost/unordered_map.hpp"
+#include "boost/algorithm/string.hpp"
 
 #include "Gaffer/Context.h"
 #include "Gaffer/StringPlug.h"
@@ -621,7 +622,11 @@ void Catalogue::Image::copyFrom( const Image *other )
 
 Catalogue::Image::Ptr Catalogue::Image::load( const std::string &fileName )
 {
-	Ptr image = new Image( boost::filesystem::path( fileName ).stem().string(), Plug::In, Plug::Default | Plug::Dynamic );
+	// Names of Plugs can not contain '.' - we want to load files like 'test.1001.exr', though
+	std::string name = boost::filesystem::path( fileName ).stem().string();
+	boost::replace_all( name, ".", "_" );
+
+	Ptr image = new Image( name, Plug::In, Plug::Default | Plug::Dynamic );
 	image->fileNamePlug()->setValue( fileName );
 
 	ImageReaderPtr reader = new ImageReader;
