@@ -686,10 +686,12 @@ Catalogue::Catalogue( const std::string &name )
 	addChild( new IntPlug( "imageIndex" ) );
 	addChild( new StringPlug( "name" ) );
 	addChild( new StringPlug( "directory" ) );
+	addChild( new IntPlug( "__imageIndex", Plug::Out ) );
+	addChild( new AtomicCompoundDataPlug( "__mapping", Plug::In, new CompoundData() ) );
 
 	// Switch used to choose which image to output
 	addChild( new ImageSwitch( "__switch" ) );
-	imageSwitch()->indexPlug()->setInput( imageIndexPlug() );
+	imageSwitch()->indexPlug()->setInput( internalImageIndexPlug() );
 
 	// Switch and constant used to implement disabled output
 	ConstantPtr disabled = new Constant( "__disabled" );
@@ -756,14 +758,34 @@ const Gaffer::StringPlug *Catalogue::directoryPlug() const
 	return getChild<StringPlug>( g_firstPlugIndex + 3 );
 }
 
+Gaffer::IntPlug *Catalogue::internalImageIndexPlug()
+{
+	return getChild<IntPlug>( g_firstPlugIndex + 4 );
+}
+
+const Gaffer::IntPlug *Catalogue::internalImageIndexPlug() const
+{
+	return getChild<IntPlug>( g_firstPlugIndex + 4 );
+}
+
+Gaffer::AtomicCompoundDataPlug *Catalogue::mappingPlug()
+{
+	return getChild<AtomicCompoundDataPlug>( g_firstPlugIndex + 5 );
+}
+
+const Gaffer::AtomicCompoundDataPlug *Catalogue::mappingPlug() const
+{
+	return getChild<AtomicCompoundDataPlug>( g_firstPlugIndex + 5 );
+}
+
 ImageSwitch *Catalogue::imageSwitch()
 {
-	return getChild<ImageSwitch>( g_firstPlugIndex + 4 );
+	return getChild<ImageSwitch>( g_firstPlugIndex + 6 );
 }
 
 const ImageSwitch *Catalogue::imageSwitch() const
 {
-	return getChild<ImageSwitch>( g_firstPlugIndex + 4 );
+	return getChild<ImageSwitch>( g_firstPlugIndex + 6 );
 }
 
 Catalogue::InternalImage *Catalogue::imageNode( Image *image )
@@ -848,6 +870,10 @@ void Catalogue::imageAdded( GraphComponent *graphComponent )
 
 	ImagePlug *nextSwitchInput = static_cast<ImagePlug *>( imageSwitch()->inPlugs()->children().back().get() );
 	nextSwitchInput->setInput( internalImage->outPlug() );
+
+	image->nameChangedSignal().connect( boost::bind( &Catalogue::computeNameToIndexMapping, this ) );
+
+	computeNameToIndexMapping();
 }
 
 void Catalogue::imageRemoved( GraphComponent *graphComponent )
@@ -885,6 +911,8 @@ void Catalogue::imageRemoved( GraphComponent *graphComponent )
 			}
 		}
 	}
+
+	computeNameToIndexMapping();
 }
 
 IECoreImage::DisplayDriverServer *Catalogue::displayDriverServer()
@@ -955,3 +983,69 @@ void Catalogue::imageReceived( Gaffer::Plug *plug )
 	internalImage->driverClosed();
 }
 
+void Catalogue::affects( const Gaffer::Plug *input, AffectedPlugsContainer &outputs ) const
+{
+	ImageNode::affects( input, outputs );
+
+	if( input == imageIndexPlug() )
+	{
+		outputs.push_back( internalImageIndexPlug() );
+	}
+}
+
+void Catalogue::hash( const Gaffer::ValuePlug *output, const Gaffer::Context *context, IECore::MurmurHash &h ) const
+{
+	ImageNode::hash( output, context, h );
+	if( output == internalImageIndexPlug() )
+	{
+		imageIndexPlug()->hash( h );
+		h.append( context->get<std::string>( "catalogue:imageName", "" ) );
+	}
+}
+
+void Catalogue::compute( ValuePlug *output, const Context *context ) const
+{
+	if( output != internalImageIndexPlug() )
+	{
+		ImageNode::compute( output, context );
+		return;
+	}
+
+	int index;
+	std::string imageName = context->get<std::string>( "catalogue:imageName", "" );
+	if( imageName.empty() )
+	{
+		index = imageIndexPlug()->getValue();
+	}
+	else
+	{
+		ConstCompoundDataPtr mappingData = mappingPlug()->getValue();
+		const IECore::IntData *indexData = mappingData->member<IntData>( imageName );
+		if( !indexData )
+		{
+			throw IECore::Exception( "Unknown image name." );
+		}
+		else
+		{
+			index = indexData->readable();
+		}
+	}
+
+	static_cast<IntPlug *>( output )->setValue( index );
+
+}
+
+void Catalogue::computeNameToIndexMapping()
+{
+	CompoundDataPtr mapData = new CompoundData();
+	std::map<InternedString, DataPtr> &map = mapData->writable();
+
+	int count = 0;
+	for( const auto &image : imagesPlug()->children() )
+	{
+		map[image->getName()] = new IntData( count );
+		++count;
+	}
+
+	mappingPlug()->setValue( mapData );
+}
