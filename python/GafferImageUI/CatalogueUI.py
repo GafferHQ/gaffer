@@ -242,6 +242,12 @@ class _ImageListing( GafferUI.PlugValueWidget ) :
 					Gaffer.WeakMethod( self.__exportClicked )
 				)
 
+				self.__extractButton = GafferUI.Button( image = "extract.png", hasFrame = False, toolTip = "Create CatalogueSelect node for selected image" )
+				self.__extractButton.setEnabled( False )
+				self.__extractButtonClickedConnection = self.__extractButton.clickedSignal().connect(
+					Gaffer.WeakMethod( self.__extractClicked )
+				)
+
 				GafferUI.Spacer( IECore.V2i( 0 ), parenting = { "expand" : True } )
 
 				self.__removeButton = GafferUI.Button( image = "delete.png", hasFrame = False, toolTip = "Remove selected image" )
@@ -319,6 +325,7 @@ class _ImageListing( GafferUI.PlugValueWidget ) :
 		index = self.__indexFromSelection()
 
 		self.__removeButton.setEnabled( index is not None )
+		self.__extractButton.setEnabled( index is not None )
 		self.__exportButton.setEnabled( index is not None )
 		self.__duplicateButton.setEnabled( index is not None )
 
@@ -376,6 +383,17 @@ class _ImageListing( GafferUI.PlugValueWidget ) :
 		with Gaffer.UndoScope( self.getPlug().ancestor( Gaffer.ScriptNode ) ) :
 			self.__images().removeChild( self.__images()[index] )
 			self.getPlug().setValue( max( 0, index - 1 ) )
+
+	def __extractClicked( self, *unused ) :
+
+		index = self.__indexFromSelection()
+		image = self.__images()[index]
+
+		extractNode = GafferImage.CatalogueSelect()
+		extractNode["in"].setInput( self.__catalogue()["out"] )
+		extractNode["imageName"].setValue( image.getName() )
+
+		self.__catalogue().parent().addChild( extractNode )
 
 	def __exportClicked( self, *unused ) :
 
