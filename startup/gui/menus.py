@@ -381,6 +381,7 @@ nodeMenu.append( "/Image/Utility/Copy Metadata", GafferImage.CopyImageMetadata, 
 nodeMenu.append( "/Image/Utility/Stats", GafferImage.ImageStats, searchText = "ImageStats", postCreator = GafferImageUI.ImageStatsUI.postCreate  )
 nodeMenu.append( "/Image/Utility/Sampler", GafferImage.ImageSampler, searchText = "ImageSampler" )
 nodeMenu.append( "/Image/Utility/Catalogue", GafferImage.Catalogue )
+nodeMenu.append( "/Image/Utility/CatalogueSelect", GafferImage.CatalogueSelect )
 
 # OSL nodes
 
