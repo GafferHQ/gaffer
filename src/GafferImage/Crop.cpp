@@ -177,7 +177,7 @@ void Crop::affects( const Gaffer::Plug *input, AffectedPlugsContainer &outputs )
 	if(
 		input == areaSourcePlug() ||
 		areaPlug()->isAncestorOf( input ) ||
-		input == formatPlug() ||
+		formatPlug()->isAncestorOf( input ) ||
 		input == formatCenterPlug() ||
 		input == inPlug()->dataWindowPlug() ||
 		input == inPlug()->formatPlug()
