@@ -39,7 +39,6 @@
 #include "ParameterHandlerBinding.h"
 #include "CompoundParameterHandlerBinding.h"
 #include "OpHolderBinding.h"
-#include "ProceduralHolderBinding.h"
 #include "ExecutableOpHolderBinding.h"
 
 using namespace boost::python;
@@ -53,7 +52,6 @@ BOOST_PYTHON_MODULE( _GafferCortex )
 	bindParameterHandler();
 	bindCompoundParameterHandler();
 	bindOpHolder();
-	bindProceduralHolder();
 	bindExecutableOpHolder();
 
 }
