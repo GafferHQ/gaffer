@@ -268,5 +268,12 @@ class CropTest( GafferImageTest.ImageTestCase ) :
 		crop["area"]["min"].setValue( IECore.V2i( 20 ) )
 		self.assertTrue( GafferImage.BufferAlgo.empty( crop["out"]["dataWindow"].getValue() ) )
 
+	def testFormatAffectsOutput( self ) :
+
+		crop = GafferImage.Crop()
+		cs = GafferTest.CapturingSlot( crop.plugDirtiedSignal() )
+		crop["format"].setValue( GafferImage.Format( 100, 200 ) )
+		self.assertIn( crop["out"]["dataWindow"], { x[0] for x in cs } )
+
 if __name__ == "__main__":
 	unittest.main()
