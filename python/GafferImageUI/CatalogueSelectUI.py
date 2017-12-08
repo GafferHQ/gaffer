@@ -34,25 +34,42 @@
 #
 ##########################################################################
 import IECore
-
 import Gaffer
 import GafferImage
 
+def __imageNames( plug ) :
 
-class CatalogueSelect( GafferImage.ImageProcessor ) :
+	nodeInput = plug.node()["in"].getInput()
+	if( nodeInput and isinstance( nodeInput.node(), GafferImage.Catalogue ) ) :
+		return nodeInput.node()["images"].keys()
+	return []
 
-	def __init__(self, name = 'CatalogueSelect' ) :
+def __imagePresetNames( plug ) :
 
-		GafferImage.ImageProcessor.__init__( self, name )
+	return IECore.StringVectorData( [ "Selected" ] + __imageNames( plug ) )
 
-		self["imageName"] = Gaffer.StringPlug()
+def __imagePresetValues( plug ) :
 
-		self["context"] = GafferImage.ImageContextVariables()
-		self["context"]["variables"].addMember( "catalogue:imageName", "", "imageNameMember" )
-		self["context"]["variables"]["imageNameMember"]["value"].setInput( self["imageName"] )
+	return IECore.StringVectorData( [ "" ] + __imageNames( plug ) )
 
-		self["context"]["in"].setInput( self["in"] )
-		self["out"].setInput( self["context"]["out"] )
+Gaffer.Metadata.registerNode(
 
+	GafferImage.CatalogueSelect,
 
-IECore.registerRunTimeTyped( CatalogueSelect, typeName = "GafferImage::CatalogueSelect" )
+	"description",
+	"Finds an image in a directly connected Catalogue by name.",
+
+	plugs = {
+
+		"imageName" : [
+
+			"description",
+			"The name of the image to extract.",
+
+			"presetNames", __imagePresetNames,
+			"presetValues", __imagePresetValues,
+
+			"plugValueWidget:type", "GafferUI.PresetsPlugValueWidget",
+		]
+	}
+)
