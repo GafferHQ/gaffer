@@ -37,6 +37,8 @@
 
 #include "boost/python.hpp"
 #include "boost/format.hpp"
+#include "boost/algorithm/string/predicate.hpp"
+#include "boost/algorithm/string/replace.hpp"
 
 #include "Gaffer/ValuePlug.h"
 #include "Gaffer/Node.h"
@@ -52,7 +54,10 @@ using namespace boost::python;
 using namespace GafferBindings;
 using namespace Gaffer;
 
-static bool shouldResetPlugDefault( const Gaffer::Plug *plug, const Serialisation *serialisation )
+namespace
+{
+
+bool shouldResetPlugDefault( const Gaffer::Plug *plug, const Serialisation *serialisation )
 {
 	if( !serialisation )
 	{
@@ -66,6 +71,17 @@ static bool shouldResetPlugDefault( const Gaffer::Plug *plug, const Serialisatio
 
 	return Context::current()->get<bool>( "valuePlugSerialiser:resetParentPlugDefaults", false );
 }
+
+std::string valueRepr( boost::python::object &o )
+{
+	// We use IECore.repr() because it correctly prefixes the imath
+	// types with the module name, and also works around problems
+	// when round-tripping empty Box2fs.
+	object repr = boost::python::import( "IECore" ).attr( "repr" );
+	return extract<std::string>( repr( o ) );
+}
+
+} // namespace
 
 std::string ValuePlugSerialiser::repr( const Gaffer::ValuePlug *plug, unsigned flagsMask, const std::string &extraArguments, const Serialisation *serialisation )
 {
@@ -89,9 +105,7 @@ std::string ValuePlugSerialiser::repr( const Gaffer::ValuePlug *plug, unsigned f
 			pythonDefaultValue = pythonPlug.attr( "defaultValue" )();
 		}
 
-		object r = pythonDefaultValue.attr( "__repr__" )();
-		extract<std::string> defaultValueExtractor( r );
-		std::string defaultValue = defaultValueExtractor();
+		const std::string defaultValue = valueRepr( pythonDefaultValue );
 		if( defaultValue.size() && defaultValue[0] != '<' )
 		{
 			result += "defaultValue = " + defaultValue + ", ";
@@ -112,8 +126,7 @@ std::string ValuePlugSerialiser::repr( const Gaffer::ValuePlug *plug, unsigned f
 		if( hasMinValue )
 		{
 			object pythonMinValue = pythonPlug.attr( "minValue" )();
-			std::string minValue = extract<std::string>( pythonMinValue.attr( "__repr__" )() );
-			result += "minValue = " + minValue + ", ";
+			result += "minValue = " + valueRepr( pythonMinValue ) + ", ";
 		}
 	}
 
@@ -122,9 +135,8 @@ std::string ValuePlugSerialiser::repr( const Gaffer::ValuePlug *plug, unsigned f
 		const bool hasMinValue = pythonPlug.attr( "hasMaxValue" )();
 		if( hasMinValue )
 		{
-			object pythonMinValue = pythonPlug.attr( "maxValue" )();
-			std::string minValue = extract<std::string>( pythonMinValue.attr( "__repr__" )() );
-			result += "maxValue = " + minValue + ", ";
+			object pythonMaxValue = pythonPlug.attr( "maxValue" )();
+			result += "maxValue = " + valueRepr( pythonMaxValue ) + ", ";
 		}
 	}
 
@@ -214,8 +226,7 @@ std::string ValuePlugSerialiser::postConstructor( const Gaffer::GraphComponent *
 		}
 	}
 
-	std::string value = extract<std::string>( pythonValue.attr( "__repr__" )() );
-	return identifier + ".setValue( " + value + " )\n";
+	return identifier + ".setValue( " + valueRepr( pythonValue ) + " )\n";
 }
 
 bool ValuePlugSerialiser::valueNeedsSerialisation( const Gaffer::ValuePlug *plug, const Serialisation &serialisation ) const
