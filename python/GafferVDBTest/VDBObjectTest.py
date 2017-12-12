@@ -160,8 +160,9 @@ class VDBObjectTest( GafferVDBTest.VDBTestCase ) :
 
 		self.assertNotEqual( h, h1 )
 
-	# TODO! This is a problem in that you can modify a grid in python
-	# and the hash on the VDBObject isn't updated correctly
+	# This demonstrates a problem in that you can modify a grid in python
+	# and the hash on the VDBObject isn't updated correctly unless we
+	# insert again into the VDBObject
 	def testModifyingGridModifiesHash( self ) :
 		sourcePath = os.path.join( self.dataDir, "smoke.vdb" )
 		smoke = GafferVDB.VDBObject( sourcePath )
@@ -176,6 +177,13 @@ class VDBObjectTest( GafferVDBTest.VDBTestCase ) :
 
 		h1 = smoke.hash()
 		self.assertEqual( h, h1 )
+
+		smoke.insertGrid ( d )
+
+		d2 = smoke.findGrid( "density" )
+
+		h2 = smoke.hash()
+		self.assertNotEqual(h2, h)
 
 	def testFindGridMakesACopy( self ) :
 		sourcePath = os.path.join( self.dataDir, "smoke.vdb" )
