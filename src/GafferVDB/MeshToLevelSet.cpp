@@ -39,7 +39,7 @@
 
 #include "Gaffer/StringPlug.h"
 
-#include "IECore/MeshPrimitive.h"
+#include "IECoreScene/MeshPrimitive.h"
 
 #include "GafferVDB/VDBObject.h"
 #include "GafferVDB/MeshToLevelSet.h"
@@ -47,6 +47,7 @@
 using namespace std;
 using namespace Imath;
 using namespace IECore;
+using namespace IECoreScene;
 using namespace Gaffer;
 using namespace GafferVDB;
 
@@ -60,7 +61,7 @@ namespace
 struct CortexMeshAdapter
 {
 
-	CortexMeshAdapter( const IECore::MeshPrimitive *mesh, const openvdb::math::Transform *transform )
+	CortexMeshAdapter( const MeshPrimitive *mesh, const openvdb::math::Transform *transform )
 		:	m_numFaces( mesh->numFaces() ),
 			m_numVertices( mesh->variableSize( PrimitiveVariable::Vertex ) ),
 			m_verticesPerFace( mesh->verticesPerFace()->readable() ),

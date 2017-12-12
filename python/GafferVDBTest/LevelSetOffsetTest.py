@@ -38,6 +38,7 @@
 import os
 
 import IECore
+import IECoreScene
 
 import GafferTest
 import GafferScene
@@ -49,7 +50,7 @@ class LevelSetOffsetTest( GafferVDBTest.VDBTestCase ) :
 	def setUp( self ) :
 		GafferVDBTest.VDBTestCase.setUp( self )
 		self.sourcePath = os.path.join( self.dataDir, "sphere.vdb" )
-		self.sceneInterface = IECore.SceneInterface.create( self.sourcePath, IECore.IndexedIO.OpenMode.Read )
+		self.sceneInterface = IECoreScene.SceneInterface.create( self.sourcePath, IECore.IndexedIO.OpenMode.Read )
 
 	def testBoundsUpdated( self ) :
 		sphere = GafferScene.Sphere()

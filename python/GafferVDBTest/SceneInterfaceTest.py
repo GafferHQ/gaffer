@@ -38,6 +38,7 @@ import GafferTest
 
 import GafferVDB
 import IECore
+import IECoreScene
 import GafferVDBTest
 import os
 
@@ -45,7 +46,7 @@ class SceneInterfaceTest( GafferVDBTest.VDBTestCase ) :
 	def setUp( self ) :
 		GafferVDBTest.VDBTestCase.setUp( self )
 		self.sourcePath = os.path.join(self.dataDir, "smoke.vdb")
-		self.sceneInterface = IECore.SceneInterface.create( self.sourcePath, IECore.IndexedIO.OpenMode.Read )
+		self.sceneInterface = IECoreScene.SceneInterface.create( self.sourcePath, IECore.IndexedIO.OpenMode.Read )
 
 	def testCanLoading( self ) :
 		self.assertEqual( self.sceneInterface.hasObject(), True )
@@ -99,86 +100,86 @@ class SceneInterfaceTest( GafferVDBTest.VDBTestCase ) :
 
 	def testHashesDontChangeOverTime( self ) :
 		self.assertEqual(
-			self.sceneInterface.hash( IECore.SceneInterface.HashType.TransformHash, 0.0 ),
-			self.sceneInterface.hash( IECore.SceneInterface.HashType.TransformHash, 1.0 )
+			self.sceneInterface.hash( IECoreScene.SceneInterface.HashType.TransformHash, 0.0 ),
+			self.sceneInterface.hash( IECoreScene.SceneInterface.HashType.TransformHash, 1.0 )
 		)
 
 		self.assertEqual(
-			self.sceneInterface.hash( IECore.SceneInterface.HashType.AttributesHash, 0.0 ),
-			self.sceneInterface.hash( IECore.SceneInterface.HashType.AttributesHash, 1.0 )
+			self.sceneInterface.hash( IECoreScene.SceneInterface.HashType.AttributesHash, 0.0 ),
+			self.sceneInterface.hash( IECoreScene.SceneInterface.HashType.AttributesHash, 1.0 )
 		)
 
 		self.assertEqual(
-			self.sceneInterface.hash( IECore.SceneInterface.HashType.BoundHash, 0.0 ),
-			self.sceneInterface.hash( IECore.SceneInterface.HashType.BoundHash, 1.0 )
+			self.sceneInterface.hash( IECoreScene.SceneInterface.HashType.BoundHash, 0.0 ),
+			self.sceneInterface.hash( IECoreScene.SceneInterface.HashType.BoundHash, 1.0 )
 		)
 
 		self.assertEqual(
-			self.sceneInterface.hash( IECore.SceneInterface.HashType.ObjectHash, 0.0 ),
-			self.sceneInterface.hash( IECore.SceneInterface.HashType.ObjectHash, 1.0 )
+			self.sceneInterface.hash( IECoreScene.SceneInterface.HashType.ObjectHash, 0.0 ),
+			self.sceneInterface.hash( IECoreScene.SceneInterface.HashType.ObjectHash, 1.0 )
 		)
 
 		self.assertEqual(
-			self.sceneInterface.hash( IECore.SceneInterface.HashType.ChildNamesHash, 0.0 ),
-			self.sceneInterface.hash( IECore.SceneInterface.HashType.ChildNamesHash, 1.0 )
+			self.sceneInterface.hash( IECoreScene.SceneInterface.HashType.ChildNamesHash, 0.0 ),
+			self.sceneInterface.hash( IECoreScene.SceneInterface.HashType.ChildNamesHash, 1.0 )
 		)
 
 		self.assertEqual(
-			self.sceneInterface.hash( IECore.SceneInterface.HashType.HierarchyHash, 0.0 ),
-			self.sceneInterface.hash( IECore.SceneInterface.HashType.HierarchyHash, 1.0 )
+			self.sceneInterface.hash( IECoreScene.SceneInterface.HashType.HierarchyHash, 0.0 ),
+			self.sceneInterface.hash( IECoreScene.SceneInterface.HashType.HierarchyHash, 1.0 )
 		)
 
 	def testHashesForRootAndVDBLocation( self ):
 		childSceneInterface = self.sceneInterface.child("vdb")
 
 		self.assertNotEqual(
-			self.sceneInterface.hash( IECore.SceneInterface.HashType.ChildNamesHash, 0.0 ),
-			childSceneInterface.hash( IECore.SceneInterface.HashType.ChildNamesHash, 0.0 )
+			self.sceneInterface.hash( IECoreScene.SceneInterface.HashType.ChildNamesHash, 0.0 ),
+			childSceneInterface.hash( IECoreScene.SceneInterface.HashType.ChildNamesHash, 0.0 )
 		)
 
 		self.assertNotEqual(
-			self.sceneInterface.hash( IECore.SceneInterface.HashType.ObjectHash, 0.0 ),
-			childSceneInterface.hash( IECore.SceneInterface.HashType.ObjectHash, 0.0 )
+			self.sceneInterface.hash( IECoreScene.SceneInterface.HashType.ObjectHash, 0.0 ),
+			childSceneInterface.hash( IECoreScene.SceneInterface.HashType.ObjectHash, 0.0 )
 		)
 
 		self.assertEqual(
-			self.sceneInterface.hash( IECore.SceneInterface.HashType.BoundHash, 0.0 ),
-			childSceneInterface.hash( IECore.SceneInterface.HashType.BoundHash, 0.0 )
+			self.sceneInterface.hash( IECoreScene.SceneInterface.HashType.BoundHash, 0.0 ),
+			childSceneInterface.hash( IECoreScene.SceneInterface.HashType.BoundHash, 0.0 )
 		)
 
 	def testHashesDifferentFiles( self ):
 		sourcePath = os.path.join(self.dataDir, "sphere.vdb")
-		sphereRoot = IECore.SceneInterface.create( sourcePath, IECore.IndexedIO.OpenMode.Read )
+		sphereRoot = IECoreScene.SceneInterface.create( sourcePath, IECore.IndexedIO.OpenMode.Read )
 
 		self.assertEqual(
-			self.sceneInterface.hash( IECore.SceneInterface.HashType.ChildNamesHash, 0.0 ),
-			sphereRoot.hash( IECore.SceneInterface.HashType.ChildNamesHash, 0.0 )
+			self.sceneInterface.hash( IECoreScene.SceneInterface.HashType.ChildNamesHash, 0.0 ),
+			sphereRoot.hash( IECoreScene.SceneInterface.HashType.ChildNamesHash, 0.0 )
 		)
 
 		self.assertEqual(
-			self.sceneInterface.child("vdb").hash( IECore.SceneInterface.HashType.ChildNamesHash, 0.0 ),
-			sphereRoot.child("vdb").hash( IECore.SceneInterface.HashType.ChildNamesHash, 0.0 )
+			self.sceneInterface.child("vdb").hash( IECoreScene.SceneInterface.HashType.ChildNamesHash, 0.0 ),
+			sphereRoot.child("vdb").hash( IECoreScene.SceneInterface.HashType.ChildNamesHash, 0.0 )
 		)
 
 		self.assertEqual(
-			self.sceneInterface.hash( IECore.SceneInterface.HashType.ObjectHash, 0.0 ),
-			sphereRoot.hash( IECore.SceneInterface.HashType.ObjectHash, 0.0 )
+			self.sceneInterface.hash( IECoreScene.SceneInterface.HashType.ObjectHash, 0.0 ),
+			sphereRoot.hash( IECoreScene.SceneInterface.HashType.ObjectHash, 0.0 )
 		)
 
 		self.assertNotEqual(
-			self.sceneInterface.child("vdb").hash( IECore.SceneInterface.HashType.ObjectHash, 0.0 ),
-			sphereRoot.child("vdb").hash( IECore.SceneInterface.HashType.ObjectHash, 0.0 )
+			self.sceneInterface.child("vdb").hash( IECoreScene.SceneInterface.HashType.ObjectHash, 0.0 ),
+			sphereRoot.child("vdb").hash( IECoreScene.SceneInterface.HashType.ObjectHash, 0.0 )
 		)
 
 	def testMissingChildBehaviour( self ) :
 		with self.assertRaises(RuntimeError):
-			self.sceneInterface.child("noChildHere", IECore.SceneInterface.MissingBehaviour.ThrowIfMissing )
+			self.sceneInterface.child("noChildHere", IECoreScene.SceneInterface.MissingBehaviour.ThrowIfMissing )
 
-		c = self.sceneInterface.child("noChildHere", IECore.SceneInterface.MissingBehaviour.NullIfMissing )
+		c = self.sceneInterface.child("noChildHere", IECoreScene.SceneInterface.MissingBehaviour.NullIfMissing )
 		self.assertEqual(c, None)
 
 		with self.assertRaises(RuntimeError):
-			c = self.sceneInterface.child("noChildHere", IECore.SceneInterface.MissingBehaviour.CreateIfMissing )
+			c = self.sceneInterface.child("noChildHere", IECoreScene.SceneInterface.MissingBehaviour.CreateIfMissing )
 
 	def testHasChild( self ) :
 		self.assertTrue( self.sceneInterface.hasChild("vdb") )

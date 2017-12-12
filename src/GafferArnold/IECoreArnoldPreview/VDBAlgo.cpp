@@ -39,7 +39,7 @@
 #include "openvdb/io/Stream.h"
 
 #include "IECore/SimpleTypedData.h"
-#include "IECore/Renderer.h"
+#include "IECoreScene/Renderer.h"
 #include "IECore/CompoundData.h"
 #include "IECore/MessageHandler.h"
 #include "IECore/Exception.h"
@@ -127,7 +127,7 @@ namespace
 
 		if ( vdbObject->unmodifiedFromFile() )
 		{
-			compoundData[g_filenameParam] = new StringData( vdbObject->filename() );
+			compoundData[g_filenameParam] = new StringData( vdbObject->fileName() );
 		}
 		else
 		{

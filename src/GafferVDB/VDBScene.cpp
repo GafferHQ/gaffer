@@ -35,7 +35,7 @@
 
 #include "openvdb/openvdb.h"
 
-#include "IECore/SceneInterface.h"
+#include "IECoreScene/SceneInterface.h"
 #include "IECore/SimpleTypedData.h"
 #include "GafferVDB/TypeIds.h"
 #include "GafferVDB/VDBObject.h"
@@ -44,6 +44,7 @@
 
 using namespace Imath;
 using namespace IECore;
+using namespace IECoreScene;
 using namespace GafferVDB;
 
 using namespace openvdb;
@@ -57,7 +58,7 @@ class VDBScene : public SceneInterface
 
 	public :
 
-		IE_CORE_DECLARERUNTIMETYPEDEXTENSION( VDBScene, VDBSceneTypeId, IECore::SceneInterface );
+		IE_CORE_DECLARERUNTIMETYPEDEXTENSION( VDBScene, VDBSceneTypeId, IECoreScene::SceneInterface );
 
 		VDBScene( const std::string &fileName, IndexedIO::OpenMode openMode )
 		: SceneInterface(),

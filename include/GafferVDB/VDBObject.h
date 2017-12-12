@@ -45,7 +45,7 @@
 
 #include "IECore/Object.h"
 #include "IECore/CompoundObject.h"
-#include "IECore/VisibleRenderable.h"
+#include "IECoreScene/VisibleRenderable.h"
 #include "IECore/VectorTypedData.h"
 
 #include "GafferVDB/TypeIds.h"
@@ -53,7 +53,7 @@
 namespace GafferVDB
 {
 
-class VDBObject : public IECore::VisibleRenderable
+class VDBObject : public IECoreScene::VisibleRenderable
 {
 
 	public :
@@ -63,7 +63,7 @@ class VDBObject : public IECore::VisibleRenderable
 		//! initialise VDBObject from a vdb file
 		VDBObject( const std::string &filename );
 
-		IE_CORE_DECLAREEXTENSIONOBJECT( GafferVDB::VDBObject, VDBObjectTypeId, IECore::VisibleRenderable );
+		IE_CORE_DECLAREEXTENSIONOBJECT( GafferVDB::VDBObject, VDBObjectTypeId, IECoreScene::VisibleRenderable );
 
 		void insertGrid( openvdb::GridBase::Ptr grid );
 		void removeGrid( const std::string &name );
@@ -74,7 +74,7 @@ class VDBObject : public IECore::VisibleRenderable
 		std::vector<std::string> gridNames() const;
 
 		Imath::Box3f bound() const override;
-		void render( IECore::Renderer *renderer ) const override;
+		void render( IECoreScene::Renderer *renderer ) const override;
 
 		IECore::CompoundObjectPtr metadata( const std::string &name );
 
@@ -84,9 +84,9 @@ class VDBObject : public IECore::VisibleRenderable
 
 		//! path to VDB file used to initialise this object
 		//! empty for procedurally generated VDBs
-		std::string filename() const
+		std::string fileName() const
 		{
-			return m_filename;
+			return m_fileName;
 		}
 
 	protected :
@@ -123,7 +123,7 @@ class VDBObject : public IECore::VisibleRenderable
 		std::unordered_map<std::string, HashedGrid> m_grids;
 
 		//! store the filename incase we need don't modify the vdb and we can pass it on to clients who can only deal with file VDBs
-		std::string m_filename;
+		std::string m_fileName;
 };
 
 IE_CORE_DECLAREPTR( VDBObject )

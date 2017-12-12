@@ -40,7 +40,7 @@
 #include "openvdb/openvdb.h"
 #include "openvdb/tools/VolumeToMesh.h"
 
-#include "IECore/MeshPrimitive.h"
+#include "IECoreScene/MeshPrimitive.h"
 
 #include "Gaffer/StringPlug.h"
 
@@ -50,6 +50,7 @@
 using namespace std;
 using namespace Imath;
 using namespace IECore;
+using namespace IECoreScene;
 using namespace Gaffer;
 using namespace GafferVDB;
 
@@ -89,7 +90,7 @@ static std::map<std::string, std::function<void( MesherDispatch& dispatch )> > m
 };
 
 
-IECore::MeshPrimitivePtr volumeToMesh( openvdb::GridBase::ConstPtr grid, double isoValue, double adaptivity )
+IECoreScene::MeshPrimitivePtr volumeToMesh( openvdb::GridBase::ConstPtr grid, double isoValue, double adaptivity )
 {
 	openvdb::tools::VolumeToMesh mesher( isoValue, adaptivity );
 	MesherDispatch dispatch( grid, mesher );

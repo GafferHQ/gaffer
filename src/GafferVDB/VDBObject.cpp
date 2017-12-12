@@ -101,7 +101,7 @@ VDBObject::VDBObject()
 }
 
 VDBObject::VDBObject( const std::string &filename )
-: m_filename( filename )
+: m_fileName( filename )
 {
 	openvdb::initialize(); // safe to call multiple times but has a performance hit of a mutex.
 
@@ -189,7 +189,7 @@ Imath::Box3f VDBObject::bound() const
 	return combinedBounds;
 }
 
-void VDBObject::render( IECore::Renderer *renderer ) const
+void VDBObject::render( IECoreScene::Renderer *renderer ) const
 {
 }
 
@@ -262,7 +262,7 @@ IECore::CompoundObjectPtr VDBObject::metadata( const std::string &name )
 
 bool VDBObject::isEqualTo( const IECore::Object *other ) const
 {
-	if( !IECore::VisibleRenderable::isNotEqualTo( other ) )
+	if( !IECoreScene::VisibleRenderable::isNotEqualTo( other ) )
 	{
 		return false;
 	}
@@ -298,7 +298,7 @@ bool VDBObject::isEqualTo( const IECore::Object *other ) const
 
 void VDBObject::hash( IECore::MurmurHash &h ) const
 {
-	IECore::VisibleRenderable::hash( h );
+	IECoreScene::VisibleRenderable::hash( h );
 
 	for( const auto& it : m_grids )
 	{
@@ -308,7 +308,7 @@ void VDBObject::hash( IECore::MurmurHash &h ) const
 
 void VDBObject::copyFrom( const IECore::Object *other, IECore::Object::CopyContext *context )
 {
-	IECore::VisibleRenderable::copyFrom( other, context );
+	IECoreScene::VisibleRenderable::copyFrom( other, context );
 
 	const VDBObject *vdbObject = runTimeCast<const VDBObject>( other );
 
@@ -318,24 +318,24 @@ void VDBObject::copyFrom( const IECore::Object *other, IECore::Object::CopyConte
 	}
 
 	m_grids = vdbObject->m_grids;
-	m_filename = vdbObject->m_filename;
+	m_fileName = vdbObject->m_fileName;
 }
 
 void VDBObject::save( IECore::Object::SaveContext *context ) const
 {
-	IECore::VisibleRenderable::save( context );
+	IECoreScene::VisibleRenderable::save( context );
 	throw IECore::NotImplementedException( "VDBObject::save" );
 }
 
 void VDBObject::load( IECore::Object::LoadContextPtr context )
 {
-	IECore::VisibleRenderable::load( context );
+	IECoreScene::VisibleRenderable::load( context );
 	throw IECore::NotImplementedException( "VDBObject::load" );
 }
 
 void VDBObject::memoryUsage( IECore::Object::MemoryAccumulator &acc ) const
 {
-	IECore::VisibleRenderable::memoryUsage( acc );
+	IECoreScene::VisibleRenderable::memoryUsage( acc );
 
 	for( const auto it : m_grids )
 	{

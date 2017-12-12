@@ -38,6 +38,7 @@ import GafferTest
 
 import GafferVDB
 import IECore
+import IECoreScene
 import GafferVDBTest
 import os
 import GafferScene
@@ -47,7 +48,7 @@ class MeshToLevelSetTest( GafferVDBTest.VDBTestCase ) :
 	def setUp( self ) :
 		GafferVDBTest.VDBTestCase.setUp( self )
 		self.sourcePath = os.path.join( self.dataDir, "sphere.vdb" )
-		self.sceneInterface = IECore.SceneInterface.create( self.sourcePath, IECore.IndexedIO.OpenMode.Read )
+		self.sceneInterface = IECoreScene.SceneInterface.create( self.sourcePath, IECore.IndexedIO.OpenMode.Read )
 
 	def testCanConvertMeshToLevelSetVolume( self ) :
 		sphere = GafferScene.Sphere()
@@ -67,7 +68,7 @@ class MeshToLevelSetTest( GafferVDBTest.VDBTestCase ) :
 		self.assertEqual( vdbBounds, meshBounds )
 		self.assertEqual( grid.gridClass, "level set" )
 		self.assertFalse( obj.unmodifiedFromFile() )
-		self.assertFalse( obj.filename(), "" )
+		self.assertFalse( obj.fileName(), "" )
 
 	def testDecreasingVoxelSizeIncreasesLeafCount( self ) :
 		sphere = GafferScene.Sphere()

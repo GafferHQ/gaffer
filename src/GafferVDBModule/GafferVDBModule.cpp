@@ -167,7 +167,7 @@ BOOST_PYTHON_MODULE( _GafferVDB )
 		.def("findGrid", &::findGrid)
 		.def("insertGrid", &::insertGrid)
 		.def("unmodifiedFromFile", &VDBObject::unmodifiedFromFile)
-		.def("filename", &VDBObject::filename)
+		.def("fileName", &VDBObject::fileName)
 		;
 
 	GafferBindings::DependencyNodeClass<MeshToLevelSet>();

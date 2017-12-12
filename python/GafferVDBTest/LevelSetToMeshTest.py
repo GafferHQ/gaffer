@@ -38,6 +38,7 @@ import GafferTest
 
 import GafferVDB
 import IECore
+import IECoreScene
 import GafferVDBTest
 import os
 import GafferScene
@@ -47,7 +48,7 @@ class LevelSetToMeshTest( GafferVDBTest.VDBTestCase ) :
 	def setUp( self ) :
 		GafferVDBTest.VDBTestCase.setUp( self )
 		self.sourcePath = os.path.join( self.dataDir, "sphere.vdb" )
-		self.sceneInterface = IECore.SceneInterface.create( self.sourcePath, IECore.IndexedIO.OpenMode.Read )
+		self.sceneInterface = IECoreScene.SceneInterface.create( self.sourcePath, IECore.IndexedIO.OpenMode.Read )
 
 	def testCanConvertLevelSetToMesh( self ) :
 		sphere = GafferScene.Sphere()
@@ -66,7 +67,7 @@ class LevelSetToMeshTest( GafferVDBTest.VDBTestCase ) :
 		levelSetToMesh["in"].setInput( meshToLevelSet["out"] )
 
 		mesh = levelSetToMesh["out"].object( "sphere" )
-		self.assertTrue( isinstance( mesh, IECore.MeshPrimitive) )
+		self.assertTrue( isinstance( mesh, IECoreScene.MeshPrimitive) )
 
 	def testChangingIsoValueUpdatesBounds ( self ) :
 		sphere = GafferScene.Sphere()
