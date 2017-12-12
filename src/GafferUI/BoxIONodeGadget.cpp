@@ -89,19 +89,19 @@ class BoxIOPlugAdder : public PlugAdder
 
 			m_boxIO->setup( connectionEndPoint );
 
-			applyEdgeMetadata( m_boxIO->plug<Plug>() );
-			if( m_boxIO->promotedPlug<Plug>() )
+			applyEdgeMetadata( m_boxIO->plug() );
+			if( m_boxIO->promotedPlug() )
 			{
-				applyEdgeMetadata( m_boxIO->promotedPlug<Plug>(), /* opposite = */ true );
+				applyEdgeMetadata( m_boxIO->promotedPlug(), /* opposite = */ true );
 			}
 
 			if( m_boxIO->direction() == Plug::In )
 			{
-				connectionEndPoint->setInput( m_boxIO->plug<Plug>() );
+				connectionEndPoint->setInput( m_boxIO->plug() );
 			}
 			else
 			{
-				m_boxIO->plug<Plug>()->setInput( connectionEndPoint );
+				m_boxIO->plug()->setInput( connectionEndPoint );
 			}
 		}
 
@@ -119,7 +119,7 @@ class BoxIOPlugAdder : public PlugAdder
 
 		void updateVisibility()
 		{
-			setVisible( !m_boxIO->plug<Plug>() );
+			setVisible( !m_boxIO->plug() );
 		}
 
 		BoxIOPtr m_boxIO;

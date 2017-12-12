@@ -89,15 +89,15 @@ class BoxPlugAdder : public PlugAdder
 
 			if( connectionEndPoint->direction() == Plug::In )
 			{
-				connectionEndPoint->setInput( boxIO->promotedPlug<Plug>() );
+				connectionEndPoint->setInput( boxIO->promotedPlug() );
 			}
 			else
 			{
-				boxIO->promotedPlug<Plug>()->setInput( connectionEndPoint );
+				boxIO->promotedPlug()->setInput( connectionEndPoint );
 			}
 
-			applyEdgeMetadata( boxIO->promotedPlug<Plug>() );
-			applyEdgeMetadata( boxIO->plug<Plug>(), /* opposite = */ true );
+			applyEdgeMetadata( boxIO->promotedPlug() );
+			applyEdgeMetadata( boxIO->plug(), /* opposite = */ true );
 		}
 
 	private :

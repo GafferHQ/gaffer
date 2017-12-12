@@ -183,7 +183,7 @@ void BoxIO::setup( const Plug *plug )
 		);
 	}
 
-	if( promotedPlug<Plug>() )
+	if( promotedPlug() )
 	{
 		throw IECore::Exception( "Promoted plug already set up" );
 	}
@@ -268,7 +268,7 @@ void BoxIO::plugSet( Plug *plug )
 {
 	if( plug == namePlug() )
 	{
-		if( Plug *p = promotedPlug<Plug>() )
+		if( Plug *p = promotedPlug() )
 		{
 			const InternedString newName = p->setName( namePlug()->getValue() );
 			// Name may have been adjusted due to
@@ -307,9 +307,9 @@ void BoxIO::plugInputChanged( Plug *plug )
 	Plug *promoted = nullptr;
 	if( m_direction == Plug::In && plug == inPlugInternal() )
 	{
-		promoted = promotedPlug<Plug>();
+		promoted = promotedPlug();
 	}
-	else if( m_direction == Plug::Out && plug == promotedPlug<Plug>() )
+	else if( m_direction == Plug::Out && plug == promotedPlug() )
 	{
 		promoted = plug;
 	}
@@ -327,7 +327,7 @@ void BoxIO::plugInputChanged( Plug *plug )
 
 void BoxIO::promotedPlugNameChanged( GraphComponent *graphComponent )
 {
-	if( graphComponent == promotedPlug<Plug>() )
+	if( graphComponent == promotedPlug() )
 	{
 		namePlug()->setValue( graphComponent->getName() );
 	}
@@ -451,7 +451,7 @@ Plug *BoxIO::promote( Plug *plug )
 	boxIO->namePlug()->setValue( promotedName( plug ) );
 	boxIO->setup( plug );
 
-	connect( plug, boxIO->plug<Plug>() );
+	connect( plug, boxIO->plug() );
 
 	if( runTimeCast<ArrayPlug>( plug ) )
 	{
@@ -460,10 +460,10 @@ Plug *BoxIO::promote( Plug *plug )
 		// promotion of the parent plug, so hide the
 		// individual elements.
 		Metadata::registerValue( plug, g_noduleTypeName, new StringData( "GafferUI::StandardNodule" ) );
-		Metadata::registerValue( boxIO->plug<Plug>(), g_noduleTypeName, new StringData( "GafferUI::StandardNodule" ) );
+		Metadata::registerValue( boxIO->plug(), g_noduleTypeName, new StringData( "GafferUI::StandardNodule" ) );
 	}
 
-	return boxIO->promotedPlug<Plug>();
+	return boxIO->promotedPlug();
 }
 
 bool BoxIO::canInsert( const Box *box )
@@ -528,7 +528,7 @@ void BoxIO::insert( Box *box )
 			boxIn->inPlugInternal()->setInput( plug );
 			for( std::vector<Plug *>::const_iterator oIt = outputsNeedingBoxIn.begin(), oeIt = outputsNeedingBoxIn.end(); oIt != oeIt; ++oIt )
 			{
-				(*oIt)->setInput( boxIn->plug<Plug>() );
+				(*oIt)->setInput( boxIn->plug() );
 			}
 		}
 		else
@@ -546,7 +546,7 @@ void BoxIO::insert( Box *box )
 			boxOut->setup( plug );
 			box->addChild( boxOut );
 
-			boxOut->plug<Plug>()->setInput( input );
+			boxOut->plug()->setInput( input );
 			plug->setInput( boxOut->outPlugInternal() );
 		}
 	}
