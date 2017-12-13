@@ -1289,12 +1289,12 @@ const Gaffer::ValuePlug *SceneView::gnomonPlug() const
 
 GafferScene::PathFilter *SceneView::hideFilter()
 {
-	return getPreprocessor<Node>()->getChild<PathFilter>( "hideFilter" );
+	return getPreprocessor()->getChild<PathFilter>( "hideFilter" );
 }
 
 const GafferScene::PathFilter *SceneView::hideFilter() const
 {
-	return getPreprocessor<Node>()->getChild<PathFilter>( "hideFilter" );
+	return getPreprocessor()->getChild<PathFilter>( "hideFilter" );
 }
 
 void SceneView::setContext( Gaffer::ContextPtr context )

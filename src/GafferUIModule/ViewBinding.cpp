@@ -110,7 +110,7 @@ namespace GafferUIModule
 
 Gaffer::NodePtr getPreprocessor( View &v )
 {
-	return v.getPreprocessor<Node>();
+	return v.getPreprocessor();
 }
 
 void bindView()

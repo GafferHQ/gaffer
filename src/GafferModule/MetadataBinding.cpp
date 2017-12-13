@@ -188,13 +188,13 @@ void registerValue( IECore::InternedString target, IECore::InternedString key, o
 
 object value( const char *target, const char *key, bool copy )
 {
-	ConstDataPtr d = Metadata::value<Data>( target, key );
+	ConstDataPtr d = Metadata::value( target, key );
 	return dataToPython( d.get(), copy );
 }
 
 object graphComponentValue( const GraphComponent *graphComponent, const char *key, bool instanceOnly, bool copy )
 {
-	ConstDataPtr d = Metadata::value<Data>( graphComponent, key, instanceOnly );
+	ConstDataPtr d = Metadata::value( graphComponent, key, instanceOnly );
 	return dataToPython( d.get(), copy );
 }
 

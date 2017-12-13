@@ -105,7 +105,7 @@ const ViewportGadget *View::viewportGadget() const
 void View::setPreprocessor( Gaffer::NodePtr preprocessor )
 {
 	setChild( "__preprocessor", preprocessor );
-	preprocessor->getChild<Plug>( "in" )->setInput( inPlug<Plug>() );
+	preprocessor->getChild<Plug>( "in" )->setInput( inPlug() );
 }
 
 void View::contextChanged( const IECore::InternedString &name )

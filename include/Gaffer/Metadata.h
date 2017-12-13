@@ -118,9 +118,9 @@ class Metadata
 		/// ===============
 
 		/// Retrieves a value, returning null if none exists.
-		template<typename T>
+		template<typename T=IECore::Data>
 		static typename T::ConstPtr value( IECore::InternedString target, IECore::InternedString key );
-		template<typename T>
+		template<typename T=IECore::Data>
 		static typename T::ConstPtr value( const GraphComponent *target, IECore::InternedString key, bool instanceOnly = false );
 
 		/// Value deregistration

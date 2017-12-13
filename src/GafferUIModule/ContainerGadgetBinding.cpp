@@ -54,7 +54,7 @@ namespace
 
 GadgetPtr getChild( IndividualContainer &c )
 {
-	return c.getChild<Gadget>();
+	return c.getChild();
 }
 
 } // namespace

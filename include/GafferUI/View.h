@@ -87,9 +87,9 @@ class View : public Gaffer::Node
 		/// The contents for the view are provided by the input to this plug.
 		/// The view can be switched by connecting a new input - this is how
 		/// the Viewer controls what will be displayed by the view.
-		template<typename T>
+		template<typename T=Gaffer::Plug>
 		T *inPlug();
-		template<typename T>
+		template<typename T=Gaffer::Plug>
 		const T *inPlug() const;
 
 		/// The Context in which the View should operate.
@@ -142,14 +142,14 @@ class View : public Gaffer::Node
 		void setPreprocessor( Gaffer::NodePtr preprocessor );
 		/// Returns the node used for preprocessing, or 0 if no such
 		/// node has been specified (or if it is not of type T).
-		template<typename T>
+		template<typename T=Gaffer::Node>
 		T *getPreprocessor();
-		template<typename T>
+		template<typename T=Gaffer::Node>
 		const T *getPreprocessor() const;
 		/// Returns the "out" plug of the preprocessor, or inPlug() if
 		/// no preprocessor has been specified. This is the plug which
 		/// should be used when computing the contents to display.
-		template<typename T>
+		template<typename T=Gaffer::Plug>
 		T *preprocessedInPlug();
 
 		/// Called when the context changes. Derived classes should call the

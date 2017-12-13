@@ -51,7 +51,7 @@ using namespace GafferUI;
 
 static PlugPtr getPlug( PlugGadget &g )
 {
-	return g.getPlug<Plug>();
+	return g.getPlug();
 }
 
 static ContextPtr getContext( PlugGadget &g )

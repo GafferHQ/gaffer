@@ -204,7 +204,7 @@ class ImageView::ColorInspector : public boost::signals::trackable
 			// are applied. We can't simply get this image from inPlug()
 			// because derived classes may have called insertConverter(),
 			// so we take it from the input to the display transform chain.
-			ImagePlug *image = view->getPreprocessor<Node>()->getChild<Clamp>( "__clamp" )->inPlug();
+			ImagePlug *image = view->getPreprocessor()->getChild<Clamp>( "__clamp" )->inPlug();
 			m_sampler->imagePlug()->setInput( image );
 
 			plug->getChild<Color4fPlug>( "color" )->setInput( m_sampler->colorPlug() );
@@ -400,7 +400,7 @@ void ImageView::insertConverter( Gaffer::NodePtr converter )
 	PlugPtr newInput = converterInput->createCounterpart( "in", Plug::In );
 	setChild( "in", newInput );
 
-	NodePtr preprocessor = getPreprocessor<Node>();
+	NodePtr preprocessor = getPreprocessor();
 	Plug::OutputContainer outputsToRestore = preprocessor->getChild<ImagePlug>( "in" )->outputs();
 
 	PlugPtr newPreprocessorInput = converterInput->createCounterpart( "in", Plug::In );
@@ -462,22 +462,22 @@ const Gaffer::StringPlug *ImageView::displayTransformPlug() const
 
 GafferImage::Clamp *ImageView::clampNode()
 {
-	return getPreprocessor<Node>()->getChild<Clamp>( "__clamp" );
+	return getPreprocessor()->getChild<Clamp>( "__clamp" );
 }
 
 const GafferImage::Clamp *ImageView::clampNode() const
 {
-	return getPreprocessor<Node>()->getChild<Clamp>( "__clamp" );
+	return getPreprocessor()->getChild<Clamp>( "__clamp" );
 }
 
 GafferImage::Grade *ImageView::gradeNode()
 {
-	return getPreprocessor<Node>()->getChild<Grade>( "__grade" );
+	return getPreprocessor()->getChild<Grade>( "__grade" );
 }
 
 const GafferImage::Grade *ImageView::gradeNode() const
 {
-	return getPreprocessor<Node>()->getChild<Grade>( "__grade" );
+	return getPreprocessor()->getChild<Grade>( "__grade" );
 }
 
 void ImageView::setContext( Gaffer::ContextPtr context )
@@ -568,18 +568,18 @@ void ImageView::insertDisplayTransform()
 		if( displayTransform )
 		{
 			m_displayTransforms[name] = displayTransform;
-			getPreprocessor<Node>()->addChild( displayTransform );
+			getPreprocessor()->addChild( displayTransform );
 		}
 	}
 
 	if( displayTransform )
 	{
 		displayTransform->inPlug()->setInput( gradeNode()->outPlug() );
-		getPreprocessor<Node>()->getChild<Plug>( "out" )->setInput( displayTransform->outPlug() );
+		getPreprocessor()->getChild<Plug>( "out" )->setInput( displayTransform->outPlug() );
 	}
 	else
 	{
-		getPreprocessor<Node>()->getChild<Plug>( "out" )->setInput( gradeNode()->outPlug() );
+		getPreprocessor()->getChild<Plug>( "out" )->setInput( gradeNode()->outPlug() );
 	}
 }
 
