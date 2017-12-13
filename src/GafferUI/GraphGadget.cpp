@@ -63,6 +63,7 @@
 #include "GafferUI/StandardGraphLayout.h"
 #include "GafferUI/Pointer.h"
 #include "GafferUI/BackdropNodeGadget.h"
+#include "GafferUI/AuxiliaryConnectionsGadget.h"
 
 using namespace GafferUI;
 using namespace Imath;
@@ -112,7 +113,7 @@ struct CompareV2fX{
 IE_CORE_DEFINERUNTIMETYPED( GraphGadget );
 
 GraphGadget::GraphGadget( Gaffer::NodePtr root, Gaffer::SetPtr filter )
-	:	m_dragStartPosition( 0 ), m_lastDragPosition( 0 ), m_dragMode( None ), m_dragReconnectCandidate( nullptr ), m_dragReconnectSrcNodule( nullptr ), m_dragReconnectDstNodule( nullptr )
+	:	m_dragStartPosition( 0 ), m_lastDragPosition( 0 ), m_dragMode( None ), m_dragReconnectCandidate( nullptr ), m_dragReconnectSrcNodule( nullptr ), m_dragReconnectDstNodule( nullptr ), m_auxiliaryConnectionsGadget( new AuxiliaryConnectionsGadget )
 {
 	keyPressSignal().connect( boost::bind( &GraphGadget::keyPressed, this, ::_1,  ::_2 ) );
 	buttonPressSignal().connect( boost::bind( &GraphGadget::buttonPress, this, ::_1,  ::_2 ) );
@@ -127,6 +128,8 @@ GraphGadget::GraphGadget( Gaffer::NodePtr root, Gaffer::SetPtr filter )
 	);
 
 	m_layout = new StandardGraphLayout;
+
+	addChild( m_auxiliaryConnectionsGadget );
 
 	setRoot( root, filter );
 }
@@ -260,6 +263,16 @@ const ConnectionGadget *GraphGadget::connectionGadget( const Gaffer::Plug *dstPl
 	return findConnectionGadget( dstPlug );
 }
 
+AuxiliaryConnectionGadget *GraphGadget::auxiliaryConnectionGadget( const Gaffer::Plug *dstPlug )
+{
+	return m_auxiliaryConnectionsGadget->auxiliaryConnectionGadget( dstPlug );
+}
+
+const AuxiliaryConnectionGadget *GraphGadget::auxiliaryConnectionGadget( const Gaffer::Plug *dstPlug ) const
+{
+	return m_auxiliaryConnectionsGadget->auxiliaryConnectionGadget( dstPlug );
+}
+
 size_t GraphGadget::connectionGadgets( const Gaffer::Plug *plug, std::vector<ConnectionGadget *> &connections, const Gaffer::Set *excludedNodes )
 {
 	if( plug->direction() == Gaffer::Plug::In )
@@ -320,6 +333,30 @@ size_t GraphGadget::connectionGadgets( const Gaffer::Node *node, std::vector<con
 	}
 
 	return connections.size();
+}
+
+size_t GraphGadget::auxiliaryConnectionGadgets( const Gaffer::Node *node, std::vector<AuxiliaryConnectionGadget *> &connections, const Gaffer::Set *excludedNodes )
+{
+	// printf("GraphGadget::auxiliaryConnectionGadgets\n");
+	return m_auxiliaryConnectionsGadget->auxiliaryConnectionGadgets( node, connections, excludedNodes );
+}
+
+size_t GraphGadget::auxiliaryConnectionGadgets( const Gaffer::Node *node, std::vector<const AuxiliaryConnectionGadget *> &connections, const Gaffer::Set *excludedNodes ) const
+{
+	// printf("GraphGadget::auxiliaryConnectionGadgets\n");
+	return m_auxiliaryConnectionsGadget->auxiliaryConnectionGadgets( node, connections, excludedNodes );
+}
+
+size_t GraphGadget::auxiliaryConnectionGadgets( const Gaffer::Plug *plug, std::vector<AuxiliaryConnectionGadget *> &connections, const Gaffer::Set *excludedNodes )
+{
+	// printf("GraphGadget::auxiliaryConnectionGadgets\n");
+	return m_auxiliaryConnectionsGadget->auxiliaryConnectionGadgets( plug, connections, excludedNodes );
+}
+
+size_t GraphGadget::auxiliaryConnectionGadgets( const Gaffer::Plug *plug, std::vector<const AuxiliaryConnectionGadget *> &connections, const Gaffer::Set *excludedNodes ) const
+{
+	// printf("GraphGadget::auxiliaryConnectionGadgets\n");
+	return m_auxiliaryConnectionsGadget->auxiliaryConnectionGadgets( plug, connections, excludedNodes );
 }
 
 size_t GraphGadget::upstreamNodeGadgets( const Gaffer::Node *node, std::vector<NodeGadget *> &upstreamNodeGadgets, size_t degreesOfSeparation )
@@ -788,6 +825,8 @@ void GraphGadget::inputChanged( Gaffer::Plug *dstPlug )
 	Nodule *nodule = findNodule( dstPlug );
 	if( !nodule )
 	{
+		m_auxiliaryConnectionsGadget->markDirty( dstPlug );
+		requestRender();
 		return;
 	}
 
@@ -839,6 +878,9 @@ void GraphGadget::noduleAdded( Nodule *nodule )
 	{
 		addConnectionGadgets( it->get() );
 	}
+
+	// make sure the auxiliary connections are being updated
+	m_auxiliaryConnectionsGadget->markDirty( nodule->plug() );
 }
 
 void GraphGadget::noduleRemoved( Nodule *nodule )
@@ -848,6 +890,17 @@ void GraphGadget::noduleRemoved( Nodule *nodule )
 	{
 		removeConnectionGadgets( it->get() );
 	}
+
+	// The connection will now have to be represented by an AuxiliaryConnectionGadget,
+	// if the plugs still exist and weren't moved to some other node.
+
+	if( !nodule->plug() )
+	{
+		return;
+	}
+
+	m_auxiliaryConnectionsGadget->markDirty( nodule->plug() );
+
 }
 
 void GraphGadget::nodeMetadataChanged( IECore::TypeId nodeTypeId, IECore::InternedString key, Gaffer::Node *node )
@@ -1511,6 +1564,8 @@ NodeGadget *GraphGadget::addNodeGadget( Gaffer::Node *node )
 
 	updateNodeGadgetTransform( nodeGadget.get() );
 
+	m_auxiliaryConnectionsGadget->markDirty( nodeGadget.get() );
+
 	return nodeGadget.get();
 }
 
@@ -1519,6 +1574,7 @@ void GraphGadget::removeNodeGadget( const Gaffer::Node *node )
 	NodeGadgetMap::iterator it = m_nodeGadgets.find( node );
 	if( it!=m_nodeGadgets.end() )
 	{
+		m_auxiliaryConnectionsGadget->removeAuxiliaryConnectionGadgets( it->second.gadget );
 		removeConnectionGadgets( it->second.gadget );
 		removeChild( it->second.gadget );
 		m_nodeGadgets.erase( it );
