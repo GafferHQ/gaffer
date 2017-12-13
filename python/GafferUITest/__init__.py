@@ -91,6 +91,7 @@ from PlaybackTest import PlaybackTest
 from SpacerGadgetTest import SpacerGadgetTest
 from BoxUITest import BoxUITest
 from ConnectionGadgetTest import ConnectionGadgetTest
+from AuxiliaryConnectionGadgetTest import AuxiliaryConnectionGadgetTest
 from MessageWidgetTest import MessageWidgetTest
 from ModuleTest import ModuleTest
 from PlugLayoutTest import PlugLayoutTest
