@@ -49,6 +49,7 @@ import Gaffer
 import GafferScene
 import GafferUI
 import GafferSceneUI
+import GafferVDB
 
 class SceneInspector( GafferUI.NodeSetEditor ) :
 
@@ -1608,6 +1609,31 @@ SceneInspector.registerSection( __AttributesSection, tab = "Selection" )
 ##########################################################################
 # Object section
 ##########################################################################
+class _VDBGridInspector( Inspector ) :
+
+	def __init__( self, gridName, metadataName ) :
+		Inspector.__init__(self)
+		self.__gridName = gridName
+		self.__metadataName = metadataName
+
+	def name( self ) :
+		return "{0} : {1}".format(self.__gridName, self.__metadataName)
+
+	def __call__(self, target):
+		if target.path is None:
+			return None
+
+		object = target.object()
+		if not isinstance( object, GafferVDB.VDBObject ):
+			return None
+
+		if self.__gridName == None or  self.__metadataName == None:
+			return None
+
+		return object.metadata(self.__gridName)[self.__metadataName]
+
+	def children ( self, target ) :
+		return []
 
 class __ObjectSection( LocationSection ) :
 
@@ -1630,6 +1656,11 @@ class __ObjectSection( LocationSection ) :
 			DiffColumn(
 				self.__PrimitiveVariablesInspector(),
 				label = "Primitive Variables"
+			)
+
+			DiffColumn(
+				self.__VDBObjectInspector(),
+				label = "VDB"
 			)
 
 	def update( self, targets ) :
@@ -1749,6 +1780,40 @@ class __ObjectSection( LocationSection ) :
 				return object.parameters()
 
 			return None
+
+	class __VDBObjectInspector( Inspector ) :
+
+		def __init__( self ) :
+			Inspector.__init__(self)
+
+		def name( self ) :
+			return "VDB"
+
+		def __call__(self, target):
+			if target.path is None:
+				return None
+
+			object = target.object()
+			if not isinstance( object, GafferVDB.VDBObject ):
+				return None
+
+			return ""
+
+		def children ( self, target ) :
+
+			if target.path is None :
+				return []
+
+			object = target.object()
+			if not isinstance( object, GafferVDB.VDBObject ) :
+				return []
+
+			childInspectors = []
+			for gridName in object.gridNames():
+				for metadataName in object.metadata(gridName).keys():
+					childInspectors.append(_VDBGridInspector( gridName, metadataName ) )
+
+			return childInspectors
 
 	class __PrimitiveVariablesInspector( Inspector ) :
 
