@@ -53,6 +53,7 @@ class LevelSetToMeshTest( GafferVDBTest.VDBTestCase ) :
 	def testCanConvertLevelSetToMesh( self ) :
 		sphere = GafferScene.Sphere()
 		meshToLevelSet = GafferVDB.MeshToLevelSet()
+		self.setFilter( meshToLevelSet, path='/sphere' )
 		meshToLevelSet["voxelSize"].setValue( 0.05 )
 		meshToLevelSet["in"].setInput( sphere["out"] )
 
@@ -60,10 +61,11 @@ class LevelSetToMeshTest( GafferVDBTest.VDBTestCase ) :
 
 		self.assertTrue( isinstance( obj, GafferVDB.VDBObject ) )
 
-		self.assertEqual( obj.gridNames(), ['levelset'] )
-		grid = obj.findGrid( "levelset" )
+		self.assertEqual( obj.gridNames(), ['surface'] )
+		grid = obj.findGrid( "surface" )
 
 		levelSetToMesh = GafferVDB.LevelSetToMesh()
+		self.setFilter( levelSetToMesh, path='/sphere' )
 		levelSetToMesh["in"].setInput( meshToLevelSet["out"] )
 
 		mesh = levelSetToMesh["out"].object( "sphere" )
@@ -74,12 +76,14 @@ class LevelSetToMeshTest( GafferVDBTest.VDBTestCase ) :
 		sphere["radius"].setValue( 5 )
 
 		meshToLevelSet = GafferVDB.MeshToLevelSet()
+		self.setFilter( meshToLevelSet, path='/sphere' )
 		meshToLevelSet["voxelSize"].setValue( 0.05 )
 		meshToLevelSet["exteriorBandwidth"].setValue( 4.0 )
 		meshToLevelSet["interiorBandwidth"].setValue( 4.0 )
 		meshToLevelSet["in"].setInput( sphere["out"] )
 
 		levelSetToMesh = GafferVDB.LevelSetToMesh()
+		self.setFilter( levelSetToMesh, path='/sphere' )
 		levelSetToMesh["in"].setInput( meshToLevelSet["out"] )
 
 		self.assertEqualTolerance( 5.0, levelSetToMesh['out'].bound( "sphere" ).max[0], 0.05 )
@@ -95,12 +99,14 @@ class LevelSetToMeshTest( GafferVDBTest.VDBTestCase ) :
 		sphere["radius"].setValue( 5 )
 
 		meshToLevelSet = GafferVDB.MeshToLevelSet()
+		self.setFilter( meshToLevelSet, path='/sphere' )
 		meshToLevelSet["voxelSize"].setValue( 0.05 )
 		meshToLevelSet["exteriorBandwidth"].setValue( 4.0 )
 		meshToLevelSet["interiorBandwidth"].setValue( 4.0 )
 		meshToLevelSet["in"].setInput( sphere["out"] )
 
 		levelSetToMesh = GafferVDB.LevelSetToMesh()
+		self.setFilter( levelSetToMesh, path='/sphere')
 		levelSetToMesh["in"].setInput( meshToLevelSet["out"] )
 
 		levelSetToMesh['adaptivity'].setValue(0.0)

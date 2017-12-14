@@ -56,8 +56,8 @@ class LevelSetToMesh : public GafferScene::SceneElementProcessor
 
 		IE_CORE_DECLARERUNTIMETYPEDEXTENSION( GafferVDB::LevelSetToMesh, LevelSetToMeshTypeId, GafferScene::SceneElementProcessor );
 
-		Gaffer::StringPlug *gridNamePlug();
-		const Gaffer::StringPlug *gridNamePlug() const;
+		Gaffer::StringPlug *gridPlug();
+		const Gaffer::StringPlug *gridPlug() const;
 
 		Gaffer::FloatPlug *isoValuePlug();
 		const Gaffer::FloatPlug *isoValuePlug() const;

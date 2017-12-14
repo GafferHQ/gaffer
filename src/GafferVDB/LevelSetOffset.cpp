@@ -53,11 +53,11 @@ IE_CORE_DEFINERUNTIMETYPED( LevelSetOffset );
 size_t LevelSetOffset::g_firstPlugIndex = 0;
 
 LevelSetOffset::LevelSetOffset( const std::string &name )
-	:	SceneElementProcessor( name )
+	:	SceneElementProcessor( name, GafferScene::Filter::NoMatch )
 {
 	storeIndexOfNextChild( g_firstPlugIndex );
 
-	addChild( new StringPlug( "gridName", Plug::In, "levelset") );
+	addChild( new StringPlug( "grid", Plug::In, "surface") );
 	addChild( new FloatPlug( "offset", Plug::In, 0.5) );
 }
 
@@ -65,12 +65,12 @@ LevelSetOffset::~LevelSetOffset()
 {
 }
 
-Gaffer::StringPlug *LevelSetOffset::gridNamePlug()
+Gaffer::StringPlug *LevelSetOffset::gridPlug()
 {
 	return  getChild<StringPlug>( g_firstPlugIndex );
 }
 
-const Gaffer::StringPlug *LevelSetOffset::gridNamePlug() const
+const Gaffer::StringPlug *LevelSetOffset::gridPlug() const
 {
 	return  getChild<StringPlug>( g_firstPlugIndex );
 }
@@ -89,7 +89,7 @@ void LevelSetOffset::affects( const Gaffer::Plug *input, AffectedPlugsContainer 
 {
 	SceneElementProcessor::affects( input, outputs );
 
-	if( input == gridNamePlug() || input == offsetPlug() )
+	if( input == gridPlug() || input == offsetPlug() )
 	{
 		outputs.push_back( outPlug()->objectPlug() );
 		outputs.push_back( outPlug()->boundPlug() );
@@ -105,7 +105,7 @@ void LevelSetOffset::hashProcessedObject( const ScenePath &path, const Gaffer::C
 {
 	SceneElementProcessor::hashProcessedObject( path, context, h );
 
-	gridNamePlug()->hash( h );
+	gridPlug()->hash( h );
 	offsetPlug()->hash( h );
 }
 
@@ -117,7 +117,7 @@ IECore::ConstObjectPtr LevelSetOffset::computeProcessedObject( const ScenePath &
 		return inputObject;
 	}
 
-	std::string gridName = gridNamePlug()->getValue();
+	std::string gridName = gridPlug()->getValue();
 
 	openvdb::GridBase::ConstPtr gridBase = vdbObject->findGrid( gridName );
 
@@ -164,7 +164,7 @@ void LevelSetOffset::hashProcessedBound( const ScenePath &path, const Gaffer::Co
 {
 	SceneElementProcessor::hashProcessedBound( path, context, h );
 
-	gridNamePlug()->hash( h );
+	gridPlug()->hash( h );
 	offsetPlug()->hash( h );
 }
 

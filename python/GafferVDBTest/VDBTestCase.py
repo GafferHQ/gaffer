@@ -37,7 +37,8 @@
 import os
 import subprocess32 as subprocess
 
-
+import IECore
+import GafferScene
 import GafferSceneTest
 
 class VDBTestCase( GafferSceneTest.SceneTestCase ) :
@@ -48,3 +49,13 @@ class VDBTestCase( GafferSceneTest.SceneTestCase ) :
 	def setUp( self ) :
 		GafferSceneTest.SceneTestCase.setUp( self )
 		self.dataDir = os.path.join( os.path.dirname( __file__ ),  "data")
+		self.filters = [] # need to keep hold of the filters for the duration of the test
+
+	def setFilter(self, node, path = '/vdb'):
+
+		pathFilter = GafferScene.PathFilter( "PathFilter" )
+		pathFilter["paths"].setValue( IECore.StringVectorData( [ path ] ) )
+		self.filters.append( pathFilter )
+
+		node["filter"].setInput( pathFilter["out"] )
+

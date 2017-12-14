@@ -57,8 +57,8 @@ class LevelSetOffset : public GafferScene::SceneElementProcessor
 
 		IE_CORE_DECLARERUNTIMETYPEDEXTENSION( GafferVDB::LevelSetOffset, LevelSetOffsetTypeId, GafferScene::SceneElementProcessor );
 
-		Gaffer::StringPlug *gridNamePlug();
-		const Gaffer::StringPlug *gridNamePlug() const;
+		Gaffer::StringPlug *gridPlug();
+		const Gaffer::StringPlug *gridPlug() const;
 
 		Gaffer::FloatPlug *offsetPlug();
 		const Gaffer::FloatPlug *offsetPlug() const;

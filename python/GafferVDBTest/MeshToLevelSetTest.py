@@ -53,14 +53,15 @@ class MeshToLevelSetTest( GafferVDBTest.VDBTestCase ) :
 	def testCanConvertMeshToLevelSetVolume( self ) :
 		sphere = GafferScene.Sphere()
 		meshToLevelSet = GafferVDB.MeshToLevelSet()
+		self.setFilter( meshToLevelSet, path='/sphere' )
 		meshToLevelSet["voxelSize"].setValue( 0.05 )
 		meshToLevelSet["in"].setInput( sphere["out"] )
 
 		obj = meshToLevelSet['out'].object( "sphere" )
 		self.assertTrue( isinstance( obj, GafferVDB.VDBObject ) )
 
-		self.assertEqual( obj.gridNames(), ['levelset'] )
-		grid = obj.findGrid( "levelset" )
+		self.assertEqual( obj.gridNames(), ['surface'] )
+		grid = obj.findGrid( "surface" )
 
 		meshBounds = sphere['out'].bound( "sphere" )
 		vdbBounds = meshToLevelSet['out'].bound( "sphere" )
@@ -73,6 +74,7 @@ class MeshToLevelSetTest( GafferVDBTest.VDBTestCase ) :
 	def testDecreasingVoxelSizeIncreasesLeafCount( self ) :
 		sphere = GafferScene.Sphere()
 		meshToLevelSet = GafferVDB.MeshToLevelSet()
+		self.setFilter( meshToLevelSet, path='/sphere' )
 		meshToLevelSet["voxelSize"].setValue( 0.1 )
 		meshToLevelSet["in"].setInput( sphere["out"] )
 
@@ -80,8 +82,8 @@ class MeshToLevelSetTest( GafferVDBTest.VDBTestCase ) :
 		meshToLevelSet["voxelSize"].setValue( 0.05 )
 		obj2 = meshToLevelSet['out'].object( "sphere" )
 
-		ls1 = obj1.findGrid( "levelset" )
-		ls2 = obj2.findGrid( "levelset" )
+		ls1 = obj1.findGrid( "surface" )
+		ls2 = obj2.findGrid( "surface" )
 
 		self.assertEqual( 56, ls1.leafCount() )
 		self.assertEqual( 158, ls2.leafCount() )
@@ -91,26 +93,28 @@ class MeshToLevelSetTest( GafferVDBTest.VDBTestCase ) :
 		sphere["radius"].setValue( 4.0 )
 
 		meshToLevelSet = GafferVDB.MeshToLevelSet()
+		self.setFilter( meshToLevelSet, '/sphere' )
 		meshToLevelSet["voxelSize"].setValue( 0.1 )
 		meshToLevelSet["in"].setInput( sphere["out"] )
 
-		self.assertTrue( 640 <= meshToLevelSet['out'].object( "sphere" ).findGrid( "levelset" ).leafCount() <= 650 )
+		self.assertTrue( 640 <= meshToLevelSet['out'].object( "sphere" ).findGrid( "surface" ).leafCount() <= 650 )
 
 		meshToLevelSet["exteriorBandwidth"].setValue( 4.0 )
-		self.assertTrue( 685 <= meshToLevelSet['out'].object( "sphere" ).findGrid( "levelset" ).leafCount() <= 695 )
+		self.assertTrue( 685 <= meshToLevelSet['out'].object( "sphere" ).findGrid( "surface" ).leafCount() <= 695 )
 
 		meshToLevelSet["interiorBandwidth"].setValue( 4.0 )
-		self.assertTrue( 715 <= meshToLevelSet['out'].object( "sphere" ).findGrid( "levelset" ).leafCount() <= 725 )
+		self.assertTrue( 715 <= meshToLevelSet['out'].object( "sphere" ).findGrid( "surface" ).leafCount() <= 725 )
 
 	def testCanSpecifyLevelsetGridname( self ) :
 		sphere = GafferScene.Sphere()
 		meshToLevelSet = GafferVDB.MeshToLevelSet()
+		self.setFilter( meshToLevelSet, path='/sphere' )
 		meshToLevelSet["voxelSize"].setValue( 0.1 )
 		meshToLevelSet["in"].setInput( sphere["out"] )
 
 		obj1 = meshToLevelSet['out'].object( "sphere" )
-		self.assertEqual( obj1.gridNames(), ["levelset"] )
+		self.assertEqual( obj1.gridNames(), ["surface"] )
 
-		meshToLevelSet["gridName"].setValue( "fooBar" )
+		meshToLevelSet["grid"].setValue( "fooBar" )
 		obj2 = meshToLevelSet['out'].object( "sphere" )
 		self.assertEqual( obj2.gridNames(), ["fooBar"] )

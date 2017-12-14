@@ -40,9 +40,9 @@ import GafferVDB
 GafferUI.Metadata.registerNode(
 	GafferVDB.MeshToLevelSet,
 	'description',
-	"""Converts a level set VDB object to a mesh primitive.""",
+	"""Converts a mesh primitive to a level set VDB object.""",
 	plugs={
-		'gridName' : [
+		'grid' : [
 			'description',
 			"""
 			Name of the level set grid to create in the VDB object.

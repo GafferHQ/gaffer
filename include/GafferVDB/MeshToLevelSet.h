@@ -62,8 +62,8 @@ class MeshToLevelSet : public GafferScene::SceneElementProcessor
 
 		IE_CORE_DECLARERUNTIMETYPEDEXTENSION( GafferVDB::MeshToLevelSet, MeshToLevelSetTypeId, GafferScene::SceneElementProcessor );
 
-		Gaffer::StringPlug *gridNamePlug();
-		const Gaffer::StringPlug *gridNamePlug() const;
+		Gaffer::StringPlug *gridPlug();
+		const Gaffer::StringPlug *gridPlug() const;
 
 		Gaffer::FloatPlug *voxelSizePlug();
 		const Gaffer::FloatPlug *voxelSizePlug() const;
