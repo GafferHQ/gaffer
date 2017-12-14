@@ -47,12 +47,14 @@ class CatalogueSelect( GafferImage.ImageProcessor ) :
 
 		self["imageName"] = Gaffer.StringPlug()
 
-		self["context"] = GafferImage.ImageContextVariables()
-		self["context"]["variables"].addMember( "catalogue:imageName", "", "imageNameMember" )
-		self["context"]["variables"]["imageNameMember"]["value"].setInput( self["imageName"] )
+		self["__context"] = GafferImage.ImageContextVariables()
+		self["__context"]["variables"].addMember( "catalogue:imageName", "", "imageNameMember" )
+		self["__context"]["variables"]["imageNameMember"]["value"].setInput( self["imageName"] )
 
-		self["context"]["in"].setInput( self["in"] )
-		self["out"].setInput( self["context"]["out"] )
+		self["__context"]["in"].setInput( self["in"] )
+		self["out"].setInput( self["__context"]["out"] )
+
+		self['out'].setFlags(Gaffer.Plug.Flags.Serialisable, False)
 
 
 IECore.registerRunTimeTyped( CatalogueSelect, typeName = "GafferImage::CatalogueSelect" )
