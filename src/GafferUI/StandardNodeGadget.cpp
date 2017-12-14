@@ -149,6 +149,27 @@ class StandardNodeGadget::ErrorGadget : public Gadget
 // StandardNodeGadget implementation
 //////////////////////////////////////////////////////////////////////////
 
+namespace
+{
+static IECoreGL::Texture *bookmarkTexture()
+{
+	static IECoreGL::TexturePtr bookmarkTexture;
+
+	if( !bookmarkTexture )
+	{
+		bookmarkTexture = ImageGadget::textureLoader()->load( "bookmark.png" );
+
+		IECoreGL::Texture::ScopedBinding binding( *bookmarkTexture );
+		glTexParameteri( GL_TEXTURE_2D, GL_TEXTURE_MIN_FILTER, GL_LINEAR_MIPMAP_LINEAR );
+		glTexParameteri( GL_TEXTURE_2D, GL_TEXTURE_MAG_FILTER, GL_LINEAR_MIPMAP_LINEAR );
+		glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_WRAP_S, GL_CLAMP_TO_BORDER );
+		glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_WRAP_T, GL_CLAMP_TO_BORDER );
+	}
+	return bookmarkTexture.get();
+}
+
+} // namespace
+
 IE_CORE_DEFINERUNTIMETYPED( StandardNodeGadget );
 
 NodeGadget::NodeGadgetTypeDescription<StandardNodeGadget> StandardNodeGadget::g_nodeGadgetTypeDescription( Gaffer::Node::staticTypeId() );
@@ -338,6 +359,12 @@ void StandardNodeGadget::doRenderLayer( Layer layer, const Style *style ) const
 				state,
 				m_userColor.get_ptr()
 			);
+
+			if( MetadataAlgo::getBookmarked( node() ) )
+			{
+				style->renderImage( Box2f( V2f( b.min.x + 1.125, b.max.y - 1.25 ), V2f( b.min.x + 1.875, b.max.y + 0.25 ) ), bookmarkTexture() );
+			}
+
 			break;
 		}
 		case GraphLayer::Overlay :
