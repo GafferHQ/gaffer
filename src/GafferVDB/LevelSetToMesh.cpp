@@ -173,11 +173,11 @@ IE_CORE_DEFINERUNTIMETYPED( LevelSetToMesh );
 size_t LevelSetToMesh::g_firstPlugIndex = 0;
 
 LevelSetToMesh::LevelSetToMesh( const std::string &name )
-	:	SceneElementProcessor( name )
+	:	SceneElementProcessor( name, GafferScene::Filter::NoMatch )
 {
 	storeIndexOfNextChild( g_firstPlugIndex );
 
-	addChild( new StringPlug( "gridName", Plug::In, "levelset" ) );
+	addChild( new StringPlug( "grid", Plug::In, "surface" ) );
 	addChild( new FloatPlug( "isoValue", Plug::In, 0.0f ) );
 	addChild( new FloatPlug( "adaptivity", Plug::In, 0.0f, 0.0f, 1.0f ) );
 
@@ -187,12 +187,12 @@ LevelSetToMesh::~LevelSetToMesh()
 {
 }
 
-Gaffer::StringPlug *LevelSetToMesh::gridNamePlug()
+Gaffer::StringPlug *LevelSetToMesh::gridPlug()
 {
 	return  getChild<StringPlug>( g_firstPlugIndex );
 }
 
-const Gaffer::StringPlug *LevelSetToMesh::gridNamePlug() const
+const Gaffer::StringPlug *LevelSetToMesh::gridPlug() const
 {
 	return  getChild<StringPlug>( g_firstPlugIndex );
 }
@@ -225,7 +225,7 @@ void LevelSetToMesh::affects( const Gaffer::Plug *input, AffectedPlugsContainer 
 	if(
 		input == isoValuePlug() ||
 		input == adaptivityPlug() ||
-		input == gridNamePlug()
+		input == gridPlug()
 	)
 	{
 		outputs.push_back( outPlug()->objectPlug() );
@@ -241,7 +241,7 @@ void LevelSetToMesh::hashProcessedObject( const ScenePath &path, const Gaffer::C
 {
 	SceneElementProcessor::hashProcessedObject( path, context, h );
 
-	gridNamePlug()->hash( h );
+	gridPlug()->hash( h );
 	isoValuePlug()->hash( h );
 	adaptivityPlug()->hash( h );
 }
@@ -254,7 +254,7 @@ IECore::ConstObjectPtr LevelSetToMesh::computeProcessedObject( const ScenePath &
 		return inputObject;
 	}
 
-	openvdb::GridBase::ConstPtr grid = vdbObject->findGrid( gridNamePlug()->getValue() );
+	openvdb::GridBase::ConstPtr grid = vdbObject->findGrid( gridPlug()->getValue() );
 
 	if (!grid)
 	{
@@ -273,7 +273,7 @@ void LevelSetToMesh::hashProcessedBound( const ScenePath &path, const Gaffer::Co
 {
 	SceneElementProcessor::hashProcessedBound( path, context, h );
 
-	gridNamePlug()->hash( h );
+	gridPlug()->hash( h );
 	isoValuePlug()->hash( h );
 }
 

@@ -126,11 +126,11 @@ IE_CORE_DEFINERUNTIMETYPED( MeshToLevelSet );
 size_t MeshToLevelSet::g_firstPlugIndex = 0;
 
 MeshToLevelSet::MeshToLevelSet( const std::string &name )
-	:	SceneElementProcessor( name )
+	:	SceneElementProcessor( name, GafferScene::Filter::NoMatch )
 {
 	storeIndexOfNextChild( g_firstPlugIndex );
 
-	addChild( new StringPlug( "gridName", Plug::In, "levelset") );
+	addChild( new StringPlug( "grid", Plug::In, "surface") );
 	addChild( new FloatPlug( "voxelSize", Plug::In, 0.1f, 0.0001f ) );
 	addChild( new FloatPlug( "exteriorBandwidth", Plug::In, 3.0f, 0.0001f ) );
 	addChild( new FloatPlug( "interiorBandwidth", Plug::In, 3.0f, 0.0001f ) );
@@ -140,12 +140,12 @@ MeshToLevelSet::~MeshToLevelSet()
 {
 }
 
-Gaffer::StringPlug *MeshToLevelSet::gridNamePlug()
+Gaffer::StringPlug *MeshToLevelSet::gridPlug()
 {
 	return  getChild<StringPlug>( g_firstPlugIndex );
 }
 
-const Gaffer::StringPlug *MeshToLevelSet::gridNamePlug() const
+const Gaffer::StringPlug *MeshToLevelSet::gridPlug() const
 {
 	return  getChild<StringPlug>( g_firstPlugIndex );
 }
@@ -184,7 +184,7 @@ void MeshToLevelSet::affects( const Gaffer::Plug *input, AffectedPlugsContainer 
 {
 	SceneElementProcessor::affects( input, outputs );
 
-	if( input == voxelSizePlug() || input == gridNamePlug() )
+	if( input == voxelSizePlug() || input == gridPlug() )
 	{
 		outputs.push_back( outPlug()->objectPlug() );
 	}
@@ -199,7 +199,7 @@ void MeshToLevelSet::hashProcessedObject( const ScenePath &path, const Gaffer::C
 {
 	SceneElementProcessor::hashProcessedObject( path, context, h );
 
-	gridNamePlug()->hash( h );
+	gridPlug()->hash( h );
 	voxelSizePlug()->hash( h );
 	exteriorBandwidthPlug()->hash ( h );
 	interiorBandwidthPlug()->hash ( h );
@@ -228,7 +228,7 @@ IECore::ConstObjectPtr MeshToLevelSet::computeProcessedObject( const ScenePath &
 		//primitiveIndexGrid.get()
 	);
 
-	grid->setName( gridNamePlug()->getValue() );
+	grid->setName( gridPlug()->getValue() );
 
 	VDBObjectPtr newVDBObject =  new VDBObject();
 	newVDBObject->insertGrid( grid );
