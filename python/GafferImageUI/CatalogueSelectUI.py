@@ -38,11 +38,16 @@ import Gaffer
 import GafferImage
 
 def __imageNames( plug ) :
+	node = plug.node()
+	imagePlug = node["in"]
 
-	nodeInput = plug.node()["in"].getInput()
-	if( nodeInput and isinstance( nodeInput.node(), GafferImage.Catalogue ) ) :
-		return nodeInput.node()["images"].keys()
-	return []
+	while imagePlug is not None and not isinstance( imagePlug.node(), GafferImage.Catalogue ) :
+		imagePlug = imagePlug.getInput()
+
+	if imagePlug is None :
+		return []
+
+	return imagePlug.node()["images"].keys()
 
 def __imagePresetNames( plug ) :
 
@@ -69,7 +74,6 @@ Gaffer.Metadata.registerNode(
 			"presetNames", __imagePresetNames,
 			"presetValues", __imagePresetValues,
 
-			"plugValueWidget:type", "GafferUI.PresetsPlugValueWidget",
 		]
 	}
 )
