@@ -48,7 +48,7 @@ class CatalogueSelectTest( GafferImageTest.ImageTestCase ) :
 		images = []
 		readers = []
 		fileNames = [ "checker.exr", "blurRange.exr", "noisyRamp.exr", "resamplePatterns.exr" ]
-		for i, fileName in enumerate( fileNames ) :
+		for fileName in fileNames :
 			images.append( GafferImage.Catalogue.Image.load( "${GAFFER_ROOT}/python/GafferImageTest/images/" + fileName ) )
 			readers.append( GafferImage.ImageReader() )
 			readers[-1]["fileName"].setValue( images[-1]["fileName"].getValue() )
@@ -65,7 +65,7 @@ class CatalogueSelectTest( GafferImageTest.ImageTestCase ) :
 			catalogueSelect["in"].setInput( c["out"] )
 			catalogueSelect["imageName"].setValue( fileName.split( "." )[0] )
 
-			self.assertTrue( catalogueSelect["out"].image() == c["__switch"]["in"][i].image() )
+			self.assertImagesEqual( catalogueSelect["out"], readers[i]["out"], ignoreMetadata = True )
 
 		# Pulling out image that is selected in the Catalogue UI
 
@@ -73,8 +73,7 @@ class CatalogueSelectTest( GafferImageTest.ImageTestCase ) :
 		catalogueSelect["in"].setInput( c["out"] )
 		catalogueSelect["imageName"].setValue( "" )
 
-		selectionIndex = c['__imageIndex'].getValue()
-		self.assertTrue( catalogueSelect["out"].image() == c["__switch"]["in"][ selectionIndex ].image() )
+		self.assertImagesEqual( catalogueSelect["out"], c["out"] )
 
 		# Pulling out invalid image
 

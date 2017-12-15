@@ -91,6 +91,7 @@ from DilateTest import DilateTest
 from MixTest import MixTest
 from CatalogueTest import CatalogueTest
 from CollectImagesTest import CollectImagesTest
+from CatalogueSelectTest import CatalogueSelectTest
 
 if __name__ == "__main__":
 	import unittest
