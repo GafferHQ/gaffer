@@ -38,6 +38,8 @@
 import re
 import ast
 import functools
+import inspect
+import imath
 
 import IECore
 
@@ -76,7 +78,7 @@ class PythonExpressionEngine( Gaffer.Expression.Engine ) :
 			for p in plugPath.split( "." )[:-1] :
 				parentDict = parentDict.setdefault( p, {} )
 
-		executionDict = { "IECore" : IECore, "parent" : plugDict, "context" : _ContextProxy( context ) }
+		executionDict = { "imath" : imath, "IECore" : IECore, "parent" : plugDict, "context" : _ContextProxy( context ) }
 
 		exec( self.__expression, executionDict, executionDict )
 
@@ -183,7 +185,7 @@ class PythonExpressionEngine( Gaffer.Expression.Engine ) :
 		result += plug.relativeName( parentNode ).replace( ".", "\"][\"" )
 		result += "\"] = "
 
-		result += repr( value )
+		result += IECore.repr( value )
 
 		return result
 
@@ -341,6 +343,8 @@ def __defaultValueExtractor( plug, topLevelPlug, value ) :
 	for name in plug.relativeName( topLevelPlug ).split( "." ) :
 		try :
 			value = getattr( value, name )
+			if inspect.ismethod( value ) :
+				value = value()
 		except AttributeError :
 			accessor = getattr( value, "get" + name[0].upper() + name[1:], None )
 			if accessor is not None :
