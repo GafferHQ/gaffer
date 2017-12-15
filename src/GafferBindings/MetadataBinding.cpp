@@ -47,6 +47,7 @@
 
 #include "GafferBindings/MetadataBinding.h"
 #include "GafferBindings/DataBinding.h"
+#include "GafferBindings/Serialisation.h"
 
 using namespace boost::python;
 using namespace IECore;
@@ -60,6 +61,7 @@ void metadataModuleDependencies( const Gaffer::Node *node, std::set<std::string>
 {
 	/// \todo Derive from the registered values so we can support
 	/// datatypes from other modules.
+	modules.insert( "imath" );
 	modules.insert( "IECore" );
 	modules.insert( "Gaffer" );
 }
@@ -68,6 +70,7 @@ void metadataModuleDependencies( const Gaffer::Plug *plug, std::set<std::string>
 {
 	/// \todo Derive from the registered values so we can support
 	/// datatypes from other modules.
+	modules.insert( "imath" );
 	modules.insert( "IECore" );
 	modules.insert( "Gaffer" );
 }
@@ -85,7 +88,9 @@ std::string metadataSerialisation( const Gaffer::Node *node, const std::string &
 
 		ConstDataPtr value = Metadata::value( node, *it );
 		object pythonValue = dataToPython( value.get(), /* copy = */ false );
-		std::string stringValue = extract<std::string>( pythonValue.attr( "__repr__" )() );
+
+		object repr = boost::python::import( "IECore" ).attr( "repr" );
+		std::string stringValue = extract<std::string>( repr( pythonValue ) );
 
 		result += boost::str(
 			boost::format( "Gaffer.Metadata.registerNodeValue( %s, %s, %s )\n" ) %
@@ -112,6 +117,11 @@ std::string metadataSerialisation( const Plug *plug, const std::string &identifi
 		ConstDataPtr value = Metadata::value( plug, *it );
 		object pythonValue = dataToPython( value.get(), /* copy = */ false );
 		std::string stringValue = extract<std::string>( pythonValue.attr( "__repr__" )() );
+		const std::string modulePath = Serialisation::modulePath( pythonValue );
+		if( modulePath == "imath" )
+		{
+			stringValue = modulePath + "." + stringValue;
+		}
 
 		result += boost::str(
 			boost::format( "Gaffer.Metadata.registerPlugValue( %s, %s, %s )\n" ) %
