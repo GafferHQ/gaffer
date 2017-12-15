@@ -340,5 +340,24 @@ class ShaderAssignmentTest( GafferSceneTest.SceneTestCase ) :
 		s["enabled"].setValue( False )
 		self.assertEqual( set( x[0] for x in cs ), set( ( s["enabled"], s["out"]["attributes"], s["out"] ) ) )
 
+	def testInputAcceptanceFromBoxesViaBoxIO( self ) :
+
+		s = Gaffer.ScriptNode()
+
+		s["s"] = GafferSceneTest.TestShader()
+		s["a"] = GafferScene.ShaderAssignment()
+		s["a"]["shader"].setInput( s["s"]["out"] )
+
+		Gaffer.Metadata.registerValue( s["s"]["out"], "nodule:type", "GafferUI::StandardNodule" )
+		Gaffer.Metadata.registerValue( s["a"]["shader"], "nodule:type", "GafferUI::StandardNodule" )
+
+		box = Gaffer.Box.create( s, Gaffer.StandardSet( { s["s"] } ) )
+		Gaffer.BoxIO.insert( box )
+
+		s2 = Gaffer.ScriptNode()
+		s2.execute( s.serialise() )
+
+		self.assertTrue( s2["a"]["shader"].source().isSame( s2["Box"]["s"]["out"] ) )
+
 if __name__ == "__main__":
 	unittest.main()
