@@ -34,12 +34,14 @@
 #
 ##########################################################################
 
-import GafferTest
-
-import GafferVDB
-import IECore
-import GafferVDBTest
 import os
+import imath
+
+import IECore
+
+import GafferTest
+import GafferVDB
+import GafferVDBTest
 
 class VDBObjectTest( GafferVDBTest.VDBTestCase ) :
 
@@ -62,8 +64,8 @@ class VDBObjectTest( GafferVDBTest.VDBTestCase ) :
 			{
 				'name': IECore.StringData( 'ls_sphere' ),
 				'file_voxel_count': IECore.Int64Data( 270638 ),
-				'file_bbox_min': IECore.V3iData( IECore.V3i( -62, -62, -62 ) ),
-				'file_bbox_max': IECore.V3iData( IECore.V3i( 62, 62, 62 ) ),
+				'file_bbox_min': IECore.V3iData( imath.V3i( -62, -62, -62 ) ),
+				'file_bbox_max': IECore.V3iData( imath.V3i( 62, 62, 62 ) ),
 				'is_local_space': IECore.BoolData( 0 ),
 				'is_saved_as_half_float': IECore.BoolData( 1 ),
 				'value_type': IECore.StringData( 'float' ),

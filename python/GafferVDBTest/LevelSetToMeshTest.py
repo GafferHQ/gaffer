@@ -34,14 +34,16 @@
 #
 ##########################################################################
 
-import GafferTest
+import os
+import imath
 
-import GafferVDB
 import IECore
 import IECoreScene
-import GafferVDBTest
-import os
+
+import GafferTest
 import GafferScene
+import GafferVDB
+import GafferVDBTest
 
 class LevelSetToMeshTest( GafferVDBTest.VDBTestCase ) :
 
@@ -86,13 +88,13 @@ class LevelSetToMeshTest( GafferVDBTest.VDBTestCase ) :
 		self.setFilter( levelSetToMesh, path='/sphere' )
 		levelSetToMesh["in"].setInput( meshToLevelSet["out"] )
 
-		self.assertEqualTolerance( 5.0, levelSetToMesh['out'].bound( "sphere" ).max[0], 0.05 )
+		self.assertEqualTolerance( 5.0, levelSetToMesh['out'].bound( "sphere" ).max()[0], 0.05 )
 
 		levelSetToMesh['isoValue'].setValue(0.5)
-		self.assertEqualTolerance( 5.5, levelSetToMesh['out'].bound( "sphere" ).max[0], 0.05 )
+		self.assertEqualTolerance( 5.5, levelSetToMesh['out'].bound( "sphere" ).max()[0], 0.05 )
 
 		levelSetToMesh['isoValue'].setValue(-0.5)
-		self.assertEqualTolerance( 4.5, levelSetToMesh['out'].bound( "sphere" ).max[0], 0.05 )
+		self.assertEqualTolerance( 4.5, levelSetToMesh['out'].bound( "sphere" ).max()[0], 0.05 )
 
 	def testIncreasingAdapativityDecreasesPolyCount( self ) :
 		sphere = GafferScene.Sphere()
