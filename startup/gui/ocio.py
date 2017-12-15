@@ -36,6 +36,7 @@
 ##########################################################################
 
 import functools
+import imath
 
 import IECore
 
@@ -80,7 +81,7 @@ def __setDisplayTransform() :
 	def f( c ) :
 
 		cc = processor.applyRGB( [ c.r, c.g, c.b ] )
-		return IECore.Color3f( *cc )
+		return imath.Color3f( *cc )
 
 	GafferUI.DisplayTransform.set( f )
 

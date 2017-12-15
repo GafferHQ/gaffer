@@ -61,5 +61,5 @@ Gaffer.Metadata.registerValue( "osl:light:maya/osl/environmentLight", "textureNa
 Gaffer.Metadata.registerValue( "osl:light:maya/osl/environmentLight", "intensityParameter", "intensity" )
 Gaffer.Metadata.registerValue( "osl:light:maya/osl/environmentLight", "exposureParameter", "exposure" )
 Gaffer.Metadata.registerValue( "osl:light:maya/osl/environmentLight", "colorParameter", "tint" )
-Gaffer.Metadata.registerValue( "osl:light:maya/osl/environmentLight", "visualiserOrientation", IECore.M44f().rotate( IECore.V3f( 0, math.pi, 0 ) ) )
+Gaffer.Metadata.registerValue( "osl:light:maya/osl/environmentLight", "visualiserOrientation", imath.M44f().rotate( imath.V3f( 0, math.pi, 0 ) ) )
 
