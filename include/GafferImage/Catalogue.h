@@ -114,7 +114,15 @@ class Catalogue : public ImageNode
 		std::string generateFileName( const Image *image ) const;
 		std::string generateFileName( const ImagePlug *image ) const;
 
+		void affects( const Gaffer::Plug *input, AffectedPlugsContainer &outputs ) const override;
+
 	private :
+
+		Gaffer::IntPlug *internalImageIndexPlug();
+		const Gaffer::IntPlug *internalImageIndexPlug() const;
+
+		Gaffer::AtomicCompoundDataPlug *mappingPlug();
+		const Gaffer::AtomicCompoundDataPlug *mappingPlug() const;
 
 		ImageSwitch *imageSwitch();
 		const ImageSwitch *imageSwitch() const;
@@ -128,6 +136,11 @@ class Catalogue : public ImageNode
 
 		void driverCreated( IECoreImage::DisplayDriver *driver, const IECore::CompoundData *parameters );
 		void imageReceived( Gaffer::Plug *plug );
+
+		void hash( const Gaffer::ValuePlug *output, const Gaffer::Context *context, IECore::MurmurHash &h ) const override;
+		void compute( Gaffer::ValuePlug *output, const Gaffer::Context *context ) const override;
+
+		void computeNameToIndexMapping();
 
 		static size_t g_firstPlugIndex;
 

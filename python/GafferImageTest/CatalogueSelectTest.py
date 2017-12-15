@@ -1,6 +1,6 @@
 ##########################################################################
 #
-#  Copyright (c) 2012, John Haddon. All rights reserved.
+#  Copyright (c) 2017, Image Engine Design Inc. All rights reserved.
 #
 #  Redistribution and use in source and binary forms, with or without
 #  modification, are permitted provided that the following conditions are
@@ -33,20 +33,52 @@
 #  SOFTWARE, EVEN IF ADVISED OF THE POSSIBILITY OF SUCH DAMAGE.
 #
 ##########################################################################
+import IECore
 
-__import__( "IECoreImage" )
-__import__( "Gaffer" )
-__import__( "GafferDispatch" )
+import GafferImage
+import GafferImageTest
 
-def __setupEnvironment() :
 
-	import os
-	if "OCIO" not in os.environ :
-		os.environ["OCIO"] = os.path.expandvars( "$GAFFER_ROOT/openColorIO/config.ocio" )
+class CatalogueSelectTest( GafferImageTest.ImageTestCase ) :
 
-__setupEnvironment()
+	def testSelection( self ):
 
-from _GafferImage import *
-from CatalogueSelect import CatalogueSelect
+		# Set up Catalogue with images that we can select
 
-__import__( "IECore" ).loadConfig( "GAFFER_STARTUP_PATHS", {}, subdirectory = "GafferImage" )
+		images = []
+		readers = []
+		fileNames = [ "checker.exr", "blurRange.exr", "noisyRamp.exr", "resamplePatterns.exr" ]
+		for fileName in fileNames :
+			images.append( GafferImage.Catalogue.Image.load( "${GAFFER_ROOT}/python/GafferImageTest/images/" + fileName ) )
+			readers.append( GafferImage.ImageReader() )
+			readers[-1]["fileName"].setValue( images[-1]["fileName"].getValue() )
+
+		c = GafferImage.Catalogue()
+
+		for image in images :
+			c["images"].addChild( image )
+
+		# Pulling out images by name
+
+		for i, fileName in enumerate( fileNames ) :
+			catalogueSelect = GafferImage.CatalogueSelect()
+			catalogueSelect["in"].setInput( c["out"] )
+			catalogueSelect["imageName"].setValue( fileName.split( "." )[0] )
+
+			self.assertImagesEqual( catalogueSelect["out"], readers[i]["out"], ignoreMetadata = True )
+
+		# Pulling out image that is selected in the Catalogue UI
+
+		catalogueSelect = GafferImage.CatalogueSelect()
+		catalogueSelect["in"].setInput( c["out"] )
+		catalogueSelect["imageName"].setValue( "" )
+
+		self.assertImagesEqual( catalogueSelect["out"], c["out"] )
+
+		# Pulling out invalid image
+
+		catalogueSelect["imageName"].setValue("nope")
+		with self.assertRaises( Exception ) as cm:
+			catalogueSelect["out"].image()
+
+		self.assertEqual( str( cm.exception ), "Exception : Unknown image name." )

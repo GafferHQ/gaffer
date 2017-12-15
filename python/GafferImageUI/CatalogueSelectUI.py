@@ -1,6 +1,6 @@
 ##########################################################################
 #
-#  Copyright (c) 2012, John Haddon. All rights reserved.
+#  Copyright (c) 2017, Image Engine Design Inc. All rights reserved.
 #
 #  Redistribution and use in source and binary forms, with or without
 #  modification, are permitted provided that the following conditions are
@@ -33,20 +33,47 @@
 #  SOFTWARE, EVEN IF ADVISED OF THE POSSIBILITY OF SUCH DAMAGE.
 #
 ##########################################################################
+import IECore
+import Gaffer
+import GafferImage
 
-__import__( "IECoreImage" )
-__import__( "Gaffer" )
-__import__( "GafferDispatch" )
+def __imageNames( plug ) :
+	node = plug.node()
+	imagePlug = node["in"]
 
-def __setupEnvironment() :
+	while imagePlug is not None and not isinstance( imagePlug.node(), GafferImage.Catalogue ) :
+		imagePlug = imagePlug.getInput()
 
-	import os
-	if "OCIO" not in os.environ :
-		os.environ["OCIO"] = os.path.expandvars( "$GAFFER_ROOT/openColorIO/config.ocio" )
+	if imagePlug is None :
+		return []
 
-__setupEnvironment()
+	return imagePlug.node()["images"].keys()
 
-from _GafferImage import *
-from CatalogueSelect import CatalogueSelect
+def __imagePresetNames( plug ) :
 
-__import__( "IECore" ).loadConfig( "GAFFER_STARTUP_PATHS", {}, subdirectory = "GafferImage" )
+	return IECore.StringVectorData( [ "Selected" ] + __imageNames( plug ) )
+
+def __imagePresetValues( plug ) :
+
+	return IECore.StringVectorData( [ "" ] + __imageNames( plug ) )
+
+Gaffer.Metadata.registerNode(
+
+	GafferImage.CatalogueSelect,
+
+	"description",
+	"Finds an image in a directly connected Catalogue by name.",
+
+	plugs = {
+
+		"imageName" : [
+
+			"description",
+			"The name of the image to extract.",
+
+			"presetNames", __imagePresetNames,
+			"presetValues", __imagePresetValues,
+
+		]
+	}
+)

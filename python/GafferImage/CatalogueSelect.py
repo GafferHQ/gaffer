@@ -1,6 +1,6 @@
 ##########################################################################
 #
-#  Copyright (c) 2012, John Haddon. All rights reserved.
+#  Copyright (c) 2017, Image Engine Design Inc. All rights reserved.
 #
 #  Redistribution and use in source and binary forms, with or without
 #  modification, are permitted provided that the following conditions are
@@ -33,20 +33,28 @@
 #  SOFTWARE, EVEN IF ADVISED OF THE POSSIBILITY OF SUCH DAMAGE.
 #
 ##########################################################################
+import IECore
 
-__import__( "IECoreImage" )
-__import__( "Gaffer" )
-__import__( "GafferDispatch" )
+import Gaffer
+import GafferImage
 
-def __setupEnvironment() :
 
-	import os
-	if "OCIO" not in os.environ :
-		os.environ["OCIO"] = os.path.expandvars( "$GAFFER_ROOT/openColorIO/config.ocio" )
+class CatalogueSelect( GafferImage.ImageProcessor ) :
 
-__setupEnvironment()
+	def __init__(self, name = 'CatalogueSelect' ) :
 
-from _GafferImage import *
-from CatalogueSelect import CatalogueSelect
+		GafferImage.ImageProcessor.__init__( self, name )
 
-__import__( "IECore" ).loadConfig( "GAFFER_STARTUP_PATHS", {}, subdirectory = "GafferImage" )
+		self["imageName"] = Gaffer.StringPlug()
+
+		self["__context"] = GafferImage.ImageContextVariables()
+		self["__context"]["variables"].addMember( "catalogue:imageName", "", "imageNameMember" )
+		self["__context"]["variables"]["imageNameMember"]["value"].setInput( self["imageName"] )
+
+		self["__context"]["in"].setInput( self["in"] )
+		self["out"].setInput( self["__context"]["out"] )
+
+		self['out'].setFlags(Gaffer.Plug.Flags.Serialisable, False)
+
+
+IECore.registerRunTimeTyped( CatalogueSelect, typeName = "GafferImage::CatalogueSelect" )
