@@ -41,6 +41,7 @@
 
 #include "GafferUIBindings/GadgetBinding.h"
 
+#include "GafferUI/AuxiliaryConnectionsGadget.h"
 #include "GafferUI/ConnectionGadget.h"
 #include "GafferUI/GraphGadget.h"
 #include "GafferUI/GraphLayout.h"
@@ -53,6 +54,7 @@
 
 using namespace boost::python;
 using namespace IECorePython;
+using namespace Gaffer;
 using namespace GafferUI;
 using namespace GafferUIBindings;
 
@@ -158,6 +160,12 @@ list unpositionedNodeGadgets( GraphGadget &graphGadget )
 	return l;
 }
 
+tuple connectionAt( AuxiliaryConnectionsGadget &g, IECore::LineSegment3f position )
+{
+	auto nodeGadgets = g.connectionAt( position );
+	return make_tuple( nodeGadgets.first, nodeGadgets.second );
+}
+
 } // namespace
 
 void GafferUIModule::bindGraphGadget()
@@ -174,6 +182,7 @@ void GafferUIModule::bindGraphGadget()
 			.def( "connectionGadget", (ConnectionGadget *(GraphGadget::*)( const Gaffer::Plug * ))&GraphGadget::connectionGadget, return_value_policy<CastToIntrusivePtr>() )
 			.def( "connectionGadgets", &connectionGadgets1, ( arg_( "plug" ), arg_( "excludedNodes" ) = object() ) )
 			.def( "connectionGadgets", &connectionGadgets2, ( arg_( "node" ), arg_( "excludedNodes" ) = object() ) )
+			.def( "auxiliaryConnectionsGadget", (AuxiliaryConnectionsGadget *(GraphGadget::*)())&GraphGadget::auxiliaryConnectionsGadget, return_value_policy<CastToIntrusivePtr>() )
 			.def( "upstreamNodeGadgets", &upstreamNodeGadgets, ( arg( "node" ), arg( "degreesOfSeparation" ) = Imath::limits<size_t>::max() ) )
 			.def( "downstreamNodeGadgets", &downstreamNodeGadgets, ( arg( "node" ), arg( "degreesOfSeparation" ) = Imath::limits<size_t>::max() ) )
 			.def( "connectedNodeGadgets", &connectedNodeGadgets, ( arg( "node" ), arg( "direction" ) = Gaffer::Plug::Invalid, arg( "degreesOfSeparation" ) = Imath::limits<size_t>::max() ) )
@@ -193,6 +202,12 @@ void GafferUIModule::bindGraphGadget()
 
 		GafferBindings::SignalClass<GraphGadget::RootChangedSignal, GafferBindings::DefaultSignalCaller<GraphGadget::RootChangedSignal>, RootChangedSlotCaller>( "RootChangedSignal" );
 	}
+
+	GadgetClass<AuxiliaryConnectionsGadget>()
+		.def( "hasConnection", (bool (AuxiliaryConnectionsGadget::*)( const NodeGadget *, const NodeGadget * ) const)&AuxiliaryConnectionsGadget::hasConnection )
+		.def( "hasConnection", (bool (AuxiliaryConnectionsGadget::*)( const Node *, const Node * ) const)&AuxiliaryConnectionsGadget::hasConnection )
+		.def( "connectionAt", &connectionAt )
+	;
 
 	IECorePython::RunTimeTypedClass<GraphLayout>()
 		.def( "connectNode", &GraphLayout::connectNode )
