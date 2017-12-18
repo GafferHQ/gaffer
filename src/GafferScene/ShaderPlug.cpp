@@ -37,6 +37,7 @@
 #include "IECore/MurmurHash.h"
 
 #include "Gaffer/SubGraph.h"
+#include "Gaffer/BoxIO.h"
 #include "Gaffer/Dot.h"
 #include "Gaffer/ScriptNode.h"
 
@@ -102,14 +103,12 @@ bool ShaderPlug::acceptsInput( const Gaffer::Plug *input ) const
 		return true;
 	}
 
-	// Really, we want to return false now, but we can't
-	// for backwards compatibility reasons. Before we had
-	// a ShaderPlug type, we just used regular Plugs in
-	// its place, and those may have made their way onto
-	// Boxes and Dots, so we accept those as intermediate
-	// connections, and rely on the checks above being
-	// called when the intermediate plug receives a
-	// connection.
+	// Really, we want to return false now, but during
+	// deserialisation we're not in control of the order
+	// of connection of plugs. We must accept intermediate
+	// connections from plugs on utility nodes on the
+	// assumption that they will later be connected to
+	// a shader.
 
 	const ScriptNode *script = ancestor<ScriptNode>();
 	if( !script || !script->isExecuting() )
@@ -120,7 +119,8 @@ bool ShaderPlug::acceptsInput( const Gaffer::Plug *input ) const
 	return
 		runTimeCast<const SubGraph>( sourceNode ) ||
 		runTimeCast<const ShaderSwitch>( sourceNode ) ||
-		runTimeCast<const Dot>( sourceNode )
+		runTimeCast<const Dot>( sourceNode ) ||
+		runTimeCast<const BoxIO>( sourceNode )
 	;
 }
 
