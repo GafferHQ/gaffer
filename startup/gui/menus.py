@@ -456,9 +456,9 @@ if moduleSearchPath.find( "GafferOSL" ) :
 import GafferVDB
 import GafferVDBUI
 
-nodeMenu.append( "/VDB/LevelSet To Mesh", GafferVDB.LevelSetToMesh, searchText = "LevelSetToMesh" )
-nodeMenu.append( "/VDB/Mesh To LevelSet", GafferVDB.MeshToLevelSet, searchText = "MeshToLevelSet" )
-nodeMenu.append( "/VDB/LevelSet Offset", GafferVDB.LevelSetOffset, searchText = "LevelSetOffset" )
+nodeMenu.append( "/VDB/Level Set To Mesh", GafferVDB.LevelSetToMesh, searchText = "LevelSetToMesh" )
+nodeMenu.append( "/VDB/Mesh To Level Set", GafferVDB.MeshToLevelSet, searchText = "MeshToLevelSet" )
+nodeMenu.append( "/VDB/Level Set Offset", GafferVDB.LevelSetOffset, searchText = "LevelSetOffset" )
 
 # Dispatch nodes
 
