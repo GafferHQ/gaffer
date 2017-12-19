@@ -44,8 +44,7 @@ from Qt import QtCore
 from Qt import QtGui
 from Qt import QtWidgets
 
-## This Widget simply displays an IECore.Spline object. For representation and editing
-# of SplinePlugs use a SplineEditor instead.
+## This Widget simply displays an IECore.Spline object.
 class SplineWidget( GafferUI.Widget ) :
 
 	DrawMode = IECore.Enum.create( "Invalid", "Ramp", "Splines" )

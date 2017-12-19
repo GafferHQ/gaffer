@@ -51,7 +51,6 @@ from TabbedContainerTest import TabbedContainerTest
 from NodeGraphTest import NodeGraphTest
 from WidgetSignalTest import WidgetSignalTest
 from EventLoopTest import EventLoopTest
-from SplinePlugGadgetTest import SplinePlugGadgetTest
 from TextWidgetTest import TextWidgetTest
 from BoolWidgetTest import BoolWidgetTest
 from ImageTest import ImageTest
