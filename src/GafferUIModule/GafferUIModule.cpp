@@ -54,7 +54,6 @@
 #include "GraphGadgetBinding.h"
 #include "ConnectionGadgetBinding.h"
 #include "NameGadgetBinding.h"
-#include "SplinePlugGadgetBinding.h"
 #include "ImageGadgetBinding.h"
 #include "PlugGadgetBinding.h"
 #include "SpacerGadgetBinding.h"
@@ -76,7 +75,6 @@ BOOST_PYTHON_MODULE( _GafferUI )
 	bindNodule();
 	bindConnectionGadget();
 	bindWidgetSignal();
-	bindSplinePlugGadget();
 	bindImageGadget();
 	bindStyle();
 	bindViewportGadget();

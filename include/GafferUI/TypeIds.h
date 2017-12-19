@@ -58,7 +58,7 @@ enum TypeId
 	LinearContainerTypeId = 110263,
 	ConnectionGadgetTypeId = 110264,
 	StandardNodeGadgetTypeId = 110265,
-	SplinePlugGadgetTypeId = 110266,
+	SplinePlugGadgetTypeId = 110266, // Obsolete - available for reuse
 	StandardNoduleTypeId = 110267,
 	CompoundNoduleTypeId = 110268,
 	ImageGadgetTypeId = 110269,
