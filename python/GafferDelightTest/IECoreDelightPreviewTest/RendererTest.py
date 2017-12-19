@@ -36,6 +36,7 @@
 
 import os
 import unittest
+import imath
 
 import IECore
 import IECoreScene
@@ -80,7 +81,7 @@ class RendererTest( GafferTest.TestCase ) :
 				"rgba",
 				{
 					"filter" : "gaussian",
-					"filterwidth" : IECore.V2f( 3.5 ),
+					"filterwidth" : imath.V2f( 3.5 ),
 				}
 			)
 		)
@@ -145,7 +146,7 @@ class RendererTest( GafferTest.TestCase ) :
 					data,
 					{
 						"filter" : "gaussian",
-						"filterwidth" : IECore.V2f( 3.5 ),
+						"filterwidth" : imath.V2f( 3.5 ),
 					}
 				)
 			)
@@ -167,7 +168,7 @@ class RendererTest( GafferTest.TestCase ) :
 
 		r.object(
 			"testPlane",
-			IECoreScene.MeshPrimitive.createPlane( IECore.Box2f( IECore.V2f( -1 ), IECore.V2f( 1 ) ), IECore.V2i( 2, 1 ) ),
+			IECoreScene.MeshPrimitive.createPlane( imath.Box2f( imath.V2f( -1 ), imath.V2f( 1 ) ), imath.V2i( 2, 1 ) ),
 			r.attributes( IECore.CompoundObject() ),
 		)
 
@@ -192,8 +193,8 @@ class RendererTest( GafferTest.TestCase ) :
 		r.object(
 			"testPlane",
 			[
-				IECoreScene.MeshPrimitive.createPlane( IECore.Box2f( IECore.V2f( -1 ), IECore.V2f( 1 ) ) ),
-				IECoreScene.MeshPrimitive.createPlane( IECore.Box2f( IECore.V2f( -2 ), IECore.V2f( 2 ) ) ),
+				IECoreScene.MeshPrimitive.createPlane( imath.Box2f( imath.V2f( -1 ), imath.V2f( 1 ) ) ),
+				IECoreScene.MeshPrimitive.createPlane( imath.Box2f( imath.V2f( -2 ), imath.V2f( 2 ) ) ),
 			],
 			[ 0, 1 ],
 			r.attributes( IECore.CompoundObject() ),
@@ -219,7 +220,7 @@ class RendererTest( GafferTest.TestCase ) :
 			self.temporaryDirectory() + "/test.nsi",
 		)
 
-		points = IECoreScene.PointsPrimitive( IECore.V3fVectorData( [ IECore.V3f( x ) for x in range( 0, 4 ) ] ) )
+		points = IECoreScene.PointsPrimitive( IECore.V3fVectorData( [ imath.V3f( x ) for x in range( 0, 4 ) ] ) )
 		points["width"] = IECoreScene.PrimitiveVariable(
 			IECoreScene.PrimitiveVariable.Interpolation.Vertex,
 			IECore.FloatVectorData( [ x + 1 for x in range( 0, 4 ) ] )
@@ -246,7 +247,7 @@ class RendererTest( GafferTest.TestCase ) :
 			self.temporaryDirectory() + "/test.nsi",
 		)
 
-		points = IECoreScene.PointsPrimitive( IECore.V3fVectorData( [ IECore.V3f( x ) for x in range( 0, 4 ) ] ) )
+		points = IECoreScene.PointsPrimitive( IECore.V3fVectorData( [ imath.V3f( x ) for x in range( 0, 4 ) ] ) )
 
 		r.object(
 			"testPoints",
@@ -273,8 +274,8 @@ class RendererTest( GafferTest.TestCase ) :
 			IECore.CubicBasisf.bSpline(),
 			False,
 			IECore.V3fVectorData(
-				[ IECore.V3f( x ) for x in range( 0, 4 ) ] +
-				[ IECore.V3f( -x ) for x in range( 0, 4 ) ]
+				[ imath.V3f( x ) for x in range( 0, 4 ) ] +
+				[ imath.V3f( -x ) for x in range( 0, 4 ) ]
 			)
 		)
 
@@ -405,11 +406,11 @@ class RendererTest( GafferTest.TestCase ) :
 			"testCamera",
 			IECoreScene.Camera(
 				parameters = {
-					"resolution" : IECore.V2i( 2000, 1000 ),
+					"resolution" : imath.V2i( 2000, 1000 ),
 					"projection" : "perspective",
 					"perspective:fov" : 40,
-					"clippingPlanes" : IECore.V2f( 0.25, 10 ),
-					"shutter" : IECore.V2f( 0, 1 ),
+					"clippingPlanes" : imath.V2f( 0.25, 10 ),
+					"shutter" : imath.V2f( 0, 1 ),
 				}
 			),
 			r.attributes( IECore.CompoundObject() )
@@ -437,7 +438,7 @@ class RendererTest( GafferTest.TestCase ) :
 			self.temporaryDirectory() + "/test.nsi",
 		)
 
-		m = IECoreScene.MeshPrimitive.createPlane( IECore.Box2f( IECore.V2f( -1 ), IECore.V2f( 1 ) ) )
+		m = IECoreScene.MeshPrimitive.createPlane( imath.Box2f( imath.V2f( -1 ), imath.V2f( 1 ) ) )
 		a = r.attributes( IECore.CompoundObject() )
 
 		r.object( "testPlane1", m, a )
@@ -459,14 +460,14 @@ class RendererTest( GafferTest.TestCase ) :
 			self.temporaryDirectory() + "/test.nsi",
 		)
 
-		m = IECoreScene.MeshPrimitive.createPlane( IECore.Box2f( IECore.V2f( -1 ), IECore.V2f( 1 ) ) )
+		m = IECoreScene.MeshPrimitive.createPlane( imath.Box2f( imath.V2f( -1 ), imath.V2f( 1 ) ) )
 		a = r.attributes( IECore.CompoundObject() )
 
 		r.object( "untransformed", m, a )
-		r.object( "identity", m, a ).transform( IECore.M44f() )
-		r.object( "transformed", m, a ).transform( IECore.M44f().translate( IECore.V3f( 1, 0, 0 ) ) )
+		r.object( "identity", m, a ).transform( imath.M44f() )
+		r.object( "transformed", m, a ).transform( imath.M44f().translate( imath.V3f( 1, 0, 0 ) ) )
 		r.object( "animated", m, a ).transform(
-			[ IECore.M44f().translate( IECore.V3f( x, 0, 0 ) ) for x in range( 0, 2 ) ],
+			[ imath.M44f().translate( imath.V3f( x, 0, 0 ) ) for x in range( 0, 2 ) ],
 			[ 0, 1 ]
 		)
 
