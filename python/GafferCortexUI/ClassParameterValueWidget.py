@@ -35,6 +35,8 @@
 #
 ##########################################################################
 
+import imath
+
 import IECore
 
 import Gaffer
@@ -76,7 +78,7 @@ class _PlugValueWidget( GafferCortexUI.CompoundParameterValueWidget._PlugValueWi
 		result.append( label )
 
 		# space
-		result.append( GafferUI.Spacer( IECore.V2i( 8, 1 ) ) )
+		result.append( GafferUI.Spacer( imath.V2i( 8, 1 ) ) )
 
 		# class button
 		className, classVersion = self._parameter().getClass( True )[1:3]
@@ -92,7 +94,7 @@ class _PlugValueWidget( GafferCortexUI.CompoundParameterValueWidget._PlugValueWi
 			result.append( versionButton )
 
 		# a spacer to stop the buttons expanding
-		result.append( GafferUI.Spacer( IECore.V2i( 1, 1 ), IECore.V2i( 9999999, 1 ) ), expand=True )
+		result.append( GafferUI.Spacer( imath.V2i( 1, 1 ), imath.V2i( 9999999, 1 ) ), expand=True )
 
 		return result
 

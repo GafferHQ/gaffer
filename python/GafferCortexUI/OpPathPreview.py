@@ -34,6 +34,8 @@
 #
 ##########################################################################
 
+import imath
+
 import IECore
 
 import Gaffer
@@ -51,7 +53,7 @@ class OpPathPreview( GafferUI.DeferredPathPreview ) :
 
 		with self.__column :
 			# we'll replace this with the op in _deferredUpdate()
-			GafferUI.Spacer( IECore.V2i( 1 ) )
+			GafferUI.Spacer( imath.V2i( 1 ) )
 			button = GafferUI.Button( "Launch" )
 			self.__executeClickedConnection = button.clickedSignal().connect( Gaffer.WeakMethod( self.__executeClicked ) )
 

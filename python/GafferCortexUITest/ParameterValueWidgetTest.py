@@ -36,6 +36,7 @@
 ##########################################################################
 
 import unittest
+import imath
 
 import IECore
 
@@ -84,7 +85,7 @@ class ParameterValueWidgetTest( GafferUITest.TestCase ) :
 	def testCreateAlwaysReturnsParameterValueWidgetInstance( self ) :
 
 		n = Gaffer.Node()
-		p = IECore.V2fParameter( "v", "", IECore.V2f( 1 ) )
+		p = IECore.V2fParameter( "v", "", imath.V2f( 1 ) )
 
 		h = GafferCortex.ParameterHandler.create( p )
 		h.setupPlug( n )
