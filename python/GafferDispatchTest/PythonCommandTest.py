@@ -36,6 +36,7 @@
 
 import unittest
 import inspect
+import imath
 
 import IECore
 
@@ -79,7 +80,7 @@ class PythonCommandTest( GafferTest.TestCase ) :
 		n = GafferDispatch.PythonCommand()
 		n["variables"].addMember( "testInt", 1 )
 		n["variables"].addMember( "testFloat", 2.5 )
-		n["variables"].addMember( "testColor", IECore.Color3f( 1, 2, 3 ) )
+		n["variables"].addMember( "testColor", imath.Color3f( 1, 2, 3 ) )
 		n["command"].setValue( inspect.cleandoc(
 			"""
 			self.testInt = variables["testInt"]
@@ -92,7 +93,7 @@ class PythonCommandTest( GafferTest.TestCase ) :
 
 		self.assertEqual( n.testInt, 1 )
 		self.assertEqual( n.testFloat, 2.5 )
-		self.assertEqual( n.testColor, IECore.Color3f( 1, 2, 3 ) )
+		self.assertEqual( n.testColor, imath.Color3f( 1, 2, 3 ) )
 
 	def testContextAccess( self ) :
 
