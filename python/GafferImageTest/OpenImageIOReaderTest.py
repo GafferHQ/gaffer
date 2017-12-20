@@ -158,25 +158,6 @@ class OpenImageIOReaderTest( GafferImageTest.ImageTestCase ) :
 		tile = n["out"].channelData( "R", imath.V2i( 0 ) )
 		self.assertEqual( len( tile ), GafferImage.ImagePlug().tileSize() **2 )
 
-	def testNoCaching( self ) :
-
-		n = GafferImage.OpenImageIOReader()
-		n["fileName"].setValue( self.fileName )
-
-		c = Gaffer.Context()
-		c["image:channelName"] = "R"
-		c["image:tileOrigin"] = imath.V2i( 0 )
-		with c :
-			# using _copy=False is not recommended anywhere outside
-			# of these tests.
-			t1 = n["out"]["channelData"].getValue( _copy=False )
-			t2 = n["out"]["channelData"].getValue( _copy=False )
-
-		# we don't want the separate computations to result in the
-		# same value, because the ImageReader has its own cache in
-		# OIIO, so doing any caching on top of that would be wasteful.
-		self.failIf( t1.isSame( t2 ) )
-
 	def testUnspecifiedFilename( self ) :
 
 		n = GafferImage.OpenImageIOReader()
@@ -495,14 +476,6 @@ class OpenImageIOReaderTest( GafferImageTest.ImageTestCase ) :
 			self.assertNotEqual( reader["out"]["metadata"].hash(), sequenceMetadataHash )
 			self.assertEqual( reader["out"]["metadata"].hash(), explicitMetadataHash )
 			self.assertEqual( reader["out"]["metadata"].getValue(), sequenceMetadataValue )
-
-	def testCacheLimits( self ) :
-
-		l = GafferImage.OpenImageIOReader.getCacheMemoryLimit()
-		self.addCleanup( GafferImage.OpenImageIOReader.setCacheMemoryLimit, l )
-
-		GafferImage.OpenImageIOReader.setCacheMemoryLimit( 100 * 1024 * 1024 ) # 100 megs
-		self.assertEqual( GafferImage.OpenImageIOReader.getCacheMemoryLimit(), 100 * 1024 * 1024 )
 
 	def testFileFormatMetadata( self ) :
 
