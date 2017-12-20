@@ -324,7 +324,7 @@ def __boxPlugValueExtractor( plug, topLevelPlug, value ) :
 	vectorPlug = plug.parent()
 	index = vectorPlug.children().index( plug )
 
-	vector = value.value.min if vectorPlug.getName() == "min" else value.value.max
+	vector = value.value.min() if vectorPlug.getName() == "min" else value.value.max()
 
 	return vector[index]
 

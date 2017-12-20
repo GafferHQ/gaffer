@@ -36,6 +36,7 @@
 ##########################################################################
 
 import unittest
+import imath
 
 import IECore
 
@@ -67,7 +68,7 @@ class CompoundNumericPlugTest( GafferTest.TestCase ) :
 		p["y"].setValue( 2 )
 		p["z"].setValue( 3 )
 
-		self.assertEqual( p.getValue(), IECore.V3f( 1, 2, 3 ) )
+		self.assertEqual( p.getValue(), imath.V3f( 1, 2, 3 ) )
 
 	def testMinMaxValues( self ) :
 
@@ -79,8 +80,8 @@ class CompoundNumericPlugTest( GafferTest.TestCase ) :
 			self.failIf( p[a].hasMaxValue() )
 
 		p = Gaffer.V3fPlug(
-			minValue = IECore.V3f( -1, -2, -3 ),
-			maxValue = IECore.V3f( 1, 2, 3 )
+			minValue = imath.V3f( -1, -2, -3 ),
+			maxValue = imath.V3f( 1, 2, 3 )
 		)
 
 		self.failUnless( p.hasMinValue() )
@@ -91,8 +92,8 @@ class CompoundNumericPlugTest( GafferTest.TestCase ) :
 
 		minValue = p.minValue()
 		maxValue = p.maxValue()
-		self.assertEqual( minValue, IECore.V3f( -1, -2, -3 ) )
-		self.assertEqual( maxValue, IECore.V3f( 1, 2, 3 ) )
+		self.assertEqual( minValue, imath.V3f( -1, -2, -3 ) )
+		self.assertEqual( maxValue, imath.V3f( 1, 2, 3 ) )
 		i = 0
 		for a in ( "x", "y", "z" ) :
 			self.assertEqual( p[a].minValue(), minValue[i] )
@@ -101,8 +102,8 @@ class CompoundNumericPlugTest( GafferTest.TestCase ) :
 
 	def testDefaultValue( self ) :
 
-		p = Gaffer.V3fPlug( defaultValue = IECore.V3f( 1, 2, 3 ) )
-		self.assertEqual( p.defaultValue(), IECore.V3f( 1, 2, 3 ) )
+		p = Gaffer.V3fPlug( defaultValue = imath.V3f( 1, 2, 3 ) )
+		self.assertEqual( p.defaultValue(), imath.V3f( 1, 2, 3 ) )
 		self.assertEqual( p["x"].defaultValue(), 1 )
 		self.assertEqual( p["y"].defaultValue(), 2 )
 		self.assertEqual( p["z"].defaultValue(), 3 )
@@ -111,7 +112,7 @@ class CompoundNumericPlugTest( GafferTest.TestCase ) :
 
 		s = Gaffer.ScriptNode()
 		n = GafferTest.CompoundNumericNode()
-		n["p"].setValue( IECore.V3f( 1, 2, 3 ) )
+		n["p"].setValue( imath.V3f( 1, 2, 3 ) )
 		s["n"] = n
 
 		ss = s.serialise()
@@ -119,7 +120,7 @@ class CompoundNumericPlugTest( GafferTest.TestCase ) :
 		s = Gaffer.ScriptNode()
 		s.execute( ss )
 
-		self.assertEqual( s["n"]["p"].getValue(), IECore.V3f( 1, 2, 3 ) )
+		self.assertEqual( s["n"]["p"].getValue(), imath.V3f( 1, 2, 3 ) )
 
 	def testSerialisationWithConnection( self ) :
 
@@ -164,7 +165,7 @@ class CompoundNumericPlugTest( GafferTest.TestCase ) :
 		s = Gaffer.ScriptNode()
 		n = Gaffer.Node()
 		n["p"] = Gaffer.V3fPlug( flags=Gaffer.Plug.Flags.Default | Gaffer.Plug.Flags.Dynamic )
-		n["p"].setValue( IECore.V3f( 1, 2, 3 ) )
+		n["p"].setValue( imath.V3f( 1, 2, 3 ) )
 		s["n"] = n
 
 		ss = s.serialise()
@@ -172,7 +173,7 @@ class CompoundNumericPlugTest( GafferTest.TestCase ) :
 		s = Gaffer.ScriptNode()
 		s.execute( ss )
 
-		self.assertEqual( s["n"]["p"].getValue(), IECore.V3f( 1, 2, 3 ) )
+		self.assertEqual( s["n"]["p"].getValue(), imath.V3f( 1, 2, 3 ) )
 
 	def testDynamicSerialisationWithConnection( self ) :
 
@@ -206,19 +207,19 @@ class CompoundNumericPlugTest( GafferTest.TestCase ) :
 
 	def testSetToDefault( self ) :
 
-		p = Gaffer.V3fPlug( defaultValue = IECore.V3f( 1, 2, 3 ) )
-		self.assertEqual( p.getValue(), IECore.V3f( 1, 2, 3 ) )
+		p = Gaffer.V3fPlug( defaultValue = imath.V3f( 1, 2, 3 ) )
+		self.assertEqual( p.getValue(), imath.V3f( 1, 2, 3 ) )
 
-		p.setValue( IECore.V3f( 4 ) )
-		self.assertEqual( p.getValue(), IECore.V3f( 4 ) )
+		p.setValue( imath.V3f( 4 ) )
+		self.assertEqual( p.getValue(), imath.V3f( 4 ) )
 
 		p.setToDefault()
-		self.assertEqual( p.getValue(), IECore.V3f( 1, 2, 3 ) )
+		self.assertEqual( p.getValue(), imath.V3f( 1, 2, 3 ) )
 
 	def testReadOnlySetValueRaises( self ) :
 
 		p = Gaffer.V3fPlug( flags = Gaffer.Plug.Flags.Default | Gaffer.Plug.Flags.ReadOnly )
-		self.assertRaises( RuntimeError, p.setValue, IECore.V3f( 1 ) )
+		self.assertRaises( RuntimeError, p.setValue, imath.V3f( 1 ) )
 
 	def testColor3fAcceptsColor4fInput( self ) :
 
@@ -249,9 +250,9 @@ class CompoundNumericPlugTest( GafferTest.TestCase ) :
 		p1 = Gaffer.V3fPlug(
 			"p",
 			Gaffer.Plug.Direction.Out,
-			IECore.V3f( 1, 2, 3 ),
-			IECore.V3f( -1, -2, -3 ),
-			IECore.V3f( 10, 20, 30 ),
+			imath.V3f( 1, 2, 3 ),
+			imath.V3f( -1, -2, -3 ),
+			imath.V3f( 10, 20, 30 ),
 			Gaffer.Plug.Flags.Default & ~Gaffer.Plug.Flags.AcceptsInputs,
 		)
 
@@ -275,9 +276,9 @@ class CompoundNumericPlugTest( GafferTest.TestCase ) :
 		p1 = Gaffer.V3fPlug(
 			"p",
 			Gaffer.Plug.Direction.Out,
-			IECore.V3f( 1, 2, 3 ),
-			IECore.V3f( -1, -2, -3 ),
-			IECore.V3f( 10, 20, 30 ),
+			imath.V3f( 1, 2, 3 ),
+			imath.V3f( -1, -2, -3 ),
+			imath.V3f( 10, 20, 30 ),
 			Gaffer.Plug.Flags.Default & ~Gaffer.Plug.Flags.AcceptsInputs,
 		)
 
@@ -350,7 +351,7 @@ class CompoundNumericPlugTest( GafferTest.TestCase ) :
 		s = Gaffer.ScriptNode()
 		s["n"] = Gaffer.Node()
 		s["n"]["p"] = Gaffer.V3fPlug()
-		s["n"]["p"].setValue( IECore.V3f( 1, 2, 3 ) )
+		s["n"]["p"].setValue( imath.V3f( 1, 2, 3 ) )
 
 		ss = s.serialise( filter = Gaffer.StandardSet( [ s["n"] ] ) )
 		self.assertEqual( ss.count( "setValue" ), 1 )
@@ -367,35 +368,35 @@ class CompoundNumericPlugTest( GafferTest.TestCase ) :
 		s["n"] = Gaffer.Node()
 		s["n"]["p"] = Gaffer.V3fPlug()
 
-		self.assertEqual( s["n"]["p"].getValue(), IECore.V3f( 0 ) )
+		self.assertEqual( s["n"]["p"].getValue(), imath.V3f( 0 ) )
 		self.assertFalse( s.undoAvailable() )
 
 		with Gaffer.UndoScope( s, mergeGroup="test" ) :
-			s["n"]["p"].setValue( IECore.V3f( 1, 2, 3 ) )
+			s["n"]["p"].setValue( imath.V3f( 1, 2, 3 ) )
 
-		self.assertEqual( s["n"]["p"].getValue(), IECore.V3f( 1, 2, 3 ) )
+		self.assertEqual( s["n"]["p"].getValue(), imath.V3f( 1, 2, 3 ) )
 		self.assertTrue( s.undoAvailable() )
 
 		with Gaffer.UndoScope( s, mergeGroup="test" ) :
-			s["n"]["p"].setValue( IECore.V3f( 4, 5, 6 ) )
+			s["n"]["p"].setValue( imath.V3f( 4, 5, 6 ) )
 
-		self.assertEqual( s["n"]["p"].getValue(), IECore.V3f( 4, 5, 6 ) )
+		self.assertEqual( s["n"]["p"].getValue(), imath.V3f( 4, 5, 6 ) )
 		self.assertTrue( s.undoAvailable() )
 
 		with Gaffer.UndoScope( s, mergeGroup="test2" ) :
-			s["n"]["p"].setValue( IECore.V3f( 7, 8, 9 ) )
+			s["n"]["p"].setValue( imath.V3f( 7, 8, 9 ) )
 
-		self.assertEqual( s["n"]["p"].getValue(), IECore.V3f( 7, 8, 9 ) )
+		self.assertEqual( s["n"]["p"].getValue(), imath.V3f( 7, 8, 9 ) )
 		self.assertTrue( s.undoAvailable() )
 
 		s.undo()
 
-		self.assertEqual( s["n"]["p"].getValue(), IECore.V3f( 4, 5, 6 ) )
+		self.assertEqual( s["n"]["p"].getValue(), imath.V3f( 4, 5, 6 ) )
 		self.assertTrue( s.undoAvailable() )
 
 		s.undo()
 
-		self.assertEqual( s["n"]["p"].getValue(), IECore.V3f( 0 ) )
+		self.assertEqual( s["n"]["p"].getValue(), imath.V3f( 0 ) )
 		self.assertFalse( s.undoAvailable() )
 
 	def testUndoMergingWithUnchangingComponents( self ) :
@@ -404,24 +405,24 @@ class CompoundNumericPlugTest( GafferTest.TestCase ) :
 		s["n"] = Gaffer.Node()
 		s["n"]["p"] = Gaffer.V3fPlug()
 
-		self.assertEqual( s["n"]["p"].getValue(), IECore.V3f( 0 ) )
+		self.assertEqual( s["n"]["p"].getValue(), imath.V3f( 0 ) )
 		self.assertFalse( s.undoAvailable() )
 
 		with Gaffer.UndoScope( s, mergeGroup="test" ) :
-			s["n"]["p"].setValue( IECore.V3f( 1, 2, 0 ) )
+			s["n"]["p"].setValue( imath.V3f( 1, 2, 0 ) )
 
-		self.assertEqual( s["n"]["p"].getValue(), IECore.V3f( 1, 2, 0 ) )
+		self.assertEqual( s["n"]["p"].getValue(), imath.V3f( 1, 2, 0 ) )
 		self.assertTrue( s.undoAvailable() )
 
 		with Gaffer.UndoScope( s, mergeGroup="test" ) :
-			s["n"]["p"].setValue( IECore.V3f( 2, 4, 0 ) )
+			s["n"]["p"].setValue( imath.V3f( 2, 4, 0 ) )
 
-		self.assertEqual( s["n"]["p"].getValue(), IECore.V3f( 2, 4, 0 ) )
+		self.assertEqual( s["n"]["p"].getValue(), imath.V3f( 2, 4, 0 ) )
 		self.assertTrue( s.undoAvailable() )
 
 		s.undo()
 
-		self.assertEqual( s["n"]["p"].getValue(), IECore.V3f( 0 ) )
+		self.assertEqual( s["n"]["p"].getValue(), imath.V3f( 0 ) )
 		self.assertFalse( s.undoAvailable() )
 
 	def testSerialisationVerbosity( self ) :
@@ -429,7 +430,7 @@ class CompoundNumericPlugTest( GafferTest.TestCase ) :
 		s = Gaffer.ScriptNode()
 		s["n"] = GafferTest.CompoundNumericNode()
 
-		s["n"]["p"].setValue( IECore.V3f( 9, 10, 11 ) )
+		s["n"]["p"].setValue( imath.V3f( 9, 10, 11 ) )
 
 		ss = s.serialise()
 		self.assertTrue( '["p"].setValue' in ss )
@@ -453,13 +454,13 @@ class CompoundNumericPlugTest( GafferTest.TestCase ) :
 		n = GafferTest.CompoundNumericNode()
 		self.assertTrue( n["p"].isSetToDefault() )
 
-		n["p"].setValue( IECore.V3f( 4, 5, 6 ) )
+		n["p"].setValue( imath.V3f( 4, 5, 6 ) )
 		self.assertFalse( n["p"].isSetToDefault() )
 
 		n["p"].setToDefault()
 		self.assertTrue( n["p"].isSetToDefault() )
 
-		n["p"].setValue( IECore.V3f( 4, 5, 6 ) )
+		n["p"].setValue( imath.V3f( 4, 5, 6 ) )
 		self.assertFalse( n["p"].isSetToDefault() )
 
 		n["p"].setValue( n["p"].defaultValue() )

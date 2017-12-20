@@ -37,6 +37,7 @@
 import unittest
 import subprocess
 import os
+import imath
 
 import IECore
 
@@ -533,7 +534,7 @@ class MetadataTest( GafferTest.TestCase ) :
 			line description
 			""",
 
-			"nodeGadget:color", IECore.Color3f( 1, 0, 0 ),
+			"nodeGadget:color", imath.Color3f( 1, 0, 0 ),
 
 			plugs = {
 				"a" : [
@@ -561,7 +562,7 @@ class MetadataTest( GafferTest.TestCase ) :
 		n = MetadataTestNodeC()
 
 		self.assertEqual( Gaffer.Metadata.value( n, "description" ), "I am a multi\nline description" )
-		self.assertEqual( Gaffer.Metadata.value( n, "nodeGadget:color" ), IECore.Color3f( 1, 0, 0 ) )
+		self.assertEqual( Gaffer.Metadata.value( n, "nodeGadget:color" ), imath.Color3f( 1, 0, 0 ) )
 
 		self.assertEqual( Gaffer.Metadata.value( n["a"], "description" ), "Another multi\nline description" )
 		self.assertEqual( Gaffer.Metadata.value( n["a"], "preset:One" ), 1 )
@@ -973,10 +974,10 @@ class MetadataTest( GafferTest.TestCase ) :
 			1,
 			2.0,
 			True,
-			IECore.Color3f( 0 ),
-			IECore.V2f( 0 ),
-			IECore.V2i( 0 ),
-			IECore.V3i( 0 ),
+			imath.Color3f( 0 ),
+			imath.V2f( 0 ),
+			imath.V2i( 0 ),
+			imath.V3i( 0 ),
 			IECore.StringVectorData( [ "one", "two" ] ),
 			IECore.IntVectorData( [ 1, 2, 3 ] ),
 		] :

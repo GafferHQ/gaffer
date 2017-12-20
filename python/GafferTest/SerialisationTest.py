@@ -34,6 +34,8 @@
 #
 ##########################################################################
 
+import imath
+
 import IECore
 
 import Gaffer
@@ -146,7 +148,7 @@ class SerialisationTest( GafferTest.TestCase ) :
 	def testIncludeParentMetadataWhenExcludingChildren( self ) :
 
 		n1 = Gaffer.Node()
-		Gaffer.Metadata.registerValue( n1, "test", IECore.Color3f( 1, 2, 3 ) )
+		Gaffer.Metadata.registerValue( n1, "test", imath.Color3f( 1, 2, 3 ) )
 
 		with Gaffer.Context() as c :
 			c["serialiser:includeParentMetadata"] = IECore.BoolData( True )
@@ -155,7 +157,7 @@ class SerialisationTest( GafferTest.TestCase ) :
 		scope = { "parent" : Gaffer.Node() }
 		exec( s.result(), scope, scope )
 
-		self.assertEqual( Gaffer.Metadata.value( scope["parent"], "test" ), IECore.Color3f( 1, 2, 3 ) )
+		self.assertEqual( Gaffer.Metadata.value( scope["parent"], "test" ), imath.Color3f( 1, 2, 3 ) )
 
 if __name__ == "__main__":
 	unittest.main()

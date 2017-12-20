@@ -36,6 +36,7 @@
 
 import os
 import unittest
+import imath
 
 import IECore
 import Gaffer
@@ -65,11 +66,11 @@ class ApplicationRootTest( GafferTest.TestCase ) :
 
 		p["category2"] = Gaffer.Plug()
 		p["category2"]["s"] = Gaffer.StringPlug( defaultValue = "apples" )
-		p["category2"]["v"] = Gaffer.V3fPlug( defaultValue = IECore.V3f( 1, 0, 0 ) )
+		p["category2"]["v"] = Gaffer.V3fPlug( defaultValue = imath.V3f( 1, 0, 0 ) )
 
 		p["category1"]["i"].setValue( 10 )
 		p["category2"]["s"].setValue( "oranges" )
-		p["category2"]["v"].setValue( IECore.V3f( 2, 3, 4 ) )
+		p["category2"]["v"].setValue( imath.V3f( 2, 3, 4 ) )
 
 		self.failIf( os.path.exists( self.__defaultPreferencesFile ) )
 		applicationRoot.savePreferences()
@@ -81,14 +82,14 @@ class ApplicationRootTest( GafferTest.TestCase ) :
 
 		p["category1"]["i"].setValue( 1 )
 		p["category2"]["s"].setValue( "beef" )
-		p["category2"]["v"].setValue( IECore.V3f( -10 ) )
+		p["category2"]["v"].setValue( imath.V3f( -10 ) )
 
 		executionContext = { "application" : application }
 		execfile( self.__preferencesFile, executionContext, executionContext )
 
 		self.assertEqual( p["category1"]["i"].getValue(), 10 )
 		self.assertEqual( p["category2"]["s"].getValue(), "oranges" )
-		self.assertEqual( p["category2"]["v"].getValue(), IECore.V3f( 2, 3, 4 ) )
+		self.assertEqual( p["category2"]["v"].getValue(), imath.V3f( 2, 3, 4 ) )
 
 	def testPreferencesPermissionsErrors( self ) :
 

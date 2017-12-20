@@ -36,6 +36,7 @@
 ##########################################################################
 
 import unittest
+import imath
 
 import IECore
 
@@ -59,7 +60,7 @@ class RandomTest( GafferTest.TestCase ) :
 
 		self.assertNotEqual( v1, v2 )
 
-		r["floatRange"].setValue( IECore.V2f( 2, 3 ) )
+		r["floatRange"].setValue( imath.V2f( 2, 3 ) )
 		v3 = r["outFloat"].getValue()
 
 		self.assertNotEqual( v2, v3 )
@@ -67,7 +68,7 @@ class RandomTest( GafferTest.TestCase ) :
 	def testOutFloatRange( self ) :
 
 		r = Gaffer.Random()
-		r["floatRange"].setValue( IECore.V2f( 10, 11 ) )
+		r["floatRange"].setValue( imath.V2f( 10, 11 ) )
 
 		for s in range( 0, 1000 ) :
 
@@ -98,7 +99,7 @@ class RandomTest( GafferTest.TestCase ) :
 		r = Gaffer.Random()
 		r["seed"].setValue( 1 )
 
-		r["baseColor"].setValue( IECore.Color3f( 0.25, 0.5, 0 ) )
+		r["baseColor"].setValue( imath.Color3f( 0.25, 0.5, 0 ) )
 
 		c1 = r["outColor"].getValue()
 		c2 = r.randomColor( 1 )
@@ -152,7 +153,7 @@ class RandomTest( GafferTest.TestCase ) :
 		r = Gaffer.Random()
 		r["seed"].setValue( -1 )
 		self.assertEqual( r["seed"].getValue(), 0 )
-		r["baseColor"].setValue( IECore.Color3f( 0.25, 0.5, 0 ) )
+		r["baseColor"].setValue( imath.Color3f( 0.25, 0.5, 0 ) )
 		c1 = r["outColor"].getValue()
 		c2 = r.randomColor( 0 )
 
