@@ -36,6 +36,7 @@
 ##########################################################################
 
 import unittest
+import imath
 
 import IECore
 
@@ -65,8 +66,8 @@ class ScenePlugTest( GafferSceneTest.SceneTestCase ) :
 
 	def testFullTransform( self ) :
 
-		translation = IECore.M44f.createTranslated( IECore.V3f( 1 ) )
-		scaling = IECore.M44f.createScaled( IECore.V3f( 10 ) )
+		translation = imath.M44f().translate( imath.V3f( 1 ) )
+		scaling = imath.M44f().scale( imath.V3f( 10 ) )
 
 		n = GafferSceneTest.CompoundObjectSource()
 		n["in"].setValue(
@@ -84,16 +85,19 @@ class ScenePlugTest( GafferSceneTest.SceneTestCase ) :
 			} )
 		)
 
-		self.assertEqual( n["out"].transform( "/" ), IECore.M44f() )
+		self.assertEqual( n["out"].transform( "/" ), imath.M44f() )
 		self.assertEqual( n["out"].transform( "/group" ), translation )
 		self.assertEqual( n["out"].transform( "/group/ball" ), scaling )
 
-		self.assertEqual( n["out"].fullTransform( "/" ), IECore.M44f() )
+		self.assertEqual( n["out"].fullTransform( "/" ), imath.M44f() )
 		self.assertEqual( n["out"].fullTransform( "/group" ), translation )
 
 		m = n["out"].fullTransform( "/group/ball" )
-		self.assertEqual( m.translation(), IECore.V3f( 1 ) )
-		self.assertEqual( m.extractScaling(), IECore.V3f( 10 ) )
+		self.assertEqual( m.translation(), imath.V3f( 1 ) )
+
+		extractedScaling = imath.V3f()
+		m.extractScaling( extractedScaling )
+		self.assertEqual( extractedScaling, imath.V3f( 10 ) )
 		self.assertEqual( m, scaling * translation )
 
 	def testFullAttributes( self ) :

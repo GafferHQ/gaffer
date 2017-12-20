@@ -41,6 +41,7 @@ import difflib
 import itertools
 import collections
 import functools
+import imath
 
 import IECore
 import IECoreScene
@@ -160,7 +161,7 @@ class SceneInspector( GafferUI.NodeSetEditor ) :
 				mainColumn.append( section )
 				self.__sections.append( section )
 
-			mainColumn.append( GafferUI.Spacer( IECore.V2i( 0 ) ), expand = True )
+			mainColumn.append( GafferUI.Spacer( imath.V2i( 0 ) ), expand = True )
 
 		else :
 
@@ -182,7 +183,7 @@ class SceneInspector( GafferUI.NodeSetEditor ) :
 
 			for tab, column in columns.items() :
 				if tab is not None :
-					column.append( GafferUI.Spacer( IECore.V2i( 0 ) ), expand = True )
+					column.append( GafferUI.Spacer( imath.V2i( 0 ) ), expand = True )
 
 		self.__targetPaths = None
 		self._updateFromSet()
@@ -465,11 +466,11 @@ class TextDiff( SideBySideDiff ) :
 			return self.__formatValues( [ values[0] ] ) + self.__formatValues( [ values[1] ] )
 		elif isinstance( values[0], IECore.Data ) and hasattr( values[0], "value" ) :
 			return self.__formatValues( [ v.value for v in values ] )
-		elif isinstance( values[0], ( IECore.V3f, IECore.V3i, IECore.V2f, IECore.V2i ) ) :
+		elif isinstance( values[0], ( imath.V3f, imath.V3i, imath.V2f, imath.V2i ) ) :
 			return self.__formatVectors( values )
-		elif isinstance( values[0], ( IECore.M44f, IECore.M44d ) ) :
+		elif isinstance( values[0], ( imath.M44f, imath.M44d ) ) :
 			return self.__formatMatrices( values )
-		elif isinstance( values[0], ( IECore.Box3f, IECore.Box3d, IECore.Box3i, IECore.Box2f, IECore.Box2d, IECore.Box2i ) ) :
+		elif isinstance( values[0], ( imath.Box3f, imath.Box3d, imath.Box3i, imath.Box2f, imath.Box2d, imath.Box2i ) ) :
 			return self.__formatBoxes( values )
 		elif isinstance( values[0], ( IECoreScene.Shader, IECore.ObjectVector ) ) :
 			return self.__formatShaders( values )
@@ -492,8 +493,8 @@ class TextDiff( SideBySideDiff ) :
 		arrays = []
 		for matrix in matrices :
 			array = []
-			for i in range( 0, matrix.dimensions()[0] ) :
-				array.append( [ matrix[i,j] for j in range( 0, matrix.dimensions()[1] ) ] )
+			for i in range( 0, len( matrix ) ) :
+				array.append( [ matrix[i][j] for j in range( 0, len( matrix[i] ) ) ] )
 			arrays.append( array )
 
 		return self.__formatNumberArrays( arrays )
@@ -506,7 +507,7 @@ class TextDiff( SideBySideDiff ) :
 
 		arrays = []
 		for box in boxes :
-			arrays.append( [ box.min, box.max ] )
+			arrays.append( [ box.min(), box.max() ] )
 
 		return self.__formatNumberArrays( arrays )
 
@@ -787,7 +788,7 @@ class DiffRow( Row ) :
 					diffWidget.contextMenuSignal().connect( Gaffer.WeakMethod( self.__contextMenu ) ),
 				] )
 
-			GafferUI.Spacer( IECore.V2i( 1, 20 ), parenting = { "expand" : True } )
+			GafferUI.Spacer( imath.V2i( 1, 20 ), parenting = { "expand" : True } )
 
 			GafferUI.MenuButton(
 				image = "gear.png",
@@ -1134,7 +1135,7 @@ class _Rail( GafferUI.ListContainer ) :
 				image._qtWidget().setSizePolicy( QtWidgets.QSizePolicy.Fixed, QtWidgets.QSizePolicy.Preferred )
 				image._qtWidget().setScaledContents( True )
 			else :
-				GafferUI.Spacer( IECore.V2i( 1 ) )
+				GafferUI.Spacer( imath.V2i( 1 ) )
 
 			GafferUI.Image( "rail" + str( type ) + ".png" )
 
@@ -1143,7 +1144,7 @@ class _Rail( GafferUI.ListContainer ) :
 				image._qtWidget().setSizePolicy( QtWidgets.QSizePolicy.Fixed, QtWidgets.QSizePolicy.Preferred )
 				image._qtWidget().setScaledContents( True )
 			else :
-				GafferUI.Spacer( IECore.V2i( 1 ) )
+				GafferUI.Spacer( imath.V2i( 1 ) )
 
 class _InheritanceSection( Section ) :
 
@@ -1200,7 +1201,7 @@ class _InheritanceSection( Section ) :
 					else :
 						GafferUI.Label( "..." )
 
-					GafferUI.Spacer( IECore.V2i( 0 ), parenting = { "expand" : True } )
+					GafferUI.Spacer( imath.V2i( 0 ), parenting = { "expand" : True } )
 
 					if atEitherEnd or value is not None :
 						diff = self.__diffCreator()
@@ -1281,7 +1282,7 @@ class _HistorySection( Section ) :
 				else :
 					GafferUI.Label( "..." )
 
-				GafferUI.Spacer( IECore.V2i( 0 ), parenting = { "expand" : True } )
+				GafferUI.Spacer( imath.V2i( 0 ), parenting = { "expand" : True } )
 
 				values = [ history[i-1].value if i > 0 else None, history[i].value ]
 
@@ -1343,7 +1344,7 @@ class __NodeSection( Section ) :
 					label._qtWidget().setSizePolicy( QtWidgets.QSizePolicy.Preferred, QtWidgets.QSizePolicy.Fixed )
 					self.__diff.setValueWidget( i, label )
 
-				GafferUI.Spacer( IECore.V2i( 0 ), parenting = { "expand" : True } )
+				GafferUI.Spacer( imath.V2i( 0 ), parenting = { "expand" : True } )
 
 	def update( self, targets ) :
 
@@ -1394,7 +1395,7 @@ class __PathSection( LocationSection ) :
 
 				self.__diff = TextDiff( highlightDiffs = False )
 
-				GafferUI.Spacer( IECore.V2i( 0 ), parenting = { "expand" : True } )
+				GafferUI.Spacer( imath.V2i( 0 ), parenting = { "expand" : True } )
 
 	def update( self, targets ) :
 
@@ -1547,8 +1548,7 @@ class __BoundSection( LocationSection ) :
 
 			bound = target.bound()
 			if self.__world :
-				transform = target.fullTransform()
-				bound = bound.transform( transform )
+				bound = bound * target.fullTransform()
 
 			return bound
 
@@ -1987,7 +1987,7 @@ class _OutputRow( Row ) :
 					collapseButton = GafferUI.Button( image = "collapsibleArrowRight.png", hasFrame=False )
 					collapseButton.__clickedConnection = collapseButton.clickedSignal().connect( Gaffer.WeakMethod( self.__collapseButtonClicked ) )
 					self.__label = TextDiff()
-					GafferUI.Spacer( IECore.V2i( 1 ), parenting = { "expand" : True } )
+					GafferUI.Spacer( imath.V2i( 1 ), parenting = { "expand" : True } )
 
 				self.__diffColumn = DiffColumn( self.__Inspector( name ) )
 				self.__diffColumn.setVisible( False )

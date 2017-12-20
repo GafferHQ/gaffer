@@ -38,6 +38,7 @@
 import os
 import shutil
 import unittest
+import imath
 
 import IECore
 import IECoreScene
@@ -57,26 +58,26 @@ class AlembicSourceTest( GafferSceneTest.SceneTestCase ) :
 		self.assertSceneValid( a["out"] )
 
 		self.assertEqual( a["out"].object( "/" ), IECore.NullObject() )
-		self.assertEqual( a["out"].transform( "/" ), IECore.M44f() )
-		self.assertEqual( a["out"].bound( "/" ), IECore.Box3f( IECore.V3f( -2 ), IECore.V3f( 2 ) ) )
+		self.assertEqual( a["out"].transform( "/" ), imath.M44f() )
+		self.assertEqual( a["out"].bound( "/" ), imath.Box3f( imath.V3f( -2 ), imath.V3f( 2 ) ) )
 		self.assertEqual( a["out"].attributes( "/" ), IECore.CompoundObject() )
 		self.assertEqual( a["out"].childNames( "/" ), IECore.InternedStringVectorData( [ "group1"] ) )
 
 		self.assertEqual( a["out"].object( "/group1" ), IECore.NullObject() )
-		self.assertEqual( a["out"].transform( "/group1" ), IECore.M44f.createScaled( IECore.V3f( 2 ) ) * IECore.M44f.createTranslated( IECore.V3f( 2, 0, 0 ) ) )
-		self.assertEqual( a["out"].bound( "/group1" ), IECore.Box3f( IECore.V3f( -2, -1, -1 ), IECore.V3f( 0, 1, 1 ) ) )
+		self.assertEqual( a["out"].transform( "/group1" ), imath.M44f().scale( imath.V3f( 2 ) ) * imath.M44f().translate( imath.V3f( 2, 0, 0 ) ) )
+		self.assertEqual( a["out"].bound( "/group1" ), imath.Box3f( imath.V3f( -2, -1, -1 ), imath.V3f( 0, 1, 1 ) ) )
 		self.assertEqual( a["out"].attributes( "/group1" ), IECore.CompoundObject() )
 		self.assertEqual( a["out"].childNames( "/group1" ), IECore.InternedStringVectorData( [ "pCube1"] ) )
 
 		self.assertEqual( a["out"].object( "/group1/pCube1" ), IECore.NullObject() )
-		self.assertEqual( a["out"].transform( "/group1/pCube1" ), IECore.M44f.createTranslated( IECore.V3f( -1, 0, 0 ) ) )
-		self.assertEqual( a["out"].bound( "/group1/pCube1" ), IECore.Box3f( IECore.V3f( -1 ), IECore.V3f( 1 ) ) )
+		self.assertEqual( a["out"].transform( "/group1/pCube1" ), imath.M44f().translate( imath.V3f( -1, 0, 0 ) ) )
+		self.assertEqual( a["out"].bound( "/group1/pCube1" ), imath.Box3f( imath.V3f( -1 ), imath.V3f( 1 ) ) )
 		self.assertEqual( a["out"].attributes( "/group1/pCube1" ), IECore.CompoundObject() )
 		self.assertEqual( a["out"].childNames( "/group1/pCube1" ), IECore.InternedStringVectorData( [ "pCubeShape1"] ) )
 
 		self.assertTrue( isinstance( a["out"].object( "/group1/pCube1/pCubeShape1" ), IECoreScene.MeshPrimitive ) )
-		self.assertEqual( a["out"].transform( "/group1/pCube1/pCubeShape1" ), IECore.M44f() )
-		self.assertEqual( a["out"].bound( "/group1/pCube1/pCubeShape1" ), IECore.Box3f( IECore.V3f( -1 ), IECore.V3f( 1 ) ) )
+		self.assertEqual( a["out"].transform( "/group1/pCube1/pCubeShape1" ), imath.M44f() )
+		self.assertEqual( a["out"].bound( "/group1/pCube1/pCubeShape1" ), imath.Box3f( imath.V3f( -1 ), imath.V3f( 1 ) ) )
 		self.assertEqual( a["out"].attributes( "/group1/pCube1/pCubeShape1" ), IECore.CompoundObject() )
 		self.assertEqual( a["out"].childNames( "/group1/pCube1/pCubeShape1" ), IECore.InternedStringVectorData( [] ) )
 
@@ -108,9 +109,9 @@ class AlembicSourceTest( GafferSceneTest.SceneTestCase ) :
 		a = GafferScene.AlembicSource()
 		a["fileName"].setValue( os.path.dirname( __file__ ) + "/alembicFiles/cube.abc" )
 
-		self.assertEqual( a["out"].fullTransform( "/" ), IECore.M44f() )
-		self.assertEqual( a["out"].fullTransform( "/group1" ), IECore.M44f.createScaled( IECore.V3f( 2 ) ) * IECore.M44f.createTranslated( IECore.V3f( 2, 0, 0 ) ) )
-		self.assertEqual( a["out"].fullTransform( "/group1/pCube1" ), IECore.M44f.createTranslated( IECore.V3f( -1, 0, 0 ) )  * a["out"].fullTransform( "/group1" ) )
+		self.assertEqual( a["out"].fullTransform( "/" ), imath.M44f() )
+		self.assertEqual( a["out"].fullTransform( "/group1" ), imath.M44f().scale( imath.V3f( 2 ) ) * imath.M44f().translate( imath.V3f( 2, 0, 0 ) ) )
+		self.assertEqual( a["out"].fullTransform( "/group1/pCube1" ), imath.M44f().translate( imath.V3f( -1, 0, 0 ) )  * a["out"].fullTransform( "/group1" ) )
 		self.assertEqual( a["out"].fullTransform( "/group1/pCube1/pCubeShape1" ), a["out"].fullTransform( "/group1/pCube1" ) )
 
 	def testRefresh( self ) :

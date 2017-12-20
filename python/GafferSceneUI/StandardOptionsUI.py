@@ -61,7 +61,7 @@ def __cameraSummary( plug ) :
 		info.append( "Mult %s" % GafferUI.NumericWidget.valueToString( resolutionMultiplier ) )
 	if plug["renderCropWindow"]["enabled"].getValue() :
 		crop = plug["renderCropWindow"]["value"].getValue()
-		info.append( "Crop %s,%s-%s,%s" % tuple( GafferUI.NumericWidget.valueToString( x ) for x in ( crop.min.x, crop.min.y, crop.max.x, crop.max.y ) ) )
+		info.append( "Crop %s,%s-%s,%s" % tuple( GafferUI.NumericWidget.valueToString( x ) for x in ( crop.min().x, crop.min().y, crop.max().x, crop.max().y ) ) )
 	if plug["overscan"]["enabled"].getValue() :
 		info.append( "Overscan %s" % ( "On" if plug["overscan"]["value"].getValue() else "Off" ) )
 

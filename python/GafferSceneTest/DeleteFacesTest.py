@@ -34,6 +34,8 @@
 #
 ##########################################################################
 
+import imath
+
 import IECore
 import IECoreScene
 import GafferScene
@@ -46,7 +48,7 @@ class DeleteFacesTest( GafferSceneTest.SceneTestCase ) :
 
 		verticesPerFace = IECore.IntVectorData( [4, 4] )
 		vertexIds = IECore.IntVectorData( [0, 1, 4, 3, 1, 2, 5, 4] )
-		p = IECore.V3fVectorData( [IECore.V3f( 0, 0, 0 ), IECore.V3f( 1, 0, 0 ), IECore.V3f( 2, 0, 0 ), IECore.V3f( 0, 1, 0 ), IECore.V3f( 1, 1, 0 ), IECore.V3f( 2, 1, 0 )] )
+		p = IECore.V3fVectorData( [imath.V3f( 0, 0, 0 ), imath.V3f( 1, 0, 0 ), imath.V3f( 2, 0, 0 ), imath.V3f( 0, 1, 0 ), imath.V3f( 1, 1, 0 ), imath.V3f( 2, 1, 0 )] )
 		deleteData = IECore.IntVectorData( [0, 1] )
 
 		mesh = IECoreScene.MeshPrimitive( verticesPerFace, vertexIds, "linear", p )
@@ -79,7 +81,7 @@ class DeleteFacesTest( GafferSceneTest.SceneTestCase ) :
 		self.assertEqual( faceDeletedObject.verticesPerFace, IECore.IntVectorData([4]) )
 		self.assertEqual( faceDeletedObject.vertexIds, IECore.IntVectorData([0, 1, 3, 2]) )
 		self.assertEqual( faceDeletedObject.numFaces(), 1 )
-		self.assertEqual( faceDeletedObject["P"].data, IECore.V3fVectorData( [IECore.V3f( 0, 0, 0 ), IECore.V3f( 1, 0, 0 ), IECore.V3f( 0, 1, 0 ), IECore.V3f( 1, 1, 0 )] ) )
+		self.assertEqual( faceDeletedObject["P"].data, IECore.V3fVectorData( [imath.V3f( 0, 0, 0 ), imath.V3f( 1, 0, 0 ), imath.V3f( 0, 1, 0 ), imath.V3f( 1, 1, 0 )] ) )
 
 		# verify the primvars are correct
 		self.assertEqual( faceDeletedObject["uniform"].data,  IECore.IntVectorData([10]) )
@@ -91,7 +93,7 @@ class DeleteFacesTest( GafferSceneTest.SceneTestCase ) :
 		rectangleScene = self.makeRectangleFromTwoSquaresScene()
 
 		expectedOriginalBound = rectangleScene["out"].bound( "/object" )
-		self.assertEqual(expectedOriginalBound, IECore.Box3f( IECore.V3f( 0, 0, 0 ), IECore.V3f( 2, 1, 0 ) ) )
+		self.assertEqual(expectedOriginalBound, imath.Box3f( imath.V3f( 0, 0, 0 ), imath.V3f( 2, 1, 0 ) ) )
 
 		deleteFaces = GafferScene.DeleteFaces()
 		deleteFaces["in"].setInput( rectangleScene["out"] )
@@ -101,6 +103,6 @@ class DeleteFacesTest( GafferSceneTest.SceneTestCase ) :
 		deleteFaces["filter"].setInput( pathFilter["out"] )
 
 		actualFaceDeletedBounds = deleteFaces["out"].bound( "/object" )
-		expectedBoundingBox = IECore.Box3f( IECore.V3f( 0, 0, 0 ), IECore.V3f( 1, 1, 0 ) )
+		expectedBoundingBox = imath.Box3f( imath.V3f( 0, 0, 0 ), imath.V3f( 1, 1, 0 ) )
 
 		self.assertEqual( actualFaceDeletedBounds, expectedBoundingBox )

@@ -34,6 +34,8 @@
 #
 ##########################################################################
 
+import imath
+
 import IECore
 
 import Gaffer
@@ -61,8 +63,8 @@ class ShaderAssignmentUITest( GafferUITest.TestCase ) :
 
 		boxGadget = g.nodeGadget( box )
 
-		self.assertEqual( boxGadget.noduleTangent( boxGadget.nodule( box["in"] ) ), IECore.V3f( 0, 1, 0 ) )
-		self.assertEqual( boxGadget.noduleTangent( boxGadget.nodule( box["shader"] ) ), IECore.V3f( -1, 0, 0 ) )
+		self.assertEqual( boxGadget.noduleTangent( boxGadget.nodule( box["in"] ) ), imath.V3f( 0, 1, 0 ) )
+		self.assertEqual( boxGadget.noduleTangent( boxGadget.nodule( box["shader"] ) ), imath.V3f( -1, 0, 0 ) )
 
 if __name__ == "__main__":
 	unittest.main()

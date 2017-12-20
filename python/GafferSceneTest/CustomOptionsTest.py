@@ -36,6 +36,7 @@
 ##########################################################################
 
 import unittest
+import imath
 
 import IECore
 import IECoreScene
@@ -56,13 +57,13 @@ class CustomOptionsTest( GafferSceneTest.SceneTestCase ) :
 		# check that the scene hierarchy is passed through
 
 		self.assertEqual( options["out"].object( "/" ), IECore.NullObject() )
-		self.assertEqual( options["out"].transform( "/" ), IECore.M44f() )
-		self.assertEqual( options["out"].bound( "/" ), IECore.Box3f( IECore.V3f( -0.5, -0.5, 0 ), IECore.V3f( 0.5, 0.5, 0 ) ) )
+		self.assertEqual( options["out"].transform( "/" ), imath.M44f() )
+		self.assertEqual( options["out"].bound( "/" ), imath.Box3f( imath.V3f( -0.5, -0.5, 0 ), imath.V3f( 0.5, 0.5, 0 ) ) )
 		self.assertEqual( options["out"].childNames( "/" ), IECore.InternedStringVectorData( [ "plane" ] ) )
 
-		self.assertEqual( options["out"].object( "/plane" ), IECoreScene.MeshPrimitive.createPlane( IECore.Box2f( IECore.V2f( -0.5 ), IECore.V2f( 0.5 ) ) ) )
-		self.assertEqual( options["out"].transform( "/plane" ), IECore.M44f() )
-		self.assertEqual( options["out"].bound( "/plane" ), IECore.Box3f( IECore.V3f( -0.5, -0.5, 0 ), IECore.V3f( 0.5, 0.5, 0 ) ) )
+		self.assertEqual( options["out"].object( "/plane" ), IECoreScene.MeshPrimitive.createPlane( imath.Box2f( imath.V2f( -0.5 ), imath.V2f( 0.5 ) ) ) )
+		self.assertEqual( options["out"].transform( "/plane" ), imath.M44f() )
+		self.assertEqual( options["out"].bound( "/plane" ), imath.Box3f( imath.V3f( -0.5, -0.5, 0 ), imath.V3f( 0.5, 0.5, 0 ) ) )
 		self.assertEqual( options["out"].childNames( "/plane" ), IECore.InternedStringVectorData() )
 
 		# check that we can make options

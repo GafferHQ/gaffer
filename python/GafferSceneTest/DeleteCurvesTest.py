@@ -34,11 +34,12 @@
 #
 ##########################################################################
 
+import imath
+
 import IECore
 import IECoreScene
 import GafferScene
 import GafferSceneTest
-
 
 class DeleteCurvesTest( GafferSceneTest.SceneTestCase ) :
 
@@ -51,21 +52,21 @@ class DeleteCurvesTest( GafferSceneTest.SceneTestCase ) :
 			False,
 			IECore.V3fVectorData(
 				[
-					IECore.V3f( 0, 0, 0 ),
-					IECore.V3f( 0, 1, 0 ),
-					IECore.V3f( 1, 1, 0 ),
-					IECore.V3f( 1, 0, 0 ),
-					IECore.V3f( 1, -1, 0 ),
-					IECore.V3f( 2, -1, 0 ),
-					IECore.V3f( 2, 0, 0 ),
+					imath.V3f( 0, 0, 0 ),
+					imath.V3f( 0, 1, 0 ),
+					imath.V3f( 1, 1, 0 ),
+					imath.V3f( 1, 0, 0 ),
+					imath.V3f( 1, -1, 0 ),
+					imath.V3f( 2, -1, 0 ),
+					imath.V3f( 2, 0, 0 ),
 
-					IECore.V3f( 0, 0, 0 ),
-					IECore.V3f( 0, 0, 1 ),
-					IECore.V3f( 1, 0, 1 ),
-					IECore.V3f( 1, 0, 0 ),
-					IECore.V3f( 1, 0, -1 ),
-					IECore.V3f( 2, 0, -1 ),
-					IECore.V3f( 2, 0, 0 )
+					imath.V3f( 0, 0, 0 ),
+					imath.V3f( 0, 0, 1 ),
+					imath.V3f( 1, 0, 1 ),
+					imath.V3f( 1, 0, 0 ),
+					imath.V3f( 1, 0, -1 ),
+					imath.V3f( 2, 0, -1 ),
+					imath.V3f( 2, 0, 0 )
 				]
 			)
 		)
@@ -103,13 +104,13 @@ class DeleteCurvesTest( GafferSceneTest.SceneTestCase ) :
 		self.assertEqual( curveDeletedObject.numCurves(), 1 )
 		self.assertEqual( curveDeletedObject["P"].data, IECore.V3fVectorData(
 			[
-				IECore.V3f( 0, 0, 0 ),
-				IECore.V3f( 0, 1, 0 ),
-				IECore.V3f( 1, 1, 0 ),
-				IECore.V3f( 1, 0, 0 ),
-				IECore.V3f( 1, -1, 0 ),
-				IECore.V3f( 2, -1, 0 ),
-				IECore.V3f( 2, 0, 0 )
+				imath.V3f( 0, 0, 0 ),
+				imath.V3f( 0, 1, 0 ),
+				imath.V3f( 1, 1, 0 ),
+				imath.V3f( 1, 0, 0 ),
+				imath.V3f( 1, -1, 0 ),
+				imath.V3f( 2, -1, 0 ),
+				imath.V3f( 2, 0, 0 )
 			] ) )
 
 		# verify the primvars are correct
@@ -134,7 +135,7 @@ class DeleteCurvesTest( GafferSceneTest.SceneTestCase ) :
 
 		actualOriginalBound = curvesScene["out"].bound( "/object" )
 
-		self.assertEqual(actualOriginalBound, IECore.Box3f( IECore.V3f( 0, -1, -1 ), IECore.V3f( 2, 1, 1 ) ) )
+		self.assertEqual(actualOriginalBound, imath.Box3f( imath.V3f( 0, -1, -1 ), imath.V3f( 2, 1, 1 ) ) )
 
 		deleteCurves = GafferScene.DeleteCurves()
 		deleteCurves["in"].setInput( curvesScene["out"] )
@@ -144,6 +145,6 @@ class DeleteCurvesTest( GafferSceneTest.SceneTestCase ) :
 		deleteCurves["filter"].setInput( pathFilter["out"] )
 
 		actualCurveDeletedBounds = deleteCurves["out"].bound( "/object" )
-		expectedBoundingBox = IECore.Box3f( IECore.V3f( 0, -1, 0 ), IECore.V3f( 2, 1, 0 ) )
+		expectedBoundingBox = imath.Box3f( imath.V3f( 0, -1, 0 ), imath.V3f( 2, 1, 0 ) )
 
 		self.assertEqual( actualCurveDeletedBounds, expectedBoundingBox )

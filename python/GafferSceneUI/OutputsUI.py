@@ -35,6 +35,7 @@
 ##########################################################################
 
 import re
+import imath
 
 import IECore
 import IECoreScene
@@ -132,7 +133,7 @@ class OutputsPlugValueWidget( GafferUI.PlugValueWidget ) :
 					image="plus.png", hasFrame=False, menu = GafferUI.Menu( Gaffer.WeakMethod( self.__addMenuDefinition ) )
 				)
 
-				GafferUI.Spacer( IECore.V2i( 1 ), maximumSize = IECore.V2i( 100000, 1 ), parenting = { "expand" : True } )
+				GafferUI.Spacer( imath.V2i( 1 ), maximumSize = imath.V2i( 100000, 1 ), parenting = { "expand" : True } )
 
 	def hasLabel( self ) :
 
@@ -187,7 +188,7 @@ class _ChildPlugWidget( GafferUI.PlugValueWidget ) :
 				GafferUI.PlugValueWidget.create( childPlug["active"] )
 				self.__label = GafferUI.Label( self.__namePlug().getValue() )
 
-				GafferUI.Spacer( IECore.V2i( 1 ), maximumSize = IECore.V2i( 100000, 1 ), parenting = { "expand" : True } )
+				GafferUI.Spacer( imath.V2i( 1 ), maximumSize = imath.V2i( 100000, 1 ), parenting = { "expand" : True } )
 
 				self.__deleteButton = GafferUI.Button( image = "delete.png", hasFrame=False )
 				self.__deleteButton.__clickedConnection = self.__deleteButton.clickedSignal().connect( Gaffer.WeakMethod( self.__deleteButtonClicked ) )

@@ -36,6 +36,7 @@
 
 import os
 import unittest
+import imath
 
 import IECore
 import IECoreScene
@@ -50,15 +51,15 @@ class MeshTangentsTest( GafferSceneTest.SceneTestCase ) :
 
 		verticesPerFace = IECore.IntVectorData( [3] )
 		vertexIds = IECore.IntVectorData( [0, 1, 2] )
-		p = IECore.V3fVectorData( [IECore.V3f( 0, 0, 0 ), IECore.V3f( 1, 0, 0 ), IECore.V3f( 0, 1, 0 )] )
-		prefData = IECore.V3fVectorData( [IECore.V3f( 0, 0, 0 ), IECore.V3f( 0, -1, 0 ), IECore.V3f( 1, 0, 0 )] )
+		p = IECore.V3fVectorData( [imath.V3f( 0, 0, 0 ), imath.V3f( 1, 0, 0 ), imath.V3f( 0, 1, 0 )] )
+		prefData = IECore.V3fVectorData( [imath.V3f( 0, 0, 0 ), imath.V3f( 0, -1, 0 ), imath.V3f( 1, 0, 0 )] )
 
 		mesh = IECoreScene.MeshPrimitive( verticesPerFace, vertexIds, "linear", p )
 
 		mesh["uv"] = IECoreScene.PrimitiveVariable(
 			IECoreScene.PrimitiveVariable.Interpolation.FaceVarying,
 			IECore.V2fVectorData(
-				[ IECore.V2f( 0, 0 ), IECore.V2f( 1, 0 ), IECore.V2f( 0, 1 ) ],
+				[ imath.V2f( 0, 0 ), imath.V2f( 1, 0 ), imath.V2f( 0, 1 ) ],
 				IECore.GeometricData.Interpretation.UV
 			)
 		)
@@ -66,7 +67,7 @@ class MeshTangentsTest( GafferSceneTest.SceneTestCase ) :
 		mesh["foo"] = IECoreScene.PrimitiveVariable(
 			IECoreScene.PrimitiveVariable.Interpolation.FaceVarying,
 			IECore.V2fVectorData(
-				[ IECore.V2f( 0, 0 ), IECore.V2f( 0, 1 ), IECore.V2f( 1, 0 ) ],
+				[ imath.V2f( 0, 0 ), imath.V2f( 0, 1 ), imath.V2f( 1, 0 ) ],
 				IECore.GeometricData.Interpretation.UV
 			)
 		)
@@ -99,10 +100,10 @@ class MeshTangentsTest( GafferSceneTest.SceneTestCase ) :
 		self.assertEqual( len( vTangent.data ), 3 )
 
 		for v in uTangent.data :
-			self.failUnless( v.equalWithAbsError( IECore.V3f( 1, 0, 0 ), 0.000001 ) )
+			self.failUnless( v.equalWithAbsError( imath.V3f( 1, 0, 0 ), 0.000001 ) )
 
 		for v in vTangent.data :
-			self.failUnless( v.equalWithAbsError( IECore.V3f( 0, 1, 0 ), 0.000001 ) )
+			self.failUnless( v.equalWithAbsError( imath.V3f( 0, 1, 0 ), 0.000001 ) )
 
 	def testCanRenameOutputTangents( self ) :
 
@@ -127,10 +128,10 @@ class MeshTangentsTest( GafferSceneTest.SceneTestCase ) :
 		self.assertEqual( len( vTangent.data ), 3 )
 
 		for v in uTangent.data :
-			self.failUnless( v.equalWithAbsError( IECore.V3f( 1, 0, 0 ), 0.000001 ) )
+			self.failUnless( v.equalWithAbsError( imath.V3f( 1, 0, 0 ), 0.000001 ) )
 
 		for v in vTangent.data :
-			self.failUnless( v.equalWithAbsError( IECore.V3f( 0, 1, 0 ), 0.000001 ) )
+			self.failUnless( v.equalWithAbsError( imath.V3f( 0, 1, 0 ), 0.000001 ) )
 
 	def testCanUseSecondUVSet( self ) :
 
@@ -155,12 +156,12 @@ class MeshTangentsTest( GafferSceneTest.SceneTestCase ) :
 		self.assertEqual( len( vTangent.data ), 3 )
 
 		for v in uTangent.data :
-			self.failUnless( v.equalWithAbsError( IECore.V3f( 0, 1, 0 ), 0.000001 ) )
+			self.failUnless( v.equalWithAbsError( imath.V3f( 0, 1, 0 ), 0.000001 ) )
 
 		# really I'd expect the naive answer to the vTangent to be IECore.V3f( 1, 0, 0 )
 		# but the code forces the triple of n, uT, vT to flip the direction of vT if we don't have a correctly handed set of basis vectors
 		for v in vTangent.data :
-			self.failUnless( v.equalWithAbsError( IECore.V3f( -1, 0, 0 ), 0.000001 ) )
+			self.failUnless( v.equalWithAbsError( imath.V3f( -1, 0, 0 ), 0.000001 ) )
 
 	def testCanUsePref( self ) :
 
@@ -185,7 +186,7 @@ class MeshTangentsTest( GafferSceneTest.SceneTestCase ) :
 		self.assertEqual( len( vTangent.data ), 3 )
 
 		for v in uTangent.data :
-			self.failUnless( v.equalWithAbsError( IECore.V3f( 0, -1, 0 ), 0.000001 ) )
+			self.failUnless( v.equalWithAbsError( imath.V3f( 0, -1, 0 ), 0.000001 ) )
 
 		for v in vTangent.data :
-			self.failUnless( v.equalWithAbsError( IECore.V3f( 1, 0, 0 ), 0.000001 ) )
+			self.failUnless( v.equalWithAbsError( imath.V3f( 1, 0, 0 ), 0.000001 ) )

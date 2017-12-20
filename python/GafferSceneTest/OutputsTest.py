@@ -37,6 +37,7 @@
 
 import os
 import unittest
+import imath
 
 import IECore
 import IECoreScene
@@ -57,13 +58,13 @@ class OutputsTest( GafferSceneTest.SceneTestCase ) :
 		# check that the scene hierarchy is passed through
 
 		self.assertEqual( outputs["out"].object( "/" ), IECore.NullObject() )
-		self.assertEqual( outputs["out"].transform( "/" ), IECore.M44f() )
-		self.assertEqual( outputs["out"].bound( "/" ), IECore.Box3f( IECore.V3f( -0.5, -0.5, 0 ), IECore.V3f( 0.5, 0.5, 0 ) ) )
+		self.assertEqual( outputs["out"].transform( "/" ), imath.M44f() )
+		self.assertEqual( outputs["out"].bound( "/" ), imath.Box3f( imath.V3f( -0.5, -0.5, 0 ), imath.V3f( 0.5, 0.5, 0 ) ) )
 		self.assertEqual( outputs["out"].childNames( "/" ), IECore.InternedStringVectorData( [ "plane" ] ) )
 
-		self.assertEqual( outputs["out"].object( "/plane" ), IECoreScene.MeshPrimitive.createPlane( IECore.Box2f( IECore.V2f( -0.5 ), IECore.V2f( 0.5 ) ) ) )
-		self.assertEqual( outputs["out"].transform( "/plane" ), IECore.M44f() )
-		self.assertEqual( outputs["out"].bound( "/plane" ), IECore.Box3f( IECore.V3f( -0.5, -0.5, 0 ), IECore.V3f( 0.5, 0.5, 0 ) ) )
+		self.assertEqual( outputs["out"].object( "/plane" ), IECoreScene.MeshPrimitive.createPlane( imath.Box2f( imath.V2f( -0.5 ), imath.V2f( 0.5 ) ) ) )
+		self.assertEqual( outputs["out"].transform( "/plane" ), imath.M44f() )
+		self.assertEqual( outputs["out"].bound( "/plane" ), imath.Box3f( imath.V3f( -0.5, -0.5, 0 ), imath.V3f( 0.5, 0.5, 0 ) ) )
 		self.assertEqual( outputs["out"].childNames( "/plane" ), IECore.InternedStringVectorData() )
 
 		# check that we have some outputs

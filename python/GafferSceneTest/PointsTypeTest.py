@@ -35,6 +35,7 @@
 ##########################################################################
 
 import unittest
+import imath
 
 import IECore
 import IECoreScene
@@ -50,7 +51,7 @@ class PointsTypeTest( GafferSceneTest.SceneTestCase ) :
 		points = IECoreScene.PointsPrimitive( 1 )
 		points["P"] = IECoreScene.PrimitiveVariable(
 			IECoreScene.PrimitiveVariable.Interpolation.Vertex,
-			IECore.V3fVectorData( [ IECore.V3f( 1, 2, 3 ) ] ),
+			IECore.V3fVectorData( [ imath.V3f( 1, 2, 3 ) ] ),
 		)
 
 		objectToScene = GafferScene.ObjectToScene()

@@ -250,7 +250,7 @@ class SubTreeTest( GafferSceneTest.SceneTestCase ) :
 			c.setFrame( 10 )
 
 			expectedRootBound = a["out"].bound( "/pCube1" )
-			expectedRootBound = expectedRootBound.transform( a["out"].transform( "/pCube1" ) )
+			expectedRootBound = expectedRootBound * a["out"].transform( "/pCube1" )
 
 			self.assertEqual( s["out"].bound( "/" ), expectedRootBound )
 

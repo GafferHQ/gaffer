@@ -39,6 +39,7 @@ import re
 import string
 import fnmatch
 import functools
+import imath
 
 import IECore
 
@@ -175,7 +176,7 @@ class _ShaderNamePlugValueWidget( GafferUI.PlugValueWidget ) :
 
 			self.__label = GafferUI.Label( "" )
 
-			GafferUI.Spacer( IECore.V2i( 1 ), parenting = { "expand" : True } )
+			GafferUI.Spacer( imath.V2i( 1 ), parenting = { "expand" : True } )
 
 			self.__button = GafferUI.Button( "Reload" )
 			self.__buttonClickedConnection = self.__button.clickedSignal().connect( Gaffer.WeakMethod( self.__buttonClicked ) )

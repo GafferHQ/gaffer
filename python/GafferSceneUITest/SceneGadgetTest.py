@@ -34,6 +34,8 @@
 #
 ##########################################################################
 
+import imath
+
 import IECore
 import IECoreScene
 import IECoreGL
@@ -66,7 +68,7 @@ class SceneGadgetTest( GafferUITest.TestCase ) :
 
 		viewportGadget = gadget.ancestor( GafferUI.ViewportGadget )
 
-		rasterPosition = ndcPosition * IECore.V2f( viewportGadget.getViewport() )
+		rasterPosition = ndcPosition * imath.V2f( viewportGadget.getViewport() )
 		gadgetLine = viewportGadget.rasterToGadgetSpace( rasterPosition, gadget )
 
 		self.assertEqual( gadget.objectAt( gadgetLine ), path )
@@ -75,8 +77,8 @@ class SceneGadgetTest( GafferUITest.TestCase ) :
 
 		viewportGadget = gadget.ancestor( GafferUI.ViewportGadget )
 
-		rasterMin = ndcBox.min * IECore.V2f( viewportGadget.getViewport() )
-		rasterMax = ndcBox.max * IECore.V2f( viewportGadget.getViewport() )
+		rasterMin = ndcBox.min() * imath.V2f( viewportGadget.getViewport() )
+		rasterMax = ndcBox.max() * imath.V2f( viewportGadget.getViewport() )
 
 		gadgetMin = viewportGadget.rasterToGadgetSpace( rasterMin, gadget ).p0
 		gadgetMax = viewportGadget.rasterToGadgetSpace( rasterMax, gadget ).p1
@@ -109,17 +111,17 @@ class SceneGadgetTest( GafferUITest.TestCase ) :
 
 		gw.getViewportGadget().frame( sg.bound() )
 
-		self.assertObjectAt( sg, IECore.V2f( 0.5 ), IECore.InternedStringVectorData( [ "group", "sphere" ] ) )
+		self.assertObjectAt( sg, imath.V2f( 0.5 ), IECore.InternedStringVectorData( [ "group", "sphere" ] ) )
 
 		s["a"]["attributes"]["visibility"]["enabled"].setValue( True )
 		s["a"]["attributes"]["visibility"]["value"].setValue( False )
 
-		self.assertObjectAt( sg, IECore.V2f( 0.5 ), None )
+		self.assertObjectAt( sg, imath.V2f( 0.5 ), None )
 
 		s["a"]["attributes"]["visibility"]["enabled"].setValue( True )
 		s["a"]["attributes"]["visibility"]["value"].setValue( True )
 
-		self.assertObjectAt( sg, IECore.V2f( 0.5 ), IECore.InternedStringVectorData( [ "group", "sphere" ] ) )
+		self.assertObjectAt( sg, imath.V2f( 0.5 ), IECore.InternedStringVectorData( [ "group", "sphere" ] ) )
 
 	def testExpansion( self ) :
 
@@ -141,18 +143,18 @@ class SceneGadgetTest( GafferUITest.TestCase ) :
 
 		gw.getViewportGadget().frame( sg.bound() )
 
-		self.assertObjectAt( sg, IECore.V2f( 0.5 ), None )
-		self.assertObjectsAt( sg, IECore.Box2f( IECore.V2f( 0 ), IECore.V2f( 1 ) ), [ "/group" ] )
+		self.assertObjectAt( sg, imath.V2f( 0.5 ), None )
+		self.assertObjectsAt( sg, imath.Box2f( imath.V2f( 0 ), imath.V2f( 1 ) ), [ "/group" ] )
 
 		sg.setExpandedPaths( GafferScene.PathMatcherData( GafferScene.PathMatcher( [ "/group" ] ) ) )
 
-		self.assertObjectAt( sg, IECore.V2f( 0.5 ), IECore.InternedStringVectorData( [ "group", "sphere" ] ) )
-		self.assertObjectsAt( sg, IECore.Box2f( IECore.V2f( 0 ), IECore.V2f( 1 ) ), [ "/group/sphere" ] )
+		self.assertObjectAt( sg, imath.V2f( 0.5 ), IECore.InternedStringVectorData( [ "group", "sphere" ] ) )
+		self.assertObjectsAt( sg, imath.Box2f( imath.V2f( 0 ), imath.V2f( 1 ) ), [ "/group/sphere" ] )
 
 		sg.setExpandedPaths( GafferScene.PathMatcherData( GafferScene.PathMatcher( [] ) ) )
 
-		self.assertObjectAt( sg, IECore.V2f( 0.5 ), None )
-		self.assertObjectsAt( sg, IECore.Box2f( IECore.V2f( 0 ), IECore.V2f( 1 ) ), [ "/group" ] )
+		self.assertObjectAt( sg, imath.V2f( 0.5 ), None )
+		self.assertObjectsAt( sg, imath.Box2f( imath.V2f( 0 ), imath.V2f( 1 ) ), [ "/group" ] )
 
 	def testExpressions( self ) :
 
@@ -258,17 +260,17 @@ class SceneGadgetTest( GafferUITest.TestCase ) :
 			# being displayed.
 
 			self.assertTrue( sg.bound().isEmpty() )
-			gw.getViewportGadget().frame( IECore.Box3f( IECore.V3f( -1 ), IECore.V3f( 1 ) ) )
-			self.assertObjectAt( sg, IECore.V2f( 0.5 ), None )
+			gw.getViewportGadget().frame( imath.Box3f( imath.V3f( -1 ), imath.V3f( 1 ) ) )
+			self.assertObjectAt( sg, imath.V2f( 0.5 ), None )
 
 			# And that redraws don't cause more fruitless attempts
 			# to compute the scene.
 
-			gw.getViewportGadget().frame( IECore.Box3f( IECore.V3f( -1.1 ), IECore.V3f( 1.1 ) ) )
+			gw.getViewportGadget().frame( imath.Box3f( imath.V3f( -1.1 ), imath.V3f( 1.1 ) ) )
 			self.waitForIdle( 1000 )
 
 			self.assertEqual( len( mh.messages ), 1 )
-			self.assertObjectAt( sg, IECore.V2f( 0.5 ), None )
+			self.assertObjectAt( sg, imath.V2f( 0.5 ), None )
 			self.assertTrue( sg.bound().isEmpty() )
 
 			# Fix the problem with the scene, and check that we can see something now
@@ -277,7 +279,7 @@ class SceneGadgetTest( GafferUITest.TestCase ) :
 
 			self.assertEqual( len( mh.messages ), 1 )
 			self.assertFalse( sg.bound().isEmpty() )
-			self.assertObjectAt( sg, IECore.V2f( 0.5 ), IECore.InternedStringVectorData( [ "bigSphere" ] ) )
+			self.assertObjectAt( sg, imath.V2f( 0.5 ), IECore.InternedStringVectorData( [ "bigSphere" ] ) )
 
 	def setUp( self ) :
 

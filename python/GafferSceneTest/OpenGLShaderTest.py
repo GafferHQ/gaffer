@@ -37,6 +37,7 @@
 import os
 import sys
 import unittest
+import imath
 
 import IECore
 import IECoreScene
@@ -62,7 +63,7 @@ class OpenGLShaderTest( GafferSceneTest.SceneTestCase ) :
 		self.assertTrue( isinstance( s["parameters"]["texture"], GafferImage.ImagePlug ) )
 
 		s["parameters"]["mult"].setValue( 0.5 )
-		s["parameters"]["tint"].setValue( IECore.Color4f( 1, 0.5, 0.25, 1 ) )
+		s["parameters"]["tint"].setValue( imath.Color4f( 1, 0.5, 0.25, 1 ) )
 
 		i = GafferImage.ImageReader()
 		i["fileName"].setValue( os.path.expandvars( "$GAFFER_ROOT/python/GafferImageTest/images/checker.exr" ) )
@@ -75,7 +76,7 @@ class OpenGLShaderTest( GafferSceneTest.SceneTestCase ) :
 		self.assertEqual( a["gl:surface"][0].name, "Texture" )
 		self.assertEqual( a["gl:surface"][0].type, "gl:surface" )
 		self.assertEqual( a["gl:surface"][0].parameters["mult"], IECore.FloatData( 0.5 ) )
-		self.assertEqual( a["gl:surface"][0].parameters["tint"].value, IECore.Color4f( 1, 0.5, 0.25, 1 ) )
+		self.assertEqual( a["gl:surface"][0].parameters["tint"].value, imath.Color4f( 1, 0.5, 0.25, 1 ) )
 		self.assertTrue( isinstance( a["gl:surface"][0].parameters["texture"], IECore.CompoundData ) )
 		self.failUnless( "displayWindow" in a["gl:surface"][0].parameters["texture"] )
 		self.failUnless( "dataWindow" in a["gl:surface"][0].parameters["texture"] )
@@ -109,7 +110,7 @@ class OpenGLShaderTest( GafferSceneTest.SceneTestCase ) :
 		h2 = s.attributesHash()
 		self.assertNotEqual( h2, h1 )
 
-		i["color"].setValue( IECore.Color4f( 1, 0, 1, 0 ) )
+		i["color"].setValue( imath.Color4f( 1, 0, 1, 0 ) )
 
 		h3 = s.attributesHash()
 		self.assertNotEqual( h3, h2 )

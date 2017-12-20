@@ -37,6 +37,7 @@
 import os
 import unittest
 import threading
+import imath
 
 import IECore
 import IECoreScene
@@ -71,7 +72,7 @@ class SceneWriterTest( GafferSceneTest.SceneTestCase ) :
 
 		t = sc.child( "group" )
 
-		self.assertEqual( t.readTransformAsMatrix( 0 ), IECore.M44d.createTranslated( IECore.V3d( 5, 0, 2 ) ) )
+		self.assertEqual( t.readTransformAsMatrix( 0 ), imath.M44d().translate( imath.V3d( 5, 0, 2 ) ) )
 
 	def testWriteAnimation( self ) :
 
@@ -93,23 +94,23 @@ class SceneWriterTest( GafferSceneTest.SceneTestCase ) :
 		sc = IECoreScene.SceneCache( self.temporaryDirectory() + "/test.scc", IECore.IndexedIO.OpenMode.Read )
 		t = sc.child( "group" )
 
-		self.assertEqual( t.readTransformAsMatrix( 0 ), IECore.M44d.createTranslated( IECore.V3d( 1, 0, 2 ) ) )
-		self.assertEqual( t.readTransformAsMatrix( 1 / 24.0 ), IECore.M44d.createTranslated( IECore.V3d( 1, 0, 2 ) ) )
-		self.assertEqual( t.readTransformAsMatrix( 1.5 / 24.0 ), IECore.M44d.createTranslated( IECore.V3d( 1.5, 0, 3 ) ) )
-		self.assertEqual( t.readTransformAsMatrix( 2 / 24.0 ), IECore.M44d.createTranslated( IECore.V3d( 2, 0, 4 ) ) )
+		self.assertEqual( t.readTransformAsMatrix( 0 ), imath.M44d().translate( imath.V3d( 1, 0, 2 ) ) )
+		self.assertEqual( t.readTransformAsMatrix( 1 / 24.0 ), imath.M44d().translate( imath.V3d( 1, 0, 2 ) ) )
+		self.assertEqual( t.readTransformAsMatrix( 1.5 / 24.0 ), imath.M44d().translate( imath.V3d( 1.5, 0, 3 ) ) )
+		self.assertEqual( t.readTransformAsMatrix( 2 / 24.0 ), imath.M44d().translate( imath.V3d( 2, 0, 4 ) ) )
 
 	def testSceneCacheRoundtrip( self ) :
 
 		scene = IECoreScene.SceneCache( self.temporaryDirectory() + "/fromPython.scc", IECore.IndexedIO.OpenMode.Write )
 		sc = scene.createChild( "a" )
-		sc.writeObject( IECoreScene.MeshPrimitive.createBox(IECore.Box3f(IECore.V3f(0),IECore.V3f(1))), 0 )
-		matrix = IECore.M44d.createTranslated( IECore.V3d( 1, 0, 0 ) ).rotate( IECore.V3d( 0, 0, IECore.degreesToRadians( -30 ) ) )
+		sc.writeObject( IECoreScene.MeshPrimitive.createBox(imath.Box3f(imath.V3f(0),imath.V3f(1))), 0 )
+		matrix = imath.M44d().translate( imath.V3d( 1, 0, 0 ) ).rotate( imath.V3d( 0, 0, IECore.degreesToRadians( -30 ) ) )
 		sc.writeTransform( IECore.M44dData( matrix ), 0 )
 		sc = sc.createChild( "b" )
-		sc.writeObject( IECoreScene.MeshPrimitive.createBox(IECore.Box3f(IECore.V3f(0),IECore.V3f(1))), 0 )
+		sc.writeObject( IECoreScene.MeshPrimitive.createBox(imath.Box3f(imath.V3f(0),imath.V3f(1))), 0 )
 		sc.writeTransform( IECore.M44dData( matrix ), 0 )
 		sc = sc.createChild( "c" )
-		sc.writeObject( IECoreScene.MeshPrimitive.createBox(IECore.Box3f(IECore.V3f(0),IECore.V3f(1))), 0 )
+		sc.writeObject( IECoreScene.MeshPrimitive.createBox(imath.Box3f(imath.V3f(0),imath.V3f(1))), 0 )
 		sc.writeTransform( IECore.M44dData( matrix ), 0 )
 
 		del scene, sc

@@ -36,6 +36,7 @@
 
 import os
 import unittest
+import imath
 
 import IECore
 import IECoreScene
@@ -58,7 +59,7 @@ class TextTest( GafferSceneTest.SceneTestCase ) :
  		t = GafferScene.Text()
 
 		self.assertEqual( t["out"].object( "/" ), IECore.NullObject() )
-		self.assertEqual( t["out"].transform( "/" ), IECore.M44f() )
+		self.assertEqual( t["out"].transform( "/" ), imath.M44f() )
 		self.assertEqual( t["out"].childNames( "/" ), IECore.InternedStringVectorData( [ "text" ] ) )
 
 		m1 = t["out"].object( "/text" )

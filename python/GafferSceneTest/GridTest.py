@@ -35,6 +35,7 @@
 ##########################################################################
 
 import unittest
+import imath
 
 import IECore
 import IECoreScene
@@ -51,7 +52,7 @@ class GridTest( GafferSceneTest.SceneTestCase ) :
 		g = GafferScene.Grid()
 		self.assertSceneValid( g["out"] )
 
-		g["dimensions"].setValue( IECore.V2f( 100, 5 ) )
+		g["dimensions"].setValue( imath.V2f( 100, 5 ) )
 		self.assertSceneValid( g["out"] )
 
 	def testChildNames( self ) :
@@ -71,7 +72,7 @@ class GridTest( GafferSceneTest.SceneTestCase ) :
 		g = GafferScene.Grid()
 
 		a = g["out"].attributes( "/grid" )
-		self.assertEqual( a["gl:surface"], IECoreScene.Shader( "Constant", "gl:surface", { "Cs" : IECore.Color3f( 1 ) } ) )
+		self.assertEqual( a["gl:surface"], IECoreScene.Shader( "Constant", "gl:surface", { "Cs" : imath.Color3f( 1 ) } ) )
 
 		g["centerPixelWidth"].setValue( 2 )
 		a2 = g["out"].attributes( "/grid/centerLines" )

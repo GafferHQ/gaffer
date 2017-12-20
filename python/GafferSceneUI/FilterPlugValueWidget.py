@@ -35,6 +35,8 @@
 #
 ##########################################################################
 
+import imath
+
 import IECore
 
 import Gaffer
@@ -63,7 +65,7 @@ class FilterPlugValueWidget( GafferUI.PlugValueWidget ) :
 				self.__menuButton = GafferUI.MenuButton()
 				self.__menuButton.setMenu( GafferUI.Menu( Gaffer.WeakMethod( self.__menuDefinition ) ) )
 
-				GafferUI.Spacer( IECore.V2i( 1 ), IECore.V2i( 100000, 1 ), parenting = { "expand" : True } )
+				GafferUI.Spacer( imath.V2i( 1 ), imath.V2i( 100000, 1 ), parenting = { "expand" : True } )
 
 			GafferUI.Divider()
 

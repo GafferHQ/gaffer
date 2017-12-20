@@ -36,6 +36,7 @@
 
 import unittest
 import math
+import imath
 
 import IECore
 import IECoreScene
@@ -82,7 +83,7 @@ class TransformTest( GafferSceneTest.SceneTestCase ) :
 		# it requires a filter before operating (applying the same transform
 		# at every location is really not very useful).
 
-		transform["transform"]["translate"].setValue( IECore.V3f( 1, 2, 3 ) )
+		transform["transform"]["translate"].setValue( imath.V3f( 1, 2, 3 ) )
 
 		self.assertSceneValid( transform["out"] )
 		self.assertScenesEqual( transform["out"], input["out"] )
@@ -95,12 +96,12 @@ class TransformTest( GafferSceneTest.SceneTestCase ) :
 
 		self.assertSceneValid( transform["out"] )
 
-		self.assertEqual( transform["out"].transform( "/group/sphere" ), IECore.M44f.createTranslated( IECore.V3f( 1, 2, 3 ) ) )
-		self.assertEqual( transform["out"].transform( "/group" ), IECore.M44f() )
+		self.assertEqual( transform["out"].transform( "/group/sphere" ), imath.M44f().translate( imath.V3f( 1, 2, 3 ) ) )
+		self.assertEqual( transform["out"].transform( "/group" ), imath.M44f() )
 
-		self.assertEqual( transform["out"].bound( "/group/sphere" ), IECore.Box3f( IECore.V3f( -1 ), IECore.V3f( 1 ) ) )
-		self.assertEqual( transform["out"].bound( "/group" ), IECore.Box3f( IECore.V3f( 0, 1, 2 ), IECore.V3f( 2, 3, 4 ) ) )
-		self.assertEqual( transform["out"].bound( "/" ), IECore.Box3f( IECore.V3f( 0, 1, 2 ), IECore.V3f( 2, 3, 4 ) ) )
+		self.assertEqual( transform["out"].bound( "/group/sphere" ), imath.Box3f( imath.V3f( -1 ), imath.V3f( 1 ) ) )
+		self.assertEqual( transform["out"].bound( "/group" ), imath.Box3f( imath.V3f( 0, 1, 2 ), imath.V3f( 2, 3, 4 ) ) )
+		self.assertEqual( transform["out"].bound( "/" ), imath.Box3f( imath.V3f( 0, 1, 2 ), imath.V3f( 2, 3, 4 ) ) )
 
 	def testEnableBehaviour( self ) :
 
@@ -113,7 +114,7 @@ class TransformTest( GafferSceneTest.SceneTestCase ) :
 	def testSpace( self ) :
 
 		sphere = GafferScene.Sphere()
-		sphere["transform"]["translate"].setValue( IECore.V3f( 1, 0, 0 ) )
+		sphere["transform"]["translate"].setValue( imath.V3f( 1, 0, 0 ) )
 
 		transform = GafferScene.Transform()
 		transform["in"].setInput( sphere["out"] )
@@ -128,24 +129,24 @@ class TransformTest( GafferSceneTest.SceneTestCase ) :
 		self.assertSceneValid( transform["out"] )
 
 		self.assertTrue(
-			IECore.V3f( 1, 0, 0 ).equalWithAbsError(
-				IECore.V3f( 0 ) * transform["out"].fullTransform( "/sphere" ),
+			imath.V3f( 1, 0, 0 ).equalWithAbsError(
+				imath.V3f( 0 ) * transform["out"].fullTransform( "/sphere" ),
 				0.000001
 			)
 		)
 
 		transform["space"].setValue( GafferScene.Transform.Space.Parent )
 		self.assertTrue(
-			IECore.V3f( 0, 0, -1 ).equalWithAbsError(
-				IECore.V3f( 0 ) * transform["out"].fullTransform( "/sphere" ),
+			imath.V3f( 0, 0, -1 ).equalWithAbsError(
+				imath.V3f( 0 ) * transform["out"].fullTransform( "/sphere" ),
 				0.000001
 			)
 		)
 
 		transform["space"].setValue( GafferScene.Transform.Space.World )
 		self.assertTrue(
-			IECore.V3f( 0, 0, -1 ).equalWithAbsError(
-				IECore.V3f( 0 ) * transform["out"].fullTransform( "/sphere" ),
+			imath.V3f( 0, 0, -1 ).equalWithAbsError(
+				imath.V3f( 0 ) * transform["out"].fullTransform( "/sphere" ),
 				0.000001
 			)
 		)
@@ -156,7 +157,7 @@ class TransformTest( GafferSceneTest.SceneTestCase ) :
 
 		group = GafferScene.Group()
 		group["in"][0].setInput( sphere["out"] )
-		group["transform"]["translate"].setValue( IECore.V3f( 1, 0, 0 ) )
+		group["transform"]["translate"].setValue( imath.V3f( 1, 0, 0 ) )
 
 		transform = GafferScene.Transform()
 		transform["in"].setInput( group["out"] )
@@ -168,8 +169,8 @@ class TransformTest( GafferSceneTest.SceneTestCase ) :
 		self.assertEqual( transform["space"].getValue(), GafferScene.Transform.Space.Local )
 		self.assertSceneValid( transform["out"] )
 		self.assertTrue(
-			IECore.V3f( 1, 0, 0 ).equalWithAbsError(
-				IECore.V3f( 0 ) * transform["out"].fullTransform( "/group/sphere" ),
+			imath.V3f( 1, 0, 0 ).equalWithAbsError(
+				imath.V3f( 0 ) * transform["out"].fullTransform( "/group/sphere" ),
 				0.000001
 			)
 		)
@@ -177,8 +178,8 @@ class TransformTest( GafferSceneTest.SceneTestCase ) :
 		transform["space"].setValue( GafferScene.Transform.Space.Parent )
 		self.assertSceneValid( transform["out"] )
 		self.assertTrue(
-			IECore.V3f( 1, 0, 0 ).equalWithAbsError(
-				IECore.V3f( 0 ) * transform["out"].fullTransform( "/group/sphere" ),
+			imath.V3f( 1, 0, 0 ).equalWithAbsError(
+				imath.V3f( 0 ) * transform["out"].fullTransform( "/group/sphere" ),
 				0.000001
 			)
 		)
@@ -186,8 +187,8 @@ class TransformTest( GafferSceneTest.SceneTestCase ) :
 		transform["space"].setValue( GafferScene.Transform.Space.World )
 		transform["transform"]["rotate"]["y"].setValue( 90 )
 		self.assertTrue(
-			IECore.V3f( 0, 0, -1 ).equalWithAbsError(
-				IECore.V3f( 0 ) * transform["out"].fullTransform( "/group/sphere" ),
+			imath.V3f( 0, 0, -1 ).equalWithAbsError(
+				imath.V3f( 0 ) * transform["out"].fullTransform( "/group/sphere" ),
 				0.000001
 			)
 		)
@@ -195,11 +196,11 @@ class TransformTest( GafferSceneTest.SceneTestCase ) :
 	def testResetLocal( self ) :
 
 		sphere = GafferScene.Sphere()
-		sphere["transform"]["translate"].setValue( IECore.V3f( 1, 0, 0 ) )
+		sphere["transform"]["translate"].setValue( imath.V3f( 1, 0, 0 ) )
 
 		group = GafferScene.Group()
 		group["in"][0].setInput( sphere["out"] )
-		group["transform"]["translate"].setValue( IECore.V3f( 1, 0, 0 ) )
+		group["transform"]["translate"].setValue( imath.V3f( 1, 0, 0 ) )
 
 		transform = GafferScene.Transform()
 		transform["in"].setInput( group["out"] )
@@ -212,30 +213,30 @@ class TransformTest( GafferSceneTest.SceneTestCase ) :
 		transform["space"].setValue( GafferScene.Transform.Space.ResetLocal )
 		self.assertSceneValid( transform["out"] )
 		self.assertTrue(
-			IECore.V3f( 1, 0, 0 ).equalWithAbsError(
-				IECore.V3f( 0 ) * transform["out"].fullTransform( "/group/sphere" ),
+			imath.V3f( 1, 0, 0 ).equalWithAbsError(
+				imath.V3f( 0 ) * transform["out"].fullTransform( "/group/sphere" ),
 				0.000001
 			)
 		)
 		self.assertTrue(
-			IECore.V3f( 2, 0, 0 ).equalWithAbsError(
-				IECore.V3f( 0, 0, 1 ) * transform["out"].fullTransform( "/group/sphere" ),
+			imath.V3f( 2, 0, 0 ).equalWithAbsError(
+				imath.V3f( 0, 0, 1 ) * transform["out"].fullTransform( "/group/sphere" ),
 				0.000001
 			)
 		)
 		self.assertEqual(
 			transform["out"].transform( "/group/sphere" ),
-			IECore.M44f.createRotated( IECore.V3f( 0, math.radians( 90 ), 0 ) )
+			imath.M44f().rotate( imath.V3f( 0, math.radians( 90 ), 0 ) )
 		)
 
 	def testResetWorld( self ) :
 
 		sphere = GafferScene.Sphere()
-		sphere["transform"]["translate"].setValue( IECore.V3f( 1, 0, 0 ) )
+		sphere["transform"]["translate"].setValue( imath.V3f( 1, 0, 0 ) )
 
 		group = GafferScene.Group()
 		group["in"][0].setInput( sphere["out"] )
-		group["transform"]["translate"].setValue( IECore.V3f( 1, 0, 0 ) )
+		group["transform"]["translate"].setValue( imath.V3f( 1, 0, 0 ) )
 
 		transform = GafferScene.Transform()
 		transform["in"].setInput( group["out"] )
@@ -248,20 +249,20 @@ class TransformTest( GafferSceneTest.SceneTestCase ) :
 		transform["space"].setValue( GafferScene.Transform.Space.ResetWorld )
 		self.assertSceneValid( transform["out"] )
 		self.assertTrue(
-			IECore.V3f( 0, 0, 0 ).equalWithAbsError(
-				IECore.V3f( 0 ) * transform["out"].fullTransform( "/group/sphere" ),
+			imath.V3f( 0, 0, 0 ).equalWithAbsError(
+				imath.V3f( 0 ) * transform["out"].fullTransform( "/group/sphere" ),
 				0.000001
 			)
 		)
 		self.assertTrue(
-			IECore.V3f( 1, 0, 0 ).equalWithAbsError(
-				IECore.V3f( 0, 0, 1 ) * transform["out"].fullTransform( "/group/sphere" ),
+			imath.V3f( 1, 0, 0 ).equalWithAbsError(
+				imath.V3f( 0, 0, 1 ) * transform["out"].fullTransform( "/group/sphere" ),
 				0.000001
 			)
 		)
 		self.assertEqual(
 			transform["out"].fullTransform( "/group/sphere" ),
-			IECore.M44f.createRotated( IECore.V3f( 0, math.radians( 90 ), 0 ) )
+			imath.M44f().rotate( imath.V3f( 0, math.radians( 90 ), 0 ) )
 		)
 
 	def testWorldWithMatchingAncestors( self ) :
@@ -275,7 +276,7 @@ class TransformTest( GafferSceneTest.SceneTestCase ) :
 
 		t = GafferScene.Transform()
 		t["in"].setInput( b["out"] )
-		t["transform"]["translate"].setValue( IECore.V3f( 1, 2, 3 ) )
+		t["transform"]["translate"].setValue( imath.V3f( 1, 2, 3 ) )
 		t["space"].setValue( t.Space.World )
 
 		f = GafferScene.PathFilter()
@@ -285,7 +286,7 @@ class TransformTest( GafferSceneTest.SceneTestCase ) :
 		self.assertSceneValid( t["out"] )
 		self.assertEqual(
 			t["out"].fullTransform( "/a" ),
-			IECore.M44f.createTranslated( IECore.V3f( 1, 2, 3 ) )
+			imath.M44f().translate( imath.V3f( 1, 2, 3 ) )
 		)
 
 		# We want it to be as if /a/b has been transformed
@@ -294,14 +295,14 @@ class TransformTest( GafferSceneTest.SceneTestCase ) :
 
 		self.assertEqual(
 			t["out"].fullTransform( "/a/b" ),
-			IECore.M44f.createTranslated( IECore.V3f( 1, 2, 3 ) )
+			imath.M44f().translate( imath.V3f( 1, 2, 3 ) )
 		)
 
-		b["transform"]["translate"].setValue( IECore.V3f( 4, 5, 6 ) )
+		b["transform"]["translate"].setValue( imath.V3f( 4, 5, 6 ) )
 		self.assertSceneValid( t["out"] )
 		self.assertEqual(
 			t["out"].fullTransform( "/a/b" ),
-			IECore.M44f.createTranslated( IECore.V3f( 5, 7, 9 ) )
+			imath.M44f().translate( imath.V3f( 5, 7, 9 ) )
 		)
 
 	def testResetWorldWithMatchingAncestors( self ) :
@@ -319,7 +320,7 @@ class TransformTest( GafferSceneTest.SceneTestCase ) :
 
 		t = GafferScene.Transform()
 		t["in"].setInput( a["out"] )
-		t["transform"]["translate"].setValue( IECore.V3f( 1, 2, 3 ) )
+		t["transform"]["translate"].setValue( imath.V3f( 1, 2, 3 ) )
 		t["space"].setValue( t.Space.ResetWorld )
 
 		# Apply to /a and /a/b/c so that we must take into
@@ -337,40 +338,40 @@ class TransformTest( GafferSceneTest.SceneTestCase ) :
 
 		self.assertEqual(
 			t["out"].fullTransform( "/a" ),
-			IECore.M44f.createTranslated( IECore.V3f( 1, 2, 3 ) )
+			imath.M44f().translate( imath.V3f( 1, 2, 3 ) )
 		)
 
 		self.assertEqual(
 			t["out"].fullTransform( "/a/b" ),
-			IECore.M44f.createTranslated( IECore.V3f( 1, 2, 3 ) )
+			imath.M44f().translate( imath.V3f( 1, 2, 3 ) )
 		)
 
 		self.assertEqual(
 			t["out"].fullTransform( "/a/b/c" ),
-			IECore.M44f.createTranslated( IECore.V3f( 1, 2, 3 ) )
+			imath.M44f().translate( imath.V3f( 1, 2, 3 ) )
 		)
 
 		# Change the transform on /a/b, and check that it is
 		# retained, but that /a/b/c adjusts for it and maintains
 		# the required absolute transform.
 
-		b["transform"]["translate"].setValue( IECore.V3f( 9, 7, 5 ) )
+		b["transform"]["translate"].setValue( imath.V3f( 9, 7, 5 ) )
 
 		self.assertSceneValid( t["out"] )
 
 		self.assertEqual(
 			t["out"].fullTransform( "/a" ),
-			IECore.M44f.createTranslated( IECore.V3f( 1, 2, 3 ) )
+			imath.M44f().translate( imath.V3f( 1, 2, 3 ) )
 		)
 
 		self.assertEqual(
 			t["out"].fullTransform( "/a/b" ),
-			IECore.M44f.createTranslated( IECore.V3f( 10, 9, 8 ) )
+			imath.M44f().translate( imath.V3f( 10, 9, 8 ) )
 		)
 
 		self.assertEqual(
 			t["out"].fullTransform( "/a/b/c" ),
-			IECore.M44f.createTranslated( IECore.V3f( 1, 2, 3 ) )
+			imath.M44f().translate( imath.V3f( 1, 2, 3 ) )
 		)
 
 	def testObjectBoundIncludedWhenDescendantsMatch( self ) :
@@ -383,10 +384,10 @@ class TransformTest( GafferSceneTest.SceneTestCase ) :
 		t = GafferScene.Transform()
 		t["in"].setInput( s["out"] )
 		t["filter"].setInput( f["out"] )
-		t["transform"]["translate"].setValue( IECore.V3f( 1 ) )
+		t["transform"]["translate"].setValue( imath.V3f( 1 ) )
 
 		self.assertSceneValid( t["out"] )
-		self.assertEqual( t["out"].bound( "/" ), IECore.Box3f( IECore.V3f( 0.5 ), IECore.V3f( 1.5 ) ) )
+		self.assertEqual( t["out"].bound( "/" ), imath.Box3f( imath.V3f( 0.5 ), imath.V3f( 1.5 ) ) )
 
 if __name__ == "__main__":
 	unittest.main()

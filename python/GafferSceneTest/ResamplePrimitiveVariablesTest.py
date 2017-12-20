@@ -33,6 +33,9 @@
 #  SOFTWARE, EVEN IF ADVISED OF THE POSSIBILITY OF SUCH DAMAGE.
 #
 ##########################################################################
+
+import imath
+
 import IECore
 import IECoreScene
 
@@ -45,7 +48,7 @@ class ResamplePrimitiveVariablesTest( GafferSceneTest.SceneTestCase ) :
 
 		verticesPerFace = IECore.IntVectorData( [4] )
 		vertexIds = IECore.IntVectorData( [0, 1, 2, 3] )
-		p = IECore.V3fVectorData( [IECore.V3f( 0, 0, 0 ), IECore.V3f( 1, 0, 0 ), IECore.V3f( 1, 1, 0 ), IECore.V3f( 0, 1, 0 )] )
+		p = IECore.V3fVectorData( [imath.V3f( 0, 0, 0 ), imath.V3f( 1, 0, 0 ), imath.V3f( 1, 1, 0 ), imath.V3f( 0, 1, 0 )] )
 		a = IECore.FloatVectorData( [0, 1, 2, 3] )
 		b = IECore.FloatVectorData( [4, 5, 6, 7] )
 

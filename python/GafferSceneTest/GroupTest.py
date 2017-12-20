@@ -38,6 +38,7 @@
 import unittest
 import gc
 import os
+import imath
 
 import IECore
 import IECoreScene
@@ -77,22 +78,22 @@ class GroupTest( GafferSceneTest.SceneTestCase ) :
 		self.assertEqual( group["name"].getValue(), "topLevel" )
 
 		self.assertEqual( group["out"].object( "/" ), IECore.NullObject() )
-		self.assertEqual( group["out"].transform( "/" ), IECore.M44f() )
+		self.assertEqual( group["out"].transform( "/" ), imath.M44f() )
 		self.assertEqual( group["out"].bound( "/" ), sphere.bound() )
 		self.assertEqual( group["out"].childNames( "/" ), IECore.InternedStringVectorData( [ "topLevel" ] ) )
 
 		self.assertEqual( group["out"].object( "/topLevel" ), IECore.NullObject() )
-		self.assertEqual( group["out"].transform( "/topLevel" ), IECore.M44f() )
+		self.assertEqual( group["out"].transform( "/topLevel" ), imath.M44f() )
 		self.assertEqual( group["out"].bound( "/topLevel" ), sphere.bound() )
 		self.assertEqual( group["out"].childNames( "/topLevel" ), IECore.InternedStringVectorData( [ "group" ] ) )
 
 		self.assertEqual( group["out"].object( "/topLevel/group" ), IECore.NullObject() )
-		self.assertEqual( group["out"].transform( "/topLevel/group" ), IECore.M44f() )
+		self.assertEqual( group["out"].transform( "/topLevel/group" ), imath.M44f() )
 		self.assertEqual( group["out"].bound( "/topLevel/group" ), sphere.bound() )
 		self.assertEqual( group["out"].childNames( "/topLevel/group" ), IECore.InternedStringVectorData( [ "sphere" ] ) )
 
 		self.assertEqual( group["out"].object( "/topLevel/group/sphere" ), sphere )
-		self.assertEqual( group["out"].transform( "/topLevel/group/sphere" ), IECore.M44f() )
+		self.assertEqual( group["out"].transform( "/topLevel/group/sphere" ), imath.M44f() )
 		self.assertEqual( group["out"].bound( "/topLevel/group/sphere" ), sphere.bound() )
 		self.assertEqual( group["out"].childNames( "/topLevel/group/sphere" ), IECore.InternedStringVectorData() )
 
@@ -100,8 +101,8 @@ class GroupTest( GafferSceneTest.SceneTestCase ) :
 
 		sphere = IECoreScene.SpherePrimitive()
 		originalRootBound = sphere.bound()
-		originalRootBound.min += IECore.V3f( 1, 0, 0 )
-		originalRootBound.max += IECore.V3f( 1, 0, 0 )
+		originalRootBound.setMin( originalRootBound.min() + imath.V3f( 1, 0, 0 ) )
+		originalRootBound.setMax( originalRootBound.max() + imath.V3f( 1, 0, 0 ) )
 		input = GafferSceneTest.CompoundObjectSource()
 		input["in"].setValue(
 			IECore.CompoundObject( {
@@ -110,7 +111,7 @@ class GroupTest( GafferSceneTest.SceneTestCase ) :
 					"sphere" : {
 						"object" : sphere,
 						"bound" : IECore.Box3fData( sphere.bound() ),
-						"transform" : IECore.M44fData( IECore.M44f.createTranslated( IECore.V3f( 1, 0, 0 ) ) ),
+						"transform" : IECore.M44fData( imath.M44f().translate( imath.V3f( 1, 0, 0 ) ) ),
 					}
 				}
 			} )
@@ -118,26 +119,26 @@ class GroupTest( GafferSceneTest.SceneTestCase ) :
 
 		group = GafferScene.Group()
 		group["in"][0].setInput( input["out"] )
-		group["transform"]["translate"].setValue( IECore.V3f( 0, 1, 0 ) )
+		group["transform"]["translate"].setValue( imath.V3f( 0, 1, 0 ) )
 
 		self.assertEqual( group["name"].getValue(), "group" )
 
-		groupedRootBound = IECore.Box3f( originalRootBound.min, originalRootBound.max )
-		groupedRootBound.min += IECore.V3f( 0, 1, 0 )
-		groupedRootBound.max += IECore.V3f( 0, 1, 0 )
+		groupedRootBound = imath.Box3f( originalRootBound.min(), originalRootBound.max() )
+		groupedRootBound.setMin( groupedRootBound.min() + imath.V3f( 0, 1, 0 ) )
+		groupedRootBound.setMax( groupedRootBound.max() + imath.V3f( 0, 1, 0 ) )
 
 		self.assertEqual( group["out"].object( "/" ), IECore.NullObject() )
-		self.assertEqual( group["out"].transform( "/" ), IECore.M44f() )
+		self.assertEqual( group["out"].transform( "/" ), imath.M44f() )
 		self.assertEqual( group["out"].bound( "/" ), groupedRootBound )
 		self.assertEqual( group["out"].childNames( "/" ), IECore.InternedStringVectorData( [ "group" ] ) )
 
 		self.assertEqual( group["out"].object( "/group" ), IECore.NullObject() )
-		self.assertEqual( group["out"].transform( "/group" ), IECore.M44f.createTranslated( IECore.V3f( 0, 1, 0 ) ) )
+		self.assertEqual( group["out"].transform( "/group" ), imath.M44f().translate( imath.V3f( 0, 1, 0 ) ) )
 		self.assertEqual( group["out"].bound( "/group" ), originalRootBound )
 		self.assertEqual( group["out"].childNames( "/group" ), IECore.InternedStringVectorData( [ "sphere" ] ) )
 
 		self.assertEqual( group["out"].object( "/group/sphere" ), sphere )
-		self.assertEqual( group["out"].transform( "/group/sphere" ), IECore.M44f.createTranslated( IECore.V3f( 1, 0, 0 ) ) )
+		self.assertEqual( group["out"].transform( "/group/sphere" ), imath.M44f().translate( imath.V3f( 1, 0, 0 ) ) )
 		self.assertEqual( group["out"].bound( "/group/sphere" ), sphere.bound() )
 		self.assertEqual( group["out"].childNames( "/group/sphere" ), IECore.InternedStringVectorData() )
 
@@ -190,7 +191,7 @@ class GroupTest( GafferSceneTest.SceneTestCase ) :
 			} ),
 		)
 
-		plane = IECoreScene.MeshPrimitive.createPlane( IECore.Box2f( IECore.V2f( -1 ), IECore.V2f( 1 ) ) )
+		plane = IECoreScene.MeshPrimitive.createPlane( imath.Box2f( imath.V2f( -1 ), imath.V2f( 1 ) ) )
 		input2 = GafferSceneTest.CompoundObjectSource()
 		input2["in"].setValue(
 			IECore.CompoundObject( {
@@ -218,32 +219,32 @@ class GroupTest( GafferSceneTest.SceneTestCase ) :
 		group["in"][1].setInput( input2["out"] )
 
 		self.assertEqual( group["out"].object( "/" ), IECore.NullObject() )
-		self.assertEqual( group["out"].transform( "/" ), IECore.M44f() )
+		self.assertEqual( group["out"].transform( "/" ), imath.M44f() )
 		self.assertEqual( group["out"].bound( "/" ), combinedBound )
 		self.assertEqual( group["out"].childNames( "/" ), IECore.InternedStringVectorData( [ "topLevel" ] ) )
 
 		self.assertEqual( group["out"].object( "/topLevel" ), IECore.NullObject() )
-		self.assertEqual( group["out"].transform( "/topLevel" ), IECore.M44f() )
+		self.assertEqual( group["out"].transform( "/topLevel" ), imath.M44f() )
 		self.assertEqual( group["out"].bound( "/topLevel" ), combinedBound )
 		self.assertEqual( group["out"].childNames( "/topLevel" ), IECore.InternedStringVectorData( [ "sphereGroup", "planeGroup" ] ) )
 
 		self.assertEqual( group["out"].object( "/topLevel/sphereGroup" ), IECore.NullObject() )
-		self.assertEqual( group["out"].transform( "/topLevel/sphereGroup" ), IECore.M44f() )
+		self.assertEqual( group["out"].transform( "/topLevel/sphereGroup" ), imath.M44f() )
 		self.assertEqual( group["out"].bound( "/topLevel/sphereGroup" ), sphere.bound() )
 		self.assertEqual( group["out"].childNames( "/topLevel/sphereGroup" ), IECore.InternedStringVectorData( [ "sphere" ] ) )
 
 		self.assertEqual( group["out"].object( "/topLevel/sphereGroup/sphere" ), sphere )
-		self.assertEqual( group["out"].transform( "/topLevel/sphereGroup/sphere" ), IECore.M44f() )
+		self.assertEqual( group["out"].transform( "/topLevel/sphereGroup/sphere" ), imath.M44f() )
 		self.assertEqual( group["out"].bound( "/topLevel/sphereGroup/sphere" ), sphere.bound() )
 		self.assertEqual( group["out"].childNames( "/topLevel/sphereGroup/sphere" ), IECore.InternedStringVectorData() )
 
 		self.assertEqual( group["out"].object( "/topLevel/planeGroup" ), IECore.NullObject() )
-		self.assertEqual( group["out"].transform( "/topLevel/planeGroup" ), IECore.M44f() )
+		self.assertEqual( group["out"].transform( "/topLevel/planeGroup" ), imath.M44f() )
 		self.assertEqual( group["out"].bound( "/topLevel/planeGroup" ), plane.bound() )
 		self.assertEqual( group["out"].childNames( "/topLevel/planeGroup" ), IECore.InternedStringVectorData( [ "plane" ] ) )
 
 		self.assertEqual( group["out"].object( "/topLevel/planeGroup/plane" ), plane )
-		self.assertEqual( group["out"].transform( "/topLevel/planeGroup/plane" ), IECore.M44f() )
+		self.assertEqual( group["out"].transform( "/topLevel/planeGroup/plane" ), imath.M44f() )
 		self.assertEqual( group["out"].bound( "/topLevel/planeGroup/plane" ), plane.bound() )
 		self.assertEqual( group["out"].childNames( "/topLevel/planeGroup/plane" ), IECore.InternedStringVectorData() )
 
@@ -263,7 +264,7 @@ class GroupTest( GafferSceneTest.SceneTestCase ) :
 			} ),
 		)
 
-		plane = IECoreScene.MeshPrimitive.createPlane( IECore.Box2f( IECore.V2f( -1 ), IECore.V2f( 1 ) ) )
+		plane = IECoreScene.MeshPrimitive.createPlane( imath.Box2f( imath.V2f( -1 ), imath.V2f( 1 ) ) )
 		input2 = GafferSceneTest.CompoundObjectSource()
 		input2["in"].setValue(
 			IECore.CompoundObject( {
@@ -286,22 +287,22 @@ class GroupTest( GafferSceneTest.SceneTestCase ) :
 		group["in"][1].setInput( input2["out"] )
 
 		self.assertEqual( group["out"].object( "/" ), IECore.NullObject() )
-		self.assertEqual( group["out"].transform( "/" ), IECore.M44f() )
+		self.assertEqual( group["out"].transform( "/" ), imath.M44f() )
 		self.assertEqual( group["out"].bound( "/" ), combinedBound )
 		self.assertEqual( group["out"].childNames( "/" ), IECore.InternedStringVectorData( [ "topLevel" ] ) )
 
 		self.assertEqual( group["out"].object( "/topLevel" ), IECore.NullObject() )
-		self.assertEqual( group["out"].transform( "/topLevel" ), IECore.M44f() )
+		self.assertEqual( group["out"].transform( "/topLevel" ), imath.M44f() )
 		self.assertEqual( group["out"].bound( "/topLevel" ), combinedBound )
 		self.assertEqual( group["out"].childNames( "/topLevel" ), IECore.InternedStringVectorData( [ "myLovelyObject", "myLovelyObject1" ] ) )
 
 		self.assertEqual( group["out"].object( "/topLevel/myLovelyObject" ), sphere )
-		self.assertEqual( group["out"].transform( "/topLevel/myLovelyObject" ), IECore.M44f() )
+		self.assertEqual( group["out"].transform( "/topLevel/myLovelyObject" ), imath.M44f() )
 		self.assertEqual( group["out"].bound( "/topLevel/myLovelyObject" ), sphere.bound() )
 		self.assertEqual( group["out"].childNames( "/topLevel/myLovelyObject" ), IECore.InternedStringVectorData() )
 
 		self.assertEqual( group["out"].object( "/topLevel/myLovelyObject1" ), plane )
-		self.assertEqual( group["out"].transform( "/topLevel/myLovelyObject1" ), IECore.M44f() )
+		self.assertEqual( group["out"].transform( "/topLevel/myLovelyObject1" ), imath.M44f() )
 		self.assertEqual( group["out"].bound( "/topLevel/myLovelyObject1" ), plane.bound() )
 		self.assertEqual( group["out"].childNames( "/topLevel/myLovelyObject1" ), IECore.InternedStringVectorData() )
 
@@ -342,7 +343,7 @@ class GroupTest( GafferSceneTest.SceneTestCase ) :
 			} ),
 		)
 
-		plane = IECoreScene.MeshPrimitive.createPlane( IECore.Box2f( IECore.V2f( -1 ), IECore.V2f( 1 ) ) )
+		plane = IECoreScene.MeshPrimitive.createPlane( imath.Box2f( imath.V2f( -1 ), imath.V2f( 1 ) ) )
 		input2 = GafferSceneTest.CompoundObjectSource()
 		input2["in"].setValue(
 			IECore.CompoundObject( {
@@ -365,22 +366,22 @@ class GroupTest( GafferSceneTest.SceneTestCase ) :
 		group["in"][1].setInput( input2["out"] )
 
 		self.assertEqual( group["out"].object( "/" ), IECore.NullObject() )
-		self.assertEqual( group["out"].transform( "/" ), IECore.M44f() )
+		self.assertEqual( group["out"].transform( "/" ), imath.M44f() )
 		self.assertEqual( group["out"].bound( "/" ), combinedBound )
 		self.assertEqual( group["out"].childNames( "/" ), IECore.InternedStringVectorData( [ "topLevel" ] ) )
 
 		self.assertEqual( group["out"].object( "/topLevel" ), IECore.NullObject() )
-		self.assertEqual( group["out"].transform( "/topLevel" ), IECore.M44f() )
+		self.assertEqual( group["out"].transform( "/topLevel" ), imath.M44f() )
 		self.assertEqual( group["out"].bound( "/topLevel" ), combinedBound )
 		self.assertEqual( group["out"].childNames( "/topLevel" ), IECore.InternedStringVectorData( [ "myLovelyObject1", "myLovelyObject2" ] ) )
 
 		self.assertEqual( group["out"].object( "/topLevel/myLovelyObject1" ), sphere )
-		self.assertEqual( group["out"].transform( "/topLevel/myLovelyObject1" ), IECore.M44f() )
+		self.assertEqual( group["out"].transform( "/topLevel/myLovelyObject1" ), imath.M44f() )
 		self.assertEqual( group["out"].bound( "/topLevel/myLovelyObject1" ), sphere.bound() )
 		self.assertEqual( group["out"].childNames( "/topLevel/myLovelyObject1" ), IECore.InternedStringVectorData() )
 
 		self.assertEqual( group["out"].object( "/topLevel/myLovelyObject2" ), plane )
-		self.assertEqual( group["out"].transform( "/topLevel/myLovelyObject2" ), IECore.M44f() )
+		self.assertEqual( group["out"].transform( "/topLevel/myLovelyObject2" ), imath.M44f() )
 		self.assertEqual( group["out"].bound( "/topLevel/myLovelyObject2" ), plane.bound() )
 		self.assertEqual( group["out"].childNames( "/topLevel/myLovelyObject2" ), IECore.InternedStringVectorData() )
 
@@ -400,7 +401,7 @@ class GroupTest( GafferSceneTest.SceneTestCase ) :
 			} ),
 		)
 
-		plane = IECoreScene.MeshPrimitive.createPlane( IECore.Box2f( IECore.V2f( -1 ), IECore.V2f( 1 ) ) )
+		plane = IECoreScene.MeshPrimitive.createPlane( imath.Box2f( imath.V2f( -1 ), imath.V2f( 1 ) ) )
 		input2 = GafferSceneTest.CompoundObjectSource()
 		input2["in"].setValue(
 			IECore.CompoundObject( {
@@ -454,7 +455,7 @@ class GroupTest( GafferSceneTest.SceneTestCase ) :
 
  		self.assertSceneHashesEqual( g1["out"], g2["out"] )
 
-	 	g2["transform"]["translate"].setValue( IECore.V3f( 1, 0, 0 ) )
+	 	g2["transform"]["translate"].setValue( imath.V3f( 1, 0, 0 ) )
 
  		self.assertSceneHashesEqual( g1["out"], g2["out"], pathsToIgnore = ( "/", "/group", ) )
  		self.assertSceneHashesEqual( g1["out"], g2["out"], childPlugNamesToIgnore = ( "transform", "bound" ) )

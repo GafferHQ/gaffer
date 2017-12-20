@@ -35,6 +35,7 @@
 ##########################################################################
 
 import unittest
+import imath
 
 import IECore
 
@@ -48,9 +49,9 @@ class ParentConstraintTest( GafferSceneTest.SceneTestCase ) :
 	def test( self ) :
 
 		plane1 = GafferScene.Plane()
-		plane1["transform"]["translate"].setValue( IECore.V3f( 1, 2, 3 ) )
-		plane1["transform"]["scale"].setValue( IECore.V3f( 1, 2, 3 ) )
-		plane1["transform"]["rotate"].setValue( IECore.V3f( 1000, 20, 39 ) )
+		plane1["transform"]["translate"].setValue( imath.V3f( 1, 2, 3 ) )
+		plane1["transform"]["scale"].setValue( imath.V3f( 1, 2, 3 ) )
+		plane1["transform"]["rotate"].setValue( imath.V3f( 1000, 20, 39 ) )
 		plane1["name"].setValue( "target" )
 
 		plane2 = GafferScene.Plane()
@@ -77,8 +78,8 @@ class ParentConstraintTest( GafferSceneTest.SceneTestCase ) :
 	def testRelativeTransform( self ) :
 
 		plane1 = GafferScene.Plane()
-		plane1["transform"]["translate"].setValue( IECore.V3f( 1, 2, 3 ) )
-		plane1["transform"]["rotate"].setValue( IECore.V3f( 0, 90, 0 ) )
+		plane1["transform"]["translate"].setValue( imath.V3f( 1, 2, 3 ) )
+		plane1["transform"]["rotate"].setValue( imath.V3f( 0, 90, 0 ) )
 		plane1["name"].setValue( "target" )
 
 		plane2 = GafferScene.Plane()
@@ -93,7 +94,7 @@ class ParentConstraintTest( GafferSceneTest.SceneTestCase ) :
 		constraint = GafferScene.ParentConstraint()
 		constraint["target"].setValue( "/group/target" )
 		constraint["in"].setInput( group["out"] )
-		constraint["relativeTransform"]["translate"].setValue( IECore.V3f( 1, 0, 0 ) )
+		constraint["relativeTransform"]["translate"].setValue( imath.V3f( 1, 0, 0 ) )
 
 		filter = GafferScene.PathFilter()
 		filter["paths"].setValue( IECore.StringVectorData( [ "/group/constrained" ] ) )
@@ -101,7 +102,7 @@ class ParentConstraintTest( GafferSceneTest.SceneTestCase ) :
 
 		self.assertSceneValid( constraint["out"] )
 
-		self.assertEqual( constraint["out"].fullTransform( "/group/constrained" ), IECore.M44f.createTranslated( IECore.V3f( 1, 0, 0 ) ) * group["out"].fullTransform( "/group/target" ) )
+		self.assertEqual( constraint["out"].fullTransform( "/group/constrained" ), imath.M44f().translate( imath.V3f( 1, 0, 0 ) ) * group["out"].fullTransform( "/group/target" ) )
 
 	def testDirtyPropagation( self ) :
 
