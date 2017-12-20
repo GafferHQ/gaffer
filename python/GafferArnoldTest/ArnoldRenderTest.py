@@ -42,6 +42,7 @@ import subprocess32 as subprocess
 import threading
 
 import arnold
+import imath
 
 import IECore
 import IECoreScene
@@ -304,7 +305,7 @@ class ArnoldRenderTest( GafferSceneTest.SceneTestCase ) :
 	@staticmethod
 	def __m44f( m ) :
 
-		return IECore.M44f( *[ i for row in m.data for i in row ] )
+		return imath.M44f( *[ i for row in m.data for i in row ] )
 
 	def testTransformMotion( self ) :
 
@@ -487,7 +488,7 @@ class ArnoldRenderTest( GafferSceneTest.SceneTestCase ) :
 		s["options"] = GafferScene.StandardOptions()
 		s["options"]["in"].setInput( s["camera"]["out"] )
 		s["options"]["options"]["renderResolution"]["enabled"].setValue( True )
-		s["options"]["options"]["renderResolution"]["value"].setValue( IECore.V2i( 200, 100 ) )
+		s["options"]["options"]["renderResolution"]["value"].setValue( imath.V2i( 200, 100 ) )
 		s["options"]["options"]["resolutionMultiplier"]["enabled"].setValue( True )
 		s["options"]["options"]["resolutionMultiplier"]["value"].setValue( 2 )
 
@@ -552,7 +553,7 @@ class ArnoldRenderTest( GafferSceneTest.SceneTestCase ) :
 
 		# Apply Crop Window
 		s["options"]["options"]["renderCropWindow"]["enabled"].setValue( True )
-		s["options"]["options"]["renderCropWindow"]["value"].setValue( IECore.Box2f( IECore.V2f( 0.25, 0.5 ), IECore.V2f( 0.75, 1.0 ) ) )
+		s["options"]["options"]["renderCropWindow"]["value"].setValue( imath.Box2f( imath.V2f( 0.25, 0.5 ), imath.V2f( 0.75, 1.0 ) ) )
 
 		s["render"]["task"].execute()
 
@@ -568,7 +569,7 @@ class ArnoldRenderTest( GafferSceneTest.SceneTestCase ) :
 			self.assertEqual( arnold.AiNodeGetInt( options, "region_max_y" ), 479 )
 
 		# Test Empty Crop Window
-		s["options"]["options"]["renderCropWindow"]["value"].setValue( IECore.Box2f() )
+		s["options"]["options"]["renderCropWindow"]["value"].setValue( imath.Box2f() )
 
 		s["render"]["task"].execute()
 

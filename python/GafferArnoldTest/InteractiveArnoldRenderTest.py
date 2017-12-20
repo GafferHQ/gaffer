@@ -37,6 +37,7 @@
 import os
 import time
 import unittest
+import imath
 
 import IECore
 import IECoreScene
@@ -100,7 +101,7 @@ class InteractiveArnoldRenderTest( GafferSceneTest.InteractiveRenderTest ) :
 		script = Gaffer.ScriptNode()
 
 		script["cube"] = GafferScene.Cube()
-		script["cube"]["dimensions"].setValue( IECore.V3f( 2 ) )
+		script["cube"]["dimensions"].setValue( imath.V3f( 2 ) )
 
 		script["meshType"] = GafferScene.MeshType()
 		script["meshType"]["in"].setInput( script["cube"]["out"] )
@@ -130,7 +131,7 @@ class InteractiveArnoldRenderTest( GafferSceneTest.InteractiveRenderTest ) :
 		script["imageStats"] = GafferImage.ImageStats()
 		script["imageStats"]["in"].setInput( script["objectToImage"]["out"] )
 		script["imageStats"]["channels"].setValue( IECore.StringVectorData( [ "R", "G", "B", "A" ] ) )
-		script["imageStats"]["area"].setValue( IECore.Box2i( IECore.V2i( 0 ), IECore.V2i( 640, 480 ) ) )
+		script["imageStats"]["area"].setValue( imath.Box2i( imath.V2i( 0 ), imath.V2i( 640, 480 ) ) )
 
 		script["render"] = self._createInteractiveRender()
 		script["render"]["in"].setInput( script["outputs"]["out"] )

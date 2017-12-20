@@ -35,6 +35,7 @@
 ##########################################################################
 
 import arnold
+import imath
 
 import IECore
 import IECoreScene
@@ -85,7 +86,7 @@ class ArnoldLightTest( GafferSceneTest.SceneTestCase ) :
 		# it and is the preferred way
 		s2 = GafferArnold.ArnoldShader()
 		s2.loadShader( "matte" )
-		s2["parameters"]["color"].setValue( IECore.Color4f( 0, 1, 0, 0.5 ) )
+		s2["parameters"]["color"].setValue( imath.Color4f( 0, 1, 0, 0.5 ) )
 
 		l = GafferArnold.ArnoldLight()
 		l.loadShader( "skydome_light" )
@@ -97,7 +98,7 @@ class ArnoldLightTest( GafferSceneTest.SceneTestCase ) :
 		self.assertEqual( network[0].name, "physical_sky" )
 		self.assertEqual( network[0].parameters["intensity"].value, 2 )
 		self.assertEqual( network[1].name, "matte" )
-		self.assertEqual( network[1].parameters["color"].value, IECore.Color4f( 0, 1, 0, 0.5 ) )
+		self.assertEqual( network[1].parameters["color"].value, imath.Color4f( 0, 1, 0, 0.5 ) )
 		self.assertEqual( network[2].parameters["color"].value, "link:" + network[0].parameters["__handle"].value )
 		self.assertEqual( network[2].parameters["shader"].value, "link:" + network[1].parameters["__handle"].value )
 
