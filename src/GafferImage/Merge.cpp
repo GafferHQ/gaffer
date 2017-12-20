@@ -213,16 +213,24 @@ void Merge::hashChannelData( const GafferImage::ImagePlug *output, const Gaffer:
 			dataWindow = (*it)->dataWindowPlug()->getValue();
 		}
 
-		const std::vector<std::string> &channelNames = channelNamesData->readable();
-
-		if( ImageAlgo::channelExists( channelNames, channelName ) )
+		const Box2i validBound = boxIntersection( tileBound, dataWindow );
+		if( BufferAlgo::empty( validBound ) )
 		{
-			(*it)->channelDataPlug()->hash( h );
+			h.append( 0 );
 		}
-
-		if( ImageAlgo::channelExists( channelNames, "A" ) )
+		else
 		{
-			h.append( (*it)->channelDataHash( "A", tileOrigin ) );
+			const std::vector<std::string> &channelNames = channelNamesData->readable();
+
+			if( ImageAlgo::channelExists( channelNames, channelName ) )
+			{
+				(*it)->channelDataPlug()->hash( h );
+			}
+
+			if( ImageAlgo::channelExists( channelNames, "A" ) )
+			{
+				h.append( (*it)->channelDataHash( "A", tileOrigin ) );
+			}
 		}
 
 		// The hash of the channel data we include above represents just the data in
@@ -235,7 +243,6 @@ void Merge::hashChannelData( const GafferImage::ImagePlug *output, const Gaffer:
 		// input data windows, we may be using/revealing the invalid parts of a tile. We
 		// deal with this in computeChannelData() by treating the invalid parts as black,
 		// and must therefore hash in the valid bound here to take that into account.
-		const Box2i validBound = boxIntersection( tileBound, dataWindow );
 		h.append( validBound );
 	}
 
@@ -308,7 +315,9 @@ IECore::ConstFloatVectorDataPtr Merge::merge( F f, const std::string &channelNam
 		ConstFloatVectorDataPtr channelData;
 		ConstFloatVectorDataPtr alphaData;
 
-		if( ImageAlgo::channelExists( channelNames, channelName ) )
+		const Box2i validBound = boxIntersection( tileBound, dataWindow );
+
+		if( ImageAlgo::channelExists( channelNames, channelName ) && !BufferAlgo::empty( validBound ) )
 		{
 			channelData = (*it)->channelDataPlug()->getValue();
 		}
@@ -317,7 +326,7 @@ IECore::ConstFloatVectorDataPtr Merge::merge( F f, const std::string &channelNam
 			channelData = ImagePlug::blackTile();
 		}
 
-		if( ImageAlgo::channelExists( channelNames, "A" ) )
+		if( ImageAlgo::channelExists( channelNames, "A" ) && !BufferAlgo::empty( validBound ) )
 		{
 			alphaData = (*it)->channelData( "A", tileOrigin );
 		}
@@ -326,7 +335,6 @@ IECore::ConstFloatVectorDataPtr Merge::merge( F f, const std::string &channelNam
 			alphaData = ImagePlug::blackTile();
 		}
 
-		const Box2i validBound = boxIntersection( tileBound, dataWindow );
 
 		if( !resultData )
 		{
