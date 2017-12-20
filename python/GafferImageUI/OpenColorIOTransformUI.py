@@ -34,6 +34,8 @@
 #
 ##########################################################################
 
+import imath
+
 import IECore
 
 import Gaffer
@@ -89,7 +91,7 @@ class _ContextFooter( GafferUI.Widget ) :
 
 		with row :
 
-			GafferUI.Spacer( IECore.V2i( GafferUI.PlugWidget.labelWidth(), 1 ) )
+			GafferUI.Spacer( imath.V2i( GafferUI.PlugWidget.labelWidth(), 1 ) )
 
 			button = GafferUI.Button(
 				image = "plus.png",
@@ -101,7 +103,7 @@ class _ContextFooter( GafferUI.Widget ) :
 				Gaffer.WeakMethod( self.__clicked )
 			)
 
-			GafferUI.Spacer( IECore.V2i( 1 ), IECore.V2i( 999999, 1 ), parenting = { "expand" : True } )
+			GafferUI.Spacer( imath.V2i( 1 ), imath.V2i( 999999, 1 ), parenting = { "expand" : True } )
 
 		self.__node = node
 

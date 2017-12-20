@@ -38,6 +38,7 @@ import os
 import shutil
 import unittest
 import subprocess
+import imath
 
 import IECore
 
@@ -52,19 +53,19 @@ class ResampleTest( GafferImageTest.ImageTestCase ) :
 
 		c = GafferImage.Constant()
 		c["format"].setValue( GafferImage.Format( 100, 100 ) )
-		c["color"].setValue( IECore.Color4f( 1 ) )
+		c["color"].setValue( imath.Color4f( 1 ) )
 
 		r = GafferImage.Resample()
 		r["in"].setInput( c["out"] )
 		r["matrix"].setValue(
-			IECore.M33f().translate( IECore.V2f( 10.5, 11.5 ) ).scale( IECore.V2f( 0.1 ) )
+			imath.M33f().translate( imath.V2f( 10.5, 11.5 ) ).scale( imath.V2f( 0.1 ) )
 		)
 
 		self.assertEqual(
 			r["out"]["dataWindow"].getValue(),
-			IECore.Box2i(
-				IECore.V2i( 10, 11 ),
-				IECore.V2i( 21, 22 )
+			imath.Box2i(
+				imath.V2i( 10, 11 ),
+				imath.V2i( 21, 22 )
 			)
 		)
 
@@ -78,19 +79,19 @@ class ResampleTest( GafferImageTest.ImageTestCase ) :
 			reader["fileName"].setValue( inputFileName )
 
 			inSize = reader["out"]["format"].getValue().getDisplayWindow().size()
-			inSize = IECore.V2f( inSize.x, inSize.y )
+			inSize = imath.V2f( inSize.x, inSize.y )
 
 			resample = GafferImage.Resample()
 			resample["in"].setInput( reader["out"] )
 			resample["matrix"].setValue(
-				IECore.M33f().scale( IECore.V2f( size.x, size.y ) / inSize )
+				imath.M33f().scale( imath.V2f( size.x, size.y ) / inSize )
 			)
 			resample["filter"].setValue( filter )
 			resample["boundingMode"].setValue( GafferImage.Sampler.BoundingMode.Clamp )
 
 			crop = GafferImage.Crop()
 			crop["in"].setInput( resample["out"] )
-			crop["area"].setValue( IECore.Box2i( IECore.V2i( 0 ), size ) )
+			crop["area"].setValue( imath.Box2i( imath.V2i( 0 ), size ) )
 
 			outputFileName = self.temporaryDirectory() + "/%s_%dx%d_%s.exr" % ( os.path.splitext( fileName )[0], size.x, size.y, filter )
 			writer = GafferImage.ImageWriter()
@@ -139,10 +140,10 @@ class ResampleTest( GafferImageTest.ImageTestCase ) :
 				)
 
 		tests = [
-			( "resamplePatterns.exr", IECore.V2i( 4 ), "lanczos3" ),
-			( "resamplePatterns.exr", IECore.V2i( 40 ), "box" ),
-			( "resamplePatterns.exr", IECore.V2i( 101 ), "gaussian" ),
-			( "resamplePatterns.exr", IECore.V2i( 119 ), "mitchell" ),
+			( "resamplePatterns.exr", imath.V2i( 4 ), "lanczos3" ),
+			( "resamplePatterns.exr", imath.V2i( 40 ), "box" ),
+			( "resamplePatterns.exr", imath.V2i( 101 ), "gaussian" ),
+			( "resamplePatterns.exr", imath.V2i( 119 ), "mitchell" ),
 		]
 
 		for args in tests :
@@ -152,10 +153,10 @@ class ResampleTest( GafferImageTest.ImageTestCase ) :
 
 		c = GafferImage.Constant()
 		c["format"].setValue( GafferImage.Format( 100, 100 ) )
-		c["color"].setValue( IECore.Color4f( 1 ) )
+		c["color"].setValue( imath.Color4f( 1 ) )
 
 		r = GafferImage.Resample()
-		r["matrix"].setValue( IECore.M33f().scale( IECore.V2f( 4 ) ) )
+		r["matrix"].setValue( imath.M33f().scale( imath.V2f( 4 ) ) )
 		r["boundingMode"].setValue( GafferImage.Sampler.BoundingMode.Clamp )
 		r["filter"].setValue( "sinc" )
 		r["in"].setInput( c["out"] )
@@ -165,7 +166,7 @@ class ResampleTest( GafferImageTest.ImageTestCase ) :
 
 	def testExpandDataWindow( self ) :
 
-		d = IECore.Box2i( IECore.V2i( 5, 6 ), IECore.V2i( 101, 304 ) )
+		d = imath.Box2i( imath.V2i( 5, 6 ), imath.V2i( 101, 304 ) )
 		c = GafferImage.Constant()
 		c["format"].setValue( GafferImage.Format( d ) )
 
@@ -175,14 +176,14 @@ class ResampleTest( GafferImageTest.ImageTestCase ) :
 		self.assertEqual( r["out"]["dataWindow"].getValue(), d )
 
 		r["expandDataWindow"].setValue( True )
-		self.assertEqual( r["out"]["dataWindow"].getValue(), IECore.Box2i( d.min - IECore.V2i( 1 ), d.max + IECore.V2i( 1 ) ) )
+		self.assertEqual( r["out"]["dataWindow"].getValue(), imath.Box2i( d.min() - imath.V2i( 1 ), d.max() + imath.V2i( 1 ) ) )
 
-		r["filterScale"].setValue( IECore.V2f( 10 ) )
-		self.assertEqual( r["out"]["dataWindow"].getValue(), IECore.Box2i( d.min - IECore.V2i( 5 ), d.max + IECore.V2i( 5 ) ) )
+		r["filterScale"].setValue( imath.V2f( 10 ) )
+		self.assertEqual( r["out"]["dataWindow"].getValue(), imath.Box2i( d.min() - imath.V2i( 5 ), d.max() + imath.V2i( 5 ) ) )
 
 	def __matrix( self, inputDataWindow, outputDataWindow ) :
 
-		return IECore.M33f()
+		return imath.M33f()
 
 if __name__ == "__main__":
 	unittest.main()

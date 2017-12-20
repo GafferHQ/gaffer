@@ -37,6 +37,7 @@
 
 import os
 import unittest
+import imath
 
 import IECore
 
@@ -57,10 +58,10 @@ class PremultiplyTest( GafferImageTest.ImageTestCase ) :
 		premult["in"].setInput(i["out"])
 
 		premult["alphaChannel"].setValue("R")
-		h1 = premult["out"].channelData( "R", IECore.V2i( 0 ) ).hash()
+		h1 = premult["out"].channelData( "R", imath.V2i( 0 ) ).hash()
 
 		premult["alphaChannel"].setValue("B")
-		h2 = premult["out"].channelData( "R", IECore.V2i( 0 ) ).hash()
+		h2 = premult["out"].channelData( "R", imath.V2i( 0 ) ).hash()
 		self.assertNotEqual( h1, h2 )
 
 	def testEnableBehaviour( self ) :
@@ -96,7 +97,7 @@ class PremultiplyTest( GafferImageTest.ImageTestCase ) :
 		color = { "R": 1.0, "G": 2.0, "B": 0.0, "A": 0.5 }
 		s = Gaffer.ScriptNode()
 		s["c"] = GafferImage.Constant()
-		s["c"]["color"].setValue( IECore.Color4f( color["R"], color["G"], color["B"], color["A"] ) )
+		s["c"]["color"].setValue( imath.Color4f( color["R"], color["G"], color["B"], color["A"] ) )
 		s["p"] = GafferImage.Premultiply()
 		s["p"]["in"].setInput( s["c"]["out"] )
 		s["p"]["channels"].setValue( "R G B A" )
@@ -107,7 +108,7 @@ class PremultiplyTest( GafferImageTest.ImageTestCase ) :
 			for channelName in color.keys():
 				c = Gaffer.Context( s.context() )
 				c["image:channelName"] = channelName
-				c["image:tileOrigin"] = IECore.V2i( 0 )
+				c["image:tileOrigin"] = imath.V2i( 0 )
 				with c :
 					result = s["p"]["out"]["channelData"].getValue()[0]
 

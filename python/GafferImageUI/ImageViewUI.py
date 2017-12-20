@@ -35,6 +35,7 @@
 ##########################################################################
 
 import functools
+import imath
 
 import IECore
 
@@ -253,7 +254,7 @@ class _ColorInspectorPlugValueWidget( GafferUI.PlugValueWidget ) :
 
 				self.__rgbLabel = GafferUI.Label()
 
-				GafferUI.Spacer( IECore.V2i( 20, 10 ), IECore.V2i( 20, 10 ) )
+				GafferUI.Spacer( imath.V2i( 20, 10 ), imath.V2i( 20, 10 ) )
 
 				self.__hsvLabel = GafferUI.Label()
 
@@ -272,17 +273,17 @@ class _ColorInspectorPlugValueWidget( GafferUI.PlugValueWidget ) :
 				color = self.getPlug()["color"].defaultValue()
 
 		if samplerChannels[3] not in channelNames :
-			color = IECore.Color3f( color[0], color[1], color[2] )
+			color = imath.Color3f( color[0], color[1], color[2] )
 
 		self.__positionLabel.setText( "<b>XY : %d %d</b>" % ( pixel.x, pixel.y ) )
 		self.__swatch.setColor( color )
 
-		if isinstance( color, IECore.Color4f ) :
+		if isinstance( color, imath.Color4f ) :
 			self.__rgbLabel.setText( "<b>RGBA : %.3f %.3f %.3f %.3f</b>" % ( color.r, color.g, color.b, color.a ) )
 		else :
 			self.__rgbLabel.setText( "<b>RGB : %.3f %.3f %.3f</b>" % ( color.r, color.g, color.b ) )
 
-		hsv = color.rgbToHSV()
+		hsv = color.rgb2hsv()
 		self.__hsvLabel.setText( "<b>HSV : %.3f %.3f %.3f</b>" % ( hsv.r, hsv.g, hsv.b ) )
 
 ##########################################################################

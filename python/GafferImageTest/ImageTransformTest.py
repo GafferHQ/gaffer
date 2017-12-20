@@ -37,6 +37,7 @@
 import unittest
 import random
 import os
+import imath
 
 import IECore
 
@@ -81,7 +82,7 @@ class ImageTransformTest( GafferImageTest.ImageTestCase ) :
 		t = GafferImage.ImageTransform()
 		t["in"].setInput( r["out"] )
 		t["transform"]["rotate"].setValue( -1. )
-		t["transform"]["scale"].setValue( IECore.V2f( 1.5, 1. ) )
+		t["transform"]["scale"].setValue( imath.V2f( 1.5, 1. ) )
 
 		r2 = GafferImage.ImageReader()
 		r2["fileName"].setValue( os.path.join( self.path, "knownTransformBug.exr" ) )
@@ -101,7 +102,7 @@ class ImageTransformTest( GafferImageTest.ImageTestCase ) :
 			if isinstance( plug, Gaffer.FloatPlug ) :
 				plug.setValue( 1 )
 			else :
-				plug.setValue( IECore.V2f( 2 ) )
+				plug.setValue( imath.V2f( 2 ) )
 
 			hash = t["out"].imageHash()
 			self.assertNotEqual( hash, previousHash )
@@ -122,7 +123,7 @@ class ImageTransformTest( GafferImageTest.ImageTestCase ) :
 			if isinstance( plug, Gaffer.FloatPlug ) :
 				plug.setValue( 1 )
 			else :
-				plug.setValue( IECore.V2f( 2 ) )
+				plug.setValue( imath.V2f( 2 ) )
 
 			dirtiedPlugs = { x[0] for x in cs }
 
@@ -141,7 +142,7 @@ class ImageTransformTest( GafferImageTest.ImageTestCase ) :
 
 		t = GafferImage.ImageTransform()
 		t["in"].setInput( r["out"] )
-		t["transform"]["translate"].setValue( IECore.V2f( 2., 2. ) )
+		t["transform"]["translate"].setValue( imath.V2f( 2., 2. ) )
 
 		self.assertEqual( t["out"]["format"].hash(), r["out"]["format"].hash() )
 
@@ -153,7 +154,7 @@ class ImageTransformTest( GafferImageTest.ImageTestCase ) :
 		t = GafferImage.ImageTransform()
 		t["in"].setInput( r["out"] )
 
-		t["transform"]["translate"].setValue( IECore.V2f( 2., 2. ) )
+		t["transform"]["translate"].setValue( imath.V2f( 2., 2. ) )
 		t["transform"]["rotate"].setValue( 90 )
 		t["enabled"].setValue( True )
 		self.assertNotEqual( r["out"].imageHash(), t["out"].imageHash() )
@@ -166,7 +167,7 @@ class ImageTransformTest( GafferImageTest.ImageTestCase ) :
 		c = GafferImage.Constant()
 		t = GafferImage.ImageTransform()
 		t["in"].setInput( c["out"] )
-		t["transform"]["translate"].setValue( IECore.V2f( 1, 0 ) )
+		t["transform"]["translate"].setValue( imath.V2f( 1, 0 ) )
 
 		self.assertEqual( t["out"]["metadata"].hash(), c["out"]["metadata"].hash() )
 		self.assertEqual( t["out"]["format"].hash(), c["out"]["format"].hash() )
@@ -222,13 +223,13 @@ class ImageTransformTest( GafferImageTest.ImageTestCase ) :
 			# to adjust our test to force it to do an actual resampling of
 			# the image, since that's what we want to test.
 			self.assertNotEqual(
-				r["out"].channelDataHash( "R", IECore.V2i( 0 ) ),
-				t["out"].channelDataHash( "R", IECore.V2i( 0 ) )
+				r["out"].channelDataHash( "R", imath.V2i( 0 ) ),
+				t["out"].channelDataHash( "R", imath.V2i( 0 ) )
 			)
 
 			# Check that the rotated image is basically the same as the input.
 			t["transform"]["pivot"].setValue(
-				IECore.V2f( random.uniform( -100, 100 ), random.uniform( -100, 100 ) ),
+				imath.V2f( random.uniform( -100, 100 ), random.uniform( -100, 100 ) ),
 			)
 			self.assertImagesEqual( r["out"], t["out"], maxDifference = 0.0001, ignoreDataWindow = True )
 
@@ -240,13 +241,13 @@ class ImageTransformTest( GafferImageTest.ImageTestCase ) :
 		# Use a Constant and a Crop to make a vertical line.
 		constant = GafferImage.Constant()
 		constant["format"].setValue( GafferImage.Format( 100, 100 ) )
-		constant["color"].setValue( IECore.Color4f( 1 ) )
+		constant["color"].setValue( imath.Color4f( 1 ) )
 
 		crop = GafferImage.Crop()
 		crop["in"].setInput( constant["out"] )
 		crop["affectDataWindow"].setValue( True )
 		crop["affectDisplayWindow"].setValue( False )
-		crop["area"].setValue( IECore.Box2i( IECore.V2i( 10, 0 ), IECore.V2i( 11, 100 ) ) )
+		crop["area"].setValue( imath.Box2i( imath.V2i( 10, 0 ), imath.V2i( 11, 100 ) ) )
 
 		# Check it's where we expect
 
@@ -259,22 +260,22 @@ class ImageTransformTest( GafferImageTest.ImageTestCase ) :
 			sampler = GafferImage.Sampler(
 				transform["out"],
 				"R",
-				IECore.Box2i( position, position + IECore.V2i( 1 ) )
+				imath.Box2i( position, position + imath.V2i( 1 ) )
 			)
 			return sampler.sample( position.x, position.y )
 
-		self.assertEqual( sample( IECore.V2i( 9, 10 ) ), 0 )
-		self.assertEqual( sample( IECore.V2i( 10, 10 ) ), 1 )
-		self.assertEqual( sample( IECore.V2i( 11, 10 ) ), 0 )
+		self.assertEqual( sample( imath.V2i( 9, 10 ) ), 0 )
+		self.assertEqual( sample( imath.V2i( 10, 10 ) ), 1 )
+		self.assertEqual( sample( imath.V2i( 11, 10 ) ), 0 )
 
 		# Move it a tiiny bit, and check it has moved
 		# a tiiny bit.
 
 		transform["transform"]["translate"]["x"].setValue( 0.1 )
 
-		self.assertEqual( sample( IECore.V2i( 9, 10 ) ), 0 )
-		self.assertGreater( sample( IECore.V2i( 10, 10 ) ), 0.9 )
-		self.assertGreater( sample( IECore.V2i( 11, 10 ) ), 0.09 )
+		self.assertEqual( sample( imath.V2i( 9, 10 ) ), 0 )
+		self.assertGreater( sample( imath.V2i( 10, 10 ) ), 0.9 )
+		self.assertGreater( sample( imath.V2i( 11, 10 ) ), 0.09 )
 
 	def testNegativeScale( self ) :
 
@@ -283,7 +284,7 @@ class ImageTransformTest( GafferImageTest.ImageTestCase ) :
 
 		t = GafferImage.ImageTransform()
 		t["in"].setInput( r["out"] )
-		t["transform"]["pivot"].setValue( IECore.V2f( 1 ) )
+		t["transform"]["pivot"].setValue( imath.V2f( 1 ) )
 		t["transform"]["scale"]["x"].setValue( -1 )
 
 		sampler = GafferImage.Sampler(

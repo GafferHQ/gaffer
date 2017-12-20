@@ -37,6 +37,7 @@
 
 import os
 import unittest
+import imath
 
 import IECore
 
@@ -57,10 +58,10 @@ class UnpremultiplyTest( GafferImageTest.ImageTestCase ) :
 		unpremult["in"].setInput(i["out"])
 
 		unpremult["alphaChannel"].setValue("R")
-		h1 = unpremult["out"].channelData( "R", IECore.V2i( 0 ) ).hash()
+		h1 = unpremult["out"].channelData( "R", imath.V2i( 0 ) ).hash()
 
 		unpremult["alphaChannel"].setValue("B")
-		h2 = unpremult["out"].channelData( "R", IECore.V2i( 0 ) ).hash()
+		h2 = unpremult["out"].channelData( "R", imath.V2i( 0 ) ).hash()
 		self.assertNotEqual( h1, h2 )
 
 	def testEnableBehaviour( self ) :
@@ -96,7 +97,7 @@ class UnpremultiplyTest( GafferImageTest.ImageTestCase ) :
 		color = { "R": 1.0, "G": 2.0, "B": 0.0, "A": 0.5 }
 		s = Gaffer.ScriptNode()
 		s["c"] = GafferImage.Constant()
-		s["c"]["color"].setValue( IECore.Color4f( color["R"], color["G"], color["B"], color["A"] ) )
+		s["c"]["color"].setValue( imath.Color4f( color["R"], color["G"], color["B"], color["A"] ) )
 		s["u"] = GafferImage.Unpremultiply()
 		s["u"]["in"].setInput( s["c"]["out"] )
 		s["u"]["channels"].setValue( "R G B A" )
@@ -107,7 +108,7 @@ class UnpremultiplyTest( GafferImageTest.ImageTestCase ) :
 			for channelName in color.keys():
 				c = Gaffer.Context( s.context() )
 				c["image:channelName"] = channelName
-				c["image:tileOrigin"] = IECore.V2i( 0 )
+				c["image:tileOrigin"] = imath.V2i( 0 )
 				with c :
 					result = s["u"]["out"]["channelData"].getValue()[0]
 

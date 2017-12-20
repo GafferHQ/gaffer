@@ -40,6 +40,7 @@ import unittest
 import shutil
 import functools
 import datetime
+import imath
 
 import IECore
 
@@ -293,7 +294,7 @@ class ImageWriterTest( GafferImageTest.ImageTestCase ) :
 		self.failIf( os.path.exists( testTileFile ) )
 
 		GafferImage.FormatPlug.acquireDefaultFormatPlug( s ).setValue(
-			GafferImage.Format( IECore.Box2i( IECore.V2i( -7, -2 ), IECore.V2i( 23, 25 ) ), 1. )
+			GafferImage.Format( imath.Box2i( imath.V2i( -7, -2 ), imath.V2i( 23, 25 ) ), 1. )
 		)
 
 		w1["in"].setInput( g["out"] )
@@ -528,7 +529,7 @@ class ImageWriterTest( GafferImageTest.ImageTestCase ) :
 	def testOffsetDisplayWindowWrite( self ) :
 
 		c = GafferImage.Constant()
-		format = GafferImage.Format( IECore.Box2i( IECore.V2i( -20, -15 ), IECore.V2i( 29, 14 ) ), 1. )
+		format = GafferImage.Format( imath.Box2i( imath.V2i( -20, -15 ), imath.V2i( 29, 14 ) ), 1. )
 		c["format"].setValue( format )
 
 		testFile = self.__testFile( "offsetDisplayWindow", "RGBA", "exr" )
@@ -790,12 +791,12 @@ class ImageWriterTest( GafferImageTest.ImageTestCase ) :
 		i["format"].setValue( GafferImage.Format( 4096, 2304, 1.000 ) )
 
 		overscanCrop = GafferImage.Crop()
-		overscanCrop["area"].setValue( IECore.Box2i( IECore.V2i( 300, 300 ), IECore.V2i( 2220, 1908 ) ) )
+		overscanCrop["area"].setValue( imath.Box2i( imath.V2i( 300, 300 ), imath.V2i( 2220, 1908 ) ) )
 		overscanCrop["affectDataWindow"].setValue( False )
 		overscanCrop["in"].setInput( i["out"] )
 
 		c = GafferImage.Crop()
-		c["area"].setValue( IECore.Box2i( IECore.V2i( -144, 1744 ), IECore.V2i( -143, 1745 ) ) )
+		c["area"].setValue( imath.Box2i( imath.V2i( -144, 1744 ), imath.V2i( -143, 1745 ) ) )
 		c["affectDisplayWindow"].setValue( False )
 		c["in"].setInput( overscanCrop["out"] )
 
@@ -813,16 +814,16 @@ class ImageWriterTest( GafferImageTest.ImageTestCase ) :
 		after = GafferImage.ImageReader()
 		after["fileName"].setValue( testFile )
 		# Check that the data window is the expected single pixel
-		self.assertEqual( after["out"]["dataWindow"].getValue(), IECore.Box2i( IECore.V2i( -144, 1744 ), IECore.V2i( -143, 1745 ) ) )
+		self.assertEqual( after["out"]["dataWindow"].getValue(), imath.Box2i( imath.V2i( -144, 1744 ), imath.V2i( -143, 1745 ) ) )
 
 	def testWriteEmptyImage( self ) :
 
 		i = GafferImage.Constant()
-		i["format"].setValue( GafferImage.Format( IECore.Box2i( IECore.V2i( 0 ), IECore.V2i( 100 ) ), 1 ) )
+		i["format"].setValue( GafferImage.Format( imath.Box2i( imath.V2i( 0 ), imath.V2i( 100 ) ), 1 ) )
 
 		c = GafferImage.Crop()
 		c["areaSource"].setValue( GafferImage.Crop.AreaSource.Area )
-		c["area"].setValue( IECore.Box2i( IECore.V2i( 40 ), IECore.V2i( 40 ) ) )
+		c["area"].setValue( imath.Box2i( imath.V2i( 40 ), imath.V2i( 40 ) ) )
 		c["affectDisplayWindow"].setValue( False )
 		c["affectDataWindow"].setValue( True )
 		c["in"].setInput( i["out"] )
@@ -841,7 +842,7 @@ class ImageWriterTest( GafferImageTest.ImageTestCase ) :
 		after = GafferImage.ImageReader()
 		after["fileName"].setValue( testFile )
 		# Check that the data window is the expected single pixel
-		self.assertEqual( after["out"]["dataWindow"].getValue(), IECore.Box2i( IECore.V2i( 0, 99 ), IECore.V2i( 1, 100 ) ) )
+		self.assertEqual( after["out"]["dataWindow"].getValue(), imath.Box2i( imath.V2i( 0, 99 ), imath.V2i( 1, 100 ) ) )
 
 	def testPixelAspectRatio( self ) :
 
@@ -1164,7 +1165,7 @@ class ImageWriterTest( GafferImageTest.ImageTestCase ) :
 	def testDefaultColorSpace( self ) :
 
 		image = GafferImage.Constant()
-		image["color"].setValue( IECore.Color4f( 0.25, 0.5, 0.75, 1 ) )
+		image["color"].setValue( imath.Color4f( 0.25, 0.5, 0.75, 1 ) )
 
 		writer = GafferImage.ImageWriter()
 		writer["in"].setInput( image["out"] )
@@ -1226,8 +1227,8 @@ class ImageWriterTest( GafferImageTest.ImageTestCase ) :
 
 		# create a wide image
 		constant = GafferImage.Constant()
-		constant["color"].setValue( IECore.Color4f( 0.5, 0.5, 0.5, 1 ) )
-		constant["format"].setValue( GafferImage.Format( IECore.Box2i( IECore.V2i( 0 ), IECore.V2i( 3000, 1080 ) ), 1. ) )
+		constant["color"].setValue( imath.Color4f( 0.5, 0.5, 0.5, 1 ) )
+		constant["format"].setValue( GafferImage.Format( imath.Box2i( imath.V2i( 0 ), imath.V2i( 3000, 1080 ) ), 1. ) )
 
 		# fit it such that we have several tiles of blank lines on top (and bottom)
 		resize = GafferImage.Resize()

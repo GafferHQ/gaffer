@@ -36,6 +36,7 @@
 
 import unittest
 import random
+import imath
 
 import IECore
 
@@ -49,7 +50,7 @@ class FormatTest( GafferImageTest.ImageTestCase ) :
 
 	def testOffsetDisplayWindow( self ) :
 
-		box = IECore.Box2i( IECore.V2i( 6, -4 ), IECore.V2i( 50, 150 ) )
+		box = imath.Box2i( imath.V2i( 6, -4 ), imath.V2i( 50, 150 ) )
 		f = GafferImage.Format( box, 1.1 )
 		self.assertEqual( f.getDisplayWindow(), box )
 		self.assertEqual( f.width(), 44 )
@@ -58,7 +59,7 @@ class FormatTest( GafferImageTest.ImageTestCase ) :
 
 	def testBoxAspectConstructor( self ) :
 
-		f = GafferImage.Format( IECore.Box2i( IECore.V2i( 0 ), IECore.V2i( 50, 150 ) ), 1.3 )
+		f = GafferImage.Format( imath.Box2i( imath.V2i( 0 ), imath.V2i( 50, 150 ) ), 1.3 )
 		self.assertEqual( f.width(), 50 )
 		self.assertEqual( f.height(), 150 )
 		self.assertEqual( f.getPixelAspect(), 1.3 )
@@ -68,7 +69,7 @@ class FormatTest( GafferImageTest.ImageTestCase ) :
 		f = GafferImage.Format( 100, 100 )
 		self.assertEqual( f.getPixelAspect(), 1. )
 
-		f = GafferImage.Format( IECore.Box2i( IECore.V2i( 0 ), IECore.V2i( 100, 100 ) ) )
+		f = GafferImage.Format( imath.Box2i( imath.V2i( 0 ), imath.V2i( 100, 100 ) ) )
 		self.assertEqual( f.getPixelAspect(), 1. )
 
 	def testWH( self ) :
@@ -83,76 +84,76 @@ class FormatTest( GafferImageTest.ImageTestCase ) :
 
 	def testEXRSpaceFormat( self ) :
 
-		f = GafferImage.Format( IECore.Box2i( IECore.V2i( 0 ), IECore.V2i( 99 ) ), 1.0, True )
+		f = GafferImage.Format( imath.Box2i( imath.V2i( 0 ), imath.V2i( 99 ) ), 1.0, True )
 		self.assertEqual( f.width(), 100 )
 		self.assertEqual( f.height(), 100 )
 		self.assertEqual(
 			f.toEXRSpace( f.getDisplayWindow() ),
-			IECore.Box2i( IECore.V2i( 0 ), IECore.V2i( 99 ) ),
+			imath.Box2i( imath.V2i( 0 ), imath.V2i( 99 ) ),
 		)
 
-		f = GafferImage.Format( IECore.Box2i( IECore.V2i( 0 ), IECore.V2i( 99 ) ), 1.0, fromEXRSpace = True )
+		f = GafferImage.Format( imath.Box2i( imath.V2i( 0 ), imath.V2i( 99 ) ), 1.0, fromEXRSpace = True )
 		self.assertEqual( f.width(), 100 )
 		self.assertEqual( f.height(), 100 )
 		self.assertEqual(
 			f.toEXRSpace( f.getDisplayWindow() ),
-			IECore.Box2i( IECore.V2i( 0 ), IECore.V2i( 99 ) ),
+			imath.Box2i( imath.V2i( 0 ), imath.V2i( 99 ) ),
 		)
 
-		f = GafferImage.Format( IECore.Box2i( IECore.V2i( 0 ), IECore.V2i( 100 ) ), 1.0, fromEXRSpace = False )
+		f = GafferImage.Format( imath.Box2i( imath.V2i( 0 ), imath.V2i( 100 ) ), 1.0, fromEXRSpace = False )
 		self.assertEqual( f.width(), 100 )
 		self.assertEqual( f.height(), 100 )
 		self.assertEqual(
 			f.getDisplayWindow(),
-			IECore.Box2i( IECore.V2i( 0 ), IECore.V2i( 100 ) ),
+			imath.Box2i( imath.V2i( 0 ), imath.V2i( 100 ) ),
 		)
 
 	def testCoordinateSystemTransforms( self ) :
 
-		f = GafferImage.Format( IECore.Box2i( IECore.V2i( -100, -200 ), IECore.V2i( 501, 301 ) ), 1 )
+		f = GafferImage.Format( imath.Box2i( imath.V2i( -100, -200 ), imath.V2i( 501, 301 ) ), 1 )
 
-		self.assertEqual( f.fromEXRSpace( IECore.V2i( -100, -200 ) ), IECore.V2i( -100, 300 ) )
-		self.assertEqual( f.fromEXRSpace( IECore.V2i( -100, 300 ) ), IECore.V2i( -100, -200 ) )
+		self.assertEqual( f.fromEXRSpace( imath.V2i( -100, -200 ) ), imath.V2i( -100, 300 ) )
+		self.assertEqual( f.fromEXRSpace( imath.V2i( -100, 300 ) ), imath.V2i( -100, -200 ) )
 
-		self.assertEqual( f.toEXRSpace( IECore.V2i( -100, -200 ) ), IECore.V2i( -100, 300 ) )
-		self.assertEqual( f.toEXRSpace( IECore.V2i( -100, 300 ) ), IECore.V2i( -100, -200 ) )
+		self.assertEqual( f.toEXRSpace( imath.V2i( -100, -200 ) ), imath.V2i( -100, 300 ) )
+		self.assertEqual( f.toEXRSpace( imath.V2i( -100, 300 ) ), imath.V2i( -100, -200 ) )
 
 		self.assertEqual(
 			f.toEXRSpace(
-				IECore.Box2i( IECore.V2i( -100, -200 ), IECore.V2i( 501, 301 ) )
+				imath.Box2i( imath.V2i( -100, -200 ), imath.V2i( 501, 301 ) )
 			),
-			IECore.Box2i( IECore.V2i( -100, -200 ), IECore.V2i( 500, 300 ) )
+			imath.Box2i( imath.V2i( -100, -200 ), imath.V2i( 500, 300 ) )
 		)
 
 		self.assertEqual(
 			f.toEXRSpace(
-				IECore.Box2i( IECore.V2i( -100, -100 ), IECore.V2i( 501, 301 ) )
+				imath.Box2i( imath.V2i( -100, -100 ), imath.V2i( 501, 301 ) )
 			),
-			IECore.Box2i( IECore.V2i( -100, -200 ), IECore.V2i( 500, 200 ) )
+			imath.Box2i( imath.V2i( -100, -200 ), imath.V2i( 500, 200 ) )
 		)
 
 		self.assertEqual(
 			f.toEXRSpace(
-				IECore.Box2i( IECore.V2i( -100, -200 ), IECore.V2i( 501, -100 ) )
+				imath.Box2i( imath.V2i( -100, -200 ), imath.V2i( 501, -100 ) )
 			),
-			IECore.Box2i( IECore.V2i( -100, 201 ), IECore.V2i( 500, 300 ) )
+			imath.Box2i( imath.V2i( -100, 201 ), imath.V2i( 500, 300 ) )
 		)
 
 		for i in range( 0, 1000 ) :
 
-			p = IECore.V2i( int( random.uniform( -500, 500 ) ), int( random.uniform( -500, 500 ) ) )
+			p = imath.V2i( int( random.uniform( -500, 500 ) ), int( random.uniform( -500, 500 ) ) )
 			pDown = f.toEXRSpace( p )
 			self.assertEqual( f.fromEXRSpace( pDown ), p )
 
-			b = IECore.Box2i()
-			b.extendBy( IECore.V2i( int( random.uniform( -500, 500 ) ), int( random.uniform( -500, 500 ) ) ) )
-			b.extendBy( IECore.V2i( int( random.uniform( -500, 500 ) ), int( random.uniform( -500, 500 ) ) ) )
+			b = imath.Box2i()
+			b.extendBy( imath.V2i( int( random.uniform( -500, 500 ) ), int( random.uniform( -500, 500 ) ) ) )
+			b.extendBy( imath.V2i( int( random.uniform( -500, 500 ) ), int( random.uniform( -500, 500 ) ) ) )
 
 			bDown = f.toEXRSpace( b )
 			if not GafferImage.BufferAlgo.empty( b ) :
 				self.assertEqual( f.fromEXRSpace( bDown ), b )
 			else :
-				self.assertEqual( f.fromEXRSpace( bDown ), IECore.Box2i() )
+				self.assertEqual( f.fromEXRSpace( bDown ), imath.Box2i() )
 
 	def testDisplayWindowCoordinateSystemTransforms( self ) :
 
@@ -166,11 +167,11 @@ class FormatTest( GafferImageTest.ImageTestCase ) :
 
 		self.assertEqual(
 			f.toEXRSpace( f.getDisplayWindow() ),
-			IECore.Box2i( IECore.V2i( 0 ), IECore.V2i( 9 ) )
+			imath.Box2i( imath.V2i( 0 ), imath.V2i( 9 ) )
 		)
 
 		self.assertEqual(
-			f.fromEXRSpace( IECore.Box2i( IECore.V2i( 0 ), IECore.V2i( 9 ) ) ),
+			f.fromEXRSpace( imath.Box2i( imath.V2i( 0 ), imath.V2i( 9 ) ) ),
 			f.getDisplayWindow()
 		)
 
@@ -209,15 +210,15 @@ class FormatTest( GafferImageTest.ImageTestCase ) :
 		f = GafferImage.Format( 10, 20, 2 )
 		self.assertEqual( str( f ), "10x20, 2" )
 
-		f = GafferImage.Format( IECore.Box2i( IECore.V2i( 10 ), IECore.V2i( 20 ) ) )
+		f = GafferImage.Format( imath.Box2i( imath.V2i( 10 ), imath.V2i( 20 ) ) )
 		self.assertEqual( str( f ), "(10 10) - (20 20)" )
 
 	def testEmptyBoxCoordinateSystemTransforms( self ) :
 
 		f = GafferImage.Format( 100, 200 )
-		self.assertEqual( f.toEXRSpace( IECore.Box2i() ), IECore.Box2i() )
-		self.assertEqual( f.toEXRSpace( IECore.Box2i( IECore.V2i( 0 ), IECore.V2i( 0 ) ) ), IECore.Box2i() )
-		self.assertEqual( f.fromEXRSpace( IECore.Box2i() ), IECore.Box2i() )
+		self.assertEqual( f.toEXRSpace( imath.Box2i() ), imath.Box2i() )
+		self.assertEqual( f.toEXRSpace( imath.Box2i( imath.V2i( 0 ), imath.V2i( 0 ) ) ), imath.Box2i() )
+		self.assertEqual( f.fromEXRSpace( imath.Box2i() ), imath.Box2i() )
 
 	def tearDown( self ) :
 

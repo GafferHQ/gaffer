@@ -35,6 +35,7 @@
 ##########################################################################
 
 import unittest
+import imath
 
 import IECore
 
@@ -46,8 +47,8 @@ class FormatDataTest( GafferImageTest.ImageTestCase ) :
 
 	def test( self ) :
 
-		f1 = GafferImage.Format( IECore.Box2i( IECore.V2i( 0 ), IECore.V2i( 200, 100 ) ), 0.5 )
-		f2 = GafferImage.Format( IECore.Box2i( IECore.V2i( 0 ), IECore.V2i( 200, 100 ) ), 1 )
+		f1 = GafferImage.Format( imath.Box2i( imath.V2i( 0 ), imath.V2i( 200, 100 ) ), 0.5 )
+		f2 = GafferImage.Format( imath.Box2i( imath.V2i( 0 ), imath.V2i( 200, 100 ) ), 1 )
 
 		fd1a = GafferImage.FormatData( f1 )
 		fd1b = GafferImage.FormatData( f1 )
@@ -69,7 +70,7 @@ class FormatDataTest( GafferImageTest.ImageTestCase ) :
 
 	def testSerialisation( self ) :
 
-		f = GafferImage.Format( IECore.Box2i( IECore.V2i( 10, 20 ), IECore.V2i( 200, 100 ) ), 0.5 )
+		f = GafferImage.Format( imath.Box2i( imath.V2i( 10, 20 ), imath.V2i( 200, 100 ) ), 0.5 )
 		fd = GafferImage.FormatData( f )
 
 		m = IECore.MemoryIndexedIO( IECore.CharVectorData(), [], IECore.IndexedIO.OpenMode.Write )
@@ -84,7 +85,7 @@ class FormatDataTest( GafferImageTest.ImageTestCase ) :
 
 	def testAutoConstructFromFormat( self ) :
 
-		f = GafferImage.Format( IECore.Box2i( IECore.V2i( 0 ), IECore.V2i( 200, 100 ) ), 0.5 )
+		f = GafferImage.Format( imath.Box2i( imath.V2i( 0 ), imath.V2i( 200, 100 ) ), 0.5 )
 
 		d = IECore.CompoundData()
 		d["f"] = f

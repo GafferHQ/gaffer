@@ -34,6 +34,8 @@
 #
 ##########################################################################
 
+import imath
+
 import IECore
 import IECoreImage
 
@@ -46,7 +48,7 @@ class ImageSamplerTest( GafferImageTest.ImageTestCase ) :
 
 	def test( self ) :
 
-		dataWindow = IECore.Box2i( IECore.V2i( 0 ), IECore.V2i( 74 ) )
+		dataWindow = imath.Box2i( imath.V2i( 0 ), imath.V2i( 74 ) )
 		image = IECoreImage.ImagePrimitive( dataWindow, dataWindow )
 		red = IECore.FloatVectorData()
 		green = IECore.FloatVectorData()
@@ -69,10 +71,10 @@ class ImageSamplerTest( GafferImageTest.ImageTestCase ) :
 		hashes = set()
 		for x in range( 0, 75 ) :
 			for y in range( 0, 75 ) :
-				sampler["pixel"].setValue( IECore.V2f( x + 0.5, y + 0.5 ) )
+				sampler["pixel"].setValue( imath.V2f( x + 0.5, y + 0.5 ) )
 				# the flip in y is necessary as gaffer image coordinates run bottom->top and
 				# cortex image coordinates run top->bottom.
-				self.assertEqual( sampler["color"].getValue(), IECore.Color4f( x, 74 - y, 0, 0 ) )
+				self.assertEqual( sampler["color"].getValue(), imath.Color4f( x, 74 - y, 0, 0 ) )
 				hashes.add( str( sampler["color"].hash() ) )
 
 		self.assertEqual( len( hashes ), 75 * 75 )
@@ -81,15 +83,15 @@ class ImageSamplerTest( GafferImageTest.ImageTestCase ) :
 
 		constant = GafferImage.Constant()
 		constant["layer"].setValue( "diffuse" )
-		constant["color"].setValue( IECore.Color4f( 1, 0.5, 0.25, 1 ) )
+		constant["color"].setValue( imath.Color4f( 1, 0.5, 0.25, 1 ) )
 
 		sampler = GafferImage.ImageSampler()
 		sampler["image"].setInput( constant["out"] )
-		sampler["pixel"].setValue( IECore.V2f( 10.5 ) )
-		self.assertEqual( sampler["color"].getValue(), IECore.Color4f( 0, 0, 0, 0 ) )
+		sampler["pixel"].setValue( imath.V2f( 10.5 ) )
+		self.assertEqual( sampler["color"].getValue(), imath.Color4f( 0, 0, 0, 0 ) )
 
 		sampler["channels"].setValue( IECore.StringVectorData( [ "diffuse.R", "diffuse.G", "diffuse.B", "diffuse.A" ] ) )
-		self.assertEqual( sampler["color"].getValue(), IECore.Color4f( 1, 0.5, 0.25, 1 ) )
+		self.assertEqual( sampler["color"].getValue(), imath.Color4f( 1, 0.5, 0.25, 1 ) )
 
 if __name__ == "__main__":
 	unittest.main()

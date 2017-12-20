@@ -36,6 +36,7 @@
 
 import os
 import unittest
+import imath
 
 import IECore
 
@@ -228,7 +229,7 @@ class MergeTest( GafferImageTest.ImageTestCase ) :
 		c = GafferImage.Constant()
 		f = GafferImage.Resize()
 		f["in"].setInput( c["out"] )
-		f["format"].setValue( GafferImage.Format( IECore.Box2i( IECore.V2i( 0 ), IECore.V2i( 10 ) ), 1 ) )
+		f["format"].setValue( GafferImage.Format( imath.Box2i( imath.V2i( 0 ), imath.V2i( 10 ) ), 1 ) )
 		d = GafferImage.ImageMetadata()
 		d["metadata"].addMember( "comment", IECore.StringData( "reformated and metadata updated" ) )
 		d["in"].setInput( f["out"] )
@@ -268,22 +269,22 @@ class MergeTest( GafferImageTest.ImageTestCase ) :
 		self.assertTrue( "in2" not in s["m"] )
 
 		with s.context() :
-			self.assertEqual( s["m"]["out"].channelData( "R", IECore.V2i( 0 ) )[0], 0.75 )
+			self.assertEqual( s["m"]["out"].channelData( "R", imath.V2i( 0 ) )[0], 0.75 )
 
 	def testSmallDataWindowOverLarge( self ) :
 
 		b = GafferImage.Constant()
 		b["format"].setValue( GafferImage.Format( 500, 500, 1.0 ) )
-		b["color"].setValue( IECore.Color4f( 1, 0, 0, 1 ) )
+		b["color"].setValue( imath.Color4f( 1, 0, 0, 1 ) )
 
 		a = GafferImage.Constant()
 		a["format"].setValue( GafferImage.Format( 500, 500, 1.0 ) )
-		a["color"].setValue( IECore.Color4f( 0, 1, 0, 1 ) )
+		a["color"].setValue( imath.Color4f( 0, 1, 0, 1 ) )
 
 		aCrop = GafferImage.Crop()
 		aCrop["in"].setInput( a["out"] )
 		aCrop["areaSource"].setValue( aCrop.AreaSource.Area )
-		aCrop["area"].setValue( IECore.Box2i( IECore.V2i( 50 ), IECore.V2i( 162 ) ) )
+		aCrop["area"].setValue( imath.Box2i( imath.V2i( 50 ), imath.V2i( 162 ) ) )
 		aCrop["affectDisplayWindow"].setValue( False )
 
 		m = GafferImage.Merge()
@@ -297,7 +298,7 @@ class MergeTest( GafferImageTest.ImageTestCase ) :
 
 		def sample( x, y ) :
 
-			return IECore.Color3f(
+			return imath.Color3f(
 				redSampler.sample( x, y ),
 				greenSampler.sample( x, y ),
 				blueSampler.sample( x, y ),
@@ -307,25 +308,25 @@ class MergeTest( GafferImageTest.ImageTestCase ) :
 		# the data window of aCrop. Everywhere else we should have
 		# red still.
 
-		self.assertEqual( sample( 49, 49 ), IECore.Color3f( 1, 0, 0 ) )
-		self.assertEqual( sample( 50, 50 ), IECore.Color3f( 0, 1, 0 ) )
-		self.assertEqual( sample( 161, 161 ), IECore.Color3f( 0, 1, 0 ) )
-		self.assertEqual( sample( 162, 162 ), IECore.Color3f( 1, 0, 0 ) )
+		self.assertEqual( sample( 49, 49 ), imath.Color3f( 1, 0, 0 ) )
+		self.assertEqual( sample( 50, 50 ), imath.Color3f( 0, 1, 0 ) )
+		self.assertEqual( sample( 161, 161 ), imath.Color3f( 0, 1, 0 ) )
+		self.assertEqual( sample( 162, 162 ), imath.Color3f( 1, 0, 0 ) )
 
 	def testLargeDataWindowAddedToSmall( self ) :
 
 		b = GafferImage.Constant()
 		b["format"].setValue( GafferImage.Format( 500, 500, 1.0 ) )
-		b["color"].setValue( IECore.Color4f( 1, 0, 0, 1 ) )
+		b["color"].setValue( imath.Color4f( 1, 0, 0, 1 ) )
 
 		a = GafferImage.Constant()
 		a["format"].setValue( GafferImage.Format( 500, 500, 1.0 ) )
-		a["color"].setValue( IECore.Color4f( 0, 1, 0, 1 ) )
+		a["color"].setValue( imath.Color4f( 0, 1, 0, 1 ) )
 
 		bCrop = GafferImage.Crop()
 		bCrop["in"].setInput( b["out"] )
 		bCrop["areaSource"].setValue( bCrop.AreaSource.Area )
-		bCrop["area"].setValue( IECore.Box2i( IECore.V2i( 50 ), IECore.V2i( 162 ) ) )
+		bCrop["area"].setValue( imath.Box2i( imath.V2i( 50 ), imath.V2i( 162 ) ) )
 		bCrop["affectDisplayWindow"].setValue( False )
 
 		m = GafferImage.Merge()
@@ -339,7 +340,7 @@ class MergeTest( GafferImageTest.ImageTestCase ) :
 
 		def sample( x, y ) :
 
-			return IECore.Color3f(
+			return imath.Color3f(
 				redSampler.sample( x, y ),
 				greenSampler.sample( x, y ),
 				blueSampler.sample( x, y ),
@@ -348,10 +349,10 @@ class MergeTest( GafferImageTest.ImageTestCase ) :
 		# We should only have yellow in areas where the background exists,
 		# and should have just green everywhere else.
 
-		self.assertEqual( sample( 49, 49 ), IECore.Color3f( 0, 1, 0 ) )
-		self.assertEqual( sample( 50, 50 ), IECore.Color3f( 1, 1, 0 ) )
-		self.assertEqual( sample( 161, 161 ), IECore.Color3f( 1, 1, 0 ) )
-		self.assertEqual( sample( 162, 162 ), IECore.Color3f( 0, 1, 0 ) )
+		self.assertEqual( sample( 49, 49 ), imath.Color3f( 0, 1, 0 ) )
+		self.assertEqual( sample( 50, 50 ), imath.Color3f( 1, 1, 0 ) )
+		self.assertEqual( sample( 161, 161 ), imath.Color3f( 1, 1, 0 ) )
+		self.assertEqual( sample( 162, 162 ), imath.Color3f( 0, 1, 0 ) )
 
 	def testCrashWithResizedInput( self ) :
 
@@ -376,10 +377,10 @@ class MergeTest( GafferImageTest.ImageTestCase ) :
 	def testModes( self ) :
 
 		b = GafferImage.Constant()
-		b["color"].setValue( IECore.Color4f( 0.1, 0.2, 0.3, 0.4 ) )
+		b["color"].setValue( imath.Color4f( 0.1, 0.2, 0.3, 0.4 ) )
 
 		a = GafferImage.Constant()
-		a["color"].setValue( IECore.Color4f( 1, 0.3, 0.1, 0.2 ) )
+		a["color"].setValue( imath.Color4f( 1, 0.3, 0.1, 0.2 ) )
 
 		merge = GafferImage.Merge()
 		merge["in"][0].setInput( b["out"] )
@@ -387,7 +388,7 @@ class MergeTest( GafferImageTest.ImageTestCase ) :
 
 		sampler = GafferImage.ImageSampler()
 		sampler["image"].setInput( merge["out"] )
-		sampler["pixel"].setValue( IECore.V2f( 10 ) )
+		sampler["pixel"].setValue( imath.V2f( 10 ) )
 
 		self.longMessage = True
 		for operation, expected in [
@@ -416,7 +417,7 @@ class MergeTest( GafferImageTest.ImageTestCase ) :
 	def testChannelRequest( self ) :
 
 		a = GafferImage.Constant()
-		a["color"].setValue( IECore.Color4f( 0.1, 0.2, 0.3, 0.4 ) )
+		a["color"].setValue( imath.Color4f( 0.1, 0.2, 0.3, 0.4 ) )
 
 		ad = GafferImage.DeleteChannels()
 		ad["in"].setInput( a["out"] )
@@ -424,7 +425,7 @@ class MergeTest( GafferImageTest.ImageTestCase ) :
 		ad["channels"].setValue( "R" )
 
 		b = GafferImage.Constant()
-		b["color"].setValue( IECore.Color4f( 1.0, 0.3, 0.1, 0.2 ) )
+		b["color"].setValue( imath.Color4f( 1.0, 0.3, 0.1, 0.2 ) )
 
 		bd = GafferImage.DeleteChannels()
 		bd["in"].setInput( b["out"] )
@@ -438,7 +439,7 @@ class MergeTest( GafferImageTest.ImageTestCase ) :
 
 		sampler = GafferImage.ImageSampler()
 		sampler["image"].setInput( merge["out"] )
-		sampler["pixel"].setValue( IECore.V2f( 10 ) )
+		sampler["pixel"].setValue( imath.V2f( 10 ) )
 
 		self.assertAlmostEqual( sampler["color"]["r"].getValue(), 0.0 + 1.0 )
 		self.assertAlmostEqual( sampler["color"]["g"].getValue(), 0.2 + 0.0 )

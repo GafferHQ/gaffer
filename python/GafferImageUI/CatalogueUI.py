@@ -35,6 +35,7 @@
 ##########################################################################
 
 import functools
+import imath
 
 import IECore
 
@@ -248,7 +249,7 @@ class _ImageListing( GafferUI.PlugValueWidget ) :
 					Gaffer.WeakMethod( self.__extractClicked )
 				)
 
-				GafferUI.Spacer( IECore.V2i( 0 ), parenting = { "expand" : True } )
+				GafferUI.Spacer( imath.V2i( 0 ), parenting = { "expand" : True } )
 
 				self.__removeButton = GafferUI.Button( image = "delete.png", hasFrame = False, toolTip = "Remove selected image" )
 				self.__removeButton.setEnabled( False )

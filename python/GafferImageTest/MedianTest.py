@@ -36,6 +36,7 @@
 
 import os
 import unittest
+import imath
 
 import IECore
 
@@ -52,7 +53,7 @@ class MedianTest( GafferImageTest.ImageTestCase ) :
 
 		m = GafferImage.Median()
 		m["in"].setInput( c["out"] )
-		m["radius"].setValue( IECore.V2i( 0 ) )
+		m["radius"].setValue( imath.V2i( 0 ) )
 
 		self.assertEqual( c["out"].imageHash(), m["out"].imageHash() )
 		self.assertImagesEqual( c["out"], m["out"] )
@@ -63,14 +64,14 @@ class MedianTest( GafferImageTest.ImageTestCase ) :
 
 		m = GafferImage.Median()
 		m["in"].setInput( c["out"] )
-		m["radius"].setValue( IECore.V2i( 1 ) )
+		m["radius"].setValue( imath.V2i( 1 ) )
 
 		self.assertEqual( m["out"]["dataWindow"].getValue(), c["out"]["dataWindow"].getValue() )
 
 		m["expandDataWindow"].setValue( True )
 
-		self.assertEqual( m["out"]["dataWindow"].getValue().min, c["out"]["dataWindow"].getValue().min - IECore.V2i( 1 ) )
-		self.assertEqual( m["out"]["dataWindow"].getValue().max, c["out"]["dataWindow"].getValue().max + IECore.V2i( 1 ) )
+		self.assertEqual( m["out"]["dataWindow"].getValue().min(), c["out"]["dataWindow"].getValue().min() - imath.V2i( 1 ) )
+		self.assertEqual( m["out"]["dataWindow"].getValue().max(), c["out"]["dataWindow"].getValue().max() + imath.V2i( 1 ) )
 
 	def testFilter( self ) :
 
@@ -81,7 +82,7 @@ class MedianTest( GafferImageTest.ImageTestCase ) :
 		m["in"].setInput( r["out"] )
 		self.assertImagesEqual( m["out"], r["out"] )
 
-		m["radius"].setValue( IECore.V2i( 1 ) )
+		m["radius"].setValue( imath.V2i( 1 ) )
 		m["boundingMode"].setValue( GafferImage.Sampler.BoundingMode.Clamp )
 
 		dataWindow = m["out"]["dataWindow"].getValue()
@@ -89,8 +90,8 @@ class MedianTest( GafferImageTest.ImageTestCase ) :
 
 		uStep = 1.0 / dataWindow.size().x
 		uMin = 0.5 * uStep
-		for y in range( dataWindow.min.y, dataWindow.max.y ) :
-			for x in range( dataWindow.min.x, dataWindow.max.x ) :
+		for y in range( dataWindow.min().y, dataWindow.max().y ) :
+			for x in range( dataWindow.min().x, dataWindow.max().x ) :
 				self.assertAlmostEqual( s.sample( x, y ), uMin + x * uStep, delta = 0.011 )
 
 	def testDriverChannel( self ) :
@@ -101,12 +102,12 @@ class MedianTest( GafferImageTest.ImageTestCase ) :
 		r = GafferImage.Grade()
 		r["in"].setInput( rRaw["out"] )
 		# Trim off the noise in the blacks so that areas with no visible color are actually flat
-		r["blackPoint"].setValue( IECore.Color4f( 0.03 ) )
+		r["blackPoint"].setValue( imath.Color4f( 0.03 ) )
 
 
 		masterMedian = GafferImage.Median()
 		masterMedian["in"].setInput( r["out"] )
-		masterMedian["radius"].setValue( IECore.V2i( 2 ) )
+		masterMedian["radius"].setValue( imath.V2i( 2 ) )
 
 		masterMedian["masterChannel"].setValue( "G" )
 
@@ -122,7 +123,7 @@ class MedianTest( GafferImageTest.ImageTestCase ) :
 
 		defaultMedian = GafferImage.Median()
 		defaultMedian["in"].setInput( r["out"] )
-		defaultMedian["radius"].setValue( IECore.V2i( 2 ) )
+		defaultMedian["radius"].setValue( imath.V2i( 2 ) )
 
 		masterMedianSingleChannel = GafferImage.DeleteChannels()
 		masterMedianSingleChannel["in"].setInput( masterMedian["out"] )

@@ -36,6 +36,7 @@
 
 import os
 import unittest
+import imath
 
 import IECore
 
@@ -52,7 +53,7 @@ class DilateTest( GafferImageTest.ImageTestCase ) :
 
 		m = GafferImage.Dilate()
 		m["in"].setInput( c["out"] )
-		m["radius"].setValue( IECore.V2i( 0 ) )
+		m["radius"].setValue( imath.V2i( 0 ) )
 
 		self.assertEqual( c["out"].imageHash(), m["out"].imageHash() )
 		self.assertImagesEqual( c["out"], m["out"] )
@@ -63,14 +64,14 @@ class DilateTest( GafferImageTest.ImageTestCase ) :
 
 		m = GafferImage.Dilate()
 		m["in"].setInput( c["out"] )
-		m["radius"].setValue( IECore.V2i( 1 ) )
+		m["radius"].setValue( imath.V2i( 1 ) )
 
 		self.assertEqual( m["out"]["dataWindow"].getValue(), c["out"]["dataWindow"].getValue() )
 
 		m["expandDataWindow"].setValue( True )
 
-		self.assertEqual( m["out"]["dataWindow"].getValue().min, c["out"]["dataWindow"].getValue().min - IECore.V2i( 1 ) )
-		self.assertEqual( m["out"]["dataWindow"].getValue().max, c["out"]["dataWindow"].getValue().max + IECore.V2i( 1 ) )
+		self.assertEqual( m["out"]["dataWindow"].getValue().min(), c["out"]["dataWindow"].getValue().min() - imath.V2i( 1 ) )
+		self.assertEqual( m["out"]["dataWindow"].getValue().max(), c["out"]["dataWindow"].getValue().max() + imath.V2i( 1 ) )
 
 	def testFilter( self ) :
 
@@ -81,7 +82,7 @@ class DilateTest( GafferImageTest.ImageTestCase ) :
 		m["in"].setInput( r["out"] )
 		self.assertImagesEqual( m["out"], r["out"] )
 
-		m["radius"].setValue( IECore.V2i( 12 ) )
+		m["radius"].setValue( imath.V2i( 12 ) )
 		m["boundingMode"].setValue( GafferImage.Sampler.BoundingMode.Clamp )
 
 		dataWindow = m["out"]["dataWindow"].getValue()
@@ -97,15 +98,15 @@ class DilateTest( GafferImageTest.ImageTestCase ) :
 		r = GafferImage.Grade()
 		r["in"].setInput( rRaw["out"] )
 		# Trim off the noise in the blacks so that areas with no visible color are actually flat
-		r["blackPoint"].setValue( IECore.Color4f( 0.03 ) )
+		r["blackPoint"].setValue( imath.Color4f( 0.03 ) )
 
 
 		masterDilate = GafferImage.Dilate()
 		masterDilate["in"].setInput( r["out"] )
-		masterDilate["radius"].setValue( IECore.V2i( 2 ) )
+		masterDilate["radius"].setValue( imath.V2i( 2 ) )
 
 		masterDilate["masterChannel"].setValue( "G" )
-		
+
 		expected = GafferImage.ImageReader()
 		expected["fileName"].setValue( os.path.dirname( __file__ ) + "/images/circlesGreenDilate.exr" )
 
@@ -115,10 +116,10 @@ class DilateTest( GafferImageTest.ImageTestCase ) :
 		# than just the green channel
 		self.assertImagesEqual( masterDilate["out"], expected["out"], ignoreMetadata = True, maxDifference=0.0005 )
 
-		
+
 		defaultDilate = GafferImage.Dilate()
 		defaultDilate["in"].setInput( r["out"] )
-		defaultDilate["radius"].setValue( IECore.V2i( 2 ) )
+		defaultDilate["radius"].setValue( imath.V2i( 2 ) )
 
 		masterDilateSingleChannel = GafferImage.DeleteChannels()
 		masterDilateSingleChannel["in"].setInput( masterDilate["out"] )

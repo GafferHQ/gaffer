@@ -37,6 +37,7 @@
 import os
 import unittest
 import math
+import imath
 
 import IECore
 import IECoreImage
@@ -90,12 +91,12 @@ class VectorWarpTest( GafferImageTest.ImageTestCase ) :
 		# (constant) warped output.
 		sampler2 = GafferImage.ImageSampler()
 		sampler2["image"].setInput( vectorWarp["out"] )
-		sampler2["pixel"].setValue( IECore.V2f( 5.5 ) )
+		sampler2["pixel"].setValue( imath.V2f( 5.5 ) )
 
 		for u in ( 0.0, 0.25, 0.5, 0.75, 1.0 ) :
 			for v in ( 0.0, 0.25, 0.5, 0.75, 1.0 ) :
-				constant["color"].setValue( IECore.Color4f( u, v, 0, 1 ) )
-				sampler1["pixel"].setValue( IECore.V2f( u * 2, v * 2 ) )
+				constant["color"].setValue( imath.Color4f( u, v, 0, 1 ) )
+				sampler1["pixel"].setValue( imath.V2f( u * 2, v * 2 ) )
 				self.assertEqual( sampler1["color"].getValue(), sampler2["color"].getValue() )
 
 	def testNegativeDataWindowOrigin( self ) :
@@ -104,11 +105,11 @@ class VectorWarpTest( GafferImageTest.ImageTestCase ) :
 		reader["fileName"].setValue( os.path.dirname( __file__ ) + "/images/checker.exr" )
 
 		constant = GafferImage.Constant()
-		constant["color"].setValue( IECore.Color4f( 0.5, 0, 0, 1 ) )
+		constant["color"].setValue( imath.Color4f( 0.5, 0, 0, 1 ) )
 
 		offset = GafferImage.Offset()
 		offset["in"].setInput( constant["out"] )
-		offset["offset"].setValue( IECore.V2i( -200, -250 ) )
+		offset["offset"].setValue( imath.V2i( -200, -250 ) )
 
 		vectorWarp = GafferImage.VectorWarp()
 		vectorWarp["in"].setInput( reader["out"] )
@@ -118,7 +119,7 @@ class VectorWarpTest( GafferImageTest.ImageTestCase ) :
 
 	def testWarpImage( self ):
 		def __warpImage( size, distortion, idistortStyle ):
-			w = IECore.Box2i( IECore.V2i( 0 ), size - IECore.V2i( 1 ) )
+			w = imath.Box2i( imath.V2i( 0 ), size - imath.V2i( 1 ) )
 			image = IECoreImage.ImagePrimitive( w, w )
 
 			R = IECore.FloatVectorData( size.x * size.y )
@@ -142,7 +143,7 @@ class VectorWarpTest( GafferImageTest.ImageTestCase ) :
 			return image
 
 		def __dotGrid( size ):
-			w = IECore.Box2i( IECore.V2i( 0 ), size - IECore.V2i( 1 ) )
+			w = imath.Box2i( imath.V2i( 0 ), size - imath.V2i( 1 ) )
 			image = IECoreImage.ImagePrimitive( w, w )
 
 			R = IECore.FloatVectorData( size.x * size.y )
@@ -165,7 +166,7 @@ class VectorWarpTest( GafferImageTest.ImageTestCase ) :
 
 
 		objectToImageSource = GafferImage.ObjectToImage()
-		objectToImageSource["object"].setValue( __dotGrid( IECore.V2i( 300 ) ) )
+		objectToImageSource["object"].setValue( __dotGrid( imath.V2i( 300 ) ) )
 
 		# TODO - reorder channels of our source image because ObjectToImage outputs in opposite order to
 		# the rest of Gaffer.  This probably should be fixed in ObjectToImage,
@@ -187,12 +188,12 @@ class VectorWarpTest( GafferImageTest.ImageTestCase ) :
 		vectorWarp["vector"].setInput( objectToImageVector["out"] )
 
 		# Test that a warp with no distortion and a box filter reproduces the input
-		objectToImageVector["object"].setValue( __warpImage( IECore.V2i( 300 ), 0, False ) )
+		objectToImageVector["object"].setValue( __warpImage( imath.V2i( 300 ), 0, False ) )
 		vectorWarp["filter"].setValue( "box" )
 		self.assertImagesEqual( vectorWarp["out"], sourceReorder["out"], maxDifference = 0.00001 )
 
 		# Test that a warp with distortion produces an expected output
-		objectToImageVector["object"].setValue( __warpImage( IECore.V2i( 300 ), 0.2, False ) )
+		objectToImageVector["object"].setValue( __warpImage( imath.V2i( 300 ), 0.2, False ) )
 		vectorWarp["filter"].setValue( "blackman-harris" )
 
 		# Enable to write out images for visual comparison
@@ -206,7 +207,7 @@ class VectorWarpTest( GafferImageTest.ImageTestCase ) :
 		expectedReader["fileName"].setValue( os.path.dirname( __file__ ) + "/images/dotGrid.warped.exr" )
 
 		# Test that we can get the same result using pixel offsets instead of normalized coordinates
-		objectToImageVector["object"].setValue( __warpImage( IECore.V2i( 300 ), 0.2, True ) )
+		objectToImageVector["object"].setValue( __warpImage( imath.V2i( 300 ), 0.2, True ) )
 		vectorWarp["vectorMode"].setValue( GafferImage.VectorWarp.VectorMode.Relative )
 		vectorWarp["vectorUnits"].setValue( GafferImage.VectorWarp.VectorUnits.Pixels )
 

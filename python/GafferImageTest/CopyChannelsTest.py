@@ -35,6 +35,7 @@
 ##########################################################################
 
 import unittest
+import imath
 
 import IECore
 
@@ -45,10 +46,10 @@ import GafferImageTest
 
 class CopyChannelsTest( GafferImageTest.ImageTestCase ) :
 
-	def __constantLayer( self, layer, color, size = IECore.V2i( 512 ) ) :
+	def __constantLayer( self, layer, color, size = imath.V2i( 512 ) ) :
 
 		result = GafferImage.Constant()
-		result["format"].setValue( GafferImage.Format( IECore.Box2i( IECore.V2i( 0 ), size ), 1 ) )
+		result["format"].setValue( GafferImage.Format( imath.Box2i( imath.V2i( 0 ), size ), 1 ) )
 		result["color"].setValue( color )
 		result["layer"].setValue( layer )
 
@@ -59,8 +60,8 @@ class CopyChannelsTest( GafferImageTest.ImageTestCase ) :
 		# Set up a copy where the main layer comes from the first
 		# input and the diffuse layer is copied in from a second input.
 
-		main = self.__constantLayer( "", IECore.Color4f( 1, 0.5, 0.25, 1 ) )
-		diffuse = self.__constantLayer( "diffuse", IECore.Color4f( 0, 0.25, 0.5, 1 ) )
+		main = self.__constantLayer( "", imath.Color4f( 1, 0.5, 0.25, 1 ) )
+		diffuse = self.__constantLayer( "diffuse", imath.Color4f( 0, 0.25, 0.5, 1 ) )
 
 		copy = GafferImage.CopyChannels()
 		copy["in"][0].setInput( main["out"] )
@@ -84,13 +85,13 @@ class CopyChannelsTest( GafferImageTest.ImageTestCase ) :
 					channel = constant["layer"].getValue() + "." + channel
 
 				self.assertEqual(
-					copy["out"].channelDataHash( channel, IECore.V2i( 0 ) ),
-					constant["out"].channelDataHash( channel, IECore.V2i( 0 ) ),
+					copy["out"].channelDataHash( channel, imath.V2i( 0 ) ),
+					constant["out"].channelDataHash( channel, imath.V2i( 0 ) ),
 				)
 
 				self.assertTrue(
-					copy["out"].channelData( channel, IECore.V2i( 0 ), _copy = False ).isSame(
-						constant["out"].channelData( channel, IECore.V2i( 0 ), _copy = False )
+					copy["out"].channelData( channel, imath.V2i( 0 ), _copy = False ).isSame(
+						constant["out"].channelData( channel, imath.V2i( 0 ), _copy = False )
 					)
 				)
 
@@ -99,8 +100,8 @@ class CopyChannelsTest( GafferImageTest.ImageTestCase ) :
 		# Set up a situation where we're copying channels
 		# from an image with a smaller data window than the
 		# primary input.
-		main = self.__constantLayer( "", IECore.Color4f( 1 ), size = IECore.V2i( 64 ) )
-		diffuse = self.__constantLayer( "diffuse", IECore.Color4f( 0.5 ), size = IECore.V2i( 60 ) )
+		main = self.__constantLayer( "", imath.Color4f( 1 ), size = imath.V2i( 64 ) )
+		diffuse = self.__constantLayer( "diffuse", imath.Color4f( 0.5 ), size = imath.V2i( 60 ) )
 
 		copy = GafferImage.CopyChannels()
 		copy["in"][0].setInput( main["out"] )
@@ -121,17 +122,17 @@ class CopyChannelsTest( GafferImageTest.ImageTestCase ) :
 			diffuseDW = diffuse["out"]["dataWindow"].getValue()
 			copyDW = copy["out"]["dataWindow"].getValue()
 			sampler = GafferImage.Sampler( copy["out"], "diffuse." + channel, copyDW )
-			for x in range( copyDW.min.x, copyDW.max.x ) :
-				for y in range( copyDW.min.y, copyDW.max.y ) :
-					if GafferImage.BufferAlgo.contains( diffuseDW, IECore.V2i( x, y ) ) :
+			for x in range( copyDW.min().x, copyDW.max().x ) :
+				for y in range( copyDW.min().y, copyDW.max().y ) :
+					if GafferImage.BufferAlgo.contains( diffuseDW, imath.V2i( x, y ) ) :
 						self.assertEqual( sampler.sample( x, y ), 0.5 )
 					else :
 						self.assertEqual( sampler.sample( x, y ), 0 )
 
 	def testChannelsPlug( self ) :
 
-		main = self.__constantLayer( "", IECore.Color4f( 1, 0.5, 0.25, 1 ) )
-		diffuse = self.__constantLayer( "diffuse", IECore.Color4f( 0, 0.25, 0.5, 1 ) )
+		main = self.__constantLayer( "", imath.Color4f( 1, 0.5, 0.25, 1 ) )
+		diffuse = self.__constantLayer( "diffuse", imath.Color4f( 0, 0.25, 0.5, 1 ) )
 
 		copy = GafferImage.CopyChannels()
 		copy["in"][0].setInput( main["out"] )

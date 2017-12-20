@@ -36,6 +36,7 @@
 
 import os
 import unittest
+import imath
 
 import IECore
 
@@ -68,7 +69,7 @@ class AtomicFormatPlugTest( GafferImageTest.ImageTestCase ) :
 
 	def testOffsetSerialize( self ) :
 
-		format = GafferImage.Format( IECore.Box2i( IECore.V2i( -5, -11 ), IECore.V2i( 13, 19 ) ), .5 )
+		format = GafferImage.Format( imath.Box2i( imath.V2i( -5, -11 ), imath.V2i( 13, 19 ) ), .5 )
 		s = Gaffer.ScriptNode()
 		s["n"] = Gaffer.Node()
 		s["n"]["f"] = GafferImage.AtomicFormatPlug( "testPlug", defaultValue = format, flags = Gaffer.Plug.Flags.Default | Gaffer.Plug.Flags.Dynamic )
@@ -99,13 +100,13 @@ class AtomicFormatPlugTest( GafferImageTest.ImageTestCase ) :
 		s = Gaffer.ScriptNode()
 		s["n"] = Gaffer.Node()
 		s["n"]["p"] = GafferImage.AtomicFormatPlug( flags = Gaffer.Plug.Flags.Default | Gaffer.Plug.Flags.Dynamic )
-		s["n"]["p"].setValue( GafferImage.Format( IECore.Box2i( IECore.V2i( 0 ), IECore.V2i( 10 ) ), 2.0 ) )
+		s["n"]["p"].setValue( GafferImage.Format( imath.Box2i( imath.V2i( 0 ), imath.V2i( 10 ) ), 2.0 ) )
 		s["n"]["p"].setFlags( Gaffer.Plug.Flags.ReadOnly, True )
 
 		s2 = Gaffer.ScriptNode()
 		s2.execute( s.serialise() )
 
-		self.assertEqual( s2["n"]["p"].getValue(), GafferImage.Format( IECore.Box2i( IECore.V2i( 0 ), IECore.V2i( 10 ) ), 2.0 ) )
+		self.assertEqual( s2["n"]["p"].getValue(), GafferImage.Format( imath.Box2i( imath.V2i( 0 ), imath.V2i( 10 ) ), 2.0 ) )
 		self.assertTrue( s2["n"]["p"].getFlags( Gaffer.Plug.Flags.ReadOnly ) )
 
 	def testExpressions( self ) :
@@ -117,11 +118,11 @@ class AtomicFormatPlugTest( GafferImageTest.ImageTestCase ) :
 		s["n2"]["user"]["f"] = GafferImage.AtomicFormatPlug( flags = Gaffer.Plug.Flags.Default | Gaffer.Plug.Flags.Dynamic )
 
 		s["e"] = Gaffer.Expression()
-		s["e"].setExpression( 'f = parent["n1"]["user"]["f"]; b = f.getDisplayWindow(); b.min -= IECore.V2i( 10 ); b.max += IECore.V2i( 20 ); f.setPixelAspect( 0.5 ); f.setDisplayWindow( b ); parent["n2"]["user"]["f"] = f')
+		s["e"].setExpression( 'f = parent["n1"]["user"]["f"]; b = f.getDisplayWindow(); b.setMin( b.min() - imath.V2i( 10 ) ); b.setMax( b.max() + imath.V2i( 20 ) ); f.setPixelAspect( 0.5 ); f.setDisplayWindow( b ); parent["n2"]["user"]["f"] = f')
 
-		s["n1"]["user"]["f"].setValue( GafferImage.Format( IECore.Box2i( IECore.V2i( 20, 30 ), IECore.V2i( 100, 110 ) ), 1 ) )
+		s["n1"]["user"]["f"].setValue( GafferImage.Format( imath.Box2i( imath.V2i( 20, 30 ), imath.V2i( 100, 110 ) ), 1 ) )
 
-		self.assertEqual( s["n2"]["user"]["f"].getValue(), GafferImage.Format( IECore.Box2i( IECore.V2i( 10, 20 ), IECore.V2i( 120, 130 ) ), 0.5 ) )
+		self.assertEqual( s["n2"]["user"]["f"].getValue(), GafferImage.Format( imath.Box2i( imath.V2i( 10, 20 ), imath.V2i( 120, 130 ) ), 0.5 ) )
 
 	def testGetAndSetEmptyFormat( self ) :
 

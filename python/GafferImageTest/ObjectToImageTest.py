@@ -36,6 +36,7 @@
 
 import os
 import unittest
+import imath
 
 import IECore
 
@@ -72,13 +73,13 @@ class ObjectToImageTest( GafferImageTest.ImageTestCase ) :
 		n["object"].setValue( IECore.Reader.create( self.fileName ).read() )
 
 		self.assertNotEqual(
-			n["out"].channelDataHash( "R", IECore.V2i( 0 ) ),
-			n["out"].channelDataHash( "G", IECore.V2i( 0 ) )
+			n["out"].channelDataHash( "R", imath.V2i( 0 ) ),
+			n["out"].channelDataHash( "G", imath.V2i( 0 ) )
 		)
 
 		self.assertNotEqual(
-			n["out"].channelDataHash( "R", IECore.V2i( 0 ) ),
-			n["out"].channelDataHash( "R", IECore.V2i( GafferImage.ImagePlug.tileSize() ) )
+			n["out"].channelDataHash( "R", imath.V2i( 0 ) ),
+			n["out"].channelDataHash( "R", imath.V2i( GafferImage.ImagePlug.tileSize() ) )
 		)
 
 if __name__ == "__main__":

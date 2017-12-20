@@ -36,6 +36,7 @@
 
 import os
 import unittest
+import imath
 
 import IECore
 
@@ -52,7 +53,7 @@ class ErodeTest( GafferImageTest.ImageTestCase ) :
 
 		m = GafferImage.Erode()
 		m["in"].setInput( c["out"] )
-		m["radius"].setValue( IECore.V2i( 0 ) )
+		m["radius"].setValue( imath.V2i( 0 ) )
 
 		self.assertEqual( c["out"].imageHash(), m["out"].imageHash() )
 		self.assertImagesEqual( c["out"], m["out"] )
@@ -63,14 +64,14 @@ class ErodeTest( GafferImageTest.ImageTestCase ) :
 
 		m = GafferImage.Erode()
 		m["in"].setInput( c["out"] )
-		m["radius"].setValue( IECore.V2i( 1 ) )
+		m["radius"].setValue( imath.V2i( 1 ) )
 
 		self.assertEqual( m["out"]["dataWindow"].getValue(), c["out"]["dataWindow"].getValue() )
 
 		m["expandDataWindow"].setValue( True )
 
-		self.assertEqual( m["out"]["dataWindow"].getValue().min, c["out"]["dataWindow"].getValue().min - IECore.V2i( 1 ) )
-		self.assertEqual( m["out"]["dataWindow"].getValue().max, c["out"]["dataWindow"].getValue().max + IECore.V2i( 1 ) )
+		self.assertEqual( m["out"]["dataWindow"].getValue().min(), c["out"]["dataWindow"].getValue().min() - imath.V2i( 1 ) )
+		self.assertEqual( m["out"]["dataWindow"].getValue().max(), c["out"]["dataWindow"].getValue().max() + imath.V2i( 1 ) )
 
 	def testFilter( self ) :
 
@@ -81,7 +82,7 @@ class ErodeTest( GafferImageTest.ImageTestCase ) :
 		m["in"].setInput( r["out"] )
 		self.assertImagesEqual( m["out"], r["out"] )
 
-		m["radius"].setValue( IECore.V2i( 8 ) )
+		m["radius"].setValue( imath.V2i( 8 ) )
 		m["boundingMode"].setValue( GafferImage.Sampler.BoundingMode.Clamp )
 
 		dataWindow = m["out"]["dataWindow"].getValue()
@@ -89,7 +90,7 @@ class ErodeTest( GafferImageTest.ImageTestCase ) :
 		s["in"].setInput( m["out"] )
 		s["area"].setValue( dataWindow )
 
-		self.assertEqual( s["max"].getValue(), IECore.Color4f( 0, 0, 0, 1 ) )
+		self.assertEqual( s["max"].getValue(), imath.Color4f( 0, 0, 0, 1 ) )
 
 	def testDriverChannel( self ) :
 
@@ -99,15 +100,15 @@ class ErodeTest( GafferImageTest.ImageTestCase ) :
 		r = GafferImage.Grade()
 		r["in"].setInput( rRaw["out"] )
 		# Trim off the noise in the blacks so that areas with no visible color are actually flat
-		r["blackPoint"].setValue( IECore.Color4f( 0.03 ) )
+		r["blackPoint"].setValue( imath.Color4f( 0.03 ) )
 
 
 		masterErode = GafferImage.Erode()
 		masterErode["in"].setInput( r["out"] )
-		masterErode["radius"].setValue( IECore.V2i( 2 ) )
+		masterErode["radius"].setValue( imath.V2i( 2 ) )
 
 		masterErode["masterChannel"].setValue( "G" )
-		
+
 		expected = GafferImage.ImageReader()
 		expected["fileName"].setValue( os.path.dirname( __file__ ) + "/images/circlesGreenErode.exr" )
 
@@ -117,10 +118,10 @@ class ErodeTest( GafferImageTest.ImageTestCase ) :
 		# than just the green channel
 		self.assertImagesEqual( masterErode["out"], expected["out"], ignoreMetadata = True, maxDifference=0.0005 )
 
-		
+
 		defaultErode = GafferImage.Erode()
 		defaultErode["in"].setInput( r["out"] )
-		defaultErode["radius"].setValue( IECore.V2i( 2 ) )
+		defaultErode["radius"].setValue( imath.V2i( 2 ) )
 
 		masterErodeSingleChannel = GafferImage.DeleteChannels()
 		masterErodeSingleChannel["in"].setInput( masterErode["out"] )

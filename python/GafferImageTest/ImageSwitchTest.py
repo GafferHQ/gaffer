@@ -36,6 +36,7 @@
 
 import inspect
 import unittest
+import imath
 
 import IECore
 
@@ -93,10 +94,10 @@ class ImageSwitchTest( GafferImageTest.ImageTestCase ) :
 
 		in0 = GafferImage.Constant()
 		in0["format"].setValue( GafferImage.Format( 100, 100, 1.0 ) )
-		in0["color"].setValue( IECore.Color4f( 1, 0, 0, 1 ) )
+		in0["color"].setValue( imath.Color4f( 1, 0, 0, 1 ) )
 		in1 = GafferImage.Constant()
 		in1["format"].setValue( GafferImage.Format( 100, 100, 1.0 ) )
-		in0["color"].setValue( IECore.Color4f( 0, 1, 0, 1 ) )
+		in0["color"].setValue( imath.Color4f( 0, 1, 0, 1 ) )
 
 		switch = GafferImage.ImageSwitch()
 		switch["in"][0].setInput( in0["out"] )
@@ -144,9 +145,9 @@ class ImageSwitchTest( GafferImageTest.ImageTestCase ) :
 
 		script["switch"] = GafferImage.ImageSwitch()
 		script["in0"] = GafferImage.Constant()
-		script["in0"]["color"].setValue( IECore.Color4f( 1, 1, 1, 1 ) )
+		script["in0"]["color"].setValue( imath.Color4f( 1, 1, 1, 1 ) )
 		script["in1"] = GafferImage.Constant()
-		script["in0"]["color"].setValue( IECore.Color4f( 0, 0, 0, 0 ) )
+		script["in0"]["color"].setValue( imath.Color4f( 0, 0, 0, 0 ) )
 
 		script["switch"]["in"][0].setInput( script["in0"]["out"] )
 		script["switch"]["in"][1].setInput( script["in1"]["out"] )
@@ -160,7 +161,7 @@ class ImageSwitchTest( GafferImageTest.ImageTestCase ) :
 			"""
 		) )
 
-		self.assertEqual( script["switch"]["out"].channelData( "R", IECore.V2i( 0 ) )[0], 0 )
+		self.assertEqual( script["switch"]["out"].channelData( "R", imath.V2i( 0 ) )[0], 0 )
 
 if __name__ == "__main__":
 	unittest.main()

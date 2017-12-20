@@ -36,6 +36,7 @@
 
 import os
 import unittest
+import imath
 
 import IECore
 import IECoreImage
@@ -58,32 +59,32 @@ class FilterAlgoTest( GafferImageTest.ImageTestCase ) :
 		# Each grid cell gets a dot in the middle
 		redDot = GafferImage.Constant()
 		redDot["format"].setValue( GafferImage.Format( 1, 1, 1.000 ) )
-		redDot["color"].setValue( IECore.Color4f( 10, 0, 0, 1 ) )
+		redDot["color"].setValue( imath.Color4f( 10, 0, 0, 1 ) )
 		redDotCentered = GafferImage.Crop( "Crop" )
 		redDotCentered["in"].setInput( redDot["out"] )
-		redDotCentered["area"].setValue( IECore.Box2i( IECore.V2i( -(subSize-1)/2 ), IECore.V2i( (subSize-1)/2 + 1 ) ) )
+		redDotCentered["area"].setValue( imath.Box2i( imath.V2i( -(subSize-1)/2 ), imath.V2i( (subSize-1)/2 + 1 ) ) )
 
 		borderForFilterWidth = 40
 		sampleRegion = redDotCentered["out"]["dataWindow"].getValue()
-		sampleRegion.min -= IECore.V2i( borderForFilterWidth )
-		sampleRegion.max += IECore.V2i( borderForFilterWidth )
+		sampleRegion.setMin( sampleRegion.min() - imath.V2i( borderForFilterWidth ) )
+		sampleRegion.setMax( sampleRegion.max() + imath.V2i( borderForFilterWidth ) )
 
 		s = GafferImage.Sampler( redDotCentered["out"], "R", sampleRegion, GafferImage.Sampler.BoundingMode.Black )
 
 		filters = GafferImage.FilterAlgo.filterNames()
 		dirs = [
-			(IECore.V2f(1,0), IECore.V2f(0,1)),
-			(IECore.V2f(5,0), IECore.V2f(0,1)),
-			(IECore.V2f(1,0), IECore.V2f(0,5)),
-			(IECore.V2f(5,0), IECore.V2f(0,5)) ]
+			(imath.V2f(1,0), imath.V2f(0,1)),
+			(imath.V2f(5,0), imath.V2f(0,1)),
+			(imath.V2f(1,0), imath.V2f(0,5)),
+			(imath.V2f(5,0), imath.V2f(0,5)) ]
 
 		for angle in range( 0, 91, 15 ):
 			sa = math.sin( angle / 180.0 * math.pi )
 			ca = math.cos( angle / 180.0 * math.pi )
-			dirs.append( ( IECore.V2f(ca * 5, sa * 5 ), IECore.V2f(-sa * 3, ca * 3 ) ) )
+			dirs.append( ( imath.V2f(ca * 5, sa * 5 ), imath.V2f(-sa * 3, ca * 3 ) ) )
 
-		size = subSize * IECore.V2i( len( dirs ), len( filters ) )
-		w = IECore.Box2i( IECore.V2i( 0 ), size - IECore.V2i( 1 ) )
+		size = subSize * imath.V2i( len( dirs ), len( filters ) )
+		w = imath.Box2i( imath.V2i( 0 ), size - imath.V2i( 1 ) )
 		parallelogramImage = IECoreImage.ImagePrimitive( w, w )
 		boxImage = IECoreImage.ImagePrimitive( w, w )
 
@@ -94,7 +95,7 @@ class FilterAlgoTest( GafferImageTest.ImageTestCase ) :
 			for y_sub, f in enumerate( filters ):
 				for y in range( subSize ):
 					for x in range( subSize ):
-						p = IECore.V2f( x + 0.5, y + 0.5 )
+						p = imath.V2f( x + 0.5, y + 0.5 )
 						inputDerivatives = GafferImage.FilterAlgo.derivativesToAxisAligned( p, d[0], d[1] )
 
 
@@ -133,7 +134,7 @@ class FilterAlgoTest( GafferImageTest.ImageTestCase ) :
 			reader["fileName"].setValue( inputFileName )
 
 			inSize = reader["out"]["format"].getValue().getDisplayWindow().size()
-			inSize = IECore.V2f( inSize.x, inSize.y )
+			inSize = imath.V2f( inSize.x, inSize.y )
 
 			deleteChannels = GafferImage.DeleteChannels()
 			deleteChannels["mode"].setValue( 1 )
@@ -141,28 +142,28 @@ class FilterAlgoTest( GafferImageTest.ImageTestCase ) :
 			deleteChannels["in"].setInput( reader["out"] )
 
 
-			scale = IECore.V2f( size.x, size.y ) / inSize
+			scale = imath.V2f( size.x, size.y ) / inSize
 
 			resample = GafferImage.Resample()
 			resample["in"].setInput( deleteChannels["out"] )
 			resample["matrix"].setValue(
-				IECore.M33f().scale( scale )
+				imath.M33f().scale( scale )
 			)
 			resample["filter"].setValue( filter )
 			resample["boundingMode"].setValue( GafferImage.Sampler.BoundingMode.Clamp )
 
 			crop = GafferImage.Crop()
 			crop["in"].setInput( resample["out"] )
-			crop["area"].setValue( IECore.Box2i( IECore.V2i( 0 ), size ) )
+			crop["area"].setValue( imath.Box2i( imath.V2i( 0 ), size ) )
 
 			borderForFilterWidth = 60
 			sampleRegion = reader["out"]["dataWindow"].getValue()
-			sampleRegion.min -= IECore.V2i( borderForFilterWidth )
-			sampleRegion.max += IECore.V2i( borderForFilterWidth )
+			sampleRegion.setMin( sampleRegion.min() - imath.V2i( borderForFilterWidth ) )
+			sampleRegion.setMax( sampleRegion.max() + imath.V2i( borderForFilterWidth ) )
 
 			s = GafferImage.Sampler( reader["out"], "R", sampleRegion, GafferImage.Sampler.BoundingMode.Clamp )
 
-			w = IECore.Box2i( IECore.V2i( 0 ), size - IECore.V2i( 1 ) )
+			w = imath.Box2i( imath.V2i( 0 ), size - imath.V2i( 1 ) )
 			boxImage = IECoreImage.ImagePrimitive( w, w )
 			parallelImage = IECoreImage.ImagePrimitive( w, w )
 
@@ -173,15 +174,15 @@ class FilterAlgoTest( GafferImageTest.ImageTestCase ) :
 				for x in range( size.x ):
 						boxR[ ( size.y - 1 - y ) * size.x + x ] = GafferImage.FilterAlgo.sampleBox(
 							s,
-							IECore.V2f( x + 0.5, y + 0.5 ) / scale,
+							imath.V2f( x + 0.5, y + 0.5 ) / scale,
 							max( 1.0 / scale[0], 1.0 ),
 							max( 1.0 / scale[1], 1.0 ),
 							filter )
 						parallelR[ ( size.y - 1 - y ) * size.x + x ] = GafferImage.FilterAlgo.sampleParallelogram(
 							s,
-							IECore.V2f( x + 0.5, y + 0.5 ) / scale,
-							IECore.V2f( 1.0 / scale[0], 0),
-							IECore.V2f( 0, 1.0 / scale[1]),
+							imath.V2f( x + 0.5, y + 0.5 ) / scale,
+							imath.V2f( 1.0 / scale[0], 0),
+							imath.V2f( 0, 1.0 / scale[1]),
 							filter )
 
 			boxImage["R"] = boxR
@@ -209,11 +210,11 @@ class FilterAlgoTest( GafferImageTest.ImageTestCase ) :
 			self.assertImagesEqual( crop["out"], imageNode["out"], maxDifference = 0.000011, ignoreMetadata = True )
 
 		tests = [
-			( "resamplePatterns.exr", IECore.V2i( 4 ), "lanczos3" ),
-			( "resamplePatterns.exr", IECore.V2i( 40 ), "box" ),
-			( "resamplePatterns.exr", IECore.V2i( 101 ), "gaussian" ),
-			( "resamplePatterns.exr", IECore.V2i( 119 ), "mitchell" ),
-			( "resamplePatterns.exr", IECore.V2i( 300 ), "sinc" ),
+			( "resamplePatterns.exr", imath.V2i( 4 ), "lanczos3" ),
+			( "resamplePatterns.exr", imath.V2i( 40 ), "box" ),
+			( "resamplePatterns.exr", imath.V2i( 101 ), "gaussian" ),
+			( "resamplePatterns.exr", imath.V2i( 119 ), "mitchell" ),
+			( "resamplePatterns.exr", imath.V2i( 300 ), "sinc" ),
 		]
 
 		for args in tests :

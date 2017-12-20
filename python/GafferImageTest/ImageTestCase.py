@@ -34,6 +34,8 @@
 #
 ##########################################################################
 
+import imath
+
 import IECore
 import IECoreImage
 
@@ -56,10 +58,10 @@ class ImageTestCase( GafferTest.TestCase ) :
 		channelNames = imageA["channelNames"].getValue()
 		self.assertEqual( channelNames, imageB["channelNames"].getValue() )
 
-		tileOrigin = GafferImage.ImagePlug.tileOrigin( dataWindow.min )
-		while tileOrigin.y < dataWindow.max.y :
-			tileOrigin.x = GafferImage.ImagePlug.tileOrigin( dataWindow.min ).x
-			while tileOrigin.x < dataWindow.max.x :
+		tileOrigin = GafferImage.ImagePlug.tileOrigin( dataWindow.min() )
+		while tileOrigin.y < dataWindow.max().y :
+			tileOrigin.x = GafferImage.ImagePlug.tileOrigin( dataWindow.min() ).x
+			while tileOrigin.x < dataWindow.max().x :
 				for channelName in channelNames :
 					self.assertEqual(
 						imageA.channelDataHash( channelName, tileOrigin ),
@@ -95,7 +97,7 @@ class ImageTestCase( GafferTest.TestCase ) :
 	# verifying that nodes deal correctly with such inputs.
 	def emptyImage( self ) :
 
-		image = IECoreImage.ImagePrimitive( IECore.Box2i(), IECore.Box2i( IECore.V2i( 0 ), IECore.V2i( 100 ) ) )
+		image = IECoreImage.ImagePrimitive( imath.Box2i(), imath.Box2i( imath.V2i( 0 ), imath.V2i( 100 ) ) )
 		image["R"] = IECore.FloatVectorData()
 		image["G"] = IECore.FloatVectorData()
 		image["B"] = IECore.FloatVectorData()
@@ -104,6 +106,6 @@ class ImageTestCase( GafferTest.TestCase ) :
 		result = GafferImage.ObjectToImage()
 		result["object"].setValue( image )
 
-		self.assertEqual( result["out"]["dataWindow"].getValue(), IECore.Box2i() )
+		self.assertEqual( result["out"]["dataWindow"].getValue(), imath.Box2i() )
 
 		return result

@@ -37,6 +37,7 @@
 import os
 import unittest
 import threading
+import imath
 
 import IECore
 
@@ -53,12 +54,12 @@ class ImageNodeTest( GafferImageTest.ImageTestCase ) :
 		c["format"].setValue( GafferImage.Format( 200, 200, 1.0 ) )
 		g = GafferImage.Grade()
 		g["in"].setInput( c["out"] )
-		g["multiply"].setValue( IECore.Color3f( 0.4, 0.5, 0.6 ) )
+		g["multiply"].setValue( imath.Color3f( 0.4, 0.5, 0.6 ) )
 
 		gradedImage = g["out"].image()
 
 		# not enough for both images - will cause cache thrashing
-		Gaffer.ValuePlug.setCacheMemoryLimit( 2 * g["out"].channelData( "R", IECore.V2i( 0 ) ).memoryUsage() )
+		Gaffer.ValuePlug.setCacheMemoryLimit( 2 * g["out"].channelData( "R", imath.V2i( 0 ) ).memoryUsage() )
 
 		images = []
 		exceptions = []

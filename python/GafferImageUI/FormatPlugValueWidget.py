@@ -35,6 +35,7 @@
 ##########################################################################
 
 import functools
+import imath
 
 import IECore
 import Gaffer
@@ -112,7 +113,7 @@ class FormatPlugValueWidget( GafferUI.PlugValueWidget ) :
 
 		self.__menuButton.setText( text if mode != "custom" else "Custom" )
 
-		nonZeroOrigin = fmt.getDisplayWindow().min != IECore.V2i( 0 )
+		nonZeroOrigin = fmt.getDisplayWindow().min() != imath.V2i( 0 )
 		for widget in ( self.__minLabel, self.__minWidget ) :
 			widget.setVisible( mode == "custom" and nonZeroOrigin )
 

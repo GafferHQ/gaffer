@@ -36,6 +36,7 @@
 
 import os
 import unittest
+import imath
 
 import IECore
 
@@ -59,17 +60,17 @@ class CDLTest( GafferImageTest.ImageTestCase ) :
 
 		self.assertEqual( n["out"].image(), o["out"].image() )
 
-		o['slope'].setValue( IECore.Color3f( 1, 2, 3 ) )
+		o['slope'].setValue( imath.Color3f( 1, 2, 3 ) )
 
 		slope = o["out"].image()
 		self.assertNotEqual( orig, slope )
 
-		o["offset"].setValue( IECore.Color3f( 1, 2, 3 ) )
+		o["offset"].setValue( imath.Color3f( 1, 2, 3 ) )
 		offset = o["out"].image()
 		self.assertNotEqual( orig, offset )
 		self.assertNotEqual( slope, offset )
 
-		o["power"].setValue( IECore.Color3f( 1, 2, 3 ) )
+		o["power"].setValue( imath.Color3f( 1, 2, 3 ) )
 		power = o["out"].image()
 		self.assertNotEqual( orig, power )
 		self.assertNotEqual( slope, power )
@@ -100,7 +101,7 @@ class CDLTest( GafferImageTest.ImageTestCase ) :
 
 		self.assertEqual( n["out"].image(), o["out"].image() )
 
-		o['slope'].setValue( IECore.Color3f( 1, 2, 3 ) )
+		o['slope'].setValue( imath.Color3f( 1, 2, 3 ) )
 
 		self.assertNotEqual( n["out"].image(), o["out"].image() )
 
@@ -130,7 +131,7 @@ class CDLTest( GafferImageTest.ImageTestCase ) :
 
 		self.assertEqual( i["out"].imageHash(), o["out"].imageHash() )
 
-		o['slope'].setValue( IECore.Color3f( 1, 2, 3 ) )
+		o['slope'].setValue( imath.Color3f( 1, 2, 3 ) )
 
 		self.assertNotEqual( i["out"].imageHash(), o["out"].imageHash() )
 
@@ -141,16 +142,16 @@ class CDLTest( GafferImageTest.ImageTestCase ) :
 
 		o = GafferImage.CDL()
 		o["in"].setInput( i["out"] )
-		o['slope'].setValue( IECore.Color3f( 1, 2, 3 ) )
+		o['slope'].setValue( imath.Color3f( 1, 2, 3 ) )
 
 		self.assertNotEqual(
-			o["out"].channelDataHash( "R", IECore.V2i( 0 ) ),
-			o["out"].channelDataHash( "G", IECore.V2i( 0 ) )
+			o["out"].channelDataHash( "R", imath.V2i( 0 ) ),
+			o["out"].channelDataHash( "G", imath.V2i( 0 ) )
 		)
 
 		self.assertNotEqual(
-			o["out"].channelData( "R", IECore.V2i( 0 ) ),
-			o["out"].channelData( "G", IECore.V2i( 0 ) )
+			o["out"].channelData( "R", imath.V2i( 0 ) ),
+			o["out"].channelData( "G", imath.V2i( 0 ) )
 		)
 
 	def testPassThrough( self ) :
@@ -160,7 +161,7 @@ class CDLTest( GafferImageTest.ImageTestCase ) :
 
 		o = GafferImage.CDL()
 		o["in"].setInput( i["out"] )
-		o['slope'].setValue( IECore.Color3f( 1, 2, 3 ) )
+		o['slope'].setValue( imath.Color3f( 1, 2, 3 ) )
 
 		self.assertEqual( i["out"]["format"].hash(), o["out"]["format"].hash() )
 		self.assertEqual( i["out"]["dataWindow"].hash(), o["out"]["dataWindow"].hash() )
@@ -175,10 +176,10 @@ class CDLTest( GafferImageTest.ImageTestCase ) :
 	def testMultipleLayers( self ) :
 
 		main = GafferImage.Constant()
-		main["color"].setValue( IECore.Color4f( 1, 0.5, 0.25, 1 ) )
+		main["color"].setValue( imath.Color4f( 1, 0.5, 0.25, 1 ) )
 
 		diffuse = GafferImage.Constant()
-		diffuse["color"].setValue( IECore.Color4f( 0.25, 0.5, 0.75, 1 ) )
+		diffuse["color"].setValue( imath.Color4f( 0.25, 0.5, 0.75, 1 ) )
 		diffuse["layer"].setValue( "diffuse" )
 
 		m = GafferImage.CopyChannels()
@@ -193,12 +194,12 @@ class CDLTest( GafferImageTest.ImageTestCase ) :
 
 		mainCDLSampler = GafferImage.ImageSampler()
 		mainCDLSampler["image"].setInput( cdl["out"] )
-		mainCDLSampler["pixel"].setValue( IECore.V2f( 0.5 ) )
+		mainCDLSampler["pixel"].setValue( imath.V2f( 0.5 ) )
 		mainCDLSampler["channels"].setValue( IECore.StringVectorData( [ "R", "G", "B", "A" ] ) )
 
 		diffuseCDLSampler = GafferImage.ImageSampler()
 		diffuseCDLSampler["image"].setInput( cdl["out"] )
-		diffuseCDLSampler["pixel"].setValue( IECore.V2f( 0.5 ) )
+		diffuseCDLSampler["pixel"].setValue( imath.V2f( 0.5 ) )
 		diffuseCDLSampler["channels"].setValue( IECore.StringVectorData( [ "diffuse." + x for x in "RGBA" ] ) )
 
 		self.assertEqual( mainCDLSampler["color"].getValue(), main["color"].getValue() )
