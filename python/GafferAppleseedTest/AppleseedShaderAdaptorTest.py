@@ -35,6 +35,7 @@
 ##########################################################################
 
 import os
+import imath
 
 import IECore
 
@@ -102,7 +103,7 @@ class AppleseedShaderAdaptorTest( GafferOSLTest.OSLTestCase ) :
 		self.assertEqual( len( network ), 2 )
 		self.assertEqual( network[0].name, "surface/as_emission_surface" )
 		self.assertEqual( network[0].type, "osl:shader" )
-		self.assertEqual( network[0].parameters["Color"].value, IECore.Color3f( 1, 0, 0 ) )
+		self.assertEqual( network[0].parameters["Color"].value, imath.Color3f( 1, 0, 0 ) )
 
 		self.assertEqual( network[1].name, "material/as_material_builder" )
 		self.assertEqual( network[1].type, "osl:surface" )
