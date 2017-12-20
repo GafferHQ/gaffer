@@ -36,6 +36,7 @@
 ##########################################################################
 
 import functools
+import imath
 
 import IECore
 
@@ -124,7 +125,7 @@ class VectorDataWidget( GafferUI.Widget ) :
 		self.__removeButtonConnection = removeButton.clickedSignal().connect( Gaffer.WeakMethod( self.__removeSelection ) )
 		self.__buttonRow.append( removeButton )
 
-		self.__buttonRow.append( GafferUI.Spacer( size = IECore.V2i( 0 ), maximumSize = IECore.V2i( 100000, 1 ) ), expand=1 )
+		self.__buttonRow.append( GafferUI.Spacer( size = imath.V2i( 0 ), maximumSize = imath.V2i( 100000, 1 ) ), expand=1 )
 		self.__column.append( self.__buttonRow )
 
 		# stuff for drag enter/leave and drop

@@ -35,6 +35,7 @@
 ##########################################################################
 
 import unittest
+import imath
 
 import IECore
 import IECoreScene
@@ -54,7 +55,7 @@ class ViewportGadgetTest( GafferUITest.TestCase ) :
 		v.setViewport( v.getViewport() )
 		self.assertEqual( len( cs ), 0 )
 
-		v.setViewport( v.getViewport() + IECore.V2i( 10 ) )
+		v.setViewport( v.getViewport() + imath.V2i( 10 ) )
 		self.assertEqual( len( cs ), 1 )
 		self.assertEqual( cs[0], ( v, ) )
 
@@ -83,142 +84,142 @@ class ViewportGadgetTest( GafferUITest.TestCase ) :
 	def testChangeResolutionPerspective( self ) :
 
 		v = GafferUI.ViewportGadget()
-		v.setViewport( IECore.V2i( 200, 100 ) )
+		v.setViewport( imath.V2i( 200, 100 ) )
 		v.setCamera(
 			IECoreScene.Camera( parameters = {
-				"resolution" : IECore.V2i( 200, 100 ),
-				"screenWindow" : IECore.Box2f( IECore.V2f( -2, -1 ), IECore.V2f( 2, 1 ) ),
+				"resolution" : imath.V2i( 200, 100 ),
+				"screenWindow" : imath.Box2f( imath.V2f( -2, -1 ), imath.V2f( 2, 1 ) ),
 				"projection" : "perspective",
 			} )
 		)
 
-		self.assertEqual( v.getCamera().parameters()["screenWindow"].value, IECore.Box2f( IECore.V2f( -2, -1 ), IECore.V2f( 2, 1 ) ) )
+		self.assertEqual( v.getCamera().parameters()["screenWindow"].value, imath.Box2f( imath.V2f( -2, -1 ), imath.V2f( 2, 1 ) ) )
 
-		v.setViewport( IECore.V2i( 200, 200 ) )
-		self.assertEqual( v.getCamera().parameters()["screenWindow"].value, IECore.Box2f( IECore.V2f( -2 ), IECore.V2f( 2 ) ) )
+		v.setViewport( imath.V2i( 200, 200 ) )
+		self.assertEqual( v.getCamera().parameters()["screenWindow"].value, imath.Box2f( imath.V2f( -2 ), imath.V2f( 2 ) ) )
 
-		v.setViewport( IECore.V2i( 200, 100 ) )
-		self.assertEqual( v.getCamera().parameters()["screenWindow"].value, IECore.Box2f( IECore.V2f( -2, -1 ), IECore.V2f( 2, 1 ) ) )
+		v.setViewport( imath.V2i( 200, 100 ) )
+		self.assertEqual( v.getCamera().parameters()["screenWindow"].value, imath.Box2f( imath.V2f( -2, -1 ), imath.V2f( 2, 1 ) ) )
 
 	def testChangeResolutionOrthographic( self ) :
 
 		v = GafferUI.ViewportGadget()
-		v.setViewport( IECore.V2i( 200, 100 ) )
+		v.setViewport( imath.V2i( 200, 100 ) )
 		v.setCamera(
 			IECoreScene.Camera( parameters = {
-				"resolution" : IECore.V2i( 200, 100 ),
-				"screenWindow" : IECore.Box2f( IECore.V2f( -2, -1 ), IECore.V2f( 2, 1 ) ),
+				"resolution" : imath.V2i( 200, 100 ),
+				"screenWindow" : imath.Box2f( imath.V2f( -2, -1 ), imath.V2f( 2, 1 ) ),
 				"projection" : "orthographic",
 			} )
 		)
 
-		self.assertEqual( v.getCamera().parameters()["screenWindow"].value, IECore.Box2f( IECore.V2f( -2, -1 ), IECore.V2f( 2, 1 ) ) )
+		self.assertEqual( v.getCamera().parameters()["screenWindow"].value, imath.Box2f( imath.V2f( -2, -1 ), imath.V2f( 2, 1 ) ) )
 
-		v.setViewport( IECore.V2i( 100, 100 ) )
-		self.assertEqual( v.getCamera().parameters()["screenWindow"].value, IECore.Box2f( IECore.V2f( -1, -1 ), IECore.V2f( 1, 1 ) ) )
+		v.setViewport( imath.V2i( 100, 100 ) )
+		self.assertEqual( v.getCamera().parameters()["screenWindow"].value, imath.Box2f( imath.V2f( -1, -1 ), imath.V2f( 1, 1 ) ) )
 
-		v.setViewport( IECore.V2i( 100, 200 ) )
-		self.assertEqual( v.getCamera().parameters()["screenWindow"].value, IECore.Box2f( IECore.V2f( -1, -2 ), IECore.V2f( 1, 2 ) ) )
+		v.setViewport( imath.V2i( 100, 200 ) )
+		self.assertEqual( v.getCamera().parameters()["screenWindow"].value, imath.Box2f( imath.V2f( -1, -2 ), imath.V2f( 1, 2 ) ) )
 
 	def testChangeResolutionOffsetOrthographic( self ) :
 
 		v = GafferUI.ViewportGadget()
-		v.setViewport( IECore.V2i( 200, 100 ) )
+		v.setViewport( imath.V2i( 200, 100 ) )
 		v.setCamera(
 			IECoreScene.Camera( parameters = {
-				"resolution" : IECore.V2i( 200, 100 ),
-				"screenWindow" : IECore.Box2f( IECore.V2f( -2, -1 ), IECore.V2f( 0, 0 ) ),
+				"resolution" : imath.V2i( 200, 100 ),
+				"screenWindow" : imath.Box2f( imath.V2f( -2, -1 ), imath.V2f( 0, 0 ) ),
 				"projection" : "orthographic",
 			} )
 		)
 
-		self.assertEqual( v.getCamera().parameters()["screenWindow"].value, IECore.Box2f( IECore.V2f( -2, -1 ), IECore.V2f( 0, 0 ) ) )
+		self.assertEqual( v.getCamera().parameters()["screenWindow"].value, imath.Box2f( imath.V2f( -2, -1 ), imath.V2f( 0, 0 ) ) )
 
-		v.setViewport( IECore.V2i( 100, 100 ) )
-		self.assertEqual( v.getCamera().parameters()["screenWindow"].value, IECore.Box2f( IECore.V2f( -1.5, -1 ), IECore.V2f( -0.5, 0 ) ) )
+		v.setViewport( imath.V2i( 100, 100 ) )
+		self.assertEqual( v.getCamera().parameters()["screenWindow"].value, imath.Box2f( imath.V2f( -1.5, -1 ), imath.V2f( -0.5, 0 ) ) )
 
-		v.setViewport( IECore.V2i( 100, 200 ) )
-		self.assertEqual( v.getCamera().parameters()["screenWindow"].value, IECore.Box2f( IECore.V2f( -1.5, -1.5 ), IECore.V2f( -0.5, 0.5 ) ) )
+		v.setViewport( imath.V2i( 100, 200 ) )
+		self.assertEqual( v.getCamera().parameters()["screenWindow"].value, imath.Box2f( imath.V2f( -1.5, -1.5 ), imath.V2f( -0.5, 0.5 ) ) )
 
 	def testRasterToWorldOrthographic( self ) :
 
 		v = GafferUI.ViewportGadget()
-		v.setViewport( IECore.V2i( 500, 250 ) )
+		v.setViewport( imath.V2i( 500, 250 ) )
 		v.setCamera(
 			IECoreScene.Camera( parameters = {
-				"resolution" : IECore.V2i( 500, 250 ),
-				"screenWindow" : IECore.Box2f( IECore.V2f( -2, -1 ), IECore.V2f( 2, 1 ) ),
+				"resolution" : imath.V2i( 500, 250 ),
+				"screenWindow" : imath.Box2f( imath.V2f( -2, -1 ), imath.V2f( 2, 1 ) ),
 				"projection" : "orthographic",
-				"clippingPlanes" : IECore.V2f( .1, 10 ),
+				"clippingPlanes" : imath.V2f( .1, 10 ),
 			} )
 		)
 
 		self.assertEqual(
-			v.rasterToWorldSpace( IECore.V2f( 0 ) ),
-			IECore.LineSegment3f( IECore.V3f( -2, 1, -.1 ), IECore.V3f( -2, 1, -10 ) )
+			v.rasterToWorldSpace( imath.V2f( 0 ) ),
+			IECore.LineSegment3f( imath.V3f( -2, 1, -.1 ), imath.V3f( -2, 1, -10 ) )
 		)
 
 		self.assertEqual(
-			v.rasterToWorldSpace( IECore.V2f( 500, 250 ) ),
-			IECore.LineSegment3f( IECore.V3f( 2, -1, -.1 ), IECore.V3f( 2, -1, -10 ) )
+			v.rasterToWorldSpace( imath.V2f( 500, 250 ) ),
+			IECore.LineSegment3f( imath.V3f( 2, -1, -.1 ), imath.V3f( 2, -1, -10 ) )
 		)
 
 		self.assertEqual(
-			v.rasterToWorldSpace( IECore.V2f( 250, 125 ) ),
-			IECore.LineSegment3f( IECore.V3f( 0, 0, -.1 ), IECore.V3f( 0, 0, -10 ) )
+			v.rasterToWorldSpace( imath.V2f( 250, 125 ) ),
+			IECore.LineSegment3f( imath.V3f( 0, 0, -.1 ), imath.V3f( 0, 0, -10 ) )
 		)
 
 	def testRasterToWorldPerspective( self ) :
 
 		v = GafferUI.ViewportGadget()
-		v.setViewport( IECore.V2i( 500, 250 ) )
+		v.setViewport( imath.V2i( 500, 250 ) )
 		v.setCamera(
 			IECoreScene.Camera( parameters = {
-				"resolution" : IECore.V2i( 500, 250 ),
-				"screenWindow" : IECore.Box2f( IECore.V2f( -1, -.5 ), IECore.V2f( 1, .5 ) ),
+				"resolution" : imath.V2i( 500, 250 ),
+				"screenWindow" : imath.Box2f( imath.V2f( -1, -.5 ), imath.V2f( 1, .5 ) ),
 				"projection" : "perspective",
 				"projection:fox" : 90.0,
-				"clippingPlanes" : IECore.V2f( .1, 10 ),
+				"clippingPlanes" : imath.V2f( .1, 10 ),
 			} )
 		)
 
 		self.assertEqual(
-			v.rasterToWorldSpace( IECore.V2f( 0 ) ),
-			IECore.LineSegment3f( IECore.V3f( -.1, .05, -.1 ), IECore.V3f( -10, 5, -10 ) )
+			v.rasterToWorldSpace( imath.V2f( 0 ) ),
+			IECore.LineSegment3f( imath.V3f( -.1, .05, -.1 ), imath.V3f( -10, 5, -10 ) )
 		)
 
 		self.assertEqual(
-			v.rasterToWorldSpace( IECore.V2f( 500, 250 ) ),
-			IECore.LineSegment3f( IECore.V3f( .1, -.05, -.1 ), IECore.V3f( 10, -5, -10 ) )
+			v.rasterToWorldSpace( imath.V2f( 500, 250 ) ),
+			IECore.LineSegment3f( imath.V3f( .1, -.05, -.1 ), imath.V3f( 10, -5, -10 ) )
 		)
 
 		self.assertEqual(
-			v.rasterToWorldSpace( IECore.V2f( 250, 125 ) ),
-			IECore.LineSegment3f( IECore.V3f( 0, 0, -.1 ), IECore.V3f( 0, 0, -10 ) )
+			v.rasterToWorldSpace( imath.V2f( 250, 125 ) ),
+			IECore.LineSegment3f( imath.V3f( 0, 0, -.1 ), imath.V3f( 0, 0, -10 ) )
 		)
 
 	def testWorldToRasterOrthographic( self ) :
 
 		v = GafferUI.ViewportGadget()
-		v.setViewport( IECore.V2i( 500, 250 ) )
+		v.setViewport( imath.V2i( 500, 250 ) )
 		v.setCamera(
 			IECoreScene.Camera( parameters = {
-				"resolution" : IECore.V2i( 500, 250 ),
-				"screenWindow" : IECore.Box2f( IECore.V2f( -2, -1 ), IECore.V2f( 2, 1 ) ),
+				"resolution" : imath.V2i( 500, 250 ),
+				"screenWindow" : imath.Box2f( imath.V2f( -2, -1 ), imath.V2f( 2, 1 ) ),
 				"projection" : "orthographic",
-				"clippingPlanes" : IECore.V2f( .1, 10 ),
+				"clippingPlanes" : imath.V2f( .1, 10 ),
 			} )
 		)
 
-		r = IECore.Rand48()
+		r = imath.Rand48()
 		for i in range( 0, 100 ) :
-			rasterPosition = IECore.V2f( r.nexti() % 500, r.nexti() % 250 )
+			rasterPosition = imath.V2f( r.nexti() % 500, r.nexti() % 250 )
 			line = v.rasterToWorldSpace( rasterPosition )
 			nearProjected = v.worldToRasterSpace( line.p0 )
 			farProjected = v.worldToRasterSpace( line.p1 )
 			self.failUnless( nearProjected.equalWithAbsError( farProjected, 0.0001 ) )
 			self.failUnless(
-				IECore.V2f( rasterPosition.x, rasterPosition.y ).equalWithAbsError(
+				imath.V2f( rasterPosition.x, rasterPosition.y ).equalWithAbsError(
 					nearProjected, 0.0001
 				)
 			)
@@ -226,26 +227,26 @@ class ViewportGadgetTest( GafferUITest.TestCase ) :
 	def testWorldToRasterPerspective( self ) :
 
 		v = GafferUI.ViewportGadget()
-		v.setViewport( IECore.V2i( 500, 250 ) )
+		v.setViewport( imath.V2i( 500, 250 ) )
 		v.setCamera(
 			IECoreScene.Camera( parameters = {
-				"resolution" : IECore.V2i( 500, 250 ),
-				"screenWindow" : IECore.Box2f( IECore.V2f( -1, -.5 ), IECore.V2f( 1, .5 ) ),
+				"resolution" : imath.V2i( 500, 250 ),
+				"screenWindow" : imath.Box2f( imath.V2f( -1, -.5 ), imath.V2f( 1, .5 ) ),
 				"projection" : "perspective",
 				"projection:fov" : 50.0,
-				"clippingPlanes" : IECore.V2f( .1, 10 ),
+				"clippingPlanes" : imath.V2f( .1, 10 ),
 			} )
 		)
 
-		r = IECore.Rand48()
+		r = imath.Rand48()
 		for i in range( 0, 100 ) :
-			rasterPosition = IECore.V2f( r.nexti() % 500, r.nexti() % 250 )
+			rasterPosition = imath.V2f( r.nexti() % 500, r.nexti() % 250 )
 			line = v.rasterToWorldSpace( rasterPosition )
 			nearProjected = v.worldToRasterSpace( line.p0 )
 			farProjected = v.worldToRasterSpace( line.p1 )
 			self.failUnless( nearProjected.equalWithAbsError( farProjected, 0.0001 ) )
 			self.failUnless(
-				IECore.V2f( rasterPosition.x, rasterPosition.y ).equalWithAbsError(
+				imath.V2f( rasterPosition.x, rasterPosition.y ).equalWithAbsError(
 					nearProjected, 0.0001
 				)
 			)

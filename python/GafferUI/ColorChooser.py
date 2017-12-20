@@ -36,6 +36,7 @@
 ##########################################################################
 
 import sys
+import imath
 
 import IECore
 
@@ -81,14 +82,14 @@ class _ComponentSlider( GafferUI.NumericSlider ) :
 		displayTransform = GafferUI.DisplayTransform.get() if self.__useDisplayTransform else lambda x : x
 
 		if self.component == "a" :
-			c1 = IECore.Color3f( 0 )
-			c2 = IECore.Color3f( 1 )
+			c1 = imath.Color3f( 0 )
+			c2 = imath.Color3f( 1 )
 		else :
-			c1 = IECore.Color3f( self.color[0], self.color[1], self.color[2] )
-			c2 = IECore.Color3f( self.color[0], self.color[1], self.color[2] )
+			c1 = imath.Color3f( self.color[0], self.color[1], self.color[2] )
+			c2 = imath.Color3f( self.color[0], self.color[1], self.color[2] )
 			if self.component in "hsv" :
-				c1 = c1.rgbToHSV()
-				c2 = c2.rgbToHSV()
+				c1 = c1.rgb2hsv()
+				c2 = c2.rgb2hsv()
 			a = { "r" : 0, "g" : 1, "b" : 2, "h" : 0, "s" : 1, "v": 2 }[self.component]
 			c1[a] = 0
 			c2[a] = 1
@@ -99,7 +100,7 @@ class _ComponentSlider( GafferUI.NumericSlider ) :
 			t = float( i ) / (numStops-1)
 			c = c1 + (c2-c1) * t
 			if self.component in "hsv" :
-				c = c.hsvToRGB()
+				c = c.hsv2rgb()
 
 			grad.setColorAt( t, self._qtColor( displayTransform( c ) ) )
 
@@ -114,7 +115,7 @@ class ColorChooser( GafferUI.Widget ) :
 
 	ColorChangedReason = IECore.Enum.create( "Invalid", "SetColor", "Reset" )
 
-	def __init__( self, color=IECore.Color3f( 1 ), useDisplayTransform = True, **kw ) :
+	def __init__( self, color=imath.Color3f( 1 ), useDisplayTransform = True, **kw ) :
 
 		self.__column = GafferUI.ListContainer( GafferUI.ListContainer.Orientation.Vertical, spacing = 4 )
 
@@ -155,7 +156,7 @@ class ColorChooser( GafferUI.Widget ) :
 				self.__initialColorSwatch = GafferUI.ColorSwatch( color, useDisplayTransform = useDisplayTransform, parenting = { "expand" : True } )
 				self.__initialColorPressConnection = self.__initialColorSwatch.buttonPressSignal().connect( Gaffer.WeakMethod( self.__initialColorPress ) )
 
-				GafferUI.Spacer( IECore.V2i( 4, 40 ) )
+				GafferUI.Spacer( imath.V2i( 4, 40 ) )
 
 				self.__colorSwatch = GafferUI.ColorSwatch( color, useDisplayTransform = useDisplayTransform, parenting = { "expand" : True } )
 
@@ -222,10 +223,10 @@ class ColorChooser( GafferUI.Widget ) :
 			a = { "r" : 0, "g" : 1, "b" : 2, "a" : 3 }[componentWidget.component]
 			newColor[a] = componentValue
 		else :
-			newColor = newColor.rgbToHSV()
+			newColor = newColor.rgb2hsv()
 			a = { "h" : 0, "s" : 1, "v" : 2 }[componentWidget.component]
 			newColor[a] = componentValue
-			newColor = newColor.hsvToRGB()
+			newColor = newColor.hsv2rgb()
 
 		self.__setColorInternal( newColor, reason )
 
@@ -271,7 +272,7 @@ class ColorChooser( GafferUI.Widget ) :
 			else :
 				self.__sliders["a"].parent().setVisible( False )
 
-			c = c.rgbToHSV()
+			c = c.rgb2hsv()
 			for component, index in ( ( "h", 0 ), ( "s", 1 ), ( "v", 2 ) ) :
 				self.__sliders[component].setValue( c[index] )
 				self.__numericWidgets[component].setValue( c[index] )

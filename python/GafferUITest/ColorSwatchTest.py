@@ -36,6 +36,7 @@
 ##########################################################################
 
 import unittest
+import imath
 
 import IECore
 
@@ -48,11 +49,11 @@ class ColorSwatchTest( GafferUITest.TestCase ) :
 
 		c = GafferUI.ColorSwatch()
 
-		self.assertEqual( c.getColor(), IECore.Color4f( 1 ) )
+		self.assertEqual( c.getColor(), imath.Color4f( 1 ) )
 
-		c.setColor( IECore.Color3f( 1, 2, 3 ) )
+		c.setColor( imath.Color3f( 1, 2, 3 ) )
 
-		self.assertEqual( c.getColor(), IECore.Color3f( 1, 2, 3 ) )
+		self.assertEqual( c.getColor(), imath.Color3f( 1, 2, 3 ) )
 
 if __name__ == "__main__":
 	unittest.main()

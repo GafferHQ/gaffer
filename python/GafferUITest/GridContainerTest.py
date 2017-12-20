@@ -35,6 +35,7 @@
 ##########################################################################
 
 import unittest
+import imath
 
 import IECore
 
@@ -60,18 +61,18 @@ class GridContainerTest( GafferUITest.TestCase ) :
 		self.assertEqual( b3.parent(), None )
 		self.assertEqual( b4.parent(), None )
 
-		self.assertEqual( c.gridSize(), IECore.V2i( 0, 0 ) )
+		self.assertEqual( c.gridSize(), imath.V2i( 0, 0 ) )
 
 		c[0,0] = b1
 
-		self.assertEqual( c.gridSize(), IECore.V2i( 1, 1 ) )
+		self.assertEqual( c.gridSize(), imath.V2i( 1, 1 ) )
 
 		self.failUnless( b1.parent() is c )
 		self.failUnless( c[0,0] is b1 )
 
 		c[1,0] = b2
 
-		self.assertEqual( c.gridSize(), IECore.V2i( 2, 1 ) )
+		self.assertEqual( c.gridSize(), imath.V2i( 2, 1 ) )
 
 		self.failUnless( b1.parent() is c )
 		self.failUnless( b2.parent() is c )
@@ -80,7 +81,7 @@ class GridContainerTest( GafferUITest.TestCase ) :
 
 		c[0,1] = b3
 
-		self.assertEqual( c.gridSize(), IECore.V2i( 2, 2 ) )
+		self.assertEqual( c.gridSize(), imath.V2i( 2, 2 ) )
 
 		self.failUnless( b1.parent() is c )
 		self.failUnless( b2.parent() is c )
@@ -91,7 +92,7 @@ class GridContainerTest( GafferUITest.TestCase ) :
 
 		c[1,1] = b4
 
-		self.assertEqual( c.gridSize(), IECore.V2i( 2, 2 ) )
+		self.assertEqual( c.gridSize(), imath.V2i( 2, 2 ) )
 
 		self.failUnless( b1.parent() is c )
 		self.failUnless( b2.parent() is c )
@@ -176,31 +177,31 @@ class GridContainerTest( GafferUITest.TestCase ) :
 		b1 = GafferUI.Button( "b1" )
 		b2 = GafferUI.Button( "b2" )
 
-		self.assertEqual( c1.gridSize(), IECore.V2i( 0, 0 ) )
+		self.assertEqual( c1.gridSize(), imath.V2i( 0, 0 ) )
 
 		c1[0,0] = b1
 
-		self.assertEqual( c1.gridSize(), IECore.V2i( 1, 1 ) )
+		self.assertEqual( c1.gridSize(), imath.V2i( 1, 1 ) )
 
 		c1[1,0] = b2
 
-		self.assertEqual( c1.gridSize(), IECore.V2i( 2, 1 ) )
+		self.assertEqual( c1.gridSize(), imath.V2i( 2, 1 ) )
 
 		del c1[1,0]
 
-		self.assertEqual( c1.gridSize(), IECore.V2i( 1, 1 ) )
+		self.assertEqual( c1.gridSize(), imath.V2i( 1, 1 ) )
 
 		del c1[0,0]
 
-		self.assertEqual( c1.gridSize(), IECore.V2i( 0, 0 ) )
+		self.assertEqual( c1.gridSize(), imath.V2i( 0, 0 ) )
 
 		c1[1,0] = b2
 
-		self.assertEqual( c1.gridSize(), IECore.V2i( 2, 1 ) )
+		self.assertEqual( c1.gridSize(), imath.V2i( 2, 1 ) )
 
 		del c1[1,0]
 
-		self.assertEqual( c1.gridSize(), IECore.V2i( 0, 0 ) )
+		self.assertEqual( c1.gridSize(), imath.V2i( 0, 0 ) )
 
 	def testRemoveRow( self ) :
 
@@ -216,11 +217,11 @@ class GridContainerTest( GafferUITest.TestCase ) :
 		g[1,1] = b11
 		g[1,0] = b10
 
-		self.assertEqual( g.gridSize(), IECore.V2i( 2, 2 ) )
+		self.assertEqual( g.gridSize(), imath.V2i( 2, 2 ) )
 
 		g.removeRow( 0 )
 
-		self.assertEqual( g.gridSize(), IECore.V2i( 2, 1 ) )
+		self.assertEqual( g.gridSize(), imath.V2i( 2, 1 ) )
 
 		self.failUnless( g[0,0] is b01 )
 		self.failUnless( g[1,0] is b11 )
@@ -239,11 +240,11 @@ class GridContainerTest( GafferUITest.TestCase ) :
 		g[1,1] = b11
 		g[1,0] = b10
 
-		self.assertEqual( g.gridSize(), IECore.V2i( 2, 2 ) )
+		self.assertEqual( g.gridSize(), imath.V2i( 2, 2 ) )
 
 		g.removeColumn( 0 )
 
-		self.assertEqual( g.gridSize(), IECore.V2i( 1, 2 ) )
+		self.assertEqual( g.gridSize(), imath.V2i( 1, 2 ) )
 
 		self.failUnless( g[0,0] is b10 )
 		self.failUnless( g[0,1] is b11 )
@@ -262,11 +263,11 @@ class GridContainerTest( GafferUITest.TestCase ) :
 		g[1,1] = b11
 		g[1,0] = b10
 
-		self.assertEqual( g.gridSize(), IECore.V2i( 2, 2 ) )
+		self.assertEqual( g.gridSize(), imath.V2i( 2, 2 ) )
 
 		del g[0:2,0]
 
-		self.assertEqual( g.gridSize(), IECore.V2i( 2, 2 ) )
+		self.assertEqual( g.gridSize(), imath.V2i( 2, 2 ) )
 
 		self.failUnless( g[0,0] is None )
 		self.failUnless( g[1,0] is None )
@@ -285,7 +286,7 @@ class GridContainerTest( GafferUITest.TestCase ) :
 
 		self.failUnless( b1.parent() is g )
 
-		self.assertEqual( g.gridSize(), IECore.V2i( 2, 2 ) )
+		self.assertEqual( g.gridSize(), imath.V2i( 2, 2 ) )
 
 		self.failUnless( g[0,0] is b1 )
 		self.failUnless( g[0,1] is b1 )
@@ -295,7 +296,7 @@ class GridContainerTest( GafferUITest.TestCase ) :
 		del g[0,0]
 
 		self.failUnless( b1.parent() is None )
-		self.assertEqual( g.gridSize(), IECore.V2i( 0, 0 ) )
+		self.assertEqual( g.gridSize(), imath.V2i( 0, 0 ) )
 
 	def testSetChildOnTopOfMultiCellChild( self ) :
 
@@ -308,13 +309,13 @@ class GridContainerTest( GafferUITest.TestCase ) :
 
 		self.failUnless( b1.parent() is g )
 
-		self.assertEqual( g.gridSize(), IECore.V2i( 2, 2 ) )
+		self.assertEqual( g.gridSize(), imath.V2i( 2, 2 ) )
 
 		g[0,0] = b2
 
 		self.failUnless( b1.parent() is None )
 		self.failUnless( b2.parent() is g )
-		self.assertEqual( g.gridSize(), IECore.V2i( 1, 1 ) )
+		self.assertEqual( g.gridSize(), imath.V2i( 1, 1 ) )
 
 	def testRemoveRowContainingMultiCellChild( self ) :
 
@@ -324,12 +325,12 @@ class GridContainerTest( GafferUITest.TestCase ) :
 
 		g[0:2,0:2] = b1
 
-		self.assertEqual( g.gridSize(), IECore.V2i( 2, 2 ) )
+		self.assertEqual( g.gridSize(), imath.V2i( 2, 2 ) )
 
 		g.removeRow( 0 )
 
 		self.failUnless( b1.parent() is None )
-		self.assertEqual( g.gridSize(), IECore.V2i( 0, 0 ) )
+		self.assertEqual( g.gridSize(), imath.V2i( 0, 0 ) )
 
 	def testRemoveColumnContainingMultiCellChild( self ) :
 
@@ -339,12 +340,12 @@ class GridContainerTest( GafferUITest.TestCase ) :
 
 		g[0:2,0:2] = b1
 
-		self.assertEqual( g.gridSize(), IECore.V2i( 2, 2 ) )
+		self.assertEqual( g.gridSize(), imath.V2i( 2, 2 ) )
 
 		g.removeColumn( 0 )
 
 		self.failUnless( b1.parent() is None )
-		self.assertEqual( g.gridSize(), IECore.V2i( 0, 0 ) )
+		self.assertEqual( g.gridSize(), imath.V2i( 0, 0 ) )
 
 	def testAutomaticParenting( self ) :
 

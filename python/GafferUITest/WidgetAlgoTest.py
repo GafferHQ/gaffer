@@ -35,6 +35,7 @@
 ##########################################################################
 
 import unittest
+import imath
 
 import IECore
 import IECoreImage
@@ -62,7 +63,7 @@ class WidgetAlgoTest( GafferUITest.TestCase ) :
 		## \todo Should we have an official method for getting
 		# physical pixel size like this? Or should `grab()` downsize
 		# to return an image with the logical pixel size?
-		expectedSize = IECore.V2f( b.size() )
+		expectedSize = imath.V2f( b.size() )
 		if Qt.__binding__ in ( "PySide2", "PyQt5" ) :
 			screen= QtWidgets.QApplication.primaryScreen()
 			windowHandle = b._qtWidget().windowHandle()
@@ -70,7 +71,7 @@ class WidgetAlgoTest( GafferUITest.TestCase ) :
 				screen = windowHandle.screen()
 			expectedSize *= screen.devicePixelRatio()
 
-		self.assertEqual( IECore.V2f( i.displayWindow.size() ) + IECore.V2f( 1 ), expectedSize )
+		self.assertEqual( imath.V2f( i.displayWindow.size() ) + imath.V2f( 1 ), expectedSize )
 
 if __name__ == "__main__":
 	unittest.main()

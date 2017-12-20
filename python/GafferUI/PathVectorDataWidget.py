@@ -34,6 +34,8 @@
 #
 ##########################################################################
 
+import imath
+
 import IECore
 
 import Gaffer
@@ -111,7 +113,7 @@ class _Editor( GafferUI.ListContainer ) :
 			button = GafferUI.Button( image = "pathChooser.png", hasFrame = False )
 			self.__buttonClickedConnection = button.clickedSignal().connect( Gaffer.WeakMethod( self.__buttonClicked ) )
 
-			GafferUI.Spacer( IECore.V2i( 2 ) )
+			GafferUI.Spacer( imath.V2i( 2 ) )
 
 		# needed to give the focus to our main editable field when editing starts.
 		self._qtWidget().setFocusProxy( self.__pathWidget()._qtWidget() )

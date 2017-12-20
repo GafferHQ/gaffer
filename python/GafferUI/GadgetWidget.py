@@ -35,6 +35,8 @@
 #
 ##########################################################################
 
+import imath
+
 import IECore
 import IECoreGL
 
@@ -282,8 +284,8 @@ class _EventFilter( QtCore.QObject ) :
 
 			toolTip = widget.getViewportGadget().getToolTip(
 				IECore.LineSegment3f(
-					IECore.V3f( qEvent.x(), qEvent.y(), 1 ),
-					IECore.V3f( qEvent.x(), qEvent.y(), 0 )
+					imath.V3f( qEvent.x(), qEvent.y(), 1 ),
+					imath.V3f( qEvent.x(), qEvent.y(), 0 )
 				)
 			 )
 

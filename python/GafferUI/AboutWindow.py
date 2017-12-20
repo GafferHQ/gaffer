@@ -36,6 +36,7 @@
 ##########################################################################
 
 import os
+import imath
 
 import IECore
 
@@ -62,7 +63,7 @@ class AboutWindow( GafferUI.Window ) :
 				) :
 
 					GafferUI.Spacer(
-						IECore.V2i( 1 ),
+						imath.V2i( 1 ),
 						parenting = { "expand" : True }
 					)
 
@@ -84,7 +85,7 @@ class AboutWindow( GafferUI.Window ) :
 					)
 
 					GafferUI.Spacer(
-						IECore.V2i( 1 ),
+						imath.V2i( 1 ),
 						parenting = { "expand" : True }
 					)
 

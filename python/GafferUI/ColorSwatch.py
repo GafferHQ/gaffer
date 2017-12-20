@@ -35,6 +35,8 @@
 #
 ##########################################################################
 
+import imath
+
 import IECore
 
 import Gaffer
@@ -50,10 +52,10 @@ from Qt import QtWidgets
 # space, pass `useDisplayTransform = False` to the constructor.
 class ColorSwatch( GafferUI.Widget ) :
 
-	__linearBackgroundColor0 = IECore.Color3f( 0.1 )
-	__linearBackgroundColor1 = IECore.Color3f( 0.2 )
+	__linearBackgroundColor0 = imath.Color3f( 0.1 )
+	__linearBackgroundColor1 = imath.Color3f( 0.2 )
 
-	def __init__( self, color=IECore.Color4f( 1 ), useDisplayTransform = True, **kw ) :
+	def __init__( self, color=imath.Color4f( 1 ), useDisplayTransform = True, **kw ) :
 
 		GafferUI.Widget.__init__( self, QtWidgets.QWidget(), **kw )
 
@@ -117,8 +119,8 @@ class ColorSwatch( GafferUI.Widget ) :
 			bg1 = self.__linearBackgroundColor1 if self.__useDisplayTransform else displayTransform( self.__linearBackgroundColor1 )
 			# Now composite the main colour with the background colour. This is happening in linear space
 			# if __useDisplayTransform is True, and in display space otherwise.
-			color0 = bg0 * ( 1.0 - c.a ) + IECore.Color3f( c.r, c.g, c.b ) * c.a
-			color1 = bg1 * ( 1.0 - c.a ) + IECore.Color3f( c.r, c.g, c.b ) * c.a
+			color0 = bg0 * ( 1.0 - c.a ) + imath.Color3f( c.r, c.g, c.b ) * c.a
+			color1 = bg1 * ( 1.0 - c.a ) + imath.Color3f( c.r, c.g, c.b ) * c.a
 
 			self.__transparentChecker.color0 = self._qtColor( effectiveDisplayTransform( color0 ) )
 			self.__transparentChecker.color1 = self._qtColor( effectiveDisplayTransform( color1 ) )
@@ -151,8 +153,8 @@ class _Checker( QtWidgets.QWidget ) :
 			# draw checkerboard if colours differ
 			checkSize = 6
 
-			min = IECore.V2i( rect.x() / checkSize, rect.y() / checkSize )
-			max = IECore.V2i( 1 + (rect.x() + rect.width()) / checkSize, 1 + (rect.y() + rect.height()) / checkSize )
+			min = imath.V2i( rect.x() / checkSize, rect.y() / checkSize )
+			max = imath.V2i( 1 + (rect.x() + rect.width()) / checkSize, 1 + (rect.y() + rect.height()) / checkSize )
 
 			for x in range( min.x, max.x ) :
 				for y in range( min.y, max.y ) :

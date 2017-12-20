@@ -37,6 +37,7 @@
 
 import sys
 import warnings
+import imath
 
 import IECore
 
@@ -267,7 +268,7 @@ class Window( GafferUI.ContainerWidget ) :
 
 	def getPosition( self ) :
 
-		return IECore.V2i( self._qtWidget().x(), self._qtWidget().y() )
+		return imath.V2i( self._qtWidget().x(), self._qtWidget().y() )
 
 	def setFullScreen( self, fullScreen ) :
 

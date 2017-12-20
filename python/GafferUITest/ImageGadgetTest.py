@@ -36,6 +36,7 @@
 
 import os
 import unittest
+import imath
 
 import IECore
 import IECoreImage
@@ -47,17 +48,17 @@ class ImageGadgetTest( GafferUITest.TestCase ) :
 
 	def testConstructFromImagePrimitive( self ) :
 
-		window = IECore.Box2i( IECore.V2i( 0 ), IECore.V2i( 255 ) )
-		imagePrimitive = IECoreImage.ImagePrimitive.createRGBFloat( IECore.Color3f( 0.25, .5, .75 ), window, window )
+		window = imath.Box2i( imath.V2i( 0 ), imath.V2i( 255 ) )
+		imagePrimitive = IECoreImage.ImagePrimitive.createRGBFloat( imath.Color3f( 0.25, .5, .75 ), window, window )
 
 		i = GafferUI.ImageGadget( imagePrimitive )
-		self.assertEqual( i.bound(), IECore.Box3f( IECore.V3f( -128, -128, 0 ), IECore.V3f( 128, 128, 0 ) ) )
+		self.assertEqual( i.bound(), imath.Box3f( imath.V3f( -128, -128, 0 ), imath.V3f( 128, 128, 0 ) ) )
 
 	def testConstructFromFile( self ) :
 
 		i = GafferUI.ImageGadget( "arrowRight10.png" )
 
-		self.assertEqual( i.bound(), IECore.Box3f( IECore.V3f( -5, -5, 0 ), IECore.V3f( 5, 5, 0 ) ) )
+		self.assertEqual( i.bound(), imath.Box3f( imath.V3f( -5, -5, 0 ), imath.V3f( 5, 5, 0 ) ) )
 
 	def testMissingFiles( self ) :
 

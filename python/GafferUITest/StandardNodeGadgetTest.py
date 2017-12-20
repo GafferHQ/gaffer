@@ -36,6 +36,7 @@
 ##########################################################################
 
 import unittest
+import imath
 
 import IECore
 
@@ -117,21 +118,21 @@ class StandardNodeGadgetTest( GafferUITest.TestCase ) :
 		n = GafferTest.AddNode()
 		g = GafferUI.StandardNodeGadget( n )
 
-		self.assertEqual( g.noduleTangent( g.nodule( n["op1"] ) ), IECore.V3f( 0, 1, 0 ) )
-		self.assertEqual( g.noduleTangent( g.nodule( n["op2"] ) ), IECore.V3f( 0, 1, 0 ) )
-		self.assertEqual( g.noduleTangent( g.nodule( n["sum"] ) ), IECore.V3f( 0, -1, 0 ) )
+		self.assertEqual( g.noduleTangent( g.nodule( n["op1"] ) ), imath.V3f( 0, 1, 0 ) )
+		self.assertEqual( g.noduleTangent( g.nodule( n["op2"] ) ), imath.V3f( 0, 1, 0 ) )
+		self.assertEqual( g.noduleTangent( g.nodule( n["sum"] ) ), imath.V3f( 0, -1, 0 ) )
 
 	def testNodulePositionMetadata( self ) :
 
 		n = GafferTest.MultiplyNode()
 
 		g = GafferUI.StandardNodeGadget( n )
-		self.assertEqual( g.noduleTangent( g.nodule( n["op1"] ) ), IECore.V3f( 0, 1, 0 ) )
+		self.assertEqual( g.noduleTangent( g.nodule( n["op1"] ) ), imath.V3f( 0, 1, 0 ) )
 
 		Gaffer.Metadata.registerValue( n.typeId(), "op1", "noduleLayout:section", "left" )
 
 		g = GafferUI.StandardNodeGadget( n )
-		self.assertEqual( g.noduleTangent( g.nodule( n["op1"] ) ), IECore.V3f( -1, 0, 0 ) )
+		self.assertEqual( g.noduleTangent( g.nodule( n["op1"] ) ), imath.V3f( -1, 0, 0 ) )
 
 	def testNameDoesntAffectHeight( self ) :
 
@@ -174,10 +175,10 @@ class StandardNodeGadgetTest( GafferUITest.TestCase ) :
 		n = GafferTest.MultiplyNode()
 
 		g = GafferUI.StandardNodeGadget( n )
-		self.assertEqual( g.noduleTangent( g.nodule( n["op2"] ) ), IECore.V3f( 0, 1, 0 ) )
+		self.assertEqual( g.noduleTangent( g.nodule( n["op2"] ) ), imath.V3f( 0, 1, 0 ) )
 
 		Gaffer.Metadata.registerValue( n["op2"], "noduleLayout:section", "left" )
-		self.assertEqual( g.noduleTangent( g.nodule( n["op2"] ) ), IECore.V3f( -1, 0, 0 ) )
+		self.assertEqual( g.noduleTangent( g.nodule( n["op2"] ) ), imath.V3f( -1, 0, 0 ) )
 
 	def testRemoveNoduleAfterCreation( self ) :
 
@@ -185,7 +186,7 @@ class StandardNodeGadgetTest( GafferUITest.TestCase ) :
 		n["p"] = Gaffer.IntPlug()
 
 		g = GafferUI.StandardNodeGadget( n )
-		self.assertEqual( g.noduleTangent( g.nodule( n["p"] ) ), IECore.V3f( 0, 1, 0 ) )
+		self.assertEqual( g.noduleTangent( g.nodule( n["p"] ) ), imath.V3f( 0, 1, 0 ) )
 
 		Gaffer.Metadata.registerValue( n["p"], "nodule:type", "" )
 		self.assertEqual( g.nodule( n["p"] ), None )

@@ -36,6 +36,7 @@
 ##########################################################################
 
 import functools
+import imath
 
 import IECore
 
@@ -81,7 +82,7 @@ class PathChooserWidget( GafferUI.Widget ) :
 				upButton.setToolTip( "Up one level" )
 				self.__upButtonClickedConnection = upButton.clickedSignal().connect( Gaffer.WeakMethod( self.__upButtonClicked ) )
 
-				GafferUI.Spacer( IECore.V2i( 2, 2 ) )
+				GafferUI.Spacer( imath.V2i( 2, 2 ) )
 
 				self.__dirPathWidget = GafferUI.PathWidget( tmpPath )
 

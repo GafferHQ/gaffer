@@ -37,6 +37,7 @@
 
 import sys
 import collections
+import imath
 
 import IECore
 
@@ -174,15 +175,15 @@ def paste( menu ) :
 		bound = s.nodeGraph.bound()
 		mousePosition = GafferUI.Widget.mousePosition()
 		if bound.intersects( mousePosition ) :
-			fallbackPosition = mousePosition - bound.min
+			fallbackPosition = mousePosition - bound.min()
 		else :
-			fallbackPosition = bound.center() - bound.min
+			fallbackPosition = bound.center() - bound.min()
 
 		fallbackPosition = s.nodeGraph.graphGadgetWidget().getViewportGadget().rasterToGadgetSpace(
-			IECore.V2f( fallbackPosition.x, fallbackPosition.y ),
+			imath.V2f( fallbackPosition.x, fallbackPosition.y ),
 			gadget = s.nodeGraph.graphGadget()
 		).p0
-		fallbackPosition = IECore.V2f( fallbackPosition.x, fallbackPosition.y )
+		fallbackPosition = imath.V2f( fallbackPosition.x, fallbackPosition.y )
 
 		s.nodeGraph.graphGadget().getLayout().positionNodes( s.nodeGraph.graphGadget(), s.script.selection(), fallbackPosition )
 

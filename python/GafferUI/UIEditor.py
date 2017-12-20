@@ -39,6 +39,7 @@ import functools
 import types
 import re
 import collections
+import imath
 
 import IECore
 
@@ -232,7 +233,7 @@ class UIEditor( GafferUI.NodeSetEditor ) :
 	@classmethod
 	def __setColor( cls, menu, node ) :
 
-		color = Gaffer.Metadata.value( node, "nodeGadget:color" ) or IECore.Color3f( 1 )
+		color = Gaffer.Metadata.value( node, "nodeGadget:color" ) or imath.Color3f( 1 )
 		dialogue = GafferUI.ColorChooserDialogue( color = color, useDisplayTransform = False )
 		color = dialogue.waitForColor( parentWindow = menu.ancestor( GafferUI.Window ) )
 		if color is not None :
@@ -510,7 +511,7 @@ class _ColorSwatchMetadataWidget( _MetadataWidget ) :
 		if value is not None :
 			self.__swatch.setColor( value )
 		else :
-			self.__swatch.setColor( IECore.Color4f( 0, 0, 0, 0 ) )
+			self.__swatch.setColor( imath.Color4f( 0, 0, 0, 0 ) )
 
 		self.__value = value
 
@@ -519,7 +520,7 @@ class _ColorSwatchMetadataWidget( _MetadataWidget ) :
 		if event.button != event.Buttons.Left :
 			return False
 
-		color = self.__value if self.__value is not None else IECore.Color3f( 1 )
+		color = self.__value if self.__value is not None else imath.Color3f( 1 )
 		dialogue = GafferUI.ColorChooserDialogue( color = color, useDisplayTransform = False )
 		color = dialogue.waitForColor( parentWindow = self.ancestor( GafferUI.Window ) )
 
@@ -1272,7 +1273,7 @@ class _PresetsEditor( GafferUI.Widget ) :
 				self.__nameWidget = GafferUI.TextWidget()
 				self.__nameEditingFinishedConnection = self.__nameWidget.editingFinishedSignal().connect( Gaffer.WeakMethod( self.__nameEditingFinished ) )
 
-				GafferUI.Spacer( IECore.V2i( 4 ), maximumSize = IECore.V2i( 4 ) )
+				GafferUI.Spacer( imath.V2i( 4 ), maximumSize = imath.V2i( 4 ) )
 
 				GafferUI.Label( "Value" )
 
@@ -1297,7 +1298,7 @@ class _PresetsEditor( GafferUI.Widget ) :
 
 		self.__editingColumn.append( plugValueWidget if plugValueWidget is not None else GafferUI.TextWidget() )
 
-		self.__editingColumn.append( GafferUI.Spacer( IECore.V2i( 0 ), parenting = { "expand" : True } ) )
+		self.__editingColumn.append( GafferUI.Spacer( imath.V2i( 0 ), parenting = { "expand" : True } ) )
 
 		self.__updatePath()
 
@@ -1565,7 +1566,7 @@ class _PlugEditor( GafferUI.Widget ) :
 						_Label( "Connection Color" )
 						self.__metadataWidgets["connectionGadget:color"] = _ColorSwatchMetadataWidget( key = "connectionGadget:color" )
 
-			GafferUI.Spacer( IECore.V2i( 0 ), parenting = { "expand" : True } )
+			GafferUI.Spacer( imath.V2i( 0 ), parenting = { "expand" : True } )
 
 		self.__plugMetadataChangedConnection = Gaffer.Metadata.plugValueChangedSignal().connect( Gaffer.WeakMethod( self.__plugMetadataChanged ) )
 

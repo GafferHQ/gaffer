@@ -36,6 +36,7 @@
 
 import weakref
 import functools
+import imath
 
 import IECore
 
@@ -78,7 +79,7 @@ class MessageWidget( GafferUI.Widget ) :
 					button.setVisible( False )
 					button.setToolTip( buttonSpec[1] )
 
-				GafferUI.Spacer( IECore.V2i( 10 ) )
+				GafferUI.Spacer( imath.V2i( 10 ) )
 
 			self.__text = GafferUI.MultiLineTextWidget( editable=False )
 

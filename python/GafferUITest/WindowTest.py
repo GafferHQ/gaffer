@@ -37,6 +37,7 @@
 
 import unittest
 import weakref
+import imath
 
 import IECore
 
@@ -275,8 +276,8 @@ class WindowTest( GafferUITest.TestCase ) :
 	def testPosition( self ) :
 
 		w = GafferUI.Window()
-		w.setPosition( IECore.V2i( 10, 20 ) )
-		self.assertEqual( w.getPosition(), IECore.V2i( 10, 20 ) )
+		w.setPosition( imath.V2i( 10, 20 ) )
+		self.assertEqual( w.getPosition(), imath.V2i( 10, 20 ) )
 
 	def testChildWindowsMethod( self ) :
 

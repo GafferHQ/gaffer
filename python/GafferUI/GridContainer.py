@@ -34,6 +34,8 @@
 #
 ##########################################################################
 
+import imath
+
 import IECore
 
 import GafferUI
@@ -73,19 +75,19 @@ class GridContainer( GafferUI.ContainerWidget ) :
 		# so we keep a track of the true dimensions (largest coordinate any widget
 		# currently has) ourselves. this is so we can implement gridSize() to return
 		# what we really want.
-		self.__maxCoordinate = IECore.V2i( -1 )
+		self.__maxCoordinate = imath.V2i( -1 )
 
 	def gridSize( self ) :
 
 		if self.__maxCoordinate is None :
-			self.__maxCoordinate = IECore.V2i( -1 )
+			self.__maxCoordinate = imath.V2i( -1 )
 			for x in range( 0, self.__qtLayout.columnCount() ) :
 				for y in range( 0, self.__qtLayout.rowCount() ) :
 					if self.__qtLayout.itemAtPosition( y, x ) is not None :
 						self.__maxCoordinate.x = max( self.__maxCoordinate.x, x )
 						self.__maxCoordinate.y = max( self.__maxCoordinate.y, y )
 
-		return self.__maxCoordinate + IECore.V2i( 1 )
+		return self.__maxCoordinate + imath.V2i( 1 )
 
 	def __setitem__( self, index, child ) :
 

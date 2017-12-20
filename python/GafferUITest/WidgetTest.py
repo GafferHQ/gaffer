@@ -38,6 +38,7 @@
 import unittest
 import weakref
 import sys
+import imath
 
 import IECore
 
@@ -347,7 +348,7 @@ class WidgetTest( GafferUITest.TestCase ) :
 		w.setChild( b )
 		w.setVisible( True )
 
-		w.setPosition( IECore.V2i( 100 ) )
+		w.setPosition( imath.V2i( 100 ) )
 
 		self.waitForIdle( 1000 )
 
@@ -355,12 +356,12 @@ class WidgetTest( GafferUITest.TestCase ) :
 		bb = b.bound()
 		bbw = b.bound( relativeTo = w )
 
-		self.failUnless( isinstance( wb, IECore.Box2i ) )
-		self.failUnless( isinstance( bb, IECore.Box2i ) )
-		self.failUnless( isinstance( bbw, IECore.Box2i ) )
+		self.failUnless( isinstance( wb, imath.Box2i ) )
+		self.failUnless( isinstance( bb, imath.Box2i ) )
+		self.failUnless( isinstance( bbw, imath.Box2i ) )
 
 		self.assertEqual( bb.size(), bbw.size() )
-		self.assertEqual( bbw.min, bb.min - wb.min )
+		self.assertEqual( bbw.min(), bb.min() - wb.min() )
 		self.assertEqual( b.size(), bb.size() )
 
 	def testParentChangedSignal( self ) :
@@ -401,8 +402,8 @@ class WidgetTest( GafferUITest.TestCase ) :
 		w1.setVisible( True )
 		w2.setVisible( True )
 
-		w1.setPosition( IECore.V2i( 100 ) )
-		w2.setPosition( IECore.V2i( 300 ) )
+		w1.setPosition( imath.V2i( 100 ) )
+		w2.setPosition( imath.V2i( 300 ) )
 
 		self.waitForIdle( 1000 )
 
@@ -418,14 +419,14 @@ class WidgetTest( GafferUITest.TestCase ) :
 		w.setChild( b )
 		w.setVisible( True )
 
-		w.setPosition( IECore.V2i( 100 ) )
+		w.setPosition( imath.V2i( 100 ) )
 
 		self.waitForIdle( 1000 )
 
 		mouseGlobal = GafferUI.Widget.mousePosition()
 		mouseLocal = GafferUI.Widget.mousePosition( relativeTo = b )
 
-		self.assertEqual( mouseGlobal, mouseLocal + b.bound().min )
+		self.assertEqual( mouseGlobal, mouseLocal + b.bound().min() )
 
 	def testAddressAndObject( self ) :
 

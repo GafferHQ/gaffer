@@ -43,6 +43,7 @@ import collections
 # when running in maya 2012 the default log level allows info messages through.
 # so we set a specific log level on the OpenGL logger to keep it quiet.
 logging.getLogger( "OpenGL" ).setLevel( logging.WARNING )
+import imath
 
 import IECore
 import IECoreGL
@@ -260,7 +261,7 @@ class _GLGraphicsView( QtWidgets.QGraphicsView ) :
 			# but it's safe.
 			IECoreGL.init( True )
 
-			owner._resize( IECore.V2i( event.size().width(), event.size().height() ) )
+			owner._resize( imath.V2i( event.size().width(), event.size().height() ) )
 
 	def keyPressEvent( self, event ) :
 
