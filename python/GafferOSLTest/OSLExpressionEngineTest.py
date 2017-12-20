@@ -38,6 +38,7 @@ import unittest
 import inspect
 import math
 import os
+import imath
 
 import IECore
 
@@ -101,8 +102,8 @@ class OSLExpressionEngineTest( GafferOSLTest.OSLTestCase ) :
 		s["e"] = Gaffer.Expression()
 		s["e"].setExpression( "parent.n.user.o = parent.n.user.i * 2;", "OSL" )
 
-		s["n"]["user"]["i"].setValue( IECore.Color3f( 1, 2, 3 ) )
-		self.assertEqual( s["n"]["user"]["o"].getValue(), IECore.Color3f( 2, 4, 6 ) )
+		s["n"]["user"]["i"].setValue( imath.Color3f( 1, 2, 3 ) )
+		self.assertEqual( s["n"]["user"]["o"].getValue(), imath.Color3f( 2, 4, 6 ) )
 
 	def testV3fPlugs( self ) :
 
@@ -114,8 +115,8 @@ class OSLExpressionEngineTest( GafferOSLTest.OSLTestCase ) :
 		s["e"] = Gaffer.Expression()
 		s["e"].setExpression( "parent.n.user.o = parent.n.user.i * 2;", "OSL" )
 
-		s["n"]["user"]["i"].setValue( IECore.V3f( 1, 2, 3 ) )
-		self.assertEqual( s["n"]["user"]["o"].getValue(), IECore.V3f( 2, 4, 6 ) )
+		s["n"]["user"]["i"].setValue( imath.V3f( 1, 2, 3 ) )
+		self.assertEqual( s["n"]["user"]["o"].getValue(), imath.V3f( 2, 4, 6 ) )
 
 	def testM44fPlugs( self ) :
 
@@ -127,8 +128,8 @@ class OSLExpressionEngineTest( GafferOSLTest.OSLTestCase ) :
 		s["e"] = Gaffer.Expression()
 		s["e"].setExpression( "parent.n.user.o = parent.n.user.i * 2;", "OSL" )
 
-		s["n"]["user"]["i"].setValue( IECore.M44f( range( 16 ) ) )
-		self.assertEqual( s["n"]["user"]["o"].getValue(), IECore.M44f( range( 0, 32, 2 ) ) )
+		s["n"]["user"]["i"].setValue( imath.M44f( *range( 16 ) ) )
+		self.assertEqual( s["n"]["user"]["o"].getValue(), imath.M44f( *range( 0, 32, 2 ) ) )
 
 	def testStringPlugs( self ) :
 
@@ -199,20 +200,20 @@ class OSLExpressionEngineTest( GafferOSLTest.OSLTestCase ) :
 
 			self.assertEqual( s["n"]["user"]["f"].getValue(), 1 )
 			self.assertEqual( s["n"]["user"]["i"].getValue(), 1 )
-			self.assertEqual( s["n"]["user"]["c"].getValue(), IECore.Color3f( 1, 2, 3 ) )
-			self.assertEqual( s["n"]["user"]["v"].getValue(), IECore.V3f( 0, 1, 2 ) )
+			self.assertEqual( s["n"]["user"]["c"].getValue(), imath.Color3f( 1, 2, 3 ) )
+			self.assertEqual( s["n"]["user"]["v"].getValue(), imath.V3f( 0, 1, 2 ) )
 			self.assertEqual( s["n"]["user"]["s"].getValue(), "default" )
 
 			c["f"] = 10
 			c["i"] = 11
-			c["c"] = IECore.Color3f( 4, 5, 6 )
-			c["v"] = IECore.V3f( 1, 2, 3 )
+			c["c"] = imath.Color3f( 4, 5, 6 )
+			c["v"] = imath.V3f( 1, 2, 3 )
 			c["s"] = "non-default"
 
 			self.assertEqual( s["n"]["user"]["f"].getValue(), 10 )
 			self.assertEqual( s["n"]["user"]["i"].getValue(), 11 )
-			self.assertEqual( s["n"]["user"]["c"].getValue(), IECore.Color3f( 4, 5, 6 ) )
-			self.assertEqual( s["n"]["user"]["v"].getValue(), IECore.V3f( 1, 2, 3 ) )
+			self.assertEqual( s["n"]["user"]["c"].getValue(), imath.Color3f( 4, 5, 6 ) )
+			self.assertEqual( s["n"]["user"]["v"].getValue(), imath.V3f( 1, 2, 3 ) )
 			self.assertEqual( s["n"]["user"]["s"].getValue(), "non-default" )
 
 	def testDefaultExpression( self ) :
@@ -227,8 +228,8 @@ class OSLExpressionEngineTest( GafferOSLTest.OSLTestCase ) :
 
 		s["n"]["user"]["f"].setValue( 10 )
 		s["n"]["user"]["i"].setValue( 10 )
-		s["n"]["user"]["c"].setValue( IECore.Color3f( 1, 2, 3 ) )
-		s["n"]["user"]["v"].setValue( IECore.V3f( 1, 2, 3 ) )
+		s["n"]["user"]["c"].setValue( imath.Color3f( 1, 2, 3 ) )
+		s["n"]["user"]["v"].setValue( imath.V3f( 1, 2, 3 ) )
 		s["n"]["user"]["s"].setValue( "s" )
 
 		defaultExpressions = [ Gaffer.Expression.defaultExpression( p, "OSL" ) for p in s["n"]["user"].children() ]

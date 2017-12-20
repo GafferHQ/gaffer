@@ -35,6 +35,7 @@
 ##########################################################################
 
 import os
+import imath
 
 import IECore
 
@@ -261,7 +262,7 @@ class OSLImageTest( GafferOSLTest.OSLTestCase ) :
 	def testNegativeTileCoordinates( self ) :
 
 		constant = GafferImage.Constant()
-		constant["format"].setValue( GafferImage.Format( IECore.Box2i( IECore.V2i( -128 ), IECore.V2i( 128 ) ) ) )
+		constant["format"].setValue( GafferImage.Format( imath.Box2i( imath.V2i( -128 ), imath.V2i( 128 ) ) ) )
 
 		outR = GafferOSL.OSLShader()
 		outR.loadShader( "ImageProcessing/OutChannel" )
@@ -284,7 +285,7 @@ class OSLImageTest( GafferOSLTest.OSLTestCase ) :
 	def testGlobals( self ) :
 
 		constant = GafferImage.Constant()
-		constant["format"].setValue( GafferImage.Format( IECore.Box2i( IECore.V2i( -10 ), IECore.V2i( 10 ) ) ) )
+		constant["format"].setValue( GafferImage.Format( imath.Box2i( imath.V2i( -10 ), imath.V2i( 10 ) ) ) )
 
 		globals = GafferOSL.OSLShader()
 		globals.loadShader( "Utility/Globals" )
@@ -321,18 +322,18 @@ class OSLImageTest( GafferOSLTest.OSLTestCase ) :
 		samplerU = GafferImage.Sampler( image["out"], "u", displayWindow )
 		samplerV = GafferImage.Sampler( image["out"], "v", displayWindow )
 
-		size = IECore.V2f( displayWindow.size() )
-		uvStep = IECore.V2f( 1.0 ) / size
+		size = imath.V2f( displayWindow.size() )
+		uvStep = imath.V2f( 1.0 ) / size
 		uvMin = 0.5 * uvStep
 
-		for y in range( displayWindow.min.y, displayWindow.max.y ) :
-			for x in range( displayWindow.min.x, displayWindow.max.x ) :
+		for y in range( displayWindow.min().y, displayWindow.max().y ) :
+			for x in range( displayWindow.min().x, displayWindow.max().x ) :
 
 				self.assertEqual( samplerR.sample( x, y ), x + 0.5, "Pixel {},{}".format( x, y ) )
 				self.assertEqual( samplerG.sample( x, y ), y + 0.5, "Pixel {},{}".format( x, y ) )
 				self.assertEqual( samplerB.sample( x, y ), 0, "Pixel {},{}".format( x, y ) )
 
-				uv = uvMin + uvStep * IECore.V2f( IECore.V2i( x, y ) - displayWindow.min )
+				uv = uvMin + uvStep * imath.V2f( imath.V2i( x, y ) - displayWindow.min() )
 				self.assertAlmostEqual( samplerU.sample( x, y ), uv.x, delta = 0.0000001, msg = "Pixel {},{}".format( x, y ) )
 				self.assertAlmostEqual( samplerV.sample( x, y ), uv.y, delta = 0.0000001, msg = "Pixel {},{}".format( x, y ) )
 
