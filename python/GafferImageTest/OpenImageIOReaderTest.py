@@ -39,6 +39,7 @@ import os
 import shutil
 import unittest
 import imath
+import random
 
 import IECore
 import IECoreImage
@@ -56,6 +57,7 @@ class OpenImageIOReaderTest( GafferImageTest.ImageTestCase ) :
 	negativeDisplayWindowFileName = os.path.expandvars( "$GAFFER_ROOT/python/GafferImageTest/images/negativeDisplayWindow.exr" )
 	circlesExrFileName = os.path.expandvars( "$GAFFER_ROOT/python/GafferImageTest/images/circles.exr" )
 	circlesJpgFileName = os.path.expandvars( "$GAFFER_ROOT/python/GafferImageTest/images/circles.jpg" )
+	alignmentTestSourceFileName = os.path.expandvars( "$GAFFER_ROOT/python/GafferImageTest/images/colorbars_half_max.exr" )
 
 	def testInternalImageSpaceConversion( self ) :
 
@@ -479,6 +481,43 @@ class OpenImageIOReaderTest( GafferImageTest.ImageTestCase ) :
 		r["fileName"].setValue( "${GAFFER_ROOT}/python/GafferImageTest/images/rgb.100x100.dpx" )
 		self.assertEqual( r["out"]["metadata"].getValue()["dataType"].value, "uint10" )
 		self.assertEqual( r["out"]["metadata"].getValue()["fileFormat"].value, "dpx" )
+
+	def testOffsetAlignment( self ) :
+		# Test a bunch of different data window alignments on disk.  This exercises code for reading
+		# weirdly aligned scanlines and partial tiles
+
+		tempFile = self.temporaryDirectory() + "/tempOffsetImage.exr"
+
+		r = GafferImage.OpenImageIOReader()
+		r["fileName"].setValue( self.alignmentTestSourceFileName )
+
+		offsetOut = GafferImage.Offset()
+		offsetOut["in"].setInput( r["out"] )
+
+		w = GafferImage.ImageWriter()
+		w["in"].setInput( offsetOut["out"] )
+		w["fileName"].setValue( tempFile )
+
+		rBack = GafferImage.OpenImageIOReader()
+		rBack["fileName"].setValue( tempFile )
+
+		offsetIn = GafferImage.Offset()
+		offsetIn["in"].setInput( rBack["out"] )
+
+		random.seed( 42 )
+		offsets = [ imath.V2i(x,y) for x in [-1,0,1] for y in [-1, 0, 1] ] + [
+			imath.V2i( random.randint( -32, 32 ), random.randint( -32, 32 ) ) for i in range( 10 ) ]
+
+		for mode in [ GafferImage.ImageWriter.Mode.Scanline, GafferImage.ImageWriter.Mode.Tile ]:
+			w['openexr']['mode'].setValue( mode )
+			for offset in offsets:
+				offsetOut['offset'].setValue( offset )
+				offsetIn['offset'].setValue( -offset )
+
+				w.execute()
+				rBack['refreshCount'].setValue( rBack['refreshCount'].getValue() + 1 )
+
+				self.assertImagesEqual( r["out"], offsetIn["out"], ignoreMetadata = True )
 
 if __name__ == "__main__":
 	unittest.main()
