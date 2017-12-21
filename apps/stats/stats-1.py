@@ -415,8 +415,6 @@ class stats( Gaffer.Application ) :
 				GafferImageTest.processTiles( image )
 		self.__timers["Image generation"] = imageTimer
 		self.__memory["Image generation"] = _Memory.maxRSS() - memory
-		self.__memory["OIIO cache limit"] = _Memory( GafferImage.OpenImageIOReader.getCacheMemoryLimit() )
-		self.__memory["OIIO cache usage"] = _Memory( GafferImage.OpenImageIOReader.cacheMemoryUsage() )
 
 		items = [
 			( "Format", image["format"].getValue() ),
