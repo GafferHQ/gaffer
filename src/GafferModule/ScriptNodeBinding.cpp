@@ -249,13 +249,16 @@ std::string replaceImath( const std::string &serialisation )
 	std::string result = serialisation;
 	for(
 		const auto &x : {
-			"V2i", "V2f",
-			"V3i", "V3f",
+			"V2i", "V2f", "V2d",
+			"V3i", "V3f", "V3d",
 			"Color3f", "Color4f",
-			"Box2i", "Box2f",
-			"Box3i", "Box3f"
-			"Box3i", "Box3f"
-			"M33f", "M44f"
+			"Box2i", "Box2f", "Box2d",
+			"Box3i", "Box3f", "Box3d",
+			"M33f", "M33d",
+			"M44f", "M44d",
+			"Eulerf", "Eulerd",
+			"Plane3f", "Plane3d",
+			"Quatf", "Quatd"
 		}
 	)
 	{
