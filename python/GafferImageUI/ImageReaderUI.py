@@ -39,14 +39,7 @@ import IECore
 import Gaffer
 import GafferUI
 import GafferImage
-
-def __colorSpacePresetNames( plug ) :
-
-	return IECore.StringVectorData( [ "Default" ] + GafferImage.OpenColorIOTransform.availableColorSpaces() )
-
-def __colorSpacePresetValues( plug ) :
-
-	return IECore.StringVectorData( [ "" ] + GafferImage.OpenColorIOTransform.availableColorSpaces() )
+import OpenColorIOTransformUI
 
 Gaffer.Metadata.registerNode(
 
@@ -209,8 +202,8 @@ Gaffer.Metadata.registerNode(
 			registered with `ImageReader::setDefaultColorSpaceFunction()`.
 			""",
 
-			"presetNames", __colorSpacePresetNames,
-			"presetValues", __colorSpacePresetValues,
+			"presetNames", OpenColorIOTransformUI.colorSpacePresetNames,
+			"presetValues", OpenColorIOTransformUI.colorSpacePresetValues,
 
 			"plugValueWidget:type", "GafferUI.PresetsPlugValueWidget",
 
