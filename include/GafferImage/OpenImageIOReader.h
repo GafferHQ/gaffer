@@ -86,15 +86,6 @@ class OpenImageIOReader : public ImageNode
 
 		static size_t supportedExtensions( std::vector<std::string> &extensions );
 
-		/// Returns the maximum number of bytes OIIO will use
-		/// to cache file loading.
-		static size_t getCacheMemoryLimit();
-		/// Sets the maximum number of bytes OIIO will use to
-		/// cache file loading.
-		static void setCacheMemoryLimit( size_t bytes );
-		/// Returns the current memory usage of OIIO's cache in bytes.
-		static size_t cacheMemoryUsage();
-
 	protected :
 
 		void hash( const Gaffer::ValuePlug *output, const Gaffer::Context *context, IECore::MurmurHash &h ) const override;
@@ -113,6 +104,9 @@ class OpenImageIOReader : public ImageNode
 		IECore::ConstFloatVectorDataPtr computeChannelData( const std::string &channelName, const Imath::V2i &tileOrigin, const Gaffer::Context *context, const ImagePlug *parent ) const override;
 
 	private :
+
+		Gaffer::ObjectVectorPlug *tileBatchPlug();
+		const Gaffer::ObjectVectorPlug *tileBatchPlug() const;
 
 		void hashFileName( const Gaffer::Context *context, IECore::MurmurHash &h ) const;
 

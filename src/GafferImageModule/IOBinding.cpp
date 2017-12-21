@@ -122,12 +122,6 @@ void GafferImageModule::bindIO()
 		scope s = GafferBindings::DependencyNodeClass<OpenImageIOReader>()
 			.def( "supportedExtensions", &supportedExtensions<OpenImageIOReader> )
 			.staticmethod( "supportedExtensions" )
-			.def( "getCacheMemoryLimit", &OpenImageIOReader::getCacheMemoryLimit )
-			.staticmethod( "getCacheMemoryLimit" )
-			.def( "setCacheMemoryLimit", &OpenImageIOReader::setCacheMemoryLimit )
-			.staticmethod( "setCacheMemoryLimit" )
-			.def( "cacheMemoryUsage", &OpenImageIOReader::cacheMemoryUsage )
-			.staticmethod( "cacheMemoryUsage" )
 		;
 
 		enum_<OpenImageIOReader::MissingFrameMode>( "MissingFrameMode" )
