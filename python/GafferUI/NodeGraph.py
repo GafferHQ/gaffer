@@ -358,8 +358,10 @@ class NodeGraph( GafferUI.EditorWidget ) :
 			# it's better to see some context around it.
 			boundSize = bound.size()
 			widgetSize = imath.V3f( self._qtWidget().width(), self._qtWidget().height(), 0 )
-			pixelsPerUnit = widgetSize / boundSize
-			adjustedPixelsPerUnit = min( pixelsPerUnit.x, pixelsPerUnit.y, 10 )
+
+			pixelsPerUnit = min( widgetSize.x / boundSize.x, widgetSize.y / boundSize.y )
+			adjustedPixelsPerUnit = min( pixelsPerUnit, 10 )
+
 			newBoundSize = widgetSize / adjustedPixelsPerUnit
 			boundCenter = bound.center()
 			bound.setMin( boundCenter - newBoundSize / 2.0 )
