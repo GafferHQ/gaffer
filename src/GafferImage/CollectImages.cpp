@@ -38,6 +38,7 @@
 
 #include "GafferImage/BufferAlgo.h"
 #include "GafferImage/ImageAlgo.h"
+#include "GafferImage/ImageProcessor.h"
 
 #include "Gaffer/ArrayPlug.h"
 #include "Gaffer/Context.h"
@@ -171,6 +172,18 @@ void CollectImages::affects( const Gaffer::Plug *input, AffectedPlugsContainer &
 		{
 			outputs.push_back( outPlug()->metadataPlug() );
 		}
+
+		if( input == imagePlug->sampleOffsetsPlug() )
+		{
+			outputs.push_back( outPlug()->sampleOffsetsPlug() );
+		}
+
+		if( input == imagePlug->deepPlug() )
+		{
+			outputs.push_back( outPlug()->deepPlug() );
+			outputs.push_back( outPlug()->dataWindowPlug() );
+			outputs.push_back( outPlug()->channelDataPlug() );
+		}
 	}
 	else if( input == rootLayersPlug() || input == layerVariablePlug() )
 	{
@@ -179,6 +192,8 @@ void CollectImages::affects( const Gaffer::Plug *input, AffectedPlugsContainer &
 		outputs.push_back( outPlug()->dataWindowPlug() );
 		outputs.push_back( outPlug()->formatPlug() );
 		outputs.push_back( outPlug()->metadataPlug() );
+		outputs.push_back( outPlug()->sampleOffsetsPlug() );
+		outputs.push_back( outPlug()->deepPlug() );
 	}
 
 }
@@ -213,6 +228,99 @@ GafferImage::Format CollectImages::computeFormat( const Gaffer::Context *context
 	{
 		return outPlug()->formatPlug()->defaultValue();
 	}
+}
+
+void CollectImages::hashDeep( const GafferImage::ImagePlug *parent, const Gaffer::Context *context, IECore::MurmurHash &h ) const
+{
+	ImageProcessor::hashDeep( parent, context, h );
+
+	const std::string layerVariable = layerVariablePlug()->getValue();
+
+	ConstStringVectorDataPtr rootLayersData = rootLayersPlug()->getValue();
+
+	Context::EditableScope editScope( context );
+	for( const auto &i : rootLayersData->readable() )
+	{
+		editScope.set( layerVariable, i );
+		inPlug()->deepPlug()->hash( h );
+	}
+}
+
+bool CollectImages::computeDeep( const Gaffer::Context *context, const ImagePlug *parent ) const
+{
+	int outDeep = -1;
+	const std::string layerVariable = layerVariablePlug()->getValue();
+
+	ConstStringVectorDataPtr rootLayersData = rootLayersPlug()->getValue();
+
+	Context::EditableScope editScope( context );
+	for( const auto &i : rootLayersData->readable() )
+	{
+		editScope.set( layerVariable, i );
+		bool curDeep = inPlug()->deepPlug()->getValue();
+		if( outDeep == -1 )
+		{
+			outDeep = curDeep;
+		}
+		else
+		{
+			if( outDeep != curDeep )
+			{
+				throw IECore::Exception( "Input to CollectImages must be consistent, but it is sometimes deep." );
+			}
+		}
+	}
+
+	return outDeep == 1;
+}
+
+void CollectImages::hashSampleOffsets( const GafferImage::ImagePlug *parent, const Gaffer::Context *context, IECore::MurmurHash &h ) const
+{
+	ImageProcessor::hashSampleOffsets( parent, context, h );
+	ConstStringVectorDataPtr rootLayersData;
+	string layerVariable;
+	{
+		ImagePlug::GlobalScope c( context );
+		rootLayersData = rootLayersPlug()->getValue();
+		layerVariable = layerVariablePlug()->getValue();
+	}
+
+	Context::EditableScope editScope( context );
+	for( const auto &i : rootLayersData->readable() )
+	{
+		editScope.set( layerVariable, i );
+		inPlug()->sampleOffsetsPlug()->hash( h );
+	}
+}
+
+IECore::ConstIntVectorDataPtr CollectImages::computeSampleOffsets( const Imath::V2i &tileOrigin, const Gaffer::Context *context, const ImagePlug *parent ) const
+{
+	ConstStringVectorDataPtr rootLayersData;
+	string layerVariable;
+	{
+		ImagePlug::GlobalScope c( context );
+		rootLayersData = rootLayersPlug()->getValue();
+		layerVariable = layerVariablePlug()->getValue();
+	}
+
+	IECore::ConstIntVectorDataPtr outSampleOffsetsData;
+	Context::EditableScope editScope( context );
+	for( const auto &i : rootLayersData->readable() )
+	{
+		editScope.set( layerVariable, i );
+		IECore::ConstIntVectorDataPtr curSampleOffsetsData = inPlug()->sampleOffsetsPlug()->getValue();
+		if( !outSampleOffsetsData )
+		{
+			outSampleOffsetsData = curSampleOffsetsData;
+		}
+		else
+		{
+			ImageAlgo::throwIfSampleOffsetsMismatch( outSampleOffsetsData.get(), curSampleOffsetsData.get(), tileOrigin,
+				"SampleOffsets on input to CollectImages must match."
+			);
+		}
+	}
+	return outSampleOffsetsData;
 }
 
 void CollectImages::hashMetadata( const GafferImage::ImagePlug *parent, const Gaffer::Context *context, IECore::MurmurHash &h ) const
@@ -258,7 +366,14 @@ void CollectImages::hashDataWindow( const GafferImage::ImagePlug *output, const 
 	ConstStringVectorDataPtr rootLayersData = rootLayersPlug()->getValue();
 	const vector<string> &rootLayers = rootLayersData->readable();
 
+	if( rootLayers.size() == 0 )
+	{
+		return;
+	}
+
 	Context::EditableScope editScope( context );
+	editScope.set( layerVariable, rootLayers[0] );
+	inPlug()->deepPlug()->hash( h );
 	for( unsigned int i = 0; i < rootLayers.size(); i++ )
 	{
 		editScope.set( layerVariable, rootLayers[i] );
@@ -275,11 +390,34 @@ Imath::Box2i CollectImages::computeDataWindow( const Gaffer::Context *context, c
 	ConstStringVectorDataPtr rootLayersData = rootLayersPlug()->getValue();
 	const vector<string> &rootLayers = rootLayersData->readable();
 
+	if( rootLayers.size() == 0 )
+	{
+		return dataWindow;
+	}
+
 	Context::EditableScope editScope( context );
+	editScope.set( layerVariable, rootLayers[0] );
+	bool deep = inPlug()->deepPlug()->getValue();
 	for( unsigned int i = 0; i < rootLayers.size(); i++ )
 	{
 		editScope.set( layerVariable, rootLayers[i] );
-		dataWindow.extendBy( inPlug()->dataWindowPlug()->getValue() );
+		Box2i curDataWindow = inPlug()->dataWindowPlug()->getValue();
+		if( i == 0 || !deep )
+		{
+			dataWindow.extendBy( curDataWindow );
+		}
+		else
+		{
+			if( curDataWindow != dataWindow )
+			{
+				throw IECore::Exception( boost::str( boost::format(
+						"DataWindows on deep input to CollectImages must match. "
+						"Received both %i,%i -> %i,%i and %i,%i -> %i,%i"
+					) % dataWindow.min.x % dataWindow.min.y % dataWindow.max.x % dataWindow.max.y %
+						curDataWindow.min.x % curDataWindow.min.y % curDataWindow.max.x % curDataWindow.max.y
+				) );
+			}
+		}
 	}
 
 	return dataWindow;
@@ -345,7 +483,6 @@ void CollectImages::hashChannelData( const GafferImage::ImagePlug *parent, const
 {
 	ConstStringVectorDataPtr rootLayersData;
 	string layerVariable;
-
 	{
 		ImagePlug::GlobalScope c( context );
 		rootLayersData = rootLayersPlug()->getValue();
@@ -371,10 +508,11 @@ void CollectImages::hashChannelData( const GafferImage::ImagePlug *parent, const
 	// for a global context
 	editScope.remove( ImagePlug::channelNameContextName );
 	editScope.remove( ImagePlug::tileOriginContextName );
+	bool deep = inPlug()->deepPlug()->getValue();
 	Box2i inputDataWindow = inPlug()->dataWindowPlug()->getValue();
 
 	const Box2i validBound = BufferAlgo::intersection( tileBound, inputDataWindow );
-	if( validBound == tileBound )
+	if( validBound == tileBound || deep )
 	{
 		h = inputChannelDataHash;
 	}
@@ -393,7 +531,6 @@ IECore::ConstFloatVectorDataPtr CollectImages::computeChannelData( const std::st
 {
 	ConstStringVectorDataPtr rootLayersData;
 	string layerVariable;
-
 	{
 		ImagePlug::GlobalScope c( context );
 		rootLayersData = rootLayersPlug()->getValue();
@@ -411,6 +548,7 @@ IECore::ConstFloatVectorDataPtr CollectImages::computeChannelData( const std::st
 	// First use this EditableScope as a global scope
 	editScope.remove( ImagePlug::channelNameContextName );
 	editScope.remove( ImagePlug::tileOriginContextName );
+	bool deep = inPlug()->deepPlug()->getValue();
 	Box2i inputDataWindow = inPlug()->dataWindowPlug()->getValue();
 
 	const Box2i tileBound( tileOrigin, tileOrigin + V2i( ImagePlug::tileSize() ) );
@@ -423,10 +561,15 @@ IECore::ConstFloatVectorDataPtr CollectImages::computeChannelData( const std::st
 	// Then set up the scope to evaluate the input channel data
 	editScope.set( ImagePlug::channelNameContextName, srcChannel );
 	editScope.set( ImagePlug::tileOriginContextName, tileOrigin );
+
 	ConstFloatVectorDataPtr inputData = inPlug()->channelDataPlug()->getValue();
 
-	if( validBound == tileBound )
+	if( validBound == tileBound || deep )
 	{
+		// If we're taking the whole tile, then just return the input tile
+		// If we're a deep image, then we're just passing through the sampleOffsets,
+		// so we also need to pass through the whole data ( and in the deep case we
+		// require all inputs to have matching data windows, so this is fine )
 		return inputData;
 	}
 	else
