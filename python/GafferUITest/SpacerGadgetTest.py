@@ -34,6 +34,8 @@
 #
 ##########################################################################
 
+import imath
+
 import IECore
 
 import GafferUI
@@ -43,8 +45,8 @@ class SpacerGadgetTest( GafferUITest.TestCase ) :
 
 	def test( self ) :
 
-		s = GafferUI.SpacerGadget( IECore.Box3f( IECore.V3f( -1 ), IECore.V3f( 3 ) ) )
-		self.assertEqual( s.bound(), IECore.Box3f( IECore.V3f( -1 ), IECore.V3f( 3 ) ) )
+		s = GafferUI.SpacerGadget( imath.Box3f( imath.V3f( -1 ), imath.V3f( 3 ) ) )
+		self.assertEqual( s.bound(), imath.Box3f( imath.V3f( -1 ), imath.V3f( 3 ) ) )
 
 		t = GafferUI.TextGadget( "t" )
 		self.assertFalse( s.acceptsChild( t ) )

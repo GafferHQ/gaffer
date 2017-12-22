@@ -34,6 +34,8 @@
 #
 ##########################################################################
 
+import imath
+
 import IECore
 import IECoreScene
 import GafferScene
@@ -46,10 +48,10 @@ class DeletePointsTest( GafferSceneTest.SceneTestCase ) :
 		testObject = IECoreScene.PointsPrimitive(
 			IECore.V3fVectorData(
 				[
-					IECore.V3f( 0, 0, 0 ),
-					IECore.V3f( 0, 1, 0 ),
-					IECore.V3f( 1, 1, 0 ),
-					IECore.V3f( 1, 0, 0 )
+					imath.V3f( 0, 0, 0 ),
+					imath.V3f( 0, 1, 0 ),
+					imath.V3f( 1, 1, 0 ),
+					imath.V3f( 1, 0, 0 )
 
 				]
 			),
@@ -83,9 +85,9 @@ class DeletePointsTest( GafferSceneTest.SceneTestCase ) :
 		self.assertEqual( pointsDeletedObject.numPoints, 2 )
 		self.assertEqual( pointsDeletedObject["P"].data, IECore.V3fVectorData(
 			[
-				IECore.V3f( 0, 0, 0 ),
+				imath.V3f( 0, 0, 0 ),
 				#IECore.V3f( 0, 1, 0 ),
-				IECore.V3f( 1, 1, 0 )
+				imath.V3f( 1, 1, 0 )
 				#IECore.V3f( 1, 0, 0 )
 			] ) )
 
@@ -106,7 +108,7 @@ class DeletePointsTest( GafferSceneTest.SceneTestCase ) :
 
 		actualOriginalBound = pointsScene["out"].bound( "/object" )
 
-		self.assertEqual(actualOriginalBound, IECore.Box3f( IECore.V3f( -0.5, -0.5, -0.5 ), IECore.V3f( 1.5, 1.5, 0.5 ) ) )
+		self.assertEqual(actualOriginalBound, imath.Box3f( imath.V3f( -0.5, -0.5, -0.5 ), imath.V3f( 1.5, 1.5, 0.5 ) ) )
 
 		deletePoints = GafferScene.DeletePoints()
 		deletePoints["in"].setInput( pointsScene["out"] )
@@ -117,7 +119,7 @@ class DeletePointsTest( GafferSceneTest.SceneTestCase ) :
 		deletePoints["points"].setValue("deletePoints2")
 
 		actualPointsDeletedBounds = deletePoints["out"].bound( "/object" )
-		expectedBoundingBox = IECore.Box3f( IECore.V3f( 0.5, -0.5, -0.5 ), IECore.V3f( 1.5, 1.5, 0.5 ) )
+		expectedBoundingBox = imath.Box3f( imath.V3f( 0.5, -0.5, -0.5 ), imath.V3f( 1.5, 1.5, 0.5 ) )
 
 		self.assertEqual( actualPointsDeletedBounds, expectedBoundingBox )
 

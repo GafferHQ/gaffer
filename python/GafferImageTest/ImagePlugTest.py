@@ -37,6 +37,7 @@
 
 import os
 import unittest
+import imath
 
 import IECore
 import Gaffer
@@ -51,14 +52,14 @@ class ImagePlugTest( GafferImageTest.ImageTestCase ) :
 		ts = GafferImage.ImagePlug.tileSize()
 
 		testCases = [
-			( IECore.V2i( ts-1, ts-1 ), IECore.V2i( 0, 0 ) ),
-			( IECore.V2i( ts, ts-1 ), IECore.V2i( ts, 0 ) ),
-			( IECore.V2i( ts, ts ), IECore.V2i( ts, ts ) ),
-			( IECore.V2i( ts*3-1, ts+5 ), IECore.V2i( ts*2, ts ) ),
-			( IECore.V2i( ts*3, ts-5 ), IECore.V2i( ts*3, 0 ) ),
-			( IECore.V2i( -ts+ts/2, 0 ), IECore.V2i( -ts, 0 ) ),
-			( IECore.V2i( ts*5+ts/3, -ts*4 ), IECore.V2i( ts*5, -ts*4 ) ),
-			( IECore.V2i( -ts+1, -ts-1 ), IECore.V2i( -ts, -ts*2 ) )
+			( imath.V2i( ts-1, ts-1 ), imath.V2i( 0, 0 ) ),
+			( imath.V2i( ts, ts-1 ), imath.V2i( ts, 0 ) ),
+			( imath.V2i( ts, ts ), imath.V2i( ts, ts ) ),
+			( imath.V2i( ts*3-1, ts+5 ), imath.V2i( ts*2, ts ) ),
+			( imath.V2i( ts*3, ts-5 ), imath.V2i( ts*3, 0 ) ),
+			( imath.V2i( -ts+ts/2, 0 ), imath.V2i( -ts, 0 ) ),
+			( imath.V2i( ts*5+ts/3, -ts*4 ), imath.V2i( ts*5, -ts*4 ) ),
+			( imath.V2i( -ts+1, -ts-1 ), imath.V2i( -ts, -ts*2 ) )
 		]
 
 		for input, expectedResult in testCases :
@@ -72,11 +73,11 @@ class ImagePlugTest( GafferImageTest.ImageTestCase ) :
 		ts = GafferImage.ImagePlug.tileSize()
 
 		for position, tileIndex in [
-			( IECore.V2i( -ts ), IECore.V2i( -1 ) ),
-			( IECore.V2i( -ts -1 ), IECore.V2i( -2 ) ),
-			( IECore.V2i( 0 ), IECore.V2i( 0 ) ),
-			( IECore.V2i( ts ), IECore.V2i( 1 ) ),
-			( IECore.V2i( ts - 1 ), IECore.V2i( 0 ) ),
+			( imath.V2i( -ts ), imath.V2i( -1 ) ),
+			( imath.V2i( -ts -1 ), imath.V2i( -2 ) ),
+			( imath.V2i( 0 ), imath.V2i( 0 ) ),
+			( imath.V2i( ts ), imath.V2i( 1 ) ),
+			( imath.V2i( ts - 1 ), imath.V2i( 0 ) ),
 		] :
 			self.assertEqual(
 				GafferImage.ImagePlug.tileIndex( position ),
@@ -160,10 +161,10 @@ class ImagePlugTest( GafferImageTest.ImageTestCase ) :
 		with Gaffer.Context() as c :
 
 			GafferImage.FormatPlug.setDefaultFormat( c, GafferImage.Format( 100, 200 ) )
-			self.assertEqual( constant["out"].image().displayWindow, IECore.Box2i( IECore.V2i( 0 ), IECore.V2i( 99, 199 ) ) )
+			self.assertEqual( constant["out"].image().displayWindow, imath.Box2i( imath.V2i( 0 ), imath.V2i( 99, 199 ) ) )
 
 			GafferImage.FormatPlug.setDefaultFormat( c, GafferImage.Format( 200, 300 ) )
-			self.assertEqual( constant["out"].image().displayWindow, IECore.Box2i( IECore.V2i( 0 ), IECore.V2i( 199, 299 ) ) )
+			self.assertEqual( constant["out"].image().displayWindow, imath.Box2i( imath.V2i( 0 ), imath.V2i( 199, 299 ) ) )
 
 if __name__ == "__main__":
 	unittest.main()

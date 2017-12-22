@@ -120,7 +120,7 @@ std::string formatRepr( const GafferImage::Format &format )
 		Imath::Box2i box( format.getDisplayWindow() );
 		return std::string(
 			boost::str( boost::format(
-				"GafferImage.Format( IECore.Box2i( IECore.V2i( %d, %d ), IECore.V2i( %d, %d ) ), %.3f )" )
+				"GafferImage.Format( imath.Box2i( imath.V2i( %d, %d ), imath.V2i( %d, %d ) ), %.3f )" )
 				% box.min.x % box.min.y % box.max.x % box.max.y % format.getPixelAspect()
 			)
 		);
@@ -134,8 +134,9 @@ class AtomicFormatPlugSerialiser : public GafferBindings::ValuePlugSerialiser
 
 		void moduleDependencies( const Gaffer::GraphComponent *graphComponent, std::set<std::string> &modules, const Serialisation &serialisation ) const override
 		{
+			// Imath is needed when reloading Format values which reference Box2i.
 			ValuePlugSerialiser::moduleDependencies( graphComponent, modules, serialisation );
-			modules.insert( "IECore" );
+			modules.insert( "imath" );
 		}
 
 };
@@ -163,9 +164,9 @@ class FormatPlugSerialiser : public GafferBindings::ValuePlugSerialiser
 
 		void moduleDependencies( const Gaffer::GraphComponent *graphComponent, std::set<std::string> &modules, const Serialisation &serialisation ) const override
 		{
-			// IECore is needed when reloading Format values which reference Box2i.
+			// Imath is needed when reloading Format values which reference Box2i.
 			ValuePlugSerialiser::moduleDependencies( graphComponent, modules, serialisation );
-			modules.insert( "IECore" );
+			modules.insert( "imath" );
 		}
 
 };

@@ -38,6 +38,7 @@
 import weakref
 import inspect
 import warnings
+import imath
 
 import IECore
 
@@ -366,7 +367,7 @@ class Widget( object ) :
 	## \deprecated Use bound().size() instead.
 	def size( self ) :
 
-		return IECore.V2i( self.__qtWidget.width(), self.__qtWidget.height() )
+		return imath.V2i( self.__qtWidget.width(), self.__qtWidget.height() )
 
 	## Returns the bounding box of the Widget as a Box2i. If relativeTo
 	# is None then the bound is provided in screen coordinates, if a
@@ -394,11 +395,11 @@ class Widget( object ) :
 					pos = q.mapToParent( pos )
 				q = parentWidget
 
-		pos = IECore.V2i( pos.x(), pos.y() )
+		pos = imath.V2i( pos.x(), pos.y() )
 		if relativeTo is not None :
-			pos -= relativeTo.bound().min
+			pos -= relativeTo.bound().min()
 
-		return IECore.Box2i( pos, pos + IECore.V2i( self.__qtWidget.width(), self.__qtWidget.height() ) )
+		return imath.Box2i( pos, pos + imath.V2i( self.__qtWidget.width(), self.__qtWidget.height() ) )
 
 	def keyPressSignal( self ) :
 
@@ -591,9 +592,9 @@ class Widget( object ) :
 	def mousePosition( relativeTo=None ) :
 
 		p = QtGui.QCursor.pos()
-		p = IECore.V2i( p.x(), p.y() )
+		p = imath.V2i( p.x(), p.y() )
 		if relativeTo is not None :
-			p = p - relativeTo.bound().min
+			p = p - relativeTo.bound().min()
 
 		return p
 
@@ -1199,7 +1200,7 @@ class _EventFilter( QtCore.QObject ) :
 
 	def __doDragEnterAndLeave( self, qObject, qEvent ) :
 
-		cursorPos = IECore.V2i( qEvent.globalPos().x(), qEvent.globalPos().y() )
+		cursorPos = imath.V2i( qEvent.globalPos().x(), qEvent.globalPos().y() )
 		candidateWidget = Widget.widgetAt( cursorPos )
 
 		if candidateWidget is self.__dragDropEvent.destinationWidget :
@@ -1209,7 +1210,7 @@ class _EventFilter( QtCore.QObject ) :
 		if candidateWidget is not None :
 			while candidateWidget is not None :
 				if candidateWidget._dragEnterSignal is not None :
-					self.__dragDropEvent.line = self.__positionToLine( cursorPos - candidateWidget.bound().min )
+					self.__dragDropEvent.line = self.__positionToLine( cursorPos - candidateWidget.bound().min() )
 					if candidateWidget._dragEnterSignal( candidateWidget, self.__dragDropEvent ) :
 						newDestinationWidget = candidateWidget
 						break
@@ -1226,7 +1227,7 @@ class _EventFilter( QtCore.QObject ) :
 			previousDestinationWidget = self.__dragDropEvent.destinationWidget
 			self.__dragDropEvent.destinationWidget = newDestinationWidget
 			if previousDestinationWidget is not None and previousDestinationWidget._dragLeaveSignal is not None :
-				self.__dragDropEvent.line = self.__positionToLine( cursorPos - previousDestinationWidget.bound().min )
+				self.__dragDropEvent.line = self.__positionToLine( cursorPos - previousDestinationWidget.bound().min() )
 				previousDestinationWidget._dragLeaveSignal( previousDestinationWidget, self.__dragDropEvent )
 
 	def __updateDrag( self, qObject, qEvent ) :
@@ -1244,8 +1245,8 @@ class _EventFilter( QtCore.QObject ) :
 
 		if dst._dragMoveSignal :
 
-			cursorPos = IECore.V2i( qEvent.globalPos().x(), qEvent.globalPos().y() )
-			self.__dragDropEvent.line = self.__positionToLine( cursorPos - dst.bound().min )
+			cursorPos = imath.V2i( qEvent.globalPos().x(), qEvent.globalPos().y() )
+			self.__dragDropEvent.line = self.__positionToLine( cursorPos - dst.bound().min() )
 
 			dst._dragMoveSignal( dst, self.__dragDropEvent )
 
@@ -1283,12 +1284,12 @@ class _EventFilter( QtCore.QObject ) :
 
 		# Emit dropSignal() on the destination.
 
-		cursorPos = IECore.V2i( qEvent.globalPos().x(), qEvent.globalPos().y() )
+		cursorPos = imath.V2i( qEvent.globalPos().x(), qEvent.globalPos().y() )
 
 		dst = dragDropEvent.destinationWidget
 		if dst is not None and dst._dropSignal :
 
-			dragDropEvent.line = self.__positionToLine( cursorPos - dst.bound().min )
+			dragDropEvent.line = self.__positionToLine( cursorPos - dst.bound().min() )
 			dragDropEvent.dropResult = dst._dropSignal( dst, dragDropEvent )
 
 		# Emit dragEndSignal() on source.
@@ -1296,7 +1297,7 @@ class _EventFilter( QtCore.QObject ) :
 		src = dragDropEvent.sourceWidget
 		if src._dragEndSignal :
 
-			dragDropEvent.line = self.__positionToLine( cursorPos - src.bound().min )
+			dragDropEvent.line = self.__positionToLine( cursorPos - src.bound().min() )
 
 			src._dragEndSignal(
 				src,
@@ -1307,14 +1308,14 @@ class _EventFilter( QtCore.QObject ) :
 
 	def __positionToLine( self, pos ) :
 
-		if isinstance( pos, IECore.V2i ) :
+		if isinstance( pos, imath.V2i ) :
 			x, y = pos.x, pos.y
 		else :
 			x, y = pos.x(), pos.y()
 
 		return IECore.LineSegment3f(
-			IECore.V3f( x, y, 1 ),
-			IECore.V3f( x, y, 0 )
+			imath.V3f( x, y, 1 ),
+			imath.V3f( x, y, 0 )
 		)
 
 # this single instance is used by all widgets

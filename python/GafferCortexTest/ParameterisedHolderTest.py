@@ -38,6 +38,7 @@
 import os
 import unittest
 import datetime
+import imath
 
 import IECore
 import IECoreImage
@@ -156,19 +157,19 @@ class ParameterisedHolderTest( GafferTest.TestCase ) :
 			parameters["iv"].setValue( IECore.IntVectorData( [ 1, 2, 3 ] ) )
 			parameters["fv"].setValue( IECore.FloatVectorData( [ 1 ] ) )
 			parameters["sv"].setValue( IECore.StringVectorData( [ "a" ] ) )
-			parameters["vv"].setValue( IECore.V3fVectorData( [ IECore.V3f( 1, 2, 3 ) ] ) )
+			parameters["vv"].setValue( IECore.V3fVectorData( [ imath.V3f( 1, 2, 3 ) ] ) )
 
 		self.assertEqual( ph["parameters"]["bv"].getValue(), IECore.BoolVectorData( [ True, False ] ) )
 		self.assertEqual( ph["parameters"]["iv"].getValue(), IECore.IntVectorData( [ 1, 2, 3 ] ) )
 		self.assertEqual( ph["parameters"]["fv"].getValue(), IECore.FloatVectorData( [ 1 ] ) )
 		self.assertEqual( ph["parameters"]["sv"].getValue(), IECore.StringVectorData( [ "a" ] ) )
-		self.assertEqual( ph["parameters"]["vv"].getValue(), IECore.V3fVectorData( [ IECore.V3f( 1, 2, 3 ) ] ) )
+		self.assertEqual( ph["parameters"]["vv"].getValue(), IECore.V3fVectorData( [ imath.V3f( 1, 2, 3 ) ] ) )
 
 		ph["parameters"]["bv"].setValue( IECore.BoolVectorData( [ True, True ] ) )
 		ph["parameters"]["iv"].setValue( IECore.IntVectorData( [ 2, 3, 4 ] ) )
 		ph["parameters"]["fv"].setValue( IECore.FloatVectorData( [ 2 ] ) )
 		ph["parameters"]["sv"].setValue( IECore.StringVectorData( [ "b" ] ) )
-		ph["parameters"]["vv"].setValue( IECore.V3fVectorData( [ IECore.V3f( 10, 20, 30 ) ] ) )
+		ph["parameters"]["vv"].setValue( IECore.V3fVectorData( [ imath.V3f( 10, 20, 30 ) ] ) )
 
 		ph.setParameterisedValues()
 
@@ -176,7 +177,7 @@ class ParameterisedHolderTest( GafferTest.TestCase ) :
 		self.assertEqual( parameters["iv"].getValue(), IECore.IntVectorData( [ 2, 3, 4 ] ) )
 		self.assertEqual( parameters["fv"].getValue(), IECore.FloatVectorData( [ 2 ] ) )
 		self.assertEqual( parameters["sv"].getValue(), IECore.StringVectorData( [ "b" ] ) )
-		self.assertEqual( parameters["vv"].getValue(), IECore.V3fVectorData( [ IECore.V3f( 10, 20, 30 ) ] ) )
+		self.assertEqual( parameters["vv"].getValue(), IECore.V3fVectorData( [ imath.V3f( 10, 20, 30 ) ] ) )
 
 	def testNoHostMapping( self ) :
 
@@ -221,9 +222,9 @@ class ParameterisedHolderTest( GafferTest.TestCase ) :
 		p.parameters().addParameters(
 
 			[
-				IECore.V2iParameter( "v2i", "", IECore.V2i( 1, 2 ) ),
-				IECore.V3fParameter( "v3f", "", IECore.V3f( 1, 2, 3 ) ),
-				IECore.Color4fParameter( "color4f", "", IECore.Color4f( 0.25, 0.5, 0.75, 1 ) ),
+				IECore.V2iParameter( "v2i", "", imath.V2i( 1, 2 ) ),
+				IECore.V3fParameter( "v3f", "", imath.V3f( 1, 2, 3 ) ),
+				IECore.Color4fParameter( "color4f", "", imath.Color4f( 0.25, 0.5, 0.75, 1 ) ),
 			]
 
 		)
@@ -231,23 +232,23 @@ class ParameterisedHolderTest( GafferTest.TestCase ) :
 		ph = GafferCortex.ParameterisedHolderNode()
 		ph.setParameterised( p )
 
-		self.assertEqual( ph["parameters"]["v2i"].defaultValue(), IECore.V2i( 1, 2 ) )
-		self.assertEqual( ph["parameters"]["v3f"].defaultValue(), IECore.V3f( 1, 2, 3 ) )
-		self.assertEqual( ph["parameters"]["color4f"].defaultValue(), IECore.Color4f( 0.25, 0.5, 0.75, 1 ) )
+		self.assertEqual( ph["parameters"]["v2i"].defaultValue(), imath.V2i( 1, 2 ) )
+		self.assertEqual( ph["parameters"]["v3f"].defaultValue(), imath.V3f( 1, 2, 3 ) )
+		self.assertEqual( ph["parameters"]["color4f"].defaultValue(), imath.Color4f( 0.25, 0.5, 0.75, 1 ) )
 
-		self.assertEqual( ph["parameters"]["v2i"].getValue(), IECore.V2i( 1, 2 ) )
-		self.assertEqual( ph["parameters"]["v3f"].getValue(), IECore.V3f( 1, 2, 3 ) )
-		self.assertEqual( ph["parameters"]["color4f"].getValue(), IECore.Color4f( 0.25, 0.5, 0.75, 1 ) )
+		self.assertEqual( ph["parameters"]["v2i"].getValue(), imath.V2i( 1, 2 ) )
+		self.assertEqual( ph["parameters"]["v3f"].getValue(), imath.V3f( 1, 2, 3 ) )
+		self.assertEqual( ph["parameters"]["color4f"].getValue(), imath.Color4f( 0.25, 0.5, 0.75, 1 ) )
 
-		ph["parameters"]["v2i"].setValue( IECore.V2i( 2, 3 ) )
-		ph["parameters"]["v3f"].setValue( IECore.V3f( 4, 5, 6 ) )
-		ph["parameters"]["color4f"].setValue( IECore.Color4f( 0.1, 0.2, 0.3, 0.5 ) )
+		ph["parameters"]["v2i"].setValue( imath.V2i( 2, 3 ) )
+		ph["parameters"]["v3f"].setValue( imath.V3f( 4, 5, 6 ) )
+		ph["parameters"]["color4f"].setValue( imath.Color4f( 0.1, 0.2, 0.3, 0.5 ) )
 
 		ph.setParameterisedValues()
 
-		self.assertEqual( p["v2i"].getTypedValue(), IECore.V2i( 2, 3 ) )
-		self.assertEqual( p["v3f"].getTypedValue(), IECore.V3f( 4, 5, 6 ) )
-		self.assertEqual( p["color4f"].getTypedValue(), IECore.Color4f( 0.1, 0.2, 0.3, 0.5 ) )
+		self.assertEqual( p["v2i"].getTypedValue(), imath.V2i( 2, 3 ) )
+		self.assertEqual( p["v3f"].getTypedValue(), imath.V3f( 4, 5, 6 ) )
+		self.assertEqual( p["color4f"].getTypedValue(), imath.Color4f( 0.1, 0.2, 0.3, 0.5 ) )
 
 	def testParameterHandlerMethod( self ) :
 
@@ -272,9 +273,9 @@ class ParameterisedHolderTest( GafferTest.TestCase ) :
 				IECore.Box3iParameter(
 					"b",
 					"",
-					IECore.Box3i(
-						IECore.V3i( -1, -2, -3 ),
-						IECore.V3i( 2, 1, 3 ),
+					imath.Box3i(
+						imath.V3i( -1, -2, -3 ),
+						imath.V3i( 2, 1, 3 ),
 					),
 				)
 			]
@@ -288,25 +289,25 @@ class ParameterisedHolderTest( GafferTest.TestCase ) :
 		self.failUnless( isinstance( ph["parameters"]["b"]["min"], Gaffer.V3iPlug ) )
 		self.failUnless( isinstance( ph["parameters"]["b"]["max"], Gaffer.V3iPlug ) )
 
-		self.assertEqual( ph["parameters"]["b"]["min"].getValue(), IECore.V3i( -1, -2, -3 ) )
-		self.assertEqual( ph["parameters"]["b"]["max"].getValue(), IECore.V3i( 2, 1, 3 ) )
+		self.assertEqual( ph["parameters"]["b"]["min"].getValue(), imath.V3i( -1, -2, -3 ) )
+		self.assertEqual( ph["parameters"]["b"]["max"].getValue(), imath.V3i( 2, 1, 3 ) )
 
-		ph["parameters"]["b"]["min"].setValue( IECore.V3i( -10, -20, -30 ) )
-		ph["parameters"]["b"]["max"].setValue( IECore.V3i( 10, 20, 30 ) )
+		ph["parameters"]["b"]["min"].setValue( imath.V3i( -10, -20, -30 ) )
+		ph["parameters"]["b"]["max"].setValue( imath.V3i( 10, 20, 30 ) )
 
 		ph.parameterHandler().setParameterValue()
 
 		self.assertEqual(
 			p["b"].getTypedValue(),
-			IECore.Box3i( IECore.V3i( -10, -20, -30 ), IECore.V3i( 10, 20, 30 ) )
+			imath.Box3i( imath.V3i( -10, -20, -30 ), imath.V3i( 10, 20, 30 ) )
 		)
 
 		with ph.parameterModificationContext() :
 
-			p["b"].setTypedValue( IECore.Box3i( IECore.V3i( -2, -4, -6 ), IECore.V3i( 2, 4, 6 ) ) )
+			p["b"].setTypedValue( imath.Box3i( imath.V3i( -2, -4, -6 ), imath.V3i( 2, 4, 6 ) ) )
 
-		self.assertEqual( ph["parameters"]["b"]["min"].getValue(), IECore.V3i( -2, -4, -6 ) )
-		self.assertEqual( ph["parameters"]["b"]["max"].getValue(), IECore.V3i( 2, 4, 6 ) )
+		self.assertEqual( ph["parameters"]["b"]["min"].getValue(), imath.V3i( -2, -4, -6 ) )
+		self.assertEqual( ph["parameters"]["b"]["max"].getValue(), imath.V3i( 2, 4, 6 ) )
 
 	def testAddAndRemoveParameters( self ) :
 

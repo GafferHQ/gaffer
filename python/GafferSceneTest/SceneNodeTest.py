@@ -37,6 +37,7 @@
 
 import unittest
 import threading
+import imath
 
 import IECore
 import IECoreScene
@@ -71,11 +72,11 @@ class SceneNodeTest( GafferSceneTest.SceneTestCase ) :
 		node = GafferSceneTest.CompoundObjectSource()
 		node["in"].setValue(
 			IECore.CompoundObject( {
-				"transform" : IECore.M44fData( IECore.M44f.createTranslated( IECore.V3f( 1 ) ) )
+				"transform" : IECore.M44fData( imath.M44f().translate( imath.V3f( 1 ) ) )
 			} )
 		)
 
-		self.assertEqual( node["out"].transform( "/" ), IECore.M44f() )
+		self.assertEqual( node["out"].transform( "/" ), imath.M44f() )
 
 		node = GafferSceneTest.CompoundObjectSource()
 		node["in"].setValue(
@@ -141,7 +142,7 @@ class SceneNodeTest( GafferSceneTest.SceneTestCase ) :
 		context = Gaffer.Context()
 		context.set("scene:path", IECore.InternedStringVectorData(["sphere"]) )
 		with context:
-			self.assertEqual( sphere["out"]["transform"].getValue(), IECore.M44f.createTranslated( IECore.V3f( 1,2,3 ) ) )
+			self.assertEqual( sphere["out"]["transform"].getValue(), imath.M44f().translate( imath.V3f( 1,2,3 ) ) )
 
 		# right, now subtree it. If the cache is behaving itself, then the transform at the root of the
 		# resulting scene should be set to identity.
@@ -150,15 +151,15 @@ class SceneNodeTest( GafferSceneTest.SceneTestCase ) :
 		subTree["root"].setValue("sphere")
 		context.set("scene:path", IECore.InternedStringVectorData([]) )
 		with context:
-			self.assertEqual( subTree["out"]["transform"].getValue(), IECore.M44f() )
+			self.assertEqual( subTree["out"]["transform"].getValue(), imath.M44f() )
 
 	def testCacheThreadSafety( self ) :
 
 		p1 = GafferScene.Plane()
-		p1["divisions"].setValue( IECore.V2i( 50 ) )
+		p1["divisions"].setValue( imath.V2i( 50 ) )
 
 		p2 = GafferScene.Plane()
-		p2["divisions"].setValue( IECore.V2i( 51 ) )
+		p2["divisions"].setValue( imath.V2i( 51 ) )
 
 		g = GafferScene.Group()
 		g["in"][0].setInput( p1["out"] )

@@ -34,6 +34,8 @@
 #
 ##########################################################################
 
+import imath
+
 import IECore
 
 import Gaffer
@@ -58,20 +60,20 @@ class ScaleToolTest( GafferUITest.TestCase ) :
 		GafferSceneUI.ContextAlgo.setSelectedPaths( view.getContext(), GafferScene.PathMatcher( [ "/plane" ] ) )
 
 		with Gaffer.UndoScope( script ) :
-			tool.scale( IECore.V3f( 2, 1, 1 ) )
+			tool.scale( imath.V3f( 2, 1, 1 ) )
 
-		self.assertEqual( script["plane"]["transform"]["scale"].getValue(), IECore.V3f( 2, 1, 1 ) )
+		self.assertEqual( script["plane"]["transform"]["scale"].getValue(), imath.V3f( 2, 1, 1 ) )
 
 		with Gaffer.UndoScope( script ) :
-			tool.scale( IECore.V3f( 1, 0.5, 1 ) )
+			tool.scale( imath.V3f( 1, 0.5, 1 ) )
 
-		self.assertEqual( script["plane"]["transform"]["scale"].getValue(), IECore.V3f( 2, 0.5, 1 ) )
-
-		script.undo()
-		self.assertEqual( script["plane"]["transform"]["scale"].getValue(), IECore.V3f( 2, 1, 1 ) )
+		self.assertEqual( script["plane"]["transform"]["scale"].getValue(), imath.V3f( 2, 0.5, 1 ) )
 
 		script.undo()
-		self.assertEqual( script["plane"]["transform"]["scale"].getValue(), IECore.V3f( 1, 1, 1 ) )
+		self.assertEqual( script["plane"]["transform"]["scale"].getValue(), imath.V3f( 2, 1, 1 ) )
+
+		script.undo()
+		self.assertEqual( script["plane"]["transform"]["scale"].getValue(), imath.V3f( 1, 1, 1 ) )
 
 if __name__ == "__main__":
 	unittest.main()

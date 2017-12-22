@@ -36,6 +36,7 @@
 
 
 import types
+import imath
 
 import IECore
 
@@ -44,7 +45,7 @@ import GafferImage
 
 def __color4fPlugCompatSetValue( self, value ) :
 
-	if isinstance( value, IECore.Color3f ) :
+	if isinstance( value, imath.Color3f ) :
 		for i in range(3):
 			self[i].setValue( value[i] )
 	else:

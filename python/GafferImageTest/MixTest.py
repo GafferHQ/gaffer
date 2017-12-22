@@ -36,6 +36,7 @@
 
 import os
 import unittest
+import imath
 
 import IECore
 
@@ -98,7 +99,7 @@ class MixTest( GafferImageTest.ImageTestCase ) :
 		##########################################
 
 		self.assertNotEqual( mix["out"].imageHash(), input1Hash )
-		self.assertEqual( mix["out"]["dataWindow"].getValue(), IECore.Box2i( IECore.V2i( 20 ), IECore.V2i( 75 ) ) )
+		self.assertEqual( mix["out"]["dataWindow"].getValue(), imath.Box2i( imath.V2i( 20 ), imath.V2i( 75 ) ) )
 
 		##########################################
 		# Test that if we disable the node the hash gets passed through.
@@ -106,7 +107,7 @@ class MixTest( GafferImageTest.ImageTestCase ) :
 
 		mix["enabled"].setValue(False)
 		self.assertEqual( mix["out"].imageHash(), input1Hash )
-		self.assertEqual( mix["out"]["dataWindow"].getValue(), IECore.Box2i( IECore.V2i( 20 ), IECore.V2i( 70 ) ) )
+		self.assertEqual( mix["out"]["dataWindow"].getValue(), imath.Box2i( imath.V2i( 20 ), imath.V2i( 70 ) ) )
 		self.assertImagesEqual( mix["out"], r["out"] )
 
 
@@ -117,7 +118,7 @@ class MixTest( GafferImageTest.ImageTestCase ) :
 		mix["enabled"].setValue( True )
 		mix["mix"].setValue( 0 )
 		self.assertEqual( mix["out"].imageHash(), input1Hash )
-		self.assertEqual( mix["out"]["dataWindow"].getValue(), IECore.Box2i( IECore.V2i( 20 ), IECore.V2i( 70 ) ) )
+		self.assertEqual( mix["out"]["dataWindow"].getValue(), imath.Box2i( imath.V2i( 20 ), imath.V2i( 70 ) ) )
 		self.assertImagesEqual( mix["out"], r["out"] )
 
 		##########################################
@@ -134,10 +135,10 @@ class MixTest( GafferImageTest.ImageTestCase ) :
 		# Just check the first tile of the data to make sure hashes are passing through
 		with Gaffer.Context() as c :
 			c[ "image:channelName" ] = IECore.StringData( "G" )
-			c[ "image:tileOrigin" ] = IECore.V2iData( IECore.V2i( 0, 0 ) )
+			c[ "image:tileOrigin" ] = IECore.V2iData( imath.V2i( 0, 0 ) )
 			self.assertEqual( mix["out"]["channelData"].hash(), g["out"]["channelData"].hash() )
 
-		self.assertEqual( mix["out"]["dataWindow"].getValue(), IECore.Box2i( IECore.V2i( 25 ), IECore.V2i( 75 ) ) )
+		self.assertEqual( mix["out"]["dataWindow"].getValue(), imath.Box2i( imath.V2i( 25 ), imath.V2i( 75 ) ) )
 		self.assertImagesEqual( mix["out"], g["out"], ignoreMetadata = True )
 
 	# Overlay a red and green tile of different data window sizes with a checkered mask and check the data window is expanded on the result and looks as we expect.
@@ -206,7 +207,7 @@ class MixTest( GafferImageTest.ImageTestCase ) :
 		c = GafferImage.Constant()
 		f = GafferImage.Resize()
 		f["in"].setInput( c["out"] )
-		f["format"].setValue( GafferImage.Format( IECore.Box2i( IECore.V2i( 0 ), IECore.V2i( 10 ) ), 1 ) )
+		f["format"].setValue( GafferImage.Format( imath.Box2i( imath.V2i( 0 ), imath.V2i( 10 ) ), 1 ) )
 		d = GafferImage.ImageMetadata()
 		d["metadata"].addMember( "comment", IECore.StringData( "reformated and metadata updated" ) )
 		d["in"].setInput( f["out"] )
@@ -234,20 +235,20 @@ class MixTest( GafferImageTest.ImageTestCase ) :
 
 		b = GafferImage.Constant()
 		b["format"].setValue( GafferImage.Format( 500, 500, 1.0 ) )
-		b["color"].setValue( IECore.Color4f( 1, 0, 0, 1 ) )
+		b["color"].setValue( imath.Color4f( 1, 0, 0, 1 ) )
 
 		a = GafferImage.Constant()
 		a["format"].setValue( GafferImage.Format( 500, 500, 1.0 ) )
-		a["color"].setValue( IECore.Color4f( 0, 1, 0, 1 ) )
+		a["color"].setValue( imath.Color4f( 0, 1, 0, 1 ) )
 
 		mask = GafferImage.Constant()
 		mask["format"].setValue( GafferImage.Format( 500, 500, 1.0 ) )
-		mask["color"].setValue( IECore.Color4f( 0.75 ) )
+		mask["color"].setValue( imath.Color4f( 0.75 ) )
 
 		aCrop = GafferImage.Crop()
 		aCrop["in"].setInput( a["out"] )
 		aCrop["areaSource"].setValue( aCrop.AreaSource.Area )
-		aCrop["area"].setValue( IECore.Box2i( IECore.V2i( 50 ), IECore.V2i( 162 ) ) )
+		aCrop["area"].setValue( imath.Box2i( imath.V2i( 50 ), imath.V2i( 162 ) ) )
 		aCrop["affectDisplayWindow"].setValue( False )
 
 		m = GafferImage.Mix()
@@ -261,7 +262,7 @@ class MixTest( GafferImageTest.ImageTestCase ) :
 
 		def sample( x, y ) :
 
-			return IECore.Color3f(
+			return imath.Color3f(
 				redSampler.sample( x, y ),
 				greenSampler.sample( x, y ),
 				blueSampler.sample( x, y ),
@@ -271,29 +272,29 @@ class MixTest( GafferImageTest.ImageTestCase ) :
 		# the data window of aCrop. But we still only take 25%
 		# of the red everywhere
 
-		self.assertEqual( sample( 49, 49 ), IECore.Color3f( 0.25, 0, 0 ) )
-		self.assertEqual( sample( 50, 50 ), IECore.Color3f( 0.25, 0.75, 0 ) )
-		self.assertEqual( sample( 161, 161 ), IECore.Color3f( 0.25, 0.75, 0 ) )
-		self.assertEqual( sample( 162, 162 ), IECore.Color3f( 0.25, 0, 0 ) )
+		self.assertEqual( sample( 49, 49 ), imath.Color3f( 0.25, 0, 0 ) )
+		self.assertEqual( sample( 50, 50 ), imath.Color3f( 0.25, 0.75, 0 ) )
+		self.assertEqual( sample( 161, 161 ), imath.Color3f( 0.25, 0.75, 0 ) )
+		self.assertEqual( sample( 162, 162 ), imath.Color3f( 0.25, 0, 0 ) )
 
 	def testLargeDataWindowAddedToSmall( self ) :
 
 		b = GafferImage.Constant()
 		b["format"].setValue( GafferImage.Format( 500, 500, 1.0 ) )
-		b["color"].setValue( IECore.Color4f( 1, 0, 0, 1 ) )
+		b["color"].setValue( imath.Color4f( 1, 0, 0, 1 ) )
 
 		a = GafferImage.Constant()
 		a["format"].setValue( GafferImage.Format( 500, 500, 1.0 ) )
-		a["color"].setValue( IECore.Color4f( 0, 1, 0, 1 ) )
+		a["color"].setValue( imath.Color4f( 0, 1, 0, 1 ) )
 
 		mask = GafferImage.Constant()
 		mask["format"].setValue( GafferImage.Format( 500, 500, 1.0 ) )
-		mask["color"].setValue( IECore.Color4f( 0.5 ) )
+		mask["color"].setValue( imath.Color4f( 0.5 ) )
 
 		bCrop = GafferImage.Crop()
 		bCrop["in"].setInput( b["out"] )
 		bCrop["areaSource"].setValue( bCrop.AreaSource.Area )
-		bCrop["area"].setValue( IECore.Box2i( IECore.V2i( 50 ), IECore.V2i( 162 ) ) )
+		bCrop["area"].setValue( imath.Box2i( imath.V2i( 50 ), imath.V2i( 162 ) ) )
 		bCrop["affectDisplayWindow"].setValue( False )
 
 		m = GafferImage.Mix()
@@ -307,7 +308,7 @@ class MixTest( GafferImageTest.ImageTestCase ) :
 
 		def sample( x, y ) :
 
-			return IECore.Color3f(
+			return imath.Color3f(
 				redSampler.sample( x, y ),
 				greenSampler.sample( x, y ),
 				blueSampler.sample( x, y ),
@@ -316,15 +317,15 @@ class MixTest( GafferImageTest.ImageTestCase ) :
 		# We should only have yellow in areas where the background exists,
 		# and should have just green everywhere else.
 
-		self.assertEqual( sample( 49, 49 ), IECore.Color3f( 0, 0.5, 0 ) )
-		self.assertEqual( sample( 50, 50 ), IECore.Color3f( 0.5, 0.5, 0 ) )
-		self.assertEqual( sample( 161, 161 ), IECore.Color3f( 0.5, 0.5, 0 ) )
-		self.assertEqual( sample( 162, 162 ), IECore.Color3f( 0, 0.5, 0 ) )
+		self.assertEqual( sample( 49, 49 ), imath.Color3f( 0, 0.5, 0 ) )
+		self.assertEqual( sample( 50, 50 ), imath.Color3f( 0.5, 0.5, 0 ) )
+		self.assertEqual( sample( 161, 161 ), imath.Color3f( 0.5, 0.5, 0 ) )
+		self.assertEqual( sample( 162, 162 ), imath.Color3f( 0, 0.5, 0 ) )
 
 	def testChannelRequest( self ) :
 
 		a = GafferImage.Constant()
-		a["color"].setValue( IECore.Color4f( 0.1, 0.2, 0.3, 0.4 ) )
+		a["color"].setValue( imath.Color4f( 0.1, 0.2, 0.3, 0.4 ) )
 
 		ad = GafferImage.DeleteChannels()
 		ad["in"].setInput( a["out"] )
@@ -332,7 +333,7 @@ class MixTest( GafferImageTest.ImageTestCase ) :
 		ad["channels"].setValue( IECore.StringVectorData( [ "R" ] ) )
 
 		b = GafferImage.Constant()
-		b["color"].setValue( IECore.Color4f( 1.0, 0.3, 0.1, 0.2 ) )
+		b["color"].setValue( imath.Color4f( 1.0, 0.3, 0.1, 0.2 ) )
 
 		bd = GafferImage.DeleteChannels()
 		bd["in"].setInput( b["out"] )
@@ -340,7 +341,7 @@ class MixTest( GafferImageTest.ImageTestCase ) :
 		bd["channels"].setValue( IECore.StringVectorData( [ "G" ] ) )
 
 		m = GafferImage.Constant()
-		m["color"].setValue( IECore.Color4f( 0.5 ) )
+		m["color"].setValue( imath.Color4f( 0.5 ) )
 
 		mix = GafferImage.Mix()
 		mix["in"][0].setInput( ad["out"] )
@@ -349,7 +350,7 @@ class MixTest( GafferImageTest.ImageTestCase ) :
 
 		sampler = GafferImage.ImageSampler()
 		sampler["image"].setInput( mix["out"] )
-		sampler["pixel"].setValue( IECore.V2f( 10 ) )
+		sampler["pixel"].setValue( imath.V2f( 10 ) )
 
 		self.assertAlmostEqual( sampler["color"]["r"].getValue(), ( 0.0 + 1.0 ) * 0.5 )
 		self.assertAlmostEqual( sampler["color"]["g"].getValue(), ( 0.2 + 0.0 ) * 0.5 )
@@ -382,15 +383,15 @@ class MixTest( GafferImageTest.ImageTestCase ) :
 
 		b = GafferImage.Constant()
 		b["format"].setValue( GafferImage.Format( 50, 50, 1.0 ) )
-		b["color"].setValue( IECore.Color4f( 1, 0, 0, 1 ) )
+		b["color"].setValue( imath.Color4f( 1, 0, 0, 1 ) )
 
 		a = GafferImage.Constant()
 		a["format"].setValue( GafferImage.Format( 50, 50, 1.0 ) )
-		a["color"].setValue( IECore.Color4f( 0, 1, 0, 1 ) )
+		a["color"].setValue( imath.Color4f( 0, 1, 0, 1 ) )
 
 		mask = GafferImage.Constant()
 		mask["format"].setValue( GafferImage.Format( 50, 50, 1.0 ) )
-		mask["color"].setValue( IECore.Color4f( 0.5 ) )
+		mask["color"].setValue( imath.Color4f( 0.5 ) )
 
 		m = GafferImage.Mix()
 		m["in"][0].setInput( b["out"] )
@@ -402,7 +403,7 @@ class MixTest( GafferImageTest.ImageTestCase ) :
 			greenSampler = GafferImage.Sampler( m["out"], "G", m["out"]["format"].getValue().getDisplayWindow() )
 			blueSampler = GafferImage.Sampler( m["out"], "B", m["out"]["format"].getValue().getDisplayWindow() )
 
-			return IECore.Color3f(
+			return imath.Color3f(
 				redSampler.sample( x, y ),
 				greenSampler.sample( x, y ),
 				blueSampler.sample( x, y ),
@@ -410,17 +411,17 @@ class MixTest( GafferImageTest.ImageTestCase ) :
 
 		# Using just mix
 		m["mix"].setValue( 0.75 )
-		self.assertEqual( sample( 49, 49 ), IECore.Color3f( 0.25, 0.75, 0 ) )
+		self.assertEqual( sample( 49, 49 ), imath.Color3f( 0.25, 0.75, 0 ) )
 		m["mix"].setValue( 0.25 )
-		self.assertEqual( sample( 49, 49 ), IECore.Color3f( 0.75, 0.25, 0 ) )
+		self.assertEqual( sample( 49, 49 ), imath.Color3f( 0.75, 0.25, 0 ) )
 
 		# Using mask multiplied with mix
 		m["mask"].setInput( mask["out"] )
-		self.assertEqual( sample( 49, 49 ), IECore.Color3f( 0.875, 0.125, 0 ) )
+		self.assertEqual( sample( 49, 49 ), imath.Color3f( 0.875, 0.125, 0 ) )
 
 		# Using invalid channel of mask defaults to just mix
 		m["maskChannel"].setValue( "DOES_NOT_EXIST" )
-		self.assertEqual( sample( 49, 49 ), IECore.Color3f( 0.75, 0.25, 0 ) )
+		self.assertEqual( sample( 49, 49 ), imath.Color3f( 0.75, 0.25, 0 ) )
 
 if __name__ == "__main__":
 	unittest.main()

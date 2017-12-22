@@ -38,6 +38,7 @@ import unittest
 
 import Gaffer
 import GafferTest
+import imath
 import IECore
 
 class DotTest( GafferTest.TestCase ) :
@@ -175,8 +176,8 @@ class DotTest( GafferTest.TestCase ) :
 
 		plug = s["n1"]["op1"]
 
-		connectionColor = IECore.Color3f( 0.1 , 0.2 , 0.3 )
-		noodleColor = IECore.Color3f( 0.4, 0.5 , 0.6 )
+		connectionColor = imath.Color3f( 0.1 , 0.2 , 0.3 )
+		noodleColor = imath.Color3f( 0.4, 0.5 , 0.6 )
 
 		Gaffer.Metadata.registerValue( plug, "connectionGadget:color", connectionColor )
 		Gaffer.Metadata.registerValue( plug, "nodule:color", noodleColor )

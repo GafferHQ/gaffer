@@ -35,6 +35,7 @@
 ##########################################################################
 
 import math
+import imath
 
 import IECore
 
@@ -76,10 +77,10 @@ class Wedge( GafferDispatch.TaskContextProcessor ) :
 			defaultValue = IECore.SplinefColor3f(
 				IECore.CubicBasisf.catmullRom(),
 				(
-					( 0, IECore.Color3f( 0 ) ),
-					( 0, IECore.Color3f( 0 ) ),
-					( 1, IECore.Color3f( 1 ) ),
-					( 1, IECore.Color3f( 1 ) ),
+					( 0, imath.Color3f( 0 ) ),
+					( 0, imath.Color3f( 0 ) ),
+					( 1, imath.Color3f( 1 ) ),
+					( 1, imath.Color3f( 1 ) ),
 				)
 			)
 		)

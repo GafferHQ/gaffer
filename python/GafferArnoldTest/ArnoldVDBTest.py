@@ -35,6 +35,7 @@
 ##########################################################################
 
 import os
+import imath
 
 import IECore
 import IECoreScene
@@ -51,13 +52,13 @@ class ArnoldVDBTest( GafferSceneTest.SceneTestCase ) :
 		# Just an empty procedural at this point.
 		self.assertEqual( v["out"].childNames( "/" ), IECore.InternedStringVectorData( [ "volume" ] ) )
 		self.assertSceneValid( v["out"] )
-		self.assertEqual( v["out"].bound( "/volume" ), IECore.Box3f( IECore.V3f( -0.5 ), IECore.V3f( 0.5 ) ) )
+		self.assertEqual( v["out"].bound( "/volume" ), imath.Box3f( imath.V3f( -0.5 ), imath.V3f( 0.5 ) ) )
 		self.assertTrue( isinstance( v["out"].object( "/volume" ), IECoreScene.ExternalProcedural ) )
 
 		# If we enter a valid vdb filename, then we should get something
 		# with the right bounds, and the right parameters in the procedural.
 		v["fileName"].setValue( os.path.join( os.path.dirname( __file__ ), "volumes", "sphere.vdb" ) )
-		self.assertEqual( v["out"].bound( "/volume" ), IECore.Box3f( IECore.V3f( -1.1, 1.1, -1.1 ), IECore.V3f( 1.1, 2.9, 1.1 ) ) )
+		self.assertEqual( v["out"].bound( "/volume" ), imath.Box3f( imath.V3f( -1.1, 1.1, -1.1 ), imath.V3f( 1.1, 2.9, 1.1 ) ) )
 
 		procedural = v["out"].object( "/volume" )
 		self.assertTrue( isinstance( procedural, IECoreScene.ExternalProcedural ) )

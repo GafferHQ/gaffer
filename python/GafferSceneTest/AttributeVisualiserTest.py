@@ -34,6 +34,8 @@
 #
 ##########################################################################
 
+import imath
+
 import IECore
 
 import Gaffer
@@ -89,11 +91,11 @@ class AttributeVisualiserTest( GafferSceneTest.SceneTestCase ) :
 		self.assertTrue( "gl:surface" in visualiser["out"].attributes( "/group/sphere2" ) )
 		self.assertEqual(
 			visualiser["out"].attributes( "/group/sphere1" )["gl:surface"].parameters["Cs"].value,
-			IECore.Color3f( 1 ),
+			imath.Color3f( 1 ),
 		)
 		self.assertEqual(
 			visualiser["out"].attributes( "/group/sphere2" )["gl:surface"].parameters["Cs"].value,
-			IECore.Color3f( .5 ),
+			imath.Color3f( .5 ),
 		)
 
 	def testShaderNodeColorMode( self ) :
@@ -119,7 +121,7 @@ class AttributeVisualiserTest( GafferSceneTest.SceneTestCase ) :
 		shader2 = GafferSceneTest.TestShader()
 		shader2["name"].setValue( "test" )
 		shader2["type"].setValue( "gfr:surface" )
-		Gaffer.Metadata.registerValue( shader2, "nodeGadget:color", IECore.Color3f( 1, 0, 0 ) )
+		Gaffer.Metadata.registerValue( shader2, "nodeGadget:color", imath.Color3f( 1, 0, 0 ) )
 
 		filter2 = GafferScene.PathFilter()
 		filter2["paths"].setValue( IECore.StringVectorData( [ "/group/sphere2" ] ) )
@@ -150,11 +152,11 @@ class AttributeVisualiserTest( GafferSceneTest.SceneTestCase ) :
 		self.assertTrue( "gl:surface" in visualiser["out"].attributes( "/group/sphere2" ) )
 		self.assertEqual(
 			visualiser["out"].attributes( "/group/sphere1" )["gl:surface"].parameters["Cs"].value,
-			IECore.Color3f( 0 ),
+			imath.Color3f( 0 ),
 		)
 		self.assertEqual(
 			visualiser["out"].attributes( "/group/sphere2" )["gl:surface"].parameters["Cs"].value,
-			IECore.Color3f( 1, 0, 0 ),
+			imath.Color3f( 1, 0, 0 ),
 		)
 
 if __name__ == "__main__":

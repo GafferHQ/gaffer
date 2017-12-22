@@ -35,6 +35,7 @@
 ##########################################################################
 
 import functools
+import imath
 
 import IECore
 
@@ -89,10 +90,10 @@ def plugCreationWidget( plugParent ) :
 
 	with GafferUI.ListContainer( GafferUI.ListContainer.Orientation.Horizontal ) as row :
 
-		GafferUI.Spacer( IECore.V2i( GafferUI.PlugWidget.labelWidth(), 1 ) )
+		GafferUI.Spacer( imath.V2i( GafferUI.PlugWidget.labelWidth(), 1 ) )
 		button = GafferUI.MenuButton( image="plus.png", hasFrame=False, menu=GafferUI.Menu( functools.partial( __plugCreationMenuDefinition, plugParent ) ) )
 		button.setToolTip( "Click to add plugs" )
-		GafferUI.Spacer( IECore.V2i( 1 ), IECore.V2i( 999999, 1 ), parenting = { "expand" : True } )
+		GafferUI.Spacer( imath.V2i( 1 ), imath.V2i( 999999, 1 ), parenting = { "expand" : True } )
 
 	return row
 

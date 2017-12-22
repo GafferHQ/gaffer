@@ -36,6 +36,7 @@
 
 import os
 import time
+import imath
 
 import IECore
 
@@ -137,7 +138,7 @@ class screengrab( Gaffer.Application ) :
 						IECore.V3fParameter(
 							name = "viewDirection",
 							description = "The direction to view the framed objects in.",
-							defaultValue = IECore.V3f( -0.64, -0.422, -0.64 ),
+							defaultValue = imath.V3f( -0.64, -0.422, -0.64 ),
 						),
 					]
 				),

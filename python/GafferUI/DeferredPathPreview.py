@@ -37,6 +37,7 @@
 import weakref
 import threading
 import functools
+import imath
 
 import IECore
 
@@ -58,7 +59,7 @@ class DeferredPathPreview( GafferUI.PathPreviewWidget ) :
 		self.__tabbedContainer.setTabsVisible( False )
 		self.__tabbedContainer.append( GafferUI.BusyWidget( size = 25 ) ) # for when we're loading
 		self.__tabbedContainer.append( displayWidget ) # for when we loaded ok
-		self.__tabbedContainer.append( GafferUI.Spacer( size = IECore.V2i( 10 ) ) ) # for when we didn't load ok
+		self.__tabbedContainer.append( GafferUI.Spacer( size = imath.V2i( 10 ) ) ) # for when we didn't load ok
 
 		# a timer we use to display the busy status if loading takes too long
 		self.__busyTimer = QtCore.QTimer()

@@ -36,6 +36,7 @@
 
 import os
 import unittest
+import imath
 
 import IECore
 import IECoreScene
@@ -59,7 +60,7 @@ class OSLLightTest( GafferOSLTest.OSLTestCase ) :
 		self.assertEqual( node["parameters"].keys(), [ "Cs" ] )
 
 		cs = GafferTest.CapturingSlot( node.plugDirtiedSignal() )
-		node["parameters"]["Cs"].setValue( IECore.Color3f( 1, 0, 0 ) )
+		node["parameters"]["Cs"].setValue( imath.Color3f( 1, 0, 0 ) )
 		self.assertIn( node["out"]["attributes"], { x[0] for x in cs } )
 
 		a = node["out"].attributes( "/light" )
@@ -72,7 +73,7 @@ class OSLLightTest( GafferOSLTest.OSLTestCase ) :
 		script = Gaffer.ScriptNode()
 		script["n"] = GafferOSL.OSLLight()
 		script["n"].loadShader( shader )
-		script["n"]["parameters"]["Cs"].setValue( IECore.Color3f( 0, 1, 0 ) )
+		script["n"]["parameters"]["Cs"].setValue( imath.Color3f( 0, 1, 0 ) )
 
 		script2 = Gaffer.ScriptNode()
 		script2.execute( script.serialise() )
@@ -94,16 +95,16 @@ class OSLLightTest( GafferOSLTest.OSLTestCase ) :
 
 		node["shape"].setValue( node.Shape.Geometry )
 		node["geometryType"].setValue( "teapot" )
-		node["geometryBound"].setValue( IECore.Box3f( IECore.V3f( -0.5 ), IECore.V3f( 0.5 ) ) )
-		m = node["geometryParameters"].addMember( "color", IECore.Color3f( 1, 0, 0 ) )
+		node["geometryBound"].setValue( imath.Box3f( imath.V3f( -0.5 ), imath.V3f( 0.5 ) ) )
+		m = node["geometryParameters"].addMember( "color", imath.Color3f( 1, 0, 0 ) )
 
 		self.assertEqual(
 			node["out"].object( "/light" ),
 			GafferScene.Private.IECoreScenePreview.Geometry(
 				"teapot",
-				IECore.Box3f( IECore.V3f( -0.5 ), IECore.V3f( 0.5 ) ),
+				imath.Box3f( imath.V3f( -0.5 ), imath.V3f( 0.5 ) ),
 				{
-					"color" : IECore.Color3f( 1, 0, 0 ),
+					"color" : imath.Color3f( 1, 0, 0 ),
 				}
 			)
 		)

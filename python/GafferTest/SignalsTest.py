@@ -40,6 +40,7 @@ import unittest
 import weakref
 import sys
 import gc
+import imath
 
 import IECore
 
@@ -96,11 +97,11 @@ class SignalsTest( GafferTest.TestCase ) :
 
 			return -1
 
-		class A( IECore.V3f ) :
+		class A( imath.V3f ) :
 
 			def __init__( self ) :
 
-				IECore.V3f.__init__( self )
+				imath.V3f.__init__( self )
 				self.signal = Gaffer.Signal1()
 
 			def f( self, n ) :
@@ -156,13 +157,13 @@ class SignalsTest( GafferTest.TestCase ) :
 
 	def testMany( self ) :
 
-		class S( IECore.V3f ) :
+		class S( imath.V3f ) :
 
 			instances = 0
 
 			def __init__( self, parent ) :
 
-				IECore.V3f.__init__( self )
+				imath.V3f.__init__( self )
 
 				S.instances += 1
 

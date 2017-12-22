@@ -36,6 +36,7 @@
 ##########################################################################
 
 import functools
+import imath
 
 import IECore
 
@@ -248,7 +249,7 @@ class NodeGraph( GafferUI.EditorWidget ) :
 			# mouse if possible.
 
 			viewport = self.__gadgetWidget.getViewportGadget()
-			gadgets = viewport.gadgetsAt( IECore.V2f( event.line.p1.x, event.line.p1.y ) )
+			gadgets = viewport.gadgetsAt( imath.V2f( event.line.p1.x, event.line.p1.y ) )
 			if len( gadgets ) :
 
 				overrideMenuDefinition = IECore.MenuDefinition()
@@ -286,7 +287,7 @@ class NodeGraph( GafferUI.EditorWidget ) :
 	def __nodeGadgetAt( self, position ) :
 
 		viewport = self.__gadgetWidget.getViewportGadget()
-		line = viewport.rasterToGadgetSpace( IECore.V2f( position.x, position.y ), gadget = self.graphGadget() )
+		line = viewport.rasterToGadgetSpace( imath.V2f( position.x, position.y ), gadget = self.graphGadget() )
 		return self.graphGadget().nodeGadgetAt( line )
 
 	def __keyPress( self, widget, event ) :
@@ -324,7 +325,7 @@ class NodeGraph( GafferUI.EditorWidget ) :
 		graphGadget = self.graphGadget()
 
 		# get the bounds of the nodes
-		bound = IECore.Box3f()
+		bound = imath.Box3f()
 		for node in nodes :
 			nodeGadget = graphGadget.nodeGadget( node )
 			if nodeGadget :
@@ -337,32 +338,34 @@ class NodeGraph( GafferUI.EditorWidget ) :
 
 		# if there's still nothing then an arbitrary area in the centre of the world
 		if bound.isEmpty() :
-			bound = IECore.Box3f( IECore.V3f( -10, -10, 0 ), IECore.V3f( 10, 10, 0 ) )
+			bound = imath.Box3f( imath.V3f( -10, -10, 0 ), imath.V3f( 10, 10, 0 ) )
 
 		# pad it a little bit so
 		# it sits nicer in the frame
-		bound.min -= IECore.V3f( 1, 1, 0 )
-		bound.max += IECore.V3f( 1, 1, 0 )
+		bound.setMin( bound.min() - imath.V3f( 1, 1, 0 ) )
+		bound.setMax( bound.max() + imath.V3f( 1, 1, 0 ) )
 
 		if extend :
 			# we're extending the existing framing, which we assume the
 			# user was happy with other than it not showing the nodes in question.
 			# so we just take the union of the existing frame and the one for the nodes.
 			cb = self.__currentFrame()
-			bound.extendBy( IECore.Box3f( IECore.V3f( cb.min.x, cb.min.y, 0 ), IECore.V3f( cb.max.x, cb.max.y, 0 ) ) )
+			bound.extendBy( imath.Box3f( imath.V3f( cb.min().x, cb.min().y, 0 ), imath.V3f( cb.max().x, cb.max().y, 0 ) ) )
 		else :
 			# we're reframing from scratch, so the frame for the nodes is all we need.
 			# we do however want to make sure that we don't zoom in too far if the node
 			# bounds are small, as having a single node filling the screen is of little use -
 			# it's better to see some context around it.
 			boundSize = bound.size()
-			widgetSize = IECore.V3f( self._qtWidget().width(), self._qtWidget().height(), 0 )
-			pixelsPerUnit = widgetSize / boundSize
-			adjustedPixelsPerUnit = min( pixelsPerUnit.x, pixelsPerUnit.y, 10 )
+			widgetSize = imath.V3f( self._qtWidget().width(), self._qtWidget().height(), 0 )
+
+			pixelsPerUnit = min( widgetSize.x / boundSize.x, widgetSize.y / boundSize.y )
+			adjustedPixelsPerUnit = min( pixelsPerUnit, 10 )
+
 			newBoundSize = widgetSize / adjustedPixelsPerUnit
 			boundCenter = bound.center()
-			bound.min = boundCenter - newBoundSize / 2.0
-			bound.max = boundCenter + newBoundSize / 2.0
+			bound.setMin( boundCenter - newBoundSize / 2.0 )
+			bound.setMax( boundCenter + newBoundSize / 2.0 )
 
 		self.__gadgetWidget.getViewportGadget().frame( bound )
 
@@ -411,8 +414,8 @@ class NodeGraph( GafferUI.EditorWidget ) :
 		camera = viewportGadget.getCamera()
 		frame = camera.parameters()["screenWindow"].value
 		translation = viewportGadget.getCameraTransform().translation()
-		frame.min += IECore.V2f( translation.x, translation.y )
-		frame.max += IECore.V2f( translation.x, translation.y )
+		frame.setMin( frame.min() + imath.V2f( translation.x, translation.y ) )
+		frame.setMax( frame.max() + imath.V2f( translation.x, translation.y ) )
 
 		return frame
 
@@ -426,7 +429,7 @@ class NodeGraph( GafferUI.EditorWidget ) :
 		frame = Gaffer.Metadata.value( self.graphGadget().getRoot(), "ui:nodeGraph:framing" )
 		if frame is not None :
 			self.graphGadgetWidget().getViewportGadget().frame(
-				IECore.Box3f( IECore.V3f( frame.min.x, frame.min.y, 0 ), IECore.V3f( frame.max.x, frame.max.y, 0 ) )
+				imath.Box3f( imath.V3f( frame.min().x, frame.min().y, 0 ), imath.V3f( frame.max().x, frame.max().y, 0 ) )
 			)
 		else :
 			self.__frame( self.graphGadget().getRoot().children( Gaffer.Node ) )
@@ -469,10 +472,10 @@ class NodeGraph( GafferUI.EditorWidget ) :
 
 		gadgetWidget = self.graphGadgetWidget()
 		fallbackPosition = gadgetWidget.getViewportGadget().rasterToGadgetSpace(
-			IECore.V2f( gadgetWidget.size() ) / 2.0,
+			imath.V2f( gadgetWidget.size() ) / 2.0,
 			gadget = graphGadget
 		).p0
-		fallbackPosition = IECore.V2f( fallbackPosition.x, fallbackPosition.y )
+		fallbackPosition = imath.V2f( fallbackPosition.x, fallbackPosition.y )
 
 		graphGadget.getLayout().positionNodes( graphGadget, nodes, fallbackPosition )
 		graphGadget.getLayout().layoutNodes( graphGadget, nodes )

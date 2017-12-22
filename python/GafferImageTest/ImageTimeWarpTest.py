@@ -36,6 +36,7 @@
 
 import unittest
 import inspect
+import imath
 
 import IECore
 
@@ -111,9 +112,9 @@ class ImageTimeWarpTest( GafferImageTest.ImageTestCase ) :
 		script = Gaffer.ScriptNode()
 		script["constant"] = GafferImage.Constant()
 		script["constant"]["format"].setValue( GafferImage.Format( 1, 1, 1.0 ) )
-		
+
 		script["e"] = Gaffer.Expression()
-		script["e"].setExpression( 'parent["constant"]["color"] = IECore.Color4f( context["frame"] )' )
+		script["e"].setExpression( 'parent["constant"]["color"] = imath.Color4f( context["frame"] )' )
 
 		script["timeWarp"] = GafferImage.ImageTimeWarp()
 		script["timeWarp"]["in"].setInput( script["constant"]["out"] )
@@ -121,10 +122,10 @@ class ImageTimeWarpTest( GafferImageTest.ImageTestCase ) :
 		script["timeWarp"]["offset"].setValue( 3 )
 
 		script["sampler"] = GafferImage.ImageSampler()
-		script["sampler"]["pixel"].setValue( IECore.V2f( 0.5, 0.5 ) )
+		script["sampler"]["pixel"].setValue( imath.V2f( 0.5, 0.5 ) )
 		script["sampler"]["image"].setInput( script["timeWarp"]["out"] )
 
-		self.assertEqual( script["sampler"]["color"].getValue(), IECore.Color4f( 3 ) )
+		self.assertEqual( script["sampler"]["color"].getValue(), imath.Color4f( 3 ) )
 
 		script["e2"] = Gaffer.Expression()
 		script["e2"].setExpression( inspect.cleandoc(
@@ -135,7 +136,7 @@ class ImageTimeWarpTest( GafferImageTest.ImageTestCase ) :
 			"""
 		) )
 
-		self.assertEqual( script["sampler"]["color"].getValue(), IECore.Color4f( 5 ) )
+		self.assertEqual( script["sampler"]["color"].getValue(), imath.Color4f( 5 ) )
 
 	def testDisabling( self ) :
 

@@ -34,6 +34,8 @@
 #
 ##########################################################################
 
+import imath
+
 import IECore
 
 import Gaffer
@@ -49,14 +51,14 @@ class DuplicateTest( GafferSceneTest.SceneTestCase ) :
 		d = GafferScene.Duplicate()
 		d["in"].setInput( s["out"] )
 		d["target"].setValue( "/sphere" )
-		d["transform"]["translate"].setValue( IECore.V3f( 1, 0, 0 ) )
+		d["transform"]["translate"].setValue( imath.V3f( 1, 0, 0 ) )
 
 		self.assertSceneValid( d["out"] )
 
 		self.assertEqual( d["out"].childNames( "/" ), IECore.InternedStringVectorData( [ "sphere", "sphere1" ] ) )
 		self.assertPathHashesEqual( s["out"], "/sphere", d["out"], "/sphere" )
 		self.assertPathHashesEqual( d["out"], "/sphere", d["out"], "/sphere1", childPlugNamesToIgnore = ( "transform", ) )
-		self.assertEqual( d["out"].transform( "/sphere1" ), IECore.M44f.createTranslated( IECore.V3f( 1, 0, 0 ) ) )
+		self.assertEqual( d["out"].transform( "/sphere1" ), imath.M44f().translate( imath.V3f( 1, 0, 0 ) ) )
 
 	def testMultipleCopies( self ) :
 
@@ -64,7 +66,7 @@ class DuplicateTest( GafferSceneTest.SceneTestCase ) :
 		d = GafferScene.Duplicate()
 		d["in"].setInput( s["out"] )
 		d["target"].setValue( "/sphere" )
-		d["transform"]["translate"].setValue( IECore.V3f( 1, 0, 0 ) )
+		d["transform"]["translate"].setValue( imath.V3f( 1, 0, 0 ) )
 		d["copies"].setValue( 10 )
 
 		self.assertSceneValid( d["out"] )
@@ -79,7 +81,7 @@ class DuplicateTest( GafferSceneTest.SceneTestCase ) :
 		for i in range( 1, 11 ) :
 			path = "sphere%d" % i
 			self.assertPathHashesEqual( d["out"], "/sphere", d["out"], path, childPlugNamesToIgnore = ( "transform", ) )
-			self.assertEqual( d["out"].transform( path ), IECore.M44f.createTranslated( IECore.V3f( 1, 0, 0 ) * i ) )
+			self.assertEqual( d["out"].transform( path ), imath.M44f().translate( imath.V3f( 1, 0, 0 ) * i ) )
 
 	def testHierarchy( self ) :
 
@@ -194,7 +196,7 @@ class DuplicateTest( GafferSceneTest.SceneTestCase ) :
 		d = GafferScene.Duplicate()
 		d["in"].setInput( s["out"] )
 		d["target"].setValue( "/sphere" )
-		d["transform"]["translate"].setValue( IECore.V3f( 1, 0, 0 ) )
+		d["transform"]["translate"].setValue( imath.V3f( 1, 0, 0 ) )
 
 		with Gaffer.PerformanceMonitor() as m :
 			self.assertEqual( s["out"]["setNames"].hash(), d["out"]["setNames"].hash() )

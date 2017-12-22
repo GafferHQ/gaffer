@@ -35,6 +35,8 @@
 #
 ##########################################################################
 
+import imath
+
 import IECore
 import IECoreScene
 
@@ -52,12 +54,12 @@ class InstancerTest( GafferSceneTest.SceneTestCase ) :
 		instanceInput = GafferSceneTest.CompoundObjectSource()
 		instanceInput["in"].setValue(
 			IECore.CompoundObject( {
-				"bound" : IECore.Box3fData( IECore.Box3f( IECore.V3f( -2 ), IECore.V3f( 2 ) ) ),
+				"bound" : IECore.Box3fData( imath.Box3f( imath.V3f( -2 ), imath.V3f( 2 ) ) ),
 				"children" : {
 					"sphere" : {
 						"object" : sphere,
 						"bound" : IECore.Box3fData( sphere.bound() ),
-						"transform" : IECore.M44fData( IECore.M44f.createScaled( IECore.V3f( 2 ) ) ),
+						"transform" : IECore.M44fData( imath.M44f().scale( imath.V3f( 2 ) ) ),
 					},
 				}
 			} )
@@ -65,17 +67,17 @@ class InstancerTest( GafferSceneTest.SceneTestCase ) :
 
 		seeds = IECoreScene.PointsPrimitive(
 			IECore.V3fVectorData(
-				[ IECore.V3f( 1, 0, 0 ), IECore.V3f( 1, 1, 0 ), IECore.V3f( 0, 1, 0 ), IECore.V3f( 0, 0, 0 ) ]
+				[ imath.V3f( 1, 0, 0 ), imath.V3f( 1, 1, 0 ), imath.V3f( 0, 1, 0 ), imath.V3f( 0, 0, 0 ) ]
 			)
 		)
 		seedsInput = GafferSceneTest.CompoundObjectSource()
 		seedsInput["in"].setValue(
 			IECore.CompoundObject( {
-				"bound" : IECore.Box3fData( IECore.Box3f( IECore.V3f( 1, 0, 0 ), IECore.V3f( 2, 1, 0 ) ) ),
+				"bound" : IECore.Box3fData( imath.Box3f( imath.V3f( 1, 0, 0 ), imath.V3f( 2, 1, 0 ) ) ),
 				"children" : {
 					"seeds" : {
 						"bound" : IECore.Box3fData( seeds.bound() ),
-						"transform" : IECore.M44fData( IECore.M44f.createTranslated( IECore.V3f( 1, 0, 0 ) ) ),
+						"transform" : IECore.M44fData( imath.M44f().translate( imath.V3f( 1, 0, 0 ) ) ),
 						"object" : seeds,
 					},
 				},
@@ -89,18 +91,18 @@ class InstancerTest( GafferSceneTest.SceneTestCase ) :
 		instancer["name"].setValue( "instances" )
 
 		self.assertEqual( instancer["out"].object( "/" ), IECore.NullObject() )
-		self.assertEqual( instancer["out"].transform( "/" ), IECore.M44f() )
-		self.assertEqual( instancer["out"].bound( "/" ), IECore.Box3f( IECore.V3f( -1, -2, -2 ), IECore.V3f( 4, 3, 2 ) ) )
+		self.assertEqual( instancer["out"].transform( "/" ), imath.M44f() )
+		self.assertEqual( instancer["out"].bound( "/" ), imath.Box3f( imath.V3f( -1, -2, -2 ), imath.V3f( 4, 3, 2 ) ) )
 		self.assertEqual( instancer["out"].childNames( "/" ), IECore.InternedStringVectorData( [ "seeds" ] ) )
 
 		self.assertEqual( instancer["out"].object( "/seeds" ), seeds )
-		self.assertEqual( instancer["out"].transform( "/seeds" ), IECore.M44f().createTranslated( IECore.V3f( 1, 0, 0 ) ) )
-		self.assertEqual( instancer["out"].bound( "/seeds" ), IECore.Box3f( IECore.V3f( -2, -2, -2 ), IECore.V3f( 3, 3, 2 ) ) )
+		self.assertEqual( instancer["out"].transform( "/seeds" ), imath.M44f().translate( imath.V3f( 1, 0, 0 ) ) )
+		self.assertEqual( instancer["out"].bound( "/seeds" ), imath.Box3f( imath.V3f( -2, -2, -2 ), imath.V3f( 3, 3, 2 ) ) )
 		self.assertEqual( instancer["out"].childNames( "/seeds" ), IECore.InternedStringVectorData( [ "instances" ] ) )
 
 		self.assertEqual( instancer["out"].object( "/seeds/instances" ), IECore.NullObject() )
-		self.assertEqual( instancer["out"].transform( "/seeds/instances" ), IECore.M44f() )
-		self.assertEqual( instancer["out"].bound( "/seeds/instances" ), IECore.Box3f( IECore.V3f( -2, -2, -2 ), IECore.V3f( 3, 3, 2 ) ) )
+		self.assertEqual( instancer["out"].transform( "/seeds/instances" ), imath.M44f() )
+		self.assertEqual( instancer["out"].bound( "/seeds/instances" ), imath.Box3f( imath.V3f( -2, -2, -2 ), imath.V3f( 3, 3, 2 ) ) )
 		self.assertEqual( instancer["out"].childNames( "/seeds/instances" ), IECore.InternedStringVectorData( [ "0", "1", "2", "3" ] ) )
 
 		for i in range( 0, 4 ) :
@@ -108,12 +110,12 @@ class InstancerTest( GafferSceneTest.SceneTestCase ) :
 			instancePath = "/seeds/instances/%d" % i
 
 			self.assertEqual( instancer["out"].object( instancePath ), IECore.NullObject() )
-			self.assertEqual( instancer["out"].transform( instancePath ), IECore.M44f.createTranslated( seeds["P"].data[i] ) )
-			self.assertEqual( instancer["out"].bound( instancePath ), IECore.Box3f( IECore.V3f( -2 ), IECore.V3f( 2 ) ) )
+			self.assertEqual( instancer["out"].transform( instancePath ), imath.M44f().translate( seeds["P"].data[i] ) )
+			self.assertEqual( instancer["out"].bound( instancePath ), imath.Box3f( imath.V3f( -2 ), imath.V3f( 2 ) ) )
 			self.assertEqual( instancer["out"].childNames( instancePath ), IECore.InternedStringVectorData( [ "sphere" ] ) )
 
 			self.assertEqual( instancer["out"].object( instancePath + "/sphere" ), sphere )
-			self.assertEqual( instancer["out"].transform( instancePath + "/sphere" ), IECore.M44f.createScaled( IECore.V3f( 2 ) ) )
+			self.assertEqual( instancer["out"].transform( instancePath + "/sphere" ), imath.M44f().scale( imath.V3f( 2 ) ) )
 			self.assertEqual( instancer["out"].bound( instancePath + "/sphere" ), sphere.bound() )
 			self.assertEqual( instancer["out"].childNames( instancePath + "/sphere" ), IECore.InternedStringVectorData() )
 
@@ -123,12 +125,12 @@ class InstancerTest( GafferSceneTest.SceneTestCase ) :
 		instanceInput = GafferSceneTest.CompoundObjectSource()
 		instanceInput["in"].setValue(
 			IECore.CompoundObject( {
-				"bound" : IECore.Box3fData( IECore.Box3f( IECore.V3f( -2 ), IECore.V3f( 2 ) ) ),
+				"bound" : IECore.Box3fData( imath.Box3f( imath.V3f( -2 ), imath.V3f( 2 ) ) ),
 				"children" : {
 					"sphere" : {
 						"object" : sphere,
 						"bound" : IECore.Box3fData( sphere.bound() ),
-						"transform" : IECore.M44fData( IECore.M44f.createScaled( IECore.V3f( 2 ) ) ),
+						"transform" : IECore.M44fData( imath.M44f().scale( imath.V3f( 2 ) ) ),
 					},
 				}
 			} )
@@ -136,17 +138,17 @@ class InstancerTest( GafferSceneTest.SceneTestCase ) :
 
 		seeds = IECoreScene.PointsPrimitive(
 			IECore.V3fVectorData(
-				[ IECore.V3f( 1, 0, 0 ), IECore.V3f( 1, 1, 0 ), IECore.V3f( 0, 1, 0 ), IECore.V3f( 0, 0, 0 ) ]
+				[ imath.V3f( 1, 0, 0 ), imath.V3f( 1, 1, 0 ), imath.V3f( 0, 1, 0 ), imath.V3f( 0, 0, 0 ) ]
 			)
 		)
 		seedsInput = GafferSceneTest.CompoundObjectSource()
 		seedsInput["in"].setValue(
 			IECore.CompoundObject( {
-				"bound" : IECore.Box3fData( IECore.Box3f( IECore.V3f( 1, 0, 0 ), IECore.V3f( 2, 1, 0 ) ) ),
+				"bound" : IECore.Box3fData( imath.Box3f( imath.V3f( 1, 0, 0 ), imath.V3f( 2, 1, 0 ) ) ),
 				"children" : {
 					"seeds" : {
 						"bound" : IECore.Box3fData( seeds.bound() ),
-						"transform" : IECore.M44fData( IECore.M44f.createTranslated( IECore.V3f( 1, 0, 0 ) ) ),
+						"transform" : IECore.M44fData( imath.M44f().translate( imath.V3f( 1, 0, 0 ) ) ),
 						"object" : seeds,
 					},
 				},
@@ -273,7 +275,7 @@ class InstancerTest( GafferSceneTest.SceneTestCase ) :
 		script = Gaffer.ScriptNode()
 
 		script["plane"] = GafferScene.Plane()
-		script["plane"]["divisions"].setValue( IECore.V2i( 20 ) )
+		script["plane"]["divisions"].setValue( imath.V2i( 20 ) )
 
 		script["sphere"] = GafferScene.Sphere()
 
@@ -361,7 +363,7 @@ class InstancerTest( GafferSceneTest.SceneTestCase ) :
 		script = Gaffer.ScriptNode()
 
 		script["plane"] = GafferScene.Plane()
-		script["plane"]["divisions"].setValue( IECore.V2i( 20 ) )
+		script["plane"]["divisions"].setValue( imath.V2i( 20 ) )
 
 		script["sphere"] = GafferScene.Sphere()
 
@@ -429,7 +431,7 @@ class InstancerTest( GafferSceneTest.SceneTestCase ) :
 		script = Gaffer.ScriptNode()
 
 		script["plane"] = GafferScene.Plane()
-		script["plane"]["divisions"].setValue( IECore.V2i( 20 ) )
+		script["plane"]["divisions"].setValue( imath.V2i( 20 ) )
 
 		script["sphere"] = GafferScene.Sphere()
 
@@ -464,7 +466,7 @@ class InstancerTest( GafferSceneTest.SceneTestCase ) :
 		script = Gaffer.ScriptNode()
 
 		script["plane"] = GafferScene.Plane()
-		script["plane"]["divisions"].setValue( IECore.V2i( 20 ) )
+		script["plane"]["divisions"].setValue( imath.V2i( 20 ) )
 
 		script["sphere"] = GafferScene.Sphere()
 
@@ -487,21 +489,21 @@ class InstancerTest( GafferSceneTest.SceneTestCase ) :
 			context.set( "a", 1 )
 			context.set( "a", 2.0 )
 			context.set( "a", "a" )
-			context.set( "a", IECore.V2i() )
-			context.set( "a", IECore.V3i() )
-			context.set( "a", IECore.V2f() )
-			context.set( "a", IECore.V3f() )
-			context.set( "a", IECore.Color3f() )
+			context.set( "a", imath.V2i() )
+			context.set( "a", imath.V3i() )
+			context.set( "a", imath.V2f() )
+			context.set( "a", imath.V3f() )
+			context.set( "a", imath.Color3f() )
 			context.set( "a", IECore.BoolData( True ) )
 
 			context["b"] = 1
 			context["b"] = 2.0
 			context["b"] = "b"
-			context["b"] = IECore.V2i()
-			context["b"] = IECore.V3i()
-			context["b"] = IECore.V2f()
-			context["b"] = IECore.V3f()
-			context["b"] = IECore.Color3f()
+			context["b"] = imath.V2i()
+			context["b"] = imath.V3i()
+			context["b"] = imath.V2f()
+			context["b"] = imath.V3f()
+			context["b"] = imath.Color3f()
 			context["b"] = IECore.BoolData( True )
 
 			with Gaffer.BlockedConnection( traverseConnection ) :
@@ -522,7 +524,7 @@ class InstancerTest( GafferSceneTest.SceneTestCase ) :
 		script = Gaffer.ScriptNode()
 
 		script["plane"] = GafferScene.Plane()
-		script["plane"]["divisions"].setValue( IECore.V2i( 20 ) )
+		script["plane"]["divisions"].setValue( imath.V2i( 20 ) )
 
 		script["sphere"] = GafferScene.Sphere()
 

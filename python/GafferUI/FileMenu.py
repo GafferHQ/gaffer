@@ -38,6 +38,7 @@
 import re
 import os
 import functools
+import imath
 
 import IECore
 
@@ -302,10 +303,10 @@ def importFile( menu ) :
 
 			fallbackPosition = scope.nodeGraph.bound().size() / 2
 			fallbackPosition = scope.nodeGraph.graphGadgetWidget().getViewportGadget().rasterToGadgetSpace(
-				IECore.V2f( fallbackPosition.x, fallbackPosition.y ),
+				imath.V2f( fallbackPosition.x, fallbackPosition.y ),
 				gadget = scope.nodeGraph.graphGadget()
 			).p0
-			fallbackPosition = IECore.V2f( fallbackPosition.x, fallbackPosition.y )
+			fallbackPosition = imath.V2f( fallbackPosition.x, fallbackPosition.y )
 
 			scope.nodeGraph.graphGadget().getLayout().positionNodes(
 				scope.nodeGraph.graphGadget(), scope.script.selection(), fallbackPosition

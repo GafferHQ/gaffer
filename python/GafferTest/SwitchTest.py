@@ -35,6 +35,7 @@
 ##########################################################################
 
 import unittest
+import imath
 
 import IECore
 import Gaffer
@@ -175,9 +176,9 @@ class SwitchTest( GafferTest.TestCase ) :
 	def testCompoundPlugs( self ) :
 
 		n = self.colorSwitch()
-		n["in"][0].setInput( self.colorPlug( IECore.Color3f( 0, 0.1, 0.2 ) ) )
-		n["in"][1].setInput( self.colorPlug( IECore.Color3f( 1, 1.1, 1.2 ) ) )
-		n["in"][2].setInput( self.colorPlug( IECore.Color3f( 2, 2.1, 2.2 ) ) )
+		n["in"][0].setInput( self.colorPlug( imath.Color3f( 0, 0.1, 0.2 ) ) )
+		n["in"][1].setInput( self.colorPlug( imath.Color3f( 1, 1.1, 1.2 ) ) )
+		n["in"][2].setInput( self.colorPlug( imath.Color3f( 2, 2.1, 2.2 ) ) )
 
 		n["index"].setValue( 0 )
 		self.assertEqual( n["out"].hash(), n["in"][0].hash() )
@@ -444,8 +445,8 @@ class SwitchTest( GafferTest.TestCase ) :
 
 		plug = s["n1"]["op1"]
 
-		connectionColor = IECore.Color3f( 0.1 , 0.2 , 0.3 )
-		noodleColor = IECore.Color3f( 0.4, 0.5 , 0.6 )
+		connectionColor = imath.Color3f( 0.1 , 0.2 , 0.3 )
+		noodleColor = imath.Color3f( 0.4, 0.5 , 0.6 )
 
 		Gaffer.Metadata.registerValue( plug, "connectionGadget:color", connectionColor )
 		Gaffer.Metadata.registerValue( plug, "nodule:color", noodleColor )

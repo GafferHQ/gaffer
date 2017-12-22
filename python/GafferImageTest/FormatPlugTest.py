@@ -36,6 +36,7 @@
 
 import unittest
 import inspect
+import imath
 
 import IECore
 
@@ -78,7 +79,7 @@ class FormatPlugTest( GafferImageTest.ImageTestCase ) :
 	def testValue( self ) :
 
 		p = GafferImage.FormatPlug()
-		v = GafferImage.Format( IECore.Box2i( IECore.V2i( 11, 12 ), IECore.V2i( 100, 200 ) ), 2 )
+		v = GafferImage.Format( imath.Box2i( imath.V2i( 11, 12 ), imath.V2i( 100, 200 ) ), 2 )
 
 		p.setValue( v )
 		self.assertEqual( p.getValue(), v )
@@ -180,17 +181,17 @@ class FormatPlugTest( GafferImageTest.ImageTestCase ) :
 			"""
 			f = parent["n1"]["user"]["f"]
 			b = f.getDisplayWindow()
-			b.min -= IECore.V2i( 10 )
-			b.max += IECore.V2i( 20 )
+			b.setMin( b.min() - imath.V2i( 10 ) )
+			b.setMax( b.max() + imath.V2i( 20 ) )
 			f.setPixelAspect( 0.5 )
 			f.setDisplayWindow( b )
 			parent["n2"]["user"]["f"] = f
 			"""
 		) )
 
-		s["n1"]["user"]["f"].setValue( GafferImage.Format( IECore.Box2i( IECore.V2i( 20, 30 ), IECore.V2i( 100, 110 ) ), 1 ) )
+		s["n1"]["user"]["f"].setValue( GafferImage.Format( imath.Box2i( imath.V2i( 20, 30 ), imath.V2i( 100, 110 ) ), 1 ) )
 
-		self.assertEqual( s["n2"]["user"]["f"].getValue(), GafferImage.Format( IECore.Box2i( IECore.V2i( 10, 20 ), IECore.V2i( 120, 130 ) ), 0.5 ) )
+		self.assertEqual( s["n2"]["user"]["f"].getValue(), GafferImage.Format( imath.Box2i( imath.V2i( 10, 20 ), imath.V2i( 120, 130 ) ), 0.5 ) )
 
 	def testDefaultExpression( self ) :
 

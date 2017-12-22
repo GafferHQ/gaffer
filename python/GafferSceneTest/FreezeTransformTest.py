@@ -35,6 +35,7 @@
 ##########################################################################
 
 import unittest
+import imath
 
 import IECore
 
@@ -47,27 +48,27 @@ class FreezeTransformTest( GafferSceneTest.SceneTestCase ) :
 	def test( self ) :
 
 		p = GafferScene.Plane()
-		p["transform"]["translate"].setValue( IECore.V3f( 1, 2, 3 ) )
+		p["transform"]["translate"].setValue( imath.V3f( 1, 2, 3 ) )
 
 		t = GafferScene.FreezeTransform()
 		t["in"].setInput( p["out"] )
 
 		self.assertSceneValid( t["out"] )
 
-		self.assertEqual( t["out"].transform( "/plane" ), IECore.M44f() )
-		self.assertEqual( t["out"].bound( "/plane" ), IECore.Box3f( IECore.V3f( 0.5, 1.5, 3 ), IECore.V3f( 1.5, 2.5, 3 ) ) )
-		self.assertEqual( t["out"].object( "/plane" ).bound(), IECore.Box3f( IECore.V3f( 0.5, 1.5, 3 ), IECore.V3f( 1.5, 2.5, 3 ) ) )
+		self.assertEqual( t["out"].transform( "/plane" ), imath.M44f() )
+		self.assertEqual( t["out"].bound( "/plane" ), imath.Box3f( imath.V3f( 0.5, 1.5, 3 ), imath.V3f( 1.5, 2.5, 3 ) ) )
+		self.assertEqual( t["out"].object( "/plane" ).bound(), imath.Box3f( imath.V3f( 0.5, 1.5, 3 ), imath.V3f( 1.5, 2.5, 3 ) ) )
 
 	def testFilter( self ) :
 
 		p1 = GafferScene.Plane()
-		p1["transform"]["translate"].setValue( IECore.V3f( 1, 2, 3 ) )
+		p1["transform"]["translate"].setValue( imath.V3f( 1, 2, 3 ) )
 
 		p2 = GafferScene.Plane()
-		p2["transform"]["translate"].setValue( IECore.V3f( 1, 2, 3 ) )
+		p2["transform"]["translate"].setValue( imath.V3f( 1, 2, 3 ) )
 
 		g = GafferScene.Group()
-		g["transform"]["translate"].setValue( IECore.V3f( 1, 0, 0 ) )
+		g["transform"]["translate"].setValue( imath.V3f( 1, 0, 0 ) )
 		g["in"][0].setInput( p1["out"] )
 		g["in"][1].setInput( p2["out"] )
 
@@ -80,26 +81,26 @@ class FreezeTransformTest( GafferSceneTest.SceneTestCase ) :
 
 		self.assertSceneValid( t["out"] )
 
-		self.assertEqual( t["out"].transform( "/group" ), IECore.M44f.createTranslated( IECore.V3f( 1, 0, 0 ) ) )
-		self.assertEqual( t["out"].transform( "/group/plane" ), IECore.M44f() )
-		self.assertEqual( t["out"].transform( "/group/plane1" ), IECore.M44f.createTranslated( IECore.V3f( 1, 2, 3 ) ) )
+		self.assertEqual( t["out"].transform( "/group" ), imath.M44f().translate( imath.V3f( 1, 0, 0 ) ) )
+		self.assertEqual( t["out"].transform( "/group/plane" ), imath.M44f() )
+		self.assertEqual( t["out"].transform( "/group/plane1" ), imath.M44f().translate( imath.V3f( 1, 2, 3 ) ) )
 
-		self.assertEqual( t["out"].bound( "/group/plane" ), IECore.Box3f( IECore.V3f( 0.5, 1.5, 3 ), IECore.V3f( 1.5, 2.5, 3 ) ) )
-		self.assertEqual( t["out"].bound( "/group/plane1" ), IECore.Box3f( IECore.V3f( -0.5, -0.5, 0 ), IECore.V3f( 0.5, 0.5, 0 ) ) )
+		self.assertEqual( t["out"].bound( "/group/plane" ), imath.Box3f( imath.V3f( 0.5, 1.5, 3 ), imath.V3f( 1.5, 2.5, 3 ) ) )
+		self.assertEqual( t["out"].bound( "/group/plane1" ), imath.Box3f( imath.V3f( -0.5, -0.5, 0 ), imath.V3f( 0.5, 0.5, 0 ) ) )
 
-		self.assertEqual( t["out"].object( "/group/plane" ).bound(), IECore.Box3f( IECore.V3f( 0.5, 1.5, 3 ), IECore.V3f( 1.5, 2.5, 3 ) ) )
-		self.assertEqual( t["out"].object( "/group/plane1" ).bound(), IECore.Box3f( IECore.V3f( -0.5, -0.5, 0 ), IECore.V3f( 0.5, 0.5, 0 ) ) )
+		self.assertEqual( t["out"].object( "/group/plane" ).bound(), imath.Box3f( imath.V3f( 0.5, 1.5, 3 ), imath.V3f( 1.5, 2.5, 3 ) ) )
+		self.assertEqual( t["out"].object( "/group/plane1" ).bound(), imath.Box3f( imath.V3f( -0.5, -0.5, 0 ), imath.V3f( 0.5, 0.5, 0 ) ) )
 
 		f["paths"].setValue( IECore.StringVectorData( [ "/group", "/group/plane" ] ) )
 
 		self.assertSceneValid( t["out"] )
 
-		self.assertEqual( t["out"].transform( "/group" ), IECore.M44f() )
-		self.assertEqual( t["out"].transform( "/group/plane" ), IECore.M44f() )
-		self.assertEqual( t["out"].transform( "/group/plane1" ), IECore.M44f.createTranslated( IECore.V3f( 1, 2, 3 ) ) )
+		self.assertEqual( t["out"].transform( "/group" ), imath.M44f() )
+		self.assertEqual( t["out"].transform( "/group/plane" ), imath.M44f() )
+		self.assertEqual( t["out"].transform( "/group/plane1" ), imath.M44f().translate( imath.V3f( 1, 2, 3 ) ) )
 
-		self.assertEqual( t["out"].bound( "/group/plane" ), IECore.Box3f( IECore.V3f( 1.5, 1.5, 3 ), IECore.V3f( 2.5, 2.5, 3 ) ) )
-		self.assertEqual( t["out"].bound( "/group/plane1" ), IECore.Box3f( IECore.V3f( 0.5, -0.5, 0 ), IECore.V3f( 1.5, 0.5, 0 ) ) )
+		self.assertEqual( t["out"].bound( "/group/plane" ), imath.Box3f( imath.V3f( 1.5, 1.5, 3 ), imath.V3f( 2.5, 2.5, 3 ) ) )
+		self.assertEqual( t["out"].bound( "/group/plane1" ), imath.Box3f( imath.V3f( 0.5, -0.5, 0 ), imath.V3f( 1.5, 0.5, 0 ) ) )
 
 	def testAffects( self ) :
 

@@ -34,6 +34,8 @@
 #
 ##########################################################################
 
+import imath
+
 import IECore
 
 import Gaffer
@@ -87,14 +89,14 @@ class RotateToolTest( GafferUITest.TestCase ) :
 		# the Y axis in world space, and the local Y axis onto the world
 		# Z axis.
 		self.assertTrue(
-			IECore.V3f( 0, 1, 0 ).equalWithAbsError(
-				IECore.V3f( 1, 0, 0 ) * script["group"]["out"].fullTransform( "/group/cube" ),
+			imath.V3f( 0, 1, 0 ).equalWithAbsError(
+				imath.V3f( 1, 0, 0 ) * script["group"]["out"].fullTransform( "/group/cube" ),
 				0.000001
 			)
 		)
 		self.assertTrue(
-			IECore.V3f( 0, 0, 1 ).equalWithAbsError(
-				IECore.V3f( 0, 1, 0 ) * script["group"]["out"].fullTransform( "/group/cube" ),
+			imath.V3f( 0, 0, 1 ).equalWithAbsError(
+				imath.V3f( 0, 1, 0 ) * script["group"]["out"].fullTransform( "/group/cube" ),
 				0.000001
 			)
 		)
@@ -125,8 +127,8 @@ class RotateToolTest( GafferUITest.TestCase ) :
 			tool.rotate( 2, 90 )
 
 		self.assertTrue(
-			IECore.V3f( 0, 1, 0 ).equalWithAbsError(
-				IECore.V3f( 1, 0, 0 ) * script["group"]["out"].fullTransform( "/group/cube" ),
+			imath.V3f( 0, 1, 0 ).equalWithAbsError(
+				imath.V3f( 1, 0, 0 ) * script["group"]["out"].fullTransform( "/group/cube" ),
 				0.000001
 			)
 		)
@@ -140,8 +142,8 @@ class RotateToolTest( GafferUITest.TestCase ) :
 			tool.rotate( 0, 90 )
 
 		self.assertTrue(
-			IECore.V3f( 0, 1, 0 ).equalWithAbsError(
-				IECore.V3f( 1, 0, 0 ) * script["group"]["out"].fullTransform( "/group/cube" ),
+			imath.V3f( 0, 1, 0 ).equalWithAbsError(
+				imath.V3f( 1, 0, 0 ) * script["group"]["out"].fullTransform( "/group/cube" ),
 				0.000001
 			)
 		)
@@ -155,8 +157,8 @@ class RotateToolTest( GafferUITest.TestCase ) :
 			tool.rotate( 2, 90 )
 
 		self.assertTrue(
-			IECore.V3f( 0, -1, 0 ).equalWithAbsError(
-				IECore.V3f( 1, 0, 0 ) * script["group"]["out"].fullTransform( "/group/cube" ),
+			imath.V3f( 0, -1, 0 ).equalWithAbsError(
+				imath.V3f( 1, 0, 0 ) * script["group"]["out"].fullTransform( "/group/cube" ),
 				0.000001
 			)
 		)
@@ -185,15 +187,15 @@ class RotateToolTest( GafferUITest.TestCase ) :
 		tool.rotate( 0, 90 )
 
 		self.assertTrue(
-			IECore.V3f( 0, 1, 0 ).equalWithAbsError(
-				IECore.V3f( 1, 0, 0 ) * script["transform"]["out"].fullTransform( "/plane" ),
+			imath.V3f( 0, 1, 0 ).equalWithAbsError(
+				imath.V3f( 1, 0, 0 ) * script["transform"]["out"].fullTransform( "/plane" ),
 				0.000001
 			)
 		)
 
 		self.assertTrue(
-			IECore.V3f( 0, 0, 1 ).equalWithAbsError(
-				IECore.V3f( 0, 1, 0 ) * script["transform"]["out"].fullTransform( "/plane" ),
+			imath.V3f( 0, 0, 1 ).equalWithAbsError(
+				imath.V3f( 0, 1, 0 ) * script["transform"]["out"].fullTransform( "/plane" ),
 				0.000001
 			)
 		)

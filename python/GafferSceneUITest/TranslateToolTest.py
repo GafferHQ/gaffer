@@ -34,6 +34,8 @@
 #
 ##########################################################################
 
+import imath
+
 import IECore
 
 import Gaffer
@@ -72,7 +74,7 @@ class TranslateToolTest( GafferUITest.TestCase ) :
 		self.assertTrue( tool.selection().upstreamScene.isSame( script["plane"]["out"] ) )
 		self.assertEqual( tool.selection().upstreamPath, "/plane" )
 		self.assertTrue( tool.selection().transformPlug.isSame( script["plane"]["transform"] ) )
-		self.assertEqual( tool.selection().transformSpace, IECore.M44f() )
+		self.assertEqual( tool.selection().transformSpace, imath.M44f() )
 
 		GafferSceneUI.ContextAlgo.setSelectedPaths( view.getContext(), GafferScene.PathMatcher( [ "/group" ] ) )
 		self.assertEqual( tool.selection().path, "/group" )
@@ -80,7 +82,7 @@ class TranslateToolTest( GafferUITest.TestCase ) :
 		self.assertTrue( tool.selection().upstreamScene.isSame( script["group"]["out"] ) )
 		self.assertEqual( tool.selection().upstreamPath, "/group" )
 		self.assertTrue( tool.selection().transformPlug.isSame( script["group"]["transform"] ) )
-		self.assertEqual( tool.selection().transformSpace, IECore.M44f() )
+		self.assertEqual( tool.selection().transformSpace, imath.M44f() )
 
 		script["transformFilter"]["paths"].setValue( IECore.StringVectorData( [ "/group" ] ) )
 		self.assertTrue( tool.selection().transformPlug.isSame( script["transform"]["transform"] ) )
@@ -94,7 +96,7 @@ class TranslateToolTest( GafferUITest.TestCase ) :
 		self.assertTrue( tool.selection().upstreamScene.isSame( script["transform"]["out"] ) )
 		self.assertEqual( tool.selection().upstreamPath, "/group" )
 		self.assertTrue( tool.selection().transformPlug.isSame( script["transform"]["transform"] ) )
-		self.assertEqual( tool.selection().transformSpace, IECore.M44f() )
+		self.assertEqual( tool.selection().transformSpace, imath.M44f() )
 
 		script["transform"]["enabled"].setValue( False )
 		self.assertTrue( tool.selection().transformPlug.isSame( script["group"]["transform"] ) )
@@ -112,11 +114,11 @@ class TranslateToolTest( GafferUITest.TestCase ) :
 		tool = GafferSceneUI.TranslateTool( view )
 		tool["active"].setValue( True )
 
-		tool.translate( IECore.V3f( 1, 0, 0 ) )
+		tool.translate( imath.V3f( 1, 0, 0 ) )
 
 		self.assertEqual(
 			script["plane"]["out"].fullTransform( "/plane" ).translation(),
-			IECore.V3f( 1, 0, 0 ),
+			imath.V3f( 1, 0, 0 ),
 		)
 
 	def testInteractionWithRotation( self ) :
@@ -134,10 +136,10 @@ class TranslateToolTest( GafferUITest.TestCase ) :
 		tool["orientation"].setValue( tool.Orientation.Local )
 
 		with Gaffer.UndoScope( script ) :
-			tool.translate( IECore.V3f( 1, 0, 0 ) )
+			tool.translate( imath.V3f( 1, 0, 0 ) )
 
 		self.assertTrue(
-			IECore.V3f( 1, 0, 0 ).equalWithAbsError(
+			imath.V3f( 1, 0, 0 ).equalWithAbsError(
 				script["plane"]["out"].fullTransform( "/plane" ).translation(),
 				0.0000001
 			)
@@ -147,10 +149,10 @@ class TranslateToolTest( GafferUITest.TestCase ) :
 		script["plane"]["transform"]["rotate"]["y"].setValue( 90 )
 
 		with Gaffer.UndoScope( script ) :
-			tool.translate( IECore.V3f( 1, 0, 0 ) )
+			tool.translate( imath.V3f( 1, 0, 0 ) )
 
 		self.assertTrue(
-			IECore.V3f( 0, 0, -1 ).equalWithAbsError(
+			imath.V3f( 0, 0, -1 ).equalWithAbsError(
 				script["plane"]["out"].fullTransform( "/plane" ).translation(),
 				0.0000001
 			)
@@ -173,10 +175,10 @@ class TranslateToolTest( GafferUITest.TestCase ) :
 		tool = GafferSceneUI.TranslateTool( view )
 		tool["active"].setValue( True )
 
-		tool.translate( IECore.V3f( 1, 0, 0 ) )
+		tool.translate( imath.V3f( 1, 0, 0 ) )
 
 		self.assertTrue(
-			IECore.V3f( 0, 0, -1 ).equalWithAbsError(
+			imath.V3f( 0, 0, -1 ).equalWithAbsError(
 				script["group"]["out"].fullTransform( "/group/plane" ).translation(),
 				0.0000001
 			)
@@ -189,7 +191,7 @@ class TranslateToolTest( GafferUITest.TestCase ) :
 		script["plane"] = GafferScene.Plane()
 		script["group"] = GafferScene.Group()
 		script["group"]["in"][0].setInput( script["plane"]["out"] )
-		script["group"]["transform"]["translate"].setValue( IECore.V3f( 1, 2, 3 ) )
+		script["group"]["transform"]["translate"].setValue( imath.V3f( 1, 2, 3 ) )
 
 		view = GafferSceneUI.SceneView()
 		view["in"].setInput( script["group"]["out"] )
@@ -198,11 +200,11 @@ class TranslateToolTest( GafferUITest.TestCase ) :
 		tool = GafferSceneUI.TranslateTool( view )
 		tool["active"].setValue( True )
 
-		tool.translate( IECore.V3f( -1, 0, 0 ) )
+		tool.translate( imath.V3f( -1, 0, 0 ) )
 
 		self.assertEqual(
 			script["group"]["out"].fullTransform( "/group/plane" ).translation(),
-			IECore.V3f( 0, 2, 3 ),
+			imath.V3f( 0, 2, 3 ),
 		)
 
 	def testOrientation( self ) :
@@ -228,10 +230,10 @@ class TranslateToolTest( GafferUITest.TestCase ) :
 		tool["orientation"].setValue( tool.Orientation.Local )
 
 		with Gaffer.UndoScope( script ) :
-			tool.translate( IECore.V3f( 1, 0, 0 ) )
+			tool.translate( imath.V3f( 1, 0, 0 ) )
 
 		self.assertTrue(
-			IECore.V3f( -1, 0, 0 ).equalWithAbsError(
+			imath.V3f( -1, 0, 0 ).equalWithAbsError(
 				script["group"]["out"].fullTransform( "/group/plane" ).translation(),
 				0.000001
 			)
@@ -243,10 +245,10 @@ class TranslateToolTest( GafferUITest.TestCase ) :
 		tool["orientation"].setValue( tool.Orientation.Parent )
 
 		with Gaffer.UndoScope( script ) :
-			tool.translate( IECore.V3f( 1, 0, 0 ) )
+			tool.translate( imath.V3f( 1, 0, 0 ) )
 
 		self.assertTrue(
-			IECore.V3f( 0, 0, -1 ).equalWithAbsError(
+			imath.V3f( 0, 0, -1 ).equalWithAbsError(
 				script["group"]["out"].fullTransform( "/group/plane" ).translation(),
 				0.0000001
 			)
@@ -258,10 +260,10 @@ class TranslateToolTest( GafferUITest.TestCase ) :
 		tool["orientation"].setValue( tool.Orientation.World )
 
 		with Gaffer.UndoScope( script ) :
-			tool.translate( IECore.V3f( 1, 0, 0 ) )
+			tool.translate( imath.V3f( 1, 0, 0 ) )
 
 		self.assertTrue(
-			IECore.V3f( 1, 0, 0 ).equalWithAbsError(
+			imath.V3f( 1, 0, 0 ).equalWithAbsError(
 				script["group"]["out"].fullTransform( "/group/plane" ).translation(),
 				0.0000001
 			)
@@ -272,7 +274,7 @@ class TranslateToolTest( GafferUITest.TestCase ) :
 		script = Gaffer.ScriptNode()
 
 		script["plane"] = GafferScene.Plane()
-		script["plane"]["transform"]["scale"].setValue( IECore.V3f( 10 ) )
+		script["plane"]["transform"]["scale"].setValue( imath.V3f( 10 ) )
 
 		view = GafferSceneUI.SceneView()
 		view["in"].setInput( script["plane"]["out"] )
@@ -282,10 +284,10 @@ class TranslateToolTest( GafferUITest.TestCase ) :
 		tool["active"].setValue( True )
 
 		with Gaffer.UndoScope( script ) :
-			tool.translate( IECore.V3f( 1, 0, 0 ) )
+			tool.translate( imath.V3f( 1, 0, 0 ) )
 
 		self.assertTrue(
-			IECore.V3f( 1, 0, 0 ).equalWithAbsError(
+			imath.V3f( 1, 0, 0 ).equalWithAbsError(
 				script["plane"]["out"].fullTransform( "/plane" ).translation(),
 				0.0000001
 			)
@@ -296,10 +298,10 @@ class TranslateToolTest( GafferUITest.TestCase ) :
 		tool["orientation"].setValue( tool.Orientation.Local )
 
 		with Gaffer.UndoScope( script ) :
-			tool.translate( IECore.V3f( 1, 0, 0 ) )
+			tool.translate( imath.V3f( 1, 0, 0 ) )
 
 		self.assertTrue(
-			IECore.V3f( 1, 0, 0 ).equalWithAbsError(
+			imath.V3f( 1, 0, 0 ).equalWithAbsError(
 				script["plane"]["out"].fullTransform( "/plane" ).translation(),
 				0.0000001
 			)
@@ -318,11 +320,11 @@ class TranslateToolTest( GafferUITest.TestCase ) :
 		tool = GafferSceneUI.TranslateTool( view )
 		tool["active"].setValue( True )
 
-		tool.translate( IECore.V3f( 1, 0, 0 ) )
+		tool.translate( imath.V3f( 1, 0, 0 ) )
 
 		self.assertEqual(
 			script["group"]["out"].fullTransform( "/group" ).translation(),
-			IECore.V3f( 1, 0, 0 ),
+			imath.V3f( 1, 0, 0 ),
 		)
 
 	def testTransform( self ) :
@@ -347,10 +349,10 @@ class TranslateToolTest( GafferUITest.TestCase ) :
 		tool["active"].setValue( True )
 		tool["orientation"].setValue( tool.Orientation.Local )
 
-		tool.translate( IECore.V3f( 1, 0, 0 ) )
+		tool.translate( imath.V3f( 1, 0, 0 ) )
 
 		self.assertTrue(
-			IECore.V3f( 0, 0, -1 ).equalWithAbsError(
+			imath.V3f( 0, 0, -1 ).equalWithAbsError(
 				script["transform"]["out"].fullTransform( "/plane" ).translation(),
 				0.0000001
 			)
@@ -378,10 +380,10 @@ class TranslateToolTest( GafferUITest.TestCase ) :
 		tool["active"].setValue( True )
 		tool["orientation"].setValue( tool.Orientation.Local )
 
-		tool.translate( IECore.V3f( 1, 0, 0 ) )
+		tool.translate( imath.V3f( 1, 0, 0 ) )
 
 		self.assertTrue(
-			IECore.V3f( 0, 0, -1 ).equalWithAbsError(
+			imath.V3f( 0, 0, -1 ).equalWithAbsError(
 				script["transform"]["out"].fullTransform( "/plane" ).translation(),
 				0.0000001
 			)

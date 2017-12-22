@@ -38,6 +38,7 @@
 import os
 import unittest
 import subprocess32 as subprocess
+import imath
 
 import IECore
 
@@ -129,13 +130,13 @@ class ColorSpaceTest( GafferImageTest.ImageTestCase ) :
 		o["outputSpace"].setValue( "sRGB" )
 
 		self.assertNotEqual(
-			o["out"].channelDataHash( "R", IECore.V2i( 0 ) ),
-			o["out"].channelDataHash( "G", IECore.V2i( 0 ) )
+			o["out"].channelDataHash( "R", imath.V2i( 0 ) ),
+			o["out"].channelDataHash( "G", imath.V2i( 0 ) )
 		)
 
 		self.assertNotEqual(
-			o["out"].channelData( "R", IECore.V2i( 0 ) ),
-			o["out"].channelData( "G", IECore.V2i( 0 ) )
+			o["out"].channelData( "R", imath.V2i( 0 ) ),
+			o["out"].channelData( "G", imath.V2i( 0 ) )
 		)
 
 	def testPassThrough( self ) :

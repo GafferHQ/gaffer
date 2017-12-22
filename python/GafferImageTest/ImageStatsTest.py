@@ -36,6 +36,7 @@
 
 import os
 import unittest
+import imath
 
 import IECore
 
@@ -58,14 +59,14 @@ class ImageStatsTest( GafferImageTest.ImageTestCase ) :
 		s["area"].setValue( r["out"]["format"].getValue().getDisplayWindow() )
 
 		s["channels"].setValue( IECore.StringVectorData( [ "", "G", "B" ] ) )
-		self.__assertColour( s["average"].getValue(), IECore.Color4f( 0., 0.0744, 0.1250, 1. ) )
-		self.__assertColour( s["min"].getValue(), IECore.Color4f( 0, 0, 0, 1. ) )
-		self.__assertColour( s["max"].getValue(), IECore.Color4f( 0, 0.5, 0.5, 1. ) )
+		self.__assertColour( s["average"].getValue(), imath.Color4f( 0., 0.0744, 0.1250, 1. ) )
+		self.__assertColour( s["min"].getValue(), imath.Color4f( 0, 0, 0, 1. ) )
+		self.__assertColour( s["max"].getValue(), imath.Color4f( 0, 0.5, 0.5, 1. ) )
 
 		s["channels"].setValue( IECore.StringVectorData( [ "R", "", "B" ] ) )
-		self.__assertColour( s["average"].getValue(), IECore.Color4f( 0.0544, 0, 0.1250, 1. ) )
-		self.__assertColour( s["min"].getValue(), IECore.Color4f( 0, 0, 0, 1. ) )
-		self.__assertColour( s["max"].getValue(), IECore.Color4f( 0.5, 0, 0.5, 1. ) )
+		self.__assertColour( s["average"].getValue(), imath.Color4f( 0.0544, 0, 0.1250, 1. ) )
+		self.__assertColour( s["min"].getValue(), imath.Color4f( 0, 0, 0, 1. ) )
+		self.__assertColour( s["max"].getValue(), imath.Color4f( 0.5, 0, 0.5, 1. ) )
 
 	def testDisconnectedDirty( self ) :
 
@@ -135,9 +136,9 @@ class ImageStatsTest( GafferImageTest.ImageTestCase ) :
 		s["channels"].setValue( IECore.StringVectorData( [ "R", "G", "B", "A" ] ) )
 
 		s["area"].setValue( r["out"]["format"].getValue().getDisplayWindow() )
-		self.__assertColour( s["average"].getValue(), IECore.Color4f( 0.0544, 0.0744, 0.1250, 0.2537 ) )
-		self.__assertColour( s["min"].getValue(), IECore.Color4f( 0, 0, 0, 0 ) )
-		self.__assertColour( s["max"].getValue(), IECore.Color4f( 0.5, 0.5, 0.5, 0.875 ) )
+		self.__assertColour( s["average"].getValue(), imath.Color4f( 0.0544, 0.0744, 0.1250, 0.2537 ) )
+		self.__assertColour( s["min"].getValue(), imath.Color4f( 0, 0, 0, 0 ) )
+		self.__assertColour( s["max"].getValue(), imath.Color4f( 0.5, 0.5, 0.5, 0.875 ) )
 
 	# Test that we can change the ROI and the outputs are correct.
 	def testROI( self ) :
@@ -149,15 +150,15 @@ class ImageStatsTest( GafferImageTest.ImageTestCase ) :
 		s["in"].setInput( r["out"] )
 		s["channels"].setValue( IECore.StringVectorData( [ "R", "G", "B", "A" ] ) )
 
-		s["area"].setValue( IECore.Box2i( IECore.V2i( 20, 20 ), IECore.V2i( 25, 25 ) ) )
-		self.__assertColour( s["average"].getValue(), IECore.Color4f( 0.5, 0, 0, 0.5 ) )
-		self.__assertColour( s["max"].getValue(), IECore.Color4f( 0.5, 0, 0, 0.5 ) )
-		self.__assertColour( s["min"].getValue(), IECore.Color4f( 0.5, 0, 0, 0.5 ) )
+		s["area"].setValue( imath.Box2i( imath.V2i( 20, 20 ), imath.V2i( 25, 25 ) ) )
+		self.__assertColour( s["average"].getValue(), imath.Color4f( 0.5, 0, 0, 0.5 ) )
+		self.__assertColour( s["max"].getValue(), imath.Color4f( 0.5, 0, 0, 0.5 ) )
+		self.__assertColour( s["min"].getValue(), imath.Color4f( 0.5, 0, 0, 0.5 ) )
 
-		s["area"].setValue( IECore.Box2i( IECore.V2i( 20, 20 ), IECore.V2i( 41, 30 ) ) )
-		self.__assertColour( s["average"].getValue(), IECore.Color4f( 0.4048, 0.1905, 0, 0.5952 ) )
-		self.__assertColour( s["min"].getValue(), IECore.Color4f( 0.25, 0, 0, 0.5 ) )
-		self.__assertColour( s["max"].getValue(), IECore.Color4f( 0.5, 0.5, 0, 0.75 ) )
+		s["area"].setValue( imath.Box2i( imath.V2i( 20, 20 ), imath.V2i( 41, 30 ) ) )
+		self.__assertColour( s["average"].getValue(), imath.Color4f( 0.4048, 0.1905, 0, 0.5952 ) )
+		self.__assertColour( s["min"].getValue(), imath.Color4f( 0.25, 0, 0, 0.5 ) )
+		self.__assertColour( s["max"].getValue(), imath.Color4f( 0.5, 0.5, 0, 0.75 ) )
 
 	def testMin( self ) :
 
@@ -183,8 +184,8 @@ class ImageStatsTest( GafferImageTest.ImageTestCase ) :
 		s["area"].setValue( c["out"]["format"].getValue().getDisplayWindow() )
 		s["channels"].setValue( IECore.StringVectorData( [ "A", "A", "A", "A" ] ) )
 
-		self.assertEqual( s["min"].getValue(), IECore.Color4f( 1 ) )
-		self.assertEqual( s["max"].getValue(), IECore.Color4f( 1 ) )
+		self.assertEqual( s["min"].getValue(), imath.Color4f( 1 ) )
+		self.assertEqual( s["max"].getValue(), imath.Color4f( 1 ) )
 
 	def __assertColour( self, colour1, colour2 ) :
 		for i in range( 0, 4 ):

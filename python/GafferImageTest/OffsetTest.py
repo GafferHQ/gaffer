@@ -36,6 +36,7 @@
 
 import os
 import unittest
+import imath
 
 import IECore
 
@@ -54,7 +55,7 @@ class OffsetTest( GafferImageTest.ImageTestCase ) :
 		o = GafferImage.Offset()
 		o["in"].setInput( c["out"] )
 
-		self.assertEqual( o["offset"].getValue(), IECore.V2i( 0 ) )
+		self.assertEqual( o["offset"].getValue(), imath.V2i( 0 ) )
 		self.assertImageHashesEqual( o["out"], c["out"] )
 		self.assertImagesEqual( o["out"], c["out"] )
 
@@ -65,16 +66,16 @@ class OffsetTest( GafferImageTest.ImageTestCase ) :
 
 		self.assertEqual(
 			c["out"]["dataWindow"].getValue(),
-			IECore.Box2i( IECore.V2i( 0 ), IECore.V2i( 2 ) )
+			imath.Box2i( imath.V2i( 0 ), imath.V2i( 2 ) )
 		)
 
 		o = GafferImage.Offset()
 		o["in"].setInput( c["out"] )
-		o["offset"].setValue( IECore.V2i( 1 ) )
+		o["offset"].setValue( imath.V2i( 1 ) )
 
 		self.assertEqual(
 			o["out"]["dataWindow"].getValue(),
-			IECore.Box2i( IECore.V2i( 1 ), IECore.V2i( 3 ) )
+			imath.Box2i( imath.V2i( 1 ), imath.V2i( 3 ) )
 		)
 
 	def testChannelData( self ) :
@@ -84,7 +85,7 @@ class OffsetTest( GafferImageTest.ImageTestCase ) :
 
 		o = GafferImage.Offset()
 		o["in"].setInput( c["out"] )
-		o["offset"].setValue( IECore.V2i( 1 ) )
+		o["offset"].setValue( imath.V2i( 1 ) )
 
 		def sample( image, channelName, pos ) :
 
@@ -94,14 +95,14 @@ class OffsetTest( GafferImageTest.ImageTestCase ) :
 		for yOffset in range( -10, 10 ) :
 			for xOffset in range( -10, 10 ) :
 
-				o["offset"].setValue( IECore.V2i( xOffset, yOffset ) )
+				o["offset"].setValue( imath.V2i( xOffset, yOffset ) )
 
 				for y in range( 0, 2 ) :
 					for x in range( 0, 2 ) :
 						for channelName in ( "R", "G", "B", "A" ) :
 							self.assertEqual(
-								sample( o["out"], channelName, IECore.V2i( x + xOffset, y + yOffset ) ),
-								sample( c["out"], channelName, IECore.V2i( x, y ) ),
+								sample( o["out"], channelName, imath.V2i( x + xOffset, y + yOffset ) ),
+								sample( c["out"], channelName, imath.V2i( x, y ) ),
 						)
 
 	def testMultipleOfTileSize( self ) :
@@ -113,13 +114,13 @@ class OffsetTest( GafferImageTest.ImageTestCase ) :
 		o["in"].setInput( c["out"] )
 
 		for offset in [
-			IECore.V2i( 0, 1 ),
-			IECore.V2i( 1, 0 ),
-			IECore.V2i( 2, 0 ),
-			IECore.V2i( 2, 1 ),
-			IECore.V2i( 2, -3 ),
-			IECore.V2i( -2, 3 ),
-			IECore.V2i( -1, -1 ),
+			imath.V2i( 0, 1 ),
+			imath.V2i( 1, 0 ),
+			imath.V2i( 2, 0 ),
+			imath.V2i( 2, 1 ),
+			imath.V2i( 2, -3 ),
+			imath.V2i( -2, 3 ),
+			imath.V2i( -1, -1 ),
 		] :
 
 			offset *= GafferImage.ImagePlug.tileSize()
@@ -127,11 +128,11 @@ class OffsetTest( GafferImageTest.ImageTestCase ) :
 
 			self.assertEqual(
 				o["out"].channelDataHash( "R", offset ),
-				c["out"].channelDataHash( "R", IECore.V2i( 0 ) ),
+				c["out"].channelDataHash( "R", imath.V2i( 0 ) ),
 			)
 			self.assertEqual(
 				o["out"].channelData( "R", offset ),
-				c["out"].channelData( "R", IECore.V2i( 0 ) ),
+				c["out"].channelData( "R", imath.V2i( 0 ) ),
 			)
 
 	def testOffsetBack( self ) :
@@ -141,11 +142,11 @@ class OffsetTest( GafferImageTest.ImageTestCase ) :
 
 		o1 = GafferImage.Offset()
 		o1["in"].setInput( c["out"] )
-		o1["offset"].setValue( IECore.V2i( 101, -45 ) )
+		o1["offset"].setValue( imath.V2i( 101, -45 ) )
 
 		o2 = GafferImage.Offset()
 		o2["in"].setInput( o1["out"] )
-		o2["offset"].setValue( IECore.V2i( -101, 45 ) )
+		o2["offset"].setValue( imath.V2i( -101, 45 ) )
 
 		self.assertImagesEqual( c["out"], o2["out"] )
 

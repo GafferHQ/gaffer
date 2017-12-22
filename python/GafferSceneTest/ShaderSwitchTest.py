@@ -35,6 +35,7 @@
 ##########################################################################
 
 import unittest
+import imath
 
 import IECore
 
@@ -107,8 +108,8 @@ class ShaderSwitchTest( GafferSceneTest.SceneTestCase ) :
 		shader1 = GafferSceneTest.TestShader()
 		shader2 = GafferSceneTest.TestShader()
 
-		shader1["parameters"]["c"].setValue( IECore.Color3f( 0 ) )
-		shader2["parameters"]["c"].setValue( IECore.Color3f( 1 ) )
+		shader1["parameters"]["c"].setValue( imath.Color3f( 0 ) )
+		shader2["parameters"]["c"].setValue( imath.Color3f( 1 ) )
 
 		switch = GafferScene.ShaderSwitch()
 		switch.setup( shader1["parameters"]["c"] )
@@ -126,7 +127,7 @@ class ShaderSwitchTest( GafferSceneTest.SceneTestCase ) :
 			network = shader3.attributes()["test:surface"]
 
 			self.assertEqual( len( network ), 2 )
-			self.assertEqual( network[0].parameters["c"].value, IECore.Color3f( i ) )
+			self.assertEqual( network[0].parameters["c"].value, imath.Color3f( i ) )
 
 	def testContextSensitiveIndex( self ) :
 

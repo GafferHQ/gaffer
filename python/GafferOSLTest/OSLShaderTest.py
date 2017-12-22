@@ -36,6 +36,7 @@
 
 import os
 import unittest
+import imath
 
 import IECore
 
@@ -68,9 +69,9 @@ class OSLShaderTest( GafferOSLTest.OSLTestCase ) :
 
 		self.assertEqual( n["parameters"]["i"].defaultValue(), 10 )
 		self.assertEqual( n["parameters"]["f"].defaultValue(), 1 )
-		self.assertEqual( n["parameters"]["c"].defaultValue(), IECore.Color3f( 1, 2, 3 ) )
+		self.assertEqual( n["parameters"]["c"].defaultValue(), imath.Color3f( 1, 2, 3 ) )
 		self.assertEqual( n["parameters"]["s"].defaultValue(), "s" )
-		self.assertEqual( n["parameters"]["m"].defaultValue(), IECore.M44f() )
+		self.assertEqual( n["parameters"]["m"].defaultValue(), imath.M44f() )
 
 		self.assertEqual( n["out"].typeId(), Gaffer.Plug.staticTypeId() )
 
@@ -80,9 +81,9 @@ class OSLShaderTest( GafferOSLTest.OSLTestCase ) :
 		self.assertEqual( network[0].type, "osl:surface" )
 		self.assertEqual( network[0].parameters["i"], IECore.IntData( 10 ) )
 		self.assertEqual( network[0].parameters["f"], IECore.FloatData( 1 ) )
-		self.assertEqual( network[0].parameters["c"], IECore.Color3fData( IECore.Color3f( 1, 2, 3 ) ) )
+		self.assertEqual( network[0].parameters["c"], IECore.Color3fData( imath.Color3f( 1, 2, 3 ) ) )
 		self.assertEqual( network[0].parameters["s"], IECore.StringData( "s" ) )
-		self.assertEqual( network[0].parameters["m"], IECore.M44fData( IECore.M44f() ) )
+		self.assertEqual( network[0].parameters["m"], IECore.M44fData( imath.M44f() ) )
 
 	def testOutputTypes( self ) :
 
@@ -129,7 +130,7 @@ class OSLShaderTest( GafferOSLTest.OSLTestCase ) :
 		self.assertEqual( network[1].type, "osl:surface" )
 		self.assertEqual( network[1].parameters["i"], IECore.StringData( "link:" + network[0].parameters["__handle"].value + ".i" ) )
 		self.assertEqual( network[1].parameters["f"], IECore.FloatData( 1 ) )
-		self.assertEqual( network[1].parameters["c"], IECore.Color3fData( IECore.Color3f( 1, 2, 3 ) ) )
+		self.assertEqual( network[1].parameters["c"], IECore.Color3fData( imath.Color3f( 1, 2, 3 ) ) )
 		self.assertEqual( network[1].parameters["s"], IECore.StringData( "s" ) )
 		self.assertEqual( network[0].name, outputTypesShader )
 		self.assertEqual( network[0].type, "osl:shader" )
@@ -197,12 +198,12 @@ class OSLShaderTest( GafferOSLTest.OSLTestCase ) :
 		self.assertEqual( n["parameters"]["s"].keys(), [ "i", "f", "c", "s" ] )
 		self.assertEqual( n["parameters"]["s"]["i"].defaultValue(), 1 )
 		self.assertEqual( n["parameters"]["s"]["f"].defaultValue(), 2 )
-		self.assertEqual( n["parameters"]["s"]["c"].defaultValue(), IECore.Color3f( 1, 2, 3 ) )
+		self.assertEqual( n["parameters"]["s"]["c"].defaultValue(), imath.Color3f( 1, 2, 3 ) )
 		self.assertEqual( n["parameters"]["s"]["s"].defaultValue(), "s" )
 
 		n["parameters"]["s"]["i"].setValue( 10 )
 		n["parameters"]["s"]["f"].setValue( 21 )
-		n["parameters"]["s"]["c"].setValue( IECore.Color3f( 3, 4, 5 ) )
+		n["parameters"]["s"]["c"].setValue( imath.Color3f( 3, 4, 5 ) )
 		n["parameters"]["s"]["s"].setValue( "ttt" )
 
 		network = n.attributes()["osl:shader"]
@@ -211,7 +212,7 @@ class OSLShaderTest( GafferOSLTest.OSLTestCase ) :
 		self.assertTrue( network[0].parameters["f"], IECore.FloatData( 3 ) )
 		self.assertTrue( network[0].parameters["s.i"], IECore.IntData( 10 ) )
 		self.assertTrue( network[0].parameters["s.f"], IECore.FloatData( 21 ) )
-		self.assertTrue( network[0].parameters["s.c"], IECore.Color3fData( IECore.Color3f( 3, 4, 5 ) ) )
+		self.assertTrue( network[0].parameters["s.c"], IECore.Color3fData( imath.Color3f( 3, 4, 5 ) ) )
 		self.assertTrue( network[0].parameters["s.s"], IECore.StringData( "ttt" ) )
 		self.assertTrue( network[0].parameters["ss"], IECore.StringData( "ss" ) )
 
@@ -418,14 +419,14 @@ class OSLShaderTest( GafferOSLTest.OSLTestCase ) :
 		self.assertAlmostEqual( n["parameters"]["b"].maxValue(), 4.7, delta = 0.00001 )
 		self.assertEqual( n["parameters"]["c"].minValue(), 23 )
 		self.assertEqual( n["parameters"]["c"].maxValue(), 47 )
-		self.assertEqual( n["parameters"]["d"].minValue(), IECore.Color3f( 1, 2, 3 ) )
-		self.assertEqual( n["parameters"]["d"].maxValue(), IECore.Color3f( 4, 5, 6 ) )
-		self.assertEqual( n["parameters"]["e"].minValue(), IECore.V3f( 1, 2, 3 ) )
-		self.assertEqual( n["parameters"]["e"].maxValue(), IECore.V3f( 4, 5, 6 ) )
-		self.assertEqual( n["parameters"]["f"].minValue(), IECore.V3f( 1, 2, 3 ) )
-		self.assertEqual( n["parameters"]["f"].maxValue(), IECore.V3f( 4, 5, 6 ) )
-		self.assertEqual( n["parameters"]["g"].minValue(), IECore.V3f( 1, 2, 3 ) )
-		self.assertEqual( n["parameters"]["g"].maxValue(), IECore.V3f( 4, 5, 6 ) )
+		self.assertEqual( n["parameters"]["d"].minValue(), imath.Color3f( 1, 2, 3 ) )
+		self.assertEqual( n["parameters"]["d"].maxValue(), imath.Color3f( 4, 5, 6 ) )
+		self.assertEqual( n["parameters"]["e"].minValue(), imath.V3f( 1, 2, 3 ) )
+		self.assertEqual( n["parameters"]["e"].maxValue(), imath.V3f( 4, 5, 6 ) )
+		self.assertEqual( n["parameters"]["f"].minValue(), imath.V3f( 1, 2, 3 ) )
+		self.assertEqual( n["parameters"]["f"].maxValue(), imath.V3f( 4, 5, 6 ) )
+		self.assertEqual( n["parameters"]["g"].minValue(), imath.V3f( 1, 2, 3 ) )
+		self.assertEqual( n["parameters"]["g"].maxValue(), imath.V3f( 4, 5, 6 ) )
 
 		# Check default min/max if not specified
 		self.assertFalse( n["parameters"]["h"].hasMinValue() )
@@ -585,11 +586,11 @@ class OSLShaderTest( GafferOSLTest.OSLTestCase ) :
 		values = {
 			"commonI" : 10,
 			"commonF" : 25,
-			"commonColor" : IECore.Color3f( 1 ),
+			"commonColor" : imath.Color3f( 1 ),
 			"commonString" : "test",
 			"commonStruct.commonI" : 11,
 			"commonStruct.commonF" : 2.5,
-			"commonStruct.commonColor" : IECore.Color3f( 0.5 ),
+			"commonStruct.commonColor" : imath.Color3f( 0.5 ),
 			"commonStruct.commonString" : "test2",
 			"commonArray" : IECore.FloatVectorData( [ 0, 1, 2 ] )
 		}
@@ -696,12 +697,12 @@ class OSLShaderTest( GafferOSLTest.OSLTestCase ) :
 			IECore.SplinefColor3f(
 				IECore.CubicBasisf.bSpline(),
 				[
-					( 0, IECore.Color3f( 0 ) ),
-					( 0, IECore.Color3f( 0 ) ),
-					( 0, IECore.Color3f( 0 ) ),
-					( 1, IECore.Color3f( 1 ) ),
-					( 1, IECore.Color3f( 1 ) ),
-					( 1, IECore.Color3f( 1 ) ),
+					( 0, imath.Color3f( 0 ) ),
+					( 0, imath.Color3f( 0 ) ),
+					( 0, imath.Color3f( 0 ) ),
+					( 1, imath.Color3f( 1 ) ),
+					( 1, imath.Color3f( 1 ) ),
+					( 1, imath.Color3f( 1 ) ),
 				]
 			)
 		)
@@ -726,12 +727,12 @@ class OSLShaderTest( GafferOSLTest.OSLTestCase ) :
 			IECore.SplinefColor3f(
 				IECore.CubicBasisf.bSpline(),
 				[
-					( 0, IECore.Color3f( 0 ) ),
-					( 0, IECore.Color3f( 0 ) ),
-					( 0, IECore.Color3f( 0 ) ),
-					( 1, IECore.Color3f( 1 ) ),
-					( 1, IECore.Color3f( 1 ) ),
-					( 1, IECore.Color3f( 1 ) ),
+					( 0, imath.Color3f( 0 ) ),
+					( 0, imath.Color3f( 0 ) ),
+					( 0, imath.Color3f( 0 ) ),
+					( 1, imath.Color3f( 1 ) ),
+					( 1, imath.Color3f( 1 ) ),
+					( 1, imath.Color3f( 1 ) ),
 				]
 			)
 		)
@@ -745,12 +746,12 @@ class OSLShaderTest( GafferOSLTest.OSLTestCase ) :
 		n.loadShader( s )
 
 		points = [
-			( 0, IECore.Color3f( 0.5 ) ),
-			( 0.3, IECore.Color3f( 0.2 ) ),
-			( 0.6, IECore.Color3f( 1 ) ),
-			( 0.65, IECore.Color3f( 0.5 ) ),
-			( 0.9, IECore.Color3f( 0.7 ) ),
-			( 1, IECore.Color3f( 1 ) )
+			( 0, imath.Color3f( 0.5 ) ),
+			( 0.3, imath.Color3f( 0.2 ) ),
+			( 0.6, imath.Color3f( 1 ) ),
+			( 0.65, imath.Color3f( 0.5 ) ),
+			( 0.9, imath.Color3f( 0.7 ) ),
+			( 1, imath.Color3f( 1 ) )
 		]
 
 		constant = GafferImage.Constant( "Constant" )
@@ -799,14 +800,14 @@ class OSLShaderTest( GafferOSLTest.OSLTestCase ) :
 		self.assertEqual( n["parameters"]["i"].defaultValue(), IECore.IntVectorData( [ 10, 11, 12 ] ) )
 		self.assertEqual( n["parameters"]["f"].defaultValue(), IECore.FloatVectorData( [ 1, 2 ] ) )
 		self.assertEqual( n["parameters"]["c"].defaultValue(), IECore.Color3fVectorData(
-			[ IECore.Color3f( 1, 2, 3 ), IECore.Color3f( 4, 5, 6 ) ] ) )
+			[ imath.Color3f( 1, 2, 3 ), imath.Color3f( 4, 5, 6 ) ] ) )
 		self.assertEqual( n["parameters"]["p"].defaultValue(), IECore.V3fVectorData(
-			[ IECore.V3f( 1, 2, 3 ), IECore.V3f( 4, 5, 6 ) ] ) )
+			[ imath.V3f( 1, 2, 3 ), imath.V3f( 4, 5, 6 ) ] ) )
 		self.assertEqual( n["parameters"]["q"].defaultValue(), IECore.V3fVectorData(
-			[ IECore.V3f( 1, 2, 3 ), IECore.V3f( 4, 5, 6 ) ] ) )
+			[ imath.V3f( 1, 2, 3 ), imath.V3f( 4, 5, 6 ) ] ) )
 		self.assertEqual( n["parameters"]["s"].defaultValue(), IECore.StringVectorData( [ "s", "t", "u", "v", "word" ] ) )
 		self.assertEqual( n["parameters"]["m"].defaultValue(), IECore.M44fVectorData(
-			[ IECore.M44f() * 1, IECore.M44f() * 0, IECore.M44f() * 1 ] ) )
+			[ imath.M44f() * 1, imath.M44f() * 0, imath.M44f() * 1 ] ) )
 
 		self.assertEqual( n["out"].typeId(), Gaffer.Plug.staticTypeId() )
 
@@ -817,14 +818,14 @@ class OSLShaderTest( GafferOSLTest.OSLTestCase ) :
 		self.assertEqual( network[0].parameters["i"], IECore.IntVectorData( [ 10, 11, 12 ] ) )
 		self.assertEqual( network[0].parameters["f"], IECore.FloatVectorData( [ 1, 2 ] ) )
 		self.assertEqual( network[0].parameters["c"], IECore.Color3fVectorData(
-			[ IECore.Color3f( 1, 2, 3 ), IECore.Color3f( 4, 5, 6 ) ] ) )
+			[ imath.Color3f( 1, 2, 3 ), imath.Color3f( 4, 5, 6 ) ] ) )
 		self.assertEqual( network[0].parameters["p"], IECore.V3fVectorData(
-			[ IECore.V3f( 1, 2, 3 ), IECore.V3f( 4, 5, 6 ) ] ) )
+			[ imath.V3f( 1, 2, 3 ), imath.V3f( 4, 5, 6 ) ] ) )
 		self.assertEqual( network[0].parameters["q"], IECore.V3fVectorData(
-			[ IECore.V3f( 1, 2, 3 ), IECore.V3f( 4, 5, 6 ) ] ) )
+			[ imath.V3f( 1, 2, 3 ), imath.V3f( 4, 5, 6 ) ] ) )
 		self.assertEqual( network[0].parameters["s"], IECore.StringVectorData( [ "s", "t", "u", "v", "word" ] ) )
 		self.assertEqual( network[0].parameters["m"], IECore.M44fVectorData(
-			[ IECore.M44f() * 1, IECore.M44f() * 0, IECore.M44f() * 1 ] ) )
+			[ imath.M44f() * 1, imath.M44f() * 0, imath.M44f() * 1 ] ) )
 
 	def testUnload( self ) :
 
@@ -870,7 +871,7 @@ class OSLShaderTest( GafferOSLTest.OSLTestCase ) :
 
 		n1 = GafferOSL.OSLShader()
 		n1.loadShader( "Maths/VectorAdd" )
-		n1["parameters"]["a"].setValue( IECore.V3f( 5, 7, 6 ) )
+		n1["parameters"]["a"].setValue( imath.V3f( 5, 7, 6 ) )
 
 		n2 = GafferOSL.OSLShader()
 		n2.loadShader( "Maths/VectorAdd" )
@@ -885,13 +886,13 @@ class OSLShaderTest( GafferOSLTest.OSLTestCase ) :
 		network = n3.attributes()["osl:shader"]
 		self.assertEqual( len( network ), 2 )
 		self.assertEqual( network[1].parameters["a"].value, "link:" + network[0].parameters["__handle"].value + ".out" )
-		self.assertEqual( network[0].parameters["a"].value, IECore.V3f( 5, 7, 6 ) )
+		self.assertEqual( network[0].parameters["a"].value, imath.V3f( 5, 7, 6 ) )
 
 	def testDisabledShaderPassesThroughExternalValue( self ) :
 
 		n1 = Gaffer.Node()
 		n1["user"]["v"] = Gaffer.V3fPlug( flags = Gaffer.Plug.Flags.Default | Gaffer.Plug.Flags.Dynamic )
-		n1["user"]["v"].setValue( IECore.V3f( 12, 11, 10 ) )
+		n1["user"]["v"].setValue( imath.V3f( 12, 11, 10 ) )
 
 		n2 = GafferOSL.OSLShader()
 		n2.loadShader( "Maths/VectorAdd" )
@@ -905,7 +906,7 @@ class OSLShaderTest( GafferOSLTest.OSLTestCase ) :
 
 		network = n3.attributes()["osl:shader"]
 		self.assertEqual( len( network ), 1 )
-		self.assertEqual( network[0].parameters["a"].value, IECore.V3f( 12, 11, 10 ) )
+		self.assertEqual( network[0].parameters["a"].value, imath.V3f( 12, 11, 10 ) )
 
 	def testDisabledShaderEvaluatesStateCorrectly( self ) :
 

@@ -36,6 +36,7 @@
 
 import os
 import unittest
+import imath
 
 import IECore
 
@@ -56,7 +57,7 @@ class TextTest( GafferImageTest.ImageTestCase ) :
 	def testPremultiplication( self ) :
 
 		constant = GafferImage.Constant()
-		constant["color"].setValue( IECore.Color4f( 0 ) )
+		constant["color"].setValue( imath.Color4f( 0 ) )
 
 		text = GafferImage.Text()
 		text["in"].setInput( constant["out"] )
@@ -65,13 +66,13 @@ class TextTest( GafferImageTest.ImageTestCase ) :
 		stats["in"].setInput( text["out"] )
 		stats["area"].setValue( text["out"]["dataWindow"].getValue() )
 
-		self.assertEqual( stats["max"].getValue(), IECore.Color4f( 1, 1, 1, 1 ) )
+		self.assertEqual( stats["max"].getValue(), imath.Color4f( 1, 1, 1, 1 ) )
 
 		text["color"]["a"].setValue( 0.5 )
-		self.assertEqual( stats["max"].getValue(), IECore.Color4f( 0.5, 0.5, 0.5, 0.5 ) )
+		self.assertEqual( stats["max"].getValue(), imath.Color4f( 0.5, 0.5, 0.5, 0.5 ) )
 
-		text["color"].setValue( IECore.Color4f( 0.5, 0.25, 1, 0.5 ) )
-		self.assertEqual( stats["max"].getValue(), IECore.Color4f( 0.25, 0.125, 0.5, 0.5 ) )
+		text["color"].setValue( imath.Color4f( 0.5, 0.25, 1, 0.5 ) )
+		self.assertEqual( stats["max"].getValue(), imath.Color4f( 0.25, 0.125, 0.5, 0.5 ) )
 
 	def testDataWindow( self ) :
 
@@ -82,9 +83,9 @@ class TextTest( GafferImageTest.ImageTestCase ) :
 		text["text"].setValue( "ab" )
 		w2 = text["out"]["dataWindow"].getValue()
 
-		self.assertEqual( w.min, w2.min )
-		self.assertGreater( w2.max.x, w.max.x )
-		self.assertGreater( w2.max.y, w.max.y )
+		self.assertEqual( w.min(), w2.min() )
+		self.assertGreater( w2.max().x, w.max().x )
+		self.assertGreater( w2.max().y, w.max().y )
 
 	def testDefaultFormat( self ) :
 
@@ -96,15 +97,15 @@ class TextTest( GafferImageTest.ImageTestCase ) :
 	def testExpectedResult( self ) :
 
 		constant = GafferImage.Constant()
-		constant["color"].setValue( IECore.Color4f( 0.25, 0.5, 0.75, 1 ) )
+		constant["color"].setValue( imath.Color4f( 0.25, 0.5, 0.75, 1 ) )
 		constant["format"].setValue( GafferImage.Format( 100, 100 ) )
 
 		text = GafferImage.Text()
 		text["in"].setInput( constant["out"] )
-		text["color"].setValue( IECore.Color4f( 1, 0.75, 0.5, 1 ) )
-		text["size"].setValue( IECore.V2i( 20 ) )
-		text["area"].setValue( IECore.Box2i( IECore.V2i( 5 ), IECore.V2i( 95 ) ) )
-		text["transform"]["pivot"].setValue( IECore.V2f( 50 ) )
+		text["color"].setValue( imath.Color4f( 1, 0.75, 0.5, 1 ) )
+		text["size"].setValue( imath.V2i( 20 ) )
+		text["area"].setValue( imath.Box2i( imath.V2i( 5 ), imath.V2i( 95 ) ) )
+		text["transform"]["pivot"].setValue( imath.V2f( 50 ) )
 		text["transform"]["rotate"].setValue( 90 )
 
 		reader = GafferImage.ImageReader()
@@ -125,8 +126,8 @@ class TextTest( GafferImageTest.ImageTestCase ) :
 		text["horizontalAlignment"].setValue( GafferImage.Text.HorizontalAlignment.Center )
 		centerDW = text["out"]["dataWindow"].getValue()
 
-		self.assertLess( leftDW.min.x, centerDW.min.x )
-		self.assertLess( centerDW.min.x, rightDW.min.x )
+		self.assertLess( leftDW.min().x, centerDW.min().x )
+		self.assertLess( centerDW.min().x, rightDW.min().x )
 
 		# Delta of 1 pixel is ok because layout is done in floating point space,
 		# and then must be rounded to pixel space to make the enclosing data window.
@@ -146,8 +147,8 @@ class TextTest( GafferImageTest.ImageTestCase ) :
 		text["verticalAlignment"].setValue( GafferImage.Text.VerticalAlignment.Center )
 		centerDW = text["out"]["dataWindow"].getValue()
 
-		self.assertLess( bottomDW.min.y, centerDW.min.y )
-		self.assertLess( centerDW.min.y, topDW.min.y )
+		self.assertLess( bottomDW.min().y, centerDW.min().y )
+		self.assertLess( centerDW.min().y, topDW.min().y )
 
 		# Delta of 1 pixel is ok because layout is done in floating point space,
 		# and then must be rounded to pixel space to make the enclosing data window.
@@ -169,7 +170,7 @@ class TextTest( GafferImageTest.ImageTestCase ) :
 	def testDisable( self ) :
 
 		c = GafferImage.Constant()
-		c["color"].setValue( IECore.Color4f( 1, 0, 0, 0.5, ) )
+		c["color"].setValue( imath.Color4f( 1, 0, 0, 0.5, ) )
 
 		t = GafferImage.Text()
 		t["in"].setInput( c["out"] )
@@ -186,21 +187,21 @@ class TextTest( GafferImageTest.ImageTestCase ) :
 
 		t = GafferImage.Text()
 		dataWindow = t["out"]["dataWindow"].getValue()
-		tile = t["out"].channelData( "R", GafferImage.ImagePlug.tileOrigin( dataWindow.min ) )
+		tile = t["out"].channelData( "R", GafferImage.ImagePlug.tileOrigin( dataWindow.min() ) )
 
 		t["shadow"].setValue( True )
-		t["shadowColor"].setValue( IECore.Color4f( 0.5 ) )
+		t["shadowColor"].setValue( imath.Color4f( 0.5 ) )
 
 		shadowDataWindow = t["out"]["dataWindow"].getValue()
 
-		self.assertEqual( shadowDataWindow.min.x, dataWindow.min.x )
-		self.assertEqual( shadowDataWindow.max.y, dataWindow.max.y )
-		self.assertGreater( shadowDataWindow.max.x, dataWindow.max.x )
-		self.assertLess( shadowDataWindow.min.y, dataWindow.min.y )
+		self.assertEqual( shadowDataWindow.min().x, dataWindow.min().x )
+		self.assertEqual( shadowDataWindow.max().y, dataWindow.max().y )
+		self.assertGreater( shadowDataWindow.max().x, dataWindow.max().x )
+		self.assertLess( shadowDataWindow.min().y, dataWindow.min().y )
 
 		self.assertEqual( t["out"]["channelNames"].getValue(), IECore.StringVectorData( [ "R", "G", "B", "A" ] ) )
 
-		shadowTile = t["out"].channelData( "R", GafferImage.ImagePlug.tileOrigin( dataWindow.min ) )
+		shadowTile = t["out"].channelData( "R", GafferImage.ImagePlug.tileOrigin( dataWindow.min() ) )
 
 		self.assertNotEqual( shadowTile, tile )
 

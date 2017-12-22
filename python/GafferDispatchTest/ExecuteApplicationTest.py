@@ -38,6 +38,7 @@
 import os
 import subprocess32 as subprocess
 import unittest
+import imath
 
 import IECore
 import IECoreScene
@@ -152,7 +153,7 @@ class ExecuteApplicationTest( GafferTest.TestCase ) :
 
 		prim = IECore.ObjectReader( self.__outputFileSeq.fileNameForFrame( 1 ) ).read()
 		self.failUnless( prim.isInstanceOf( IECoreScene.SpherePrimitive.staticTypeId() ) )
-		self.assertEqual( prim.bound(), IECore.Box3f( IECore.V3f( -5 ), IECore.V3f( 5 ) ) )
+		self.assertEqual( prim.bound(), imath.Box3f( imath.V3f( -5 ), imath.V3f( 5 ) ) )
 		self.assertEqual( prim.thetaMax(), 180 )
 
 	def testErrorReturnStatusForBadContext( self ) :

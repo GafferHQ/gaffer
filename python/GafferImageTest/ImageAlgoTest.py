@@ -35,6 +35,7 @@
 ##########################################################################
 
 import unittest
+import imath
 
 import IECore
 
@@ -141,7 +142,7 @@ class ImageAlgoTest( GafferImageTest.ImageTestCase ) :
 	def testParallelProcessEmptyDataWindow( self ) :
 
 		d = GafferImage.Display()
-		self.assertEqual( d["out"]["dataWindow"].getValue(), IECore.Box2i() )
+		self.assertEqual( d["out"]["dataWindow"].getValue(), imath.Box2i() )
 
 		GafferImageTest.processTiles( d["out"] )
 		d["out"].image()

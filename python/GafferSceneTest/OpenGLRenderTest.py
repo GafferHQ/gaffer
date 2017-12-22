@@ -36,6 +36,7 @@
 
 import os
 import unittest
+import imath
 
 import IECore
 import IECoreScene
@@ -55,7 +56,7 @@ class OpenGLRenderTest( GafferSceneTest.SceneTestCase ) :
 		s = Gaffer.ScriptNode()
 
 		s["plane"] = GafferScene.Plane()
-		s["plane"]["transform"]["translate"].setValue( IECore.V3f( 0, 0, -5 ) )
+		s["plane"]["transform"]["translate"].setValue( imath.V3f( 0, 0, -5 ) )
 
 		s["image"] = GafferImage.ImageReader()
 		s["image"]["fileName"].setValue( os.path.expandvars( "$GAFFER_ROOT/python/GafferImageTest/images/checker.exr" ) )
@@ -64,7 +65,7 @@ class OpenGLRenderTest( GafferSceneTest.SceneTestCase ) :
 		s["shader"].loadShader( "Texture" )
 		s["shader"]["parameters"]["texture"].setInput( s["image"]["out"] )
 		s["shader"]["parameters"]["mult"].setValue( 1 )
-		s["shader"]["parameters"]["tint"].setValue( IECore.Color4f( 1 ) )
+		s["shader"]["parameters"]["tint"].setValue( imath.Color4f( 1 ) )
 
 		s["assignment"] = GafferScene.ShaderAssignment()
 		s["assignment"]["in"].setInput( s["plane"]["out"] )
@@ -97,7 +98,7 @@ class OpenGLRenderTest( GafferSceneTest.SceneTestCase ) :
 
 		imageSampler = GafferImage.ImageSampler()
 		imageSampler["image"].setInput( imageReader["out"] )
-		imageSampler["pixel"].setValue( IECore.V2f( 320, 240 ) )
+		imageSampler["pixel"].setValue( imath.V2f( 320, 240 ) )
 
 		self.assertAlmostEqual( imageSampler["color"]["r"].getValue(), 0.666666, delta = 0.001 )
 		self.assertAlmostEqual( imageSampler["color"]["g"].getValue(), 0.666666, delta = 0.001 )

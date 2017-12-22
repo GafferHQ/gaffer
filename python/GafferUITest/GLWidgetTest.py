@@ -34,6 +34,8 @@
 #
 ##########################################################################
 
+import imath
+
 import IECore
 
 import Gaffer
@@ -75,7 +77,7 @@ class GLWidgetTest( GafferUITest.TestCase ) :
 
 		self.waitForIdle( 1000 )
 
-		self.assertTrue( GafferUI.Widget.widgetAt( w.bound().min + IECore.V2i( 4 ) ) is b )
+		self.assertTrue( GafferUI.Widget.widgetAt( w.bound().min() + imath.V2i( 4 ) ) is b )
 
 	def testOverlayBound( self ) :
 
@@ -91,16 +93,16 @@ class GLWidgetTest( GafferUITest.TestCase ) :
 		w.setVisible( True )
 		self.waitForIdle( 1000 )
 
-		w.setPosition( IECore.V2i( 100 ) )
+		w.setPosition( imath.V2i( 100 ) )
 		self.waitForIdle( 1000 )
 		b1 = b.bound()
 
-		w.setPosition( IECore.V2i( 200 ) )
+		w.setPosition( imath.V2i( 200 ) )
 		self.waitForIdle( 1000 )
 		b2 = b.bound()
 
-		self.assertEqual( b2.min, b1.min + IECore.V2i( 100 ) )
-		self.assertEqual( b2.max, b1.max + IECore.V2i( 100 ) )
+		self.assertEqual( b2.min(), b1.min() + imath.V2i( 100 ) )
+		self.assertEqual( b2.max(), b1.max() + imath.V2i( 100 ) )
 
 	def testOverlayMousePosition( self ) :
 
@@ -115,7 +117,7 @@ class GLWidgetTest( GafferUITest.TestCase ) :
 
 		w.setVisible( True )
 
-		w.setPosition( IECore.V2i( 100 ) )
+		w.setPosition( imath.V2i( 100 ) )
 		self.waitForIdle( 1000 )
 
 		wBound = w.bound()
@@ -124,7 +126,7 @@ class GLWidgetTest( GafferUITest.TestCase ) :
 		wP = GafferUI.Widget.mousePosition( relativeTo = w )
 		bP = GafferUI.Widget.mousePosition( relativeTo = b )
 
-		self.assertEqual( bBound.min - wBound.min, wP - bP )
+		self.assertEqual( bBound.min() - wBound.min(), wP - bP )
 
 	def testOverlayAccessors( self ) :
 

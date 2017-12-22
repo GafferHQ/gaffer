@@ -34,6 +34,8 @@
 #
 ##########################################################################
 
+import imath
+
 import IECore
 
 import Gaffer
@@ -105,13 +107,13 @@ def __plugPresetValues( plug ) :
 		return IECore.FloatVectorData( [ float( v ) for v in values ] )
 	elif isinstance( plug, Gaffer.Color3fPlug ) :
 		return IECore.Color3fVectorData( [
-			IECore.Color3f(
+			imath.Color3f(
 				*[ float( x ) for x in v.split( "," ) ]
 			) for v in values
 		] )
 	elif isinstance( plug, Gaffer.V3fPlug ) :
 		return IECore.V3fVectorData( [
-			IECore.V3f(
+			imath.V3f(
 				*[ float( x ) for x in v.split( "," ) ]
 			) for v in values
 		] )

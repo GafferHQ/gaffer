@@ -38,6 +38,9 @@
 #include <memory>
 
 #include "boost/python.hpp" // must be the first include
+#include "boost/algorithm/string/replace.hpp"
+#include "boost/regex.hpp"
+#include "boost/lexical_cast.hpp"
 
 #include "IECore/MessageHandler.h"
 
@@ -184,6 +187,9 @@ boost::python::object executionDict( ScriptNodePtr script, NodePtr parent )
 	boost::python::object gafferModule = boost::python::import( "Gaffer" );
 	result["Gaffer"] = gafferModule;
 
+	boost::python::object imathModule = boost::python::import( "imath" );
+	result["imath"] = imathModule;
+
 	result["script"] = boost::python::object( script );
 	result["parent"] = boost::python::object( parent );
 
@@ -211,12 +217,65 @@ std::string serialise( const Node *parent, const Set *filter )
 	return result;
 }
 
+std::string replaceImath( const std::string &serialisation )
+{
+	// Figure out the version of Gaffer which serialised the file.
+
+	int milestoneVersion = 0;
+	int majorVersion = 0;
+	boost::regex milestoneVersionRegex( R"(Gaffer\.Metadata\.registerNodeValue\( parent, "serialiser:milestoneVersion", ([0-9]+), )" );
+	boost::regex majorVersionRegex( R"(Gaffer\.Metadata\.registerNodeValue\( parent, "serialiser:majorVersion", ([0-9]+), )" );
+	boost::match_results<const char *> matchResults;
+	if( regex_search( serialisation.c_str(), matchResults, milestoneVersionRegex ) )
+	{
+		milestoneVersion = boost::lexical_cast<int>( matchResults.str( 1 ) );
+	}
+	if( regex_search( serialisation.c_str(), matchResults, majorVersionRegex ) )
+	{
+		majorVersion = boost::lexical_cast<int>( matchResults.str( 1 ) );
+	}
+
+	// If it's from a version which used the imath bindings
+	// then we have no work to do.
+
+	if( milestoneVersion > 0 || majorVersion >= 42 )
+	{
+		return serialisation;
+	}
+
+	// Otherwise we need to replace all references to imath
+	// types to use the imath module rather than IECore.
+
+	std::string result = serialisation;
+	for(
+		const auto &x : {
+			"V2i", "V2f", "V2d",
+			"V3i", "V3f", "V3d",
+			"Color3f", "Color4f",
+			"Box2i", "Box2f", "Box2d",
+			"Box3i", "Box3f", "Box3d",
+			"M33f", "M33d",
+			"M44f", "M44d",
+			"Eulerf", "Eulerd",
+			"Plane3f", "Plane3d",
+			"Quatf", "Quatd"
+		}
+	)
+	{
+		boost::replace_all( result, std::string( "IECore." ) + x, std::string( "imath." ) + x );
+	}
+
+	return result;
+}
+
 bool execute( ScriptNode *script, const std::string &serialisation, Node *parent, bool continueOnError, const std::string &context = "" )
 {
 	if( !Py_IsInitialized() )
 	{
 		Py_Initialize();
 	}
+
+	const std::string toExecute = replaceImath( serialisation );
 
 	IECorePython::ScopedGILLock gilLock;
 	bool result = false;
@@ -228,7 +287,7 @@ bool execute( ScriptNode *script, const std::string &serialisation, Node *parent
 		{
 			try
 			{
-				exec( serialisation.c_str(), e, e );
+				exec( toExecute.c_str(), e, e );
 			}
 			catch( boost::python::error_already_set &e )
 			{
@@ -239,7 +298,7 @@ bool execute( ScriptNode *script, const std::string &serialisation, Node *parent
 		}
 		else
 		{
-			result = tolerantExec( serialisation.c_str(), e, e, context );
+			result = tolerantExec( toExecute.c_str(), e, e, context );
 		}
 	}
 	catch( boost::python::error_already_set &e )

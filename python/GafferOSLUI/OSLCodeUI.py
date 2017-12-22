@@ -36,6 +36,7 @@
 
 import os
 import functools
+import imath
 
 import IECore
 
@@ -167,7 +168,7 @@ class _ParametersFooter( GafferUI.PlugValueWidget ) :
 
 		with row :
 
-				GafferUI.Spacer( IECore.V2i( GafferUI.PlugWidget.labelWidth(), 1 ) )
+				GafferUI.Spacer( imath.V2i( GafferUI.PlugWidget.labelWidth(), 1 ) )
 
 				menuButton = GafferUI.MenuButton(
 					image = "plus.png",
@@ -180,7 +181,7 @@ class _ParametersFooter( GafferUI.PlugValueWidget ) :
 				)
 				menuButton.setEnabled( not Gaffer.MetadataAlgo.readOnly( plug ) )
 
-				GafferUI.Spacer( IECore.V2i( 1 ), IECore.V2i( 999999, 1 ), parenting = { "expand" : True } )
+				GafferUI.Spacer( imath.V2i( 1 ), imath.V2i( 999999, 1 ), parenting = { "expand" : True } )
 
 	def _updateFromPlug( self ) :
 
@@ -212,10 +213,10 @@ class _ParametersFooter( GafferUI.PlugValueWidget ) :
 						defaultValue = IECore.SplinefColor3f(
 							IECore.CubicBasisf.catmullRom(),
 							(
-								( 0, IECore.Color3f( 0 ) ),
-								( 0, IECore.Color3f( 0 ) ),
-								( 1, IECore.Color3f( 1 ) ),
-								( 1, IECore.Color3f( 1 ) ),
+								( 0, imath.Color3f( 0 ) ),
+								( 0, imath.Color3f( 0 ) ),
+								( 1, imath.Color3f( 1 ) ),
+								( 1, imath.Color3f( 1 ) ),
 							)
 						)
 					)

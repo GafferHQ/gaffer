@@ -35,6 +35,7 @@
 ##########################################################################
 
 import unittest
+import imath
 
 import IECore
 
@@ -106,7 +107,7 @@ class ShaderTest( GafferSceneTest.SceneTestCase ) :
 
 		cs = GafferTest.CapturingSlot( s.plugDirtiedSignal() )
 
-		Gaffer.Metadata.registerValue( s, "nodeGadget:color", IECore.Color3f( 1, 0, 0 ) )
+		Gaffer.Metadata.registerValue( s, "nodeGadget:color", imath.Color3f( 1, 0, 0 ) )
 
 		self.assertTrue( s["out"] in [ x[0] for x in cs ] )
 
@@ -115,8 +116,8 @@ class ShaderTest( GafferSceneTest.SceneTestCase ) :
 		s2 = s.attributes()["test:surface"]
 		self.assertNotEqual( s2, s1 )
 
-		self.assertEqual( s1[0].blindData()["gaffer:nodeColor"], IECore.Color3fData( IECore.Color3f( 0 ) ) )
-		self.assertEqual( s2[0].blindData()["gaffer:nodeColor"], IECore.Color3fData( IECore.Color3f( 1, 0, 0 ) ) )
+		self.assertEqual( s1[0].blindData()["gaffer:nodeColor"], IECore.Color3fData( imath.Color3f( 0 ) ) )
+		self.assertEqual( s2[0].blindData()["gaffer:nodeColor"], IECore.Color3fData( imath.Color3f( 1, 0, 0 ) ) )
 
 	def testShaderTypesInAttributes( self ) :
 

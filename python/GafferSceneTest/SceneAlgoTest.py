@@ -35,6 +35,7 @@
 ##########################################################################
 
 import unittest
+import imath
 
 import IECore
 
@@ -53,7 +54,7 @@ class SceneAlgoTest( GafferSceneTest.SceneTestCase ) :
 		group["in"][1].setInput( plane["out"] )
 
 		plane2 = GafferScene.Plane()
-		plane2["divisions"].setValue( IECore.V2i( 99, 99 ) ) # 10000 instances
+		plane2["divisions"].setValue( imath.V2i( 99, 99 ) ) # 10000 instances
 
 		instancer = GafferScene.Instancer()
 		instancer["in"].setInput( plane2["out"] )

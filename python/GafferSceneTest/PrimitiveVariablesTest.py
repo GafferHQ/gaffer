@@ -34,6 +34,8 @@
 #
 ##########################################################################
 
+import imath
+
 import IECore
 import IECoreScene
 
@@ -75,9 +77,9 @@ class PrimitiveVariablesTest( GafferSceneTest.SceneTestCase ) :
 		p = GafferScene.PrimitiveVariables()
 		p["in"].setInput( s["out"] )
 
-		p["primitiveVariables"].addMember( "myFirstData", IECore.V3fData( IECore.V3f( 0 ), IECore.GeometricData.Interpretation.Vector ) )
-		p["primitiveVariables"].addMember( "mySecondData", IECore.V3fData( IECore.V3f( 0 ), IECore.GeometricData.Interpretation.Normal ) )
-		p["primitiveVariables"].addMember( "myThirdData", IECore.V3fData( IECore.V3f( 0 ), IECore.GeometricData.Interpretation.Point ) )
+		p["primitiveVariables"].addMember( "myFirstData", IECore.V3fData( imath.V3f( 0 ), IECore.GeometricData.Interpretation.Vector ) )
+		p["primitiveVariables"].addMember( "mySecondData", IECore.V3fData( imath.V3f( 0 ), IECore.GeometricData.Interpretation.Normal ) )
+		p["primitiveVariables"].addMember( "myThirdData", IECore.V3fData( imath.V3f( 0 ), IECore.GeometricData.Interpretation.Point ) )
 
 		o = p["out"].object( "/sphere" )
 
@@ -94,9 +96,9 @@ class PrimitiveVariablesTest( GafferSceneTest.SceneTestCase ) :
 		self.assertFalse( 'mySecondData' in o )
 		self.assertFalse( 'myThirdData' in o )
 
-		p["primitiveVariables"].addMember( "myFirstData", IECore.V3fData( IECore.V3f( 0 ), IECore.GeometricData.Interpretation.Point ) )
-		p["primitiveVariables"].addMember( "mySecondData", IECore.V3fData( IECore.V3f( 0 ), IECore.GeometricData.Interpretation.Vector ) )
-		p["primitiveVariables"].addMember( "myThirdData", IECore.V3fData( IECore.V3f( 0 ), IECore.GeometricData.Interpretation.Normal ) )
+		p["primitiveVariables"].addMember( "myFirstData", IECore.V3fData( imath.V3f( 0 ), IECore.GeometricData.Interpretation.Point ) )
+		p["primitiveVariables"].addMember( "mySecondData", IECore.V3fData( imath.V3f( 0 ), IECore.GeometricData.Interpretation.Vector ) )
+		p["primitiveVariables"].addMember( "myThirdData", IECore.V3fData( imath.V3f( 0 ), IECore.GeometricData.Interpretation.Normal ) )
 
 		o = p["out"].object( "/sphere" )
 

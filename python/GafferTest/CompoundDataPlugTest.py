@@ -36,6 +36,7 @@
 ##########################################################################
 
 import unittest
+import imath
 
 import IECore
 
@@ -94,7 +95,7 @@ class CompoundDataPlugTest( GafferTest.TestCase ) :
 
 		# test if creating a plug from data that has a geometric
 		# interpretation specified transfers that interpretation to the plug
-		m4 = p.addOptionalMember( "vector", IECore.V3fData( IECore.V3f( 0 ), IECore.GeometricData.Interpretation.Vector ), plugName = "vector", enabled = True )
+		m4 = p.addOptionalMember( "vector", IECore.V3fData( imath.V3f( 0 ), IECore.GeometricData.Interpretation.Vector ), plugName = "vector", enabled = True )
 		self.assertEqual( m4["value"].interpretation(), IECore.GeometricData.Interpretation.Vector )
 
 	def testVectorData( self ) :
@@ -122,61 +123,61 @@ class CompoundDataPlugTest( GafferTest.TestCase ) :
 		self.assertEqual( d, IECore.StringVectorData( [ "1", "2", "3" ] ) )
 		self.assertEqual( n, "c" )
 
-		m4 = p.addMember( "d", IECore.V3fVectorData( [ IECore.V3f( x ) for x in range( 1, 5 ) ] ) )
+		m4 = p.addMember( "d", IECore.V3fVectorData( [ imath.V3f( x ) for x in range( 1, 5 ) ] ) )
 		self.failUnless( isinstance( m4, Gaffer.ValuePlug ) )
 
 		d, n = p.memberDataAndName( m4 )
-		self.assertEqual( d, IECore.V3fVectorData( [ IECore.V3f( x ) for x in range( 1, 5 ) ] ) )
+		self.assertEqual( d, IECore.V3fVectorData( [ imath.V3f( x ) for x in range( 1, 5 ) ] ) )
 		self.assertEqual( n, "d" )
 
-		m5 = p.addMember( "e", IECore.Color3fVectorData( [ IECore.Color3f( x ) for x in range( 1, 5 ) ] ) )
+		m5 = p.addMember( "e", IECore.Color3fVectorData( [ imath.Color3f( x ) for x in range( 1, 5 ) ] ) )
 		self.failUnless( isinstance( m5, Gaffer.ValuePlug ) )
 
 		d, n = p.memberDataAndName( m5 )
-		self.assertEqual( d, IECore.Color3fVectorData( [ IECore.Color3f( x ) for x in range( 1, 5 ) ] ) )
+		self.assertEqual( d, IECore.Color3fVectorData( [ imath.Color3f( x ) for x in range( 1, 5 ) ] ) )
 		self.assertEqual( n, "e" )
 
-		m6 = p.addMember( "f", IECore.M44fVectorData( [ IECore.M44f() * x for x in range( 1, 5 ) ] ) )
+		m6 = p.addMember( "f", IECore.M44fVectorData( [ imath.M44f() * x for x in range( 1, 5 ) ] ) )
 		self.failUnless( isinstance( m6, Gaffer.ValuePlug ) )
 
 		d, n = p.memberDataAndName( m6 )
-		self.assertEqual( d, IECore.M44fVectorData( [ IECore.M44f() * x for x in range( 1, 5 ) ] ) )
+		self.assertEqual( d, IECore.M44fVectorData( [ imath.M44f() * x for x in range( 1, 5 ) ] ) )
 		self.assertEqual( n, "f" )
 
-		m7 = p.addMember( "d", IECore.V2iVectorData( [ IECore.V2i( x ) for x in range( 1, 5 ) ] ) )
+		m7 = p.addMember( "d", IECore.V2iVectorData( [ imath.V2i( x ) for x in range( 1, 5 ) ] ) )
 		self.failUnless( isinstance( m7, Gaffer.ValuePlug ) )
 
 		d, n = p.memberDataAndName( m7 )
-		self.assertEqual( d, IECore.V2iVectorData( [ IECore.V2i( x ) for x in range( 1, 5 ) ] ) )
+		self.assertEqual( d, IECore.V2iVectorData( [ imath.V2i( x ) for x in range( 1, 5 ) ] ) )
 		self.assertEqual( n, "d" )
 
 	def testImathVectorData( self ) :
 
 		p = Gaffer.CompoundDataPlug()
 
-		m1 = p.addMember( "a", IECore.V3fData( IECore.V3f( 1, 2, 3 ) ) )
+		m1 = p.addMember( "a", IECore.V3fData( imath.V3f( 1, 2, 3 ) ) )
 		self.failUnless( isinstance( m1, Gaffer.ValuePlug ) )
 
 		d, n = p.memberDataAndName( m1 )
-		self.assertEqual( d, IECore.V3fData( IECore.V3f( 1, 2, 3 ) ) )
+		self.assertEqual( d, IECore.V3fData( imath.V3f( 1, 2, 3 ) ) )
 		self.assertEqual( n, "a" )
 
-		m2 = p.addMember( "b", IECore.V2fData( IECore.V2f( 1, 2 ) ) )
+		m2 = p.addMember( "b", IECore.V2fData( imath.V2f( 1, 2 ) ) )
 		self.failUnless( isinstance( m2, Gaffer.ValuePlug ) )
 
 		d, n = p.memberDataAndName( m2 )
-		self.assertEqual( d, IECore.V2fData( IECore.V2f( 1, 2 ) ) )
+		self.assertEqual( d, IECore.V2fData( imath.V2f( 1, 2 ) ) )
 		self.assertEqual( n, "b" )
 
 	def testImathMatrixData( self ) :
 
 		p = Gaffer.CompoundDataPlug()
 
-		m1 = p.addMember( "a", IECore.M44fData( IECore.M44f( *range(16) ) ) )
+		m1 = p.addMember( "a", IECore.M44fData( imath.M44f( *range(16) ) ) )
 		self.failUnless( isinstance( m1, Gaffer.ValuePlug ) )
 
 		d, n = p.memberDataAndName( m1 )
-		self.assertEqual( d, IECore.M44fData( IECore.M44f( *range(16) ) ) )
+		self.assertEqual( d, IECore.M44fData( imath.M44f( *range(16) ) ) )
 		self.assertEqual( n, "a" )
 
 	def testTransformPlugData( self ) :
@@ -184,27 +185,27 @@ class CompoundDataPlugTest( GafferTest.TestCase ) :
 		p = Gaffer.CompoundDataPlug()
 
 		m1 = p.addMember( "a", Gaffer.TransformPlug() )
-		m1["value"]["translate"].setValue( IECore.V3f( 1,2,3 ) )
+		m1["value"]["translate"].setValue( imath.V3f( 1,2,3 ) )
 		self.failUnless( isinstance( m1, Gaffer.ValuePlug ) )
 
 		d, n = p.memberDataAndName( m1 )
-		self.assertEqual( d, IECore.M44fData( IECore.M44f( [
+		self.assertEqual( d, IECore.M44fData( imath.M44f(
 			1, 0, 0, 0,
 			0, 1, 0, 0,
 			0, 0, 1, 0,
 			1, 2, 3, 1,
-		] ) ) )
+		) ) )
 		self.assertEqual( n, "a" )
 
 	def testPlugFlags( self ) :
 
 		p = Gaffer.CompoundDataPlug()
-		m1 = p.addMember( "a", IECore.V3fData( IECore.V3f( 1, 2, 3 ) ), plugFlags = Gaffer.Plug.Flags.Default )
+		m1 = p.addMember( "a", IECore.V3fData( imath.V3f( 1, 2, 3 ) ), plugFlags = Gaffer.Plug.Flags.Default )
 		self.assertEqual( m1.getFlags(), Gaffer.Plug.Flags.Default )
 		self.assertEqual( m1["name"].getFlags(), Gaffer.Plug.Flags.Default)
 		self.assertEqual( m1["value"].getFlags(), Gaffer.Plug.Flags.Default )
 
-		m2 = p.addOptionalMember( "a", IECore.V3fData( IECore.V3f( 1, 2, 3 ) ), plugFlags = Gaffer.Plug.Flags.Default )
+		m2 = p.addOptionalMember( "a", IECore.V3fData( imath.V3f( 1, 2, 3 ) ), plugFlags = Gaffer.Plug.Flags.Default )
 		self.assertEqual( m2.getFlags(), Gaffer.Plug.Flags.Default )
 		self.assertEqual( m2["name"].getFlags(), Gaffer.Plug.Flags.Default )
 		self.assertEqual( m2["value"].getFlags(), Gaffer.Plug.Flags.Default )
@@ -213,7 +214,7 @@ class CompoundDataPlugTest( GafferTest.TestCase ) :
 	def testCreateCounterpart( self ) :
 
 		p1 = Gaffer.CompoundDataPlug()
-		m1 = p1.addMember( "a", IECore.V3fData( IECore.V3f( 1, 2, 3 ) ), plugFlags = Gaffer.Plug.Flags.Default )
+		m1 = p1.addMember( "a", IECore.V3fData( imath.V3f( 1, 2, 3 ) ), plugFlags = Gaffer.Plug.Flags.Default )
 
 		p2 = p1.createCounterpart( "c", Gaffer.Plug.Direction.Out )
 		self.assertEqual( p2.typeName(), p1.typeName() )
@@ -338,10 +339,10 @@ class CompoundDataPlugTest( GafferTest.TestCase ) :
 		p = Gaffer.CompoundDataPlug()
 
 		for name, value in [
-			( "b2f", IECore.Box2fData( IECore.Box2f( IECore.V2f( 0, 1 ), IECore.V2f( 1, 2 ) ) ) ),
-			( "b2i", IECore.Box2iData( IECore.Box2i( IECore.V2i( -1, 10 ), IECore.V2i( 11, 20 ) ) ) ),
-			( "b3f", IECore.Box3fData( IECore.Box3f( IECore.V3f( 0, 1, 2 ), IECore.V3f( 3, 4, 5 ) ) ) ),
-			( "b3i", IECore.Box3iData( IECore.Box3i( IECore.V3i( 0, 1, 2 ), IECore.V3i( 3, 4, 5 ) ) ) ),
+			( "b2f", IECore.Box2fData( imath.Box2f( imath.V2f( 0, 1 ), imath.V2f( 1, 2 ) ) ) ),
+			( "b2i", IECore.Box2iData( imath.Box2i( imath.V2i( -1, 10 ), imath.V2i( 11, 20 ) ) ) ),
+			( "b3f", IECore.Box3fData( imath.Box3f( imath.V3f( 0, 1, 2 ), imath.V3f( 3, 4, 5 ) ) ) ),
+			( "b3i", IECore.Box3iData( imath.Box3i( imath.V3i( 0, 1, 2 ), imath.V3i( 3, 4, 5 ) ) ) ),
 		] :
 			m = p.addMember( name, value )
 			self.assertEqual( p.memberDataAndName( m ), ( value, name ) )

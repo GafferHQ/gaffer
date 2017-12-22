@@ -34,13 +34,15 @@
 #
 ##########################################################################
 
-import GafferTest
+import os
+import imath
 
-import GafferVDB
 import IECore
 import IECoreScene
+
+import GafferTest
+import GafferVDB
 import GafferVDBTest
-import os
 
 class SceneInterfaceTest( GafferVDBTest.VDBTestCase ) :
 	def setUp( self ) :
@@ -71,7 +73,7 @@ class SceneInterfaceTest( GafferVDBTest.VDBTestCase ) :
 			0, 0, 0, 1
 		]
 
-		m44 = IECore.M44d( matrixArray )
+		m44 = imath.M44d( *matrixArray )
 		m44Data = IECore.M44dData( m44 )
 
 		transformData = self.sceneInterface.readTransform( 0.0 )
@@ -83,9 +85,9 @@ class SceneInterfaceTest( GafferVDBTest.VDBTestCase ) :
 	def testCanReadBounds( self ) :
 		bound = self.sceneInterface.readBound( 0.0 )
 
-		expectedBound = IECore.Box3d(
-			IECore.V3d( [-33.809524536132812, -12.380952835083008, -26.190475463867188] ),
-			IECore.V3d( [19.047618865966797, 93.333335876464844, 27.142856597900391] )
+		expectedBound = imath.Box3d(
+			imath.V3d( [-33.809524536132812, -12.380952835083008, -26.190475463867188] ),
+			imath.V3d( [19.047618865966797, 93.333335876464844, 27.142856597900391] )
 		)
 
 		self.assertEqual(bound, expectedBound)

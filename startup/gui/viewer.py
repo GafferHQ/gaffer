@@ -35,6 +35,7 @@
 ##########################################################################
 
 import functools
+import imath
 
 import IECore
 
@@ -47,7 +48,7 @@ import GafferSceneUI
 
 preferences = application.root()["preferences"]
 preferences["viewer"] = Gaffer.Plug()
-preferences["viewer"]["gridDimensions"] = Gaffer.V2fPlug( defaultValue = IECore.V2f( 10 ), minValue = IECore.V2f( 0 ) )
+preferences["viewer"]["gridDimensions"] = Gaffer.V2fPlug( defaultValue = imath.V2f( 10 ), minValue = imath.V2f( 0 ) )
 
 Gaffer.Metadata.registerValue( preferences["viewer"], "plugValueWidget:type", "GafferUI.LayoutPlugValueWidget", persistent = False )
 Gaffer.Metadata.registerValue( preferences["viewer"], "layout:section", "Viewer", persistent = False )

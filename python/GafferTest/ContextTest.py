@@ -37,6 +37,7 @@
 import unittest
 import threading
 import weakref
+import imath
 
 import IECore
 
@@ -117,33 +118,33 @@ class ContextTest( GafferTest.TestCase ) :
 		self.assertEqual( c["string"], "bye" )
 		self.failUnless( isinstance( c["string"], basestring ) )
 
-		c["v2i"] = IECore.V2i( 1, 2 )
-		self.assertEqual( c["v2i"], IECore.V2i( 1, 2 ) )
-		self.assertEqual( c.get( "v2i" ), IECore.V2i( 1, 2 ) )
-		c.set( "v2i", IECore.V2i( 1, 2 ) )
-		self.assertEqual( c["v2i"], IECore.V2i( 1, 2 ) )
-		self.failUnless( isinstance( c["v2i"], IECore.V2i ) )
+		c["v2i"] = imath.V2i( 1, 2 )
+		self.assertEqual( c["v2i"], imath.V2i( 1, 2 ) )
+		self.assertEqual( c.get( "v2i" ), imath.V2i( 1, 2 ) )
+		c.set( "v2i", imath.V2i( 1, 2 ) )
+		self.assertEqual( c["v2i"], imath.V2i( 1, 2 ) )
+		self.failUnless( isinstance( c["v2i"], imath.V2i ) )
 
-		c["v3i"] = IECore.V3i( 1, 2, 3 )
-		self.assertEqual( c["v3i"], IECore.V3i( 1, 2, 3 ) )
-		self.assertEqual( c.get( "v3i" ), IECore.V3i( 1, 2, 3 ) )
-		c.set( "v3i", IECore.V3i( 1, 2, 3 ) )
-		self.assertEqual( c["v3i"], IECore.V3i( 1, 2, 3 ) )
-		self.failUnless( isinstance( c["v3i"], IECore.V3i ) )
+		c["v3i"] = imath.V3i( 1, 2, 3 )
+		self.assertEqual( c["v3i"], imath.V3i( 1, 2, 3 ) )
+		self.assertEqual( c.get( "v3i" ), imath.V3i( 1, 2, 3 ) )
+		c.set( "v3i", imath.V3i( 1, 2, 3 ) )
+		self.assertEqual( c["v3i"], imath.V3i( 1, 2, 3 ) )
+		self.failUnless( isinstance( c["v3i"], imath.V3i ) )
 
-		c["v2f"] = IECore.V2f( 1, 2 )
-		self.assertEqual( c["v2f"], IECore.V2f( 1, 2 ) )
-		self.assertEqual( c.get( "v2f" ), IECore.V2f( 1, 2 ) )
-		c.set( "v2f", IECore.V2f( 1, 2 ) )
-		self.assertEqual( c["v2f"], IECore.V2f( 1, 2 ) )
-		self.failUnless( isinstance( c["v2f"], IECore.V2f ) )
+		c["v2f"] = imath.V2f( 1, 2 )
+		self.assertEqual( c["v2f"], imath.V2f( 1, 2 ) )
+		self.assertEqual( c.get( "v2f" ), imath.V2f( 1, 2 ) )
+		c.set( "v2f", imath.V2f( 1, 2 ) )
+		self.assertEqual( c["v2f"], imath.V2f( 1, 2 ) )
+		self.failUnless( isinstance( c["v2f"], imath.V2f ) )
 
-		c["v3f"] = IECore.V3f( 1, 2, 3 )
-		self.assertEqual( c["v3f"], IECore.V3f( 1, 2, 3 ) )
-		self.assertEqual( c.get( "v3f" ), IECore.V3f( 1, 2, 3 ) )
-		c.set( "v3f", IECore.V3f( 1, 2, 3 ) )
-		self.assertEqual( c["v3f"], IECore.V3f( 1, 2, 3 ) )
-		self.failUnless( isinstance( c["v3f"], IECore.V3f ) )
+		c["v3f"] = imath.V3f( 1, 2, 3 )
+		self.assertEqual( c["v3f"], imath.V3f( 1, 2, 3 ) )
+		self.assertEqual( c.get( "v3f" ), imath.V3f( 1, 2, 3 ) )
+		c.set( "v3f", imath.V3f( 1, 2, 3 ) )
+		self.assertEqual( c["v3f"], imath.V3f( 1, 2, 3 ) )
+		self.failUnless( isinstance( c["v3f"], imath.V3f ) )
 
 	def testCopying( self ) :
 

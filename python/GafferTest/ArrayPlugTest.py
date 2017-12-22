@@ -36,6 +36,7 @@
 
 import unittest
 import gc
+import imath
 
 import IECore
 
@@ -374,8 +375,8 @@ class ArrayPlugTest( GafferTest.TestCase ) :
 
 		n2.addChild(Gaffer.IntPlug("test"))
 
-		connectionColor = IECore.Color3f( 0.1 , 0.2 , 0.3 )
-		noodleColor = IECore.Color3f( 0.4, 0.5 , 0.6 )
+		connectionColor = imath.Color3f( 0.1 , 0.2 , 0.3 )
+		noodleColor = imath.Color3f( 0.4, 0.5 , 0.6 )
 
 		element = Gaffer.IntPlug()
 		Gaffer.Metadata.registerValue( element, "connectionGadget:color", connectionColor )

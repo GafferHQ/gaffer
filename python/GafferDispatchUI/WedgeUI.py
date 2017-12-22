@@ -34,6 +34,8 @@
 #
 ##########################################################################
 
+import imath
+
 import IECore
 
 import Gaffer
@@ -296,8 +298,8 @@ class _ValuesPreview( GafferUI.Widget ) :
 		GafferUI.Widget.__init__( self, self.__grid, **kw )
 
 		self.__grid[0,0] =  GafferUI.Spacer(
-			IECore.V2i( GafferUI.PlugWidget.labelWidth(), 1 ),
-			IECore.V2i( GafferUI.PlugWidget.labelWidth(), 1 ),
+			imath.V2i( GafferUI.PlugWidget.labelWidth(), 1 ),
+			imath.V2i( GafferUI.PlugWidget.labelWidth(), 1 ),
 		)
 		self.__grid[1,0] = previewWidget
 
@@ -368,7 +370,7 @@ class _ColorValuesPreview( _ValuesPreview ) :
 			except :
 				return
 
-		if not len( values ) or not isinstance( values[0], IECore.Color3f ) :
+		if not len( values ) or not isinstance( values[0], imath.Color3f ) :
 			return
 
 		for i in range( 0, max( len( values ), len( self.__row ) ) ) :

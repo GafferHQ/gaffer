@@ -35,6 +35,7 @@
 ##########################################################################
 
 import types
+import imath
 
 import IECore
 
@@ -99,9 +100,9 @@ Gaffer.Metadata.registerNode(
 # NodeGadget drop handler
 ##########################################################################
 
-GafferUI.Pointer.registerPointer( "addObjects", GafferUI.Pointer( "addObjects.png", IECore.V2i( 36, 18 ) ) )
-GafferUI.Pointer.registerPointer( "removeObjects", GafferUI.Pointer( "removeObjects.png", IECore.V2i( 36, 18 ) ) )
-GafferUI.Pointer.registerPointer( "replaceObjects", GafferUI.Pointer( "replaceObjects.png", IECore.V2i( 36, 18 ) ) )
+GafferUI.Pointer.registerPointer( "addObjects", GafferUI.Pointer( "addObjects.png", imath.V2i( 36, 18 ) ) )
+GafferUI.Pointer.registerPointer( "removeObjects", GafferUI.Pointer( "removeObjects.png", imath.V2i( 36, 18 ) ) )
+GafferUI.Pointer.registerPointer( "replaceObjects", GafferUI.Pointer( "replaceObjects.png", imath.V2i( 36, 18 ) ) )
 
 __DropMode = IECore.Enum.create( "None", "Add", "Remove", "Replace" )
 

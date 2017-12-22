@@ -36,6 +36,7 @@
 ##########################################################################
 
 import unittest
+import imath
 
 import IECore
 import Gaffer
@@ -47,20 +48,20 @@ class TransformPlugTest( GafferTest.TestCase ) :
 
 		p = Gaffer.TransformPlug()
 
-		p["translate"].setValue( IECore.V3f( 1, 2, 3 ) )
-		p["rotate"].setValue( IECore.V3f( 90, 45, 0 ) )
-		p["scale"].setValue( IECore.V3f( 1, 2, 4 ) )
+		p["translate"].setValue( imath.V3f( 1, 2, 3 ) )
+		p["rotate"].setValue( imath.V3f( 90, 45, 0 ) )
+		p["scale"].setValue( imath.V3f( 1, 2, 4 ) )
 
-		translate = IECore.M44f.createTranslated( p["translate"].getValue() )
-		rotate = IECore.Eulerf( IECore.degreesToRadians( p["rotate"].getValue() ), IECore.Eulerf.Order.XYZ, IECore.Eulerf.InputLayout.XYZLayout )
+		translate = imath.M44f().translate( p["translate"].getValue() )
+		rotate = imath.Eulerf( IECore.degreesToRadians( p["rotate"].getValue() ), imath.Eulerf.Order.XYZ )
 		rotate = rotate.toMatrix44()
-		scale = IECore.M44f.createScaled( p["scale"].getValue() )
+		scale = imath.M44f().scale( p["scale"].getValue() )
 		transforms = {
 			"t" : translate,
 			"r" : rotate,
 			"s" : scale,
 		}
-		transform = IECore.M44f()
+		transform = imath.M44f()
 		for m in ( "s", "r", "t" ) :
 			transform = transform * transforms[m]
 
@@ -70,9 +71,9 @@ class TransformPlugTest( GafferTest.TestCase ) :
 
 		p = Gaffer.TransformPlug()
 
-		t =	IECore.V3f( 100, 0, 0 )
-		r =	IECore.V3f( 0, 90, 0 )
-		s =	IECore.V3f( 2, 2, 2 )
+		t =	imath.V3f( 100, 0, 0 )
+		r =	imath.V3f( 0, 90, 0 )
+		s =	imath.V3f( 2, 2, 2 )
 		p["translate"].setValue(  t )
 		p["rotate"].setValue( r )
 		p["scale"].setValue( s )
@@ -81,7 +82,7 @@ class TransformPlugTest( GafferTest.TestCase ) :
 		# This verifies that translation is not being affected by rotation and scale,
 		# which is what users will expect
 		self.assertTrue( p.matrix().equalWithAbsError(
-			IECore.M44f(
+			imath.M44f(
 				0,   0,  -2,   0,
 				0,   2,   0,   0,
 				2,   0,   0,   0,
@@ -108,39 +109,39 @@ class TransformPlugTest( GafferTest.TestCase ) :
 
 		p = Gaffer.TransformPlug()
 
-		p["rotate"].setValue( IECore.V3f( 0, 90, 0 ) )
+		p["rotate"].setValue( imath.V3f( 0, 90, 0 ) )
 
 		self.assertTrue(
-			IECore.V3f( 0, 0, -1 ).equalWithAbsError(
-				IECore.V3f( 1, 0, 0 ) * p.matrix(),
+			imath.V3f( 0, 0, -1 ).equalWithAbsError(
+				imath.V3f( 1, 0, 0 ) * p.matrix(),
 				1e-6
 			)
 		)
 
-		p["pivot"].setValue( IECore.V3f( 1, 0, 0 ) )
+		p["pivot"].setValue( imath.V3f( 1, 0, 0 ) )
 
 		self.assertTrue(
-			IECore.V3f( 1, 0, 0 ).equalWithAbsError(
-				IECore.V3f( 1, 0, 0 ) * p.matrix(),
+			imath.V3f( 1, 0, 0 ).equalWithAbsError(
+				imath.V3f( 1, 0, 0 ) * p.matrix(),
 				1e-6
 			)
 		)
 
-		p["pivot"].setValue( IECore.V3f( -1, 0, 0 ) )
+		p["pivot"].setValue( imath.V3f( -1, 0, 0 ) )
 
 		self.assertTrue(
-			IECore.V3f( -1, 0, -2 ).equalWithAbsError(
-				IECore.V3f( 1, 0, 0 ) * p.matrix(),
+			imath.V3f( -1, 0, -2 ).equalWithAbsError(
+				imath.V3f( 1, 0, 0 ) * p.matrix(),
 				1e-6
 			)
 		)
 
-		p["rotate"].setValue( IECore.V3f( 0, 0, 0 ) )
-		p["scale"].setValue( IECore.V3f( 2, 1, 1 ) )
+		p["rotate"].setValue( imath.V3f( 0, 0, 0 ) )
+		p["scale"].setValue( imath.V3f( 2, 1, 1 ) )
 
 		self.assertTrue(
-			IECore.V3f( 3, 0, 0 ).equalWithAbsError(
-				IECore.V3f( 1, 0, 0 ) * p.matrix(),
+			imath.V3f( 3, 0, 0 ).equalWithAbsError(
+				imath.V3f( 1, 0, 0 ) * p.matrix(),
 				1e-6
 			)
 		)
@@ -150,15 +151,15 @@ class TransformPlugTest( GafferTest.TestCase ) :
 		s = Gaffer.ScriptNode()
 		s["n"] = Gaffer.Node()
 		s["n"]["p"] = Gaffer.TransformPlug( flags = Gaffer.Plug.Flags.Default | Gaffer.Plug.Flags.Dynamic )
-		s["n"]["p"]["translate"].setValue( IECore.V3f( 1, 2, 3 ) )
-		s["n"]["p"]["rotate"].setValue( IECore.V3f( 4, 5, 6 ) )
+		s["n"]["p"]["translate"].setValue( imath.V3f( 1, 2, 3 ) )
+		s["n"]["p"]["rotate"].setValue( imath.V3f( 4, 5, 6 ) )
 		ss = s.serialise()
 
 		s2 = Gaffer.ScriptNode()
 		s2.execute( ss )
 
-		self.assertEqual( s2["n"]["p"]["translate"].getValue(), IECore.V3f( 1, 2, 3 ) )
-		self.assertEqual( s2["n"]["p"]["rotate"].getValue(), IECore.V3f( 4, 5, 6 ) )
+		self.assertEqual( s2["n"]["p"]["translate"].getValue(), imath.V3f( 1, 2, 3 ) )
+		self.assertEqual( s2["n"]["p"]["rotate"].getValue(), imath.V3f( 4, 5, 6 ) )
 
 if __name__ == "__main__":
 	unittest.main()

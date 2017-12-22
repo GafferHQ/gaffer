@@ -34,6 +34,8 @@
 #
 ##########################################################################
 
+import imath
+
 import IECore
 
 import Gaffer
@@ -54,7 +56,7 @@ def __convertFormat( graphComponent, format ):
 
 	if gafferVersion < ( 0, 17, 0, 0 ) :
 		displayWindow = format.getDisplayWindow()
-		displayWindow.max += IECore.V2i( 1 )
+		displayWindow.setMax( displayWindow.max() + imath.V2i( 1 ) )
 		return GafferImage.Format( displayWindow, format.getPixelAspect() )
 
 	return format

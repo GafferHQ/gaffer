@@ -34,6 +34,8 @@
 #
 ##########################################################################
 
+import imath
+
 import IECore
 
 import Gaffer
@@ -93,7 +95,7 @@ class MenuButton( GafferUI.Button ) :
 		b = self.bound()
 		self.__menu.popup(
 			parent = self,
-			position = IECore.V2i( b.min.x, b.max.y ),
+			position = imath.V2i( b.min().x, b.max().y ),
 		)
 
 	def __menuVisibilityChanged( self, menu ) :

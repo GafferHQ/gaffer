@@ -35,6 +35,7 @@
 ##########################################################################
 
 import functools
+import imath
 
 import IECore
 
@@ -146,11 +147,11 @@ def __insertDot( menu, destinationPlug ) :
 
 		menuPosition = menu.popupPosition( relativeTo = gadgetWidget )
 		position = gadgetWidget.getViewportGadget().rasterToGadgetSpace(
-			IECore.V2f( menuPosition.x, menuPosition.y ),
+			imath.V2f( menuPosition.x, menuPosition.y ),
 			gadget = graphGadget
 		).p0
 
-		graphGadget.setNodePosition( node, IECore.V2f( position.x, position.y ) )
+		graphGadget.setNodePosition( node, imath.V2f( position.x, position.y ) )
 
 def __connectionContextMenu( nodeGraph, destinationPlug, menuDefinition ) :
 

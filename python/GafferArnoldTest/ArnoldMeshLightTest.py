@@ -34,6 +34,8 @@
 #
 ##########################################################################
 
+import imath
+
 import IECore
 
 import Gaffer
@@ -81,12 +83,12 @@ class ArnoldMeshLightTest( GafferSceneTest.SceneTestCase ) :
 		l["filter"].setInput( f["out"] )
 
 		l["parameters"]["intensity"].setValue( 10 )
-		l["parameters"]["color"].setValue( IECore.Color3f( 1, 0, 0 ) )
+		l["parameters"]["color"].setValue( imath.Color3f( 1, 0, 0 ) )
 
 		shaders = l["out"].attributes( "/sphere" )["ai:light"]
 		self.assertEqual( len( shaders ), 1 )
 		self.assertEqual( shaders[0].parameters["intensity"].value, 10 )
-		self.assertEqual( shaders[0].parameters["color"].value, IECore.Color3f( 1, 0, 0 ) )
+		self.assertEqual( shaders[0].parameters["color"].value, imath.Color3f( 1, 0, 0 ) )
 
 	def testCameraVisibility( self ) :
 

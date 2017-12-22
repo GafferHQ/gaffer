@@ -36,6 +36,7 @@
 ##########################################################################
 
 import unittest
+import imath
 
 import IECore
 import IECoreGL
@@ -57,7 +58,7 @@ class StandardStyleTest( GafferUITest.TestCase ) :
 			if n=="LastColor" :
 				continue
 
-			c = IECore.Color3f( i )
+			c = imath.Color3f( i )
 			v = getattr( GafferUI.StandardStyle.Color, n )
 			s.setColor( v, c )
 			self.assertEqual( s.getColor( v ), c )
@@ -85,15 +86,15 @@ class StandardStyleTest( GafferUITest.TestCase ) :
 		cs = GafferTest.CapturingSlot( s.changedSignal() )
 		self.assertEqual( len( cs ), 0 )
 
-		s.setColor( GafferUI.StandardStyle.Color.BackgroundColor, IECore.Color3f( 0 ) )
+		s.setColor( GafferUI.StandardStyle.Color.BackgroundColor, imath.Color3f( 0 ) )
 		self.assertEqual( len( cs ), 1 )
 		self.assertTrue( cs[0][0].isSame( s ) )
 
-		s.setColor( GafferUI.StandardStyle.Color.BackgroundColor, IECore.Color3f( 1 ) )
+		s.setColor( GafferUI.StandardStyle.Color.BackgroundColor, imath.Color3f( 1 ) )
 		self.assertEqual( len( cs ), 2 )
 		self.assertTrue( cs[1][0].isSame( s ) )
 
-		s.setColor( GafferUI.StandardStyle.Color.BackgroundColor, IECore.Color3f( 1 ) )
+		s.setColor( GafferUI.StandardStyle.Color.BackgroundColor, imath.Color3f( 1 ) )
 		self.assertEqual( len( cs ), 2 )
 
 		f = IECoreGL.FontLoader.defaultFontLoader().load( "VeraMono.ttf" )

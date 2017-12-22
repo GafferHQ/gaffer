@@ -35,6 +35,8 @@
 #
 ##########################################################################
 
+import imath
+
 import IECore
 import GafferUI
 
@@ -193,7 +195,7 @@ class ListContainer( GafferUI.ContainerWidget ) :
 
 	def addSpacer( self, width=0, height=0, expand=False, horizontalAlignment=None, verticalAlignment=None):
 
-		self.append( GafferUI.Spacer( IECore.V2i( width, height ) ), expand=expand, horizontalAlignment=horizontalAlignment, verticalAlignment=verticalAlignment )
+		self.append( GafferUI.Spacer( imath.V2i( width, height ) ), expand=expand, horizontalAlignment=horizontalAlignment, verticalAlignment=verticalAlignment )
 
 	def addChild( self, child, expand=False, horizontalAlignment=None, verticalAlignment=None ) :
 

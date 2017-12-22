@@ -35,6 +35,7 @@
 ##########################################################################
 
 import unittest
+import imath
 
 import IECore
 
@@ -54,7 +55,7 @@ class BoxPlugTest( GafferTest.TestCase ) :
 
 	def testCreateCounterpart( self ) :
 
-		p1 = Gaffer.Box3fPlug( "b", Gaffer.Plug.Direction.Out, IECore.Box3f( IECore.V3f( -1 ), IECore.V3f( 1 ) ), Gaffer.Plug.Flags.Default | Gaffer.Plug.Flags.Dynamic )
+		p1 = Gaffer.Box3fPlug( "b", Gaffer.Plug.Direction.Out, imath.Box3f( imath.V3f( -1 ), imath.V3f( 1 ) ), Gaffer.Plug.Flags.Default | Gaffer.Plug.Flags.Dynamic )
 		p2 = p1.createCounterpart( "c", Gaffer.Plug.Direction.In )
 
 		self.assertEqual( p2.getName(), "c" )
@@ -65,8 +66,8 @@ class BoxPlugTest( GafferTest.TestCase ) :
 
 		s = Gaffer.ScriptNode()
 		s["n"] = Gaffer.Node()
-		s["n"]["p"] = Gaffer.Box3fPlug( minValue=IECore.V3f( -1 ), maxValue=IECore.V3f( 1 ), flags=Gaffer.Plug.Flags.Default | Gaffer.Plug.Flags.Dynamic )
-		s["n"]["p"].setValue( IECore.Box3f( IECore.V3f( -100 ), IECore.V3f( 1, 2, 3 ) ) )
+		s["n"]["p"] = Gaffer.Box3fPlug( minValue=imath.V3f( -1 ), maxValue=imath.V3f( 1 ), flags=Gaffer.Plug.Flags.Default | Gaffer.Plug.Flags.Dynamic )
+		s["n"]["p"].setValue( imath.Box3f( imath.V3f( -100 ), imath.V3f( 1, 2, 3 ) ) )
 
 		s2 = Gaffer.ScriptNode()
 		s2.execute( s.serialise() )
@@ -77,7 +78,7 @@ class BoxPlugTest( GafferTest.TestCase ) :
 
 	def testMinMax( self ) :
 
-		b = Gaffer.Box3fPlug( "p", Gaffer.Plug.Direction.In, IECore.Box3f( IECore.V3f( -0.5 ), IECore.V3f( 0.5 ) ) )
+		b = Gaffer.Box3fPlug( "p", Gaffer.Plug.Direction.In, imath.Box3f( imath.V3f( -0.5 ), imath.V3f( 0.5 ) ) )
 		v = Gaffer.V3fPlug()
 
 		self.assertEqual( b.minValue(), v.minValue() )
@@ -87,17 +88,17 @@ class BoxPlugTest( GafferTest.TestCase ) :
 		self.assertEqual( b.minValue(), v.minValue() )
 		self.assertEqual( b.maxValue(), v.maxValue() )
 
-		b = Gaffer.Box3fPlug( "p", minValue = IECore.V3f( -1, -2, -3 ), maxValue = IECore.V3f( 1, 2, 3 ) )
+		b = Gaffer.Box3fPlug( "p", minValue = imath.V3f( -1, -2, -3 ), maxValue = imath.V3f( 1, 2, 3 ) )
 		self.assertTrue( b.hasMinValue() )
 		self.assertTrue( b.hasMaxValue() )
-		self.assertEqual( b.minValue(), IECore.V3f( -1, -2, -3 ) )
-		self.assertEqual( b.maxValue(), IECore.V3f( 1, 2, 3 ) )
+		self.assertEqual( b.minValue(), imath.V3f( -1, -2, -3 ) )
+		self.assertEqual( b.maxValue(), imath.V3f( 1, 2, 3 ) )
 
 		c = b.createCounterpart( "c", Gaffer.Plug.Direction.In )
 		self.assertTrue( c.hasMinValue() )
 		self.assertTrue( c.hasMaxValue() )
-		self.assertEqual( c.minValue(), IECore.V3f( -1, -2, -3 ) )
-		self.assertEqual( c.maxValue(), IECore.V3f( 1, 2, 3 ) )
+		self.assertEqual( c.minValue(), imath.V3f( -1, -2, -3 ) )
+		self.assertEqual( c.maxValue(), imath.V3f( 1, 2, 3 ) )
 
 if __name__ == "__main__":
 	unittest.main()

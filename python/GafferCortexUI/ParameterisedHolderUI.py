@@ -38,6 +38,7 @@
 import re
 import pipes
 import fnmatch
+import imath
 
 import IECore
 
@@ -78,7 +79,7 @@ class _ParameterisedHolderNodeUI( GafferUI.NodeUI ) :
 
 			if headerVisible :
 				with GafferUI.ListContainer( orientation = GafferUI.ListContainer.Orientation.Horizontal ) :
-					GafferUI.Spacer( IECore.V2i( 10 ), parenting = { "expand"  : True } )
+					GafferUI.Spacer( imath.V2i( 10 ), parenting = { "expand"  : True } )
 					toolButton = GafferCortexUI.ToolParameterValueWidget( self.node().parameterHandler() )
 					toolButton.plugValueWidget().setReadOnly( readOnly )
 					_InfoButton( node )

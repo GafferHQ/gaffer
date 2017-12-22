@@ -34,6 +34,8 @@
 #
 ##########################################################################
 
+import imath
+
 import IECore
 
 import Gaffer
@@ -65,10 +67,10 @@ def nodeMenuCreateCommand( menu ) :
 		else :
 			menuPosition = menu.popupPosition( relativeTo = gadgetWidget )
 			nodePosition = gadgetWidget.getViewportGadget().rasterToGadgetSpace(
-				IECore.V2f( menuPosition.x, menuPosition.y ),
+				imath.V2f( menuPosition.x, menuPosition.y ),
 				gadget = graphGadget
 			).p0
-			graphGadget.setNodePosition( backdrop, IECore.V2f( nodePosition.x, nodePosition.y ) )
+			graphGadget.setNodePosition( backdrop, imath.V2f( nodePosition.x, nodePosition.y ) )
 
 	return backdrop
 

@@ -36,6 +36,7 @@
 
 import sys
 import traceback
+import imath
 
 import IECore
 
@@ -63,7 +64,7 @@ class ErrorDialogue( GafferUI.Dialogue ) :
 				}
 			)
 
-			GafferUI.Spacer( IECore.V2i( 250, 1 ) )
+			GafferUI.Spacer( imath.V2i( 250, 1 ) )
 
 			if message is not None :
 				GafferUI.Label(

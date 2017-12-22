@@ -35,6 +35,7 @@
 ##########################################################################
 
 import unittest
+import imath
 
 import IECore
 
@@ -50,8 +51,8 @@ class ResizeTest( GafferImageTest.ImageTestCase ) :
 		r = GafferImage.Resize()
 		self.assertTrue( r["format"].getValue().getDisplayWindow().isEmpty() )
 
-		f1 = GafferImage.Format( IECore.Box2i( IECore.V2i( 1, 2 ), IECore.V2i( 11, 12 ) ), 1 )
-		f2 = GafferImage.Format( IECore.Box2i( IECore.V2i( 100, 200 ), IECore.V2i( 1100, 1200 ) ), 1 )
+		f1 = GafferImage.Format( imath.Box2i( imath.V2i( 1, 2 ), imath.V2i( 11, 12 ) ), 1 )
+		f2 = GafferImage.Format( imath.Box2i( imath.V2i( 100, 200 ), imath.V2i( 1100, 1200 ) ), 1 )
 
 		c1 = Gaffer.Context()
 		c2 = Gaffer.Context()
@@ -69,52 +70,52 @@ class ResizeTest( GafferImageTest.ImageTestCase ) :
 
 		# Resize to the same size as the input image.
 		c = GafferImage.Constant()
-		c["format"].setValue( GafferImage.Format( IECore.Box2i( IECore.V2i( 0 ), IECore.V2i( 512 ) ), 1 ) )
-		c["color"].setValue( IECore.Color4f( 0.25, 0.5, 0.75, 1 ) )
+		c["format"].setValue( GafferImage.Format( imath.Box2i( imath.V2i( 0 ), imath.V2i( 512 ) ), 1 ) )
+		c["color"].setValue( imath.Color4f( 0.25, 0.5, 0.75, 1 ) )
 
 		r = GafferImage.Resize()
 		r["in"].setInput( c["out"] )
-		r["format"].setValue( GafferImage.Format( IECore.Box2i( IECore.V2i( 0 ), IECore.V2i( 512 ) ), 1 ) )
+		r["format"].setValue( GafferImage.Format( imath.Box2i( imath.V2i( 0 ), imath.V2i( 512 ) ), 1 ) )
 
 		# Assert that the pixel data is passed clean through.
 		for channel in [ "R", "G", "B", "A" ] :
 			self.assertEqual(
-				c["out"].channelDataHash( channel, IECore.V2i( 0 ) ),
-				r["out"].channelDataHash( channel, IECore.V2i( 0 ) ),
+				c["out"].channelDataHash( channel, imath.V2i( 0 ) ),
+				r["out"].channelDataHash( channel, imath.V2i( 0 ) ),
 			)
 			self.assertTrue(
-				c["out"].channelData( channel, IECore.V2i( 0 ), _copy = False ).isSame(
-					r["out"].channelData( channel, IECore.V2i( 0 ), _copy = False )
+				c["out"].channelData( channel, imath.V2i( 0 ), _copy = False ).isSame(
+					r["out"].channelData( channel, imath.V2i( 0 ), _copy = False )
 				)
 			)
 
 	def testFit( self ) :
 
 		c = GafferImage.Constant()
-		c["format"].setValue( GafferImage.Format( IECore.Box2i( IECore.V2i( 0 ), IECore.V2i( 256, 128 ) ), 1 ) )
-		c["color"].setValue( IECore.Color4f( 0.25, 0.5, 0.75, 1 ) )
+		c["format"].setValue( GafferImage.Format( imath.Box2i( imath.V2i( 0 ), imath.V2i( 256, 128 ) ), 1 ) )
+		c["color"].setValue( imath.Color4f( 0.25, 0.5, 0.75, 1 ) )
 
 		r = GafferImage.Resize()
 		r["in"].setInput( c["out"] )
-		r["format"].setValue( GafferImage.Format( IECore.Box2i( IECore.V2i( 0 ), IECore.V2i( 1024, 256 ) ), 1 ) )
+		r["format"].setValue( GafferImage.Format( imath.Box2i( imath.V2i( 0 ), imath.V2i( 1024, 256 ) ), 1 ) )
 
 		self.assertEqual( r["fitMode"].getValue(), r.FitMode.Horizontal )
 
 		horizontalDataWindow = r["out"]["dataWindow"].getValue()
 		displayWindow = r["format"].getValue().getDisplayWindow()
 
-		self.assertEqual( horizontalDataWindow.min.x, displayWindow.min.x )
-		self.assertEqual( horizontalDataWindow.max.x, displayWindow.max.x )
-		self.assertTrue( horizontalDataWindow.min.y < displayWindow.min.y )
-		self.assertTrue( horizontalDataWindow.max.y > displayWindow.max.y )
+		self.assertEqual( horizontalDataWindow.min().x, displayWindow.min().x )
+		self.assertEqual( horizontalDataWindow.max().x, displayWindow.max().x )
+		self.assertTrue( horizontalDataWindow.min().y < displayWindow.min().y )
+		self.assertTrue( horizontalDataWindow.max().y > displayWindow.max().y )
 
 		r["fitMode"].setValue( r.FitMode.Vertical )
 		verticalDataWindow = r["out"]["dataWindow"].getValue()
 
-		self.assertTrue( verticalDataWindow.min.x > displayWindow.min.x )
-		self.assertTrue( verticalDataWindow.max.x < displayWindow.max.x )
-		self.assertEqual( verticalDataWindow.min.y, displayWindow.min.y )
-		self.assertEqual( verticalDataWindow.max.y, displayWindow.max.y )
+		self.assertTrue( verticalDataWindow.min().x > displayWindow.min().x )
+		self.assertTrue( verticalDataWindow.max().x < displayWindow.max().x )
+		self.assertEqual( verticalDataWindow.min().y, displayWindow.min().y )
+		self.assertEqual( verticalDataWindow.max().y, displayWindow.max().y )
 
 		r["fitMode"].setValue( r.FitMode.Fit )
 		self.assertEqual( r["out"]["dataWindow"].getValue(), verticalDataWindow )
@@ -128,28 +129,28 @@ class ResizeTest( GafferImageTest.ImageTestCase ) :
 	def testMismatchedDataWindow( self ) :
 
 		constant = GafferImage.Constant()
-		constant["format"].setValue( GafferImage.Format( IECore.Box2i( IECore.V2i( 0 ), IECore.V2i( 256, 256 ) ), 1 ) )
+		constant["format"].setValue( GafferImage.Format( imath.Box2i( imath.V2i( 0 ), imath.V2i( 256, 256 ) ), 1 ) )
 
 		crop = GafferImage.Crop()
 		crop["in"].setInput( constant["out"] )
 		crop["areaSource"].setValue( crop.AreaSource.Area )
-		crop["area"].setValue( IECore.Box2i( IECore.V2i( 64 ), IECore.V2i( 128 ) ) )
+		crop["area"].setValue( imath.Box2i( imath.V2i( 64 ), imath.V2i( 128 ) ) )
 		crop["affectDisplayWindow"].setValue( False )
 		crop["affectDataWindow"].setValue( True )
 
 		resize = GafferImage.Resize()
 		resize["in"].setInput( crop["out"] )
-		resize["format"].setValue( GafferImage.Format( IECore.Box2i( IECore.V2i( 0 ), IECore.V2i( 512, 512 ) ), 1 ) )
+		resize["format"].setValue( GafferImage.Format( imath.Box2i( imath.V2i( 0 ), imath.V2i( 512, 512 ) ), 1 ) )
 
 		self.assertEqual(
 			resize["out"]["dataWindow"].getValue(),
-			IECore.Box2i( IECore.V2i( 128 ), IECore.V2i( 256 ) )
+			imath.Box2i( imath.V2i( 128 ), imath.V2i( 256 ) )
 		)
 
 	def testDataWindowRounding( self ) :
 
 		constant = GafferImage.Constant()
-		constant["format"].setValue( GafferImage.Format( IECore.Box2i( IECore.V2i( 0 ), IECore.V2i( 200, 150 ) ), 1 ) )
+		constant["format"].setValue( GafferImage.Format( imath.Box2i( imath.V2i( 0 ), imath.V2i( 200, 150 ) ), 1 ) )
 
 		resize = GafferImage.Resize()
 		resize["in"].setInput( constant["out"] )
@@ -157,15 +158,15 @@ class ResizeTest( GafferImageTest.ImageTestCase ) :
 		for width in range( 1, 2000 ) :
 			resize["format"].setValue( GafferImage.Format( width, 150, 1 ) )
 			dataWindow = resize["out"]["dataWindow"].getValue()
-			self.assertEqual( dataWindow.min.x, 0 )
-			self.assertEqual( dataWindow.max.x, width )
+			self.assertEqual( dataWindow.min().x, 0 )
+			self.assertEqual( dataWindow.max().x, width )
 
 		resize["fitMode"].setValue( resize.FitMode.Vertical )
 		for height in range( 1, 2000 ) :
 			resize["format"].setValue( GafferImage.Format( 200, height, 1 ) )
 			dataWindow = resize["out"]["dataWindow"].getValue()
-			self.assertEqual( dataWindow.min.y, 0 )
-			self.assertEqual( dataWindow.max.y, height )
+			self.assertEqual( dataWindow.min().y, 0 )
+			self.assertEqual( dataWindow.max().y, height )
 
 	def testFilterAffectsChannelData( self ) :
 
@@ -225,11 +226,11 @@ class ResizeTest( GafferImageTest.ImageTestCase ) :
 		r["format"].setValue( GafferImage.Format( 200, 200 ) )
 
 		self.assertEqual( r["out"]["format"].getValue(), GafferImage.Format( 200, 200 ) )
-		self.assertEqual( r["out"]["dataWindow"].getValue(), IECore.Box2i( IECore.V2i( 0 ), IECore.V2i( 200 ) ) )
+		self.assertEqual( r["out"]["dataWindow"].getValue(), imath.Box2i( imath.V2i( 0 ), imath.V2i( 200 ) ) )
 
 		r["enabled"].setValue( False )
 		self.assertEqual( r["out"]["format"].getValue(), GafferImage.Format( 100, 100 ) )
-		self.assertEqual( r["out"]["dataWindow"].getValue(), IECore.Box2i( IECore.V2i( 0 ), IECore.V2i( 100 ) ) )
+		self.assertEqual( r["out"]["dataWindow"].getValue(), imath.Box2i( imath.V2i( 0 ), imath.V2i( 100 ) ) )
 
 	def testEmptyDataWindow( self ) :
 
@@ -239,7 +240,7 @@ class ResizeTest( GafferImageTest.ImageTestCase ) :
 		r["in"].setInput( e["out"] )
 		r["format"].setValue( GafferImage.Format( 2121, 1012 ) )
 
-		self.assertEqual( r["out"]["dataWindow"].getValue(), IECore.Box2i() )
+		self.assertEqual( r["out"]["dataWindow"].getValue(), imath.Box2i() )
 
 if __name__ == "__main__":
 	unittest.main()

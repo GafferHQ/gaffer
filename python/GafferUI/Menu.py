@@ -126,7 +126,7 @@ class Menu( GafferUI.Widget ) :
 			return result
 
 		if relativeTo is not None :
-			result = result - relativeTo.bound().min
+			result = result - relativeTo.bound().min()
 
 		return result
 

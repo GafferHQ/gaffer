@@ -35,6 +35,7 @@
 ##########################################################################
 
 import os
+import imath
 
 import IECore
 import IECoreScene
@@ -44,9 +45,9 @@ import GafferOSLTest
 
 class ShadingEngineTest( GafferOSLTest.OSLTestCase ) :
 
-	def rectanglePoints( self, bound = IECore.Box2f( IECore.V2f( -1 ), IECore.V2f( 1 ) ), divisions = IECore.V2i( 10 ) ) :
+	def rectanglePoints( self, bound = imath.Box2f( imath.V2f( -1 ), imath.V2f( 1 ) ), divisions = imath.V2i( 10 ) ) :
 
-		r = IECore.Rand48()
+		r = imath.Rand48()
 
 		pData = IECore.V3fVectorData()
 		uData = IECore.FloatVectorData()
@@ -57,15 +58,15 @@ class ShadingEngineTest( GafferOSLTest.OSLTestCase ) :
 			for x in range( 0, divisions.x ) :
 				u = float( x ) / float( divisions.x - 1 )
 				v = float( y ) / float( divisions.y - 1 )
-				pData.append( IECore.V3f(
-					bound.min.x + u * bound.size().x,
-					bound.min.y + v * bound.size().y,
+				pData.append( imath.V3f(
+					bound.min().x + u * bound.size().x,
+					bound.min().y + v * bound.size().y,
 					0
 				) )
 				uData.append( u )
 				vData.append( v )
 				floatUserData.append( r.nextf( 0, 1 ) )
-				colorUserData.append( r.nextColor3f() )
+				colorUserData.append( imath.Color3f( r.nextf(), r.nextf(), r.nextf() ) )
 
 		return IECore.CompoundData( {
 			"P" : pData,
@@ -80,12 +81,12 @@ class ShadingEngineTest( GafferOSLTest.OSLTestCase ) :
 		s = self.compileShader( os.path.dirname( __file__ ) +  "/shaders/constant.osl" )
 
 		e = GafferOSL.ShadingEngine( IECore.ObjectVector( [
-			IECoreScene.Shader( s, "osl:surface", { "Cs" : IECore.Color3f( 1, 0.5, 0.25 ) } )
+			IECoreScene.Shader( s, "osl:surface", { "Cs" : imath.Color3f( 1, 0.5, 0.25 ) } )
 		] ) )
 
 		p = e.shade( self.rectanglePoints() )
 
-		self.assertEqual( p["Ci"], IECore.Color3fVectorData( [ IECore.Color3f( 1, 0.5, 0.25 ) ] * 100 ) )
+		self.assertEqual( p["Ci"], IECore.Color3fVectorData( [ imath.Color3f( 1, 0.5, 0.25 ) ] * 100 ) )
 
 	def testNetwork( self ) :
 
@@ -99,7 +100,7 @@ class ShadingEngineTest( GafferOSLTest.OSLTestCase ) :
 
 		p = e.shade( self.rectanglePoints() )
 
-		self.assertEqual( p["Ci"], IECore.Color3fVectorData( [ IECore.Color3f( 0.5 ) ] * 100 ) )
+		self.assertEqual( p["Ci"], IECore.Color3fVectorData( [ imath.Color3f( 0.5 ) ] * 100 ) )
 
 	def testGlobals( self ) :
 
@@ -115,7 +116,7 @@ class ShadingEngineTest( GafferOSLTest.OSLTestCase ) :
 			v1 = p["Ci"]
 			v2 = rp[n]
 			for i in range( 0, len( v1 ) ) :
-				self.assertEqual( v1[i], IECore.Color3f( v2[i] ) )
+				self.assertEqual( v1[i], imath.Color3f( v2[i] ) )
 
 	def testUserDataViaGetAttribute( self ) :
 
@@ -161,7 +162,7 @@ class ShadingEngineTest( GafferOSLTest.OSLTestCase ) :
 		p = e.shade( rp )
 
 		for i, c in enumerate( p["Ci"] ) :
-			self.assertEqual( c, IECore.Color3f(i) )
+			self.assertEqual( c, imath.Color3f(i) )
 
 	def testDynamicAttributesAllAttributesAreNeeded( self ) :
 
@@ -180,13 +181,13 @@ class ShadingEngineTest( GafferOSLTest.OSLTestCase ) :
 		constant = self.compileShader( os.path.dirname( __file__ ) + "/shaders/constant.osl" )
 
 		e = GafferOSL.ShadingEngine( IECore.ObjectVector( [
-			IECoreScene.Shader( shader, "osl:shader", { "s.c" : IECore.Color3f( 0.1, 0.2, 0.3 ), "__handle" : "h" } ),
+			IECoreScene.Shader( shader, "osl:shader", { "s.c" : imath.Color3f( 0.1, 0.2, 0.3 ), "__handle" : "h" } ),
 			IECoreScene.Shader( constant, "osl:surface", { "Cs" : "link:h.c" } ),
 		] ) )
 		p = e.shade( self.rectanglePoints() )
 
 		for c in p["Ci"] :
-			self.assertEqual( c, IECore.Color3f( 0.1, 0.2, 0.3 ) )
+			self.assertEqual( c, imath.Color3f( 0.1, 0.2, 0.3 ) )
 
 	def testClosureParameters( self ) :
 
@@ -194,20 +195,20 @@ class ShadingEngineTest( GafferOSLTest.OSLTestCase ) :
 		inputClosure = self.compileShader( os.path.dirname( __file__ ) + "/shaders/inputClosure.osl" )
 
 		e = GafferOSL.ShadingEngine( IECore.ObjectVector( [
-			IECoreScene.Shader( outputClosure, "osl:shader", { "e" : IECore.Color3f( 0.1, 0.2, 0.3 ), "__handle" : "h" } ),
+			IECoreScene.Shader( outputClosure, "osl:shader", { "e" : imath.Color3f( 0.1, 0.2, 0.3 ), "__handle" : "h" } ),
 			IECoreScene.Shader( inputClosure, "osl:surface", { "i" : "link:h.c" } ),
 		] ) )
 		p = e.shade( self.rectanglePoints() )
 
 		for c in p["Ci"] :
-			self.assertEqual( c, IECore.Color3f( 0.1, 0.2, 0.3 ) )
+			self.assertEqual( c, imath.Color3f( 0.1, 0.2, 0.3 ) )
 
 	def testDebugClosure( self ) :
 
 		shader = self.compileShader( os.path.dirname( __file__ ) + "/shaders/debugClosure.osl" )
 
 		e = GafferOSL.ShadingEngine( IECore.ObjectVector( [
-			IECoreScene.Shader( shader, "osl:surface", { "name" : "a", "weight" : IECore.Color3f( 1, 0, 0 ) } ),
+			IECoreScene.Shader( shader, "osl:surface", { "name" : "a", "weight" : imath.Color3f( 1, 0, 0 ) } ),
 		] ) )
 
 		points = self.rectanglePoints()
@@ -219,10 +220,10 @@ class ShadingEngineTest( GafferOSLTest.OSLTestCase ) :
 		self.assertEqual( len( shading["a"] ), len( points["P"] ) )
 
 		for c in shading["Ci"] :
-			self.assertEqual( c, IECore.Color3f( 0 ) )
+			self.assertEqual( c, imath.Color3f( 0 ) )
 
 		for a in shading["a"] :
-			self.assertEqual( a, IECore.Color3f( 1, 0, 0 ) )
+			self.assertEqual( a, imath.Color3f( 1, 0, 0 ) )
 
 	def testMultipleDebugClosures( self ) :
 
@@ -237,7 +238,7 @@ class ShadingEngineTest( GafferOSLTest.OSLTestCase ) :
 
 		for n in ( "u", "v", "P" ) :
 			for i in range( 0, len( shading[n] ) ) :
-				self.assertEqual( shading[n][i], IECore.Color3f( points[n][i] ) )
+				self.assertEqual( shading[n][i], imath.Color3f( points[n][i] ) )
 
 	def testTypedDebugClosure( self ) :
 
@@ -274,7 +275,7 @@ class ShadingEngineTest( GafferOSLTest.OSLTestCase ) :
 		shader = self.compileShader( os.path.dirname( __file__ ) + "/shaders/debugClosureWithInternalValue.osl" )
 
 		e = GafferOSL.ShadingEngine( IECore.ObjectVector( [
-			IECoreScene.Shader( shader, "osl:surface", { "value" : IECore.Color3f( 1, 0.5, 0.25 ) } ),
+			IECoreScene.Shader( shader, "osl:surface", { "value" : imath.Color3f( 1, 0.5, 0.25 ) } ),
 		] ) )
 
 		points = self.rectanglePoints()
@@ -292,17 +293,17 @@ class ShadingEngineTest( GafferOSLTest.OSLTestCase ) :
 
 		for i in range( 0, len( points["P"] ) ) :
 			self.assertEqual( shading["f"][i], 1 )
-			self.assertEqual( shading["p"][i], IECore.V3f( 1, 0.5, 0.25 ) )
-			self.assertEqual( shading["v"][i], IECore.V3f( 1, 0.5, 0.25 ) )
-			self.assertEqual( shading["n"][i], IECore.V3f( 1, 0.5, 0.25 ) )
-			self.assertEqual( shading["c"][i], IECore.Color3f( 1, 0.5, 0.25 ) )
+			self.assertEqual( shading["p"][i], imath.V3f( 1, 0.5, 0.25 ) )
+			self.assertEqual( shading["v"][i], imath.V3f( 1, 0.5, 0.25 ) )
+			self.assertEqual( shading["n"][i], imath.V3f( 1, 0.5, 0.25 ) )
+			self.assertEqual( shading["c"][i], imath.Color3f( 1, 0.5, 0.25 ) )
 
 	def testDebugClosureWithZeroValue( self ) :
 
 		shader = self.compileShader( os.path.dirname( __file__ ) + "/shaders/debugClosureWithInternalValue.osl" )
 
 		e = GafferOSL.ShadingEngine( IECore.ObjectVector( [
-			IECoreScene.Shader( shader, "osl:surface", { "value" : IECore.Color3f( 0 ) } ),
+			IECoreScene.Shader( shader, "osl:surface", { "value" : imath.Color3f( 0 ) } ),
 		] ) )
 
 		points = self.rectanglePoints()
@@ -320,10 +321,10 @@ class ShadingEngineTest( GafferOSLTest.OSLTestCase ) :
 
 		for i in range( 0, len( points["P"] ) ) :
 			self.assertEqual( shading["f"][i], 0 )
-			self.assertEqual( shading["p"][i], IECore.V3f( 0 ) )
-			self.assertEqual( shading["v"][i], IECore.V3f( 0 ) )
-			self.assertEqual( shading["n"][i], IECore.V3f( 0 ) )
-			self.assertEqual( shading["c"][i], IECore.Color3f( 0 ) )
+			self.assertEqual( shading["p"][i], imath.V3f( 0 ) )
+			self.assertEqual( shading["v"][i], imath.V3f( 0 ) )
+			self.assertEqual( shading["n"][i], imath.V3f( 0 ) )
+			self.assertEqual( shading["c"][i], imath.Color3f( 0 ) )
 
 	def testSpline( self ) :
 
@@ -331,10 +332,10 @@ class ShadingEngineTest( GafferOSLTest.OSLTestCase ) :
 		spline =  IECore.SplinefColor3f(
 			IECore.CubicBasisf.bSpline(),
 			[
-				( 0, IECore.Color3f( 1 ) ),
-				( 0, IECore.Color3f( 1 ) ),
-				( 1, IECore.Color3f( 0 ) ),
-				( 1, IECore.Color3f( 0 ) ),
+				( 0, imath.Color3f( 1 ) ),
+				( 0, imath.Color3f( 1 ) ),
+				( 1, imath.Color3f( 0 ) ),
+				( 1, imath.Color3f( 0 ) ),
 			]
 		)
 
@@ -352,12 +353,12 @@ class ShadingEngineTest( GafferOSLTest.OSLTestCase ) :
 		shader = self.compileShader( os.path.dirname( __file__ ) + "/shaders/extractTranslate.osl" )
 
 		e = GafferOSL.ShadingEngine( IECore.ObjectVector( [
-			IECoreScene.Shader( shader, "osl:surface", { "m" : IECore.M44f().translate( IECore.V3f( 1, 2, 3 ) ) } )
+			IECoreScene.Shader( shader, "osl:surface", { "m" : imath.M44f().translate( imath.V3f( 1, 2, 3 ) ) } )
 		] ) )
 
 		p = e.shade( self.rectanglePoints() )
 		for i in range( 0, len( p["Ci"] ) ) :
-			self.assertEqual( p["translate"][i], IECore.V3f( 1, 2, 3 ) )
+			self.assertEqual( p["translate"][i], imath.V3f( 1, 2, 3 ) )
 
 	def testParameters( self ) :
 
@@ -367,11 +368,11 @@ class ShadingEngineTest( GafferOSLTest.OSLTestCase ) :
 				"f" : 1.0,
 				"i" : 2,
 				"s" : "three",
-				"c" : IECore.Color3f( 4, 5, 6 ),
-				"vec" : IECore.V3fData( IECore.V3f( 7, 8, 9 ), IECore.GeometricData.Interpretation.Vector ),
-				"p" : IECore.V3fData( IECore.V3f( 10, 11, 12 ), IECore.GeometricData.Interpretation.Point ),
-				"n" : IECore.V3fData( IECore.V3f( 13, 14, 15 ), IECore.GeometricData.Interpretation.Normal ),
-				"noInterp" : IECore.V3f( 16, 17, 18 ),
+				"c" : imath.Color3f( 4, 5, 6 ),
+				"vec" : IECore.V3fData( imath.V3f( 7, 8, 9 ), IECore.GeometricData.Interpretation.Vector ),
+				"p" : IECore.V3fData( imath.V3f( 10, 11, 12 ), IECore.GeometricData.Interpretation.Point ),
+				"n" : IECore.V3fData( imath.V3f( 13, 14, 15 ), IECore.GeometricData.Interpretation.Normal ),
+				"noInterp" : imath.V3f( 16, 17, 18 ),
 
 			 } )
 		] ) )
@@ -379,7 +380,7 @@ class ShadingEngineTest( GafferOSLTest.OSLTestCase ) :
 		rp = self.rectanglePoints()
 		p = e.shade( rp )
 		for i in range( 0, len( p["Ci"] ) ) :
-			self.assertEqual( p["Ci"][i], IECore.Color3f( 0, 1, 0 ) )
+			self.assertEqual( p["Ci"][i], imath.Color3f( 0, 1, 0 ) )
 
 	def testTransform( self ) :
 
@@ -392,14 +393,14 @@ class ShadingEngineTest( GafferOSLTest.OSLTestCase ) :
 		p = e.shade( self.rectanglePoints() )
 
 		# Transform has no effect if world matrix not set
-		self.assertEqual( p["Ci"], IECore.Color3fVectorData( [ IECore.Color3f( i ) for i in self.rectanglePoints()["P"] ] ) )
+		self.assertEqual( p["Ci"], IECore.Color3fVectorData( [ imath.Color3f( i ) for i in self.rectanglePoints()["P"] ] ) )
 
-		worldMatrix = IECore.M44f()
-		worldMatrix.translate( IECore.V3f( 2, 0, 0 ) )
+		worldMatrix = imath.M44f()
+		worldMatrix.translate( imath.V3f( 2, 0, 0 ) )
 		p = e.shade( self.rectanglePoints(), { "world" : GafferOSL.ShadingEngine.Transform( worldMatrix ) } )
 
 		# Transform from object to world
-		self.assertEqual( p["Ci"], IECore.Color3fVectorData( [ IECore.Color3f( i + IECore.V3f( 2, 0, 0 ) ) for i in self.rectanglePoints()["P"] ] ) )
+		self.assertEqual( p["Ci"], IECore.Color3fVectorData( [ imath.Color3f( i + imath.V3f( 2, 0, 0 ) ) for i in self.rectanglePoints()["P"] ] ) )
 
 		e = GafferOSL.ShadingEngine( IECore.ObjectVector( [
 			IECoreScene.Shader( s, "osl:surface", { "backwards" : IECore.IntData( 1 ) } )
@@ -408,7 +409,7 @@ class ShadingEngineTest( GafferOSLTest.OSLTestCase ) :
 		p = e.shade( self.rectanglePoints(), { "world" : GafferOSL.ShadingEngine.Transform( worldMatrix ) } )
 
 		# Transform from world to object
-		self.assertEqual( p["Ci"], IECore.Color3fVectorData( [ IECore.Color3f( i + IECore.V3f( -2, 0, 0 ) ) for i in self.rectanglePoints()["P"] ] ) )
+		self.assertEqual( p["Ci"], IECore.Color3fVectorData( [ imath.Color3f( i + imath.V3f( -2, 0, 0 ) ) for i in self.rectanglePoints()["P"] ] ) )
 
 	def testVectorToColorConnections( self ) :
 
@@ -421,7 +422,7 @@ class ShadingEngineTest( GafferOSLTest.OSLTestCase ) :
 		r = e.shade( p )
 
 		for i, c in enumerate( r["Ci"] ) :
-			self.assertEqual( IECore.V3f( *c ), p["P"][i] )
+			self.assertEqual( imath.V3f( *c ), p["P"][i] )
 
 	def testCanReadV3iArrayUserData( self ) :
 
@@ -437,15 +438,15 @@ class ShadingEngineTest( GafferOSLTest.OSLTestCase ) :
 		p["v3i"] = IECore.V3iVectorData( numPoints )
 
 		for i in range( numPoints ) :
-			p["v3i"][i] = IECore.V3i( [i, i + 1 , i + 2 ] )
+			p["v3i"][i] = imath.V3i( [i, i + 1 , i + 2 ] )
 
 		r = e.shade( p )
 
 		for i, c in enumerate( r["Ci"] ) :
 			if i < 50:
-				expected = IECore.Color3f( 0.0, i / 100.0, i / 200.0 )
+				expected = imath.Color3f( 0.0, i / 100.0, i / 200.0 )
 			else:
-				expected = IECore.Color3f( 1.0, 0.0, 0.0 )
+				expected = imath.Color3f( 1.0, 0.0, 0.0 )
 
 			self.assertEqual( c, expected )
 
@@ -468,14 +469,14 @@ class ShadingEngineTest( GafferOSLTest.OSLTestCase ) :
 		] ) )
 
 		p = self.rectanglePoints()
-		p["v2f"] = IECore.V2fVectorData( [ IECore.V2f( x.x, x.y ) for x in p["P"] ] )
+		p["v2f"] = IECore.V2fVectorData( [ imath.V2f( x.x, x.y ) for x in p["P"] ] )
 
 		r = e.shade( p )
 
 		for i, c in enumerate( r["Ci"] ) :
 			self.assertEqual(
 				c,
-				IECore.Color3f( p["P"][i].x, p["P"][i].y, 0 )
+				imath.Color3f( p["P"][i].x, p["P"][i].y, 0 )
 			)
 
 	def testUVProvidedAsV2f( self ) :
@@ -484,7 +485,7 @@ class ShadingEngineTest( GafferOSLTest.OSLTestCase ) :
 
 		rp = self.rectanglePoints()
 		rp["uv"] = IECore.V2fVectorData(
-			[ IECore.V2f( u, v ) for u, v in zip( rp["u"], rp["v"] ) ]
+			[ imath.V2f( u, v ) for u, v in zip( rp["u"], rp["v"] ) ]
 		)
 		del rp["u"]
 		del rp["v"]
@@ -497,7 +498,7 @@ class ShadingEngineTest( GafferOSLTest.OSLTestCase ) :
 
 			p = e.shade( rp )
 			for i, c in enumerate( p["Ci"] ) :
-				self.assertEqual( c, IECore.Color3f( rp["uv"][i][uvIndex] ) )
+				self.assertEqual( c, imath.Color3f( rp["uv"][i][uvIndex] ) )
 
 	def testTextureOrientation( self ) :
 

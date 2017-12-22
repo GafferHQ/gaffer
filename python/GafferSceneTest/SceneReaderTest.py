@@ -36,6 +36,7 @@
 
 import os
 import unittest
+import imath
 
 import IECore
 import IECoreScene
@@ -57,7 +58,7 @@ class SceneReaderTest( GafferSceneTest.SceneTestCase ) :
 		sc = IECoreScene.SceneCache( self.__testFile, IECore.IndexedIO.OpenMode.Write )
 
 		t = sc.createChild( "1" )
-		t.writeTransform( IECore.M44dData( IECore.M44d.createTranslated( IECore.V3d( 1, 0, 0 ) ) ), 0.0 )
+		t.writeTransform( IECore.M44dData( imath.M44d().translate( imath.V3d( 1, 0, 0 ) ) ), 0.0 )
 
 		s = t.createChild( "2" )
 		s.writeObject( IECoreScene.SpherePrimitive( 10 ), 0.0 )
@@ -76,7 +77,7 @@ class SceneReaderTest( GafferSceneTest.SceneTestCase ) :
 		sc = IECoreScene.SceneCache( self.__testFile, IECore.IndexedIO.OpenMode.Write )
 
 		t = sc.createChild( "transform" )
-		t.writeTransform( IECore.M44dData( IECore.M44d.createTranslated( IECore.V3d( 1, 0, 0 ) ) ), 0.0 )
+		t.writeTransform( IECore.M44dData( imath.M44d().translate( imath.V3d( 1, 0, 0 ) ) ), 0.0 )
 
 		s = t.createChild( "shape" )
 		s.writeObject( IECoreScene.SpherePrimitive( 10 ), 0.0 )
@@ -97,7 +98,7 @@ class SceneReaderTest( GafferSceneTest.SceneTestCase ) :
 		sc = IECoreScene.SceneCache( self.__testFile, IECore.IndexedIO.OpenMode.Write )
 
 		t = sc.createChild( "transform" )
-		t.writeTransform( IECore.M44dData( IECore.M44d.createTranslated( IECore.V3d( 1, 0, 0 ) ) ), 0.0 )
+		t.writeTransform( IECore.M44dData( imath.M44d().translate( imath.V3d( 1, 0, 0 ) ) ), 0.0 )
 
 		s = t.createChild( "shape" )
 		s.writeObject( IECoreScene.SpherePrimitive( 10 ), 0.0 )
@@ -114,7 +115,7 @@ class SceneReaderTest( GafferSceneTest.SceneTestCase ) :
 		scene = reader["out"]
 		self.assertSceneValid( scene )
 
-		self.assertEqual( scene.transform( "transform" ), IECore.M44f.createTranslated( IECore.V3f( 1, 0, 0 ) ) )
+		self.assertEqual( scene.transform( "transform" ), imath.M44f().translate( imath.V3f( 1, 0, 0 ) ) )
 		self.assertEqual( scene.object( "transform/shape" ), IECoreScene.SpherePrimitive( 10 ) )
 
 	def writeAnimatedSCC( self ) :
@@ -123,34 +124,34 @@ class SceneReaderTest( GafferSceneTest.SceneTestCase ) :
 
 		time = 0
 		sc1 = scene.createChild( str( 1 ) )
-		mesh = IECoreScene.MeshPrimitive.createBox(IECore.Box3f(IECore.V3f(0),IECore.V3f(1)))
-		mesh["Cd"] = IECoreScene.PrimitiveVariable( IECoreScene.PrimitiveVariable.Interpolation.Uniform, IECore.V3fVectorData( [ IECore.V3f( 1, 0, 0 ) ] * 6 ) )
+		mesh = IECoreScene.MeshPrimitive.createBox(imath.Box3f(imath.V3f(0),imath.V3f(1)))
+		mesh["Cd"] = IECoreScene.PrimitiveVariable( IECoreScene.PrimitiveVariable.Interpolation.Uniform, IECore.V3fVectorData( [ imath.V3f( 1, 0, 0 ) ] * 6 ) )
 		sc1.writeObject( mesh, time )
 		sc1.writeTransform( IECore.M44dData(), time )
 
 		sc2 = sc1.createChild( str( 2 ) )
-		mesh = IECoreScene.MeshPrimitive.createBox(IECore.Box3f(IECore.V3f(0),IECore.V3f(1)))
-		mesh["Cd"] = IECoreScene.PrimitiveVariable( IECoreScene.PrimitiveVariable.Interpolation.Uniform, IECore.V3fVectorData( [ IECore.V3f( 0, 1, 0 ) ] * 6 ) )
+		mesh = IECoreScene.MeshPrimitive.createBox(imath.Box3f(imath.V3f(0),imath.V3f(1)))
+		mesh["Cd"] = IECoreScene.PrimitiveVariable( IECoreScene.PrimitiveVariable.Interpolation.Uniform, IECore.V3fVectorData( [ imath.V3f( 0, 1, 0 ) ] * 6 ) )
 		sc2.writeObject( mesh, time )
 		sc2.writeTransform( IECore.M44dData(), time )
 
 		sc3 = sc2.createChild( str( 3 ) )
-		mesh = IECoreScene.MeshPrimitive.createBox(IECore.Box3f(IECore.V3f(0),IECore.V3f(1)))
-		mesh["Cd"] = IECoreScene.PrimitiveVariable( IECoreScene.PrimitiveVariable.Interpolation.Uniform, IECore.V3fVectorData( [ IECore.V3f( 0, 0, 1 ) ] * 6 ) )
+		mesh = IECoreScene.MeshPrimitive.createBox(imath.Box3f(imath.V3f(0),imath.V3f(1)))
+		mesh["Cd"] = IECoreScene.PrimitiveVariable( IECoreScene.PrimitiveVariable.Interpolation.Uniform, IECore.V3fVectorData( [ imath.V3f( 0, 0, 1 ) ] * 6 ) )
 		sc3.writeObject( mesh, time )
 		sc3.writeTransform( IECore.M44dData(), time )
 
 		for frame in [ 0.5, 1, 1.5, 2, 5, 10 ] :
 
-			matrix = IECore.M44d.createTranslated( IECore.V3d( 1, frame, 0 ) )
+			matrix = imath.M44d().translate( imath.V3d( 1, frame, 0 ) )
 			sc1.writeTransform( IECore.M44dData( matrix ), float( frame ) / 24 )
 
-			mesh["Cd"] = IECoreScene.PrimitiveVariable( IECoreScene.PrimitiveVariable.Interpolation.Uniform, IECore.V3fVectorData( [ IECore.V3f( frame, 1, 0 ) ] * 6 ) )
+			mesh["Cd"] = IECoreScene.PrimitiveVariable( IECoreScene.PrimitiveVariable.Interpolation.Uniform, IECore.V3fVectorData( [ imath.V3f( frame, 1, 0 ) ] * 6 ) )
 			sc2.writeObject( mesh, float( frame ) / 24 )
-			matrix = IECore.M44d.createTranslated( IECore.V3d( 2, frame, 0 ) )
+			matrix = imath.M44d().translate( imath.V3d( 2, frame, 0 ) )
 			sc2.writeTransform( IECore.M44dData( matrix ), float( frame ) / 24 )
 
-			matrix = IECore.M44d.createTranslated( IECore.V3d( 3, frame, 0 ) )
+			matrix = imath.M44d().translate( imath.V3d( 3, frame, 0 ) )
 			sc3.writeTransform( IECore.M44dData( matrix ), float( frame ) / 24 )
 
 	def testAnimatedScene( self ) :
@@ -167,28 +168,28 @@ class SceneReaderTest( GafferSceneTest.SceneTestCase ) :
 		context.setFrame( 0 )
 
 		with context:
-			self.assertEqual( scene.transform( "/1" ), IECore.M44f() )
-			self.assertEqual( scene.transform( "/1/2" ), IECore.M44f() )
-			self.assertEqual( scene.transform( "/1/2/3" ), IECore.M44f() )
+			self.assertEqual( scene.transform( "/1" ), imath.M44f() )
+			self.assertEqual( scene.transform( "/1/2" ), imath.M44f() )
+			self.assertEqual( scene.transform( "/1/2/3" ), imath.M44f() )
 
 		for time in [ 0.5, 1, 1.5, 2, 5, 10 ] :
 
 			context.setFrame( time )
 
 			with context:
-				self.assertEqual( scene.transform( "/1" ), IECore.M44f.createTranslated( IECore.V3f( 1, time, 0 ) ) )
-				self.assertEqual( scene.transform( "/1/2" ), IECore.M44f.createTranslated( IECore.V3f( 2, time, 0 ) ) )
-				self.assertEqual( scene.transform( "/1/2/3" ), IECore.M44f.createTranslated( IECore.V3f( 3, time, 0 ) ) )
+				self.assertEqual( scene.transform( "/1" ), imath.M44f().translate( imath.V3f( 1, time, 0 ) ) )
+				self.assertEqual( scene.transform( "/1/2" ), imath.M44f().translate( imath.V3f( 2, time, 0 ) ) )
+				self.assertEqual( scene.transform( "/1/2/3" ), imath.M44f().translate( imath.V3f( 3, time, 0 ) ) )
 
 				mesh = scene.object( "/1/2" )
-				self.assertEqual( mesh["Cd"].data, IECore.V3fVectorData( [ IECore.V3f( time, 1, 0 ) ] * 6 ) )
+				self.assertEqual( mesh["Cd"].data, IECore.V3fVectorData( [ imath.V3f( time, 1, 0 ) ] * 6 ) )
 
 	def testEnabled( self ) :
 
 		sc = IECoreScene.SceneCache( self.__testFile, IECore.IndexedIO.OpenMode.Write )
 
 		t = sc.createChild( "transform" )
-		t.writeTransform( IECore.M44dData( IECore.M44d.createTranslated( IECore.V3d( 1, 0, 0 ) ) ), 0.0 )
+		t.writeTransform( IECore.M44dData( imath.M44d().translate( imath.V3d( 1, 0, 0 ) ) ), 0.0 )
 
 		s = t.createChild( "shape" )
 		s.writeObject( IECoreScene.SpherePrimitive( 10 ), 0.0 )
@@ -216,8 +217,8 @@ class SceneReaderTest( GafferSceneTest.SceneTestCase ) :
 
 		self.assertSceneValid( s["out"] )
 		self.assertEqual( s["out"].childNames( "/" ), IECore.InternedStringVectorData() )
-		self.assertEqual( s["out"].bound( "/" ), IECore.Box3f() )
-		self.assertEqual( s["out"].transform( "/" ), IECore.M44f() )
+		self.assertEqual( s["out"].bound( "/" ), imath.Box3f() )
+		self.assertEqual( s["out"].transform( "/" ), imath.M44f() )
 		self.assertEqual( s["out"].attributes( "/" ), IECore.CompoundObject() )
 		self.assertEqual( s["out"].object( "/" ), IECore.NullObject() )
 
@@ -225,8 +226,8 @@ class SceneReaderTest( GafferSceneTest.SceneTestCase ) :
 
 		s = IECoreScene.SceneCache( "/tmp/test.scc", IECore.IndexedIO.OpenMode.Write )
 		sphereGroup = s.createChild( "sphereGroup" )
-		sphereGroup.writeTransform( IECore.M44dData( IECore.M44d.createTranslated( IECore.V3d( 1, 0, 0 ) ) ), 0.0 )
-		sphereGroup.writeTransform( IECore.M44dData( IECore.M44d.createTranslated( IECore.V3d( 2, 0, 0 ) ) ), 1.0 )
+		sphereGroup.writeTransform( IECore.M44dData( imath.M44d().translate( imath.V3d( 1, 0, 0 ) ) ), 0.0 )
+		sphereGroup.writeTransform( IECore.M44dData( imath.M44d().translate( imath.V3d( 2, 0, 0 ) ) ), 1.0 )
 		sphere = sphereGroup.createChild( "sphere" )
 		sphere.writeObject( IECoreScene.SpherePrimitive(), 0 )
 
@@ -250,15 +251,15 @@ class SceneReaderTest( GafferSceneTest.SceneTestCase ) :
 		s = IECoreScene.SceneCache( "/tmp/test.scc", IECore.IndexedIO.OpenMode.Write )
 
 		movingGroup = s.createChild( "movingGroup" )
-		movingGroup.writeTransform( IECore.M44dData( IECore.M44d.createTranslated( IECore.V3d( 1, 0, 0 ) ) ), 0.0 )
-		movingGroup.writeTransform( IECore.M44dData( IECore.M44d.createTranslated( IECore.V3d( 2, 0, 0 ) ) ), 1.0 )
+		movingGroup.writeTransform( IECore.M44dData( imath.M44d().translate( imath.V3d( 1, 0, 0 ) ) ), 0.0 )
+		movingGroup.writeTransform( IECore.M44dData( imath.M44d().translate( imath.V3d( 2, 0, 0 ) ) ), 1.0 )
 
 		deformingSphere = movingGroup.createChild( "deformingSphere" )
 		deformingSphere.writeObject( IECoreScene.SpherePrimitive(), 0 )
 		deformingSphere.writeObject( IECoreScene.SpherePrimitive( 2 ), 1 )
 
 		staticGroup = s.createChild( "staticGroup" )
-		staticGroup.writeTransform( IECore.M44dData( IECore.M44d.createTranslated( IECore.V3d( 1, 0, 0 ) ) ), 0.0 )
+		staticGroup.writeTransform( IECore.M44dData( imath.M44d().translate( imath.V3d( 1, 0, 0 ) ) ), 0.0 )
 
 		staticSphere = staticGroup.createChild( "staticSphere" )
 		staticSphere.writeObject( IECoreScene.SpherePrimitive(), 0 )
@@ -321,7 +322,7 @@ class SceneReaderTest( GafferSceneTest.SceneTestCase ) :
 		planeGroup = s.createChild( "planeGroup" )
 		plane = planeGroup.createChild( "plane" )
 		plane.writeTags( [ "wood", "something" ] )
-		plane.writeObject( IECoreScene.MeshPrimitive.createPlane( IECore.Box2f( IECore.V2f( -1 ), IECore.V2f( 1 ) ) ), 0 )
+		plane.writeObject( IECoreScene.MeshPrimitive.createPlane( imath.Box2f( imath.V2f( -1 ), imath.V2f( 1 ) ) ), 0 )
 
 		del s, sphereGroup, sphere, planeGroup, plane
 
@@ -366,7 +367,7 @@ class SceneReaderTest( GafferSceneTest.SceneTestCase ) :
 		planeGroup = s.createChild( "planeGroup" )
 		plane = planeGroup.createChild( "plane" )
 		plane.writeTags( [ "wood", "something" ] )
-		plane.writeObject( IECoreScene.MeshPrimitive.createPlane( IECore.Box2f( IECore.V2f( -1 ), IECore.V2f( 1 ) ) ), 0 )
+		plane.writeObject( IECoreScene.MeshPrimitive.createPlane( imath.Box2f( imath.V2f( -1 ), imath.V2f( 1 ) ) ), 0 )
 
 		del s, sphereGroup, sphere, planeGroup, plane
 
@@ -433,7 +434,7 @@ class SceneReaderTest( GafferSceneTest.SceneTestCase ) :
 		planeGroup = s.createChild( "planeGroup" )
 		plane = planeGroup.createChild( "plane" )
 		plane.writeTags( [ "wood", "something" ] )
-		plane.writeObject( IECoreScene.MeshPrimitive.createPlane( IECore.Box2f( IECore.V2f( -1 ), IECore.V2f( 1 ) ) ), 0 )
+		plane.writeObject( IECoreScene.MeshPrimitive.createPlane( imath.Box2f( imath.V2f( -1 ), imath.V2f( 1 ) ) ), 0 )
 
 		del s, sphereGroup, sphere, planeGroup, plane
 

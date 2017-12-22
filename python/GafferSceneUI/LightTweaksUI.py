@@ -35,6 +35,7 @@
 ##########################################################################
 
 import functools
+import imath
 
 import IECore
 import IECoreScene
@@ -216,7 +217,7 @@ class _TweaksFooter( GafferUI.PlugValueWidget ) :
 
 		with row :
 
-				GafferUI.Spacer( IECore.V2i( GafferUI.PlugWidget.labelWidth(), 1 ) )
+				GafferUI.Spacer( imath.V2i( GafferUI.PlugWidget.labelWidth(), 1 ) )
 
 				GafferUI.MenuButton(
 					image = "plus.png",
@@ -224,7 +225,7 @@ class _TweaksFooter( GafferUI.PlugValueWidget ) :
 					menu = GafferUI.Menu( Gaffer.WeakMethod( self.__menuDefinition ) )
 				)
 
-				GafferUI.Spacer( IECore.V2i( 1 ), IECore.V2i( 999999, 1 ), parenting = { "expand" : True } )
+				GafferUI.Spacer( imath.V2i( 1 ), imath.V2i( 999999, 1 ), parenting = { "expand" : True } )
 
 	def _updateFromPlug( self ) :
 

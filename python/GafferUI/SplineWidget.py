@@ -35,6 +35,8 @@
 #
 ##########################################################################
 
+import imath
+
 import IECore
 
 import Gaffer
@@ -136,9 +138,9 @@ class SplineWidget( GafferUI.Widget ) :
 				t = float( i + 0.5 ) / numStops
 				c = self.__spline( t )
 				if isinstance( c, float ) :
-					c = IECore.Color3f( c, c, c )
+					c = imath.Color3f( c, c, c )
 				else :
-					c = IECore.Color3f( c[0], c[1], c[2] )
+					c = imath.Color3f( c[0], c[1], c[2] )
 
 				c = displayTransform( c )
 				self.__gradientToDraw.setPixel( i, 0, self._qtColor( c ).rgb() )
@@ -154,7 +156,7 @@ class SplineWidget( GafferUI.Widget ) :
 			interval = self.__spline.interval()
 			if isinstance( self.__spline, IECore.Splineff ) :
 				spline = IECore.Struct()
-				spline.color = IECore.Color3f( 1 )
+				spline.color = imath.Color3f( 1 )
 				spline.path = QtGui.QPainterPath()
 				for i in range( 0, numPoints ) :
 					t = float( i ) / ( numPoints - 1 )
@@ -169,9 +171,9 @@ class SplineWidget( GafferUI.Widget ) :
 				for i in range( 0, self.__spline( 0 ).dimensions() ) :
 					spline = IECore.Struct()
 					if i==3 :
-						spline.color = IECore.Color3f( 1 )
+						spline.color = imath.Color3f( 1 )
 					else :
-						c = IECore.Color3f( 0 )
+						c = imath.Color3f( 0 )
 						c[i] = 1
 						spline.color = c
 					spline.path = QtGui.QPainterPath()

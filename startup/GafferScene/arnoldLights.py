@@ -71,7 +71,7 @@ Gaffer.Metadata.registerValue( "ai:light:cylinder_light", "intensityParameter", 
 Gaffer.Metadata.registerValue( "ai:light:cylinder_light", "exposureParameter", "exposure" )
 Gaffer.Metadata.registerValue( "ai:light:cylinder_light", "colorParameter", "color" )
 Gaffer.Metadata.registerValue( "ai:light:cylinder_light", "radiusParameter", "radius" )
-Gaffer.Metadata.registerValue( "ai:light:cylinder_light", "visualiserOrientation", IECore.M44f().rotate( IECore.V3f( 0.5 * math.pi, 0 , 0 ) ) )
+Gaffer.Metadata.registerValue( "ai:light:cylinder_light", "visualiserOrientation", imath.M44f().rotate( imath.V3f( 0.5 * math.pi, 0 , 0 ) ) )
 
 Gaffer.Metadata.registerValue( "ai:light:skydome_light", "intensityParameter", "intensity" )
 Gaffer.Metadata.registerValue( "ai:light:skydome_light", "exposureParameter", "exposure" )

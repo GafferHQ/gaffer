@@ -36,6 +36,7 @@
 ##########################################################################
 
 import unittest
+import imath
 
 import IECore
 import IECoreScene
@@ -60,10 +61,10 @@ class CameraTest( GafferSceneTest.SceneTestCase ) :
 		p["fieldOfView"].setValue( 45 )
 
 		self.assertEqual( p["out"].object( "/" ), IECore.NullObject() )
-		self.assertEqual( p["out"].transform( "/" ), IECore.M44f() )
+		self.assertEqual( p["out"].transform( "/" ), imath.M44f() )
 		self.assertEqual( p["out"].childNames( "/" ), IECore.InternedStringVectorData( [ "camera" ] ) )
 
-		self.assertEqual( p["out"].transform( "/camera" ), IECore.M44f() )
+		self.assertEqual( p["out"].transform( "/camera" ), imath.M44f() )
 		self.assertEqual( p["out"].childNames( "/camera" ), IECore.InternedStringVectorData() )
 
 		o = p["out"].object( "/camera" )
@@ -107,11 +108,11 @@ class CameraTest( GafferSceneTest.SceneTestCase ) :
 
 		p = GafferScene.Camera()
 		o = p["out"].object( "/camera" )
-		self.assertEqual( o.parameters()["clippingPlanes"].value, IECore.V2f( 0.01, 100000 ) )
+		self.assertEqual( o.parameters()["clippingPlanes"].value, imath.V2f( 0.01, 100000 ) )
 
-		p["clippingPlanes"].setValue( IECore.V2f( 1, 10 ) )
+		p["clippingPlanes"].setValue( imath.V2f( 1, 10 ) )
 		o = p["out"].object( "/camera" )
-		self.assertEqual( o.parameters()["clippingPlanes"].value, IECore.V2f( 1, 10 ) )
+		self.assertEqual( o.parameters()["clippingPlanes"].value, imath.V2f( 1, 10 ) )
 
 	def testEnableBehaviour( self ) :
 

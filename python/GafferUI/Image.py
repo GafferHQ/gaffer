@@ -35,6 +35,7 @@
 ##########################################################################
 
 import os
+import imath
 
 import IECore
 import IECoreImage
@@ -139,7 +140,7 @@ class Image( GafferUI.Widget ) :
 			targetType = IECore.UCharVectorData.staticTypeId(),
 		)
 
-		imageSize = image.dataWindow.size() + IECore.V2i( 1 )
+		imageSize = image.dataWindow.size() + imath.V2i( 1 )
 
 		s = interleaved.toString()
 		image = QtGui.QImage( s, imageSize.x, imageSize.y, format )

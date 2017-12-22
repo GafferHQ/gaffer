@@ -35,6 +35,7 @@
 ##########################################################################
 
 import unittest
+import imath
 
 import IECore
 
@@ -48,10 +49,10 @@ class VectorDataWidgetTest( GafferUITest.TestCase ) :
 
 		data = [
 			IECore.FloatVectorData( range( 0, 3 ) ),
-			IECore.Color3fVectorData( [ IECore.Color3f( x ) for x in range( 0, 3 ) ] ),
+			IECore.Color3fVectorData( [ imath.Color3f( x ) for x in range( 0, 3 ) ] ),
 			IECore.StringVectorData( [ str( x ) for x in range( 0, 3 ) ] ),
 			IECore.IntVectorData( range( 0, 3 ) ),
-			IECore.V3fVectorData( [ IECore.V3f( x ) for x in range( 0, 3 ) ] ),
+			IECore.V3fVectorData( [ imath.V3f( x ) for x in range( 0, 3 ) ] ),
 		]
 
 		w = GafferUI.VectorDataWidget( data )
@@ -84,7 +85,7 @@ class VectorDataWidgetTest( GafferUITest.TestCase ) :
 
 		data = [
 			IECore.FloatVectorData( range( 0, 3 ) ),
-			IECore.Color3fVectorData( [ IECore.Color3f( x ) for x in range( 0, 3 ) ] ),
+			IECore.Color3fVectorData( [ imath.Color3f( x ) for x in range( 0, 3 ) ] ),
 			IECore.StringVectorData( [ str( x ) for x in range( 0, 3 ) ] ),
 		]
 

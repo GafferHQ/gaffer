@@ -35,6 +35,7 @@
 ##########################################################################
 
 import unittest
+import imath
 
 import IECore
 import IECoreScene
@@ -57,13 +58,13 @@ class SphereTest( GafferSceneTest.SceneTestCase ) :
 		s["type"].setValue( GafferScene.Sphere.Type.Primitive )
 
 		self.assertEqual( s["out"].object( "/" ), IECore.NullObject() )
-		self.assertEqual( s["out"].transform( "/" ), IECore.M44f() )
-		self.assertEqual( s["out"].bound( "/" ), IECore.Box3f( IECore.V3f( -1 ), IECore.V3f( 1 ) ) )
+		self.assertEqual( s["out"].transform( "/" ), imath.M44f() )
+		self.assertEqual( s["out"].bound( "/" ), imath.Box3f( imath.V3f( -1 ), imath.V3f( 1 ) ) )
 		self.assertEqual( s["out"].childNames( "/" ), IECore.InternedStringVectorData( [ "sphere" ] ) )
 
 		self.assertEqual( s["out"].object( "/sphere" ), IECoreScene.SpherePrimitive( 1 ) )
-		self.assertEqual( s["out"].transform( "/sphere" ), IECore.M44f() )
-		self.assertEqual( s["out"].bound( "/sphere" ), IECore.Box3f( IECore.V3f( -1 ), IECore.V3f( 1 ) ) )
+		self.assertEqual( s["out"].transform( "/sphere" ), imath.M44f() )
+		self.assertEqual( s["out"].bound( "/sphere" ), imath.Box3f( imath.V3f( -1 ), imath.V3f( 1 ) ) )
 		self.assertEqual( s["out"].childNames( "/sphere" ), IECore.InternedStringVectorData() )
 
 	def testMesh( self ) :
@@ -99,8 +100,8 @@ class SphereTest( GafferSceneTest.SceneTestCase ) :
 		self.assertNotEqual( s["out"].objectHash( "/sphere" ), h )
 		h = s["out"].objectHash( "/sphere" )
 
-		s["divisions"].setValue( IECore.V2i( 5, 10 ) )
-		m = IECoreScene.MeshPrimitive.createSphere( 3, -0.75, 0.75, 300, IECore.V2i( 5, 10 ) )
+		s["divisions"].setValue( imath.V2i( 5, 10 ) )
+		m = IECoreScene.MeshPrimitive.createSphere( 3, -0.75, 0.75, 300, imath.V2i( 5, 10 ) )
 		self.assertEqual( s["out"].object( "/sphere" ), m )
 		self.assertNotEqual( s["out"].objectHash( "/sphere" ), h )
 
@@ -136,7 +137,7 @@ class SphereTest( GafferSceneTest.SceneTestCase ) :
 		self.assertNotEqual( s["out"].objectHash( "/sphere" ), h )
 		h = s["out"].objectHash( "/sphere" )
 
-		s["divisions"].setValue( IECore.V2i( 5, 10 ) )
+		s["divisions"].setValue( imath.V2i( 5, 10 ) )
 		# divisions don't affect SpherePrimitives
 		self.assertEqual( s["out"].object( "/sphere" ), m )
 		# divisions do affect the hash, since we don't check the value of type
@@ -168,13 +169,13 @@ class SphereTest( GafferSceneTest.SceneTestCase ) :
 
 		s = GafferScene.Sphere()
 		s["type"].setValue( GafferScene.Sphere.Type.Primitive )
-		s["transform"]["translate"].setValue( IECore.V3f( 1, 0, 0 ) )
+		s["transform"]["translate"].setValue( imath.V3f( 1, 0, 0 ) )
 
-		self.assertEqual( s["out"].transform( "/" ), IECore.M44f() )
-		self.assertEqual( s["out"].transform( "/sphere" ), IECore.M44f.createTranslated( IECore.V3f( 1, 0, 0 ) ) )
+		self.assertEqual( s["out"].transform( "/" ), imath.M44f() )
+		self.assertEqual( s["out"].transform( "/sphere" ), imath.M44f().translate( imath.V3f( 1, 0, 0 ) ) )
 
-		self.assertEqual( s["out"].bound( "/" ), IECore.Box3f( IECore.V3f( 0, -1, -1 ), IECore.V3f( 2, 1, 1 ) ) )
-		self.assertEqual( s["out"].bound( "/sphere" ), IECore.Box3f( IECore.V3f( -1 ), IECore.V3f( 1 ) ) )
+		self.assertEqual( s["out"].bound( "/" ), imath.Box3f( imath.V3f( 0, -1, -1 ), imath.V3f( 2, 1, 1 ) ) )
+		self.assertEqual( s["out"].bound( "/sphere" ), imath.Box3f( imath.V3f( -1 ), imath.V3f( 1 ) ) )
 
 	def testEnabled( self ) :
 

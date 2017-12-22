@@ -36,6 +36,7 @@
 
 import unittest
 import os
+import imath
 
 import IECore
 
@@ -53,7 +54,7 @@ class ClampTest( GafferImageTest.ImageTestCase ) :
 
 		clamp = GafferImage.Clamp()
 		clamp["in"].setInput(i["out"])
-		clamp["max"].setValue( IECore.Color4f( .5, .5, .5, .5 ) )
+		clamp["max"].setValue( imath.Color4f( .5, .5, .5, .5 ) )
 
 		self.assertImagesEqual( i["out"], clamp["out"] )
 
@@ -65,17 +66,17 @@ class ClampTest( GafferImageTest.ImageTestCase ) :
 		clamp = GafferImage.Clamp()
 		clamp["in"].setInput(i["out"])
 
-		clamp["max"].setValue( IECore.Color4f( 1., 1., 1., 1. ) )
+		clamp["max"].setValue( imath.Color4f( 1., 1., 1., 1. ) )
 
-		redHash = clamp["out"].channelDataHash( "R", IECore.V2i( 0 ) )
-		greenHash = clamp["out"].channelDataHash( "G", IECore.V2i( 0 ) )
-		blueHash = clamp["out"].channelDataHash( "B", IECore.V2i( 0 ) )
+		redHash = clamp["out"].channelDataHash( "R", imath.V2i( 0 ) )
+		greenHash = clamp["out"].channelDataHash( "G", imath.V2i( 0 ) )
+		blueHash = clamp["out"].channelDataHash( "B", imath.V2i( 0 ) )
 
-		clamp["max"].setValue( IECore.Color4f( .25, 1., 1., 1. ) )
+		clamp["max"].setValue( imath.Color4f( .25, 1., 1., 1. ) )
 
-		redHash2 = clamp["out"].channelDataHash( "R", IECore.V2i( 0 ) )
-		greenHash2 = clamp["out"].channelDataHash( "G", IECore.V2i( 0 ) )
-		blueHash2 = clamp["out"].channelDataHash( "B", IECore.V2i( 0 ) )
+		redHash2 = clamp["out"].channelDataHash( "R", imath.V2i( 0 ) )
+		greenHash2 = clamp["out"].channelDataHash( "G", imath.V2i( 0 ) )
+		blueHash2 = clamp["out"].channelDataHash( "B", imath.V2i( 0 ) )
 
 		self.assertNotEqual(redHash, redHash2)
 		self.assertEqual(greenHash, greenHash2)
@@ -89,7 +90,7 @@ class ClampTest( GafferImageTest.ImageTestCase ) :
 		clamp["in"].setInput( r["out"] )
 
 		cs = GafferTest.CapturingSlot( clamp.plugDirtiedSignal() )
-		clamp["max"].setValue( IECore.Color4f( .25, 1., 1., 1. ) )
+		clamp["max"].setValue( imath.Color4f( .25, 1., 1., 1. ) )
 
 		dirtiedPlugs = set( [ x[0].relativeName( x[0].node() ) for x in cs ] )
 
@@ -108,10 +109,10 @@ class ClampTest( GafferImageTest.ImageTestCase ) :
 
 		clamp = GafferImage.Clamp()
 		clamp["in"].setInput(i["out"])
-		clamp["min"].setValue( IECore.Color4f( .0, .0, .0, .0 ) )
-		clamp["max"].setValue( IECore.Color4f( .0, .25, .25, .25 ) )
-		clamp["minClampTo"].setValue( IECore.Color4f( .0, .0, .0, .0 ) )
-		clamp["maxClampTo"].setValue( IECore.Color4f( 1., .5, .25, 1. ) )
+		clamp["min"].setValue( imath.Color4f( .0, .0, .0, .0 ) )
+		clamp["max"].setValue( imath.Color4f( .0, .25, .25, .25 ) )
+		clamp["minClampTo"].setValue( imath.Color4f( .0, .0, .0, .0 ) )
+		clamp["maxClampTo"].setValue( imath.Color4f( 1., .5, .25, 1. ) )
 		clamp["minEnabled"].setValue( True )
 		clamp["maxEnabled"].setValue( True )
 		clamp["minClampToEnabled"].setValue( False )
@@ -160,7 +161,7 @@ class ClampTest( GafferImageTest.ImageTestCase ) :
 
 		c = GafferImage.Clamp()
 		c["in"].setInput( i["out"] )
-		c["max"].setValue( IECore.Color4f( .5, .5, .5, .5 ) )
+		c["max"].setValue( imath.Color4f( .5, .5, .5, .5 ) )
 
 		self.assertEqual( i["out"]["format"].hash(), c["out"]["format"].hash() )
 		self.assertEqual( i["out"]["dataWindow"].hash(), c["out"]["dataWindow"].hash() )

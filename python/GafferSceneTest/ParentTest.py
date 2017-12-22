@@ -34,6 +34,8 @@
 #
 ##########################################################################
 
+import imath
+
 import IECore
 
 import GafferScene
@@ -118,7 +120,7 @@ class ParentTest( GafferSceneTest.SceneTestCase ) :
 		c = GafferScene.Cube()
 
 		cSmall = GafferScene.Cube()
-		cSmall["dimensions"].setValue( IECore.V3f( 0.1 ) )
+		cSmall["dimensions"].setValue( imath.V3f( 0.1 ) )
 
 		g = GafferScene.Group()
 		g["in"][0].setInput( c["out"] )
@@ -135,7 +137,7 @@ class ParentTest( GafferSceneTest.SceneTestCase ) :
 		c = GafferScene.Cube()
 
 		cLarge = GafferScene.Cube()
-		cLarge["dimensions"].setValue( IECore.V3f( 10 ) )
+		cLarge["dimensions"].setValue( imath.V3f( 10 ) )
 
 		g = GafferScene.Group()
 		g["in"][0].setInput( c["out"] )

@@ -38,6 +38,7 @@
 import re
 import fnmatch
 import inspect
+import imath
 
 import IECore
 
@@ -132,10 +133,10 @@ class NodeMenu( object ) :
 			# the click location that opened the menu.
 			menuPosition = menu.popupPosition( relativeTo = gadgetWidget )
 			fallbackPosition = gadgetWidget.getViewportGadget().rasterToGadgetSpace(
-				IECore.V2f( menuPosition.x, menuPosition.y ),
+				imath.V2f( menuPosition.x, menuPosition.y ),
 				gadget = graphGadget
 			).p0
-			fallbackPosition = IECore.V2f( fallbackPosition.x, fallbackPosition.y )
+			fallbackPosition = imath.V2f( fallbackPosition.x, fallbackPosition.y )
 
 			graphGadget.getLayout().positionNode( graphGadget, node, fallbackPosition )
 

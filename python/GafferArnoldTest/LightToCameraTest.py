@@ -34,6 +34,8 @@
 #
 ##########################################################################
 
+import imath
+
 import IECore
 
 import GafferScene
@@ -76,10 +78,10 @@ class LightToCameraTest( GafferSceneTest.SceneTestCase ) :
 			lc["out"].object( "/group/spot1" ).parameters(),
 			IECore.CompoundData( {
 				'projection:fov':IECore.FloatData( 65 ),
-				'clippingPlanes':IECore.V2fData( IECore.V2f( 0.01, 100000 ) ),
+				'clippingPlanes':IECore.V2fData( imath.V2f( 0.01, 100000 ) ),
 				'projection':IECore.StringData( 'perspective' ),
-				'resolutionOverride':IECore.V2iData( IECore.V2i( 512, 512 ) ),
-				'screenWindow':IECore.Box2fData( IECore.Box2f( IECore.V2f( -1, -1 ), IECore.V2f( 1, 1 ) ) )
+				'resolutionOverride':IECore.V2iData( imath.V2i( 512, 512 ) ),
+				'screenWindow':IECore.Box2fData( imath.Box2f( imath.V2f( -1, -1 ), imath.V2f( 1, 1 ) ) )
 			} )
 		)
 
@@ -87,10 +89,10 @@ class LightToCameraTest( GafferSceneTest.SceneTestCase ) :
 		self.assertEqual(
 			lc["out"].object( "/group/distant1" ).parameters(),
 			IECore.CompoundData( {
-				'clippingPlanes':IECore.V2fData( IECore.V2f( -100000, 100000 ) ),
+				'clippingPlanes':IECore.V2fData( imath.V2f( -100000, 100000 ) ),
 				'projection':IECore.StringData( 'orthographic' ),
-				'resolutionOverride':IECore.V2iData( IECore.V2i( 512, 512 ) ),
-				'screenWindow':IECore.Box2fData( IECore.Box2f( IECore.V2f( -1, -1 ), IECore.V2f( 1, 1 ) ) )
+				'resolutionOverride':IECore.V2iData( imath.V2i( 512, 512 ) ),
+				'screenWindow':IECore.Box2fData( imath.Box2f( imath.V2f( -1, -1 ), imath.V2f( 1, 1 ) ) )
 			} )
 		)
 
@@ -99,7 +101,7 @@ class LightToCameraTest( GafferSceneTest.SceneTestCase ) :
 			lc["out"].object( "/group/env1" ).parameters(),
 			IECore.CompoundData({
 				'projection':IECore.StringData( 'perspective' ),
-				'resolutionOverride':IECore.V2iData( IECore.V2i( 512, 512 ) )
+				'resolutionOverride':IECore.V2iData( imath.V2i( 512, 512 ) )
 			} )
 		)
 

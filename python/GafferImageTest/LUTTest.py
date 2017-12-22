@@ -36,6 +36,7 @@
 
 import os
 import unittest
+import imath
 
 import IECore
 
@@ -156,13 +157,13 @@ class LUTTest( GafferImageTest.ImageTestCase ) :
 		o["fileName"].setValue( self.lut )
 
 		self.assertNotEqual(
-			o["out"].channelDataHash( "R", IECore.V2i( 0 ) ),
-			o["out"].channelDataHash( "G", IECore.V2i( 0 ) )
+			o["out"].channelDataHash( "R", imath.V2i( 0 ) ),
+			o["out"].channelDataHash( "G", imath.V2i( 0 ) )
 		)
 
 		self.assertNotEqual(
-			o["out"].channelData( "R", IECore.V2i( 0 ) ),
-			o["out"].channelData( "G", IECore.V2i( 0 ) )
+			o["out"].channelData( "R", imath.V2i( 0 ) ),
+			o["out"].channelData( "G", imath.V2i( 0 ) )
 		)
 
 	def testPassThrough( self ) :

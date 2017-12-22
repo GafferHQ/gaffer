@@ -37,6 +37,7 @@
 
 import unittest
 import threading
+import imath
 
 import IECore
 
@@ -495,16 +496,16 @@ class GraphGadgetTest( GafferUITest.TestCase ) :
 			g = GafferUI.GraphGadget( script )
 			c = g.connectionGadget( script["n2"]["i"] )
 
-			gb = IECore.Box3f()
+			gb = imath.Box3f()
 			gb.extendBy( g.nodeGadget( script["n1"] ).bound() )
 			gb.extendBy( g.nodeGadget( script["n2"] ).bound() )
-			gb.min -= IECore.V3f( 10 )
-			gb.max += IECore.V3f( 10 )
+			gb.setMin( gb.min() - imath.V3f( 10 ) )
+			gb.setMax( gb.max() + imath.V3f( 10 ) )
 
 			b = c.bound()
 			self.failIf( b.isEmpty() )
 
-			self.failUnless( gb.contains( b ) )
+			self.failUnless( IECore.BoxAlgo.contains( gb, b ) )
 
 	def testNoFilter( self ) :
 
@@ -599,8 +600,8 @@ class GraphGadgetTest( GafferUITest.TestCase ) :
 		g = GafferUI.GraphGadget( s )
 
 		self.assertFalse( g.hasNodePosition( s["n"] ) )
-		g.setNodePosition( s["n"], IECore.V2f( -100, 2000 ) )
-		self.assertEqual( g.getNodePosition( s["n"] ), IECore.V2f( -100, 2000 ) )
+		g.setNodePosition( s["n"], imath.V2f( -100, 2000 ) )
+		self.assertEqual( g.getNodePosition( s["n"] ), imath.V2f( -100, 2000 ) )
 		self.assertTrue( g.hasNodePosition( s["n"] ) )
 
 	def testPlugConnectionGadgets( self ) :
@@ -1023,7 +1024,7 @@ class GraphGadgetTest( GafferUITest.TestCase ) :
 		script["n"] = Gaffer.Node()
 
 		g = GafferUI.GraphGadget( script )
-		g.setNodePosition( script["n"], IECore.V2f( 1, 2 ) )
+		g.setNodePosition( script["n"], imath.V2f( 1, 2 ) )
 		self.assertTrue( g.hasNodePosition( script["n"] ) )
 
 		script.execute( script.serialise( script, Gaffer.StandardSet( [ script["n"] ] ) ) )
@@ -1253,7 +1254,7 @@ class GraphGadgetTest( GafferUITest.TestCase ) :
 		s["n"] = Gaffer.Node()
 		self.assertEqual( g.unpositionedNodeGadgets(), [ g.nodeGadget( s["n"] ) ] )
 
-		g.setNodePosition( s["n"], IECore.V2f( 0 ) )
+		g.setNodePosition( s["n"], imath.V2f( 0 ) )
 		self.assertEqual( g.unpositionedNodeGadgets(), [] )
 
 	def testInputConnectionMaintainedOnNoduleMove( self ) :

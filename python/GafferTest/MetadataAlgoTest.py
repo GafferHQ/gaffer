@@ -38,6 +38,7 @@ import unittest
 
 import Gaffer
 import GafferTest
+import imath
 import IECore
 
 class MetadataAlgoTest( GafferTest.TestCase ) :
@@ -282,9 +283,9 @@ class MetadataAlgoTest( GafferTest.TestCase ) :
 		plug1 = Gaffer.IntPlug()
 		plug2 = Gaffer.IntPlug()
 
-		connectionColor = IECore.Color3f( 0.1 , 0.2 , 0.3 )
-		noodleColor = IECore.Color3f( 0.4, 0.5 , 0.6 )
-		noodleColorExisting = IECore.Color3f( 0.7, 0.8 , 0.9 )
+		connectionColor = imath.Color3f( 0.1 , 0.2 , 0.3 )
+		noodleColor = imath.Color3f( 0.4, 0.5 , 0.6 )
+		noodleColorExisting = imath.Color3f( 0.7, 0.8 , 0.9 )
 
 		Gaffer.Metadata.registerValue( plug1, "connectionGadget:color", connectionColor )
 		Gaffer.Metadata.registerValue( plug1, "nodule:color", noodleColor )
@@ -301,9 +302,9 @@ class MetadataAlgoTest( GafferTest.TestCase ) :
 		plug1 = Gaffer.IntPlug()
 		plug2 = Gaffer.IntPlug()
 
-		connectionColor = IECore.Color3f( 0.1 , 0.2 , 0.3 )
-		noodleColor =  IECore.Color3f( 0.4, 0.5 , 0.6 )
-		noodleColorExisting = IECore.Color3f( 0.7, 0.8 , 0.9 )
+		connectionColor = imath.Color3f( 0.1 , 0.2 , 0.3 )
+		noodleColor =  imath.Color3f( 0.4, 0.5 , 0.6 )
+		noodleColorExisting = imath.Color3f( 0.7, 0.8 , 0.9 )
 
 		Gaffer.Metadata.registerValue( plug1, "connectionGadget:color", connectionColor )
 		Gaffer.Metadata.registerValue( plug1, "nodule:color", noodleColor )

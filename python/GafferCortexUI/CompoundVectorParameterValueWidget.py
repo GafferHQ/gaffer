@@ -35,6 +35,8 @@
 #
 ##########################################################################
 
+import imath
+
 import IECore
 
 import Gaffer
@@ -208,7 +210,7 @@ class _PresetEditor( GafferUI.ListContainer ) :
 		self.__menu = GafferUI.Menu( m )
 
 		bound = self.bound()
-		self.__menu.popup( parent = self, position = IECore.V2i( bound.min.x, bound.max.y ) )
+		self.__menu.popup( parent = self, position = imath.V2i( bound.min().x, bound.max().y ) )
 
 		# necessary because the qt edit action tries to give us the focus, and we don't want it -
 		# we want the menu to have it so it can be navigated with the cursor keys.

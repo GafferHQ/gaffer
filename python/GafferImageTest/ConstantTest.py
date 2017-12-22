@@ -36,6 +36,7 @@
 ##########################################################################
 
 import unittest
+import imath
 
 import IECore
 
@@ -49,11 +50,11 @@ class ConstantTest( GafferImageTest.ImageTestCase ) :
 	def testChannelData( self ) :
 
 		constant = GafferImage.Constant()
-		constant["format"].setValue( GafferImage.Format( IECore.Box2i( IECore.V2i( 0 ), IECore.V2i( 511 ) ), 1 ) )
-		constant["color"].setValue( IECore.Color4f( 0, 0.25, 0.5, 1 ) )
+		constant["format"].setValue( GafferImage.Format( imath.Box2i( imath.V2i( 0 ), imath.V2i( 511 ) ), 1 ) )
+		constant["color"].setValue( imath.Color4f( 0, 0.25, 0.5, 1 ) )
 
 		for i, channel in enumerate( [ "R", "G", "B", "A" ] ) :
-			channelData = constant["out"].channelData( channel, IECore.V2i( 0 ) )
+			channelData = constant["out"].channelData( channel, imath.V2i( 0 ) )
 			self.assertEqual( len( channelData ), constant["out"].tileSize() * constant["out"].tileSize() )
 			expectedValue = constant["color"][i].getValue()
 			for value in channelData :
@@ -65,15 +66,15 @@ class ConstantTest( GafferImageTest.ImageTestCase ) :
 		# be affected by that particular channel of the colour plug.
 
 		constant = GafferImage.Constant()
-		constant["format"].setValue( GafferImage.Format( IECore.Box2i( IECore.V2i( 0 ), IECore.V2i( 511 ) ), 1 ) )
-		constant["color"].setValue( IECore.Color4f( 0 ) )
+		constant["format"].setValue( GafferImage.Format( imath.Box2i( imath.V2i( 0 ), imath.V2i( 511 ) ), 1 ) )
+		constant["color"].setValue( imath.Color4f( 0 ) )
 
 		channels = [ "R", "G", "B", "A" ]
 		for i, channel in enumerate( channels ) :
 
-			h1 = [ constant["out"].channelDataHash( c, IECore.V2i( 0 ) ) for c in channels ]
+			h1 = [ constant["out"].channelDataHash( c, imath.V2i( 0 ) ) for c in channels ]
 			constant["color"][i].setValue( constant["color"][i].getValue() + .1 )
-			h2 = [ constant["out"].channelDataHash( c, IECore.V2i( 0 ) ) for c in channels ]
+			h2 = [ constant["out"].channelDataHash( c, imath.V2i( 0 ) ) for c in channels ]
 
 			for j in range( 0, len( channels ) ) :
 				if j == i :
@@ -86,9 +87,9 @@ class ConstantTest( GafferImageTest.ImageTestCase ) :
 		# Check that the data hash doesn't change when the format does.
 		c = GafferImage.Constant()
 		c["format"].setValue( GafferImage.Format( 2048, 1156, 1. ) )
-		h1 = c["out"].channelData( "R", IECore.V2i( 0 ) ).hash()
+		h1 = c["out"].channelData( "R", imath.V2i( 0 ) ).hash()
 		c["format"].setValue( GafferImage.Format( 1920, 1080, 1. ) )
-		h2 = c["out"].channelData( "R", IECore.V2i( 0 ) ).hash()
+		h2 = c["out"].channelData( "R", imath.V2i( 0 ) ).hash()
 		self.assertEqual( h1, h2 )
 
 	def testTileHashes( self ) :
@@ -99,8 +100,8 @@ class ConstantTest( GafferImageTest.ImageTestCase ) :
 		c["color"][0].setValue( .5 )
 
 		self.assertEqual(
-			c["out"].channelDataHash( "R", IECore.V2i( 0 ) ),
-			c["out"].channelDataHash( "R", IECore.V2i( GafferImage.ImagePlug().tileSize() ) ),
+			c["out"].channelDataHash( "R", imath.V2i( 0 ) ),
+			c["out"].channelDataHash( "R", imath.V2i( GafferImage.ImagePlug().tileSize() ) ),
 		)
 
 	def testTileIdentity( self ) :
@@ -111,16 +112,16 @@ class ConstantTest( GafferImageTest.ImageTestCase ) :
 		# The channelData() binding returns a copy by default, so we wouldn't
 		# expect two tiles to be referencing the same object.
 		self.assertFalse(
-			c["out"].channelData( "R", IECore.V2i( 0 ) ).isSame(
-				c["out"].channelData( "R", IECore.V2i( GafferImage.ImagePlug.tileSize() ) )
+			c["out"].channelData( "R", imath.V2i( 0 ) ).isSame(
+				c["out"].channelData( "R", imath.V2i( GafferImage.ImagePlug.tileSize() ) )
 			)
 		)
 
 		# But behind the scenes we do want them to be the same, so
 		# check that that is the case.
 		self.assertTrue(
-			c["out"].channelData( "R", IECore.V2i( 0 ), _copy = False ).isSame(
-				c["out"].channelData( "R", IECore.V2i( GafferImage.ImagePlug.tileSize() ), _copy = False )
+			c["out"].channelData( "R", imath.V2i( 0 ), _copy = False ).isSame(
+				c["out"].channelData( "R", imath.V2i( GafferImage.ImagePlug.tileSize() ), _copy = False )
 			)
 		)
 
@@ -136,7 +137,7 @@ class ConstantTest( GafferImageTest.ImageTestCase ) :
 
 		c = GafferImage.Constant()
 		h1 = c["out"]["channelNames"].hash()
-		c["color"].setValue( IECore.Color4f( 1, 0.5, 0.25, 1 ) )
+		c["color"].setValue( imath.Color4f( 1, 0.5, 0.25, 1 ) )
 		h2 = c["out"]["channelNames"].hash()
 
 		self.assertEqual( h1, h2 )
@@ -145,12 +146,12 @@ class ConstantTest( GafferImageTest.ImageTestCase ) :
 
 		s = Gaffer.ScriptNode()
 		s["c"] = GafferImage.Constant()
-		s["c"]["color"].setValue( IECore.Color4f( 0, 1, 0, 0 ) )
+		s["c"]["color"].setValue( imath.Color4f( 0, 1, 0, 0 ) )
 
 		s2 = Gaffer.ScriptNode()
 		s2.execute( s.serialise() )
 
-		self.assertEqual( s2["c"]["color"].getValue(), IECore.Color4f( 0, 1, 0, 0 ) )
+		self.assertEqual( s2["c"]["color"].getValue(), imath.Color4f( 0, 1, 0, 0 ) )
 
 	def testFormatDependencies( self ) :
 
@@ -170,8 +171,8 @@ class ConstantTest( GafferImageTest.ImageTestCase ) :
 		c1 = GafferImage.Constant()
 		c2 = GafferImage.Constant()
 
-		c1["color"].setValue( IECore.Color4f( 1, 0.5, 0.25, 1 ) )
-		c2["color"].setValue( IECore.Color4f( 1, 0.5, 0.25, 1 ) )
+		c1["color"].setValue( imath.Color4f( 1, 0.5, 0.25, 1 ) )
+		c2["color"].setValue( imath.Color4f( 1, 0.5, 0.25, 1 ) )
 		c2["layer"].setValue( "diffuse" )
 
 		self.assertEqual(
@@ -187,13 +188,13 @@ class ConstantTest( GafferImageTest.ImageTestCase ) :
 		for channelName in ( "R", "G", "B", "A" ) :
 
 			self.assertEqual(
-				c1["out"].channelDataHash( channelName, IECore.V2i( 0 ) ),
-				c2["out"].channelDataHash( "diffuse." + channelName, IECore.V2i( 0 ) )
+				c1["out"].channelDataHash( channelName, imath.V2i( 0 ) ),
+				c2["out"].channelDataHash( "diffuse." + channelName, imath.V2i( 0 ) )
 			)
 
 			self.assertEqual(
-				c1["out"].channelData( channelName, IECore.V2i( 0 ) ),
-				c2["out"].channelData( "diffuse." + channelName, IECore.V2i( 0 ) )
+				c1["out"].channelData( channelName, imath.V2i( 0 ) ),
+				c2["out"].channelData( "diffuse." + channelName, imath.V2i( 0 ) )
 			)
 
 	def testLayerAffectsChannelNames( self ) :

@@ -35,6 +35,7 @@
 ##########################################################################
 
 import functools
+import imath
 
 import IECore
 
@@ -127,7 +128,7 @@ class _SettingsWindow( GafferUI.Window ) :
 		with self :
 			with GafferUI.ListContainer() :
 				self.__frame = GafferUI.Frame( borderStyle = GafferUI.Frame.BorderStyle.None, borderWidth = 4 )
-				GafferUI.Spacer( IECore.V2i( 0 ), parenting = { "expand" : True } )
+				GafferUI.Spacer( imath.V2i( 0 ), parenting = { "expand" : True } )
 
 		self.__shaderView = shaderView
 		self.__sceneChangedConnection = shaderView.sceneChangedSignal().connect( Gaffer.WeakMethod( self.__sceneChanged ) )

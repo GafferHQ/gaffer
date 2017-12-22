@@ -36,6 +36,7 @@
 
 import os
 import threading
+import imath
 
 import IECore
 
@@ -165,7 +166,7 @@ class CatalogueTest( GafferImageTest.ImageTestCase ) :
 		c2["enabled"].setValue( False )
 		self.assertNotEqual( c2["out"]["format"].getValue(), c1["out"]["format"].getValue() )
 		self.assertNotEqual( c2["out"]["dataWindow"].getValue(), c1["out"]["dataWindow"].getValue() )
-		self.assertEqual( c2["out"]["dataWindow"].getValue(), IECore.Box2i() )
+		self.assertEqual( c2["out"]["dataWindow"].getValue(), imath.Box2i() )
 
 		disabledConstant = GafferImage.Constant()
 		disabledConstant["enabled"].setValue( False )
@@ -201,11 +202,11 @@ class CatalogueTest( GafferImageTest.ImageTestCase ) :
 
 		aov1 = GafferImage.Constant()
 		aov1["format"].setValue( GafferImage.Format( 100, 100 ) )
-		aov1["color"].setValue( IECore.Color4f( 1, 0, 0, 1 ) )
+		aov1["color"].setValue( imath.Color4f( 1, 0, 0, 1 ) )
 
 		aov2 = GafferImage.Constant()
 		aov2["format"].setValue( GafferImage.Format( 100, 100 ) )
-		aov2["color"].setValue( IECore.Color4f( 0, 1, 0, 1 ) )
+		aov2["color"].setValue( imath.Color4f( 0, 1, 0, 1 ) )
 		aov2["layer"].setValue( "diffuse" )
 
 		self.sendImage( aov1["out"], c )
@@ -251,8 +252,8 @@ class CatalogueTest( GafferImageTest.ImageTestCase ) :
 		constant2 = GafferImage.Constant()
 		constant1["format"].setValue( GafferImage.Format( 100, 100 ) )
 		constant2["format"].setValue( GafferImage.Format( 100, 100 ) )
-		constant1["color"].setValue( IECore.Color4f( 1, 0, 0, 1 ) )
-		constant2["color"].setValue( IECore.Color4f( 0, 1, 0, 1 ) )
+		constant1["color"].setValue( imath.Color4f( 1, 0, 0, 1 ) )
+		constant2["color"].setValue( imath.Color4f( 0, 1, 0, 1 ) )
 
 		self.sendImage(
 			constant1["out"],
@@ -493,12 +494,12 @@ class CatalogueTest( GafferImageTest.ImageTestCase ) :
 		display.setDriver( drivers[0][0] )
 
 		self.assertEqual(
-			display["out"].channelDataHash( "R", IECore.V2i( 0 ) ),
-			c["out"].channelDataHash( "R", IECore.V2i( 0 ) )
+			display["out"].channelDataHash( "R", imath.V2i( 0 ) ),
+			c["out"].channelDataHash( "R", imath.V2i( 0 ) )
 		)
 		self.assertTrue(
-			display["out"].channelData( "R", IECore.V2i( 0 ), _copy = False ).isSame(
-				c["out"].channelData( "R", IECore.V2i( 0 ), _copy = False )
+			display["out"].channelData( "R", imath.V2i( 0 ), _copy = False ).isSame(
+				c["out"].channelData( "R", imath.V2i( 0 ), _copy = False )
 			)
 		)
 
@@ -510,12 +511,12 @@ class CatalogueTest( GafferImageTest.ImageTestCase ) :
 
 		c["imageIndex"].setValue( 1 )
 		self.assertEqual(
-			display["out"].channelDataHash( "R", IECore.V2i( 0 ) ),
-			c["out"].channelDataHash( "R", IECore.V2i( 0 ) )
+			display["out"].channelDataHash( "R", imath.V2i( 0 ) ),
+			c["out"].channelDataHash( "R", imath.V2i( 0 ) )
 		)
 		self.assertTrue(
-			display["out"].channelData( "R", IECore.V2i( 0 ), _copy = False ).isSame(
-				c["out"].channelData( "R", IECore.V2i( 0 ), _copy = False )
+			display["out"].channelData( "R", imath.V2i( 0 ), _copy = False ).isSame(
+				c["out"].channelData( "R", imath.V2i( 0 ), _copy = False )
 			)
 		)
 

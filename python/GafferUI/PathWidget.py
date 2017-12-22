@@ -38,6 +38,7 @@
 import os
 import warnings
 import functools
+import imath
 
 import IECore
 
@@ -223,7 +224,7 @@ class PathWidget( GafferUI.TextWidget ) :
 				break
 
 		bound = self.bound()
-		return IECore.V2i( bound.min.x + x, bound.max.y )
+		return imath.V2i( bound.min().x + x, bound.max().y )
 
 	def __pathChanged( self, path ) :
 

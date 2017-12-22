@@ -39,6 +39,7 @@ import unittest
 import random
 import threading
 import subprocess32 as subprocess
+import imath
 
 import IECore
 import IECoreImage
@@ -136,15 +137,15 @@ class DisplayTest( GafferImageTest.ImageTestCase ) :
 			)
 
 			tileSize = GafferImage.ImagePlug.tileSize()
-			minTileOrigin = GafferImage.ImagePlug.tileOrigin( dataWindow.min )
-			maxTileOrigin = GafferImage.ImagePlug.tileOrigin( dataWindow.max - IECore.V2i( 1 ) )
+			minTileOrigin = GafferImage.ImagePlug.tileOrigin( dataWindow.min() )
+			maxTileOrigin = GafferImage.ImagePlug.tileOrigin( dataWindow.max() - imath.V2i( 1 ) )
 			for y in range( minTileOrigin.y, maxTileOrigin.y + 1, tileSize ) :
 				for x in range( minTileOrigin.x, maxTileOrigin.x + 1, tileSize ) :
-					tileOrigin = IECore.V2i( x, y )
+					tileOrigin = imath.V2i( x, y )
 					channelData = []
 					for channelName in channelNames :
 						channelData.append( image.channelData( channelName, tileOrigin ) )
-					driver.sendBucket( IECore.Box2i( tileOrigin, tileOrigin + IECore.V2i( tileSize ) ), channelData )
+					driver.sendBucket( imath.Box2i( tileOrigin, tileOrigin + imath.V2i( tileSize ) ), channelData )
 
 			driver.close()
 
@@ -172,7 +173,7 @@ class DisplayTest( GafferImageTest.ImageTestCase ) :
 		server = IECoreImage.DisplayDriverServer()
 		driverCreatedConnection = GafferImage.Display.driverCreatedSignal().connect( lambda driver, parameters : node.setDriver( driver ) )
 
-		dataWindow = IECore.Box2i( IECore.V2i( -100, -200 ), IECore.V2i( 303, 557 ) )
+		dataWindow = imath.Box2i( imath.V2i( -100, -200 ), imath.V2i( 303, 557 ) )
 		driver = self.Driver(
 			GafferImage.Format( dataWindow ),
 			dataWindow,
@@ -185,12 +186,12 @@ class DisplayTest( GafferImageTest.ImageTestCase ) :
 			h1 = self.__tileHashes( node, "Y" )
 			t1 = self.__tiles( node, "Y" )
 
-			bucketWindow = IECore.Box2i()
+			bucketWindow = imath.Box2i()
 			while GafferImage.BufferAlgo.empty( bucketWindow ) :
 				bucketWindow.extendBy(
-					IECore.V2i(
-						int( random.uniform( dataWindow.min.x, dataWindow.max.x ) ),
-						int( random.uniform( dataWindow.min.y, dataWindow.max.y ) ),
+					imath.V2i(
+						int( random.uniform( dataWindow.min().x, dataWindow.max().x ) ),
+						int( random.uniform( dataWindow.min().y, dataWindow.max().y ) ),
 					)
 				)
 
@@ -223,12 +224,12 @@ class DisplayTest( GafferImageTest.ImageTestCase ) :
 		blackTile = IECore.FloatVectorData( [ 0 ] * GafferImage.ImagePlug.tileSize() * GafferImage.ImagePlug.tileSize() )
 
 		self.assertEqual(
-			node["out"].channelData( "R", -IECore.V2i( GafferImage.ImagePlug.tileSize() ) ),
+			node["out"].channelData( "R", -imath.V2i( GafferImage.ImagePlug.tileSize() ) ),
 			blackTile
 		)
 
 		self.assertEqual(
-			node["out"].channelData( "R", 10 * IECore.V2i( GafferImage.ImagePlug.tileSize() ) ),
+			node["out"].channelData( "R", 10 * imath.V2i( GafferImage.ImagePlug.tileSize() ) ),
 			blackTile
 		)
 
@@ -252,7 +253,7 @@ class DisplayTest( GafferImageTest.ImageTestCase ) :
 		driversCreated = GafferTest.CapturingSlot( GafferImage.Display.driverCreatedSignal() )
 
 		server = IECoreImage.DisplayDriverServer()
-		dataWindow = IECore.Box2i( IECore.V2i( 0 ), IECore.V2i( 100 ) )
+		dataWindow = imath.Box2i( imath.V2i( 0 ), imath.V2i( 100 ) )
 
 		driver = self.Driver(
 			GafferImage.Format( dataWindow ),
@@ -275,7 +276,7 @@ class DisplayTest( GafferImageTest.ImageTestCase ) :
 		self.assertEqual( display["out"]["dataWindow"].getValue(), dataWindow )
 		self.assertEqual( display["out"]["channelNames"].getValue(), IECore.StringVectorData( [ "Y" ] ) )
 		self.assertEqual(
-			display["out"].channelData( "Y", IECore.V2i( 0 ) ),
+			display["out"].channelData( "Y", imath.V2i( 0 ) ),
 			IECore.FloatVectorData( [ 0.5 ] * GafferImage.ImagePlug.tileSize() * GafferImage.ImagePlug.tileSize() )
 		)
 
@@ -287,12 +288,12 @@ class DisplayTest( GafferImageTest.ImageTestCase ) :
 		driver.sendBucket( dataWindow, [ IECore.FloatVectorData( [ 1 ] * dataWindow.size().x * dataWindow.size().y ) ] )
 
 		self.assertEqual(
-			display["out"].channelData( "Y", IECore.V2i( 0 ) ),
+			display["out"].channelData( "Y", imath.V2i( 0 ) ),
 			IECore.FloatVectorData( [ 1 ] * GafferImage.ImagePlug.tileSize() * GafferImage.ImagePlug.tileSize() )
 		)
 
 		self.assertEqual(
-			display2["out"].channelData( "Y", IECore.V2i( 0 ) ),
+			display2["out"].channelData( "Y", imath.V2i( 0 ) ),
 			IECore.FloatVectorData( [ 0.5 ] * GafferImage.ImagePlug.tileSize() * GafferImage.ImagePlug.tileSize() )
 		)
 
@@ -324,13 +325,13 @@ class DisplayTest( GafferImageTest.ImageTestCase ) :
 
 		dataWindow = node["out"]["dataWindow"].getValue()
 
-		minTileOrigin = GafferImage.ImagePlug.tileOrigin( dataWindow.min )
-		maxTileOrigin = GafferImage.ImagePlug.tileOrigin( dataWindow.max )
+		minTileOrigin = GafferImage.ImagePlug.tileOrigin( dataWindow.min() )
+		maxTileOrigin = GafferImage.ImagePlug.tileOrigin( dataWindow.max() )
 
 		tiles = {}
 		for y in range( minTileOrigin.y, maxTileOrigin.y, GafferImage.ImagePlug.tileSize() ) :
 			for x in range( minTileOrigin.x, maxTileOrigin.x, GafferImage.ImagePlug.tileSize() ) :
-				tiles[( x, y )] = node["out"].channelData( channelName, IECore.V2i( x, y ) )
+				tiles[( x, y )] = node["out"].channelData( channelName, imath.V2i( x, y ) )
 
 		return tiles
 
@@ -338,21 +339,21 @@ class DisplayTest( GafferImageTest.ImageTestCase ) :
 
 		dataWindow = node["out"]["dataWindow"].getValue()
 
-		minTileOrigin = GafferImage.ImagePlug.tileOrigin( dataWindow.min )
-		maxTileOrigin = GafferImage.ImagePlug.tileOrigin( dataWindow.max )
+		minTileOrigin = GafferImage.ImagePlug.tileOrigin( dataWindow.min() )
+		maxTileOrigin = GafferImage.ImagePlug.tileOrigin( dataWindow.max() )
 
 		hashes = {}
 		for y in range( minTileOrigin.y, maxTileOrigin.y, GafferImage.ImagePlug.tileSize() ) :
 			for x in range( minTileOrigin.x, maxTileOrigin.x, GafferImage.ImagePlug.tileSize() ) :
-				hashes[( x, y )] = node["out"].channelDataHash( channelName, IECore.V2i( x, y ) )
+				hashes[( x, y )] = node["out"].channelDataHash( channelName, imath.V2i( x, y ) )
 
 		return hashes
 
 	def __assertTilesChangedInRegion( self, t1, t2, region ) :
 
 		for tileOriginTuple in t1.keys() :
-			tileOrigin = IECore.V2i( *tileOriginTuple )
-			tileRegion = IECore.Box2i( tileOrigin, tileOrigin + IECore.V2i( GafferImage.ImagePlug.tileSize() ) )
+			tileOrigin = imath.V2i( *tileOriginTuple )
+			tileRegion = imath.Box2i( tileOrigin, tileOrigin + imath.V2i( GafferImage.ImagePlug.tileSize() ) )
 
 			if GafferImage.BufferAlgo.intersects( tileRegion, region ) :
 				self.assertNotEqual( t1[tileOriginTuple], t2[tileOriginTuple] )

@@ -37,6 +37,7 @@
 import os
 import inspect
 import unittest
+import imath
 
 import IECore
 
@@ -56,17 +57,17 @@ class GradeTest( GafferImageTest.ImageTestCase ) :
 		# Create a grade node and save the hash of a tile from each channel.
 		grade = GafferImage.Grade()
 		grade["in"].setInput(i["out"])
-		grade["gain"].setValue( IECore.Color3f( 2., 2., 2. ) )
-		hashRed = grade["out"].channelData( "R", IECore.V2i( 0 ) ).hash()
-		hashGreen = grade["out"].channelData( "G", IECore.V2i( 0 ) ).hash()
-		hashBlue = grade["out"].channelData( "B", IECore.V2i( 0 ) ).hash()
+		grade["gain"].setValue( imath.Color3f( 2., 2., 2. ) )
+		hashRed = grade["out"].channelData( "R", imath.V2i( 0 ) ).hash()
+		hashGreen = grade["out"].channelData( "G", imath.V2i( 0 ) ).hash()
+		hashBlue = grade["out"].channelData( "B", imath.V2i( 0 ) ).hash()
 
 		# Now we set the gamma on the green channel to 0 which should disable it's output.
 		# The red and blue channels should still be graded as before.
-		grade["gamma"].setValue( IECore.Color3f( 1., 0., 1. ) )
-		hashRed2 = grade["out"].channelData( "R", IECore.V2i( 0 ) ).hash()
-		hashGreen2 = grade["out"].channelData( "G", IECore.V2i( 0 ) ).hash()
-		hashBlue2 = grade["out"].channelData( "B", IECore.V2i( 0 ) ).hash()
+		grade["gamma"].setValue( imath.Color3f( 1., 0., 1. ) )
+		hashRed2 = grade["out"].channelData( "R", imath.V2i( 0 ) ).hash()
+		hashGreen2 = grade["out"].channelData( "G", imath.V2i( 0 ) ).hash()
+		hashBlue2 = grade["out"].channelData( "B", imath.V2i( 0 ) ).hash()
 
 		self.assertEqual( hashRed, hashRed2 )
 		self.assertNotEqual( hashGreen, hashGreen2 )
@@ -79,16 +80,16 @@ class GradeTest( GafferImageTest.ImageTestCase ) :
 
 		grade = GafferImage.Grade()
 		grade["in"].setInput(i["out"])
-		grade["gain"].setValue( IECore.Color3f( 2., 2., 2. ) )
+		grade["gain"].setValue( imath.Color3f( 2., 2., 2. ) )
 
-		h1 = grade["out"].channelData( "R", IECore.V2i( 0 ) ).hash()
-		h2 = grade["out"].channelData( "R", IECore.V2i( GafferImage.ImagePlug().tileSize() ) ).hash()
+		h1 = grade["out"].channelData( "R", imath.V2i( 0 ) ).hash()
+		h2 = grade["out"].channelData( "R", imath.V2i( GafferImage.ImagePlug().tileSize() ) ).hash()
 		self.assertNotEqual( h1, h2 )
 
 		# Test that two tiles within the same image have the same hash when disabled.
 		grade["enabled"].setValue(False)
-		h1 = grade["out"].channelData( "R", IECore.V2i( 0 ) ).hash()
-		h2 = grade["out"].channelData( "R", IECore.V2i( GafferImage.ImagePlug().tileSize() ) ).hash()
+		h1 = grade["out"].channelData( "R", imath.V2i( 0 ) ).hash()
+		h2 = grade["out"].channelData( "R", imath.V2i( GafferImage.ImagePlug().tileSize() ) ).hash()
 		self.assertNotEqual( h1, h2 )
 
 	def testEnableBehaviour( self ) :
@@ -107,7 +108,7 @@ class GradeTest( GafferImageTest.ImageTestCase ) :
 
 		g = GafferImage.Grade()
 		g["in"].setInput( i["out"] )
-		g["gain"].setValue( IECore.Color3f( 2., 2., 2. ) )
+		g["gain"].setValue( imath.Color3f( 2., 2., 2. ) )
 
 		self.assertEqual( i["out"]["format"].hash(), g["out"]["format"].hash() )
 		self.assertEqual( i["out"]["dataWindow"].hash(), g["out"]["dataWindow"].hash() )
@@ -132,9 +133,9 @@ class GradeTest( GafferImageTest.ImageTestCase ) :
 		channelNames = ( "R", "G", "B" )
 		for channelIndex, channelName in enumerate( channelNames ) :
 			for plugName in ( "blackPoint", "whitePoint", "lift", "gain", "multiply", "offset", "gamma" ) :
-				oldChannelHashes = [ s["g"]["out"].channelDataHash( c, IECore.V2i( 0 ) ) for c in channelNames ]
+				oldChannelHashes = [ s["g"]["out"].channelDataHash( c, imath.V2i( 0 ) ) for c in channelNames ]
 				s["g"][plugName][channelIndex].setValue( s["g"][plugName][channelIndex].getValue() + 0.01 )
-				newChannelHashes = [ s["g"]["out"].channelDataHash( c, IECore.V2i( 0 ) ) for c in channelNames ]
+				newChannelHashes = [ s["g"]["out"].channelDataHash( c, imath.V2i( 0 ) ) for c in channelNames ]
 				for hashChannelIndex in range( 0, 3 ) :
 					if channelIndex == hashChannelIndex :
 						self.assertNotEqual( oldChannelHashes[hashChannelIndex], newChannelHashes[hashChannelIndex] )
@@ -153,13 +154,13 @@ class GradeTest( GafferImageTest.ImageTestCase ) :
 
 		for channelName in ( "R", "G", "B", "A" ) :
 			self.assertEqual(
-				s["g"]["out"].channelDataHash( channelName, IECore.V2i( 0 ) ),
-				s["c"]["out"].channelDataHash( channelName, IECore.V2i( 0 ) ),
+				s["g"]["out"].channelDataHash( channelName, imath.V2i( 0 ) ),
+				s["c"]["out"].channelDataHash( channelName, imath.V2i( 0 ) ),
 			)
 
 			c = Gaffer.Context( s.context() )
 			c["image:channelName"] = channelName
-			c["image:tileOrigin"] = IECore.V2i( 0 )
+			c["image:tileOrigin"] = imath.V2i( 0 )
 			with c :
 				self.assertTrue(
 					s["g"]["out"]["channelData"].getValue( _copy=False ).isSame(
@@ -170,7 +171,7 @@ class GradeTest( GafferImageTest.ImageTestCase ) :
 	def testAllChannels( self ):
 		c = GafferImage.Constant()
 		c["format"].setValue( GafferImage.Format( 50, 50, 1.0 ) )
-		c["color"].setValue( IECore.Color4f( 0.125, 0.25, 0.5, 0.75 ) )
+		c["color"].setValue( imath.Color4f( 0.125, 0.25, 0.5, 0.75 ) )
 
 		s = GafferImage.Shuffle()
 		s["channels"].addChild( GafferImage.Shuffle.ChannelPlug( 'customChannel', '__white' ) )
@@ -196,7 +197,7 @@ class GradeTest( GafferImageTest.ImageTestCase ) :
 
 		self.assertEqual( sample( 25, 25 ), [ 0.125, 0.25, 0.5, 0.75, 1.0 ] )
 
-		g["offset"].setValue( IECore.Color4f( 3, 3, 3, 3 ) )
+		g["offset"].setValue( imath.Color4f( 3, 3, 3, 3 ) )
 		self.assertEqual( sample( 25, 25 ), [ 3.125, 3.25, 3.5, 0.75, 1.0 ] )
 
 		g["channels"].setValue( IECore.StringVectorData( [ "A" ] ) )
@@ -213,10 +214,10 @@ class GradeTest( GafferImageTest.ImageTestCase ) :
 		script = Gaffer.ScriptNode()
 
 		script["c1"] = GafferImage.Constant()
-		script["c1"]["color"].setValue( IECore.Color4f( 1 ) )
+		script["c1"]["color"].setValue( imath.Color4f( 1 ) )
 
 		script["c2"] = GafferImage.Constant()
-		script["c2"]["color"].setValue( IECore.Color4f( 1 ) )
+		script["c2"]["color"].setValue( imath.Color4f( 1 ) )
 		script["c2"]["layer"].setValue( "B" )
 
 		script["copyChannels"] = GafferImage.CopyChannels()
@@ -233,16 +234,16 @@ class GradeTest( GafferImageTest.ImageTestCase ) :
 			"""
 			import GafferImage
 			layerName = GafferImage.ImageAlgo.layerName( context["image:channelName" ] )
-			parent["grade"]["gain"] = IECore.Color4f( 1 if layerName == "B" else 0.5 )
+			parent["grade"]["gain"] = imath.Color4f( 1 if layerName == "B" else 0.5 )
 			"""
 		) )
 
 		sampler = GafferImage.ImageSampler()
 		sampler["image"].setInput( script["grade"]["out"] )
-		sampler["pixel"].setValue( IECore.V2f( 10.5 ) )
+		sampler["pixel"].setValue( imath.V2f( 10.5 ) )
 
 		sampler["channels"].setValue( IECore.StringVectorData( [ "R", "G", "B", "A" ] ) )
-		self.assertEqual( sampler["color"].getValue(), IECore.Color4f( 0.5 ) )
+		self.assertEqual( sampler["color"].getValue(), imath.Color4f( 0.5 ) )
 
 		sampler["channels"].setValue( IECore.StringVectorData( [ "B.R", "B.G", "B.B", "B.A" ] ) )
-		self.assertEqual( sampler["color"].getValue(), IECore.Color4f( 1 ) )
+		self.assertEqual( sampler["color"].getValue(), imath.Color4f( 1 ) )

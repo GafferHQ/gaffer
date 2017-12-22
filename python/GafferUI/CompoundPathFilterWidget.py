@@ -34,6 +34,8 @@
 #
 ##########################################################################
 
+import imath
+
 import IECore
 
 import Gaffer
@@ -60,7 +62,7 @@ class CompoundPathFilterWidget( GafferUI.PathFilterWidget ) :
 		for y in range( self.__grid.gridSize().y - 1, -1, -1 ) :
 			self.__grid.removeRow( y )
 
-		gridPos = IECore.V2i( 0 )
+		gridPos = imath.V2i( 0 )
 		for filter in self.pathFilter().getFilters() :
 
 			filterWidget = GafferUI.PathFilterWidget.create( filter )

@@ -35,6 +35,7 @@
 ##########################################################################
 
 import unittest
+import imath
 
 import IECore
 
@@ -72,7 +73,7 @@ class SceneFilterPathFilterTest( GafferSceneTest.SceneTestCase ) :
 	def testManyPaths( self ) :
 
 		plane = GafferScene.Plane()
-		plane["divisions"].setValue( IECore.V2i( 500 ) )
+		plane["divisions"].setValue( imath.V2i( 500 ) )
 
 		sphere = GafferScene.Sphere()
 

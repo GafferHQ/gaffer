@@ -37,6 +37,7 @@
 
 import os
 import unittest
+import imath
 
 import IECore
 import IECoreScene
@@ -58,10 +59,10 @@ class SceneTestCase( GafferTest.TestCase ) :
 
 			o = scenePlug.object( scenePath, _copy = False )
 			if isinstance( o, IECoreScene.VisibleRenderable ) :
-				 if not thisBound.contains( o.bound() ) :
+				 if not IECore.BoxAlgo.contains( thisBound, o.bound() ) :
 					self.fail( "Bound %s does not contain object %s at %s" % ( thisBound, o.bound(), scenePath ) )
 
-			unionOfTransformedChildBounds = IECore.Box3f()
+			unionOfTransformedChildBounds = imath.Box3f()
 			childNames = scenePlug.childNames( scenePath, _copy = False )
 			for childName in childNames :
 
@@ -70,18 +71,18 @@ class SceneTestCase( GafferTest.TestCase ) :
 
 				childBound = scenePlug.bound( childPath )
 				childTransform = scenePlug.transform( childPath )
-				childBound = childBound.transform( childTransform )
+				childBound = childBound * childTransform
 
 				unionOfTransformedChildBounds.extendBy( childBound )
 
 				walkScene( childPath )
 
-			if not thisBound.contains( unionOfTransformedChildBounds ) :
+			if not IECore.BoxAlgo.contains( thisBound, unionOfTransformedChildBounds ) :
 				self.fail( "Bound ( %s ) does not contain children ( %s ) at %s" % ( thisBound, unionOfTransformedChildBounds, scenePath ) )
 
 		# check that the root doesn't have any properties it shouldn't
 		self.assertEqual( scenePlug.attributes( "/" ), IECore.CompoundObject() )
-		self.assertEqual( scenePlug.transform( "/" ), IECore.M44f() )
+		self.assertEqual( scenePlug.transform( "/" ), imath.M44f() )
 		self.assertEqual( scenePlug.object( "/" ), IECore.NullObject() )
 
 		# then walk the scene to check the bounds
@@ -266,8 +267,8 @@ class SceneTestCase( GafferTest.TestCase ) :
 	def assertBoxesAlmostEqual( self, box1, box2, places ) :
 
 		for n in "min", "max" :
-			v1 = getattr( box1, n )
-			v2 = getattr( box1, n )
+			v1 = getattr( box1, n )()
+			v2 = getattr( box1, n )()
 			for i in range( 0, 3 ) :
 				self.assertAlmostEqual( v1[i], v2[i], places )
 

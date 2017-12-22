@@ -36,6 +36,7 @@
 
 import Gaffer
 import GafferUI
+import imath
 import IECore
 
 from Qt import QtCore
@@ -58,7 +59,7 @@ class RampPlugValueWidget( GafferUI.PlugValueWidget ) :
 				drawModeWidget.setSelection( "Ramp" )
 				self.__drawModeChangedConnection = drawModeWidget.selectionChangedSignal().connect( Gaffer.WeakMethod( self.__drawModeChanged ) )
 
-				GafferUI.Spacer( IECore.V2i( 0 ), parenting = { "expand" : True } )
+				GafferUI.Spacer( imath.V2i( 0 ), parenting = { "expand" : True } )
 
 				# TODO: Since we don't have a good way to register metadata on child plugs, we just write the
 				# metadata on this child plug right before constructing a widget for it.  There should probably
