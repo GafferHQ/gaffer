@@ -467,6 +467,7 @@ StandardStyle::StandardStyle()
 	setColor( HighlightColor, Color3f( 0.466, 0.612, 0.741 ) );
 	setColor( ConnectionColor, Color3f( 0.125, 0.125, 0.125 ) );
 	setColor( AuxiliaryConnectionColor, Color3f( 0.3, 0.45, 0.3 ) );
+	setColor( CurveColor, Color3f( 1.0, 1.0, 1.0 ) );
 }
 
 StandardStyle::~StandardStyle()
@@ -801,6 +802,44 @@ void StandardStyle::renderRectangle( const Imath::Box2f &box ) const
 		glVertex2f( box.max.x, box.min.y );
 
 	glEnd();
+}
+
+void StandardStyle::renderCurveSegment( const Imath::V2f &start, const Imath::V2f &end, const Imath::V2f &startTangent, const Imath::V2f &endTangent, State state, const Imath::Color3f *userColor ) const
+{
+	glUniform1i( g_isCurveParameter, 1 );
+	glUniform1i( g_borderParameter, 0 );
+	glUniform1f( g_edgeAntiAliasingParameter, 1 );
+	glUniform1i( g_textureTypeParameter, 0 );
+	glUniform1f( g_lineWidthParameter, 3.0 );
+
+	glColor( colorForState( CurveColor, state, userColor ) );
+
+	// \todo: The rendering interface here should probably eventually work on V2f's instead?
+	//        The function signature anticipates that eventual switch,
+	//        but that's easy enough to revert if not desired. For now, do a conversion...
+	Imath::V3f _start = Imath::V3f( start.x, start.y, 0 );
+	Imath::V3f _end = Imath::V3f( end.x, end.y, 0 );
+	Imath::V3f _startTangent = Imath::V3f( startTangent.x, startTangent.y, 0 );
+	Imath::V3f _endTangent = Imath::V3f( endTangent.x, endTangent.y, 0 );
+
+	V3f dir = ( _end - _start ).normalized();
+
+	glUniform3fv( g_v0Parameter, 1, _start.getValue() );
+	glUniform3fv( g_v1Parameter, 1, _end.getValue() );
+	glUniform3fv( g_t0Parameter, 1, ( _startTangent != V3f( 0 ) ? _startTangent :  dir ).getValue() );
+	glUniform3fv( g_t1Parameter, 1, ( _endTangent != V3f( 0 ) ? _endTangent : -dir ).getValue() );
+
+	glUniform1f( g_endPointSizeParameter, g_endPointSize );
+
+	glCallList( connectionDisplayList() );
+}
+
+void StandardStyle::renderKeyFrame( const Imath::V2f &position, State state, const Imath::Color3f *userColor ) const
+{
+	int keyFrameSize = 2;
+
+	glColor( colorForState( CurveColor, state, userColor ) );
+	renderSolidRectangle( Box2f( position - V2f( keyFrameSize ), position + V2f( keyFrameSize ) ) );
 }
 
 void StandardStyle::renderBackdrop( const Imath::Box2f &box, State state, const Imath::Color3f *userColor ) const
