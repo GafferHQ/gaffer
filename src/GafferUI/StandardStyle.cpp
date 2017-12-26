@@ -932,15 +932,23 @@ void StandardStyle::renderImage( const Imath::Box2f &box, const IECoreGL::Textur
 	glPopAttrib();
 }
 
-void StandardStyle::renderLine( const IECore::LineSegment3f &line ) const
+
+void StandardStyle::renderLine( const IECore::LineSegment3f &line, float width, const Imath::Color3f *userColor ) const
 {
 	glUniform1i( g_isCurveParameter, 1 );
 	glUniform1i( g_borderParameter, 0 );
 	glUniform1i( g_edgeAntiAliasingParameter, 1 );
 	glUniform1i( g_textureTypeParameter, 0 );
-	glUniform1f( g_lineWidthParameter, 0.5 );
+	glUniform1f( g_lineWidthParameter, width );
 
-	glColor( getColor( BackgroundColor ) );
+	if( userColor )
+	{
+		glColor( *userColor );
+	}
+	else
+	{
+		glColor( getColor( BackgroundColor ) );
+	}
 
 	V3f d = line.normalizedDirection();
 

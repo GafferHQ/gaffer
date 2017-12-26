@@ -73,7 +73,7 @@ class GAFFERUI_API StandardStyle : public Style
 		void bind( const Style *currentStyle=nullptr ) const override;
 
 		void renderImage( const Imath::Box2f &box, const IECoreGL::Texture *texture ) const override;
-		void renderLine( const IECore::LineSegment3f &line ) const override;
+		void renderLine( const IECore::LineSegment3f &line, float width=0.5, const Imath::Color3f *userColor = nullptr ) const override;
 		void renderSolidRectangle( const Imath::Box2f &box ) const override;
 		void renderRectangle( const Imath::Box2f &box ) const override;
 
