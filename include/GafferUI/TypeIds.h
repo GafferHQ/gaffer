@@ -80,6 +80,7 @@ enum TypeId
 	TranslateHandleTypeId = 110285,
 	ScaleHandleTypeId = 110286,
 	RotateHandleTypeId = 110287,
+	AnimationGadgetTypeId = 110288,
 
 	LastTypeId = 110450
 };
