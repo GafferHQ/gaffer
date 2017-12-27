@@ -42,6 +42,7 @@
 
 #include "GafferScene/SceneNode.h"
 
+#include "GafferSceneTest/Export.h"
 #include "GafferSceneTest/TypeIds.h"
 
 namespace GafferSceneTest
@@ -49,7 +50,7 @@ namespace GafferSceneTest
 
 /// A source which turns a CompoundObject hierarchy into a scene.
 /// It's useful as a source node in unit tests.
-class CompoundObjectSource : public GafferScene::SceneNode
+class GAFFERSCENETEST_API CompoundObjectSource : public GafferScene::SceneNode
 {
 
 	public :

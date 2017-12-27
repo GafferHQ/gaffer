@@ -1,6 +1,6 @@
 //////////////////////////////////////////////////////////////////////////
 //
-//  Copyright (c) 2014, Image Engine Design Inc. All rights reserved.
+//  Copyright (c) 2016, Image Engine Design Inc. All rights reserved.
 //
 //  Redistribution and use in source and binary forms, with or without
 //  modification, are permitted provided that the following conditions are
@@ -34,16 +34,18 @@
 //
 //////////////////////////////////////////////////////////////////////////
 
-#ifndef GAFFERSCENETEST_SCENEPLUGTEST_H
-#define GAFFERSCENETEST_SCENEPLUGTEST_H
+#ifndef GAFFERSCENETEST_EXPORT_H
+#define GAFFERSCENETEST_EXPORT_H
 
-#include "GafferSceneTest/Export.h"
+#include "Gaffer/Export.h"
 
-namespace GafferSceneTest
-{
+// define GAFFERSCENETEST_API macro based on whether or not we are compiling
+// GafferSceneTest, or including headers for linking to it. the GAFFERSCENETEST_API
+// macro is the one that is used in the class definitions.
+#ifdef GafferSceneTest_EXPORTS
+  #define GAFFERSCENETEST_API GAFFER_EXPORT
+#else
+  #define GAFFERSCENETEST_API GAFFER_IMPORT
+#endif
 
-GAFFERSCENETEST_API void testManyStringToPathCalls();
-
-} // namespace GafferSceneTest
-
-#endif // GAFFERSCENETEST_SCENEPLUGTEST_H
+#endif // #ifndef GAFFERSCENETEST_EXPORT_H
