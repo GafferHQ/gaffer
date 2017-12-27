@@ -1,7 +1,6 @@
 //////////////////////////////////////////////////////////////////////////
 //
-//  Copyright (c) 2011, John Haddon. All rights reserved.
-//  Copyright (c) 2012-2013, Image Engine Design Inc. All rights reserved.
+//  Copyright (c) 2016, Image Engine Design Inc. All rights reserved.
 //
 //  Redistribution and use in source and binary forms, with or without
 //  modification, are permitted provided that the following conditions are
@@ -35,49 +34,18 @@
 //
 //////////////////////////////////////////////////////////////////////////
 
-#ifndef GAFFERUI_TEXTGADGET_H
-#define GAFFERUI_TEXTGADGET_H
+#ifndef GAFFERUI_EXPORT_H
+#define GAFFERUI_EXPORT_H
 
-#include "GafferUI/Export.h"
-#include "GafferUI/Gadget.h"
+#include "Gaffer/Export.h"
 
-#include "IECoreScene/Font.h"
+// define GAFFERUI_API macro based on whether or not we are compiling
+// GafferUI, or including headers for linking to it. the GAFFERUI_API
+// macro is the one that is used in the class definitions.
+#ifdef GafferUI_EXPORTS
+  #define GAFFERUI_API GAFFER_EXPORT
+#else
+  #define GAFFERUI_API GAFFER_IMPORT
+#endif
 
-namespace GafferUI
-{
-
-class GAFFERUI_API TextGadget : public Gadget
-{
-
-	public :
-
-		TextGadget( const std::string &text );
-		~TextGadget() override;
-
-		IE_CORE_DECLARERUNTIMETYPEDEXTENSION( GafferUI::TextGadget, TextGadgetTypeId, Gadget );
-
-		const std::string &getText() const;
-		void setText( const std::string &text );
-
-		Imath::Box3f bound() const override;
-
-	protected :
-
-		void doRenderLayer( Layer layer, const Style *style ) const override;
-		bool hasLayer( Layer layer ) const override { return layer == Layer::Main; };
-
-	private :
-
-		std::string m_text;
-		Imath::Box3f m_bound;
-
-};
-
-IE_CORE_DECLAREPTR( TextGadget );
-
-typedef Gaffer::FilteredChildIterator<Gaffer::TypePredicate<TextGadget> > TextGadgetIterator;
-typedef Gaffer::FilteredRecursiveChildIterator<Gaffer::TypePredicate<TextGadget> > RecursiveTextGadgetIterator;
-
-} // namespace GafferUI
-
-#endif // GAFFERUI_TEXTGADGET_H
+#endif // #ifndef GAFFERUI_EXPORT_H

@@ -39,6 +39,7 @@
 
 #include "Gaffer/Dot.h"
 
+#include "GafferUI/Export.h"
 #include "GafferUI/StandardNodeGadget.h"
 
 namespace Gaffer
@@ -51,7 +52,7 @@ IE_CORE_FORWARDDECLARE( Plug )
 namespace GafferUI
 {
 
-class DotNodeGadget : public StandardNodeGadget
+class GAFFERUI_API DotNodeGadget : public StandardNodeGadget
 {
 
 	public :

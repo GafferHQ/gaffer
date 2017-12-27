@@ -44,6 +44,7 @@
 
 #include "Gaffer/FilteredRecursiveChildIterator.h"
 
+#include "GafferUI/Export.h"
 #include "GafferUI/Gadget.h"
 
 namespace Gaffer
@@ -56,7 +57,7 @@ namespace GafferUI
 
 IE_CORE_FORWARDDECLARE( Nodule )
 
-class Nodule : public Gadget
+class GAFFERUI_API Nodule : public Gadget
 {
 
 	public :

@@ -38,12 +38,13 @@
 #ifndef GAFFERUI_SCALEHANDLE_H
 #define GAFFERUI_SCALEHANDLE_H
 
+#include "GafferUI/Export.h"
 #include "GafferUI/Handle.h"
 
 namespace GafferUI
 {
 
-class ScaleHandle : public Handle
+class GAFFERUI_API ScaleHandle : public Handle
 {
 
 	public :

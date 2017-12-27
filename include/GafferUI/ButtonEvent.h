@@ -38,6 +38,7 @@
 #ifndef GAFFERUI_BUTTONEVENT_H
 #define GAFFERUI_BUTTONEVENT_H
 
+#include "GafferUI/Export.h"
 #include "GafferUI/ModifiableEvent.h"
 
 #include "IECore/LineSegment.h"
@@ -52,7 +53,7 @@ namespace GafferUI
 /// This will be convenient for 2d-only Widgets but also allow Gadgets to
 /// get the original raster position for an event without jumping through
 /// hoops and running the gauntlet of precision issues.
-struct ButtonEvent : public ModifiableEvent
+struct GAFFERUI_API ButtonEvent : public ModifiableEvent
 {
 	/// An enum to represent the mouse buttons.
 	enum Buttons

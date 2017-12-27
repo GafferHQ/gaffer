@@ -37,12 +37,13 @@
 #ifndef GAFFERUI_PLUGADDER_H
 #define GAFFERUI_PLUGADDER_H
 
+#include "GafferUI/Export.h"
 #include "GafferUI/StandardNodeGadget.h"
 
 namespace GafferUI
 {
 
-class PlugAdder : public Gadget
+class GAFFERUI_API PlugAdder : public Gadget
 {
 
 	public :

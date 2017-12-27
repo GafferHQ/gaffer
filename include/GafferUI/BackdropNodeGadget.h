@@ -40,13 +40,14 @@
 #include "Gaffer/Backdrop.h"
 #include "Gaffer/BoxPlug.h"
 
+#include "GafferUI/Export.h"
 #include "GafferUI/NodeGadget.h"
 
 namespace GafferUI
 {
 
 
-class BackdropNodeGadget : public NodeGadget
+class GAFFERUI_API BackdropNodeGadget : public NodeGadget
 {
 
 	public :

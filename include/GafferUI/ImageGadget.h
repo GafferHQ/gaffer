@@ -42,6 +42,7 @@
 
 #include "IECoreGL/TextureLoader.h"
 
+#include "GafferUI/Export.h"
 #include "GafferUI/Gadget.h"
 
 namespace IECoreGL
@@ -54,7 +55,7 @@ IE_CORE_FORWARDDECLARE( Texture )
 namespace GafferUI
 {
 
-class ImageGadget : public Gadget
+class GAFFERUI_API ImageGadget : public Gadget
 {
 
 	public :

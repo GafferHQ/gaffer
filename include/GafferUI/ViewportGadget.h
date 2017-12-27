@@ -42,6 +42,7 @@
 
 #include "IECoreGL/Selector.h"
 
+#include "GafferUI/Export.h"
 #include "GafferUI/IndividualContainer.h"
 
 namespace GafferUI
@@ -53,7 +54,7 @@ namespace GafferUI
 /// its child gadgets, transforming the event from the 2d space of the widget to the 3d
 /// space of the gadget as it goes. The framing of the child gadgets is specified using a
 /// Camera, which may be specified both programatically and through user interaction.
-class ViewportGadget : public Gadget
+class GAFFERUI_API ViewportGadget : public Gadget
 {
 
 	public :
@@ -127,7 +128,7 @@ class ViewportGadget : public Gadget
 
 		/// The SelectionScope class can be used by child Gadgets to perform
 		/// OpenGL selection from event signal callbacks.
-		class SelectionScope
+		class GAFFERUI_API SelectionScope
 		{
 
 			public :
@@ -169,7 +170,7 @@ class ViewportGadget : public Gadget
 		};
 
 		/// The RasterScope class can be used to perform drawing in raster space.
-		class RasterScope
+		class GAFFERUI_API RasterScope
 		{
 
 			public :

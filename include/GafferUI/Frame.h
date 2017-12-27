@@ -38,13 +38,14 @@
 #ifndef GAFFERUI_FRAME_H
 #define GAFFERUI_FRAME_H
 
+#include "GafferUI/Export.h"
 #include "GafferUI/IndividualContainer.h"
 
 namespace GafferUI
 {
 
 /// The Frame class draws a frame around its child.
-class Frame : public IndividualContainer
+class GAFFERUI_API Frame : public IndividualContainer
 {
 
 	public :
