@@ -44,6 +44,7 @@
 
 #include "Gaffer/NumericPlug.h"
 
+#include "GafferImage/Export.h"
 #include "GafferImage/ImageNode.h"
 
 namespace GafferImage
@@ -51,7 +52,7 @@ namespace GafferImage
 
 IE_CORE_FORWARDDECLARE( GafferDisplayDriver )
 
-class Display : public ImageNode
+class GAFFERIMAGE_API Display : public ImageNode
 {
 
 	public :

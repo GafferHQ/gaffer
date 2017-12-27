@@ -40,6 +40,8 @@
 #include <vector>
 #include "OpenEXR/ImathBox.h"
 
+#include "GafferImage/Export.h"
+
 namespace GafferImage
 {
 
@@ -67,7 +69,7 @@ namespace ImageAlgo
 ///     - "Z" is the depth channel
 
 /// Returns the names of all layers present in the specified channels.
-std::vector<std::string> layerNames( const std::vector<std::string> &channelNames );
+GAFFERIMAGE_API std::vector<std::string> layerNames( const std::vector<std::string> &channelNames );
 
 /// Returns the name of the layer the channel belongs to.
 /// This is simply the portion of the channelName up to the

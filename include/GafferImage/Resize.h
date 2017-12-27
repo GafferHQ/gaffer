@@ -39,6 +39,7 @@
 
 #include "Gaffer/NumericPlug.h"
 
+#include "GafferImage/Export.h"
 #include "GafferImage/ImageProcessor.h"
 #include "GafferImage/FormatPlug.h"
 
@@ -54,7 +55,7 @@ namespace GafferImage
 
 IE_CORE_FORWARDDECLARE( Resample )
 
-class Resize : public ImageProcessor
+class GAFFERIMAGE_API Resize : public ImageProcessor
 {
 	public :
 

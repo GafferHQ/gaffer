@@ -39,12 +39,13 @@
 
 #include "Gaffer/CompoundNumericPlug.h"
 
+#include "GafferImage/Export.h"
 #include "GafferImage/ImageProcessor.h"
 
 namespace GafferImage
 {
 
-class Offset : public ImageProcessor
+class GAFFERIMAGE_API Offset : public ImageProcessor
 {
 	public :
 

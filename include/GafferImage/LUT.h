@@ -39,6 +39,7 @@
 
 #include "Gaffer/NumericPlug.h"
 
+#include "GafferImage/Export.h"
 #include "GafferImage/OpenColorIOTransform.h"
 
 namespace Gaffer
@@ -51,7 +52,7 @@ IE_CORE_FORWARDDECLARE( StringPlug )
 namespace GafferImage
 {
 
-class LUT : public OpenColorIOTransform
+class GAFFERIMAGE_API LUT : public OpenColorIOTransform
 {
 
 	public :

@@ -39,6 +39,7 @@
 
 #include "Gaffer/CompoundNumericPlug.h"
 
+#include "GafferImage/Export.h"
 #include "GafferImage/ImageProcessor.h"
 
 namespace GafferImage
@@ -46,7 +47,7 @@ namespace GafferImage
 
 IE_CORE_FORWARDDECLARE( Resample )
 
-class Blur : public ImageProcessor
+class GAFFERIMAGE_API Blur : public ImageProcessor
 {
 	public :
 

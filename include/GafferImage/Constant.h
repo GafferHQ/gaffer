@@ -40,13 +40,14 @@
 #include "Gaffer/CompoundNumericPlug.h"
 #include "Gaffer/StringPlug.h"
 
+#include "GafferImage/Export.h"
 #include "GafferImage/ImageNode.h"
 #include "GafferImage/FormatPlug.h"
 
 namespace GafferImage
 {
 
-class Constant : public ImageNode
+class GAFFERIMAGE_API Constant : public ImageNode
 {
 
 	public :

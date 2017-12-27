@@ -43,6 +43,7 @@
 
 #include "GafferDispatch/TaskNode.h"
 
+#include "GafferImage/Export.h"
 #include "GafferImage/TypeIds.h"
 
 namespace Gaffer
@@ -57,7 +58,7 @@ namespace GafferImage
 IE_CORE_FORWARDDECLARE( ColorSpace )
 IE_CORE_FORWARDDECLARE( ImagePlug )
 
-class ImageWriter : public GafferDispatch::TaskNode
+class GAFFERIMAGE_API ImageWriter : public GafferDispatch::TaskNode
 {
 
 	public :

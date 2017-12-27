@@ -15,7 +15,7 @@
 //        disclaimer in the documentation and/or other materials provided with
 //        the distribution.
 //
-//      * Neither the name of Image Engine Design nor the names of
+//      * Neither the name of John Haddon nor the names of
 //        any other contributors to this software may be used to endorse or
 //        promote products derived from this software without specific prior
 //        written permission.
@@ -34,61 +34,18 @@
 //
 //////////////////////////////////////////////////////////////////////////
 
-#ifndef GAFFERIMAGE_UVWARP_H
-#define GAFFERIMAGE_UVWARP_H
+#ifndef GAFFERIMAGE_EXPORT_H
+#define GAFFERIMAGE_EXPORT_H
 
-#include "GafferImage/Export.h"
-#include "GafferImage/Warp.h"
+#include "Gaffer/Export.h"
 
-namespace GafferImage
-{
+// define GAFFERIMAGE_API macro based on whether or not we are compiling
+// GafferImage, or including headers for linking to it. the GAFFERIMAGE_API
+// macro is the one that is used in the class definitions.
+#ifdef GafferImage_EXPORTS
+  #define GAFFERIMAGE_API GAFFER_EXPORT
+#else
+  #define GAFFERIMAGE_API GAFFER_IMPORT
+#endif
 
-class GAFFERIMAGE_API VectorWarp : public Warp
-{
-	public :
-
-		VectorWarp( const std::string &name=defaultName<Warp>() );
-		~VectorWarp() override;
-
-		IE_CORE_DECLARERUNTIMETYPEDEXTENSION( GafferImage::VectorWarp, VectorWarpTypeId, Warp );
-
-		ImagePlug *vectorPlug();
-		const ImagePlug *vectorPlug() const;
-
-		enum VectorMode
-		{
-			Relative,   // Relative offset
-			Absolute,   // Absolute position
-		};
-
-		Gaffer::IntPlug *vectorModePlug();
-		const Gaffer::IntPlug *vectorModePlug() const;
-
-		enum VectorUnits
-		{
-			Pixels,  // Vector specified in pixels
-			Screen,  // Vector specified as fraction of display window
-		};
-
-		Gaffer::IntPlug *vectorUnitsPlug();
-		const Gaffer::IntPlug *vectorUnitsPlug() const;
-
-	protected :
-
-		bool affectsEngine( const Gaffer::Plug *input ) const override;
-		void hashEngine( const Imath::V2i &tileOrigin, const Gaffer::Context *context, IECore::MurmurHash &h ) const override;
-		const Engine *computeEngine( const Imath::V2i &tileOrigin, const Gaffer::Context *context ) const override;
-
-	private :
-
-		struct Engine;
-
-		static size_t g_firstPlugIndex;
-
-};
-
-IE_CORE_DECLAREPTR( VectorWarp )
-
-} // namespace GafferImage
-
-#endif // GAFFERIMAGE_UVWARP_H
+#endif // #ifndef GAFFERIMAGE_EXPORT_H

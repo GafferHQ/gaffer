@@ -39,12 +39,13 @@
 
 #include "Gaffer/StringPlug.h"
 
+#include "GafferImage/Export.h"
 #include "GafferImage/ImageProcessor.h"
 
 namespace GafferImage
 {
 
-class CollectImages : public ImageProcessor
+class GAFFERIMAGE_API CollectImages : public ImageProcessor
 {
 
 	public :

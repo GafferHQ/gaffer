@@ -37,12 +37,13 @@
 #ifndef GAFFERIMAGE_MEDIAN_H
 #define GAFFERIMAGE_MEDIAN_H
 
+#include "GafferImage/Export.h"
 #include "GafferImage/RankFilter.h"
 
 namespace GafferImage
 {
 
-class Median : public RankFilter
+class GAFFERIMAGE_API Median : public RankFilter
 {
 
 	public :

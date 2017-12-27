@@ -49,7 +49,7 @@ IE_CORE_FORWARDDECLARE( StringPlug )
 namespace GafferImage
 {
 
-class DisplayTransform : public OpenColorIOTransform
+class GAFFERIMAGE_API DisplayTransform : public OpenColorIOTransform
 {
 
 	public :

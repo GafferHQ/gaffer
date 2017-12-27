@@ -40,6 +40,7 @@
 
 #include "Gaffer/ComputeNode.h"
 
+#include "GafferImage/Export.h"
 #include "GafferImage/ImagePlug.h"
 
 namespace GafferImage
@@ -47,7 +48,7 @@ namespace GafferImage
 
 /// The ImageNode class is the base class for all Nodes which are capable of generating
 /// or manipulating images.
-class ImageNode : public Gaffer::ComputeNode
+class GAFFERIMAGE_API ImageNode : public Gaffer::ComputeNode
 {
 
 	public :
