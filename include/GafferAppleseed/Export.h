@@ -1,6 +1,6 @@
 //////////////////////////////////////////////////////////////////////////
 //
-//  Copyright (c) 2014, Esteban Tovagliari. All rights reserved.
+//  Copyright (c) 2016, Image Engine Design Inc. All rights reserved.
 //
 //  Redistribution and use in source and binary forms, with or without
 //  modification, are permitted provided that the following conditions are
@@ -34,49 +34,18 @@
 //
 //////////////////////////////////////////////////////////////////////////
 
-#ifndef GAFFERAPPLESEED_APPLESEEDLIGHT_H
-#define GAFFERAPPLESEED_APPLESEEDLIGHT_H
+#ifndef GAFFERAPPLESEED_EXPORT_H
+#define GAFFERAPPLESEED_EXPORT_H
 
-#include "foundation/utility/api/specializedapiarrays.h"
+#include "Gaffer/Export.h"
 
-#include "GafferScene/Light.h"
+// define GAFFERAPPLESEED_API macro based on whether or not we are compiling
+// GafferAppleseed, or including headers for linking to it. the GAFFERAPPLESEED_API
+// macro is the one that is used in the class definitions.
+#ifdef GafferAppleseed_EXPORTS
+  #define GAFFERAPPLESEED_API GAFFER_EXPORT
+#else
+  #define GAFFERAPPLESEED_API GAFFER_IMPORT
+#endif
 
-#include "GafferAppleseed/Export.h"
-#include "GafferAppleseed/TypeIds.h"
-
-namespace GafferAppleseed
-{
-
-class GAFFERAPPLESEED_API AppleseedLight : public GafferScene::Light
-{
-
-	public :
-
-		IE_CORE_DECLARERUNTIMETYPEDEXTENSION( GafferAppleseed::AppleseedLight, AppleseedLightTypeId, GafferScene::Light );
-
-		AppleseedLight( const std::string &name=defaultName<AppleseedLight>() );
-		~AppleseedLight() override;
-
-		void loadShader( const std::string &shaderName );
-
-	protected :
-
-		void hashLight( const Gaffer::Context *context, IECore::MurmurHash &h ) const override;
-		IECore::ObjectVectorPtr computeLight( const Gaffer::Context *context ) const override;
-
-	private :
-
-		Gaffer::StringPlug *modelPlug();
-		const Gaffer::StringPlug *modelPlug() const;
-
-		void setupPlugs( const std::string &shaderName, const foundation::DictionaryArray &metadata );
-
-		static size_t g_firstPlugIndex;
-
-};
-
-IE_CORE_DECLAREPTR( AppleseedLight )
-
-} // namespace GafferAppleseed
-
-#endif // GAFFERAPPLESEED_APPLESEEDLIGHT_H
+#endif // #ifndef GAFFERAPPLESEED_EXPORT_H

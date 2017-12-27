@@ -39,12 +39,13 @@
 
 #include "GafferScene/SceneProcessor.h"
 
+#include "GafferAppleseed/Export.h"
 #include "GafferAppleseed/TypeIds.h"
 
 namespace GafferAppleseed
 {
 
-class AppleseedShaderAdaptor : public GafferScene::SceneProcessor
+class GAFFERAPPLESEED_API AppleseedShaderAdaptor : public GafferScene::SceneProcessor
 {
 
 	public :
