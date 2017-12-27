@@ -39,12 +39,13 @@
 
 #include "GafferScene/InteractiveRender.h"
 
+#include "GafferArnold/Export.h"
 #include "GafferArnold/TypeIds.h"
 
 namespace GafferArnold
 {
 
-class InteractiveArnoldRender : public GafferScene::InteractiveRender
+class GAFFERARNOLD_API InteractiveArnoldRender : public GafferScene::InteractiveRender
 {
 
 	public :

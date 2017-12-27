@@ -1,6 +1,6 @@
 //////////////////////////////////////////////////////////////////////////
 //
-//  Copyright (c) 2012, John Haddon. All rights reserved.
+//  Copyright (c) 2016, Image Engine Design Inc. All rights reserved.
 //
 //  Redistribution and use in source and binary forms, with or without
 //  modification, are permitted provided that the following conditions are
@@ -34,31 +34,18 @@
 //
 //////////////////////////////////////////////////////////////////////////
 
-#ifndef GAFFERARNOLD_ARNOLDATTRIBUTES_H
-#define GAFFERARNOLD_ARNOLDATTRIBUTES_H
+#ifndef GAFFERARNOLD_EXPORT_H
+#define GAFFERARNOLD_EXPORT_H
 
-#include "GafferScene/Attributes.h"
+#include "Gaffer/Export.h"
 
-#include "GafferArnold/Export.h"
-#include "GafferArnold/TypeIds.h"
+// define GAFFERARNOLD_API macro based on whether or not we are compiling
+// GafferArnold, or including headers for linking to it. the GAFFERARNOLD_API
+// macro is the one that is used in the class definitions.
+#ifdef GafferArnold_EXPORTS
+  #define GAFFERARNOLD_API GAFFER_EXPORT
+#else
+  #define GAFFERARNOLD_API GAFFER_IMPORT
+#endif
 
-namespace GafferArnold
-{
-
-class GAFFERARNOLD_API ArnoldAttributes : public GafferScene::Attributes
-{
-
-	public :
-
-		ArnoldAttributes( const std::string &name=defaultName<ArnoldAttributes>() );
-		~ArnoldAttributes() override;
-
-		IE_CORE_DECLARERUNTIMETYPEDEXTENSION( GafferArnold::ArnoldAttributes, ArnoldAttributesTypeId, GafferScene::Attributes );
-
-};
-
-IE_CORE_DECLAREPTR( ArnoldAttributes )
-
-} // namespace GafferArnold
-
-#endif // GAFFERARNOLD_ARNOLDATTRIBUTES_H
+#endif // #ifndef GAFFERARNOLD_EXPORT_H
