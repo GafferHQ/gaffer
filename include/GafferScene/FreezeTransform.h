@@ -37,12 +37,13 @@
 #ifndef GAFFERSCENE_FREEZETRANSFORM_H
 #define GAFFERSCENE_FREEZETRANSFORM_H
 
+#include "GafferScene/Export.h"
 #include "GafferScene/FilteredSceneProcessor.h"
 
 namespace GafferScene
 {
 
-class FreezeTransform : public FilteredSceneProcessor
+class GAFFERSCENE_API FreezeTransform : public FilteredSceneProcessor
 {
 
 	public :

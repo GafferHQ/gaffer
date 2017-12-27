@@ -40,6 +40,7 @@
 
 #include "Gaffer/ComputeNode.h"
 
+#include "GafferScene/Export.h"
 #include "GafferScene/ScenePlug.h"
 #include "GafferScene/PathMatcherData.h"
 
@@ -48,7 +49,7 @@ namespace GafferScene
 
 /// The SceneNode class is the base class for all Nodes which are capable of generating
 /// or processing scene graphs.
-class SceneNode : public Gaffer::ComputeNode
+class GAFFERSCENE_API SceneNode : public Gaffer::ComputeNode
 {
 
 	public :

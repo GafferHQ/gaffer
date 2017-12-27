@@ -37,6 +37,7 @@
 #ifndef GAFFERSCENE_ATTRIBUTEPROCESSOR_H
 #define GAFFERSCENE_ATTRIBUTEPROCESSOR_H
 
+#include "GafferScene/Export.h"
 #include "GafferScene/SceneElementProcessor.h"
 
 namespace Gaffer
@@ -51,7 +52,7 @@ namespace GafferScene
 
 /// The AttributeProcessor base class simplifies the process of manipulating
 /// attributes.
-class AttributeProcessor : public SceneElementProcessor
+class GAFFERSCENE_API AttributeProcessor : public SceneElementProcessor
 {
 
 	public :

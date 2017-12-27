@@ -37,6 +37,7 @@
 #ifndef GAFFERSCENE_MAPPROJECTION_H
 #define GAFFERSCENE_MAPPROJECTION_H
 
+#include "GafferScene/Export.h"
 #include "GafferScene/SceneElementProcessor.h"
 
 namespace Gaffer
@@ -50,7 +51,7 @@ namespace GafferScene
 {
 
 /// Applies texture coordinates via a camera projection.
-class MapProjection : public SceneElementProcessor
+class GAFFERSCENE_API MapProjection : public SceneElementProcessor
 {
 
 	public :

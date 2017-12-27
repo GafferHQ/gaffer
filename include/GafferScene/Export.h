@@ -34,48 +34,18 @@
 //
 //////////////////////////////////////////////////////////////////////////
 
-#ifndef GAFFERSCENE_COPYOPTIONS_H
-#define GAFFERSCENE_COPYOPTIONS_H
+#ifndef GAFFERSCENE_EXPORT_H
+#define GAFFERSCENE_EXPORT_H
 
-#include "GafferScene/Export.h"
-#include "GafferScene/GlobalsProcessor.h"
-#include "GafferScene/ScenePlug.h"
-#include "Gaffer/StringPlug.h"
+#include "Gaffer/Export.h"
 
-namespace GafferScene
-{
+// define GAFFERSCENE_API macro based on whether or not we are compiling
+// GafferScene, or including headers for linking to it. the GAFFERSCENE_API
+// macro is the one that is used in the class definitions.
+#ifdef GafferScene_EXPORTS
+  #define GAFFERSCENE_API GAFFER_EXPORT
+#else
+  #define GAFFERSCENE_API GAFFER_IMPORT
+#endif
 
-  class GAFFERSCENE_API CopyOptions : public GafferScene::GlobalsProcessor
-  {
-
-	public :
-
-		CopyOptions( const std::string &name=defaultName<CopyOptions>() );
-		~CopyOptions() override;
-
-		IE_CORE_DECLARERUNTIMETYPEDEXTENSION( GafferScene::CopyOptions, CopyOptionsTypeId, GlobalsProcessor );
-
-		GafferScene::ScenePlug *sourcePlug();
-		const GafferScene::ScenePlug *sourcePlug() const;
-
-		Gaffer::StringPlug *namesPlug();
-		const Gaffer::StringPlug *namesPlug() const;
-
-		void affects( const Gaffer::Plug *input, AffectedPlugsContainer &outputs ) const override;
-
-	protected :
-
-		void hashProcessedGlobals( const Gaffer::Context *context, IECore::MurmurHash &h ) const override;
-		IECore::ConstCompoundObjectPtr computeProcessedGlobals( const Gaffer::Context *context, IECore::ConstCompoundObjectPtr inputGlobals ) const override;
-
-	private :
-
-		static size_t g_firstPlugIndex;
-
-};
-
-IE_CORE_DECLAREPTR( CopyOptions )
-
-} // namespace GafferScene
-
-#endif // GAFFERSCENE_COPYOPTIONS_H
+#endif // #ifndef GAFFERSCENE_EXPORT_H

@@ -38,12 +38,13 @@
 #ifndef GAFFERSCENE_CAMERA_H
 #define GAFFERSCENE_CAMERA_H
 
+#include "GafferScene/Export.h"
 #include "GafferScene/ObjectSource.h"
 
 namespace GafferScene
 {
 
-class Camera : public ObjectSource
+class GAFFERSCENE_API Camera : public ObjectSource
 {
 
 	public :

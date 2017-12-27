@@ -41,6 +41,7 @@
 
 #include "IECoreScene/SceneInterface.h"
 
+#include "GafferScene/Export.h"
 #include "GafferScene/SceneNode.h"
 
 namespace Gaffer
@@ -53,7 +54,7 @@ IE_CORE_FORWARDDECLARE( StringPlug )
 namespace GafferScene
 {
 
-class SceneReader : public SceneNode
+class GAFFERSCENE_API SceneReader : public SceneNode
 {
 
 	public :

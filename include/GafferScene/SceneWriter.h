@@ -43,13 +43,14 @@
 
 #include "GafferDispatch/TaskNode.h"
 
+#include "GafferScene/Export.h"
 #include "GafferScene/TypeIds.h"
 #include "GafferScene/ScenePlug.h"
 
 namespace GafferScene
 {
 
-class SceneWriter : public GafferDispatch::TaskNode
+class GAFFERSCENE_API SceneWriter : public GafferDispatch::TaskNode
 {
 
 	public :

@@ -37,6 +37,7 @@
 #ifndef GAFFERSCENE_ISOLATE_H
 #define GAFFERSCENE_ISOLATE_H
 
+#include "GafferScene/Export.h"
 #include "GafferScene/FilteredSceneProcessor.h"
 
 namespace Gaffer
@@ -49,7 +50,7 @@ IE_CORE_FORWARDDECLARE( StringPlug )
 namespace GafferScene
 {
 
-class Isolate : public FilteredSceneProcessor
+class GAFFERSCENE_API Isolate : public FilteredSceneProcessor
 {
 
 	public :

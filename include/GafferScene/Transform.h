@@ -39,12 +39,13 @@
 
 #include "Gaffer/TransformPlug.h"
 
+#include "GafferScene/Export.h"
 #include "GafferScene/SceneElementProcessor.h"
 
 namespace GafferScene
 {
 
-class Transform : public SceneElementProcessor
+class GAFFERSCENE_API Transform : public SceneElementProcessor
 {
 
 	public :

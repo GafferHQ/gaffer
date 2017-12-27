@@ -43,6 +43,7 @@
 #include "Gaffer/BoxPlug.h"
 #include "Gaffer/Context.h"
 
+#include "GafferScene/Export.h"
 #include "GafferScene/TypeIds.h"
 #include "GafferScene/PathMatcherDataPlug.h"
 
@@ -51,7 +52,7 @@ namespace GafferScene
 
 /// The ScenePlug is used to pass scenegraphs between nodes in the gaffer graph. It is a compound
 /// type, with subplugs for different aspects of the scene.
-class ScenePlug : public Gaffer::ValuePlug
+class GAFFERSCENE_API ScenePlug : public Gaffer::ValuePlug
 {
 
 	public :
@@ -132,7 +133,7 @@ class ScenePlug : public Gaffer::ValuePlug
 
 		/// Utility class to scope a temporary copy of a context,
 		/// specifying the scene path.
-		struct PathScope : public Gaffer::Context::EditableScope
+		struct GAFFERSCENE_API PathScope : public Gaffer::Context::EditableScope
 		{
 			PathScope( const Gaffer::Context *context );
 			PathScope( const Gaffer::Context *context, const ScenePath &scenePath );
@@ -142,7 +143,7 @@ class ScenePlug : public Gaffer::ValuePlug
 
 		/// Utility class to scope a temporary copy of a context,
 		/// specifying the set name.
-		struct SetScope : public Gaffer::Context::EditableScope
+		struct GAFFERSCENE_API SetScope : public Gaffer::Context::EditableScope
 		{
 			SetScope( const Gaffer::Context *context );
 			SetScope( const Gaffer::Context *context, const IECore::InternedString &setName );
@@ -155,7 +156,7 @@ class ScenePlug : public Gaffer::ValuePlug
 		/// when evaluating plugs which must not be sensitive
 		/// to such variables, and can improve performance by
 		/// reducing pressure on the hash cache.
-		struct GlobalScope : public Gaffer::Context::EditableScope
+		struct GAFFERSCENE_API GlobalScope : public Gaffer::Context::EditableScope
 		{
 			GlobalScope( const Gaffer::Context *context );
 		};

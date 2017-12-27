@@ -39,12 +39,13 @@
 
 #include "Gaffer/CompoundDataPlug.h"
 
+#include "GafferScene/Export.h"
 #include "GafferScene/ObjectSource.h"
 
 namespace GafferScene
 {
 
-class ExternalProcedural : public ObjectSource
+class GAFFERSCENE_API ExternalProcedural : public ObjectSource
 {
 
 	public :

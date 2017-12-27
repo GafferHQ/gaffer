@@ -40,6 +40,7 @@
 
 #include "IECore/TypedData.h"
 
+#include "GafferScene/Export.h"
 #include "GafferScene/Filter.h"
 
 namespace GafferScene
@@ -48,7 +49,7 @@ namespace GafferScene
 /// The PathMatcher class provides an acceleration structure for matching
 /// paths against a sequence of reference paths. It provides the internal
 /// implementation for the PathFilter.
-class PathMatcher
+class GAFFERSCENE_API PathMatcher
 {
 
 	public :

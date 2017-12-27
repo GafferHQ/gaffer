@@ -38,6 +38,7 @@
 #ifndef GAFFERSCENE_GLOBALSPROCESSOR_H
 #define GAFFERSCENE_GLOBALSPROCESSOR_H
 
+#include "GafferScene/Export.h"
 #include "GafferScene/SceneProcessor.h"
 
 namespace GafferScene
@@ -45,7 +46,7 @@ namespace GafferScene
 
 /// The GlobalsProcessor class provides a base class for modifying the globals
 /// of a scene while passing everything else through unchanged.
-class GlobalsProcessor : public SceneProcessor
+class GAFFERSCENE_API GlobalsProcessor : public SceneProcessor
 {
 
 	public :

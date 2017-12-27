@@ -40,6 +40,7 @@
 #include "Gaffer/SplinePlug.h"
 #include "Gaffer/NumericPlug.h"
 
+#include "GafferScene/Export.h"
 #include "GafferScene/SceneElementProcessor.h"
 
 namespace Gaffer
@@ -52,7 +53,7 @@ IE_CORE_FORWARDDECLARE( StringPlug )
 namespace GafferScene
 {
 
-class AttributeVisualiser : public SceneElementProcessor
+class GAFFERSCENE_API AttributeVisualiser : public SceneElementProcessor
 {
 
 	public :

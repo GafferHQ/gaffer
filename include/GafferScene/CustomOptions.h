@@ -39,12 +39,13 @@
 
 #include "Gaffer/StringPlug.h"
 
+#include "GafferScene/Export.h"
 #include "GafferScene/Options.h"
 
 namespace GafferScene
 {
 
-class CustomOptions : public GafferScene::Options
+class GAFFERSCENE_API CustomOptions : public GafferScene::Options
 {
 
 	public :

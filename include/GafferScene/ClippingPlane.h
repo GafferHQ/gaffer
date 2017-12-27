@@ -37,12 +37,13 @@
 #ifndef GAFFERSCENE_CLIPPINGPLANE_H
 #define GAFFERSCENE_CLIPPINGPLANE_H
 
+#include "GafferScene/Export.h"
 #include "GafferScene/ObjectSource.h"
 
 namespace GafferScene
 {
 
-class ClippingPlane : public ObjectSource
+class GAFFERSCENE_API ClippingPlane : public ObjectSource
 {
 
 	public :

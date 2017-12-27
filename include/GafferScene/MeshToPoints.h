@@ -37,6 +37,7 @@
 #ifndef GAFFERSCENE_MESHTOPOINTS_H
 #define GAFFERSCENE_MESHTOPOINTS_H
 
+#include "GafferScene/Export.h"
 #include "GafferScene/SceneElementProcessor.h"
 
 namespace Gaffer
@@ -49,7 +50,7 @@ IE_CORE_FORWARDDECLARE( StringPlug )
 namespace GafferScene
 {
 
-class MeshToPoints : public SceneElementProcessor
+class GAFFERSCENE_API MeshToPoints : public SceneElementProcessor
 {
 
 	public :

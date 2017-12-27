@@ -38,6 +38,7 @@
 #ifndef GAFFERSCENE_SCENEPROCESSOR_H
 #define GAFFERSCENE_SCENEPROCESSOR_H
 
+#include "GafferScene/Export.h"
 #include "GafferScene/SceneNode.h"
 
 namespace Gaffer
@@ -52,7 +53,7 @@ namespace GafferScene
 
 /// A base class for nodes which will take a number of input scenes and
 /// process them in some way to generate an output scene.
-class SceneProcessor : public SceneNode
+class GAFFERSCENE_API SceneProcessor : public SceneNode
 {
 
 	public :

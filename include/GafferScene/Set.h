@@ -39,6 +39,7 @@
 
 #include "Gaffer/TypedObjectPlug.h"
 
+#include "GafferScene/Export.h"
 #include "GafferScene/FilteredSceneProcessor.h"
 
 namespace Gaffer
@@ -53,7 +54,7 @@ namespace GafferScene
 
 /// Node to define sets of locations in the scene - not to be confused
 /// with the Gaffer::Set class which is for an entirely different purpose.
-class Set : public FilteredSceneProcessor
+class GAFFERSCENE_API Set : public FilteredSceneProcessor
 {
 
 	public :

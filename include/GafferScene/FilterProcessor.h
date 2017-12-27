@@ -37,6 +37,7 @@
 #ifndef GAFFERSCENE_FILTERPROCESSOR_H
 #define GAFFERSCENE_FILTERPROCESSOR_H
 
+#include "GafferScene/Export.h"
 #include "GafferScene/Filter.h"
 
 namespace Gaffer
@@ -51,7 +52,7 @@ namespace GafferScene
 
 /// A base class for filters which operate by processing one
 /// or more input filters.
-class FilterProcessor : public Filter
+class GAFFERSCENE_API FilterProcessor : public Filter
 {
 
 	public :
@@ -62,7 +63,7 @@ class FilterProcessor : public Filter
 		/// Constructs with an ArrayPlug called "in". Use inPlug() as a
 		/// convenience for accessing the first child in the array, and use
 		/// inPlugs() to access the array itself.
-		FilterProcessor( const std::string &name, size_t minInputs, size_t maxInputs = Imath::limits<size_t>::max() );
+		FilterProcessor( const std::string &name, size_t minInputs, size_t maxInputs = std::numeric_limits<size_t>::max() );
 
 		~FilterProcessor() override;
 

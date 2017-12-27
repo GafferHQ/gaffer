@@ -37,12 +37,13 @@
 #ifndef GAFFERSCENE_CUSTOMATTRIBUTES_H
 #define GAFFERSCENE_CUSTOMATTRIBUTES_H
 
+#include "GafferScene/Export.h"
 #include "GafferScene/Attributes.h"
 
 namespace GafferScene
 {
 
-class CustomAttributes : public GafferScene::Attributes
+class GAFFERSCENE_API CustomAttributes : public GafferScene::Attributes
 {
 
 	public :

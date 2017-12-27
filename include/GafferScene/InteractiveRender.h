@@ -39,6 +39,7 @@
 
 #include "Gaffer/Node.h"
 
+#include "GafferScene/Export.h"
 #include "GafferScene/ScenePlug.h"
 #include "GafferScene/RendererAlgo.h"
 #include "GafferScene/Private/IECoreScenePreview/Renderer.h"
@@ -54,7 +55,7 @@ IE_CORE_FORWARDDECLARE( StringPlug )
 namespace GafferScene
 {
 
-class InteractiveRender : public Gaffer::Node
+class GAFFERSCENE_API InteractiveRender : public Gaffer::Node
 {
 
 	public :

@@ -37,6 +37,7 @@
 #ifndef GAFFERSCENE_POINTSTYPE_H
 #define GAFFERSCENE_POINTSTYPE_H
 
+#include "GafferScene/Export.h"
 #include "GafferScene/SceneElementProcessor.h"
 
 namespace Gaffer
@@ -49,7 +50,7 @@ IE_CORE_FORWARDDECLARE( StringPlug )
 namespace GafferScene
 {
 
-class PointsType : public SceneElementProcessor
+class GAFFERSCENE_API PointsType : public SceneElementProcessor
 {
 
 	public :
