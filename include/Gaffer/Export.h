@@ -34,58 +34,25 @@
 //
 //////////////////////////////////////////////////////////////////////////
 
-#ifndef GAFFER_MONITOR_H
-#define GAFFER_MONITOR_H
+#ifndef GAFFER_EXPORT_H
+#define GAFFER_EXPORT_H
 
-#include "boost/noncopyable.hpp"
+// define platform-specific macros for importing/exporting symbols
+#ifdef _MSC_VER
+  #define GAFFER_IMPORT __declspec(dllimport)
+  #define GAFFER_EXPORT __declspec(dllexport)
+#else
+  #define GAFFER_IMPORT
+  #define GAFFER_EXPORT
+#endif
 
-#include "Gaffer/Export.h"
+// define GAFFER_API macro based on whether or not we are compiling Gaffer,
+// or including headers for linking to it. the GAFFER_API macro is the one that is
+// used in the class definitions.
+#ifdef Gaffer_EXPORTS
+  #define GAFFER_API GAFFER_EXPORT
+#else
+  #define GAFFER_API GAFFER_IMPORT
+#endif
 
-namespace Gaffer
-{
-
-class Process;
-
-/// Base class for monitoring node graph processes.
-class GAFFER_API Monitor : boost::noncopyable
-{
-
-	public :
-
-		Monitor();
-		virtual ~Monitor();
-
-		void setActive( bool active );
-		bool getActive() const;
-
-		class GAFFER_API Scope : boost::noncopyable
-		{
-
-			public :
-
-				/// Constructing the Scope makes the monitor active.
-				/// If monitor is null, the Scope is a no-op.
-				Scope( Monitor *monitor );
-				/// Destruction of the Scope makes the monitor inactive.
-				~Scope();
-
-			private :
-
-				Monitor *m_monitor;
-
-		};
-
-	protected :
-
-		friend class Process;
-
-		/// Implementations must be safe to call concurrently.
-		virtual void processStarted( const Process *process ) = 0;
-		/// Implementations must be safe to call concurrently.
-		virtual void processFinished( const Process *process ) = 0;
-
-};
-
-} // namespace Gaffer
-
-#endif // GAFFER_MONITOR_H
+#endif // #ifndef GAFFER_EXPORT_H

@@ -40,6 +40,7 @@
 
 #include "IECore/Object.h"
 
+#include "Gaffer/Export.h"
 #include "Gaffer/GraphComponent.h"
 #include "Gaffer/FilteredChildIterator.h"
 #include "Gaffer/FilteredRecursiveChildIterator.h"
@@ -66,7 +67,7 @@ IE_CORE_FORWARDDECLARE( Node )
 /// When two parent plugs are connected, and children are added to or removed
 /// from the source plug, the equivalent operation will be automatically
 /// performed on the destination plug so as to maintain the parent connection.
-class Plug : public GraphComponent
+class GAFFER_API Plug : public GraphComponent
 {
 
 	public :

@@ -41,6 +41,7 @@
 #include "IECore/RefCounted.h"
 #include "IECore/InternedString.h"
 
+#include "Gaffer/Export.h"
 #include "Gaffer/StringAlgo.h"
 
 namespace Gaffer
@@ -51,7 +52,7 @@ IE_CORE_FORWARDDECLARE( Plug )
 namespace PlugAlgo
 {
 
-void replacePlug( GraphComponent *parent, PlugPtr plug );
+GAFFER_API void replacePlug( GraphComponent *parent, PlugPtr plug );
 
 /// Promotion
 /// =========
@@ -63,7 +64,7 @@ void replacePlug( GraphComponent *parent, PlugPtr plug );
 
 /// Returns true if a call to `promote( plug, parent )` would
 /// succeed, false otherwise.
-bool canPromote( const Plug *plug, const Plug *parent = nullptr );
+GAFFER_API bool canPromote( const Plug *plug, const Plug *parent = nullptr );
 /// Promotes an internal plug, returning the newly created
 /// external plug. By default the external plug is parented
 /// directly to the node, but the `parent` argument
@@ -73,17 +74,17 @@ bool canPromote( const Plug *plug, const Plug *parent = nullptr );
 /// plug - this can be controlled with the `excludeMetadata`
 /// argument.
 /// \undoable
-Plug *promote( Plug *plug, Plug *parent = nullptr, const StringAlgo::MatchPattern &excludeMetadata = "layout:*" );
+GAFFER_API Plug *promote( Plug *plug, Plug *parent = nullptr, const StringAlgo::MatchPattern &excludeMetadata = "layout:*" );
 /// As `promote` but by providing the name argument, you can skip an additional
 /// renaming step after promoting.
 /// \undoable
-Plug *promoteWithName( Plug *plug, const IECore::InternedString &name, Plug *parent = nullptr, const StringAlgo::MatchPattern &excludeMetadata = "layout:*" );
+GAFFER_API Plug *promoteWithName( Plug *plug, const IECore::InternedString &name, Plug *parent = nullptr, const StringAlgo::MatchPattern &excludeMetadata = "layout:*" );
 /// Returns true if the plug appears to have been promoted.
-bool isPromoted( const Plug *plug );
+GAFFER_API bool isPromoted( const Plug *plug );
 /// Unpromotes a previously promoted plug, removing the
 /// external plug where possible.
 /// \undoable
-void unpromote( Plug *plug );
+GAFFER_API void unpromote( Plug *plug );
 
 } // namespace PlugAlgo
 

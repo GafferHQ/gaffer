@@ -48,6 +48,7 @@
 #include "IECore/RefCounted.h"
 #include "IECore/MurmurHash.h"
 
+#include "Gaffer/Export.h"
 #include "Gaffer/Monitor.h"
 
 namespace Gaffer
@@ -59,7 +60,7 @@ IE_CORE_FORWARDDECLARE( Context )
 
 /// A monitor which collects statistics about
 /// what contexts plugs are evaluated in.
-class ContextMonitor : public Monitor
+class GAFFER_API ContextMonitor : public Monitor
 {
 
 	public :
@@ -69,7 +70,7 @@ class ContextMonitor : public Monitor
 		ContextMonitor( const GraphComponent *root = nullptr );
 		~ContextMonitor() override;
 
-		struct Statistics
+		struct GAFFER_API Statistics
 		{
 
 			size_t numUniqueContexts() const;

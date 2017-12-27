@@ -37,6 +37,7 @@
 #ifndef GAFFER_TIMEWARP_H
 #define GAFFER_TIMEWARP_H
 
+#include "Gaffer/Export.h"
 #include "Gaffer/ContextProcessor.h"
 #include "Gaffer/NumericPlug.h"
 
@@ -44,7 +45,7 @@ namespace Gaffer
 {
 
 template<typename BaseType>
-class TimeWarp : public ContextProcessor<BaseType>
+class GAFFER_EXPORT TimeWarp : public ContextProcessor<BaseType>
 {
 
 	public :

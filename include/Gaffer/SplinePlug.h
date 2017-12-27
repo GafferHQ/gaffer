@@ -40,6 +40,7 @@
 
 #include "IECore/Spline.h"
 
+#include "Gaffer/Export.h"
 #include "Gaffer/NumericPlug.h"
 #include "Gaffer/TypedPlug.h"
 #include "Gaffer/PlugType.h"
@@ -115,7 +116,7 @@ private:
 /// details such as adding repeated endpoint values are added when converting to
 /// IECore::Spline.
 template<typename T>
-class SplinePlug : public ValuePlug
+class GAFFER_API SplinePlug : public ValuePlug
 {
 
 	public :

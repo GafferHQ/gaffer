@@ -43,6 +43,8 @@
 
 #include "IECore/InternedString.h"
 
+#include "Gaffer/Export.h"
+
 namespace Gaffer
 {
 
@@ -57,7 +59,7 @@ class Monitor;
 /// considered to be entirely an internal implementation
 /// detail - they are exposed publicly only so they can
 /// be used by the Monitor classes.
-class Process : public boost::noncopyable
+class GAFFER_API Process : public boost::noncopyable
 {
 
 	public :

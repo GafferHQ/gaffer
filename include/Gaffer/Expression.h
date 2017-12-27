@@ -40,6 +40,7 @@
 
 #include <functional>
 
+#include "Gaffer/Export.h"
 #include "Gaffer/ComputeNode.h"
 #include "Gaffer/TypedObjectPlug.h"
 
@@ -48,7 +49,7 @@ namespace Gaffer
 
 IE_CORE_FORWARDDECLARE( StringPlug )
 
-class Expression : public ComputeNode
+class GAFFER_API Expression : public ComputeNode
 {
 
 	public :
@@ -90,7 +91,7 @@ class Expression : public ComputeNode
 		/// for use in the Expression node. All methods
 		/// are protected as Engines are for the internal
 		/// use of the Expression node only.
-		class Engine : public IECore::RefCounted
+		class GAFFER_API Engine : public IECore::RefCounted
 		{
 
 			public :

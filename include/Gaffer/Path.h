@@ -44,6 +44,7 @@
 #include "IECore/InternedString.h"
 #include "IECore/CompoundData.h"
 
+#include "Gaffer/Export.h"
 #include "Gaffer/TypeIds.h"
 
 namespace GafferModule
@@ -53,7 +54,7 @@ namespace GafferModule
 // We don't include PathBinding.h because we don't want
 // python involved in any way when building the pure C++
 // modules.
-void bindPath();
+GAFFER_IMPORT void bindPath();
 
 } // namespace GafferModule
 
@@ -70,7 +71,7 @@ IE_CORE_FORWARDDECLARE( PathFilter )
 ///
 /// A path is represented by a root location followed by a series of names
 /// which refer to items nested below the root.
-class Path : public IECore::RunTimeTyped
+class GAFFER_API Path : public IECore::RunTimeTyped
 {
 
 	public :

@@ -42,13 +42,14 @@
 
 #include "IECore/SimpleTypedData.h"
 
+#include "Gaffer/Export.h"
 #include "Gaffer/ValuePlug.h"
 
 namespace Gaffer
 {
 
 template<typename T>
-class NumericPlug : public ValuePlug
+class GAFFER_API NumericPlug : public ValuePlug
 {
 
 	public :

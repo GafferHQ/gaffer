@@ -39,6 +39,7 @@
 
 #include "boost/utility/enable_if.hpp"
 
+#include "Gaffer/Export.h"
 #include "Gaffer/ComputeNode.h"
 #include "Gaffer/NumericPlug.h"
 
@@ -61,7 +62,7 @@ namespace Gaffer
 ///   in the GafferTest.SwitchTest
 ///   test cases.
 template<typename BaseType>
-class Switch : public BaseType
+class GAFFER_EXPORT Switch : public BaseType
 {
 
 	public :

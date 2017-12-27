@@ -38,6 +38,7 @@
 #ifndef GAFFER_STANDARDSET_H
 #define GAFFER_STANDARDSET_H
 
+#include "Gaffer/Export.h"
 #include "Gaffer/Set.h"
 
 #include "boost/multi_index_container.hpp"
@@ -77,7 +78,7 @@ struct MemberAcceptanceCombiner
 
 /// The StandardSet provides a Set implementation where membership is explicitly set using add() and remove()
 /// methods. Membership may be restricted using the memberAcceptanceSignal().
-class StandardSet : public Gaffer::Set
+class GAFFER_API StandardSet : public Gaffer::Set
 {
 
 	public :

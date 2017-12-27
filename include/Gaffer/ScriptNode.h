@@ -41,6 +41,7 @@
 #include <stack>
 #include <functional>
 
+#include "Gaffer/Export.h"
 #include "Gaffer/Node.h"
 #include "Gaffer/NumericPlug.h"
 #include "Gaffer/TypedPlug.h"
@@ -72,7 +73,7 @@ IE_CORE_DECLAREPTR( ScriptContainer );
 
 /// The ScriptNode class represents a script - that is a single collection of
 /// nodes which are stored in a single file.
-class ScriptNode : public Node
+class GAFFER_API ScriptNode : public Node
 {
 
 	public :

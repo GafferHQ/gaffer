@@ -43,6 +43,7 @@
 #include "IECore/RunTimeTyped.h"
 #include "IECore/InternedString.h"
 
+#include "Gaffer/Export.h"
 #include "Gaffer/TypeIds.h"
 
 namespace Gaffer
@@ -59,7 +60,7 @@ class FilteredChildIterator;
 template<typename Predicate, typename RecursionPredicate>
 class FilteredRecursiveChildIterator;
 
-class GraphComponent : public IECore::RunTimeTyped, public boost::signals::trackable
+class GAFFER_API GraphComponent : public IECore::RunTimeTyped, public boost::signals::trackable
 {
 
 	public :

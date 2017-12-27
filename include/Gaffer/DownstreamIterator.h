@@ -41,6 +41,7 @@
 
 #include "IECore/MessageHandler.h"
 
+#include "Gaffer/Export.h"
 #include "Gaffer/DependencyNode.h"
 
 namespace Gaffer
@@ -52,7 +53,7 @@ namespace Gaffer
 /// a diamond graph being the simplest example. Typically you will want to
 /// track visited plugs and prune traversal when revisiting.
 /// See DependencyNodeTest.testEfficiency and Plug.cpp.
-class DownstreamIterator : public boost::iterator_facade<DownstreamIterator, const Plug, boost::forward_traversal_tag>
+class GAFFER_API DownstreamIterator : public boost::iterator_facade<DownstreamIterator, const Plug, boost::forward_traversal_tag>
 {
 
 	public :

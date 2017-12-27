@@ -38,12 +38,13 @@
 #ifndef GAFFER_PREFERENCES_H
 #define GAFFER_PREFERENCES_H
 
+#include "Gaffer/Export.h"
 #include "Gaffer/Node.h"
 
 namespace Gaffer
 {
 
-class Preferences : public Node
+class GAFFER_API Preferences : public Node
 {
 
 	public :

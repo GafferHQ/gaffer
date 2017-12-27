@@ -43,13 +43,14 @@
 
 #include "IECore/GeometricTypedData.h"
 
+#include "Gaffer/Export.h"
 #include "Gaffer/NumericPlug.h"
 
 namespace Gaffer
 {
 
 template<typename T>
-class CompoundNumericPlug : public ValuePlug
+class GAFFER_API CompoundNumericPlug : public ValuePlug
 {
 
 	public :

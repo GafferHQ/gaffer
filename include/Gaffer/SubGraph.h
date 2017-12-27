@@ -37,12 +37,13 @@
 #ifndef GAFFER_SUBGRAPH_H
 #define GAFFER_SUBGRAPH_H
 
+#include "Gaffer/Export.h"
 #include "Gaffer/DependencyNode.h"
 
 namespace Gaffer
 {
 
-class SubGraph : public DependencyNode
+class GAFFER_API SubGraph : public DependencyNode
 {
 
 	public :
