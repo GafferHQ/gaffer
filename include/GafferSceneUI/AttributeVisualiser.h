@@ -41,13 +41,15 @@
 
 #include "IECore/CompoundObject.h"
 
+#include "GafferSceneUI/Export.h"
+
 namespace GafferSceneUI
 {
 
 IE_CORE_FORWARDDECLARE( AttributeVisualiser )
 
 
-class AttributeVisualiser : public IECore::RefCounted
+class GAFFERSCENEUI_API AttributeVisualiser : public IECore::RefCounted
 {
 
 	public :
