@@ -39,6 +39,7 @@
 
 #include "IECore/DateTimeParameter.h"
 
+#include "GafferCortex/Export.h"
 #include "GafferCortex/ParameterHandler.h"
 
 namespace Gaffer
@@ -51,7 +52,7 @@ IE_CORE_FORWARDDECLARE( StringPlug )
 namespace GafferCortex
 {
 
-class DateTimeParameterHandler : public ParameterHandler
+class GAFFERCORTEX_API DateTimeParameterHandler : public ParameterHandler
 {
 
 	public :

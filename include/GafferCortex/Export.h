@@ -1,6 +1,6 @@
 //////////////////////////////////////////////////////////////////////////
 //
-//  Copyright (c) 2012-2014, Image Engine Design Inc. All rights reserved.
+//  Copyright (c) 2016, Image Engine Design Inc. All rights reserved.
 //
 //  Redistribution and use in source and binary forms, with or without
 //  modification, are permitted provided that the following conditions are
@@ -34,45 +34,18 @@
 //
 //////////////////////////////////////////////////////////////////////////
 
-#ifndef GAFFERCORTEX_TIMECODEPARAMETERHANDLER_H
-#define GAFFERCORTEX_TIMECODEPARAMETERHANDLER_H
+#ifndef GAFFERCORTEX_EXPORT_H
+#define GAFFERCORTEX_EXPORT_H
 
-#include "IECore/TimeCodeParameter.h"
+#include "Gaffer/Export.h"
 
-#include "GafferCortex/Export.h"
-#include "GafferCortex/ParameterHandler.h"
+// define GAFFERCORTEX_API macro based on whether or not we are compiling
+// GafferCortex, or including headers for linking to it. the GAFFERCORTEX_API
+// macro is the one that is used in the class definitions.
+#ifdef GafferCortex_EXPORTS
+  #define GAFFERCORTEX_API GAFFER_EXPORT
+#else
+  #define GAFFERCORTEX_API GAFFER_IMPORT
+#endif
 
-namespace GafferCortex
-{
-
-class GAFFERCORTEX_API TimeCodeParameterHandler : public ParameterHandler
-{
-
-	public :
-
-		IE_CORE_DECLAREMEMBERPTR( TimeCodeParameterHandler );
-
-		TimeCodeParameterHandler( IECore::TimeCodeParameterPtr parameter );
-		~TimeCodeParameterHandler() override;
-
-		IECore::Parameter *parameter() override;
-		const IECore::Parameter *parameter() const override;
-		void restore( Gaffer::GraphComponent *plugParent ) override;
-		Gaffer::Plug *setupPlug( Gaffer::GraphComponent *plugParent, Gaffer::Plug::Direction direction=Gaffer::Plug::In, unsigned flags = Gaffer::Plug::Default | Gaffer::Plug::Dynamic ) override;
-		Gaffer::Plug *plug() override;
-		const Gaffer::Plug *plug() const override;
-		void setParameterValue() override;
-		void setPlugValue() override;
-
-	private :
-
-		IECore::TimeCodeParameterPtr m_parameter;
-		Gaffer::PlugPtr m_plug;
-
-		static ParameterHandlerDescription<TimeCodeParameterHandler, IECore::TimeCodeParameter> g_description;
-
-};
-
-} // namespace GafferCortex
-
-#endif // GAFFERCORTEX_TIMECODEPARAMETERHANDLER_H
+#endif // #ifndef GAFFERCORTEX_EXPORT_H

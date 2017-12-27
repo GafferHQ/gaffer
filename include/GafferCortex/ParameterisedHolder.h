@@ -41,6 +41,7 @@
 #include "Gaffer/ComputeNode.h"
 #include "GafferDispatch/TaskNode.h"
 
+#include "GafferCortex/Export.h"
 #include "GafferCortex/TypeIds.h"
 
 namespace IECore
@@ -57,7 +58,7 @@ namespace GafferCortex
 IE_CORE_FORWARDDECLARE( CompoundParameterHandler );
 
 template<typename BaseType>
-class ParameterisedHolder : public BaseType
+class GAFFER_EXPORT ParameterisedHolder : public BaseType
 {
 
 	public :
@@ -84,7 +85,7 @@ class ParameterisedHolder : public BaseType
 		void setParameterisedValues();
 
 		/// \todo Is this even needed? Can we just use an UndoScope instead?
-		class ParameterModificationContext
+		class GAFFERCORTEX_API ParameterModificationContext
 		{
 			public :
 				ParameterModificationContext( Ptr parameterisedHolder );

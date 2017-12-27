@@ -40,12 +40,13 @@
 
 #include "IECore/CompoundParameter.h"
 
+#include "GafferCortex/Export.h"
 #include "GafferCortex/ParameterHandler.h"
 
 namespace GafferCortex
 {
 
-class CompoundParameterHandler : public ParameterHandler
+class GAFFERCORTEX_API CompoundParameterHandler : public ParameterHandler
 {
 
 	public :
