@@ -1,6 +1,6 @@
 //////////////////////////////////////////////////////////////////////////
 //
-//  Copyright (c) 2013-2014, Image Engine Design Inc. All rights reserved.
+//  Copyright (c) 2016, Image Engine Design Inc. All rights reserved.
 //
 //  Redistribution and use in source and binary forms, with or without
 //  modification, are permitted provided that the following conditions are
@@ -34,16 +34,18 @@
 //
 //////////////////////////////////////////////////////////////////////////
 
-#ifndef GAFFERDISPATCHBINDINGS_DISPATCHERBINDING_H
-#define GAFFERDISPATCHBINDINGS_DISPATCHERBINDING_H
+#ifndef GAFFERDISPATCHBINDINGS_EXPORT_H
+#define GAFFERDISPATCHBINDINGS_EXPORT_H
 
-#include "GafferDispatchBindings/Export.h"
+#include "Gaffer/Export.h"
 
-namespace GafferDispatchBindings
-{
+// define GAFFERDISPATCHBINDINGS_API macro based on whether or not we are compiling
+// GafferDispatchBindings, or including headers for linking to it. the GAFFERDISPATCHBINDINGS_API
+// macro is the one that is used in the class definitions.
+#ifdef GafferDispatchBindings_EXPORTS
+  #define GAFFERDISPATCHBINDINGS_API GAFFER_EXPORT
+#else
+  #define GAFFERDISPATCHBINDINGS_API GAFFER_IMPORT
+#endif
 
-GAFFERDISPATCHBINDINGS_API void bindDispatcher();
-
-} // namespace GafferDispatchBindings
-
-#endif // GAFFERDISPATCHBINDINGS_DISPATCHERBINDING_H
+#endif // #ifndef GAFFERDISPATCHBINDINGS_EXPORT_H
