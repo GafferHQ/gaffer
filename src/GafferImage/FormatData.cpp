@@ -37,6 +37,7 @@
 #include "IECore/TypedData.h"
 #include "IECore/TypedData.inl"
 
+#include "GafferImage/Export.h"
 #include "GafferImage/TypeIds.h"
 #include "GafferImage/FormatData.h"
 
@@ -47,7 +48,7 @@ namespace IECore
 
 IECORE_RUNTIMETYPED_DEFINETEMPLATESPECIALISATION( GafferImage::FormatData, GafferImage::FormatDataTypeId )
 
-template<>
+template<> GAFFERIMAGE_API
 void FormatData::save( SaveContext *context ) const
 {
 	Data::save( context );
@@ -57,7 +58,7 @@ void FormatData::save( SaveContext *context ) const
 	container->write( "pixelAspect", readable().getPixelAspect() );
 }
 
-template<>
+template<> GAFFERIMAGE_API
 void FormatData::load( LoadContextPtr context )
 {
 	Data::load( context );
@@ -74,7 +75,7 @@ void FormatData::load( LoadContextPtr context )
 	writable().setPixelAspect( pixelAspect );
 }
 
-template<>
+template<> GAFFERIMAGE_API
 void SimpleDataHolder<GafferImage::Format>::hash( MurmurHash &h ) const
 {
 	const GafferImage::Format &f = readable();
