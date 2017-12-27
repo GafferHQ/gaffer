@@ -1,6 +1,6 @@
 //////////////////////////////////////////////////////////////////////////
 //
-//  Copyright (c) 2014, Image Engine Design Inc. All rights reserved.
+//  Copyright (c) 2016, Image Engine Design Inc. All rights reserved.
 //
 //  Redistribution and use in source and binary forms, with or without
 //  modification, are permitted provided that the following conditions are
@@ -34,31 +34,18 @@
 //
 //////////////////////////////////////////////////////////////////////////
 
-#ifndef GAFFERBINDINGS_DATABINDING_H
-#define GAFFERBINDINGS_DATABINDING_H
+#ifndef GAFFERBINDINGS_EXPORT_H
+#define GAFFERBINDINGS_EXPORT_H
 
-#include "boost/python.hpp"
+#include "Gaffer/Export.h"
 
-#include "IECore/Data.h"
+// define GAFFERBINDINGS_API macro based on whether or not we are compiling
+// GafferBindings, or including headers for linking to it. the GAFFERBINDINGS_API
+// macro is the one that is used in the class definitions.
+#ifdef GafferBindings_EXPORTS
+  #define GAFFERBINDINGS_API GAFFER_EXPORT
+#else
+  #define GAFFERBINDINGS_API GAFFER_IMPORT
+#endif
 
-#include "GafferBindings/Export.h"
-
-namespace GafferBindings
-{
-
-/// Converts an IECore::Data instance to Python. Simple data is "unwrapped" and
-/// returned as an instance of the internal type. For instance, Color3fData is
-/// converted to Color3f. This avoids the unintuitive hoop jumping of using the
-/// .value field in python all the time. Vector data and all other complex types
-/// are simply returned as they are, on the grounds that there's not a better type
-/// to represent them in Python.
-/// \todo It might be too late, but consider how this could be put to use
-/// in Cortex itself.
-GAFFERBINDINGS_API boost::python::object dataToPython( IECore::Data *data, boost::python::object nullValue = boost::python::object() );
-/// As above, but since the data is const (and python has no const), requiring
-/// an argument specifying whether or not to copy the data.
-GAFFERBINDINGS_API boost::python::object dataToPython( const IECore::Data *data, bool copy, boost::python::object nullValue = boost::python::object() );
-
-} // namespace GafferBindings
-
-#endif // GAFFERBINDINGS_DATABINDING_H
+#endif // #ifndef GAFFERBINDINGS_EXPORT_H

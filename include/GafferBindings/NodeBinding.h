@@ -46,6 +46,7 @@
 
 #include "Gaffer/Node.h"
 
+#include "GafferBindings/Export.h"
 #include "GafferBindings/GraphComponentBinding.h"
 #include "GafferBindings/Serialisation.h"
 
@@ -119,7 +120,7 @@ class NodeWrapper : public GraphComponentWrapper<T>
 
 };
 
-class NodeSerialiser : public Serialisation::Serialiser
+class GAFFERBINDINGS_API NodeSerialiser : public Serialisation::Serialiser
 {
 
 	public :
