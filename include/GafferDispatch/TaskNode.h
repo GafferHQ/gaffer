@@ -42,6 +42,7 @@
 #include "Gaffer/DependencyNode.h"
 #include "Gaffer/Plug.h"
 
+#include "GafferDispatch/Export.h"
 #include "GafferDispatch/TypeIds.h"
 
 namespace Gaffer
@@ -73,7 +74,7 @@ IE_CORE_FORWARDDECLARE( TaskNode )
 /// TaskNode can be chained together with other TaskNodes to define a required execution
 /// order. Typically TaskNodes should be executed by Dispatcher classes that can query the
 /// required execution order and schedule Tasks appropriately.
-class TaskNode : public Gaffer::DependencyNode
+class GAFFERDISPATCH_API TaskNode : public Gaffer::DependencyNode
 {
 
 	public :
@@ -85,7 +86,7 @@ class TaskNode : public Gaffer::DependencyNode
 		/// primarily for the use of Dispatcher classes. See TaskPlug
 		/// for the main public interface for the execution of
 		/// individual tasks.
-		class Task
+		class GAFFERDISPATCH_API Task
 		{
 			public :
 
@@ -131,7 +132,7 @@ class TaskNode : public Gaffer::DependencyNode
 		/// Plug type used to represent tasks within the
 		/// node graph. This provides the primary public
 		/// interface for querying and executing tasks.
-		class TaskPlug : public Gaffer::Plug
+		class GAFFERDISPATCH_API TaskPlug : public Gaffer::Plug
 		{
 
 			public :
