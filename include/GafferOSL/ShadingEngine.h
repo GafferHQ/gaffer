@@ -40,12 +40,13 @@
 #include "IECore/CompoundData.h"
 #include "IECore/ObjectVector.h"
 
+#include "GafferOSL/Export.h"
 #include "GafferOSL/TypeIds.h"
 
 namespace GafferOSL
 {
 
-class ShadingEngine : public IECore::RefCounted
+class GAFFEROSL_API ShadingEngine : public IECore::RefCounted
 {
 
 	public :
@@ -55,7 +56,7 @@ class ShadingEngine : public IECore::RefCounted
 		ShadingEngine( const IECore::ObjectVector *shaderNetwork );
 		~ShadingEngine() override;
 
-		struct Transform
+		struct GAFFEROSL_API Transform
 		{
 
 			Transform()
