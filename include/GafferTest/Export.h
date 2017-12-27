@@ -1,6 +1,6 @@
 //////////////////////////////////////////////////////////////////////////
 //
-//  Copyright (c) 2015, Image Engine Design Inc. All rights reserved.
+//  Copyright (c) 2016, Image Engine Design Inc. All rights reserved.
 //
 //  Redistribution and use in source and binary forms, with or without
 //  modification, are permitted provided that the following conditions are
@@ -34,16 +34,18 @@
 //
 //////////////////////////////////////////////////////////////////////////
 
-#ifndef GAFFERTEST_COMPUTENODETEST_H
-#define GAFFERTEST_COMPUTENODETEST_H
+#ifndef GAFFERTEST_EXPORT_H
+#define GAFFERTEST_EXPORT_H
 
-#include "GafferTest/Export.h"
+#include "Gaffer/Export.h"
 
-namespace GafferTest
-{
+// define GAFFERTEST_API macro based on whether or not we are compiling
+// GafferTest, or including headers for linking to it. the GAFFERTEST_API
+// macro is the one that is used in the class definitions.
+#ifdef GafferTest_EXPORTS
+  #define GAFFERTEST_API GAFFER_EXPORT
+#else
+  #define GAFFERTEST_API GAFFER_IMPORT
+#endif
 
-GAFFERTEST_API void testComputeNodeThreading();
-
-} // namespace GafferTest
-
-#endif // GAFFERTEST_COMPUTENODETEST_H
+#endif // #ifndef GAFFERTEST_EXPORT_H
