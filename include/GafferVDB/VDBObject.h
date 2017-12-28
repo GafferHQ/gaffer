@@ -48,12 +48,13 @@
 #include "IECoreScene/VisibleRenderable.h"
 #include "IECore/VectorTypedData.h"
 
+#include "GafferVDB/Export.h"
 #include "GafferVDB/TypeIds.h"
 
 namespace GafferVDB
 {
 
-class VDBObject : public IECoreScene::VisibleRenderable
+class GAFFERVDB_API VDBObject : public IECoreScene::VisibleRenderable
 {
 
 	public :
@@ -97,7 +98,7 @@ class VDBObject : public IECoreScene::VisibleRenderable
 
 		static const unsigned int m_ioVersion;
 
-		class HashedGrid
+		class GAFFERVDB_API HashedGrid
 		{
 			public:
 				HashedGrid() : m_hashValid( false ), m_unmodifiedFromFile( false )

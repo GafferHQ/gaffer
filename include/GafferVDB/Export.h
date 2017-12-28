@@ -1,6 +1,6 @@
 //////////////////////////////////////////////////////////////////////////
 //
-//  Copyright (c) 2017, John Haddon. All rights reserved.
+//  Copyright (c) 2017, Image Engine Design Inc. All rights reserved.
 //
 //  Redistribution and use in source and binary forms, with or without
 //  modification, are permitted provided that the following conditions are
@@ -34,63 +34,18 @@
 //
 //////////////////////////////////////////////////////////////////////////
 
-#ifndef GAFFERVDB_MESHTOLEVELSET_H
-#define GAFFERVDB_MESHTOLEVELSET_H
+#ifndef GAFFERVDB_EXPORT_H
+#define GAFFERVDB_EXPORT_H
 
-#include "Gaffer/NumericPlug.h"
+#include "Gaffer/Export.h"
 
-#include "GafferScene/SceneElementProcessor.h"
+// define GAFFERVDB_API macro based on whether or not we are compiling
+// GafferVDB, or including headers for linking to it. the GAFFERVDB_API
+// macro is the one that is used in the class definitions.
+#ifdef GafferVDB_EXPORTS
+	#define GAFFERVDB_API GAFFER_EXPORT
+#else
+	#define GAFFERVDB_API GAFFER_IMPORT
+#endif
 
-#include "GafferVDB/Export.h"
-#include "GafferVDB/TypeIds.h"
-
-
-namespace Gaffer
-{
-class StringPlug;
-}
-
-namespace GafferVDB
-{
-
-class GAFFERVDB_API MeshToLevelSet : public GafferScene::SceneElementProcessor
-{
-
-	public :
-
-		MeshToLevelSet( const std::string &name=defaultName<MeshToLevelSet>() );
-		virtual ~MeshToLevelSet();
-
-		IE_CORE_DECLARERUNTIMETYPEDEXTENSION( GafferVDB::MeshToLevelSet, MeshToLevelSetTypeId, GafferScene::SceneElementProcessor );
-
-		Gaffer::StringPlug *gridPlug();
-		const Gaffer::StringPlug *gridPlug() const;
-
-		Gaffer::FloatPlug *voxelSizePlug();
-		const Gaffer::FloatPlug *voxelSizePlug() const;
-
-		Gaffer::FloatPlug *exteriorBandwidthPlug();
-		const Gaffer::FloatPlug *exteriorBandwidthPlug() const;
-
-		Gaffer::FloatPlug *interiorBandwidthPlug();
-		const Gaffer::FloatPlug *interiorBandwidthPlug() const;
-
-		virtual void affects( const Gaffer::Plug *input, AffectedPlugsContainer &outputs ) const override;
-
-	protected :
-
-		virtual bool processesObject() const override;
-		virtual void hashProcessedObject( const ScenePath &path, const Gaffer::Context *context, IECore::MurmurHash &h ) const override;
-		virtual IECore::ConstObjectPtr computeProcessedObject( const ScenePath &path, const Gaffer::Context *context, IECore::ConstObjectPtr inputObject ) const override;
-
-	private :
-
-		static size_t g_firstPlugIndex;
-
-};
-
-IE_CORE_DECLAREPTR( MeshToLevelSet )
-
-} // namespace GafferVDB
-
-#endif // GAFFERVDB_MESHTOLEVELSET_H
+#endif // #ifndef GAFFERVDB_EXPORT_H
