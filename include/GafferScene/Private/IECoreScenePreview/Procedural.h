@@ -39,6 +39,7 @@
 
 #include "IECoreScene/VisibleRenderable.h"
 
+#include "GafferScene/Export.h"
 #include "GafferScene/TypeIds.h"
 
 namespace IECoreScenePreview
@@ -48,7 +49,7 @@ class Renderer;
 
 /// \todo Would it be useful to have a virtual function that returns an
 /// ExternalProcedural, for use when serialising scenes?
-class Procedural : public IECoreScene::VisibleRenderable
+class GAFFERSCENE_API Procedural : public IECoreScene::VisibleRenderable
 {
 
 	public :

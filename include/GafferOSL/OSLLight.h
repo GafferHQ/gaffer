@@ -42,6 +42,7 @@
 #include "GafferScene/Light.h"
 #include "GafferScene/ShaderPlug.h"
 
+#include "GafferOSL/Export.h"
 #include "GafferOSL/TypeIds.h"
 
 namespace GafferOSL
@@ -49,7 +50,7 @@ namespace GafferOSL
 
 class OSLShader;
 
-class OSLLight : public GafferScene::Light
+class GAFFEROSL_API OSLLight : public GafferScene::Light
 {
 
 	public :

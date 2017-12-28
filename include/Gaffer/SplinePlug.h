@@ -60,7 +60,7 @@ enum SplineDefinitionInterpolation
 
 
 template<typename T>
-struct SplineDefinition
+struct GAFFER_API SplineDefinition
 {
 	typedef typename T::XType XType;
 	typedef typename T::YType YType;
