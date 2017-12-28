@@ -38,6 +38,7 @@
 import ast
 import sys
 import traceback
+import imath
 
 import IECore
 
@@ -76,6 +77,7 @@ class ScriptEditor( GafferUI.EditorWidget ) :
 		self.__inputWidgetDropTextConnection = self.__inputWidget.dropTextSignal().connect( Gaffer.WeakMethod( self.__dropText ) )
 
 		self.__executionDict = {
+			"imath" : imath,
 			"IECore" : IECore,
 			"Gaffer" : Gaffer,
 			"GafferUI" : GafferUI,
