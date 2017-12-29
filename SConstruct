@@ -1303,6 +1303,9 @@ libraries = {
 
 }
 
+if env["PLATFORM"] == "win32" :
+	libraries["scripts"]["additionalFiles"].append( "bin/gaffer.cmd" )
+
 # Add on OpenGL libraries to definitions - these vary from platform to platform
 for library in ( "GafferUI", "GafferScene", "GafferSceneUI", "GafferImageUI" ) :
 	if env["PLATFORM"] == "darwin" :
