@@ -41,6 +41,8 @@
 #include "IECoreScene/Shader.h"
 #include "IECoreGL/Renderable.h"
 
+#include "GafferSceneUI/Export.h"
+
 namespace GafferSceneUI
 {
 
@@ -51,7 +53,7 @@ IE_CORE_FORWARDDECLARE( LightFilterVisualiser )
 /// depending on their shader name (accessed using `IECore::Shader::getName()`). A
 /// factory mechanism is provided to map from this name to a specialised
 /// LightFilterVisualiser.
-class LightFilterVisualiser : public IECore::RefCounted
+class GAFFERSCENEUI_API LightFilterVisualiser : public IECore::RefCounted
 {
 
 	public :
