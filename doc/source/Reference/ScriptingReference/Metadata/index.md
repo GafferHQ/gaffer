@@ -49,9 +49,9 @@ NodeGraph Layout
 ====================== ================================ ================================
 Name                   Purpose                          Example Values
 ====================== ================================ ================================
-nodule:color           The colour of the plug           IECore.Color3f( 0, 1, 0 )
-connectionGadget:color The colour of input connections  IECore.Color3f( 1, 0, 0 )
-nodeGadget:color       The colour of a node             IECore.Color3f( 0, 0, 1 )
+nodule:color           The colour of the plug           imath.Color3f( 0, 1, 0 )
+connectionGadget:color The colour of input connections  imath.Color3f( 1, 0, 0 )
+nodeGadget:color       The colour of a node             imath.Color3f( 0, 0, 1 )
 noduleLayout:section   The edge the plug appears on     "left", "right", "top", "bottom"
 noduleLayout:visible   Shows/hides the plug             True (visible), False (hidden)
 ====================== ================================ ================================

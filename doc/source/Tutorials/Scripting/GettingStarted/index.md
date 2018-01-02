@@ -86,7 +86,7 @@ script["Sphere"]["transform"]["translate"]["y"].setValue( 2 )
 script["Sphere"]["transform"]["translate"]["z"].setValue( 3 )
 
 # Setting them all in one shot
-script["Sphere"]["transform"]["translate"].setValue( IECore.V3f( 1, 2, 3 ) )
+script["Sphere"]["transform"]["translate"].setValue( imath.V3f( 1, 2, 3 ) )
 ```
 
 > Tip : The second form is often more convenient because it is shorter, and because the `V3f` class

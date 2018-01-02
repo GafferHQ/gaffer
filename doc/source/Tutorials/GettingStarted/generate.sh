@@ -54,7 +54,7 @@ gaffer screengrab \
 
 gaffer screengrab \
 	-script scripts/group.gfr \
-	-command "import IECore; script['Camera']['transform']['translate'].setValue( IECore.V3f( 19, 13, 31 ) ); script['Camera']['transform']['rotate'].setValue( IECore.V3f( 0, 30, 0 ) );" \
+	-command "import imath; script['Camera']['transform']['translate'].setValue( imath.V3f( 19, 13, 31 ) ); script['Camera']['transform']['rotate'].setValue( imath.V3f( 0, 30, 0 ) );" \
 	-selection Camera \
 	-editor NodeEditor \
 	-nodeEditor.reveal Camera.transform \
