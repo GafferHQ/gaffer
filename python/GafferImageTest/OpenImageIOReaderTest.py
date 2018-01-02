@@ -164,15 +164,6 @@ class OpenImageIOReaderTest( GafferImageTest.ImageTestCase ) :
 		n["out"]["channelNames"].getValue()
 		n["out"].channelData( "R", imath.V2i( 0 ) )
 
-	def testNoOIIOErrorBufferOverflows( self ) :
-
-		n = GafferImage.OpenImageIOReader()
-		n["fileName"].setValue( "thisReallyReallyReallyReallyReallyReallyReallyReallyReallyLongFilenameDoesNotExist.tif" )
-
-		for i in range( 0, 300000 ) :
-			with IECore.IgnoredExceptions( Exception ) :
-				n["out"]["dataWindow"].getValue()
-
 	def testChannelDataHashes( self ) :
 		# Test that two tiles within the same image have different hashes.
 		n = GafferImage.OpenImageIOReader()
