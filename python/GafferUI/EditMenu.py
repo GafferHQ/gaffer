@@ -185,7 +185,14 @@ def paste( menu ) :
 		).p0
 		fallbackPosition = imath.V2f( fallbackPosition.x, fallbackPosition.y )
 
+		# First position the nodes sensibly as a group, keeping their relative positions.
+		# Usually this is all we need to do, because typically they were laid out when they
+		# were cut/copied.
+		nodesNeedingLayout = [ x for x in s.script.selection() if not s.nodeGraph.graphGadget().hasNodePosition( x ) ]
 		s.nodeGraph.graphGadget().getLayout().positionNodes( s.nodeGraph.graphGadget(), s.script.selection(), fallbackPosition )
+		# Second, do an auto-layout for any nodes which weren't laid out properly when they
+		# were cut/copied.
+		s.nodeGraph.graphGadget().getLayout().layoutNodes( s.nodeGraph.graphGadget(), Gaffer.StandardSet( nodesNeedingLayout ) )
 
 		s.nodeGraph.frame( s.script.selection(), extend = True )
 
