@@ -181,7 +181,7 @@ class DisplayTest( GafferImageTest.ImageTestCase ) :
 			port = server.portNumber(),
 		)
 
-		for i in range( 0, 1000 ) :
+		for i in range( 0, 100 ) :
 
 			h1 = self.__tileHashes( node, "Y" )
 			t1 = self.__tiles( node, "Y" )
