@@ -204,7 +204,9 @@ if targetAppVersion :
 # get include locations right
 ##########################################################################
 
-exrVersion =  targetAppReg.get( "OpenEXRVersion", cortexReg["OpenEXRVersion"] )
+boostVersion = targetAppReg.get( "boostVersion", cortexReg["boostVersion"] )
+tbbVersion = targetAppReg.get( "tbbVersion", cortexReg["tbbVersion"] ) 
+exrVersion = targetAppReg.get( "OpenEXRVersion", cortexReg["OpenEXRVersion"] )
 
 LOCATE_DEPENDENCY_SYSTEMPATH = [
 
@@ -217,8 +219,8 @@ LOCATE_DEPENDENCY_SYSTEMPATH = [
 	os.path.join( IEEnv.Environment.rootPath(), "tools", "include", IEEnv.platform(), "glew", targetAppReg.get( "glew", cortexReg["glewVersion"] ) ),
 	os.path.join( IEEnv.Environment.rootPath(), "tools", "include", IEEnv.platform(), "OpenEXR", exrVersion ),
 	os.path.join( IEEnv.Environment.rootPath(), "tools", "include", IEEnv.platform(), "OpenEXR", exrVersion, "OpenEXR" ),
-	os.path.join( IEEnv.Environment.rootPath(), "tools", "include", IEEnv.platform(), "tbb", targetAppReg.get( "tbbVersion", cortexReg["tbbVersion"] ) ),
-	os.path.join( IEEnv.Environment.rootPath(), "tools", "include", IEEnv.platform(), "boost", targetAppReg.get( "boostVersion", cortexReg["boostVersion"] ) ),
+	os.path.join( IEEnv.Environment.rootPath(), "tools", "include", IEEnv.platform(), "tbb", tbbVersion ),
+	os.path.join( IEEnv.Environment.rootPath(), "tools", "include", IEEnv.platform(), "boost", boostVersion ),
 	os.path.join( pythonReg["location"], compiler, compilerVersion, pythonReg["include"], "python" + pythonVersion ),
 	"/usr/include/freetype2",
 ]
@@ -268,7 +270,9 @@ LOCATE_DEPENDENCY_PYTHONPATH = [
 	os.path.join( IEEnv.Environment.rootPath(), "apps", "cortex", cortexVersion, IEEnv.platform(), "base", "python", pythonVersion, compiler, compilerVersion ),
 	os.path.join( IEEnv.Environment.rootPath(), "apps", "cortex", cortexVersion, IEEnv.platform(), "base", "arnold", arnoldVersion, "python", pythonVersion, compiler, compilerVersion ),
 	os.path.join( IEEnv.Environment.rootPath(), "apps", "cortex", cortexVersion, IEEnv.platform(), "base", "appleseed", appleseedVersion, "python", pythonVersion, compiler, compilerVersion ),
+	os.path.join( IEEnv.Environment.rootPath(), "apps", "openexr", exrVersion, IEEnv.platform(), compiler, compilerVersion, "python", pythonVersion, "boost", boostVersion, "lib64", "python" + pythonVersion, "site-packages" ),
 	os.path.join( IEEnv.Environment.rootPath(), "apps", "OpenColorIO", ocioVersion, IEEnv.platform(), compiler, compilerVersion, "lib", "python" + pythonVersion, "site-packages" ),
+	os.path.join( IEEnv.Environment.rootPath(), "apps", "OpenVDB", vdbVersion, IEEnv.platform(), compiler, compilerVersion, "python", "lib", "python" + pythonVersion ),
 	os.path.join( IEEnv.Environment.rootPath(), "apps", "pyqt", pyqtVersion, "qt" + qtVersion, "python" + pythonVersion, IEEnv.platform(), compiler, compilerVersion, "python" ),
 	os.path.join( IEEnv.Environment.rootPath(), "tools", "python", pythonVersion, IEEnv.platform(), compiler, compilerVersion, "sip", "4" ),
 	os.path.join( IEEnv.Environment.rootPath(), "tools", "python", pythonVersion, IEEnv.platform(), compiler, compilerVersion, "subprocess32", "3" ),
