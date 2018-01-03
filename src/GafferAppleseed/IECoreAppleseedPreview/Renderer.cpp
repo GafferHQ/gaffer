@@ -50,6 +50,7 @@
 #include "foundation/utility/stopwatch.h"
 #include "foundation/utility/string.h"
 
+#include "renderer/api/aov.h"
 #include "renderer/api/bsdf.h"
 #include "renderer/api/camera.h"
 #include "renderer/api/color.h"
@@ -422,7 +423,7 @@ class AppleseedEntity : public IECoreScenePreview::Renderer::ObjectInterface
 			params.insert( "camera", cameraName.c_str() );
 
 			// Replace the frame.
-			m_project.set_frame( asr::FrameFactory().create( "beauty", params ) );
+			m_project.set_frame( asr::FrameFactory().create( "beauty", params, m_project.get_frame()->aovs() ) );
 		}
 
 		void resetFrame()
@@ -434,7 +435,7 @@ class AppleseedEntity : public IECoreScenePreview::Renderer::ObjectInterface
 			params.remove_path( "crop_window" );
 
 			// Replace the frame.
-			m_project.set_frame( asr::FrameFactory().create( "beauty", params ) );
+			m_project.set_frame( asr::FrameFactory().create( "beauty", params, m_project.get_frame()->aovs() ) );
 		}
 
 	private :
@@ -1800,7 +1801,7 @@ class AppleseedAreaLight : public AppleseedLight
 				asf::auto_release_ptr<asr::Object> object;
 				if( m_renderType == IECoreScenePreview::Renderer::SceneDescription )
 				{
-					object = asr::MeshObjectFactory::create( name().c_str(), params );
+					object = asr::MeshObjectFactory().create( name().c_str(), params );
 				}
 				else
 				{
@@ -2255,39 +2256,92 @@ class AppleseedRenderer final : public IECoreScenePreview::Renderer
 		{
 			if( output == nullptr )
 			{
-				// Reset display / image output related params.
+				// Reset display / image output related params and recreate the frame.
+				m_aovs.clear();
 				m_project->get_frame()->get_parameters().remove_path( "output_filename" );
-				m_project->get_frame()->get_parameters().remove_path( "output_aovs" );
-				m_project->get_frame()->get_parameters().remove_path( "color_space" );
+				m_project->set_frame( asr::FrameFactory::create( "beauty", m_project->get_frame()->get_parameters() ) );
 				m_project->set_display( asf::auto_release_ptr<asr::Display>() );
 				return;
 			}
 
-			if( output->getType() == "exr" || output->getType() == "png" )
-			{
-				// Output render directly to a file.
-				m_project->get_frame()->get_parameters().insert( "output_filename", output->getName().c_str() );
-				m_project->get_frame()->get_parameters().insert( "output_aovs", false );
+			const bool isFileOutput = output->getType() == "exr" || output->getType() == "png";
+			const bool isBeauty = output->getData() == "rgba";
 
-				if( output->getType() == "png" )
+			if( isInteractiveRender() && !isBeauty )
+			{
+				// We do not support AOVs when doing interactive rendering.
+				return;
+			}
+
+			// Create an AOV if needed,
+			asr::AOV *aov = nullptr;
+			if( !isBeauty )
+			{
+				const asr::AOVFactoryRegistrar factoryRegistrar;
+				if( const asr::IAOVFactory *factory = factoryRegistrar.lookup( output->getData().c_str() ) )
 				{
-					m_project->get_frame()->get_parameters().insert( "color_space", "srgb" );
+					asf::auto_release_ptr<asr::AOV> aovEntity = factory->create( asr::ParamArray() );
+					aov = aovEntity.get();
+
+					if( m_aovs.get_by_name( aov->get_name() ) != nullptr )
+					{
+						msg( Msg::Warning, "AppleseedRenderer::output", boost::format( "AOV \"%s\" already exists. Ignoring." ) % aov->get_name() );
+						return;
+					}
+
+					if( isFileOutput )
+					{
+						// Save the image filename.
+						aov->get_parameters().insert( "output_filename", output->getName().c_str() );
+					}
+
+					// Save the AOV and recreate the frame.
+					m_aovs.insert( aovEntity );
+					m_project->set_frame( asr::FrameFactory::create( "beauty", m_project->get_frame()->get_parameters(), m_aovs ) );
 				}
 				else
 				{
-					m_project->get_frame()->get_parameters().insert( "color_space", "linear_rgb" );
+					msg( Msg::Warning, "AppleseedRenderer::output", boost::format( "Unknown AOV \"%s\"." ) % aov->get_name() );
+					return;
+				}
+			}
+
+			if( isFileOutput ) // Batch output.
+			{
+				// Set the output filename.
+				if( isBeauty ) // Batch Beauty.
+				{
+					m_project->get_frame()->get_parameters().insert( "output_filename", output->getName().c_str() );
+				}
+			}
+			else if( output->getType() == "ieDisplay" ) // Interactive output.
+			{
+				// Create and set the display in the project if not already created.
+				if( m_project->get_display() == nullptr )
+				{
+					asr::ParamArray params;
+					params.insert( "plugin_name", output->getType().c_str() );
+
+					asf::auto_release_ptr<asr::Display> dpy( asr::DisplayFactory::create( name.c_str(), params ) );
+					m_project->set_display( dpy );
+				}
+
+				// Add the params for this output to the display params.
+				asr::ParamArray& displayParams = m_project->get_display()->get_parameters();
+				asr::ParamArray outputParams = ParameterAlgo::convertParams( output->parameters() );
+
+				if( isBeauty )
+				{
+					displayParams.push( "beauty" ) = outputParams;
+				}
+				else
+				{
+					displayParams.push( aov->get_name() ) = outputParams;
 				}
 			}
 			else
 			{
-				asr::ParamArray params = ParameterAlgo::convertParams( output->parameters() );
-
-				// Insert the plugin_name parameter for appleseed.
-				params.insert( "plugin_name", output->getType().c_str() );
-
-				// Create and set the display in the project.
-				asf::auto_release_ptr<asr::Display> dpy( asr::DisplayFactory::create( name.c_str(), params ) );
-				m_project->set_display( dpy );
+				msg( Msg::Warning, "AppleseedRenderer::output", boost::format( "Unknown output type \"%s\"." ) % output->getType() );
 			}
 		}
 
@@ -2467,7 +2521,7 @@ class AppleseedRenderer final : public IECoreScenePreview::Renderer
 			if( m_renderType == SceneDescription )
 			{
 				// Export the project and exit.
-				asr::ProjectFileWriter::write( *m_project, m_appleseedFileName.c_str(), asr::ProjectFileWriter::OmitHandlingAssetFiles | asr::ProjectFileWriter::OmitWritingGeometryFiles );
+				asr::ProjectFileWriter::write( *m_project, m_appleseedFileName.c_str(), asr::ProjectFileWriter::OmitHandlingAssetFiles | asr::ProjectFileWriter::OmitWritingGeometryFiles, nullptr );
 			}
 			else if( m_renderType == Batch )
 			{
@@ -2513,6 +2567,7 @@ class AppleseedRenderer final : public IECoreScenePreview::Renderer
 			cfg_params->insert( "lighting_engine", "pt" );
 			cfg_params->insert( "pixel_renderer", "uniform" );
 			cfg_params->insert( "sampling_mode", "qmc" );
+			cfg_params->insert( "spectrum_mode", "rgb" );
 			cfg_params->insert_path( "progressive_frame_renderer.max_fps", "5" );
 
 			// Insert some config params needed by the final renderer.
@@ -2525,6 +2580,7 @@ class AppleseedRenderer final : public IECoreScenePreview::Renderer
 			cfg_params->insert( "lighting_engine", "pt" );
 			cfg_params->insert( "pixel_renderer", "uniform" );
 			cfg_params->insert( "sampling_mode", "qmc" );
+			cfg_params->insert( "spectrum_mode", "rgb" );
 			cfg_params->insert_path( "uniform_pixel_renderer.samples", "16" );
 
 			// Create some basic project entities.
@@ -2656,13 +2712,7 @@ class AppleseedRenderer final : public IECoreScenePreview::Renderer
 
 			// Save the frame to disk if needed.
 			const asr::Frame* frame = m_project->get_frame();
-			const string output_filename = frame->get_parameters().get_optional<string>("output_filename");
-
-			if( !output_filename.empty() )
-			{
-				RENDERER_LOG_INFO("writing frame to disk...");
-				frame->write_main_image(output_filename.c_str());
-			}
+			frame->write_main_and_aov_images();
 		}
 
 		void interactiveRender()
@@ -2722,6 +2772,7 @@ class AppleseedRenderer final : public IECoreScenePreview::Renderer
 
 		// Members used by batch and project generation renders
 
+		asr::AOVContainer m_aovs;
 		InstanceMasterCachePtr m_instanceMasterCache;
 
 		// Members used by interactive and batch renders

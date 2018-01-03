@@ -185,6 +185,55 @@ with IECore.IgnoredExceptions( ImportError ) :
 			)
 		)
 
+
+# Add standard appleseed AOVs
+
+with IECore.IgnoredExceptions( ImportError ) :
+
+	# If appleseed isn't available for any reason, this will fail
+	# and we won't add any unnecessary output definitions.
+	import GafferAppleseed
+
+	for aov in [
+		"diffuse",
+		"glossy",
+		"emission",
+		"direct_diffuse",
+		"indirect_diffuse",
+		"direct_glossy",
+		"indirect_glossy",
+		"depth",
+		"normal",
+		"uv"
+	] :
+
+		label = aov.replace( "_", " " ).title().replace( " ", "_" )
+		aovModel = aov + "_aov"
+
+		GafferScene.Outputs.registerOutput(
+			"Interactive/appleseed/" + label,
+			IECoreScene.Display(
+				aov,
+				"ieDisplay",
+				aovModel,
+				{
+					"driverType" : "ClientDisplayDriver",
+					"displayHost" : "localhost",
+					"displayPort" : "${image:catalogue:port}",
+					"remoteDisplayType" : "GafferImage::GafferDisplayDriver",
+				}
+			)
+		)
+
+		GafferScene.Outputs.registerOutput(
+			"Batch/appleseed/" + label,
+			IECoreScene.Display(
+				"${project:rootDirectory}/renders/${script:name}/%s/%s.####.exr" % ( aov, aov ),
+				"exr",
+				aovModel
+			)
+		)
+
 # Publish the Catalogue port number as a context variable, so we can refer
 # to it easily in output definitions.
 
