@@ -82,7 +82,8 @@ class ImageReaderTest( GafferImageTest.ImageTestCase ) :
 
 		n = GafferImage.ImageReader()
 		n["out"]["channelNames"].getValue()
-		n["out"].channelData( "R", imath.V2i( 0 ) )
+		self.assertTrue( GafferImage.BufferAlgo.empty( n["out"]['dataWindow'].getValue() ) )
+
 
 	def testChannelDataHashes( self ) :
 		# Test that two tiles within the same image have different hashes.
@@ -169,7 +170,10 @@ class ImageReaderTest( GafferImageTest.ImageTestCase ) :
 			self.assertEqual( reader["out"]["dataWindow"].getValue(), oiio["out"]["dataWindow"].getValue() )
 			self.assertEqual( reader["out"]["metadata"].getValue(), oiio["out"]["metadata"].getValue() )
 			self.assertEqual( reader["out"]["channelNames"].getValue(), oiio["out"]["channelNames"].getValue() )
-			self.assertEqual( reader["out"].channelData( "R", imath.V2i( 0 ) ), oiio["out"].channelData( "R", imath.V2i( 0 ) ) )
+
+			# It is only valid to query the data inside the data window
+			if not GafferImage.BufferAlgo.empty( reader["out"]["dataWindow"].getValue() ):
+				self.assertEqual( reader["out"].channelData( "R", imath.V2i( 0 ) ), oiio["out"].channelData( "R", imath.V2i( 0 ) ) )
 			self.assertImagesEqual( reader["out"], oiio["out"] )
 
 		context = Gaffer.Context()
@@ -248,7 +252,8 @@ class ImageReaderTest( GafferImageTest.ImageTestCase ) :
 			self.assertEqual( reader["out"]["dataWindow"].getValue(), oiio["out"]["dataWindow"].getValue() )
 			self.assertEqual( reader["out"]["metadata"].getValue(), oiio["out"]["metadata"].getValue() )
 			self.assertEqual( reader["out"]["channelNames"].getValue(), oiio["out"]["channelNames"].getValue() )
-			self.assertEqual( reader["out"].channelData( "R", imath.V2i( 0 ) ), oiio["out"].channelData( "R", imath.V2i( 0 ) ) )
+			self.assertTrue( GafferImage.BufferAlgo.empty( reader["out"]['dataWindow'].getValue() ) )
+			self.assertTrue( GafferImage.BufferAlgo.empty( oiio["out"]['dataWindow'].getValue() ) )
 
 	def testFrameRangeMask( self ) :
 
