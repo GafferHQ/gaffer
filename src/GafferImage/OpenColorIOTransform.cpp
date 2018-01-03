@@ -239,3 +239,16 @@ void OpenColorIOTransform::availableColorSpaces( std::vector<std::string> &color
 		colorSpaces.push_back( config->getColorSpaceNameByIndex( i ) );
 	}
 }
+
+void OpenColorIOTransform::availableRoles( std::vector<std::string> &roles )
+{
+	OpenColorIO::ConstConfigRcPtr config = OpenColorIO::GetCurrentConfig();
+
+	roles.clear();
+	roles.reserve( config->getNumRoles() );
+
+	for( int i = 0; i < config->getNumRoles(); ++i )
+	{
+		roles.push_back( config->getRoleName( i ) );
+	}
+}

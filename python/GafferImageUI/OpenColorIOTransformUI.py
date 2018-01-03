@@ -42,6 +42,15 @@ import Gaffer
 import GafferUI
 import GafferImage
 
+def colorSpacePresetNames( plug ) :
+
+	return IECore.StringVectorData( [ "None" ] + sorted( map( lambda x: "Roles/{0}".format( x.replace( "_", " ").title() ), GafferImage.OpenColorIOTransform.availableRoles() ) ) + sorted( GafferImage.OpenColorIOTransform.availableColorSpaces() )  )
+
+
+def colorSpacePresetValues( plug ) :
+
+	return IECore.StringVectorData( [ "" ] + sorted( GafferImage.OpenColorIOTransform.availableRoles() ) + sorted( GafferImage.OpenColorIOTransform.availableColorSpaces() ) )
+
 Gaffer.Metadata.registerNode(
 
 	GafferImage.OpenColorIOTransform,
