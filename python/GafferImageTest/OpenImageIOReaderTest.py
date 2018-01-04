@@ -58,6 +58,8 @@ class OpenImageIOReaderTest( GafferImageTest.ImageTestCase ) :
 	circlesExrFileName = os.path.expandvars( "$GAFFER_ROOT/python/GafferImageTest/images/circles.exr" )
 	circlesJpgFileName = os.path.expandvars( "$GAFFER_ROOT/python/GafferImageTest/images/circles.jpg" )
 	alignmentTestSourceFileName = os.path.expandvars( "$GAFFER_ROOT/python/GafferImageTest/images/colorbars_half_max.exr" )
+	multipartFileName = os.path.expandvars( "$GAFFER_ROOT/python/GafferImageTest/images/multipart.exr" )
+	unsupportedMultipartFileName = os.path.expandvars( "$GAFFER_ROOT/python/GafferImageTest/images/unsupportedMultipart.exr" )
 
 	def testInternalImageSpaceConversion( self ) :
 
@@ -518,6 +520,91 @@ class OpenImageIOReaderTest( GafferImageTest.ImageTestCase ) :
 				rBack['refreshCount'].setValue( rBack['refreshCount'].getValue() + 1 )
 
 				self.assertImagesEqual( r["out"], offsetIn["out"], ignoreMetadata = True )
+
+	def testMultipartRead( self ) :
+		
+		rgbReader = GafferImage.OpenImageIOReader()
+		rgbReader["fileName"].setValue( self.offsetDataWindowFileName )
+
+		compareDelete = GafferImage.DeleteChannels()
+		compareDelete["in"].setInput( rgbReader["out"] )
+
+		# This test multipart file contains a "rgb" subimage, an "rgba" subimage, and a "depth" subimage, with
+		# one channel named "Z" ( copied from the green channel of our reference image.
+		# It was created using this command:
+		# > oiiotool rgb.100x100.exr --attrib "oiio:subimagename" rgb -ch "R,G,B" rgb.100x100.exr --attrib "oiio:subimagename" rgba rgb.100x100.exr --attrib "oiio:subimagename" depth --ch "G" --chnames "Z" --siappendall -o multipart.exr
+		multipartReader = GafferImage.OpenImageIOReader()
+		multipartReader["fileName"].setValue( self.multipartFileName )
+
+		multipartShuffle = GafferImage.Shuffle()
+		multipartShuffle["in"].setInput( multipartReader["out"] )
+
+		multipartDelete = GafferImage.DeleteChannels()
+		multipartDelete["in"].setInput( multipartShuffle["out"] )
+		multipartDelete['channels'].setValue( "*.*" )
+
+		self.assertEqual( set( multipartReader["out"]["channelNames"].getValue() ),
+			set([ "rgba.R", "rgba.G", "rgba.B", "rgba.A", "rgb.R", "rgb.G", "rgb.B", "depth.Z" ])
+		)
+
+		multipartShuffle["channels"].clearChildren()
+		multipartShuffle["channels"].addChild( GafferImage.Shuffle.ChannelPlug( "R", "rgba.R" ) )
+		multipartShuffle["channels"].addChild( GafferImage.Shuffle.ChannelPlug( "G", "rgba.G" ) )
+		multipartShuffle["channels"].addChild( GafferImage.Shuffle.ChannelPlug( "B", "rgba.B" ) )
+		multipartShuffle["channels"].addChild( GafferImage.Shuffle.ChannelPlug( "A", "rgba.A" ) )
+		self.assertImagesEqual( compareDelete["out"], multipartDelete["out"], ignoreMetadata = True )
+
+		multipartShuffle["channels"].clearChildren()
+		multipartShuffle["channels"].addChild( GafferImage.Shuffle.ChannelPlug( "R", "rgb.R" ) )
+		multipartShuffle["channels"].addChild( GafferImage.Shuffle.ChannelPlug( "G", "rgb.G" ) )
+		multipartShuffle["channels"].addChild( GafferImage.Shuffle.ChannelPlug( "B", "rgb.B" ) )
+		compareDelete['channels'].setValue( "A" )
+		self.assertImagesEqual( compareDelete["out"], multipartDelete["out"], ignoreMetadata = True )
+
+		multipartShuffle["channels"].clearChildren()
+		multipartShuffle["channels"].addChild( GafferImage.Shuffle.ChannelPlug( "G", "depth.Z" ) )
+		compareDelete['channels'].setValue( "R B A" )
+		self.assertImagesEqual( compareDelete["out"], multipartDelete["out"], ignoreMetadata = True )
+
+	def testUnsupportedMultipartRead( self ) :
+		
+		rgbReader = GafferImage.OpenImageIOReader()
+		rgbReader["fileName"].setValue( self.offsetDataWindowFileName )
+
+		compareShuffle = GafferImage.Shuffle()
+		compareShuffle["in"].setInput( rgbReader["out"] )
+		compareShuffle["channels"].clearChildren()
+		compareShuffle["channels"].addChild( GafferImage.Shuffle.ChannelPlug( "rgba.R", "R" ) )
+		compareShuffle["channels"].addChild( GafferImage.Shuffle.ChannelPlug( "rgba.G", "G" ) )
+		compareShuffle["channels"].addChild( GafferImage.Shuffle.ChannelPlug( "rgba.B", "B" ) )
+		compareShuffle["channels"].addChild( GafferImage.Shuffle.ChannelPlug( "rgba.A", "A" ) )
+
+		compareDelete = GafferImage.DeleteChannels()
+		compareDelete["in"].setInput( compareShuffle["out"] )
+		compareDelete["channels"].setValue( "R G B A" )
+
+		# This test multipart file contains a "rgba" subimage, and a second subimage with a
+		# differing data window.  The second part can currently not be loaded, because Gaffer images
+		# have a single data window for the whole image.
+		#
+		# In the future, should we union the data windows?  Are subimages with differing data windows common?
+		# This would probably happen with stereo images, but we should probably put work into handling stereo
+		# images differently - with a context variable to control which eye we get, rather than loading everything
+		# as channels.
+		#
+		# It was created using this command:
+		# > oiiotool rgb.100x100.exr --attrib "oiio:subimagename" rgba checkerboard.100x100.exr --attrib "oiio:subimagename" fullDataWindow --siappendall -o unsupportedMultipart.exr
+		multipartReader = GafferImage.OpenImageIOReader()
+		multipartReader["fileName"].setValue( self.unsupportedMultipartFileName )
+
+		# When we compare to the single part comparison file, the image will come out the same, because
+		# the second part is ignored - and we should get a message about it being ignored
+		with IECore.CapturingMessageHandler() as mh :
+			self.assertImagesEqual( compareDelete["out"], multipartReader["out"], ignoreMetadata = True )
+
+		self.assertEqual( len( mh.messages ), 1 )
+		self.assertTrue( mh.messages[0].message.startswith( "Ignoring subimage 1 of " ) )
+
 
 if __name__ == "__main__":
 	unittest.main()
