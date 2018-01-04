@@ -3524,20 +3524,20 @@
     </g>
     <g
        id="forExport:bookmark"
-       inkscape:label="#g6482">
+       inkscape:label="#g3320">
       <path
          inkscape:label="#path6329"
          sodipodi:nodetypes="cccccc"
          inkscape:connector-curvature="0"
-         id="sfsfsdfsdfsdf"
-         d="m 398.5828,570.94498 0,172.8344 41.18304,-43.64358 41.65136,43.64358 0,-172.8344 z"
-         style="fill:#bb2b2b;fill-opacity:1;stroke:#303030;stroke-width:17.16559982000000062;stroke-linecap:butt;stroke-linejoin:round;stroke-miterlimit:4;stroke-opacity:1;stroke-dasharray:none" />
+         id="bookmark"
+         d="m 420,572.36218 0,170 39.77385,-42.92785 40.22615,42.92785 0,-170 z"
+         style="fill:#bb2b2b;fill-opacity:1;stroke:#262626;stroke-width:20;stroke-linecap:butt;stroke-linejoin:round;stroke-miterlimit:4;stroke-opacity:1;stroke-dasharray:none" />
       <rect
-         y="561.86218"
-         x="389.98615"
-         height="191"
-         width="100.04203"
-         id="rect6361"
+         y="561.36218"
+         x="409"
+         height="192"
+         width="102"
+         id="rect3318"
          style="fill:none;stroke:none" />
     </g>
   </g>
