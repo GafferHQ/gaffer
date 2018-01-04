@@ -211,7 +211,7 @@ with IECore.IgnoredExceptions( ImportError ) :
 		aovModel = aov + "_aov"
 
 		GafferScene.Outputs.registerOutput(
-			"Interactive/appleseed/" + label,
+			"Interactive/Appleseed/" + label,
 			IECoreScene.Display(
 				aov,
 				"ieDisplay",
@@ -226,7 +226,7 @@ with IECore.IgnoredExceptions( ImportError ) :
 		)
 
 		GafferScene.Outputs.registerOutput(
-			"Batch/appleseed/" + label,
+			"Batch/Appleseed/" + label,
 			IECoreScene.Display(
 				"${project:rootDirectory}/renders/${script:name}/%s/%s.####.exr" % ( aov, aov ),
 				"exr",
