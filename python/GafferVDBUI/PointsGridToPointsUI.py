@@ -1,6 +1,6 @@
 ##########################################################################
 #
-#  Copyright (c) 2015, John Haddon. All rights reserved.
+#  Copyright (c) 2017, Image Engine Design Inc. All rights reserved.
 #
 #  Redistribution and use in source and binary forms, with or without
 #  modification, are permitted provided that the following conditions are
@@ -15,7 +15,7 @@
 #        disclaimer in the documentation and/or other materials provided with
 #        the distribution.
 #
-#      * Neither the name of John Haddon nor the names of
+#      * Neither the name of Image Engine Design Inc nor the names of
 #        any other contributors to this software may be used to endorse or
 #        promote products derived from this software without specific prior
 #        written permission.
@@ -34,11 +34,38 @@
 #
 ##########################################################################
 
-from _GafferVDBUI import *
+import GafferUI
+import GafferVDB
 
-import LevelSetToMeshUI
-import MeshToLevelSetUI
-import LevelSetOffsetUI
-import PointsGridToPointsUI
+GafferUI.Metadata.registerNode(
+	GafferVDB.PointsGridToPoints,
+	'description',
+	"""Converts a points grid in a VDB object to a points primitive.""",
+	plugs={
+		'grid' : [
+			'description',
+			"""
+			Name of the points grid in the VDB to create a points primitive from.
+			"""
+		],
 
-__import__( "IECore" ).loadConfig( "GAFFER_STARTUP_PATHS", {}, subdirectory = "GafferVDBUI" )
+		"names" : [
+			"description",
+			"""
+			The names of the primitive variables to be extracted from VDB points grid.
+			Names should be separated by spaces, and Gaffer's
+			standard wildcard characters may be used.
+			"""
+		],
+
+		"invertNames" : [
+			"description",
+			"""
+			When on, the primitive variables matched by names
+			are not extracted, and the non-matching primitive
+			variables are extracted instead.
+			"""
+		],
+
+	}
+)
