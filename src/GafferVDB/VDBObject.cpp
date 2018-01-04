@@ -370,9 +370,15 @@ IECore::MurmurHash VDBObject::HashedGrid::hash() const
 {
 	if( !m_hashValid )
 	{
+		m_hash = IECore::MurmurHash();
+
 		MurmurHashSink sink( m_hash );
 		boost::iostreams::stream<MurmurHashSink> hashStream( sink );
 
+		openvdb::io::StreamMetadata::Ptr streamMetadata ( new openvdb::io::StreamMetadata() );
+		openvdb::io::setStreamMetadataPtr( hashStream, streamMetadata );
+
+		m_grid->writeMeta( hashStream );
 		m_grid->writeTopology( hashStream );
 		m_grid->writeBuffers( hashStream );
 		m_grid->writeTransform( hashStream );
