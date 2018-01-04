@@ -1,3 +1,180 @@
+0.42.0.0
+========
+
+This major release brings significant version upgrades to all supported
+renderers : Arnold 5, 3Delight 13 (NSI), and Appleseed 1.8. It also
+introduces native support for OpenVDB, and initial support for reading
+and writing USD files. This is of course in addition to the usual
+assortment of improvements and bug fixes.
+
+> Note :
+>
+> As of this release we no longer support Arnold 4 or 3Delight 12.
+> Additionally, some Cortex functionality has been moved to the
+> IECoreScene python module, and we now use the imath python module
+> to access types like V3f, Color3f etc. Custom scripts and/or
+> expressions may need to be updated accordingly. See the Breaking
+> Changes section for more details.
+
+Features
+--------
+
+- Arnold 5 support (#2308) :
+  - Added support for rendering arbitrary meshes as volumes. Previously
+    they were converted to box volumes.
+  - Added support for light path expressions.
+  - Added support for transform_type.
+  - Added ArnoldAOVShader node to support AOV shaders.
+  - Added support for volume_padding (#2356).
+- 3Delight 13 support via the NSI API (#2311).
+  - All shading/lighting is now performed via OSL shaders.
+  - Includes full support for adding/removing/moving objects during
+    interactive rendering.
+- Appleseed 1.8 support (#2371) :
+  - Updated version to 1.8.1.
+  - Added AOV presets to the Outputs node.
+- USD (#2393)
+  - The SceneReader node can now read USD files.
+  - The SceneWriter node can now write USD files.
+- VDB (#2373) :
+  - Added native support for representing VDB volume data in Gaffer
+    scenes.
+  - The standard SceneReader node can now load .vdb files.
+  - VDB objects can be rendered directly to Arnold.
+  - The Viewer now provides basic visualisation of VDB grids.
+  - The SceneInspector provides inspection of grid metadata etc
+    in the Object section.
+  - Several new nodes demonstrate the feasibility of manipulating
+    VDB grids directly in Gaffer's node graph :
+      - LevelSetToMesh
+      - MeshToLevelSet
+      - LevelSetOffset
+- Catalogue : Added a new CatalogueSelect node. This can be placed
+  downstream of a Catalogue to override the image to view (#2370).
+- UI Editor : Added the ability to add custom buttons to a plug (#2348).
+- Gadget : Introduced layer-based rendering for Gadget-based UI
+  elements (#2304).
+
+Improvements
+------------
+
+- OpenColorIO nodes : Added role presets to all colorspace plugs (#2379)
+- NodeGraph : Added icons to signify that a node has been bookmarked (#2369)
+- PlugLayout : Improved layout of successive accessory widgets. They
+  are now all placed in the same row (#2348).
+- Simplified 3delight configuration based on $DELIGHT environment
+  variable (#2311).
+- TaskPlug/FilterPlug/ShaderPlug : Tightened `acceptsInput()` constraints (#2321).
+- OSLObject : Added support for reading and writing matrix primitive variables (#2327).
+- GafferImage : Moved default format plug creation to gui config (#2333).
+
+Fixes
+-----
+
+- Catalogue :
+  - Fixed bug that prevented images with a '.' in the filename from
+    being loaded (#2370).
+  - Fixed crashes caused by removing several images in quick
+    succession (#2337).
+- File Menu : Fixed "Import..." bugs (#1077, #2339).
+- Edit Menu : Fixed automatic layout of pasted nodes (#2383)
+- ShaderPlug : Fixed bug when deserialising inputs from BoxIO nodes (#2374)
+- Crop : Fixed bug whereby changing the format plug value did not trigger
+  recomputation (#2368).
+- ImageWriter (#2364) :
+  - Fixed a crash when writing a data window with a single pixel .
+  - Fixed writing of empty data windows to write a single pixel data
+    window instead of a full image. OpenEXR does not support empty data
+    windows, so we must write at least one pixel.
+- NodeGraph :
+  - Fixed confusing Box navigation behaviour (#2343, #2347).
+  - Fixed overlay text to always be on top (#674, #2304).
+  - Fixed layering so dragged connections are always drawn behind
+    nodes, and highlighted plugs are drawn above all others (#2304).
+- SubGraph : Accounted for BoxIO nodes in `correspondingInput() (#2360).
+  This fixed a node reconnection bug when deleting a Box or Reference, and
+  allows Box and Reference nodes to be drag-inserted onto existing connections.
+- ScriptNode :
+  - Fixed node deletion problems caused by errors in `correspondingInput()`
+    implementations. This was preventing nodes representing missing Arnold
+    shaders from being deleted (#2355).
+  - Fixed crashes caused by syntax errors in code passed to `execute()` method.
+    This could cause a crash when pasting invalid text into the NodeGraph.
+    (#2319, #2320)
+- Shader/ShaderPlug : Fixed GIL management bug which could cause a deadlock
+  in the `attributes()` and `attributesHash()` methods (#2354).
+- GraphComponent : Fixed crashes caused by passing `None` to the Python
+  bindings (#2338).
+- VectorWarp : Fixed handling of nan/inf (#2341).
+- Expression : Fixed copy/paste bug (#2336).
+- BoxIO : Fixed undo/redo of `insert()` method (#2314).
+- RendererAlgo : Fixed crash when renderer returns a null ObjectInterface (#2302).
+- SetUI : Fixed set name context menus to account for intermediate nodes between
+  destination and filter (#2312).
+- StandardLightVisualiser : Fixed for Cortex 10 UV conventions (#2311).
+- PlugAlgo : Fixed promotion of non-serialisable output plugs (#2314).
+- Serialiser : Fixed syntax error created by `moduleDependencies()` (#2320).
+- Plug : Fixed `setInput( nullptr )` so it removes inputs from all descendant
+  plugs (#2323).
+
+API
+---
+
+- OpenColorIOTransform : Added method to query available role names (#2379)
+- Added default template arguments to simplify usage of several methods (#2361)
+  - `PlugGadget::getPlug()`
+  - `IndividualContainer::getChild()`
+  - `Dot::inPlug()` and `Dot::outPlug()`
+  - `View::inPlug()`, `View::getPreprocessor()` and `View::preprocessedInPlug()`
+  - `Metadata::value()`
+  - `BoxIO::plug()` and `BoxIO::promotedPlug()`
+- Added GafferUI.ButtonPlugValueWidget (#2348).
+- ScriptNode : Added `importFile()` method (#2339).
+- Added new OpenGL renderer backend (#2302).
+- Gadget : Introduced layer-based rendering (#2304).
+- GafferOSL :
+  - Added ClosurePlug type (#2308).
+  - Added OSLLight node (#2311).
+
+Breaking Changes
+----------------
+
+- Removed GafferRenderMan, and with it support for 3Delight versions
+  prior to 13 (#2311).
+- Removed support for Arnold 4 (#2308).
+- Gaffer and Cortex now use the official `imath` python module rather
+  than custom bindings in IECore (#2378).
+- Cortex scene classes have moved to a new IECoreScene module, as we
+  continue to simplify and modularize Cortex (#2362).
+- Removed SplineEditor/SplinePlugGadget since they have never been
+  used (#2375).
+- Removed ProceduralHolder node. This was not exposed via the UI,
+  had never been used, and is no longer supported by any of the
+  renderer backends (#2366).
+- Shader : Removed deprecated state methods (#2354).
+- Removed RenderableGadget. If similar functionality is required,
+  use an ObjectToSceneNode and a SceneGadget (#2334).
+- SceneAlgo : Removed camera/transform utilities. These relied on conventions
+  and functionality that will be removed in Cortex 10 (#2332).
+- RendererAlgo : Removed obsolete functions used only with the legacy
+  renderer backends (#2318).
+- Removed code for handling `IECore::Light`. Lights are now
+  always represented as shaders assigned to a location (#2331).
+- Removed SceneProcedural and ScriptProcedural. These were only useful
+  in legacy renderer backends, which have now all been removed (#2318).
+- Removed ExecutableRender node. This used the legacy renderer backends
+  which have all been removed (#2318).
+- Gadget : Modified rendering API (#2304).
+- Removed IncrementingPlugValueWidget. Use RefreshPlugValueWidget
+  instead (#2322).
+- Removed EnumPlugValueWidget. Use PresetsPlugValueWidget and
+  metadata presets instead (#2322).
+- ViewportGadget : Refactored camera transform handling. The camera
+  transform is now accessed via new `setCameraTransform()`/`getCameraTransform()`
+  methods, rather than via the camera itself (#2351).
+- ScriptNode : Modified signature of `ScriptExecutedSignal` to use raw pointers
+  (#2336).
+
 0.41.0.0
 ========
 
