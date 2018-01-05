@@ -671,9 +671,14 @@ const IECore::Object *ValuePlug::defaultObjectValue() const
 	return m_defaultValue.get();
 }
 
-IECore::ConstObjectPtr ValuePlug::getObjectValue( const IECore::MurmurHash *precomputedHash, bool cachedOnly ) const
+IECore::ConstObjectPtr ValuePlug::getObjectValue( const IECore::MurmurHash *precomputedHash ) const
 {
-	return ComputeProcess::value( this, precomputedHash, cachedOnly );
+	return ComputeProcess::value( this, precomputedHash, /* cachedOnly = */ false );
+}
+
+IECore::ConstObjectPtr ValuePlug::getObjectValueIfCached( const IECore::MurmurHash *precomputedHash ) const
+{
+	return ComputeProcess::value( this, precomputedHash, /* cachedOnly = */ true );
 }
 
 void ValuePlug::setObjectValue( IECore::ConstObjectPtr value )

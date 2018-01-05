@@ -154,7 +154,11 @@ class ValuePlug : public Plug
 		/// If `cachedOnly` is true and the value is not in the cache, null will be
 		/// returned. This argument may be removed in a future version - use only if
 		/// absolutely necessary.
-		IECore::ConstObjectPtr getObjectValue( const IECore::MurmurHash *precomputedHash = nullptr, bool cachedOnly = false ) const;
+		IECore::ConstObjectPtr getObjectValue( const IECore::MurmurHash *precomputedHash = nullptr ) const;
+		/// As above, but returns null if the value is not already cached.
+		/// This method is likely to be removed in a future version - use only
+		/// if absolutely necessary.
+		IECore::ConstObjectPtr getObjectValueIfCached( const IECore::MurmurHash *precomputedHash = nullptr ) const;
 		/// Should be called by derived classes when they wish to set the plug
 		/// value - the value is referenced directly (not copied) and so must
 		/// not be changed following the call.

@@ -96,9 +96,15 @@ void TypedObjectPlug<T>::setValue( ConstValuePtr value )
 }
 
 template<class T>
-typename TypedObjectPlug<T>::ConstValuePtr TypedObjectPlug<T>::getValue( const IECore::MurmurHash *precomputedHash, bool cachedOnly ) const
+typename TypedObjectPlug<T>::ConstValuePtr TypedObjectPlug<T>::getValue( const IECore::MurmurHash *precomputedHash ) const
 {
-	return boost::static_pointer_cast<const ValueType>( getObjectValue( precomputedHash, cachedOnly ) );
+	return boost::static_pointer_cast<const ValueType>( getObjectValue( precomputedHash ) );
+}
+
+template<class T>
+typename TypedObjectPlug<T>::ConstValuePtr TypedObjectPlug<T>::getValueIfCached( const IECore::MurmurHash *precomputedHash ) const
+{
+	return boost::static_pointer_cast<const ValueType>( getObjectValueIfCached( precomputedHash ) );
 }
 
 template<class T>
