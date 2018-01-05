@@ -150,7 +150,11 @@ class ValuePlug : public Plug
 		/// If a precomputed hash is available it may be passed to avoid computing
 		/// it again unnecessarily. Passing an incorrect hash has dire consequences, so
 		/// use with care.
-		IECore::ConstObjectPtr getObjectValue( const IECore::MurmurHash *precomputedHash = nullptr ) const;
+		///
+		/// If `cachedOnly` is true and the value is not in the cache, null will be
+		/// returned. This argument may be removed in a future version - use only if
+		/// absolutely necessary.
+		IECore::ConstObjectPtr getObjectValue( const IECore::MurmurHash *precomputedHash = nullptr, bool cachedOnly = false ) const;
 		/// Should be called by derived classes when they wish to set the plug
 		/// value - the value is referenced directly (not copied) and so must
 		/// not be changed following the call.

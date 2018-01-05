@@ -108,7 +108,11 @@ class TypedObjectPlug : public ValuePlug
 		/// This pattern is particularly effective because it not only
 		/// avoids unnecessary conversions, but it also avoids churn in
 		/// the ValuePlug cache.
-		ConstValuePtr getValue( const IECore::MurmurHash *precomputedHash = nullptr ) const;
+		///
+		/// If `cachedOnly` is true and the value is not in the cache, null will be
+		/// returned. This argument may be removed in a future version - use only if
+		/// absolutely necessary.
+		ConstValuePtr getValue( const IECore::MurmurHash *precomputedHash = nullptr, bool cachedOnly = false ) const;
 
 		void setFrom( const ValuePlug *other ) override;
 

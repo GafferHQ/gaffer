@@ -270,7 +270,7 @@ class ValuePlug::ComputeProcess : public Process
 			g_cache.clear();
 		}
 
-		static IECore::ConstObjectPtr value( const ValuePlug *plug, const IECore::MurmurHash *precomputedHash )
+		static IECore::ConstObjectPtr value( const ValuePlug *plug, const IECore::MurmurHash *precomputedHash, bool cachedOnly )
 		{
 			const ValuePlug *p = sourcePlug( plug );
 
@@ -294,7 +294,7 @@ class ValuePlug::ComputeProcess : public Process
 				// result if we have.
 				IECore::MurmurHash hash = precomputedHash ? *precomputedHash : p->hash();
 				IECore::ConstObjectPtr result = g_cache.get( hash );
-				if( result )
+				if( result || cachedOnly )
 				{
 					return result;
 				}
@@ -322,7 +322,14 @@ class ValuePlug::ComputeProcess : public Process
 			{
 				// Plug has requested no caching, so we compute from scratch every
 				// time.
-				return ComputeProcess( p, plug ).m_result;
+				if( !cachedOnly )
+				{
+					return ComputeProcess( p, plug ).m_result;
+				}
+				else
+				{
+					return nullptr;
+				}
 			}
 		}
 
@@ -664,9 +671,9 @@ const IECore::Object *ValuePlug::defaultObjectValue() const
 	return m_defaultValue.get();
 }
 
-IECore::ConstObjectPtr ValuePlug::getObjectValue( const IECore::MurmurHash *precomputedHash ) const
+IECore::ConstObjectPtr ValuePlug::getObjectValue( const IECore::MurmurHash *precomputedHash, bool cachedOnly ) const
 {
-	return ComputeProcess::value( this, precomputedHash );
+	return ComputeProcess::value( this, precomputedHash, cachedOnly );
 }
 
 void ValuePlug::setObjectValue( IECore::ConstObjectPtr value )

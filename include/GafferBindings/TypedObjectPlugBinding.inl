@@ -76,13 +76,13 @@ void setValue( typename T::Ptr p, typename T::ValuePtr v, bool copy=true )
 // Likewise, we expose the precomputedHash argument prefixed with an underscore to
 // discourage its use - again it is mainly exposed for use only in the tests.
 template<typename T>
-IECore::ObjectPtr getValue( typename T::Ptr p, const IECore::MurmurHash *precomputedHash=nullptr, bool copy=true )
+IECore::ObjectPtr getValue( typename T::Ptr p, const IECore::MurmurHash *precomputedHash=nullptr, bool copy=true, bool cachedOnly=false )
 {
 	// Must release GIL in case computation spawns threads which need
 	// to reenter Python.
 	IECorePython::ScopedGILRelease r;
 
-	typename IECore::ConstObjectPtr v = p->getValue( precomputedHash );
+	typename IECore::ConstObjectPtr v = p->getValue( precomputedHash, cachedOnly );
 	if( v )
 	{
 		if( copy )
@@ -142,7 +142,7 @@ TypedObjectPlugClass<T, TWrapper>::TypedObjectPlugClass( const char *docString )
 	);
 	this->def( "defaultValue", &Detail::defaultValue<T>, ( boost::python::arg_( "_copy" ) = true ) );
 	this->def( "setValue", Detail::setValue<T>, ( boost::python::arg_( "value" ), boost::python::arg_( "_copy" ) = true ) );
-	this->def( "getValue", Detail::getValue<T>, ( boost::python::arg_( "_precomputedHash" ) = boost::python::object(), boost::python::arg_( "_copy" ) = true ) );
+	this->def( "getValue", Detail::getValue<T>, ( boost::python::arg_( "_precomputedHash" ) = boost::python::object(), boost::python::arg_( "_copy" ) = true, boost::python::arg_( "_cachedOnly" ) = false ) );
 
 	boost::python::scope s = *this;
 
