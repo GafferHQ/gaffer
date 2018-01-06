@@ -36,8 +36,10 @@
 
 import os
 import unittest
+import imath
 
 import IECore
+import IECoreScene
 import IECoreGL
 
 import GafferTest
@@ -73,7 +75,7 @@ class RendererTest( GafferTest.TestCase ) :
 	def testPrimVars( self ) :
 
 		renderer = GafferScene.Private.IECoreScenePreview.Renderer.create( "OpenGL" )
-		renderer.output( "test", IECore.Display( self.temporaryDirectory() + "/testPrimVars.tif", "tiff", "rgba", {} ) )
+		renderer.output( "test", IECoreScene.Display( self.temporaryDirectory() + "/testPrimVars.tif", "tiff", "rgba", {} ) )
 
 		fragmentSource = """
 		uniform float red;
@@ -89,17 +91,17 @@ class RendererTest( GafferTest.TestCase ) :
 		attributes = renderer.attributes(
 			IECore.CompoundObject( {
 				"gl:surface" : IECore.ObjectVector( [
-					IECore.Shader( "rgbColor", "surface", { "gl:fragmentSource" : fragmentSource } )
+					IECoreScene.Shader( "rgbColor", "surface", { "gl:fragmentSource" : fragmentSource } )
 				] )
 			} )
 		)
 
 		def sphere( red, green, blue ) :
 
-			s = IECore.SpherePrimitive()
-			s["red"] = IECore.PrimitiveVariable( IECore.PrimitiveVariable.Interpolation.Constant, IECore.FloatData( red ) )
-			s["green"] = IECore.PrimitiveVariable( IECore.PrimitiveVariable.Interpolation.Constant, IECore.FloatData( green ) )
-			s["blue"] = IECore.PrimitiveVariable( IECore.PrimitiveVariable.Interpolation.Constant, IECore.FloatData( blue ) )
+			s = IECoreScene.SpherePrimitive()
+			s["red"] = IECoreScene.PrimitiveVariable( IECoreScene.PrimitiveVariable.Interpolation.Constant, IECore.FloatData( red ) )
+			s["green"] = IECoreScene.PrimitiveVariable( IECoreScene.PrimitiveVariable.Interpolation.Constant, IECore.FloatData( green ) )
+			s["blue"] = IECoreScene.PrimitiveVariable( IECoreScene.PrimitiveVariable.Interpolation.Constant, IECore.FloatData( blue ) )
 
 			return s
 
@@ -108,7 +110,7 @@ class RendererTest( GafferTest.TestCase ) :
 			sphere( 1, 0, 0 ),
 			attributes
 		).transform(
-			IECore.M44f().translate( IECore.V3f( 0, 0, -5 ) )
+			imath.M44f().translate( imath.V3f( 0, 0, -5 ) )
 		)
 
 		renderer.object(
@@ -116,7 +118,7 @@ class RendererTest( GafferTest.TestCase ) :
 			sphere( 0, 1, 0 ),
 			attributes
 		).transform(
-			IECore.M44f().translate( IECore.V3f( -1, 0, -5 ) )
+			imath.M44f().translate( imath.V3f( -1, 0, -5 ) )
 		)
 
 		renderer.object(
@@ -124,13 +126,13 @@ class RendererTest( GafferTest.TestCase ) :
 			sphere( 0, 0, 1 ),
 			attributes
 		).transform(
-			IECore.M44f().translate( IECore.V3f( 1, 0, -5 ) )
+			imath.M44f().translate( imath.V3f( 1, 0, -5 ) )
 		)
 
 		renderer.render()
 
 		image = IECore.Reader.create(  self.temporaryDirectory() + "/testPrimVars.tif" ).read()
-		dimensions = image.dataWindow.size() + IECore.V2i( 1 )
+		dimensions = image.dataWindow.size() + imath.V2i( 1 )
 		index = dimensions.x * int( dimensions.y * 0.5 )
 		self.assertEqual( image["R"][index], 0 )
 		self.assertEqual( image["G"][index], 1 )
@@ -149,7 +151,7 @@ class RendererTest( GafferTest.TestCase ) :
 	def testShaderParameters( self ) :
 
 		renderer = GafferScene.Private.IECoreScenePreview.Renderer.create( "OpenGL" )
-		renderer.output( "test", IECore.Display( self.temporaryDirectory() + "/testShaderParameters.tif", "tiff", "rgba", {} ) )
+		renderer.output( "test", IECoreScene.Display( self.temporaryDirectory() + "/testShaderParameters.tif", "tiff", "rgba", {} ) )
 
 		fragmentSource = """
 		uniform vec3 colorValue;
@@ -162,12 +164,12 @@ class RendererTest( GafferTest.TestCase ) :
 		attributes = renderer.attributes(
 			IECore.CompoundObject( {
 				"gl:surface" : IECore.ObjectVector( [
-					IECore.Shader(
+					IECoreScene.Shader(
 						"color",
 						"surface",
 						{
 							"gl:fragmentSource" : fragmentSource,
-							"colorValue" : IECore.Color3f( 1, 0, 0 )
+							"colorValue" : imath.Color3f( 1, 0, 0 )
 						}
 					)
 				] )
@@ -176,10 +178,10 @@ class RendererTest( GafferTest.TestCase ) :
 
 		renderer.object(
 			"sphere",
-			IECore.SpherePrimitive(),
+			IECoreScene.SpherePrimitive(),
 			attributes
 		).transform(
-			IECore.M44f().translate( IECore.V3f( 0, 0, -5 ) )
+			imath.M44f().translate( imath.V3f( 0, 0, -5 ) )
 		)
 
 		renderer.render()
