@@ -34,30 +34,18 @@
 //
 //////////////////////////////////////////////////////////////////////////
 
-#ifndef GAFFERDELIGHT_INTERACTIVEDELIGHTRENDER_H
-#define GAFFERDELIGHT_INTERACTIVEDELIGHTRENDER_H
+#ifndef GAFFERDELIGHT_EXPORT_H
+#define GAFFERDELIGHT_EXPORT_H
 
-#include "GafferScene/InteractiveRender.h"
+#include "Gaffer/Export.h"
 
-#include "GafferDelight/Export.h"
-#include "GafferDelight/TypeIds.h"
+// define GAFFERDELIGHT_API macro based on whether or not we are compiling
+// GafferDelight, or including headers for linking to it. the GAFFERDELIGHT_API
+// macro is the one that is used in the class definitions.
+#ifdef GafferDelight_EXPORTS
+  #define GAFFERDELIGHT_API GAFFER_EXPORT
+#else
+  #define GAFFERDELIGHT_API GAFFER_IMPORT
+#endif
 
-namespace GafferDelight
-{
-
-class GAFFERDELIGHT_API InteractiveDelightRender : public GafferScene::InteractiveRender
-{
-
-	public :
-
-		InteractiveDelightRender( const std::string &name=defaultName<InteractiveDelightRender>() );
-
-		IE_CORE_DECLARERUNTIMETYPEDEXTENSION( GafferDelight::InteractiveDelightRender, InteractiveDelightRenderTypeId, GafferScene::InteractiveRender );
-
-};
-
-IE_CORE_DECLAREPTR( InteractiveDelightRender );
-
-} // namespace GafferDelight
-
-#endif // GAFFERDELIGHT_INTERACTIVEDELIGHTRENDER_H
+#endif // #ifndef GAFFERDELIGHT_EXPORT_H

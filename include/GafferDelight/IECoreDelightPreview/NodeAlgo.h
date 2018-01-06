@@ -43,6 +43,10 @@
 #include "IECore/VectorTypedData.h"
 #include "IECoreScene/Primitive.h"
 
+// Change this to "IECoreDelight/Export.h" and remove the define when it goes into Cortex.
+#include "GafferDelight/Export.h"
+#define IECOREDELIGHT_API GAFFERDELIGHT_API
+
 namespace IECoreDelight
 {
 
@@ -54,10 +58,10 @@ namespace NodeAlgo
 /// Converts the specified IECore::Object into an equivalent
 /// NSI node with the specified handle, returning true on
 /// success and false on failure.
-bool convert( const IECore::Object *object, NSIContext_t context, const char *handle );
+IECOREDELIGHT_API bool convert( const IECore::Object *object, NSIContext_t context, const char *handle );
 /// As above, but converting a moving object. If no motion converter
 /// is available, the first sample is converted instead.
-bool convert( const std::vector<const IECore::Object *> &samples, const std::vector<float> &sampleTimes, NSIContext_t context, const char *handle );
+IECOREDELIGHT_API bool convert( const std::vector<const IECore::Object *> &samples, const std::vector<float> &sampleTimes, NSIContext_t context, const char *handle );
 
 /// Signature of a function which can convert an IECore::Object
 /// into an NSI node.
@@ -67,7 +71,7 @@ typedef bool (*MotionConverter)( const std::vector<const IECore::Object *> &samp
 /// Registers a converter for a specific type.
 /// Use the ConverterDescription utility class in preference to
 /// this, since it provides additional type safety.
-void registerConverter( IECore::TypeId fromType, Converter converter, MotionConverter motionConverter = nullptr );
+IECOREDELIGHT_API void registerConverter( IECore::TypeId fromType, Converter converter, MotionConverter motionConverter = nullptr );
 
 /// Class which registers a converter for type T automatically
 /// when instantiated.
@@ -93,10 +97,10 @@ class ConverterDescription
 };
 
 /// Adds all PrimitiveVariables into a ParameterList for use with NSISetAttribute.
-void primitiveVariableParameterList( const IECoreScene::Primitive *primitive, ParameterList &parameters, const IECore::IntVectorData *vertexIndices = nullptr );
+IECOREDELIGHT_API void primitiveVariableParameterList( const IECoreScene::Primitive *primitive, ParameterList &parameters, const IECore::IntVectorData *vertexIndices = nullptr );
 /// As above, but splits out animated primitive variables into a separate vector of ParameterLists
 /// for use with NSISetAttributeAtTime.
-void primitiveVariableParameterLists( const std::vector<const IECoreScene::Primitive *> &primitives, ParameterList &staticParameters, std::vector<ParameterList> &animatedParameters, const IECore::IntVectorData *vertexIndices = nullptr );
+IECOREDELIGHT_API void primitiveVariableParameterLists( const std::vector<const IECoreScene::Primitive *> &primitives, ParameterList &staticParameters, std::vector<ParameterList> &animatedParameters, const IECore::IntVectorData *vertexIndices = nullptr );
 
 } // namespace NodeAlgo
 
