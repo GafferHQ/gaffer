@@ -54,7 +54,7 @@ Gaffer.Metadata.registerNode(
 			"description",
 			"""
 			The names of the primitive variables to be affected.
-			Names should be specified by spaces, and Gaffer's
+			Names should be separated by spaces, and Gaffer's
 			standard wildcard characters may be used.
 			""",
 
