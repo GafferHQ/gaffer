@@ -600,8 +600,8 @@ Plug *loadMatrixArrayParameter( const OSLQuery::Parameter *parameter, const Inte
 
 Plug *loadClosureParameter( const OSLQuery::Parameter *parameter, const InternedString &name, Gaffer::Plug *parent )
 {
-	ClosurePlug *existingPlug = parent->getChild<ClosurePlug>( name );
-	if( existingPlug )
+	Plug *existingPlug = parent->getChild<Plug>( name );
+	if( runTimeCast<ClosurePlug>( existingPlug ) )
 	{
 		return existingPlug;
 	}
