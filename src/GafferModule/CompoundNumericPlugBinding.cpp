@@ -83,12 +83,13 @@ std::string compoundNumericPlugRepr( const T *plug )
 template<typename T>
 class CompoundNumericPlugSerialiser : public ValuePlugSerialiser
 {
-  public:
 
-	std::string constructor( const Gaffer::GraphComponent *graphComponent, const Serialisation &serialisation ) const override
-	{
-		return maskedCompoundNumericPlugRepr( static_cast<const T *>( graphComponent ), Plug::All & ~Plug::ReadOnly, &serialisation );
-	}
+	public :
+
+		std::string constructor( const Gaffer::GraphComponent *graphComponent, const Serialisation &serialisation ) const override
+		{
+			return maskedCompoundNumericPlugRepr( static_cast<const T *>( graphComponent ), Plug::All & ~Plug::ReadOnly, &serialisation );
+		}
 
 	protected :
 
