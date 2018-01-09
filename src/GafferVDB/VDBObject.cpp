@@ -210,6 +210,7 @@ IECore::CompoundObjectPtr VDBObject::metadata( const std::string &name )
 	{
 		openvdb::Metadata::Ptr ptr = metaIt->second;
 
+		//todo replace with more generic conversion mechanism.
 		if( metaIt->second->typeName() == "string" )
 		{
 			openvdb::TypedMetadata<openvdb::Name>::ConstPtr typedPtr = openvdb::DynamicPtrCast<openvdb::TypedMetadata<openvdb::Name> >( ptr );
@@ -231,6 +232,16 @@ IECore::CompoundObjectPtr VDBObject::metadata( const std::string &name )
 				metadata->members()[metaIt->first] = intData;
 			}
 		}
+		else if( metaIt->second->typeName() == "int32" )
+		{
+			openvdb::TypedMetadata<openvdb::Int32>::ConstPtr typedPtr = openvdb::DynamicPtrCast<openvdb::TypedMetadata<openvdb::Int32> >( ptr );
+			if( typedPtr )
+			{
+				IntDataPtr intData = new IntData();
+				intData->writable() = typedPtr->value();
+				metadata->members()[metaIt->first] = intData;
+			}
+		}
 		else if( metaIt->second->typeName() == "bool" )
 		{
 			openvdb::TypedMetadata<bool>::ConstPtr typedPtr = openvdb::DynamicPtrCast<openvdb::TypedMetadata<bool> >( ptr );
@@ -240,7 +251,6 @@ IECore::CompoundObjectPtr VDBObject::metadata( const std::string &name )
 				data->writable() = typedPtr->value();
 				metadata->members()[metaIt->first] = data;
 			}
-
 		}
 		else if( metaIt->second->typeName() == "vec3i" )
 		{
@@ -254,7 +264,11 @@ IECore::CompoundObjectPtr VDBObject::metadata( const std::string &name )
 		}
 		else
 		{
-			IECore::msg( IECore::MessageHandler::Warning, "VDBObject::metadata", boost::format( "'%1%' has unsupported metadata type: '%2%'" ) % metaIt->second->typeName() % metaIt->first );
+			IECore::msg(
+				IECore::MessageHandler::Warning,
+				"VDBObject::metadata",
+				boost::format( "'%1%' has unsupported metadata type: '%2%'" ) % metaIt->first % metaIt->second->typeName()
+			);
 		}
 	}
 	return metadata;
