@@ -409,30 +409,27 @@ IECoreScene::PointsPrimitivePtr createPointsPrimitive( openvdb::GridBase::ConstP
 		const openvdb::points::AttributeArray &array = leafIter->constAttributeArray( "P" );
 		openvdb::points::AttributeHandle<openvdb::Vec3f> positionHandle( array );
 
+		const openvdb::points::AttributeSet &attributeSet = leafIter->attributeSet();
+		const openvdb::points::AttributeSet::Descriptor &descriptor = attributeSet.descriptor();
+
+		for (const auto &it : descriptor.map() )
+		{
+			size_t index = it.second;
+			const std::string &attributeName = it.first;
+			if ( !primitiveVariableFilter( attributeName ) )
+			{
+				continue;
+			}
+			const openvdb::points::AttributeArray *attributeArray = attributeSet.get( index );
+			appendPrimitiveVariableData( primVars, attributeName, descriptor.type( index ).first, leafIter, *attributeArray, count );
+		}
+
 		for( auto indexIter = leafIter->beginIndexOn(); indexIter; ++indexIter )
 		{
-			const openvdb::points::AttributeSet &attributeSet = leafIter->attributeSet();
-			const openvdb::points::AttributeSet::Descriptor &descriptor = attributeSet.descriptor();
-
-			for (const auto &it : descriptor.map() )
-			{
-				const std::string &attributeName = it.first;
-
-				if ( !primitiveVariableFilter( attributeName ) )
-				{
-					continue;
-				}
-
-				size_t index = it.second;
-
-				const openvdb::points::AttributeArray *attributeArray = attributeSet.get( index );
-				appendPrimitiveVariableData( primVars, attributeName, descriptor.type ( index ).first, leafIter, *attributeArray, count);
-			}
-
 			openvdb::Vec3f voxelPosition = positionHandle.get( *indexIter );
 			const openvdb::Vec3d xyz = indexIter.getCoord().asVec3d();
 			openvdb::Vec3f worldPosition = pointsGrid->transform().indexToWorld( voxelPosition + xyz );
-			points.push_back( Imath::Vec3<float>( worldPosition[0], worldPosition[1], worldPosition[2] ) );
+			points.emplace_back( worldPosition[0], worldPosition[1], worldPosition[2] );
 		}
 	}
 
@@ -540,6 +537,10 @@ IECore::ConstObjectPtr PointsGridToPoints::computeProcessedObject( const ScenePa
 	bool invert = invertNamesPlug()->getValue();
 	auto primitiveVariableFilter = [names, invert](const std::string& primitiveVariableName) -> bool
 	{
+		if (primitiveVariableName == "P")
+		{
+			return false;
+		}
 		return StringAlgo::matchMultiple( primitiveVariableName, names ) != invert;
 	};
 
