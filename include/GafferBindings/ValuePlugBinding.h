@@ -58,15 +58,9 @@ class ValuePlugSerialiser : public PlugSerialiser
 
 		void moduleDependencies( const Gaffer::GraphComponent *graphComponent, std::set<std::string> &modules, const Serialisation &serialisation ) const override;
 		std::string constructor( const Gaffer::GraphComponent *graphComponent, const Serialisation &serialisation ) const override;
-		std::string postConstructor( const Gaffer::GraphComponent *graphComponent, const std::string &identifier, const Serialisation &serialisation ) const override;
+		std::string postHierarchy( const Gaffer::GraphComponent *graphComponent, const std::string &identifier, const Serialisation &serialisation ) const override;
 
 		static std::string repr( const Gaffer::ValuePlug *plug, unsigned flagsMask = Gaffer::Plug::All, const std::string &extraArguments = "", const Serialisation *serialisation = nullptr );
-
-	protected :
-
-		/// May be implemented by derived classes to control whether or not a setValue() call is emitted by postConstructor().
-		/// The default implementation returns true only for input plugs without an incoming connection.
-		virtual bool valueNeedsSerialisation( const Gaffer::ValuePlug *plug, const Serialisation &serialisation ) const;
 
 };
 

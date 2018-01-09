@@ -1333,8 +1333,8 @@ class ExpressionTest( GafferTest.TestCase ) :
 
 		s = Gaffer.ScriptNode()
 		s["n1"] = GafferTest.AddNode()
-		s["n1"]["op1"].setValue( 10 )
-		s["n1"]["op2"].setValue( 20 )
+		s["n1"]["op1"].setValue( 101 )
+		s["n1"]["op2"].setValue( 201 )
 		s["n1"]["sum"].setFlags( Gaffer.Plug.Flags.Serialisable, False )
 		s["n2"] = GafferTest.AddNode()
 
@@ -1344,7 +1344,7 @@ class ExpressionTest( GafferTest.TestCase ) :
 		s2 = Gaffer.ScriptNode()
 		s2.execute( s.serialise() )
 
-		self.assertEqual( s2["n2"]["op1"].getValue(), 30 )
+		self.assertEqual( s2["n2"]["op1"].getValue(), 302 )
 
 if __name__ == "__main__":
 	unittest.main()
