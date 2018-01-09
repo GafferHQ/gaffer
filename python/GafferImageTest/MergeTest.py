@@ -468,5 +468,22 @@ class MergeTest( GafferImageTest.ImageTestCase ) :
 
 		self.assertEqual( m["out"]["dataWindow"].getValue(), a["out"]["dataWindow"].getValue() )
 
+	# Make sure we don't fail by pulling tiles outside the data window when merging images with
+	# misaligned data
+	def testTilesOutsideDataWindow( self ) :
+
+		r = GafferImage.ImageReader()
+		r["fileName"].setValue( self.checkerPath )
+
+		o = GafferImage.Offset()
+		o["in"].setInput( r["out"] )
+		o["offset"].setValue( imath.V2i( -10 ) )
+
+		merge = GafferImage.Merge()
+
+		merge["in"][0].setInput( r["out"] )
+		merge["in"][1].setInput( o["out"] )
+		merge["out"].image()
+
 if __name__ == "__main__":
 	unittest.main()

@@ -138,8 +138,18 @@ void Offset::hashChannelData( const GafferImage::ImagePlug *parent, const Gaffer
 	{
 		ImageProcessor::hashChannelData( parent, context, h );
 
+		Box2i inDataWindow = inPlug()->dataWindowPlug()->getValue();
+
 		const Box2i outTileBound( tileOrigin, tileOrigin + V2i( ImagePlug::tileSize() ) );
-		const Box2i inBound( outTileBound.min - offset, outTileBound.max - offset );
+		const Box2i inBound = BufferAlgo::intersection( 
+			inDataWindow,
+			Box2i( outTileBound.min - offset, outTileBound.max - offset )
+		);
+
+		// Note that two differing output tiles could depend on the same input tile, for
+		// example if the input image is small enough that there is a single valid tile.
+		// Hash in the bound to distinguish the output tiles in this case
+		h.append( inBound );
 
 		V2i inTileOrigin;
 		for( inTileOrigin.y = ImagePlug::tileOrigin( inBound.min ).y; inTileOrigin.y < inBound.max.y; inTileOrigin.y += ImagePlug::tileSize() )
@@ -167,8 +177,13 @@ IECore::ConstFloatVectorDataPtr Offset::computeChannelData( const std::string &c
 	}
 	else
 	{
+		Box2i inDataWindow = inPlug()->dataWindowPlug()->getValue();
+
 		const Box2i outTileBound( tileOrigin, tileOrigin + V2i( ImagePlug::tileSize() ) );
-		const Box2i inBound( outTileBound.min - offset, outTileBound.max - offset );
+		const Box2i inBound = BufferAlgo::intersection( 
+			inDataWindow,
+			Box2i( outTileBound.min - offset, outTileBound.max - offset )
+		);
 
 		FloatVectorDataPtr outData = new FloatVectorData;
 		outData->writable().resize( ImagePlug::tileSize() * ImagePlug::tileSize() );

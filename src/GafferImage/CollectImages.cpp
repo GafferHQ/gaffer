@@ -406,20 +406,25 @@ IECore::ConstFloatVectorDataPtr CollectImages::computeChannelData( const std::st
 	sourceLayerAndChannel( channelName, rootLayers, srcLayer, srcChannel );
 
 	Context::EditableScope editScope( context );
-	editScope.set( ImagePlug::channelNameContextName, srcChannel );
 	editScope.set( layerVariable, srcLayer );
 
-	const Box2i tileBound( tileOrigin, tileOrigin + V2i( ImagePlug::tileSize() ) );
-
-	ConstFloatVectorDataPtr inputData = inPlug()->channelDataPlug()->getValue();
-
-	// We've now gathered all data that depends on the tile/channel, so we can use the same editScope
-	// for a global context
+	// First use this EditableScope as a global scope
 	editScope.remove( ImagePlug::channelNameContextName );
 	editScope.remove( ImagePlug::tileOriginContextName );
 	Box2i inputDataWindow = inPlug()->dataWindowPlug()->getValue();
 
+	const Box2i tileBound( tileOrigin, tileOrigin + V2i( ImagePlug::tileSize() ) );
 	const Box2i validBound = BufferAlgo::intersection( tileBound, inputDataWindow );
+	if( BufferAlgo::empty( validBound ) )
+	{
+		return ImagePlug::blackTile();
+	}
+
+	// Then set up the scope to evaluate the input channel data
+	editScope.set( ImagePlug::channelNameContextName, srcChannel );
+	editScope.set( ImagePlug::tileOriginContextName, tileOrigin );
+	ConstFloatVectorDataPtr inputData = inPlug()->channelDataPlug()->getValue();
+
 	if( validBound == tileBound )
 	{
 		return inputData;
@@ -429,17 +434,14 @@ IECore::ConstFloatVectorDataPtr CollectImages::computeChannelData( const std::st
 		FloatVectorDataPtr resultData = new FloatVectorData;
 		vector<float> &result = resultData->writable();
 		result.resize( ImagePlug::tileSize() * ImagePlug::tileSize(), 0.0f );
-		if( !BufferAlgo::empty( validBound ) )
-		{
-			copyRegion(
-				&inputData->readable().front(),
-				tileBound,
-				validBound,
-				&result.front(),
-				tileBound,
-				validBound.min
-			);
-		}
+		copyRegion(
+			&inputData->readable().front(),
+			tileBound,
+			validBound,
+			&result.front(),
+			tileBound,
+			validBound.min
+		);
 		return resultData;
 	}
 }
