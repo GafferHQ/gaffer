@@ -98,7 +98,6 @@ import PointsTypeUI
 import ParametersUI
 import TextUI
 import AimConstraintUI
-import AlembicSourceUI
 import CoordinateSystemUI
 import DeleteAttributesUI
 import SeedsUI
