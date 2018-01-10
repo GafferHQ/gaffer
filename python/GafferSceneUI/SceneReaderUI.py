@@ -53,7 +53,7 @@ Gaffer.Metadata.registerNode(
 	"""
 	The primary means of loading external assets (models, animation and cameras etc)
 	from caches into Gaffer. Gaffer's native file format is the .scc (SceneCache) format
-	provided by Cortex, but Alembic caches are also supported. Other formats may be
+	provided by Cortex, but Alembic and USD files are also supported. Other formats may be
 	added by registering a new implementation of Cortex's abstract SceneInterface.
 	""",
 
