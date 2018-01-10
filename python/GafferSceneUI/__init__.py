@@ -144,7 +144,6 @@ import EncapsulateUI
 # then all the PathPreviewWidgets. note that the order
 # of import controls the order of display.
 
-from AlembicPathPreview import AlembicPathPreview
 from SceneReaderPathPreview import SceneReaderPathPreview
 
 __import__( "IECore" ).loadConfig( "GAFFER_STARTUP_PATHS", {}, subdirectory = "GafferSceneUI" )
