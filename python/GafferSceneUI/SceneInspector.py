@@ -1498,7 +1498,8 @@ class __TransformSection( LocationSection ) :
 				return matrix
 
 			try :
-				components = dict( zip( "shrt", matrix.extractSHRT() ) )
+				components = { x : imath.V3f() for x in "shrt" }
+				matrix.extractSHRT( components["s"], components["h"], components["r"], components["t"] )
 			except :
 				# decomposition can fail if we have 0 scale.
 				return "Unavailable"
