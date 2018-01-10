@@ -29,7 +29,7 @@ You should be presented with the default UI layout.
 Loading some geometry
 ---------------------
 
-As Gaffer is primarily a lighting package, it is expected that modelling and animation will be performed in an external package and then imported into Gaffer in the form of an animation cache. Gaffer supports both the Alembic (.abc) file format and its own native SceneCache (.scc) format.
+As Gaffer is primarily a lighting package, it is expected that modelling and animation will be performed in an external package and then imported into Gaffer in the form of an animation cache. Gaffer supports the popular Alembic and USD file formats, and also its own native SceneCache (.scc) format.
 
 Let's start by creating a [SceneReader][2] node to load some geometry :
 
