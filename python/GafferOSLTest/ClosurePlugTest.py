@@ -1,6 +1,6 @@
 ##########################################################################
 #
-#  Copyright (c) 2013-2014, John Haddon. All rights reserved.
+#  Copyright (c) 2017, Image Engine Design Inc. All rights reserved.
 #
 #  Redistribution and use in source and binary forms, with or without
 #  modification, are permitted provided that the following conditions are
@@ -34,16 +34,33 @@
 #
 ##########################################################################
 
-from OSLTestCase import OSLTestCase
-from OSLShaderTest import OSLShaderTest
-from ShadingEngineTest import ShadingEngineTest
-from OSLImageTest import OSLImageTest
-from OSLObjectTest import OSLObjectTest
-from OSLExpressionEngineTest import OSLExpressionEngineTest
-from ModuleTest import ModuleTest
-from OSLCodeTest import OSLCodeTest
-from ClosurePlugTest import ClosurePlugTest
+import Gaffer
+import GafferOSL
+import GafferOSLTest
+
+class ClosurePlugTest( GafferOSLTest.OSLTestCase ) :
+
+	def testAcceptsInput( self ) :
+
+		closurePlug1 = GafferOSL.ClosurePlug()
+		closurePlug2 = GafferOSL.ClosurePlug()
+
+		# We want to accept inputs from ClosurePlugs.
+		self.assertTrue( closurePlug1.acceptsInput( closurePlug2 ) )
+
+		# But not from regular plugs.
+		plug = Gaffer.Plug()
+		self.assertFalse( closurePlug1.acceptsInput( plug ) )
+
+		# Even if they are on a box.
+		box = Gaffer.Box()
+		box["p"] = Gaffer.Plug()
+		self.assertFalse( closurePlug1.acceptsInput( box["p"] ) )
+
+		# Or a dot.
+		dot = Gaffer.Dot()
+		dot.setup( Gaffer.Plug() )
+		self.assertFalse( closurePlug1.acceptsInput( dot["out"] ) )
 
 if __name__ == "__main__":
-	import unittest
 	unittest.main()

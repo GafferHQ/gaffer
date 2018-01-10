@@ -155,19 +155,27 @@ class OSLImageTest( GafferOSLTest.OSLTestCase ) :
 
 	def testAcceptsShaderSwitch( self ) :
 
-		image = GafferOSL.OSLImage()
-		switch = GafferScene.ShaderSwitch()
+		script = Gaffer.ScriptNode()
+		script["image"] = GafferOSL.OSLImage()
+		script["switch"] = GafferScene.ShaderSwitch()
 
-		self.assertTrue( image["shader"].acceptsInput( switch["out"] ) )
+		# We're testing a backwards compatibility special case that is
+		# only enabled when loading a script, hence the use of `execute()`.
+		script.execute( """script["image"]["shader"].setInput( script["switch"]["out"] )""" )
+		self.assertTrue( script["image"]["shader"].getInput().isSame( script["switch"]["out"] ) )
 
 	def testAcceptsDot( self ) :
 
-		object = GafferOSL.OSLImage()
-		switch = GafferScene.ShaderSwitch()
-		dot = Gaffer.Dot()
-		dot.setup( switch["out"] )
+		script = Gaffer.ScriptNode()
+		script["image"] = GafferOSL.OSLImage()
+		script["switch"] = GafferScene.ShaderSwitch()
+		script["dot"] = Gaffer.Dot()
+		script["dot"].setup( script["switch"]["out"] )
 
-		self.assertTrue( object["shader"].acceptsInput( dot["out"] ) )
+		# We're testing a backwards compatibility special case that is
+		# only enabled when loading a script, hence the use of `execute()`.
+		script.execute( """script["image"]["shader"].setInput( script["dot"]["out"] )""" )
+		self.assertTrue( script["image"]["shader"].getInput().isSame( script["dot"]["out"] ) )
 
 	def testChannelWithZeroValue( self ) :
 

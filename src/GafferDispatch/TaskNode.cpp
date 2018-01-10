@@ -39,6 +39,7 @@
 #include "Gaffer/Context.h"
 #include "Gaffer/ArrayPlug.h"
 #include "Gaffer/Process.h"
+#include "Gaffer/ScriptNode.h"
 
 #include "GafferDispatch/Dispatcher.h"
 #include "GafferDispatch/TaskNode.h"
@@ -177,6 +178,12 @@ bool TaskNode::TaskPlug::acceptsInput( const Plug *input ) const
 	// where the task plugs were just represented
 	// as standard Plugs, and may have been promoted to
 	// Boxes and Dots in that form.
+	const ScriptNode *script = ancestor<ScriptNode>();
+	if( !script || !script->isExecuting() )
+	{
+		return false;
+	}
+
 	if( input->typeId() == Plug::staticTypeId() )
 	{
 		const Plug *sourcePlug = input->source<Plug>();
@@ -189,7 +196,6 @@ bool TaskNode::TaskPlug::acceptsInput( const Plug *input ) const
 	}
 
 	return false;
-
 }
 
 PlugPtr TaskNode::TaskPlug::createCounterpart( const std::string &name, Direction direction ) const

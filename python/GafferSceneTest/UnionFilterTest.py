@@ -190,9 +190,6 @@ class UnionFilterTest( GafferSceneTest.SceneTestCase ) :
 
 		self.assertFalse( uf["in"][0].acceptsInput( dot2["out"] ) )
 
-		dot2["in"].setInput( None )
-		self.assertTrue( uf["in"][0].acceptsInput( dot2["out"] ) )
-
 	def testReferencePromotedPlug( self ) :
 
 		s = Gaffer.ScriptNode()

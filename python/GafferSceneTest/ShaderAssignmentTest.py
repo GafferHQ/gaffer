@@ -206,18 +206,22 @@ class ShaderAssignmentTest( GafferSceneTest.SceneTestCase ) :
 		s["b"]["in"] = Gaffer.Plug( flags = Gaffer.Plug.Flags.Default | Gaffer.Plug.Flags.Dynamic )
 		s["b"]["out"] = Gaffer.Plug( flags = Gaffer.Plug.Flags.Default | Gaffer.Plug.Flags.Dynamic, direction = Gaffer.Plug.Direction.Out )
 
-		# shader assignments should accept connections speculatively
-		# from unconnected box inputs and outputs.
+		# Shader assignments should accept connections speculatively
+		# from unconnected box inputs and outputs. We use `execute()` for
+		# this because the backwards compatibility is provided only when
+		# a script is loading.
 
-		self.assertTrue( s["b"]["a"]["shader"].acceptsInput( s["b"]["in"] ) )
-		self.assertTrue( s["a"]["shader"].acceptsInput( s["b"]["out"] ) )
+		s.execute( """script["b"]["a"]["shader"].setInput( script["b"]["in"] )""" )
+		s.execute( """script["a"]["shader"].setInput( script["b"]["out"] )""" )
 
 		# but should reject connections to connected box inputs and outputs
 		# if they're unsuitable.
 
+		s["b"]["a"]["shader"].setInput( None )
 		s["b"]["in"].setInput( s["n"]["out"] )
 		self.assertFalse( s["b"]["a"]["shader"].acceptsInput( s["b"]["in"] ) )
 
+		s["a"]["shader"].setInput( None )
 		s["b"]["out"].setInput( s["b"]["n"]["out"] )
 		self.assertFalse( s["a"]["shader"].acceptsInput( s["b"]["out"] ) )
 
@@ -249,10 +253,12 @@ class ShaderAssignmentTest( GafferSceneTest.SceneTestCase ) :
 
 	def testInputAcceptanceFromSwitches( self ) :
 
-		a = GafferScene.ShaderAssignment()
-		s = GafferScene.ShaderSwitch()
+		script = Gaffer.ScriptNode()
+		script["a"] = GafferScene.ShaderAssignment()
+		script["s"] = GafferScene.ShaderSwitch()
 
-		self.assertTrue( a["shader"].acceptsInput( s["out"] ) )
+		script.execute( """script["a"]["shader"].setInput( script["s"]["out"] )""" )
+		self.assertTrue( script["a"]["shader"].getInput().isSame( script["s"]["out"] ) )
 
 	def testAcceptsNoneInputs( self ) :
 
@@ -261,13 +267,18 @@ class ShaderAssignmentTest( GafferSceneTest.SceneTestCase ) :
 
 	def testInputAcceptanceFromDots( self ) :
 
-		a = GafferScene.ShaderAssignment()
+		script = Gaffer.ScriptNode()
 
-		s = GafferSceneTest.TestShader()
-		d = Gaffer.Dot()
-		d.setup( s["out"] )
+		script["a"] = GafferScene.ShaderAssignment()
 
-		self.assertTrue( a["shader"].acceptsInput( d["out"] ) )
+		script["s"] = GafferSceneTest.TestShader()
+		script["d"] = Gaffer.Dot()
+		script["d"].setup( script["s"]["out"] )
+
+		# Input only accepted during execution, for backwards compatibility
+		# when loading old scripts.
+		script.execute( """script["a"]["shader"].setInput( script["d"]["out"] )""" )
+		self.assertTrue( script["a"]["shader"].getInput().isSame( script["d"]["out"] ) )
 
 	def testFilterInputAcceptanceFromReferences( self ) :
 

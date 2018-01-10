@@ -35,9 +35,6 @@
 //
 //////////////////////////////////////////////////////////////////////////
 
-#include "Gaffer/SubGraph.h"
-#include "Gaffer/Dot.h"
-
 #include "Gaffer/Context.h"
 
 #include "GafferScene/FilteredSceneProcessor.h"
