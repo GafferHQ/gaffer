@@ -423,7 +423,7 @@ void Expression::updatePlug( ValuePlug *parentPlug, size_t childIndex, ValuePlug
 	// Finally we can add the plug we need.
 
 	PlugPtr childPlug = plug->createCounterpart( "p0", parentPlug->direction() );
-	childPlug->setFlags( Plug::Dynamic, true );
+	childPlug->setFlags( Plug::Dynamic | Plug::Serialisable, true );
 	parentPlug->addChild( childPlug );
 	if( childPlug->direction() == Plug::In )
 	{
