@@ -281,28 +281,31 @@ bool StandardNodule::dragEnter( GadgetPtr gadget, const DragDropEvent &event )
 	{
 		setHighlighted( true );
 
-		// snap the drag endpoint to our centre, as another little visual indication
-		// that we're well up for being connected.
-		V3f centre = V3f( 0 ) * fullTransform();
-		centre = centre * event.sourceGadget->fullTransform().inverse();
+		if( event.sourceGadget )
+		{
+			// snap the drag endpoint to our centre, as another little visual indication
+			// that we're well up for being connected.
+			V3f centre = V3f( 0 ) * fullTransform();
+			centre = centre * event.sourceGadget->fullTransform().inverse();
 
-		V3f tangent( 0 );
-		if( NodeGadget *nodeGadget = ancestor<NodeGadget>() )
-		{
-			tangent = nodeGadget->noduleTangent( this );
-		}
+			V3f tangent( 0 );
+			if( NodeGadget *nodeGadget = ancestor<NodeGadget>() )
+			{
+				tangent = nodeGadget->noduleTangent( this );
+			}
 
-		if( Nodule *sourceNodule = IECore::runTimeCast<Nodule>( event.sourceGadget.get() ) )
-		{
-			sourceNodule->updateDragEndPoint( centre, tangent );
-		}
-		else if( ConnectionGadget *sourceConnection = IECore::runTimeCast<ConnectionGadget>( event.sourceGadget.get() ) )
-		{
-			sourceConnection->updateDragEndPoint( centre, tangent );
-		}
-		else if( PlugAdder *plugAdder = IECore::runTimeCast<PlugAdder>( event.sourceGadget.get() ) )
-		{
-			plugAdder->updateDragEndPoint( centre, tangent );
+			if( Nodule *sourceNodule = IECore::runTimeCast<Nodule>( event.sourceGadget.get() ) )
+			{
+				sourceNodule->updateDragEndPoint( centre, tangent );
+			}
+			else if( ConnectionGadget *sourceConnection = IECore::runTimeCast<ConnectionGadget>( event.sourceGadget.get() ) )
+			{
+				sourceConnection->updateDragEndPoint( centre, tangent );
+			}
+			else if( PlugAdder *plugAdder = IECore::runTimeCast<PlugAdder>( event.sourceGadget.get() ) )
+			{
+				plugAdder->updateDragEndPoint( centre, tangent );
+			}
 		}
 
 		// show the labels of all compatible nodules on this node, if it doesn't

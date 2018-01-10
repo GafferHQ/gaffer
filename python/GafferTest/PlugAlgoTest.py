@@ -561,5 +561,20 @@ class PlugAlgoTest( GafferTest.TestCase ) :
 
 		self.assertEqual( p.getName(), 'newName' )
 
+	def testPromoteNonSerialisableOutput( self ) :
+
+		s = Gaffer.ScriptNode()
+		s["b"] = Gaffer.Box()
+		s["b"]["a"] = GafferTest.AddNode()
+		s["b"]["a"]["sum"].setFlags( Gaffer.Plug.Flags.Serialisable, False )
+
+		Gaffer.PlugAlgo.promote( s["b"]["a"]["sum"] )
+		self.assertTrue( s["b"]["sum"].getInput().isSame( s["b"]["a"]["sum"] ) )
+
+		s2 = Gaffer.ScriptNode()
+		s2.execute( s.serialise() )
+
+		self.assertTrue( s2["b"]["sum"].getInput().isSame( s2["b"]["a"]["sum"] ) )
+
 if __name__ == "__main__":
 	unittest.main()
