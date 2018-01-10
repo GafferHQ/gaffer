@@ -85,6 +85,7 @@ def gafferRegistryVersion() :
 
 cortexMajorVersion = getOption( "CORTEX_MAJOR_VERSION", os.environ["CORTEX_MAJOR_VERSION"] )
 cortexVersion = getOption( "CORTEX_VERSION", os.environ["CORTEX_VERSION"] )
+cortexMajorVersion = cortexVersion.split( "." )[0]
 cortexReg = IEEnv.registry["libraries"]["cortex"][cortexMajorVersion].get( IEEnv.platform(), IEEnv.registry["libraries"]["cortex"][cortexMajorVersion] )
 compiler = getOption( "COMPILER", None )
 compilerVersion = getOption( "COMPILER_VERSION", None )
@@ -97,7 +98,7 @@ targetAppVersion = None
 
 gafferReg = IEEnv.registry["apps"]["gaffer"][gafferRegistryVersion()][IEEnv.platform()]
 qtVersion = gafferReg["qtVersion"]
-pyqtVersion = gafferReg.get( "pyqtVersion", "4.8.6" )
+pysideVersion = gafferReg.get( "pysideVersion", "2.0.0" )
 oiioVersion = gafferReg["OpenImageIO"]
 ocioVersion = gafferReg["OpenColorIO"]
 oslVersion = gafferReg["OpenShadingLanguage"]
@@ -207,6 +208,7 @@ if targetAppVersion :
 boostVersion = targetAppReg.get( "boostVersion", cortexReg["boostVersion"] )
 tbbVersion = targetAppReg.get( "tbbVersion", cortexReg["tbbVersion"] ) 
 exrVersion = targetAppReg.get( "OpenEXRVersion", cortexReg["OpenEXRVersion"] )
+usdVersion = targetAppReg.get( "usdVersion", cortexReg["usdVersion"] )
 
 LOCATE_DEPENDENCY_SYSTEMPATH = [
 
@@ -257,7 +259,9 @@ LOCATE_DEPENDENCY_LIBPATH = [
 	os.path.join( IEEnv.Environment.rootPath(), "apps", "cortex", cortexVersion, IEEnv.platform(), "base", "arnold", arnoldVersion, "lib", compiler, compilerVersion ),
 	os.path.join( IEEnv.Environment.rootPath(), "apps", "cortex", cortexVersion, IEEnv.platform(), "base", "appleseed", appleseedVersion, "lib", compiler, compilerVersion ),
 	os.path.join( IEEnv.Environment.rootPath(), "apps", "qt", qtVersion, IEEnv.platform(), compiler, compilerVersion, "lib" ),
+	os.path.join( IEEnv.Environment.rootPath(), "apps", "PySide", pysideVersion, "qt" + qtVersion, "python" + pythonVersion, IEEnv.platform(), compiler, compilerVersion, "lib" ),
 	os.path.join( OSLHOME, "lib" ),
+	os.path.join( IEEnv.Environment.rootPath(), "apps", "usd", usdVersion, IEEnv.platform(), "cortex", cortexMajorVersion, "lib" ),
 	os.path.join( IEEnv.Environment.rootPath(), "apps", "OpenVDB", vdbVersion, IEEnv.platform(), compiler, compilerVersion, "lib" ),
 	os.path.join( IEEnv.Environment.rootPath(), "apps", "OpenVDB", vdbVersion, IEEnv.platform(), compiler, compilerVersion, "python", "lib", "python{0}".format( pythonVersion ) ),
 	os.path.join( IEEnv.Environment.rootPath(), "apps", "appleseed", appleseedVersion, IEEnv.platform(), "lib" ),
@@ -272,8 +276,9 @@ LOCATE_DEPENDENCY_PYTHONPATH = [
 	os.path.join( IEEnv.Environment.rootPath(), "apps", "cortex", cortexVersion, IEEnv.platform(), "base", "appleseed", appleseedVersion, "python", pythonVersion, compiler, compilerVersion ),
 	os.path.join( IEEnv.Environment.rootPath(), "apps", "openexr", exrVersion, IEEnv.platform(), compiler, compilerVersion, "python", pythonVersion, "boost", boostVersion, "lib64", "python" + pythonVersion, "site-packages" ),
 	os.path.join( IEEnv.Environment.rootPath(), "apps", "OpenColorIO", ocioVersion, IEEnv.platform(), compiler, compilerVersion, "lib", "python" + pythonVersion, "site-packages" ),
+	os.path.join( IEEnv.Environment.rootPath(), "apps", "usd", usdVersion, IEEnv.platform(), "cortex", cortexMajorVersion, "lib", "python" ),
 	os.path.join( IEEnv.Environment.rootPath(), "apps", "OpenVDB", vdbVersion, IEEnv.platform(), compiler, compilerVersion, "python", "lib", "python" + pythonVersion ),
-	os.path.join( IEEnv.Environment.rootPath(), "apps", "pyqt", pyqtVersion, "qt" + qtVersion, "python" + pythonVersion, IEEnv.platform(), compiler, compilerVersion, "python" ),
+	os.path.join( IEEnv.Environment.rootPath(), "apps", "PySide", pysideVersion, "qt" + qtVersion, "python" + pythonVersion, IEEnv.platform(), compiler, compilerVersion, "python" ),
 	os.path.join( IEEnv.Environment.rootPath(), "tools", "python", pythonVersion, IEEnv.platform(), compiler, compilerVersion, "sip", "4" ),
 	os.path.join( IEEnv.Environment.rootPath(), "tools", "python", pythonVersion, IEEnv.platform(), compiler, compilerVersion, "subprocess32", "3" ),
 	os.path.join( IEEnv.Environment.rootPath(), "tools", "python", pythonVersion, IEEnv.platform(), compiler, compilerVersion, "PyOpenGL", "3" ),
