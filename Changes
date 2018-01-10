@@ -1,3 +1,14 @@
+0.35.1.2
+========
+
+Fixes
+-----
+
+- ClosurePlug : Fix loading of old scripts (#2391)
+- BoxIO : Fix undo/redo of `insert()` method (#2370)
+- PlugAlgo : Fix promotion of non-serialisable output plugs (#2370)
+- StandardNodule : Fix crash when receiving drag from NodeEditor (#2370)
+
 0.35.1.1
 ========
 
