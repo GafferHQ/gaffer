@@ -37,6 +37,8 @@
 import math
 import functools
 
+import imath
+
 import Gaffer
 import GafferUI
 import GafferScene
@@ -104,7 +106,8 @@ def __copyCamera( node, transform ) :
 
 	with Gaffer.UndoScope( node.scriptNode() ) :
 
-		s, h, r, t = transform.extractSHRT()
+		s, h, r, t = imath.V3f(), imath.V3f(), imath.V3f(), imath.V3f()
+		transform.extractSHRT( s, h, r, t )
 		node["transform"]["translate"].setValue( t )
 		node["transform"]["rotate"].setValue( r * 180.0 / math.pi )
 		node["transform"]["scale"].setValue( s )
