@@ -46,7 +46,7 @@ class ScenePathTest( GafferSceneTest.SceneTestCase ) :
 
 	def test( self ) :
 
-		a = GafferScene.AlembicSource()
+		a = GafferScene.SceneReader()
 		a["fileName"].setValue( os.path.dirname( __file__ ) + "/alembicFiles/cube.abc" )
 
 		p = GafferScene.ScenePath( a["out"], Gaffer.Context(), "/" )
@@ -57,7 +57,7 @@ class ScenePathTest( GafferSceneTest.SceneTestCase ) :
 
 	def testRelative( self ) :
 
-		a = GafferScene.AlembicSource()
+		a = GafferScene.SceneReader()
 		a["fileName"].setValue( os.path.dirname( __file__ ) + "/alembicFiles/cube.abc" )
 
 		p = GafferScene.ScenePath( a["out"], Gaffer.Context(), "group1" )
