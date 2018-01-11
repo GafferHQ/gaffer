@@ -41,7 +41,6 @@ import unittest
 import imath
 
 import IECore
-import IECoreScene
 
 import Gaffer
 import GafferTest
@@ -56,7 +55,7 @@ class ExecuteApplicationTest( GafferTest.TestCase ) :
 		self.__scriptFileName = self.temporaryDirectory() + "/executeScript.gfr"
 		self.__scriptFileNameWithSpecialCharacters = self.temporaryDirectory() + "/executeScript-10.tmp.gfr"
 		self.__outputTextFile = self.temporaryDirectory() + "/executeOutput.txt"
-		self.__outputFileSeq = IECore.FileSequence( self.temporaryDirectory() + "/sphere.####.cob" )
+		self.__outputFileSeq = IECore.FileSequence( self.temporaryDirectory() + "/output.####.cob" )
 
 	def testErrorReturnStatusForMissingScript( self ) :
 
@@ -74,9 +73,9 @@ class ExecuteApplicationTest( GafferTest.TestCase ) :
 
 		s = Gaffer.ScriptNode()
 
-		s["sphere"] = GafferTest.SphereNode()
+		s["object"] = GafferTest.CachingTestNode()
 		s["write"] = Gaffer.ObjectWriter()
-		s["write"]["in"].setInput( s["sphere"]["out"] )
+		s["write"]["in"].setInput( s["object"]["out"] )
 		s["write"]["fileName"].setValue( self.__outputFileSeq.fileName )
 
 		s["fileName"].setValue( self.__scriptFileName )
@@ -98,9 +97,9 @@ class ExecuteApplicationTest( GafferTest.TestCase ) :
 	def testFramesParameter( self ) :
 
 		s = Gaffer.ScriptNode()
-		s["sphere"] = GafferTest.SphereNode()
+		s["object"] = GafferTest.CachingTestNode()
 		s["write"] = Gaffer.ObjectWriter()
-		s["write"]["in"].setInput( s["sphere"]["out"] )
+		s["write"]["in"].setInput( s["object"]["out"] )
 		s["write"]["fileName"].setValue( self.__outputFileSeq.fileName )
 
 		s["fileName"].setValue( self.__scriptFileName )
@@ -126,13 +125,11 @@ class ExecuteApplicationTest( GafferTest.TestCase ) :
 	def testContextParameter( self ) :
 
 		s = Gaffer.ScriptNode()
-		s["sphere"] = GafferTest.SphereNode()
+		s["string"] = GafferTest.CachingTestNode()
 		s["e"] = Gaffer.Expression()
-		s["e"].setExpression( "parent['sphere']['radius'] = context.get( 'sphere:radius', 1 )" )
-		s["e2"] = Gaffer.Expression()
-		s["e2"].setExpression( "parent['sphere']['theta'] = context.get( 'sphere:theta', 360 )" )
+		s["e"].setExpression( "parent['string']['in'] = '{} {}'.format( context.get( 'valueOne', 0 ), context.get( 'valueTwo', 0 ) )" )
 		s["write"] = Gaffer.ObjectWriter()
-		s["write"]["in"].setInput( s["sphere"]["out"] )
+		s["write"]["in"].setInput( s["string"]["out"] )
 		s["write"]["fileName"].setValue( self.__outputFileSeq.fileName )
 
 		s["fileName"].setValue( self.__scriptFileName )
@@ -140,7 +137,7 @@ class ExecuteApplicationTest( GafferTest.TestCase ) :
 
 		self.failIf( os.path.exists( self.__outputFileSeq.fileNameForFrame( 1 ) ) )
 		p = subprocess.Popen(
-			"gaffer execute " + self.__scriptFileName + " -context -sphere:radius 5 -sphere:theta 180",
+			"gaffer execute " + self.__scriptFileName + " -context -valueOne 1 -valueTwo 2",
 			shell=True,
 			stderr = subprocess.PIPE,
 		)
@@ -151,10 +148,9 @@ class ExecuteApplicationTest( GafferTest.TestCase ) :
 		self.failIf( p.returncode )
 		self.failUnless( os.path.exists( self.__outputFileSeq.fileNameForFrame( 1 ) ) )
 
-		prim = IECore.ObjectReader( self.__outputFileSeq.fileNameForFrame( 1 ) ).read()
-		self.failUnless( prim.isInstanceOf( IECoreScene.SpherePrimitive.staticTypeId() ) )
-		self.assertEqual( prim.bound(), imath.Box3f( imath.V3f( -5 ), imath.V3f( 5 ) ) )
-		self.assertEqual( prim.thetaMax(), 180 )
+		string = IECore.ObjectReader( self.__outputFileSeq.fileNameForFrame( 1 ) ).read()
+		self.failUnless( string.isInstanceOf( IECore.StringData ) )
+		self.assertEqual( string.value, "1 2" )
 
 	def testErrorReturnStatusForBadContext( self ) :
 

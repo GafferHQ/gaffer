@@ -54,7 +54,6 @@ except AttributeError :
 
 from TestCase import TestCase
 from AddNode import AddNode
-from SphereNode import SphereNode
 from SignalsTest import SignalsTest
 from GraphComponentTest import GraphComponentTest
 from FrameNode import FrameNode

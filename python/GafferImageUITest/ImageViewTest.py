@@ -64,24 +64,24 @@ class ImageViewTest( GafferUITest.TestCase ) :
 				GafferImageUI.ImageView.__init__( self, "MyView" )
 
 				converter = Gaffer.Node()
-				converter["in"] = Gaffer.ObjectPlug( defaultValue = IECore.NullObject.defaultNullObject() )
+				converter["in"] = Gaffer.StringPlug()
 				converter["out"] = GafferImage.ImagePlug( direction = Gaffer.Plug.Direction.Out )
-				converter["constant"] = GafferImage.Constant()
-				converter["constant"]["format"].setValue( GafferImage.Format( 20, 20, 1 ) )
-				converter["out"].setInput( converter["constant"]["out"] )
+				converter["text"] = GafferImage.Text()
+				converter["text"]["text"].setInput( converter["in"] )
+				converter["out"].setInput( converter["text"]["out"] )
 
 				self._insertConverter( converter )
 
 				self["in"].setInput( viewedPlug )
 
-		GafferUI.View.registerView( GafferTest.SphereNode.staticTypeId(), "out", MyView )
+		GafferUI.View.registerView( GafferTest.StringInOutNode, "out", MyView )
 
-		sphere = GafferTest.SphereNode()
+		string = GafferTest.StringInOutNode()
 
-		view = GafferUI.View.create( sphere["out"] )
+		view = GafferUI.View.create( string["out"] )
 		self.assertTrue( isinstance( view, MyView ) )
-		self.assertTrue( view["in"].getInput().isSame( sphere["out"] ) )
-		self.assertTrue( isinstance( view["in"], Gaffer.ObjectPlug ) )
+		self.assertTrue( view["in"].getInput().isSame( string["out"] ) )
+		self.assertTrue( isinstance( view["in"], Gaffer.StringPlug ) )
 		view["exposure"].setValue( 1 )
 		view["gamma"].setValue( 0.5 )
 

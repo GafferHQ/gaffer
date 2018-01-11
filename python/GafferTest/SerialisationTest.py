@@ -134,16 +134,16 @@ class SerialisationTest( GafferTest.TestCase ) :
 		self.assertEqual( Gaffer.Serialisation.classPath( Gaffer.Node() ), "Gaffer.Node" )
 		self.assertEqual( Gaffer.Serialisation.classPath( Gaffer.Node ), "Gaffer.Node" )
 
-		self.assertEqual( Gaffer.Serialisation.classPath( GafferTest.SphereNode() ), "GafferTest.SphereNode" )
-		self.assertEqual( Gaffer.Serialisation.classPath( GafferTest.SphereNode ), "GafferTest.SphereNode" )
+		self.assertEqual( Gaffer.Serialisation.classPath( GafferTest.AddNode() ), "GafferTest.AddNode" )
+		self.assertEqual( Gaffer.Serialisation.classPath( GafferTest.AddNode ), "GafferTest.AddNode" )
 
 	def testModulePath( self ) :
 
 		self.assertEqual( Gaffer.Serialisation.modulePath( Gaffer.Node() ), "Gaffer" )
 		self.assertEqual( Gaffer.Serialisation.modulePath( Gaffer.Node ), "Gaffer" )
 
-		self.assertEqual( Gaffer.Serialisation.modulePath( GafferTest.SphereNode() ), "GafferTest" )
-		self.assertEqual( Gaffer.Serialisation.modulePath( GafferTest.SphereNode ), "GafferTest" )
+		self.assertEqual( Gaffer.Serialisation.modulePath( GafferTest.AddNode() ), "GafferTest" )
+		self.assertEqual( Gaffer.Serialisation.modulePath( GafferTest.AddNode ), "GafferTest" )
 
 	def testIncludeParentMetadataWhenExcludingChildren( self ) :
 
