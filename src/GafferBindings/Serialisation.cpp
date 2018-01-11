@@ -187,14 +187,32 @@ std::string Serialisation::classPath( boost::python::object &object )
 		result += ".";
 	}
 
+	boost::python::object cls;
 	if( PyType_Check( object.ptr() ) )
 	{
-		result += extract<std::string>( object.attr( "__name__" ) );
+		cls = object;
 	}
 	else
 	{
-		result += extract<std::string>( object.attr( "__class__" ).attr( "__name__" ) );
+		cls = object.attr( "__class__" );
 	}
+
+	if( PyObject_HasAttrString( cls.ptr(), "__qualname__" ) )
+	{
+		// In Python 3, __qualname__ will give us a qualified name
+		// for a nested class, which is exactly what we want.
+		// See https://www.python.org/dev/peps/pep-3155.
+		//
+		// In the meantime we still support __qualname__ in Python
+		// 2, so that nested classes can provide it manually where
+		// necessary.
+		result += extract<std::string>( cls.attr( "__qualname__" ) );
+	}
+	else
+	{
+		result += extract<std::string>( cls.attr( "__name__" ) );
+	}
+
 	return result;
 }
 
