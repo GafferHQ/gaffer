@@ -170,7 +170,7 @@ def __connectionContextMenu( nodeGraph, destinationPlug, menuDefinition ) :
 		"/Insert Dot",
 		{
 			"command" : functools.partial( __insertDot, destinationPlug = destinationPlug ),
-			"active" : not destinationPlug.getFlags( Gaffer.Plug.Flags.ReadOnly ) and not Gaffer.MetadataAlgo.readOnly( destinationPlug ),
+			"active" : not Gaffer.MetadataAlgo.readOnly( destinationPlug ),
 		}
 	)
 

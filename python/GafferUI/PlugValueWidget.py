@@ -332,7 +332,7 @@ class PlugValueWidget( GafferUI.Widget ) :
 		if len( menuDefinition.items() ) :
 			menuDefinition.append( "/LockDivider", { "divider" : True } )
 
-		readOnly = Gaffer.MetadataAlgo.getReadOnly( self.getPlug() ) or self.getPlug().getFlags( Gaffer.Plug.Flags.ReadOnly )
+		readOnly = Gaffer.MetadataAlgo.getReadOnly( self.getPlug() )
 		menuDefinition.append(
 			"/Unlock" if readOnly else "/Lock",
 			{
@@ -618,16 +618,7 @@ class PlugValueWidget( GafferUI.Widget ) :
 
 	def __applyReadOnly( self, readOnly ) :
 
-		def clearFlags( plug ) :
-			plug.setFlags( Gaffer.Plug.Flags.ReadOnly, False )
-			for child in plug.children() :
-				clearFlags( child )
-
 		with Gaffer.UndoScope( self.getPlug().ancestor( Gaffer.ScriptNode.staticTypeId() ) ) :
-			# We used to use a plug flag, but we use metadata now
-			# instead. Clear the old flags so that metadata is in
-			# control.
-			clearFlags( self.getPlug() )
 			Gaffer.MetadataAlgo.setReadOnly( self.getPlug(), readOnly )
 
 	# drag and drop stuff
