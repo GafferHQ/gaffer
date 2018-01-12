@@ -41,7 +41,6 @@
 #include "Gaffer/ComputeNode.h"
 
 #include "GafferScene/ScenePlug.h"
-#include "GafferScene/PathMatcherData.h"
 
 namespace GafferScene
 {
@@ -117,7 +116,7 @@ class SceneNode : public Gaffer::ComputeNode
 		/// in the result of computeSetNames(), and the corresponding hashSet() method also needs to take this into
 		/// account. The rationale for this is that it frees other nodes from checking that a set exists before accessing
 		/// it, and that makes computation quicker, as we don't need to access setNamesPlug() at all in many common cases.
-		virtual GafferScene::ConstPathMatcherDataPtr computeSet( const IECore::InternedString &setName, const Gaffer::Context *context, const ScenePlug *parent ) const;
+		virtual IECore::ConstPathMatcherDataPtr computeSet( const IECore::InternedString &setName, const Gaffer::Context *context, const ScenePlug *parent ) const;
 
 		/// Convenience function to compute the correct bounding box for a path from the bounding box and transforms of its
 		/// children. Using this from computeBound() should be a last resort, as it implies peeking inside children to determine

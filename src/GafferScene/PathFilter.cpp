@@ -40,7 +40,6 @@
 #include "Gaffer/Context.h"
 
 #include "GafferScene/ScenePlug.h"
-#include "GafferScene/PathMatcherData.h"
 #include "GafferScene/PathFilter.h"
 
 using namespace GafferScene;
@@ -76,12 +75,12 @@ const Gaffer::StringVectorDataPlug *PathFilter::pathsPlug() const
 	return getChild<Gaffer::StringVectorDataPlug>( g_firstPlugIndex );
 }
 
-PathMatcherDataPlug *PathFilter::pathMatcherPlug()
+Gaffer::PathMatcherDataPlug *PathFilter::pathMatcherPlug()
 {
 	return getChild<PathMatcherDataPlug>( g_firstPlugIndex + 1 );
 }
 
-const PathMatcherDataPlug *PathFilter::pathMatcherPlug() const
+const Gaffer::PathMatcherDataPlug *PathFilter::pathMatcherPlug() const
 {
 	return getChild<PathMatcherDataPlug>( g_firstPlugIndex + 1 );
 }

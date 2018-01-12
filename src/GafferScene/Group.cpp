@@ -49,7 +49,6 @@
 #include "Gaffer/TransformPlug.h"
 
 #include "GafferScene/Group.h"
-#include "GafferScene/PathMatcherData.h"
 
 using namespace std;
 using namespace Imath;
@@ -423,7 +422,7 @@ void Group::hashSet( const IECore::InternedString &setName, const Gaffer::Contex
 	namePlug()->hash( h );
 }
 
-GafferScene::ConstPathMatcherDataPtr Group::computeSet( const IECore::InternedString &setName, const Gaffer::Context *context, const ScenePlug *parent ) const
+IECore::ConstPathMatcherDataPtr Group::computeSet( const IECore::InternedString &setName, const Gaffer::Context *context, const ScenePlug *parent ) const
 {
 	InternedString groupName;
 	ConstCompoundObjectPtr mapping;

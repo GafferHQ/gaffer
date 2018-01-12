@@ -57,7 +57,6 @@
 #include "Gaffer/Metadata.h"
 
 #include "GafferScene/RendererAlgo.h"
-#include "GafferScene/PathMatcherData.h"
 #include "GafferScene/SceneAlgo.h"
 #include "GafferScene/SceneProcessor.h"
 #include "GafferScene/Private/IECoreScenePreview/Renderer.h"

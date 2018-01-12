@@ -51,6 +51,7 @@
 
 #include "IECore/MessageHandler.h"
 
+using namespace IECore;
 using namespace Gaffer;
 using namespace GafferScene;
 

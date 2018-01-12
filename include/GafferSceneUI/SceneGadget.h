@@ -44,7 +44,6 @@
 #include "GafferUI/Gadget.h"
 
 #include "GafferScene/ScenePlug.h"
-#include "GafferScene/PathMatcherData.h"
 
 #include "GafferSceneUI/TypeIds.h"
 
@@ -78,8 +77,8 @@ class SceneGadget : public GafferUI::Gadget
 		/// Limits the expanded parts of the scene to those in the specified paths.
 		/// Without this, the whole scene is shown. A copy is not taken, but the
 		/// SceneGadget will not modify the expanded paths.
-		void setExpandedPaths( GafferScene::ConstPathMatcherDataPtr expandedPaths );
-		const GafferScene::PathMatcherData *getExpandedPaths() const;
+		void setExpandedPaths( IECore::ConstPathMatcherDataPtr expandedPaths );
+		const IECore::PathMatcherData *getExpandedPaths() const;
 
 		void setMinimumExpansionDepth( size_t depth );
 		size_t getMinimumExpansionDepth() const;
@@ -98,14 +97,14 @@ class SceneGadget : public GafferUI::Gadget
 		size_t objectsAt(
 			const Imath::V3f &corner0InGadgetSpace,
 			const Imath::V3f &corner1InGadgetSpace,
-			GafferScene::PathMatcher &paths
+			IECore::PathMatcher &paths
 		) const;
 
 		/// Returns the selection.
-		const GafferScene::PathMatcherData *getSelection() const;
+		const IECore::PathMatcherData *getSelection() const;
 		/// Sets the selection. A copy is not taken, but the selection
 		/// is const and will not be modified by the SceneGadget.
-		void setSelection( GafferScene::ConstPathMatcherDataPtr selection );
+		void setSelection( IECore::ConstPathMatcherDataPtr selection );
 		/// Returns the bounding box of all the selected objects.
 		Imath::Box3f selectionBound() const;
 
@@ -129,7 +128,7 @@ class SceneGadget : public GafferUI::Gadget
 		GafferScene::ConstScenePlugPtr m_scene;
 		Gaffer::ContextPtr m_context;
 		mutable unsigned m_dirtyFlags;
-		GafferScene::ConstPathMatcherDataPtr m_expandedPaths;
+		IECore::ConstPathMatcherDataPtr m_expandedPaths;
 		size_t m_minimumExpansionDepth;
 
 		class SceneGraph;
@@ -138,7 +137,7 @@ class SceneGadget : public GafferUI::Gadget
 		IECoreGL::StatePtr m_baseState;
 		std::unique_ptr<SceneGraph> m_sceneGraph;
 
-		GafferScene::ConstPathMatcherDataPtr m_selection;
+		IECore::ConstPathMatcherDataPtr m_selection;
 
 };
 

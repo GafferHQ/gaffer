@@ -38,9 +38,9 @@
 #define GAFFERSCENE_FILTERRESULTS_H
 
 #include "Gaffer/ComputeNode.h"
+#include "Gaffer/TypedObjectPlug.h"
 
 #include "GafferScene/TypeIds.h"
-#include "GafferScene/PathMatcherDataPlug.h"
 
 namespace GafferScene
 {
@@ -64,8 +64,8 @@ class FilterResults : public Gaffer::ComputeNode
 		FilterPlug *filterPlug();
 		const FilterPlug *filterPlug() const;
 
-		PathMatcherDataPlug *outPlug();
-		const PathMatcherDataPlug *outPlug() const;
+		Gaffer::PathMatcherDataPlug *outPlug();
+		const Gaffer::PathMatcherDataPlug *outPlug() const;
 
 		void affects( const Gaffer::Plug *input, AffectedPlugsContainer &outputs ) const override;
 

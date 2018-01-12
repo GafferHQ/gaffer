@@ -44,7 +44,6 @@
 #include "Gaffer/Context.h"
 
 #include "GafferScene/TypeIds.h"
-#include "GafferScene/PathMatcherDataPlug.h"
 
 namespace GafferScene
 {
@@ -105,8 +104,8 @@ class ScenePlug : public Gaffer::ValuePlug
 		/// Used to represent an individual set. This is sensitive
 		/// to the scene:setName context variable which specifies
 		/// which set to compute.
-		PathMatcherDataPlug *setPlug();
-		const PathMatcherDataPlug *setPlug() const;
+		Gaffer::PathMatcherDataPlug *setPlug();
+		const Gaffer::PathMatcherDataPlug *setPlug() const;
 		//@}
 
 		/// @name Context management
@@ -191,7 +190,7 @@ class ScenePlug : public Gaffer::ValuePlug
 		/// uses GlobalScope to remove unnecessary context variables which
 		/// could otherwise lead to poor cache performance.
 		IECore::ConstInternedStringVectorDataPtr setNames() const;
-		ConstPathMatcherDataPtr set( const IECore::InternedString &setName ) const;
+		IECore::ConstPathMatcherDataPtr set( const IECore::InternedString &setName ) const;
 
 		IECore::MurmurHash boundHash( const ScenePath &scenePath ) const;
 		IECore::MurmurHash transformHash( const ScenePath &scenePath ) const;

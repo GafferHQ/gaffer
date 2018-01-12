@@ -302,11 +302,11 @@ void ObjectSource::hashSet( const IECore::InternedString &setName, const Gaffer:
 	}
 }
 
-GafferScene::ConstPathMatcherDataPtr ObjectSource::computeSet( const IECore::InternedString &setName, const Gaffer::Context *context, const ScenePlug *parent ) const
+IECore::ConstPathMatcherDataPtr ObjectSource::computeSet( const IECore::InternedString &setName, const Gaffer::Context *context, const ScenePlug *parent ) const
 {
 	if( setNameValid( setName ) )
 	{
-		PathMatcherDataPtr result = new PathMatcherData;
+		IECore::PathMatcherDataPtr result = new IECore::PathMatcherData;
 		result->writable().addPath( namePlug()->getValue() );
 		return result;
 	}

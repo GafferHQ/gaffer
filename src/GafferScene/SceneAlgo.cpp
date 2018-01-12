@@ -52,7 +52,6 @@
 #include "GafferScene/SceneAlgo.h"
 #include "GafferScene/Filter.h"
 #include "GafferScene/ScenePlug.h"
-#include "GafferScene/PathMatcher.h"
 
 using namespace std;
 using namespace Imath;
@@ -107,7 +106,7 @@ namespace
 
 struct ThreadablePathAccumulator
 {
-	ThreadablePathAccumulator( GafferScene::PathMatcher &result): m_result( result ){}
+	ThreadablePathAccumulator( PathMatcher &result): m_result( result ){}
 
 	bool operator()( const GafferScene::ScenePlug *scene, const GafferScene::ScenePlug::ScenePath &path )
 	{
@@ -117,7 +116,7 @@ struct ThreadablePathAccumulator
 	}
 
 	tbb::spin_mutex m_mutex;
-	GafferScene::PathMatcher &m_result;
+	PathMatcher &m_result;
 
 };
 
@@ -202,7 +201,7 @@ namespace
 struct Sets
 {
 
-	Sets( const ScenePlug *scene, const Context *context, const std::vector<InternedString> &names, std::vector<GafferScene::ConstPathMatcherDataPtr> &sets )
+	Sets( const ScenePlug *scene, const Context *context, const std::vector<InternedString> &names, std::vector<IECore::ConstPathMatcherDataPtr> &sets )
 		:	m_scene( scene ), m_context( context ), m_names( names ), m_sets( sets )
 	{
 	}
@@ -221,7 +220,7 @@ struct Sets
 		const ScenePlug *m_scene;
 		const Context *m_context;
 		const std::vector<InternedString> &m_names;
-		std::vector<GafferScene::ConstPathMatcherDataPtr> &m_sets;
+		std::vector<IECore::ConstPathMatcherDataPtr> &m_sets;
 
 } ;
 
@@ -235,7 +234,7 @@ IECore::ConstCompoundDataPtr GafferScene::SceneAlgo::sets( const ScenePlug *scen
 
 IECore::ConstCompoundDataPtr GafferScene::SceneAlgo::sets( const ScenePlug *scene, const std::vector<IECore::InternedString> &setNames )
 {
-	std::vector<GafferScene::ConstPathMatcherDataPtr> setsVector;
+	std::vector<IECore::ConstPathMatcherDataPtr> setsVector;
 	setsVector.resize( setNames.size(), nullptr );
 
 	Sets setsCompute( scene, Context::current(), setNames, setsVector );
@@ -246,7 +245,7 @@ IECore::ConstCompoundDataPtr GafferScene::SceneAlgo::sets( const ScenePlug *scen
 	{
 		// The const_pointer_cast is ok because we're just using it to put the set into
 		// a container that will be const on return - we never modify the set itself.
-		result->writable()[setNames[i]] = boost::const_pointer_cast<GafferScene::PathMatcherData>( setsVector[i] );
+		result->writable()[setNames[i]] = boost::const_pointer_cast<PathMatcherData>( setsVector[i] );
 	}
 	return result;
 }

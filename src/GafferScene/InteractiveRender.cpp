@@ -50,7 +50,6 @@
 
 #include "GafferScene/InteractiveRender.h"
 #include "GafferScene/SceneAlgo.h"
-#include "GafferScene/PathMatcherData.h"
 #include "GafferScene/SceneNode.h"
 #include "GafferScene/SceneProcessor.h"
 

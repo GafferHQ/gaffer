@@ -193,7 +193,7 @@ bool SelectionTool::buttonPress( const GafferUI::ButtonEvent &event )
 	ScenePlug::ScenePath objectUnderMouse;
 	sg->objectAt( event.line, objectUnderMouse );
 
-	PathMatcher &selection = const_cast<GafferScene::PathMatcherData *>( sg->getSelection() )->writable();
+	PathMatcher &selection = const_cast<PathMatcherData *>( sg->getSelection() )->writable();
 
 	const bool shiftHeld = event.modifiers && ButtonEvent::Shift;
 	bool selectionChanged = false;
@@ -289,7 +289,7 @@ bool SelectionTool::dragEnd( const GafferUI::DragDropEvent &event )
 	dragOverlay()->setVisible( false );
 
 	SceneGadget *sg = sceneGadget();
-	PathMatcher &selection = const_cast<GafferScene::PathMatcherData *>( sg->getSelection() )->writable();
+	PathMatcher &selection = const_cast<PathMatcherData *>( sg->getSelection() )->writable();
 
 	if( sg->objectsAt( dragOverlay()->getStartPosition(), dragOverlay()->getEndPosition(), selection ) )
 	{

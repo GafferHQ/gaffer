@@ -40,7 +40,9 @@
 #include "OpenEXR/ImathVec.h"
 
 #include "Gaffer/NumericPlug.h"
+
 #include "GafferScene/ScenePlug.h"
+#include "GafferScene/Filter.h"
 
 namespace IECore
 {
@@ -60,9 +62,6 @@ IE_CORE_FORWARDDECLARE( Camera )
 namespace GafferScene
 {
 
-class Filter;
-class PathMatcher;
-
 namespace SceneAlgo
 {
 
@@ -77,12 +76,12 @@ bool exists( const ScenePlug *scene, const ScenePlug::ScenePath &path );
 bool visible( const ScenePlug *scene, const ScenePlug::ScenePath &path );
 
 /// Finds all the paths in the scene that are matched by the filter, and adds them into the PathMatcher.
-void matchingPaths( const Filter *filter, const ScenePlug *scene, PathMatcher &paths );
+void matchingPaths( const Filter *filter, const ScenePlug *scene, IECore::PathMatcher &paths );
 /// As above, but specifying the filter as a plug - typically Filter::outPlug() or
 /// FilteredSceneProcessor::filterPlug() would be passed.
-void matchingPaths( const Gaffer::IntPlug *filterPlug, const ScenePlug *scene, PathMatcher &paths );
+void matchingPaths( const Gaffer::IntPlug *filterPlug, const ScenePlug *scene, IECore::PathMatcher &paths );
 /// As above, but specifying the filter as a PathMatcher.
-void matchingPaths( const PathMatcher &filter, const ScenePlug *scene, PathMatcher &paths );
+void matchingPaths( const IECore::PathMatcher &filter, const ScenePlug *scene, IECore::PathMatcher &paths );
 
 /// Invokes the ThreadableFunctor at every location in the scene,
 /// visiting parent locations before their children, but
@@ -129,7 +128,7 @@ template <class ThreadableFunctor>
 void filteredParallelTraverse( const ScenePlug *scene, const Gaffer::IntPlug *filterPlug, ThreadableFunctor &f );
 /// As above, but using a PathMatcher as a filter.
 template <class ThreadableFunctor>
-void filteredParallelTraverse( const ScenePlug *scene, const PathMatcher &filter, ThreadableFunctor &f );
+void filteredParallelTraverse( const ScenePlug *scene, const IECore::PathMatcher &filter, ThreadableFunctor &f );
 
 /// Returns just the global attributes from the globals (everything prefixed with "attribute:").
 IECore::ConstCompoundObjectPtr globalAttributes( const IECore::CompoundObject *globals );

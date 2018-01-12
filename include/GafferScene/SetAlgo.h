@@ -39,8 +39,8 @@
 
 #include "IECore/MurmurHash.h"
 
-#include "GafferScene/PathMatcher.h"
 #include "Gaffer/Plug.h"
+
 #include "GafferScene/ScenePlug.h"
 
 namespace GafferScene
@@ -49,7 +49,7 @@ namespace GafferScene
 namespace SetAlgo
 {
 
-PathMatcher evaluateSetExpression( const std::string &setExpression, const ScenePlug* scene );
+IECore::PathMatcher evaluateSetExpression( const std::string &setExpression, const ScenePlug* scene );
 
 IECore::MurmurHash setExpressionHash( const std::string &setExpression, const ScenePlug* scene );
 void setExpressionHash( const std::string &setExpression, const ScenePlug* scene, IECore::MurmurHash &h );

@@ -196,7 +196,7 @@ template<class ThreadableFunctor>
 struct PathMatcherFunctor
 {
 
-	PathMatcherFunctor( ThreadableFunctor &f, const PathMatcher &filter )
+	PathMatcherFunctor( ThreadableFunctor &f, const IECore::PathMatcher &filter )
 		: m_f( f ), m_filter( filter )
 	{
 	}
@@ -218,7 +218,7 @@ struct PathMatcherFunctor
 	private :
 
 		ThreadableFunctor &m_f;
-		const PathMatcher &m_filter;
+		const IECore::PathMatcher &m_filter;
 
 };
 
@@ -263,7 +263,7 @@ void filteredParallelTraverse( const GafferScene::ScenePlug *scene, const Gaffer
 }
 
 template <class ThreadableFunctor>
-void filteredParallelTraverse( const ScenePlug *scene, const PathMatcher &filter, ThreadableFunctor &f )
+void filteredParallelTraverse( const ScenePlug *scene, const IECore::PathMatcher &filter, ThreadableFunctor &f )
 {
 	Detail::PathMatcherFunctor<ThreadableFunctor> ff( f, filter );
 	parallelTraverse( scene, ff );

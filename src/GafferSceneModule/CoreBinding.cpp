@@ -47,6 +47,7 @@
 #include "CoreBinding.h"
 
 using namespace boost::python;
+using namespace IECore;
 using namespace Gaffer;
 using namespace GafferBindings;
 using namespace GafferScene;

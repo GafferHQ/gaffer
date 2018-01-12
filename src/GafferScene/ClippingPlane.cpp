@@ -39,7 +39,6 @@
 #include "Gaffer/StringPlug.h"
 
 #include "GafferScene/ClippingPlane.h"
-#include "GafferScene/PathMatcherData.h"
 
 using namespace Gaffer;
 using namespace GafferScene;

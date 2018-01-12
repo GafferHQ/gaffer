@@ -40,7 +40,6 @@
 #include "Gaffer/StringPlug.h"
 
 #include "GafferScene/Isolate.h"
-#include "GafferScene/PathMatcherData.h"
 
 using namespace std;
 using namespace IECore;
@@ -97,7 +96,7 @@ struct Isolate::SetsToKeep
 
 	private :
 
-		GafferScene::ConstPathMatcherDataPtr m_setOwners[2];
+		IECore::ConstPathMatcherDataPtr m_setOwners[2];
 		const PathMatcher *m_sets[2];
 
 };
@@ -373,7 +372,7 @@ void Isolate::hashSet( const IECore::InternedString &setName, const Gaffer::Cont
 	filterPlug()->hash( h );
 }
 
-GafferScene::ConstPathMatcherDataPtr Isolate::computeSet( const IECore::InternedString &setName, const Gaffer::Context *context, const ScenePlug *parent ) const
+IECore::ConstPathMatcherDataPtr Isolate::computeSet( const IECore::InternedString &setName, const Gaffer::Context *context, const ScenePlug *parent ) const
 {
 	ConstPathMatcherDataPtr inputSetData = inPlug()->setPlug()->getValue();
 	if(

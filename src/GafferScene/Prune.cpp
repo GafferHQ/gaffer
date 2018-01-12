@@ -37,7 +37,6 @@
 #include "Gaffer/Context.h"
 
 #include "GafferScene/Prune.h"
-#include "GafferScene/PathMatcherData.h"
 
 using namespace std;
 using namespace IECore;
@@ -251,7 +250,7 @@ void Prune::hashSet( const IECore::InternedString &setName, const Gaffer::Contex
 	filterPlug()->hash( h );
 }
 
-GafferScene::ConstPathMatcherDataPtr Prune::computeSet( const IECore::InternedString &setName, const Gaffer::Context *context, const ScenePlug *parent ) const
+IECore::ConstPathMatcherDataPtr Prune::computeSet( const IECore::InternedString &setName, const Gaffer::Context *context, const ScenePlug *parent ) const
 {
 	ConstPathMatcherDataPtr inputSetData = inPlug()->setPlug()->getValue();
 	const PathMatcher &inputSet = inputSetData->readable();

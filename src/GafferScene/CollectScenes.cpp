@@ -422,7 +422,7 @@ void CollectScenes::hashSet( const IECore::InternedString &setName, const Gaffer
 	}
 }
 
-GafferScene::ConstPathMatcherDataPtr CollectScenes::computeSet( const IECore::InternedString &setName, const Gaffer::Context *context, const ScenePlug *parent ) const
+IECore::ConstPathMatcherDataPtr CollectScenes::computeSet( const IECore::InternedString &setName, const Gaffer::Context *context, const ScenePlug *parent ) const
 {
 	PathMatcherDataPtr setData = new PathMatcherData;
 	PathMatcher &set = setData->writable();

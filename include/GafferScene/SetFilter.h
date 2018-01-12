@@ -40,8 +40,6 @@
 #include "Gaffer/TypedObjectPlug.h"
 
 #include "GafferScene/Filter.h"
-#include "GafferScene/PathMatcher.h"
-#include "GafferScene/PathMatcherDataPlug.h"
 
 namespace Gaffer
 {
@@ -81,8 +79,8 @@ class SetFilter : public Filter
 
 	private :
 
-		GafferScene::PathMatcherDataPlug *expressionResultPlug();
-		const GafferScene::PathMatcherDataPlug *expressionResultPlug() const;
+		Gaffer::PathMatcherDataPlug *expressionResultPlug();
+		const Gaffer::PathMatcherDataPlug *expressionResultPlug() const;
 
 		static size_t g_firstPlugIndex;
 

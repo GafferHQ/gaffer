@@ -38,7 +38,6 @@
 
 #include "Gaffer/Context.h"
 
-#include "GafferScene/PathMatcherData.h"
 #include "GafferScene/ScenePlug.h"
 
 using namespace IECore;
@@ -96,43 +95,43 @@ namespace GafferSceneUI
 namespace ContextAlgo
 {
 
-void setExpandedPaths( Context *context, const GafferScene::PathMatcher &paths )
+void setExpandedPaths( Context *context, const IECore::PathMatcher &paths )
 {
-	context->set( g_expandedPathsName, new GafferScene::PathMatcherData( paths ) );
+	context->set( g_expandedPathsName, new IECore::PathMatcherData( paths ) );
 }
 
-GafferScene::PathMatcher getExpandedPaths( const Gaffer::Context *context )
+IECore::PathMatcher getExpandedPaths( const Gaffer::Context *context )
 {
-	if( const GafferScene::PathMatcherData *expandedPaths = context->get<GafferScene::PathMatcherData>( g_expandedPathsName, nullptr ) )
+	if( const IECore::PathMatcherData *expandedPaths = context->get<IECore::PathMatcherData>( g_expandedPathsName, nullptr ) )
 	{
 		return expandedPaths->readable();
 	}
 
-	return GafferScene::PathMatcher();
+	return IECore::PathMatcher();
 }
 
 void expand( Context *context, const PathMatcher &paths, bool expandAncestors )
 {
-	GafferScene::PathMatcherData *expandedPaths = const_cast<GafferScene::PathMatcherData *>( context->get<GafferScene::PathMatcherData>( g_expandedPathsName, nullptr ) );
+	IECore::PathMatcherData *expandedPaths = const_cast<IECore::PathMatcherData *>( context->get<IECore::PathMatcherData>( g_expandedPathsName, nullptr ) );
 	if( !expandedPaths )
 	{
-		expandedPaths = new GafferScene::PathMatcherData();
+		expandedPaths = new IECore::PathMatcherData();
 		context->set( g_expandedPathsName, expandedPaths );
 	}
 
-	GafferScene::PathMatcher &expanded = expandedPaths->writable();
+	IECore::PathMatcher &expanded = expandedPaths->writable();
 
 	bool needUpdate = false;
 	if( expandAncestors )
 	{
-		for( GafferScene::PathMatcher::RawIterator it = paths.begin(), eIt = paths.end(); it != eIt; ++it )
+		for( IECore::PathMatcher::RawIterator it = paths.begin(), eIt = paths.end(); it != eIt; ++it )
 		{
 			needUpdate |= expanded.addPath( *it );
 		}
 	}
 	else
 	{
-		for( GafferScene::PathMatcher::Iterator it = paths.begin(), eIt = paths.end(); it != eIt; ++it )
+		for( IECore::PathMatcher::Iterator it = paths.begin(), eIt = paths.end(); it != eIt; ++it )
 		{
 			needUpdate |= expanded.addPath( *it );
 		}
@@ -147,22 +146,22 @@ void expand( Context *context, const PathMatcher &paths, bool expandAncestors )
 	}
 }
 
-GafferScene::PathMatcher expandDescendants( Context *context, const GafferScene::PathMatcher &paths, const ScenePlug *scene, int depth )
+IECore::PathMatcher expandDescendants( Context *context, const IECore::PathMatcher &paths, const ScenePlug *scene, int depth )
 {
-	GafferScene::PathMatcherData *expandedPaths = const_cast<GafferScene::PathMatcherData *>( context->get<GafferScene::PathMatcherData>( g_expandedPathsName, nullptr ) );
+	IECore::PathMatcherData *expandedPaths = const_cast<IECore::PathMatcherData *>( context->get<IECore::PathMatcherData>( g_expandedPathsName, nullptr ) );
 	if( !expandedPaths )
 	{
-		expandedPaths = new GafferScene::PathMatcherData();
+		expandedPaths = new IECore::PathMatcherData();
 		context->set( g_expandedPathsName, expandedPaths );
 	}
 
-	GafferScene::PathMatcher &expanded = expandedPaths->writable();
+	IECore::PathMatcher &expanded = expandedPaths->writable();
 
 	bool needUpdate = false;
-	GafferScene::PathMatcher leafPaths;
+	IECore::PathMatcher leafPaths;
 
 	// \todo: parallelize the walk
-	for( GafferScene::PathMatcher::Iterator it = paths.begin(), eIt = paths.end(); it != eIt; ++it )
+	for( IECore::PathMatcher::Iterator it = paths.begin(), eIt = paths.end(); it != eIt; ++it )
 	{
 		needUpdate |= expandWalk( *it, scene, depth + 1, expanded, leafPaths );
 	}
@@ -180,10 +179,10 @@ GafferScene::PathMatcher expandDescendants( Context *context, const GafferScene:
 
 void clearExpansion( Gaffer::Context *context )
 {
-	setExpandedPaths( context, GafferScene::PathMatcher() );
+	setExpandedPaths( context, IECore::PathMatcher() );
 }
 
-void setSelectedPaths( Context *context, const GafferScene::PathMatcher &paths )
+void setSelectedPaths( Context *context, const IECore::PathMatcher &paths )
 {
 	/// \todo: Switch to storing PathMatcherData after some thorough
 	/// testing and a major version break.
@@ -193,9 +192,9 @@ void setSelectedPaths( Context *context, const GafferScene::PathMatcher &paths )
 	context->set( g_selectedPathsName, s.get() );
 }
 
-GafferScene::PathMatcher getSelectedPaths( const Gaffer::Context *context )
+IECore::PathMatcher getSelectedPaths( const Gaffer::Context *context )
 {
-	GafferScene::PathMatcher result;
+	IECore::PathMatcher result;
 
 	if( const StringVectorData *selection = context->get<StringVectorData>( g_selectedPathsName, nullptr ) )
 	{

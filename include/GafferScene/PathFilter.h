@@ -40,7 +40,6 @@
 #include "Gaffer/TypedObjectPlug.h"
 
 #include "GafferScene/Filter.h"
-#include "GafferScene/PathMatcherDataPlug.h"
 
 namespace GafferScene
 {
@@ -76,15 +75,15 @@ class PathFilter : public Filter
 		// using an intermediate plug called __pathMatcher, as it's possible the paths we're
 		// testing against could vary depending on the context:
 
-		PathMatcherDataPlug *pathMatcherPlug();
-		const PathMatcherDataPlug *pathMatcherPlug() const;
+		Gaffer::PathMatcherDataPlug *pathMatcherPlug();
+		const Gaffer::PathMatcherDataPlug *pathMatcherPlug() const;
 
 		// If that's not the case, we can improve performance by precomputing the PathMatcher
 		// whenever the plug is dirtied, which saves on graph evaluations:
 
 		void plugDirtied( const Gaffer::Plug *plug );
 
-		PathMatcherDataPtr m_pathMatcher;
+		IECore::PathMatcherDataPtr m_pathMatcher;
 
 		static size_t g_firstPlugIndex;
 

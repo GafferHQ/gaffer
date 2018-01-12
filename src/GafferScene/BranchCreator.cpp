@@ -41,7 +41,6 @@
 #include "Gaffer/StringAlgo.h"
 #include "Gaffer/StringPlug.h"
 
-#include "GafferScene/PathMatcherData.h"
 #include "GafferScene/BranchCreator.h"
 
 using namespace std;
@@ -407,7 +406,7 @@ void BranchCreator::hashSet( const IECore::InternedString &setName, const Gaffer
 	h.append( branchSetHash );
 }
 
-GafferScene::ConstPathMatcherDataPtr BranchCreator::computeSet( const IECore::InternedString &setName, const Gaffer::Context *context, const ScenePlug *parent ) const
+IECore::ConstPathMatcherDataPtr BranchCreator::computeSet( const IECore::InternedString &setName, const Gaffer::Context *context, const ScenePlug *parent ) const
 {
 	ConstPathMatcherDataPtr inputSetData = inPlug()->set( setName );
 
@@ -518,7 +517,7 @@ void BranchCreator::hashBranchSet( const ScenePath &parentPath, const IECore::In
 {
 }
 
-GafferScene::ConstPathMatcherDataPtr BranchCreator::computeBranchSet( const ScenePath &parentPath, const IECore::InternedString &setName, const Gaffer::Context *context ) const
+IECore::ConstPathMatcherDataPtr BranchCreator::computeBranchSet( const ScenePath &parentPath, const IECore::InternedString &setName, const Gaffer::Context *context ) const
 {
 	// See comments in computeBranchSetNames.
 	return nullptr;

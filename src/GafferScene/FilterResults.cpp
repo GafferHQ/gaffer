@@ -80,12 +80,12 @@ const FilterPlug *FilterResults::filterPlug() const
 	return getChild<FilterPlug>( g_firstPlugIndex + 1 );
 }
 
-PathMatcherDataPlug *FilterResults::outPlug()
+Gaffer::PathMatcherDataPlug *FilterResults::outPlug()
 {
 	return getChild<PathMatcherDataPlug>( g_firstPlugIndex + 2 );
 }
 
-const PathMatcherDataPlug *FilterResults::outPlug() const
+const Gaffer::PathMatcherDataPlug *FilterResults::outPlug() const
 {
 	return getChild<PathMatcherDataPlug>( g_firstPlugIndex + 2 );
 }

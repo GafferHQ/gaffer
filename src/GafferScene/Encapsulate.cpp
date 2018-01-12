@@ -218,7 +218,7 @@ void Encapsulate::hashSet( const IECore::InternedString &setName, const Gaffer::
 	filterPlug()->hash( h );
 }
 
-GafferScene::ConstPathMatcherDataPtr Encapsulate::computeSet( const IECore::InternedString &setName, const Gaffer::Context *context, const ScenePlug *parent ) const
+IECore::ConstPathMatcherDataPtr Encapsulate::computeSet( const IECore::InternedString &setName, const Gaffer::Context *context, const ScenePlug *parent ) const
 {
 	ConstPathMatcherDataPtr inputSetData = inPlug()->setPlug()->getValue();
 	const PathMatcher &inputSet = inputSetData->readable();

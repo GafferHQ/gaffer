@@ -138,7 +138,7 @@ void Parent::hashBranchSet( const ScenePath &parentPath, const IECore::InternedS
 	h = childPlug()->setHash( setName );
 }
 
-GafferScene::ConstPathMatcherDataPtr Parent::computeBranchSet( const ScenePath &parentPath, const IECore::InternedString &setName, const Gaffer::Context *context ) const
+IECore::ConstPathMatcherDataPtr Parent::computeBranchSet( const ScenePath &parentPath, const IECore::InternedString &setName, const Gaffer::Context *context ) const
 {
 	return childPlug()->set( setName );
 }

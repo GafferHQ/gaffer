@@ -113,7 +113,7 @@ IECore::ConstCompoundObjectPtr EvaluateLightLinks::computeAttributes( const Scen
 
 	IECore::StringVectorDataPtr lightNames = new IECore::StringVectorData();
 	std::vector<std::string> &lightNamesWritable = lightNames->writable();
-	GafferScene::PathMatcher linkedlightsSet = SetAlgo::evaluateSetExpression( expressionData->readable(), inPlug() );
+	PathMatcher linkedlightsSet = SetAlgo::evaluateSetExpression( expressionData->readable(), inPlug() );
 	linkedlightsSet = linkedlightsSet.intersection( inPlug()->set( "__lights" )->readable() );
 	linkedlightsSet.paths( lightNamesWritable );
 	result->members()[ m_lightLinkAttrName ] = lightNames;

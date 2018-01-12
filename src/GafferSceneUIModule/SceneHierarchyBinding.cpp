@@ -320,7 +320,7 @@ class SceneHierarchySetFilter : public SceneHierarchyFilter
 			{
 				try
 				{
-					GafferScene::ConstPathMatcherDataPtr set = getScene()->set( *it );
+					ConstPathMatcherDataPtr set = getScene()->set( *it );
 					m_sets.push_back( set->readable() );
 				}
 				catch( ... )

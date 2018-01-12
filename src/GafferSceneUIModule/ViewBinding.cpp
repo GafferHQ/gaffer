@@ -53,6 +53,7 @@
 
 using namespace std;
 using namespace boost::python;
+using namespace IECore;
 using namespace IECorePython;
 using namespace Gaffer;
 using namespace GafferBindings;

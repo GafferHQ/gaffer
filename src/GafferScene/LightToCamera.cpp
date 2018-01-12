@@ -451,7 +451,7 @@ void LightToCamera::hashSet( const IECore::InternedString &setName, const Gaffer
 	filterPlug()->hash( h );
 }
 
-GafferScene::ConstPathMatcherDataPtr LightToCamera::computeSet( const IECore::InternedString &setName, const Gaffer::Context *context, const ScenePlug *parent ) const
+IECore::ConstPathMatcherDataPtr LightToCamera::computeSet( const IECore::InternedString &setName, const Gaffer::Context *context, const ScenePlug *parent ) const
 {
 	ConstPathMatcherDataPtr inputSetData = inPlug()->setPlug()->getValue();
 
