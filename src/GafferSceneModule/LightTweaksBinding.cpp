@@ -56,42 +56,10 @@ LightTweaks::TweakPlugPtr constructUsingData( const std::string &tweakName, IECo
 	return new LightTweaks::TweakPlug( tweakName, tweakValue.get(), enabled );
 }
 
-std::string maskedTweakPlugRepr( const LightTweaks::TweakPlug *plug, unsigned flagsMask )
-{
-	// The only reason we have a different __repr__ implementation than Gaffer::Plug is
-	// because we can't determine the nested class name from a PyObject.
-	std::string result = "GafferScene.LightTweaks.TweakPlug( \"" + plug->getName().string() + "\", ";
-
-	if( plug->direction()!=Plug::In )
-	{
-		result += "direction = " + PlugSerialiser::directionRepr( plug->direction() ) + ", ";
-	}
-
-	const unsigned flags = plug->getFlags() & flagsMask;
-	if( flags != Plug::Default )
-	{
-		result += "flags = " + PlugSerialiser::flagsRepr( flags ) + ", ";
-	}
-
-	result += ")";
-
-	return result;
-}
-
-std::string tweakPlugRepr( const LightTweaks::TweakPlug *plug )
-{
-	return maskedTweakPlugRepr( plug, Plug::All );
-}
-
 class TweakPlugSerialiser : public PlugSerialiser
 {
 
 	public :
-
-		std::string constructor( const Gaffer::GraphComponent *graphComponent, const Serialisation &serialisation ) const override
-		{
-			return maskedTweakPlugRepr( static_cast<const LightTweaks::TweakPlug *>( graphComponent ), Plug::All & ~Plug::ReadOnly );
-		}
 
 		bool childNeedsConstruction( const Gaffer::GraphComponent *child, const Serialisation &serialisation ) const override
 		{
@@ -139,8 +107,9 @@ void GafferSceneModule::bindLightTweaks()
 				)
 			)
 		)
-		.def( "__repr__", tweakPlugRepr )
 	;
+
+	tweakPlugScope.attr( "__qualname__" ) = "LightTweaks.TweakPlug";
 
 	enum_<LightTweaks::TweakPlug::Mode>( "Mode" )
 		.value( "Replace", LightTweaks::TweakPlug::Replace )

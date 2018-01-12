@@ -159,5 +159,17 @@ class SerialisationTest( GafferTest.TestCase ) :
 
 		self.assertEqual( Gaffer.Metadata.value( scope["parent"], "test" ), imath.Color3f( 1, 2, 3 ) )
 
+	class Outer( object ) :
+
+			class Inner( object ) :
+
+					# Emulate feature coming in Python 3.
+					# See https://www.python.org/dev/peps/pep-3155/
+					__qualname__ = "Outer.Inner"
+
+	def testClassPathForNestedClasses( self ) :
+
+		self.assertEqual( Gaffer.Serialisation.classPath( self.Outer.Inner ), "GafferTest.SerialisationTest.Outer.Inner" )
+
 if __name__ == "__main__":
 	unittest.main()

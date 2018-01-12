@@ -152,9 +152,7 @@ void GafferModule::bindAnimation()
 		.def( "previousKey", &Animation::CurvePlug::previousKey )
 		.def( "nextKey", &Animation::CurvePlug::nextKey )
 		.def( "evaluate", &Animation::CurvePlug::evaluate )
-		// Adjusting the name so that it correctly reflects
-		// the nesting, and can be used by the PlugSerialiser.
-		.attr( "__name__" ) = "Animation.CurvePlug"
+		.attr( "__qualname__" ) = "Animation.CurvePlug"
 	;
 
 	Serialisation::registerSerialiser( Gaffer::Animation::CurvePlug::staticTypeId(), new CurvePlugSerialiser );

@@ -121,45 +121,6 @@ struct ExecuteOnUIThreadSlotCaller
 	}
 };
 
-std::string maskedRepr( const Catalogue::Image *plug, unsigned flagsMask )
-{
-	/// \todo We only really need this function because the standard plug serialiser
-	/// can't extract the nested class name. We have this problem in a few places now,
-	/// so maybe we should have a simple mechanism for providing the name, or we should
-	/// use `RunTimeTyped::typeName()` instead.
-	std::string result = "GafferImage.Catalogue.Image( \"" + plug->getName().string() + "\", ";
-
-	if( plug->direction()!=Plug::In )
-	{
-		result += "direction = " + PlugSerialiser::directionRepr( plug->direction() ) + ", ";
-	}
-
-	const unsigned flags = plug->getFlags() & flagsMask;
-	if( flags != Plug::Default )
-	{
-		result += "flags = " + PlugSerialiser::flagsRepr( flags ) + ", ";
-	}
-
-	result += ")";
-
-	return result;
-}
-
-std::string repr( const Catalogue::Image *plug )
-{
-	return maskedRepr( plug, Plug::All );
-}
-
-class ImageSerialiser : public PlugSerialiser
-{
-
-	std::string constructor( const Gaffer::GraphComponent *graphComponent, const Serialisation &serialisation ) const override
-	{
-		return maskedRepr( static_cast<const Catalogue::Image *>( graphComponent ), Plug::All & ~Plug::ReadOnly );
-	}
-
-};
-
 class CatalogueSerialiser : public NodeSerialiser
 {
 
@@ -244,14 +205,13 @@ void GafferImageModule::bindCatalogue()
 					)
 				)
 			)
-			.def( "__repr__", repr )
 			.def( "copyFrom", &copyFrom )
 			.def( "load", Catalogue::Image::load )
 			.def( "save", &save )
 			.staticmethod( "load" )
+			.attr( "__qualname__" ) = "Catalogue.Image"
 		;
 
-		Serialisation::registerSerialiser( Catalogue::Image::staticTypeId(), new ImageSerialiser );
 		Serialisation::registerSerialiser( Catalogue::staticTypeId(), new CatalogueSerialiser );
 	}
 

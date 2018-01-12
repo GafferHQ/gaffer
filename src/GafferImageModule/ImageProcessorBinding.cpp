@@ -53,50 +53,6 @@ using namespace Gaffer;
 using namespace GafferBindings;
 using namespace GafferImage;
 
-namespace
-{
-
-std::string maskedChannelPlugRepr( const Shuffle::ChannelPlug *plug, unsigned flagsMask )
-{
-	// the only reason we have a different __repr__ implementation than Gaffer::Plug is
-	// because we can't determine the nested class name from a PyObject.
-	std::string result = "GafferImage.Shuffle.ChannelPlug( \"" + plug->getName().string() + "\", ";
-
-	if( plug->direction()!=Plug::In )
-	{
-		result += "direction = " + PlugSerialiser::directionRepr( plug->direction() ) + ", ";
-	}
-
-	const unsigned flags = plug->getFlags() & flagsMask;
-	if( flags != Plug::Default )
-	{
-		result += "flags = " + PlugSerialiser::flagsRepr( flags ) + ", ";
-	}
-
-	result += ")";
-
-	return result;
-}
-
-std::string channelPlugRepr( const Shuffle::ChannelPlug *plug )
-{
-	return maskedChannelPlugRepr( plug, Plug::All );
-}
-
-class ChannelPlugSerialiser : public ValuePlugSerialiser
-{
-
-	public :
-
-		std::string constructor( const Gaffer::GraphComponent *graphComponent, const Serialisation &serialisation ) const override
-		{
-			return maskedChannelPlugRepr( static_cast<const Shuffle::ChannelPlug *>( graphComponent ), Plug::All & ~Plug::ReadOnly );
-		}
-
-};
-
-} // namespace
-
 void GafferImageModule::bindImageProcessor()
 {
 
@@ -159,10 +115,8 @@ void GafferImageModule::bindImageProcessor()
 				)
 			)
 			.def( init<const std::string &, const std::string &>() )
-			.def( "__repr__", channelPlugRepr )
+			.attr( "__qualname__" ) = "Shuffle.ChannelPlug"
 		;
 	}
-
-	Serialisation::registerSerialiser( Shuffle::ChannelPlug::staticTypeId(), new ChannelPlugSerialiser );
 
 }
