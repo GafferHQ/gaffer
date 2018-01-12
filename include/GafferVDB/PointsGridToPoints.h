@@ -1,6 +1,6 @@
 //////////////////////////////////////////////////////////////////////////
 //
-//  Copyright (c) 2017, John Haddon. All rights reserved.
+//  Copyright (c) 2017, Image Engine. All rights reserved.
 //
 //  Redistribution and use in source and binary forms, with or without
 //  modification, are permitted provided that the following conditions are
@@ -15,7 +15,7 @@
 //        disclaimer in the documentation and/or other materials provided with
 //        the distribution.
 //
-//      * Neither the name of John Haddon nor the names of
+//      * Neither the name of Image Engine nor the names of
 //        any other contributors to this software may be used to endorse or
 //        promote products derived from this software without specific prior
 //        written permission.
@@ -34,24 +34,59 @@
 //
 //////////////////////////////////////////////////////////////////////////
 
-#ifndef GAFFERVDB_TYPEIDS_H
-#define GAFFERVDB_TYPEIDS_H
+#ifndef GAFFERVDB_POINTSGRIDTOPOINTS_H
+#define GAFFERVDB_POINTSGRIDTOPOINTS_H
+
+#include "Gaffer/NumericPlug.h"
+
+#include "GafferScene/SceneElementProcessor.h"
+
+#include "GafferVDB/TypeIds.h"
+
+
+namespace Gaffer
+{
+class StringPlug;
+}
 
 namespace GafferVDB
 {
 
-enum TypeId
+class PointsGridToPoints : public GafferScene::SceneElementProcessor
 {
-	VDBGridTypeId = 110950,
-	VDBObjectTypeId = 110951,
-	VDBSceneTypeId = 110952,
-	MeshToLevelSetTypeId = 110953,
-	LevelSetToMeshTypeId = 110954,
-	LevelSetOffsetTypeId = 110955,
-	PointsGridToPointsId = 110956,
-	LastTypeId = 110974
+
+	public :
+
+		PointsGridToPoints( const std::string &name=defaultName<PointsGridToPoints>() );
+		virtual ~PointsGridToPoints();
+
+		IE_CORE_DECLARERUNTIMETYPEDEXTENSION( GafferVDB::PointsGridToPoints, PointsGridToPointsId, GafferScene::SceneElementProcessor );
+
+		Gaffer::StringPlug *gridPlug();
+		const Gaffer::StringPlug *gridPlug() const;
+
+		Gaffer::StringPlug *namesPlug();
+		const Gaffer::StringPlug *namesPlug() const;
+
+		Gaffer::BoolPlug *invertNamesPlug();
+		const Gaffer::BoolPlug *invertNamesPlug() const;
+
+		virtual void affects( const Gaffer::Plug *input, AffectedPlugsContainer &outputs ) const override;
+
+	protected :
+
+		virtual bool processesObject() const override;
+		virtual void hashProcessedObject( const ScenePath &path, const Gaffer::Context *context, IECore::MurmurHash &h ) const override;
+		virtual IECore::ConstObjectPtr computeProcessedObject( const ScenePath &path, const Gaffer::Context *context, IECore::ConstObjectPtr inputObject ) const override;
+
+	private :
+
+		static size_t g_firstPlugIndex;
+
 };
+
+IE_CORE_DECLAREPTR( PointsGridToPoints )
 
 } // namespace GafferVDB
 
-#endif // GAFFERVDB_TYPEIDS_H
+#endif // GAFFERVDB_POINTSGRIDTOPOINTS_H

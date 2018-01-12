@@ -38,8 +38,11 @@
 #include <boost/mpl/list.hpp>
 
 #include "openvdb/openvdb.h"
+#include "openvdb/points/PointConversion.h"
+#include "openvdb/points/PointCount.h"
 
 #include "IECoreGL/CurvesPrimitive.h"
+#include "IECoreGL/PointsPrimitive.h"
 #include "IECoreGL/Group.h"
 
 #include "GafferSceneUI/ObjectVisualiser.h"
@@ -73,7 +76,8 @@ public:
 			{ openvdb::typeNameAsString<std::string>(), []( GeometryCollector& collector , openvdb::GridBase::ConstPtr grid) { collector.collectTyped<openvdb::StringGrid>( grid ); } },
 			{ openvdb::typeNameAsString<openvdb::Vec3d>(), []( GeometryCollector& collector , openvdb::GridBase::ConstPtr grid) { collector.collectTyped<openvdb::Vec3DGrid>( grid ); } },
 			{ openvdb::typeNameAsString<openvdb::Vec3i>(), []( GeometryCollector& collector , openvdb::GridBase::ConstPtr grid) { collector.collectTyped<openvdb::Vec3IGrid>( grid ); } },
-			{ openvdb::typeNameAsString<openvdb::Vec3f>(), []( GeometryCollector& collector , openvdb::GridBase::ConstPtr grid) { collector.collectTyped<openvdb::Vec3SGrid>( grid ); } }
+			{ openvdb::typeNameAsString<openvdb::Vec3f>(), []( GeometryCollector& collector , openvdb::GridBase::ConstPtr grid) { collector.collectTyped<openvdb::Vec3SGrid>( grid ); } },
+			{ openvdb::typeNameAsString<openvdb::PointDataIndex32>(), [] ( GeometryCollector& collector , openvdb::GridBase::ConstPtr grid) { collector.collectPoints( grid ); } }
 		};
 
 		const auto it = collectors.find( grid->valueType() );
@@ -89,6 +93,8 @@ public:
 
 	std::vector<IECore::V3fVectorDataPtr>  positions;
 	std::vector<IECore::IntVectorDataPtr>  vertsPerCurve;
+
+	std::vector<IECore::V3fVectorDataPtr> points;
 
 private:
 
@@ -115,6 +121,43 @@ private:
 
 			addBox( grid.get(), iter.getDepth(), min, max );
 		}
+	}
+
+	void collectPoints( openvdb::GridBase::ConstPtr baseGrid )
+	{
+
+		openvdb::points::PointDataGrid::ConstPtr pointsGrid = openvdb::GridBase::constGrid<openvdb::points::PointDataGrid>( baseGrid );
+		if ( !pointsGrid )
+		{
+			return;
+		}
+
+		openvdb::Index64 count = openvdb::points::pointCount( pointsGrid->tree() );
+
+		IECore::V3fVectorDataPtr pointData = new IECore::V3fVectorData();
+		auto &points = pointData->writable();
+		points.reserve( count );
+
+		for (auto leafIter = pointsGrid->tree().cbeginLeaf(); leafIter; ++leafIter) {
+			const openvdb::points::AttributeArray& array =  leafIter->constAttributeArray("P");
+			openvdb::points::AttributeHandle<openvdb::Vec3f> positionHandle( array );
+
+			for (auto indexIter = leafIter->beginIndexOn(); indexIter; ++indexIter)
+			{
+				openvdb::Vec3f voxelPosition = positionHandle.get( *indexIter );
+				const openvdb::Vec3d xyz = indexIter.getCoord().asVec3d();
+				openvdb::Vec3f worldPosition =  pointsGrid->transform().indexToWorld( voxelPosition + xyz );
+				points.push_back( Imath::Vec3<float>( worldPosition[0], worldPosition[1], worldPosition[2] ) );
+			}
+		}
+
+		addPoints( pointData );
+		collectTyped<openvdb::points::PointDataGrid> ( baseGrid );
+	}
+
+	void addPoints(IECore::V3fVectorDataPtr _points)
+	{
+		points.push_back(_points);
 	}
 
 	template<typename GridType>
@@ -286,7 +329,7 @@ class VDBVisualiser : public ObjectVisualiser
 			IECoreGL::Group *rootGroup = new IECoreGL::Group();
 
 			// todo can these colors go into a config?
-			static std::array<Color4f, 4> colors = { { Color4f( 0.56, 0.06, 0.2, 0.2 ), Color4f( 0.06, 0.56, 0.2, 0.2 ), Color4f( 0.06, 0.2, 0.56, 0.2 ), Color4f( 0.6, 0.6, 0.6, 0.2 ) } };
+			static std::array<Color4f, 4> colors = { { Color4f( 0.56, 0.06, 0.2, 0.2 ), Color4f( 0.06, 0.56, 0.2, 0.2 ), Color4f( 0.06, 0.2, 0.56, 0.2 ), Color4f( 0.55, 0.55, 0.55, 0.5 ) } };
 
 			GeometryCollector collector;
 			collector.collect( grid );
@@ -308,6 +351,23 @@ class VDBVisualiser : public ObjectVisualiser
 				group->addChild( curves );
 
 				rootGroup->addChild( group );
+			}
+
+			for(auto pointsData : collector.points )
+			{
+				IECoreGL::Group *pointsGroup = new IECoreGL::Group();
+
+				pointsGroup->getState()->add( new IECoreGL::Primitive::DrawPoints( true ) );
+				pointsGroup->getState()->add( new IECoreGL::Primitive::DrawSolid( false ) );
+				pointsGroup->getState()->add( new IECoreGL::PointColorStateComponent( Color4f( 0.8, 0.8, 0.8, 1 ) ) );
+				pointsGroup->getState()->add( new IECoreGL::PointsPrimitive::GLPointWidth( 2.0 ) );
+
+				IECoreGL::PointsPrimitivePtr points = new IECoreGL::PointsPrimitive( IECoreGL::PointsPrimitive::Point );
+				points->addPrimitiveVariable("P", IECoreScene::PrimitiveVariable( IECoreScene::PrimitiveVariable::Vertex, pointsData ) );
+				pointsGroup->addChild( points );
+
+				rootGroup->addChild( pointsGroup );
+
 			}
 
 			return rootGroup;

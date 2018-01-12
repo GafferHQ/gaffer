@@ -34,14 +34,50 @@
 #
 ##########################################################################
 
-from VDBTestCase import VDBTestCase
-from SceneInterfaceTest import SceneInterfaceTest
-from VDBObjectTest import VDBObjectTest
-from MeshToLevelSetTest import MeshToLevelSetTest
-from LevelSetToMeshTest import LevelSetToMeshTest
-from LevelSetOffsetTest import LevelSetOffsetTest
-from PointsGridToPointsTest import PointsGridToPointsTest
+import GafferTest
+
+import GafferVDB
+import IECore
+import IECoreScene
+import GafferVDBTest
+import os
+import GafferScene
+
+import imath
+
+
+class PointsGridToPointsTest( GafferVDBTest.VDBTestCase ) :
+	def setUp( self ) :
+		GafferVDBTest.VDBTestCase.setUp( self )
+		self.sourcePath = os.path.join( self.dataDir, "points.vdb" )
+		self.sceneInterface = IECoreScene.SceneInterface.create( self.sourcePath, IECore.IndexedIO.OpenMode.Read )
+
+	def testCanConvertPointsGridToPoints( self ) :
+
+		sceneReader = GafferScene.SceneReader( "SceneReader" )
+		sceneReader["fileName"].setValue( self.sourcePath )
+
+		pointsGridToPoints = GafferVDB.PointsGridToPoints( "PointsGridToPoints" )
+		pointsGridToPoints["in"].setInput( sceneReader["out"] )
+
+		points = pointsGridToPoints["out"].object("/vdb")
+
+		self.assertTrue( isinstance( points, IECoreScene.PointsPrimitive ) )
+		self.assertTrue( "P" in points )
+		self.assertEqual( len( points["P"].data), 8 )
+		self.assertEqual( points["P"].data[0], imath.V3f( -0.500004232, 0.366468042, 0.261457711  ) )
+
+	def testVDBObjectLeftUnchangedIfIncorrectGrid( self ) :
+
+		sceneReader = GafferScene.SceneReader( "SceneReader" )
+		sceneReader["fileName"].setValue( self.sourcePath )
+
+		pointsGridToPoints = GafferVDB.PointsGridToPoints( "PointsGridToPoints" )
+		pointsGridToPoints["in"].setInput( sceneReader["out"] )
+		pointsGridToPoints["grid"].setValue( "nogridhere" )
+
+		vdb = pointsGridToPoints["out"].object("/vdb")
+		self.assertTrue( isinstance( vdb, GafferVDB.VDBObject) )
 
 if __name__ == "__main__":
-	import unittest
 	unittest.main()

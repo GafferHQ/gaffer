@@ -39,5 +39,6 @@ from _GafferVDBUI import *
 import LevelSetToMeshUI
 import MeshToLevelSetUI
 import LevelSetOffsetUI
+import PointsGridToPointsUI
 
 __import__( "IECore" ).loadConfig( "GAFFER_STARTUP_PATHS", {}, subdirectory = "GafferVDBUI" )
