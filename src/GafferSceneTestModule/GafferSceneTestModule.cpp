@@ -46,7 +46,6 @@
 #include "GafferSceneTest/TestShader.h"
 #include "GafferSceneTest/TestLight.h"
 #include "GafferSceneTest/ScenePlugTest.h"
-#include "GafferSceneTest/PathMatcherTest.h"
 
 using namespace boost::python;
 using namespace GafferSceneTest;
@@ -70,9 +69,5 @@ BOOST_PYTHON_MODULE( _GafferSceneTest )
 	def( "connectTraverseSceneToPreDispatchSignal", &connectTraverseSceneToPreDispatchSignal );
 
 	def( "testManyStringToPathCalls", &testManyStringToPathCalls );
-
-	def( "testPathMatcherRawIterator", &testPathMatcherRawIterator );
-	def( "testPathMatcherIteratorPrune", &testPathMatcherIteratorPrune );
-	def( "testPathMatcherFind", &testPathMatcherFind );
 
 }
