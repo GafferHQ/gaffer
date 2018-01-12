@@ -311,12 +311,12 @@ class ParentTest( GafferSceneTest.SceneTestCase ) :
 		p["child"].setInput( c2["out"] )
 
 		h = p["out"].setHash( "test" )
-		self.assertEqual( p["out"].set( "test" ).value, GafferScene.PathMatcher() )
+		self.assertEqual( p["out"].set( "test" ).value, IECore.PathMatcher() )
 
 		c1["sets"].setValue( "test" )
 
 		self.assertNotEqual( p["out"].setHash( "test" ), h )
-		self.assertEqual( p["out"].set( "test" ).value, GafferScene.PathMatcher( [ "/cube" ] ) )
+		self.assertEqual( p["out"].set( "test" ).value, IECore.PathMatcher( [ "/cube" ] ) )
 
 if __name__ == "__main__":
 	unittest.main()

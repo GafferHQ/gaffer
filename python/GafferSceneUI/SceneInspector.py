@@ -1219,7 +1219,7 @@ class _InheritanceSection( Section ) :
 	def __labelButtonPress( self, label, event ) :
 
 		script = self.__target.scene.ancestor( Gaffer.ScriptNode )
-		GafferSceneUI.ContextAlgo.setSelectedPaths( script.context(), GafferScene.PathMatcher( [ label.getText() ] ) )
+		GafferSceneUI.ContextAlgo.setSelectedPaths( script.context(), IECore.PathMatcher( [ label.getText() ] ) )
 
 ##########################################################################
 # History section
@@ -2147,7 +2147,7 @@ class _SetDiff( Diff ) :
 		editor = self.ancestor( SceneInspector )
 
 		context = editor.getContext()
-		GafferSceneUI.ContextAlgo.setSelectedPaths( context, GafferScene.PathMatcher( widget.paths ) )
+		GafferSceneUI.ContextAlgo.setSelectedPaths( context, IECore.PathMatcher( widget.paths ) )
 
 		return True
 

@@ -695,12 +695,12 @@ class GroupTest( GafferSceneTest.SceneTestCase ) :
 
 		self.assertEqual(
 			g["out"].set( "s1" ).value,
-			GafferScene.PathMatcher( [ "/group/plane" ] )
+			IECore.PathMatcher( [ "/group/plane" ] )
 		)
 
 		self.assertEqual(
 			g["out"].set( "s2" ).value,
-			GafferScene.PathMatcher( [ "/group/plane1" ] )
+			IECore.PathMatcher( [ "/group/plane1" ] )
 		)
 
 	def testNextInPlug( self ) :

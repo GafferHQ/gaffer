@@ -85,21 +85,6 @@ class PathFilterTest( GafferSceneTest.SceneTestCase ) :
 			c["scene:path"] = IECore.InternedStringVectorData( [ "a" ] )
 			self.assertEqual( f["out"].getValue(), int( f.Result.NoMatch ) )
 
-	def testScaling( self ) :
-
-		paths = GafferSceneTest.PathMatcherTest.generatePaths(
-			seed = 1,
-			depthRange = ( 4, 8 ),
-			numChildrenRange = ( 5, 6 )
-		)
-
-		f = GafferScene.PathFilter()
-		f["paths"].setValue( IECore.StringVectorData( [ "/" + "/".join( [ str( x ) for x in p ] ) for p in paths ] ) )
-		with Gaffer.Context() as c :
-			for path in paths :
-				c["scene:path"] = path
-				self.assertTrue( f["out"].getValue() & f.Result.ExactMatch )
-
 	def testInputsAccepted( self ) :
 
 		f = GafferScene.PathFilter()

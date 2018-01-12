@@ -112,7 +112,7 @@ def __selectAffected( node, context ) :
 
 		walkOutputs( filter["out"] )
 
-	pathMatcher = GafferScene.PathMatcher()
+	pathMatcher = IECore.PathMatcher()
 	with context :
 		for scene in scenes :
 			GafferScene.SceneAlgo.matchingPaths( filter, scene, pathMatcher )

@@ -85,7 +85,7 @@ class SceneViewTest( GafferUITest.TestCase ) :
 		view = GafferUI.View.create( A["out"] )
 
 		def setSelection( paths ) :
-			GafferSceneUI.ContextAlgo.setSelectedPaths( view.getContext(), GafferScene.PathMatcher( paths ) )
+			GafferSceneUI.ContextAlgo.setSelectedPaths( view.getContext(), IECore.PathMatcher( paths ) )
 
 		def getSelection() :
 			return set( GafferSceneUI.ContextAlgo.getSelectedPaths( view.getContext() ).paths() )
@@ -94,7 +94,7 @@ class SceneViewTest( GafferUITest.TestCase ) :
 		self.assertEqual( getSelection(), set( [ "/A" ] ) )
 
 		def setExpandedPaths( paths ) :
-			GafferSceneUI.ContextAlgo.setExpandedPaths( view.getContext(), GafferScene.PathMatcher( paths ) )
+			GafferSceneUI.ContextAlgo.setExpandedPaths( view.getContext(), IECore.PathMatcher( paths ) )
 
 		def getExpandedPaths() :
 			return set( GafferSceneUI.ContextAlgo.getExpandedPaths( view.getContext() ).paths() )
@@ -315,17 +315,17 @@ class SceneViewTest( GafferUITest.TestCase ) :
 		self.assertFalse( cameraContains( script["Group"]["out"], "/group/sphere" ) )
 		self.assertFalse( cameraContains( script["Group"]["out"], "/group/sphere1" ) )
 
-		view.frame( GafferScene.PathMatcher( [ "/group/sphere" ] ), direction = imath.V3f( 0, 0, 1 ) )
+		view.frame( IECore.PathMatcher( [ "/group/sphere" ] ), direction = imath.V3f( 0, 0, 1 ) )
 		self.assertFalse( cameraContains( script["Group"]["out"], "/group" ) )
 		self.assertTrue( cameraContains( script["Group"]["out"], "/group/sphere" ) )
 		self.assertFalse( cameraContains( script["Group"]["out"], "/group/sphere1" ) )
 
-		view.frame( GafferScene.PathMatcher( [ "/group/sphere1" ] ), direction = imath.V3f( 0, 0, 1 ) )
+		view.frame( IECore.PathMatcher( [ "/group/sphere1" ] ), direction = imath.V3f( 0, 0, 1 ) )
 		self.assertFalse( cameraContains( script["Group"]["out"], "/group" ) )
 		self.assertFalse( cameraContains( script["Group"]["out"], "/group/sphere" ) )
 		self.assertTrue( cameraContains( script["Group"]["out"], "/group/sphere1" ) )
 
-		view.frame( GafferScene.PathMatcher( [ "/group/sp*" ] ), direction = imath.V3f( 0, 0, 1 ) )
+		view.frame( IECore.PathMatcher( [ "/group/sp*" ] ), direction = imath.V3f( 0, 0, 1 ) )
 		self.assertTrue( cameraContains( script["Group"]["out"], "/group" ) )
 		self.assertTrue( cameraContains( script["Group"]["out"], "/group/sphere" ) )
 		self.assertTrue( cameraContains( script["Group"]["out"], "/group/sphere1" ) )

@@ -83,11 +83,11 @@ class SceneGadgetTest( GafferUITest.TestCase ) :
 		gadgetMin = viewportGadget.rasterToGadgetSpace( rasterMin, gadget ).p0
 		gadgetMax = viewportGadget.rasterToGadgetSpace( rasterMax, gadget ).p1
 
-		objectsAt = GafferScene.PathMatcher()
+		objectsAt = IECore.PathMatcher()
 		gadget.objectsAt( gadgetMin, gadgetMax, objectsAt )
 
 		objects = set( objectsAt.paths() )
-		expectedObjects = set( GafferScene.PathMatcher( paths ).paths() )
+		expectedObjects = set( IECore.PathMatcher( paths ).paths() )
 		self.assertEqual( objects, expectedObjects )
 
 	def testObjectVisibility( self ) :
@@ -146,12 +146,12 @@ class SceneGadgetTest( GafferUITest.TestCase ) :
 		self.assertObjectAt( sg, imath.V2f( 0.5 ), None )
 		self.assertObjectsAt( sg, imath.Box2f( imath.V2f( 0 ), imath.V2f( 1 ) ), [ "/group" ] )
 
-		sg.setExpandedPaths( GafferScene.PathMatcherData( GafferScene.PathMatcher( [ "/group" ] ) ) )
+		sg.setExpandedPaths( IECore.PathMatcherData( IECore.PathMatcher( [ "/group" ] ) ) )
 
 		self.assertObjectAt( sg, imath.V2f( 0.5 ), IECore.InternedStringVectorData( [ "group", "sphere" ] ) )
 		self.assertObjectsAt( sg, imath.Box2f( imath.V2f( 0 ), imath.V2f( 1 ) ), [ "/group/sphere" ] )
 
-		sg.setExpandedPaths( GafferScene.PathMatcherData( GafferScene.PathMatcher( [] ) ) )
+		sg.setExpandedPaths( IECore.PathMatcherData( IECore.PathMatcher( [] ) ) )
 
 		self.assertObjectAt( sg, imath.V2f( 0.5 ), None )
 		self.assertObjectsAt( sg, imath.Box2f( imath.V2f( 0 ), imath.V2f( 1 ) ), [ "/group" ] )

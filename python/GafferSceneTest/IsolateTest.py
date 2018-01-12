@@ -403,7 +403,7 @@ class IsolateTest( GafferSceneTest.SceneTestCase ) :
 
 		self.assertEqual( isolate["out"].set( "__lights" ).value.paths(), [ "/group/model1/light" ] )
 		self.assertEqual( isolate["out"].set( "__cameras" ).value.paths(), [] )
-		self.assertEqual( isolate["out"].set( "lightsAndSpheres" ).value, GafferScene.PathMatcher( [ "/group/model1/sphere", "/group/model1/light" ] ) )
+		self.assertEqual( isolate["out"].set( "lightsAndSpheres" ).value, IECore.PathMatcher( [ "/group/model1/sphere", "/group/model1/light" ] ) )
 
 		self.assertNotEqual( isolate["out"].setHash( "__lights" ), group["out"].setHash( "__lights" ) )
 		self.assertNotEqual( isolate["out"].setHash( "__cameras" ), group["out"].setHash( "__cameras" ) )
@@ -420,7 +420,7 @@ class IsolateTest( GafferSceneTest.SceneTestCase ) :
 		self.assertEqual( isolate["out"].set( "__cameras" ).value.paths(), [] )
 		self.assertEqual(
 			isolate["out"].set("lightsAndSpheres" ).value,
-			GafferScene.PathMatcher( [ "/group/model1/sphere" ] + group["out"].set( "__lights" ).value.paths() )
+			IECore.PathMatcher( [ "/group/model1/sphere" ] + group["out"].set( "__lights" ).value.paths() )
 		)
 
 		self.assertEqual( isolate["out"].setHash( "__lights" ), group["out"].setHash( "__lights" ) )
@@ -438,7 +438,7 @@ class IsolateTest( GafferSceneTest.SceneTestCase ) :
 		self.assertEqual( isolate["out"].set( "__cameras" ), group["out"].set( "__cameras" ) )
 		self.assertEqual(
 			isolate["out"].set("lightsAndSpheres" ).value,
-			GafferScene.PathMatcher( [ "/group/model1/sphere" ] + group["out"].set( "__lights" ).value.paths() )
+			IECore.PathMatcher( [ "/group/model1/sphere" ] + group["out"].set( "__lights" ).value.paths() )
 		)
 
 		self.assertEqual( isolate["out"].setHash( "__lights" ), group["out"].setHash( "__lights" ) )

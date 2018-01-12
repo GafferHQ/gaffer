@@ -71,8 +71,8 @@ class SceneHierarchyTest( GafferUITest.TestCase ) :
 
 		# Expand the root, and select /group.
 
-		GafferSceneUI.ContextAlgo.setExpandedPaths( script.context(), GafferScene.PathMatcher( [ "/" ] ) )
-		GafferSceneUI.ContextAlgo.setSelectedPaths( script.context(), GafferScene.PathMatcher( [ "/group" ] ) )
+		GafferSceneUI.ContextAlgo.setExpandedPaths( script.context(), IECore.PathMatcher( [ "/" ] ) )
+		GafferSceneUI.ContextAlgo.setSelectedPaths( script.context(), IECore.PathMatcher( [ "/group" ] ) )
 
 		self.waitForIdle( 1000 )
 

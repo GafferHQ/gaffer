@@ -284,10 +284,10 @@ class SetTest( GafferSceneTest.SceneTestCase ) :
 		s["in"].setInput( g["out"] )
 		s["filter"].setInput( f["out"] )
 
-		self.assertEqual( s["out"].set( "set" ).value, GafferScene.PathMatcher() )
+		self.assertEqual( s["out"].set( "set" ).value, IECore.PathMatcher() )
 
 		p["name"].setValue( "plain" )
-		self.assertEqual( s["out"].set( "set" ).value, GafferScene.PathMatcher( [ "/group/plain" ] ) )
+		self.assertEqual( s["out"].set( "set" ).value, IECore.PathMatcher( [ "/group/plain" ] ) )
 
 	def testSetNamesDirtyPropagation( self ) :
 

@@ -121,9 +121,9 @@ class SceneTestCase( GafferTest.TestCase ) :
 	def assertBuiltInSetsComplete( self, scenePlug ) :
 
 		setNames = scenePlug["setNames"].getValue()
-		lightSet = scenePlug.set( "__lights" ) if "__lights" in setNames else GafferScene.PathMatcherData()
-		cameraSet = scenePlug.set( "__cameras" ) if "__cameras" in setNames else GafferScene.PathMatcherData()
-		coordinateSystemSet = scenePlug.set( "__coordinateSystems" ) if "__coordinateSystems" in setNames else GafferScene.PathMatcherData()
+		lightSet = scenePlug.set( "__lights" ) if "__lights" in setNames else IECore.PathMatcherData()
+		cameraSet = scenePlug.set( "__cameras" ) if "__cameras" in setNames else IECore.PathMatcherData()
+		coordinateSystemSet = scenePlug.set( "__coordinateSystems" ) if "__coordinateSystems" in setNames else IECore.PathMatcherData()
 
 		def walkScene( scenePath ) :
 

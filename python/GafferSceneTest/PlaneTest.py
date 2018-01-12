@@ -158,8 +158,8 @@ class PlaneTest( GafferSceneTest.SceneTestCase ) :
 		p["sets"].setValue( "A B")
 		self.assertEqual( p["out"]["setNames"].getValue(), IECore.InternedStringVectorData( [ "A", "B" ] ) )
 
-		self.assertEqual( p["out"].set( "" ), GafferScene.PathMatcherData() )
-		self.assertEqual( p["out"].set( "nonexistent1" ), GafferScene.PathMatcherData() )
+		self.assertEqual( p["out"].set( "" ), IECore.PathMatcherData() )
+		self.assertEqual( p["out"].set( "nonexistent1" ), IECore.PathMatcherData() )
 		self.assertEqual( p["out"].setHash( "nonexistent1" ), p["out"].setHash( "nonexistent2" ) )
 		self.assertTrue( p["out"].set( "nonexistent1", _copy = False ).isSame( p["out"].set( "nonexistent2", _copy = False ) ) )
 
