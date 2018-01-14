@@ -41,6 +41,7 @@ from AppleseedAttributesTest import AppleseedAttributesTest
 from AppleseedShaderAdaptorTest import AppleseedShaderAdaptorTest
 from AppleseedAutoInstancingTest import AppleseedAutoInstancingTest
 from AppleseedCameraTest import AppleseedCameraTest
+from AppleseedCapsuleTest import AppleseedCapsuleTest
 
 if __name__ == "__main__":
 	import unittest
