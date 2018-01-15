@@ -51,11 +51,11 @@ class ReferenceTest( GafferTest.TestCase ) :
 
 		GafferTest.TestCase.setUp( self )
 
-		# stash the SphereNode so we can restore it in
+		# stash the StringInOutNode so we can restore it in
 		# tearDown() - we're going to mischievously delete
 		# it from the GafferTest module to induce errors
 		# during testing.
-		self.__SphereNode = GafferTest.SphereNode
+		self.__StringInOutNode = GafferTest.StringInOutNode
 
 	def testLoad( self ) :
 
@@ -452,11 +452,11 @@ class ReferenceTest( GafferTest.TestCase ) :
 
 		s = Gaffer.ScriptNode()
 		s["b"] = Gaffer.Box()
-		s["b"]["n"] = GafferTest.SphereNode()
+		s["b"]["n"] = GafferTest.StringInOutNode()
 
 		s["b"].exportForReference( self.temporaryDirectory() + "/test.grf" )
 
-		del GafferTest.SphereNode # induce a failure during loading
+		del GafferTest.StringInOutNode # induce a failure during loading
 
 		s2 = Gaffer.ScriptNode()
 		s2["r"] = Gaffer.Reference()
@@ -465,7 +465,7 @@ class ReferenceTest( GafferTest.TestCase ) :
 			self.assertRaises( Exception, s2["r"].load, self.temporaryDirectory() + "/test.grf" )
 
 		self.assertEqual( len( mh.messages ), 2 )
-		self.assertTrue( "has no attribute 'SphereNode'" in mh.messages[0].message )
+		self.assertTrue( "has no attribute 'StringInOutNode'" in mh.messages[0].message )
 		self.assertTrue( "KeyError: 'n'" in mh.messages[1].message )
 
 	def testErrorTolerantLoading( self ) :
@@ -474,7 +474,7 @@ class ReferenceTest( GafferTest.TestCase ) :
 
 		s = Gaffer.ScriptNode()
 		s["b"] = Gaffer.Box()
-		s["b"]["s"] = GafferTest.SphereNode()
+		s["b"]["s"] = GafferTest.StringInOutNode()
 		s["b"]["a"] = GafferTest.AddNode()
 
 		s["b"].exportForReference( self.temporaryDirectory() + "/test.grf" )
@@ -489,12 +489,12 @@ class ReferenceTest( GafferTest.TestCase ) :
 		self.assertTrue( isinstance( s2["r"]["a"], GafferTest.AddNode ) )
 
 		# save that script, and then mysteriously
-		# disable GafferTest.SphereNode.
+		# disable GafferTest.StringInOutNode.
 
 		s2["fileName"].setValue( self.temporaryDirectory() + "/test.gfr" )
 		s2.save()
 
-		del GafferTest.SphereNode
+		del GafferTest.StringInOutNode
 
 		# load the script, and check that we could at least
 		# load in the other referenced node.
@@ -575,7 +575,7 @@ class ReferenceTest( GafferTest.TestCase ) :
 
 		s = Gaffer.ScriptNode()
 		s["b"] = Gaffer.Box()
-		s["b"]["s"] = GafferTest.SphereNode()
+		s["b"]["s"] = GafferTest.StringInOutNode()
 		s["b"]["a"] = GafferTest.AddNode()
 
 		s["b"].exportForReference( self.temporaryDirectory() + "/test.grf" )
@@ -1154,7 +1154,7 @@ class ReferenceTest( GafferTest.TestCase ) :
 
 		GafferTest.TestCase.tearDown( self )
 
-		GafferTest.SphereNode = self.__SphereNode
+		GafferTest.StringInOutNode = self.__StringInOutNode
 
 		for f in (
 			"/tmp/test.grf",

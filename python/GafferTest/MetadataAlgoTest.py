@@ -35,11 +35,12 @@
 ##########################################################################
 
 import unittest
+import imath
+
+import IECore
 
 import Gaffer
 import GafferTest
-import imath
-import IECore
 
 class MetadataAlgoTest( GafferTest.TestCase ) :
 
@@ -183,7 +184,7 @@ class MetadataAlgoTest( GafferTest.TestCase ) :
 		self.assertEqual( ancestorAffected, [ False ] )
 		self.assertEqual( childAffected, [ False ] )
 
-		Gaffer.Metadata.registerValue( GafferTest.SphereNode, "p.s", "test", 1 )
+		Gaffer.Metadata.registerValue( GafferTest.StringInOutNode, "p.s", "test", 1 )
 		self.assertEqual( affected, [ False, False ] )
 		self.assertEqual( ancestorAffected, [ False, False ] )
 		self.assertEqual( childAffected, [ False, False ] )

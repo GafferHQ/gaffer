@@ -160,8 +160,8 @@ class ObjectWriterTest( GafferTest.TestCase ) :
 
 		# now theres a file and object, we get some output
 		with c :
-			s["sphere"] = GafferTest.SphereNode()
-			s["n"]["in"].setInput( s["sphere"]["out"] )
+			s["o"] = GafferTest.CachingTestNode()
+			s["n"]["in"].setInput( s["o"]["out"] )
 			self.assertNotEqual( s["n"]["task"].hash(), IECore.MurmurHash() )
 
 		# output doesn't vary by time

@@ -63,7 +63,7 @@ class ObjectReaderTest( GafferTest.TestCase ) :
 	def testChangingFileType( self ) :
 
 		imageFileName = os.path.expandvars( "$GAFFER_ROOT/python/GafferCortexTest/images/checker.exr" )
-		cobFileName = os.path.expandvars( "$GAFFER_ROOT/python/GafferTest/cobs/pSphereShape1.cob" )
+		cobFileName = os.path.expandvars( "$GAFFER_ROOT/python/GafferCortexTest/cobs/string.cob" )
 
 		node = GafferCortex.ObjectReader()
 		node["fileName"].setValue( imageFileName )
