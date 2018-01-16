@@ -52,7 +52,7 @@ IE_CORE_DEFINERUNTIMETYPED( Set );
 size_t Set::g_firstPlugIndex = 0;
 
 Set::Set( const std::string &name )
-	:	FilteredSceneProcessor( name, Filter::NoMatch )
+	:	FilteredSceneProcessor( name, IECore::PathMatcher::NoMatch )
 {
 	storeIndexOfNextChild( g_firstPlugIndex );
 	addChild( new Gaffer::IntPlug( "mode", Gaffer::Plug::In, Create, Create, Remove ) );

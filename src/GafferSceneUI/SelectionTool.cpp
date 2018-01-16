@@ -210,7 +210,7 @@ bool SelectionTool::buttonPress( const GafferUI::ButtonEvent &event )
 	}
 	else
 	{
-		const bool objectSelectedAlready = selection.match( objectUnderMouse ) & Filter::ExactMatch;
+		const bool objectSelectedAlready = selection.match( objectUnderMouse ) & PathMatcher::ExactMatch;
 
 		if( objectSelectedAlready )
 		{
@@ -255,7 +255,7 @@ IECore::RunTimeTypedPtr SelectionTool::dragBegin( GafferUI::Gadget *gadget, cons
 	else
 	{
 		const PathMatcher &selection = sg->getSelection()->readable();
-		if( selection.match( objectUnderMouse ) & Filter::ExactMatch )
+		if( selection.match( objectUnderMouse ) & PathMatcher::ExactMatch )
 		{
 			// drag the selection somewhere
 			IECore::StringVectorDataPtr dragData = new IECore::StringVectorData();

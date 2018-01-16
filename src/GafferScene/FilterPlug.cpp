@@ -51,7 +51,7 @@ IE_CORE_DEFINERUNTIMETYPED( FilterPlug );
 const IECore::InternedString FilterPlug::inputSceneContextName( "scene:filter:inputScene" );
 
 FilterPlug::FilterPlug( const std::string &name, Direction direction, unsigned flags )
-	:	IntPlug( name, direction, Filter::NoMatch, Filter::NoMatch, Filter::EveryMatch, flags )
+	:	IntPlug( name, direction, IECore::PathMatcher::NoMatch, IECore::PathMatcher::NoMatch, IECore::PathMatcher::EveryMatch, flags )
 {
 }
 

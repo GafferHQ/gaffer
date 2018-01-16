@@ -141,7 +141,7 @@ class BranchCreator : public SceneProcessor
 		IECore::ConstCompoundDataPtr computeMapping( const Gaffer::Context *context ) const;
 
 		// Computes the relevant parent and branch paths for computing the result
-		// at the specified path. Returns a Filter::Result to describe where path is
+		// at the specified path. Returns a PathMatcher::Result to describe where path is
 		// relative to the parent, as follows :
 		//
 		// AncestorMatch
@@ -163,7 +163,7 @@ class BranchCreator : public SceneProcessor
 		//
 		// The path is a direct pass through from the input - neither
 		// parentPath nor branchPath will be filled in.
-		Filter::Result parentAndBranchPaths( const IECore::CompoundData *mapping, const ScenePath &path, ScenePath &parentPath, ScenePath &branchPath ) const;
+		IECore::PathMatcher::Result parentAndBranchPaths( const IECore::CompoundData *mapping, const ScenePath &path, ScenePath &parentPath, ScenePath &branchPath ) const;
 
 		static size_t g_firstPlugIndex;
 

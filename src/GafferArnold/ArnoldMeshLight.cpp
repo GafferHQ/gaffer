@@ -52,7 +52,7 @@ using namespace GafferArnold;
 IE_CORE_DEFINERUNTIMETYPED( ArnoldMeshLight );
 
 ArnoldMeshLight::ArnoldMeshLight( const std::string &name )
-	:	GafferScene::FilteredSceneProcessor( name, GafferScene::Filter::NoMatch )
+	:	GafferScene::FilteredSceneProcessor( name, IECore::PathMatcher::NoMatch )
 {
 
 	// ArnoldAttributesNode. This hides the objects from the majority

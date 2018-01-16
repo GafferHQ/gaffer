@@ -175,8 +175,8 @@ struct ThreadableFilteredFunctor
 
 	bool operator()( const GafferScene::ScenePlug *scene, const GafferScene::ScenePlug::ScenePath &path )
 	{
-		const GafferScene::Filter::Result match = (GafferScene::Filter::Result)m_filter->getValue();
-		if( match & GafferScene::Filter::ExactMatch )
+		const IECore::PathMatcher::Result match = (IECore::PathMatcher::Result)m_filter->getValue();
+		if( match & IECore::PathMatcher::ExactMatch )
 		{
 			if( !m_f( scene, path ) )
 			{
@@ -184,7 +184,7 @@ struct ThreadableFilteredFunctor
 			}
 		}
 
-		return ( match & GafferScene::Filter::DescendantMatch ) != 0;
+		return ( match & IECore::PathMatcher::DescendantMatch ) != 0;
 	}
 
 	ThreadableFunctor &m_f;
@@ -204,7 +204,7 @@ struct PathMatcherFunctor
 	bool operator()( const GafferScene::ScenePlug *scene, const GafferScene::ScenePlug::ScenePath &path )
 	{
 		const unsigned match = m_filter.match( path );
-		if( match & GafferScene::Filter::ExactMatch )
+		if( match & IECore::PathMatcher::ExactMatch )
 		{
 			if( !m_f( scene, path ) )
 			{
@@ -212,7 +212,7 @@ struct PathMatcherFunctor
 			}
 		}
 
-		return match & GafferScene::Filter::DescendantMatch;
+		return match & IECore::PathMatcher::DescendantMatch;
 	}
 
 	private :

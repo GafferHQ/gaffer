@@ -167,7 +167,7 @@ unsigned SetFilter::computeMatch( const ScenePlug *scene, const Gaffer::Context 
 {
 	if( !scene )
 	{
-		return NoMatch;
+		return IECore::PathMatcher::NoMatch;
 	}
 
 	const ScenePlug::ScenePath &path = context->get<ScenePlug::ScenePath>( ScenePlug::scenePathContextName );

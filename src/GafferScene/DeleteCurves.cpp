@@ -53,7 +53,7 @@ IE_CORE_DEFINERUNTIMETYPED( DeleteCurves );
 
 size_t DeleteCurves::g_firstPlugIndex = 0;
 
-DeleteCurves::DeleteCurves( const std::string &name ) : SceneElementProcessor( name, Filter::NoMatch )
+DeleteCurves::DeleteCurves( const std::string &name ) : SceneElementProcessor( name, IECore::PathMatcher::NoMatch )
 {
 	storeIndexOfNextChild( g_firstPlugIndex );
 

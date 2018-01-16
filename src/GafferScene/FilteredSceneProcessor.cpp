@@ -47,11 +47,11 @@ IE_CORE_DEFINERUNTIMETYPED( FilteredSceneProcessor );
 
 size_t FilteredSceneProcessor::g_firstPlugIndex = 0;
 
-FilteredSceneProcessor::FilteredSceneProcessor( const std::string &name, Filter::Result filterDefault )
+FilteredSceneProcessor::FilteredSceneProcessor( const std::string &name, IECore::PathMatcher::Result filterDefault )
 	:	SceneProcessor( name )
 {
 	storeIndexOfNextChild( g_firstPlugIndex );
-	addChild( new FilterPlug( "filter", Plug::In, filterDefault, Filter::NoMatch, Filter::EveryMatch, Plug::Default ) );
+	addChild( new FilterPlug( "filter", Plug::In, filterDefault, IECore::PathMatcher::NoMatch, IECore::PathMatcher::EveryMatch, Plug::Default ) );
 }
 
 FilteredSceneProcessor::~FilteredSceneProcessor()
@@ -89,8 +89,8 @@ void FilteredSceneProcessor::filterHash( const Gaffer::Context *context, IECore:
 	filterPlug()->hash( h );
 }
 
-Filter::Result FilteredSceneProcessor::filterValue( const Gaffer::Context *context ) const
+IECore::PathMatcher::Result FilteredSceneProcessor::filterValue( const Gaffer::Context *context ) const
 {
 	FilterPlug::SceneScope sceneScope( context, inPlug() );
-	return (Filter::Result)filterPlug()->getValue();
+	return (IECore::PathMatcher::Result)filterPlug()->getValue();
 }

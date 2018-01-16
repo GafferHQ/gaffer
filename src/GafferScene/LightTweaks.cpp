@@ -342,7 +342,7 @@ IE_CORE_DEFINERUNTIMETYPED( LightTweaks );
 size_t LightTweaks::g_firstPlugIndex = 0;
 
 LightTweaks::LightTweaks( const std::string &name )
-	:	SceneElementProcessor( name, Filter::NoMatch )
+	:	SceneElementProcessor( name, IECore::PathMatcher::NoMatch )
 {
 	storeIndexOfNextChild( g_firstPlugIndex );
 	addChild( new StringPlug( "type", Plug::In, "light *:light" ) );

@@ -438,7 +438,7 @@ ConstInternedStringVectorDataPtr RenderSets::setsAttribute( const std::vector<IE
 	vector<InternedString> *result = nullptr;
 	for( Sets::const_iterator it = m_sets.begin(), eIt = m_sets.end(); it != eIt; ++it )
 	{
-		if( it->second.set.match( path ) & ( Filter::ExactMatch | Filter::AncestorMatch ) )
+		if( it->second.set.match( path ) & ( IECore::PathMatcher::ExactMatch | IECore::PathMatcher::AncestorMatch ) )
 		{
 			if( !result )
 			{
@@ -727,7 +727,7 @@ struct CameraOutput : public LocationOutput
 		}
 
 		const size_t cameraMatch = m_cameraSet.match( path );
-		if( cameraMatch & Filter::ExactMatch )
+		if( cameraMatch & IECore::PathMatcher::ExactMatch )
 		{
 			IECore::ConstObjectPtr object = scene->objectPlug()->getValue();
 			if( const Camera *camera = runTimeCast<const Camera>( object.get() ) )
@@ -746,7 +746,7 @@ struct CameraOutput : public LocationOutput
 			}
 		}
 
-		return cameraMatch & Filter::DescendantMatch;
+		return cameraMatch & IECore::PathMatcher::DescendantMatch;
 	}
 
 	private :
@@ -772,7 +772,7 @@ struct LightOutput : public LocationOutput
 		}
 
 		const size_t lightMatch = m_lightSet.match( path );
-		if( lightMatch & Filter::ExactMatch )
+		if( lightMatch & IECore::PathMatcher::ExactMatch )
 		{
 			IECore::ConstObjectPtr object = scene->objectPlug()->getValue();
 
@@ -785,7 +785,7 @@ struct LightOutput : public LocationOutput
 			applyTransform( objectInterface.get() );
 		}
 
-		return lightMatch & Filter::DescendantMatch;
+		return lightMatch & IECore::PathMatcher::DescendantMatch;
 	}
 
 	const PathMatcher &m_lightSet;
@@ -807,7 +807,7 @@ struct ObjectOutput : public LocationOutput
 			return false;
 		}
 
-		if( ( m_cameraSet.match( path ) & Filter::ExactMatch ) || ( m_lightSet.match( path ) & Filter::ExactMatch ) )
+		if( ( m_cameraSet.match( path ) & IECore::PathMatcher::ExactMatch ) || ( m_lightSet.match( path ) & IECore::PathMatcher::ExactMatch ) )
 		{
 			return true;
 		}
@@ -995,7 +995,7 @@ void outputCameras( const ScenePlug *scene, const IECore::CompoundObject *global
 		{
 			throw IECore::Exception( "Camera \"" + cameraOption->readable() + "\" does not exist" );
 		}
-		if( !( renderSets.camerasSet().match( cameraPath ) & Filter::ExactMatch ) )
+		if( !( renderSets.camerasSet().match( cameraPath ) & IECore::PathMatcher::ExactMatch ) )
 		{
 			throw IECore::Exception( "Camera \"" + cameraOption->readable() + "\" is not in the camera set" );
 		}

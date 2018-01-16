@@ -53,7 +53,7 @@ IE_CORE_DEFINERUNTIMETYPED( DeleteFaces );
 
 size_t DeleteFaces::g_firstPlugIndex = 0;
 
-DeleteFaces::DeleteFaces( const std::string &name ) : SceneElementProcessor( name, Filter::NoMatch )
+DeleteFaces::DeleteFaces( const std::string &name ) : SceneElementProcessor( name, IECore::PathMatcher::NoMatch )
 {
 	storeIndexOfNextChild( g_firstPlugIndex );
 

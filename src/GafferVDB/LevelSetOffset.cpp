@@ -53,7 +53,7 @@ IE_CORE_DEFINERUNTIMETYPED( LevelSetOffset );
 size_t LevelSetOffset::g_firstPlugIndex = 0;
 
 LevelSetOffset::LevelSetOffset( const std::string &name )
-	:	SceneElementProcessor( name, GafferScene::Filter::NoMatch )
+	:	SceneElementProcessor( name, IECore::PathMatcher::NoMatch )
 {
 	storeIndexOfNextChild( g_firstPlugIndex );
 

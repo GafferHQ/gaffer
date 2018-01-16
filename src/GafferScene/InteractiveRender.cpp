@@ -547,7 +547,7 @@ class InteractiveRender::SceneGraphUpdateTask : public tbb::task
 			// we can just early out.
 
 			const unsigned sceneGraphMatch = this->sceneGraphMatch();
-			if( !( sceneGraphMatch & ( Filter::ExactMatch | Filter::DescendantMatch ) ) )
+			if( !( sceneGraphMatch & ( IECore::PathMatcher::ExactMatch | IECore::PathMatcher::DescendantMatch ) ) )
 			{
 				m_sceneGraph->clear();
 				return nullptr;
@@ -573,7 +573,7 @@ class InteractiveRender::SceneGraphUpdateTask : public tbb::task
 				m_scenePath,
 				m_dirtyComponents,
 				m_changedParentComponents,
-				sceneGraphMatch & Filter::ExactMatch ? m_sceneGraphType : SceneGraph::NoType,
+				sceneGraphMatch & IECore::PathMatcher::ExactMatch ? m_sceneGraphType : SceneGraph::NoType,
 				m_interactiveRender->m_renderer.get(),
 				m_interactiveRender->m_globals.get(),
 				m_interactiveRender->m_renderSets
@@ -621,17 +621,17 @@ class InteractiveRender::SceneGraphUpdateTask : public tbb::task
 				{
 					unsigned m = m_interactiveRender->m_renderSets.lightsSet().match( m_scenePath ) |
 					             m_interactiveRender->m_renderSets.camerasSet().match( m_scenePath );
-					if( m & Filter::ExactMatch )
+					if( m & IECore::PathMatcher::ExactMatch )
 					{
-						return Filter::AncestorMatch | Filter::DescendantMatch;
+						return IECore::PathMatcher::AncestorMatch | IECore::PathMatcher::DescendantMatch;
 					}
 					else
 					{
-						return Filter::EveryMatch;
+						return IECore::PathMatcher::EveryMatch;
 					}
 				}
 				default :
-					return Filter::NoMatch;
+					return IECore::PathMatcher::NoMatch;
 			}
 		}
 

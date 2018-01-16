@@ -48,7 +48,7 @@ IE_CORE_DEFINERUNTIMETYPED( Prune );
 size_t Prune::g_firstPlugIndex = 0;
 
 Prune::Prune( const std::string &name )
-	:	FilteredSceneProcessor( name, Filter::NoMatch )
+	:	FilteredSceneProcessor( name, IECore::PathMatcher::NoMatch )
 {
 	storeIndexOfNextChild( g_firstPlugIndex );
 	addChild( new BoolPlug( "adjustBounds", Plug::In, false ) );
@@ -133,7 +133,7 @@ void Prune::hashBound( const ScenePath &path, const Gaffer::Context *context, co
 {
 	if( adjustBoundsPlug()->getValue() )
 	{
-		if( filterValue( context ) & Filter::DescendantMatch )
+		if( filterValue( context ) & IECore::PathMatcher::DescendantMatch )
 		{
 			h = hashOfTransformedChildBounds( path, outPlug() );
 			return;
@@ -148,7 +148,7 @@ Imath::Box3f Prune::computeBound( const ScenePath &path, const Gaffer::Context *
 {
 	if( adjustBoundsPlug()->getValue() )
 	{
-		if( filterValue( context ) & Filter::DescendantMatch )
+		if( filterValue( context ) & IECore::PathMatcher::DescendantMatch )
 		{
 			return unionOfTransformedChildBounds( path, outPlug() );
 		}
@@ -160,13 +160,13 @@ Imath::Box3f Prune::computeBound( const ScenePath &path, const Gaffer::Context *
 void Prune::hashChildNames( const ScenePath &path, const Gaffer::Context *context, const ScenePlug *parent, IECore::MurmurHash &h ) const
 {
 	FilterPlug::SceneScope sceneScope( context, inPlug() );
-	const Filter::Result m = (Filter::Result)filterPlug()->getValue();
+	const IECore::PathMatcher::Result m = (IECore::PathMatcher::Result)filterPlug()->getValue();
 
-	if( m & Filter::ExactMatch )
+	if( m & IECore::PathMatcher::ExactMatch )
 	{
 		h = inPlug()->childNamesPlug()->defaultValue()->Object::hash();
 	}
-	else if( m & Filter::DescendantMatch )
+	else if( m & IECore::PathMatcher::DescendantMatch )
 	{
 		// we might be computing new childnames for this level.
 		FilteredSceneProcessor::hashChildNames( path, context, parent, h );
@@ -193,13 +193,13 @@ void Prune::hashChildNames( const ScenePath &path, const Gaffer::Context *contex
 IECore::ConstInternedStringVectorDataPtr Prune::computeChildNames( const ScenePath &path, const Gaffer::Context *context, const ScenePlug *parent ) const
 {
 	FilterPlug::SceneScope sceneScope( context, inPlug() );
-	const Filter::Result m = (Filter::Result)filterPlug()->getValue();
+	const IECore::PathMatcher::Result m = (IECore::PathMatcher::Result)filterPlug()->getValue();
 
-	if( m & Filter::ExactMatch  )
+	if( m & IECore::PathMatcher::ExactMatch  )
 	{
 		return inPlug()->childNamesPlug()->defaultValue();
 	}
-	else if( m & Filter::DescendantMatch )
+	else if( m & IECore::PathMatcher::DescendantMatch )
 	{
 		// we may need to delete one or more of our children
 		ConstInternedStringVectorDataPtr inputChildNamesData = inPlug()->childNamesPlug()->getValue();
@@ -214,7 +214,7 @@ IECore::ConstInternedStringVectorDataPtr Prune::computeChildNames( const ScenePa
 		{
 			childPath[path.size()] = *it;
 			sceneScope.set( ScenePlug::scenePathContextName, childPath );
-			if( !(filterPlug()->getValue() & Filter::ExactMatch) )
+			if( !(filterPlug()->getValue() & IECore::PathMatcher::ExactMatch) )
 			{
 				outputChildNames.push_back( *it );
 			}
@@ -268,7 +268,7 @@ IECore::ConstPathMatcherDataPtr Prune::computeSet( const IECore::InternedString 
 	{
 		sceneScope.set( ScenePlug::scenePathContextName, *pIt );
 		const int m = filterPlug()->getValue();
-		if( m & ( Filter::ExactMatch | Filter::AncestorMatch ) )
+		if( m & ( IECore::PathMatcher::ExactMatch | IECore::PathMatcher::AncestorMatch ) )
 		{
 			// This path and all below it are pruned, so we can
 			// ignore it and prune the traversal to the descendant
@@ -277,7 +277,7 @@ IECore::ConstPathMatcherDataPtr Prune::computeSet( const IECore::InternedString 
 			pIt.prune();
 			++pIt;
 		}
-		else if( m & Filter::DescendantMatch )
+		else if( m & IECore::PathMatcher::DescendantMatch )
 		{
 			// This path isn't pruned, so we continue our traversal
 			// as normal to find out which descendants _are_ pruned.
@@ -289,7 +289,7 @@ IECore::ConstPathMatcherDataPtr Prune::computeSet( const IECore::InternedString 
 			// below it. We can avoid retesting the filter for
 			// all descendant paths, since we know they're not
 			// pruned.
-			assert( m == Filter::NoMatch );
+			assert( m == IECore::PathMatcher::NoMatch );
 			pIt.prune();
 			++pIt;
 		}

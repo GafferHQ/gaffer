@@ -82,7 +82,7 @@ struct Isolate::SetsToKeep
 
 	unsigned match( const ScenePath &path ) const
 	{
-		unsigned result = Filter::NoMatch;
+		unsigned result = IECore::PathMatcher::NoMatch;
 		for( int i = 0; i < 2; ++i )
 		{
 			if( m_sets[i] )
@@ -110,7 +110,7 @@ IE_CORE_DEFINERUNTIMETYPED( Isolate );
 size_t Isolate::g_firstPlugIndex = 0;
 
 Isolate::Isolate( const std::string &name )
-	:	FilteredSceneProcessor( name, Filter::EveryMatch )
+	:	FilteredSceneProcessor( name, IECore::PathMatcher::EveryMatch )
 {
 	storeIndexOfNextChild( g_firstPlugIndex );
 	addChild( new StringPlug( "from", Plug::In, "/" ) );
@@ -271,7 +271,7 @@ void Isolate::hashChildNames( const ScenePath &path, const Gaffer::Context *cont
 		{
 			childPath[path.size()] = *it;
 			const unsigned m = setsToKeep.match( childPath );
-			if( m == Filter::NoMatch )
+			if( m == IECore::PathMatcher::NoMatch )
 			{
 				sceneScope.set( ScenePlug::scenePathContextName, childPath );
 				filterPlug()->hash( h );
@@ -310,12 +310,12 @@ IECore::ConstInternedStringVectorDataPtr Isolate::computeChildNames( const Scene
 		{
 			childPath[path.size()] = *it;
 			unsigned m = setsToKeep.match( childPath );
-			if( m == Filter::NoMatch )
+			if( m == IECore::PathMatcher::NoMatch )
 			{
 				sceneScope.set( ScenePlug::scenePathContextName, childPath );
 				m |= filterPlug()->getValue();
 			}
-			if( m != Filter::NoMatch )
+			if( m != IECore::PathMatcher::NoMatch )
 			{
 				outputChildNames.push_back( *it );
 			}
@@ -403,14 +403,14 @@ IECore::ConstPathMatcherDataPtr Isolate::computeSet( const IECore::InternedStrin
 	{
 		sceneScope.set( ScenePlug::scenePathContextName, *pIt );
 		const int m = filterPlug()->getValue() || setsToKeep.match( *pIt );
-		if( m & ( Filter::ExactMatch | Filter::AncestorMatch ) )
+		if( m & ( IECore::PathMatcher::ExactMatch | IECore::PathMatcher::AncestorMatch ) )
 		{
 			// We want to keep everything below this point, so
 			// can just prune our iteration.
 			pIt.prune();
 			++pIt;
 		}
-		else if( m & Filter::DescendantMatch )
+		else if( m & IECore::PathMatcher::DescendantMatch )
 		{
 			// We might be removing things below here,
 			// so just continue our iteration normally
@@ -419,7 +419,7 @@ IECore::ConstPathMatcherDataPtr Isolate::computeSet( const IECore::InternedStrin
 		}
 		else
 		{
-			assert( m == Filter::NoMatch );
+			assert( m == IECore::PathMatcher::NoMatch );
 			if( boost::starts_with( *pIt, fromPath ) )
 			{
 				// Not going to keep anything below
@@ -445,5 +445,5 @@ bool Isolate::mayPruneChildren( const ScenePath &path, unsigned filterValue, con
 	}
 
 	filterValue |= setsToKeep.match( path );
-	return filterValue == Filter::DescendantMatch || filterValue == Filter::NoMatch;
+	return filterValue == IECore::PathMatcher::DescendantMatch || filterValue == IECore::PathMatcher::NoMatch;
 }

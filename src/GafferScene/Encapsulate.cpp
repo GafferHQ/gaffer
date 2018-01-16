@@ -48,7 +48,7 @@ IE_CORE_DEFINERUNTIMETYPED( Encapsulate );
 size_t Encapsulate::g_firstPlugIndex = 0;
 
 Encapsulate::Encapsulate( const std::string &name )
-	:	FilteredSceneProcessor( name, Filter::NoMatch ), m_dirtyCount( 0 )
+	:	FilteredSceneProcessor( name, IECore::PathMatcher::NoMatch ), m_dirtyCount( 0 )
 {
 	storeIndexOfNextChild( g_firstPlugIndex );
 
@@ -130,7 +130,7 @@ bool Encapsulate::acceptsInput( const Gaffer::Plug *plug, const Gaffer::Plug *in
 
 void Encapsulate::hashObject( const ScenePath &path, const Gaffer::Context *context, const ScenePlug *parent, IECore::MurmurHash &h ) const
 {
-	if( filterValue( context ) & Filter::ExactMatch )
+	if( filterValue( context ) & IECore::PathMatcher::ExactMatch )
 	{
 		FilteredSceneProcessor::hashObject( path, context, parent, h );
 		// What we really want here is a hash uniquely identifying the
@@ -157,7 +157,7 @@ void Encapsulate::hashObject( const ScenePath &path, const Gaffer::Context *cont
 
 IECore::ConstObjectPtr Encapsulate::computeObject( const ScenePath &path, const Gaffer::Context *context, const ScenePlug *parent ) const
 {
-	if( filterValue( context ) & Filter::ExactMatch )
+	if( filterValue( context ) & IECore::PathMatcher::ExactMatch )
 	{
 		return new Capsule(
 			inPlug()->source<ScenePlug>(),
@@ -175,7 +175,7 @@ IECore::ConstObjectPtr Encapsulate::computeObject( const ScenePath &path, const 
 
 void Encapsulate::hashChildNames( const ScenePath &path, const Gaffer::Context *context, const ScenePlug *parent, IECore::MurmurHash &h ) const
 {
-	if( filterValue( context ) & Filter::ExactMatch )
+	if( filterValue( context ) & IECore::PathMatcher::ExactMatch )
 	{
 		h = outPlug()->childNamesPlug()->defaultValue()->Object::hash();
 	}
@@ -187,7 +187,7 @@ void Encapsulate::hashChildNames( const ScenePath &path, const Gaffer::Context *
 
 IECore::ConstInternedStringVectorDataPtr Encapsulate::computeChildNames( const ScenePath &path, const Gaffer::Context *context, const ScenePlug *parent ) const
 {
-	if( filterValue( context ) & Filter::ExactMatch )
+	if( filterValue( context ) & IECore::PathMatcher::ExactMatch )
 	{
 		return outPlug()->childNamesPlug()->defaultValue();
 	}
@@ -236,7 +236,7 @@ IECore::ConstPathMatcherDataPtr Encapsulate::computeSet( const IECore::InternedS
 	{
 		sceneScope.set( ScenePlug::scenePathContextName, *pIt );
 		const int m = filterPlug()->getValue();
-		if( m & ( Filter::ExactMatch | Filter::AncestorMatch ) )
+		if( m & ( IECore::PathMatcher::ExactMatch | IECore::PathMatcher::AncestorMatch ) )
 		{
 			// All paths below here are encapsulated, so we can
 			// remove them from the set and prune our traversal.
@@ -251,7 +251,7 @@ IECore::ConstPathMatcherDataPtr Encapsulate::computeSet( const IECore::InternedS
 			pIt.prune();
 			++pIt;
 		}
-		else if( m & Filter::DescendantMatch )
+		else if( m & IECore::PathMatcher::DescendantMatch )
 		{
 			// This path isn't encapsulated, so we continue our traversal
 			// as normal to find out which descendants _are_ encapsulated.
@@ -261,7 +261,7 @@ IECore::ConstPathMatcherDataPtr Encapsulate::computeSet( const IECore::InternedS
 		{
 			// This path isn't encapsulated, and neither is anything
 			// below it. We can prune our traversal.
-			assert( m == Filter::NoMatch );
+			assert( m == IECore::PathMatcher::NoMatch );
 			pIt.prune();
 			++pIt;
 		}

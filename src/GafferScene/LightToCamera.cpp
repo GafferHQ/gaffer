@@ -248,7 +248,7 @@ IE_CORE_DEFINERUNTIMETYPED( LightToCamera );
 size_t LightToCamera::g_firstPlugIndex = 0;
 
 LightToCamera::LightToCamera( const std::string &name )
-	:	SceneElementProcessor( name, GafferScene::Filter::NoMatch )
+	:	SceneElementProcessor( name, IECore::PathMatcher::NoMatch )
 {
 	storeIndexOfNextChild( g_firstPlugIndex );
 
@@ -488,7 +488,7 @@ IECore::ConstPathMatcherDataPtr LightToCamera::computeSet( const IECore::Interne
 	{
 		sceneScope.set( ScenePlug::scenePathContextName, *pIt );
 		const int m = filterPlug()->getValue();
-		if( m & Filter::ExactMatch )
+		if( m & IECore::PathMatcher::ExactMatch )
 		{
 			if( isLightSet )
 			{
