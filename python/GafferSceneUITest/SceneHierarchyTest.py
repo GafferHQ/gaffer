@@ -48,7 +48,7 @@ class SceneHierarchyTest( GafferUITest.TestCase ) :
 		e = False
 		if "ui:scene:expandedPaths" in context :
 			expandePaths = GafferSceneUI.ContextAlgo.getExpandedPaths( context )
-			if expandePaths and ( expandePaths.match( path ) & GafferScene.Filter.Result.ExactMatch ) :
+			if expandePaths and ( expandePaths.match( path ) & IECore.PathMatcher.Result.ExactMatch ) :
 				e = True
 
 		self.assertEqual( e, expanded )

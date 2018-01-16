@@ -1908,10 +1908,10 @@ class __SetMembershipSection( LocationSection ) :
 			set = target.set( self.__setName )
 
 			m = set.value.match( target.path )
-			if m & GafferScene.Filter.Result.ExactMatch :
+			if m & IECore.PathMatcher.Result.ExactMatch :
 				return True
 
-			if (not ignoreInheritance) and (m & GafferScene.Filter.Result.AncestorMatch) :
+			if (not ignoreInheritance) and (m & IECore.PathMatcher.Result.AncestorMatch) :
 				return True
 
 			return None

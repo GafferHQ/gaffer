@@ -63,15 +63,15 @@ class PathFilterTest( GafferSceneTest.SceneTestCase ) :
 		f["paths"].setValue( IECore.StringVectorData( [ "/a", "/red", "/b/c/d" ] ) )
 
 		for path, result in [
-			( "/a",  f.Result.ExactMatch ),
-			( "/red", f.Result.ExactMatch ),
-			( "/re", f.Result.NoMatch ),
-			( "/redThing", f.Result.NoMatch ),
-			( "/b/c/d", f.Result.ExactMatch ),
-			( "/c", f.Result.NoMatch ),
-			( "/a/b", f.Result.AncestorMatch ),
-			( "/blue", f.Result.NoMatch ),
-			( "/b/c", f.Result.DescendantMatch ),
+			( "/a",  IECore.PathMatcher.Result.ExactMatch ),
+			( "/red", IECore.PathMatcher.Result.ExactMatch ),
+			( "/re", IECore.PathMatcher.Result.NoMatch ),
+			( "/redThing", IECore.PathMatcher.Result.NoMatch ),
+			( "/b/c/d", IECore.PathMatcher.Result.ExactMatch ),
+			( "/c", IECore.PathMatcher.Result.NoMatch ),
+			( "/a/b", IECore.PathMatcher.Result.AncestorMatch ),
+			( "/blue", IECore.PathMatcher.Result.NoMatch ),
+			( "/b/c", IECore.PathMatcher.Result.DescendantMatch ),
 		] :
 
 			with Gaffer.Context() as c :
@@ -83,7 +83,7 @@ class PathFilterTest( GafferSceneTest.SceneTestCase ) :
 		f = GafferScene.PathFilter()
 		with Gaffer.Context() as c :
 			c["scene:path"] = IECore.InternedStringVectorData( [ "a" ] )
-			self.assertEqual( f["out"].getValue(), int( f.Result.NoMatch ) )
+			self.assertEqual( f["out"].getValue(), int( IECore.PathMatcher.Result.NoMatch ) )
 
 	def testInputsAccepted( self ) :
 
@@ -132,15 +132,15 @@ class PathFilterTest( GafferSceneTest.SceneTestCase ) :
 		p.setValue( IECore.StringVectorData( [ "/a", "/red", "/b/c/d" ] ) )
 
 		for path, result in [
-			( "/a",  GafferScene.Filter.Result.ExactMatch ),
-			( "/red", GafferScene.Filter.Result.ExactMatch ),
-			( "/re", GafferScene.Filter.Result.NoMatch ),
-			( "/redThing", GafferScene.Filter.Result.NoMatch ),
-			( "/b/c/d", GafferScene.Filter.Result.ExactMatch ),
-			( "/c", GafferScene.Filter.Result.NoMatch ),
-			( "/a/b", GafferScene.Filter.Result.AncestorMatch ),
-			( "/blue", GafferScene.Filter.Result.NoMatch ),
-			( "/b/c", GafferScene.Filter.Result.DescendantMatch ),
+			( "/a",  IECore.PathMatcher.Result.ExactMatch ),
+			( "/red", IECore.PathMatcher.Result.ExactMatch ),
+			( "/re", IECore.PathMatcher.Result.NoMatch ),
+			( "/redThing", IECore.PathMatcher.Result.NoMatch ),
+			( "/b/c/d", IECore.PathMatcher.Result.ExactMatch ),
+			( "/c", IECore.PathMatcher.Result.NoMatch ),
+			( "/a/b", IECore.PathMatcher.Result.AncestorMatch ),
+			( "/blue", IECore.PathMatcher.Result.NoMatch ),
+			( "/b/c", IECore.PathMatcher.Result.DescendantMatch ),
 		] :
 
 			with Gaffer.Context() as c :
@@ -166,9 +166,9 @@ class PathFilterTest( GafferSceneTest.SceneTestCase ) :
 
 		with Gaffer.Context() as c :
 			c["scene:path"] = IECore.InternedStringVectorData( [ "a" ])
-			self.assertEqual( s["f"]["out"].getValue(), GafferScene.Filter.Result.NoMatch )
+			self.assertEqual( s["f"]["out"].getValue(), IECore.PathMatcher.Result.NoMatch )
 			c["passName"] = "foreground"
-			self.assertEqual( s["f"]["out"].getValue(), GafferScene.Filter.Result.ExactMatch )
+			self.assertEqual( s["f"]["out"].getValue(), IECore.PathMatcher.Result.ExactMatch )
 
 	def testEnabled( self ) :
 
@@ -184,10 +184,10 @@ class PathFilterTest( GafferSceneTest.SceneTestCase ) :
 		with Gaffer.Context() as c :
 
 			c["scene:path"] = IECore.InternedStringVectorData( [ "a" ] )
-			self.assertEqual( f["out"].getValue(), GafferScene.Filter.Result.ExactMatch )
+			self.assertEqual( f["out"].getValue(), IECore.PathMatcher.Result.ExactMatch )
 
 			f["enabled"].setValue( False )
-			self.assertEqual( f["out"].getValue(), GafferScene.Filter.Result.NoMatch )
+			self.assertEqual( f["out"].getValue(), IECore.PathMatcher.Result.NoMatch )
 
 		a = f.affects( f["enabled"] )
 		self.assertTrue( f["out"] in a )
@@ -200,7 +200,7 @@ class PathFilterTest( GafferSceneTest.SceneTestCase ) :
 		with Gaffer.Context() as c :
 
 			c["scene:path"] = IECore.InternedStringVectorData( [ "a" ] )
-			self.assertEqual( f["out"].getValue(), GafferScene.Filter.Result.NoMatch )
+			self.assertEqual( f["out"].getValue(), IECore.PathMatcher.Result.NoMatch )
 
 if __name__ == "__main__":
 	unittest.main()

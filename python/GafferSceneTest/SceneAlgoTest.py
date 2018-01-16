@@ -68,9 +68,9 @@ class SceneAlgoTest( GafferSceneTest.SceneTestCase ) :
 		GafferScene.SceneAlgo.matchingPaths( filter, instancer["out"], matchingPaths )
 
 		self.assertEqual( len( matchingPaths.paths() ), 1000 )
-		self.assertEqual( matchingPaths.match( "/plane/instances/1/group/plane" ), GafferScene.Filter.Result.ExactMatch )
-		self.assertEqual( matchingPaths.match( "/plane/instances/1121/group/plane" ), GafferScene.Filter.Result.ExactMatch )
-		self.assertEqual( matchingPaths.match( "/plane/instances/1121/group/sphere" ), GafferScene.Filter.Result.NoMatch )
+		self.assertEqual( matchingPaths.match( "/plane/instances/1/group/plane" ), IECore.PathMatcher.Result.ExactMatch )
+		self.assertEqual( matchingPaths.match( "/plane/instances/1121/group/plane" ), IECore.PathMatcher.Result.ExactMatch )
+		self.assertEqual( matchingPaths.match( "/plane/instances/1121/group/sphere" ), IECore.PathMatcher.Result.NoMatch )
 
 	def testExists( self ) :
 
