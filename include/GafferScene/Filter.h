@@ -37,6 +37,8 @@
 #ifndef GAFFERSCENE_FILTER_H
 #define GAFFERSCENE_FILTER_H
 
+#include "IECore/PathMatcher.h"
+
 #include "Gaffer/ComputeNode.h"
 #include "Gaffer/NumericPlug.h"
 
@@ -55,15 +57,6 @@ class Filter : public Gaffer::ComputeNode
 {
 
 	public :
-
-		enum Result
-		{
-			NoMatch = 0,
-			DescendantMatch = 1,
-			ExactMatch = 2,
-			AncestorMatch = 4,
-			EveryMatch = DescendantMatch | ExactMatch | AncestorMatch
-		};
 
 		IE_CORE_DECLARERUNTIMETYPEDEXTENSION( GafferScene::Filter, FilterTypeId, Gaffer::ComputeNode );
 
@@ -111,6 +104,8 @@ class Filter : public Gaffer::ComputeNode
 		virtual void hashMatch( const ScenePlug *scene, const Gaffer::Context *context, IECore::MurmurHash &h ) const;
 		/// Must be implemented by derived classes to compute the result of the filter, or
 		/// an input connection must be made into outPlug(), so that the method is not called.
+		/// Results must be a bitwise combination of values from the IECore::PathMatcher::Result
+		/// enumeration.
 		virtual unsigned computeMatch( const ScenePlug *scene, const Gaffer::Context *context ) const;
 
 	private :
