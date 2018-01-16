@@ -58,4 +58,5 @@ void GafferModule::bindTypedObjectPlug()
 	GafferBindings::TypedObjectPlugClass<Gaffer::ObjectVectorPlug>();
 	GafferBindings::TypedObjectPlugClass<Gaffer::CompoundObjectPlug>();
 	GafferBindings::TypedObjectPlugClass<Gaffer::AtomicCompoundDataPlug>();
+	GafferBindings::TypedObjectPlugClass<Gaffer::PathMatcherDataPlug>();
 }
