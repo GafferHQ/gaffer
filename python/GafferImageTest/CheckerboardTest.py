@@ -51,13 +51,13 @@ class CheckerboardTest( GafferImageTest.ImageTestCase ) :
 
 		checkerboard = GafferImage.Checkerboard()
 		checkerboard["format"].setValue( GafferImage.Format( IECore.Box2i( IECore.V2i( 0 ), IECore.V2i( 511 ) ), 1 ) )
-		checkerboard["colorB"].setValue( IECore.Color4f( 0.1, 0.25, 0.5, 1 ) )
+		checkerboard["colorA"].setValue( IECore.Color4f( 0.1, 0.25, 0.5, 1 ) )
 
 		for i, channel in enumerate( [ "R", "G", "B", "A" ] ) :
 			channelData = checkerboard["out"].channelData( channel, IECore.V2i( 0 ) )
 			self.assertEqual( len( channelData ), checkerboard["out"].tileSize() * checkerboard["out"].tileSize() )
 
-			expectedValue = checkerboard["colorB"][i].getValue()
+			expectedValue = checkerboard["colorA"][i].getValue()
 			s = GafferImage.Sampler( checkerboard["out"], channel, checkerboard["out"]["dataWindow"].getValue() )
 			self.assertAlmostEqual( s.sample( 12, 12 ), expectedValue, delta = 0.001 )
 			self.assertAlmostEqual( s.sample( 72, 72 ), expectedValue, delta = 0.001 )
@@ -143,9 +143,9 @@ class CheckerboardTest( GafferImageTest.ImageTestCase ) :
 
 		checkerboard = GafferImage.Checkerboard()
 		checkerboard["format"].setValue( GafferImage.Format( 128, 128 ) )
-		checkerboard["size"]["x"].setValue( 129 )
-		checkerboard["size"]["y"].setValue( 129 )
-		checkerboard["transform"]["translate"].setValue( IECore.V2f( -1, -1 ) )
+		checkerboard["size"]["x"].setValue( 128 )
+		checkerboard["size"]["y"].setValue( 128 )
+		checkerboard["transform"]["rotate"].setValue( 45 )
 
 		reader = GafferImage.ImageReader()
 		reader["fileName"].setValue( os.path.dirname( __file__ ) + "/images/GafferChecker.exr" )
