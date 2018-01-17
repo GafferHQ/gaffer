@@ -73,11 +73,8 @@ class Checkerboard : public ImageNode
 		Gaffer::Color4fPlug *colorPlugB();
 		const Gaffer::Color4fPlug *colorPlugB() const;
 
-		Gaffer::V2iPlug *sizePlug();
-		const Gaffer::V2iPlug *sizePlug() const;
-
-		Gaffer::FloatPlug *softnessPlug();
-		const Gaffer::FloatPlug *softnessPlug() const;
+		Gaffer::V2fPlug *sizePlug();
+		const Gaffer::V2fPlug *sizePlug() const;
 
 		Gaffer::StringPlug *layerPlug();
 		const Gaffer::StringPlug *layerPlug() const;

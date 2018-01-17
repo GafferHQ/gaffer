@@ -52,19 +52,15 @@ using namespace Gaffer;
 
 namespace
 {
-
-	float filteredStripes( float x, float period, float width )
+	float filteredStripes( float x, float period )
 	{
-		float edge = 0.5f;
-		float w = width / period;
-		float x0 = x / period - w / 2;
-		float x1 = x0 + w;
-		float edgeComp = 1 - edge;
+		float x0 = (x - 0.5f) / period;
+		float x1 = (x + 0.5f) / period;
 		float floorX1 = floor( x1 );
 		float floorX0 = floor( x0 );
-	
-		return ( ( edgeComp * floorX1 + max( 0.f, x1 - floorX1 - edge ) ) - ( edgeComp * floorX0 + max( 0.f, x0 - floorX0 - edge ) ) ) / ( w );
-	
+
+		return ( ( 0.5f * floorX1 + max( 0.f, x1 - floorX1 - 0.5f ) ) -
+			 ( 0.5f * floorX0 + max( 0.f, x0 - floorX0 - 0.5f ) ) ) * period;
 	}
 
 }
@@ -82,8 +78,7 @@ Checkerboard::Checkerboard( const std::string &name )
 {
 	storeIndexOfNextChild( g_firstPlugIndex );
 	addChild( new FormatPlug( "format" ) );
-	addChild( new V2iPlug( "size", Plug::In, V2i( 64 ), V2i( 1 ), V2i( 4096 ) ) );
-	addChild( new FloatPlug( "softness", Plug::In, 1.f, 1.f, 10.f ) );
+	addChild( new V2fPlug( "size", Plug::In, V2i( 64.f ), V2i( 1.f ), V2i( 4096.f ) ) );
 	addChild( new Color4fPlug( "colorA", Plug::In, Color4f( 0.1, 0.1, 0.1, 1 ) ) );
 	addChild( new Color4fPlug( "colorB", Plug::In, Color4f( .5, 0.5, 0.5, 1 ) ) );
 	addChild( new StringPlug( "layer" ) );
@@ -104,64 +99,54 @@ const GafferImage::FormatPlug *Checkerboard::formatPlug() const
 	return getChild<FormatPlug>( g_firstPlugIndex );
 }
 
-Gaffer::V2iPlug *Checkerboard::sizePlug()
+Gaffer::V2fPlug *Checkerboard::sizePlug()
 {
-	return getChild<V2iPlug>( g_firstPlugIndex + 1 );
+	return getChild<V2fPlug>( g_firstPlugIndex + 1 );
 }
 
-const Gaffer::V2iPlug *Checkerboard::sizePlug() const
+const Gaffer::V2fPlug *Checkerboard::sizePlug() const
 { 
-	return getChild<V2iPlug>( g_firstPlugIndex + 1 );
-}
-
-Gaffer::FloatPlug *Checkerboard::softnessPlug()
-{
-	return getChild<FloatPlug>( g_firstPlugIndex + 2 );
-}
-
-const Gaffer::FloatPlug *Checkerboard::softnessPlug() const
-{ 
-	return getChild<FloatPlug>( g_firstPlugIndex + 2 );
+	return getChild<V2fPlug>( g_firstPlugIndex + 1 );
 }
 
 Gaffer::Color4fPlug *Checkerboard::colorPlugA()
 {
-	return getChild<Color4fPlug>( g_firstPlugIndex + 3 );
+	return getChild<Color4fPlug>( g_firstPlugIndex + 2 );
 }
 
 const Gaffer::Color4fPlug *Checkerboard::colorPlugA() const
 {
-	return getChild<Color4fPlug>( g_firstPlugIndex + 3 );
+	return getChild<Color4fPlug>( g_firstPlugIndex + 2 );
 }
 
 Gaffer::Color4fPlug *Checkerboard::colorPlugB()
 {
-	return getChild<Color4fPlug>( g_firstPlugIndex + 4 );
+	return getChild<Color4fPlug>( g_firstPlugIndex + 3 );
 }
 
 const Gaffer::Color4fPlug *Checkerboard::colorPlugB() const
 {
-	return getChild<Color4fPlug>( g_firstPlugIndex + 4 );
+	return getChild<Color4fPlug>( g_firstPlugIndex + 3 );
 }
 
 Gaffer::StringPlug *Checkerboard::layerPlug()
 {
-	return getChild<StringPlug>( g_firstPlugIndex + 5 );
+	return getChild<StringPlug>( g_firstPlugIndex + 4 );
 }
 
 const Gaffer::StringPlug *Checkerboard::layerPlug() const
 {
-	return getChild<StringPlug>( g_firstPlugIndex + 5 );
+	return getChild<StringPlug>( g_firstPlugIndex + 4 );
 }
 
 Gaffer::Transform2DPlug *Checkerboard::transformPlug()
 {
-	return getChild<Transform2DPlug>( g_firstPlugIndex + 6 );
+	return getChild<Transform2DPlug>( g_firstPlugIndex + 5 );
 }
 
 const Gaffer::Transform2DPlug *Checkerboard::transformPlug() const
 {
-	return getChild<Transform2DPlug>( g_firstPlugIndex + 6 );
+	return getChild<Transform2DPlug>( g_firstPlugIndex + 5 );
 }
 
 void Checkerboard::affects( const Gaffer::Plug *input, AffectedPlugsContainer &outputs ) const
@@ -171,9 +156,8 @@ void Checkerboard::affects( const Gaffer::Plug *input, AffectedPlugsContainer &o
 	if(
 		input->parent<Plug>() == colorPlugA() ||
 		input->parent<Plug>() == colorPlugB() ||
-		input->parent<V2iPlug>() == sizePlug() ||
-		transformPlug()->isAncestorOf( input ) ||
-		input == softnessPlug()
+		input->parent<V2fPlug>() == sizePlug() ||
+		transformPlug()->isAncestorOf( input ) 
 	)
 	{
 		outputs.push_back( outPlug()->channelDataPlug() );
@@ -264,7 +248,6 @@ void Checkerboard::hashChannelData( const GafferImage::ImagePlug *output, const 
 
 	h.append( sizePlug()->getValue() );
 	transformPlug()->hash( h );
-	softnessPlug()->hash( h );
 }
 
 IECore::ConstFloatVectorDataPtr Checkerboard::computeChannelData( const std::string &channelName, const Imath::V2i &tileOrigin, const Gaffer::Context *context, const ImagePlug *parent ) const
@@ -273,8 +256,7 @@ IECore::ConstFloatVectorDataPtr Checkerboard::computeChannelData( const std::str
 
 	const float valueA = colorPlugA()->getChild( channelIndex )->getValue();
 	const float valueB = colorPlugB()->getChild( channelIndex )->getValue();
-	const V2i size = sizePlug()->getValue();
-	float softness = softnessPlug()->getValue();
+	const V2f size = sizePlug()->getValue();
 	const M33f transform = transformPlug()->matrix();
 
 	FloatVectorDataPtr resultData = new FloatVectorData;
@@ -283,8 +265,6 @@ IECore::ConstFloatVectorDataPtr Checkerboard::computeChannelData( const std::str
 
 	float w0;
 	float h0;
-	float w1;
-	float h1;
 	float v;
 
 	for( int y = 0; y < ImagePlug::tileSize(); ++y )
@@ -292,15 +272,13 @@ IECore::ConstFloatVectorDataPtr Checkerboard::computeChannelData( const std::str
 		for( int x = 0; x < ImagePlug::tileSize(); ++x )
 		{
 			// screen space pixel coordinates
-			V2f p( tileOrigin.x + x, tileOrigin.y + y );
+			V2f p( tileOrigin.x + x + 0.5, tileOrigin.y + y + .5 );
 			p *= transform.inverse();
 
-			w0 = filteredStripes( p.x , size.x, softness );
-			h0 = filteredStripes( p.y , size.y, softness );
-			w1 = filteredStripes( p.x  + size.x / 2.f, size.x, softness );
-			h1 = filteredStripes( p.y  + size.y / 2.f, size.y, softness );
-			v = w0 * h0 + w1 * h1;
+			w0 = filteredStripes( p.x, size.x );
+			h0 = filteredStripes( p.y, size.y );
 
+			v = lerp<float>( w0, 1 - w0, h0 );
 			result.push_back( lerp<float>( valueA, valueB, v ) );
 		}
 
