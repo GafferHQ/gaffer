@@ -37,6 +37,7 @@
 #ifndef GAFFER_BOX_H
 #define GAFFER_BOX_H
 
+#include "Gaffer/Export.h"
 #include "Gaffer/SubGraph.h"
 
 namespace Gaffer
@@ -47,7 +48,7 @@ IE_CORE_FORWARDDECLARE( Set )
 
 /// A Box is simply a Node which is intended to hold other Nodes
 /// as children.
-class Box : public SubGraph
+class GAFFER_API Box : public SubGraph
 {
 
 	public :

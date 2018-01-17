@@ -37,6 +37,7 @@
 #ifndef GAFFER_CHILDSET_H
 #define GAFFER_CHILDSET_H
 
+#include "Gaffer/Export.h"
 #include "Gaffer/Set.h"
 
 namespace Gaffer
@@ -44,7 +45,7 @@ namespace Gaffer
 
 /// The ChildSet is a Set implementation where the membership automatically
 /// tracks the children of a GraphComponent.
-class ChildSet : public Gaffer::Set
+class GAFFER_API ChildSet : public Gaffer::Set
 {
 
 	public :

@@ -38,6 +38,7 @@
 #ifndef GAFFER_STRINGPLUG_H
 #define GAFFER_STRINGPLUG_H
 
+#include "Gaffer/Export.h"
 #include "Gaffer/ValuePlug.h"
 #include "Gaffer/Context.h"
 
@@ -79,7 +80,7 @@ namespace Gaffer
 /// > `getValue()`. However, in practice, it was determined to
 /// > be too error prone to remember to do this for every
 /// > value access in every node.
-class StringPlug : public ValuePlug
+class GAFFER_API StringPlug : public ValuePlug
 {
 
 	public :

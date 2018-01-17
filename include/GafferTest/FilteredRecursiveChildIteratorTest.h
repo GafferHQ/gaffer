@@ -37,10 +37,12 @@
 #ifndef GAFFERTEST_FILTEREDRECURSIVECHILDITERATORTEST_H
 #define GAFFERTEST_FILTEREDRECURSIVECHILDITERATORTEST_H
 
+#include "GafferTest/Export.h"
+
 namespace GafferTest
 {
 
-void testFilteredRecursiveChildIterator();
+GAFFERTEST_API void testFilteredRecursiveChildIterator();
 
 } // namespace GafferTest
 

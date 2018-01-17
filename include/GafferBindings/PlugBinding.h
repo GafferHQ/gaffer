@@ -44,6 +44,7 @@
 
 #include "Gaffer/Plug.h"
 
+#include "GafferBindings/Export.h"
 #include "GafferBindings/GraphComponentBinding.h"
 #include "GafferBindings/Serialisation.h"
 
@@ -137,7 +138,7 @@ class PlugWrapper : public GraphComponentWrapper<WrappedType>
 
 };
 
-class PlugSerialiser : public Serialisation::Serialiser
+class GAFFERBINDINGS_API PlugSerialiser : public Serialisation::Serialiser
 {
 
 	public :

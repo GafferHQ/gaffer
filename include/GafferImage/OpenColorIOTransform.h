@@ -41,13 +41,14 @@
 
 #include "Gaffer/CompoundDataPlug.h"
 
+#include "GafferImage/Export.h"
 #include "GafferImage/ColorProcessor.h"
 
 namespace GafferImage
 {
 
 /// Abstract base class for nodes which apply an OpenColorIO Transform
-class OpenColorIOTransform : public ColorProcessor
+class GAFFERIMAGE_API OpenColorIOTransform : public ColorProcessor
 {
 
 	public :

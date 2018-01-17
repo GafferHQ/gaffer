@@ -40,12 +40,13 @@
 #include "Gaffer/CompoundNumericPlug.h"
 #include "Gaffer/NumericPlug.h"
 
+#include "GafferImage/Export.h"
 #include "GafferImage/OpenColorIOTransform.h"
 
 namespace GafferImage
 {
 
-class CDL : public OpenColorIOTransform
+class GAFFERIMAGE_API CDL : public OpenColorIOTransform
 {
 
 	public :

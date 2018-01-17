@@ -34,6 +34,7 @@
 //
 //////////////////////////////////////////////////////////////////////////
 
+#include "Gaffer/Export.h"
 #include "Gaffer/DeleteContextVariables.inl"
 
 namespace Gaffer
@@ -44,4 +45,4 @@ IECORE_RUNTIMETYPED_DEFINETEMPLATESPECIALISATION( Gaffer::DeleteContextVariables
 }
 
 // explicit instantiation
-template class Gaffer::DeleteContextVariables<Gaffer::ComputeNode>;
+template class GAFFER_API Gaffer::DeleteContextVariables<Gaffer::ComputeNode>;

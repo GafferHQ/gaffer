@@ -43,13 +43,14 @@
 #include "Gaffer/StringPlug.h"
 #include "Gaffer/NumericPlug.h"
 
+#include "GafferImage/Export.h"
 #include "GafferImage/ImageNode.h"
 #include "GafferImage/ImageSwitch.h"
 
 namespace GafferImage
 {
 
-class Catalogue : public ImageNode
+class GAFFERIMAGE_API Catalogue : public ImageNode
 {
 
 	public :
@@ -60,7 +61,7 @@ class Catalogue : public ImageNode
 		~Catalogue() override;
 
 		/// Plug type used to represent an image in the catalogue.
-		class Image : public Gaffer::Plug
+		class GAFFERIMAGE_API Image : public Gaffer::Plug
 		{
 
 			public :

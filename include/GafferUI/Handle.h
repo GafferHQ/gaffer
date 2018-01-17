@@ -38,13 +38,14 @@
 #ifndef GAFFERUI_HANDLE_H
 #define GAFFERUI_HANDLE_H
 
+#include "GafferUI/Export.h"
 #include "GafferUI/Gadget.h"
 #include "GafferUI/Style.h"
 
 namespace GafferUI
 {
 
-class Handle : public Gadget
+class GAFFERUI_API Handle : public Gadget
 {
 
 	public :
@@ -80,7 +81,7 @@ class Handle : public Gadget
 		// Helper for performing linear drags. Should be constructed
 		// in `dragBegin()` and then `position()` should be used
 		// to measure the progress of the drag.
-		struct LinearDrag
+		struct GAFFERUI_API LinearDrag
 		{
 
 			LinearDrag();
@@ -103,7 +104,7 @@ class Handle : public Gadget
 		};
 
 		// Helper for performing drags in a plane.
-		struct PlanarDrag
+		struct GAFFERUI_API PlanarDrag
 		{
 
 			PlanarDrag();

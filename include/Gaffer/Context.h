@@ -44,6 +44,7 @@
 #include "IECore/Data.h"
 #include "IECore/MurmurHash.h"
 
+#include "Gaffer/Export.h"
 #include "Gaffer/StringAlgo.h"
 
 namespace Gaffer
@@ -69,7 +70,7 @@ namespace Gaffer
 /// avoid unnecessary recomputation. In the future we may explore having the UI use a separate
 /// container for such variables, or a more general mechanism for variables guaranteed to be
 /// unrelated to computation.
-class Context : public IECore::RefCounted
+class GAFFER_API Context : public IECore::RefCounted
 {
 
 	public :
@@ -221,7 +222,7 @@ class Context : public IECore::RefCounted
 
 		/// The Scope class is used to push and pop the current context on
 		/// the calling thread.
-		class Scope : boost::noncopyable
+		class GAFFER_API Scope : boost::noncopyable
 		{
 
 			public :
@@ -245,7 +246,7 @@ class Context : public IECore::RefCounted
 		/// because it is harder to provide the necessary lifetime
 		/// guarantees there, and performance critical code should
 		/// not be implemented in Python in any case.
-		class EditableScope : boost::noncopyable
+		class GAFFER_API EditableScope : boost::noncopyable
 		{
 
 			public :

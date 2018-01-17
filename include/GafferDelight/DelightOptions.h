@@ -39,12 +39,13 @@
 
 #include "GafferScene/Options.h"
 
+#include "GafferDelight/Export.h"
 #include "GafferDelight/TypeIds.h"
 
 namespace GafferDelight
 {
 
-class DelightOptions : public GafferScene::Options
+class GAFFERDELIGHT_API DelightOptions : public GafferScene::Options
 {
 
 	public :

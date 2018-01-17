@@ -41,10 +41,12 @@
 #include "Gaffer/Set.h"
 #include "Gaffer/GraphComponent.h"
 
+#include "GafferBindings/Export.h"
+
 namespace GafferBindings
 {
 
-class Serialisation
+class GAFFERBINDINGS_API Serialisation
 {
 
 	public :
@@ -79,7 +81,7 @@ class Serialisation
 
 		/// The Serialiser class may be implemented differently for specific types to customise
 		/// their serialisation.
-		class Serialiser : public IECore::RefCounted
+		class GAFFERBINDINGS_API Serialiser : public IECore::RefCounted
 		{
 
 			public :

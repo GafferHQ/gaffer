@@ -37,12 +37,14 @@
 #ifndef GAFFERSCENETEST_PATHMATCHERTEST_H
 #define GAFFERSCENETEST_PATHMATCHERTEST_H
 
+#include "GafferSceneTest/Export.h"
+
 namespace GafferSceneTest
 {
 
-void testPathMatcherRawIterator();
-void testPathMatcherIteratorPrune();
-void testPathMatcherFind();
+GAFFERSCENETEST_API void testPathMatcherRawIterator();
+GAFFERSCENETEST_API void testPathMatcherIteratorPrune();
+GAFFERSCENETEST_API void testPathMatcherFind();
 
 } // namespace GafferSceneTest
 

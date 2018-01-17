@@ -37,6 +37,7 @@
 #ifndef GAFFERUI_KEYEVENT_H
 #define GAFFERUI_KEYEVENT_H
 
+#include "GafferUI/Export.h"
 #include "GafferUI/ModifiableEvent.h"
 
 #include "OpenEXR/ImathVec.h"
@@ -45,7 +46,7 @@ namespace GafferUI
 {
 
 /// A class to represent events involving keyboard keys.
-struct KeyEvent : public ModifiableEvent
+struct GAFFERUI_API KeyEvent : public ModifiableEvent
 {
 	KeyEvent(
 		const char *k = "a",

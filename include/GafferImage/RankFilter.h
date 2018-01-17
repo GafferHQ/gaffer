@@ -41,12 +41,13 @@
 #include "Gaffer/StringPlug.h"
 #include "Gaffer/TypedObjectPlug.h"
 
+#include "GafferImage/Export.h"
 #include "GafferImage/ImageProcessor.h"
 
 namespace GafferImage
 {
 
-class RankFilter : public ImageProcessor
+class GAFFERIMAGE_API RankFilter : public ImageProcessor
 {
 
 	public :

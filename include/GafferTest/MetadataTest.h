@@ -37,10 +37,12 @@
 #ifndef GAFFERTEST_METADATATEST_H
 #define GAFFERTEST_METADATATEST_H
 
+#include "GafferTest/Export.h"
+
 namespace GafferTest
 {
 
-void testMetadataThreading();
+GAFFERTEST_API void testMetadataThreading();
 
 } // namespace GafferTest
 

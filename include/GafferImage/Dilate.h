@@ -37,12 +37,13 @@
 #ifndef GAFFERIMAGE_DILATE_H
 #define GAFFERIMAGE_DILATE_H
 
+#include "GafferImage/Export.h"
 #include "GafferImage/RankFilter.h"
 
 namespace GafferImage
 {
 
-class Dilate : public RankFilter
+class GAFFERIMAGE_API Dilate : public RankFilter
 {
 
 	public :

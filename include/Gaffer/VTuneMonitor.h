@@ -39,13 +39,14 @@
 
 #ifdef GAFFER_VTUNE
 
+#include "Gaffer/Export.h"
 #include "Gaffer/Monitor.h"
 
 namespace Gaffer
 {
 
 /// A monitor which provides instrumentation to annotate a vtune profile
-class VTuneMonitor : public Monitor
+class GAFFER_API VTuneMonitor : public Monitor
 {
 
 	public :

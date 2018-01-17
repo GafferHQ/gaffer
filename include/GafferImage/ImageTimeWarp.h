@@ -38,6 +38,8 @@
 #define GAFFERIMAGE_IMAGETIMEWARP_H
 
 #include "Gaffer/TimeWarp.h"
+
+#include "GafferImage/Export.h"
 #include "GafferImage/ImageProcessor.h"
 
 namespace GafferImage

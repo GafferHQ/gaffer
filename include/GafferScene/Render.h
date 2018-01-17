@@ -41,6 +41,8 @@
 #include "Gaffer/NumericPlug.h"
 
 #include "GafferDispatch/TaskNode.h"
+
+#include "GafferScene/Export.h"
 #include "GafferScene/TypeIds.h"
 
 namespace GafferScene
@@ -48,7 +50,7 @@ namespace GafferScene
 
 IE_CORE_FORWARDDECLARE( ScenePlug )
 
-class Render : public GafferDispatch::TaskNode
+class GAFFERSCENE_API Render : public GafferDispatch::TaskNode
 {
 
 	public :

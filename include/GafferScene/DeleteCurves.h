@@ -38,6 +38,7 @@
 #ifndef GAFFERSCENE_DELETECURVES_H
 #define GAFFERSCENE_DELETECURVES_H
 
+#include "GafferScene/Export.h"
 #include "GafferScene/SceneElementProcessor.h"
 
 namespace Gaffer
@@ -50,7 +51,7 @@ IE_CORE_FORWARDDECLARE( StringPlug )
 namespace GafferScene
 {
 
-class DeleteCurves : public SceneElementProcessor
+class GAFFERSCENE_API DeleteCurves : public SceneElementProcessor
 {
 
 	public :

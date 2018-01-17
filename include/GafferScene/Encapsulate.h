@@ -37,12 +37,13 @@
 #ifndef GAFFERSCENE_ENCAPSULATE_H
 #define GAFFERSCENE_ENCAPSULATE_H
 
+#include "GafferScene/Export.h"
 #include "GafferScene/FilteredSceneProcessor.h"
 
 namespace GafferScene
 {
 
-class Encapsulate : public FilteredSceneProcessor
+class GAFFERSCENE_API Encapsulate : public FilteredSceneProcessor
 {
 
 	public :

@@ -42,6 +42,7 @@
 
 #include "IECore/RunTimeTyped.h"
 
+#include "GafferUI/Export.h"
 #include "GafferUI/TypeIds.h"
 
 namespace Gaffer
@@ -64,7 +65,7 @@ IE_CORE_FORWARDDECLARE( GraphGadget );
 /// a mechanism of named operations which can be invoked by menu items in the NodeGraph.
 /// The StandardGraphLayout should then implement some variation of the Sugiyama algorithm
 /// and have named operations for snapping to grid, aligning etc.
-class GraphLayout : public IECore::RunTimeTyped
+class GAFFERUI_API GraphLayout : public IECore::RunTimeTyped
 {
 
 	public :

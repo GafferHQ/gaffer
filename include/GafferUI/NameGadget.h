@@ -37,6 +37,7 @@
 #ifndef GAFFERUI_NAMEGADGET_H
 #define GAFFERUI_NAMEGADGET_H
 
+#include "GafferUI/Export.h"
 #include "GafferUI/TextGadget.h"
 
 #include "IECoreScene/Font.h"
@@ -44,7 +45,7 @@
 namespace GafferUI
 {
 
-class NameGadget : public TextGadget
+class GAFFERUI_API NameGadget : public TextGadget
 {
 
 	public :

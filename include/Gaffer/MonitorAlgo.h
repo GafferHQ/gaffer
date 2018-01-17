@@ -39,6 +39,8 @@
 
 #include <string>
 
+#include "Gaffer/Export.h"
+
 namespace Gaffer
 {
 
@@ -63,8 +65,8 @@ enum PerformanceMetric
 	Last = HashesPerCompute
 };
 
-std::string formatStatistics( const PerformanceMonitor &monitor, size_t maxLinesPerMetric = 50 );
-std::string formatStatistics( const PerformanceMonitor &monitor, PerformanceMetric metric, size_t maxLines = 50 );
+GAFFER_API std::string formatStatistics( const PerformanceMonitor &monitor, size_t maxLinesPerMetric = 50 );
+GAFFER_API std::string formatStatistics( const PerformanceMonitor &monitor, PerformanceMetric metric, size_t maxLines = 50 );
 
 } // namespace MonitorAlgo
 

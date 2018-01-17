@@ -39,12 +39,13 @@
 
 #include "GafferScene/Attributes.h"
 
+#include "GafferAppleseed/Export.h"
 #include "GafferAppleseed/TypeIds.h"
 
 namespace GafferAppleseed
 {
 
-class AppleseedAttributes : public GafferScene::Attributes
+class GAFFERAPPLESEED_API AppleseedAttributes : public GafferScene::Attributes
 {
 
 	public :

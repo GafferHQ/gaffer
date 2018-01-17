@@ -37,6 +37,7 @@
 #ifndef GAFFERSCENE_IMAGETRANSFORM_H
 #define GAFFERSCENE_IMAGETRANSFORM_H
 
+#include "GafferImage/Export.h"
 #include "GafferImage/ImageProcessor.h"
 
 namespace Gaffer
@@ -52,7 +53,7 @@ namespace GafferImage
 
 IE_CORE_FORWARDDECLARE( Resample )
 
-class ImageTransform : public ImageProcessor
+class GAFFERIMAGE_API ImageTransform : public ImageProcessor
 {
 	public :
 

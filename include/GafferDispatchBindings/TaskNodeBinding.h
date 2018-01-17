@@ -48,10 +48,12 @@
 
 #include "GafferDispatch/TaskNode.h"
 
+#include "GafferDispatchBindings/Export.h"
+
 namespace GafferDispatchBindings
 {
 
-void bindTaskNode();
+GAFFERDISPATCHBINDINGS_API void bindTaskNode();
 
 template<typename T, typename TWrapper=T>
 class TaskNodeClass : public GafferBindings::DependencyNodeClass<T, TWrapper>

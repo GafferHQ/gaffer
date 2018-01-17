@@ -38,6 +38,8 @@
 #define GAFFERIMAGE_IMAGESWITCH_H
 
 #include "Gaffer/Switch.h"
+
+#include "GafferImage/Export.h"
 #include "GafferImage/ImageProcessor.h"
 
 namespace GafferImage

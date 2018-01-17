@@ -39,12 +39,13 @@
 
 #include "Gaffer/TransformPlug.h"
 
+#include "GafferScene/Export.h"
 #include "GafferScene/BranchCreator.h"
 
 namespace GafferScene
 {
 
-class Duplicate : public BranchCreator
+class GAFFERSCENE_API Duplicate : public BranchCreator
 {
 
 	public :

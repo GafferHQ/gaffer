@@ -38,12 +38,13 @@
 #ifndef GAFFER_TRANSFORMPLUG_H
 #define GAFFER_TRANSFORMPLUG_H
 
+#include "Gaffer/Export.h"
 #include "Gaffer/CompoundNumericPlug.h"
 
 namespace Gaffer
 {
 
-class TransformPlug : public ValuePlug
+class GAFFER_API TransformPlug : public ValuePlug
 {
 
 	public :

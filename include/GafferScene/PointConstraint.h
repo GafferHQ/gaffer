@@ -37,12 +37,13 @@
 #ifndef GAFFERSCENE_POINTCONSTRAINT_H
 #define GAFFERSCENE_POINTCONSTRAINT_H
 
+#include "GafferScene/Export.h"
 #include "GafferScene/Constraint.h"
 
 namespace GafferScene
 {
 
-class PointConstraint : public Constraint
+class GAFFERSCENE_API PointConstraint : public Constraint
 {
 
 	public :

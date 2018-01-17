@@ -57,7 +57,7 @@ using namespace Gaffer;
 namespace
 {
 
-bool shouldResetPlugDefault( const Gaffer::Plug *plug, const Serialisation *serialisation )
+GAFFERBINDINGS_API bool shouldResetPlugDefault( const Gaffer::Plug *plug, const Serialisation *serialisation )
 {
 	if( !serialisation )
 	{
@@ -72,7 +72,7 @@ bool shouldResetPlugDefault( const Gaffer::Plug *plug, const Serialisation *seri
 	return Context::current()->get<bool>( "valuePlugSerialiser:resetParentPlugDefaults", false );
 }
 
-std::string valueRepr( boost::python::object &o )
+GAFFERBINDINGS_API std::string valueRepr( boost::python::object &o )
 {
 	// We use IECore.repr() because it correctly prefixes the imath
 	// types with the module name, and also works around problems

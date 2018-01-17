@@ -41,6 +41,7 @@
 
 #include "GafferScene/SceneElementProcessor.h"
 
+#include "GafferVDB/Export.h"
 #include "GafferVDB/TypeIds.h"
 
 
@@ -52,7 +53,7 @@ class StringPlug;
 namespace GafferVDB
 {
 
-class MeshToLevelSet : public GafferScene::SceneElementProcessor
+class GAFFERVDB_API MeshToLevelSet : public GafferScene::SceneElementProcessor
 {
 
 	public :

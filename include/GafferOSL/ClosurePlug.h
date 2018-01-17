@@ -41,6 +41,7 @@
 
 #include "Gaffer/Plug.h"
 
+#include "GafferOSL/Export.h"
 #include "GafferOSL/TypeIds.h"
 
 namespace GafferOSL
@@ -50,7 +51,7 @@ namespace GafferOSL
 /// loader a shader from OSL or a renderer.  We probably won't be able
 /// to set or get closure plugs, but we need to be able to connect
 /// them, and they should only connect to other closure plugs.
-class ClosurePlug : public Gaffer::Plug
+class GAFFEROSL_API ClosurePlug : public Gaffer::Plug
 {
 
 	public :

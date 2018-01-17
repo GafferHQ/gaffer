@@ -37,10 +37,12 @@
 #ifndef GAFFERSCENETEST_SCENEPLUGTEST_H
 #define GAFFERSCENETEST_SCENEPLUGTEST_H
 
+#include "GafferSceneTest/Export.h"
+
 namespace GafferSceneTest
 {
 
-void testManyStringToPathCalls();
+GAFFERSCENETEST_API void testManyStringToPathCalls();
 
 } // namespace GafferSceneTest
 

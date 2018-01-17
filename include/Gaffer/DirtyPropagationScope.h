@@ -39,6 +39,8 @@
 
 #include "boost/noncopyable.hpp"
 
+#include "Gaffer/Export.h"
+
 namespace Gaffer
 {
 
@@ -56,7 +58,7 @@ namespace Gaffer
 /// // outputs of the node only once, at the exit
 /// // of the scope.
 /// ```
-class DirtyPropagationScope : boost::noncopyable
+class GAFFER_API DirtyPropagationScope : boost::noncopyable
 {
 
 	public :

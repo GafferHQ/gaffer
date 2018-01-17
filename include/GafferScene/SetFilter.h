@@ -39,6 +39,7 @@
 
 #include "Gaffer/TypedObjectPlug.h"
 
+#include "GafferScene/Export.h"
 #include "GafferScene/Filter.h"
 #include "GafferScene/PathMatcher.h"
 #include "GafferScene/PathMatcherDataPlug.h"
@@ -54,7 +55,7 @@ namespace GafferScene
 {
 
 /// \todo Investigate whether or not caching is actually beneficial for this node
-class SetFilter : public Filter
+class GAFFERSCENE_API SetFilter : public Filter
 {
 
 	public :

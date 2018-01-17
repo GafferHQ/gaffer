@@ -46,6 +46,7 @@
 #include "IECore/LineSegment.h"
 #include "IECoreGL/GL.h"
 
+#include "GafferUI/Export.h"
 #include "GafferUI/TypeIds.h"
 
 namespace IECoreGL
@@ -60,7 +61,7 @@ namespace GafferUI
 
 IE_CORE_FORWARDDECLARE( Style );
 
-class Style : public IECore::RunTimeTyped
+class GAFFERUI_API Style : public IECore::RunTimeTyped
 {
 
 	public :

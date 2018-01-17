@@ -37,6 +37,7 @@
 #ifndef IECORESCENEPREVIEW_RENDERER_H
 #define IECORESCENEPREVIEW_RENDERER_H
 
+#include "GafferScene/Export.h" // Will need to be IECore
 #include "IECore/CompoundObject.h"
 #include "IECoreScene/Display.h"
 #include "IECoreScene/Camera.h"
@@ -69,7 +70,7 @@ namespace IECoreScenePreview
 /// - Change the python bindings so that the lifetime of the object
 ///   handles and the renderer are tied together, or have the object
 ///   handles keep the renderer alive on the C++ side anyway.
-class Renderer : public IECore::RefCounted
+class GAFFERSCENE_API Renderer : public IECore::RefCounted
 {
 
 	public :
@@ -114,7 +115,7 @@ class Renderer : public IECore::RefCounted
 		/// A handle to a block of attributes. Currently all
 		/// AttributesInterfaces _must_ be destroyed prior
 		/// to destruction of the renderer itself.
-		class AttributesInterface : public IECore::RefCounted
+		class GAFFERSCENE_API AttributesInterface : public IECore::RefCounted
 		{
 
 			public :
@@ -159,7 +160,7 @@ class Renderer : public IECore::RefCounted
 		///
 		/// Currently all ObjectInterfaces _must_ be destroyed prior to destruction
 		/// of the renderer itself.
-		class ObjectInterface : public IECore::RefCounted
+		class GAFFERSCENE_API ObjectInterface : public IECore::RefCounted
 		{
 
 			public :
@@ -277,7 +278,7 @@ class Renderer : public IECore::RefCounted
 		/// renderer implementation.
 		/// \todo Derive this from RunTimeTyped::TypeDescription.
 		template<class T>
-		struct TypeDescription
+		struct GAFFER_EXPORT TypeDescription
 		{
 
 			/// \todo Take the type name from RunTimeTyped::staticTypeId().

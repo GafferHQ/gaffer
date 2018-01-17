@@ -39,6 +39,7 @@
 
 #include "Gaffer/CompoundNumericPlug.h"
 
+#include "GafferImage/Export.h"
 #include "GafferImage/ChannelDataProcessor.h"
 
 namespace GafferImage
@@ -51,7 +52,7 @@ namespace GafferImage
 /// If the min/max clamp is enabled, if the channel value is outside the range,
 /// either clamp to range or, if enabled, clamp to the provided value
 //
-class Clamp : public ChannelDataProcessor
+class GAFFERIMAGE_API Clamp : public ChannelDataProcessor
 {
 
 	public :

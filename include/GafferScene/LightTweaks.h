@@ -39,12 +39,13 @@
 
 #include "Gaffer/StringPlug.h"
 
+#include "GafferScene/Export.h"
 #include "GafferScene/SceneElementProcessor.h"
 
 namespace GafferScene
 {
 
-class LightTweaks : public SceneElementProcessor
+class GAFFERSCENE_API LightTweaks : public SceneElementProcessor
 {
 
 	public :
@@ -57,7 +58,7 @@ class LightTweaks : public SceneElementProcessor
 		/// Compound plug type used to represent a tweak.
 		/// Add instances of these to the tweaksPlug() to
 		/// add tweaks.
-		class TweakPlug : public Gaffer::Plug
+		class GAFFERSCENE_API TweakPlug : public Gaffer::Plug
 		{
 
 			public :

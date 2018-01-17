@@ -42,13 +42,14 @@
 
 #include "IECore/BoxTraits.h"
 
+#include "Gaffer/Export.h"
 #include "Gaffer/CompoundNumericPlug.h"
 
 namespace Gaffer
 {
 
 template<typename T>
-class BoxPlug : public ValuePlug
+class GAFFER_API BoxPlug : public ValuePlug
 {
 
 	public :

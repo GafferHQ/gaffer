@@ -39,6 +39,7 @@
 
 #include "Gaffer/StringPlug.h"
 
+#include "GafferImage/Export.h"
 #include "GafferImage/ImageProcessor.h"
 
 namespace GafferImage
@@ -46,7 +47,7 @@ namespace GafferImage
 
 /// Forms a useful base class for nodes which must process R,G and B channels at the same time
 /// to perform some sort of channel mixing.
-class ColorProcessor : public ImageProcessor
+class GAFFERIMAGE_API ColorProcessor : public ImageProcessor
 {
 
 	public :

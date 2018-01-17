@@ -44,6 +44,7 @@
 #include "Gaffer/TypedPlug.h"
 #include "Gaffer/Context.h"
 
+#include "GafferImage/Export.h"
 #include "GafferImage/TypeIds.h"
 #include "GafferImage/AtomicFormatPlug.h"
 
@@ -76,7 +77,7 @@ namespace GafferImage
 /// Some notes on color space:
 /// GafferImage nodes expect to operate in linear space, with associated alpha. Users are responsible
 /// for meeting that expectation (or knowing what they're doing when they don't).
-class ImagePlug : public Gaffer::ValuePlug
+class GAFFERIMAGE_API ImagePlug : public Gaffer::ValuePlug
 {
 
 	public :
@@ -140,7 +141,7 @@ class ImagePlug : public Gaffer::ValuePlug
 		/// with tile/channel specific variables removed. This can be used
 		/// when evaluating plugs which must be global to the whole image,
 		/// and can improve performance by reducing pressure on the hash cache
-		struct GlobalScope : public Gaffer::Context::EditableScope
+		struct GAFFERIMAGE_API GlobalScope : public Gaffer::Context::EditableScope
 		{
 			GlobalScope( const Gaffer::Context *context );
 		};
@@ -148,7 +149,7 @@ class ImagePlug : public Gaffer::ValuePlug
 		/// Utility class to scope a temporary copy of a context,
 		/// with convenient accessors to set tileOrigin and channelName,
 		/// which you often need to do while accessing channelData
-		struct ChannelDataScope : public Gaffer::Context::EditableScope
+		struct GAFFERIMAGE_API ChannelDataScope : public Gaffer::Context::EditableScope
 		{
 			ChannelDataScope( const Gaffer::Context *context );
 			void setTileOrigin( const Imath::V2i &tileOrigin );

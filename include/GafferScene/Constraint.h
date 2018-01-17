@@ -37,6 +37,7 @@
 #ifndef GAFFERSCENE_CONSTRAINT_H
 #define GAFFERSCENE_CONSTRAINT_H
 
+#include "GafferScene/Export.h"
 #include "GafferScene/SceneElementProcessor.h"
 
 namespace Gaffer
@@ -49,7 +50,7 @@ IE_CORE_FORWARDDECLARE( StringPlug )
 namespace GafferScene
 {
 
-class Constraint : public SceneElementProcessor
+class GAFFERSCENE_API Constraint : public SceneElementProcessor
 {
 
 	public :

@@ -40,6 +40,8 @@
 
 #include <string>
 
+#include "Gaffer/Export.h"
+
 namespace Gaffer
 {
 
@@ -62,35 +64,35 @@ namespace StringAlgo
 /// - [A-Z], which matches any single character from the specified range
 /// - [!ABC], which matches any character not in the specified set
 /// - [!A-Z], which matches any character not in the specified range
-typedef std::string MatchPattern;
+GAFFER_API typedef std::string MatchPattern;
 
 /// Returns true if the string matches the pattern and false otherwise.
-inline bool match( const std::string &s, const MatchPattern &pattern );
-inline bool match( const char *s, const char *pattern );
+GAFFER_API inline bool match( const std::string &s, const MatchPattern &pattern );
+GAFFER_API inline bool match( const char *s, const char *pattern );
 
 /// As above, but considering multiple patterns, separated by spaces.
-inline bool matchMultiple( const std::string &s, const MatchPattern &patterns );
-inline bool matchMultiple( const char *s, const char *patterns );
+GAFFER_API inline bool matchMultiple( const std::string &s, const MatchPattern &patterns );
+GAFFER_API inline bool matchMultiple( const char *s, const char *patterns );
 
 /// Returns true if the specified pattern contains characters which
 /// have special meaning to the match() function.
-inline bool hasWildcards( const MatchPattern &pattern );
-inline bool hasWildcards( const char *pattern );
+GAFFER_API inline bool hasWildcards( const MatchPattern &pattern );
+GAFFER_API inline bool hasWildcards( const char *pattern );
 
 /// Returns the numeric suffix from the end of s, if one exists, and -1 if
 /// one doesn't. If stem is specified then it will be filled with the contents
 /// of s preceding the suffix, or the whole of s if no suffix exists.
-int numericSuffix( const std::string &s, std::string *stem = nullptr );
+GAFFER_API int numericSuffix( const std::string &s, std::string *stem = nullptr );
 /// As above, but returns defaultSuffix in the case that no suffix exists.
-int numericSuffix( const std::string &s, int defaultSuffix, std::string *stem = nullptr );
+GAFFER_API int numericSuffix( const std::string &s, int defaultSuffix, std::string *stem = nullptr );
 
 /// Splits the input string wherever the separator is found, outputting all non-empty tokens
 /// in sequence. Note that this is significantly quicker than boost::tokenizer
 /// where TokenType is IECore::InternedString.
 template<typename TokenType, typename OutputIterator>
-void tokenize( const std::string &s, const char separator, OutputIterator outputIterator );
+GAFFER_API void tokenize( const std::string &s, const char separator, OutputIterator outputIterator );
 template<typename OutputContainer>
-void tokenize( const std::string &s, const char separator, OutputContainer &outputContainer );
+GAFFER_API void tokenize( const std::string &s, const char separator, OutputContainer &outputContainer );
 
 } // namespace StringAlgo
 

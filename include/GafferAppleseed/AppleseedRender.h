@@ -39,12 +39,13 @@
 
 #include "GafferScene/Render.h"
 
+#include "GafferAppleseed/Export.h"
 #include "GafferAppleseed/TypeIds.h"
 
 namespace GafferAppleseed
 {
 
-class AppleseedRender : public GafferScene::Render
+class GAFFERAPPLESEED_API AppleseedRender : public GafferScene::Render
 {
 
 	public :

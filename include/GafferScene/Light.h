@@ -37,12 +37,13 @@
 #ifndef GAFFERSCENE_LIGHT_H
 #define GAFFERSCENE_LIGHT_H
 
+#include "GafferScene/Export.h"
 #include "GafferScene/ObjectSource.h"
 
 namespace GafferScene
 {
 
-class Light : public ObjectSource
+class GAFFERSCENE_API Light : public ObjectSource
 {
 
 	public :

@@ -41,13 +41,15 @@
 
 #include "Gaffer/Plug.h"
 
+#include "GafferArnold/Export.h"
+
 namespace GafferArnold
 {
 
 /// A helper class for mapping Arnold parameters to Gaffer Plugs.
 /// \todo Should probably just be free functions in a ParameterAlgo.h
 /// header, and should maybe be private too.
-class ParameterHandler
+class GAFFERARNOLD_API ParameterHandler
 {
 
 	public :

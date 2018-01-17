@@ -39,6 +39,7 @@
 
 #include "Gaffer/BoxPlug.h"
 
+#include "GafferImage/Export.h"
 #include "GafferImage/Shape.h"
 
 namespace Gaffer
@@ -52,7 +53,7 @@ IE_CORE_FORWARDDECLARE( Transform2DPlug )
 namespace GafferImage
 {
 
-class Text : public Shape
+class GAFFERIMAGE_API Text : public Shape
 {
 
 	public :

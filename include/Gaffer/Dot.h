@@ -37,6 +37,7 @@
 #ifndef GAFFER_DOT_H
 #define GAFFER_DOT_H
 
+#include "Gaffer/Export.h"
 #include "Gaffer/DependencyNode.h"
 #include "Gaffer/NumericPlug.h"
 
@@ -47,7 +48,7 @@ IE_CORE_FORWARDDECLARE( StringPlug )
 
 /// The Dot node has no computational purpose - it is merely a pass-through,
 /// used as an organisational tool in the graph.
-class Dot : public DependencyNode
+class GAFFER_API Dot : public DependencyNode
 {
 
 	public :

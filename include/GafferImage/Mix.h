@@ -40,6 +40,7 @@
 #include "Gaffer/NumericPlug.h"
 #include "Gaffer/StringPlug.h"
 
+#include "GafferImage/Export.h"
 #include "GafferImage/ImagePlug.h"
 #include "GafferImage/ImageProcessor.h"
 
@@ -49,7 +50,7 @@ namespace GafferImage
 /// A node for blending between two images, based on a mask.
 /// Expands the dataWindow to the union of the two input dataWindows; create a union of
 /// channelNames from the connected inputs, and will blend the channelData according to the mask
-class Mix : public ImageProcessor
+class GAFFERIMAGE_API Mix : public ImageProcessor
 {
 
 	public :

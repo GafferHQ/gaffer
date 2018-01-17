@@ -37,6 +37,7 @@
 #ifndef GAFFERSCENE_MAPOFFSET_H
 #define GAFFERSCENE_MAPOFFSET_H
 
+#include "GafferScene/Export.h"
 #include "GafferScene/SceneElementProcessor.h"
 
 namespace Gaffer
@@ -50,7 +51,7 @@ namespace GafferScene
 {
 
 /// Applies offsets to texture coordinates.
-class MapOffset : public SceneElementProcessor
+class GAFFERSCENE_API MapOffset : public SceneElementProcessor
 {
 
 	public :

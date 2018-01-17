@@ -37,13 +37,14 @@
 #ifndef GAFFERSCENE_UNIONFILTER_H
 #define GAFFERSCENE_UNIONFILTER_H
 
+#include "GafferScene/Export.h"
 #include "GafferScene/FilterProcessor.h"
 
 namespace GafferScene
 {
 
 /// \todo Investigate whether or not caching is actually beneficial for this node
-class UnionFilter : public FilterProcessor
+class GAFFERSCENE_API UnionFilter : public FilterProcessor
 {
 
 	public :
