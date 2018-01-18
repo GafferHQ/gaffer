@@ -38,6 +38,8 @@
 import os
 import unittest
 
+import imath
+
 import IECore
 
 import Gaffer
@@ -50,11 +52,11 @@ class CheckerboardTest( GafferImageTest.ImageTestCase ) :
 	def testChannelData( self ) :
 
 		checkerboard = GafferImage.Checkerboard()
-		checkerboard["format"].setValue( GafferImage.Format( IECore.Box2i( IECore.V2i( 0 ), IECore.V2i( 511 ) ), 1 ) )
-		checkerboard["colorA"].setValue( IECore.Color4f( 0.1, 0.25, 0.5, 1 ) )
+		checkerboard["format"].setValue( GafferImage.Format( imath.Box2i( imath.V2i( 0 ), imath.V2i( 511 ) ), 1 ) )
+		checkerboard["colorA"].setValue( imath.Color4f( 0.1, 0.25, 0.5, 1 ) )
 
 		for i, channel in enumerate( [ "R", "G", "B", "A" ] ) :
-			channelData = checkerboard["out"].channelData( channel, IECore.V2i( 0 ) )
+			channelData = checkerboard["out"].channelData( channel, imath.V2i( 0 ) )
 			self.assertEqual( len( channelData ), checkerboard["out"].tileSize() * checkerboard["out"].tileSize() )
 
 			expectedValue = checkerboard["colorA"][i].getValue()
@@ -67,9 +69,9 @@ class CheckerboardTest( GafferImageTest.ImageTestCase ) :
 		# Check that the data hash change when the format does.
 		c = GafferImage.Checkerboard()
 		c["format"].setValue( GafferImage.Format( 2048, 1156, 1. ) )
-		h1 = c["out"].channelData( "R", IECore.V2i( 0 ) ).hash()
+		h1 = c["out"].channelData( "R", imath.V2i( 0 ) ).hash()
 		c["format"].setValue( GafferImage.Format( 1920, 1080, 1. ) )
-		h2 = c["out"].channelData( "R", IECore.V2i( 0 ) ).hash()
+		h2 = c["out"].channelData( "R", imath.V2i( 0 ) ).hash()
 		self.assertEqual( h1, h2 )
 
 	def testEnableBehaviour( self ) :
@@ -86,7 +88,7 @@ class CheckerboardTest( GafferImageTest.ImageTestCase ) :
 
 		c = GafferImage.Checkerboard()
 		h1 = c["out"]["channelNames"].hash()
-		c["colorA"].setValue( IECore.Color4f( 1, 0.5, 0.25, 1 ) )
+		c["colorA"].setValue( imath.Color4f( 1, 0.5, 0.25, 1 ) )
 		h2 = c["out"]["channelNames"].hash()
 
 		self.assertEqual( h1, h2 )
@@ -95,12 +97,12 @@ class CheckerboardTest( GafferImageTest.ImageTestCase ) :
 
 		s = Gaffer.ScriptNode()
 		s["c"] = GafferImage.Checkerboard()
-		s["c"]["colorA"].setValue( IECore.Color4f( 0, 1, 0, 0 ) )
+		s["c"]["colorA"].setValue( imath.Color4f( 0, 1, 0, 0 ) )
 
 		s2 = Gaffer.ScriptNode()
 		s2.execute( s.serialise() )
 
-		self.assertEqual( s2["c"]["colorA"].getValue(), IECore.Color4f( 0, 1, 0, 0 ) )
+		self.assertEqual( s2["c"]["colorA"].getValue(), imath.Color4f( 0, 1, 0, 0 ) )
 
 	def testFormatDependencies( self ) :
 
