@@ -52,6 +52,8 @@
 #include "Gaffer/NumericPlug.h"
 
 #include "GafferDispatch/TaskNode.h"
+#include "GafferDispatch/Export.h"
+
 #include "GafferDispatchBindings/DispatcherBinding.h" // to enable friend declaration for TaskBatch.
 
 namespace Gaffer
@@ -96,7 +98,7 @@ IE_CORE_FORWARDDECLARE( Dispatcher )
 /// of Context specific Tasks from TaskNodes which exist within a ScriptNode.
 /// Dispatchers can also modify TaskNodes during construction, adding
 /// plugs which affect Task execution.
-class Dispatcher : public Gaffer::Node
+class GAFFERDISPATCH_API Dispatcher : public Gaffer::Node
 {
 	public :
 
