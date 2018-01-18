@@ -43,11 +43,12 @@
 #include "Gaffer/StringPlug.h"
 
 #include "GafferOSL/TypeIds.h"
+#include "GafferOSL/Export.h"
 
 namespace GafferOSL
 {
 
-class OSLObject : public GafferScene::SceneElementProcessor
+class GAFFEROSL_API OSLObject : public GafferScene::SceneElementProcessor
 {
 
 	public :

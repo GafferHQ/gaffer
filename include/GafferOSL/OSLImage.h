@@ -43,11 +43,12 @@
 #include "GafferScene/ShaderPlug.h"
 
 #include "GafferOSL/TypeIds.h"
+#include "GafferOSL/Export.h"
 
 namespace GafferOSL
 {
 
-class OSLImage : public GafferImage::ImageProcessor
+class GAFFEROSL_API OSLImage : public GafferImage::ImageProcessor
 {
 
 	public :

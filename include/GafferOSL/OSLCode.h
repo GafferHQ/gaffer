@@ -46,7 +46,7 @@ namespace GafferOSL
 /// on disk on demand, during shader network generation. Rejig the
 /// generation process to allow for this. Also bear in mind the related
 /// todo items in ArnoldDisplacement and ArnoldLight.
-class OSLCode : public OSLShader
+class GAFFEROSL_API OSLCode : public OSLShader
 {
 
 	public :

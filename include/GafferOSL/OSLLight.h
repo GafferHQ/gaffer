@@ -43,13 +43,14 @@
 #include "GafferScene/ShaderPlug.h"
 
 #include "GafferOSL/TypeIds.h"
+#include "GafferOSL/Export.h"
 
 namespace GafferOSL
 {
 
 class OSLShader;
 
-class OSLLight : public GafferScene::Light
+class GAFFEROSL_API OSLLight : public GafferScene::Light
 {
 
 	public :

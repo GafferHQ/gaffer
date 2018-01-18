@@ -40,13 +40,14 @@
 #include "GafferScene/Shader.h"
 
 #include "GafferOSL/TypeIds.h"
+#include "GafferOSL/Export.h"
 
 namespace GafferOSL
 {
 
 IE_CORE_FORWARDDECLARE( ShadingEngine )
 
-class OSLShader : public GafferScene::Shader
+class GAFFEROSL_API OSLShader : public GafferScene::Shader
 {
 
 	public :
@@ -101,7 +102,7 @@ class OSLShader : public GafferScene::Shader
 			}
 		}
 
-		
+
 
 	protected :
 

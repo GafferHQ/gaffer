@@ -1,6 +1,6 @@
 //////////////////////////////////////////////////////////////////////////
 //
-//  Copyright (c) 2013, John Haddon. All rights reserved.
+//  Copyright (c) 2018, Image Engine Design Inc. All rights reserved.
 //
 //  Redistribution and use in source and binary forms, with or without
 //  modification, are permitted provided that the following conditions are
@@ -32,74 +32,15 @@
 //
 //////////////////////////////////////////////////////////////////////////
 
-#ifndef GAFFEROSL_SHADINGENGINE_H
-#define GAFFEROSL_SHADINGENGINE_H
+#ifndef GAFFEROSL_EXPORT_H
+#define GAFFEROSL_EXPORT_H
 
-#include "boost/container/flat_set.hpp"
+#include "IECore/Export.h"
 
-#include "IECore/CompoundData.h"
-#include "IECore/ObjectVector.h"
+#ifdef GAFFEROSL_EXPORTS
+	#define GAFFEROSL_API IECORE_EXPORT
+#else
+	#define GAFFEROSL_API IECORE_IMPORT
+#endif
 
-#include "GafferOSL/TypeIds.h"
-#include "GafferOSL/Export.h"
-
-namespace GafferOSL
-{
-
-class GAFFEROSL_API ShadingEngine : public IECore::RefCounted
-{
-
-	public :
-
-		IE_CORE_DECLAREMEMBERPTR( ShadingEngine )
-
-		ShadingEngine( const IECore::ObjectVector *shaderNetwork );
-		~ShadingEngine() override;
-
-		struct Transform
-		{
-
-			Transform()
-			{
-			}
-
-			Transform( Imath::M44f fromObjectSpace )
-				: fromObjectSpace( fromObjectSpace ), toObjectSpace( fromObjectSpace.inverse() )
-			{
-			}
-
-			Transform( Imath::M44f fromObjectSpace, Imath::M44f toObjectSpace )
-				: fromObjectSpace( fromObjectSpace ), toObjectSpace( toObjectSpace )
-			{
-			}
-
-			Imath::M44f fromObjectSpace;
-			Imath::M44f toObjectSpace;
-
-		};
-
-		typedef std::map<IECore::InternedString, Transform> Transforms;
-
-		IECore::CompoundDataPtr shade( const IECore::CompoundData *points, const Transforms &transforms = Transforms() ) const;
-
-		bool needsAttribute( const std::string &scope, const std::string &name ) const;
-
-	private :
-
-		void queryAttributesNeeded();
-
-		typedef boost::container::flat_set<std::pair<std::string, std::string> > AttributesNeededContainer;
-		AttributesNeededContainer m_attributesNeeded;
-
-		// Set to true if the shader reads attributes who's name is not know at compile time
-		bool m_unknownAttributesNeeded;
-
-		void *m_shaderGroupRef;
-
-};
-
-IE_CORE_DECLAREPTR( ShadingEngine )
-
-} // namespace GafferOSL
-
-#endif // GAFFEROSL_SHADINGENGINE_H
+#endif // #ifndef GAFFEROSL_EXPORT_H
