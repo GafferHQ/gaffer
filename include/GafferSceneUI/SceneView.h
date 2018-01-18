@@ -47,6 +47,7 @@
 
 #include "GafferSceneUI/TypeIds.h"
 #include "GafferSceneUI/SceneGadget.h"
+#include "GafferSceneUI/Export.h"
 
 namespace GafferScene
 {
@@ -65,7 +66,7 @@ namespace GafferSceneUI
 /// these in the public API as optional "bolt on" components that applications can
 /// use as they see fit. If we do this, we need to consider how these relate to
 /// Tools, which could also be seen as viewer components.
-class SceneView : public GafferUI::View
+class GAFFERSCENEUI_API SceneView : public GafferUI::View
 {
 
 	public :

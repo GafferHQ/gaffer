@@ -46,7 +46,7 @@ namespace GafferSceneUI
 
 IE_CORE_FORWARDDECLARE( SceneView )
 
-class RotateTool : public TransformTool
+class GAFFERSCENEUI_API RotateTool : public TransformTool
 {
 
 	public :

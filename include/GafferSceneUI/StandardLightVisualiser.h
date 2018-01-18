@@ -50,7 +50,7 @@ namespace GafferSceneUI
 /// This also provides several protected utility methods for
 /// making standard visualisations, so is suitable for use as
 /// a base class for custom light visualisers.
-class StandardLightVisualiser : public LightVisualiser
+class GAFFERSCENEUI_API StandardLightVisualiser : public LightVisualiser
 {
 
 	public :

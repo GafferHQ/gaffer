@@ -47,7 +47,7 @@ namespace GafferSceneUI
 
 IE_CORE_FORWARDDECLARE( SceneView )
 
-class TranslateTool : public TransformTool
+class GAFFERSCENEUI_API TranslateTool : public TransformTool
 {
 
 	public :

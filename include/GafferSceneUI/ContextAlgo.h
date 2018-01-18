@@ -39,6 +39,8 @@
 
 #include "IECore/PathMatcher.h"
 
+#include "GafferSceneUI/Export.h"
+
 namespace Gaffer
 {
 
@@ -73,18 +75,18 @@ namespace ContextAlgo
 /// construct a deeper hierarchy, if the name of a location is visible in
 /// the SceneHierarchy, then it's geometry will be displayed in the Viewer.
 
-void setExpandedPaths( Gaffer::Context *context, const IECore::PathMatcher &paths );
-IECore::PathMatcher getExpandedPaths( const Gaffer::Context *context );
+GAFFERSCENEUI_API void setExpandedPaths( Gaffer::Context *context, const IECore::PathMatcher &paths );
+GAFFERSCENEUI_API IECore::PathMatcher getExpandedPaths( const Gaffer::Context *context );
 
 /// Appends paths to the current expansion, optionally adding all ancestor paths too.
-void expand( Gaffer::Context *context, const IECore::PathMatcher &paths, bool expandAncestors = true );
+GAFFERSCENEUI_API void expand( Gaffer::Context *context, const IECore::PathMatcher &paths, bool expandAncestors = true );
 
 /// Appends descendant paths to the current expansion up to a specified maximum depth.
 /// Returns a new PathMatcher containing the new leafs of this expansion.
-IECore::PathMatcher expandDescendants( Gaffer::Context *context, const IECore::PathMatcher &paths, const GafferScene::ScenePlug *scene, int depth = Imath::limits<int>::max() );
+GAFFERSCENEUI_API IECore::PathMatcher expandDescendants( Gaffer::Context *context, const IECore::PathMatcher &paths, const GafferScene::ScenePlug *scene, int depth = Imath::limits<int>::max() );
 
 /// Clears the currently expanded paths
-void clearExpansion( Gaffer::Context *context );
+GAFFERSCENEUI_API void clearExpansion( Gaffer::Context *context );
 
 /// Path Selection
 /// ==============
@@ -93,8 +95,8 @@ void clearExpansion( Gaffer::Context *context );
 /// to perform scene selection, again using the Context to store paths to the
 /// currently selected locations within the scene.
 
-void setSelectedPaths( Gaffer::Context *context, const IECore::PathMatcher &paths );
-IECore::PathMatcher getSelectedPaths( const Gaffer::Context *context );
+GAFFERSCENEUI_API void setSelectedPaths( Gaffer::Context *context, const IECore::PathMatcher &paths );
+GAFFERSCENEUI_API IECore::PathMatcher getSelectedPaths( const Gaffer::Context *context );
 
 } // namespace ContextAlgo
 

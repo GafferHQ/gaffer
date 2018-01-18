@@ -40,6 +40,8 @@
 
 #include "GafferScene/ScenePlug.h"
 
+#include "GafferSceneUI/ContextAlgo.h"
+
 using namespace IECore;
 using namespace Gaffer;
 using namespace GafferScene;

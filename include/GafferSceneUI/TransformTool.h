@@ -50,7 +50,7 @@ namespace GafferSceneUI
 
 IE_CORE_FORWARDDECLARE( SceneView )
 
-class TransformTool : public GafferSceneUI::SelectionTool
+class GAFFERSCENEUI_API TransformTool : public GafferSceneUI::SelectionTool
 {
 
 	public :

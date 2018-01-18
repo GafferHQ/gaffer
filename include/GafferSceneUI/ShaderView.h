@@ -46,11 +46,12 @@
 #include "GafferImageUI/ImageView.h"
 
 #include "GafferSceneUI/TypeIds.h"
+#include "GafferSceneUI/Export.h"
 
 namespace GafferSceneUI
 {
 
-class ShaderView : public GafferImageUI::ImageView
+class GAFFERSCENEUI_API ShaderView : public GafferImageUI::ImageView
 {
 
 	public :
