@@ -48,7 +48,7 @@ IE_CORE_FORWARDDECLARE( NoduleLayout );
 
 /// A Nodule subclass to represent each of the children of a
 /// Plug with their own nodule.
-class CompoundNodule : public Nodule
+class GAFFERUI_API CompoundNodule : public Nodule
 {
 
 	public :

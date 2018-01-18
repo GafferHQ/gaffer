@@ -51,7 +51,7 @@ IE_CORE_FORWARDDECLARE( Plug )
 namespace GafferUI
 {
 
-class DotNodeGadget : public StandardNodeGadget
+class GAFFERUI_API DotNodeGadget : public StandardNodeGadget
 {
 
 	public :

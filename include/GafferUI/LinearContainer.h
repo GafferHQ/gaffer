@@ -43,7 +43,7 @@
 namespace GafferUI
 {
 
-class LinearContainer : public ContainerGadget
+class GAFFERUI_API LinearContainer : public ContainerGadget
 {
 
 	public :

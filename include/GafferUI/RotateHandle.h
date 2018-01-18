@@ -42,7 +42,7 @@
 namespace GafferUI
 {
 
-class RotateHandle : public Handle
+class GAFFERUI_API RotateHandle : public Handle
 {
 
 	public :

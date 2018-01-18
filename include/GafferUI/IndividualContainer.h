@@ -45,7 +45,7 @@ namespace GafferUI
 
 /// The IndividualContainer class allows a single child to be held,
 /// and rejects efforts to add any more.
-class IndividualContainer : public ContainerGadget
+class GAFFERUI_API IndividualContainer : public ContainerGadget
 {
 
 	public :

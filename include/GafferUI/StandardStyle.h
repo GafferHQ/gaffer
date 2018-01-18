@@ -56,7 +56,7 @@ IE_CORE_FORWARDDECLARE( State )
 namespace GafferUI
 {
 
-class StandardStyle : public Style
+class GAFFERUI_API StandardStyle : public Style
 {
 
 	public :

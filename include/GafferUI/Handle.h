@@ -44,7 +44,7 @@
 namespace GafferUI
 {
 
-class Handle : public Gadget
+class GAFFERUI_API Handle : public Gadget
 {
 
 	public :

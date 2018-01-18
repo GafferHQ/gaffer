@@ -46,7 +46,7 @@ namespace GafferUI
 
 IE_CORE_FORWARDDECLARE( Gadget )
 
-struct DragDropEvent : public ButtonEvent
+struct GAFFERUI_API DragDropEvent : public ButtonEvent
 {
 
 	DragDropEvent(

@@ -45,8 +45,7 @@
 namespace GafferUI
 {
 
-
-class BackdropNodeGadget : public NodeGadget
+class GAFFERUI_API BackdropNodeGadget : public NodeGadget
 {
 
 	public :

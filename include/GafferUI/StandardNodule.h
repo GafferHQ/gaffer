@@ -51,7 +51,7 @@ namespace Gaffer
 namespace GafferUI
 {
 
-class StandardNodule : public Nodule
+class GAFFERUI_API StandardNodule : public Nodule
 {
 
 	public :

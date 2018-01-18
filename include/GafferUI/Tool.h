@@ -43,6 +43,7 @@
 #include "Gaffer/TypedPlug.h"
 
 #include "GafferUI/TypeIds.h"
+#include "GafferUI/Export.h"
 
 namespace GafferUI
 {
@@ -70,7 +71,7 @@ IE_CORE_FORWARDDECLARE( View )
 /// It is recommended that such updates are performed via
 /// ViewportGadget::preRenderSignal(), so that they are
 /// performed lazily only when needed.
-class Tool : public Gaffer::Node
+class GAFFERUI_API Tool : public Gaffer::Node
 {
 
 	public :

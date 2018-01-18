@@ -71,7 +71,7 @@ IE_CORE_FORWARDDECLARE( Style );
 /// Gadgets are zoomable UI elements. They draw themselves using OpenGL, and provide an interface for
 /// handling events. To present a Gadget in the user interface, it should be placed in the viewport of
 /// a GadgetWidget.
-class Gadget : public Gaffer::GraphComponent
+class GAFFERUI_API Gadget : public Gaffer::GraphComponent
 {
 
 	public :

@@ -70,7 +70,7 @@ namespace GraphLayer
 };
 
 /// The GraphGadget class provides a ui for connecting nodes together.
-class GraphGadget : public ContainerGadget
+class GAFFERUI_API GraphGadget : public ContainerGadget
 {
 
 	public :

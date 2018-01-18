@@ -54,7 +54,7 @@ IE_CORE_FORWARDDECLARE( Texture )
 namespace GafferUI
 {
 
-class ImageGadget : public Gadget
+class GAFFERUI_API ImageGadget : public Gadget
 {
 
 	public :

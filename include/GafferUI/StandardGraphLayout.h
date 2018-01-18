@@ -53,7 +53,7 @@ namespace GafferUI
 IE_CORE_FORWARDDECLARE( NodeGadget )
 IE_CORE_FORWARDDECLARE( ConnectionGadget )
 
-class StandardGraphLayout : public GraphLayout
+class GAFFERUI_API StandardGraphLayout : public GraphLayout
 {
 
 	public :

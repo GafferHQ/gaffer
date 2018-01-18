@@ -42,7 +42,7 @@
 namespace GafferUI
 {
 
-class SpacerGadget : public Gadget
+class GAFFERUI_API SpacerGadget : public Gadget
 {
 
 	public :

@@ -52,7 +52,7 @@ namespace GafferUI
 /// This will be convenient for 2d-only Widgets but also allow Gadgets to
 /// get the original raster position for an event without jumping through
 /// hoops and running the gauntlet of precision issues.
-struct ButtonEvent : public ModifiableEvent
+struct GAFFERUI_API ButtonEvent : public ModifiableEvent
 {
 	/// An enum to represent the mouse buttons.
 	enum Buttons

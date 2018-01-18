@@ -50,7 +50,7 @@ namespace GafferUI
 /// the transforms for children when they have been dirtied. This would
 /// simplify derived classes and provide greater justification for the
 /// existence of this base class.
-class ContainerGadget : public Gadget
+class GAFFERUI_API ContainerGadget : public Gadget
 {
 
 	public :
