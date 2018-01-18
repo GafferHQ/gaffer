@@ -40,11 +40,12 @@
 #include "GafferScene/Options.h"
 
 #include "GafferAppleseed/TypeIds.h"
+#include "GafferAppleseed/Export.h"
 
 namespace GafferAppleseed
 {
 
-class AppleseedOptions : public GafferScene::Options
+class GAFFERAPPLESEED_API AppleseedOptions : public GafferScene::Options
 {
 
 	public :
