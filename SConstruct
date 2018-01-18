@@ -105,7 +105,11 @@ options.Add(
 options.Add(
 	"LINKFLAGS",
 	"The extra flags to pass to the C++ linker during compilation.",
-	"",
+	""
+)
+
+options.Add(
+	BoolVariable( "ASAN", "Enable ASan when compiling with clang++", False)
 )
 
 options.Add(
@@ -347,6 +351,11 @@ for path in [
 		CXXFLAGS = [ "-isystem", path ]
 	)
 
+if "clang++" in os.path.basename( env["CXX"] ):
+	env.Append(
+		CXXFLAGS = [ "-Wno-unused-local-typedef" ]
+	)
+
 env["BUILD_DIR"] = os.path.abspath( env["BUILD_DIR"] )
 
 # DISPLAY and HOME are essential for running gaffer when generating
@@ -480,6 +489,12 @@ if not haveInkscape and env["INKSCAPE"] != "disableGraphics" :
 if not conf.checkQtVersion() :
 	sys.stderr.write( "Qt not found\n" )
 	Exit( 1 )
+
+if "clang++" in os.path.basename( env["CXX"] ) and env["ASAN"] :
+	env.Append(
+		CXXFLAGS = ["-fsanitize=address", "-shared-libasan"],
+		LINKFLAGS = ["-fsanitize=address", "-shared-libasan"]
+	)
 
 ###############################################################################################
 # An environment for running commands with access to the applications we've built
