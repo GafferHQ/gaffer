@@ -40,11 +40,12 @@
 #include "GafferScene/Shader.h"
 
 #include "GafferSceneTest/TypeIds.h"
+#include "GafferSceneTest/Export.h"
 
 namespace GafferSceneTest
 {
 
-class TestShader : public GafferScene::Shader
+class GAFFERSCENETEST_API TestShader : public GafferScene::Shader
 {
 
 	public :
