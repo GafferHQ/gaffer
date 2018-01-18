@@ -214,16 +214,6 @@ class OpenImageIOReaderTest( GafferImageTest.ImageTestCase ) :
 
 		self.assertImagesEqual( exrReader["out"], jpgOCIO["out"], ignoreMetadata = True, maxDifference = 0.001 )
 
-	def testOIIOJpgRead( self ) :
-
-		# call through to c++ test.
-		GafferImageTest.testOIIOJpgRead()
-
-	def testOIIOExrRead( self ) :
-
-		# call through to c++ test.
-		GafferImageTest.testOIIOExrRead()
-
 	def testSupportedExtensions( self ) :
 
 		e = GafferImage.OpenImageIOReader.supportedExtensions()
@@ -522,7 +512,7 @@ class OpenImageIOReaderTest( GafferImageTest.ImageTestCase ) :
 				self.assertImagesEqual( r["out"], offsetIn["out"], ignoreMetadata = True )
 
 	def testMultipartRead( self ) :
-		
+
 		rgbReader = GafferImage.OpenImageIOReader()
 		rgbReader["fileName"].setValue( self.offsetDataWindowFileName )
 
@@ -567,7 +557,7 @@ class OpenImageIOReaderTest( GafferImageTest.ImageTestCase ) :
 		self.assertImagesEqual( compareDelete["out"], multipartDelete["out"], ignoreMetadata = True )
 
 	def testUnsupportedMultipartRead( self ) :
-		
+
 		rgbReader = GafferImage.OpenImageIOReader()
 		rgbReader["fileName"].setValue( self.offsetDataWindowFileName )
 

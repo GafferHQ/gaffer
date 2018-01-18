@@ -41,7 +41,6 @@
 #include "GafferImage/ImagePlug.h"
 
 #include "GafferImageTest/ProcessTiles.h"
-#include "GafferImageTest/ImageReaderTest.h"
 
 using namespace boost::python;
 using namespace GafferImageTest;
@@ -56,6 +55,4 @@ BOOST_PYTHON_MODULE( _GafferImageTest )
 {
 	def( "processTiles", &processTilesWrapper );
 	def( "connectProcessTilesToPlugDirtiedSignal", &connectProcessTilesToPlugDirtiedSignal );
-	def( "testOIIOJpgRead", &testOIIOJpgRead );
-	def( "testOIIOExrRead", &testOIIOExrRead );
 }
