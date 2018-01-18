@@ -1,6 +1,6 @@
 //////////////////////////////////////////////////////////////////////////
 //
-//  Copyright (c) 2015, Image Engine Design Inc. All rights reserved.
+//  Copyright (c) 2013-2014, Image Engine Design Inc. All rights reserved.
 //
 //  Redistribution and use in source and binary forms, with or without
 //  modification, are permitted provided that the following conditions are
@@ -34,18 +34,14 @@
 //
 //////////////////////////////////////////////////////////////////////////
 
-#include "boost/python.hpp"
+#ifndef GAFFERDISPATCHMODULE_DISPATCHERBINDING_H
+#define GAFFERDISPATCHMODULE_DISPATCHERBINDING_H
 
-#include "TaskNodeBinding.h"
-#include "DispatcherBinding.h"
-
-using namespace boost::python;
-using namespace GafferDispatchModule;
-
-BOOST_PYTHON_MODULE( _GafferDispatch )
+namespace GafferDispatchModule
 {
 
-	bindTaskNode();
-	bindDispatcher();
+void bindDispatcher();
 
-}
+} // namespace GafferDispatchModule
+
+#endif // GAFFERDISPATCHMODULE_DISPATCHERBINDING_H

@@ -35,13 +35,17 @@
 //////////////////////////////////////////////////////////////////////////
 
 #include "boost/python.hpp"
+#include "boost/python/suite/indexing/container_utils.hpp"
 
 #include "Gaffer/Plug.h"
 #include "Gaffer/Context.h"
 #include "GafferBindings/PlugBinding.h"
 
 #include "GafferDispatch/TaskNode.h"
+
 #include "GafferDispatchBindings/TaskNodeBinding.h"
+
+#include "TaskNodeBinding.h"
 
 using namespace boost::python;
 using namespace IECore;
@@ -49,6 +53,7 @@ using namespace IECorePython;
 using namespace Gaffer;
 using namespace GafferBindings;
 using namespace GafferDispatch;
+using namespace GafferDispatchBindings;
 
 namespace
 {
@@ -136,7 +141,7 @@ boost::python::list taskPlugPostTasks( const TaskNode::TaskPlug &t )
 
 } // namespace
 
-void GafferDispatchBindings::bindTaskNode()
+void GafferDispatchModule::bindTaskNode()
 {
 	typedef TaskNodeWrapper<TaskNode> Wrapper;
 

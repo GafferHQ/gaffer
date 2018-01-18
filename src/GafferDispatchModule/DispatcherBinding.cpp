@@ -47,7 +47,8 @@
 #include "GafferBindings/SignalBinding.h"
 
 #include "GafferDispatch/Dispatcher.h"
-#include "GafferDispatchBindings/DispatcherBinding.h"
+
+#include "DispatcherBinding.h"
 
 using namespace boost::python;
 using namespace IECore;
@@ -316,7 +317,7 @@ struct PostDispatchSlotCaller
 
 } // namespace
 
-void GafferDispatchBindings::bindDispatcher()
+void GafferDispatchModule::bindDispatcher()
 {
 	scope s = NodeClass<Dispatcher, DispatcherWrapper>()
 		.def( "dispatch", &dispatch )

@@ -51,8 +51,6 @@
 namespace GafferDispatchBindings
 {
 
-void bindTaskNode();
-
 template<typename T, typename TWrapper=T>
 class TaskNodeClass : public GafferBindings::DependencyNodeClass<T, TWrapper>
 {

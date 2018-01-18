@@ -1,6 +1,6 @@
 //////////////////////////////////////////////////////////////////////////
 //
-//  Copyright (c) 2013-2014, Image Engine Design Inc. All rights reserved.
+//  Copyright (c) 2017, Image Engine Design Inc. All rights reserved.
 //
 //  Redistribution and use in source and binary forms, with or without
 //  modification, are permitted provided that the following conditions are
@@ -34,14 +34,14 @@
 //
 //////////////////////////////////////////////////////////////////////////
 
-#ifndef GAFFERDISPATCHBINDINGS_DISPATCHERBINDING_H
-#define GAFFERDISPATCHBINDINGS_DISPATCHERBINDING_H
+#ifndef GAFFERDISPATCHMODULE_TASKNODEBINDING_H
+#define GAFFERDISPATCHMODULE_TASKNODEBINDING_H
 
-namespace GafferDispatchBindings
+namespace GafferDispatchModule
 {
 
-void bindDispatcher();
+void bindTaskNode();
 
-} // namespace GafferDispatchBindings
+} // namespace GafferDispatchModule
 
-#endif // GAFFERDISPATCHBINDINGS_DISPATCHERBINDING_H
+#endif // GAFFERDISPATCHMODULE_TASKNODEBINDING_H
