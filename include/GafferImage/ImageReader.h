@@ -56,7 +56,7 @@ namespace GafferImage
 IE_CORE_FORWARDDECLARE( ColorSpace )
 IE_CORE_FORWARDDECLARE( OpenImageIOReader )
 
-class ImageReader : public ImageNode
+class GAFFERIMAGE_API ImageReader : public ImageNode
 {
 
 	public :

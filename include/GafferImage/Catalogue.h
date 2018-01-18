@@ -49,7 +49,7 @@
 namespace GafferImage
 {
 
-class Catalogue : public ImageNode
+class GAFFERIMAGE_API Catalogue : public ImageNode
 {
 
 	public :

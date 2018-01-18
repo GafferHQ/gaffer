@@ -42,7 +42,7 @@
 namespace GafferImage
 {
 
-class Erode : public RankFilter
+class GAFFERIMAGE_API Erode : public RankFilter
 {
 
 	public :

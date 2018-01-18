@@ -46,7 +46,7 @@
 namespace GafferImage
 {
 
-class Constant : public ImageNode
+class GAFFERIMAGE_API Constant : public ImageNode
 {
 
 	public :

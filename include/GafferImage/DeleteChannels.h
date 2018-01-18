@@ -45,7 +45,7 @@
 namespace GafferImage
 {
 
-class DeleteChannels : public ImageProcessor
+class GAFFERIMAGE_API DeleteChannels : public ImageProcessor
 {
 
 	public :

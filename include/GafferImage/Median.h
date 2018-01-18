@@ -42,7 +42,7 @@
 namespace GafferImage
 {
 
-class Median : public RankFilter
+class GAFFERIMAGE_API Median : public RankFilter
 {
 
 	public :

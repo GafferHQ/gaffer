@@ -46,7 +46,7 @@ namespace GafferImage
 
 /// The MetadataProcessor class provides a base class for modifying metadata
 /// of an image while passing everything else through unchanged.
-class MetadataProcessor : public ImageProcessor
+class GAFFERIMAGE_API MetadataProcessor : public ImageProcessor
 {
 
 	public :

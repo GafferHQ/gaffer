@@ -44,7 +44,7 @@
 namespace GafferImage
 {
 
-class Mirror : public ImageProcessor
+class GAFFERIMAGE_API Mirror : public ImageProcessor
 {
 
 	public :

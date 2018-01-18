@@ -57,7 +57,7 @@ namespace GafferImage
 IE_CORE_FORWARDDECLARE( ColorSpace )
 IE_CORE_FORWARDDECLARE( ImagePlug )
 
-class ImageWriter : public GafferDispatch::TaskNode
+class GAFFERIMAGE_API ImageWriter : public GafferDispatch::TaskNode
 {
 
 	public :

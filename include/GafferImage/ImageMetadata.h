@@ -44,7 +44,7 @@
 namespace GafferImage
 {
 
-class ImageMetadata : public MetadataProcessor
+class GAFFERIMAGE_API ImageMetadata : public MetadataProcessor
 {
 
 	public :

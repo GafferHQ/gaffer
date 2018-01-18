@@ -54,7 +54,7 @@ namespace GafferImage
 
 IE_CORE_FORWARDDECLARE( Resample )
 
-class Resize : public ImageProcessor
+class GAFFERIMAGE_API Resize : public ImageProcessor
 {
 	public :
 

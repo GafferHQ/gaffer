@@ -45,7 +45,7 @@
 namespace GafferImage
 {
 
-class Premultiply : public ChannelDataProcessor
+class GAFFERIMAGE_API Premultiply : public ChannelDataProcessor
 {
 
 	public :

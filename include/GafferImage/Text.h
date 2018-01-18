@@ -52,7 +52,7 @@ IE_CORE_FORWARDDECLARE( Transform2DPlug )
 namespace GafferImage
 {
 
-class Text : public Shape
+class GAFFERIMAGE_API Text : public Shape
 {
 
 	public :

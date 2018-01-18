@@ -47,7 +47,7 @@ namespace GafferImage
 
 /// The ChannelDataProcessor provides a useful base class for nodes that manipulate individual channels
 /// of an image and leave their image dimensions, channel names, and metadata unchanged.
-class ChannelDataProcessor : public ImageProcessor
+class GAFFERIMAGE_API ChannelDataProcessor : public ImageProcessor
 {
 
 	public :

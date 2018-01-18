@@ -44,7 +44,7 @@
 namespace GafferImage
 {
 
-class CopyChannels : public ImageProcessor
+class GAFFERIMAGE_API CopyChannels : public ImageProcessor
 {
 
 	public :

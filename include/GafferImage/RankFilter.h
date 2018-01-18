@@ -46,7 +46,7 @@
 namespace GafferImage
 {
 
-class RankFilter : public ImageProcessor
+class GAFFERIMAGE_API RankFilter : public ImageProcessor
 {
 
 	public :

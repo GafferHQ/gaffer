@@ -46,7 +46,7 @@ namespace GafferImage
 
 IE_CORE_FORWARDDECLARE( Resample )
 
-class Blur : public ImageProcessor
+class GAFFERIMAGE_API Blur : public ImageProcessor
 {
 	public :
 

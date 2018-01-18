@@ -44,7 +44,7 @@
 namespace GafferImage
 {
 
-class Offset : public ImageProcessor
+class GAFFERIMAGE_API Offset : public ImageProcessor
 {
 	public :
 

@@ -44,7 +44,7 @@
 namespace GafferImage
 {
 
-class Shuffle : public ImageProcessor
+class GAFFERIMAGE_API Shuffle : public ImageProcessor
 {
 
 	public :

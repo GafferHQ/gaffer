@@ -43,9 +43,10 @@
 
 namespace GafferImage
 {
-	IE_CORE_FORWARDDECLARE( FormatPlug );
 
-class Crop : public ImageProcessor
+IE_CORE_FORWARDDECLARE( FormatPlug );
+
+class GAFFERIMAGE_API Crop : public ImageProcessor
 {
 	public :
 

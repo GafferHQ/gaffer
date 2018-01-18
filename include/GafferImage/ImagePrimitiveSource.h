@@ -47,7 +47,7 @@ namespace GafferImage
 {
 
 template<typename BaseType>
-class ImagePrimitiveSource : public BaseType
+class GAFFERIMAGE_API ImagePrimitiveSource : public BaseType
 {
 
 	public :

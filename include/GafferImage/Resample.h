@@ -57,7 +57,7 @@ namespace GafferImage
 /// data window in the output image, using a chosen filter. Uses OIIO::Filter2D
 /// to provide the filter implementation, and is based heavily on OIIO's
 /// ImageBufAlgo resize() function.
-class Resample : public ImageProcessor
+class GAFFERIMAGE_API Resample : public ImageProcessor
 {
 	public :
 

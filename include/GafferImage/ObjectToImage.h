@@ -42,7 +42,7 @@
 namespace GafferImage
 {
 
-class ObjectToImage : public ImagePrimitiveNode
+class GAFFERIMAGE_API ObjectToImage : public ImagePrimitiveNode
 {
 
 	public :

@@ -50,7 +50,7 @@ IE_CORE_FORWARDDECLARE( StringPlug )
 namespace GafferImage
 {
 
-class ColorSpace : public OpenColorIOTransform
+class GAFFERIMAGE_API ColorSpace : public OpenColorIOTransform
 {
 
 	public :

@@ -42,6 +42,7 @@
 #include "Gaffer/TypedObjectPlug.h"
 
 #include "GafferImage/TypeIds.h"
+#include "GafferImage/Export.h"
 
 namespace GafferImage
 {
@@ -49,7 +50,7 @@ namespace GafferImage
 IE_CORE_FORWARDDECLARE( ImagePlug )
 IE_CORE_FORWARDDECLARE( FilterPlug )
 
-class ImageSampler : public Gaffer::ComputeNode
+class GAFFERIMAGE_API ImageSampler : public Gaffer::ComputeNode
 {
 
 	public :

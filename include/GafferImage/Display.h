@@ -51,7 +51,7 @@ namespace GafferImage
 
 IE_CORE_FORWARDDECLARE( GafferDisplayDriver )
 
-class Display : public ImageNode
+class GAFFERIMAGE_API Display : public ImageNode
 {
 
 	public :

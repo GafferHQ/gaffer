@@ -45,7 +45,7 @@
 namespace GafferImage
 {
 
-class CDL : public OpenColorIOTransform
+class GAFFERIMAGE_API CDL : public OpenColorIOTransform
 {
 
 	public :

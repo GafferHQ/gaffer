@@ -51,7 +51,7 @@ IE_CORE_FORWARDDECLARE( StringPlug )
 namespace GafferImage
 {
 
-class LUT : public OpenColorIOTransform
+class GAFFERIMAGE_API LUT : public OpenColorIOTransform
 {
 
 	public :

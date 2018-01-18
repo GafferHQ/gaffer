@@ -44,7 +44,7 @@
 namespace GafferImage
 {
 
-class CollectImages : public ImageProcessor
+class GAFFERIMAGE_API CollectImages : public ImageProcessor
 {
 
 	public :

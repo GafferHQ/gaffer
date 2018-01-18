@@ -52,7 +52,7 @@ IE_CORE_FORWARDDECLARE( StringPlug )
 namespace GafferImage
 {
 
-class OpenImageIOReader : public ImageNode
+class GAFFERIMAGE_API OpenImageIOReader : public ImageNode
 {
 
 	public :
