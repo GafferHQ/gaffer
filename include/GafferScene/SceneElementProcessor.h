@@ -49,7 +49,7 @@ namespace GafferScene
 /// is feeling a bit unwieldy, and it seems that typical derived classes only ever modify
 /// one thing anyway. Perhaps we'd be better off with individual TransformProcessor,
 /// AttributeProcessor, ObjectProcessor and Deformer base classes.
-class SceneElementProcessor : public FilteredSceneProcessor
+class GAFFERSCENE_API SceneElementProcessor : public FilteredSceneProcessor
 {
 
 	public :

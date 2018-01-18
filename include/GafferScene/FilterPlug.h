@@ -41,6 +41,7 @@
 #include "Gaffer/Context.h"
 
 #include "GafferScene/TypeIds.h"
+#include "GafferScene/Export.h"
 
 namespace GafferScene
 {
@@ -52,7 +53,7 @@ class ScenePlug;
 /// \todo This derives from IntPlug for backwards compatibility
 /// reasons, but it may be preferable to derive straight from
 /// ValuePlug for version 1.0.0.0.
-class FilterPlug : public Gaffer::IntPlug
+class GAFFERSCENE_API FilterPlug : public Gaffer::IntPlug
 {
 
 	public :

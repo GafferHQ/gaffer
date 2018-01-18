@@ -42,7 +42,7 @@
 namespace GafferScene
 {
 
-class FreezeTransform : public FilteredSceneProcessor
+class GAFFERSCENE_API FreezeTransform : public FilteredSceneProcessor
 {
 
 	public :

@@ -52,7 +52,7 @@ namespace GafferScene
 {
 
 /// \todo Investigate whether or not caching is actually beneficial for this node
-class SetFilter : public Filter
+class GAFFERSCENE_API SetFilter : public Filter
 {
 
 	public :

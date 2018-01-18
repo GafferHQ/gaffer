@@ -42,7 +42,7 @@
 namespace GafferScene
 {
 
-class CustomAttributes : public GafferScene::Attributes
+class GAFFERSCENE_API CustomAttributes : public GafferScene::Attributes
 {
 
 	public :

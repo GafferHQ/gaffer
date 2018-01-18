@@ -42,7 +42,7 @@
 namespace GafferScene
 {
 
-class DeleteOptions : public DeleteGlobals
+class GAFFERSCENE_API DeleteOptions : public DeleteGlobals
 {
 
 	public :

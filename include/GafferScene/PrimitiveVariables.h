@@ -44,7 +44,7 @@
 namespace GafferScene
 {
 
-class PrimitiveVariables : public SceneElementProcessor
+class GAFFERSCENE_API PrimitiveVariables : public SceneElementProcessor
 {
 
 	public :

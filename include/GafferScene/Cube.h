@@ -44,7 +44,7 @@
 namespace GafferScene
 {
 
-class Cube : public ObjectSource
+class GAFFERSCENE_API Cube : public ObjectSource
 {
 
 	public :

@@ -53,7 +53,7 @@ IE_CORE_FORWARDDECLARE( StringPlug )
 namespace GafferScene
 {
 
-class SceneReader : public SceneNode
+class GAFFERSCENE_API SceneReader : public SceneNode
 {
 
 	public :

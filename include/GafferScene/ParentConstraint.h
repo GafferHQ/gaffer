@@ -44,7 +44,7 @@
 namespace GafferScene
 {
 
-class ParentConstraint : public Constraint
+class GAFFERSCENE_API ParentConstraint : public Constraint
 {
 
 	public :

@@ -44,7 +44,7 @@
 namespace GafferScene
 {
 
-class CustomOptions : public GafferScene::Options
+class GAFFERSCENE_API CustomOptions : public GafferScene::Options
 {
 
 	public :

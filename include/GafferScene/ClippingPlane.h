@@ -42,7 +42,7 @@
 namespace GafferScene
 {
 
-class ClippingPlane : public ObjectSource
+class GAFFERSCENE_API ClippingPlane : public ObjectSource
 {
 
 	public :

@@ -44,8 +44,8 @@
 namespace GafferScene
 {
 
-  class CopyOptions : public GafferScene::GlobalsProcessor
-  {
+class GAFFERSCENE_API CopyOptions : public GafferScene::GlobalsProcessor
+{
 
 	public :
 

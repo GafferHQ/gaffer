@@ -51,7 +51,7 @@ namespace GafferScene
 
 /// A base class for filters which operate by processing one
 /// or more input filters.
-class FilterProcessor : public Filter
+class GAFFERSCENE_API FilterProcessor : public Filter
 {
 
 	public :

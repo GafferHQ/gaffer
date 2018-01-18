@@ -49,7 +49,7 @@
 namespace GafferScene
 {
 
-class SceneWriter : public GafferDispatch::TaskNode
+class GAFFERSCENE_API SceneWriter : public GafferDispatch::TaskNode
 {
 
 	public :

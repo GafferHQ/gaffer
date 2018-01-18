@@ -53,7 +53,7 @@ IE_CORE_FORWARDDECLARE( TransformPlug )
 namespace GafferScene
 {
 
-class ObjectSource : public SceneNode
+class GAFFERSCENE_API ObjectSource : public SceneNode
 {
 
 	public :

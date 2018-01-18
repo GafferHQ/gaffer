@@ -45,7 +45,7 @@
 namespace GafferScene
 {
 
-class Plane : public ObjectSource
+class GAFFERSCENE_API Plane : public ObjectSource
 {
 
 	public :

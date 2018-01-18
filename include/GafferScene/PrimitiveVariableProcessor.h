@@ -54,7 +54,7 @@ namespace GafferScene
 
 /// The PrimitiveVariableProcessor base class simplifies the process of manipulating
 /// primitive variables.
-class PrimitiveVariableProcessor : public SceneElementProcessor
+class GAFFERSCENE_API PrimitiveVariableProcessor : public SceneElementProcessor
 {
 
 	public :

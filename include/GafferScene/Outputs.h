@@ -45,7 +45,7 @@
 namespace GafferScene
 {
 
-class Outputs : public GlobalsProcessor
+class GAFFERSCENE_API Outputs : public GlobalsProcessor
 {
 
 	public :

@@ -44,7 +44,7 @@
 namespace GafferScene
 {
 
-class LightTweaks : public SceneElementProcessor
+class GAFFERSCENE_API LightTweaks : public SceneElementProcessor
 {
 
 	public :

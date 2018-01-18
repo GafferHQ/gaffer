@@ -42,7 +42,7 @@
 namespace GafferScene
 {
 
-class OpenGLRender : public Render
+class GAFFERSCENE_API OpenGLRender : public Render
 {
 
 	public :

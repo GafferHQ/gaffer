@@ -44,7 +44,7 @@
 namespace GafferScene
 {
 
-class Sphere : public ObjectSource
+class GAFFERSCENE_API Sphere : public ObjectSource
 {
 
 	public :

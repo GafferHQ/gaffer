@@ -52,7 +52,7 @@ IE_CORE_FORWARDDECLARE( StringPlug )
 namespace GafferScene
 {
 
-class AttributeVisualiser : public SceneElementProcessor
+class GAFFERSCENE_API AttributeVisualiser : public SceneElementProcessor
 {
 
 	public :

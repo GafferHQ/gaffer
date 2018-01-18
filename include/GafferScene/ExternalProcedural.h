@@ -44,7 +44,7 @@
 namespace GafferScene
 {
 
-class ExternalProcedural : public ObjectSource
+class GAFFERSCENE_API ExternalProcedural : public ObjectSource
 {
 
 	public :

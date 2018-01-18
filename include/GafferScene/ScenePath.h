@@ -41,6 +41,7 @@
 #include "Gaffer/Path.h"
 
 #include "GafferScene/TypeIds.h"
+#include "GafferScene/Export.h"
 
 namespace Gaffer
 {
@@ -56,7 +57,7 @@ namespace GafferScene
 
 IE_CORE_FORWARDDECLARE( ScenePlug )
 
-class ScenePath : public Gaffer::Path
+class GAFFERSCENE_API ScenePath : public Gaffer::Path
 {
 
 	public :

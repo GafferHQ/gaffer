@@ -42,7 +42,7 @@
 namespace GafferScene
 {
 
-class CoordinateSystem : public ObjectSource
+class GAFFERSCENE_API CoordinateSystem : public ObjectSource
 {
 
 	public :

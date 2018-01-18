@@ -53,7 +53,7 @@ IE_CORE_FORWARDDECLARE( ScenePlug )
 /// A base class for nodes which are used to limit the scope
 /// of an operation to specific parts of the scene. Used in
 /// conjunction with the FilteredSceneProcessor class.
-class Filter : public Gaffer::ComputeNode
+class GAFFERSCENE_API Filter : public Gaffer::ComputeNode
 {
 
 	public :

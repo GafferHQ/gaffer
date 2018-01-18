@@ -44,7 +44,7 @@
 namespace GafferScene
 {
 
-class MeshTangents : public SceneElementProcessor
+class GAFFERSCENE_API MeshTangents : public SceneElementProcessor
 {
 
 	public :

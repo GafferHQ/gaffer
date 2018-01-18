@@ -51,7 +51,7 @@ IE_CORE_FORWARDDECLARE( StringPlug )
 namespace GafferScene
 {
 
-class Grid : public SceneNode
+class GAFFERSCENE_API Grid : public SceneNode
 {
 
 	public :

@@ -42,7 +42,7 @@
 namespace GafferScene
 {
 
-class Light : public ObjectSource
+class GAFFERSCENE_API Light : public ObjectSource
 {
 
 	public :

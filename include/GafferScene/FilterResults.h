@@ -48,7 +48,7 @@ namespace GafferScene
 IE_CORE_FORWARDDECLARE( ScenePlug )
 IE_CORE_FORWARDDECLARE( FilterPlug )
 
-class FilterResults : public Gaffer::ComputeNode
+class GAFFERSCENE_API FilterResults : public Gaffer::ComputeNode
 {
 
 	public :

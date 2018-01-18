@@ -47,7 +47,7 @@ namespace GafferScene
 
 /// The FilteredSceneProcessor provides a base class for limiting the processing of scenes
 /// to certain locations using a Filter node.
-class FilteredSceneProcessor : public SceneProcessor
+class GAFFERSCENE_API FilteredSceneProcessor : public SceneProcessor
 {
 
 	public :

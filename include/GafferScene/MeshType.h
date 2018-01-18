@@ -50,7 +50,7 @@ namespace GafferScene
 {
 
 /// The MeshType node changes the mesh interpolation type.
-class MeshType : public SceneElementProcessor
+class GAFFERSCENE_API MeshType : public SceneElementProcessor
 {
 
 	public :

@@ -68,20 +68,20 @@ namespace SceneAlgo
 /// Returns true if the specified location exists within the scene, and false otherwise.
 /// This operates by traversing the path from the root, ensuring that each location includes
 /// the next path element within its child names.
-bool exists( const ScenePlug *scene, const ScenePlug::ScenePath &path );
+GAFFERSCENE_API bool exists( const ScenePlug *scene, const ScenePlug::ScenePath &path );
 
 /// Returns true if the specified location is visible, and false otherwise.
 /// This operates by traversing the path from the root, terminating if
 /// the "scene:visible" attribute is false.
-bool visible( const ScenePlug *scene, const ScenePlug::ScenePath &path );
+GAFFERSCENE_API bool visible( const ScenePlug *scene, const ScenePlug::ScenePath &path );
 
 /// Finds all the paths in the scene that are matched by the filter, and adds them into the PathMatcher.
-void matchingPaths( const Filter *filter, const ScenePlug *scene, IECore::PathMatcher &paths );
+GAFFERSCENE_API void matchingPaths( const Filter *filter, const ScenePlug *scene, IECore::PathMatcher &paths );
 /// As above, but specifying the filter as a plug - typically Filter::outPlug() or
 /// FilteredSceneProcessor::filterPlug() would be passed.
-void matchingPaths( const Gaffer::IntPlug *filterPlug, const ScenePlug *scene, IECore::PathMatcher &paths );
+GAFFERSCENE_API void matchingPaths( const Gaffer::IntPlug *filterPlug, const ScenePlug *scene, IECore::PathMatcher &paths );
 /// As above, but specifying the filter as a PathMatcher.
-void matchingPaths( const IECore::PathMatcher &filter, const ScenePlug *scene, IECore::PathMatcher &paths );
+GAFFERSCENE_API void matchingPaths( const IECore::PathMatcher &filter, const ScenePlug *scene, IECore::PathMatcher &paths );
 
 /// Invokes the ThreadableFunctor at every location in the scene,
 /// visiting parent locations before their children, but
@@ -131,25 +131,25 @@ template <class ThreadableFunctor>
 void filteredParallelTraverse( const ScenePlug *scene, const IECore::PathMatcher &filter, ThreadableFunctor &f );
 
 /// Returns just the global attributes from the globals (everything prefixed with "attribute:").
-IECore::ConstCompoundObjectPtr globalAttributes( const IECore::CompoundObject *globals );
+GAFFERSCENE_API IECore::ConstCompoundObjectPtr globalAttributes( const IECore::CompoundObject *globals );
 
 /// Calculates the shutter specified by the globals.
-Imath::V2f shutter( const IECore::CompoundObject *globals );
+GAFFERSCENE_API Imath::V2f shutter( const IECore::CompoundObject *globals );
 
 /// Returns true if the specified set exists within the scene, and false otherwise.
 /// This simply searches for the set name in the result of scene->setNamesPlug()->getValue().
-bool setExists( const ScenePlug *scene, const IECore::InternedString &setName );
+GAFFERSCENE_API bool setExists( const ScenePlug *scene, const IECore::InternedString &setName );
 
 /// Returns all the sets in the scene, indexed by name. Performs individual set
 /// computations in parallel for improved performance.
-IECore::ConstCompoundDataPtr sets( const ScenePlug *scene );
+GAFFERSCENE_API IECore::ConstCompoundDataPtr sets( const ScenePlug *scene );
 /// As above, but returning only the requested sets.
-IECore::ConstCompoundDataPtr sets( const ScenePlug *scene, const std::vector<IECore::InternedString> &setNames );
+GAFFERSCENE_API IECore::ConstCompoundDataPtr sets( const ScenePlug *scene, const std::vector<IECore::InternedString> &setNames );
 
 /// Returns a bounding box for the specified object. Typically
 /// this is provided by the VisibleRenderable::bound() method, but
 /// for other object types we must return a synthetic bound.
-Imath::Box3f bound( const IECore::Object *object );
+GAFFERSCENE_API Imath::Box3f bound( const IECore::Object *object );
 
 } // namespace SceneAlgo
 

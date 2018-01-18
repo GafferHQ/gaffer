@@ -48,7 +48,7 @@ namespace GafferScene
 IE_CORE_FORWARDDECLARE( ScenePlug )
 
 /// Procedural that renders a subtree of a Gaffer scene.
-class Capsule : public IECoreScenePreview::Procedural
+class GAFFERSCENE_API Capsule : public IECoreScenePreview::Procedural
 {
 
 	public :

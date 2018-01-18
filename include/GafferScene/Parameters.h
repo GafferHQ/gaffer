@@ -44,7 +44,7 @@
 namespace GafferScene
 {
 
-class Parameters : public SceneElementProcessor
+class GAFFERSCENE_API Parameters : public SceneElementProcessor
 {
 
 	public :

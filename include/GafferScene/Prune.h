@@ -42,7 +42,7 @@
 namespace GafferScene
 {
 
-class Prune : public FilteredSceneProcessor
+class GAFFERSCENE_API Prune : public FilteredSceneProcessor
 {
 
 	public :

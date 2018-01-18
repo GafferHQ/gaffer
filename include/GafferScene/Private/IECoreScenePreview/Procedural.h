@@ -48,7 +48,7 @@ class Renderer;
 
 /// \todo Would it be useful to have a virtual function that returns an
 /// ExternalProcedural, for use when serialising scenes?
-class Procedural : public IECoreScene::VisibleRenderable
+class IECORESCENE_API Procedural : public IECoreScene::VisibleRenderable
 {
 
 	public :

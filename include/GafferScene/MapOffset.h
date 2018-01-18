@@ -50,7 +50,7 @@ namespace GafferScene
 {
 
 /// Applies offsets to texture coordinates.
-class MapOffset : public SceneElementProcessor
+class GAFFERSCENE_API MapOffset : public SceneElementProcessor
 {
 
 	public :

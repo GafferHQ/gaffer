@@ -44,7 +44,7 @@
 namespace GafferScene
 {
 
-class ShaderAssignment : public SceneElementProcessor
+class GAFFERSCENE_API ShaderAssignment : public SceneElementProcessor
 {
 
 	public :

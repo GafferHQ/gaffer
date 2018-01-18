@@ -1,6 +1,6 @@
 //////////////////////////////////////////////////////////////////////////
 //
-//  Copyright (c) 2017, Image Engine Design Inc. All rights reserved.
+//  Copyright (c) 2018, Image Engine Design Inc. All rights reserved.
 //
 //  Redistribution and use in source and binary forms, with or without
 //  modification, are permitted provided that the following conditions are
@@ -32,51 +32,15 @@
 //
 //////////////////////////////////////////////////////////////////////////
 
-#ifndef IECORE_GEOMETRY_H
-#define IECORE_GEOMETRY_H
+#ifndef GAFFERSCENE_EXPORT_H
+#define GAFFERSCENE_EXPORT_H
 
-#include "IECoreScene/VisibleRenderable.h"
+#include "IECore/Export.h"
 
-#include "GafferScene/TypeIds.h"
+#ifdef GAFFERSCENE_EXPORTS
+	#define GAFFERSCENE_API IECORE_EXPORT
+#else
+	#define GAFFERSCENE_API IECORE_IMPORT
+#endif
 
-namespace IECoreScenePreview
-{
-
-/// Class used to represent additional geometry types supported
-/// by specific renderers but not present in Cortex (think RiGeometry).
-class IECORESCENE_API Geometry : public IECoreScene::VisibleRenderable
-{
-
-	public:
-
-		Geometry( const std::string &type = "", const Imath::Box3f &bound = Imath::Box3f(), const IECore::CompoundDataPtr &parameters = nullptr );
-
-		IE_CORE_DECLAREEXTENSIONOBJECT( IECoreScenePreview::Geometry, GafferScene::PreviewGeometryTypeId, IECoreScene::VisibleRenderable );
-
-		void setType( const std::string &type );
-		const std::string &getType() const;
-
-		void setBound( const Imath::Box3f &bound );
-		const Imath::Box3f &getBound() const;
-
-		IECore::CompoundData *parameters();
-		const IECore::CompoundData *parameters() const;
-
-		Imath::Box3f bound() const override;
-		void render( IECoreScene::Renderer *renderer ) const override;
-
-	private:
-
-		static const unsigned int m_ioVersion;
-
-		std::string m_type;
-		Imath::Box3f m_bound;
-		IECore::CompoundDataPtr m_parameters;
-
-};
-
-IE_CORE_DECLAREPTR( Geometry );
-
-} // namespace IECoreScenePreview
-
-#endif // IECORE_GEOMETRY_H
+#endif // #ifndef GAFFERSCENE_EXPORT_H

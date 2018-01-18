@@ -42,7 +42,7 @@
 namespace GafferScene
 {
 
-class OpenGLShader : public GafferScene::Shader
+class GAFFERSCENE_API OpenGLShader : public GafferScene::Shader
 {
 
 	public :

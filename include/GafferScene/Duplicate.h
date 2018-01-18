@@ -44,7 +44,7 @@
 namespace GafferScene
 {
 
-class Duplicate : public BranchCreator
+class GAFFERSCENE_API Duplicate : public BranchCreator
 {
 
 	public :

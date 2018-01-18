@@ -43,6 +43,7 @@
 #include "Gaffer/BoxPlug.h"
 #include "Gaffer/Context.h"
 
+#include "GafferScene/Export.h"
 #include "GafferScene/TypeIds.h"
 
 namespace GafferScene
@@ -50,7 +51,7 @@ namespace GafferScene
 
 /// The ScenePlug is used to pass scenegraphs between nodes in the gaffer graph. It is a compound
 /// type, with subplugs for different aspects of the scene.
-class ScenePlug : public Gaffer::ValuePlug
+class GAFFERSCENE_API ScenePlug : public Gaffer::ValuePlug
 {
 
 	public :
