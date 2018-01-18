@@ -49,11 +49,12 @@
 #include "IECore/VectorTypedData.h"
 
 #include "GafferVDB/TypeIds.h"
+#include "GafferVDB/Export.h"
 
 namespace GafferVDB
 {
 
-class VDBObject : public IECoreScene::VisibleRenderable
+class GAFFERVDB_API VDBObject : public IECoreScene::VisibleRenderable
 {
 
 	public :

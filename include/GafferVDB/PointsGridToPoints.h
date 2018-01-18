@@ -42,7 +42,7 @@
 #include "GafferScene/SceneElementProcessor.h"
 
 #include "GafferVDB/TypeIds.h"
-
+#include "GafferVDB/Export.h"
 
 namespace Gaffer
 {
@@ -52,7 +52,7 @@ class StringPlug;
 namespace GafferVDB
 {
 
-class PointsGridToPoints : public GafferScene::SceneElementProcessor
+class GAFFERVDB_API PointsGridToPoints : public GafferScene::SceneElementProcessor
 {
 
 	public :

@@ -42,11 +42,12 @@
 #include "GafferScene/SceneElementProcessor.h"
 
 #include "GafferVDB/TypeIds.h"
+#include "GafferVDB/Export.h"
 
 namespace GafferVDB
 {
 
-class LevelSetToMesh : public GafferScene::SceneElementProcessor
+class GAFFERVDB_API LevelSetToMesh : public GafferScene::SceneElementProcessor
 {
 
 	public :

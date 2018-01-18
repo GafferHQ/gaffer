@@ -43,11 +43,12 @@
 #include "GafferScene/SceneElementProcessor.h"
 
 #include "GafferVDB/TypeIds.h"
+#include "GafferVDB/Export.h"
 
 namespace GafferVDB
 {
 
-class LevelSetOffset : public GafferScene::SceneElementProcessor
+class GAFFERVDB_API LevelSetOffset : public GafferScene::SceneElementProcessor
 {
 
 	public :
