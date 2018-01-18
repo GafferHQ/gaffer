@@ -39,13 +39,15 @@
 
 #include "boost/noncopyable.hpp"
 
+#include "Gaffer/Export.h"
+
 namespace Gaffer
 {
 
 class Process;
 
 /// Base class for monitoring node graph processes.
-class Monitor : boost::noncopyable
+class GAFFER_API Monitor : boost::noncopyable
 {
 
 	public :

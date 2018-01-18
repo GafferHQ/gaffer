@@ -39,6 +39,7 @@
 #define GAFFER_SET_H
 
 #include "Gaffer/Node.h"
+#include "Gaffer/Export.h"
 
 #include "IECore/RunTimeTyped.h"
 
@@ -48,7 +49,7 @@ namespace Gaffer
 /// Set provides an abstract base class for an arbitrary collection
 /// of IECore::RunTimeTyped objects.
 /// \todo Provide an iterator wrapping member().
-class Set : public IECore::RunTimeTyped, public boost::signals::trackable
+class GAFFER_API Set : public IECore::RunTimeTyped, public boost::signals::trackable
 {
 
 	public :

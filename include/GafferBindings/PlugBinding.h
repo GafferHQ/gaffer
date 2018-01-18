@@ -137,7 +137,7 @@ class PlugWrapper : public GraphComponentWrapper<WrappedType>
 
 };
 
-class PlugSerialiser : public Serialisation::Serialiser
+class GAFFERBINDINGS_API PlugSerialiser : public Serialisation::Serialiser
 {
 
 	public :

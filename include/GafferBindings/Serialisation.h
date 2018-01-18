@@ -41,10 +41,12 @@
 #include "Gaffer/Set.h"
 #include "Gaffer/GraphComponent.h"
 
+#include "GafferBindings/Export.h"
+
 namespace GafferBindings
 {
 
-class Serialisation
+class GAFFERBINDINGS_API Serialisation
 {
 
 	public :

@@ -51,7 +51,7 @@ namespace GafferBindings
 /// :	Replaces the default value with the current value for plugs
 ///     of the parent node. This is used when exporting the contents
 ///     of a Box node.
-class ValuePlugSerialiser : public PlugSerialiser
+class GAFFERBINDINGS_API ValuePlugSerialiser : public PlugSerialiser
 {
 
 	public :

@@ -54,7 +54,7 @@ IE_CORE_FORWARDDECLARE( ScriptNode )
 /// to the plugs and their values, flags and connections. The Node class itself
 /// doesn't define any means of performing computations - this is instead provided by
 /// the DependencyNode and ComputeNode derived classes.
-class Node : public GraphComponent
+class GAFFER_API Node : public GraphComponent
 {
 
 	public :

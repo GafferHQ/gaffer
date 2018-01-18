@@ -42,7 +42,7 @@
 namespace Gaffer
 {
 
-class SubGraph : public DependencyNode
+class GAFFER_API SubGraph : public DependencyNode
 {
 
 	public :

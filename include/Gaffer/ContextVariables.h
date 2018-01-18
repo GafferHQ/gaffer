@@ -45,7 +45,7 @@ namespace Gaffer
 {
 
 template<typename BaseType>
-class ContextVariables : public ContextProcessor<BaseType>
+class IECORE_EXPORT ContextVariables : public ContextProcessor<BaseType>
 {
 
 	public :

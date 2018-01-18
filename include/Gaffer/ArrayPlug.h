@@ -47,7 +47,7 @@ namespace Gaffer
 /// The ArrayPlug maintains a sequence of identically-typed child
 /// plugs, automatically adding new plugs when all existing plugs
 /// have connections.
-class ArrayPlug : public Plug
+class GAFFER_API ArrayPlug : public Plug
 {
 
 	public :

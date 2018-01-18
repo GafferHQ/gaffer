@@ -45,7 +45,7 @@ namespace Gaffer
 {
 
 /// A PathFilter which filters using StringAlgo match().
-class MatchPatternPathFilter : public Gaffer::PathFilter
+class GAFFER_API MatchPatternPathFilter : public Gaffer::PathFilter
 {
 
 	public :

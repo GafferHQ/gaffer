@@ -61,7 +61,7 @@ namespace Gaffer
 ///   in the GafferTest.SwitchTest
 ///   test cases.
 template<typename BaseType>
-class Switch : public BaseType
+class IECORE_EXPORT Switch : public BaseType
 {
 
 	public :

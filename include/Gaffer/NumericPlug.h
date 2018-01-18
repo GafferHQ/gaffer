@@ -48,7 +48,7 @@ namespace Gaffer
 {
 
 template<typename T>
-class NumericPlug : public ValuePlug
+class GAFFER_API NumericPlug : public ValuePlug
 {
 
 	public :

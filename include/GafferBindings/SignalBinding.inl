@@ -352,7 +352,7 @@ struct Slot : public SlotBase<Signal::slot_function_type::arity, Signal, Caller>
 	}
 };
 
-boost::python::object pythonConnection( const boost::signals::connection &connection, bool scoped );
+GAFFERBINDINGS_API boost::python::object pythonConnection( const boost::signals::connection &connection, bool scoped );
 
 template<typename Signal, typename SlotCaller>
 boost::python::object connect( Signal &s, boost::python::object &slot, bool scoped )

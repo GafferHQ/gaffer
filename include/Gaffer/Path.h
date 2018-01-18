@@ -45,6 +45,7 @@
 #include "IECore/CompoundData.h"
 
 #include "Gaffer/TypeIds.h"
+#include "Gaffer/Export.h"
 
 namespace GafferModule
 {
@@ -70,7 +71,7 @@ IE_CORE_FORWARDDECLARE( PathFilter )
 ///
 /// A path is represented by a root location followed by a series of names
 /// which refer to items nested below the root.
-class Path : public IECore::RunTimeTyped
+class GAFFER_API Path : public IECore::RunTimeTyped
 {
 
 	public :

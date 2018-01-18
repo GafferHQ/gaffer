@@ -119,7 +119,7 @@ class NodeWrapper : public GraphComponentWrapper<T>
 
 };
 
-class NodeSerialiser : public Serialisation::Serialiser
+class GAFFERBINDINGS_API NodeSerialiser : public Serialisation::Serialiser
 {
 
 	public :

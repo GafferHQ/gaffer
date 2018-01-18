@@ -38,8 +38,6 @@
 #ifndef GAFFER_TYPEDPLUG_H
 #define GAFFER_TYPEDPLUG_H
 
-#include "OpenEXR/ImathMatrix.h"
-
 #include "IECore/SimpleTypedData.h"
 
 #include "Gaffer/ValuePlug.h"
@@ -48,7 +46,7 @@ namespace Gaffer
 {
 
 template<typename T>
-class TypedPlug : public ValuePlug
+class IECORE_EXPORT TypedPlug : public ValuePlug
 {
 
 	public :

@@ -79,7 +79,7 @@ namespace Gaffer
 /// > `getValue()`. However, in practice, it was determined to
 /// > be too error prone to remember to do this for every
 /// > value access in every node.
-class StringPlug : public ValuePlug
+class GAFFER_API StringPlug : public ValuePlug
 {
 
 	public :

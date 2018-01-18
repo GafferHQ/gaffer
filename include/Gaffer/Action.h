@@ -43,6 +43,7 @@
 #include "IECore/RunTimeTyped.h"
 
 #include "Gaffer/TypeIds.h"
+#include "Gaffer/Export.h"
 
 namespace Gaffer
 {
@@ -64,7 +65,7 @@ IE_CORE_FORWARDDECLARE( Action );
 /// back to the ScriptNode - this would result in a circular reference,
 /// preventing the ScriptNode from being deleted appropriately. It is essential
 /// that great care is taken with this when implementing subclasses.
-class Action : public IECore::RunTimeTyped
+class GAFFER_API Action : public IECore::RunTimeTyped
 {
 
 	public :

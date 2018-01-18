@@ -47,7 +47,7 @@ namespace Gaffer
 IE_CORE_FORWARDDECLARE( StringPlug )
 
 /// Base class for nodes which generate random values based on Context values.
-class Random : public ComputeNode
+class GAFFER_API Random : public ComputeNode
 {
 
 	public :

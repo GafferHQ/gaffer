@@ -45,6 +45,7 @@
 #include "IECore/MurmurHash.h"
 
 #include "Gaffer/StringAlgo.h"
+#include "Gaffer/Export.h"
 
 namespace Gaffer
 {
@@ -69,7 +70,7 @@ namespace Gaffer
 /// avoid unnecessary recomputation. In the future we may explore having the UI use a separate
 /// container for such variables, or a more general mechanism for variables guaranteed to be
 /// unrelated to computation.
-class Context : public IECore::RefCounted
+class GAFFER_API Context : public IECore::RefCounted
 {
 
 	public :

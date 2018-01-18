@@ -59,7 +59,7 @@ IE_CORE_FORWARDDECLARE( Context )
 
 /// A monitor which collects statistics about
 /// what contexts plugs are evaluated in.
-class ContextMonitor : public Monitor
+class GAFFER_API ContextMonitor : public Monitor
 {
 
 	public :

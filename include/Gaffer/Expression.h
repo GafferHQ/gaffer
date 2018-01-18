@@ -48,7 +48,7 @@ namespace Gaffer
 
 IE_CORE_FORWARDDECLARE( StringPlug )
 
-class Expression : public ComputeNode
+class GAFFER_API Expression : public ComputeNode
 {
 
 	public :

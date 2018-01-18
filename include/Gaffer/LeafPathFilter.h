@@ -43,7 +43,7 @@ namespace Gaffer
 {
 
 /// A PathFilter which removes leaf paths.
-class LeafPathFilter : public Gaffer::PathFilter
+class GAFFER_API LeafPathFilter : public Gaffer::PathFilter
 {
 
 	public :

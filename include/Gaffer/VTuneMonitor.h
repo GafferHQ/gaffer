@@ -45,7 +45,7 @@ namespace Gaffer
 {
 
 /// A monitor which provides instrumentation to annotate a vtune profile
-class VTuneMonitor : public Monitor
+class GAFFER_API VTuneMonitor : public Monitor
 {
 
 	public :

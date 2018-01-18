@@ -45,7 +45,7 @@ namespace Gaffer
 
 IE_CORE_FORWARDDECLARE( Preferences )
 
-class ApplicationRoot : public GraphComponent
+class GAFFER_API ApplicationRoot : public GraphComponent
 {
 
 	public :

@@ -44,7 +44,7 @@ namespace Gaffer
 {
 
 template<typename BaseType>
-class TimeWarp : public ContextProcessor<BaseType>
+class IECORE_EXPORT TimeWarp : public ContextProcessor<BaseType>
 {
 
 	public :

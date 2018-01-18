@@ -53,7 +53,7 @@ IE_CORE_FORWARDDECLARE( Context )
 /// methods defined by the ComputeNode. ComputeNode computations are threadsafe (multiple
 /// threads may call getValue() with multiple Contexts concurrently) and make use
 /// of an in-memory caching mechanism to avoid repeated computations of the same thing.
-class ComputeNode : public DependencyNode
+class GAFFER_API ComputeNode : public DependencyNode
 {
 
 	public :

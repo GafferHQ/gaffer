@@ -52,7 +52,7 @@ IE_CORE_FORWARDDECLARE( DependencyNode )
 /// to allow the connections to pass values between connection
 /// points, and for DependencyNode::compute() to be used to compute output
 /// values.
-class ValuePlug : public Plug
+class GAFFER_API ValuePlug : public Plug
 {
 
 	public :

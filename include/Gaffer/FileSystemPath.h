@@ -45,7 +45,7 @@
 namespace Gaffer
 {
 
-class FileSystemPath : public Path
+class GAFFER_API FileSystemPath : public Path
 {
 
 	public :

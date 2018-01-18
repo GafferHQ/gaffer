@@ -55,7 +55,7 @@ IE_CORE_FORWARDDECLARE( Plug )
 
 /// A monitor which collects statistics about the frequency
 /// and duration of hash and compute processes per plug.
-class PerformanceMonitor : public Monitor
+class GAFFER_API PerformanceMonitor : public Monitor
 {
 
 	public :
