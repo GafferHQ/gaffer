@@ -41,11 +41,12 @@
 #include "Gaffer/NumericPlug.h"
 
 #include "GafferTest/TypeIds.h"
+#include "GafferTest/Export.h"
 
 namespace GafferTest
 {
 
-class MultiplyNode : public Gaffer::ComputeNode
+class GAFFERTEST_API MultiplyNode : public Gaffer::ComputeNode
 {
 
 	public :
