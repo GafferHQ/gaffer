@@ -40,11 +40,12 @@
 #include "GafferScene/Attributes.h"
 
 #include "GafferArnold/TypeIds.h"
+#include "GafferArnold/Export.h"
 
 namespace GafferArnold
 {
 
-class ArnoldAttributes : public GafferScene::Attributes
+class GAFFERARNOLD_API ArnoldAttributes : public GafferScene::Attributes
 {
 
 	public :

@@ -39,10 +39,12 @@
 
 #include "GafferScene/FilteredSceneProcessor.h"
 
+#include "GafferArnold/Export.h"
+
 namespace GafferArnold
 {
 
-class ArnoldMeshLight : public GafferScene::FilteredSceneProcessor
+class GAFFERARNOLD_API ArnoldMeshLight : public GafferScene::FilteredSceneProcessor
 {
 
 	public :

@@ -40,11 +40,12 @@
 #include "GafferScene/Light.h"
 
 #include "GafferArnold/TypeIds.h"
+#include "GafferArnold/Export.h"
 
 namespace GafferArnold
 {
 
-class ArnoldLight : public GafferScene::Light
+class GAFFERARNOLD_API ArnoldLight : public GafferScene::Light
 {
 
 	public :

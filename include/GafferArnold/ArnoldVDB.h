@@ -40,11 +40,12 @@
 #include "GafferScene/ObjectSource.h"
 
 #include "GafferArnold/TypeIds.h"
+#include "GafferArnold/Export.h"
 
 namespace GafferArnold
 {
 
-class ArnoldVDB : public GafferScene::ObjectSource
+class GAFFERARNOLD_API ArnoldVDB : public GafferScene::ObjectSource
 {
 
 	public :

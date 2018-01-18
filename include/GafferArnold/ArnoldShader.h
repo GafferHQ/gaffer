@@ -41,11 +41,12 @@
 #include "GafferScene/Shader.h"
 
 #include "GafferArnold/TypeIds.h"
+#include "GafferArnold/Export.h"
 
 namespace GafferArnold
 {
 
-class ArnoldShader : public GafferScene::Shader
+class GAFFERARNOLD_API ArnoldShader : public GafferScene::Shader
 {
 
 	public :
