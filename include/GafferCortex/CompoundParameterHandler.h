@@ -45,7 +45,7 @@
 namespace GafferCortex
 {
 
-class CompoundParameterHandler : public ParameterHandler
+class GAFFERCORTEX_API CompoundParameterHandler : public ParameterHandler
 {
 
 	public :

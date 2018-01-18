@@ -46,7 +46,7 @@ namespace GafferCortex
 {
 
 template<typename T>
-class NumericParameterHandler : public ParameterHandler
+class GAFFERCORTEX_API NumericParameterHandler : public ParameterHandler
 {
 
 	public :

@@ -42,6 +42,7 @@
 #include "GafferDispatch/TaskNode.h"
 
 #include "GafferCortex/TypeIds.h"
+#include "GafferCortex/Export.h"
 
 namespace IECore
 {
@@ -57,7 +58,7 @@ namespace GafferCortex
 IE_CORE_FORWARDDECLARE( CompoundParameterHandler );
 
 template<typename BaseType>
-class ParameterisedHolder : public BaseType
+class GAFFERCORTEX_API ParameterisedHolder : public BaseType
 {
 
 	public :
