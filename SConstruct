@@ -386,7 +386,7 @@ elif env["PLATFORM"] == "posix" :
 
 	env["GAFFER_PLATFORM"] = "linux"
 
-env.Append( CXXFLAGS = [ "-std=$CXXSTD" ] )
+env.Append( CXXFLAGS = [ "-std=$CXXSTD", "-fvisibility=hidden" ] )
 
 if env["DEBUG"] :
 	env.Append( CXXFLAGS = [ "-g", "-O0" ] )
@@ -928,6 +928,7 @@ for libraryName, libraryDef in libraries.items() :
 	# environment
 
 	libEnv = baseLibEnv.Clone()
+	libEnv.Append( CXXFLAGS = "-D{0}_EXPORTS".format( libraryName.upper() ) )
 	libEnv.Append( **(libraryDef.get( "envAppends", {} )) )
 
 	# library
@@ -964,22 +965,25 @@ for libraryName, libraryDef in libraries.items() :
 	pythonEnv = basePythonEnv.Clone()
 	pythonEnv.Append( **(libraryDef.get( "pythonEnvAppends", {} ))  )
 
+	bindingsEnv = pythonEnv.Clone()
+	bindingsEnv.Append( CXXFLAGS = "-D{0}BINDINGS_EXPORTS".format( libraryName.upper() ) )
+
 	bindingsSource = sorted( glob.glob( "src/" + libraryName + "Bindings/*.cpp" ) )
 	if bindingsSource :
 
-		bindingsLibrary = pythonEnv.SharedLibrary( "lib/" + libraryName + "Bindings", bindingsSource )
-		pythonEnv.Default( bindingsLibrary )
+		bindingsLibrary = bindingsEnv.SharedLibrary( "lib/" + libraryName + "Bindings", bindingsSource )
+		bindingsEnv.Default( bindingsLibrary )
 
-		bindingsLibraryInstall = pythonEnv.Install( "$BUILD_DIR/lib", bindingsLibrary )
+		bindingsLibraryInstall = bindingsEnv.Install( "$BUILD_DIR/lib", bindingsLibrary )
 		env.Alias( "build", bindingsLibraryInstall )
 
 		# header install
-		bindingsHeaderInstall = pythonEnv.Install(
+		bindingsHeaderInstall = bindingsEnv.Install(
 			"$BUILD_DIR/" + "include/" + libraryName + "Bindings",
 			glob.glob( "include/" + libraryName + "Bindings/*.h" ) +
 			glob.glob( "include/" + libraryName + "Bindings/*.inl" )
 		)
-		pythonEnv.Alias( "build", bindingsHeaderInstall )
+		bindingsEnv.Alias( "build", bindingsHeaderInstall )
 
 
 	pythonModuleSource = sorted( glob.glob( "src/" + libraryName + "Module/*.cpp" ) )
