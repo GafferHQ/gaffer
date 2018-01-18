@@ -124,6 +124,8 @@ class DispatcherWrapper : public NodeWrapper<Dispatcher>
 		// functions because TaskBatch is a protected member of Dispatcher.
 		//////////////////////////////////////////////////////////////////////////
 
+		typedef Dispatcher::TaskBatch TaskBatch;
+
 		static void taskBatchExecute( const Dispatcher::TaskBatch &batch )
 		{
 			ScopedGILRelease gilRelease;
@@ -335,7 +337,7 @@ void GafferDispatchBindings::bindDispatcher()
 		.value( "CustomRange", Dispatcher::CustomRange )
 	;
 
-	RefCountedClass<Dispatcher::TaskBatch, RefCounted>( "_TaskBatch" )
+	RefCountedClass<DispatcherWrapper::TaskBatch, RefCounted>( "_TaskBatch" )
 		.def( "execute", &DispatcherWrapper::taskBatchExecute )
 		.def( "node", &DispatcherWrapper::taskBatchGetNode )
 		.def( "plug", &DispatcherWrapper::taskBatchPlug )

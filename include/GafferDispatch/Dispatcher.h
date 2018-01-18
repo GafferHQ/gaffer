@@ -54,8 +54,6 @@
 #include "GafferDispatch/TaskNode.h"
 #include "GafferDispatch/Export.h"
 
-#include "GafferDispatchBindings/DispatcherBinding.h" // to enable friend declaration for TaskBatch.
-
 namespace Gaffer
 {
 
@@ -284,7 +282,6 @@ class GAFFERDISPATCH_API Dispatcher : public Gaffer::Node
 		static PostDispatchSignal g_postDispatchSignal;
 		static std::string g_defaultDispatcherType;
 
-		friend void GafferDispatchBindings::bindDispatcher();
 };
 
 } // namespace GafferDispatch
