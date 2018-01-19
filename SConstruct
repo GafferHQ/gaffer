@@ -85,7 +85,7 @@ options.Add(
 options.Add(
 	"CXXFLAGS",
 	"The extra flags to pass to the C++ compiler during compilation.",
-	[ "-pipe", "-Wall", "-Werror" ]
+	[ "-pipe", "-Wall" ]
 )
 
 options.Add(
@@ -96,6 +96,10 @@ options.Add(
 	"CXXSTD",
 	"The C++ standard to build against. A minimum of C++11 is required.",
 	"c++11",
+)
+
+options.Add(
+	BoolVariable( "WARNINGS_AS_ERRORS", "Treat compiler and linker warnings as errors.", True )
 )
 
 options.Add(
@@ -392,6 +396,12 @@ if env["DEBUG"] :
 	env.Append( CXXFLAGS = [ "-g", "-O0" ] )
 else :
 	env.Append( CXXFLAGS = [ "-DNDEBUG", "-DBOOST_DISABLE_ASSERTS" , "-O3" ] )
+
+if env["WARNINGS_AS_ERRORS"] :
+	env.Append(
+		CXXFLAGS = [ "-Werror" ],
+		SHLINKFLAGS = [ "-Wl,-fatal_warnings" ],
+	)
 
 if env["BUILD_CACHEDIR"] != "" :
 	CacheDir( env["BUILD_CACHEDIR"] )
