@@ -539,7 +539,60 @@ class OSLObjectTest( GafferOSLTest.OSLTestCase ) :
 		for index, m in enumerate( matrixPrimvar.data ) :
 			self.assertEqual( m, imath.M44f( index ) )
 
+	def testCanWriteStringPrimvar( self ) :
+
+		# The plane will contain 4 vertices &
+		# OSL defaults to operating on vertices so we should get 4
+		# strings in the output primvar.
+		plane = GafferScene.Plane( "Plane" )
+		oslObject = GafferOSL.OSLObject( "OSLObject" )
+		pathFilter = GafferScene.PathFilter( "PathFilter" )
+		pathFilter["paths"].setValue( IECore.StringVectorData( ['/plane'] ) )
+
+		outString = GafferOSL.OSLShader( "OutString" )
+		outString.loadShader( "ObjectProcessing/OutString" )
+
+		outObject = GafferOSL.OSLShader( "OutObject" )
+		outObject.loadShader( "ObjectProcessing/OutObject" )
+
+		oslCode = GafferOSL.OSLCode( "OSLCode" )
+
+		oslCode["out"].addChild( Gaffer.StringPlug( "foo", direction = Gaffer.Plug.Direction.Out, defaultValue = '' ) )
+
+		# shading:index returns the vertex index 0,1,2,3 and we attempt to write out if the index
+		# is odd or even in a string called 'foo'.
+		oslCode["code"].setValue( """
+		int shadingIndex;
+		if (getattribute("shading:index", shadingIndex))
+		{
+			if (shadingIndex % 2 == 0)
+			{
+				foo = "even";
+			}
+			else
+			{
+				foo = "odd";
+			}
+		}
+		else
+		{
+			foo = "eh";
+		}""" )
+
+		oslObject["in"].setInput( plane["out"] )
+		oslObject["filter"].setInput( pathFilter["out"] )
+		oslObject["shader"].setInput( outObject["out"] )
+		outString["parameters"]["value"].setInput( oslCode["out"]["foo"] )
+		outObject["parameters"]["in0"].setInput( outString["out"]["primitiveVariable"] )
+
+		outputPlane = oslObject['out'].object( "/plane" )
+
+		self.assertTrue( outputPlane )
+		self.assertTrue( "name" in outputPlane.keys() )
+
+		pv = outputPlane["name"]
+		self.assertEqual( pv.data, IECore.StringVectorData( ["even", "odd", "even", "odd"] ) )
+
 if __name__ == "__main__":
 	unittest.main()
-
 
