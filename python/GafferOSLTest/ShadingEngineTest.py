@@ -479,6 +479,25 @@ class ShadingEngineTest( GafferOSLTest.OSLTestCase ) :
 				imath.Color3f( p["P"][i].x, p["P"][i].y, 0 )
 			)
 
+	def testCanReadStringData( self ):
+
+		s = self.compileShader( os.path.dirname( __file__ ) +  "/shaders/stringAttribute.osl" )
+		e = GafferOSL.ShadingEngine( IECore.ObjectVector( [
+			IECoreScene.Shader( s, "osl:surface", { "name" : "strattr" } )
+		] ) )
+
+		p = self.rectanglePoints()
+		p["strattr"] = IECore.StringVectorData( [ "testo" if x % 2 == 0 else "no-testo"  for x in range(len(p["P"])) ] )
+
+		r = e.shade( p )
+
+		for i, c in enumerate( r["Ci"] ) :
+			f = 1.0 if x % 2 == 0 else 0.0
+
+			self.assertEqual(
+				c,
+				imath.Color3f( f, f, f ) )
+
 	def testUVProvidedAsV2f( self ) :
 
 		shader = self.compileShader( os.path.dirname( __file__ ) + "/shaders/globals.osl" )
