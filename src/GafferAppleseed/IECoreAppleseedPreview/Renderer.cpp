@@ -90,6 +90,7 @@
 #include "IECoreAppleseed/ShaderAlgo.h"
 #include "IECoreAppleseed/TransformAlgo.h"
 
+#include "GafferScene/Private/IECoreScenePreview/Procedural.h"
 #include "GafferScene/Private/IECoreScenePreview/Renderer.h"
 
 
@@ -109,6 +110,7 @@ using namespace IECoreAppleseed;
 namespace
 {
 
+const char *g_defaultSurfaceShaderlName = "__default_facing_ratio_shader";
 const char *g_defaultMaterialName = "__defaultMaterial";
 const char *g_nullMaterialName = "__nullMaterial";
 
@@ -123,6 +125,98 @@ T *reportedCast( const RunTimeTyped *v, const char *type, const InternedString &
 	msg( Msg::Warning, "AppleseedRenderer", boost::format( "Expected %s but got %s for %s \"%s\"." ) % T::staticTypeName() % v->typeName() % type % name.c_str() );
 	return nullptr;
 }
+
+/// Helper class to manage appleseed log targets in an exception safe way.
+class ScopedLogTarget
+{
+
+	public :
+
+		ScopedLogTarget()
+		{
+		}
+
+		~ScopedLogTarget()
+		{
+			if( m_logTarget.get() != nullptr )
+			{
+				asr::global_logger().remove_target( m_logTarget.get() );
+			}
+		}
+
+		void setLogTarget( asf::auto_release_ptr<asf::ILogTarget> logTarget )
+		{
+			assert( m_logTarget.get() == nullptr );
+			assert( logTarget.get() != nullptr );
+
+			asr::global_logger().add_target( logTarget.get() );
+			m_logTarget = logTarget;
+		}
+
+	private :
+
+		asf::auto_release_ptr<asf::ILogTarget> m_logTarget;
+};
+
+} // namespace
+
+//////////////////////////////////////////////////////////////////////////
+// AppleseedRendererBase forward declaration
+//////////////////////////////////////////////////////////////////////////
+
+namespace
+{
+
+IE_CORE_FORWARDDECLARE( ShaderCache );
+IE_CORE_FORWARDDECLARE( InstanceMasterCache );
+
+/// This class implements the basics of outputting attributes
+/// and objects to appleseed, but is not a complete implementation
+/// of the renderer interface. It is subclassed to provide concrete
+/// implementations suitable for use as the master renderer or
+/// for use in procedurals.
+class AppleseedRendererBase : public IECoreScenePreview::Renderer
+{
+
+	public :
+
+		virtual ~AppleseedRendererBase() override;
+
+		AttributesInterfacePtr attributes( const CompoundObject *attributes ) override;
+
+		ObjectInterfacePtr object( const string &name, const Object *object, const AttributesInterface *attributes ) override;
+		ObjectInterfacePtr object( const string &name, const vector<const Object *> &samples, const vector<float> &times, const AttributesInterface *attributes ) override;
+
+	protected :
+
+		AppleseedRendererBase( RenderType renderType, const string &fileName, const float shutterOpen, const float shutterClose );
+
+		bool isInteractiveRender() const
+		{
+			return m_renderType == Interactive;
+		}
+
+		void createProject();
+
+		ObjectInterfacePtr procedural( const string &name, const IECoreScenePreview::Procedural* procedural, const AttributesInterface *attributes );
+
+		RenderType m_renderType;
+
+		asf::auto_release_ptr<asr::Project> m_project;
+		asr::Assembly *m_mainAssembly;
+
+		ShaderCachePtr m_shaderCache;
+		InstanceMasterCachePtr m_instanceMasterCache;
+
+		typedef tbb::concurrent_hash_map<IECore::MurmurHash, string> ProceduralCache;
+		ProceduralCache m_proceduralCache;
+
+		float m_shutterOpenTime;
+		float m_shutterCloseTime;
+
+		string m_appleseedFileName;
+		boost::filesystem::path m_projectPath;
+};
 
 } // namespace
 
@@ -879,9 +973,12 @@ namespace
 /// A primitive that can be instanced.
 class InstanceMaster : public IECore::RefCounted
 {
+
 	public :
 
-		InstanceMaster(const string &name, asr::Assembly *mainAssembly ) : m_name( name ), m_mainAssembly( mainAssembly )
+		InstanceMaster( const string &name, asr::Assembly *mainAssembly )
+			:	m_name( name )
+			,	m_mainAssembly( mainAssembly )
 		{
 			assert( m_mainAssembly );
 			m_numInstances = 0;
@@ -939,7 +1036,8 @@ class AppleseedInstance : public AppleseedEntity
 	public :
 
 		AppleseedInstance( asr::Project &project, const string &name, const string &masterName )
-			:	AppleseedEntity( project, name, false ), m_masterName( masterName )
+			:	AppleseedEntity( project, name, false )
+			,	m_masterName( masterName )
 		{
 		}
 
@@ -1900,6 +1998,422 @@ class AppleseedAreaLight : public AppleseedLight
 } // namespace
 
 //////////////////////////////////////////////////////////////////////////
+// Procedurals
+//////////////////////////////////////////////////////////////////////////
+
+namespace
+{
+
+class ProceduralRenderer : public AppleseedRendererBase
+{
+
+	public :
+
+		/// \todo The base class currently makes a new shader cache
+		/// and a new instance cache. Can we share with the parent
+		/// renderer instead?
+		ProceduralRenderer( RenderType renderType, const string &fileName, const float shutterOpen, const float shutterClose )
+			: AppleseedRendererBase( renderType, fileName, shutterOpen, shutterClose )
+		{
+			assert( renderType != Interactive );
+		}
+
+		virtual void option( const IECore::InternedString &name, const IECore::Object *value ) override
+		{
+			IECore::msg( IECore::Msg::Warning, "AppleseedRenderer", "Procedurals can not call option()" );
+		}
+
+		virtual void output( const IECore::InternedString &name, const Output *output ) override
+		{
+			IECore::msg( IECore::Msg::Warning, "AppleseedRenderer", "Procedurals can not call output()" );
+		}
+
+		ObjectInterfacePtr camera( const std::string &name, const IECoreScene::Camera *camera, const AttributesInterface *attributes ) override
+		{
+			IECore::msg( IECore::Msg::Warning, "AppleseedRenderer", "Procedurals can not call camera()" );
+			return nullptr;
+		}
+
+		ObjectInterfacePtr light( const std::string &name, const IECore::Object *object, const AttributesInterface *attributes ) override
+		{
+			IECore::msg( IECore::Msg::Warning, "AppleseedRenderer", "Procedurals can not call light()" );
+			return nullptr;
+		}
+
+		virtual void render() override
+		{
+			IECore::msg( IECore::Msg::Warning, "AppleseedRenderer", "Procedurals can not call render()" );
+		}
+
+		virtual void pause() override
+		{
+			IECore::msg( IECore::Msg::Warning, "AppleseedRenderer", "Procedurals can not call pause()" );
+		}
+
+		asf::auto_release_ptr<asr::Assembly> releaseMainAssembly()
+		{
+			// Clear unused shaders.
+			m_shaderCache->clearUnused();
+
+			// Convert instanced primitives into assemblies.
+			if( m_instanceMasterCache )
+			{
+				m_instanceMasterCache->movePrimitivesToAssemblies();
+			}
+
+			// Remove the main assembly from the project and return it.
+			asr::Scene* scene = m_project->get_scene();
+			asf::auto_release_ptr<asr::Assembly> assembly = scene->assemblies().remove( m_mainAssembly );
+			return assembly;
+		}
+};
+
+IE_CORE_DECLAREPTR( ProceduralRenderer )
+
+/// Appleseed procedural handle.
+class AppleseedProcedural : public AppleseedEntity
+{
+
+	public :
+
+		AppleseedProcedural( asr::Project &project, const string &name, const IECoreScenePreview::Procedural *procedural, ProceduralRenderer* renderer , bool interactiveRender )
+			:	AppleseedEntity( project, name, interactiveRender )
+			,	m_assembly( nullptr )
+			,	m_assemblyInstance( nullptr )
+		{
+			// Expand the procedural into the renderer's project.
+			procedural->render( renderer );
+
+			// Remove the main assembly from the renderer's project.
+			asf::auto_release_ptr<asr::Assembly> ass = renderer->releaseMainAssembly();
+
+			// Remove the default surface shader and materials from the assembly.
+			ass->surface_shaders().remove(ass->surface_shaders().get_by_name(g_defaultSurfaceShaderlName));
+			ass->materials().remove(ass->materials().get_by_name(g_defaultMaterialName));
+			ass->materials().remove(ass->materials().get_by_name(g_nullMaterialName));
+
+			// Rename the assembly and insert it into out main assembly.
+			string assemblyName = name + "_assembly";
+			ass->set_name( assemblyName.c_str() );
+
+			m_assembly = ass.get();
+			mainAssembly().assemblies().insert( ass );
+
+			if( isInteractiveRender() )
+			{
+				createAssemblyInstance();
+			}
+		}
+
+		~AppleseedProcedural() override
+		{
+			if( isInteractiveRender() )
+			{
+				removeAssemblyInstance( m_assemblyInstance );
+				removeAssembly( m_assembly );
+			}
+			else
+			{
+				// Create an instance of the procedural assembly and add it to the main assembly.
+				createAssemblyInstance();
+			}
+		}
+
+		void transform( const M44f &transform ) override
+		{
+			if( isInteractiveRender() )
+			{
+				TransformAlgo::makeTransformSequence( transform, m_assemblyInstance->transform_sequence() );
+				bumpMainAssemblyVersionId();
+			}
+			else
+			{
+				TransformAlgo::makeTransformSequence( transform, m_transformSequence );
+			}
+		}
+
+		void transform( const vector<M44f> &samples, const vector<float> &times ) override
+		{
+			if( isInteractiveRender() )
+			{
+				TransformAlgo::makeTransformSequence( times, samples, m_assemblyInstance->transform_sequence() );
+				bumpMainAssemblyVersionId();
+			}
+			else
+			{
+				TransformAlgo::makeTransformSequence( times, samples, m_transformSequence );
+			}
+		}
+
+		bool attributes( const IECoreScenePreview::Renderer::AttributesInterface *attributes ) override
+		{
+			// We don't support attributes inside procedurals.
+			return true;
+		}
+
+	private :
+
+		void createAssemblyInstance()
+		{
+			string assemblyName = name() + "_assembly";
+			string assemblyInstanceName = assemblyName + "_instance";
+			asf::auto_release_ptr<asr::AssemblyInstance> assInstance( asr::AssemblyInstanceFactory::create( assemblyInstanceName.c_str(), asr::ParamArray(), assemblyName.c_str() ) );
+			assInstance->transform_sequence() = m_transformSequence;
+
+			m_assemblyInstance = assInstance.get();
+			insertAssemblyInstance( assInstance );
+		}
+
+		asr::Assembly *m_assembly;
+		asr::AssemblyInstance *m_assemblyInstance;
+		asr::TransformSequence m_transformSequence;
+
+};
+
+} // namespace
+
+//////////////////////////////////////////////////////////////////////////
+// AppleseedRendererBase definition
+//////////////////////////////////////////////////////////////////////////
+
+namespace
+{
+
+AppleseedRendererBase::AppleseedRendererBase( RenderType renderType, const string &fileName, const float shutterOpen, const float shutterClose )
+	:	m_renderType( renderType )
+	,	m_shutterOpenTime( shutterOpen )
+	,	m_shutterCloseTime( shutterClose )
+	,	m_appleseedFileName( fileName )
+{
+	// Create the project.
+	createProject();
+
+	// Create the shader cache.
+	m_shaderCache.reset( new ShaderCache( *m_project, isInteractiveRender() ) );
+
+	// Create the instance master cache for non-interactive renders.
+	if( !isInteractiveRender() )
+	{
+		m_instanceMasterCache.reset( new InstanceMasterCache() );
+	}
+}
+
+AppleseedRendererBase::~AppleseedRendererBase()
+{
+}
+
+AppleseedRendererBase::AttributesInterfacePtr AppleseedRendererBase::attributes( const CompoundObject *attributes )
+{
+	return new AppleseedAttributes( attributes, m_shaderCache.get() );
+}
+
+AppleseedRendererBase::ObjectInterfacePtr AppleseedRendererBase::object( const string &name, const Object *object, const AttributesInterface *attributes )
+{
+	if( const IECoreScenePreview::Procedural *p = IECore::runTimeCast<const IECoreScenePreview::Procedural>( object ) )
+	{
+		return procedural( name, p, attributes );
+	}
+
+	if( !ObjectAlgo::isPrimitiveSupported( object ) )
+	{
+		return new AppleseedNullObject( *m_project, name, m_renderType == Interactive );
+	}
+
+	if( m_instanceMasterCache )
+	{
+		MurmurHash primitiveHash;
+		object->hash( primitiveHash );
+
+		const AppleseedAttributes *appleseedAttributes = static_cast<const AppleseedAttributes*>( attributes );
+		appleseedAttributes->appendToHash( primitiveHash );
+
+		InstanceMasterPtr master = m_instanceMasterCache->get( primitiveHash, name, m_mainAssembly );
+		if( master->m_numInstances > 0 )
+		{
+			return new AppleseedInstance( *m_project, name, master->m_name );
+		}
+	}
+
+	if( m_renderType == SceneDescription )
+	{
+		return new AppleseedPrimitive( *m_project, name, object, attributes, m_projectPath );
+	}
+	else
+	{
+		return new AppleseedPrimitive( *m_project, name, object, attributes, m_renderType == Interactive );
+	}
+}
+
+AppleseedRendererBase::ObjectInterfacePtr AppleseedRendererBase::object( const string &name, const vector<const Object *> &samples, const vector<float> &times, const AttributesInterface *attributes )
+{
+	if( const IECoreScenePreview::Procedural *p = IECore::runTimeCast<const IECoreScenePreview::Procedural>( samples.front() ) )
+	{
+		return procedural( name, p, attributes );
+	}
+
+	if( !ObjectAlgo::isPrimitiveSupported( samples[0] ) )
+	{
+		return new AppleseedNullObject( *m_project, name, m_renderType == Interactive );
+	}
+
+	if( m_instanceMasterCache )
+	{
+		MurmurHash primitiveHash;
+		for( size_t i = 0, e = samples.size(); i < e; ++i)
+		{
+			primitiveHash.append( times[i] );
+			samples[i]->hash( primitiveHash );
+		}
+
+		const AppleseedAttributes *appleseedAttributes = static_cast<const AppleseedAttributes*>( attributes );
+		appleseedAttributes->appendToHash( primitiveHash );
+
+		InstanceMasterPtr master = m_instanceMasterCache->get( primitiveHash, name, m_mainAssembly );
+		if( master->m_numInstances > 0 )
+		{
+			return new AppleseedInstance( *m_project, name, master->m_name );
+		}
+	}
+
+	if( m_renderType == SceneDescription )
+	{
+		return new AppleseedPrimitive( *m_project, name, samples, times, m_shutterOpenTime, m_shutterCloseTime, attributes, m_projectPath );
+	}
+	else
+	{
+		return new AppleseedPrimitive( *m_project, name, samples, times, m_shutterOpenTime, m_shutterCloseTime, attributes, m_renderType == Interactive );
+	}
+}
+
+AppleseedRendererBase::ObjectInterfacePtr AppleseedRendererBase::procedural( const string &name, const IECoreScenePreview::Procedural* p, const AttributesInterface *attributes )
+{
+	if( !isInteractiveRender() )
+	{
+		// Check if we have seen this procedural before.
+		MurmurHash hash;
+		p->hash(hash);
+
+		ProceduralCache::accessor a;
+		m_proceduralCache.insert( a, hash );
+
+		if( a->second.empty() )
+		{
+			a->second = name;
+		}
+		else
+		{
+			// Return a handle to an instance of the procedural.
+			return new AppleseedInstance( *m_project, name, a->second );
+		}
+	}
+
+	// Create a procedural renderer. Disable scene edits and enable auto-instancing.
+	RenderType procRenderType = m_renderType == Interactive ? Batch : m_renderType;
+	ProceduralRendererPtr renderer = new ProceduralRenderer( procRenderType, m_appleseedFileName, m_shutterOpenTime, m_shutterCloseTime );
+
+	// Expand the procedural and return a handle to it.
+	return new AppleseedProcedural( *m_project, name, p, renderer.get() , isInteractiveRender() );
+}
+
+void AppleseedRendererBase::createProject()
+{
+	assert( m_project.get() == nullptr );
+
+	m_project = asr::ProjectFactory::create( "project" );
+	m_project->add_default_configurations();
+
+	// Insert some config params needed by the interactive renderer.
+	asr::Configuration *cfg = m_project->configurations().get_by_name( "interactive" );
+	asr::ParamArray *cfg_params = &cfg->get_parameters();
+	cfg_params->insert( "sample_renderer", "generic" );
+	cfg_params->insert( "sample_generator", "generic" );
+	cfg_params->insert( "tile_renderer", "generic" );
+	cfg_params->insert( "frame_renderer", "progressive" );
+	cfg_params->insert( "lighting_engine", "pt" );
+	cfg_params->insert( "pixel_renderer", "uniform" );
+	cfg_params->insert( "sampling_mode", "qmc" );
+	cfg_params->insert( "spectrum_mode", "rgb" );
+	cfg_params->insert_path( "progressive_frame_renderer.max_fps", "5" );
+
+	// Insert some config params needed by the final renderer.
+	cfg = m_project->configurations().get_by_name( "final" );
+	cfg_params = &cfg->get_parameters();
+	cfg_params->insert( "sample_renderer", "generic" );
+	cfg_params->insert( "sample_generator", "generic" );
+	cfg_params->insert( "tile_renderer", "generic" );
+	cfg_params->insert( "frame_renderer", "generic" );
+	cfg_params->insert( "lighting_engine", "pt" );
+	cfg_params->insert( "pixel_renderer", "uniform" );
+	cfg_params->insert( "sampling_mode", "qmc" );
+	cfg_params->insert( "spectrum_mode", "rgb" );
+	cfg_params->insert_path( "uniform_pixel_renderer.samples", "16" );
+
+	// Create some basic project entities.
+	asf::auto_release_ptr<asr::Frame> frame( asr::FrameFactory::create( "beauty", asr::ParamArray().insert( "resolution", "640 480" ) ) );
+	m_project->set_frame( frame );
+
+	// 16 bits float (half) is the default pixel format in appleseed.
+	// Force the pixel format to float to avoid half -> float conversions in the display driver.
+	m_project->get_frame()->get_parameters().insert( "pixel_format", "float" );
+
+	// Create the scene
+	asf::auto_release_ptr<asr::Scene> scene = asr::SceneFactory::create();
+	m_project->set_scene( scene );
+
+	// Create the main assembly
+	asf::auto_release_ptr<asr::Assembly> assembly = asr::AssemblyFactory().create( "assembly", asr::ParamArray() );
+	m_mainAssembly = assembly.get();
+	m_project->get_scene()->assemblies().insert( assembly );
+
+	// Create the default facing ratio diagnostic surface shader.
+	asr::ParamArray params;
+	params.insert( "mode", "facing_ratio" );
+	asf::auto_release_ptr<asr::SurfaceShader> surfaceShader = asr::DiagnosticSurfaceShaderFactory().create( g_defaultSurfaceShaderlName, params );
+	m_mainAssembly->surface_shaders().insert( surfaceShader );
+
+	// Create the default facing ratio material.
+	params.clear();
+	params.insert( "surface_shader", g_defaultSurfaceShaderlName );
+	asf::auto_release_ptr<asr::Material> material = asr::GenericMaterialFactory().create( g_defaultMaterialName, params );
+	m_mainAssembly->materials().insert( material );
+
+	// Create an empty black material for back faces and area lights.
+	material = asr::GenericMaterialFactory().create( g_nullMaterialName, asr::ParamArray() );
+	m_mainAssembly->materials().insert( material );
+
+	// Instance the main assembly
+	asf::auto_release_ptr<asr::AssemblyInstance> assemblyInstance = asr::AssemblyInstanceFactory::create( "assembly_inst", asr::ParamArray(), "assembly" );
+	m_project->get_scene()->assembly_instances().insert( assemblyInstance );
+
+	if( m_renderType == SceneDescription )
+	{
+		if( m_appleseedFileName.empty() )
+		{
+			msg( MessageHandler::Error, "AppleseedRenderer", "Empty project filename" );
+		}
+
+		m_projectPath = boost::filesystem::path( m_appleseedFileName ).parent_path();
+
+		// Create a dir to store the mesh files if it does not exist yet.
+		boost::filesystem::path geomPath = m_projectPath / "_geometry";
+		if( !boost::filesystem::exists( geomPath ) )
+		{
+			if( !boost::filesystem::create_directory( geomPath ) )
+			{
+				msg( MessageHandler::Error, "AppleseedRenderer", "Couldn't create _geometry directory." );
+			}
+		}
+
+		// Set the project filename and add the project directory
+		// to the search paths.
+		m_project->set_path( m_appleseedFileName.c_str() );
+		m_project->search_paths().set_root_path( m_projectPath.string().c_str() );
+	}
+}
+
+} // namespace
+
+//////////////////////////////////////////////////////////////////////////
 // AppleseedRenderer
 //////////////////////////////////////////////////////////////////////////
 
@@ -1918,58 +2432,19 @@ InternedString g_overrideShadingMode( "as:cfg:shading_engine:override_shading:mo
 InternedString g_searchPath( "as:searchpath" );
 InternedString g_maxInteractiveRenderSamples( "as:cfg:progressive_frame_renderer:max_samples" );
 
-/// Helper class to manage log targets in an exception safe way.
-class ScopedLogTarget
-{
-
-	public :
-
-		ScopedLogTarget()
-		{
-		}
-
-		~ScopedLogTarget()
-		{
-			if( m_logTarget.get() != nullptr )
-			{
-				asr::global_logger().remove_target( m_logTarget.get() );
-			}
-		}
-
-		void setLogTarget( asf::auto_release_ptr<asf::ILogTarget> logTarget )
-		{
-			assert( m_logTarget.get() == nullptr );
-			assert( logTarget.get() != nullptr );
-
-			asr::global_logger().add_target( logTarget.get() );
-			m_logTarget = logTarget;
-		}
-
-	private :
-
-		asf::auto_release_ptr<asf::ILogTarget> m_logTarget;
-};
-
-class AppleseedRenderer final : public IECoreScenePreview::Renderer
+/// The full renderer implementation as presented to the outside world.
+class AppleseedRenderer final : public AppleseedRendererBase
 {
 
 	public :
 
 		AppleseedRenderer( RenderType renderType, const string &fileName )
-			:	m_renderType( renderType ), m_shutterOpenTime( 0.0f ), m_shutterCloseTime( 0.0f ), m_environmentEDFVisible( false ), m_maxInteractiveRenderSamples( 0 ), m_appleseedFileName( fileName )
+			:	AppleseedRendererBase( renderType , fileName, 0.0f, 0.0f )
+			,	m_environmentEDFVisible( false )
+			,	m_maxInteractiveRenderSamples( 0 )
 		{
-			// Create the renderer controller and the project.
+			// Create the renderer controller.
 			m_rendererController = new RendererController();
-			createProject();
-
-			// Create the shader cache.
-			m_shaderCache.reset( new ShaderCache( *m_project, isInteractiveRender() ) );
-
-			// Create the instance master cache for non-interactive renders.
-			if( !isInteractiveRender() )
-			{
-				m_instanceMasterCache.reset( new InstanceMasterCache() );
-			}
 		}
 
 		~AppleseedRenderer() override
@@ -2345,11 +2820,6 @@ class AppleseedRenderer final : public IECoreScenePreview::Renderer
 			}
 		}
 
-		Renderer::AttributesInterfacePtr attributes( const CompoundObject *attributes ) override
-		{
-			return new AppleseedAttributes( attributes, m_shaderCache.get() );
-		}
-
 		ObjectInterfacePtr camera( const string &name, const Camera *camera, const AttributesInterface *attributes ) override
 		{
 			CameraPtr cameraCopy = camera->copy();
@@ -2397,76 +2867,17 @@ class AppleseedRenderer final : public IECoreScenePreview::Renderer
 			return new AppleseedNullObject( *m_project, name, isInteractiveRender() );
 		}
 
-		ObjectInterfacePtr object( const string &name, const Object *object, const AttributesInterface *attributes ) override
-		{
-			if( !ObjectAlgo::isPrimitiveSupported( object ) )
-			{
-				return new AppleseedNullObject( *m_project, name, m_renderType == Interactive );
-			}
-
-			if( m_instanceMasterCache )
-			{
-				MurmurHash primitiveHash;
-				object->hash( primitiveHash );
-
-				const AppleseedAttributes *appleseedAttributes = static_cast<const AppleseedAttributes*>( attributes );
-				appleseedAttributes->appendToHash( primitiveHash );
-
-				InstanceMasterPtr master = m_instanceMasterCache->get( primitiveHash, name, m_mainAssembly );
-				if( master->m_numInstances > 0 )
-				{
-					return new AppleseedInstance( *m_project, name, master->m_name );
-				}
-			}
-
-			if( m_renderType == SceneDescription )
-			{
-				return new AppleseedPrimitive( *m_project, name, object, attributes, m_projectPath );
-			}
-			else
-			{
-				return new AppleseedPrimitive( *m_project, name, object, attributes, m_renderType == Interactive );
-			}
-		}
-
-		ObjectInterfacePtr object( const string &name, const vector<const Object *> &samples, const vector<float> &times, const AttributesInterface *attributes ) override
-		{
-			if( !ObjectAlgo::isPrimitiveSupported( samples[0] ) )
-			{
-				return new AppleseedNullObject( *m_project, name, m_renderType == Interactive );
-			}
-
-			if( m_instanceMasterCache )
-			{
-				MurmurHash primitiveHash;
-				for( int i = 0, e = samples.size(); i < e; ++i)
-				{
-					primitiveHash.append( times[i] );
-					samples[i]->hash( primitiveHash );
-				}
-
-				const AppleseedAttributes *appleseedAttributes = static_cast<const AppleseedAttributes*>( attributes );
-				appleseedAttributes->appendToHash( primitiveHash );
-
-				InstanceMasterPtr master = m_instanceMasterCache->get( primitiveHash, name, m_mainAssembly );
-				if( master->m_numInstances > 0 )
-				{
-					return new AppleseedInstance( *m_project, name, master->m_name );
-				}
-			}
-
-			if( m_renderType == SceneDescription )
-			{
-				return new AppleseedPrimitive( *m_project, name, samples, times, m_shutterOpenTime, m_shutterCloseTime, attributes, m_projectPath );
-			}
-			else
-			{
-				return new AppleseedPrimitive( *m_project, name, samples, times, m_shutterOpenTime, m_shutterCloseTime, attributes, m_renderType == Interactive );
-			}
-		}
-
 		void render() override
 		{
+			// Clear unused shaders.
+			m_shaderCache->clearUnused();
+
+			// Convert instanced primitives into assemblies.
+			if( m_instanceMasterCache )
+			{
+				m_instanceMasterCache->movePrimitivesToAssemblies();
+			}
+
 			// Create a default camera if needed.
 			if( m_project->get_uncached_active_camera() == nullptr )
 			{
@@ -2508,15 +2919,6 @@ class AppleseedRenderer final : public IECoreScenePreview::Renderer
 				m_project->configurations().get_by_name( "interactive" )->get_parameters().insert_path( "progressive_frame_renderer.max_samples", numPixels * m_maxInteractiveRenderSamples );
 			}
 
-			// Clear unused shaders.
-			m_shaderCache->clearUnused();
-
-			// Convert instanced primitives into assemblies.
-			if( m_instanceMasterCache )
-			{
-				m_instanceMasterCache->movePrimitivesToAssemblies();
-			}
-
 			// Launch render.
 			if( m_renderType == SceneDescription )
 			{
@@ -2544,108 +2946,6 @@ class AppleseedRenderer final : public IECoreScenePreview::Renderer
 		}
 
 	private :
-
-		bool isInteractiveRender() const
-		{
-			return m_renderType == Interactive;
-		}
-
-		void createProject()
-		{
-			assert( m_project.get() == nullptr );
-
-			m_project = asr::ProjectFactory::create( "project" );
-			m_project->add_default_configurations();
-
-			// Insert some config params needed by the interactive renderer.
-			asr::Configuration *cfg = m_project->configurations().get_by_name( "interactive" );
-			asr::ParamArray *cfg_params = &cfg->get_parameters();
-			cfg_params->insert( "sample_renderer", "generic" );
-			cfg_params->insert( "sample_generator", "generic" );
-			cfg_params->insert( "tile_renderer", "generic" );
-			cfg_params->insert( "frame_renderer", "progressive" );
-			cfg_params->insert( "lighting_engine", "pt" );
-			cfg_params->insert( "pixel_renderer", "uniform" );
-			cfg_params->insert( "sampling_mode", "qmc" );
-			cfg_params->insert( "spectrum_mode", "rgb" );
-			cfg_params->insert_path( "progressive_frame_renderer.max_fps", "5" );
-
-			// Insert some config params needed by the final renderer.
-			cfg = m_project->configurations().get_by_name( "final" );
-			cfg_params = &cfg->get_parameters();
-			cfg_params->insert( "sample_renderer", "generic" );
-			cfg_params->insert( "sample_generator", "generic" );
-			cfg_params->insert( "tile_renderer", "generic" );
-			cfg_params->insert( "frame_renderer", "generic" );
-			cfg_params->insert( "lighting_engine", "pt" );
-			cfg_params->insert( "pixel_renderer", "uniform" );
-			cfg_params->insert( "sampling_mode", "qmc" );
-			cfg_params->insert( "spectrum_mode", "rgb" );
-			cfg_params->insert_path( "uniform_pixel_renderer.samples", "16" );
-
-			// Create some basic project entities.
-			asf::auto_release_ptr<asr::Frame> frame( asr::FrameFactory::create( "beauty", asr::ParamArray().insert( "resolution", "640 480" ) ) );
-			m_project->set_frame( frame );
-
-			// 16 bits float (half) is the default pixel format in appleseed.
-			// Force the pixel format to float to avoid half -> float conversions in the display driver.
-			m_project->get_frame()->get_parameters().insert( "pixel_format", "float" );
-
-			// Create the scene
-			asf::auto_release_ptr<asr::Scene> scene = asr::SceneFactory::create();
-			m_project->set_scene( scene );
-
-			// Create the main assembly
-			asf::auto_release_ptr<asr::Assembly> assembly = asr::AssemblyFactory().create( "assembly", asr::ParamArray() );
-			m_mainAssembly = assembly.get();
-			m_project->get_scene()->assemblies().insert( assembly );
-
-			// Create the default facing ratio diagnostic surface shader.
-			const char *surfaceShaderName = "__default_facing_ratio_shader";
-			asr::ParamArray params;
-			params.insert( "mode", "facing_ratio" );
-			asf::auto_release_ptr<asr::SurfaceShader> surfaceShader = asr::DiagnosticSurfaceShaderFactory().create( surfaceShaderName, params );
-			m_mainAssembly->surface_shaders().insert( surfaceShader );
-
-			// Create the default facing ratio material.
-			params.clear();
-			params.insert( "surface_shader", surfaceShaderName );
-			asf::auto_release_ptr<asr::Material> material = asr::GenericMaterialFactory().create( g_defaultMaterialName, params );
-			m_mainAssembly->materials().insert( material );
-
-			// Create an empty black material for back faces and area lights.
-			material = asr::GenericMaterialFactory().create( g_nullMaterialName, asr::ParamArray() );
-			m_mainAssembly->materials().insert( material );
-
-			// Instance the main assembly
-			asf::auto_release_ptr<asr::AssemblyInstance> assemblyInstance = asr::AssemblyInstanceFactory::create( "assembly_inst", asr::ParamArray(), "assembly" );
-			m_project->get_scene()->assembly_instances().insert( assemblyInstance );
-
-			if( m_renderType == SceneDescription )
-			{
-				if( m_appleseedFileName.empty() )
-				{
-					msg( MessageHandler::Error, "AppleseedRenderer", "Empty project filename" );
-				}
-
-				m_projectPath = boost::filesystem::path( m_appleseedFileName ).parent_path();
-
-				// Create a dir to store the mesh files if it does not exist yet.
-				boost::filesystem::path geomPath = m_projectPath / "_geometry";
-				if( !boost::filesystem::exists( geomPath ) )
-				{
-					if( !boost::filesystem::create_directory( geomPath ) )
-					{
-						msg( MessageHandler::Error, "AppleseedRenderer", "Couldn't create _geometry directory." );
-					}
-				}
-
-				// Set the project filename and add the project directory
-				// to the search paths.
-				m_project->set_path( m_appleseedFileName.c_str() );
-				m_project->search_paths().set_root_path( m_projectPath.string().c_str() );
-			}
-		}
 
 		void batchRender()
 		{
@@ -2756,24 +3056,14 @@ class AppleseedRenderer final : public IECoreScenePreview::Renderer
 
 		// Members used by all render types.
 
-		RenderType m_renderType;
-
-		asf::auto_release_ptr<asr::Project> m_project;
-		asr::Assembly *m_mainAssembly;
-
 		string m_cameraName;
-		float m_shutterOpenTime;
-		float m_shutterCloseTime;
 
 		string m_environmentEDFName;
 		bool m_environmentEDFVisible;
 
-		ShaderCachePtr m_shaderCache;
-
 		// Members used by batch and project generation renders
 
 		asr::AOVContainer m_aovs;
-		InstanceMasterCachePtr m_instanceMasterCache;
 
 		// Members used by interactive and batch renders
 
@@ -2787,11 +3077,6 @@ class AppleseedRenderer final : public IECoreScenePreview::Renderer
 
 		int m_maxInteractiveRenderSamples;
 		boost::thread m_renderThread;
-
-		// Members used by project generation renderer
-
-		string m_appleseedFileName;
-		boost::filesystem::path m_projectPath;
 
 		// Registration with factory
 
