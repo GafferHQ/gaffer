@@ -1,6 +1,6 @@
 ##########################################################################
 #
-#  Copyright (c) 2015, Image Engine Design Inc. All rights reserved.
+#  Copyright (c) 2018, Image Engine Design Inc. All rights reserved.
 #
 #  Redistribution and use in source and binary forms, with or without
 #  modification, are permitted provided that the following conditions are
@@ -34,17 +34,32 @@
 #
 ##########################################################################
 
-__import__( "Gaffer" )
+import IECore
 
-from _GafferDispatch import *
-from LocalDispatcher import LocalDispatcher
-from SystemCommand import SystemCommand
-from TaskList import TaskList
-from TaskContextProcessor import TaskContextProcessor
-from Wedge import Wedge
-from TaskContextVariables import TaskContextVariables
-from TaskSwitch import TaskSwitch
-from PythonCommand import PythonCommand
-from FrameMask import FrameMask
+import Gaffer
+import GafferDispatch
 
-__import__( "IECore" ).loadConfig( "GAFFER_STARTUP_PATHS", subdirectory = "GafferDispatch" )
+class FrameMask( GafferDispatch.TaskNode ) :
+
+	def __init__( self, name = "FrameMask" ) :
+
+		GafferDispatch.TaskNode.__init__( self, name )
+		self["mask"] = Gaffer.StringPlug()
+
+	def preTasks( self, context ) :
+
+		frames = IECore.FrameList.parse( self["mask"].getValue() ).asList()
+		if ( not frames ) or ( context.getFrame() in frames ) :
+			return GafferDispatch.TaskNode.preTasks( self, context )
+		else :
+			return []
+
+	def hash( self, context ) :
+
+		return IECore.MurmurHash()
+
+	def execute( self ) :
+
+		pass
+
+IECore.registerRunTimeTyped( FrameMask, typeName = "GafferDispatch::FrameMask" )
