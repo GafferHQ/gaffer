@@ -62,7 +62,7 @@ class TabbedContainer( GafferUI.ContainerWidget ) :
 
 		# See comments in Button.py
 		if TabbedContainer.__palette is None :
-			TabbedContainer.__palette = QtGui.QPalette( QtWidgets.QApplication.instance().palette() )
+			TabbedContainer.__palette = QtGui.QPalette( QtWidgets.QApplication.instance().palette( self.__tabBar._qtWidget() ) )
 			TabbedContainer.__palette.setColor( QtGui.QPalette.Disabled, QtGui.QPalette.Light, QtGui.QColor( 0, 0, 0, 0 ) )
 
 		self.__tabBar._qtWidget().setPalette( TabbedContainer.__palette )
