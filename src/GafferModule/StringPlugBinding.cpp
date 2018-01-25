@@ -95,19 +95,19 @@ std::string substitutionsRepr( unsigned substitutions )
 	return result;
 }
 
-std::string maskedRepr( const Gaffer::StringPlug *plug, unsigned flagsMask, const Serialisation *serialisation )
+std::string serialisationRepr( const Gaffer::StringPlug *plug, const Serialisation *serialisation )
 {
 	std::string extraArguments;
 	if( plug->substitutions() != Context::AllSubstitutions )
 	{
 		extraArguments = "substitutions = " + substitutionsRepr( plug->substitutions() );
 	}
-	return ValuePlugSerialiser::repr( plug, flagsMask, extraArguments, serialisation );
+	return ValuePlugSerialiser::repr( plug, extraArguments, serialisation );
 }
 
 std::string repr( const Gaffer::StringPlug *plug )
 {
-	return maskedRepr( plug, Plug::All, nullptr );
+	return serialisationRepr( plug, nullptr );
 }
 
 class StringPlugSerialiser : public ValuePlugSerialiser
@@ -117,7 +117,7 @@ class StringPlugSerialiser : public ValuePlugSerialiser
 
 		std::string constructor( const Gaffer::GraphComponent *graphComponent, const Serialisation &serialisation ) const override
 		{
-			return maskedRepr( static_cast<const StringPlug *>( graphComponent ), Plug::All & ~Plug::ReadOnly, &serialisation );
+			return serialisationRepr( static_cast<const StringPlug *>( graphComponent ), &serialisation );
 		}
 
 };

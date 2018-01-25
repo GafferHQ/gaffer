@@ -913,20 +913,17 @@ class ParameterisedHolderTest( GafferTest.TestCase ) :
 		self.failUnless( "parameters" in ph )
 		self.failUnless( "i" in ph["parameters"] )
 		self.assertEqual( ph["parameters"]["i"].getValue(), 1 )
-		self.assertEqual( ph["parameters"]["i"].getFlags( Gaffer.Plug.Flags.ReadOnly ), False )
+		self.assertFalse( Gaffer.MetadataAlgo.getReadOnly( ph["parameters"]["i"] ) )
 
 		with ph.parameterModificationContext() :
 
 			p.parameters()["i"].userData()["gaffer"] = IECore.CompoundObject( {
 				"readOnly" : IECore.BoolData( True ),
 			} )
-			p.parameters()["i"].setNumericValue( 2 )
 
-		self.assertEqual( ph["parameters"]["i"].getFlags( Gaffer.Plug.Flags.ReadOnly ), True )
-		# the plug was made read only, so should not have accepted the new parameter value
-		self.assertEqual( ph["parameters"]["i"].getValue(), 1 )
+		self.assertTrue( Gaffer.MetadataAlgo.getReadOnly( ph["parameters"]["i"] ) )
 
-	def testConections( self ) :
+	def testConnections( self ) :
 
 		p = IECore.Parameterised( "" )
 

@@ -57,7 +57,7 @@ namespace
 {
 
 template<typename T>
-std::string maskedCompoundNumericPlugRepr( const T *plug, unsigned flagsMask, const Serialisation *serialisation = nullptr )
+std::string serialisationRepr( const T *plug, const Serialisation *serialisation = nullptr )
 {
 	std::string extraArgs = "";
 
@@ -71,13 +71,13 @@ std::string maskedCompoundNumericPlugRepr( const T *plug, unsigned flagsMask, co
 		boost::replace_first( extraArgs, "_IECore", "GeometricData" );
 	}
 
-	return ValuePlugSerialiser::repr( plug, flagsMask, extraArgs, serialisation );
+	return ValuePlugSerialiser::repr( plug, extraArgs, serialisation );
 }
 
 template<typename T>
-std::string compoundNumericPlugRepr( const T *plug )
+std::string repr( const T *plug )
 {
-	return maskedCompoundNumericPlugRepr( plug, Plug::All );
+	return serialisationRepr( plug );
 }
 
 template<typename T>
@@ -88,7 +88,7 @@ class CompoundNumericPlugSerialiser : public ValuePlugSerialiser
 
 		std::string constructor( const Gaffer::GraphComponent *graphComponent, const Serialisation &serialisation ) const override
 		{
-			return maskedCompoundNumericPlugRepr( static_cast<const T *>( graphComponent ), Plug::All & ~Plug::ReadOnly, &serialisation );
+			return serialisationRepr( static_cast<const T *>( graphComponent ), &serialisation );
 		}
 
 };
@@ -159,7 +159,7 @@ void bind()
 		.def( "gang", &gang<T> )
 		.def( "isGanged", &T::isGanged )
 		.def( "ungang", &ungang<T> )
-		.def( "__repr__", &compoundNumericPlugRepr<T> )
+		.def( "__repr__", &repr<T> )
 	;
 
 	Serialisation::registerSerialiser( T::staticTypeId(), new CompoundNumericPlugSerialiser<T>() );

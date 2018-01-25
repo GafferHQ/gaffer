@@ -176,7 +176,7 @@ std::string valueSerialisationWalk( const Gaffer::ValuePlug *plug, const Seriali
 
 } // namespace
 
-std::string ValuePlugSerialiser::repr( const Gaffer::ValuePlug *plug, unsigned flagsMask, const std::string &extraArguments, const Serialisation *serialisation )
+std::string ValuePlugSerialiser::repr( const Gaffer::ValuePlug *plug, const std::string &extraArguments, const Serialisation *serialisation )
 {
 	std::string result = Serialisation::classPath( plug ) + "( \"" + plug->getName().string() + "\", ";
 
@@ -233,7 +233,7 @@ std::string ValuePlugSerialiser::repr( const Gaffer::ValuePlug *plug, unsigned f
 		}
 	}
 
-	const unsigned flags = plug->getFlags() & flagsMask;
+	const unsigned flags = plug->getFlags();
 	if( flags != Plug::Default )
 	{
 		result += "flags = " + PlugSerialiser::flagsRepr( flags ) + ", ";
@@ -269,7 +269,7 @@ void ValuePlugSerialiser::moduleDependencies( const Gaffer::GraphComponent *grap
 
 std::string ValuePlugSerialiser::constructor( const Gaffer::GraphComponent *graphComponent, const Serialisation &serialisation ) const
 {
-	return repr( static_cast<const ValuePlug *>( graphComponent ), Plug::All & ~Plug::ReadOnly, "", &serialisation );
+	return repr( static_cast<const ValuePlug *>( graphComponent ), "", &serialisation );
 }
 
 std::string ValuePlugSerialiser::postHierarchy( const Gaffer::GraphComponent *graphComponent, const std::string &identifier, const Serialisation &serialisation ) const

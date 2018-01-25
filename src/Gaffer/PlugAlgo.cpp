@@ -204,22 +204,6 @@ bool validatePromotability( const Plug *plug, const Plug *parent, bool throwExce
 
 	if( plug->direction() == Plug::In )
 	{
-		if( plug->getFlags( Plug::ReadOnly ) )
-		{
-			if( !throwExceptions )
-			{
-				return false;
-			}
-			else
-			{
-				throw IECore::Exception(
-					boost::str(
-						boost::format( "Cannot promote plug \"%s\" as it is read only." ) % plug->fullName()
-					)
-				);
-			}
-		}
-
 		// The plug must be serialisable, as we need its input to be saved,
 		// but we only need to check this for the topmost plug and not for
 		// children, because a setInput() call for a parent plug will also

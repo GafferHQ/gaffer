@@ -345,37 +345,6 @@ class PlugTest( GafferTest.TestCase ) :
 		self.assertEqual( pIn2.getFlags( Gaffer.Plug.Flags.AcceptsInputs ), True )
 		self.assertEqual( pIn2.acceptsInput( pOut ), True )
 
-	def testReadOnlyDefaultsToOff( self ) :
-
-		p = Gaffer.Plug()
-		self.failIf( p.getFlags( Gaffer.Plug.Flags.ReadOnly ) )
-
-	def testReadOnlyDisallowsInputs( self ) :
-
-		self.failUnless( Gaffer.Plug.Flags.All & Gaffer.Plug.Flags.ReadOnly )
-
-		p1 = Gaffer.Plug()
-		p2 = Gaffer.Plug()
-		self.failUnless( p1.acceptsInput( p2 ) )
-		# read-only plugs can still be used as connection sources
-		p2.setFlags( Gaffer.Plug.Flags.ReadOnly, True )
-		self.failUnless( p1.acceptsInput( p2 ) )
-		# but cannot be used as destinations
-		self.failIf( p2.acceptsInput( p1 ) )
-		self.assertRaises( RuntimeError, p2.setInput, p1 )
-
-	def testOutputPlugsDisallowReadOnly( self ) :
-
-		p = Gaffer.Plug( direction = Gaffer.Plug.Direction.Out )
-		self.assertRaises( RuntimeError, p.setFlags, Gaffer.Plug.Flags.ReadOnly, True )
-
-		self.assertRaises(
-			RuntimeError,
-			Gaffer.Plug,
-			direction = Gaffer.Plug.Direction.Out,
-			flags = Gaffer.Plug.Flags.Default | Gaffer.Plug.Flags.ReadOnly
-		)
-
 	def testRepr( self ) :
 
 		p1 = Gaffer.Plug(
@@ -439,35 +408,6 @@ class PlugTest( GafferTest.TestCase ) :
 
 		p = Gaffer.Plug()
 		self.assertFalse( p.acceptsInput( p ) )
-
-	def testReadOnlySerialisation( self ) :
-
-		s = Gaffer.ScriptNode()
-		s["n"] = Gaffer.Node()
-		s["n"]["p"] = Gaffer.Plug( flags = Gaffer.Plug.Flags.Default | Gaffer.Plug.Flags.Dynamic )
-		s["n"]["p2"] = Gaffer.Plug( direction=Gaffer.Plug.Direction.Out, flags = Gaffer.Plug.Flags.Default | Gaffer.Plug.Flags.Dynamic )
-		s["n"]["p"].setInput( s["n"]["p2"] )
-		s["n"]["p"].setFlags( Gaffer.Plug.Flags.ReadOnly, True )
-		ss = s.serialise()
-
-		s2 = Gaffer.ScriptNode()
-		s2.execute( ss )
-
-		self.assertTrue( s2["n"]["p"].getInput().isSame( s2["n"]["p2"] ) )
-		self.assertEqual( s2["n"]["p"].getFlags( Gaffer.Plug.Flags.ReadOnly ), True )
-
-	def testReadOnlyRepr( self ) :
-
-		p1 = Gaffer.Plug(
-			"p",
-			flags = Gaffer.Plug.Flags.Default | Gaffer.Plug.Flags.ReadOnly,
-		)
-
-		p2 = eval( repr( p1 ) )
-
-		self.assertEqual( p1.getName(), p2.getName() )
-		self.assertEqual( p1.direction(), p2.direction() )
-		self.assertEqual( p1.getFlags(), p2.getFlags() )
 
 	def testNoFlagsRepr( self ) :
 
@@ -705,20 +645,20 @@ class PlugTest( GafferTest.TestCase ) :
 		s["n"] = Gaffer.Node()
 		s["n"]["user"]["p"] = Gaffer.IntPlug()
 
-		self.assertFalse( s["n"]["user"]["p"].getFlags( Gaffer.Plug.Flags.ReadOnly ) )
+		self.assertFalse( s["n"]["user"]["p"].getFlags( Gaffer.Plug.Flags.Dynamic ) )
 
 		cs = GafferTest.CapturingSlot( s["n"].plugFlagsChangedSignal() )
 		with Gaffer.UndoScope( s["n"]["user"]["p"].ancestor( Gaffer.ScriptNode ) ) :
-			s["n"]["user"]["p"].setFlags( Gaffer.Plug.Flags.ReadOnly, True )
-			self.assertTrue( s["n"]["user"]["p"].getFlags( Gaffer.Plug.Flags.ReadOnly ) )
+			s["n"]["user"]["p"].setFlags( Gaffer.Plug.Flags.Dynamic, True )
+			self.assertTrue( s["n"]["user"]["p"].getFlags( Gaffer.Plug.Flags.Dynamic ) )
 			self.assertEqual( len( cs ), 1 )
 
 		s.undo()
-		self.assertFalse( s["n"]["user"]["p"].getFlags( Gaffer.Plug.Flags.ReadOnly ) )
+		self.assertFalse( s["n"]["user"]["p"].getFlags( Gaffer.Plug.Flags.Dynamic ) )
 		self.assertEqual( len( cs ), 2 )
 
 		s.redo()
-		self.assertTrue( s["n"]["user"]["p"].getFlags( Gaffer.Plug.Flags.ReadOnly ) )
+		self.assertTrue( s["n"]["user"]["p"].getFlags( Gaffer.Plug.Flags.Dynamic ) )
 		self.assertEqual( len( cs ), 3 )
 
 	def testParentConnectionIgnoresOutOfOrderChildConnections( self ) :

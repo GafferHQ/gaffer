@@ -53,10 +53,11 @@ def __scriptAdded( container, script ) :
 	variables = script["variables"]
 	if "projectName" not in variables :
 		projectName = variables.addMember( "project:name", IECore.StringData( "default" ), "projectName" )
-		projectName["name"].setFlags( Gaffer.Plug.Flags.ReadOnly, True )
 	if "projectRootDirectory" not in variables :
 		projectRoot = variables.addMember( "project:rootDirectory", IECore.StringData( "$HOME/gaffer/projects/${project:name}" ), "projectRootDirectory" )
-		projectRoot["name"].setFlags( Gaffer.Plug.Flags.ReadOnly, True )
+
+	Gaffer.MetadataAlgo.setReadOnly( variables["projectName"]["name"], True )
+	Gaffer.MetadataAlgo.setReadOnly( variables["projectRootDirectory"]["name"], True )
 
 	GafferImage.FormatPlug.acquireDefaultFormatPlug( script )
 

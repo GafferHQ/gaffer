@@ -194,7 +194,7 @@ class LabelPlugValueWidget( GafferUI.PlugValueWidget ) :
 
 		assert( label is self.__label )
 
-		if self.getPlug().getFlags( Gaffer.Plug.Flags.ReadOnly ) or Gaffer.MetadataAlgo.readOnly( self.getPlug() ) :
+		if Gaffer.MetadataAlgo.readOnly( self.getPlug() ) :
 			return
 
 		if self.__editableLabel is None :

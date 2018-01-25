@@ -186,11 +186,6 @@ class TypedObjectPlugTest( GafferTest.TestCase ) :
 		self.failUnless( Gaffer.ObjectVectorPlug.ValueType is IECore.ObjectVector )
 		self.failUnless( Gaffer.AtomicCompoundDataPlug.ValueType is IECore.CompoundData )
 
-	def testReadOnlySetValueRaises( self ) :
-
-		p = Gaffer.ObjectPlug( defaultValue = IECore.NullObject(), flags = Gaffer.Plug.Flags.Default | Gaffer.Plug.Flags.ReadOnly )
-		self.assertRaises( RuntimeError, p.setValue, IECore.IntData( 10 ) )
-
 	def testSetValueCopying( self ) :
 
 		p = Gaffer.ObjectPlug( defaultValue = IECore.IntData( 1 ) )

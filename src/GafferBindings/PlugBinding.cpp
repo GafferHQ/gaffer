@@ -55,7 +55,7 @@ void PlugSerialiser::moduleDependencies( const Gaffer::GraphComponent *graphComp
 
 std::string PlugSerialiser::constructor( const Gaffer::GraphComponent *graphComponent, const Serialisation &serialisation ) const
 {
-	return repr( static_cast<const Plug *>( graphComponent ), Plug::All & ~Plug::ReadOnly );
+	return repr( static_cast<const Plug *>( graphComponent ) );
 }
 
 std::string PlugSerialiser::postHierarchy( const Gaffer::GraphComponent *graphComponent, const std::string &identifier, const Serialisation &serialisation ) const
@@ -68,10 +68,6 @@ std::string PlugSerialiser::postHierarchy( const Gaffer::GraphComponent *graphCo
 		if( inputIdentifier.size() )
 		{
 			result += identifier + ".setInput( " + inputIdentifier + " )\n";
-		}
-		if( plug->getFlags( Plug::ReadOnly ) )
-		{
-			result += identifier + ".setFlags( Gaffer.Plug.Flags.ReadOnly, True )\n";
 		}
 
 		result += metadataSerialisation( plug, identifier );
@@ -110,8 +106,8 @@ std::string PlugSerialiser::directionRepr( Plug::Direction direction )
 
 std::string PlugSerialiser::flagsRepr( unsigned flags )
 {
-	static const Plug::Flags values[] = { Plug::Dynamic, Plug::Serialisable, Plug::AcceptsInputs, Plug::PerformsSubstitutions, Plug::Cacheable, Plug::ReadOnly, Plug::AcceptsDependencyCycles, Plug::None };
-	static const char *names[] = { "Dynamic", "Serialisable", "AcceptsInputs", "PerformsSubstitutions", "Cacheable", "ReadOnly", "AcceptsDependencyCycles", nullptr };
+	static const Plug::Flags values[] = { Plug::Dynamic, Plug::Serialisable, Plug::AcceptsInputs, Plug::PerformsSubstitutions, Plug::Cacheable, Plug::AcceptsDependencyCycles, Plug::None };
+	static const char *names[] = { "Dynamic", "Serialisable", "AcceptsInputs", "PerformsSubstitutions", "Cacheable", "AcceptsDependencyCycles", nullptr };
 
 	int defaultButOffCount = 0;
 	std::string defaultButOff;

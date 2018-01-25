@@ -60,7 +60,7 @@ class ValuePlugSerialiser : public PlugSerialiser
 		std::string constructor( const Gaffer::GraphComponent *graphComponent, const Serialisation &serialisation ) const override;
 		std::string postHierarchy( const Gaffer::GraphComponent *graphComponent, const std::string &identifier, const Serialisation &serialisation ) const override;
 
-		static std::string repr( const Gaffer::ValuePlug *plug, unsigned flagsMask = Gaffer::Plug::All, const std::string &extraArguments = "", const Serialisation *serialisation = nullptr );
+		static std::string repr( const Gaffer::ValuePlug *plug, const std::string &extraArguments = "", const Serialisation *serialisation = nullptr );
 
 };
 

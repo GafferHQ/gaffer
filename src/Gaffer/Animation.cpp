@@ -275,10 +275,6 @@ const Plug *Animation::curvesPlug() const
 
 bool Animation::canAnimate( const ValuePlug *plug )
 {
-	if( plug->getFlags( Plug::ReadOnly ) )
-	{
-		return false;
-	}
 	if( !plug->getFlags( Plug::AcceptsInputs ) )
 	{
 		return false;
