@@ -100,5 +100,39 @@ class BoxPlugTest( GafferTest.TestCase ) :
 		self.assertEqual( c.minValue(), imath.V3f( -1, -2, -3 ) )
 		self.assertEqual( c.maxValue(), imath.V3f( 1, 2, 3 ) )
 
+	def testValueSerialisation( self ) :
+
+		s = Gaffer.ScriptNode()
+		s["n"] = Gaffer.Node()
+		s["n"]["user"]["b"] = Gaffer.Box2iPlug( flags = Gaffer.Plug.Flags.Default | Gaffer.Plug.Flags.Dynamic )
+		s["n"]["user"]["i"] = Gaffer.IntPlug( flags = Gaffer.Plug.Flags.Default | Gaffer.Plug.Flags.Dynamic )
+
+		def assertExpectedValues( numSetValueCalls ) :
+
+			ss = s.serialise( filter = Gaffer.StandardSet( { s["n"] } ) )
+			self.assertEqual( ss.count( "setValue" ), numSetValueCalls )
+
+			s2 = Gaffer.ScriptNode()
+			s2.execute( ss )
+
+			self.assertEqual( s2["n"]["user"]["b"].getValue(), s["n"]["user"]["b"].getValue() )
+
+		assertExpectedValues( 0 )
+
+		s["n"]["user"]["b"].setValue( imath.Box2i( imath.V2i( 1, 2 ), imath.V2i( 3, 4 ) ) )
+		assertExpectedValues( 1 ) # One setValue() call for plug b.
+
+		s["n"]["user"]["b"]["min"]["x"].setInput( s["n"]["user"]["i"] )
+		assertExpectedValues( 2 ) # One setValue() call for b.min.y, another for b.max.
+
+		s["n"]["user"]["b"]["max"]["x"].setInput( s["n"]["user"]["i"] )
+		assertExpectedValues( 2 ) # One setValue() call for b.min.y, another for b.max.y.
+
+		s["n"]["user"]["b"]["max"]["y"].setInput( s["n"]["user"]["i"] )
+		assertExpectedValues( 1 ) # One setValue() call for b.min.y
+
+		s["n"]["user"]["b"]["min"]["y"].setInput( s["n"]["user"]["i"] )
+		assertExpectedValues( 0 ) # All leaf plugs have inputs, so no setValue() calls needed.
+
 if __name__ == "__main__":
 	unittest.main()

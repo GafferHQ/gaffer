@@ -218,5 +218,32 @@ class FormatPlugTest( GafferImageTest.ImageTestCase ) :
 
 		self.assertEqual( len( allHashes ), 1 )
 
+	def testSerialiseWithPartialExpressionConnection( self ) :
+
+		s = Gaffer.ScriptNode()
+
+		s["r"] = GafferImage.ImageReader()
+		s["r"]["fileName"].setValue( "thisFileDoesNotExist" )
+
+		s["n"] = Gaffer.Node()
+		s["n"]["user"]["f"] = GafferImage.FormatPlug( flags = Gaffer.Plug.Flags.Default | Gaffer.Plug.Flags.Dynamic )
+		s["n"]["user"]["f"]["displayWindow"].setValue( imath.Box2i( imath.V2i( 10, 11 ), imath.V2i( 20, 21 ) ) )
+
+		# This expression will throw because the ImageReader is referencing
+		# an invalid file.
+		s["e"] = Gaffer.Expression()
+		s["e"].setExpression( """parent["n"]["user"]["f"]["pixelAspect"] = parent["r"]["out"]["format"].getPixelAspectRatio()""" )
+
+		# Despite that, we should still be able to serialise the script
+		# without triggering expression evaluation. This is particularly
+		# useful when dispatching a script where the ImageReader is
+		# set up to read an image which won't exist until one of the tasks
+		# has been executed.
+
+		s2 = Gaffer.ScriptNode()
+		s2.execute( s.serialise() )
+		self.assertEqual( s2["n"]["user"]["f"]["displayWindow"].getValue(), s["n"]["user"]["f"]["displayWindow"].getValue() )
+
+
 if __name__ == "__main__":
 	unittest.main()
