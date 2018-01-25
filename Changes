@@ -39,6 +39,9 @@ API
 ---
 
 - Serialisation : Added support for nested classes in `classPath()` method (#2400).
+- Plug : Remove deprecated ReadOnly flag (#2401).
+- Moved PathMatcher/PathMatcherData/PathMatcherDataPlug from GafferScene to Gaffer (#2404).
+- Filter : Removed Result enum. Use IECore::PathMatcher::Result instead (#2404).
 
 Breaking Changes
 ----------------
@@ -52,6 +55,9 @@ Breaking Changes
 - ValuePlugSerialiser : Removed `valueNeedsSerialisation()` virtual
   method (#2395).
 - OpenImageIOReader : Removed cache related methods (#2380).
+- Removed Plug::ReadOnly flag. Use MetadataAlgo instead (#2401).
+- ValuePlugSerialiser : Removed flagsMask argument from `repr()` method (#2401).
+- Filter : Removed Result enum. Use IECore::PathMatcher::Result instead (#2404).
 
 0.42.0.0
 ========
