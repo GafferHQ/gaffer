@@ -41,7 +41,6 @@
 
 #include "GafferScene/SceneReader.h"
 #include "GafferScene/SceneWriter.h"
-#include "GafferScene/AlembicSource.h"
 
 #include "IOBinding.h"
 
@@ -75,7 +74,5 @@ void GafferSceneModule::bindIO()
 	;
 
 	GafferDispatchBindings::TaskNodeClass<SceneWriter>();
-
-	GafferBindings::DependencyNodeClass<AlembicSource>();
 
 }
